@@ -5,6 +5,7 @@ import linecache
 import gc
 
 import mpmath
+import cmath
 
 from sympy.testing.pytest import raises, warns_deprecated_sympy
 from sympy.concrete.summations import Sum
@@ -17,12 +18,13 @@ from sympy.functions.combinatorial.factorials import (RisingFactorial, factorial
 from sympy.functions.combinatorial.numbers import bernoulli, harmonic
 from sympy.functions.elementary.complexes import Abs, sign
 from sympy.functions.elementary.exponential import exp, log
-from sympy.functions.elementary.hyperbolic import acosh
+from sympy.functions.elementary.hyperbolic import asinh,acosh,atanh
 from sympy.functions.elementary.integers import floor
 from sympy.functions.elementary.miscellaneous import (Max, Min, sqrt)
 from sympy.functions.elementary.piecewise import Piecewise
-from sympy.functions.elementary.trigonometric import (acos, cos, cot, sin,
+from sympy.functions.elementary.trigonometric import (asin, acos, atan, cos, cot, sin,
                                                       sinc, tan)
+from sympy.functions import sinh,cosh,tanh
 from sympy.functions.special.bessel import (besseli, besselj, besselk, bessely, jn, yn)
 from sympy.functions.special.beta_functions import (beta, betainc, betainc_regularized)
 from sympy.functions.special.delta_functions import (Heaviside)
@@ -299,6 +301,157 @@ def test_numexpr_printer():
         args = arg_tuple[:nargs]
         f = lambdify(args, ssym(*args), modules='numexpr')
         assert f(*(1, )*nargs) is not None
+
+
+def test_cmath_sqrt():
+    f = lambdify(x, sqrt(x), "cmath")
+    assert f(0) == 0
+    assert f(1) == 1
+    assert f(4) == 2
+    assert abs(f(2) - 1.414) < 0.001
+    assert f(-1) == 1j
+    assert f(-4) == 2j
+
+
+def test_cmath_log():
+    f = lambdify(x, log(x), "cmath")
+    assert abs(f(1) - 0) < 1e-15
+    assert abs(f(cmath.e) - 1) < 1e-15
+    assert abs(f(-1) - cmath.log(-1)) < 1e-15
+
+
+def test_cmath_sinh():
+    f = lambdify(x, sinh(x), "cmath")
+    assert abs(f(0) - cmath.sinh(0)) < 1e-15
+    assert abs(f(pi) - cmath.sinh(pi)) < 1e-15
+    assert abs(f(-pi) - cmath.sinh(-pi)) < 1e-15
+    assert abs(f(1j) - cmath.sinh(1j)) < 1e-15
+
+
+def test_cmath_cosh():
+    f = lambdify(x, cosh(x), "cmath")
+    assert abs(f(0) - cmath.cosh(0)) < 1e-15
+    assert abs(f(pi) - cmath.cosh(pi)) < 1e-15
+    assert abs(f(-pi) - cmath.cosh(-pi)) < 1e-15
+    assert abs(f(1j) - cmath.cosh(1j)) < 1e-15
+
+
+def test_cmath_tanh():
+    f = lambdify(x, tanh(x), "cmath")
+    assert abs(f(0) - cmath.tanh(0)) < 1e-15
+    assert abs(f(pi) - cmath.tanh(pi)) < 1e-15
+    assert abs(f(-pi) - cmath.tanh(-pi)) < 1e-15
+    assert abs(f(1j) - cmath.tanh(1j)) < 1e-15
+
+
+def test_cmath_sin():
+    f = lambdify(x, sin(x), "cmath")
+    assert abs(f(0) - cmath.sin(0)) < 1e-15
+    assert abs(f(pi) - cmath.sin(pi)) < 1e-15
+    assert abs(f(-pi) - cmath.sin(-pi)) < 1e-15
+    assert abs(f(1j) - cmath.sin(1j)) < 1e-15
+
+
+def test_cmath_cos():
+    f = lambdify(x, cos(x), "cmath")
+    assert abs(f(0) - cmath.cos(0)) < 1e-15
+    assert abs(f(pi) - cmath.cos(pi)) < 1e-15
+    assert abs(f(-pi) - cmath.cos(-pi)) < 1e-15
+    assert abs(f(1j) - cmath.cos(1j)) < 1e-15
+
+
+def test_cmath_tan():
+    f = lambdify(x, tan(x), "cmath")
+    assert abs(f(0) - cmath.tan(0)) < 1e-15
+    assert abs(f(1j) - cmath.tan(1j)) < 1e-15
+
+
+def test_cmath_asin():
+    f = lambdify(x, asin(x), "cmath")
+    assert abs(f(0) - cmath.asin(0)) < 1e-15
+    assert abs(f(1) - cmath.asin(1)) < 1e-15
+    assert abs(f(-1) - cmath.asin(-1)) < 1e-15
+    assert abs(f(2) - cmath.asin(2)) < 1e-15
+
+
+def test_cmath_acos():
+    f = lambdify(x, acos(x), "cmath")
+    assert abs(f(1) - cmath.acos(1)) < 1e-15
+    assert abs(f(-1) - cmath.acos(-1)) < 1e-15
+    assert abs(f(2) - cmath.acos(2)) < 1e-15
+
+
+def test_cmath_atan():
+    f = lambdify(x, atan(x), "cmath")
+    assert abs(f(0) - cmath.atan(0)) < 1e-15
+    assert abs(f(1) - cmath.atan(1)) < 1e-15
+    assert abs(f(-1) - cmath.atan(-1)) < 1e-15
+    assert abs(f(2) - cmath.atan(2)) < 1e-15
+
+
+def test_cmath_asinh():
+    f = lambdify(x, asinh(x), "cmath")
+    assert abs(f(0) - cmath.asinh(0)) < 1e-15
+    assert abs(f(1) - cmath.asinh(1)) < 1e-15
+    assert abs(f(-1) - cmath.asinh(-1)) < 1e-15
+    assert abs(f(2) - cmath.asinh(2)) < 1e-15
+
+
+def test_cmath_acosh():
+    f = lambdify(x, acosh(x), "cmath")
+    assert abs(f(1) - cmath.acosh(1)) < 1e-15
+    assert abs(f(2) - cmath.acosh(2)) < 1e-15
+
+
+def test_cmath_atanh():
+    f = lambdify(x, atanh(x), "cmath")
+    assert abs(f(0) - cmath.atanh(0)) < 1e-15
+    assert abs(f(0.5) - cmath.atanh(0.5)) < 1e-15
+    assert abs(f(-0.5) - cmath.atanh(-0.5)) < 1e-15
+    assert abs(f(2) - cmath.atanh(2)) < 1e-15
+
+
+def test_lambdify_complex_identities():
+    # Define symbol
+    z = symbols('z')
+    # Explicit mappings for re and im
+    custom_mappings = {"re": lambda z: z.real, "im": lambda z: z.imag}
+    expr = cos(z) - cos(re(z)) * cosh(im(z)) + I * sin(re(z)) * sinh(im(z))
+    func = lambdify([z], expr, modules=[custom_mappings, "cmath", "math"])
+    hpi = math.pi / 2
+    assert func(hpi + 1j * hpi) == 0j
+
+    # Euler's Formula
+    func = lambdify([z], exp(I * z) - (cos(z) + I * sin(z)), modules=["cmath", "math"])
+    assert func(hpi) == 0j
+
+    # Exponential Identity: e^z = e^(Re(z)) * (cos(Im(z)) + i sin(Im(z)))
+    func_exp = lambdify([z], exp(z) - exp(re(z)) * (cos(im(z)) + I * sin(im(z))),
+                        modules=[custom_mappings, "cmath", "math"])
+    assert func_exp(hpi + 1j * hpi) == 0j
+
+    # Complex Cosine Identity: cos(z) = cos(Re(z)) * cosh(Im(z)) - i sin(Re(z)) * sinh(Im(z))
+    func_cos = lambdify([z], cos(z) - (cos(re(z)) * cosh(im(z)) - I * sin(re(z)) * sinh(im(z))),
+                        modules=[custom_mappings, "cmath", "math"])
+    assert func_cos(hpi + 1j * hpi) == 0j
+
+    # Complex Sine Identity: sin(z) = sin(Re(z)) * cosh(Im(z)) + i cos(Re(z)) * sinh(Im(z))
+    func_sin = lambdify([z], sin(z) - (sin(re(z)) * cosh(im(z)) + I * cos(re(z)) * sinh(im(z))),
+                        modules=[custom_mappings, "cmath", "math"])
+    assert func_sin(hpi + 1j * hpi) == 0j
+
+    # Complex Hyperbolic Cosine Identity: cosh(z) = cosh(Re(z)) * cos(Im(z)) + i sinh(Re(z)) * sin(Im(z))
+    func_cosh = lambdify([z], cosh(z) - (cosh(re(z)) * cos(im(z)) + I * sinh(re(z)) * sin(im(z))),
+                         modules=[custom_mappings, "cmath", "math"])
+    assert func_cosh(hpi + 1j * hpi) == 0j
+
+    # Complex Hyperbolic Sine Identity: sinh(z) = sinh(Re(z)) * cos(Im(z)) + i cosh(Re(z)) * sin(Im(z))
+    func_sinh = lambdify([z], sinh(z) - (sinh(re(z)) * cos(im(z)) + I * cosh(re(z)) * sin(im(z))),
+                         modules=[custom_mappings, "cmath", "math"])
+    assert func_sinh(hpi + 1j * hpi) == 0j
+
+    func_cosh = lambdify([z], cosh(z) - (exp(z) + exp(-z)) / 2, modules=["cmath", "math"])
+    assert func_cosh(hpi) == 0j
 
 
 def test_issue_9334():
