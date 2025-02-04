@@ -11,6 +11,8 @@ The tutorial is also available on video:
 - [Symbolic Computation with Python using SymPy | SciPy 2016](https://www.youtube.com/watch?v=AqnpuGbM6-Q)
 - SymPy Tutorial SciPy 2014 [Part 1](https://www.youtube.com/watch?v=Lgp442bibDM) [Part 2](https://www.youtube.com/watch?v=_PTe10whFKo) [Part 3](https://www.youtube.com/watch?v=qleGSnrnxgc)
 
+A [live shell for SymPy](https://live.sympy.org) is available, where you can try out SymPy-based programs in the browser via WebAssembly without having to install Python or SymPy. It is powered by the [JupyterLite](https://jupyterlite.readthedocs.io) and [Pyodide](https://pyodide.org) projects.
+
 ## Read the paper
 
 We authored a journal paper in 2017 that provides a high-level look at SymPy and its capabilities. You can read it here:
@@ -20,6 +22,8 @@ https://peerj.com/articles/cs-103/
 ## Peruse the documentation
 
 Besides the tutorial, there is a lot more information in the [documentation](documentation). It's probably a good idea to at least browse through the different topics to get an idea of what else is available.
+
+The API examples are a good place to start if you are looking for examples of how to use SymPy. The [API examples](https://docs.sympy.org/latest/modules/index.html) are organized by module and show how to use the functions in that module. They are also interactive, so you can click on the "Try it" buttons to run the code provided by the examples in your browser via [JupyterLite](https://jupyterlite.readthedocs.io) and [Pyodide](https://pyodide.org).
 
 ## Review the Code of Conduct
 
