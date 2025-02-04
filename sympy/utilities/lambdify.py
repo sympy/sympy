@@ -28,6 +28,7 @@ __doctest_requires__ = {('lambdify',): ['numpy', 'tensorflow']}
 # Default namespaces, letting us define translations that can't be defined
 # by simple variable maps, like I => 1j
 MATH_DEFAULT: dict[str, Any] = {}
+CMATH_DEFAULT: dict[str,Any] = {}
 MPMATH_DEFAULT: dict[str, Any] = {}
 NUMPY_DEFAULT: dict[str, Any] = {"I": 1j}
 SCIPY_DEFAULT: dict[str, Any] = {"I": 1j}
@@ -42,6 +43,7 @@ NUMEXPR_DEFAULT: dict[str, Any] = {}
 # throughout this file, whereas the defaults should remain unmodified.
 
 MATH = MATH_DEFAULT.copy()
+CMATH = CMATH_DEFAULT.copy()
 MPMATH = MPMATH_DEFAULT.copy()
 NUMPY = NUMPY_DEFAULT.copy()
 SCIPY = SCIPY_DEFAULT.copy()
@@ -57,6 +59,24 @@ MATH_TRANSLATIONS = {
     "ceiling": "ceil",
     "E": "e",
     "ln": "log",
+}
+
+CMATH_TRANSLATIONS = {
+    "exp": "exp",
+    "log": "log",
+    "sqrt": "sqrt",
+    "sin": "sin",
+    "cos": "cos",
+    "tan": "tan",
+    "asin": "asin",
+    "acos": "acos",
+    "atan": "atan",
+    "sinh": "sinh",
+    "cosh": "cosh",
+    "tanh": "tanh",
+    "asinh": "asinh",
+    "acosh": "acosh",
+    "atanh": "atanh"
 }
 
 # NOTE: This dictionary is reused in Function._eval_evalf to allow subclasses
@@ -109,6 +129,7 @@ NUMEXPR_TRANSLATIONS: dict[str, str] = {}
 # Available modules:
 MODULES = {
     "math": (MATH, MATH_DEFAULT, MATH_TRANSLATIONS, ("from math import *",)),
+    "cmath": (CMATH, CMATH_DEFAULT, CMATH_TRANSLATIONS, ("import cmath; from cmath import *",)),
     "mpmath": (MPMATH, MPMATH_DEFAULT, MPMATH_TRANSLATIONS, ("from mpmath import *",)),
     "numpy": (NUMPY, NUMPY_DEFAULT, NUMPY_TRANSLATIONS, ("import numpy; from numpy import *; from numpy.linalg import *",)),
     "scipy": (SCIPY, SCIPY_DEFAULT, SCIPY_TRANSLATIONS, ("import scipy; import numpy; from scipy.special import *",)),
@@ -128,7 +149,7 @@ def _import(module, reload=False):
     """
     Creates a global translation dictionary for module.
 
-    The argument module has to be one of the following strings: "math",
+    The argument module has to be one of the following strings: "math","cmath"
     "mpmath", "numpy", "sympy", "tensorflow", "jax".
     These dictionaries map names of Python functions to their equivalent in
     other modules.
@@ -312,15 +333,15 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
 
         - ``["scipy", "numpy"]`` if SciPy is installed
         - ``["numpy"]`` if only NumPy is installed
-        - ``["math", "mpmath", "sympy"]`` if neither is installed.
+        - ``["math","cmath", "mpmath", "sympy"]`` if neither is installed.
 
         That is, SymPy functions are replaced as far as possible by
         either ``scipy`` or ``numpy`` functions if available, and Python's
-        standard library ``math``, or ``mpmath`` functions otherwise.
+        standard library ``math`` and ``cmath``, or ``mpmath`` functions otherwise.
 
         *modules* can be one of the following types:
 
-        - The strings ``"math"``, ``"mpmath"``, ``"numpy"``, ``"numexpr"``,
+        - The strings ``"math"``, ``"cmath"``, ``"mpmath"``, ``"numpy"``, ``"numexpr"``,
           ``"scipy"``, ``"sympy"``, or ``"tensorflow"`` or ``"jax"``. This uses the
           corresponding printer and namespace mapping for that module.
         - A module (e.g., ``math``). This uses the global namespace of the
@@ -774,7 +795,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
                 # Use either numpy (if available) or python.math where possible.
                 # XXX: This leads to different behaviour on different systems and
                 #      might be the reason for irreproducible errors.
-                modules = ["math", "mpmath", "sympy"]
+                modules = ["math", "cmath", "mpmath", "sympy"]
             else:
                 modules = ["numpy"]
         else:
@@ -809,6 +830,8 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     if printer is None:
         if _module_present('mpmath', namespaces):
             from sympy.printing.pycode import MpmathPrinter as Printer # type: ignore
+        elif _module_present('cmath', namespaces):
+            from sympy.printing.pycode import CmathPrinter as Printer # type: ignore
         elif _module_present('scipy', namespaces):
             from sympy.printing.numpy import SciPyPrinter as Printer # type: ignore
         elif _module_present('numpy', namespaces):
