@@ -722,7 +722,7 @@ def test_issue_2877():
     def r(a, b, c):
         return factor(a*x**2 + b*x + c)
     e = r(5.0/6, 10, 5)
-    assert nsimplify(e) == 5*x**2/6 + 10*x + 5
+    assert nsimplify(e) == 10*(x**2/12 + x + S(1)/2)
 
 
 def test_issue_5910():
