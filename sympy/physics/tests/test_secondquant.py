@@ -90,8 +90,7 @@ def test_dagger():
     assert Dagger('a') == Dagger(Symbol('a'))
     assert Dagger(Dagger('a')) == Symbol('a')
     assert Dagger(exp(2 * I)) == exp(-2 * I)
-    s = symbols('s', commutative=True)
-    assert Dagger(s) == conjugate(s)
+    assert Dagger(i) == conjugate(i)
 
 
 def test_operator():
