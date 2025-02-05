@@ -3049,8 +3049,12 @@ def nsolve(*args, dict=False, **kwargs):
             if isinstance(fi, Eq):
                 f[i] = fi.lhs - fi.rhs
         f = Matrix(f).T
-    if iterable(x0):
-        x0 = list(x0)
+    if all([eq.is_zero for eq in f]):
+        raise ValueError('The equation is always true for all variables')
+    if any([eq.is_inconsistent for eq in f]):
+        return None
+    # if iterable(x0):
+    #     x0 = list(x0)
     if not isinstance(f, Matrix):
         # assume it's a SymPy expression
         if isinstance(f, Eq):
@@ -3059,10 +3063,7 @@ def nsolve(*args, dict=False, **kwargs):
             raise TypeError('nsolve cannot accept inequalities')
         syms = f.free_symbols
         if fargs is None:
-            if syms:
-                fargs = syms.pop()
-            else:
-                raise ValueError('No free symbols to solve for')
+            fargs = syms.copy().pop()
         if not (len(syms) == 1 and (fargs in syms or fargs[0] in syms)):
             raise ValueError(filldedent('''
                 expected a one-dimensional and numerical function'''))
