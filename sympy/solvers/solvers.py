@@ -2956,8 +2956,7 @@ def nsolve(*args, dict=False, **kwargs):
         try:
             x = sympify(findroot(f, x0, **kwargs))
             return [{fargs: x}] if as_dict else x
-        except Exception as e:
-
+        except Exception:
             return None
 
     # Multi-variable case
