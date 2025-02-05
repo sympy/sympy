@@ -3049,8 +3049,12 @@ def nsolve(*args, dict=False, **kwargs):
             if isinstance(fi, Eq):
                 f[i] = fi.lhs - fi.rhs
         f = Matrix(f).T
-    if iterable(x0):
-        x0 = list(x0)
+    if all(simplify(eq) == 0 for eq in f):
+        raise ValueError('The equation is always true for all variables')
+    if any(simplify(eq) is S.NaN for eq in f):
+        return None
+    # if iterable(x0):
+    #     x0 = list(x0)
     if not isinstance(f, Matrix):
         # assume it's a SymPy expression
         if isinstance(f, Eq):
