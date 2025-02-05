@@ -154,7 +154,7 @@ def _(expr, assumptions):
                 return True
             if ask(Q.eq(expr.base,0),assumptions) and ask(Q.positive(expr.exp)) is True:
                 return True
-            return 
+            return
         return is_base_rational
     elif ask(Q.rational(expr.exp), assumptions):
         if ask(Q.prime(expr.base), assumptions):
