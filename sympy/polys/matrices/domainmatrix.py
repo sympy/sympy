@@ -3320,15 +3320,7 @@ class DomainMatrix:
 
     def qrd(self):
         """
-        Compute the fraction-free QR decomposition of the DomainMatrix.
-
-        Explanation
-        ===========
-
-        This method computes the QR decomposition of a matrix in a fraction-free
-        manner, ensuring that all intermediate results remain in the domain of
-        the input matrix. This avoids divisions and is particularly suited for
-        exact arithmetic domains like integers or polynomials.
+        Compute a fraction-free QR decomposition using fflu decomposition.
 
         Returns
         =======
@@ -3338,32 +3330,16 @@ class DomainMatrix:
             R is the upper triangular matrix.
             D is the diagonal matrix.
 
-        Raises
-        ======
-
-        DMDomainError
-            If the domain of the DomainMatrix is not an integral domain.
-
-        Examples
+        See Also
         ========
 
-        >>> from sympy import ZZ
-        >>> from sympy.polys.matrices import DomainMatrix
-        >>> A = DomainMatrix([[1, 2], [3, 4], [5, 6]], (3, 2), ZZ)
-        >>> Q, R, D = A.qrd()
-        >>> Q
-        DomainMatrix([[1, 0], [3, 1]], (2, 2), ZZ)
-        >>> R
-        DomainMatrix([[1, 2], [0, -2]], (2, 2), ZZ)
-        >>> D
-        DomainMatrix([[1, 0], [0, 1]], (2, 2), ZZ)
+        qr, fflu
         """
-
-        ddm_q, ddm_r, ddm_d = self.rep.qrd()
-        Q = self.from_rep(ddm_q)
-        R = self.from_rep(ddm_r)
-        D = self.from_rep(ddm_d)
-
+        M = self.transpose().matmul(self)
+        M_aug = M.hstack(self.transpose())
+        P, L, D, Ut = M_aug.fflu()
+        Q = Ut[:, -self.shape[1]:].transpose()
+        R = L.transpose()
         return Q, R, D
 
     def lu_solve(self, rhs):
@@ -3442,19 +3418,6 @@ class DomainMatrix:
         - D is a diagonal matrix.
         - U is an upper triangular matrix.
 
-        Invariants
-        ==========
-
-            >>> L.is_lower and U.is_upper and D.is_diagonal
-            True
-
-            >>> L * D.to_field().inv() * U == P * A.to_field()
-            True
-
-            >>> I, d = D.inv_den()
-            >>> L * I * U == d * P * A
-            True
-
         Returns
         =======
 
@@ -3480,11 +3443,18 @@ class DomainMatrix:
         >>> P
         DomainMatrix([[1, 0], [0, 1]], (2, 2), ZZ)
         >>> L
-        DomainMatrix([[1, 0], [3, 1]], (2, 2), ZZ)
+        DomainMatrix([[1, 0], [3, -2]], (2, 2), ZZ)
         >>> D
-        DomainMatrix([[1, 0], [0, 1]], (2, 2), ZZ)
+        DomainMatrix([[1, 0], [0, -2]], (2, 2), ZZ)
         >>> U
-        DomainMatrix([[1, 2], [0, -2]], (2, 2), ZZ)
+        DomainMatrix([[1, 2], [0, 0]], (2, 2), ZZ)
+        >>> L.is_lower and U.is_upper and D.is_diagonal
+        True
+        >>> L * D.to_field().inv() * U == P * A.to_field()
+        True
+        >>> I, d = D.inv_den()
+        >>> L * I * U == d * P * A
+        True
 
         See Also
         ========

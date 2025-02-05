@@ -1360,3 +1360,211 @@ def test_DomainMatrix_pickling():
     assert pickle.loads(pickle.dumps(dM)) == dM
     dM = DomainMatrix([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
     assert pickle.loads(pickle.dumps(dM)) == dM
+
+
+def test_DomainMatrix_fflu():
+    A = DomainMatrix([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
+    P, L, D, U = A.fflu()
+    assert P.shape == A.shape
+    assert L.shape == A.shape
+    assert D.shape == A.shape
+    assert U.shape == A.shape
+    assert L[0, 1] == DomainScalar(ZZ(0), ZZ)
+    assert U[1, 0] == DomainScalar(ZZ(0), ZZ)
+    assert D[0, 1] == DomainScalar(ZZ(0), ZZ)
+    assert D[1, 0] == DomainScalar(ZZ(0), ZZ)
+    I, d = D.inv_den()
+    assert L.matmul(I).matmul(U) == d * P.matmul(A)
+
+
+def test_DomainMatrix_qrd():
+    A = DomainMatrix([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
+    Q, R, D = A.qrd()
+    assert Q.shape == A.shape
+    assert R.shape == A.shape
+    assert D.shape == A.shape
+    QT_Q = Q.transpose().matmul(Q)
+    assert QT_Q == D
+    assert R[1, 0] == DomainScalar(ZZ(0), ZZ)
+    a_field = A.to_field()
+    q_field = Q.to_field()
+    d_inv = D.to_field().inv()
+    r_field = R.to_field()
+    assert q_field.matmul(d_inv).matmul(r_field) == a_field
+
+
+def _check_fflu(A, P, L, D, U):
+    m, n = A.shape
+    assert P.shape == (m, m)
+    assert L.shape == (m, m)
+    assert D.shape == (min(m, n), min(m, n))
+    assert U.shape == (m, n)
+    assert L.is_lower
+    assert U.is_upper
+    assert D.is_diagonal
+    di, d = D.inv_den()
+    assert P.matmul(A).rmul(d) == L.matmul(di).matmul(U)
+
+
+def _check_qrd(A, Q, R, D):
+    m, n = A.shape
+    assert Q.shape[1] == min(m, n)
+    assert R.shape == (min(m, n), n)
+    assert D.shape == (min(m, n), min(m, n))
+    assert R.is_upper
+    assert D.is_diagonal
+    Di, d = D.inv_den()
+    assert d * A == Q.matmul(Di.matmul(R))
+    QTQ = Q.transpose().matmul(Q)
+    assert QTQ.is_diagonal
+
+
+def test_DomainMatrix_fflu_identity():
+    A = DomainMatrix.eye(3, ZZ)
+    P, L, D, U = A.fflu()
+    _check_fflu(A, P, L, D, U)
+
+
+def test_DomainMatrix_fflu_empty():
+    A = DomainMatrix([], (0, 0), ZZ)
+    P, L, D, U = A.fflu()
+    assert P == DomainMatrix([], (0, 0), ZZ)
+    assert L == DomainMatrix([], (0, 0), ZZ)
+    assert D == DomainMatrix([], (0, 0), ZZ)
+    assert U == DomainMatrix([], (0, 0), ZZ)
+
+
+def test_DomainMatrix_fflu_permutation():
+    A = DomainMatrix([[0, 1], [1, 0]], (2, 2), ZZ)
+    P, L, D, U = A.fflu()
+    _check_fflu(A, P, L, D, U)
+    assert P == DomainMatrix([[0, 1], [1, 0]], (2, 2), ZZ)
+    assert L == DomainMatrix([[1, 0], [0, 1]], (2, 2), ZZ)
+    assert D == DomainMatrix([[1, 0], [0, 1]], (2, 2), ZZ)
+    assert U == DomainMatrix([[1, 0], [0, 1]], (2, 2), ZZ)
+
+
+def test_DomainMatrix_fflu_domain():
+    A = DomainMatrix([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
+    Aq = A.convert_to(QQ)
+    P, L, D, U = Aq.fflu()
+    _check_fflu(Aq, P, L, D, U)
+    assert P.domain == QQ
+    assert L.domain == QQ
+    assert D.domain == QQ
+    assert U.domain == QQ
+
+
+def test_DomainMatrix_fflu_empty_cols():
+    A = DomainMatrix([], (0, 2), ZZ)
+    P, L, D, U = A.fflu()
+    assert P == DomainMatrix([], (0, 0), ZZ)
+    assert L == DomainMatrix([], (0, 0), ZZ)
+    assert D == DomainMatrix([], (0, 0), ZZ)
+    assert U == DomainMatrix([], (0, 2), ZZ)
+
+
+def test_DomainMatrix_qrd_2x2_matrix():
+    A = DomainMatrix([[4, 3], [6, 3]], (2, 2), ZZ)
+    Q, R, D = A.qrd()
+    _check_qrd(A, Q, R, D)
+    assert Q == DomainMatrix([[4, 36], [6, -24]], (2, 2), ZZ)
+    assert R == DomainMatrix([[52, 30], [0, 36]], (2, 2), ZZ)
+    assert D == DomainMatrix([[52, 0], [0, 1872]], (2, 2), ZZ)
+
+
+def test_DomainMatrix_qrd_3x3_matrix():
+    A = DomainMatrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]], (3, 3), ZZ)
+    Q, R, D = A.qrd()
+    _check_qrd(A, Q, R, D)
+    assert Q == DomainMatrix([[1, 54, 0], [4, 18, 0], [7, -18, 0]], (3, 3), ZZ)
+    assert R == DomainMatrix([[66, 78, 90], [0, 54, 108], [0, 0, 1]], (3, 3), ZZ)
+    assert D == DomainMatrix([[66, 0, 0], [0, 3564, 0], [0, 0, 1]], (3, 3), ZZ)
+
+
+def test_DomainMatrix_qrd_zero_matrix():
+    A = DomainMatrix.zeros((3, 3), ZZ)
+    Q, R, D = A.qrd()
+    _check_qrd(A, Q, R, D)
+    assert Q == DomainMatrix({}, (3, 3), ZZ)
+    assert R == DomainMatrix({0: {0: 1}, 1: {1: 1}, 2: {2: 1}}, (3, 3), ZZ)
+    assert D == DomainMatrix({0: {0: 1}, 1: {1: 1}, 2: {2: 1}}, (3, 3), ZZ)
+
+
+def test_DomainMatrix_qrd_negative_entries():
+    A = DomainMatrix([[-1, -2], [-3, -4]], (2, 2), ZZ)
+    Q, R, D = A.qrd()
+    _check_qrd(A, Q, R, D)
+    assert Q == DomainMatrix([[-1, -6], [-3, 2]], (2, 2), ZZ)
+    assert R == DomainMatrix([[10, 14], [0, 4]], (2, 2), ZZ)
+    assert D == DomainMatrix([[10, 0], [0, 40]], (2, 2), ZZ)
+
+
+def test_DomainMatrix_qrd_mixed_signs():
+    A = DomainMatrix([[1, -2], [-3, 4]], (2, 2), ZZ)
+    Q, R, D = A.qrd()
+    _check_qrd(A, Q, R, D)
+    assert Q == DomainMatrix([[1, -6], [-3, -2]], (2, 2), ZZ)
+    assert R == DomainMatrix([[10, -14], [0, 4]], (2, 2), ZZ)
+    assert D == DomainMatrix([[10, 0], [0, 40]], (2, 2), ZZ)
+
+
+def test_DomainMatrix_qrd_upper_triangular():
+    A = DomainMatrix([[1, 2, 3], [0, 4, 5], [0, 0, 6]], (3, 3), ZZ)
+    Q, R, D = A.qrd()
+    _check_qrd(A, Q, R, D)
+    assert Q == DomainMatrix([[1, 0, 0], [0, 4, 0], [0, 0, 96]], (3, 3), ZZ)
+    assert R == DomainMatrix([[1, 2, 3], [0, 16, 20], [0, 0, 576]], (3, 3), ZZ)
+    assert D == DomainMatrix([[1, 0, 0], [0, 16, 0], [0, 0, 9216]], (3, 3), ZZ)
+
+
+def test_DomainMatrix_qrd_lower_triangular():
+    A = DomainMatrix([[1, 0, 0], [2, 3, 0], [4, 5, 6]], (3, 3), ZZ)
+    Q, R, D = A.qrd()
+    _check_qrd(A, Q, R, D)
+    assert Q == DomainMatrix([[1, -26, -36], [2, 11, -90], [4, 1, 54]], (3, 3), ZZ)
+    assert R == DomainMatrix([[21, 26, 24], [0, 38, 6], [0, 0, 324]], (3, 3), ZZ)
+    assert D == DomainMatrix([[21, 0, 0], [0, 798, 0], [0, 0, 12312]], (3, 3), ZZ)
+
+
+def test_DomainMatrix_qrd_large_matrix():
+    A = DomainMatrix([
+        [1, 2, 3, 4, 5],
+        [2, 3, 4, 5, 6],
+        [3, 4, 5, 6, 7],
+        [4, 5, 6, 7, 8],
+        [5, 6, 7, 8, 9]
+    ], (5, 5), ZZ)
+    Q, R, D = A.qrd()
+    _check_qrd(A, Q, R, D)
+    assert Q == DomainMatrix([[1, 40, 0, 0, 0],
+                            [2, 25, 0, 0, 0],
+                            [3, 10, 0, 0, 0],
+                            [4, -5, 0, 0, 0],
+                            [5, -20, 0, 0, 0]], (5, 5), ZZ)
+    assert R == DomainMatrix([[55, 70, 85, 100, 115],
+                            [0, 50, 100, 150, 200],
+                            [0, 0, 1, 0, 0],
+                            [0, 0, 0, 1, 0],
+                            [0, 0, 0, 0, 1]], (5, 5), ZZ)
+    assert D == DomainMatrix([[55, 0, 0, 0, 0],
+                            [0, 2750, 0, 0, 0],
+                            [0, 0, 1, 0, 0],
+                            [0, 0, 0, 1, 0],
+                            [0, 0, 0, 0, 1]], (5, 5), ZZ)
+
+
+def test_qrd_2x3_matrix():
+    A = DomainMatrix([[1, 2, 3], [4, 5, 6]], (2, 3), ZZ)
+    Q, R, D = A.qrd()
+    assert Q == DomainMatrix([[27, 18, 0], [1, 12, 0], [4, -3, 0]], (3, 3), ZZ)
+    assert R == DomainMatrix([[17, 22, 27], [0, 9, 18], [0, 0, 1]], (3, 3), ZZ)
+    assert D == DomainMatrix([[17, 0, 0], [0, 153, 0], [0, 0, 1]], (3, 3), ZZ)
+
+
+def test_qrd_3x2_matrix():
+    A = DomainMatrix([[1, 2], [3, 4], [5, 6]], (3, 2), ZZ)
+    Q, R, D = A.qrd()
+    assert Q == DomainMatrix([[3, 8], [5, -10]], (2, 2), ZZ)
+    assert R == DomainMatrix([[35, 44], [0, 24]], (2, 2), ZZ)
+    assert D == DomainMatrix([[35, 0], [0, 840]], (2, 2), ZZ)

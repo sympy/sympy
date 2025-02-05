@@ -1078,24 +1078,6 @@ class SDM(dict):
         R = ddm_r.to_sdm()
         return Q, R
 
-    def qrd(self):
-        """
-        Fraction-free QR decomposition for SDM.
-
-        Returns
-        =======
-
-        (Q, R, D)
-            Q is the orthogonal matrix as an SDM.
-            R is the upper triangular matrix as an SDM.
-            D is the diagonal matrix as an SDM.
-        """
-        ddm_q, ddm_r, ddm_d = self.to_ddm().qrd()
-        Q = ddm_q.to_sdm()
-        R = ddm_r.to_sdm()
-        D = ddm_d.to_sdm()
-        return Q, R, D
-
     def lu_solve(A, b):
         """
 

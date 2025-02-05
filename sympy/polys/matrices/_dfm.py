@@ -699,24 +699,6 @@ class DFM:
         Q, R = self.to_ddm().qr()
         return Q.to_dfm(), R.to_dfm()
 
-    def qrd(self):
-        """
-        Fraction-free QR decomposition for DFM.
-
-        Returns
-        =======
-
-        (Q, R, D)
-            Q is the orthogonal matrix as a DFM.
-            R is the upper triangular matrix as a DFM.
-            D is the diagonal matrix as a DFM.
-        """
-        ddm_q, ddm_r, ddm_d = self.to_ddm().qrd()
-        Q = ddm_q.to_dfm()
-        R = ddm_r.to_dfm()
-        D = ddm_d.to_dfm()
-        return Q, R, D
-
     # XXX: The lu_solve function should be renamed to solve. Whether or not it
     # uses an LU decomposition is an implementation detail. A method called
     # lu_solve would make sense for a situation in which an LU decomposition is

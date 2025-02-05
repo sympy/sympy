@@ -962,8 +962,8 @@ class DDM(list):
         """
         Compute a fraction-free PLDU decomposition for DDM.
 
-        This method adapts to rank-deficient matrices by removing rows and columns
-        corresponding to zero pivots in the upper triangular matrix U.
+        This method adapts to rank-deficient matrices by maintaining the original
+        matrix dimensions while zeroing out rows/columns corresponding to zero pivots.
 
         Returns
         =======
@@ -998,15 +998,9 @@ class DDM(list):
         if rows == 0 or cols == 0:
             return P, L, D, U
 
-        if rows == 1 and cols == 1:
-            D[0][0] = U[0][0]
-            U[0][0] = K.one
-            return P, L, D, U
-
         oldpivot = K.one
-        nonzero_pivots = []
 
-        for k in range(min(rows, cols) - 1):
+        for k in range(min(rows, cols)):
             if U[k][k] == K.zero:
                 for kpivot in range(k + 1, rows):
                     if U[kpivot][k] != K.zero:
@@ -1016,8 +1010,6 @@ class DDM(list):
                         break
                 else:
                     continue
-
-            nonzero_pivots.append(k)
 
             Ukk = U[k][k]
             L[k][k] = Ukk
@@ -1033,15 +1025,6 @@ class DDM(list):
                 U[i][k] = K.zero
 
             oldpivot = Ukk
-
-        if min(rows, cols) > 0 and U[min(rows, cols) - 1][min(rows, cols) - 1] != K.zero:
-            nonzero_pivots.append(min(rows, cols) - 1)
-            D[min(rows, cols) - 1][min(rows, cols) - 1] = oldpivot
-
-        P = P.extract(nonzero_pivots, nonzero_pivots)
-        L = L.extract(nonzero_pivots, nonzero_pivots)
-        D = D.extract(nonzero_pivots, nonzero_pivots)
-        U = U.extract(nonzero_pivots, range(cols))
 
         return P, L, D, U
 
@@ -1086,29 +1069,6 @@ class DDM(list):
         Q = Q.extract(range(rows), range(min(rows, cols)))
 
         return Q, R
-
-    def qrd(self):
-        """
-        Compute a fraction-free QR decomposition for
-        DDM using fflu decomposition.
-
-        Returns
-        =======
-
-        (Q, R, D)
-            Q is the orthogonal matrix.
-            R is the upper triangular matrix.
-            D is the diagonal matrix.
-
-        See Also
-        ========
-
-        qr, fflu
-        """
-        P, L, D, U = self.fflu()
-        Q = P.matmul(L)
-        R = U
-        return Q, R, D
 
     def lu_solve(a, b):
         """x where a*x = b"""

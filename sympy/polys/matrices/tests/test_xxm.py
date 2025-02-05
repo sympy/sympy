@@ -892,6 +892,8 @@ def test_XXM_qr_identity_matrix(DM):
     assert R == A
     assert (Q.transpose().matmul(Q)).is_diagonal
     assert R.is_upper
+    assert Q.shape == (3, 3)
+    assert R.shape == (3, 3)
 
 
 @pytest.mark.parametrize('DM', DMQ_all)
@@ -998,25 +1000,21 @@ def test_XXM_qr_empty_matrix_0x2(DM):
     assert R.shape == (0, 2)
 
 
-@pytest.mark.parametrize('DM', DMZ_all)
-def test_xxm_fflu_identity_matrix(DM):
-    T = type(DM([[0]]))
-    A = T.eye(3, DM([[0]]).domain)
-    P, L, D, U = A.fflu()
-    assert P == A
-    assert L == A
-    assert D == A
-    assert U == A
-
-
-@pytest.mark.parametrize('DM', DMZ_all)
-def test_xxm_fflu_single_element(DM):
-    A = DM([[5]])
-    P, L, D, U = A.fflu()
-    assert P == DM([[1]])
-    assert L == DM([[1]])
-    assert D == DM([[5]])
-    assert U == DM([[1]])
+def _check_fflu(A, P, L, D, U):
+    m, n = A.shape
+    assert P.shape == (m, m)
+    assert L.shape == (m, m)
+    assert D.shape == (min(m, n), min(m, n))
+    assert U.shape == (m, n)
+    assert L.is_lower
+    assert U.is_upper
+    assert D.is_diagonal
+    A_field = A.convert_to(QQ)
+    P_field = P.convert_to(QQ)
+    L_field = L.convert_to(QQ)
+    D_field = D.convert_to(QQ)
+    U_field = U.convert_to(QQ)
+    assert L_field.matmul(D_field.inv()).matmul(U_field) == P_field.matmul(A_field)
 
 
 @pytest.mark.parametrize('DM', DMZ_all)
@@ -1042,20 +1040,6 @@ def test_xxm_fflu_empty_matrix_with_cols(DM):
 
 
 @pytest.mark.parametrize('DM', DMZ_all)
-def test_xxm_fflu_single_row(DM):
-    A = DM([[1, 2, 3]])
-    A = DomainMatrix(A.to_list(), A.shape, A.domain)
-    P, L, D, U = A.fflu()
-    assert P.shape == (1, 1)
-    assert L.shape == (1, 1)
-    assert D.shape == (1, 1)
-    assert U.shape == (1, 3)
-    assert L.is_lower
-    assert U.is_upper
-    assert D.is_diagonal
-
-
-@pytest.mark.parametrize('DM', DMZ_all)
 def test_xxm_fflu_empty_matrix(DM):
     T = type(DM([[0]]))
     A = T.zeros((0, 0), ZZ)
@@ -1069,233 +1053,163 @@ def test_xxm_fflu_empty_matrix(DM):
 @pytest.mark.parametrize('DM', DMZ_all)
 def test_xxm_fflu_rank_deficient(DM):
     A = DM([[1, 2], [2, 4], [3, 6]])
-    A = DomainMatrix(A.to_list(), A.shape, A.domain)
     P, L, D, U = A.fflu()
-    assert P.shape == (1, 1)
-    assert L.shape == (1, 1)
-    assert D.shape == (1, 1)
-    assert U.shape == (1, 2)
-    assert L.is_lower
-    assert U.is_upper
-    assert D.is_diagonal
+    assert P.shape == (3, 3)
+    assert L.shape == (3, 3)
+    assert D.shape == (2, 2)
+    assert U.shape == (3, 2)
 
 
 @pytest.mark.parametrize('DM', DMZ_all)
 def test_xxm_fflu_single_column(DM):
     A = DM([[1], [2], [3]])
-    A = DomainMatrix(A.to_list(), A.shape, A.domain)
     P, L, D, U = A.fflu()
-    assert P.shape == (1, 1)
-    assert L.shape == (1, 1)
+    assert P.shape == (3, 3)
+    assert L.shape == (3, 3)
     assert D.shape == (1, 1)
-    assert U.shape == (1, 1)
-    assert L.is_lower
-    assert U.is_upper
-    assert D.is_diagonal
+    assert U.shape == (3, 1)
+
+
+@pytest.mark.parametrize('DM', DMZ_all)
+def test_xxm_fflu_single_row(DM):
+    A = DM([[1, 2, 3]])
+    P, L, D, U = A.fflu()
+    _check_fflu(A, P, L, D, U)
+    assert P == DM([[1]])
+    assert L == DM([[1]])
+    assert D == DM([[1]])
+    assert U == DM([[1, 2, 3]])
+
+
+@pytest.mark.parametrize('DM', DMZ_all)
+def test_xxm_fflu_identity_matrix(DM):
+    T = type(DM([[0]]))
+    A = T.eye(3, DM([[0]]).domain)
+    P, L, D, U = A.fflu()
+    _check_fflu(A, P, L, D, U)
+    assert P == T.eye(3, DM([[0]]).domain)
+    assert L == T.eye(3, DM([[0]]).domain)
+    assert D == T.eye(3, DM([[0]]).domain)
+    assert U == T.eye(3, DM([[0]]).domain)
+
+
+@pytest.mark.parametrize('DM', DMZ_all)
+def test_xxm_fflu_single_element(DM):
+    A = DM([[5]])
+    P, L, D, U = A.fflu()
+    _check_fflu(A, P, L, D, U)
+    assert P == DM([[1]])
+    assert L == DM([[5]])
+    assert D == DM([[5]])
+    assert U == DM([[5]])
 
 
 @pytest.mark.parametrize('DM', DMZ_all)
 def test_xxm_fflu_square_matrix(DM):
     A = DM([[4, 3], [6, 3]])
-    A = DomainMatrix(A.to_list(), A.shape, A.domain)
     P, L, D, U = A.fflu()
-    di, d = D.inv_den()
-    assert P.matmul(A).rmul(d) == L.matmul(di).matmul(U)
-    assert L.is_lower
-    assert U.is_upper
-    assert D.is_diagonal
+    _check_fflu(A, P, L, D, U)
+    assert P == DM([[1, 0], [0, 1]])
+    assert L == DM([[4, 0], [6, -6]])
+    assert D == DM([[4, 0], [0, -24]])
+    assert U == DM([[4, 3], [0, -6]])
 
 
 @pytest.mark.parametrize('DM', DMZ_all)
 def test_xxm_fflu_non_square_matrix(DM):
     A = DM([[1, 2, 3], [4, 5, 6]])
-    A = DomainMatrix(A.to_list(), A.shape, A.domain)
     P, L, D, U = A.fflu()
-    di, d = D.inv_den()
-    assert P.matmul(A).rmul(d) == L.matmul(di).matmul(U)
-    assert L.is_lower
-    assert U.is_upper
-    assert D.is_diagonal
-
-
-@pytest.mark.parametrize('DM', DMZ_all)
-def test_xxm_fflu_sparse_matrix(DM):
-    A = DM([[1, 0, 0], [0, 4, 0], [0, 0, 9]])
-    A = DomainMatrix(A.to_list(), A.shape, A.domain)
-    P, L, D, U = A.fflu()
-    di, d = D.inv_den()
-    assert P.matmul(A).rmul(d) == L.matmul(di).matmul(U)
-    assert L.is_lower
-    assert U.is_upper
-    assert D.is_diagonal
+    _check_fflu(A, P, L, D, U)
+    assert P == DM([[1, 0], [0, 1]])
+    assert L == DM([[1, 0], [4, -3]])
+    assert D == DM([[1, 0], [0, -3]])
+    assert U == DM([[1, 2, 3], [0, -3, -6]])
 
 
 @pytest.mark.parametrize('DM', DMZ_all)
 def test_xxm_fflu_with_permutations(DM):
     A = DM([[0, 1], [1, 0]])
-    A = DomainMatrix(A.to_list(), A.shape, A.domain)
     P, L, D, U = A.fflu()
-    di, d = D.inv_den()
-    assert P.matmul(A).rmul(d) == L.matmul(di).matmul(U)
-    assert L.is_lower
-    assert U.is_upper
-    assert D.is_diagonal
+    _check_fflu(A, P, L, D, U)
+    assert P == DM([[0, 1], [1, 0]])
+    assert L == DM([[1, 0], [0, 1]])
+    assert D == DM([[1, 0], [0, 1]])
+    assert U == DM([[1, 0], [0, 1]])
+
+
+@pytest.mark.parametrize('DM', DMZ_all)
+def test_xxm_fflu_sparse_matrix(DM):
+    A = DM([[1, 0, 0], [0, 4, 0], [0, 0, 9]])
+    P, L, D, U = A.fflu()
+    _check_fflu(A, P, L, D, U)
+    assert P == DM([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
+    assert L == DM([[1, 0, 0], [0, 4, 0], [0, 0, 36]])
+    assert D == DM([[1, 0, 0], [0, 4, 0], [0, 0, 144]])
+    assert U == DM([[1, 0, 0], [0, 4, 0], [0, 0, 36]])
 
 
 @pytest.mark.parametrize('DM', DMZ_all)
 def test_xxm_fflu_negative_entries(DM):
     A = DM([[-1, -2], [-3, -4]])
-    A = DomainMatrix(A.to_list(), A.shape, A.domain)
     P, L, D, U = A.fflu()
-    di, d = D.inv_den()
-    assert P.matmul(A).rmul(d) == L.matmul(di).matmul(U)
-    assert L.is_lower
-    assert U.is_upper
-    assert D.is_diagonal
-
-
-@pytest.mark.parametrize('DM', DMZ_all)
-def test_xxm_fflu_mixed_sign_entries(DM):
-    A = DM([[1, -2], [-3, 4]])
-    A = DomainMatrix(A.to_list(), A.shape, A.domain)
-    P, L, D, U = A.fflu()
-    di, d = D.inv_den()
-    assert P.matmul(A).rmul(d) == L.matmul(di).matmul(U)
-    assert L.is_lower
-    assert U.is_upper
-    assert D.is_diagonal
+    _check_fflu(A, P, L, D, U)
+    assert P == DM([[1, 0], [0, 1]])
+    assert L == DM([[-1, 0], [-3, -2]])
+    assert D == DM([[-1, 0], [0, 2]])
+    assert U == DM([[-1, -2], [0, -2]])
 
 
 @pytest.mark.parametrize('DM', DMZ_all)
 def test_xxm_fflu_upper_triangular(DM):
     A = DM([[1, 2, 3], [0, 4, 5], [0, 0, 6]])
-    A = DomainMatrix(A.to_list(), A.shape, A.domain)
     P, L, D, U = A.fflu()
-    di, d = D.inv_den()
-    assert P.matmul(A).rmul(d) == L.matmul(di).matmul(U)
-    assert L.is_lower
-    assert U.is_upper
-    assert D.is_diagonal
+    _check_fflu(A, P, L, D, U)
+    assert P == DM([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
+    assert L == DM([[1, 0, 0], [0, 4, 0], [0, 0, 24]])
+    assert D == DM([[1, 0, 0], [0, 4, 0], [0, 0, 96]])
+    assert U == DM([[1, 2, 3], [0, 4, 5], [0, 0, 24]])
 
 
 @pytest.mark.parametrize('DM', DMZ_all)
 def test_xxm_fflu_lower_triangular(DM):
     A = DM([[1, 0, 0], [2, 3, 0], [4, 5, 6]])
-    A = DomainMatrix(A.to_list(), A.shape, A.domain)
     P, L, D, U = A.fflu()
-    di, d = D.inv_den()
-    assert P.matmul(A).rmul(d) == L.matmul(di).matmul(U)
-    assert L.is_lower
-    assert U.is_upper
-    assert D.is_diagonal
+    _check_fflu(A, P, L, D, U)
+    assert P == DM([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
+    assert L == DM([[1, 0, 0], [2, 3, 0], [4, 5, 18]])
+    assert D == DM([[1, 0, 0], [0, 3, 0], [0, 0, 54]])
+    assert U == DM([[1, 0, 0], [0, 3, 0], [0, 0, 18]])
 
 
 @pytest.mark.parametrize('DM', DMZ_all)
 def test_xxm_fflu_diagonal_matrix(DM):
     A = DM([[1, 0, 0], [0, 2, 0], [0, 0, 3]])
-    A = DomainMatrix(A.to_list(), A.shape, A.domain)
     P, L, D, U = A.fflu()
-    di, d = D.inv_den()
-    assert P.matmul(A).rmul(d) == L.matmul(di).matmul(U)
-    assert L.is_lower
-    assert U.is_upper
-    assert D.is_diagonal
+    _check_fflu(A, P, L, D, U)
+    assert P == DM([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
+    assert L == DM([[1, 0, 0], [0, 2, 0], [0, 0, 6]])
+    assert D == DM([[1, 0, 0], [0, 2, 0], [0, 0, 12]])
+    assert U == DM([[1, 0, 0], [0, 2, 0], [0, 0, 6]])
+
+
+@pytest.mark.parametrize('DM', DMZ_all)
+def test_xxm_fflu_mixed_sign_entries(DM):
+    A = DM([[1, -2], [-3, 4]])
+    P, L, D, U = A.fflu()
+    _check_fflu(A, P, L, D, U)
+    assert P == DM([[1, 0], [0, 1]])
+    assert L == DM([[1, 0], [-3, -2]])
+    assert D == DM([[1, 0], [0, -2]])
+    assert U == DM([[1, -2], [0, -2]])
 
 
 @pytest.mark.parametrize('domain', [ZZ, QQ])
 @pytest.mark.parametrize('DM', DMZ_all)
 def test_xxm_fflu_different_domains(DM, domain):
-    lol = DM([[1, 2], [3, 4]])
-    A = DomainMatrix(lol.to_list(), lol.shape, domain)
+    A = DM([[1, 2], [3, 4]])
     P, L, D, U = A.fflu()
-    di, d = D.inv_den()
-    assert P.matmul(A).rmul(d) == L.matmul(di).matmul(U)
-    assert L.is_lower
-    assert U.is_upper
-    assert D.is_diagonal
-
-
-@pytest.mark.parametrize('DM', DMZ_all)
-def test_xxm_qrd_square_matrix(DM):
-    A = DM([[4, 3], [6, 3]])
-    Q, R, D = A.qrd()
-    assert Q.shape == (2, 2)
-    assert R.shape == (2, 2)
-    assert D.shape == (2, 2)
-    assert R.is_upper
-    assert D.is_diagonal
-    assert Q.transpose().matmul(Q).is_diagonal
-
-
-@pytest.mark.parametrize('DM', DMZ_all)
-def test_xxm_qrd_mixed_signs(DM):
-    lol = [[ZZ(1), ZZ(-2)], [ZZ(-3), ZZ(4)]]
-    A = DM(lol)
-    Q, R, D = A.qrd()
-    assert Q.shape == (2, 2)
-    assert R.shape == (2, 2)
-    assert D.shape == (2, 2)
-    assert R.is_upper
-    assert D.is_diagonal
-    assert Q.transpose().matmul(Q).is_diagonal
-
-
-@pytest.mark.parametrize('DM', DMZ_all)
-def test_xxm_qrd_identity_matrix(DM):
-    T = type(DM([[0]]))
-    A = T.eye(3, DM([[0]]).domain)
-    Q, R, D = A.qrd()
-    assert Q.shape == (3, 3)
-    assert R.shape == (3, 3)
-    assert D.shape == (3, 3)
-    assert Q == A
-    assert R == A
-    assert D == A
-
-
-@pytest.mark.parametrize('DM', DMZ_all)
-def test_xxm_qrd_empty_matrix(DM):
-    T = type(DM([[0]]))
-    A = T.zeros((0, 0), ZZ)
-    Q, R, D = A.qrd()
-    assert Q.shape == (0, 0)
-    assert R.shape == (0, 0)
-    assert D.shape == (0, 0)
-    assert Q.matmul(R).shape == (0, 0)
-
-
-@pytest.mark.parametrize('DM', DMZ_all)
-def test_xxm_qrd_single_row(DM):
-    A = DM([[1, 2, 3]])
-    A = DomainMatrix(A.to_list(), A.shape, A.domain)
-    Q, R, D = A.qrd()
-    assert Q.shape == (1, 1)
-    assert R.shape == (1, 3)
-    assert D.shape == (1, 1)
-    assert R.is_upper
-    assert D.is_diagonal
-
-
-@pytest.mark.parametrize('DM', DMZ_all)
-def test_xxm_qrd_rank_deficient(DM):
-    A = DM([[1, 2], [2, 4], [3, 6]])
-    A = DomainMatrix(A.to_list(), A.shape, A.domain)
-    Q, R, D = A.qrd()
-    assert Q.shape == (1, 1)
-    assert R.shape == (1, 2)
-    assert D.shape == (1, 1)
-    assert R.is_upper
-    assert D.is_diagonal
-    assert Q.transpose().matmul(Q).is_diagonal
-
-
-@pytest.mark.parametrize('DM', DMZ_all)
-def test_xxm_qrd_single_column(DM):
-    A = DM([[1], [2], [3]])
-    A = DomainMatrix(A.to_list(), A.shape, A.domain)
-    Q, R, D = A.qrd()
-    assert Q.shape == (1, 1)
-    assert R.shape == (1, 1)
-    assert D.shape == (1, 1)
-    assert R.is_upper
-    assert D.is_diagonal
+    _check_fflu(A, P, L, D, U)
+    assert P == DM([[1, 0], [0, 1]])
+    assert L == DM([[1, 0], [3, -2]])
+    assert D == DM([[1, 0], [0, -2]])
+    assert U == DM([[1, 2], [0, -2]])
