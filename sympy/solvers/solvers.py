@@ -3064,6 +3064,13 @@ def nsolve(*args, dict=False, **kwargs):
             raise ValueError(filldedent('''
                 expected a one-dimensional and numerical function'''))
 
+        # Check if the equation simplifies to a tautology or contradiction
+        simplified_eq = f.simplify()
+        if simplified_eq == True:
+            raise ValueError("The equation is always true (a tautology).")
+        elif simplified_eq == False:
+            raise ValueError("The equation has no solution (a contradiction).")
+
         # the function is much better behaved if there is no denominator
         # but sending the numerator is left to the user since sometimes
         # the function is better behaved when the denominator is present
