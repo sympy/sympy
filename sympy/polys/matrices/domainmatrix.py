@@ -3447,7 +3447,7 @@ class DomainMatrix:
         >>> D
         DomainMatrix([[1, 0], [0, -2]], (2, 2), ZZ)
         >>> U
-        DomainMatrix([[1, 2], [0, 0]], (2, 2), ZZ)
+        DomainMatrix([[1, 2], [0, -2]], (2, 2), ZZ)
         >>> L.is_lower and U.is_upper and D.is_diagonal
         True
         >>> L * D.to_field().inv() * U == P * A.to_field()
