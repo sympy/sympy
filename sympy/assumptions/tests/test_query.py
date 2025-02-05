@@ -1379,6 +1379,15 @@ def test_rational():
         assert ask(Q.rational(h(7, evaluate=False))) is False
         assert ask(Q.rational(h(x)), Q.rational(x)) is False
 
+    #https://github.com/sympy/sympy/issues/27442
+    assert ask(Q.rational(x**y),Q.irrational(x) & Q.rational(y)) is False
+    assert ask(Q.rational(x**y),Q.integer(x) & Q.prime(x) & Q.rational(y)) is False
+    assert ask(Q.rational(x**y),Q.integer(x) & Q.integer(y)) is None
+    assert ask(Q.rational(x**y),Q.integer(x) & Q.eq(x,0) & Q.integer(y)) is None
+    assert ask(Q.rational(x**y),Q.integer(x) & Q.eq(x,0) & Q.integer(y) & Q.positive(y)) is True
+    assert ask(Q.rational(x**y),Q.eq(x,1) & Q.rational(y)) is True
+    assert ask(Q.rational(x**y),Q.eq(x,-1) & Q.rational(y)) is True
+
 
 def test_hermitian():
     assert ask(Q.hermitian(x)) is None
