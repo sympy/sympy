@@ -3059,7 +3059,10 @@ def nsolve(*args, dict=False, **kwargs):
             raise TypeError('nsolve cannot accept inequalities')
         syms = f.free_symbols
         if fargs is None:
-            fargs = syms.copy().pop()
+            if syms:
+                fargs = syms.pop()
+            else:
+                raise ValueError('No free symbols to solve for')
         if not (len(syms) == 1 and (fargs in syms or fargs[0] in syms)):
             raise ValueError(filldedent('''
                 expected a one-dimensional and numerical function'''))
