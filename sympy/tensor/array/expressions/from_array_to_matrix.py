@@ -25,28 +25,35 @@ from sympy.tensor.array.expressions.array_expressions import PermuteDims, ArrayD
 from sympy.tensor.array.expressions.utils import _get_mapping_from_subranks
 
 
-def _get_candidate_for_matmul_from_contraction(scan_indices: List[Optional[int]], remaining_args: List[_ArgE]) -> tTuple[Optional[_ArgE], bool, int]:
-
+def _get_candidate_for_matmul_from_contraction(
+    scan_indices: List[Optional[int]], remaining_args: List[_ArgE]
+) -> tTuple[Optional[_ArgE], bool, int]:
+    # Filter out None values from scan_indices
     scan_indices_int: List[int] = [i for i in scan_indices if i is not None]
+
     if len(scan_indices_int) == 0:
         return None, False, -1
 
     transpose: bool = False
     candidate: Optional[_ArgE] = None
     candidate_index: int = -1
+
     for arg_with_ind2 in remaining_args:
         if not isinstance(arg_with_ind2.element, MatrixExpr):
             continue
+
         for index in scan_indices_int:
             if candidate_index != -1 and candidate_index != index:
                 # A candidate index has already been selected, check
                 # repetitions only for that index:
                 continue
+
             if index in arg_with_ind2.indices:
                 if set(arg_with_ind2.indices) == {index}:
                     # Index repeated twice in arg_with_ind2
                     candidate = None
                     break
+
                 if candidate is None:
                     candidate = arg_with_ind2
                     candidate_index = index
@@ -55,6 +62,7 @@ def _get_candidate_for_matmul_from_contraction(scan_indices: List[Optional[int]]
                     # Index repeated more than twice, break
                     candidate = None
                     break
+
     return candidate, transpose, candidate_index
 
 
