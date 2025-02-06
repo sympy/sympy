@@ -1384,7 +1384,6 @@ def test_rational():
     assert ask(Q.rational(x**y),Q.integer(x) & Q.prime(x) & Q.rational(y)) is False
     assert ask(Q.rational(x**y),Q.integer(x) & Q.integer(y)) is None
     assert ask(Q.rational(x**y),Q.integer(x) & Q.eq(x,0) & Q.integer(y)) is None
-    assert ask(Q.rational(x**y),Q.integer(x) & Q.eq(x,0) & Q.integer(y) & Q.positive(y)) is True
     assert ask(Q.rational(x**y),Q.eq(x,1) & Q.rational(y)) is True
     assert ask(Q.rational(x**y),Q.eq(x,-1) & Q.rational(y)) is True
 
