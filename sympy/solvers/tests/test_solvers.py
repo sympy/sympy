@@ -2734,8 +2734,8 @@ def test_issue_23834():
     expected_sol3 = [{a: -1, b: 0}, {a: 1, b: 0}]
     assert sol3 == expected_sol3
 
-    # Test case 4: Using dict=True
-    eq4 = a*x - 2*x
-    sol4 = solve_undetermined_coeffs(eq4, [a], dict=True)
-    expected_sol4 = [{a: 2}]
-    assert sol4 == expected_sol4
+    # Test case 4: Coefficients on different generators
+    eq4 = cos(x)*a - 2*cos(x) + b*x - 3*x
+    sol5 = solve_undetermined_coeffs(eq4, (a, b), x)
+    expected_sol5 = {a: 2, b: 3}
+    assert sol5 == expected_sol5
