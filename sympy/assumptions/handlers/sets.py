@@ -163,7 +163,7 @@ def _(expr, assumptions):
             return False
         if ask(Q.eq(expr.base,1) | Q.eq(expr.base,-1)):
             return True
-        if ask(Q.eq(expr.base,0)) & ask(Q.positive(expr.exp)) is True:
+        if ask(Q.eq(expr.base,0)) and ask(Q.positive(expr.exp)) is True:
             return True
 
 @RationalPredicate.register_many(asin, atan, cos, sin, tan)
