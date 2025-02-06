@@ -2712,3 +2712,6 @@ def test_solve_Piecewise():
         (46*x - 3*(x - 6)**2/2 - 276, (x >= 6) & (x < 10)),
         (0, x < 10),  # this will simplify away
         (S.NaN,True)))
+
+def test_issue_8397():
+    assert nsolve(Eq(-x - 1, -x + 1), 10) == False
