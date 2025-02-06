@@ -18,3 +18,5 @@ include AUTHORS
 include README.md
 include bin/isympy
 exclude MANIFEST.in
+include sorted_mailmap
+
