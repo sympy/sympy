@@ -3059,17 +3059,22 @@ def nsolve(*args, dict=False, **kwargs):
             raise TypeError('nsolve cannot accept inequalities')
         syms = f.free_symbols
         if fargs is None:
+            if not syms:
+                if f == 0:
+                    return [] if as_dict else None
+                else:
+                    return False
             fargs = syms.copy().pop()
         if not (len(syms) == 1 and (fargs in syms or fargs[0] in syms)):
             raise ValueError(filldedent('''
                 expected a one-dimensional and numerical function'''))
 
         # Check if the equation simplifies to a tautology or contradiction
-        simplified_eq = f.simplify()
-        if simplified_eq == True:
-            raise ValueError("The equation is always true (a tautology).")
-        elif simplified_eq == False:
-            raise ValueError("The equation has no solution (a contradiction).")
+        # simplified_eq = f.simplify()
+        # if simplified_eq == True:
+        #     raise ValueError("The equation is always true (a tautology).")
+        # elif simplified_eq == False:
+        #     raise ValueError("The equation has no solution (a contradiction).")
 
         # the function is much better behaved if there is no denominator
         # but sending the numerator is left to the user since sometimes
