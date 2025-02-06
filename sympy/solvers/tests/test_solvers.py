@@ -2712,3 +2712,30 @@ def test_solve_Piecewise():
         (46*x - 3*(x - 6)**2/2 - 276, (x >= 6) & (x < 10)),
         (0, x < 10),  # this will simplify away
         (S.NaN,True)))
+
+def test_issue_23834():
+    # Define symbols
+    x, h, p, k, a, b, c = symbols('x h p k a b c')
+
+    # Test case 1: Linear system
+    eq1 = a*x + a + b - x/2
+    sol1 = solve_undetermined_coeffs(eq1, [a, b], x)
+    assert sol1 == {a: 1/2, b: -1/2}
+
+    # Test case 2: Nonlinear system
+    eq2 = a*x**2 + b*x + c - ((x - h)**2 + 4*p*k)/4/p
+    sol2 = solve_undetermined_coeffs(eq2, (h, p, k), x)
+    expected_sol2 = {h: -b/(2*a), k: (4*a*c - b**2)/(4*a), p: 1/(4*a)}
+    assert sol2 == expected_sol2
+
+    # Test case 3: Multiple solutions
+    eq3 = a**2*x + b - x
+    sol3 = solve_undetermined_coeffs(eq3, [a, b], x)
+    expected_sol3 = [{a: -1, b: 0}, {a: 1, b: 0}]
+    assert sol3 == expected_sol3
+
+    # Test case 4: Using dict=True
+    eq4 = a*x - 2*x
+    sol4 = solve_undetermined_coeffs(eq4, [a], dict=True)
+    expected_sol4 = [{a: 2}]
+    assert sol4 == expected_sol4

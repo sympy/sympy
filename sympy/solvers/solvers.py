@@ -2427,18 +2427,10 @@ def solve_undetermined_coeffs(equ, coeffs, *syms, **flags):
         return ([], {}) if flags.get('set', None) else []  # solve(0, x) -> []
 
     if not syms:
-        # e.g. A*exp(x) + B - (exp(x) + y) separated into parts that
-        # don't/do depend on coeffs gives
-        # -(exp(x) + y), A*exp(x) + B
-        # then see what symbols are common to both
-        # {x} = {x, A, B} - {x, y}
         ind, dep = xeq.as_independent(*coeffs, as_Add=True)
         dfree = dep.free_symbols
         syms = dfree & ind.free_symbols
         if not syms:
-            # but if the system looks like (a + b)*x + b - c
-            # then {} = {a, b, x} - c
-            # so calculate {x} = {a, b, x} - {a, b}
             syms = dfree - set(coeffs)
         if not syms:
             syms = [Dummy()]
@@ -2449,27 +2441,17 @@ def solve_undetermined_coeffs(equ, coeffs, *syms, **flags):
         xeq = e[0]
         syms = s
 
-    # find the functional forms in which symbols appear
-
     gens = set(xeq.as_coefficients_dict(*syms).keys()) - {1}
     cset = set(coeffs)
     if any(g.has_xfree(cset) for g in gens):
         return  # a generator contained a coefficient symbol
 
-    # make sure we are working with symbols for generators
-
     e, gens, _ = recast_to_symbols([xeq], list(gens))
     xeq = e[0]
 
-    # collect coefficients in front of generators
-
     system = list(collect(xeq, gens, evaluate=False).values())
 
-    # get a solution
-
     soln = solve(system, coeffs, **flags)
-
-    # unpack unless told otherwise if length is 1
 
     settings = flags.get('dict', None) or flags.get('set', None)
     if type(soln) is dict or settings or len(soln) != 1:
