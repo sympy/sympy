@@ -1345,8 +1345,8 @@ def test_rational():
     assert ask(Q.rational(1/x), Q.irrational(x)) is False
 
     assert ask(Q.rational(2/x), Q.rational(x)) is None
-    assert ask(Q.rational(2/x), Q.integer(x)) is True
-    assert ask(Q.rational(2/x), Q.even(x)) is True
+    assert ask(Q.rational(2/x), Q.integer(x)) is None
+    assert ask(Q.rational(2/x), Q.even(x)) is None
     assert ask(Q.rational(2/x), Q.odd(x)) is True
     assert ask(Q.rational(2/x), Q.irrational(x)) is False
 
