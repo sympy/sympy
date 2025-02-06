@@ -3059,6 +3059,11 @@ def nsolve(*args, dict=False, **kwargs):
             raise TypeError('nsolve cannot accept inequalities')
         syms = f.free_symbols
         if fargs is None:
+            if not syms:
+                if f == 0:
+                    return [] if as_dict else None
+                else:
+                    return False
             fargs = syms.copy().pop()
         if not (len(syms) == 1 and (fargs in syms or fargs[0] in syms)):
             raise ValueError(filldedent('''
