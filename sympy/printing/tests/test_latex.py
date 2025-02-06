@@ -3161,19 +3161,19 @@ def test_simple_unit_fraction():
     expr = 1.0 * kg / minute / second
     assert latex(expr) == r"\frac{1.0 \text{kg}}{\text{minute} \text{s}}"
     assert latex(expr, mul_symbol="dot") == r"\frac{1.0 \cdot \text{kg}}{\text{minute} \cdot \text{s}}"
-    assert latex(expr, mul_symbol=r"\\, ") == r"\frac{1.0\\, \text{kg}}{\text{minute}\\, \text{s}}"
+    assert latex(expr, mul_symbol=r"\, ") == r"\frac{1.0\, \text{kg}}{\text{minute}\, \text{s}}"
 
 def test_units_with_addition():
     expr = 1.0 * kg / (4 + minute * second)
     assert latex(expr) == r"\frac{1.0 \text{kg}}{\text{minute} \text{s} + 4}"
     assert latex(expr, mul_symbol="dot") == r"\frac{1.0 \cdot \text{kg}}{\text{minute} \cdot \text{s} + 4}"
-    assert latex(expr, mul_symbol=r"\\, ") == r"\frac{1.0\\, \text{kg}}{\text{minute}\\, \text{s} + 4}"
+    assert latex(expr, mul_symbol=r"\, ") == r"\frac{1.0\, \text{kg}}{\text{minute}\, \text{s} + 4}"
 
 def test_units_with_powers():
     expr = 1.0 * kg / (minute * minute * second)
     assert latex(expr) == r"\frac{1.0 \text{kg}}{\text{minute}^{2} \text{s}}"
     assert latex(expr, mul_symbol="dot") == r"\frac{1.0 \cdot \text{kg}}{\text{minute}^{2} \cdot \text{s}}"
-    assert latex(expr, mul_symbol=r"\\, ") == r"\frac{1.0\\, \text{kg}}{\text{minute}^{2}\\, \text{s}}"
+    assert latex(expr, mul_symbol=r"\, ") == r"\frac{1.0\, \text{kg}}{\text{minute}^{2}\, \text{s}}"
 
 def test_units_different_order():
     expr = 1.0 * kg / (second * second * minute)
