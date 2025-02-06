@@ -19,6 +19,7 @@ from sympy.core.singleton import S
 from sympy.core.sorting import default_sort_key
 from sympy.core.symbol import Dummy, Symbol
 from sympy.core.sympify import sympify
+from sympy.functions.elementary.complexes import conjugate
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.matrices.dense import zeros
@@ -139,6 +140,8 @@ class Dagger(Expr):
         dagger = getattr(arg, '_dagger_', None)
         if dagger is not None:
             return dagger()
+        if isinstance(arg, Symbol) and arg.is_commutative:
+            return conjugate(arg)
         if isinstance(arg, Basic):
             if arg.is_Add:
                 return Add(*tuple(map(Dagger, arg.args)))
@@ -150,6 +153,9 @@ class Dagger(Expr):
                 return Pow(Dagger(arg.args[0]), arg.args[1])
             if arg == I:
                 return -arg
+        if isinstance(arg, Function):
+            if all(a.is_commutative for a in arg.args):
+                return arg.func(*[Dagger(a) for a in arg.args])
         else:
             return None
 
