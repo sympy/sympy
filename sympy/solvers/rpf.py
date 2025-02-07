@@ -23,6 +23,25 @@ def inverse_function(expr, var):
 def induction(expr, var):
     return sympy.rsolve(expr.subs(var, expression_iterate(iteration_counter - 1)) - expression_iterate(iteration_counter), expression_iterate(iteration_counter), [var])
 
+def after_induction(expr, induced_expr, k, result_var, func_var):
+    expr = expr.subs(result_var, expression_iterate(iteration_counter - 1)).subs(func_var, induced_expr.subs(iteration_counter, k - iteration_counter))
+
+    try:
+        return sympy.rsolve(expr.subs(result_var, expression_iterate(iteration_counter - 1)).subs(func_var, induced_expr.subs(iteration_counter, k - iteration_counter)) - expression_iterate(iteration_counter), expression_iterate(iteration_counter), [result_var])
+    except (NotImplementedError, ValueError):
+        x = sympy.Wild("x")
+        y = sympy.Wild("y")
+
+        match = expr.match(expression_iterate(x) + y)
+        if match:
+            return sympy.Sum(match[y], (iteration_counter, 1, k))
+
+        match = expr.match(expression_iterate(x) * y)
+        if match:
+            return sympy.Product(match[y], (iteration_counter, 1, k))
+
+        raise NotImplementedError
+
 def decontextualize_conditions(piecewise):
     pairs = []
     precondition = sympy.true
@@ -133,9 +152,13 @@ class RPFMode(Enum):
 
 def rpf(piecewise, func, mode):
     if len(func.args) > 1:
-        return piecewise
+        if mode is RPFMode.SIMPLIFY:
+            return piecewise
+        else:
+            raise NotImplementedError
 
     piecewise = sympy.simplify(piecewise)
+    var = func.args[0]
     func = func.func
 
     new_pairs = []
@@ -144,7 +167,6 @@ def rpf(piecewise, func, mode):
     for pair in decontextualize_conditions(piecewise):
         if pair not in exit_points:
             try:
-                var = tuple(pair[0].free_symbols)[0]
                 for exit_point in exit_points:
                     expr, after = transform_nonexit_term(pair[0], func)
                     if sympy.ask(sympy.simplify(sympy.Or(pair[1].subs(var, expr), exit_point[1].subs(var, expr))), sympy.simplify(pair[1])) is True:
@@ -152,7 +174,7 @@ def rpf(piecewise, func, mode):
                         k = solve_k(induction(expr, var), var, exit_point[1])
                         new_expr = induced_expr.subs(iteration_counter, k)
 
-                        induced_after = induction(after, result2)
+                        induced_after = after_induction(after, induced_expr, k, result2, var)
                         new_pairs.append((induced_after.subs(result2, exit_point[0].subs(var, new_expr)).subs(iteration_counter, k), sympy.And(pair[1], exit_point[1].subs(var, new_expr))))
                         break
                 else:
