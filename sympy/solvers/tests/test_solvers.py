@@ -2718,4 +2718,3 @@ def test_issue_8397():
         nsolve(Eq(-x - 1, -x + 1), 10)  # Attempt to solve a contradiction
     except ValueError as e:
         assert str(e) == "the equation has no solution"
-
