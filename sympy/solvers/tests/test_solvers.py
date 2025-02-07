@@ -49,8 +49,8 @@ def NS(e, n=15, **options):
 
 
 def test_swap_back():
-    fx, gx = symbols('fx gx')
-    f = Function('f')
+    f, g = map(Function, 'fg')
+    fx, gx = f(x), g(x)
     assert solve([fx + y - 2, fx - gx - 5], fx, y, gx) == \
         {fx: gx + 5, y: -gx - 3}
     assert solve(fx + gx*x - 2, [fx, gx], dict=True) == [{fx: 2, gx: 0}]
@@ -117,7 +117,6 @@ def test_guess_transcendental():
 
 
 def test_solve_args():
-    a, b = symbols('a b')
     # equation container, issue 5113
     ans = {x: -3, y: 1}
     eqs = (x + 5*y - 2, -3*x + 6*y - 15)
@@ -2721,7 +2720,7 @@ def test_issue_23834():
     # Test case 1: Linear system
     eq1 = a*x + a + b - x/2
     sol1 = solve_undetermined_coeffs(eq1, [a, b], x)
-    assert sol1 == {a: Rational(1, 2), b: Rational(-1, 2)}
+    assert sol1 == {a: 1/2, b: -1/2}
 
     # Test case 2: Nonlinear system
     eq2 = a*x**2 + b*x + c - ((x - h)**2 + 4*p*k)/4/p
