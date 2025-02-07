@@ -686,6 +686,14 @@ class CmathPrinter(PythonCodePrinter):
 
     def _print_known_const(self, expr):
         return self._kc[expr.__class__.__name__]
+    
+    def _print_re(self, expr):
+        """Prints `re(z)` as `z.real`"""
+        return f"({self._print(expr.args[0])}).real"
+
+    def _print_im(self, expr):
+        """Prints `im(z)` as `z.imag`"""
+        return f"({self._print(expr.args[0])}).imag"
 
 
 for k in CmathPrinter._kf:
