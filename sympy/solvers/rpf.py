@@ -21,7 +21,8 @@ def induction(expr, var):
     return sympy.rsolve(expr.subs(var, expression_iterate(iteration_counter - 1)) - expression_iterate(iteration_counter), expression_iterate(iteration_counter), [var])
 
 def decontextualize_conditions(piecewise):
-    pairs = list()
+    pairs = []
+
     precondition = sympy.true
     for pair in piecewise.args:
         pairs.append((pair[0], sympy.simplify(sympy.And(pair[1], precondition))))
@@ -118,7 +119,7 @@ def rpf(piecewise, func, mode):
     piecewise = sympy.simplify(piecewise)
     func = func.func
 
-    new_pairs = list()
+    new_pairs = []
     exit_points = get_exit_points(piecewise, func)
 
     for pair in decontextualize_conditions(piecewise):
