@@ -49,7 +49,7 @@ def NS(e, n=15, **options):
 
 
 def test_swap_back():
-    fx, gx, x, y = symbols('fx gx x y')
+    fx, gx = symbols('fx gx')
     f = Function('f')
     assert solve([fx + y - 2, fx - gx - 5], fx, y, gx) == \
         {fx: gx + 5, y: -gx - 3}
