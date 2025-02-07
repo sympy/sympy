@@ -14,6 +14,9 @@ expression_iterate = DummyFunction("expression_iterate")
 iteration_counter = sympy.Dummy("iteration_counter")
 k_symbol = sympy.Dummy("k")
 
+x = sympy.Dummy("x")
+open_ceiling = sympy.Lambda((x), sympy.Piecewise((x + 1, sympy.Equality(sympy.frac(x), 0)), (sympy.ceiling(x), sympy.true)))
+
 def inverse_function(expr, var):
     return sympy.solveset(expr - result, var)
 
@@ -43,11 +46,12 @@ def __solve_k(expr, var, condition):
     result = sympy.solveset(condition.subs(var, expr), iteration_counter, domain=sympy.Integers)
     if isinstance(result, sympy.FiniteSet):
         assert len(result) == 1
-        return tuple(result)[0]
+        return tuple(result)[0], sympy.ceiling
     elif isinstance(result, sympy.ImageSet):
-        return result.lamda(k_symbol)
+        return result.lamda(k_symbol), sympy.ceiling
     elif isinstance(result, sympy.ConditionSet):
         result = result.condition
+        ceiling_func = sympy.ceiling
 
         if isinstance(result, sympy.And):
             exprs = result.args
@@ -59,15 +63,17 @@ def __solve_k(expr, var, condition):
             if isinstance(expr, (sympy.LessThan, sympy.StrictLessThan)):
                 pass
             elif isinstance(expr, sympy.GreaterThan):
-                value = sympy.ceiling(expr.rhs)
+                value = expr.rhs
+                ceiling_func = sympy.ceiling
             elif isinstance(expr, sympy.StrictGreaterThan):
-                value = sympy.Piecewise((expr.rhs + 1, sympy.Equality(sympy.frac(expr.rhs), 0)), (sympy.ceiling(expr.rhs), sympy.true))
+                value = expr.rhs
+                ceiling_func = open_ceiling
             elif isinstance(expr, sympy.Equality):
                 value = expr.rhs
             else:
                 raise NotImplementedError
 
-        return value
+        return value, ceiling_func
     elif isinstance(result, (sympy.Interval, sympy.Intersection)):
         if isinstance(result, sympy.Intersection):
             result = list(result.args)
@@ -80,16 +86,18 @@ def __solve_k(expr, var, condition):
             else:
                 raise NotImplementedError
 
-        return result.left
+        return result.left, open_ceiling if result.left_open else sympy.ceiling
     else:
         raise NotImplementedError
 
 def _solve_k(expr, var, conditions):
     if isinstance(conditions, sympy.And):
         value = sympy.sympify(0)
-        for subcondition in map(partial(_solve_k, expr, var), conditions.args):
+        previous_ceiling_func = sympy.ceiling
+        for index, (subcondition, ceiling_func) in enumerate(map(partial(_solve_k, expr, var), conditions.args)):
             if subcondition.has(k_symbol):
                 value, subcondition = subcondition, value
+                ceiling_func, previous_ceiling_func = previous_ceiling_func, ceiling_func
 
             if value.has(k_symbol):
                 inverse = inverse_function(value, k_symbol)
@@ -99,20 +107,25 @@ def _solve_k(expr, var, conditions):
                     inverse = tuple(inverse)[0]
 
                 inverse = inverse.subs(result, subcondition)
-                value = value.subs(k_symbol, sympy.Max(sympy.ceiling(inverse), 0))
+                value = value.subs(k_symbol, sympy.Max(ceiling_func(inverse), 0))
             elif value == 0:
                 value = subcondition
             else:
                 value = sympy.Max(value, subcondition)
+                previous_ceiling_func = previous_ceiling_func(ceiling_func)
 
-        return value.subs(k_symbol, 0)
+            if index != len(conditions.args) - 1:
+                previous_ceiling_func = ceiling_func
+
+        return value.subs(k_symbol, 0), previous_ceiling_func
     elif isinstance(conditions, sympy.Or):
-        return sympy.Min(*map(partial(_solve_k, expr, var), conditions.args)).subs(k_symbol, 0)
+        return sympy.Min(*map(lambda expr, ceiling_func: ceiling_func(expr.subs(k_symbol, 0)), map(partial(_solve_k, expr, var), conditions.args))), sympy.ceiling
     else:
         return __solve_k(expr, var, conditions)
 
 def solve_k(expr, var, conditions):
-    return sympy.ceiling(_solve_k(expr, var, conditions).subs(k_symbol, 0))
+    expr, ceiling_func = _solve_k(expr, var, conditions)
+    return ceiling_func(expr.subs(k_symbol, 0))
 
 class RPFMode(Enum):
     SIMPLIFY = 1
