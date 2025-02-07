@@ -159,7 +159,7 @@ def rpfsolve(piecewise, func):
     Parameters
     ==========
 
-    piecewise : Expr or a relational.
+    piecewise : Piecewise
         The target piecewise
     func : Function
         The name and parameters of the function
