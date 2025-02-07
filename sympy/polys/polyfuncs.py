@@ -319,3 +319,42 @@ def viete(f, roots=None, *gens, **args):
         sign = -sign
 
     return result
+
+
+def viete_expansion(cons):
+    """
+    Return coefficients of prod(x+i for i in cons).expand()
+    with the coefficient of x**n (with n = len(roots)) appearing
+    first.
+
+    Given a list of constants `[c_1, c_2, ..., c_n]`, this function returns the
+    coefficients of the monic polynomial `(x + c_1)(x + c_2)...(x + c_n)` in
+    the form `[a_n, a_{n-1}, ..., a_0]` where the polynomial is
+    `a_n x^n + a_{n-1} x^{n-1} + ... + a_0`.
+
+    cons : list of Expr
+        The constants `c_i` in the factors `(x + c_i)`.
+
+    list of Expr
+        The coefficients of the expanded polynomial, starting with the leading
+        coefficient (which is 1 for a monic polynomial) down to the constant term.
+
+    Examples
+    ========
+
+    >>> from sympy.polys.polyfuncs import viete_expansion
+    >>> from sympy import Rational
+    >>> viete_expansion([Rational(7,2), Rational(15,3)])
+    [1, 17/2, 35/2]
+    >>> from sympy.abc import a, b
+    >>> viete_expansion([a, b])
+    [1, a + b, a*b]
+
+    """
+    n = len(cons)
+    coeffs = [0]*(n + 1)
+    coeffs[0] = 1
+    for i in range(n):
+        for j in range(i + 1, 0, -1):
+            coeffs[j] += cons[i] * coeffs[j - 1]
+    return coeffs
