@@ -3063,7 +3063,7 @@ def nsolve(*args, dict=False, **kwargs):
                 if f == 0:
                     return [] if as_dict else None
                 else:
-                    return False
+                    raise ValueError("the equation has no solution")
             fargs = syms.copy().pop()
         if not (len(syms) == 1 and (fargs in syms or fargs[0] in syms)):
             raise ValueError(filldedent('''
