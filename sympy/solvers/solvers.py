@@ -12,7 +12,7 @@ This module contain solvers for all kinds of equations:
 
 """
 from __future__ import annotations
-from sympy import symbols
+
 from sympy.core import (S, Add, Symbol, Dummy, Expr, Mul)
 from sympy.core.assumptions import check_assumptions
 from sympy.core.exprtools import factor_terms
@@ -456,7 +456,6 @@ def solve(f, *symbols, **flags):
     is returned. If you want an algebraic solutions for one
     or more of the symbols, pass the expression to be solved in a list:
 
-        >>> a, b, x = symbols('a b x')
         >>> e = a*x + b - 2*x - 3
         >>> solve(e, [a, b])
         {a: 2, b: 3}
