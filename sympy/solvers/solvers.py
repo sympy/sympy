@@ -2451,6 +2451,7 @@ def solve_undetermined_coeffs(equ, coeffs, *syms, **flags):
         syms = s
 
     # find the functional forms in which symbols appear
+
     gens = set(xeq.as_coefficients_dict(*syms).keys()) - {1}
     cset = set(coeffs)
     if any(g.has_xfree(cset) for g in gens):
@@ -2460,9 +2461,11 @@ def solve_undetermined_coeffs(equ, coeffs, *syms, **flags):
     xeq = e[0]
 
     # collect coefficients in front of generators
+
     system = list(collect(xeq, gens, evaluate=False).values())
 
     # get a solution
+
     soln = solve(system, coeffs, **flags)
 
     # Handle output format
