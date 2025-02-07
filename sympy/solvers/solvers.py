@@ -12,7 +12,7 @@ This module contain solvers for all kinds of equations:
 
 """
 from __future__ import annotations
-
+from sympy import symbols
 from sympy.core import (S, Add, Symbol, Dummy, Expr, Mul)
 from sympy.core.assumptions import check_assumptions
 from sympy.core.exprtools import factor_terms
