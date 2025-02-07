@@ -15,7 +15,7 @@ iteration_counter = sympy.Dummy("iteration_counter")
 k_symbol = sympy.Dummy("k")
 
 x = sympy.Dummy("x")
-open_ceiling = sympy.Lambda((x), sympy.Piecewise((x + 1, sympy.Equality(sympy.frac(x), 0)), (sympy.ceiling(x), sympy.true)))
+open_ceiling = sympy.Lambda(x, sympy.Piecewise((x + 1, sympy.Equality(sympy.frac(x), 0)), (sympy.ceiling(x), sympy.true)))
 
 def inverse_function(expr, var):
     return sympy.solveset(expr - result, var)
@@ -119,7 +119,7 @@ def _solve_k(expr, var, conditions):
 
         return value.subs(k_symbol, 0), previous_ceiling_func
     elif isinstance(conditions, sympy.Or):
-        return sympy.Min(*map(lambda expr, ceiling_func: ceiling_func(expr.subs(k_symbol, 0)), map(partial(_solve_k, expr, var), conditions.args))), sympy.ceiling
+        return sympy.Min(*(ceiling_func(expr.subs(k_symbol, 0)) for expr, ceiling_func in map(partial(_solve_k, expr, var), conditions.args))), sympy.ceiling
     else:
         return __solve_k(expr, var, conditions)
 
