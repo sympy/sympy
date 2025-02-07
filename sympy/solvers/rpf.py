@@ -148,7 +148,7 @@ def rpf(piecewise, func, mode):
         else:
             new_pairs.append(pair)
 
-    return sympy.Piecewise(*new_pairs, *exit_points)
+    return sympy.Piecewise(*new_pairs)
 
 def rpfsimplify(piecewise, func):
     return rpf(piecewise, func, RPFMode.SIMPLIFY)
