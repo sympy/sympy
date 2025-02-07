@@ -22,7 +22,6 @@ def induction(expr, var):
 
 def decontextualize_conditions(piecewise):
     pairs = []
-
     precondition = sympy.true
     for pair in piecewise.args:
         pairs.append((pair[0], sympy.simplify(sympy.And(pair[1], precondition))))
