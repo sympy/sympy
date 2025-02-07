@@ -89,6 +89,8 @@ Recurrence Equations
 
 .. autofunction:: rsolve_hyper
 
+.. autofunction:: sympy.solvers.rpf::rpfsolve
+
 Systems of Polynomial Equations
 -------------------------------
 

@@ -84,3 +84,5 @@ Simplify
    :members:
 
 .. autofunction:: epath
+
+.. autofunction:: rpfsimplify
