@@ -187,13 +187,13 @@ def rpfsimplify(piecewise, func):
     Piecewise
         The simplified piecewise.
 
-    =====
     Limitations
+    =====
 
     It cannot solve expressions with more than one parameter. Piecewise conditions that are recursive must only result in the same piecewise condition being invoked and one non-recursive condition.
 
-    ========
     See Also
+    ========
 
     sympy.solvers.rpfsolve: RPF solver; only returns if all recursive terms can be solved
 
@@ -216,21 +216,21 @@ def rpfsolve(piecewise, func):
     =======
 
     Piecewise
-        A transformed non-recursive version of the input piecewise.
+        A transformed non-recursive version of the input piecewise
 
-    ======
     Raises
+    ======
 
     NotImplementedError
         If any of the recursive terms cannot be solved.
 
-    =====
     Limitations
+    =====
 
     It cannot solve expressions with more than one parameter. Piecewise conditions that are recursive must only result in the same piecewise condition being invoked and one non-recursive condition.
 
-    ========
     See Also
+    ========
 
     sympy.simplify.rpfsimplify: simplifier using rpfsolve; returns even if all terms can't be solved
 
