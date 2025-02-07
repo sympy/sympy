@@ -61,23 +61,7 @@ MATH_TRANSLATIONS = {
     "ln": "log",
 }
 
-CMATH_TRANSLATIONS = {
-    "exp": "exp",
-    "log": "log",
-    "sqrt": "sqrt",
-    "sin": "sin",
-    "cos": "cos",
-    "tan": "tan",
-    "asin": "asin",
-    "acos": "acos",
-    "atan": "atan",
-    "sinh": "sinh",
-    "cosh": "cosh",
-    "tanh": "tanh",
-    "asinh": "asinh",
-    "acosh": "acosh",
-    "atanh": "atanh"
-}
+CMATH_TRANSLATIONS = {}
 
 # NOTE: This dictionary is reused in Function._eval_evalf to allow subclasses
 # of Function to automatically evalf.
@@ -830,8 +814,6 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     if printer is None:
         if _module_present('mpmath', namespaces):
             from sympy.printing.pycode import MpmathPrinter as Printer # type: ignore
-        elif _module_present('cmath', namespaces):
-            from sympy.printing.pycode import CmathPrinter as Printer # type: ignore
         elif _module_present('scipy', namespaces):
             from sympy.printing.numpy import SciPyPrinter as Printer # type: ignore
         elif _module_present('numpy', namespaces):
@@ -846,6 +828,8 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
             from sympy.printing.tensorflow import TensorflowPrinter as Printer # type: ignore
         elif _module_present('sympy', namespaces):
             from sympy.printing.pycode import SymPyPrinter as Printer # type: ignore
+        elif _module_present('cmath', namespaces):
+            from sympy.printing.pycode import CmathPrinter as Printer # type: ignore
         else:
             from sympy.printing.pycode import PythonCodePrinter as Printer # type: ignore
         user_functions = {}
