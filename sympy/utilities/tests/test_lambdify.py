@@ -458,7 +458,7 @@ def test_lambdify_complex_identities():
     expr1 = log(re(z)) + log(im(z)) - log(re(z) * im(z))
     expr2 = exp(re(z)) * exp(im(z) * I) - exp(z)
     expr3 = log(exp(re(z))) - re(z)
-    expr4 = exp(log(re(z))) - re(z) 
+    expr4 = exp(log(re(z))) - re(z)
     expr5 = log(exp(re(z) + im(z))) - (re(z) + im(z))
     expr6 = exp(log(re(z) + im(z))) - (re(z) + im(z))
     func1 = lambdify([z], expr1, modules=["sympy", "cmath", "math"])
