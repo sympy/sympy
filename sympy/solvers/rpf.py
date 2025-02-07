@@ -131,7 +131,7 @@ def rpf(piecewise, func, mode):
                         induced_expr = induction(expr, var)
                         k = solve_k(induction(expr, var), var, exit_point[1])
                         new_expr = induced_expr.subs(iteration_counter, k)
-    
+
                         induced_after = induction(after, result2)
                         new_pairs.append((induced_after.subs(result2, exit_point[0].subs(var, new_expr)).subs(iteration_counter, k), sympy.And(pair[1], exit_point[1].subs(var, new_expr))))
                         break
