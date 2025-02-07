@@ -456,6 +456,7 @@ def solve(f, *symbols, **flags):
     is returned. If you want an algebraic solutions for one
     or more of the symbols, pass the expression to be solved in a list:
 
+        >>> a, b, x = symbols('a b x')
         >>> e = a*x + b - 2*x - 3
         >>> solve(e, [a, b])
         {a: 2, b: 3}
@@ -2467,44 +2468,22 @@ def solve_undetermined_coeffs(equ, coeffs, *syms, **flags):
 
     # get a solution
 
-    if flags.get('set', False):
-        if not system:
-            return ([], {})  # Explicitly return ([], {}) when no equations exist
-        soln = solve(system, coeffs, **flags)
-        if isinstance(soln, dict):
-            return ([], soln)
-        elif isinstance(soln, (list, tuple)):
-            if all(isinstance(s, dict) for s in soln):
-                return ([], soln[0] if soln else {})
-            else:
-                return ([], dict(zip(coeffs, soln[0])) if soln else {})
-        else:
-            return ([], {})
-
     soln = solve(system, coeffs, **flags)
 
-    if flags.get('dict', False):
-        if isinstance(soln, dict):
-            return [soln]
-        elif isinstance(soln, (list, tuple)):
-            if all(isinstance(s, dict) for s in soln):
-                return soln
-            else:
-                return [dict(zip(coeffs, s)) for s in soln]
-        else:
-            return []
-    else:
-        if isinstance(soln, dict):
+    # unpack unless told otherwise if length is 1
+
+    if isinstance(soln, dict):
+        return soln
+    elif isinstance(soln, (list, tuple)):
+        if len(soln) == 1 and isinstance(soln[0], dict):
+            return soln[0]
+        elif all(isinstance(s, dict) for s in soln):
             return soln
-        elif isinstance(soln, (list, tuple)):
-            if len(soln) == 1 and isinstance(soln[0], dict):
-                return soln[0]
-            elif all(isinstance(s, dict) for s in soln):
-                return soln
-            else:
-                return [dict(zip(coeffs, s)) for s in soln]
         else:
-            return None
+            # Convert list of tuples to list of dictionaries
+            return [dict(zip(coeffs, s)) for s in soln]
+    else:
+        return None
 
 
 def solve_linear_system_LU(matrix, syms):
