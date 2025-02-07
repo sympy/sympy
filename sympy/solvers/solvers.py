@@ -456,7 +456,6 @@ def solve(f, *symbols, **flags):
     is returned. If you want an algebraic solutions for one
     or more of the symbols, pass the expression to be solved in a list:
 
-        >>> a, b, x = symbols('a b x')
         >>> e = a*x + b - 2*x - 3
         >>> solve(e, [a, b])
         {a: 2, b: 3}
