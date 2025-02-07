@@ -90,7 +90,7 @@ def _solve_k(expr, var, conditions):
                     raise NotImplementedError
                 else:
                     inverse = tuple(inverse)[0]
-    
+
                 inverse = inverse.subs(result, subcondition)
                 value = value.subs(k_symbol, sympy.Max(sympy.ceiling(inverse), 0))
             elif value == 0:
