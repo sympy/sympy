@@ -3487,46 +3487,6 @@ class Expr(Basic, EvalfMixin):
         from sympy.series.limits import limit
         return limit(self, x, xlim, dir)
 
-    def compute_leading_term(self, x, logx=None):
-        """Deprecated function to compute the leading term of a series.
-
-        as_leading_term is only allowed for results of .series()
-        This is a wrapper to compute a series first.
-        """
-        from sympy.utilities.exceptions import SymPyDeprecationWarning
-
-        SymPyDeprecationWarning(
-            feature="compute_leading_term",
-            useinstead="as_leading_term",
-            issue=21843,
-            deprecated_since_version="1.12"
-        ).warn()
-
-        from sympy.functions.elementary.piecewise import Piecewise, piecewise_fold
-        if self.has(Piecewise):
-            expr = piecewise_fold(self)
-        else:
-            expr = self
-        if self.removeO() == 0:
-            return self
-
-        from .symbol import Dummy
-        from sympy.functions.elementary.exponential import log
-        from sympy.series.order import Order
-
-        _logx = logx
-        logx = Dummy('logx') if logx is None else logx
-        res = Order(1)
-        incr = S.One
-        while res.is_Order:
-            res = expr._eval_nseries(x, n=1+incr, logx=logx).cancel().powsimp().trigsimp()
-            incr *= 2
-
-        if _logx is None:
-            res = res.subs(logx, log(x))
-
-        return res.as_leading_term(x)
-
     @cacheit
     def as_leading_term(self, *symbols, logx=None, cdir=0):
         """
