@@ -70,8 +70,15 @@ def __solve_k(expr, var, condition):
         return value
     elif isinstance(result, (sympy.Interval, sympy.Intersection)):
         if isinstance(result, sympy.Intersection):
-            assert tuple(result.args)[0] is sympy.Integers
-            result = tuple(result.args)[1]
+            result = list(result.args)
+            if sympy.Integers in result:
+                result.remove(sympy.Integers)
+                if len(result) == 1:
+                    result = result[0]
+                else:
+                    raise NotImplementedError
+            else:
+                raise NotImplementedError
 
         return result.left
     else:
