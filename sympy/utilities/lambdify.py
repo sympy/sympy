@@ -61,7 +61,7 @@ MATH_TRANSLATIONS = {
     "ln": "log",
 }
 
-CMATH_TRANSLATIONS = {}
+CMATH_TRANSLATIONS: dict[str, str] = {}
 
 # NOTE: This dictionary is reused in Function._eval_evalf to allow subclasses
 # of Function to automatically evalf.
