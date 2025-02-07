@@ -85,4 +85,6 @@ Simplify
 
 .. autofunction:: epath
 
+.. module:: sympy.simplify
+
 .. autofunction:: rpfsimplify
