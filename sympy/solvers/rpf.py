@@ -39,9 +39,9 @@ def transform_nonexit_term(expr, func):
 
     return function_expr.args[0], expr.replace(function_expr, result2)
 
-def _solve_k(expr, var, condition):
+def __solve_k(expr, var, condition):
     result = sympy.solveset(condition.subs(var, expr), iteration_counter, domain=sympy.Integers)
-    if isinstance(result, set):
+    if isinstance(result, sympy.FiniteSet):
         assert len(result) == 1
         return tuple(result)[0]
     elif isinstance(result, sympy.ImageSet):
@@ -73,11 +73,11 @@ def _solve_k(expr, var, condition):
             assert tuple(result.args)[0] is sympy.Integers
             result = tuple(result.args)[1]
 
-        return sympy.ceiling(result.left)
+        return result.left
     else:
         raise NotImplementedError
 
-def solve_k(expr, var, conditions):
+def _solve_k(expr, var, conditions):
     if isinstance(conditions, sympy.And):
         value = sympy.sympify(0)
         for subcondition in map(partial(_solve_k, expr, var), conditions.args):
@@ -86,7 +86,7 @@ def solve_k(expr, var, conditions):
 
             if value.has(k_symbol):
                 inverse = inverse_function(value, k_symbol)
-                if not (isinstance(inverse, sympy.Set) and len(inverse) == 1):
+                if not (isinstance(inverse, sympy.FiniteSet) and len(inverse) == 1):
                     raise NotImplementedError
                 else:
                     inverse = tuple(inverse)[0]
@@ -96,13 +96,16 @@ def solve_k(expr, var, conditions):
             elif value == 0:
                 value = subcondition
             else:
-                raise NotImplementedError
+                value = sympy.Max(value, subcondition)
 
         return value.subs(k_symbol, 0)
     elif isinstance(conditions, sympy.Or):
-        return sympy.Min(*map(partial(_solve_k, expr, var), conditions.args))
+        return sympy.Min(*map(partial(_solve_k, expr, var), conditions.args)).subs(k_symbol, 0)
     else:
-        return _solve_k(expr, var, conditions).subs(k_symbol, 0)
+        return __solve_k(expr, var, conditions)
+
+def solve_k(expr, var, conditions):
+    return sympy.ceiling(_solve_k(expr, var, conditions).subs(k_symbol, 0))
 
 class RPFMode(Enum):
     SIMPLIFY = 1
@@ -119,8 +122,8 @@ def rpf(piecewise, func, mode):
     exit_points = get_exit_points(piecewise, func)
 
     for pair in decontextualize_conditions(piecewise):
-        try:
-            if pair not in exit_points:
+        if pair not in exit_points:
+            try:
                 var = tuple(pair[0].free_symbols)[0]
                 for exit_point in exit_points:
                     expr, after = transform_nonexit_term(pair[0], func)
@@ -137,13 +140,13 @@ def rpf(piecewise, func, mode):
                         new_pairs.append(pair)
                     else:
                         raise NotImplementedError
-            else:
-                new_pairs.append(pair)
-        except NotImplementedError as error:
-            if mode is RPFMode.SIMPLIFY:
-                new_pairs.append(pair)
-            else:
-                raise NotImplementedError from error
+            except NotImplementedError as error:
+                if mode is RPFMode.SIMPLIFY:
+                    new_pairs.append(pair)
+                else:
+                    raise NotImplementedError from error
+        else:
+            new_pairs.append(pair)
 
     return sympy.Piecewise(*new_pairs, *exit_points)
 
