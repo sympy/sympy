@@ -2720,7 +2720,7 @@ def test_issue_23834():
     # Test case 1: Linear system
     eq1 = a*x + a + b - x/2
     sol1 = solve_undetermined_coeffs(eq1, [a, b], x)
-    assert sol1 == {a: 1/2, b: -1/2}
+    assert sol1 == {a: Rational(1, 2), b: Rational(-1, 2)}
 
     # Test case 2: Nonlinear system
     eq2 = a*x**2 + b*x + c - ((x - h)**2 + 4*p*k)/4/p
