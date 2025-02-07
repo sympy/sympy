@@ -2424,7 +2424,7 @@ def solve_undetermined_coeffs(equ, coeffs, *syms, **flags):
     free = xeq.free_symbols
     coeffs = free & set(coeffs)
     if not coeffs:
-        return []
+        return ([], {}) if flags.get('set', None) else []
 
     if not syms:
         # Separate terms dependent and independent of coefficients
