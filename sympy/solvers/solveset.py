@@ -1536,7 +1536,7 @@ def _invert_modular(modterm, rhs, n, symbol):
         # Check for complex arguments
         return modterm, rhs
 
-    if abs(rhs) >= abs(m):
+    if rhs.is_constant() and m.is_constant() and abs(rhs) >= abs(m):
         # if rhs has value greater than value of m.
         return symbol, S.EmptySet
 
