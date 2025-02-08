@@ -401,7 +401,7 @@ def test_pi():
     assert ask(Q.commutative(z)) is True
     assert ask(Q.integer(z)) is False
     assert ask(Q.rational(z)) is False
-    assert ask(Q.algebraic(z)) is False
+    assert ask(Q.algebraic(z)) is None
     assert ask(Q.real(z)) is True
     assert ask(Q.complex(z)) is True
     assert ask(Q.irrational(z)) is True
@@ -419,7 +419,7 @@ def test_pi():
     z = (1 + S.Pi) ** 2
     assert ask(Q.commutative(z)) is True
     assert ask(Q.integer(z)) is False
-    assert ask(Q.rational(z)) is False
+    assert ask(Q.rational(z)) is None
     assert ask(Q.algebraic(z)) is None
     assert ask(Q.real(z)) is True
     assert ask(Q.complex(z)) is True
@@ -1342,13 +1342,13 @@ def test_rational():
     assert ask(Q.rational(1/x), Q.integer(x)) is None
     assert ask(Q.rational(1/x), Q.even(x)) is None
     assert ask(Q.rational(1/x), Q.odd(x)) is True
-    assert ask(Q.rational(1/x), Q.irrational(x)) is False
+    assert ask(Q.rational(1/x), Q.irrational(x)) is None
 
     assert ask(Q.rational(2/x), Q.rational(x)) is None
     assert ask(Q.rational(2/x), Q.integer(x)) is None
     assert ask(Q.rational(2/x), Q.even(x)) is None
     assert ask(Q.rational(2/x), Q.odd(x)) is True
-    assert ask(Q.rational(2/x), Q.irrational(x)) is False
+    assert ask(Q.rational(2/x), Q.irrational(x)) is None
 
     assert ask(Q.rational(x), ~Q.algebraic(x)) is False
 
