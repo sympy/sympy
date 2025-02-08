@@ -191,7 +191,7 @@ def _ecm_one_factor(n, B1=10000, B2=100000, max_curve=200, seed=None):
     Parameters
     ==========
 
-    n : Number to be Factored
+    n : Number to be Factored. Assume that it is a composite number.
     B1 : Stage 1 Bound. Must be an even number.
     B2 : Stage 2 Bound. Must be an even number.
     max_curve : Maximum number of curves generated
@@ -199,7 +199,7 @@ def _ecm_one_factor(n, B1=10000, B2=100000, max_curve=200, seed=None):
     Returns
     =======
 
-    integer | None : ``n`` (if it is prime) else a non-trivial divisor of ``n``. ``None`` if not found
+    integer | None : a non-trivial divisor of ``n``. ``None`` if not found
 
     References
     ==========
@@ -208,8 +208,6 @@ def _ecm_one_factor(n, B1=10000, B2=100000, max_curve=200, seed=None):
            2nd Edition (2005), page 344, ISBN:978-0387252827
     """
     randint = _randint(seed)
-    if isprime(n):
-        return n
 
     # When calculating T, if (B1 - 2*D) is negative, it cannot be calculated.
     D = min(sqrt(B2), B1 // 2 - 1)
@@ -319,26 +317,32 @@ def ecm(n, B1=10000, B2=100000, max_curve=200, seed=1234):
     >>> ecm(9804659461513846513)
     {4641991, 2112166839943}
     """
+    from .factor_ import _perfect_power
     n = as_int(n)
     if B1 % 2 != 0 or B2 % 2 != 0:
         raise ValueError("both bounds must be even")
-    _factors = set()
-    for prime in sieve.primerange(1, 100000):
+    TF_LIMIT = 100000
+    factors = set()
+    for prime in sieve.primerange(2, TF_LIMIT):
         if n % prime == 0:
-            _factors.add(prime)
+            factors.add(prime)
             while(n % prime == 0):
                 n //= prime
-    while(n > 1):
+
+    queue = []
+    def check(m):
+        if isprime(m):
+            factors.add(m)
+            return
+        if result := _perfect_power(m, TF_LIMIT):
+            return check(result[0])
+        queue.append(m)
+    check(n)
+    while queue:
+        n = queue.pop()
         factor = _ecm_one_factor(n, B1, B2, max_curve, seed)
         if factor is None:
             raise ValueError("Increase the bounds")
-        _factors.add(factor)
-        n //= factor
-
-    factors = set()
-    for factor in _factors:
-        if isprime(factor):
-            factors.add(factor)
-            continue
-        factors |= ecm(factor)
+        check(factor)
+        check(n // factor)
     return factors
