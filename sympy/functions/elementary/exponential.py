@@ -540,8 +540,7 @@ class exp(ExpBase, metaclass=ExpMeta):
         arg0 = arg.subs(x, 0)
         if arg0.has(log):
             if re(cdir) < S.Zero:
-                return -arg0
-            
+                return -arg0    
         if arg is S.NaN:
             return S.NaN
         if isinstance(arg0, AccumBounds):
