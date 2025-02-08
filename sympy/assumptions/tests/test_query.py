@@ -400,7 +400,7 @@ def test_pi():
     z = S.Pi ** 2
     assert ask(Q.commutative(z)) is True
     assert ask(Q.integer(z)) is False
-    assert ask(Q.rational(z)) is False
+    assert ask(Q.rational(z)) is None
     assert ask(Q.algebraic(z)) is None
     assert ask(Q.real(z)) is True
     assert ask(Q.complex(z)) is True
@@ -1358,7 +1358,7 @@ def test_rational():
     assert ask(Q.rational(y/x), Q.integer(x) & Q.rational(y)) is None
     assert ask(Q.rational(y/x), Q.even(x) & Q.rational(y)) is None
     assert ask(Q.rational(y/x), Q.odd(x) & Q.rational(y)) is True
-    assert ask(Q.rational(y/x), Q.irrational(x) & Q.rational(y)) is False
+    assert ask(Q.rational(y/x), Q.irrational(x) & Q.rational(y)) is None
 
     for f in [exp, sin, tan, asin, atan, cos]:
         assert ask(Q.rational(f(7))) is False
