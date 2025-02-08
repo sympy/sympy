@@ -12,7 +12,6 @@ from sympy.series.order import Order
 from .gruntz import gruntz
 from sympy.core.power import Pow
 
-
 def limit(e, z, z0, dir="+"):
     """Computes the limit of ``e(z)`` at the point ``z0``.
 
