@@ -151,9 +151,10 @@ def _(expr, assumptions):
     if is_exp_integer:
         is_base_rational = ask(Q.rational(expr.base),assumptions)
         if is_base_rational is True:
-            if ask(Q.ne(expr.base,0),assumptions):
+            is_base_zero = ask(Q.zero(expr.base),assumptions)
+            if is_base_zero is False:
                 return True
-            if ask(Q.eq(expr.base,0),assumptions) and ask(Q.positive(expr.exp)) is True:
+            if is_base_zero is True and ask(Q.positive(expr.exp)) is True:
                 return True
         return
     elif ask(Q.rational(expr.exp), assumptions):
@@ -163,7 +164,7 @@ def _(expr, assumptions):
             return False
         if ask(Q.eq(expr.base,1) | Q.eq(expr.base,-1)):
             return True
-        if ask(Q.eq(expr.base,0)) and ask(Q.positive(expr.exp)) is True:
+        if ask(Q.zero(expr.base)) and ask(Q.positive(expr.exp)) is True:
             return True
 
 @RationalPredicate.register_many(asin, atan, cos, sin, tan)
