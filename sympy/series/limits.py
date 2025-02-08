@@ -10,6 +10,8 @@ from sympy.functions.special.gamma_functions import gamma
 from sympy.polys import PolynomialError, factor
 from sympy.series.order import Order
 from .gruntz import gruntz
+from sympy.core.power import Pow
+
 
 def limit(e, z, z0, dir="+"):
     """Computes the limit of ``e(z)`` at the point ``z0``.
@@ -273,6 +275,8 @@ class Limit(Expr):
             abs_flag = isinstance(expr, Abs)
             arg_flag = isinstance(expr, arg)
             sign_flag = isinstance(expr, sign)
+            if isinstance(expr, Pow) and expr.base.is_Function and expr.base.func == log and expr.exp == 2:
+                return Abs(expr.base)
             if abs_flag or sign_flag or arg_flag:
                 try:
                     sig = limit(expr.args[0], z, z0, dir)
