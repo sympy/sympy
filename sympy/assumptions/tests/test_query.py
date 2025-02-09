@@ -1790,7 +1790,21 @@ def test_prime():
 
     assert ask(Q.prime(x**2), Q.integer(x)) is False
     assert ask(Q.prime(x**2), Q.prime(x)) is False
-    assert ask(Q.prime(x**y), Q.integer(x) & Q.integer(y)) is False
+
+    # https://github.com/sympy/sympy/issues/27446
+    assert ask(Q.prime(4**x), Q.integer(x)) is False
+    assert ask(Q.prime(p**x), Q.prime(p) & Q.integer(x) & Q.ne(x, 1)) is False
+    assert ask(Q.prime(n**x), Q.integer(x) & Q.composite(n)) is False
+    assert ask(Q.prime(x**y), Q.integer(x) & Q.integer(y)) is None
+    assert ask(Q.prime(2**x), Q.integer(x)) is None
+    assert ask(Q.prime(p**x), Q.prime(p) & Q.integer(x)) is None
+
+    # Ideally, these should return True since the base is prime and the exponent is one,
+    # but currently, they return None.
+    assert ask(Q.prime(x**y), Q.prime(x) & Q.eq(y,1)) is None
+    assert ask(Q.prime(x**y), Q.prime(x) & Q.integer(y) & Q.gt(y,0) & Q.lt(y,2)) is None
+
+    assert ask(Q.prime(Pow(x,1, evaluate=False)), Q.prime(x)) is True
 
 
 @_both_exp_pow
