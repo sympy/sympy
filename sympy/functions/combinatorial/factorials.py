@@ -7,6 +7,7 @@ from sympy.core.function import DefinedFunction, ArgumentIndexError, PoleError
 from sympy.core.logic import fuzzy_and
 from sympy.core.numbers import Integer, pi, I
 from sympy.core.relational import Eq
+from sympy.core.power import Pow
 from sympy.external.gmpy import gmpy as _gmpy
 from sympy.ntheory import sieve
 from sympy.ntheory.residue_ntheory import binomial_mod
@@ -391,6 +392,10 @@ class factorial2(CombinatorialFunction):
                     n(n-2)(n-4) \cdots 2 & n\ \text{positive even} \\
                     (n+2)!!/(n+2) & n\ \text{negative odd} \end{cases}
 
+    It is also defined for all complex numbers (except non negative integers) as:
+
+    .. math:: z!! = \sqrt{\frac{2}{\pi}} 2^\frac{z}{2} \Gamma\left(\tfrac z2+1\right)
+
     References
     ==========
 
@@ -411,6 +416,8 @@ class factorial2(CombinatorialFunction):
     1
     >>> factorial2(-5)
     1/3
+    >>> factorial2(1 + I)
+    sqrt(2)*2**(1/2 + I/2)*gamma(3/2 + I/2)/sqrt(pi)
 
     See Also
     ========
@@ -420,7 +427,11 @@ class factorial2(CombinatorialFunction):
 
     @classmethod
     def eval(cls, arg):
-        # TODO: extend this to complex numbers?
+        from sympy.functions.special.gamma_functions import gamma
+        from sympy.functions.elementary.miscellaneous import sqrt
+
+        if arg.is_complex:
+            return sqrt(2/pi) * Pow(2, arg/2) * gamma(arg/2 + 1)
 
         if arg.is_Number:
             if not arg.is_Integer:

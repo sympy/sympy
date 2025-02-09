@@ -391,6 +391,10 @@ def test_factorial2():
     assert factorial2(z).is_even is False
     assert factorial2(z).is_odd is True
 
+    # Test for complex numbers
+    assert factorial2(1 + I) == sqrt(2)*2**(1/2 + I/2)*gamma(3/2 + I/2)/sqrt(pi)
+    assert factorial2(2 + 3*I) == sqrt(2)*2**(1 + 3*I/2)*gamma(2 + 3*I/2)/sqrt(pi)
+
 
 def test_factorial2_rewrite():
     n = Symbol('n', integer=True)
