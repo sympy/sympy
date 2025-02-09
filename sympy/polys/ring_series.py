@@ -133,9 +133,9 @@ def rs_is_puiseux(p, x):
     ========
 
     >>> from sympy.polys.domains import QQ
-    >>> from sympy.polys.rings import ring
+    >>> from sympy.polys.puiseux import puiseux_ring
     >>> from sympy.polys.ring_series import rs_is_puiseux
-    >>> R, x = ring('x', QQ)
+    >>> R, x = puiseux_ring('x', QQ)
     >>> p = x**QQ(2,5) + x**QQ(2,3) + x
     >>> rs_is_puiseux(p, x)
     True
@@ -158,12 +158,12 @@ def rs_puiseux(f, p, x, prec):
     ========
 
     >>> from sympy.polys.domains import QQ
-    >>> from sympy.polys.rings import ring
+    >>> from sympy.polys.puiseux import puiseux_ring
     >>> from sympy.polys.ring_series import rs_puiseux, rs_exp
-    >>> R, x = ring('x', QQ)
+    >>> R, x = puiseux_ring('x', QQ)
     >>> p = x**QQ(2,5) + x**QQ(2,3) + x
     >>> rs_puiseux(rs_exp,p, x, 1)
-    1/2*x**(4/5) + x**(2/3) + x**(2/5) + 1
+    1 + x**(2/5) + x**(2/3) + 1/2*x**(4/5)
     """
     index = p.ring.gens.index(x)
     n = 1
@@ -868,13 +868,13 @@ def mul_xin(p, i, n):
 def pow_xin(p, i, n):
     """
     >>> from sympy.polys.domains import QQ
-    >>> from sympy.polys.rings import ring
+    >>> from sympy.polys.puiseux import puiseux_ring
     >>> from sympy.polys.ring_series import pow_xin
-    >>> R, x, y = ring('x, y', QQ)
+    >>> R, x, y = puiseux_ring('x, y', QQ)
     >>> p = x**QQ(2,5) + x + x**QQ(2,3)
     >>> index = p.ring.gens.index(x)
     >>> pow_xin(p, index, 15)
-    x**15 + x**10 + x**6
+    x**6 + x**10 + x**15
     """
     R = p.ring
     q = {}
@@ -1008,13 +1008,13 @@ def rs_log(p, x, prec):
     ========
 
     >>> from sympy.polys.domains import QQ
-    >>> from sympy.polys.rings import ring
+    >>> from sympy.polys.puiseux import puiseux_ring
     >>> from sympy.polys.ring_series import rs_log
-    >>> R, x = ring('x', QQ)
+    >>> R, x = puiseux_ring('x', QQ)
     >>> rs_log(1 + x, x, 8)
-    1/7*x**7 - 1/6*x**6 + 1/5*x**5 - 1/4*x**4 + 1/3*x**3 - 1/2*x**2 + x
+    x + -1/2*x**2 + 1/3*x**3 + -1/4*x**4 + 1/5*x**5 + -1/6*x**6 + 1/7*x**7
     >>> rs_log(x**QQ(3, 2) + 1, x, 5)
-    1/3*x**(9/2) - 1/2*x**3 + x**(3/2)
+    x**(3/2) + -1/2*x**3 + 1/3*x**(9/2)
     """
     if rs_is_puiseux(p, x):
         return rs_puiseux(rs_log, p, x, prec)
@@ -1400,13 +1400,13 @@ def rs_sin(p, x, prec):
     ========
 
     >>> from sympy.polys.domains import QQ
-    >>> from sympy.polys.rings import ring
+    >>> from sympy.polys.puiseux import puiseux_ring
     >>> from sympy.polys.ring_series import rs_sin
-    >>> R, x, y = ring('x, y', QQ)
+    >>> R, x, y = puiseux_ring('x, y', QQ)
     >>> rs_sin(x + x*y, x, 4)
-    -1/6*x**3*y**3 - 1/2*x**3*y**2 - 1/2*x**3*y - 1/6*x**3 + x*y + x
+    x + x*y + -1/6*x**3 + -1/2*x**3*y + -1/2*x**3*y**2 + -1/6*x**3*y**3
     >>> rs_sin(x**QQ(3, 2) + x*y**QQ(7, 5), x, 4)
-    -1/2*x**(7/2)*y**(14/5) - 1/6*x**3*y**(21/5) + x**(3/2) + x*y**(7/5)
+    x*y**(7/5) + x**(3/2) + -1/6*x**3*y**(21/5) + -1/2*x**(7/2)*y**(14/5)
 
     See Also
     ========
@@ -1470,13 +1470,13 @@ def rs_cos(p, x, prec):
     ========
 
     >>> from sympy.polys.domains import QQ
-    >>> from sympy.polys.rings import ring
+    >>> from sympy.polys.puiseux import puiseux_ring
     >>> from sympy.polys.ring_series import rs_cos
-    >>> R, x, y = ring('x, y', QQ)
+    >>> R, x, y = puiseux_ring('x, y', QQ)
     >>> rs_cos(x + x*y, x, 4)
-    -1/2*x**2*y**2 - x**2*y - 1/2*x**2 + 1
+    1 + -1/2*x**2 + -1*x**2*y + -1/2*x**2*y**2
     >>> rs_cos(x + x*y, x, 4)/x**QQ(7, 5)
-    -1/2*x**(3/5)*y**2 - x**(3/5)*y - 1/2*x**(3/5) + x**(-7/5)
+    x**(-7/5) + -1/2*x**(3/5) + -1*x**(3/5)*y + -1/2*x**(3/5)*y**2
 
     See Also
     ========
