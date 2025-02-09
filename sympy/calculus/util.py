@@ -334,16 +334,32 @@ def not_empty_in(finset_intersection, *syms):
         return S.EmptySet
 
     if isinstance(finset_intersection, Union):
-        elm_in_sets = finset_intersection.args[0]
-        return Union(not_empty_in(finset_intersection.args[1], *syms),
-                     elm_in_sets)
+
+        return Union(not_empty_in(finset_intersection.args[0]), not_empty_in(finset_intersection.args[1]))
 
     if isinstance(finset_intersection, FiniteSet):
         finite_set = finset_intersection
         _sets = S.Reals
+
+    elif isinstance(finset_intersection, Intersection):
+        if len(finset_intersection.args) != 2:
+            raise ValueError('Intersection must have exactly two arguments, not %s: %s' %
+                            (len(finset_intersection.args), finset_intersection))
+
+        if isinstance(finset_intersection.args[0], FiniteSet):
+            finite_set = finset_intersection.args[0]
+            _sets = finset_intersection.args[1]
+
+        elif isinstance(finset_intersection.args[1], FiniteSet):
+            finite_set = finset_intersection.args[1]
+            _sets = finset_intersection.args[0]
+        else:
+            raise ValueError('A FiniteSet must be one of the arguments in the Intersection, not %s and %s' %
+                            (type(finset_intersection.args[0]), type(finset_intersection.args[1])))
+
     else:
-        finite_set = finset_intersection.args[1]
-        _sets = finset_intersection.args[0]
+        raise ValueError('Input must be a FiniteSet or an Intersection, not %s: %s' %
+                         (type(finset_intersection), finset_intersection))
 
     if not isinstance(finite_set, FiniteSet):
         raise ValueError('A FiniteSet must be given, not %s: %s' %

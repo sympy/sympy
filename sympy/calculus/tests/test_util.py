@@ -1,3 +1,4 @@
+import unittest
 from sympy.core.function import Lambda
 from sympy.core.numbers import (E, I, Rational, oo, pi)
 from sympy.core.relational import Eq
@@ -19,7 +20,7 @@ from sympy.simplify.simplify import simplify
 from sympy.calculus.util import (function_range, continuous_domain, not_empty_in,
                                  periodicity, lcim, is_convex,
                                  stationary_points, minimum, maximum)
-from sympy.sets.sets import (Interval, FiniteSet, Complement, Union)
+from sympy.sets.sets import (Interval, FiniteSet, Complement, Union,Intersection)
 from sympy.sets.fancysets import ImageSet
 from sympy.sets.conditionset import ConditionSet
 from sympy.testing.pytest import XFAIL, raises, _both_exp_pow, slow
@@ -390,3 +391,70 @@ def test_issue_18747():
 
 def test_issue_25942():
     assert (acos(x) > pi/3).as_set() == Interval.Ropen(-1, S(1)/2)
+
+class TestNotEmptyIn(unittest.TestCase):
+    def test_finite_set(self):
+        # Case 1: FiniteSet
+        fs = FiniteSet(1, 2, 3)
+        self.assertTrue(not_empty_in(fs))
+
+    def test_intersection_finite_set_second(self):
+        # Case 2: Intersection with FiniteSet as second argument
+        intersection = Intersection(Interval(0, 10), FiniteSet(1, 2, 3))
+        self.assertTrue(not_empty_in(intersection))
+
+    def test_intersection_finite_set_first(self):
+        # Case 3: Intersection with FiniteSet as first argument
+        intersection = Intersection(FiniteSet(1, 2, 3), Interval(0, 10))
+        self.assertTrue(not_empty_in(intersection))
+
+    def test_not_finite_set_or_intersection(self):
+        # Case 1: Not a FiniteSet or Intersection
+        with self.assertRaises(ValueError):
+            not_empty_in(Interval(0, 10))
+
+    def test_intersection_more_than_two_args(self):
+        # Case 2: Intersection with more than two arguments
+        intersection = Intersection(Interval(0, 10), FiniteSet(1, 2, 3), Interval(5, 15))
+        with self.assertRaises(ValueError):
+            not_empty_in(intersection)
+
+    def test_intersection_no_finite_set(self):
+        # Case 3: Intersection with no FiniteSet
+        intersection = Intersection(Interval(0, 10), Interval(5, 15))
+        with self.assertRaises(ValueError):
+            not_empty_in(intersection)
+
+    def test_non_set_input(self):
+        # Test for non-set inputs
+        with self.assertRaises(ValueError):
+            not_empty_in(42)  # Input is not a set
+        with self.assertRaises(ValueError):
+            not_empty_in("not a set")
+
+    def test_intersection_with_non_set_args(self):
+        # Test for Intersection with non-set arguments
+        intersection = Intersection(Interval(0, 10), 42)
+        with self.assertRaises(ValueError):
+            not_empty_in(intersection)
+
+    def test_intersection_with_empty_finite_set(self):
+        # Test for Intersection with empty FiniteSet
+        intersection = Intersection(Interval(0, 10), FiniteSet())  # Empty FiniteSet
+        self.assertTrue(not_empty_in(intersection))
+
+    def test_intersection_with_non_finite_set(self):
+        # Test for Intersection with no FiniteSet
+        intersection = Intersection(Interval(0, 10), Interval(5, 15))  # No FiniteSet
+        with self.assertRaises(ValueError):
+            not_empty_in(intersection)
+
+    def test_intersection_with_complex_sets(self):
+        # Test for Intersection with complex sets
+        intersection = Intersection(FiniteSet(1, 2, 3), Union(Interval(0, 10), Interval(20, 30)))
+        self.assertTrue(not_empty_in(intersection))
+
+    def test_union(self):
+        # Test for Union input
+        union = Union(FiniteSet(1, 2, 3), Interval(0, 10))
+        self.assertTrue(not_empty_in(union))
