@@ -37,7 +37,19 @@ if TYPE_CHECKING:
 def puiseux_ring(
     symbols: str | list[Expr], domain: Domain
 ) -> tuple[PuiseuxRing, *tuple[PuiseuxPoly, ...]]:
-    """Construct a Puiseux ring."""
+    """Construct a Puiseux ring.
+
+    This function constructs a Puiseux ring with the given symbols and domain.
+
+    >>> from sympy.polys.domains import QQ
+    >>> from sympy.polys.puiseux import puiseux_ring
+    >>> R, x, y = puiseux_ring('x y', QQ)
+    >>> R
+    PuiseuxRing((x, y), QQ)
+    >>> p = 5*x**QQ(1,2) + 7/y
+    >>> p
+    7*y**(-1) + 5*x**(1/2)
+    """
     ring = PuiseuxRing(symbols, domain)
     return (ring,) + ring.gens # type: ignore
 
@@ -64,14 +76,20 @@ class PuiseuxRing:
     Importantly the Puiseux ring can represent truncated series with negative
     and fractional exponents:
 
-    >>> f = x**(-1) + y**(-2)
+    >>> f = 1/x + 1/y**2
     >>> f
     x**(-1) + y**(-2)
     >>> f.diff(x)
     -1*x**(-2)
 
-    >>> rs_nth_root((1 + x), 2, x, 5)
-    1 + 1/2*x + -1/8*x**2 + 1/16*x**3 + -5/128*x**4
+    >>> rs_nth_root(8*x + x**2 + x**3, 3, x, 5)
+    2*x**(1/3) + 1/12*x**(4/3) + 23/288*x**(7/3) + -139/20736*x**(10/3)
+
+    See Also
+    ========
+
+    sympy.polys.ring_series
+    PuiseuxPoly
     """
     def __init__(self, symbols: str | list[Expr], domain: Domain):
 
@@ -209,7 +227,46 @@ def _div_monom(monom: Iterable[int], div: Iterable[int]) -> tuple[int, ...]:
 
 
 class PuiseuxPoly:
-    """Puiseux polynomial. Represents a truncated Puiseux series."""
+    """Puiseux polynomial. Represents a truncated Puiseux series.
+
+    See the :class:`PuiseuxRing` class for more information.
+
+    >>> from sympy import QQ
+    >>> from sympy.polys.puiseux import puiseux_ring
+    >>> R, x, y = puiseux_ring('x, y', QQ)
+    >>> p = 5*x**2 + 7*y**3
+    >>> p
+    7*y**3 + 5*x**2
+
+    The internal representation of a Puiseux polynomial wraps a normal
+    polynomial. To support negative powers the polynomial is considered to be
+    divided by a monomial.
+
+    >>> p2 = 1/x + 1/y**2
+    >>> p2.monom # x*y**2
+    (1, 2)
+    >>> p2.poly
+    x + y**2
+    >>> (y**2 + x) / (x*y**2) == p2
+    True
+
+    To support fractional powers the polynomial is considered to be a function
+    of ``x**(1/nx) * y**(1/ny) * ...``. The representation keeps track of a
+    monomial and a list of exponent denominators so that the polynomial can be
+    used to represent both negative and fractional powers.
+
+    >>> p3 = x**QQ(1,2) + y**QQ(2,3)
+    >>> p3.ns
+    (2, 3)
+    >>> p3.poly
+    x + y**2
+
+    See Also
+    ========
+
+    sympy.polys.puiseux.PuiseuxRing
+    sympy.polys.rings.PolyElement
+    """
 
     ring: PuiseuxRing
     poly: PolyElement
@@ -342,11 +399,23 @@ class PuiseuxPoly:
             return tuple(int(mi.numerator) for mi in monom)
 
     def itermonoms(self) -> Iterator[tuple[Any, ...]]:
+        """Iterate over the monomials of a Puiseux polynomial.
+
+        >>> from sympy import QQ
+        >>> from sympy.polys.puiseux import puiseux_ring
+        >>> R, x, y = puiseux_ring('x, y', QQ)
+        >>> p = 5*x**2 + 7*y**3
+        >>> list(p.itermonoms())
+        [(2, 0), (0, 3)]
+        >>> p[(2, 0)]
+        5
+        """
         monom, ns = self.monom, self.ns
         for m in self.poly.itermonoms():
             yield self._monom_fromint(m, monom, ns)
 
     def monoms(self) -> list[tuple[Any, ...]]:
+        """Return a list of the monomials of a Puiseux polynomial."""
         return list(self.itermonoms())
 
     def __iter__(self) -> Iterator[tuple[tuple[Any, ...], Any]]:
@@ -360,26 +429,47 @@ class PuiseuxPoly:
         return len(self.poly)
 
     def iterterms(self) -> Iterator[tuple[tuple[Any, ...], Any]]:
+        """Iterate over the terms of a Puiseux polynomial.
+
+        >>> from sympy import QQ
+        >>> from sympy.polys.puiseux import puiseux_ring
+        >>> R, x, y = puiseux_ring('x, y', QQ)
+        >>> p = 5*x**2 + 7*y**3
+        >>> list(p.iterterms())
+        [((2, 0), 5), ((0, 3), 7)]
+        """
         monom, ns = self.monom, self.ns
         for m, coeff in self.poly.iterterms():
             mq = self._monom_fromint(m, monom, ns)
             yield mq, coeff
 
     def terms(self) -> list[tuple[tuple[Any, ...], Any]]:
+        """Return a list of the terms of a Puiseux polynomial."""
         return list(self.iterterms())
 
     @property
     def is_term(self) -> bool:
+        """Return True if the Puiseux polynomial is a single term."""
         return self.poly.is_term
 
     def to_dict(self) -> dict[tuple[int, ...], Any]:
+        """Return a dictionary representation of a Puiseux polynomial."""
         return dict(self.iterterms())
 
     @classmethod
     def from_dict(
         cls, terms: dict[tuple[Any, ...], Any], ring: PuiseuxRing
     ) -> PuiseuxPoly:
+        """Create a Puiseux polynomial from a dictionary of terms.
 
+        >>> from sympy import QQ
+        >>> from sympy.polys.puiseux import puiseux_ring, PuiseuxPoly
+        >>> R, x = puiseux_ring('x', QQ)
+        >>> PuiseuxPoly.from_dict({(QQ(1,2),): QQ(3)}, R)
+        3*x**(1/2)
+        >>> R.from_dict({(QQ(1,2),): QQ(3)})
+        3*x**(1/2)
+        """
         ns = [1] * ring.ngens
         mon = [0] * ring.ngens
         for mo in terms:
@@ -403,6 +493,17 @@ class PuiseuxPoly:
         return cls._new(ring, poly, monom, ns_final)
 
     def as_expr(self) -> Expr:
+        """Convert a Puiseux polynomial to a :class:`Expr`.
+
+        >>> from sympy import QQ, Expr
+        >>> from sympy.polys.puiseux import puiseux_ring
+        >>> R, x = puiseux_ring('x', QQ)
+        >>> p = 5*x**2 + 7*x**3
+        >>> p.as_expr()
+        7*x**3 + 5*x**2
+        >>> isinstance(_, Expr)
+        True
+        """
         ring = self.ring
         dom = ring.domain
         symbols = ring.symbols
@@ -669,6 +770,17 @@ class PuiseuxPoly:
         return self.ring.from_dict({monom: coeff})
 
     def diff(self, x: PuiseuxPoly) -> PuiseuxPoly:
+        """Differentiate a Puiseux polynomial with respect to a variable.
+
+        >>> from sympy import QQ
+        >>> from sympy.polys.puiseux import puiseux_ring
+        >>> R, x, y = puiseux_ring('x, y', QQ)
+        >>> p = 5*x**2 + 7*y**3
+        >>> p.diff(x)
+        10*x
+        >>> p.diff(y)
+        21*y**2
+        """
         ring = self.ring
         i = ring.index(x)
         g = {}
