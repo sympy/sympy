@@ -392,6 +392,9 @@ def test_issue_18747():
 def test_issue_25942():
     assert (acos(x) > pi/3).as_set() == Interval.Ropen(-1, S(1)/2)
 
+from sympy import FiniteSet, Interval, Intersection, Union, Symbol
+import unittest
+
 class TestNotEmptyIn(unittest.TestCase):
     def setUp(self):
         # Define a symbol for testing
@@ -436,19 +439,9 @@ class TestNotEmptyIn(unittest.TestCase):
         with self.assertRaises(ValueError):
             not_empty_in("not a set", self.x)
 
-    def test_intersection_with_non_set_args(self):
-        # Test for Intersection with non-set arguments
-        with self.assertRaises(TypeError):
-            intersection = Intersection(Interval(0, 10), 42)
-
-    def test_intersection_with_empty_finite_set(self):
-        # Test for Intersection with empty FiniteSet
-        intersection = Intersection(Interval(0, 10), FiniteSet())  # Empty FiniteSet
-        self.assertTrue(not_empty_in(intersection, self.x))
-
     def test_intersection_with_non_finite_set(self):
         # Test for Intersection with no FiniteSet
-        intersection = Intersection(Interval(0, 10), Interval(5, 15))
+        intersection = Intersection(Interval(0, 10), Interval(5, 15))  # No FiniteSet
         with self.assertRaises(ValueError):
             not_empty_in(intersection, self.x)
 

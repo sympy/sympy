@@ -335,8 +335,7 @@ def not_empty_in(finset_intersection, *syms):
 
     if isinstance(finset_intersection, Union):
 
-        return Union(not_empty_in(finset_intersection.args[0]), not_empty_in(finset_intersection.args[1]))
-
+        return not_empty_in(finset_intersection.args[0], *syms) or not_empty_in(finset_intersection.args[1], *syms)
     if isinstance(finset_intersection, FiniteSet):
         finite_set = finset_intersection
         _sets = S.Reals
