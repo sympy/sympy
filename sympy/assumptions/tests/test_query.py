@@ -1112,12 +1112,13 @@ def test_issue_27441():
     # https://github.com/sympy/sympy/issues/27441
     assert ask(Q.composite(y), Q.integer(y) & Q.positive(y) & ~Q.prime(y)) is None
 
+
 def test_issue_27447():
     x = Symbol('x', finite=True)
     y = Symbol('y', finite=True, nonzero=True)
-    # https://github.com/sympy/sympy/issues/27447
     assert ask(Q.finite(Mul(x, oo))) is None
     assert ask(Q.finite(Mul(y, oo))) is False
+
 
 @XFAIL
 def test_bounded_xfail():

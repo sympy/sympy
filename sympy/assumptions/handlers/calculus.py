@@ -155,7 +155,7 @@ def _(expr, assumptions):
     for arg in expr.args:
         _bounded = ask(Q.finite(arg), assumptions)
         if _bounded:
-            if ask(Q.eq(arg, 0), assumptions) is None:
+            if ask(Q.zero(arg), assumptions) is None:
                 possible_zero = None
         elif _bounded is None:
             if result is None:
