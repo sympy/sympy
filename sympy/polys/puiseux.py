@@ -23,7 +23,7 @@ from sympy.polys.domains import QQ
 from sympy.polys.rings import PolyRing, PolyElement
 from sympy.core.add import Add
 from sympy.core.mul import Mul
-from math import gcd, lcm
+from sympy.external.gmpy import gcd, lcm
 
 from typing import TYPE_CHECKING
 
@@ -36,7 +36,7 @@ if TYPE_CHECKING:
 
 def puiseux_ring(
     symbols: str | list[Expr], domain: Domain
-) -> tuple[PuiseuxRing, *tuple[PuiseuxPoly, ...]]:
+) -> 'tuple[PuiseuxRing, *tuple[PuiseuxPoly, ...]]':
     """Construct a Puiseux ring.
 
     This function constructs a Puiseux ring with the given symbols and domain.
