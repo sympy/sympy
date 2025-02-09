@@ -1960,8 +1960,8 @@ def rs_series(expr, a, prec):
     Parameters
     ==========
 
-    expr : :class:`Expr`
-    a : :class:`Symbol` with respect to which expr is to be expanded
+    expr : :class:`~.Expr`
+    a : :class:`~.Symbol` with respect to which expr is to be expanded
     prec : order of the series expansion
 
     Currently supports multivariate Taylor series expansion. This is much
