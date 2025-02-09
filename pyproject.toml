@@ -30,6 +30,14 @@ markers = [
     "tooslow",
 ]
 
+[tool.coverage.report]
+
+exclude_lines = [
+    "pragma: no cover",
+    "if TYPE_CHECKING:",
+    "assert False",
+]
+
 [tool.ruff]
 # Enable Pyflakes `E` and `F` codes by default.
 lint.select = [

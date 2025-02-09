@@ -96,6 +96,11 @@ class PuiseuxRing:
     def __repr__(self) -> str:
         return f"PuiseuxRing({self.symbols}, {self.domain})"
 
+    def __eq__(self, other: Any) -> bool:
+        if not isinstance(other, PuiseuxRing):
+            return NotImplemented
+        return self.symbols == other.symbols and self.domain == other.domain
+
     def from_poly(self, poly: PolyElement) -> PuiseuxPoly:
         """Create a Puiseux polynomial from a polynomial.
 
@@ -241,13 +246,16 @@ class PuiseuxPoly:
         return obj
 
     def __eq__(self, other: Any) -> bool:
-        if not isinstance(other, PuiseuxPoly):
+        if isinstance(other, PuiseuxPoly):
+            return (
+                self.poly == other.poly
+                and self.monom == other.monom
+                and self.ns == other.ns
+            )
+        elif self.monom is None and self.ns is None:
+            return self.poly.__eq__(other)
+        else:
             return NotImplemented
-        return (
-            self.poly == other.poly
-            and self.monom == other.monom
-            and self.ns == other.ns
-        )
 
     @classmethod
     def _normalize(
@@ -270,16 +278,32 @@ class PuiseuxPoly:
 
         if ns is not None:
             factors_d, [poly_d] = poly.deflate()
+            degrees = poly.degrees()
+            monom_d = monom if monom is not None else [0] * len(degrees)
             ns_new = []
+            monom_new = []
             inflations = []
-            for fi, ni in zip(factors_d, ns):
-                g = gcd(fi, ni)
+            for fi, ni, di, mi in zip(factors_d, ns, degrees, monom_d):
+                if di == 0:
+                    g = gcd(ni, mi)
+                else:
+                    g = gcd(fi, ni, mi)
                 ns_new.append(ni // g)
+                monom_new.append(mi // g)
                 inflations.append(fi // g)
+
             if any(infl > 1 for infl in inflations):
                 poly_d = poly_d.inflate(inflations)
+
             poly = poly_d
-            ns = tuple(ns_new)
+
+            if monom is not None:
+                monom = tuple(monom_new)
+
+            if all(n == 1 for n in ns_new):
+                ns = None
+            else:
+                ns = tuple(ns_new)
 
         return poly, monom, ns
 
