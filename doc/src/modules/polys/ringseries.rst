@@ -188,6 +188,7 @@ by ``polys.ring.ring``.
 
 **Utility functions**
 
+.. autofunction:: rs_series
 .. autofunction:: rs_is_puiseux
 .. autofunction:: rs_puiseux
 .. autofunction:: rs_puiseux2

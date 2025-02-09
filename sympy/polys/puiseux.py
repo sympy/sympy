@@ -25,10 +25,12 @@ from sympy.core.add import Add
 from sympy.core.mul import Mul
 from sympy.external.gmpy import gcd, lcm
 
+
 from typing import TYPE_CHECKING
 
+
 if TYPE_CHECKING:
-    from typing import Any
+    from typing import Any, Unpack
     from sympy.core.expr import Expr
     from sympy.polys.domains import Domain
     from collections.abc import Iterable, Iterator
@@ -36,7 +38,7 @@ if TYPE_CHECKING:
 
 def puiseux_ring(
     symbols: str | list[Expr], domain: Domain
-) -> 'tuple[PuiseuxRing, *tuple[PuiseuxPoly, ...]]':
+) -> tuple[PuiseuxRing, Unpack[tuple[PuiseuxPoly, ...]]]:
     """Construct a Puiseux ring.
 
     This function constructs a Puiseux ring with the given symbols and domain.
@@ -88,7 +90,7 @@ class PuiseuxRing:
     See Also
     ========
 
-    sympy.polys.ring_series
+    sympy.polys.ring_series.rs_series
     PuiseuxPoly
     """
     def __init__(self, symbols: str | list[Expr], domain: Domain):
@@ -493,7 +495,7 @@ class PuiseuxPoly:
         return cls._new(ring, poly, monom, ns_final)
 
     def as_expr(self) -> Expr:
-        """Convert a Puiseux polynomial to a :class:`Expr`.
+        """Convert a Puiseux polynomial to :class:`~sympy.core.expr.Expr`.
 
         >>> from sympy import QQ, Expr
         >>> from sympy.polys.puiseux import puiseux_ring
