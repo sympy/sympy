@@ -1119,9 +1119,7 @@ def represent_zbasis(controls, targets, target_matrix, nqubits, format='sympy'):
         target = targets[0]
 
         # Build the non-trivial part.
-        product2 = []
-        for i in range(nqubits):
-            product2.append(matrix_eye(2, format=format))
+        product2 = [matrix_eye(2, format=format) for i in range(nqubits)]
         for control in controls:
             product2[nqubits - 1 - control] = op11
         product2[nqubits - 1 - target] = target_matrix - eye2

@@ -28,8 +28,7 @@ def _expand_powers(factors):
         if (isinstance(factor, Pow)
                 and isinstance(factor.args[1], Integer)
                 and factor.args[1] > 0):
-            for n in range(factor.args[1]):
-                new_factors.append(factor.args[0])
+            new_factors.extend(factor.args[0] for n in range(factor.args[1]))
         else:
             new_factors.append(factor)
 

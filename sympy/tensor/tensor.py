@@ -2692,10 +2692,8 @@ class TensAdd(TensExpr, AssocOp):
         return TensAdd(*new_args).doit(deep=False)
 
     def _print(self):
-        a = []
         args = self.args
-        for x in args:
-            a.append(str(x))
+        a = [str(x) for x in args]
         s = ' + '.join(a)
         s = s.replace('+ -', '- ')
         return s
@@ -5120,10 +5118,7 @@ def get_lines(ex, index_type):
         if c in dt:
             continue
         index_types = c.index_types
-        a = []
-        for i in range(len(index_types)):
-            if index_types[i] is index_type:
-                a.append(i)
+        a = [i for i in range(len(index_types)) if index_types[i] is index_type]
         if len(a) > 2:
             raise ValueError('at most two indices of type %s allowed' % index_type)
         if len(a) == 2:

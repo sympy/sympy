@@ -25,7 +25,6 @@ def upretty(expr):
 N = CoordSys3D('N')
 C = N.orient_new_axis('C', a, N.k)  # type: ignore
 v = []
-d = []
 v.append(Vector.zero)
 v.append(N.i)  # type: ignore
 v.append(-N.i)  # type: ignore
@@ -65,8 +64,7 @@ pretty_v_11 = """\
            \\/         / \
 """
 
-for x in v:
-    d.append(x | N.k)  # type: ignore
+d = [x | N.k for x in v]  # type: ignore
 s = 3*N.x**2*C.y  # type: ignore
 upretty_s = """\
          2\n\

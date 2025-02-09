@@ -297,13 +297,11 @@ def gf_from_dict(f, p, K):
     n, h = max(f.keys()), []
 
     if isinstance(n, SYMPY_INTS):
-        for k in range(n, -1, -1):
-            h.append(f.get(k, K.zero) % p)
+        h.extend(f.get(k, K.zero) % p for k in range(n, -1, -1))
     else:
         (n,) = n
 
-        for k in range(n, -1, -1):
-            h.append(f.get((k,), K.zero) % p)
+        h.extend(f.get((k,), K.zero) % p for k in range(n, -1, -1))
 
     return gf_trunc(h, p)
 
@@ -1713,8 +1711,7 @@ def gf_Qmatrix(f, p, K):
     for i in range(1, (n - 1)*r + 1):
         qq, c = [(-q[-1]*f[-1]) % p], q[-1]
 
-        for j in range(1, n):
-            qq.append((q[j - 1] - c*f[-j - 1]) % p)
+        qq.extend((q[j - 1] - c*f[-j - 1]) % p for j in range(1, n))
 
         if not (i % r):
             Q[i//r] = list(qq)
@@ -1777,11 +1774,8 @@ def gf_Qbasis(Q, p, K):
             else:
                 Q[i][j] = (-Q[i][j]) % p
 
-    basis = []
 
-    for q in Q:
-        if any(q):
-            basis.append(q)
+    basis = [q for q in Q if any(q)]
 
     return basis
 
@@ -2227,8 +2221,7 @@ def gf_factor(f, p, K):
     factors = []
 
     for g, n in gf_sqf_list(f, p, K)[1]:
-        for h in gf_factor_sqf(g, p, K)[1]:
-            factors.append((h, n))
+        factors.extend((h, n) for h in gf_factor_sqf(g, p, K)[1])
 
     return lc, _sort_factors(factors)
 

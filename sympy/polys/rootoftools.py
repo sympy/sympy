@@ -680,10 +680,8 @@ class ComplexRootOf(RootOf):
         reals = cls._get_reals(factors)
         reals_count = cls._count_roots(reals)
 
-        roots = []
 
-        for index in range(0, reals_count):
-            roots.append(cls._reals_index(reals, index))
+        roots = [cls._reals_index(reals, index) for index in range(0, reals_count)]
 
         return roots
 
@@ -701,16 +699,13 @@ class ComplexRootOf(RootOf):
         reals = cls._get_reals(factors, use_cache=use_cache)
         reals_count = cls._count_roots(reals)
 
-        roots = []
 
-        for index in range(0, reals_count):
-            roots.append(cls._reals_index(reals, index))
+        roots = [cls._reals_index(reals, index) for index in range(0, reals_count)]
 
         complexes = cls._get_complexes(factors, use_cache=use_cache)
         complexes_count = cls._count_roots(complexes)
 
-        for index in range(0, complexes_count):
-            roots.append(cls._complexes_index(complexes, index))
+        roots.extend(cls._complexes_index(complexes, index) for index in range(0, complexes_count))
 
         return roots
 
@@ -794,10 +789,8 @@ class ComplexRootOf(RootOf):
         """Return postprocessed roots of specified kind
          for polynomials with rational coefficients. """
         coeff, poly = cls._preprocess_roots(poly)
-        roots = []
 
-        for root in getattr(cls, method)(poly):
-            roots.append(coeff*cls._postprocess_root(root, radicals))
+        roots = [coeff*cls._postprocess_root(root, radicals) for root in getattr(cls, method)(poly)]
 
         return roots
 

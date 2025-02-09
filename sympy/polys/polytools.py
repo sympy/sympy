@@ -6487,8 +6487,7 @@ def to_rational_coeffs(f):
                 rescale_x = simplify(1/rescale1_x)
                 x = f.gens[0]
                 v = [x**n]
-                for i in range(1, n + 1):
-                    v.append(coeffs1[i - 1]*x**(n - i))
+                v.extend(coeffs1[i - 1]*x**(n - i) for i in range(1, n + 1))
                 f = Add(*v)
                 f = Poly(f)
                 return lc, rescale_x, f
@@ -6580,9 +6579,7 @@ def _torational_factor_list(p, x):
     if lc:
         c = simplify(factors[0]*lc*r**n)
         r1 = simplify(1/r)
-        a = []
-        for z in factors[1:][0]:
-            a.append((simplify(z[0].subs({x: x*r1})), z[1]))
+        a = [(simplify(z[0].subs({x: x*r1})), z[1]) for z in factors[1:][0]]
     else:
         c = factors[0]
         a = []

@@ -127,9 +127,7 @@ def _util_contraction_diagonal(array, *contraction_or_diagonal_axes):
     # Determine absolute positions of the contracted indices:
     summed_deltas = []
     for axes_group in contraction_or_diagonal_axes:
-        lidx = []
-        for js in range(array.shape[axes_group[0]]):
-            lidx.append(sum(cum_shape[ig] * js for ig in axes_group))
+        lidx = [sum(cum_shape[ig] * js for ig in axes_group) for js in range(array.shape[axes_group[0]])]
         summed_deltas.append(lidx)
 
     return array, remaining_indices, remaining_shape, summed_deltas

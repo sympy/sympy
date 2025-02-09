@@ -735,8 +735,7 @@ class CodeBlock(CodegenAST):
         for dst_node in A:
             i, a = dst_node
             for s in a.rhs.free_symbols:
-                for src_node in var_map[s]:
-                    E.append((src_node, dst_node))
+                E.extend((src_node, dst_node) for src_node in var_map[s])
 
         ordered_assignments = topological_sort([A, E])
 

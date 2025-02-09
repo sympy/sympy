@@ -343,9 +343,7 @@ def _build_matrix(smooth_relations):
 
     smooth_relations : Stores smooth relations
     """
-    matrix = []
-    for s_relation in smooth_relations:
-        matrix.append(s_relation[2])
+    matrix = [s_relation[2] for s_relation in smooth_relations]
     return matrix
 
 

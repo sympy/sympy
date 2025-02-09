@@ -376,11 +376,8 @@ class Add(Expr, AssocOp):
 
         # process O(x)
         if order_factors:
-            newseq2 = []
-            for t in newseq:
-                # x + O(x) -> O(x)
-                if not any(o.contains(t) for o in order_factors):
-                    newseq2.append(t)
+            # x + O(x) -> O(x)
+            newseq2 = [t for t in newseq if not any(o.contains(t) for o in order_factors)]
             newseq = newseq2 + order_factors # type: ignore
             # 1 + O(1) -> O(1)
             for o in order_factors:

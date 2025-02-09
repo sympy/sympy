@@ -939,13 +939,11 @@ def dup_from_dict(f, K):
     n, h = max(f.keys()), []
 
     if isinstance(n, int):
-        for k in range(n, -1, -1):
-            h.append(f.get(k, K.zero))
+        h.extend(f.get(k, K.zero) for k in range(n, -1, -1))
     else:
         (n,) = n
 
-        for k in range(n, -1, -1):
-            h.append(f.get((k,), K.zero))
+        h.extend(f.get((k,), K.zero) for k in range(n, -1, -1))
 
     return dup_strip(h)
 
@@ -969,8 +967,7 @@ def dup_from_raw_dict(f, K):
 
     n, h = max(f.keys()), []
 
-    for k in range(n, -1, -1):
-        h.append(f.get(k, K.zero))
+    h.extend(f.get(k, K.zero) for k in range(n, -1, -1))
 
     return dup_strip(h)
 
@@ -1443,8 +1440,7 @@ def _rec_inflate(g, M, v, i, K):
     result = [g[0]]
 
     for coeff in g[1:]:
-        for _ in range(1, M[i]):
-            result.append(dmp_zero(w))
+        result.extend(dmp_zero(w) for _ in range(1, M[i]))
 
         result.append(coeff)
 

@@ -153,9 +153,7 @@ def _connected_components_decomposition(M):
     p = Permutation(flatten(iblocks))
     P = PermutationMatrix(p)
 
-    blocks = []
-    for b in iblocks:
-        blocks.append(M[b, b])
+    blocks = [M[b, b] for b in iblocks]
     B = BlockDiagMatrix(*blocks)
     return P, B
 
@@ -271,9 +269,7 @@ def _strongly_connected_components_decomposition(M, lower=True):
 
     rows = []
     for a in iblocks:
-        cols = []
-        for b in iblocks:
-            cols.append(M[a, b])
+        cols = [M[a, b] for b in iblocks]
         rows.append(cols)
     B = BlockMatrix(rows)
     return P, B

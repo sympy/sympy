@@ -703,10 +703,7 @@ def test_issue_25282():
     def rotate(x, i):
         return x[i:] + x[:i]
 
-    mat = []
-    for i in range(12):
-        mat.append(rotate(ss, i) + rotate(sd, i))
-    for i in range(12):
-        mat.append(rotate(ds, i) + rotate(dd, i))
+    mat = [rotate(ss, i) + rotate(sd, i) for i in range(12)]
+    mat.extend(rotate(ds, i) + rotate(dd, i) for i in range(12))
 
     assert sum(Matrix(mat).eigenvals().values()) == 24

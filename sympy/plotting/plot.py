@@ -1171,12 +1171,9 @@ def check_arguments(args, expr_len, nb_of_free_symbols):
             plots = [exprs + Tuple(*args[expr_len:])]
         else:
             default_range = Tuple(-10, 10)
-            ranges = []
-            for symbol in free_symbols:
-                ranges.append(Tuple(symbol) + default_range)
+            ranges = [Tuple(symbol) + default_range for symbol in free_symbols]
 
-            for i in range(len(free_symbols) - nb_of_free_symbols):
-                ranges.append(Tuple(Dummy()) + default_range)
+            ranges.extend(Tuple(Dummy()) + default_range for i in range(len(free_symbols) - nb_of_free_symbols))
             plots = [exprs + Tuple(*ranges)]
         return plots
 

@@ -524,8 +524,7 @@ class PrettyPrinter(Printer):
 
             width = (func_height + 2) * 5 // 3 - 2
             sign_lines = [horizontal_chr + corner_chr + (horizontal_chr * (width-2)) + corner_chr + horizontal_chr]
-            for _ in range(func_height + 1):
-                sign_lines.append(' ' + vertical_chr + (' ' * (width-2)) + vertical_chr + ' ')
+            sign_lines.extend(' ' + vertical_chr + (' ' * (width-2)) + vertical_chr + ' ' for _ in range(func_height + 1))
 
             pretty_sign = stringPict('')
             pretty_sign = prettyForm(*pretty_sign.stack(*sign_lines))
@@ -591,12 +590,10 @@ class PrettyPrinter(Printer):
             if use_ascii:
                 lines.append("_"*(w) + ' ')
                 lines.append(r"\%s`" % (' '*(w - 1)))
-                for i in range(1, d):
-                    lines.append('%s\\%s' % (' '*i, ' '*(w - i)))
+                lines.extend('%s\\%s' % (' '*i, ' '*(w - i)) for i in range(1, d))
                 if more:
                     lines.append('%s)%s' % (' '*(d), ' '*(w - d)))
-                for i in reversed(range(1, d)):
-                    lines.append('%s/%s' % (' '*i, ' '*(w - i)))
+                lines.extend('%s/%s' % (' '*i, ' '*(w - i)) for i in reversed(range(1, d)))
                 lines.append("/" + "_"*(w - 1) + ',')
                 return d, h + more, lines, more
             else:
@@ -604,10 +601,8 @@ class PrettyPrinter(Printer):
                 d = d + more
                 vsum = vobj('sum', 4)
                 lines.append("_"*(w))
-                for i in range(0, d):
-                    lines.append('%s%s%s' % (' '*i, vsum[2], ' '*(w - i - 1)))
-                for i in reversed(range(0, d)):
-                    lines.append('%s%s%s' % (' '*i, vsum[4], ' '*(w - i - 1)))
+                lines.extend('%s%s%s' % (' '*i, vsum[2], ' '*(w - i - 1)) for i in range(0, d))
+                lines.extend('%s%s%s' % (' '*i, vsum[4], ' '*(w - i - 1)) for i in reversed(range(0, d)))
                 lines.append(vsum[8]*(w))
                 return d, h + 2*more, lines, more
 

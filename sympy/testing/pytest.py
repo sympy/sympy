@@ -294,9 +294,7 @@ calls the deprecated code (the current stacklevel is showing code from
             # We can only test that the active_deprecations_target works if we are
             # in the git repo.
             return
-        targets = []
-        for w in warnrec:
-            targets.append(w.message.active_deprecations_target)
+        targets = [w.message.active_deprecations_target for w in warnrec]
         with open(active_deprecations_file, encoding="utf-8") as f:
             text = f.read()
         for target in targets:

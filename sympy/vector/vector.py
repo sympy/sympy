@@ -419,10 +419,7 @@ class Vector(BasisDependent):
 def get_postprocessor(cls):
     def _postprocessor(expr):
         vec_class = {Add: VectorAdd}[cls]
-        vectors = []
-        for term in expr.args:
-            if isinstance(term.kind, VectorKind):
-                vectors.append(term)
+        vectors = [term for term in expr.args if isinstance(term.kind, VectorKind)]
 
         if vec_class == VectorAdd:
             return VectorAdd(*vectors).doit(deep=False)

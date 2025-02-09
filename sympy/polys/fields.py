@@ -91,9 +91,7 @@ def sfield(exprs, *symbols, **options):
         opt.domain, _ = construct_domain(coeffs, opt=opt)
 
     _field = FracField(opt.gens, opt.domain, opt.order)
-    fracs = []
-    for i in range(0, len(reps), 2):
-        fracs.append(_field(tuple(reps[i:i+2])))
+    fracs = [_field(tuple(reps[i:i+2])) for i in range(0, len(reps), 2)]
 
     if single:
         return (_field, fracs[0])

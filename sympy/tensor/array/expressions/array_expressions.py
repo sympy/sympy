@@ -1714,10 +1714,7 @@ class _EditArrayContraction:
             arg_with_ind.indices = [updates.get(i, None) for i in arg_with_ind.indices]
 
     def merge_scalars(self):
-        scalars = []
-        for arg_with_ind in self.args_with_ind:
-            if len(arg_with_ind.indices) == 0:
-                scalars.append(arg_with_ind)
+        scalars = [arg_with_ind for arg_with_ind in self.args_with_ind if len(arg_with_ind.indices) == 0]
         for i in scalars:
             self.args_with_ind.remove(i)
         scalar = Mul.fromiter([i.element for i in scalars])

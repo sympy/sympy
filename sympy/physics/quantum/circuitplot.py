@@ -156,9 +156,7 @@ class CircuitPlot:
         """Create a list of all gates in the circuit plot."""
         gates = []
         if isinstance(self.circuit, Mul):
-            for g in reversed(self.circuit.args):
-                if isinstance(g, Gate):
-                    gates.append(g)
+            gates.extend(g for g in reversed(self.circuit.args) if isinstance(g, Gate))
         elif isinstance(self.circuit, Gate):
             gates.append(self.circuit)
         return gates

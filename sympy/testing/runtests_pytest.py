@@ -145,9 +145,7 @@ def update_args_with_paths(
                         matches.append(str(pathlib.Path(path)))
                         dirs[:] = []
                     else:
-                        for file in files:
-                            if fnmatch(file, partial_path_file):
-                                matches.append(str(pathlib.Path(path, file)))
+                        matches.extend(str(pathlib.Path(path, file)) for file in files if fnmatch(file, partial_path_file))
         return matches
 
     def is_tests_file(filepath: str) -> bool:

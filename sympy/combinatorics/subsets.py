@@ -182,10 +182,8 @@ class Subset():
                 i = i - 1
             indices.append(i + 1)
 
-        ret_set = []
         super_set = self.superset
-        for i in indices:
-            ret_set.append(super_set[i])
+        ret_set = [super_set[i] for i in indices]
         return Subset(ret_set, super_set)
 
     def prev_lexicographic(self):
@@ -222,10 +220,8 @@ class Subset():
                 indices.append(i - 1)
             indices.append(self.superset_size - 1)
 
-        ret_set = []
         super_set = self.superset
-        for i in indices:
-            ret_set.append(super_set[i])
+        ret_set = [super_set[i] for i in indices]
         return Subset(ret_set, super_set)
 
     def iterate_graycode(self, k):
@@ -491,10 +487,7 @@ class Subset():
         """
         if len(super_set) != len(bitlist):
             raise ValueError("The sizes of the lists are not equal")
-        ret_set = []
-        for i in range(len(bitlist)):
-            if bitlist[i] == '1':
-                ret_set.append(super_set[i])
+        ret_set = [super_set[i] for i in range(len(bitlist)) if bitlist[i] == '1']
         return Subset(ret_set, super_set)
 
     @classmethod

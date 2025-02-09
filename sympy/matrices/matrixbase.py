@@ -263,12 +263,10 @@ class MatrixBase(Printable):
         v = []
         if diagonal:
             for j in range(c):
-                for i in range(j, c):
-                    v.append(self[i, j])
+                v.extend(self[i, j] for i in range(j, c))
         else:
             for j in range(c):
-                for i in range(j + 1, c):
-                    v.append(self[i, j])
+                v.extend(self[i, j] for i in range(j + 1, c))
         return self._new(len(v), 1, v)
 
     def col_del(self, col):

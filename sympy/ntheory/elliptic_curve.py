@@ -133,12 +133,10 @@ class EllipticCurve:
         """Returns points on the curve for the given x-coordinate."""
         pt = []
         if self._domain == QQ:
-            for y in solve(self._poly.subs(self.x, x)):
-                pt.append((x, y))
+            pt.extend((x, y) for y in solve(self._poly.subs(self.x, x)))
         else:
             congruence_eq = self._poly.subs({self.x: x, self.z: 1}).expr
-            for y in polynomial_congruence(congruence_eq, self.characteristic):
-                pt.append((x, y))
+            pt.extend((x, y) for y in polynomial_congruence(congruence_eq, self.characteristic))
         return pt
 
     def torsion_points(self):
@@ -163,9 +161,7 @@ class EllipticCurve:
         if self.characteristic > 0:
             raise ValueError("No torsion point for Finite Field.")
         l = [EllipticCurvePoint.point_at_infinity(self)]
-        for xx in solve(self._poly.subs({self.y: 0, self.z: 1})):
-            if xx.is_rational:
-                l.append(self(xx, 0))
+        l.extend(self(xx, 0) for xx in solve(self._poly.subs({self.y: 0, self.z: 1})) if xx.is_rational)
         for i in divisors(self.discriminant, generator=True):
             j = int(i**.5)
             if j**2 == i:

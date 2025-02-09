@@ -1555,9 +1555,7 @@ def test_issue_18894():
     R, a = sring(items, extension=True)
     assert R.domain == QQ.algebraic_field(sqrt(3)+sqrt(3*sqrt(3)+10))
     assert R.gens == ()
-    result = []
-    for item in items:
-        result.append(R.domain.from_sympy(item))
+    result = [R.domain.from_sympy(item) for item in items]
     assert a == result
 
 def test_PolyElement_factor_list():

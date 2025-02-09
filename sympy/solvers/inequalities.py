@@ -872,10 +872,8 @@ def _solve_inequality(ie, s, linear=False):
                 if classify(rv, s, c.rhs) is S.true:
                     # rv is permitting this value but it shouldn't
                     conds.append(~c)
-        for i in (-oo, oo):
-            if (classify(rv, s, i) is S.true and
-                    classify(ie, s, i) is not S.true):
-                conds.append(s < i if i is oo else i < s)
+        conds.extend(s < i if i is oo else i < s for i in (-oo, oo) if classify(rv, s, i) is S.true and
+                    classify(ie, s, i) is not S.true)
 
     conds.append(rv)
     return And(*conds)

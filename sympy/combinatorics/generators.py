@@ -158,8 +158,7 @@ def rubik(n):
             face = faces[F]
             rv = []
             for c in range(n):
-                for r in range(n - 1, -1, -1):
-                    rv.append(face[r, c])
+                rv.extend(face[r, c] for r in range(n - 1, -1, -1))
             faces[F] = Matrix(n, n, rv)
 
     def ccw(F):
