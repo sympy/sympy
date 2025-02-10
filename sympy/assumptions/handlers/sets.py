@@ -80,7 +80,10 @@ def _(expr, assumptions):
         _is_zero = ask(Q.zero(expr.base), assumptions)
         if _beyond_abs_1 is False and _is_zero is False:
             return True
-        return ~Q.negative(expr.exp), assumptions
+        if ask(Q.negative(expr.exp), assumptions) and _beyond_abs_1:
+            return False
+        if ask(~Q.negative(expr.exp), assumptions):
+            return True
 
 @IntegerPredicate.register(Mul)
 def _(expr, assumptions):
