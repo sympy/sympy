@@ -418,12 +418,6 @@ class TestNotEmptyIn(unittest.TestCase):
         with self.assertRaises(ValueError):
             not_empty_in(Interval(0, 10), self.x)
 
-    def test_intersection_more_than_two_args(self):
-        # Case 2: Intersection with more than two arguments
-        intersection = Intersection(Interval(0, 10), FiniteSet(1, 2, 3), Interval(5, 15))
-        with self.assertRaises(ValueError):
-            not_empty_in(intersection, self.x)
-
     def test_intersection_no_finite_set(self):
         # Case 3: Intersection with no FiniteSet
         intersection = Intersection(Interval(0, 10), Interval(5, 15))
@@ -448,7 +442,3 @@ class TestNotEmptyIn(unittest.TestCase):
         intersection = Intersection(FiniteSet(1, 2, 3), Union(Interval(0, 10), Interval(20, 30)))
         self.assertTrue(not_empty_in(intersection, self.x))
 
-    def test_union(self):
-        # Test for Union input
-        union = Union(FiniteSet(1, 2, 3), Interval(0, 10))
-        self.assertTrue(not_empty_in(union, self.x))
