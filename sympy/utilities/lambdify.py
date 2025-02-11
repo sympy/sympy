@@ -779,7 +779,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
                 # Use either numpy (if available) or python.math where possible.
                 # XXX: This leads to different behaviour on different systems and
                 #      might be the reason for irreproducible errors.
-                modules = ["math", "cmath", "mpmath", "sympy"]
+                modules = ["math", "mpmath", "sympy"]
             else:
                 modules = ["numpy"]
         else:
