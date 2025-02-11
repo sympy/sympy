@@ -14,7 +14,7 @@ jobs:
 
   code-quality:
 
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
@@ -62,7 +62,7 @@ jobs:
   mypy:
     needs: code-quality
 
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -79,7 +79,7 @@ jobs:
   sphinx-lint:
     needs: code-quality
 
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -95,7 +95,7 @@ jobs:
 
   authors:
     needs: code-quality
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
@@ -113,7 +113,7 @@ jobs:
   doctests-latest:
     needs: code-quality
 
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -128,7 +128,7 @@ jobs:
   tests-latest:
     needs: code-quality
 
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
 
     name: Tests
 
@@ -146,7 +146,7 @@ jobs:
   optional-dependencies:
     needs: code-quality
 
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
 
     strategy:
       fail-fast: false
@@ -191,7 +191,7 @@ jobs:
   bleeding-edge:
     needs: code-quality
     name: Bleeding edge dependencies
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -218,7 +218,7 @@ jobs:
   python-flint:
     needs: code-quality
 
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -235,7 +235,7 @@ jobs:
   flint-gmpy2:
     needs: code-quality
 
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -252,7 +252,7 @@ jobs:
   tensorflow:
     needs: code-quality
 
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -270,7 +270,7 @@ jobs:
   symengine:
     needs: code-quality
 
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -290,7 +290,7 @@ jobs:
   tests-slow:
     needs: [doctests-latest, tests-latest]
 
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
@@ -306,7 +306,7 @@ jobs:
   tests-other-python:
     needs: [doctests-latest, tests-latest]
 
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
 
     strategy:
       fail-fast: false
@@ -329,7 +329,7 @@ jobs:
   doctests-other-python:
     needs: [doctests-latest, tests-latest]
 
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
 
     strategy:
       fail-fast: false
@@ -352,7 +352,7 @@ jobs:
   tests-mpmath-master:
     needs: [doctests-latest, tests-latest]
 
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
 
     name: mpmath-master Tests
 
@@ -371,7 +371,7 @@ jobs:
   sphinx:
     needs: [doctests-latest, tests-latest]
 
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -398,7 +398,7 @@ jobs:
   py2-import:
     needs: [doctests-latest, tests-latest]
 
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -411,7 +411,7 @@ jobs:
   sdist-check:
     needs: [doctests-latest, tests-latest]
 
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -426,7 +426,7 @@ jobs:
   benchmarks:
     needs: [doctests-latest, tests-latest]
 
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
