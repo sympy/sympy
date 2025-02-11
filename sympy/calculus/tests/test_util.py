@@ -441,4 +441,3 @@ class TestNotEmptyIn(unittest.TestCase):
         # Test for Intersection with complex sets
         intersection = Intersection(FiniteSet(1, 2, 3), Union(Interval(0, 10), Interval(20, 30)))
         self.assertTrue(not_empty_in(intersection, self.x))
-
