@@ -217,7 +217,7 @@ def rpf(piecewise, func, mode):
                             for k, k_condition in solve_k(induced_expr, var, exit_point[1]):
                                 new_expr = induced_expr.subs(iteration_counter, k)
                                 condition2 = sympy.And(exit_point[1].subs(var, new_expr), k_condition, sympy.GreaterThan(k, 0))
-    
+
                                 induced_after = after_induction(after, induced_expr, k, result2, var)
                                 new_terms_and_ks.append(((induced_after.subs(result2, exit_point[0].subs(var, new_expr)).subs(iteration_counter, k), sympy.And(pair[1], condition2)), k))
                                 checked_ks.append(sympy.Piecewise((k, condition2), (sympy.oo, sympy.true)))
