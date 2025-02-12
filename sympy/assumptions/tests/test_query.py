@@ -1595,6 +1595,7 @@ def test_integer():
     assert ask(Q.integer(x**y), Q.integer(x) & Q.integer(y) & Q.positive(y)) is True
     assert ask(Q.integer(x**y), Q.integer(x) & Q.integer(y) & ~Q.negative(y)) is None
     assert ask(Q.integer(2**n), Q.integer(n) & Q.negative(n)) is False
+    assert ask(Q.integer(2**n), Q.integer(n)) is None
     assert ask(Q.integer(x**y), ~Q.integer(x) & Q.integer(y)) is None
     assert ask(Q.integer(x**y), Q.zero(y)) is None
     assert ask(Q.integer(x**y), Q.zero(x)) is None

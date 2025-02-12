@@ -77,13 +77,14 @@ def _(expr, assumptions):
     both_integers = ask(Q.integer(expr.base) & Q.integer(expr.exp), assumptions)
     if both_integers:
         exp_is_positive = ask(Q.positive(expr.exp), assumptions)
+        exp_is_more_than_zero = ask(~Q.negative(expr.exp), assumptions)
         base_is_zero = ask(Q.zero(expr.base), assumptions)
         base_is_abs_1 = ask(Q.gt(expr.base, -2) & Q.lt(expr.base, 2), assumptions)
         if exp_is_positive is True: # if exp > 0 then always an integer.
             return True
         elif base_is_zero is not False: # if base is zero or can be zero and exp <= 0 then return None.
             return None
-        elif base_is_abs_1 is True or exp_is_positive is None: # if base is 1, -1 or exp is 0 then an integer.
+        elif base_is_abs_1 is True or exp_is_more_than_zero is True: # if base is 1, -1 or exp >= 0 then it is integer.
             return True
         elif base_is_abs_1 is False and exp_is_positive is False: # if base is 1 and exp is negative then not an integer.
             return False
