@@ -241,7 +241,6 @@ def rpf(piecewise, func, mode):
                 new_pairs.append(pair)
 
         piecewise_args = new_pairs
-        print(piecewise_args)
 
     return simplify_piecewise(sympy.Piecewise(*new_pairs))
 
