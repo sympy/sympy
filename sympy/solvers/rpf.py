@@ -189,12 +189,13 @@ def rpf(piecewise, func, mode):
 
     piecewise_args = decontextualize_conditions(piecewise)
 
-    new_pairs = list()
     simplifed = True
     while simplifed:
         simplifed = False
 
         exit_points = get_exit_points(piecewise_args, func)
+
+        new_pairs = list()
         for pair in piecewise_args:
             if pair not in exit_points:
                 try:
