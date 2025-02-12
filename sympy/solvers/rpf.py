@@ -111,9 +111,9 @@ def __solve_k_process(result):
 def __solve_k(expr, var, condition):
     return __solve_k_process(sympy.solveset(condition.subs(var, expr), iteration_counter, domain=sympy.S.Integers))
 
-def _solve_k_flatten(expr, var, conditions):
+def _solve_k(expr, var, conditions):
     if isinstance(conditions, sympy.And):
-        results = tuple(map(partial(_solve_k_flatten, expr, var), conditions.args))
+        results = tuple(map(partial(_solve_k, expr, var), conditions.args))
 
         permutations = [list()]
         for item in results:
@@ -125,12 +125,12 @@ def _solve_k_flatten(expr, var, conditions):
 
         return permutations
     elif isinstance(conditions, sympy.Or):
-        return sum(map(partial(_solve_k_flatten, expr, var), conditions.args), start=list())
+        return sum(map(partial(_solve_k, expr, var), conditions.args), start=list())
     else:
         return __solve_k(expr, var, conditions)
 
 def solve_k(expr, var, conditions):
-    permutations = _solve_k_flatten(expr, var, conditions)
+    permutations = _solve_k(expr, var, conditions)
 
     out = list()
     for permutation in permutations:
