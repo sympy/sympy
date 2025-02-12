@@ -1587,7 +1587,7 @@ def test_integer():
     assert ask(Q.integer(x/3), Q.even(x)) is None
 
     # https://github.com/sympy/sympy/issues/21177
-    # Noteable edge cases: 
+    # Noteable edge cases:
     # 0^0, 1^oo, (-1)^oo are undefined
     # 0^y for y < 0 is undefined due to division by zero
     assert ask(Q.integer((-1)**y), Q.integer(y)) is True
