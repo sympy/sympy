@@ -668,3 +668,25 @@ def test_issue_25165():
     e1 = (1/sqrt(( - x + 1)**2 + (x - 0.23)**4)).series(x, 0, 2)
     e2 = 0.998603724830355 + 1.02004923189934*x + O(x**2)
     assert all_close(e1, e2)
+
+def test_float_base_simplification():
+    from sympy import symbols, Float, S, Rational, simplify
+
+    x = symbols('x')
+
+    # Test case for 1.0
+    assert simplify((Float('1.0')**(x + 1))/(Float('1.0')**x)) == S.One
+    assert simplify(Float('1.0')**x) == S.One
+
+    # Test case for other numbers
+    assert simplify((Float('2.0')**(x + 1))/(Float('2.0')**x)) == 2
+    assert simplify((Float('0.5')**(x + 1))/(Float('0.5')**x)) == Rational(1, 2)
+    assert simplify((Float('4.0')**(x + 2))/(Float('4.0')**x)) == 16
+
+    # Test combined expressions
+    assert simplify(Float('2.0')**x * Float('0.5')**x) == S.One
+    assert simplify(Float('4.0')**x * Float('0.25')**x) == S.One
+
+    # Test different float precisions
+    assert simplify(Float('1.00000000000000')**x) == S.One
+    assert simplify((Float('2.00000000000000')**(x + 1))/(Float('2.00000000000000')**x)) == 2
