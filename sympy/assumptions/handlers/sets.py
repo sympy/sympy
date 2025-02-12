@@ -67,23 +67,23 @@ def _(expr, assumptions):
 @IntegerPredicate.register(Pow)
 def _(expr, assumptions):
     """
-    * Integer  **  Integer  -> Integer
+    * Integer  **  +Integer  -> Integer
     * Integer  ** !Integer  -> ?
     * !Integer ** !Integer  -> ?
     * Integer  ** -Integer  -> ?
     """
     if expr.is_number:
         return _IntegerPredicate_number(expr, assumptions)
-    _both_integers = ask(Q.integer(expr.base) & Q.integer(expr.exp), assumptions)
-    if _both_integers:
-        _beyond_abs_1 = ask((Q.gt(expr.base , 1) | Q.lt(expr.base , -1)), assumptions) # not one of {-1, 0, 1},
-        _is_zero = ask(Q.zero(expr.base), assumptions)
-        if _beyond_abs_1 is False and _is_zero is False:
+    both_integers = ask(Q.integer(expr.base) & Q.integer(expr.exp), assumptions)
+    if both_integers:
+        exp_is_positive = ask(Q.positive(expr.exp), assumptions)
+        base_is_zero = ask(Q.zero(expr.base), assumptions)
+        base_is_abs_1 = ask(Q.gt(expr.base, -2) & Q.lt(expr.base, 2))
+        if exp_is_positive is True:
             return True
-        if ask(Q.negative(expr.exp), assumptions) and _beyond_abs_1:
-            return False
-        if ask(~Q.negative(expr.exp), assumptions):
-            return True
+        elif base_is_zero:
+            return None
+        return base_is_abs_1
 
 @IntegerPredicate.register(Mul)
 def _(expr, assumptions):

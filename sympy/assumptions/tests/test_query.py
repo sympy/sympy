@@ -1586,18 +1586,14 @@ def test_integer():
     assert ask(Q.integer(x/3), Q.odd(x)) is None
     assert ask(Q.integer(x/3), Q.even(x)) is None
 
-    # <This test was already existing. The following was added to the end>
     # https://github.com/sympy/sympy/issues/21177
-
-    # Edge cases: 0^0 is undefined, 0^y (non-positive y) is undefined, -1^Real is integer.
-    # x^y where both x and y are integers is None as 2^-1 is not a integer.
-    # x^y where y is a negative integer is None because 1^-1 is a integer.
-    # x^y where y is a negative integer is False because when x < -1 or x > 1.
-    # x^y where x and y are integers and y is a positive integer is True because it is certainly a integer.
+    # Noteable edge cases: 
+    # 0^0, 1^oo, (-1)^oo are undefined
+    # 0^y for y < 0 is undefined due to division by zero
     assert ask(Q.integer((-1)**y), Q.integer(y)) is True
     assert ask(Q.integer(x**2), Q.integer(x)) is True
     assert ask(Q.integer(x**y), Q.integer(x) & Q.integer(y) & Q.positive(y)) is True
-    assert ask(Q.integer(x**y), Q.integer(x) & Q.integer(y) & ~Q.negative(y)) is True
+    assert ask(Q.integer(x**y), Q.integer(x) & Q.integer(y) & ~Q.negative(y)) is None
     assert ask(Q.integer(2**n), Q.integer(n) & Q.negative(n)) is False
     assert ask(Q.integer(x**y), ~Q.integer(x) & Q.integer(y)) is None
     assert ask(Q.integer(x**y), Q.zero(y)) is None
