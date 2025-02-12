@@ -47,16 +47,16 @@ def after_induction(expr, induced_expr, k, result_var, func_var):
 
         match = expr.match(expression_iterate(a) + b)
         if match:
-            return sympy.Sum(match[b], (iteration_counter, 1, k))
+            return result_var + sympy.Sum(match[b], (iteration_counter, 1, k))
 
         match = expr.match(expression_iterate(a) * b)
         if match:
-            return sympy.Product(match[b], (iteration_counter, 1, k))
+            return result_var + sympy.Product(match[b], (iteration_counter, 1, k))
 
         raise NotImplementedError
 
 def decontextualize_conditions(piecewise):
-    pairs = list()
+    pairs = []
     precondition = sympy.true
     for pair in piecewise.args:
         pairs.append((pair[0], sympy.simplify(sympy.And(pair[1], precondition))))
@@ -104,7 +104,7 @@ def __solve_k_process(result):
     elif isinstance(result, sympy.Intersection):
         return __solve_k_process(__solve_k_process_remove_integer_intersections(result))
     elif isinstance(result, sympy.Union):
-        return sum(map(__solve_k_process, result.args), start=list())
+        return sum(map(__solve_k_process, result.args), start=[])
     else:
         raise NotImplementedError
 
@@ -115,9 +115,9 @@ def _solve_k(expr, var, conditions):
     if isinstance(conditions, sympy.And):
         results = tuple(map(partial(_solve_k, expr, var), conditions.args))
 
-        permutations = [list()]
+        permutations = [[]]
         for item in results:
-            new_permutations = list()
+            new_permutations = []
             for item2 in permutations:
                 for item3 in item:
                     new_permutations.append(item2 + item3)
@@ -125,14 +125,14 @@ def _solve_k(expr, var, conditions):
 
         return permutations
     elif isinstance(conditions, sympy.Or):
-        return sum(map(partial(_solve_k, expr, var), conditions.args), start=list())
+        return sum(map(partial(_solve_k, expr, var), conditions.args), start=[])
     else:
         return __solve_k(expr, var, conditions)
 
 def solve_k(expr, var, conditions):
     permutations = _solve_k(expr, var, conditions)
 
-    out = list()
+    out = []
     for permutation in permutations:
         values, types = zip(*permutation)
 
@@ -159,7 +159,7 @@ def solve_k(expr, var, conditions):
             if greater_values:
                 expr = sympy.Max(*greater_values)
             else:
-                expr = sympy.sympify(0)
+                expr = sympy.sympify(1)
 
             for value, _ in filter(lambda pair: pair[1] is KConstraintType.LESSER, permutation):
                 prior_condition = sympy.And(prior_condition, sympy.LessThan(expr, value))
@@ -195,23 +195,23 @@ def rpf(piecewise, func, mode):
 
         exit_points = get_exit_points(piecewise_args, func)
 
-        new_pairs = list()
+        new_pairs = []
         for pair in piecewise_args:
             if pair not in exit_points:
                 try:
                     expr, after = transform_nonexit_term(pair[0], func)
                     induced_expr = induction(expr, var)
 
-                    possible_exit_points = list()
-                    exit_point_conditions = list()
+                    possible_exit_points = []
+                    exit_point_conditions = []
                     for exit_point in exit_points:
                         if sympy.ask(sympy.simplify(exit_point[1].subs(var, expr))) is not False:
                             possible_exit_points.append(exit_point)
                             exit_point_conditions.append(exit_point[1].subs(var, expr))
 
                     if sympy.ask(sympy.simplify(sympy.Or(pair[1].subs(var, expr), *exit_point_conditions)), sympy.simplify(pair[1])) is True:
-                        new_terms_and_ks = list()
-                        checked_ks = list()
+                        new_terms_and_ks = []
+                        checked_ks = []
 
                         for exit_point in possible_exit_points:
                             for k, k_condition in solve_k(induced_expr, var, exit_point[1]):
