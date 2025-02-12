@@ -201,18 +201,18 @@ def rpf(piecewise, func, mode):
                 try:
                     expr, after = transform_nonexit_term(pair[0], func)
                     induced_expr = induction(expr, var)
-    
+
                     possible_exit_points = list()
                     exit_point_conditions = list()
                     for exit_point in exit_points:
                         if sympy.ask(sympy.simplify(exit_point[1].subs(var, expr))) is not False:
                             possible_exit_points.append(exit_point)
                             exit_point_conditions.append(exit_point[1].subs(var, expr))
-    
+
                     if sympy.ask(sympy.simplify(sympy.Or(pair[1].subs(var, expr), *exit_point_conditions)), sympy.simplify(pair[1])) is True:
                         new_terms_and_ks = list()
                         checked_ks = list()
-    
+
                         for exit_point in possible_exit_points:
                             for k, k_condition in solve_k(induced_expr, var, exit_point[1]):
                                 new_expr = induced_expr.subs(iteration_counter, k)
@@ -221,9 +221,9 @@ def rpf(piecewise, func, mode):
                                 induced_after = after_induction(after, induced_expr, k, result2, var)
                                 new_terms_and_ks.append(((induced_after.subs(result2, exit_point[0].subs(var, new_expr)).subs(iteration_counter, k), sympy.And(pair[1], condition2)), k))
                                 checked_ks.append(sympy.Piecewise((k, condition2), (sympy.oo, sympy.true)))
-    
+
                         min_k = sympy.Min(*checked_ks)
-    
+
                         for (term, condition), k in new_terms_and_ks:
                             new_pairs.append((term, sympy.And(condition, sympy.Equality(k, min_k))))
 
