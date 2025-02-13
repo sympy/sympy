@@ -324,7 +324,7 @@ class Poly(Basic):
         >>> from sympy import Poly, symbols
         >>> x = symbols('x')
         >>> Poly.from_roots([1, 2, 3], x)
-        Poly(x**3 - 6*x**2 + 11*x - 6, x, domain='QQ')
+        Poly(x**3 - 6*x**2 + 11*x - 6, x)
         >>> Poly.from_roots([-1, -2, -3], x)
         Poly(x**3 + 6*x**2 + 11*x + 6, x)
         """
