@@ -136,21 +136,21 @@ def solve_k(expr, var, conditions):
     for permutation in permutations:
         values, types = zip(*permutation)
 
-        prior_condition = sympy.true
+        precondition = sympy.true
 
         if KConstraintType.EQUAL in types:
             expr = values[types.index(KConstraintType.EQUAL)]
             for index2, (value, type_) in enumerate(permutation):
                 if type_ is KConstraintType.EQUAL:
-                    prior_condition = sympy.And(prior_condition, sympy.Equality(sympy.frac(value), 0))
-                    prior_condition = sympy.And(prior_condition, sympy.Equality(value, expr))
+                    precondition = sympy.And(precondition, sympy.Equality(sympy.frac(value), 0))
+                    precondition = sympy.And(precondition, sympy.Equality(value, expr))
                 elif type_ is KConstraintType.GREATER:
-                    prior_condition = sympy.And(prior_condition, sympy.GreaterThan(expr, value))
+                    precondition = sympy.And(precondition, sympy.GreaterThan(expr, value))
                 elif type_ is KConstraintType.LESSER:
-                    prior_condition = sympy.And(prior_condition, sympy.LessThan(expr, value))
+                    precondition = sympy.And(precondition, sympy.LessThan(expr, value))
                 elif type_ is KConstraintType.GENERATOR:
-                    prior_condition = sympy.And(prior_condition, sympy.Equality(sympy.frac(inverse_function(value, meta_k).subs(result, expr)), 0))
-                    prior_condition = sympy.And(prior_condition, sympy.GreaterThan(inverse_function(value, meta_k).subs(result, expr), 0))
+                    precondition = sympy.And(precondition, sympy.Equality(sympy.frac(inverse_function(value, meta_k).subs(result, expr)), 0))
+                    precondition = sympy.And(precondition, sympy.GreaterThan(inverse_function(value, meta_k).subs(result, expr), 0))
         else:
             if types.count(KConstraintType.GENERATOR) > 1:
                 raise NotImplementedError
@@ -162,13 +162,13 @@ def solve_k(expr, var, conditions):
                 expr = sympy.sympify(1)
 
             for value, _ in filter(lambda pair: pair[1] is KConstraintType.LESSER, permutation):
-                prior_condition = sympy.And(prior_condition, sympy.LessThan(expr, value))
+                precondition = sympy.And(precondition, sympy.LessThan(expr, value))
 
             if KConstraintType.GENERATOR in types:
                 generator = values[types.index(KConstraintType.GENERATOR)]
                 expr = generator.subs(meta_k, sympy.Max(sympy.ceiling(inverse_function(generator, meta_k).subs(result, expr)), 0))
 
-        out.append((expr, prior_condition))
+        out.append((expr, precondition))
 
     return out
 
@@ -214,9 +214,9 @@ def rpf(piecewise, func, mode):
                         checked_ks = []
 
                         for exit_point in possible_exit_points:
-                            for k, k_condition in solve_k(induced_expr, var, exit_point[1]):
+                            for k, k_precondition in solve_k(induced_expr, var, exit_point[1]):
                                 new_expr = induced_expr.subs(iteration_counter, k)
-                                condition2 = sympy.And(exit_point[1].subs(var, new_expr), k_condition, sympy.GreaterThan(k, 0))
+                                condition2 = sympy.And(exit_point[1].subs(var, new_expr), k_precondition, sympy.GreaterThan(k, 0))
 
                                 induced_after = after_induction(after, induced_expr, k, result2, var)
                                 new_terms_and_ks.append(((induced_after.subs(result2, exit_point[0].subs(var, new_expr)).subs(iteration_counter, k), sympy.And(pair[1], condition2)), k))
