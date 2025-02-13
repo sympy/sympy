@@ -325,8 +325,8 @@ class Poly(Basic):
         >>> x = symbols('x')
         >>> Poly.from_roots([1, 2, 3], x)
         Poly(x**3 - 6*x**2 + 11*x - 6, x, domain='ZZ')
-        >>> Poly.from_roots([Rational(1, 2), Rational(3, 4)], x)
-        Poly(x**2 - 5/4*x + 3/8, x, domain='QQ')
+        >>> Poly.from_roots([-1, -2, -3], x)
+        Poly(x**3 + 6*x**2 + 11*x + 6, x)
         """
 
         roots = [sympify(r) for r in roots]
