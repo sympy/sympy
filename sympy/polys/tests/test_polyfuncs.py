@@ -1,7 +1,7 @@
 """Tests for high-level polynomials manipulation functions. """
 
 from sympy.polys.polyfuncs import (
-    symmetrize, horner, interpolate, rational_interpolate, viete
+    symmetrize, horner, interpolate, rational_interpolate, viete,
 )
 
 from sympy.polys.polyerrors import (
