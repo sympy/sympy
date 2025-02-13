@@ -21,7 +21,7 @@ from sympy.core.intfunc import ilcm
 from sympy.core.numbers import I, Integer, equal_valued
 from sympy.core.relational import Relational, Equality
 from sympy.core.sorting import ordered
-from sympy.core.symbol import Dummy, Symbol
+from sympy.core.symbol import Dummy, Symbol, symbols
 from sympy.core.sympify import sympify, _sympify
 from sympy.core.traversal import preorder_traversal, bottom_up
 from sympy.logic.boolalg import BooleanAtom
@@ -312,6 +312,43 @@ class Poly(Basic):
             rep = rep.to_field()
 
         return rep
+
+    @classmethod
+    def from_roots(cls, roots, gens=None, domain=None, **args):
+        """
+        Construct a monic polynomial from its roots.
+
+        Examples
+        ========
+
+        >>> from sympy import Poly, symbols
+        >>> x = symbols('x')
+        >>> Poly.from_roots([1, 2, 3], x)
+        Poly(x**3 - 6*x**2 + 11*x - 6, x, domain='ZZ')
+        >>> Poly.from_roots([Rational(1, 2), Rational(3, 4)], x)
+        Poly(x**2 - 5/4*x + 3/8, x, domain='QQ')
+        """
+
+        roots = [sympify(r) for r in roots]
+
+        if gens is None:
+            gens = symbols('x')
+        if isinstance(gens, Basic):
+            gens = (gens,)
+
+        n = len(roots)
+        coeffs = [0] * (n + 1)
+        coeffs[0] = 1
+
+        for i in range(n):
+            for j in range(i + 1, 0, -1):
+                coeffs[j] -= roots[i] * coeffs[j - 1]
+
+        if domain is None:
+            elements = coeffs
+            domain, _ = construct_domain(elements)
+
+        return cls(coeffs, *gens, domain=domain, **args)
 
     @classmethod
     def _from_expr(cls, rep, opt):

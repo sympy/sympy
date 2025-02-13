@@ -1,14 +1,12 @@
 """Tests for high-level polynomials manipulation functions. """
 
-from sympy import Rational
 from sympy.polys.polyfuncs import (
-    symmetrize, horner, interpolate, rational_interpolate, viete, viete_expansion
+    symmetrize, horner, interpolate, rational_interpolate, viete
 )
 
 from sympy.polys.polyerrors import (
     MultivariatePolynomialError,
 )
-from sympy.polys.polytools import Poly
 
 from sympy.core.singleton import S
 from sympy.core.symbol import symbols
@@ -126,34 +124,3 @@ def test_viete():
     raises(ValueError, lambda: viete(x**2 + 1, [r1]))
 
     raises(MultivariatePolynomialError, lambda: viete(x + y, [r1]))
-
-
-def test_viete_expansion():
-
-    a, b = symbols('a b')
-    x = symbols('x')
-
-    assert viete_expansion([]) == [1]
-    assert viete_expansion([1]) == [1, 1]
-
-    assert viete_expansion([-2]) == [1, -2]
-    assert viete_expansion([1, 1]) == [1, 2, 1]
-
-    assert viete_expansion([2, 2, 2]) == [1, 6, 12, 8]
-    assert viete_expansion([1, 2, 3]) == [1, 6, 11, 6]
-    assert viete_expansion([1, 2, 3, 4]) == [1, 10, 35, 50, 24]
-
-    assert viete_expansion([-1, -2]) == [1, -3, 2]
-    assert viete_expansion([-1, -2, -3]) == [1, -6, 11, -6]
-
-    assert viete_expansion([0]) == [1, 0]
-    assert viete_expansion([0, 0]) == [1, 0, 0]
-    assert viete_expansion([0, 1, 2]) == [1, 3, 2, 0]
-
-    assert viete_expansion([a]) == [1, a]
-    assert viete_expansion([a, b]) == [1, a + b, a*b]
-
-    coeffs = viete_expansion([Rational(7, 2), 5])
-    poly = 2 * 3 * Poly(coeffs, x, domain='QQ')
-    assert poly == Poly(6*x**2 + 51*x + 105, x, domain='QQ')
-    assert viete_expansion([Rational(7,2), 5]) == [1, Rational(17,2), Rational(35,2)]
