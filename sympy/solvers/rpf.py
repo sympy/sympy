@@ -100,7 +100,7 @@ def __solve_k_process(result):
     elif isinstance(result, sympy.ImageSet):
         return [[(result.lamda(meta_k), KConstraintType.GENERATOR)]]
     elif isinstance(result, sympy.Interval):
-        return [[(open_ceiling_left(result.left) if result.left_open else sympy.ceiling(result.left), KConstraintType.GREATER), (open_ceiling_right(result.right) if result.right_open else sympy.ceiling(result.right), KConstraintType.LESSER)]]
+        return [[(open_ceiling_left(result.left) if result.left_open else sympy.ceiling(result.left), KConstraintType.GREATER), (open_ceiling_right(result.right) if result.right_open else sympy.floor(result.right), KConstraintType.LESSER)]]
     elif isinstance(result, sympy.Intersection):
         return __solve_k_process(__solve_k_process_remove_integer_intersections(result))
     elif isinstance(result, sympy.Union):
@@ -216,7 +216,7 @@ def rpf(piecewise, func, mode):
                         for exit_point in possible_exit_points:
                             for k, k_precondition in solve_k(induced_expr, var, exit_point[1]):
                                 new_expr = induced_expr.subs(iteration_counter, k)
-                                condition2 = sympy.And(exit_point[1].subs(var, new_expr), k_precondition, sympy.GreaterThan(k, 0))
+                                condition2 = sympy.And(exit_point[1].subs(var, new_expr), k_precondition, sympy.GreaterThan(k, 1))
 
                                 induced_after = after_induction(after, induced_expr, k, result2, var)
                                 new_terms_and_ks.append(((induced_after.subs(result2, exit_point[0].subs(var, new_expr)).subs(iteration_counter, k), sympy.And(pair[1], condition2)), k))
