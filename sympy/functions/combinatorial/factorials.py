@@ -430,7 +430,7 @@ class factorial2(CombinatorialFunction):
         from sympy.functions.special.gamma_functions import gamma
         from sympy.functions.elementary.miscellaneous import sqrt
 
-        if arg.is_complex:
+        if arg.is_complex and not arg.is_real:
             return sqrt(2/pi) * Pow(2, arg/2) * gamma(arg/2 + 1)
 
         if arg.is_Number:
