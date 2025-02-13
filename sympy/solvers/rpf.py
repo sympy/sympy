@@ -15,8 +15,8 @@ iteration_counter = sympy.Dummy("iteration_counter")
 meta_k = sympy.Dummy("meta_k")
 
 x = sympy.Dummy("x")
-open_ceiling_left = sympy.Lambda(x, sympy.floor(x) + 1)
-open_ceiling_right = sympy.Lambda(x, sympy.ceiling(x) - 1)
+open_ceiling = sympy.Lambda(x, sympy.floor(x) + 1)
+open_floor = sympy.Lambda(x, sympy.ceiling(x) - 1)
 
 def simplify_piecewise(piecewise):
     expr = sympy.simplify(piecewise)
@@ -100,7 +100,7 @@ def __solve_k_process(result):
     elif isinstance(result, sympy.ImageSet):
         return [[(result.lamda(meta_k), KConstraintType.GENERATOR)]]
     elif isinstance(result, sympy.Interval):
-        return [[(open_ceiling_left(result.left) if result.left_open else sympy.ceiling(result.left), KConstraintType.GREATER), (open_ceiling_right(result.right) if result.right_open else sympy.floor(result.right), KConstraintType.LESSER)]]
+        return [[(open_ceiling(result.left) if result.left_open else sympy.ceiling(result.left), KConstraintType.GREATER), (open_floor(result.right) if result.right_open else sympy.floor(result.right), KConstraintType.LESSER)]]
     elif isinstance(result, sympy.Intersection):
         return __solve_k_process(__solve_k_process_remove_integer_intersections(result))
     elif isinstance(result, sympy.Union):
