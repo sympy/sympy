@@ -27,7 +27,7 @@ from sympy.core.traversal import preorder_traversal, bottom_up
 from sympy.logic.boolalg import BooleanAtom
 from sympy.polys import polyoptions as options
 from sympy.polys.constructor import construct_domain
-from sympy.polys.domains import FF, QQ, ZZ, EX
+from sympy.polys.domains import FF, QQ, ZZ,
 from sympy.polys.domains.domainelement import DomainElement
 from sympy.polys.fglmtools import matrix_fglm
 from sympy.polys.groebnertools import groebner as _groebner
