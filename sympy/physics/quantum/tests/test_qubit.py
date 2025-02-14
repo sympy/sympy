@@ -5,11 +5,12 @@ from sympy.core.singleton import S
 from sympy.core.symbol import symbols
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.matrices.dense import Matrix
+from sympy.physics.quantum import TensorProduct
 from sympy.physics.quantum.qubit import (measure_all, measure_all_oneshot, measure_partial,
                                          matrix_to_qubit, matrix_to_density,
                                          qubit_to_matrix, IntQubit,
                                          IntQubitBra, QubitBra)
-from sympy.physics.quantum.gate import (HadamardGate, CNOT, XGate, YGate,
+from sympy.physics.quantum.gate import (HadamardGate, CNOT, H, XGate, YGate,
                                         ZGate, PhaseGate)
 from sympy.physics.quantum.qapply import qapply
 from sympy.physics.quantum.represent import represent
@@ -178,6 +179,12 @@ def test_measure_partial():
         [(Qubit('1000'), Rational(1, 4)),
          (Qubit('1111')/sqrt(3) + Qubit('1101')/sqrt(3) +
           Qubit('1011')/sqrt(3), Rational(3, 4))]
+
+    # Test of measuring states constructed like this: apply a quantum gate
+    # after a TensorProduct from issue 26322
+    state3 = H(0)*TensorProduct(Qubit('0'), Qubit('0'))
+    assert measure_partial(state3, [0]) == \
+        [(Qubit('00'), Rational(1, 2)), (Qubit('01'), Rational(1, 2))]
 
 
 def test_measure_all():
