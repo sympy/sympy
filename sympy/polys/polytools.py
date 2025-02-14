@@ -27,7 +27,7 @@ from sympy.core.traversal import preorder_traversal, bottom_up
 from sympy.logic.boolalg import BooleanAtom
 from sympy.polys import polyoptions as options
 from sympy.polys.constructor import construct_domain
-from sympy.polys.domains import FF, QQ, ZZ
+from sympy.polys.domains import FF, QQ, ZZ, EX
 from sympy.polys.domains.domainelement import DomainElement
 from sympy.polys.fglmtools import matrix_fglm
 from sympy.polys.groebnertools import groebner as _groebner
@@ -325,16 +325,18 @@ class Poly(Basic):
             gens = (gens,)
 
         n = len(roots)
-        coeffs = [0] * (n + 1)
-        coeffs[0] = 1
+
+        if domain is None:
+            domain, roots = construct_domain(roots)
+        else:
+            roots = [domain.convert(r) for r in roots]
+
+        coeffs = [domain.zero] * (n + 1)
+        coeffs[0] = domain.one
 
         for i in range(n):
             for j in range(i + 1, 0, -1):
-                coeffs[j] -= roots[i] * coeffs[j - 1]
-
-        if domain is None:
-            elements = coeffs
-            domain, _ = construct_domain(elements)
+                coeffs[j] = domain.sub(coeffs[j], domain.mul(roots[i], coeffs[j - 1]))
 
         return cls(coeffs, *gens, domain=domain, **args)
 
