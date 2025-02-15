@@ -237,3 +237,15 @@ def test_pdsolve_variable_coeff():
     eq = exp(2*x)*(u.diff(y)) + y*u - u
     sol = pdsolve(eq, hint='1st_linear_variable_coeff')
     assert sol == Eq(u, F(x)*exp(-y*(y - 2)*exp(-2*x)/2))
+
+def test_with_eta_xi_vaiables():
+    eta = Symbol("eta")
+    xi = Symbol("xi")
+
+    u = Function('U')(eta, xi)
+    eq = Eq(u.diff(eta) - sin(eta), 0)
+    sol = pdsolve(eq,hint='1st_linear_constant_coeff')
+    F = Function('F')
+
+    assert sol == Eq(u,F(-xi) - cos(eta))
+    assert checkpdesol(eq, sol)[0]
