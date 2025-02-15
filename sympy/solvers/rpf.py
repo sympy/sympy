@@ -80,7 +80,7 @@ def after_induction(expr, induced_expr_map, k):
         raise NotImplementedError from error
 
 def decontextualize_conditions(piecewise):
-    pairs = list()
+    pairs = []
     precondition = sympy.true
     for pair in piecewise.args:
         pairs.append((pair[0], sympy.simplify(sympy.And(pair[1], precondition))))
@@ -102,7 +102,7 @@ def transform_nonexit_term(expr, func):
 def safe_subs(expr, replacements):
     symbols_replaced = tuple(expr.free_symbols & set(replacements.keys()))
 
-    temp_symbols = list()
+    temp_symbols = []
     for symbol in symbols_replaced:
         temp_symbol = sympy.Dummy()
         expr = expr.subs(symbol, temp_symbol)
@@ -144,7 +144,7 @@ def __solve_k_process(result):
     elif isinstance(result, sympy.Intersection):
         return __solve_k_process(__solve_k_process_remove_integer_intersections(result))
     elif isinstance(result, sympy.Union):
-        return sum(map(__solve_k_process, result.args), start=list())
+        return sum(map(__solve_k_process, result.args), start=[])
     else:
         raise NotImplementedError
 
@@ -159,7 +159,7 @@ def __solve_k(induced_expr_map, condition):
             roots = __solve_k_process_remove_integer_intersections(sympy.solveset(root_expr, iteration_counter, domain=sympy.S.Integers))
 
             if isinstance(roots, sympy.FiniteSet):
-                out = list()
+                out = []
                 for root in roots + {-sympy.oo}:
                     roots2 = (roots - {root}) + {sympy.oo}
                     min_root2 = sympy.Min(*(sympy.Piecewise((root2, sympy.GreaterThan(root2, root)), (sympy.oo, sympy.true)) for root2 in roots2))
@@ -178,9 +178,9 @@ def _solve_k(induced_expr_map, conditions):
     if isinstance(conditions, sympy.And):
         results = tuple(map(partial(_solve_k, induced_expr_map), conditions.args))
 
-        permutations = [list()]
+        permutations = [[]]
         for item in results:
-            new_permutations = list()
+            new_permutations = []
             for item2 in permutations:
                 for item3 in item:
                     new_permutations.append(item2 + item3)
@@ -188,14 +188,14 @@ def _solve_k(induced_expr_map, conditions):
 
         return permutations
     elif isinstance(conditions, sympy.Or):
-        return sum(map(partial(_solve_k, induced_expr_map), conditions.args), start=list())
+        return sum(map(partial(_solve_k, induced_expr_map), conditions.args), start=[])
     else:
         return __solve_k(induced_expr_map, conditions)
 
 def solve_k(induced_expr_map, conditions):
     permutations = _solve_k(induced_expr_map, conditions)
 
-    out = list()
+    out = []
     for permutation in permutations:
         values, types = zip(*permutation)
 
@@ -258,7 +258,7 @@ def rpf(piecewise, func, mode):
 
         exit_points = get_exit_points(piecewise_args, func)
 
-        new_pairs = list()
+        new_pairs = []
         for pair in piecewise_args:
             if pair not in exit_points:
                 try:
@@ -269,16 +269,16 @@ def rpf(piecewise, func, mode):
                     for var in parameters:
                         univariate_induction(exprs, parameters, var, solved)
 
-                    possible_exit_points = list()
-                    exit_point_conditions = list()
+                    possible_exit_points = []
+                    exit_point_conditions = []
                     for exit_point in exit_points:
                         if sympy.ask(sympy.simplify(safe_subs(exit_point[1], next_expr_map))) is not False:
                             possible_exit_points.append(exit_point)
                             exit_point_conditions.append(safe_subs(exit_point[1], next_expr_map))
 
                     if sympy.ask(sympy.simplify(sympy.Or(safe_subs(pair[1], next_expr_map), *exit_point_conditions)), sympy.simplify(pair[1])) is True:
-                        new_terms_and_ks = list()
-                        checked_ks = list()
+                        new_terms_and_ks = []
+                        checked_ks = []
 
                         for exit_point in possible_exit_points:
                             for k, k_precondition in solve_k(solved, exit_point[1]):
