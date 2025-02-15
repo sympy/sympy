@@ -2012,8 +2012,6 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
         if not x:
             return f.ring.zero
-        if not x:
-            raise ZeroDivisionError('polynomial division')
         if not f or x == domain.one:
             return f
 
