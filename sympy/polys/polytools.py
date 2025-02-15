@@ -315,7 +315,7 @@ class Poly(Basic):
 
     @classmethod
     def from_roots(cls, roots, gens=None, domain=None, **args):
-        """Construct a monic polynomial from its roots. """
+        """Construct a monic polynomial from its roots."""
 
         roots = [sympify(r) for r in roots]
 
@@ -324,21 +324,28 @@ class Poly(Basic):
         if isinstance(gens, Basic):
             gens = (gens,)
 
-        n = len(roots)
-
         if domain is None:
-            domain, roots = construct_domain(roots)
+            domain, converted_roots = construct_domain(roots)
         else:
-            roots = [domain.convert(r) for r in roots]
+            converted_roots = [domain.convert(r) for r in roots]
 
+        coeffs = cls._construct_from_roots_domain(converted_roots, domain)
+
+        return cls(coeffs, *gens, domain=domain, **args)
+
+    @staticmethod
+    def _construct_from_roots_domain(roots, domain):
+        """Low-level implementation using domain elements."""
+
+        n = len(roots)
         coeffs = [domain.zero] * (n + 1)
         coeffs[0] = domain.one
 
         for i in range(n):
             for j in range(i + 1, 0, -1):
-                coeffs[j] = domain.sub(coeffs[j], domain.mul(roots[i], coeffs[j - 1]))
+                coeffs[j] = domain.sub(coeffs[j], domain.mul(roots[i], coeffs[j-1]))
 
-        return cls(coeffs, *gens, domain=domain, **args)
+        return coeffs
 
     @classmethod
     def _from_expr(cls, rep, opt):
