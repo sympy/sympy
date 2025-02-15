@@ -1588,3 +1588,10 @@ def test_zero_polynomial_primitive():
     assert cont == 0
     assert prim == zero_poly
     assert prim.is_primitive is False
+
+    R_old = ZZ.old_poly_ring(x)
+    zero_poly_old = R_old(0)
+    cont_old, prim_old = zero_poly_old.primitive()
+    assert cont_old == 0
+    assert prim_old == zero_poly_old
+    assert prim_old.is_primitive is False
