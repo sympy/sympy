@@ -53,7 +53,7 @@ Many Linux distrubtions package SymPy, for example on Debian based systems
 SymPy can be installed with apt:
 
 ```
-apt install sympy
+apt install python-sympy
 ```
 
 or on Fedora based systems, dnf can be used:
