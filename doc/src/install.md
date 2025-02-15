@@ -62,6 +62,18 @@ or on Fedora based systems, dnf can be used:
 dnf install sympy
 ```
 
+## From nightly wheels
+
+We publish a [snapshot of the latest development version of SymPy](
+https://anaconda.org/scientific-python-nightly-wheels/sympy) every night as a
+pip compatible wheel. You can install the latest version with pip:
+
+```
+pip install -i https://pypi.anaconda.org/scientific-python-nightly-wheels/simple sympy
+```
+
+or with other tools that install wheels.
+
 (installation-git)=
 ## From Git
 
