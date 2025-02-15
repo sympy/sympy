@@ -4,7 +4,7 @@
 
 SymPy can be installed on virtually any computer that supports Python.
 
-# From PyPi
+## From PyPi
 
 The official recommend method of installing Python packages from PyPi is via
 pip, with the most basic command being:
@@ -47,7 +47,7 @@ conda install --channel conda-forge sympy
 Tools such as mamba and pixi can be used to install the SymPy conda package
 also.
 
-# From Linux Package Managers
+## From Linux Package Managers
 
 Many Linux distrubtions package SymPy, for example on Debian based systems
 SymPy can be installed with apt:
@@ -63,7 +63,7 @@ dnf install sympy
 ```
 
 (installation-git)=
-## Git
+## From Git
 
 If you wish to contribute to SymPy or like to get the latest updates as they
 come, install SymPy from git. To download the repository, execute the following
@@ -112,7 +112,7 @@ log(x)
 For a starter guide on using SymPy effectively, refer to the {ref}`intro-tutorial`.
 
 (mpmath-install)=
-## mpmath
+## mpmath installation
 
 Versions of SymPy prior to 1.0 included [mpmath], but it now depends on it as
 an external dependency. If you installed SymPy with pip or conda, it will
