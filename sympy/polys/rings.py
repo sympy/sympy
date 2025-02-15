@@ -1974,8 +1974,6 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
     def primitive(f):
         """Returns content and a primitive polynomial. """
         cont = f.content()
-        if cont == f.ring.domain.zero:
-            return (cont, f)
         return cont, f.quo_ground(cont)
 
     def monic(f):
@@ -2012,6 +2010,8 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
     def quo_ground(f, x):
         domain = f.ring.domain
 
+        if not x:
+            return f.ring.zero
         if not x:
             raise ZeroDivisionError('polynomial division')
         if not f or x == domain.one:
