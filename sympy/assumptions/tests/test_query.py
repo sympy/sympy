@@ -1114,11 +1114,9 @@ def test_issue_27441():
 
 
 def test_issue_27447():
-    x = Symbol('x', finite=True)
-    y = Symbol('y', finite=True, nonzero=True)
-    assert ask(Q.finite(Mul(x, oo))) is None
-    assert ask(Q.finite(Mul(y, oo))) is False
-
+    x,y = symbols('x y')
+    assert ask(Q.finite(Mul(x, oo)), Q.finite(x)) is None
+    assert ask(Q.finite(Mul(y, oo)), Q.finite(y) & ~Q.zero(y)) is False
 
 @XFAIL
 def test_bounded_xfail():
