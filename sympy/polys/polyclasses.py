@@ -2218,6 +2218,8 @@ class DUP_Flint(DMP):
     def primitive(f):
         """Returns content and a primitive form of ``f``. """
         cont = f.content()
+        if cont == f.ring.domain.zero:
+            return (cont, f)
         prim = f._exquo_ground(cont)
         return cont, prim
 
