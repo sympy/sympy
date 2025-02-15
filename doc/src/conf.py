@@ -84,6 +84,7 @@ redirects = {
     "tutorial/matrices": "../tutorials/intro-tutorial/matrices.html",
     "tutorial/manipulation": "../tutorials/intro-tutorial/manipulation.html",
 
+    "modules/physics/continuum_mechanics/beam_problems": "../../tutorials/physics/continuum_mechanics/beam_problems.html",
     "modules/physics/vector/index": "../../../explanation/modules/physics/vector/index.html",
     "modules/physics/vector/vectors": "../../../explanation/modules/physics/vector/vectors/vectors.html",
     "modules/physics/vector/kinematics": "../../../explanation/modules/physics/vector/kinematics/kinematics.html",
@@ -102,6 +103,7 @@ redirects = {
     "modules/physics/mechanics/linearize": "../../../explanation/modules/physics/mechanics/linearize.html",
     "modules/physics/mechanics/sympy_mechanics_for_autolev_uses": "../../../explanation/modules/physics/mechanics/sympy_mechanics_for_autolev_users.html",
     "tutorials/physics/biomechanics/biomechanics": "../../../explanation/modules/physics/biomechanics/biomechanics.html",
+    
 
 }
 
