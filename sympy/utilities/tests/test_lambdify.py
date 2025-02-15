@@ -372,6 +372,7 @@ def test_cmath_asin():
     assert abs(f(1) - cmath.asin(1)) < 1e-15
     assert abs(f(-1) - cmath.asin(-1)) < 1e-15
     assert abs(f(2) - cmath.asin(2)) < 1e-15
+    assert abs(f(1j) - cmath.asin(1j)) < 1e-15
 
 
 def test_cmath_acos():
@@ -379,6 +380,7 @@ def test_cmath_acos():
     assert abs(f(1) - cmath.acos(1)) < 1e-15
     assert abs(f(-1) - cmath.acos(-1)) < 1e-15
     assert abs(f(2) - cmath.acos(2)) < 1e-15
+    assert abs(f(1j) - cmath.acos(1j)) < 1e-15
 
 
 def test_cmath_atan():
@@ -387,6 +389,7 @@ def test_cmath_atan():
     assert abs(f(1) - cmath.atan(1)) < 1e-15
     assert abs(f(-1) - cmath.atan(-1)) < 1e-15
     assert abs(f(2) - cmath.atan(2)) < 1e-15
+    assert abs(f(2j) - cmath.atan(2j)) < 1e-15
 
 
 def test_cmath_asinh():
@@ -395,12 +398,15 @@ def test_cmath_asinh():
     assert abs(f(1) - cmath.asinh(1)) < 1e-15
     assert abs(f(-1) - cmath.asinh(-1)) < 1e-15
     assert abs(f(2) - cmath.asinh(2)) < 1e-15
+    assert abs(f(2j) - cmath.asinh(2j)) < 1e-15
 
 
 def test_cmath_acosh():
     f = lambdify(x, acosh(x), "cmath")
     assert abs(f(1) - cmath.acosh(1)) < 1e-15
     assert abs(f(2) - cmath.acosh(2)) < 1e-15
+    assert abs(f(-1) - cmath.acosh(-1)) < 1e-15
+    assert abs(f(2j) - cmath.acosh(2j)) < 1e-15
 
 
 def test_cmath_atanh():
@@ -409,6 +415,8 @@ def test_cmath_atanh():
     assert abs(f(0.5) - cmath.atanh(0.5)) < 1e-15
     assert abs(f(-0.5) - cmath.atanh(-0.5)) < 1e-15
     assert abs(f(2) - cmath.atanh(2)) < 1e-15
+    assert abs(f(-2) - cmath.atanh(-2)) < 1e-15
+    assert abs(f(2j) - cmath.atanh(2j)) < 1e-15
 
 
 def test_cmath_complex_identities():
@@ -441,7 +449,7 @@ def test_cmath_complex_identities():
     assert abs(func_sin(hpi + 1j * hpi)) < 4e-16
 
     # Complex Hyperbolic Cosine Identity: cosh(z) = cosh(Re(z)) * cos(Im(z)) + i*sinh(Re(z)) * sin(Im(z))
-    func_cosh = lambdify([z], cosh(z) - (cosh(re(z)) * cos(im(z)) + I * sinh(re(z)) * sin(im(z))),
+    func_cosh_1 = lambdify([z], cosh(z) - (cosh(re(z)) * cos(im(z)) + I * sinh(re(z)) * sin(im(z))),
                          modules=["cmath", "math"])
     assert abs(func_cosh(hpi + 1j * hpi)) < 4e-16
 
@@ -451,7 +459,7 @@ def test_cmath_complex_identities():
     assert abs(func_sinh(hpi + 1j * hpi)) < 4e-16
 
     # cosh(z) = (e^z + e^(-z)) / 2
-    func_cosh = lambdify([z], cosh(z) - (exp(z) + exp(-z)) / 2, modules=["cmath", "math"])
+    func_cosh_2 = lambdify([z], cosh(z) - (exp(z) + exp(-z)) / 2, modules=["cmath", "math"])
     assert abs(func_cosh(hpi)) < 4e-16
 
     # Additional expressions testing log and exp with real and imaginary parts
