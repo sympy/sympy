@@ -400,7 +400,7 @@ def test_pi():
     z = S.Pi ** 2
     assert ask(Q.commutative(z)) is True
     assert ask(Q.integer(z)) is False
-    assert ask(Q.rational(z)) is None
+    assert ask(Q.rational(z)) is False
     assert ask(Q.algebraic(z)) is False
     assert ask(Q.real(z)) is True
     assert ask(Q.complex(z)) is True
@@ -419,7 +419,7 @@ def test_pi():
     z = (1 + S.Pi) ** 2
     assert ask(Q.commutative(z)) is True
     assert ask(Q.integer(z)) is False
-    assert ask(Q.rational(z)) is None
+    assert ask(Q.rational(z)) is False
     assert ask(Q.algebraic(z)) is None
     assert ask(Q.real(z)) is True
     assert ask(Q.complex(z)) is True
@@ -1379,7 +1379,7 @@ def test_rational():
         assert ask(Q.rational(h(7, evaluate=False))) is False
         assert ask(Q.rational(h(x)), Q.rational(x)) is False
 
-    #https://github.com/sympy/sympy/issues/27442
+    # https://github.com/sympy/sympy/issues/27442
     assert ask(Q.rational(x**y),Q.irrational(x) & Q.rational(y)) is None
     assert ask(Q.rational(x**y),Q.integer(x) & Q.prime(x) & Q.rational(y)) is None
     assert ask(Q.rational(x**y),Q.integer(x) & Q.integer(y)) is None
