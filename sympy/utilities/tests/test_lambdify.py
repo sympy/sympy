@@ -451,7 +451,7 @@ def test_cmath_complex_identities():
     # Complex Hyperbolic Cosine Identity: cosh(z) = cosh(Re(z)) * cos(Im(z)) + i*sinh(Re(z)) * sin(Im(z))
     func_cosh_1 = lambdify([z], cosh(z) - (cosh(re(z)) * cos(im(z)) + I * sinh(re(z)) * sin(im(z))),
                          modules=["cmath", "math"])
-    assert abs(func_cosh(hpi + 1j * hpi)) < 4e-16
+    assert abs(func_cosh_1(hpi + 1j * hpi)) < 4e-16
 
     # Complex Hyperbolic Sine Identity: sinh(z) = sinh(Re(z)) * cos(Im(z)) + i*cosh(Re(z)) * sin(Im(z))
     func_sinh = lambdify([z], sinh(z) - (sinh(re(z)) * cos(im(z)) + I * cosh(re(z)) * sin(im(z))),
@@ -460,7 +460,7 @@ def test_cmath_complex_identities():
 
     # cosh(z) = (e^z + e^(-z)) / 2
     func_cosh_2 = lambdify([z], cosh(z) - (exp(z) + exp(-z)) / 2, modules=["cmath", "math"])
-    assert abs(func_cosh(hpi)) < 4e-16
+    assert abs(func_cosh_2(hpi)) < 4e-16
 
     # Additional expressions testing log and exp with real and imaginary parts
     expr1 = log(re(z)) + log(im(z)) - log(re(z) * im(z))
