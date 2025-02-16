@@ -16,7 +16,6 @@ from sympy.combinatorics.perm_groups import PermutationGroup
 
 from sympy.testing.pytest import raises, XFAIL
 
-
 def test_symbol_unset():
     x = Symbol('x', real=True, integer=True)
     assert x.is_real is True
