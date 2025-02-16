@@ -1279,7 +1279,7 @@ def _discrete_log_trial_mul(n, a, b, order=None):
     b %= n
     if order is None:
         order = n
-    x = 1
+    x = 1 % n
     for i in range(order):
         if x == a:
             return i
@@ -1662,7 +1662,7 @@ def discrete_log(n, a, b, order=None, prime_order=None):
         prime_order = isprime(order)
 
     if order < 1000:
-        return _discrete_log_trial_mul(n, a, b, order)
+        return _discrete_log_trial_mul(n, a, b, order+1)
     elif prime_order:
         # Shanks and Pollard rho are O(sqrt(order)) while index calculus is O(exp(2*sqrt(log(n)log(log(n)))))
         # we compare the expected running times to determine the algorithmus which is expected to be faster
