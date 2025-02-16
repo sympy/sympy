@@ -8,7 +8,7 @@ from sympy.polys.galoistools import gf_crt1, gf_crt2, linear_congruence, gf_csol
 from .primetest import isprime
 from .generate import primerange
 from .factor_ import factorint, _perfect_power
-from .modular import crt
+from .modular import crt, solve_congruence
 from sympy.utilities.decorator import deprecated
 from sympy.utilities.memoization import recurrence_memo
 from sympy.utilities.misc import as_int
@@ -1592,6 +1592,74 @@ def _discrete_log_pohlig_hellman(n, a, b, order=None, order_factors=None):
     return d
 
 
+def _discrete_log_composite_n(n, a, b, order=None, order_factors=None):
+    """
+    Compute the discrete logarithm of ``a`` to the base ``b`` modulo ``n``,
+    where n is any number (prime or composite)
+
+    This is a recursive function that calls underneath the Pohlig-Hellman algorithm
+
+    Examples
+    ========
+
+    >>> from sympy.ntheory.residue_ntheory import _discrete_log_composite_n
+    >>> _discrete_log_composite_n(1073, 29, 87)
+    15
+
+    See Also
+    ========
+
+    _discrete_log_pohlig_hellman
+
+    References
+    ==========
+
+    .. [1] "Handbook of applied cryptography", Menezes, A. J., Van, O. P. C., &
+        Vanstone, S. A. (1997).
+    .. [2] https://math.stackexchange.com/questions/2527691/apply-chinese-remainder-theorem-to-solve-discrete-logarithm-problem
+
+    """
+    from math import ceil
+    factorisation_n = factorint(n)
+
+    cyclic_dlog = []
+    unique_dlog = []
+    continuous_dlog = []
+    for factor, multiplicity in factorisation_n.items():
+        prime_power = factor ** multiplicity
+        if gcd(b, factor) == 1:
+            period_solution = n_order(b, prime_power)
+            cyclic_dlog.append( (discrete_log(prime_power, a, b), period_solution) )
+        else:
+            if a % prime_power == 0:
+                continuous_dlog.append(discrete_log(prime_power, a, b))
+            else:
+                unique_dlog.append(discrete_log(prime_power, a, b))
+
+    if len(cyclic_dlog) > 0:
+        result = solve_congruence(*cyclic_dlog)
+        if result is None:
+            raise ValueError("Log does not exist")
+        else:
+            result, mm = result
+    else:
+        result, mm = (0, 1)
+
+    if len(continuous_dlog) > 0:
+        starting_value = max(continuous_dlog)
+        k = ceil( (starting_value - result) / mm)
+        result = result + k * mm
+
+    if len(unique_dlog) > 0:
+        unique = unique_dlog[0]
+        if all(l == unique for l in unique_dlog) and (unique >= result) and ((unique - result) % mm == 0):
+            result, mm = (unique, 0)
+        else:
+            raise ValueError("Log does not exist")
+
+    return result
+
+
 def discrete_log(n, a, b, order=None, prime_order=None):
     """
     Compute the discrete logarithm of ``a`` to the base ``b`` modulo ``n``.
@@ -1673,8 +1741,10 @@ def discrete_log(n, a, b, order=None, prime_order=None):
             return _discrete_log_shanks_steps(n, a, b, order)
         return _discrete_log_pollard_rho(n, a, b, order)
 
-    return _discrete_log_pohlig_hellman(n, a, b, order, order_factors)
-
+    if isprime(n):
+        return _discrete_log_pohlig_hellman(n, a, b, order, order_factors)
+    else:
+        return _discrete_log_composite_n(n, a, b, order)
 
 
 def quadratic_congruence(a, b, c, n):
