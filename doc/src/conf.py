@@ -84,6 +84,7 @@ redirects = {
     "tutorial/matrices": "../tutorials/intro-tutorial/matrices.html",
     "tutorial/manipulation": "../tutorials/intro-tutorial/manipulation.html",
 
+    "modules/physics/continuum_mechanics/beam_problems": "../../../tutorials/physics/continuum_mechanics/beam_problems.html",
     "modules/physics/vector/index": "../../../explanation/modules/physics/vector/index.html",
     "modules/physics/vector/vectors": "../../../explanation/modules/physics/vector/vectors/vectors.html",
     "modules/physics/vector/kinematics": "../../../explanation/modules/physics/vector/kinematics/kinematics.html",
