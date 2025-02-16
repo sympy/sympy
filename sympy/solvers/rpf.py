@@ -309,7 +309,7 @@ def rpf(piecewise, func, mode):
 
         piecewise_args = new_pairs
 
-    return new_pairs
+    return sympy.Piecewise(*new_pairs)
 
 def rpfsimplify(piecewise, func):
     r"""Attempts to simplify recursive terms in piecewise functions into a non-recursive ones
