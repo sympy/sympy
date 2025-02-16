@@ -32,7 +32,7 @@ class ExprCondPair(Tuple):
                 cond = piecewise_fold(cond)
                 if isinstance(cond, Piecewise):
                     cond = cond.rewrite(ITE)
-    
+
             if not isinstance(cond, Boolean):
                 raise TypeError(filldedent('''
                     Second argument must be a Boolean,
