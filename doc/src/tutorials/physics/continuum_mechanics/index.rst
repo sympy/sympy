@@ -7,4 +7,3 @@ Continuum Mechanics Tutorials
    :maxdepth: 2
 
    beam_problems.rst
-   
