@@ -19,21 +19,25 @@ Undefined = S.NaN  # Piecewise()
 class ExprCondPair(Tuple):
     """Represents an expression, condition pair."""
 
-    def __new__(cls, expr, cond):
+    def __new__(cls, expr, cond, **options):
         expr = as_Basic(expr)
-        if cond == True:
-            return Tuple.__new__(cls, expr, true)
-        elif cond == False:
-            return Tuple.__new__(cls, expr, false)
-        elif isinstance(cond, Basic) and cond.has(Piecewise):
-            cond = piecewise_fold(cond)
-            if isinstance(cond, Piecewise):
-                cond = cond.rewrite(ITE)
 
-        if not isinstance(cond, Boolean):
-            raise TypeError(filldedent('''
-                Second argument must be a Boolean,
-                not `%s`''' % func_name(cond)))
+        evaluate = options.get('evaluate', global_parameters.evaluate)
+        if evaluate:
+            if cond == True:
+                return Tuple.__new__(cls, expr, true)
+            elif cond == False:
+                return Tuple.__new__(cls, expr, false)
+            elif isinstance(cond, Basic) and cond.has(Piecewise):
+                cond = piecewise_fold(cond)
+                if isinstance(cond, Piecewise):
+                    cond = cond.rewrite(ITE)
+    
+            if not isinstance(cond, Boolean):
+                raise TypeError(filldedent('''
+                    Second argument must be a Boolean,
+                    not `%s`''' % func_name(cond)))
+
         return Tuple.__new__(cls, expr, cond)
 
     @property
@@ -131,11 +135,14 @@ class Piecewise(DefinedFunction):
     def __new__(cls, *args, **options):
         if len(args) == 0:
             raise TypeError("At least one (expr, cond) pair expected.")
+
+        evaluate = options.pop('evaluate', global_parameters.evaluate)
+
         # (Try to) sympify args first
         newargs = []
         for ec in args:
             # ec could be a ExprCondPair or a tuple
-            pair = ExprCondPair(*getattr(ec, 'args', ec))
+            pair = ExprCondPair(*getattr(ec, 'args', ec), evaluate=evaluate)
             cond = pair.cond
             if cond is false:
                 continue
@@ -143,8 +150,7 @@ class Piecewise(DefinedFunction):
             if cond is true:
                 break
 
-        eval = options.pop('evaluate', global_parameters.evaluate)
-        if eval:
+        if evaluate:
             r = cls.eval(*newargs)
             if r is not None:
                 return r
