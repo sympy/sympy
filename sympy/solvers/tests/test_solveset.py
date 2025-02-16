@@ -3121,6 +3121,8 @@ def test_invert_modular():
     assert dumeq(invert_modular(Mod(2**(x**2 + x + 1), 7), S(2), n, x),
             (x**2 + x + 1, ImageSet(Lambda(n, 3*n + 1), S.Naturals0)))
     assert invert_modular(Mod(sin(x)**4, 7), S(5), n, x) == (x, S.EmptySet)
+    assert dumeq(invert_modular(Mod(2**x, 2), S(0), n, x),
+            (x, ImageSet(Lambda(n, n + 1), S.Naturals0)))
 
 
 def test_solve_modular():

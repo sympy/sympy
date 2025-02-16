@@ -1566,9 +1566,8 @@ def _invert_modular(modterm, rhs, n, symbol):
             if not m.is_Integer and rhs.is_Integer and a.base.is_Integer:
                 return modterm, rhs
 
-            mdiv = m.p // number_gcd(m.p, rhs.p)
             try:
-                remainder = discrete_log(mdiv, rhs.p, a.base.p)
+                remainder = discrete_log(m.p, rhs.p, a.base.p)
             except ValueError:  # log does not exist
                 return modterm, rhs
             # period -> coefficient of n in the solution and also referred as
