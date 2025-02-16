@@ -143,3 +143,9 @@ This can be removed once https://github.com/executablebooks/mdit-py-plugins/issu
 .task-list-item-checkbox {
     margin: 0 0.2em 0.25em -1.4em;
 }
+
+/* Override visited link color in Furo */
+a:visited {
+    color: var(--color-link); /* Use the default link color */
+}
+
