@@ -146,7 +146,7 @@ jobs:
   # retrieve in the next run.
   handle-test-durations-files:
     name: Merge and cache new test durations
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     needs: [delete-test-durations-caches]
     if: always()
     steps:
