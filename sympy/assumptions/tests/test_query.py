@@ -1588,7 +1588,7 @@ def test_integer():
 
     # https://github.com/sympy/sympy/issues/21177
     # Notable edge cases:
-    # 0^0, 0^oo, 1^oo, (-1)^oo are undefined
+    # 0^0, 0^oo, 0^I, (-1)^oo are undefined
     # 0^y for y < 0 is undefined due to division by zero
     assert ask(Q.integer((-1)**y), Q.integer(y)) is True
     assert ask(Q.integer(x**2), Q.integer(x)) is True
@@ -1611,7 +1611,7 @@ def test_integer():
     assert ask(Q.integer(x**y), Q.rational(x) & Q.integer(y)) is None
     assert ask(Q.integer(x**y), Q.integer(x) & Q.integer(y) & Q.negative(y)) is None
     assert ask(Q.integer(x**y), Q.integer(x) & Q.integer(y) & Q.zero(x)) is None
-    assert ask(Q.integer(x**y), Q.zero(y) & Q.nonzero(x)) is None # (or True)
+    assert ask(Q.integer(x**y), Q.zero(y) & Q.nonzero(x)) is None # (Ideally this should be True.)
 
 
 def test_negative():
