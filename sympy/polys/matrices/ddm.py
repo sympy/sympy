@@ -992,7 +992,7 @@ class DDM(list):
         K = self.domain
         P = self.eye(rows, K)
         L = self.eye(rows, K)
-        D = self.eye(min(rows, cols), K)
+        D = self.eye(rows, K)
         U = self.copy()
 
         if rows == 0 or cols == 0:
@@ -1009,6 +1009,8 @@ class DDM(list):
                         L[k][:k], L[kpivot][:k] = L[kpivot][:k], L[k][:k]
                         break
                 else:
+                    if k > 0:
+                        D[k][k] = D[k-1][k-1]
                     continue
 
             Ukk = U[k][k]

@@ -801,6 +801,17 @@ class DFM:
             D is the diagonal matrix as a DFM.
             U is the upper triangular matrix as a DFM.
         """
+        if self.domain == ZZ:
+            fflu = getattr(self.rep, 'fflu', None)
+            if fflu is not None:
+                P, L, D, U = self.rep.fflu()
+                m, n = self.shape
+                return (
+                    self._new(P, (m, m), self.domain),
+                    self._new(L, (m, m), self.domain),
+                    self._new(D, (m, m), self.domain),
+                    self._new(U, self.shape, self.domain)
+                )
         ddm_p, ddm_l, ddm_d, ddm_u = self.to_ddm().fflu()
         P = ddm_p.to_dfm()
         L = ddm_l.to_dfm()

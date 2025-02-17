@@ -3427,12 +3427,6 @@ class DomainMatrix:
             - D (Diagonal matrix)
             - U (Upper triangular matrix)
 
-        Raises
-        ======
-
-        DMDomainError
-            If the domain of the DomainMatrix is not an integral domain.
-
         Examples
         ========
 
@@ -3459,7 +3453,7 @@ class DomainMatrix:
         See Also
         ========
 
-        lu : Standard LU decomposition (with division).
+        lu : Standard LU decomposition.
         """
         from_rep = self.from_rep
         P, L, D, U = self.rep.fflu()
