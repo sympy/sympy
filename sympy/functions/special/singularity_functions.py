@@ -1,4 +1,4 @@
-from sympy import S, Mul
+from sympy import Mul, Expr
 from sympy.core import S, oo, diff
 from sympy.core.function import DefinedFunction, ArgumentIndexError
 from sympy.core.logic import fuzzy_not
@@ -182,9 +182,10 @@ class SingularityFunction(DefinedFunction):
 
     def __mul__(self, other):
         '''
-        Modifies the singularity function multiplication to return one if an exponent is 0 while the other is not
-        '''
+        Overwrites the singularity function multiplication to return one if an exponent is 0. It will check that the
+        shift and variable remain the same so that it can be simplified.
 
+        '''
         if isinstance(other, SingularityFunction):
             if self.args[1] == other.args[1] and self.args[0] == other.args[0]:
                 if self.args[2] == 0 and other.args[2] != 0:
@@ -193,8 +194,18 @@ class SingularityFunction(DefinedFunction):
                     return self
                 if self.args[2] == 0 and other.args[2] == 0:
                     return self
-        return Mul(self,other, evaluate=True)
+        return Mul(self, other, evaluate=True)
 
+    def _eval_power(self, expt) -> Expr | None:
+        '''
+        Modifies the singularity function exponential function, in which it will return a simplified version of the
+        singularity function to a certain power only if the power for the singularity function is 0 (essentially
+        discontinuity should equal 1).
+
+        '''
+        if self.args[2] == 0 and expt != 0:
+            return self
+        return super()._eval_power(expt)
 
     def _eval_rewrite_as_Piecewise(self, *args, **kwargs):
         '''
