@@ -16,6 +16,9 @@ from .printer import Printer, print_function
 
 from mpmath.libmp import prec_to_dps, to_str as mlib_to_str
 
+from .. import symbols, Symbol
+from ..polys.polyoptions import Symbols
+from sympy.functions.special.singularity_functions import SingularityFunction
 
 class StrPrinter(Printer):
     printmethod = "_sympystr"
@@ -268,6 +271,12 @@ class StrPrinter(Printer):
         # etc so we display in a straight-forward form that fully preserves all
         # args and their order.
         args = expr.args
+
+        if isinstance(args[0], Integer) and isinstance(args[1], Symbol):
+            beginning_part = f"{args[0]}{self._print(args[1])}"
+            remaining_part = " * ".join(self._print(arg) for arg in args[2:])
+            return beginning_part if not remaining_part else f"{beginning_part}{remaining_part}"
+
         if args[0] is S.One or any(
                 isinstance(a, Number) or
                 a.is_Pow and all(ai.is_Integer for ai in a.args)
