@@ -56,18 +56,18 @@ class InfinitePredicate(Predicate):
     Examples
     ========
 
-    >>> from sympy import Q, ask, oo, Rational
+    >>> from sympy import Q, ask, oo, Rational, Symbol, exp
     >>> ask(Q.infinite(oo))
     True
-    >>> ask(Q.infinite(oo*oo))
+    >>> ask(Q.infinite(1e1000))
     True
     >>> ask(Q.infinite(1/Rational(0)))
     True
+    >>> ask(Q.infinite(exp(Symbol('x'))))
+    None
     >>> ask(Q.infinite(5))
     False
     >>> print(ask(Q.infinite(0 * oo)))
-    None
-    >>> print(ask(Q.infinite(oo - oo)))
     None
 
     """
