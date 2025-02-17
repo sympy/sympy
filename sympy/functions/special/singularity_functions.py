@@ -194,7 +194,7 @@ class SingularityFunction(DefinedFunction):
                     return self
         return Mul(self,other, evaluate=True)
 
-    def _eval_power(self, expt) -> Expr | None:
+    def _eval_power(self, expt):
         '''
         Modifies the singularity function exponential function, in which it will return a simplified version of the
         singularity function to a certain power only if the power for the singularity function is 0 (essentially
