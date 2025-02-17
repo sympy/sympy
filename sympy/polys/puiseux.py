@@ -253,7 +253,7 @@ class PuiseuxPoly:
     True
 
     To support fractional powers the polynomial is considered to be a function
-    of ``x**(1/nx) * y**(1/ny) * ...``. The representation keeps track of a
+    of ``x**(1/nx), y**(1/ny), ...``. The representation keeps track of a
     monomial and a list of exponent denominators so that the polynomial can be
     used to represent both negative and fractional powers.
 
