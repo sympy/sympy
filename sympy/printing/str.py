@@ -268,6 +268,13 @@ class StrPrinter(Printer):
         # etc so we display in a straight-forward form that fully preserves all
         # args and their order.
         args = expr.args
+        
+        # Simplifies the string representation of multiplying integers and variables.
+        if isinstance(args[0], Integer) and isinstance(args[1], Symbol):
+            beginning_part = f"{args[0]}{self._print(args[1])}"
+            remaining_part = " * ".join(self._print(arg) for arg in args[2:])
+            return beginning_part if not remaining_part else f"{beginning_part}{remaining_part}"
+            
         if args[0] is S.One or any(
                 isinstance(a, Number) or
                 a.is_Pow and all(ai.is_Integer for ai in a.args)
