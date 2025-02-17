@@ -16,9 +16,8 @@ from .printer import Printer, print_function
 
 from mpmath.libmp import prec_to_dps, to_str as mlib_to_str
 
-from .. import symbols, Symbol
-from ..polys.polyoptions import Symbols
-from sympy.functions.special.singularity_functions import SingularityFunction
+from .. import Symbol
+
 
 class StrPrinter(Printer):
     printmethod = "_sympystr"
@@ -272,6 +271,7 @@ class StrPrinter(Printer):
         # args and their order.
         args = expr.args
 
+        # Simplifies the string representation of multiplying integers and variables.
         if isinstance(args[0], Integer) and isinstance(args[1], Symbol):
             beginning_part = f"{args[0]}{self._print(args[1])}"
             remaining_part = " * ".join(self._print(arg) for arg in args[2:])
