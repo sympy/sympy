@@ -9,7 +9,6 @@ from sympy.assumptions.handlers import AskHandler
 from sympy.assumptions.ask_generated import (get_all_known_facts,
     get_known_facts_dict)
 from sympy.core.add import Add
-from sympy.core.mul import Mul
 from sympy.core.numbers import (I, Integer, Rational, oo, zoo, pi)
 from sympy.core.singleton import S
 from sympy.core.power import Pow
@@ -1115,8 +1114,9 @@ def test_issue_27441():
 
 def test_issue_27447():
     x,y = symbols('x y')
-    assert ask(Q.finite(Mul(x, oo)), Q.finite(x)) is None
-    assert ask(Q.finite(Mul(y, oo)), Q.finite(y) & ~Q.zero(y)) is False
+    a = x * y
+    assert ask(Q.finite(a), Q.infinite(y)) is None
+    assert ask(Q.finite(a), Q.finite(x) & Q.infinite(y) & ~Q.zero(x)) is False
 
 @XFAIL
 def test_bounded_xfail():
