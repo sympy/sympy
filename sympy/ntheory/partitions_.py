@@ -309,7 +309,7 @@ def is_partition_dominant(lambda_:list,mu:list) -> bool:
         return False
     if(len(lambda_)!=len(mu)):
         if(len(lambda_)>len(mu)):
-            b+=[0]*(len(lambda_)-len(mu))
+            mu+=[0]*(len(lambda_)-len(mu))
         else:
             lambda_+=[0]*(len(mu)-len(lambda_))
     lambda_.sort(reverse=True)
