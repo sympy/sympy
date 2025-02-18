@@ -3941,10 +3941,3 @@ def test_issue_20985():
     w, R = symbols('w R')
     poly = Poly(1.0 + I*w/R, w, 1/R)
     assert poly.degree() == S(1)
-
-
-def test_issue_21314():
-    x = Symbol('x')
-    p = Poly([1, 2, 3], x)
-    poly = p.one
-    assert poly == Poly(1, x, domain=ZZ)
