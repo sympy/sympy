@@ -262,6 +262,7 @@ def _(expr, assumptions):
     """
     * Real**Integer              -> Real
     * Positive**Real             -> Real
+    * Negative**Real             -> ?
     * Real**(Integer/Even)       -> Real if base is nonnegative
     * Real**(Integer/Odd)        -> Real
     * Imaginary**(Integer/Even)  -> Real
@@ -318,8 +319,6 @@ def _(expr, assumptions):
                 return True
             elif ask(Q.positive(expr.base), assumptions):
                 return True
-            elif ask(Q.negative(expr.base), assumptions):
-                return False
 
 @RealPredicate.register_many(cos, sin)
 def _(expr, assumptions):
@@ -741,7 +740,21 @@ def _(expr, assumptions):
         if ask(Q.algebraic(expr.exp), assumptions):
             return ask(~Q.nonzero(expr.exp), assumptions)
         return
-    return expr.exp.is_Rational and ask(Q.algebraic(expr.base), assumptions)
+    if expr.base == pi:
+        if ask(Q.integer(expr.exp), assumptions) and ask(Q.positive(expr.exp), assumptions):
+            return False
+        return
+    exp_rational = ask(Q.rational(expr.exp), assumptions)
+    base_algebraic = ask(Q.algebraic(expr.base), assumptions)
+    exp_algebraic = ask(Q.algebraic(expr.exp),assumptions)
+    if base_algebraic and exp_algebraic:
+        if exp_rational:
+            return True
+        # Check based on the Gelfond-Schneider theorem:
+        # If the base is algebraic and not equal to 0 or 1, and the exponent
+        # is irrational,then the result is transcendental.
+        if ask(Q.ne(expr.base,0) & Q.ne(expr.base,1)) and exp_rational is False:
+            return False
 
 @AlgebraicPredicate.register(Rational) # type:ignore
 def _(expr, assumptions):
