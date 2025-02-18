@@ -1596,12 +1596,12 @@ def _discrete_log_pohlig_hellman(n, a, b, order=None, order_factors=None):
     return d
 
 
-def _discrete_log_composite_n(n, a, b, order=None, order_factors=None):
+def _discrete_log_composite_n(n, a, b, n_factors=None):
     """
     Compute the discrete logarithm of ``a`` to the base ``b`` modulo ``n``,
     where n is any number (prime or composite)
 
-    This is a recursive function that calls underneath the Pohlig-Hellman algorithm
+    This is a recursive function that calls discrete_log
 
     Examples
     ========
@@ -1613,7 +1613,7 @@ def _discrete_log_composite_n(n, a, b, order=None, order_factors=None):
     See Also
     ========
 
-    _discrete_log_pohlig_hellman
+    discrete_log
 
     References
     ==========
@@ -1624,12 +1624,13 @@ def _discrete_log_composite_n(n, a, b, order=None, order_factors=None):
 
     """
     from math import ceil
-    factorisation_n = factorint(n)
+    if n_factors is None:
+        n_factors = factorint(n)
 
     cyclic_dlog = []
     unique_dlog = []
     continuous_dlog = []
-    for factor, multiplicity in factorisation_n.items():
+    for factor, multiplicity in n_factors.items():
         prime_power = factor ** multiplicity
         if gcd(b, factor) == 1:
             period_solution = n_order(b, prime_power)
@@ -1703,11 +1704,13 @@ def discrete_log(n, a, b, order=None, prime_order=None):
 
     from math import sqrt, log
     n, a, b = as_int(n), as_int(a), as_int(b)
+    modulus_factors = None
     if order is None:
         # Compute the order and its factoring in one pass
         # order = totient(n), factors = factorint(order)
+        modulus_factors = factorint(n)
         factors = {}
-        for px, kx in factorint(n).items():
+        for px, kx in modulus_factors.items():
             if kx > 1:
                 if px in factors:
                     factors[px] += kx - 1
@@ -1750,10 +1753,10 @@ def discrete_log(n, a, b, order=None, prime_order=None):
             return _discrete_log_shanks_steps(n, a, b, order)
         return _discrete_log_pollard_rho(n, a, b, order)
 
-    if isprime(n):
+    if gcd(b, n) == 1:
         return _discrete_log_pohlig_hellman(n, a, b, order, order_factors)
     else:
-        return _discrete_log_composite_n(n, a, b, order)
+        return _discrete_log_composite_n(n, a, b, modulus_factors)
 
 
 def quadratic_congruence(a, b, c, n):
