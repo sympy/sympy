@@ -443,11 +443,6 @@ class Poly(Basic):
         """Return one polynomial with ``self``'s properties. """
         return self.new(self.rep.one(self.rep.lev, self.rep.dom), *self.gens)
 
-    @property
-    def unit(self):
-        """Return unit polynomial with ``self``'s properties. """
-        return self.new(self.rep.unit(self.rep.lev, self.rep.dom), *self.gens)
-
     def unify(f, g):
         """
         Make ``f`` and ``g`` belong to the same domain.
