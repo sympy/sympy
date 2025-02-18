@@ -163,8 +163,9 @@ def monotonicity_helper(expression, predicate, interval=S.Reals, symbol=None):
     variable = symbol or (free.pop() if free else Symbol('x'))
     derivative = expression.diff(variable)
     predicate_interval = solveset(predicate(derivative), variable, S.Reals)
-    return interval.is_subset(predicate_interval)
-
+    if interval.is_subset(predicate_interval):
+        return True
+    return False
 
 def is_increasing(expression, interval=S.Reals, symbol=None):
     """
