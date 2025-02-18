@@ -1642,6 +1642,32 @@ class Quaternion(Expr):
         """
 
         return self.norm() * self.axis()
+    def curl(self, x, y, z):
+        """
+        Computes the curl of the vector field represented by the quaternion.
+        The quaternion is assumed to represent a 3D vector field, i.e.,
+        q = xi + yj + zk (where a = 0).
+
+        Parameters
+        ----------
+        x, y, z : symbols
+            The coordinates of the vector field.
+
+        Returns
+        -------
+        Quaternion
+            The quaternion representing the curl of the vector field.
+        """
+        # Extract the components of the quaternion (assuming it's a vector field)
+        xi, yi, zi = self.b, self.c, self.d  # components of i, j, k
+
+        # Compute partial derivatives of the components
+        curl_x = diff(zi, y) - diff(yi, z)
+        curl_y = diff(xi, z) - diff(zi, x)
+        curl_z = diff(yi, x) - diff(xi, y)
+
+        # Return a quaternion representing the curl (using i, j, k)
+        return Quaternion(0, curl_x, curl_y, curl_z)
 
     def mensor(self):
         """
