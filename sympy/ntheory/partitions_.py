@@ -276,3 +276,48 @@ def npartitions(n, verbose=False):
     """
     from sympy.functions.combinatorial.numbers import partition as func_partition
     return func_partition(n)
+
+
+def is_partition_dominant(lambda_:list,mu:list) -> bool:
+    """
+    Checks if 'lambda_' dominates 'mu' in the dominance order.
+
+    Returns True if the sums are equal and the cumulative sum of 'lambda_'
+    is greater than or equal to that of 'mu' at every index.
+
+    Args:
+        lambda_ (list): First partition.
+        mu (list): Second partition.
+
+    Returns:
+        bool: True if 'lambda_' dominates 'mu', else False.
+
+    Examples
+    ========
+
+    >>> from sympy.ntheory.partitions_ import is_partition_dominant
+    >>> lambda_ = [5, 3, 2]
+    >>> mu = [4, 4, 2]
+    >>> is_partition_dominant(lambda_ ,mu)
+    True
+    >>> lambda_ = [4, 3, 2]
+    >>> mu = [5, 3, 1]
+    >>> is_partition_dominant(lambda_ ,mu)
+    False
+    """
+    if(sum(lambda_)!=sum(mu)):
+        return False
+    if(len(lambda_)!=len(mu)):
+        if(len(lambda_)>len(mu)):
+            b+=[0]*(len(lambda_)-len(mu))
+        else:
+            lambda_+=[0]*(len(mu)-len(lambda_))
+    lambda_.sort(reverse=True)
+    mu.sort(reverse=True)
+    sum_lambda_=sum_mu=0
+    for i in range(len(lambda_)):
+        sum_lambda_+=lambda_[i]
+        sum_mu+=mu[i]
+        if(sum_mu>sum_lambda_):
+            return False
+    return True

@@ -1,4 +1,4 @@
-from sympy.ntheory.partitions_ import npartitions, _partition_rec, _partition
+from sympy.ntheory.partitions_ import npartitions, _partition_rec, _partition,is_partition_dominant
 
 
 def test__partition_rec():
@@ -26,3 +26,8 @@ def test_deprecated_ntheory_symbolic_functions():
 
     with warns_deprecated_sympy():
         assert npartitions(0) == 1
+
+
+def test_is_partition_dominant():
+    assert is_partition_dominant([5, 3, 2], [4, 4, 2]) == True
+    assert is_partition_dominant([4, 3, 2], [5, 3, 1]) == False
