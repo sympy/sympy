@@ -1623,7 +1623,7 @@ def _discrete_log_composite_n(n, a, b, n_factors=None):
     .. [2] https://math.stackexchange.com/questions/2527691/apply-chinese-remainder-theorem-to-solve-discrete-logarithm-problem
 
     """
-    from math import ceil
+    from sympy.functions.elementary.integers import ceiling
     if n_factors is None:
         n_factors = factorint(n)
 
@@ -1652,7 +1652,7 @@ def _discrete_log_composite_n(n, a, b, n_factors=None):
 
     if len(continuous_dlog) > 0:
         starting_value = max(continuous_dlog)
-        k = ceil( (starting_value - result) / mm)
+        k = ceiling( (starting_value - result) / mm)
         result = result + k * mm
 
     if len(unique_dlog) > 0:
