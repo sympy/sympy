@@ -2,19 +2,21 @@
 
 from __future__ import annotations
 
-from typing import Any
+from collections import defaultdict
+from typing import Any, Optional, Tuple
 from collections.abc import Sequence, Iterable
 
 import itertools
 
-from sympy import Dummy
+from sympy import Dummy, Symbol
 from sympy.core import S
 from sympy.core.expr import Expr
 from sympy.core.exprtools import factor_terms
 from sympy.core.sorting import default_sort_key
 from sympy.logic.boolalg import Boolean
 from sympy.polys import Poly, groebner, roots
-from sympy.polys.domains import ZZ
+from sympy.polys.densearith import dup_lshift, dup_add
+from sympy.polys.domains import ZZ, QQ, ZZ_I, QQ_I
 from sympy.polys.polytools import parallel_poly_from_expr, sqf_part
 from sympy.polys.polyerrors import (
     ComputationFailed,
@@ -846,3 +848,314 @@ def _poly_sort_key(poly):
 def _sys_sort_key(sys):
     """Sort key for lists of polynomials"""
     return list(zip(*map(_poly_sort_key, sys)))
+
+
+def get_domain_conversion(domain, gens):
+    if domain.is_PolynomialRing:
+        base_domain = domain.domain
+        params = domain.symbols
+
+        def lift_poly(poly: Poly, new_gen: Symbol) -> Poly:
+            injected = poly.inject()
+            return injected.set_domain(base_domain)
+
+        def lower_poly(poly: Poly, orig_domain, gen_index: int) -> Poly:
+            return poly.eject(*params).set_domain(orig_domain)
+
+        return base_domain, lift_poly, lower_poly
+    else:
+        dom, lift, lower = dom_get_alg_lift(domain)
+
+        def lift_poly(poly: Poly, new_gen: Symbol) -> Poly:
+            new_gens = poly.gens + (new_gen,)
+            new_coeffs = {}
+
+            for monom, coeff in poly.rep.to_dict().items():
+                lifted = lift(coeff)
+                for i, c in enumerate(lifted):
+                    new_monom = monom + (i,)
+                    new_coeffs[new_monom] = c
+
+            return Poly.from_dict(new_coeffs, *new_gens, domain=dom)
+
+        def lower_poly(poly: Poly, orig_domain, gen_index: int) -> Poly:
+            coeffs = defaultdict(list)
+            for monom, coeff in poly.rep.to_dict().items():
+                base_monom = monom[:gen_index] + monom[gen_index + 1:]
+                deg = monom[gen_index]
+                while len(coeffs[base_monom]) <= deg:
+                    coeffs[base_monom].append(0)
+                coeffs[base_monom][deg] = coeff
+
+            new_coeffs = {}
+            for monom, coeff_list in coeffs.items():
+                if not coeff_list:
+                    coeff_list = [0, 0]
+                elif len(coeff_list) == 1:
+                    coeff_list.append(0)
+                new_coeffs[monom] = lower(coeff_list)
+
+            return Poly.from_dict(new_coeffs, *poly.gens[:gen_index], domain=orig_domain)
+
+        return dom, lift_poly, lower_poly
+
+
+def groebner_basis(polys: list[Poly], gens: Optional[Tuple] = None) -> Tuple[list[Poly], list[Poly], list[Poly]]:
+
+    if not polys:
+        return [], [], []
+
+    domain = polys[0].domain
+    if not all(p.domain == domain for p in polys):
+        raise ValueError("All polynomials must have the same domain")
+
+    if gens is None:
+        gens = polys[0].gens
+
+    if domain.is_ZZ:
+        basis = groebner_basis_zz(polys, gens)
+        return basis, [], []
+    elif domain.is_QQ:
+        basis = groebner_basis_qq(polys, gens)
+        return basis, [], []
+    elif domain in (ZZ_I, QQ_I):
+        basis = groebner_basis_complex(polys, gens)
+        return basis, [], []
+    elif domain.is_PolynomialRing:
+        basis, eqs = groebner_basis_polyring(polys, gens)
+        return basis, eqs, []
+    elif domain.is_AlgebraicField:
+        basis = groebner_basis_algebraic(polys, gens)
+        return basis, [], []
+    elif domain.is_FractionField:
+        basis, eqs, ineqs = groebner_basis_fracfield(polys, gens)
+        return basis, eqs, ineqs
+    else:
+        raise DomainError(f"Unsupported domain: {domain}")
+
+
+def _dom_lift_gaussian(e, K):
+    return [e.y, e.x]
+
+
+def _dom_lower_gaussian(l, K):
+    if len(l) < 2:
+        l.extend([0] * (2 - len(l)))
+    return K(l[1], l[0])
+
+
+def _dom_lift_algebraic(e, K):
+    return e.to_list()
+
+
+def _dom_lower_algebraic(l, K):
+    return K(l)
+
+
+def _dom_lift_poly(e, K, dom_lift):
+    d = []
+    for monom, coeff in e.terms():
+        elements = dom_lift(coeff)
+        if len(elements) > len(d):
+            d.extend([{} for _ in range(len(elements) - len(d))])
+        for i, c in enumerate(elements[::-1]):
+            d[i][monom] = c
+    return [K.ring.from_dict(d) for d in d[::-1]]
+
+
+def _dom_lower_poly(l, K, dom_lower):
+    d = defaultdict(list)
+    for i, e in enumerate(l[::-1]):
+        for monom, coeff in e.items():
+            c = dup_lshift([coeff], i, K.dom)
+            d[monom] = dup_add(d[monom], c, K.dom)
+    return K.ring.from_dict({monom: dom_lower(c) for monom, c in d.items()})
+
+
+def dom_get_alg_lift(K):
+    if K.is_ZZ_I or K.is_QQ_I:
+        dom = K.dom
+        lift = lambda e: _dom_lift_gaussian(e, K)
+        lower = lambda l: _dom_lower_gaussian(l, K)
+    elif K.is_AlgebraicField:
+        dom = K.dom
+        lift = lambda e: _dom_lift_algebraic(e, K)
+        lower = lambda l: _dom_lower_algebraic(l, K)
+    elif K.is_PolynomialRing:
+        dom_e, lift_e, lower_e = dom_get_alg_lift(K.dom)
+        dom = dom_e[K.symbols]
+        lift = lambda e: _dom_lift_poly(e, dom, lift_e)
+        lower = lambda l: _dom_lower_poly(l, K, lower_e)
+    else:
+        raise NotImplementedError
+    return dom, lift, lower
+
+
+def _lift_poly(poly: Poly, new_gen: Symbol) -> Poly:
+    domain = poly.domain
+    dom, lift, _ = dom_get_alg_lift(domain)
+
+    new_gens = poly.gens + (new_gen,)
+    new_coeffs = {}
+
+    for monom, coeff in poly.rep.to_dict().items():
+        lifted = lift(coeff)
+        for i, c in enumerate(lifted):
+            new_monom = monom + (i,)
+            new_coeffs[new_monom] = c
+
+    return Poly.from_dict(new_coeffs, *new_gens, domain=dom)
+
+
+def _lower_poly(poly: Poly, orig_domain, gen_index: int) -> Poly:
+    _, _, lower = dom_get_alg_lift(orig_domain)
+
+    coeffs = defaultdict(list)
+    for monom, coeff in poly.rep.to_dict().items():
+        base_monom = monom[:gen_index] + monom[gen_index + 1:]
+        deg = monom[gen_index]
+        while len(coeffs[base_monom]) <= deg:
+            coeffs[base_monom].append(0)
+        coeffs[base_monom][deg] = coeff
+
+    new_coeffs = {}
+    for monom, coeff_list in coeffs.items():
+        if not coeff_list:
+            coeff_list = [0, 0]
+        elif len(coeff_list) == 1:
+            coeff_list.append(0)
+        new_coeffs[monom] = lower(coeff_list)
+
+    return Poly.from_dict(new_coeffs, *poly.gens[:gen_index], domain=orig_domain)
+
+
+def groebner_basis_zz(polys: list[Poly], gens: Tuple) -> list[Poly]:
+    basis = groebner(polys, gens)
+    return [Poly(b, *gens, domain=ZZ) if not isinstance(b, Poly) else b for b in basis]
+
+
+def groebner_basis_qq(polys: list[Poly], gens: Tuple) -> list[Poly]:
+    cleared = [p.clear_denoms()[1] for p in polys]
+    basis = groebner_basis_zz(cleared, gens)
+    return [p.set_domain(QQ) for p in basis]
+
+
+def groebner_basis_complex(polys: list[Poly], gens: Tuple) -> list[Poly]:
+    domain = polys[0].domain
+    i = Symbol('i')
+    new_gens = gens + (i,)
+
+    if domain.is_QQ_I:
+        polys = [p.clear_denoms()[1] for p in polys]
+
+    dom, lift_poly, lower_poly = get_domain_conversion(domain, gens)
+    lifted_polys = [lift_poly(p, i) for p in polys]
+    min_poly = Poly(i ** 2 + 1, *new_gens, domain=ZZ)
+    lifted_polys.append(min_poly)
+
+    basis = groebner(lifted_polys, new_gens)
+
+    result = []
+    for b in basis:
+        if not isinstance(b, Poly):
+            b = Poly(b, *new_gens, domain=ZZ)
+        if b.degree(i) < 2:
+            result.append(lower_poly(b, domain, len(gens)))
+
+    return result
+
+
+def groebner_basis_algebraic(polys: list[Poly], gens: Tuple) -> list[Poly]:
+    K = polys[0].domain
+    alpha = Dummy('alpha')
+    new_gens = gens + (alpha,)
+
+    cleared_polys = [p.clear_denoms()[1] for p in polys]
+    dom, lift_poly, lower_poly = get_domain_conversion(K, gens)
+
+    lifted_polys = [lift_poly(p, alpha) for p in cleared_polys]
+    min_poly = Poly(K.mod.to_list(), alpha).clear_denoms()[1]
+    lifted_polys.append(min_poly)
+
+    basis = groebner(lifted_polys, new_gens)
+
+    result = []
+    for b in basis:
+        if not isinstance(b, Poly):
+            b = Poly(b, *new_gens, domain=ZZ)
+        if alpha not in b.free_symbols:
+            result.append(lower_poly(b, K, len(gens)))
+
+    return result
+
+
+def groebner_basis_polyring(polys: list[Poly], gens: Tuple) -> Tuple[list[Poly], list[Poly]]:
+    domain = polys[0].domain
+    base_domain = domain.domain
+    params = domain.symbols
+
+    if base_domain.is_QQ:
+        polys = [p.clear_denoms()[1] for p in polys]
+        base_domain = ZZ
+
+    dom, lift_poly, lower_poly = get_domain_conversion(domain, gens)
+    injected_polys = [lift_poly(p, None) for p in polys]
+    new_gens = gens + tuple(params)
+
+    basis = groebner(injected_polys, new_gens)
+
+    param_eqs = []
+    var_basis = []
+
+    for b in basis:
+        if not isinstance(b, Poly):
+            b = Poly(b, *new_gens, domain=base_domain)
+        if all(g not in b.free_symbols for g in gens):
+            param_eqs.append(b)
+        else:
+            var_basis.append(lower_poly(b, domain, len(gens)))
+
+    param_eqs = [lower_poly(p, domain, len(gens)) for p in param_eqs]
+
+    return var_basis, param_eqs
+
+
+def groebner_basis_fracfield(polys: list[Poly], gens: Tuple) -> Tuple[list[Poly], list[Poly], list[Poly]]:
+    domain = polys[0].domain
+    d = Symbol('d')
+    new_gens = gens + (d,)
+
+    cleared_data = []
+    inequalities = []
+    for p in polys:
+        denom, p_cleared = p.clear_denoms(convert=True)
+        cleared_data.append((denom, p_cleared))
+        if denom != 1:
+            inequalities.append(Poly(denom, *new_gens, domain=domain))
+
+    new_polys = []
+    for denom, p_cleared in cleared_data:
+        new_polys.append(p_cleared)
+        if denom != 1:
+            new_polys.append(Poly(d - denom, *new_gens, domain=domain))
+
+    basis = groebner(new_polys, new_gens)
+
+    var_basis = []
+    equalities = []
+
+    for b in basis:
+        if not isinstance(b, Poly):
+            b = Poly(b, *new_gens)
+        if d not in b.free_symbols:
+            if all(g not in b.free_symbols for g in gens):
+                equalities.append(Poly(b, *gens, domain=domain))
+            else:
+                var_basis.append(Poly(b, *gens, domain=domain))
+        else:
+            if b.degree(d) == 1:
+                coeff = -b.coeff_monomial(1)
+                if coeff != 0:
+                    inequalities.append(Poly(coeff, *gens, domain=domain))
+
+    return var_basis, equalities, inequalities
