@@ -267,8 +267,8 @@ def test_log_values():
     assert exp(-log(3))**(-1) == 3
 
     assert log(S.Half) == -log(2)
-    assert log(2*3).func is log
-    assert log(2*3**2).func is log
+    assert isinstance(log(2*3), log)
+    assert isinstance(log(2*3**2),  log)
 
 
 def test_match_real_imag():
@@ -380,8 +380,8 @@ def test_log_symbolic():
 
     assert (log(x**-5)**-1).expand() != -1/log(x)/5
     assert (log(p**-5)**-1).expand() == -1/log(p)/5
-    assert log(-x).func is log and log(-x).args[0] == -x
-    assert log(-p).func is log and log(-p).args[0] == -p
+    assert isinstance(log(-x), log) and log(-x).args[0] == -x
+    assert isinstance(log(-p), log) and log(-p).args[0] == -p
 
 
 def test_log_exp():
@@ -460,13 +460,13 @@ def test_log_hashing():
     assert log(x) != log(log(log(x)))
 
     e = 1/log(log(x) + log(log(x)))
-    assert e.base.func is log
+    assert isinstance(e.base, log)
     e = 1/log(log(x) + log(log(log(x))))
-    assert e.base.func is log
+    assert isinstance(e.base, log)
 
     e = log(log(x))
-    assert e.func is log
-    assert x.func is not log
+    assert isinstance(e, log)
+    assert not isinstance(x, log)
     assert hash(log(log(x))) != hash(x)
     assert e != x
 
