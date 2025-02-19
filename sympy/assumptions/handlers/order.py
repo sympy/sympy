@@ -6,7 +6,7 @@ from sympy.assumptions import Q, ask
 from sympy.core import Add, Basic, Expr, Mul, Pow
 from sympy.core.logic import fuzzy_not, fuzzy_and, fuzzy_or
 from sympy.core.numbers import E, ImaginaryUnit, NaN, I, pi
-from sympy.functions import Abs, acos, acot, asin, atan, exp, factorial, log
+from sympy.functions import Abs, acos, acot, asin, atan, exp, factorial, log, im, re
 from sympy.matrices import Determinant, Trace
 from sympy.matrices.expressions.matexpr import MatrixElement
 
@@ -22,21 +22,20 @@ from ..predicates.order import (NegativePredicate, NonNegativePredicate,
 # NegativePredicate
 
 def _NegativePredicate_number(expr, assumptions):
-    r, i = expr.as_real_imag()
     # If the imaginary part can symbolically be shown to be zero then
     # we just evaluate the real part; otherwise we evaluate the imaginary
     # part to see if it actually evaluates to zero and if it does then
     # we make the comparison between the real part and zero.
-    if not i:
-        r = r.evalf(2)
-        if r._prec != 1:
-            return r < 0
+    if expr.is_real:
+        eval = expr.evalf(2)
+        if eval._prec != 1:
+            return eval < 0
     else:
-        i = i.evalf(2)
+        i = im(expr).evalf(2)
         if i._prec != 1:
             if i != 0:
                 return False
-            r = r.evalf(2)
+            r = re(expr).evalf(2)
             if r._prec != 1:
                 return r < 0
 
@@ -165,7 +164,7 @@ def _(expr, assumptions):
         def nonz(i):
             if i._prec != 1:
                 return i != 0
-        return fuzzy_or(nonz(i) for i in i.as_real_imag())
+        return fuzzy_or(nonz(i) for i in i.is_real)
 
 @NonZeroPredicate.register(Add)
 def _(expr, assumptions):

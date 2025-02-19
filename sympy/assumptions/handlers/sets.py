@@ -130,8 +130,7 @@ def _(expr, assumptions):
     * Rational + !Rational    -> !Rational
     * !Rational + !Rational   -> ?
     """
-    if expr.is_number:
-        if expr.as_real_imag()[1]:
+    if expr.is_number or expr.has(I):
             return False
     return test_closed_group(expr, assumptions, Q.rational)
 
@@ -205,7 +204,7 @@ def _(expr, assumptions):
 def _RealPredicate_number(expr, assumptions):
     # let as_real_imag() work first since the expression may
     # be simpler to evaluate
-    i = expr.as_real_imag()[1].evalf(2)
+    i = im(expr).evalf(2)
     if i._prec != 1:
         return not i
     # allow None to be returned if we couldn't show for sure
