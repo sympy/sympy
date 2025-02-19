@@ -90,7 +90,10 @@ def _generate_factor_base(prime_bound, n):
                 idx_1000 = len(factor_base) - 1
             if prime > 5000 and idx_5000 is None:
                 idx_5000 = len(factor_base) - 1
-            residue = _sqrt_mod_prime_power(n, prime, 1)[0]
+            candidate_residue = _sqrt_mod_prime_power(n, prime, 1)
+            if candidate_residue is None:
+                continue
+            residue = candidate_residue[0]
             log_p = round(log(prime)*2**10)
             factor_base.append(FactorBaseElem(prime, residue, log_p))
     return idx_1000, idx_5000, factor_base
