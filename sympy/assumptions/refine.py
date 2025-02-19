@@ -393,6 +393,17 @@ def refine_matrixelement(expr, assumptions):
             return expr
         return MatrixElement(matrix, j, i)
 
+def refine_Add(expr, assumptions):
+    from sympy import S
+    args = expr.args
+    has_pos_inf = any(a == S.Infinity for a in args)
+    has_neg_inf = any(a == S.NegativeInfinity for a in args)
+    if has_pos_inf and not has_neg_inf:
+        return S.Infinity
+    if has_neg_inf and not has_pos_inf:
+        return S.NegativeInfinity
+    return expr
+
 handlers_dict: dict[str, Callable[[Expr, Boolean], Expr]] = {
     'Abs': refine_abs,
     'Pow': refine_Pow,
@@ -401,5 +412,6 @@ handlers_dict: dict[str, Callable[[Expr, Boolean], Expr]] = {
     'im': refine_im,
     'arg': refine_arg,
     'sign': refine_sign,
-    'MatrixElement': refine_matrixelement
+    'MatrixElement': refine_matrixelement,
+    'Add': refine_Add
 }
