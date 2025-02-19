@@ -2,21 +2,19 @@
 
 from __future__ import annotations
 
-from collections import defaultdict
-from typing import Any, Optional, Tuple
+from typing import Any
 from collections.abc import Sequence, Iterable
 
 import itertools
 
-from sympy import Dummy, Symbol
+from sympy import Dummy
 from sympy.core import S
 from sympy.core.expr import Expr
 from sympy.core.exprtools import factor_terms
 from sympy.core.sorting import default_sort_key
 from sympy.logic.boolalg import Boolean
 from sympy.polys import Poly, groebner, roots
-from sympy.polys.densearith import dup_lshift, dup_add
-from sympy.polys.domains import ZZ, QQ, ZZ_I, QQ_I
+from sympy.polys.domains import ZZ
 from sympy.polys.polytools import parallel_poly_from_expr, sqf_part
 from sympy.polys.polyerrors import (
     ComputationFailed,
@@ -828,7 +826,7 @@ def get_irreducible_groebner_bases(eqs, gens=None):
     gb = groebner(polys, *orig_gens, domain=domain)
 
     irreducible_bases = []
-    systems_to_process = [[p for p in gb]]
+    systems_to_process = [list(gb)]
     processed_systems = set()
 
     while systems_to_process:
@@ -854,7 +852,7 @@ def get_irreducible_groebner_bases(eqs, gens=None):
         for sys in factored_systems:
             if sys:
                 new_gb = groebner(sys, *orig_gens, domain=domain)
-                systems_to_process.append([p for p in new_gb])
+                systems_to_process.append(list(new_gb))
 
     return remove_redundant_bases(irreducible_bases, orig_gens, domain)
 
