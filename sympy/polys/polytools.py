@@ -7772,8 +7772,10 @@ class GroebnerBasis(Basic):
 
         # Using Poly input
         >>> f_poly = Poly(f, x, y)
+        >>> G = groebner([Poly(x**3 - x), Poly(y**3 - y)])
+
         >>> G.reduce(f_poly)
-        ([2*x, 1], x**2 + y**2 + y)
+        ([Poly(2*x, x, y, domain='ZZ'), Poly(1, x, y, domain='ZZ')], Poly(x**2 + y**2 + y, x, y, domain='ZZ'))
 
         """
         if isinstance(expr, Poly):
