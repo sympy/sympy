@@ -17,7 +17,6 @@
 from sympy.external.gmpy import GROUND_TYPES
 
 from sympy import ZZ, QQ, GF, ZZ_I, symbols
-
 from sympy.polys.matrices.exceptions import (
     DMBadInputError,
     DMDomainError,
@@ -893,6 +892,8 @@ def test_XXM_qr_identity_matrix(DM):
     assert R == A
     assert (Q.transpose().matmul(Q)).is_diagonal
     assert R.is_upper
+    assert Q.shape == (3, 3)
+    assert R.shape == (3, 3)
 
 
 @pytest.mark.parametrize('DM', DMQ_all)
@@ -997,3 +998,23 @@ def test_XXM_qr_empty_matrix_0x2(DM):
     assert R.is_upper
     assert Q.shape == (0, 0)
     assert R.shape == (0, 2)
+
+
+@pytest.mark.parametrize('DM', DMZ_all)
+def test_XXM_fflu(DM):
+    A = DM([[1, 2], [3, 4]])
+    P, L, D, U = A.fflu()
+    A_field = A.convert_to(QQ)
+    P_field = P.convert_to(QQ)
+    L_field = L.convert_to(QQ)
+    D_field = D.convert_to(QQ)
+    U_field = U.convert_to(QQ)
+    assert P.shape == A.shape
+    assert L.shape == A.shape
+    assert D.shape == A.shape
+    assert U.shape == A.shape
+    assert P == DM([[1, 0], [0, 1]])
+    assert L == DM([[1, 0], [3, -2]])
+    assert D == DM([[1, 0], [0, -2]])
+    assert U == DM([[1, 2], [0, -2]])
+    assert L_field.matmul(D_field.inv()).matmul(U_field) == P_field.matmul(A_field)

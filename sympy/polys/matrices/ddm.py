@@ -958,6 +958,78 @@ class DDM(list):
 
         return L, U, swaps
 
+    def fflu(self):
+        """
+        Compute a fraction-free PLDU decomposition for DDM.
+
+        This method adapts to rank-deficient matrices by maintaining the original
+        matrix dimensions while zeroing out rows/columns corresponding to zero pivots.
+
+        Returns
+        =======
+
+        (P, L, D, U)
+            P is the permutation matrix.
+            L is the lower triangular matrix.
+            D is the diagonal matrix.
+            U is the upper triangular matrix.
+
+        See Also
+        ========
+
+        sympy.matrices.matrixbase.MatrixBase.LUdecomposition
+        LUdecomposition_Simple
+        LUsolve
+
+        References
+        ==========
+
+        .. [1] W. Zhou & D.J. Jeffrey, "Fraction-free matrix factors: new forms
+            for LU and QR factors". Frontiers in Computer Science in China,
+            Vol 2, no. 1, pp. 67-80, 2008.
+        """
+        rows, cols = self.shape
+        K = self.domain
+        P = self.eye(rows, K)
+        L = self.eye(rows, K)
+        D = self.eye(rows, K)
+        U = self.copy()
+
+        if rows == 0 or cols == 0:
+            return P, L, D, U
+
+        oldpivot = K.one
+
+        for k in range(min(rows, cols)):
+            if U[k][k] == K.zero:
+                for kpivot in range(k + 1, rows):
+                    if U[kpivot][k] != K.zero:
+                        U[k], U[kpivot] = U[kpivot], U[k]
+                        P[k], P[kpivot] = P[kpivot], P[k]
+                        L[k][:k], L[kpivot][:k] = L[kpivot][:k], L[k][:k]
+                        break
+                else:
+                    if k > 0:
+                        D[k][k] = D[k-1][k-1]
+                    continue
+
+            Ukk = U[k][k]
+            L[k][k] = Ukk
+            D[k][k] = oldpivot * Ukk
+
+            for i in range(k + 1, rows):
+                Uik = U[i][k]
+                L[i][k] = Uik
+
+                for j in range(k + 1, cols):
+                    U[i][j] = K.exquo(Ukk * U[i][j] - U[k][j] * Uik, oldpivot)
+
+                U[i][k] = K.zero
+
+            oldpivot = Ukk
+
+        return P, L, D, U
+
     def qr(self):
         """
         QR decomposition for DDM.
