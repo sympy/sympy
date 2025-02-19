@@ -136,6 +136,8 @@ Ntheory Functions Reference
 
 .. autofunction:: npartitions
 
+.. autofunction:: is_partition_dominant
+
 .. module:: sympy.ntheory.primetest
 
 .. autofunction:: is_fermat_pseudoprime
