@@ -17,7 +17,7 @@ Now let's jump in and do some interesting mathematics.  One of the most useful
 features of a symbolic manipulation system is the ability to simplify
 mathematical expressions.  SymPy has dozens of functions to perform various
 kinds of simplification.  There is also one general function called
-:func:`simplify() <sympy.simplify.simplify.simplify>`` that attempts to apply all of these functions in an intelligent
+:func:`simplify() <sympy.simplify.simplify.simplify>` that attempts to apply all of these functions in an intelligent
 way to arrive at the simplest form of an expression.  Here are some examples
 
     >>> simplify(sin(x)**2 + cos(x)**2)
@@ -28,10 +28,10 @@ way to arrive at the simplest form of an expression.  Here are some examples
     (x - 2)⋅(x - 1)
 
 Here, ``gamma(x)`` is `\Gamma(x)`, the `gamma function
-<https://en.wikipedia.org/wiki/Gamma_function>`_.  We see that :func:`simplify() <sympy.simplify.simplify.simplify>``
+<https://en.wikipedia.org/wiki/Gamma_function>`_.  We see that :func:`simplify() <sympy.simplify.simplify.simplify>`
 is capable of handling a large class of expressions.
 
-But :func:`simplify() <sympy.simplify.simplify.simplify>`` has a pitfall.  It just applies all the major
+But :func:`simplify() <sympy.simplify.simplify.simplify>` has a pitfall.  It just applies all the major
 simplification operations in SymPy, and uses heuristics to determine the
 simplest result. But "simplest" is not a well-defined term.  For example, say
 we wanted to "simplify" `x^2 + 2x + 1` into `(x + 1)^2`:
@@ -43,24 +43,24 @@ we wanted to "simplify" `x^2 + 2x + 1` into `(x + 1)^2`:
 We did not get what we want.  There is a function to perform this
 simplification, called :func:`simplify() <sympy.simplify.simplify.simplify>`, which will be discussed below.
 
-Another pitfall to :func:`simplify() <sympy.simplify.simplify.simplify>`` is that it can be unnecessarily slow, since
+Another pitfall to :func:`simplify() <sympy.simplify.simplify.simplify>` is that it can be unnecessarily slow, since
 it tries many kinds of simplifications before picking the best one.  If you
 already know exactly what kind of simplification you are after, it is better
 to apply the specific simplification function(s) that apply those
 simplifications.
 
-Applying specific simplification functions instead of :func:`simplify() <sympy.simplify.simplify.simplify>`` also has
+Applying specific simplification functions instead of :func:`simplify() <sympy.simplify.simplify.simplify>` also has
 the advantage that specific functions have certain guarantees about the form
 of their output.  These will be discussed with each function below.  For
 example, :func:`simplify() <sympy.simplify.simplify.simplify>`, when called on a polynomial with rational coefficients,
 is guaranteed to factor the polynomial into irreducible factors.
-:func:`simplify() <sympy.simplify.simplify.simplify>`` has no guarantees.  It is entirely heuristical, and, as we saw
+:func:`simplify() <sympy.simplify.simplify.simplify>` has no guarantees.  It is entirely heuristical, and, as we saw
 above, it may even miss a possible type of simplification that SymPy is
 capable of doing.
 
-:func:`simplify() <sympy.simplify.simplify.simplify>`` is best when used interactively, when you just want to whittle
+:func:`simplify() <sympy.simplify.simplify.simplify>` is best when used interactively, when you just want to whittle
 down an expression to a simpler form.  You may then choose to apply specific
-functions once you see what :func:`simplify() <sympy.simplify.simplify.simplify>`` returns, to get a more precise
+functions once you see what :func:`simplify() <sympy.simplify.simplify.simplify>` returns, to get a more precise
 result.  It is also useful when you have no idea what form an expression will
 take, and you need a catchall function to simplify it.
 
@@ -266,7 +266,7 @@ To simplify expressions using trigonometric identities, use :func:`trigsimp() <s
     >>> trigsimp(sinh(x)/tanh(x))
     cosh(x)
 
-Much like :func:`simplify() <sympy.simplify.simplify.simplify>``, :func:`trigsimp() <sympy.simplify.trigsimp.trigsimp>` applies various trigonometric identities to
+Much like :func:`simplify() <sympy.simplify.simplify.simplify>`, :func:`trigsimp() <sympy.simplify.trigsimp.trigsimp>` applies various trigonometric identities to
 the input expression, and then uses a heuristic to return the "best" one.
 
 expand_trig
@@ -673,7 +673,7 @@ information).
 combsimp
 --------
 
-To simplify combinatorial expressions, use ``combsimp()``.
+To simplify combinatorial expressions, use :func:`combsimp() <sympy.simplify.combsimp.combsimp>`.
 
     >>> n, k = symbols('n k', integer = True)
     >>> combsimp(factorial(n)/factorial(n - 3))
@@ -687,7 +687,7 @@ gammasimp
 ---------
 
 To simplify expressions with gamma functions or combinatorial functions with
-non-integer argument, use ``gammasimp()``.
+non-integer argument, use :func:`gammasimp() <sympy.simplify.simplify.gammasimp>`.
 
     >>> gammasimp(gamma(x)*gamma(1 - x))
        π
