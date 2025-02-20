@@ -1647,6 +1647,7 @@ def _discrete_log_composite_n(n, a, b, n_factors=None):
             raise ValueError("Log does not exist")
         else:
             result, mm = result
+            result = ZZ.to_sympy(result)
     else:
         result, mm = (0, 1)
 
