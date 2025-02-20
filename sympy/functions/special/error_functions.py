@@ -2206,6 +2206,20 @@ class Shi(TrigonometricIntegral):
         else:
             return self
 
+    def _eval_aseries(self, n, args0, x, logx):
+        from sympy.series.order import Order
+        point = args0[0]
+
+        if point is S.Infinity:
+            z = self.args[0]
+            o = Order(1/z**(n), x)
+
+            p = [factorial(2 *k)/z**(2*k+1) for k in range(n//2+1)] + [o]
+            q = [factorial(2*k+1)/z**(2*(k+1)) for k in range(n//2)] + [o]
+            result =  Add(*q)*sinh(z+o) + Add(*p)*cosh(z+o)
+
+            return result - (I*pi/2)
+        return super()._eval_aseries(n, args0, x, logx)
 
 class Chi(TrigonometricIntegral):
     r"""
@@ -2319,6 +2333,24 @@ class Chi(TrigonometricIntegral):
         else:
             return self
 
+    def _eval_aseries(self, n, args0, x, logx):
+        from sympy.series.order import Order
+        point = args0[0]
+        sign=S.One
+
+        if point in (S.Infinity, S.NegativeInfinity):
+            z = self.args[0]
+            o = Order(1/z**(n), x)
+
+            p = [factorial(2*k)/z**(2*k+1) for k in range(n//2+1)] + [o]
+            q = [factorial(2*k+1)/z**(2*(k+1)) for k in range(n//2)] + [o]
+            result =  Add(*q)*cosh(z+o) + Add(*p)*sinh(z+o)
+
+            if point is S.Infinity:
+                sign=S.NegativeOne
+
+            return result + sign*(I*pi/2)
+        return super()._eval_aseries(n, args0, x, logx)
 
 ###############################################################################
 #################### FRESNEL INTEGRALS ########################################
