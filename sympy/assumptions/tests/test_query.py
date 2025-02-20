@@ -1019,9 +1019,9 @@ def test_bounded():
     a = x*y
     x, y = a.args
     assert ask(Q.finite(a), Q.finite(x) & Q.finite(y)) is True
-    assert ask(Q.finite(a), Q.finite(x) & ~Q.finite(y)) is False
+    assert ask(Q.finite(a), Q.finite(x) & Q.infinite(y)) is None
     assert ask(Q.finite(a), Q.finite(x)) is None
-    assert ask(Q.finite(a), ~Q.finite(x) & Q.finite(y)) is False
+    assert ask(Q.finite(a), Q.infinite(x) & Q.finite(y)) is None
     assert ask(Q.finite(a), ~Q.finite(x) & ~Q.finite(y)) is False
     assert ask(Q.finite(a), ~Q.finite(x)) is None
     assert ask(Q.finite(a), Q.finite(y)) is None
@@ -1032,23 +1032,23 @@ def test_bounded():
     assert ask(Q.finite(a), Q.finite(x) & Q.finite(y)
         & Q.finite(z)) is True
     assert ask(Q.finite(a), Q.finite(x) & Q.finite(y)
-        & ~Q.finite(z)) is False
+        & Q.infinite(z)) is None
     assert ask(Q.finite(a), Q.finite(x) & Q.finite(y)) is None
-    assert ask(Q.finite(a), Q.finite(x) & ~Q.finite(y)
-        & Q.finite(z)) is False
-    assert ask(Q.finite(a), Q.finite(x) & ~Q.finite(y)
-        & ~Q.finite(z)) is False
+    assert ask(Q.finite(a), Q.finite(x) & Q.infinite(y)
+        & Q.finite(z)) is None
+    assert ask(Q.finite(a), Q.finite(x) & Q.infinite(y)
+        & Q.infinite(z)) is None
     assert ask(Q.finite(a), Q.finite(x) & ~Q.finite(y)) is None
     assert ask(Q.finite(a), Q.finite(x) & Q.finite(z)) is None
     assert ask(Q.finite(a), Q.finite(x) & ~Q.finite(z)) is None
     assert ask(Q.finite(a), Q.finite(x)) is None
-    assert ask(Q.finite(a), ~Q.finite(x) & Q.finite(y)
-        & Q.finite(z)) is False
-    assert ask(Q.finite(a), ~Q.finite(x) & Q.finite(y)
-        & ~Q.finite(z)) is False
+    assert ask(Q.finite(a), Q.infinite(x) & Q.finite(y)
+        & Q.finite(z)) is None
+    assert ask(Q.finite(a), Q.infinite(x) & Q.finite(y)
+        & Q.infinite(z)) is None
     assert ask(Q.finite(a), ~Q.finite(x) & Q.finite(y)) is None
-    assert ask(Q.finite(a), ~Q.finite(x) & ~Q.finite(y)
-        & Q.finite(z)) is False
+    assert ask(Q.finite(a), Q.infinite(x) & Q.infinite(y)
+        & Q.finite(z)) is None
     assert ask(Q.finite(a), ~Q.finite(x) & ~Q.finite(y)
         & ~Q.finite(z)) is False
     assert ask(Q.finite(a), ~Q.finite(x) & ~Q.finite(y)) is None
@@ -1111,6 +1111,12 @@ def test_issue_27441():
     # https://github.com/sympy/sympy/issues/27441
     assert ask(Q.composite(y), Q.integer(y) & Q.positive(y) & ~Q.prime(y)) is None
 
+
+def test_issue_27447():
+    x,y = symbols('x y')
+    a = x * y
+    assert ask(Q.finite(a), Q.infinite(y)) is None
+    assert ask(Q.finite(a), Q.finite(x) & Q.infinite(y) & ~Q.zero(x)) is False
 
 @XFAIL
 def test_bounded_xfail():
