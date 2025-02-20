@@ -1255,7 +1255,7 @@ def _discrete_log_trial_mul(n, a, b, order=None):
 
     The algorithm finds the discrete logarithm using exhaustive search. This
     naive method is used as fallback algorithm of ``discrete_log`` when the
-    group order is very small.
+    group order is very small. The value ``n`` must be greater than 1.
 
     Examples
     ========
@@ -1279,10 +1279,6 @@ def _discrete_log_trial_mul(n, a, b, order=None):
     b %= n
     if order is None:
         order = n
-    if n < 1:
-        raise ValueError("n should be positive")
-    if n == 1:
-        return 0
     x = 1
     for i in range(order):
         if x == a:
