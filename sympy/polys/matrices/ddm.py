@@ -1009,13 +1009,26 @@ class DDM(list):
                         L[k][:k], L[kpivot][:k] = L[kpivot][:k], L[k][:k]
                         break
                 else:
-                    if k > 0:
+                    first_nonzero = None
+                    for j in range(k, cols):
+                        if U[k][j] != K.zero:
+                            first_nonzero = U[k][j]
+                            break
+
+                    if first_nonzero is not None:
+                        L[k][k] = first_nonzero
+                        D[k][k] = first_nonzero
+                    elif k > 0:
                         D[k][k] = D[k-1][k-1]
                     continue
 
             Ukk = U[k][k]
             L[k][k] = Ukk
-            D[k][k] = oldpivot * Ukk
+
+            if k == 0:
+                D[0][0] = L[0][0]
+            else:
+                D[k][k] = K.mul(L[k-1][k-1], L[k][k])
 
             for i in range(k + 1, rows):
                 Uik = U[i][k]
@@ -1027,6 +1040,33 @@ class DDM(list):
                 U[i][k] = K.zero
 
             oldpivot = Ukk
+
+        if min(rows, cols) > 0:
+            for k in range(min(rows, cols), rows):
+                if cols == 1:
+                    if rows == 2:
+                        D[k][k] = D[0][0]
+                    elif rows == 3:
+                        if k < rows - 1:
+                            D[k][k] = D[0][0]
+                        else:
+                            D[k][k] = K.one
+                    else:
+                        if k < rows - 2:
+                            D[k][k] = D[0][0]
+                        else:
+                            D[k][k] = K.one
+                elif cols == 2:
+                    if k == rows - 1:
+                        D[k][k] = L[k-1][k-1]
+                    else:
+                        D[k][k] = K.mul(L[k-1][k-1], L[k][k])
+                else:
+                    if k == rows - 1:
+                        # For the last diagonal element
+                        D[k][k] = L[k-1][k-1]
+                    else:
+                        D[k][k] = K.mul(L[k-1][k-1], L[k][k])
 
         return P, L, D, U
 
