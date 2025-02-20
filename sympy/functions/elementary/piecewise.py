@@ -19,11 +19,10 @@ Undefined = S.NaN  # Piecewise()
 class ExprCondPair(Tuple):
     """Represents an expression, condition pair."""
 
-    def __new__(cls, expr, cond, **options):
+    def __new__(cls, expr, cond, evaluate=None):
         expr = as_Basic(expr)
 
-        evaluate = options.get('evaluate', global_parameters.evaluate)
-        if evaluate:
+        if global_parameters.evaluate if evaluate is None else evaluate:
             if cond == True:
                 return Tuple.__new__(cls, expr, true)
             elif cond == False:
@@ -132,11 +131,12 @@ class Piecewise(DefinedFunction):
     nargs = None
     is_Piecewise = True
 
-    def __new__(cls, *args, **options):
+    def __new__(cls, *args, evaluate=None):
         if len(args) == 0:
             raise TypeError("At least one (expr, cond) pair expected.")
 
-        evaluate = options.pop('evaluate', global_parameters.evaluate)
+        if evaluate is None:
+            evaluate = global_parameters.evaluate
 
         # (Try to) sympify args first
         newargs = []
@@ -157,7 +157,7 @@ class Piecewise(DefinedFunction):
         elif len(newargs) == 1 and newargs[0].cond == True:
             return newargs[0].expr
 
-        return Basic.__new__(cls, *newargs, **options)
+        return Basic.__new__(cls, *newargs, evaluate=evaluate)
 
     @classmethod
     def eval(cls, *_args):
