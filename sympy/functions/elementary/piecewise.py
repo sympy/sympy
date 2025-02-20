@@ -157,7 +157,7 @@ class Piecewise(DefinedFunction):
         elif len(newargs) == 1 and newargs[0].cond == True:
             return newargs[0].expr
 
-        return Basic.__new__(cls, *newargs, evaluate=evaluate)
+        return Basic.__new__(cls, *newargs)
 
     @classmethod
     def eval(cls, *_args):
