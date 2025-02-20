@@ -8,7 +8,7 @@ from sympy.polys.galoistools import gf_crt1, gf_crt2, linear_congruence, gf_csol
 from .primetest import isprime
 from .generate import primerange
 from .factor_ import factorint, _perfect_power
-from .modular import crt
+from .modular import crt, solve_congruence
 from sympy.utilities.decorator import deprecated
 from sympy.utilities.memoization import recurrence_memo
 from sympy.utilities.misc import as_int
@@ -1255,7 +1255,7 @@ def _discrete_log_trial_mul(n, a, b, order=None):
 
     The algorithm finds the discrete logarithm using exhaustive search. This
     naive method is used as fallback algorithm of ``discrete_log`` when the
-    group order is very small.
+    group order is very small. The value ``n`` must be greater than 1.
 
     Examples
     ========
@@ -1592,6 +1592,76 @@ def _discrete_log_pohlig_hellman(n, a, b, order=None, order_factors=None):
     return d
 
 
+def _discrete_log_composite_n(n, a, b, n_factors=None):
+    """
+    Compute the discrete logarithm of ``a`` to the base ``b`` modulo ``n``,
+    where n is any number (prime or composite)
+
+    This is a recursive function that calls discrete_log
+
+    Examples
+    ========
+
+    >>> from sympy.ntheory.residue_ntheory import _discrete_log_composite_n
+    >>> _discrete_log_composite_n(1073, 29, 87)
+    15
+
+    See Also
+    ========
+
+    discrete_log
+
+    References
+    ==========
+
+    .. [1] "Handbook of applied cryptography", Menezes, A. J., Van, O. P. C., &
+        Vanstone, S. A. (1997).
+    .. [2] https://math.stackexchange.com/questions/2527691/apply-chinese-remainder-theorem-to-solve-discrete-logarithm-problem
+
+    """
+    from sympy.functions.elementary.integers import ceiling
+    if n_factors is None:
+        n_factors = factorint(n)
+
+    cyclic_dlog = []
+    unique_dlog = []
+    continuous_dlog = []
+    for factor, multiplicity in n_factors.items():
+        prime_power = factor ** multiplicity
+        if gcd(b, factor) == 1:
+            period_solution = n_order(b, prime_power)
+            cyclic_dlog.append( (discrete_log(prime_power, a, b), period_solution) )
+        else:
+            if a % prime_power == 0:
+                continuous_dlog.append(discrete_log(prime_power, a, b))
+            else:
+                unique_dlog.append(discrete_log(prime_power, a, b))
+
+    if len(cyclic_dlog) > 0:
+        result = solve_congruence(*cyclic_dlog)
+        if result is None:
+            raise ValueError("Log does not exist")
+        else:
+            result, mm = result
+            result = ZZ.to_sympy(result)
+    else:
+        result, mm = (0, 1)
+
+    if len(continuous_dlog) > 0:
+        starting_value = max(continuous_dlog)
+        k = ceiling( (starting_value - result) / mm)
+        result = result + k * mm
+
+    if len(unique_dlog) > 0:
+        unique = unique_dlog[0]
+        if all(l == unique for l in unique_dlog) and (unique >= result) and ((unique - result) % mm == 0):
+            result, mm = (unique, 0)
+        else:
+            raise ValueError("Log does not exist")
+
+    return result
+
+
 def discrete_log(n, a, b, order=None, prime_order=None):
     """
     Compute the discrete logarithm of ``a`` to the base ``b`` modulo ``n``.
@@ -1624,13 +1694,20 @@ def discrete_log(n, a, b, order=None, prime_order=None):
         Vanstone, S. A. (1997).
 
     """
+    if n < 1:
+        raise ValueError("n should be positive")
+    if n == 1:
+        return 0
+
     from math import sqrt, log
     n, a, b = as_int(n), as_int(a), as_int(b)
+    modulus_factors = None
     if order is None:
         # Compute the order and its factoring in one pass
         # order = totient(n), factors = factorint(order)
+        modulus_factors = factorint(n)
         factors = {}
-        for px, kx in factorint(n).items():
+        for px, kx in modulus_factors.items():
             if kx > 1:
                 if px in factors:
                     factors[px] += kx - 1
@@ -1662,7 +1739,7 @@ def discrete_log(n, a, b, order=None, prime_order=None):
         prime_order = isprime(order)
 
     if order < 1000:
-        return _discrete_log_trial_mul(n, a, b, order)
+        return _discrete_log_trial_mul(n, a, b, order+1)
     elif prime_order:
         # Shanks and Pollard rho are O(sqrt(order)) while index calculus is O(exp(2*sqrt(log(n)log(log(n)))))
         # we compare the expected running times to determine the algorithmus which is expected to be faster
@@ -1673,8 +1750,10 @@ def discrete_log(n, a, b, order=None, prime_order=None):
             return _discrete_log_shanks_steps(n, a, b, order)
         return _discrete_log_pollard_rho(n, a, b, order)
 
-    return _discrete_log_pohlig_hellman(n, a, b, order, order_factors)
-
+    if gcd(b, n) == 1:
+        return _discrete_log_pohlig_hellman(n, a, b, order, order_factors)
+    else:
+        return _discrete_log_composite_n(n, a, b, modulus_factors)
 
 
 def quadratic_congruence(a, b, c, n):
