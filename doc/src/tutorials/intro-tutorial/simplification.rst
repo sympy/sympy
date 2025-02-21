@@ -250,7 +250,7 @@ Trigonometric Simplification
    SymPy follows Python's naming conventions for inverse trigonometric
    functions, which is to append an ``a`` to the front of the function's
    name.  For example, the inverse cosine, or arc cosine, is called
-:func:`acos() <sympy.functions.elementary.trigonometric.acos>`.
+   :func:`acos() <sympy.functions.elementary.trigonometric.acos>`.
 
    >>> acos(x)
    acos(x)
@@ -372,7 +372,7 @@ but for now, all we need to know are the following.
 
 - Symbols can be given different assumptions by passing the assumption to
   :func:`symbols() <sympy.core.symbol.symbols>`.  For the rest of this section,
-we will be assuming that ``x``
+  we will be assuming that ``x``
   and ``y`` are positive, and that ``a`` and ``b`` are real.  We will leave
   ``z``, ``t``, and ``c`` as arbitrary complex Symbols to demonstrate what
   happens in that case.
