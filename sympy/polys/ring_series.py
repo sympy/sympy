@@ -506,11 +506,13 @@ def _series_inversion1(p, x, prec):
     if _has_constant_term(p - c, x):
         raise ValueError("p cannot contain a constant term depending on "
                          "parameters")
+    if hasattr(R.domain, 'is_unit') and not R.domain.is_unit(c):
+        raise ValueError(f"Constant term {c} must be a unit in {R.domain}")
+
     one = R(1)
     if R.domain is EX:
         one = 1
     if c != one:
-        # TODO add check that it is a unit
         p1 = R(1)/c
     else:
         p1 = R(1)
