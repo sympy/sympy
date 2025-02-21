@@ -18,7 +18,7 @@ from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import sin
 
-from sympy.testing.pytest import SKIP
+from sympy.testing.pytest import SKIP, warns_deprecated_sympy
 
 a, b, c, x, y, z, s = symbols('a,b,c,x,y,z,s')
 
@@ -490,6 +490,26 @@ def test_sympy__codegen__numpy_nodes__logaddexp():
 def test_sympy__codegen__numpy_nodes__logaddexp2():
     from sympy.codegen.numpy_nodes import logaddexp2
     assert _test_args(logaddexp2(x, y))
+
+
+def test_sympy__codegen__numpy_nodes__amin():
+    from sympy.codegen.numpy_nodes import amin
+    assert _test_args(amin(x))
+
+
+def test_sympy__codegen__numpy_nodes__amax():
+    from sympy.codegen.numpy_nodes import amax
+    assert _test_args(amax(x))
+
+
+def test_sympy__codegen__numpy_nodes__minimum():
+    from sympy.codegen.numpy_nodes import minimum
+    assert _test_args(minimum(x, y, z))
+
+
+def test_sympy__codegen__numpy_nodes__maximum():
+    from sympy.codegen.numpy_nodes import maximum
+    assert _test_args(maximum(x, y, z))
 
 
 def test_sympy__codegen__pynodes__List():
@@ -3754,8 +3774,9 @@ def test_sympy__physics__quantum__operator__HermitianOperator():
 
 
 def test_sympy__physics__quantum__operator__IdentityOperator():
-    from sympy.physics.quantum.operator import IdentityOperator
-    assert _test_args(IdentityOperator(5))
+    with warns_deprecated_sympy():
+        from sympy.physics.quantum.operator import IdentityOperator
+        assert _test_args(IdentityOperator(5))
 
 
 def test_sympy__physics__quantum__operator__Operator():

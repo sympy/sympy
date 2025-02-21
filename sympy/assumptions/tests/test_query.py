@@ -420,7 +420,7 @@ def test_pi():
     assert ask(Q.commutative(z)) is True
     assert ask(Q.integer(z)) is False
     assert ask(Q.rational(z)) is False
-    assert ask(Q.algebraic(z)) is False
+    assert ask(Q.algebraic(z)) is None
     assert ask(Q.real(z)) is True
     assert ask(Q.complex(z)) is True
     assert ask(Q.irrational(z)) is True
@@ -1107,6 +1107,11 @@ def test_bounded():
     assert ask(Q.finite(cos(x) + sin(x))) is True
 
 
+def test_issue_27441():
+    # https://github.com/sympy/sympy/issues/27441
+    assert ask(Q.composite(y), Q.integer(y) & Q.positive(y) & ~Q.prime(y)) is None
+
+
 @XFAIL
 def test_bounded_xfail():
     """We need to support relations in ask for this to work"""
@@ -1785,7 +1790,21 @@ def test_prime():
 
     assert ask(Q.prime(x**2), Q.integer(x)) is False
     assert ask(Q.prime(x**2), Q.prime(x)) is False
-    assert ask(Q.prime(x**y), Q.integer(x) & Q.integer(y)) is False
+
+    # https://github.com/sympy/sympy/issues/27446
+    assert ask(Q.prime(4**x), Q.integer(x)) is False
+    assert ask(Q.prime(p**x), Q.prime(p) & Q.integer(x) & Q.ne(x, 1)) is False
+    assert ask(Q.prime(n**x), Q.integer(x) & Q.composite(n)) is False
+    assert ask(Q.prime(x**y), Q.integer(x) & Q.integer(y)) is None
+    assert ask(Q.prime(2**x), Q.integer(x)) is None
+    assert ask(Q.prime(p**x), Q.prime(p) & Q.integer(x)) is None
+
+    # Ideally, these should return True since the base is prime and the exponent is one,
+    # but currently, they return None.
+    assert ask(Q.prime(x**y), Q.prime(x) & Q.eq(y,1)) is None
+    assert ask(Q.prime(x**y), Q.prime(x) & Q.integer(y) & Q.gt(y,0) & Q.lt(y,2)) is None
+
+    assert ask(Q.prime(Pow(x,1, evaluate=False)), Q.prime(x)) is True
 
 
 @_both_exp_pow
@@ -1907,15 +1926,18 @@ def test_real_pow():
     assert ask(Q.real(x**y), Q.imaginary(x) & Q.odd(y)) is False
     assert ask(Q.real(x**y), Q.imaginary(x) & Q.even(y)) is True
     assert ask(Q.real(x**(y/z)), Q.real(x) & Q.real(y/z) & Q.rational(y/z) & Q.even(z) & Q.positive(x)) is True
-    assert ask(Q.real(x**(y/z)), Q.real(x) & Q.rational(y/z) & Q.even(z) & Q.negative(x)) is False
+    assert ask(Q.real(x**(y/z)), Q.real(x) & Q.rational(y/z) & Q.even(z) & Q.negative(x)) is None
     assert ask(Q.real(x**(y/z)), Q.real(x) & Q.integer(y/z)) is True
     assert ask(Q.real(x**(y/z)), Q.real(x) & Q.real(y/z) & Q.positive(x)) is True
-    assert ask(Q.real(x**(y/z)), Q.real(x) & Q.real(y/z) & Q.negative(x)) is False
+    assert ask(Q.real(x**(y/z)), Q.real(x) & Q.real(y/z) & Q.negative(x)) is None
     assert ask(Q.real((-I)**i), Q.imaginary(i)) is True
     assert ask(Q.real(I**i), Q.imaginary(i)) is True
     assert ask(Q.real(i**i), Q.imaginary(i)) is None  # i might be 2*I
     assert ask(Q.real(x**i), Q.imaginary(i)) is None  # x could be 0
     assert ask(Q.real(x**(I*pi/log(x))), Q.real(x)) is True
+
+    # https://github.com/sympy/sympy/issues/27485
+    assert ask(Q.real(n**p), Q.negative(n) & Q.positive(p)) is None
 
 
 @_both_exp_pow
@@ -1992,7 +2014,7 @@ def test_algebraic():
     assert ask(Q.algebraic(sqrt(1 + I*sqrt(3)))) is True
 
     assert ask(Q.algebraic(1 + I*sqrt(3)**Rational(17, 31))) is True
-    assert ask(Q.algebraic(1 + I*sqrt(3)**(17/pi))) is False
+    assert ask(Q.algebraic(1 + I*sqrt(3)**(17/pi))) is None
 
     for f in [exp, sin, tan, asin, atan, cos]:
         assert ask(Q.algebraic(f(7))) is False
@@ -2013,13 +2035,21 @@ def test_algebraic():
         assert ask(Q.algebraic(h(7, evaluate=False))) is False
         assert ask(Q.algebraic(h(x)), Q.algebraic(x)) is False
 
-    assert ask(Q.algebraic(sqrt(sin(7)))) is False
+    assert ask(Q.algebraic(sqrt(sin(7)))) is None
     assert ask(Q.algebraic(sqrt(y + I*sqrt(7)))) is None
 
     assert ask(Q.algebraic(2.47)) is True
 
     assert ask(Q.algebraic(x), Q.transcendental(x)) is False
     assert ask(Q.transcendental(x), Q.algebraic(x)) is False
+
+    #https://github.com/sympy/sympy/issues/27445
+    assert ask(Q.algebraic(Pow(1, x, evaluate=False)), Q.algebraic(x)) is None
+    assert ask(Q.algebraic(Pow(x, y))) is None
+    assert ask(Q.algebraic(Pow(1, x, evaluate=False))) is None
+    assert ask(Q.algebraic(x**(pi*I))) is None
+    assert ask(Q.algebraic(pi**n),Q.integer(n) & Q.positive(n)) is False
+    assert ask(Q.algebraic(x**y),Q.algebraic(x) & Q.rational(y)) is True
 
 
 def test_global():

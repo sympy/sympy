@@ -2,6 +2,7 @@ from sympy.core.function import (Derivative, Function, diff)
 from sympy.core.mul import Mul
 from sympy.core.numbers import (Integer, pi)
 from sympy.core.symbol import (Symbol, symbols)
+from sympy.core.sympify import sympify
 from sympy.functions.elementary.trigonometric import sin
 from sympy.physics.quantum.qexpr import QExpr
 from sympy.physics.quantum.dagger import Dagger
@@ -16,6 +17,8 @@ from sympy.physics.quantum.represent import represent
 from sympy.physics.quantum.spin import JzKet, JzBra
 from sympy.physics.quantum.trace import Tr
 from sympy.matrices import eye
+
+from sympy.testing.pytest import warns_deprecated_sympy
 
 
 class CustomKet(Ket):
@@ -53,7 +56,8 @@ def test_operator():
     assert t_op.label[0] == Symbol(t_op.default_args()[0])
 
     assert Operator() == Operator("O")
-    assert A*IdentityOperator() == A
+    with warns_deprecated_sympy():
+        assert A*IdentityOperator() == A
 
 
 def test_operator_inv():
@@ -88,27 +92,29 @@ def test_unitary():
 
 
 def test_identity():
-    I = IdentityOperator()
-    O = Operator('O')
-    x = Symbol("x")
+    with warns_deprecated_sympy():
+        I = IdentityOperator()
+        O = Operator('O')
+        x = Symbol("x")
+        three = sympify(3)
 
-    assert isinstance(I, IdentityOperator)
-    assert isinstance(I, Operator)
+        assert isinstance(I, IdentityOperator)
+        assert isinstance(I, Operator)
 
-    assert I * O == O
-    assert O * I == O
-    assert I * Dagger(O) == Dagger(O)
-    assert Dagger(O) * I == Dagger(O)
-    assert isinstance(I * I, IdentityOperator)
-    assert isinstance(3 * I, Mul)
-    assert isinstance(I * x, Mul)
-    assert I.inv() == I
-    assert Dagger(I) == I
-    assert qapply(I * O) == O
-    assert qapply(O * I) == O
+        assert I * O == O
+        assert O * I == O
+        assert I * Dagger(O) == Dagger(O)
+        assert Dagger(O) * I == Dagger(O)
+        assert isinstance(I * I, IdentityOperator)
+        assert three * I == three
+        assert I * x == x
+        assert I.inv() == I
+        assert Dagger(I) == I
+        assert qapply(I * O) == O
+        assert qapply(O * I) == O
 
-    for n in [2, 3, 5]:
-        assert represent(IdentityOperator(n)) == eye(n)
+        for n in [2, 3, 5]:
+            assert represent(IdentityOperator(n)) == eye(n)
 
 
 def test_outer_product():

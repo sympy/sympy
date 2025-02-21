@@ -285,11 +285,6 @@ class Product(ExprWithIntLimits):
         else:
             return powsimp(f)
 
-    def _eval_adjoint(self):
-        if self.is_commutative:
-            return self.func(self.function.adjoint(), *self.limits)
-        return None
-
     def _eval_conjugate(self):
         return self.func(self.function.conjugate(), *self.limits)
 
