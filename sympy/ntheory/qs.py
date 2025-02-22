@@ -6,42 +6,30 @@ from math import log, sqrt
 
 
 class SievePolynomial:
-    def __init__(self, modified_coeff=(), a=None, b=None):
+    def __init__(self, a, b, N):
         """This class denotes the seive polynomial.
-        If ``g(x) = (a*x + b)**2 - N``. `g(x)` can be expanded
-        to ``a*x**2 + 2*a*b*x + b**2 - N``, so the coefficient
-        is stored in the form `[a**2, 2*a*b, b**2 - N]`. This
-        ensures faster `eval` method because we dont have to
-        perform `a**2, 2*a*b, b**2` every time we call the
-        `eval` method. As multiplication is more expensive
-        than addition, by using modified_coefficient we get
-        a faster seiving process.
+        Provide methods to compute `(a*x + b)**2 - N` and
+        `a*x + b` when given `x`.
 
         Parameters
         ==========
 
-        modified_coeff : modified_coefficient of sieve polynomial
         a : parameter of the sieve polynomial
         b : parameter of the sieve polynomial
+        N : number to be factored
+
         """
-        self.modified_coeff = modified_coeff
         self.a = a
         self.b = b
+        self.a2 = a**2
+        self.ab = 2*a*b
+        self.b2 = b**2 - N
 
-    def eval(self, x):
-        """
-        Compute the value of the sieve polynomial at point x.
+    def eval_u(self, x):
+        return self.a*x + self.b
 
-        Parameters
-        ==========
-
-        x : Integer parameter for sieve polynomial
-        """
-        ans = 0
-        for coeff in self.modified_coeff:
-            ans *= x
-            ans += coeff
-        return ans
+    def eval_v(self, x):
+        return (self.a2*x + self.ab)*x + self.b2
 
 
 class FactorBaseElem:
@@ -154,7 +142,7 @@ def _initialize_first_polynomial(N, M, factor_base, idx_1000, idx_5000, seed=Non
         B.append(a//q_l*gamma)
 
     b = sum(B)
-    g = SievePolynomial([a*a, 2*a*b, b*b - N], a, b)
+    g = SievePolynomial(a, b, N)
 
     for fb in factor_base:
         if a % fb.prime == 0:
@@ -196,7 +184,7 @@ def _initialize_ith_poly(N, factor_base, i, g, B):
         neg_pow = 1
     b = g.b + 2*neg_pow*B[v - 1]
     a = g.a
-    g = SievePolynomial([a*a, 2*a*b, b*b - N], a, b)
+    g = SievePolynomial(a, b, N)
     for fb in factor_base:
         if a % fb.prime == 0:
             continue
@@ -303,11 +291,11 @@ def _trial_division_stage(N, M, factor_base, sieve_array, sieve_poly, partial_re
         if val < accumulated_val:
             continue
         x = idx - M
-        v = sieve_poly.eval(x)
+        v = sieve_poly.eval_v(x)
         vec, is_smooth = _check_smoothness(v, factor_base)
         if is_smooth is None:#Neither smooth nor partial
             continue
-        u = sieve_poly.a*x + sieve_poly.b
+        u = sieve_poly.eval_u(x)
         # Update the partial relation
         # If 2 partial relation with same large prime is found then generate smooth relation
         if is_smooth is False:#partial relation found
