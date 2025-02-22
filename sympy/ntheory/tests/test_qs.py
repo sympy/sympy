@@ -122,3 +122,9 @@ def test_qs_3():
     factor = _find_factor(
         dependent_row, mark, gauss_matrix, 0, smooth_relations, N)
     assert factor == 23
+
+
+def test_issue_27616():
+    #https://github.com/sympy/sympy/issues/27616
+    N = 9804659461513846513 + 1
+    assert qs(N, 5000, 20000) is not None

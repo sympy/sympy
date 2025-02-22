@@ -474,11 +474,16 @@ def qs(N, prime_bound, M, ERROR_TERM=25, seed=1234):
     .. [2] https://www.rieselprime.de/ziki/Self-initializing_quadratic_sieve
     """
     ERROR_TERM*=2**10
-    idx_1000, idx_5000, factor_base = _generate_factor_base(prime_bound, N)
+    proper_factor = set()
     smooth_relations = []
     ith_poly = 0
     partial_relations = {}
-    proper_factor = set()
+    if N % 2 == 0:
+        proper_factor.add(2)
+        N//=2
+        while N % 2 == 0:
+            N//=2
+    idx_1000, idx_5000, factor_base = _generate_factor_base(prime_bound, N)
     threshold = 5*len(factor_base) // 100
     while True:
         if ith_poly == 0:
