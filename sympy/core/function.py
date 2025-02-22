@@ -2441,9 +2441,8 @@ class Subs(Expr):
         return self.expr.as_leading_term(x)
 
 
-from sympy.core.cache import cacheit 
-
-@cacheit  
+from sympy.core.cache import cacheit
+@cacheit
 def diff(f, *symbols, **kwargs):
     """
     Differentiate f with respect to symbols.
