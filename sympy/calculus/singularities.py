@@ -14,7 +14,7 @@ the following function types in the given ``Interval``:
 - Monotonic
 
 """
-
+from sympy.sets import Interval, Union
 from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
@@ -116,8 +116,7 @@ def singularities(expression, symbol, domain=None):
 #                      DIFFERENTIAL CALCULUS METHODS                      #
 ###########################################################################
 
-
-def monotonicity_helper(expression, predicate, interval=S.Reals, symbol=None):
+def monotonicity_helper(expression, predicate, interval=Interval(-float('inf'), float('inf')), symbol=None):
     """
     Helper function for functions checking function monotonicity.
 
@@ -125,7 +124,7 @@ def monotonicity_helper(expression, predicate, interval=S.Reals, symbol=None):
     ==========
 
     expression : Expr
-        The target function which is being checked
+        The target function which is being checked.
     predicate : function
         The property being tested for. The function takes in an integer
         and returns a boolean. The integer input is the derivative and
@@ -136,20 +135,15 @@ def monotonicity_helper(expression, predicate, interval=S.Reals, symbol=None):
     symbol : Symbol, optional
         The symbol present in expression which gets varied over the given range.
 
-    It returns a boolean indicating whether the interval in which
-    the function's derivative satisfies given predicate is a superset
-    of the given interval.
-
     Returns
     =======
 
     Boolean
         True if ``predicate`` is true for all the derivatives when ``symbol``
         is varied in ``range``, False otherwise.
-
     """
-    from sympy.solvers.solveset import solveset
-
+    from sympy import Symbol, solveset, sympify
+    # Convert the expression to a sympy expression
     expression = sympify(expression)
     free = expression.free_symbols
 
@@ -159,12 +153,31 @@ def monotonicity_helper(expression, predicate, interval=S.Reals, symbol=None):
                 'The function has not yet been implemented'
                 ' for all multivariate expressions.'
             )
-
     variable = symbol or (free.pop() if free else Symbol('x'))
-    derivative = expression.diff(variable)
-    predicate_interval = solveset(predicate(derivative), variable, S.Reals)
-    return interval.is_subset(predicate_interval)
 
+    # Differentiate the expression with respect to the chosen symbol
+    derivative = expression.diff(variable)
+
+    # Solve the predicate on the derivative
+    predicate_interval = solveset(predicate(derivative), variable, domain=Interval(-float('inf'), float('inf')))
+
+    # Check if the predicate_interval is compatible with the interval
+    if predicate_interval is None:
+        return False  # No solutions found, so predicate is never satisfied
+
+    # Ensure predicate_interval is always in a comparable form (e.g., an interval or union of intervals)
+    if isinstance(predicate_interval, Interval):
+        # It's already an interval, check if the original interval is a subset
+        return interval.is_subset(predicate_interval)
+    elif isinstance(predicate_interval, Union):
+        # Handle the case where the result is a union of intervals
+        for subinterval in predicate_interval.args:
+            if isinstance(subinterval, Interval) and interval.is_subset(subinterval):
+                return True
+        return False
+    else:
+        # If predicate_interval is not an Interval or Union, convert it to an interval or set
+        return interval.is_subset(predicate_interval)
 
 def is_increasing(expression, interval=S.Reals, symbol=None):
     """
