@@ -22,10 +22,9 @@ def test_qs_1():
 def test_qs_2() -> None:
     n = 10009202107
     M = 50
-    # a = 10, b = 15, modified_coeff = [a**2, 2*a*b, b**2 - N]
-    sieve_poly = SievePolynomial([100,  1600, -10009195707], 10, 80)
-    assert sieve_poly.eval(10) == -10009169707
-    assert sieve_poly.eval(5) == -10009185207
+    sieve_poly = SievePolynomial(10, 80, n)
+    assert sieve_poly.eval_v(10) == sieve_poly.eval_u(10)**2 - n == -10009169707
+    assert sieve_poly.eval_v(5) == sieve_poly.eval_u(5)**2 - n == -10009185207
 
     idx_1000, idx_5000, factor_base = _generate_factor_base(2000, n)
     assert idx_1000 == 82
