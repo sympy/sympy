@@ -107,6 +107,10 @@ def test_inversion():
     p = R.zero
     raises(ZeroDivisionError, lambda: rs_series_inversion(p, x, 3))
 
+    R, x = ring('x', ZZ)
+    p = 2 + x
+    raises(ValueError, lambda: rs_series_inversion(p, x, 3))
+
 
 def test_series_reversion():
     R, x, y = ring('x, y', QQ)
@@ -633,11 +637,3 @@ def test_rs_series():
     assert rs_series(log(1 + x*a**2), x, 7).as_expr() == -x**6*a**12/6 + \
                     x**5*a**10/5 - x**4*a**8/4 + x**3*a**6/3 - \
                     x**2*a**4/2 + x*a**2
-
-def test_issue_24277():
-    import pytest
-    Rx = ZZ['x']
-    x = Rx.gens[0]
-    p = Rx(2+x)
-    with pytest.raises(ValueError):
-        rs_series_inversion(p, x, 3)
