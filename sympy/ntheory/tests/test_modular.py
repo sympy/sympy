@@ -1,4 +1,4 @@
-from sympy.ntheory.modular import crt, crt1, crt2, solve_congruence
+from sympy.ntheory.modular import crt, crt1, crt2, solve_congruence,frobenius_number
 from sympy.testing.pytest import raises
 
 
@@ -32,3 +32,9 @@ def test_modular():
     assert solve_congruence(*list(zip((1, 1, 2), (3, 2, 4)))) is None
     raises(
         ValueError, lambda: solve_congruence(*list(zip([3, 4, 2], [12.1, 35, 17]))))
+
+
+def test_frobenius_number():
+    assert frobenius_number([6, 9, 20]) == 43
+    assert frobenius_number([3, 5]) == 7
+    assert frobenius_number([4, 6, 8]) == None
