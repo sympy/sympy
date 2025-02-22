@@ -163,9 +163,9 @@ def _(expr, assumptions):
     elif ask(Q.rational(expr.exp), assumptions):
         if ask(Q.prime(expr.base), assumptions) and is_exp_integer is False:
             return False
-        if ask(Q.eq(expr.base,1) | Q.eq(expr.base,-1)):
-            return True
         if ask(Q.zero(expr.base)) and ask(Q.positive(expr.exp)) is True:
+            return True
+        if ask(Q.eq(expr.base,1)):
             return True
 
 @RationalPredicate.register_many(asin, atan, cos, sin, tan)
