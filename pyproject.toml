@@ -33,6 +33,7 @@ markers = [
 [tool.ruff]
 # Enable Pyflakes `E` and `F` codes by default.
 lint.select = [
+    "B015",  # Useless comparison: a == b rather than a = b.
     "C4",
     "E",
     "F",
@@ -43,7 +44,6 @@ lint.select = [
     "SIM101",
     "SLOT",
     "TRY002",
-    "B015",  # Useless comparison: a == b rather than a = b.
 ]
 
 # Ignore rules that currently fail on the SymPy codebase
