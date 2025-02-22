@@ -481,7 +481,8 @@ def qs(N, prime_bound, M, ERROR_TERM=25, seed=1234):
     threshold = len(factor_base) * 105//100
     while len(smooth_relations) < threshold:
         if ith_poly == 0:
-            ith_sieve_poly, B_array = _initialize_first_polynomial(N, M, factor_base, idx_1000, idx_5000)
+            seed += 1
+            ith_sieve_poly, B_array = _initialize_first_polynomial(N, M, factor_base, idx_1000, idx_5000, seed)
         else:
             ith_sieve_poly = _initialize_ith_poly(N, factor_base, ith_poly, ith_sieve_poly, B_array)
         ith_poly += 1
