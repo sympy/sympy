@@ -1,4 +1,5 @@
 from math import prod
+from itertools import combinations_with_replacement
 
 from sympy.external.gmpy import gcd, gcdext
 from sympy.ntheory.primetest import isprime
@@ -289,3 +290,53 @@ def solve_congruence(*remainder_modulus_pairs, **hint):
         if symmetric:
             return symmetric_residue(n, m), m
         return n, m
+
+
+def frobenius_number(denominations):
+    """
+    Computes the Frobenius number for a given set of coin denominations.
+    The Frobenius number is the largest integer that cannot be expressed as a
+    non-negative integer combination of the given denominations.
+
+    Parameters:
+        denominations (list): A list of positive integers representing coin values.
+
+    Returns:
+        int: The Frobenius number if it exists, otherwise None (if GCD != 1).
+
+    Examples
+    ========
+    >>> from sympy.ntheory.modular import frobenius_number
+    >>> frobenius_number([6, 9, 20])
+    43
+    >>> frobenius_number([3, 5])
+    7
+    """
+    if len(denominations) == 1:
+        raise ValueError("Frobenius number is undefined for a single number.")
+
+    if any(d <= 0 for d in denominations):
+        raise ValueError("All input numbers must be positive integers.")
+
+    if 1 in denominations:
+        raise ValueError("Frobenius number is not defined when 1 is in the set.")
+
+    if gcd(*denominations) != 1:
+        raise ValueError("The numbers must have a GCD of 1 for a finite Frobenius number.")
+
+    if len(denominations) == 2:
+        a, b = sorted(denominations)
+        return a * b - a - b
+
+    max_value = max(denominations) * max(denominations)
+    representable = set()
+
+    for i in range(1, max_value):
+        for comb in combinations_with_replacement(denominations, i):
+            representable.add(sum(comb))
+
+    for i in range(max_value, -1, -1):
+        if i not in representable:
+            return i
+
+    return None
