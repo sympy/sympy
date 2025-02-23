@@ -434,7 +434,7 @@ def qs(N, prime_bound, M, ERROR_TERM=25, seed=1234):
     Returns
     =======
 
-    set(int) : The set of proper factors of N without considering multiplicity.
+    set(int) : A set of factors of N without considering multiplicity.
                Returns ``{N}`` if factorization fails.
 
     Examples
@@ -475,7 +475,7 @@ def qs_factor(N, prime_bound, M, ERROR_TERM=25, seed=1234):
     Returns
     =======
 
-    dict[int, int] : Proper factors of N.
+    dict[int, int] : Factors of N.
                      Returns ``{N: 1}`` if factorization fails.
                      Note that the key is not always a prime number.
 
