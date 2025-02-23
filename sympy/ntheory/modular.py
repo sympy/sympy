@@ -310,9 +310,10 @@ def frobenius_number(denominations):
     43
     >>> print(frobenius_number([3, 5]))
     7
-    >>> print(frobenius_number([4, 6, 8])) # GCD != 1
-    None
     """
+    if len(denominations) == 1:
+        raise ValueError("Frobenius number is undefined for a single number.")
+
     if any(d <= 0 for d in denominations):
         raise ValueError("All input numbers must be positive integers.")
 
@@ -320,7 +321,7 @@ def frobenius_number(denominations):
         raise ValueError("Frobenius number is not defined when 1 is in the set.")
 
     if gcd(*denominations) != 1:
-        return None
+        raise ValueError("The numbers must have a GCD of 1 for a finite Frobenius number.")
 
     if len(denominations) == 2:
         a, b = sorted(denominations)
