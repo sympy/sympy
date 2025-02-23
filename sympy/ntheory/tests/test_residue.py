@@ -344,3 +344,7 @@ def test_deprecated_ntheory_symbolic_functions():
         assert legendre_symbol(2, 3) == -1
     with warns_deprecated_sympy():
         assert jacobi_symbol(2, 3) == -1
+
+
+def test_discrete_log_n_equals_1():
+    assert discrete_log(1, 0, 2) == 0
