@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from sympy.ntheory import qs
+from sympy.ntheory import qs, qs_factor
 from sympy.ntheory.qs import SievePolynomial, _generate_factor_base, \
     _initialize_first_polynomial, _initialize_ith_poly, \
     _gen_sieve_array, _check_smoothness, _trial_division_stage, _gauss_mod_2, \
@@ -119,6 +119,12 @@ def test_qs_4():
     for factor in qs(N, 1000, 2000):
         assert N % factor == 0
         N //= factor
+
+
+def test_qs_factor():
+    assert qs_factor(1009 * 100003, 2000, 10000) == {1009: 1, 100003: 1}
+    assert qs_factor(1009**2 * 2003**2*30011*400009, 2000, 10000) == \
+        {1633856814842812561: 1, 30011: 1}
 
 
 def test_issue_27616():
