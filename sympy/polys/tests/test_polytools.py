@@ -3968,3 +3968,20 @@ def test_issue_20985():
     w, R = symbols('w R')
     poly = Poly(1.0 + I*w/R, w, 1/R)
     assert poly.degree() == S(1)
+
+
+def test_issue_23861():
+
+    x = Symbol('x')
+
+    imaginary_str = '3.{}1'.format('0' * 50)
+    imaginary = Float(imaginary_str)
+
+    poly = x + I * imaginary
+    roots = nroots(poly, n=300)
+    assert len(roots) == 1
+
+    root = roots[0]
+    expected = -I * imaginary
+    difference = (root - expected).evalf(300)
+    assert abs(difference) < 1e-300
