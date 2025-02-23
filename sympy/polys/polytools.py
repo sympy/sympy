@@ -3712,11 +3712,12 @@ class Poly(Basic):
         else:
             coeffs = [coeff.evalf(n=n).as_real_imag()
                     for coeff in f.all_coeffs()]
-            try:
-                coeffs = [mpmath.mpc(*coeff) for coeff in coeffs]
-            except TypeError:
-                raise DomainError("Numerical domain expected, got %s" % \
-                        f.rep.dom)
+            with mpmath.workdps(n):
+                try:
+                    coeffs = [mpmath.mpc(*coeff) for coeff in coeffs]
+                except TypeError:
+                    raise DomainError("Numerical domain expected, got %s" % \
+                            f.rep.dom)
 
         dps = mpmath.mp.dps
         mpmath.mp.dps = n
