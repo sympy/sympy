@@ -3202,6 +3202,12 @@ def test_nroots():
         '1.7 + 2.5*I]')
     assert str(Poly(1e-15*x**2 -1).nroots()) == ('[-31622776.6016838, 31622776.6016838]')
 
+    # https://github.com/sympy/sympy/issues/23861
+
+    i = Float('3.000000000000000000000000000000000000000000000000001')
+    [r] = nroots(x + I*i, n=300)
+    assert abs(r + I*i) < 1e-300
+
 
 def test_ground_roots():
     f = x**6 - 4*x**4 + 4*x**3 - x**2
@@ -3968,20 +3974,3 @@ def test_issue_20985():
     w, R = symbols('w R')
     poly = Poly(1.0 + I*w/R, w, 1/R)
     assert poly.degree() == S(1)
-
-
-def test_issue_23861():
-
-    x = Symbol('x')
-
-    imaginary_str = '3.{}1'.format('0' * 50)
-    imaginary = Float(imaginary_str)
-
-    poly = x + I * imaginary
-    roots = nroots(poly, n=300)
-    assert len(roots) == 1
-
-    root = roots[0]
-    expected = -I * imaginary
-    difference = (root - expected).evalf(300)
-    assert abs(difference) < 1e-300
