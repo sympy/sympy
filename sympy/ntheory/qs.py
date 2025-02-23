@@ -434,11 +434,8 @@ def qs(N, prime_bound, M, ERROR_TERM=25, seed=1234):
     Returns
     =======
 
-    set(int) : Set of proper factors of N.
+    set(int) : The set of proper factors of N without considering multiplicity.
                Returns ``{N}`` if factorization fails.
-               If factorization succeeds, it satisfies
-               ``N = math.prod(f**e for f, e in zip(proper_factor, es))``.
-               ``e`` is an integer greater than or equal to 1.
 
     Examples
     ========
@@ -449,34 +446,76 @@ def qs(N, prime_bound, M, ERROR_TERM=25, seed=1234):
     >>> qs(9804659461513846513, 2000, 10000)
     {4641991, 2112166839943}
 
+    See Also
+    ========
+
+    qs_factor
+
     References
     ==========
 
     .. [1] https://pdfs.semanticscholar.org/5c52/8a975c1405bd35c65993abf5a4edb667c1db.pdf
     .. [2] https://www.rieselprime.de/ziki/Self-initializing_quadratic_sieve
     """
+    return set(qs_factor(N, prime_bound, M, ERROR_TERM, seed))
+
+
+def qs_factor(N, prime_bound, M, ERROR_TERM=25, seed=1234):
+    """ Performs factorization using Self-Initializing Quadratic Sieve.
+
+    Parameters
+    ==========
+
+    N : Number to be Factored
+    prime_bound : upper bound for primes in the factor base
+    M : Sieve Interval
+    ERROR_TERM : Error term for checking smoothness
+    seed : seed of random number generator
+
+    Returns
+    =======
+
+    dict[int, int] : Proper factors of N.
+                     Returns ``{N: 1}`` if factorization fails.
+                     Note that the key is not always a prime number.
+
+    Examples
+    ========
+
+    >>> from sympy.ntheory import qs_factor
+    >>> qs_factor(1009 * 100003, 2000, 10000)
+    {1009: 1, 100003: 1}
+
+    See Also
+    ========
+
+    qs
+
+    """
     if N < 2:
         raise ValueError("N should be greater than 1")
     ERROR_TERM*=2**10
-    proper_factor = set()
+    factors = {}
     smooth_relations = []
     ith_poly = 0
     partial_relations = {}
     # Eliminate the possibility of even numbers,
     # prime numbers, and perfect powers.
     if N % 2 == 0:
-        proper_factor.add(2)
+        e = 1
         N //= 2
         while N % 2 == 0:
             N //= 2
+            e += 1
+        factors[2] = e
     if isprime(N):
-        proper_factor.add(N)
-        return proper_factor
+        factors[N] = 1
+        return factors
     if result := _perfect_power(N, 3):
-        n, _ = result
-        proper_factor.add(n)
-        return proper_factor
-
+        n, e = result
+        factors[n] = e
+        return factors
+    N_copy = N
     idx_1000, idx_5000, factor_base = _generate_factor_base(prime_bound, N)
     threshold = len(factor_base) * 105//100
     while len(smooth_relations) < threshold:
@@ -491,21 +530,28 @@ def qs(N, prime_bound, M, ERROR_TERM=25, seed=1234):
         sieve_array = _gen_sieve_array(M, factor_base)
         s_rel, p_f = _trial_division_stage(N, M, factor_base, sieve_array, ith_sieve_poly, partial_relations, ERROR_TERM)
         smooth_relations += s_rel
-        proper_factor |= p_f
+        for p in p_f:
+            if N_copy % p:
+                continue
+            e = 1
+            N_copy //= p
+            while N_copy % p == 0:
+                N_copy //= p
+                e += 1
+            factors[p] = e
     matrix = [s_relation[2] for s_relation in smooth_relations]
     dependent_row, mark, gauss_matrix = _gauss_mod_2(matrix)
-    N_copy = N
     for index in range(len(dependent_row)):
         factor = _find_factor(dependent_row, mark, gauss_matrix, index, smooth_relations, N)
         if 1 < factor and N_copy % factor == 0:
-            proper_factor.add(factor)
+            e = 1
+            N_copy //= factor
             while N_copy % factor == 0:
                 N_copy //= factor
-            if N_copy == 1:
-                break
-            if isprime(N_copy):
-                proper_factor.add(N_copy)
+                e += 1
+            factors[factor] = e
+            if N_copy == 1 or isprime(N_copy):
                 break
     if N_copy != 1:
-        proper_factor.add(N_copy)
-    return proper_factor
+        factors[N_copy] = 1
+    return factors
