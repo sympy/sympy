@@ -1116,7 +1116,8 @@ def test_issue_27447():
     x,y = symbols('x y')
     a = x * y
     assert ask(Q.finite(a), Q.infinite(y)) is None
-    assert ask(Q.finite(a), Q.finite(x) & Q.infinite(y) & ~Q.zero(x)) is False
+    assert ask(Q.finite(a), Q.finite(x) & ~Q.zero(x) & ~Q.finite(y)) is False
+
 
 @XFAIL
 def test_bounded_xfail():
