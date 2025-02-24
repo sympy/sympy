@@ -1,4 +1,5 @@
 from sympy.assumptions.ask import Q
+from sympy import oo
 from sympy.assumptions.refine import refine
 from sympy.core.expr import Expr
 from sympy.core.numbers import (I, Rational, nan, pi)
@@ -243,3 +244,4 @@ def test_refine_negative_infinity():
     expr = sqrt(z) - oo
     result = refine(expr)
     assert result == S.NegativeInfinity
+
