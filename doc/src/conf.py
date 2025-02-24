@@ -502,8 +502,9 @@ global_enable_try_examples = True
 try_examples_global_button_text = "Try it!"
 try_examples_global_warning_text = (
     "Interactive examples for SymPy are experimental and may not always "
-    "work as expected. If you encounter any issues, please report them on "
-    "the [SymPy issue tracker](https://github.com/sympy/sympy/issues/new)."
+    "work as expected. If you encounter any issues or wish to provide any "
+    "feedback, please reach out to us on the "
+    "[SymPy issue tracker](https://github.com/sympy/sympy/issues/27657)."
 )
 
 
