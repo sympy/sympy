@@ -1391,6 +1391,8 @@ def test_rational():
     assert ask(Q.rational(Pow(-1, x, evaluate=False), Q.rational(x))) is None
     assert ask(Q.rational(x**y), Q.integer(y) & ~Q. algebraic(x)) is None
     assert ask(Q.rational(x**y), Q.integer(y) & ~Q. algebraic(x) & ~Q.zero(x)) is None
+    assert ask(Q.rational(x**y), Q.integer(y) & ~Q.algebraic(x) & Q.complex(x) & ~Q.real(x)) is None
+    assert ask(Q.rational(x**y), Q.integer(y) & ~Q.algebraic(x) & Q.complex(x)) is None
 
 
 def test_hermitian():
