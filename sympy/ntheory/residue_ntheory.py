@@ -1625,6 +1625,10 @@ def discrete_log(n, a, b, order=None, prime_order=None):
 
     """
     from math import sqrt, log
+    if n < 1:
+        raise ValueError("n should be positive")
+    if n == 1:
+        return 0
     n, a, b = as_int(n), as_int(a), as_int(b)
     if order is None:
         # Compute the order and its factoring in one pass
