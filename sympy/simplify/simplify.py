@@ -605,9 +605,7 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
         new_expr = custom_simplify(expr)
         if new_expr != expr:
             return new_expr
-        
     expr = sympify(expr, rational=rational)
-
     if rational and expr.has(Float):
         simplified_expr = nsimplify(expr, rational=True)
         try:
