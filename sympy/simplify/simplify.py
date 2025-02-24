@@ -615,10 +615,6 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
                 expr = simplified_expr
         except (TypeError, ValueError):
             pass
-
-    
-
-
     def shorter(*choices):
         """
         Return the choice that has the fewest ops. In case of a tie,
