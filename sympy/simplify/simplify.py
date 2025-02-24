@@ -442,12 +442,10 @@ def custom_simplify(expr):
         simplified_expr = expr.lhs - expr.rhs
         if simplified_expr.is_Add or simplified_expr.is_Mul:
             simplified_expr = simplified_expr.simplify()
-        
             if simplified_expr.is_Mul:
                 coeff, term = simplified_expr.as_coeff_Mul()
                 if coeff == 2:
-                    simplified_expr = term 
-        
+                    simplified_expr = term
         return expr.func(simplified_expr, 0)
     return expr
 
