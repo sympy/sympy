@@ -225,3 +225,21 @@ def test_matrixelement():
     assert refine(x[1, 0], Q.symmetric(x)) == x[0, 1]
     assert refine(x[i, j], Q.symmetric(x)) == x[j, i]
     assert refine(x[j, i], Q.symmetric(x)) == x[j, i]
+
+def test_refine_infinity():
+    expr = (sqrt(z) + oo)**2
+
+    result = refine(expr)
+
+    assert result == oo, f"Expected oo, but got {result}"
+
+def test_refine_infinity_with_finite_term():
+    expr = sqrt(z) + 5 + oo
+    result = refine(expr)
+
+    assert result == oo, f"Expected oo, but got {result}"
+
+def test_refine_negative_infinity():
+    expr = sqrt(z) - oo
+    result = refine(expr)
+    assert result == S.NegativeInfinity
