@@ -48,6 +48,7 @@ from sympy.simplify.trigsimp import trigsimp, exptrigsimp
 from sympy.utilities.decorator import deprecated
 from sympy.utilities.iterables import has_variety, sift, subsets, iterable
 from sympy.utilities.misc import as_int
+from sympy.core.relational import GreaterThan, LessThan
 
 import mpmath
 
@@ -432,6 +433,19 @@ def simplify(expr: Set, **kwargs) -> Set: ...
 @overload
 def simplify(expr: Basic, **kwargs) -> Basic: ...
 
+def custom_simplify(expr):
+    if isinstance(expr, (GreaterThan, LessThan)):
+        simplified_expr = (expr.lhs - expr.rhs).simplify()
+        
+        if simplified_expr.is_Mul:
+            coeff, term = simplified_expr.as_coeff_Mul()
+            if coeff == 2:
+                simplified_expr = term  # Remove coefficient 2
+
+        return expr.func(simplified_expr, 0)  # Apply inequality
+    return expr
+
+
 def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, doit=True, **kwargs):
     """Simplifies the given expression.
 
@@ -586,6 +600,7 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
     sympy.assumptions.refine.refine : Simplification using assumptions.
     sympy.assumptions.ask.ask : Query for boolean expressions using assumptions.
     """
+    expr = custom_simplify(expr)
 
     def shorter(*choices):
         """
