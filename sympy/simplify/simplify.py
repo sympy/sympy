@@ -433,8 +433,6 @@ def simplify(expr: Set, **kwargs) -> Set: ...
 @overload
 def simplify(expr: Basic, **kwargs) -> Basic: ...
 
-from sympy.core.relational import GreaterThan, LessThan
-
 def custom_simplify(expr):
     if isinstance(expr, (GreaterThan, LessThan)):
         if not expr.lhs.is_real or not expr.rhs.is_real or expr.has(Eq):
