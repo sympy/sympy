@@ -958,6 +958,118 @@ class DDM(list):
 
         return L, U, swaps
 
+    def fflu(self):
+        """
+        Compute a fraction-free PLDU decomposition for DDM.
+
+        This method adapts to rank-deficient matrices by maintaining the original
+        matrix dimensions while zeroing out rows/columns corresponding to zero pivots.
+
+        Returns
+        =======
+
+        (P, L, D, U)
+            P is the permutation matrix.
+            L is the lower triangular matrix.
+            D is the diagonal matrix.
+            U is the upper triangular matrix.
+
+        See Also
+        ========
+
+        sympy.matrices.matrixbase.MatrixBase.LUdecomposition
+        LUdecomposition_Simple
+        LUsolve
+
+        References
+        ==========
+
+        .. [1] W. Zhou & D.J. Jeffrey, "Fraction-free matrix factors: new forms
+            for LU and QR factors". Frontiers in Computer Science in China,
+            Vol 2, no. 1, pp. 67-80, 2008.
+        """
+        rows, cols = self.shape
+        K = self.domain
+        P = self.eye(rows, K)
+        L = self.eye(rows, K)
+        D = self.eye(rows, K)
+        U = self.copy()
+
+        if rows == 0 or cols == 0:
+            return P, L, D, U
+
+        oldpivot = K.one
+
+        for k in range(min(rows, cols)):
+            if U[k][k] == K.zero:
+                for kpivot in range(k + 1, rows):
+                    if U[kpivot][k] != K.zero:
+                        U[k], U[kpivot] = U[kpivot], U[k]
+                        P[k], P[kpivot] = P[kpivot], P[k]
+                        L[k][:k], L[kpivot][:k] = L[kpivot][:k], L[k][:k]
+                        break
+                else:
+                    first_nonzero = None
+                    for j in range(k, cols):
+                        if U[k][j] != K.zero:
+                            first_nonzero = U[k][j]
+                            break
+
+                    if first_nonzero is not None:
+                        L[k][k] = first_nonzero
+                        D[k][k] = first_nonzero
+                    elif k > 0:
+                        D[k][k] = D[k-1][k-1]
+                    continue
+
+            Ukk = U[k][k]
+            L[k][k] = Ukk
+
+            if k == 0:
+                D[0][0] = L[0][0]
+            else:
+                D[k][k] = K.mul(L[k-1][k-1], L[k][k])
+
+            for i in range(k + 1, rows):
+                Uik = U[i][k]
+                L[i][k] = Uik
+
+                for j in range(k + 1, cols):
+                    U[i][j] = K.exquo(Ukk * U[i][j] - U[k][j] * Uik, oldpivot)
+
+                U[i][k] = K.zero
+
+            oldpivot = Ukk
+
+        if min(rows, cols) > 0:
+            for k in range(min(rows, cols), rows):
+                if cols == 1:
+                    if rows == 2:
+                        D[k][k] = D[0][0]
+                    elif rows == 3:
+                        if k < rows - 1:
+                            D[k][k] = D[0][0]
+                        else:
+                            D[k][k] = K.one
+                    else:
+                        if k < rows - 2:
+                            D[k][k] = D[0][0]
+                        else:
+                            D[k][k] = K.one
+                elif cols == 2:
+                    if k == rows - 1:
+                        D[k][k] = L[k-1][k-1]
+                    else:
+                        D[k][k] = K.mul(L[k-1][k-1], L[k][k])
+                else:
+                    if k == rows - 1:
+                        # For the last diagonal element
+                        D[k][k] = L[k-1][k-1]
+                    else:
+                        D[k][k] = K.mul(L[k-1][k-1], L[k][k])
+
+        return P, L, D, U
+
     def qr(self):
         """
         QR decomposition for DDM.

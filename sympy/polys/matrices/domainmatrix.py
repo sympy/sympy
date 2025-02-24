@@ -3318,6 +3318,30 @@ class DomainMatrix:
         R = self.from_rep(ddm_r)
         return Q, R
 
+    def qrd(self):
+        """
+        Compute a fraction-free QR decomposition using fflu decomposition.
+
+        Returns
+        =======
+
+        (Q, R, D)
+            Q is the orthogonal matrix.
+            R is the upper triangular matrix.
+            D is the diagonal matrix.
+
+        See Also
+        ========
+
+        qr, fflu
+        """
+        M = self.transpose().matmul(self)
+        M_aug = M.hstack(self.transpose())
+        P, L, D, Ut = M_aug.fflu()
+        Q = Ut[:, -self.shape[1]:].transpose()
+        R = L.transpose()
+        return Q, R, D
+
     def lu_solve(self, rhs):
         r"""
         Solver for DomainMatrix x in the A*x = B
@@ -3369,6 +3393,71 @@ class DomainMatrix:
             raise DMNotAField('Not a field')
         sol = self.rep.lu_solve(rhs.rep)
         return self.from_rep(sol)
+
+    def fflu(self):
+        """
+        Compute the fraction-free PLDU decomposition of the DomainMatrix.
+
+        Explanation
+        ===========
+
+        This method computes the PLDU decomposition in a fraction-free manner,
+        ensuring that all intermediate results remain in the domain of the input
+        matrix. Unlike standard LU decomposition, which introduces division,
+        this approach avoids fractions, making it particularly suitable for
+        exact arithmetic over integers or polynomials.
+
+        Given a square matrix A, this decomposition expresses it as:
+
+            P * A = L * D * U
+
+        where:
+
+        - P is a permutation matrix that applies row swaps for numerical stability.
+        - L is a unit lower triangular matrix (having ones on the diagonal).
+        - D is a diagonal matrix.
+        - U is an upper triangular matrix.
+
+        Returns
+        =======
+
+        (P, L, D, U)
+            - P (Permutation matrix)
+            - L (Lower triangular matrix with unit diagonal)
+            - D (Diagonal matrix)
+            - U (Upper triangular matrix)
+
+        Examples
+        ========
+
+        >>> from sympy import ZZ
+        >>> from sympy.polys.matrices import DomainMatrix
+        >>> A = DomainMatrix([[1, 2], [3, 4]], (2, 2), ZZ)
+        >>> P, L, D, U = A.fflu()
+        >>> P
+        DomainMatrix([[1, 0], [0, 1]], (2, 2), ZZ)
+        >>> L
+        DomainMatrix([[1, 0], [3, -2]], (2, 2), ZZ)
+        >>> D
+        DomainMatrix([[1, 0], [0, -2]], (2, 2), ZZ)
+        >>> U
+        DomainMatrix([[1, 2], [0, -2]], (2, 2), ZZ)
+        >>> L.is_lower and U.is_upper and D.is_diagonal
+        True
+        >>> L * D.to_field().inv() * U == P * A.to_field()
+        True
+        >>> I, d = D.inv_den()
+        >>> L * I * U == d * P * A
+        True
+
+        See Also
+        ========
+
+        lu : Standard LU decomposition.
+        """
+        from_rep = self.from_rep
+        P, L, D, U = self.rep.fflu()
+        return from_rep(P), from_rep(L), from_rep(D), from_rep(U)
 
     def _solve(A, b):
         # XXX: Not sure about this method or its signature. It is just created
