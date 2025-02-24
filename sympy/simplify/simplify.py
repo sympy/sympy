@@ -436,7 +436,6 @@ def simplify(expr: Basic, **kwargs) -> Basic: ...
 def custom_simplify(expr):
     if isinstance(expr, (GreaterThan, LessThan)):
         simplified_expr = (expr.lhs - expr.rhs).simplify()
-        
         if simplified_expr.is_Mul:
             coeff, term = simplified_expr.as_coeff_Mul()
             if coeff == 2:
