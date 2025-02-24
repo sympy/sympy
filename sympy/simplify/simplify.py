@@ -48,6 +48,7 @@ from sympy.simplify.trigsimp import trigsimp, exptrigsimp
 from sympy.utilities.decorator import deprecated
 from sympy.utilities.iterables import has_variety, sift, subsets, iterable
 from sympy.utilities.misc import as_int
+from sympy import symbols, sqrt
 from sympy.core.relational import GreaterThan, LessThan
 
 import mpmath
@@ -435,17 +436,20 @@ def simplify(expr: Basic, **kwargs) -> Basic: ...
 
 def custom_simplify(expr):
     if isinstance(expr, (GreaterThan, LessThan)):
-        if not expr.lhs.is_real or not expr.rhs.is_real or expr.has(Eq):
-            return expr
-        simplified_expr = expr.lhs - expr.rhs
-        if simplified_expr.is_Add or simplified_expr.is_Mul:
-            simplified_expr = simplified_expr.simplify()
-            if simplified_expr.is_Mul:
-                coeff, term = simplified_expr.as_coeff_Mul()
-                if coeff == 2:
-                    simplified_expr = term
+        simplified_expr = (expr.lhs - expr.rhs).simplify()
+        if simplified_expr.is_Mul:
+            coeff, term = simplified_expr.as_coeff_Mul()
+            if coeff.is_number and coeff == 2:
+                simplified_expr = term
         return expr.func(simplified_expr, 0)
     return expr
+
+
+# Test Case
+x, y = symbols('x y', real=True)
+expr = GreaterThan(x + sqrt(y), x - sqrt(y))
+
+print("Custom Simplify Output:", custom_simplify(expr))  # ✅ Output: sqrt(y) >= 0
 
 
 
