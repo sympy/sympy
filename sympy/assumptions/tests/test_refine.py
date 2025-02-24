@@ -244,4 +244,3 @@ def test_refine_negative_infinity():
     expr = sqrt(z) - oo
     result = refine(expr)
     assert result == S.NegativeInfinity
-
