@@ -48,7 +48,7 @@ from sympy.ntheory.factor_ import divisors
 from sympy.ntheory.residue_ntheory import discrete_log, nthroot_mod
 from sympy.polys import (roots, Poly, degree, together, PolynomialError,
                          RootOf, factor, lcm, gcd)
-from sympy.polys.polyerrors import CoercionFailed
+from sympy.polys.polyerrors import CoercionFailed, NotInvertible
 from sympy.polys.polytools import invert, groebner, poly
 from sympy.polys.solvers import (sympy_eqs_to_ring, solve_lin_sys,
     PolyNonlinearError)
@@ -1548,14 +1548,17 @@ def _invert_modular(modterm, rhs, n, symbol):
         g, h = a.as_independent(symbol)
         if g is not S.Zero:
             x_indep_term = rhs - Mod(g, m)
-            return _invert_modular(Mod(h, m), Mod(x_indep_term, m), n, symbol)
+            return _invert_modular(Mod(h, m, evaluate=False), Mod(x_indep_term, m), n, symbol)
 
     if a.is_Mul:
         # g*h = a
         g, h = a.as_independent(symbol)
         if g is not S.One:
-            x_indep_term = rhs*invert(g, m)
-            return _invert_modular(Mod(h, m), Mod(x_indep_term, m), n, symbol)
+            try:
+                x_indep_term = rhs*invert(g, m)
+            except NotInvertible:
+                return modterm, rhs
+            return _invert_modular(Mod(h, m, evaluate=False), Mod(x_indep_term, m), n, symbol)
 
     if a.is_Pow:
         # base**expo = a
@@ -1566,9 +1569,8 @@ def _invert_modular(modterm, rhs, n, symbol):
             if not m.is_Integer and rhs.is_Integer and a.base.is_Integer:
                 return modterm, rhs
 
-            mdiv = m.p // number_gcd(m.p, rhs.p)
             try:
-                remainder = discrete_log(mdiv, rhs.p, a.base.p)
+                remainder = discrete_log(m.p, rhs.p, a.base.p)
             except ValueError:  # log does not exist
                 return modterm, rhs
             # period -> coefficient of n in the solution and also referred as
