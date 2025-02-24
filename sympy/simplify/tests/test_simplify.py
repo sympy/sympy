@@ -142,6 +142,14 @@ def test_simplify_expr():
 
     assert simplify(hyper([], [], x)) == exp(x)
 
+def test_simplify_inequality():
+    from sympy import Symbol, sqrt, GreaterThan
+    x = Symbol("x")
+    y = Symbol("y")
+    expr = GreaterThan(x + sqrt(y), x - sqrt(y))
+    assert expr.simplify() == GreaterThan(sqrt(y), 0)
+
+
 
 def test_issue_3557():
     f_1 = x*a + y*b + z*c - 1
