@@ -48,8 +48,7 @@ from sympy.simplify.trigsimp import trigsimp, exptrigsimp
 from sympy.utilities.decorator import deprecated
 from sympy.utilities.iterables import has_variety, sift, subsets, iterable
 from sympy.utilities.misc import as_int
-from sympy import sqrt
-from sympy.core.relational import GreaterThan, LessThan, Eq
+from sympy.core.relational import GreaterThan, LessThan
 
 import mpmath
 
