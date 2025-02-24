@@ -1344,9 +1344,9 @@ def test_rational():
     assert ask(Q.rational(1/x), Q.odd(x)) is True
     assert ask(Q.rational(1/x), Q.irrational(x)) is None
 
-    assert ask(Q.rational(2/x), Q.rational(x)) is None
-    assert ask(Q.rational(2/x), Q.integer(x)) is None
-    assert ask(Q.rational(2/x), Q.even(x)) is None
+    assert ask(Q.rational(2/x), Q.rational(x) & Q.nonzero(x)) is True
+    assert ask(Q.rational(2/x), Q.integer(x) & Q.nonzero(x)) is True
+    assert ask(Q.rational(2/x), Q.even(x) & Q.nonzero(x)) is True
     assert ask(Q.rational(2/x), Q.odd(x)) is True
     assert ask(Q.rational(2/x), Q.irrational(x)) is None
 
@@ -1390,6 +1390,7 @@ def test_rational():
     assert ask(Q.rational(x**y), ~Q.rational(x) & Q.integer(y) ) is None
     assert ask(Q.rational(Pow(-1, x, evaluate=False), Q.rational(x))) is None
     assert ask(Q.rational(x**y), Q.integer(y) & ~Q. algebraic(x)) is None
+    assert ask(Q.rational(x**y), Q.integer(y) & ~Q. algebraic(x) & ~Q.zero(x)) is None
 
 
 def test_hermitian():
