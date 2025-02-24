@@ -122,6 +122,8 @@ Ntheory Functions Reference
 
 .. autofunction:: solve_congruence
 
+.. autofunction:: frobenius_number
+
 .. module:: sympy.ntheory.multinomial
 
 .. autofunction:: binomial_coefficients
