@@ -29,6 +29,7 @@ a0, a1, a2, a3, b0, b1, b2, b3, c0, c1, c2, c3, d0, d1, d2, d3 = symbols('a0:4,\
 TF1 = TransferFunction(1, s**2 + 2*zeta*wn*s + wn**2, s)
 TF2 = TransferFunction(k, 1, s)
 TF3 = TransferFunction(a2*p - s, a2*s + p, s)
+TF4 = TransferFunction(k, tau*s + 1, s)
 
 
 def test_TransferFunction_construction():
@@ -1750,6 +1751,12 @@ def test_conversion():
                    Matrix([[1, 0]]),
                    Matrix([[0]]))
     assert SS.rewrite(TransferFunction)[0][0] == TF1
+
+    SS1 = TF4.rewrite(StateSpace)
+    assert SS1 == \
+        StateSpace(Matrix([[-1/tau]]), Matrix([[1]]), Matrix([[k/tau]]),
+                   Matrix([[0]]))
+    assert SS1.rewrite(TransferFunction)[0][0] == TF4
 
     # Transfer function has to be proper
     raises(ValueError, lambda: TransferFunction(b*s**2 + p**2 - a*p + s, b - p**2, s).rewrite(StateSpace))
