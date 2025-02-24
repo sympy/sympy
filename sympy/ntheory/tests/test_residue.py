@@ -276,6 +276,8 @@ def test_residue():
     args = 5779, 3528, 6215
     assert discrete_log(*args) == 687
     assert discrete_log(*Tuple(*args)) == 687
+    assert discrete_log(1, 0, 2) == 0
+    raises(ValueError, lambda: discrete_log(-5, 0, 2))
     assert quadratic_congruence(400, 85, 125, 1600) == [295, 615, 935, 1255, 1575]
     assert quadratic_congruence(3, 6, 5, 25) == [3, 20]
     assert quadratic_congruence(120, 80, 175, 500) == []
@@ -344,7 +346,3 @@ def test_deprecated_ntheory_symbolic_functions():
         assert legendre_symbol(2, 3) == -1
     with warns_deprecated_sympy():
         assert jacobi_symbol(2, 3) == -1
-
-
-def test_discrete_log_n_equals_1():
-    assert discrete_log(1, 0, 2) == 0
