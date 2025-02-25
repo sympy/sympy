@@ -159,6 +159,8 @@ def _(expr, assumptions):
                 return True
         if ask(Q.algebraic(expr.base),assumptions) is False:
             return ask(Q.zero(expr.exp), assumptions)
+        if ask(Q.irrational(expr.base),assumptions) and ask(Q.eq(expr.exp,-1)):
+            return False
         return
     elif ask(Q.rational(expr.exp), assumptions):
         if ask(Q.prime(expr.base), assumptions) and is_exp_integer is False:
