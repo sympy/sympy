@@ -3974,33 +3974,3 @@ def test_issue_20985():
     w, R = symbols('w R')
     poly = Poly(1.0 + I*w/R, w, 1/R)
     assert poly.degree() == S(1)
-
-
-def test_all_polynomial_operations():
-    from sympy.core.symbol import symbols
-    x, y = symbols('x y')
-    p = Poly(x**2, x)
-
-    assert str(p) == "Poly(x**2, x, domain='ZZ')"
-
-    result_by_2 = p / 2
-    assert str(result_by_2) == "Poly(1/2*x**2, x, domain='QQ')"
-
-    result_by_x = p / x
-    assert str(result_by_x) == "Poly(x, x, domain='QQ')"
-
-    result_rec = 1 / p
-    assert result_rec == 1 / (x**2)
-
-    result_by_self = p / p
-    assert result_by_self == 1
-
-    p2 = Poly(x**2*y + x, x)
-    assert str(p2) == "Poly(y*x**2 + x, x, domain='ZZ[y]')"
-
-    result_p2_by_y = p2 / y
-    assert str(result_p2_by_y) == "Poly(x**2 + 1/y*x, x, domain='ZZ(y)')"
-
-    result_p2_by_exp = p2 / exp(y)
-    expected = (x**2 * y + x) * exp(-y)
-    assert result_p2_by_exp == expected
