@@ -63,7 +63,7 @@ class InfinitePredicate(Predicate):
     True
     >>> ask(Q.infinite(1/Rational(0)))
     True
-    >>> ask(Q.infinite(exp(Symbol('x'))))
+    >>> print(ask(Q.infinite(exp(Symbol('x')))))
     None
     >>> ask(Q.infinite(5))
     False
