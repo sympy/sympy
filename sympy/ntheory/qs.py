@@ -1,6 +1,6 @@
 from math import log, sqrt
 from sympy.core.random import _randint
-from sympy.external.gmpy import gcd, invert, sqrt as isqrt
+from sympy.external.gmpy import bit_scan1, gcd, invert, sqrt as isqrt
 from sympy.ntheory.factor_ import _perfect_power
 from sympy.ntheory.primetest import isprime
 from sympy.ntheory.residue_ntheory import _sqrt_mod_prime_power
@@ -50,9 +50,10 @@ class FactorBaseElem:
         self.prime = prime
         self.tmem_p = tmem_p
         self.log_p = log_p
+        # `soln1` and `soln2` are solutions to
+        # the equation `(a*x + b)**2 - N = 0 (mod p)`.
         self.soln1 = None
         self.soln2 = None
-        self.a_inv = None
         self.b_ainv = None
 
 
@@ -147,11 +148,12 @@ def _initialize_first_polynomial(N, M, factor_base, idx_1000, idx_5000, seed=Non
 
     for fb in factor_base:
         if a % fb.prime == 0:
+            fb.soln1 = None
             continue
-        fb.a_inv = invert(a, fb.prime)
-        fb.b_ainv = [2*b_elem*fb.a_inv % fb.prime for b_elem in B]
-        fb.soln1 = (fb.a_inv*(fb.tmem_p - b)) % fb.prime
-        fb.soln2 = (fb.a_inv*(-fb.tmem_p - b)) % fb.prime
+        a_inv = invert(a, fb.prime)
+        fb.b_ainv = [2*b_elem*a_inv % fb.prime for b_elem in B]
+        fb.soln1 = (a_inv*(fb.tmem_p - b)) % fb.prime
+        fb.soln2 = (a_inv*(-fb.tmem_p - b)) % fb.prime
     return g, B
 
 
@@ -173,24 +175,19 @@ def _initialize_ith_poly(N, factor_base, i, g, B):
     g : (i - 1)th polynomial
     B : array that stores a//q_l*gamma
     """
-    from sympy.functions.elementary.integers import ceiling
-    v = 1
-    j = i
-    while(j % 2 == 0):
-        v += 1
-        j //= 2
-    if ceiling(i / (2**v)) % 2 == 1:
-        neg_pow = -1
-    else:
+    v = bit_scan1(i)
+    if (i >> (v + 1)) % 2:
         neg_pow = 1
-    b = g.b + 2*neg_pow*B[v - 1]
+    else:
+        neg_pow = -1
+    b = g.b + 2*neg_pow*B[v]
     a = g.a
     g = SievePolynomial(a, b, N)
     for fb in factor_base:
-        if a % fb.prime == 0:
+        if fb.soln1 is None:
             continue
-        fb.soln1 = (fb.soln1 - neg_pow*fb.b_ainv[v - 1]) % fb.prime
-        fb.soln2 = (fb.soln2 - neg_pow*fb.b_ainv[v - 1]) % fb.prime
+        fb.soln1 = (fb.soln1 - neg_pow*fb.b_ainv[v]) % fb.prime
+        fb.soln2 = (fb.soln2 - neg_pow*fb.b_ainv[v]) % fb.prime
 
     return g
 
