@@ -1342,13 +1342,13 @@ def test_rational():
     assert ask(Q.rational(1/x), Q.integer(x) & Q.nonzero(x)) is True
     assert ask(Q.rational(1/x), Q.even(x) & Q.nonzero(x)) is True
     assert ask(Q.rational(1/x), Q.odd(x)) is True
-    assert ask(Q.rational(1/x), Q.irrational(x)) is None
+    assert ask(Q.rational(1/x), Q.irrational(x)) is False
 
     assert ask(Q.rational(2/x), Q.rational(x) & Q.nonzero(x)) is True
     assert ask(Q.rational(2/x), Q.integer(x) & Q.nonzero(x)) is True
     assert ask(Q.rational(2/x), Q.even(x) & Q.nonzero(x)) is True
     assert ask(Q.rational(2/x), Q.odd(x)) is True
-    assert ask(Q.rational(2/x), Q.irrational(x)) is None
+    assert ask(Q.rational(2/x), Q.irrational(x)) is False
 
     assert ask(Q.rational(x), ~Q.algebraic(x)) is False
 
@@ -1358,7 +1358,7 @@ def test_rational():
     assert ask(Q.rational(y/x), Q.integer(x) & Q.rational(y) & Q.nonzero(x)) is True
     assert ask(Q.rational(y/x), Q.even(x) & Q.rational(y) & Q.nonzero(x)) is True
     assert ask(Q.rational(y/x), Q.odd(x) & Q.rational(y)) is True
-    assert ask(Q.rational(y/x), Q.irrational(x) & Q.rational(y)) is None
+    assert ask(Q.rational(y/x), Q.irrational(x) & Q.rational(y) & Q.nonzero(y)) is False
 
     for f in [exp, sin, tan, asin, atan, cos]:
         assert ask(Q.rational(f(7))) is False
