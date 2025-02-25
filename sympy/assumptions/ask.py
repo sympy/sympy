@@ -503,9 +503,12 @@ def ask(proposition, assumptions=True, context=global_assumptions):
         return bool(res)
 
     # using satask (still costly)
-    res = satask(proposition, assumptions=assumptions, context=context)
-    if res is not None:
-        return res
+    try:
+        res = satask(proposition, assumptions=assumptions, context=context)
+        if res is not None:
+            return res
+    except ValueError:
+        pass
 
     try:
         res = lra_satask(proposition, assumptions=assumptions, context=context)
