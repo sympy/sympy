@@ -2188,6 +2188,11 @@ class Shi(TrigonometricIntegral):
         # XXX should we polarify z?
         return (E1(z) - E1(exp_polar(I*pi)*z))/2 - I*pi/2
 
+    def _eval_rewrite_as_Integral(self, z, **kwargs):
+        from sympy.integrals.integrals import Integral
+        t = Dummy(uniquely_named_symbol('t', [z]).name)
+        return Integral(sinh(t) / t, (t, 0, z))
+
     def _eval_is_zero(self):
         z = self.args[0]
         if z.is_zero:
@@ -2303,6 +2308,11 @@ class Chi(TrigonometricIntegral):
 
     def _eval_rewrite_as_expint(self, z, **kwargs):
         return -I*pi/2 - (E1(z) + E1(exp_polar(I*pi)*z))/2
+
+    def _eval_rewrite_as_Integral(self, z, **kwargs):
+        from sympy.integrals.integrals import Integral
+        t = Dummy(uniquely_named_symbol('t', [z]).name)
+        return S.EulerGamma + log(z) + Integral((cosh(t) - 1) / t, (t, 0, z))
 
     def _eval_as_leading_term(self, x, logx, cdir):
         arg = self.args[0].as_leading_term(x, logx=logx, cdir=cdir)
