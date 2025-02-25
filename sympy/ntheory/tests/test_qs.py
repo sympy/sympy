@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-from sympy.ntheory import qs
+from sympy.ntheory import qs, qs_factor
 from sympy.ntheory.qs import SievePolynomial, _generate_factor_base, \
     _initialize_first_polynomial, _initialize_ith_poly, \
     _gen_sieve_array, _check_smoothness, _trial_division_stage, _gauss_mod_2, \
-    _build_matrix, _find_factor
+    _find_factor
 from sympy.testing.pytest import slow
 
 
@@ -13,7 +13,7 @@ def test_qs_1():
     assert qs(10009202107, 100, 10000) == {100043, 100049}
     assert qs(211107295182713951054568361, 1000, 10000) == \
         {13791315212531, 15307263442931}
-    assert qs(980835832582657*990377764891511, 3000, 50000) == \
+    assert qs(980835832582657*990377764891511, 3000, 50000, seed=123) == \
         {980835832582657, 990377764891511}
     assert qs(18640889198609*20991129234731, 1000, 50000) == \
         {18640889198609, 20991129234731}
@@ -22,10 +22,9 @@ def test_qs_1():
 def test_qs_2() -> None:
     n = 10009202107
     M = 50
-    # a = 10, b = 15, modified_coeff = [a**2, 2*a*b, b**2 - N]
-    sieve_poly = SievePolynomial([100,  1600, -10009195707], 10, 80)
-    assert sieve_poly.eval(10) == -10009169707
-    assert sieve_poly.eval(5) == -10009185207
+    sieve_poly = SievePolynomial(10, 80, n)
+    assert sieve_poly.eval_v(10) == sieve_poly.eval_u(10)**2 - n == -10009169707
+    assert sieve_poly.eval_v(5) == sieve_poly.eval_u(5)**2 - n == -10009185207
 
     idx_1000, idx_5000, factor_base = _generate_factor_base(2000, n)
     assert idx_1000 == 82
@@ -98,16 +97,7 @@ def test_qs_3():
         (149, 20384, [0, 1, 0, 1]),
         (-31138074, 19208, [0, 1, 0, 0])
     ]
-
-    matrix = _build_matrix(smooth_relations)
-    assert matrix == [
-        [0, 0, 0, 1],
-        [0, 1, 0, 1],
-        [0, 0, 0, 0],
-        [0, 1, 0, 1],
-        [0, 1, 0, 0]
-    ]
-
+    matrix = [s_relation[2] for s_relation in smooth_relations]
     dependent_row, mark, gauss_matrix = _gauss_mod_2(matrix)
     assert dependent_row == [[[0, 0, 0, 0], 2], [[0, 1, 0, 0], 3]]
     assert mark == [True, True, False, False, True]
@@ -122,3 +112,22 @@ def test_qs_3():
     factor = _find_factor(
         dependent_row, mark, gauss_matrix, 0, smooth_relations, N)
     assert factor == 23
+
+
+def test_qs_4():
+    N = 10007**2 * 10009 * 10037**3 * 10039
+    for factor in qs(N, 1000, 2000):
+        assert N % factor == 0
+        N //= factor
+
+
+def test_qs_factor():
+    assert qs_factor(1009 * 100003, 2000, 10000) == {1009: 1, 100003: 1}
+    assert qs_factor(1009**2 * 2003**2*30011*400009, 2000, 10000) == \
+        {1633856814842812561: 1, 30011: 1}
+
+
+def test_issue_27616():
+    #https://github.com/sympy/sympy/issues/27616
+    N = 9804659461513846513 + 1
+    assert qs(N, 5000, 20000) is not None

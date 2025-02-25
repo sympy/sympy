@@ -1,4 +1,4 @@
-from sympy.polys.domains import QQ, EX, RR
+from sympy.polys.domains import ZZ, QQ, EX, RR
 from sympy.polys.rings import ring
 from sympy.polys.ring_series import (_invert_monoms, rs_integrate,
     rs_trunc, rs_mul, rs_square, rs_pow, _has_constant_term, rs_hadamard_exp,
@@ -106,6 +106,10 @@ def test_inversion():
     raises(NotImplementedError, lambda: rs_series_inversion(p, x, 4))
     p = R.zero
     raises(ZeroDivisionError, lambda: rs_series_inversion(p, x, 3))
+
+    R, x = ring('x', ZZ)
+    p = 2 + x
+    raises(ValueError, lambda: rs_series_inversion(p, x, 3))
 
 
 def test_series_reversion():
