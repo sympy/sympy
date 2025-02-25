@@ -4495,7 +4495,16 @@ class Poly(Basic):
 
     @_sympifyit('g', NotImplemented)
     def __truediv__(f, g):
-        return f.as_expr()/g.as_expr()
+        try:
+            f = f.to_field()
+            g = f.domain.convert(g)
+            return f.per(f.rep * (1 / g))
+        except (CoercionFailed, TypeError):
+            result = f.as_expr() / g.as_expr()
+            if result.is_polynomial():
+                return Poly(result, f.gens, domain=f.domain)
+            else:
+                return result
 
     @_sympifyit('g', NotImplemented)
     def __rtruediv__(f, g):
