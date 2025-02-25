@@ -1117,6 +1117,7 @@ def test_issue_27447():
     a = x*y
     assert ask(Q.finite(a), Q.finite(x)  & ~Q.finite(y)) is None
     assert ask(Q.finite(a), ~Q.finite(x)  & Q.finite(y)) is None
+    assert ask(Q.finite(a), ~Q.finite(x) & Q.zero(y)) is None
 
     a = x*y*z
     assert ask(Q.finite(a), Q.finite(x) & Q.finite(y)
