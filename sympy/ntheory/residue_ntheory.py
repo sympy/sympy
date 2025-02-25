@@ -18,7 +18,7 @@ from sympy.core.random import _randint, randint
 from itertools import product
 
 
-def n_order(a, n):
+def n_order(a, n, factorization_n=None):
     r""" Returns the order of ``a`` modulo ``n``.
 
     Explanation
@@ -72,7 +72,9 @@ def n_order(a, n):
     if gcd(a, n) != 1:
         raise ValueError("The two numbers should be relatively prime")
     a_order = 1
-    for p, e in factorint(n).items():
+    if factorization_n is None:
+        factorization_n = factorint(n)
+    for p, e in factorization_n.items():
         pe = p**e
         pe_order = (p - 1) * p**(e - 1)
         factors = factorint(p - 1)
@@ -1644,13 +1646,14 @@ def discrete_log(n, a, b, order=None, prime_order=None):
         a_mod_pe = a % pe
         b_mod_pe = b % pe
         if b_mod_pe % p != 0:
-            order_pe = n_order(b_mod_pe, pe)
+            order_pe = n_order(b_mod_pe, pe, {p: e})
             if order_pe < 1000:
                 result = _discrete_log_trial_mul(pe, a_mod_pe, b_mod_pe, order_pe)
             elif e == 1:
                 # Shanks and Pollard rho are O(sqrt(order)) while index calculus is
                 # O(exp(2*sqrt(log(n)log(log(n)))))
-                # we compare the expected running times to determine the algorithm which is expected to be faster
+                # we compare the expected running times to determine the algorithm which is
+                # expected to be faster
                 # the number 10 was determined experimentally
                 if 4*sqrt(log(pe)*log(log(pe))) < log(order_pe) - 10:
                     result = _discrete_log_index_calculus(pe, a_mod_pe, b_mod_pe, order_pe)
@@ -1696,6 +1699,7 @@ def discrete_log(n, a, b, order=None, prime_order=None):
         if unique is not None:
             result = unique
 
+        return result
     else:
         if unique is None:
             return continuous
@@ -1703,8 +1707,6 @@ def discrete_log(n, a, b, order=None, prime_order=None):
             return unique
         else:
             raise ValueError("Log does not exist")
-
-    return result
 
 
 def quadratic_congruence(a, b, c, n):
