@@ -44,8 +44,6 @@ def test_qs_2() -> None:
         [0, 0, 3, 7, 13, 0, 8, 19, 9, 43, 27, 25, 63, 29, 19]
     assert [factor_base[i].soln2 for i in range(15)] == \
         [0, 1, 1, 3, 12, 16, 15, 6, 15, 1, 56, 55, 61, 58, 16]
-    assert [factor_base[i].a_inv for i in range(15)] == \
-        [1, 1, 5, 7, 3, 5, 26, 6, 40, 5, 21, 45, 4, 1, 8]
     assert [factor_base[i].b_ainv for i in range(5)] == \
         [[0, 0], [0, 2], [3, 0], [3, 9], [13, 13]]
 
