@@ -1284,6 +1284,8 @@ def _discrete_log_trial_mul(n, a, b, order=None):
         if x == a:
             return i
         x = x * b % n
+    if x == a:
+        return order
     raise ValueError("Log does not exist")
 
 
@@ -1592,76 +1594,6 @@ def _discrete_log_pohlig_hellman(n, a, b, order=None, order_factors=None):
     return d
 
 
-def _discrete_log_composite_n(n, a, b, n_factors=None):
-    """
-    Compute the discrete logarithm of ``a`` to the base ``b`` modulo ``n``,
-    where n is any number (prime or composite)
-
-    This is a recursive function that calls discrete_log
-
-    Examples
-    ========
-
-    >>> from sympy.ntheory.residue_ntheory import _discrete_log_composite_n
-    >>> _discrete_log_composite_n(1073, 29, 87)
-    15
-
-    See Also
-    ========
-
-    discrete_log
-
-    References
-    ==========
-
-    .. [1] "Handbook of applied cryptography", Menezes, A. J., Van, O. P. C., &
-        Vanstone, S. A. (1997).
-    .. [2] https://math.stackexchange.com/questions/2527691/apply-chinese-remainder-theorem-to-solve-discrete-logarithm-problem
-
-    """
-    from sympy.functions.elementary.integers import ceiling
-    if n_factors is None:
-        n_factors = factorint(n)
-
-    cyclic_dlog = []
-    unique_dlog = []
-    continuous_dlog = []
-    for factor, multiplicity in n_factors.items():
-        prime_power = factor ** multiplicity
-        if gcd(b, factor) == 1:
-            period_solution = n_order(b, prime_power)
-            cyclic_dlog.append( (discrete_log(prime_power, a, b), period_solution) )
-        else:
-            if a % prime_power == 0:
-                continuous_dlog.append(discrete_log(prime_power, a, b))
-            else:
-                unique_dlog.append(discrete_log(prime_power, a, b))
-
-    if len(cyclic_dlog) > 0:
-        result = solve_congruence(*cyclic_dlog)
-        if result is None:
-            raise ValueError("Log does not exist")
-        else:
-            result, mm = result
-            result = ZZ.to_sympy(result)
-    else:
-        result, mm = (0, 1)
-
-    if len(continuous_dlog) > 0:
-        starting_value = max(continuous_dlog)
-        k = ceiling( (starting_value - result) / mm)
-        result = result + k * mm
-
-    if len(unique_dlog) > 0:
-        unique = unique_dlog[0]
-        if all(l == unique for l in unique_dlog) and (unique >= result) and ((unique - result) % mm == 0):
-            result, mm = (unique, 0)
-        else:
-            raise ValueError("Log does not exist")
-
-    return result
-
-
 def discrete_log(n, a, b, order=None, prime_order=None):
     """
     Compute the discrete logarithm of ``a`` to the base ``b`` modulo ``n``.
@@ -1700,60 +1632,79 @@ def discrete_log(n, a, b, order=None, prime_order=None):
         return 0
 
     from math import sqrt, log
+    from sympy.functions.combinatorial.numbers import totient
+    from sympy.functions.elementary.integers import ceiling
     n, a, b = as_int(n), as_int(a), as_int(b)
-    modulus_factors = None
-    if order is None:
-        # Compute the order and its factoring in one pass
-        # order = totient(n), factors = factorint(order)
-        modulus_factors = factorint(n)
-        factors = {}
-        for px, kx in modulus_factors.items():
-            if kx > 1:
-                if px in factors:
-                    factors[px] += kx - 1
-                else:
-                    factors[px] = kx - 1
-            for py, ky in factorint(px - 1).items():
-                if py in factors:
-                    factors[py] += ky
-                else:
-                    factors[py] = ky
-        order = 1
-        for px, kx in factors.items():
-            order *= px**kx
-        # Now the `order` is the order of the group and factors = factorint(order)
-        # The order of `b` divides the order of the group.
-        order_factors = {}
-        for p, e in factors.items():
-            i = 0
-            for _ in range(e):
-                if pow(b, order // p, n) == 1:
-                    order //= p
-                    i += 1
-                else:
-                    break
-            if i < e:
-                order_factors[p] = e - i
 
-    if prime_order is None:
-        prime_order = isprime(order)
+    cyclic_dlog = []
+    continuous = 0
+    unique = None
+    for p, e in factorint(n).items():
+        pe = p ** e
+        a_mod_pe = a % pe
+        b_mod_pe = b % pe
+        if b_mod_pe % p != 0:
+            order_pe = n_order(b_mod_pe, pe)
+            if order_pe < 1000:
+                result = _discrete_log_trial_mul(pe, a_mod_pe, b_mod_pe, order_pe)
+            elif e == 1:
+                # Shanks and Pollard rho are O(sqrt(order)) while index calculus is
+                # O(exp(2*sqrt(log(n)log(log(n)))))
+                # we compare the expected running times to determine the algorithm which is expected to be faster
+                # the number 10 was determined experimentally
+                if 4*sqrt(log(pe)*log(log(pe))) < log(order_pe) - 10:
+                    result = _discrete_log_index_calculus(pe, a_mod_pe, b_mod_pe, order_pe)
+                elif order < 1000000000000:
+                    # Shanks seems typically faster, but uses O(sqrt(order)) memory
+                    result = _discrete_log_shanks_steps(pe, a_mod_pe, b_mod_pe, order_pe)
+                else:
+                    result = _discrete_log_pollard_rho(pe, a_mod_pe, b_mod_pe, order_pe)
+            else:
+                result = _discrete_log_pollard_rho(pe, a_mod_pe, b_mod_pe, order_pe)
 
-    if order < 1000:
-        return _discrete_log_trial_mul(n, a, b, order+1)
-    elif prime_order:
-        # Shanks and Pollard rho are O(sqrt(order)) while index calculus is O(exp(2*sqrt(log(n)log(log(n)))))
-        # we compare the expected running times to determine the algorithmus which is expected to be faster
-        if 4*sqrt(log(n)*log(log(n))) < log(order) - 10:  # the number 10 was determined experimental
-            return _discrete_log_index_calculus(n, a, b, order)
-        elif order < 1000000000000:
-            # Shanks seems typically faster, but uses O(sqrt(order)) memory
-            return _discrete_log_shanks_steps(n, a, b, order)
-        return _discrete_log_pollard_rho(n, a, b, order)
+            cyclic_dlog.append((result, order_pe))
+        else:
+            order_pe = totient(pe)
+            if order_pe < 1000:
+                k = _discrete_log_trial_mul(pe, a_mod_pe, b_mod_pe, order_pe)
+            else:
+                k = _discrete_log_pohlig_hellman(pe, a_mod_pe, b_mod_pe, order_pe)
 
-    if gcd(b, n) == 1:
-        return _discrete_log_pohlig_hellman(n, a, b, order, order_factors)
+            if a_mod_pe:
+                if unique is not None and unique != k:
+                    raise ValueError("Log does not exist")
+                else:
+                    unique = k
+            else:
+                continuous = max(continuous, k)
+
+    if cyclic_dlog:
+        result = solve_congruence(*cyclic_dlog)
+        if result is None:
+            raise ValueError("Log does not exist")
+        else:
+            result, mm = result
+            result = ZZ.to_sympy(result)
+
+        if continuous > result:
+            k = ceiling( (continuous - result) / mm)
+            result = result + k * mm
+
+        if unique is not None and (unique < result or ((unique - result) % mm != 0)):
+            raise ValueError("Log does not exist")
+
+        if unique is not None:
+            result = unique
+
     else:
-        return _discrete_log_composite_n(n, a, b, modulus_factors)
+        if unique is None:
+            return continuous
+        elif continuous <= unique:
+            return unique
+        else:
+            raise ValueError("Log does not exist")
+
+    return result
 
 
 def quadratic_congruence(a, b, c, n):
