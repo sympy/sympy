@@ -1354,9 +1354,9 @@ def test_rational():
 
     # with multiple symbols
     assert ask(Q.rational(x*y), Q.irrational(x) & Q.irrational(y)) is None
-    assert ask(Q.rational(y/x), Q.rational(x) & Q.rational(y)) is None
-    assert ask(Q.rational(y/x), Q.integer(x) & Q.rational(y)) is None
-    assert ask(Q.rational(y/x), Q.even(x) & Q.rational(y)) is None
+    assert ask(Q.rational(y/x), Q.rational(x) & Q.rational(y) & Q.nonzero(x)) is True
+    assert ask(Q.rational(y/x), Q.integer(x) & Q.rational(y) & Q.nonzero(x)) is True
+    assert ask(Q.rational(y/x), Q.even(x) & Q.rational(y) & Q.nonzero(x)) is True
     assert ask(Q.rational(y/x), Q.odd(x) & Q.rational(y)) is True
     assert ask(Q.rational(y/x), Q.irrational(x) & Q.rational(y)) is None
 
