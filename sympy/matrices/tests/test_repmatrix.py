@@ -47,3 +47,16 @@ def test_matrix_inv_mod():
     raises(ValueError, lambda: A.inv_mod(2))
     A = Matrix([[1, 2], [3, 4]])
     raises(TypeError, lambda: A.inv_mod(Rational(1, 2)))
+    # https://github.com/sympy/sympy/issues/27663
+    M = Matrix([
+        [2, 3, 1, 4],
+        [1, 5, 3, 2],
+        [3, 2, 4, 1],
+        [4, 1, 2, 5],
+    ])
+    assert M.inv_mod(26) == Matrix([
+        [7, 21, 10, 10],
+        [1, 7, 19, 3],
+        [14, 1, 15, 1],
+        [25, 23, 3, 12],
+    ])
