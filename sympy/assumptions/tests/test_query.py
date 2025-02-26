@@ -1132,6 +1132,7 @@ def test_issue_27447():
     assert ask(Q.finite(a), ~Q.finite(x) & ~Q.finite(y)
         & Q.finite(z)) is None
 
+
 @XFAIL
 def test_issue_27662_xfail():
     assert ask(Q.finite(x*y), ~Q.finite(x)
