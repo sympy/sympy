@@ -237,8 +237,7 @@ def _(expr, assumptions):
     if assumptions is True:
         result = ask(~Q.finite(expr))
     else:
-        result = ask(~Q.finite(expr),assumptions)
-        
+        result = ask(~Q.finite(expr),assumptions)    
     return result
 
 
