@@ -481,6 +481,9 @@ class Pow(Expr):
 
     def _eval_is_integer(self):
         b, e = self.args
+
+        if b.is_zero and e.is_negative:
+            return None
         if b.is_rational:
             if b.is_integer is False and e.is_positive:
                 return False  # rat**nonneg
