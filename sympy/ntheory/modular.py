@@ -301,7 +301,7 @@ def frobenius_number(denominations):
         denominations (list): A list of positive integers representing coin values.
 
     Returns:
-        int: The Frobenius number if it exists, otherwise None (if GCD != 1).
+        If the Frobenius number exists, return the integer value. Otherwise, return an appropriate error message.
 
     Examples
     ========
