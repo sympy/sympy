@@ -790,6 +790,12 @@ def test_DomainMatrix_inv():
     Aninv = DomainMatrix([[QQ(1), QQ(2)], [QQ(3), QQ(6)]], (2, 2), QQ)
     raises(DMNonInvertibleMatrixError, lambda: Aninv.inv())
 
+    Z3 = FF(3)
+    assert DM([[1, 2], [3, 4]], Z3).inv() == DM([[1, 1], [0, 1]], Z3)
+
+    Z6 = FF(6)
+    raises(DMNotAField, lambda: DM([[1, 2], [3, 4]], Z6).inv())
+
 
 def test_DomainMatrix_det():
     A = DomainMatrix([], (0, 0), ZZ)
