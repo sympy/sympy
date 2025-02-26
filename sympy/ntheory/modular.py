@@ -1,5 +1,4 @@
 from math import prod
-from itertools import combinations_with_replacement
 
 from sympy.external.gmpy import gcd, gcdext
 from sympy.ntheory.primetest import isprime
