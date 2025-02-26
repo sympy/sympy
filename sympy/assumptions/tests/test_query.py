@@ -1107,6 +1107,21 @@ def test_bounded():
     assert ask(Q.finite(cos(x) + sin(x))) is True
 
 
+def test_unbounded_expr():
+    # https://github.com/sympy/sympy/issues/27610
+    assert ask(Q.infinite(I * oo)) is True
+    assert ask(Q.infinite(1 + I*oo)) is True
+    assert ask(Q.infinite(3 * (I * oo))) is True
+    assert ask(Q.infinite(-I * oo)) is True
+    assert ask(Q.infinite(1 + zoo)) is True
+    assert ask(Q.infinite(I * zoo)) is True
+    assert ask(Q.infinite(x / y), Q.infinite(x) & Q.finite(y) & ~Q.zero(y)) is True
+    assert ask(Q.infinite(I * oo - I * oo)) is None
+    assert ask(Q.infinite(x * I * oo)) is None
+    assert ask(Q.infinite(1 / x), Q.finite(x) & ~Q.zero(x)) is False
+    assert ask(Q.infinite(1 / (I * oo))) is False
+
+
 def test_issue_27441():
     # https://github.com/sympy/sympy/issues/27441
     assert ask(Q.composite(y), Q.integer(y) & Q.positive(y) & ~Q.prime(y)) is None
