@@ -158,8 +158,7 @@ def _(expr, assumptions):
             if ask(Q.zero(arg), assumptions) is not False:
                 if result is False:
                     return None
-                else:
-                    possible_zero = None
+                possible_zero = None
         elif _bounded is None:
             if result is None:
                 return None
@@ -170,11 +169,8 @@ def _(expr, assumptions):
         else:
             if possible_zero is None:
                 return None
-            else:
-                result = False
-    if result:
-        return result
-    return possible_zero
+            result = False
+    return result
 
 @FinitePredicate.register(Pow)
 def _(expr, assumptions):
