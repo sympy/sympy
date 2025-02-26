@@ -1641,15 +1641,23 @@ def discrete_log(n, a, b, order=None, prime_order=None):
     cyclic_dlog = []
     continuous = 0
     unique = None
-    for p, e in factorint(n).items():
+    factors_n = factorint(n)
+    for p, e in factors_n.items():
         pe = p ** e
         a_mod_pe = a % pe
         b_mod_pe = b % pe
         if b_mod_pe % p != 0:
-            order_pe = n_order(b_mod_pe, pe, {p: e})
+            if len(factors_n) == 1 and order is not None:
+                order_pe = order
+                if prime_order is not None:
+                    prime_order_pe = isprime(order_pe)
+            else:
+                order_pe = n_order(b_mod_pe, pe, {p: e})
+                prime_order_pe = isprime(order_pe)
+
             if order_pe < 1000:
                 result = _discrete_log_trial_mul(pe, a_mod_pe, b_mod_pe, order_pe)
-            elif e == 1:
+            elif prime_order_pe:
                 # Shanks and Pollard rho are O(sqrt(order)) while index calculus is
                 # O(exp(2*sqrt(log(n)log(log(n)))))
                 # we compare the expected running times to determine the algorithm which is
@@ -1657,13 +1665,13 @@ def discrete_log(n, a, b, order=None, prime_order=None):
                 # the number 10 was determined experimentally
                 if 4*sqrt(log(pe)*log(log(pe))) < log(order_pe) - 10:
                     result = _discrete_log_index_calculus(pe, a_mod_pe, b_mod_pe, order_pe)
-                elif order < 1000000000000:
+                elif order_pe < 1000000000000:
                     # Shanks seems typically faster, but uses O(sqrt(order)) memory
                     result = _discrete_log_shanks_steps(pe, a_mod_pe, b_mod_pe, order_pe)
                 else:
                     result = _discrete_log_pollard_rho(pe, a_mod_pe, b_mod_pe, order_pe)
             else:
-                result = _discrete_log_pollard_rho(pe, a_mod_pe, b_mod_pe, order_pe)
+                result = _discrete_log_pohlig_hellman(pe, a_mod_pe, b_mod_pe, order_pe)
 
             cyclic_dlog.append((result, order_pe))
         else:
@@ -1687,7 +1695,7 @@ def discrete_log(n, a, b, order=None, prime_order=None):
             raise ValueError("Log does not exist")
         else:
             result, mm = result
-            result = ZZ.to_sympy(result)
+            result = as_int(ZZ.to_sympy(result))
 
         if continuous > result:
             k = ceiling( (continuous - result) / mm)
