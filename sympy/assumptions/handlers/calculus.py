@@ -158,7 +158,7 @@ def _(expr, assumptions):
             if ask(Q.zero(arg), assumptions) is not False:
                 if result is False:
                     return None
-                possible_zero = None
+                possible_zero = True
         elif _bounded is None:
             if result is None:
                 return None
@@ -167,7 +167,7 @@ def _(expr, assumptions):
             if result is not False:
                 result = None
         else:
-            if possible_zero is None:
+            if possible_zero is True:
                 return None
             result = False
     return result
