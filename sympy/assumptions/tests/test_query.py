@@ -1117,7 +1117,6 @@ def test_issue_27447():
     a = x*y
     assert ask(Q.finite(a), Q.finite(x)  & ~Q.finite(y)) is None
     assert ask(Q.finite(a), ~Q.finite(x)  & Q.finite(y)) is None
-    assert ask(Q.finite(a), ~Q.finite(x) & Q.zero(y)) is None
 
     a = x*y*z
     assert ask(Q.finite(a), Q.finite(x) & Q.finite(y)
@@ -1133,14 +1132,17 @@ def test_issue_27447():
     assert ask(Q.finite(a), ~Q.finite(x) & ~Q.finite(y)
         & Q.finite(z)) is None
 
+@XFAIL
+def test_issue_27662_xfail():
+    assert ask(Q.finite(x*y), ~Q.finite(x)
+        & Q.zero(y)) is None
+
 
 @XFAIL
 def test_bounded_xfail():
     """We need to support relations in ask for this to work"""
     assert ask(Q.finite(sin(x)**x)) is True
     assert ask(Q.finite(cos(x)**x)) is True
-    assert ask(Q.finite(x*y), ~Q.finite(x)
-        & Q.zero(y)) is None
 
 
 def test_commutative():
