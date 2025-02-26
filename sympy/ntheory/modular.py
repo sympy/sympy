@@ -312,31 +312,26 @@ def frobenius_number(denominations):
     >>> frobenius_number([3, 5])
     7
     """
+    denominations=sorted(denominations)
     if len(denominations) == 1:
         raise ValueError("Frobenius number is undefined for a single number.")
-
     if any(d <= 0 for d in denominations):
         raise ValueError("All input numbers must be positive integers.")
-
     if 1 in denominations:
-        raise ValueError("Frobenius number is not defined when 1 is in the set.")
-
+        return 0
     if gcd(*denominations) != 1:
         raise ValueError("The numbers must have a GCD of 1 for a finite Frobenius number.")
-
     if len(denominations) == 2:
-        a, b = sorted(denominations)
+        a, b = denominations
         return a * b - a - b
-
-    max_value = max(denominations) * max(denominations)
-    representable = set()
-
-    for i in range(1, max_value):
-        for comb in combinations_with_replacement(denominations, i):
-            representable.add(sum(comb))
-
-    for i in range(max_value, -1, -1):
-        if i not in representable:
+    max_n =denominations[0]*denominations[1]
+    reachable=[False]*(max_n+1)
+    reachable[0]=True
+    for num in denominations:
+        for i in range(num,max_n+1):
+            if reachable[i-num]:
+                reachable[i]=True
+    for i in range(max_n-1,-1,-1):
+        if not reachable[i]:
             return i
-
     return None

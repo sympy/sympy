@@ -37,3 +37,7 @@ def test_modular():
 def test_frobenius_number():
     assert frobenius_number([6, 9, 20]) == 43
     assert frobenius_number([3, 5]) == 7
+    assert frobenius_number([1,3, 5]) == 0
+    raises(ValueError,lambda:frobenius_number([3]))
+    raises(ValueError,lambda:frobenius_number([3,-5]))
+    raises(ValueError,lambda:frobenius_number([6,9]))
