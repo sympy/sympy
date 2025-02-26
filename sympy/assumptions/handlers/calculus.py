@@ -4,7 +4,7 @@ infinitesimal, finite, etc.
 """
 
 from sympy.assumptions import Q, ask
-from sympy.core import Add, Mul, Pow, Symbol
+from sympy.core import Expr,Add, Mul, Pow, Symbol
 from sympy.core.numbers import (NegativeInfinity, GoldenRatio,
     Infinity, Exp1, ComplexInfinity, ImaginaryUnit, NaN, Number, Pi, E,
     TribonacciConstant)
@@ -230,6 +230,16 @@ def _(expr, assumptions):
 @InfinitePredicate.register_many(ComplexInfinity, Infinity, NegativeInfinity)
 def _(expr, assumptions):
     return True
+
+
+@InfinitePredicate.register(Expr)
+def _(expr, assumptions):
+    if assumptions is True:
+        result = ask(~Q.finite(expr))
+    else:
+        result = ask(~Q.finite(expr),assumptions)
+        
+    return result
 
 
 # PositiveInfinitePredicate
