@@ -2,6 +2,9 @@ from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.polys.polytools import lcm
 from sympy.utilities import public
+from sympy import Expr, Poly
+from typing import Generator
+from sympy.polys.polytools import extended_euclidean_algorithm
 
 @public
 def approximants(l, X=Symbol('x'), simplify=False):
@@ -101,3 +104,146 @@ def approximants(l, X=Symbol('x'), simplify=False):
         else:
             yield out
     return
+
+
+@public
+def pade_approximants(
+    f: Expr, x: Expr, order: int
+) -> Generator[tuple[Poly, Poly], None, None]:
+    """
+    Returns all pade approximants of the expression f of the desired order
+
+    Description
+    ===========
+
+    Given a function f and an integer order, the function computes all pade approximants
+    of order [m/n] with m + n = order.
+
+    Parameters
+    ==========
+
+    f : Expr
+        The function to approximate
+    x : Expr
+        The variable of the function
+    order : int
+        The desired order of the pade approximants
+
+    Returns
+    =======
+
+    pade approximants : Generator[tuple[Poly, Poly], None, None]
+        Generator for (numerator, denominator) pairs of polynomials representing the numerator
+        and denominators of the approximants.
+
+    Examples
+    ========
+
+    >>> from sympy.abc import x
+    >>> from sympy import sin, exp
+    >>> from sympy.series.approximants import pade_approximants
+
+    >>> pade_exp = pade_approximants(exp(x), x, 2)
+    >>> for num, denom in pade_exp: print(num, denom)
+    Poly(1/2*x**2 + x + 1, x, domain='QQ') Poly(1, x, domain='QQ')
+    Poly(2*x + 4, x, domain='QQ') Poly(-2*x + 4, x, domain='QQ')
+    Poly(1, x, domain='QQ') Poly(1/2*x**2 - x + 1, x, domain='QQ')
+
+    To get the pade approximants, divide the numerator by the denominator
+
+    >>> pade_sin = pade_approximants(sin(x), x, 5)
+    >>> for num, denom in pade_sin: print(num/denom)
+    x**5/120 - x**3/6 + x
+    -(20*x**4 - 120*x**2)/(120*x)
+    (-7*x**3/60 + x)/(x**2/20 + 1)
+    360*x**2/(7*(60*x**3/7 + 360*x/7))
+    x/(7*x**4/360 + x**2/6 + 1)
+    """
+
+    assert order >= 0, "order must be a non-negative integer"
+
+    f_taylor_poly = f.series(x, n=order + 1).removeO().as_poly(x, field=True)
+    remainder_monomial = Poly(x ** (order + 1), x)
+
+    yield f_taylor_poly, f_taylor_poly.one
+
+    eea = extended_euclidean_algorithm(remainder_monomial, f_taylor_poly)
+
+    for _, t, r in eea:
+        yield r, t
+
+
+@public
+def pade_approximant(f: Expr, x: Expr, m: int, n: int | None = None) -> Expr:
+    """
+    [m/n] pade approximant of f around x=0
+
+    Description
+    ===========
+
+    For a function f and integers m and n, the [m/n] pade approximant of f is the rational function
+    p(x)/f(x) such that p(x) and q(x) are polynomials of degree at most m and n respectively. The pade
+    approximation is such that the taylor series of p(x)/q(x) around x=0 matches the taylor series of f(x)
+    up to at least (m + n)th order in x.
+
+    Parameters
+    ==========
+
+    f : Expr
+        The function to approximate
+    x : Expr
+        The variable of the function
+    m : int
+        The degree of the numerator polynomial
+    n : int | None
+        The degree of the denominator polynomial. If None, n = m
+
+    Returns
+    =======
+
+    pade approximant : Expr
+        The pade approximant of f, a rational function
+
+    Examples
+    ========
+
+    >>> import sympy as sp
+    >>> from sympy.series.approximants import pade_approximant
+    >>> x = sp.symbols('x')
+
+    >>> pade_exp = pade_approximant(sp.exp(x), x, 2)
+    >>> pade_exp
+    (x**2/4 + 3*x/2 + 3)/(x**2/4 - 3*x/2 + 3)
+
+    The numerators and denominators of an [m/n] pade approximant do not
+    necessarily have order m and n respectively
+
+    >>> pade_sin = pade_approximant(sp.sin(x), x, 1, 3)
+    >>> pade_sin
+    36*x/(6*x**2 + 36)
+
+    The [m/0] pade approximant is the mth order taylor polynomial of f
+
+    >>> pade_cos = pade_approximant(sp.cos(x), x, 4, 0)
+    >>> pade_cos
+    x**4/24 - x**2/2 + 1
+    """
+    if n is None:
+        n = m
+
+    assert m >= 0 and n >= 0, "m and n must be non-negative integers"
+
+    approximants = pade_approximants(f, x, m + n)
+
+    numerator, denominator = next(approximants)
+    for next_numerator, next_denominator in approximants:
+        if next_numerator.degree() < m:
+            return numerator / denominator
+
+        numerator, denominator = next_numerator, next_denominator
+
+    if numerator.degree() == m:
+        return numerator / denominator
+
+    # if it hasn't returned yet, there is no [m/n] pade approximant
+    return None
