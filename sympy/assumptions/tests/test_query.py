@@ -1107,8 +1107,7 @@ def test_bounded():
     assert ask(Q.finite(cos(x) + sin(x))) is True
 
 
-def test_unbounded_expr():
-    # https://github.com/sympy/sympy/issues/27610
+def test_unbounded():
     assert ask(Q.infinite(I * oo)) is True
     assert ask(Q.infinite(1 + I*oo)) is True
     assert ask(Q.infinite(3 * (I * oo))) is True
