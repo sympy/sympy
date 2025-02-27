@@ -227,11 +227,6 @@ def _(expr, assumptions):
 # InfinitePredicate
 
 
-@InfinitePredicate.register_many(ComplexInfinity, Infinity, NegativeInfinity)
-def _(expr, assumptions):
-    return True
-
-
 @InfinitePredicate.register(Expr)
 def _(expr, assumptions):
     is_finite = Q.finite(expr)._eval_ask(assumptions)
