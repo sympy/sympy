@@ -234,11 +234,7 @@ def _(expr, assumptions):
 
 @InfinitePredicate.register(Expr)
 def _(expr, assumptions):
-    if assumptions is True:
-        result = ask(~Q.finite(expr))
-    else:
-        result = ask(~Q.finite(expr),assumptions)
-    return result
+    return ask(~Q.finite(expr),assumptions)
 
 
 # PositiveInfinitePredicate
