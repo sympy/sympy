@@ -548,6 +548,10 @@ def test_posify():
     assert str(Sum(posify(1/x**n)[0], (n,1,3)).expand()) == \
         'Sum(_x**(-n), (n, 1, 3))'
 
+    A = Matrix([[1, 2, 3], [4, 5, 6 * Abs(x)]])
+    Ap, rep = posify(A)
+    assert Ap == A.subs(*reversed(rep.popitem()))
+
     # issue 16438
     k = Symbol('k', finite=True)
     eq, rep = posify(k)
