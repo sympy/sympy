@@ -53,8 +53,24 @@ class InfinitePredicate(Predicate):
     ``Q.infinite(x)`` is true iff the absolute value of ``x`` is
     infinity.
 
+    Examples
+    ========
+
+    >>> from sympy import Q, ask, oo, Rational, Symbol, exp
+    >>> ask(Q.infinite(oo))
+    True
+    >>> ask(Q.infinite(1e1000))
+    True
+    >>> ask(Q.infinite(1/Rational(0)))
+    True
+    >>> print(ask(Q.infinite(exp(Symbol('x')))))
+    None
+    >>> ask(Q.infinite(5))
+    False
+    >>> print(ask(Q.infinite(0 * oo)))
+    None
+
     """
-    # TODO: Add examples
     name = 'infinite'
     handler = Dispatcher(
         "InfiniteHandler",
