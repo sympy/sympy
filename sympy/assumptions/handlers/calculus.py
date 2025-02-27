@@ -151,10 +151,14 @@ def _(expr, assumptions):
         * /s = not signed
     """
     result = True
+    possible_zero = False
     for arg in expr.args:
         _bounded = ask(Q.finite(arg), assumptions)
         if _bounded:
-            continue
+            if ask(Q.zero(arg), assumptions) is not False:
+                if result is False:
+                    return None
+                possible_zero = True
         elif _bounded is None:
             if result is None:
                 return None
@@ -163,6 +167,8 @@ def _(expr, assumptions):
             if result is not False:
                 result = None
         else:
+            if possible_zero:
+                return None
             result = False
     return result
 
