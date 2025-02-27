@@ -4,7 +4,7 @@ infinitesimal, finite, etc.
 """
 
 from sympy.assumptions import Q, ask
-from sympy.core import Expr,Add, Mul, Pow, Symbol
+from sympy.core import Expr, Add, Mul, Pow, Symbol
 from sympy.core.numbers import (NegativeInfinity, GoldenRatio,
     Infinity, Exp1, ComplexInfinity, ImaginaryUnit, NaN, Number, Pi, E,
     TribonacciConstant)
