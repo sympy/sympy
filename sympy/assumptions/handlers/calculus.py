@@ -167,7 +167,7 @@ def _(expr, assumptions):
             if result is not False:
                 result = None
         else:
-            if possible_zero is True:
+            if possible_zero:
                 return None
             result = False
     return result
