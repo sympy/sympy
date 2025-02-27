@@ -1201,9 +1201,8 @@ def rs_atan(p, x, prec):
         return rs_puiseux(rs_atan, p, x, prec)
     R = p.ring
     const = 0
-    if _has_constant_term(p, x):
-        zm = R.zero_monom
-        c = p[zm]
+    c = _get_constant_term(p, x)
+    if c:
         if R.domain is EX:
             c_expr = c.as_expr()
             const = atan(c_expr)
@@ -1212,8 +1211,11 @@ def rs_atan(p, x, prec):
                 c_expr = c.as_expr()
                 const = R(atan(c_expr))
             except ValueError:
-                raise DomainError("The given series cannot be expanded in "
-                    "this domain.")
+                R = R.add_gens([atan(c_expr)])
+                p = p.set_ring(R)
+                x = x.set_ring(R)
+                c = c.set_ring(R)
+                const = R(atan(c_expr))
         else:
             try:
                 const = R(atan(c))
@@ -1855,7 +1857,8 @@ _convert_func = {
         'cos': 'rs_cos',
         'exp': 'rs_exp',
         'tan': 'rs_tan',
-        'log': 'rs_log'
+        'log': 'rs_log',
+        'atan': 'rs_atan'
         }
 
 def rs_min_pow(expr, series_rs, a):
