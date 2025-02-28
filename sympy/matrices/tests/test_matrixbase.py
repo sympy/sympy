@@ -8,7 +8,7 @@ from sympy import (
     ImmutableSparseMatrix, Integer, KroneckerDelta, MatPow, Matrix,
     MatrixSymbol, Max, Min, MutableDenseMatrix, MutableSparseMatrix, Poly, Pow,
     PurePoly, Q, Quaternion, Rational, RootOf, S, SparseMatrix, Symbol, Tuple,
-    Wild, banded, casoratian, cos, diag, diff, exp, expand, eye, hessian,
+    Wild, banded, casoratian, cos, diag, diff, exp, expand, eye, floor, hessian,
     integrate, log, matrix_multiply_elementwise, nan, ones, oo, pi, randMatrix,
     rot_axis1, rot_axis2, rot_axis3, rot_ccw_axis1, rot_ccw_axis2,
     rot_ccw_axis3, signsimp, simplify, sin, sqrt, sstr, symbols, sympify, tan,
@@ -3788,3 +3788,8 @@ def test_issue_23276():
     assert integrate(M, (x, 0, 1), (y, 0, 1)) == Matrix([
         [S.Half],
         [S.Half]])
+
+
+def test_issue_27225():
+    # https://github.com/sympy/sympy/issues/27225
+    raises(TypeError, lambda : floor(Matrix([1, 1, 0])))
