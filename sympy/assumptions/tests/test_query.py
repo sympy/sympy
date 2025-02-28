@@ -1379,15 +1379,15 @@ def test_rational():
     assert ask(Q.rational(x/2), Q.odd(x)) is True
     assert ask(Q.rational(x/2), Q.irrational(x)) is False
 
-    assert ask(Q.rational(1/x), Q.rational(x)) is True
-    assert ask(Q.rational(1/x), Q.integer(x)) is True
-    assert ask(Q.rational(1/x), Q.even(x)) is True
+    assert ask(Q.rational(1/x), Q.rational(x) & Q.nonzero(x)) is True
+    assert ask(Q.rational(1/x), Q.integer(x) & Q.nonzero(x)) is True
+    assert ask(Q.rational(1/x), Q.even(x) & Q.nonzero(x)) is True
     assert ask(Q.rational(1/x), Q.odd(x)) is True
     assert ask(Q.rational(1/x), Q.irrational(x)) is False
 
-    assert ask(Q.rational(2/x), Q.rational(x)) is True
-    assert ask(Q.rational(2/x), Q.integer(x)) is True
-    assert ask(Q.rational(2/x), Q.even(x)) is True
+    assert ask(Q.rational(2/x), Q.rational(x) & Q.nonzero(x)) is True
+    assert ask(Q.rational(2/x), Q.integer(x) & Q.nonzero(x)) is True
+    assert ask(Q.rational(2/x), Q.even(x) & Q.nonzero(x)) is True
     assert ask(Q.rational(2/x), Q.odd(x)) is True
     assert ask(Q.rational(2/x), Q.irrational(x)) is False
 
@@ -1395,11 +1395,11 @@ def test_rational():
 
     # with multiple symbols
     assert ask(Q.rational(x*y), Q.irrational(x) & Q.irrational(y)) is None
-    assert ask(Q.rational(y/x), Q.rational(x) & Q.rational(y)) is True
-    assert ask(Q.rational(y/x), Q.integer(x) & Q.rational(y)) is True
-    assert ask(Q.rational(y/x), Q.even(x) & Q.rational(y)) is True
+    assert ask(Q.rational(y/x), Q.rational(x) & Q.rational(y) & Q.nonzero(x)) is True
+    assert ask(Q.rational(y/x), Q.integer(x) & Q.rational(y) & Q.nonzero(x)) is True
+    assert ask(Q.rational(y/x), Q.even(x) & Q.rational(y) & Q.nonzero(x)) is True
     assert ask(Q.rational(y/x), Q.odd(x) & Q.rational(y)) is True
-    assert ask(Q.rational(y/x), Q.irrational(x) & Q.rational(y)) is False
+    assert ask(Q.rational(y/x), Q.irrational(x) & Q.rational(y) & Q.nonzero(y)) is False
 
     for f in [exp, sin, tan, asin, atan, cos]:
         assert ask(Q.rational(f(7))) is False
@@ -1419,6 +1419,21 @@ def test_rational():
         assert ask(Q.rational(h(7))) is False
         assert ask(Q.rational(h(7, evaluate=False))) is False
         assert ask(Q.rational(h(x)), Q.rational(x)) is False
+
+    # https://github.com/sympy/sympy/issues/27442
+    assert ask(Q.rational(x**y),Q.irrational(x) & Q.rational(y)) is None
+    assert ask(Q.rational(x**y),Q.integer(x) & Q.prime(x) & Q.rational(y)) is None
+    assert ask(Q.rational(x**y),Q.integer(x) & Q.integer(y)) is None
+    assert ask(Q.rational(x**y),Q.integer(x) & Q.eq(x,0) & Q.integer(y)) is None
+    assert ask(Q.rational(x**y),Q.eq(x,1) & Q.rational(y)) is None
+    assert ask(Q.rational(x**y),Q.eq(x,-1) & Q.rational(y)) is None
+    assert ask(Q.rational(x**y), Q.prime(x) & Q.rational(y)) is None
+    assert ask(Q.rational(x**y), ~Q.rational(x) & Q.integer(y) ) is None
+    assert ask(Q.rational(Pow(-1, x, evaluate=False), Q.rational(x))) is None
+    assert ask(Q.rational(x**y), Q.integer(y) & ~Q. algebraic(x)) is None
+    assert ask(Q.rational(x**y), Q.integer(y) & ~Q. algebraic(x) & ~Q.zero(x)) is None
+    assert ask(Q.rational(x**y), Q.integer(y) & ~Q.algebraic(x) & Q.complex(x) & ~Q.real(x)) is None
+    assert ask(Q.rational(x**y), Q.integer(y) & ~Q.algebraic(x) & Q.complex(x)) is None
 
 
 def test_hermitian():
