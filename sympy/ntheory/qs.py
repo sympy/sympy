@@ -1,4 +1,4 @@
-from math import log, sqrt
+from math import exp, log
 from sympy.core.random import _randint
 from sympy.external.gmpy import bit_scan1, gcd, invert, sqrt as isqrt
 from sympy.ntheory.factor_ import _perfect_power
@@ -86,7 +86,7 @@ def _generate_factor_base(prime_bound, n):
     return idx_1000, idx_5000, factor_base
 
 
-def _initialize_first_polynomial(N, M, factor_base, idx_1000, idx_5000, seed=None):
+def _initialize_first_polynomial(N, M, factor_base, idx_1000, idx_5000, randint):
     """This step is the initialization of the 1st sieve polynomial.
     Here `a` is selected as a product of several primes of the factor_base
     such that `a` is about to ``sqrt(2*N) / M``. Other initial values of
@@ -105,28 +105,28 @@ def _initialize_first_polynomial(N, M, factor_base, idx_1000, idx_5000, seed=Non
     factor_base : factor_base primes
     idx_1000 : index of prime number in the factor_base near 1000
     idx_5000 : index of prime number in the factor_base near to 5000
-    seed : Generate pseudoprime numbers
+    randint : A callable that takes two integers (a, b) and returns a random integer
+              n such that a <= n <= b, similar to `random.randint`.
     """
-    randint = _randint(seed)
-    approx_val = sqrt(2*N) / M
+    approx_val = log(2*N)/2 - log(M)
     # `a` is a parameter of the sieve polynomial and `q` is the prime factors of `a`
     # randomly search for a combination of primes whose multiplication is close to approx_val
     # This multiplication of primes will be `a` and the primes will be `q`
     # `best_a` denotes that `a` is close to approx_val in the random search of combination
     best_a, best_q, best_ratio = None, None, None
-    start = 0 if idx_1000 is None else idx_1000
-    end = len(factor_base) - 1 if idx_5000 is None else idx_5000
+    start = idx_1000 or 0
+    end = idx_5000 or (len(factor_base) - 1)
     for _ in range(50):
         a = 1
         q = []
-        while(a < approx_val):
+        while log(a) < approx_val:
             rand_p = 0
             while(rand_p == 0 or rand_p in q):
                 rand_p = randint(start, end)
             p = factor_base[rand_p].prime
             a *= p
             q.append(rand_p)
-        ratio = a / approx_val
+        ratio = exp(log(a) - approx_val)
         if best_ratio is None or abs(ratio - 1) < abs(best_ratio - 1):
             best_q = q
             best_a = a
@@ -513,12 +513,12 @@ def qs_factor(N, prime_bound, M, ERROR_TERM=25, seed=1234):
         factors[n] = e
         return factors
     N_copy = N
+    randint = _randint(seed)
     idx_1000, idx_5000, factor_base = _generate_factor_base(prime_bound, N)
     threshold = len(factor_base) * 105//100
     while len(smooth_relations) < threshold:
         if ith_poly == 0:
-            seed += 1
-            ith_sieve_poly, B_array = _initialize_first_polynomial(N, M, factor_base, idx_1000, idx_5000, seed)
+            ith_sieve_poly, B_array = _initialize_first_polynomial(N, M, factor_base, idx_1000, idx_5000, randint)
         else:
             ith_sieve_poly = _initialize_ith_poly(N, factor_base, ith_poly, ith_sieve_poly, B_array)
         ith_poly += 1

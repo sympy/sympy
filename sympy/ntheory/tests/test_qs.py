@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import math
+from sympy.core.random import _randint
 from sympy.ntheory import qs, qs_factor
 from sympy.ntheory.qs import SievePolynomial, _generate_factor_base, \
     _initialize_first_polynomial, _initialize_ith_poly, \
@@ -13,7 +15,7 @@ def test_qs_1():
     assert qs(10009202107, 100, 10000) == {100043, 100049}
     assert qs(211107295182713951054568361, 1000, 10000) == \
         {13791315212531, 15307263442931}
-    assert qs(980835832582657*990377764891511, 3000, 50000, seed=123) == \
+    assert qs(980835832582657*990377764891511, 2000, 10000) == \
         {980835832582657, 990377764891511}
     assert qs(18640889198609*20991129234731, 1000, 50000) == \
         {18640889198609, 20991129234731}
@@ -36,7 +38,7 @@ def test_qs_2() -> None:
         [710, 1125, 1993, 2455, 2901]
 
     g, B = _initialize_first_polynomial(
-        n, M, factor_base, idx_1000, idx_5000, seed=0)
+        n, M, factor_base, idx_1000, idx_5000, _randint(0))
     assert g.a == 1133107
     assert g.b == 682543
     assert B == [272889, 409654]
@@ -121,8 +123,10 @@ def test_qs_4():
 
 def test_qs_factor():
     assert qs_factor(1009 * 100003, 2000, 10000) == {1009: 1, 100003: 1}
-    assert qs_factor(1009**2 * 2003**2*30011*400009, 2000, 10000) == \
-        {1633856814842812561: 1, 30011: 1}
+    n = 1009**2 * 2003**2*30011*400009
+    factors = qs_factor(n, 2000, 10000)
+    assert len(factors) > 1
+    assert math.prod(p**e for p, e in factors.items()) == n
 
 
 def test_issue_27616():
