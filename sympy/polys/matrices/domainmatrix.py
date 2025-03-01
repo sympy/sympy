@@ -3396,34 +3396,29 @@ class DomainMatrix:
 
     def fflu(self):
         """
-        Compute the fraction-free PLDU decomposition of the DomainMatrix.
+        Fraction-free LU decomposition of DomainMatrix.
 
         Explanation
         ===========
 
-        This method computes the PLDU decomposition in a fraction-free manner,
-        ensuring that all intermediate results remain in the domain of the input
-        matrix. Unlike standard LU decomposition, which introduces division,
-        this approach avoids fractions, making it particularly suitable for
-        exact arithmetic over integers or polynomials.
+        This method computes the PLDU decomposition
+        using Gauss-Bareiss elimination in a fraction-free manner,
+        it ensures that all intermediate results remain in
+        the domain of the input matrix. Unlike standard
+        LU decomposition, which introduces division, this approach
+        avoids fractions, making it particularly suitable
+        for exact arithmetic over integers or polynomials.
 
-        Given a square matrix A, this decomposition expresses it as:
+        This method satisfies the invariant:
 
-            P * A = L * D * U
-
-        where:
-
-        - P is a permutation matrix that applies row swaps for numerical stability.
-        - L is a unit lower triangular matrix (having ones on the diagonal).
-        - D is a diagonal matrix.
-        - U is an upper triangular matrix.
+        P * A = L * inv(D) * U
 
         Returns
         =======
 
         (P, L, D, U)
             - P (Permutation matrix)
-            - L (Lower triangular matrix with unit diagonal)
+            - L (Lower triangular matrix)
             - D (Diagonal matrix)
             - U (Upper triangular matrix)
 

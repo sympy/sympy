@@ -960,113 +960,109 @@ class DDM(list):
 
     def fflu(self):
         """
-        Compute a fraction-free PLDU decomposition for DDM.
+        Fraction-free LU decomposition of DDM.
 
-        This method adapts to rank-deficient matrices by maintaining the original
-        matrix dimensions while zeroing out rows/columns corresponding to zero pivots.
+        Explanation
+        ===========
+
+        This method computes the PLDU decomposition
+        using Gauss-Bareiss elimination in a fraction-free manner
+        ,it ensures that all intermediate results remain in
+        the domain of the input matrix. Unlike standard
+        LU decomposition, which introduces division, this approach
+        avoids fractions, making it particularly suitable
+        for exact arithmetic over integers or polynomials.
+
+        This method satisfies the invariant:
+
+        P * A = L * inv(D) * U
 
         Returns
         =======
 
         (P, L, D, U)
-            P is the permutation matrix.
-            L is the lower triangular matrix.
-            D is the diagonal matrix.
-            U is the upper triangular matrix.
-
-        See Also
-        ========
-
-        sympy.matrices.matrixbase.MatrixBase.LUdecomposition
-        LUdecomposition_Simple
-        LUsolve
-
-        References
-        ==========
-
-        .. [1] W. Zhou & D.J. Jeffrey, "Fraction-free matrix factors: new forms
-            for LU and QR factors". Frontiers in Computer Science in China,
-            Vol 2, no. 1, pp. 67-80, 2008.
+            - P (Permutation matrix)
+            - L (Lower triangular matrix with unit diagonal)
+            - D (Diagonal matrix)
+            - U (Upper triangular matrix)
         """
         rows, cols = self.shape
         K = self.domain
-        P = self.eye(rows, K)
-        L = self.eye(rows, K)
-        D = self.eye(rows, K)
+
+        # Phase 1: Perform row operations and get permutation
         U = self.copy()
+        perm = list(range(rows))
+        rank = 0
 
-        if rows == 0 or cols == 0:
-            return P, L, D, U
+        for j in range(min(rows, cols)):
+            # Skip columns where all entries are zero
+            if all(U[i][j] == K.zero for i in range(rows)):
+                continue
 
-        oldpivot = K.one
+            # Find the first non-zero pivot in the current column
+            pivot_row = -1
+            for i in range(rank, rows):
+                if U[i][j] != K.zero:
+                    pivot_row = i
+                    break
 
-        for k in range(min(rows, cols)):
-            if U[k][k] == K.zero:
-                for kpivot in range(k + 1, rows):
-                    if U[kpivot][k] != K.zero:
-                        U[k], U[kpivot] = U[kpivot], U[k]
-                        P[k], P[kpivot] = P[kpivot], P[k]
-                        L[k][:k], L[kpivot][:k] = L[kpivot][:k], L[k][:k]
-                        break
-                else:
-                    first_nonzero = None
-                    for j in range(k, cols):
-                        if U[k][j] != K.zero:
-                            first_nonzero = U[k][j]
-                            break
+            # If no pivot is found, skip column
+            if pivot_row == -1:
+                continue
 
-                    if first_nonzero is not None:
-                        L[k][k] = first_nonzero
-                        D[k][k] = first_nonzero
-                    elif k > 0:
-                        D[k][k] = D[k-1][k-1]
-                    continue
+            # Swap rows to bring the pivot to the current rank
+            if pivot_row != rank:
+                U[rank], U[pivot_row] = U[pivot_row], U[rank]
+                perm[rank], perm[pivot_row] = perm[pivot_row], perm[rank]
 
-            Ukk = U[k][k]
-            L[k][k] = Ukk
+            # Found pivot - (Gauss-Bareiss elimination)
+            pivot = U[rank][j]
+            for i in range(rank + 1, rows):
+                multiplier = U[i][j]
+                # Denominator is previous pivot or 1
+                denominator = U[rank - 1][rank - 1] if rank > 0 else K.one
+                for k in range(j + 1, cols):
+                    U[i][k] = K.exquo(pivot * U[i][k] - U[rank][k] * multiplier, denominator)
+                # Keep the multiplier for L matrix
+                U[i][j] = multiplier
+            rank += 1
 
-            if k == 0:
-                D[0][0] = L[0][0]
-            else:
-                D[k][k] = K.mul(L[k-1][k-1], L[k][k])
+        # Phase 2: Construct P, L, D matrices
+        # Create P from permutation
+        P = self.zeros((rows, rows), K)
+        for i, pi in enumerate(perm):
+            P[i][pi] = K.one
 
-            for i in range(k + 1, rows):
-                Uik = U[i][k]
-                L[i][k] = Uik
+        # Create L matrix
+        L = self.zeros((rows, rows), K)
+        i = j = k = 0
+        while i < rows and j < cols:
+            if U[i][j] != K.zero:
+                # Found non-zero pivot
+                # Diagonal entry is the pivot
+                L[i][k] = U[i][j]
+                for l in range(i + 1, rows):
+                    # Off-diagonal entries are the multipliers
+                    L[l][k] = U[l][j]
+                    # zero out the entries in U
+                    U[l][j] = K.zero
+                i += 1
+                k += 1
+            j += 1
 
-                for j in range(k + 1, cols):
-                    U[i][j] = K.exquo(Ukk * U[i][j] - U[k][j] * Uik, oldpivot)
+        # Fill remaining diagonal of L with ones
+        for i in range(k, rows):
+            L[i][i] = K.one
 
-                U[i][k] = K.zero
-
-            oldpivot = Ukk
-
-        if min(rows, cols) > 0:
-            for k in range(min(rows, cols), rows):
-                if cols == 1:
-                    if rows == 2:
-                        D[k][k] = D[0][0]
-                    elif rows == 3:
-                        if k < rows - 1:
-                            D[k][k] = D[0][0]
-                        else:
-                            D[k][k] = K.one
-                    else:
-                        if k < rows - 2:
-                            D[k][k] = D[0][0]
-                        else:
-                            D[k][k] = K.one
-                elif cols == 2:
-                    if k == rows - 1:
-                        D[k][k] = L[k-1][k-1]
-                    else:
-                        D[k][k] = K.mul(L[k-1][k-1], L[k][k])
-                else:
-                    if k == rows - 1:
-                        # For the last diagonal element
-                        D[k][k] = L[k-1][k-1]
-                    else:
-                        D[k][k] = K.mul(L[k-1][k-1], L[k][k])
+        # Create D matrix - using FLINT's approach with accumulator
+        D = self.zeros((rows, rows), K)
+        if rows >= 1:
+            D[0][0] = L[0][0]
+        di = K.one
+        for i in range(1, rows):
+            # Accumulate product of pivots
+            di = L[i - 1][i - 1] * L[i][i]
+            D[i][i] = di
 
         return P, L, D, U
 

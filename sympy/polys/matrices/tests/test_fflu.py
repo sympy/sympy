@@ -177,13 +177,13 @@ def _check_fflu(A, P, L, D, U):
     assert D_field.shape == (m, m)
     assert U_field.shape == (m, n)
     assert L_field.is_lower
-    assert U_field.is_upper
     assert D_field.is_diagonal
     if hasattr(D, 'inv_den'):
         di, d = D.inv_den()
         assert P.matmul(A).rmul(d) == L.matmul(di).matmul(U)
     else:
         assert L_field.matmul(D_field).matmul(U_field) == P_field.matmul(A_field)
+    assert U_field.is_upper
 
 
 def _to_DM(A, ans):
@@ -221,13 +221,13 @@ def _check_fflu_result(result, A, P_ans, L_ans, D_ans, U_ans):
     assert D.shape == (m, m)
     assert U.shape == (m, n)
     assert L.is_lower
-    assert U.is_upper
     assert D.is_diagonal
     if hasattr(D, 'inv_den'):
         di, d = D.inv_den()
         assert P.matmul(A).rmul(d) == L.matmul(di).matmul(U)
     else:
         assert P.matmul(A) == L.matmul(D.inv()).matmul(U)
+    assert U.is_upper
 
 
 @pytest.mark.parametrize('name, A, P_ans, L_ans, D_ans, U_ans', FFLU_EXAMPLES)
@@ -244,13 +244,13 @@ def test_dm_sparse_fflu(name, A, P_ans, L_ans, D_ans, U_ans):
 
 @pytest.mark.parametrize('name, A, P_ans, L_ans, D_ans, U_ans', FFLU_EXAMPLES)
 def test_ddm_fflu(name, A, P_ans, L_ans, D_ans, U_ans):
-    A = A.to_field().to_ddm().copy()
+    A = A.to_ddm()
     _check_fflu_result(A.fflu(), A, P_ans, L_ans, D_ans, U_ans)
 
 
 @pytest.mark.parametrize('name, A, P_ans, L_ans, D_ans, U_ans', FFLU_EXAMPLES)
 def test_sdm_fflu(name, A, P_ans, L_ans, D_ans, U_ans):
-    A = A.to_field().to_sdm()
+    A = A.to_sdm()
     _check_fflu_result(A.fflu(), A, P_ans, L_ans, D_ans, U_ans)
 
 

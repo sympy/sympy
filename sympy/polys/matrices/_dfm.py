@@ -787,19 +787,29 @@ class DFM:
 
     def fflu(self):
         """
-        Fraction-free PLDU decomposition for DFM.
+        Fraction-free LU decomposition of DFM.
 
-        This method adapts to rank-deficient matrices by removing rows and columns
-        corresponding to zero pivots in the upper triangular matrix U.
+        Explanation
+        ===========
 
-        Returns
-        =======
+        This method computes the PLDU decomposition
+        using Gauss-Bareiss elimination in a fraction-free manner,
+        it ensures that all intermediate results remain in
+        the domain of the input matrix. Unlike standard
+        LU decomposition, which introduces division, this approach
+        avoids fractions, making it particularly suitable
+        for exact arithmetic over integers or polynomials.
 
-        (P, L, D, U)
-            P is the permutation matrix as a DFM.
-            L is the lower triangular matrix as a DFM.
-            D is the diagonal matrix as a DFM.
-            U is the upper triangular matrix as a DFM.
+        This method satisfies the invariant:
+
+        P * A = L * inv(D) * U
+
+        See Also
+        ========
+
+        sympy.matrices.matrixbase.MatrixBase.LUdecomposition
+        LUdecomposition_Simple
+        LUsolve
         """
         if self.domain == ZZ:
             fflu = getattr(self.rep, 'fflu', None)
