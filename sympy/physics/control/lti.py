@@ -935,7 +935,7 @@ class TransferFunction(SISOLinearTimeInvariant):
         diff = n - num_poly.degree()
         num_coeffs = [0]*diff + num_coeffs
 
-        a = den_coeffs[1:]  # a0 = den_coeffs[0]
+        a = den_coeffs[1:]  
         a_mat = Matrix([[(-1)*coefficient/den_coeffs[0] for coefficient in reversed(a)]])
         vert = zeros(n-1, 1)
         mat = eye(n-1)
