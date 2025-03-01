@@ -1,47 +1,36 @@
+from math import exp, log
 from sympy.core.random import _randint
-from sympy.external.gmpy import gcd, invert, sqrt as isqrt
+from sympy.external.gmpy import bit_scan1, gcd, invert, sqrt as isqrt
+from sympy.ntheory.factor_ import _perfect_power
+from sympy.ntheory.primetest import isprime
 from sympy.ntheory.residue_ntheory import _sqrt_mod_prime_power
-from sympy.ntheory import isprime
-from math import log, sqrt
 
 
 class SievePolynomial:
-    def __init__(self, modified_coeff=(), a=None, b=None):
+    def __init__(self, a, b, N):
         """This class denotes the seive polynomial.
-        If ``g(x) = (a*x + b)**2 - N``. `g(x)` can be expanded
-        to ``a*x**2 + 2*a*b*x + b**2 - N``, so the coefficient
-        is stored in the form `[a**2, 2*a*b, b**2 - N]`. This
-        ensures faster `eval` method because we dont have to
-        perform `a**2, 2*a*b, b**2` every time we call the
-        `eval` method. As multiplication is more expensive
-        than addition, by using modified_coefficient we get
-        a faster seiving process.
+        Provide methods to compute `(a*x + b)**2 - N` and
+        `a*x + b` when given `x`.
 
         Parameters
         ==========
 
-        modified_coeff : modified_coefficient of sieve polynomial
         a : parameter of the sieve polynomial
         b : parameter of the sieve polynomial
+        N : number to be factored
+
         """
-        self.modified_coeff = modified_coeff
         self.a = a
         self.b = b
+        self.a2 = a**2
+        self.ab = 2*a*b
+        self.b2 = b**2 - N
 
-    def eval(self, x):
-        """
-        Compute the value of the sieve polynomial at point x.
+    def eval_u(self, x):
+        return self.a*x + self.b
 
-        Parameters
-        ==========
-
-        x : Integer parameter for sieve polynomial
-        """
-        ans = 0
-        for coeff in self.modified_coeff:
-            ans *= x
-            ans += coeff
-        return ans
+    def eval_v(self, x):
+        return (self.a2*x + self.ab)*x + self.b2
 
 
 class FactorBaseElem:
@@ -61,9 +50,10 @@ class FactorBaseElem:
         self.prime = prime
         self.tmem_p = tmem_p
         self.log_p = log_p
+        # `soln1` and `soln2` are solutions to
+        # the equation `(a*x + b)**2 - N = 0 (mod p)`.
         self.soln1 = None
         self.soln2 = None
-        self.a_inv = None
         self.b_ainv = None
 
 
@@ -96,7 +86,7 @@ def _generate_factor_base(prime_bound, n):
     return idx_1000, idx_5000, factor_base
 
 
-def _initialize_first_polynomial(N, M, factor_base, idx_1000, idx_5000, seed=None):
+def _initialize_first_polynomial(N, M, factor_base, idx_1000, idx_5000, randint):
     """This step is the initialization of the 1st sieve polynomial.
     Here `a` is selected as a product of several primes of the factor_base
     such that `a` is about to ``sqrt(2*N) / M``. Other initial values of
@@ -115,28 +105,28 @@ def _initialize_first_polynomial(N, M, factor_base, idx_1000, idx_5000, seed=Non
     factor_base : factor_base primes
     idx_1000 : index of prime number in the factor_base near 1000
     idx_5000 : index of prime number in the factor_base near to 5000
-    seed : Generate pseudoprime numbers
+    randint : A callable that takes two integers (a, b) and returns a random integer
+              n such that a <= n <= b, similar to `random.randint`.
     """
-    randint = _randint(seed)
-    approx_val = sqrt(2*N) / M
+    approx_val = log(2*N)/2 - log(M)
     # `a` is a parameter of the sieve polynomial and `q` is the prime factors of `a`
     # randomly search for a combination of primes whose multiplication is close to approx_val
     # This multiplication of primes will be `a` and the primes will be `q`
     # `best_a` denotes that `a` is close to approx_val in the random search of combination
     best_a, best_q, best_ratio = None, None, None
-    start = 0 if idx_1000 is None else idx_1000
-    end = len(factor_base) - 1 if idx_5000 is None else idx_5000
+    start = idx_1000 or 0
+    end = idx_5000 or (len(factor_base) - 1)
     for _ in range(50):
         a = 1
         q = []
-        while(a < approx_val):
+        while log(a) < approx_val:
             rand_p = 0
             while(rand_p == 0 or rand_p in q):
                 rand_p = randint(start, end)
             p = factor_base[rand_p].prime
             a *= p
             q.append(rand_p)
-        ratio = a / approx_val
+        ratio = exp(log(a) - approx_val)
         if best_ratio is None or abs(ratio - 1) < abs(best_ratio - 1):
             best_q = q
             best_a = a
@@ -154,15 +144,16 @@ def _initialize_first_polynomial(N, M, factor_base, idx_1000, idx_5000, seed=Non
         B.append(a//q_l*gamma)
 
     b = sum(B)
-    g = SievePolynomial([a*a, 2*a*b, b*b - N], a, b)
+    g = SievePolynomial(a, b, N)
 
     for fb in factor_base:
         if a % fb.prime == 0:
+            fb.soln1 = None
             continue
-        fb.a_inv = invert(a, fb.prime)
-        fb.b_ainv = [2*b_elem*fb.a_inv % fb.prime for b_elem in B]
-        fb.soln1 = (fb.a_inv*(fb.tmem_p - b)) % fb.prime
-        fb.soln2 = (fb.a_inv*(-fb.tmem_p - b)) % fb.prime
+        a_inv = invert(a, fb.prime)
+        fb.b_ainv = [2*b_elem*a_inv % fb.prime for b_elem in B]
+        fb.soln1 = (a_inv*(fb.tmem_p - b)) % fb.prime
+        fb.soln2 = (a_inv*(-fb.tmem_p - b)) % fb.prime
     return g, B
 
 
@@ -184,24 +175,19 @@ def _initialize_ith_poly(N, factor_base, i, g, B):
     g : (i - 1)th polynomial
     B : array that stores a//q_l*gamma
     """
-    from sympy.functions.elementary.integers import ceiling
-    v = 1
-    j = i
-    while(j % 2 == 0):
-        v += 1
-        j //= 2
-    if ceiling(i / (2**v)) % 2 == 1:
-        neg_pow = -1
-    else:
+    v = bit_scan1(i)
+    if (i >> (v + 1)) % 2:
         neg_pow = 1
-    b = g.b + 2*neg_pow*B[v - 1]
+    else:
+        neg_pow = -1
+    b = g.b + 2*neg_pow*B[v]
     a = g.a
-    g = SievePolynomial([a*a, 2*a*b, b*b - N], a, b)
+    g = SievePolynomial(a, b, N)
     for fb in factor_base:
-        if a % fb.prime == 0:
+        if fb.soln1 is None:
             continue
-        fb.soln1 = (fb.soln1 - neg_pow*fb.b_ainv[v - 1]) % fb.prime
-        fb.soln2 = (fb.soln2 - neg_pow*fb.b_ainv[v - 1]) % fb.prime
+        fb.soln1 = (fb.soln1 - neg_pow*fb.b_ainv[v]) % fb.prime
+        fb.soln2 = (fb.soln2 - neg_pow*fb.b_ainv[v]) % fb.prime
 
     return g
 
@@ -303,11 +289,11 @@ def _trial_division_stage(N, M, factor_base, sieve_array, sieve_poly, partial_re
         if val < accumulated_val:
             continue
         x = idx - M
-        v = sieve_poly.eval(x)
+        v = sieve_poly.eval_v(x)
         vec, is_smooth = _check_smoothness(v, factor_base)
         if is_smooth is None:#Neither smooth nor partial
             continue
-        u = sieve_poly.a*x + sieve_poly.b
+        u = sieve_poly.eval_u(x)
         # Update the partial relation
         # If 2 partial relation with same large prime is found then generate smooth relation
         if is_smooth is False:#partial relation found
@@ -332,21 +318,6 @@ def _trial_division_stage(N, M, factor_base, sieve_array, sieve_poly, partial_re
         #assert u*u % N == v % N
         smooth_relations.append((u, v, vec))
     return smooth_relations, proper_factor
-
-
-#LINEAR ALGEBRA STAGE
-def _build_matrix(smooth_relations):
-    """Build a 2D matrix from smooth relations.
-
-    Parameters
-    ==========
-
-    smooth_relations : Stores smooth relations
-    """
-    matrix = []
-    for s_relation in smooth_relations:
-        matrix.append(s_relation[2])
-    return matrix
 
 
 def _gauss_mod_2(A):
@@ -455,8 +426,13 @@ def qs(N, prime_bound, M, ERROR_TERM=25, seed=1234):
     prime_bound : upper bound for primes in the factor base
     M : Sieve Interval
     ERROR_TERM : Error term for checking smoothness
-    threshold : Extra smooth relations for factorization
-    seed : generate pseudo prime numbers
+    seed : seed of random number generator
+
+    Returns
+    =======
+
+    set(int) : A set of factors of N without considering multiplicity.
+               Returns ``{N}`` if factorization fails.
 
     Examples
     ========
@@ -467,22 +443,82 @@ def qs(N, prime_bound, M, ERROR_TERM=25, seed=1234):
     >>> qs(9804659461513846513, 2000, 10000)
     {4641991, 2112166839943}
 
+    See Also
+    ========
+
+    qs_factor
+
     References
     ==========
 
     .. [1] https://pdfs.semanticscholar.org/5c52/8a975c1405bd35c65993abf5a4edb667c1db.pdf
     .. [2] https://www.rieselprime.de/ziki/Self-initializing_quadratic_sieve
     """
+    return set(qs_factor(N, prime_bound, M, ERROR_TERM, seed))
+
+
+def qs_factor(N, prime_bound, M, ERROR_TERM=25, seed=1234):
+    """ Performs factorization using Self-Initializing Quadratic Sieve.
+
+    Parameters
+    ==========
+
+    N : Number to be Factored
+    prime_bound : upper bound for primes in the factor base
+    M : Sieve Interval
+    ERROR_TERM : Error term for checking smoothness
+    seed : seed of random number generator
+
+    Returns
+    =======
+
+    dict[int, int] : Factors of N.
+                     Returns ``{N: 1}`` if factorization fails.
+                     Note that the key is not always a prime number.
+
+    Examples
+    ========
+
+    >>> from sympy.ntheory import qs_factor
+    >>> qs_factor(1009 * 100003, 2000, 10000)
+    {1009: 1, 100003: 1}
+
+    See Also
+    ========
+
+    qs
+
+    """
+    if N < 2:
+        raise ValueError("N should be greater than 1")
     ERROR_TERM*=2**10
-    idx_1000, idx_5000, factor_base = _generate_factor_base(prime_bound, N)
+    factors = {}
     smooth_relations = []
     ith_poly = 0
     partial_relations = {}
-    proper_factor = set()
-    threshold = 5*len(factor_base) // 100
-    while True:
+    # Eliminate the possibility of even numbers,
+    # prime numbers, and perfect powers.
+    if N % 2 == 0:
+        e = 1
+        N //= 2
+        while N % 2 == 0:
+            N //= 2
+            e += 1
+        factors[2] = e
+    if isprime(N):
+        factors[N] = 1
+        return factors
+    if result := _perfect_power(N, 3):
+        n, e = result
+        factors[n] = e
+        return factors
+    N_copy = N
+    randint = _randint(seed)
+    idx_1000, idx_5000, factor_base = _generate_factor_base(prime_bound, N)
+    threshold = len(factor_base) * 105//100
+    while len(smooth_relations) < threshold:
         if ith_poly == 0:
-            ith_sieve_poly, B_array = _initialize_first_polynomial(N, M, factor_base, idx_1000, idx_5000)
+            ith_sieve_poly, B_array = _initialize_first_polynomial(N, M, factor_base, idx_1000, idx_5000, randint)
         else:
             ith_sieve_poly = _initialize_ith_poly(N, factor_base, ith_poly, ith_sieve_poly, B_array)
         ith_poly += 1
@@ -491,21 +527,28 @@ def qs(N, prime_bound, M, ERROR_TERM=25, seed=1234):
         sieve_array = _gen_sieve_array(M, factor_base)
         s_rel, p_f = _trial_division_stage(N, M, factor_base, sieve_array, ith_sieve_poly, partial_relations, ERROR_TERM)
         smooth_relations += s_rel
-        proper_factor |= p_f
-        if len(smooth_relations) >= len(factor_base) + threshold:
-            break
-    matrix = _build_matrix(smooth_relations)
+        for p in p_f:
+            if N_copy % p:
+                continue
+            e = 1
+            N_copy //= p
+            while N_copy % p == 0:
+                N_copy //= p
+                e += 1
+            factors[p] = e
+    matrix = [s_relation[2] for s_relation in smooth_relations]
     dependent_row, mark, gauss_matrix = _gauss_mod_2(matrix)
-    N_copy = N
     for index in range(len(dependent_row)):
         factor = _find_factor(dependent_row, mark, gauss_matrix, index, smooth_relations, N)
-        if factor > 1 and factor < N:
-            proper_factor.add(factor)
-            while(N_copy % factor == 0):
+        if 1 < factor and N_copy % factor == 0:
+            e = 1
+            N_copy //= factor
+            while N_copy % factor == 0:
                 N_copy //= factor
-            if isprime(N_copy):
-                proper_factor.add(N_copy)
+                e += 1
+            factors[factor] = e
+            if N_copy == 1 or isprime(N_copy):
                 break
-            if(N_copy == 1):
-                break
-    return proper_factor
+    if N_copy != 1:
+        factors[N_copy] = 1
+    return factors

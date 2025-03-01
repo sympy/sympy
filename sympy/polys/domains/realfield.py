@@ -171,10 +171,7 @@ class RealField(Field, CharacteristicZero, SimpleDomain):
         return self.from_sympy(base.to_sympy(element).evalf(self.dps))
 
     def from_RealField(self, element, base):
-        if self == base:
-            return element
-        else:
-            return self.dtype(element)
+        return self.dtype(element)
 
     def from_ComplexField(self, element, base):
         if not element.imag:

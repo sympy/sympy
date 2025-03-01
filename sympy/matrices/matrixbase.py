@@ -2029,7 +2029,7 @@ class MatrixBase(Printable):
         return self._eval_iter_items()
 
     def _eval_adjoint(self):
-        return self.transpose().conjugate()
+        return self.transpose().applyfunc(lambda x: x.adjoint())
 
     def _eval_applyfunc(self, f):
         cols = self.cols
@@ -2191,7 +2191,7 @@ class MatrixBase(Printable):
         conjugate: By-element conjugation
         sympy.matrices.matrixbase.MatrixBase.D: Dirac conjugation
         """
-        return self.T.C
+        return self.adjoint()
 
     def permute(self, perm, orientation='rows', direction='forward'):
         r"""Permute the rows or columns of a matrix by the given list of
@@ -2986,7 +2986,7 @@ class MatrixBase(Printable):
 
     @call_highest_priority('__add__')
     def __radd__(self, other):
-        return self + other
+        return self.__add__(other)
 
     @call_highest_priority('__matmul__')
     def __rmatmul__(self, other):

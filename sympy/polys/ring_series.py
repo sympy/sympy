@@ -43,6 +43,7 @@ Look at rs_sin and rs_series for further reference.
 
 from sympy.polys.domains import QQ, EX
 from sympy.polys.rings import PolyElement, ring, sring
+from sympy.polys.puiseux import PuiseuxPoly
 from sympy.polys.polyerrors import DomainError
 from sympy.polys.monomials import (monomial_min, monomial_mul, monomial_div,
                                    monomial_ldiv)
@@ -89,7 +90,8 @@ def _invert_monoms(p1):
 
 def _giant_steps(target):
     """Return a list of precision steps for the Newton's method"""
-    res = giant_steps(2, target)
+    # We use ceil here because giant_steps cannot handle flint.fmpq
+    res = giant_steps(2, math.ceil(target))
     if res[0] != 2:
         res = [2] + res
     return res
@@ -113,13 +115,13 @@ def rs_trunc(p1, x, prec):
     x**5 + x + 1
     """
     R = p1.ring
-    p = R.zero
+    p = {}
     i = R.gens.index(x)
     for exp1 in p1:
         if exp1[i] >= prec:
             continue
         p[exp1] = p1[exp1]
-    return p
+    return R(p)
 
 def rs_is_puiseux(p, x):
     """
@@ -131,15 +133,15 @@ def rs_is_puiseux(p, x):
     ========
 
     >>> from sympy.polys.domains import QQ
-    >>> from sympy.polys.rings import ring
+    >>> from sympy.polys.puiseux import puiseux_ring
     >>> from sympy.polys.ring_series import rs_is_puiseux
-    >>> R, x = ring('x', QQ)
+    >>> R, x = puiseux_ring('x', QQ)
     >>> p = x**QQ(2,5) + x**QQ(2,3) + x
     >>> rs_is_puiseux(p, x)
     True
     """
     index = p.ring.gens.index(x)
-    for k in p:
+    for k in p.itermonoms():
         if k[index] != int(k[index]):
             return True
         if k[index] < 0:
@@ -156,12 +158,12 @@ def rs_puiseux(f, p, x, prec):
     ========
 
     >>> from sympy.polys.domains import QQ
-    >>> from sympy.polys.rings import ring
+    >>> from sympy.polys.puiseux import puiseux_ring
     >>> from sympy.polys.ring_series import rs_puiseux, rs_exp
-    >>> R, x = ring('x', QQ)
+    >>> R, x = puiseux_ring('x', QQ)
     >>> p = x**QQ(2,5) + x**QQ(2,3) + x
     >>> rs_puiseux(rs_exp,p, x, 1)
-    1/2*x**(4/5) + x**(2/3) + x**(2/5) + 1
+    1 + x**(2/5) + x**(2/3) + 1/2*x**(4/5)
     """
     index = p.ring.gens.index(x)
     n = 1
@@ -229,18 +231,18 @@ def rs_mul(p1, p2, x, prec):
     3*x**2 + 3*x + 1
     """
     R = p1.ring
-    p = R.zero
+    p = {}
     if R.__class__ != p2.ring.__class__ or R != p2.ring:
         raise ValueError('p1 and p2 must have the same ring')
     iv = R.gens.index(x)
-    if not isinstance(p2, PolyElement):
+    if not isinstance(p2, (PolyElement, PuiseuxPoly)):
         raise ValueError('p2 must be a polynomial')
     if R == p2.ring:
         get = p.get
-        items2 = list(p2.items())
+        items2 = p2.terms()
         items2.sort(key=lambda e: e[0][iv])
         if R.ngens == 1:
-            for exp1, v1 in p1.items():
+            for exp1, v1 in p1.iterterms():
                 for exp2, v2 in items2:
                     exp = exp1[0] + exp2[0]
                     if exp < prec:
@@ -250,7 +252,7 @@ def rs_mul(p1, p2, x, prec):
                         break
         else:
             monomial_mul = R.monomial_mul
-            for exp1, v1 in p1.items():
+            for exp1, v1 in p1.iterterms():
                 for exp2, v2 in items2:
                     if exp1[iv] + exp2[iv] < prec:
                         exp = monomial_mul(exp1, exp2)
@@ -258,8 +260,7 @@ def rs_mul(p1, p2, x, prec):
                     else:
                         break
 
-    p.strip_zero()
-    return p
+    return R(p)
 
 def rs_square(p1, x, prec):
     """
@@ -277,10 +278,10 @@ def rs_square(p1, x, prec):
     6*x**2 + 4*x + 1
     """
     R = p1.ring
-    p = R.zero
+    p = {}
     iv = R.gens.index(x)
     get = p.get
-    items = list(p1.items())
+    items = p1.terms()
     items.sort(key=lambda e: e[0][iv])
     monomial_mul = R.monomial_mul
     for i in range(len(items)):
@@ -292,14 +293,13 @@ def rs_square(p1, x, prec):
                 p[exp] = get(exp, 0) + v1*v2
             else:
                 break
-    p = p.imul_num(2)
+    p = {m: 2*v for m, v in p.items()}
     get = p.get
-    for expv, v in p1.items():
+    for expv, v in p1.iterterms():
         if 2*expv[iv] < prec:
             e2 = monomial_mul(expv, expv)
             p[e2] = get(e2, 0) + v**2
-    p.strip_zero()
-    return p
+    return R(p)
 
 def rs_pow(p1, n, x, prec):
     """
@@ -506,11 +506,13 @@ def _series_inversion1(p, x, prec):
     if _has_constant_term(p - c, x):
         raise ValueError("p cannot contain a constant term depending on "
                          "parameters")
+    if not R.domain.is_unit(c):
+        raise ValueError(f"Constant term {c} must be a unit in {R.domain}")
+
     one = R(1)
     if R.domain is EX:
         one = 1
     if c != one:
-        # TODO add check that it is a unit
         p1 = R(1)/c
     else:
         p1 = R(1)
@@ -753,7 +755,7 @@ def rs_diff(p, x):
     """
     R = p.ring
     n = R.gens.index(x)
-    p1 = R.zero
+    p1 = {}
     mn = [0]*R.ngens
     mn[n] = 1
     mn = tuple(mn)
@@ -761,7 +763,7 @@ def rs_diff(p, x):
         if expv[n]:
             e = monomial_ldiv(expv, mn)
             p1[e] = R.domain_new(p[expv]*expv[n])
-    return p1
+    return R(p1)
 
 def rs_integrate(p, x):
     """
@@ -784,7 +786,7 @@ def rs_integrate(p, x):
     1/3*x**3*y**3 + 1/2*x**2
     """
     R = p.ring
-    p1 = R.zero
+    p1 = {}
     n = R.gens.index(x)
     mn = [0]*R.ngens
     mn[n] = 1
@@ -793,7 +795,7 @@ def rs_integrate(p, x):
     for expv in p:
         e = monomial_mul(expv, mn)
         p1[e] = R.domain_new(p[expv]/(expv[n] + 1))
-    return p1
+    return R(p1)
 
 def rs_fun(p, f, *args):
     r"""
@@ -858,31 +860,31 @@ def mul_xin(p, i, n):
     `x\_i` is the ith variable in ``p``.
     """
     R = p.ring
-    q = R(0)
-    for k, v in p.items():
+    q = {}
+    for k, v in p.terms():
         k1 = list(k)
         k1[i] += n
         q[tuple(k1)] = v
-    return q
+    return R(q)
 
 def pow_xin(p, i, n):
     """
     >>> from sympy.polys.domains import QQ
-    >>> from sympy.polys.rings import ring
+    >>> from sympy.polys.puiseux import puiseux_ring
     >>> from sympy.polys.ring_series import pow_xin
-    >>> R, x, y = ring('x, y', QQ)
+    >>> R, x, y = puiseux_ring('x, y', QQ)
     >>> p = x**QQ(2,5) + x + x**QQ(2,3)
     >>> index = p.ring.gens.index(x)
     >>> pow_xin(p, index, 15)
-    x**15 + x**10 + x**6
+    x**6 + x**10 + x**15
     """
     R = p.ring
-    q = R(0)
-    for k, v in p.items():
+    q = {}
+    for k, v in p.terms():
         k1 = list(k)
         k1[i] *= n
         q[tuple(k1)] = v
-    return q
+    return R(q)
 
 def _nth_root1(p, n, x, prec):
     """
@@ -973,7 +975,7 @@ def rs_nth_root(p, n, x, prec):
         c = p[zm]
         if R.domain is EX:
             c_expr = c.as_expr()
-            const = c_expr**QQ(1, n)
+            const = EX(c_expr**QQ(1, n))
         elif isinstance(c, PolyElement):
             try:
                 c_expr = c.as_expr()
@@ -991,7 +993,7 @@ def rs_nth_root(p, n, x, prec):
     else:
         res = _nth_root1(p, n, x, prec)
     if m:
-        m = QQ(m, n)
+        m = QQ(m) / n
         res = mul_xin(res, index, m)
     return res
 
@@ -1008,13 +1010,13 @@ def rs_log(p, x, prec):
     ========
 
     >>> from sympy.polys.domains import QQ
-    >>> from sympy.polys.rings import ring
+    >>> from sympy.polys.puiseux import puiseux_ring
     >>> from sympy.polys.ring_series import rs_log
-    >>> R, x = ring('x', QQ)
+    >>> R, x = puiseux_ring('x', QQ)
     >>> rs_log(1 + x, x, 8)
-    1/7*x**7 - 1/6*x**6 + 1/5*x**5 - 1/4*x**4 + 1/3*x**3 - 1/2*x**2 + x
+    x + -1/2*x**2 + 1/3*x**3 + -1/4*x**4 + 1/5*x**5 + -1/6*x**6 + 1/7*x**7
     >>> rs_log(x**QQ(3, 2) + 1, x, 5)
-    1/3*x**(9/2) - 1/2*x**3 + x**(3/2)
+    x**(3/2) + -1/2*x**3 + 1/3*x**(9/2)
     """
     if rs_is_puiseux(p, x):
         return rs_puiseux(rs_log, p, x, prec)
@@ -1030,7 +1032,7 @@ def rs_log(p, x, prec):
             c_expr = c.as_expr()
             if R.domain is EX:
                 const = log(c_expr)
-            elif isinstance(c, PolyElement):
+            elif isinstance(c, (PolyElement, PuiseuxPoly)):
                 try:
                     const = R(log(c_expr))
                 except ValueError:
@@ -1199,9 +1201,8 @@ def rs_atan(p, x, prec):
         return rs_puiseux(rs_atan, p, x, prec)
     R = p.ring
     const = 0
-    if _has_constant_term(p, x):
-        zm = R.zero_monom
-        c = p[zm]
+    c = _get_constant_term(p, x)
+    if c:
         if R.domain is EX:
             c_expr = c.as_expr()
             const = atan(c_expr)
@@ -1210,8 +1211,11 @@ def rs_atan(p, x, prec):
                 c_expr = c.as_expr()
                 const = R(atan(c_expr))
             except ValueError:
-                raise DomainError("The given series cannot be expanded in "
-                    "this domain.")
+                R = R.add_gens([atan(c_expr)])
+                p = p.set_ring(R)
+                x = x.set_ring(R)
+                c = c.set_ring(R)
+                const = R(atan(c_expr))
         else:
             try:
                 const = R(atan(c))
@@ -1400,13 +1404,13 @@ def rs_sin(p, x, prec):
     ========
 
     >>> from sympy.polys.domains import QQ
-    >>> from sympy.polys.rings import ring
+    >>> from sympy.polys.puiseux import puiseux_ring
     >>> from sympy.polys.ring_series import rs_sin
-    >>> R, x, y = ring('x, y', QQ)
+    >>> R, x, y = puiseux_ring('x, y', QQ)
     >>> rs_sin(x + x*y, x, 4)
-    -1/6*x**3*y**3 - 1/2*x**3*y**2 - 1/2*x**3*y - 1/6*x**3 + x*y + x
+    x + x*y + -1/6*x**3 + -1/2*x**3*y + -1/2*x**3*y**2 + -1/6*x**3*y**3
     >>> rs_sin(x**QQ(3, 2) + x*y**QQ(7, 5), x, 4)
-    -1/2*x**(7/2)*y**(14/5) - 1/6*x**3*y**(21/5) + x**(3/2) + x*y**(7/5)
+    x*y**(7/5) + x**(3/2) + -1/6*x**3*y**(21/5) + -1/2*x**(7/2)*y**(14/5)
 
     See Also
     ========
@@ -1470,13 +1474,13 @@ def rs_cos(p, x, prec):
     ========
 
     >>> from sympy.polys.domains import QQ
-    >>> from sympy.polys.rings import ring
+    >>> from sympy.polys.puiseux import puiseux_ring
     >>> from sympy.polys.ring_series import rs_cos
-    >>> R, x, y = ring('x, y', QQ)
+    >>> R, x, y = puiseux_ring('x, y', QQ)
     >>> rs_cos(x + x*y, x, 4)
-    -1/2*x**2*y**2 - x**2*y - 1/2*x**2 + 1
+    1 + -1/2*x**2 + -1*x**2*y + -1/2*x**2*y**2
     >>> rs_cos(x + x*y, x, 4)/x**QQ(7, 5)
-    -1/2*x**(3/5)*y**2 - x**(3/5)*y - 1/2*x**(3/5) + x**(-7/5)
+    x**(-7/5) + -1/2*x**(3/5) + -1*x**(3/5)*y + -1/2*x**(3/5)*y**2
 
     See Also
     ========
@@ -1830,7 +1834,7 @@ def rs_compose_add(p1, p2):
     np2e = rs_hadamard_exp(np2)
     np3e = rs_mul(np1e, np2e, x, prec)
     np3 = rs_hadamard_exp(np3e, True)
-    np3a = (np3[(0,)] - np3)/x
+    np3a = (np3[(0,)] - np3) / x
     q = rs_integrate(np3a, x)
     q = rs_exp(q, x, prec)
     q = _invert_monoms(q)
@@ -1853,7 +1857,8 @@ _convert_func = {
         'cos': 'rs_cos',
         'exp': 'rs_exp',
         'tan': 'rs_tan',
-        'log': 'rs_log'
+        'log': 'rs_log',
+        'atan': 'rs_atan'
         }
 
 def rs_min_pow(expr, series_rs, a):
@@ -1960,8 +1965,8 @@ def rs_series(expr, a, prec):
     Parameters
     ==========
 
-    expr : :class:`Expr`
-    a : :class:`Symbol` with respect to which expr is to be expanded
+    expr : :class:`~.Expr`
+    a : :class:`~.Symbol` with respect to which expr is to be expanded
     prec : order of the series expansion
 
     Currently supports multivariate Taylor series expansion. This is much

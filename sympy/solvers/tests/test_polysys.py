@@ -17,7 +17,7 @@ from sympy.solvers.polysys import (solve_poly_system,
                                    solve_biquadratic, SolveFailed,
                                    solve_generic, factor_system_bool,
                                    factor_system_cond, factor_system_poly,
-                                   factor_system)
+                                   factor_system, _factor_sets, _factor_sets_slow)
 from sympy.polys.polytools import parallel_poly_from_expr
 from sympy.testing.pytest import raises
 from sympy.core.relational import Eq
@@ -248,6 +248,12 @@ def test_factor_system():
         [sin(x)**2 + cos(x)**2]
     ]
 
+    assert factor_system([a*x, y, a]) == [[y, a]]
+
+    assert factor_system([a*x, y, a], [x, y]) == []
+
+    assert factor_system([a ** 2 * x, y], [x, y]) == [[x, y]]
+
     assert factor_system([a*x*(x - 1), b*y, c], [x, y]) == []
 
     assert factor_system([a*x*(x - 1), b*y, c], [x, y, c]) == [
@@ -363,6 +369,15 @@ def test_factor_system_cond():
 
     assert factor_system_cond([x*(x-1), y], [x, y]) == [[x - 1, y], [x, y]]
 
+    assert factor_system_cond([a*x, y, a], [x, y]) == [[y, a]]
+
+    assert factor_system_cond([a*x, b*x], [x, y]) == [[x], [a, b]]
+
+    assert factor_system_cond([a*b*x, y], [x, y]) == [[x, y], [y, a*b]]
+
+    assert factor_system_cond([a*b*x, y]) == [[x, y], [y, a], [y, b]]
+
+    assert factor_system_cond([a**2*x, y], [x, y]) == [[x, y], [y, a]]
 
 def test_factor_system_bool():
 
@@ -386,6 +401,24 @@ def test_factor_system_bool():
     assert factor_system_bool([1], [x]) == False
     assert factor_system_bool([a], [x]) == Eq(a, 0)
 
+    assert factor_system_bool([a * x, y, a], [x, y]) == Eq(a, 0) & Eq(y, 0)
+
+    assert (factor_system_bool([a*x, b*y*x, a], [x, y]) == (
+        Eq(a, 0) & Eq(b, 0))
+        | (Eq(a, 0) & Eq(x, 0))
+        | (Eq(a, 0) & Eq(y, 0)))
+
+    assert (factor_system_bool([a*x, b*x], [x, y]) == Eq(x, 0) |
+            (Eq(a, 0) & Eq(b, 0)))
+
+    assert (factor_system_bool([a*b*x, y], [x, y]) == (
+        Eq(x, 0) & Eq(y, 0)) |
+        (Eq(y, 0) & Eq(a*b, 0)))
+
+    assert (factor_system_bool([a**2*x, y], [x, y]) == (
+        Eq(a, 0) & Eq(y, 0)) |
+        (Eq(x, 0) & Eq(y, 0)))
+
     assert factor_system_bool([a*x*y, b*y*z], [x, y, z]) == (
         Eq(y, 0)
         | (Eq(a, 0) & Eq(b, 0))
@@ -398,3 +431,27 @@ def test_factor_system_bool():
         (Eq(a, 0) & Eq(b, 0))
         | (Eq(x - 1, 0) & Eq(b, 0))
     )
+
+
+def test_factor_sets():
+    #
+    from random import randint
+
+    def generate_random_system(n_eqs=3, n_factors=2, max_val=10):
+        return [
+            [randint(0, max_val) for _ in range(randint(1, n_factors))]
+            for _ in range(n_eqs)
+        ]
+
+    test_cases = [
+        [[1, 2], [1, 3]],
+        [[1, 2], [3, 4]],
+        [[1], [1, 2], [2]],
+    ]
+
+    for case in test_cases:
+        assert _factor_sets(case) == _factor_sets_slow(case)
+
+    for _ in range(100):
+        system = generate_random_system()
+        assert _factor_sets(system) == _factor_sets_slow(system)
