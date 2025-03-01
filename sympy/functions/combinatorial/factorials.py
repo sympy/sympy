@@ -421,6 +421,7 @@ class factorial2(CombinatorialFunction):
     @classmethod
     def eval(cls, arg):
         # TODO: extend this to complex numbers?
+        # this was discussed in https://github.com/sympy/sympy/pull/27574
 
         if arg.is_Number:
             if not arg.is_Integer:
