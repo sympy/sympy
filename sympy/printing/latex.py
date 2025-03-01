@@ -983,7 +983,11 @@ class LatexPrinter(Printer):
             elif exp is not None:
                 func_tex = self._hprint_Function(func)
                 func_tex = self.parenthesize_super(func_tex)
-                name = r'%s^{%s}' % (func_tex, exp)
+                if func in accepted_latex_functions:
+                    name = r'%s^{%s}' % (func_tex, exp)
+                else:
+                    name = r'\left(%s %s\right)^{%s}' % (func_tex, r'%s', exp)
+
             else:
                 name = self._hprint_Function(func)
 
@@ -995,7 +999,10 @@ class LatexPrinter(Printer):
                 else:
                     name += r"%s"
             else:
-                name += r"{\left(%s \right)}"
+                if func in accepted_latex_functions or exp is None:
+                    name += r"{\left(%s \right)}"
+                else:
+                    name = name % r"{\left(%s \right)}"
 
             if inv_trig_power_case and exp is not None:
                 name += r"^{%s}" % exp
