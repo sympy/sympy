@@ -440,8 +440,8 @@ def ask(proposition, assumptions=True, context=global_assumptions):
     Notes
     =====
 
-    Relations in assumptions are now partially implemented, allowing 
-    for meaningful results in certain cases
+    Relations in assumptions are now partially implemented, allowing
+    for meaningful results in certain cases.
 
     >>> ask(Q.positive(x), x > 0)
     True
