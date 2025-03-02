@@ -2,7 +2,7 @@ from sympy.assumptions.lra_satask import lra_satask
 from sympy.logic.algorithms.lra_theory import UnhandledInput
 from sympy.assumptions.ask import Q, ask
 
-from sympy.core import symbols, Symbol
+from sympy.core import symbols
 from sympy.matrices.expressions.matexpr import MatrixSymbol
 
 from sympy.testing.pytest import raises, XFAIL
