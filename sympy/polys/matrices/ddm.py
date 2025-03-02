@@ -958,38 +958,18 @@ class DDM(list):
 
         return L, U, swaps
 
-    def fflu(self):
+    def _fflu(self):
         """
-        Fraction-free LU decomposition of DDM.
+        Private method for Phase 1 of fraction-free LU decomposition.
+        Performs row operations and elimination to compute U and permutation indices.
 
-        Explanation
-        ===========
-
-        This method computes the PLDU decomposition
-        using Gauss-Bareiss elimination in a fraction-free manner
-        ,it ensures that all intermediate results remain in
-        the domain of the input matrix. Unlike standard
-        LU decomposition, which introduces division, this approach
-        avoids fractions, making it particularly suitable
-        for exact arithmetic over integers or polynomials.
-
-        This method satisfies the invariant:
-
-        P * A = L * inv(D) * U
-
-        Returns
-        =======
-
-        (P, L, D, U)
-            - P (Permutation matrix)
-            - L (Lower triangular matrix with unit diagonal)
-            - D (Diagonal matrix)
-            - U (Upper triangular matrix)
+        Returns:
+            U : Upper triangular matrix after elimination.
+            perm (list): Permutation indices for row swaps.
         """
         rows, cols = self.shape
         K = self.domain
 
-        # Phase 1: Perform row operations and get permutation
         U = self.copy()
         perm = list(range(rows))
         rank = 0
@@ -1026,6 +1006,42 @@ class DDM(list):
                 # Keep the multiplier for L matrix
                 U[i][j] = multiplier
             rank += 1
+
+        return U, perm
+
+    def fflu(self):
+        """
+        Fraction-free LU decomposition of DDM.
+
+        Explanation
+        ===========
+
+        This method computes the PLDU decomposition
+        using Gauss-Bareiss elimination in a fraction-free manner,
+        ensuring that all intermediate results remain in
+        the domain of the input matrix. Unlike standard
+        LU decomposition, which introduces division, this approach
+        avoids fractions, making it particularly suitable
+        for exact arithmetic over integers or polynomials.
+
+        This method satisfies the invariant:
+
+        P * A = L * inv(D) * U
+
+        Returns
+        =======
+
+        (P, L, D, U)
+            - P (Permutation matrix)
+            - L (Lower triangular matrix)
+            - D (Diagonal matrix)
+            - U (Upper triangular matrix)
+        """
+        rows, cols = self.shape
+        K = self.domain
+
+        # Phase 1: Perform row operations and get permutation
+        U, perm = self._fflu()
 
         # Phase 2: Construct P, L, D matrices
         # Create P from permutation

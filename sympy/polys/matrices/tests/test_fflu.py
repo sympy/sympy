@@ -162,6 +162,15 @@ FFLU_EXAMPLES = [
         DM([[84, 0, 0, 0], [0, 365904, 0, 0], [0, 0, 1321658316, 0], [0, 0, 0, 303411]], ZZ),
         DM([[84, 30, 9], [0, 365904, 13], [0, 0, 1321658316], [0, 0, 0]], ZZ),
     ),
+
+    (
+        'fflu_row_swap',
+        DM([[0, 1, 2], [3, 4, 5], [6, 7, 8]], ZZ),
+        DM([[0, 1, 0], [1, 0, 0], [0, 0, 1]], ZZ),
+        DM([[3, 0, 0], [0, 3, 0], [6, -3, 1]], ZZ),
+        DM([[3, 0, 0], [0, 9, 0], [0, 0, 3]], ZZ),
+        DM([[3, 4, 5], [0, 3, 6], [0, 0, 0]], ZZ)
+    ),
 ]
 
 
@@ -222,11 +231,8 @@ def _check_fflu_result(result, A, P_ans, L_ans, D_ans, U_ans):
     assert U.shape == (m, n)
     assert L.is_lower
     assert D.is_diagonal
-    if hasattr(D, 'inv_den'):
-        di, d = D.inv_den()
-        assert P.matmul(A).rmul(d) == L.matmul(di).matmul(U)
-    else:
-        assert P.matmul(A) == L.matmul(D.inv()).matmul(U)
+    di, d = D.inv_den()
+    assert P.matmul(A).rmul(d) == L.matmul(di).matmul(U)
     assert U.is_upper
 
 
@@ -282,11 +288,8 @@ def test_fflu_properties():
     assert L.is_lower
     assert U.is_upper
     assert D.is_diagonal
-    if hasattr(D, 'inv_den'):
-        di, d = D.inv_den()
-        assert P.matmul(A).rmul(d) == L.matmul(di).matmul(U)
-    else:
-        assert P.matmul(A) == L.matmul(D.inv()).matmul(U)
+    di, d = D.inv_den()
+    assert P.matmul(A).rmul(d) == L.matmul(di).matmul(U)
 
 
 def test_fflu_rank_deficient():
