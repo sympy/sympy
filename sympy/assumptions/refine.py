@@ -4,7 +4,7 @@ from typing import Callable
 from sympy.core import S, Add, Expr, Basic, Mul, Pow, Rational
 from sympy.core.logic import fuzzy_not
 from sympy.logic.boolalg import Boolean
-from sympy.core.numbers import Infinity as oo, ComplexInfinity as zoo
+from sympy.core.numbers import Infinity, ComplexInfinity
 from sympy.assumptions import ask, Q # type: ignore
 
 
