@@ -77,6 +77,8 @@ def check_satisfiability(prop, _prop, factbase):
             raise UnhandledInput(f"LRASolver: {expr} is of MatrixKind")
         if expr == S.NaN:
             raise UnhandledInput("LRASolver: nan")
+        if expr not in real_exprs:
+            raise UnhandledInput(f"LRASolver: {expr} must be real")
 
     # convert old assumptions into predicates and add them to sat_true and sat_false
     # also check for unhandled predicates
