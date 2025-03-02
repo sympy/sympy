@@ -43,6 +43,20 @@ WHITE_LIST = ALLOWED_PRED | {Q.positive, Q.negative, Q.zero, Q.nonzero, Q.nonpos
                                             Q.positive_infinite}
 
 
+def infer_real_expressions(factbase, all_exprs):
+    """
+    Infers which expressions are real based on the given factbase and expressions.
+    """
+    real_exprs = set()
+
+    # Add expressions explicitly declared as real
+    for expr in all_exprs:
+        if expr.is_real is True:
+            real_exprs.add(expr)
+
+    return real_exprs
+
+
 def check_satisfiability(prop, _prop, factbase):
     sat_true = factbase.copy()
     sat_false = factbase.copy()
@@ -50,10 +64,14 @@ def check_satisfiability(prop, _prop, factbase):
     sat_false.add_from_cnf(_prop)
 
     all_pred, all_exprs = get_all_pred_and_expr_from_enc_cnf(sat_true)
+    real_exprs = infer_real_expressions(factbase, all_exprs)
 
     for pred in all_pred:
         if pred.function not in WHITE_LIST and pred.function != Q.ne:
             raise UnhandledInput(f"LRASolver: {pred} is an unhandled predicate")
+        if pred.function in (Q.gt,Q.lt):
+            real_exprs.add(pred.args[0])
+            real_exprs.add(pred.args[1])
     for expr in all_exprs:
         if expr.kind == MatrixKind(NumberKind):
             raise UnhandledInput(f"LRASolver: {expr} is of MatrixKind")
@@ -62,16 +80,17 @@ def check_satisfiability(prop, _prop, factbase):
 
     # convert old assumptions into predicates and add them to sat_true and sat_false
     # also check for unhandled predicates
-    for assm in extract_pred_from_old_assum(all_exprs):
-        n = len(sat_true.encoding)
-        if assm not in sat_true.encoding:
-            sat_true.encoding[assm] = n+1
-        sat_true.data.append([sat_true.encoding[assm]])
+    if (len(real_exprs)==len(all_exprs)):
+        for assm in extract_pred_from_old_assum(all_exprs):
+            n = len(sat_true.encoding)
+            if assm not in sat_true.encoding:
+                sat_true.encoding[assm] = n+1
+            sat_true.data.append([sat_true.encoding[assm]])
 
-        n = len(sat_false.encoding)
-        if assm not in sat_false.encoding:
-            sat_false.encoding[assm] = n+1
-        sat_false.data.append([sat_false.encoding[assm]])
+            n = len(sat_false.encoding)
+            if assm not in sat_false.encoding:
+                sat_false.encoding[assm] = n+1
+            sat_false.data.append([sat_false.encoding[assm]])
 
 
     sat_true = _preprocess(sat_true)
@@ -257,8 +276,6 @@ def extract_pred_from_old_assum(all_exprs):
         if len(expr.free_symbols) == 0:
             continue
 
-        if expr.is_real is not True:
-            raise UnhandledInput(f"LRASolver: {expr} must be real")
         # test for I times imaginary variable; such expressions are considered real
         if isinstance(expr, Mul) and any(arg.is_real is not True for arg in expr.args):
             raise UnhandledInput(f"LRASolver: {expr} must be real")
