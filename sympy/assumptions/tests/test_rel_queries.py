@@ -4,14 +4,11 @@ from sympy.assumptions.ask import Q, ask
 
 from sympy.core import symbols, Symbol
 from sympy.matrices.expressions.matexpr import MatrixSymbol
-from sympy.core.numbers import I
 
 from sympy.testing.pytest import raises, XFAIL
 x, y, z = symbols("x y z", real=True)
 
 def test_lra_satask():
-    im = Symbol('im', imaginary=True)
-
     # test preprocessing of unequalities is working correctly
     assert lra_satask(Q.eq(x, 1), ~Q.ne(x, 0)) is False
     assert lra_satask(Q.eq(x, 0), ~Q.ne(x, 0)) is True
