@@ -1,11 +1,9 @@
-from sympy.core.numbers import Infinity, NegativeInfinity, ComplexInfinity
-from sympy.assumptions.ask import Q
 from sympy.assumptions.refine import refine
-from sympy.core.numbers import (I, Rational, nan, pi)
 from sympy.core import S
+from sympy.core.numbers import nan
 from sympy.core.symbol import Symbol
 from sympy.functions.elementary.miscellaneous import sqrt
-from sympy.abc import w, x, y, z
+from sympy.abc import z
 
 def test_refine_infinity():
     expr = (sqrt(z) + S.Infinity)**2
@@ -55,15 +53,16 @@ def test_refine_add_negative_infinity():
     assert result == S.NegativeInfinity, f"Expected NegativeInfinity, got {result}"
 
 def test_refine_directed_infinity():
-    from sympy import I, S, sqrt, refine, Symbol
+    from sympy import I, refine, Symbol, S, sqrt
     z = Symbol('z', real=True)
     expr = I * S.Infinity + sqrt(z)
     result = refine(expr)
     assert result == S.ComplexInfinity, f"Expected ComplexInfinity, got {result}"
 
 def test_refine_infinite_symbol():
-    from sympy import S, refine, Symbol
+    from sympy import refine, Symbol, S
     x = Symbol('x', real=True)
+    # Monkey-patch the assumptions to simulate an infinite symbol.
     x._assumptions = x._assumptions.copy()
     x._assumptions['infinite'] = True
     expr = x + 1
@@ -71,7 +70,7 @@ def test_refine_infinite_symbol():
     assert result == S.Infinity, f"Expected Infinity for an infinite symbol, got {result}"
 
 def test_refine_accumulation_bounds_with_infinity():
-    from sympy import S, refine
+    from sympy import refine, S
     from sympy.calculus.accumulationbounds import AccumulationBounds
     expr = S.Infinity + AccumulationBounds(1, 2)
     result = refine(expr)
