@@ -948,7 +948,7 @@ class TransferFunction(SISOLinearTimeInvariant):
         i = n
         C = []
         while (i > 0):
-            C.append((num_coeffs[i] - den_coeffs[i]*num_coeffs[0])/den_coeffs[0])
+            C.append(num_coeffs[i]/den_coeffs[0] - den_coeffs[i]*num_coeffs[0]/(den_coeffs[0]**2))
             i -= 1
         C = Matrix([C])
 
