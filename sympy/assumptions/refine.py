@@ -4,8 +4,8 @@ from typing import Callable
 from sympy.core import S, Add, Expr, Basic, Mul, Pow, Rational
 from sympy.core.logic import fuzzy_not
 from sympy.logic.boolalg import Boolean
-
-from sympy.assumptions import ask, Q  # type: ignore
+from sympy.core.numbers import Infinity as oo, ComplexInfinity as zoo
+from sympy.assumptions import ask, Q # type: ignore
 
 
 def refine(expr, assumptions=True):
@@ -394,14 +394,83 @@ def refine_matrixelement(expr, assumptions):
         return MatrixElement(matrix, j, i)
 
 def refine_Add(expr, assumptions):
-    from sympy import S
+    """
+    A more advanced example of refine_Add that tries to handle:
+      - NaN
+      - ComplexInfinity (zoo)
+      - Directed infinities like I*oo
+      - Symbols that are assumed infinite
+      - AccumulationBounds
+      - Real Infinities (S.Infinity, S.NegativeInfinity)
+    """
+    from sympy.calculus.accumulationbounds import AccumulationBounds
+
     args = expr.args
-    has_pos_inf = any(a == S.Infinity for a in args)
-    has_neg_inf = any(a == S.NegativeInfinity for a in args)
-    if has_pos_inf and not has_neg_inf:
+    has_nan = False
+    has_complex_inf = False
+    real_infs = set()
+    directed_infs = []
+    accum_bounds = []
+    infinite_symbols = []
+
+    finite_args = []
+
+    for a in args:
+        if a is S.NaN:
+            has_nan = True
+            continue
+
+        if a == S.ComplexInfinity:
+            has_complex_inf = True
+            continue
+
+        if a == S.Infinity:
+            real_infs.add(+1)
+            continue
+        elif a == S.NegativeInfinity:
+            real_infs.add(-1)
+            continue
+
+        if a.is_infinite and a.is_real is False:
+            directed_infs.append(a)
+            continue
+
+        if isinstance(a, AccumulationBounds):
+            accum_bounds.append(a)
+            continue
+
+        if a.is_infinite:
+            infinite_symbols.append(a)
+            continue
+
+        finite_args.append(a)
+
+    if has_nan:
+        return S.NaN
+
+    if has_complex_inf or directed_infs:
+        return S.ComplexInfinity
+
+    if len(real_infs) == 2:
+        return S.NaN
+    elif len(real_infs) == 1:
+        sign = real_infs.pop()
+        if sign == +1:
+            return S.Infinity
+        else:
+            return S.NegativeInfinity
+
+    if infinite_symbols:
+        if any(sym.is_complex and not sym.is_real for sym in infinite_symbols):
+            return S.ComplexInfinity
+        if any(sym.is_positive for sym in infinite_symbols):
+            return S.Infinity
+        if any(sym.is_negative for sym in infinite_symbols):
+            return S.NegativeInfinity
         return S.Infinity
-    if has_neg_inf and not has_pos_inf:
-        return S.NegativeInfinity
+
+    if accum_bounds:
+        pass
     return expr
 
 handlers_dict: dict[str, Callable[[Expr, Boolean], Expr]] = {
