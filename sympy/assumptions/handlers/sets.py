@@ -783,19 +783,20 @@ def _(expr, assumptions):
 def _(expr, assumptions):
     return False
 
-@TranscendentalPredicate.register(RealPredicate)
-def _(expr, assumptions):
-    is_algebraic = Q.algebraic(expr)._eval_ask(assumptions)
-    if is_algebraic is None:
-        return None
-    return not is_algebraic
 
 @TranscendentalPredicate.register(Expr)
 def _(expr, assumptions):
-    ret = expr.is_transcendental
-    if ret is None:
-        raise MDNotImplementedError
-    return ret
+    is_real = Q.real(expr)._eval_ask(assumptions)
+    if is_real is None:
+        return None
+    elif is_real is False:
+        return False
+    else:
+        is_algebraic = Q.algebraic(expr)._eval_ask(assumptions)
+        if is_algebraic is None:
+            return None
+        return not is_algebraic
+
 
 @TranscendentalPredicate.register(NaN)
 def _(expr, assumptions):
