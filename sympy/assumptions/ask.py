@@ -440,10 +440,11 @@ def ask(proposition, assumptions=True, context=global_assumptions):
     Notes
     =====
 
-    Relations in assumptions are not implemented (yet), so the following
-    will not give a meaningful result.
+    Relations in assumptions are now partially implemented, allowing 
+    for meaningful results in certain cases
 
     >>> ask(Q.positive(x), x > 0)
+    True
 
     It is however a work in progress.
 
