@@ -1,5 +1,4 @@
 from sympy.assumptions.ask import Q
-from sympy import oo
 from sympy.assumptions.refine import refine
 from sympy.core.expr import Expr
 from sympy.core.numbers import (I, Rational, nan, pi)
