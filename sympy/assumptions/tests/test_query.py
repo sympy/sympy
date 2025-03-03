@@ -1993,7 +1993,7 @@ def test_real_pow():
 
     # https://github.com/sympy/sympy/issues/27485
     assert ask(Q.real(n**p), Q.negative(n) & Q.positive(p)) is None
-    
+
     # https://github.com/sympy/sympy/issues/22014
     a = Symbol('a', real = True)
     expr = (1/(1-a))
