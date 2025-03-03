@@ -8,7 +8,7 @@ from sympy.polys.galoistools import gf_crt1, gf_crt2, linear_congruence, gf_csol
 from .primetest import isprime
 from .generate import primerange
 from .factor_ import factorint, _perfect_power
-from .modular import crt
+from .modular import crt, solve_congruence
 from sympy.utilities.decorator import deprecated
 from sympy.utilities.memoization import recurrence_memo
 from sympy.utilities.misc import as_int
@@ -18,7 +18,7 @@ from sympy.core.random import _randint, randint
 from itertools import product
 
 
-def n_order(a, n):
+def n_order(a, n, factorization_n=None):
     r""" Returns the order of ``a`` modulo ``n``.
 
     Explanation
@@ -72,7 +72,9 @@ def n_order(a, n):
     if gcd(a, n) != 1:
         raise ValueError("The two numbers should be relatively prime")
     a_order = 1
-    for p, e in factorint(n).items():
+    if factorization_n is None:
+        factorization_n = factorint(n)
+    for p, e in factorization_n.items():
         pe = p**e
         pe_order = (p - 1) * p**(e - 1)
         factors = factorint(p - 1)
@@ -1255,7 +1257,7 @@ def _discrete_log_trial_mul(n, a, b, order=None):
 
     The algorithm finds the discrete logarithm using exhaustive search. This
     naive method is used as fallback algorithm of ``discrete_log`` when the
-    group order is very small.
+    group order is very small. The value ``n`` must be greater than 1.
 
     Examples
     ========
@@ -1284,6 +1286,8 @@ def _discrete_log_trial_mul(n, a, b, order=None):
         if x == a:
             return i
         x = x * b % n
+    if x == a:
+        return order
     raise ValueError("Log does not exist")
 
 
@@ -1624,57 +1628,93 @@ def discrete_log(n, a, b, order=None, prime_order=None):
         Vanstone, S. A. (1997).
 
     """
+    if n < 1:
+        raise ValueError("n should be positive")
+    if n == 1:
+        return 0
+
     from math import sqrt, log
+    from sympy.functions.combinatorial.numbers import totient
+    from sympy.functions.elementary.integers import ceiling
     n, a, b = as_int(n), as_int(a), as_int(b)
-    if order is None:
-        # Compute the order and its factoring in one pass
-        # order = totient(n), factors = factorint(order)
-        factors = {}
-        for px, kx in factorint(n).items():
-            if kx > 1:
-                if px in factors:
-                    factors[px] += kx - 1
+
+    cyclic_dlog = []
+    continuous = 0
+    unique = None
+    factors_n = factorint(n)
+    for p, e in factors_n.items():
+        pe = p ** e
+        a_mod_pe = a % pe
+        b_mod_pe = b % pe
+        if b_mod_pe % p != 0:
+            if len(factors_n) == 1 and order is not None:
+                order_pe = order
+                if prime_order is not None:
+                    prime_order_pe = isprime(order_pe)
+            else:
+                order_pe = n_order(b_mod_pe, pe, {p: e})
+                prime_order_pe = isprime(order_pe)
+
+            if order_pe < 1000:
+                result = _discrete_log_trial_mul(pe, a_mod_pe, b_mod_pe, order_pe)
+            elif prime_order_pe:
+                # Shanks and Pollard rho are O(sqrt(order)) while index calculus is
+                # O(exp(2*sqrt(log(n)log(log(n)))))
+                # we compare the expected running times to determine the algorithm which is
+                # expected to be faster
+                # the number 10 was determined experimentally
+                if 4*sqrt(log(pe)*log(log(pe))) < log(order_pe) - 10:
+                    result = _discrete_log_index_calculus(pe, a_mod_pe, b_mod_pe, order_pe)
+                elif order_pe < 1000000000000:
+                    # Shanks seems typically faster, but uses O(sqrt(order)) memory
+                    result = _discrete_log_shanks_steps(pe, a_mod_pe, b_mod_pe, order_pe)
                 else:
-                    factors[px] = kx - 1
-            for py, ky in factorint(px - 1).items():
-                if py in factors:
-                    factors[py] += ky
+                    result = _discrete_log_pollard_rho(pe, a_mod_pe, b_mod_pe, order_pe)
+            else:
+                result = _discrete_log_pohlig_hellman(pe, a_mod_pe, b_mod_pe, order_pe)
+
+            cyclic_dlog.append((result, order_pe))
+        else:
+            order_pe = totient(pe)
+            if order_pe < 1000:
+                k = _discrete_log_trial_mul(pe, a_mod_pe, b_mod_pe, order_pe)
+            else:
+                k = _discrete_log_pohlig_hellman(pe, a_mod_pe, b_mod_pe, order_pe)
+
+            if a_mod_pe:
+                if unique is not None and unique != k:
+                    raise ValueError("Log does not exist")
                 else:
-                    factors[py] = ky
-        order = 1
-        for px, kx in factors.items():
-            order *= px**kx
-        # Now the `order` is the order of the group and factors = factorint(order)
-        # The order of `b` divides the order of the group.
-        order_factors = {}
-        for p, e in factors.items():
-            i = 0
-            for _ in range(e):
-                if pow(b, order // p, n) == 1:
-                    order //= p
-                    i += 1
-                else:
-                    break
-            if i < e:
-                order_factors[p] = e - i
+                    unique = k
+            else:
+                continuous = max(continuous, k)
 
-    if prime_order is None:
-        prime_order = isprime(order)
+    if cyclic_dlog:
+        result = solve_congruence(*cyclic_dlog)
+        if result is None:
+            raise ValueError("Log does not exist")
+        else:
+            result, mm = result
+            result = as_int(ZZ.to_sympy(result))
 
-    if order < 1000:
-        return _discrete_log_trial_mul(n, a, b, order)
-    elif prime_order:
-        # Shanks and Pollard rho are O(sqrt(order)) while index calculus is O(exp(2*sqrt(log(n)log(log(n)))))
-        # we compare the expected running times to determine the algorithmus which is expected to be faster
-        if 4*sqrt(log(n)*log(log(n))) < log(order) - 10:  # the number 10 was determined experimental
-            return _discrete_log_index_calculus(n, a, b, order)
-        elif order < 1000000000000:
-            # Shanks seems typically faster, but uses O(sqrt(order)) memory
-            return _discrete_log_shanks_steps(n, a, b, order)
-        return _discrete_log_pollard_rho(n, a, b, order)
+        if continuous > result:
+            k = ceiling( (continuous - result) / mm)
+            result = result + k * mm
 
-    return _discrete_log_pohlig_hellman(n, a, b, order, order_factors)
+        if unique is not None and (unique < result or ((unique - result) % mm != 0)):
+            raise ValueError("Log does not exist")
 
+        if unique is not None:
+            result = unique
+
+        return result
+    else:
+        if unique is None:
+            return continuous
+        elif continuous <= unique:
+            return unique
+        else:
+            raise ValueError("Log does not exist")
 
 
 def quadratic_congruence(a, b, c, n):
