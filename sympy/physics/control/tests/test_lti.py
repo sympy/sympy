@@ -30,6 +30,8 @@ TF1 = TransferFunction(1, s**2 + 2*zeta*wn*s + wn**2, s)
 TF2 = TransferFunction(k, 1, s)
 TF3 = TransferFunction(a2*p - s, a2*s + p, s)
 TF4 = TransferFunction(k*s + p, tau*s + 1, s)
+TF5 = TransferFunction(k, p, s)
+TF6 = TransferFunction(k*s + p, k*s + p, s)
 
 
 def test_TransferFunction_construction():
@@ -1758,6 +1760,14 @@ def test_conversion():
                    Matrix([[k/tau]]))
     assert SS1.rewrite(TransferFunction)[0][0] == TF4
 
+    SS2 = TF5.rewrite(StateSpace)
+    assert SS2 == \
+        StateSpace(Matrix([[0]]), Matrix([[0]]), Matrix([[0]]), Matrix([[k/p]]))
+    assert SS2.rewrite(TransferFunction)[0][0] == TF5
+
+    SS3 = TF6.rewrite(StateSpace)
+    assert SS3 == \
+        StateSpace(Matrix([[0]]), Matrix([[0]]), Matrix([[0]]), Matrix([[1]]))
     # Transfer function has to be proper
     raises(ValueError, lambda: TransferFunction(b*s**2 + p**2 - a*p + s, b - p**2, s).rewrite(StateSpace))
 

@@ -932,13 +932,29 @@ class TransferFunction(SISOLinearTimeInvariant):
 
         num_coeffs = num_poly.all_coeffs()
         den_coeffs = den_poly.all_coeffs()
+
+        if n == 0:
+            return StateSpace(
+                Matrix([zeros(1)]),
+                Matrix([zeros(1)]),
+                Matrix([zeros(1)]),
+                Matrix([num_coeffs[0] / den_coeffs[0]]),
+            )
+
+        if self.num == self.den:
+            return StateSpace(
+                Matrix([zeros(1)]), Matrix([zeros(1)]), Matrix([zeros(1)]), Matrix([1])
+            )
+
         diff = n - num_poly.degree()
-        num_coeffs = [0]*diff + num_coeffs
+        num_coeffs = [0] * diff + num_coeffs
 
         a = den_coeffs[1:]
-        a_mat = Matrix([[(-1)*coefficient/den_coeffs[0] for coefficient in reversed(a)]])
-        vert = zeros(n-1, 1)
-        mat = eye(n-1)
+        a_mat = Matrix(
+            [[(-1) * coefficient / den_coeffs[0] for coefficient in reversed(a)]]
+        )
+        vert = zeros(n - 1, 1)
+        mat = eye(n - 1)
         A = vert.row_join(mat)
         A = A.col_join(a_mat)
 
