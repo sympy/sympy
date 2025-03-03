@@ -1624,13 +1624,14 @@ def discrete_log(n, a, b, order=None, prime_order=None):
         Vanstone, S. A. (1997).
 
     """
+    from math import sqrt, log
+    n, a, b = as_int(n), as_int(a), as_int(b)
+
     if n < 1:
         raise ValueError("n should be positive")
     if n == 1:
         return 0
 
-    from math import sqrt, log
-    n, a, b = as_int(n), as_int(a), as_int(b)
     if order is None:
         # Compute the order and its factoring in one pass
         # order = totient(n), factors = factorint(order)
