@@ -1108,14 +1108,10 @@ def test_issue_25820():
 def test_issue_27683():
     x = Symbol('x')
     u = Function('u')(x)
-    
     eq1 = Eq(diff(u, x, x) * 4000.0, 1)
     eq2 = Eq(diff(u, x, x) * Float(4000), Float(1))
-    
     sol1 = dsolve(eq1, u)
     sol2 = dsolve(eq2, u)
-    
     expected = Eq(u, C1 + C2*x + 0.000125*x**2)
-    
     assert sol1 == expected
     assert sol2 == expected
