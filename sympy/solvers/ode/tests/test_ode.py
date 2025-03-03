@@ -1106,6 +1106,7 @@ def test_issue_25820():
 
 
 def test_issue_27683():
+    from sympy import Float
     x = Symbol('x')
     u = Function('u')(x)
     eq1 = Eq(diff(u, x, x) * 4000.0, 1)
