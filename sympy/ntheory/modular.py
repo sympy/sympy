@@ -289,3 +289,48 @@ def solve_congruence(*remainder_modulus_pairs, **hint):
         if symmetric:
             return symmetric_residue(n, m), m
         return n, m
+
+
+def frobenius_number(denominations):
+    """
+    Computes the Frobenius number for a given set of coin denominations.
+    The Frobenius number is the largest integer that cannot be expressed as a
+    non-negative integer combination of the given denominations.
+
+    Parameters:
+        denominations (list): A list of positive integers representing coin values.
+
+    Returns:
+        If the Frobenius number exists, return the integer value. Otherwise, return an appropriate error message.
+
+    Examples
+    ========
+    >>> from sympy.ntheory.modular import frobenius_number
+    >>> frobenius_number([6, 9, 20])
+    43
+    >>> frobenius_number([3, 5])
+    7
+    """
+    denominations=sorted(denominations)
+    if len(denominations) == 1:
+        raise ValueError("Frobenius number is undefined for a single number.")
+    if any(d <= 0 for d in denominations):
+        raise ValueError("All input numbers must be positive integers.")
+    if 1 in denominations:
+        return 0
+    if gcd(*denominations) != 1:
+        raise ValueError("The numbers must have a GCD of 1 for a finite Frobenius number.")
+    if len(denominations) == 2:
+        a, b = denominations
+        return a * b - a - b
+    max_n =denominations[0]*denominations[1]
+    reachable=[False]*(max_n+1)
+    reachable[0]=True
+    for num in denominations:
+        for i in range(num,max_n+1):
+            if reachable[i-num]:
+                reachable[i]=True
+    for i in range(max_n-1,-1,-1):
+        if not reachable[i]:
+            return i
+    return None
