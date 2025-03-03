@@ -1907,6 +1907,8 @@ def test_positive():
     assert ask(Q.positive(exp(x*pi*I)), Q.even(x)) is True
     assert ask(Q.positive(exp(x*pi*I)), Q.odd(x)) is False
     assert ask(Q.positive(exp(x*pi*I)), Q.real(x)) is None
+    assert ask(Q.positive(x**2),Q.real(x)) is True
+    assert ask(Q.positive(x**y),Q.even(y) & Q.real(x)) is True
 
     # logarithm
     assert ask(Q.positive(log(x)), Q.imaginary(x)) is False
@@ -2282,7 +2284,7 @@ def test_issue_3906():
 
 
 def test_issue_5833():
-    assert ask(Q.positive(log(x)**2), Q.positive(x)) is None
+    assert ask(Q.positive(log(x)**2), Q.positive(x)) is True
     assert ask(~Q.negative(log(x)**2), Q.positive(x)) is True
 
 
