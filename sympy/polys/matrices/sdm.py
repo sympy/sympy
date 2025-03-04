@@ -1105,7 +1105,7 @@ class SDM(dict):
         See Also
         ========
 
-        DomainMatrix.fflu
+        sympy.polys.matrices.ddm.DDM.fflu
         """
         ddm_p, ddm_l, ddm_d, ddm_u = self.to_ddm().fflu()
         P = ddm_p.to_sdm()

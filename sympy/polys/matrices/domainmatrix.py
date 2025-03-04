@@ -3424,7 +3424,7 @@ class DomainMatrix:
         See Also
         ========
 
-        lu : Standard LU decomposition.
+        sympy.polys.matrices.ddm.DDM.fflu
         """
         from_rep = self.from_rep
         P, L, D, U = self.rep.fflu()

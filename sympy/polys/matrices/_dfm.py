@@ -803,7 +803,7 @@ class DFM:
         See Also
         ========
 
-        DomainMatrix.fflu
+        sympy.polys.matrices.ddm.DDM.fflu
         """
         if self.domain == ZZ:
             fflu = getattr(self.rep, 'fflu', None)

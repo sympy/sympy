@@ -1016,8 +1016,8 @@ class DDM(list):
         See Also
         ========
 
-        DomainMatrix.fflu
-        The higher-level interface to this function.
+        sympy.polys.matrices.domainmatrix.DomainMatrix.fflu
+            The higher-level interface to this function.
         """
         rows, cols = self.shape
         K = self.domain
