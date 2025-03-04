@@ -964,25 +964,25 @@ class DDM(list):
         Performs row operations and elimination to compute U and permutation indices.
 
         Returns:
-            U : Upper triangular matrix after elimination.
+            LU : decomposition as a single matrix.
             perm (list): Permutation indices for row swaps.
         """
         rows, cols = self.shape
         K = self.domain
 
-        U = self.copy()
+        LU = self.copy()
         perm = list(range(rows))
         rank = 0
 
         for j in range(min(rows, cols)):
             # Skip columns where all entries are zero
-            if all(U[i][j] == K.zero for i in range(rows)):
+            if all(LU[i][j] == K.zero for i in range(rows)):
                 continue
 
             # Find the first non-zero pivot in the current column
             pivot_row = -1
             for i in range(rank, rows):
-                if U[i][j] != K.zero:
+                if LU[i][j] != K.zero:
                     pivot_row = i
                     break
 
@@ -992,50 +992,32 @@ class DDM(list):
 
             # Swap rows to bring the pivot to the current rank
             if pivot_row != rank:
-                U[rank], U[pivot_row] = U[pivot_row], U[rank]
+                LU[rank], LU[pivot_row] = LU[pivot_row], LU[rank]
                 perm[rank], perm[pivot_row] = perm[pivot_row], perm[rank]
 
             # Found pivot - (Gauss-Bareiss elimination)
-            pivot = U[rank][j]
+            pivot = LU[rank][j]
             for i in range(rank + 1, rows):
-                multiplier = U[i][j]
+                multiplier = LU[i][j]
                 # Denominator is previous pivot or 1
-                denominator = U[rank - 1][rank - 1] if rank > 0 else K.one
+                denominator = LU[rank - 1][rank - 1] if rank > 0 else K.one
                 for k in range(j + 1, cols):
-                    U[i][k] = K.exquo(pivot * U[i][k] - U[rank][k] * multiplier, denominator)
+                    LU[i][k] = K.exquo(pivot * LU[i][k] - LU[rank][k] * multiplier, denominator)
                 # Keep the multiplier for L matrix
-                U[i][j] = multiplier
+                LU[i][j] = multiplier
             rank += 1
 
-        return U, perm
+        return LU, perm
 
     def fflu(self):
         """
         Fraction-free LU decomposition of DDM.
 
-        Explanation
-        ===========
+        See Also
+        ========
 
-        This method computes the PLDU decomposition
-        using Gauss-Bareiss elimination in a fraction-free manner,
-        ensuring that all intermediate results remain in
-        the domain of the input matrix. Unlike standard
-        LU decomposition, which introduces division, this approach
-        avoids fractions, making it particularly suitable
-        for exact arithmetic over integers or polynomials.
-
-        This method satisfies the invariant:
-
-        P * A = L * inv(D) * U
-
-        Returns
-        =======
-
-        (P, L, D, U)
-            - P (Permutation matrix)
-            - L (Lower triangular matrix)
-            - D (Diagonal matrix)
-            - U (Upper triangular matrix)
+        DomainMatrix.fflu
+        The higher-level interface to this function.
         """
         rows, cols = self.shape
         K = self.domain
@@ -1051,23 +1033,22 @@ class DDM(list):
 
         # Create L matrix
         L = self.zeros((rows, rows), K)
-        i = j = k = 0
+        i = j = 0
         while i < rows and j < cols:
             if U[i][j] != K.zero:
                 # Found non-zero pivot
                 # Diagonal entry is the pivot
-                L[i][k] = U[i][j]
+                L[i][i] = U[i][j]
                 for l in range(i + 1, rows):
                     # Off-diagonal entries are the multipliers
-                    L[l][k] = U[l][j]
+                    L[l][i] = U[l][j]
                     # zero out the entries in U
                     U[l][j] = K.zero
                 i += 1
-                k += 1
             j += 1
 
         # Fill remaining diagonal of L with ones
-        for i in range(k, rows):
+        for i in range(i, rows):
             L[i][i] = K.one
 
         # Create D matrix - using FLINT's approach with accumulator

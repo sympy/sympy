@@ -485,8 +485,13 @@ class DFM:
     def is_upper(self):
         """Return ``True`` if the matrix is upper triangular."""
         M = self.rep
+        rows, cols = self.rows, self.cols
+
+        if cols == 0:
+            return True
+
         for i in range(self.rows):
-            for j in range(i):
+            for j in range(min(i, cols)):
                 if M[i, j]:
                     return False
         return True
@@ -792,24 +797,13 @@ class DFM:
         Explanation
         ===========
 
-        This method computes the PLDU decomposition
-        using Gauss-Bareiss elimination in a fraction-free manner,
-        it ensures that all intermediate results remain in
-        the domain of the input matrix. Unlike standard
-        LU decomposition, which introduces division, this approach
-        avoids fractions, making it particularly suitable
-        for exact arithmetic over integers or polynomials.
-
-        This method satisfies the invariant:
-
-        P * A = L * inv(D) * U
+        Uses `python-flint` if possible for a matrix of
+        integers otherwise uses the DDM method.
 
         See Also
         ========
 
-        sympy.matrices.matrixbase.MatrixBase.LUdecomposition
-        LUdecomposition_Simple
-        LUsolve
+        DomainMatrix.fflu
         """
         if self.domain == ZZ:
             fflu = getattr(self.rep, 'fflu', None)

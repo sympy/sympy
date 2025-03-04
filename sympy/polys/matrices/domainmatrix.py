@@ -3318,30 +3318,6 @@ class DomainMatrix:
         R = self.from_rep(ddm_r)
         return Q, R
 
-    def qrd(self):
-        """
-        Compute a fraction-free QR decomposition using fflu decomposition.
-
-        Returns
-        =======
-
-        (Q, R, D)
-            Q is the orthogonal matrix.
-            R is the upper triangular matrix.
-            D is the diagonal matrix.
-
-        See Also
-        ========
-
-        qr, fflu
-        """
-        M = self.transpose().matmul(self)
-        M_aug = M.hstack(self.transpose())
-        P, L, D, Ut = M_aug.fflu()
-        Q = Ut[:, -self.shape[1]:].transpose()
-        R = L.transpose()
-        return Q, R, D
-
     def lu_solve(self, rhs):
         r"""
         Solver for DomainMatrix x in the A*x = B

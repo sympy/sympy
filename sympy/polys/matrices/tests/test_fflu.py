@@ -1,8 +1,5 @@
 from sympy.polys.matrices import DomainMatrix, DM
 from sympy.polys.domains import ZZ, QQ
-from sympy.polys.matrices.ddm import DDM
-from sympy.polys.matrices.sdm import SDM
-from sympy.polys.matrices._dfm import DFM
 from sympy import Matrix
 import pytest
 
@@ -60,6 +57,26 @@ FFLU_EXAMPLES = [
         DM([], ZZ),
         DM([], ZZ),
         DM([], ZZ),
+    ),
+
+    (
+        'zz_empty_0x2',
+        DomainMatrix([], (0, 2), ZZ),
+        DomainMatrix([], (0, 0), ZZ),
+        DomainMatrix([], (0, 0), ZZ),
+        DomainMatrix([], (0, 0), ZZ),
+        DomainMatrix([], (0, 2), ZZ)
+    ),
+
+    (
+
+        'zz_empty_2x0',
+        DomainMatrix([[], []], (2, 0), ZZ),
+        DomainMatrix.eye((2, 2), ZZ),
+        DomainMatrix.eye((2, 2), ZZ),
+        DomainMatrix.eye((2, 2), ZZ),
+        DomainMatrix([[], []], (2, 0), ZZ)
+
     ),
 
     (
@@ -175,7 +192,6 @@ FFLU_EXAMPLES = [
 
 
 def _check_fflu(A, P, L, D, U):
-    A_field = _to_DM(A, P).to_field().to_dense()
     P_field = P.to_field().to_dense()
     L_field = L.to_field().to_dense()
     D_field = D.to_field().to_dense()
@@ -187,11 +203,8 @@ def _check_fflu(A, P, L, D, U):
     assert U_field.shape == (m, n)
     assert L_field.is_lower
     assert D_field.is_diagonal
-    if hasattr(D, 'inv_den'):
-        di, d = D.inv_den()
-        assert P.matmul(A).rmul(d) == L.matmul(di).matmul(U)
-    else:
-        assert L_field.matmul(D_field).matmul(U_field) == P_field.matmul(A_field)
+    di, d = D.inv_den()
+    assert P.matmul(A).rmul(d) == L.matmul(di).matmul(U)
     assert U_field.is_upper
 
 
@@ -200,21 +213,7 @@ def _to_DM(A, ans):
         return A
     elif isinstance(A, Matrix):
         return A.to_DM(ans.domain)
-
-    if not (hasattr(A, 'shape') and hasattr(A, 'domain')):
-        shape, domain = ans.shape, ans.domain
-    else:
-        shape, domain = A.shape, A.domain
-
-    if isinstance(A, DDM):
-        return DomainMatrix(A.to_list(), shape, domain)
-    elif isinstance(A, SDM):
-        return DomainMatrix(A.to_list(), shape, domain)
-    elif isinstance(A, DFM):
-        data = A.to_ddm().to_list()
-        return DomainMatrix(data, shape, domain)
-    else:
-        raise TypeError(f"Cannot convert {type(A)} to DomainMatrix")
+    return DomainMatrix(A.to_list(), A.shape, A.domain)
 
 
 def _check_fflu_result(result, A, P_ans, L_ans, D_ans, U_ans):

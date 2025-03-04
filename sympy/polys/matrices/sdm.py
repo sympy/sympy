@@ -1098,38 +1098,14 @@ class SDM(dict):
 
     def fflu(self):
         """
-        Fraction-free LU decomposition of SDM.
+        Fraction free LU decomposition of SDM.
 
-        Explanation
-        ===========
-
-        This method computes the PLDU decomposition
-        using Gauss-Bareiss elimination in a fraction-free manner,
-        it ensures that all intermediate results remain in
-        the domain of the input matrix. Unlike standard
-        LU decomposition, which introduces division, this approach
-        avoids fractions, making it particularly suitable
-        for exact arithmetic over integers or polynomials.
-
-        This method satisfies the invariant:
-
-        P * A = L * inv(D) * U
-
-        Returns
-        =======
-
-        (P, L, D, U)
-            P is the permutation matrix as an SDM.
-            L is the lower triangular matrix as an SDM.
-            D is the diagonal matrix as an SDM.
-            U is the upper triangular matrix as an SDM.
+        Uses DDM implementation.
 
         See Also
         ========
 
-        sympy.matrices.matrixbase.MatrixBase.LUdecomposition
-        LUdecomposition_Simple
-        LUsolve
+        DomainMatrix.fflu
         """
         ddm_p, ddm_l, ddm_d, ddm_u = self.to_ddm().fflu()
         P = ddm_p.to_sdm()

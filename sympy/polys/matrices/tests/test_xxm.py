@@ -17,6 +17,7 @@
 from sympy.external.gmpy import GROUND_TYPES
 
 from sympy import ZZ, QQ, GF, ZZ_I, symbols
+
 from sympy.polys.matrices.exceptions import (
     DMBadInputError,
     DMDomainError,
