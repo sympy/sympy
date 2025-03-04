@@ -67,7 +67,6 @@ def _(expr, assumptions):
 @IntegerPredicate.register(Pow)
 def _(expr, assumptions):
     """
-    * Integer  **  Positive Integer      -> True
     * pm 1     **  Integer               -> True
     * Integer  **  Non-negative Integer  -> True
     * Integer  **  Negative Integer      -> False
