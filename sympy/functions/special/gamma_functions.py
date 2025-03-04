@@ -215,13 +215,11 @@ class gamma(DefinedFunction):
         raise PoleError()
 
     def _eval_aseries(self, n, args0, x, logx):
-        from sympy.series.order import O
         from sympy.functions.combinatorial.numbers import bernoulli
         z=self.args[0]
         point=args0[0]
 
         if point in (S.Infinity, S.NegativeInfinity):
-            z = self.args[0]
             coeff = exp((log(z)*(z - S.Half) - z + log(2*pi)/2).expand())
             expressions = [bernoulli(2*k) / (2*k*(2*k - 1)*z**(2*k - 1)) for k in range(1, n)]
 
