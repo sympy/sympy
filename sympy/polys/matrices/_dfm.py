@@ -485,7 +485,7 @@ class DFM:
     def is_upper(self):
         """Return ``True`` if the matrix is upper triangular."""
         M = self.rep
-        rows, cols = self.rows, self.cols
+        cols = self.cols
 
         if cols == 0:
             return True
