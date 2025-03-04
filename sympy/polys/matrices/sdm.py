@@ -1107,7 +1107,7 @@ class SDM(dict):
 
         sympy.polys.matrices.ddm.DDM.fflu
         """
-        ddm_p, ddm_l, ddm_d, ddm_u = self.to_ddm().fflu()
+        ddm_p, ddm_l, ddm_d, ddm_u = self.to_dfm_or_ddm().fflu()
         P = ddm_p.to_sdm()
         L = ddm_l.to_sdm()
         D = ddm_d.to_sdm()
