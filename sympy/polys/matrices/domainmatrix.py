@@ -3370,6 +3370,66 @@ class DomainMatrix:
         sol = self.rep.lu_solve(rhs.rep)
         return self.from_rep(sol)
 
+    def fflu(self):
+        """
+        Fraction-free LU decomposition of DomainMatrix.
+
+        Explanation
+        ===========
+
+        This method computes the PLDU decomposition
+        using Gauss-Bareiss elimination in a fraction-free manner,
+        it ensures that all intermediate results remain in
+        the domain of the input matrix. Unlike standard
+        LU decomposition, which introduces division, this approach
+        avoids fractions, making it particularly suitable
+        for exact arithmetic over integers or polynomials.
+
+        This method satisfies the invariant:
+
+        P * A = L * inv(D) * U
+
+        Returns
+        =======
+
+        (P, L, D, U)
+            - P (Permutation matrix)
+            - L (Lower triangular matrix)
+            - D (Diagonal matrix)
+            - U (Upper triangular matrix)
+
+        Examples
+        ========
+
+        >>> from sympy import ZZ
+        >>> from sympy.polys.matrices import DomainMatrix
+        >>> A = DomainMatrix([[1, 2], [3, 4]], (2, 2), ZZ)
+        >>> P, L, D, U = A.fflu()
+        >>> P
+        DomainMatrix([[1, 0], [0, 1]], (2, 2), ZZ)
+        >>> L
+        DomainMatrix([[1, 0], [3, -2]], (2, 2), ZZ)
+        >>> D
+        DomainMatrix([[1, 0], [0, -2]], (2, 2), ZZ)
+        >>> U
+        DomainMatrix([[1, 2], [0, -2]], (2, 2), ZZ)
+        >>> L.is_lower and U.is_upper and D.is_diagonal
+        True
+        >>> L * D.to_field().inv() * U == P * A.to_field()
+        True
+        >>> I, d = D.inv_den()
+        >>> L * I * U == d * P * A
+        True
+
+        See Also
+        ========
+
+        sympy.polys.matrices.ddm.DDM.fflu
+        """
+        from_rep = self.from_rep
+        P, L, D, U = self.rep.fflu()
+        return from_rep(P), from_rep(L), from_rep(D), from_rep(U)
+
     def _solve(A, b):
         # XXX: Not sure about this method or its signature. It is just created
         # because it is needed by the holonomic module.
