@@ -221,14 +221,12 @@ class gamma(DefinedFunction):
         point=args0[0]
 
         if point in (S.Infinity, S.NegativeInfinity):
-            coeff = sqrt(2 * pi) * z ** (z - Rational(1, 2)) * exp(-z)
-            sum_expr = Add(*[bernoulli(2 * k) / (2 * k * (2 * k - 1) * z ** (2 * k - 1))
-                for k in range(1, n)])
+            z = self.args[0]
+            coeff = exp((log(z)*(z - S.Half) - z + log(2*pi)/2).expand())
+            expressions = [bernoulli(2*k) / (2*k*(2*k - 1)*z**(2*k - 1)) for k in range(1, n)]
 
-            if point is S.NegativeInfinity:
-                coeff *= S.NegativeOne / sin(pi*z)
+            return (exp(Add(*expressions))._eval_nseries(x, n, logx))*coeff
 
-            return coeff * (1 + sum_expr + O(z ** (-2 * n - 1)))
         return super()._eval_aseries(n, args0, x, logx)
 
 

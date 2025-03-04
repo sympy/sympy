@@ -109,12 +109,13 @@ def test_gamma_series():
 
     #aseries
     s = Symbol('s', positive=True)
-    assert gamma(s).series(s, oo) == sqrt(2) * sqrt(pi) * s ** (s - Rational(1, 2)) * \
-           (1 / (1188 * s ** 9) - 1 / (1680 * s ** 7) + 1 / (1260 * s ** 5) - 1 / \
-            (360 * s ** 3) + 1 / (12 * s) + 1 + O(s ** (-13), (s, oo))) * exp(-s)
-    assert gamma(s).series(s, -oo) == -sqrt(2) * sqrt(pi) * s ** (s - Rational(1, 2)) * \
-           (1 / (1188 * s ** 9) - 1 / (1680 * s ** 7) + 1 / (1260 * s ** 5) - 1 / \
-            (360 * s ** 3) + 1 / (12 * s) + 1 + O(-1 / s ** 13,(s, -oo))) * exp(-s) / sin(pi * s)
+    assert gamma(s).series(s, oo) == sqrt(2)*sqrt(pi)*(163879/(209018880*s**5) - \
+            571/(2488320*s**4) - 139/(51840*s**3) + 1/(288*s**2) + 1/(12*s) + 1 + \
+            O(s**(-6), (s, oo)))*exp(-s*log(1/s) - s)/sqrt(s)
+    assert gamma(s).series(s, -oo) == sqrt(2)*sqrt(pi)*(163879/(209018880*s**5) - \
+            571/(2488320*s**4) - 139/(51840*s**3) + 1/(288*s**2) + 1/(12*s) + 1 + \
+            O(s**(-6), (s, -oo)))*exp(-s*log(-1/s) - s + I*pi*s)/sqrt(s)
+
 
 
 def tn_branch(s, func):
