@@ -1643,7 +1643,11 @@ def test_integer():
     assert ask(Q.integer(x/3), Q.even(x)) is None
 
     # https://github.com/sympy/sympy/issues/7286
+    assert ask(Q.integer(Abs(x)),Q.integer(x)) is True
+    assert ask(Q.integer(Abs(-x)),Q.integer(x)) is True
     assert ask(Q.integer(Abs(x)), ~Q.integer(x)) is None
+    assert ask(Q.integer(Abs(x)),Q.complex(x)) is None
+    assert ask(Q.integer(Abs(x+I*y)),Q.real(x) & Q.real(y)) is None
 
 
 def test_negative():
