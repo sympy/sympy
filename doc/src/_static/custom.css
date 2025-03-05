@@ -143,3 +143,45 @@ This can be removed once https://github.com/executablebooks/mdit-py-plugins/issu
 .task-list-item-checkbox {
     margin: 0 0.2em 0.25em -1.4em;
 }
+
+/* Some styles for the TryExamples directive buttons enabled by jupyterlite-sphinx */
+/* The accessibility results are as follows:
+/* https://webaim.org/resources/contrastchecker/?fcolor=FFFFFF&bcolor=22632F, and
+/* https://webaim.org/resources/contrastchecker/?fcolor=FFFFFF&bcolor=348A47
+/* where we make them pass on the "Large Text" scale for AA and AAA, since
+/* the font is weighted is considered enough to be large text. */
+
+.try_examples_button {
+    color: #FFFFFF;
+    background-color: #22632F;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    margin-bottom: 5px;
+    box-shadow: 0 2px 5px rgba(108, 108, 108, 0.2);
+    font-weight: bold;
+    font-size: 0.9rem;
+    transition: all 50ms cubic-bezier(0.860, 0.000, 0.070, 1.000);
+}
+
+.try_examples_button:hover {
+    background-color: #2A7A3A;
+    transform: scale(1.02);
+    cursor: pointer;
+}
+
+[data-theme="dark"] .try_examples_button {
+    background-color: #2D7A3D;
+}
+
+[data-theme="dark"] .try_examples_button:hover {
+    background-color: #348A47;
+    box-shadow: 0 2px 5px rgba(255, 255, 255, 0.2);
+}
+
+.try_examples_button_container {
+    display: flex;
+    justify-content: flex-start;
+    gap: 10px;
+    margin-bottom: 10px;
+}
