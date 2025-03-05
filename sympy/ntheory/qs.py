@@ -223,33 +223,32 @@ def _check_smoothness(num, factor_base):
     """Here we check that if `num` is a smooth number or not. If `a` is a smooth
     number then it returns a vector of prime exponents modulo 2. For example
     if a = 2 * 5**2 * 7**3 and the factor base contains {2, 3, 5, 7} then
-    `a` is a smooth number and this function returns ([1, 0, 0, 1], True). If
-    `a` is a partial relation which means that `a` a has one prime factor
+    `a` is a smooth number and this function returns (18, True) (18 = [1, 0, 0, 1, 0]).
+    If `a` is a partial relation which means that `a` a has one prime factor
     greater than the `factor_base` then it returns `(a, False)` which denotes `a`
     is a partial relation.
 
     Parameters
     ==========
 
-    a : integer whose smootheness is to be checked
+    num : integer whose smootheness is to be checked
     factor_base : factor_base primes
     """
-    vec = []
     if num < 0:
-        vec.append(1)
         num *= -1
+        vec = 1
     else:
-        vec.append(0)
-     #-1 is not included in factor_base add -1 in vector
-    for factor in factor_base:
-        if num % factor.prime != 0:
-            vec.append(0)
+        vec = 0
+    for i, fb in enumerate(factor_base, 1):
+        if num % fb.prime:
             continue
-        factor_exp = 0
-        while num % factor.prime == 0:
-            factor_exp += 1
-            num //= factor.prime
-        vec.append(factor_exp % 2)
+        e = 1
+        num //= fb.prime
+        while num % fb.prime == 0:
+            e += 1
+            num //= fb.prime
+        if e % 2:
+            vec += 1 << i
     if num == 1:
         return vec, True
     if isprime(num):
@@ -312,97 +311,57 @@ def _trial_division_stage(N, M, factor_base, sieve_array, sieve_poly, partial_re
                 except ZeroDivisionError:#if large_prime divides N
                     proper_factor.add(large_prime)
                     continue
-                u = u*u_prev*large_prime_inv
-                v = v*v_prev // (large_prime*large_prime)
-                vec, is_smooth = _check_smoothness(v, factor_base)
+                u = (u*u_prev*large_prime_inv) % N
+                v = v*v_prev // large_prime**2
+                vec, _ = _check_smoothness(v, factor_base)
         #assert u*u % N == v % N
         smooth_relations.append((u, v, vec))
     return smooth_relations, proper_factor
 
 
-def _gauss_mod_2(A):
-    """Fast gaussian reduction for modulo 2 matrix.
+def _find_factor(N, smooth_relations, col):
+    """ Finds proper factor of N using fast gaussian reduction for modulo 2 matrix.
 
     Parameters
     ==========
 
-    A : Matrix
-
-    Examples
-    ========
-
-    >>> from sympy.ntheory.qs import _gauss_mod_2
-    >>> _gauss_mod_2([[0, 1, 1], [1, 0, 1], [0, 1, 0], [1, 1, 1]])
-    ([[[1, 0, 1], 3]],
-     [True, True, True, False],
-     [[0, 1, 0], [1, 0, 0], [0, 0, 1], [1, 0, 1]])
+    N : Number to be factored
+    smooth_relations : Smooth relations vectors matrix
+    col : Number of columns in the matrix
 
     Reference
     ==========
 
     .. [1] A fast algorithm for gaussian elimination over GF(2) and
-    its implementation on the GAPP. Cetin K.Koc, Sarath N.Arachchige"""
-    import copy
-    matrix = copy.deepcopy(A)
-    row = len(matrix)
-    col = len(matrix[0])
-    mark = [False]*row
-    for c in range(col):
-        for r in range(row):
-            if matrix[r][c] == 1:
-                break
-        mark[r] = True
-        for c1 in range(col):
-            if c1 == c:
-                continue
-            if matrix[r][c1] == 1:
-                for r2 in range(row):
-                    matrix[r2][c1] = (matrix[r2][c1] + matrix[r2][c]) % 2
-    dependent_row = []
-    for idx, val in enumerate(mark):
-        if val == False:
-            dependent_row.append([matrix[idx], idx])
-    return dependent_row, mark, matrix
-
-
-def _find_factor(dependent_rows, mark, gauss_matrix, index, smooth_relations, N):
-    """Finds proper factor of N. Here, transform the dependent rows as a
-    combination of independent rows of the gauss_matrix to form the desired
-    relation of the form ``X**2 = Y**2 modN``. After obtaining the desired relation
-    we obtain a proper factor of N by `gcd(X - Y, N)`.
-
-    Parameters
-    ==========
-
-    dependent_rows : denoted dependent rows in the reduced matrix form
-    mark : boolean array to denoted dependent and independent rows
-    gauss_matrix : Reduced form of the smooth relations matrix
-    index : denoted the index of the dependent_rows
-    smooth_relations : Smooth relations vectors matrix
-    N : Number to be factored
+    its implementation on the GAPP. Cetin K.Koc, Sarath N.Arachchige
     """
-    idx_in_smooth = dependent_rows[index][1]
-    independent_u = [smooth_relations[idx_in_smooth][0]]
-    independent_v = [smooth_relations[idx_in_smooth][1]]
-    dept_row = dependent_rows[index][0]
+    matrix = [s_relation[2] for s_relation in smooth_relations]
+    row = len(matrix)
+    mark = [False] * row
+    for pos in range(col):
+        m = 1 << pos
+        for i in range(row):
+            if p := matrix[i] & m:
+                add_col = p ^ matrix[i]
+                matrix[i] = m
+                mark[i] = True
+                for j in range(i + 1, row):
+                    if matrix[j] & m:
+                        matrix[j] ^= add_col
+                break
 
-    for idx, val in enumerate(dept_row):
-        if val == 1:
-            for row in range(len(gauss_matrix)):
-                if gauss_matrix[row][idx] == 1 and mark[row] == True:
-                    independent_u.append(smooth_relations[row][0])
-                    independent_v.append(smooth_relations[row][1])
-                    break
-
-    u = 1
-    v = 1
-    for i in independent_u:
-        u *= i
-    for i in independent_v:
-        v *= i
-    #assert u**2 % N == v % N
-    v = isqrt(v)
-    return gcd(u - v, N)
+    for m, mat, rel in zip(mark, matrix, smooth_relations):
+        if m:
+            continue
+        u, v = rel[0], rel[1]
+        for m1, mat1, rel1 in zip(mark, matrix, smooth_relations):
+            if m1 and mat & mat1:
+                u *= rel1[0]
+                v *= rel1[1]
+        # assert is_square(v)
+        v = isqrt(v)
+        if 1 < (g := gcd(u - v, N)) < N:
+            yield g
 
 
 def qs(N, prime_bound, M, ERROR_TERM=25, seed=1234):
@@ -536,11 +495,8 @@ def qs_factor(N, prime_bound, M, ERROR_TERM=25, seed=1234):
                 N_copy //= p
                 e += 1
             factors[p] = e
-    matrix = [s_relation[2] for s_relation in smooth_relations]
-    dependent_row, mark, gauss_matrix = _gauss_mod_2(matrix)
-    for index in range(len(dependent_row)):
-        factor = _find_factor(dependent_row, mark, gauss_matrix, index, smooth_relations, N)
-        if 1 < factor and N_copy % factor == 0:
+    for factor in _find_factor(N, smooth_relations, len(factor_base) + 1):
+        if N_copy % factor == 0:
             e = 1
             N_copy //= factor
             while N_copy % factor == 0:
