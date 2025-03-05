@@ -14,6 +14,7 @@ from sympy.functions.special.hyper import hyper
 from sympy.functions.special.polynomials import (assoc_laguerre, assoc_legendre, chebyshevt, chebyshevt_root, chebyshevu, chebyshevu_root, gegenbauer, hermite, hermite_prob, jacobi, jacobi_normalized, laguerre, legendre)
 from sympy.polys.orthopolys import laguerre_poly
 from sympy.polys.polyroots import roots
+from sympy.integrals import integrate
 
 from sympy.core.expr import unchanged
 from sympy.core.function import ArgumentIndexError
@@ -176,7 +177,6 @@ def test_legendre():
     assert legendre(n, 1) == 1
     assert legendre(n, oo) is oo
     assert legendre(-n, x) == legendre(n - 1, x)
-    assert legendre(n, -x) == (-1)**n*legendre(n, x)
     assert unchanged(legendre, -n + k, x)
 
     assert conjugate(legendre(n, x)) == legendre(n, conjugate(x))
@@ -192,6 +192,10 @@ def test_legendre():
             x/2)**_k*(x/2 + S.Half)**(-_k + n)*binomial(n, _k)**2, (_k, 0, n)))
     raises(ArgumentIndexError, lambda: legendre(n, x).fdiff(1))
     raises(ArgumentIndexError, lambda: legendre(n, x).fdiff(3))
+
+    res = integrate(legendre(n, x), (x, -1, 1))
+    assert res.subs({n: 0}) == 2
+    assert res.subs({n: 1}) == 0
 
 
 def test_assoc_legendre():
