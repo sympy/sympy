@@ -259,8 +259,7 @@ def function_range(f, symbol, domain):
 
                 critical_points = solveset(f.diff(symbol), symbol, interval)
                 # Check if the result is unsolvable or non-iterable
-                if (isinstance(critical_points, ConditionSet) or (isinstance(critical_points, Complement) and any(isinstance(sub, ConditionSet) for sub in critical_points.args)) or 
-                    (isinstance(critical_points, Union) and any(isinstance(sub, ConditionSet) or not iterable(sub) for sub in critical_points.args)) or not iterable(critical_points)):
+                if (isinstance(critical_points, ConditionSet) or (isinstance(critical_points, Complement) and any(isinstance(sub, ConditionSet) for sub in critical_points.args)) or (isinstance(critical_points, Union) and any(isinstance(sub, ConditionSet) or not iterable(sub) for sub in critical_points.args)) or not iterable(critical_points)):
                     raise NotImplementedError(
                         f"Unable to find explicit critical points for the derivative of given function:\n\n  {f.diff(symbol)} = 0\n\n"
                         "This may be due to the unsimplified form of the derivative (e.g. involving radicals or transcendental functions)."
