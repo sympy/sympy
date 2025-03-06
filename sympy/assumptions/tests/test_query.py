@@ -1082,6 +1082,15 @@ def test_bounded():
     assert ask(Q.finite(2**x), ~Q.finite(x)) is False
     assert ask(Q.finite(x**2), ~Q.finite(x)) is False
 
+    # https://github.com/sympy/sympy/issues/27707
+    assert ask(Q.finite(x**y),Q.real(x) & Q.real(y)) is None
+    assert ask(Q.finite(x**y),Q.real(x) & Q.negative(y)) is None
+    assert ask(Q.finite(x**y),Q.zero(x) & Q.negative(y)) is None
+    assert ask(Q.finite(x**y),Q.real(x) & Q.positive(y)) is True
+    assert ask(Q.finite(x**y),Q.nonzero(x) & Q.real(y)) is True
+    assert ask(Q.finite(x**y),Q.nonzero(x) & Q.negative(y)) is True
+    assert ask(Q.finite(x**y),Q.zero(x) & Q.positive(y)) is True
+
     # sign function
     assert ask(Q.finite(sign(x))) is True
     assert ask(Q.finite(sign(x)), ~Q.finite(x)) is True
