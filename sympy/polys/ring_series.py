@@ -1879,7 +1879,6 @@ def _rs_series(expr, series_rs, a, prec):
     # inefficient. For details, read the todo in sring.
     args = expr.args
     R = series_rs.ring
-    print(R)
 
     # expr does not contain any function to be expanded
     if not any(arg.has(Function) for arg in args) and not expr.is_Function:
