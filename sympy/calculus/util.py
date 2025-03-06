@@ -263,8 +263,7 @@ def function_range(f, symbol, domain):
                 # then try again with derivative simplification.
                 if (isinstance(critical_points, ConditionSet) or
                     (isinstance(critical_points, Complement) and any(isinstance(sub, ConditionSet) for sub in critical_points.args)) or
-                    (isinstance(critical_points, Union) and any(isinstance(sub, ConditionSet) or not iterable(sub) 
-                                                            for sub in critical_points.args)) or
+                    (isinstance(critical_points, Union) and any(isinstance(sub, ConditionSet) or not iterable(sub) for sub in critical_points.args)) or
                     not iterable(critical_points)):
                     critical_points = solveset(f.diff(symbol), symbol, interval, simplify_derivative=True)
                     if (isinstance(critical_points, ConditionSet) or
