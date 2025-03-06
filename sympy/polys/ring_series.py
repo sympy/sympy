@@ -1915,18 +1915,14 @@ def _rs_series(expr, series_rs, a, prec):
 
     elif expr.is_Mul:
         n = len(args)
-        for arg in args:    # XXX Looks redundant
-            if not arg.is_Number:
-                R1, _ = sring(arg, expand=False, series=True)
-                R = R.compose(R1)
         min_pows = list(map(rs_min_pow, args, [R(arg) for arg in args],
             [a]*len(args)))
         sum_pows = sum(min_pows)
         series = R(1)
 
         for i in range(n):
-            _series = _rs_series(args[i], R(args[i]), a, prec - sum_pows +
-                min_pows[i])
+            _series = _rs_series(args[i], R(args[i]), a, ceiling(prec
+                - sum_pows + min_pows[i]))
             R = R.compose(_series.ring)
             _series = _series.set_ring(R)
             series = series.set_ring(R)

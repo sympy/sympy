@@ -650,3 +650,12 @@ def test_rs_series():
            9*x**5/40 - 5*x**3/12 + x**2/4 + x/2 + pi/4
     assert rs_series(atan(1 + x * a), x, 9).as_expr() == -a**7*x**7/112 + a**6*x**6/48 \
            - a**5*x**5/40 + a**3*x**3/12 - a**2*x**2/4 + a*x/2 + pi/4
+
+
+def test_issue():
+    # https://github.com/sympy/sympy/issues/10191
+    # https://github.com/sympy/sympy/issues/19543
+
+    from sympy.abc import a,b
+    assert rs_series(sin(a**QQ(3,7))*exp(a + b**QQ(6,7)), a,2).as_expr() == \
+        a**QQ(10,7)*exp(b**QQ(6,7)) - a**QQ(9,7)*exp(b**QQ(6,7))/6 + a**QQ(3,7)*exp(b**QQ(6,7))
