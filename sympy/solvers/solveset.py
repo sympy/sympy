@@ -2334,7 +2334,7 @@ def _transolve(f, symbol, domain):
     return result
 
 
-def solveset(f, symbol=None, domain=S.Complexes):
+def solveset(f, symbol=None, domain=S.Complexes, simplify_derivative=False):
     r"""Solves a given inequality or equation with set as output
 
     Parameters
@@ -2437,6 +2437,12 @@ def solveset(f, symbol=None, domain=S.Complexes):
     """
     f = sympify(f)
     symbol = sympify(symbol)
+    if simplify_derivative:
+        try:
+            # Simplify derivative expressions for easier solving
+            f = simplify(f)
+        except Exception:
+            pass  # If simplification fails or is not needed, continue with original f
 
     if f is S.true:
         return domain

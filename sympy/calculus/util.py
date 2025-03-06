@@ -257,7 +257,31 @@ def function_range(f, symbol, domain):
                 else:
                     vals += FiniteSet(f.subs(symbol, limit_point))
 
-            critical_points = solveset(f.diff(symbol), symbol, interval)
+                # Evaluate critical points in the interval using solveset with no derivative simplification.
+                critical_points = solveset(f.diff(symbol), symbol, interval, simplify_derivative=False)
+                # If the result is unsolvable (e.g. a ConditionSet, or a Complement/Union containing one),
+                # then try again with derivative simplification.
+                if (isinstance(critical_points, ConditionSet) or
+                    (isinstance(critical_points, Complement) and any(isinstance(sub, ConditionSet) for sub in critical_points.args)) or
+                    (isinstance(critical_points, Union) and any(isinstance(sub, ConditionSet) or not iterable(sub) 
+                                                            for sub in critical_points.args)) or
+                    not iterable(critical_points)):
+                    critical_points = solveset(f.diff(symbol), symbol, interval, simplify_derivative=True)
+                    if (isinstance(critical_points, ConditionSet) or
+                        (isinstance(critical_points, Complement) and any(isinstance(sub, ConditionSet) for sub in critical_points.args)) or
+                            (isinstance(critical_points, Union) and any(isinstance(sub, ConditionSet) or not iterable(sub) for sub in critical_points.args)) or
+                                not iterable(critical_points)):
+                        raise NotImplementedError(
+                            f"Unable to find explicit critical points for the derivative:\n\n  {f.diff(symbol)} = 0\n\n"
+                            "This may be due to the transcendental or radical nature of the function. "
+                            "Consider using a numerical method (e.g. nsolve) or analyze monotonicity manually."
+                        )
+                if isinstance(critical_points, ImageSet):
+                    raise NotImplementedError(
+                        f"Found an infinite number of critical points for the derivative:\n\n  {f.diff(symbol)} = 0\n\n"
+                        "This indicates a periodic function; consider restricting the domain."
+                    )
+
 
             if not iterable(critical_points):
                 raise NotImplementedError(
