@@ -783,6 +783,9 @@ def _(expr, assumptions):
 def _(expr, assumptions):
     return False
 
+@TranscendentalPredicate.register(Float)
+def _(expr, assumptions):
+    return None
 
 @TranscendentalPredicate.register(Expr)
 def _(expr, assumptions):
@@ -796,7 +799,6 @@ def _(expr, assumptions):
         if is_algebraic is None:
             return None
         return not is_algebraic
-
 
 @TranscendentalPredicate.register(NaN)
 def _(expr, assumptions):
