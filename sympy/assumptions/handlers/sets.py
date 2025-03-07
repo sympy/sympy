@@ -779,7 +779,7 @@ def _(expr, assumptions):
     return True
 
 @TranscendentalPredicate.register_many(AlgebraicNumber, TribonacciConstant,
-    Infinity, ImaginaryUnit, ComplexInfinity, GoldenRatio)
+    Infinity, ImaginaryUnit, ComplexInfinity, GoldenRatio, NegativeInfinity)
 def _(expr, assumptions):
     return False
 
@@ -789,14 +789,7 @@ def _(expr, assumptions):
 
 @TranscendentalPredicate.register(Expr)
 def _(expr, assumptions):
-    is_real = Q.real(expr)._eval_ask(assumptions)
-    if is_real is not True:
-        return is_real
-    else:
-        is_algebraic = Q.algebraic(expr)._eval_ask(assumptions)
-        if is_algebraic is None:
-            return None
-        return not is_algebraic
+    return not Q.algebraic(expr)._eval_ask(assumptions)
 
 @TranscendentalPredicate.register(NaN)
 def _(expr, assumptions):
