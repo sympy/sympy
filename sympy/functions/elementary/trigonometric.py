@@ -3507,7 +3507,7 @@ class atan2(InverseTrigonometricFunction):
     >>> atan2(1, -1)
     3*pi/4
 
-    where only the `\operatorname{atan2}` function reurns what we expect.
+    where only the `\operatorname{atan2}` function returns what we expect.
     We can differentiate the function with respect to both arguments:
 
     >>> from sympy import diff

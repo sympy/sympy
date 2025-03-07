@@ -4274,7 +4274,7 @@ class MatrixBase(Printable):
         [sin(theta(t)),  cos(theta(t)), 0],
         [            0,              0, 1]])
 
-        We can retrive the angular velocity:
+        We can retrieve the angular velocity:
 
         >>> Omega = R.T * R.diff()
         >>> Omega = trigsimp(Omega)

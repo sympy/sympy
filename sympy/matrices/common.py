@@ -1,5 +1,5 @@
 """
-A module contining deprecated matrix mixin classes.
+A module containing deprecated matrix mixin classes.
 
 The classes in this module are deprecated and will be removed in a future
 release. They are kept here for backwards compatibility in case downstream

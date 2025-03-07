@@ -900,8 +900,8 @@ class TransferFunction(SISOLinearTimeInvariant):
 
     def _eval_rewrite_as_StateSpace(self, *args):
         """
-        Returns the equivalent space space model of the transfer function model.
-        The state space model will be returned in the controllable cannonical form.
+        Returns the equivalent space model of the transfer function model.
+        The state space model will be returned in the controllable canonical form.
 
         Unlike the space state to transfer function model conversion, the transfer function
         to state space model conversion is not unique. There can be multiple state space
@@ -4270,11 +4270,11 @@ class StateSpace(LinearTimeInvariant):
             if A.rows != B.rows:
                 raise ShapeError("Matrices A and B must have the same number of rows.")
 
-            # Check Ouput and Feedthrough matrices have same rows
+            # Check Output and Feedthrough matrices have same rows
             if C.rows != D.rows:
                 raise ShapeError("Matrices C and D must have the same number of rows.")
 
-            # Check State and Ouput matrices have same columns
+            # Check State and Output matrices have same columns
             if A.cols != C.cols:
                 raise ShapeError("Matrices A and C must have the same number of columns.")
 
