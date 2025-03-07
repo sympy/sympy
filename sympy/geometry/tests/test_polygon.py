@@ -651,7 +651,7 @@ def test_type_of_triangle():
     assert p2.is_scalene() == True
     assert p2.is_equilateral() == False
 
-    # Equilateral triagle
+    # Equilateral triangle
     p3 = Polygon(Point(0, 0), Point(6, 0), Point(3, sqrt(27)))
     assert p3.is_isosceles() == True
     assert p3.is_scalene() == False

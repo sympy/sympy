@@ -278,7 +278,7 @@ that would affect the behaviour of :func:`~.solve`:
     [1]
 
 When using string input SymPy will create the expression and create all of the
-symbolc implicitly so the question arises how can the assumptions be
+symbolic implicitly so the question arises how can the assumptions be
 specified? The answer is that rather than depending on implicit string
 conversion it is better to use the :func:`~.parse_expr` function explicitly
 and then it is possible to provide assumptions for the symbols e.g.:

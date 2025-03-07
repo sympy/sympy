@@ -112,7 +112,7 @@ class RealField(Field, CharacteristicZero, SimpleDomain):
 
     @property
     def tp(self):
-        # XXX: Domain treats tp as an alis of dtype. Here we need to two
+        # XXX: Domain treats tp as an alias of dtype. Here we need to two
         # separate things: dtype is a callable to make/convert instances.
         # We use tp with isinstance to check if an object is an instance
         # of the domain already.

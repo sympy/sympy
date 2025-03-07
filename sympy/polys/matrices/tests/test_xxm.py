@@ -4,7 +4,7 @@
 # These three types are supposed to be interchangeable, so we should use the
 # same tests for all of them for the most part.
 #
-# The tests here cover the basic part of the inerface that the three types
+# The tests here cover the basic part of the interface that the three types
 # should expose and that DomainMatrix should mostly rely on.
 #
 # More in-depth tests of the heavier algorithms like rref etc should go in

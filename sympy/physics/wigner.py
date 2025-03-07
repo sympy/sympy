@@ -883,7 +883,7 @@ def real_gaunt(l_1, l_2, l_3, mu_1, mu_2, mu_3, prec=None):
     requirement that the sum of the `l_i` be even to yield a non-zero value.
     It also obeys the following symmetry rules:
 
-    - zero for `l_1`, `l_2`, `l_3` not fulfiling the condition
+    - zero for `l_1`, `l_2`, `l_3` not fulfilling the condition
       `l_1 \in \{l_{\text{max}}, l_{\text{max}}-2, \ldots, l_{\text{min}}\}`,
       where `l_{\text{max}} = l_2+l_3`,
 

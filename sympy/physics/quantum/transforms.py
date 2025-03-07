@@ -179,7 +179,7 @@ def _transform_op_op(a, b):
 
 
 def _postprocess_state_mul(expr):
-    """Trasform a ``Mul`` of quantum expressions into canonical form.
+    """Transform a ``Mul`` of quantum expressions into canonical form.
 
     This function is registered ``_constructor_postprocessor_mapping`` as a
     transformer for ``Mul``. This means that every time a quantum expression

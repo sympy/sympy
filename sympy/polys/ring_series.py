@@ -1776,7 +1776,7 @@ def rs_hadamard_exp(p1, inverse=False):
     Return ``sum f_i/i!*x**i`` from ``sum f_i*x**i``,
     where ``x`` is the first variable.
 
-    If ``invers=True`` return ``sum f_i*i!*x**i``
+    If ``inverse=True`` return ``sum f_i*i!*x**i``
 
     Examples
     ========
