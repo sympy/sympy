@@ -313,7 +313,7 @@ def _(expr, assumptions):
     if expr.is_number:
         return _PositivePredicate_number(expr, assumptions)
     if ask(Q.even(expr.exp),assumptions):
-        if ask(Q.real(expr.base), assumptions): 
+        if ask(Q.real(expr.base), assumptions):
             is_base_zero = ask(Q.zero(expr.base),assumptions)
             if is_base_zero is None:
                 return None
