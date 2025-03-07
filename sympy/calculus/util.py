@@ -268,7 +268,7 @@ def function_range(f, symbol, domain):
 
                 prev_handler = signal.signal(signal.SIGALRM, _timeout_handler)
                 signal.alarm(10)
-                try:                
+                try:
                     critical_points = solveset(f.diff(symbol), symbol, interval)
                 except _SolvesetTimeoutError:
                     raise NotImplementedError(
