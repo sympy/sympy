@@ -257,7 +257,6 @@ def function_range(f, symbol, domain):
                     vals += critical_values
                 else:
                     vals += FiniteSet(f.subs(symbol, limit_point))
-                
                 # Set up iteration limit and safe solveset wrapper
                 MAX_ITER = 1000
                 iter_count = 0
