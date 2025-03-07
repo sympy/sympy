@@ -289,7 +289,6 @@ def function_range(f, symbol, domain):
                         f"  {f.diff(symbol)} = 0\n"
                         "This may be due to an unsimplifiable or transcendental equation."
                     )
-                
                 # Check if the result is unsolvable or non-iterable
                 if (isinstance(critical_points, ConditionSet) or (isinstance(critical_points, Complement) and any(isinstance(sub, ConditionSet) for sub in critical_points.args)) or (isinstance(critical_points, Union) and any(isinstance(sub, ConditionSet) or not iterable(sub) for sub in critical_points.args)) or not iterable(critical_points)):
                     raise NotImplementedError(
@@ -301,8 +300,7 @@ def function_range(f, symbol, domain):
                         f"Found an infinite number of critical points for the derivative:\n\n  {f.diff(symbol)} = 0\n\n"
                         "This indicates a periodic function; consider restricting the domain."
                     )
-                
-            
+
             if not iterable(critical_points):
                 raise NotImplementedError(
                         'Unable to find critical points for {}'.format(f))
