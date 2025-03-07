@@ -216,7 +216,7 @@ def function_range(f, symbol, domain):
 
     # This is a helper function for the solveset function to raise a timeout error
     def _timeout_handler(signum, frame):
-        raise _SolveSetTimeoutError()
+        raise _SolvesetTimeoutError()
 
     if domain is S.EmptySet:
         return S.EmptySet
