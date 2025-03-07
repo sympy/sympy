@@ -25,7 +25,7 @@ from sympy.sets.conditionset import ConditionSet
 from sympy.utilities import filldedent
 from sympy.utilities.iterables import iterable
 from sympy.matrices.dense import hessian
-import signal
+from concurrent.futures import ThreadPoolExecutor, TimeoutError as FuturesTimeoutError
 
 
 def continuous_domain(f, symbol, domain):
@@ -210,14 +210,6 @@ def function_range(f, symbol, domain):
         OR if the critical points of the function on the domain cannot be found.
     """
 
-    # THis is class is used to signal a timeout in the solveset function if it takes too long
-    class _SolvesetTimeoutError(Exception):
-        pass
-
-    # This is a helper function for the solveset function to raise a timeout error
-    def _timeout_handler(signum, frame):
-        raise _SolvesetTimeoutError()
-
     if domain is S.EmptySet:
         return S.EmptySet
 
@@ -269,12 +261,16 @@ def function_range(f, symbol, domain):
                 # For the purpose of finding critical points, we need to find the derivative of the function
                 # the value of f.diff(symbol) is stored for the purpose of the usage of _SolvetTimeoutError
                 fprime = f.diff(symbol)
-                prev_handler = signal.signal(signal.SIGALRM, _timeout_handler)
-                signal.alarm(10)
+                 # Use ThreadPoolExecutor to run solveset with a timeout.
+                def compute_critical():
+                    return solveset(fprime, symbol, interval)
                 try:
-                    critical_points = solveset(fprime, symbol, interval)
-                except _SolvesetTimeoutError:
-                    raise NotImplementedError(f"Solving for critical points (equation {fprime} = 0) was aborted due to excessive runtime.")
+                    with ThreadPoolExecutor(max_workers=1) as executor:
+                        critical_points = executor.submit(compute_critical).result(timeout=10)
+                except FuturesTimeoutError:
+                    raise NotImplementedError(
+                        f"Solving for critical points (equation {fprime} = 0) was aborted due to excessive runtime.")
+
                 # Check if the result is unsolvable or non-iterable
                 if (isinstance(critical_points, ConditionSet) or (isinstance(critical_points, Complement) and any(isinstance(sub, ConditionSet) for sub in critical_points.args)) or (isinstance(critical_points, Union) and any(isinstance(sub, ConditionSet) or not iterable(sub) for sub in critical_points.args)) or not iterable(critical_points)):
                     raise NotImplementedError(
