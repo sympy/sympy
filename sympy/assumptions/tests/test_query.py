@@ -1651,6 +1651,34 @@ def test_integer():
     assert ask(Q.integer(x/3), Q.odd(x)) is None
     assert ask(Q.integer(x/3), Q.even(x)) is None
 
+    # https://github.com/sympy/sympy/issues/21177
+    # Notable edge cases:
+    # 0^0, 0^oo, 0^I, (-1)^oo are undefined
+    # 0^y for y < 0 is undefined due to division by zero
+    assert ask(Q.integer((-1)**y), Q.integer(y)) is True
+    assert ask(Q.integer(x**2), Q.integer(x)) is True
+    assert ask(Q.integer(x**y), Q.integer(x) & Q.integer(y) & Q.positive(y)) is True
+    assert ask(Q.integer(x**y), Q.integer(x) & Q.integer(y) & ~Q.negative(y)) is None
+    assert ask(Q.integer(2**n), Q.integer(n) & Q.negative(n)) is False
+    assert ask(Q.integer(2**n), Q.integer(n)) is None
+    assert ask(Q.integer(x**y), ~Q.integer(x) & Q.integer(y)) is None
+    assert ask(Q.integer(x**y), Q.zero(y)) is None
+    assert ask(Q.integer(x**y), Q.zero(x)) is None
+    assert ask(Q.integer(x**y), ~Q.zero(y) & Q.zero(x)) is None
+    assert ask(Q.integer(x**y), Q.zero(y) & ~Q.zero(x)) is None
+    assert ask(Q.integer(x**y), Q.nonzero(y) & Q.zero(x)) is None
+    assert ask(Q.integer(x**y), Q.integer(x)) is None
+    assert ask(Q.integer(x**y), Q.integer(x) & Q.integer(y)) is None
+    assert ask(Q.integer(x**y), Q.integer(x) & Q.positive(y)) is None
+    assert ask(Q.integer(x**y), Q.integer(x) & Q.negative(y)) is None
+    assert ask(Q.integer(x**y), ~Q.integer(x) & Q.integer(y) & Q.positive(y)) is None
+    assert ask(Q.integer(x**y), Q.integer(x) & ~Q.integer(y)) is None
+    assert ask(Q.integer(x**y), Q.rational(x) & Q.integer(y)) is None
+    assert ask(Q.integer(x**y), Q.integer(x) & Q.integer(y) & Q.negative(y)) is None
+    assert ask(Q.integer(x**y), Q.integer(x) & Q.integer(y) & Q.zero(x)) is None
+    assert ask(Q.integer(x**y), Q.zero(y) & Q.nonzero(x)) is None # (Ideally this should be True.)
+    assert ask(Q.integer(x**y), Q.gt(x, 1) & Q.integer(x) & ~Q.positive(y) & Q.integer(y)) is None
+
 
 def test_negative():
     assert ask(Q.negative(x), Q.negative(x)) is True
