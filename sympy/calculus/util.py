@@ -274,7 +274,7 @@ def function_range(f, symbol, domain):
                     raise NotImplementedError(
                         f"Solving for critical points (equation {fprime} = 0) was aborted due to excessive runtime."
                     )
-                
+                                
                 # Check if the result is unsolvable or non-iterable
                 if (isinstance(critical_points, ConditionSet) or (isinstance(critical_points, Complement) and any(isinstance(sub, ConditionSet) for sub in critical_points.args)) or (isinstance(critical_points, Union) and any(isinstance(sub, ConditionSet) or not iterable(sub) for sub in critical_points.args)) or not iterable(critical_points)):
                     raise NotImplementedError(
