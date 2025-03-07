@@ -1,6 +1,6 @@
-from math import log, sqrt
+from math import exp, log
 from sympy.core.random import _randint
-from sympy.external.gmpy import gcd, invert, sqrt as isqrt
+from sympy.external.gmpy import bit_scan1, gcd, invert, sqrt as isqrt
 from sympy.ntheory.factor_ import _perfect_power
 from sympy.ntheory.primetest import isprime
 from sympy.ntheory.residue_ntheory import _sqrt_mod_prime_power
@@ -50,9 +50,10 @@ class FactorBaseElem:
         self.prime = prime
         self.tmem_p = tmem_p
         self.log_p = log_p
+        # `soln1` and `soln2` are solutions to
+        # the equation `(a*x + b)**2 - N = 0 (mod p)`.
         self.soln1 = None
         self.soln2 = None
-        self.a_inv = None
         self.b_ainv = None
 
 
@@ -85,7 +86,7 @@ def _generate_factor_base(prime_bound, n):
     return idx_1000, idx_5000, factor_base
 
 
-def _initialize_first_polynomial(N, M, factor_base, idx_1000, idx_5000, seed=None):
+def _initialize_first_polynomial(N, M, factor_base, idx_1000, idx_5000, randint):
     """This step is the initialization of the 1st sieve polynomial.
     Here `a` is selected as a product of several primes of the factor_base
     such that `a` is about to ``sqrt(2*N) / M``. Other initial values of
@@ -104,28 +105,28 @@ def _initialize_first_polynomial(N, M, factor_base, idx_1000, idx_5000, seed=Non
     factor_base : factor_base primes
     idx_1000 : index of prime number in the factor_base near 1000
     idx_5000 : index of prime number in the factor_base near to 5000
-    seed : Generate pseudoprime numbers
+    randint : A callable that takes two integers (a, b) and returns a random integer
+              n such that a <= n <= b, similar to `random.randint`.
     """
-    randint = _randint(seed)
-    approx_val = sqrt(2*N) / M
+    approx_val = log(2*N)/2 - log(M)
     # `a` is a parameter of the sieve polynomial and `q` is the prime factors of `a`
     # randomly search for a combination of primes whose multiplication is close to approx_val
     # This multiplication of primes will be `a` and the primes will be `q`
     # `best_a` denotes that `a` is close to approx_val in the random search of combination
     best_a, best_q, best_ratio = None, None, None
-    start = 0 if idx_1000 is None else idx_1000
-    end = len(factor_base) - 1 if idx_5000 is None else idx_5000
+    start = idx_1000 or 0
+    end = idx_5000 or (len(factor_base) - 1)
     for _ in range(50):
         a = 1
         q = []
-        while(a < approx_val):
+        while log(a) < approx_val:
             rand_p = 0
             while(rand_p == 0 or rand_p in q):
                 rand_p = randint(start, end)
             p = factor_base[rand_p].prime
             a *= p
             q.append(rand_p)
-        ratio = a / approx_val
+        ratio = exp(log(a) - approx_val)
         if best_ratio is None or abs(ratio - 1) < abs(best_ratio - 1):
             best_q = q
             best_a = a
@@ -147,11 +148,12 @@ def _initialize_first_polynomial(N, M, factor_base, idx_1000, idx_5000, seed=Non
 
     for fb in factor_base:
         if a % fb.prime == 0:
+            fb.soln1 = None
             continue
-        fb.a_inv = invert(a, fb.prime)
-        fb.b_ainv = [2*b_elem*fb.a_inv % fb.prime for b_elem in B]
-        fb.soln1 = (fb.a_inv*(fb.tmem_p - b)) % fb.prime
-        fb.soln2 = (fb.a_inv*(-fb.tmem_p - b)) % fb.prime
+        a_inv = invert(a, fb.prime)
+        fb.b_ainv = [2*b_elem*a_inv % fb.prime for b_elem in B]
+        fb.soln1 = (a_inv*(fb.tmem_p - b)) % fb.prime
+        fb.soln2 = (a_inv*(-fb.tmem_p - b)) % fb.prime
     return g, B
 
 
@@ -173,24 +175,19 @@ def _initialize_ith_poly(N, factor_base, i, g, B):
     g : (i - 1)th polynomial
     B : array that stores a//q_l*gamma
     """
-    from sympy.functions.elementary.integers import ceiling
-    v = 1
-    j = i
-    while(j % 2 == 0):
-        v += 1
-        j //= 2
-    if ceiling(i / (2**v)) % 2 == 1:
-        neg_pow = -1
-    else:
+    v = bit_scan1(i)
+    if (i >> (v + 1)) % 2:
         neg_pow = 1
-    b = g.b + 2*neg_pow*B[v - 1]
+    else:
+        neg_pow = -1
+    b = g.b + 2*neg_pow*B[v]
     a = g.a
     g = SievePolynomial(a, b, N)
     for fb in factor_base:
-        if a % fb.prime == 0:
+        if fb.soln1 is None:
             continue
-        fb.soln1 = (fb.soln1 - neg_pow*fb.b_ainv[v - 1]) % fb.prime
-        fb.soln2 = (fb.soln2 - neg_pow*fb.b_ainv[v - 1]) % fb.prime
+        fb.soln1 = (fb.soln1 - neg_pow*fb.b_ainv[v]) % fb.prime
+        fb.soln2 = (fb.soln2 - neg_pow*fb.b_ainv[v]) % fb.prime
 
     return g
 
@@ -226,33 +223,32 @@ def _check_smoothness(num, factor_base):
     """Here we check that if `num` is a smooth number or not. If `a` is a smooth
     number then it returns a vector of prime exponents modulo 2. For example
     if a = 2 * 5**2 * 7**3 and the factor base contains {2, 3, 5, 7} then
-    `a` is a smooth number and this function returns ([1, 0, 0, 1], True). If
-    `a` is a partial relation which means that `a` a has one prime factor
+    `a` is a smooth number and this function returns (18, True) (18 = [1, 0, 0, 1, 0]).
+    If `a` is a partial relation which means that `a` a has one prime factor
     greater than the `factor_base` then it returns `(a, False)` which denotes `a`
     is a partial relation.
 
     Parameters
     ==========
 
-    a : integer whose smootheness is to be checked
+    num : integer whose smootheness is to be checked
     factor_base : factor_base primes
     """
-    vec = []
     if num < 0:
-        vec.append(1)
         num *= -1
+        vec = 1
     else:
-        vec.append(0)
-     #-1 is not included in factor_base add -1 in vector
-    for factor in factor_base:
-        if num % factor.prime != 0:
-            vec.append(0)
+        vec = 0
+    for i, fb in enumerate(factor_base, 1):
+        if num % fb.prime:
             continue
-        factor_exp = 0
-        while num % factor.prime == 0:
-            factor_exp += 1
-            num //= factor.prime
-        vec.append(factor_exp % 2)
+        e = 1
+        num //= fb.prime
+        while num % fb.prime == 0:
+            e += 1
+            num //= fb.prime
+        if e % 2:
+            vec += 1 << i
     if num == 1:
         return vec, True
     if isprime(num):
@@ -315,97 +311,57 @@ def _trial_division_stage(N, M, factor_base, sieve_array, sieve_poly, partial_re
                 except ZeroDivisionError:#if large_prime divides N
                     proper_factor.add(large_prime)
                     continue
-                u = u*u_prev*large_prime_inv
-                v = v*v_prev // (large_prime*large_prime)
-                vec, is_smooth = _check_smoothness(v, factor_base)
+                u = (u*u_prev*large_prime_inv) % N
+                v = v*v_prev // large_prime**2
+                vec, _ = _check_smoothness(v, factor_base)
         #assert u*u % N == v % N
         smooth_relations.append((u, v, vec))
     return smooth_relations, proper_factor
 
 
-def _gauss_mod_2(A):
-    """Fast gaussian reduction for modulo 2 matrix.
+def _find_factor(N, smooth_relations, col):
+    """ Finds proper factor of N using fast gaussian reduction for modulo 2 matrix.
 
     Parameters
     ==========
 
-    A : Matrix
-
-    Examples
-    ========
-
-    >>> from sympy.ntheory.qs import _gauss_mod_2
-    >>> _gauss_mod_2([[0, 1, 1], [1, 0, 1], [0, 1, 0], [1, 1, 1]])
-    ([[[1, 0, 1], 3]],
-     [True, True, True, False],
-     [[0, 1, 0], [1, 0, 0], [0, 0, 1], [1, 0, 1]])
+    N : Number to be factored
+    smooth_relations : Smooth relations vectors matrix
+    col : Number of columns in the matrix
 
     Reference
     ==========
 
     .. [1] A fast algorithm for gaussian elimination over GF(2) and
-    its implementation on the GAPP. Cetin K.Koc, Sarath N.Arachchige"""
-    import copy
-    matrix = copy.deepcopy(A)
-    row = len(matrix)
-    col = len(matrix[0])
-    mark = [False]*row
-    for c in range(col):
-        for r in range(row):
-            if matrix[r][c] == 1:
-                break
-        mark[r] = True
-        for c1 in range(col):
-            if c1 == c:
-                continue
-            if matrix[r][c1] == 1:
-                for r2 in range(row):
-                    matrix[r2][c1] = (matrix[r2][c1] + matrix[r2][c]) % 2
-    dependent_row = []
-    for idx, val in enumerate(mark):
-        if val == False:
-            dependent_row.append([matrix[idx], idx])
-    return dependent_row, mark, matrix
-
-
-def _find_factor(dependent_rows, mark, gauss_matrix, index, smooth_relations, N):
-    """Finds proper factor of N. Here, transform the dependent rows as a
-    combination of independent rows of the gauss_matrix to form the desired
-    relation of the form ``X**2 = Y**2 modN``. After obtaining the desired relation
-    we obtain a proper factor of N by `gcd(X - Y, N)`.
-
-    Parameters
-    ==========
-
-    dependent_rows : denoted dependent rows in the reduced matrix form
-    mark : boolean array to denoted dependent and independent rows
-    gauss_matrix : Reduced form of the smooth relations matrix
-    index : denoted the index of the dependent_rows
-    smooth_relations : Smooth relations vectors matrix
-    N : Number to be factored
+    its implementation on the GAPP. Cetin K.Koc, Sarath N.Arachchige
     """
-    idx_in_smooth = dependent_rows[index][1]
-    independent_u = [smooth_relations[idx_in_smooth][0]]
-    independent_v = [smooth_relations[idx_in_smooth][1]]
-    dept_row = dependent_rows[index][0]
+    matrix = [s_relation[2] for s_relation in smooth_relations]
+    row = len(matrix)
+    mark = [False] * row
+    for pos in range(col):
+        m = 1 << pos
+        for i in range(row):
+            if p := matrix[i] & m:
+                add_col = p ^ matrix[i]
+                matrix[i] = m
+                mark[i] = True
+                for j in range(i + 1, row):
+                    if matrix[j] & m:
+                        matrix[j] ^= add_col
+                break
 
-    for idx, val in enumerate(dept_row):
-        if val == 1:
-            for row in range(len(gauss_matrix)):
-                if gauss_matrix[row][idx] == 1 and mark[row] == True:
-                    independent_u.append(smooth_relations[row][0])
-                    independent_v.append(smooth_relations[row][1])
-                    break
-
-    u = 1
-    v = 1
-    for i in independent_u:
-        u *= i
-    for i in independent_v:
-        v *= i
-    #assert u**2 % N == v % N
-    v = isqrt(v)
-    return gcd(u - v, N)
+    for m, mat, rel in zip(mark, matrix, smooth_relations):
+        if m:
+            continue
+        u, v = rel[0], rel[1]
+        for m1, mat1, rel1 in zip(mark, matrix, smooth_relations):
+            if m1 and mat & mat1:
+                u *= rel1[0]
+                v *= rel1[1]
+        # assert is_square(v)
+        v = isqrt(v)
+        if 1 < (g := gcd(u - v, N)) < N:
+            yield g
 
 
 def qs(N, prime_bound, M, ERROR_TERM=25, seed=1234):
@@ -516,12 +472,12 @@ def qs_factor(N, prime_bound, M, ERROR_TERM=25, seed=1234):
         factors[n] = e
         return factors
     N_copy = N
+    randint = _randint(seed)
     idx_1000, idx_5000, factor_base = _generate_factor_base(prime_bound, N)
     threshold = len(factor_base) * 105//100
     while len(smooth_relations) < threshold:
         if ith_poly == 0:
-            seed += 1
-            ith_sieve_poly, B_array = _initialize_first_polynomial(N, M, factor_base, idx_1000, idx_5000, seed)
+            ith_sieve_poly, B_array = _initialize_first_polynomial(N, M, factor_base, idx_1000, idx_5000, randint)
         else:
             ith_sieve_poly = _initialize_ith_poly(N, factor_base, ith_poly, ith_sieve_poly, B_array)
         ith_poly += 1
@@ -539,11 +495,8 @@ def qs_factor(N, prime_bound, M, ERROR_TERM=25, seed=1234):
                 N_copy //= p
                 e += 1
             factors[p] = e
-    matrix = [s_relation[2] for s_relation in smooth_relations]
-    dependent_row, mark, gauss_matrix = _gauss_mod_2(matrix)
-    for index in range(len(dependent_row)):
-        factor = _find_factor(dependent_row, mark, gauss_matrix, index, smooth_relations, N)
-        if 1 < factor and N_copy % factor == 0:
+    for factor in _find_factor(N, smooth_relations, len(factor_base) + 1):
+        if N_copy % factor == 0:
             e = 1
             N_copy //= factor
             while N_copy % factor == 0:

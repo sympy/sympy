@@ -1,10 +1,11 @@
 from __future__ import annotations
 
+import math
+from sympy.core.random import _randint
 from sympy.ntheory import qs, qs_factor
 from sympy.ntheory.qs import SievePolynomial, _generate_factor_base, \
     _initialize_first_polynomial, _initialize_ith_poly, \
-    _gen_sieve_array, _check_smoothness, _trial_division_stage, _gauss_mod_2, \
-    _find_factor
+    _gen_sieve_array, _check_smoothness, _trial_division_stage, _find_factor
 from sympy.testing.pytest import slow
 
 
@@ -13,7 +14,7 @@ def test_qs_1():
     assert qs(10009202107, 100, 10000) == {100043, 100049}
     assert qs(211107295182713951054568361, 1000, 10000) == \
         {13791315212531, 15307263442931}
-    assert qs(980835832582657*990377764891511, 3000, 50000, seed=123) == \
+    assert qs(980835832582657*990377764891511, 2000, 10000) == \
         {980835832582657, 990377764891511}
     assert qs(18640889198609*20991129234731, 1000, 50000) == \
         {18640889198609, 20991129234731}
@@ -36,7 +37,7 @@ def test_qs_2() -> None:
         [710, 1125, 1993, 2455, 2901]
 
     g, B = _initialize_first_polynomial(
-        n, M, factor_base, idx_1000, idx_5000, seed=0)
+        n, M, factor_base, idx_1000, idx_5000, _randint(0))
     assert g.a == 1133107
     assert g.b == 682543
     assert B == [272889, 409654]
@@ -44,8 +45,6 @@ def test_qs_2() -> None:
         [0, 0, 3, 7, 13, 0, 8, 19, 9, 43, 27, 25, 63, 29, 19]
     assert [factor_base[i].soln2 for i in range(15)] == \
         [0, 1, 1, 3, 12, 16, 15, 6, 15, 1, 56, 55, 61, 58, 16]
-    assert [factor_base[i].a_inv for i in range(15)] == \
-        [1, 1, 5, 7, 3, 5, 26, 6, 40, 5, 21, 45, 4, 1, 8]
     assert [factor_base[i].b_ainv for i in range(5)] == \
         [[0, 0], [0, 2], [3, 0], [3, 9], [13, 13]]
 
@@ -57,12 +56,11 @@ def test_qs_2() -> None:
     assert sieve_array[0:5] == [8424, 13603, 1835, 5335, 710]
 
     assert _check_smoothness(9645, factor_base) == (5, False)
-    assert _check_smoothness(210313, factor_base)[0][0:15] == \
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 1]
+    assert _check_smoothness(210313, factor_base)[0] == 20992
     assert _check_smoothness(210313, factor_base)[1]
 
     partial_relations: dict[int, tuple[int, int]] = {}
-    smooth_relation, partial_relation = _trial_division_stage(
+    smooth_relation, proper_factor = _trial_division_stage(
         n, M, factor_base, sieve_array, sieve_poly, partial_relations,
         ERROR_TERM=25*2**10)
 
@@ -73,45 +71,23 @@ def test_qs_2() -> None:
         6653: (550, -10008899607)
     }
     assert [smooth_relation[i][0] for i in range(5)] == [
-        -250, -670615476700, -45211565844500, -231723037747200, -1811665537200]
+        -250, 1064469, 72819, 231957, 44167]
     assert [smooth_relation[i][1] for i in range(5)] == [
         -10009139607, 1133094251961, 5302606761, 53804049849, 1950723889]
-    assert smooth_relation[0][2][0:15] == [
-        1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-
-    assert _gauss_mod_2(
-        [[0, 0, 1], [1, 0, 1], [0, 1, 0], [0, 1, 1], [0, 1, 1]]
-    ) == (
-        [[[0, 1, 1], 3], [[0, 1, 1], 4]],
-        [True, True, True, False, False],
-        [[0, 0, 1], [1, 0, 0], [0, 1, 0], [0, 1, 1], [0, 1, 1]]
-    )
+    assert smooth_relation[0][2] == 89213869829863962596973701078031812362502145
+    assert proper_factor == set()
 
 
 def test_qs_3():
     N = 1817
     smooth_relations = [
-        (2455024, 637, [0, 0, 0, 1]),
-        (-27993000, 81536, [0, 1, 0, 1]),
-        (11461840, 12544, [0, 0, 0, 0]),
-        (149, 20384, [0, 1, 0, 1]),
-        (-31138074, 19208, [0, 1, 0, 0])
+        (2455024, 637, 8),
+        (-27993000, 81536, 10),
+        (11461840, 12544, 0),
+        (149, 20384, 10),
+        (-31138074, 19208, 2)
     ]
-    matrix = [s_relation[2] for s_relation in smooth_relations]
-    dependent_row, mark, gauss_matrix = _gauss_mod_2(matrix)
-    assert dependent_row == [[[0, 0, 0, 0], 2], [[0, 1, 0, 0], 3]]
-    assert mark == [True, True, False, False, True]
-    assert gauss_matrix == [
-        [0, 0, 0, 1],
-        [0, 1, 0, 0],
-        [0, 0, 0, 0],
-        [0, 1, 0, 0],
-        [0, 1, 0, 1]
-    ]
-
-    factor = _find_factor(
-        dependent_row, mark, gauss_matrix, 0, smooth_relations, N)
-    assert factor == 23
+    assert next(_find_factor(N, smooth_relations, 4)) == 23
 
 
 def test_qs_4():
@@ -123,8 +99,10 @@ def test_qs_4():
 
 def test_qs_factor():
     assert qs_factor(1009 * 100003, 2000, 10000) == {1009: 1, 100003: 1}
-    assert qs_factor(1009**2 * 2003**2*30011*400009, 2000, 10000) == \
-        {1633856814842812561: 1, 30011: 1}
+    n = 1009**2 * 2003**2*30011*400009
+    factors = qs_factor(n, 2000, 10000)
+    assert len(factors) > 1
+    assert math.prod(p**e for p, e in factors.items()) == n
 
 
 def test_issue_27616():
