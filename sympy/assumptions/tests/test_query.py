@@ -1085,7 +1085,7 @@ def test_bounded():
     # https://github.com/sympy/sympy/issues/27707
     assert ask(Q.finite(x**y),Q.real(x) & Q.real(y)) is None
     assert ask(Q.finite(x**y),Q.real(x) & Q.negative(y)) is None
-    assert ask(Q.finite(x**y),Q.zero(x) & Q.negative(y)) is None
+    assert ask(Q.finite(x**y),Q.zero(x) & Q.negative(y)) is False
     assert ask(Q.finite(x**y),Q.real(x) & Q.positive(y)) is True
     assert ask(Q.finite(x**y),Q.nonzero(x) & Q.real(y)) is True
     assert ask(Q.finite(x**y),Q.nonzero(x) & Q.negative(y)) is True
