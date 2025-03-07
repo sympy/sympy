@@ -266,15 +266,15 @@ def function_range(f, symbol, domain):
                 else:
                     vals += FiniteSet(f.subs(symbol, limit_point))
 
+                # For the purpose of finding critical points, we need to find the derivative of the function
+                # the value of f.diff(symbol) is stored for the purpose of the usage of _SolvetTimeoutError
+                fprime = f.diff(symbol)
                 prev_handler = signal.signal(signal.SIGALRM, _timeout_handler)
                 signal.alarm(10)
                 try:
-                    critical_points = solveset(f.diff(symbol), symbol, interval)
+                    critical_points = solveset(fprime, symbol, interval)
                 except _SolvesetTimeoutError:
-                    raise NotImplementedError(
-                        f"Solving for critical points (equation {fprime} = 0) was aborted due to excessive runtime."
-                    )
-                                
+                    raise NotImplementedError(f"Solving for critical points (equation {fprime} = 0) was aborted due to excessive runtime.")
                 # Check if the result is unsolvable or non-iterable
                 if (isinstance(critical_points, ConditionSet) or (isinstance(critical_points, Complement) and any(isinstance(sub, ConditionSet) for sub in critical_points.args)) or (isinstance(critical_points, Union) and any(isinstance(sub, ConditionSet) or not iterable(sub) for sub in critical_points.args)) or not iterable(critical_points)):
                     raise NotImplementedError(
