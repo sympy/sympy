@@ -13,13 +13,13 @@ Printers
 
 There are several printers available in SymPy.  The most common ones are
 
-- str
-- srepr
-- ASCII pretty printer
-- Unicode pretty printer
-- LaTeX
-- MathML
-- Dot
+- :ref:`str <str>`
+- :ref:`srepr <srepr>`
+- :ref:`ASCII pretty printer <ASCII Pretty Printer>`
+- :ref:`Unicode pretty printer <Unicode Pretty Printer>`
+- :ref:`\mathrm{\LaTeX} <LaTeX>`
+- :ref:`MathML <MathML>`
+- :ref:`Dot <Dot>`
 
 In addition to these, there are also "printers" that can output SymPy objects
 to code, such as C, Fortran, Javascript, Theano, and Python.  These are not
@@ -97,6 +97,8 @@ Printing Functions
 In addition to automatic printing, you can explicitly use any one of the
 printers by calling the appropriate function.
 
+(str)=
+
 str
 ---
 
@@ -113,6 +115,8 @@ exactly the same as the expression as you would enter it.
     >>> print(Integral(sqrt(1/x), x))
     Integral(sqrt(1/x), x)
 
+(srepr)=
+
 srepr
 -----
 
@@ -126,6 +130,7 @@ section.  To get it, use ``srepr()`` [#srepr-fn]_.
 The srepr form is mostly useful for understanding how an expression is built
 internally.
 
+(ASCII Pretty Printer)=
 
 ASCII Pretty Printer
 --------------------
@@ -159,6 +164,8 @@ use ``pretty()``.
      |
     /
 
+(Unicode Pretty Printer)=
+
 Unicode Pretty Printer
 ----------------------
 
@@ -189,6 +196,8 @@ The ``latex()`` function has many options to change the formatting of
 different things.  See :py:meth:`its documentation
 <sympy.printing.latex.latex>` for more details.
 
+(MathML)=
+
 MathML
 ------
 
@@ -215,6 +224,7 @@ imported from ``sympy.printing.mathml``.
 ``print_mathml()`` prints the output.  If you want the string, use the
 function ``mathml()``.
 
+(Dot)=
 
 Dot
 ---
