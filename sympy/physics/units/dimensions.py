@@ -117,7 +117,7 @@ class Dimension(Expr):
 
     For example, in classical mechanics we know that time is different from
     temperature and dimensions make this difference (but they do not provide
-    any measure of these quantites.
+    any measure of these quantities.
 
         >>> from sympy.physics.units import Dimension
         >>> length = Dimension('length')

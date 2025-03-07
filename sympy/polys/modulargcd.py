@@ -2141,7 +2141,7 @@ def func_field_modgcd(f, g):
     This is done by calculating the GCD in
     `\mathbb{Z}_p(x_1, \ldots, x_{n-1})[z]/(\check m_{\alpha}(z))[x_0]` for
     suitable primes `p` and then reconstructing the coefficients with the
-    Chinese Remainder Theorem and Rational Reconstuction. The GCD over
+    Chinese Remainder Theorem and Rational Reconstruction. The GCD over
     `\mathbb{Z}_p(x_1, \ldots, x_{n-1})[z]/(\check m_{\alpha}(z))[x_0]` is
     computed with a recursive subroutine, which evaluates the polynomials at
     `x_{n-1} = a` for suitable evaluation points `a \in \mathbb Z_p` and

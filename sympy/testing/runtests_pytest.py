@@ -8,7 +8,7 @@ SymPy historically had its own testing framework that aimed to:
 - have no magic, just import the test file and execute the test functions; and
 - be portable.
 
-To reduce the maintence burden of developing an independent testing framework
+To reduce the maintenance burden of developing an independent testing framework
 and to leverage the benefits of existing Python testing infrastructure, SymPy
 now uses pytest (and various of its plugins) to run the test suite.
 
@@ -252,7 +252,7 @@ def test(*paths, subprocess=True, rerun=0, **kwargs):
 
     Note that a `pytest.ExitCode`, which is an `enum`, is returned. This is
     different to the legacy SymPy test runner which would return a `bool`. If
-    all tests sucessfully pass the `pytest.ExitCode.OK` with value `0` is
+    all tests successfully pass the `pytest.ExitCode.OK` with value `0` is
     returned, whereas the legacy SymPy test runner would return `True`. In any
     other scenario, a non-zero `enum` value is returned, whereas the legacy
     SymPy test runner would return `False`. Users need to, therefore, be careful

@@ -323,7 +323,7 @@ $ ./bin/test /core /utilities
 
 This will run tests for the `core` and `utilities` modules.
 
-Similary, run quality tests with:
+Similarly, run quality tests with:
 
 ```bash
 $ ./bin/test code_quality
