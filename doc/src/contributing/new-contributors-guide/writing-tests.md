@@ -644,7 +644,7 @@ This will import the module if it is installed and return `None` otherwise.
 
 `sympy.testing.pytest.skip` should be used to skip tests when the module in
 question is not installed (see [](writing-tests-skip) above). This can be done
-at the module level if the entire test file should be skippped, or in each
+at the module level if the entire test file should be skipped, or in each
 individual function.
 
 You should also make sure the test is run in the "Optional Dependencies" CI

@@ -129,7 +129,7 @@ Example 2
 
 This problem explains how to model a rotaional system to state-space model. The system has input torque `τ_a` and damping effects `B_{r1}` and `B_{r2}`. The system consists of two flywheels connected by a spring, with the angular positions denoted by `θ_1` and `θ_2`.
 
-The energy variables for the rotating system are potential energy stored in springs `1/2 K_r \theta^ 2` and kinetic energy stored in inertial elments `1/2 J \omega ^ 2`.
+The energy variables for the rotating system are potential energy stored in springs `1/2 K_r \theta^ 2` and kinetic energy stored in inertial elements `1/2 J \omega ^ 2`.
 
 The **State Variables:** can be written as:
 

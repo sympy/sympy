@@ -1,4 +1,4 @@
-"""Quantum mechanical angular momemtum."""
+"""Quantum mechanical angular momentum."""
 
 from sympy.concrete.summations import Sum
 from sympy.core.add import Add

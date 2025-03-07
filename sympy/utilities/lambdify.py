@@ -1331,7 +1331,7 @@ class _TensorflowEvaluatorPrinter(_EvaluatorPrinter):
     def _print_unpacking(self, lvalues, rvalue):
         """Generate argument unpacking code.
 
-        This method is used when the input value is not interable,
+        This method is used when the input value is not iterable,
         but can be indexed (see issue #14655).
         """
 

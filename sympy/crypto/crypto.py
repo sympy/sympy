@@ -2638,7 +2638,7 @@ def encipher_elgamal(i, key, seed=None):
     ``i`` is a plaintext message expressed as an integer.
     ``key`` is public key (p, r, e). In order to encrypt
     a message, a random number ``a`` in ``range(2, p)``
-    is generated and the encryped message is returned as
+    is generated and the encrypted message is returned as
     `c_{1}` and `c_{2}` where:
 
     `c_{1} \equiv r^{a} \pmod p`

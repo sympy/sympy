@@ -2708,7 +2708,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         >>> g = 2*x + 2
         >>> f.prem(g) # first generator is chosen by default if it is not given
         -4*y + 4
-        >>> f.rem(g) # shows the differnce between prem and rem
+        >>> f.rem(g) # shows the difference between prem and rem
         x**2 + x*y
         >>> f.prem(g, y) # generator is given
         0
@@ -2928,7 +2928,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         >>> h = 2*x + 2
         >>> f.pexquo(g)
         2*x
-        >>> f.exquo(g) # shows the differnce between pexquo and exquo
+        >>> f.exquo(g) # shows the difference between pexquo and exquo
         Traceback (most recent call last):
         ...
         ExactQuotientFailed: 2*x + 2*y does not divide x**2 + x*y

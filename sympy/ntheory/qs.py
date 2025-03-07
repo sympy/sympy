@@ -8,7 +8,7 @@ from sympy.ntheory.residue_ntheory import _sqrt_mod_prime_power
 
 class SievePolynomial:
     def __init__(self, a, b, N):
-        """This class denotes the seive polynomial.
+        """This class denotes the sieve polynomial.
         Provide methods to compute `(a*x + b)**2 - N` and
         `a*x + b` when given `x`.
 

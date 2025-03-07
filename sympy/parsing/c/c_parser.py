@@ -123,7 +123,7 @@ if cin:
             It takes the filename as an attribute and creates a Clang AST
             Translation Unit parsing the file.
             Then the transformation function is called on the translation unit,
-            whose reults are collected into a list which is returned by the
+            whose results are collected into a list which is returned by the
             function.
 
             Parameters
@@ -159,7 +159,7 @@ if cin:
             It takes the source code as an attribute, stores it in a temporary
             file and creates a Clang AST Translation Unit parsing the file.
             Then the transformation function is called on the translation unit,
-            whose reults are collected into a list which is returned by the
+            whose results are collected into a list which is returned by the
             function.
 
             Parameters
@@ -588,7 +588,7 @@ if cin:
                 the result from the wrapped expression
 
             None : NoneType
-                No childs are found for the node
+                No children are found for the node
 
             Raises
             ======
@@ -658,7 +658,7 @@ if cin:
             return Return(next(node.get_children()).spelling)
 
         def transform_compound_stmt(self, node):
-            """Transformation function for compond statemets
+            """Transformation function for compound statements
 
             Returns
             =======

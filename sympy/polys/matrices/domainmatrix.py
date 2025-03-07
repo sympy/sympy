@@ -2187,7 +2187,7 @@ class DomainMatrix:
               for dense matrices or for matrices with simple denominators.
 
             - ``A.rref(method='CD')`` clears the denominators before using
-              fraction-free Gauss-Jordan elimination in the assoicated ring.
+              fraction-free Gauss-Jordan elimination in the associated ring.
               This is most efficient for dense matrices with very simple
               denominators.
 
@@ -2272,7 +2272,7 @@ class DomainMatrix:
               simple denominators.
 
             - ``A.rref(method='CD')`` clears denominators before using
-              fraction-free Gauss-Jordan elimination in the assoicated ring.
+              fraction-free Gauss-Jordan elimination in the associated ring.
               The result will be converted back to the original domain unless
               ``keep_domain=False`` is passed in which case the result will be
               over the ring used for elimination. This is most efficient for

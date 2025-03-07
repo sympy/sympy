@@ -288,7 +288,7 @@ class DFM:
         return DDM.from_dok(dok, shape, domain).to_dfm()
 
     def iter_values(self):
-        """Iterater over the non-zero values of the matrix."""
+        """Iterate over the non-zero values of the matrix."""
         m, n = self.shape
         rep = self.rep
         for i in range(m):
@@ -702,7 +702,7 @@ class DFM:
     # XXX: The lu_solve function should be renamed to solve. Whether or not it
     # uses an LU decomposition is an implementation detail. A method called
     # lu_solve would make sense for a situation in which an LU decomposition is
-    # reused several times to solve iwth different rhs but that would imply a
+    # reused several times to solve with different rhs but that would imply a
     # different call signature.
     #
     # The underlying python-flint method has an algorithm= argument so we could
