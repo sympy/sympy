@@ -25,7 +25,6 @@ from sympy.sets.conditionset import ConditionSet
 from sympy.utilities import filldedent
 from sympy.utilities.iterables import iterable
 from sympy.matrices.dense import hessian
-from concurrent.futures import ThreadPoolExecutor, TimeoutError as FuturesTimeoutError
 
 
 def continuous_domain(f, symbol, domain):
@@ -219,7 +218,8 @@ def function_range(f, symbol, domain):
         return FiniteSet(f.expand())
 
     from sympy.series.limits import limit
-    from sympy.solvers.solveset import solveset
+    from sympy.solvers import solveset as _solveset_orig
+    import sympy.solvers.solveset as _solveset_module
 
     if period is not None:
         if isinstance(domain, Interval):
@@ -257,20 +257,40 @@ def function_range(f, symbol, domain):
                     vals += critical_values
                 else:
                     vals += FiniteSet(f.subs(symbol, limit_point))
+                
+                # Set up iteration limit and safe solveset wrapper
+                MAX_ITER = 1000
+                iter_count = 0
 
-                # For the purpose of finding critical points, we need to find the derivative of the function
-                # the value of f.diff(symbol) is stored for the purpose of the usage of _SolvetTimeoutError
-                fprime = f.diff(symbol)
-                 # Use ThreadPoolExecutor to run solveset with a timeout.
-                def compute_critical():
-                    return solveset(fprime, symbol, interval)
+                def _solveset_safe(eq, sym, dom):
+                    nonlocal iter_count
+                    iter_count += 1
+                    if iter_count > MAX_ITER:
+                        # Restore original solveset in module (cleanup) and abort
+                        _solveset_module.solveset = _solveset_orig
+                        raise NotImplementedError(
+                            "Computation aborted due to excessive runtime (iteration limit reached)"
+                        )
+                    # Call the original solveset
+                    return _solveset_orig(eq, sym, dom)
+
+                # Monkey-patch solveset in its module to ensure recursive calls use the wrapper
+                _solveset_module.solveset = _solveset_safe
                 try:
-                    with ThreadPoolExecutor(max_workers=1) as executor:
-                        critical_points = executor.submit(compute_critical).result(timeout=10)
-                except FuturesTimeoutError:
-                    raise NotImplementedError(
-                        f"Solving for critical points (equation {fprime} = 0) was aborted due to excessive runtime.")
+                    # Find critical points of f in the current interval using the safe solveset
+                    critical_points = _solveset_safe(f.diff(symbol), symbol, interval)
+                finally:
+                    # Restore the original solveset function to avoid side effects
+                    _solveset_module.solveset = _solveset_orig
 
+                if not iterable(critical_points):
+                    # If critical points cannot be determined, raise NotImplementedError as before
+                    raise NotImplementedError(
+                        "Unable to find explicit critical points for the derivative of the function:\n"
+                        f"  {f.diff(symbol)} = 0\n"
+                        "This may be due to an unsimplifiable or transcendental equation."
+                    )
+                
                 # Check if the result is unsolvable or non-iterable
                 if (isinstance(critical_points, ConditionSet) or (isinstance(critical_points, Complement) and any(isinstance(sub, ConditionSet) for sub in critical_points.args)) or (isinstance(critical_points, Union) and any(isinstance(sub, ConditionSet) or not iterable(sub) for sub in critical_points.args)) or not iterable(critical_points)):
                     raise NotImplementedError(
@@ -282,9 +302,8 @@ def function_range(f, symbol, domain):
                         f"Found an infinite number of critical points for the derivative:\n\n  {f.diff(symbol)} = 0\n\n"
                         "This indicates a periodic function; consider restricting the domain."
                     )
-
-
-
+                
+            
             if not iterable(critical_points):
                 raise NotImplementedError(
                         'Unable to find critical points for {}'.format(f))
