@@ -1182,7 +1182,8 @@ def _futrig(e, measure=None):
     else:
         coeff = None
 
-    Lops = lambda x: (L(x), measure(x) if measure is not None else x.count_ops(), _nodes(x), len(x.args), x.is_Add)
+    measure = measure if measure is not None else lambda x: x.count_ops()
+    Lops = lambda x: (L(x), measure(x), _nodes(x), len(x.args), x.is_Add)
     trigs = lambda x: x.has(TrigonometricFunction)
 
     tree = [identity,
