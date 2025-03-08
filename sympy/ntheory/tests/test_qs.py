@@ -55,9 +55,8 @@ def test_qs_2() -> None:
     sieve_array = _gen_sieve_array(M, factor_base)
     assert sieve_array[0:5] == [8424, 13603, 1835, 5335, 710]
 
-    assert _check_smoothness(9645, factor_base) == (5, False)
-    assert _check_smoothness(210313, factor_base)[0] == 20992
-    assert _check_smoothness(210313, factor_base)[1]
+    assert _check_smoothness(9645, factor_base) == (36028797018963972, 5)
+    assert _check_smoothness(210313, factor_base) == (20992, 1)
 
     partial_relations: dict[int, tuple[int, int]] = {}
     smooth_relation, proper_factor = _trial_division_stage(
@@ -65,10 +64,10 @@ def test_qs_2() -> None:
         ERROR_TERM=25*2**10)
 
     assert partial_relations == {
-        8699: (440, -10009008507),
-        166741: (490, -10008962007),
-        131449: (530, -10008921207),
-        6653: (550, -10008899607)
+        8699: (440, -10009008507, 75557863761098695507973),
+        166741: (490, -10008962007, 524341),
+        131449: (530, -10008921207, 664613997892457936451903530140172325),
+        6653: (550, -10008899607, 19342813113834066795307021)
     }
     assert [smooth_relation[i][0] for i in range(5)] == [
         -250, 1064469, 72819, 231957, 44167]
