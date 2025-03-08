@@ -94,7 +94,8 @@ def _(expr, assumptions):
 
 @IntegerPredicate.register(Abs)
 def _(expr, assumptions):
-    return ask(Q.integer(expr.args[0]), assumptions)
+    if ask(Q.integer(expr.args[0]), assumptions):
+        return True
 
 @IntegerPredicate.register_many(Determinant, MatrixElement, Trace)
 def _(expr, assumptions):
