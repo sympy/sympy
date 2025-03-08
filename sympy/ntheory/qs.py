@@ -220,13 +220,8 @@ def _gen_sieve_array(M, factor_base):
 
 
 def _check_smoothness(num, factor_base):
-    """Here we check that if `num` is a smooth number or not. If `a` is a smooth
-    number then it returns a vector of prime exponents modulo 2. For example
-    if a = 2 * 5**2 * 7**3 and the factor base contains {2, 3, 5, 7} then
-    `a` is a smooth number and this function returns (18, True) (18 = [1, 0, 0, 1, 0]).
-    If `a` is a partial relation which means that `a` a has one prime factor
-    greater than the `factor_base` then it returns `(a, False)` which denotes `a`
-    is a partial relation.
+    r""" Check if `num` is smooth with respect to the given `factor_base`
+    and compute its factorization vector.
 
     Parameters
     ==========
@@ -249,11 +244,7 @@ def _check_smoothness(num, factor_base):
             num //= fb.prime
         if e % 2:
             vec += 1 << i
-    if num == 1:
-        return vec, True
-    if isprime(num):
-        return num, False
-    return None, None
+    return vec, num
 
 
 def _trial_division_stage(N, M, factor_base, sieve_array, sieve_poly, partial_relations, ERROR_TERM):
@@ -279,43 +270,30 @@ def _trial_division_stage(N, M, factor_base, sieve_array, sieve_poly, partial_re
     partial_relations : stores partial relations with one large prime
     ERROR_TERM : error term for accumulated_val
     """
-    sqrt_n = isqrt(N)
-    accumulated_val = log(M * sqrt_n)*2**10 - ERROR_TERM
+    accumulated_val = (log(M) + log(N)/2 - ERROR_TERM) * 2**10
     smooth_relations = []
     proper_factor = set()
     partial_relation_upper_bound = 128*factor_base[-1].prime
-    for idx, val in enumerate(sieve_array):
+    for x, val in enumerate(sieve_array, -M):
         if val < accumulated_val:
             continue
-        x = idx - M
         v = sieve_poly.eval_v(x)
-        vec, is_smooth = _check_smoothness(v, factor_base)
-        if is_smooth is None:#Neither smooth nor partial
-            continue
-        u = sieve_poly.eval_u(x)
-        # Update the partial relation
-        # If 2 partial relation with same large prime is found then generate smooth relation
-        if is_smooth is False:#partial relation found
-            large_prime = vec
-            #Consider the large_primes under 128*F
-            if large_prime > partial_relation_upper_bound:
+        vec, num = _check_smoothness(v, factor_base)
+        if num == 1:
+            smooth_relations.append((sieve_poly.eval_u(x), v, vec))
+        elif num < partial_relation_upper_bound and isprime(num):
+            if N % num == 0:
+                proper_factor.add(num)
                 continue
-            if large_prime not in partial_relations:
-                partial_relations[large_prime] = (u, v)
-                continue
+            u = sieve_poly.eval_u(x)
+            if num in partial_relations:
+                u_prev, v_prev, vec_prev = partial_relations.pop(num)
+                u = u*u_prev*invert(num, N) % N
+                v = v*v_prev // num**2
+                vec ^= vec_prev
+                smooth_relations.append((u, v, vec))
             else:
-                u_prev, v_prev = partial_relations[large_prime]
-                partial_relations.pop(large_prime)
-                try:
-                    large_prime_inv = invert(large_prime, N)
-                except ZeroDivisionError:#if large_prime divides N
-                    proper_factor.add(large_prime)
-                    continue
-                u = (u*u_prev*large_prime_inv) % N
-                v = v*v_prev // large_prime**2
-                vec, _ = _check_smoothness(v, factor_base)
-        #assert u*u % N == v % N
-        smooth_relations.append((u, v, vec))
+                partial_relations[num] = (u, v, vec)
     return smooth_relations, proper_factor
 
 
@@ -450,7 +428,6 @@ def qs_factor(N, prime_bound, M, ERROR_TERM=25, seed=1234):
     """
     if N < 2:
         raise ValueError("N should be greater than 1")
-    ERROR_TERM*=2**10
     factors = {}
     smooth_relations = []
     ith_poly = 0
