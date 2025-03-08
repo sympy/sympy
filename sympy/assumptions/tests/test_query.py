@@ -1995,9 +1995,10 @@ def test_real_pow():
     assert ask(Q.real(n**p), Q.negative(n) & Q.positive(p)) is None
 
     # https://github.com/sympy/sympy/issues/22014
-    a = Symbol('a', real = True)
-    expr = (1/(1-a))
-    assert ask(Q.real(expr)) is None
+    expr = (1/(1-x))
+    assert ask(Q.real(expr), Q.real(x)) is None
+    assert ask(Q.real(expr), Q.real(x) & ~Q.zero(1-x)) is True
+    assert ask(Q.real(expr), Q.positive(1-x)) is True
 
 
 @_both_exp_pow
