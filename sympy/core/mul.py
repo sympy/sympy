@@ -2003,6 +2003,10 @@ class Mul(Expr, AssocOp):
                 n0 = S.Zero
             facs = [t.nseries(x, n=ceiling(n-n0), logx=logx, cdir=cdir) for t in self.args]
             from sympy.simplify.powsimp import powsimp
+            from sympy.functions.special.error_functions import Shi
+            if self.has(Shi):
+                res = powsimp(self.func(*facs), combine='exp', deep=True)
+                return res
             res = powsimp(self.func(*facs).expand(), combine='exp', deep=True)
             if res.has(Order):
                 res += Order(x**n, x)
