@@ -9,7 +9,7 @@ from sympy.polys.ring_series import (_invert_monoms, rs_integrate,
     rs_LambertW, rs_series_reversion, rs_is_puiseux, rs_series)
 from sympy.testing.pytest import raises, slow
 from sympy.core.symbol import symbols
-from sympy.functions import (sin, cos, exp, tan, cot, atan, atanh,
+from sympy.functions import (sin, cos, exp, tan, cot, sinh, cosh, atan, atanh,
     tanh, log, sqrt)
 from sympy.core.numbers import Rational, pi
 from sympy.core import expand, S
@@ -652,6 +652,21 @@ def test_rs_series_ConstantInExpr():
     assert rs_series(atan(1 + x * a), x, 9).as_expr() == -a**7*x**7/112 + a**6*x**6/48 \
            - a**5*x**5/40 + a**3*x**3/12 - a**2*x**2/4 + a*x/2 + pi/4
 
+    assert rs_series(tanh(1 + x), x, 5).as_expr() == -5*x**4*tanh(1)**3/3 + x**4* \
+           tanh(1)**5 + 2*x**4*tanh(1)/3 - x**3*tanh(1)**4 - x**3/3 + 4*x**3*tanh(1) \
+           **2/3 - x**2*tanh(1) + x**2*tanh(1)**3 - x*tanh(1)**2 + x + tanh(1)
+    assert rs_series(tanh(1 + x * a), x, 3).as_expr() == -a**2*x**2*tanh(1) + a**2*x** \
+           2*tanh(1)**3 - a*x*tanh(1)**2 + a*x + tanh(1)
+
+    assert rs_series(sinh(1 + x), x, 5).as_expr() == x**4*sinh(1)/24 + x**3*cosh(1)/6 + \
+           x**2*sinh(1)/2 + x*cosh(1) + sinh(1)
+    assert rs_series(sinh(1 + x * a), x, 5).as_expr() == a**4*x**4*sinh(1)/24 + \
+           a**3*x**3*cosh(1)/6 + a**2*x**2*sinh(1)/2 + a*x*cosh(1) + sinh(1)
+
+    assert rs_series(cosh(1 + x), x, 5).as_expr() == x**4*cosh(1)/24 + x**3*sinh(1)/6 + \
+           x**2*cosh(1)/2 + x*sinh(1) + cosh(1)
+    assert rs_series(cosh(1 + x * a), x, 5).as_expr() == a**4*x**4*cosh(1)/24 + \
+           a**3*x**3*sinh(1)/6 + a**2*x**2*cosh(1)/2 + a*x*sinh(1) + cosh(1)
 
 def test_issue():
     # https://github.com/sympy/sympy/issues/10191
