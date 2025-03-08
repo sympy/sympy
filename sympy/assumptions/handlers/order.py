@@ -315,9 +315,9 @@ def _(expr, assumptions):
     if ask(Q.even(expr.exp), assumptions):
         if ask(Q.real(expr.base), assumptions):
             _zero = ask(Q.zero(expr.base), assumptions)
-            if is_base_zero is None:
+            if _zero is None:
                 return None
-            if is_base_zero:
+            if _zero:
                 if ask(Q.positive(expr.exp), assumptions):
                     return False
                 return
