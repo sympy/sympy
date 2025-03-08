@@ -1634,7 +1634,7 @@ def _solve(f, *symbols, **flags):
                     try:
                         soln = poly.all_roots()
                         if any(isinstance(root , log) for root in soln):
-                            return soln  
+                            return soln
                     except NotImplementedError:
                         if not flags.get('incomplete', True):
                                 raise NotImplementedError(
