@@ -789,7 +789,10 @@ def _(expr, assumptions):
 
 @TranscendentalPredicate.register(Expr)
 def _(expr, assumptions):
-    return not Q.algebraic(expr)._eval_ask(assumptions)
+    is_algebraic = Q.algebraic(expr)._eval_ask(assumptions)
+    if is_algebraic is None:
+        return None
+    return not is_algebraic
 
 @TranscendentalPredicate.register(NaN)
 def _(expr, assumptions):
