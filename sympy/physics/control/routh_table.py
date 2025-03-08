@@ -3,6 +3,8 @@ from sympy import Poly
 from sympy import simplify
 from sympy import symbols, Symbol
 
+__all__ = ['RouthHurwitz']
+
 
 class RouthHurwitz(MutableDenseMatrix):
 
