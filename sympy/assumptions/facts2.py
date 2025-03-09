@@ -9,6 +9,69 @@ from sympy.core.symbol import Symbol
 from sympy.strategies.core import switch
 
 
+class RulesEngine:
+    def __init__(self, dictionary):
+        """Initialize the rules engine with a nested dictionary structure."""
+        self.rules = {}
+        self.knowledge_base = {}
+
+        for key, value in dictionary.items():
+            self.add_rule(key, value)
+
+    def add_rule(self, conditions, consequence):
+        """
+        Add a rule to the rules engine.
+
+        :param conditions: A set of conditions (e.g., {"a", "b", "c", "d"})
+        :param consequence: The resulting fact (e.g., "e")
+        """
+        rule_tree = self.rules
+        for condition in sorted(conditions):  # Sort to maintain consistency
+            rule_tree = rule_tree.setdefault(condition, {})
+        rule_tree["__result__"] = consequence  # Store the consequence
+
+    def add_fact(self, fact, source_facts):
+        """Add a fact to the knowledge base."""
+        self.knowledge_base[fact] = source_facts
+
+    def traverse_rule_tree(self, rule_tree, current_facts):
+        """Recursively traverse the rule tree to check for matching conditions."""
+        if "__result__" in rule_tree:  # Consequence found
+            return rule_tree["__result__"]
+        for key, sub_tree in rule_tree.items():
+            if key in current_facts:  # Move deeper if condition exists
+                result = self.traverse_rule_tree(sub_tree, current_facts)
+                if result:
+                    return result
+        return None
+
+    def infer_facts(self):
+        """Infer new facts based on existing knowledge."""
+        new_facts = set()
+
+
+        # Traverse from each known fact
+        for fact in self.knowledge_base:
+            result = self.traverse_rule_tree(self.rules.get(fact, {}), self.knowledge_base)
+            if result and result not in self.knowledge_base:
+                new_facts.add(result)
+
+        # Update knowledge base
+        self.knowledge_base.update(new_facts)
+        return new_facts
+
+    def run_inference_until_stable(self):
+        """Keep running inference until no new facts are inferred."""
+        while True:
+            new_facts = self.infer_facts()
+            if not new_facts:
+                break
+
+    def __repr__(self):
+        """Return a string representation of the current knowledge base."""
+        return f"Knowledge Base: {self.knowledge_base}"
+
+
 def _AppliedPredicate_to_Predicate(pred):
     if isinstance(pred, AppliedPredicate):
         return pred.function
@@ -79,8 +142,12 @@ def facts_to_dictionary(x = None):
 
     composite_predicate = get_composite_predicates()
     for superset, subsets in composite_predicate.items():
-        for subset in subsets.args:
-            _add_rule(rules_dict, subset, superset)
+        _add_rule(rules_dict, subsets, superset)
+        _add_rule(rules_dict, superset, subsets)
+        # for subset in subsets.args:
+        #     _add_rule(rules_dict, subset, superset)
+
+
 
 
     return rules_dict
@@ -89,12 +156,13 @@ from sympy.assumptions.ask_generated import get_known_facts_dict
 
 rules_dict = facts_to_dictionary()
 
-# bad_keys = [key for key in blah.keys()
-#             if not(isinstance(key, Predicate) or isinstance(key.args[0], Predicate))]
-#assert len(bad_keys) == 0, bad_keys
+bad_keys = [key for key in rules_dict.keys()
+            if not(isinstance(key, Predicate) or isinstance(key.args[0], Predicate))]
+assert len(bad_keys) == 0, bad_keys
 
 # print(blah)
 #dic = get_known_facts_dict()
+
 
 def check_consistency(initial_literals):
   """
@@ -114,13 +182,14 @@ def check_consistency(initial_literals):
   # the initial list of literals. Each known literal is mapped to its "source
   # literals", a subset of `initial_literals` that implies that literal.
   knowledge_base = {}
+  rules_engine = RulesEngine(rules_dict)
 
   def add_new_fact(new_fact, source_facts):
     assert type(source_facts) == set
-    if ~new_fact in knowledge_base:
+    if ~new_fact in rules_engine.knowledge_base:
       # we have found a contradiciton: some literal and its negation are true
       return False, source_facts | knowledge_base[~new_fact]
-    knowledge_base[new_fact] = source_facts
+    rules_engine.add_fact(new_fact, source_facts)
     return True, None
 
   for lit in initial_literals:
@@ -154,5 +223,6 @@ def check_consistency(initial_literals):
   return True, None
 
 from sympy import Q
-print(check_consistency([~Q.positive, ~Q.negative, ~Q.zero, Q.real]))
+print(check_consistency([~Q.positive, Q.real, ~Q.negative, ~Q.zero]))
+#print(check_consistency([Q.positive, ~Q.real]))
 
