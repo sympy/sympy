@@ -2012,6 +2012,8 @@ def test_real_pow():
 
     # https://github.com/sympy/sympy/issues/16530
     assert ask(Q.real(1/Abs(x))) is None
+    assert(ask(Q.real(x**y),Q.zero(x) & Q.real(y))) is None
+    assert(ask(Q.real(x**y),Q.zero(x) & Q.positive(y))) is True
 
 
 @_both_exp_pow
