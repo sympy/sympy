@@ -793,10 +793,13 @@ def _(expr, assumptions):
     if ret is not None:
         return ret
 
-    is_algebraic = Q.algebraic(expr)._eval_ask(assumptions)
-    if is_algebraic is None:
-        return None
-    return not is_algebraic
+    is_complex = ask(Q.complex(expr), assumptions)
+    is_algebraic = ask(Q.algebraic(expr), assumptions)
+    if is_complex:
+        if is_algebraic is None:
+            return None
+        return not is_algebraic
+    return is_complex
 
 @TranscendentalPredicate.register(NaN)
 def _(expr, assumptions):
