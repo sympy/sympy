@@ -1,6 +1,9 @@
 from __future__ import annotations
 from functools import reduce
 
+
+
+from sympy import Number
 from sympy.core import S, sympify, Dummy, Mod
 from sympy.core.cache import cacheit
 from sympy.core.function import DefinedFunction, ArgumentIndexError, PoleError
@@ -389,7 +392,8 @@ class factorial2(CombinatorialFunction):
     .. math:: n!! = \begin{cases} 1 & n = 0 \\
                     n(n-2)(n-4) \cdots 1 & n\ \text{positive odd} \\
                     n(n-2)(n-4) \cdots 2 & n\ \text{positive even} \\
-                    (n+2)!!/(n+2) & n\ \text{negative odd} \end{cases}
+                    (n+2)!!/(n+2) & n\ \text{negative odd} \\
+                    sqrt(2/\pi)*2**(n/2) *\gamma(n/2+1) \test{complex number not negative even}\end{cases}
 
     References
     ==========
@@ -420,13 +424,20 @@ class factorial2(CombinatorialFunction):
 
     @classmethod
     def eval(cls, arg):
-        # TODO: extend this to complex numbers?
 
-        if arg.is_Number:
-            if not arg.is_Integer:
-                raise ValueError("argument must be nonnegative integer "
-                                    "or negative odd integer")
+        from sympy import gamma
+        from sympy import sqrt
 
+        print(arg)
+
+        #when arg = inf the gamma function returns inf
+        if arg is S.Infinity:
+            return arg
+
+        if arg is -S.Infinity:
+            raise ValueError ('gamma function not defined for -oo')
+
+        if arg.is_Number and arg.is_Integer:
             # This implementation is faster than the recursive one
             # It also avoids "maximum recursion depth exceeded" runtime error
             if arg.is_nonnegative:
@@ -435,11 +446,22 @@ class factorial2(CombinatorialFunction):
                     return 2**k * factorial(k)
                 return factorial(arg) / factorial2(arg - 1)
 
-
             if arg.is_odd:
                 return arg*(S.NegativeOne)**((1 - arg)/2) / factorial2(-arg)
-            raise ValueError("argument must be nonnegative integer "
-                                "or negative odd integer")
+
+            raise ValueError("for integer argument must be nonnegative integer "
+                              "or negative odd integer")
+
+
+        #In case arg is complex (an expression with the form 3 + 4 * I)
+        # where I is the imaginary unit it's not a Number but a number
+        if arg.is_number:
+            #if is a negative real we are in the is_Number case
+            if arg.is_complex:
+                root = sqrt(2/pi,evaluate= False)
+                #return the symbolic expression
+                return root * 2**(arg/2) * gamma(arg/2 + 1)
+
 
 
     def _eval_is_even(self):
@@ -1131,3 +1153,5 @@ class binomial(CombinatorialFunction):
     def _eval_as_leading_term(self, x, logx, cdir):
         from sympy.functions.special.gamma_functions import gamma
         return self.rewrite(gamma)._eval_as_leading_term(x, logx=logx, cdir=cdir)
+
+

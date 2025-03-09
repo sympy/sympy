@@ -1,3 +1,4 @@
+from sympy import cos
 from sympy.concrete.products import Product
 from sympy.core.function import expand_func
 from sympy.core.mod import Mod
@@ -315,12 +316,22 @@ def test_factorial_rewrite():
 
 
 def test_factorial2():
+
     n = Symbol('n', integer=True)
 
     assert factorial2(-1) == 1
     assert factorial2(0) == 1
     assert factorial2(7) == 105
     assert factorial2(8) == 384
+
+    #for the complex extension
+    assert  factorial2(I).evalf() -((sqrt(2)*2**(I/2)*gamma(1 + I/2)/sqrt(pi)).evalf()) == 0
+    assert factorial2(-I).evalf() - ((sqrt(2)*gamma(1 - I/2)/(2**(I/2)*sqrt(pi))).evalf()) == 0
+    assert abs(factorial2(3+7*I).evalf() - ((sqrt(2)*2**(3/2 + 7*I/2)*gamma(5/2 + 7*I/2)/sqrt(pi)).evalf())) < 10**(-15) # the evaluation gives a very near 0 approximation
+    assert factorial2(pi).evalf() - ((sqrt(2)*2**(pi/2)*gamma(1 + pi/2)/sqrt(pi)).evalf()) == 0
+    assert factorial2 (Rational(5,2)).evalf() - ((2*2**(3/4)*gamma(9/4)/sqrt(pi)).evalf()) == 0
+    assert factorial2(oo) == oo
+
 
     # The following is exhaustive
     tt = Symbol('tt', integer=True, nonnegative=True)
@@ -337,10 +348,11 @@ def test_factorial2():
     nf = Symbol('nf', nonnegative=False)
     nn = Symbol('nn')
     z = Symbol('z', zero=True)
-    #Solves and Fixes Issue #10388 - This is the updated test for the same solved issue
-    raises(ValueError, lambda: factorial2(oo))
-    raises(ValueError, lambda: factorial2(Rational(5, 2)))
+
+    #Solves and Fixes Issue #10388 - This is the updated test for the same solved issue. With the complex extension
     raises(ValueError, lambda: factorial2(-4))
+    raises (ValueError,lambda:factorial2(-oo))
+
     assert factorial2(n).is_integer is None
     assert factorial2(tt - 1).is_integer
     assert factorial2(tte - 1).is_integer
@@ -390,6 +402,8 @@ def test_factorial2():
     assert factorial2(tfo).is_odd is None
     assert factorial2(z).is_even is False
     assert factorial2(z).is_odd is True
+
+
 
 
 def test_factorial2_rewrite():
