@@ -22,7 +22,7 @@ from .common import test_closed_group
 from ..predicates.sets import (IntegerPredicate, RationalPredicate,
     IrrationalPredicate, RealPredicate, ExtendedRealPredicate,
     HermitianPredicate, ComplexPredicate, ImaginaryPredicate,
-    AntihermitianPredicate, AlgebraicPredicate)
+    AntihermitianPredicate, AlgebraicPredicate, TranscendentalPredicate)
 
 
 # IntegerPredicate
@@ -804,3 +804,37 @@ def _(expr, assumptions):
     x = expr.args[0]
     if ask(Q.algebraic(x), assumptions):
         return ask(~Q.nonzero(x - 1), assumptions)
+
+
+# TranscendentalPredicate
+
+@TranscendentalPredicate.register_many(Exp1, Pi)
+def _(expr, assumptions):
+    return True
+
+@TranscendentalPredicate.register_many(AlgebraicNumber, TribonacciConstant,
+    Infinity, ImaginaryUnit, ComplexInfinity, GoldenRatio, NegativeInfinity)
+def _(expr, assumptions):
+    return False
+
+@TranscendentalPredicate.register(Float)
+def _(expr, assumptions):
+    return None
+
+@TranscendentalPredicate.register(Expr)
+def _(expr, assumptions):
+    ret = expr.is_transcendental
+    if ret is not None:
+        return ret
+
+    is_complex = ask(Q.complex(expr), assumptions)
+    if is_complex:
+        is_algebraic = ask(Q.algebraic(expr), assumptions)
+        if is_algebraic is None:
+            return None
+        return not is_algebraic
+    return is_complex
+
+@TranscendentalPredicate.register(NaN)
+def _(expr, assumptions):
+    return None
