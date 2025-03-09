@@ -794,8 +794,8 @@ def _(expr, assumptions):
         return ret
 
     is_complex = ask(Q.complex(expr), assumptions)
-    is_algebraic = ask(Q.algebraic(expr), assumptions)
     if is_complex:
+        is_algebraic = ask(Q.algebraic(expr), assumptions)
         if is_algebraic is None:
             return None
         return not is_algebraic
