@@ -17,7 +17,7 @@ with the math of any part of this section, you may safely skip it.
 Derivatives
 ===========
 
-To take derivatives, use the ``diff`` function.
+To take derivatives, use the :func:`~sympy.core.function.diff` function.
 
     >>> diff(cos(x), x)
     -sin(x)
@@ -26,7 +26,7 @@ To take derivatives, use the ``diff`` function.
          ⎝x ⎠
     2⋅x⋅ℯ
 
-``diff`` can take multiple derivatives at once.  To take multiple derivatives,
+:func:`~sympy.core.function.diff` can take multiple derivatives at once.  To take multiple derivatives,
 pass the variable as many times as you wish to differentiate, or pass a number
 after the variable.  For example, both of the following find the third
 derivative of `x^4`.
@@ -52,7 +52,7 @@ derivatives.  For example, each of the following will compute
      3  2 ⎛ 3  3  3       2  2  2                ⎞  x⋅y⋅z
     x ⋅y ⋅⎝x ⋅y ⋅z  + 14⋅x ⋅y ⋅z  + 52⋅x⋅y⋅z + 48⎠⋅ℯ
 
-``diff`` can also be called as a method.  The two ways of calling ``diff`` are
+:func:`~sympy.core.function.diff` can also be called as a method.  The two ways of calling :func:`~sympy.core.function.diff` are
 exactly the same, and are provided only for convenience.
 
     >>> expr.diff(x, y, y, z, 4)
@@ -61,7 +61,7 @@ exactly the same, and are provided only for convenience.
 
 
 To create an unevaluated derivative, use the ``Derivative`` class.  It has the
-same syntax as ``diff``.
+same syntax as :func:`~sympy.core.function.diff`.
 
     >>> deriv = Derivative(expr, x, y, y, z, 4)
     >>> deriv
@@ -71,7 +71,7 @@ same syntax as ``diff``.
       4   2
     ∂z  ∂y  ∂x
 
-To evaluate an unevaluated derivative, use the ``doit`` method.
+To evaluate an unevaluated derivative, use the :func:`~sympy.core.basic.Basic.doit` method.
 
     >>> deriv.doit()
      3  2 ⎛ 3  3  3       2  2  2                ⎞  x⋅y⋅z
@@ -98,7 +98,7 @@ Derivatives of unspecified order can be created using tuple ``(x, n)`` where
 Integrals
 =========
 
-To compute an integral, use the ``integrate`` function.  There are two kinds
+To compute an integral, use the :func:`~sympy.integrals.integrals.integrate` function.  There are two kinds
 of integrals, definite and indefinite.  To compute an indefinite integral,
 that is, an antiderivative, or primitive, just pass the variable after the
 expression.
@@ -108,7 +108,7 @@ expression.
 
 Note that SymPy does not include the constant of integration.  If you want it,
 you can add one yourself, or rephrase your problem as a differential equation
-and use ``dsolve`` to solve it, which does add the constant (see :ref:`tutorial-dsolve`).
+and use :func:`~sympy.solvers.ode.dsolve` to solve it, which does add the constant (see :ref:`tutorial-dsolve`).
 
 .. sidebar:: Quick Tip
 
@@ -139,7 +139,7 @@ do
     >>> integrate(exp(-x**2 - y**2), (x, -oo, oo), (y, -oo, oo))
     π
 
-If ``integrate`` is unable to compute an integral, it returns an unevaluated
+If :func:`~sympy.integrals.integrals.integrate` is unable to compute an integral, it returns an unevaluated
 ``Integral`` object.
 
     >>> expr = integrate(x**x, x)
@@ -152,7 +152,7 @@ If ``integrate`` is unable to compute an integral, it returns an unevaluated
     ⌡
 
 As with ``Derivative``, you can create an unevaluated integral using
-``Integral``.  To later evaluate this integral, call ``doit``.
+``Integral``.  To later evaluate this integral, call :func:`~sympy.integrals.integrals.Integral.doit`.
 
     >>> expr = Integral(log(x)**2, x)
     >>> expr
@@ -164,13 +164,13 @@ As with ``Derivative``, you can create an unevaluated integral using
              2
     x⋅log (x) - 2⋅x⋅log(x) + 2⋅x
 
-``integrate`` uses powerful algorithms that are always improving to compute
+:func:`~sympy.integrals.integrals.integrate` uses powerful algorithms that are always improving to compute
 both definite and indefinite integrals, including heuristic pattern matching
 type algorithms, a partial implementation of the `Risch algorithm
 <https://en.wikipedia.org/wiki/Risch_algorithm>`_, and an algorithm using
 `Meijer G-functions <https://en.wikipedia.org/wiki/Meijer_g-function>`_ that is
 useful for computing integrals in terms of special functions, especially
-definite integrals.  Here is a sampling of some of the power of ``integrate``.
+definite integrals.  Here is a sampling of some of the power of :func:`~sympy.integrals.integrals.integrate`.
 
     >>> integ = Integral((x**4 + x**2*exp(x) - x**2 - 2*x*exp(x) - 2*x -
     ...     exp(x))*exp(x)/((x - 1)**2*(x + 1)**2*(exp(x) + 1)), x)
@@ -263,7 +263,7 @@ through numerical techniques, even when dealing with infinite intervals or integ
 Limits
 ======
 
-SymPy can compute symbolic limits with the ``limit`` function.  The syntax to compute
+SymPy can compute symbolic limits with the :func:`~sympy.core.expr.Expr.limit` function.  The syntax to compute
 
 .. math::
 
@@ -274,7 +274,7 @@ is ``limit(f(x), x, x0)``.
     >>> limit(sin(x)/x, x, 0)
     1
 
-``limit`` should be used instead of ``subs`` whenever the point of evaluation
+:func:`~sympy.core.expr.Expr.limit` should be used instead of :func:`~sympy.core.basic.Basic.subs` whenever the point of evaluation
 is a singularity.  Even though SymPy has objects to represent `\infty`, using
 them for evaluation is not reliable because they do not keep track of things
 like rate of growth.  Also, things like `\infty - \infty` and
@@ -286,8 +286,8 @@ like rate of growth.  Also, things like `\infty - \infty` and
     >>> limit(expr, x, oo)
     0
 
-Like ``Derivative`` and ``Integral``, ``limit`` has an unevaluated
-counterpart, ``Limit``.  To evaluate it, use ``doit``.
+Like ``Derivative`` and ``Integral``, :func:`~sympy.core.expr.Expr.limit` has an unevaluated
+counterpart, ``Limit``.  To evaluate it, use :func:`~sympy.series.limits.Limit.doit`.
 
     >>> expr = Limit((cos(x) - 1)/x, x, 0)
     >>> expr
@@ -298,7 +298,7 @@ counterpart, ``Limit``.  To evaluate it, use ``doit``.
     0
 
 To evaluate a limit at one side only, pass ``'+'`` or ``'-'`` as a fourth
-argument to ``limit``.  For example, to compute
+argument to :func:`~sympy.core.expr.Expr.limit`.  For example, to compute
 
 .. math::
 
@@ -342,7 +342,7 @@ absorb higher order terms.
     >>> x*O(1)
     O(x)
 
-If you do not want the order term, use the ``removeO`` method.
+If you do not want the order term, use the :func:`~sympy.core.expr.Expr.removeO` method.
 
     >>> expr.series(x, 0, 4).removeO()
      2
@@ -371,14 +371,14 @@ values for yet. One approach would be to use a finite difference
 approach.
 
 The simplest way the differentiate using finite differences is to use
-the ``differentiate_finite`` function:
+the :func:`~sympy.calculus.finite_diff.differentiate_finite` function:
 
     >>> f, g = symbols('f g', cls=Function)
     >>> differentiate_finite(f(x)*g(x))
     -f(x - 1/2)⋅g(x - 1/2) + f(x + 1/2)⋅g(x + 1/2)
 
 If you already have a ``Derivative`` instance, you can use the
-``as_finite_difference`` method to generate approximations of the
+:func:`~sympy.core.function.Derivative.as_finite_difference` method to generate approximations of the
 derivative to arbitrary order:
 
     >>> f = Function('f')
@@ -413,7 +413,7 @@ using fewer points (see the documentation of ``finite_diff_weights``
 for more details).
 
 If using ``finite_diff_weights`` directly looks complicated, and the
-``as_finite_difference`` method of ``Derivative`` instances
+:func:`~sympy.core.function.Derivative.as_finite_difference` method of ``Derivative`` instances
 is not flexible enough, you can use ``apply_finite_diff`` which
 takes ``order``, ``x_list``, ``y_list`` and ``x0`` as parameters:
 
