@@ -5,7 +5,6 @@ from sympy.core import S, Add, Expr, Basic, Mul, Pow, Rational
 from sympy.core.logic import fuzzy_not
 from sympy.logic.boolalg import Boolean
 from sympy.assumptions import ask, Q # type: ignore
-from sympy.calculus.accumulationbounds import AccumulationBounds
 
 def refine(expr, assumptions=True):
     """
@@ -431,9 +430,6 @@ def refine_Add(expr, assumptions):
                 infty_type = -1
             elif infty_type != -1:
                 return S.NaN
-            continue
-        elif isinstance(a, AccumulationBounds):
-            accum_bounds.append(a)
             continue
         finite_args.append(a)
     if accum_bounds:
