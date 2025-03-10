@@ -1153,5 +1153,3 @@ class binomial(CombinatorialFunction):
     def _eval_as_leading_term(self, x, logx, cdir):
         from sympy.functions.special.gamma_functions import gamma
         return self.rewrite(gamma)._eval_as_leading_term(x, logx=logx, cdir=cdir)
-
-
