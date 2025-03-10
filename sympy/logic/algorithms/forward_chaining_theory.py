@@ -129,13 +129,17 @@ def transitive_closure(graph):
                     queue.append((neighbor,))
                     closure[start_node].add(neighbor)
 
-    return {node: list(neighbors) for node, neighbors in closure.items()}
+    return {node: set(neighbors) for node, neighbors in closure.items()}
 
 
 
 from sympy.assumptions.ask_generated import get_known_facts_dict
 
 rules_dict = facts_to_dictionary()
+
+# make sure all literals imply themselves
+# for lit in set.union(*rules_dict.values(), {key[0] for key in rules_dict}).:
+#     rules_dict[key].add(key[0])
 
 rules_dict = transitive_closure(rules_dict)
 
@@ -249,6 +253,13 @@ class FCSolver():
         self.enc_to_pred = {v: k for k, v in pred_to_enc.items()} if pred_to_enc else None
         self.asserted = defaultdict(dict)
 
+        # dictionary of rules with only one antecedent
+        # all literals imply themselves
+        all_lits = set.union(*rules_dict.values(), {key[0] for key in rules_dict})
+        self.direct = defaultdict(set, {key[0]: val | {key[0]} for key, val in rules_dict.items() if len(key) == 1})
+        for lit in all_lits:
+            self.direct[lit].add(lit)
+
     @staticmethod
     def from_encoded_cnf(encoded_cnf, testing_mode=False):
         if testing_mode:
@@ -287,16 +298,19 @@ class FCSolver():
 
     def _assert_lit(self, expr, new_fact, source_facts):
         assert type(source_facts) == set
-        if ~new_fact in self.asserted[expr]:
-            # we have found a contradiciton: some literal and its negation are true
-            conflict_clause = [lit for lit in source_facts | self.asserted[expr][~new_fact]]
-            if isinstance(conflict_clause[0], int):
-                conflict_clause = [-lit for lit in conflict_clause]
-            else:
-                conflict_clause = [~lit for lit in conflict_clause]
-            assert len(conflict_clause) <= 4
-            print(len(conflict_clause))
-            return False, conflict_clause
+
+        # note: each fact implies itself and is included in its list of implicants
+        for implicant in self.direct[new_fact]:
+            if ~implicant in self.asserted[expr]:
+                # we have found a contradiciton: some literal and its negation are true
+                conflict_clause = [lit for lit in source_facts | self.asserted[expr][~implicant]]
+                if isinstance(conflict_clause[0], int):
+                    conflict_clause = [-lit for lit in conflict_clause]
+                else:
+                    conflict_clause = [~lit for lit in conflict_clause]
+                assert len(conflict_clause) <= 4
+                print(len(conflict_clause))
+                return False, conflict_clause
 
         self.asserted[expr][new_fact] = source_facts
         return True, None
@@ -345,6 +359,7 @@ class FCSolver():
                 for fact in new_facts:
                     res = self._assert_lit(expr, fact, source_facts)
                     if res[0] is False:
+                        assert len(res[1]) > 2
                         return res
                     pending_facts.add(fact)
                     self.engine.add_fact(fact, source_facts)

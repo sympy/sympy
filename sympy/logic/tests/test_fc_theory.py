@@ -16,13 +16,13 @@ def test_fc_theory():
     preds = [~Q.positive(x), Q.prime(x)]
     res = fc.check(preds)
     assert res[0] is False
-    assert res[1] == {~Q.positive(x), Q.prime(x)}
+    assert res[1] == [Q.positive(x), ~Q.prime(x)]
 
     fc.reset_state()
     res = fc.check(preds)
     preds = [~Q.positive(x), Q.prime(x), Q.finite(x)]
     assert res[0] is False
-    assert res[1] == {~Q.positive(x), Q.prime(x)}
+    assert res[1] == [Q.positive(x), ~Q.prime(x)]
 
     fc.reset_state()
     preds = [~Q.positive(x)]
