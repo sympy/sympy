@@ -1278,9 +1278,9 @@ def _discrete_log_trial_mul(n, a, b, order=None):
     a %= n
     b %= n
     if order is None:
-        order = n
+        order = n - 1
     x = 1
-    for i in range(order):
+    for i in range(order + 1):
         if x == a:
             return i
         x = x * b % n
