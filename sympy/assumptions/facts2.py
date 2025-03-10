@@ -154,7 +154,7 @@ class RulesEngine:
         self.knowledge_base[fact] = source_facts
 
     def triggers(self, fact):
-        if fact not in self.rules or fact in self.knowledge_base:
+        if fact not in self.rules or fact not in self.knowledge_base:
             return False
 
         if "__result__" in self.rules[fact]:
@@ -253,7 +253,7 @@ class FCSolver():
                 if not res:
                     continue
                 new_facts, antecedents, triggered_facts = res
-                source_facts = set.union(*[self.engine.knowledge_base[ant] for ant in antecedents])
+                source_facts = set.union(*[self.engine.knowledge_base[ant] for ant in antecedents], set())
                 for fact in new_facts:
                     res = self.add_new_fact(fact, source_facts)
                     if res[0] is False:
@@ -332,7 +332,13 @@ class FCSolver():
 
 from sympy import Q
 solver = FCSolver()
-#assert solver.check_consistency([~Q.positive, Q.prime])[0] is False
+assert solver.check_consistency([~Q.positive, Q.prime])[0] is False
+solver = FCSolver()
+assert solver.check_consistency([~Q.positive])[0] is True
+solver = FCSolver()
+assert solver.check_consistency([Q.integer, ~Q.odd, ~Q.even])[0] is False
+solver = FCSolver()
+assert solver.check_consistency([Q.real, ~Q.rational, ~Q.irrational])[0] is False
 
 print("\n\n --- \n\n")
 
