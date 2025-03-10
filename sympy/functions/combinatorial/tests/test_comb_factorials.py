@@ -327,7 +327,7 @@ def test_factorial2():
     #for the complex extension
     assert  factorial2(I).evalf() -((sqrt(2)*2**(I/2)*gamma(1 + I/2)/sqrt(pi)).evalf()) == 0
     assert factorial2(-I).evalf() - ((sqrt(2)*gamma(1 - I/2)/(2**(I/2)*sqrt(pi))).evalf()) == 0
-    assert abs(factorial2(3+7*I).evalf() - ((sqrt(2)*2**(3/2 + 7*I/2)*gamma(5/2 + 7*I/2)/sqrt(pi)).evalf())) < 10**(-15) 
+    assert abs(factorial2(3+7*I).evalf() - ((sqrt(2)*2**(3/2 + 7*I/2)*gamma(5/2 + 7*I/2)/sqrt(pi)).evalf())) < 10**(-15)
     # the evaluation gives a very near 0 approximation
     assert factorial2(pi).evalf() - ((sqrt(2)*2**(pi/2)*gamma(1 + pi/2)/sqrt(pi)).evalf()) == 0
     assert factorial2 (Rational(5,2)).evalf() - ((2*2**(3/4)*gamma(9/4)/sqrt(pi)).evalf()) == 0
