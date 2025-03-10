@@ -2,8 +2,6 @@ from __future__ import annotations
 from functools import reduce
 
 
-
-from sympy import Number
 from sympy.core import S, sympify, Dummy, Mod
 from sympy.core.cache import cacheit
 from sympy.core.function import DefinedFunction, ArgumentIndexError, PoleError
