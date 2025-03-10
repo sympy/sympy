@@ -9,7 +9,7 @@ from sympy.assumptions.ask_generated import get_all_known_matrix_facts, get_all_
 from sympy.assumptions.assume import global_assumptions, AppliedPredicate
 from sympy.assumptions.sathandlers import class_fact_registry
 from sympy.core import oo
-from sympy.logic.inference import satisfiable
+from sympy.logic.inference import _satisfiable
 from sympy.assumptions.cnf import CNF, EncodedCNF
 from sympy.matrices.kind import MatrixKind
 
@@ -87,8 +87,8 @@ def check_satisfiability(prop, _prop, factbase):
     sat_false = factbase.copy()
     sat_true.add_from_cnf(prop)
     sat_false.add_from_cnf(_prop)
-    can_be_true = satisfiable(sat_true)
-    can_be_false = satisfiable(sat_false)
+    can_be_true = _satisfiable(sat_true, use_sympy_theory=True)
+    can_be_false = _satisfiable(sat_false, use_sympy_theory=True)
 
     if can_be_true and can_be_false:
         return None
@@ -338,8 +338,8 @@ def get_all_relevant_facts(proposition, assumptions, context,
         if any(expr.kind == MatrixKind(NumberKind) for expr in all_exprs):
             known_facts_CNF.add_clauses(get_all_known_matrix_facts())
         # check for undefinedKind since kind system isn't fully implemented
-        if any(((expr.kind == NumberKind) or (expr.kind == UndefinedKind)) for expr in all_exprs):
-            known_facts_CNF.add_clauses(get_all_known_number_facts())
+        # if any(((expr.kind == NumberKind) or (expr.kind == UndefinedKind)) for expr in all_exprs):
+        #     known_facts_CNF.add_clauses(get_all_known_number_facts())
 
         kf_encoded = EncodedCNF()
         kf_encoded.from_cnf(known_facts_CNF)

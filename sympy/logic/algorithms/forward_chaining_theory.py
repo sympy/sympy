@@ -242,6 +242,7 @@ class FCSolver():
             if new_fact < 0:
                 neg = True
             new_fact = self.enc_to_pred[abs(new_fact)]
+            assert isinstance(new_fact, AppliedPredicate)
             expr = new_fact.arg
             new_fact = new_fact.function
             if neg:
@@ -262,7 +263,14 @@ class FCSolver():
         assert type(source_facts) == set
         if ~new_fact in self.asserted[expr]:
             # we have found a contradiciton: some literal and its negation are true
-            return False, list(source_facts | self.asserted[expr][~new_fact])
+            conflict_clause = [lit for lit in source_facts | self.asserted[expr][~new_fact]]
+            if isinstance(conflict_clause[0], int):
+                conflict_clause = [-lit for lit in conflict_clause]
+            else:
+                conflict_clause = [~lit for lit in conflict_clause]
+            assert len(conflict_clause) <= 4
+            print(len(conflict_clause))
+            return False, conflict_clause
 
         self.asserted[expr][new_fact] = source_facts
         return True, None
@@ -277,6 +285,8 @@ class FCSolver():
     def check(self, initial_literals):
 
         for lit in initial_literals:
+            if isinstance(lit, int) and not isinstance(self.enc_to_pred[abs(lit)], AppliedPredicate):
+                continue
             # initial facts are their own source facts.
             res = self.assert_lit(lit, {lit})
             if res[0] is False:

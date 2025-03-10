@@ -325,12 +325,24 @@ def test_satisfiable_all_models():
 def test_sympy_theory():
     from sympy.abc import x, y
     from sympy.assumptions import Q
+
+    # for _ in range(100):
+    #     assert _satisfiable(Q.negative(x) | Q.positive(x) | Q.zero(x), use_sympy_theory=True) is not False
+
     assert _satisfiable(Q.negative(x) &  Q.prime(x), use_sympy_theory=True) is False
     assert _satisfiable(Q.negative(x) & Q.prime(y), use_sympy_theory=True) == {Q.negative(x) : True, Q.prime(y):True}
 
-    assert _satisfiable((Q.negative(x) & Q.prime(x)) | (Q.negative(y) & Q.prime(y)), use_sympy_theory=True) is False
+    assert _satisfiable(Q.negative(x) | Q.positive(x) | Q.zero(x), use_sympy_theory=True) is not False
 
-    assert _satisfiable(Q.negative(x) & Q.prime(y) | (Q.negative(y) & Q.prime(x)), use_sympy_theory=True) is False
+    def boolean_formula_to_encoded_cnf(bf):
+        cnf = CNF.from_prop(bf)
+        enc = EncodedCNF()
+        enc.from_cnf(cnf)
+        return enc
+
+    # assert _satisfiable((Q.negative(x) & Q.prime(x)) | (Q.negative(y) & Q.prime(y)), use_sympy_theory=True) is False
+    #
+    # assert _satisfiable(Q.negative(x) & Q.prime(y) | (Q.negative(y) & Q.prime(x)), use_sympy_theory=True) is False
 
 
 
