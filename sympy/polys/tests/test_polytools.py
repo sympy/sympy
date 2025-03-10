@@ -29,7 +29,8 @@ from sympy.polys.polytools import (
     cancel, reduced, groebner,
     GroebnerBasis, is_zero_dimensional,
     _torational_factor_list,
-    to_rational_coeffs)
+    to_rational_coeffs,
+    extended_euclidean_algorithm)
 
 from sympy.polys.polyerrors import (
     MultivariatePolynomialError,
@@ -1926,6 +1927,18 @@ def test_issue_7864():
     q, r = div(a, .408248290463863*a)
     assert abs(q - 2.44948974278318) < 1e-14
     assert r == 0
+
+
+def test_extended_euclidean_algorithm():
+    f = Poly(x**5 + 2*x**4 - x**2 + 1, x)
+    g = Poly(x**4 - 1, x)
+    eea_result = extended_euclidean_algorithm(f, g)
+
+    r_degree = 5
+    for si, ti, ri in eea_result:
+        assert si*f + ti*g == ri
+        assert ri.degree() < r_degree
+        r_degree = ri.degree()
 
 
 def test_gcdex():
