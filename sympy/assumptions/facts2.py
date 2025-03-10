@@ -125,11 +125,16 @@ from collections.abc import Iterable
 class RulesEngine:
     def __init__(self, dictionary):
         """Initialize the rules engine with a nested dictionary structure."""
-        self.rules = {}
+        self.rule_tree = {}
         self.knowledge_base = {}
 
         for key, value in dictionary.items():
             self.add_rule(key, value)
+
+        self.rules = self.rule_tree.copy()
+
+    def reset_state(self):
+        pass
 
     def add_rule(self, conditions, consequence):
         """
@@ -138,7 +143,7 @@ class RulesEngine:
         :param conditions: A set of conditions (e.g., {"a", "b", "c", "d"})
         :param consequence: The resulting fact (e.g., "e")
         """
-        rule_tree = self.rules
+        rule_tree = self.rule_tree
 
         for condition in sorted(conditions, key=lambda x: str(x)):  # Sort to maintain consistency
             rule_tree = rule_tree.setdefault(condition, {})
@@ -148,16 +153,35 @@ class RulesEngine:
         """Add a fact to the knowledge base."""
         self.knowledge_base[fact] = source_facts
 
-    def traverse_rule_tree(self, rule_tree, current_facts):
-        """Recursively traverse the rule tree to check for matching conditions."""
-        if "__result__" in rule_tree:  # Consequence found
-            return rule_tree["__result__"]
-        for key, sub_tree in rule_tree.items():
-            if key in current_facts:  # Move deeper if condition exists
-                result = self.traverse_rule_tree(sub_tree, current_facts)
-                if result:
-                    return result
-        return None
+    def triggers(self, fact):
+        if fact not in self.rules or fact in self.knowledge_base:
+            return False
+
+        if "__result__" in self.rules[fact]:
+            implicants, antecedents = self.rules[fact]["__result__"]
+            implicants = [imp for imp in implicants if imp not in self.knowledge_base]
+        else:
+            implicants, antecedents = [], []
+
+        pending_facts = set()
+        next = self.rules.pop(fact)
+        for rule_root in next:
+            if rule_root != "__result__":
+                self.rules.update({rule_root: next[rule_root]})
+                pending_facts.update(next[rule_root].keys())
+
+        return implicants, antecedents, pending_facts
+
+    # def traverse_rule_tree(self, rule_tree, current_facts):
+    #     """Recursively traverse the rule tree to check for matching conditions."""
+    #     if "__result__" in rule_tree:  # Consequence found
+    #         return rule_tree["__result__"]
+    #     for key, sub_tree in rule_tree.items():
+    #         if key in current_facts:  # Move deeper if condition exists
+    #             result = self.traverse_rule_tree(sub_tree, current_facts)
+    #             if result:
+    #                 return result
+    #     return None
 
     def infer_facts(self):
         """Infer new facts based on existing knowledge."""
@@ -217,34 +241,26 @@ class FCSolver():
                 # if antecedent == ~Q.even:
                 #     print("blah")
 
-                if antecedent not in self.engine.knowledge_base:
+                # if antecedent not in self.engine.knowledge_base:
+                #     continue
+                #
+                # # print(f"Checking {antecedent}")
+                # if antecedent not in self.engine.rules:
+                #     # print(f"\t{antecedent} not in rules")
+                #     continue
+
+                res = self.engine.triggers(antecedent)
+                if not res:
                     continue
+                new_facts, antecedents, triggered_facts = res
+                source_facts = set.union(*[self.engine.knowledge_base[ant] for ant in antecedents])
+                for fact in new_facts:
+                    res = self.add_new_fact(fact, source_facts)
+                    if res[0] is False:
+                        return res
+                    pending_facts.add(fact)
 
-                # print(f"Checking {antecedent}")
-                if antecedent not in self.engine.rules:
-                    # print(f"\t{antecedent} not in rules")
-                    continue
-
-                if "__result__" in self.engine.rules[antecedent]:
-                    implicants, antecedents = self.engine.rules[antecedent]["__result__"]
-                    for implicant in implicants:
-                        if implicant in self.engine.knowledge_base:
-                            # print(f"\t{antecedent} already known")
-                            continue
-                        # print(f"\tDeriving {implicant} from {antecedents}")
-                        source_facts = set.union(*[self.engine.knowledge_base[ant] for ant in antecedents])
-                        #source_facts.update(antecedents)
-                        new_fact = implicant
-                        res = self.add_new_fact(new_fact, source_facts)
-                        if res[0] is False:
-                            return res
-                        pending_facts.add(new_fact)
-
-                next = self.engine.rules.pop(antecedent)
-                for rule_root in next:
-                    if rule_root != "__result__":
-                        self.engine.rules.update({rule_root : next[rule_root]})
-                        pending_facts.update(next[rule_root].keys())
+                pending_facts.update(triggered_facts)
 
             queue = pending_facts
 
@@ -341,7 +357,14 @@ def test2_empty():
 
 print(timeit(test_empty, number=1000))
 print(timeit(test2_empty, number=1000))
-print(timeit(lambda: RulesEngine(rules_dict), number=1000))
+
+import copy
+
+r_engine = RulesEngine(rules_dict)
+
+print(timeit(lambda: copy.deepcopy(r_engine), number=1000))
+
+print(r_engine.rules)
 
 #RulesEngine(rules_dict)
 #print(solver.check_consistency([ Q.integer, ~Q.odd, ~Q.even]))
