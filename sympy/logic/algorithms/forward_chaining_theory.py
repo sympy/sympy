@@ -108,10 +108,36 @@ def facts_to_dictionary(x = None):
     return rules_dict
 
 
+from collections import deque
+
+
+def transitive_closure(graph):
+    closure = {node: set(neighbors) for node, neighbors in graph.items()}
+
+    for start_node in graph:
+        visited = set()
+        queue = deque([start_node])
+
+        while queue:
+            node = queue.popleft()
+            if node in visited or len(node) > 1:
+                continue
+            visited.add(node)
+
+            for neighbor in graph.get(node, []):
+                if neighbor not in visited:
+                    queue.append((neighbor,))
+                    closure[start_node].add(neighbor)
+
+    return {node: list(neighbors) for node, neighbors in closure.items()}
+
+
 
 from sympy.assumptions.ask_generated import get_known_facts_dict
 
 rules_dict = facts_to_dictionary()
+
+rules_dict = transitive_closure(rules_dict)
 
 # bad_keys = [key for key in rules_dict.keys()
 #             if not(isinstance(key, Predicate) or isinstance(key[0], Predicate))]
