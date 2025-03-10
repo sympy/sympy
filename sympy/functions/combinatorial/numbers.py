@@ -1127,6 +1127,12 @@ class euler(DefinedFunction):
                 return Integer(res)
         # Euler polynomials
         elif n.is_Number:
+            from sympy.core.numbers import Float
+            if x.has(Float):
+                from mpmath import mp
+                x_mp = mp.mpc(complex(x))
+                result = mp.eulerpoly(int(n), x_mp)
+                return Float(result.real) + I * Float(result.imag)
             return euler_poly(n, x)
 
     def _eval_rewrite_as_Sum(self, n, x=None, **kwargs):
