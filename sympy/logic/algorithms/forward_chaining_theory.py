@@ -77,12 +77,20 @@ def _add_rule(rules_dict, antecedent, implicant, remove_var = True):
     if len([key for key in rules_dict.keys() if not isinstance(key, Iterable)]) > 0:
         assert len([key for key in rules_dict.keys() if not isinstance(key, Iterable)]) == 0
 
+from sympy.assumptions import Q
+# add additional rules:
+additional_rules = And(
+    Implies(Q.nonzero, ~Q.zero),
+    Implies(Q.nonpositive, ~Q.positive),
+    Implies(Q.nonnegative, ~Q.negative),
+)
 #@cacheit
 def facts_to_dictionary(x = None):
 
     rules_dict = defaultdict(set)
 
-    facts = get_number_facts()
+    facts = And(get_number_facts(), additional_rules)
+
     for fact in list(facts.args):
         if isinstance(fact, Implies):
             _add_rule(rules_dict, fact.args[0], fact.args[1])
