@@ -510,11 +510,19 @@ def _(expr, assumptions):
 def _Imaginary_number(expr, assumptions):
     # let as_real_imag() work first since the expression may
     # be simpler to evaluate
-    r = expr.as_real_imag()[0].evalf(2)
-    if r._prec != 1:
-        return not r
-    # allow None to be returned if we couldn't show for sure
-    # that r was 0
+    if isinstance(expr, Pow) and expr.base == I:
+        exp = expr.exp
+        if exp.is_Add:
+            term = None
+            for t in exp.args:
+                if I not in t.free_symbols:
+                    term = t
+                    break
+
+            if term is not None and term.is_number:
+                mod_4 = term % 4
+                return bool(mod_4 == 1 or mod_4 == 3)
+    return expr.is_imaginary
 
 @ImaginaryPredicate.register(ImaginaryUnit) # type:ignore
 def _(expr, assumptions):
