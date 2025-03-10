@@ -5,7 +5,7 @@ from sympy.core import S, Add, Expr, Basic, Mul, Pow, Rational
 from sympy.core.logic import fuzzy_not
 from sympy.logic.boolalg import Boolean
 from sympy.assumptions import ask, Q # type: ignore
-
+from sympy.calculus.accumulationbounds import AccumulationBounds
 
 def refine(expr, assumptions=True):
     """
