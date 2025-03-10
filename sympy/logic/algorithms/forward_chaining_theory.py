@@ -4,6 +4,7 @@ from sympy.assumptions.facts import get_number_facts, get_composite_predicates
 from collections import defaultdict
 from sympy.core.cache import cacheit
 from sympy.assumptions import AppliedPredicate, Predicate
+from types import MappingProxyType
 
 from sympy.core.symbol import Symbol
 from sympy.strategies.core import switch
@@ -83,6 +84,9 @@ additional_rules = And(
     Implies(Q.nonzero, ~Q.zero),
     Implies(Q.nonpositive, ~Q.positive),
     Implies(Q.nonnegative, ~Q.negative),
+    Implies(~Q.real, ~Q.nonzero),
+    Implies(~Q.real, ~Q.nonpositive),
+    Implies(~Q.real, ~Q.nonnegative),
 )
 #@cacheit
 def facts_to_dictionary(x = None):
@@ -169,11 +173,15 @@ class RulesEngine:
         for key, value in dictionary.items():
             self.add_rule(key, value)
 
+        self.original_keys = list(self.rule_tree.keys())
+
         self.rules = self.rule_tree.copy()
 
     def reset_state(self):
         self.rules = self.rule_tree.copy()
         self.knowledge_base = {}
+
+        assert list(self.rule_tree.keys()) == self.original_keys
 
 
     def add_rule(self, conditions, consequence):
@@ -256,7 +264,8 @@ class FCSolver():
     Theory solver for SymPy's unary facts
     """
     def __init__(self, pred_to_enc = None, testing_mode=False):
-        self.engine = RulesEngine(rules_dict)
+        self.engine = rules_engine
+        self.engine.reset_state()
         self.pred_to_enc = pred_to_enc
         self.enc_to_pred = {v: k for k, v in pred_to_enc.items()} if pred_to_enc else None
         self.asserted = defaultdict(dict)
@@ -318,7 +327,7 @@ class FCSolver():
                 else:
                     conflict_clause = [~lit for lit in conflict_clause]
                 assert len(conflict_clause) <= 4
-                print(len(conflict_clause))
+                #print(len(conflict_clause))
                 if self.testing_mode:
                     conflict_clause = sorted(conflict_clause, key=lambda x: str(x))
                 return False, conflict_clause
@@ -371,7 +380,8 @@ class FCSolver():
                 for fact in new_facts:
                     res = self._assert_lit(expr, fact, source_facts)
                     if res[0] is False:
-                        assert len(res[1]) > 2
+                        if len(res[1]) <= 2:
+                            assert len(res[1]) > 2
                         return res
                     pending_facts.add(fact)
                     self.engine.add_fact(fact, source_facts)
@@ -382,128 +392,4 @@ class FCSolver():
 
         return True, None
 
-
-
-
-
-# def check_consistency(initial_literals):
-#   """
-#   Parameters
-#   ==========
-#
-#   initial_literals (list): A list of initial literals (facts) to seed the knowledge base.
-#
-#   Returns
-#   =======
-#
-#   tuple:
-#       - (bool): `True` if the knowledge base is consistent, `False` if a contradiction is found.
-#       - (set or None): If inconsistent, a set of conflicting facts; otherwise, `None`.
-#   """
-#   # A dictionary keeping track of all of the literals known to be implied by
-#   # the initial list of literals. Each known literal is mapped to its "source
-#   # literals", a subset of `initial_literals` that implies that literal.
-#   knowledge_base = {}
-#   rules_engine = RulesEngine(rules_dict)
-#
-#   def add_new_fact(new_fact, source_facts):
-#     assert type(source_facts) == set
-#     if ~new_fact in rules_engine.knowledge_base:
-#       # we have found a contradiciton: some literal and its negation are true
-#       return False, source_facts | knowledge_base[~new_fact]
-#     rules_engine.add_fact(new_fact, source_facts)
-#     return True, None
-#
-#   for lit in initial_literals:
-#     # initial facts are their own source facts.
-#     res = add_new_fact(lit, {lit})
-#     if res[0] is False:
-#       return res
-#
-#   queue = initial_literals
-#   while queue:
-#     pending_facts = set()
-#     for antecedent in queue:
-#       print(f"Checking {antecedent}")
-#       if antecedent not in rules_dict:
-#         print(f"\t{antecedent} not in rules")
-#         continue
-#       for implicant in rules_dict[antecedent]:
-#         if implicant in knowledge_base:
-#           print(f"\t{antecedent} already known")
-#           continue
-#         print(f"\tDeriving {implicant} from {antecedent}")
-#         source_facts = knowledge_base[antecedent]
-#         new_fact = implicant
-#         res = add_new_fact(new_fact, source_facts)
-#         if res[0] is False:
-#           return res
-#         pending_facts.add(new_fact)
-#
-#     queue = pending_facts
-#
-#   return True, None
-
-
-#
-from sympy import Q
-from sympy.abc import x
-# solver = FCSolver()
-# assert solver.check([~Q.positive, Q.prime])[0] is False
-# solver.reset_state()
-# solver = FCSolver()
-# assert solver.check([~Q.positive(x)])[0] is True
-# # solver = FCSolver()
-# solver.reset_state()
-# assert solver.check([Q.integer, ~Q.odd, ~Q.even])[0] is False
-# # solver = FCSolver()
-# solver.reset_state()
-# assert solver.check([Q.real, ~Q.rational, ~Q.irrational])[0] is False
-#
-# print("\n\n --- \n\n")
-#
-# from timeit import timeit
-#
-# def test():
-#     global solver
-#     solver.reset_state()
-#     return solver.check([Q.integer, ~Q.odd, ~Q.even])
-#
-# def test_empty():
-#     global solver
-#     solver.reset_state()
-#     return solver.check([Q.integer])
-#
-# from sympy.assumptions import satask, Q
-# from sympy.abc import x
-# def test2():
-#     satask.satask(Q.integer(x) & ~Q.odd(x) & ~Q.even(x))
-# def test2_empty():
-#     satask.satask(Q.integer(x))
-#
-#
-# print(f"my algorithm: {timeit(test, number=1000)}")
-# print(f"satask: {timeit(test2, number=1000)}")
-#
-# print(f"my algorithm on empty: {timeit(test_empty, number=1000)}")
-# print(f"satask on empty: {timeit(test2_empty, number=1000)}")
-#
-# import copy
-#
-# r_engine = RulesEngine(rules_dict)
-
-#print(timeit(lambda: copy.deepcopy(r_engine), number=1000))
-
-#print(r_engine.rules)
-
-#RulesEngine(rules_dict)
-#print(solver.check_consistency([ Q.integer, ~Q.odd, ~Q.even]))
-
-#print(solver.check_consistency([ Q.real, ~Q.rational, ~Q.irrational]))
-
-# solver = FCSolver()
-# print(solver.check_consistency([~Q.positive, Q.real, ~Q.negative, ~Q.zero]))
-
-#print(check_consistency([~Q.positive, Q.real, ~Q.negative, ~Q.zero]))
-#print(check_consistency([Q.positive, ~Q.real]))
 
