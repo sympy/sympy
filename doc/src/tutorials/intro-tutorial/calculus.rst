@@ -389,7 +389,7 @@ the :func:`~sympy.calculus.finite_diff.differentiate_finite` function:
 
 If you already have a ``Derivative`` instance, you can use the
 :func:`~sympy.core.function.Derivative.as_finite_difference` method to generate
- approximations of the derivative to arbitrary order:
+approximations of the derivative to arbitrary order:
 
     >>> f = Function('f')
     >>> dfdx = f(x).diff(x)
