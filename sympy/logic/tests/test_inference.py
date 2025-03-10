@@ -379,3 +379,18 @@ def test_z3_vs_lra_dpll2():
         lra_dpll2_sat = lra_dpll2_satisfiable(cnf) is not False
 
         assert z3_sat == lra_dpll2_sat
+
+def test_issue_27733():
+    x, y = symbols('x,y')
+    clauses = [[1, -3, -2], [5, 7, -8, -6, -4], [-10, -9, 10, 11, -4], [-12, 13, 14], [-10, 9, -6, 11, -4],
+               [16, -15, 18, -19, -17], [11, -6, 10, -9], [9, 11, -10, -9], [2, -3, -1], [-13, 12], [-15, 3, -17],
+               [-16, -15, 19, -17], [-6, -9, 10, 11, -4], [20, -1, -2], [-23, -22, -21], [10, 11, -10, -9],
+               [9, 11, -4, -10], [24, -6, -4], [-14, 12], [-10, -9, 9, -6, 11], [25, -27, -26], [-15, 19, -18, -17],
+               [5, 8, -7, -6, -4], [-30, -29, 28], [12], [14]]
+
+    encoding = {Q.gt(y, i): i for i in range(1, 31) if i != 11 and i != 12}
+    encoding[Q.gt(x, 0)] = 11
+    encoding[Q.lt(x, 0)] = 12
+
+    cnf = EncodedCNF(clauses, encoding)
+    assert satisfiable(cnf, use_lra_theory=True) is False
