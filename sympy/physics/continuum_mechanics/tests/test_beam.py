@@ -1116,3 +1116,27 @@ def test_torsion_Beam3D():
     assert b.angular_deflection().subs(x, 12) == sympify("53/840")
     assert b.angular_deflection().subs(x, 17) == sympify("2/35")
     assert b.angular_deflection().subs(x, 20) == sympify("3/56")
+
+def test_beam_with_symbolic_loads():
+    from sympy import Heaviside
+
+    L, E, J, F_1, F_2, d = symbols('L E J F_1 F_2 d', positive=True)
+
+    b = Beam(L, E, J)
+
+    b.apply_support(loc=0, type='fixed')
+
+    b.apply_load(F_1, start=L, order=-1)
+    b.apply_load(F_2, start=d, order=-1)
+
+    reactions = [r[0] for r in b._support_as_loads]
+    b.solve_for_reaction_loads(*reactions)
+
+    M_0 = b.reaction_loads[symbols('M_0')]
+    R_0 = b.reaction_loads[symbols('R_0')]
+
+    expected_M_0 = F_1 * L + F_2 * d * Heaviside(L - d, 1)
+    expected_R_0 = -F_1 - F_2 * Heaviside(L - d, 1)
+
+    assert M_0 == expected_M_0
+    assert R_0 == expected_R_0
