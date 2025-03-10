@@ -1259,6 +1259,10 @@ class Derivative(Expr):
 
     def __new__(cls, expr, *variables, **kwargs):
         expr = sympify(expr)
+        if not isinstance(expr, Basic):
+            raise TypeError(
+                "First argument to Derivative must be an instance of Basic (e.g., an expression like f(t))"
+            )
         symbols_or_none = getattr(expr, "free_symbols", None)
         has_symbol_set = isinstance(symbols_or_none, set)
 
