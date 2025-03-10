@@ -51,9 +51,10 @@ class RouthHurwitz(MutableDenseMatrix):
             self._handle_special_cases(i)
 
     def _calculate_row(self, i):
-        for j in range(self.cols):
-            num = (self[i-1, 0] * self._get_safe_element(i-2, j+1)
-                   - self[i-2, 0] * self._get_safe_element(i-1, j+1))
+        trailing_columns = i//2
+        for j in range(self.cols - trailing_columns):
+            num = (self[i-1, 0] * self[i-2, j+1]
+                   - self[i-2, 0] * self[i-1, j+1])
             den = self[i-1, 0]
 
             self[i, j] = simplify(num / den)
@@ -74,12 +75,6 @@ class RouthHurwitz(MutableDenseMatrix):
 
         if self[i, 0] == 0:
             self[i, 0] = self._inf_element
-
-    def _get_safe_element(self, i, j):
-        if j >= self.cols:
-            return 0
-
-        return self[i, j]
 
     @property
     def first_column(self):
