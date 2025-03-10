@@ -222,7 +222,7 @@ class PermutationGroup(Basic):
         >>> H = PermutationGroup([perm4])
 
         >>> G & H  # Compute G intersected with H
-        PermutationGroup([Permutation([])])
+        PermutationGroup([Permutation([4])])
         """
         if not isinstance(other, PermutationGroup):
             return NotImplemented
