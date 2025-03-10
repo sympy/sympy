@@ -1899,6 +1899,7 @@ def test_positive():
 
     #exponential
     assert ask(Q.positive(exp(x)), Q.real(x)) is True
+    assert ask(Q.positive(x**y), Q.nonzero(x) & Q.even(y)) is True
     assert ask(~Q.negative(exp(x)), Q.real(x)) is True
     assert ask(Q.positive(x + exp(x)), Q.real(x)) is None
     assert ask(Q.positive(exp(x)), Q.imaginary(x)) is None
