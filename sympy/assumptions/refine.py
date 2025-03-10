@@ -409,9 +409,8 @@ def refine_Add(expr, assumptions):
     AccumBounds(1, 3) + 2
     """
     finite_args = []
-    infty_type = None 
+    infty_type = None
     accum_bounds = []
-
     for a in expr.args:
         if a is S.NaN:
             return S.NaN
