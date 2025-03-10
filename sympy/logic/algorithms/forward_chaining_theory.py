@@ -247,11 +247,12 @@ class FCSolver():
     """
     Theory solver for SymPy's unary facts
     """
-    def __init__(self, pred_to_enc = None):
+    def __init__(self, pred_to_enc = None, testing_mode=False):
         self.engine = RulesEngine(rules_dict)
         self.pred_to_enc = pred_to_enc
         self.enc_to_pred = {v: k for k, v in pred_to_enc.items()} if pred_to_enc else None
         self.asserted = defaultdict(dict)
+        self.testing_mode = testing_mode
 
         # dictionary of rules with only one antecedent
         # all literals imply themselves
@@ -310,6 +311,8 @@ class FCSolver():
                     conflict_clause = [~lit for lit in conflict_clause]
                 assert len(conflict_clause) <= 4
                 print(len(conflict_clause))
+                if self.testing_mode:
+                    conflict_clause = sorted(conflict_clause, key=lambda x: str(x))
                 return False, conflict_clause
 
         self.asserted[expr][new_fact] = source_facts
@@ -330,6 +333,7 @@ class FCSolver():
             # initial facts are their own source facts.
             res = self.assert_lit(lit, {lit})
             if res[0] is False:
+                assert len(res[1]) == 2
                 return res
 
         res = None

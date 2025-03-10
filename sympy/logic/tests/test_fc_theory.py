@@ -5,7 +5,7 @@ from sympy.assumptions.cnf import CNF, EncodedCNF
 from sympy.logic.boolalg import And
 
 
-fc = FCSolver()
+fc = FCSolver(testing_mode=True)
 def test_fc_theory():
     fc.reset_state()
     preds = [~Q.positive(x)]
