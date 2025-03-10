@@ -5,7 +5,7 @@ from sympy.core.symbol import symbols
 from sympy.core.relational import Unequality
 from sympy.logic.boolalg import And, Or, Implies, Equivalent, true, false
 from sympy.logic.inference import literal_symbol, \
-     pl_true, satisfiable, valid, entails, PropKB
+     pl_true, satisfiable, _satisfiable, valid, entails, PropKB
 from sympy.logic.algorithms.dpll import dpll, dpll_satisfiable, \
     find_pure_symbol, find_unit_clause, unit_propagate, \
     find_pure_symbol_int_repr, find_unit_clause_int_repr, \
@@ -321,6 +321,18 @@ def test_satisfiable_all_models():
     result = satisfiable(Or(*X), all_models=True)
     for i in range(10):
         assert next(result)
+
+def test_sympy_theory():
+    from sympy.abc import x, y
+    from sympy.assumptions import Q
+    assert _satisfiable(Q.negative(x) &  Q.prime(x), use_sympy_theory=True) is False
+    assert _satisfiable(Q.negative(x) & Q.prime(y), use_sympy_theory=True) == {Q.negative(x) : True, Q.prime(y):True}
+
+    assert _satisfiable((Q.negative(x) & Q.prime(x)) | (Q.negative(y) & Q.prime(y)), use_sympy_theory=True) is False
+
+    assert _satisfiable(Q.negative(x) & Q.prime(y) | (Q.negative(y) & Q.prime(x)), use_sympy_theory=True) is False
+
+
 
 
 def test_z3():

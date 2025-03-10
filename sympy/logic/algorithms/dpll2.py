@@ -16,9 +16,11 @@ from sympy.core.sorting import ordered
 from sympy.assumptions.cnf import EncodedCNF
 
 from sympy.logic.algorithms.lra_theory import LRASolver
+from sympy.logic.algorithms.forward_chaining_theory import FCSolver
 
 
-def dpll_satisfiable(expr, all_models=False, use_lra_theory=False):
+
+def dpll_satisfiable(expr, all_models=False, use_lra_theory=False, use_sympy_theory=False):
     """
     Check satisfiability of a propositional sentence.
     It returns a model rather than True when it succeeds.
@@ -51,7 +53,13 @@ def dpll_satisfiable(expr, all_models=False, use_lra_theory=False):
     else:
         lra = None
         immediate_conflicts = []
-    solver = SATSolver(expr.data + immediate_conflicts, expr.variables, set(), expr.symbols, lra_theory=lra)
+
+    if use_sympy_theory:
+        fc = FCSolver.from_encoded_cnf(expr)
+    else:
+        fc = None
+
+    solver = SATSolver(expr.data + immediate_conflicts, expr.variables, set(), expr.symbols, lra_theory=lra, fc_theory = fc)
     models = solver._find_model()
 
     if all_models:
@@ -88,7 +96,7 @@ class SATSolver:
 
     def __init__(self, clauses, variables, var_settings, symbols=None,
                 heuristic='vsids', clause_learning='none', INTERVAL=500,
-                 lra_theory = None):
+                 lra_theory = None, fc_theory = None):
 
         self.var_settings = var_settings
         self.heuristic = heuristic
@@ -138,6 +146,7 @@ class SATSolver:
         self.original_num_clauses = len(self.clauses)
 
         self.lra = lra_theory
+        self.fc = fc_theory
 
     def _initialize_variables(self, variables):
         """Set up the variable data structures needed."""
@@ -231,6 +240,13 @@ class SATSolver:
                                 break
                         res = self.lra.check()
                         self.lra.reset_bounds()
+                    elif self.fc:
+                        # for enc_var in self.var_settings:
+                        #     res = self.lra.assert_lit(enc_var)
+                        #     if res is not None:
+                        #         break
+                        res = self.fc.check(self.var_settings)
+                        self.fc.reset_state()
                     else:
                         res = None
                     if res is None or res[0]:
