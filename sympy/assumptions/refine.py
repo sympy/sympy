@@ -4,9 +4,7 @@ from typing import Callable
 from sympy.core import S, Add, Expr, Basic, Mul, Pow, Rational
 from sympy.core.logic import fuzzy_not
 from sympy.logic.boolalg import Boolean
-
-from sympy.assumptions import ask, Q  # type: ignore
-
+from sympy.assumptions import ask, Q # type: ignore
 
 def refine(expr, assumptions=True):
     """
@@ -393,6 +391,58 @@ def refine_matrixelement(expr, assumptions):
             return expr
         return MatrixElement(matrix, j, i)
 
+def refine_Add(expr, assumptions):
+    """
+    Handler for advanced addition refinement.
+
+    Examples
+    ========
+
+    >>> from sympy.assumptions.refine import refine_Add
+    >>> from sympy import S, I, oo, AccumBounds
+    >>> refine_Add(S.NaN + 1, {})
+    NaN
+    >>> refine_Add(2 + I*oo, {})
+    2 + I*oo
+    >>> refine_Add(AccumBounds(1, 3) + 2, {})
+    AccumBounds(1, 3) + 2
+    """
+    finite_args = []
+    infty_type = None
+    accum_bounds = []
+    for a in expr.args:
+        if a is S.NaN:
+            return S.NaN
+        elif a == S.ComplexInfinity:
+            if infty_type is None:
+                infty_type = S.ComplexInfinity
+            elif infty_type != S.ComplexInfinity:
+                return S.NaN
+            continue
+        elif a == S.Infinity:
+            if infty_type is None:
+                infty_type = +1
+            elif infty_type != +1:
+                return S.NaN
+            continue
+        elif a == S.NegativeInfinity:
+            if infty_type is None:
+                infty_type = -1
+            elif infty_type != -1:
+                return S.NaN
+            continue
+        finite_args.append(a)
+    if accum_bounds:
+        return expr
+    if infty_type is not None:
+        if infty_type == +1:
+            return S.Infinity
+        elif infty_type == -1:
+            return S.NegativeInfinity
+        else:
+            return S.ComplexInfinity
+    return expr
+
 handlers_dict: dict[str, Callable[[Expr, Boolean], Expr]] = {
     'Abs': refine_abs,
     'Pow': refine_Pow,
@@ -401,5 +451,6 @@ handlers_dict: dict[str, Callable[[Expr, Boolean], Expr]] = {
     'im': refine_im,
     'arg': refine_arg,
     'sign': refine_sign,
-    'MatrixElement': refine_matrixelement
+    'MatrixElement': refine_matrixelement,
+    'Add': refine_Add
 }

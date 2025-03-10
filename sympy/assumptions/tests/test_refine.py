@@ -12,6 +12,7 @@ from sympy.abc import w, x, y, z
 from sympy.core.relational import Eq, Ne
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.matrices.expressions.matexpr import MatrixSymbol
+from sympy.calculus.accumulationbounds import AccumulationBounds
 
 
 def test_Abs():
@@ -199,7 +200,7 @@ def test_issue_refine_9384():
     assert refine(Piecewise((1, x > 0), (0, True)), Q.negative(x)) == 0
 
 
-def test_eval_refine():
+def test_eval_refine_infinity():
     class MockExpr(Expr):
         def _eval_refine(self, assumptions):
             return True
@@ -225,3 +226,44 @@ def test_matrixelement():
     assert refine(x[1, 0], Q.symmetric(x)) == x[0, 1]
     assert refine(x[i, j], Q.symmetric(x)) == x[j, i]
     assert refine(x[j, i], Q.symmetric(x)) == x[j, i]
+
+def test_refine():
+    expr = (sqrt(z) + S.Infinity)**2
+    result = refine(expr)
+    assert result == S.Infinity
+
+    z_sym = Symbol('z', real=True)
+    expr = S.Infinity + sqrt(z_sym) + 5
+    result = refine(expr)
+    assert result == S.Infinity
+
+    expr = S.NegativeInfinity + sqrt(z_sym)
+    result = refine(expr)
+    assert result == S.NegativeInfinity
+
+    expr = sqrt(z_sym) + nan
+    result = refine(expr)
+    assert result is nan
+
+    expr = S.Infinity + S.NegativeInfinity + sqrt(z_sym)
+    result = refine(expr)
+    assert result is nan
+
+    expr = S.Infinity + sqrt(z_sym)
+    result = refine(expr)
+    assert result == S.Infinity
+
+    expr = S.NegativeInfinity + sqrt(z_sym)
+    result = refine(expr)
+    assert result == S.NegativeInfinity
+
+    x = Symbol('x', real=True)
+    x._assumptions = x._assumptions.copy()
+    x._assumptions['infinite'] = True
+    expr = x + 1
+    result = refine(expr)
+    assert result == S.Infinity
+
+    expr = S.Infinity + AccumulationBounds(1, 2)
+    result = refine(expr)
+    assert result == S.Infinity
