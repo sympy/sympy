@@ -134,7 +134,9 @@ class RulesEngine:
         self.rules = self.rule_tree.copy()
 
     def reset_state(self):
-        pass
+        self.rules = self.rule_tree.copy()
+        self.knowledge_base = {}
+
 
     def add_rule(self, conditions, consequence):
         """
@@ -153,7 +155,7 @@ class RulesEngine:
         """Add a fact to the knowledge base."""
         self.knowledge_base[fact] = source_facts
 
-    def triggers(self, fact):
+    def trigger(self, fact):
         if fact not in self.rules or fact not in self.knowledge_base:
             return False
 
@@ -226,6 +228,9 @@ class FCSolver():
         self.engine.add_fact(new_fact, source_facts)
         return True, None
 
+    def reset_state(self):
+        self.engine.reset_state()
+
     def check_consistency(self, initial_literals):
 
         for lit in initial_literals:
@@ -238,21 +243,10 @@ class FCSolver():
         while queue:
             pending_facts = set()
             for antecedent in queue:
-                # if antecedent == ~Q.even:
-                #     print("blah")
-
-                # if antecedent not in self.engine.knowledge_base:
-                #     continue
-                #
-                # # print(f"Checking {antecedent}")
-                # if antecedent not in self.engine.rules:
-                #     # print(f"\t{antecedent} not in rules")
-                #     continue
-
-                res = self.engine.triggers(antecedent)
+                res = self.engine.trigger(antecedent)
                 if not res:
                     continue
-                new_facts, antecedents, triggered_facts = res
+                new_facts, antecedents, new_pending_facts = res
                 source_facts = set.union(*[self.engine.knowledge_base[ant] for ant in antecedents], set())
                 for fact in new_facts:
                     res = self.add_new_fact(fact, source_facts)
@@ -260,7 +254,7 @@ class FCSolver():
                         return res
                     pending_facts.add(fact)
 
-                pending_facts.update(triggered_facts)
+                pending_facts.update(new_pending_facts)
 
             queue = pending_facts
 
@@ -333,11 +327,14 @@ class FCSolver():
 from sympy import Q
 solver = FCSolver()
 assert solver.check_consistency([~Q.positive, Q.prime])[0] is False
-solver = FCSolver()
+solver.reset_state()
+#solver = FCSolver()
 assert solver.check_consistency([~Q.positive])[0] is True
-solver = FCSolver()
+# solver = FCSolver()
+solver.reset_state()
 assert solver.check_consistency([Q.integer, ~Q.odd, ~Q.even])[0] is False
-solver = FCSolver()
+# solver = FCSolver()
+solver.reset_state()
 assert solver.check_consistency([Q.real, ~Q.rational, ~Q.irrational])[0] is False
 
 print("\n\n --- \n\n")
@@ -345,11 +342,13 @@ print("\n\n --- \n\n")
 from timeit import timeit
 
 def test():
-    solver = FCSolver()
+    global solver
+    solver.reset_state()
     return solver.check_consistency([ Q.integer, ~Q.odd, ~Q.even])
 
 def test_empty():
-    solver = FCSolver()
+    global solver
+    solver.reset_state()
     return solver.check_consistency([Q.integer])
 
 from sympy.assumptions import satask, Q
@@ -360,17 +359,19 @@ def test2_empty():
     satask.satask(Q.integer(x))
 
 
+print(f"my algorithm: {timeit(test, number=1000)}")
+print(f"satask: {timeit(test2, number=1000)}")
 
-print(timeit(test_empty, number=1000))
-print(timeit(test2_empty, number=1000))
+print(f"my algorithm on empty: {timeit(test_empty, number=1000)}")
+print(f"satask on empty: {timeit(test2_empty, number=1000)}")
 
 import copy
 
 r_engine = RulesEngine(rules_dict)
 
-print(timeit(lambda: copy.deepcopy(r_engine), number=1000))
+#print(timeit(lambda: copy.deepcopy(r_engine), number=1000))
 
-print(r_engine.rules)
+#print(r_engine.rules)
 
 #RulesEngine(rules_dict)
 #print(solver.check_consistency([ Q.integer, ~Q.odd, ~Q.even]))
