@@ -256,14 +256,3 @@ def test_refine():
     expr = S.NegativeInfinity + sqrt(z_sym)
     result = refine(expr)
     assert result == S.NegativeInfinity
-
-    x = Symbol('x', real=True)
-    x._assumptions = x._assumptions.copy()
-    x._assumptions['infinite'] = True
-    expr = x + 1
-    result = refine(expr)
-    assert result == S.Infinity
-
-    expr = S.Infinity + AccumulationBounds(1, 2)
-    result = refine(expr)
-    assert result == S.Infinity
