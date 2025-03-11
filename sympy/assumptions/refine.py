@@ -409,7 +409,7 @@ def refine_Add(expr, assumptions):
     nan
     """
     finite_args = []
-    infty_type = None   
+    infty_type = None
     for a in expr.args:
         if a is S.NaN:
             return S.NaN
