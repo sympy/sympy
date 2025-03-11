@@ -1406,7 +1406,7 @@ def _create_evalf_table():
     from sympy.functions.elementary.exponential import exp, log
     from sympy.functions.elementary.integers import ceiling, floor
     from sympy.functions.elementary.piecewise import Piecewise
-    from sympy.functions.elementary.trigonometric import atan, cos, sin
+    from sympy.functions.elementary.trigonometric import atan, cos, sin, tan
     from sympy.integrals.integrals import Integral
     evalf_table = {
         Symbol: evalf_symbol,
@@ -1428,6 +1428,7 @@ def _create_evalf_table():
 
         cos: evalf_trig,
         sin: evalf_trig,
+        tan: evalf_trig,
 
         Add: evalf_add,
         Mul: evalf_mul,
