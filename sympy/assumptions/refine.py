@@ -409,8 +409,7 @@ def refine_Add(expr, assumptions):
     nan
     """
     finite_args = []
-    infty_type = None
-    
+    infty_type = None   
     for a in expr.args:
         if a is S.NaN:
             return S.NaN
@@ -460,7 +459,6 @@ def refine_Add(expr, assumptions):
                             return S.NaN
                     continue
         finite_args.append(a)
-    
     if infty_type is not None:
         if infty_type == +1:
             return S.Infinity
@@ -469,8 +467,7 @@ def refine_Add(expr, assumptions):
         elif infty_type == S.ComplexInfinity:
             return S.ComplexInfinity
         else:
-            return infty_type
-    
+            return infty_type    
     return expr
 
 handlers_dict: dict[str, Callable[[Expr, Boolean], Expr]] = {
