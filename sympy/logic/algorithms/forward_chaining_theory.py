@@ -270,6 +270,7 @@ class FCSolver():
         self.enc_to_pred = {v: k for k, v in pred_to_enc.items()} if pred_to_enc else None
         self.asserted = defaultdict(dict)
         self.testing_mode = testing_mode
+        self.conflict = False
 
         # dictionary of rules with only one antecedent
         # all literals imply themselves
@@ -292,6 +293,7 @@ class FCSolver():
 
 
     def assert_lit(self, new_fact, source_facts = None):
+        assert self.conflict is False
         if source_facts is None:
             # initial facts are their own source facts.
             source_facts = {new_fact}
@@ -332,6 +334,7 @@ class FCSolver():
                 #print(len(conflict_clause))
                 if self.testing_mode:
                     conflict_clause = sorted(conflict_clause, key=lambda x: str(x))
+                self.conflict= True
                 return False, conflict_clause
 
         self.asserted[expr][new_fact] = source_facts
@@ -343,6 +346,7 @@ class FCSolver():
     def reset_state(self):
         self.engine.reset_state()
         self.asserted = defaultdict(dict)
+        self.conflict = False
 
     def sanity_check(self, initial_literals=[]):
         res = (True, None)

@@ -242,19 +242,25 @@ class SATSolver:
                         res = self.lra.check()
                         self.lra.reset_bounds()
                     elif self.fc:
-                        # res = None
-                        # for lit in self.var_settings:
-                        #     if not isinstance(self.fc.enc_to_pred[abs(lit)], AppliedPredicate):
-                        #         continue
-                        #     # initial facts are their own source facts.
-                        #     temp = self.fc.assert_lit(lit, {lit})
-                        #     if res[0] is False:
-                        #         assert len(res[1]) == 2
-                        #         res = temp
+                        def sanity_check(initial_literals):
+                            res = (True, None)
+                            for lit in initial_literals:
+                                res = self.fc.assert_lit(lit)
+                                if not res[0]:
+                                    return res
+                            return res
 
-                        blah = 0
-                        res = self.fc.sanity_check(self.var_settings)
-                        if res is not None and res[0] is False:
+                        self.fc.reset_state()
+                        res = (True, None)
+                        for lit in self.var_settings:
+                            res = self.fc.assert_lit(lit)
+                            if not res[0]:
+                                break
+
+                        #res = sanity_check(self.var_settings)
+
+                        #res = self.fc.sanity_check(self.var_settings)
+                        if res[0] is False:
                             #res = santity_res
                             blah = 1
                         else:
