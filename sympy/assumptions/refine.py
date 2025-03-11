@@ -394,22 +394,23 @@ def refine_matrixelement(expr, assumptions):
 def refine_Add(expr, assumptions):
     """
     Handler for advanced addition refinement.
-
+    
     Examples
     ========
 
     >>> from sympy.assumptions.refine import refine_Add
-    >>> from sympy import S, I, oo, AccumBounds
-    >>> refine_Add(S.NaN + 1, {})
-    NaN
-    >>> refine_Add(2 + I*oo, {})
-    2 + I*oo
-    >>> refine_Add(AccumBounds(1, 3) + 2, {})
-    AccumBounds(1, 3) + 2
+    >>> from sympy import S, I, oo, symbols
+    >>> x = symbols('x', real=True)
+    >>> refine_Add(3 + S.Infinity, {})
+    oo
+    >>> refine_Add(5 + I*oo, {})
+    5 + I*oo
+    >>> refine_Add(S.Infinity + S.NegativeInfinity + x, {})
+    nan
     """
     finite_args = []
     infty_type = None
-    accum_bounds = []
+    
     for a in expr.args:
         if a is S.NaN:
             return S.NaN
@@ -431,16 +432,45 @@ def refine_Add(expr, assumptions):
             elif infty_type != -1:
                 return S.NaN
             continue
+        elif a.is_Mul:
+            factors = list(a.args)
+            found_infty = None
+            for factor in factors:
+                if factor in (S.Infinity, S.NegativeInfinity):
+                    found_infty = factor
+                    break
+            if found_infty is not None:
+                coeff = a / found_infty
+                if not coeff.is_real:
+                    if infty_type is None:
+                        infty_type = a
+                    elif infty_type != a:
+                        return S.NaN
+                    continue
+                else:
+                    if found_infty == S.Infinity:
+                        if infty_type is None:
+                            infty_type = +1
+                        elif infty_type != +1:
+                            return S.NaN
+                    else:
+                        if infty_type is None:
+                            infty_type = -1
+                        elif infty_type != -1:
+                            return S.NaN
+                    continue
         finite_args.append(a)
-    if accum_bounds:
-        return expr
+    
     if infty_type is not None:
         if infty_type == +1:
             return S.Infinity
         elif infty_type == -1:
             return S.NegativeInfinity
-        else:
+        elif infty_type == S.ComplexInfinity:
             return S.ComplexInfinity
+        else:
+            return infty_type
+    
     return expr
 
 handlers_dict: dict[str, Callable[[Expr, Boolean], Expr]] = {
