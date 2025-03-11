@@ -202,17 +202,20 @@ class RulesEngine:
         """Add a fact to the knowledge base."""
         self.knowledge_base[fact] = source_facts
 
+    def add_facts(self, facts):
+        """Add a fact to the knowledge base."""
+        self.knowledge_base.update(facts)
+
     def trigger(self, fact):
         if fact not in self.rules or fact not in self.knowledge_base:
             return False
 
         if "__result__" in self.rules[fact]:
             implicants, antecedents = self.rules[fact]["__result__"]
-            implicants = [imp for imp in implicants if imp not in self.knowledge_base]
+            #implicants = [imp for imp in implicants if imp not in self.knowledge_base]
         else:
             implicants, antecedents = [], []
 
-        #implicants = sorted(implicants, key=lambda x: str(x))
 
         pending_facts = set()
         next = self.rules.pop(fact)
@@ -400,12 +403,18 @@ class FCSolver():
                 return res
         return res
 
-
     def _check_expr(self, expr):
-        queue = set(self.asserted[expr])
+        assignment = self.asserted[expr].copy()
+        return self._check_assignment(expr)
 
-        for fact in queue:
-            self.engine.add_fact(fact, self.asserted[expr][fact])
+
+    def _check_assignment(self, expr):
+        queue = self.asserted[expr].copy()
+
+        self.engine.add_facts(queue)
+
+        # for fact in queue:
+        #     self.engine.add_fact(fact, self.asserted[expr][fact])
 
         while queue:
             pending_facts = set()
@@ -415,12 +424,13 @@ class FCSolver():
                     continue
                 new_facts, antecedents, new_pending_facts = res
                 source_facts = set.union(*[self.engine.knowledge_base[ant] for ant in antecedents], set())
+
                 for fact in new_facts:
-                    res = self._assert_lit(expr, fact, source_facts)
-                    if res[0] is False:
-                        if len(res[1]) <= 2:
-                            assert len(res[1]) > 2
-                        return res
+                    if ~fact in self.engine.knowledge_base:
+                        explanation = self.engine.knowledge_base[antecedent] | self.engine.knowledge_base[~fact]
+                    #res = self._assert_lit(expr, fact, source_facts)
+                        assert len(explanation) >= 2
+                        return False, [-lit for lit in explanation]
                     pending_facts.add(fact)
                     self.engine.add_fact(fact, source_facts)
 
