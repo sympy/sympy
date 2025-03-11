@@ -467,7 +467,7 @@ def refine_Add(expr, assumptions):
         elif infty_type == S.ComplexInfinity:
             return S.ComplexInfinity
         else:
-            return infty_type    
+            return infty_type
     return expr
 
 handlers_dict: dict[str, Callable[[Expr, Boolean], Expr]] = {
