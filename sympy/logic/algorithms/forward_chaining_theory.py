@@ -173,7 +173,7 @@ class RulesEngine:
         for key, value in dictionary.items():
             self.add_rule(key, value)
 
-        self.original_keys = list(self.rule_tree.keys())
+        #self.original_keys = list(self.rule_tree.keys())
 
         self.rules = self.rule_tree.copy()
 
@@ -181,7 +181,7 @@ class RulesEngine:
         self.rules = self.rule_tree.copy()
         self.knowledge_base = {}
 
-        assert list(self.rule_tree.keys()) == self.original_keys
+        #assert list(self.rule_tree.keys()) == self.original_keys
 
 
     def add_rule(self, conditions, consequence):
@@ -342,9 +342,23 @@ class FCSolver():
         self.engine.reset_state()
         self.asserted = defaultdict(dict)
 
-    def check(self, initial_literals):
-
+    def sanity_check(self, initial_literals=[]):
         for lit in initial_literals:
+            if isinstance(lit, int) and not isinstance(self.enc_to_pred[abs(lit)], AppliedPredicate):
+                continue
+            # initial facts are their own source facts.
+            res = self.assert_lit(lit, {lit})
+            if res[0] is False:
+                assert len(res[1]) == 2
+                return res
+
+    def check(self, initial_literals = [], res = None):
+
+        # res = self.sanity_check(initial_literals)
+        if res is not None and res[0] is False:
+            return res
+
+        for lit in []:
             if isinstance(lit, int) and not isinstance(self.enc_to_pred[abs(lit)], AppliedPredicate):
                 continue
             # initial facts are their own source facts.

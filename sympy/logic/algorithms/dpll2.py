@@ -17,6 +17,7 @@ from sympy.assumptions.cnf import EncodedCNF
 
 from sympy.logic.algorithms.lra_theory import LRASolver
 from sympy.logic.algorithms.forward_chaining_theory import FCSolver
+from sympy.assumptions import AppliedPredicate
 
 
 
@@ -241,12 +242,34 @@ class SATSolver:
                         res = self.lra.check()
                         self.lra.reset_bounds()
                     elif self.fc:
-                        # for enc_var in self.var_settings:
-                        #     res = self.lra.assert_lit(enc_var)
-                        #     if res is not None:
-                        #         break
-                        res = self.fc.check(self.var_settings)
+                        # res = None
+                        # for lit in []:
+                        #     if not isinstance(self.fc.enc_to_pred[abs(lit)], AppliedPredicate):
+                        #         continue
+                        #     # initial facts are their own source facts.
+                        #     res = self.fc.assert_lit(lit, {lit})
+                        #     if res[0] is False:
+                        #         assert len(res[1]) == 2
+                        #     else:
+                        #         res = None
+                        # res = self.fc.sanity_check(self.var_settings)
+                        #
+                        # if res is not None and res[0] is False:
+                        #     pass
+                        # else:
+                        #     res = self.fc.check()
+                        #     self.fc.reset_state()
+
+                        santity_res = self.fc.sanity_check(self.var_settings)
+                        if santity_res is not None and santity_res[0] is False:
+                            res = santity_res
+                        else:
+                            res = self.fc.check(res=santity_res)
+                        # if santity_res is not None and santity_res[0] is False:
+                        #     assert res == santity_res
                         self.fc.reset_state()
+                        if santity_res is not None and res[0] is False:
+                            res = santity_res
                     else:
                         res = None
                     if res is None or res[0]:
