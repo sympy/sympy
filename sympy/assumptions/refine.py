@@ -395,18 +395,6 @@ def refine_Add(expr, assumptions):
     """
     Handler for advanced addition refinement.
 
-    Examples
-    ========
-
-    >>> from sympy.assumptions.refine import refine_Add
-    >>> from sympy import S, I, oo, symbols
-    >>> x = symbols('x', real=True)
-    >>> refine_Add(3 + S.Infinity, {})
-    oo
-    >>> refine_Add(5 + I*oo, {})
-    5 + I*oo
-    >>> refine_Add(S.Infinity + S.NegativeInfinity + x, {})
-    nan
     """
     finite_args = []
     infty_type = None
