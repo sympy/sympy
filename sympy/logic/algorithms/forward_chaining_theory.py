@@ -171,7 +171,7 @@ class RulesEngine:
         self.rule_tree = {}
         self.knowledge_base = {}
 
-        for key, value in sorted(dictionary.items(), key=lambda item: str(item)):
+        for key, value in dictionary.items():
             self.add_rule(key, value)
 
         #self.original_keys = list(self.rule_tree.keys())
@@ -212,7 +212,7 @@ class RulesEngine:
         else:
             implicants, antecedents = [], []
 
-        implicants = sorted(implicants, key=lambda x: str(x))
+        #implicants = sorted(implicants, key=lambda x: str(x))
 
         pending_facts = set()
         next = self.rules.pop(fact)
@@ -402,7 +402,7 @@ class FCSolver():
 
 
     def _check_expr(self, expr):
-        queue = sorted(set(self.asserted[expr]), key=lambda x: str(x))
+        queue = set(self.asserted[expr])
 
         for fact in queue:
             self.engine.add_fact(fact, self.asserted[expr][fact])
@@ -426,7 +426,7 @@ class FCSolver():
 
                 pending_facts.update(new_pending_facts)
 
-            queue = sorted(pending_facts, key=lambda x: str(x))
+            queue = pending_facts
 
         return True, None
 
