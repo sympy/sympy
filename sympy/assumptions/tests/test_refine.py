@@ -12,7 +12,6 @@ from sympy.abc import w, x, y, z
 from sympy.core.relational import Eq, Ne
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.matrices.expressions.matexpr import MatrixSymbol
-from sympy.calculus.accumulationbounds import AccumulationBounds
 
 
 def test_Abs():
