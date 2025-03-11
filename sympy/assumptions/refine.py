@@ -394,7 +394,7 @@ def refine_matrixelement(expr, assumptions):
 def refine_Add(expr, assumptions):
     """
     Handler for advanced addition refinement.
-    
+
     Examples
     ========
 
