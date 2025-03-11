@@ -423,9 +423,9 @@ class SATSolver:
 
         """
 
-        print(f"{lit} assigned in _assign_literal.")
+        #print(f"{lit} assigned in _assign_literal.")
         if self.fc:
-            print(f"Calling assert_lit on {lit}.")
+        #    print(f"Calling assert_lit on {lit}.")
             res = self.fc.assert_lit(lit, force_assertion=not unit_prop)
             if not res[0]:
                 self._simple_add_learned_clause(res[1])
@@ -480,7 +480,7 @@ class SATSolver:
         """
         # Undo the variable settings
         for lit in self._current_level.var_settings:
-            print(f"undoing {lit}.")
+            #print(f"undoing {lit}.")
             self.var_settings.remove(lit)
             self.heur_lit_unset(lit)
             self.variable_set[abs(lit)] = False

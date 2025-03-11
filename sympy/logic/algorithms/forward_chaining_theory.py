@@ -319,7 +319,7 @@ class FCSolver():
 
     def assert_lit(self, new_fact, source_facts = None, force_assertion=False):
 
-        print(f"Asserting {new_fact} in assert_lit")
+        #print(f"Asserting {new_fact} in assert_lit")
 
         assert self.conflict is not True
         if source_facts is None:
@@ -357,7 +357,7 @@ class FCSolver():
                 return False, conflict_clause
 
         self.asserted[expr][new_fact] = source_facts
-        print(f"{new_fact} asserted in _assert_lit()")
+        #print(f"{new_fact} asserted in _assert_lit()")
         return True, None
 
 
