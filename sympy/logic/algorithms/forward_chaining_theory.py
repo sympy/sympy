@@ -148,20 +148,19 @@ def transitive_closure(graph):
 from sympy.assumptions.ask_generated import get_known_facts_dict
 
 rules_dict = facts_to_dictionary()
-
-# make sure all literals imply themselves
-# for lit in set.union(*rules_dict.values(), {key[0] for key in rules_dict}).:
-#     rules_dict[key].add(key[0])
-
 rules_dict = transitive_closure(rules_dict)
 rules_dict = dict(sorted(rules_dict.items(), key=lambda item: str(item)))
 
-# bad_keys = [key for key in rules_dict.keys()
-#             if not(isinstance(key, Predicate) or isinstance(key[0], Predicate))]
-#assert len(bad_keys) == 0, bad_keys
+# dictionary of rules with only one antecedent
+# all literals imply themselves
+all_lits = set.union(*rules_dict.values(), {key[0] for key in rules_dict})
+direct_dict = defaultdict(set, {key[0]: val | {key[0]} for key, val in rules_dict.items() if len(key) == 1})
+for lit in all_lits:
+    direct_dict[lit].add(lit)
 
-# print(blah)
-#dic = get_known_facts_dict()
+direct_dict = MappingProxyType(direct_dict)
+
+
 from collections.abc import Iterable
 
 
@@ -177,6 +176,7 @@ class RulesEngine:
         #self.original_keys = list(self.rule_tree.keys())
 
         self.rules = self.rule_tree.copy()
+        self.direct = direct_dict
 
     def reset_state(self):
         self.rules = self.rule_tree.copy()
@@ -210,21 +210,19 @@ class RulesEngine:
         if fact not in self.rules or fact not in self.knowledge_base:
             return False
 
-        if "__result__" in self.rules[fact]:
-            implicants, antecedents = self.rules[fact]["__result__"]
-            #implicants = [imp for imp in implicants if imp not in self.knowledge_base]
-        else:
-            implicants, antecedents = [], []
-
-
+        implicants, antecedents = [], []
         pending_facts = set()
         next = self.rules.pop(fact)
         for rule_root in next:
             if rule_root != "__result__":
                 self.rules.update({rule_root: next[rule_root]})
                 pending_facts.update(next[rule_root].keys())
+            else:
+                implicants, antecedents = next["__result__"]
 
-        return implicants, antecedents, pending_facts
+        source_facts = set.union(*[self.knowledge_base[ant] for ant in antecedents], set())
+
+        return implicants, source_facts, pending_facts
 
     # def traverse_rule_tree(self, rule_tree, current_facts):
     #     """Recursively traverse the rule tree to check for matching conditions."""
@@ -281,9 +279,7 @@ class FCSolver():
         # dictionary of rules with only one antecedent
         # all literals imply themselves
         all_lits = set.union(*rules_dict.values(), {key[0] for key in rules_dict})
-        self.direct = defaultdict(set, {key[0]: val | {key[0]} for key, val in rules_dict.items() if len(key) == 1})
-        for lit in all_lits:
-            self.direct[lit].add(lit)
+        self.direct = direct_dict
 
     @staticmethod
     def from_encoded_cnf(encoded_cnf, testing_mode=False):
@@ -422,8 +418,8 @@ class FCSolver():
                 res = self.engine.trigger(antecedent)
                 if not res:
                     continue
-                new_facts, antecedents, new_pending_facts = res
-                source_facts = set.union(*[self.engine.knowledge_base[ant] for ant in antecedents], set())
+                new_facts, source_facts, new_pending_facts = res
+
 
                 for fact in new_facts:
                     if ~fact in self.engine.knowledge_base:
