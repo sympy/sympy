@@ -291,7 +291,14 @@ class FCSolver():
 
 
 
-    def assert_lit(self, new_fact, source_facts):
+    def assert_lit(self, new_fact, source_facts = None):
+        if source_facts is None:
+            # initial facts are their own source facts.
+            source_facts = {new_fact}
+
+        if isinstance(new_fact, int) and not isinstance(self.enc_to_pred[abs(new_fact)], AppliedPredicate):
+            return True, None
+
         neg = False
         if self.enc_to_pred is not None:
             if new_fact < 0:
@@ -305,9 +312,9 @@ class FCSolver():
         expr, new_fact = new_fact.arg, new_fact.function
 
         new_fact = ~new_fact if neg else new_fact
-        return self._assert_lit(expr, new_fact, source_facts)
+        return self._assert_lit(expr, new_fact, source_facts, external=True)
 
-    def _assert_lit(self, expr, new_fact, source_facts):
+    def _assert_lit(self, expr, new_fact, source_facts, external=False):
         assert type(source_facts) == set
 
         # note: each fact implies itself and is included in its list of implicants
@@ -320,6 +327,8 @@ class FCSolver():
                 else:
                     conflict_clause = [~lit for lit in conflict_clause]
                 assert len(conflict_clause) <= 4
+                if external:
+                    assert len(conflict_clause) == 2
                 #print(len(conflict_clause))
                 if self.testing_mode:
                     conflict_clause = sorted(conflict_clause, key=lambda x: str(x))
@@ -336,14 +345,12 @@ class FCSolver():
         self.asserted = defaultdict(dict)
 
     def sanity_check(self, initial_literals=[]):
+        res = (True, None)
         for lit in initial_literals:
-            if isinstance(lit, int) and not isinstance(self.enc_to_pred[abs(lit)], AppliedPredicate):
-                continue
-            # initial facts are their own source facts.
-            res = self.assert_lit(lit, {lit})
-            if res[0] is False:
-                assert len(res[1]) == 2
+            res = self.assert_lit(lit)
+            if not res[0]:
                 return res
+        return res
 
     def check(self, initial_literals = [], res = None):
 
