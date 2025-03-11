@@ -154,6 +154,7 @@ rules_dict = facts_to_dictionary()
 #     rules_dict[key].add(key[0])
 
 rules_dict = transitive_closure(rules_dict)
+rules_dict = dict(sorted(rules_dict.items(), key=lambda item: str(item)))
 
 # bad_keys = [key for key in rules_dict.keys()
 #             if not(isinstance(key, Predicate) or isinstance(key[0], Predicate))]
@@ -170,7 +171,7 @@ class RulesEngine:
         self.rule_tree = {}
         self.knowledge_base = {}
 
-        for key, value in dictionary.items():
+        for key, value in sorted(dictionary.items(), key=lambda item: str(item)):
             self.add_rule(key, value)
 
         #self.original_keys = list(self.rule_tree.keys())
@@ -210,6 +211,8 @@ class RulesEngine:
             implicants = [imp for imp in implicants if imp not in self.knowledge_base]
         else:
             implicants, antecedents = [], []
+
+        implicants = sorted(implicants, key=lambda x: str(x))
 
         pending_facts = set()
         next = self.rules.pop(fact)
@@ -382,7 +385,7 @@ class FCSolver():
 
 
     def _check_expr(self, expr):
-        queue = set(self.asserted[expr])
+        queue = sorted(set(self.asserted[expr]), key=lambda x: str(x))
 
         for fact in queue:
             self.engine.add_fact(fact, self.asserted[expr][fact])
@@ -406,7 +409,7 @@ class FCSolver():
 
                 pending_facts.update(new_pending_facts)
 
-            queue = pending_facts
+            queue = sorted(pending_facts, key=lambda x: str(x))
 
         return True, None
 
