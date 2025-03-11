@@ -293,10 +293,35 @@ class FCSolver():
 
         return FCSolver(pred_to_enc)
 
+    def decomposte_fact(self, fact):
+        neg = False
+        if self.enc_to_pred is not None:
+            if fact < 0:
+                neg = True
+            fact = self.enc_to_pred[abs(fact)]
+        elif isinstance(fact, Not):
+            neg = True
+            fact = fact.args[0]
+
+        assert isinstance(fact, AppliedPredicate)
+        expr, fact = fact.arg, fact.function
+        fact = ~fact if neg else fact
+        return expr, fact
+
+    def unassert_lit(self, fact):
+        expr, fact = self.decomposte_fact(fact)
+        if fact not in self.asserted[expr]:
+            return False
+            assert fact in self.asserted[expr]
+        del self.asserted[expr][fact]
+        self.conflict = None
 
 
-    def assert_lit(self, new_fact, source_facts = None):
-        assert self.conflict is False
+    def assert_lit(self, new_fact, source_facts = None, force_assertion=False):
+
+        print(f"Asserting {new_fact} in assert_lit")
+
+        assert self.conflict is not True
         if source_facts is None:
             # initial facts are their own source facts.
             source_facts = {new_fact}
@@ -304,22 +329,11 @@ class FCSolver():
         if isinstance(new_fact, int) and not isinstance(self.enc_to_pred[abs(new_fact)], AppliedPredicate):
             return True, None
 
-        neg = False
-        if self.enc_to_pred is not None:
-            if new_fact < 0:
-                neg = True
-            new_fact = self.enc_to_pred[abs(new_fact)]
-        elif isinstance(new_fact, Not):
-            neg = True
-            new_fact = new_fact.args[0]
+        expr, new_fact = self.decomposte_fact(new_fact)
 
-        assert isinstance(new_fact, AppliedPredicate)
-        expr, new_fact = new_fact.arg, new_fact.function
+        return self._assert_lit(expr, new_fact, source_facts, external=True, force_assertion=force_assertion)
 
-        new_fact = ~new_fact if neg else new_fact
-        return self._assert_lit(expr, new_fact, source_facts, external=True)
-
-    def _assert_lit(self, expr, new_fact, source_facts, external=False):
+    def _assert_lit(self, expr, new_fact, source_facts, external=False, force_assertion=False):
         assert type(source_facts) == set
 
         # note: each fact implies itself and is included in its list of implicants
@@ -338,9 +352,12 @@ class FCSolver():
                 if self.testing_mode:
                     conflict_clause = sorted(conflict_clause, key=lambda x: str(x))
                 self.conflict= True
+                if force_assertion:
+                    self.asserted[expr][new_fact] = source_facts
                 return False, conflict_clause
 
         self.asserted[expr][new_fact] = source_facts
+        print(f"{new_fact} asserted in _assert_lit()")
         return True, None
 
 

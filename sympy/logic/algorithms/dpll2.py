@@ -250,10 +250,11 @@ class SATSolver:
                                     return res
                             return res
 
+                        save_asserted = self.fc.asserted.copy()
                         self.fc.reset_state()
                         res = (True, None)
-                        for lit in self.var_settings:
-                            res = self.fc.assert_lit(lit)
+                        for l in self.var_settings:
+                            res = self.fc.assert_lit(l)
                             if not res[0]:
                                 break
 
@@ -268,6 +269,7 @@ class SATSolver:
                         # if santity_res is not None and santity_res[0] is False:
                         #     assert res == santity_res
                         self.fc.reset_state()
+                        self.fc.asserted = save_asserted
                         # if santity_res is not None and res[0] is False:
                         #     res = santity_res
                     else:
@@ -389,7 +391,7 @@ class SATSolver:
         """
         return cls in self.sentinels[lit]
 
-    def _assign_literal(self, lit):
+    def _assign_literal(self, lit, unit_prop=False):
         """Make a literal assignment.
 
         The literal assignment must be recorded as part of the current
@@ -420,6 +422,17 @@ class SATSolver:
         {-1}
 
         """
+
+        print(f"{lit} assigned in _assign_literal.")
+        if self.fc:
+            print(f"Calling assert_lit on {lit}.")
+            res = self.fc.assert_lit(lit, force_assertion=not unit_prop)
+            if not res[0]:
+                self._simple_add_learned_clause(res[1])
+                self.fc.conflict = None
+                if unit_prop:
+                    return True
+
         self.var_settings.add(lit)
         self._current_level.var_settings.add(lit)
         self.variable_set[abs(lit)] = True
@@ -467,9 +480,12 @@ class SATSolver:
         """
         # Undo the variable settings
         for lit in self._current_level.var_settings:
+            print(f"undoing {lit}.")
             self.var_settings.remove(lit)
             self.heur_lit_unset(lit)
             self.variable_set[abs(lit)] = False
+            if self.fc.unassert_lit(lit) is False:
+                assert False
 
         # Pop the level off the stack
         self.levels.pop()
@@ -514,6 +530,7 @@ class SATSolver:
     def _unit_prop(self):
         """Perform unit propagation on the current theory."""
         result = len(self._unit_prop_queue) > 0
+        #queue_backup = self._unit_prop_queue.copy()
         while self._unit_prop_queue:
             next_lit = self._unit_prop_queue.pop()
             if -next_lit in self.var_settings:
@@ -521,7 +538,13 @@ class SATSolver:
                 self._unit_prop_queue = []
                 return False
             else:
-                self._assign_literal(next_lit)
+                conflict = self._assign_literal(next_lit, unit_prop=True)
+                if conflict:
+                    self.is_unsatisfied = True
+                    self._unit_prop_queue = []
+                    return False
+
+
 
         return result
 
