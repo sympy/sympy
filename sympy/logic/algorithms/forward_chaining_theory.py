@@ -206,13 +206,13 @@ class RulesEngine:
         """Add a fact to the knowledge base."""
         self.knowledge_base.update(facts)
 
-    def trigger(self, fact):
-        if fact not in self.rules or fact not in self.knowledge_base:
+    def trigger(self, trig_fact):
+        if trig_fact not in self.rules or trig_fact not in self.knowledge_base:
             return False
 
         implicants, antecedents = [], []
         pending_facts = set()
-        next = self.rules.pop(fact)
+        next = self.rules.pop(trig_fact)
         for rule_root in next:
             if rule_root != "__result__":
                 self.rules.update({rule_root: next[rule_root]})
@@ -220,9 +220,21 @@ class RulesEngine:
             else:
                 implicants, antecedents = next["__result__"]
 
+
         source_facts = set.union(*[self.knowledge_base[ant] for ant in antecedents], set())
 
-        return implicants, source_facts, pending_facts
+        res = (True, None)
+        for fact in implicants:
+            if ~fact in self.knowledge_base:
+                explanation = self.knowledge_base[trig_fact] | self.knowledge_base[~fact]
+                # res = self._assert_lit(expr, fact, source_facts)
+                assert len(explanation) >= 2
+                res = (False, [-lit for lit in explanation])
+                break
+            pending_facts.add(fact)
+            self.add_fact(fact, source_facts)
+
+        return res, source_facts, pending_facts
 
     # def traverse_rule_tree(self, rule_tree, current_facts):
     #     """Recursively traverse the rule tree to check for matching conditions."""
@@ -418,17 +430,10 @@ class FCSolver():
                 res = self.engine.trigger(antecedent)
                 if not res:
                     continue
-                new_facts, source_facts, new_pending_facts = res
+                results, source_facts, new_pending_facts = res
 
-
-                for fact in new_facts:
-                    if ~fact in self.engine.knowledge_base:
-                        explanation = self.engine.knowledge_base[antecedent] | self.engine.knowledge_base[~fact]
-                    #res = self._assert_lit(expr, fact, source_facts)
-                        assert len(explanation) >= 2
-                        return False, [-lit for lit in explanation]
-                    pending_facts.add(fact)
-                    self.engine.add_fact(fact, source_facts)
+                if results[0] is False:
+                    return results
 
                 pending_facts.update(new_pending_facts)
 
