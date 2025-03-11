@@ -1,6 +1,8 @@
 from sympy.polys.rings import ring
 from sympy.polys.domains import ZZ
-from sympy.polys.heuristicgcd import heugcd
+from sympy.polys.heuristicgcd import heugcd, HeuristicGCDFailed
+from sympy.testing.pytest import raises
+
 
 
 def test_heugcd_univariate_integers():
@@ -150,3 +152,59 @@ def test_issue_25793():
     H, cff, cfg = R.dup_zz_heu_gcd(f, g)
     assert H == f
     # needs a test for dmp, too, that fails in master before this change
+def test_heugcd_basic():
+    R, x, y = ring("x,y", ZZ)
+
+    f = x**2 + 2*x*y + y**2
+    g = x**2 + x*y
+
+    h, cff, cfg = heugcd(f, g)
+
+    assert h == x + y
+    assert cff == x + y
+    assert cfg == x
+    assert cff*h == f
+    assert cfg*h == g
+
+
+def test_heugcd_timeout():
+    """Test that heugcd raises an exception when timeout is exceeded."""
+    # Create a case that would normally take a long time
+    R, *xs = ring("x:100", ZZ)  # 100 variables
+
+    # Create a polynomial with many terms
+    p1 = sum(xs)  # x0 + x1 + ... + x99
+    p2 = p1**2    # This will have many terms
+
+    # Test with a very short timeout
+    raises(HeuristicGCDFailed, lambda: heugcd(p1, p2, timeout=0.001))
+
+    # Test that normal cases still work with timeout
+    R, x, y = ring("x,y", ZZ)
+    f = x**2 + 2*x*y + y**2
+    g = x**2 + x*y
+
+    # This should complete within the default timeout
+    h, cff, cfg = heugcd(f, g)
+    assert h == x + y
+    assert cff == x + y
+    assert cfg == x
+
+
+def test_heugcd_recursive_timeout():
+    """Test that timeout is properly passed to recursive calls."""
+    R, x, y, z = ring("x,y,z", ZZ)
+
+    # Create polynomials that will require recursive calls
+    f = x**2 + 2*x*y + y**2 + z
+    g = x**2 + x*y + z
+
+    # With a reasonable timeout, this should succeed
+    h, cff, cfg = heugcd(f, g, timeout=5.0)
+    assert cff*h == f
+    assert cfg*h == g
+
+    # With a very short timeout, it should fail
+    # This test might be flaky depending on system speed
+    # so we'll make the timeout extremely small
+    raises(HeuristicGCDFailed, lambda: heugcd(f, g, timeout=0.0001))

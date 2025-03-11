@@ -1,10 +1,12 @@
 """Heuristic polynomial GCD algorithm (HEUGCD). """
 
 from .polyerrors import HeuristicGCDFailed
+import time
 
 HEU_GCD_MAX = 6
+DEFAULT_TIMEOUT = 5.0  # Default timeout in seconds
 
-def heugcd(f, g):
+def heugcd(f, g, timeout=DEFAULT_TIMEOUT):
     """
     Heuristic polynomial GCD in ``Z[X]``.
 
@@ -25,6 +27,16 @@ def heugcd(f, g):
     by variable into a large integer. The final step is to verify if the
     interpolated polynomial is the correct GCD. This gives cofactors of
     the input polynomials as a side effect.
+
+    Parameters
+    ==========
+
+    f, g : polynomials
+        The polynomials for which to compute the GCD.
+    timeout : float, optional
+        Maximum time in seconds to spend trying to compute the GCD.
+        If the computation exceeds this time, a HeuristicGCDFailed
+        exception is raised. Default is 5.0 seconds.
 
     Examples
     ========
@@ -54,6 +66,13 @@ def heugcd(f, g):
     """
     assert f.ring == g.ring and f.ring.domain.is_ZZ
 
+    # Start timing immediately
+    start_time = time.time()
+
+    # Check timeout immediately to handle very small timeouts
+    if timeout is not None and timeout <= 0:
+        raise HeuristicGCDFailed('computation timed out (timeout too small)')
+
     ring = f.ring
     x0 = ring.gens[0]
     domain = ring.domain
@@ -70,6 +89,10 @@ def heugcd(f, g):
                   g_norm // abs(g.LC)) + 4)
 
     for i in range(0, HEU_GCD_MAX):
+        # Check if we've exceeded the timeout
+        if timeout is not None and time.time() - start_time > timeout:
+            raise HeuristicGCDFailed('computation timed out after %s seconds' % timeout)
+
         ff = f.evaluate(x0, x)
         gg = g.evaluate(x0, x)
 
@@ -77,7 +100,17 @@ def heugcd(f, g):
             if ring.ngens == 1:
                 h, cff, cfg = domain.cofactors(ff, gg)
             else:
-                h, cff, cfg = heugcd(ff, gg)
+                # Pass the remaining timeout to recursive calls
+                # Make sure we check time again to avoid race conditions
+                if timeout is not None:
+                    remaining_time = max(0.0, timeout - (time.time() - start_time))
+                    # Force timeout on recursive calls with very small remaining time
+                    if remaining_time < 0.001:
+                        raise HeuristicGCDFailed('computation timed out during recursive call')
+                else:
+                    remaining_time = None
+
+                h, cff, cfg = heugcd(ff, gg, timeout=remaining_time)
 
             h = _gcd_interpolate(h, x, ring)
             h = h.primitive()[1]
