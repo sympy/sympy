@@ -297,21 +297,14 @@ class FCSolver():
             if new_fact < 0:
                 neg = True
             new_fact = self.enc_to_pred[abs(new_fact)]
-            assert isinstance(new_fact, AppliedPredicate)
-            expr = new_fact.arg
-            new_fact = new_fact.function
-            if neg:
-                new_fact = ~new_fact
-        else:
-            if isinstance(new_fact, Not):
-                neg = True
-                new_fact = new_fact.args[0]
+        elif isinstance(new_fact, Not):
+            neg = True
+            new_fact = new_fact.args[0]
 
-            expr = new_fact.arg
-            new_fact = new_fact.function
-            if neg:
-                new_fact = ~new_fact
+        assert isinstance(new_fact, AppliedPredicate)
+        expr, new_fact = new_fact.arg, new_fact.function
 
+        new_fact = ~new_fact if neg else new_fact
         return self._assert_lit(expr, new_fact, source_facts)
 
     def _assert_lit(self, expr, new_fact, source_facts):
