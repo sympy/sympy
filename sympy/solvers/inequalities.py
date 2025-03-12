@@ -380,7 +380,7 @@ def reduce_abs_inequalities(exprs, gen):
         for expr, rel in exprs ])
 
 
-def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, continuous=False):
+def solve_univariate_inequality2(expr, gen, relational=True, domain=S.Reals, continuous=False):
     """Solves a real univariate inequality.
 
     Parameters
@@ -409,8 +409,7 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
     =====
 
     Currently, we cannot solve all the inequalities due to limitations in
-    :func:`sympy.solvers.solveset.solvify`. Also, the solution returned for trigonometric inequalities
-    are restricted in its periodic interval.
+    :func:`sympy.solvers.solveset.solvify`.
 
     See Also
     ========
@@ -432,10 +431,6 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
     >>> domain = Interval(0, S.Infinity)
     >>> solve_univariate_inequality(x**2 >= 4, x, False, domain)
     Interval(2, oo)
-
-    >>> solve_univariate_inequality(sin(x) > 0, x, relational=False)
-    Interval.open(0, pi)
-
     """
     from sympy.solvers.solvers import denoms
 
@@ -444,20 +439,13 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
         Inequalities in the complex domain are
         not supported. Try the real domain by
         setting domain=S.Reals'''))
-    elif domain is not S.Reals:
-        rv = solve_univariate_inequality(
-        expr, gen, relational=False, continuous=continuous).intersection(domain)
-        if relational:
-            rv = rv.as_relational(gen)
-        return rv
-    else:
-        pass  # continue with attempt to solve in Real domain
+
+    original_domain = domain
 
     # This keeps the function independent of the assumptions about `gen`.
     # `solveset` makes sure this function is called only when the domain is
     # real.
     _gen = gen
-    _domain = domain
     if gen.is_extended_real is False:
         rv = S.EmptySet
         return rv if not relational else rv.as_relational(_gen)
@@ -472,22 +460,21 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
                 '''))
 
     rv = None
+    period = None
 
-    if expr is S.true:
+    if expr == S.true:
         rv = domain
-
-    elif expr is S.false:
+    elif expr == S.false:
         rv = S.EmptySet
-
     else:
         e = expr.lhs - expr.rhs
         period = periodicity(e, gen)
         if period == S.Zero:
             e = expand_mul(e)
             const = expr.func(e, 0)
-            if const is S.true:
+            if const == S.true:
                 rv = domain
-            elif const is S.false:
+            elif const == S.false:
                 rv = S.EmptySet
         elif period is not None:
             frange = function_range(e, gen, domain)
@@ -498,17 +485,14 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
                     rv = domain
                 elif not expr.func(frange.inf, 0):
                     rv = S.EmptySet
-
             elif rel in ('>', '>='):
                 if expr.func(frange.inf, 0):
                     rv = domain
                 elif not expr.func(frange.sup, 0):
                     rv = S.EmptySet
 
-            inf, sup = domain.inf, domain.sup
-            if sup - inf is S.Infinity:
-                domain = Interval(0, period, False, True).intersect(_domain)
-                _domain = domain
+            if domain.sup - domain.inf is S.Infinity:
+                domain = Interval(0, period, False, True).intersect(domain)
 
         if rv is None:
             n, d = e.as_numer_denom()
@@ -637,7 +621,7 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
             sol_sets = [S.EmptySet]
 
             start = domain.inf
-            if start in domain and valid(start) and start.is_finite:
+            if start.is_finite and start in domain and valid(start):
                 sol_sets.append(FiniteSet(start))
 
             for x in reals:
@@ -652,7 +636,7 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
                     if x in discontinuities:
                         discontinuities.remove(x)
                         _valid = valid(x)
-                    else:  # it's a solution
+                    else: # it's a solution
                         _valid = include_x
                     if _valid:
                         sol_sets.append(FiniteSet(x))
@@ -667,10 +651,20 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
                 sol_sets.append(Interval.open(start, end))
 
             if coeffI != S.Zero and check:
-                rv = (make_real).intersect(_domain)
+                rv = (make_real).intersect(domain)
             else:
                 rv = Intersection(
-                    (Union(*sol_sets)), make_real, _domain).subs(gen, _gen)
+                    (Union(*sol_sets)), make_real, domain).subs(gen, _gen)
+
+    if domain is not S.Reals:
+        rv = rv.intersection(domain)
+
+    if period is not None:
+        period_domain = Interval(0, period, False, True)
+        if rv != period_domain:
+            n = Dummy('n', integer=True)
+            x = Dummy('x')
+            rv = imageset(Lambda(n, imageset(Lambda(x, x + period * n), rv)), S.Integers)
 
     return rv if not relational else rv.as_relational(_gen)
 
