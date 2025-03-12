@@ -1102,7 +1102,7 @@ class TransferFunction(SISOLinearTimeInvariant):
         """
         return fuzzy_and(pole.as_real_imag()[0].is_negative for pole in self.poles())
 
-    def get_asymptotic_stability_conditions(self) -> list | bool:
+    def get_asymptotic_stability_conditions(self):
         """
         Returns the asymptotic stability conditions for the transfer function.
 
