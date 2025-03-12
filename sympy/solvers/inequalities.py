@@ -380,7 +380,7 @@ def reduce_abs_inequalities(exprs, gen):
         for expr, rel in exprs ])
 
 
-def solve_univariate_inequality2(expr, gen, relational=True, domain=S.Reals, continuous=False):
+def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, continuous=False):
     """Solves a real univariate inequality.
 
     Parameters
