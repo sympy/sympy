@@ -1581,6 +1581,7 @@ def _discrete_log_pohlig_hellman(n, a, b, order=None, order_factors=None):
 
     if order is None:
         order = n_order(b, n)
+    order = as_int(order)
     if order_factors is None:
         order_factors = factorint(order)
     l = [0] * len(order_factors)
@@ -1675,12 +1676,8 @@ def discrete_log(n, a, b, order=None, prime_order=None):
 
             cyclic_dlog.append((result, order_pe))
         else:
-            order_pe = totient(pe)
-            if order_pe < 1000:
-                k = _discrete_log_trial_mul(pe, a_mod_pe, b_mod_pe, order_pe)
-            else:
-                k = _discrete_log_pohlig_hellman(pe, a_mod_pe, b_mod_pe, order_pe)
-
+            # last argument is the totient of a prime power
+            k = _discrete_log_trial_mul(pe, a_mod_pe, b_mod_pe, (p**(e-1)) * (p-1) )
             if a_mod_pe:
                 if unique is not None and unique != k:
                     raise ValueError("Log does not exist")
