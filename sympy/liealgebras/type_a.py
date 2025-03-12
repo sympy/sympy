@@ -94,8 +94,8 @@ class TypeA(Standard_Cartan):
         k = 0
         for i in range(0, n):
             for j in range(i+1, n+1):
-               k += 1
-               posroots[k] = self.basic_root(i, j)
+                k += 1
+                posroots[k] = self.basic_root(i, j)
         return posroots
 
     def highest_root(self):
@@ -136,11 +136,9 @@ class TypeA(Standard_Cartan):
 
         n = self.n
         m = 2 * eye(n)
-        i = 1
-        while i < n-1:
+        for i in range(1, n - 1):
             m[i, i+1] = -1
             m[i, i-1] = -1
-            i += 1
         m[0,1] = -1
         m[n-1, n-2] = -1
         return m

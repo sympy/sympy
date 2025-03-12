@@ -1,6 +1,11 @@
+#
+# This module is deprecated and should not be used any more. The actual
+# implementation of RR and CC now uses mpmath's mpf and mpc types directly.
+#
 """Real and complex elements. """
 
 
+from sympy.external.gmpy import MPQ
 from sympy.polys.domains.domainelement import DomainElement
 from sympy.utilities import public
 
@@ -8,7 +13,6 @@ from mpmath.ctx_mp_python import PythonMPContext, _mpf, _mpc, _constant
 from mpmath.libmp import (MPZ_ONE, fzero, fone, finf, fninf, fnan,
     round_nearest, mpf_mul, repr_dps, int_types,
     from_int, from_float, from_str, to_rational)
-from mpmath.rational import mpq
 
 
 @public
@@ -125,6 +129,11 @@ class MPContext(PythonMPContext):
     def to_rational(ctx, s, limit=True):
         p, q = to_rational(s._mpf_)
 
+        # Needed for GROUND_TYPES=flint if gmpy2 is installed because mpmath's
+        # to_rational() function returns a gmpy2.mpz instance and if MPQ is
+        # flint.fmpq then MPQ(p, q) will fail.
+        p = int(p)
+
         if not limit or q <= ctx.max_denom:
             return p, q
 
@@ -141,16 +150,16 @@ class MPContext(PythonMPContext):
 
         k = (ctx.max_denom - q0)//q1
 
-        number = mpq(p, q)
-        bound1 = mpq(p0 + k*p1, q0 + k*q1)
-        bound2 = mpq(p1, q1)
+        number = MPQ(p, q)
+        bound1 = MPQ(p0 + k*p1, q0 + k*q1)
+        bound2 = MPQ(p1, q1)
 
         if not bound2 or not bound1:
             return p, q
         elif abs(bound2 - number) <= abs(bound1 - number):
-            return bound2._mpq_
+            return bound2.numerator, bound2.denominator
         else:
-            return bound1._mpq_
+            return bound1.numerator, bound1.denominator
 
     def almosteq(ctx, s, t, rel_eps=None, abs_eps=None):
         t = ctx.convert(t)

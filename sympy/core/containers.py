@@ -6,6 +6,8 @@
     They are supposed to work seamlessly within the SymPy framework.
 """
 
+from __future__ import annotations
+
 from collections import OrderedDict
 from collections.abc import MutableSet
 from typing import Any, Callable
@@ -167,7 +169,7 @@ class Tuple(Basic):
         See Also
         ========
 
-        sympy.matrices.common.MatrixKind
+        sympy.matrices.kind.MatrixKind
         sympy.core.kind.NumberKind
         """
         return TupleKind(*(i.kind for i in self.args))
@@ -251,6 +253,9 @@ class Dict(Basic):
     one
 
     """
+
+    elements: frozenset[Tuple]
+    _dict: dict[Basic, Basic]
 
     def __new__(cls, *args):
         if len(args) == 1 and isinstance(args[0], (dict, Dict)):

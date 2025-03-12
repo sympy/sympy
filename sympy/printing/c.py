@@ -47,6 +47,7 @@ known_functions_C89 = {
     "atan2": "atan2",
     "exp": "exp",
     "log": "log",
+    "log10": "log10",
     "sinh": "sinh",
     "cosh": "cosh",
     "tanh": "tanh",
@@ -58,7 +59,6 @@ known_functions_C89 = {
 known_functions_C99 = dict(known_functions_C89, **{
     'exp2': 'exp2',
     'expm1': 'expm1',
-    'log10': 'log10',
     'log2': 'log2',
     'log1p': 'log1p',
     'Cbrt': 'cbrt',
@@ -151,18 +151,13 @@ class C89CodePrinter(CodePrinter):
     standard = "C89"
     reserved_words = set(reserved_words)
 
-    _default_settings: dict[str, Any] = {
-        'order': None,
-        'full_prec': 'auto',
+    _default_settings: dict[str, Any] = dict(CodePrinter._default_settings, **{
         'precision': 17,
         'user_functions': {},
-        'human': True,
-        'allow_unknown_functions': False,
         'contract': True,
         'dereference': set(),
         'error_on_reserved': False,
-        'reserved_word_suffix': '_',
-    }
+    })
 
     type_aliases = {
         real: float64,
@@ -332,12 +327,9 @@ class C89CodePrinter(CodePrinter):
                 temp += (shift,)
                 shift *= dims[i]
             strides = temp
-        flat_index = sum([x[0]*x[1] for x in zip(indices, strides)]) + offset
+        flat_index = sum(x[0]*x[1] for x in zip(indices, strides)) + offset
         return "%s[%s]" % (self._print(expr.base.label),
                            self._print(flat_index))
-
-    def _print_Idx(self, expr):
-        return self._print(expr.label)
 
     @_as_macro_if_defined
     def _print_NumberSymbol(self, expr):
@@ -545,7 +537,7 @@ class C89CodePrinter(CodePrinter):
                 raise ValueError("Expected strides when offset is given")
             idxs = ']['.join((self._print(arg) for arg in elem.indices))
         else:
-            global_idx = sum([i*s for i, s in zip(elem.indices, elem.strides)])
+            global_idx = sum(i*s for i, s in zip(elem.indices, elem.strides))
             if elem.offset != None: # Must be "!= None", cannot be "is not None"
                 global_idx += elem.offset
             idxs = self._print(global_idx)

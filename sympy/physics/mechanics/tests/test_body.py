@@ -1,12 +1,13 @@
-from sympy.core.backend import (Symbol, symbols, sin, cos, Matrix, zeros,
-                                _simplify_matrix)
+from sympy import (Symbol, symbols, sin, cos, Matrix, zeros,
+                                simplify)
 from sympy.physics.vector import Point, ReferenceFrame, dynamicsymbols, Dyadic
 from sympy.physics.mechanics import inertia, Body
-from sympy.testing.pytest import raises
+from sympy.testing.pytest import raises, warns_deprecated_sympy
 
 
 def test_default():
-    body = Body('body')
+    with warns_deprecated_sympy():
+        body = Body('body')
     assert body.name == 'body'
     assert body.loads == []
     point = Point('body_masscenter')
@@ -27,8 +28,9 @@ def test_custom_rigid_body():
     rigidbody_mass = Symbol('rigidbody_mass')
     rigidbody_frame = ReferenceFrame('rigidbody_frame')
     body_inertia = inertia(rigidbody_frame, 1, 0, 0)
-    rigid_body = Body('rigidbody_body', rigidbody_masscenter, rigidbody_mass,
-                      rigidbody_frame, body_inertia)
+    with warns_deprecated_sympy():
+        rigid_body = Body('rigidbody_body', rigidbody_masscenter,
+                          rigidbody_mass, rigidbody_frame, body_inertia)
     com = rigid_body.masscenter
     frame = rigid_body.frame
     rigidbody_masscenter.set_vel(rigidbody_frame, 0)
@@ -51,8 +53,9 @@ def test_particle_body():
     particle_masscenter = Point('particle_masscenter')
     particle_mass = Symbol('particle_mass')
     particle_frame = ReferenceFrame('particle_frame')
-    particle_body = Body('particle_body', particle_masscenter, particle_mass,
-                         particle_frame)
+    with warns_deprecated_sympy():
+        particle_body = Body('particle_body', particle_masscenter,
+                             particle_mass, particle_frame)
     com = particle_body.masscenter
     frame = particle_body.frame
     particle_masscenter.set_vel(particle_frame, 0)
@@ -72,7 +75,8 @@ def test_particle_body():
     assert particle_body.central_inertia == inertia(particle_frame, 1, 1, 1)
     assert particle_body.is_rigidbody
 
-    particle_body = Body('particle_body', mass=particle_mass)
+    with warns_deprecated_sympy():
+        particle_body = Body('particle_body', mass=particle_mass)
     assert not particle_body.is_rigidbody
     point = particle_body.masscenter.locatenew('point', particle_body.x)
     point_inertia = particle_mass * inertia(particle_body.frame, 0, 1, 1)
@@ -87,8 +91,9 @@ def test_particle_body_add_force():
     particle_masscenter = Point('particle_masscenter')
     particle_mass = Symbol('particle_mass')
     particle_frame = ReferenceFrame('particle_frame')
-    particle_body = Body('particle_body', particle_masscenter, particle_mass,
-                         particle_frame)
+    with warns_deprecated_sympy():
+        particle_body = Body('particle_body', particle_masscenter,
+                             particle_mass, particle_frame)
 
     a = Symbol('a')
     force_vector = a * particle_body.frame.x
@@ -112,8 +117,9 @@ def test_body_add_force():
     rigidbody_mass = Symbol('rigidbody_mass')
     rigidbody_frame = ReferenceFrame('rigidbody_frame')
     body_inertia = inertia(rigidbody_frame, 1, 0, 0)
-    rigid_body = Body('rigidbody_body', rigidbody_masscenter, rigidbody_mass,
-                      rigidbody_frame, body_inertia)
+    with warns_deprecated_sympy():
+        rigid_body = Body('rigidbody_body', rigidbody_masscenter,
+                          rigidbody_mass, rigidbody_frame, body_inertia)
 
     l = Symbol('l')
     Fa = Symbol('Fa')
@@ -139,7 +145,8 @@ def test_body_add_force():
     raises(TypeError, lambda: rigid_body.apply_force(0))
 
 def test_body_add_torque():
-    body = Body('body')
+    with warns_deprecated_sympy():
+        body = Body('body')
     torque_vector = body.frame.x
     body.apply_torque(torque_vector)
 
@@ -148,32 +155,38 @@ def test_body_add_torque():
     raises(TypeError, lambda: body.apply_torque(0))
 
 def test_body_masscenter_vel():
-    A = Body('A')
+    with warns_deprecated_sympy():
+        A = Body('A')
     N = ReferenceFrame('N')
-    B = Body('B', frame=N)
+    with warns_deprecated_sympy():
+        B = Body('B', frame=N)
     A.masscenter.set_vel(N, N.z)
     assert A.masscenter_vel(B) == N.z
     assert A.masscenter_vel(N) == N.z
 
 def test_body_ang_vel():
-    A = Body('A')
+    with warns_deprecated_sympy():
+        A = Body('A')
     N = ReferenceFrame('N')
-    B = Body('B', frame=N)
+    with warns_deprecated_sympy():
+        B = Body('B', frame=N)
     A.frame.set_ang_vel(N, N.y)
     assert A.ang_vel_in(B) == N.y
     assert B.ang_vel_in(A) == -N.y
     assert A.ang_vel_in(N) == N.y
 
 def test_body_dcm():
-    A = Body('A')
-    B = Body('B')
+    with warns_deprecated_sympy():
+        A = Body('A')
+        B = Body('B')
     A.frame.orient_axis(B.frame, B.frame.z, 10)
     assert A.dcm(B) == Matrix([[cos(10), sin(10), 0], [-sin(10), cos(10), 0], [0, 0, 1]])
     assert A.dcm(B.frame) == Matrix([[cos(10), sin(10), 0], [-sin(10), cos(10), 0], [0, 0, 1]])
 
 def test_body_axis():
     N = ReferenceFrame('N')
-    B = Body('B', frame=N)
+    with warns_deprecated_sympy():
+        B = Body('B', frame=N)
     assert B.x == N.x
     assert B.y == N.y
     assert B.z == N.z
@@ -181,7 +194,8 @@ def test_body_axis():
 def test_apply_force_multiple_one_point():
     a, b = symbols('a b')
     P = Point('P')
-    B = Body('B')
+    with warns_deprecated_sympy():
+        B = Body('B')
     f1 = a*B.x
     f2 = b*B.y
     B.apply_force(f1, P)
@@ -194,8 +208,9 @@ def test_apply_force():
     q, x, v1, v2 = dynamicsymbols('q x v1 v2')
     P1 = Point('P1')
     P2 = Point('P2')
-    B1 = Body('B1')
-    B2 = Body('B2')
+    with warns_deprecated_sympy():
+        B1 = Body('B1')
+        B2 = Body('B2')
     N = ReferenceFrame('N')
 
     P1.set_vel(B1.frame, v1*B1.x)
@@ -225,8 +240,9 @@ def test_apply_force():
 def test_apply_torque():
     t = symbols('t')
     q = dynamicsymbols('q')
-    B1 = Body('B1')
-    B2 = Body('B2')
+    with warns_deprecated_sympy():
+        B1 = Body('B1')
+        B2 = Body('B2')
     N = ReferenceFrame('N')
     torque = t*q*N.x
 
@@ -241,7 +257,8 @@ def test_apply_torque():
 def test_clear_load():
     a = symbols('a')
     P = Point('P')
-    B = Body('B')
+    with warns_deprecated_sympy():
+        B = Body('B')
     force = a*B.z
     B.apply_force(force, P)
     assert B.loads == [(P, force)]
@@ -251,7 +268,8 @@ def test_clear_load():
 def test_remove_load():
     P1 = Point('P1')
     P2 = Point('P2')
-    B = Body('B')
+    with warns_deprecated_sympy():
+        B = Body('B')
     f1 = B.x
     f2 = B.y
     B.apply_force(f1, P1)
@@ -266,10 +284,11 @@ def test_remove_load():
 
 def test_apply_loads_on_multi_degree_freedom_holonomic_system():
     """Example based on: https://pydy.readthedocs.io/en/latest/examples/multidof-holonomic.html"""
-    W = Body('W') #Wall
-    B = Body('B') #Block
-    P = Body('P') #Pendulum
-    b = Body('b') #bob
+    with warns_deprecated_sympy():
+        W = Body('W') #Wall
+        B = Body('B') #Block
+        P = Body('P') #Pendulum
+        b = Body('b') #bob
     q1, q2 = dynamicsymbols('q1 q2') #generalized coordinates
     k, c, g, kT = symbols('k c g kT') #constants
     F, T = dynamicsymbols('F T') #Specified forces
@@ -298,7 +317,8 @@ def test_parallel_axis():
     # Test RigidBody
     o = Point('o')
     p = o.locatenew('p', a * N.x + b * N.y)
-    R = Body('R', masscenter=o, frame=N, mass=m, central_inertia=Io)
+    with warns_deprecated_sympy():
+        R = Body('R', masscenter=o, frame=N, mass=m, central_inertia=Io)
     Ip = R.parallel_axis(p)
     Ip_expected = inertia(N, Ix + m * b**2, Iy + m * a**2,
                           Iz + m * (a**2 + b**2), ixy=-m * a * b)
@@ -306,12 +326,13 @@ def test_parallel_axis():
     # Reference frame from which the parallel axis is viewed should not matter
     A = ReferenceFrame('A')
     A.orient_axis(N, N.z, 1)
-    assert _simplify_matrix(
+    assert simplify(
         (R.parallel_axis(p, A) - Ip_expected).to_matrix(A)) == zeros(3, 3)
     # Test Particle
     o = Point('o')
     p = o.locatenew('p', a * N.x + b * N.y)
-    P = Body('P', masscenter=o, mass=m, frame=N)
+    with warns_deprecated_sympy():
+        P = Body('P', masscenter=o, mass=m, frame=N)
     Ip = P.parallel_axis(p, N)
     Ip_expected = inertia(N, m * b ** 2, m * a ** 2, m * (a ** 2 + b ** 2),
                           ixy=-m * a * b)

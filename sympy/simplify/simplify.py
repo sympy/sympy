@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+from typing import overload
+
 from collections import defaultdict
 
 from sympy.concrete.products import Product
@@ -9,7 +13,7 @@ from sympy.core.exprtools import factor_nc
 from sympy.core.parameters import global_parameters
 from sympy.core.function import (expand_log, count_ops, _mexpand,
     nfloat, expand_mul, expand)
-from sympy.core.numbers import Float, I, pi, Rational
+from sympy.core.numbers import Float, I, pi, Rational, equal_valued
 from sympy.core.relational import Relational
 from sympy.core.rules import Transform
 from sympy.core.sorting import ordered
@@ -28,10 +32,12 @@ from sympy.functions.special.bessel import (BesselBase, besselj, besseli,
                                             besselk, bessely, jn)
 from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.integrals.integrals import Integral
+from sympy.logic.boolalg import Boolean
 from sympy.matrices.expressions import (MatrixExpr, MatAdd, MatMul,
                                             MatPow, MatrixSymbol)
 from sympy.polys import together, cancel, factor
 from sympy.polys.numberfields.minpoly import _is_sum_surds, _minimal_polynomial_sq
+from sympy.sets.sets import Set
 from sympy.simplify.combsimp import combsimp
 from sympy.simplify.cse_opts import sub_pre, sub_post
 from sympy.simplify.hyperexpand import hyperexpand
@@ -258,7 +264,7 @@ def posify(eq):
     [2]
     """
     eq = sympify(eq)
-    if iterable(eq):
+    if not isinstance(eq, Basic) and iterable(eq):
         f = type(eq)
         eq = list(eq)
         syms = set()
@@ -417,6 +423,15 @@ def signsimp(expr, evaluate=None):
     return e
 
 
+@overload
+def simplify(expr: Expr, **kwargs) -> Expr: ...
+@overload
+def simplify(expr: Boolean, **kwargs) -> Boolean: ...
+@overload
+def simplify(expr: Set, **kwargs) -> Set: ...
+@overload
+def simplify(expr: Basic, **kwargs) -> Basic: ...
+
 def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, doit=True, **kwargs):
     """Simplifies the given expression.
 
@@ -562,7 +577,7 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
     :obj:`~.Eq()` or :obj:`~.Or()`), simplification will return ``True`` or
     ``False`` if truth value can be determined. If the expression is not
     evaluated by default (such as :obj:`~.Predicate()`), simplification will
-    not reduce it and you should use :func:`~.refine()` or :func:`~.ask()`
+    not reduce it and you should use :func:`~.refine` or :func:`~.ask`
     function. This inconsistency will be resolved in future version.
 
     See Also
@@ -631,7 +646,6 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
     # TODO: Apply different strategies, considering expression pattern:
     # is it a purely rational function? Is there any trigonometric function?...
     # See also https://github.com/sympy/sympy/pull/185.
-
 
     # rationalize Floats
     floats = False
@@ -813,7 +827,6 @@ def sum_combine(s_t):
 
     return result
 
-
 def factor_sum(self, limits=None, radical=False, clear=False, fraction=False, sign=True):
     """Return Sum with constant factors extracted.
 
@@ -832,6 +845,7 @@ def factor_sum(self, limits=None, radical=False, clear=False, fraction=False, si
     >>> factor_sum(s.function, s.limits)
     y*Sum(x, (x, 1, 3))
     """
+
     # XXX deprecate in favor of direct call to factor_terms
     kwargs = {"radical": radical, "clear": clear,
         "fraction": fraction, "sign": sign}
@@ -1214,7 +1228,7 @@ def besselsimp(expr):
     works on the Bessel J and I functions, however. It works by looking at all
     such functions in turn, and eliminating factors of "I" and "-1" (actually
     their polar equivalents) in front of the argument. Then, functions of
-    half-integer order are rewritten using strigonometric functions and
+    half-integer order are rewritten using trigonometric functions and
     functions of integer order (> 1) are rewritten using functions
     of low order.  Finally, if the expression was changed, compute
     factorization of the result with factor().
@@ -1733,7 +1747,7 @@ def nc_simplify(expr, deep=True):
         if isinstance(s, _Pow):
             return get_score(s.args[0])
         elif isinstance(s, (_Add, _Mul)):
-            return sum([get_score(a) for a in s.args])
+            return sum(get_score(a) for a in s.args)
         return 1
 
     def compare(s, alt_s):
@@ -1758,7 +1772,7 @@ def nc_simplify(expr, deep=True):
         # get the non-commutative part
         c_args, args = expr.args_cnc()
         com_coeff = Mul(*c_args)
-        if com_coeff != 1:
+        if not equal_valued(com_coeff, 1):
             return com_coeff*nc_simplify(expr/com_coeff, deep=deep)
 
     inv_tot, args = _reduce_inverses(args)

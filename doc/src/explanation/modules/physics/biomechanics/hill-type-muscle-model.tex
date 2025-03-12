@@ -1,0 +1,102 @@
+\documentclass[tightpage]{standalone}
+%\usetikzlibrary{...}% tikz package already loaded by 'tikz' option
+
+\usepackage{varwidth}
+\usepackage{tikz}
+\usepackage{tkz-euclide}
+\usepackage{circuitikz}
+\usetikzlibrary{angles, backgrounds, calc, intersections, patterns, positioning, arrows.meta, matrix, decorations.shapes}
+\usepackage{amsmath}
+
+\usepackage{xcolor}
+\definecolor{mpltabblue}{RGB}{31,119,180}
+
+\newcommand{\CE}{\mathrm{CE}}
+\newcommand{\EE}{\mathrm{EE}}
+\newcommand{\DE}{\mathrm{DE}}
+\newcommand{\SE}{\mathrm{SE}}
+
+\newcommand{\lT}{l^{T}}
+\newcommand{\lM}{l^{M}}
+\newcommand{\lMT}{l^{MT}}
+
+\newcommand{\FT}{F^{T}}
+\newcommand{\FM}{F^{M}}
+
+\newcommand{\pennation}{\alpha}
+\newcommand{\cospennation}{\cos{\left( \pennation \right)}}
+
+\begin{document}
+
+\begin{varwidth}{\linewidth}
+
+\begin{circuitikz}[background rectangle/.style={fill=white}, show background rectangle]
+    %%%%%%%%%%%%%%%% Parameters %%%%%%%%%%%%%%%% 
+    % --- Pennation Angle ---
+    \pgfmathsetmacro{\PenAngle}{30}
+    
+    % --- Muscle Length ---
+    \pgfmathsetmacro{\MuscleLength}{8}
+    
+    % --- Tendon Length ---
+    \pgfmathsetmacro{\TendonLength}{4}
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+
+    \ctikzset{label/align = straight}
+    
+    % --- Tendon Nodes ---
+
+    \node[draw=black, circle,fill,inner sep=0.05cm]  (TendonStart) at (0,0) {};
+    \node[draw=black, circle,fill,inner sep=0.05cm]  (TendonEnd) at (\TendonLength cm,0) {};
+    
+    % --- Muscle Node ---
+
+    \node[draw=black, circle,fill,inner sep=0.05cm]  (MuscleEnd) at ($(TendonEnd)+(\PenAngle:\MuscleLength cm)$) {};
+
+    % --- Muscle Node to lay elements on ---
+
+    \node (Q1) at ($(TendonEnd)!0.25!(MuscleEnd)$) {};
+    \node (Q3) at ($(TendonEnd)!0.75!(MuscleEnd)$) {};
+    
+    \node (Q1a) at ($(Q1)+(\PenAngle+90:1.2 cm)$) {};
+    \node (Q1b) at ($(Q1)+(\PenAngle+90:-1.2 cm)$) {};
+    
+    \node (Q3a) at ($(Q3)+(\PenAngle+90:1.2 cm)$) {};
+    \node (Q3b) at ($(Q3)+(\PenAngle+90:-1.2 cm)$) {};
+
+
+    % --- Inserting Elements onto Nodes ---
+    \draw (MuscleEnd) to[damper, l = $\DE$] (TendonEnd);
+    
+    \draw (Q1a.center) -- (Q1b.center);
+    \draw (Q3a.center) -- (Q3b.center);
+    
+    \draw (Q1a.center) to[generic, l_ = $\CE$] (Q3a.center);
+    \draw (Q1b.center) to[ cute inductor, l_= $\EE$] (Q3b.center);
+
+    \draw (TendonStart.center) to[cute inductor, inductors/coils=9, inductors/width=1.3, l= $\SE$] (TendonEnd.center);
+
+    % --- Pennation Angle ---
+    \node (LineEnd) at ($(TendonEnd)+(1.5,0)$) {};
+    \draw[color = black!50] (TendonEnd.center) -- (LineEnd.center);
+    
+    \pic [draw,-{latex}, angle radius=1 cm, angle eccentricity=1.25,"$\pennation$"] {angle=LineEnd--TendonEnd--MuscleEnd};
+    
+    
+    % --- Length measurements ---
+    \draw [{latex}-{latex}] ($ (TendonStart) - (0,1) $) -- node[below]{$\lT$} ($ (TendonEnd) - (0,1) $);
+
+    \draw [{latex}-{latex}] ($ (TendonEnd) - (0,1) $) -- node[below]{$\lM \cospennation$} ($ (MuscleEnd) - (0,1+ \MuscleLength*sin(\PenAngle) $);
+    
+    % --- Force Markings ---
+    \node (FM1) at ($ (TendonStart) - (1.3,0) $) {$\FT$};
+    \draw [{-latex},very thick,color=mpltabblue,shorten <=1.5mm] (TendonStart) -- (FM1);
+    
+    \node (FM2) at ($ (MuscleEnd) + (\PenAngle:1.3 cm)$) {$\FM$};
+    \draw [{-latex},very thick,color=mpltabblue,shorten <=1.5mm] (MuscleEnd) -- (FM2);
+    
+\end{circuitikz}
+
+\end{varwidth}
+
+\end{document}

@@ -255,9 +255,6 @@ RR
 .. autoclass:: RealField
    :members:
 
-.. autoclass:: sympy.polys.domains.mpelements.RealElement
-   :members:
-
 .. _CC:
 
 
@@ -265,9 +262,6 @@ CC
 ==
 
 .. autoclass:: ComplexField
-   :members:
-
-.. autoclass:: sympy.polys.domains.mpelements.ComplexElement
    :members:
 
 .. _K[x]:

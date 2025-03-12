@@ -4,6 +4,7 @@
 from itertools import combinations_with_replacement, product
 from textwrap import dedent
 
+from sympy.core.cache import cacheit
 from sympy.core import Mul, S, Tuple, sympify
 from sympy.polys.polyerrors import ExactQuotientFailed
 from sympy.polys.polyutils import PicklableWithSlots, dict_from_expr
@@ -120,7 +121,7 @@ def itermonomials(variables, max_degrees, min_degrees=None):
         if all(variable.is_commutative for variable in variables):
             monomials_list_comm = []
             for item in combinations_with_replacement(variables, max_degree):
-                powers = {variable: 0 for variable in variables}
+                powers = dict.fromkeys(variables, 0)
                 for variable in item:
                     if variable != 1:
                         powers[variable] += 1
@@ -130,7 +131,7 @@ def itermonomials(variables, max_degrees, min_degrees=None):
         else:
             monomials_list_non_comm = []
             for item in product(variables, repeat=max_degree):
-                powers = {variable: 0 for variable in variables}
+                powers = dict.fromkeys(variables, 0)
                 for variable in item:
                     if variable != 1:
                         powers[variable] += 1
@@ -394,8 +395,14 @@ def term_div(a, b, domain):
 class MonomialOps:
     """Code generator of fast monomial arithmetic functions. """
 
-    def __init__(self, ngens):
-        self.ngens = ngens
+    @cacheit
+    def __new__(cls, ngens):
+        obj = super().__new__(cls)
+        obj.ngens = ngens
+        return obj
+
+    def __getnewargs__(self):
+        return (self.ngens,)
 
     def _build(self, code, name):
         ns = {}
@@ -405,6 +412,7 @@ class MonomialOps:
     def _vars(self, name):
         return [ "%s%s" % (name, i) for i in range(self.ngens) ]
 
+    @cacheit
     def mul(self):
         name = "monomial_mul"
         template = dedent("""\
@@ -419,6 +427,7 @@ class MonomialOps:
         code = template % {"name": name, "A": ", ".join(A), "B": ", ".join(B), "AB": ", ".join(AB)}
         return self._build(code, name)
 
+    @cacheit
     def pow(self):
         name = "monomial_pow"
         template = dedent("""\
@@ -431,6 +440,7 @@ class MonomialOps:
         code = template % {"name": name, "A": ", ".join(A), "Ak": ", ".join(Ak)}
         return self._build(code, name)
 
+    @cacheit
     def mulpow(self):
         name = "monomial_mulpow"
         template = dedent("""\
@@ -445,6 +455,7 @@ class MonomialOps:
         code = template % {"name": name, "A": ", ".join(A), "B": ", ".join(B), "ABk": ", ".join(ABk)}
         return self._build(code, name)
 
+    @cacheit
     def ldiv(self):
         name = "monomial_ldiv"
         template = dedent("""\
@@ -459,6 +470,7 @@ class MonomialOps:
         code = template % {"name": name, "A": ", ".join(A), "B": ", ".join(B), "AB": ", ".join(AB)}
         return self._build(code, name)
 
+    @cacheit
     def div(self):
         name = "monomial_div"
         template = dedent("""\
@@ -475,6 +487,7 @@ class MonomialOps:
         code = template % {"name": name, "A": ", ".join(A), "B": ", ".join(B), "RAB": "\n    ".join(RAB), "R": ", ".join(R)}
         return self._build(code, name)
 
+    @cacheit
     def lcm(self):
         name = "monomial_lcm"
         template = dedent("""\
@@ -489,6 +502,7 @@ class MonomialOps:
         code = template % {"name": name, "A": ", ".join(A), "B": ", ".join(B), "AB": ", ".join(AB)}
         return self._build(code, name)
 
+    @cacheit
     def gcd(self):
         name = "monomial_gcd"
         template = dedent("""\
@@ -593,18 +607,9 @@ class Monomial(PicklableWithSlots):
 
     def __pow__(self, other):
         n = int(other)
-
-        if not n:
-            return self.rebuild([0]*len(self))
-        elif n > 0:
-            exponents = self.exponents
-
-            for i in range(1, n):
-                exponents = monomial_mul(exponents, self.exponents)
-
-            return self.rebuild(exponents)
-        else:
+        if n < 0:
             raise ValueError("a non-negative integer expected, got %s" % other)
+        return self.rebuild(monomial_pow(self.exponents, n))
 
     def gcd(self, other):
         """Greatest common divisor of monomials. """

@@ -1,5 +1,4 @@
-from sympy.core.expr import Expr
-from sympy.core.function import (Derivative, Function, Lambda, expand)
+from sympy.core.function import (Derivative, Function, Lambda, expand, PoleError)
 from sympy.core.numbers import (E, I, Rational, comp, nan, oo, pi, zoo)
 from sympy.core.relational import Eq
 from sympy.core.singleton import S
@@ -9,6 +8,7 @@ from sympy.functions.elementary.exponential import (exp, exp_polar, log)
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import (acos, atan, atan2, cos, sin)
+from sympy.functions.elementary.hyperbolic import sinh
 from sympy.functions.special.delta_functions import (DiracDelta, Heaviside)
 from sympy.integrals.integrals import Integral
 from sympy.matrices.dense import Matrix
@@ -19,6 +19,7 @@ from sympy.matrices import SparseMatrix
 from sympy.sets.sets import Interval
 from sympy.core.expr import unchanged
 from sympy.core.function import ArgumentIndexError
+from sympy.series.order import Order
 from sympy.testing.pytest import XFAIL, raises, _both_exp_pow
 
 
@@ -605,6 +606,15 @@ def test_arg():
     assert arg(exp_polar(4*pi*I)) == 4*pi
     assert arg(exp_polar(-7*pi*I)) == -7*pi
     assert arg(exp_polar(5 - 3*pi*I/4)) == pi*Rational(-3, 4)
+
+    assert arg(exp(I*pi/7)) == pi/7     # issue 17300
+    assert arg(exp(16*I)) == 16 - 6*pi
+    assert arg(exp(13*I*pi/12)) == -11*pi/12
+    assert arg(exp(123 - 5*I)) == -5 + 2*pi
+    assert arg(exp(sin(1 + 3*I))) == -2*pi + cos(1)*sinh(3)
+    r = Symbol('r', real=True)
+    assert arg(exp(r - 2*I)) == -2
+
     f = Function('f')
     assert not arg(f(0) + I*f(1)).atoms(re)
 
@@ -661,6 +671,17 @@ def test_arg_rewrite():
     assert arg(x + I*y).rewrite(atan2) == atan2(y, x)
 
 
+def test_arg_leading_term_and_series():
+    x = Symbol('x')
+    assert arg(x).as_leading_term(x, cdir = 1) == 0
+    assert arg(x).as_leading_term(x, cdir = -1) == pi
+    raises(PoleError, lambda: arg(x + I).as_leading_term(x, cdir = 1))
+    raises(PoleError, lambda: arg(2*x).as_leading_term(x, cdir = I))
+
+    assert arg(x).nseries(x) == 0
+    assert arg(x).nseries(x, n=0) == Order(1)
+
+
 def test_adjoint():
     a = Symbol('a', antihermitian=True)
     b = Symbol('b', hermitian=True)
@@ -673,11 +694,11 @@ def test_adjoint():
 
     x, y = symbols('x y')
     assert adjoint(adjoint(x)) == x
-    assert adjoint(x + y) == adjoint(x) + adjoint(y)
-    assert adjoint(x - y) == adjoint(x) - adjoint(y)
-    assert adjoint(x * y) == adjoint(x) * adjoint(y)
-    assert adjoint(x / y) == adjoint(x) / adjoint(y)
-    assert adjoint(-x) == -adjoint(x)
+    assert adjoint(x + y) == conjugate(x) + conjugate(y)
+    assert adjoint(x - y) == conjugate(x) - conjugate(y)
+    assert adjoint(x * y) == conjugate(x) * conjugate(y)
+    assert adjoint(x / y) == conjugate(x) / conjugate(y)
+    assert adjoint(-x) == -conjugate(x)
 
     x, y = symbols('x y', commutative=False)
     assert adjoint(adjoint(x)) == x
@@ -715,7 +736,7 @@ def test_conjugate():
 
 
 def test_conjugate_transpose():
-    x = Symbol('x')
+    x = Symbol('x', commutative=False)
     assert conjugate(transpose(x)) == adjoint(x)
     assert transpose(conjugate(x)) == adjoint(x)
     assert adjoint(transpose(x)) == conjugate(x)
@@ -723,16 +744,7 @@ def test_conjugate_transpose():
     assert adjoint(conjugate(x)) == transpose(x)
     assert conjugate(adjoint(x)) == transpose(x)
 
-    class Symmetric(Expr):
-        def _eval_adjoint(self):
-            return None
-
-        def _eval_conjugate(self):
-            return None
-
-        def _eval_transpose(self):
-            return self
-    x = Symmetric()
+    x = Symbol('x')
     assert conjugate(x) == adjoint(x)
     assert transpose(x) == x
 
@@ -744,11 +756,11 @@ def test_transpose():
 
     x, y = symbols('x y')
     assert transpose(transpose(x)) == x
-    assert transpose(x + y) == transpose(x) + transpose(y)
-    assert transpose(x - y) == transpose(x) - transpose(y)
-    assert transpose(x * y) == transpose(x) * transpose(y)
-    assert transpose(x / y) == transpose(x) / transpose(y)
-    assert transpose(-x) == -transpose(x)
+    assert transpose(x + y) == x + y
+    assert transpose(x - y) == x - y
+    assert transpose(x * y) == x * y
+    assert transpose(x / y) == x / y
+    assert transpose(-x) == -x
 
     x, y = symbols('x y', commutative=False)
     assert transpose(transpose(x)) == x

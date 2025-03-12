@@ -28,7 +28,7 @@ ErrorListener = import_module('antlr4.error.ErrorListener',
 
 
 if ErrorListener:
-    class MathErrorListener(ErrorListener.ErrorListener):  # type: ignore
+    class MathErrorListener(ErrorListener.ErrorListener):  # type:ignore # noqa:F811
         def __init__(self, src):
             super(ErrorListener.ErrorListener, self).__init__()
             self.src = src

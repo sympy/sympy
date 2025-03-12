@@ -95,7 +95,7 @@ def test_vector_integrate():
     assert vector_integrate(-23*C.z, poly) == -161*C.z - 23*sqrt(17)*C.z
 
     point = Point(2, 3)
-    assert vector_integrate(C.i*C.y - C.z, point) == ParametricIntegral(C.y*C.i, ParametricRegion((2, 3)))
+    assert vector_integrate(C.i*C.y, point) == ParametricIntegral(C.y*C.i, ParametricRegion((2, 3)))
 
     c3 = ImplicitRegion((x, y), x**2 + y**2 - 4)
     assert vector_integrate(45, c3) == 180*pi

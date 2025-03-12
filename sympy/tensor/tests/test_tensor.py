@@ -4,10 +4,11 @@ from sympy.core.numbers import Integer
 from sympy.matrices.dense import (Matrix, eye)
 from sympy.tensor.indexed import Indexed
 from sympy.combinatorics import Permutation
-from sympy.core import S, Rational, Symbol, Basic, Add
+from sympy.core import S, Rational, Symbol, Basic, Add, Wild, Function
 from sympy.core.containers import Tuple
 from sympy.core.symbol import symbols
 from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.integrals import integrate
 from sympy.tensor.array import Array
 from sympy.tensor.tensor import TensorIndexType, tensor_indices, TensorSymmetry, \
     get_symmetric_group_sgs, TensorIndex, tensor_mul, TensAdd, \
@@ -423,6 +424,23 @@ def test_canonicalize3():
     t1 = t.canon_bp()
     assert t1 == -chi(a0)*psi(a1)
 
+def test_canonicalize4():
+    #Check whether TensAdd.canon_bp chokes on a case where the type of the expression changes on calling expand
+    Cartesian = TensorIndexType('Cartesian', dim=3)
+    p = tensor_indices("p", Cartesian)
+    K = TensorHead("K", [Cartesian])
+    expr = TensAdd( K(p) , - 2*K(p) )
+    assert expr.canon_bp() == -K(p)
+
+def test_canonicalize5():
+    R3 = TensorIndexType('R3', dim=3)
+    p = tensor_indices("p", R3)
+    K = TensorHead("K", [R3])
+    f = symbols("f", cls=Function)
+    x = symbols("x")
+
+    expr = integrate(f(x), (x,0,1)) * K(p)
+    assert expr.as_dummy().canon_bp() == integrate(f(x), (x,0,1)).as_dummy() * K(p)
 
 def test_TensorIndexType():
     D = Symbol('D')
@@ -1007,6 +1025,20 @@ def test_contract_metric4():
     assert expr.contract_metric(delta) == 0
 
 
+def test_contract_metric5():
+    R3 = TensorIndexType('R3', dim=3)
+    p, q, r = tensor_indices("p q r", R3)
+    delta = R3.delta
+    K = TensorHead("K", [R3])
+
+    F = Function("F")
+    x = Symbol("x")
+
+    #Check if contract_metric gets into an infinite loop when given a TensMul whose coeff is an Add
+    expr = (2+F(x))*K(-p)*K(-q)
+    assert expr.contract_metric(delta) == expr
+
+
 def test_epsilon():
     Lorentz = TensorIndexType('Lorentz', dim=4, dummy_name='L')
     a, b, c, d, e = tensor_indices('a,b,c,d,e', Lorentz)
@@ -1088,6 +1120,16 @@ def test_contract_delta1():
     t = P1(a, -b, b, -a)
     t1 = t.contract_delta(delta)
     assert t1.equals(n**2 - 1)
+
+def test_contract_delta2():
+    R3 = TensorIndexType('R3', dim=3)
+    p, q = tensor_indices("p q", R3)
+    delta = R3.delta
+    K = TensorHead("K", [R3])
+
+    #Check if TensAdd.contract_delta can handle the case when the TensAdd has non-TensExpr args.
+    expr = 1 + K(p)*K(q)*delta(-p,-q)
+    assert expr.contract_delta(delta) == 1 + K(p)*K(-p)
 
 def test_fun():
     with warns_deprecated_sympy():
@@ -1770,6 +1812,9 @@ def test_tensor_expand():
 
     A, B, C, D = tensor_heads("A B C D", [L])
 
+    F = Function("F")
+    x = Symbol("x")
+
     assert isinstance(Add(A(i), B(i)), TensAdd)
     assert isinstance(expand(A(i)+B(i)), TensAdd)
 
@@ -1813,6 +1858,21 @@ def test_tensor_expand():
 
     expr = C(-i)*(B(j)*B(-j) + B(j)*C(-j))
     assert expr.expand() == C(-i)*B(j)*B(-j) + C(-i)*B(j)*C(-j)
+
+    """
+    Test whether expand correctly handles the case where the coeff of a TensMul
+    is an add. We do not directly check expr_expand == 2*A(i) + F(x)*A(i) since
+    __add__ currently consolidates the coefficients automatically
+    """
+    expr = (2 + F(x))*A(i)
+    expr_expand = expr.expand()
+    assert isinstance(expr_expand, TensAdd)
+    assert expr_expand.args == (2*A(i), F(x)*A(i))
+
+    expr = (2 + F(x))*A(i) + B(i)
+    expr_expand = expr.expand()
+    assert isinstance(expr_expand, TensAdd)
+    assert expr_expand.args == (2*A(i), F(x)*A(i), B(i))
 
 
 def test_tensor_alternative_construction():
@@ -1983,6 +2043,7 @@ def test_tensor_matching():
     p, q, r = tensor_indices("p q r", R3)
     a,b,c = symbols("a b c", cls = WildTensorIndex, tensor_index_type=R3, ignore_updown=True)
     g = WildTensorIndex("g", R3)
+    delta = R3.delta
     eps = R3.epsilon
     K = TensorHead("K", [R3])
     V = TensorHead("V", [R3])
@@ -2005,6 +2066,87 @@ def test_tensor_matching():
     assert U(p,q).matches( A(q,p) ) == None
     assert ( K(q)*K(p) ).replace( W(q,p), 1) == 1
 
+    #Some tests for matching without Wild
+    assert delta(p,q).matches(delta(q,p)) == {}
+    assert eps(p,q,r).matches(eps(q,p,r)) is None
+    assert eps(p,q,r).matches(eps(q,r,p)) == {}
+
+def test_TensAdd_matching():
+    """
+    Test match and replace with the pattern being a TensAdd
+    """
+    R3 = TensorIndexType('R3', dim=3)
+    p, q = tensor_indices("p q", R3)
+    K = TensorHead("K", [R3])
+    V = TensorHead("V", [R3])
+    W = WildTensorHead('W', unordered_indices=True)
+
+    assert ( K(p)*K(q) + V(p)*V(q) ).matches( K(p)*K(q) + V(p)*V(q) ) == {}
+    assert ( K(p)*K(q) + V(p)*V(q) ).matches( K(p)*K(q) + V(p)*V(q) + K(p)*V(q) + V(p)*K(q) ) is None
+    assert ( K(p)*K(q) + V(p)*V(q) + K(p)*V(q) + K(q)*V(p) ).replace(
+        W(p,q) + K(p)*K(q) + V(p)*V(q),
+        W(p,q) + 3*K(p)*V(q)
+        ).doit() == K(q)*V(p) + 4*K(p)*V(q)
+
+def test_TensMul_matching():
+    """
+    Test match and replace with the pattern being a TensMul
+    """
+    R3 = TensorIndexType('R3', dim=3)
+    p, q, r, s, t = tensor_indices("p q r s t", R3)
+    wi = Wild("wi")
+    a,b,c,d,e,f = symbols("a b c d e f", cls = WildTensorIndex, tensor_index_type=R3, ignore_updown=True)
+    delta = R3.delta
+    eps = R3.epsilon
+    K = TensorHead("K", [R3])
+    V = TensorHead("V", [R3])
+    W = WildTensorHead('W', unordered_indices=True)
+    U = WildTensorHead('U')
+    k = Symbol("K")
+
+    assert ( wi*K(p) ).matches( K(p) ) == {wi: 1}
+    assert ( wi * eps(p,q,r) ).matches(eps(p,r,q)) == {wi:-1}
+    assert ( K(p)*V(-p) ).replace( W(a)*V(-a), 1) == 1
+    assert ( K(q)*K(p)*V(-p) ).replace( W(q,a)*V(-a), 1) == 1
+    assert ( K(p)*V(-p) ).replace( K(-a)*V(a), 1 ) == 1
+    assert ( K(q)*K(p)*V(-p) ).replace( W(q)*U(p)*V(-p), 1) == 1
+    assert (
+        (K(p)*V(q)).replace(W()*K(p)*V(q), W()*V(p)*V(q)).doit()
+        == V(p)*V(q)
+        )
+    assert (
+        ( eps(r,p,q)*eps(-r,-s,-t) ).replace(
+            eps(e,a,b)*eps(-e,c,d),
+            delta(a,c)*delta(b,d) - delta(a,d)*delta(b,c),
+            ).doit().canon_bp()
+        == delta(p,-s)*delta(q,-t) - delta(p,-t)*delta(q,-s)
+        )
+    assert (
+        ( eps(r,p,q)*eps(-r,-p,-q) ).replace(
+            eps(c,a,b)*eps(-c,d,f),
+            delta(a,d)*delta(b,f) - delta(a,f)*delta(b,d),
+            ).contract_delta(delta).doit()
+        == 6
+        )
+    assert ( V(-p)*V(q)*V(-q) ).replace( wi*W()*V(a)*V(-a), wi*W() ).doit() == V(-p)
+    assert ( k**4*K(r)*K(-r) ).replace( wi*W()*K(a)*K(-a), wi*W()*k**2 ).doit() == k**6
+
+    #Multiple occurrence of WildTensor in value
+    assert (
+        ( K(p)*V(q) ).replace(W(q)*K(p), W(p)*W(q))
+        == V(p)*V(q)
+        )
+    assert (
+        ( K(p)*V(q)*V(r) ).replace(W(q,r)*K(p), W(p,r)*W(q,s)*V(-s) )
+        == V(p)*V(r)*V(q)*V(s)*V(-s)
+        )
+
+    #Edge case involving automatic index relabelling
+    D0, D1, D2, D3 = tensor_indices("R_0 R_1 R_2 R_3", R3)
+    expr = delta(-D0, -D1)*K(D2)*K(D3)*K(-D3)
+    m = ( W()*K(a)*K(-a) ).matches(expr)
+    assert D2 not in m.values()
+
 def test_TensMul_subs():
     """
     Test subs and xreplace in TensMul. See bug #24337
@@ -2015,11 +2157,13 @@ def test_TensMul_subs():
     V = TensorHead("V", [R3])
     A = TensorHead("A", [R3, R3])
     C0 = TensorIndex(R3.dummy_name + "_0", R3, True)
+    a = WildTensorIndex("a", R3, ignore_updown=True)
 
     assert ( K(p)*V(r)*K(-p) ).subs({V(r): K(q)*K(-q)}) == K(p)*K(q)*K(-q)*K(-p)
     assert ( K(p)*V(r)*K(-p) ).xreplace({V(r): K(q)*K(-q)}) == K(p)*K(q)*K(-q)*K(-p)
     assert ( K(p)*V(r) ).xreplace({p: C0, V(r): K(q)*K(-q)}) == K(C0)*K(q)*K(-q)
     assert ( K(p)*A(q,-q)*K(-p) ).doit() == K(p)*A(q,-q)*K(-p)
+    assert ( K(p)*V(-p) ).replace( K(a), V(a)*V(q)*V(-q) ) == V(p)*V(q)*V(-q)*V(-p)
 
 
 def test_tensorsymmetry():
@@ -2059,3 +2203,16 @@ def test_postprocessor():
 
     assert isinstance((x*2).replace(x, K(i)), TensMul)
     assert isinstance((x+2).replace(x, K(i)*K(-i)), TensAdd)
+
+def test_TensMul_nocoeff():
+    """
+    Ensure that for any TensMul instance, self.coeff * self.nocoeff == self
+    """
+
+    R3 = TensorIndexType('R3', dim=3)
+    i, j = tensor_indices("i j", R3)
+    K = TensorHead("K", [R3])
+    P = TensorHead("P", [R3])
+
+    expr = TensMul(2, K(i), P(j))
+    assert expr.coeff * expr.nocoeff == expr

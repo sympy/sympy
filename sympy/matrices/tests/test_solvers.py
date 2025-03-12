@@ -5,12 +5,12 @@ from sympy.core.singleton import S
 from sympy.core.symbol import (Symbol, symbols)
 from sympy.core.sympify import sympify
 from sympy.simplify.simplify import simplify
-from sympy.matrices.matrices import (ShapeError, NonSquareMatrixError)
+from sympy.matrices.exceptions import (ShapeError, NonSquareMatrixError)
 from sympy.matrices import (
     ImmutableMatrix, Matrix, eye, ones, ImmutableDenseMatrix, dotprodsimp)
 from sympy.matrices.determinant import _det_laplace
 from sympy.testing.pytest import raises
-from sympy.matrices.common import NonInvertibleMatrixError
+from sympy.matrices.exceptions import NonInvertibleMatrixError
 from sympy.polys.matrices.exceptions import DMShapeError
 from sympy.solvers.solveset import linsolve
 from sympy.abc import x, y
@@ -119,6 +119,20 @@ def test_LUsolve():
     A = Matrix(4, 4, lambda i, j: 1/(i+j+1) if i != 3 else 0)
     b = Matrix.zeros(4, 1)
     raises(NonInvertibleMatrixError, lambda: A.LUsolve(b))
+
+
+def test_LUsolve_noncommutative():
+    a0, a1, a2, a3 = symbols("a:4", commutative=False)
+    b0, b1 = symbols("b:2", commutative=False)
+    A = Matrix([[a0, a1], [a2, a3]])
+    check = A * A.LUsolve(Matrix([b0, b1]))
+    assert check[0, 0].expand() == b0
+    # Because sympy simplification is very limited with noncommutative expressions,
+    # perform an explicit check with the second element
+    assert check[1, 0] == (
+        a2*a0**(-1)*(-a1*(-a2*a0**(-1)*a1 + a3)**(-1)*(-a2*a0**(-1)*b0 + b1) + b0)
+        + a3*(-a2*a0**(-1)*a1 + a3)**(-1)*(-a2*a0**(-1)*b0 + b1)
+    )
 
 
 def test_QRsolve():

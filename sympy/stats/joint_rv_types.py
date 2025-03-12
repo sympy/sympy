@@ -586,7 +586,7 @@ class MultivariateEwensDistribution(JointDistribution):
         if condi:
             term_2 = Mul.fromiter(theta**syms[j]/((j+1)**syms[j]*factorial(syms[j]))
                                     for j in range(n))
-            cond = Eq(sum([(k + 1)*syms[k] for k in range(n)]), n)
+            cond = Eq(sum((k + 1)*syms[k] for k in range(n)), n)
             return Piecewise((term_1 * term_2, cond), (0, True))
         syms = syms[0]
         j, k = symbols('j, k', positive=True, integer=True)
@@ -633,8 +633,7 @@ def MultivariateEwens(syms, n, theta):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Ewens%27s_sampling_formula
-    .. [2] https://www.researchgate.net/publication/280311472_The_Ubiquitous_Ewens_Sampling_Formula
-
+    .. [2] https://www.jstor.org/stable/24780825
     """
     return multivariate_rv(MultivariateEwensDistribution, syms, n, theta)
 
@@ -668,8 +667,8 @@ class GeneralizedMultivariateLogGammaDistribution(JointDistribution):
                 ((gamma(v + n)**(k - 1))*gamma(v)*gamma(n + 1))
         sterm2 = Mul.fromiter(mui*li**(-v - n) for mui, li in zip(mu, l))
         term1 = sterm1 * sterm2
-        sterm3 = (v + n) * sum([mui * yi for mui, yi in zip(mu, y)])
-        sterm4 = sum([exp(mui * yi)/li for (mui, yi, li) in zip(mu, y, l)])
+        sterm3 = (v + n) * sum(mui * yi for mui, yi in zip(mu, y))
+        sterm4 = sum(exp(mui * yi)/li for (mui, yi, li) in zip(mu, y, l))
         term2 = exp(sterm3 - sterm4)
         return Pow(d, v) * Sum(term1 * term2, (n, 0, S.Infinity))
 

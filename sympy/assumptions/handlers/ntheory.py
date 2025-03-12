@@ -5,7 +5,7 @@ Handlers for keys related to number theory: prime, even, odd, etc.
 from sympy.assumptions import Q, ask
 from sympy.core import Add, Basic, Expr, Float, Mul, Pow, S
 from sympy.core.numbers import (ImaginaryUnit, Infinity, Integer, NaN,
-    NegativeInfinity, NumberSymbol, Rational)
+    NegativeInfinity, NumberSymbol, Rational, int_valued)
 from sympy.functions import Abs, im, re
 from sympy.ntheory import isprime
 
@@ -63,7 +63,14 @@ def _(expr, assumptions):
         return _PrimePredicate_number(expr, assumptions)
     if ask(Q.integer(expr.exp), assumptions) and \
             ask(Q.integer(expr.base), assumptions):
-        return False
+        prime_base = ask(Q.prime(expr.base), assumptions)
+        if prime_base is False:
+            return False
+        is_exp_one = ask(Q.eq(expr.exp, 1), assumptions)
+        if is_exp_one is False:
+            return False
+        if prime_base is True and is_exp_one is True:
+            return True
 
 @PrimePredicate.register(Integer)
 def _(expr, assumptions):
@@ -106,8 +113,11 @@ def _(expr, assumptions):
                 return
             # Positive integer which is not prime is not
             # necessarily composite
-            if expr.equals(1):
+            _is_one = ask(Q.eq(expr, 1), assumptions)
+            if _is_one:
                 return False
+            if _is_one is None:
+                return None
             return not _prime
         else:
             return _integer
@@ -119,13 +129,15 @@ def _(expr, assumptions):
 
 def _EvenPredicate_number(expr, assumptions):
     # helper method
+    if isinstance(expr, (float, Float)):
+        if int_valued(expr):
+            return None
+        return False
     try:
         i = int(expr.round())
-        if not (expr - i).equals(0):
-            raise TypeError
     except TypeError:
         return False
-    if isinstance(expr, (float, Float)):
+    if not (expr - i).equals(0):
         return False
     return i % 2 == 0
 

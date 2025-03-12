@@ -1,5 +1,5 @@
-from sympy.core.backend import sympify
-from sympy.physics.vector import Point, Dyadic, ReferenceFrame
+from sympy import sympify
+from sympy.physics.vector import Point, Dyadic, ReferenceFrame, outer
 from collections import namedtuple
 
 __all__ = ['inertia', 'inertia_of_point_mass', 'Inertia']
@@ -46,11 +46,11 @@ def inertia(frame, ixx, iyy, izz, ixy=0, iyz=0, izx=0):
         raise TypeError('Need to define the inertia in a frame')
     ixx, iyy, izz = sympify(ixx), sympify(iyy), sympify(izz)
     ixy, iyz, izx = sympify(ixy), sympify(iyz), sympify(izx)
-    return (ixx * (frame.x | frame.x) + ixy * (frame.x | frame.y) +
-            izx * (frame.x | frame.z) + ixy * (frame.y | frame.x) +
-            iyy * (frame.y | frame.y) + iyz * (frame.y | frame.z) +
-            izx * (frame.z | frame.x) + iyz * (frame.z | frame.y) +
-            izz * (frame.z | frame.z))
+    return (ixx*outer(frame.x, frame.x) + ixy*outer(frame.x, frame.y) +
+            izx*outer(frame.x, frame.z) + ixy*outer(frame.y, frame.x) +
+            iyy*outer(frame.y, frame.y) + iyz*outer(frame.y, frame.z) +
+            izx*outer(frame.z, frame.x) + iyz*outer(frame.z, frame.y) +
+            izz*outer(frame.z, frame.z))
 
 
 def inertia_of_point_mass(mass, pos_vec, frame):
@@ -79,9 +79,11 @@ def inertia_of_point_mass(mass, pos_vec, frame):
 
     """
 
-    return mass * (
-        ((frame.x | frame.x) + (frame.y | frame.y) + (frame.z | frame.z)) *
-        (pos_vec & pos_vec) - (pos_vec | pos_vec))
+    return mass*(
+        (outer(frame.x, frame.x) +
+         outer(frame.y, frame.y) +
+         outer(frame.z, frame.z)) *
+        (pos_vec.dot(pos_vec)) - outer(pos_vec, pos_vec))
 
 
 class Inertia(namedtuple('Inertia', ['dyadic', 'point'])):
@@ -118,6 +120,8 @@ class Inertia(namedtuple('Inertia', ['dyadic', 'point'])):
     ((N.x|N.x) + (N.y|N.y) + (N.z|N.z), Po)
 
     """
+    __slots__ = ()
+
     def __new__(cls, dyadic, point):
         # Switch order if given in the wrong order
         if isinstance(dyadic, Point) and isinstance(point, Dyadic):

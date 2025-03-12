@@ -25,8 +25,7 @@ from sympy.abc import x, y, z, a, b, c, t, k, n
 antlr4 = import_module("antlr4")
 
 # disable tests if antlr4-python3-runtime is not present
-if not antlr4:
-    disabled = True
+disabled = antlr4 is None
 
 theta = Symbol('theta')
 f = Function('f')

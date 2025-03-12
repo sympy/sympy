@@ -2,16 +2,16 @@ from collections import defaultdict
 from sympy.core.containers import Tuple
 from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, Symbol)
-
+from sympy.functions.combinatorial.numbers import totient
 from sympy.ntheory import n_order, is_primitive_root, is_quad_residue, \
-    legendre_symbol, jacobi_symbol, totient, primerange, sqrt_mod, \
+    legendre_symbol, jacobi_symbol, primerange, sqrt_mod, \
     primitive_root, quadratic_residues, is_nthpow_residue, nthroot_mod, \
     sqrt_mod_iter, mobius, discrete_log, quadratic_congruence, \
     polynomial_congruence, sieve
 from sympy.ntheory.residue_ntheory import _primitive_root_prime_iter, \
     _primitive_root_prime_power_iter, _primitive_root_prime_power2_iter, \
-    _discrete_log_trial_mul, _discrete_log_shanks_steps, \
-    _discrete_log_pollard_rho, _discrete_log_pohlig_hellman, \
+    _nthroot_mod_prime_power, _discrete_log_trial_mul, _discrete_log_shanks_steps, \
+    _discrete_log_pollard_rho, _discrete_log_index_calculus, _discrete_log_pohlig_hellman, \
     _binomial_mod_prime_power, binomial_mod
 from sympy.polys.domains import ZZ
 from sympy.testing.pytest import raises
@@ -186,9 +186,30 @@ def test_residue():
     assert not is_nthpow_residue(2, 2, 5)
     assert is_nthpow_residue(8547, 12, 10007)
     assert is_nthpow_residue(Dummy(even=True) + 3, 3, 2) == True
-    assert nthroot_mod(Dummy(odd=True), 3, 2) == 1
+    # _nthroot_mod_prime_power
+    for p in primerange(2, 10):
+        for a in range(3):
+            for n in range(3, 5):
+                ans = _nthroot_mod_prime_power(a, n, p, 1)
+                assert isinstance(ans, list)
+                if len(ans) == 0:
+                    for b in range(p):
+                        assert pow(b, n, p) != a % p
+                    for k in range(2, 10):
+                        assert _nthroot_mod_prime_power(a, n, p, k) == []
+                else:
+                    for b in range(p):
+                        pred = pow(b, n, p) == a % p
+                        assert not(pred ^ (b in ans))
+                    for k in range(2, 10):
+                        ans = _nthroot_mod_prime_power(a, n, p, k)
+                        if not ans:
+                            break
+                        for b in ans:
+                            assert pow(b, n , p**k) == a
 
-    assert nthroot_mod(29, 31, 74) == [45]
+    assert nthroot_mod(Dummy(odd=True), 3, 2) == 1
+    assert nthroot_mod(29, 31, 74) == 45
     assert nthroot_mod(1801, 11, 2663) == 44
     for a, q, p in [(51922, 2, 203017), (43, 3, 109), (1801, 11, 2663),
           (26118163, 1303, 33333347), (1499, 7, 2663), (595, 6, 2663),
@@ -198,59 +219,29 @@ def test_residue():
     assert nthroot_mod(11, 3, 109) is None
     assert nthroot_mod(16, 5, 36, True) == [4, 22]
     assert nthroot_mod(9, 16, 36, True) == [3, 9, 15, 21, 27, 33]
-    assert nthroot_mod(4, 3, 3249000) == []
+    assert nthroot_mod(4, 3, 3249000) is None
     assert nthroot_mod(36010, 8, 87382, True) == [40208, 47174]
     assert nthroot_mod(0, 12, 37, True) == [0]
     assert nthroot_mod(0, 7, 100, True) == [0, 10, 20, 30, 40, 50, 60, 70, 80, 90]
     assert nthroot_mod(4, 4, 27, True) == [5, 22]
     assert nthroot_mod(4, 4, 121, True) == [19, 102]
     assert nthroot_mod(2, 3, 7, True) == []
-
-    for p in range(5, 100):
-        qv = range(3, p, 4)
-        for q in qv:
-            d = defaultdict(list)
-            for i in range(p):
-                d[pow(i, q, p)].append(i)
-            for a in range(1, p - 1):
-                res = nthroot_mod(a, q, p, True)
-                if d[a]:
-                    assert d[a] == res
+    for p in range(1, 20):
+        for a in range(p):
+            for n in range(1, p):
+                ans = nthroot_mod(a, n, p, True)
+                assert isinstance(ans, list)
+                for b in range(p):
+                    pred = pow(b, n, p) == a
+                    assert not(pred ^ (b in ans))
+                ans2 = nthroot_mod(a, n, p, False)
+                if ans2 is None:
+                    assert ans == []
                 else:
-                    assert res == []
+                    assert ans2 in ans
 
-    assert legendre_symbol(5, 11) == 1
-    assert legendre_symbol(25, 41) == 1
-    assert legendre_symbol(67, 101) == -1
-    assert legendre_symbol(0, 13) == 0
-    assert legendre_symbol(9, 3) == 0
-    raises(ValueError, lambda: legendre_symbol(2, 4))
-
-    assert jacobi_symbol(25, 41) == 1
-    assert jacobi_symbol(-23, 83) == -1
-    assert jacobi_symbol(3, 9) == 0
-    assert jacobi_symbol(42, 97) == -1
-    assert jacobi_symbol(3, 5) == -1
-    assert jacobi_symbol(7, 9) == 1
-    assert jacobi_symbol(0, 3) == 0
-    assert jacobi_symbol(0, 1) == 1
-    assert jacobi_symbol(2, 1) == 1
-    assert jacobi_symbol(1, 3) == 1
-    raises(ValueError, lambda: jacobi_symbol(3, 8))
-
-    assert mobius(13*7) == 1
-    assert mobius(1) == 1
-    assert mobius(13*7*5) == -1
-    assert mobius(13**2) == 0
-    raises(ValueError, lambda: mobius(-3))
-
-    p = Symbol('p', integer=True, positive=True, prime=True)
     x = Symbol('x', positive=True)
     i = Symbol('i', integer=True)
-    assert mobius(p) == -1
-    raises(TypeError, lambda: mobius(x))
-    raises(ValueError, lambda: mobius(i))
-
     assert _discrete_log_trial_mul(587, 2**7, 2) == 7
     assert _discrete_log_trial_mul(941, 7**18, 7) == 18
     assert _discrete_log_trial_mul(389, 3**81, 3) == 81
@@ -265,15 +256,26 @@ def test_residue():
     assert _discrete_log_pollard_rho(24567899, 3**333, 3, rseed=0) == 333
     raises(ValueError, lambda: _discrete_log_pollard_rho(11, 7, 31, rseed=0))
     raises(ValueError, lambda: _discrete_log_pollard_rho(227, 3**7, 5, rseed=0))
-
+    assert _discrete_log_index_calculus(983, 948, 2, 491) == 183
+    assert _discrete_log_index_calculus(633383, 21794, 2, 316691) == 68048
+    assert _discrete_log_index_calculus(941762639, 68822582, 2, 470881319) == 338029275
+    assert _discrete_log_index_calculus(999231337607, 888188918786, 2, 499615668803) == 142811376514
+    assert _discrete_log_index_calculus(47747730623, 19410045286, 43425105668, 645239603) == 590504662
     assert _discrete_log_pohlig_hellman(98376431, 11**9, 11) == 9
     assert _discrete_log_pohlig_hellman(78723213, 11**31, 11) == 31
     assert _discrete_log_pohlig_hellman(32942478, 11**98, 11) == 98
     assert _discrete_log_pohlig_hellman(14789363, 11**444, 11) == 444
+    assert discrete_log(1, 0, 2) == 0
+    raises(ValueError, lambda: discrete_log(-4, 1, 3))
+    raises(ValueError, lambda: discrete_log(10, 3, 2))
     assert discrete_log(587, 2**9, 2) == 9
     assert discrete_log(2456747, 3**51, 3) == 51
     assert discrete_log(32942478, 11**127, 11) == 127
     assert discrete_log(432751500361, 7**324, 7) == 324
+    assert discrete_log(265390227570863,184500076053622, 2) == 17835221372061
+    assert discrete_log(22708823198678103974314518195029102158525052496759285596453269189798311427475159776411276642277139650833937,
+                        17463946429475485293747680247507700244427944625055089103624311227422110546803452417458985046168310373075327,
+                        123456) == 2068031853682195777930683306640554533145512201725884603914601918777510185469769997054750835368413389728895
     args = 5779, 3528, 6215
     assert discrete_log(*args) == 687
     assert discrete_log(*Tuple(*args)) == 687
@@ -288,6 +290,7 @@ def test_residue():
     assert quadratic_congruence(5, 10, 14, 2) == [0]
     assert quadratic_congruence(10, 17, 19, 2) == [1]
     assert quadratic_congruence(10, 14, 20, 2) == [0, 1]
+    assert quadratic_congruence(2**48-7, 2**48-1, 4, 2**48) == [8249717183797, 31960993774868]
     assert polynomial_congruence(6*x**5 + 10*x**4 + 5*x**3 + x**2 + x + 1,
         972000) == [220999, 242999, 463999, 485999, 706999, 728999, 949999, 971999]
 
@@ -333,3 +336,14 @@ def test_binomial_p_pow():
     for _ in range(trials):
         m, prime, power = randint(0, n), choice(primes), randint(1, 10)
         assert _binomial_mod_prime_power(n, m, prime, power) == binomials[m] % prime**power
+
+
+def test_deprecated_ntheory_symbolic_functions():
+    from sympy.testing.pytest import warns_deprecated_sympy
+
+    with warns_deprecated_sympy():
+        assert mobius(3) == -1
+    with warns_deprecated_sympy():
+        assert legendre_symbol(2, 3) == -1
+    with warns_deprecated_sympy():
+        assert jacobi_symbol(2, 3) == -1

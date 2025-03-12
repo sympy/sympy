@@ -1,7 +1,6 @@
 from sympy.assumptions.ask import (Q, ask)
 from sympy.core import Basic, Add, Mul, S
 from sympy.core.sympify import _sympify
-from sympy.functions import adjoint
 from sympy.functions.elementary.complexes import re, im
 from sympy.strategies import typed, exhaust, condition, do_one, unpack
 from sympy.strategies.traverse import bottom_up
@@ -9,7 +8,7 @@ from sympy.utilities.iterables import is_sequence, sift
 from sympy.utilities.misc import filldedent
 
 from sympy.matrices import Matrix, ShapeError
-from sympy.matrices.common import NonInvertibleMatrixError
+from sympy.matrices.exceptions import NonInvertibleMatrixError
 from sympy.matrices.expressions.determinant import det, Determinant
 from sympy.matrices.expressions.inverse import Inverse
 from sympy.matrices.expressions.matadd import MatAdd
@@ -76,7 +75,7 @@ class BlockMatrix(MatrixExpr):
 
     See Also
     ========
-    sympy.matrices.matrices.MatrixBase.irregular
+    sympy.matrices.matrixbase.MatrixBase.irregular
     """
     def __new__(cls, *args, **kwargs):
         from sympy.matrices.immutable import ImmutableDenseMatrix
@@ -111,7 +110,7 @@ class BlockMatrix(MatrixExpr):
             if not ok:
                 # same total cols in each row
                 ok = len({
-                    sum([i.cols for i in r]) for r in rows}) == 1
+                    sum(i.cols for i in r) for r in rows}) == 1
                 if blocky and ok:
                     raise ValueError(filldedent('''
                         Although this matrix is comprised of blocks,
@@ -187,20 +186,14 @@ class BlockMatrix(MatrixExpr):
         return BlockMatrix(M)
 
     def _eval_adjoint(self):
-        # Adjoint all the individual matrices
-        matrices = [adjoint(matrix) for matrix in self.blocks]
-        # Make a copy
-        M = Matrix(self.blockshape[0], self.blockshape[1], matrices)
-        # Transpose the block structure
-        M = M.transpose()
-        return BlockMatrix(M)
+        return BlockMatrix(
+            Matrix(self.blockshape[0], self.blockshape[1], self.blocks).adjoint()
+        )
 
     def _eval_trace(self):
         if self.rowblocksizes == self.colblocksizes:
-            return Add(*[trace(self.blocks[i, i])
-                        for i in range(self.blockshape[0])])
-        raise NotImplementedError(
-            "Can't perform trace of irregular blockshape")
+            blocks = [self.blocks[i, i] for i in range(self.blockshape[0])]
+            return Add(*[trace(block) for block in blocks])
 
     def _eval_determinant(self):
         if self.blockshape == (1, 1):
@@ -315,7 +308,7 @@ class BlockMatrix(MatrixExpr):
         See Also
         ========
 
-        sympy.matrices.matrices.MatrixBase.pinv
+        sympy.matrices.matrixbase.MatrixBase.pinv
         """
 
         if self.blockshape == (2, 2):
@@ -505,13 +498,13 @@ class BlockMatrix(MatrixExpr):
             [[A, B],
              [C, D]] = self.blocks.tolist()
             try:
-                A = A**0.5
+                A = A**S.Half
                 AI = A.I
             except NonInvertibleMatrixError:
                 raise NonInvertibleMatrixError('Block LU decomposition cannot be calculated when\
                     "A" is singular')
             Z = ZeroMatrix(*B.shape)
-            Q = self.schur()**0.5
+            Q = self.schur()**S.Half
             L = BlockMatrix([[A, Z], [C*AI, Q]])
             U = BlockMatrix([[A, AI*B],[Z.T, Q]])
             return L, U
@@ -795,8 +788,8 @@ def bc_dist(expr):
 
 def bc_matmul(expr):
     if isinstance(expr, MatPow):
-        if expr.args[1].is_Integer:
-            factor, matrices = (1, [expr.args[0]]*expr.args[1])
+        if expr.args[1].is_Integer and expr.args[1] > 0:
+            factor, matrices = 1, [expr.args[0]]*expr.args[1]
         else:
             return expr
     else:

@@ -1,12 +1,15 @@
 """Hypergeometric and Meijer G-functions"""
+from collections import Counter
+
 from sympy.core import S, Mod
 from sympy.core.add import Add
 from sympy.core.expr import Expr
-from sympy.core.function import Function, Derivative, ArgumentIndexError
+from sympy.core.function import DefinedFunction, Derivative, ArgumentIndexError
 
 from sympy.core.containers import Tuple
 from sympy.core.mul import Mul
 from sympy.core.numbers import I, pi, oo, zoo
+from sympy.core.parameters import global_parameters
 from sympy.core.relational import Ne
 from sympy.core.sorting import default_sort_key
 from sympy.core.symbol import Dummy
@@ -20,8 +23,20 @@ from sympy.functions.elementary.exponential import exp_polar
 from sympy.functions.elementary.integers import ceiling
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.logic.boolalg import (And, Or)
+from sympy import ordered
+
 
 class TupleArg(Tuple):
+
+    # This method is only needed because hyper._eval_as_leading_term falls back
+    # (via super()) on using Function._eval_as_leading_term, which in turn
+    # calls as_leading_term on the args of the hyper. Ideally hyper should just
+    # have an _eval_as_leading_term method that handles all cases and this
+    # method should be removed because leading terms of tuples don't make
+    # sense.
+    def as_leading_term(self, *x, logx=None, cdir=0):
+        return TupleArg(*[f.as_leading_term(*x, logx=logx, cdir=cdir) for f in self.args])
+
     def limit(self, x, xlim, dir='+'):
         """ Compute limit x->xlim.
         """
@@ -53,7 +68,7 @@ def _prep_tuple(v):
     return TupleArg(*[unpolarify(x) for x in v])
 
 
-class TupleParametersBase(Function):
+class TupleParametersBase(DefinedFunction):
     """ Base class that takes care of differentiation, when some of
         the arguments are actually tuples. """
     # This is not deduced automatically since there are Tuples as arguments.
@@ -120,17 +135,19 @@ class hyper(TupleParametersBase):
 
     >>> from sympy import hyper
     >>> from sympy.abc import x, n, a
-    >>> hyper((1, 2, 3), [3, 4], x)
+    >>> h = hyper((1, 2, 3), [3, 4], x); h
+    hyper((1, 2), (4,), x)
+    >>> hyper((3, 1, 2), [3, 4], x, evaluate=False)  # don't remove duplicates
     hyper((1, 2, 3), (3, 4), x)
 
     There is also pretty printing (it looks better using Unicode):
 
     >>> from sympy import pprint
-    >>> pprint(hyper((1, 2, 3), [3, 4], x), use_unicode=False)
+    >>> pprint(h, use_unicode=False)
       _
-     |_  /1, 2, 3 |  \
-     |   |        | x|
-    3  2 \  3, 4  |  /
+     |_  /1, 2 |  \
+     |   |     | x|
+    2  1 \  4  |  /
 
     The parameters must always be iterables, even if they are vectors of
     length one or zero:
@@ -142,7 +159,7 @@ class hyper(TupleParametersBase):
     should not expect much implemented functionality):
 
     >>> hyper((n, a), (n**2,), x)
-    hyper((n, a), (n**2,), x)
+    hyper((a, n), (n**2,), x)
 
     The hypergeometric function generalizes many named special functions.
     The function ``hyperexpand()`` tries to express a hypergeometric function
@@ -191,7 +208,19 @@ class hyper(TupleParametersBase):
 
     def __new__(cls, ap, bq, z, **kwargs):
         # TODO should we check convergence conditions?
-        return Function.__new__(cls, _prep_tuple(ap), _prep_tuple(bq), z, **kwargs)
+        if kwargs.pop('evaluate', global_parameters.evaluate):
+            ca = Counter(Tuple(*ap))
+            cb = Counter(Tuple(*bq))
+            common = ca & cb
+            arg = ap, bq = [], []
+            for i, c in enumerate((ca, cb)):
+                c -= common
+                for k in ordered(c):
+                    arg[i].extend([k]*c[k])
+        else:
+            ap = list(ordered(ap))
+            bq = list(ordered(bq))
+        return super().__new__(cls, _prep_tuple(ap), _prep_tuple(bq), z, **kwargs)
 
     @classmethod
     def eval(cls, ap, bq, z):
@@ -226,7 +255,7 @@ class hyper(TupleParametersBase):
         return Piecewise((Sum(coeff * z**n / factorial(n), (n, 0, oo)),
                          self.convergence_statement), (self, True))
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx, cdir):
         arg = self.args[2]
         x0 = arg.subs(x, 0)
         if x0 is S.NaN:
@@ -245,8 +274,12 @@ class hyper(TupleParametersBase):
         ap = self.args[0]
         bq = self.args[1]
 
-        if x0 != 0:
-            return super()._eval_nseries(x, n, logx)
+        if not (arg == x and x0 == 0):
+            # It would be better to do something with arg.nseries here, rather
+            # than falling back on Function._eval_nseries. The code below
+            # though is not sufficient if arg is something like x/(x+1).
+            from sympy.simplify.hyperexpand import hyperexpand
+            return hyperexpand(super()._eval_nseries(x, n, logx))
 
         terms = []
 
@@ -411,7 +444,7 @@ class meijerg(TupleParametersBase):
     >>> from sympy import meijerg, Tuple, pprint
     >>> from sympy.abc import x, a
     >>> pprint(meijerg((1, 2), (a, 4), (5,), [], x), use_unicode=False)
-     __1, 2 /1, 2  a, 4 |  \
+     __1, 2 /1, 2  4, a |  \
     /__     |           | x|
     \_|4, 1 \ 5         |  /
 
@@ -496,6 +529,7 @@ class meijerg(TupleParametersBase):
         def tr(p):
             if len(p) != 2:
                 raise TypeError("wrong argument")
+            p = [list(ordered(i)) for i in p]
             return TupleArg(_prep_tuple(p[0]), _prep_tuple(p[1]))
 
         arg0, arg1 = tr(args[0]), tr(args[1])
@@ -507,7 +541,7 @@ class meijerg(TupleParametersBase):
                          "any b1, ..., bm by a positive integer")
 
         # TODO should we check convergence conditions?
-        return Function.__new__(cls, arg0, arg1, args[2], **kwargs)
+        return super().__new__(cls, arg0, arg1, args[2], **kwargs)
 
     def fdiff(self, argindex=3):
         if argindex != 3:
@@ -689,7 +723,7 @@ class meijerg(TupleParametersBase):
 
         return Expr._from_mpmath(v, prec)
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx, cdir):
         from sympy.simplify.hyperexpand import hyperexpand
         return hyperexpand(self).as_leading_term(x, logx=logx, cdir=cdir)
 
@@ -759,7 +793,7 @@ class meijerg(TupleParametersBase):
         return not self.free_symbols
 
 
-class HyperRep(Function):
+class HyperRep(DefinedFunction):
     """
     A base class for "hyper representation functions".
 
@@ -1092,7 +1126,7 @@ class HyperRep_sinasin(HyperRep):
     def _expr_big_minus(cls, a, z, n):
         return -1/sqrt(1 + 1/z)*sinh(2*a*asinh(sqrt(z)) + 2*a*pi*I*n)
 
-class appellf1(Function):
+class appellf1(DefinedFunction):
     r"""
     This is the Appell hypergeometric function of two variables as:
 

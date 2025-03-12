@@ -24,18 +24,15 @@ def literal_symbol(literal):
 
     if literal is True or literal is False:
         return literal
-    try:
-        if literal.is_Symbol:
-            return literal
-        if literal.is_Not:
-            return literal_symbol(literal.args[0])
-        else:
-            raise ValueError
-    except (AttributeError, ValueError):
+    elif literal.is_Symbol:
+        return literal
+    elif literal.is_Not:
+        return literal_symbol(literal.args[0])
+    else:
         raise ValueError("Argument must be a boolean literal.")
 
 
-def satisfiable(expr, algorithm=None, all_models=False, minimal=False):
+def satisfiable(expr, algorithm=None, all_models=False, minimal=False, use_lra_theory=False):
     """
     Check satisfiability of a propositional sentence.
     Returns a model when it succeeds.
@@ -77,6 +74,11 @@ def satisfiable(expr, algorithm=None, all_models=False, minimal=False):
     UNSAT
 
     """
+    if use_lra_theory:
+        if algorithm is not None and algorithm != "dpll2":
+            raise ValueError(f"Currently only dpll2 can handle using lra theory. {algorithm} is not handled.")
+        algorithm = "dpll2"
+
     if algorithm is None or algorithm == "pycosat":
         pycosat = import_module('pycosat')
         if pycosat is not None:
@@ -93,18 +95,27 @@ def satisfiable(expr, algorithm=None, all_models=False, minimal=False):
         if pysat is None:
             algorithm = "dpll2"
 
+    if algorithm=="z3":
+        z3 = import_module('z3')
+        if z3 is None:
+            algorithm = "dpll2"
+
     if algorithm == "dpll":
         from sympy.logic.algorithms.dpll import dpll_satisfiable
         return dpll_satisfiable(expr)
     elif algorithm == "dpll2":
         from sympy.logic.algorithms.dpll2 import dpll_satisfiable
-        return dpll_satisfiable(expr, all_models)
+        return dpll_satisfiable(expr, all_models, use_lra_theory=use_lra_theory)
     elif algorithm == "pycosat":
         from sympy.logic.algorithms.pycosat_wrapper import pycosat_satisfiable
         return pycosat_satisfiable(expr, all_models)
     elif algorithm == "minisat22":
         from sympy.logic.algorithms.minisat22_wrapper import minisat22_satisfiable
         return minisat22_satisfiable(expr, all_models, minimal)
+    elif algorithm == "z3":
+        from sympy.logic.algorithms.z3_wrapper import z3_satisfiable
+        return z3_satisfiable(expr, all_models)
+
     raise NotImplementedError
 
 
@@ -195,7 +206,7 @@ def pl_true(expr, model=None, deep=False):
     if result in boolean:
         return bool(result)
     if deep:
-        model = {k: True for k in result.atoms()}
+        model = dict.fromkeys(result.atoms(), True)
         if pl_true(result, model):
             if valid(result):
                 return True

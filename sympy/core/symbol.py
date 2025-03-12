@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+
 from .assumptions import StdFactKB, _assume_defined
 from .basic import Basic, Atom
 from .cache import cacheit
@@ -203,23 +204,62 @@ def uniquely_named_symbol(xname, exprs=(), compare=str, modify=None, **assumptio
     return _symbol(x, default, **assumptions)
 _uniquely_named_symbol = uniquely_named_symbol
 
-class Symbol(AtomicExpr, Boolean):
+
+# XXX: We need type: ignore below because Expr and Boolean are incompatible as
+# superclasses. Really Symbol should not be a subclass of Boolean.
+
+
+class Symbol(AtomicExpr, Boolean): # type: ignore
     """
+    Symbol class is used to create symbolic variables.
+
+    Explanation
+    ===========
+
+    Symbolic variables are placeholders for mathematical symbols that can represent numbers, constants, or any other mathematical entities and can be used in mathematical expressions and to perform symbolic computations.
+
     Assumptions:
-       commutative = True
+
+    commutative = True
+    positive = True
+    real = True
+    imaginary = True
+    complex = True
+    complete list of more assumptions- :ref:`predicates`
 
     You can override the default assumptions in the constructor.
 
     Examples
     ========
 
-    >>> from sympy import symbols
-    >>> A,B = symbols('A,B', commutative = False)
-    >>> bool(A*B != B*A)
+    >>> from sympy import Symbol
+    >>> x = Symbol("x", positive=True)
+    >>> x.is_positive
     True
-    >>> bool(A*B*2 == 2*A*B) == True # multiplication by scalars is commutative
-    True
+    >>> x.is_negative
+    False
 
+    passing in greek letters:
+
+    >>> from sympy import Symbol
+    >>> alpha = Symbol('alpha')
+    >>> alpha #doctest: +SKIP
+    α
+
+    Trailing digits are automatically treated like subscripts of what precedes them in the name.
+    General format to add subscript to a symbol :
+    ``<var_name> = Symbol('<symbol_name>_<subscript>')``
+
+    >>> from sympy import Symbol
+    >>> alpha_i = Symbol('alpha_i')
+    >>> alpha_i #doctest: +SKIP
+    αᵢ
+
+    Parameters
+    ==========
+
+    AtomicExpr: variable name
+    Boolean: Assumption with a boolean value(True or False)
     """
 
     is_comparable = False
@@ -244,10 +284,10 @@ class Symbol(AtomicExpr, Boolean):
         Examples
         ========
 
-            >>> from sympy import Symbol
-            >>> x = Symbol('x')
-            >>> x._diff_wrt
-            True
+        >>> from sympy import Symbol
+        >>> x = Symbol('x')
+        >>> x._diff_wrt
+        True
         """
         return True
 
@@ -295,11 +335,10 @@ class Symbol(AtomicExpr, Boolean):
         cls._sanitize(assumptions, cls)
         return Symbol.__xnew_cached_(cls, name, **assumptions)
 
-    @staticmethod
-    def __xnew__(cls, name, **assumptions):  # never cached (e.g. dummy)
-        if not isinstance(name, str):
-            raise TypeError("name should be a string, not %s" % repr(type(name)))
 
+    @staticmethod
+    @cacheit
+    def _canonical_assumptions(**assumptions):
         # This is retained purely so that srepr can include commutative=True if
         # that was explicitly specified but not if it was not. Ideally srepr
         # should not distinguish these cases because the symbols otherwise
@@ -309,18 +348,28 @@ class Symbol(AtomicExpr, Boolean):
         #
         assumptions_orig = assumptions.copy()
 
-        # The only assumption that is assumed by default is comutative=True:
+        # The only assumption that is assumed by default is commutative=True:
         assumptions.setdefault('commutative', True)
 
         assumptions_kb = StdFactKB(assumptions)
         assumptions0 = dict(assumptions_kb)
 
+        return assumptions_kb, assumptions_orig, assumptions0
+
+    @staticmethod
+    def __xnew__(cls, name, **assumptions):  # never cached (e.g. dummy)
+        if not isinstance(name, str):
+            raise TypeError("name should be a string, not %s" % repr(type(name)))
+
+
         obj = Expr.__new__(cls)
         obj.name = name
 
+        assumptions_kb, assumptions_orig, assumptions0 = Symbol._canonical_assumptions(**assumptions)
+
         obj._assumptions = assumptions_kb
         obj._assumptions_orig = assumptions_orig
-        obj._assumptions0 = assumptions0
+        obj._assumptions0 = tuple(sorted(assumptions0.items()))
 
         # The three assumptions dicts are all a little different:
         #
@@ -359,8 +408,7 @@ class Symbol(AtomicExpr, Boolean):
             setattr(self, name, value)
 
     def _hashable_content(self):
-        # Note: user-specified assumptions not hashed, just derived ones
-        return (self.name,) + tuple(sorted(self.assumptions0.items()))
+        return (self.name,) + self._assumptions0
 
     def _eval_subs(self, old, new):
         if old.is_Pow:
@@ -372,7 +420,7 @@ class Symbol(AtomicExpr, Boolean):
 
     @property
     def assumptions0(self):
-        return self._assumptions0.copy()
+        return dict(self._assumptions0)
 
     @cacheit
     def sort_key(self, order=None):

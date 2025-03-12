@@ -161,6 +161,7 @@ def test_exp_subs():
 
 
 def test_exp_adjoint():
+    x = Symbol('x', commutative=False)
     assert adjoint(exp(x)) == exp(adjoint(x))
 
 
@@ -524,7 +525,7 @@ def test_log_nseries():
     assert log(-2*x + (3 - I)*x**2)._eval_nseries(x, 3, None, -1) == -I*pi + log(2) + log(x) - \
     x*(S(3)/2 - I/2) + x**2*(-1 + 3*I/4) + O(x**3)
     assert log(sqrt(-I*x**2 - 3)*sqrt(-I*x**2 - 1) - 2)._eval_nseries(x, 3, None, 1) == -I*pi + \
-    log(sqrt(3) + 2) + I*x**2*(-2 + 4*sqrt(3)/3) + O(x**3)
+    log(sqrt(3) + 2) + 2*sqrt(3)*I*x**2/(3*sqrt(3) + 6) + O(x**3)
     assert log(-1/(1 - x))._eval_nseries(x, 3, None, 1) == I*pi + x + x**2/2 + O(x**3)
     assert log(-1/(1 - x))._eval_nseries(x, 3, None, -1) == I*pi + x + x**2/2 + O(x**3)
 

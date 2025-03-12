@@ -1,16 +1,20 @@
+from sympy import Not
 from sympy.codegen import Assignment
 from sympy.codegen.ast import none
 from sympy.codegen.cfunctions import expm1, log1p
 from sympy.codegen.scipy_nodes import cosm1
 from sympy.codegen.matrix_nodes import MatrixSolve
 from sympy.core import Expr, Mod, symbols, Eq, Le, Gt, zoo, oo, Rational, Pow
+from sympy.core.function import Derivative
 from sympy.core.numbers import pi
 from sympy.core.singleton import S
-from sympy.functions import acos, KroneckerDelta, Piecewise, sign, sqrt, Min, Max, cot, acsch, asec, coth
+from sympy.functions import acos, KroneckerDelta, Piecewise, sign, sqrt, Min, Max, cot, acsch, asec, coth, sec, log, sin, cos, tan, asin, atan, sinh, cosh, tanh, asinh, acosh, atanh
+from sympy.functions.elementary.trigonometric import atan2
 from sympy.logic import And, Or
 from sympy.matrices import SparseMatrix, MatrixSymbol, Identity
+from sympy.printing.codeprinter import PrintMethodNotImplementedError
 from sympy.printing.pycode import (
-    MpmathPrinter, PythonCodePrinter, pycode, SymPyPrinter
+    MpmathPrinter, CmathPrinter, PythonCodePrinter, pycode, SymPyPrinter
 )
 from sympy.printing.tensorflow import TensorflowPrinter
 from sympy.printing.numpy import NumPyPrinter, SciPyPrinter
@@ -19,6 +23,7 @@ from sympy.tensor import IndexedBase, Idx
 from sympy.tensor.array.expressions.array_expressions import ArraySymbol, ArrayDiagonal, ArrayContraction, ZeroArray, OneArray
 from sympy.external import import_module
 from sympy.functions.special.gamma_functions import loggamma
+
 
 
 x, y, z = symbols('x y z')
@@ -37,6 +42,7 @@ def test_PythonCodePrinter():
     assert prntr.doprint(And(x, y)) == 'x and y'
     assert prntr.doprint(Or(x, y)) == 'x or y'
     assert prntr.doprint(1/(x+y)) == '1/(x + y)'
+    assert prntr.doprint(Not(x)) == 'not x'
     assert not prntr.module_imports
 
     assert prntr.doprint(pi) == 'math.pi'
@@ -47,10 +53,10 @@ def test_PythonCodePrinter():
     assert prntr.module_imports == {'math': {'pi', 'sqrt'}}
 
     assert prntr.doprint(acos(x)) == 'math.acos(x)'
-    assert prntr.doprint(cot(x)) == '1/math.tan(x)'
-    assert prntr.doprint(coth(x)) == '(math.exp(x) + math.exp(-x))/(math.exp(x) - math.exp(-x))'
-    assert prntr.doprint(asec(x)) == 'math.acos(1/x)'
-    assert prntr.doprint(acsch(x)) == 'math.log(math.sqrt(1 + x**(-2)) + 1/x)'
+    assert prntr.doprint(cot(x)) == '(1/math.tan(x))'
+    assert prntr.doprint(coth(x)) == '((math.exp(x) + math.exp(-x))/(math.exp(x) - math.exp(-x)))'
+    assert prntr.doprint(asec(x)) == '(math.acos(1/x))'
+    assert prntr.doprint(acsch(x)) == '(math.log(math.sqrt(1 + x**(-2)) + 1/x))'
 
     assert prntr.doprint(Assignment(x, 2)) == 'x = 2'
     assert prntr.doprint(Piecewise((1, Eq(x, 0)),
@@ -75,6 +81,29 @@ def test_PythonCodePrinter_standard():
     assert prntr.standard == 'python3'
 
     raises(ValueError, lambda: PythonCodePrinter({'standard':'python4'}))
+
+
+def test_CmathPrinter():
+    p = CmathPrinter()
+
+    assert p.doprint(sqrt(x)) == 'cmath.sqrt(x)'
+    assert p.doprint(log(x)) == 'cmath.log(x)'
+
+    assert p.doprint(sin(x)) == 'cmath.sin(x)'
+    assert p.doprint(cos(x)) == 'cmath.cos(x)'
+    assert p.doprint(tan(x)) == 'cmath.tan(x)'
+
+    assert p.doprint(asin(x)) == 'cmath.asin(x)'
+    assert p.doprint(acos(x)) == 'cmath.acos(x)'
+    assert p.doprint(atan(x)) == 'cmath.atan(x)'
+
+    assert p.doprint(sinh(x)) == 'cmath.sinh(x)'
+    assert p.doprint(cosh(x)) == 'cmath.cosh(x)'
+    assert p.doprint(tanh(x)) == 'cmath.tanh(x)'
+
+    assert p.doprint(asinh(x)) == 'cmath.asinh(x)'
+    assert p.doprint(acosh(x)) == 'cmath.acosh(x)'
+    assert p.doprint(atanh(x)) == 'cmath.atanh(x)'
 
 
 def test_MpmathPrinter():
@@ -138,8 +167,11 @@ def test_NumPyPrinter():
     assert p.doprint(S.Pi) == 'numpy.pi'
     assert p.doprint(S.EulerGamma) == 'numpy.euler_gamma'
     assert p.doprint(S.NaN) == 'numpy.nan'
-    assert p.doprint(S.Infinity) == 'numpy.PINF'
-    assert p.doprint(S.NegativeInfinity) == 'numpy.NINF'
+    assert p.doprint(S.Infinity) == 'numpy.inf'
+    assert p.doprint(S.NegativeInfinity) == '-numpy.inf'
+
+    # Function rewriting operator precedence fix
+    assert p.doprint(sec(x)**2) == '(numpy.cos(x)**(-1.0))**2'
 
 
 def test_issue_18770():
@@ -283,13 +315,13 @@ def test_issue_16535_16536():
     assert prntr.doprint(expr1) == 'scipy.special.gamma(a)*scipy.special.gammainc(a, x)'
     assert prntr.doprint(expr2) == 'scipy.special.gamma(a)*scipy.special.gammaincc(a, x)'
 
-    prntr = NumPyPrinter()
-    assert "Not supported" in prntr.doprint(expr1)
-    assert "Not supported" in prntr.doprint(expr2)
+    p_numpy = NumPyPrinter()
+    p_pycode = PythonCodePrinter({'strict': False})
 
-    prntr = PythonCodePrinter()
-    assert "Not supported" in prntr.doprint(expr1)
-    assert "Not supported" in prntr.doprint(expr2)
+    for expr in [expr1, expr2]:
+        with raises(NotImplementedError):
+            p_numpy.doprint(expr1)
+        assert "Not supported" in p_pycode.doprint(expr)
 
 
 def test_Integral():
@@ -302,7 +334,7 @@ def test_Integral():
     evaluateat = Integral(x**2, (x, 1))
 
     prntr = SciPyPrinter()
-    assert prntr.doprint(single) == 'scipy.integrate.quad(lambda x: numpy.exp(-x), 0, numpy.PINF)[0]'
+    assert prntr.doprint(single) == 'scipy.integrate.quad(lambda x: numpy.exp(-x), 0, numpy.inf)[0]'
     assert prntr.doprint(double) == 'scipy.integrate.nquad(lambda x, y: x**2*numpy.exp(x*y), ((-z, z), (0, z)))[0]'
     raises(NotImplementedError, lambda: prntr.doprint(indefinite))
     raises(NotImplementedError, lambda: prntr.doprint(evaluateat))
@@ -324,17 +356,17 @@ def test_fresnel_integrals():
     assert prntr.doprint(expr1) == 'scipy.special.fresnel(x)[1]'
     assert prntr.doprint(expr2) == 'scipy.special.fresnel(x)[0]'
 
-    prntr = NumPyPrinter()
-    assert "Not supported" in prntr.doprint(expr1)
-    assert "Not supported" in prntr.doprint(expr2)
+    p_numpy = NumPyPrinter()
+    p_pycode = PythonCodePrinter()
+    p_mpmath = MpmathPrinter()
+    for expr in [expr1, expr2]:
+        with raises(NotImplementedError):
+            p_numpy.doprint(expr)
+        with raises(NotImplementedError):
+            p_pycode.doprint(expr)
 
-    prntr = PythonCodePrinter()
-    assert "Not supported" in prntr.doprint(expr1)
-    assert "Not supported" in prntr.doprint(expr2)
-
-    prntr = MpmathPrinter()
-    assert prntr.doprint(expr1) == 'mpmath.fresnelc(x)'
-    assert prntr.doprint(expr2) == 'mpmath.fresnels(x)'
+    assert p_mpmath.doprint(expr1) == 'mpmath.fresnelc(x)'
+    assert p_mpmath.doprint(expr2) == 'mpmath.fresnels(x)'
 
 
 def test_beta():
@@ -346,13 +378,13 @@ def test_beta():
     assert prntr.doprint(expr) == 'scipy.special.beta(x, y)'
 
     prntr = NumPyPrinter()
-    assert prntr.doprint(expr) == 'math.gamma(x)*math.gamma(y)/math.gamma(x + y)'
+    assert prntr.doprint(expr) == '(math.gamma(x)*math.gamma(y)/math.gamma(x + y))'
 
     prntr = PythonCodePrinter()
-    assert prntr.doprint(expr) == 'math.gamma(x)*math.gamma(y)/math.gamma(x + y)'
+    assert prntr.doprint(expr) == '(math.gamma(x)*math.gamma(y)/math.gamma(x + y))'
 
     prntr = PythonCodePrinter({'allow_unknown_functions': True})
-    assert prntr.doprint(expr) == 'math.gamma(x)*math.gamma(y)/math.gamma(x + y)'
+    assert prntr.doprint(expr) == '(math.gamma(x)*math.gamma(y)/math.gamma(x + y))'
 
     prntr = MpmathPrinter()
     assert prntr.doprint(expr) ==  'mpmath.beta(x, y)'
@@ -367,11 +399,11 @@ def test_airy():
     assert prntr.doprint(expr1) == 'scipy.special.airy(x)[0]'
     assert prntr.doprint(expr2) == 'scipy.special.airy(x)[2]'
 
-    prntr = NumPyPrinter()
+    prntr = NumPyPrinter({'strict': False})
     assert "Not supported" in prntr.doprint(expr1)
     assert "Not supported" in prntr.doprint(expr2)
 
-    prntr = PythonCodePrinter()
+    prntr = PythonCodePrinter({'strict': False})
     assert "Not supported" in prntr.doprint(expr1)
     assert "Not supported" in prntr.doprint(expr2)
 
@@ -385,11 +417,11 @@ def test_airy_prime():
     assert prntr.doprint(expr1) == 'scipy.special.airy(x)[1]'
     assert prntr.doprint(expr2) == 'scipy.special.airy(x)[3]'
 
-    prntr = NumPyPrinter()
+    prntr = NumPyPrinter({'strict': False})
     assert "Not supported" in prntr.doprint(expr1)
     assert "Not supported" in prntr.doprint(expr2)
 
-    prntr = PythonCodePrinter()
+    prntr = PythonCodePrinter({'strict': False})
     assert "Not supported" in prntr.doprint(expr1)
     assert "Not supported" in prntr.doprint(expr2)
 
@@ -424,3 +456,38 @@ def test_array_printer():
     assert prntr.doprint(ArrayDiagonal(A, [0,1], [2,3])) == 'tensorflow.linalg.einsum("aabbc->cab", A)'
     assert prntr.doprint(ArrayContraction(A, [2], [3])) == 'tensorflow.linalg.einsum("abcde->abe", A)'
     assert prntr.doprint(Assignment(I[i,j,k], I[i,j,k])) == 'I = I'
+
+
+def test_custom_Derivative_methods():
+    class MyPrinter(SciPyPrinter):
+        def _print_Derivative_cosm1(self, args, seq_orders):
+            arg, = args
+            order, = seq_orders
+            return 'my_custom_cosm1(%s, deriv_order=%d)' % (self._print(arg), order)
+
+        def _print_Derivative_atan2(self, args, seq_orders):
+            arg1, arg2 = args
+            ord1, ord2 = seq_orders
+            return 'my_custom_atan2(%s, %s, deriv1=%d, deriv2=%d)' % (
+                self._print(arg1), self._print(arg2), ord1, ord2
+            )
+
+    p = MyPrinter()
+    cosm1_1 = cosm1(x).diff(x, evaluate=False)
+    assert p.doprint(cosm1_1) == 'my_custom_cosm1(x, deriv_order=1)'
+    atan2_2_3 = atan2(x, y).diff(x, 2, y, 3, evaluate=False)
+    assert p.doprint(atan2_2_3) == 'my_custom_atan2(x, y, deriv1=2, deriv2=3)'
+
+    try:
+        p.doprint(expm1(x).diff(x, evaluate=False))
+    except PrintMethodNotImplementedError as e:
+        assert '_print_Derivative_expm1' in repr(e)
+    else:
+        assert False  # should have thrown
+
+    try:
+        p.doprint(Derivative(cosm1(x**2),x))
+    except ValueError as e:
+        assert '_print_Derivative(' in repr(e)
+    else:
+        assert False  # should have thrown

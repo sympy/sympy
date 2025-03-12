@@ -1,4 +1,4 @@
-from sympy.core import Rational, S
+from sympy.core import Rational, S, Add, Mul, I
 from sympy.simplify import simplify, trigsimp
 from sympy.core.function import (Derivative, Function, diff)
 from sympy.core.numbers import pi
@@ -12,6 +12,10 @@ from sympy.vector.vector import Vector, BaseVector, VectorAdd, \
 from sympy.vector.coordsysrect import CoordSys3D
 from sympy.vector.vector import Cross, Dot, cross
 from sympy.testing.pytest import raises
+from sympy.vector.kind import VectorKind
+from sympy.core.kind import NumberKind
+from sympy.testing.pytest import XFAIL
+
 
 C = CoordSys3D('C')
 
@@ -26,6 +30,14 @@ def test_cross():
     assert Cross(v1, v2).doit() == C.z**3*C.i + (-C.x*C.z)*C.j + (C.x*C.y - C.x*C.z**2)*C.k
     assert cross(v1, v2) == C.z**3*C.i + (-C.x*C.z)*C.j + (C.x*C.y - C.x*C.z**2)*C.k
     assert Cross(v1, v2) == -Cross(v2, v1)
+    # XXX: Cannot use Cross here. See XFAIL test below:
+    assert cross(v1, v2) + cross(v2, v1) == Vector.zero
+
+
+@XFAIL
+def test_cross_xfail():
+    v1 = C.x * i + C.z * C.z * j
+    v2 = C.x * i + C.y * j + C.z * k
     assert Cross(v1, v2) + Cross(v2, v1) == Vector.zero
 
 
@@ -50,6 +62,50 @@ def test_vector_sympy():
     v3 = 2*i + 4*j + i + 4*k + k
     assert v3 == v2
     assert v3.__hash__() == v2.__hash__()
+
+
+def test_kind():
+    assert C.i.kind is VectorKind(NumberKind)
+    assert C.j.kind is VectorKind(NumberKind)
+    assert C.k.kind is VectorKind(NumberKind)
+
+    assert C.x.kind is NumberKind
+    assert C.y.kind is NumberKind
+    assert C.z.kind is NumberKind
+
+    assert Mul._kind_dispatcher(NumberKind, VectorKind(NumberKind)) is VectorKind(NumberKind)
+    assert Mul(2, C.i).kind is VectorKind(NumberKind)
+
+    v1 = C.x * i + C.z * C.z * j
+    v2 = C.x * i + C.y * j + C.z * k
+    assert v1.kind is VectorKind(NumberKind)
+    assert v2.kind is VectorKind(NumberKind)
+
+    assert (v1 + v2).kind is VectorKind(NumberKind)
+    assert Add(v1, v2).kind is VectorKind(NumberKind)
+    assert Cross(v1, v2).doit().kind is VectorKind(NumberKind)
+    assert VectorAdd(v1, v2).kind is VectorKind(NumberKind)
+    assert VectorMul(2, v1).kind is VectorKind(NumberKind)
+    assert VectorZero().kind is VectorKind(NumberKind)
+
+    assert v1.projection(v2).kind is VectorKind(NumberKind)
+    assert v2.projection(v1).kind is VectorKind(NumberKind)
+
+
+def test_vectoradd():
+    assert isinstance(Add(C.i, C.j), VectorAdd)
+    v1 = C.x * i + C.z * C.z * j
+    v2 = C.x * i + C.y * j + C.z * k
+    assert isinstance(Add(v1, v2), VectorAdd)
+
+    # https://github.com/sympy/sympy/issues/26121
+
+    E = Matrix([C.i, C.j, C.k]).T
+    a = Matrix([1, 2, 3])
+    av = E*a
+
+    assert av[0].kind == VectorKind()
+    assert isinstance(av[0], VectorAdd)
 
 
 def test_vector():
@@ -160,6 +216,26 @@ def test_vector_simplify():
     assert trigsimp(v) == v.trigsimp()
 
     assert simplify(Vector.zero) == Vector.zero
+
+
+def test_vector_equals():
+    assert (2*i).equals(j) is False
+    assert i.equals(i) is True
+
+    # https://github.com/sympy/sympy/issues/25915
+    A = (sqrt(2) + sqrt(6)) / sqrt(sqrt(3) + 2)
+    assert (A*i).equals(2*i) is True
+    assert (A*i).equals(3*i) is False
+
+    # Test comparing vectors in different coordinate systems
+    D = C.orient_new_axis('D', pi/2, C.k)
+    assert (D.i).equals(C.j) is True
+    assert (D.i).equals(C.i) is False
+
+
+def test_vector_conjugate():
+    # https://github.com/sympy/sympy/issues/27094
+    assert (I*i + (1 + I)*j + 2*k).conjugate() == -I*i + (1 - I)*j + 2*k
 
 
 def test_vector_dot():

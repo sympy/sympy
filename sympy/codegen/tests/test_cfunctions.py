@@ -3,7 +3,7 @@ from sympy.core.singleton import S
 from sympy.core.symbol import (Symbol, symbols)
 from sympy.functions.elementary.exponential import (exp, log)
 from sympy.codegen.cfunctions import (
-    expm1, log1p, exp2, log2, fma, log10, Sqrt, Cbrt, hypot
+    expm1, log1p, exp2, log2, fma, log10, Sqrt, Cbrt, hypot, isnan, isinf
 )
 from sympy.core.function import expand_log
 
@@ -163,3 +163,24 @@ def test_hypot():
 
     assert hypot(17*x, 42*y).diff(x).expand(func=True) - 2*17*17*x*((17*x)**2 + (42*y)**2)**Rational(-1, 2)/2 == 0
     assert hypot(17*x, 42*y).diff(y).expand(func=True) - 2*42*42*y*((17*x)**2 + (42*y)**2)**Rational(-1, 2)/2 == 0
+
+
+def test_isnan_isinf():
+    x = Symbol('x')
+
+    # isinf
+    assert isinf(+S.Infinity) == True
+    assert isinf(-S.Infinity) == True
+    assert isinf(S.Pi) == False
+    isinfx = isinf(x)
+    assert isinfx not in (False, True)
+    assert isinfx.func is isinf
+    assert isinfx.args == (x,)
+
+    # isnan
+    assert isnan(S.NaN) == True
+    assert isnan(S.Pi) == False
+    isnanx = isnan(x)
+    assert isnanx not in (False, True)
+    assert isnanx.func is isnan
+    assert isnanx.args == (x,)

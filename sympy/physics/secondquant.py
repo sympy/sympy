@@ -19,6 +19,7 @@ from sympy.core.singleton import S
 from sympy.core.sorting import default_sort_key
 from sympy.core.symbol import Dummy, Symbol
 from sympy.core.sympify import sympify
+from sympy.functions.elementary.complexes import conjugate
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.matrices.dense import zeros
@@ -139,6 +140,8 @@ class Dagger(Expr):
         dagger = getattr(arg, '_dagger_', None)
         if dagger is not None:
             return dagger()
+        if isinstance(arg, Symbol) and arg.is_commutative:
+            return conjugate(arg)
         if isinstance(arg, Basic):
             if arg.is_Add:
                 return Add(*tuple(map(Dagger, arg.args)))
@@ -150,6 +153,9 @@ class Dagger(Expr):
                 return Pow(Dagger(arg.args[0]), arg.args[1])
             if arg == I:
                 return -arg
+        if isinstance(arg, Function):
+            if all(a.is_commutative for a in arg.args):
+                return arg.func(*[Dagger(a) for a in arg.args])
         else:
             return None
 
@@ -187,9 +193,9 @@ class AntiSymmetricTensor(TensorSymbol):
 
         try:
             upper, signu = _sort_anticommuting_fermions(
-                upper, key=cls._sortkey)
+                upper, key=_sqkey_index)
             lower, signl = _sort_anticommuting_fermions(
-                lower, key=cls._sortkey)
+                lower, key=_sqkey_index)
 
         except ViolationOfPauliPrinciple:
             return S.Zero
@@ -204,36 +210,11 @@ class AntiSymmetricTensor(TensorSymbol):
 
             return TensorSymbol.__new__(cls, symbol, upper, lower)
 
-    @classmethod
-    def _sortkey(cls, index):
-        """Key for sorting of indices.
-
-        particle < hole < general
-
-        FIXME: This is a bottle-neck, can we do it faster?
-        """
-        h = hash(index)
-        label = str(index)
-        if isinstance(index, Dummy):
-            if index.assumptions0.get('above_fermi'):
-                return (20, label, h)
-            elif index.assumptions0.get('below_fermi'):
-                return (21, label, h)
-            else:
-                return (22, label, h)
-
-        if index.assumptions0.get('above_fermi'):
-            return (10, label, h)
-        elif index.assumptions0.get('below_fermi'):
-            return (11, label, h)
-        else:
-            return (12, label, h)
-
     def _latex(self, printer):
         return "{%s^{%s}_{%s}}" % (
             self.symbol,
-            "".join([ i.name for i in self.args[1]]),
-            "".join([ i.name for i in self.args[2]])
+            "".join([ printer._print(i) for i in self.args[1]]),
+            "".join([ printer._print(i) for i in self.args[2]])
         )
 
     @property
@@ -432,7 +413,7 @@ class AnnihilateBoson(BosonicOperator, Annihilator):
         if self.state is S.Zero:
             return "b_{0}"
         else:
-            return "b_{%s}" % self.state.name
+            return "b_{%s}" % printer._print(self.state)
 
 class CreateBoson(BosonicOperator, Creator):
     """
@@ -473,7 +454,7 @@ class CreateBoson(BosonicOperator, Creator):
         if self.state is S.Zero:
             return "{b^\\dagger_{0}}"
         else:
-            return "{b^\\dagger_{%s}}" % self.state.name
+            return "{b^\\dagger_{%s}}" % printer._print(self.state)
 
 B = AnnihilateBoson
 Bd = CreateBoson
@@ -791,7 +772,7 @@ class AnnihilateFermion(FermionicOperator, Annihilator):
         if self.state is S.Zero:
             return "a_{0}"
         else:
-            return "a_{%s}" % self.state.name
+            return "a_{%s}" % printer._print(self.state)
 
 
 class CreateFermion(FermionicOperator, Creator):
@@ -940,7 +921,7 @@ class CreateFermion(FermionicOperator, Creator):
         if self.state is S.Zero:
             return "{a^\\dagger_{0}}"
         else:
-            return "{a^\\dagger_{%s}}" % self.state.name
+            return "{a^\\dagger_{%s}}" % printer._print(self.state)
 
 Fd = CreateFermion
 F = AnnihilateFermion
@@ -1051,7 +1032,7 @@ class FermionState(FockState):
         if len(occupations) > 1:
             try:
                 (occupations, sign) = _sort_anticommuting_fermions(
-                    occupations, key=hash)
+                    occupations, key=_sqkey_index)
             except ViolationOfPauliPrinciple:
                 return S.Zero
         else:
@@ -1221,14 +1202,19 @@ class FermionState(FockState):
         return self.__class__((i,) + self.args[0], self.fermi_level)
 
     @classmethod
-    def _count_holes(cls, list):
+    def _count_holes(cls, occupations):
         """
-        Returns the number of identified hole states in list.
+        Returns the number of identified hole states in occupations list.
         """
-        return len([i for i in list if cls._only_below_fermi(i)])
+        return len([i for i in occupations if cls._only_below_fermi(i)])
 
-    def _negate_holes(self, list):
-        return tuple([-i if i <= self.fermi_level else i for i in list])
+    def _negate_holes(self, occupations):
+        """
+        Returns the occupations list where states below the fermi level have negative labels.
+
+        For symbolic state labels, no sign is included.
+        """
+        return tuple([-i if self._only_below_fermi(i) and i.is_number else i for i in occupations])
 
     def __repr__(self):
         if self.fermi_level:
@@ -2223,12 +2209,37 @@ def contraction(a, b):
         raise ContractionAppliesOnlyToFermions(*t)
 
 
-def _sqkey(sq_operator):
+def _sqkey_operator(sq_operator):
     """Generates key for canonical sorting of SQ operators."""
     return sq_operator._sortkey()
 
+def _sqkey_index(index):
+    """Key for sorting of indices.
 
-def _sort_anticommuting_fermions(string1, key=_sqkey):
+    particle < hole < general
+
+    FIXME: This is a bottle-neck, can we do it faster?
+    """
+    h = hash(index)
+    label = str(index)
+    if isinstance(index, Dummy):
+        if index.assumptions0.get('above_fermi'):
+            return (20, label, h)
+        elif index.assumptions0.get('below_fermi'):
+            return (21, label, h)
+        else:
+            return (22, label, h)
+
+    if index.assumptions0.get('above_fermi'):
+        return (10, label, h)
+    elif index.assumptions0.get('below_fermi'):
+        return (11, label, h)
+    else:
+        return (12, label, h)
+
+
+
+def _sort_anticommuting_fermions(string1, key=_sqkey_operator):
     """Sort fermionic operators to canonical order, assuming all pairs anticommute.
 
     Explanation
@@ -3018,7 +3029,7 @@ class PermutationOperator(Expr):
             return expr
 
     def _latex(self, printer):
-        return "P(%s%s)" % self.args
+        return "P(%s%s)" % tuple(printer._print(i) for i in self.args)
 
 
 def simplify_index_permutations(expr, permutation_operators):

@@ -131,7 +131,7 @@ class NonZeroPredicate(Predicate):
     name = 'nonzero'
     handler = Dispatcher(
         "NonZeroHandler",
-        doc=("Handler for key 'zero'. Test that an expression is not identically"
+        doc=("Handler for key 'nonzero'. Test that an expression is not identically"
         " zero.")
     )
 

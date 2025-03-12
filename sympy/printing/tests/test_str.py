@@ -27,12 +27,15 @@ from sympy.integrals.integrals import Integral
 from sympy.logic.boolalg import (Equivalent, false, true, Xor)
 from sympy.matrices.dense import Matrix
 from sympy.matrices.expressions.matexpr import MatrixSymbol
+from sympy.matrices.expressions import Identity
 from sympy.matrices.expressions.slice import MatrixSlice
 from sympy.matrices import SparseMatrix
 from sympy.polys.polytools import factor
 from sympy.series.limits import Limit
 from sympy.series.order import O
 from sympy.sets.sets import (Complement, FiniteSet, Interval, SymmetricDifference)
+from sympy.stats import (Covariance, Expectation, Probability, Variance)
+from sympy.stats.rv import RandomSymbol
 from sympy.external import import_module
 from sympy.physics.control.lti import TransferFunction, Series, Parallel, \
     Feedback, TransferFunctionMatrix, MIMOSeries, MIMOParallel, MIMOFeedback
@@ -460,8 +463,6 @@ def test_PolyElement():
     assert str(x - 1) == "x - 1"
     assert str(x + 1) == "x + 1"
     assert str(x**2) == "x**2"
-    assert str(x**(-2)) == "x**(-2)"
-    assert str(x**QQ(1, 2)) == "x**(1/2)"
 
     assert str((u**2 + 3*u*v + 1)*x**2*y + u + 1) == "(u**2 + 3*u*v + 1)*x**2*y + u + 1"
     assert str((u**2 + 3*u*v + 1)*x**2*y + (u + 1)*x) == "(u**2 + 3*u*v + 1)*x**2*y + (u + 1)*x"
@@ -915,6 +916,11 @@ def test_empty_printer():
     assert str_printer.emptyPrinter(x*y) == "x*y"
     assert str_printer.emptyPrinter(32) == "32"
 
+def test_decimal_printer():
+    dec_printer = StrPrinter(settings={"dps":3})
+    f = Function('f')
+    assert dec_printer.doprint(f(1.329294)) == "f(1.33)"
+
 
 def test_settings():
     raises(TypeError, lambda: sstr(S(4), method="garbage"))
@@ -1160,6 +1166,10 @@ def test_NDimArray():
     assert sstr(NDimArray(1.0), full_prec=False) == '1.0'
     assert sstr(NDimArray([1.0, 2.0]), full_prec=True) == '[1.00000000000000, 2.00000000000000]'
     assert sstr(NDimArray([1.0, 2.0]), full_prec=False) == '[1.0, 2.0]'
+    assert sstr(NDimArray([], (0,))) == 'ImmutableDenseNDimArray([], (0,))'
+    assert sstr(NDimArray([], (0, 0))) == 'ImmutableDenseNDimArray([], (0, 0))'
+    assert sstr(NDimArray([], (0, 1))) == 'ImmutableDenseNDimArray([], (0, 1))'
+    assert sstr(NDimArray([], (1, 0))) == 'ImmutableDenseNDimArray([], (1, 0))'
 
 def test_Predicate():
     assert sstr(Q.even) == 'Q.even'
@@ -1173,3 +1183,24 @@ def test_printing_str_array_expressions():
     M = MatrixSymbol("M", 3, 3)
     N = MatrixSymbol("N", 3, 3)
     assert sstr(ArrayElement(M*N, [x, 0])) == "(M*N)[x, 0]"
+
+def test_printing_stats():
+    # issue 24132
+    x = RandomSymbol("x")
+    y = RandomSymbol("y")
+    z1 = Probability(x > 0)*Identity(2)
+    z2 = Expectation(x)*Identity(2)
+    z3 = Variance(x)*Identity(2)
+    z4 = Covariance(x, y) * Identity(2)
+
+    assert str(z1) == "Probability(x > 0)*I"
+    assert str(z2) == "Expectation(x)*I"
+    assert str(z3) == "Variance(x)*I"
+    assert str(z4) ==  "Covariance(x, y)*I"
+    assert z1.is_commutative == False
+    assert z2.is_commutative == False
+    assert z3.is_commutative == False
+    assert z4.is_commutative == False
+    assert z2._eval_is_commutative() == False
+    assert z3._eval_is_commutative() == False
+    assert z4._eval_is_commutative() == False

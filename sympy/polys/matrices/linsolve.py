@@ -152,7 +152,7 @@ def _linear_eq_to_dict(eqs, syms):
     coeffs = []
     ind = []
     symset = set(syms)
-    for i, e in enumerate(eqs):
+    for e in eqs:
         if e.is_Equality:
             coeff, terms = _lin_eq2dict(e.lhs, symset)
             cR, tR = _lin_eq2dict(e.rhs, symset)

@@ -5,7 +5,7 @@ from itertools import product
 from typing import Any, Callable
 
 import sympy
-from sympy import Mul, Add, Pow, log, exp, sqrt, cos, sin, tan, asin, acos, acot, asec, acsc, sinh, cosh, tanh, asinh, \
+from sympy import Mul, Add, Pow, Rational, log, exp, sqrt, cos, sin, tan, asin, acos, acot, asec, acsc, sinh, cosh, tanh, asinh, \
     acosh, atanh, acoth, asech, acsch, expand, im, flatten, polylog, cancel, expand_trig, sign, simplify, \
     UnevaluatedExpr, S, atan, atan2, Mod, Max, Min, rf, Ei, Si, Ci, airyai, airyaiprime, airybi, primepi, prime, \
     isprime, cot, sec, csc, csch, sech, coth, Function, I, pi, Tuple, GreaterThan, StrictGreaterThan, StrictLessThan, \
@@ -131,6 +131,7 @@ class MathematicaParser:
     # left: Mathematica, right: SymPy
     CORRESPONDENCES = {
         'Sqrt[x]': 'sqrt(x)',
+        'Rational[x,y]': 'Rational(x,y)',
         'Exp[x]': 'exp(x)',
         'Log[x]': 'log(x)',
         'Log[x,y]': 'log(y,x)',
@@ -448,7 +449,7 @@ class MathematicaParser:
 
         s = m.string                # whole string
         anc = m.end() + 1           # pointing the first letter of arguments
-        square, curly = [], []      # stack for brakets
+        square, curly = [], []      # stack for brackets
         args = []
 
         # current cursor
@@ -737,7 +738,8 @@ class MathematicaParser:
             else:
                 stack[-1].append(token)
             pointer += 1
-        assert len(stack) == 1
+        if len(stack) != 1:
+            raise RuntimeError("Stack should have only one element")
         return self._parse_after_braces(stack[0])
 
     def _util_remove_newlines(self, lines: list, tokens: list, inside_enclosure: bool):
@@ -874,14 +876,16 @@ class MathematicaParser:
                         else:
                             node.append(arg2)
                     elif op_type == self.PREFIX:
-                        assert grouping_strat is None
+                        if grouping_strat is not None:
+                            raise TypeError("'Prefix' op_type should not have a grouping strat")
                         if pointer == size - 1 or self._is_op(tokens[pointer + 1]):
                             tokens[pointer] = self._missing_arguments_default[token]()
                         else:
                             node.append(tokens.pop(pointer+1))
                             size -= 1
                     elif op_type == self.POSTFIX:
-                        assert grouping_strat is None
+                        if grouping_strat is not None:
+                            raise TypeError("'Prefix' op_type should not have a grouping strat")
                         if pointer == 0 or self._is_op(tokens[pointer - 1]):
                             tokens[pointer] = self._missing_arguments_default[token]()
                         else:
@@ -975,6 +979,7 @@ class MathematicaParser:
         "Times": Mul,
         "Plus": Add,
         "Power": Pow,
+        "Rational": Rational,
         "Log": lambda *a: log(*reversed(a)),
         "Log2": lambda x: log(x, 2),
         "Log10": lambda x: log(x, 10),

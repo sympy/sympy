@@ -1,6 +1,7 @@
+from sympy.core.basic import _aresame
 from sympy.core.function import Lambda, expand_complex
 from sympy.core.mul import Mul
-from sympy.core.numbers import ilcm
+from sympy.core.numbers import ilcm, Float
 from sympy.core.relational import Eq
 from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, symbols)
@@ -435,10 +436,20 @@ def _(a, b):
             start = a.start
             left_open = a.left_open
         else:
-            #this is to ensure that if Eq(a.start,b.start) but
-            #type(a.start) != type(b.start) the order of a and b
-            #does not matter for the result
-            start = list(ordered([a,b]))[0].start
+            start = a.start
+            if not _aresame(a.start, b.start):
+                # For example Integer(2) != Float(2)
+                # Prefer the Float boundary because Floats should be
+                # contagious in calculations.
+                if b.start.has(Float) and not a.start.has(Float):
+                    start = b.start
+                elif a.start.has(Float) and not b.start.has(Float):
+                    start = a.start
+                else:
+                    #this is to ensure that if Eq(a.start, b.start) but
+                    #type(a.start) != type(b.start) the order of a and b
+                    #does not matter for the result
+                    start = list(ordered([a,b]))[0].start
             left_open = a.left_open or b.left_open
 
         if a.end < b.end:
@@ -448,7 +459,15 @@ def _(a, b):
             end = b.end
             right_open = b.right_open
         else:
-            end = list(ordered([a,b]))[0].end
+            # see above for logic with start
+            end = a.end
+            if not _aresame(a.end, b.end):
+                if b.end.has(Float) and not a.end.has(Float):
+                    end = b.end
+                elif a.end.has(Float) and not b.end.has(Float):
+                    end = a.end
+                else:
+                    end = list(ordered([a,b]))[0].end
             right_open = a.right_open or b.right_open
 
         if end - start == 0 and (left_open or right_open):

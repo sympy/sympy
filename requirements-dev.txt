@@ -1,0 +1,9 @@
+mpmath
+pytest
+pytest-xdist
+pytest-timeout
+pytest-split
+pytest-doctestplus
+hypothesis
+flake8
+flake8-comprehensions

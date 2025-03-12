@@ -42,6 +42,7 @@ test_list = [
     '*jax*',
 
     # gmpy
+    'sympy/ntheory',
     'sympy/polys',
 
     # gmpy, numpy, scipy, autowrap, matplotlib
@@ -100,6 +101,7 @@ doctest_list = [
     '*aesara*',
 
     # gmpy
+    'sympy/ntheory',
     'sympy/polys',
 
     # autowrap
@@ -124,6 +126,18 @@ doctest_list = [
     # lxml
     "sympy/utilities/mathml/",
 ]
+
+
+# This is just needed for the numpy nightly job which does not have matplotlib
+# Otherwise these could be added to doctest_list above
+try:
+    import matplotlib # noqa: F401
+    doctest_list.extend([
+        'doc/src/tutorials/biomechanics/biomechanical-model-example.rst',
+        'doc/src/tutorials/biomechanics/biomechanics.rst',
+    ])
+except ImportError:
+    pass
 
 
 print('Testing optional dependencies')

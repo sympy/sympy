@@ -218,9 +218,8 @@ def collect(expr, syms, func=None, evaluate=None, exact=False, distribute_order_
         for term, rat, sym, deriv in terms:
             if deriv is not None:
                 var, order = deriv
-
-                while order > 0:
-                    term, order = Derivative(term, var), order - 1
+                for _ in range(order):
+                    term = Derivative(term, var)
 
             if sym is None:
                 if rat is S.One:
@@ -247,10 +246,9 @@ def collect(expr, syms, func=None, evaluate=None, exact=False, distribute_order_
         while isinstance(expr, Derivative):
             s0 = expr.variables[0]
 
-            for s in expr.variables:
-                if s != s0:
-                    raise NotImplementedError(
-                        'Improve MV Derivative support in collect')
+            if any(s != s0 for s in expr.variables):
+                raise NotImplementedError(
+                    'Improve MV Derivative support in collect')
 
             if s0 == sym:
                 expr, order = expr.expr, order + len(expr.variables)
@@ -595,32 +593,32 @@ def collect_abs(expr):
     Abs(1/x)
     """
     def _abs(mul):
-      c, nc = mul.args_cnc()
-      a = []
-      o = []
-      for i in c:
-          if isinstance(i, Abs):
-              a.append(i.args[0])
-          elif isinstance(i, Pow) and isinstance(i.base, Abs) and i.exp.is_real:
-              a.append(i.base.args[0]**i.exp)
-          else:
-              o.append(i)
-      if len(a) < 2 and not any(i.exp.is_negative for i in a if isinstance(i, Pow)):
-          return mul
-      absarg = Mul(*a)
-      A = Abs(absarg)
-      args = [A]
-      args.extend(o)
-      if not A.has(Abs):
-          args.extend(nc)
-          return Mul(*args)
-      if not isinstance(A, Abs):
-          # reevaluate and make it unevaluated
-          A = Abs(absarg, evaluate=False)
-      args[0] = A
-      _mulsort(args)
-      args.extend(nc)  # nc always go last
-      return Mul._from_args(args, is_commutative=not nc)
+        c, nc = mul.args_cnc()
+        a = []
+        o = []
+        for i in c:
+            if isinstance(i, Abs):
+                a.append(i.args[0])
+            elif isinstance(i, Pow) and isinstance(i.base, Abs) and i.exp.is_real:
+                a.append(i.base.args[0]**i.exp)
+            else:
+                o.append(i)
+        if len(a) < 2 and not any(i.exp.is_negative for i in a if isinstance(i, Pow)):
+            return mul
+        absarg = Mul(*a)
+        A = Abs(absarg)
+        args = [A]
+        args.extend(o)
+        if not A.has(Abs):
+            args.extend(nc)
+            return Mul(*args)
+        if not isinstance(A, Abs):
+            # reevaluate and make it unevaluated
+            A = Abs(absarg, evaluate=False)
+        args[0] = A
+        _mulsort(args)
+        args.extend(nc)  # nc always go last
+        return Mul._from_args(args, is_commutative=not nc)
 
     return expr.replace(
         lambda x: isinstance(x, Mul),
@@ -841,6 +839,7 @@ def radsimp(expr, symbolic=True, max_terms=4):
     1/(a + b*sqrt(c))
 
     """
+    from sympy.core.expr import Expr
     from sympy.simplify.simplify import signsimp
 
     syms = symbols("a:d A:D")
@@ -894,9 +893,14 @@ def radsimp(expr, symbolic=True, max_terms=4):
         # We do this by recursively calling handle on each piece.
         from sympy.simplify.simplify import nsimplify
 
+        if expr.is_Atom:
+            return expr
+        elif not isinstance(expr, Expr):
+            return expr.func(*[handle(a) for a in expr.args])
+
         n, d = fraction(expr)
 
-        if expr.is_Atom or (d.is_Atom and n.is_Atom):
+        if d.is_Atom and n.is_Atom:
             return expr
         elif not n.is_Atom:
             n = n.func(*[handle(a) for a in n.args])
@@ -993,6 +997,9 @@ def radsimp(expr, symbolic=True, max_terms=4):
             return expr
         return _unevaluated_Mul(n, 1/d)
 
+    if not isinstance(expr, Expr):
+        return expr.func(*[radsimp(a, symbolic=symbolic, max_terms=max_terms) for a in expr.args])
+
     coeff, expr = expr.as_coeff_Add()
     expr = expr.normal()
     old = fraction(expr)
@@ -1074,7 +1081,7 @@ def fraction(expr, exact=False):
        (x, y**(-k))
 
        If we know nothing about sign of some exponent and ``exact``
-       flag is unset, then structure this exponent's structure will
+       flag is unset, then the exponent's structure will
        be analyzed and pretty fraction will be returned:
 
        >>> from sympy import exp, Mul
@@ -1116,7 +1123,7 @@ def fraction(expr, exact=False):
             elif ex.is_positive:
                 numer.append(term)
             elif not exact and ex.is_Mul:
-                n, d = term.as_numer_denom()
+                n, d = term.as_numer_denom()  # this will cause evaluation
                 if n != 1:
                     numer.append(n)
                 denom.append(d)
@@ -1131,12 +1138,12 @@ def fraction(expr, exact=False):
     return Mul(*numer, evaluate=not exact), Mul(*denom, evaluate=not exact)
 
 
-def numer(expr):
-    return fraction(expr)[0]
+def numer(expr, exact=False):  # default matches fraction's default
+    return fraction(expr, exact=exact)[0]
 
 
-def denom(expr):
-    return fraction(expr)[1]
+def denom(expr, exact=False):  # default matches fraction's default
+    return fraction(expr, exact=exact)[1]
 
 
 def fraction_expand(expr, **hints):
@@ -1144,12 +1151,14 @@ def fraction_expand(expr, **hints):
 
 
 def numer_expand(expr, **hints):
-    a, b = fraction(expr)
+    # default matches fraction's default
+    a, b = fraction(expr, exact=hints.get('exact', False))
     return a.expand(numer=True, **hints) / b
 
 
 def denom_expand(expr, **hints):
-    a, b = fraction(expr)
+    # default matches fraction's default
+    a, b = fraction(expr, exact=hints.get('exact', False))
     return a / b.expand(denom=True, **hints)
 
 

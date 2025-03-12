@@ -8,7 +8,7 @@ All the functions in this file are used by more than one solvers so, instead of 
 instances in other classes for using them it is better to keep it here as separate helpers.
 
 """
-from collections import defaultdict
+from collections import Counter
 from sympy.core import Add, S
 from sympy.core.function import diff, expand, _mexpand, expand_mul
 from sympy.core.relational import Eq
@@ -83,9 +83,7 @@ def _get_euler_characteristic_eq_sols(eq, func, match_obj):
     constants.reverse()
 
     # Create a dict root: multiplicity or charroots
-    charroots = defaultdict(int)
-    for root in chareqroots:
-        charroots[root] += 1
+    charroots = Counter(chareqroots)
     gsol = S.Zero
     ln = log
     for root, multiplicity in charroots.items():
@@ -204,9 +202,7 @@ def _get_const_characteristic_eq_sols(r, func, order):
     chareq_is_complex = not all(i.is_real for i in chareq.all_coeffs())
 
     # Create a dict root: multiplicity or charroots
-    charroots = defaultdict(int)
-    for root in chareqroots:
-        charroots[root] += 1
+    charroots = Counter(chareqroots)
     # We need to keep track of terms so we can run collect() at the end.
     # This is necessary for constantsimp to work properly.
     collectterms = []
@@ -316,15 +312,15 @@ def _undetermined_coefficients_match(expr, x, func=None, eq_homogeneous=S.Zero):
     expr = powsimp(expr, combine='exp')  # exp(x)*exp(2*x + 1) => exp(3*x + 1)
     retdict = {}
 
-    def _test_term(expr, x):
+    def _test_term(expr, x) -> bool:
         r"""
         Test if ``expr`` fits the proper form for undetermined coefficients.
         """
         if not expr.has(x):
             return True
-        elif expr.is_Add:
+        if expr.is_Add:
             return all(_test_term(i, x) for i in expr.args)
-        elif expr.is_Mul:
+        if expr.is_Mul:
             if expr.has(sin, cos):
                 foundtrig = False
                 # Make sure that there is only one trig function in the args.
@@ -336,26 +332,15 @@ def _undetermined_coefficients_match(expr, x, func=None, eq_homogeneous=S.Zero):
                         else:
                             foundtrig = True
             return all(_test_term(i, x) for i in expr.args)
-        elif expr.is_Function:
-            if expr.func in (sin, cos, exp, sinh, cosh):
-                if expr.args[0].match(a*x + b):
-                    return True
-                else:
-                    return False
-            else:
-                return False
-        elif expr.is_Pow and expr.base.is_Symbol and expr.exp.is_Integer and \
+        if expr.is_Function:
+            return expr.func in (sin, cos, exp, sinh, cosh) and \
+                   bool(expr.args[0].match(a*x + b))
+        if expr.is_Pow and expr.base.is_Symbol and expr.exp.is_Integer and \
                 expr.exp >= 0:
             return True
-        elif expr.is_Pow and expr.base.is_number:
-            if expr.exp.match(a*x + b):
-                return True
-            else:
-                return False
-        elif expr.is_Symbol or expr.is_number:
-            return True
-        else:
-            return False
+        if expr.is_Pow and expr.base.is_number:
+            return bool(expr.exp.match(a*x + b))
+        return expr.is_Symbol or bool(expr.is_number)
 
     def _get_trial_set(expr, x, exprs=set()):
         r"""

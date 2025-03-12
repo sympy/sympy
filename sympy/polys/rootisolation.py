@@ -505,9 +505,7 @@ def dup_inner_isolate_positive_roots(f, K, eps=None, inf=None, sup=None, fast=Fa
             if result is not None:
                 results.append(result)
     elif not mobius:
-        for f, M in roots:
-            u, v = _mobius_to_interval(M, F)
-            results.append((u, v))
+        results.extend(_mobius_to_interval(M, F) for _, M in roots)
     else:
         results = roots
 
@@ -631,7 +629,7 @@ def dup_isolate_real_roots(f, K, eps=None, inf=None, sup=None, basis=False, fast
     return sorted(I_neg + I_zero + I_pos)
 
 def dup_isolate_real_roots_list(polys, K, eps=None, inf=None, sup=None, strict=False, basis=False, fast=False):
-    """Isolate real roots of a list of square-free polynomial using Vincent-Akritas-Strzebonski (VAS) CF approach.
+    """Isolate real roots of a list of polynomial using Vincent-Akritas-Strzebonski (VAS) CF approach.
 
        References
        ==========
@@ -672,11 +670,7 @@ def dup_isolate_real_roots_list(polys, K, eps=None, inf=None, sup=None, strict=F
             else:
                 factors_dict[f][i] = k
 
-    factors_list = []
-
-    for f, indices in factors_dict.items():
-        factors_list.append((list(f), indices))
-
+    factors_list = [(list(f), indices) for f, indices in factors_dict.items()]
     I_neg, I_pos = _real_isolate_and_disjoin(factors_list, K, eps=eps,
         inf=inf, sup=sup, strict=strict, basis=basis, fast=fast)
 
@@ -767,12 +761,11 @@ def _real_isolate_and_disjoin(factors, K, eps=None, inf=None, sup=None, strict=F
     I_neg = [ (_mobius_to_interval(M, field), k, f) for (_, M, k, f) in I_neg ]
     I_pos = [ (_mobius_to_interval(M, field), k, f) for (_, M, k, f) in I_pos ]
 
+    I_neg = [((-v, -u), k, f) for ((u, v), k, f) in I_neg]
+
     if not basis:
-        I_neg = [ ((-v, -u), k) for ((u, v), k, _) in I_neg ]
-        I_pos = [ (( u, v), k) for ((u, v), k, _) in I_pos ]
-    else:
-        I_neg = [ ((-v, -u), k, f) for ((u, v), k, f) in I_neg ]
-        I_pos = [ (( u, v), k, f) for ((u, v), k, f) in I_pos ]
+        I_neg = [((u, v), k) for ((u, v), k, _) in I_neg]
+        I_pos = [((u, v), k) for ((u, v), k, _) in I_pos]
 
     return I_neg, I_pos
 
@@ -1272,7 +1265,7 @@ def _reverse_intervals(intervals):
 
 def _winding_number(T, field):
     """Compute the winding number of the input polynomial, i.e. the number of roots. """
-    return int(sum([ field(*_values[t][i]) for t, i in T ]) / field(2))
+    return int(sum(field(*_values[t][i]) for t, i in T) / field(2))
 
 def dup_count_complex_roots(f, K, inf=None, sup=None, exclude=None):
     """Count all roots in [u + v*I, s + t*I] rectangle using Collins-Krandick algorithm. """
@@ -1288,7 +1281,7 @@ def dup_count_complex_roots(f, K, inf=None, sup=None, exclude=None):
 
     if inf is None or sup is None:
         _, lc = dup_degree(f), abs(dup_LC(f, F))
-        B = 2*max([ F.quo(abs(c), lc) for c in f ])
+        B = 2*max(F.quo(abs(c), lc) for c in f)
 
     if inf is None:
         (u, v) = (-B, -B)
@@ -1597,7 +1590,7 @@ def dup_isolate_complex_roots_sqf(f, K, eps=None, inf=None, sup=None, blackbox=F
     f = dup_convert(f, K, F)
 
     lc = abs(dup_LC(f, F))
-    B = 2*max([ F.quo(abs(c), lc) for c in f ])
+    B = 2*max(F.quo(abs(c), lc) for c in f)
 
     (u, v), (s, t) = (-B, F.zero), (B, B)
 

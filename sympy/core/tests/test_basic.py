@@ -1,14 +1,14 @@
 """This tests sympy/core/basic.py with (ideally) no reference to subclasses
 of Basic or Atom."""
-
 import collections
+from typing import TypeVar, Generic
 
 from sympy.assumptions.ask import Q
 from sympy.core.basic import (Basic, Atom, as_Basic,
     _atomic, _aresame)
 from sympy.core.containers import Tuple
 from sympy.core.function import Function, Lambda
-from sympy.core.numbers import I, pi
+from sympy.core.numbers import I, pi, Float
 from sympy.core.singleton import S
 from sympy.core.symbol import symbols, Symbol, Dummy
 from sympy.concrete.summations import Sum
@@ -17,16 +17,24 @@ from sympy.functions.special.gamma_functions import gamma
 from sympy.integrals.integrals import Integral
 from sympy.functions.elementary.exponential import exp
 from sympy.testing.pytest import raises, warns_deprecated_sympy
+from sympy.functions.elementary.complexes import Abs, sign
+from sympy.functions.elementary.piecewise import Piecewise
+from sympy.core.relational import Eq
 
 b1 = Basic()
 b2 = Basic(b1)
 b3 = Basic(b2)
 b21 = Basic(b2, b1)
+T = TypeVar('T')
 
 
 def test__aresame():
     assert not _aresame(Basic(Tuple()), Basic())
-    assert not _aresame(Basic(S(2)), Basic(S(2.)))
+    for i, j in [(S(2), S(2.)), (1., Float(1))]:
+        for do in range(2):
+            assert not _aresame(Basic(i), Basic(j))
+            assert not _aresame(i, j)
+            i, j = j, i
 
 
 def test_structure():
@@ -125,11 +133,11 @@ def test_subs():
     assert b21.subs(collections.OrderedDict([(b2, b1), (b1, b2)])) == Basic(b2, b2)
 
     raises(ValueError, lambda: b21.subs('bad arg'))
-    raises(ValueError, lambda: b21.subs(b1, b2, b3))
+    raises(TypeError, lambda: b21.subs(b1, b2, b3))
     # dict(b1=foo) creates a string 'b1' but leaves foo unchanged; subs
     # will convert the first to a symbol but will raise an error if foo
     # cannot be sympified; sympification is strict if foo is not string
-    raises(ValueError, lambda: b21.subs(b1='bad arg'))
+    raises(TypeError, lambda: b21.subs(b1='bad arg'))
 
     assert Symbol("text").subs({"text": b1}) == b1
     assert Symbol("s").subs({"s": 1}) == 1
@@ -193,7 +201,7 @@ def test_call():
     assert sin(x).rcall(1) == sin(x)
     assert (1 + sin(x)).rcall(1) == 1 + sin(x)
 
-    # Effect in the pressence of callables
+    # Effect in the presence of callables
     l = Lambda(x, 2*x)
     assert (l + x).rcall(y) == 2*y + x
     assert (x**l).rcall(2) == x**4
@@ -317,3 +325,19 @@ class MySubclass(Basic, metaclass=MyMeta):
         exec(code)
 
     assert myclasses == ['executed']
+
+
+def test_generic():
+    # https://github.com/sympy/sympy/issues/25399
+    class A(Symbol, Generic[T]):
+        pass
+
+    class B(A[T]):
+        pass
+
+
+def test_rewrite_abs():
+    # https://github.com/sympy/sympy/issues/27323
+    x = Symbol('x')
+    assert sign(x).rewrite(abs) == sign(x).rewrite(Abs)
+    assert sign(x).rewrite(abs) == Piecewise((0, Eq(x, 0)), (x / Abs(x), True))

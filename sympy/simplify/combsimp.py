@@ -50,7 +50,7 @@ def combsimp(expr):
     expr = expr.rewrite(gamma, piecewise=False)
     if any(isinstance(node, gamma) and not node.args[0].is_integer
         for node in preorder_traversal(expr)):
-        return gammasimp(expr);
+        return gammasimp(expr)
 
     expr = _gammasimp(expr, as_comb = True)
     expr = _gamma_as_comb(expr)

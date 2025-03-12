@@ -140,7 +140,7 @@ def prefix_unit(unit, prefixes):
 
     prefixed_units = []
 
-    for prefix_abbr, prefix in prefixes.items():
+    for prefix in prefixes.values():
         quantity = Quantity(
                 "%s%s" % (prefix.name, unit.name),
                 abbrev=("%s%s" % (prefix.abbrev, unit.abbrev)),

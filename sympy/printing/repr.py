@@ -227,6 +227,7 @@ class ReprPrinter(Printer):
         d = expr._assumptions_orig
         # print the dummy_index like it was an assumption
         if expr.is_Dummy:
+            d = d.copy()
             d['dummy_index'] = expr.dummy_index
 
         if d == {}:
@@ -318,13 +319,9 @@ class ReprPrinter(Printer):
 
     def _print_DMP(self, p):
         cls = p.__class__.__name__
-        rep = self._print(p.rep)
+        rep = self._print(p.to_list())
         dom = self._print(p.dom)
-        if p.ring is not None:
-            ringstr = ", ring=" + self._print(p.ring)
-        else:
-            ringstr = ""
-        return "%s(%s, %s%s)" % (cls, rep, dom, ringstr)
+        return "%s(%s, %s)" % (cls, rep, dom)
 
     def _print_MonogenicFiniteExtension(self, ext):
         # The expanded tree shown by srepr(ext.modulus)

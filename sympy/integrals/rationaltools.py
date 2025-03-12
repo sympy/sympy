@@ -6,6 +6,7 @@ from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, Symbol, symbols)
 from sympy.functions.elementary.exponential import log
 from sympy.functions.elementary.trigonometric import atan
+from sympy.polys.polyerrors import DomainError
 from sympy.polys.polyroots import roots
 from sympy.polys.polytools import cancel
 from sympy.polys.rootoftools import RootSum
@@ -324,6 +325,21 @@ def log_to_atan(f, g):
         return A + log_to_atan(s, t)
 
 
+def _get_real_roots(f, x):
+    """get real roots of f if possible"""
+    rs = roots(f, filter='R')
+
+    try:
+        num_roots = f.count_roots()
+    except DomainError:
+        return rs
+    else:
+        if len(rs) == num_roots:
+            return rs
+        else:
+            return None
+
+
 def log_to_real(h, q, x, t):
     r"""
     Convert complex logarithms to real functions.
@@ -360,8 +376,8 @@ def log_to_real(h, q, x, t):
     from sympy.simplify.radsimp import collect
     u, v = symbols('u,v', cls=Dummy)
 
-    H = h.as_expr().subs({t: u + I*v}).expand()
-    Q = q.as_expr().subs({t: u + I*v}).expand()
+    H = h.as_expr().xreplace({t: u + I*v}).expand()
+    Q = q.as_expr().xreplace({t: u + I*v}).expand()
 
     H_map = collect(H, I, evaluate=False)
     Q_map = collect(Q, I, evaluate=False)
@@ -371,18 +387,29 @@ def log_to_real(h, q, x, t):
 
     R = Poly(resultant(c, d, v), u)
 
-    R_u = roots(R, filter='R')
+    R_u = _get_real_roots(R, u)
 
-    if len(R_u) != R.count_roots():
+    if R_u is None:
         return None
 
     result = S.Zero
 
     for r_u in R_u.keys():
-        C = Poly(c.subs({u: r_u}), v)
-        R_v = roots(C, filter='R')
+        C = Poly(c.xreplace({u: r_u}), v)
+        if not C:
+            # t was split into real and imaginary parts
+            # and denom Q(u, v) = c + I*d. We just found
+            # that c(r_u) is 0 so the roots are in d
+            C = Poly(d.xreplace({u: r_u}), v)
+            # we were going to reject roots from C that
+            # did not set d to zero, but since we are now
+            # using C = d and c is already 0, there is
+            # nothing to check
+            d = S.Zero
 
-        if len(R_v) != C.count_roots():
+        R_v = _get_real_roots(C, v)
+
+        if R_v is None:
             return None
 
         R_v_paired = [] # take one from each pair of conjugate roots
@@ -395,21 +422,21 @@ def log_to_real(h, q, x, t):
 
         for r_v in R_v_paired:
 
-            D = d.subs({u: r_u, v: r_v})
+            D = d.xreplace({u: r_u, v: r_v})
 
             if D.evalf(chop=True) != 0:
                 continue
 
-            A = Poly(a.subs({u: r_u, v: r_v}), x)
-            B = Poly(b.subs({u: r_u, v: r_v}), x)
+            A = Poly(a.xreplace({u: r_u, v: r_v}), x)
+            B = Poly(b.xreplace({u: r_u, v: r_v}), x)
 
             AB = (A**2 + B**2).as_expr()
 
             result += r_u*log(AB) + r_v*log_to_atan(A, B)
 
-    R_q = roots(q, filter='R')
+    R_q = _get_real_roots(q, t)
 
-    if len(R_q) != q.count_roots():
+    if R_q is None:
         return None
 
     for r in R_q.keys():

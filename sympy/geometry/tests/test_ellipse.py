@@ -254,7 +254,8 @@ def test_ellipse_geom():
     assert intersection(Ellipse(Point(0, 0), 2, 1), Ellipse(Point(3, 0), 1, 2)) == [Point(2, 0)]
     assert intersection(Circle(Point(0, 0), 2), Circle(Point(3, 0), 1)) == [Point(2, 0)]
     assert intersection(Circle(Point(0, 0), 2), Circle(Point(7, 0), 1)) == []
-    assert intersection(Ellipse(Point(0, 0), 5, 17), Ellipse(Point(4, 0), 1, 0.2)) == [Point(5, 0)]
+    assert intersection(Ellipse(Point(0, 0), 5, 17), Ellipse(Point(4, 0), 1, 0.2)
+        ) == [Point(5.0, 0, evaluate=False)]
     assert intersection(Ellipse(Point(0, 0), 5, 17), Ellipse(Point(4, 0), 0.999, 0.2)) == []
     assert Circle((0, 0), S.Half).intersection(
         Triangle((-1, 0), (1, 0), (0, 1))) == [
@@ -451,6 +452,8 @@ def test_is_tangent():
     assert c1.is_tangent(Ray((-3, -2), (-15, -20))) is False
     assert c1.is_tangent(Ray((-3, -22), (15, 20))) is False
     assert c1.is_tangent(Ray((9, 20), (9, -20))) is True
+    assert c1.is_tangent(Ray((2, 5), (9, 5))) is True
+    assert c1.is_tangent(Segment((2, 5), (9, 5))) is True
     assert e1.is_tangent(Segment((2, 2), (-7, 7))) is False
     assert e1.is_tangent(Segment((0, 0), (1, 2))) is False
     assert c1.is_tangent(Segment((0, 0), (-5, -2))) is False

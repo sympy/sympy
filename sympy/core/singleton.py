@@ -1,8 +1,24 @@
 """Singleton mechanism"""
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 
 from .core import Registry
 from .sympify import sympify
+
+
+if TYPE_CHECKING:
+    from sympy.core.numbers import (
+        Zero as _Zero,
+        One as _One,
+        NegativeOne as _NegativeOne,
+        Half as _Half,
+        Infinity as _Infinity,
+        NegativeInfinity as _NegativeInfinity,
+        ComplexInfinity as _ComplexInfinity,
+        NaN as _NaN,
+    )
 
 
 class SingletonRegistry(Registry):
@@ -82,6 +98,15 @@ class SingletonRegistry(Registry):
 
     """
     __slots__ = ()
+
+    Zero: _Zero
+    One: _One
+    NegativeOne: _NegativeOne
+    Half: _Half
+    Infinity: _Infinity
+    NegativeInfinity: _NegativeInfinity
+    ComplexInfinity: _ComplexInfinity
+    NaN: _NaN
 
     # Also allow things like S(5)
     __call__ = staticmethod(sympify)

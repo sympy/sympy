@@ -293,7 +293,7 @@ def processVariables(self, ctx):
             self.var_list.append(name + strfunc(i))
 
     elif "{" in ctx.getText():
-        # Process variables of the type: Variales x{3}, y{2}
+        # Process variables of the type: Variables x{3}, y{2}
 
         if "'" in ctx.getText():
             dash_count = ctx.getText().count("'")
@@ -567,7 +567,7 @@ if AutolevListener:
                         for j in range(num3, num4):
                             declare_phy_entities(self, ctx, self.getValue(ctx.parentCtx.varType()), i, j)
                     except Exception:
-                       declare_phy_entities(self, ctx, self.getValue(ctx.parentCtx.varType()), i)
+                        declare_phy_entities(self, ctx, self.getValue(ctx.parentCtx.varType()), i)
         # ================== Subrules of parser rule expr (Start) ====================== #
 
         def exitId(self, ctx):

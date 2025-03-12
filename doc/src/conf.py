@@ -16,6 +16,9 @@ import os
 import subprocess
 from datetime import datetime
 
+from intersphinx_registry import get_intersphinx_mapping
+
+
 # Make sure we import sympy from git
 sys.path.insert(0, os.path.abspath('../..'))
 
@@ -81,6 +84,26 @@ redirects = {
     "tutorial/matrices": "../tutorials/intro-tutorial/matrices.html",
     "tutorial/manipulation": "../tutorials/intro-tutorial/manipulation.html",
 
+    "modules/physics/continuum_mechanics/beam_problems": "../../../tutorials/physics/continuum_mechanics/beam_problems.html",
+    "modules/physics/vector/index": "../../../explanation/modules/physics/vector/index.html",
+    "modules/physics/vector/vectors": "../../../explanation/modules/physics/vector/vectors/vectors.html",
+    "modules/physics/vector/kinematics": "../../../explanation/modules/physics/vector/kinematics/kinematics.html",
+    "modules/physics/vector/advanced": "../../../explanation/modules/physics/vector/advanced.html",
+    "modules/physics/vector/fields": "../../../explanation/modules/physics/vector/fields.html",
+    "modules/physics/mechanics/index": "../../../explanation/modules/physics/mechanics/index.html",
+    "modules/physics/mechanics/advanced": "../../../explanation/modules/physics/mechanics/advanced.html",
+    "modules/physics/mechanics/autolev_parser": "../../../explanation/modules/physics/mechanics/autolev_parser.html",
+    "modules/physics/mechanics/examples": "../../../tutorials/physics/mechanics/index.html",
+    "modules/physics/mechanics/joints": "../../../explanation/modules/physics/mechanics/joints.html",
+    "modules/physics/mechanics/kane": "../../../explanation/modules/physics/mechanics/kane.html",
+    "modules/physics/mechanics/lagrange": "../../../explanation/modules/physics/mechanics/lagrange.html",
+    "modules/physics/mechanics/masses": "../../../explanation/modules/physics/mechanics/masses.html",
+    "modules/physics/mechanics/reference": "../../../explanation/modules/physics/mechanics/reference.html",
+    "modules/physics/mechanics/symsystem": "../../../explanation/modules/physics/mechanics/symsystem.html",
+    "modules/physics/mechanics/linearize": "../../../explanation/modules/physics/mechanics/linearize.html",
+    "modules/physics/mechanics/sympy_mechanics_for_autolev_uses": "../../../explanation/modules/physics/mechanics/sympy_mechanics_for_autolev_users.html",
+    "tutorials/physics/biomechanics/biomechanics": "../../../explanation/modules/physics/biomechanics/biomechanics.html",
+
 }
 
 html_baseurl = "https://docs.sympy.org/latest/"
@@ -88,9 +111,6 @@ html_baseurl = "https://docs.sympy.org/latest/"
 # Configure Sphinx copybutton (see https://sphinx-copybutton.readthedocs.io/en/latest/use.html)
 copybutton_prompt_text = r">>> |\.\.\. |\$ |In \[\d*\]: | {2,5}\.\.\.: | {5,8}: "
 copybutton_prompt_is_regexp = True
-
-# Use this to use pngmath instead
-#extensions = ['sphinx.ext.autodoc', 'sphinx.ext.viewcode', 'sphinx.ext.pngmath', ]
 
 # Enable warnings for all bad cross references. These are turned into errors
 # with the -W flag in the Makefile.
@@ -117,11 +137,11 @@ myst_enable_extensions = ["dollarmath", "linkify", "tasklist"]
 myst_heading_anchors = 6
 # Make - [ ] checkboxes from the tasklist extension checkable
 # Requires https://github.com/executablebooks/MyST-Parser/pull/686
-# myst_enable_checkboxes = True
+myst_enable_checkboxes = True
 # myst_update_mathjax = False
 
 # Don't linkify links unless they start with "https://". This is needed
-# because the linkify library treates .py as a TLD.
+# because the linkify library treats .py as a TLD.
 myst_linkify_fuzzy_links = False
 
 # Add any paths that contain templates here, relative to this directory.
@@ -174,6 +194,8 @@ pygments_dark_style = 'styles.NativeHighContrastStyle'
 
 # Don't show the source code hyperlinks when using matplotlib plot directive.
 plot_html_show_source_link = False
+
+maximum_signature_line_length = 50
 
 # Options for HTML output
 # -----------------------
@@ -344,28 +366,71 @@ latex_documents = [('index', 'sympy-%s.tex' % release, 'SymPy Documentation',
                     'SymPy Development Team', 'manual', True)]
 
 # Additional stuff for the LaTeX preamble.
-# Tweaked to work with XeTeX.
+latex_engine = 'xelatex'
+latex_use_xindy = False
 latex_elements = {
-    'babel':     '',
-    'fontenc': r'''
-% Define version of \LaTeX that is usable in math mode
-\let\OldLaTeX\LaTeX
-\renewcommand{\LaTeX}{\text{\OldLaTeX}}
-
-\usepackage{bm}
-\usepackage{amssymb}
-\usepackage{fontspec}
-\usepackage[english]{babel}
-\defaultfontfeatures{Mapping=tex-text}
+    'passoptionstopackages': r'\PassOptionsToPackage{no-math}{fontspec}',
+    'fontpkg': r'''
 \setmainfont{DejaVu Serif}
 \setsansfont{DejaVu Sans}
 \setmonofont{DejaVu Sans Mono}
 ''',
-    'fontpkg':   '',
-    'inputenc':  '',
-    'utf8extra': '',
     'preamble':  r'''
-'''
+\usepackage{newunicodechar}
+% Some Unicode characters need some re-mapping:
+% using \text to allow usage in math mode
+% Those turn out to be available in DejaVu Sans, but not Mono,
+% which caused Missing character.
+% Attention that if sans-serif font is modified in future, this
+% may need updates.
+\newunicodechar{ᵦ}{\text{\sffamily ᵦ}}%   (U+1D66)
+\newunicodechar{ᵧ}{\text{\sffamily ᵧ}}%   (U+1D67)
+\newunicodechar{ᵨ}{\text{\sffamily ᵨ}}%   (U+1D68)
+\newunicodechar{ᵩ}{\text{\sffamily ᵩ}}%   (U+1D69
+\newunicodechar{ᵪ}{\text{\sffamily ᵪ}}%   (U+1D6A)
+\newunicodechar{∧}{\text{\sffamily ∧}}%   (U+2227)
+\newunicodechar{∪}{\text{\sffamily ∪}}%   (U+222A)
+\newunicodechar{ⅆ}{\text{\sffamily ⅆ}}%   (U+2146)
+\newunicodechar{∊}{\text{\sffamily ∊}}%   (U+220A)
+\newunicodechar{⊻}{\text{\sffamily ⊻}}%   (U+22BB)
+\newunicodechar{⊼}{\text{\sffamily ⊼}}%   (U+22BC)
+\newunicodechar{⊽}{\text{\sffamily ⊽}}%   (U+22BD)
+\newunicodechar{⨂}{\text{\sffamily ⨂}}%   (U+2A02)
+% Those next two are not available in DejaVu Sans Bold,
+% we can find them in boldface in XITS or simply use \mdseries
+% Opting for the later here.
+\newunicodechar{┬}{\text{\sffamily\mdseries ┬}}%   (U+252C)
+\newunicodechar{┴}{\text{\sffamily\mdseries ┴}}%   (U+2534)
+% Next one (cross mark) is  used only once in sources (not in math mode).
+% Available in Emoji fonts such as Noto Emoji.
+% U+2715 is available in DejaVu Sans and DejaVu Sans Mono but not Serif
+\newunicodechar{❌}{\textcolor{red}{\sffamily\bfseries ✕}}% (U+274C --> U+2715)
+%
+\newfontfamily{\TGDejaVuMath}{texgyredejavu-math.otf}
+  \newunicodechar{𝑅}{\text{\TGDejaVuMath 𝑅}}%   (U+1D445)
+  \newunicodechar{𝕀}{\text{\TGDejaVuMath 𝕀}}%   (U+1D540)
+  \newunicodechar{𝕌}{\text{\TGDejaVuMath 𝕌}}%   (U+1D54C)
+  \newunicodechar{𝟘}{\text{\TGDejaVuMath 𝟘}}%   (U+1D7D8)
+  \newunicodechar{𝟙}{\text{\TGDejaVuMath 𝟙}}%   (U+1D7D9)
+%
+% Define version of \LaTeX that is usable in math mode
+\usepackage{letltxmacro}
+\LetLtxMacro\OldLaTeX\LaTeX
+\AtBeginDocument{\DeclareRobustCommand{\LaTeX}{\text{\OldLaTeX}}}
+\let\OldUnderscore\_
+\makeatletter
+\AtBeginDocument{\sbox\sphinxcontinuationbox{\spx@opt@verbatimcontinued}}
+\makeatother
+\protected\def\_{\OldUnderscore\discretionary{}{\sphinxafterbreak}{}}
+% increase room on TOC page for page numbers going into the thousands
+\makeatletter
+\renewcommand{\@pnumwidth}{2.5em}% default is 1.55em
+\renewcommand{\@tocrmarg}{3.5em}%  default is 2.55em
+\makeatother
+''',
+    'sphinxsetup': 'verbatimforcewraps',
+    'printindex': r'\def\twocolumn[#1]{#1}\raggedright\printindex',
+    'fvset': r'\fvset{fontsize=auto}',
 }
 
 # SymPy logo on title page
@@ -383,14 +448,6 @@ latex_show_pagerefs = True
 latex_use_modindex = False
 
 default_role = 'math'
-pngmath_divpng_args = ['-gamma 1.5', '-D 110']
-# Note, this is ignored by the mathjax extension
-# Any \newcommand should be defined in the file
-pngmath_latex_preamble = '\\usepackage{amsmath}\n' \
-    '\\usepackage{bm}\n' \
-    '\\usepackage{amsfonts}\n' \
-    '\\usepackage{amssymb}\n' \
-    '\\setlength{\\parindent}{0pt}\n'
 
 texinfo_documents = [
     (master_doc, 'sympy', 'SymPy Documentation', 'SymPy Development Team',
@@ -401,12 +458,9 @@ texinfo_documents = [
 graphviz_output_format = 'svg'
 
 # Enable links to other packages
-intersphinx_mapping = {
-    'matplotlib': ('https://matplotlib.org/stable/', None),
-    'mpmath': ('https://mpmath.org/doc/current/', None),
-    "scipy": ("https://docs.scipy.org/doc/scipy/", None),
-    "numpy": ("https://numpy.org/doc/stable/", None),
-}
+intersphinx_mapping = get_intersphinx_mapping(
+    packages={"matplotlib", "mpmath", "scipy", "numpy"},
+)
 # Require :external: to reference intersphinx. Prevents accidentally linking
 # to something from matplotlib.
 intersphinx_disabled_reftypes = ['*']
@@ -425,7 +479,7 @@ if not commit_hash:
         commit_hash = subprocess.check_output(['git', 'rev-parse', 'HEAD'])
         commit_hash = commit_hash.decode('ascii')
         commit_hash = commit_hash.rstrip()
-    except:
+    except Exception:
         import warnings
         warnings.warn(
             "Failed to get the git commit hash as the command " \
@@ -460,15 +514,6 @@ def linkcode_resolve(domain, info):
         except Exception:
             return
 
-    # strip decorators, which would resolve to the source of the decorator
-    # possibly an upstream bug in getsourcefile, bpo-1764286
-    try:
-        unwrap = inspect.unwrap
-    except AttributeError:
-        pass
-    else:
-        obj = unwrap(obj)
-
     try:
         fn = inspect.getsourcefile(obj)
     except Exception:
@@ -488,3 +533,21 @@ def linkcode_resolve(domain, info):
 
     fn = os.path.relpath(fn, start=os.path.dirname(sympy.__file__))
     return blobpath + fn + linespec
+
+
+def resolve_type_aliases(app, env, node, contnode):
+    """Resolve :class: references to our type aliases as :attr: instead."""
+    # A sphinx bug means that TypeVar doesn't work:
+    # https://github.com/sphinx-doc/sphinx/issues/10785
+    if (
+        node["refdomain"] == "py"
+        and node["reftype"] == "class"
+        and node["reftarget"] in ["sympy.utilities.decorator.T"]
+    ):
+        return app.env.get_domain("py").resolve_xref(
+            env, node["refdoc"], app.builder, "attr", node["reftarget"], node, contnode
+        )
+
+
+def setup(app):
+    app.connect("missing-reference", resolve_type_aliases)

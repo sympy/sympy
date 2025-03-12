@@ -8,7 +8,7 @@ SymPy historically had its own testing framework that aimed to:
 - have no magic, just import the test file and execute the test functions; and
 - be portable.
 
-To reduce the maintence burden of developing an independent testing framework
+To reduce the maintenance burden of developing an independent testing framework
 and to leverage the benefits of existing Python testing infrastructure, SymPy
 now uses pytest (and various of its plugins) to run the test suite.
 
@@ -92,18 +92,6 @@ split_pattern = re.compile(r'([1-9][0-9]*)/([1-9][0-9]*)')
 def sympy_dir() -> pathlib.Path:
     """Returns the root SymPy directory."""
     return pathlib.Path(__file__).parents[2]
-
-
-def update_args_with_rootdir(args: List[str]) -> List[str]:
-    """Adds `--rootdir` and path to the args `list` passed to `pytest.main`.
-
-    This is required to ensure that pytest is able to find the SymPy tests in
-    instances where it gets confused determining the root directory, e.g. when
-    running with Pyodide (e.g. `bin/test_pyodide.mjs`).
-
-    """
-    args.extend(['--rootdir', str(sympy_dir())])
-    return args
 
 
 def update_args_with_paths(
@@ -264,7 +252,7 @@ def test(*paths, subprocess=True, rerun=0, **kwargs):
 
     Note that a `pytest.ExitCode`, which is an `enum`, is returned. This is
     different to the legacy SymPy test runner which would return a `bool`. If
-    all tests sucessfully pass the `pytest.ExitCode.OK` with value `0` is
+    all tests successfully pass the `pytest.ExitCode.OK` with value `0` is
     returned, whereas the legacy SymPy test runner would return `True`. In any
     other scenario, a non-zero `enum` value is returned, whereas the legacy
     SymPy test runner would return `False`. Users need to, therefore, be careful
@@ -389,7 +377,6 @@ def test(*paths, subprocess=True, rerun=0, **kwargs):
         pytest.main()
 
     args = []
-    args = update_args_with_rootdir(args)
 
     if kwargs.get('verbose', False):
         args.append('--verbose')
@@ -421,15 +408,11 @@ def test(*paths, subprocess=True, rerun=0, **kwargs):
             raise ModuleNotFoundError(msg)
         args.extend(['--timeout', str(int(timeout))])
 
-    # The use of `bool | None` for the `slow` kwarg allows a configuration file
-    # to take precedence if found by pytest, but if one isn't present (e.g. in
-    # the case when used with Pyodide) then a user can still explicitly ensure
-    # that only the slow tests are run.
-    if slow := kwargs.get('slow', None) is not None:
-        if slow:
-            args.extend(['-m', 'slow'])
-        else:
-            args.extend(['-m', 'not slow'])
+    # Skip slow tests by default and always skip tooslow tests
+    if kwargs.get('slow', False):
+        args.extend(['-m', 'slow and not tooslow'])
+    else:
+        args.extend(['-m', 'not slow and not tooslow'])
 
     if (split := kwargs.get('split')) is not None:
         if not pytest_plugin_manager.has_split:

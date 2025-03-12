@@ -49,7 +49,7 @@ pull request, or even before committing a change.
 - [ ] **Cross reference relevant issues in the pull request description.** If
   the pull request fixes an issue (i.e., the issue should be closed once the
   PR is merged), use the ["fixes #123" syntax
-  ](https://help.github.com/articles/closing-issues-via-commit-messages).
+  ](https://docs.github.com/issues/tracking-your-work-with-issues/linking-a-pull-request-to-an-issue).
 
 - [ ] **Add a comment to the original issue cross-referencing the pull
   request** for visibility. If there is not a corresponding issue, this is OK.
@@ -75,7 +75,7 @@ in the issue tracker and see if one interests you. If you'd like to try to fix
 it, then create a message in the issue saying that you'd like to work on it.
 If it isn't clear how to fix it, ask for suggestions on how to do it in the
 issue itself or on the [mailing
-list](https://groups.google.com/forum/#!forum/sympy).
+list](https://groups.google.com/g/sympy).
 
 SymPy's code is organized into Python packages and modules. The core code is
 in the `sympy/core` directory and other packages in the sympy directory have
@@ -294,20 +294,23 @@ here to see a preview of the documentation."
 (workflow-process-run-tests)=
 ## Run the Tests
 
-There are several ways of running SymPy tests but the easiest is to use the `bin/test` script, consult 'the wiki details on running tests \<<https://github.com/sympy/sympy/wiki/Running-tests>>\`\_.
+There are several ways of running SymPy tests but the easiest is to use the
+`bin/test` script.
 
-The script takes a number of options and arguments and then passes them to `sympy.test(*paths, **kwargs)`. Run `bin/test --help` for all supported arguments.
+The script takes a number of options and arguments. Run `bin/test --help` for
+all supported arguments. Under the hood it uses `pytest`, and you can use that
+directly as well if you prefer.
 
 Run all tests by using the command:
 
 ```bash
-$ bin/test
+$ ./bin/test
 ```
 
 To run tests for a specific file, use:
 
 ```bash
-$ bin/test test_basic
+$ ./bin/test test_basic
 ```
 
 Where `test_basic` is from file `sympy/core/basic.py`.
@@ -315,15 +318,15 @@ Where `test_basic` is from file `sympy/core/basic.py`.
 To run tests for modules, use:
 
 ```bash
-$  bin/test /core /utilities
+$ ./bin/test /core /utilities
 ```
 
 This will run tests for the `core` and `utilities` modules.
 
-Similary, run quality tests with:
+Similarly, run quality tests with:
 
 ```bash
-$ bin/test code_quality
+$ ./bin/test code_quality
 ```
 
 ## Commit the changes
@@ -388,7 +391,7 @@ Using `.git/info/exclude` would be the best, because it is only applied locally.
 
 <https://stackoverflow.com/questions/22906851/when-would-you-use-git-info-exclude-instead-of-gitignore-to-exclude-files>
 
-<https://help.github.com/en/articles/ignoring-files>
+<https://docs.github.com/get-started/getting-started-with-git/ignoring-files>
 
 (workflow-process-commit-messages)=
 ### Writing commit messages
@@ -514,7 +517,7 @@ Co-authored-by: AUTHOR-NAME ANOTHER-NAME@EXAMPLE.COM
 ```
 
 to the bottom of the commit message. See
-https://help.github.com/en/articles/creating-a-commit-with-multiple-authors.
+https://docs.github.com/pull-requests/committing-changes-to-your-project/creating-and-editing-commits/creating-a-commit-with-multiple-authors.
 
 ## Make a Pull Request
 
@@ -568,9 +571,9 @@ The description is a good place to:
 
 - Use phrases like "closes #1234" or "fixed #1234" (or similar that [follow
   the auto-close
-  syntax](https://help.github.com/articles/closing-issues-via-commit-messages)
+  syntax](https://docs.github.com/issues/tracking-your-work-with-issues/linking-a-pull-request-to-an-issue)
   and are also [discussed
-  here](https://github.com/blog/1506-closing-issues-via-pull-requests)). Then
+  here](https://github.blog/2013-05-14-closing-issues-via-pull-requests/)). Then
   those other issues or pull requests will be closed automatically when your
   pull request is merged. Note: this syntax does not work in the discussion of
   the pull request. See this [quick
@@ -595,18 +598,19 @@ Every author's name and email address is stored in the
 file should not be edited directly. The AUTHORS file is updated automatically
 when a new version of SymPy is released based on the name and email addresses
 that are recorded in the commits. Every commit made with git stores the name
-and email address that git is configured with (see "Configure git settings"
-above). The [.mailmap](https://github.com/sympy/sympy/blob/master/.mailmap)
+and email address that git is configured with (see [Configure git settings](#configure-git-settings)). The [.mailmap](https://github.com/sympy/sympy/blob/master/.mailmap)
 file is used to associate the name/email recorded in the commits with an
 author name and email address that will be listed in the AUTHORS file.
 
 The first time you make a pull request you will need to add your name and email address to the .mailmap file by adding a line like
 
 ```
-Joe Bloggs <joe@bloggs.com>
+Joe Bloggs <joe@bloggs.com>  joeb <joe@bloggs.com>
 ```
 
-This name and email should exactly match the name and email that you have configured with git before making the commits (see "Configure git settings" above). The `bin/mailmap_check.py` script can check that this has been done correctly. If you have made a commit but not yet added yourself to the .mailmap file then you will see this:
+This line in the .mailmap file associates the author name with the corresponding commits. The first name and email address is what will eventually go in the AUTHORS file. The second entry is what is recorded in the commit metadata. (see [Mapping user names to AUTHORS file entry](#mailmap-mapping-names))
+
+The commit metadata name and email should exactly match the name and email that you have configured with git before making the commits (see [Configure git settings](#configure-git-settings)). The `bin/mailmap_check.py` script can check that this has been done correctly. If you have made a commit but not yet added yourself to the .mailmap file then you will see this:
 
 ```bash
 $ python bin/mailmap_check.py
@@ -635,7 +639,6 @@ index 3af6dc1..7fa63b1 100644
 @@ -1307,3 +1307,4 @@ zsc347 <zsc347@gmail.com>
  Øyvind Jensen <jensen.oyvind@gmail.com>
  Łukasz Pankowski <lukpank@o2.pl>
- 彭于斌 <1931127624@qq.com>
 +Joe Bloggs <joe@bloggs.com>
 ```
 
@@ -691,7 +694,9 @@ git add .mailmap
 git commit -m 'author: add Joe Bloggs to .mailmap'
 ```
 
-Sometimes a commit will be made with an incorrect name or email address or an author will make multiple commits with different names and email addresses. In this case a line should be added to the .mailmap file where the first name and email address is what should be recorded in the AUTHORS file and the others are the name and email address that was incorrectly used in the other commits. For example if the commit was recorded with the name `joeb` and the email address `wrong@email.com` but the AUTHORS file should show `Joe Bloggs` as above then there should be a line in the .mailmap file like:
+(mailmap-mapping-names)=
+### Mapping user names to AUTHORS file entry
+Sometimes a commit will be made with an incorrect name or email address or an author will make multiple commits with different names and email addresses or an author wishes to use a proper name that differs from their github name. In this case a line should be added to the .mailmap file where the first name and email address is what should be recorded in the AUTHORS file and the others are the name and email address that was incorrectly used in the other commits. For example if the commit was recorded with the name `joeb` and the email address `wrong@email.com` but the AUTHORS file should show `Joe Bloggs` as above then there should be a line in the .mailmap file like:
 
 ```
 Joe Bloggs <joe@bloggs.com> joeb <wrong@email.com>

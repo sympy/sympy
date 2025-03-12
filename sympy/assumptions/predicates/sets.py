@@ -35,6 +35,18 @@ class IntegerPredicate(Predicate):
     )
 
 
+class NonIntegerPredicate(Predicate):
+    """
+    Non-integer extended real predicate.
+    """
+    name = 'noninteger'
+    handler = Dispatcher(
+        "NonIntegerHandler",
+        doc=("Handler for Q.noninteger.\n\n"
+        "Test that an expression is a non-integer extended real number.")
+    )
+
+
 class RationalPredicate(Predicate):
     """
     Rational number predicate.

@@ -39,19 +39,19 @@ def test_lll():
     ]
     delta = QQ(5, 6)
     for basis_dm, reduced_dm in normal_test_data:
-        reduced = _ddm_lll(basis_dm.rep, delta=delta)[0]
-        assert reduced == reduced_dm.rep
+        reduced = _ddm_lll(basis_dm.rep.to_ddm(), delta=delta)[0]
+        assert reduced == reduced_dm.rep.to_ddm()
 
-        reduced = ddm_lll(basis_dm.rep, delta=delta)
-        assert reduced == reduced_dm.rep
+        reduced = ddm_lll(basis_dm.rep.to_ddm(), delta=delta)
+        assert reduced == reduced_dm.rep.to_ddm()
 
-        reduced, transform = _ddm_lll(basis_dm.rep, delta=delta, return_transform=True)
-        assert reduced == reduced_dm.rep
-        assert transform.matmul(basis_dm.rep) == reduced_dm.rep
+        reduced, transform = _ddm_lll(basis_dm.rep.to_ddm(), delta=delta, return_transform=True)
+        assert reduced == reduced_dm.rep.to_ddm()
+        assert transform.matmul(basis_dm.rep.to_ddm()) == reduced_dm.rep.to_ddm()
 
-        reduced, transform = ddm_lll_transform(basis_dm.rep, delta=delta)
-        assert reduced == reduced_dm.rep
-        assert transform.matmul(basis_dm.rep) == reduced_dm.rep
+        reduced, transform = ddm_lll_transform(basis_dm.rep.to_ddm(), delta=delta)
+        assert reduced == reduced_dm.rep.to_ddm()
+        assert transform.matmul(basis_dm.rep.to_ddm()) == reduced_dm.rep.to_ddm()
 
         reduced = basis_dm.rep.lll(delta=delta)
         assert reduced == reduced_dm.rep
@@ -90,13 +90,13 @@ def test_lll_linear_dependent():
             [10, -4, 2]], ZZ)
     ]
     for not_basis in linear_dependent_test_data:
-        raises(DMRankError, lambda: _ddm_lll(not_basis.rep))
-        raises(DMRankError, lambda: ddm_lll(not_basis.rep))
+        raises(DMRankError, lambda: _ddm_lll(not_basis.rep.to_ddm()))
+        raises(DMRankError, lambda: ddm_lll(not_basis.rep.to_ddm()))
         raises(DMRankError, lambda: not_basis.rep.lll())
         raises(DMRankError, lambda: not_basis.rep.to_sdm().lll())
         raises(DMRankError, lambda: not_basis.lll())
-        raises(DMRankError, lambda: _ddm_lll(not_basis.rep, return_transform=True))
-        raises(DMRankError, lambda: ddm_lll_transform(not_basis.rep))
+        raises(DMRankError, lambda: _ddm_lll(not_basis.rep.to_ddm(), return_transform=True))
+        raises(DMRankError, lambda: ddm_lll_transform(not_basis.rep.to_ddm()))
         raises(DMRankError, lambda: not_basis.rep.lll_transform())
         raises(DMRankError, lambda: not_basis.rep.to_sdm().lll_transform())
         raises(DMRankError, lambda: not_basis.lll_transform())

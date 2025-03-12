@@ -716,14 +716,12 @@ class CosetTable(DefaultPrinting):
         table = self.table
         while len(self.deduction_stack) > 0:
             alpha, x = self.deduction_stack.pop()
-            for w in R_c_x:
-                if not self.scan_check(alpha, w):
-                    return False
+            if not all(self.scan_check(alpha, w) for w in R_c_x):
+                return False
             beta = table[alpha][self.A_dict[x]]
             if beta is not None:
-                for w in R_c_x_inv:
-                    if not self.scan_check(beta, w):
-                        return False
+                if not all(self.scan_check(beta, w) for w in R_c_x_inv):
+                    return False
         return True
 
     def switch(self, beta, gamma):
@@ -816,7 +814,13 @@ class CosetTable(DefaultPrinting):
                 for x in A:
                     beta = table[alpha][A_dict[x]]
                     table[gamma][A_dict[x]] = beta
-                    table[beta][A_dict_inv[x]] == gamma
+                    # XXX: The line below uses == rather than = which means
+                    # that it has no effect. It is not clear though if it is
+                    # correct simply to delete the line or to change it to
+                    # use =. Changing it causes some tests to fail.
+                    #
+                    # https://github.com/sympy/sympy/issues/27633
+                    table[beta][A_dict_inv[x]] == gamma # noqa: B015
         # all the cosets in the table are live cosets
         self.p = list(range(gamma + 1))
         # delete the useless columns

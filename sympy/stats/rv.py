@@ -44,16 +44,22 @@ from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.iterables import iterable
 
 
+__doctest_requires__ = {('sample',): ['scipy']}
+
+
 x = Symbol('x')
+
 
 @singledispatch
 def is_random(x):
     return False
 
+
 @is_random.register(Basic)
 def _(x):
     atoms = x.free_symbols
     return any(is_random(i) for i in atoms)
+
 
 class RandomDomain(Basic):
     """
@@ -1633,7 +1639,7 @@ class Distribution(Basic):
                 import pymc3 as pymc
 
             with pymc.Model():
-                if do_sample_pymc(self):
+                if do_sample_pymc(self) is not None:
                     samps = pymc.sample(draws=prod(size), chains=1, compute_convergence_checks=False,
                             progressbar=False, random_seed=seed, return_inferencedata=False)[:]['X']
                     samps = samps.reshape(size)

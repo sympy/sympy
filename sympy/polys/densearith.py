@@ -757,7 +757,7 @@ def dup_mul(f, g, K):
 
     n = max(df, dg) + 1
 
-    if n < 100:
+    if n < 100 or not K.is_Exact:
         h = []
 
         for i in range(0, df + dg + 1):
@@ -1741,7 +1741,7 @@ def dmp_max_norm(f, u, K):
 
     v = u - 1
 
-    return max([ dmp_max_norm(c, v, K) for c in f ])
+    return max(dmp_max_norm(c, v, K) for c in f)
 
 
 def dup_l1_norm(f, K):
@@ -1783,7 +1783,7 @@ def dmp_l1_norm(f, u, K):
 
     v = u - 1
 
-    return sum([ dmp_l1_norm(c, v, K) for c in f ])
+    return sum(dmp_l1_norm(c, v, K) for c in f)
 
 
 def dup_l2_norm_squared(f, K):
@@ -1822,7 +1822,7 @@ def dmp_l2_norm_squared(f, u, K):
 
     v = u - 1
 
-    return sum([ dmp_l2_norm_squared(c, v, K) for c in f ])
+    return sum(dmp_l2_norm_squared(c, v, K) for c in f)
 
 
 def dup_expand(polys, K):

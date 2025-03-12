@@ -110,7 +110,7 @@ class SingleODEProblem:
                 if r and r[c1]:
                     den = self.func**r[c1]
                     reduced_eq = Add(*[arg/den for arg in self.eq.args])
-        if not reduced_eq:
+        if reduced_eq is None:
             reduced_eq = expand(self.eq)
         return reduced_eq
 
@@ -1277,9 +1277,7 @@ class Separable(SinglePatternODESolver):
         # m1[coeff]*m1[x]*m1[y] + m2[coeff]*m2[x]*m2[y]*y'
         self.m1 = separatevars(d, dict=True, symbols=(x, self.y))
         self.m2 = separatevars(e, dict=True, symbols=(x, self.y))
-        if self.m1 and self.m2:
-            return True
-        return False
+        return bool(self.m1 and self.m2)
 
     def _get_match_object(self):
         fx = self.ode_problem.func
@@ -1621,8 +1619,8 @@ class HomogeneousCoeffSubsIndepDivDep(SinglePatternODESolver):
     >>> pprint(dsolve(2*x*f(x) + (x**2 + f(x)**2)*f(x).diff(x), f(x),
     ... hint='1st_homogeneous_coeff_subs_indep_div_dep',
     ... simplify=False))
-                             /    2    \
-                             | 3*x     |
+                             /   2     \
+                             |3*x      |
                           log|----- + 1|
                              | 2       |
                              \f (x)    /
@@ -1707,8 +1705,8 @@ class HomogeneousCoeffBest(HomogeneousCoeffSubsIndepDivDep, HomogeneousCoeffSubs
     >>> f = Function('f')
     >>> pprint(dsolve(2*x*f(x) + (x**2 + f(x)**2)*f(x).diff(x), f(x),
     ... hint='1st_homogeneous_coeff_best', simplify=False))
-                             /    2    \
-                             | 3*x     |
+                             /   2     \
+                             |3*x      |
                           log|----- + 1|
                              | 2       |
                              \f (x)    /
@@ -1730,9 +1728,8 @@ class HomogeneousCoeffBest(HomogeneousCoeffSubsIndepDivDep, HomogeneousCoeffSubs
     order = [1]
 
     def _verify(self, fx):
-        if HomogeneousCoeffSubsIndepDivDep._verify(self, fx) and HomogeneousCoeffSubsDepDivIndep._verify(self, fx):
-            return True
-        return False
+        return HomogeneousCoeffSubsIndepDivDep._verify(self, fx) and \
+               HomogeneousCoeffSubsDepDivIndep._verify(self, fx)
 
     def _get_general_solution(self, *, simplify_flag: bool = True):
         # There are two substitutions that solve the equation, u1=y/x and u2=x/y
@@ -1744,7 +1741,8 @@ class HomogeneousCoeffBest(HomogeneousCoeffSubsIndepDivDep, HomogeneousCoeffSubs
         if simplify_flag:
             sol1 = odesimp(self.ode_problem.eq, *sol1, fx, "1st_homogeneous_coeff_subs_indep_div_dep")
             sol2 = odesimp(self.ode_problem.eq, *sol2, fx, "1st_homogeneous_coeff_subs_dep_div_indep")
-        return min([sol1, sol2], key=lambda x: ode_sol_simplicity(x, fx, trysolving=not simplify))
+        # XXX: not simplify should be not simplify_flag. mypy correctly complains
+        return min([sol1, sol2], key=lambda x: ode_sol_simplicity(x, fx, trysolving=not simplify)) # type: ignore
 
 
 class LinearCoefficients(HomogeneousCoeffBest):
@@ -2183,8 +2181,8 @@ class NthLinearConstantCoeffHomogeneous(SingleODESolver):
         roots, collectterms = _get_const_characteristic_eq_sols(self.r, fx, order)
         # A generator of constants
         constants = self.ode_problem.get_numbered_constants(num=len(roots))
-        gsol = Add(*[i*j for (i, j) in zip(constants, roots)])
-        gsol = Eq(fx, gsol)
+        gsol_rhs = Add(*[i*j for (i, j) in zip(constants, roots)])
+        gsol = Eq(fx, gsol_rhs)
         if simplify_flag:
             gsol = _get_simplified_sol([gsol], fx, collectterms)
 
@@ -2285,8 +2283,8 @@ class NthLinearConstantCoeffVariationOfParameters(SingleODESolver):
         roots, collectterms = _get_const_characteristic_eq_sols(self.r, f(x), order)
         # A generator of constants
         constants = self.ode_problem.get_numbered_constants(num=len(roots))
-        homogen_sol = Add(*[i*j for (i, j) in zip(constants, roots)])
-        homogen_sol = Eq(f(x), homogen_sol)
+        homogen_sol_rhs = Add(*[i*j for (i, j) in zip(constants, roots)])
+        homogen_sol = Eq(f(x), homogen_sol_rhs)
         homogen_sol = _solve_variation_of_parameters(eq, f(x), roots, homogen_sol, order, self.r, simplify_flag)
         if simplify_flag:
             homogen_sol = _get_simplified_sol([homogen_sol], f(x), collectterms)
@@ -2377,8 +2375,8 @@ class NthLinearConstantCoeffUndeterminedCoefficients(SingleODESolver):
         roots, collectterms = _get_const_characteristic_eq_sols(self.r, f(x), order)
         # A generator of constants
         constants = self.ode_problem.get_numbered_constants(num=len(roots))
-        homogen_sol = Add(*[i*j for (i, j) in zip(constants, roots)])
-        homogen_sol = Eq(f(x), homogen_sol)
+        homogen_sol_rhs = Add(*[i*j for (i, j) in zip(constants, roots)])
+        homogen_sol = Eq(f(x), homogen_sol_rhs)
         self.r.update({'list': roots, 'sol': homogen_sol, 'simpliy_flag': simplify_flag})
         gsol = _solve_undetermined_coefficients(eq, f(x), order, self.r, self.trialset)
         if simplify_flag:
@@ -2660,8 +2658,8 @@ class NthLinearEulerEqNonhomogeneousUndeterminedCoefficients(SingleODESolver):
 
         self.const_undet_instance = NthLinearConstantCoeffUndeterminedCoefficients(SingleODEProblem(eq, f(x), x))
         sol = self.const_undet_instance.get_general_solution(simplify = simplify_flag)[0]
-        sol = sol.subs(x, log(x))
-        sol = sol.subs(f(log(x)), f(x)).expand()
+        sol = sol.subs(x, log(x)) # type: ignore
+        sol = sol.subs(f(log(x)), f(x)).expand() # type: ignore
 
         return [sol]
 
@@ -2751,12 +2749,12 @@ class SecondLinearBessel(SingleODESolver):
             if coeff1 is None:
                 return False
             # c3 maybe of very complex form so I am simply checking (a - b) form
-            # if yes later I will match with the standerd form of bessel in a and b
+            # if yes later I will match with the standard form of bessel in a and b
             # a, b are wild variable defined above.
-            _coeff2 = r[c3].match(a - b)
+            _coeff2 = expand(r[c3]).match(a - b)
             if _coeff2 is None:
                 return False
-            # matching with standerd form for c3
+            # matching with standard form for c3
             coeff2 = factor(_coeff2[a]).match(c4**2*(x)**(2*a4))
             if coeff2 is None:
                 return False

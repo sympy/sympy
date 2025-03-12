@@ -55,41 +55,41 @@ PlotGrid Class
 Series Classes
 --------------
 
-.. autoclass:: sympy.plotting.plot::BaseSeries
+.. autoclass:: sympy.plotting.series::BaseSeries
    :members:
 
-.. autoclass:: sympy.plotting.plot::Line2DBaseSeries
+.. autoclass:: sympy.plotting.series::Line2DBaseSeries
    :members:
 
-.. autoclass:: sympy.plotting.plot::LineOver1DRangeSeries
+.. autoclass:: sympy.plotting.series::LineOver1DRangeSeries
    :members:
 
-.. autoclass:: sympy.plotting.plot::Parametric2DLineSeries
+.. autoclass:: sympy.plotting.series::Parametric2DLineSeries
    :members:
 
-.. autoclass:: sympy.plotting.plot::Line3DBaseSeries
+.. autoclass:: sympy.plotting.series::Line3DBaseSeries
    :members:
 
-.. autoclass:: sympy.plotting.plot::Parametric3DLineSeries
+.. autoclass:: sympy.plotting.series::Parametric3DLineSeries
    :members:
 
-.. autoclass:: sympy.plotting.plot::SurfaceBaseSeries
+.. autoclass:: sympy.plotting.series::SurfaceBaseSeries
    :members:
 
-.. autoclass:: sympy.plotting.plot::SurfaceOver2DRangeSeries
+.. autoclass:: sympy.plotting.series::SurfaceOver2DRangeSeries
    :members:
 
-.. autoclass:: sympy.plotting.plot::ParametricSurfaceSeries
+.. autoclass:: sympy.plotting.series::ParametricSurfaceSeries
    :members:
 
-.. autoclass:: sympy.plotting.plot_implicit::ImplicitSeries
+.. autoclass:: sympy.plotting.series::GenericDataSeries
+   :members:
+
+.. autoclass:: sympy.plotting.series::ImplicitSeries
    :members:
 
 Backends
 --------
-
-.. autoclass:: sympy.plotting.plot::BaseBackend
-   :members:
 
 .. autoclass:: sympy.plotting.plot::MatplotlibBackend
    :members:
@@ -289,7 +289,7 @@ origin and of radius 2 units.
     >>> x,y = symbols('x y')
     >>> plot_implicit(Eq(x**2+y**2, 4))
 
-Similarly, :func:`~.plot_implicit()` may be used to plot any 2-D geometric structure from
+Similarly, :func:`~.plot_implicit` may be used to plot any 2-D geometric structure from
 its implicit equation.
 
 Plotting polygons (Polygon, RegularPolygon, Triangle) are not supported

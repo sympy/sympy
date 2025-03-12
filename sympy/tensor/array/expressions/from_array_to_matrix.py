@@ -15,7 +15,7 @@ from sympy.matrices.expressions.special import (Identity, ZeroMatrix, OneMatrix)
 from sympy.matrices.expressions.trace import Trace
 from sympy.matrices.expressions.transpose import Transpose
 from sympy.combinatorics.permutations import _af_invert, Permutation
-from sympy.matrices.common import MatrixCommon
+from sympy.matrices.matrixbase import MatrixBase
 from sympy.matrices.expressions.applyfunc import ElementwiseApplyFunction
 from sympy.matrices.expressions.matexpr import MatrixElement
 from sympy.tensor.array.expressions.array_expressions import PermuteDims, ArrayDiagonal, \
@@ -171,7 +171,7 @@ def _find_trivial_kronecker_products_broadcast(expr: ArrayTensorProduct):
     newargs: List[Basic] = []
     removed = []
     count_dims = 0
-    for i, arg in enumerate(expr.args):
+    for arg in expr.args:
         count_dims += get_rank(arg)
         shape = get_shape(arg)
         current_range = [count_dims-i for i in range(len(shape), 0, -1)]
@@ -363,7 +363,7 @@ def _(expr: ArrayTensorProduct):
         if isinstance(arg, OneArray):
             removed.extend(current_range)
             continue
-        if not isinstance(arg, (MatrixExpr, MatrixCommon)):
+        if not isinstance(arg, (MatrixExpr, MatrixBase)):
             rarg, rem = _remove_trivial_dims(arg)
             removed.extend(rem)
             newargs.append(rarg)
@@ -395,10 +395,10 @@ def _(expr: ArrayTensorProduct):
             elif pending == k:
                 prev = newargs[-1]
                 if prev.shape[0] == 1:
-                    d1 = cumul[prev_i]
+                    d1 = cumul[prev_i]  # type: ignore
                     prev = _a2m_transpose(prev)
                 else:
-                    d1 = cumul[prev_i] + 1
+                    d1 = cumul[prev_i] + 1  # type: ignore
                 if arg.shape[1] == 1:
                     d2 = cumul[i] + 1
                     arg = _a2m_transpose(arg)
@@ -443,7 +443,7 @@ def _(expr: PermuteDims):
     pinv = _af_invert(expr.permutation.array_form)
     shift = list(accumulate([1 if i in subremoved else 0 for i in range(len(p))]))
     premoved = [pinv[i] for i in subremoved]
-    p2 = [e - shift[e] for i, e in enumerate(p) if e not in subremoved]
+    p2 = [e - shift[e] for e in p if e not in subremoved]
     # TODO: check if subremoved should be permuted as well...
     newexpr = _permute_dims(subexpr, p2)
     premoved = sorted(premoved)
@@ -758,7 +758,7 @@ def identify_hadamard_products(expr: tUnion[ArrayContraction, ArrayDiagonal]):
     v: List[_ArgE]
     for k, v in map_contr_to_args.items():
         make_trace: bool = False
-        if len(k) == 1 and next(iter(k)) >= 0 and sum([next(iter(k)) in i for i in map_contr_to_args]) == 1:
+        if len(k) == 1 and next(iter(k)) >= 0 and sum(next(iter(k)) in i for i in map_contr_to_args) == 1:
             # This is a trace: the arguments are fully contracted with only one
             # index, and the index isn't used anywhere else:
             make_trace = True
@@ -784,7 +784,7 @@ def identify_hadamard_products(expr: tUnion[ArrayContraction, ArrayDiagonal]):
             make_trace = True
             first_element = v[0].element
             if not check_transpose(v[0].indices):
-                first_element = first_element.T
+                first_element = first_element.T # type: ignore
             hadamard_factors = v[1:]
         else:
             hadamard_factors = v
@@ -870,7 +870,7 @@ def remove_identity_matrices(expr: ArrayContraction):
 
     permutation_map = {}
 
-    free_indices = list(accumulate([0] + [sum([i is None for i in arg.indices]) for arg in editor.args_with_ind]))
+    free_indices = list(accumulate([0] + [sum(i is None for i in arg.indices) for arg in editor.args_with_ind]))
     free_map = dict(zip(editor.args_with_ind, free_indices[:-1]))
 
     update_pairs = {}

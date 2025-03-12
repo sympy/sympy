@@ -1,5 +1,7 @@
 """Tools for manipulating of large commutative expressions. """
 
+from __future__ import annotations
+
 from .add import Add
 from .mul import Mul, _keep_coeff
 from .power import Pow
@@ -277,8 +279,11 @@ def decompose_power_rat(expr: Expr) -> tTuple[Expr, Rational]:
     (exp(x/2), -3)
 
     """
-    _ = base, exp = expr.as_base_exp()
-    return _ if exp.is_Rational else decompose_power(expr)
+    base, exp = expr.as_base_exp()
+    if not exp.is_Rational:
+        base, exp_i = decompose_power(expr)
+        exp = Integer(exp_i)
+    return base, exp # type: ignore
 
 
 class Factors:
@@ -1153,7 +1158,7 @@ def _factor_sum_int(expr, **kwargs):
         return i * expr.func(d, *limits)
 
 
-def factor_terms(expr, radical=False, clear=False, fraction=False, sign=True):
+def factor_terms(expr: Expr | complex, radical=False, clear=False, fraction=False, sign=True) -> Expr:
     """Remove common factors from terms in all arguments without
     changing the underlying structure of the expr. No expansion or
     simplification (and no processing of non-commutatives) is performed.
@@ -1263,8 +1268,8 @@ def factor_terms(expr, radical=False, clear=False, fraction=False, sign=True):
                 *[do(a) for a in p.args])
         rv = _keep_coeff(cont, p, clear=clear, sign=sign)
         return rv
-    expr = sympify(expr)
-    return do(expr)
+    expr2 = sympify(expr)
+    return do(expr2)
 
 
 def _mask_nc(eq, name=None):

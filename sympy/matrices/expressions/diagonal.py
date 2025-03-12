@@ -196,7 +196,7 @@ class DiagMatrix(MatrixExpr):
         from sympy.matrices.expressions.matmul import MatMul
         from sympy.matrices.expressions.transpose import Transpose
         from sympy.matrices.dense import eye
-        from sympy.matrices.matrices import MatrixBase
+        from sympy.matrices.matrixbase import MatrixBase
         vector = self._vector
         # This accounts for shape (1, 1) and identity matrices, among others:
         if ask(Q.diagonal(vector)):

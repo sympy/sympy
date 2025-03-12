@@ -1,6 +1,6 @@
 from pytest import raises
 
-from sympy.core.backend import symbols
+from sympy import symbols
 from sympy.physics.mechanics import (RigidBody, Particle, ReferenceFrame, Point,
                                      outer, dynamicsymbols, Force, Torque)
 from sympy.physics.mechanics.loads import gravity, _parse_load

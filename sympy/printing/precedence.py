@@ -59,6 +59,11 @@ PRECEDENCE_VALUES = {
 
 
 def precedence_Mul(item):
+    from sympy.core.function import Function
+    if any(hasattr(arg, 'precedence') and isinstance(arg, Function) and
+           arg.precedence < PRECEDENCE["Mul"] for arg in item.args):
+        return PRECEDENCE["Mul"]
+
     if item.could_extract_minus_sign():
         return PRECEDENCE["Add"]
     return PRECEDENCE["Mul"]
@@ -122,16 +127,13 @@ def precedence(item):
     """
     if hasattr(item, "precedence"):
         return item.precedence
-    try:
-        mro = item.__class__.__mro__
-    except AttributeError:
-        return PRECEDENCE["Atom"]
-    for i in mro:
-        n = i.__name__
-        if n in PRECEDENCE_FUNCTIONS:
-            return PRECEDENCE_FUNCTIONS[n](item)
-        elif n in PRECEDENCE_VALUES:
-            return PRECEDENCE_VALUES[n]
+    if not isinstance(item, type):
+        for i in type(item).mro():
+            n = i.__name__
+            if n in PRECEDENCE_FUNCTIONS:
+                return PRECEDENCE_FUNCTIONS[n](item)
+            elif n in PRECEDENCE_VALUES:
+                return PRECEDENCE_VALUES[n]
     return PRECEDENCE["Atom"]
 
 
@@ -155,6 +157,7 @@ PRECEDENCE_TRADITIONAL['Intersection'] = PRECEDENCE['Xor']
 PRECEDENCE_TRADITIONAL['Complement'] = PRECEDENCE['Xor']
 PRECEDENCE_TRADITIONAL['SymmetricDifference'] = PRECEDENCE['Xor']
 PRECEDENCE_TRADITIONAL['ProductSet'] = PRECEDENCE['Xor']
+PRECEDENCE_TRADITIONAL['DotProduct'] = PRECEDENCE_TRADITIONAL['Dot']
 
 
 def precedence_traditional(item):

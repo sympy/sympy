@@ -609,7 +609,8 @@ def _chinese_remainder_reconstruction_multivariate(hp, hq, p, q):
     hpmonoms.difference_update(monoms)
     hqmonoms.difference_update(monoms)
 
-    zero = hp.ring.domain.zero
+    domain = hp.ring.domain
+    zero = domain.zero
 
     hpq = hp.ring.zero
 
@@ -617,7 +618,7 @@ def _chinese_remainder_reconstruction_multivariate(hp, hq, p, q):
         crt_ = _chinese_remainder_reconstruction_multivariate
     else:
         def crt_(cp, cq, p, q):
-            return crt([p, q], [cp, cq], symmetric=True)[0]
+            return domain(crt([p, q], [cp, cq], symmetric=True)[0])
 
     for monom in monoms:
         hpq[monom] = crt_(hp[monom], hq[monom], p, q)
@@ -1746,12 +1747,12 @@ def _integer_rational_reconstruction(c, m, domain):
 
     bound = sqrt(m / 2) # still correct if replaced by ZZ.sqrt(m // 2) ?
 
-    while r1 >= bound:
+    while int(r1) >= bound:
         quo = r0 // r1
         r0, r1 = r1, r0 - quo*r1
         s0, s1 = s1, s0 - quo*s1
 
-    if abs(s1) >= bound:
+    if abs(int(s1)) >= bound:
         return None
 
     if s1 < 0:
@@ -2018,12 +2019,12 @@ def _to_ZZ_poly(f, ring):
     den = domain.one
 
     for coeff in f.itercoeffs():
-        for c in coeff.rep:
+        for c in coeff.to_list():
             if c:
                 den = domain.lcm(den, c.denominator)
 
     for monom, coeff in f.iterterms():
-        coeff = coeff.rep
+        coeff = coeff.to_list()
         m = ring.domain.one
         if isinstance(ring.domain, PolynomialRing):
             m = m.mul_monom(monom[1:])
@@ -2031,7 +2032,7 @@ def _to_ZZ_poly(f, ring):
 
         for i in range(n):
             if coeff[i]:
-                c = domain(coeff[i] * den) * m
+                c = domain.convert(coeff[i] * den) * m
 
                 if (monom[0], n-i-1) not in f_:
                     f_[(monom[0], n-i-1)] = c
@@ -2140,7 +2141,7 @@ def func_field_modgcd(f, g):
     This is done by calculating the GCD in
     `\mathbb{Z}_p(x_1, \ldots, x_{n-1})[z]/(\check m_{\alpha}(z))[x_0]` for
     suitable primes `p` and then reconstructing the coefficients with the
-    Chinese Remainder Theorem and Rational Reconstuction. The GCD over
+    Chinese Remainder Theorem and Rational Reconstruction. The GCD over
     `\mathbb{Z}_p(x_1, \ldots, x_{n-1})[z]/(\check m_{\alpha}(z))[x_0]` is
     computed with a recursive subroutine, which evaluates the polynomials at
     `x_{n-1} = a` for suitable evaluation points `a \in \mathbb Z_p` and
@@ -2247,7 +2248,7 @@ def func_field_modgcd(f, g):
     if n == 1:
         f_ = _to_ZZ_poly(f, ZZring)
         g_ = _to_ZZ_poly(g, ZZring)
-        minpoly = ZZring.drop(0).from_dense(domain.mod.rep)
+        minpoly = ZZring.drop(0).from_dense(domain.mod.to_list())
 
         h = _func_field_modgcd_m(f_, g_, minpoly)
         h = _to_ANP_poly(h, ring)

@@ -336,10 +336,7 @@ def interpolating_spline(d, x, X, Y):
 
     # Sorting the intervals
     #  ival contains the end-points of each interval
-    ival = [_ivl(c, x) for c in intervals]
-    com = zip(ival, intervals)
-    com = sorted(com, key=lambda x: x[0])
-    intervals = [y for x, y in com]
+    intervals = sorted(intervals, key=lambda c: _ivl(c, x))
 
     basis_dicts = [{c: e for (e, c) in b.args} for b in basis]
     spline = []

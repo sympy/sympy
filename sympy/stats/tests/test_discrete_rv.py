@@ -24,8 +24,9 @@ from sympy.stats.drv_types import (PoissonDistribution, GeometricDistribution,
                                    FlorySchulz, Poisson, Geometric, Hermite, Logarithmic,
                                     NegativeBinomial, Skellam, YuleSimon, Zeta,
                                     DiscreteRV)
-from sympy.testing.pytest import slow, nocache_fail, raises
+from sympy.testing.pytest import slow, nocache_fail, raises, skip
 from sympy.stats.symbolic_probability import Expectation
+from sympy.functions.combinatorial.factorials import FallingFactorial
 
 x = Symbol('x')
 
@@ -50,6 +51,20 @@ def test_Poisson():
     assert isinstance(E(2*x, evaluate=False), Expectation)
     # issue 8248
     assert x.pspace.compute_expectation(1) == 1
+    # issue 27344
+    try:
+        import numpy as np
+    except ImportError:
+        skip("numpy not installed")
+    y = Poisson('y', np.float64(4.72544290380919e-11))
+    assert E(y) == 4.72544290380919e-11
+    y = Poisson('y', np.float64(4.725442903809197e-11))
+    assert E(y) == 4.725442903809197e-11
+    l2 = 5
+    z = Poisson('z', l2)
+    assert E(z) == l2
+    assert E(FallingFactorial(z, 3)) == l2**3
+    assert E(z**2) == l2 + l2**2
 
 
 def test_FlorySchulz():
@@ -116,10 +131,10 @@ def test_negative_binomial():
     r = 5
     p = S.One / 3
     x = NegativeBinomial('x', r, p)
-    assert E(x) == p*r / (1-p)
+    assert E(x) == r * (1 - p) / p
     # This hangs when run with the cache disabled:
-    assert variance(x) == p*r / (1-p)**2
-    assert E(x**5 + 2*x + 3) == Rational(9207, 4)
+    assert variance(x) == r * (1 - p) / p**2
+    assert E(x**5 + 2*x + 3) == E(x**5) + 2*E(x) + 3 == Rational(796473, 1)
     assert isinstance(E(x, evaluate=False), Expectation)
 
 
@@ -242,7 +257,7 @@ def test_moment_generating_functions():
 
     negative_binomial_mgf = moment_generating_function(
         NegativeBinomial('n', 5, Rational(1, 3)))(t)
-    assert negative_binomial_mgf.diff(t).subs(t, 0) == Rational(5, 2)
+    assert negative_binomial_mgf.diff(t).subs(t, 0) == Rational(10, 1)
 
     poisson_mgf = moment_generating_function(Poisson('p', 5))(t)
     assert poisson_mgf.diff(t).subs(t, 0) == 5
@@ -292,6 +307,6 @@ def test_product_spaces():
     assert str(P(X1 + X2 < 3).rewrite(Sum)) == (
         "Sum(Piecewise((1/(4*2**n), n >= -1), (0, True)), (n, -oo, -1))/3")
     assert str(P(X1 + X2 > 3).rewrite(Sum)) == (
-        'Sum(Piecewise((2**(X2 - n - 2)*(3/2)**(1 - X2)/6, '
+        'Sum(Piecewise((2**(X2 - n - 2)*(2/3)**(X2 - 1)/6, '
         'X2 - n <= 2), (0, True)), (X2, 1, oo), (n, 1, oo))')
     assert P(Eq(X1 + X2, 3)) == Rational(1, 12)

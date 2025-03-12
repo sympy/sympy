@@ -246,6 +246,13 @@ def TR3(rv):
             rv = fmap[type(rv)](S.Pi/2 - rv.args[0])
         return rv
 
+    # touch numbers iside of trig functions to let them automatically update
+    rv = rv.replace(
+        lambda x: isinstance(x, TrigonometricFunction),
+        lambda x: x.replace(
+            lambda n: n.is_number and n.is_Mul,
+            lambda n: n.func(*n.args)))
+
     return bottom_up(rv, f)
 
 
@@ -273,7 +280,12 @@ def TR4(rv):
     0 1 zoo 0
     """
     # special values at 0, pi/6, pi/4, pi/3, pi/2 already handled
-    return rv
+    return rv.replace(
+        lambda x:
+            isinstance(x, TrigonometricFunction) and
+            (r:=x.args[0]/pi).is_Rational and r.q in (1, 2, 3, 4, 6),
+        lambda x:
+            x.func(x.args[0].func(*x.args[0].args)))
 
 
 def _TR56(rv, f, g, h, max, pow):
@@ -443,7 +455,7 @@ def TR8(rv, first=True):
             return rv
 
         args = {cos: [], sin: [], None: []}
-        for a in ordered(Mul.make_args(rv)):
+        for a in Mul.make_args(rv):
             if a.func in (cos, sin):
                 args[type(a)].append(a.args[0])
             elif (a.is_Pow and a.exp.is_Integer and a.exp > 0 and \
@@ -1074,7 +1086,7 @@ def TR13(rv):
 
         # XXX handle products of powers? or let power-reducing handle it?
         args = {tan: [], cot: [], None: []}
-        for a in ordered(Mul.make_args(rv)):
+        for a in Mul.make_args(rv):
             if a.func in (tan, cot):
                 args[type(a)].append(a.args[0])
             else:

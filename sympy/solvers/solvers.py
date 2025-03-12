@@ -20,9 +20,10 @@ from sympy.core.function import (expand_mul, expand_log, Derivative,
                                  AppliedUndef, UndefinedFunction, nfloat,
                                  Function, expand_power_exp, _mexpand, expand,
                                  expand_func)
-from sympy.core.logic import fuzzy_not
-from sympy.core.numbers import ilcm, Float, Rational, _illegal
-from sympy.core.power import integer_log, Pow
+from sympy.core.logic import fuzzy_not, fuzzy_and
+from sympy.core.numbers import Float, Rational, _illegal
+from sympy.core.intfunc import integer_log, ilcm
+from sympy.core.power import Pow
 from sympy.core.relational import Eq, Ne
 from sympy.core.sorting import ordered, default_sort_key
 from sympy.core.sympify import sympify, _sympify
@@ -41,17 +42,18 @@ from sympy.simplify import (simplify, collect, powsimp, posify,  # type: ignore
     powdenest, nsimplify, denom, logcombine, sqrtdenest, fraction,
     separatevars)
 from sympy.simplify.sqrtdenest import sqrt_depth
-from sympy.simplify.fu import TR1, TR2i
+from sympy.simplify.fu import TR1, TR2i, TR10, TR11
 from sympy.strategies.rl import rebuild
-from sympy.matrices.common import NonInvertibleMatrixError
+from sympy.matrices.exceptions import NonInvertibleMatrixError
 from sympy.matrices import Matrix, zeros
 from sympy.polys import roots, cancel, factor, Poly
-from sympy.polys.polyerrors import GeneratorsNeeded, PolynomialError
 from sympy.polys.solvers import sympy_eqs_to_ring, solve_lin_sys
+from sympy.polys.polyerrors import GeneratorsNeeded, PolynomialError
+from sympy.polys.polytools import gcd
 from sympy.utilities.lambdify import lambdify
 from sympy.utilities.misc import filldedent, debugf
 from sympy.utilities.iterables import (connected_components,
-    generate_bell, uniq, iterable, is_sequence, subsets, flatten)
+    generate_bell, uniq, iterable, is_sequence, subsets, flatten, sift)
 from sympy.utilities.decorator import conserve_mpmath_dps
 
 from mpmath import findroot
@@ -95,7 +97,7 @@ def recast_to_symbols(eqs, symbols):
     symbols = list(ordered(symbols))
     swap_sym = {}
     i = 0
-    for j, s in enumerate(symbols):
+    for s in symbols:
         if not isinstance(s, Symbol) and s not in swap_sym:
             swap_sym[s] = Dummy('X%d' % i)
             i += 1
@@ -172,8 +174,7 @@ def denoms(eq, *symbols):
         den = denom(p)
         if den is S.One:
             continue
-        for d in Mul.make_args(den):
-            dens.add(d)
+        dens.update(Mul.make_args(den))
     if not symbols:
         return dens
     elif len(symbols) == 1:
@@ -246,15 +247,7 @@ def checksol(f, symbol, sol=None, **flags):
     if iterable(f):
         if not f:
             raise ValueError('no functions to check')
-        rv = True
-        for fi in f:
-            check = checksol(fi, sol, **flags)
-            if check:
-                continue
-            if check is False:
-                return False
-            rv = None  # don't return, wait to see if there's a False
-        return rv
+        return fuzzy_and(checksol(fi, sol, **flags) for fi in f)
 
     f = _sympify(f)
 
@@ -271,8 +264,8 @@ def checksol(f, symbol, sol=None, **flags):
             f = f.subs(sol)
             if not f.is_Boolean:
                 return
-        else:
-            f = f.rewrite(Add, evaluate=False, deep=False)
+        elif isinstance(f, Eq):
+            f = Add(f.lhs, -f.rhs, evaluate=False)
 
     if isinstance(f, BooleanAtom):
         return bool(f)
@@ -804,7 +797,7 @@ def solve(f, *symbols, **flags):
             Allows ``solve`` to return a solution for a pattern in terms of
             other functions that contain that pattern; this is only
             needed if the pattern is inside of some invertible function
-            like cos, exp, ect.
+            like cos, exp, etc.
         particular=True (default is False)
             Instructs ``solve`` to try to find a particular solution to
             a linear system with as many zeros as possible; this is very
@@ -827,7 +820,7 @@ def solve(f, *symbols, **flags):
     ========
 
     rsolve: For solving recurrence relationships
-    dsolve: For solving differential equations
+    sympy.solvers.ode.dsolve: For solving differential equations
 
     """
     from .inequalities import reduce_inequalities
@@ -945,8 +938,8 @@ def solve(f, *symbols, **flags):
                             Unanticipated argument of Eq when other arg
                             is True or False.
                         '''))
-                else:
-                    fi = fi.rewrite(Add, evaluate=False, deep=False)
+                elif isinstance(fi, Eq):
+                    fi = Add(fi.lhs, -fi.rhs, evaluate=False)
             f[i] = fi
 
         # *** dispatch and handle as a system of relationals
@@ -1135,6 +1128,29 @@ def solve(f, *symbols, **flags):
         if _has_piecewise(fi):
             f[i] = piecewise_fold(fi)
 
+    # expand angles of sums; in general, expand_trig will allow
+    # more roots to be found but this is not a great solultion
+    # to not returning a parametric solution, otherwise
+    # many values can be returned that have a simple
+    # relationship between values
+    targs = {t for fi in f for t in fi.atoms(TrigonometricFunction)}
+    if len(targs) > 1:
+        add, other = sift(targs, lambda x: x.args[0].is_Add, binary=True)
+        add, other = [[i for i in l if i.has_free(*symbols)] for l in (add, other)]
+        trep = {}
+        for t in add:
+            a = t.args[0]
+            ind, dep = a.as_independent(*symbols)
+            if dep in symbols or -dep in symbols:
+                # don't let expansion expand wrt anything in ind
+                n = Dummy() if not ind.is_Number else ind
+                trep[t] = TR10(t.func(dep + n)).xreplace({n: ind})
+        if other and len(other) <= 2:
+            base = gcd(*[i.args[0] for i in other]) if len(other) > 1 else other[0].args[0]
+            for i in other:
+                trep[i] = TR11(i, base)
+        f = [fi.xreplace(trep) for fi in f]
+
     #
     # try to get a solution
     ###########################################################################
@@ -1217,18 +1233,13 @@ def solve(f, *symbols, **flags):
         got_None = []  # solutions for which one or more symbols gave None
         no_False = []  # solutions for which no symbols gave False
         for sol in solution:
-            a_None = False
-            for symb, val in sol.items():
-                test = check_assumptions(val, **symb.assumptions0)
-                if test:
-                    continue
-                if test is False:
-                    break
-                a_None = True
-            else:
-                no_False.append(sol)
-                if a_None:
-                    got_None.append(sol)
+            v = fuzzy_and(check_assumptions(val, **symb.assumptions0)
+                          for symb, val in sol.items())
+            if v is False:
+                continue
+            no_False.append(sol)
+            if v is None:
+                got_None.append(sol)
 
         solution = no_False
         if warn and got_None:
@@ -1390,15 +1401,26 @@ def _solve(f, *symbols, **flags):
 
     elif f.is_Piecewise:
         result = set()
-        for i, (expr, cond) in enumerate(f.args):
-            if expr.is_zero:
-                raise NotImplementedError(
-                    'solve cannot represent interval solutions')
-            candidates = _vsolve(expr, symbol, **flags)
+        if any(e.is_zero for e, c in f.args):
+            f = f.simplify()  # failure imminent w/o help
+
+        cond = neg = True
+        for expr, cnd in f.args:
             # the explicit condition for this expr is the current cond
             # and none of the previous conditions
-            args = [~c for _, c in f.args[:i]] + [cond]
-            cond = And(*args)
+            cond = And(neg, cnd)
+            neg = And(neg, ~cond)
+
+            if expr.is_zero and cond.simplify() != False:
+                raise NotImplementedError(filldedent('''
+                    An expression is already zero when %s.
+                    This means that in this *region* the solution
+                    is zero but solve can only represent discrete,
+                    not interval, solutions. If this is a spurious
+                    interval it might be resolved with simplification
+                    of the Piecewise conditions.''' % cond))
+            candidates = _vsolve(expr, symbol, **flags)
+
             for candidate in candidates:
                 if candidate in result:
                     # an unconditional value was already there
@@ -1769,7 +1791,7 @@ def _solve_system(exprs, symbols, **flags):
                 if not isinstance(subsol, list):
                     subsol = [subsol]
                 subsols.append(subsol)
-            # Full solution is cartesion product of subsystems
+            # Full solution is cartesian product of subsystems
             sols = []
             for soldicts in product(*subsols):
                 sols.append(dict(item for sd in soldicts
@@ -1837,7 +1859,7 @@ def _solve_system(exprs, symbols, **flags):
                 free = list(ordered(free.intersection(symbols)))
                 got_s = set()
                 result = []
-                for syms in subsets(free, len(polys)):
+                for syms in subsets(free, min(len(free), len(polys))):
                     try:
                         # returns [], None or list of tuples
                         res = solve_poly_system(polys, *syms)
@@ -1858,7 +1880,7 @@ def _solve_system(exprs, symbols, **flags):
                 if got_s:
                     solved_syms = list(got_s)
                 else:
-                    raise NotImplementedError('no valid subset found')
+                    failed.extend([g.as_expr() for g in polys])
             else:
                 try:
                     result = solve_poly_system(polys, *symbols)
@@ -1950,10 +1972,13 @@ def _solve_system(exprs, symbols, **flags):
                         # check that it is independent of previous solutions
                         iset = set(rnew.items())
                         for i in newresult:
-                            if len(i) < len(iset) and not set(i.items()) - iset:
-                                # this is a superset of a known solution that
-                                # is smaller
-                                break
+                            if len(i) < len(iset):
+                                # update i with what is known
+                                i_items_updated = {(k, v.xreplace(rnew)) for k, v in i.items()}
+                                if not i_items_updated - iset:
+                                    # this is a superset of a known solution that
+                                    # is smaller
+                                    break
                         else:
                             # keep it
                             newresult.append(rnew)
@@ -2541,9 +2566,9 @@ def det_minor(M):
     if n == 2:
         return M[0, 0]*M[1, 1] - M[1, 0]*M[0, 1]
     else:
-        return sum([(1, -1)[i % 2]*Add(*[M[0, i]*d for d in
+        return sum((1, -1)[i % 2]*Add(*[M[0, i]*d for d in
             Add.make_args(det_minor(M.minor_submatrix(0, i)))])
-            if M[0, i] else S.Zero for i in range(n)])
+            if M[0, i] else S.Zero for i in range(n))
 
 
 def det_quick(M, method=None):
@@ -3113,7 +3138,7 @@ def _invert(eq, *symbols, **kwargs):
 
     >>> invert(sqrt(x + y) - 2)
     (4, x + y)
-    >>> invert(sqrt(x + y) - 2)
+    >>> invert(sqrt(x + y) + 2)  # note +2 instead of -2
     (4, x + y)
 
     If the exponent is an Integer, setting ``integer_power`` to True
@@ -3185,9 +3210,12 @@ def _invert(eq, *symbols, **kwargs):
             if any(_ispow(i) for i in (ad, bd)):
                 a_base, a_exp = ad.as_base_exp()
                 b_base, b_exp = bd.as_base_exp()
-                if a_base == b_base:
-                    # a = -b
-                    lhs = powsimp(powdenest(ad/bd))
+                if a_base == b_base and a_exp.extract_additively(b_exp) is None:
+                    # a = -b and exponents do not have canceling terms/factors
+                    # e.g. if exponents were 3*x and x then the ratio would have
+                    # an exponent of 2*x: one of the roots would be lost
+                    rat = powsimp(powdenest(ad/bd))
+                    lhs = rat
                     rhs = -bi/ai
                 else:
                     rat = ad/bd

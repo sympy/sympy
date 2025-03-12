@@ -2,7 +2,8 @@
 
 from sympy.core.add import Add
 from sympy.core.cache import cacheit
-from sympy.core.function import ArgumentIndexError, expand_mul, Function
+from sympy.core.function import ArgumentIndexError, expand_mul, DefinedFunction
+from sympy.core.logic import fuzzy_not
 from sympy.core.numbers import pi, I, Integer
 from sympy.core.relational import Eq
 from sympy.core.singleton import S
@@ -21,7 +22,7 @@ from sympy.polys.polytools import Poly
 ###############################################################################
 
 
-class lerchphi(Function):
+class lerchphi(DefinedFunction):
     r"""
     Lerch transcendent (Lerch phi function).
 
@@ -219,7 +220,7 @@ class lerchphi(Function):
 ###############################################################################
 
 
-class polylog(Function):
+class polylog(DefinedFunction):
     r"""
     Polylogarithm function.
 
@@ -391,7 +392,7 @@ class polylog(Function):
 ###############################################################################
 
 
-class zeta(Function):
+class zeta(DefinedFunction):
     r"""
     Hurwitz zeta function (or Riemann zeta function).
 
@@ -540,9 +541,7 @@ class zeta(Function):
         return lerchphi(1, s, a)
 
     def _eval_is_finite(self):
-        arg_is_one = (self.args[0] - 1).is_zero
-        if arg_is_one is not None:
-            return not arg_is_one
+        return fuzzy_not((self.args[0] - 1).is_zero)
 
     def _eval_expand_func(self, **hints):
         s = self.args[0]
@@ -565,7 +564,7 @@ class zeta(Function):
         else:
             raise ArgumentIndexError
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx, cdir):
         if len(self.args) == 2:
             s, a = self.args
         else:
@@ -579,10 +578,10 @@ class zeta(Function):
         if e.is_negative and not s.is_positive:
             raise NotImplementedError
 
-        return super(zeta, self)._eval_as_leading_term(x, logx, cdir)
+        return super(zeta, self)._eval_as_leading_term(x, logx=logx, cdir=cdir)
 
 
-class dirichlet_eta(Function):
+class dirichlet_eta(DefinedFunction):
     r"""
     Dirichlet eta function.
 
@@ -665,7 +664,7 @@ class dirichlet_eta(Function):
             return self.rewrite(zeta)._eval_evalf(prec)
 
 
-class riemann_xi(Function):
+class riemann_xi(DefinedFunction):
     r"""
     Riemann Xi function.
 
@@ -704,7 +703,7 @@ class riemann_xi(Function):
         return s*(s - 1)*gamma(s/2)*zeta(s)/(2*pi**(s/2))
 
 
-class stieltjes(Function):
+class stieltjes(DefinedFunction):
     r"""
     Represents Stieltjes constants, $\gamma_{k}$ that occur in
     Laurent Series expansion of the Riemann zeta function.

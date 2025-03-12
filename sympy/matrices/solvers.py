@@ -2,7 +2,7 @@ from sympy.core.function import expand_mul
 from sympy.core.symbol import Dummy, uniquely_named_symbol, symbols
 from sympy.utilities.iterables import numbered_symbols
 
-from .common import ShapeError, NonSquareMatrixError, NonInvertibleMatrixError
+from .exceptions import ShapeError, NonSquareMatrixError, NonInvertibleMatrixError
 from .eigen import _fuzzy_positive_definite
 from .utilities import _get_intermediate_simp, _iszero
 
@@ -357,7 +357,7 @@ def _LUsolve(M, rhs, iszerofunc=_iszero):
     for i in range(m):
         for j in range(min(i, n)):
             scale = A[i, j]
-            b.zip_row_op(i, j, lambda x, y: dps(x - y * scale))
+            b.zip_row_op(i, j, lambda x, y: dps(x - scale * y))
 
     # consistency check for overdetermined systems
     if m > n:
@@ -372,10 +372,10 @@ def _LUsolve(M, rhs, iszerofunc=_iszero):
     for i in range(n - 1, -1, -1):
         for j in range(i + 1, n):
             scale = A[i, j]
-            b.zip_row_op(i, j, lambda x, y: dps(x - y * scale))
+            b.zip_row_op(i, j, lambda x, y: dps(x - scale * y))
 
         scale = A[i, i]
-        b.row_op(i, lambda x, _: dps(x / scale))
+        b.row_op(i, lambda x, _: dps(scale**-1 * x))
 
     return rhs.__class__(b)
 
@@ -590,7 +590,7 @@ def _gauss_jordan_solve(M, B, freevar=False):
 
     # Free parameters
     # what are current unnumbered free symbol names?
-    name = uniquely_named_symbol('tau', aug,
+    name = uniquely_named_symbol('tau', [aug],
             compare=lambda i: str(i).rstrip('1234567890'),
             modify=lambda s: '_' + s).name
     gen  = numbered_symbols(name)

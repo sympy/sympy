@@ -4,7 +4,7 @@ from sympy.core.singleton import S
 from sympy.core.sorting import default_sort_key
 from sympy.functions.elementary.complexes import Abs, arg, re, unpolarify
 from sympy.functions.elementary.exponential import (exp, exp_polar, log)
-from sympy.functions.elementary.hyperbolic import cosh, acosh
+from sympy.functions.elementary.hyperbolic import cosh, acosh, sinh
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise, piecewise_fold
 from sympy.functions.elementary.trigonometric import (cos, sin, sinc, asin)
@@ -342,7 +342,7 @@ def test_lookup_table():
     from sympy.integrals.meijerint import z as z_dummy
     table = {}
     _create_lookup_table(table)
-    for _, l in table.items():
+    for l in table.values():
         for formula, terms, cond, hint in sorted(l, key=default_sort_key):
             subs = {}
             for ai in list(formula.free_symbols) + [z_dummy]:
@@ -754,11 +754,21 @@ def test_issue_6462():
 
 
 def test_indefinite_1_bug():
-    assert integrate((b + t)**(-a), t, meijerg=True
-        ) == -b**(1 - a)*(1 + t/b)**(1 - a)/(a - 1)
+    assert integrate((b + t)**(-a), t, meijerg=True) == -b*(1 + t/b)**(1 - a)/(a*b**a - b**a)
 
 
 def test_pr_23583():
     # This result is wrong. Check whether new result is correct when this test fail.
     assert integrate(1/sqrt((x - I)**2-1), meijerg=True) == \
            Piecewise((acosh(x - I), Abs((x - I)**2) > 1), (-I*asin(x - I), True))
+
+
+# 25786
+def test_integrate_function_of_square_over_negatives():
+    assert integrate(exp(-x**2), (x,-5,0), meijerg=True) == sqrt(pi)/2 * erf(5)
+
+
+def test_issue_25949():
+    from sympy.core.symbol import symbols
+    y = symbols("y", nonzero=True)
+    assert integrate(cosh(y*(x + 1)), (x, -1, -0.25), meijerg=True) == sinh(0.75*y)/y

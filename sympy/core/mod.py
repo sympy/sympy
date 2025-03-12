@@ -1,6 +1,6 @@
 from .add import Add
 from .exprtools import gcd_terms
-from .function import Function
+from .function import DefinedFunction
 from .kind import NumberKind
 from .logic import fuzzy_and, fuzzy_not
 from .mul import Mul
@@ -8,7 +8,7 @@ from .numbers import equal_valued
 from .singleton import S
 
 
-class Mod(Function):
+class Mod(DefinedFunction):
     """Represents a modulo operation on symbolic expressions.
 
     Parameters
@@ -164,8 +164,10 @@ class Mod(Function):
                 return prod_non_mod*cls(net, q)
 
             if q.is_Integer and q is not S.One:
-                non_mod_l = [i % q if i.is_Integer and (i % q is not S.Zero) else i for
-                             i in non_mod_l]
+                if all(t.is_integer for t in p.args):
+                    non_mod_l = [i % q if i.is_Integer else i for i in p.args]
+                    if any(iq is S.Zero for iq in non_mod_l):
+                        return S.Zero
 
             p = Mul(*(non_mod_l + mod_l))
 
@@ -249,7 +251,7 @@ class Mod(Function):
         from sympy.functions.elementary.integers import floor
         return a - b*floor(a/b)
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx, cdir):
         from sympy.functions.elementary.integers import floor
         return self.rewrite(floor)._eval_as_leading_term(x, logx=logx, cdir=cdir)
 

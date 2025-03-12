@@ -21,7 +21,7 @@ if USE_SYMENGINE:
         SymEngine's ``sympify`` does not accept keyword arguments and is
         therefore not compatible with SymPy's ``sympify`` with ``strict=True``
         (which ensures that only the types for which an explicit conversion has
-        been defined are converted). This wrapper adds an addiotional parameter
+        been defined are converted). This wrapper adds an additional parameter
         ``strict`` (with default ``False``) that will raise a ``SympifyError``
         if ``strict=True`` and the argument passed to the parameter ``a`` is a
         string.
@@ -52,7 +52,8 @@ else:
     from sympy.core.function import (diff, Function, AppliedUndef,
         expand, Derivative)
     from sympy.core.mul import Mul
-    from sympy.core.numbers import igcd, pi, I, Integer, Rational, E
+    from sympy.core.intfunc import igcd
+    from sympy.core.numbers import pi, I, Integer, Rational, E
     from sympy.core.singleton import S
     from sympy.core.symbol import Symbol, var, symbols
     from sympy.core.sympify import SympifyError, sympify
@@ -66,7 +67,7 @@ else:
     from sympy.matrices.dense import (eye, zeros, diag, Matrix,
         ones, symarray)
     from sympy.matrices.immutable import ImmutableMatrix
-    from sympy.matrices.matrices import MatrixBase
+    from sympy.matrices.matrixbase import MatrixBase
     from sympy.utilities.lambdify import lambdify
 
 
@@ -99,7 +100,8 @@ else:
 
 def _simplify_matrix(M):
     """Return a simplified copy of the matrix M"""
-    assert isinstance(M, (Matrix, ImmutableMatrix))
+    if not isinstance(M, (Matrix, ImmutableMatrix)):
+        raise TypeError("The matrix M must be an instance of Matrix or ImmutableMatrix")
     Mnew = M.as_mutable() # makes a copy if mutable
     Mnew.simplify()
     if isinstance(M, ImmutableMatrix):

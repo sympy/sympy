@@ -34,7 +34,7 @@ def _ddm_lll(x, delta=QQ(3, 4), return_transform=False):
         return abs(mu[k][j]) <= half
 
     def dot_rows(x, y, rows: tuple[int, int]):
-        return sum([x[rows[0]][z] * y[rows[1]][z] for z in range(x.shape[1])])
+        return sum(x[rows[0]][z] * y[rows[1]][z] for z in range(x.shape[1]))
 
     def reduce_row(T, mu, y, rows: tuple[int, int]):
         r = closest_integer(mu[rows[0]][rows[1]])

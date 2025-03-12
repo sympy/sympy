@@ -14,6 +14,7 @@ from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.elementary.integers import floor
 from sympy.functions.elementary.miscellaneous import (Max, sqrt)
 from sympy.functions.elementary.trigonometric import (atan, cos, sin)
+from sympy.integrals.integrals import Integral
 from sympy.polys.polytools import Poly
 from sympy.sets.sets import FiniteSet
 
@@ -1632,6 +1633,8 @@ def test_issue_3531():
     # https://github.com/sympy/sympy/issues/3531
     # https://github.com/sympy/sympy/pull/18116
     class MightyNumeric(tuple):
+        __slots__ = ()
+
         def __rtruediv__(self, other):
             return "something"
 
@@ -1996,6 +1999,11 @@ def test_Mod():
     from sympy.abc import phi
     assert Mod(4.0*Mod(phi, 1) , 2) == 2.0*(Mod(2*(Mod(phi, 1)), 1))
 
+    xi = symbols('x', integer=True)
+    assert unchanged(Mod, xi, 2)
+    assert Mod(3*xi, 2) == Mod(xi, 2)
+    assert unchanged(Mod, 3*x, 2)
+
 
 def test_Mod_Pow():
     # modular exponentiation
@@ -2350,6 +2358,14 @@ def test_Mul_does_not_distribute_infinity():
     assert ((1 - I)*z).expand() is oo
 
 
+def test_Mul_does_not_let_0_trump_inf():
+    assert Mul(*[0, a + zoo]) is S.NaN
+    assert Mul(*[0, a + oo]) is S.NaN
+    assert Mul(*[0, a + Integral(1/x**2, (x, 1, oo))]) is S.Zero
+    # Integral is treated like an unknown like 0*x -> 0
+    assert Mul(*[0, a + Integral(x, (x, 1, oo))]) is S.Zero
+
+
 def test_issue_8247_8354():
     from sympy.functions.elementary.trigonometric import tan
     z = sqrt(1 + sqrt(3)) + sqrt(3 + 3*sqrt(3)) - sqrt(10 + 6*sqrt(3))
@@ -2461,3 +2477,7 @@ def test_issue_22453():
 def test_issue_22613():
     assert (0**(x - 2)).as_content_primitive() == (1, 0**(x - 2))
     assert (0**(x + 2)).as_content_primitive() == (1, 0**(x + 2))
+
+
+def test_issue_25176():
+    assert sqrt(-4*3**(S(3)/4)*I/3) == 2*3**(S(7)/8)*sqrt(-I)/3

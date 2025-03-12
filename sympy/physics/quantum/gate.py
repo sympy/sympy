@@ -37,7 +37,7 @@ from sympy.physics.quantum.operator import (UnitaryOperator, Operator,
 from sympy.physics.quantum.matrixutils import matrix_tensor_product, matrix_eye
 from sympy.physics.quantum.matrixcache import matrix_cache
 
-from sympy.matrices.matrices import MatrixBase
+from sympy.matrices.matrixbase import MatrixBase
 
 from sympy.utilities.iterables import is_sequence
 

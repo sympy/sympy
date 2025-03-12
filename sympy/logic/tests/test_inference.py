@@ -2,7 +2,8 @@
 
 from sympy.assumptions.ask import Q
 from sympy.core.symbol import symbols
-from sympy.logic.boolalg import And, Implies, Equivalent, true, false
+from sympy.core.relational import Unequality
+from sympy.logic.boolalg import And, Or, Implies, Equivalent, true, false
 from sympy.logic.inference import literal_symbol, \
      pl_true, satisfiable, valid, entails, PropKB
 from sympy.logic.algorithms.dpll import dpll, dpll_satisfiable, \
@@ -10,7 +11,14 @@ from sympy.logic.algorithms.dpll import dpll, dpll_satisfiable, \
     find_pure_symbol_int_repr, find_unit_clause_int_repr, \
     unit_propagate_int_repr
 from sympy.logic.algorithms.dpll2 import dpll_satisfiable as dpll2_satisfiable
-from sympy.testing.pytest import raises
+
+from sympy.logic.algorithms.z3_wrapper import z3_satisfiable
+from sympy.assumptions.cnf import CNF, EncodedCNF
+from sympy.logic.tests.test_lra_theory import make_random_problem
+from sympy.core.random import randint
+
+from sympy.testing.pytest import raises, skip
+from sympy.external import import_module
 
 
 def test_literal():
@@ -313,3 +321,61 @@ def test_satisfiable_all_models():
     result = satisfiable(Or(*X), all_models=True)
     for i in range(10):
         assert next(result)
+
+
+def test_z3():
+    z3 = import_module("z3")
+
+    if not z3:
+        skip("z3 not installed.")
+    A, B, C = symbols('A,B,C')
+    x, y, z = symbols('x,y,z')
+    assert z3_satisfiable((x >= 2) & (x < 1)) is False
+    assert z3_satisfiable( A & ~A ) is False
+
+    model = z3_satisfiable(A & (~A | B | C))
+    assert bool(model) is True
+    assert model[A] is True
+
+    # test nonlinear function
+    assert z3_satisfiable((x ** 2 >= 2) & (x < 1) & (x > -1)) is False
+
+
+def test_z3_vs_lra_dpll2():
+    z3 = import_module("z3")
+    if z3 is None:
+        skip("z3 not installed.")
+
+    def boolean_formula_to_encoded_cnf(bf):
+        cnf = CNF.from_prop(bf)
+        enc = EncodedCNF()
+        enc.from_cnf(cnf)
+        return enc
+
+    def make_random_cnf(num_clauses=5, num_constraints=10, num_var=2):
+        assert num_clauses <= num_constraints
+        constraints = make_random_problem(num_variables=num_var, num_constraints=num_constraints, rational=False)
+        clauses = [[cons] for cons in constraints[:num_clauses]]
+        for cons in constraints[num_clauses:]:
+            if isinstance(cons, Unequality):
+                cons = ~cons
+            i = randint(0, num_clauses-1)
+            clauses[i].append(cons)
+
+        clauses = [Or(*clause) for clause in clauses]
+        cnf = And(*clauses)
+        return boolean_formula_to_encoded_cnf(cnf)
+
+    lra_dpll2_satisfiable = lambda x: dpll2_satisfiable(x, use_lra_theory=True)
+
+    for _ in range(50):
+        cnf = make_random_cnf(num_clauses=10, num_constraints=15, num_var=2)
+
+        try:
+            z3_sat = z3_satisfiable(cnf)
+        except z3.z3types.Z3Exception:
+            continue
+
+        lra_dpll2_sat = lra_dpll2_satisfiable(cnf) is not False
+
+        assert z3_sat == lra_dpll2_sat

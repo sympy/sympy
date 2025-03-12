@@ -124,8 +124,7 @@ class EllipticCurve:
             for i in range(char):
                 congruence_eq = self._poly.subs({self.x: i, self.z: 1}).expr
                 sol = polynomial_congruence(congruence_eq, char)
-                for num in sol:
-                    all_pt.add((i, num))
+                all_pt.update((i, num) for num in sol)
             return all_pt
         else:
             raise ValueError("Infinitely many points")

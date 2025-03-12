@@ -55,12 +55,7 @@ def gosper_normal(f, g, n, polys=True):
     D = Poly(n + h, n, h, domain=opt.domain)
 
     R = A.resultant(B.compose(D))
-    roots = set(R.ground_roots().keys())
-
-    for r in set(roots):
-        if not r.is_Integer or r < 0:
-            roots.remove(r)
-
+    roots = {r for r in R.ground_roots().keys() if r.is_Integer and r >= 0}
     for i in sorted(roots):
         d = A.gcd(B.shift(+i))
 

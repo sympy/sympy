@@ -504,7 +504,7 @@ class TrigSubstitutionRule(Rule):
             (theta, inverse)
         ]
         return Piecewise(
-            (self.substep.eval().subs(substitution).trigsimp(), self.restriction)
+                (self.substep.eval().subs(substitution).trigsimp(), self.restriction) # type: ignore
         )
 
     def contains_dont_know(self) -> bool:
@@ -754,7 +754,7 @@ def manual_diff(f, symbol):
         elif isinstance(f, csc):
             return -arg.diff(symbol) * csc(arg) * cot(arg)
         elif isinstance(f, Add):
-            return sum([manual_diff(arg, symbol) for arg in f.args])
+            return sum(manual_diff(arg, symbol) for arg in f.args)
         elif isinstance(f, Mul):
             if len(f.args) == 2 and isinstance(f.args[0], Number):
                 return f.args[0] * manual_diff(f.args[1], symbol)
@@ -810,8 +810,8 @@ def find_substitutions(integrand, symbol, u_var):
             return False
         # avoid increasing the degree of a rational function
         if integrand.is_rational_function(symbol) and substituted.is_rational_function(u_var):
-            deg_before = max([degree(t, symbol) for t in integrand.as_numer_denom()])
-            deg_after = max([degree(t, u_var) for t in substituted.as_numer_denom()])
+            deg_before = max(degree(t, symbol) for t in integrand.as_numer_denom())
+            deg_after = max(degree(t, u_var) for t in substituted.as_numer_denom())
             if deg_after > deg_before:
                 return False
         return substituted.as_independent(u_var, as_Add=False)
@@ -1225,7 +1225,7 @@ def _parts_rule(integrand, symbol) -> tuple[Expr, Expr, Expr, Expr, Rule] | None
                 args = [arg for arg in integrand.args
                         if any(isinstance(arg, cls) for cls in functions)]
                 if args:
-                    u = Mul(*args)
+                    u = Mul(*args) # type: ignore
                     dv = integrand / u
                     return u, dv
             return None
@@ -1430,7 +1430,12 @@ def quadratic_denom_rule(integral):
             if positive_cond is S.false:
                 return negative_step
             return PiecewiseRule(integrand, symbol, [(general_rule, positive_cond), (negative_step, S.true)])
-        return general_rule
+
+        power = PowerRule(integrand, symbol, symbol, -2)
+        if b != 1:
+            power = ConstantTimesRule(integrand, symbol, 1/b, symbol**-2, power)
+
+        return PiecewiseRule(integrand, symbol, [(general_rule, Ne(c, 0)), (power, True)])
 
     d = Wild('d', exclude=[symbol])
     match2 = integrand.match(a / (b * symbol ** 2 + c * symbol + d))
@@ -1510,7 +1515,7 @@ def sqrt_linear_rule(integral: IntegralInfo):
         step: Rule = URule(integrand, x, u, u_x, substep)
         generic_cond = Ne(b0, 0)
         if generic_cond is not S.true:  # possible degenerate case
-            simplified = integrand.subs({b: 0 for b in bs})
+            simplified = integrand.subs(dict.fromkeys(bs, 0))
             degenerate_step = integral_steps(simplified, x)
             step = PiecewiseRule(integrand, x, [(step, generic_cond), (degenerate_step, S.true)])
         return step
@@ -1861,7 +1866,7 @@ def dirac_delta_rule(integral: IntegralInfo):
     if len(integrand.args) == 1:
         n = S.Zero
     else:
-        n = integrand.args[1]
+        n = integrand.args[1] # type: ignore
     if not n.is_Integer or n < 0:
         return
     a, b = Wild('a', exclude=[x]), Wild('b', exclude=[x, 0])

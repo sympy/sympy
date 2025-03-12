@@ -5,7 +5,7 @@ from functools import wraps
 
 from sympy.core import Add, Mul, Pow, S, sympify, Float
 from sympy.core.basic import Basic
-from sympy.core.expr import UnevaluatedExpr
+from sympy.core.expr import Expr, UnevaluatedExpr
 from sympy.core.function import Lambda
 from sympy.core.mul import _keep_coeff
 from sympy.core.sorting import default_sort_key
@@ -34,6 +34,11 @@ class AssignmentError(Exception):
     """
     pass
 
+class PrintMethodNotImplementedError(NotImplementedError):
+    """
+    Raised if a _print_* method is missing in the Printer.
+    """
+    pass
 
 def _convert_python_lists(arg):
     if isinstance(arg, list):
@@ -64,6 +69,7 @@ class CodePrinter(StrPrinter):
         'human': True,
         'inline': False,
         'allow_unknown_functions': False,
+        'strict': None  # True or False; None => True if human == True
     }
 
     # Functions which are "simple" to rewrite to other functions that
@@ -104,11 +110,14 @@ class CodePrinter(StrPrinter):
             'Ei': ('li', []),
             'dirichlet_eta': ('zeta', []),
             'riemann_xi': ('zeta', ['gamma']),
+            'SingularityFunction': ('Piecewise', []),
     }
 
     def __init__(self, settings=None):
-
         super().__init__(settings=settings)
+        if self._settings.get('strict', True) == None:
+            # for backwards compatibility, human=False need not to throw:
+            self._settings['strict'] = self._settings.get('human', True) == True
         if not hasattr(self, 'reserved_words'):
             self.reserved_words = set()
 
@@ -342,6 +351,9 @@ class CodePrinter(StrPrinter):
         else:
             return '%s_%d' % (expr.name, expr.dummy_index)
 
+    def _print_Idx(self, expr):
+        return self._print(expr.label)
+
     def _print_CodeBlock(self, expr):
         return '\n'.join([self._print(i) for i in expr.args])
 
@@ -406,7 +418,6 @@ class CodePrinter(StrPrinter):
         return self._print(expr.symbol)
 
     def _print_Symbol(self, expr):
-
         name = super()._print_Symbol(expr)
 
         if name in self.reserved_words:
@@ -444,13 +455,34 @@ class CodePrinter(StrPrinter):
             # Simple rewrite to supported function possible
             target_f, required_fs = self._rewriteable_functions[expr.func.__name__]
             if self._can_print(target_f) and all(self._can_print(f) for f in required_fs):
-                return self._print(expr.rewrite(target_f))
+                return '(' + self._print(expr.rewrite(target_f)) + ')'
+
         if expr.is_Function and self._settings.get('allow_unknown_functions', False):
             return '%s(%s)' % (self._print(expr.func), ', '.join(map(self._print, expr.args)))
         else:
             return self._print_not_supported(expr)
 
     _print_Expr = _print_Function
+
+    def _print_Derivative(self, expr):
+        obj, *wrt_order_pairs = expr.args
+        for func_arg in obj.args:
+            if not func_arg.is_Symbol:
+                raise ValueError("%s._print_Derivative(...) only supports functions with symbols as arguments." %
+                                 self.__class__.__name__)
+        meth_name = '_print_Derivative_%s' % obj.func.__name__
+        pmeth = getattr(self, meth_name, None)
+        if pmeth is None:
+            if self._settings.get('strict', False):
+                raise PrintMethodNotImplementedError(
+                    f"Unsupported by {type(self)}: {type(expr)}" +
+                    f"\nPrinter has no method: {meth_name}" +
+                    "\nSet the printer option 'strict' to False in order to generate partially printed code."
+                )
+            return self._print_not_supported(expr)
+        orders = dict(wrt_order_pairs)
+        seq_orders = [orders[arg] for arg in obj.args]
+        return pmeth(obj.args, seq_orders)
 
     # Don't inherit the str-printer method for Heaviside to the code printers
     _print_Heaviside = None
@@ -508,6 +540,12 @@ class CodePrinter(StrPrinter):
 
     def _print_BooleanFunction(self, expr):
         return self._print(expr.to_nnf())
+
+    def _print_isnan(self, arg):
+        return 'isnan(%s)' % self._print(*arg.args)
+
+    def _print_isinf(self, arg):
+        return 'isinf(%s)' % self._print(*arg.args)
 
     def _print_Mul(self, expr):
 
@@ -568,6 +606,11 @@ class CodePrinter(StrPrinter):
             return sign + '*'.join(a_str) + "/(%s)" % '*'.join(b_str)
 
     def _print_not_supported(self, expr):
+        if self._settings.get('strict', False):
+            raise PrintMethodNotImplementedError(
+                f"Unsupported by {type(self)}: {type(expr)}" +
+                "\nSet the printer option 'strict' to False in order to generate partially printed code."
+            )
         try:
             self._not_supported.add(expr)
         except TypeError:
@@ -578,7 +621,6 @@ class CodePrinter(StrPrinter):
     # The following can not be simply translated into C or Fortran
     _print_Basic = _print_not_supported
     _print_ComplexInfinity = _print_not_supported
-    _print_Derivative = _print_not_supported
     _print_ExprCondPair = _print_not_supported
     _print_GeometryEntity = _print_not_supported
     _print_Infinity = _print_not_supported
@@ -873,3 +915,125 @@ def cxxcode(expr, assign_to=None, standard='c++11', **settings):
     """ C++ equivalent of :func:`~.ccode`. """
     from sympy.printing.cxx import cxx_code_printers
     return cxx_code_printers[standard.lower()](settings).doprint(expr, assign_to)
+
+
+def rust_code(expr, assign_to=None, **settings):
+    """Converts an expr to a string of Rust code
+
+    Parameters
+    ==========
+
+    expr : Expr
+        A SymPy expression to be converted.
+    assign_to : optional
+        When given, the argument is used as the name of the variable to which
+        the expression is assigned. Can be a string, ``Symbol``,
+        ``MatrixSymbol``, or ``Indexed`` type. This is helpful in case of
+        line-wrapping, or for expressions that generate multi-line statements.
+    precision : integer, optional
+        The precision for numbers such as pi [default=15].
+    user_functions : dict, optional
+        A dictionary where the keys are string representations of either
+        ``FunctionClass`` or ``UndefinedFunction`` instances and the values
+        are their desired C string representations. Alternatively, the
+        dictionary value can be a list of tuples i.e. [(argument_test,
+        cfunction_string)].  See below for examples.
+    dereference : iterable, optional
+        An iterable of symbols that should be dereferenced in the printed code
+        expression. These would be values passed by address to the function.
+        For example, if ``dereference=[a]``, the resulting code would print
+        ``(*a)`` instead of ``a``.
+    human : bool, optional
+        If True, the result is a single string that may contain some constant
+        declarations for the number symbols. If False, the same information is
+        returned in a tuple of (symbols_to_declare, not_supported_functions,
+        code_text). [default=True].
+    contract: bool, optional
+        If True, ``Indexed`` instances are assumed to obey tensor contraction
+        rules and the corresponding nested loops over indices are generated.
+        Setting contract=False will not generate loops, instead the user is
+        responsible to provide values for the indices in the code.
+        [default=True].
+
+    Examples
+    ========
+
+    >>> from sympy import rust_code, symbols, Rational, sin, ceiling, Abs, Function
+    >>> x, tau = symbols("x, tau")
+    >>> rust_code((2*tau)**Rational(7, 2))
+    '8.0*1.4142135623731*tau.powf(7_f64/2.0)'
+    >>> rust_code(sin(x), assign_to="s")
+    's = x.sin();'
+
+    Simple custom printing can be defined for certain types by passing a
+    dictionary of {"type" : "function"} to the ``user_functions`` kwarg.
+    Alternatively, the dictionary value can be a list of tuples i.e.
+    [(argument_test, cfunction_string)].
+
+    >>> custom_functions = {
+    ...   "ceiling": "CEIL",
+    ...   "Abs": [(lambda x: not x.is_integer, "fabs", 4),
+    ...           (lambda x: x.is_integer, "ABS", 4)],
+    ...   "func": "f"
+    ... }
+    >>> func = Function('func')
+    >>> rust_code(func(Abs(x) + ceiling(x)), user_functions=custom_functions)
+    '(fabs(x) + x.ceil()).f()'
+
+    ``Piecewise`` expressions are converted into conditionals. If an
+    ``assign_to`` variable is provided an if statement is created, otherwise
+    the ternary operator is used. Note that if the ``Piecewise`` lacks a
+    default term, represented by ``(expr, True)`` then an error will be thrown.
+    This is to prevent generating an expression that may not evaluate to
+    anything.
+
+    >>> from sympy import Piecewise
+    >>> expr = Piecewise((x + 1, x > 0), (x, True))
+    >>> print(rust_code(expr, tau))
+    tau = if (x > 0.0) {
+        x + 1
+    } else {
+        x
+    };
+
+    Support for loops is provided through ``Indexed`` types. With
+    ``contract=True`` these expressions will be turned into loops, whereas
+    ``contract=False`` will just print the assignment expression that should be
+    looped over:
+
+    >>> from sympy import Eq, IndexedBase, Idx
+    >>> len_y = 5
+    >>> y = IndexedBase('y', shape=(len_y,))
+    >>> t = IndexedBase('t', shape=(len_y,))
+    >>> Dy = IndexedBase('Dy', shape=(len_y-1,))
+    >>> i = Idx('i', len_y-1)
+    >>> e=Eq(Dy[i], (y[i+1]-y[i])/(t[i+1]-t[i]))
+    >>> rust_code(e.rhs, assign_to=e.lhs, contract=False)
+    'Dy[i] = (y[i + 1] - y[i])/(t[i + 1] - t[i]);'
+
+    Matrices are also supported, but a ``MatrixSymbol`` of the same dimensions
+    must be provided to ``assign_to``. Note that any expression that can be
+    generated normally can also exist inside a Matrix:
+
+    >>> from sympy import Matrix, MatrixSymbol
+    >>> mat = Matrix([x**2, Piecewise((x + 1, x > 0), (x, True)), sin(x)])
+    >>> A = MatrixSymbol('A', 3, 1)
+    >>> print(rust_code(mat, A))
+    A = [x.powi(2), if (x > 0.0) {
+        x + 1
+    } else {
+        x
+    }, x.sin()];
+    """
+    from sympy.printing.rust import RustCodePrinter
+    printer = RustCodePrinter(settings)
+    expr = printer._rewrite_known_functions(expr)
+    if isinstance(expr, Expr):
+        for src_func, dst_func in printer.function_overrides.values():
+            expr = expr.replace(src_func, dst_func)
+    return printer.doprint(expr, assign_to)
+
+
+def print_rust_code(expr, **settings):
+    """Prints Rust representation of the given expression."""
+    print(rust_code(expr, **settings))

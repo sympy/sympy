@@ -8,7 +8,7 @@ from sympy.functions.special.spherical_harmonics import Ynm
 from sympy.matrices.dense import Matrix
 from sympy.physics.wigner import (clebsch_gordan, wigner_9j, wigner_6j, gaunt,
         real_gaunt, racah, dot_rot_grad_Ynm, wigner_3j, wigner_d_small, wigner_d)
-from sympy.testing.pytest import raises
+from sympy.testing.pytest import raises, skip
 
 # for test cases, refer : https://en.wikipedia.org/wiki/Table_of_Clebsch%E2%80%93Gordan_coefficients
 
@@ -55,7 +55,22 @@ def test_clebsch_gordan():
     assert clebsch_gordan(p, h, l, k, 1, l) == 1/sqrt(15)
 
 
+def test_clebsch_gordan_numpy():
+    try:
+        import numpy as np
+    except ImportError:
+        skip("numpy not installed")
+    assert clebsch_gordan(*np.zeros(6).astype(np.int64)) == 1
+    assert wigner_3j(2, np.float64(6.0), 4.0, 0, 0, 0) == sqrt(715)/143
+    assert wigner_3j(0, 0.5, 0.5, 0, 0.5, -0.5) == sqrt(2)/2
+    raises(ValueError, lambda: wigner_3j(2.1, 6, 4, 0, 0, 0))
+
+
 def test_wigner():
+    try:
+        import numpy as np
+    except ImportError:
+        skip("numpy not installed")
     def tn(a, b):
         return (a - b).n(64) < S('1e-64')
     assert tn(wigner_9j(1, 1, 1, 1, 1, 1, 1, 1, 0, prec=64), Rational(1, 18))
@@ -63,6 +78,8 @@ def test_wigner():
         70)/(246960*sqrt(105)) - 365/(3528*sqrt(70)*sqrt(105))
     assert wigner_6j(5, 5, 5, 5, 5, 5) == Rational(1, 52)
     assert tn(wigner_6j(8, 8, 8, 8, 8, 8, prec=64), Rational(-12219, 965770))
+    assert wigner_6j(1, 1, 1, 1.0, np.float64(1.0), 1) == Rational(1, 6)
+    assert wigner_6j(3.0, np.float32(3), 3.0, 3, 3, 3) == Rational(-1, 14)
     # regression test for #8747
     half = S.Half
     assert wigner_9j(0, 0, 0, 0, half, half, 0, half, half) == half
@@ -78,6 +95,14 @@ def test_wigner():
                       2, 4, 4,
                       5, 7 * half, 7 * half)
             == -sqrt(Rational(3481, 5042614500)))
+    assert (wigner_9j(5, 5, 5.0,
+                      np.float64(5.0), 5, 5,
+                      5, 5, 5)
+            == 0)
+    assert (wigner_9j(1.0, 2.0, 3.0,
+                      3, 2, 1,
+                      2, 1, 3)
+            == -4*sqrt(70)/11025)
 
 
 def test_gaunt():
@@ -128,7 +153,7 @@ def test_realgaunt():
     assert real_gaunt(1, 1, 2, -1, 0, -1) == sqrt(15)/(10*sqrt(pi))
     assert real_gaunt(1, 1, 2, 0, 1, 1) == sqrt(15)/(10*sqrt(pi))
     assert real_gaunt(1, 1, 2, 1, 1, 2) == sqrt(15)/(10*sqrt(pi))
-    assert real_gaunt(1, 1, 2, -1, 1, -2) == -sqrt(15)/(10*sqrt(pi))
+    assert real_gaunt(1, 1, 2, -1, 1, -2) == sqrt(15)/(10*sqrt(pi))
     assert real_gaunt(1, 1, 2, -1, -1, 2) == -sqrt(15)/(10*sqrt(pi))
     assert real_gaunt(2, 2, 2, 0, 1, 1) == sqrt(5)/(14*sqrt(pi))
     assert real_gaunt(2, 2, 2, 1, 1, 2) == sqrt(15)/(14*sqrt(pi))
@@ -179,13 +204,20 @@ def test_dot_rota_grad_SH():
 
 def test_wigner_d():
     half = S(1)/2
-    alpha, beta, gamma = symbols("alpha, beta, gamma", real=True)
-    d = wigner_d_small(half, beta).subs({beta: pi/2})
-    d_ = Matrix([[1, 1], [-1, 1]])/sqrt(2)
-    assert d == d_
+    assert wigner_d_small(half, 0) == Matrix([[1, 0], [0, 1]])
+    assert wigner_d_small(half, pi/2) == Matrix([[1, 1], [-1, 1]])/sqrt(2)
+    assert wigner_d_small(half, pi) == Matrix([[0, 1], [-1, 0]])
 
+    alpha, beta, gamma = symbols("alpha, beta, gamma", real=True)
     D = wigner_d(half, alpha, beta, gamma)
     assert D[0, 0] == exp(I*alpha/2)*exp(I*gamma/2)*cos(beta/2)
     assert D[0, 1] == exp(I*alpha/2)*exp(-I*gamma/2)*sin(beta/2)
     assert D[1, 0] == -exp(-I*alpha/2)*exp(I*gamma/2)*sin(beta/2)
     assert D[1, 1] == exp(-I*alpha/2)*exp(-I*gamma/2)*cos(beta/2)
+
+    # Test Y_{n mi}(g*x)=\sum_{mj}D^n_{mi mj}*Y_{n mj}(x)
+    theta, phi = symbols("theta phi", real=True)
+    v = Matrix([Ynm(1, mj, theta, phi) for mj in range(1, -2, -1)])
+    w = wigner_d(1, -pi/2, pi/2, -pi/2)@v.subs({theta: pi/4, phi: pi})
+    w_ = v.subs({theta: pi/2, phi: pi/4})
+    assert w.expand(func=True).as_real_imag() == w_.expand(func=True).as_real_imag()
