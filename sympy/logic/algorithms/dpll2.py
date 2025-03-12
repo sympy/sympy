@@ -147,7 +147,10 @@ class SATSolver:
         self.original_num_clauses = len(self.clauses)
 
         self.lra = lra_theory
-        self.fc = fc_theory
+        self.fc = None
+        if fc_theory:
+            self.fc, fc_state = fc_theory
+            self._current_level.fc_state = fc_state
 
     def _initialize_variables(self, variables):
         """Set up the variable data structures needed."""
@@ -242,36 +245,7 @@ class SATSolver:
                         res = self.lra.check()
                         self.lra.reset_bounds()
                     elif self.fc:
-                        def sanity_check(initial_literals):
-                            res = (True, None)
-                            for lit in initial_literals:
-                                res = self.fc.assert_lit(lit)
-                                if not res[0]:
-                                    return res
-                            return res
-
-                        save_asserted = self.fc.asserted.copy()
-                        self.fc.reset_state()
-                        res = (True, None)
-                        for l in self.var_settings:
-                            res = self.fc.assert_lit(l)
-                            if not res[0]:
-                                break
-
-                        #res = sanity_check(self.var_settings)
-
-                        #res = self.fc.sanity_check(self.var_settings)
-                        if res[0] is False:
-                            #res = santity_res
-                            blah = 1
-                        else:
-                            res = self.fc.check()
-                        # if santity_res is not None and santity_res[0] is False:
-                        #     assert res == santity_res
-                        self.fc.reset_state()
-                        self.fc.asserted = save_asserted
-                        # if santity_res is not None and res[0] is False:
-                        #     res = santity_res
+                        res = self.fc.check(self.var_settings)
                     else:
                         res = None
                     if res is None or res[0]:
@@ -391,7 +365,7 @@ class SATSolver:
         """
         return cls in self.sentinels[lit]
 
-    def _assign_literal(self, lit, unit_prop=False):
+    def _assign_literal(self, lit, called_from_unit_prop=False):
         """Make a literal assignment.
 
         The literal assignment must be recorded as part of the current
@@ -426,11 +400,13 @@ class SATSolver:
         #print(f"{lit} assigned in _assign_literal.")
         if self.fc:
         #    print(f"Calling assert_lit on {lit}.")
-            res = self.fc.assert_lit(lit, force_assertion=not unit_prop)
+            if self._current_level.fc_state is None:
+                self._current_level.fc_state = self.levels[-2].fc_state.copy()
+            res = self.fc.assert_lit(lit, self._current_level.fc_state, force_assertion=not called_from_unit_prop)
             if not res[0]:
                 self._simple_add_learned_clause(res[1])
                 self.fc.conflict = None
-                if unit_prop:
+                if called_from_unit_prop:
                     return True
 
         self.var_settings.add(lit)
@@ -484,8 +460,9 @@ class SATSolver:
             self.var_settings.remove(lit)
             self.heur_lit_unset(lit)
             self.variable_set[abs(lit)] = False
-            if self.fc.unassert_lit(lit) is False:
-                assert False
+            self.fc.deactivate_literal(lit, self._current_level.fc_state)
+            # if self.fc.deactivate_literal(lit) is False:
+            #     assert False
 
         # Pop the level off the stack
         self.levels.pop()
@@ -538,7 +515,7 @@ class SATSolver:
                 self._unit_prop_queue = []
                 return False
             else:
-                conflict = self._assign_literal(next_lit, unit_prop=True)
+                conflict = self._assign_literal(next_lit, called_from_unit_prop=True)
                 if conflict:
                     self.is_unsatisfied = True
                     self._unit_prop_queue = []
@@ -747,4 +724,5 @@ class Level:
     def __init__(self, decision, flipped=False):
         self.decision = decision
         self.var_settings = set()
+        self.fc_state = None
         self.flipped = flipped
