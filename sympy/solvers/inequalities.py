@@ -419,7 +419,7 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
     Examples
     ========
 
-    >>> from sympy import solve_univariate_inequality, Symbol, sin, Interval, S
+    >>> from sympy import solve_univariate_inequality, Symbol, Interval, S
     >>> x = Symbol('x')
 
     >>> solve_univariate_inequality(x**2 >= 4, x)
