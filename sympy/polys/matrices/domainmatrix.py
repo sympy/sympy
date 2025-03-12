@@ -456,7 +456,7 @@ class DomainMatrix:
         See Also
         ========
 
-        Matrix
+        sympy.matrices.dense.Matrix
 
         """
         if fmt == 'dense':
