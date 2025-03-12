@@ -1658,6 +1658,12 @@ def test_integer():
     assert ask(Q.integer(Abs(x)),Q.complex(x)) is None
     assert ask(Q.integer(Abs(x+I*y)),Q.real(x) & Q.real(y)) is None
 
+    # https://github.com/sympy/sympy/issues/27739
+    assert ask(Q.integer(x/y), Q.integer(x) & Q.integer(y)) is None
+    assert ask(Q.integer(1/x), Q.integer(x)) is None
+    assert ask(Q.integer(pi**x), Q.zero(x)) is True
+    assert ask(Q.integer(x**y),Q.integer(x) & Q.integer(y)) is None
+
 
 def test_negative():
     assert ask(Q.negative(x), Q.negative(x)) is True
