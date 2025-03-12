@@ -18,7 +18,7 @@ from sympy.core.random import _randint, randint
 from itertools import product
 
 
-def n_order(a, n, factorization_n=None):
+def n_order(a, n):
     r""" Returns the order of ``a`` modulo ``n``.
 
     Explanation
@@ -1653,7 +1653,7 @@ def discrete_log(n, a, b, order=None, prime_order=None):
                 if prime_order is not None:
                     prime_order_pe = isprime(order_pe)
             else:
-                order_pe = n_order(b_mod_pe, pe, {p: e})
+                order_pe = n_order(b_mod_pe, pe)
                 prime_order_pe = isprime(order_pe)
 
             if order_pe < 1000:
