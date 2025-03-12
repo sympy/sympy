@@ -209,3 +209,7 @@ Miscellaneous
 .. autofunction:: sympy.functions.elementary.miscellaneous.cbrt
 
 .. autofunction:: sympy.functions.elementary.miscellaneous.real_root
+.. note::
+   When working with Min/Max functions with many arguments, setting ``evaluate=False``
+   significantly improves performance by skipping the ``_find_localzeros`` function.
+   This can result in a speedup of over 1000x for expressions with 50 or more symbols.
