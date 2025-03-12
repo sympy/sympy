@@ -433,6 +433,8 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
     Interval(2, oo)
     """
     from sympy.solvers.solvers import denoms
+    from sympy.sets import imageset
+    from sympy.core.function import Lambda
 
     if domain.is_subset(S.Reals) is False:
         raise NotImplementedError(filldedent('''
@@ -665,6 +667,8 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
             n = Dummy('n', integer=True)
             x = Dummy('x')
             rv = imageset(Lambda(n, imageset(Lambda(x, x + period * n), rv)), S.Integers)
+        else:
+            rv = original_domain
 
     return rv if not relational else rv.as_relational(_gen)
 
