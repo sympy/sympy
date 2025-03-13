@@ -761,3 +761,13 @@ def test_issue_23948():
         *log(-x**2 - 2*x*log(x) - x + exp(x) - log(x)**2 + log(5))**2)
 
     assert risch_integrate(f, x) == F
+
+
+def test_sympyissue_23610():
+    from sympy import Symbol, Integral, diff, simplify, integrate, log
+    a = Symbol("a", real=True)
+    x = Symbol("x", positive=True)
+    fxa = (x**a - 1) / log(x)
+    Ia = Integral(fxa, (x, 0, 1))
+    dIa_da = simplify(diff(Ia, a))
+    result = integrate(dIa_da, (a,))
