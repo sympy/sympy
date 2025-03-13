@@ -771,4 +771,3 @@ def test_sympyissue_23610():
     Ia = Integral(fxa, (x, 0, 1))
     dIa_da = simplify(diff(Ia, a))
     _ = integrate(dIa_da, (a,))
-
