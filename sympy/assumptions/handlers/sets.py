@@ -777,6 +777,11 @@ def _(expr, assumptions):
         if ask(Q.ne(expr.base,0) & Q.ne(expr.base,1)) and exp_rational is False:
             return False
 
+    exp_integer = ask(Q.integer(expr.exp), assumptions)
+    if base_algebraic is False and exp_integer:
+        if expr.exp > 0:
+            return False
+
 @AlgebraicPredicate.register(Rational) # type:ignore
 def _(expr, assumptions):
     return expr.q != 0
