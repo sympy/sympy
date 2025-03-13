@@ -770,4 +770,5 @@ def test_sympyissue_23610():
     fxa = (x**a - 1) / log(x)
     Ia = Integral(fxa, (x, 0, 1))
     dIa_da = simplify(diff(Ia, a))
-    result = integrate(dIa_da, (a,))
+    _ = integrate(dIa_da, (a,))
+
