@@ -7,7 +7,7 @@ from sympy.core import Add, Basic, Expr, Mul, Pow, S
 from sympy.core.numbers import (AlgebraicNumber, ComplexInfinity, Exp1, Float,
     GoldenRatio, ImaginaryUnit, Infinity, Integer, NaN, NegativeInfinity,
     Number, NumberSymbol, Pi, pi, Rational, TribonacciConstant, E)
-from sympy.core.logic import fuzzy_bool
+from sympy.core.logic import fuzzy_bool, _fuzzy_group
 from sympy.functions import (Abs, acos, acot, asin, atan, cos, cot, exp, im,
     log, re, sin, tan)
 from sympy.core.numbers import I
@@ -753,7 +753,39 @@ def _(expr, assumptions):
 
 @AlgebraicPredicate.register_many(Add, Mul) # type:ignore
 def _(expr, assumptions):
-    return test_closed_group(expr, assumptions, Q.algebraic)
+    closed_group = test_closed_group(expr, assumptions, Q.algebraic)
+    if closed_group is not None:
+        return closed_group
+
+    def recursive_check(transcendental_num, other_transcendental, expression):
+        if expression.is_Atom:
+            if expression.equals(other_transcendental):
+                return None
+
+            expression_transcendental = expression.equals(transcendental_num)
+            expression_rational = ask(Q.rational(expression))
+            if expression_transcendental is None or expression_rational is None:
+                return None
+            elif expression_transcendental | expression_rational:
+                return True
+            else:
+                return False
+
+        args_transcendental = True
+        for arg in expression.args:
+            arg_check = recursive_check(transcendental_num, other_transcendental, arg)
+            if arg_check is None:
+                args_transcendental = None
+                break
+            args_transcendental = args_transcendental | arg_check
+        return args_transcendental
+
+    polynomial_pi = recursive_check(pi, E, expr)
+    polynomial_E = recursive_check(E, pi, expr)
+    if polynomial_pi or polynomial_E:
+        return False
+    else:
+        return closed_group
 
 @AlgebraicPredicate.register(Pow) # type:ignore
 def _(expr, assumptions):
