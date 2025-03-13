@@ -1123,7 +1123,7 @@ class TransferFunction(SISOLinearTimeInvariant):
         Examples
         ========
 
-        >>> from sympy import symbols, I, solve, reduce_inequalities
+        >>> from sympy import symbols, solve, reduce_inequalities
         >>> from sympy.abc import s
         >>> from sympy.physics.control.lti import TransferFunction, Feedback
 
