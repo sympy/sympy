@@ -434,7 +434,6 @@ def test_torch_derivative_lambdify():
     result = f(x_val)
     assert torch.isclose(result, torch.tensor(-1.0), atol=1e-5)
 
-    # For f(x,y) = x*y², ∂²f/∂x∂y = 2y
     expr = Derivative(x * y ** 2, x, y)
     f = lambdify((x, y), expr, 'torch')
     x_val = torch.tensor(2.0, requires_grad=True)
