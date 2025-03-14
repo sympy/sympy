@@ -288,7 +288,7 @@ def assumptions_maximum(symbol, assumptions=set()):
     from sympy.functions import Min
 
     if not isinstance(symbol, Symbol):
-        raise ValueError("Input must be a symbol, use calculus.util.minimum() for expressions")
+        raise ValueError("Input must be a symbol, use calculus.util.maximum() for expressions")
 
     if symbol.is_infinite and symbol.is_extended_negative:
         return symbol
