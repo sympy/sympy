@@ -1,5 +1,6 @@
 from .accumulationbounds import AccumBounds, AccumulationBounds # noqa: F401
 from .singularities import singularities
+from sympy.assumptions.wrapper import assumptions_minimum, assumptions_maximum
 from sympy.core import Pow, S
 from sympy.core.function import diff, expand_mul, Function
 from sympy.core.kind import NumberKind
@@ -26,6 +27,18 @@ from sympy.utilities import filldedent
 from sympy.utilities.iterables import iterable
 from sympy.matrices.dense import hessian
 
+
+def assumption_domain(symbol):
+    try:
+        min, min_open = assumptions_minimum(symbol)
+        max, max_open = assumptions_maximum(symbol)
+
+        return Interval(min, max, min_open, max_open)
+    except NotImplementedError:
+        from sympy.assumptions.assume import global_assumptions
+        from sympy.logic.boolalg import And
+
+        return ConditionSet(symbol, And(*global_assumptions), S.Reals)
 
 def continuous_domain(f, symbol, domain):
     """
@@ -81,6 +94,9 @@ def continuous_domain(f, symbol, domain):
         raise NotImplementedError(filldedent('''
             Domain must be a subset of S.Reals.
             '''))
+
+    domain = Intersection(domain, assumption_domain(symbol))
+
     implemented = [Pow, exp, log, Abs, frac,
                    sin, cos, tan, cot, sec, csc,
                    asin, acos, atan, acot, asec, acsc,
@@ -208,6 +224,9 @@ def function_range(f, symbol, domain):
         is continuous are not finite or real,
         OR if the critical points of the function on the domain cannot be found.
     """
+
+    if domain.is_subset(S.Reals):
+        domain = Intersection(domain, assumption_domain(symbol))
 
     if domain is S.EmptySet:
         return S.EmptySet
@@ -839,6 +858,10 @@ def maximum(f, symbol, domain=S.Reals):
     1/2
 
     """
+
+    if domain.is_subset(S.Reals):
+        domain = Intersection(domain, assumption_domain(symbol))
+
     if isinstance(symbol, Symbol):
         if domain is S.EmptySet:
             raise ValueError("Maximum value not defined for empty domain.")
@@ -886,6 +909,10 @@ def minimum(f, symbol, domain=S.Reals):
     -1/2
 
     """
+
+    if domain.is_subset(S.Reals):
+        domain = Intersection(domain, assumption_domain(symbol))
+
     if isinstance(symbol, Symbol):
         if domain is S.EmptySet:
             raise ValueError("Minimum value not defined for empty domain.")

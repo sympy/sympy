@@ -46,6 +46,11 @@ False
 from sympy.assumptions import ask, Q
 from sympy.core.basic import Basic
 from sympy.core.sympify import _sympify
+from sympy.core.singleton import S
+from sympy.functions import Piecewise
+from sympy.logic.boolalg import And, Or, Not
+
+import itertools
 
 
 def make_eval_method(fact):
@@ -162,3 +167,169 @@ def is_extended_nonnegative(obj, assumptions=None):
     if assumptions is None:
         return obj.is_extended_nonnegative
     return ask(Q.extended_nonnegative(obj), assumptions)
+
+
+_conditional = lambda func, null_value: lambda items: func(*(Piecewise((value, precondition), (null_value, S.true)) for value, precondition, is_strict in items))
+conditional_choice = lambda items: Or(*(And(is_strict, precondition) for value, precondition, is_strict in items))
+
+def _parse_assumption(symbol, conditional_function, relational_function):
+    from sympy.core.relational import Relational
+
+    def parse_assumption(assumption, negated=False):
+        if not assumption.has(symbol):
+            return set()
+
+        if isinstance(assumption, And):
+            if negated:
+                return parse_assumption(Or(*map(Not, assumption.args)), negated=False)
+
+            new_assumptions = set()
+            for assumption2 in assumption.args:
+                new_assumptions.update(parse_assumption(assumption2, negated=negated))
+        elif isinstance(assumption, Or):
+            if negated:
+                return parse_assumption(And(*map(Not, assumption.args)), negated=False)
+
+            new_assumptions = set()
+            relevant_assumptions = set()
+            for assumption2 in assumption.args:
+                new_assumptions.update(parse_assumption(assumption2, negated=negated))
+
+                if assumption2.has(symbol):
+                    relevant_assumptions.add(assumption2)
+
+            value = conditional_function(new_assumptions)
+            return {(value, And(*map(Not, set(assumption.args) - relevant_assumptions)), conditional_choice(new_assumptions))}
+        elif isinstance(assumption, Not):
+            return parse_assumption(assumption.args[0], negated=not negated)
+        elif isinstance(assumption, Relational):
+            # TODO: support rewriting relational in terms of symbol if it is not
+
+            if negated:
+                assumption = assumption.negated
+
+            if assumption.rhs == symbol:
+                assumption = assumption.reversed
+
+            return relational_function(assumption, assumption.lhs, assumption.rhs)
+        else:
+            raise NotImplementedError
+
+    return parse_assumption
+
+def assumptions_minimum(symbol, assumptions=set()):
+    from .assume import global_assumptions
+
+    from sympy.core.relational import _Greater, GreaterThan, StrictGreaterThan, _Less, Equality, Unequality
+    from sympy.core.exprtools import _monotonic_sign, _eps
+    from sympy.core.symbol import Symbol
+    from sympy.functions import Max
+
+    import itertools
+
+    if not isinstance(symbol, Symbol):
+        raise ValueError("Input must be a symbol, use calculus.util.minimum() for expressions")
+
+    if symbol.is_infinite and symbol.is_extended_positive:
+        return symbol
+
+    conditional_max = _conditional(Max, S.NegativeInfinity)
+
+    def _relational(assumption, lhs, rhs):
+        if isinstance(assumption, _Greater):
+            if assumption.lhs != symbol:
+                raise NotImplementedError
+
+            if isinstance(assumption, GreaterThan):
+                return {(assumption.rhs, S.true, S.false)}
+            elif isinstance(assumption, StrictGreaterThan):
+                return {(assumption.rhs, S.true, S.true)}
+            else:
+                raise NotImplementedError
+        elif isinstance(assumption, _Less):
+            pass
+        elif isinstance(assumption, Equality):
+            if assumption.lhs != symbol:
+                raise NotImplementedError
+
+            return ({assumption.rhs, S.true, S.false})
+        elif isinstance(assumption, Unequality):
+            pass
+        else:
+            raise NotImplementedError
+
+        return set()
+
+    parse_assumption = _parse_assumption(symbol, conditional_max, _relational)
+
+    relevant_assumptions = set()
+    for assumption in itertools.chain(global_assumptions, assumptions):
+        relevant_assumptions.update(parse_assumption(assumption))
+
+    if symbol.is_negative is False:
+        result = _monotonic_sign(symbol)
+        if result is not None:
+            if result in (_eps, -_eps):
+                relevant_assumptions.add((S.Zero, S.true, S.true))
+            else:
+                relevant_assumptions.add((result, S.true, S.false))
+
+    return conditional_max(relevant_assumptions), conditional_choice(relevant_assumptions)
+
+
+def assumptions_maximum(symbol, assumptions=set()):
+    from .assume import global_assumptions
+
+    from sympy.core.relational import _Greater, _Less, LessThan, StrictLessThan, Equality, Unequality
+    from sympy.core.exprtools import _monotonic_sign, _eps
+    from sympy.core.symbol import Symbol
+    from sympy.functions import Min
+
+    if not isinstance(symbol, Symbol):
+        raise ValueError("Input must be a symbol, use calculus.util.minimum() for expressions")
+
+    if symbol.is_infinite and symbol.is_extended_negative:
+        return symbol
+
+    conditional_min = _conditional(Min, S.Infinity)
+
+    def _relational(assumption, lhs, rhs):
+        if isinstance(assumption, _Greater):
+            pass
+        elif isinstance(assumption, _Less):
+            if assumption.lhs != symbol:
+                raise NotImplementedError
+
+            if isinstance(assumption, LessThan):
+                return {(assumption.rhs, S.true, S.false)}
+            elif isinstance(assumption, StrictLessThan):
+                return {(assumption.rhs, S.true, S.true)}
+            else:
+                raise NotImplementedError
+        elif isinstance(assumption, Equality):
+            if assumption.lhs != symbol:
+                raise NotImplementedError
+
+            return ({assumption.rhs, S.true, S.false})
+        elif isinstance(assumption, Unequality):
+            pass
+        else:
+            raise NotImplementedError
+
+        return set()
+
+    parse_assumption = _parse_assumption(symbol, conditional_min, _relational)
+
+    relevant_assumptions = set()
+    for assumption in itertools.chain(global_assumptions, assumptions):
+        relevant_assumptions.update(parse_assumption(assumption))
+
+    if symbol.is_positive is False:
+        result = _monotonic_sign(symbol)
+        if result is not None:
+            if result in (_eps, -_eps):
+                relevant_assumptions.add((S.Zero, S.true, S.true))
+            else:
+                relevant_assumptions.add((result, S.true, S.false))
+
+    return conditional_min(relevant_assumptions), conditional_choice(relevant_assumptions)

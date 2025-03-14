@@ -2447,7 +2447,7 @@ def solveset(f, symbol=None, domain=S.Complexes):
     if not isinstance(f, (Expr, Relational, Number)):
         raise ValueError("%s is not a valid SymPy expression" % f)
 
-    if not isinstance(symbol, (Expr, Relational)) and  symbol is not None:
+    if not isinstance(symbol, (Expr, Relational)) and symbol is not None:
         raise ValueError("%s is not a valid SymPy symbol" % (symbol,))
 
     if not isinstance(domain, Set):
