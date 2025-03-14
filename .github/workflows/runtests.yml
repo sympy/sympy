@@ -265,6 +265,23 @@ jobs:
       # Test modules that can use tensorflow
       - run: bin/test_tensorflow.py
 
+  # -------------------- PyTorch tests -------------------------- #
+
+  pytorch:
+    needs: code-quality
+
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install --upgrade pip
+      - run: pip install -r requirements-dev.txt
+      - run: pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
+      # Test modules that can use pytorch
+      - run: bin/test_pytorch.py
+
   # -------------------- SymEngine tests --------------------------- #
 
   symengine:
