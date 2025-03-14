@@ -382,18 +382,19 @@ class MinMaxBase(Expr, LatticeOp):
         evaluate = assumptions.pop('evaluate', global_parameters.evaluate)
         args = (sympify(arg) for arg in args)
 
-        # first standard filter, for cls.zero and cls.identity
-        # also reshape Max(a, Max(b, c)) to Max(a, b, c)
+        # Always perform basic filtering and reshaping
+        try:
+            args = frozenset(cls._new_args_filter(args))
+        except ShortCircuit:
+            return cls.zero
 
+        # Always remove redundant args
+        args = cls._collapse_arguments(args, **assumptions)
+
+        # Only perform expensive _find_localzeros when evaluate=True
         if evaluate:
-            try:
-                args = frozenset(cls._new_args_filter(args))
-            except ShortCircuit:
-                return cls.zero
-            # remove redundant args that are easily identified
-            args = cls._collapse_arguments(args, **assumptions)
-            # find local zeros
             args = cls._find_localzeros(args, **assumptions)
+
         args = frozenset(args)
 
         if not args:
@@ -406,6 +407,7 @@ class MinMaxBase(Expr, LatticeOp):
         obj = Expr.__new__(cls, *ordered(args), **assumptions)
         obj._argset = args
         return obj
+
 
     @classmethod
     def _collapse_arguments(cls, args, **assumptions):
@@ -599,30 +601,43 @@ class MinMaxBase(Expr, LatticeOp):
         """
         Check if x and y are connected somehow.
         """
-        for i in range(2):
-            if x == y:
-                return True
-            t, f = Max, Min
-            for op in "><":
-                for j in range(2):
-                    try:
-                        if op == ">":
-                            v = x >= y
-                        else:
-                            v = x <= y
-                    except TypeError:
-                        return False  # non-real arg
-                    if not v.is_Relational:
-                        return t if v else f
-                    t, f = f, t
-                    x, y = y, x
-                x, y = y, x  # run next pass with reversed order relative to start
-            # simplification can be expensive, so be conservative
-            # in what is attempted
-            x = factor_terms(x - y)
-            y = S.Zero
+        def hit(v, t, f):
+            if not v.is_Relational:
+                return t if v else f
+            return None
+
+        # First check equality - fastest check
+        if x == y:
+            return True
+
+        # Check basic relations without duplicates
+        # Only check x >= y and x <= y (not both y <= x and y >= x)
+        r = hit(x >= y, Max, Min)
+        if r is not None:
+            return r
+
+        r = hit(x <= y, Min, Max)
+        if r is not None:
+            return r
+
+        # Only do expensive factor_terms operation if simpler checks fail
+        # and only do it once instead of in a loop
+        from sympy.core.exprtools import factor_terms
+        from sympy import S
+
+        x_minus_y = factor_terms(x - y)
+        y = S.Zero
+
+        r = hit(x_minus_y >= y, Max, Min)
+        if r is not None:
+            return r
+
+        r = hit(x_minus_y <= y, Min, Max)
+        if r is not None:
+            return r
 
         return False
+
 
     def _eval_derivative(self, s):
         # f(x).diff(s) -> x.diff(s) * f.fdiff(1)(s)
