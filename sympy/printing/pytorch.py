@@ -1,4 +1,3 @@
-from collections.abc import Iterable
 
 from sympy.printing.pycode import AbstractPythonCodePrinter, ArrayPrinter
 from sympy.matrices.expressions import MatrixExpr
@@ -124,7 +123,7 @@ class TorchPrinter(ArrayPrinter, AbstractPythonCodePrinter):
     def _print_Transpose(self, expr):
         if expr.arg.is_Matrix and expr.arg.shape[0] == expr.arg.shape[1]:
             # For square matrices, we can use the .t() method
-            return "{}({}).t()".format(self._print(expr.arg))
+            return "{}({}).t()".format("torch.transpose", self._print(expr.arg))
         else:
             # For non-square matrices or more general cases
             # transpose first and second dimensions (typical matrix transpose)
