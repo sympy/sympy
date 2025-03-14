@@ -172,6 +172,7 @@ def is_extended_nonnegative(obj, assumptions=None):
 _conditional = lambda func, null_value: lambda items: func(*(Piecewise((value, precondition), (null_value, S.true)) for value, precondition, is_strict in items))
 conditional_choice = lambda items: Or(*(And(is_strict, precondition) for value, precondition, is_strict in items))
 
+
 def _parse_assumption(symbol, conditional_function, relational_function):
     from sympy.core.relational import Relational
 
@@ -216,6 +217,7 @@ def _parse_assumption(symbol, conditional_function, relational_function):
             raise NotImplementedError
 
     return parse_assumption
+
 
 def assumptions_minimum(symbol, assumptions=set()):
     from .assume import global_assumptions
