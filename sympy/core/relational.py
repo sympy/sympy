@@ -377,7 +377,7 @@ class Relational(Boolean, EvalfMixin):
         if isinstance(other, Relational):
             if other in (self, self.reversed):
                 return True
-            a, b = self, other
+            a, b = self.simplify(), other.simplify()
             if a.func in (Eq, Ne) or b.func in (Eq, Ne):
                 if a.func != b.func:
                     return False
