@@ -4,13 +4,13 @@ from sympy.polys.puiseux import puiseux_ring
 from sympy.polys.ring_series import (_invert_monoms, rs_integrate,
     rs_trunc, rs_mul, rs_square, rs_pow, _has_constant_term, rs_hadamard_exp,
     rs_series_from_list, rs_exp, rs_log, rs_newton, rs_series_inversion,
-    rs_compose_add, rs_asin, rs_atan, rs_atanh, rs_tan, rs_cot, rs_sin, rs_cos,
-    rs_cos_sin, rs_sinh, rs_cosh, rs_tanh, _tan1, rs_fun, rs_nth_root,
+    rs_compose_add, rs_asin, rs_atan, rs_atanh, rs_asinh, rs_tan, rs_cot, rs_sin,
+    rs_cos, rs_cos_sin, rs_sinh, rs_cosh, rs_tanh, _tan1, rs_fun, rs_nth_root,
     rs_LambertW, rs_series_reversion, rs_is_puiseux, rs_series)
 from sympy.testing.pytest import raises, slow
 from sympy.core.symbol import symbols
 from sympy.functions import (sin, cos, exp, tan, cot, sinh, cosh, atan, atanh,
-    tanh, log, sqrt)
+    asinh, tanh, log, sqrt)
 from sympy.core.numbers import Rational, pi
 from sympy.core import expand, S
 
@@ -399,6 +399,25 @@ def test_atanh():
     p = x + x**2 + 5
     assert rs_atanh(p, x, 10).compose(x, 10) == EX(Rational(-733442653682135, 5079158784) \
         + atanh(5))
+
+def test_asinh():
+    R, x, y = ring('x, y', QQ)
+    assert rs_asinh(x, x, 9) == -5/112*x**7 + 3/40*x**5 - 1/6*x**3 + x
+    assert rs_asinh(x*y + x**2*y**3, x, 9) == 3/4*x**8*y**11 - 5/16*x**8*y**9 + \
+           3/4*x**7*y**9 - 5/112*x**7*y**7 - 1/6*x**6*y**9 + 3/8*x**6*y**7 - 1/2*x \
+           **5*y**7 + 3/40*x**5*y**5 - 1/2*x**4*y**5 - 1/6*x**3*y**3 + x**2*y**3 + x*y
+
+    # Constant term in series
+    a = symbols('a')
+    R, x, y = ring('x, y', EX)
+    assert rs_asinh(x + a, x, 3) == -EX(a/(2*a**2*sqrt(a**2 + 1) + 2*sqrt(a**2 + 1))) \
+        *x**2 + EX(1/sqrt(a**2 + 1))*x + EX(asinh(a))
+    assert rs_asinh(x + x**2*y + a, x, 3) == EX(1/sqrt(a**2 + 1))*x**2*y - EX(a/(2*a**2 \
+        *sqrt(a**2 + 1) + 2*sqrt(a**2 + 1)))*x**2 + EX(1/sqrt(a**2 + 1))*x + EX(asinh(a))
+
+    p = x + x ** 2 + 5
+    assert rs_asinh(p, x, 10).compose(x, 10) == EX(asinh(5) + 4643789843094995*sqrt(26)/\
+        205564141692)
 
 def test_sinh():
     R, x, y = ring('x, y', QQ)
