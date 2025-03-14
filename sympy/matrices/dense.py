@@ -831,13 +831,15 @@ def GramSchmidt(vlist, orthonormal=False):
     """
     from sympy.polys.matrices import DomainMatrix
     from sympy.sets.sets import FiniteSet
+    from sympy import simplify, radsimp, cancel
     if isinstance(vlist, FiniteSet):
         vlist = list(vlist)
     if not vlist:
         return []
     if len(vlist) == 1:
         if orthonormal:
-            return [vlist[0] / vlist[0].norm()]
+            norm = vlist[0].norm()
+            return [simplify(vlist[0] / norm) if norm != 0 else vlist[0]]
         return [vlist[0]]
     is_row_vector = vlist[0].shape[0] == 1
     if is_row_vector:
@@ -846,9 +848,12 @@ def GramSchmidt(vlist, orthonormal=False):
     A = A.to_field()
     Q, _ = A.qr()
     Q_matrix = Q.to_Matrix()
-    orthogonal_vectors = [Q_matrix.col(i) for i in range(Q_matrix.cols)]
+    orthogonal_vectors = [simplify(Q_matrix.col(i)) for i in range(Q_matrix.cols)]
     if orthonormal:
-        orthogonal_vectors = [v / v.norm() for v in orthogonal_vectors]
+        orthogonal_vectors = [
+            Matrix([radsimp(cancel(element / v.norm())) for element in v]) if v.norm() != 0 else v
+            for v in orthogonal_vectors
+        ]
     if is_row_vector:
         orthogonal_vectors = [v.transpose() for v in orthogonal_vectors]
     return orthogonal_vectors
