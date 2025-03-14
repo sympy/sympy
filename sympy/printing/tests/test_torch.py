@@ -14,14 +14,14 @@ from sympy.functions import \
     Abs, ceiling, exp, floor, sign, sin, asin, cos, \
     acos, tan, atan, atan2, cosh, acosh, sinh, asinh, tanh, atanh, \
     re, im, arg, erf, loggamma, sqrt
-from sympy.testing.pytest import skip, raises
+from sympy.testing.pytest import skip
 from sympy.external import import_module
 from sympy.matrices.expressions import \
     Determinant, HadamardProduct, Inverse, Trace
 from sympy.matrices import randMatrix
 from sympy.matrices import Identity, ZeroMatrix, OneMatrix
 from sympy import conjugate, I
-from sympy import Heaviside, gamma, digamma, loggamma, polygamma
+from sympy import Heaviside, gamma, polygamma
 
 
 
@@ -35,7 +35,7 @@ Q = MatrixSymbol("Q", 3, 3)
 x, y, z, t = symbols("x y z t")
 
 if torch is not None:
-    llo = [[j for j in range(i, i + 3)] for i in range(0, 9, 3)]
+    llo = [list(range(i, i + 3)) for i in range(0, 9, 3)]
     m3x3 = torch.tensor(llo, dtype=torch.float64)
     m3x3sympy = Matrix(llo)
 
@@ -46,7 +46,7 @@ def _compare_torch_matrix(variables, expr):
     random_matrices = [randMatrix(i.shape[0], i.shape[1]) for i in variables]
     random_variables = [torch.tensor(i.tolist(), dtype=torch.float64) for i in random_matrices]
     r = f(*random_variables)
-    e = expr.subs({k: v for k, v in zip(variables, random_matrices)}).doit()
+    e = expr.subs(dict(zip(variables, random_matrices))).doit()
 
     if isinstance(e, _CodegenArrayAbstract):
         e = e.doit()
@@ -72,7 +72,7 @@ def _compare_torch_scalar(variables, expr, rng=lambda: random.uniform(-5, 5)):
     r = f(*t_rvs)
     if isinstance(r, torch.Tensor):
         r = r.item()
-    e = float(expr.subs({k: v for k, v in zip(variables, rvs)}).evalf().doit())
+    e = expr.subs(dict(zip(variables, rvs))).doit()
     assert abs(r - e) < 1e-6
 
 
@@ -81,7 +81,7 @@ def _compare_torch_relational(variables, expr, rng=lambda: random.randint(0, 10)
     rvs = [rng() for v in variables]
     t_rvs = [torch.tensor(i, dtype=torch.float64) for i in rvs]
     r = f(*t_rvs)
-    e = bool(expr.subs({k: v for k, v in zip(variables, rvs)}).doit())
+    e = bool(expr.subs(dict(zip(variables, rvs))).doit())
     assert r.item() == e
 
 
@@ -530,6 +530,3 @@ def test_torch_special_functions():
 
     expr = gamma(sin(x))
     assert torch_code(expr) == "torch.special.gamma(torch.sin(x))"
-
-
-
