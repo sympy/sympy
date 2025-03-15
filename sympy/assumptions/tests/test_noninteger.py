@@ -34,7 +34,7 @@ def test_noninteger():
     assert ask(Q.noninteger(2.5 + 3)) == True
     assert ask(Q.noninteger(log(2))) == True
 
-    # ask() with both propositions and assumptions
+    # Applied predicates
     assert ask(Q.noninteger(x), Q.integer(x)) == False
     assert ask(Q.integer(x), Q.noninteger(x)) == False
     assert ask(Q.integer(x), Q.integer(x)) == True

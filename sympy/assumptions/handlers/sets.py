@@ -102,21 +102,13 @@ def _(expr, assumptions):
     return ask(Q.integer_elements(expr.args[0]), assumptions)
 
 
-# nonIntegerPredicate
-
-# class NonIntegerPredicate(Predicate):
-#     """
-#     Predicate to check if an expression is non-integer.
-#     """
-#     pass
-
 @NonIntegerPredicate.register(Integer)
 def _(expr, assumptions):
-    return False  # An integer is never a non-integer
+    return False  
 
 @NonIntegerPredicate.register(Float)
 def _(expr, assumptions):
-    return not expr.is_integer  # A float is generally non-integer unless it's an exact integer value
+    return not expr.is_integer  
 
 @NonIntegerPredicate.register(Rational)
 def _(expr, assumptions):
@@ -131,7 +123,6 @@ def _(expr, assumptions):
 
 @NonIntegerPredicate.register(Add)
 def _(expr, assumptions):
-    # Similar logic as RationalPredicate: Rational + Rational -> Rational
     if expr.is_number:
         return not expr.is_integer
     return test_closed_group(expr, assumptions, Q.noninteger)

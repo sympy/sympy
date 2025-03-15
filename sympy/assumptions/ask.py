@@ -468,38 +468,23 @@ def ask(proposition, assumptions=True, context=global_assumptions):
     if isinstance(assumptions, Predicate) or assumptions.kind is not BooleanKind:
         raise TypeError("assumptions must be a valid logical expression")
 
-    '''
-    for functions calling like ask(proposition, assumptions):
-        first make 'assumptions' = True and then check if 'propositions' is also True 
-        in that case if yes then return True otherwise return False
-    '''
-    # if isinstance(assumptions, AppliedPredicate):
-    #     var = assumptions.arguments[0]  # Extract variable from the assumption
-    #     assigned_value = None
+   
+    if isinstance(assumptions, AppliedPredicate):
+        var = assumptions.arguments[0]  
+        assigned_value = None
 
-    #     '''
-    #     if 'assumptions' = Q.integer(x):
-    #        assign x = integer
-    #     '''
-    #     if assumptions.function == Q.integer:  
-    #         assigned_value = Integer(1) # since 1 is an integer
+        if assumptions.function == Q.integer:  
+            assigned_value = Integer(1) 
 
-    #     '''
-    #     if 'assumptions' = Q.noninteger(x):
-    #        assign x = noninteger
-    #     ''' 
-    #     elif assumptions.function == Q.noninteger:
-    #         assigned_value = Rational(1, 2)  # 1/2 is a noninteger
+        elif assumptions.function == Q.noninteger:
+            assigned_value = Rational(1, 2)  
 
-    #     '''
-    #     next checking if propositions align with assumptions 
-    #     '''
-    #     if assigned_value is not None:
-    #         if isinstance(proposition, AppliedPredicate):
-    #             if proposition.function == Q.integer:
-    #                 return isinstance(assigned_value, Integer)
-    #             elif proposition.function == Q.noninteger:
-    #                 return not isinstance(assigned_value, Integer)
+        if assigned_value is not None:
+            if isinstance(proposition, AppliedPredicate):
+                if proposition.function == Q.integer:
+                    return isinstance(assigned_value, Integer)
+                elif proposition.function == Q.noninteger:
+                    return not isinstance(assigned_value, Integer)
 
     binrelpreds = {Eq: Q.eq, Ne: Q.ne, Gt: Q.gt, Lt: Q.lt, Ge: Q.ge, Le: Q.le}
     if isinstance(proposition, AppliedPredicate):
