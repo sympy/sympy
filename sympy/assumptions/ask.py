@@ -468,16 +468,15 @@ def ask(proposition, assumptions=True, context=global_assumptions):
     if isinstance(assumptions, Predicate) or assumptions.kind is not BooleanKind:
         raise TypeError("assumptions must be a valid logical expression")
 
-   
     if isinstance(assumptions, AppliedPredicate):
-        var = assumptions.arguments[0]  
+        var = assumptions.arguments[0]
         assigned_value = None
 
-        if assumptions.function == Q.integer:  
-            assigned_value = Integer(1) 
+        if assumptions.function == Q.integer:
+            assigned_value = Integer(1)
 
         elif assumptions.function == Q.noninteger:
-            assigned_value = Rational(1, 2)  
+            assigned_value = Rational(1, 2)
 
         if assigned_value is not None:
             if isinstance(proposition, AppliedPredicate):

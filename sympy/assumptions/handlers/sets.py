@@ -104,11 +104,11 @@ def _(expr, assumptions):
 
 @NonIntegerPredicate.register(Integer)
 def _(expr, assumptions):
-    return False  
+    return False
 
 @NonIntegerPredicate.register(Float)
 def _(expr, assumptions):
-    return not expr.is_integer  
+    return not expr.is_integer
 
 @NonIntegerPredicate.register(Rational)
 def _(expr, assumptions):
