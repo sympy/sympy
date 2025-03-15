@@ -469,7 +469,6 @@ def ask(proposition, assumptions=True, context=global_assumptions):
         raise TypeError("assumptions must be a valid logical expression")
 
     if isinstance(assumptions, AppliedPredicate):
-        var = assumptions.arguments[0]
         assigned_value = None
 
         if assumptions.function == Q.integer:
