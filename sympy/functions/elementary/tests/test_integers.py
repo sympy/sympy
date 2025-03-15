@@ -1,5 +1,5 @@
 from sympy.calculus.accumulationbounds import AccumBounds
-from sympy.core.numbers import (E, Float, I, Rational, nan, oo, pi, zoo)
+from sympy.core.numbers import (E, Float, I, Rational, Integer, nan, oo, pi, zoo)
 from sympy.core.relational import (Eq, Ge, Gt, Le, Lt, Ne)
 from sympy.core.singleton import S
 from sympy.core.symbol import (Symbol, symbols)
@@ -22,6 +22,7 @@ i = Symbol('i', imaginary=True)
 y = Symbol('y', real=True)
 k, n = symbols('k,n', integer=True)
 b = Symbol('b', real=True, noninteger=True)
+m = Symbol('m', positive=True)
 
 
 def test_floor():
@@ -58,6 +59,11 @@ def test_floor():
 
     assert floor(Float(7.69)) == 7
     assert floor(-Float(7.69)) == -8
+
+    assert floor(1/(m+1)) == S.Zero
+    assert floor((m+2)/(m+1)) == S.One
+    assert floor(-1/(m+1)) == S.NegativeOne
+    assert floor((m+2)/(-m-1)) == Integer(-2)
 
     assert floor(I) == I
     assert floor(-I) == -I
@@ -249,6 +255,11 @@ def test_ceiling():
 
     assert ceiling(Float(7.69)) == 8
     assert ceiling(-Float(7.69)) == -7
+
+    assert ceiling(1/(m+1)) == S.One
+    assert ceiling((m+2)/(m+1)) == Integer(2)
+    assert ceiling(-1/(m+1)) == S.Zero
+    assert ceiling((m+2)/(-m-1)) == S.NegativeOne
 
     assert ceiling(I) == I
     assert ceiling(-I) == -I
