@@ -4,10 +4,10 @@ from sympy.assumptions.facts import get_number_facts, get_composite_predicates
 from collections import defaultdict
 from sympy.core.cache import cacheit
 from sympy.assumptions import AppliedPredicate, Predicate
-
-from sympy.core.symbol import Symbol
-from sympy.strategies.core import switch
+from types import MappingProxyType
 from collections.abc import Iterable
+from functools import reduce
+from sympy.assumptions.cnf import Literal
 
 def _AppliedPredicate_to_Predicate(pred):
     if isinstance(pred, AppliedPredicate):
@@ -23,9 +23,6 @@ def _is_literal(expr):
     return isinstance(expr, Predicate) or (isinstance(expr.args[0], Predicate) and isinstance(expr, Not)), f"{expr} is not a literal"
 
 def _add_rule(rules_dict, antecedent, implicant, remove_var = True):
-
-
-
     if remove_var:
         antecedent = _AppliedPredicate_to_Predicate(antecedent)
         implicant = _AppliedPredicate_to_Predicate(implicant)
@@ -77,12 +74,23 @@ def _add_rule(rules_dict, antecedent, implicant, remove_var = True):
     if len([key for key in rules_dict.keys() if not isinstance(key, Iterable)]) > 0:
         assert len([key for key in rules_dict.keys() if not isinstance(key, Iterable)]) == 0
 
+from sympy.assumptions import Q
+# add additional rules:
+additional_rules = And(
+    Implies(Q.nonzero, ~Q.zero),
+    Implies(Q.nonpositive, ~Q.positive),
+    Implies(Q.nonnegative, ~Q.negative),
+    Implies(~Q.real, ~Q.nonzero),
+    Implies(~Q.real, ~Q.nonpositive),
+    Implies(~Q.real, ~Q.nonnegative),
+)
 #@cacheit
 def facts_to_dictionary(x = None):
 
     rules_dict = defaultdict(set)
 
-    facts = get_number_facts()
+    facts = And(get_number_facts(), additional_rules)
+
     for fact in list(facts.args):
         if isinstance(fact, Implies):
             _add_rule(rules_dict, fact.args[0], fact.args[1])
@@ -102,285 +110,119 @@ def facts_to_dictionary(x = None):
         # for subset in subsets.args:
         #     _add_rule(rules_dict, subset, superset)
 
-
-
-
     return rules_dict
+
+
+from collections import deque
+
+
+def transitive_closure(graph):
+    closure = {node: set(neighbors) for node, neighbors in graph.items()}
+
+    for start_node in graph:
+        visited = set()
+        queue = deque([start_node])
+
+        while queue:
+            node = queue.popleft()
+            if node in visited or len(node) > 1:
+                continue
+            visited.add(node)
+
+            for neighbor in graph.get(node, []):
+                if neighbor not in visited:
+                    queue.append((neighbor,))
+                    closure[start_node].add(neighbor)
+
+    return {node: set(neighbors) for node, neighbors in closure.items()}
 
 
 
 from sympy.assumptions.ask_generated import get_known_facts_dict
 
 rules_dict = facts_to_dictionary()
+rules_dict = transitive_closure(rules_dict)
+rules_dict = dict(sorted(rules_dict.items(), key=lambda item: str(item)))
 
-# bad_keys = [key for key in rules_dict.keys()
-#             if not(isinstance(key, Predicate) or isinstance(key[0], Predicate))]
-#assert len(bad_keys) == 0, bad_keys
+# dictionary of rules with only one antecedent
+# all literals imply themselves
+all_lits = set.union(*rules_dict.values(), {key[0] for key in rules_dict})
+direct_dict = defaultdict(set, {key[0]: val | {key[0]} for key, val in rules_dict.items() if len(key) == 1})
+for lit in all_lits:
+    direct_dict[lit].add(lit)
 
-# print(blah)
-#dic = get_known_facts_dict()
-from collections.abc import Iterable
+all_preds = [lit for lit in all_lits if not isinstance(lit, Not)]
+all_preds = sorted(all_preds, key=lambda pred: str(pred))
 
+# if we give more commonly used preds lower numbers, this will help
+pred_to_id = {all_preds[i] : i for i in range(len(all_preds))}
+def pred_to_id_neg_tup(pred):
+    if isinstance(pred, Not):
+        return -pred_to_id[pred.args[0]]#, True
+    else:
+        return pred_to_id[pred]#, False
 
-class RulesEngine:
-    def __init__(self, dictionary):
-        """Initialize the rules engine with a nested dictionary structure."""
-        self.rule_tree = {}
-        self.knowledge_base = {}
+id_to_pred = [pred for pred, _ in sorted(pred_to_id.items(), key=lambda x: x[1])]
+num_preds = len(all_preds)
 
-        for key, value in dictionary.items():
-            self.add_rule(key, value)
+id_direct_dict = {pred_to_id_neg_tup(pred) : {pred_to_id_neg_tup(im) for im in imps } for pred, imps in direct_dict.items()}
+id_rules_dict = {}
+for ante, imps in rules_dict.items():
+    id_rules_dict[tuple(pred_to_id_neg_tup(pred) for pred in ante)] = set(pred_to_id_neg_tup(imp) for imp in imps)
 
-        self.rules = self.rule_tree.copy()
-
-    def reset_state(self):
-        self.rules = self.rule_tree.copy()
-        self.knowledge_base = {}
-
-
-    def add_rule(self, conditions, consequence):
-        """
-        Add a rule to the rules engine.
-
-        :param conditions: A set of conditions (e.g., {"a", "b", "c", "d"})
-        :param consequence: The resulting fact (e.g., "e")
-        """
-        rule_tree = self.rule_tree
-
-        for condition in sorted(conditions, key=lambda x: str(x)):  # Sort to maintain consistency
-            rule_tree = rule_tree.setdefault(condition, {})
-        rule_tree["__result__"] = (consequence, conditions)   # Store the consequence
-
-    def add_fact(self, fact, source_facts):
-        """Add a fact to the knowledge base."""
-        self.knowledge_base[fact] = source_facts
-
-    def trigger(self, fact):
-        if fact not in self.rules or fact not in self.knowledge_base:
-            return False
-
-        if "__result__" in self.rules[fact]:
-            implicants, antecedents = self.rules[fact]["__result__"]
-            implicants = [imp for imp in implicants if imp not in self.knowledge_base]
-        else:
-            implicants, antecedents = [], []
-
-        pending_facts = set()
-        next = self.rules.pop(fact)
-        for rule_root in next:
-            if rule_root != "__result__":
-                self.rules.update({rule_root: next[rule_root]})
-                pending_facts.update(next[rule_root].keys())
-
-        return implicants, antecedents, pending_facts
-
-    # def traverse_rule_tree(self, rule_tree, current_facts):
-    #     """Recursively traverse the rule tree to check for matching conditions."""
-    #     if "__result__" in rule_tree:  # Consequence found
-    #         return rule_tree["__result__"]
-    #     for key, sub_tree in rule_tree.items():
-    #         if key in current_facts:  # Move deeper if condition exists
-    #             result = self.traverse_rule_tree(sub_tree, current_facts)
-    #             if result:
-    #                 return result
-    #     return None
-
-    def infer_facts(self):
-        """Infer new facts based on existing knowledge."""
-        new_facts = set()
+#id_rules_dict = { tuple(pred_to_id_neg_tup(pred) for pred in ante) : {pred_to_id_neg_tup(im) for im in imps} for ante, imps in rules_dict.items()}
 
 
-        # Traverse from each known fact
-        for fact in self.knowledge_base:
-            result = self.traverse_rule_tree(self.rules.get(fact, {}), self.knowledge_base)
-            if result and result not in self.knowledge_base:
-                new_facts.add(result)
-
-        # Update knowledge base
-        self.knowledge_base.update(new_facts)
-        return new_facts
-
-    def run_inference_until_stable(self):
-        """Keep running inference until no new facts are inferred."""
-        while True:
-            new_facts = self.infer_facts()
-            if not new_facts:
-                break
-
-    def __repr__(self):
-        """Return a string representation of the current knowledge base."""
-        return f"Knowledge Base: {self.knowledge_base}"
-
-rules_engine = RulesEngine(rules_dict)
-
-class FCSolver():
-    """
-    Theory solver for SymPy's unary facts
-    """
-    def __init__(self):
-        self.engine = RulesEngine(rules_dict)
-
-    def add_new_fact(self, new_fact, source_facts):
-        assert type(source_facts) == set
-        if ~new_fact in self.engine.knowledge_base:
-            # we have found a contradiciton: some literal and its negation are true
-            return False, source_facts | self.engine.knowledge_base[~new_fact]
-        self.engine.add_fact(new_fact, source_facts)
-        return True, None
-
-    def reset_state(self):
-        self.engine.reset_state()
-
-    def check_consistency(self, initial_literals):
-
-        for lit in initial_literals:
-            # initial facts are their own source facts.
-            res = self.add_new_fact(lit, {lit})
-            if res[0] is False:
-                return res
-
-        queue = initial_literals
-        while queue:
-            pending_facts = set()
-            for antecedent in queue:
-                res = self.engine.trigger(antecedent)
-                if not res:
-                    continue
-                new_facts, antecedents, new_pending_facts = res
-                source_facts = set.union(*[self.engine.knowledge_base[ant] for ant in antecedents], set())
-                for fact in new_facts:
-                    res = self.add_new_fact(fact, source_facts)
-                    if res[0] is False:
-                        return res
-                    pending_facts.add(fact)
-
-                pending_facts.update(new_pending_facts)
-
-            queue = pending_facts
-
-        return True, None
+# def pred_lit_set_to_bit_set(pred_lit_set):
+#     i = pred_lit_set_to_int(pred_lit_set)
+#     return BitSet(i)
 
 
 
+def pred_lit_set_to_int(pred_lit_set):
+    binary = []
+    for i in range(2*len(all_preds)):
+        neg = i >= len(all_preds)
+        lit = id_to_pred[i % len(all_preds)]
+        if neg:
+            lit = ~lit
+
+        in_set = (lit in pred_lit_set)*1
+        binary.append(str(in_set))
+
+    return int("".join(binary), 2)
+
+direct_dict_bitset = {}
+for lit in all_lits:
+    direct_imps_bitset = pred_lit_set_to_int(direct_dict[lit])
+    neg = False
+    if isinstance(lit, Not):
+        pred_id = pred_to_id[lit.args[0]]
+        lit = -pred_to_id[lit.args[0]]
+        neg = True
+    else:
+        pred_id = pred_to_id[lit]
+
+    direct_dict_bitset[(pred_id, neg)] = direct_imps_bitset
 
 
-# def check_consistency(initial_literals):
-#   """
-#   Parameters
-#   ==========
-#
-#   initial_literals (list): A list of initial literals (facts) to seed the knowledge base.
-#
-#   Returns
-#   =======
-#
-#   tuple:
-#       - (bool): `True` if the knowledge base is consistent, `False` if a contradiction is found.
-#       - (set or None): If inconsistent, a set of conflicting facts; otherwise, `None`.
-#   """
-#   # A dictionary keeping track of all of the literals known to be implied by
-#   # the initial list of literals. Each known literal is mapped to its "source
-#   # literals", a subset of `initial_literals` that implies that literal.
-#   knowledge_base = {}
-#   rules_engine = RulesEngine(rules_dict)
-#
-#   def add_new_fact(new_fact, source_facts):
-#     assert type(source_facts) == set
-#     if ~new_fact in rules_engine.knowledge_base:
-#       # we have found a contradiciton: some literal and its negation are true
-#       return False, source_facts | knowledge_base[~new_fact]
-#     rules_engine.add_fact(new_fact, source_facts)
-#     return True, None
-#
-#   for lit in initial_literals:
-#     # initial facts are their own source facts.
-#     res = add_new_fact(lit, {lit})
-#     if res[0] is False:
-#       return res
-#
-#   queue = initial_literals
-#   while queue:
-#     pending_facts = set()
-#     for antecedent in queue:
-#       print(f"Checking {antecedent}")
-#       if antecedent not in rules_dict:
-#         print(f"\t{antecedent} not in rules")
-#         continue
-#       for implicant in rules_dict[antecedent]:
-#         if implicant in knowledge_base:
-#           print(f"\t{antecedent} already known")
-#           continue
-#         print(f"\tDeriving {implicant} from {antecedent}")
-#         source_facts = knowledge_base[antecedent]
-#         new_fact = implicant
-#         res = add_new_fact(new_fact, source_facts)
-#         if res[0] is False:
-#           return res
-#         pending_facts.add(new_fact)
-#
-#     queue = pending_facts
-#
-#   return True, None
+pred_id_to_bitvec = [pred_lit_set_to_int({pred}) for pred in id_to_pred]
+pred_id_to_bitvec += [pred_lit_set_to_int({~pred}) for pred in id_to_pred]
+pred_id_neg_to_direct_implicants_bitset = direct_dict_bitset
+
+#pred_id_direct_dict = {pred_to_id[pred] : 2  for pred, implications in direct_dict.items()}
+
+# I want a mapping of pred number to an int representing the negated preds implied by it
+# I need to give negated preds a seperate number
+
+# I can create an int representing a signle pred or negated pred
+# then I can AND that with the int representing the current state.
+# If non-zero, then the pred is in the set.
+
+direct_dict = dict(direct_dict)
+direct_dict = MappingProxyType(direct_dict)
 
 
 
-from sympy import Q
-solver = FCSolver()
-assert solver.check_consistency([~Q.positive, Q.prime])[0] is False
-solver.reset_state()
-#solver = FCSolver()
-assert solver.check_consistency([~Q.positive])[0] is True
-# solver = FCSolver()
-solver.reset_state()
-assert solver.check_consistency([Q.integer, ~Q.odd, ~Q.even])[0] is False
-# solver = FCSolver()
-solver.reset_state()
-assert solver.check_consistency([Q.real, ~Q.rational, ~Q.irrational])[0] is False
-
-print("\n\n --- \n\n")
-
-from timeit import timeit
-
-def test():
-    global solver
-    solver.reset_state()
-    return solver.check_consistency([ Q.integer, ~Q.odd, ~Q.even])
-
-def test_empty():
-    global solver
-    solver.reset_state()
-    return solver.check_consistency([Q.integer])
-
-from sympy.assumptions import satask, Q
-from sympy.abc import x
-def test2():
-    satask.satask(Q.integer(x) & ~Q.odd(x) & ~Q.even(x))
-def test2_empty():
-    satask.satask(Q.integer(x))
-
-
-print(f"my algorithm: {timeit(test, number=1000)}")
-print(f"satask: {timeit(test2, number=1000)}")
-
-print(f"my algorithm on empty: {timeit(test_empty, number=1000)}")
-print(f"satask on empty: {timeit(test2_empty, number=1000)}")
-
-import copy
-
-r_engine = RulesEngine(rules_dict)
-
-#print(timeit(lambda: copy.deepcopy(r_engine), number=1000))
-
-#print(r_engine.rules)
-
-#RulesEngine(rules_dict)
-#print(solver.check_consistency([ Q.integer, ~Q.odd, ~Q.even]))
-
-#print(solver.check_consistency([ Q.real, ~Q.rational, ~Q.irrational]))
-
-# solver = FCSolver()
-# print(solver.check_consistency([~Q.positive, Q.real, ~Q.negative, ~Q.zero]))
-
-#print(check_consistency([~Q.positive, Q.real, ~Q.negative, ~Q.zero]))
-#print(check_consistency([Q.positive, ~Q.real]))
-
+# class RuleTree:
+#     def __init__(self, rules):
