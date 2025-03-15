@@ -227,8 +227,6 @@ def assumptions_minimum(symbol, assumptions=set()):
     from sympy.core.symbol import Symbol
     from sympy.functions import Max
 
-    import itertools
-
     if not isinstance(symbol, Symbol):
         raise ValueError("Input must be a symbol, use calculus.util.minimum() for expressions")
 
