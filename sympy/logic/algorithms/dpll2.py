@@ -103,6 +103,7 @@ class SATSolver:
         self.heuristic = heuristic
         self.is_unsatisfied = False
         self._unit_prop_queue = []
+        self._theory_prop_queue = []
         self.update_functions = []
         self.INTERVAL = INTERVAL
 
@@ -365,7 +366,7 @@ class SATSolver:
         """
         return cls in self.sentinels[lit]
 
-    def _assign_literal(self, lit, called_from_unit_prop=False):
+    def _assign_literal(self, lit, called_from_unit_prop=False, called_from_theory_prop=False):
         """Make a literal assignment.
 
         The literal assignment must be recorded as part of the current
@@ -397,11 +398,18 @@ class SATSolver:
 
         """
 
-        #print(f"{lit} assigned in _assign_literal.")
         if self.fc:
-        #    print(f"Calling assert_lit on {lit}.")
+            # If current level fc state is undefined, set equal to previous level's state
             if self._current_level.fc_state is None:
                 self._current_level.fc_state = self.levels[-2].fc_state.copy()
+
+            if not called_from_theory_prop and not called_from_unit_prop:
+                theory_prop = self.fc.theory_prop(lit)
+                if self.fc.print_vars:
+                    self.fc._unecode_literals(theory_prop)
+                    print(f"From {self.fc._unecode_literals([lit])} propagate {self.fc._unecode_literals(theory_prop)}")
+                self._theory_prop_queue.extend(theory_prop)
+
             res = self.fc.assert_lit(lit, self._current_level.fc_state, force_assertion=not called_from_unit_prop)
             if not res[0]:
                 self._simple_add_learned_clause(res[1])
@@ -503,6 +511,8 @@ class SATSolver:
             changed = False
             changed |= self._unit_prop()
             changed |= self._pure_literal()
+            if self.fc and self.fc.theory_prop_enabled:
+                changed |= self._theory_prop()
 
     def _unit_prop(self):
         """Perform unit propagation on the current theory."""
@@ -519,6 +529,25 @@ class SATSolver:
                 if conflict:
                     self.is_unsatisfied = True
                     self._unit_prop_queue = []
+                    return False
+
+
+
+        return result
+
+    def _theory_prop(self):
+        result = len(self._theory_prop_queue) > 0
+        while self._theory_prop_queue:
+            next_lit = self._theory_prop_queue.pop()
+            if -next_lit in self.var_settings:
+                self.is_unsatisfied = True
+                self._theory_prop_queue = []
+                return False
+            else:
+                conflict = self._assign_literal(next_lit, called_from_theory_prop=True)
+                if conflict:
+                    self.is_unsatisfied = True
+                    self._theory_prop_queue = []
                     return False
 
 

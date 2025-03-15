@@ -428,6 +428,12 @@ class FCSolver():
         self.engine.reset_state()
         self.enc_to_decomposed_pred = None
         self.expr_count = 0
+        self.print_vars = False
+        self.theory_prop_enabled = False
+
+        # expr_id to set of unassigned (inactive) variables
+        self.unassigned_variables = defaultdict(set)
+
         if pred_to_enc is not None:
             self.enc_to_decomposed_pred = {}
             expr_to_id = {}
@@ -440,14 +446,15 @@ class FCSolver():
                     self.expr_count += 1
                 assert neg is False
                 pred_id = self.predicate_to_pred_id(pred)
-                self.enc_to_decomposed_pred[enc] = expr_to_id[expr], pred_id, neg
+                expr_id = expr_to_id[expr]
+                self.enc_to_decomposed_pred[enc] = expr_id, pred_id, neg
+                self.unassigned_variables[expr_id].add(enc)
 
         self.pred_to_enc = pred_to_enc
         #self.enc_to_pred = {v: k for k, v in pred_to_enc.items()} if pred_to_enc else None
 
-
-        self.active_literals = {expr_id: set() for expr_id in range(self.expr_count)} # dictionary from expr_id to set of active literals associated with expr
-
+        # dictionary from expr_id to set of active literals associated with expr
+        self.active_literals = {expr_id: set() for expr_id in range(self.expr_count)}
 
         self.testing_mode = testing_mode
         self.conflict = False
@@ -488,6 +495,14 @@ class FCSolver():
         neg = literal < 0
         return expr_id, pred_id, neg
 
+    def literal_to_expr_id(self, literal):
+        expr_id, _, _ = self.enc_to_decomposed_pred[abs(literal)]
+        return expr_id
+
+    def literal_to_pred_id(self, literal):
+        _, pred_id, _ = self.enc_to_decomposed_pred[abs(literal)]
+        return pred_id
+
 
     def predicate_to_pred_id(self, pred):
         return pred_to_id[pred]
@@ -502,20 +517,25 @@ class FCSolver():
         if state[expr_id] is None:
             state[expr_id] = 0
             for active_literal in self.active_literals[expr_id]:
-                state[expr_id] |= self.get_direct_implicants_bitset(active_literal)
-        state[expr_id] |= self.get_direct_implicants_bitset(new_literal)
+                state[expr_id] |= self.get_direct_implicants_bitset_from_literal(active_literal)
+        state[expr_id] |= self.get_direct_implicants_bitset_from_literal(new_literal)
         self.active_literals[expr_id].add(new_literal)
+        self.unassigned_variables[expr_id].discard(abs(new_literal))
 
     def deactivate_literal(self, literal, state):
         expr_id, _, _ = self.decompose_literal(literal)
         self.active_literals[expr_id].remove(literal)
         state[expr_id] = None
+        self.unassigned_variables[expr_id].add(abs(literal))
 
     def to_bitvector(self, pred_id, neg):
         return pred_id_to_bitvec[pred_id + neg*len(id_to_pred)]
 
-    def get_direct_implicants_bitset(self, literal):
-        expr_id, pred_id, neg = self.decompose_literal(literal)
+    def get_direct_implicants_bitset_from_literal(self, literal):
+        _, pred_id, neg = self.decompose_literal(literal)
+        return self.get_direct_implicants_bitset(pred_id, neg)
+
+    def get_direct_implicants_bitset(self, pred_id, neg):
         return pred_id_neg_to_direct_implicants_bitset[(pred_id, neg)]
 
 
@@ -533,7 +553,7 @@ class FCSolver():
         negated_pred_bv = self.to_bitvector(new_pred_id, not new_neg)
 
         for active_lit in self.active_literals[new_expr_id]:
-            bitset = self.get_direct_implicants_bitset(active_lit)
+            bitset = self.get_direct_implicants_bitset_from_literal(active_lit)
             if bitset & negated_pred_bv:
                 return active_lit
 
@@ -601,6 +621,45 @@ class FCSolver():
                 return res
         return res
 
+    def theory_prop(self, new_lit):
+        if not self.theory_prop_enabled:
+            return []
+        if not self.lit_in_theory(new_lit):
+            return []
+
+        #expr_id, pred_id, neg = self.decompose_literal(new_lit)
+        expr_id = self.literal_to_expr_id(new_lit)
+
+        if self.print_vars:
+            new_pred = ~id_to_pred[pred_id] if neg else id_to_pred[pred_id]
+
+        implicants = []
+        direct_implicants_set = self.get_direct_implicants_bitset_from_literal(new_lit)
+        for unassigned_variable in self.unassigned_variables[expr_id]:
+            if not self.lit_in_theory(unassigned_variable):
+                continue
+
+            uv_pred_id = self.literal_to_pred_id(unassigned_variable)
+            #print(cur_pred)
+
+            # Try positive polarity first, then negative if needed
+            for polarity in (False, True):
+                literal_bitvec = self.to_bitvector(uv_pred_id, polarity)
+                if literal_bitvec & direct_implicants_set:
+                    imp = -unassigned_variable if polarity else unassigned_variable
+                    implicants.append(imp)
+                    break
+
+
+        return implicants
+
+
+
+
+
+        # For all unassigned literals that have the same expr id:
+        # Check if their negation is in the set of direct implicants of new lit/
+
     def check(self, initial_literals, pre_encoded=True):
         assert len(initial_literals) > 0
 
@@ -652,5 +711,17 @@ class FCSolver():
             queue = pending_facts
 
         return True, None
+
+    def _unecode_literals(self, literals):
+        ret = []
+        for lit in literals:
+            if not self.lit_in_theory(lit):
+                continue
+            expr_id, pred_id, neg = self.decompose_literal(lit)
+
+            new_pred = ~id_to_pred[pred_id] if neg else id_to_pred[pred_id]
+            ret.append(new_pred)
+        return ret
+
 
 
