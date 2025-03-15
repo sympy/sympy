@@ -4,7 +4,7 @@ import math
 from sympy.core.random import _randint
 from sympy.ntheory import qs, qs_factor
 from sympy.ntheory.qs import SievePolynomial, _generate_factor_base, \
-    _initialize_first_polynomial, _initialize_ith_poly, \
+    _generate_polynomial, \
     _gen_sieve_array, _check_smoothness, _trial_division_stage, _find_factor
 from sympy.testing.pytest import slow
 
@@ -36,11 +36,11 @@ def test_qs_2() -> None:
     assert [factor_base[i].log_p for i in range(5)] == \
         [710, 1125, 1993, 2455, 2901]
 
-    g, B = _initialize_first_polynomial(
+    it = _generate_polynomial(
         n, M, factor_base, idx_1000, idx_5000, _randint(0))
+    g = next(it)
     assert g.a == 1133107
     assert g.b == 682543
-    assert B == [272889, 409654]
     assert [factor_base[i].soln1 for i in range(15)] == \
         [0, 0, 3, 7, 13, 0, 8, 19, 9, 43, 27, 25, 63, 29, 19]
     assert [factor_base[i].soln2 for i in range(15)] == \
@@ -48,7 +48,7 @@ def test_qs_2() -> None:
     assert [factor_base[i].b_ainv for i in range(5)] == \
         [[0, 0], [0, 2], [3, 0], [3, 9], [13, 13]]
 
-    g_1 = _initialize_ith_poly(n, factor_base, 1, g, B)
+    g_1 = next(it)
     assert g_1.a == 1133107
     assert g_1.b == 136765
 
