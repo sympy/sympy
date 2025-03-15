@@ -24,7 +24,7 @@ from sympy.matrices import Matrix, SparseMatrix
 from sympy.testing.pytest import (XFAIL, slow, raises, warns_deprecated_sympy,
     _both_exp_pow)
 import math
-from sympy import symbols, Q, ask, Rational, Float, pi, E, I, oo, log
+from sympy import Q, ask, Float, E
 
 
 def test_int_1():
