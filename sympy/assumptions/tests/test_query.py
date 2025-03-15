@@ -24,6 +24,7 @@ from sympy.matrices import Matrix, SparseMatrix
 from sympy.testing.pytest import (XFAIL, slow, raises, warns_deprecated_sympy,
     _both_exp_pow)
 import math
+from sympy import symbols, Q, ask, Rational, Float, pi, E, I, oo, log
 
 
 def test_int_1():
@@ -2521,3 +2522,35 @@ def test_issue_25221():
     assert ask(Q.transcendental(x), Q.algebraic(x) | Q.positive(y,y)) is None
     assert ask(Q.transcendental(x), Q.algebraic(x) | (0 > y)) is None
     assert ask(Q.transcendental(x), Q.algebraic(x) | Q.gt(0,y)) is None
+
+def test_noninteger():
+    x = symbols('x')
+    y = symbols('y', rational=True)
+    z = symbols('z')
+
+    assert ask(Q.noninteger(5)) is False
+    assert ask(Q.noninteger(-3)) is False
+    assert ask(Q.noninteger(0)) is False
+
+    assert ask(Q.noninteger(5.5)) is True
+    assert ask(Q.noninteger(Float(5.5))) is True
+    assert ask(Q.noninteger(Rational(11, 2))) is True
+    assert ask(Q.noninteger(Rational(4, 2))) is False
+
+    assert ask(Q.noninteger(pi)) is True
+    assert ask(Q.noninteger(E)) is True
+
+    assert ask(Q.noninteger(I)) is True
+    assert ask(Q.noninteger(1 + I)) is True
+
+    assert ask(Q.noninteger(oo)) is True
+    assert ask(Q.noninteger(-oo)) is True
+
+    assert ask(Q.noninteger(2 + 3)) is False
+    assert ask(Q.noninteger(2.5 + 3)) is True
+    assert ask(Q.noninteger(log(2))) is True
+
+    assert ask(Q.noninteger(x), Q.integer(x)) is False
+    assert ask(Q.integer(x), Q.noninteger(x)) is False
+    assert ask(Q.integer(x), Q.integer(x)) is True
+    assert ask(Q.noninteger(x), Q.noninteger(x)) is True
