@@ -2525,7 +2525,6 @@ def test_issue_25221():
 
 def test_noninteger():
     x = symbols('x')
-    y = symbols('y', rational=True)
 
     assert ask(Q.noninteger(5)) is False
     assert ask(Q.noninteger(-3)) is False
