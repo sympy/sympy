@@ -332,7 +332,7 @@ def get_all_relevant_facts(proposition, assumptions, context,
         if not exprs:
             break
 
-    if use_known_facts:
+    if False:
         known_facts_CNF = CNF()
 
         if any(expr.kind == MatrixKind(NumberKind) for expr in all_exprs):
