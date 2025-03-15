@@ -19,7 +19,7 @@ from sympy.matrices.expressions.matexpr import MatrixElement
 from sympy.multipledispatch import MDNotImplementedError
 
 from .common import test_closed_group
-from ..predicates.sets import (IntegerPredicate, RationalPredicate,
+from ..predicates.sets import (IntegerPredicate, NonIntegerPredicate, RationalPredicate,
     IrrationalPredicate, RealPredicate, ExtendedRealPredicate,
     HermitianPredicate, ComplexPredicate, ImaginaryPredicate,
     AntihermitianPredicate, AlgebraicPredicate)
@@ -100,6 +100,53 @@ def _(expr, assumptions):
 @IntegerPredicate.register_many(Determinant, MatrixElement, Trace)
 def _(expr, assumptions):
     return ask(Q.integer_elements(expr.args[0]), assumptions)
+
+
+# nonIntegerPredicate
+
+# class NonIntegerPredicate(Predicate):
+#     """
+#     Predicate to check if an expression is non-integer.
+#     """
+#     pass
+
+@NonIntegerPredicate.register(Integer)
+def _(expr, assumptions):
+    return False  # An integer is never a non-integer
+
+@NonIntegerPredicate.register(Float)
+def _(expr, assumptions):
+    return not expr.is_integer  # A float is generally non-integer unless it's an exact integer value
+
+@NonIntegerPredicate.register(Rational)
+def _(expr, assumptions):
+    return not expr.is_integer
+
+@NonIntegerPredicate.register(Expr)
+def _(expr, assumptions):
+    ret = expr.is_noninteger
+    if ret is None:
+        raise MDNotImplementedError
+    return ret
+
+@NonIntegerPredicate.register(Add)
+def _(expr, assumptions):
+    # Similar logic as RationalPredicate: Rational + Rational -> Rational
+    if expr.is_number:
+        return not expr.is_integer
+    return test_closed_group(expr, assumptions, Q.noninteger)
+
+@NonIntegerPredicate.register(Pow)
+def _(expr, assumptions):
+    if expr.base == E:
+        x = expr.exp
+        if ask(Q.rational(x), assumptions):
+            return ask(~Q.zero(x), assumptions)
+    return not ask(Q.integer(expr), assumptions)
+
+@NonIntegerPredicate.register(ImaginaryUnit)
+def _(expr, assumptions):
+    return True
 
 
 # RationalPredicate
