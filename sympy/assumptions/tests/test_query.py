@@ -27,7 +27,6 @@ import math
 from sympy import Float, E, GoldenRatio, TribonacciConstant
 from sympy.matrices.expressions import MatrixSymbol, Determinant, Trace
 from sympy.matrices.expressions.matexpr import MatrixElement
-from sympy import Matrix
 
 
 def test_int_1():
