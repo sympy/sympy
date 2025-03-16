@@ -9,7 +9,7 @@ from sympy.assumptions.handlers import AskHandler
 from sympy.assumptions.ask_generated import (get_all_known_facts,
     get_known_facts_dict)
 from sympy.core.add import Add
-from sympy.core.numbers import (I, Integer, Rational, oo, zoo, pi)
+from sympy.core.numbers import (I,Integer, Rational, oo, zoo, pi)
 from sympy.core.singleton import S
 from sympy.core.power import Pow
 from sympy.core.symbol import Str, symbols, Symbol
@@ -25,7 +25,9 @@ from sympy.testing.pytest import (XFAIL, slow, raises, warns_deprecated_sympy,
     _both_exp_pow)
 import math
 from sympy import Float, E, GoldenRatio, TribonacciConstant
-from sympy.matrices.expressions import MatrixSymbol, Determinant, Trace, MatrixElement
+from sympy.matrices.expressions import MatrixSymbol, Determinant, Trace
+from sympy.matrices.expressions.matexpr import MatrixElement
+from sympy import Matrix
 
 
 def test_int_1():
@@ -2524,7 +2526,6 @@ def test_issue_25221():
     assert ask(Q.transcendental(x), Q.algebraic(x) | (0 > y)) is None
     assert ask(Q.transcendental(x), Q.algebraic(x) | Q.gt(0,y)) is None
 
-x = symbols('x')
 A = MatrixSymbol('A', 2, 2)
 
 def test_basic_noninteger():
