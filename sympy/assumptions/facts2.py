@@ -223,6 +223,24 @@ direct_dict = dict(direct_dict)
 direct_dict = MappingProxyType(direct_dict)
 
 
+# direct implication count by pred and negated pred
+
+implication_counts_by_lit = {}
+#should_pred_start_negated = {}
+for lit, bitset in direct_dict_bitset.items():
+    pred_id, neg = lit
+    count = bin(bitset).count('1')
+    implication_counts_by_lit[lit] = count
+
+
+
+
+# Code to get the most powerful assumptions
+# sorted([ ((id_to_pred[lit[0]],lit[1] ), count) for lit, count in implication_counts_by_lit.items()], key=lambda item: item[1], reverse=True)
+
+
+
+
 
 # class RuleTree:
 #     def __init__(self, rules):

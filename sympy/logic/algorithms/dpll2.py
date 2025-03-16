@@ -107,6 +107,10 @@ class SATSolver:
         self.update_functions = []
         self.INTERVAL = INTERVAL
 
+        self.fc = None
+        if fc_theory:
+            self.fc, _ = fc_theory
+
         if symbols is None:
             self.symbols = list(ordered(variables))
         else:
@@ -148,9 +152,8 @@ class SATSolver:
         self.original_num_clauses = len(self.clauses)
 
         self.lra = lra_theory
-        self.fc = None
         if fc_theory:
-            self.fc, fc_state = fc_theory
+            _, fc_state = fc_theory
             self._current_level.fc_state = fc_state
 
     def _initialize_variables(self, variables):
@@ -580,8 +583,13 @@ class SATSolver:
         self.lit_scores = {}
 
         for var in range(1, len(self.variable_set)):
-            self.lit_scores[var] = float(-self.occurrence_count[var])
-            self.lit_scores[-var] = float(-self.occurrence_count[-var])
+            if self.fc:
+                pos_mult, neg_mult = self.fc.get_heuristic_multipliers(var)
+                self.lit_scores[var] = float(-self.occurrence_count[var])*pos_mult
+                self.lit_scores[-var] = float(-self.occurrence_count[-var])*neg_mult
+            else:
+                self.lit_scores[var] = float(-self.occurrence_count[var])
+                self.lit_scores[-var] = float(-self.occurrence_count[-var])
             heappush(self.lit_heap, (self.lit_scores[var], var))
             heappush(self.lit_heap, (self.lit_scores[-var], -var))
 

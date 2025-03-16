@@ -11,7 +11,8 @@ from sympy.assumptions.cnf import Literal
 from sympy.logic.algorithms.rules_engine import RulesEngine
 from sympy.assumptions.facts2 import (id_rules_dict, rules_dict, id_direct_dict,
                                       id_to_pred, direct_dict, pred_to_id, pred_id_to_bitvec,
-                                      pred_id_neg_to_direct_implicants_bitset)
+                                      pred_id_neg_to_direct_implicants_bitset,
+                                      implication_counts_by_lit)
 
 
 rules_engine = RulesEngine(id_rules_dict, direct_dict)
@@ -335,6 +336,19 @@ class FCSolver():
 
             ret.append(new_pred)
         return ret
+
+    def get_heuristic_multipliers(self, variable):
+        if not self.lit_in_theory(variable):
+            return 1, 1
+        expr_id, pred_id, _ = self.enc_to_decomposed_pred[variable]
+        positive_weighting = implication_counts_by_lit[(pred_id, False)]#*len(self.unassigned_variables[expr_id])
+        negative_weighting = implication_counts_by_lit[(pred_id, True)]#*len(self.unassigned_variables[expr_id])
+        return positive_weighting, negative_weighting
+
+    # def starts_negated(self, variable):
+    #     pred_id = self.literal_to_pred_id(variable)
+    #     return should_pred_start_negated[pred_id]
+
 
 
 
