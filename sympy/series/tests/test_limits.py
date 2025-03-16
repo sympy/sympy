@@ -954,7 +954,7 @@ def test_issue_10978():
     assert LambertW(x).limit(x, 0) == 0
 
 
-@XFAIL
+@XFAIL # issue 27773
 def test_issue_14313_comment():
     assert limit(floor(n/2), n, oo) is oo
 
