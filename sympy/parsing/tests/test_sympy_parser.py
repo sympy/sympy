@@ -385,4 +385,3 @@ def test_evaluate_false_matrix():
     expr_str = "Matrix([1, 2]) + Matrix([1, 2])"
     parsed_expr = parse_expr(expr_str, evaluate=False)
     assert str(parsed_expr) == "Matrix([1, 2]) + Matrix([1, 2])"
-
