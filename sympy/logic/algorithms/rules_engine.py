@@ -2,11 +2,12 @@ from collections.abc import Iterable
 from sympy.assumptions.facts2 import id_to_pred
 
 class RulesEngine:
-    def __init__(self, full_rules, direct_implications):
+    def __init__(self, full_rules, direct_implications, testing_mode=False):
         """Initialize the rules engine with a nested dictionary structure."""
         self.rule_tree = {}
         self.knowledge_base = {}
         self.encoded_literal_to_pred = {}
+        self.testing_mode = testing_mode
 
         for key, value in full_rules.items():
             self.add_rule(key, value)
@@ -126,10 +127,35 @@ class RulesEngine:
         ret = []
         for lit in literals:
             pred_id, neg = self.encoded_literal_to_pred[lit]
-            new_pred = ~id_to_pred[pred_id]if neg else id_to_pred[pred_id]
+            new_pred = ~id_to_pred[pred_id] if neg else id_to_pred[pred_id]
             ret.append(new_pred)
         return ret
 
     def __repr__(self):
         """Return a string representation of the current knowledge base."""
         return f"Knowledge Base: {self.knowledge_base}"
+
+    def check(self, fc_lit_to_source_lits):
+
+        queue = fc_lit_to_source_lits
+        self.reset_state()
+        self.add_facts(fc_lit_to_source_lits)
+
+        while queue:
+            pending_facts = set()
+            for antecedent in queue:
+                res = self.trigger(antecedent)
+                if not res:
+                    continue
+                results, source_facts, new_pending_facts = res
+
+                if results[0] is False:
+                    if self.testing_mode:
+                        results = False, [self._to_pred(lit) for lit in results[1]]
+                    return results
+
+                pending_facts.update(new_pending_facts)
+
+            queue = pending_facts
+
+        return True, None

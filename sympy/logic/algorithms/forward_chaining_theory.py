@@ -289,7 +289,7 @@ class FCSolver():
 
         for expr_id, fc_lits in expr_id_to_fc_literal.items():
             fc_lits = reduce(lambda a, b: {**a, **b}, fc_lits)
-            res = self._check_assignment(fc_lits)
+            res = self.engine.check(fc_lits)
             if res[0] is False:
                 if self.print_vars:
                     print(f"Found conflict caused by: {self._unecode_literals(res[1])}")
@@ -298,31 +298,6 @@ class FCSolver():
 
         return True, None
 
-
-    def _check_assignment(self, fc_lit_to_source_lits):
-
-        queue = fc_lit_to_source_lits
-        self.engine.reset_state()
-        self.engine.add_facts(fc_lit_to_source_lits)
-
-        while queue:
-            pending_facts = set()
-            for antecedent in queue:
-                res = self.engine.trigger(antecedent)
-                if not res:
-                    continue
-                results, source_facts, new_pending_facts = res
-
-                if results[0] is False:
-                    if self.testing_mode:
-                        results = False, [self.engine._to_pred(lit) for lit in results[1]]
-                    return results
-
-                pending_facts.update(new_pending_facts)
-
-            queue = pending_facts
-
-        return True, None
 
     def _unecode_literals(self, literals):
         ret = []
