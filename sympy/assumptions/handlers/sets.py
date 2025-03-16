@@ -23,6 +23,7 @@ from ..predicates.sets import (IntegerPredicate, NonIntegerPredicate, RationalPr
     IrrationalPredicate, RealPredicate, ExtendedRealPredicate,
     HermitianPredicate, ComplexPredicate, ImaginaryPredicate,
     AntihermitianPredicate, AlgebraicPredicate)
+from sympy import Symbol
 
 
 # IntegerPredicate
@@ -101,44 +102,104 @@ def _(expr, assumptions):
 def _(expr, assumptions):
     return ask(Q.integer_elements(expr.args[0]), assumptions)
 
+# Noninteger Predicates
 
-@NonIntegerPredicate.register(Integer)
-def _(expr, assumptions):
-    return False
+def _NonIntegerPredicate_number(expr, assumptions):
+    # Helper function
+    try:
+        i = int(expr.round())
+        if not (expr - i).equals(0):
+            return True
+        return False
+    except (TypeError, ValueError):
+        return True
 
-@NonIntegerPredicate.register(Float)
-def _(expr, assumptions):
-    return not expr.is_integer
-
-@NonIntegerPredicate.register(Rational)
-def _(expr, assumptions):
-    return not expr.is_integer
-
-@NonIntegerPredicate.register(Expr)
-def _(expr, assumptions):
-    ret = expr.is_noninteger
-    if ret is None:
-        raise MDNotImplementedError
-    return ret
-
-@NonIntegerPredicate.register(Add)
-def _(expr, assumptions):
-    if expr.is_number:
-        return not expr.is_integer
-    return test_closed_group(expr, assumptions, Q.noninteger)
-
-@NonIntegerPredicate.register(Pow)
-def _(expr, assumptions):
-    if expr.base == E:
-        x = expr.exp
-        if ask(Q.rational(x), assumptions):
-            return ask(~Q.zero(x), assumptions)
-    return not ask(Q.integer(expr), assumptions)
-
-@NonIntegerPredicate.register(ImaginaryUnit)
+@NonIntegerPredicate.register_many(Exp1, GoldenRatio, ImaginaryUnit, Pi,
+                                    Rational, TribonacciConstant)
 def _(expr, assumptions):
     return True
 
+@NonIntegerPredicate.register_many(int, Integer)
+def _(expr, assumptions):
+    return False
+
+@NonIntegerPredicate.register(Symbol)
+def _(expr, assumptions):
+    if ask(Q.irrational(expr), assumptions):
+        return True
+    if ask(Q.integer(expr), assumptions):
+        return False
+    return None
+
+@NonIntegerPredicate.register(Expr)
+def _(expr, assumptions):
+    ret = expr.is_integer
+    if ret is None:
+        raise MDNotImplementedError
+    return not ret
+
+@NonIntegerPredicate.register(Float)
+def _(expr, assumptions):
+    if isinstance(expr, Float):
+        if expr.equals(int(expr)):
+            return False
+        return True
+    return None
+
+@NonIntegerPredicate.register_many(Add, Pow)
+def _(expr, assumptions):
+    if expr.is_number:
+        return _NonIntegerPredicate_number(expr, assumptions)
+
+    if isinstance(expr, Add):
+        terms = expr.as_ordered_terms()
+        if all(ask(Q.integer(term), assumptions) for term in terms):
+            return False
+        if any(ask(Q.noninteger(term), assumptions) for term in terms):
+            return True
+        if any(term.is_rational and not term.is_integer for term in terms):
+            return True
+
+    if isinstance(expr, Pow):
+        base, exp = expr.as_base_exp()
+        if ask(Q.integer(base), assumptions) and ask(Q.integer(exp), assumptions):
+            return False
+        return True
+    return test_closed_group(expr, assumptions, Q.noninteger)
+
+
+@NonIntegerPredicate.register(Mul)
+def _(expr, assumptions):
+    if expr.is_number:
+        return _NonIntegerPredicate_number(expr, assumptions)
+
+    _output = False
+    for arg in expr.args:
+        if ask(Q.integer(arg), assumptions):
+            continue
+        if ask(Q.irrational(arg), assumptions):
+            return True
+        if arg.is_Rational:
+            if arg.q == 2:
+                return not ask(Q.even(2 * expr), assumptions)
+            if ~(arg.q & 1):
+                return None
+        _output = True
+    return _output
+
+@NonIntegerPredicate.register(Abs)
+def _(expr, assumptions):
+    if ask(Q.integer(expr.args[0]), assumptions):
+        return False
+    return True
+
+@NonIntegerPredicate.register_many(Determinant, MatrixElement, Trace)
+def _(expr, assumptions):
+    if isinstance(expr, Matrix):
+        return None
+    elif ask(Q.extended_real(expr), assumptions) is not True:
+        return None
+    return not ask(Q.integer_elements(expr.args[0]), assumptions)
 
 # RationalPredicate
 

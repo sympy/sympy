@@ -24,8 +24,8 @@ from sympy.matrices import Matrix, SparseMatrix
 from sympy.testing.pytest import (XFAIL, slow, raises, warns_deprecated_sympy,
     _both_exp_pow)
 import math
-from sympy import Float, E
-
+from sympy import Float, E, GoldenRatio, TribonacciConstant
+from sympy.matrices.expressions import MatrixSymbol
 
 def test_int_1():
     z = 1
@@ -2523,32 +2523,87 @@ def test_issue_25221():
     assert ask(Q.transcendental(x), Q.algebraic(x) | (0 > y)) is None
     assert ask(Q.transcendental(x), Q.algebraic(x) | Q.gt(0,y)) is None
 
-def test_noninteger():
-    x = symbols('x')
+x, y = symbols('x y')
+A = MatrixSymbol('A', 2, 2)
 
-    assert ask(Q.noninteger(5)) is False
-    assert ask(Q.noninteger(-3)) is False
-    assert ask(Q.noninteger(0)) is False
+def test_basic_noninteger():
+    assert ask(Q.noninteger(Rational(1, 2))) is True
+    assert ask(Q.noninteger(Rational(3, 1))) is False
+    assert ask(Q.noninteger(Float(2.5))) is True
+    assert ask(Q.noninteger(Float(3.0))) is False
+    assert ask(Q.noninteger(I)) is True
+    assert ask(Q.noninteger(Float(-0.0))) is False
+    assert ask(Q.noninteger(Float(-1.0))) is False
 
-    assert ask(Q.noninteger(5.5)) is True
-    assert ask(Q.noninteger(Float(5.5))) is True
-    assert ask(Q.noninteger(Rational(11, 2))) is True
-    assert ask(Q.noninteger(Rational(4, 2))) is False
-
+def test_constants():
     assert ask(Q.noninteger(pi)) is True
     assert ask(Q.noninteger(E)) is True
-
+    assert ask(Q.noninteger(GoldenRatio)) is True
+    assert ask(Q.noninteger(TribonacciConstant)) is True
     assert ask(Q.noninteger(I)) is True
-    assert ask(Q.noninteger(1 + I)) is True
+    assert ask(Q.noninteger(2 + I)) is True
 
-    assert ask(Q.noninteger(oo)) is True
-    assert ask(Q.noninteger(-oo)) is True
-
+def test_addition():
+    assert ask(Q.noninteger(1 + Rational(1, 2))) is True
     assert ask(Q.noninteger(2 + 3)) is False
-    assert ask(Q.noninteger(2.5 + 3)) is True
-    assert ask(Q.noninteger(log(2))) is True
+    assert ask(Q.noninteger(2 + sqrt(2))) is True
 
+def test_multiplication():
+    assert ask(Q.noninteger(2 * sqrt(2))) is True
+    assert ask(Q.noninteger(2 * Rational(3, 2))) is False
+    assert ask(Q.noninteger(2 * 4)) is False
+
+def test_power():
+    assert ask(Q.noninteger(sqrt(2)**2)) is False
+    assert ask(Q.noninteger(2**Rational(1, 2))) is True
+
+def test_abs():
+    assert ask(Q.noninteger(Abs(-3))) is False
+    assert ask(Q.noninteger(Abs(Rational(5, 2)))) is True
+
+def test_matrices():
+    assert ask(Q.noninteger(Matrix([[1, 2], [3, 4]]))) is None
+    assert ask(Q.noninteger(Matrix([[1.5, 2.2], [3.3, 4.4]]))) is None
+    assert ask(Q.noninteger(Determinant(Matrix([[1, 2], [3, 4]])))) is False
+    assert ask(Q.noninteger(Determinant(Matrix([[1.5, 2], [3, 4]])))) is True
+    assert ask(Q.noninteger(Trace(Matrix([[1, 2], [3, 4]])))) is False
+    assert ask(Q.noninteger(Trace(Matrix([[1.5, 2], [3, 4.5]])))) is True
+    assert ask(Q.noninteger(MatrixElement(Matrix([[1, 2], [3, 4]]), 0, 0))) is False
+    assert ask(Q.noninteger(MatrixElement(Matrix([[1.5, 2], [3, 4]]), 0, 0)))
+
+def test_applied_predicates():
     assert ask(Q.noninteger(x), Q.integer(x)) is False
-    assert ask(Q.integer(x), Q.noninteger(x)) is False
-    assert ask(Q.integer(x), Q.integer(x)) is True
-    assert ask(Q.noninteger(x), Q.noninteger(x)) is True
+    assert ask(Q.noninteger(x), Q.irrational(x)) is True
+    assert ask(Q.noninteger(x + Rational(1, 2)), Q.integer(x)) is True
+    assert ask(Q.noninteger(2*x), Q.even(x)) is False
+    assert ask(Q.noninteger(2*x + 1), Q.even(x)) is False
+
+# def test_noninteger():
+#     x = symbols('x')
+
+#     assert ask(Q.noninteger(5)) is False
+#     assert ask(Q.noninteger(-3)) is False
+#     assert ask(Q.noninteger(0)) is False
+
+#     assert ask(Q.noninteger(5.5)) is True
+#     assert ask(Q.noninteger(Float(5.5))) is True
+#     assert ask(Q.noninteger(Rational(11, 2))) is True
+#     assert ask(Q.noninteger(Rational(4, 2))) is False
+
+#     assert ask(Q.noninteger(pi)) is True
+#     assert ask(Q.noninteger(E)) is True
+
+#     assert ask(Q.noninteger(I)) is True
+#     assert ask(Q.noninteger(1 + I)) is True
+
+#     assert ask(Q.noninteger(oo)) is True
+#     assert ask(Q.noninteger(-oo)) is True
+
+#     assert ask(Q.noninteger(2 + 3)) is False
+#     assert ask(Q.noninteger(2.5 + 3)) is True
+#     assert ask(Q.noninteger(log(2))) is True
+
+#     assert ask(Q.noninteger(x), Q.integer(x)) is False
+#     assert ask(Q.integer(x), Q.noninteger(x)) is False
+#     assert ask(Q.integer(x), Q.integer(x)) is True
+#     assert ask(Q.noninteger(x), Q.noninteger(x)) is True

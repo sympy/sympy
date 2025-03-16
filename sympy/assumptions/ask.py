@@ -468,22 +468,6 @@ def ask(proposition, assumptions=True, context=global_assumptions):
     if isinstance(assumptions, Predicate) or assumptions.kind is not BooleanKind:
         raise TypeError("assumptions must be a valid logical expression")
 
-    if isinstance(assumptions, AppliedPredicate):
-        assigned_value = None
-
-        if assumptions.function == Q.integer:
-            assigned_value = Integer(1)
-
-        elif assumptions.function == Q.noninteger:
-            assigned_value = Rational(1, 2)
-
-        if assigned_value is not None:
-            if isinstance(proposition, AppliedPredicate):
-                if proposition.function == Q.integer:
-                    return isinstance(assigned_value, Integer)
-                elif proposition.function == Q.noninteger:
-                    return not isinstance(assigned_value, Integer)
-
     binrelpreds = {Eq: Q.eq, Ne: Q.ne, Gt: Q.gt, Lt: Q.lt, Ge: Q.ge, Le: Q.le}
     if isinstance(proposition, AppliedPredicate):
         key, args = proposition.function, proposition.arguments
