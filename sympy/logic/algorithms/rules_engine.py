@@ -16,6 +16,7 @@ class RulesEngine:
         self.debugging_print_enabled = False
 
         self.rules = self.rule_tree.copy()
+        self.rules_list = full_rules
         self.direct = direct_implications
 
     def reset_state(self):
@@ -59,6 +60,46 @@ class RulesEngine:
 
     def get_negated_fact(self, fact):
         return fact[0], not fact[1]
+
+
+    def create_explanation_if_conflict(self, fact, antecdents):
+        neg_fact = self.get_negated_fact(fact)
+        if neg_fact in self.knowledge_base:
+            explanation = set.union(*(self.knowledge_base[cond] for cond in antecdents))
+            explanation |=  self.knowledge_base[neg_fact]
+            if self.debugging_print_enabled:
+                print(
+                    f"Found conflict triggered by {self._to_pred(fact)} caused by {self._unecode_literals(explanation)}")
+
+            return False, [-lit for lit in explanation]
+
+        return None
+
+    def trigger_rules(self):
+        new_facts = []
+        for conditions, consequences in self.rules_list.items():
+            if any(condition not in self.knowledge_base for condition in conditions):
+                continue
+
+            _new_facts = []
+            for consequence in consequences:
+                if consequence in self.knowledge_base:
+                    continue
+
+                res = self.create_explanation_if_conflict(consequence, conditions)
+                if res:
+                    return res
+
+                _new_facts.append(consequence)
+
+
+            if _new_facts:
+                source_facts = set.union(*(self.knowledge_base[cond] for cond in conditions))
+                for fact in _new_facts:
+                    self.knowledge_base[fact] = source_facts
+            new_facts.extend(_new_facts)
+
+        return True, new_facts
 
     def trigger(self, trig_fact):
         if trig_fact not in self.rules or trig_fact not in self.knowledge_base:
@@ -140,27 +181,40 @@ class RulesEngine:
         """Return a string representation of the current knowledge base."""
         return f"Knowledge Base: {self.knowledge_base}"
 
-    def check(self, fc_lit_to_source_lits):
+    def get_direct_implications(self, fc_lit):
+        return self.direct[fc_lit]
 
-        queue = fc_lit_to_source_lits
+
+    def trigger_direct_implications(self, fc_lit_to_source_lits):
+
+        pending_facts = set()
+        for fc_lit in fc_lit_to_source_lits:
+            for implication in self.get_direct_implications(fc_lit):
+                if implication in self.knowledge_base:
+                    continue
+                self.knowledge_base[implication] = fc_lit_to_source_lits[fc_lit]
+                pending_facts.add(implication)
+
+        return pending_facts
+
+
+    def _check_by_rules(self, fc_lit_to_source_lits):
+        # loops through rules and continously applies them until no new facts are learned
         self.reset_state()
-        self.add_facts(fc_lit_to_source_lits)
+        queue = self.trigger_direct_implications(fc_lit_to_source_lits)
 
         while queue:
-            pending_facts = set()
-            for antecedent in queue:
-                res = self.trigger(antecedent)
-                if not res:
-                    continue
-                results, source_facts, new_pending_facts = res
+            res = self.trigger_rules()
+            if res[0] is False:
+                return res
 
-                if results[0] is False:
-                    if self.testing_mode:
-                        results = False, [self._to_pred(lit) for lit in results[1]]
-                    return results
-
-                pending_facts.update(new_pending_facts)
-
-            queue = pending_facts
+            queue = res[1]
 
         return True, None
+
+
+
+    def check(self, fc_lit_to_source_lits):
+        return self._check_by_rules(fc_lit_to_source_lits)
+
+

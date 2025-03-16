@@ -232,7 +232,20 @@ for lit, bitset in direct_dict_bitset.items():
     count = bin(bitset).count('1')
     implication_counts_by_lit[lit] = count
 
+def pred_to_fc_lit(pred):
+    if isinstance(pred, Not):
+        pred_id = pred_to_id[pred.args[0]]
+        neg = True
+    else:
+        pred_id = pred_to_id[pred]
+        neg = False
 
+    return pred_id, neg
+
+def preds_to_fc_lits(preds):
+    return set(pred_to_fc_lit(pred) for pred in preds)
+
+fc_lit_to_direct_implications =  {pred_to_fc_lit(key) : preds_to_fc_lits(value) for key, value in direct_dict.items()}
 
 print("hi")
 # Code to get the most powerful assumptions

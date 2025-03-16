@@ -15,7 +15,7 @@ from sympy.assumptions.facts2 import (id_rules_dict, rules_dict, id_direct_dict,
                                       implication_counts_by_lit, fc_lit_to_direct_implications)
 
 
-rules_engine = RulesEngine(id_rules_dict, direct_dict)
+rules_engine = RulesEngine(id_rules_dict, fc_lit_to_direct_implications)
 
 class FCSolver():
     """
