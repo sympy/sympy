@@ -102,9 +102,6 @@ class RulesEngine:
         return True, new_facts
 
     def trigger(self, trig_fact):
-        if trig_fact not in self.rules or trig_fact not in self.knowledge_base:
-            return False
-
         implicants, antecedents = [], []
         pending_facts = set()
         next_rules = self.rules.pop(trig_fact)
@@ -138,13 +135,13 @@ class RulesEngine:
                 if self.debugging_print_enabled:
                     print(f"Found conflict triggered by {self._to_pred(trig_fact)} from {self._to_pred(fact)} caused by {self._unecode_literals(explanation)}")
 
-                return (False, [-lit for lit in explanation]), source_facts, pending_facts
+                return (False, [-lit for lit in explanation]), pending_facts
 
         pending_facts.update(implicants)
         new_facts = {imp: source_facts for imp in implicants}
         self._add_facts(new_facts)
 
-        return res, source_facts, pending_facts
+        return res, pending_facts
 
 
     def infer_facts(self):
@@ -212,9 +209,31 @@ class RulesEngine:
 
         return True, None
 
+    def _check_by_facts(self, fc_lit_to_source_lits):
+        # maintains a queue of facts and checks if facts trigger any rules
+        # when a new fact is added, that fact and any facts that might now
+        # trigger a rule that needed new fact to trigger are added to the queue
+        self.reset_state()
+        queue = fc_lit_to_source_lits
+        self.add_facts(fc_lit_to_source_lits)
 
+        while queue:
+            pending_facts = set()
+            for antecedent in queue:
+                if antecedent not in self.rules or antecedent not in self.knowledge_base:
+                    continue
+                results, new_pending_facts = self.trigger(antecedent)
+
+                if results[0] is False:
+                    return results
+
+                pending_facts.update(new_pending_facts)
+
+            queue = pending_facts
+
+        return True, None
 
     def check(self, fc_lit_to_source_lits):
-        return self._check_by_rules(fc_lit_to_source_lits)
+        return self._check_by_facts(fc_lit_to_source_lits)
 
 
