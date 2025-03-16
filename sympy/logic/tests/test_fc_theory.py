@@ -8,12 +8,22 @@ data = []
 encoding = {
     Q.positive(x): 1,
     Q.prime(x): 2,
-    Q.finite(x): 3
+    Q.finite(x): 3,
+    Q.odd(x) : 4,
+    Q.even(x): 5,
+    Q.integer(x): 6,
+    Q.commutative(x): 7,
 }
 cnf = EncodedCNF(data, encoding)
 fc, state = FCSolver.from_encoded_cnf(cnf, testing_mode=True)
 
 def test_check():
+
+    fc.reset_state()
+    preds = [6, -5, -4]
+    res = fc.check(preds, False)
+    assert res[0] is False
+
     fc.reset_state()
     preds = [-1]
     res = fc.check(preds, False)
@@ -35,6 +45,14 @@ def test_check():
     preds = [-1]
     res = fc.check(preds, False)
     assert res[0] is True
+
+    fc.reset_state()
+    preds = [6, -5, -4]
+    res = fc.check(preds, False)
+    assert res[0] is False
+
+    # satask(Q.odd(x * y), Q.odd(x) & Q.odd(y)) is True
+
 
 def test_immediate_conflict_detection():
 

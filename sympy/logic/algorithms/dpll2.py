@@ -215,6 +215,8 @@ class SATSolver:
         # Check if unit prop says the theory is unsat right off the bat
         self._simplify()
         if self.is_unsatisfied:
+            if self.fc.print_vars:
+                print("Formula unsatisfiable!\n\n")
             return
 
         # While the theory still has clauses remaining
@@ -250,6 +252,8 @@ class SATSolver:
                     else:
                         res = None
                     if res is None or res[0]:
+                        if self.fc.print_vars:
+                            print("Satisfying assignment found!\n\n")
                         yield {self.symbols[abs(lit) - 1]:
                                     lit > 0 for lit in self.var_settings}
                     else:
@@ -262,6 +266,8 @@ class SATSolver:
                     while self._current_level.flipped:
                         self._undo()
                     if len(self.levels) == 1:
+                        if self.fc.print_vars:
+                            print("Formula unsatisfiable!\n\n")
                         return
                     flip_lit = -self._current_level.decision
                     self._undo()
@@ -289,6 +295,8 @@ class SATSolver:
 
                     # If we've unrolled all the way, the theory is unsat
                     if 1 == len(self.levels):
+                        if self.fc.print_vars:
+                            print("Formula unsatisfiable!\n\n")
                         return
 
                 # Detect and add a learned clause
@@ -399,11 +407,16 @@ class SATSolver:
         """
 
         if self.fc:
+            if self.fc.print_vars:
+                new_lit =  self.fc._unecode_literals({lit})
+                cur_ass = self.fc._unecode_literals(self.var_settings)
+                print(f"Adding {new_lit} to SAT Solver assignments: {cur_ass}")
+
             # If current level fc state is undefined, set equal to previous level's state
             if self._current_level.fc_state is None:
                 self._current_level.fc_state = self.levels[-2].fc_state.copy()
 
-            if not called_from_theory_prop and not called_from_unit_prop:
+            if not called_from_theory_prop and not called_from_unit_prop and self.fc.theory_prop_enabled:
                 theory_prop = self.fc.theory_prop(lit)
                 if self.fc.print_vars:
                     self.fc._unecode_literals(theory_prop)

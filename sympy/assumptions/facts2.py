@@ -158,9 +158,9 @@ all_preds = sorted(all_preds, key=lambda pred: str(pred))
 pred_to_id = {all_preds[i] : i for i in range(len(all_preds))}
 def pred_to_id_neg_tup(pred):
     if isinstance(pred, Not):
-        return -pred_to_id[pred.args[0]]#, True
+        return (pred_to_id[pred.args[0]], True)
     else:
-        return pred_to_id[pred]#, False
+        return (pred_to_id[pred], False)
 
 id_to_pred = [pred for pred, _ in sorted(pred_to_id.items(), key=lambda x: x[1])]
 num_preds = len(all_preds)

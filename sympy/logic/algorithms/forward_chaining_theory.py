@@ -31,9 +31,9 @@ class FCSolver():
         # expr_id to set of unassigned (inactive) variables
         self.unassigned_variables = defaultdict(set)
 
+        expr_to_id = {}
         if pred_to_enc is not None:
             self.enc_to_decomposed_pred = {}
-            expr_to_id = {}
             for appliedPred, enc in pred_to_enc.items():
                 if not isinstance(appliedPred, AppliedPredicate) and not isinstance(appliedPred, Not):
                     continue
@@ -46,6 +46,13 @@ class FCSolver():
                 expr_id = expr_to_id[expr]
                 self.enc_to_decomposed_pred[enc] = expr_id, pred_id, neg
                 self.unassigned_variables[expr_id].add(enc)
+
+        if self.print_vars:
+            self.expr_id_to_expr = {value:key for key, value in expr_to_id.items()}
+
+        # disable when finished
+        if True:
+            self.expr_id_to_expr = {value: key for key, value in expr_to_id.items()}
 
         self.pred_to_enc = pred_to_enc
         #self.enc_to_pred = {v: k for k, v in pred_to_enc.items()} if pred_to_enc else None
@@ -193,6 +200,9 @@ class FCSolver():
 
         if self.immediate_conflict(expr_id, pred_id, neg, state):
             conflicting_literal = self.identify_directly_conflicting_literal(expr_id, pred_id, neg)
+            if self.print_vars:
+               print(f"found conflict caused by: {self._unecode_literals([conflicting_literal, literal])}")
+               print()
             conflict_clause = [-conflicting_literal, -literal]
             if force_assertion:
                 self.activate_literal(literal, expr_id, pred_id, neg, state)
@@ -227,8 +237,8 @@ class FCSolver():
         #expr_id, pred_id, neg = self.decompose_literal(new_lit)
         expr_id = self.literal_to_expr_id(new_lit)
 
-        if self.print_vars:
-            new_pred = ~id_to_pred[pred_id] if neg else id_to_pred[pred_id]
+        # if self.print_vars:
+        #     new_pred = ~id_to_pred[pred_id] if neg else id_to_pred[pred_id]
 
         implicants = []
         direct_implicants_set = self.get_direct_implicants_bitset_from_literal(new_lit)
@@ -264,7 +274,7 @@ class FCSolver():
 
         def sat_lit_to_fc_lit(sat_lit):
             _, pred_id, neg = self.decompose_literal(sat_lit)
-            return Literal(pred_id, neg)
+            return pred_id, neg
 
         expr_id_to_fc_literal = defaultdict(list)
 
@@ -280,6 +290,9 @@ class FCSolver():
             fc_lits = reduce(lambda a, b: {**a, **b}, fc_lits)
             res = self._check_assignment(fc_lits)
             if res[0] is False:
+                if self.print_vars:
+                    print(f"Found conflict caused by: {self._unecode_literals(res[1])}")
+                    print()
                 return res
 
         return True, None
@@ -288,6 +301,7 @@ class FCSolver():
     def _check_assignment(self, fc_lit_to_source_lits):
 
         queue = fc_lit_to_source_lits
+        self.engine.reset_state()
         self.engine.add_facts(fc_lit_to_source_lits)
 
         while queue:
@@ -316,7 +330,9 @@ class FCSolver():
                 continue
             expr_id, pred_id, neg = self.decompose_literal(lit)
 
-            new_pred = ~id_to_pred[pred_id] if neg else id_to_pred[pred_id]
+            new_expr = self.expr_id_to_expr[expr_id]
+            new_pred = ~id_to_pred[pred_id](new_expr) if neg else id_to_pred[pred_id](new_expr)
+
             ret.append(new_pred)
         return ret
 
