@@ -11,8 +11,6 @@ from sympy.utilities.decorator import memoize_property
 from sympy.utilities.exceptions import (sympy_deprecation_warning,
                                         SymPyDeprecationWarning,
                                         ignore_warnings)
-from sympy import Integer, Rational
-
 
 # Memoization is necessary for the properties of AssumptionKeys to
 # ensure that only one object of Predicate objects are created.
