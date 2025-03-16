@@ -2565,11 +2565,11 @@ def test_matrices():
     assert ask(Q.noninteger(Matrix([[1, 2], [3, 4]]))) is None
     assert ask(Q.noninteger(Matrix([[1.5, 2.2], [3.3, 4.4]]))) is None
     assert ask(Q.noninteger(Determinant(Matrix([[1, 2], [3, 4]])))) is False
-    assert ask(Q.noninteger(Determinant(Matrix([[1.5, 2], [3, 4]])))) is True
+    assert ask(Q.noninteger(Determinant(Matrix([[1.5, 2], [3, 4]])))) is False
     assert ask(Q.noninteger(Trace(Matrix([[1, 2], [3, 4]])))) is False
     assert ask(Q.noninteger(Trace(Matrix([[1.5, 2], [3, 4.5]])))) is True
     assert ask(Q.noninteger(MatrixElement(Matrix([[1, 2], [3, 4]]), 0, 0))) is False
-    assert ask(Q.noninteger(MatrixElement(Matrix([[1.5, 2], [3, 4]]), 0, 0)))
+    assert ask(Q.noninteger(MatrixElement(Matrix([[1.5, 2], [3, 4]]), 0, 0))) is True
 
 def test_applied_predicates():
     assert ask(Q.noninteger(x), Q.integer(x)) is False

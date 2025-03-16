@@ -165,12 +165,10 @@ def _(expr, assumptions):
         return True
     return test_closed_group(expr, assumptions, Q.noninteger)
 
-
 @NonIntegerPredicate.register(Mul)
 def _(expr, assumptions):
     if expr.is_number:
         return _NonIntegerPredicate_number(expr, assumptions)
-
     _output = False
     for arg in expr.args:
         if ask(Q.integer(arg), assumptions):
@@ -191,23 +189,14 @@ def _(expr, assumptions):
         return False
     return True
 
-@NonIntegerPredicate.register(MatrixElement)
-def _(expr, assumptions):
-    return not ask(Q.integer(expr), assumptions)
-
-@NonIntegerPredicate.register(Determinant)
-def _(expr, assumptions):
-    det_value = expr.doit()
-    if ask(Q.extended_real(det_value), assumptions) is not True:
-        return None
-    return not ask(Q.integer(det_value), assumptions)
-
 @NonIntegerPredicate.register(Expr)
 def _(expr, assumptions):
-    ret = expr.is_integer
-    if ret is None:
-        raise MDNotImplementedError
-    return not ret
+    if isinstance(expr, Trace) or isinstance(expr, Determinant) or isinstance(expr, MatrixElement):
+        value = expr.doit()
+        if ask(Q.extended_real(value), assumptions) is not True:
+            return None
+        return not ask(Q.integer(value), assumptions)
+    return ask(~Q.integer(expr,assumptions)) and ask(Q.extended_real(expr,assumptions))
 
 # RationalPredicate
 
