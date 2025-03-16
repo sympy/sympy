@@ -495,20 +495,19 @@ class Relational(Boolean, EvalfMixin):
                             del nzm[0]
                             newexpr = Add(*[i * j for i, j in nzm])
                             r = r.func(lhsterm, -newexpr)
-
                     else:
                         r = r.func(constant, S.Zero)
                 except ValueError:
                     try:
                         from sympy.polys.polyerrors import PolynomialError
-                        from sympy.polys.polytools import gcd
-                        from sympy.solvers.solvers import solve_undetermined_coeffs
-                        m = list(solve_undetermined_coeffs(dif, free))
-                        constant = m[-1]
-                        del m[-1]
-                        scale = gcd(m)
-                        m = [mtmp / scale for mtmp in m]
-                        nzm = list(filter(lambda f: f[0] != 0, list(zip(m, free))))
+                        from sympy.polys.polytools import gcd, Poly, poly
+                        p = poly(dif, free[0])
+                        c = p.all_coeffs()
+                        constant = c[-1]
+                        c[-1] = 0
+                        scale = gcd(c)
+                        c = [ctmp / scale for ctmp in c]
+                        nzm = list(filter(lambda f: f[0] != 0, list(zip(c, free))))
                         if scale != 0:
                             if constant != 0:
                                 # lhs: expression, rhs: constant
