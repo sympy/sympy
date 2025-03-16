@@ -7,7 +7,7 @@ from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.elementary.integers import (ceiling, floor, frac)
 from sympy.functions.elementary.miscellaneous import sqrt
-from sympy.functions.elementary.trigonometric import sin, cos, tan
+from sympy.functions.elementary.trigonometric import sin, cos, tan, asin
 from sympy.polys.rootoftools import RootOf, CRootOf
 from sympy import Integers
 from sympy.sets.sets import Interval
@@ -37,6 +37,9 @@ def test_floor():
 
     assert floor(1) == 1
     assert floor(-1) == -1
+
+    assert floor(I*log(asin(5)/abs(asin(5)))) == 0
+    assert floor(-I*log(asin(7)/abs(asin(7)))) == -2
 
     assert floor(E) == 2
     assert floor(-E) == -3
@@ -234,6 +237,9 @@ def test_ceiling():
 
     assert ceiling(1) == 1
     assert ceiling(-1) == -1
+
+    assert ceiling(I*log(asin(5)/abs(asin(5)))) == 1
+    assert ceiling(-I*log(asin(7)/abs(asin(7)))) == -1
 
     assert ceiling(E) == 3
     assert ceiling(-E) == -2
