@@ -13,7 +13,7 @@ from sympy.functions import (Abs, acos, acot, asin, atan, cos, cot, exp, im,
 from sympy.core.numbers import I
 from sympy.core.relational import Eq
 from sympy.functions.elementary.complexes import conjugate
-from sympy.matrices import Determinant, MatrixBase, Trace
+from sympy.matrices import Determinant, MatrixBase, Trace, Matrix
 from sympy.matrices.expressions.matexpr import MatrixElement
 
 from sympy.multipledispatch import MDNotImplementedError
@@ -24,7 +24,8 @@ from ..predicates.sets import (IntegerPredicate, NonIntegerPredicate, RationalPr
     HermitianPredicate, ComplexPredicate, ImaginaryPredicate,
     AntihermitianPredicate, AlgebraicPredicate)
 from sympy import Symbol
-
+from sympy.matrices.expressions import MatrixSymbol
+from sympy.matrices.dense import MutableDenseMatrix
 
 # IntegerPredicate
 
@@ -131,12 +132,9 @@ def _(expr, assumptions):
         return False
     return None
 
-@NonIntegerPredicate.register(Expr)
+@NonIntegerPredicate.register(MutableDenseMatrix)
 def _(expr, assumptions):
-    ret = expr.is_integer
-    if ret is None:
-        raise MDNotImplementedError
-    return not ret
+    return None
 
 @NonIntegerPredicate.register(Float)
 def _(expr, assumptions):
@@ -193,13 +191,23 @@ def _(expr, assumptions):
         return False
     return True
 
-@NonIntegerPredicate.register_many(Determinant, MatrixElement, Trace)
+@NonIntegerPredicate.register(MatrixElement)
 def _(expr, assumptions):
-    if isinstance(expr, Matrix):
+    return not ask(Q.integer(expr), assumptions)
+
+@NonIntegerPredicate.register(Determinant)
+def _(expr, assumptions):
+    det_value = expr.doit()
+    if ask(Q.extended_real(det_value), assumptions) is not True:
         return None
-    elif ask(Q.extended_real(expr), assumptions) is not True:
-        return None
-    return not ask(Q.integer_elements(expr.args[0]), assumptions)
+    return not ask(Q.integer(det_value), assumptions)
+
+@NonIntegerPredicate.register(Expr)
+def _(expr, assumptions):
+    ret = expr.is_integer
+    if ret is None:
+        raise MDNotImplementedError
+    return not ret
 
 # RationalPredicate
 

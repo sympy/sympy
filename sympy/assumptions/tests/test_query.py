@@ -28,7 +28,6 @@ from sympy import Float, E, GoldenRatio, TribonacciConstant
 from sympy.matrices.expressions import MatrixSymbol, Determinant, Trace
 from sympy.matrices.expressions.matexpr import MatrixElement
 
-
 def test_int_1():
     z = 1
     assert ask(Q.commutative(z)) is True
