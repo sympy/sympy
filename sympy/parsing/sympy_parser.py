@@ -1073,6 +1073,7 @@ def parse_expr(s: str, local_dict: Optional[DICT] = None,
 
     if not evaluate:
         code = compile(evaluateFalse(code), '<string>', 'eval') # type: ignore
+        code = str(code)
         code = code.replace("factorial(", "Function('factorial')(")
         code = code.replace("Matrix(", "Function('Matrix')(")
 
