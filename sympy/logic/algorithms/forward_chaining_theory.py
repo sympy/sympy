@@ -289,6 +289,8 @@ class FCSolver():
 
         for expr_id, fc_lits in expr_id_to_fc_literal.items():
             fc_lits = reduce(lambda a, b: {**a, **b}, fc_lits)
+            if len(fc_lits) <= 2:
+                continue
             res = self.engine.check(fc_lits)
             if res[0] is False:
                 if self.print_vars:
