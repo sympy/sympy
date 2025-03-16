@@ -12,7 +12,7 @@ from sympy.logic.algorithms.rules_engine import RulesEngine
 from sympy.assumptions.facts2 import (id_rules_dict, rules_dict, id_direct_dict,
                                       id_to_pred, direct_dict, pred_to_id, pred_id_to_bitvec,
                                       pred_id_neg_to_direct_implicants_bitset,
-                                      implication_counts_by_lit)
+                                      implication_counts_by_lit, fc_lit_to_direct_implications)
 
 
 rules_engine = RulesEngine(id_rules_dict, direct_dict)
@@ -268,6 +268,25 @@ class FCSolver():
         # For all unassigned literals that have the same expr id:
         # Check if their negation is in the set of direct implicants of new lit/
 
+    def find_independent_subset(self, literals):
+        if len(literals) <= 2:
+            return literals
+
+        # implication_counts_by_lit
+        def get_implication_count(fc_lit):
+            return implication_counts_by_lit[fc_lit]
+
+        sorted_literals = sorted(literals.items(), key= lambda pair: get_implication_count(pair[0]), reverse=True)
+        union = self.get_direct_implicants_bitset(sorted_literals[0][0][0], sorted_literals[0][0][1])
+        independent_literals = [sorted_literals[0]]
+        for lit in sorted_literals[1:]:
+            new_union = union | self.get_direct_implicants_bitset(lit[0][0], lit[0][1])
+            if new_union != union:
+                independent_literals.append(lit)
+            union = new_union
+
+        return dict(independent_literals)
+
     def check(self, initial_literals, pre_encoded=True):
         assert len(initial_literals) > 0
 
@@ -289,6 +308,7 @@ class FCSolver():
 
         for expr_id, fc_lits in expr_id_to_fc_literal.items():
             fc_lits = reduce(lambda a, b: {**a, **b}, fc_lits)
+            fc_lits = self.find_independent_subset(fc_lits)
             if len(fc_lits) <= 2:
                 continue
             res = self.engine.check(fc_lits)
