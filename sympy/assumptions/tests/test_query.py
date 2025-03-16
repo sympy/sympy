@@ -25,7 +25,8 @@ from sympy.testing.pytest import (XFAIL, slow, raises, warns_deprecated_sympy,
     _both_exp_pow)
 import math
 from sympy import Float, E, GoldenRatio, TribonacciConstant
-from sympy.matrices.expressions import MatrixSymbol
+from sympy.matrices.expressions import MatrixSymbol, Determinant, Trace, MatrixElement
+
 
 def test_int_1():
     z = 1
@@ -2523,7 +2524,7 @@ def test_issue_25221():
     assert ask(Q.transcendental(x), Q.algebraic(x) | (0 > y)) is None
     assert ask(Q.transcendental(x), Q.algebraic(x) | Q.gt(0,y)) is None
 
-x, y = symbols('x y')
+x = symbols('x')
 A = MatrixSymbol('A', 2, 2)
 
 def test_basic_noninteger():
@@ -2577,33 +2578,3 @@ def test_applied_predicates():
     assert ask(Q.noninteger(x + Rational(1, 2)), Q.integer(x)) is True
     assert ask(Q.noninteger(2*x), Q.even(x)) is False
     assert ask(Q.noninteger(2*x + 1), Q.even(x)) is False
-
-# def test_noninteger():
-#     x = symbols('x')
-
-#     assert ask(Q.noninteger(5)) is False
-#     assert ask(Q.noninteger(-3)) is False
-#     assert ask(Q.noninteger(0)) is False
-
-#     assert ask(Q.noninteger(5.5)) is True
-#     assert ask(Q.noninteger(Float(5.5))) is True
-#     assert ask(Q.noninteger(Rational(11, 2))) is True
-#     assert ask(Q.noninteger(Rational(4, 2))) is False
-
-#     assert ask(Q.noninteger(pi)) is True
-#     assert ask(Q.noninteger(E)) is True
-
-#     assert ask(Q.noninteger(I)) is True
-#     assert ask(Q.noninteger(1 + I)) is True
-
-#     assert ask(Q.noninteger(oo)) is True
-#     assert ask(Q.noninteger(-oo)) is True
-
-#     assert ask(Q.noninteger(2 + 3)) is False
-#     assert ask(Q.noninteger(2.5 + 3)) is True
-#     assert ask(Q.noninteger(log(2))) is True
-
-#     assert ask(Q.noninteger(x), Q.integer(x)) is False
-#     assert ask(Q.integer(x), Q.noninteger(x)) is False
-#     assert ask(Q.integer(x), Q.integer(x)) is True
-#     assert ask(Q.noninteger(x), Q.noninteger(x)) is True
