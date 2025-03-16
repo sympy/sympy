@@ -375,3 +375,14 @@ def test_issue_22822():
     raises(ValueError, lambda: parse_expr('x', {'': 1}))
     data = {'some_parameter': None}
     assert parse_expr('some_parameter is None', data) is True
+
+def test_evaluate_false_factorial():
+    expr_str = "factorial(5) + factorial(5)"
+    parsed_expr = parse_expr(expr_str, evaluate=False)
+    assert str(parsed_expr) == "factorial(5) + factorial(5)"
+
+def test_evaluate_false_matrix():
+    expr_str = "Matrix([1, 2]) + Matrix([1, 2])"
+    parsed_expr = parse_expr(expr_str, evaluate=False)
+    assert str(parsed_expr) == "Matrix([1, 2]) + Matrix([1, 2])"
+

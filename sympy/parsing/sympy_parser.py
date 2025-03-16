@@ -1073,6 +1073,8 @@ def parse_expr(s: str, local_dict: Optional[DICT] = None,
 
     if not evaluate:
         code = compile(evaluateFalse(code), '<string>', 'eval') # type: ignore
+        code = code.replace("factorial(", "Function('factorial')(")
+        code = code.replace("Matrix(", "Function('Matrix')(")
 
     try:
         rv = eval_expr(code, local_dict, global_dict)
@@ -1095,6 +1097,8 @@ def evaluateFalse(s: str):
     transformed_node = EvaluateFalseTransformer().visit(node)
     # node is a Module, we want an Expression
     transformed_node = ast.Expression(transformed_node.body[0].value)
+    s = s.replace("factorial(", "Function('factorial')(")
+    s = s.replace("Matrix(", "Function('Matrix')(")
 
     return ast.fix_missing_locations(transformed_node)
 
