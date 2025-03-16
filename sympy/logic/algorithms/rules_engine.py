@@ -13,7 +13,7 @@ class RulesEngine:
             self.add_rule(key, value)
 
         #self.original_keys = list(self.rule_tree.keys())
-        self.debugging_print_enabled = True
+        self.debugging_print_enabled = False
 
         self.rules = self.rule_tree.copy()
         self.direct = direct_implications
@@ -30,7 +30,7 @@ class RulesEngine:
         Add a rule to the rules engine.
 
         :param conditions: A set of conditions (e.g., {"a", "b", "c", "d"})
-        :param consequence: The resulting fact (e.g., "e")
+        :param consequence: The resulting facts (e.g., {"e"})
         """
         rule_tree = self.rule_tree
         self.print_steps = False
@@ -39,18 +39,17 @@ class RulesEngine:
             rule_tree = rule_tree.setdefault(condition, {})
         rule_tree["__result__"] = (consequence, conditions)   # Store the consequence
 
-    def add_fact(self, fact, source_facts):
-        """Add a fact to the knowledge base."""
+    def _add_facts(self, facts):
+        """Internal method to add facts."""
         if self.debugging_print_enabled:
-            print(f"adding fact: {self._to_pred(fact)}")
-        self.knowledge_base[fact] = source_facts
+            print(f"adding facts: {[self._to_pred(f)for f in facts]}")
+        self.knowledge_base.update(facts)
 
     def add_facts(self, facts):
         """Add a fact to the knowledge base."""
         if self.debugging_print_enabled:
-            print(f"adding facts: {[self._to_pred(f)for f in facts]}")
             self.encoded_literal_to_pred = {list(value)[0]: key for key, value in facts.items()}
-        self.knowledge_base.update(facts)
+        self._add_facts(facts)
 
 
     def _to_pred(self, literal):
@@ -67,36 +66,42 @@ class RulesEngine:
 
         implicants, antecedents = [], []
         pending_facts = set()
-        next = self.rules.pop(trig_fact)
-        for rule_root in next:
+        next_rules = self.rules.pop(trig_fact)
+        for rule_root in next_rules:
             if rule_root != "__result__":
-                self.rules.update({rule_root: next[rule_root]})
-                pending_facts.update(next[rule_root].keys())
-            else:
-                implicants, antecedents = next["__result__"]
-                if self.debugging_print_enabled:
-                    pred_implicants = [self._to_pred(imp) for imp in implicants]
-                    pred_antecedents = [self._to_pred(ant) for ant in antecedents]
-                    sources = set(source for ant in antecedents for source in self.knowledge_base[ant])
-                    for imp in pred_implicants:
-                        print(f"Derived {imp} from {pred_antecedents} which was sourced from {self._unecode_literals(sources)}")
+                self.rules[rule_root] = next_rules[rule_root]
+
+        # there might be new facts that could be triggered
+        pending_facts.update(next_rules.keys())
+        pending_facts.discard("__result__")
 
 
-        source_facts = set.union(*[self.knowledge_base[ant] for ant in antecedents], set())
+        if "__result__" in next_rules:
+            implicants, antecedents = next_rules["__result__"]
+            if self.debugging_print_enabled:
+                pred_implicants = [self._to_pred(imp) for imp in implicants]
+                pred_antecedents = [self._to_pred(ant) for ant in antecedents]
+                sources = set(source for ant in antecedents for source in self.knowledge_base[ant])
+                for imp in pred_implicants:
+                    print(f"Derived {imp} from {pred_antecedents} which was sourced from {self._unecode_literals(sources)}")
+
+
+
+        source_facts =  set.union(*(self.knowledge_base[ant] for ant in antecedents)) if len(antecedents) > 0 else set()
 
         res = (True, None)
         for fact in implicants:
-            if self.get_negated_fact(fact) in self.knowledge_base:
-                explanation = source_facts | self.knowledge_base[self.get_negated_fact(fact)]
+            neg_fact = self.get_negated_fact(fact)
+            if neg_fact in self.knowledge_base:
+                explanation = source_facts | self.knowledge_base[neg_fact]
                 if self.debugging_print_enabled:
                     print(f"Found conflict triggered by {self._to_pred(trig_fact)} from {self._to_pred(fact)} caused by {self._unecode_literals(explanation)}")
-                    #print(f"Found conflict caused by {explanation}")
-                # res = self._assert_lit(expr, fact, source_facts)
-                #assert len(explanation) >= 2
-                res = (False, [-lit for lit in explanation])
-                break
-            pending_facts.add(fact)
-            self.add_fact(fact, source_facts)
+
+                return (False, [-lit for lit in explanation]), source_facts, pending_facts
+
+        pending_facts.update(implicants)
+        new_facts = {imp: source_facts for imp in implicants}
+        self._add_facts(new_facts)
 
         return res, source_facts, pending_facts
 
