@@ -234,7 +234,7 @@ for lit, bitset in direct_dict_bitset.items():
 
 
 
-
+print("hi")
 # Code to get the most powerful assumptions
 # sorted([ ((id_to_pred[lit[0]],lit[1] ), count) for lit, count in implication_counts_by_lit.items()], key=lambda item: item[1], reverse=True)
 
