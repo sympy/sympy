@@ -320,8 +320,8 @@ def test_solve_univariate_inequality():
     assert isolve(n/c1 > 0, c1) == False
 
     zero = cos(1)**2 + sin(1)**2 - 1
-    raises(NotImplementedError, lambda: isolve(x**2 < zero, x))
-    raises(NotImplementedError, lambda: isolve(
+    raises(AttributeError, lambda: isolve(x**2 < zero, x))
+    raises(ValueError, lambda: isolve(
         x**2 < zero*I, x))
     raises(NotImplementedError, lambda: isolve(1/(x - y) < 2, x))
     raises(NotImplementedError, lambda: isolve(1/(x - y) < 0, x))
@@ -330,10 +330,7 @@ def test_solve_univariate_inequality():
     zero = x**2 + x - x*(x + 1)
     assert isolve(zero < 0, x, relational=False) is S.EmptySet
     assert isolve(zero <= 0, x, relational=False) is S.Reals
-
-    # make sure iter_solutions gets a default value
-    raises(NotImplementedError, lambda: isolve(
-        Eq(cos(x)**2 + sin(x)**2, 1), x))
+    assert isolve(Eq(cos(x)**2 + sin(x)**2, 1), x) == (-oo < x) & (x < oo)
 
 
 def test_trig_inequalities():
