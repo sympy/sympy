@@ -7964,7 +7964,7 @@ def eisenstein_criterion(self):
     """
     Applies Eisenstein's criterion to check if a polynomial in Z[x] is irreducible over Q.
 
-    Let f(x) = a_n*x^n + a_(n-1)*x^(n-1) + ... + a_1*x + a_0 ∈ Z[x].
+    Let f(x) = a_n*x^n + a_(n-1)*x^(n-1) + ... + a_1*x + a_0 in Z[x].
 
     If there exists a prime number p such that:
 
