@@ -7970,7 +7970,7 @@ def eisenstein_criterion(self):
 
         1) p does NOT divide a_n (the leading coefficient),
         2) p^2 does NOT divide a_0 (the constant term),
-        3) p divides all other coefficients (a_i for i ≠ n),
+        3) p divides all other coefficients (a_i for i neq n),
 
     then f(x) is irreducible in Q.
 
