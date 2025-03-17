@@ -136,9 +136,6 @@ class floor(RoundFunction):
     def _eval_number(cls, arg):
         if arg.is_Number:
             return arg.floor()
-        if (arg_eval := arg.evalf()).is_Float:
-            if abs(arg_eval - (f := arg_eval.floor())) > 1e-10:
-                return f
         if any(isinstance(i, j)
                 for i in (arg, -arg) for j in (floor, ceiling)):
             return arg
@@ -339,9 +336,6 @@ class ceiling(RoundFunction):
     def _eval_number(cls, arg):
         if arg.is_Number:
             return arg.ceiling()
-        if (arg_eval := arg.evalf()).is_Float:
-            if abs(arg_eval - (c := arg_eval.ceiling())) > 1e-10:
-                return c
         if any(isinstance(i, j)
                 for i in (arg, -arg) for j in (floor, ceiling)):
             return arg
