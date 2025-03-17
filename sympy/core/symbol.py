@@ -450,6 +450,11 @@ class Symbol(AtomicExpr, Boolean): # type: ignore
     binary_symbols = free_symbols  # in this case, not always
 
     def as_set(self):
+        from sympy.calculus.util import assumption_domain
+
+        if self.is_real:
+            return assumption_domain(self)
+    
         return S.UniversalSet
 
 
