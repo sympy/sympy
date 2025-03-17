@@ -454,7 +454,7 @@ class Symbol(AtomicExpr, Boolean): # type: ignore
 
         if self.is_real:
             return assumption_domain(self)
-    
+
         return S.UniversalSet
 
 
