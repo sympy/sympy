@@ -29,7 +29,7 @@ from sympy.polys.polytools import (
     cancel, reduced, groebner,
     GroebnerBasis, is_zero_dimensional,
     _torational_factor_list,
-    to_rational_coeffs)
+    to_rational_coeffs, eisenstein_criterion)
 
 from sympy.polys.polyerrors import (
     MultivariatePolynomialError,
@@ -3865,6 +3865,14 @@ def test_as_list():
     assert Poly(x**2 + y + 1, x, y, domain='ZZ').as_list() == [[1], [], [1, 1]]
     assert Poly(x**2 + y + 1, x, y, z, domain='ZZ').as_list() == \
                                                     [[[1]], [[]], [[1], [1]]]
+
+def test_eisenstein_criterion():
+    assert eisenstein_criterion(Poly(x**99-10)) == True
+    assert eisenstein_criterion(Poly(0.5*x**4+3*x**2+x+5)) == None
+    assert eisenstein_criterion(Poly(x**3-3*x+5*y)) == None
+    assert eisenstein_criterion(Poly(x**12 + 7*x**11 + 14*x**10 + 21*x**9 + 35*x**8 + 7*x**7 +
+    28*x**6 + 49*x**5 + 56*x**4 + 63*x**3 + 70*x**2 + 77*x + 21)) == True
+    assert eisenstein_criterion(Poly(x**4-5*x**2+6))== None
 
 
 def test_issue_11198():

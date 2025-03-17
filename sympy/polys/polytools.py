@@ -7958,3 +7958,56 @@ def named_poly(n, f, K, name, x, polys):
     else:
         poly = Poly.new(poly, head)
     return poly if polys else poly.as_expr()
+
+@public
+def eisenstein_criterion(self):
+    """
+    Applies Eisenstein's criterion to check if a polynomial in Z[x] is irreducible over Q.
+
+    Let f(x) = a_n*x^n + a_(n-1)*x^(n-1) + ... + a_1*x + a_0 ∈ Z[x].
+
+    If there exists a prime number p such that:
+
+        1) p does NOT divide a_n (the leading coefficient),
+        2) p^2 does NOT divide a_0 (the constant term),
+        3) p divides all other coefficients (a_i for i ≠ n),
+
+    then f(x) is irreducible in Q.
+
+    Returns:
+        True if Eisenstein's criterion applies and f(x) is irreducible. in Q
+        None otherwise.
+
+        """
+    from sympy.ntheory import primerange
+
+    #this is only for polys whith one variable
+    if len(self.gens) != 1:
+        return None
+    #we obtain the list of coefficient in descendent orden of degree
+    coeffs = self.all_coeffs()
+    #This criterion only works in Z[x]
+    for c in coeffs:
+        if not(c.is_integer):
+            return None
+    # upper_coeff = a_n
+    upper_coeff = coeffs[0]
+    #lower_coeff = a_0
+    lower_coeff = coeffs[len(coeffs)-1]
+    #to know until which prime we need to try we get the min(in abs).
+    # Because if a > b then a can't divide b
+    min_coeff = abs(min((c for c in coeffs[1:] if c != 0),key=abs))
+
+    for p in primerange(2,min_coeff+1):
+        div = True
+        #try the conditions 1) and 2)
+        if upper_coeff % p != 0 and lower_coeff % p**2 != 0:
+                #the condition 3
+                for c in coeffs[1:]:
+                    if c % p  != 0:
+                        div = False
+                        break
+                if not div:
+                    continue
+                return True
+    return None
