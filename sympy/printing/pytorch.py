@@ -138,23 +138,8 @@ class TorchPrinter(ArrayPrinter, AbstractPythonCodePrinter):
             ", ".join(str(i) for i in expr.permutation.array_form)
         )
 
-    # Old version borrowed from the Tensorflow implementation
-    # def _print_Derivative(self, expr):
-    #     variables = expr.variables
-    #     if any(isinstance(i, Iterable) for i in variables):
-    #         raise NotImplementedError("derivation by multiple variables is not supported")
-    #     def unfold(expr, args):
-    #         if not args:
-    #             return self._print(expr)
-    #         return "%s(%s, %s)[0]" % (
-    #                 self._module_format("torch.autograd.grad"),
-    #                 unfold(expr, args[:-1]),
-    #                 self._print(args[-1]),
-    #             )
-    #     return unfold(expr.expr, variables)
-
     def _print_Derivative(self, expr):
-        # this version handles multi-variable and mixed partial derivatives
+        # this version handles multi-variable and mixed partial derivatives. The tensorflow version does not.
         variables = expr.variables
         expr_arg = expr.expr
 
