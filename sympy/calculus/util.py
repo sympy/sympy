@@ -29,11 +29,22 @@ from sympy.matrices.dense import hessian
 
 
 def assumption_domain(symbol):
+    from sympy.sets import imageset
+
     try:
         min, min_open = assumptions_minimum(symbol)
         max, max_open = assumptions_maximum(symbol)
 
-        return Interval(min, max, min_open, max_open)
+        domain = Interval(min, max, min_open, max_open)
+
+        if symbol.is_even:
+            n = Dummy('n')
+            domain = domain.intersect(imageset(n, n * 2, S.Integers))
+        elif symbol.is_odd:
+            n = Dummy('n')
+            domain = domain.intersect(imageset(n, n * 2 + 1, S.Integers))
+
+        return domain
     except NotImplementedError:
         from sympy.assumptions.assume import global_assumptions
         from sympy.logic.boolalg import And
