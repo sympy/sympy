@@ -7979,7 +7979,6 @@ def eisenstein_criterion(self):
         None otherwise.
 
         """
-    from sympy.ntheory import primerange
     from sympy.ntheory import factorint
 
     #this is only for polys whith one variable
@@ -8002,14 +8001,16 @@ def eisenstein_criterion(self):
             prime_divisors = factorint(c)
             first_not_null = coeffs.index(c)
             break
-    #try the conditions 1) and 2)
+    #we dont need to evaluate the coeffs that are 0
     for c in coeffs[first_not_null + 1:]:
         for prime in list(prime_divisors.keys()):
             if c % prime != 0:
                 del prime_divisors[prime]
         if not prime_divisors:
             return None
+    #Here we have all the primes that fullfil condition 3
     for prime in prime_divisors:
+        #condition 1) and 2)
         if upper_coeff % prime != 0 and lower_coeff % (prime**2) != 0:
             return True
     return None
