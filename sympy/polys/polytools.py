@@ -7979,7 +7979,6 @@ def eisenstein_criterion(self):
         None otherwise.
 
         """
-    from sympy.polys.rings import ring
     from sympy.polys.factortools import dup_zz_irreducible_p
     #this is only for polys whith one variable
     if len(self.gens) != 1:
