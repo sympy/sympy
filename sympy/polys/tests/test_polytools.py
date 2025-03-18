@@ -2,6 +2,7 @@
 
 import pickle
 
+from sympy import nextprime
 from sympy.polys.polytools import (
     Poly, PurePoly, poly,
     parallel_poly_from_expr,
@@ -3873,6 +3874,9 @@ def test_eisenstein_criterion():
     assert eisenstein_criterion(Poly(x**12 + 7*x**11 + 14*x**10 + 21*x**9 + 35*x**8 + 7*x**7 +
     28*x**6 + 49*x**5 + 56*x**4 + 63*x**3 + 70*x**2 + 77*x + 21)) == True
     assert eisenstein_criterion(Poly(x**4-5*x**2+6))== None
+    p = nextprime(10 ** 10)
+    assert eisenstein_criterion(Poly((p + 1) * x ** 1000 + p * x + p, x, domain=QQ)) == True
+
 
 
 def test_issue_11198():

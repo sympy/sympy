@@ -7980,12 +7980,13 @@ def eisenstein_criterion(self):
 
         """
     from sympy.ntheory import primerange
+    from sympy.ntheory import factorint
 
     #this is only for polys whith one variable
     if len(self.gens) != 1:
         return None
     #we obtain the list of coefficient in descendent orden of degree
-    coeffs = self.all_coeffs()
+    coeffs = [abs(c) for c in self.all_coeffs()]
     #This criterion only works in Z[x]
     for c in coeffs:
         if not(c.is_integer):
@@ -7994,20 +7995,21 @@ def eisenstein_criterion(self):
     upper_coeff = coeffs[0]
     #lower_coeff = a_0
     lower_coeff = coeffs[len(coeffs)-1]
-    #to know until which prime we need to try we get the min(in abs).
-    # Because if a > b then a can't divide b
-    min_coeff = abs(min((c for c in coeffs[1:] if c != 0),key=abs))
-
-    for p in primerange(2,min_coeff+1):
-        div = True
-        #try the conditions 1) and 2)
-        if upper_coeff % p != 0 and lower_coeff % p**2 != 0:
-                #the condition 3
-                for c in coeffs[1:]:
-                    if c % p  != 0:
-                        div = False
-                        break
-                if not div:
-                    continue
-                return True
+    if lower_coeff == 0:
+        return None
+    for c in coeffs[1:]:
+        if c != 0:
+            prime_divisors = factorint(c)
+            first_not_null = coeffs.index(c)
+            break
+    #try the conditions 1) and 2)
+    for c in coeffs[first_not_null + 1:]:
+        for prime in list(prime_divisors.keys()):
+            if c % prime != 0:
+                del prime_divisors[prime]
+        if not prime_divisors:
+            return None
+    for prime in prime_divisors:
+        if upper_coeff % prime != 0 and lower_coeff % (prime**2) != 0:
+            return True
     return None
