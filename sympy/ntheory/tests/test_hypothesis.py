@@ -5,6 +5,12 @@ from sympy.functions.combinatorial.numbers import divisor_sigma, totient
 from sympy.ntheory.primetest import is_square
 from sympy.ntheory import factorint, digits
 
+@st.composite
+def digit_strategy(draw):
+    n = draw(st.integers())
+    b = draw(st.integers(min_value=2))
+    digits_value = draw(st.integers(min_value=len(digits(n,b))-1, max_value=len(digits(n, b))+5))
+    return (n, b, digits_value)
 
 @given(n=st.integers(1, 10**10))
 def test_tau_hypothesis(n):
@@ -34,11 +40,14 @@ def test_factorint(n):
     assert product == n
 
 
-@given(n=st.integers(min_value=1), b=st.integers(min_value=2))
-def test_digits(n, b):
-    digits_list = digits(n, b)
+@given(digit_strategy())
+def test_digits(digits_tuple):
+    n, b, digits_value = digits_tuple
+    digits_list = digits(n, b, digits=digits_value)
     size = len(digits_list)-1
     x = 0
     for i in range(0, size):
         x = x + digits_list[size-i] * b**i
-    assert x == n
+    assert x == abs(n)
+    if n < 0:
+        assert digits_list[0] == -b
