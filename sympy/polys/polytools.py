@@ -7959,7 +7959,7 @@ def named_poly(n, f, K, name, x, polys):
         poly = Poly.new(poly, head)
     return poly if polys else poly.as_expr()
 
-@public
+
 def eisenstein_criterion(self):
     """
     Applies Eisenstein's criterion to check if a polynomial in Z[x] is irreducible over Q.
