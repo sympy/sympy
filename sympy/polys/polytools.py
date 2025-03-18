@@ -7979,38 +7979,15 @@ def eisenstein_criterion(self):
         None otherwise.
 
         """
-    from sympy.ntheory import factorint
-
+    from sympy.polys.rings import ring
+    from sympy.polys.factortools import dup_zz_irreducible_p
     #this is only for polys whith one variable
     if len(self.gens) != 1:
         return None
     #we obtain the list of coefficient in descendent orden of degree
-    coeffs = [abs(c) for c in self.all_coeffs()]
-    #This criterion only works in Z[x]
+    coeffs = self.all_coeffs()
     for c in coeffs:
         if not(c.is_integer):
             return None
-    # upper_coeff = a_n
-    upper_coeff = coeffs[0]
-    #lower_coeff = a_0
-    lower_coeff = coeffs[len(coeffs)-1]
-    if lower_coeff == 0:
-        return None
-    for c in coeffs[1:]:
-        if c != 0:
-            prime_divisors = factorint(c)
-            first_not_null = coeffs.index(c)
-            break
-    #we dont need to evaluate the coeffs that are 0
-    for c in coeffs[first_not_null + 1:]:
-        for prime in list(prime_divisors.keys()):
-            if c % prime != 0:
-                del prime_divisors[prime]
-        if not prime_divisors:
-            return None
-    #Here we have all the primes that fullfil condition 3
-    for prime in prime_divisors:
-        #condition 1) and 2)
-        if upper_coeff % prime != 0 and lower_coeff % (prime**2) != 0:
-            return True
-    return None
+
+    return dup_zz_irreducible_p(coeffs,ZZ)
