@@ -136,7 +136,15 @@ class TensorProduct(Expr):
         if isinstance(args[0], (Matrix, ImmutableMatrix, numpy_ndarray,
                                                     scipy_sparse_matrix)):
             return matrix_tensor_product(*args)
-        c_part, new_args = cls.flatten(sympify(args))
+        args = sympify(args)
+        for i, arg in enumerate(args):
+            if arg.is_Add:
+                distributed_terms = []
+                for term in arg.args:
+                    new_args = args[:i] + (term,) + args[i+1:]
+                    distributed_terms.append(TensorProduct(*new_args))
+                return Add(*distributed_terms)
+        c_part, new_args = cls.flatten(args)
         c_part = Mul(*c_part)
         if len(new_args) == 0:
             return c_part
