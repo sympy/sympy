@@ -753,8 +753,7 @@ class TransferFunction(SISOLinearTimeInvariant):
         >>> tf = TransferFunction.from_coeff_lists(num, den, s)
         >>> tf
         TransferFunction(s**2 + 2, 3*s**3 + 2*s**2 + 2*s + 1, s)
-
-        # Create a Transfer Function with more than one variable
+        >>> #Create a Transfer Function with more than one variable
         >>> tf1 = TransferFunction.from_coeff_lists([p, 1], [2*p, 0, 4], s)
         >>> tf1
         TransferFunction(p*s + 1, 2*p*s**2 + 4, s)
@@ -802,13 +801,11 @@ class TransferFunction(SISOLinearTimeInvariant):
         >>> tf = TransferFunction.from_zpk(zeros, poles, gain, s)
         >>> tf
         TransferFunction(7*(s - 3)*(s - 2)*(s - 1), (s - 6)*(s - 5)*(s - 4), s)
-
-        # Create a Transfer Function with variable poles and zeros
+        >>> #Create a Transfer Function with variable poles and zeros
         >>> tf1 = TransferFunction.from_zpk([p, k], [p + k, p - k], 2, s)
         >>> tf1
         TransferFunction(2*(-k + s)*(-p + s), (-k - p + s)*(k - p + s), s)
-
-        # Complex poles or zeros are acceptable
+        >>> #Complex poles or zeros are acceptable
         >>> tf2 = TransferFunction.from_zpk([0], [1-1j, 1+1j, 2], -2, s)
         >>> tf2
         TransferFunction(-2*s, (s - 2)*(s - 1.0 - 1.0*I)*(s - 1.0 + 1.0*I), s)
@@ -903,8 +900,8 @@ class TransferFunction(SISOLinearTimeInvariant):
 
     def _eval_rewrite_as_StateSpace(self, *args):
         """
-        Returns the equivalent space space model of the transfer function model.
-        The state space model will be returned in the controllable cannonical form.
+        Returns the equivalent space model of the transfer function model.
+        The state space model will be returned in the controllable canonical form.
 
         Unlike the space state to transfer function model conversion, the transfer function
         to state space model conversion is not unique. There can be multiple state space
@@ -4273,11 +4270,11 @@ class StateSpace(LinearTimeInvariant):
             if A.rows != B.rows:
                 raise ShapeError("Matrices A and B must have the same number of rows.")
 
-            # Check Ouput and Feedthrough matrices have same rows
+            # Check Output and Feedthrough matrices have same rows
             if C.rows != D.rows:
                 raise ShapeError("Matrices C and D must have the same number of rows.")
 
-            # Check State and Ouput matrices have same columns
+            # Check State and Output matrices have same columns
             if A.cols != C.cols:
                 raise ShapeError("Matrices A and C must have the same number of columns.")
 

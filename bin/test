@@ -21,7 +21,7 @@ Notes
   runner has seen extensive real-world testing and will be removed in the
   future.
 - To regenerate the `.test_durations` file, which is used by pytest-split to
-  determine how to partion the tests into evenly sized groups, run:
+  determine how to partition the tests into evenly sized groups, run:
     `$ bin/test --store-durations`
 
 """
@@ -107,7 +107,7 @@ parser.add_argument(
 parser.add_argument(
     '--store-durations', action='store_true', dest='store_durations',
     default=False, help='Update the `.test_durations` file, which helps '
-    'pytest-split partion tests into even-sized groups.')
+    'pytest-split partition tests into even-sized groups.')
 
 options, args = parser.parse_known_args()
 

@@ -506,18 +506,6 @@ def test_issue_3934():
     assert limit((5**(1/x) + 3**(1/x))**x, x, 0) == 5
 
 
-def test_calculate_series():
-    # NOTE
-    # The calculate_series method is being deprecated and is no longer responsible
-    # for result being returned. The mrv_leadterm function now uses simple leadterm
-    # calls rather than calculate_series.
-
-    # needs gruntz calculate_series to go to n = 32
-    assert limit(x**Rational(77, 3)/(1 + x**Rational(77, 3)), x, oo) == 1
-    # needs gruntz calculate_series to go to n = 128
-    assert limit(x**101.1/(1 + x**101.1), x, oo) == 1
-
-
 def test_issue_5955():
     assert limit((x**16)/(1 + x**16), x, oo) == 1
     assert limit((x**100)/(1 + x**100), x, oo) == 1
@@ -556,6 +544,8 @@ def test_Limit_dir():
 def test_polynomial():
     assert limit((x + 1)**1000/((x + 1)**1000 + 1), x, oo) == 1
     assert limit((x + 1)**1000/((x + 1)**1000 + 1), x, -oo) == 1
+    assert limit(x ** Rational(77, 3) / (1 + x ** Rational(77, 3)), x, oo) == 1
+    assert limit(x ** 101.1 / (1 + x ** 101.1), x, oo) == 1
 
 
 def test_rational():

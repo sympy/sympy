@@ -468,7 +468,7 @@ class CodePrinter(StrPrinter):
         obj, *wrt_order_pairs = expr.args
         for func_arg in obj.args:
             if not func_arg.is_Symbol:
-                raise ValueError("%s._print_Derivative(...) only supports functions with symobls as arguments." %
+                raise ValueError("%s._print_Derivative(...) only supports functions with symbols as arguments." %
                                  self.__class__.__name__)
         meth_name = '_print_Derivative_%s' % obj.func.__name__
         pmeth = getattr(self, meth_name, None)

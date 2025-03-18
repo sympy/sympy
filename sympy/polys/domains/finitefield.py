@@ -232,6 +232,14 @@ class FiniteField(Field, SimpleDomain):
     def tp(self):
         return self._tp
 
+    @property
+    def is_Field(self):
+        is_field = getattr(self, '_is_field', None)
+        if is_field is None:
+            from sympy.ntheory.primetest import isprime
+            self._is_field = is_field = isprime(self.mod)
+        return is_field
+
     def __str__(self):
         return 'GF(%s)' % self.mod
 
