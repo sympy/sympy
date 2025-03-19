@@ -741,6 +741,38 @@ def _(mat, assumptions):
 
 # AlgebraicPredicate
 
+# Helper function: determines if an expression is a rational
+# polynomial evaluated at a transcendental value
+def _ConstantPolynomial(expr, assumptions):
+    def recursive_check(transcendental_num, other_transcendentals, expression):
+        if expression.is_Atom:
+            if expression.equals(other_transcendentals):
+                return None
+
+            expression_transcendental = expression.equals(transcendental_num)
+            expression_rational = ask(Q.rational(expression))
+            if expression_transcendental is None or expression_rational is None:
+                return None
+            elif expression_transcendental | expression_rational:
+                return True
+            else:
+                return False
+
+        args_transcendental = True
+        for arg in expression.args:
+            arg_check = recursive_check(transcendental_num, other_transcendentals, arg)
+            if arg_check is None:
+                args_transcendental = None
+                break
+            args_transcendental = args_transcendental | arg_check
+        return args_transcendental
+
+    polynomial_pi = recursive_check(pi, E, expr)
+    polynomial_E = recursive_check(E, pi, expr)
+    if polynomial_pi or polynomial_E:
+        return False
+    return True
+
 @AlgebraicPredicate.register_many(AlgebraicNumber, Float, GoldenRatio, # type:ignore
     ImaginaryUnit, TribonacciConstant)
 def _(expr, assumptions):
@@ -757,35 +789,10 @@ def _(expr, assumptions):
     if closed_group is not None:
         return closed_group
 
-    def recursive_check(transcendental_num, other_transcendental, expression):
-        if expression.is_Atom:
-            if expression.equals(other_transcendental):
-                return None
-
-            expression_transcendental = expression.equals(transcendental_num)
-            expression_rational = ask(Q.rational(expression))
-            if expression_transcendental is None or expression_rational is None:
-                return None
-            elif expression_transcendental | expression_rational:
-                return True
-            else:
-                return False
-
-        args_transcendental = True
-        for arg in expression.args:
-            arg_check = recursive_check(transcendental_num, other_transcendental, arg)
-            if arg_check is None:
-                args_transcendental = None
-                break
-            args_transcendental = args_transcendental | arg_check
-        return args_transcendental
-
-    polynomial_pi = recursive_check(pi, E, expr)
-    polynomial_E = recursive_check(E, pi, expr)
-    if polynomial_pi or polynomial_E:
-        return False
-    else:
-        return closed_group
+    is_constant_poly = _ConstantPolynomial(expr, assumptions)
+    if is_constant_poly is not None:
+        return is_constant_poly
+    return None
 
 @AlgebraicPredicate.register(Pow) # type:ignore
 def _(expr, assumptions):
