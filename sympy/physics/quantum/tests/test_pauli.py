@@ -17,6 +17,7 @@ sx2, sy2, sz2 = SigmaX(2), SigmaY(2), SigmaZ(2)
 
 sm, sp = SigmaMinus(), SigmaPlus()
 sm1, sp1 = SigmaMinus(1), SigmaPlus(1)
+sm2, sp2 = SigmaMinus(2), SigmaPlus(2)
 A, B = Operator("A"), Operator("B")
 
 
@@ -50,6 +51,13 @@ def test_pauli_operators_commutator_with_labels():
     assert Commutator(sy1, sz2).doit() == 0
     assert Commutator(sz1, sx2).doit() == 0
 
+    assert Commutator(sp1, sp1).doit() == 0
+    assert Commutator(sm1, sm1).doit() == 0
+    assert Commutator(sp1, sm1).doit() == sz1
+
+    assert Commutator(sm1, sm2).doit() == 0
+    assert Commutator(sp1, sm2).doit() == 0
+    assert Commutator(sp1, sp2).doit() == 0
 
 def test_pauli_operators_anticommutator():
 
