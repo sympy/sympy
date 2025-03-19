@@ -462,6 +462,7 @@ class Relational(Boolean, EvalfMixin):
                     from sympy.polys.polyerrors import PolynomialError
                     from sympy.polys.polytools import gcd, Poly, poly
                     try:
+                        x = free.pop() if free else x
                         p = poly(dif, x)
                         c = p.all_coeffs()
                         constant = c[-1]
@@ -494,11 +495,34 @@ class Relational(Boolean, EvalfMixin):
                             del nzm[0]
                             newexpr = Add(*[i * j for i, j in nzm])
                             r = r.func(lhsterm, -newexpr)
-
                     else:
                         r = r.func(constant, S.Zero)
                 except ValueError:
-                    pass
+                    try:
+                        from sympy.polys.polyerrors import PolynomialError
+                        from sympy.polys.polytools import gcd, Poly, poly
+                        p = poly(dif, free[0])
+                        c = p.all_coeffs()
+                        constant = c[-1]
+                        c[-1] = 0
+                        scale = gcd(c)
+                        c = [ctmp / scale for ctmp in c]
+                        nzm = list(filter(lambda f: f[0] != 0, list(zip(c, free))))
+                        if scale != 0:
+                            if constant != 0:
+                                # lhs: expression, rhs: constant
+                                newexpr = Add(*[i * j for i, j in nzm])
+                                r = r.func(newexpr, -constant / scale)
+                            else:
+                                # keep first term on lhs
+                                lhsterm = nzm[0][0] * nzm[0][1]
+                                del nzm[0]
+                                newexpr = Add(*[i * j for i, j in nzm])
+                                r = r.func(lhsterm, -newexpr)
+                        else:
+                            r = r.func(constant, S.Zero)
+                    except PolynomialError:
+                        pass
         # Did we get a simplified result?
         r = r.canonical
         measure = kwargs['measure']
