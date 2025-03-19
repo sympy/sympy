@@ -9,7 +9,7 @@ from sympy.assumptions.handlers import AskHandler
 from sympy.assumptions.ask_generated import (get_all_known_facts,
     get_known_facts_dict)
 from sympy.core.add import Add
-from sympy.core.numbers import (I, Integer, Rational, oo, zoo, pi)
+from sympy.core.numbers import (I, Integer, Rational, oo, zoo, pi, E)
 from sympy.core.singleton import S
 from sympy.core.power import Pow
 from sympy.core.symbol import Str, symbols, Symbol
@@ -2150,6 +2150,16 @@ def test_algebraic():
     assert ask(Q.algebraic(x**(pi*I))) is None
     assert ask(Q.algebraic(pi**n),Q.integer(n) & Q.positive(n)) is False
     assert ask(Q.algebraic(x**y),Q.algebraic(x) & Q.rational(y)) is True
+
+    # https://github.com/sympy/sympy/pull/27696
+    assert ask(Q.algebraic(log(3,2)**2)) is True
+    assert ask(Q.algebraic(pi**2 + 3*pi + 4)) is False
+    assert ask(Q.algebraic(E**2 - 2*E**3)) is False
+    assert ask(Q.algebraic((pi**2 + 3)**3)) is False
+    assert ask(Q.algebraic((E + 1)**2 + 3*E)) is False
+    assert ask(Q.algebraic(pi + E)) is None
+    assert ask(Q.algebraic(pi**2 + 3*E**3)) is None
+
 
 
 def test_global():
