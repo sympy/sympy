@@ -57,7 +57,7 @@ class Mod(DefinedFunction):
             """Try to return p % q if both are numbers or +/-p is known
             to be less than or equal q.
             """
-            from sympy.functions.elementary.integers import floor
+
             if q.is_zero:
                 raise ZeroDivisionError("Modulo by zero")
             if p is S.NaN or q is S.NaN or p.is_finite is False or q.is_finite is False:
@@ -79,8 +79,38 @@ class Mod(DefinedFunction):
                 if rv is not None:
                     return rv
 
-            if not (f := floor(p/q)).has(floor):
-                return p - f*q
+            # by ratio
+            r = p/q
+            if r.is_integer:
+                return S.Zero
+            try:
+                d = int(r)
+            except TypeError:
+                pass
+            else:
+                if isinstance(d, int):
+                    rv = p - d*q
+                    if (rv*q < 0) == True:
+                        rv += q
+                    return rv
+
+            # by difference
+            # -2|q| < p < 2|q|
+            d = abs(p)
+            for _ in range(2):
+                d -= abs(q)
+                if d.is_negative:
+                    if q.is_positive:
+                        if p.is_positive:
+                            return d + q
+                        elif p.is_negative:
+                            return -d
+                    elif q.is_negative:
+                        if p.is_positive:
+                            return d
+                        elif p.is_negative:
+                            return -d + q
+                    break
 
         rv = number_eval(p, q)
         if rv is not None:
