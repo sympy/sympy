@@ -1,7 +1,7 @@
 """
 Handlers for predicates related to set membership: integer, rational, etc.
 """
-
+from sympy.abc import x
 from sympy.assumptions import Q, ask
 from sympy.core import Add, Basic, Expr, Mul, Pow, S
 from sympy.core.numbers import (AlgebraicNumber, ComplexInfinity, Exp1, Float,
@@ -15,6 +15,7 @@ from sympy.core.relational import Eq
 from sympy.functions.elementary.complexes import conjugate
 from sympy.matrices import Determinant, MatrixBase, Trace
 from sympy.matrices.expressions.matexpr import MatrixElement
+from sympy.polys.polytools import Poly
 
 from sympy.multipledispatch import MDNotImplementedError
 
@@ -23,6 +24,7 @@ from ..predicates.sets import (IntegerPredicate, RationalPredicate,
     IrrationalPredicate, RealPredicate, ExtendedRealPredicate,
     HermitianPredicate, ComplexPredicate, ImaginaryPredicate,
     AntihermitianPredicate, AlgebraicPredicate, TranscendentalPredicate)
+from ...physics.quantum.tests.test_grover import return_one_on_one
 
 
 # IntegerPredicate
@@ -744,34 +746,33 @@ def _(mat, assumptions):
 # Helper function: determines if an expression is a rational
 # polynomial evaluated at a transcendental value
 def _ConstantPolynomial(expr, assumptions):
-    def recursive_check(transcendental_num, other_transcendentals, expression):
-        if expression.is_Atom:
-            if expression.equals(other_transcendentals):
-                return None
+    print("Calling constant polynomial with ", expr, " and ", assumptions)
+    is_constant_poly = False
+    for transcendental in [E, pi]:
+        print("transcendental is ", transcendental)
+        new_expr = expr.subs(transcendental, x)
+        all_coefficients_rational = True
+        print("new_expr is ", new_expr)
+        if new_expr.is_polynomial(x):
+            expr_poly = Poly(new_expr, x)
+            for coefficient in expr_poly.coeffs():
+                print("coefficient is ", coefficient)
+                coefficient_rational = ask(Q.rational(coefficient), assumptions)
+                if coefficient_rational is None:
+                    all_coefficients_rational = None
+                    break
+                all_coefficients_rational &= coefficient_rational
+                print("coefficient is rational? ", coefficient_rational,)
+                print("all_coefficients_rational is ", all_coefficients_rational)
 
-            expression_transcendental = expression.equals(transcendental_num)
-            expression_rational = ask(Q.rational(expression))
-            if expression_transcendental is None or expression_rational is None:
-                return None
-            elif expression_transcendental | expression_rational:
+            if all_coefficients_rational:
+                print("return true")
                 return True
-            else:
-                return False
+            elif all_coefficients_rational is None:
+                is_constant_poly = None
 
-        args_transcendental = True
-        for arg in expression.args:
-            arg_check = recursive_check(transcendental_num, other_transcendentals, arg)
-            if arg_check is None:
-                args_transcendental = None
-                break
-            args_transcendental = args_transcendental | arg_check
-        return args_transcendental
-
-    polynomial_pi = recursive_check(pi, E, expr)
-    polynomial_E = recursive_check(E, pi, expr)
-    if polynomial_pi or polynomial_E:
-        return False
-    return True
+    print("return ", is_constant_poly)
+    return is_constant_poly
 
 @AlgebraicPredicate.register_many(AlgebraicNumber, Float, GoldenRatio, # type:ignore
     ImaginaryUnit, TribonacciConstant)
@@ -785,13 +786,15 @@ def _(expr, assumptions):
 
 @AlgebraicPredicate.register_many(Add, Mul) # type:ignore
 def _(expr, assumptions):
+    print("Calling mul with ", expr, " and ", assumptions)
     closed_group = test_closed_group(expr, assumptions, Q.algebraic)
     if closed_group is not None:
+        print("returning closed group", closed_group)
         return closed_group
-
     is_constant_poly = _ConstantPolynomial(expr, assumptions)
-    if is_constant_poly is not None:
-        return is_constant_poly
+    print("returning constant poly", not is_constant_poly)
+    if is_constant_poly:
+        return False
     return None
 
 @AlgebraicPredicate.register(Pow) # type:ignore
@@ -816,10 +819,12 @@ def _(expr, assumptions):
         if ask(Q.ne(expr.base,0) & Q.ne(expr.base,1)) and exp_rational is False:
             return False
 
-    exp_integer = ask(Q.integer(expr.exp), assumptions)
-    if base_algebraic is False and exp_integer:
-        if expr.exp > 0:
+    is_constant_poly = _ConstantPolynomial(expr.base, assumptions)
+    if is_constant_poly:
+        exp_positive_integer = ask(Q.integer(expr.exp) & ~Q.negative(expr.exp), assumptions)
+        if exp_positive_integer:
             return False
+    return None
 
 @AlgebraicPredicate.register(Rational) # type:ignore
 def _(expr, assumptions):
