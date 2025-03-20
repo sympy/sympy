@@ -78,6 +78,33 @@ def test_PolyRing_ring_new():
     R, = ring("", QQ)
     assert R.ring_new([((), 7)]) == R(7)
 
+
+def test_PolyRing_index():
+    R, x, y, z = ring("x,y,z", ZZ)
+
+    assert R.index(0) == 0
+    assert R.index(1) == 1
+    assert R.index(2) == 2
+
+    assert R.index(-1) == 2
+    assert R.index(-2) == 1
+    assert R.index(-3) == 0
+
+    assert R.index(x) == 0
+    assert R.index(y) == 1
+    assert R.index(z) == 2
+
+    assert R.index(None) == 0
+    R_empty = PolyRing([], ZZ)
+    assert R_empty.index(None) == -1
+
+    raises(ValueError, lambda: R.index(3))
+    raises(ValueError, lambda: R.index(-4))
+    w = Symbol('w')
+    raises(ValueError, lambda: R.index(w))
+    raises(ValueError, lambda: R.index("u"))
+
+
 def test_PolyRing_drop():
     R, x,y,z = ring("x,y,z", ZZ)
 
