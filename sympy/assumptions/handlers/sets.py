@@ -24,7 +24,6 @@ from ..predicates.sets import (IntegerPredicate, RationalPredicate,
     IrrationalPredicate, RealPredicate, ExtendedRealPredicate,
     HermitianPredicate, ComplexPredicate, ImaginaryPredicate,
     AntihermitianPredicate, AlgebraicPredicate, TranscendentalPredicate)
-from ...physics.quantum.tests.test_grover import return_one_on_one
 
 
 # IntegerPredicate
