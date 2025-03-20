@@ -461,9 +461,9 @@ def get_integer_part(expr: 'Expr', no: int, options: OPT_DICT, return_ints=False
 
     re_, im_, re_acc, im_acc = None, None, None, None
 
-    if ire:
+    if ire is not None and ire != fzero:
         re_, re_acc = calc_part(re(expr, evaluate=False), ire)
-    if iim:
+    if iim is not None and iim != fzero:
         im_, im_acc = calc_part(im(expr, evaluate=False), iim)
 
     if return_ints:
