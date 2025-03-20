@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from .basic import Atom, Basic
+from .add import Add
 from .coreerrors import LazyExceptionMessage
 from .sorting import ordered
 from .evalf import EvalfMixin
@@ -418,7 +419,6 @@ class Relational(Boolean, EvalfMixin):
                 return left
 
     def _eval_simplify(self, **kwargs):
-        from .add import Add
         from .expr import Expr
         r = self
         r = r.func(*[i.simplify(**kwargs) for i in r.args])
@@ -639,6 +639,18 @@ class Equality(Relational):
     def _eval_relation(cls, lhs, rhs):
         return _sympify(lhs == rhs)
 
+    def _eval_rewrite(self, rule, args, **hints):
+        if rule == GreaterThan:
+            if is_ge(self.lhs, self.rhs):
+                return GreaterThan(self.rhs, self.lhs)
+            elif is_ge(self.rhs, self.lhs):
+                return GreaterThan(self.lhs, self.rhs)
+        elif rule == LessThan:
+            if is_ge(self.lhs, self.rhs):
+                return LessThan(self.lhs, self.rhs)
+            elif is_ge(self.rhs, self.lhs):
+                return LessThan(self.rhs, self.lhs)
+
     def _eval_rewrite_as_Add(self, L, R, evaluate=True, **kwargs):
         """
         return Eq(L, R) as L - R. To control the evaluation of
@@ -708,23 +720,53 @@ class Equality(Relational):
         from .expr import Expr
         if not isinstance(e.lhs, Expr) or not isinstance(e.rhs, Expr):
             return e
+
+        lhs, rhs = e.lhs, e.rhs
+
+        lr_ge = is_ge(lhs, rhs)
+        rl_ge = is_ge(rhs, lhs)
+
+        if lr_ge and rl_ge:
+            return S.true
+
+        if not lr_ge and rl_ge:
+            lhs, rhs = rhs, lhs
+            lr_ge, rl_ge = rl_ge, lr_ge
+
+        if lr_ge:
+            if len(lhs.free_symbols) == 1 and len(rhs.free_symbols) == 1:
+                try:
+                    from sympy.calculus.util import minimum, maximum
+                    from sympy.logic.boolalg import And
+
+                    x = lhs.free_symbols.pop()
+                    y = rhs.free_symbols.pop()
+
+                    min_x = minimum(lhs, x)
+                    max_y = maximum(rhs, y)
+
+                    if min_x.equals(max_y):
+                        return And(Eq(lhs, min_x), Eq(y, max_y))
+                except NotImplementedError:
+                    pass
+
         free = self.free_symbols
         if len(free) == 1:
             try:
-                from .add import Add
                 from sympy.solvers.solveset import linear_coeffs
+
                 x = free.pop()
-                m, b = linear_coeffs(
-                    Add(e.lhs, -e.rhs, evaluate=False), x)
+                m, b = linear_coeffs(Add(lhs, -rhs, evaluate=False), x)
                 if m.is_zero is False:
-                    enew = e.func(x, -b / m)
+                    enew = Equality(x, -b / m)
                 else:
-                    enew = e.func(m * x, -b)
+                    enew = Equality(m * x, -b)
                 measure = kwargs['measure']
                 if measure(enew) <= kwargs['ratio'] * measure(e):
                     e = enew
             except ValueError:
                 pass
+
         return e.canonical
 
     def integrate(self, *args, **kwargs):
@@ -798,6 +840,18 @@ class Unequality(Relational):
                 return _sympify(val)
 
         return Relational.__new__(cls, lhs, rhs, **options)
+
+    def _eval_rewrite(self, rule, args, **hints):
+        if rule == StrictGreaterThan:
+            if is_ge(self.lhs, self.rhs):
+                return StrictGreaterThan(self.rhs, self.lhs)
+            elif is_ge(self.rhs, self.lhs):
+                return StrictGreaterThan(self.lhs, self.rhs)
+        elif rule == StrictLessThan:
+            if is_ge(self.lhs, self.rhs):
+                return StrictLessThan(self.lhs, self.rhs)
+            elif is_ge(self.rhs, self.lhs):
+                return StrictLessThan(self.rhs, self.lhs)
 
     @classmethod
     def _eval_relation(cls, lhs, rhs):
@@ -1136,6 +1190,11 @@ class GreaterThan(_Greater):
 
     rel_op = '>='
 
+    def _eval_rewrite(self, rule, args, **hints):
+        if rule == Equality:
+            if is_ge(self.rhs, self.lhs):
+                return Equality(self.lhs, self.rhs)
+
     @classmethod
     def _eval_fuzzy_relation(cls, lhs, rhs):
         return is_ge(lhs, rhs)
@@ -1152,6 +1211,11 @@ class LessThan(_Less):
     __slots__ = ()
 
     rel_op = '<='
+
+    def _eval_rewrite(self, rule, args, **hints):
+        if rule == Equality:
+            if is_ge(self.lhs, self.rhs):
+                return Equality(self.lhs, self.rhs)
 
     @classmethod
     def _eval_fuzzy_relation(cls, lhs, rhs):
@@ -1170,6 +1234,11 @@ class StrictGreaterThan(_Greater):
 
     rel_op = '>'
 
+    def _eval_rewrite(self, rule, args, **hints):
+        if rule == Unequality:
+            if is_ge(self.lhs, self.rhs):
+                return Unequality(self.lhs, self.rhs)
+
     @classmethod
     def _eval_fuzzy_relation(cls, lhs, rhs):
         return is_gt(lhs, rhs)
@@ -1187,6 +1256,11 @@ class StrictLessThan(_Less):
     __slots__ = ()
 
     rel_op = '<'
+
+    def _eval_rewrite(self, rule, args, **hints):
+        if rule == Unequality:
+            if is_ge(self.rhs, self.lhs):
+                return Unequality(self.lhs, self.rhs)
 
     @classmethod
     def _eval_fuzzy_relation(cls, lhs, rhs):
@@ -1530,7 +1604,6 @@ def is_eq(lhs, rhs, assumptions=None):
 
     from sympy.assumptions.wrapper import (AssumptionsWrapper,
         is_infinite, is_extended_real)
-    from .add import Add
 
     _lhs = AssumptionsWrapper(lhs, assumptions)
     _rhs = AssumptionsWrapper(rhs, assumptions)
