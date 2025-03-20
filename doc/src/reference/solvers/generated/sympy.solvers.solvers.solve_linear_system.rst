@@ -15,7 +15,7 @@ Examples
    >>> from sympy.abc import x, y, z
    >>> init_printing(use_unicode=True)
 
-.. include:: /sympy.solvers.solvers.solve_linear_system_examples.rst
+.. include:: ./sympy.solvers.solvers.solve_linear_system_examples.rst
 
 See Also
 --------

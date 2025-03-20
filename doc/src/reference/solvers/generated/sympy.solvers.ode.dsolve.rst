@@ -15,7 +15,7 @@ Examples
    >>> from sympy.abc import x, y, z
    >>> init_printing(use_unicode=True)
 
-.. include:: /sympy.solvers.ode.dsolve_examples.rst
+.. include:: ./sympy.solvers.ode.dsolve_examples.rst
 
 See Also
 --------

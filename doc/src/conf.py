@@ -144,7 +144,7 @@ autodoc_inherit_docstrings = False
 # Directory containing example files to be included
 # This makes Sphinx look for include files relative to the directory containing
 # the file that contains the include directive
-include_patterns = ['reference/solvers/generated']
+include_patterns = ['*', 'reference/solvers/generated']
 
 # See https://www.sympy.org/sphinx-math-dollar/
 mathjax3_config = {
