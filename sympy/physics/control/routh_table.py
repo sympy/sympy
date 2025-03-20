@@ -25,6 +25,9 @@ class RouthHurwitz(MutableDenseMatrix):
             The polynomial whose Routh-Hurwitz table is to be created.
         var : :py:class:`~.Symbol`
             The symbol representing the variable in the polynomial.
+        infinitesimal_element : None, :py:class:`~.Symbol`, optional
+            The symbol representing the infinitesimal element for the first column zero case.
+            If not provided, a default symbol ``epsilon`` will be used.
 
         Examples
         ========
@@ -77,20 +80,23 @@ class RouthHurwitz(MutableDenseMatrix):
         [ 16,  0,  0,  0]])
         >>> RouthHurwitz(p2, s).zero_rows_case
         True
+        >>> RouthHurwitz(p2, s).auxiliary_polynomial
+        Poly(2*s**4 + 12*s**2 + 16, s, domain='ZZ')
 
         References
         ==========
         .. [1] https://en.wikipedia.org/wiki/Routh-Hurwitz_stability_criterion
 
     """
-    def __new__(cls, polynomial, var):
+    def __new__(cls, polynomial, var, infinitesimal_element = None):
         if not isinstance(var, Symbol):
             raise ValueError("var must be a Symbol")
         n = Poly(polynomial, var).degree()
 
         return super().__new__(cls, n + 1, n//2 + 1, [0]*(n + 1)*(n//2 + 1))
 
-    def __init__(self, polynomial, var):
+    def __init__(self, polynomial, var, infinitesimal_element = None):
+        self._var = var
         self._polynomial = Poly(polynomial, var)
         self._poly_degree = self._polynomial.degree()
         self._coeffs = self._polynomial.all_coeffs()
@@ -98,7 +104,9 @@ class RouthHurwitz(MutableDenseMatrix):
         self._zero_row_case = False
         self._aux_poly_degree = 0
 
-        self._inf_element = symbols("epsilon", dummy=True)
+        self._inf_element = infinitesimal_element
+        if infinitesimal_element is None:
+            self._inf_element = symbols("epsilon", dummy=True)
 
         self._build_table()
 
@@ -169,5 +177,13 @@ class RouthHurwitz(MutableDenseMatrix):
     @property
     def auxiliary_polynomial(self):
         """If zero_rows_case is True, return the auxiliary polynomial, else None """
-        # TODO
-        pass
+        if self.zero_rows_case is False:
+            return None
+
+        aux_poly = 0
+        aux_poly_row = self._poly_degree - self._aux_poly_degree
+
+        for j, exp in enumerate(range(self._aux_poly_degree, -1, -2)):
+            aux_poly += self[aux_poly_row, j] * self._var**exp
+
+        return Poly(aux_poly, self._var)

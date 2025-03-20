@@ -1100,7 +1100,8 @@ class TransferFunction(SISOLinearTimeInvariant):
         True
 
         """
-        return fuzzy_and(pole.as_real_imag()[0].is_negative for pole in self.poles())
+        standard_form = self.to_standard_form()
+        return fuzzy_and(pole.as_real_imag()[0].is_negative for pole in standard_form.poles())
 
     def to_standard_form(self):
         r"""
@@ -1158,9 +1159,12 @@ class TransferFunction(SISOLinearTimeInvariant):
         (3/10 < k) & (k < oo)
 
         """
-
         from sympy.physics.control import RouthHurwitz
         from sympy import false, sign
+
+        stability = self.is_stable()
+        if stability is not None:
+            return stability
 
         standard_form = self.to_standard_form()
 

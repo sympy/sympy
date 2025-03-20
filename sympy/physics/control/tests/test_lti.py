@@ -24,8 +24,8 @@ from sympy.testing.pytest import raises
 
 a, x, b, c, s, g, d, p, k, tau, zeta, wn, T = symbols('a, x, b, c, s, g, d, p, k,\
     tau, zeta, wn, T')
-a0, a1, a2, a3, b0, b1, b2, b3, c0, c1, c2, c3, d0, d1, d2, d3 = symbols('a0:4,\
-    b0:4, c0:4, d0:4')
+a0, a1, a2, a3, b0, b1, b2, b3, b4, c0, c1, c2, c3, d0, d1, d2, d3 = symbols('a0:4,\
+    b0:5, c0:4, d0:4')
 TF1 = TransferFunction(1, s**2 + 2*zeta*wn*s + wn**2, s)
 TF2 = TransferFunction(k, 1, s)
 TF3 = TransferFunction(a2*p - s, a2*s + p, s)
@@ -279,7 +279,7 @@ def test_TransferFunction_functions():
 
     assert G1.is_stable() is False
     assert G2.is_stable() is True
-    assert tf1.is_stable() is False   # as one pole is +ve, and the other is -ve.
+    assert tf1.is_stable() is True
     assert expect2.is_stable() is False
     assert expect1.is_stable() is True
     assert stable_tf.is_stable() is True
@@ -287,6 +287,14 @@ def test_TransferFunction_functions():
     assert TF_.is_stable() is False
     assert expect4_.is_stable() is None   # no assumption provided for the only pole 's'.
     assert SP4.is_stable() is None
+
+    generic_den = b4 * s**4 + b3 * s**3 + b2 * s**2 + b1 * s + b0
+
+    stab_cond = TransferFunction(1, generic_den, s).get_asymptotic_stability_conditions()
+    assert stab_cond == [b4 > 0, b3 > 0, -b1*b4/b3 + b2 > 0, (b0*b3**2 + b1*(b1*b4 - b2*b3))/(b1*b4 - b2*b3) > 0, b0 > 0]
+    assert TransferFunction(1, (s+1)*(s+2*I)*(s-2*I), s).get_asymptotic_stability_conditions() is False
+    assert TransferFunction(1, (s+1)*(s+2)*(s+1/2), s).get_asymptotic_stability_conditions() is True
+    assert stable_tf.get_asymptotic_stability_conditions() is True
 
     # Zeros of a transfer function.
     assert G1.zeros() == [1, 1]
