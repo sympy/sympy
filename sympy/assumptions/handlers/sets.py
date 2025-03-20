@@ -1,7 +1,7 @@
 """
 Handlers for predicates related to set membership: integer, rational, etc.
 """
-
+from sympy.abc import x
 from sympy.assumptions import Q, ask
 from sympy.core import Add, Basic, Expr, Mul, Pow, S
 from sympy.core.numbers import (AlgebraicNumber, ComplexInfinity, Exp1, Float,
@@ -15,6 +15,7 @@ from sympy.core.relational import Eq
 from sympy.functions.elementary.complexes import conjugate
 from sympy.matrices import Determinant, MatrixBase, Trace
 from sympy.matrices.expressions.matexpr import MatrixElement
+from sympy.polys.polytools import Poly
 
 from sympy.multipledispatch import MDNotImplementedError
 
@@ -22,7 +23,7 @@ from .common import test_closed_group
 from ..predicates.sets import (IntegerPredicate, RationalPredicate,
     IrrationalPredicate, RealPredicate, ExtendedRealPredicate,
     HermitianPredicate, ComplexPredicate, ImaginaryPredicate,
-    AntihermitianPredicate, AlgebraicPredicate)
+    AntihermitianPredicate, AlgebraicPredicate, TranscendentalPredicate)
 
 
 # IntegerPredicate
@@ -741,6 +742,29 @@ def _(mat, assumptions):
 
 # AlgebraicPredicate
 
+# Helper function: determines if an expression is a rational
+# polynomial evaluated at a transcendental value
+def _ConstantPolynomial(expr, assumptions):
+    is_constant_poly = False
+    for transcendental in [E, pi]:
+        new_expr = expr.subs(transcendental, x)
+        all_coefficients_rational = True
+        if new_expr.is_polynomial(x):
+            expr_poly = Poly(new_expr, x)
+            for coefficient in expr_poly.coeffs():
+                coefficient_rational = ask(Q.rational(coefficient), assumptions)
+                if coefficient_rational is None:
+                    all_coefficients_rational = None
+                    break
+                all_coefficients_rational &= coefficient_rational
+
+            if all_coefficients_rational:
+                return True
+            elif all_coefficients_rational is None:
+                is_constant_poly = None
+
+    return is_constant_poly
+
 @AlgebraicPredicate.register_many(AlgebraicNumber, Float, GoldenRatio, # type:ignore
     ImaginaryUnit, TribonacciConstant)
 def _(expr, assumptions):
@@ -753,7 +777,14 @@ def _(expr, assumptions):
 
 @AlgebraicPredicate.register_many(Add, Mul) # type:ignore
 def _(expr, assumptions):
-    return test_closed_group(expr, assumptions, Q.algebraic)
+    closed_group = test_closed_group(expr, assumptions, Q.algebraic)
+    if closed_group is not None:
+        return closed_group
+    is_constant_poly = _ConstantPolynomial(expr, assumptions)
+
+    if is_constant_poly:
+        return False
+    return None
 
 @AlgebraicPredicate.register(Pow) # type:ignore
 def _(expr, assumptions):
@@ -776,6 +807,13 @@ def _(expr, assumptions):
         # is irrational,then the result is transcendental.
         if ask(Q.ne(expr.base,0) & Q.ne(expr.base,1)) and exp_rational is False:
             return False
+
+    is_constant_poly = _ConstantPolynomial(expr.base, assumptions)
+    if is_constant_poly:
+        exp_positive_integer = ask(Q.integer(expr.exp) & ~Q.negative(expr.exp), assumptions)
+        if exp_positive_integer:
+            return False
+    return None
 
 @AlgebraicPredicate.register(Rational) # type:ignore
 def _(expr, assumptions):
@@ -804,3 +842,37 @@ def _(expr, assumptions):
     x = expr.args[0]
     if ask(Q.algebraic(x), assumptions):
         return ask(~Q.nonzero(x - 1), assumptions)
+
+
+# TranscendentalPredicate
+
+@TranscendentalPredicate.register_many(Exp1, Pi)
+def _(expr, assumptions):
+    return True
+
+@TranscendentalPredicate.register_many(AlgebraicNumber, TribonacciConstant,
+    Infinity, ImaginaryUnit, ComplexInfinity, GoldenRatio, NegativeInfinity)
+def _(expr, assumptions):
+    return False
+
+@TranscendentalPredicate.register(Float)
+def _(expr, assumptions):
+    return None
+
+@TranscendentalPredicate.register(Expr)
+def _(expr, assumptions):
+    ret = expr.is_transcendental
+    if ret is not None:
+        return ret
+
+    is_complex = ask(Q.complex(expr), assumptions)
+    if is_complex:
+        is_algebraic = ask(Q.algebraic(expr), assumptions)
+        if is_algebraic is None:
+            return None
+        return not is_algebraic
+    return is_complex
+
+@TranscendentalPredicate.register(NaN)
+def _(expr, assumptions):
+    return None
