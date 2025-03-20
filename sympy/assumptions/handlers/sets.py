@@ -746,32 +746,24 @@ def _(mat, assumptions):
 # Helper function: determines if an expression is a rational
 # polynomial evaluated at a transcendental value
 def _ConstantPolynomial(expr, assumptions):
-    print("Calling constant polynomial with ", expr, " and ", assumptions)
     is_constant_poly = False
     for transcendental in [E, pi]:
-        print("transcendental is ", transcendental)
         new_expr = expr.subs(transcendental, x)
         all_coefficients_rational = True
-        print("new_expr is ", new_expr)
         if new_expr.is_polynomial(x):
             expr_poly = Poly(new_expr, x)
             for coefficient in expr_poly.coeffs():
-                print("coefficient is ", coefficient)
                 coefficient_rational = ask(Q.rational(coefficient), assumptions)
                 if coefficient_rational is None:
                     all_coefficients_rational = None
                     break
                 all_coefficients_rational &= coefficient_rational
-                print("coefficient is rational? ", coefficient_rational,)
-                print("all_coefficients_rational is ", all_coefficients_rational)
 
             if all_coefficients_rational:
-                print("return true")
                 return True
             elif all_coefficients_rational is None:
                 is_constant_poly = None
 
-    print("return ", is_constant_poly)
     return is_constant_poly
 
 @AlgebraicPredicate.register_many(AlgebraicNumber, Float, GoldenRatio, # type:ignore
@@ -786,13 +778,11 @@ def _(expr, assumptions):
 
 @AlgebraicPredicate.register_many(Add, Mul) # type:ignore
 def _(expr, assumptions):
-    print("Calling mul with ", expr, " and ", assumptions)
     closed_group = test_closed_group(expr, assumptions, Q.algebraic)
     if closed_group is not None:
-        print("returning closed group", closed_group)
         return closed_group
     is_constant_poly = _ConstantPolynomial(expr, assumptions)
-    print("returning constant poly", not is_constant_poly)
+
     if is_constant_poly:
         return False
     return None
