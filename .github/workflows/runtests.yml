@@ -512,7 +512,7 @@ jobs:
         # GitHub Actions summary page.
 
       - name: Upload results as artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: benchmarks
           path: |
