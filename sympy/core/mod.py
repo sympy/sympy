@@ -104,8 +104,11 @@ class Mod(DefinedFunction):
             else:
                 return
             ls = -2*q
+            r = p - q
             for _ in range(4):
-                if fuzzy_and([comp1(ls, p), comp2(p, ls + q)]):
+                if not comp1(ls, p):
+                    return
+                if comp2(r, ls):
                     return p - ls
                 ls += q
 
