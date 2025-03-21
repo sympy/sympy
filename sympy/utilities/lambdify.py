@@ -20,7 +20,8 @@ from sympy.utilities.decorator import doctest_depends_on
 from sympy.utilities.iterables import (is_sequence, iterable,
     NotIterable, flatten)
 from sympy.utilities.misc import filldedent
-
+# 添加标识符检查逻辑
+from keyword import iskeyword
 
 __doctest_requires__ = {('lambdify',): ['numpy', 'tensorflow']}
 
@@ -192,7 +193,7 @@ _lambdify_generated_counter = 1
 
 @doctest_depends_on(modules=('numpy', 'scipy', 'tensorflow',), python_version=(3,))
 def lambdify(args, expr, modules=None, printer=None, use_imps=True,
-             dummify=False, cse=False, docstring_limit=1000):
+             dummify=None, cse=False, docstring_limit=1000):
     """Convert a SymPy expression into a function that allows for fast
     numeric evaluation.
 
@@ -765,6 +766,35 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     argument is not provided, ``lambdify`` creates functions using the NumPy
     and SciPy namespaces.
     """
+
+    # 添加标识符检查逻辑
+    from keyword import iskeyword
+
+    def _validate_identifier(name):
+        return name.isidentifier() and not iskeyword(name)
+
+    def _dummify_args(args, dummify):
+        if dummify is None:
+            # 自动模式：仅替换无效标识符
+            newargs = []
+            for a in args:
+                if isinstance(a, Symbol):
+                    name = a.name
+                    if not _validate_identifier(name):
+                        newargs.append(Dummy(name))
+                    else:
+                        newargs.append(a)
+                else:
+                    newargs.append(a)
+            return newargs
+        elif dummify:
+            # 强制替换所有符号
+            return [Dummy(a.name) if isinstance(a, Symbol) else a for a in args]
+        else:
+            # 禁用替换
+            return args
+
+
     from sympy.core.symbol import Symbol
     from sympy.core.expr import Expr
 
