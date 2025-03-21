@@ -3,13 +3,7 @@ This module can be used to solve 2D beam bending problems with
 singularity functions in mechanics.
 """
 
-from sympy.core import S, Symbol, diff, symbols
-from sympy.core.add import Add
-from sympy.core.expr import Expr
-from sympy.core.function import (Derivative, Function)
-from sympy.core.mul import Mul
-from sympy.core.relational import Eq
-from sympy.core.sympify import sympify
+from sympy.core import S, Symbol, diff, symbols, Add, Expr, Derivative, Function, Mul, Eq, sympify, Basic
 from sympy.solvers import linsolve
 from sympy.solvers.ode.ode import dsolve
 from sympy.solvers.solvers import solve
@@ -25,6 +19,11 @@ from sympy.utilities.lambdify import lambdify
 from sympy.utilities.decorator import doctest_depends_on
 from sympy.utilities.iterables import iterable
 import warnings
+import matplotlib.pyplot as plt
+import numpy as np
+import matplotlib.patches as patches
+from sympy import pi, tan
+
 
 
 __doctest_requires__ = {
@@ -2296,47 +2295,57 @@ class Beam:
         return plot(self._ild_moment.subs(subs), (a, 0, self._length), title='I.L.D. for Moment',
                xlabel=r'$\mathrm{a}$', ylabel=r'$\mathrm{M}$', line_color='blue', show=True)
 
+    
     @doctest_depends_on(modules=('numpy',))
-    def draw(self, pictorial=True):
+    def draw(self, show_load_values=True, draw_support_icons=True, show_grid=False, show_support_reactions=True):
         """
-        Returns a plot object representing the beam diagram of the beam.
-        In particular, the diagram might include:
+        Draws a 1D beam diagram with loads, supports, and reactions.
 
-        * the beam.
-        * vertical black arrows represent point loads and support reaction
-          forces (the latter if they have been added with the ``apply_load``
-          method).
-        * circular arrows represent moments.
-        * shaded areas represent distributed loads.
-        * the support, if ``apply_support`` has been executed.
-        * if a composite beam has been created with the ``join`` method and
-          a hinge has been specified, it will be shown with a white disc.
+        This method makes a simple plot of the beam using matplotlib, showing:
+        - The beam as a thick line.
+        - Point loads and reactions as arrows (point loads in blue/black, reactions in gray).
+        - Moments as curved arrows (counterclockwise for positive, clockwise for negative).
+        - Distributed loads as shaded areas with arrows.
+        - Supports as icons (triangles for pins/rollers, boxes for fixed).
+        - Hinges as markers on the beam.
 
-        The diagram shows positive loads on the upper side of the beam,
-        and negative loads on the lower side. If two or more distributed
-        loads acts along the same direction over the same region, the
-        function will add them up together.
+        Sign convention:
+        - Positive point/distributed loads go downward (negative y-direction).
+        - Negative point/distributed loads go upward.
+        - Positive moments are counterclockwise (↺), bending the beam upward.
+        - Negative moments are clockwise (↻), bending downward.
 
-        .. note::
-            The user must be careful while entering load values.
-            The draw function assumes a sign convention which is used
-            for plotting loads.
-            Given a right handed coordinate system with XYZ coordinates,
-            the beam's length is assumed to be along the positive X axis.
-            The draw function recognizes positive loads(with n>-2) as loads
-            acting along negative Y direction and positive moments acting
-            along positive Z direction.
+        The y-axis isnt scaled (no ticks or labels), so load heights are just for looks.
 
         Parameters
         ==========
-
-        pictorial: Boolean (default=True)
-            Setting ``pictorial=True`` would simply create a pictorial (scaled)
-            view of the beam diagram. On the other hand, ``pictorial=False``
-            would create a beam diagram with the exact dimensions on the plot.
+        show_load_values : bool, optional
+            If True, shows load values on the plot. Default is True.
+        draw_support_icons : bool, optional
+            If True, draws support icons (like triangles for pins). Default is True.
+        show_grid : bool, optional
+            If True, adds a grid to the plot. Default is False.
+        show_support_reactions : bool, optional
+            If True, shows support reactions as arrows. Default is True.
 
         Examples
         ========
+        .. plot::
+            :context: close-figs
+            :format: doctest
+            :include-source: True
+
+            >>> from sympy.physics.continuum_mechanics.beam import Beam
+            >>> from sympy import symbols
+            >>> P, M, W = symbols('P, M, W')
+            >>> E, I = symbols('E, I')
+            >>> b = Beam(50, E, I)
+            >>> b.apply_load(-10, 10, -1)  # Downward point load at x=10
+            >>> b.apply_load(M, 20, -2)    # Moment at x=20
+            >>> b.apply_load(5, 30, 0, 40) # Upward distributed load from x=30 to x=40
+            >>> b.apply_support(0, "fixed")
+            >>> b.apply_support(50, "pin")
+            >>> b.draw()  # doctest: +SKIP
 
         .. plot::
             :context: close-figs
@@ -2345,251 +2354,604 @@ class Beam:
 
             >>> from sympy.physics.continuum_mechanics.beam import Beam
             >>> from sympy import symbols
-            >>> P1, P2, M = symbols('P1, P2, M')
             >>> E, I = symbols('E, I')
-            >>> b = Beam(50, 20, 30)
-            >>> b.apply_load(-10, 2, -1)
-            >>> b.apply_load(15, 26, -1)
-            >>> b.apply_load(P1, 10, -1)
-            >>> b.apply_load(-P2, 40, -1)
-            >>> b.apply_load(90, 5, 0, 23)
-            >>> b.apply_load(10, 30, 1, 50)
-            >>> b.apply_load(M, 15, -2)
-            >>> b.apply_load(-M, 30, -2)
-            >>> p50 = b.apply_support(50, "pin")
-            >>> p0, m0 = b.apply_support(0, "fixed")
-            >>> p20 = b.apply_support(20, "roller")
-            >>> p = b.draw()  # doctest: +SKIP
-            >>> p  # doctest: +ELLIPSIS,+SKIP
-            Plot object containing:
-            [0]: cartesian line: 25*SingularityFunction(x, 5, 0) - 25*SingularityFunction(x, 23, 0)
-            + SingularityFunction(x, 30, 1) - 20*SingularityFunction(x, 50, 0)
-            - SingularityFunction(x, 50, 1) + 5 for x over (0.0, 50.0)
-            [1]: cartesian line: 5 for x over (0.0, 50.0)
-            ...
-            >>> p.show() # doctest: +SKIP
-
+            >>> b = Beam(70, E, I)
+            >>> b.apply_rotation_hinge(20)  # Rotation hinge at x=20
+            >>> b.apply_sliding_hinge(50)   # Sliding hinge at x=50
+            >>> b.apply_load(-5, 40, 1, 60) # Downward ramp load from x=40 to x=60
+            >>> b.apply_support(0, "fixed")
+            >>> b.apply_support(35, "roller")
+            >>> b.apply_support(70, "pin")
+            >>> b.draw()  # doctest: +SKIP
         """
-        if not numpy:
-            raise ImportError("To use this function numpy module is required")
 
-        loads = list(set(self.applied_loads) - set(self._support_as_loads))
-        if (not pictorial) and any((len(l[0].free_symbols) > 0) and (l[2] >= 0) for l in loads):
-            raise ValueError("`pictorial=False` requires numerical "
-                "distributed loads. Instead, symbolic loads were found. "
-                "Cannot continue.")
+        # Check if a load is negative or not
+        def _is_load_negative(load):
+            rv = load.is_negative
+            if load.is_Atom or rv is not None:
+                return rv
+            return load.doit().expand().is_negative
 
-        x = self.variable
+        # Set up the plot with a decent size
+        fig, ax = plt.subplots(figsize=(10, 5.71))
+        ax.set_aspect("equal")
 
-        # checking whether length is an expression in terms of any Symbol.
+        # Colors for different stuff
+        colors = {
+            "point_load": "blue",
+            "point_load_symbolic": "black",
+            "distributed_load": "#A30000",
+            "distributed_load_symbolic": "black",
+            "support_reaction": "#696969",
+        }
+
+        # Get the beam length, sub in 10 for any symbols
         if isinstance(self.length, Expr):
             l = list(self.length.atoms(Symbol))
-            # assigning every Symbol a default value of 10
             l = dict.fromkeys(l, 10)
-            length = self.length.subs(l)
+            length = float(self.length.subs(l))
         else:
             l = {}
-            length = self.length
-        height = length/10
+            length = float(self.length)
 
-        rectangles = []
-        rectangles.append({'xy':(0, 0), 'width':length, 'height': height, 'facecolor':"brown"})
-        annotations, markers, load_eq,load_eq1, fill = self._draw_load(pictorial, length, l)
-        support_markers, support_rectangles = self._draw_supports(length, l)
+        # Add some padding to the x-axis (20% on each side)
+        padding = 0.2 * length
+        x_min = -padding
+        x_max = length + padding
 
-        rectangles += support_rectangles
-        markers += support_markers
+        # Scale things based on beam length (using 50 as a reference)
+        reference_length = 50.0
+        element_scale = length / reference_length
 
-        for loc in self._applied_rotation_hinges:
-            ratio = loc / self.length
-            x_pos = float(ratio) * length
-            markers += [{'args':[[x_pos], [height / 2]], 'marker':'o', 'markersize':6, 'color':"white"}]
+        # Sizes for visual stuff
+        scale = 1.0
+        beam_height = 2.5 * element_scale  # For text placement
+        load_arrow_length = 8.0  # Fixed height for point loads
+        reaction_arrow_length = 10.0  # Fixed height for reactions
+        beam_thickness = 0.15 * element_scale
+        arrow_width = 0.3 * element_scale
+        arrow_head_width = 0.5 * element_scale
+        arrow_head_length = 1.0 * element_scale
+        reaction_arrow_width = 0.6 * element_scale
+        reaction_arrow_head_width = 0.75 * element_scale
+        reaction_arrow_head_length = 1.5 * element_scale
+        hinge_circle_radius = 0.1 * element_scale
+        hinge_line_length = 0.2 * element_scale
+        moment_radius = 1.0 * element_scale
 
-        for loc in self._applied_sliding_hinges:
-            ratio = loc / self.length
-            x_pos = float(ratio) * length
-            markers += [{'args': [[x_pos], [height / 2]], 'marker':'|', 'markersize':12, 'color':"white"}]
+        # Check if there’s anything to draw
+        has_elements = (
+            self.applied_loads or
+            (self._support_as_loads and show_support_reactions) or
+            (self._applied_supports and draw_support_icons) or
+            getattr(self, '_applied_rotation_hinges', []) or
+            getattr(self, '_applied_sliding_hinges', [])
+        )
 
-        ylim = (-length, 1.25*length)
-        if fill:
-            # when distributed loads are presents, they might get clipped out
-            # in the figure by the ylim settings.
-            # It might be necessary to compute new limits.
-            _min = min(min(fill["y2"]), min(r["xy"][1] for r in rectangles))
-            _max = max(max(fill["y1"]), max(r["xy"][1] for r in rectangles))
-            if (_min < ylim[0]) or (_max > ylim[1]):
-                offset = abs(_max - _min) * 0.1
-                ylim = (_min - offset, _max + offset)
+        # If nothing to draw, just show the beam
+        if not has_elements:
+            ax.plot([0, length], [0, 0], color="black", linewidth=5, zorder=10)
+            ax.set_xlim(x_min, x_max)
+            ax.set_ylim(-5, 5)
+            ax.set_yticks([])
+            ax.set_ylabel("")
+            plt.xlabel("Position along beam (x)")
+            plt.title("Beam Diagram")
+            plt.show()
+            return
 
-        sing_plot = plot(height + load_eq, height + load_eq1, (x, 0, length),
-            xlim=(-height, length + height), ylim=ylim,
-            annotations=annotations, markers=markers, rectangles=rectangles,
-            line_color='brown', fill=fill, axis=False, show=False)
+        # Draw the beam, split into segments if there are hinges
+        rotation_hinges = sorted(getattr(self, '_applied_rotation_hinges', []))
+        sliding_hinges = sorted(getattr(self, '_applied_sliding_hinges', []))
+        hinge_positions = sorted(set(rotation_hinges + sliding_hinges))
 
-        return sing_plot
+        if hinge_positions:
+            # Split the beam at hinge points
+            segment_starts = [0] + [float(pos.subs(l) if l else pos) for pos in hinge_positions]
+            segment_ends = segment_starts[1:] + [length]
+            beam_colors = ["black", "darkgray"]
+            for i, (start, end) in enumerate(zip(segment_starts, segment_ends)):
+                color = beam_colors[i % len(beam_colors)]
+                ax.plot([start, end], [0, 0], color=color, linewidth=5, zorder=10)
+                ax.plot(start, 0, marker='o', markersize=8, color=color, zorder=15)
+                ax.text(start, beam_height / 2, f"Beam {i+1}", fontsize=10, color=color, zorder=15)
+        else:
+            ax.plot([0, length], [0, 0], color="black", linewidth=5, zorder=10)
 
-
-    def _is_load_negative(self, load):
-        """Try to determine if a load is negative or positive, using
-        expansion and doit if necessary.
-
-        Returns
-        =======
-        True: if the load is negative
-        False: if the load is positive
-        None: if it is indeterminate
-
-        """
-        rv = load.is_negative
-        if load.is_Atom or rv is not None:
-            return rv
-        return load.doit().expand().is_negative
-
-    def _draw_load(self, pictorial, length, l):
+        # Split loads and reactions
         loads = list(set(self.applied_loads) - set(self._support_as_loads))
-        height = length/10
-        x = self.variable
+        support_loads = self._support_as_loads if show_support_reactions else []
 
-        annotations = []
-        markers = []
-        load_args = []
-        scaled_load = 0
-        load_args1 = []
-        scaled_load1 = 0
-        load_eq = S.Zero     # For positive valued higher order loads
-        load_eq1 = S.Zero    # For negative valued higher order loads
-        fill = None
+        # Set up y-limits
+        y_lower = 5
+        y_upper = 5
 
-        # schematic view should use the class convention as much as possible.
-        # However, users can add expressions as symbolic loads, for example
-        # P1 - P2: is this load positive or negative? We can't say.
-        # On these occasions it is better to inform users about the
-        # indeterminate state of those loads.
-        warning_head = "Please, note that this schematic view might not be " \
-            "in agreement with the sign convention used by the Beam class " \
-            "for load-related computations, because it was not possible " \
-            "to determine the sign (hence, the direction) of the " \
-            "following loads:\n"
-        warning_body = ""
+        # Figure out how far up and down the plot needs to go
+        max_downward_extent = 0
+        max_upward_extent = 0
 
-        for load in loads:
-            # check if the position of load is in terms of the beam length.
-            if l:
-                pos =  load[1].subs(l)
-            else:
-                pos = load[1]
+        # Check loads and reactions for y-limits
+        for load in loads + support_loads:
+            pos = float(load[1].subs(l) if l else load[1])
+            is_support_reaction = load in support_loads
 
-            # point loads
-            if load[2] == -1:
-                iln = self._is_load_negative(load[0])
-                if iln is None:
-                    warning_body += "* Point load %s located at %s\n" % (load[0], load[1])
-                if iln:
-                    annotations.append({'text':'', 'xy':(pos, 0), 'xytext':(pos, height - 4*height), 'arrowprops':{'width': 1.5, 'headlength': 5, 'headwidth': 5, 'facecolor': 'black'}})
+            if load[2] == -1:  # Point load
+                load_length = reaction_arrow_length if is_support_reaction else load_arrow_length
+                if is_support_reaction:
+                    start_y = beam_thickness - load_length
+                    end_y = beam_thickness
+                    max_upward_extent = max(max_upward_extent, abs(start_y))
                 else:
-                    annotations.append({'text':'', 'xy':(pos, height),  'xytext':(pos, height*4), 'arrowprops':{"width": 1.5, "headlength": 4, "headwidth": 4, "facecolor": 'black'}})
-            # moment loads
-            elif load[2] == -2:
-                iln = self._is_load_negative(load[0])
-                if iln is None:
-                    warning_body += "* Moment %s located at %s\n" % (load[0], load[1])
-                if self._is_load_negative(load[0]):
-                    markers.append({'args':[[pos], [height/2]], 'marker': r'$\circlearrowright$', 'markersize':15})
-                else:
-                    markers.append({'args':[[pos], [height/2]], 'marker': r'$\circlearrowleft$', 'markersize':15})
-            # higher order loads
-            elif load[2] >= 0:
-                # `fill` will be assigned only when higher order loads are present
+                    if _is_load_negative(load[0]):
+                        start_y = -load_length
+                        end_y = -beam_thickness
+                        max_downward_extent = max(max_downward_extent, abs(start_y))
+                        if show_load_values:
+                            max_downward_extent = max(max_downward_extent, abs(start_y) + 2)
+                    else:
+                        start_y = load_length
+                        end_y = beam_thickness
+                        max_upward_extent = max(max_upward_extent, abs(start_y))
+                        if show_load_values:
+                            max_upward_extent = max(max_upward_extent, abs(start_y) + 2)
+
+            elif load[2] == -2:  # Moment
+                moment_y = -beam_height
+                radius = moment_radius
+                lowest_y = moment_y - radius * 2
+                max_downward_extent = max(max_downward_extent, abs(lowest_y))
+                if show_load_values:
+                    max_downward_extent = max(max_downward_extent, abs(lowest_y) + 2 * element_scale)
+
+            elif load[2] >= 0:  # Distributed load
                 value, start, order, end = load
-
-                iln = self._is_load_negative(value)
-                if iln is None:
-                    warning_body += "* Distributed load %s from %s to %s\n" % (value, start, end)
-
-                # Positive loads have their separate equations
-                if not iln:
-                    # if pictorial is True we remake the load equation again with
-                    # some constant magnitude values.
-                    if pictorial:
-                        # remake the load equation again with some constant
-                        # magnitude values.
-                        value = 10**(1-order) if order > 0 else length/2
-                    scaled_load += value*SingularityFunction(x, start, order)
-                    if end:
-                        f2 = value*x**order if order >= 0 else length/2*x**order
-                        for i in range(0, order + 1):
-                            scaled_load -= (f2.diff(x, i).subs(x, end - start)*
-                                            SingularityFunction(x, end, i)/factorial(i))
-
-                    if isinstance(scaled_load, Add):
-                        load_args = scaled_load.args
-                    else:
-                        # when the load equation consists of only a single term
-                        load_args = (scaled_load,)
-                    load_eq = Add(*[i.subs(l) for i in load_args])
-
-                # For loads with negative value
+                start = float(start.subs(l) if l else start)
+                end = float(end.subs(l) if l else end) if end else length
+                max_load_length = load_arrow_length
+                if _is_load_negative(value):
+                    ramp_y = -max_load_length
+                    max_downward_extent = max(max_downward_extent, abs(ramp_y))
+                    if show_load_values:
+                        avg_y = -max_load_length
+                        max_downward_extent = max(max_downward_extent, abs(avg_y) + 2)
                 else:
-                    if pictorial:
-                        # remake the load equation again with some constant
-                        # magnitude values.
-                        value = 10**(1-order) if order > 0 else length/2
-                    scaled_load1 += abs(value)*SingularityFunction(x, start, order)
-                    if end:
-                        f2 = abs(value)*x**order if order >= 0 else length/2*x**order
-                        for i in range(0, order + 1):
-                            scaled_load1 -= (f2.diff(x, i).subs(x, end - start)*
-                                            SingularityFunction(x, end, i)/factorial(i))
+                    ramp_y = max_load_length
+                    max_upward_extent = max(max_upward_extent, abs(ramp_y))
+                    if show_load_values:
+                        avg_y = max_load_length
+                        max_upward_extent = max(max_upward_extent, abs(avg_y) + 2)
 
-                    if isinstance(scaled_load1, Add):
-                        load_args1 = scaled_load1.args
+        # Check supports for y-limits
+        support_padding = 0
+        if draw_support_icons and self._applied_supports:
+            for support in self._applied_supports:
+                if support[1] in ["pin", "roller"]:
+                    triangle_height = scale * element_scale * 2.5
+                    if support[1] == "roller":
+                        roller_y = -triangle_height - (scale * hinge_circle_radius)
+                        roller_radius = 0.15 * element_scale
+                        lowest_y = roller_y - roller_radius
+                        max_downward_extent = max(max_downward_extent, abs(lowest_y))
+                        support_padding = max(support_padding, abs(lowest_y) + 2)
                     else:
-                        # when the load equation consists of only a single term
-                        load_args1 = (scaled_load1,)
-                    load_eq1 = [i.subs(l) for i in load_args1]
-                    load_eq1 = -Add(*load_eq1) - height
+                        lowest_y = -triangle_height
+                        max_downward_extent = max(max_downward_extent, abs(lowest_y))
+                        support_padding = max(support_padding, abs(lowest_y) + 2)
+                elif support[1] == "fixed":
+                    box_size = scale * element_scale * 2.5
+                    lowest_y = -box_size
+                    max_downward_extent = max(max_downward_extent, abs(lowest_y))
+                    support_padding = max(support_padding, abs(lowest_y) + 2)
 
-        if len(warning_body) > 0:
-            warnings.warn(warning_head + warning_body)
+        # Check hinges for y-limits
+        if rotation_hinges or sliding_hinges:
+            lowest_y = -hinge_circle_radius
+            max_downward_extent = max(max_downward_extent, abs(lowest_y))
+            lowest_y = -hinge_line_length
+            max_downward_extent = max(max_downward_extent, abs(lowest_y))
 
-        xx = numpy.arange(0, float(length), 0.001)
-        yy1 = lambdify([x], height + load_eq.rewrite(Piecewise))(xx)
-        yy2 = lambdify([x], height + load_eq1.rewrite(Piecewise))(xx)
-        if not isinstance(yy1, numpy.ndarray):
-            yy1 *= numpy.ones_like(xx)
-        if not isinstance(yy2, numpy.ndarray):
-            yy2 *= numpy.ones_like(xx)
-        fill = {'x': xx, 'y1': yy1, 'y2': yy2,
-            'color':'darkkhaki', "zorder": -1}
-        return annotations, markers, load_eq, load_eq1, fill
+        # Add some padding to the y-limits
+        y_lower = max(5, max_downward_extent * 1.2, support_padding)
+        y_upper = max(5, max_upward_extent * 1.2)
 
+        # Draw all the loads and reactions
+        for load in loads + support_loads:
+            pos = float(load[1].subs(l) if l else load[1])
+            is_support_reaction = load in support_loads
 
-    def _draw_supports(self, length, l):
-        height = float(length/10)
-
-        support_markers = []
-        support_rectangles = []
-        for support in self._applied_supports:
-            if l:
-                pos =  support[0].subs(l)
+            # Pick the color
+            if is_support_reaction:
+                load_color = colors["support_reaction"]
             else:
-                pos = support[0]
-
-            if support[1] == "pin":
-                support_markers.append({'args':[pos, [0]], 'marker':6, 'markersize':13, 'color':"black"})
-
-            elif support[1] == "roller":
-                support_markers.append({'args':[pos, [-height/2.5]], 'marker':'o', 'markersize':11, 'color':"black"})
-
-            elif support[1] == "fixed":
-                if pos == 0:
-                    support_rectangles.append({'xy':(0, -3*height), 'width':-length/20, 'height':6*height + height, 'fill':False, 'hatch':'/////'})
+                if load[2] < 0 or load[2] == 1:
+                    load_color = colors["point_load"] if not isinstance(load[0], Basic) or not load[0].has(Symbol) else colors["point_load_symbolic"]
                 else:
-                    support_rectangles.append({'xy':(length, -3*height), 'width':length/20, 'height': 6*height + height, 'fill':False, 'hatch':'/////'})
+                    load_color = colors["distributed_load"] if not isinstance(load[0], Basic) or not load[0].has(Symbol) else colors["distributed_load_symbolic"]
 
-        return support_markers, support_rectangles
+            # Point loads and reactions
+            if load[2] == -1:
+                load_length = reaction_arrow_length if is_support_reaction else load_arrow_length
+                current_arrow_width = reaction_arrow_width if is_support_reaction else arrow_width
+                current_arrow_head_width = reaction_arrow_head_width if is_support_reaction else arrow_head_width
+                current_arrow_head_length = reaction_arrow_head_length if is_support_reaction else arrow_head_length
 
+                if is_support_reaction:
+                    end_y = beam_thickness
+                    start_y = end_y - load_length
+                    if isinstance(load[0], (int, float)) and float(load[0]) < 0:
+                        load_color = colors["support_reaction"]
+                else:
+                    if _is_load_negative(load[0]):
+                        start_y = -load_length
+                        end_y = -beam_thickness
+                    else:
+                        start_y = load_length
+                        end_y = beam_thickness
 
+                arrow_patch = patches.FancyArrow(
+                    pos, start_y, 0, end_y - start_y,
+                    length_includes_head=True,
+                    width=current_arrow_width,
+                    head_width=current_arrow_head_width,
+                    head_length=current_arrow_head_length,
+                    color=load_color,
+                    alpha=1.0,
+                    zorder=100,
+                )
+                ax.add_patch(arrow_patch)
+
+                if show_load_values:
+                    color_text = "black" if load_color == colors["support_reaction"] else load_color
+                    value_text = (
+                        f"{float(load[0]):0.2f}"
+                        if not isinstance(load[0], Basic) or not load[0].has(Symbol)
+                        else f'{str(load[0]).split("__")[0]}'
+                    )
+                    if is_support_reaction and isinstance(load[0], (int, float)) and float(load[0]) < 0:
+                        value_text += "\n(Downward)"
+                    plt.text(
+                        pos, start_y,
+                        value_text,
+                        fontsize=8,
+                        color=color_text,
+                        zorder=100,
+                        ha="center",
+                        va="center",
+                        bbox={"facecolor": "lightgrey", "alpha": 0.75, "edgecolor": "none"},
+                    )
+
+            # Moments
+            elif load[2] == -2:
+                moment_y = -beam_height
+                radius = moment_radius
+
+                if _is_load_negative(load[0]):  # Negative moment (clockwise)
+                    arc = patches.Arc(
+                        (pos, moment_y),
+                        width=2 * radius,
+                        height=2 * radius,
+                        theta1=90,
+                        theta2=90 - 180,
+                        color=load_color,
+                        linewidth=2,
+                        zorder=100,
+                    )
+                    ax.add_patch(arc)
+                    angle = np.radians(90)
+                    arrow_x = pos + radius * np.cos(angle)
+                    arrow_y = moment_y + radius * np.sin(angle)
+                    dx = 0.12 * radius * np.sin(angle)
+                    dy = -0.12 * radius * np.cos(angle)
+                    arrowhead = patches.FancyArrow(
+                        arrow_x, arrow_y, dx, dy,
+                        length_includes_head=True,
+                        width=0.03 * element_scale,
+                        head_width=0.60 * element_scale,
+                        head_length=0.60 * element_scale,
+                        color=load_color,
+                        zorder=100,
+                    )
+                    ax.add_patch(arrowhead)
+                else:  # Positive moment (counterclockwise)
+                    arc = patches.Arc(
+                        (pos, moment_y),
+                        width=2 * radius,
+                        height=2 * radius,
+                        theta1=270,
+                        theta2=270 + 180,
+                        color=load_color,
+                        linewidth=2,
+                        zorder=100,
+                    )
+                    ax.add_patch(arc)
+                    angle = np.radians(90)
+                    arrow_x = pos + radius * np.cos(angle)
+                    arrow_y = moment_y + radius * np.sin(angle)
+                    dx = -0.12 * radius * np.sin(angle)
+                    dy = 0.12 * radius * np.cos(angle)
+                    arrowhead = patches.FancyArrow(
+                        arrow_x, arrow_y, dx, dy,
+                        length_includes_head=True,
+                        width=0.03 * element_scale,
+                        head_width=0.60 * element_scale,
+                        head_length=0.60 * element_scale,
+                        color=load_color,
+                        zorder=100,
+                    )
+                    ax.add_patch(arrowhead)
+
+                if show_load_values:
+                    color_text = "black" if load_color == colors["support_reaction"] else load_color
+                    value_text = (
+                        f"{float(abs(load[0])):0.2f}" if not isinstance(load[0], Basic) or not load[0].has(Symbol)
+                        else f'{str(abs(load[0])).split("__")[0]}'
+                    )
+                    plt.text(
+                        pos, moment_y - radius * 2,
+                        value_text,
+                        fontsize=8,
+                        color=color_text,
+                        zorder=100,
+                        ha="center",
+                        va="center",
+                        bbox={"facecolor": "lightgrey", "alpha": 0.75, "edgecolor": "none"},
+                    )
+
+            # Distributed loads (including ramp loads)
+            elif load[2] >= 0:
+                value, start, order, end = load
+                start = float(start.subs(l) if l else start)
+                end = float(end.subs(l) if l else end) if end else length
+
+                max_load_length = load_arrow_length
+                num_arrows = max(int((end - start) / (length / 50)), 1)
+                arrow_tails_x, arrow_tails_y = [], []
+                arrow_heads_x, arrow_heads_y = [], []
+
+                for i in range(num_arrows + 1):
+                    t = i / num_arrows
+                    x_point = start + t * (end - start)
+
+                    if order == 1:
+                        load_length = max_load_length * t  # Ramp load
+                    else:
+                        load_length = max_load_length  # Uniform load
+
+                    if _is_load_negative(value):
+                        ramp_y = -load_length
+                        beam_edge = -beam_thickness
+                        start_y = ramp_y
+                        end_y = beam_edge
+                        if start_y > end_y:
+                            start_y, end_y = end_y, start_y
+                    else:
+                        ramp_y = load_length
+                        beam_edge = beam_thickness
+                        start_y = ramp_y
+                        end_y = beam_edge
+                        if start_y < end_y:
+                            start_y, end_y = end_y, start_y
+
+                    arrow_patch = patches.FancyArrow(
+                        x_point, start_y, 0, end_y - start_y,
+                        length_includes_head=True,
+                        width=arrow_width,
+                        head_width=arrow_head_width,
+                        head_length=arrow_head_length,
+                        color=load_color,
+                        alpha=1.0,
+                        zorder=90,
+                    )
+                    ax.add_patch(arrow_patch)
+
+                    arrow_tails_x.append(x_point)
+                    arrow_tails_y.append(ramp_y)
+                    arrow_heads_x.append(x_point)
+                    arrow_heads_y.append(beam_edge)
+
+                plt.plot(arrow_tails_x, arrow_tails_y, color=load_color, alpha=1, zorder=91)
+
+                arrow_coords = [
+                    (arrow_tails_x[0], arrow_tails_y[0]),
+                    (arrow_tails_x[-1], arrow_tails_y[-1]),
+                    (arrow_heads_x[-1], arrow_heads_y[-1]),
+                    (arrow_heads_x[0], arrow_heads_y[0]),
+                ]
+                polygon = plt.Polygon(
+                    arrow_coords,
+                    closed=True,
+                    fill=True,
+                    color=load_color,
+                    edgecolor=None,
+                    alpha=0.25,
+                    zorder=89,
+                )
+                ax.add_patch(polygon)
+
+                if show_load_values:
+                    avg_x = (start + end) / 2
+                    avg_y = max_load_length if not _is_load_negative(value) else -max_load_length
+                    color_text = "black" if load_color == colors["support_reaction"] else load_color
+                    value_text = (
+                        f"{float(abs(value)):0.2f}" if not isinstance(value, Basic) or not value.has(Symbol)
+                        else f'{str(abs(value)).split("__")[0]}'
+                    )
+                    plt.text(
+                        avg_x, avg_y,
+                        value_text,
+                        fontsize=8,
+                        color=color_text,
+                        zorder=100,
+                        ha="center",
+                        va="center",
+                        bbox={"facecolor": "lightgrey", "alpha": 0.75, "edgecolor": "none"},
+                    )
+
+        # Draw supports if needed
+        if draw_support_icons:
+            for support in self._applied_supports:
+                pos = float(support[0].subs(l) if l else support[0])
+
+                if support[1] == "pin":
+                    triangle_height = scale * element_scale * 2.5
+                    angle = 34 * (pi / 180)
+                    half_width = triangle_height * float(tan(angle))
+
+                    triangle_vertices = [
+                        [pos, 0],
+                        [pos - half_width, -triangle_height],
+                        [pos + half_width, -triangle_height],
+                    ]
+
+                    triangle = patches.Polygon(
+                        triangle_vertices,
+                        edgecolor="k",
+                        facecolor="none",
+                        linewidth=1.5,
+                        zorder=20,
+                    )
+                    ax.add_patch(triangle)
+
+                    pivot_circle = patches.Circle(
+                        (pos, 0),
+                        hinge_circle_radius,
+                        edgecolor="k",
+                        facecolor="white",
+                        linewidth=1.5,
+                        zorder=20,
+                    )
+                    ax.add_patch(pivot_circle)
+
+                elif support[1] == "roller":
+                    triangle_height = scale * element_scale * 2.5
+                    angle = 34 * (pi / 180)
+                    half_width = triangle_height * float(tan(angle))
+
+                    triangle_vertices = [
+                        [pos, 0],
+                        [pos - half_width, -triangle_height],
+                        [pos + half_width, -triangle_height],
+                    ]
+
+                    triangle = patches.Polygon(
+                        triangle_vertices,
+                        edgecolor="k",
+                        facecolor="none",
+                        linewidth=1.5,
+                        zorder=20,
+                    )
+                    ax.add_patch(triangle)
+
+                    pivot_circle = patches.Circle(
+                        (pos, 0),
+                        hinge_circle_radius,
+                        edgecolor="k",
+                        facecolor="white",
+                        linewidth=1.5,
+                        zorder=20,
+                    )
+                    ax.add_patch(pivot_circle)
+
+                    roller_y = -triangle_height - (scale * hinge_circle_radius)
+                    roller_radius = 0.15 * element_scale
+                    roller_positions = [
+                        pos - half_width / 2,
+                        pos + half_width / 2,
+                    ]
+                    for roller_x in roller_positions:
+                        roller = patches.Circle(
+                            (roller_x, roller_y),
+                            roller_radius,
+                            edgecolor="k",
+                            facecolor="white",
+                            linewidth=1.5,
+                            zorder=20,
+                        )
+                        ax.add_patch(roller)
+
+                elif support[1] == "fixed":
+                    box_size = scale * element_scale * 2.5
+                    x_box = pos - box_size / 2 if pos == length else pos
+                    y_box = -box_size / 2
+
+                    scaled_vertices = [
+                        [x_box, y_box],
+                        [x_box + box_size, y_box],
+                        [x_box + box_size, y_box + box_size],
+                        [x_box, y_box + box_size],
+                    ]
+
+                    polygon = patches.Polygon(
+                        scaled_vertices,
+                        edgecolor="k",
+                        facecolor="none",
+                        linewidth=1.5,
+                        hatch='/////',
+                    )
+                    ax.add_patch(polygon)
+
+                    num_lines = 4
+                    for i in range(num_lines):
+                        x_start = x_box + i * (box_size / num_lines)
+                        y_start = y_box
+                        x_end = x_box + (i + 1) * (box_size / num_lines)
+                        y_end = y_box + (box_size / num_lines)
+                        ax.plot(
+                            [x_start, x_end],
+                            [y_start, y_end],
+                            color="black",
+                            linewidth=1,
+                        )
+
+        # Draw hinges
+        rotation_hinges = getattr(self, '_applied_rotation_hinges', [])
+        for loc in rotation_hinges:
+            pos = float(loc.subs(l) if l else loc)
+            pivot_circle = patches.Circle(
+                (pos, 0),
+                hinge_circle_radius,
+                edgecolor="k",
+                facecolor="white",
+                linewidth=1.5,
+                zorder=20,
+            )
+            ax.add_patch(pivot_circle)
+
+        sliding_hinges = getattr(self, '_applied_sliding_hinges', [])
+        for loc in sliding_hinges:
+            pos = float(loc.subs(l) if l else loc)
+            plt.plot(
+                [pos, pos],
+                [-hinge_line_length, hinge_line_length],
+                color="white",
+                linewidth=2,
+                zorder=20,
+            )
+
+        # Set the plot limits
+        ax.set_xlim(x_min, x_max)
+        ax.set_ylim(-y_lower, y_upper)
+        if show_grid:
+            ax.grid(True, zorder=10)
+        else:
+            ax.grid(False)
+
+        # Fix x-axis ticks and hide y-axis
+        x_ticks = plt.xticks()[0]
+        if len(x_ticks) > 1:
+            x_step = x_ticks[1] - x_ticks[0]
+            if x_step < 1:
+                x_step = 1
+            x_min, x_max = plt.xlim()
+            new_x_ticks = [i * x_step for i in range(int(x_min // x_step), int(x_max // x_step) + 1)]
+            plt.xticks(new_x_ticks)
+
+        ax.set_yticks([])
+        ax.set_ylabel("")
+        plt.xlabel("Position along beam (x)")
+        plt.title("Beam Diagram")
+        plt.show()
+    
 class Beam3D(Beam):
     """
     This class handles loads applied in any direction of a 3D space along
