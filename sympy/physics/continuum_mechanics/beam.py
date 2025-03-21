@@ -2295,7 +2295,6 @@ class Beam:
         return plot(self._ild_moment.subs(subs), (a, 0, self._length), title='I.L.D. for Moment',
                xlabel=r'$\mathrm{a}$', ylabel=r'$\mathrm{M}$', line_color='blue', show=True)
 
-    
     @doctest_depends_on(modules=('numpy',))
     def draw(self, show_load_values=True, draw_support_icons=True, show_grid=False, show_support_reactions=True):
         """
@@ -2951,7 +2950,7 @@ class Beam:
         plt.xlabel("Position along beam (x)")
         plt.title("Beam Diagram")
         plt.show()
-    
+
 class Beam3D(Beam):
     """
     This class handles loads applied in any direction of a 3D space along
