@@ -13,7 +13,7 @@ non-negative integers.
 # of polynomial rings.
 #
 # Ideally there would be more of a proper series type that can keep track of
-# not not just the leading terms of a truncated series but also the precision
+# not just the leading terms of a truncated series but also the precision
 # of the series. For now the rings here are just introduced to keep the
 # interface that ring_series was using before.
 
