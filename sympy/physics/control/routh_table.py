@@ -81,7 +81,7 @@ class RouthHurwitz(MutableDenseMatrix):
     [                     b_2, b_4],
     [(-b_1*b_4 + b_2*b_3)/b_2,   0],
     [                     b_4,   0]])
-    >>> RouthHurwitz(p, s).first_column
+    >>> RouthHurwitz(p, s)[:, 0]
     Matrix([
     [                     b_1],
     [                     b_2],
@@ -194,11 +194,6 @@ class RouthHurwitz(MutableDenseMatrix):
 
         if self[i, 0] == 0:
             self[i, 0] = self._inf_element
-
-    @property
-    def first_column(self):
-        """Return the first column of the table."""
-        return self[:, 0]
 
     @property
     def zero_rows_case(self):

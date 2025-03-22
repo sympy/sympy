@@ -1182,7 +1182,7 @@ class TransferFunction(SISOLinearTimeInvariant):
         num_conditions = True
         var_conditions = []
 
-        for eq in table.first_column:
+        for eq in table[:, 0]:
             limit_val = limit(eq, table.infinitesimal_element, 0)
 
             if limit_val == 0:

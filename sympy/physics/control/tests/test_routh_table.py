@@ -25,7 +25,7 @@ def test_table():
         [(b0*b3**2 + b1*(b1*b4 - b2*b3))/(b1*b4 - b2*b3)],
         [b0]])
 
-    assert t1.first_column.equals(expected1_1)
+    assert t1[:, 0].equals(expected1_1)
     assert t1.zero_rows_case is False
     assert t1.auxiliary_polynomial is None
     assert t1.infinitesimal_element == epsilon
