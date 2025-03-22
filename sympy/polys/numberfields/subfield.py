@@ -360,6 +360,7 @@ def primitive_element(extension, x=None, *, ex=False, polys=False):
             gen += s*ext
             coeffs.append(s)
 
+        _, g = g.primitive()
         if not polys:
             return g.as_expr(), coeffs
         else:
@@ -393,6 +394,8 @@ def primitive_element(extension, x=None, *, ex=False, polys=False):
         f = cls(x, domain=QQ)
     else:
         H = [_.to_list() for _ in reps]
+
+    _, f = f.primitive()
     if not polys:
         return f.as_expr(), coeffs, H
     else:
