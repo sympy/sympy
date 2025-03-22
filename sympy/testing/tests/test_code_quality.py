@@ -200,7 +200,7 @@ def test_files():
       o name of arg-less test suite functions start with _ or test_
       o no duplicate function names that start with test_
       o no assignments to self variable in class methods
-      o no lines contain ".func is" except in the test suite
+      o no lines contain ".func is"
       o there is no do-nothing expression like `a == b` or `x + 1`
     """
 
