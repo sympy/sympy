@@ -8,84 +8,120 @@ __all__ = ['RouthHurwitz']
 
 class RouthHurwitz(MutableDenseMatrix):
     r"""
-        A class for creating a Routh-Hurwitz table from a given polynomial.
-        It handle special cases with methods discussed in [1].
+    A class for creating a Routh-Hurwitz table from a given polynomial.
+    It handle special cases with methods discussed in [1].
 
-        Note: When a row of the table is zero, the property ``zero_rows_case`` is set to True.
+    Note: When a row of the table is zero, the property ``zero_rows_case`` is set to True.
 
-        Explanation
-        ============
+    Explanation
+    ============
 
-        TODO: Explain the special cases and why the ``zero_rows_case`` property is important.
+    In mathematics, the Routh-Hurwitz table is used to determine the number of roots of a polynomial that have positive or negative real parts.
 
-        Parameters
-        ==========
+    It's crucial in the control system theory because it can be used to retrieve
+    necessary and sufficient conditions for the stability of a linear time-invariant control system.
 
-        polynomial : :py:class:`~.Expr`, :py:class:`~.Number`
-            The polynomial whose Routh-Hurwitz table is to be created.
-        var : :py:class:`~.Symbol`
-            The symbol representing the variable in the polynomial.
-        infinitesimal_element : None, :py:class:`~.Symbol`, optional
-            The symbol representing the infinitesimal element for the first column zero case.
-            If not provided, a default symbol ``epsilon`` will be used.
+    Once the table is constructed, the stability of the system can be assessed by counting the number of sign changes in the first column.
+    Each sign change corresponds to a root with a positive real part, whereas each preservation of sign corresponds to a root with a negative real part.
 
-        Examples
-        ========
+    There are two special cases to consider during the construction of the table:
 
-        >>> from sympy import symbols
-        >>> from sympy.physics.control import RouthHurwitz
-        >>> b1, b2, b3, b4 = symbols('b_1 b_2 b_3 b_4')
-        >>> s = symbols("s")
+    1.  First Column Zero Case:
+        If a zero appears in the first column of a row (while the row is not entirely zero), the zero is replaced with a small symbolic infinitesimal ($\epsilon$, by default).
+        When checking for sign changes, the limit $\epsilon \to 0$ is taken.
+        Specifically, if the other elements in the column are positive, then $\epsilon \to 0^+$; if they are negative, then $\epsilon \to 0^-$; otherwise, $\epsilon \to 0^\pm$.
 
-        Here is a generic example of how to use the ``RouthHurwitz`` class:
+    2.  Full Row Zero Case:
+        If an entire row becomes zero, we can substitute the row with the coefficients of the derivative of an auxiliary polynomial.
+        The auxiliary polynomial is constructed using the row immediately above the zero row.
+        For instance, consider the following example:
+        $$\begin{matrix}3\\2\\1\end{matrix}\begin{bmatrix}b_3&b_1\\ b_2&b_0\\ 0&0\end{bmatrix}$$
+        The auxiliary polynomial will be: $a(s) = b_2 s^2 + b_0$
+        The characteristic is that, if $p(s)$ is the polynomial we are analyzing, $p(s)=a(s)\cdot other(s)$ and
+        the roots of $a(s)$ are symmetric about the origin in the s-plane, so when we
+        fall in this case, we should note that there could be poles with only imaginary part or poles with negative and positive real parts.
 
-        >>> p = b1*s**3 + b2*s**2 + b3*s + b4
-        >>> RouthHurwitz(p, s)
-        Matrix([
-        [               b_1, b_3],
-        [               b_2, b_4],
-        [-b_1*b_4/b_2 + b_3,   0],
-        [               b_4,   0]])
-        >>> RouthHurwitz(p, s).first_column
-        Matrix([
-        [               b_1],
-        [               b_2],
-        [-b_1*b_4/b_2 + b_3],
-        [               b_4]])
 
-        Here you can see how the table appears in the first column zero case:
+    The table is constructed for a polynomial of the form
+    $p(s) = b_n s^n + b_{n-1} s^{n-1} + \ldots + b_1 s + b_0$
+    and the table has $n+1$ rows and the following structure:
 
-        >>> p1 = s**4 + s**3 + 3*s**2 + 3*s + 3
-        >>> RouthHurwitz(p1, s)
-        Matrix([
-        [            1, 3, 3],
-        [            1, 3, 0],
-        [      epsilon, 3, 0],
-        [3 - 3/epsilon, 0, 0],
-        [            3, 0, 0]])
-        >>> RouthHurwitz(p1, s).zero_rows_case
-        False
+    $$\begin{bmatrix}b_n&b_{n-2}&b_{n-4}&\cdots\\ b_{n-1}&b_{n-3}&b_{n-5}&\cdots\\ c_{1}&c_2&c_3&\cdots\\ d_{1}&d_2&d_3&\cdots\\ \vdots&\vdots&\vdots&\ddots\end{bmatrix}$$
 
-        Here you can see how the table appears in the full row zero case (poles with only imaginary part):
+    In this table, the elements in the subsequent rows are computed using the formulas:
+    $c_i = \frac{b_{n-1}\cdot b_{n-2i} - b_n\cdot b_{n-(2i+1)}}{b_{n-1}}$
 
-        >>> p2 = s**6 + 2*s**5 + 8*s**4 + 12*s**3 + 20*s**2 + 16*s + 16
-        >>> RouthHurwitz(p2, s)
-        Matrix([
-        [  1,  8, 20, 16],
-        [  2, 12, 16,  0],
-        [  2, 12, 16,  0],
-        [  8, 24,  0,  0],
-        [  6, 16,  0,  0],
-        [8/3,  0,  0,  0],
-        [ 16,  0,  0,  0]])
-        >>> RouthHurwitz(p2, s).zero_rows_case
-        True
-        >>> RouthHurwitz(p2, s).auxiliary_polynomial
-        Poly(2*s**4 + 12*s**2 + 16, s, domain='ZZ')
+    $d_i = \frac{c_1 \cdot b_{n-(2i+1)}-b_{n-1}\cdot c_{i+1}}{c_1}$
 
-        References
-        ==========
-        .. [1] https://en.wikipedia.org/wiki/Routh-Hurwitz_stability_criterion
+    Parameters
+    ==========
+
+    polynomial : :py:class:`~.Expr`, :py:class:`~.Number`
+        The polynomial whose Routh-Hurwitz table is to be created.
+    var : :py:class:`~.Symbol`
+        The symbol representing the variable in the polynomial.
+    infinitesimal_element : None, :py:class:`~.Symbol`, optional
+        The symbol representing the infinitesimal element for the first column zero case.
+        If not provided, a default symbol ``epsilon`` will be used.
+
+    Examples
+    ========
+
+    >>> from sympy import symbols
+    >>> from sympy.physics.control import RouthHurwitz
+    >>> b1, b2, b3, b4 = symbols('b_1 b_2 b_3 b_4')
+    >>> s = symbols("s")
+
+    Here is a generic example of how to use the ``RouthHurwitz`` class:
+
+    >>> p = b1*s**3 + b2*s**2 + b3*s + b4
+    >>> RouthHurwitz(p, s)
+    Matrix([
+    [               b_1, b_3],
+    [               b_2, b_4],
+    [-b_1*b_4/b_2 + b_3,   0],
+    [               b_4,   0]])
+    >>> RouthHurwitz(p, s).first_column
+    Matrix([
+    [               b_1],
+    [               b_2],
+    [-b_1*b_4/b_2 + b_3],
+    [               b_4]])
+
+    Here you can see how the table appears in the first column zero case:
+
+    >>> p1 = s**4 + s**3 + 3*s**2 + 3*s + 3
+    >>> RouthHurwitz(p1, s)
+    Matrix([
+    [            1, 3, 3],
+    [            1, 3, 0],
+    [      epsilon, 3, 0],
+    [3 - 3/epsilon, 0, 0],
+    [            3, 0, 0]])
+    >>> RouthHurwitz(p1, s).zero_rows_case
+    False
+
+    Here you can see how the table appears in the full row zero case (poles with only imaginary part):
+
+    >>> p2 = s**6 + 2*s**5 + 8*s**4 + 12*s**3 + 20*s**2 + 16*s + 16
+    >>> RouthHurwitz(p2, s)
+    Matrix([
+    [  1,  8, 20, 16],
+    [  2, 12, 16,  0],
+    [  2, 12, 16,  0],
+    [  8, 24,  0,  0],
+    [  6, 16,  0,  0],
+    [8/3,  0,  0,  0],
+    [ 16,  0,  0,  0]])
+    >>> RouthHurwitz(p2, s).zero_rows_case
+    True
+    >>> RouthHurwitz(p2, s).auxiliary_polynomial
+    Poly(2*s**4 + 12*s**2 + 16, s, domain='ZZ')
+
+    References
+    ==========
+    .. [1] https://en.wikipedia.org/wiki/Routh-Hurwitz_stability_criterion
+    .. [2] https://www.circuitbread.com/tutorials/routh-hurwitz-criterion-part-2-3-3
 
     """
     def __new__(cls, polynomial, var, infinitesimal_element = None):
