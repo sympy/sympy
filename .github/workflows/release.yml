@@ -18,7 +18,7 @@ on:
       - '1.13'
 env:
   release_branch: '1.13'            # e.g. 1.13
-  release_version: '1.13.4rc1'         # e.g. 1.13.1rc1
+  release_version: '1.13.4'         # e.g. 1.13.1rc1
   final_release_version: '1.13.4'   # e.g. 1.13.1
   previous_version: '1.13.3'        # e.g. 1.13.0
   dev_version: '1.14-dev'           # e.g. 1.14-dev
