@@ -1114,6 +1114,17 @@ def _solve_radical(f, unradf, symbol, solveset_solver):
                 f_set.append(s)
             else:
                 c_set.append(s)
+        tol_post = 1e-8  # Tolerance for the residual check
+        filtered = []
+        for s in f_set:
+            try:
+                resid = abs(f.subs(symbol, s).evalf(50))
+                if resid < tol_post:
+                    filtered.append(s)
+            except Exception:
+                filtered.append(s)
+        if filtered:
+            f_set = FiniteSet(*filtered)
         return FiniteSet(*f_set) + ConditionSet(symbol, Eq(f, 0), FiniteSet(*c_set))
 
     def check_set(solutions):
