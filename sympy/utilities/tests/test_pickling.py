@@ -42,6 +42,10 @@ deprecated_attrs = {
     'expr_free_symbols',  # Deprecated from SymPy 1.9. This can be removed when exr_free_symbols is removed.
 }
 
+dont_check_attrs = {
+    '_sage_',  # Fails because Sage is not installed
+}
+
 
 def check(a, exclude=[], check_attr=True, deprecated=()):
     """ Check that pickling and copying round-trips.
@@ -78,7 +82,9 @@ def check(a, exclude=[], check_attr=True, deprecated=()):
 
         def c(a, b, d):
             for i in d:
-                if i in not_equal_attrs:
+                if i in dont_check_attrs:
+                    continue
+                elif i in not_equal_attrs:
                     if hasattr(a, i):
                         assert hasattr(b, i), i
                 elif i in deprecated_attrs or i in deprecated:
@@ -166,18 +172,13 @@ def test_core_function():
 
 def test_core_undefinedfunctions():
     f = Function("f")
-    # Full XFAILed test below
-    exclude = list(range(5))
-    # https://github.com/cloudpipe/cloudpickle/issues/65
-    # https://github.com/cloudpipe/cloudpickle/issues/190
-    exclude.append(cloudpickle)
-    check(f, exclude=exclude)
-
-@XFAIL
-def test_core_undefinedfunctions_fail():
-    # This fails because f is assumed to be a class at sympy.basic.function.f
-    f = Function("f")
     check(f)
+
+
+def test_core_appliedundef():
+    x = Symbol("_long_unique_name_1")
+    f = Function("_long_unique_name_2")
+    check(f(x))
 
 
 def test_core_interval():
@@ -204,6 +205,11 @@ def test_Singletons():
         for func in copiers:
             assert func(obj) is obj
 
+#================== combinatorics ===================
+from sympy.combinatorics.free_groups import FreeGroup
+
+def test_free_group():
+    check(FreeGroup("x, y, z"), check_attr=False)
 
 #================== functions ===================
 from sympy.functions import (Piecewise, lowergamma, acosh, chebyshevu,

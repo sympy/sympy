@@ -1,7 +1,7 @@
 from sympy.core import (S, pi, oo, symbols, Function, Rational, Integer,
                         Tuple, Symbol, Eq, Ne, Le, Lt, Gt, Ge)
 from sympy.core import EulerGamma, GoldenRatio, Catalan, Lambda, Mul, Pow
-from sympy.functions import Piecewise, sqrt, ceiling, exp, sin, cos
+from sympy.functions import Piecewise, sqrt, ceiling, exp, sin, cos, sinc
 from sympy.testing.pytest import raises
 from sympy.utilities.lambdify import implemented_function
 from sympy.matrices import (eye, Matrix, MatrixSymbol, Identity,
@@ -147,6 +147,10 @@ def test_boolean():
     assert julia_code((x & y) | z) == "z || x && y"
     assert julia_code((x | y) & z) == "z && (x || y)"
 
+def test_sinc():
+    assert julia_code(sinc(x)) == 'sinc(x / pi)'
+    assert julia_code(sinc(x + 3)) == 'sinc((x + 3) / pi)'
+    assert julia_code(sinc(pi * (x + 3))) == 'sinc(x + 3)'
 
 def test_Matrices():
     assert julia_code(Matrix(1, 1, [10])) == "[10]"
