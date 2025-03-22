@@ -277,6 +277,10 @@ def test_primitive_element():
     assert primitive_element([sqrt(2), 0], x, ex=True) == (x**2 - 2, [1, 0], [[MPQ(1,1), MPQ(0,1)], []])
     assert primitive_element([0, sqrt(2)], x, ex=True) == (x**2 - 2, [1, 1], [[], [MPQ(1,1), MPQ(0,1)]])
 
+    # Issue 27798
+    a, b = CRootOf(49*x**3 - 49*x**2 + 14*x - 1, 2), CRootOf(49*x**3 - 49*x**2 + 14*x - 1, 0)
+    assert primitive_element([a, b], polys=True)[0].primitive()[0] == 1
+    assert primitive_element([a, b], polys=True, ex=True)[0].primitive()[0] == 1
 
 def test_to_number_field():
     assert to_number_field(sqrt(2)) == AlgebraicNumber(sqrt(2))
