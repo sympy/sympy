@@ -56,4 +56,4 @@ References
 ----------
 
 - :doc:`/tutorials/intro-tutorial/solvers` - Tutorial on using solvers
-- :doc:`/modules/solvers/solvers` - Overview of the solvers module 
+- :doc:`/modules/solvers/solvers` - Overview of the solvers module

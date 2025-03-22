@@ -1,4 +1,4 @@
-﻿sympy.solvers.solvers.check\_assumptions
+sympy.solvers.solvers.check\_assumptions
 ========================================
 
 .. currentmodule:: sympy.solvers.solvers
@@ -29,4 +29,3 @@ References
 
 .. rubric:: References
 
- 

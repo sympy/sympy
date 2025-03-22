@@ -1,4 +1,4 @@
-﻿sympy.solvers.ode.homogeneous\_order
+sympy.solvers.ode.homogeneous\_order
 ====================================
 
 .. currentmodule:: sympy.solvers.ode
@@ -29,4 +29,3 @@ References
 
 .. rubric:: References
 
- 

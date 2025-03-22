@@ -1,4 +1,4 @@
-﻿sympy.solvers.solvers.minsolve\_linear\_system
+sympy.solvers.solvers.minsolve\_linear\_system
 ==============================================
 
 .. currentmodule:: sympy.solvers.solvers
@@ -29,4 +29,3 @@ References
 
 .. rubric:: References
 
- 

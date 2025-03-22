@@ -36,4 +36,4 @@ For other types of solving functionality, see:
 * :func:`~sympy.solvers.solveset.solveset` - An improved version of ``solve`` that returns a set of solutions
 * :func:`~sympy.solvers.inequalities.solve_univariate_inequality` - For solving inequalities
 * :func:`~sympy.solvers.ode.dsolve` - For solving differential equations
-* :func:`~sympy.solvers.pde.pdsolve` - For solving partial differential equations 
+* :func:`~sympy.solvers.pde.pdsolve` - For solving partial differential equations

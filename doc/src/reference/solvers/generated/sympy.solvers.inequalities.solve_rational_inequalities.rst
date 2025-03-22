@@ -1,4 +1,4 @@
-﻿sympy.solvers.inequalities.solve\_rational\_inequalities
+sympy.solvers.inequalities.solve\_rational\_inequalities
 ========================================================
 
 .. currentmodule:: sympy.solvers.inequalities
@@ -29,4 +29,3 @@ References
 
 .. rubric:: References
 
- 

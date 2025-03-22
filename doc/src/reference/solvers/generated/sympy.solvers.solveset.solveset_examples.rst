@@ -17,12 +17,12 @@ Solve a transcendental equation:
 
 >>> from sympy import exp, sin
 >>> solveset(exp(x) - 1, x)
-{2*I*pi*n | n in Integers} ∪ {0}
+{2*I*pi*n | n in Integers} âˆª {0}
 
 Solve a trigonometric equation:
 
 >>> solveset(sin(x), x)
-{2*pi*n | n in Integers} ∪ {2*pi*n + pi | n in Integers}
+{2*pi*n | n in Integers} âˆª {2*pi*n + pi | n in Integers}
 
 Advanced Usage
 =============
@@ -51,4 +51,4 @@ EmptySet
 Handle equations with infinitely many solutions:
 
 >>> solveset(sin(x) - sin(x), x, domain=S.Reals)
-Reals 
+Reals

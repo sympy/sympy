@@ -8,4 +8,4 @@ def get_intersphinx_mapping(packages=None):
     }
     if packages is None:
         return mapping
-    return {k: v for k, v in mapping.items() if k in packages} 
+    return {k: v for k, v in mapping.items() if k in packages}

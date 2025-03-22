@@ -1,4 +1,4 @@
-﻿sympy.solvers.ode.checkodesol
+sympy.solvers.ode.checkodesol
 =============================
 
 .. currentmodule:: sympy.solvers.ode
@@ -29,4 +29,3 @@ References
 
 .. rubric:: References
 
- 

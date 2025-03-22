@@ -29,4 +29,4 @@ For other types of solving functionality, see:
 * :func:`~sympy.solvers.solvers.solve` - For solving equations
 * :func:`~sympy.solvers.solveset.solveset` - A newer equation solving framework
 * :func:`~sympy.solvers.ode.dsolve` - For solving differential equations
-* :func:`~sympy.solvers.pde.pdsolve` - For solving partial differential equations 
+* :func:`~sympy.solvers.pde.pdsolve` - For solving partial differential equations

@@ -1,4 +1,4 @@
-﻿sympy.solvers.ode.classify\_ode
+sympy.solvers.ode.classify\_ode
 ===============================
 
 .. currentmodule:: sympy.solvers.ode
@@ -29,4 +29,3 @@ References
 
 .. rubric:: References
 
- 

@@ -1,4 +1,4 @@
-﻿sympy.solvers.solveset.substitution
+sympy.solvers.solveset.substitution
 ===================================
 
 .. currentmodule:: sympy.solvers.solveset
@@ -29,4 +29,3 @@ References
 
 .. rubric:: References
 
- 

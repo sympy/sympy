@@ -1,4 +1,4 @@
-﻿sympy.solvers.solvers.solve\_undetermined\_coeffs
+sympy.solvers.solvers.solve\_undetermined\_coeffs
 =================================================
 
 .. currentmodule:: sympy.solvers.solvers
@@ -29,4 +29,3 @@ References
 
 .. rubric:: References
 
- 

@@ -1,4 +1,4 @@
-﻿sympy.solvers.ode.infinitesimals
+sympy.solvers.ode.infinitesimals
 ================================
 
 .. currentmodule:: sympy.solvers.ode
@@ -29,4 +29,3 @@ References
 
 .. rubric:: References
 
- 

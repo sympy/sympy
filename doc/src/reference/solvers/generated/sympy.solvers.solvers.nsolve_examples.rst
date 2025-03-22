@@ -40,4 +40,4 @@ Solving Transcendental Equations
 nsolve is particularly useful for transcendental equations::
 
     >>> nsolve(sin(x) - x/2, x, 2)
-    1.89549426703398 
+    1.89549426703398

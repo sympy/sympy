@@ -43,4 +43,4 @@ Inequalities with rational functions::
     ((-oo, -1) | [1, oo))
 
     >>> solve_univariate_inequality(1/(x - 2) > 0, x)
-    (2, oo) 
+    (2, oo)

@@ -1,4 +1,4 @@
-﻿sympy.solvers.solveset.nonlinsolve
+sympy.solvers.solveset.nonlinsolve
 ==================================
 
 .. currentmodule:: sympy.solvers.solveset
@@ -29,4 +29,3 @@ References
 
 .. rubric:: References
 
- 

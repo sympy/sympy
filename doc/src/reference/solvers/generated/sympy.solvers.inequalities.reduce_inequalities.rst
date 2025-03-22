@@ -1,4 +1,4 @@
-﻿sympy.solvers.inequalities.reduce\_inequalities
+sympy.solvers.inequalities.reduce\_inequalities
 ===============================================
 
 .. currentmodule:: sympy.solvers.inequalities
@@ -29,4 +29,3 @@ References
 
 .. rubric:: References
 
- 

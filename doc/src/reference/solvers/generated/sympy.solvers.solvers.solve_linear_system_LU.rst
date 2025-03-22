@@ -1,4 +1,4 @@
-﻿sympy.solvers.solvers.solve\_linear\_system\_LU
+sympy.solvers.solvers.solve\_linear\_system\_LU
 ===============================================
 
 .. currentmodule:: sympy.solvers.solvers
@@ -29,4 +29,3 @@ References
 
 .. rubric:: References
 
- 

@@ -34,4 +34,4 @@ References
 {% for ref in references %}
 .. [{{ ref.key }}] {{ ref.text }}
 {% endfor %}
-{% endif %} 
+{% endif %}

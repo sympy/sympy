@@ -73,4 +73,4 @@ Complex Solutions
     >>> solve(x**2 + 1, x)  # Solve equation with complex solutions
     [-I, I]
     >>> solve(x**2 + 2*x + 2, x)  # Solve quadratic with complex roots
-    [-1 - I, -1 + I] 
+    [-1 - I, -1 + I]

@@ -1,4 +1,4 @@
-﻿sympy.solvers.pde.pde\_separate\_mul
+sympy.solvers.pde.pde\_separate\_mul
 ====================================
 
 .. currentmodule:: sympy.solvers.pde
@@ -29,4 +29,3 @@ References
 
 .. rubric:: References
 
- 

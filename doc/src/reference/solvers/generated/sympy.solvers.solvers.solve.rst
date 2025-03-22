@@ -1,4 +1,4 @@
-﻿sympy.solvers.solvers.solve
+sympy.solvers.solvers.solve
 ===========================
 
 .. currentmodule:: sympy.solvers.solvers
@@ -29,4 +29,3 @@ References
 
 .. rubric:: References
 
- 

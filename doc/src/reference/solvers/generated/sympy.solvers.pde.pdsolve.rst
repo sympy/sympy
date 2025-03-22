@@ -1,4 +1,4 @@
-﻿sympy.solvers.pde.pdsolve
+sympy.solvers.pde.pdsolve
 =========================
 
 .. currentmodule:: sympy.solvers.pde
@@ -29,4 +29,3 @@ References
 
 .. rubric:: References
 
- 
