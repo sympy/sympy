@@ -347,6 +347,12 @@ def primitive_element(extension, x=None, *, ex=False, polys=False):
     else:
         x, cls = Dummy('x'), PurePoly
 
+    def _canonicalize(f):
+        _, f = f.primitive()
+        if f.LC() < 0:
+            f = -f
+        return f
+
     if not ex:
         gen, coeffs = extension[0], [1]
         g = minimal_polynomial(gen, x, polys=True)
@@ -360,7 +366,7 @@ def primitive_element(extension, x=None, *, ex=False, polys=False):
             gen += s*ext
             coeffs.append(s)
 
-        _, g = g.primitive()
+        g = _canonicalize(g)
         if not polys:
             return g.as_expr(), coeffs
         else:
@@ -395,7 +401,7 @@ def primitive_element(extension, x=None, *, ex=False, polys=False):
     else:
         H = [_.to_list() for _ in reps]
 
-    _, f = f.primitive()
+    f = _canonicalize(f)
     if not polys:
         return f.as_expr(), coeffs, H
     else:
