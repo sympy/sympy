@@ -3,10 +3,12 @@ from sympy.core import S, Symbol, Add, sympify, Expr, PoleError, Mul
 from sympy.core.exprtools import factor_terms
 from sympy.core.numbers import Float, _illegal
 from sympy.core.function import AppliedUndef
+from sympy.core.mod import Mod
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.elementary.complexes import (Abs, sign, arg, re)
 from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.special.gamma_functions import gamma
+from sympy.functions.elementary.integers import floor, ceiling
 from sympy.polys import PolynomialError, factor
 from sympy.series.order import Order
 from .gruntz import gruntz
@@ -324,6 +326,11 @@ class Limit(Expr):
                     return S.ComplexInfinity
 
         if z0 is S.Infinity:
+            if z.is_integer and e.has(floor, ceiling, Mod):
+                try:
+                    return gruntz(e, z, z0, dir)
+                except (NotImplementedError, TypeError, ValueError):
+                    return Limit(e, z, z0, dir)
             if e.is_Mul:
                 e = factor_terms(e)
             newe = e.subs(z, 1/z)
