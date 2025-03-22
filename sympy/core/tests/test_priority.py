@@ -15,7 +15,7 @@ class Higher(Integer):
     '''
 
     _op_priority = 20.0
-    result = S.One
+    result: Expr = S.One
 
     def __new__(cls):
         obj = Expr.__new__(cls)
@@ -87,7 +87,7 @@ class Lower(Higher):
     '''
 
     _op_priority = 5.0
-    result = S.NegativeOne
+    result: Expr = S.NegativeOne
 
     def __new__(cls):
         obj = Expr.__new__(cls)
