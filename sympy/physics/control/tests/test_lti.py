@@ -1,7 +1,7 @@
 from sympy.core.add import Add
 from sympy.core.function import Function
 from sympy.core.mul import Mul
-from sympy.core.numbers import (I, pi, Rational, oo)
+from sympy.core.numbers import (I, Rational, oo, pi)
 from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.core.symbol import symbols
@@ -292,14 +292,23 @@ def test_TransferFunction_functions():
     assert G1.zeros() == [1, 1]
     assert G2.zeros() == []
     assert tf1.zeros() == [-3, 1]
-    assert expect4_.zeros() == [7**(Rational(2, 3))*(-s)**(Rational(1, 3))/7, -7**(Rational(2, 3))*(-s)**(Rational(1, 3))/14 -
-        sqrt(3)*7**(Rational(2, 3))*I*(-s)**(Rational(1, 3))/14, -7**(Rational(2, 3))*(-s)**(Rational(1, 3))/14 + sqrt(3)*7**(Rational(2, 3))*I*(-s)**(Rational(1, 3))/14]
-    assert SP4.zeros() == [(s/a1)**(Rational(1, 3)), -(s/a1)**(Rational(1, 3))/2 - sqrt(3)*I*(s/a1)**(Rational(1, 3))/2,
-        -(s/a1)**(Rational(1, 3))/2 + sqrt(3)*I*(s/a1)**(Rational(1, 3))/2]
+    assert expect4_.zeros() == [
+        -7**Rational(2, 3)*s**Rational(1, 3)/7,
+        7**Rational(2, 3)*s**Rational(1, 3)*exp(-I*pi/3)/7,
+        7**Rational(2, 3)*s**Rational(1, 3)*exp(I*pi/3)/7
+    ]
+    assert SP4.zeros() == [
+        (s/a1)**Rational(1, 3),
+        (s/a1)**Rational(1, 3)*exp(-2*I*pi/3),
+        (s/a1)**Rational(1, 3)*exp(2*I*pi/3)
+    ]
     assert str(expect3.zeros()) == str([0.125 - 1.11102430216445*sqrt(-0.405063291139241*p**3 - 1.0),
         1.11102430216445*sqrt(-0.405063291139241*p**3 - 1.0) + 0.125])
-    assert tf_.zeros() == [k**(Rational(1, 3)), -k**(Rational(1, 3))/2 - sqrt(3)*I*k**(Rational(1, 3))/2,
-        -k**(Rational(1, 3))/2 + sqrt(3)*I*k**(Rational(1, 3))/2]
+    assert tf_.zeros() == [
+        k**Rational(1, 3),
+        k**Rational(1, 3)*exp(-2*I*pi/3),
+        k**Rational(1, 3)*exp(2*I*pi/3)
+    ]
     assert _TF.zeros() == [CRootOf(x**9 + x + 1, 0), 0, CRootOf(x**9 + x + 1, 1), CRootOf(x**9 + x + 1, 2),
         CRootOf(x**9 + x + 1, 3), CRootOf(x**9 + x + 1, 4), CRootOf(x**9 + x + 1, 5), CRootOf(x**9 + x + 1, 6),
         CRootOf(x**9 + x + 1, 7), CRootOf(x**9 + x + 1, 8)]
@@ -1323,8 +1332,8 @@ def test_TransferFunctionMatrix_functions():
 
     # elem_poles()
 
-    assert H_1.elem_poles() == [[[-sqrt(2)/2 - sqrt(2)*I/2, -sqrt(2)/2 + sqrt(2)*I/2, sqrt(2)/2 - sqrt(2)*I/2, sqrt(2)/2 + sqrt(2)*I/2], []],
-        [[], [0]]]
+    assert H_1.elem_poles() == [[[exp(-3*I*pi/4), exp(-I*pi/4), exp(I*pi/4), exp(3*I*pi/4)],
+        []], [[], [0]]]
     assert H_2.elem_poles() == [[[0, 0], [sqrt(a), -sqrt(a)]]]
     assert tfm2.elem_poles() == [[[wn*(-zeta + sqrt((zeta - 1)*(zeta + 1))), wn*(-zeta - sqrt((zeta - 1)*(zeta + 1)))], [], [-p/a2]],
         [[-a0], [wn*(-zeta + sqrt((zeta - 1)*(zeta + 1))), wn*(-zeta - sqrt((zeta - 1)*(zeta + 1)))], [-p/a2]]]
