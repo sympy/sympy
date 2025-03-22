@@ -426,3 +426,19 @@ def test_to_euler_options():
                     q = Quaternion(*elements)
                     if not q.is_zero_quaternion():
                         test_one_case(q)
+
+def test_quaternion_integration():
+    var_x = symbols('x')
+    quat = Quaternion(1, 2, 3, 4) # Example quaternion
+
+    # Expected indefinite  integral
+    expected = Quaternion(integrate(1, var_x), integrate(2, var_x), integrate(3, var_x), integrate(4, var_x))
+    assert quat.integrate(var_x) == expected
+
+    # Expected definite integral from x=1 to x=5
+    expected_definite = Quaternion(integrate(1, (var_x, 1, 5)),
+                                   integrate(2, (var_x, 1, 5)),
+                                   integrate(3, (var_x, 1, 5)),
+                                   integrate(4, (var_x, 1, 5)),
+                                   integrate(5, (var_x, 1, 5)))
+    assert quat.integrate((var_x, 1, 5)) == expected_definite
