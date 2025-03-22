@@ -1,4 +1,6 @@
-from typing import Tuple as tTuple
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, overload
 
 from sympy.core import S, Add, Mul, sympify, Symbol, Dummy, Basic
 from sympy.core.expr import Expr
@@ -11,6 +13,9 @@ from sympy.core.power import Pow
 from sympy.core.relational import Eq
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
+
+if TYPE_CHECKING:
+    from sympy.algebras.quaternion import Quaternion
 
 ###############################################################################
 ######################### REAL and IMAGINARY PARTS ############################
@@ -59,7 +64,7 @@ class re(DefinedFunction):
     im
     """
 
-    args: tTuple[Expr]
+    args: tuple[Expr]
 
     is_extended_real = True
     unbranched = True  # implicitly works on the projection to C
@@ -181,7 +186,7 @@ class im(DefinedFunction):
     re
     """
 
-    args: tTuple[Expr]
+    args: tuple[Expr]
 
     is_extended_real = True
     unbranched = True  # implicitly works on the projection to C
@@ -501,7 +506,7 @@ class Abs(DefinedFunction):
     sign, conjugate
     """
 
-    args: tTuple[Expr]
+    args: tuple[Expr]
 
     is_extended_real = True
     is_extended_negative = False
@@ -862,6 +867,15 @@ class conjugate(DefinedFunction):
     .. [1] https://en.wikipedia.org/wiki/Complex_conjugation
     """
     _singularities = True  # non-holomorphic
+
+    if TYPE_CHECKING:
+
+        @overload
+        def __new__(cls, arg: Quaternion) -> Quaternion: ... # type: ignore
+        @overload
+        def __new__(cls, arg: Expr) -> Expr: ... # type: ignore
+
+        def __new__(cls, arg: Basic) -> Basic: ... # type: ignore
 
     @classmethod
     def eval(cls, arg):
