@@ -147,10 +147,12 @@ class RouthHurwitz(MutableDenseMatrix):
         self._build_table()
 
     def _build_table(self):
+        """Build the Routh-Hurwitz table."""
         self._initialize()
         self._calculate()
 
     def _initialize(self):
+        """"Initialize the table with the coefficients of the polynomial."""
         row, col = 0, 0
         for coeff in self._coeffs:
             self[row, col] = coeff
@@ -164,6 +166,7 @@ class RouthHurwitz(MutableDenseMatrix):
         self._handle_special_cases(1)
 
     def _calculate(self):
+        """Calculate the table using the first 2 rows."""
         for i in range(2, self.rows):
             self._calculate_row(i)
             self._handle_special_cases(i)
@@ -178,6 +181,7 @@ class RouthHurwitz(MutableDenseMatrix):
             self[i, j] = cancel(num / den)
 
     def _handle_special_cases(self, i):
+        """Handle the first column zero case and the full row zero case."""
         if all(self[i, j] == 0 for j in range(self.cols)):
             self._zero_row_case = True
             self._aux_poly_degree = self._poly_degree - i + 1
