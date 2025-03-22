@@ -41,3 +41,4 @@ For inconsistent systems, None is returned::
     >>> system = Matrix(([1, 1, 3], [1, 1, 4]))
     >>> solve_linear_system(system, x, y)
     None
+

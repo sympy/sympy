@@ -52,3 +52,4 @@ Handle equations with infinitely many solutions:
 
 >>> solveset(sin(x) - sin(x), x, domain=S.Reals)
 Reals
+

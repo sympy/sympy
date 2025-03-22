@@ -29,3 +29,4 @@ For other types of solving functionality, see:
 * :func:`~sympy.solvers.solveset.solveset` - A newer equation solving framework
 * :func:`~sympy.solvers.inequalities.solve_univariate_inequality` - For solving inequalities
 * :func:`~sympy.solvers.ode.dsolve` - For solving ordinary differential equations
+

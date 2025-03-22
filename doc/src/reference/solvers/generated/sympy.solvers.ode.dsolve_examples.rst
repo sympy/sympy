@@ -47,3 +47,4 @@ Higher-order ODEs can also be solved::
 
     >>> dsolve(Derivative(f(x), x, x, x) + Derivative(f(x), x), f(x))
     f(x) = C1 + C2*sin(x) + C3*cos(x)
+

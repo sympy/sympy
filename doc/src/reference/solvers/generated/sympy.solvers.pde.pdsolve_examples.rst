@@ -42,3 +42,4 @@ Solving the 2D Laplace equation::
     >>> eq = Eq(Derivative(u(x, y), x, x) + Derivative(u(x, y), y, y), 0)
     >>> pdsolve(eq)
     u(x, y) = F(x + I*y) + G(x - I*y)
+
