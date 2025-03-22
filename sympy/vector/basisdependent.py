@@ -245,7 +245,7 @@ class BasisDependentMul(BasisDependent, Mul):
 
     @classmethod
     def _new(cls, *args, **options):
-        from sympy.vector import Cross, Dot, Curl, Gradient
+        from sympy.vector import Cross, Dot, Curl, Gradient, Vector
         count = 0
         measure_number = S.One
         zeroflag = False
@@ -269,6 +269,13 @@ class BasisDependentMul(BasisDependent, Mul):
                 expr = arg
             elif isinstance(arg, (Cross, Dot, Curl, Gradient)):
                 extra_args.append(arg)
+            elif isinstance(arg, Vector):
+                try:
+                    arg.components
+                except AttributeError as exc:
+                    raise ValueError(
+                        "Invalid vector definition, object does not have components."
+                    ) from exc
             else:
                 measure_number *= arg
         # Make sure incompatible types weren't multiplied
