@@ -12,7 +12,6 @@ from sympy.utilities.exceptions import (sympy_deprecation_warning,
                                         SymPyDeprecationWarning,
                                         ignore_warnings)
 
-
 # Memoization is necessary for the properties of AssumptionKeys to
 # ensure that only one object of Predicate objects are created.
 # This is because assumption handlers are registered on those objects.
@@ -76,7 +75,7 @@ class AssumptionKeys:
 
     @memoize_property
     def noninteger(self):
-        from .predicates.sets import NonIntegerPredicate
+        from .handlers.sets import NonIntegerPredicate
         return NonIntegerPredicate()
 
     @memoize_property
