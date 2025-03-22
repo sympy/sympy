@@ -1839,7 +1839,12 @@ def risch_integrate(f, x, extension=None, handle_first='log',
         else:
             result = result.subs(DE.backsubs)
             if not i.is_zero:
-                i = NonElementaryIntegral(i.function.subs(DE.backsubs),i.limits)
+                # If i is NaN or contains NaN, do not attempt to build a NonElementaryIntegral.
+                if i is S.NaN or i.has(S.NaN):
+                    i = S.NaN
+                else:
+                    i = NonElementaryIntegral(i.function.subs(DE.backsubs), i.limits)
+
             if not separate_integral:
                 result += i
                 return result
