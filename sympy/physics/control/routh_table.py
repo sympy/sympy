@@ -1,6 +1,6 @@
 from sympy.matrices.dense import MutableDenseMatrix
 from sympy import Poly
-from sympy import simplify
+from sympy import cancel
 from sympy import symbols, Symbol
 
 __all__ = ['RouthHurwitz']
@@ -77,27 +77,27 @@ class RouthHurwitz(MutableDenseMatrix):
     >>> p = b1*s**3 + b2*s**2 + b3*s + b4
     >>> RouthHurwitz(p, s)
     Matrix([
-    [               b_1, b_3],
-    [               b_2, b_4],
-    [-b_1*b_4/b_2 + b_3,   0],
-    [               b_4,   0]])
+    [                     b_1, b_3],
+    [                     b_2, b_4],
+    [(-b_1*b_4 + b_2*b_3)/b_2,   0],
+    [                     b_4,   0]])
     >>> RouthHurwitz(p, s).first_column
     Matrix([
-    [               b_1],
-    [               b_2],
-    [-b_1*b_4/b_2 + b_3],
-    [               b_4]])
+    [                     b_1],
+    [                     b_2],
+    [(-b_1*b_4 + b_2*b_3)/b_2],
+    [                     b_4]])
 
     Here you can see how the table appears in the first column zero case:
 
     >>> p1 = s**4 + s**3 + 3*s**2 + 3*s + 3
     >>> RouthHurwitz(p1, s)
     Matrix([
-    [            1, 3, 3],
-    [            1, 3, 0],
-    [      epsilon, 3, 0],
-    [3 - 3/epsilon, 0, 0],
-    [            3, 0, 0]])
+    [                      1, 3, 3],
+    [                      1, 3, 0],
+    [                epsilon, 3, 0],
+    [(3*epsilon - 3)/epsilon, 0, 0],
+    [                      3, 0, 0]])
     >>> RouthHurwitz(p1, s).zero_rows_case
     False
 
@@ -175,7 +175,7 @@ class RouthHurwitz(MutableDenseMatrix):
                    - self[i-2, 0] * self[i-1, j+1])
             den = self[i-1, 0]
 
-            self[i, j] = simplify(num / den)
+            self[i, j] = cancel(num / den)
 
     def _handle_special_cases(self, i):
         if all(self[i, j] == 0 for j in range(self.cols)):

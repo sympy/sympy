@@ -291,7 +291,7 @@ def test_TransferFunction_functions():
     generic_den = b4 * s**4 + b3 * s**3 + b2 * s**2 + b1 * s + b0
 
     stab_cond = TransferFunction(1, generic_den, s).get_asymptotic_stability_conditions()
-    assert stab_cond == [b4 > 0, b3 > 0, -b1*b4/b3 + b2 > 0, (b0*b3**2 + b1*(b1*b4 - b2*b3))/(b1*b4 - b2*b3) > 0, b0 > 0]
+    assert stab_cond == [b4 > 0, b3 > 0, (-b1*b4 + b2*b3)/b3 > 0, (b0*b3**2 + b1**2*b4 - b1*b2*b3)/(b1*b4 - b2*b3) > 0, b0 > 0]
     assert TransferFunction(1, (s+1)*(s+2*I)*(s-2*I), s).get_asymptotic_stability_conditions() is False
     assert TransferFunction(1, (s+1)*(s+2)*(s+1/2), s).get_asymptotic_stability_conditions() is True
     assert stable_tf.get_asymptotic_stability_conditions() is True

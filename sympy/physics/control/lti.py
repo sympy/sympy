@@ -24,6 +24,8 @@ from sympy.series import limit
 from sympy.utilities.misc import filldedent
 from sympy.solvers.ode.systems import linodesolve
 from sympy.solvers.solveset import linsolve, linear_eq_to_matrix
+from sympy.logic import false
+from sympy.functions.elementary.complexes import sign
 
 from mpmath.libmp.libmpf import prec_to_dps
 
@@ -1132,7 +1134,7 @@ class TransferFunction(SISOLinearTimeInvariant):
         >>> p1 = b1*s**3 + b2*s**2 + b3*s + b4
         >>> tf1 = TransferFunction(1, p1, s)
         >>> tf1.get_asymptotic_stability_conditions()
-        [b_1 > 0, b_2 > 0, -b_1*b_4/b_2 + b_3 > 0, b_4 > 0]
+        [b_1 > 0, b_2 > 0, (-b_1*b_4 + b_2*b_3)/b_2 > 0, b_4 > 0]
 
         >>> p2 = s**4 + 3*s**3 + 6*s**2 + 12*s + 8
         >>> solve(p2)
@@ -1159,8 +1161,8 @@ class TransferFunction(SISOLinearTimeInvariant):
         (3/10 < k) & (k < oo)
 
         """
+
         from sympy.physics.control import RouthHurwitz
-        from sympy import false, sign
 
         stability = self.is_stable()
         if stability is not None:
