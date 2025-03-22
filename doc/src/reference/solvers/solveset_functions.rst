@@ -22,7 +22,7 @@ Functions
    nonlinsolve
    substitution
    linear_eq_to_matrix
-   
+
 Related Functions
 ----------------
 

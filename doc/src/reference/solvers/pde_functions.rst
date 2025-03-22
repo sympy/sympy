@@ -19,7 +19,7 @@ Functions
    pde_separate
    pde_separate_add
    pde_separate_mul
-   
+
 Related Functions
 ----------------
 

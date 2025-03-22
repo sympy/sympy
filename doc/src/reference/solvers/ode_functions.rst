@@ -20,7 +20,7 @@ Functions
    infinitesimals
    checkinfsol
    ode_lie_group
-   
+
 Related Functions
 ----------------
 

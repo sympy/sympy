@@ -16,7 +16,7 @@ First-order ODEs can be solved using dsolve::
 
     >>> dsolve(Derivative(f(x), x) - f(x), f(x))
     f(x) = C1*exp(x)
-    
+
     >>> dsolve(Derivative(f(x), x) + f(x), f(x))
     f(x) = C1*exp(-x)
 

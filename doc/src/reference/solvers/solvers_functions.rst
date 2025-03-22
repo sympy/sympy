@@ -27,7 +27,7 @@ Functions
    check_solutions
    nsolve
    solve_undetermined_coeffs
-   
+
 Related Functions
 ----------------
 
