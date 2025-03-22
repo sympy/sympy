@@ -187,6 +187,10 @@ with
     def bound_symbols(self):
         return flatten([self.sym])
 
+    @property
+    def _measure(self):
+        raise NotImplementedError("Measure for unevaluated `ConditionSet` is undetermined")
+
     def _contains(self, other):
         def ok_sig(a, b):
             tuples = [isinstance(i, Tuple) for i in (a, b)]
