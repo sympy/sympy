@@ -51,6 +51,28 @@ def test_evaluate_pauli_product():
         TensorProduct(I*sigma1*sigma2*sigma1*sigma2, 1)
     ) == 1 -I + I*sigma3*tau1*sigma2 - 1 - sigma3 - I*TensorProduct(1,1)
 
+def test_evaluate_pauli_product_ordering():
+    from sympy.physics.paulialgebra import evaluate_pauli_product
+
+    a1 = Pauli(1, label = "a")
+    b3 = Pauli(3, label = "b")
+
+    # Simpler case where ordering is already present
+    assert evaluate_pauli_product((a1 * b3) + (a1 * b3)) == 2 * a1 * b3
+
+    # Issue 26745
+    assert evaluate_pauli_product((a1 * b3) + (b3 * a1)) == 2 * a1 * b3
+
+    assert evaluate_pauli_product(a1 * b3 * a1) == b3
+
+def test_evaluate_pauli_product_empty():
+    from sympy.physics.paulialgebra import evaluate_pauli_product
+
+    assert evaluate_pauli_product(1) == 1
+    a1 = Pauli(1, label = "a")
+    assert evaluate_pauli_product(a1) == a1
+    labelmissing = Pauli(1)
+    assert evaluate_pauli_product(labelmissing) == labelmissing
 
 @XFAIL
 def test_Pauli_should_work():
