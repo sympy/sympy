@@ -2,6 +2,7 @@ from sympy.core.decorators import call_highest_priority
 from sympy.core.expr import Expr
 from sympy.core.mod import Mod
 from sympy.core.numbers import Integer
+from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.functions.elementary.integers import floor
 
@@ -14,7 +15,7 @@ class Higher(Integer):
     '''
 
     _op_priority = 20.0
-    result = 1
+    result = S.One
 
     def __new__(cls):
         obj = Expr.__new__(cls)
@@ -86,7 +87,7 @@ class Lower(Higher):
     '''
 
     _op_priority = 5.0
-    result = -1
+    result = S.NegativeOne
 
     def __new__(cls):
         obj = Expr.__new__(cls)
@@ -133,8 +134,7 @@ def test_div():
 def test_mod():
     assert h%l == h%x == 1
     assert l%h == x%h == 2
-    # An issue arises within `Mod.eval` when performing comparisons
-    # assert x%l == Mod(x, -1)
+    assert x%l == Mod(x, -1)
     assert l%x == Mod(-1, x)
 
 
