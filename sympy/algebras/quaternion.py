@@ -1098,7 +1098,7 @@ class Quaternion(Expr):
         4 + 8*i + 12*j + 16*k
 
         """
-        # Verified: This implementation correctly applies symbolic integration to each quaternion component.
+
         return Quaternion(integrate(self.a, *args), integrate(self.b, *args),
                           integrate(self.c, *args), integrate(self.d, *args))
 
