@@ -10,7 +10,6 @@ from sympy.functions.elementary.trigonometric import (cos, sin, sinc)
 from sympy.matrices.expressions.matexpr import MatrixSymbol
 from sympy.assumptions import assuming, Q
 from sympy.external import import_module
-from sympy.ntheory import digits
 from sympy.printing.codeprinter import ccode
 from sympy.codegen.matrix_nodes import MatrixSolve
 from sympy.codegen.cfunctions import log2, exp2, expm1, log1p
@@ -439,7 +438,7 @@ def test_compiled_ccode_with_rewriting():
 
     # Unfortunately, we need to call ``.n()`` on our expressions before we hand them
     # to ``ccode``, and we need to request a large number of significant digits.
-    # In this test, results converged for double precision when the following number
+    # In this test, results converged for double precision when the following numberg
     # of significant digits were chosen:
 
     num_of_digits = max(25, mpmath.mp.dps)
