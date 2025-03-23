@@ -1,4 +1,5 @@
 import tempfile
+import mpmath
 from sympy.core.numbers import pi, Rational
 from sympy.core.power import Pow
 from sympy.core.singleton import S
@@ -9,6 +10,7 @@ from sympy.functions.elementary.trigonometric import (cos, sin, sinc)
 from sympy.matrices.expressions.matexpr import MatrixSymbol
 from sympy.assumptions import assuming, Q
 from sympy.external import import_module
+from sympy.ntheory import digits
 from sympy.printing.codeprinter import ccode
 from sympy.codegen.matrix_nodes import MatrixSolve
 from sympy.codegen.cfunctions import log2, exp2, expm1, log1p
@@ -439,7 +441,9 @@ def test_compiled_ccode_with_rewriting():
     # to ``ccode``, and we need to request a large number of significant digits.
     # In this test, results converged for double precision when the following number
     # of significant digits were chosen:
-    NUMBER_OF_DIGITS = 25   # TODO: this should ideally be automatically handled.
+
+    num_of_digits = max(25, mpmath.mp.dps)
+
 
     func_c = '''
 #include <math.h>
@@ -450,8 +454,8 @@ double func_unchanged(double x) {
 double func_rewritten(double x) {
     return %(rewritten)s;
 }
-''' % {"unchanged": ccode(unchanged.n(NUMBER_OF_DIGITS)),
-           "rewritten": ccode(rewritten.n(NUMBER_OF_DIGITS))}
+''' % {"unchanged": ccode(unchanged.n(num_of_digits)),
+           "rewritten": ccode(rewritten.n(num_of_digits))}
 
     func_pyx = '''
 #cython: language_level=3
