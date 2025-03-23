@@ -117,6 +117,14 @@ def convert_to(expr, target_units, unit_system="SI"):
     if not isinstance(expr, Quantity) and expr.has(Quantity):
         expr = expr.replace(lambda x: isinstance(x, Quantity),
             lambda x: x.convert_to(target_units, unit_system))
+        
+    if isinstance(expr, Quantity):
+        scale_def = UnitSystem._quantity_scale_factors_global.get(expr)
+        if scale_def:
+            scale, ref_unit = scale_def
+            from sympy.physics.units.util import convert_to as _convert_to
+            resolved_ref = _convert_to(ref_unit, target_units, unit_system)
+            expr = sympify(scale) * resolved_ref
 
     def get_total_scale_factor(expr):
         if isinstance(expr, Mul):
