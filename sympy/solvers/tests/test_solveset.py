@@ -752,13 +752,12 @@ def test_solve_abs():
     eqab = eq.subs(reps)
     for si in sol.subs(reps):
         assert not eqab.subs(x, si)
-
-    eq = Eq(sin(Abs(x)), 1)
-    sol = Union(
-        ImageSet(Lambda(n, -2*n*pi - pi/2), Range(0, oo, 1)),
-        ImageSet(Lambda(n, 2*n*pi + pi/2), Range(0, oo, 1))
-    )
-    assert dumeq(solveset(eq, x, domain=S.Reals), sol)
+    assert dumeq(solveset(Eq(sin(Abs(x)), 1), x, domain=S.Reals), Union(
+        Intersection(Interval(0, oo), Union(
+        Intersection(ImageSet(Lambda(n, 2*n*pi + 3*pi/2), S.Integers),
+            Interval(-oo, 0)),
+        Intersection(ImageSet(Lambda(n, 2*n*pi + pi/2), S.Integers),
+            Interval(0, oo))))))
 
 
 def test_issue_9824():
@@ -1042,15 +1041,8 @@ def test_solve_trig_hyp_by_inversion():
     assert solveset_real(cos(sinh(x))-cos(pi/12), x).dummy_eq(Union(
         ImageSet(Lambda(n, asinh(2*n*pi + pi/12)), S.Integers),
         ImageSet(Lambda(n, asinh(2*n*pi + 23*pi/12)), S.Integers)))
-    # The answer below should be:
-    #    FiniteSet(asinh(23*pi/12), asinh(25*pi/12))
-    # Previously this was computed by the intersections simplifying
-    # automatically but that simplification should handled in solveset rather
-    # than Intersection.
-    assert solveset(cos(sinh(x))-cos(pi/12), x, Interval(2,3)).dummy_eq(Union(
-        Intersection(ImageSet(Lambda(n, asinh(2*n*pi + pi/12)), S.Integers), Interval(2, 3)),
-        Intersection(ImageSet(Lambda(n, asinh(2*n*pi + 23*pi/12)), S.Integers), Interval(2, 3))
-    ))
+    assert solveset(cos(sinh(x))-cos(pi/12), x, Interval(2,3)) == \
+        FiniteSet(asinh(23*pi/12), asinh(25*pi/12))
     assert solveset_real(cosh(x**2-1)-2, x) == FiniteSet(
         -sqrt(1 + acosh(2)), sqrt(1 + acosh(2)))
 
@@ -1141,8 +1133,8 @@ def test_old_trig_issues():
 
     # issue #20798
     assert all_close(solveset(cos(2*x) - 0.5, x, Interval(0, 2*pi)), FiniteSet(
-        0.523598775598299, -0.523598775598299 + 1.0*pi,
-        -0.523598775598299 + 2.0*pi, 0.523598775598299 + 1.0*pi))
+        0.523598775598299, -0.523598775598299 + pi,
+        -0.523598775598299 + 2*pi, 0.523598775598299 + pi))
     sol = Union(ImageSet(Lambda(n, n*pi - 0.523598775598299), S.Integers),
                 ImageSet(Lambda(n, n*pi + 0.523598775598299), S.Integers))
     ret = solveset(cos(2*x) - 0.5, x, S.Reals)
