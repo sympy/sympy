@@ -26,7 +26,7 @@ def test_table():
         [b0]])
 
     assert t1[:, 0].equals(expected1_1)
-    assert t1.zero_rows_case is False
+    assert t1.zero_row_case is False
     assert t1.auxiliary_polynomial is None
     assert t1.infinitesimal_element == epsilon
 
@@ -39,7 +39,7 @@ def test_table():
         [3 - 3/t2.infinitesimal_element, 0, 0], [3, 0, 0]])
 
     assert t2.equals(expected2)
-    assert t2.zero_rows_case is False
+    assert t2.zero_row_case is False
 
     # zero row test case
     p3 = s**6 + 2*s**5 + 8*s**4 + 12*s**3 + 20*s**2 + 16*s + 16
@@ -50,5 +50,5 @@ def test_table():
         [8, 24, 0, 0], [6, 16, 0, 0], [8/3, 0, 0, 0], [16, 0, 0, 0]])
 
     assert t3.equals(expected3)
-    assert t3.zero_rows_case is True
+    assert t3.zero_row_case is True
     assert t3.auxiliary_polynomial == Poly(2*s**4 + 12*s**2 + 16, s)

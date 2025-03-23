@@ -6,7 +6,6 @@ from sympy.core.containers import Tuple
 from sympy.core.evalf import EvalfMixin
 from sympy.core.expr import Expr
 from sympy.core.function import expand
-from sympy.core.logic import fuzzy_and
 from sympy.core.mul import Mul
 from sympy.core.numbers import I, pi, oo
 from sympy.core.power import Pow
@@ -24,8 +23,10 @@ from sympy.series import limit
 from sympy.utilities.misc import filldedent
 from sympy.solvers.ode.systems import linodesolve
 from sympy.solvers.solveset import linsolve, linear_eq_to_matrix
-from sympy.logic import false
-from sympy.functions.elementary.complexes import sign
+from sympy.logic.boolalg import false, true
+from sympy.solvers.inequalities import reduce_inequalities
+from sympy.physics.control.routh_table import RouthHurwitz
+
 
 from mpmath.libmp.libmpf import prec_to_dps
 
@@ -1102,8 +1103,20 @@ class TransferFunction(SISOLinearTimeInvariant):
         True
 
         """
-        standard_form = self.to_standard_form()
-        return fuzzy_and(pole.as_real_imag()[0].is_negative for pole in standard_form.poles())
+        try:
+            standard_form = self.to_standard_form()
+            s = standard_form.get_asymptotic_stability_conditions()
+            output = reduce_inequalities(s)
+            if output in (true, false):
+                return output
+
+            return None
+        except NotImplementedError:
+            # If there are more than one symbols,
+            # reduce_inequalities could fail
+            return None
+
+        #return fuzzy_and(pole.as_real_imag()[0].is_negative for pole in standard_form.poles())
 
     def to_standard_form(self):
         r"""
@@ -1141,14 +1154,14 @@ class TransferFunction(SISOLinearTimeInvariant):
         [-2, -1, -2*I, 2*I]
         >>> tf2 = TransferFunction(1, p2, s)
         >>> tf2.get_asymptotic_stability_conditions()
-        False
+        [False]
 
         >>> p3 = s**4 + 17*s**3 + 137/2*s**2 + 213/2*s + 54
         >>> solve(p3)
         [-12.0, -1.0, -2.0 - 0.707106781186548*I, -2.0 + 0.707106781186548*I]
         >>> tf3 = TransferFunction(1, p3, s)
         >>> tf3.get_asymptotic_stability_conditions()
-        True
+        [True]
 
         >>> k = symbols('k')
         >>> tf4 = TransferFunction(-20*s + 20, s**3 + 2*s**2 + 100*s, s)
@@ -1161,25 +1174,25 @@ class TransferFunction(SISOLinearTimeInvariant):
         (3/10 < k) & (k < oo)
 
         """
-
-        from sympy.physics.control import RouthHurwitz
-
-        stability = self.is_stable()
-        if stability is not None:
-            return stability
-
         standard_form = self.to_standard_form()
 
         den = Poly(standard_form.den, self.var)
-        lead_term_sign = sign(den.LC()) if den.LC().is_number else 1
+
+        # If a non-positive coefficient is found, the sign of the polynomial is flipped.
+        # This ensures that the first row of the Routh-Hurwitz table can always be made positive.
+        for i, coeff in enumerate(den.all_coeffs()):
+            if reduce_inequalities(coeff <= 0) is true:
+                den = -den
+                break
 
         table = RouthHurwitz(den, self.var)
 
-        if table.zero_rows_case:
-            # There is a pole with a real part equal to zero
-            return False
+        if table.zero_row_case:
+            # There is a pole with a real part equal to zero or
+            # a pole with a positive real part.
+            return [False]
 
-        num_conditions = True
+        num_conditions = true
         var_conditions = []
 
         for eq in table[:, 0]:
@@ -1189,15 +1202,15 @@ class TransferFunction(SISOLinearTimeInvariant):
                 continue
 
             elif limit_val.is_number:
-                num_conditions &= limit_val * lead_term_sign > 0
+                num_conditions &= limit_val > 0
 
             else:
-                var_conditions.append(limit_val * lead_term_sign > 0)
+                var_conditions.append(limit_val > 0)
 
         if num_conditions is false:
-            return False
+            return [False]
 
-        return var_conditions if len(var_conditions) > 0 else True
+        return var_conditions if len(var_conditions) > 0 else [True]
 
 
     def __add__(self, other):

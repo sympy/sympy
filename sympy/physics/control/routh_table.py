@@ -11,7 +11,7 @@ class RouthHurwitz(MutableDenseMatrix):
     A class for creating a Routh-Hurwitz table from a given polynomial.
     It handle special cases with methods discussed in [1].
 
-    Note: When a row of the table is zero, the property ``zero_rows_case`` is set to True.
+    Note: When a row of the table is zero, the property ``zero_row_case`` is set to True.
 
     Explanation
     ============
@@ -98,7 +98,7 @@ class RouthHurwitz(MutableDenseMatrix):
     [                epsilon, 3, 0],
     [(3*epsilon - 3)/epsilon, 0, 0],
     [                      3, 0, 0]])
-    >>> RouthHurwitz(p1, s).zero_rows_case
+    >>> RouthHurwitz(p1, s).zero_row_case
     False
 
     Here you can see how the table appears in the full row zero case (poles with only imaginary part):
@@ -113,7 +113,7 @@ class RouthHurwitz(MutableDenseMatrix):
     [  6, 16,  0,  0],
     [8/3,  0,  0,  0],
     [ 16,  0,  0,  0]])
-    >>> RouthHurwitz(p2, s).zero_rows_case
+    >>> RouthHurwitz(p2, s).zero_row_case
     True
     >>> RouthHurwitz(p2, s).auxiliary_polynomial
     Poly(2*s**4 + 12*s**2 + 16, s, domain='ZZ')
@@ -143,6 +143,10 @@ class RouthHurwitz(MutableDenseMatrix):
         self._inf_element = infinitesimal_element
         if infinitesimal_element is None:
             self._inf_element = symbols("epsilon", dummy=True)
+
+        if self._poly_degree < 1:
+            self[0, 0] = self._coeffs[0]
+            return
 
         self._build_table()
 
@@ -200,8 +204,12 @@ class RouthHurwitz(MutableDenseMatrix):
             self[i, 0] = self._inf_element
 
     @property
-    def zero_rows_case(self):
-        """Return True if a row of the table was zero, else False."""
+    def zero_row_case(self):
+        """
+        Return True if during the building of the table the Full Row Zero Case
+        (see the explanation section) has been encountered, else False.
+
+        """
         return self._zero_row_case
 
     @property
@@ -211,8 +219,14 @@ class RouthHurwitz(MutableDenseMatrix):
 
     @property
     def auxiliary_polynomial(self):
-        """If zero_rows_case is True, return the auxiliary polynomial, else None """
-        if self.zero_rows_case is False:
+        """
+        If the zero_row_case is True, return the auxiliary polynomial associated with the Full Row Zero Case.
+        Otherwise, return None.
+
+        It is used to handle the Full Row Zero Case during the construction of the Routh-Hurwitz table.
+
+        """
+        if self.zero_row_case is False:
             return None
 
         aux_poly = 0
