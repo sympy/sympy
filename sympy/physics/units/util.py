@@ -126,11 +126,11 @@ def convert_to(expr, target_units, unit_system="SI"):
             return get_total_scale_factor(expr.base) ** expr.exp
         elif isinstance(expr, Quantity):
             return unit_system.get_quantity_scale_factor(expr)
-        return expr   
+        return expr
 
     if isinstance(expr, Quantity):
         scale_def = UnitSystem._quantity_scale_factors_global.get(expr)
-        
+
         if scale_def:
             scale, ref_unit = scale_def
 
@@ -138,7 +138,7 @@ def convert_to(expr, target_units, unit_system="SI"):
             # If the reference unit is not convertible to the target units, return the original expression
             if depmat is None:
                 return expr
-            
+
             if scale != 1:
                 # Add the reference unit to the expression
                 expr = sympify(scale) * ref_unit
@@ -146,7 +146,7 @@ def convert_to(expr, target_units, unit_system="SI"):
     depmat = _get_conversion_matrix_for_expr(expr, target_units, unit_system)
     if depmat is None:
         return expr
-    
+
     expr_scale_factor = get_total_scale_factor(expr)
     return expr_scale_factor * Mul.fromiter(
         (1/get_total_scale_factor(u)*u)**p for u, p in
