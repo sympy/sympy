@@ -441,12 +441,13 @@ class Relational(Boolean, EvalfMixin):
             r = r.canonical
             # If there is only one symbol in the expression,
             # try to write it on a simplified form
-            free = list(filter(lambda x: x.is_real is not False, r.free_symbols))
+            if len(r.free_symbols):
+                dif = r.lhs - r.rhs
+            free = list(filter(lambda x: x.is_real is not False, dif.free_symbols))
             if len(free) == 1:
                 try:
                     from sympy.solvers.solveset import linear_coeffs
                     x = free.pop()
-                    dif = r.lhs - r.rhs
                     m, b = linear_coeffs(dif, x)
                     if m.is_zero is False:
                         if m.is_negative:
@@ -476,7 +477,6 @@ class Relational(Boolean, EvalfMixin):
                     from sympy.solvers.solveset import linear_coeffs
                     from sympy.polys.polytools import gcd
                     free = list(ordered(free))
-                    dif = r.lhs - r.rhs
                     m = linear_coeffs(dif, *free)
                     constant = m[-1]
                     del m[-1]
