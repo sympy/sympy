@@ -4,11 +4,12 @@ from sympy.core.power import Pow
 from sympy.core.symbol import symbols
 from sympy.core.sympify import sympify
 from sympy.printing.str import sstr
+from sympy.physics.units.quantities import Quantity
 from sympy.physics.units import (
     G, centimeter, coulomb, day, degree, gram, hbar, hour, inch, joule, kelvin,
     kilogram, kilometer, length, meter, mile, minute, newton, planck,
     planck_length, planck_mass, planck_temperature, planck_time, radians,
-    second, speed_of_light, steradian, time, km)
+    second, speed_of_light, steradian, time, km, ft, m, foot)
 from sympy.physics.units.util import convert_to, check_dimensions
 from sympy.testing.pytest import raises
 from sympy.functions.elementary.miscellaneous import sqrt
@@ -73,6 +74,24 @@ def test_convert_to_quantities():
     # https://github.com/sympy/sympy/issues/26263
     assert convert_to(sqrt(meter**2 + meter**2.0), meter) == sqrt(meter**2 + meter**2.0)
     assert convert_to((meter**2 + meter**2.0)**2, meter) == (meter**2 + meter**2.0)**2
+
+    # https://github.com/sympy/sympy/issues/27812
+    acre_in_ft = Quantity("acre")
+    acre_in_ft.set_global_relative_scale_factor(43560, ft**2)
+    assert convert_to(acre_in_ft, m**2) == 316160658*meter**2/78125
+
+    acre_in_m = Quantity("acre")
+    acre_in_m.set_global_relative_scale_factor(4046.8564224, m**2)
+    assert convert_to(acre_in_m, ft**2) == 43560.0*foot**2
+
+    acre_in_m = convert_to(acre_in_ft, m**2)
+    back_to_ft2 = convert_to(acre_in_m, ft**2)
+    assert back_to_ft2 == 43560.0*foot**2
+
+    acre_test = Quantity("acre_test")
+    acre_test.set_global_relative_scale_factor(43560, ft**2)
+    raises(TypeError, lambda: convert_to(acre_test, "not_a_unit"))
+
 
 
 def test_convert_to_tuples_of_quantities():
