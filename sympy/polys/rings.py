@@ -423,25 +423,18 @@ class PolyRing(DefaultPrinting, IPolys):
                 i = -1  # indicate impossible choice
         elif isinstance(gen, int):
             i = gen
-
-            if 0 <= i and i < self.ngens:
+            if 0 <= i < self.ngens:
                 pass
-            elif -self.ngens <= i and i <= -1:
-                i = self.ngens + i
             else:
-                raise ValueError("invalid generator index: %s" % gen)
+                raise ValueError(
+                    "generator index must be a non-negative integer less than %s, got %s" % (self.ngens, gen))
         elif self.is_element(gen):
             try:
                 i = self.gens.index(gen)
             except ValueError:
                 raise ValueError("invalid generator: %s" % gen)
-        elif isinstance(gen, str):
-            try:
-                i = self.symbols.index(gen)
-            except ValueError:
-                raise ValueError("invalid generator: %s" % gen)
         else:
-            raise ValueError("expected a polynomial generator, an integer, a string or None, got %s" % gen)
+            raise ValueError("expected a polynomial generator, a non-negative integer, or None, got %s" % gen)
 
         return i
 

@@ -86,10 +86,6 @@ def test_PolyRing_index():
     assert R.index(1) == 1
     assert R.index(2) == 2
 
-    assert R.index(-1) == 2
-    assert R.index(-2) == 1
-    assert R.index(-3) == 0
-
     assert R.index(x) == 0
     assert R.index(y) == 1
     assert R.index(z) == 2
@@ -99,10 +95,13 @@ def test_PolyRing_index():
     assert R_empty.index(None) == -1
 
     raises(ValueError, lambda: R.index(3))
-    raises(ValueError, lambda: R.index(-4))
+    raises(ValueError, lambda: R.index(-1))
+    raises(ValueError, lambda: R.index(-2))
+    raises(ValueError, lambda: R.index(-3))
     w = Symbol('w')
     raises(ValueError, lambda: R.index(w))
     raises(ValueError, lambda: R.index("u"))
+    raises(ValueError, lambda: R.index("x"))
 
 
 def test_PolyRing_drop():
