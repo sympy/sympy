@@ -117,7 +117,7 @@ def convert_to(expr, target_units, unit_system="SI"):
     if not isinstance(expr, Quantity) and expr.has(Quantity):
         expr = expr.replace(lambda x: isinstance(x, Quantity),
             lambda x: x.convert_to(target_units, unit_system))
-        
+
     def get_total_scale_factor(expr):
         if isinstance(expr, Mul):
             return reduce(lambda x, y: x * y,
