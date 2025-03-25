@@ -1545,7 +1545,7 @@ def eval_sum_residue(f, i_a_b):
             flipped_f = f.subs(i, -i)
             is_even = True if flipped_f == f else False
             res = eval_sum_residue(flipped_f, (i, b, S.Infinity))
-            
+
             if res is not None:
                 if is_even:
                     return res
