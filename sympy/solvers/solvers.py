@@ -3005,6 +3005,7 @@ def nsolve(*args, dict=False, **kwargs):
 
     """
     allowed_kwargs = {"printer"} 
+    filtered_kwargs = {k: v for k, v in kwargs.items() if k in allowed_kwargs}
     # there are several other SymPy functions that use method= so
     # guard against that here
     if 'method' in kwargs:
@@ -3071,7 +3072,7 @@ def nsolve(*args, dict=False, **kwargs):
         # e.g., issue 11768
 
         
-        filtered_kwargs = {k: v for k, v in kwargs.items() if k in allowed_kwargs}
+        
 
         f = lambdify(fargs, f, modules, **filtered_kwargs)
         x = sympify(findroot(f, x0, **kwargs))
