@@ -1536,6 +1536,17 @@ def eval_sum_residue(f, i_a_b):
         return -S.Pi * sum(residues)
 
     if not (a.is_finite and b is S.Infinity):
+
+        if a is S.NegativeInfinity and b.is_finite:
+            # Apply the decomposition formula:
+            # (-oo, a) = (-oo, +oo) - (a+1, +oo)
+            full_sum = eval_sum_residue(f, (i, S.NegativeInfinity, S.Infinity))
+            tail_sum = eval_sum_residue(f, (i, b + 1, S.Infinity))
+            if full_sum is not None and tail_sum is not None:
+                return full_sum - tail_sum
+            else:
+                return None
+
         return None
 
     if not is_even_function(numer, denom):

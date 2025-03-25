@@ -1584,6 +1584,16 @@ def test_summation_by_residues():
     assert eval_sum_residue((-1)**x / x**2, (x, S(1), oo)) == -pi**2/12
     assert eval_sum_residue((-1)**x / x**2, (x, S(2), oo)) == 1 - pi**2/12
 
+    # https://github.com/sympy/sympy/issues/27824
+    assert summation((1/(k**2+1)), (k, -oo, 0)) == Rational(1, 2) + pi/(2*tanh(pi))
+    assert summation((-1)**k / k, (k, -oo, -1)) == log(2)
+
+    #Function is odd and convergent
+    assert summation((k), (k, -oo, 0)) == oo
+
+    #Function is odd and divergent
+    assert summation(1 / k**3, (k, -oo, -1)) == -zeta(3)
+
 
 @slow
 def test_summation_by_residues_failing():
