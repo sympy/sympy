@@ -4,9 +4,7 @@ from typing import Callable
 from sympy.core import S, Add, Expr, Basic, Mul, Pow, Rational
 from sympy.core.logic import fuzzy_not
 from sympy.logic.boolalg import Boolean
-
-from sympy.assumptions import ask, Q  # type: ignore
-
+from sympy.assumptions import ask, Q # type: ignore
 
 def refine(expr, assumptions=True):
     """
@@ -393,6 +391,54 @@ def refine_matrixelement(expr, assumptions):
             return expr
         return MatrixElement(matrix, j, i)
 
+def refine_Add(expr, assumptions):
+    """
+    Handler for advanced addition refinement.
+
+    """
+    finite_args = []
+    infty_type = None
+    for a in expr.args:
+        if a is S.NaN:
+            return S.NaN
+        elif a in [S.ComplexInfinity, S.Infinity,S.NegativeInfinity]:
+            if infty_type is None:
+                infty_type = a
+            elif infty_type != a:
+                return S.NaN
+            continue
+        elif a.is_Mul:
+            factors = list(a.args)
+            found_infty = None
+            for factor in factors:
+                if factor in (S.Infinity, S.NegativeInfinity):
+                    found_infty = factor
+                    break
+            if found_infty is not None:
+                coeff = a / found_infty
+                if not coeff.is_real:
+                    if infty_type is None:
+                        infty_type = a
+                    elif infty_type != a:
+                        return S.NaN
+                    continue
+                else:
+                    if found_infty == S.Infinity:
+                        if infty_type is None:
+                            infty_type = +1
+                        elif infty_type != +1:
+                            return S.NaN
+                    else:
+                        if infty_type is None:
+                            infty_type = -1
+                        elif infty_type != -1:
+                            return S.NaN
+                    continue
+        finite_args.append(a)
+    if infty_type is not None:
+        return infty_type
+    return expr
+
 handlers_dict: dict[str, Callable[[Expr, Boolean], Expr]] = {
     'Abs': refine_abs,
     'Pow': refine_Pow,
@@ -401,5 +447,6 @@ handlers_dict: dict[str, Callable[[Expr, Boolean], Expr]] = {
     'im': refine_im,
     'arg': refine_arg,
     'sign': refine_sign,
-    'MatrixElement': refine_matrixelement
+    'MatrixElement': refine_matrixelement,
+    'Add': refine_Add
 }
