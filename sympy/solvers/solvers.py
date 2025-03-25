@@ -3004,8 +3004,8 @@ def nsolve(*args, dict=False, **kwargs):
     0.46792545969349058
 
     """
-    #adding printer based on the issue #27799
-    allowed_kwargs = {"printer"} 
+    # adding printer based on the issue 27799
+    allowed_kwargs = {"printer"}
     filtered_kwargs = {k: v for k, v in kwargs.items() if k in allowed_kwargs}
     # there are several other SymPy functions that use method= so
     # guard against that here
@@ -3070,7 +3070,7 @@ def nsolve(*args, dict=False, **kwargs):
         # the function is much better behaved if there is no denominator
         # but sending the numerator is left to the user since sometimes
         # the function is better behaved when the denominator is present
-        # e.g., issue 11768           
+        # e.g., issue 11768
 
         f = lambdify(fargs, f, modules, **filtered_kwargs)
         x = sympify(findroot(f, x0, **kwargs))
