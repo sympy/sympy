@@ -3004,6 +3004,7 @@ def nsolve(*args, dict=False, **kwargs):
     0.46792545969349058
 
     """
+    allowed_kwargs = {"printer"} 
     # there are several other SymPy functions that use method= so
     # guard against that here
     if 'method' in kwargs:
@@ -3069,7 +3070,7 @@ def nsolve(*args, dict=False, **kwargs):
         # the function is better behaved when the denominator is present
         # e.g., issue 11768
 
-        allowed_kwargs = {"printer"} 
+        
         filtered_kwargs = {k: v for k, v in kwargs.items() if k in allowed_kwargs}
 
         f = lambdify(fargs, f, modules, **filtered_kwargs)
