@@ -3069,7 +3069,10 @@ def nsolve(*args, dict=False, **kwargs):
         # the function is better behaved when the denominator is present
         # e.g., issue 11768
 
-        f = lambdify(fargs, f, modules, **kwargs)
+        allowed_kwargs = {"printer"} 
+        filtered_kwargs = {k: v for k, v in kwargs.items() if k in allowed_kwargs}
+
+        f = lambdify(fargs, f, modules, **filtered_kwargs)
         x = sympify(findroot(f, x0, **kwargs))
         if as_dict:
             return [{fargs: x}]
@@ -3088,8 +3091,8 @@ def nsolve(*args, dict=False, **kwargs):
         print('J(x):')
         print(J)
     # create functions
-    f = lambdify(fargs, f.T, modules,**kwargs )
-    J = lambdify(fargs, J, modules, **kwargs)
+    f = lambdify(fargs, f.T, modules,**filtered_kwargs )
+    J = lambdify(fargs, J, modules, **filtered_kwargs)
     # solve the system numerically
     x = findroot(f, x0, J=J, **kwargs)
     if as_dict:
