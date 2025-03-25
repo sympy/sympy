@@ -1540,10 +1540,17 @@ def eval_sum_residue(f, i_a_b):
         if a is S.NegativeInfinity and b.is_finite:
             # Apply the decomposition formula:
             # (-oo, a) = (-oo, +oo) - (a+1, +oo)
-            full_sum = eval_sum_residue(f, (i, S.NegativeInfinity, S.Infinity))
-            tail_sum = eval_sum_residue(f, (i, b + 1, S.Infinity))
-            if full_sum is not None and tail_sum is not None:
-                return full_sum - tail_sum
+            # (-oo, a) = (a, +oo) for even function
+            # (-oo, a) = -(a, +oo) for odd function
+            flipped_f = f.subs(i, -i)
+            is_even = True if flipped_f == f else False
+            res = eval_sum_residue(flipped_f, (i, b, S.Infinity))
+            
+            if res is not None:
+                if is_even:
+                    return res
+                else:
+                    return -res
             else:
                 return None
 
