@@ -657,9 +657,6 @@ def test_si():
     t = Symbol('t', Dummy=True)
     assert Si(x).rewrite(sinc).dummy_eq(Integral(sinc(t), (t, 0, x)))
 
-    assert limit(Shi(x), x, S.Infinity) == S.Infinity
-    assert limit(Shi(x), x, S.NegativeInfinity) == S.NegativeInfinity
-
 
 def test_ci():
     m1 = exp_polar(I*pi)
@@ -713,6 +710,24 @@ def test_ci():
     assert Ci(x).rewrite(expint) == -expint(1, x*exp_polar(-I*pi/2))/2 -\
                                         expint(1, x*exp_polar(I*pi/2))/2
     raises(ArgumentIndexError, lambda: Ci(x).fdiff(2))
+
+
+def test_shi_series():
+    assert Shi(x).series(x, oo) == (6/x**4 + x**(-2) + O(x**(-6), (x, oo)))* \
+           sinh(x + O(x**(-6), (x, oo))) + (24/x**5 + 2/x**3 + 1/x + O(x**(-6), (x, oo)))* \
+           cosh(x + O(x**(-6), (x, oo))) - I*pi/2
+    assert Shi(x).series(x, -oo) == (6/x**4 + x**(-2) + O(x**(-6), (x, -oo)))* \
+           sinh(x + O(x**(-6), (x, -oo))) - (-24/x**5 - 2/x**3 - 1/x + O(x**(-6), (x, -oo)))*\
+           cosh(x + O(x**(-6), (x, -oo))) + I*pi/2
+
+
+def test_chi_series():
+    assert Chi(x).series(x, oo) == (6/x**4 + x**(-2) + O(x**(-6), (x, oo)))* \
+           cosh(x + O(x**(-6), (x, oo))) + (24/x**5 + 2/x**3 + 1/x + O(x**(-6), (x, oo)))*\
+           sinh(x + O(x**(-6), (x, oo))) - I*pi/2
+    assert Chi(x).series(x, -oo) == (6/x**4 + x**(-2) + O(x**(-6), (x, -oo)))* \
+           cosh(x + O(x**(-6), (x, -oo))) + (24/x**5 + 2/x**3 + 1/x + O(x**(-6), (x, -oo)))* \
+           sinh(x + O(x**(-6), (x, -oo))) + I*pi/2
 
 
 def test_fresnel():
