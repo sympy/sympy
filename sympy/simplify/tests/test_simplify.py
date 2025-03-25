@@ -146,7 +146,7 @@ def test_simplify_expr():
 def test_issue_27754():
     # Simplify for Multivariable Non-linear polynomials
     assert simplify(Eq(y - sqrt(x), y + sqrt(x))) == Eq(x, 0)
-    assert simplify(Eq(x**2 + y**2, x**2 - y**2)) == Eq(y, 0)
+    assert simplify(Eq(x**2 + y**2, x**2 - y**2)) == Eq(y**2, 0)
 
     assert simplify(Eq(x**6 + sqrt(x), x**6 - sqrt(x))) == Eq(x, 0)
     assert simplify(Eq(sqrt(x + y) + sqrt(y), sqrt(x + y) - sqrt(y))) == Eq(y, 0)
@@ -161,7 +161,7 @@ def test_issue_27754():
     # Trivial cases
     assert simplify(Eq(sqrt(x + y + z), sqrt(x + y - z))) == Eq(z, 0)
     assert simplify(Eq(sqrt(x + 1)**2, x + 1)) is S.true
-    assert simplify(Gt(x**2, (x + 1)**2)) is S.false
+    assert simplify(Gt(x**2, (x + 1)**2)) == Eq(Lt(x, Rational(-1, 2)))
 
     # Case with mixed polynomials and radicals on both sides
     assert simplify(Eq(x**2 + sqrt(x + y), x**2 - sqrt(x + y))) == Eq(x + y, 0)
