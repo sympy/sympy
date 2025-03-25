@@ -846,19 +846,6 @@ def _(expr, assumptions):
 
 # TranscendentalPredicate
 
-@TranscendentalPredicate.register_many(Exp1, Pi)
-def _(expr, assumptions):
-    return True
-
-@TranscendentalPredicate.register_many(AlgebraicNumber, TribonacciConstant,
-    Infinity, ImaginaryUnit, ComplexInfinity, GoldenRatio, NegativeInfinity)
-def _(expr, assumptions):
-    return False
-
-@TranscendentalPredicate.register(Float)
-def _(expr, assumptions):
-    return None
-
 @TranscendentalPredicate.register(Expr)
 def _(expr, assumptions):
     ret = expr.is_transcendental
@@ -872,7 +859,3 @@ def _(expr, assumptions):
             return None
         return not is_algebraic
     return is_complex
-
-@TranscendentalPredicate.register(NaN)
-def _(expr, assumptions):
-    return None
