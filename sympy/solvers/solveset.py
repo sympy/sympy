@@ -1302,8 +1302,10 @@ def _solveset(f, symbol, domain, _check=False):
     elif f.is_Relational:
         from .inequalities import solve_univariate_inequality
         try:
-            result = solve_univariate_inequality(
-            f, symbol, domain=domain, relational=False)
+            if domain == S.Reals:
+                result = _solve_periodic_inequality(f, symbol, domain)
+            else:
+                result = solve_univariate_inequality(f, symbol, domain=domain, relational=False)
         except NotImplementedError:
             result = ConditionSet(symbol, f, domain)
         return result
@@ -1690,6 +1692,34 @@ def _solve_modular(f, symbol, domain):
 
     return unsolved_result
 
+def _solve_periodic_inequality(expr, symbol, domain=S.Reals):
+    """
+    Special-case solver for periodic inequalities.
+    If the inequality is periodic in `symbol` (and the domain is S.Reals),
+    this function computes the base solution over one period and then
+    lifts it to the entire domain.
+    """
+    from sympy.solvers.inequalities import solve_univariate_inequality
+    from sympy import periodicity, Interval, Dummy, imageset, Lambda, S
+
+    # Determine the period from the difference (lhs - rhs)
+    per = periodicity(expr.lhs - expr.rhs, symbol)
+    if per and per != S.Zero and domain == S.Reals:
+        period_domain = Interval(0, per, False, True)
+        base_sol = solve_univariate_inequality(expr, symbol, relational=False, domain=period_domain)
+        # If the solution covers the entire period, return S.Reals.
+        if base_sol == period_domain:
+            return S.Reals
+        # Otherwise, shift the one-period solution over all integers.
+        n = Dummy('n', integer=True)
+        shifted_interval = Interval(base_sol.inf + per*n,
+                                    base_sol.sup + per*n,
+                                    base_sol.left_open,
+                                    base_sol.right_open)
+        return imageset(Lambda(n, shifted_interval), S.Integers)
+    else:
+        # Fall back to the standard solver if not periodic
+        return solve_univariate_inequality(expr, symbol, relational=False, domain=domain)
 
 def _term_factors(f):
     """
