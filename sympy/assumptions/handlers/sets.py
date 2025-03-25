@@ -18,7 +18,7 @@ from sympy.matrices.expressions.matexpr import MatrixElement
 
 from sympy.multipledispatch import MDNotImplementedError
 
-from .common import test_closed_group
+from .common import test_closed_group, ask_all, ask_any
 from ..predicates.sets import (IntegerPredicate, RationalPredicate,
     IrrationalPredicate, RealPredicate, ExtendedRealPredicate,
     HermitianPredicate, ComplexPredicate, ImaginaryPredicate,
@@ -68,18 +68,13 @@ def _(expr, assumptions):
 def _(expr,assumptions):
     if expr.is_number:
         return _IntegerPredicate_number(expr, assumptions)
-    if ask(Q.nonzero(expr.base), assumptions) and ask(Q.zero(expr.exp), assumptions):
+    if ask_all([Q.nonzero(expr.base), Q.zero(expr.exp)], assumptions):
         return True
-    if ask(Q.integer(expr.base), assumptions):
-        if ask(Q.integer(expr.exp), assumptions):
-            if ask(Q.positive(expr.exp), assumptions):
-                return True
-            if ask(Q.eq(expr.base,1), assumptions) or ask(Q.eq(expr.base,-1), assumptions):
-                return True
-            if ask(Q.zero(expr.base), assumptions) is not False:
-                if ask(Q.positive(expr.exp), assumptions):
-                    return True
-            return
+    if ask_all([Q.integer(expr.base), Q.integer(expr.exp)], assumptions):
+        if ask_any([Q.positive(expr.exp), Q.eq(expr.base, 1) | Q.eq(expr.base, -1)], assumptions):
+            return True
+        if ask(Q.zero(expr.base), assumptions) is not False and ask(Q.positive(expr.exp), assumptions):
+            return True
 
 @IntegerPredicate.register(Mul)
 def _(expr, assumptions):
