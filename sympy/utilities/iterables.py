@@ -1,13 +1,16 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from collections import Counter, defaultdict, OrderedDict
 from itertools import (
     chain, combinations, combinations_with_replacement, cycle, islice,
     permutations, product, groupby
 )
+
 # For backwards compatibility
 from itertools import product as cartes # noqa: F401
 from operator import gt
-
-
 
 # this is the logical location of these functions
 from sympy.utilities.enumerative import (
@@ -15,6 +18,11 @@ from sympy.utilities.enumerative import (
 
 from sympy.utilities.misc import as_int
 from sympy.utilities.decorator import deprecated
+
+
+if TYPE_CHECKING:
+    from typing import TypeVar, Iterable, Callable
+    T = TypeVar('T')
 
 
 def is_palindromic(s, i=0, j=None):
@@ -667,6 +675,18 @@ def sift(seq, keyfunc, binary=False):
         except (IndexError, TypeError):
             raise ValueError('keyfunc gave non-binary output')
     return T, F
+
+
+def _sift_true_false(seq: Iterable[T], keyfunc: Callable[[T], bool]) -> tuple[list[T], list[T]]:
+    """Sift iterable for items with keyfunc(item) = True/False."""
+    true: list[T] = []
+    false: list[T] = []
+    for i in seq:
+        if keyfunc(i):
+            true.append(i)
+        else:
+            false.append(i)
+    return true, false
 
 
 def take(iter, n):
