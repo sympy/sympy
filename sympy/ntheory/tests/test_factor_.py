@@ -373,6 +373,13 @@ def test_factorint():
     n = {4: 2, 12: 3}
     assert str(factorint(n)) == sans
     assert str(factorint(Dict(n))) == sans
+    #issue 
+    assert factorint(99991, limit=100000) == {99991: 1}
+    assert factorint(1024) == {2: 10}
+    assert factorint(1000) == {2: 3, 5: 3}
+    assert factorint(1) == {}
+    assert factorint(0) == {0: 1}
+    assert factorint(-12) == {-1: 1, 2: 2, 3: 1}
 
 
 def test_divisors_and_divisor_count():
