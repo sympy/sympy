@@ -689,6 +689,27 @@ class DFM:
             # what happens here.
             raise NotImplementedError("DFM.inv() is not implemented for %s" % K)
 
+    @doctest_depends_on(ground_types='flint')
+    def rank(self):
+        """
+        Returns the rank of the matrix.
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix
+        >>> M = Matrix([[1, 2], [2, 4]])
+        >>> dfm = M.to_DM().to_dfm()
+        >>> dfm.rank()
+
+        See Also
+        ========
+
+        sympy.polys.matrices.domainmatrix.DomainMatrix.rank
+            Higher level interface to compute the rank of a matrix.
+        """
+        return self.rep.rank()
+
     def lu(self):
         """Return the LU decomposition of the matrix."""
         L, U, swaps = self.to_ddm().lu()

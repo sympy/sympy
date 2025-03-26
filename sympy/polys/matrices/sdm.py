@@ -1024,6 +1024,15 @@ class SDM(dict):
         """
         return A.to_dfm_or_ddm().inv().to_sdm()
 
+    def rank(self):
+        """
+        Returns the rank of the matrix.
+        """
+        if not self.domain.is_Field:
+            return self.convert_to(QQ).rank()
+        rref, pivots = self.rref()
+        return len(pivots)
+
     def det(A):
         """
         Returns determinant of A

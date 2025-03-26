@@ -947,6 +947,15 @@ class DDM(list):
         ddm_iinv(ainv, a, K)
         return ainv
 
+    def rank(self):
+        """
+        Returns the rank of the matrix.
+        """
+        if not self.domain.is_Field:
+            return self.convert_to(QQ).rank()
+        rref, pivots = self.rref()
+        return len(pivots)
+
     def lu(a):
         """L, U decomposition of a"""
         m, n = a.shape

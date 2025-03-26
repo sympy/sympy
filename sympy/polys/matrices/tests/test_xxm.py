@@ -817,6 +817,27 @@ def test_XXM_inv_ZZ(DM):
 
 
 @pytest.mark.parametrize('DM', DMZ_all)
+def test_XXM_rank_ZZ(DM):
+    assert DM([[1, 0, 0], [0, 1, 0], [0, 0, 1]]).rank() == 3
+    assert DM([[1, 2, 3], [4, 5, 6], [7, 8, 9]]).rank() == 2
+    assert DM([[0, 0], [0, 0]]).rank() == 0
+    assert DM([[1, 0, 2], [0, 1, 3]]).rank() == 2
+    assert DM([[1, 0], [0, 1], [2, 3]]).rank() == 2
+    assert DM([[1, 2], [2, 4], [3, 6]]).rank() == 1
+
+
+@pytest.mark.parametrize('DM', DMQ_all)
+def test_XXM_rank_QQ(DM):
+    assert DM([[(1, 2), (1, 3)], [(1, 4), (1, 5)]]).rank() == 2
+    assert DM([[(1, 2), (1, 3)], [(2, 4), (2, 6)]]).rank() == 1
+    assert DM([[(1, 1), (2, 1), (3, 1)],
+               [(4, 1), (5, 1), (6, 1)],
+               [(7, 1), (8, 1), (9, 1)]]).rank() == 2
+    assert DM([[(1, 2), (2, 3), (3, 4)],
+               [(1, 5), (1, 6), (1, 7)]]).rank() == 2
+
+
+@pytest.mark.parametrize('DM', DMZ_all)
 def test_XXM_charpoly_ZZ(DM):
     dM1 = DM([[1, 2, 3], [4, 5, 6], [7, 8, 10]])
     assert dM1.charpoly() == [1, -16, -12, 3]
