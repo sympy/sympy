@@ -1,6 +1,7 @@
 """Tests for tools for manipulation of rational expressions. """
 
 from sympy.polys.rationaltools import together
+from sympy.polys.rationaltools import thiele_interpolate as thiele
 
 from sympy.core.mul import Mul
 from sympy.core.numbers import Rational
@@ -61,3 +62,22 @@ def test_together():
     assert together(Eq(1/x + 1/y, 1 + 1/z)) == Eq((x + y)/(x*y), (z + 1)/z)
 
     assert together((A*B)**-1 + (B*A)**-1) == (A*B)**-1 + (B*A)**-1
+
+
+def test_thiele_interpolate():
+    assert thiele([1, 2], [0, 0]) == 0
+    assert thiele([2, 1], [0, 0]) == 0
+    assert thiele([1, 2], [1, 1]) == 1
+    assert thiele([2, 1], [1, 1]) == 1
+    assert thiele([1, 2], [1, 2]) == x
+    assert thiele([2, 1], [1, 2]) == 3 - x
+    assert thiele([1, 2, 3], [1, 2, 3]) == x
+    assert thiele([1, 2, 3], [3, 2, 1]) == 4 - x
+    assert thiele([1, 2, 3], [2, 4, 6]) == 2*x
+    assert thiele([2, 1, 3], [4, 2, 6]) == 2*x
+    assert thiele([1, 2], [1, 4]) == 3*x - 2
+    assert thiele([1, 2, 3, 4], [1, 4, 9, 16]) == x**2
+    assert thiele([1, 2, 3, 4, 5], [1, 4, 9, 16, 25]) == x**2
+    assert thiele([1, 2, 3, 4, 5, 6], [1, 8, 27, 64, 125, 216]) == x**3
+    assert thiele([1, 2, 3, 4], [1, 2, 1, 2]) == (x**2 - 2*x - 2)/(2*x - 5)
+    assert thiele([1, 2, 4, 9], [0, 1, 0, 1]) == (x**2 - 5*x + 4)/(6*x - 14)
