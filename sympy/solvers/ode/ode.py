@@ -2257,7 +2257,7 @@ def homogeneous_order(eq, *symbols):
     # Replace all functions with dummy variables
     dum = numbered_symbols(prefix='d', cls=Dummy)
     newsyms = set()
-    for i in [j for j in symset if getattr(j, 'is_Function')]:
+    for i in [j for j in symset if j.is_Function]:
         iargs = set(i.args)
         if iargs.difference(symset):
             return None
