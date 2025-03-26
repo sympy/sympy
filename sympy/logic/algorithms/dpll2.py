@@ -484,7 +484,8 @@ class SATSolver:
             self.var_settings.remove(lit)
             self.heur_lit_unset(lit)
             self.variable_set[abs(lit)] = False
-            self.fc.deactivate_literal(lit, self._current_level.fc_state)
+            if self.fc:
+                self.fc.deactivate_literal(lit, self._current_level.fc_state)
             # if self.fc.deactivate_literal(lit) is False:
             #     assert False
 
