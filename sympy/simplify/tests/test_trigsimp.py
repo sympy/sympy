@@ -518,3 +518,12 @@ def test_trigsimp_inverse():
             assert angle_inverted != angle  # assures simplification happened
             assert sin(angle_inverted) == trigsimp(sin(angle))
             assert cos(angle_inverted) == trigsimp(cos(angle))
+
+
+def test_issue_25906():
+    # https://github.com/sympy/sympy/issues/25906
+    expr = sin(x)**2 + cos(x)**2
+    custom_measure = lambda expr: expr.count_ops()
+    default_simplified = simplify(expr)
+    custom_simplified = simplify(expr, measure=custom_measure)
+    assert custom_simplified.equals(default_simplified)
