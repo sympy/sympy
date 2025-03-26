@@ -1535,28 +1535,14 @@ def eval_sum_residue(f, i_a_b):
         residues = [residue(residue_factor, z, root) for root in nonint_roots]
         return -S.Pi * sum(residues)
 
-    if not (a.is_finite and b is S.Infinity):
-
-        if a is S.NegativeInfinity and b.is_finite:
-            # Apply the decomposition formula:
-            # (-oo, a) = (-oo, +oo) - (a+1, +oo)
-            # (-oo, a) = (a, +oo) for even function
-            # (-oo, a) = -(a, +oo) for odd function
-            flipped_f = f.subs(i, -i)
-            is_even = True if flipped_f == f else False
-            res = eval_sum_residue(flipped_f, (i, b, S.Infinity))
-
-            if res is not None:
-                if is_even:
-                    return res
-                else:
-                    return -res
-            else:
-                return None
-
-        return None
-
     if not is_even_function(numer, denom):
+        #for odd function flip the limit and negate
+        #limit (-oo, a) is flipped to (-a, oo) and the answer is negated
+        if a is S.NegativeInfinity and b.is_finite:
+            res = eval_sum_residue(f, (i, -b, S.Infinity))
+            if res is not None:
+                return -res
+
         # Try shifting summation and check if the summand can be made
         # and even function from the origin.
         # Sum(f(n), (n, a, b)) => Sum(f(n + s), (n, a - s, b - s))
@@ -1578,6 +1564,14 @@ def eval_sum_residue(f, i_a_b):
         else:
             f = numer.as_expr() / denom.as_expr()
         return eval_sum_residue(f, (i, a-shift, b-shift))
+    else:
+        #for even function flip the limit
+        #limit (-oo, a) is flipped to (-a, oo)
+        if a is S.NegativeInfinity and b.is_finite:
+            res = eval_sum_residue(f, (i, -b, S.Infinity))
+            if res is not None:
+                return res
+
 
     poles = get_poles(denom)
     if poles is None:
