@@ -12,6 +12,7 @@ See :ref:`polys-docs` for an index of documentation for the polys module and
 Basic polynomial manipulation functions
 =======================================
 
+.. module:: sympy.polys.polytools
 .. currentmodule:: sympy.polys.polytools
 
 .. autofunction:: poly
@@ -181,6 +182,7 @@ Appell sequences
 Manipulation of rational functions
 ==================================
 
+.. module:: sympy.polys.rationaltools
 .. currentmodule:: sympy.polys.rationaltools
 
 .. autofunction:: together
@@ -188,6 +190,7 @@ Manipulation of rational functions
 Partial fraction decomposition
 ==============================
 
+.. module:: sympy.polys.partfrac
 .. currentmodule:: sympy.polys.partfrac
 
 .. autofunction:: apart
