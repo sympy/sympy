@@ -1452,13 +1452,23 @@ def eval_sum_residue(f, i_a_b):
     """
     i, a, b = i_a_b
 
-    def is_even_function(numer, denom):
-        """Test if the rational function is an even function"""
+    def get_function_symmetery(numer, denom):
+        """
+        Returns 'even', 'odd', or 'neither' based on the symmetry of a
+        rational function.
+        """
+
         numer_even = all(i % 2 == 0 for (i,) in numer.monoms())
         denom_even = all(i % 2 == 0 for (i,) in denom.monoms())
         numer_odd = all(i % 2 == 1 for (i,) in numer.monoms())
         denom_odd = all(i % 2 == 1 for (i,) in denom.monoms())
-        return (numer_even and denom_even) or (numer_odd and denom_odd)
+
+        if (numer_even and denom_even) or (numer_odd and denom_odd):
+            return 'even'
+        elif numer_even and denom_even:
+            return 'odd'
+        else:
+            return 'neither'
 
     def match_rational(f, i):
         numer, denom = f.as_numer_denom()
@@ -1535,13 +1545,15 @@ def eval_sum_residue(f, i_a_b):
         residues = [residue(residue_factor, z, root) for root in nonint_roots]
         return -S.Pi * sum(residues)
 
-    if not is_even_function(numer, denom):
+    current_rational_function_symmetry = get_function_symmetery(numer, denom)
+    if not 'even' == current_rational_function_symmetry:
         #for odd function flip the limit and negate
         #limit (-oo, a) is flipped to (-a, oo) and the answer is negated
-        if a is S.NegativeInfinity and b.is_finite:
-            res = eval_sum_residue(f, (i, -b, S.Infinity))
-            if res is not None:
-                return -res
+        if 'odd' == current_rational_function_symmetry:
+            if a is S.NegativeInfinity and b.is_finite:
+                res = eval_sum_residue(f, (i, -b, S.Infinity))
+                if res is not None:
+                    return -res
 
         # Try shifting summation and check if the summand can be made
         # and even function from the origin.
@@ -1556,7 +1568,7 @@ def eval_sum_residue(f, i_a_b):
         numer = numer.shift(shift)
         denom = denom.shift(shift)
 
-        if not is_even_function(numer, denom):
+        if not 'even' == current_rational_function_symmetry:
             return None
 
         if alternating:
