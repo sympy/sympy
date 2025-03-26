@@ -117,6 +117,10 @@ def get_number_facts(x = None):
 
         # commutativity
         Implies(Q.finite(x) | Q.infinite(x), Q.commutative(x)),
+
+        # noninteger,
+        Equivalent(Q.noninteger(x), Q.real(x) & ~Q.integer(x)),
+
     )
     return fact
 
