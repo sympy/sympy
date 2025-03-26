@@ -765,10 +765,14 @@ def _ConstantPolynomial(expr, assumptions):
 
     return is_constant_poly
 
-@AlgebraicPredicate.register_many(AlgebraicNumber, Float, GoldenRatio, # type:ignore
+@AlgebraicPredicate.register_many(AlgebraicNumber, GoldenRatio, # type:ignore
     ImaginaryUnit, TribonacciConstant)
 def _(expr, assumptions):
     return True
+
+@AlgebraicPredicate.register(Float)
+def _(expr, assumptions):
+    return None
 
 @AlgebraicPredicate.register_many(ComplexInfinity, Exp1, Infinity, # type:ignore
     NegativeInfinity, Pi)

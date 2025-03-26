@@ -107,6 +107,7 @@ def test_float_1():
     assert ask(Q.composite(z)) is None
     assert ask(Q.hermitian(z)) is True
     assert ask(Q.antihermitian(z)) is False
+    assert ask(Q.algebraic(z)) is None
     assert ask(Q.transcendental(z)) is None
 
     z = 7.2123
@@ -126,6 +127,7 @@ def test_float_1():
     assert ask(Q.composite(z)) is False
     assert ask(Q.hermitian(z)) is True
     assert ask(Q.antihermitian(z)) is False
+    assert ask(Q.algebraic(z)) is None
     assert ask(Q.transcendental(z)) is None
 
     # test for issue #12168
@@ -2138,7 +2140,7 @@ def test_algebraic():
     assert ask(Q.algebraic(sqrt(sin(7)))) is None
     assert ask(Q.algebraic(sqrt(y + I*sqrt(7)))) is None
 
-    assert ask(Q.algebraic(2.47)) is True
+    assert ask(Q.algebraic(2.47)) is None
 
     assert ask(Q.algebraic(x), Q.transcendental(x)) is False
     assert ask(Q.transcendental(x), Q.algebraic(x)) is False
