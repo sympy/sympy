@@ -162,7 +162,7 @@ from .simplify import (simplify, hypersimp, hypersimilar, logcombine,
         nsimplify, FU, fu, sqrtdenest, cse, epath, EPath, hyperexpand,
         collect, rcollect, radsimp, collect_const, fraction, numer, denom,
         trigsimp, exptrigsimp, powsimp, powdenest, combsimp, gammasimp,
-        ratsimp, ratsimpmodprime)
+        ratsimp, ratsimpmodprime, rpfsimplify)
 
 from .sets import (Set, Interval, Union, EmptySet, FiniteSet, ProductSet,
         Intersection, DisjointUnion, imageset, Complement, SymmetricDifference, ImageSet,
@@ -179,7 +179,7 @@ from .solvers import (solve, solve_linear_system, solve_linear_system_LU,
         pdsolve, classify_pde, checkpdesol, ode_order, reduce_inequalities,
         reduce_abs_inequality, reduce_abs_inequalities, solve_poly_inequality,
         solve_rational_inequalities, solve_univariate_inequality, decompogen,
-        solveset, linsolve, linear_eq_to_matrix, nonlinsolve, substitution)
+        solveset, linsolve, linear_eq_to_matrix, nonlinsolve, substitution, rpfsolve)
 
 from .matrices import (ShapeError, NonSquareMatrixError, GramSchmidt,
         casoratian, diag, eye, hessian, jordan_cell, list2numpy, matrix2numpy,
@@ -397,6 +397,7 @@ __all__ = [
     'hyperexpand', 'collect', 'rcollect', 'radsimp', 'collect_const',
     'fraction', 'numer', 'denom', 'trigsimp', 'exptrigsimp', 'powsimp',
     'powdenest', 'combsimp', 'gammasimp', 'ratsimp', 'ratsimpmodprime',
+    'rpfsimplify',
 
     # sympy.sets
     'Set', 'Interval', 'Union', 'EmptySet', 'FiniteSet', 'ProductSet',
@@ -417,7 +418,7 @@ __all__ = [
     'reduce_abs_inequality', 'reduce_abs_inequalities',
     'solve_poly_inequality', 'solve_rational_inequalities',
     'solve_univariate_inequality', 'decompogen', 'solveset', 'linsolve',
-    'linear_eq_to_matrix', 'nonlinsolve', 'substitution',
+    'linear_eq_to_matrix', 'nonlinsolve', 'substitution', 'rpfsolve',
 
     # sympy.matrices
     'ShapeError', 'NonSquareMatrixError', 'GramSchmidt', 'casoratian', 'diag',
