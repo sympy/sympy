@@ -3,7 +3,7 @@ from sympy.logic.boolalg import (to_cnf, And, Not, Implies, Equivalent,
 from sympy.assumptions.facts import get_number_facts, get_composite_predicates
 from collections import defaultdict
 from sympy.core.cache import cacheit
-from sympy.assumptions import AppliedPredicate, Predicate
+from sympy.assumptions import AppliedPredicate, Predicate, AppliedBinaryRelation
 from types import MappingProxyType
 from functools import reduce
 from sympy.assumptions.cnf import Literal
@@ -38,12 +38,21 @@ class FCSolver():
             for appliedPred, enc in pred_to_enc.items():
                 if not isinstance(appliedPred, AppliedPredicate) and not isinstance(appliedPred, Not):
                     continue
+                # if isinstance(appliedPred, AppliedBinaryRelation):
+                #     continue
+                if len(appliedPred.args) > 2:
+                    continue
+
                 expr, pred, neg = self.decompose_AppliedPredicate(appliedPred)
                 if expr not in expr_to_id:
                     expr_to_id[expr] = self.expr_count
                     self.expr_count += 1
                 assert neg is False
-                pred_id = self.predicate_to_pred_id(pred)
+                try:
+                    pred_id = self.predicate_to_pred_id(pred)
+                except KeyError:
+                    # skip unrecognized predicates
+                    continue
                 expr_id = expr_to_id[expr]
                 self.enc_to_decomposed_pred[enc] = expr_id, pred_id, neg
                 self.unassigned_variables[expr_id].add(enc)
