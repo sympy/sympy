@@ -74,6 +74,7 @@ MPMATH_TRANSLATIONS = {
     "elliptic_e": "ellipe",
     "elliptic_pi": "ellippi",
     "ceiling": "ceil",
+    "assoc_legendre": "legenp",
     "chebyshevt": "chebyt",
     "chebyshevu": "chebyu",
     "assoc_legendre": "legenp",
