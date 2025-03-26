@@ -701,12 +701,6 @@ class DFM:
         >>> M = Matrix([[1, 2], [2, 4]])
         >>> dfm = M.to_DM().to_dfm()
         >>> dfm.rank()
-
-        See Also
-        ========
-
-        sympy.polys.matrices.domainmatrix.DomainMatrix.rank
-            Higher level interface to compute the rank of a matrix.
         """
         return self.rep.rank()
 
