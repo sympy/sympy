@@ -218,7 +218,7 @@ class SATSolver:
         # Check if unit prop says the theory is unsat right off the bat
         self._simplify()
         if self.is_unsatisfied:
-            if self.fc.print_vars:
+            if self.fc and self.fc.print_vars:
                 print("Formula unsatisfiable!\n\n")
             return
 
@@ -255,7 +255,7 @@ class SATSolver:
                     else:
                         res = None
                     if res is None or res[0]:
-                        if self.fc.print_vars:
+                        if self.fc and self.fc.print_vars:
                             print("Satisfying assignment found!\n\n")
                         yield {self.symbols[abs(lit) - 1]:
                                     lit > 0 for lit in self.var_settings}
@@ -269,7 +269,7 @@ class SATSolver:
                     while self._current_level.flipped:
                         self._undo()
                     if len(self.levels) == 1:
-                        if self.fc.print_vars:
+                        if self.fc and self.fc.print_vars:
                             print("Formula unsatisfiable!\n\n")
                         return
                     flip_lit = -self._current_level.decision
@@ -298,7 +298,7 @@ class SATSolver:
 
                     # If we've unrolled all the way, the theory is unsat
                     if 1 == len(self.levels):
-                        if self.fc.print_vars:
+                        if self.fc and self.fc.print_vars:
                             print("Formula unsatisfiable!\n\n")
                         return
 
