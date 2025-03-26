@@ -779,18 +779,17 @@ def _(expr, assumptions):
 def _(expr, assumptions):
     return False
 
-@AlgebraicPredicate.register(Basic)
-def _(expr, assumptions):
-    if expr.is_number:
-        is_constant_poly = _ConstantPolynomial(expr, assumptions)
-        if is_constant_poly:
-            return False
-
 @AlgebraicPredicate.register_many(Add, Mul) # type:ignore
 def _(expr, assumptions):
     closed_group = test_closed_group(expr, assumptions, Q.algebraic)
     if closed_group is not None:
         return closed_group
+
+    if expr.is_number:
+        is_constant_poly = _ConstantPolynomial(expr, assumptions)
+        if is_constant_poly:
+            return False
+    return None
 
 @AlgebraicPredicate.register(Pow) # type:ignore
 def _(expr, assumptions):
@@ -814,11 +813,12 @@ def _(expr, assumptions):
         if ask(Q.ne(expr.base,0) & Q.ne(expr.base,1)) and exp_rational is False:
             return False
 
-    is_constant_poly = _ConstantPolynomial(expr.base, assumptions)
-    if is_constant_poly:
-        exp_positive_integer = ask(Q.integer(expr.exp) & ~Q.negative(expr.exp), assumptions)
-        if exp_positive_integer:
-            return False
+    if expr.is_number:
+        is_constant_poly = _ConstantPolynomial(expr.base, assumptions)
+        if is_constant_poly:
+            exp_positive_integer = ask(Q.integer(expr.exp) & ~Q.negative(expr.exp), assumptions)
+            if exp_positive_integer:
+                return False
     return None
 
 @AlgebraicPredicate.register(Rational) # type:ignore
