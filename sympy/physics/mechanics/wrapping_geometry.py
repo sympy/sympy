@@ -277,7 +277,7 @@ class WrappingSphere(WrappingGeometryBase):
         for point in (point_1, point_2):
             if not self.point_on_surface(point):
                 msg = (
-                    f'Geodesic length cannot be calculated as point {point} '
+                    f'Geodesic end vectors cannot be calculated as point {point} '
                     f'with radius {point.pos_from(self.point).magnitude()} '
                     f'from the sphere\'s center {self.point} does not lie on '
                     f'the surface of {self} with radius {self.radius}.'
@@ -550,7 +550,7 @@ class WrappingCylinder(WrappingGeometryBase):
         for point in (point_1, point_2):
             if not self.point_on_surface(point):
                 msg = (
-                    f'Geodesic length cannot be calculated as point {point} '
+                    f'Geodesic end vectors cannot be calculated as point {point} '
                     f'with radius {point.pos_from(self.point).magnitude()} '
                     f'from the cylinder\'s center {self.point} does not lie on '
                     f'the surface of {self} with radius {self.radius} and axis '
