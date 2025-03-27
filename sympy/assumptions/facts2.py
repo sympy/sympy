@@ -3,11 +3,14 @@ from sympy.logic.boolalg import (to_cnf, And, Not, Implies, Equivalent,
 from sympy.assumptions.facts import get_number_facts, get_composite_predicates
 from collections import defaultdict
 from sympy.core.cache import cacheit
-from sympy.assumptions import AppliedPredicate, Predicate
+from sympy.assumptions import AppliedPredicate, Predicate, Q
 from types import MappingProxyType
 from collections.abc import Iterable
 from functools import reduce
 from sympy.assumptions.cnf import Literal
+from collections import deque
+from sympy.assumptions.ask_generated import get_known_facts_dict
+
 
 def _AppliedPredicate_to_Predicate(pred):
     if isinstance(pred, AppliedPredicate):
@@ -74,7 +77,6 @@ def _add_rule(rules_dict, antecedent, implicant, remove_var = True):
     if len([key for key in rules_dict.keys() if not isinstance(key, Iterable)]) > 0:
         assert len([key for key in rules_dict.keys() if not isinstance(key, Iterable)]) == 0
 
-from sympy.assumptions import Q
 # add additional rules:
 additional_rules = And(
     Implies(Q.nonzero, ~Q.zero),
@@ -113,8 +115,6 @@ def facts_to_dictionary(x = None):
     return rules_dict
 
 
-from collections import deque
-
 
 def transitive_closure(graph):
     closure = {node: set(neighbors) for node, neighbors in graph.items()}
@@ -137,8 +137,6 @@ def transitive_closure(graph):
     return {node: set(neighbors) for node, neighbors in closure.items()}
 
 
-
-from sympy.assumptions.ask_generated import get_known_facts_dict
 
 rules_dict = facts_to_dictionary()
 rules_dict = transitive_closure(rules_dict)
