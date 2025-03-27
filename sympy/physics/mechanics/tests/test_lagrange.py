@@ -309,4 +309,3 @@ def test_rotating_bead():
 
     # Verify the solution matches c = omega^2/(2g)
     assert simplify(c_sol - omega**2/(2*g)) == 0
-
