@@ -95,7 +95,7 @@ def convert_to(expr, target_units, unit_system="SI"):
     """
     from sympy import Rational, simplify
 
-def convert_to(expr, target_units):
+
     """
     Convert the given expression to the specified target units.
 
@@ -111,7 +111,7 @@ def convert_to(expr, target_units):
     expr = simplify(expr)
 
     # Proceed with unit conversion as usual
-    return expr.convert_to(target_units)
+    return expr.convert_to(target_units, unit_system=unit_system)
 
     from sympy.physics.units import UnitSystem
     unit_system = UnitSystem.get_unit_system(unit_system)
