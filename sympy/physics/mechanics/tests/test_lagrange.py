@@ -294,18 +294,12 @@ def test_rotating_bead():
     # Lagrange's equations of motion
     lm = LagrangesMethod(L, [r])
     lm.form_lagranges_equations()
-    eom = lm.eom[0]
+    RHS = lm.rhs()  # Returns [r', r''] 
 
-    # Substitute steady conditions: r = R, r' = 0, r'' = 0
-    subs_dict = {
-        r: R,
-        r.diff(t): 0,
-        r.diff(t, t): 0
-    }
-    eom_steady = eom.subs(subs_dict)
+    # Substitute steady conditions: r=R, r'=0
+    steady_subs = {r: R, r.diff(t): 0}
+    r_double_dot = RHS[1].subs(steady_subs)  # Get r'' expression
 
-    # Solve for c
-    c_sol = solve(eom_steady, c)[0]
-
-    # Verify the solution matches c = omega^2/(2g)
-    assert simplify(c_sol - omega**2/(2*g)) == 0
+    # Verify r'' = 0 when c = ω²/(2g)
+    expected_c = omega**2 / (2*g)
+    assert simplify(r_double_dot.subs(c, expected_c)) == 0
