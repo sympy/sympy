@@ -745,8 +745,8 @@ def _(mat, assumptions):
 # Helper function: determines if an expression is a rational
 # polynomial evaluated at a transcendental value
 def _ConstantPolynomial(expr, assumptions):
-    for transcendental in [E, pi]:
-        new_expr = expr.subs(transcendental, x)
+    if (expr.has(E) | expr.has(exp)) ^ expr.has(pi):
+        new_expr = expr.subs(E, x).subs(pi, x)
         if new_expr.is_polynomial(x):
             expr_poly = Poly(new_expr, x)
             all_coefficients_rational = all(coeff.is_Rational for coeff in expr_poly.coeffs())
