@@ -1,15 +1,11 @@
-from sympy.logic.boolalg import (to_cnf, And, Not, Implies, Equivalent,
-    Exclusive, Or, to_nnf, BooleanFunction)
+from sympy.logic.boolalg import (And, Not, Implies, Equivalent,
+                                 Or, to_nnf, BooleanFunction)
 from sympy.assumptions.facts import get_number_facts, get_composite_predicates
 from collections import defaultdict
-from sympy.core.cache import cacheit
 from sympy.assumptions import AppliedPredicate, Predicate, Q
 from types import MappingProxyType
 from collections.abc import Iterable
-from functools import reduce
-from sympy.assumptions.cnf import Literal
 from collections import deque
-from sympy.assumptions.ask_generated import get_known_facts_dict
 
 
 def _AppliedPredicate_to_Predicate(pred):
@@ -86,7 +82,7 @@ additional_rules = And(
     Implies(~Q.real, ~Q.nonpositive),
     Implies(~Q.real, ~Q.nonnegative),
 )
-#@cacheit
+
 def facts_to_dictionary(x = None):
 
     rules_dict = defaultdict(set)
@@ -109,8 +105,6 @@ def facts_to_dictionary(x = None):
     for superset, subsets in composite_predicate.items():
         _add_rule(rules_dict, subsets, superset)
         _add_rule(rules_dict, superset, subsets)
-        # for subset in subsets.args:
-        #     _add_rule(rules_dict, subset, superset)
 
     return rules_dict
 
@@ -168,12 +162,6 @@ id_rules_dict = {}
 for ante, imps in rules_dict.items():
     id_rules_dict[tuple(pred_to_id_neg_tup(pred) for pred in ante)] = set(pred_to_id_neg_tup(imp) for imp in imps)
 
-#id_rules_dict = { tuple(pred_to_id_neg_tup(pred) for pred in ante) : {pred_to_id_neg_tup(im) for im in imps} for ante, imps in rules_dict.items()}
-
-
-# def pred_lit_set_to_bit_set(pred_lit_set):
-#     i = pred_lit_set_to_int(pred_lit_set)
-#     return BitSet(i)
 
 
 
@@ -208,7 +196,6 @@ pred_id_to_bitvec = [pred_lit_set_to_int({pred}) for pred in id_to_pred]
 pred_id_to_bitvec += [pred_lit_set_to_int({~pred}) for pred in id_to_pred]
 pred_id_neg_to_direct_implicants_bitset = direct_dict_bitset
 
-#pred_id_direct_dict = {pred_to_id[pred] : 2  for pred, implications in direct_dict.items()}
 
 # I want a mapping of pred number to an int representing the negated preds implied by it
 # I need to give negated preds a seperate number
@@ -224,7 +211,6 @@ direct_dict = MappingProxyType(direct_dict)
 # direct implication count by pred and negated pred
 
 implication_counts_by_lit = {}
-#should_pred_start_negated = {}
 for lit, bitset in direct_dict_bitset.items():
     pred_id, neg = lit
     count = bin(bitset).count('1')
@@ -244,14 +230,3 @@ def preds_to_fc_lits(preds):
     return set(pred_to_fc_lit(pred) for pred in preds)
 
 fc_lit_to_direct_implications =  {pred_to_fc_lit(key) : preds_to_fc_lits(value) for key, value in direct_dict.items()}
-
-print("hi")
-# Code to get the most powerful assumptions
-# sorted([ ((id_to_pred[lit[0]],lit[1] ), count) for lit, count in implication_counts_by_lit.items()], key=lambda item: item[1], reverse=True)
-
-
-
-
-
-# class RuleTree:
-#     def __init__(self, rules):
