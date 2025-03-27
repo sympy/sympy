@@ -247,7 +247,28 @@ def test_rolling_disc():
         )*Derivative(q2(t), t)
 
 def test_rotating_bead():
-    
+    # Test case for a bead sliding on a rotating parabolic wire.
+
+    # Problem Description:
+    # A bead of mass m slides without friction on a parabolic wire defined by z = c*r^2,
+    # where r is the radial distance from the vertical axis and c is a shape constant.
+    # The wire rotates about its vertical symmetry axis with constant angular velocity ω.
+    # When the bead moves in a circle of constant radius R, we need to find the value of c.
+
+    # Physics Approach:
+    # 1. The system has cylindrical symmetry, so we use (r, θ, z) coordinates
+    # 2. The constraint z = c*r^2 relates vertical and radial motion
+    # 3. The wire rotation provides θ = ω*t (explicit time dependence)
+    # 4. We construct the Lagrangian L = T - U where:
+    #    - T includes kinetic energy from radial, tangential and vertical motion
+    #    - U = mgz = mgc*r^2 is the gravitational potential energy
+    # 5. The equation of motion is derived using Lagrange's method
+    # 6. For circular motion (r = R = constant), we set r' = r'' = 0
+    # 7. Solving the simplified equation gives c = ω²/(2g)
+
+    # This test verifies that the Lagrangian mechanics implementation correctly derives
+    # the relationship between the parabola's shape (c) and the rotation rate (ω).
+
 
     # Define symbols and dynamic variables
     m, g, omega, c, R = symbols('m g omega c R')
