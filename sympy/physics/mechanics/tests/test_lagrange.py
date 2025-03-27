@@ -9,7 +9,6 @@ from sympy.matrices.dense import Matrix
 from sympy.simplify.simplify import simplify
 from sympy.testing.pytest import raises
 
-
 def test_invalid_coordinates():
     # Simple pendulum, but use symbol instead of dynamicsymbol
     l, m, g = symbols('l m g')
@@ -274,29 +273,29 @@ def test_rotating_bead():
     m, g, omega, c, R = symbols('m g omega c R')
     t = dynamicsymbols._t
     r = dynamicsymbols('r')  # Generalized coordinate r(t)
-    
+
     # Inertial reference frame
     N = ReferenceFrame('N')
-    
+
     # Position vector in cylindrical coordinates with theta = omega*t and z = c*r^2
     theta = omega * t
     position = r * (cos(theta)*N.x + sin(theta)*N.y) + c*r**2 * N.z
-    
+
     # Velocity in the inertial frame
     velocity = position.dt(N)
-    
+
     # Kinetic and potential energies
     T = 0.5 * m * velocity.dot(velocity)
     U = m * g * c * r**2
-    
+
     # Lagrangian
     L = T - U
-    
+
     # Lagrange's equations of motion
     lm = LagrangesMethod(L, [r])
     lm.form_lagranges_equations()
     eom = lm.eom[0]
-    
+
     # Substitute steady conditions: r = R, r' = 0, r'' = 0
     subs_dict = {
         r: R,
@@ -304,9 +303,9 @@ def test_rotating_bead():
         r.diff(t, t): 0
     }
     eom_steady = eom.subs(subs_dict)
-    
+
     # Solve for c
     c_sol = solve(eom_steady, c)[0]
-    
+
     # Verify the solution matches c = omega^2/(2g)
     assert simplify(c_sol - omega**2/(2*g)) == 0
