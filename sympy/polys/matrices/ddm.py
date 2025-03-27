@@ -950,11 +950,42 @@ class DDM(list):
     def rank(self):
         """
         Returns the rank of the matrix.
+
+        Examples
+        ========
+
+        >>> from sympy import QQ, ZZ
+        >>> from sympy.polys.matrices.ddm import DDM
+        >>> A = DDM([[QQ(1), QQ(2)], [QQ(2), QQ(4)]], (2, 2), QQ)
+        >>> A.rank()
+        1
+        >>> B = DDM([[ZZ(1), ZZ(2)], [ZZ(2), ZZ(4)]], (2, 2), ZZ)
+        >>> B.rank()
+        1
+
+        See Also
+        ========
+        sympy.polys.matrices.sdm.SDM.rank
+        sympy.polys.matrices._dfm.DFM.rank
         """
-        if not self.domain.is_Field:
-            return self.convert_to(QQ).rank()
-        rref, pivots = self.rref()
-        return len(pivots)
+        if self.domain.is_Field:
+            rref, pivots = self.rref()
+            return len(pivots)
+        else:
+            # For non-field domains like ZZ, use fraction-free LU decomposition
+            rows, cols = self.shape
+            # Use _fflu to get the decomposition as a single matrix
+            LU, perm = self._fflu()
+            # Count the number of non-zero pivots
+            rank = 0
+            i = j = 0
+            while i < rows and j < cols:
+                if LU[i][j] != self.domain.zero:
+                    rank += 1
+                    i += 1
+                j += 1
+
+            return rank
 
     def lu(a):
         """L, U decomposition of a"""

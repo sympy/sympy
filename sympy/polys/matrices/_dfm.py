@@ -701,6 +701,13 @@ class DFM:
         >>> M = Matrix([[1, 2], [2, 4]])
         >>> dfm = M.to_DM().to_dfm()
         >>> dfm.rank()
+        1
+
+        See Also
+        ========
+
+        sympy.polys.matrices.ddm.DDM.rank
+        sympy.polys.matrices.sdm.SDM.rank
         """
         return self.rep.rank()
 

@@ -1027,11 +1027,32 @@ class SDM(dict):
     def rank(self):
         """
         Returns the rank of the matrix.
+
+        Examples
+        ========
+
+        >>> from sympy import QQ, ZZ
+        >>> from sympy.polys.matrices.sdm import SDM
+        >>> A = SDM({0: {0: QQ(1), 1: QQ(2)}, 1: {0: QQ(2), 1: QQ(4)}}, (2, 2), QQ)
+        >>> A.rank()
+        1
+        >>> B = SDM({0: {0: ZZ(1), 1: ZZ(2)}, 1: {0: ZZ(2), 1: ZZ(4)}}, (2, 2), ZZ)
+        >>> B.rank()
+        1
+
+        See Also
+        ========
+
+        rref
+        fflu
         """
-        if not self.domain.is_Field:
-            return self.convert_to(QQ).rank()
-        rref, pivots = self.rref()
-        return len(pivots)
+        if self.domain.is_Field:
+            rref, pivots = self.rref()
+            return len(pivots)
+        else:
+            # For non-field domains like ZZ, convert to DDM and use fflu
+            ddm = self.to_ddm()
+            return ddm.rank()
 
     def det(A):
         """
