@@ -745,25 +745,14 @@ def _(mat, assumptions):
 # Helper function: determines if an expression is a rational
 # polynomial evaluated at a transcendental value
 def _ConstantPolynomial(expr, assumptions):
-    is_constant_poly = False
     for transcendental in [E, pi]:
         new_expr = expr.subs(transcendental, x)
-        all_coefficients_rational = True
         if new_expr.is_polynomial(x):
             expr_poly = Poly(new_expr, x)
-            for coefficient in expr_poly.coeffs():
-                coefficient_rational = ask(Q.rational(coefficient), assumptions)
-                if coefficient_rational is None:
-                    all_coefficients_rational = None
-                    break
-                all_coefficients_rational &= coefficient_rational
-
+            all_coefficients_rational = all(coeff.is_Rational for coeff in expr_poly.coeffs())
             if all_coefficients_rational:
                 return True
-            elif all_coefficients_rational is None:
-                is_constant_poly = None
-
-    return is_constant_poly
+    return None
 
 @AlgebraicPredicate.register_many(AlgebraicNumber, GoldenRatio, # type:ignore
     ImaginaryUnit, TribonacciConstant)
@@ -785,10 +774,8 @@ def _(expr, assumptions):
     if closed_group is not None:
         return closed_group
 
-    if expr.is_number:
-        is_constant_poly = _ConstantPolynomial(expr, assumptions)
-        if is_constant_poly:
-            return False
+    if expr.is_number and _ConstantPolynomial(expr, assumptions):
+        return False
     return None
 
 @AlgebraicPredicate.register(Pow) # type:ignore
