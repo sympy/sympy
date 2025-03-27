@@ -1050,9 +1050,7 @@ class SDM(dict):
             rref, pivots = self.rref()
             return len(pivots)
         else:
-            # For non-field domains like ZZ, convert to DDM and use fflu
-            ddm = self.to_ddm()
-            return ddm.rank()
+            return self.to_dfm_or_ddm().rank()
 
     def det(A):
         """
