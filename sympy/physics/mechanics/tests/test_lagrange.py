@@ -294,7 +294,7 @@ def test_rotating_bead():
     # Lagrange's equations of motion
     lm = LagrangesMethod(L, [r])
     lm.form_lagranges_equations()
-    RHS = lm.rhs()  # Returns [r', r''] 
+    RHS = lm.rhs()  # Returns [r', r'']
 
     # Substitute steady conditions: r=R, r'=0
     steady_subs = {r: R, r.diff(t): 0}
