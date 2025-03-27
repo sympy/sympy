@@ -274,6 +274,16 @@ class WrappingSphere(WrappingGeometryBase):
             The point at which the geodesic terminates.
 
         """
+        for point in (point_1, point_2):
+            if not self.point_on_surface(point):
+                msg = (
+                    f'Geodesic length cannot be calculated as point {point} '
+                    f'with radius {point.pos_from(self.point).magnitude()} '
+                    f'from the sphere\'s center {self.point} does not lie on '
+                    f'the surface of {self} with radius {self.radius}.'
+                )
+                raise ValueError(msg)
+
         pA, pB = point_1, point_2
         pO = self.point
         pA_vec = pA.pos_from(pO)
@@ -537,6 +547,17 @@ class WrappingCylinder(WrappingGeometryBase):
             The point at which the geodesic terminates.
 
         """
+        for point in (point_1, point_2):
+            if not self.point_on_surface(point):
+                msg = (
+                    f'Geodesic length cannot be calculated as point {point} '
+                    f'with radius {point.pos_from(self.point).magnitude()} '
+                    f'from the cylinder\'s center {self.point} does not lie on '
+                    f'the surface of {self} with radius {self.radius} and axis '
+                    f'{self.axis}.'
+                )
+                raise ValueError(msg)
+
         point_1_from_origin_point = point_1.pos_from(self.point)
         point_2_from_origin_point = point_2.pos_from(self.point)
 
