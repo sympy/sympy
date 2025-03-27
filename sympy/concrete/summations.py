@@ -1465,7 +1465,7 @@ def eval_sum_residue(f, i_a_b):
 
         if (numer_even and denom_even) or (numer_odd and denom_odd):
             return 'even'
-        elif numer_even and denom_even:
+        elif (numer_odd and denom_even) or (numer_even and denom_odd):
             return 'odd'
         else:
             return 'neither'
@@ -1575,7 +1575,7 @@ def eval_sum_residue(f, i_a_b):
         else:
             f = numer.as_expr() / denom.as_expr()
         return eval_sum_residue(f, (i, a-shift, b-shift))
-    else:
+    elif ('even' == get_function_symmetery(numer, denom)):
         #for even function flip the limit
         #limit (-oo, a) is flipped to (-a, oo)
         if a is S.NegativeInfinity and b.is_finite:
