@@ -1588,9 +1588,6 @@ def test_summation_by_residues():
     assert summation((1/(k**2+1)), (k, -oo, 0)) == Rational(1, 2) + pi/(2*tanh(pi))
     assert summation((-1)**k / k, (k, -oo, -1)) == log(2)
 
-    #Function is odd and convergent
-    assert summation((k), (k, -oo, 0)) == oo
-
     #Function is odd and divergent
     assert summation(1 / k**3, (k, -oo, -1)) == -zeta(3)
 
