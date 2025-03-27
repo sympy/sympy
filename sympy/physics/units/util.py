@@ -93,6 +93,26 @@ def convert_to(expr, target_units, unit_system="SI"):
     7.62963087839509e-20*hbar**0.5*speed_of_light**0.5/gravitational_constant**0.5
 
     """
+    from sympy import Rational, simplify
+
+def convert_to(expr, target_units):
+    """
+    Convert the given expression to the specified target units.
+
+    Fixes:
+    - Ensures expressions are simplified before conversion.
+    - Converts floating-point numbers into rational numbers for consistency.
+    """
+
+    # Convert all floating-point numbers to rational numbers
+    expr = expr.replace(lambda x: x.is_Float, lambda x: Rational(str(x)))
+
+    # Simplify the expression to ensure correct unit conversions
+    expr = simplify(expr)
+
+    # Proceed with unit conversion as usual
+    return expr.convert_to(target_units)
+
     from sympy.physics.units import UnitSystem
     unit_system = UnitSystem.get_unit_system(unit_system)
 
