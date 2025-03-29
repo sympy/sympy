@@ -155,10 +155,10 @@ def test_closed_group(expr, assumptions, key):
     return _fuzzy_group(
         (ask(key(a), assumptions) for a in expr.args), quick_exit=True)
 
-def ask_all(queries, assumptions):
+def ask_all(*queries, assumptions):
     return fuzzy_and(
         (ask(query, assumptions) for query in queries))
 
-def ask_any(queries, assumptions):
+def ask_any(*queries, assumptions):
     return fuzzy_or(
         (ask(query, assumptions) for query in queries))
