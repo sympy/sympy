@@ -1,7 +1,7 @@
 """
 Handlers for predicates related to set membership: integer, rational, etc.
 """
-
+from sympy.abc import x
 from sympy.assumptions import Q, ask
 from sympy.core import Add, Basic, Expr, Mul, Pow, S
 from sympy.core.numbers import (AlgebraicNumber, ComplexInfinity, Exp1, Float,
@@ -15,6 +15,7 @@ from sympy.core.relational import Eq
 from sympy.functions.elementary.complexes import conjugate
 from sympy.matrices import Determinant, MatrixBase, Trace
 from sympy.matrices.expressions.matexpr import MatrixElement
+from sympy.polys.polytools import Poly
 
 from sympy.multipledispatch import MDNotImplementedError
 
@@ -22,7 +23,7 @@ from .common import test_closed_group
 from ..predicates.sets import (IntegerPredicate, RationalPredicate,
     IrrationalPredicate, RealPredicate, ExtendedRealPredicate,
     HermitianPredicate, ComplexPredicate, ImaginaryPredicate,
-    AntihermitianPredicate, AlgebraicPredicate)
+    AntihermitianPredicate, AlgebraicPredicate, TranscendentalPredicate)
 
 
 # IntegerPredicate
@@ -741,10 +742,33 @@ def _(mat, assumptions):
 
 # AlgebraicPredicate
 
-@AlgebraicPredicate.register_many(AlgebraicNumber, Float, GoldenRatio, # type:ignore
+# Helper function: determines if an expression is a rational
+# polynomial evaluated at a transcendental value. Such expressions are non-algebraic.
+# PROOF: we prove the contrapositive: if f is a non-constant rational polynomial and f(t) is
+# algebraic, then t is algebraic. But if g is a non-constant rational poylnomial such that
+# g(f(t)) == 0, then t is a solution to the non-constant rational polynomial g(f) and is algebraic.
+# Proof credited to Qiaochun Yuan at MathStackExchange: https://math.stackexchange.com/users/232/qiaochu-yuan
+def _isNonAlgebraic(expr, assumptions):
+    # To check if the expression is a rational polynomial evaluated at pi or E, we
+    # must check that the expression contains either pi or E but not both (hence the XOR).
+    # Furthermore, Sympy simplifies expressions like E**2 + E te exp(2) + E; thus, polynomials
+    # containing E can have either E or exp.
+    if not (expr.has(E) | expr.has(exp)) ^ expr.has(pi):
+        return None
+    new_expr = expr.subs(E, x).subs(pi, x)
+    if new_expr.is_polynomial(x):
+        expr_poly = Poly(new_expr, x)
+        if all(coeff.is_Rational for coeff in expr_poly.coeffs()):
+            return True
+
+@AlgebraicPredicate.register_many(AlgebraicNumber, GoldenRatio, # type:ignore
     ImaginaryUnit, TribonacciConstant)
 def _(expr, assumptions):
     return True
+
+@AlgebraicPredicate.register(Float)
+def _(expr, assumptions):
+    return None
 
 @AlgebraicPredicate.register_many(ComplexInfinity, Exp1, Infinity, # type:ignore
     NegativeInfinity, Pi)
@@ -753,7 +777,12 @@ def _(expr, assumptions):
 
 @AlgebraicPredicate.register_many(Add, Mul) # type:ignore
 def _(expr, assumptions):
-    return test_closed_group(expr, assumptions, Q.algebraic)
+    closed_group = test_closed_group(expr, assumptions, Q.algebraic)
+    if closed_group is not None:
+        return closed_group
+
+    if expr.is_number and _isNonAlgebraic(expr, assumptions):
+        return False
 
 @AlgebraicPredicate.register(Pow) # type:ignore
 def _(expr, assumptions):
@@ -775,6 +804,10 @@ def _(expr, assumptions):
         # If the base is algebraic and not equal to 0 or 1, and the exponent
         # is irrational,then the result is transcendental.
         if ask(Q.ne(expr.base,0) & Q.ne(expr.base,1)) and exp_rational is False:
+            return False
+
+    if expr.is_number and _isNonAlgebraic(expr.base, assumptions):
+        if ask(Q.integer(expr.exp) & ~Q.negative(expr.exp), assumptions):
             return False
 
 @AlgebraicPredicate.register(Rational) # type:ignore
@@ -804,3 +837,20 @@ def _(expr, assumptions):
     x = expr.args[0]
     if ask(Q.algebraic(x), assumptions):
         return ask(~Q.nonzero(x - 1), assumptions)
+
+
+# TranscendentalPredicate
+
+@TranscendentalPredicate.register(Expr)
+def _(expr, assumptions):
+    ret = expr.is_transcendental
+    if ret is not None:
+        return ret
+
+    is_complex = ask(Q.complex(expr), assumptions)
+    if is_complex:
+        is_algebraic = ask(Q.algebraic(expr), assumptions)
+        if is_algebraic is None:
+            return None
+        return not is_algebraic
+    return is_complex
