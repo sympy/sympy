@@ -1,6 +1,7 @@
 """Tools for solving inequalities and systems of inequalities. """
 import itertools
 
+from sympy.assumptions.wrapper import assumption_domain
 from sympy.calculus.util import (continuous_domain, periodicity,
     function_range)
 from sympy.core import sympify
@@ -438,6 +439,8 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
 
     """
     from sympy.solvers.solvers import denoms
+
+    domain = domain.intersect(assumption_domain(gen, _exclude=_exclude | {expr}))
 
     if domain.is_subset(S.Reals) is False:
         raise NotImplementedError(filldedent('''
