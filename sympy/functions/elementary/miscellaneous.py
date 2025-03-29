@@ -681,6 +681,12 @@ class MinMaxBase(Expr, LatticeOp):
 
 
 class Max(MinMaxBase, Application):
+    def __new__(cls, *args, **kwargs):  
+        args = tuple(map(sympify, args))  # Convert input to SymPy expressions
+        args = tuple(sorted(set(args), key=lambda x: (x.is_number, x)))  # Remove duplicates & sort
+        if len(args) == 1:
+            return args[0]  # If only one argument, return it directly
+        return super().__new__(cls, *args, **kwargs)  # Call parent class constructor
     r"""
     Return, if possible, the maximum value of the list.
 
@@ -799,6 +805,13 @@ class Max(MinMaxBase, Application):
 
 
 class Min(MinMaxBase, Application):
+    def __new__(cls, *args, **kwargs):  
+        args = tuple(map(sympify, args))  # Convert input to SymPy expressions
+        args = tuple(sorted(set(args), key=lambda x: (x.is_number, x)))  # Remove duplicates & sort
+        if len(args) == 1:
+            return args[0]  # If only one argument, return it directly
+        return super().__new__(cls, *args, **kwargs)  # Call parent class constructor  
+
     """
     Return, if possible, the minimum value of the list.
     It is named ``Min`` and not ``min`` to avoid conflicts
