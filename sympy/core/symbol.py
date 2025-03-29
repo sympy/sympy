@@ -449,7 +449,12 @@ class Symbol(AtomicExpr, Boolean): # type: ignore
 
     binary_symbols = free_symbols  # in this case, not always
 
-    def as_set(self):
+    def as_set(self, symbol, _exclude=frozenset()):
+        from sympy.assumptions.wrapper import assumption_domain
+
+        if symbol == self:
+            return assumption_domain(self)
+
         return S.UniversalSet
 
 

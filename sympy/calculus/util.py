@@ -1,5 +1,6 @@
 from .accumulationbounds import AccumBounds, AccumulationBounds # noqa: F401
 from .singularities import singularities
+from sympy.assumptions.wrapper import assumption_domain
 from sympy.core import Pow, S
 from sympy.core.function import diff, expand_mul, Function
 from sympy.core.kind import NumberKind
@@ -27,7 +28,7 @@ from sympy.utilities.iterables import iterable
 from sympy.matrices.dense import hessian
 
 
-def continuous_domain(f, symbol, domain):
+def continuous_domain(f, symbol, domain, _exclude=frozenset()):
     """
     Returns the domain on which the function expression f is continuous.
 
@@ -81,6 +82,9 @@ def continuous_domain(f, symbol, domain):
         raise NotImplementedError(filldedent('''
             Domain must be a subset of S.Reals.
             '''))
+
+    domain = domain.intersect(assumption_domain(symbol, _exclude=_exclude))
+
     implemented = [Pow, exp, log, Abs, frac,
                    sin, cos, tan, cot, sec, csc,
                    asin, acos, atan, acot, asec, acsc,
@@ -114,7 +118,7 @@ def continuous_domain(f, symbol, domain):
             pass    # 0**negative handled by singularities()
         else:
             constraint = solve_univariate_inequality(atom.base >= 0,
-                                                        symbol).as_set()
+                                                        symbol).as_set(symbol)
             cont_domain = Intersection(constraint, cont_domain)
 
     for atom in f.atoms(Function):
@@ -122,14 +126,14 @@ def continuous_domain(f, symbol, domain):
             for c in constraints[atom.func]:
                 constraint_relational = c.subs(x, atom.args[0])
                 constraint_set = solve_univariate_inequality(
-                    constraint_relational, symbol).as_set()
+                    constraint_relational, symbol).as_set(symbol)
                 cont_domain = Intersection(constraint_set, cont_domain)
         elif atom.func in constraints_union:
             constraint_set = S.EmptySet
             for c in constraints_union[atom.func]:
                 constraint_relational = c.subs(x, atom.args[0])
                 constraint_set += solve_univariate_inequality(
-                    constraint_relational, symbol).as_set()
+                    constraint_relational, symbol).as_set(symbol)
             cont_domain = Intersection(constraint_set, cont_domain)
         # XXX: the discontinuities below could be factored out in
         # a new "discontinuities()".
@@ -158,7 +162,7 @@ def continuous_domain(f, symbol, domain):
     return cont_domain - singularities(f, symbol, domain)
 
 
-def function_range(f, symbol, domain):
+def function_range(f, symbol, domain, _exclude=frozenset()):
     """
     Finds the range of a function in a given domain.
     This method is limited by the ability to determine the singularities and
@@ -208,6 +212,8 @@ def function_range(f, symbol, domain):
         is continuous are not finite or real,
         OR if the critical points of the function on the domain cannot be found.
     """
+
+    domain = domain.intersect(assumption_domain(symbol, _exclude=_exclude))
 
     if domain is S.EmptySet:
         return S.EmptySet
@@ -801,7 +807,7 @@ def stationary_points(f, symbol, domain=S.Reals):
     return set
 
 
-def maximum(f, symbol, domain=S.Reals):
+def maximum(f, symbol, domain=S.Reals, _exclude=frozenset()):
     """
     Returns the maximum value of a function in the given domain.
 
@@ -839,6 +845,9 @@ def maximum(f, symbol, domain=S.Reals):
     1/2
 
     """
+
+    domain = domain.intersect(assumption_domain(symbol, _exclude=_exclude))
+
     if isinstance(symbol, Symbol):
         if domain is S.EmptySet:
             raise ValueError("Maximum value not defined for empty domain.")
@@ -848,7 +857,7 @@ def maximum(f, symbol, domain=S.Reals):
         raise ValueError("%s is not a valid symbol." % symbol)
 
 
-def minimum(f, symbol, domain=S.Reals):
+def minimum(f, symbol, domain=S.Reals, _exclude=frozenset()):
     """
     Returns the minimum value of a function in the given domain.
 
@@ -886,6 +895,9 @@ def minimum(f, symbol, domain=S.Reals):
     -1/2
 
     """
+
+    domain = domain.intersect(assumption_domain(symbol, _exclude=_exclude))
+
     if isinstance(symbol, Symbol):
         if domain is S.EmptySet:
             raise ValueError("Minimum value not defined for empty domain.")

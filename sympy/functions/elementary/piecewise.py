@@ -252,7 +252,7 @@ class Piecewise(DefinedFunction):
 
             if cond.is_Relational:
                 return None
-            if a in c.as_set().boundary:
+            if a in c.as_set(x).boundary:
                 return None
             # Apply expression if a is an interior point of the domain of e.
             if cond:
@@ -880,7 +880,7 @@ class Piecewise(DefinedFunction):
                             Inequalities in the complex domain are
                             not supported. Try the real domain by
                             setting domain=S.Reals'''))
-            cond_int = U.intersect(cond.as_set())
+            cond_int = U.intersect(cond.as_set(tuple(cond_free)[0]))
             U = U - cond_int
             if cond_int != S.EmptySet:
                 exp_sets.append((expr, cond_int))
@@ -903,7 +903,7 @@ class Piecewise(DefinedFunction):
                 x = free.pop()
                 try:
                     byfree[x] = byfree.setdefault(
-                        x, S.EmptySet).union(c.as_set())
+                        x, S.EmptySet).union(c.as_set(x))
                 except NotImplementedError:
                     if not default:
                         raise NotImplementedError(filldedent('''

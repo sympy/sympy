@@ -46,6 +46,9 @@ False
 from sympy.assumptions import ask, Q
 from sympy.core.basic import Basic
 from sympy.core.sympify import _sympify
+from sympy.core.singleton import S
+
+import itertools
 
 
 def make_eval_method(fact):
@@ -162,3 +165,58 @@ def is_extended_nonnegative(obj, assumptions=None):
     if assumptions is None:
         return obj.is_extended_nonnegative
     return ask(Q.extended_nonnegative(obj), assumptions)
+
+
+def assumption_domain(symbol, assumptions=set(), _exclude=frozenset()):
+    from .assume import global_assumptions
+
+    from sympy.core.exprtools import _monotonic_sign, _eps
+    from sympy.core.symbol import Symbol, Dummy
+    from sympy.sets import FiniteSet, Interval, imageset
+
+    if not isinstance(symbol, Symbol):
+        raise ValueError("Input must be a symbol, use calculus.util.function_domain() for expressions")
+
+    if symbol.is_infinite and symbol.is_extended_positive:
+        return FiniteSet(S.Infinity)
+    elif symbol.is_infinite and symbol.is_extended_negative:
+        return FiniteSet(S.NegativeInfinity)
+    elif symbol.is_zero:
+        return FiniteSet(S.Zero)
+
+    domain = S.UniversalSet
+
+    for assumption in itertools.chain(global_assumptions, assumptions):
+        if domain == S.EmptySet:
+            break
+
+        if assumption in _exclude or not assumption.has(symbol):
+            continue
+
+        domain = domain.intersect(assumption.as_set(symbol, _exclude=_exclude | {symbol}))
+
+    if symbol.is_negative is False:
+        result = _monotonic_sign(symbol)
+        if result is not None:
+            if result in (_eps, -_eps):
+                domain = domain.intersect(Interval(S.Zero, S.Infinity, S.true, S.false))
+            else:
+                domain = domain.intersect(Interval(result, S.Infinity, S.false, S.false))
+    elif symbol.is_positive is False:
+        result = _monotonic_sign(symbol)
+        if result is not None:
+            if result in (_eps, -eps):
+                domain = domain.intersect(Interval(S.NegativeInfinity, S.Zero, S.false, S.true))
+            else:
+                domain = domain.intersect(Interval(S.NegativeInfinity, result, S.false, S.false))
+
+    if symbol.is_even:
+        n = Dummy('n')
+        domain = domain.intersect(imageset(n, n * 2, S.Integers))
+    elif symbol.is_odd:
+        n = Dummy('n')
+        domain = domain.intersect(imageset(n, n * 2 + 1, S.Integers))
+
+    # TODO: add case for is_prime
+
+    return domain

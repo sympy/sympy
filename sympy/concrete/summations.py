@@ -484,7 +484,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         if sequence_term.is_Piecewise:
             for func, cond in sequence_term.args:
                 # see if it represents something going to oo
-                if cond == True or cond.as_set().sup is S.Infinity:
+                if cond == True or cond.as_set(sym).sup is S.Infinity:
                     s = Sum(func, (sym, lower_limit, upper_limit))
                     return s.is_convergent()
             return S.true
@@ -1362,7 +1362,7 @@ def eval_sum_hyper(f, i_a_b):
         res1, cond1 = res1
         res2, cond2 = res2
         cond = And(cond1, cond2)
-        if cond == False or cond.as_set() == S.EmptySet:
+        if cond == False:
             return None
         return Piecewise((res1 + res2, cond), (old_sum, True))
 

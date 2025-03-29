@@ -1604,7 +1604,7 @@ def test_process_limits():
     # these should be (x, union) not union
     # (but then we would get a TypeError because we don't
     # handle non-contiguous sets: see below use of `union`)
-    union = Or(x < 1, x > 3).as_set()
+    union = Or(x < 1, x > 3).as_set(x)
     raises(ValueError, lambda: _process_limits(
         union, discrete=True))
     raises(ValueError, lambda: _process_limits(
