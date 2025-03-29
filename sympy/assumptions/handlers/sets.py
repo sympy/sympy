@@ -783,7 +783,6 @@ def _(expr, assumptions):
 
     if expr.is_number and _isAlgebraic(expr, assumptions):
         return False
-    return None
 
 @AlgebraicPredicate.register(Pow) # type:ignore
 def _(expr, assumptions):
@@ -807,13 +806,9 @@ def _(expr, assumptions):
         if ask(Q.ne(expr.base,0) & Q.ne(expr.base,1)) and exp_rational is False:
             return False
 
-    if expr.is_number:
-        is_constant_poly = _isAlgebraic(expr.base, assumptions)
-        if is_constant_poly:
-            exp_positive_integer = ask(Q.integer(expr.exp) & ~Q.negative(expr.exp), assumptions)
-            if exp_positive_integer:
-                return False
-    return None
+    if expr.is_number and _isAlgebraic(expr.base, assumptions):
+        if ask(Q.integer(expr.exp) & ~Q.negative(expr.exp), assumptions):
+            return False
 
 @AlgebraicPredicate.register(Rational) # type:ignore
 def _(expr, assumptions):
