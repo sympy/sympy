@@ -639,6 +639,18 @@ class Equality(Relational):
     def _eval_relation(cls, lhs, rhs):
         return _sympify(lhs == rhs)
 
+    def _eval_rewrite(self, rule, args, **hints):
+        if rule == GreaterThan:
+            if is_ge(self.lhs, self.rhs):
+                return GreaterThan(self.rhs, self.lhs)
+            elif is_ge(self.rhs, self.lhs):
+                return GreaterThan(self.lhs, self.rhs)
+        elif rule == LessThan:
+            if is_ge(self.lhs, self.rhs):
+                return LessThan(self.lhs, self.rhs)
+            elif is_ge(self.rhs, self.lhs):
+                return LessThan(self.rhs, self.lhs)
+
     def _eval_rewrite_as_Add(self, L, R, evaluate=True, **kwargs):
         """
         return Eq(L, R) as L - R. To control the evaluation of
@@ -812,6 +824,18 @@ class Unequality(Relational):
                 return {self.rhs}
         return set()
 
+    def _eval_rewrite(self, rule, args, **hints):
+        if rule == StrictGreaterThan:
+            if is_ge(self.lhs, self.rhs):
+                return StrictGreaterThan(self.rhs, self.lhs)
+            elif is_ge(self.rhs, self.lhs):
+                return StrictGreaterThan(self.lhs, self.rhs)
+        elif rule == StrictLessThan:
+            if is_ge(self.lhs, self.rhs):
+                return StrictLessThan(self.lhs, self.rhs)
+            elif is_ge(self.rhs, self.lhs):
+                return StrictLessThan(self.rhs, self.lhs)
+
     def _eval_simplify(self, **kwargs):
         # simplify as an equality
         eq = Equality(*self.args)._eval_simplify(**kwargs)
@@ -868,6 +892,21 @@ class _Inequality(Relational):
             return cls(lhs, rhs, evaluate=False)
         else:
             return _sympify(val)
+
+    def _eval_simplify(self, **kwargs):
+        e = super()._eval_simplify(**kwargs)
+        if not isinstance(e, _Inequality):
+            return e
+
+        equality_form = e.rewrite(Equality)
+        if equality_form != e:
+            return equality_form
+
+        unequality_form = e.rewrite(Unequality)
+        if unequality_form != e:
+            return unequality_form
+
+        return e
 
 
 class _Greater(_Inequality):
@@ -1144,6 +1183,11 @@ class GreaterThan(_Greater):
     def strict(self):
         return Gt(*self.args)
 
+    def _eval_rewrite(self, rule, args, **hints):
+        if rule == Equality:
+            if is_ge(self.rhs, self.lhs):
+                return Equality(self.lhs, self.rhs)
+
 Ge = GreaterThan
 
 
@@ -1160,6 +1204,11 @@ class LessThan(_Less):
     @property
     def strict(self):
         return Lt(*self.args)
+
+    def _eval_rewrite(self, rule, args, **hints):
+        if rule == Equality:
+            if is_ge(self.lhs, self.rhs):
+                return Equality(self.lhs, self.rhs)
 
 Le = LessThan
 
@@ -1178,6 +1227,10 @@ class StrictGreaterThan(_Greater):
     def weak(self):
         return Ge(*self.args)
 
+    def _eval_rewrite(self, rule, args, **hints):
+        if rule == Unequality:
+            if is_ge(self.lhs, self.rhs):
+                return Unequality(self.lhs, self.rhs)
 
 Gt = StrictGreaterThan
 
@@ -1195,6 +1248,11 @@ class StrictLessThan(_Less):
     @property
     def weak(self):
         return Le(*self.args)
+
+    def _eval_rewrite(self, rule, args, **hints):
+        if rule == Unequality:
+            if is_ge(self.rhs, self.lhs):
+                return Unequality(self.lhs, self.rhs)
 
 Lt = StrictLessThan
 
