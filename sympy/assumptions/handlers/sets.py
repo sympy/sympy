@@ -744,7 +744,7 @@ def _(mat, assumptions):
 
 # Helper function: determines if an expression is a rational
 # polynomial evaluated at a transcendental value
-def _ConstantPolynomial(expr, assumptions):
+def _isAlgebraic(expr, assumptions):
     if not (expr.has(E) | expr.has(exp)) ^ expr.has(pi):
         return None
     new_expr = expr.subs(E, x).subs(pi, x)
@@ -773,7 +773,7 @@ def _(expr, assumptions):
     if closed_group is not None:
         return closed_group
 
-    if expr.is_number and _ConstantPolynomial(expr, assumptions):
+    if expr.is_number and _isAlgebraic(expr, assumptions):
         return False
     return None
 
@@ -800,7 +800,7 @@ def _(expr, assumptions):
             return False
 
     if expr.is_number:
-        is_constant_poly = _ConstantPolynomial(expr.base, assumptions)
+        is_constant_poly = _isAlgebraic(expr.base, assumptions)
         if is_constant_poly:
             exp_positive_integer = ask(Q.integer(expr.exp) & ~Q.negative(expr.exp), assumptions)
             if exp_positive_integer:
