@@ -51,7 +51,8 @@ from mpmath.libmp.libintmath import ifac
 from sympy.core import PoleError, Function, Expr
 from sympy.core.numbers import Rational
 from sympy.core.intfunc import igcd
-from sympy.functions import sin, cos, tan, atan, exp, atanh, tanh, log, ceiling
+from sympy.functions import (sin, cos, tan, atan, exp, atanh, asinh, tanh, log,
+                             ceiling, sinh, cosh)
 from sympy.utilities.misc import as_int
 from mpmath.libmp.libintmath import giant_steps
 import math
@@ -1620,6 +1621,60 @@ def rs_atanh(p, x, prec):
     p1 = rs_mul(dp, p1, x, prec - 1)
     return rs_integrate(p1, x) + const
 
+def rs_asinh(p, x, prec):
+    """
+    Hyperbolic arcsine of a series
+
+    Return the series expansion of the arcsinh of ``p``, about 0.
+
+    Examples
+    ========
+
+    >>> from sympy.polys.domains import QQ
+    >>> from sympy.polys.rings import ring
+    >>> from sympy.polys.ring_series import rs_asinh
+    >>> R, x = ring('x', QQ)
+    >>> rs_asinh(x, x, 9)
+    -5/112*x**7 + 3/40*x**5 - 1/6*x**3 + x
+
+    See Also
+    ========
+
+    asinh
+    """
+    if rs_is_puiseux(p, x):
+        return rs_puiseux(rs_asinh, p, x, prec)
+    R = p.ring
+    const = 0
+    c = _get_constant_term(p, x)
+    if c:
+        if R.domain is EX:
+            c_expr = c.as_expr()
+            const = asinh(c_expr)
+        elif isinstance(c, PolyElement):
+            try:
+                c_expr = c.as_expr()
+                const = R(asinh(c_expr))
+            except ValueError:
+                raise DomainError("The given series cannot be expanded in "
+                    "this domain.")
+        else:
+            try:
+                const = R(asinh(c))
+            except ValueError:
+                raise DomainError("The given series cannot be expanded in "
+                    "this domain.")
+
+    # Instead of using a closed form formula, we differentiate asinh(p) to get
+    # `1/sqrt(1+p**2) * dp`, whose series expansion is much easier to calculate.
+    # Finally we integrate to get back asinh
+    dp = rs_diff(p, x)
+    p_squared = rs_square(p, x, prec)
+    denom = p_squared + R(1)
+    p1 = rs_nth_root(denom, -2, x, prec - 1)
+    p1 = rs_mul(dp, p1, x, prec - 1)
+    return rs_integrate(p1, x) + const
+
 def rs_sinh(p, x, prec):
     """
     Hyperbolic sine of a series
@@ -1643,6 +1698,34 @@ def rs_sinh(p, x, prec):
     """
     if rs_is_puiseux(p, x):
         return rs_puiseux(rs_sinh, p, x, prec)
+    R = p.ring
+    if not p:
+        return R(0)
+    c = _get_constant_term(p, x)
+    if c:
+        if R.domain is EX:
+            c_expr = c.as_expr()
+            t1, t2 = sinh(c_expr), cosh(c_expr)
+        elif isinstance(c, PolyElement):
+            try:
+                c_expr = c.as_expr()
+                t1, t2 = R(sinh(c_expr)), R(cosh(c_expr))
+            except ValueError:
+                R = R.add_gens([sinh(c_expr), cosh(c_expr)])
+                p = p.set_ring(R)
+                x = x.set_ring(R)
+                c = c.set_ring(R)
+                t1, t2 = R(sinh(c_expr)), R(cosh(c_expr))
+        else:
+            try:
+                t1, t2 = R(sinh(c)), R(cosh(c))
+            except ValueError:
+                raise DomainError("The given series cannot be expanded in "
+                                  "this domain.")
+
+        p1 = p - c
+        return rs_sinh(p1, x, prec) * t2 + rs_cosh(p1, x, prec) * t1
+
     t = rs_exp(p, x, prec)
     t1 = rs_series_inversion(t, x, prec)
     return (t - t1)/2
@@ -1670,6 +1753,32 @@ def rs_cosh(p, x, prec):
     """
     if rs_is_puiseux(p, x):
         return rs_puiseux(rs_cosh, p, x, prec)
+    R = p.ring
+    c = _get_constant_term(p, x)
+    if c:
+        if R.domain is EX:
+            c_expr = c.as_expr()
+            t1, t2 = sinh(c_expr), cosh(c_expr)
+        elif isinstance(c, PolyElement):
+            try:
+                c_expr = c.as_expr()
+                t1, t2 = R(sinh(c_expr)), R(cosh(c_expr))
+            except ValueError:
+                R = R.add_gens([sinh(c_expr), cosh(c_expr)])
+                p = p.set_ring(R)
+                x = x.set_ring(R)
+                c = c.set_ring(R)
+                t1, t2 = R(sinh(c_expr)), R(cosh(c_expr))
+        else:
+            try:
+                t1, t2 = R(sinh(c)), R(cosh(c))
+            except ValueError:
+                raise DomainError("The given series cannot be expanded in "
+                                  "this domain.")
+
+        p1 = p - c
+        return rs_cosh(p1, x, prec) * t2 + rs_sinh(p1, x, prec) * t1
+
     t = rs_exp(p, x, prec)
     t1 = rs_series_inversion(t, x, prec)
     return (t + t1)/2
@@ -1720,9 +1829,8 @@ def rs_tanh(p, x, prec):
         return rs_puiseux(rs_tanh, p, x, prec)
     R = p.ring
     const = 0
-    if _has_constant_term(p, x):
-        zm = R.zero_monom
-        c = p[zm]
+    c = _get_constant_term(p, x)
+    if c:
         if R.domain is EX:
             c_expr = c.as_expr()
             const = tanh(c_expr)
@@ -1731,8 +1839,11 @@ def rs_tanh(p, x, prec):
                 c_expr = c.as_expr()
                 const = R(tanh(c_expr))
             except ValueError:
-                raise DomainError("The given series cannot be expanded in "
-                    "this domain.")
+                R = R.add_gens([tanh(c_expr)])
+                p = p.set_ring(R)
+                x = x.set_ring(R)
+                c = c.set_ring(R)
+                const = R(tanh(c_expr))
         else:
             try:
                 const = R(tanh(c))
@@ -1858,7 +1969,10 @@ _convert_func = {
         'exp': 'rs_exp',
         'tan': 'rs_tan',
         'log': 'rs_log',
-        'atan': 'rs_atan'
+        'atan': 'rs_atan',
+        'sinh': 'rs_sinh',
+        'cosh': 'rs_cosh',
+        'tanh': 'rs_tanh'
         }
 
 def rs_min_pow(expr, series_rs, a):

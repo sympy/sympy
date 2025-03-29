@@ -1908,6 +1908,12 @@ def test_Mod():
     assert Mod(-p - 5, -p - 3) == -2
     assert Mod(p + 1, p - 1).func is Mod
 
+    # issue 27749
+    n = symbols('n', integer=True, positive=True)
+    assert unchanged(Mod, 1, n)
+    n = symbols('n', prime=True)
+    assert Mod(1, n) == 1
+
     # handling sums
     assert (x + 3) % 1 == Mod(x, 1)
     assert (x + 3.0) % 1 == Mod(1.*x, 1)

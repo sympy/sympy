@@ -166,6 +166,7 @@ by ``polys.ring.ring``.
 .. autofunction:: rs_cos
 .. autofunction:: rs_cos_sin
 .. autofunction:: rs_atanh
+.. autofunction:: rs_asinh
 .. autofunction:: rs_sinh
 .. autofunction:: rs_cosh
 .. autofunction:: rs_tanh
