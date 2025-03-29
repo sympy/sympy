@@ -5,7 +5,7 @@ from sympy.core.symbol import symbols
 from sympy.core.relational import Unequality
 from sympy.logic.boolalg import And, Or, Implies, Equivalent, true, false
 from sympy.logic.inference import literal_symbol, \
-     pl_true, satisfiable, valid, entails, PropKB
+     pl_true, satisfiable, _satisfiable, valid, entails, PropKB
 from sympy.logic.algorithms.dpll import dpll, dpll_satisfiable, \
     find_pure_symbol, find_unit_clause, unit_propagate, \
     find_pure_symbol_int_repr, find_unit_clause_int_repr, \
@@ -322,6 +322,30 @@ def test_satisfiable_all_models():
     for i in range(10):
         assert next(result)
 
+def test_sympy_theory():
+    from sympy.abc import x, y
+    from sympy.assumptions import Q
+
+    # for _ in range(100):
+    #     assert _satisfiable(Q.negative(x) | Q.positive(x) | Q.zero(x), use_sympy_theory=True) is not False
+
+    assert _satisfiable(Q.negative(x) &  Q.prime(x), use_sympy_theory=True) is False
+    assert _satisfiable(Q.negative(x) & Q.prime(y), use_sympy_theory=True) == {Q.negative(x) : True, Q.prime(y):True}
+
+    assert _satisfiable(Q.negative(x) | Q.positive(x) | Q.zero(x), use_sympy_theory=True) is not False
+
+    def boolean_formula_to_encoded_cnf(bf):
+        cnf = CNF.from_prop(bf)
+        enc = EncodedCNF()
+        enc.from_cnf(cnf)
+        return enc
+
+    # assert _satisfiable((Q.negative(x) & Q.prime(x)) | (Q.negative(y) & Q.prime(y)), use_sympy_theory=True) is False
+    #
+    # assert _satisfiable(Q.negative(x) & Q.prime(y) | (Q.negative(y) & Q.prime(x)), use_sympy_theory=True) is False
+
+
+
 
 def test_z3():
     z3 = import_module("z3")
@@ -379,3 +403,18 @@ def test_z3_vs_lra_dpll2():
         lra_dpll2_sat = lra_dpll2_satisfiable(cnf) is not False
 
         assert z3_sat == lra_dpll2_sat
+
+def test_issue_27733():
+    x, y = symbols('x,y')
+    clauses = [[1, -3, -2], [5, 7, -8, -6, -4], [-10, -9, 10, 11, -4], [-12, 13, 14], [-10, 9, -6, 11, -4],
+               [16, -15, 18, -19, -17], [11, -6, 10, -9], [9, 11, -10, -9], [2, -3, -1], [-13, 12], [-15, 3, -17],
+               [-16, -15, 19, -17], [-6, -9, 10, 11, -4], [20, -1, -2], [-23, -22, -21], [10, 11, -10, -9],
+               [9, 11, -4, -10], [24, -6, -4], [-14, 12], [-10, -9, 9, -6, 11], [25, -27, -26], [-15, 19, -18, -17],
+               [5, 8, -7, -6, -4], [-30, -29, 28], [12], [14]]
+
+    encoding = {Q.gt(y, i): i for i in range(1, 31) if i != 11 and i != 12}
+    encoding[Q.gt(x, 0)] = 11
+    encoding[Q.lt(x, 0)] = 12
+
+    cnf = EncodedCNF(clauses, encoding)
+    assert satisfiable(cnf, use_lra_theory=True) is False
