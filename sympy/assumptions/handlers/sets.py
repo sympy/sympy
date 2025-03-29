@@ -743,8 +743,16 @@ def _(mat, assumptions):
 # AlgebraicPredicate
 
 # Helper function: determines if an expression is a rational
-# polynomial evaluated at a transcendental value
+# polynomial evaluated at a transcendental value. Such expressions are non-algebraic.
+# PROOF: we prove the contrapositive: if f is a non-constant rational polynomial and f(t) is
+# algebraic, then t is algebraic. But if g is a non-constant rational poylnomial such that
+# g(f(t)) == 0, then t is a solution to the non-constant rational polynomial g(f) and is algebraic.
+# Proof credited to Qiaochun Yuan at MathStackExchange: https://math.stackexchange.com/users/232/qiaochu-yuan
 def _isAlgebraic(expr, assumptions):
+    # To check if the expression is a rational polynomial evaluated at pi or E, we
+    # must check that the expression contains either pi or E but not both (hence the XOR).
+    # Furthermore Sympy simplifies expressions like E**2 + E te exp(2) + E; thus, polynomials
+    # containing E can have either E or E.
     if not (expr.has(E) | expr.has(exp)) ^ expr.has(pi):
         return None
     new_expr = expr.subs(E, x).subs(pi, x)
