@@ -735,8 +735,6 @@ class And(LatticeOp, BooleanFunction):
         return Intersection(*(arg.operator_domain() for arg in self.args))
 
     def _eval_as_set(self, symbol, _exclude=frozenset()):
-        from sympy.sets.sets import Intersection
-
         set = S.UniversalSet
         for arg in self.args:
             if set == S.EmptySet:
@@ -845,8 +843,6 @@ class Or(LatticeOp, BooleanFunction):
         return Union(*(arg.operator_domain() for arg in self.args))
 
     def _eval_as_set(self, symbol, _exclude=frozenset()):
-        from sympy.sets.sets import Union
-
         maximum_possible_domain = self.operator_domain()
 
         set = S.EmptySet
