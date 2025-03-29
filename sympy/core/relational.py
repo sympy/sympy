@@ -900,11 +900,11 @@ class _Inequality(Relational):
 
         equality_form = e.rewrite(Equality)
         if equality_form != e:
-            return equality_form
+            return equality_form.simplify(**kwargs)
 
         unequality_form = e.rewrite(Unequality)
         if unequality_form != e:
-            return unequality_form
+            return unequality_form.simplify(**kwargs)
 
         return e
 
