@@ -637,7 +637,7 @@ def test_solve_transcendental():
     # issue 15325
     assert solve(y**(1/x) - z, x) == [log(y)/log(z)]
 
-    # issue 25685 (basic trig identies should give simple solutions)
+    # issue 25685 (basic trig identities should give simple solutions)
     for yi in [cos(2*x),sin(2*x),cos(x - pi/3)]:
         sol = solve([cos(x) - S(3)/5, yi - y])
         assert (sol[0][y] + sol[1][y]).is_Rational, (yi,sol)

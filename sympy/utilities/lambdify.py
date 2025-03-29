@@ -28,12 +28,14 @@ __doctest_requires__ = {('lambdify',): ['numpy', 'tensorflow']}
 # Default namespaces, letting us define translations that can't be defined
 # by simple variable maps, like I => 1j
 MATH_DEFAULT: dict[str, Any] = {}
+CMATH_DEFAULT: dict[str,Any] = {}
 MPMATH_DEFAULT: dict[str, Any] = {}
 NUMPY_DEFAULT: dict[str, Any] = {"I": 1j}
 SCIPY_DEFAULT: dict[str, Any] = {"I": 1j}
 CUPY_DEFAULT: dict[str, Any] = {"I": 1j}
 JAX_DEFAULT: dict[str, Any] = {"I": 1j}
 TENSORFLOW_DEFAULT: dict[str, Any] = {}
+TORCH_DEFAULT: dict[str, Any] = {"I": 1j}
 SYMPY_DEFAULT: dict[str, Any] = {}
 NUMEXPR_DEFAULT: dict[str, Any] = {}
 
@@ -42,12 +44,14 @@ NUMEXPR_DEFAULT: dict[str, Any] = {}
 # throughout this file, whereas the defaults should remain unmodified.
 
 MATH = MATH_DEFAULT.copy()
+CMATH = CMATH_DEFAULT.copy()
 MPMATH = MPMATH_DEFAULT.copy()
 NUMPY = NUMPY_DEFAULT.copy()
 SCIPY = SCIPY_DEFAULT.copy()
 CUPY = CUPY_DEFAULT.copy()
 JAX = JAX_DEFAULT.copy()
 TENSORFLOW = TENSORFLOW_DEFAULT.copy()
+TORCH = TORCH_DEFAULT.copy()
 SYMPY = SYMPY_DEFAULT.copy()
 NUMEXPR = NUMEXPR_DEFAULT.copy()
 
@@ -58,6 +62,8 @@ MATH_TRANSLATIONS = {
     "E": "e",
     "ln": "log",
 }
+
+CMATH_TRANSLATIONS: dict[str, str] = {}
 
 # NOTE: This dictionary is reused in Function._eval_evalf to allow subclasses
 # of Function to automatically evalf.
@@ -103,18 +109,21 @@ CUPY_TRANSLATIONS: dict[str, str] = {}
 JAX_TRANSLATIONS: dict[str, str] = {}
 
 TENSORFLOW_TRANSLATIONS: dict[str, str] = {}
+TORCH_TRANSLATIONS: dict[str, str] = {}
 
 NUMEXPR_TRANSLATIONS: dict[str, str] = {}
 
 # Available modules:
 MODULES = {
     "math": (MATH, MATH_DEFAULT, MATH_TRANSLATIONS, ("from math import *",)),
+    "cmath": (CMATH, CMATH_DEFAULT, CMATH_TRANSLATIONS, ("import cmath; from cmath import *",)),
     "mpmath": (MPMATH, MPMATH_DEFAULT, MPMATH_TRANSLATIONS, ("from mpmath import *",)),
     "numpy": (NUMPY, NUMPY_DEFAULT, NUMPY_TRANSLATIONS, ("import numpy; from numpy import *; from numpy.linalg import *",)),
     "scipy": (SCIPY, SCIPY_DEFAULT, SCIPY_TRANSLATIONS, ("import scipy; import numpy; from scipy.special import *",)),
     "cupy": (CUPY, CUPY_DEFAULT, CUPY_TRANSLATIONS, ("import cupy",)),
     "jax": (JAX, JAX_DEFAULT, JAX_TRANSLATIONS, ("import jax",)),
     "tensorflow": (TENSORFLOW, TENSORFLOW_DEFAULT, TENSORFLOW_TRANSLATIONS, ("import tensorflow",)),
+    "torch": (TORCH, TORCH_DEFAULT, TORCH_TRANSLATIONS, ("import torch",)),
     "sympy": (SYMPY, SYMPY_DEFAULT, {}, (
         "from sympy.functions import *",
         "from sympy.matrices import *",
@@ -128,7 +137,7 @@ def _import(module, reload=False):
     """
     Creates a global translation dictionary for module.
 
-    The argument module has to be one of the following strings: "math",
+    The argument module has to be one of the following strings: "math","cmath"
     "mpmath", "numpy", "sympy", "tensorflow", "jax".
     These dictionaries map names of Python functions to their equivalent in
     other modules.
@@ -312,15 +321,15 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
 
         - ``["scipy", "numpy"]`` if SciPy is installed
         - ``["numpy"]`` if only NumPy is installed
-        - ``["math", "mpmath", "sympy"]`` if neither is installed.
+        - ``["math","cmath", "mpmath", "sympy"]`` if neither is installed.
 
         That is, SymPy functions are replaced as far as possible by
         either ``scipy`` or ``numpy`` functions if available, and Python's
-        standard library ``math``, or ``mpmath`` functions otherwise.
+        standard library ``math`` and ``cmath``, or ``mpmath`` functions otherwise.
 
         *modules* can be one of the following types:
 
-        - The strings ``"math"``, ``"mpmath"``, ``"numpy"``, ``"numexpr"``,
+        - The strings ``"math"``, ``"cmath"``, ``"mpmath"``, ``"numpy"``, ``"numexpr"``,
           ``"scipy"``, ``"sympy"``, or ``"tensorflow"`` or ``"jax"``. This uses the
           corresponding printer and namespace mapping for that module.
         - A module (e.g., ``math``). This uses the global namespace of the
@@ -821,8 +830,12 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
             from sympy.printing.lambdarepr import NumExprPrinter as Printer # type: ignore
         elif _module_present('tensorflow', namespaces):
             from sympy.printing.tensorflow import TensorflowPrinter as Printer # type: ignore
+        elif _module_present('torch', namespaces):
+            from sympy.printing.pytorch import TorchPrinter as Printer  # type: ignore
         elif _module_present('sympy', namespaces):
             from sympy.printing.pycode import SymPyPrinter as Printer # type: ignore
+        elif _module_present('cmath', namespaces):
+            from sympy.printing.pycode import CmathPrinter as Printer # type: ignore
         else:
             from sympy.printing.pycode import PythonCodePrinter as Printer # type: ignore
         user_functions = {}
@@ -1324,7 +1337,7 @@ class _TensorflowEvaluatorPrinter(_EvaluatorPrinter):
     def _print_unpacking(self, lvalues, rvalue):
         """Generate argument unpacking code.
 
-        This method is used when the input value is not interable,
+        This method is used when the input value is not iterable,
         but can be indexed (see issue #14655).
         """
 

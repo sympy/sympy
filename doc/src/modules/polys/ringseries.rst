@@ -35,47 +35,22 @@ Taylor series, we extend it to allow Laurent and even Puiseux series (with
 fractional exponents)::
 
     >>> from sympy.polys.ring_series import rs_cos, rs_tan
-    >>> R, x, y = ring('x, y', QQ)
+    >>> from sympy.polys.puiseux import puiseux_ring
+    >>> R, x, y = puiseux_ring('x, y', QQ)
 
     >>> rs_cos(x + x*y, x, 3)/x**3
-    -1/2*x**(-1)*y**2 - x**(-1)*y - 1/2*x**(-1) + x**(-3)
+    x**(-3) + -1/2*x**(-1) + -1*x**(-1)*y + -1/2*x**(-1)*y**2
 
     >>> rs_tan(x**QQ(2, 5)*y**QQ(1, 2), x, 2)
-    1/3*x**(6/5)*y**(3/2) + x**(2/5)*y**(1/2)
+    x**(2/5)*y**(1/2) + 1/3*x**(6/5)*y**(3/2)
 
-By default, ``PolyElement`` did not allow non-natural numbers as exponents. It
-converted a fraction to an integer and raised an error on getting negative
-exponents. The goal of the ``ring series`` module is fast series expansion, and
-not to use the ``polys`` module. The reason we use it as our backend is simply
-because it implements a sparse representation and most of the basic functions
-that we need. However, this default behaviour of ``polys`` was limiting for
-``ring series``.
+Since polynomial rings cannot handle negative or fractional exponents, we use
+the :func:`sympy.polys.puiseux.puiseux_ring` function to create a ring that can
+represent such series.
 
-Note that there is no such constraint (in having rational exponents) in the
-data-structure used by ``polys``- ``dict``. Sparse polynomials
-(``PolyElement``) use the Python dict to store a polynomial term by term, where
-a tuple of exponents is the key and the coefficient of that term is the value.
-There is no reason why we can't have rational values in the ``dict`` so as to
-support rational exponents.
-
-So the approach we took was to modify sparse ``polys`` to allow non-natural
-exponents. And it turned out to be quite simple. We only had to delete the
-conversion to ``int`` of exponents in the ``__pow__`` method of
-``PolyElement``. So::
-
-    >>> x**QQ(3, 4)
-    x**(3/4)
-
-and not ``1`` as was the case earlier.
-
-Though this change violates the definition of a polynomial, it doesn't break
-anything yet.  Ideally, we shouldn't modify ``polys`` in any way. But to have
-all the ``series`` capabilities we want, no other simple way was found. If need
-be, we can separate the modified part of ``polys`` from core ``polys``. It
-would be great if any other elegant solution is found.
-
-All series returned by the functions of this module are instances of the
-``PolyElement`` class. To use them with other SymPy types, convert them  to
+All series returned by the functions of this module are instances of
+``PolyElement`` or ``PuiseuxPoly``. To use them with other SymPy types, convert
+them  to
 ``Expr``::
 
     >>> from sympy.polys.ring_series import rs_exp
@@ -191,6 +166,7 @@ by ``polys.ring.ring``.
 .. autofunction:: rs_cos
 .. autofunction:: rs_cos_sin
 .. autofunction:: rs_atanh
+.. autofunction:: rs_asinh
 .. autofunction:: rs_sinh
 .. autofunction:: rs_cosh
 .. autofunction:: rs_tanh
@@ -213,6 +189,7 @@ by ``polys.ring.ring``.
 
 **Utility functions**
 
+.. autofunction:: rs_series
 .. autofunction:: rs_is_puiseux
 .. autofunction:: rs_puiseux
 .. autofunction:: rs_puiseux2
@@ -220,3 +197,15 @@ by ``polys.ring.ring``.
 .. autofunction:: rs_fun
 .. autofunction:: mul_xin
 .. autofunction:: pow_xin
+
+**Puiseux rings**
+
+.. currentmodule:: sympy.polys.puiseux
+
+.. autofunction:: puiseux_ring
+
+.. autoclass:: PuiseuxRing
+    :members:
+
+.. autoclass:: PuiseuxPoly
+    :members:

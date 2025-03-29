@@ -3,6 +3,7 @@ from sympy.core import S, Symbol, Add, sympify, Expr, PoleError, Mul
 from sympy.core.exprtools import factor_terms
 from sympy.core.numbers import Float, _illegal
 from sympy.core.function import AppliedUndef
+from sympy.core.symbol import Dummy
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.elementary.complexes import (Abs, sign, arg, re)
 from sympy.functions.elementary.exponential import (exp, log)
@@ -326,13 +327,16 @@ class Limit(Expr):
         if z0 is S.Infinity:
             if e.is_Mul:
                 e = factor_terms(e)
-            newe = e.subs(z, 1/z)
+            dummy = Dummy('z', positive=z.is_positive, negative=z.is_negative, real=z.is_real)
+            newe = e.subs(z, 1/dummy)
             # cdir changes sign as oo- should become 0+
             cdir = -cdir
+            newz = dummy
         else:
             newe = e.subs(z, z + z0)
+            newz = z
         try:
-            coeff, ex = newe.leadterm(z, cdir=cdir)
+            coeff, ex = newe.leadterm(newz, cdir=cdir)
         except (ValueError, NotImplementedError, PoleError):
             # The NotImplementedError catching is for custom functions
             from sympy.simplify.powsimp import powsimp
@@ -342,9 +346,9 @@ class Limit(Expr):
                 if r is not None:
                     return r
             try:
-                coeff = newe.as_leading_term(z, cdir=cdir)
+                coeff = newe.as_leading_term(newz, cdir=cdir)
                 if coeff != newe and (coeff.has(exp) or coeff.has(S.Exp1)):
-                    return gruntz(coeff, z, 0, "-" if re(cdir).is_negative else "+")
+                    return gruntz(coeff, newz, 0, "-" if re(cdir).is_negative else "+")
             except (ValueError, NotImplementedError, PoleError):
                 pass
         else:
@@ -352,7 +356,7 @@ class Limit(Expr):
                 return coeff
             if coeff.has(S.Infinity, S.NegativeInfinity, S.ComplexInfinity, S.NaN):
                 return self
-            if not coeff.has(z):
+            if not coeff.has(newz):
                 if ex.is_positive:
                     return S.Zero
                 elif ex == 0:

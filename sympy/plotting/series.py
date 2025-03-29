@@ -209,7 +209,7 @@ class BaseSeries:
         # line and surface series can show data with a colormap, hence a
         # colorbar is essential to understand the data. However, sometime it
         # is useful to hide it on series-by-series base. The following keyword
-        # controls wheter the series should show a colorbar or not.
+        # controls whether the series should show a colorbar or not.
         self.colorbar = kwargs.get("colorbar", True)
         # Some series might use a colormap as default coloring. Setting this
         # attribute to False will inform the backends to use solid color.
@@ -266,7 +266,7 @@ class BaseSeries:
         # this attribute will eventually contain a dictionary with the
         # discretized ranges
         self._discretized_domain = None
-        # wheter the series contains any interactive range, which is a range
+        # whether the series contains any interactive range, which is a range
         # where the minimum and maximum values can be changed with an
         # interactive widget
         self._interactive_ranges = False
@@ -301,7 +301,7 @@ class BaseSeries:
                 "expression.")
 
     def _check_fs(self):
-        """ Checks if there are enogh parameters and free symbols.
+        """ Checks if there are enough parameters and free symbols.
         """
         exprs, ranges = self.expr, self.ranges
         params, label = self.params, self.label
@@ -344,7 +344,7 @@ class BaseSeries:
             remaining_fs = fs.difference(params.keys())
             if len(remaining_fs) > 0:
                 raise ValueError(
-                    "Unkown symbols found in plotting range: %s. " % (r,) +
+                    "Unknown symbols found in plotting range: %s. " % (r,) +
                     "Are the following parameters? %s" % remaining_fs)
 
     def _create_lambda_func(self):
@@ -491,7 +491,7 @@ class BaseSeries:
 
     def _aggregate_args(self):
         """Create a list of arguments to be passed to the lambda function,
-        sorted accoring to self._signature.
+        sorted according to self._signature.
         """
         args = []
         for s in self._signature:
@@ -636,7 +636,7 @@ class BaseSeries:
 
         # if the expressions is a lambda function and no label has been
         # provided, then its better to do the following in order to avoid
-        # suprises on the backend
+        # surprises on the backend
         if any(callable(e) for e in exprs):
             if self._label == str(self.expr):
                 self.label = ""
@@ -769,7 +769,7 @@ class BaseSeries:
             # surface_color). For example:
             # p = plot(sin(x), line_color=lambda x, y: -y)
             # This creates a ColoredLineOver1DRangeSeries with line_color=None
-            # and color_func=lambda x, y: -y, which efffectively is a
+            # and color_func=lambda x, y: -y, which effectively is a
             # parametric series. Later we could change it to a string value:
             # p[0].line_color = "red"
             # However, this sets ine_color="red" and color_func=None, but the
@@ -959,7 +959,7 @@ def _detect_poles_symbolic_helper(expr, symb, start, end):
     Returns
     =======
     pole : list
-        List of symbolic poles, possibily empty.
+        List of symbolic poles, possibly empty.
     """
     poles = []
     interval = Interval(nsimplify(start), nsimplify(end))
@@ -1123,7 +1123,7 @@ class Line2DBaseSeries(BaseSeries):
 
     def _insert_exclusions(self, points):
         """Add NaN to each of the exclusion point. Practically, this adds a
-        NaN to the exlusion point, plus two other nearby points evaluated with
+        NaN to the exclusion point, plus two other nearby points evaluated with
         the numerical functions associated to this data series.
         These nearby points are important when the number of discretization
         points is low, or the scale is logarithm.
@@ -1141,7 +1141,7 @@ class Line2DBaseSeries(BaseSeries):
         k = n - 1
         if n == 2:
             k = 0
-        # indeces of the other coordinates
+        # indices of the other coordinates
         j_indeces = sorted(set(range(n)).difference([k]))
         # TODO: for now, I assume that numpy functions are going to succeed
         funcs = [f[0] for f in self._functions]
@@ -1513,7 +1513,7 @@ class ParametricLineBaseSeries(Line2DBaseSeries):
             self._latex_label = latex(self.expr)
         # if the expressions is a lambda function and use_cm=False and no label
         # has been provided, then its better to do the following in order to
-        # avoid suprises on the backend
+        # avoid surprises on the backend
         if any(callable(e) for e in self.expr) and (not self.use_cm):
             if self._label == str(self.expr):
                 self._label = ""
@@ -1825,7 +1825,7 @@ class SurfaceBaseSeries(BaseSeries):
         self._latex_label = latex(exprs) if label is None else label
         # if the expressions is a lambda function and no label
         # has been provided, then its better to do the following to avoid
-        # suprises on the backend
+        # surprises on the backend
         is_lambda = (callable(exprs) if not hasattr(exprs, "__iter__")
             else any(callable(e) for e in exprs))
         if is_lambda and (self._label == str(exprs)):
@@ -2163,7 +2163,7 @@ class GenericDataSeries(BaseSeries):
        ax.plot([0, 1, 2], [0, 1, -1], "*")
        fig
 
-    Which is far better in terms of readibility. Also, it gives access to the
+    Which is far better in terms of readability. Also, it gives access to the
     full plotting library capabilities, without the need to reinvent the wheel.
     """
     is_generic = True
@@ -2478,7 +2478,7 @@ class ImplicitSeries(BaseSeries):
             The rewritten expression
 
         equality : Boolean
-            Wheter the original expression was an Equality or not.
+            Whether the original expression was an Equality or not.
         """
         equality = False
         if isinstance(expr, Equality):

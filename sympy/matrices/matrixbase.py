@@ -2986,7 +2986,7 @@ class MatrixBase(Printable):
 
     @call_highest_priority('__add__')
     def __radd__(self, other):
-        return self + other
+        return self.__add__(other)
 
     @call_highest_priority('__matmul__')
     def __rmatmul__(self, other):
@@ -4274,7 +4274,7 @@ class MatrixBase(Printable):
         [sin(theta(t)),  cos(theta(t)), 0],
         [            0,              0, 1]])
 
-        We can retrive the angular velocity:
+        We can retrieve the angular velocity:
 
         >>> Omega = R.T * R.diff()
         >>> Omega = trigsimp(Omega)
