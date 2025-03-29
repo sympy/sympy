@@ -2029,3 +2029,12 @@ def test_float_roundtrip():
     x = sympify(0.8975979010256552)
     y = float(mp.doprint(x).strip('</cn>'))
     assert x == y
+
+
+def test_content_mathml_disable_split_super_sub():
+    mp = MathMLContentPrinter({'disable_split_super_sub': True})
+    assert mp.doprint(Symbol('u_b')) == '<ci>u_b</ci>'
+
+def test_presentation_mathml_disable_split_super_sub():
+    mpp = MathMLPresentationPrinter({'disable_split_super_sub': True})
+    assert mpp.doprint(Symbol('u_b')) == '<mi>u_b</mi>'
