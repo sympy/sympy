@@ -748,7 +748,7 @@ def _(mat, assumptions):
 # algebraic, then t is algebraic. But if g is a non-constant rational poylnomial such that
 # g(f(t)) == 0, then t is a solution to the non-constant rational polynomial g(f) and is algebraic.
 # Proof credited to Qiaochun Yuan at MathStackExchange: https://math.stackexchange.com/users/232/qiaochu-yuan
-def _isAlgebraic(expr, assumptions):
+def _isNonAlgebraic(expr, assumptions):
     # To check if the expression is a rational polynomial evaluated at pi or E, we
     # must check that the expression contains either pi or E but not both (hence the XOR).
     # Furthermore, Sympy simplifies expressions like E**2 + E te exp(2) + E; thus, polynomials
@@ -781,7 +781,7 @@ def _(expr, assumptions):
     if closed_group is not None:
         return closed_group
 
-    if expr.is_number and _isAlgebraic(expr, assumptions):
+    if expr.is_number and _isNonAlgebraic(expr, assumptions):
         return False
 
 @AlgebraicPredicate.register(Pow) # type:ignore
@@ -806,7 +806,7 @@ def _(expr, assumptions):
         if ask(Q.ne(expr.base,0) & Q.ne(expr.base,1)) and exp_rational is False:
             return False
 
-    if expr.is_number and _isAlgebraic(expr.base, assumptions):
+    if expr.is_number and _isNonAlgebraic(expr.base, assumptions):
         if ask(Q.integer(expr.exp) & ~Q.negative(expr.exp), assumptions):
             return False
 
