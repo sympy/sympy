@@ -189,6 +189,15 @@ def test_quaternion_functions():
     assert integrate(Quaternion(x, x, x, x), x) == \
     Quaternion(x**2 / 2, x**2 / 2, x**2 / 2, x**2 / 2)
 
+    assert Quaternion(1, x, x**2, x**3).integrate(x) == \
+    Quaternion(x, x**2/2, x**3/3, x**4/4)
+
+    assert Quaternion(sin(x), cos(x), sin(2*x), cos(2*x)).integrate(x) == \
+    Quaternion(-cos(x), sin(x), -cos(2*x)/2, sin(2*x)/2)
+
+    assert Quaternion(x**2, y**2, z**2, x*y*z).integrate(x, y) == \
+    Quaternion(x**3*y/3, x*y**3/3, x*y*z**2, x**2*y**2*z/4)
+
     assert Quaternion.rotate_point((1, 1, 1), q1) == (S.One / 5, 1, S(7) / 5)
     n = Symbol('n')
     raises(TypeError, lambda: q1**n)
