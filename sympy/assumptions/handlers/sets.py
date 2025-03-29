@@ -777,12 +777,10 @@ def _(expr, assumptions):
 
 @AlgebraicPredicate.register_many(Add, Mul) # type:ignore
 def _(expr, assumptions):
-    closed_group = test_closed_group(expr, assumptions, Q.algebraic)
-    if closed_group is not None:
-        return closed_group
-
     if expr.is_number and _isNonAlgebraic(expr, assumptions):
         return False
+
+    return test_closed_group(expr, assumptions, Q.algebraic)
 
 @AlgebraicPredicate.register(Pow) # type:ignore
 def _(expr, assumptions):
