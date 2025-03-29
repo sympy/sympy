@@ -205,7 +205,7 @@ def assumption_domain(symbol, assumptions=set(), _exclude=frozenset()):
     elif symbol.is_positive is False:
         result = _monotonic_sign(symbol)
         if result is not None:
-            if result in (_eps, -eps):
+            if result in (_eps, -_eps):
                 domain = domain.intersect(Interval(S.NegativeInfinity, S.Zero, S.false, S.true))
             else:
                 domain = domain.intersect(Interval(S.NegativeInfinity, result, S.false, S.false))
