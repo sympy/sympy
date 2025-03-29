@@ -84,6 +84,7 @@ redirects = {
     "tutorial/matrices": "../tutorials/intro-tutorial/matrices.html",
     "tutorial/manipulation": "../tutorials/intro-tutorial/manipulation.html",
 
+    "modules/physics/continuum_mechanics/beam_problems": "../../../tutorials/physics/continuum_mechanics/beam_problems.html",
     "modules/physics/vector/index": "../../../explanation/modules/physics/vector/index.html",
     "modules/physics/vector/vectors": "../../../explanation/modules/physics/vector/vectors/vectors.html",
     "modules/physics/vector/kinematics": "../../../explanation/modules/physics/vector/kinematics/kinematics.html",
@@ -140,7 +141,7 @@ myst_enable_checkboxes = True
 # myst_update_mathjax = False
 
 # Don't linkify links unless they start with "https://". This is needed
-# because the linkify library treates .py as a TLD.
+# because the linkify library treats .py as a TLD.
 myst_linkify_fuzzy_links = False
 
 # Add any paths that contain templates here, relative to this directory.

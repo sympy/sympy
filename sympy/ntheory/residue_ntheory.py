@@ -1255,7 +1255,7 @@ def _discrete_log_trial_mul(n, a, b, order=None):
 
     The algorithm finds the discrete logarithm using exhaustive search. This
     naive method is used as fallback algorithm of ``discrete_log`` when the
-    group order is very small.
+    group order is very small. The value ``n`` must be greater than 1.
 
     Examples
     ========
@@ -1435,7 +1435,7 @@ def _discrete_log_pollard_rho(n, a, b, order=None, retries=10, rseed=None):
 
 def _discrete_log_is_smooth(n: int, factorbase: list):
     """Try to factor n with respect to a given factorbase.
-    Upon success a list of exponents with repect to the factorbase is returned.
+    Upon success a list of exponents with respect to the factorbase is returned.
     Otherwise None."""
     factors = [0]*len(factorbase)
     for i, p in enumerate(factorbase):
@@ -1482,7 +1482,7 @@ def _discrete_log_index_calculus(n, a, b, order, rseed=None):
     # We have added an extra term to the asymptotic value which
     # is closer to the theoretical optimum for n up to 2^70.
     B = int(exp(0.5 * sqrt( log(n) * log(log(n)) )*( 1 + 1/log(log(n)) )))
-    max = 5 * B * B  # expected number of trys to find a relation
+    max = 5 * B * B  # expected number of tries to find a relation
     factorbase = list(primerange(B)) # compute the factorbase
     lf = len(factorbase) # length of the factorbase
     ordermo = order-1
@@ -1535,7 +1535,7 @@ def _discrete_log_index_calculus(n, a, b, order, rseed=None):
                     relationa[j] = (relationa[j] - rbi*relations[i][j]) % order
             if relationa[i] > 0:  # the index of the first nonzero entry
                 break  # we do not need to reduce further at this point
-        else:  # all unkowns are gone
+        else:  # all unknowns are gone
             #print(f"Success after {k} relations out of {lf}")
             x = (order -relationa[lf]) % order
             if pow(b,x,n) == a:
@@ -1626,6 +1626,12 @@ def discrete_log(n, a, b, order=None, prime_order=None):
     """
     from math import sqrt, log
     n, a, b = as_int(n), as_int(a), as_int(b)
+
+    if n < 1:
+        raise ValueError("n should be positive")
+    if n == 1:
+        return 0
+
     if order is None:
         # Compute the order and its factoring in one pass
         # order = totient(n), factors = factorint(order)
@@ -1665,7 +1671,7 @@ def discrete_log(n, a, b, order=None, prime_order=None):
         return _discrete_log_trial_mul(n, a, b, order)
     elif prime_order:
         # Shanks and Pollard rho are O(sqrt(order)) while index calculus is O(exp(2*sqrt(log(n)log(log(n)))))
-        # we compare the expected running times to determine the algorithmus which is expected to be faster
+        # we compare the expected running times to determine the algorithm which is expected to be faster
         if 4*sqrt(log(n)*log(log(n))) < log(order) - 10:  # the number 10 was determined experimental
             return _discrete_log_index_calculus(n, a, b, order)
         elif order < 1000000000000:

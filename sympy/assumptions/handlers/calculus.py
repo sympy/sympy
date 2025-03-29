@@ -4,7 +4,7 @@ infinitesimal, finite, etc.
 """
 
 from sympy.assumptions import Q, ask
-from sympy.core import Add, Mul, Pow, Symbol
+from sympy.core import Expr, Add, Mul, Pow, Symbol
 from sympy.core.numbers import (NegativeInfinity, GoldenRatio,
     Infinity, Exp1, ComplexInfinity, ImaginaryUnit, NaN, Number, Pi, E,
     TribonacciConstant)
@@ -151,10 +151,14 @@ def _(expr, assumptions):
         * /s = not signed
     """
     result = True
+    possible_zero = False
     for arg in expr.args:
         _bounded = ask(Q.finite(arg), assumptions)
         if _bounded:
-            continue
+            if ask(Q.zero(arg), assumptions) is not False:
+                if result is False:
+                    return None
+                possible_zero = True
         elif _bounded is None:
             if result is None:
                 return None
@@ -163,6 +167,8 @@ def _(expr, assumptions):
             if result is not False:
                 result = None
         else:
+            if possible_zero:
+                return None
             result = False
     return result
 
@@ -189,6 +195,12 @@ def _(expr, assumptions):
     if base_bounded is False and ask(Q.extended_nonzero(expr.exp), assumptions):
         return False
     if base_bounded and exp_bounded:
+        is_base_zero = ask(Q.zero(expr.base),assumptions)
+        is_exp_negative = ask(Q.negative(expr.exp),assumptions)
+        if is_base_zero is True and is_exp_negative is True:
+            return False
+        if is_base_zero is not False and is_exp_negative is not False:
+            return None
         return True
     if (abs(expr.base) <= 1) == True and ask(Q.extended_positive(expr.exp), assumptions):
         return True
@@ -227,9 +239,12 @@ def _(expr, assumptions):
 # InfinitePredicate
 
 
-@InfinitePredicate.register_many(ComplexInfinity, Infinity, NegativeInfinity)
+@InfinitePredicate.register(Expr)
 def _(expr, assumptions):
-    return True
+    is_finite = Q.finite(expr)._eval_ask(assumptions)
+    if is_finite is None:
+        return None
+    return not is_finite
 
 
 # PositiveInfinitePredicate

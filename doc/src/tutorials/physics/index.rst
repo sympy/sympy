@@ -23,4 +23,5 @@ write to our `mailing list
 
    biomechanics/index.rst
    mechanics/index.rst
+   continuum_mechanics/index.rst
    control/index.rst

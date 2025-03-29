@@ -443,11 +443,6 @@ class Poly(Basic):
         """Return one polynomial with ``self``'s properties. """
         return self.new(self.rep.one(self.rep.lev, self.rep.dom), *self.gens)
 
-    @property
-    def unit(self):
-        """Return unit polynomial with ``self``'s properties. """
-        return self.new(self.rep.unit(self.rep.lev, self.rep.dom), *self.gens)
-
     def unify(f, g):
         """
         Make ``f`` and ``g`` belong to the same domain.
@@ -3717,11 +3712,12 @@ class Poly(Basic):
         else:
             coeffs = [coeff.evalf(n=n).as_real_imag()
                     for coeff in f.all_coeffs()]
-            try:
-                coeffs = [mpmath.mpc(*coeff) for coeff in coeffs]
-            except TypeError:
-                raise DomainError("Numerical domain expected, got %s" % \
-                        f.rep.dom)
+            with mpmath.workdps(n):
+                try:
+                    coeffs = [mpmath.mpc(*coeff) for coeff in coeffs]
+                except TypeError:
+                    raise DomainError("Numerical domain expected, got %s" % \
+                            f.rep.dom)
 
         dps = mpmath.mp.dps
         mpmath.mp.dps = n
@@ -7755,7 +7751,7 @@ class GroebnerBasis(Basic):
         Examples
         ========
 
-        >>> from sympy import groebner, expand
+        >>> from sympy import groebner, expand, Poly
         >>> from sympy.abc import x, y
 
         >>> f = 2*x**4 - x**2 + y**3 + y**2
@@ -7770,8 +7766,23 @@ class GroebnerBasis(Basic):
         >>> _ == f
         True
 
+        # Using Poly input
+        >>> f_poly = Poly(f, x, y)
+        >>> G = groebner([Poly(x**3 - x), Poly(y**3 - y)])
+
+        >>> G.reduce(f_poly)
+        ([Poly(2*x, x, y, domain='ZZ'), Poly(1, x, y, domain='ZZ')], Poly(x**2 + y**2 + y, x, y, domain='ZZ'))
+
         """
-        poly = Poly._from_expr(expr, self._options)
+        if isinstance(expr, Poly):
+
+            if expr.gens != self._options.gens:
+                raise ValueError("Polynomial generators don't match Groebner basis generators")
+            poly = expr.set_domain(self._options.domain)
+        else:
+
+            poly = Poly._from_expr(expr, self._options)
+
         polys = [poly] + list(self._basis)
 
         opt = self._options

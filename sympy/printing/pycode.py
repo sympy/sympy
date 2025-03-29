@@ -165,7 +165,7 @@ class AbstractPythonCodePrinter(CodePrinter):
 
     def _expand_reduce_binary_op(self, op, args):
         """
-        This method expands a reductin on binary operations.
+        This method expands a reduction on binary operations.
 
         Notice: this is NOT the same as ``functools.reduce``.
 
@@ -631,6 +631,76 @@ def pycode(expr, **settings):
 
     """
     return PythonCodePrinter(settings).doprint(expr)
+
+
+from itertools import chain
+from sympy.printing.pycode import PythonCodePrinter
+
+_known_functions_cmath = {
+    'exp': 'exp',
+    'sqrt': 'sqrt',
+    'log': 'log',
+    'cos': 'cos',
+    'sin': 'sin',
+    'tan': 'tan',
+    'acos': 'acos',
+    'asin': 'asin',
+    'atan': 'atan',
+    'cosh': 'cosh',
+    'sinh': 'sinh',
+    'tanh': 'tanh',
+    'acosh': 'acosh',
+    'asinh': 'asinh',
+    'atanh': 'atanh',
+}
+
+_known_constants_cmath = {
+    'Pi': 'pi',
+    'E': 'e',
+    'Infinity': 'inf',
+    'NegativeInfinity': '-inf',
+}
+
+class CmathPrinter(PythonCodePrinter):
+    """ Printer for Python's cmath module """
+    printmethod = "_cmathcode"
+    language = "Python with cmath"
+
+    _kf = dict(chain(
+        _known_functions_cmath.items()
+    ))
+
+    _kc = {k: 'cmath.' + v for k, v in _known_constants_cmath.items()}
+
+    def _print_Pow(self, expr, rational=False):
+        return self._hprint_Pow(expr, rational=rational, sqrt='cmath.sqrt')
+
+    def _print_Float(self, e):
+        return '{func}({val})'.format(func=self._module_format('cmath.mpf'), val=self._print(e))
+
+    def _print_known_func(self, expr):
+        func_name = expr.func.__name__
+        if func_name in self._kf:
+            return f"cmath.{self._kf[func_name]}({', '.join(map(self._print, expr.args))})"
+        return super()._print_Function(expr)
+
+    def _print_known_const(self, expr):
+        return self._kc[expr.__class__.__name__]
+
+    def _print_re(self, expr):
+        """Prints `re(z)` as `z.real`"""
+        return f"({self._print(expr.args[0])}).real"
+
+    def _print_im(self, expr):
+        """Prints `im(z)` as `z.imag`"""
+        return f"({self._print(expr.args[0])}).imag"
+
+
+for k in CmathPrinter._kf:
+    setattr(CmathPrinter, '_print_%s' % k, CmathPrinter._print_known_func)
+
+for k in _known_constants_cmath:
+    setattr(CmathPrinter, '_print_%s' % k, CmathPrinter._print_known_const)
 
 
 _not_in_mpmath = 'log1p log2'.split()
