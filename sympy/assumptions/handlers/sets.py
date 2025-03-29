@@ -748,7 +748,7 @@ def _ConstantPolynomial(expr, assumptions):
     if not (expr.has(E) | expr.has(exp)) ^ expr.has(pi):
         return None
     new_expr = expr.subs(E, x).subs(pi, x)
-    if not new_expr.is_polynomial(x):
+    if new_expr.is_polynomial(x):
         expr_poly = Poly(new_expr, x)
         if all(coeff.is_Rational for coeff in expr_poly.coeffs()):
             return True
