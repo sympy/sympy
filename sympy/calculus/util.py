@@ -118,7 +118,7 @@ def continuous_domain(f, symbol, domain, _exclude=frozenset()):
             pass    # 0**negative handled by singularities()
         else:
             constraint = solve_univariate_inequality(atom.base >= 0,
-                                                        symbol).as_set(symbol)
+                symbol, _exclude=_exclude).as_set(symbol)
             cont_domain = Intersection(constraint, cont_domain)
 
     for atom in f.atoms(Function):
@@ -126,14 +126,14 @@ def continuous_domain(f, symbol, domain, _exclude=frozenset()):
             for c in constraints[atom.func]:
                 constraint_relational = c.subs(x, atom.args[0])
                 constraint_set = solve_univariate_inequality(
-                    constraint_relational, symbol).as_set(symbol)
+                    constraint_relational, symbol, _exclude=_exclude).as_set(symbol)
                 cont_domain = Intersection(constraint_set, cont_domain)
         elif atom.func in constraints_union:
             constraint_set = S.EmptySet
             for c in constraints_union[atom.func]:
                 constraint_relational = c.subs(x, atom.args[0])
                 constraint_set += solve_univariate_inequality(
-                    constraint_relational, symbol).as_set(symbol)
+                    constraint_relational, symbol, _exclude=_exclude).as_set(symbol)
             cont_domain = Intersection(constraint_set, cont_domain)
         # XXX: the discontinuities below could be factored out in
         # a new "discontinuities()".
