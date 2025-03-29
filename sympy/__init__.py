@@ -10,6 +10,7 @@ See the webpage for more information and documentation:
     https://sympy.org
 
 """
+from __future__ import annotations
 
 
 import sys
@@ -47,7 +48,7 @@ def __sympy_debug():
     else:
         raise RuntimeError("unrecognized value for SYMPY_DEBUG: %s" %
                            debug_str)
-SYMPY_DEBUG = __sympy_debug()  # type: bool
+SYMPY_DEBUG: bool = __sympy_debug()
 
 from .core import (sympify, SympifyError, cacheit, Basic, Atom,
         preorder_traversal, S, Expr, AtomicExpr, UnevaluatedExpr, Symbol,
