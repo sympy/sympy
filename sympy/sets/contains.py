@@ -59,5 +59,8 @@ class Contains(Boolean):
             if i.is_Boolean or i.is_Symbol or
             isinstance(i, (Eq, Ne))])
 
-    def as_set(self):
+    def as_set(self, symbol, _exclude=frozenset()):
+        if symbol != self.args[0]:
+            raise ValueError("symbol does not match first operand")
+
         return self.args[1]
