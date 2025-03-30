@@ -1,4 +1,4 @@
-from typing import Tuple as tTuple, Union as tUnion
+from __future__ import annotations
 from sympy.core.add import Add
 from sympy.core.cache import cacheit
 from sympy.core.expr import Expr
@@ -165,7 +165,7 @@ def _peeloff_pi(arg):
     return arg, S.Zero
 
 
-def _pi_coeff(arg: Expr, cycles: int = 1) -> tUnion[Expr, None]:
+def _pi_coeff(arg: Expr, cycles: int = 1) -> Expr | None:
     r"""
     When arg is a Number times $\pi$ (e.g. $3\pi/2$) then return the Number
     normalized to be in the range $[0, 2]$, else `None`.
@@ -2028,7 +2028,7 @@ class sinc(DefinedFunction):
 
 class InverseTrigonometricFunction(DefinedFunction):
     """Base class for inverse trigonometric functions."""
-    _singularities = (S.One, S.NegativeOne, S.Zero, S.ComplexInfinity)  # type: tTuple[Expr, ...]
+    _singularities: tuple[Expr, ...] = (S.One, S.NegativeOne, S.Zero, S.ComplexInfinity)
 
     @staticmethod
     @cacheit
@@ -2620,7 +2620,7 @@ class atan(InverseTrigonometricFunction):
 
     """
 
-    args: tTuple[Expr]
+    args: tuple[Expr]
 
     _singularities = (S.ImaginaryUnit, -S.ImaginaryUnit)
 
