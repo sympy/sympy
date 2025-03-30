@@ -75,7 +75,10 @@ class MathMLPrinterBase(Printer):
         return res
 
     def _split_super_sub(self, name):
-        return (name, [], []) if self._settings["disable_split_super_sub"] else split_super_sub(name)
+        if self._settings["disable_split_super_sub"]:
+            return (name, [], [])
+        else:
+            return split_super_sub(name)
 
 
 class MathMLContentPrinter(MathMLPrinterBase):
