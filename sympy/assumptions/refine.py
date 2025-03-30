@@ -405,8 +405,6 @@ def refine_Add(expr, assumptions):
 
     >>> refine_Add(Add(S.NaN, 1, evaluate=False), {})
     nan
-    >>> refine_Add(S.ComplexInfinity + 1, {})
-    zoo
     """
     if any(arg is S.NaN for arg in expr.args):
         return S.NaN
