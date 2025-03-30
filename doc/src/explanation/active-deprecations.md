@@ -81,13 +81,13 @@ SymPy deprecation warnings.
 
 The ``tensor_product_simp`` function in the ``sympy.physics.quantum``
 module has been deprecated along with two helper functions,
-``tensor_product_simp_Mul`` and ``tensor_product_simp_Pow``. The 
+``tensor_product_simp_Mul`` and ``tensor_product_simp_Pow``. The
 transformations performed by these functions are now applied
 automatically to all quantum expressions in the new
 ``sympy.physics.quantum.transforms`` module.
 
 If you are using these functions in your code, you can remove them as
-they are now reduntant.
+they are now redundant.
 
 Their current implementations have been replaced by a simple
 pass-through as all quantum expressions will already be in the form
@@ -101,11 +101,11 @@ The ``IdentityOperator`` in the ``sympy.physics.quantum`` module has been
 deprecated. Originally, we thought that it would be helpful to have a
 multiplicative identity for quantum operators and states. However, at this
 time, it is unused in `sympy.physics.quantum` for anything other than tests
-of its own behavior. In addition, users were finding inconsistencies in 
+of its own behavior. In addition, users were finding inconsistencies in
 the behavior of ``IdentityOperator`` compared to what is expected by a
 multiplicative identity.
 
-Moving forward, we recommend that users use the scalar `S.One` as the 
+Moving forward, we recommend that users use the scalar `S.One` as the
 multiplicative identity for all operators and states in the quantum
 module. The code in ``sympy.physics.quantum`` currently does not ever
 return an ``IdentityOperator`` so the only place users will encounter

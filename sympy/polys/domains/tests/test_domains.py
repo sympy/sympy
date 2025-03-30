@@ -19,9 +19,9 @@ from sympy.polys.domains.polynomialring import PolynomialRing
 from sympy.polys.domains.realfield import RealField
 
 from sympy.polys.numberfields.subfield import field_isomorphism
-from sympy.polys.rings import ring
+from sympy.polys.rings import ring, PolyElement
 from sympy.polys.specialpolys import cyclotomic_poly
-from sympy.polys.fields import field
+from sympy.polys.fields import field, FracElement
 
 from sympy.polys.agca.extensions import FiniteExtension
 
@@ -506,6 +506,19 @@ def test_issue_14433():
     assert ((x - y) in QQ.frac_field(x, 1/y)) is True
 
 
+def test_Domain_is_field():
+    assert ZZ.is_Field is False
+    assert GF(5).is_Field is True
+    assert GF(6).is_Field is False
+    assert QQ.is_Field is True
+    assert RR.is_Field is True
+    assert CC.is_Field is True
+    assert EX.is_Field is True
+    assert ALG.is_Field is True
+    assert QQ[x].is_Field is False
+    assert ZZ.frac_field(x).is_Field is True
+
+
 def test_Domain_get_ring():
     assert ZZ.has_assoc_Ring is True
     assert QQ.has_assoc_Ring is True
@@ -657,7 +670,12 @@ def test_Domain_is_unit():
 def test_Domain_convert():
 
     def check_element(e1, e2, K1, K2, K3):
-        assert type(e1) is type(e2), '%s, %s: %s %s -> %s' % (e1, e2, K1, K2, K3)
+        if isinstance(e1, PolyElement):
+            assert isinstance(e2, PolyElement) and e1.ring == e2.ring
+        elif isinstance(e1, FracElement):
+            assert isinstance(e2, FracElement) and e1.field == e2.field
+        else:
+            assert type(e1) is type(e2), '%s, %s: %s %s -> %s' % (e1, e2, K1, K2, K3)
         assert e1 == e2, '%s, %s: %s %s -> %s' % (e1, e2, K1, K2, K3)
 
     def check_domains(K1, K2):

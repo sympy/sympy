@@ -2749,12 +2749,12 @@ class SecondLinearBessel(SingleODESolver):
             if coeff1 is None:
                 return False
             # c3 maybe of very complex form so I am simply checking (a - b) form
-            # if yes later I will match with the standerd form of bessel in a and b
+            # if yes later I will match with the standard form of bessel in a and b
             # a, b are wild variable defined above.
             _coeff2 = expand(r[c3]).match(a - b)
             if _coeff2 is None:
                 return False
-            # matching with standerd form for c3
+            # matching with standard form for c3
             coeff2 = factor(_coeff2[a]).match(c4**2*(x)**(2*a4))
             if coeff2 is None:
                 return False

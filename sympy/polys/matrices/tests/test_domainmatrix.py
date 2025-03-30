@@ -790,6 +790,12 @@ def test_DomainMatrix_inv():
     Aninv = DomainMatrix([[QQ(1), QQ(2)], [QQ(3), QQ(6)]], (2, 2), QQ)
     raises(DMNonInvertibleMatrixError, lambda: Aninv.inv())
 
+    Z3 = FF(3)
+    assert DM([[1, 2], [3, 4]], Z3).inv() == DM([[1, 1], [0, 1]], Z3)
+
+    Z6 = FF(6)
+    raises(DMNotAField, lambda: DM([[1, 2], [3, 4]], Z6).inv())
+
 
 def test_DomainMatrix_det():
     A = DomainMatrix([], (0, 0), ZZ)
@@ -1360,3 +1366,18 @@ def test_DomainMatrix_pickling():
     assert pickle.loads(pickle.dumps(dM)) == dM
     dM = DomainMatrix([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
     assert pickle.loads(pickle.dumps(dM)) == dM
+
+
+def test_DomainMatrix_fflu():
+    A = DM([[1, 2], [3, 4]], ZZ)
+    P, L, D, U = A.fflu()
+    assert P.shape == A.shape
+    assert L.shape == A.shape
+    assert D.shape == A.shape
+    assert U.shape == A.shape
+    assert P == DM([[1, 0], [0, 1]], ZZ)
+    assert L == DM([[1, 0], [3, -2]], ZZ)
+    assert D == DM([[1, 0], [0, -2]], ZZ)
+    assert U == DM([[1, 2], [0, -2]], ZZ)
+    di, d = D.inv_den()
+    assert P.matmul(A).rmul(d) == L.matmul(di).matmul(U)

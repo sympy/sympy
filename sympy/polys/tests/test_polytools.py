@@ -3202,6 +3202,12 @@ def test_nroots():
         '1.7 + 2.5*I]')
     assert str(Poly(1e-15*x**2 -1).nroots()) == ('[-31622776.6016838, 31622776.6016838]')
 
+    # https://github.com/sympy/sympy/issues/23861
+
+    i = Float('3.000000000000000000000000000000000000000000000000001')
+    [r] = nroots(x + I*i, n=300)
+    assert abs(r + I*i) < 1e-300
+
 
 def test_ground_roots():
     f = x**6 - 4*x**4 + 4*x**3 - x**2

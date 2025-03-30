@@ -1096,6 +1096,24 @@ class SDM(dict):
         """
         return A.from_ddm(A.to_ddm().lu_solve(b.to_ddm()))
 
+    def fflu(self):
+        """
+        Fraction free LU decomposition of SDM.
+
+        Uses DDM implementation.
+
+        See Also
+        ========
+
+        sympy.polys.matrices.ddm.DDM.fflu
+        """
+        ddm_p, ddm_l, ddm_d, ddm_u = self.to_dfm_or_ddm().fflu()
+        P = ddm_p.to_sdm()
+        L = ddm_l.to_sdm()
+        D = ddm_d.to_sdm()
+        U = ddm_u.to_sdm()
+        return P, L, D, U
+
     def nullspace(A):
         """
         Nullspace of a :py:class:`~.SDM` matrix A.
@@ -1511,7 +1529,7 @@ def sdm_matmul_exraw(A, B, K, m, o):
     #
     # Like sdm_matmul above except that:
     #
-    # - Handles cases like 0*oo -> nan (sdm_matmul skips multipication by zero)
+    # - Handles cases like 0*oo -> nan (sdm_matmul skips multiplication by zero)
     # - Uses K.sum (Add(*items)) for efficient addition of Expr
     #
     zero = K.zero

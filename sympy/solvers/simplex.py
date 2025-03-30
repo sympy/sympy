@@ -15,7 +15,7 @@ indicate otherwise.
 
 Errors that might be raised are UnboundedLPError when there is no
 finite solution for the system or InfeasibleLPError when the
-constraints represent impossible conditions (i.e. a non-existant
+constraints represent impossible conditions (i.e. a non-existent
  simplex).
 
 Here is a simple 1-D system: minimize `x` given that ``x >= 1``.
@@ -76,7 +76,7 @@ from sympy.utilities.misc import filldedent
 
 class UnboundedLPError(Exception):
     """
-    A linear programing problem is said to be unbounded if its objective
+    A linear programming problem is said to be unbounded if its objective
     function can assume arbitrarily large values.
 
     Example
@@ -95,9 +95,9 @@ class UnboundedLPError(Exception):
 
 class InfeasibleLPError(Exception):
     """
-    A linear programing problem is considered infeasible if its
+    A linear programming problem is considered infeasible if its
     constraint set is empty. That is, if the set of all vectors
-    satisfying the contraints is empty, then the problem is infeasible.
+    satisfying the constraints is empty, then the problem is infeasible.
 
     Example
     =======
@@ -234,7 +234,7 @@ def _simplex(A, B, C, D=None, dual=False):
     >>> [i <= j for i, j in zip(a*y,b)]
     [2*y <= 1, y <= 1]
 
-    In this 1-dimensional dual system, the more restrictive contraint is
+    In this 1-dimensional dual system, the more restrictive constraint is
     the first which limits ``y`` between 0 and 1/2 and the maximum of
     ``F`` is attained at the nonzero value, hence is ``4*(1/2) + 1 = 3``.
 
@@ -827,7 +827,7 @@ def lpmin(f, constr):
     (1/3, {x: 1/3, y: 5/9})
 
     Negative values for variables are permitted unless explicitly
-    exluding, so minimizing ``x`` for ``x <= 3`` is an
+    excluding, so minimizing ``x`` for ``x <= 3`` is an
     unbounded problem while the following has a bounded solution:
 
     >>> lpmin(x, [x >= 0, x <= 3])
@@ -865,7 +865,7 @@ def lpmax(f, constr):
     (4/5, {x: 4/5, y: 2/5})
 
     Negative values for variables are permitted unless explicitly
-    exluding:
+    excluding:
 
     >>> lpmax(x, [x <= -1])
     (-1, {x: -1})
@@ -886,7 +886,7 @@ def lpmax(f, constr):
 
 
 def _handle_bounds(bounds):
-    # introduce auxilliary variables as needed for univariate
+    # introduce auxiliary variables as needed for univariate
     # inequalities
 
     def _make_list(length: int, index_value_pairs):

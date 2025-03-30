@@ -1110,7 +1110,7 @@ rho_msg = "Pollard's rho with retries %i, max_steps %i and seed %i"
 pm1_msg = "Pollard's p-1 with smoothness bound %i and seed %i"
 ecm_msg = "Elliptic Curve with B1 bound %i, B2 bound %i, num_curves %i"
 factor_msg = '\t%i ** %i'
-fermat_msg = 'Close factors satisying Fermat condition found.'
+fermat_msg = 'Close factors satisfying Fermat condition found.'
 complete_msg = 'Factorization is complete.'
 
 
