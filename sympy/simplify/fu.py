@@ -653,7 +653,6 @@ def TR10i(rv):
     2*sqrt(2)*x*sin(x + pi/6)
 
     """
-    global _ROOT2, _ROOT3, _invROOT3
     if _ROOT2 is None:
         _roots()
 
@@ -1775,7 +1774,6 @@ def trig_split(a, b, two=False):
     >>> trig_split(cos(x)*cos(y), sin(x)*sin(y))
     >>> trig_split(-sqrt(6)*cos(x), sqrt(2)*sin(x)*sin(y), two=True)
     """
-    global _ROOT2, _ROOT3, _invROOT3
     if _ROOT2 is None:
         _roots()
 
