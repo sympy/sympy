@@ -1,4 +1,4 @@
-from typing import Tuple as tTuple
+from __future__ import annotations
 
 from .expr_with_intlimits import ExprWithIntLimits
 from .summations import Sum, summation, _dummy_with_inherited_properties_concrete
@@ -191,7 +191,7 @@ class Product(ExprWithIntLimits):
 
     __slots__ = ()
 
-    limits: tTuple[tTuple[Symbol, Expr, Expr]]
+    limits: tuple[tuple[Symbol, Expr, Expr]]
 
     def __new__(cls, function, *symbols, **assumptions):
         obj = ExprWithIntLimits.__new__(cls, function, *symbols, **assumptions)
