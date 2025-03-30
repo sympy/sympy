@@ -9,6 +9,7 @@ from sympy.matrices.dense import Matrix
 from sympy.simplify.simplify import simplify
 from sympy.testing.pytest import raises
 
+
 def test_invalid_coordinates():
     # Simple pendulum, but use symbol instead of dynamicsymbol
     l, m, g = symbols('l m g')
