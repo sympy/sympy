@@ -245,7 +245,7 @@ class Printer:
 
     _default_settings: dict[str, Any] = {}
 
-    printmethod = None  # type: str
+    printmethod: str
 
     @classmethod
     def _get_initial_settings(cls):
