@@ -406,28 +406,51 @@ def refine_Add(expr, assumptions):
 
     >>> refine_Add(Add(S.NaN, 1, evaluate=False), {})
     nan
-    >>> refine_Add(Add(2, I*oo, evaluate=False), {})
-    2 + I*oo
-    >>> refine_Add(Add(AccumBounds(1, 3), 2, evaluate=False), {})
-    AccumBounds(3, 5)
+    >>> refine_Add(S.ComplexInfinity + 1, {})
+    zoo
     """
-    infinity_type = None
-    for subexpr in expr.args:
-        if subexpr is S.NaN:
-            return S.NaN
-        if subexpr in (S.ComplexInfinity, S.Infinity, S.NegativeInfinity):
-            if infinity_type is not None and infinity_type != subexpr:
-                return S.NaN
-            infinity_type = subexpr
-        elif subexpr.is_infinite:
-            if infinity_type is not None:
-                if infinity_type == -subexpr:
+    if any(arg is S.NaN for arg in expr.args):
+        return S.NaN
+
+    if any(arg is S.ComplexInfinity for arg in expr.args):
+        return S.ComplexInfinity
+
+    finite_terms = []
+    real_inf = None
+    nonreal_infs = []
+
+    for arg in expr.args:
+        if arg in (S.Infinity, S.NegativeInfinity):
+            if real_inf is None:
+                real_inf = arg
+            else:
+                if arg != real_inf:
                     return S.NaN
+            continue
+        if hasattr(arg, 'is_infinite') and arg.is_infinite:
+            nonreal_infs.append(arg)
+        else:
+            finite_terms.append(arg)
+
+    if real_inf is not None and nonreal_infs:
+        return S.ComplexInfinity
+
+    if nonreal_infs:
+        rep = nonreal_infs[0]
+        for term in nonreal_infs[1:]:
+            if term == -rep:
+                return S.NaN
+            elif term != rep:
                 return S.ComplexInfinity
-            infinity_type = subexpr
-    if infinity_type is not None:
-        return infinity_type
-    return expr
+        if finite_terms:
+            return Add(*(finite_terms + [rep]), evaluate=False)
+        else:
+            return rep
+
+    if real_inf is not None:
+        return real_inf
+
+    return Add(*expr.args)
 
 handlers_dict: dict[str, Callable[[Expr, Boolean], Expr]] = {
     'Abs': refine_abs,
