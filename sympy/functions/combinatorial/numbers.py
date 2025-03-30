@@ -6,9 +6,9 @@ sequences of rational numbers such as Bernoulli and Fibonacci numbers.
 Factorials, binomial coefficients and related functions are located in
 the separate 'factorials' module.
 """
+from __future__ import annotations
 from math import prod
 from collections import defaultdict
-from typing import Tuple as tTuple
 
 from sympy.core import S, Symbol, Add, Dummy
 from sympy.core.cache import cacheit
@@ -516,7 +516,7 @@ class bernoulli(DefinedFunction):
 
     """
 
-    args: tTuple[Integer]
+    args: tuple[Integer]
 
     # Calculates B_n for positive even n
     @staticmethod
