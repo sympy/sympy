@@ -1546,12 +1546,14 @@ def eval_sum_residue(f, i_a_b):
         return -S.Pi * sum(residues)
 
     rational_function_symmetry = get_function_symmetry(numer, denom)
-    if not ('even' == rational_function_symmetry):
+    if not (rational_function_symmetry == 'even'):
         #for odd function flip the limit and negate
         #limit (-oo, a) is flipped to (-a, oo) and the answer is negated
-        if ('odd' == rational_function_symmetry):
+        if (rational_function_symmetry == 'odd'):
             if a is S.NegativeInfinity and b.is_finite:
                 res = eval_sum_residue(f, (i, -b, S.Infinity))
+                #if the function was successfully transformed to a
+                #even function by shifting
                 if res is not None:
                     return -res
 
@@ -1568,7 +1570,7 @@ def eval_sum_residue(f, i_a_b):
         numer = numer.shift(shift)
         denom = denom.shift(shift)
 
-        if not ('even' == get_function_symmetry(numer, denom)):
+        if not (get_function_symmetry(numer, denom) == 'even'):
             return None
 
         if alternating:
@@ -1576,7 +1578,7 @@ def eval_sum_residue(f, i_a_b):
         else:
             f = numer.as_expr() / denom.as_expr()
         return eval_sum_residue(f, (i, a-shift, b-shift))
-    elif ('even' == rational_function_symmetry):
+    elif (rational_function_symmetry == 'even'):
         #for even function flip the limit
         #limit (-oo, a) is flipped to (-a, oo)
         if a is S.NegativeInfinity and b.is_finite:
