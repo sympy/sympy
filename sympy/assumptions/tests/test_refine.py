@@ -12,7 +12,7 @@ from sympy.abc import w, x, y, z
 from sympy.core.relational import Eq, Ne
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.matrices.expressions.matexpr import MatrixSymbol
-from sympy import I, oo, nan, Add
+from sympy import Add
 
 
 def test_Abs():
