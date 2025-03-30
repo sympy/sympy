@@ -400,9 +400,8 @@ def refine_Add(expr, assumptions):
     Examples
     ========
 
-    >>> from sympy import S, I, oo, Add
+    >>> from sympy import S, Add
     >>> from sympy.assumptions.refine import refine_Add
-    >>> from sympy.calculus.accumulationbounds import AccumBounds
 
     >>> refine_Add(Add(S.NaN, 1, evaluate=False), {})
     nan
