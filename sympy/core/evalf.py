@@ -1234,7 +1234,7 @@ def check_convergence(numer: 'Expr', denom: 'Expr', n: 'Symbol') -> tuple[int, A
     return rate, constant, (qc - pc)/dpol.LC()
 
 
-def hypsum(expr: 'Expr', n: 'Symbol', start: int, prec: int) -> mpf:  # type: ignore
+def hypsum(expr: 'Expr', n: 'Symbol', start: int, prec: int) -> mpf:
     """
     Sum a rapidly convergent infinite hypergeometric series with
     given general term, e.g. e = hypsum(1/factorial(n), n). The
