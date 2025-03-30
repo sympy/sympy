@@ -12,6 +12,7 @@ from sympy.abc import w, x, y, z
 from sympy.core.relational import Eq, Ne
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.matrices.expressions.matexpr import MatrixSymbol
+from sympy import I, oo, nan, Add
 
 
 def test_Abs():
@@ -226,32 +227,45 @@ def test_matrixelement():
     assert refine(x[i, j], Q.symmetric(x)) == x[j, i]
     assert refine(x[j, i], Q.symmetric(x)) == x[j, i]
 
-def test_refine():
-    expr = (sqrt(z) + S.Infinity)**2
+def test_refine_infinity():
+    z = Symbol('z', real=True)
+
+    expr = sqrt(z) + S.Infinity
     result = refine(expr)
     assert result == S.Infinity
 
-    z_sym = Symbol('z', real=True)
-    expr = S.Infinity + sqrt(z_sym) + 5
-    result = refine(expr)
-    assert result == S.Infinity
-
-    expr = S.NegativeInfinity + sqrt(z_sym)
+    expr = sqrt(z) + S.NegativeInfinity
     result = refine(expr)
     assert result == S.NegativeInfinity
 
-    expr = sqrt(z_sym) + nan
-    result = refine(expr)
-    assert result is nan
-
-    expr = S.Infinity + S.NegativeInfinity + sqrt(z_sym)
-    result = refine(expr)
-    assert result is nan
-
-    expr = S.Infinity + sqrt(z_sym)
+    expr = S.Infinity + sqrt(z) + 5
     result = refine(expr)
     assert result == S.Infinity
 
-    expr = S.NegativeInfinity + sqrt(z_sym)
+    expr = S.NegativeInfinity + sqrt(z)
     result = refine(expr)
     assert result == S.NegativeInfinity
+
+    expr = sqrt(z) + nan
+    result = refine(expr)
+    assert result is nan
+
+    expr = Add(S.Infinity, S.NegativeInfinity, sqrt(z), evaluate=False)
+    result = refine(expr)
+    assert result is nan
+
+    expr = I * S.Infinity + sqrt(z)
+    result = refine(expr)
+    assert result == expr
+
+    expr = Add(S.Infinity, I*S.Infinity, evaluate=False)
+    result = refine(expr)
+    assert result == S.ComplexInfinity
+
+    expr = Add(I*S.Infinity, -I*S.Infinity, evaluate=False)
+    result = refine(expr)
+    assert result is nan
+
+    expr = S.ComplexInfinity + sqrt(z)
+    result = refine(expr)
+    assert result == S.ComplexInfinity
