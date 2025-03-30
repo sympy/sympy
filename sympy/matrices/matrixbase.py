@@ -112,8 +112,8 @@ class MatrixBase(Printable):
     one = S.One
 
     _diff_wrt: bool = True
-    rows: int = None
-    cols: int = None
+    rows: int
+    cols: int
     _simplify = None
 
     @classmethod

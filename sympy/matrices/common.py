@@ -127,8 +127,8 @@ class _MatrixDeprecatedMeta(type):
 class MatrixRequired(metaclass=_MatrixDeprecatedMeta):
     """Deprecated mixin class for making matrix classes."""
 
-    rows: int = None
-    cols: int = None
+    rows: int
+    cols: int
     _simplify = None
 
     def __init_subclass__(cls, **kwargs):
