@@ -1,7 +1,7 @@
 from sympy.assumptions.ask import Q
 from sympy.assumptions.refine import refine
 from sympy.core.expr import Expr
-from sympy.core.numbers import (I, Rational, nan, pi)
+from sympy.core.numbers import (I, Rational, oo, zoo, nan, pi)
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.functions.elementary.complexes import (Abs, arg, im, re, sign)
@@ -200,7 +200,7 @@ def test_issue_refine_9384():
     assert refine(Piecewise((1, x > 0), (0, True)), Q.negative(x)) == 0
 
 
-def test_eval_refine_infinity():
+def test_eval_refine():
     class MockExpr(Expr):
         def _eval_refine(self, assumptions):
             return True
@@ -228,15 +228,21 @@ def test_matrixelement():
     assert refine(x[j, i], Q.symmetric(x)) == x[j, i]
 
 def test_refine_infinity():
+    z = Symbol('z')
+    assert refine(sqrt(z) + oo) == oo
+    assert refine(sqrt(z) + -oo) == -oo
+    assert refine(Add(oo, -oo, sqrt(z), evaluate=False)) is nan
+    assert refine(zoo + sqrt(z)) == zoo
+
     z = Symbol('z', real=True)
-    assert refine(sqrt(z) + S.Infinity) == S.Infinity
-    assert refine(sqrt(z) + S.NegativeInfinity) == S.NegativeInfinity
-    assert refine(S.Infinity + sqrt(z) + 5) == S.Infinity
-    assert refine(S.NegativeInfinity + sqrt(z)) == S.NegativeInfinity
+    assert refine(sqrt(z) + oo) == oo
+    assert refine(sqrt(z) + -oo) == -oo
+    assert refine(oo + sqrt(z) + 5) == oo
+    assert refine(-oo + sqrt(z)) == -oo
     assert refine(sqrt(z) + nan) is nan
-    assert refine(Add(S.Infinity, S.NegativeInfinity, sqrt(z), evaluate=False)) is nan
-    expr = I * S.Infinity + sqrt(z)
+    assert refine(Add(oo, -oo, sqrt(z), evaluate=False)) is nan
+    expr = I * oo + sqrt(z)
     assert refine(expr) == expr
-    assert refine(Add(S.Infinity, I * S.Infinity, evaluate=False)) == S.ComplexInfinity
-    assert refine(Add(I * S.Infinity, -I * S.Infinity, evaluate=False)) is nan
-    assert refine(S.ComplexInfinity + sqrt(z)) == S.ComplexInfinity
+    assert refine(Add(oo, I * oo, evaluate=False)) == zoo
+    assert refine(Add(I * oo, -I * oo, evaluate=False)) is nan
+    assert refine(zoo + sqrt(z)) == zoo
