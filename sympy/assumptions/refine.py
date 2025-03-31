@@ -418,6 +418,12 @@ def refine_Add(expr, assumptions):
             if inf is None:
                 inf = arg
             else:
+                inf_real, inf_imag = inf.as_real_imag()
+                arg_real, arg_imag = arg.as_real_imag()
+                if (inf_real.is_infinite and arg_real.is_infinite and inf_real != arg_real) or (inf_imag.is_infinite and arg_imag.is_infinite and inf_imag != arg_imag):
+                    return S.NaN
+                elif (arg_real.is_infinite or inf_real.is_infinite) and (arg_imag.is_infinite or inf_imag.is_infinite):
+                    return S.ComplexInfinity
                 if arg == -inf:
                     return S.NaN
                 if arg != inf:
