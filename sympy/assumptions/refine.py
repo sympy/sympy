@@ -431,6 +431,13 @@ def refine_Add(expr, assumptions):
             finite_terms.append(arg)
 
     if inf is not None:
+        inf_real, inf_imag = inf.as_real_imag()
+        if inf is S.ComplexInfinity:
+            return S.ComplexInfinity
+        elif inf_real.is_infinite:
+            return Add(inf_imag * I, *finite_terms, evaluate=False)
+        elif inf_imag.is_infinite:
+            return Add(inf_real, *finite_terms, evaluate=False)
         if inf in (S.Infinity, S.NegativeInfinity):
             return inf
         if inf is S.ComplexInfinity:
