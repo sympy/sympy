@@ -1103,18 +1103,19 @@ class TransferFunction(SISOLinearTimeInvariant):
         True
 
         """
+        standard_form = self.to_standard_form()
+        s = standard_form.get_asymptotic_stability_conditions()
         try:
-            standard_form = self.to_standard_form()
-            s = standard_form.get_asymptotic_stability_conditions()
             output = reduce_inequalities(s)
-            if output in (true, false):
-                return bool(output)
-
-            return None
         except NotImplementedError:
             # If there are more than one symbols,
             # reduce_inequalities could fail
             return None
+
+        if output in (true, false):
+            return bool(output)
+
+        return None
 
         #return fuzzy_and(pole.as_real_imag()[0].is_negative for pole in standard_form.poles())
 
@@ -1181,9 +1182,14 @@ class TransferFunction(SISOLinearTimeInvariant):
         # If a non-positive coefficient is found, the sign of the polynomial is flipped.
         # This ensures that the first row of the Routh-Hurwitz table can always be made positive.
         for i, coeff in enumerate(den.all_coeffs()):
-            if reduce_inequalities(coeff <= 0) is true:
-                den = -den
-                break
+            try:
+                if reduce_inequalities(coeff <= 0) is true:
+                    den = -den
+                    break
+            except NotImplementedError:
+                # If there are more than one symbols,
+                # reduce_inequalities could fail
+                pass
 
         table = RouthHurwitz(den, self.var)
 
