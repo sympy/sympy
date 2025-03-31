@@ -1,6 +1,6 @@
-========================
+=====================
 Solveset Functions
-========================
+=====================
 
 .. currentmodule:: sympy.solvers.solveset
 
@@ -32,4 +32,14 @@ For other types of solving functionality, see:
 * :func:`~sympy.solvers.inequalities.solve_univariate_inequality` - For solving inequalities
 * :func:`~sympy.solvers.ode.dsolve` - For solving differential equations
 * :func:`~sympy.solvers.pde.pdsolve` - For solving partial differential equations
+
+.. toctree::
+   :hidden:
+
+   generated/sympy.solvers.solveset.solveset.rst
+   generated/sympy.solvers.solveset.linsolve.rst
+   generated/sympy.solvers.solveset.nonlinsolve.rst
+   generated/sympy.solvers.solveset.substitution.rst
+   generated/sympy.solvers.solveset.linear_eq_to_matrix.rst
+   generated/sympy.solvers.solveset.solveset_examples.rst
 

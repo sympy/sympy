@@ -1,8 +1,17 @@
 .. _reference:
 
-=============
+================
 API Reference
-=============
+================
+
+This is the complete SymPy reference manual, automatically generated from the docstrings in the
+latest SymPy release.
+
+.. toctree::
+   :maxdepth: 2
+
+   public/index.rst
+   solvers/index.rst
 
 This section contains a summary of SymPy modules, functions, classes, and
 methods. All functions and objects implemented in the ``sympy`` core

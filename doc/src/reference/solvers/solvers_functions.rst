@@ -38,3 +38,20 @@ For other types of solving functionality, see:
 * :func:`~sympy.solvers.ode.dsolve` - For solving differential equations
 * :func:`~sympy.solvers.pde.pdsolve` - For solving partial differential equations
 
+.. toctree::
+   :hidden:
+
+   generated/sympy.solvers.solvers.solve.rst
+   generated/sympy.solvers.solvers.solve_linear.rst
+   generated/sympy.solvers.solvers.solve_linear_system.rst
+   generated/sympy.solvers.solvers.solve_linear_system_LU.rst
+   generated/sympy.solvers.solvers.minsolve_linear_system.rst
+   generated/sympy.solvers.solvers.checksol.rst
+   generated/sympy.solvers.solvers.check_assumptions.rst
+   generated/sympy.solvers.solvers.check_solutions.rst
+   generated/sympy.solvers.solvers.nsolve.rst
+   generated/sympy.solvers.solvers.solve_undetermined_coeffs.rst
+   generated/sympy.solvers.solvers.nsolve_examples.rst
+   generated/sympy.solvers.solvers.solve_linear_system_examples.rst
+   generated/sympy.solvers.solvers.solve_examples.rst
+

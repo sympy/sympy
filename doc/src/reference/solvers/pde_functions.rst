@@ -30,3 +30,14 @@ For other types of solving functionality, see:
 * :func:`~sympy.solvers.inequalities.solve_univariate_inequality` - For solving inequalities
 * :func:`~sympy.solvers.ode.dsolve` - For solving ordinary differential equations
 
+.. toctree::
+   :hidden:
+
+   generated/sympy.solvers.pde.pdsolve.rst
+   generated/sympy.solvers.pde.classify_pde.rst
+   generated/sympy.solvers.pde.checkpdesol.rst
+   generated/sympy.solvers.pde.pde_separate.rst
+   generated/sympy.solvers.pde.pde_separate_add.rst
+   generated/sympy.solvers.pde.pde_separate_mul.rst
+   generated/sympy.solvers.pde.pdsolve_examples.rst
+

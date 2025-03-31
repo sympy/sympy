@@ -1,20 +1,19 @@
 .. _solvers:
 
+=======
 Solvers
 =======
 
+This section contains documentation for the various solver modules in SymPy.
+
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
 
-   generated/sympy.solvers.solvers.solve
-   generated/sympy.solvers.solveset.solveset
-   generated/sympy.solvers.solvers.nsolve
-   generated/sympy.solvers.ode.dsolve
-   generated/sympy.solvers.pde.pdsolve
-   generated/sympy.solvers.solvers.solve_linear_system
-   generated/sympy.solvers.polysys.solve_poly_system
-   generated/sympy.solvers.inequalities.solve_univariate_inequality
+   solvers_functions.rst
+   solveset_functions.rst
+   inequality_functions.rst
+   ode_functions.rst
+   pde_functions.rst
 
 Overview
 --------
