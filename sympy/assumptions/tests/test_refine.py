@@ -229,43 +229,14 @@ def test_matrixelement():
 
 def test_refine_infinity():
     z = Symbol('z', real=True)
-
-    expr = sqrt(z) + S.Infinity
-    result = refine(expr)
-    assert result == S.Infinity
-
-    expr = sqrt(z) + S.NegativeInfinity
-    result = refine(expr)
-    assert result == S.NegativeInfinity
-
-    expr = S.Infinity + sqrt(z) + 5
-    result = refine(expr)
-    assert result == S.Infinity
-
-    expr = S.NegativeInfinity + sqrt(z)
-    result = refine(expr)
-    assert result == S.NegativeInfinity
-
-    expr = sqrt(z) + nan
-    result = refine(expr)
-    assert result is nan
-
-    expr = Add(S.Infinity, S.NegativeInfinity, sqrt(z), evaluate=False)
-    result = refine(expr)
-    assert result is nan
-
+    assert refine(sqrt(z) + S.Infinity) == S.Infinity
+    assert refine(sqrt(z) + S.NegativeInfinity) == S.NegativeInfinity
+    assert refine(S.Infinity + sqrt(z) + 5) == S.Infinity
+    assert refine(S.NegativeInfinity + sqrt(z)) == S.NegativeInfinity
+    assert refine(sqrt(z) + nan) is nan
+    assert refine(Add(S.Infinity, S.NegativeInfinity, sqrt(z), evaluate=False)) is nan
     expr = I * S.Infinity + sqrt(z)
-    result = refine(expr)
-    assert result == expr
-
-    expr = Add(S.Infinity, I*S.Infinity, evaluate=False)
-    result = refine(expr)
-    assert result == S.ComplexInfinity
-
-    expr = Add(I*S.Infinity, -I*S.Infinity, evaluate=False)
-    result = refine(expr)
-    assert result is nan
-
-    expr = S.ComplexInfinity + sqrt(z)
-    result = refine(expr)
-    assert result == S.ComplexInfinity
+    assert refine(expr) == expr
+    assert refine(Add(S.Infinity, I * S.Infinity, evaluate=False)) == S.ComplexInfinity
+    assert refine(Add(I * S.Infinity, -I * S.Infinity, evaluate=False)) is nan
+    assert refine(S.ComplexInfinity + sqrt(z)) == S.ComplexInfinity
