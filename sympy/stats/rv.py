@@ -196,9 +196,9 @@ class PSpace(Basic):
     sympy.stats.frv.FinitePSpace
     """
 
-    is_Finite: bool
-    is_Continuous: bool
-    is_Discrete: bool
+    is_Finite: bool | None = None  # Fails test if not set to None
+    is_Continuous: bool | None = None  # Fails test if not set to None
+    is_Discrete: bool | None = None  # Fails test if not set to None
     is_real: bool | None
 
     @property
