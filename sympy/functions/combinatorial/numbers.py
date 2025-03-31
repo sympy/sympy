@@ -9,6 +9,7 @@ the separate 'factorials' module.
 from __future__ import annotations
 from math import prod
 from collections import defaultdict
+from typing import Callable
 
 from sympy.core import S, Symbol, Add, Dummy
 from sympy.core.cache import cacheit
@@ -890,6 +891,9 @@ class harmonic(DefinedFunction):
 
     """
 
+    # This prevents redundant recalculations and speeds up harmonic number computations.
+    harmonic_cache: dict[Integer, Callable[[int], Rational]] = {}
+
     @classmethod
     def eval(cls, n, m=None):
         from sympy.functions.special.zeta_functions import zeta
@@ -914,7 +918,14 @@ class harmonic(DefinedFunction):
             if n.is_negative and (m.is_integer is False or m.is_nonpositive is False):
                 return S.ComplexInfinity if m is S.One else S.NaN
             if n.is_nonnegative:
-                return Add(*(k**(-m) for k in range(1, int(n)+1)))
+                if m.is_Integer:
+                    if m not in cls.harmonic_cache:
+                        @recurrence_memo([0])
+                        def f(n, prev):
+                            return prev[-1] + S.One / n**m
+                        cls.harmonic_cache[m] = f
+                    return cls.harmonic_cache[m](int(n))
+                return Add(*(k**(-m) for k in range(1, int(n) + 1)))
 
     def _eval_rewrite_as_polygamma(self, n, m=S.One, **kwargs):
         from sympy.functions.special.gamma_functions import gamma, polygamma
