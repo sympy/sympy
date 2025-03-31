@@ -972,7 +972,7 @@ class DDM(list):
             rref, pivots = self.rref()
             return len(pivots)
         else:
-            # For non-field domains like ZZ, use fraction-free LU decomposition
+            # For non-field domains like ZZ, use fraction-free LU decomposition (fflu)
             _, _, rank = self._fflu()
             return rank
 
