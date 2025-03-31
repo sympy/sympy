@@ -1050,7 +1050,8 @@ class SDM(dict):
             rref, pivots = self.rref()
             return len(pivots)
         else:
-            return self.to_dfm_or_ddm().rank()
+            rref_sdm, _, pivots = sdm_rref_den(self, self.domain)
+            return len(pivots)
 
     def det(A):
         """
