@@ -13,16 +13,17 @@ This page provides a curated list of functions available in SymPy's ``solvers.od
 Functions
 ---------
 
-.. autosummary::
-   :toctree: ./generated/
-   :template: function.rst
+.. autofunction:: sympy.solvers.ode::dsolve
 
-   dsolve
-   classify_ode
-   checkodesol
-   homogeneous_order
-   infinitesimals
-   checkinfsol
+.. autofunction:: sympy.solvers.ode::classify_ode
+
+.. autofunction:: sympy.solvers.ode::checkodesol
+
+.. autofunction:: sympy.solvers.ode::homogeneous_order
+
+.. autofunction:: sympy.solvers.ode::infinitesimals
+
+.. autofunction:: sympy.solvers.ode::checkinfsol
 
 Related Functions
 ----------------
@@ -33,15 +34,4 @@ For other types of solving functionality, see:
 * :func:`~sympy.solvers.solveset.solveset` - An improved version of ``solve`` that returns a set of solutions
 * :func:`~sympy.solvers.inequalities.solve_univariate_inequality` - For solving inequalities
 * :func:`~sympy.solvers.pde.pdsolve` - For solving partial differential equations
-
-.. toctree::
-   :hidden:
-
-   generated/sympy.solvers.ode.dsolve.rst
-   generated/sympy.solvers.ode.classify_ode.rst
-   generated/sympy.solvers.ode.checkodesol.rst
-   generated/sympy.solvers.ode.homogeneous_order.rst
-   generated/sympy.solvers.ode.infinitesimals.rst
-   generated/sympy.solvers.ode.checkinfsol.rst
-   generated/sympy.solvers.ode.dsolve_examples.rst
 

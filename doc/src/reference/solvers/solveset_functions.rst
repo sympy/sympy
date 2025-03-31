@@ -13,15 +13,15 @@ This page provides a curated list of functions available in SymPy's ``solvers.so
 Functions
 ---------
 
-.. autosummary::
-   :toctree: ./generated/
-   :template: function.rst
+.. autofunction:: sympy.solvers.solveset::solveset
 
-   solveset
-   linsolve
-   nonlinsolve
-   substitution
-   linear_eq_to_matrix
+.. autofunction:: sympy.solvers.solveset::linsolve
+
+.. autofunction:: sympy.solvers.solveset::nonlinsolve
+
+.. autofunction:: sympy.solvers.solveset::substitution
+
+.. autofunction:: sympy.solvers.solveset::linear_eq_to_matrix
 
 Related Functions
 ----------------
@@ -32,14 +32,4 @@ For other types of solving functionality, see:
 * :func:`~sympy.solvers.inequalities.solve_univariate_inequality` - For solving inequalities
 * :func:`~sympy.solvers.ode.dsolve` - For solving differential equations
 * :func:`~sympy.solvers.pde.pdsolve` - For solving partial differential equations
-
-.. toctree::
-   :hidden:
-
-   generated/sympy.solvers.solveset.solveset.rst
-   generated/sympy.solvers.solveset.linsolve.rst
-   generated/sympy.solvers.solveset.nonlinsolve.rst
-   generated/sympy.solvers.solveset.substitution.rst
-   generated/sympy.solvers.solveset.linear_eq_to_matrix.rst
-   generated/sympy.solvers.solveset.solveset_examples.rst
 

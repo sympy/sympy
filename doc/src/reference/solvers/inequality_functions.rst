@@ -13,15 +13,15 @@ This page provides a curated list of functions available in SymPy's ``solvers.in
 Functions
 ---------
 
-.. autosummary::
-   :toctree: ./generated/
-   :template: function.rst
+.. autofunction:: sympy.solvers.inequalities::solve_univariate_inequality
 
-   solve_univariate_inequality
-   solve_poly_inequality
-   solve_rational_inequalities
-   reduce_inequalities
-   reduce_abs_inequalities
+.. autofunction:: sympy.solvers.inequalities::solve_poly_inequality
+
+.. autofunction:: sympy.solvers.inequalities::solve_rational_inequalities
+
+.. autofunction:: sympy.solvers.inequalities::reduce_inequalities
+
+.. autofunction:: sympy.solvers.inequalities::reduce_abs_inequalities
 
 Related Functions
 ----------------
@@ -32,14 +32,4 @@ For other types of solving functionality, see:
 * :func:`~sympy.solvers.solveset.solveset` - An improved version of ``solve`` that returns a set of solutions
 * :func:`~sympy.solvers.ode.dsolve` - For solving differential equations
 * :func:`~sympy.solvers.pde.pdsolve` - For solving partial differential equations
-
-.. toctree::
-   :hidden:
-
-   generated/sympy.solvers.inequalities.solve_univariate_inequality.rst
-   generated/sympy.solvers.inequalities.solve_poly_inequality.rst
-   generated/sympy.solvers.inequalities.solve_rational_inequalities.rst
-   generated/sympy.solvers.inequalities.reduce_inequalities.rst
-   generated/sympy.solvers.inequalities.reduce_abs_inequalities.rst
-   generated/sympy.solvers.inequalities.solve_univariate_inequality_examples.rst
 
