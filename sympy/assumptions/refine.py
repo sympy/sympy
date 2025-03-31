@@ -422,7 +422,7 @@ def refine_Add(expr, assumptions):
                 if (inf_real.is_infinite and arg_real.is_infinite and inf_real != arg_real) or (inf_imag.is_infinite and arg_imag.is_infinite and inf_imag != arg_imag):
                     return S.NaN
                 elif (arg_real.is_infinite or inf_real.is_infinite) and (arg_imag.is_infinite or inf_imag.is_infinite):
-                    return S.ComplexInfinity
+                    inf = S.ComplexInfinity
                 elif inf_real.is_finite and arg_real.is_finite:
                     finite_terms.append(arg_real)
                 elif inf_imag.is_finite and arg_imag.is_finite:
