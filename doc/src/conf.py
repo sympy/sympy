@@ -16,20 +16,7 @@ import os
 import subprocess
 from datetime import datetime
 
-try:
-    from intersphinx_registry import get_intersphinx_mapping
-except ImportError:
-    def get_intersphinx_mapping(packages=None):
-        """Get intersphinx mapping for specified packages."""
-        mapping = {
-            "matplotlib": ("https://matplotlib.org/stable/", None),
-            "mpmath": ("https://mpmath.org/doc/current/", None),
-            "scipy": ("https://docs.scipy.org/doc/scipy/", None),
-            "numpy": ("https://numpy.org/doc/stable/", None),
-        }
-        if packages is None:
-            return mapping
-        return {k: v for k, v in mapping.items() if k in packages}
+from intersphinx_registry import get_intersphinx_mapping
 
 
 # Make sure we import sympy from git
@@ -46,12 +33,11 @@ sys.path = ['ext'] + sys.path
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.addons.*') or your custom ones.
 extensions = ['sphinx.ext.autodoc', 'sphinx.ext.linkcode',
-              'sphinx_math_dollar', 'sphinx.ext.mathjax',
+              'sphinx_math_dollar', 'sphinx.ext.mathjax', 'numpydoc',
               'sphinx_reredirects', 'sphinx_copybutton',
               'sphinx.ext.graphviz', 'sphinxcontrib.jquery',
               'matplotlib.sphinxext.plot_directive', 'myst_parser',
-              'sphinx.ext.intersphinx',
-              'sphinx.ext.autosummary']
+              'convert-svg-to-pdf', 'sphinx.ext.intersphinx', ]
 
 # Add redirects here. This should be done whenever a page that is in the
 # existing release docs is moved somewhere else so that the URLs don't break.
@@ -117,11 +103,7 @@ redirects = {
     "modules/physics/mechanics/linearize": "../../../explanation/modules/physics/mechanics/linearize.html",
     "modules/physics/mechanics/sympy_mechanics_for_autolev_uses": "../../../explanation/modules/physics/mechanics/sympy_mechanics_for_autolev_users.html",
     "tutorials/physics/biomechanics/biomechanics": "../../../explanation/modules/physics/biomechanics/biomechanics.html",
-    "modules/solvers/solveset": "../reference/solvers/generated/sympy.solvers.solveset.solveset.html",
-    "modules/solvers/solvers": "../reference/solvers/generated/sympy.solvers.solvers.solve.html",
-    "modules/solvers/inequalities": "../reference/solvers/generated/sympy.solvers.inequalities.solve_univariate_inequality.html",
-    "modules/solvers/ode": "../reference/solvers/generated/sympy.solvers.ode.dsolve.html",
-    "modules/solvers/pde": "../reference/solvers/generated/sympy.solvers.pde.pdsolve.html",
+
 }
 
 html_baseurl = "https://docs.sympy.org/latest/"
@@ -140,11 +122,6 @@ nitpick_ignore = [
 
 # To stop docstrings inheritance.
 autodoc_inherit_docstrings = False
-
-# Directory containing example files to be included
-# This makes Sphinx look for include files relative to the directory containing
-# the file that contains the include directive
-include_patterns = ['*', 'reference/solvers/generated']
 
 # See https://www.sympy.org/sphinx-math-dollar/
 mathjax3_config = {
@@ -204,7 +181,7 @@ today_fmt = '%B %d, %Y'
 
 # If true, the current module name will be prepended to all description
 # unit titles (such as .. function::).
-add_module_names = False
+#add_module_names = True
 
 # If true, sectionauthor and moduleauthor directives will be shown in the
 # output. They are ignored by default.
@@ -574,13 +551,3 @@ def resolve_type_aliases(app, env, node, contnode):
 
 def setup(app):
     app.connect("missing-reference", resolve_type_aliases)
-
-# Configure autosummary
-autosummary_generate = True
-autosummary_imported_members = True
-autosummary_generate_overwrite = True
-
-# Configure numpydoc
-numpydoc_show_class_members = False
-numpydoc_show_inherited_class_members = False
-numpydoc_class_members_toctree = False
