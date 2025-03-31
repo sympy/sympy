@@ -406,46 +406,36 @@ def refine_Add(expr, assumptions):
     >>> refine_Add(Add(S.NaN, 1, evaluate=False), {})
     nan
     """
-    if any(arg is S.NaN for arg in expr.args):
-        return S.NaN
-
-    if any(arg is S.ComplexInfinity for arg in expr.args):
-        return S.ComplexInfinity
-
     finite_terms = []
-    real_inf = None
-    nonreal_infs = []
+    inf = None
 
     for arg in expr.args:
-        if arg in (S.Infinity, S.NegativeInfinity):
-            if real_inf is None:
-                real_inf = arg
+        if arg is S.NaN:
+            return S.NaN
+
+        if arg in (S.Infinity, S.NegativeInfinity, S.ComplexInfinity) or \
+           (hasattr(arg, 'is_infinite') and arg.is_infinite):
+            if inf is None:
+                inf = arg
             else:
-                if arg != real_inf:
+                if arg == -inf:
                     return S.NaN
+                if arg != inf:
+                    if inf in (S.Infinity, S.NegativeInfinity) and arg in (S.Infinity, S.NegativeInfinity):
+                        return S.NaN
+                    inf = S.ComplexInfinity
             continue
-        if hasattr(arg, 'is_infinite') and arg.is_infinite:
-            nonreal_infs.append(arg)
         else:
             finite_terms.append(arg)
 
-    if real_inf is not None and nonreal_infs:
-        return S.ComplexInfinity
-
-    if nonreal_infs:
-        rep = nonreal_infs[0]
-        for term in nonreal_infs[1:]:
-            if term == -rep:
-                return S.NaN
-            elif term != rep:
-                return S.ComplexInfinity
+    if inf is not None:
+        if inf in (S.Infinity, S.NegativeInfinity):
+            return inf
+        if inf is S.ComplexInfinity:
+            return S.ComplexInfinity
         if finite_terms:
-            return Add(*(finite_terms + [rep]), evaluate=False)
-        else:
-            return rep
-
-    if real_inf is not None:
-        return real_inf
+            return Add(*(finite_terms + [inf]), evaluate=False)
+        return inf
 
     return Add(*expr.args)
 
