@@ -20,7 +20,6 @@ from sympy.functions.elementary.trigonometric import sin, cos
 from sympy.physics.control import (TransferFunction, PIDController, Series, Parallel,
     Feedback, TransferFunctionMatrix, MIMOSeries, MIMOParallel, MIMOFeedback,
     StateSpace, gbt, bilinear, forward_diff, backward_diff, phase_margin, gain_margin)
-from sympy.logic.boolalg import false, true
 from sympy.testing.pytest import raises
 
 a, x, b, c, s, g, d, p, k, tau, zeta, wn, T = symbols('a, x, b, c, s, g, d, p, k,\
@@ -278,14 +277,14 @@ def test_TransferFunction_functions():
     stable_tf = TransferFunction(s**2 + a0 - a1*p, q*s - 1, s)
     stable_tf_ = TransferFunction(s**2 + a0 - a1*p, q*s - t, s)
 
-    assert G1.is_stable() is false
-    assert G2.is_stable() is true
-    assert tf1.is_stable() is true
-    assert expect2.is_stable() is false
-    assert expect1.is_stable() is true
-    assert stable_tf.is_stable() is true
-    assert stable_tf_.is_stable() is true
-    assert TF_.is_stable() is false
+    assert G1.is_stable() is False
+    assert G2.is_stable() is True
+    assert tf1.is_stable() is True
+    assert expect2.is_stable() is False
+    assert expect1.is_stable() is True
+    assert stable_tf.is_stable() is True
+    assert stable_tf_.is_stable() is True
+    assert TF_.is_stable() is False
     assert expect4_.is_stable() is None   # no assumption provided for the only pole 's'.
     assert SP4.is_stable() is None
 

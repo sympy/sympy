@@ -1108,7 +1108,7 @@ class TransferFunction(SISOLinearTimeInvariant):
             s = standard_form.get_asymptotic_stability_conditions()
             output = reduce_inequalities(s)
             if output in (true, false):
-                return output
+                return bool(output)
 
             return None
         except NotImplementedError:
