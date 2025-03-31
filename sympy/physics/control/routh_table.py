@@ -11,47 +11,71 @@ class RouthHurwitz(MutableDenseMatrix):
     A class for creating a Routh-Hurwitz table from a given polynomial.
     It handle special cases with methods discussed in [1].
 
-    Note: When a row of the table is zero, the property ``zero_row_case`` is set to True.
+    Note: When a row of the table is zero, the property ``zero_row_case``
+    is set to True.
 
     Explanation
     ============
 
-    In mathematics, the Routh-Hurwitz table is used to determine the number of roots of a polynomial that have positive or negative real parts.
+    In mathematics, the Routh-Hurwitz table is used to determine the number of
+    roots of a polynomial that have positive or negative real parts.
 
-    It's crucial in the control system theory because it can be used to retrieve
-    necessary and sufficient conditions for the stability of a linear time-invariant control system.
+    It's crucial in the control system theory because it can be used to
+    retrieve necessary and sufficient conditions for the stability of a linear
+    time-invariant control system.
 
-    Once the table is constructed, the stability of the system can be assessed by counting the number of sign changes in the first column.
-    Each sign change corresponds to a root with a positive real part, whereas each preservation of sign corresponds to a root with a negative real part.
+    Once the table is constructed, the stability of the system can be assessed
+    by counting the number of sign changes in the first column.
+    Each sign change corresponds to a root with a positive real part, whereas
+    each preservation of sign corresponds to a root with a negative real part.
 
-    There are two special cases to consider during the construction of the table:
+    There are two special cases to consider during the construction of the
+    table:
 
     1.  First Column Zero Case:
-        If a zero appears in the first column of a row (while the row is not entirely zero), the zero is replaced with a small symbolic infinitesimal ($\epsilon$, by default).
-        When checking for sign changes, the limit $\epsilon \to 0$ is taken.
-        Specifically, if the other elements in the column are positive, then $\epsilon \to 0^+$; if they are negative, then $\epsilon \to 0^-$; otherwise, $\epsilon \to 0^\pm$.
+        If a zero appears in the first column of a row (while the row is not
+        entirely zero), the zero is replaced with a small symbolic infinitesimal
+        (:math:`\epsilon`, by default).
+        When checking for sign changes, the limit :math:`\epsilon \to 0`
+        is taken.
+        Specifically, if the other elements in the column are positive, then
+        :math:`\epsilon \to 0^+`; if they are negative, then
+        :math:`\epsilon \to 0^-`; otherwise, :math:`\epsilon \to 0^\pm`.
 
     2.  Full Row Zero Case:
-        If an entire row becomes zero, we can substitute the row with the coefficients of the derivative of an auxiliary polynomial.
-        The auxiliary polynomial is constructed using the row immediately above the zero row.
+        If an entire row becomes zero, we can substitute the row with the
+        coefficients of the derivative of an auxiliary polynomial.
+        The auxiliary polynomial is constructed using the row immediately
+        above the zero row.
         For instance, consider the following example:
-        $$\begin{matrix}3\\2\\1\end{matrix}\begin{bmatrix}b_3&b_1\\ b_2&b_0\\ 0&0\end{bmatrix}$$
-        The auxiliary polynomial will be: $a(s) = b_2 s^2 + b_0$
-        The characteristic is that, if $p(s)$ is the polynomial we are analyzing, $p(s)=a(s)\cdot other(s)$ and
-        the roots of $a(s)$ are symmetric about the origin in the s-plane, so when we
-        fall in this case, we should note that there could be poles with only imaginary part or poles with negative and positive real parts.
+
+        .. math::
+            \begin{matrix}3\\2\\1\end{matrix}\begin{bmatrix}b_3&b_1\\
+            b_2&b_0\\ 0&0\end{bmatrix}
+
+        The auxiliary polynomial will be: :math:`a(s) = b_2 s^2 + b_0`
+        The characteristic is that, if :math:`p(s)` is the polynomial we are
+        analyzing, :math:`p(s)=a(s)\cdot other(s)` and
+        the roots of :math:`a(s)` are symmetric about the origin in the
+        s-plane, so when we
+        fall in this case, we should note that there could be poles with only
+        imaginary part or poles with negative and positive real parts.
 
 
     The table is constructed for a polynomial of the form
-    $p(s) = b_n s^n + b_{n-1} s^{n-1} + \ldots + b_1 s + b_0$
-    and the table has $n+1$ rows and the following structure:
+    :math:`p(s) = b_n s^n + b_{n-1} s^{n-1} + \ldots + b_1 s + b_0`
+    and the table has :math:`n+1` rows and the following structure:
 
-    $$\begin{bmatrix}b_n&b_{n-2}&b_{n-4}&\cdots\\ b_{n-1}&b_{n-3}&b_{n-5}&\cdots\\ c_{1}&c_2&c_3&\cdots\\ d_{1}&d_2&d_3&\cdots\\ \vdots&\vdots&\vdots&\ddots\end{bmatrix}$$
+    .. math::
+        \begin{bmatrix}b_n&b_{n-2}&b_{n-4}&\cdots\\
+        b_{n-1}&b_{n-3}&b_{n-5}&\cdots\\ c_{1}&c_2&c_3&\cdots\\
+            d_{1}&d_2&d_3&\cdots\\ \vdots&\vdots&\vdots&\ddots\end{bmatrix}
 
-    In this table, the elements in the subsequent rows are computed using the formulas:
-    $c_i = \frac{b_{n-1}\cdot b_{n-2i} - b_n\cdot b_{n-(2i+1)}}{b_{n-1}}$
+    In this table, the elements in the subsequent rows are computed using the
+    formulas:
+    :math:`c_i = \frac{b_{n-1}\cdot b_{n-2i}-b_n\cdot b_{n-(2i+1)}}{b_{n-1}}`
 
-    $d_i = \frac{c_1 \cdot b_{n-(2i+1)}-b_{n-1}\cdot c_{i+1}}{c_1}$
+    :math:`d_i = \frac{c_1 \cdot b_{n-(2i+1)}-b_{n-1}\cdot c_{i+1}}{c_1}`
 
     Parameters
     ==========
@@ -61,7 +85,8 @@ class RouthHurwitz(MutableDenseMatrix):
     var : :py:class:`~.Symbol`
         The symbol representing the variable in the polynomial.
     infinitesimal_element : None, :py:class:`~.Symbol`, optional
-        The symbol representing the infinitesimal element for the first column zero case.
+        The symbol representing the infinitesimal element for the first column
+        zero case.
         If not provided, a default symbol ``epsilon`` will be used.
 
     Examples
@@ -101,7 +126,8 @@ class RouthHurwitz(MutableDenseMatrix):
     >>> RouthHurwitz(p1, s).zero_row_case
     False
 
-    Here you can see how the table appears in the full row zero case (poles with only imaginary part):
+    Here you can see how the table appears in the full row zero case
+    (poles with only imaginary part):
 
     >>> p2 = s**6 + 2*s**5 + 8*s**4 + 12*s**3 + 20*s**2 + 16*s + 16
     >>> RouthHurwitz(p2, s)
@@ -220,10 +246,12 @@ class RouthHurwitz(MutableDenseMatrix):
     @property
     def auxiliary_polynomial(self):
         """
-        If the zero_row_case is True, return the auxiliary polynomial associated with the Full Row Zero Case.
+        If the zero_row_case is True, return the auxiliary polynomial
+        associated with the Full Row Zero Case.
         Otherwise, return None.
 
-        It is used to handle the Full Row Zero Case during the construction of the Routh-Hurwitz table.
+        It is used to handle the Full Row Zero Case during the
+        construction of the Routh-Hurwitz table.
 
         """
         if self.zero_row_case is False:
