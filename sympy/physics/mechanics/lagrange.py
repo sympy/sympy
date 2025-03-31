@@ -6,6 +6,7 @@ from sympy.physics.mechanics.functions import (
     find_dynamicsymbols, msubs, _f_list_parser, _validate_coordinates)
 from sympy.physics.mechanics.linearize import Linearizer
 from sympy.utilities.iterables import iterable
+from sympy import simplify
 
 __all__ = ['LagrangesMethod']
 
@@ -103,7 +104,7 @@ class LagrangesMethod(_Methods):
     """
 
     def __init__(self, Lagrangian, qs, forcelist=None, bodies=None, frame=None,
-                 hol_coneqs=None, nonhol_coneqs=None):
+                 hol_coneqs=None, nonhol_coneqs=None,simplify=True):
         """Supply the following for the initialization of LagrangesMethod.
 
         Lagrangian : Sympifyable
@@ -170,6 +171,8 @@ class LagrangesMethod(_Methods):
         self.coneqs = Matrix([hol_coneqs.diff(dynamicsymbols._t),
                 nonhol_coneqs])
         self._hol_coneqs = hol_coneqs
+        self._simplify = simplify
+
 
     def form_lagranges_equations(self):
         """Method to form Lagrange's equations of motion.
@@ -225,6 +228,10 @@ class LagrangesMethod(_Methods):
 
         # Form the EOM
         self.eom = without_lam - self._term3
+
+        if self._simplify:
+           self.eom = simplify(self.eom)
+
         return self.eom
 
     def _form_eoms(self):
