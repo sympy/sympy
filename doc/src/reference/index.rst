@@ -10,7 +10,6 @@ latest SymPy release.
 .. toctree::
    :maxdepth: 2
 
-   public/index.rst
    solvers/index.rst
 
 This section contains a summary of SymPy modules, functions, classes, and
