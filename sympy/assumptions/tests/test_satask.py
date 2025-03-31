@@ -40,7 +40,7 @@ def test_satask():
     assert satask(Q.real(x), Q.zero(x)) is True
     assert satask(Q.zero(x), Q.zero(x*y)) is None
     assert satask(Q.zero(x*y), Q.zero(x) & Q.finite(x) & Q.finite(y))
-    
+
     # https://github.com/sympy/sympy/issues/27662
     assert satask(Q.finite(x*y), ~Q.finite(x) & Q.zero(y)) is None
     assert satask(~Q.finite(x) & Q.zero(y)) is None
@@ -49,7 +49,6 @@ def test_satask():
     assert satask(Q.zero(x*y), Q.zero(x) | Q.zero(y)) is None
     assert satask(Implies(Q.zero(x), Q.zero(x*y))) is None
     assert satask(Q.zero(x) | Q.zero(y), Q.nonzero(x*y)) is None
-
 
 
 def test_zero():
@@ -61,7 +60,7 @@ def test_zero():
     """
     assert satask(Q.zero(x) | Q.zero(y), Q.zero(x*y)) is True
     assert satask(Q.zero(x*y), (Q.zero(x) | Q.zero(y)) & (Q.finite(x) & Q.finite(y))) is True
-    assert satask(Implies(Q.zero(x), Q.zero(x*y))) is None
+    assert satask(Q.zero(x*y), Q.zero(x)) is None
 
     # https://github.com/sympy/sympy/issues/27662
     assert (satask(Q.zero(x*y), (Q.finite(x)) & (Q.finite(y)) & Q.zero(x))) is True

@@ -233,7 +233,6 @@ def _(expr):
 
 @class_fact_registry.multiregister(Mul)
 def _(expr):
-    #      not an iff and only if -- everything has to be finite
     return [Equivalent(Q.zero(expr), anyarg(x, Q.zero(x), expr) & allargs(x, Q.finite(x), expr)),
             allargs(x, Q.positive(x), expr) >> Q.positive(expr),
             allargs(x, Q.real(x), expr) >> Q.real(expr),
