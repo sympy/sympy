@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import Callable
 
-from sympy.core import S, Add, Expr, Basic, Mul, Pow, Rational
+from sympy.core import S, I, Add, Expr, Basic, Mul, Pow, Rational
 from sympy.core.logic import fuzzy_not
 from sympy.logic.boolalg import Boolean
 from sympy.assumptions import ask, Q # type: ignore
