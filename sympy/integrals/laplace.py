@@ -77,6 +77,8 @@ def DEBUG_WRAP(func):
 
 def _debug(text):
     from sympy import SYMPY_DEBUG
+    global _LT_level
+
     if SYMPY_DEBUG:
         print('-LT- %s%s' % ('  '*_LT_level, text), file=sys.stderr)
 
