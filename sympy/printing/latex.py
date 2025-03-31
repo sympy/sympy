@@ -168,6 +168,7 @@ class LatexPrinter(Printer):
         "max": None,
         "diff_operator": "d",
         "adjoint_style": "dagger",
+        "disable_split_super_sub": False,
     }
 
     def __init__(self, settings=None):
@@ -1630,15 +1631,20 @@ class LatexPrinter(Printer):
 
     _print_RandomSymbol = _print_Symbol
 
-    def _deal_with_super_sub(self, string: str, style='plain') -> str:
-        if '{' in string:
-            name, supers, subs = string, [], []
+    def _split_super_sub(self, name: str) -> tuple[str, list[str], list[str]]:
+        if name is None or '{' in name:
+            return (name, [], [])
+        elif self._settings["disable_split_super_sub"]:
+            name, supers, subs = (name.replace('_', '\\_').replace('^', '\\^'), [], [])
         else:
-            name, supers, subs = split_super_sub(string)
+            name, supers, subs = split_super_sub(name)
+        name = translate(name)
+        supers = [translate(sup) for sup in supers]
+        subs = [translate(sub) for sub in subs]
+        return (name, supers, subs)
 
-            name = translate(name)
-            supers = [translate(sup) for sup in supers]
-            subs = [translate(sub) for sub in subs]
+    def _deal_with_super_sub(self, string: str, style='plain') -> str:
+        name, supers, subs = self._split_super_sub(string)
 
         # apply the style only to the name
         if style == 'bold':
@@ -2802,15 +2808,7 @@ class LatexPrinter(Printer):
             self._print(h.domain), self._print(h.codomain))
 
     def _print_Manifold(self, manifold):
-        string = manifold.name.name
-        if '{' in string:
-            name, supers, subs = string, [], []
-        else:
-            name, supers, subs = split_super_sub(string)
-
-            name = translate(name)
-            supers = [translate(sup) for sup in supers]
-            subs = [translate(sub) for sub in subs]
+        name, supers, subs = self._split_super_sub(manifold.name.name)
 
         name = r'\text{%s}' % name
         if supers:
