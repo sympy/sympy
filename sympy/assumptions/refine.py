@@ -413,8 +413,7 @@ def refine_Add(expr, assumptions):
         if arg is S.NaN:
             return S.NaN
 
-        if arg in (S.Infinity, S.NegativeInfinity, S.ComplexInfinity) or \
-           (hasattr(arg, 'is_infinite') and arg.is_infinite):
+        if arg.is_infinite:
             if inf is None:
                 inf = arg
             else:
@@ -424,13 +423,10 @@ def refine_Add(expr, assumptions):
                     return S.NaN
                 elif (arg_real.is_infinite or inf_real.is_infinite) and (arg_imag.is_infinite or inf_imag.is_infinite):
                     return S.ComplexInfinity
-                if arg == -inf:
-                    return S.NaN
-                if arg != inf:
-                    if inf in (S.Infinity, S.NegativeInfinity) and arg in (S.Infinity, S.NegativeInfinity):
-                        return S.NaN
-                    inf = S.ComplexInfinity
-            continue
+                elif inf_real.is_finite and arg_real.is_finite:
+                    finite_terms.append(arg_real)
+                elif inf_imag.is_finite and arg_imag.is_finite:
+                    finite_terms.append(arg_imag * I)
         else:
             finite_terms.append(arg)
 
