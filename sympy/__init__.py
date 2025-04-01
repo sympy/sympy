@@ -50,7 +50,7 @@ def __sympy_debug():
                            debug_str)
 # Fails py2 test if using type hinting
 SYMPY_DEBUG = __sympy_debug()  # type: bool
- 
+
 
 from .core import (sympify, SympifyError, cacheit, Basic, Atom,
         preorder_traversal, S, Expr, AtomicExpr, UnevaluatedExpr, Symbol,
