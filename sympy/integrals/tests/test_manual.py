@@ -292,6 +292,8 @@ def test_manualintegrate_special():
     assert_is_integral_of(f, F)
     f, F = sqrt(4 + 9*sin(x)**2), 2*elliptic_e(x, Rational(-9, 4))
     assert_is_integral_of(f, F)
+    f, F = exp(-x**2)*exp(x), Rational(1,2)*exp(Rational(1,4))*sqrt(pi)*erf(x - Rational(1,2))
+    assert_is_integral_of(f, F)
 
 
 def test_manualintegrate_derivative():
