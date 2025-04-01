@@ -146,7 +146,7 @@ def fastlog(x: MPF_TUP | None) -> int | Any:
     return x[2] + x[3]
 
 
-def pure_complex(v: 'Expr', or_real=False) -> tuple['Number', 'Number'] | None:
+def pure_complex(v: Expr, or_real=False) -> tuple['Number', 'Number'] | None:
     """Return a and b if v matches a + I*b where b is not zero and
     a and b are Numbers, else None. If `or_real` is True then 0 will
     be returned for `b` if `v` is a real number.
@@ -260,7 +260,7 @@ def complex_accuracy(result: TMP_RES) -> int | Any:
     return -relative_error
 
 
-def get_abs(expr: 'Expr', prec: int, options: OPT_DICT) -> TMP_RES:
+def get_abs(expr: Expr, prec: int, options: OPT_DICT) -> TMP_RES:
     result = evalf(expr, prec + 2, options)
     if result is S.ComplexInfinity:
         return finf, None, prec, None
@@ -282,7 +282,7 @@ def get_abs(expr: 'Expr', prec: int, options: OPT_DICT) -> TMP_RES:
         return None, None, None, None
 
 
-def get_complex_part(expr: 'Expr', no: int, prec: int, options: OPT_DICT) -> TMP_RES:
+def get_complex_part(expr: Expr, no: int, prec: int, options: OPT_DICT) -> TMP_RES:
     """no = 0 for real part, no = 1 for imaginary part"""
     workprec = prec
     i = 0
@@ -351,7 +351,7 @@ def chop_parts(value: TMP_RES, prec: int) -> TMP_RES:
     return re, im, re_acc, im_acc
 
 
-def check_target(expr: 'Expr', result: TMP_RES, prec: int):
+def check_target(expr: Expr, result: TMP_RES, prec: int):
     a = complex_accuracy(result)
     if a < prec:
         raise PrecisionExhausted("Failed to distinguish the expression: \n\n%s\n\n"
@@ -359,7 +359,7 @@ def check_target(expr: 'Expr', result: TMP_RES, prec: int):
             "a higher maxn for evalf" % (expr))
 
 
-def get_integer_part(expr: 'Expr', no: int, options: OPT_DICT, return_ints=False) -> \
+def get_integer_part(expr: Expr, no: int, options: OPT_DICT, return_ints=False) -> \
         TMP_RES | tuple[int, int]:
     """
     With no = 1, computes ceiling(expr)
@@ -402,7 +402,7 @@ def get_integer_part(expr: 'Expr', no: int, options: OPT_DICT, return_ints=False
     # We can now easily find the nearest integer, but to find floor/ceil, we
     # must also calculate whether the difference to the nearest integer is
     # positive or negative (which may fail if very close).
-    def calc_part(re_im: 'Expr', nexpr: MPF_TUP):
+    def calc_part(re_im: Expr, nexpr: MPF_TUP):
         from .add import Add
         _, _, exponent, _ = nexpr
         is_int = exponent == 0
@@ -892,7 +892,7 @@ def evalf_exp(expr: 'exp', prec: int, options: OPT_DICT) -> TMP_RES:
     return evalf_pow(Pow(S.Exp1, expr.exp, evaluate=False), prec, options)
 
 
-def evalf_trig(v: 'Expr', prec: int, options: OPT_DICT) -> TMP_RES:
+def evalf_trig(v: Expr, prec: int, options: OPT_DICT) -> TMP_RES:
     """
     This function handles sin , cos and tan of complex arguments.
 
@@ -1030,7 +1030,7 @@ def evalf_subs(prec: int, subs: dict) -> dict:
     return newsubs
 
 
-def evalf_piecewise(expr: 'Expr', prec: int, options: OPT_DICT) -> TMP_RES:
+def evalf_piecewise(expr: Expr, prec: int, options: OPT_DICT) -> TMP_RES:
     from .numbers import Float, Integer
     if 'subs' in options:
         expr = expr.subs(evalf_subs(prec, options['subs']))
@@ -1106,7 +1106,7 @@ def do_integral(expr: 'Integral', prec: int, options: OPT_DICT) -> TMP_RES:
         max_real_term: float | int = MINUS_INF
         max_imag_term: float | int = MINUS_INF
 
-        def f(t: 'Expr') -> mpc | mpf:  # type: ignore
+        def f(t: Expr) -> mpc | mpf:  # type: ignore
             nonlocal max_real_term, max_imag_term
             re, im, re_acc, im_acc = evalf(func, mp.prec, {'subs': {x: t}})
 
@@ -1192,7 +1192,7 @@ def evalf_integral(expr: 'Integral', prec: int, options: OPT_DICT) -> TMP_RES:
     return result
 
 
-def check_convergence(numer: 'Expr', denom: 'Expr', n: 'Symbol') -> tuple[int, Any, Any]:
+def check_convergence(numer: Expr, denom: Expr, n: 'Symbol') -> tuple[int, Any, Any]:
     """
     Returns
     =======
@@ -1234,7 +1234,7 @@ def check_convergence(numer: 'Expr', denom: 'Expr', n: 'Symbol') -> tuple[int, A
     return rate, constant, (qc - pc)/dpol.LC()
 
 
-def hypsum(expr: 'Expr', n: 'Symbol', start: int, prec: int) -> mpf:
+def hypsum(expr: Expr, n: 'Symbol', start: int, prec: int) -> mpf:
     """
     Sum a rapidly convergent infinite hypergeometric series with
     given general term, e.g. e = hypsum(1/factorial(n), n). The
@@ -1370,7 +1370,7 @@ def evalf_sum(expr: 'Sum', prec: int, options: OPT_DICT) -> TMP_RES:
 #                                                                            #
 #----------------------------------------------------------------------------#
 
-def evalf_symbol(x: 'Expr', prec: int, options: OPT_DICT) -> TMP_RES:
+def evalf_symbol(x: Expr, prec: int, options: OPT_DICT) -> TMP_RES:
     val = options['subs'][x]
     if isinstance(val, mpf):
         if not val:
@@ -1388,7 +1388,7 @@ def evalf_symbol(x: 'Expr', prec: int, options: OPT_DICT) -> TMP_RES:
         return v
 
 
-evalf_table: dict[Type['Expr'], Callable[['Expr', int, OPT_DICT], TMP_RES]] = {}
+evalf_table: dict[Type[Expr], Callable[[Expr, int, OPT_DICT], TMP_RES]] = {}
 
 
 def _create_evalf_table():
@@ -1451,7 +1451,7 @@ def _create_evalf_table():
     }
 
 
-def evalf(x: 'Expr', prec: int, options: OPT_DICT) -> TMP_RES:
+def evalf(x: Expr, prec: int, options: OPT_DICT) -> TMP_RES:
     """
     Evaluate the ``Expr`` instance, ``x``
     to a binary precision of ``prec``. This
@@ -1755,7 +1755,7 @@ def N(x, n=15, **options):
     return sympify(x, rational=True).evalf(n, **options)
 
 
-def _evalf_with_bounded_error(x: 'Expr', eps: 'Expr | None' = None,
+def _evalf_with_bounded_error(x: Expr, eps: Expr | None = None,
                               m: int = 0,
                               options: OPT_DICT | None = None) -> TMP_RES:
     """
