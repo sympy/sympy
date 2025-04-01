@@ -5,7 +5,6 @@ from sympy.core.relational import (Eq, Gt)
 from sympy.core.singleton import S
 from sympy.core.symbol import symbols
 from sympy.functions.elementary.complexes import Abs
-from sympy.logic.boolalg import Implies
 from sympy.matrices.expressions.matexpr import MatrixSymbol
 from sympy.assumptions.cnf import CNF, Literal
 from sympy.assumptions.satask import (satask, extract_predargs,
