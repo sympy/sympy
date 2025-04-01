@@ -391,8 +391,8 @@ class tribonacci(DefinedFunction):
                 return cls._tribpoly(n).subs(_sym, sym)
 
     def _eval_rewrite_as_sqrt(self, n, **kwargs):
-        from sympy.functions.elementary.miscellaneous import cbrt, sqrt
-        w = (-1 + S.ImaginaryUnit * sqrt(3)) / 2
+        from sympy.functions.elementary.miscellaneous import cbrt, sqrt, _SQRT3
+        w = (-1 + S.ImaginaryUnit * _SQRT3()) / 2
         a = (1 + cbrt(19 + 3*sqrt(33)) + cbrt(19 - 3*sqrt(33))) / 3
         b = (1 + w*cbrt(19 + 3*sqrt(33)) + w**2*cbrt(19 - 3*sqrt(33))) / 3
         c = (1 + w**2*cbrt(19 + 3*sqrt(33)) + w*cbrt(19 - 3*sqrt(33))) / 3

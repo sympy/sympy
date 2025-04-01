@@ -17,7 +17,7 @@ from sympy.core.sorting import ordered
 from sympy.core.symbol import Dummy, Symbol, symbols
 from sympy.core.sympify import sympify
 from sympy.functions import exp, im, cos, acos, Piecewise
-from sympy.functions.elementary.miscellaneous import root, sqrt
+from sympy.functions.elementary.miscellaneous import root, sqrt, _SQRT2, _SQRT3
 from sympy.ntheory import divisors, isprime, nextprime
 from sympy.polys.domains import EX
 from sympy.polys.polyerrors import (PolynomialError, GeneratorsNeeded,
@@ -163,7 +163,7 @@ def roots_cubic(f, trig=False):
     elif q.is_real and q.is_negative:
         u1 = -root(-q/2 + sqrt(q**2/4 + pon3**3), 3)
 
-    coeff = I*sqrt(3)/2
+    coeff = I*_SQRT3()/2
     if u1 is None:
         u1 = S.One
         u2 = Rational(-1, 2) + coeff
@@ -589,7 +589,7 @@ def roots_quintic(f):
 
     # hard-coded results for [factor(i) for i in _vsolve(x**5 - a - I*b, x)]
     x0 = z**(S(1)/5)
-    x1 = sqrt(2)
+    x1 = _SQRT2()
     x2 = sqrt(5)
     x3 = sqrt(5 - x2)
     x4 = I*x2

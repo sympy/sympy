@@ -76,7 +76,7 @@ from sympy.functions.elementary.complexes import (Abs, sign)
 from sympy.functions.elementary.exponential import log
 from sympy.functions.elementary.hyperbolic import sinh
 from sympy.functions.elementary.integers import floor
-from sympy.functions.elementary.miscellaneous import sqrt, Max, Min
+from sympy.functions.elementary.miscellaneous import sqrt, Max, Min, _SQRT2
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import asin
 from sympy.functions.special.error_functions import (erf, erfc, erfi, erfinv, expint)
@@ -806,7 +806,7 @@ class ChiDistribution(SingleContinuousDistribution):
         k = self.k
 
         part_1 = hyper((k/2,), (S.Half,), -t**2/2)
-        part_2 = I*t*sqrt(2)*gamma((k+1)/2)/gamma(k/2)
+        part_2 = I*t*_SQRT2()*gamma((k+1)/2)/gamma(k/2)
         part_3 = hyper(((k+1)/2,), (Rational(3, 2),), -t**2/2)
         return part_1 + part_2*part_3
 
@@ -814,7 +814,7 @@ class ChiDistribution(SingleContinuousDistribution):
         k = self.k
 
         part_1 = hyper((k / 2,), (S.Half,), t ** 2 / 2)
-        part_2 = t * sqrt(2) * gamma((k + 1) / 2) / gamma(k / 2)
+        part_2 = t * _SQRT2() * gamma((k + 1) / 2) / gamma(k / 2)
         part_3 = hyper(((k + 1) / 2,), (S(3) / 2,), t ** 2 / 2)
         return part_1 + part_2 * part_3
 
@@ -1274,7 +1274,7 @@ class ExGaussianDistribution(SingleContinuousDistribution):
         mean, std, rate = self.mean, self.std, self.rate
         term1 = rate/2
         term2 = exp(rate * (2 * mean + rate * std**2 - 2*x)/2)
-        term3 = erfc((mean + rate*std**2 - x)/(sqrt(2)*std))
+        term3 = erfc((mean + rate*std**2 - x)/(_SQRT2()*std))
         return term1*term2*term3
 
     def _cdf(self, x):
@@ -2804,7 +2804,7 @@ class LogNormalDistribution(SingleContinuousDistribution):
     def _cdf(self, x):
         mean, std = self.mean, self.std
         return Piecewise(
-                (S.Half + S.Half*erf((log(x) - mean)/sqrt(2)/std), x > 0),
+                (S.Half + S.Half*erf((log(x) - mean)/_SQRT2()/std), x > 0),
                 (S.Zero, True)
         )
 
@@ -2967,7 +2967,7 @@ class MaxwellDistribution(SingleContinuousDistribution):
 
     def _cdf(self, x):
         a = self.a
-        return erf(sqrt(2)*x/(2*a)) - sqrt(2)*x*exp(-x**2/(2*a**2))/(sqrt(pi)*a)
+        return erf(_SQRT2()*x/(2*a)) - _SQRT2()*x*exp(-x**2/(2*a**2))/(sqrt(pi)*a)
 
 def Maxwell(name, a):
     r"""
@@ -3217,7 +3217,7 @@ class NormalDistribution(SingleContinuousDistribution):
 
     def _cdf(self, x):
         mean, std = self.mean, self.std
-        return erf(sqrt(2)*(-mean + x)/(2*std))/2 + S.Half
+        return erf(_SQRT2()*(-mean + x)/(2*std))/2 + S.Half
 
     def _characteristic_function(self, t):
         mean, std = self.mean, self.std
@@ -3229,7 +3229,7 @@ class NormalDistribution(SingleContinuousDistribution):
 
     def _quantile(self, p):
         mean, std = self.mean, self.std
-        return mean + std*sqrt(2)*erfinv(2*p - 1)
+        return mean + std*_SQRT2()*erfinv(2*p - 1)
 
 
 def Normal(name, mean, std):
@@ -3811,11 +3811,11 @@ class RayleighDistribution(SingleContinuousDistribution):
 
     def _characteristic_function(self, t):
         sigma = self.sigma
-        return 1 - sigma*t*exp(-sigma**2*t**2/2) * sqrt(pi/2) * (erfi(sigma*t/sqrt(2)) - I)
+        return 1 - sigma*t*exp(-sigma**2*t**2/2) * sqrt(pi/2) * (erfi(sigma*t/_SQRT2()) - I)
 
     def _moment_generating_function(self, t):
         sigma = self.sigma
-        return 1 + sigma*t*exp(sigma**2*t**2/2) * sqrt(pi/2) * (erf(sigma*t/sqrt(2)) + 1)
+        return 1 + sigma*t*exp(sigma**2*t**2/2) * sqrt(pi/2) * (erf(sigma*t/_SQRT2()) + 1)
 
 
 def Rayleigh(name, sigma):

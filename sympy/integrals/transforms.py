@@ -15,7 +15,7 @@ from sympy.functions.elementary.complexes import re, arg, Abs
 from sympy.functions.elementary.exponential import exp, exp_polar
 from sympy.functions.elementary.hyperbolic import cosh, coth, sinh, tanh
 from sympy.functions.elementary.integers import ceiling
-from sympy.functions.elementary.miscellaneous import Max, Min, sqrt
+from sympy.functions.elementary.miscellaneous import Max, Min, sqrt, _SQRT2
 from sympy.functions.elementary.piecewise import piecewise_fold
 from sympy.functions.elementary.trigonometric import cos, cot, sin, tan
 from sympy.functions.special.bessel import besselj
@@ -1176,7 +1176,7 @@ class SineTransform(SineCosineTypeTransform):
     _kern = sin
 
     def a(self):
-        return sqrt(2)/sqrt(pi)
+        return _SQRT2()/sqrt(pi)
 
     def b(self):
         return S.One
@@ -1235,7 +1235,7 @@ class InverseSineTransform(SineCosineTypeTransform):
     _kern = sin
 
     def a(self):
-        return sqrt(2)/sqrt(pi)
+        return _SQRT2()/sqrt(pi)
 
     def b(self):
         return S.One
@@ -1295,7 +1295,7 @@ class CosineTransform(SineCosineTypeTransform):
     _kern = cos
 
     def a(self):
-        return sqrt(2)/sqrt(pi)
+        return _SQRT2()/sqrt(pi)
 
     def b(self):
         return S.One
@@ -1354,7 +1354,7 @@ class InverseCosineTransform(SineCosineTypeTransform):
     _kern = cos
 
     def a(self):
-        return sqrt(2)/sqrt(pi)
+        return _SQRT2()/sqrt(pi)
 
     def b(self):
         return S.One

@@ -1,6 +1,7 @@
 from sympy.core import S, sympify, NumberKind
 from sympy.utilities.iterables import sift
 from sympy.core.add import Add
+from sympy.core.cache import cacheit
 from sympy.core.containers import Tuple
 from sympy.core.operations import LatticeOp, ShortCircuit
 from sympy.core.function import (Application, Lambda,
@@ -150,6 +151,27 @@ def sqrt(arg, evaluate=None):
     """
     # arg = sympify(arg) is handled by Pow
     return Pow(arg, S.Half, evaluate=evaluate)
+
+
+@cacheit
+def _SQRT2() -> Expr:
+    """ function for internal use that returns cached `sqrt(2)`
+    """
+    return sqrt(2)
+
+
+@cacheit
+def _SQRT3() -> Expr:
+    """ function for internal use that returns cached `sqrt(3)`
+    """
+    return sqrt(3)
+
+
+@cacheit
+def _INV_SQRT3() -> Expr:
+    """ function for internal use that returns cached `1/sqrt(3)`
+    """
+    return 1 / _SQRT3()
 
 
 def cbrt(arg, evaluate=None):

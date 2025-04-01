@@ -15,7 +15,7 @@ from sympy.functions.combinatorial.numbers import bernoulli, euler
 from sympy.functions.elementary.complexes import arg as arg_f, im, re
 from sympy.functions.elementary.exponential import log, exp
 from sympy.functions.elementary.integers import floor
-from sympy.functions.elementary.miscellaneous import sqrt, Min, Max
+from sympy.functions.elementary.miscellaneous import sqrt, Min, Max, _SQRT2, _SQRT3, _INV_SQRT3
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary._trigonometric_special import (
     cos_table, ipartfrac, fermat_coords)
@@ -1759,7 +1759,7 @@ class sec(ReciprocalTrigonometricFunction):
     def _eval_rewrite_as_besselj(self, arg, **kwargs):
         from sympy.functions.special.bessel import besselj
         return Piecewise(
-                (1/(sqrt(pi*arg)/(sqrt(2))*besselj(-S.Half, arg)), Ne(arg, 0)),
+                (1/(sqrt(pi*arg)/_SQRT2()*besselj(-S.Half, arg)), Ne(arg, 0)),
                 (1, True)
             )
 
@@ -2036,27 +2036,27 @@ class InverseTrigonometricFunction(DefinedFunction):
         # Only keys with could_extract_minus_sign() == False
         # are actually needed.
         return {
-            sqrt(3)/2: pi/3,
-            sqrt(2)/2: pi/4,
-            1/sqrt(2): pi/4,
+            _SQRT3()/2: pi/3,
+            _SQRT2()/2: pi/4,
+            1/_SQRT2(): pi/4,
             sqrt((5 - sqrt(5))/8): pi/5,
-            sqrt(2)*sqrt(5 - sqrt(5))/4: pi/5,
+            _SQRT2()*sqrt(5 - sqrt(5))/4: pi/5,
             sqrt((5 + sqrt(5))/8): pi*Rational(2, 5),
-            sqrt(2)*sqrt(5 + sqrt(5))/4: pi*Rational(2, 5),
+            _SQRT2()*sqrt(5 + sqrt(5))/4: pi*Rational(2, 5),
             S.Half: pi/6,
-            sqrt(2 - sqrt(2))/2: pi/8,
-            sqrt(S.Half - sqrt(2)/4): pi/8,
-            sqrt(2 + sqrt(2))/2: pi*Rational(3, 8),
-            sqrt(S.Half + sqrt(2)/4): pi*Rational(3, 8),
+            sqrt(2 - _SQRT2())/2: pi/8,
+            sqrt(S.Half - _SQRT2()/4): pi/8,
+            sqrt(2 + _SQRT2())/2: pi*Rational(3, 8),
+            sqrt(S.Half + _SQRT2()/4): pi*Rational(3, 8),
             (sqrt(5) - 1)/4: pi/10,
             (1 - sqrt(5))/4: -pi/10,
             (sqrt(5) + 1)/4: pi*Rational(3, 10),
-            sqrt(6)/4 - sqrt(2)/4: pi/12,
-            -sqrt(6)/4 + sqrt(2)/4: -pi/12,
-            (sqrt(3) - 1)/sqrt(8): pi/12,
-            (1 - sqrt(3))/sqrt(8): -pi/12,
-            sqrt(6)/4 + sqrt(2)/4: pi*Rational(5, 12),
-            (1 + sqrt(3))/sqrt(8): pi*Rational(5, 12)
+            sqrt(6)/4 - _SQRT2()/4: pi/12,
+            -sqrt(6)/4 + _SQRT2()/4: -pi/12,
+            (_SQRT3() - 1)/sqrt(8): pi/12,
+            (1 - _SQRT3())/sqrt(8): -pi/12,
+            sqrt(6)/4 + _SQRT2()/4: pi*Rational(5, 12),
+            (1 + _SQRT3())/sqrt(8): pi*Rational(5, 12)
         }
 
 
@@ -2066,19 +2066,19 @@ class InverseTrigonometricFunction(DefinedFunction):
         # Only keys with could_extract_minus_sign() == False
         # are actually needed.
         return {
-            sqrt(3)/3: pi/6,
-            1/sqrt(3): pi/6,
-            sqrt(3): pi/3,
-            sqrt(2) - 1: pi/8,
-            1 - sqrt(2): -pi/8,
-            1 + sqrt(2): pi*Rational(3, 8),
+            _SQRT3()/3: pi/6,
+            _INV_SQRT3(): pi/6,
+            _SQRT3(): pi/3,
+            _SQRT2() - 1: pi/8,
+            1 - _SQRT2(): -pi/8,
+            1 + _SQRT2(): pi*Rational(3, 8),
             sqrt(5 - 2*sqrt(5)): pi/5,
             sqrt(5 + 2*sqrt(5)): pi*Rational(2, 5),
             sqrt(1 - 2*sqrt(5)/5): pi/10,
             sqrt(1 + 2*sqrt(5)/5): pi*Rational(3, 10),
-            2 - sqrt(3): pi/12,
-            -2 + sqrt(3): -pi/12,
-            2 + sqrt(3): pi*Rational(5, 12)
+            2 - _SQRT3(): pi/12,
+            -2 + _SQRT3(): -pi/12,
+            2 + _SQRT3(): pi*Rational(5, 12)
         }
 
     @staticmethod
@@ -2087,23 +2087,23 @@ class InverseTrigonometricFunction(DefinedFunction):
         # Keys for which could_extract_minus_sign()
         # will obviously return True are omitted.
         return {
-            2*sqrt(3)/3: pi/3,
-            sqrt(2): pi/4,
+            2*_INV_SQRT3(): pi/3,
+            _SQRT2(): pi/4,
             sqrt(2 + 2*sqrt(5)/5): pi/5,
             1/sqrt(Rational(5, 8) - sqrt(5)/8): pi/5,
             sqrt(2 - 2*sqrt(5)/5): pi*Rational(2, 5),
             1/sqrt(Rational(5, 8) + sqrt(5)/8): pi*Rational(2, 5),
             2: pi/6,
-            sqrt(4 + 2*sqrt(2)): pi/8,
-            2/sqrt(2 - sqrt(2)): pi/8,
-            sqrt(4 - 2*sqrt(2)): pi*Rational(3, 8),
-            2/sqrt(2 + sqrt(2)): pi*Rational(3, 8),
+            sqrt(4 + 2*_SQRT2()): pi/8,
+            2/sqrt(2 - _SQRT2()): pi/8,
+            sqrt(4 - 2*_SQRT2()): pi*Rational(3, 8),
+            2/sqrt(2 + _SQRT2()): pi*Rational(3, 8),
             1 + sqrt(5): pi/10,
             sqrt(5) - 1: pi*Rational(3, 10),
             -(sqrt(5) - 1): pi*Rational(-3, 10),
-            sqrt(6) + sqrt(2): pi/12,
-            sqrt(6) - sqrt(2): pi*Rational(5, 12),
-            -(sqrt(6) - sqrt(2)): pi*Rational(-5, 12)
+            sqrt(6) + _SQRT2(): pi/12,
+            sqrt(6) - _SQRT2(): pi*Rational(5, 12),
+            -(sqrt(6) - _SQRT2()): pi*Rational(-5, 12)
         }
 
 
@@ -2478,7 +2478,7 @@ class acos(InverseTrigonometricFunction):
             return self.func(arg.as_leading_term(x))
         # Handling branch points
         if x0 == 1:
-            return sqrt(2)*sqrt((S.One - arg).as_leading_term(x))
+            return _SQRT2()*sqrt((S.One - arg).as_leading_term(x))
         if x0 in (-S.One, S.ComplexInfinity):
             return self.rewrite(log)._eval_as_leading_term(x, logx=logx, cdir=cdir)
         # Handling points lying on branch cuts (-oo, -1) U (1, oo)
@@ -3158,7 +3158,7 @@ class asec(InverseTrigonometricFunction):
             return self.func(arg.as_leading_term(x))
         # Handling branch points
         if x0 == 1:
-            return sqrt(2)*sqrt((arg - S.One).as_leading_term(x))
+            return _SQRT2()*sqrt((arg - S.One).as_leading_term(x))
         if x0 in (-S.One, S.Zero):
             return self.rewrite(log)._eval_as_leading_term(x, logx=logx, cdir=cdir)
         # Handling points lying on branch cuts (-1, 1)

@@ -3,6 +3,7 @@ from sympy.core.function import _mexpand, count_ops, expand_mul
 from sympy.core.sorting import default_sort_key
 from sympy.core.symbol import Dummy
 from sympy.functions import root, sign, sqrt
+from sympy.functions.elementary.miscellaneous import _SQRT2
 from sympy.polys import Poly, PolynomialError
 
 
@@ -299,7 +300,7 @@ def _sqrtdenest_rec(expr):
         c_1 = _sqrtdenest_rec(sqrt(c2_1))
         d_1 = _sqrtdenest_rec(sqrt(a1 + c_1))
         num, den = rad_rationalize(b1, d_1)
-        c = _mexpand(d_1/sqrt(2) + num/(den*sqrt(2)))
+        c = _mexpand(d_1/_SQRT2() + num/(den*_SQRT2()))
     else:
         c = _sqrtdenest1(sqrt(c2))
 
@@ -313,7 +314,7 @@ def _sqrtdenest_rec(expr):
     if sqrt_depth(d) > 1:
         raise SqrtdenestStopIteration
     num, den = rad_rationalize(b, d)
-    r = d/sqrt(2) + num/(den*sqrt(2))
+    r = d/_SQRT2() + num/(den*_SQRT2())
     r = radsimp(r)
     return _mexpand(r)
 
@@ -456,7 +457,7 @@ def _sqrt_numeric_denest(a, b, r, d2):
         s1, s2 = sign(s), sign(b)
         if s1 == s2 == -1:
             s1 = s2 = 1
-        res = (s1 * sqrt(a + d) + s2 * sqrt(a - d)) * sqrt(2) / 2
+        res = (s1 * sqrt(a + d) + s2 * sqrt(a - d)) * _SQRT2() / 2
         return res.expand()
 
 
@@ -622,7 +623,7 @@ def _denester(nested, av0, h, max_depth_level):
                     av0[1] = None
                     return None, None
                 sqvad1 = radsimp(1/sqvad)
-                res = _mexpand(sqvad/sqrt(2) + (v[1]*sqrt(R)*sqvad1/sqrt(2)))
+                res = _mexpand(sqvad/_SQRT2() + (v[1]*sqrt(R)*sqvad1/_SQRT2()))
                 return res, f
 
                       #          sign(v[1])*sqrt(_mexpand(v[1]**2*R*vad1/2))), f
@@ -631,7 +632,7 @@ def _denester(nested, av0, h, max_depth_level):
                 if s2 <= 0:
                     return sqrt(nested[-1]), [0]*len(nested)
                 FR, s = root(_mexpand(R), 4), sqrt(s2)
-                return _mexpand(s/(sqrt(2)*FR) + v[0]*FR/(sqrt(2)*s)), f
+                return _mexpand(s/(_SQRT2()*FR) + v[0]*FR/(_SQRT2()*s)), f
 
 
 def _sqrt_ratcomb(cs, args):

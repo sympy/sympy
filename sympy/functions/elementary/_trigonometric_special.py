@@ -39,7 +39,7 @@ from sympy.core.expr import Expr
 from sympy.core.singleton import S
 from sympy.core.intfunc import igcdex
 from sympy.core.numbers import Integer
-from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.miscellaneous import sqrt, _SQRT2
 from sympy.core.cache import cacheit
 
 
@@ -190,8 +190,8 @@ def cos_5() -> Expr:
 def cos_17() -> Expr:
     r"""Computes $\cos \frac{\pi}{17}$ in square roots"""
     return sqrt(
-        (15 + sqrt(17)) / 32 + sqrt(2) * (sqrt(17 - sqrt(17)) +
-        sqrt(sqrt(2) * (-8 * sqrt(17 + sqrt(17)) - (1 - sqrt(17))
+        (15 + sqrt(17)) / 32 + _SQRT2() * (sqrt(17 - sqrt(17)) +
+        sqrt(_SQRT2() * (-8 * sqrt(17 + sqrt(17)) - (1 - sqrt(17))
         * sqrt(17 - sqrt(17))) + 6 * sqrt(17) + 34)) / 32)
 
 

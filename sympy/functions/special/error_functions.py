@@ -15,7 +15,7 @@ from sympy.core.sympify import sympify
 from sympy.functions.combinatorial.factorials import factorial, factorial2, RisingFactorial
 from sympy.functions.elementary.complexes import  polar_lift, re, unpolarify
 from sympy.functions.elementary.integers import ceiling, floor
-from sympy.functions.elementary.miscellaneous import sqrt, root
+from sympy.functions.elementary.miscellaneous import sqrt, root, _SQRT2
 from sympy.functions.elementary.exponential import exp, log, exp_polar
 from sympy.functions.elementary.hyperbolic import cosh, sinh
 from sympy.functions.elementary.trigonometric import cos, sin, sinc
@@ -2488,7 +2488,7 @@ class fresnels(FresnelIntegral):
         return pi*z**3/6 * hyper([Rational(3, 4)], [Rational(3, 2), Rational(7, 4)], -pi**2*z**4/16)
 
     def _eval_rewrite_as_meijerg(self, z, **kwargs):
-        return (pi*z**Rational(9, 4) / (sqrt(2)*(z**2)**Rational(3, 4)*(-z)**Rational(3, 4))
+        return (pi*z**Rational(9, 4) / (_SQRT2()*(z**2)**Rational(3, 4)*(-z)**Rational(3, 4))
                 * meijerg([], [1], [Rational(3, 4)], [Rational(1, 4), 0], -pi**2*z**4/16))
 
     def _eval_rewrite_as_Integral(self, z, **kwargs):
@@ -2649,7 +2649,7 @@ class fresnelc(FresnelIntegral):
         return z * hyper([Rational(1, 4)], [S.Half, Rational(5, 4)], -pi**2*z**4/16)
 
     def _eval_rewrite_as_meijerg(self, z, **kwargs):
-        return (pi*z**Rational(3, 4) / (sqrt(2)*root(z**2, 4)*root(-z, 4))
+        return (pi*z**Rational(3, 4) / (_SQRT2()*root(z**2, 4)*root(-z, 4))
                 * meijerg([], [1], [Rational(1, 4)], [Rational(3, 4), 0], -pi**2*z**4/16))
 
     def _eval_rewrite_as_Integral(self, z, **kwargs):

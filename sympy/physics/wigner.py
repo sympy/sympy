@@ -63,7 +63,7 @@ from sympy.core.sympify import sympify
 from sympy.functions.combinatorial.factorials import (binomial, factorial)
 from sympy.functions.elementary.complexes import re
 from sympy.functions.elementary.exponential import exp
-from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.miscellaneous import sqrt, _SQRT2
 from sympy.functions.elementary.trigonometric import (cos, sin)
 from sympy.functions.special.spherical_harmonics import Ynm
 from sympy.matrices.dense import zeros
@@ -933,7 +933,7 @@ def real_gaunt(l_1, l_2, l_3, mu_1, mu_2, mu_3, prec=None):
     t = lambda x: 1 if x > 0 else 0
     A = lambda mu, m: t(-mu) * (s(m) * kron_del(m, mu) - kron_del(m, -mu))
     B = lambda mu, m: t(mu) * (kron_del(m, mu) + s(m) * kron_del(m, -mu))
-    U = lambda mu, m: kron_del(abs(mu), abs(m)) * (kron_del(mu, 0) * kron_del(m, 0) + (B(mu, m) + I * A(mu, m))/sqrt(2))
+    U = lambda mu, m: kron_del(abs(mu), abs(m)) * (kron_del(mu, 0) * kron_del(m, 0) + (B(mu, m) + I * A(mu, m))/_SQRT2())
 
     ugnt = 0
     for m1 in range(-l_1, l_1+1):

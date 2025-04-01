@@ -10,7 +10,7 @@ from sympy.functions.combinatorial.numbers import bernoulli, euler, nC
 from sympy.functions.elementary.complexes import Abs, im, re
 from sympy.functions.elementary.exponential import exp, log, match_real_imag
 from sympy.functions.elementary.integers import floor
-from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.miscellaneous import sqrt, _SQRT2, _SQRT3, _INV_SQRT3
 from sympy.functions.elementary.trigonometric import (
     acos, acot, asin, atan, cos, cot, csc, sec, sin, tan,
     _imaginary_unit_as_coefficient)
@@ -25,24 +25,24 @@ def _rewrite_hyperbolics_as_exp(expr):
 @cacheit
 def _acosh_table():
     return {
-        I: log(I*(1 + sqrt(2))),
-        -I: log(-I*(1 + sqrt(2))),
+        I: log(I*(1 + _SQRT2())),
+        -I: log(-I*(1 + _SQRT2())),
         S.Half: pi/3,
         Rational(-1, 2): pi*Rational(2, 3),
-        sqrt(2)/2: pi/4,
-        -sqrt(2)/2: pi*Rational(3, 4),
-        1/sqrt(2): pi/4,
-        -1/sqrt(2): pi*Rational(3, 4),
-        sqrt(3)/2: pi/6,
-        -sqrt(3)/2: pi*Rational(5, 6),
-        (sqrt(3) - 1)/sqrt(2**3): pi*Rational(5, 12),
-        -(sqrt(3) - 1)/sqrt(2**3): pi*Rational(7, 12),
-        sqrt(2 + sqrt(2))/2: pi/8,
-        -sqrt(2 + sqrt(2))/2: pi*Rational(7, 8),
-        sqrt(2 - sqrt(2))/2: pi*Rational(3, 8),
-        -sqrt(2 - sqrt(2))/2: pi*Rational(5, 8),
-        (1 + sqrt(3))/(2*sqrt(2)): pi/12,
-        -(1 + sqrt(3))/(2*sqrt(2)): pi*Rational(11, 12),
+        _SQRT2()/2: pi/4,
+        -_SQRT2()/2: pi*Rational(3, 4),
+        1/_SQRT2(): pi/4,
+        -1/_SQRT2(): pi*Rational(3, 4),
+        _SQRT3()/2: pi/6,
+        -_SQRT3()/2: pi*Rational(5, 6),
+        (_SQRT3() - 1)/sqrt(2**3): pi*Rational(5, 12),
+        -(_SQRT3() - 1)/sqrt(2**3): pi*Rational(7, 12),
+        sqrt(2 + _SQRT2())/2: pi/8,
+        -sqrt(2 + _SQRT2())/2: pi*Rational(7, 8),
+        sqrt(2 - _SQRT2())/2: pi*Rational(3, 8),
+        -sqrt(2 - _SQRT2())/2: pi*Rational(5, 8),
+        (1 + _SQRT3())/(2*_SQRT2()): pi/12,
+        -(1 + _SQRT3())/(2*_SQRT2()): pi*Rational(11, 12),
         (sqrt(5) + 1)/4: pi/5,
         -(sqrt(5) + 1)/4: pi*Rational(4, 5)
     }
@@ -52,17 +52,17 @@ def _acosh_table():
 def _acsch_table():
     return {
             I: -pi / 2,
-            I*(sqrt(2) + sqrt(6)): -pi / 12,
+            I*(_SQRT2() + sqrt(6)): -pi / 12,
             I*(1 + sqrt(5)): -pi / 10,
-            I*2 / sqrt(2 - sqrt(2)): -pi / 8,
+            I*2 / sqrt(2 - _SQRT2()): -pi / 8,
             I*2: -pi / 6,
             I*sqrt(2 + 2/sqrt(5)): -pi / 5,
-            I*sqrt(2): -pi / 4,
+            I*_SQRT2(): -pi / 4,
             I*(sqrt(5)-1): -3*pi / 10,
-            I*2 / sqrt(3): -pi / 3,
-            I*2 / sqrt(2 + sqrt(2)): -3*pi / 8,
+            I*2*_INV_SQRT3(): -pi / 3,
+            I*2 / sqrt(2 + _SQRT2()): -3*pi / 8,
             I*sqrt(2 - 2/sqrt(5)): -2*pi / 5,
-            I*(sqrt(6) - sqrt(2)): -5*pi / 12,
+            I*(sqrt(6) - _SQRT2()): -5*pi / 12,
             S(2): -I*log((1+sqrt(5))/2),
         }
 
@@ -70,30 +70,30 @@ def _acsch_table():
 @cacheit
 def _asech_table():
         return {
-            I: - (pi*I / 2) + log(1 + sqrt(2)),
-            -I: (pi*I / 2) + log(1 + sqrt(2)),
-            (sqrt(6) - sqrt(2)): pi / 12,
-            (sqrt(2) - sqrt(6)): 11*pi / 12,
+            I: - (pi*I / 2) + log(1 + _SQRT2()),
+            -I: (pi*I / 2) + log(1 + _SQRT2()),
+            (sqrt(6) - _SQRT2()): pi / 12,
+            (_SQRT2() - sqrt(6)): 11*pi / 12,
             sqrt(2 - 2/sqrt(5)): pi / 10,
             -sqrt(2 - 2/sqrt(5)): 9*pi / 10,
-            2 / sqrt(2 + sqrt(2)): pi / 8,
-            -2 / sqrt(2 + sqrt(2)): 7*pi / 8,
-            2 / sqrt(3): pi / 6,
-            -2 / sqrt(3): 5*pi / 6,
+            2 / sqrt(2 + _SQRT2()): pi / 8,
+            -2 / sqrt(2 + _SQRT2()): 7*pi / 8,
+            2*_INV_SQRT3(): pi / 6,
+            -2*_INV_SQRT3(): 5*pi / 6,
             (sqrt(5) - 1): pi / 5,
             (1 - sqrt(5)): 4*pi / 5,
-            sqrt(2): pi / 4,
-            -sqrt(2): 3*pi / 4,
+            _SQRT2(): pi / 4,
+            -_SQRT2(): 3*pi / 4,
             sqrt(2 + 2/sqrt(5)): 3*pi / 10,
             -sqrt(2 + 2/sqrt(5)): 7*pi / 10,
             S(2): pi / 3,
             -S(2): 2*pi / 3,
-            sqrt(2*(2 + sqrt(2))): 3*pi / 8,
-            -sqrt(2*(2 + sqrt(2))): 5*pi / 8,
+            sqrt(2*(2 + _SQRT2())): 3*pi / 8,
+            -sqrt(2*(2 + _SQRT2())): 5*pi / 8,
             (1 + sqrt(5)): 2*pi / 5,
             (-1 - sqrt(5)): 3*pi / 5,
-            (sqrt(6) + sqrt(2)): 5*pi / 12,
-            (-sqrt(6) - sqrt(2)): 7*pi / 12,
+            (sqrt(6) + _SQRT2()): 5*pi / 12,
+            (-sqrt(6) - _SQRT2()): 7*pi / 12,
             I*S.Infinity: -pi*I / 2,
             I*S.NegativeInfinity: pi*I / 2,
         }
@@ -1243,9 +1243,9 @@ class asinh(InverseHyperbolicFunction):
             elif arg.is_zero:
                 return S.Zero
             elif arg is S.One:
-                return log(sqrt(2) + 1)
+                return log(_SQRT2() + 1)
             elif arg is S.NegativeOne:
-                return log(sqrt(2) - 1)
+                return log(_SQRT2() - 1)
             elif arg.is_negative:
                 return -cls(-arg)
         else:
@@ -2134,9 +2134,9 @@ class acsch(InverseHyperbolicFunction):
             elif arg.is_zero:
                 return S.ComplexInfinity
             elif arg is S.One:
-                return log(1 + sqrt(2))
+                return log(1 + _SQRT2())
             elif arg is S.NegativeOne:
-                return - log(1 + sqrt(2))
+                return - log(1 + _SQRT2())
 
         if arg.is_number:
             cst_table = _acsch_table()

@@ -16,8 +16,9 @@ from sympy.core.traversal import bottom_up
 from sympy.functions.combinatorial.factorials import binomial
 from sympy.functions.elementary.hyperbolic import (
     cosh, sinh, tanh, coth, sech, csch, HyperbolicFunction)
+from sympy.functions.elementary.miscellaneous import _SQRT2, _SQRT3, _INV_SQRT3
 from sympy.functions.elementary.trigonometric import (
-    cos, sin, tan, cot, sec, csc, sqrt, TrigonometricFunction)
+    cos, sin, tan, cot, sec, csc, TrigonometricFunction)
 from sympy.ntheory.factor_ import perfect_power
 from sympy.polys.polytools import factor
 from sympy.strategies.tree import greedy
@@ -737,7 +738,7 @@ def TR10i(rv):
             # that have the right ratio
             args = []
             for a in byrad:
-                for b in [_ROOT3()*a, _invROOT3()]:
+                for b in [_SQRT3()*a, _INV_SQRT3()]:
                     if b in byrad:
                         for i in range(len(byrad[a])):
                             if byrad[a][i] is None:
@@ -1715,21 +1716,6 @@ fufuncs = '''
 FU = dict(list(zip(fufuncs, list(map(locals().get, fufuncs)))))
 
 
-@cacheit
-def _ROOT2():
-    return sqrt(2)
-
-
-@cacheit
-def _ROOT3():
-    return sqrt(3)
-
-
-@cacheit
-def _invROOT3():
-    return 1/sqrt(3)
-
-
 def trig_split(a, b, two=False):
     """Return the gcd, s1, s2, a1, a2, bool where
 
@@ -1898,12 +1884,12 @@ def trig_split(a, b, two=False):
         if not cob:
             cob = S.One
         if coa is cob:
-            gcd *= _ROOT2()
+            gcd *= _SQRT2()
             return gcd, n1, n2, c.args[0], pi/4, False
-        elif coa/cob == _ROOT3():
+        elif coa/cob == _SQRT3():
             gcd *= 2*cob
             return gcd, n1, n2, c.args[0], pi/3, False
-        elif coa/cob == _invROOT3():
+        elif coa/cob == _INV_SQRT3():
             gcd *= 2*coa
             return gcd, n1, n2, c.args[0], pi/6, False
 

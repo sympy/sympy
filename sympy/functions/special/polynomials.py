@@ -14,7 +14,7 @@ from sympy.functions.combinatorial.factorials import binomial, factorial, Rising
 from sympy.functions.elementary.complexes import re
 from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.integers import floor
-from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.miscellaneous import sqrt, _SQRT2
 from sympy.functions.elementary.trigonometric import cos, sec
 from sympy.functions.special.gamma_functions import gamma
 from sympy.functions.special.hyper import hyper
@@ -1102,7 +1102,7 @@ class hermite(OrthogonalPolynomial):
         return self._eval_rewrite_as_Sum(n, x, **kwargs)
 
     def _eval_rewrite_as_hermite_prob(self, n, x, **kwargs):
-        return sqrt(2)**n * hermite_prob(n, x*sqrt(2))
+        return _SQRT2()**n * hermite_prob(n, x*_SQRT2())
 
 
 class hermite_prob(OrthogonalPolynomial):
@@ -1199,7 +1199,7 @@ class hermite_prob(OrthogonalPolynomial):
         return self._eval_rewrite_as_Sum(n, x, **kwargs)
 
     def _eval_rewrite_as_hermite(self, n, x, **kwargs):
-        return sqrt(2)**(-n) * hermite(n, x/sqrt(2))
+        return _SQRT2()**(-n) * hermite(n, x/_SQRT2())
 
 
 #----------------------------------------------------------------------------

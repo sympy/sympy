@@ -43,10 +43,10 @@ def swinnerton_dyer_poly(n, x=None, polys=False):
         x = Dummy('x')
 
     if n > 3:
-        from sympy.functions.elementary.miscellaneous import sqrt
+        from sympy.functions.elementary.miscellaneous import sqrt, _SQRT2
         from .numberfields import minimal_polynomial
         p = 2
-        a = [sqrt(2)]
+        a = [_SQRT2()]
         for i in range(2, n + 1):
             p = nextprime(p)
             a.append(sqrt(p))

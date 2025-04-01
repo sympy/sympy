@@ -25,7 +25,7 @@ from sympy.core.numbers import Number
 from sympy.core.singleton import S as _S
 from sympy.core.sorting import default_sort_key
 from sympy.core.sympify import _sympify
-from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.miscellaneous import sqrt, _SQRT2
 from sympy.printing.pretty.stringpict import prettyForm, stringPict
 
 from sympy.physics.quantum.anticommutator import AntiCommutator
@@ -682,22 +682,22 @@ class HadamardGate(HermitianOperator, OneQubitGate):
             return matrix_cache.get_matrix('Hsqrt2', format)
 
     def _eval_commutator_XGate(self, other, **hints):
-        return I*sqrt(2)*YGate(self.targets[0])
+        return I*_SQRT2()*YGate(self.targets[0])
 
     def _eval_commutator_YGate(self, other, **hints):
-        return I*sqrt(2)*(ZGate(self.targets[0]) - XGate(self.targets[0]))
+        return I*_SQRT2()*(ZGate(self.targets[0]) - XGate(self.targets[0]))
 
     def _eval_commutator_ZGate(self, other, **hints):
-        return -I*sqrt(2)*YGate(self.targets[0])
+        return -I*_SQRT2()*YGate(self.targets[0])
 
     def _eval_anticommutator_XGate(self, other, **hints):
-        return sqrt(2)*IdentityGate(self.targets[0])
+        return _SQRT2()*IdentityGate(self.targets[0])
 
     def _eval_anticommutator_YGate(self, other, **hints):
         return _S.Zero
 
     def _eval_anticommutator_ZGate(self, other, **hints):
-        return sqrt(2)*IdentityGate(self.targets[0])
+        return _SQRT2()*IdentityGate(self.targets[0])
 
 
 class XGate(HermitianOperator, OneQubitGate):

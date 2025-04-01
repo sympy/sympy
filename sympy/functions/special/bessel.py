@@ -14,7 +14,7 @@ from sympy.functions.combinatorial.factorials import factorial, RisingFactorial
 from sympy.functions.elementary.trigonometric import sin, cos, csc, cot
 from sympy.functions.elementary.integers import ceiling
 from sympy.functions.elementary.exponential import exp, log
-from sympy.functions.elementary.miscellaneous import cbrt, sqrt, root
+from sympy.functions.elementary.miscellaneous import cbrt, sqrt, root, _SQRT2, _SQRT3, _INV_SQRT3
 from sympy.functions.elementary.complexes import (Abs, re, im, polar_lift, unpolarify)
 from sympy.functions.special.gamma_functions import gamma, digamma, uppergamma
 from sympy.functions.special.hyper import hyper
@@ -237,7 +237,7 @@ class besselj(BesselBase):
             if not sign.is_negative:
                 # Refer Abramowitz and Stegun 1965, p. 364 for more information on
                 # asymptotic approximation of besselj function.
-                return sqrt(2)*cos(z - pi*(2*nu + 1)/4)/sqrt(pi*z)
+                return _SQRT2()*cos(z - pi*(2*nu + 1)/4)/sqrt(pi*z)
             return self
 
         return super(besselj, self)._eval_as_leading_term(x, logx=logx, cdir=cdir)
@@ -375,7 +375,7 @@ class bessely(BesselBase):
             if not sign.is_negative:
                 # Refer Abramowitz and Stegun 1965, p. 364 for more information on
                 # asymptotic approximation of bessely function.
-                return sqrt(2)*(-sin(pi*nu/2 - z + pi/4) + 3*cos(pi*nu/2 - z + pi/4)/(8*z))*sqrt(1/z)/sqrt(pi)
+                return _SQRT2()*(-sin(pi*nu/2 - z + pi/4) + 3*cos(pi*nu/2 - z + pi/4)/(8*z))*sqrt(1/z)/sqrt(pi)
             return self
 
         return super(bessely, self)._eval_as_leading_term(x, logx=logx, cdir=cdir)
@@ -1540,7 +1540,7 @@ class airyai(AiryBase):
                     n = M[n]
                     pf = (d * z**n)**m / (d**m * z**(m*n))
                     newarg = c * d**m * z**(m*n)
-                    return S.Half * ((pf + S.One)*airyai(newarg) - (pf - S.One)/sqrt(3)*airybi(newarg))
+                    return S.Half * ((pf + S.One)*airyai(newarg) - (pf - S.One)*_INV_SQRT3()*airybi(newarg))
 
 
 class airybi(AiryBase):
@@ -1685,7 +1685,7 @@ class airybi(AiryBase):
         tt = Rational(2, 3)
         a = Pow(z, Rational(3, 2))
         if re(z).is_positive:
-            return sqrt(z)/sqrt(3) * (besseli(-ot, tt*a) + besseli(ot, tt*a))
+            return sqrt(z)*_INV_SQRT3() * (besseli(-ot, tt*a) + besseli(ot, tt*a))
         else:
             b = Pow(a, ot)
             c = Pow(a, -ot)
@@ -1717,7 +1717,7 @@ class airybi(AiryBase):
                     n = M[n]
                     pf = (d * z**n)**m / (d**m * z**(m*n))
                     newarg = c * d**m * z**(m*n)
-                    return S.Half * (sqrt(3)*(S.One - pf)*airyai(newarg) + (S.One + pf)*airybi(newarg))
+                    return S.Half * (_SQRT3()*(S.One - pf)*airyai(newarg) + (S.One + pf)*airybi(newarg))
 
 
 class airyaiprime(AiryBase):
@@ -1874,7 +1874,7 @@ class airyaiprime(AiryBase):
                     n = M[n]
                     pf = (d**m * z**(n*m)) / (d * z**n)**m
                     newarg = c * d**m * z**(n*m)
-                    return S.Half * ((pf + S.One)*airyaiprime(newarg) + (pf - S.One)/sqrt(3)*airybiprime(newarg))
+                    return S.Half * ((pf + S.One)*airyaiprime(newarg) + (pf - S.One)*_INV_SQRT3()*airybiprime(newarg))
 
 
 class airybiprime(AiryBase):
@@ -1996,14 +1996,14 @@ class airybiprime(AiryBase):
         tt = Rational(2, 3)
         a = tt * Pow(-z, Rational(3, 2))
         if re(z).is_negative:
-            return -z/sqrt(3) * (besselj(-tt, a) + besselj(tt, a))
+            return -z*_INV_SQRT3() * (besselj(-tt, a) + besselj(tt, a))
 
     def _eval_rewrite_as_besseli(self, z, **kwargs):
         ot = Rational(1, 3)
         tt = Rational(2, 3)
         a = tt * Pow(z, Rational(3, 2))
         if re(z).is_positive:
-            return z/sqrt(3) * (besseli(-tt, a) + besseli(tt, a))
+            return z*_INV_SQRT3() * (besseli(-tt, a) + besseli(tt, a))
         else:
             a = Pow(z, Rational(3, 2))
             b = Pow(a, tt)
@@ -2038,7 +2038,7 @@ class airybiprime(AiryBase):
                     n = M[n]
                     pf = (d**m * z**(n*m)) / (d * z**n)**m
                     newarg = c * d**m * z**(n*m)
-                    return S.Half * (sqrt(3)*(pf - S.One)*airyaiprime(newarg) + (pf + S.One)*airybiprime(newarg))
+                    return S.Half * (_SQRT3()*(pf - S.One)*airyaiprime(newarg) + (pf + S.One)*airybiprime(newarg))
 
 
 class marcumq(DefinedFunction):

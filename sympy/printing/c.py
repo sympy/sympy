@@ -103,7 +103,7 @@ def get_math_macros():
     """
     from sympy.codegen.cfunctions import log2, Sqrt
     from sympy.functions.elementary.exponential import log
-    from sympy.functions.elementary.miscellaneous import sqrt
+    from sympy.functions.elementary.miscellaneous import sqrt, _SQRT2
 
     return {
         S.Exp1: 'M_E',
@@ -118,9 +118,9 @@ def get_math_macros():
         2/S.Pi: 'M_2_PI',
         2/sqrt(S.Pi): 'M_2_SQRTPI',
         2/Sqrt(S.Pi): 'M_2_SQRTPI',
-        sqrt(2): 'M_SQRT2',
+        _SQRT2(): 'M_SQRT2',
         Sqrt(2): 'M_SQRT2',
-        1/sqrt(2): 'M_SQRT1_2',
+        1/_SQRT2(): 'M_SQRT1_2',
         1/Sqrt(2): 'M_SQRT1_2'
     }
 
