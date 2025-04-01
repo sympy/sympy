@@ -69,8 +69,7 @@ def test_zero():
     # relevant facts, because going from Q.nonzero(x*y) -> ~Q.zero(x*y) and
     # Q.zero(x*y) -> Equivalent(Q.zero(x*y), Q.zero(x) | Q.zero(y)) takes two
     # steps.
-    assert satask(Q.zero(x) | Q.zero(y), Q.nonzero(x*y) & Q.finite(x) & Q.finite(y)) is False
-
+    assert satask(Q.zero(x) | Q.zero(y), Q.nonzero(x*y)) is False
     assert satask(Q.zero(x), Q.zero(x**2)) is True
 
 
