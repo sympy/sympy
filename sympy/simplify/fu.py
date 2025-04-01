@@ -1,7 +1,6 @@
 from collections import defaultdict
 
 from sympy.core.add import Add
-from sympy.core.cache import cacheit
 from sympy.core.expr import Expr
 from sympy.core.exprtools import Factors, gcd_terms, factor_terms
 from sympy.core.function import expand_mul
