@@ -896,7 +896,6 @@ class harmonic(DefinedFunction):
     harmonic_cache: dict[Integer, Callable[[int], Rational]] = {}
 
     @classmethod
-    @classmethod
     def eval(cls, n, m=None):
         from sympy.functions.special.zeta_functions import zeta
 
