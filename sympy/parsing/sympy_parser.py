@@ -914,6 +914,10 @@ def parse_expr(s: str, local_dict: Optional[DICT] = None,
                global_dict: Optional[DICT] = None, evaluate=True):
     """Converts the string ``s`` to a SymPy expression, in ``local_dict``.
 
+    .. warning::
+        Note that this function uses ``eval``, and thus shouldn't be used on
+        unsanitized input.
+
     Parameters
     ==========
 

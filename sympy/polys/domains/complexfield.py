@@ -142,10 +142,7 @@ class ComplexField(Field, CharacteristicZero, SimpleDomain):
         return self.dtype(element)
 
     def from_ComplexField(self, element, base):
-        if self == base:
-            return element
-        else:
-            return self.dtype(element)
+        return self.dtype(element)
 
     def get_ring(self):
         """Returns a ring associated with ``self``. """

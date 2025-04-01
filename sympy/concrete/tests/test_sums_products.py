@@ -16,7 +16,7 @@ from sympy.core.symbol import (Dummy, Symbol, symbols)
 from sympy.core.sympify import sympify
 from sympy.functions.combinatorial.factorials import (rf, binomial, factorial)
 from sympy.functions.combinatorial.numbers import harmonic
-from sympy.functions.elementary.complexes import Abs
+from sympy.functions.elementary.complexes import Abs, re
 from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.elementary.hyperbolic import (sinh, tanh)
 from sympy.functions.elementary.integers import floor
@@ -32,6 +32,7 @@ from sympy.matrices.expressions.matexpr import MatrixSymbol
 from sympy.matrices.expressions.special import Identity
 from sympy.matrices import (Matrix, SparseMatrix,
     ImmutableDenseMatrix, ImmutableSparseMatrix, diag)
+from sympy.sets.contains import Contains
 from sympy.sets.fancysets import Range
 from sympy.sets.sets import Interval
 from sympy.simplify.combsimp import combsimp
@@ -636,18 +637,21 @@ def test_Sum_doit():
                     (0, True)), (n, 1, nmax))
 
     q, s = symbols('q, s')
-    assert summation(1/n**(2*s), (n, 1, oo)) == Piecewise((zeta(2*s), 2*s > 1),
+    assert summation(1/n**(2*s), (n, 1, oo)) == Piecewise((zeta(2*s), 2*re(s) > 1),
         (Sum(n**(-2*s), (n, 1, oo)), True))
-    assert summation(1/(n+1)**s, (n, 0, oo)) == Piecewise((zeta(s), s > 1),
+    assert summation(1/(n+1)**s, (n, 0, oo)) == Piecewise((zeta(s), re(s) > 1),
         (Sum((n + 1)**(-s), (n, 0, oo)), True))
     assert summation(1/(n+q)**s, (n, 0, oo)) == Piecewise(
-        (zeta(s, q), And(q > 0, s > 1)),
+        (zeta(s, q), And(~Contains(-q, S.Naturals0), re(s) > 1)),
         (Sum((n + q)**(-s), (n, 0, oo)), True))
     assert summation(1/(n+q)**s, (n, q, oo)) == Piecewise(
-        (zeta(s, 2*q), And(2*q > 0, s > 1)),
+        (zeta(s, 2*q), And(~Contains(-2*q, S.Naturals0), re(s) > 1)),
         (Sum((n + q)**(-s), (n, q, oo)), True))
     assert summation(1/n**2, (n, 1, oo)) == zeta(2)
     assert summation(1/n**s, (n, 0, oo)) == Sum(n**(-s), (n, 0, oo))
+    assert summation(1/(n+1)**(2+I), (n, 0, oo)) == zeta(2+I)
+    t = symbols('t', real=True, positive=True)
+    assert summation(1/(n+I)**(t+1), (n, 0, oo)) == zeta(t+1, I)
 
 
 def test_Product_doit():

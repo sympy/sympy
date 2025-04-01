@@ -1639,7 +1639,7 @@ class Distribution(Basic):
                 import pymc3 as pymc
 
             with pymc.Model():
-                if do_sample_pymc(self):
+                if do_sample_pymc(self) is not None:
                     samps = pymc.sample(draws=prod(size), chains=1, compute_convergence_checks=False,
                             progressbar=False, random_seed=seed, return_inferencedata=False)[:]['X']
                     samps = samps.reshape(size)

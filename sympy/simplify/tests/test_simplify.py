@@ -232,6 +232,8 @@ def test_issue_5652():
     n = symbols('n', commutative=False)
     assert simplify(n + n**(-n)) == n + n**(-n)
 
+def test_issue_27380():
+    assert simplify(1.0**(x+1)/1.0**x) == 1.0
 
 def test_simplify_fail1():
     x = Symbol('x')
@@ -545,6 +547,10 @@ def test_posify():
         'Integral(1/_x, (y, 1, 3)) + Integral(_y, (y, 1, 3))'
     assert str(Sum(posify(1/x**n)[0], (n,1,3)).expand()) == \
         'Sum(_x**(-n), (n, 1, 3))'
+
+    A = Matrix([[1, 2, 3], [4, 5, 6 * Abs(x)]])
+    Ap, rep = posify(A)
+    assert Ap == A.subs(*reversed(rep.popitem()))
 
     # issue 16438
     k = Symbol('k', finite=True)

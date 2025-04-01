@@ -124,7 +124,7 @@ class Vector(BasisDependent):
 
         ``True``, ``False`` or ``None``. A return value of ``True`` indicates
         that the two vectors are identically equal. A return value of ``False``
-        indictes that they are not. In some cases it is not possible to
+        indicates that they are not. In some cases it is not possible to
         determine if the two vectors are identically equal and ``None`` is
         returned.
 

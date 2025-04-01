@@ -141,7 +141,7 @@ myst_enable_checkboxes = True
 # myst_update_mathjax = False
 
 # Don't linkify links unless they start with "https://". This is needed
-# because the linkify library treates .py as a TLD.
+# because the linkify library treats .py as a TLD.
 myst_linkify_fuzzy_links = False
 
 # Add any paths that contain templates here, relative to this directory.

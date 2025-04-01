@@ -28,7 +28,7 @@ Solution
     Subpart 1
 
     >>> s, k = symbols('s k')
-    >>> gain = k                        # Let unknwon gain be k
+    >>> gain = k                        # Let unknown gain be k
     >>> a = [-3]                        # Zero at -3 in S plane
     >>> b = [-1, -2-I, -2+I]            # Poles at -1, (-2, j) and (-2, -j) in S plane
     >>> tf = TransferFunction.from_zpk(a, b, gain, s)
