@@ -245,7 +245,7 @@ class Printer:
 
     _default_settings: dict[str, Any] = {}
 
-    printmethod: str
+    printmethod: str | None = None  # must be initialized to pass tests
 
     @classmethod
     def _get_initial_settings(cls):
