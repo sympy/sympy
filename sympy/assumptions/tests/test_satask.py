@@ -47,7 +47,7 @@ def test_satask():
     assert satask(~Q.finite(x) & Q.zero(y) & Q.finite(x*y)) is None
     assert satask(~Q.finite(x) & Q.zero(y) & ~Q.finite(x*y)) is None
     assert satask(Q.zero(x*y), Q.zero(x) | Q.zero(y)) is None
-    assert satask(Implies(Q.zero(x), Q.zero(x*y))) is None
+    assert satask(Q.zero(x*y), Q.zero(x)) is None
     assert satask(Q.zero(x) | Q.zero(y), Q.nonzero(x*y)) is None
 
 
@@ -59,17 +59,18 @@ def test_zero():
 
     """
     assert satask(Q.zero(x) | Q.zero(y), Q.zero(x*y)) is True
-    assert satask(Q.zero(x*y), (Q.zero(x) | Q.zero(y)) & (Q.finite(x) & Q.finite(y))) is True
+    assert satask(Q.zero(x*y), (Q.zero(x) | Q.zero(y)) & Q.finite(x) & Q.finite(y)) is True
     assert satask(Q.zero(x*y), Q.zero(x)) is None
 
     # https://github.com/sympy/sympy/issues/27662
-    assert (satask(Q.zero(x*y), (Q.finite(x)) & (Q.finite(y)) & Q.zero(x))) is True
+    assert (satask(Q.zero(x*y), Q.finite(x) & Q.finite(y) & Q.zero(x))) is True
 
     # This one in particular requires computing the fixed-point of the
     # relevant facts, because going from Q.nonzero(x*y) -> ~Q.zero(x*y) and
     # Q.zero(x*y) -> Equivalent(Q.zero(x*y), Q.zero(x) | Q.zero(y)) takes two
     # steps.
     assert satask(Q.zero(x) | Q.zero(y), Q.nonzero(x*y)) is False
+
     assert satask(Q.zero(x), Q.zero(x**2)) is True
 
 
