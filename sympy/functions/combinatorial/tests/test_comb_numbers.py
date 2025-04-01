@@ -371,6 +371,26 @@ def test_harmonic_calculus():
     assert limit(harmonic(x, z - 1), x, oo) == Limit(harmonic(x, z - 1), x, oo, dir='-')
 
 
+def test_large_harmonic_unevaluated():
+    # For n greater than 10^5, our guard should prevent full evaluation.
+    # Instead, harmonic(n) should return a symbolic (unevaluated) expression.
+    n_large = 10 ** 6
+    H = harmonic(n_large)
+
+    # Check that H is still a symbolic unevaluated expression
+    assert isinstance(H, harmonic) and H.args[0] == n_large and H.args[1] == S.One, (
+        "For n > 10^5, harmonic(n) should return a symbolic unevaluated expression."
+    )
+
+    # Evaluate explicitly using .evalf()
+    H_numeric = H.evalf(10)
+    assert H_numeric > 0, (
+        "The evaluated numeric value should be positive for harmonic numbers."
+    )
+
+    print(f"Test passed for harmonic({n_large}).")
+
+
 def test_euler():
     assert euler(0) == 1
     assert euler(1) == 0
