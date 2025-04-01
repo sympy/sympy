@@ -25,7 +25,7 @@ from sympy.core.numbers import Number
 from sympy.core.singleton import S as _S
 from sympy.core.sorting import default_sort_key
 from sympy.core.sympify import _sympify
-from sympy.functions.elementary.miscellaneous import sqrt, _SQRT2
+from sympy.functions.elementary.miscellaneous import _SQRT2
 from sympy.printing.pretty.stringpict import prettyForm, stringPict
 
 from sympy.physics.quantum.anticommutator import AntiCommutator
