@@ -3,7 +3,7 @@ Adaptive numerical evaluation of SymPy expressions, using mpmath
 for mathematical functions.
 """
 from __future__ import annotations
-from typing import Callable, TYPE_CHECKING, Any, overload, Type
+from typing import Callable, TYPE_CHECKING, Any, overload, Type, Tuple as tTuple
 
 import math
 
@@ -77,7 +77,8 @@ representing a floating-point number: [1, -1][sign]*man*2**exp where
 sign is 0 or 1 and bc should correspond to the number of bits used to
 represent the mantissa (man) in binary notation, e.g.
 """
-MPF_TUP = tuple[int, int, int, int]  # mpf value tuple
+# Must be type Tuple for python 3.8 tests
+MPF_TUP = tTuple[int, int, int, int]  # mpf value tuple
 
 """
 Explanation
