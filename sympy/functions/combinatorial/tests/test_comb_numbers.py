@@ -248,6 +248,7 @@ def test_harmonic():
     assert harmonic(-1, 2) is S.NaN
     assert harmonic(-3, -2) == -5
     assert harmonic(-3, -3) == 9
+    assert str(harmonic(100000).evalf()) == '12.0901461298634' #issue 27853
 
 
 def test_harmonic_rational():

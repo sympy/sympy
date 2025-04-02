@@ -3,6 +3,7 @@ A Printer for generating readable representation of most SymPy classes.
 """
 
 from __future__ import annotations
+import sys
 from typing import Any
 
 from sympy.core import S, Rational, Pow, Basic, Mul, Number
@@ -713,9 +714,16 @@ class StrPrinter(Printer):
         if expr.q == 1:
             return str(expr.p)
         else:
-            if self._settings.get("sympy_integers", False):
-                return "S(%s)/%s" % (expr.p, expr.q)
-            return "%s/%s" % (expr.p, expr.q)
+            try:
+                if self._settings.get("sympy_integers", False):
+                    return "S(%s)/%s" % (expr.p, expr.q)
+                return "%s/%s" % (expr.p, expr.q)
+            except ValueError as e:
+                if "Exceeds the limit" in str(e):
+                    sys.set_int_max_str_digits(10000)
+                    if self._settings.get("sympy_integers", False):
+                        return "S(%s)/%s" % (expr.p, expr.q)
+                    return "%s/%s" % (expr.p, expr.q)
 
     def _print_PythonRational(self, expr):
         if expr.q == 1:

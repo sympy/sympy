@@ -918,6 +918,8 @@ class harmonic(DefinedFunction):
             if n.is_negative and (m.is_integer is False or m.is_nonpositive is False):
                 return S.ComplexInfinity if m is S.One else S.NaN
             if n.is_nonnegative:
+                if n > 10000:
+                    return None
                 if m.is_Integer:
                     if m not in cls.harmonic_cache:
                         @recurrence_memo([0])
