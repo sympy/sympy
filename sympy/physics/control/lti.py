@@ -1159,7 +1159,7 @@ class TransferFunction(SISOLinearTimeInvariant):
         >>> feedback = Feedback(tf1, tf2).doit()
         >>> feedback
         TransferFunction(k*(12 - 2*s)*(s**3 + 2*s**2 + 100*s), (s**3 + 2*s**2 + 100*s)*(k*(s**3 + 2*s**2 + 100*s) - 2*s + 12), s)
-        >>> feedback.to_standard_form()
+        >>> feedback.to_standard_form(cancel_poles_zeros = True)
         TransferFunction(-2*k*s + 12*k, k*s**3 + 2*k*s**2 + s*(100*k - 2) + 12, s)
 
         """
@@ -1170,7 +1170,8 @@ class TransferFunction(SISOLinearTimeInvariant):
         if cancel_poles_zeros:
             num, den = cancel(tf.num / tf.den).as_numer_denom()
 
-        return TransferFunction(num, den, self.var)
+        return TransferFunction(num.collect(self.var),
+                                den.collect(self.var), self.var)
 
     def get_asymptotic_stability_conditions(self, cancel_poles_zeros = False):
         """
@@ -1219,7 +1220,7 @@ class TransferFunction(SISOLinearTimeInvariant):
         >>> tf4 = TransferFunction(-20*s + 20, s**3 + 2*s**2 + 100*s, s)
         >>> tf5 = TransferFunction(1, k, s)
         >>> feedback = Feedback(tf4, tf5).doit()
-        >>> ineq = feedback.get_asymptotic_stability_conditions()
+        >>> ineq = feedback.get_asymptotic_stability_conditions(cancel_poles_zeros = True)
         >>> ineq
         [k > 0, 2*k > 0, 100*k - 30 > 0]
         >>> reduce_inequalities(ineq)
