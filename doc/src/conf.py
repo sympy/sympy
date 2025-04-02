@@ -39,6 +39,12 @@ extensions = ['sphinx.ext.autodoc', 'sphinx.ext.linkcode',
               'matplotlib.sphinxext.plot_directive', 'myst_parser',
               'convert-svg-to-pdf', 'sphinx.ext.intersphinx', ]
 
+
+autodoc_default_options = {
+    'exclude-members': '__contains__, __hash__, __iter__',  # 排除多个内置方法用逗号分隔
+    'members': True,          # 保留其他成员的文档
+    'undoc-members': True,    # 可选：包含未写文档的成员
+}
 # Add redirects here. This should be done whenever a page that is in the
 # existing release docs is moved somewhere else so that the URLs don't break.
 # The format is
