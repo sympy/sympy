@@ -12,6 +12,7 @@ from sympy.abc import w, x, y, z
 from sympy.core.relational import Eq, Ne
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.matrices.expressions.matexpr import MatrixSymbol
+from sympy import Min, Max, oo, ask, Q, refine
 
 
 def test_Abs():
@@ -225,3 +226,42 @@ def test_matrixelement():
     assert refine(x[1, 0], Q.symmetric(x)) == x[0, 1]
     assert refine(x[i, j], Q.symmetric(x)) == x[j, i]
     assert refine(x[j, i], Q.symmetric(x)) == x[j, i]
+
+#min/max tests for explicitly given infinities
+def test_refine_min_max_infinities():
+    z = Symbol('z', real=True) 
+    expr = Min(S.Infinity, sqrt(z)) 
+    result = refine(expr)
+    assert result == sqrt(z), f"Expected sqrt(z), got {result}"
+
+    z = Symbol('z', real=True)
+    expr = Max(-1*S.infinity, sqrt(z)) 
+    result = refine(expr) 
+    assert result == sqrt(z), f"Expected sqrt(z), got {result}"
+
+    expr = Min(S.NegativeInfinity, S.Infinity)
+    result = refine(expr)
+    assert result == S.NegativeInfinity, f"Expected -inf, got {result}"
+
+    expr = Max(S.NegativeInfinity, S.Infinity)
+    result = refine(expr)
+    assert result == S.Infinity, f"Expected +inf, got {result}"
+    
+
+
+
+# def test_refine_max_negative_infinity():
+#   z = Symbol('z', real=True)
+#   expr = Max(-1*S.infinity, sqrt(z)) 
+#   result = refine(expr) 
+#   assert result == sqrt(z), f"Expected sqrt(z), got {result}"
+
+# def test_refine_min_both_infinities():
+#   expr = Min(S.NegativeInfinity, S.Infinity)
+#   result = refine(expr)
+#   assert result == S.NegativeInfinity, f"Expected -inf, got {result}"
+
+# def test_refine_max_both_infinities():
+#   expr = Max(S.NegativeInfinity, S.Infinity)
+#   result = refine(expr)
+#   assert result == S.Infinity, f"Expected +inf, got {result}"
