@@ -181,15 +181,15 @@ class LagrangesMethod(_Methods):
         coordinates. Internally, it computes and stores the mass matrix and generalized forces
         based on the following structure:
 
-            EOM = ∂/∂t(∂L/∂q̇) - ∂L/∂q - Q - λᵗ∂f/∂q̇ = 0
+            EOM = d/dt(dL/dq_dot) - dL/dq - Q - lambda_transpose * df/dq_dot = 0
 
         where:
         - L is the Lagrangian
         - q are the generalized coordinates
-        - q̇ are the generalized velocities
+        - q_dot are the generalized velocities
         - Q are generalized non-conservative forces
         - f are constraint equations (if any)
-        - λ are the Lagrange multipliers
+        - lambda are the Lagrange multipliers
 
         If holonomic or non-holonomic constraints are present, the corresponding Lagrange multipliers
         and constraint matrices are included in the computation.
@@ -198,8 +198,8 @@ class LagrangesMethod(_Methods):
         =======
         Matrix
             The symbolic equations of motion, in the form:
-            M * q̈ + F = 0, where M is the mass matrix, F the forcing vector,
-            and q̈ the second derivatives of the generalized coordinates.
+            M * q_double_dot + F = 0, where M is the mass matrix, F the forcing vector,
+            and q_double_dot the second derivatives of the generalized coordinates.
         """
         qds = self._qdots
         qdd_zero = dict.fromkeys(self._qdoubledots, 0)
