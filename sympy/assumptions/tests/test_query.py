@@ -2161,6 +2161,16 @@ def test_algebraic():
     assert ask(Q.algebraic((E + 1)**2 + 3*E)) is False
     assert ask(Q.algebraic(pi + E)) is None
     assert ask(Q.algebraic(pi**2 + 3*E**3)) is None
+    assert ask(Q.algebraic(oo**2 + pi**2 + 1)) is False
+    assert ask(Q.algebraic(oo**2 + 3*E + E)) is False
+    assert ask(Q.algebraic(oo*pi**2)) is False
+
+    mm = S.NegativeInfinity
+    assert ask(Q.algebraic(mm*pi**2 + pi)) is False
+    assert ask(Q.algebraic((mm + E)**2)) is False
+
+    assert ask(Q.algebraic(zoo**3)) is False
+    assert ask(Q.algebraic(zoo**2 + pi**2)) is False
 
 
 
