@@ -594,6 +594,8 @@ class MathematicaParser:
     _enclosure_open = ["(", "[", "[[", "{"]
     _enclosure_close = [")", "]", "]]", "}"]
 
+    _known_constant_symbols = {'\u03c0'} # Pi is a known constant
+
     @classmethod
     def _get_neg(cls, x):
         return f"-{x}" if isinstance(x, str) and re.match(MathematicaParser._number, x) else ["Times", "-1", x]
@@ -658,7 +660,6 @@ class MathematicaParser:
         # Tokenize the input strings with a regular expression:
         token_lists = [tokenizer.findall(i) if isinstance(i, str) and self._is_valid_string(i) else [i] for i in code_splits]
         tokens = [j for i in token_lists for j in i]
-
         # Remove newlines at the beginning
         while tokens and tokens[0] == "\n":
             tokens.pop(0)
@@ -667,11 +668,16 @@ class MathematicaParser:
             tokens.pop(-1)
 
         return tokens
-    
+
     # This function will check is all characters in the string are either
     # ASCII or Greek (Unicode range \u0370 to \u03FF).
-    def _is_valid_string(self,string:str) -> bool:
-        return all(c.isascii() or '\u0370' <= c <= '\u03FF' for c in string)
+    def _is_valid_string(self, string: str) -> bool:
+        if string in self._known_constant_symbols:
+            return True
+        return all(
+            c.isascii() or ('\u0370' <= c <= '\u03FF' and c not in self._known_constant_symbols)
+            for c in string
+        )
 
     def _is_op(self, token: str | list) -> bool:
         if isinstance(token, list):
