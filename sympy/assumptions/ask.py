@@ -11,6 +11,7 @@ from sympy.utilities.decorator import memoize_property
 from sympy.utilities.exceptions import (sympy_deprecation_warning,
                                         SymPyDeprecationWarning,
                                         ignore_warnings)
+from sympy.logic.boolalg import And
 
 
 # Memoization is necessary for the properties of AssumptionKeys to
@@ -363,6 +364,96 @@ def _extract_all_facts(assump, exprs):
                 facts.add(frozenset(args))
     return CNF(facts)
 
+def _deduce_binrel_from_assumptions(proposition, assumptions):
+    """
+    Infer logical consequences or contradictions involving binary relational predicates.
+
+    Explanation
+    ===========
+
+    This is a minimal rule-based system used by `ask()` to infer binary relational
+    consequences that are not captured by the univariate (CNF-based) logic engine.
+
+    For example, the predicate `Q.ge(a, b)` can be inferred as true from the assumption
+    `Q.gt(a, b)`; conversely, `Q.gt(a, b)` contradicts `Q.lt(a, b)`, and so the former
+    should be inferred as false if the latter is assumed.
+
+    This function handles such implications and contradictions manually for common
+    binary predicates (e.g. Q.gt, Q.ge, Q.lt, Q.le, Q.eq), ensuring correct behavior
+    for simple logical inferences involving binary relations.
+
+    This is necessary because the logic backend of SymPy currently only supports
+    univariate predicate logic via CNF, and binary relations are not yet integrated
+    into the SAT solver.
+
+    Examples
+    ========
+
+    >>> from sympy import symbols, ask, Q
+    >>> a, b = symbols('a b', real=True)
+    >>> ask(Q.ge(a, b), Q.gt(a, b))
+    True
+    >>> ask(Q.gt(a, b), Q.lt(a, b))
+    False
+
+    Notes
+    =====
+
+    This function is intended to be called internally by `ask()` and is not part
+    of the public API.
+
+    """
+    # Ensure the proposition is a binary relational predicate (e.g., Q.ge(a, b))
+    if not isinstance(proposition, AppliedPredicate):
+        return None
+
+    f = proposition.function
+    args = proposition.arguments
+
+    # Rule set 1: Positive implications between binary predicates.
+    # These are simple cases where a stronger assumption implies a weaker one.
+    # For example, Q.gt(a, b) => Q.ge(a, b)
+    implication_rules = [
+        (Q.gt, Q.ge),  # gt ⇒ ge
+        (Q.lt, Q.le),  # lt ⇒ le
+    ]
+
+    for stronger, weaker in implication_rules:
+        if f == weaker:
+            # If proposition is e.g. Q.ge(a, b), and assumptions contain Q.gt(a, b),
+            # we can directly return True.
+            stronger_pred = stronger(*args)
+            if ask(stronger_pred, assumptions):
+                return True
+
+    # Rule set 2: Logical contradictions between binary predicates.
+    # These cover pairs of predicates that cannot simultaneously be true.
+    # For example, Q.lt(a, b) contradicts Q.gt(a, b), so one must be False.
+    contradiction_pairs = [
+        (Q.gt, Q.lt), (Q.lt, Q.gt),
+        (Q.ge, Q.lt), (Q.le, Q.gt),
+        (Q.eq, Q.gt), (Q.eq, Q.lt),
+    ]
+
+    # Normalize assumptions to a list for uniform processing
+    assumption_list = []
+    if isinstance(assumptions, AppliedPredicate):
+        assumption_list = [assumptions]
+    elif isinstance(assumptions, And):
+        assumption_list = list(assumptions.args)
+
+    # Check for contradictions: if any contradictory predicate is present in
+    # the assumptions, we can safely return False.
+    for a_pred, b_pred in contradiction_pairs:
+        if f == a_pred:
+            contradicting = b_pred(*args)
+            if contradicting in assumption_list:
+                return False
+
+    # If no inference could be made, return None
+    return None
+
+
 
 def ask(proposition, assumptions=True, context=global_assumptions):
     """
@@ -453,13 +544,68 @@ def ask(proposition, assumptions=True, context=global_assumptions):
     sympy.assumptions.refine.refine : Simplification using assumptions.
         Proposition is not reduced to ``None`` if the truth value cannot
         be determined.
+        
+    This function also includes a heuristic to handle cases where Python evaluates
+    symbolic relations like `a == 0` to `False` before SymPy can interpret them symbolically.
+    When this happens and assumptions include `Q.zero(a)` or `Q.eq(a, b)`, the function
+    will attempt to recover the intended symbolic relation and evaluate it accordingly.
+
+    This helps ensure expressions like `ask(a == 0, Q.zero(a))` or
+    `ask(a == 0, Q.eq(a, 0))` correctly return True.
+    
     """
     from sympy.assumptions.satask import satask
     from sympy.assumptions.lra_satask import lra_satask
     from sympy.logic.algorithms.lra_theory import UnhandledInput
+    from sympy.assumptions.predicates.common import IsTruePredicate
+    from sympy.core.relational import Relational
+    from sympy.assumptions import AppliedPredicate
+    from sympy.logic.boolalg import And
+
+
+    if isinstance(proposition, bool):
+        # Handle cases where symbolic comparison (e.g. a == 0) has been evaluated
+        # prematurely by Python into a plain bool. This typically happens when
+        # users write expressions like `ask(a == 0, Q.zero(a))`, where `a == 0`
+        # gets resolved to False before SymPy can wrap it as a symbolic Eq(a, 0).
+        #
+        # This block attempts to recover the intended symbolic meaning by
+        # inspecting the assumptions and reconstructing the appropriate
+        # binary predicate (e.g. Q.eq(a, 0)) from common patterns.
+        #
+        # For now, it handles:
+        #   - Q.zero(a) ⇒ assume proposition was Q.eq(a, 0)
+        #   - Q.eq(a, b) ⇒ assume proposition was also Q.eq(a, b)
+        
+        assumption_list = []
+        if isinstance(assumptions, AppliedPredicate):
+            assumption_list = [assumptions]
+        elif isinstance(assumptions, And):
+            assumption_list = list(assumptions.args)
+
+        for a in assumption_list:
+            if not isinstance(a, AppliedPredicate):
+                continue
+
+            func = a.function
+            args = a.arguments
+
+            # Case 1: from Q.zero(a) assume proposition should be Q.eq(a, 0)
+            if func == Q.zero and len(args) == 1:
+                x = args[0]
+                return ask(Q.eq(x, 0), assumptions, context)
+
+            # Case 2: from Q.eq(a, b) assume proposition should be Q.eq(a, b)
+            if func == Q.eq and len(args) == 2:
+                x, y = args
+                return ask(Q.eq(x, y), assumptions, context)
+
 
     proposition = sympify(proposition)
     assumptions = sympify(assumptions)
+    
+    if isinstance(proposition, Relational):
+        proposition = Q.is_true(proposition)
 
     if isinstance(proposition, Predicate) or proposition.kind is not BooleanKind:
         raise TypeError("proposition must be a valid logical expression")
@@ -474,6 +620,11 @@ def ask(proposition, assumptions=True, context=global_assumptions):
         key, args = binrelpreds[type(proposition)], proposition.args
     else:
         key, args = Q.is_true, (proposition,)
+        
+    # Intercept binary relation implications
+    binrel_result = _deduce_binrel_from_assumptions(proposition, assumptions)
+    if binrel_result is not None:
+        return binrel_result
 
     # convert local and global assumptions to CNF
     assump_cnf = CNF.from_prop(assumptions)

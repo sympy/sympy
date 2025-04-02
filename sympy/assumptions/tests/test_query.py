@@ -2526,3 +2526,19 @@ def test_issue_25221():
 def test_issue_27440():
     nan = S.NaN
     assert ask(Q.negative(nan)) is None
+    
+def test_issue_27680():
+    assert ask(x >= y, Q.gt(x, y)) is True  
+    assert ask(x <= y, Q.le(x, y)) is True  
+    assert ask(x >= y, Q.ge(x, y)) is True  
+    assert ask(x <= y, Q.lt(x, y)) is True  
+    assert ask(x == 0, Q.zero(x)) is True  
+    assert ask(x == 0, Q.eq(x, 0)) is True  
+    assert ask(Q.eq(x, 0), Q.eq(x, 0)) is True  
+    assert ask(Q.ge(x, y), Q.gt(x, y)) is True  
+    assert ask(Q.le(x, y), Q.lt(x, y)) is True  
+    assert ask(Q.gt(x, y), Q.lt(x, y)) is False
+    assert ask(Q.lt(x, y), Q.gt(x, y)) is False
+    assert ask(Q.ge(x, y), Q.lt(x, y)) is False
+    assert ask(Q.le(x, y), Q.gt(x, y)) is False
+    assert ask(Q.eq(x, y), Q.gt(x, y)) is False
