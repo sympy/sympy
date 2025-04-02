@@ -81,6 +81,27 @@ if tensorflow:
 
 w, x, y, z = symbols('w,x,y,z')
 
+def test_dummify_smart_comprehensive():
+    # 测试Python关键字
+    x_if = symbols('if')
+    f = lambdify((x_if,), x_if + 1, dummify=None)
+    assert inspect.getargspec(f).args[0].startswith('_Dummy_')
+
+    # 测试Unicode符号
+    x_alpha = symbols('xα')  # 希腊字母
+    f = lambdify((x_alpha,), x_alpha**2, dummify=None)
+    assert 'xα' in inspect.getsource(f)
+
+    # 测试带空格符号
+    x_space = symbols('x y')
+    f = lambdify((x_space,), x_space, dummify=None)
+    assert inspect.getargspec(f).args[0].startswith('_Dummy_')
+
+    # 测试有效标识符
+    x_valid = symbols('x_valid')
+    f = lambdify((x_valid,), x_valid, dummify=None)
+    assert inspect.getargspec(f).args[0] == 'x_valid'
+
 #================== Test different arguments =======================
 
 
@@ -575,7 +596,6 @@ def test_spherical_bessel():
     ytest = yn(2, x)
     assert abs(lambdify(x,ytest)(test_point) -
             ytest.subs(x,test_point).evalf()) < 1e-8
-
 
 #================== Test vectors ===================================
 
