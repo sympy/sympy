@@ -173,7 +173,7 @@ class LagrangesMethod(_Methods):
 
     def form_lagranges_equations(self):
         """
-        Generates the symbolic equations of motion using Lagrange’s equations of the second kind.
+        Generates the symbolic equations of motion using Lagrange's equations of the second kind.
 
         Explanation
         ==========
