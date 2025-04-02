@@ -1076,7 +1076,7 @@ class TransferFunction(SISOLinearTimeInvariant):
         argnew = TransferFunction(arg_num, arg_den, self.var).to_expr()
         return argnew.expand()
 
-    def is_stable(self, cancel_poles_zeros = True):
+    def is_stable(self, cancel_poles_zeros = False):
         """
         Returns True if the transfer function is asymptotically stable;
         else False.
@@ -1115,9 +1115,9 @@ class TransferFunction(SISOLinearTimeInvariant):
         True
         >>> tf5 = TransferFunction((s+1)*(s-1), (s-1)*(s+2)*(s+4), s)
         >>> tf5.is_stable()
-        True
-        >>> tf5.is_stable(cancel_poles_zeros = False)
         False
+        >>> tf5.is_stable(cancel_poles_zeros = True)
+        True
 
         """
         tf = self.to_standard_form(cancel_poles_zeros)
@@ -1136,7 +1136,7 @@ class TransferFunction(SISOLinearTimeInvariant):
 
         return None
 
-    def to_standard_form(self, cancel_poles_zeros = True):
+    def to_standard_form(self, cancel_poles_zeros = False):
         r"""
         Return the transfer function in its standard form.
 
@@ -1170,10 +1170,9 @@ class TransferFunction(SISOLinearTimeInvariant):
         if cancel_poles_zeros:
             num, den = cancel(tf.num / tf.den).as_numer_denom()
 
-        return TransferFunction(num.collect(self.var),
-                                den.collect(self.var), self.var)
+        return TransferFunction(num, den, self.var)
 
-    def get_asymptotic_stability_conditions(self, cancel_poles_zeros = True):
+    def get_asymptotic_stability_conditions(self, cancel_poles_zeros = False):
         """
         Returns the asymptotic stability conditions for
         the transfer function.

@@ -279,7 +279,8 @@ def test_TransferFunction_functions():
 
     assert G1.is_stable() is False
     assert G2.is_stable() is True
-    assert tf1.is_stable() is True
+    assert tf1.is_stable() is False
+    assert tf1.is_stable(True) is True
     assert expect2.is_stable() is False
     assert expect1.is_stable() is True
     assert stable_tf.is_stable() is True
