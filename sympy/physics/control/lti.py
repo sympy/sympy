@@ -1120,10 +1120,7 @@ class TransferFunction(SISOLinearTimeInvariant):
         False
 
         """
-        tf = self
-
-        if cancel_poles_zeros:
-            tf = self.to_standard_form()
+        tf = self.to_standard_form(cancel_poles_zeros)
 
         conditions = tf.get_asymptotic_stability_conditions(cancel_poles_zeros = False)
 
@@ -1139,7 +1136,7 @@ class TransferFunction(SISOLinearTimeInvariant):
 
         return None
 
-    def to_standard_form(self):
+    def to_standard_form(self, cancel_poles_zeros = True):
         r"""
         Return the transfer function in its standard form.
 
@@ -1148,6 +1145,9 @@ class TransferFunction(SISOLinearTimeInvariant):
         .. math::
             \frac{a_n s^n + a_{n-1} s^{n-1} + \cdots + a_1 s + a_0}
             {b_m s^m + b_{m-1} s^{m-1} + \cdots + b_1 s + b_0}
+
+        Note: Also with cancel_poles_zeros = True, there could be unaccounted
+        pole-zero cancellations.
 
         Examples
         ========
@@ -1164,7 +1164,12 @@ class TransferFunction(SISOLinearTimeInvariant):
 
         """
         tf = self.expand()
-        num, den = cancel(tf.num / tf.den).as_numer_denom()
+
+        num = tf.num
+        den = tf.den
+        if cancel_poles_zeros:
+            num, den = cancel(tf.num / tf.den).as_numer_denom()
+
         return TransferFunction(num.collect(self.var),
                                 den.collect(self.var), self.var)
 
@@ -1222,13 +1227,9 @@ class TransferFunction(SISOLinearTimeInvariant):
         (3/10 < k) & (k < oo)
 
         """
-        den = self.den
+        standard_form = self.to_standard_form(cancel_poles_zeros)
 
-        if cancel_poles_zeros:
-            standard_form = self.to_standard_form()
-            den = standard_form.den
-
-        den = Poly(den, self.var)
+        den = Poly(standard_form.den, self.var)
 
         # If a non-positive coefficient is found, the sign of the
         # polynomial is flipped.
