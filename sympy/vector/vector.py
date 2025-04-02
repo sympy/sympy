@@ -579,6 +579,28 @@ class Cross(Vector):
         obj._expr2 = expr2
         return obj
 
+    def __add__(self, other):
+        self_result = self.doit()
+        if self == self_result:
+            raise NotImplementedError("Cross product not implemented for objects of type "
+                                        f"{type(self._expr1)} and {type(self._expr2)}.")
+        other_result = other.doit()
+        if other == other_result:
+            raise NotImplementedError("Cross product not implemented for objects of type "
+                                        f"{type(other._expr1)} and {type(other._expr2)}.")
+        return self_result + other_result
+
+    def __sub__(self, other):
+        self_result = self.doit()
+        if self == self_result:
+            raise NotImplementedError("Cross product not implemented for objects of type "
+                                        f"{type(self._expr1)} and {type(self._expr2)}.")
+        other_result = other.doit()
+        if other == other_result:
+            raise NotImplementedError("Cross product not implemented for objects of type "
+                                        f"{type(other._expr1)} and {type(other._expr2)}.")
+        return self_result - other_result
+
     def doit(self, **hints):
         return cross(self._expr1, self._expr2)
 

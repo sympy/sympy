@@ -14,7 +14,6 @@ from sympy.vector.vector import Cross, Dot, cross
 from sympy.testing.pytest import raises
 from sympy.vector.kind import VectorKind
 from sympy.core.kind import NumberKind
-from sympy.testing.pytest import XFAIL
 
 
 C = CoordSys3D('C')
@@ -30,15 +29,14 @@ def test_cross():
     assert Cross(v1, v2).doit() == C.z**3*C.i + (-C.x*C.z)*C.j + (C.x*C.y - C.x*C.z**2)*C.k
     assert cross(v1, v2) == C.z**3*C.i + (-C.x*C.z)*C.j + (C.x*C.y - C.x*C.z**2)*C.k
     assert Cross(v1, v2) == -Cross(v2, v1)
-    # XXX: Cannot use Cross here. See XFAIL test below:
     assert cross(v1, v2) + cross(v2, v1) == Vector.zero
 
 
-@XFAIL
-def test_cross_xfail():
+def test_cross_opr():
     v1 = C.x * i + C.z * C.z * j
     v2 = C.x * i + C.y * j + C.z * k
     assert Cross(v1, v2) + Cross(v2, v1) == Vector.zero
+    assert Cross(v1, v2) - Cross(v2, v1) == 2*Cross(v1, v2).doit()
 
 
 def test_dot():
