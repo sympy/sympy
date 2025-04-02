@@ -176,7 +176,7 @@ class LagrangesMethod(_Methods):
         Generates the symbolic equations of motion using Lagrange's equations of the second kind.
 
         Explanation
-        ==========
+        ===========
         This method constructs the equations of motion from the provided Lagrangian and generalized
         coordinates. Internally, it computes and stores the mass matrix and generalized forces
         based on the following structure:
@@ -201,6 +201,7 @@ class LagrangesMethod(_Methods):
             M * q_double_dot + F = 0, where M is the mass matrix, F the forcing vector,
             and q_double_dot the second derivatives of the generalized coordinates.
         """
+
         qds = self._qdots
         qdd_zero = dict.fromkeys(self._qdoubledots, 0)
         n = len(self.q)
