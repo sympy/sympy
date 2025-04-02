@@ -10,6 +10,7 @@ def test_mathematica():
         '- 6x': '-6*x',
         'Sin[x]^2': 'sin(x)**2',
         '2(x-1)': '2*(x-1)',
+        'Sqrt[2]*σ' : 'sqrt(2)*σ', # test case for issue 27868
         '3y+8': '3*y+8',
         'ArcSin[2x+9(4-x)^2]/x': 'asin(2*x+9*(4-x)**2)/x',
         'x+y': 'x+y',
