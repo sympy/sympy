@@ -186,8 +186,8 @@ class LagrangesMethod(_Methods):
         # EOM = term1 - term2 - term3 - term4 = 0
 
         # First term
-        self._term1 = self._L.jacobian(qds)
-        self._term1 = self._term1.diff(dynamicsymbols._t).T
+        _jac_L_qds = self._L.jacobian(qds)
+        self._term1 = _jac_L_qds.diff(dynamicsymbols._t).T
 
         # Second term
         self._term2 = self._L.jacobian(self.q).T
