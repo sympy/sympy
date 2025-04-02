@@ -588,7 +588,7 @@ class MathematicaParser:
         "##": lambda: ["SlotSequence", "1"],
     }
 
-    _literal = r"[A-Za-z][A-Za-z0-9]*"
+    _literal = r"[A-Za-z\u0370-\u03FF][A-Za-z0-9\u0370-\u03FF]*"
     _number = r"(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)"
 
     _enclosure_open = ["(", "[", "[[", "{"]
@@ -656,7 +656,7 @@ class MathematicaParser:
             code_splits[i] = code_split
 
         # Tokenize the input strings with a regular expression:
-        token_lists = [tokenizer.findall(i) if isinstance(i, str) and i.isascii() else [i] for i in code_splits]
+        token_lists = [tokenizer.findall(i) if isinstance(i, str) and self._is_valid_string(i) else [i] for i in code_splits]
         tokens = [j for i in token_lists for j in i]
 
         # Remove newlines at the beginning
@@ -667,6 +667,11 @@ class MathematicaParser:
             tokens.pop(-1)
 
         return tokens
+    
+    # This function will check is all characters in the string are either
+    # ASCII or Greek (Unicode range \u0370 to \u03FF).
+    def _is_valid_string(self,string:str) -> bool:
+        return all(c.isascii() or '\u0370' <= c <= '\u03FF' for c in string)
 
     def _is_op(self, token: str | list) -> bool:
         if isinstance(token, list):
