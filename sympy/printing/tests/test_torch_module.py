@@ -3,7 +3,6 @@ Unit tests for the torch_module function and lambdify with "torch_module" in sym
 """
 
 import random
-import math
 import numpy as np
 
 import sympy
