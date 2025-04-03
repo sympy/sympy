@@ -24,7 +24,7 @@ The following methods are implemented for solving partial differential
 equations.  See the docstrings of the various pde_hint() functions for
 more information on each (run help(pde)):
 
-  - 1st order linear homogeneous partial differential equations
+  - 1st order linear 3homogeneous partial differential equations
     with constant coefficients.
   - 1st order linear general partial differential equations
     with constant coefficients.
@@ -49,6 +49,7 @@ from sympy.solvers.deutils import _preprocess, ode_order, _desolve
 from sympy.solvers.solvers import solve
 from sympy.simplify.radsimp import collect
 
+
 import operator
 
 
@@ -56,7 +57,8 @@ allhints = (
     "1st_linear_constant_coeff_homogeneous",
     "1st_linear_constant_coeff",
     "1st_linear_constant_coeff_Integral",
-    "1st_linear_variable_coeff"
+    "1st_linear_variable_coeff",
+    "2nd_linear_constant_coeff_homogeneous"
     )
 
 
@@ -351,6 +353,30 @@ def classify_pde(eq, func=None, dict=False, *, prep=True, **kwargs):
             if r:
                 r.update({'b': b, 'c': c, 'd': d, 'e': e})
                 matching_hints["1st_linear_variable_coeff"] = r
+    if order == 2:
+        # Match second-order linear homogeneous PDE with constant coefficients
+        a = Wild('a', exclude=[f(x,y), fx, fy, x, y])
+        b = Wild('b', exclude=[f(x,y), fx, fy, x, y])
+        c = Wild('c', exclude=[f(x,y), fx, fy, x, y])
+        d = Wild('d', exclude=[f(x,y), fx, fy, x, y])
+        e = Wild('e', exclude=[f(x,y), fx, fy, x, y])
+        f_coeff = Wild('f_coeff', exclude=[f(x,y), fx, fy, x, y])
+
+        pattern = (
+            a*f(x,y).diff(x,x) +
+            b*f(x,y).diff(x,y) +
+            c*f(x,y).diff(y,y) +
+            d*fx +
+            e*fy +
+            f_coeff*f(x,y)
+        )
+
+        match = reduced_eq.match(pattern)
+        # Verify it's truly second-order and constant coefficients
+        if match and (match[a]**2 + match[b]**2 + match[c]**2 != 0):
+            # Check all coefficients are constants (no x/y dependence)
+            if all(val.is_constant() for val in match.values()):
+                matching_hints["2nd_linear_constant_coeff_homogeneous"] = match
 
     # Order keys based on allhints.
     rettuple = tuple(i for i in allhints if i in matching_hints)
