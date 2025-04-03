@@ -168,10 +168,15 @@ jobs:
       - run: sudo apt-get install antlr4 clang
       - run: python -m pip install --upgrade pip wheel setuptools
 
+      # XXX: Deprecate and remove support for aesara.
+      # For now it pins the numpy version and so doesn't work on 3.13.
+      - if: ${{ ! contains(matrix.python-version, '3.13') }}
+        run: pip install aesara
+
       # dependencies to install in all Python versions:
       - run: pip install numpy numexpr matplotlib ipython cython          \
                          wurlitzer autowrap lxml lark z3-solver pycosat   \
-                         jax jaxlib libclang scipy aesara                 \
+                         jax jaxlib libclang scipy                        \
                          'antlr4-python3-runtime==4.11.*'                 \
                          symengine                                        \
                          numba llvmlite pymc                              \
