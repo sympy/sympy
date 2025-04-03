@@ -12,7 +12,7 @@ from sympy.core.sorting import _nodes
 from sympy.core.symbol import Dummy, symbols, Wild
 from sympy.external.gmpy import SYMPY_INTS
 from sympy.functions import sin, cos, exp, cosh, tanh, sinh, tan, cot, coth
-from sympy.functions import atan2
+from sympy.functions import atan2, asin, acos
 from sympy.functions.elementary.hyperbolic import HyperbolicFunction
 from sympy.functions.elementary.trigonometric import TrigonometricFunction
 from sympy.polys import Poly, factor, cancel, parallel_poly_from_expr
@@ -437,6 +437,18 @@ def _trigsimp_inverse(rv):
     def f(rv):
         # for simple functions
         g = getattr(rv, 'inverse', None)
+        if isinstance(rv, asin):
+            x = rv.args[0]
+            if _coeff_isneg(x):
+                print(x.args)
+                return -f(x.args[1].args[0])
+        
+        if isinstance(rv, acos):
+            x = rv.args[0]
+            if _coeff_isneg(x):
+                print(x.args)
+                return S.Pi-f(x.args[1].args[0])
+        
         if (g is not None and isinstance(rv.args[0], g()) and
                 isinstance(g()(1), TrigonometricFunction)):
             return rv.args[0].args[0]
