@@ -8,7 +8,7 @@ from sympy.combinatorics import Permutation
 from sympy.concrete.summations import Sum
 from sympy.core.numbers import Rational
 from sympy.core.singleton import S
-from sympy.core.symbol import symbols
+from sympy.core.symbol import symbols, Symbol
 from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import (cos, sin, tan)
@@ -475,3 +475,10 @@ def test_derivatives_of_hadamard_expressions():
 
     expr = hadamard_power(a.T*X*b, S.Half)
     assert expr.diff(X) == a/(2*sqrt(a.T*X*b))*b.T
+
+
+def test_issue_23364():
+    Q = MatrixSymbol('Q', 4, 4)
+    l = Symbol('l')
+    expr = (l * Q)**2
+    assert expr.diff(l) == MatMul(2 / l, (l * Q)**2)
