@@ -12,6 +12,7 @@ from sympy.core.symbol import Dummy
 from sympy.core.sympify import sympify
 from sympy.core.traversal import preorder_traversal
 from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.complexes import re, im
 from sympy.functions.elementary.miscellaneous import sqrt, cbrt
 from sympy.functions.elementary.trigonometric import cos, sin, tan
 from sympy.ntheory.factor_ import divisors
@@ -56,7 +57,7 @@ def _choose_factor(factors, x, v, dom=QQ, prec=200, bound=5):
         # with `subs` argument but we only need a ballpark evaluation
         fe = [f.as_expr().xreplace({x:v}) for f in factors]
         if v.is_number:
-            fe = [f.n(prec) for f in fe]
+            fe = [f.n(prec1) for f in fe]
 
         # assign integers [0, n) to symbols (if any)
         for n in subsets(range(bound), k=len(symbols), repetition=True):
@@ -528,6 +529,42 @@ def _minpoly_rootof(ex, x):
     return result
 
 
+def _minpoly_re(ex, x):
+    """
+    Returns the minimal polynomial of the real part of an algebraic element
+    """
+    arg = ex.args[0]
+    if arg.is_real:
+        return _minpoly_compose(arg, x, QQ)
+    elif arg.is_real is False:
+        y = Dummy('y')
+        mp = _minpoly_compose(ex.args[0], x, QQ).as_poly(x)
+        p_re, p_imag = mp.real_imag(x, y)
+        p_re_x = resultant(p_re, p_imag, y).as_poly(x)
+        _, factors = factor_list(p_re_x.as_expr(), x)
+        result = _choose_factor(factors, x, ex)
+        return result
+
+
+def _minpoly_im(ex, y):
+    """
+    Returns the minimal polynomial of the imaginary part of an algebraic element
+    """
+    arg = ex.args[0]
+    if arg.is_real:
+        return y
+    elif arg.is_imaginary:
+        return _minpoly_compose(arg, y, QQ)
+    elif arg.is_imaginary is False:
+        x = Dummy('x')
+        mp = _minpoly_compose(ex.args[0], y, QQ).as_poly(y)
+        p_re, p_imag = mp.real_imag(x, y)
+        p_imag_y = resultant(p_re, p_imag, x).as_poly(y)
+        _, factors = factor_list(p_imag_y.as_expr(), y)
+        result = _choose_factor(factors, y, ex)
+        return result
+
+
 def _minpoly_compose(ex, x, dom):
     """
     Computes the minimal polynomial of an algebraic element
@@ -616,6 +653,10 @@ def _minpoly_compose(ex, x, dom):
         res = _minpoly_exp(ex, x)
     elif ex.__class__ is CRootOf:
         res = _minpoly_rootof(ex, x)
+    elif ex.__class__ is re:
+        res = _minpoly_re(ex, x)
+    elif ex.__class__ is im:
+        res = _minpoly_im(ex, x)
     else:
         raise NotAlgebraic("%s does not seem to be an algebraic element" % ex)
     return res
