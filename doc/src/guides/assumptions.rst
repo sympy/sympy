@@ -867,7 +867,7 @@ above.  Another example is the ``is_empty`` property of sets:
     >>> from sympy import FiniteSet, Intersection
     >>> S1 = FiniteSet(1, 2)
     >>> S1
-    {1, 2}
+    FiniteSet(1, 2)
     >>> print(S1.is_empty)
     False
     >>> S2 = Intersection(FiniteSet(1), FiniteSet(Symbol('x')))
