@@ -772,7 +772,7 @@ def _isNonAlgebraic(expr, assumptions):
     References
     ==========
 
-    .. [1] https://math.stackexchange.com/users/232/qiaochu-yuan
+    .. [1] https://math.stackexchange.com/questions/1875840/references-on-pin-is-transcendental?noredirect=1&lq=1
     .. [2] https://stacks.math.columbia.edu/tag/030D
 
     """
