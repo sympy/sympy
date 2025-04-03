@@ -741,41 +741,10 @@ def _(mat, assumptions):
 
 
 # AlgebraicPredicate
+# helper function: determines if a given expression is a polynomial
+# with rational coefficients evaluated at a transcendental number. Such
+# expressions are not transcendental.
 def _isNonAlgebraic(expr, assumptions):
-    """
-    Algebraic handler helper function
-
-    Explanation
-    ===========
-
-    If t is transcendental and f is a non-constant rational polynomial,
-    then f(x) is trascendental (non-algebraic).
-
-    PROOF: We prove the contrapositive: if f is non-constant rational polynomial
-    and f(t) is algebraic, then t is algebraic. Then if g is a non-constant
-    rational polynomial such that g(f(t)) == 0, then t is solution to the non-
-    constant rational polynomial g o f. Thus t is algebraic.
-
-    Proof credited to Qiaochun Yuan at MathStackExchange.
-
-    Examples
-    ========
-
-    >>> from sympy import ask, Q, pi, E
-    >>> ask(Q.algebraic(pi**2))
-    False
-    >>> ask(Q.algebraic((E + 1)**3))
-    False
-    >>> ask(Q.transcendental(pi + E))
-    None
-
-    References
-    ==========
-
-    .. [1] https://math.stackexchange.com/questions/1875840/references-on-pin-is-transcendental?noredirect=1&lq=1
-    .. [2] https://stacks.math.columbia.edu/tag/030D
-
-    """
     # To check if the expression is a rational polynomial evaluated at pi or E, we
     # must check that the expression contains either pi or E but not both (hence the XOR).
     if not (expr.has(E) | expr.has(exp)) ^ expr.has(pi):

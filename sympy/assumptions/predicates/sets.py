@@ -355,6 +355,16 @@ class AlgebraicPredicate(Predicate):
     algebraic numbers. ``x`` is algebraic if there is some polynomial
     in ``p(x)\in \mathbb\{Q\}[x]`` such that ``p(x) = 0``.
 
+    If ``t`` is transcendental and ``f`` is a non-constant rational polynomial,
+    then ``f(x)`` is trascendental (non-algebraic).
+
+    PROOF: We prove the contrapositive: if ``f`` is non-constant rational polynomial
+    and ``f(t)`` is algebraic, then ``t`` is algebraic. Then if g is a non-constant
+    rational polynomial such that ``g(f(t)) = 0``, ``t`` is solution to the non-constant
+    rational polynomial ``g \circ f``. Thus, ``t`` is algebraic.
+
+    Proof credited to Qiaochun Yuan at MathStackExchange.
+
     Examples
     ========
 
@@ -369,7 +379,9 @@ class AlgebraicPredicate(Predicate):
     References
     ==========
 
-    .. [1] https://en.wikipedia.org/wiki/Algebraic_number
+    .. [1] https://en.wikipedia.org/wiki/Algebraic_number..
+    .. [2] https://math.stackexchange.com/questions/1875840/references-on-pin-is-transcendental?noredirect=1&lq=1
+    .. [3] https://stacks.math.columbia.edu/tag/030D
 
     """
     name = 'algebraic'
@@ -405,7 +417,6 @@ class TranscendentalPredicate(Predicate):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Transcendental_number
-
     """
 
     name = 'transcendental'
