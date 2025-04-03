@@ -260,6 +260,34 @@ def test_MatrixSymbol_determinant():
     assert Determinant(A + B).doit() == det(A + B) == (A + B).det()
 
 
+def test_rewrite_as_indexed():
+    from sympy import Indexed, IndexedBase, Idx
+    Cb = IndexedBase('C')
+    Db = IndexedBase('D')
+
+    i = Idx('i', n)
+    j = Idx('j', n)
+    k = Idx('k', n)
+
+    assert C.rewrite(Indexed) == Cb[i, j]
+    assert (C + D).rewrite(Indexed) == Cb[i, j] + Db[i, j]
+    assert (C*D).rewrite(Indexed) == Cb[i, j] * Db[j, k]
+
+    Ab = IndexedBase('A')
+    ll = Idx('l', m)
+
+    assert (C*D*A).rewrite(Indexed) == Cb[i, j]*Db[j, k]*Ab[k, ll]
+
+    k = Idx('k', m)
+
+    assert ((C + D)*A).rewrite(Indexed) == (Cb[i, j] + Db[i, j])*Ab[j, k]
+
+    i = Idx('i', m)
+    k = Idx('k', n)
+    Eb = IndexedBase('E')
+    assert (E*(C + D)).rewrite(Indexed) == (Cb[j, k] + Db[j, k])*Eb[i, j]
+
+
 def test_MatrixElement_diff():
     assert (A[3, 0]*A[0, 0]).diff(A[0, 0]) == A[3, 0]
 
