@@ -743,7 +743,7 @@ def _(mat, assumptions):
 # AlgebraicPredicate
 # helper function: determines if a given expression is a polynomial
 # with rational coefficients evaluated at a transcendental number. Such
-# expressions are not transcendental.
+# expressions are not algebraic.
 def _isNonAlgebraic(expr, assumptions):
     # To check if the expression is a rational polynomial evaluated at pi or E, we
     # must check that the expression contains either pi or E but not both (hence the XOR).
