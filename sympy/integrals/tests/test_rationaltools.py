@@ -6,7 +6,7 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import atan
 from sympy.integrals.integrals import integrate
 from sympy.polys.polytools import Poly
-from sympy.simplify.simplify import simplify
+from sympy.simplify.simplify import simplify,nsimplify
 
 from sympy.integrals.rationaltools import ratint, ratint_logpart, log_to_atan
 
@@ -111,6 +111,19 @@ def test_ratint():
     # even if the symbol is already a Dummy
     d = Dummy()
     assert ratint(1/(d**2 + 1), d, symbol=d) == atan(d)
+
+    #issue 27675
+    f = 2.06 * (x + 0.20) / (x + 0.34) ** 2
+    expected_result = nsimplify(
+        """
+        1.03 * log(0.68*x + x**2.0 + 0.1156000000000000221823)
+        - 61233967.47800592524007 * atan(
+            212323049.5076488392513*x + 72189836.83260060534544
+        )
+        """
+    )
+    assert nsimplify(ratint(f, x)) == expected_result
+    assert abs(integrate(f, (x,0,1)) - 2.19223589366895) < 1e-10
 
 
 def test_ratint_logpart():
