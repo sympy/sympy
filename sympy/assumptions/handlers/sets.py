@@ -73,8 +73,6 @@ def _(expr,assumptions):
     if ask_all(Q.integer(expr.base), Q.integer(expr.exp), assumptions=assumptions):
         if ask_any(Q.positive(expr.exp), Q.zero(expr.base-1), Q.zero(expr.base+1), assumptions=assumptions):
             return True
-        if ask(Q.positive(expr.exp), assumptions):
-            return True
 
 @IntegerPredicate.register(Mul)
 def _(expr, assumptions):
