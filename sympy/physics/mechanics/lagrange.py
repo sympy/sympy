@@ -172,8 +172,7 @@ class LagrangesMethod(_Methods):
         self._hol_coneqs = hol_coneqs
 
     def form_lagranges_equations(self):
-       """
-        Generates the symbolic equations of motion using Lagrange's equations of the second kind.
+        """Generates the symbolic equations of motion using Lagrange's equations of the second kind.
 
         Explanation
         ===========
