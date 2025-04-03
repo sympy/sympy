@@ -95,7 +95,7 @@ known_functions = {
     # "": "trunc",
     # "": "fract",
     "Abs": "abs",
-    "sign": "signum",
+    # "": "signum",
     # "": "is_sign_positive",
     # "": "is_sign_negative",
     # "": "mul_add",
@@ -561,6 +561,10 @@ class RustCodePrinter(CodePrinter):
             lhs_code = self._print(lhs)
             rhs_code = self._print(rhs)
             return self._get_statement("%s = %s" % (lhs_code, rhs_code))
+
+    def _print_sign(self, expr):
+        arg = self._print(expr.args[0])
+        return "(if (%s == 0.0) { 0.0 } else { (%s).signum() })" % (arg, arg)
 
     def _cast_to_float(self, expr):
         if not expr.is_number:

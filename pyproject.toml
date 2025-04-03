@@ -49,6 +49,7 @@ lint.select = [
     "PIE810",
     "PLE",
     "PLR1736",
+    "PLW0602", # Global statement used but no assignment
     "SIM101",
     "SLOT",
     "TRY002",

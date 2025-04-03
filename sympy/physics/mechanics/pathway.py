@@ -322,7 +322,7 @@ class ObstacleSetPathway(PathwayBase):
     Parameters
     ==========
 
-    attachments : tuple[Point, Point]
+    attachments : tuple[Point, ...]
         The set of ``Point`` objects that define the segmented obstacle-set
         pathway.
 

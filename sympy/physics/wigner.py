@@ -1025,7 +1025,7 @@ def wigner_d_small(J, beta):
     such that
 
     .. math ::
-        d^{(J)}_{m',m}(\\beta) = \\mathtt{wigner_d_small(J,beta)[J-mprime,J-m]}
+        d^{(J)}_{m',m}(\\beta) = \\mathtt{wigner\\_d\\_small(J,beta)[J-mprime,J-m]}
 
     The components are calculated using the general form [Edmonds74]_,
     equation 4.1.15.
