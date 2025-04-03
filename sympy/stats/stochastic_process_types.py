@@ -1044,7 +1044,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
         for class_ in classes:
             # begin recurrent check (similar to self._check_trans_probs())
             submatrix = T[class_, class_]  # get the submatrix with those states
-            is_recurrent = S.true
+            is_recurrent: Boolean = S.true
             rows = submatrix.tolist()
             for row in rows:
                 if (sum(row) - 1) != 0:

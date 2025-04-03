@@ -37,7 +37,7 @@ from sympy.core.logic import fuzzy_not
 from sympy.core.mul import Mul
 from sympy.core.numbers import Integer, Number, E
 from sympy.core.power import Pow
-from sympy.core.relational import Eq, Ne, Boolean
+from sympy.core.relational import Eq, Ne
 from sympy.core.singleton import S
 from sympy.core.symbol import Dummy, Symbol, Wild
 from sympy.functions.elementary.complexes import Abs
@@ -58,7 +58,7 @@ from sympy.functions.special.polynomials import (chebyshevt, chebyshevu,
     OrthogonalPolynomial)
 from sympy.functions.special.zeta_functions import polylog
 from .integrals import Integral
-from sympy.logic.boolalg import And
+from sympy.logic.boolalg import And, Boolean
 from sympy.ntheory.factor_ import primefactors
 from sympy.polys.polytools import degree, lcm_list, gcd_list, Poly
 from sympy.simplify.radsimp import fraction
@@ -1066,7 +1066,7 @@ def nested_pow_rule(integral: IntegralInfo):
     a_ = Wild('a', exclude=[x])
     b_ = Wild('b', exclude=[x, 0])
     pattern = a_+b_*x
-    generic_cond = S.true
+    generic_cond: Boolean = S.true
 
     class NoMatch(Exception):
         pass
@@ -1167,7 +1167,7 @@ def inverse_trig_rule(integral: IntegralInfo, degenerate=True):
         step = _add_degenerate_step(non_square_cond, generic_step, square_step)
         if k.is_real and c.is_real:
             # list of ((rule, base_exp, a, sign_a, b, sign_b), condition)
-            rules = []
+            rules: list[tuple[Rule, Boolean]] = []
             for args, cond in (  # don't apply ArccoshRule to x**2-1
                 ((ArcsinRule, k, 1, -c, -1, h), And(k > 0, c < 0)),  # 1-x**2
                 ((ArcsinhRule, k, 1, c, 1, h), And(k > 0, c > 0)),  # 1+x**2

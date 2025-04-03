@@ -28,7 +28,7 @@ from sympy.functions.elementary.trigonometric import asin
 
 from itertools import product
 
-a, c, x, y, z = symbols('a,c,x,y,z')
+a, c, x, y, z = symbols('a,c,x,y,z', seq=True)
 b = Symbol("b", positive=True)
 
 
