@@ -1422,8 +1422,7 @@ class Permutation(Atom):
         Permutation([0, 1, 2, 3])
         """
         if isinstance(n, Permutation):
-            raise NotImplementedError(
-                'p**p is not defined; do you mean p^p (conjugate)?')
+            return NotImplemented
         n = int(n)
         return self._af_new(_af_pow(self.array_form, n))
 
@@ -1441,8 +1440,7 @@ class Permutation(Atom):
         if int_valued(i):
             return self(i)
         else:
-            raise NotImplementedError(
-                "i^p = p(i) when i is an integer, not %s." % i)
+            return NotImplemented
 
     def __xor__(self, h):
         """Return the conjugate permutation ``~h*self*h` `.
