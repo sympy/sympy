@@ -144,7 +144,7 @@ jobs:
   # -------------------- Optional dependency tests ----------------- #
 
   optional-dependencies:
-    needs: code-quality
+    needs: [doctests-latest, tests-latest]
 
     runs-on: ubuntu-latest
 
@@ -189,7 +189,7 @@ jobs:
   # -------------------- Bleeding edge dependencies ----------------- #
 
   bleeding-edge:
-    needs: code-quality
+    needs: [doctests-latest, tests-latest]
     name: Bleeding edge dependencies
     runs-on: ubuntu-latest
     steps:
@@ -216,7 +216,7 @@ jobs:
   # -------------------- FLINT tests -------------------------------- #
 
   python-flint:
-    needs: code-quality
+    needs: [doctests-latest, tests-latest]
 
     runs-on: ubuntu-latest
     steps:
@@ -233,7 +233,7 @@ jobs:
   # -------------------- FLINT+gmpy2 ------------------------------ #
 
   flint-gmpy2:
-    needs: code-quality
+    needs: [doctests-latest, tests-latest]
 
     runs-on: ubuntu-latest
     steps:
@@ -250,7 +250,7 @@ jobs:
   # -------------------- Tensorflow tests -------------------------- #
 
   tensorflow:
-    needs: code-quality
+    needs: [doctests-latest, tests-latest]
 
     runs-on: ubuntu-latest
     steps:
@@ -268,7 +268,7 @@ jobs:
   # -------------------- PyTorch tests -------------------------- #
 
   pytorch:
-    needs: code-quality
+    needs: [doctests-latest, tests-latest]
 
     runs-on: ubuntu-latest
     steps:
@@ -285,7 +285,7 @@ jobs:
   # -------------------- SymEngine tests --------------------------- #
 
   symengine:
-    needs: code-quality
+    needs: [doctests-latest, tests-latest]
 
     runs-on: ubuntu-latest
     steps:
@@ -327,7 +327,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.8', '3.9', '3.10', '3.11', '3.12', '3.13', '3.14-dev', 'pypy-3.10']
+        python-version: ['3.9', '3.10', '3.11', '3.12', '3.13', '3.14-dev', 'pypy-3.10']
 
     name: ${{ matrix.python-version }} Tests
 
@@ -350,7 +350,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.8', '3.9', '3.10', '3.11', '3.12', '3.13', '3.14-dev', 'pypy-3.10']
+        python-version: ['3.9', '3.10', '3.11', '3.12', '3.13', '3.14-dev', 'pypy-3.10']
 
     name: ${{ matrix.python-version }} Doctests
 
