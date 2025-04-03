@@ -315,11 +315,6 @@ def test_unicode_names():
 
 
 def test_python3_features():
-    # Make sure the tokenizer can handle Python 3-only features
-    if sys.version_info < (3, 8):
-        skip("test_python3_features requires Python 3.8 or newer")
-
-
     assert parse_expr("123_456") == 123456
     assert parse_expr("1.2[3_4]") == parse_expr("1.2[34]") == Rational(611, 495)
     assert parse_expr("1.2[012_012]") == parse_expr("1.2[012012]") == Rational(400, 333)
