@@ -1,8 +1,11 @@
 from sympy.core.containers import Tuple
-from sympy.core.numbers import pi
+from sympy.core.mul import Mul
+from sympy.core.numbers import Float, Integer, pi
 from sympy.core.power import Pow
 from sympy.core.symbol import symbols
 from sympy.core.sympify import sympify
+from sympy.physics.units.dimensions import Dimension
+from sympy.physics.units.unitsystem import UnitSystem
 from sympy.printing.str import sstr
 from sympy.physics.units import (
     G, centimeter, coulomb, day, degree, gram, hbar, hour, inch, joule, kelvin,
@@ -161,6 +164,14 @@ def test_quantity_simplify_across_dimensions():
     assert quantity_simplify(5*kilometer/hour, across_dimensions=True, unit_system="SI") == 25*meter/(18*second)
     assert quantity_simplify(5*kilogram*meter/second**2, across_dimensions=True, unit_system="SI") == 5*newton
 
+    assert quantity_simplify(3*volt + 2*ampere*ohm, across_dimensions=True, unit_system="SI") == 5*volt
+    assert quantity_simplify(3*meter * 2*meter, across_dimensions=True, unit_system="SI") == 6*meter**2
+    assert quantity_simplify(ampere*meter*ohm, across_dimensions=True, unit_system="SI") == volt*meter
+    assert quantity_simplify(ampere*meter**3*ohm, across_dimensions=True, unit_system="SI") == volt*meter**3
+    assert quantity_simplify((2*volt + 2*ohm*ampere) / meter, across_dimensions=True, unit_system="SI") == 4*volt/meter
+    assert quantity_simplify(13140019104.1279*(-7209794853.0*ampere*ohm + 9125000000.0*volt)/(ampere*meter**3*ohm), across_dimensions=True, unit_system="SI") == Mul(Float('2.5165832219904086e+19', precision=53), Pow(meter, Integer(-3)))
+
+
 def test_check_dimensions():
     x = symbols('x')
     assert check_dimensions(inch + x) == inch + x
@@ -176,3 +187,32 @@ def test_check_dimensions():
     raises(ValueError, lambda: check_dimensions(2 * meter + 3 * second))
     raises(ValueError, lambda: check_dimensions(1 / second + 1 / meter))
     raises(ValueError, lambda: check_dimensions(2 * meter*(mile + centimeter) + km))
+
+
+def test_is_dimensionally_equivalent():
+    from sympy.physics.units.util import is_dimensionally_equivalent
+    from sympy.physics.units import ampere, ohm, volt, joule, farad, second, weber, newton
+    from sympy.physics.units import length, time, mass, current
+
+    unit_system = UnitSystem.get_unit_system("SI")
+
+    assert is_dimensionally_equivalent(meter, meter, unit_system)
+    assert is_dimensionally_equivalent(meter, centimeter, unit_system)
+    assert is_dimensionally_equivalent(meter, kilometer, unit_system)
+    assert not is_dimensionally_equivalent(meter, second, unit_system)
+    assert not is_dimensionally_equivalent(meter, newton, unit_system)
+    assert not is_dimensionally_equivalent(newton, ampere, unit_system)
+    assert not is_dimensionally_equivalent(meter, meter**2, unit_system)
+    assert is_dimensionally_equivalent(volt, ohm*ampere, unit_system)
+    assert is_dimensionally_equivalent(ohm, volt/ampere, unit_system)
+    assert is_dimensionally_equivalent(joule/ampere, weber, unit_system)
+    assert is_dimensionally_equivalent(farad, coulomb/volt, unit_system)
+
+    assert is_dimensionally_equivalent(length, meter, unit_system)
+    assert is_dimensionally_equivalent(length**2, meter**2, unit_system)
+    assert is_dimensionally_equivalent(time, second, unit_system)
+    assert is_dimensionally_equivalent(mass, kilogram, unit_system)
+    assert is_dimensionally_equivalent(kilogram, mass, unit_system)
+
+    assert is_dimensionally_equivalent(current, { current: 1 }, unit_system)
+    assert is_dimensionally_equivalent({ length: 1, time: -2 }, meter/second**2, unit_system)
