@@ -210,7 +210,7 @@ class LagrangesMethod(_Methods):
             - M : n x n mass matrix
             - F : n x 1 forcing vector
             - q_ddot : n x 1 acceleration vector
-    
+
           For constrained systems, returns the augmented form:
          [ M  C.T ] [ q_ddot ] = [ F ]
          [ C   0  ] [ lam    ]   [ c ]
