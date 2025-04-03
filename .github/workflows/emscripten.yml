@@ -50,6 +50,11 @@ jobs:
           version: ${{ env.EMSCRIPTEN_VERSION }}
           actions-cache-folder: emsdk-cache
 
+      # XXX: Remove this later...
+      # https://github.com/sympy/sympy/issues/27883
+      - name: Pin the wheel package
+        run: pip install 'wheel != 0.46.0'
+
       - name: Install pyodide-build
         run: pip install pyodide-build
 
