@@ -178,7 +178,7 @@ def pure_complex(v: Expr, or_real=False) -> tuple['Number', 'Number'] | None:
 
 
 # I don't know what this is, see function scaled_zero below
-SCALED_ZERO_TUP = tuple[list[int], int, int, int]
+SCALED_ZERO_TUP = tTuple[list[int], int, int, int]
 
 
 @overload
