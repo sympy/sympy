@@ -46,7 +46,7 @@ from sympy.simplify.fu import TR1, TR2i, TR10, TR11
 from sympy.strategies.rl import rebuild
 from sympy.matrices.exceptions import NonInvertibleMatrixError
 from sympy.matrices import Matrix, zeros
-from sympy.polys import roots, cancel, factor, Poly
+from sympy.polys import roots, cancel, factor, Poly, RootOf
 from sympy.polys.solvers import sympy_eqs_to_ring, solve_lin_sys
 from sympy.polys.polyerrors import GeneratorsNeeded, PolynomialError
 from sympy.polys.polytools import gcd
@@ -233,6 +233,7 @@ def checksol(f, symbol, sol=None, **flags):
 
     """
     from sympy.physics.units import Unit
+    from sympy.solvers.solveset import domain_check
 
     minimal = flags.get('minimal', False)
 
@@ -350,8 +351,66 @@ def checksol(f, symbol, sol=None, **flags):
             break
         if val.is_Rational:
             return val == 0
+        tol = flags.get('tol', 1e-9)
         if numerical and val.is_number:
-            return (abs(val.n(18).n(12, chop=True)) < 1e-9) is S.true
+            # Extract numeric solution from sol if needed.
+            if isinstance(sol, dict):
+                sol_val = sol[symbol] if not isinstance(symbol, dict) else list(sol.values())[0]
+            else:
+                sol_val = sol
+            sol_val = _sympify(sol_val)
+
+            # 1) Discard solutions outside the domain (e.g. sqrt of negative).
+            #    If domain_check fails, we return False immediately.
+            #    That ensures we do not accept spurious solutions.
+            if domain_check(f, symbol, sol_val) is False:
+                return False
+
+            # Try to obtain a polynomial representation. If f is not a polynomial,
+            # attempt to unradicalize it.
+            poly = None
+            if f.is_polynomial(symbol):
+                try:
+                    poly = Poly(f, symbol)
+                except Exception:
+                    poly = None
+            else:
+                try:
+                    from sympy.solvers.solvers import unrad
+                    poly_expr, _ = unrad(f)
+                    if poly_expr.is_polynomial(symbol):
+                        poly = Poly(poly_expr, symbol)
+                except Exception:
+                    poly = None
+
+            if poly is not None:
+                # Loop over all roots obtained via RootOf, evaluating them to high precision.
+                for i in range(poly.degree()):
+                    candidate = RootOf(poly, i)
+                    candidate_val = candidate.evalf(50)
+                    # Evaluate f at candidate_val with high precision.
+                    f_candidate = f.subs(symbol, candidate_val).evalf(50)
+                    # Skip candidate if f_candidate is not real or its imaginary part is above tol.
+                    if not f_candidate.is_real or abs(im(f_candidate)) > tol:
+                        continue
+                    # NEW: If the absolute residual is too large, skip candidate.
+                    if abs(f_candidate) > tol:
+                        continue
+                    try:
+                        if sol_val.is_number and candidate_val.is_number:
+                            # Use float conversion for safe sign comparison.
+                            sol_float = float(sol_val.evalf())
+                            cand_float = float(candidate_val.evalf())
+                            if sol_float != 0 and cand_float * sol_float < 0:
+                                continue
+                    except Exception:
+                        pass
+                    if abs(candidate_val - sol_val) < tol:
+                        return True
+                return False
+            else:
+                # Fallback to the original numerical check.
+                return (abs(val.n(18).n(12, chop=True)) < tol) is S.true
 
     if flags.get('warn', False):
         warnings.warn("\n\tWarning: could not verify solution %s." % sol)
