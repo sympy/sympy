@@ -1024,5 +1024,3 @@ def test_torch_module_complex_system():
 
     assert torch.allclose(result, expected, atol=1e-6), \
         f"Different input failed: Expected {expected}, got {result}"
-
-
