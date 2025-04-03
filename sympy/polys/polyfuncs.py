@@ -319,3 +319,22 @@ def viete(f, roots=None, *gens, **args):
         sign = -sign
 
     return result
+
+def vieta_expansion(cons):
+    """return coefficients of prod(x+i for i in cons).expand()
+    with the coefficient of x**n (with n = len(roots)) appearing
+    first. For (2x + 8)*(3x+15) the expansion can be used to
+    as `2*3*Poly(vieta_expansion((8//2,15//3)), x)`.
+    
+    >>> vieta_expansion((1,1))
+    [1, 2, 1]
+    >>> vieta_expansion((1,2))
+    [1, 3, 2]
+    """
+    n = len(cons)
+    c = [0]*(n + 1)
+    c[0] = c  # coeff of x**n
+    for i in range(n):
+        for j in range(i + 1, 0, -1):
+            c[j] += cons[i]*coeff[j - 1]
+    return c
