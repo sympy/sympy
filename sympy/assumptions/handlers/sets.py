@@ -68,12 +68,12 @@ def _(expr, assumptions):
 def _(expr,assumptions):
     if expr.is_number:
         return _IntegerPredicate_number(expr, assumptions)
-    if ask_all(Q.nonzero(expr.base), Q.zero(expr.exp), assumptions=assumptions):
+    if ask_all(~Q.zero(expr.base), Q.finite(expr.base), Q.zero(expr.exp), assumptions=assumptions):
         return True
     if ask_all(Q.integer(expr.base), Q.integer(expr.exp), assumptions=assumptions):
         if ask_any(Q.positive(expr.exp), Q.zero(expr.base-1), Q.zero(expr.base+1), assumptions=assumptions):
             return True
-        if ask(Q.zero(expr.base), assumptions) is not False and ask(Q.positive(expr.exp), assumptions):
+        if ask(Q.positive(expr.exp), assumptions):
             return True
 
 @IntegerPredicate.register(Mul)
