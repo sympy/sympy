@@ -12,9 +12,10 @@ See the webpage for more information and documentation:
 """
 
 
+# Keep this in sync with setup.py/pyproject.toml
 import sys
-if sys.version_info < (3, 8):
-    raise ImportError("Python version 3.8 or above is required for SymPy.")
+if sys.version_info < (3, 9):
+    raise ImportError("Python version 3.9 or above is required for SymPy.")
 del sys
 
 
