@@ -298,3 +298,35 @@ def test_dict_from_expr():
         ({(0,): -Integer(1), (1,): Integer(1)}, (x,))
     raises(PolynomialError, lambda: dict_from_expr(A*B - B*A))
     raises(PolynomialError, lambda: dict_from_expr(S.true))
+
+
+def test_rational_base_generator():
+    from sympy import (Poly, poly, div, rem, quo, exquo, invert, gcd,
+        primitive, content, sqf, factor, cancel, construct_domain, apart)
+    for a, b in [(2**x, 4**x), (x, x**2)]:
+        p = Poly(a + b)
+        assert poly(a + b) == p
+        assert (a + b).as_poly() == p
+        assert p.gens == (a,)
+        # give gen a
+        assert Poly(a + b, a) == p
+        assert poly(a + b, a) == p
+        assert (a + b).as_poly(a) == p
+        # give gen b
+        raises(PolynomialError, lambda: Poly(a + b, b))
+        raises(PolynomialError, lambda: poly(a + b, b))
+        assert (a + b).as_poly(b) is None
+        assert div(b, a) == (a, 0)
+        assert rem(b, a) == 0
+        assert quo(b, a) == a
+        assert exquo(b - 1, a - 1) == a + 1
+        assert invert(b - 1, 2*a - 1) == -4/S(3)
+        assert gcd(b, a) == a
+        assert primitive(b + a) == (1, a**2 + a)
+        assert content(b + a) == 1
+        B, E = a.as_base_exp()
+        assert sqf(b*a) == (B**3)**E
+        assert factor(b + a) == a*(a + 1)
+        assert cancel(b/a) == a
+        assert construct_domain(a + b) == (ZZ[2*x], a**2 + a)
+        assert apart((b + a)/a) == a + 1

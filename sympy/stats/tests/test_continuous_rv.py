@@ -743,6 +743,7 @@ def test_frechet():
     assert density(X)(x) == a*((x - m)/s)**(-a - 1)*exp(-((x - m)/s)**(-a))/s
     assert cdf(X)(x) == Piecewise((exp(-((-m + x)/s)**(-a)), m <= x), (0, True))
 
+
 @slow
 def test_gamma():
     k = Symbol("k", positive=True)
@@ -771,8 +772,8 @@ def test_gamma():
 
     Y = Gamma('y', 2*k, 3*theta)
     assert coskewness(X, theta*X + Y, k*X + Y).simplify() == \
-        2*531441**(-k)*sqrt(k)*theta*(3*3**(12*k) - 2*531441**k) \
-        /(sqrt(k**2 + 18)*sqrt(theta**2 + 18))
+        2*sqrt(k)*theta/(sqrt(k**2 + 18)*sqrt(theta**2 + 18))
+
 
 def test_gamma_inverse():
     a = Symbol("a", positive=True)
@@ -783,6 +784,7 @@ def test_gamma_inverse():
     assert characteristic_function(X)(x) == 2 * (-I*b*x)**(a/2) \
             * besselk(a, 2*sqrt(b)*sqrt(-I*x))/gamma(a)
     raises(NotImplementedError, lambda: moment_generating_function(X))
+
 
 def test_gompertz():
     b = Symbol("b", positive=True)
