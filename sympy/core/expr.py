@@ -4101,7 +4101,6 @@ class UnevaluatedExpr(Expr):
             return self.args[0]
 
 
-
 def unchanged(func, *args):
     """Return True if `func` applied to the `args` is unchanged.
     Can be used instead of `assert foo == foo`.
