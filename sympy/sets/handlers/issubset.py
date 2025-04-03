@@ -1,9 +1,8 @@
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.core.logic import fuzzy_and, fuzzy_bool, fuzzy_not, fuzzy_or
-from sympy.core.relational import Eq
 from sympy.sets.sets import FiniteSet, Interval, Set, Union, ProductSet
-from sympy.sets.fancysets import Complexes, Reals, Range, Rationals
+from sympy.sets.fancysets import Complexes, Reals, Range, Rationals, Integers, ImageSet
 from sympy.multipledispatch import Dispatcher
 
 
@@ -19,15 +18,29 @@ def _(a, b):
 
 @is_subset_sets.register(Interval, Interval)
 def _(a, b):
-    # This is correct but can be made more comprehensive...
-    if fuzzy_bool(a.start < b.start):
+
+    if b.left_open and not a.left_open:
+        # [a1, a2] <= (b1, b2]
+        left_in = fuzzy_bool(a.start > b.start)
+    else:
+        # (a1, a2] <= (b1, b2]
+        # (a1, a2] <= [b1, b2]
+        # [a1, a2] <= [b1, b2]
+        left_in = fuzzy_bool(a.start >= b.start)
+
+    if left_in is False:
         return False
-    if fuzzy_bool(a.end > b.end):
-        return False
-    if (b.left_open and not a.left_open and fuzzy_bool(Eq(a.start, b.start))):
-        return False
-    if (b.right_open and not a.right_open and fuzzy_bool(Eq(a.end, b.end))):
-        return False
+
+    if b.right_open and not a.right_open:
+        # [a1, a2] <= [b1, b2)
+        right_in = fuzzy_bool(a.end < b.end)
+    else:
+        # [a1, a2) <= [b1, b2)
+        # [a1, a2) <= [b1, b2]
+        # [a1, a2] <= [b1, b2]
+        right_in = fuzzy_bool(a.end <= b.end)
+
+    return fuzzy_and([left_in, right_in])
 
 @is_subset_sets.register(Interval, FiniteSet)
 def _(a_interval, b_fs):
@@ -38,6 +51,8 @@ def _(a_interval, b_fs):
 
 @is_subset_sets.register(Interval, Union)
 def _(a_interval, b_u):
+    if fuzzy_or(a_interval.is_subset(s) for s in b_u.args):
+        return True
     if all(isinstance(s, (Interval, FiniteSet)) for s in b_u.args):
         intervals = [s for s in b_u.args if isinstance(s, Interval)]
         if all(fuzzy_bool(a_interval.start < s.start) for s in intervals):
@@ -105,6 +120,15 @@ def _(a_range, b_finiteset):
                 return True
         return None
 
+@is_subset_sets.register(ImageSet, Reals)
+def _(a_imageset, b_reals):
+    f = a_imageset.lamda
+    base = a_imageset.base_set
+    var = f.variables
+    if base.is_subset(b_reals):
+        if f.expr.as_poly(*var, domain='QQ') is not None:
+            return True
+
 @is_subset_sets.register(Interval, Range)
 def _(a_interval, b_range):
     if a_interval.measure.is_extended_nonzero:
@@ -131,6 +155,22 @@ def _(a, b):
 def _(a, b):
     return False
 
+@is_subset_sets.register(Rationals, Complexes)
+def _(a, b):
+    return True
+
+@is_subset_sets.register(Reals, Complexes)
+def _(a, b):
+    return True
+
+@is_subset_sets.register(Interval, Reals)
+def _(a, b):
+    return True
+
+@is_subset_sets.register(Integers, Rationals)
+def _(a, b):
+    return True
+
 @is_subset_sets.register(Rationals, Reals)
 def _(a, b):
     return True
@@ -138,6 +178,16 @@ def _(a, b):
 @is_subset_sets.register(Rationals, Range)
 def _(a, b):
     return False
+
+@is_subset_sets.register(Range, Rationals)
+def _(a, b):
+    return True
+
+@is_subset_sets.register(ProductSet, ProductSet)
+def _(a, b):
+    if len(a.sets) != len(b.sets):
+        return False
+    return fuzzy_and(a_i.is_subset(b_i) for a_i, b_i in zip(a.sets, b.sets))
 
 @is_subset_sets.register(ProductSet, FiniteSet)
 def _(a_ps, b_fs):
