@@ -3,7 +3,6 @@
 # This module provides pure Python implementations of some number theory
 # functions that are alternately used from gmpy2 if it is installed.
 
-import sys
 import math
 
 import mpmath.libmp as mlib
