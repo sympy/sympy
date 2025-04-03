@@ -9,7 +9,7 @@ from sympy.core.mul import Mul
 from sympy.printing.precedence import PRECEDENCE
 from sympy.external import import_module
 from sympy.codegen.cfunctions import Sqrt
-from sympy import S
+from sympy import S, MutableDenseMatrix
 from sympy import Integer
 
 import sympy
@@ -596,7 +596,8 @@ class SympyModule(torch.nn.Module):
 
         self.args = tuple(args)
         self.arg_names = [arg.name for arg in self.args]
-        self.expressions = tuple(expr) if isinstance(expr, (tuple, list)) else (expr,)
+        self.expressions = tuple(expr) if isinstance(expr, (tuple, list, MutableDenseMatrix)) else (expr,)
+
         func_lookup = {k: v[1] if isinstance(v, tuple) else v for k, v in _TORCH_FUNCTION_MAP.items()}
         func_lookup = {**func_lookup, **_TORCHMODULE_ONLY_FUNCTION_MAP}
         if extra_funcs:

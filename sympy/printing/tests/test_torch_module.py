@@ -957,7 +957,7 @@ def test_torch_module_complex_system():
         [0.8414709848078965 - 0.4161468365471424 + 2.0],  # sin(1) + cos(2) + sqrt(4)
         [-1.0 - 1.0 + 8.0],  # -1 * 1^2 - 0.5 * 2 + 2 * 4
         [3.0 * 0.9092974268256817]  # 3 * sin(2)
-    ], dtype=torch.float64)
+    ], dtype=torch.float64).squeeze()
 
     assert torch.allclose(result, expected, atol=1e-6), \
         f"Evaluation failed: Expected {expected}, got {result}"
@@ -1020,7 +1020,7 @@ def test_torch_module_complex_system():
         [0.479425538604203 + 0.5403023058681398 * 2 + 3.0],
         [0.5 * 0.25 + 1.0 - 27.0],
         [5.0 * 0.479425538604203]
-    ], dtype=torch.float64)
+    ], dtype=torch.float64).squeeze()
 
     assert torch.allclose(result, expected, atol=1e-6), \
         f"Different input failed: Expected {expected}, got {result}"
