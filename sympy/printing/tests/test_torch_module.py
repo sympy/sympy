@@ -949,14 +949,10 @@ def test_torch_module_complex_system():
 
     result = mod(x_val, y_val, z_val, a_val[0], a_val[1], a_val[2], a_val[3])
 
-    # Expected values:
-    # f1 = sin(1) + cos(2) * 1.0 + sqrt(|4|) ≈ 0.8415 - 0.4161 + 2.0 ≈ 2.4254
-    # f2 = -1.0 * 1^2 - 0.5 * 2 + 2.0 * 4 ≈ -1.0 - 1.0 + 8.0 ≈ 6.0
-    # f3 = (1.0 + 2.0) * sin(1 * 2) ≈ 3.0 * 0.9093 ≈ 2.7279
     expected = torch.tensor([
-        [0.8414709848078965 - 0.4161468365471424 + 2.0],  # sin(1) + cos(2) + sqrt(4)
-        [-1.0 - 1.0 + 8.0],  # -1 * 1^2 - 0.5 * 2 + 2 * 4
-        [3.0 * 0.9092974268256817]  # 3 * sin(2)
+        [0.8414709848078965 - 0.4161468365471424 + 2.0],
+        [-1.0 - 1.0 + 8.0],
+        [3.0 * 0.9092974268256817]
     ], dtype=torch.float64).squeeze()
 
     assert torch.allclose(result, expected, atol=1e-6), \
@@ -971,33 +967,26 @@ def test_torch_module_complex_system():
     result = mod(x_val, y_val, z_val, a_val[0], a_val[1], a_val[2], a_val[3])
     assert result.requires_grad, "Output should support gradients"
 
-    # Compute gradient of sum(result) w.r.t. x, y, z
     result.sum().backward()
     assert x_val.grad is not None, "Gradient w.r.t. x should be computed"
     assert y_val.grad is not None, "Gradient w.r.t. y should be computed"
     assert z_val.grad is not None, "Gradient w.r.t. z should be computed"
 
-    # Analytical gradients:
-    # f = [sin(x) + cos(y)*A00 + sqrt(abs(z)), A01*x^2 - A10*y + A11*z, (A00 + A11)*sin(x*y)]
-    # ∂f/∂x = [cos(x), 2*A01*x, (A00 + A11)*cos(x*y)*y]
-    # ∂f/∂y = [-sin(y)*A00, -A10, (A00 + A11)*cos(x*y)*x]
-    # ∂f/∂z = [1/(2*sqrt(|z|))*sign(z), A11, 0]
-    # grad of sum = sum of each ∂f/∂var
     expected_x_grad = (
-        cos(1.0) +  # ∂f1/∂x
-        2 * (-1.0) * 1.0 +  # ∂f2/∂x: 2 * A01 * x
-        (1.0 + 2.0) * cos(1.0 * 2.0) * 2.0  # ∂f3/∂x: (A00 + A11) * cos(x*y) * y
-    )  # ≈ 0.5403 - 2.0 + 3 * (-0.4161) * 2 ≈ -4.7486
+        cos(1.0) +
+        2 * (-1.0) * 1.0 +
+        (1.0 + 2.0) * cos(1.0 * 2.0) * 2.0
+    )
     expected_y_grad = (
-        -sin(2.0) * 1.0 +  # ∂f1/∂y: -sin(y) * A00
-        -0.5 +  # ∂f2/∂y: -A10
-        (1.0 + 2.0) * cos(1.0 * 2.0) * 1.0  # ∂f3/∂y: (A00 + A11) * cos(x*y) * x
-    )  # ≈ -0.9093 - 0.5 + 3 * (-0.4161) ≈ -2.6576
+        -sin(2.0) * 1.0 +
+        -0.5 +
+        (1.0 + 2.0) * cos(1.0 * 2.0) * 1.0
+    )
     expected_z_grad = (
-        1.0 / (2 * sqrt(4.0)) * 1.0 +  # ∂f1/∂z: 1/(2*sqrt(|z|)) * sign(z)
-        2.0 +  # ∂f2/∂z: A11
-        0.0  # ∂f3/∂z
-    )  # ≈ 0.25 + 2.0 ≈ 2.25
+        1.0 / (2 * sqrt(4.0)) * 1.0 +
+        2.0 +
+        0.0
+    )
 
     expected_grad = torch.tensor([expected_x_grad, expected_y_grad, expected_z_grad], dtype=torch.float64)
     computed_grad = torch.tensor([x_val.grad.item(), y_val.grad.item(), z_val.grad.item()], dtype=torch.float64)
@@ -1012,10 +1001,6 @@ def test_torch_module_complex_system():
 
     result = mod(x_val, y_val, z_val, a_val[0], a_val[1], a_val[2], a_val[3])
 
-    # Expected values:
-    # f1 = sin(0.5) + cos(1) * 2 + sqrt(|-9|) ≈ 0.4794 + 0.5403 * 2 + 3 ≈ 4.5594
-    # f2 = 0.5 * 0.5^2 - (-1) * 1 + 3 * (-9) ≈ 0.125 + 1 - 27 ≈ -25.875
-    # f3 = (2 + 3) * sin(0.5 * 1) ≈ 5 * 0.4794 ≈ 2.3970
     expected = torch.tensor([
         [0.479425538604203 + 0.5403023058681398 * 2 + 3.0],
         [0.5 * 0.25 + 1.0 - 27.0],
