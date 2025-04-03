@@ -437,9 +437,11 @@ def _trigsimp_inverse(rv):
     def f(rv):
         # for simple functions
         g = getattr(rv, 'inverse', None)
-        if (g is not None and isinstance(rv.args[0], g()) and
-                isinstance(g()(1), TrigonometricFunction)):
-            return rv.args[0].args[0]
+
+        if g is not None:
+            g_type = g()
+            if g_type is not None and isinstance(rv.args[0], g_type) and isinstance(g_type(1), TrigonometricFunction):
+                return rv.args[0].args[0]
 
         # for atan2 simplifications, harder because atan2 has 2 args
         if isinstance(rv, atan2):
