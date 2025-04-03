@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 
-import sys
 import builtins
 import types
 
@@ -10,7 +9,7 @@ from sympy.core import Symbol, Function, Float, Rational, Integer, I, Mul, Pow, 
 from sympy.functions import exp, factorial, factorial2, sin, Min, Max
 from sympy.logic import And
 from sympy.series import Limit
-from sympy.testing.pytest import raises, skip
+from sympy.testing.pytest import raises
 
 from sympy.parsing.sympy_parser import (
     parse_expr, standard_transformations, rationalize, TokenError,
