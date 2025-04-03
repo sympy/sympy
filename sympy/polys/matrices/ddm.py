@@ -424,7 +424,7 @@ class DDM(list):
 
     def iter_values(self):
         """
-        Iterater over the non-zero values of the matrix.
+        Iterate over the non-zero values of the matrix.
 
         Examples
         ========

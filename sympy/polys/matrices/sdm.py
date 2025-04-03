@@ -1529,7 +1529,7 @@ def sdm_matmul_exraw(A, B, K, m, o):
     #
     # Like sdm_matmul above except that:
     #
-    # - Handles cases like 0*oo -> nan (sdm_matmul skips multipication by zero)
+    # - Handles cases like 0*oo -> nan (sdm_matmul skips multiplication by zero)
     # - Uses K.sum (Add(*items)) for efficient addition of Expr
     #
     zero = K.zero

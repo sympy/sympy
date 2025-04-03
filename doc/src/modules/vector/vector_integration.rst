@@ -12,7 +12,7 @@ To integrate a scalar or vector field over a region, we have to first define a r
 
 The :func:`~sympy.vector.integrals.vector_integrate` function is used to integrate scalar or vector field over any type of region. It automatically determines the type of integration (line, surface, or volume) depending on the nature of the object.
 
-We define a coordinate system and make necesssary imports for examples.
+We define a coordinate system and make necessary imports for examples.
 
 >>> from sympy import sin, cos, exp, pi, symbols
 >>> from sympy.vector import CoordSys3D, ParametricRegion, ImplicitRegion, vector_integrate

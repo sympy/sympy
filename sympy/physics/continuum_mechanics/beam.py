@@ -2092,7 +2092,7 @@ class Beam:
 
         Warning
         =======
-        The values for a = 0 and a = l, with l the lenght of the beam, in
+        The values for a = 0 and a = l, with l the length of the beam, in
         the plot can be incorrect.
 
         Examples
@@ -2170,7 +2170,7 @@ class Beam:
         Warning
         =======
         This method creates equations that can give incorrect results when
-        substituting a = 0 or a = l, with l the lenght of the beam.
+        substituting a = 0 or a = l, with l the length of the beam.
 
         Examples
         ========

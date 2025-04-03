@@ -165,7 +165,7 @@ class AbstractPythonCodePrinter(CodePrinter):
 
     def _expand_reduce_binary_op(self, op, args):
         """
-        This method expands a reductin on binary operations.
+        This method expands a reduction on binary operations.
 
         Notice: this is NOT the same as ``functools.reduce``.
 

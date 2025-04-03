@@ -348,7 +348,7 @@ class Symbol(AtomicExpr, Boolean): # type: ignore
         #
         assumptions_orig = assumptions.copy()
 
-        # The only assumption that is assumed by default is comutative=True:
+        # The only assumption that is assumed by default is commutative=True:
         assumptions.setdefault('commutative', True)
 
         assumptions_kb = StdFactKB(assumptions)

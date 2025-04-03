@@ -165,7 +165,7 @@ algorithms implemented for the various heuristics.
 Rational Riccati Solver
 -----------------------
 These functions are intended for internal use to solve a first order Riccati
-differential equation with atleast one rational particular solution.
+differential equation with at least one rational particular solution.
 
 .. autofunction:: sympy.solvers.ode.riccati::riccati_normal
 

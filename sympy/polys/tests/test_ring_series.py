@@ -4,13 +4,13 @@ from sympy.polys.puiseux import puiseux_ring
 from sympy.polys.ring_series import (_invert_monoms, rs_integrate,
     rs_trunc, rs_mul, rs_square, rs_pow, _has_constant_term, rs_hadamard_exp,
     rs_series_from_list, rs_exp, rs_log, rs_newton, rs_series_inversion,
-    rs_compose_add, rs_asin, rs_atan, rs_atanh, rs_tan, rs_cot, rs_sin, rs_cos,
-    rs_cos_sin, rs_sinh, rs_cosh, rs_tanh, _tan1, rs_fun, rs_nth_root,
+    rs_compose_add, rs_asin, rs_atan, rs_atanh, rs_asinh, rs_tan, rs_cot, rs_sin,
+    rs_cos, rs_cos_sin, rs_sinh, rs_cosh, rs_tanh, _tan1, rs_fun, rs_nth_root,
     rs_LambertW, rs_series_reversion, rs_is_puiseux, rs_series)
 from sympy.testing.pytest import raises, slow
 from sympy.core.symbol import symbols
-from sympy.functions import (sin, cos, exp, tan, cot, atan, atanh,
-    tanh, log, sqrt)
+from sympy.functions import (sin, cos, exp, tan, cot, sinh, cosh, atan, atanh,
+    asinh, tanh, log, sqrt)
 from sympy.core.numbers import Rational, pi
 from sympy.core import expand, S
 
@@ -400,6 +400,25 @@ def test_atanh():
     assert rs_atanh(p, x, 10).compose(x, 10) == EX(Rational(-733442653682135, 5079158784) \
         + atanh(5))
 
+def test_asinh():
+    R, x, y = ring('x, y', QQ)
+    assert rs_asinh(x, x, 9) == -5/112*x**7 + 3/40*x**5 - 1/6*x**3 + x
+    assert rs_asinh(x*y + x**2*y**3, x, 9) == 3/4*x**8*y**11 - 5/16*x**8*y**9 + \
+           3/4*x**7*y**9 - 5/112*x**7*y**7 - 1/6*x**6*y**9 + 3/8*x**6*y**7 - 1/2*x \
+           **5*y**7 + 3/40*x**5*y**5 - 1/2*x**4*y**5 - 1/6*x**3*y**3 + x**2*y**3 + x*y
+
+    # Constant term in series
+    a = symbols('a')
+    R, x, y = ring('x, y', EX)
+    assert rs_asinh(x + a, x, 3) == -EX(a/(2*a**2*sqrt(a**2 + 1) + 2*sqrt(a**2 + 1))) \
+        *x**2 + EX(1/sqrt(a**2 + 1))*x + EX(asinh(a))
+    assert rs_asinh(x + x**2*y + a, x, 3) == EX(1/sqrt(a**2 + 1))*x**2*y - EX(a/(2*a**2 \
+        *sqrt(a**2 + 1) + 2*sqrt(a**2 + 1)))*x**2 + EX(1/sqrt(a**2 + 1))*x + EX(asinh(a))
+
+    p = x + x ** 2 + 5
+    assert rs_asinh(p, x, 10).compose(x, 10) == EX(asinh(5) + 4643789843094995*sqrt(26)/\
+        205564141692)
+
 def test_sinh():
     R, x, y = ring('x, y', QQ)
     assert rs_sinh(x, x, 9) == x + x**3/6 + x**5/120 + x**7/5040
@@ -633,16 +652,17 @@ def test_rs_series():
     assert rs_series(sin(a)/7, a, 5).as_expr() == (sin(a)/7).series(a, 0,
             5).removeO()
 
+
+def test_rs_series_ConstantInExpr():
+    x, a = symbols('x a')
     assert rs_series(log(1 + x), x, 5).as_expr() == -x**4/4 + x**3/3 - \
-                    x**2/2 + x
+            x**2/2 + x
     assert rs_series(log(1 + 4*x), x, 5).as_expr() == -64*x**4 + 64*x**3/3 - \
-                    8*x**2 + 4*x
+            8*x**2 + 4*x
     assert rs_series(log(1 + x + x**2), x, 10).as_expr() == -2*x**9/9 + \
-                    x**8/8 + x**7/7 - x**6/3 + x**5/5 + x**4/4 - 2*x**3/3 + \
-                    x**2/2 + x
+            x**8/8 + x**7/7 - x**6/3 + x**5/5 + x**4/4 - 2*x**3/3 + x**2/2 + x
     assert rs_series(log(1 + x*a**2), x, 7).as_expr() == -x**6*a**12/6 + \
-                    x**5*a**10/5 - x**4*a**8/4 + x**3*a**6/3 - \
-                    x**2*a**4/2 + x*a**2
+            x**5*a**10/5 - x**4*a**8/4 + x**3*a**6/3 - x**2*a**4/2 + x*a**2
 
     assert rs_series(atan(1 + x), x, 9).as_expr() == -x**7/112 + x**6/48 - x**5/40 \
            + x**3/12 - x**2/4 + x/2 + pi/4
@@ -650,3 +670,27 @@ def test_rs_series():
            9*x**5/40 - 5*x**3/12 + x**2/4 + x/2 + pi/4
     assert rs_series(atan(1 + x * a), x, 9).as_expr() == -a**7*x**7/112 + a**6*x**6/48 \
            - a**5*x**5/40 + a**3*x**3/12 - a**2*x**2/4 + a*x/2 + pi/4
+
+    assert rs_series(tanh(1 + x), x, 5).as_expr() == -5*x**4*tanh(1)**3/3 + x**4* \
+           tanh(1)**5 + 2*x**4*tanh(1)/3 - x**3*tanh(1)**4 - x**3/3 + 4*x**3*tanh(1) \
+           **2/3 - x**2*tanh(1) + x**2*tanh(1)**3 - x*tanh(1)**2 + x + tanh(1)
+    assert rs_series(tanh(1 + x * a), x, 3).as_expr() == -a**2*x**2*tanh(1) + a**2*x** \
+           2*tanh(1)**3 - a*x*tanh(1)**2 + a*x + tanh(1)
+
+    assert rs_series(sinh(1 + x), x, 5).as_expr() == x**4*sinh(1)/24 + x**3*cosh(1)/6 + \
+           x**2*sinh(1)/2 + x*cosh(1) + sinh(1)
+    assert rs_series(sinh(1 + x * a), x, 5).as_expr() == a**4*x**4*sinh(1)/24 + \
+           a**3*x**3*cosh(1)/6 + a**2*x**2*sinh(1)/2 + a*x*cosh(1) + sinh(1)
+
+    assert rs_series(cosh(1 + x), x, 5).as_expr() == x**4*cosh(1)/24 + x**3*sinh(1)/6 + \
+           x**2*cosh(1)/2 + x*sinh(1) + cosh(1)
+    assert rs_series(cosh(1 + x * a), x, 5).as_expr() == a**4*x**4*cosh(1)/24 + \
+           a**3*x**3*sinh(1)/6 + a**2*x**2*cosh(1)/2 + a*x*sinh(1) + cosh(1)
+
+def test_issue():
+    # https://github.com/sympy/sympy/issues/10191
+    # https://github.com/sympy/sympy/issues/19543
+
+    a, b = symbols('a b')
+    assert rs_series(sin(a**QQ(3,7))*exp(a + b**QQ(6,7)), a,2).as_expr() == \
+        a**QQ(10,7)*exp(b**QQ(6,7)) - a**QQ(9,7)*exp(b**QQ(6,7))/6 + a**QQ(3,7)*exp(b**QQ(6,7))
