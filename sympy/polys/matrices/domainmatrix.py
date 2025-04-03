@@ -9,9 +9,14 @@ convenience routines for converting between Expr and the poly domains as well
 as unifying matrices with different domains.
 
 """
+from __future__ import annotations
+
 from collections import Counter
 from functools import reduce
-from typing import Union as tUnion, Tuple as tTuple
+from typing import Union as tUnion, Tuple as tTuple, overload, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from typing_extensions import Self
 
 from sympy.external.gmpy import GROUND_TYPES
 from sympy.utilities.decorator import doctest_depends_on
@@ -187,6 +192,15 @@ class DomainMatrix:
             raise RuntimeError # pragma: no cover
         args = (arg, rep.shape, rep.domain)
         return (self.__class__, args)
+
+    @overload
+    def __getitem__(self, key: tuple[int, int]) -> DomainScalar: ...
+    @overload
+    def __getitem__(self, key: tuple[slice, int]) -> Self: ...
+    @overload
+    def __getitem__(self, key: tuple[int, slice]) -> Self: ...
+    @overload
+    def __getitem__(self, key: tuple[slice, slice]) -> Self: ...
 
     def __getitem__(self, key):
         i, j = key

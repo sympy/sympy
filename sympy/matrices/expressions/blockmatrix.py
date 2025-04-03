@@ -1,3 +1,10 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from sympy.matrices.immutable import ImmutableDenseMatrix
+
 from sympy.assumptions.ask import (Q, ask)
 from sympy.core import Basic, Add, Mul, S
 from sympy.core.sympify import _sympify
@@ -77,6 +84,8 @@ class BlockMatrix(MatrixExpr):
     ========
     sympy.matrices.matrixbase.MatrixBase.irregular
     """
+    args: tuple[ImmutableDenseMatrix] # type: ignore
+
     def __new__(cls, *args, **kwargs):
         from sympy.matrices.immutable import ImmutableDenseMatrix
         isMat = lambda i: getattr(i, 'is_Matrix', False)
@@ -144,7 +153,7 @@ class BlockMatrix(MatrixExpr):
         return self.blocks.shape
 
     @property
-    def blocks(self):
+    def blocks(self) -> ImmutableDenseMatrix:
         return self.args[0]
 
     @property
@@ -583,6 +592,8 @@ class BlockDiagMatrix(BlockMatrix):
 
     sympy.matrices.dense.diag
     """
+    args: tuple[MatrixExpr, ...] # type: ignore
+
     def __new__(cls, *mats):
         return Basic.__new__(BlockDiagMatrix, *[_sympify(m) for m in mats])
 
