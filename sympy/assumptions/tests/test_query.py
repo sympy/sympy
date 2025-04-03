@@ -1669,6 +1669,7 @@ def test_integer():
     assert ask(Q.integer(x**y), Q.integer(x) & Q.integer(y) & Q.positive(y)) is True
     assert ask(Q.integer(x**y), Q.zero(x) & Q.integer(y) & Q.positive(y)) is True
     assert ask(Q.integer(pi**x), Q.zero(x)) is True
+    assert ask(Q.integer(x**y), Q.imaginary(x) & Q.zero(y)) is True
 
 
 def test_negative():
