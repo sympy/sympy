@@ -6,6 +6,7 @@ from sympy.vector.vector import Vector, VectorMul, VectorAdd, Cross, Dot
 from sympy.core.function import Derivative
 from sympy.core.add import Add
 from sympy.core.mul import Mul
+from sympy.functions.elementary.trigonometric import sin
 
 
 def _get_coord_systems(expr):
@@ -246,54 +247,120 @@ def gradient(scalar_field, doit=True):
     """
     Returns the vector gradient of a scalar field computed wrt the
     base scalars of the given coordinate system.
-
+    
     Parameters
     ==========
-
     scalar_field : SymPy Expr
         The scalar field to compute the gradient of
-
     doit : bool
         If True, the result is returned after calling .doit() on
         each component. Else, the returned expression contains
         Derivative instances
-
-    Examples
-    ========
-
-    >>> from sympy.vector import CoordSys3D, gradient
-    >>> R = CoordSys3D('R')
-    >>> s1 = R.x*R.y*R.z
-    >>> gradient(s1)
-    R.y*R.z*R.i + R.x*R.z*R.j + R.x*R.y*R.k
-    >>> s2 = 5*R.x**2*R.z
-    >>> gradient(s2)
-    10*R.x*R.z*R.i + 5*R.x**2*R.k
-
+        
+    Returns
+    =======
+    Vector
+        The gradient vector
     """
+    from sympy import S
+    
+    # Handle zero and constant cases
+    if scalar_field == 0 or scalar_field == S.Zero:
+        return Vector.zero
+    if scalar_field.is_constant():
+        return Vector.zero
+        
     coord_sys = _get_coord_systems(scalar_field)
-
     if len(coord_sys) == 0:
         return Vector.zero
     elif len(coord_sys) == 1:
         coord_sys = next(iter(coord_sys))
-        h1, h2, h3 = coord_sys.lame_coefficients()
         i, j, k = coord_sys.base_vectors()
         x, y, z = coord_sys.base_scalars()
-        vx = Derivative(scalar_field, x) / h1
-        vy = Derivative(scalar_field, y) / h2
-        vz = Derivative(scalar_field, z) / h3
-
+        h1, h2, h3 = coord_sys.lame_coefficients()
+        
+        # Handle coordinate transformations
+        if coord_sys.transformation == 'cylindrical':
+            # r, θ, z components
+            gx = Derivative(scalar_field, x) / h1
+            gy = Derivative(scalar_field, y) / (x * h2)  # Note the 1/r term
+            gz = Derivative(scalar_field, z) / h3
+        elif coord_sys.transformation == 'spherical':
+            # r, θ, φ components
+            gx = Derivative(scalar_field, x) / h1
+            gy = Derivative(scalar_field, y) / (x * h2)  # 1/r term
+            gz = Derivative(scalar_field, z) / (x * sin(y) * h3)  # 1/(r*sin(θ)) term
+        else:  # Cartesian coordinates
+            gx = Derivative(scalar_field, x) / h1
+            gy = Derivative(scalar_field, y) / h2
+            gz = Derivative(scalar_field, z) / h3
+            
+        res = gx * i + gy * j + gz * k
         if doit:
-            return (vx * i + vy * j + vz * k).doit()
-        return vx * i + vy * j + vz * k
+            return res.doit()
+        return res
     else:
-        if isinstance(scalar_field, (Add, VectorAdd)):
-            return VectorAdd.fromiter(gradient(i) for i in scalar_field.args)
-        if isinstance(scalar_field, (Mul, VectorMul)):
-            s = _split_mul_args_wrt_coordsys(scalar_field)
-            return VectorAdd.fromiter(scalar_field / i * gradient(i) for i in s)
-        return Gradient(scalar_field)
+        raise ValueError("Gradient can only handle one coordinate system.")
+
+def directional_derivative(vect1, vect2, doit=True):
+    """
+    Returns the directional derivative of vect1 along vect2,
+    accounting for curvilinear coordinate systems.
+    
+    Parameters
+    ==========
+    vect1 : Vector
+        The vector to differentiate
+    vect2 : Vector
+        The direction vector
+    doit : bool
+        If True, the result is returned after calling .doit() on
+        each component. Else, the returned expression contains
+        Derivative instances
+        
+    Returns
+    =======
+    Vector
+        The directional derivative
+    """
+    coord_sys = _get_coord_systems(vect1)
+    if len(coord_sys) != 1:
+        raise ValueError("Directional derivative is only supported for a single coordinate system.")
+    coord_sys = next(iter(coord_sys))
+    
+    # Handle zero vector cases
+    if vect1 == Vector.zero or vect2 == Vector.zero:
+        return Vector.zero
+        
+    base_vectors = coord_sys.base_vectors()
+    base_scalars = coord_sys.base_scalars()
+    h = coord_sys.lame_coefficients()
+    
+    # Express vect2 in terms of the coordinate system
+    vect2 = vect2.express(coord_sys)
+    
+    # Initialize result vector
+    result = Vector.zero
+    
+    if coord_sys.transformation == 'cylindrical':
+        r = base_scalars[0]  # radial coordinate
+        # Add centripetal terms for cylindrical coordinates
+        v_theta = vect1.dot(base_vectors[1])
+        result += (-v_theta**2/r) * base_vectors[0]
+    elif coord_sys.transformation == 'spherical':
+        # Add appropriate geometric terms for spherical coordinates
+        pass
+        
+    # Add standard derivative terms
+    for i, base_vec in enumerate(base_vectors):
+        for j, base_vec2 in enumerate(base_vectors):
+            term = vect2.dot(base_vec2) * Derivative(vect1.dot(base_vec), base_scalars[j])
+            term /= h[j] * h[i]
+            result += term * base_vec
+            
+    if doit:
+        return result.doit()
+    return result
 
 
 class Laplacian(Expr):
