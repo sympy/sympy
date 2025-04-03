@@ -172,34 +172,48 @@ class LagrangesMethod(_Methods):
         self._hol_coneqs = hol_coneqs
 
     def form_lagranges_equations(self):
-        """
+       """
         Generates the symbolic equations of motion using Lagrange's equations of the second kind.
 
         Explanation
         ===========
-        This method constructs the equations of motion from the provided Lagrangian and generalized
-        coordinates. Internally, it computes and stores the mass matrix and generalized forces
-        based on the following structure:
+        This method constructs the equations of motion in the form:
 
-            EOM = d/dt(dL/dq_dot) - dL/dq - Q - lambda_transpose * df/dq_dot = 0
+            M * q_ddot = F
 
         where:
-        - L is the Lagrangian
-        - q are the generalized coordinates
-        - q_dot are the generalized velocities
-        - Q are generalized non-conservative forces
-        - f are constraint equations (if any)
-        - lambda are the Lagrange multipliers
+        - M : Mass matrix (shape n x n)
+        - q_ddot : Vector of generalized accelerations (shape n x 1)
+        - F : Forcing vector (shape n x 1)
 
-        If holonomic or non-holonomic constraints are present, the corresponding Lagrange multipliers
-        and constraint matrices are included in the computation.
+        The complete Lagrange equation form is:
+
+            d/dt(dL/d(qdot)) - dL/dq + C.T*lam = Q
+
+        where:
+        - L : Lagrangian of the system
+        - q : Generalized coordinates
+        - qdot : Generalized velocities (d(q)/dt)
+        - C : Constraint Jacobian matrix (shape m x n) if constraints exist
+        - lam : Lagrange multipliers (shape m x 1) if constraints exist
+        - Q : Non-conservative generalized forces
+
+        For constrained systems, the equations are augmented with:
+
+         C * q_ddot = c
 
         Returns
         =======
         Matrix
-            The symbolic equations of motion, in the form:
-            M * q_double_dot + F = 0, where M is the mass matrix, F the forcing vector,
-            and q_double_dot the second derivatives of the generalized coordinates.
+            The equations of motion in the form M * q_ddot = F.
+            Dimensions:
+            - M : n x n mass matrix
+            - F : n x 1 forcing vector
+            - q_ddot : n x 1 acceleration vector
+    
+          For constrained systems, returns the augmented form:
+         [ M  C.T ] [ q_ddot ] = [ F ]
+         [ C   0  ] [ lam    ]   [ c ]
         """
 
         qds = self._qdots
