@@ -1507,7 +1507,7 @@ def test_complex_params_number_eval():
     #       sum(blablabla for for n in range(1, m+1))
     # But range requires integer numbers, whereas per above example, the series
     # casts parameters to complex. Verify that the series is able to detect
-    # upper bounds in summations and cast it to int in order to get successfull
+    # upper bounds in summations and cast it to int in order to get successful
     # evaluation
     x, T, n, m = symbols("x, T, n, m")
     fs = S(1) / 2 - (1 / pi) * Sum(sin(2 * n * pi * x / T) / n, (n, 1, m))
@@ -1524,7 +1524,7 @@ def test_complex_params_number_eval():
 
 def test_complex_range_line_plot_1():
     # verify that univariate functions are evaluated with a complex
-    # data range (with zero imaginary part). There shouln't be any
+    # data range (with zero imaginary part). There shouldn't be any
     # NaN value in the output.
     if not np:
         skip("numpy not installed.")
@@ -1552,7 +1552,7 @@ def test_complex_range_line_plot_1():
 @XFAIL
 def test_complex_range_line_plot_2():
     # verify that univariate functions are evaluated with a complex
-    # data range (with non-zero imaginary part). There shouln't be any
+    # data range (with non-zero imaginary part). There shouldn't be any
     # NaN value in the output.
     if not np:
         skip("numpy not installed.")

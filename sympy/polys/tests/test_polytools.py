@@ -3202,6 +3202,12 @@ def test_nroots():
         '1.7 + 2.5*I]')
     assert str(Poly(1e-15*x**2 -1).nroots()) == ('[-31622776.6016838, 31622776.6016838]')
 
+    # https://github.com/sympy/sympy/issues/23861
+
+    i = Float('3.000000000000000000000000000000000000000000000000001')
+    [r] = nroots(x + I*i, n=300)
+    assert abs(r + I*i) < 1e-300
+
 
 def test_ground_roots():
     f = x**6 - 4*x**4 + 4*x**3 - x**2
@@ -3567,6 +3573,33 @@ def test_reduced():
 
     assert reduced(1, [1], x) == ([1], 0)
     raises(ComputationFailed, lambda: reduced(1, [1]))
+
+    f_poly = Poly(2*x**3 + y**3 + 3*y)
+    G_poly = groebner([Poly(x**2 + y**2 - 1), Poly(x*y - 2)])
+
+    Q_poly = [Poly(x**2 - 1/2*x*y**3 + 1/2*x*y + 1/4*y**6 - 1/2*y**4 + 1/4*y**2, x, y, domain='QQ'),
+              Poly(-1/4*y**5 + 1/2*y**3 + 3/4*y, x, y, domain='QQ')]
+    r_poly = Poly(0, x, y, domain='QQ')
+
+    assert G_poly.reduce(f_poly) == (Q_poly, r_poly)
+
+    Q, r = G_poly.reduce(f)
+    assert all(isinstance(q, Poly) for q in Q)
+    assert isinstance(r, Poly)
+
+    f_wrong_gens = Poly(2*x**3 + y**3 + 3*y, x, y, z)
+    raises(ValueError, lambda: G_poly.reduce(f_wrong_gens))
+
+    zero_poly = Poly(0, x, y)
+    Q, r = G_poly.reduce(zero_poly)
+    assert all(q.is_zero for q in Q)
+    assert r.is_zero
+
+    const_poly = Poly(1, x, y)
+    Q, r = G_poly.reduce(const_poly)
+    assert isinstance(r, Poly)
+    assert r.as_expr() == 1
+    assert all(q.is_zero for q in Q)
 
 
 def test_groebner():

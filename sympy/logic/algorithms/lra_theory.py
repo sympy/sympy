@@ -59,7 +59,7 @@ Here's an example of how that would work:
 
     Note that since EncodedCNF is inherently non-deterministic,
     the int each predicate is encoded as is not consistent. As a
-    result, the code bellow likely does not reflect the assignment
+    result, the code below likely does not reflect the assignment
     given above.
 
     >>> lra.assert_lit(-1) #doctest: +SKIP
@@ -169,7 +169,7 @@ class LRASolver():
         if self.run_checks:
             assert A[:, n-m:] == -eye(m)
 
-        self.enc_to_boundary = enc_to_boundary  # mapping of int to Boundry objects
+        self.enc_to_boundary = enc_to_boundary  # mapping of int to Boundary objects
         self.boundary_to_enc = {value: key for key, value in enc_to_boundary.items()}
         self.A = A
         self.slack = slack_variables
@@ -230,7 +230,7 @@ class LRASolver():
         """
         # This function has three main jobs:
         # - raise errors if the input formula is not handled
-        # - preprocesses the formula into a matirx and single variable constraints
+        # - preprocesses the formula into a matrix and single variable constraints
         # - create one-literal conflict clauses from predicates that are always True
         #   or always False such as Q.gt(3, 2)
         #
@@ -647,7 +647,7 @@ class LRASolver():
     def _pivot(M, i, j):
         """
         Performs a pivot operation about entry i, j of M by performing
-        a series of row operations on a copy of M and returing the result.
+        a series of row operations on a copy of M and returning the result.
         The original M is left unmodified.
 
         Conceptually, M represents a system of equations and pivoting
@@ -840,7 +840,7 @@ class Boundary:
             return self.var.var >= self.bound
 
     def __repr__(self):
-        return repr("Boundry(" + repr(self.get_inequality()) + ")")
+        return repr("Boundary(" + repr(self.get_inequality()) + ")")
 
     def __eq__(self, other):
         other = (other.var, other.bound, other.strict, other.upper, other.equality)

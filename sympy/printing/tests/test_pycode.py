@@ -8,13 +8,13 @@ from sympy.core import Expr, Mod, symbols, Eq, Le, Gt, zoo, oo, Rational, Pow
 from sympy.core.function import Derivative
 from sympy.core.numbers import pi
 from sympy.core.singleton import S
-from sympy.functions import acos, KroneckerDelta, Piecewise, sign, sqrt, Min, Max, cot, acsch, asec, coth, sec
+from sympy.functions import acos, KroneckerDelta, Piecewise, sign, sqrt, Min, Max, cot, acsch, asec, coth, sec, log, sin, cos, tan, asin, atan, sinh, cosh, tanh, asinh, acosh, atanh
 from sympy.functions.elementary.trigonometric import atan2
 from sympy.logic import And, Or
 from sympy.matrices import SparseMatrix, MatrixSymbol, Identity
 from sympy.printing.codeprinter import PrintMethodNotImplementedError
 from sympy.printing.pycode import (
-    MpmathPrinter, PythonCodePrinter, pycode, SymPyPrinter
+    MpmathPrinter, CmathPrinter, PythonCodePrinter, pycode, SymPyPrinter
 )
 from sympy.printing.tensorflow import TensorflowPrinter
 from sympy.printing.numpy import NumPyPrinter, SciPyPrinter
@@ -23,6 +23,7 @@ from sympy.tensor import IndexedBase, Idx
 from sympy.tensor.array.expressions.array_expressions import ArraySymbol, ArrayDiagonal, ArrayContraction, ZeroArray, OneArray
 from sympy.external import import_module
 from sympy.functions.special.gamma_functions import loggamma
+
 
 
 x, y, z = symbols('x y z')
@@ -80,6 +81,29 @@ def test_PythonCodePrinter_standard():
     assert prntr.standard == 'python3'
 
     raises(ValueError, lambda: PythonCodePrinter({'standard':'python4'}))
+
+
+def test_CmathPrinter():
+    p = CmathPrinter()
+
+    assert p.doprint(sqrt(x)) == 'cmath.sqrt(x)'
+    assert p.doprint(log(x)) == 'cmath.log(x)'
+
+    assert p.doprint(sin(x)) == 'cmath.sin(x)'
+    assert p.doprint(cos(x)) == 'cmath.cos(x)'
+    assert p.doprint(tan(x)) == 'cmath.tan(x)'
+
+    assert p.doprint(asin(x)) == 'cmath.asin(x)'
+    assert p.doprint(acos(x)) == 'cmath.acos(x)'
+    assert p.doprint(atan(x)) == 'cmath.atan(x)'
+
+    assert p.doprint(sinh(x)) == 'cmath.sinh(x)'
+    assert p.doprint(cosh(x)) == 'cmath.cosh(x)'
+    assert p.doprint(tanh(x)) == 'cmath.tanh(x)'
+
+    assert p.doprint(asinh(x)) == 'cmath.asinh(x)'
+    assert p.doprint(acosh(x)) == 'cmath.acosh(x)'
+    assert p.doprint(atanh(x)) == 'cmath.atanh(x)'
 
 
 def test_MpmathPrinter():

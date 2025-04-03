@@ -14,13 +14,13 @@ jobs:
 
   code-quality:
 
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
+          python-version: '3.13'
       - run: python -m pip install --upgrade pip setuptools
 
       - run: pip install -r requirements-dev.txt
@@ -62,12 +62,12 @@ jobs:
   mypy:
     needs: code-quality
 
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
+          python-version: '3.13'
       - run: python -m pip install --upgrade pip
       - run: pip install mpmath mypy hypothesis
 
@@ -79,12 +79,12 @@ jobs:
   sphinx-lint:
     needs: code-quality
 
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
+          python-version: '3.13'
       - run: python -m pip install --upgrade pip
       - run: pip install sphinx-lint
 
@@ -95,7 +95,7 @@ jobs:
 
   authors:
     needs: code-quality
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
@@ -103,7 +103,7 @@ jobs:
           fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
+          python-version: '3.13'
       - run: python -m pip install --upgrade pip
       - run: pip install mpmath
       - run: bin/mailmap_check.py
@@ -113,12 +113,12 @@ jobs:
   doctests-latest:
     needs: code-quality
 
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
+          python-version: '3.13'
       - run: python -m pip install --upgrade pip
       - run: pip install mpmath
       - run: bin/doctest --force-colors
@@ -128,7 +128,7 @@ jobs:
   tests-latest:
     needs: code-quality
 
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
 
     name: Tests
 
@@ -136,7 +136,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
+          python-version: '3.13'
       - run: python -m pip install --upgrade pip
       - run: pip install -r requirements-dev.txt
       - run: pytest -n auto
@@ -144,14 +144,14 @@ jobs:
   # -------------------- Optional dependency tests ----------------- #
 
   optional-dependencies:
-    needs: code-quality
+    needs: [doctests-latest, tests-latest]
 
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
 
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.9', '3.10', '3.11', '3.12']
+        python-version: ['3.9', '3.10', '3.11', '3.12', '3.13']
 
     name: ${{ matrix.python-version }} Optional Dendendencies
 
@@ -168,10 +168,15 @@ jobs:
       - run: sudo apt-get install antlr4 clang
       - run: python -m pip install --upgrade pip wheel setuptools
 
+      # XXX: Deprecate and remove support for aesara.
+      # For now it pins the numpy version and so doesn't work on 3.13.
+      - if: ${{ ! contains(matrix.python-version, '3.13') }}
+        run: pip install aesara
+
       # dependencies to install in all Python versions:
       - run: pip install numpy numexpr matplotlib ipython cython          \
                          wurlitzer autowrap lxml lark z3-solver pycosat   \
-                         jax jaxlib libclang scipy aesara                 \
+                         jax jaxlib libclang scipy                        \
                          'antlr4-python3-runtime==4.11.*'                 \
                          symengine                                        \
                          numba llvmlite pymc                              \
@@ -189,14 +194,14 @@ jobs:
   # -------------------- Bleeding edge dependencies ----------------- #
 
   bleeding-edge:
-    needs: code-quality
+    needs: [doctests-latest, tests-latest]
     name: Bleeding edge dependencies
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
+          python-version: '3.13'
       - run: pip install --upgrade pip
       - run: pip install git+https://github.com/mpmath/mpmath.git@master
       - run: |
@@ -216,14 +221,14 @@ jobs:
   # -------------------- FLINT tests -------------------------------- #
 
   python-flint:
-    needs: code-quality
+    needs: [doctests-latest, tests-latest]
 
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
+          python-version: '3.13'
       - run: python -m pip install --upgrade pip
       - run: pip install -r requirements-dev.txt
       - run: pip install python-flint
@@ -233,14 +238,14 @@ jobs:
   # -------------------- FLINT+gmpy2 ------------------------------ #
 
   flint-gmpy2:
-    needs: code-quality
+    needs: [doctests-latest, tests-latest]
 
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
+          python-version: '3.13'
       - run: python -m pip install --upgrade pip
       - run: pip install -r requirements-dev.txt
       - run: pip install python-flint gmpy2
@@ -250,33 +255,49 @@ jobs:
   # -------------------- Tensorflow tests -------------------------- #
 
   tensorflow:
-    needs: code-quality
+    needs: [doctests-latest, tests-latest]
 
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          # tensorflow not yet available for 3.12
-          python-version: '3.11'
+          # tensorflow not yet available for 3.13
+          python-version: '3.12'
       - run: python -m pip install --upgrade pip
       - run: pip install -r requirements-dev.txt
       - run: pip install numpy scipy tensorflow
       # Test modules that can use tensorflow
       - run: bin/test_tensorflow.py
 
-  # -------------------- SymEngine tests --------------------------- #
+  # -------------------- PyTorch tests -------------------------- #
 
-  symengine:
-    needs: code-quality
+  pytorch:
+    needs: [doctests-latest, tests-latest]
 
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          # symengine not yet available for 3.12
-          python-version: '3.11'
+          python-version: '3.13'
+      - run: python -m pip install --upgrade pip
+      - run: pip install -r requirements-dev.txt
+      - run: pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
+      # Test modules that can use pytorch
+      - run: bin/test_pytorch.py
+
+  # -------------------- SymEngine tests --------------------------- #
+
+  symengine:
+    needs: [doctests-latest, tests-latest]
+
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
       - run: python -m pip install --upgrade pip
       - run: pip install -r requirements-dev.txt
       - run: pip install numpy symengine
@@ -290,13 +311,13 @@ jobs:
   tests-slow:
     needs: [doctests-latest, tests-latest]
 
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
+          python-version: '3.13'
       - run: python -m pip install --upgrade pip
       - run: pip install -r requirements-dev.txt
       - run: pytest -m slow --timeout 595 -n auto
@@ -306,12 +327,14 @@ jobs:
   tests-other-python:
     needs: [doctests-latest, tests-latest]
 
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
 
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.8', '3.9', '3.10', '3.11', '3.13-dev', 'pypy-3.9']
+        python-version: ['3.9', '3.10', '3.11', '3.12', '3.13', '3.14', 'pypy-3.11']
+        exclude:
+          - python-version: 3.13
 
     name: ${{ matrix.python-version }} Tests
 
@@ -320,6 +343,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
+          allow-prereleases: true
       - run: python -m pip install --upgrade pip
       - run: pip install -r requirements-dev.txt
       - run: pytest -n auto
@@ -329,12 +353,14 @@ jobs:
   doctests-other-python:
     needs: [doctests-latest, tests-latest]
 
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
 
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.8', '3.9', '3.10', '3.11', '3.13-dev', 'pypy-3.9']
+        python-version: ['3.9', '3.10', '3.11', '3.12', '3.13', '3.14', 'pypy-3.11']
+        exclude:
+          - python-version: 3.13
 
     name: ${{ matrix.python-version }} Doctests
 
@@ -343,6 +369,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
+          allow-prereleases: true
       - run: python -m pip install --upgrade pip
       - run: pip install mpmath
       - run: bin/doctest --force-colors
@@ -352,7 +379,7 @@ jobs:
   tests-mpmath-master:
     needs: [doctests-latest, tests-latest]
 
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
 
     name: mpmath-master Tests
 
@@ -360,7 +387,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
+          python-version: '3.13'
       - run: python -m pip install --upgrade pip
       - run: pip install git+https://github.com/mpmath/mpmath.git@master
       - run: pip install -r requirements-dev.txt
@@ -371,12 +398,12 @@ jobs:
   sphinx:
     needs: [doctests-latest, tests-latest]
 
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
+          python-version: '3.13'
       - run: doc/aptinstall.sh
       - run: pip install -r doc/requirements.txt
       - run: bin/test_sphinx.sh
@@ -398,7 +425,7 @@ jobs:
   py2-import:
     needs: [doctests-latest, tests-latest]
 
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -411,12 +438,12 @@ jobs:
   sdist-check:
     needs: [doctests-latest, tests-latest]
 
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
+          python-version: '3.13'
       - run: python -m pip install --upgrade pip build
       - run: python -m build --sdist
       - run: release/compare_tar_against_git.py dist/*.tar.gz .
@@ -426,7 +453,7 @@ jobs:
   benchmarks:
     needs: [doctests-latest, tests-latest]
 
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
@@ -434,7 +461,7 @@ jobs:
           fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
+          python-version: '3.13'
       - run: pip install asv virtualenv packaging
       - run: git submodule add https://github.com/sympy/sympy_benchmarks.git
 

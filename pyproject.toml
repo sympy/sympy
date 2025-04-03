@@ -30,9 +30,18 @@ markers = [
     "tooslow",
 ]
 
+[tool.coverage.report]
+
+exclude_lines = [
+    "pragma: no cover",
+    "if TYPE_CHECKING:",
+    "assert False",
+]
+
 [tool.ruff]
 # Enable Pyflakes `E` and `F` codes by default.
 lint.select = [
+    "B015",  # Useless comparison: a == b rather than a = b.
     "C4",
     "E",
     "F",
@@ -40,6 +49,7 @@ lint.select = [
     "PIE810",
     "PLE",
     "PLR1736",
+    "PLW0602", # Global statement used but no assignment
     "SIM101",
     "SLOT",
     "TRY002",
@@ -66,6 +76,7 @@ lint.ignore = [
 exclude = [
     "sympy/assumptions/*generated.py",
     "sympy/core/*_generated.py",
+    "sympy/core/benchmarks/",
     "sympy/parsing/latex/_antlr/*",
     "sympy/parsing/autolev/_antlr/*",
     "sympy/parsing/autolev/test-examples/*",

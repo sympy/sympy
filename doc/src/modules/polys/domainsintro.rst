@@ -116,7 +116,7 @@ different ways e.g.::
   >>> e.expand()
   x**2 + x
 
-These two expression although equivalent have different tree representations::
+These two expressions, although equivalent, have different tree representations::
 
   >>> print(srepr(e))
   Mul(Symbol('x'), Add(Symbol('x'), Integer(1)))
