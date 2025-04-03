@@ -36,6 +36,7 @@ CUPY_DEFAULT: dict[str, Any] = {"I": 1j}
 JAX_DEFAULT: dict[str, Any] = {"I": 1j}
 TENSORFLOW_DEFAULT: dict[str, Any] = {}
 TORCH_DEFAULT: dict[str, Any] = {"I": 1j}
+TORCH_MODULE_DEFAULT: dict[str, Any] = {}
 SYMPY_DEFAULT: dict[str, Any] = {}
 NUMEXPR_DEFAULT: dict[str, Any] = {}
 
@@ -52,6 +53,7 @@ CUPY = CUPY_DEFAULT.copy()
 JAX = JAX_DEFAULT.copy()
 TENSORFLOW = TENSORFLOW_DEFAULT.copy()
 TORCH = TORCH_DEFAULT.copy()
+TORCH_MODULE = TORCH_MODULE_DEFAULT.copy()
 SYMPY = SYMPY_DEFAULT.copy()
 NUMEXPR = NUMEXPR_DEFAULT.copy()
 
@@ -110,6 +112,7 @@ JAX_TRANSLATIONS: dict[str, str] = {}
 
 TENSORFLOW_TRANSLATIONS: dict[str, str] = {}
 TORCH_TRANSLATIONS: dict[str, str] = {}
+TORCH_MODULE_TRANSLATIONS: dict[str, str] = {}
 
 NUMEXPR_TRANSLATIONS: dict[str, str] = {}
 
@@ -124,6 +127,7 @@ MODULES = {
     "jax": (JAX, JAX_DEFAULT, JAX_TRANSLATIONS, ("import jax",)),
     "tensorflow": (TENSORFLOW, TENSORFLOW_DEFAULT, TENSORFLOW_TRANSLATIONS, ("import tensorflow",)),
     "torch": (TORCH, TORCH_DEFAULT, TORCH_TRANSLATIONS, ("import torch",)),
+    "torch_module": (TORCH_MODULE, TORCH_MODULE_DEFAULT, TORCH_MODULE_TRANSLATIONS, ("import torch",)),
     "sympy": (SYMPY, SYMPY_DEFAULT, {}, (
         "from sympy.functions import *",
         "from sympy.matrices import *",
@@ -814,6 +818,10 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
         syms = expr.atoms(Symbol)
         for term in syms:
             namespace.update({str(term): term})
+
+    if _module_present('torch_module', namespaces):
+        from sympy.printing.pytorch import torch_module
+        return torch_module(args, expr)
 
     if printer is None:
         if _module_present('mpmath', namespaces):
