@@ -3,7 +3,6 @@ import functools as ft
 from sympy.printing.pycode import AbstractPythonCodePrinter, ArrayPrinter
 from sympy.tensor.array.expressions.array_expressions import ArrayTensorProduct
 from sympy.matrices.expressions.fourier import DFT
-from sympy.combinatorics.permutations import Permutation
 from sympy.matrices.expressions import MatrixExpr
 from sympy.core.mul import Mul
 from sympy.printing.precedence import PRECEDENCE
@@ -237,7 +236,7 @@ _TORCHMODULE_ONLY_FUNCTION_MAP = {
 }
 
 
-number_symbols = [cls for cls in sympy.NumberSymbol.__subclasses__()]
+number_symbols = list(sympy.NumberSymbol.__subclasses__())
 
 
 _TORCH_FUNCTION_MAP.update({
