@@ -3,7 +3,7 @@ Adaptive numerical evaluation of SymPy expressions, using mpmath
 for mathematical functions.
 """
 from __future__ import annotations
-from typing import Callable, TYPE_CHECKING, Any, overload, Type, Tuple as tTuple, Dict as tDict
+from typing import Callable, TYPE_CHECKING, Any, overload, Type, Tuple as tTuple, Dict as tDict, List
 
 import math
 
@@ -178,7 +178,7 @@ def pure_complex(v: Expr, or_real=False) -> tuple['Number', 'Number'] | None:
 
 
 # I don't know what this is, see function scaled_zero below
-SCALED_ZERO_TUP = tTuple[list[int], int, int, int]
+SCALED_ZERO_TUP = tTuple[List[int], int, int, int]
 
 
 @overload
@@ -1388,8 +1388,8 @@ def evalf_symbol(x: Expr, prec: int, options: OPT_DICT) -> TMP_RES:
         cache[x] = (v, prec)
         return v
 
-
-evalf_table: dict[Type[Expr], Callable[[Expr, int, OPT_DICT], TMP_RES]] = {}
+# Must be type Dict to pass 3.8 tests
+evalf_table: tDict[Type[Expr], Callable[[Expr, int, OPT_DICT], TMP_RES]] = {}
 
 
 def _create_evalf_table():
