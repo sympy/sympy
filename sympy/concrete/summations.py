@@ -279,6 +279,8 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         zeta function does not converge unless `s > 1` and `q > 0`
         """
         i, a, b = limits
+        if a.is_comparable and b.is_comparable and a > b:
+            return self.eval_zeta_function(f, (i, b + S.One, a - S.One))
         if b is not S.Infinity:
             return
         w, y, z = Wild('w', exclude=[i]), Wild('y', exclude=[i]), Wild('z', exclude=[i])
@@ -1019,6 +1021,8 @@ def eval_sum(f, limits):
         return f*(b - a + 1)
     if a == b:
         return f.subs(i, a)
+    if a.is_comparable and b.is_comparable and a > b:
+        return eval_sum(f, (i, b + S.One, a - S.One))
     if isinstance(f, Piecewise):
         if not any(i in arg.args[1].free_symbols for arg in f.args):
             # Piecewise conditions do not depend on the dummy summation variable,
@@ -1449,8 +1453,16 @@ def eval_sum_residue(f, i_a_b):
            In: Complex Analysis with Applications.
            Undergraduate Texts in Mathematics. Springer, Cham.
            https://doi.org/10.1007/978-3-319-94063-2_5
+
+    .. [#] Michael Karr, "Summation in Finite Terms", Journal of the ACM,
+           Volume 28 Issue 2, April 1981, Pages 305-350
+           https://dl.acm.org/doi/10.1145/322248.322255
     """
     i, a, b = i_a_b
+
+    # If lower limit > upper limit: Karr Summation Convention
+    if a.is_comparable and b.is_comparable and a > b:
+        return eval_sum_residue(f, (i, b + S.One, a - S.One))
 
     def is_even_function(numer, denom):
         """Test if the rational function is an even function"""
