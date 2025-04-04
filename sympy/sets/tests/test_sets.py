@@ -972,7 +972,7 @@ def test_Union_as_relational():
         Or(And(Le(0, x), Le(x, 1)), Eq(x, 2))
     assert (Interval(0, 1, True, True) + FiniteSet(1)).as_relational(x) == \
         And(Lt(0, x), Le(x, 1))
-    assert Or(x < 0, x > 0).as_set().as_relational(x) == \
+    assert Or(x < 0, x > 0).as_set(x).as_relational(x) == \
         And((x > -oo), (x < oo), Ne(x, 0))
     assert (Interval.Ropen(1, 3) + Interval.Lopen(3, 5)
         ).as_relational(x) == And(Ne(x,3),(x>=1),(x<=5))
@@ -1742,8 +1742,8 @@ def test_issue_14336():
     #https://github.com/sympy/sympy/issues/14336
     U = S.Complexes
     x = Symbol("x")
-    U -= U.intersect(Ne(x, 1).as_set())
-    U -= U.intersect(S.true.as_set())
+    U -= U.intersect(Ne(x, 1).as_set(x))
+    U -= U.intersect(S.true.as_set(x))
 
 def test_issue_9855():
     #https://github.com/sympy/sympy/issues/9855
