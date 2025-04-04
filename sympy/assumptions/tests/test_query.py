@@ -1827,7 +1827,7 @@ def test_odd_query():
     assert ask(Q.odd(3**k), Q.even(k)) is None
 
     assert ask(Q.odd(k**m), Q.even(k) & Q.integer(m) & ~Q.negative(m)) is None
-    assert ask(Q.odd(n**m), Q.odd(n) & Q.integer(m) & ~Q.negative(m)) is None
+    assert ask(Q.odd(n**m), Q.odd(n) & Q.integer(m) & ~Q.negative(m)) is True
 
     assert ask(Q.odd(k**p), Q.even(k) & Q.integer(p) & Q.positive(p)) is False
     assert ask(Q.odd(n**p), Q.odd(n) & Q.integer(p) & Q.positive(p)) is True
