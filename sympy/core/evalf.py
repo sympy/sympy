@@ -3,7 +3,7 @@ Adaptive numerical evaluation of SymPy expressions, using mpmath
 for mathematical functions.
 """
 from __future__ import annotations
-from typing import Callable, TYPE_CHECKING, Any, overload, Type, Tuple as tTuple, Dict as tDict, List
+from typing import Callable, TYPE_CHECKING, Any, overload, Type, Tuple as tTuple
 
 import math
 
@@ -108,7 +108,7 @@ TMP_RES = Any  # temporary result, should be some variant of
 # 2. sometimes the result can't be zoo
 
 # type of the "options" parameter in internal evalf functions
-OPT_DICT = tDict[str, Any]  #  must be type Dict for python 3.8 tests
+OPT_DICT = dict[str, Any]
 
 
 def fastlog(x: MPF_TUP | None) -> int | Any:
