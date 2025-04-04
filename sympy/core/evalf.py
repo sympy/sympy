@@ -1389,8 +1389,7 @@ def evalf_symbol(x: Expr, prec: int, options: OPT_DICT) -> TMP_RES:
         cache[x] = (v, prec)
         return v
 
-# Must be type Dict to pass 3.8 tests
-evalf_table: tDict[Type[Expr], Callable[[Expr, int, OPT_DICT], TMP_RES]] = {}
+evalf_table: dict[Type[Expr], Callable[[Expr, int, OPT_DICT], TMP_RES]] = {}
 
 
 def _create_evalf_table():
