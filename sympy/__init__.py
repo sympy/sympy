@@ -10,6 +10,7 @@ See the webpage for more information and documentation:
     https://sympy.org
 
 """
+from __future__ import annotations
 
 
 import sys
