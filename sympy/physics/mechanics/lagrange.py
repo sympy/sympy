@@ -172,7 +172,8 @@ class LagrangesMethod(_Methods):
         self._hol_coneqs = hol_coneqs
 
     def form_lagranges_equations(self):
-        """Generates the symbolic equations of motion using Lagrange's equations of the second kind.
+        """
+        Generates the symbolic equations of motion using Lagrange's equations of the second kind.
 
         Explanation
         ===========
@@ -211,8 +212,8 @@ class LagrangesMethod(_Methods):
             - q_ddot : n x 1 acceleration vector
 
           For constrained systems, returns the augmented form:
-         [ M  C.T ] [ q_ddot ] = [ F ]
-         [ C   0  ] [ lam    ]   [ c ]
+          [ M  C.T ] [ q_ddot ] = [ F ]
+          [ C   0  ] [ lam    ]   [ c ]
         """
 
         qds = self._qdots
