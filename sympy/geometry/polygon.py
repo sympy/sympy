@@ -1404,7 +1404,7 @@ class Polygon(GeometrySet):
         pts.append(pts[0])  # close it
         cw = Polygon._is_clockwise(*pts[:3])
         if cw:
-            pts = list(reversed(pts))
+            pts.reverse()
         for v, a in p.angles.items():
             i = pts.index(v)
             p1, p2 = Point._normalize_dimension(pts[i], pts[i + 1])
