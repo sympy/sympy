@@ -2880,7 +2880,7 @@ class Tensor(TensExpr):
 
     is_commutative = False
 
-    _index_structure = None  # type: _IndexStructure
+    _index_structure: _IndexStructure
     args: tuple[TensorHead, Tuple]
 
     def __new__(cls, tensor_head, indices, *, is_canon_bp=False, **kw_args):
@@ -3346,7 +3346,7 @@ class Tensor(TensExpr):
         expr = Indexed(tens.args[0], *index_symbols)
         return self._check_add_Sum(expr, index_symbols)
 
-    def _eval_partial_derivative(self, s):  # type: (Tensor) -> Expr
+    def _eval_partial_derivative(self, s: Tensor) -> Expr:
 
         if not isinstance(s, Tensor):
             return S.Zero
@@ -3432,7 +3432,7 @@ class TensMul(TensExpr, AssocOp):
     """
     identity = S.One
 
-    _index_structure = None  # type: _IndexStructure
+    _index_structure: _IndexStructure
 
     def __new__(cls, *args, **kw_args):
         is_canon_bp = kw_args.get('is_canon_bp', False)

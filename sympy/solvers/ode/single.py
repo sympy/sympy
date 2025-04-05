@@ -70,12 +70,12 @@ class SingleODEProblem:
     """
 
     # Instance attributes:
-    eq = None  # type: Expr
-    func = None  # type: AppliedUndef
-    sym = None  # type: Symbol
-    _order = None  # type: int
-    _eq_expanded = None  # type: Expr
-    _eq_preprocessed = None  # type: Expr
+    eq: Expr
+    func: AppliedUndef
+    sym: Symbol
+    _order: int
+    _eq_expanded: Expr
+    _eq_preprocessed: Expr
     _eq_high_order_free = None
 
     def __init__(self, eq, func, sym, prep=True, **kwargs):
@@ -255,7 +255,7 @@ class SingleODESolver:
     has_integral: ClassVar[bool]
 
     # The ODE to be solved
-    ode_problem = None  # type: SingleODEProblem
+    ode_problem: SingleODEProblem
 
     # Cache whether or not the equation has matched the method
     _matched: bool | None = None

@@ -1,7 +1,7 @@
 from sympy.physics.units import Dimension
 
 
-angle = Dimension(name="angle")  # type: Dimension
+angle: Dimension = Dimension(name="angle")
 
 # base dimensions (MKS)
 length = Dimension(name="length", symbol="L")
@@ -9,12 +9,12 @@ mass = Dimension(name="mass", symbol="M")
 time = Dimension(name="time", symbol="T")
 
 # base dimensions (MKSA not in MKS)
-current = Dimension(name='current', symbol='I')  # type: Dimension
+current: Dimension = Dimension(name='current', symbol='I')
 
 # other base dimensions:
-temperature = Dimension("temperature", "T")  # type: Dimension
-amount_of_substance = Dimension("amount_of_substance")  # type: Dimension
-luminous_intensity = Dimension("luminous_intensity")  # type: Dimension
+temperature: Dimension = Dimension("temperature", "T")
+amount_of_substance: Dimension = Dimension("amount_of_substance")
+luminous_intensity: Dimension = Dimension("luminous_intensity")
 
 # derived dimensions (MKS)
 velocity = Dimension(name="velocity")
@@ -30,14 +30,14 @@ area = Dimension("area")
 volume = Dimension("volume")
 
 # derived dimensions (MKSA not in MKS)
-voltage = Dimension(name='voltage', symbol='U')  # type: Dimension
-impedance = Dimension(name='impedance', symbol='Z')  # type: Dimension
-conductance = Dimension(name='conductance', symbol='G')  # type: Dimension
-capacitance = Dimension(name='capacitance')  # type: Dimension
-inductance = Dimension(name='inductance')  # type: Dimension
-charge = Dimension(name='charge', symbol='Q')  # type: Dimension
-magnetic_density = Dimension(name='magnetic_density', symbol='B')  # type: Dimension
-magnetic_flux = Dimension(name='magnetic_flux')  # type: Dimension
+voltage: Dimension = Dimension(name='voltage', symbol='U')
+impedance: Dimension = Dimension(name='impedance', symbol='Z')
+conductance: Dimension = Dimension(name='conductance', symbol='G')
+capacitance: Dimension = Dimension(name='capacitance')
+inductance: Dimension = Dimension(name='inductance')
+charge: Dimension = Dimension(name='charge', symbol='Q')
+magnetic_density: Dimension = Dimension(name='magnetic_density', symbol='B')
+magnetic_flux: Dimension = Dimension(name='magnetic_flux')
 
 # Dimensions in information theory:
-information = Dimension(name='information')  # type: Dimension
+information: Dimension = Dimension(name='information')

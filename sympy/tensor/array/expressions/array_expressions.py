@@ -1,10 +1,10 @@
+from __future__ import annotations
 import collections.abc
 import operator
 from collections import defaultdict, Counter
 from functools import reduce
 import itertools
 from itertools import accumulate
-from typing import Optional, List, Tuple as tTuple
 
 import typing
 
@@ -37,7 +37,7 @@ from sympy.core.sympify import _sympify
 
 
 class _ArrayExpr(Expr):
-    shape: tTuple[Expr, ...]
+    shape: tuple[Expr, ...]
 
     def __getitem__(self, item):
         if not isinstance(item, collections.abc.Iterable):
@@ -1588,9 +1588,9 @@ class _ArgE:
     the second index is contracted to the 4th (i.e. number ``3``) group of the
     array contraction object.
     """
-    indices: List[Optional[int]]
+    indices: list[int | None]
 
-    def __init__(self, element, indices: Optional[List[Optional[int]]] = None):
+    def __init__(self, element, indices: list[int | None] | None = None):
         self.element = element
         if indices is None:
             self.indices = [None for i in range(get_rank(element))]
@@ -1641,8 +1641,8 @@ class _EditArrayContraction:
     def __init__(self, base_array: typing.Union[ArrayContraction, ArrayDiagonal, ArrayTensorProduct]):
 
         expr: Basic
-        diagonalized: tTuple[tTuple[int, ...], ...]
-        contraction_indices: List[tTuple[int]]
+        diagonalized: tuple[tuple[int, ...], ...]
+        contraction_indices: list[tuple[int]]
         if isinstance(base_array, ArrayContraction):
             mapping = _get_mapping_from_subranks(base_array.subranks)
             expr = base_array.expr
@@ -1678,14 +1678,14 @@ class _EditArrayContraction:
         else:
             args = [expr]
 
-        args_with_ind: List[_ArgE] = [_ArgE(arg) for arg in args]
+        args_with_ind: list[_ArgE] = [_ArgE(arg) for arg in args]
         for i, contraction_tuple in enumerate(contraction_indices):
             for j in contraction_tuple:
                 arg_pos, rel_pos = mapping[j]
                 args_with_ind[arg_pos].indices[rel_pos] = i
-        self.args_with_ind: List[_ArgE] = args_with_ind
+        self.args_with_ind: list[_ArgE] = args_with_ind
         self.number_of_contraction_indices: int = len(contraction_indices)
-        self._track_permutation: Optional[List[List[int]]] = None
+        self._track_permutation: list[list[int]] | None = None
 
         mapping = _get_mapping_from_subranks(base_array.subranks)
 
@@ -1794,8 +1794,8 @@ class _EditArrayContraction:
         expr3 = _permute_dims(expr2, permutation)
         return expr3
 
-    def get_contraction_indices(self) -> List[List[int]]:
-        contraction_indices: List[List[int]] = [[] for i in range(self.number_of_contraction_indices)]
+    def get_contraction_indices(self) -> list[list[int]]:
+        contraction_indices: list[list[int]] = [[] for i in range(self.number_of_contraction_indices)]
         current_position: int = 0
         for arg_with_ind in self.args_with_ind:
             for j in arg_with_ind.indices:
@@ -1804,18 +1804,18 @@ class _EditArrayContraction:
                 current_position += 1
         return contraction_indices
 
-    def get_mapping_for_index(self, ind) -> List[_IndPos]:
+    def get_mapping_for_index(self, ind) -> list[_IndPos]:
         if ind >= self.number_of_contraction_indices:
             raise ValueError("index value exceeding the index range")
-        positions: List[_IndPos] = []
+        positions: list[_IndPos] = []
         for i, arg_with_ind in enumerate(self.args_with_ind):
             for j, arg_ind in enumerate(arg_with_ind.indices):
                 if ind == arg_ind:
                     positions.append(_IndPos(i, j))
         return positions
 
-    def get_contraction_indices_to_ind_rel_pos(self) -> List[List[_IndPos]]:
-        contraction_indices: List[List[_IndPos]] = [[] for i in range(self.number_of_contraction_indices)]
+    def get_contraction_indices_to_ind_rel_pos(self) -> list[list[_IndPos]]:
+        contraction_indices: list[list[_IndPos]] = [[] for i in range(self.number_of_contraction_indices)]
         for i, arg_with_ind in enumerate(self.args_with_ind):
             for j, ind in enumerate(arg_with_ind.indices):
                 if ind is not None:
@@ -1832,11 +1832,11 @@ class _EditArrayContraction:
                 counter += 1
         return counter
 
-    def get_args_with_index(self, index: int) -> List[_ArgE]:
+    def get_args_with_index(self, index: int) -> list[_ArgE]:
         """
         Get a list of arguments having the given index.
         """
-        ret: List[_ArgE] = [i for i in self.args_with_ind if index in i.indices]
+        ret: list[_ArgE] = [i for i in self.args_with_ind if index in i.indices]
         return ret
 
     @property

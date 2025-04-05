@@ -1,3 +1,4 @@
+from __future__ import annotations
 from collections import defaultdict
 from collections.abc import Iterable
 from inspect import isfunction
@@ -110,9 +111,9 @@ class MatrixBase(Printable):
     zero = S.Zero
     one = S.One
 
-    _diff_wrt = True  # type: bool
-    rows = None  # type: int
-    cols = None  # type: int
+    _diff_wrt: bool = True
+    rows: int
+    cols: int
     _simplify = None
 
     @classmethod
