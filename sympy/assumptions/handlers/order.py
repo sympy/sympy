@@ -316,12 +316,16 @@ def _(expr, assumptions):
 
     if expr.is_number:
         return _PositivePredicate_number(expr, assumptions)
+    if ask(Q.even(expr.exp), assumptions) and ask(Q.real(expr.base), assumptions):
+        zero_base = ask(Q.zero(expr.base), assumptions)
+        if zero_base and ask(Q.positive(expr.exp), assumptions):
+            return False
+        elif zero_base is False:
+            return True
     if ask(Q.positive(expr.base), assumptions):
         if ask(Q.real(expr.exp), assumptions):
             return True
     if ask(Q.negative(expr.base), assumptions):
-        if ask(Q.even(expr.exp), assumptions):
-            return True
         if ask(Q.odd(expr.exp), assumptions):
             return False
 
