@@ -267,3 +267,13 @@ def _(expr, assumptions):
             return None
         return not _even
     return _integer
+
+
+from .common import CommonHandler
+class AskRationalHandler(CommonHandler):
+    @staticmethod
+    def Pow(expr, assumptions):
+        # Handle 0 ** negative => undefined => not rational
+        if ask(Q.zero(expr.base), assumptions) and ask(Q.negative(expr.exp), assumptions):
+            return False  # 0^(-n) is undefined, hence not rational
+

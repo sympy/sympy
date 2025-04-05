@@ -1031,7 +1031,6 @@ def test_Pow_is_integer():
     k = Symbol('k', integer=True)
     n = Symbol('n', integer=True, nonnegative=True)
     m = Symbol('m', integer=True, positive=True)
-    negative_exp = Symbol('negative_exp', integer=True, negative=True)
     assert (k**2).is_integer is True
     assert (k**(-2)).is_integer is None
     assert ((m + 1)**(-2)).is_integer is False

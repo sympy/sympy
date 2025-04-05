@@ -1346,7 +1346,9 @@ def test_rational():
     assert ask(Q.rational(2/x), Q.irrational(x)) is False
 
     assert ask(Q.rational(x), ~Q.algebraic(x)) is False
-
+    # Test rationality of 0 raised to a negative integer
+    n = Symbol('n', integer=True, negative=True)
+    assert ask(Q.rational(S(0)**n)) == False
     # with multiple symbols
     assert ask(Q.rational(x*y), Q.irrational(x) & Q.irrational(y)) is None
     assert ask(Q.rational(y/x), Q.rational(x) & Q.rational(y)) is True
