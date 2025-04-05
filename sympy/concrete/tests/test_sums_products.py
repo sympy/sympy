@@ -1583,6 +1583,17 @@ def test_summation_by_residues():
     assert eval_sum_residue((-1)**x / x**2, (x, S(1), oo)) == -pi**2/12
     assert eval_sum_residue((-1)**x / x**2, (x, S(2), oo)) == 1 - pi**2/12
 
+    # https://github.com/sympy/sympy/issues/27824
+    assert eval_sum_residue((1/(k**2+1)), (k, -oo, S(0))) == Rational(1, 2) + pi/(2*tanh(pi))
+
+    # The odd function when called directly in eval_sum_residue returns None
+    # because the current implementation attempts to convert non-even functions
+    # into even ones by shifting. However, this doesn't work in this case,
+    # as the coefficient of the second-highest power in the denominator (k**2)
+    # is zero. This results in a shift of zero, which means the function should
+    # return None.
+    assert eval_sum_residue((1/k**3), (k,-oo, S(-1))) == None
+
 
 @slow
 def test_summation_by_residues_failing():
