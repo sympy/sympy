@@ -1453,10 +1453,6 @@ def eval_sum_residue(f, i_a_b):
            In: Complex Analysis with Applications.
            Undergraduate Texts in Mathematics. Springer, Cham.
            https://doi.org/10.1007/978-3-319-94063-2_5
-
-    .. [#] Michael Karr, "Summation in Finite Terms", Journal of the ACM,
-           Volume 28 Issue 2, April 1981, Pages 305-350
-           https://dl.acm.org/doi/10.1145/322248.322255
     """
     i, a, b = i_a_b
 

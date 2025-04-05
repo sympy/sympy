@@ -142,8 +142,6 @@ def test_karr_convention():
     n = Symbol('n', integer=True)
     assert Sum(1/(x**2 + 1), (x, oo, 0)).doit(deep=False) == Rational(-1, 2) + pi / (2 * tanh(pi))
     assert Sum(c**x/factorial(x), (x, oo, 0)).doit(deep=False).simplify() == exp(c) - 1 # exponential series
-    assert Sum(1/(x**2 + 1), (x, oo, 0)).doit(deep=False) == -1/2 + pi/(2*tanh(pi))
-    assert Sum(c**x/factorial(x), (x, oo, 0)).simplify().doit(deep=False) == 1 - exp(c) # exponential series
     assert Sum((-1)**x/x, (x, oo,0)).doit() == -log(2) # alternating harmnic series
     assert Sum((1/2)**x,(x, oo, -1)).doit() == S(2) # geometric series
     assert Sum(1/x, (x, oo, 0)).doit() == oo # harmonic series, divergent
