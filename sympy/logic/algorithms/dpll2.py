@@ -16,9 +16,12 @@ from sympy.core.sorting import ordered
 from sympy.assumptions.cnf import EncodedCNF
 
 from sympy.logic.algorithms.lra_theory import LRASolver
+from sympy.logic.algorithms.forward_chaining_theory import FCSolver
+from sympy.assumptions import AppliedPredicate
 
 
-def dpll_satisfiable(expr, all_models=False, use_lra_theory=False):
+
+def dpll_satisfiable(expr, all_models=False, use_lra_theory=False, use_sympy_theory=False):
     """
     Check satisfiability of a propositional sentence.
     It returns a model rather than True when it succeeds.
@@ -51,7 +54,13 @@ def dpll_satisfiable(expr, all_models=False, use_lra_theory=False):
     else:
         lra = None
         immediate_conflicts = []
-    solver = SATSolver(expr.data + immediate_conflicts, expr.variables, set(), expr.symbols, lra_theory=lra)
+
+    if use_sympy_theory:
+        fc = FCSolver.from_encoded_cnf(expr)
+    else:
+        fc = None
+
+    solver = SATSolver(expr.data + immediate_conflicts, expr.variables, set(), expr.symbols, lra_theory=lra, fc_theory = fc)
     models = solver._find_model()
 
     if all_models:
@@ -88,14 +97,19 @@ class SATSolver:
 
     def __init__(self, clauses, variables, var_settings, symbols=None,
                 heuristic='vsids', clause_learning='none', INTERVAL=500,
-                 lra_theory = None):
+                 lra_theory = None, fc_theory = None):
 
         self.var_settings = var_settings
         self.heuristic = heuristic
         self.is_unsatisfied = False
         self._unit_prop_queue = []
+        self._theory_prop_queue = []
         self.update_functions = []
         self.INTERVAL = INTERVAL
+
+        self.fc = None
+        if fc_theory:
+            self.fc, _ = fc_theory
 
         if symbols is None:
             self.symbols = list(ordered(variables))
@@ -138,6 +152,9 @@ class SATSolver:
         self.original_num_clauses = len(self.clauses)
 
         self.lra = lra_theory
+        if fc_theory:
+            _, fc_state = fc_theory
+            self._current_level.fc_state = fc_state
 
     def _initialize_variables(self, variables):
         """Set up the variable data structures needed."""
@@ -201,6 +218,8 @@ class SATSolver:
         # Check if unit prop says the theory is unsat right off the bat
         self._simplify()
         if self.is_unsatisfied:
+            if self.fc and self.fc.print_vars:
+                print("Formula unsatisfiable!\n\n")
             return
 
         # While the theory still has clauses remaining
@@ -231,9 +250,13 @@ class SATSolver:
                                 break
                         res = self.lra.check()
                         self.lra.reset_bounds()
+                    elif self.fc:
+                        res = self.fc.check(self.var_settings)
                     else:
                         res = None
                     if res is None or res[0]:
+                        if self.fc and self.fc.print_vars:
+                            print("Satisfying assignment found!\n\n")
                         yield {self.symbols[abs(lit) - 1]:
                                     lit > 0 for lit in self.var_settings}
                     else:
@@ -246,6 +269,8 @@ class SATSolver:
                     while self._current_level.flipped:
                         self._undo()
                     if len(self.levels) == 1:
+                        if self.fc and self.fc.print_vars:
+                            print("Formula unsatisfiable!\n\n")
                         return
                     flip_lit = -self._current_level.decision
                     self._undo()
@@ -273,6 +298,8 @@ class SATSolver:
 
                     # If we've unrolled all the way, the theory is unsat
                     if 1 == len(self.levels):
+                        if self.fc and self.fc.print_vars:
+                            print("Formula unsatisfiable!\n\n")
                         return
 
                 # Detect and add a learned clause
@@ -350,7 +377,7 @@ class SATSolver:
         """
         return cls in self.sentinels[lit]
 
-    def _assign_literal(self, lit):
+    def _assign_literal(self, lit, called_from_unit_prop=False, called_from_theory_prop=False):
         """Make a literal assignment.
 
         The literal assignment must be recorded as part of the current
@@ -381,6 +408,31 @@ class SATSolver:
         {-1}
 
         """
+
+        if self.fc:
+            if self.fc.print_vars:
+                new_lit =  self.fc._unecode_literals({lit})
+                cur_ass = self.fc._unecode_literals(self.var_settings)
+                print(f"Adding {new_lit} to SAT Solver assignments: {cur_ass}")
+
+            # If current level fc state is undefined, set equal to previous level's state
+            if self._current_level.fc_state is None:
+                self._current_level.fc_state = self.levels[-2].fc_state.copy()
+
+            if not called_from_theory_prop and not called_from_unit_prop and self.fc.theory_prop_enabled:
+                theory_prop = self.fc.theory_prop(lit)
+                if self.fc.print_vars:
+                    self.fc._unecode_literals(theory_prop)
+                    print(f"From {self.fc._unecode_literals([lit])} propagate {self.fc._unecode_literals(theory_prop)}")
+                self._theory_prop_queue.extend(theory_prop)
+
+            res = self.fc.assert_lit(lit, self._current_level.fc_state, force_assertion=not called_from_unit_prop)
+            if not res[0]:
+                self._simple_add_learned_clause(res[1])
+                self.fc.conflict = None
+                if called_from_unit_prop:
+                    return True
+
         self.var_settings.add(lit)
         self._current_level.var_settings.add(lit)
         self.variable_set[abs(lit)] = True
@@ -428,9 +480,14 @@ class SATSolver:
         """
         # Undo the variable settings
         for lit in self._current_level.var_settings:
+            #print(f"undoing {lit}.")
             self.var_settings.remove(lit)
             self.heur_lit_unset(lit)
             self.variable_set[abs(lit)] = False
+            if self.fc:
+                self.fc.deactivate_literal(lit, self._current_level.fc_state)
+            # if self.fc.deactivate_literal(lit) is False:
+            #     assert False
 
         # Pop the level off the stack
         self.levels.pop()
@@ -471,10 +528,13 @@ class SATSolver:
             changed = False
             changed |= self._unit_prop()
             changed |= self._pure_literal()
+            if self.fc and self.fc.theory_prop_enabled:
+                changed |= self._theory_prop()
 
     def _unit_prop(self):
         """Perform unit propagation on the current theory."""
         result = len(self._unit_prop_queue) > 0
+        #queue_backup = self._unit_prop_queue.copy()
         while self._unit_prop_queue:
             next_lit = self._unit_prop_queue.pop()
             if -next_lit in self.var_settings:
@@ -482,7 +542,32 @@ class SATSolver:
                 self._unit_prop_queue = []
                 return False
             else:
-                self._assign_literal(next_lit)
+                conflict = self._assign_literal(next_lit, called_from_unit_prop=True)
+                if conflict:
+                    self.is_unsatisfied = True
+                    self._unit_prop_queue = []
+                    return False
+
+
+
+        return result
+
+    def _theory_prop(self):
+        result = len(self._theory_prop_queue) > 0
+        while self._theory_prop_queue:
+            next_lit = self._theory_prop_queue.pop()
+            if -next_lit in self.var_settings:
+                self.is_unsatisfied = True
+                self._theory_prop_queue = []
+                return False
+            else:
+                conflict = self._assign_literal(next_lit, called_from_theory_prop=True)
+                if conflict:
+                    self.is_unsatisfied = True
+                    self._theory_prop_queue = []
+                    return False
+
+
 
         return result
 
@@ -499,8 +584,13 @@ class SATSolver:
         self.lit_scores = {}
 
         for var in range(1, len(self.variable_set)):
-            self.lit_scores[var] = float(-self.occurrence_count[var])
-            self.lit_scores[-var] = float(-self.occurrence_count[-var])
+            if self.fc:
+                pos_mult, neg_mult = self.fc.get_heuristic_multipliers(var)
+                self.lit_scores[var] = float(-self.occurrence_count[var])*pos_mult
+                self.lit_scores[-var] = float(-self.occurrence_count[-var])*neg_mult
+            else:
+                self.lit_scores[var] = float(-self.occurrence_count[var])
+                self.lit_scores[-var] = float(-self.occurrence_count[-var])
             heappush(self.lit_heap, (self.lit_scores[var], var))
             heappush(self.lit_heap, (self.lit_scores[-var], -var))
 
@@ -685,4 +775,5 @@ class Level:
     def __init__(self, decision, flipped=False):
         self.decision = decision
         self.var_settings = set()
+        self.fc_state = None
         self.flipped = flipped
