@@ -147,7 +147,7 @@ def fastlog(x: MPF_TUP | None) -> int | Any:
     return x[2] + x[3]
 
 
-def pure_complex(v: Expr, or_real=False) -> tuple['Number', 'Number'] | None:
+def pure_complex(v: Expr, or_real=False) -> tuple[Number, Number] | None:
     """Return a and b if v matches a + I*b where b is not zero and
     a and b are Numbers, else None. If `or_real` is True then 0 will
     be returned for `b` if `v` is a real number.
@@ -1059,7 +1059,7 @@ def evalf_alg_num(a: 'AlgebraicNumber', prec: int, options: OPT_DICT) -> TMP_RES
 #----------------------------------------------------------------------------#
 
 
-def as_mpmath(x: Any, prec: int, options: OPT_DICT) -> mpc | mpf:  # type: ignore
+def as_mpmath(x: Any, prec: int, options: OPT_DICT) -> mpc | mpf:
     from .numbers import Infinity, NegativeInfinity, Zero
     x = sympify(x)
     if isinstance(x, Zero) or x == 0.0:
@@ -1108,7 +1108,7 @@ def do_integral(expr: 'Integral', prec: int, options: OPT_DICT) -> TMP_RES:
         max_real_term: float | int = MINUS_INF
         max_imag_term: float | int = MINUS_INF
 
-        def f(t: Expr) -> mpc | mpf:  # type: ignore
+        def f(t: Expr) -> mpc | mpf:
             nonlocal max_real_term, max_imag_term
             re, im, re_acc, im_acc = evalf(func, mp.prec, {'subs': {x: t}})
 
@@ -1194,7 +1194,7 @@ def evalf_integral(expr: 'Integral', prec: int, options: OPT_DICT) -> TMP_RES:
     return result
 
 
-def check_convergence(numer: Expr, denom: Expr, n: 'Symbol') -> tuple[int, Any, Any]:
+def check_convergence(numer: Expr, denom: Expr, n: Symbol) -> tuple[int, Any, Any]:
     """
     Returns
     =======
@@ -1236,7 +1236,7 @@ def check_convergence(numer: Expr, denom: Expr, n: 'Symbol') -> tuple[int, Any, 
     return rate, constant, (qc - pc)/dpol.LC()
 
 
-def hypsum(expr: Expr, n: 'Symbol', start: int, prec: int) -> mpf:
+def hypsum(expr: Expr, n: Symbol, start: int, prec: int) -> mpf:
     """
     Sum a rapidly convergent infinite hypergeometric series with
     given general term, e.g. e = hypsum(1/factorial(n), n). The
