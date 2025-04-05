@@ -947,6 +947,35 @@ class DDM(list):
         ddm_iinv(ainv, a, K)
         return ainv
 
+    def rank(self):
+        """
+        Returns the rank of the matrix.
+
+        Examples
+        ========
+
+        >>> from sympy import QQ, ZZ
+        >>> from sympy.polys.matrices.ddm import DDM
+        >>> A = DDM([[QQ(1), QQ(2)], [QQ(2), QQ(4)]], (2, 2), QQ)
+        >>> A.rank()
+        1
+        >>> B = DDM([[ZZ(1), ZZ(2)], [ZZ(2), ZZ(4)]], (2, 2), ZZ)
+        >>> B.rank()
+        1
+
+        See Also
+        ========
+        sympy.polys.matrices.sdm.SDM.rank
+        sympy.polys.matrices._dfm.DFM.rank
+        """
+        if self.domain.is_Field:
+            rref, pivots = self.rref()
+            return len(pivots)
+        else:
+            # For non-field domains like ZZ, use fraction-free LU decomposition (fflu)
+            _, _, rank = self._fflu()
+            return rank
+
     def lu(a):
         """L, U decomposition of a"""
         m, n = a.shape
@@ -966,6 +995,7 @@ class DDM(list):
         Returns:
             LU : decomposition as a single matrix.
             perm (list): Permutation indices for row swaps.
+            rank (int): Rank of the matrix.
         """
         rows, cols = self.shape
         K = self.domain
@@ -1007,7 +1037,7 @@ class DDM(list):
                 LU[i][j] = multiplier
             rank += 1
 
-        return LU, perm
+        return LU, perm, rank
 
     def fflu(self):
         """
@@ -1023,7 +1053,7 @@ class DDM(list):
         K = self.domain
 
         # Phase 1: Perform row operations and get permutation
-        U, perm = self._fflu()
+        U, perm, rank = self._fflu()
 
         # Phase 2: Construct P, L, D matrices
         # Create P from permutation
