@@ -314,10 +314,10 @@ def _(expr, assumptions):
         return _PositivePredicate_number(expr, assumptions)
     if ask(Q.even(expr.exp), assumptions) and ask(Q.real(expr.base), assumptions):
         zero_base = ask(Q.zero(expr.base), assumptions)
-        if zero_base:
-            positive_exp = ask(Q.positive(expr.exp), assumptions)
-            return False if positive_exp else None
-        return True if zero_base is False else None
+        if zero_base and ask(Q.positive(expr.exp), assumptions):
+            return False
+        elif zero_base is False:
+            return True
     if ask(Q.positive(expr.base), assumptions):
         if ask(Q.real(expr.exp), assumptions):
             return True
