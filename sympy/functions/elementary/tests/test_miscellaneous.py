@@ -80,10 +80,10 @@ def test_Min():
     assert Min(oo, p) == p
     assert Min(oo, oo) is oo
 
-    assert Min(n, n_).func is Min
-    assert Min(nn, nn_).func is Min
-    assert Min(np, np_).func is Min
-    assert Min(p, p_).func is Min
+    assert isinstance(Min(n, n_), Min)
+    assert isinstance(Min(nn, nn_),  Min)
+    assert isinstance(Min(np, np_),  Min)
+    assert isinstance(Min(p, p_),  Min)
 
     # lists
     assert Min() is S.Infinity
