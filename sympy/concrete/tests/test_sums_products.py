@@ -9,7 +9,7 @@ from sympy.core import (Catalan, EulerGamma)
 from sympy.core.facts import InconsistentAssumptions
 from sympy.core.mod import Mod
 from sympy.core.numbers import (E, I, Rational, nan, oo, pi)
-from sympy.core.relational import Eq
+from sympy.core.relational import Eq, Ne
 from sympy.core.numbers import Float
 from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, Symbol, symbols)
@@ -22,7 +22,7 @@ from sympy.functions.elementary.hyperbolic import (sinh, tanh)
 from sympy.functions.elementary.integers import floor
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
-from sympy.functions.elementary.trigonometric import (cos, sin)
+from sympy.functions.elementary.trigonometric import (cos, sin, atan)
 from sympy.functions.special.gamma_functions import (gamma, lowergamma)
 from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.functions.special.zeta_functions import zeta
@@ -138,6 +138,26 @@ def test_karr_convention():
     s = Sum(e, (i, 0, 11))
     assert s.n(3) == s.doit().n(3)
 
+    # issue #27893
+    n = Symbol('n', integer=True)
+    assert Sum(1/(x**2 + 1), (x, oo, 0)).doit(deep=False) == Rational(-1, 2) + pi / (2 * tanh(pi))
+    assert Sum(c**x/factorial(x), (x, oo, 0)).doit(deep=False).simplify() == exp(c) - 1 # exponential series
+    assert Sum((-1)**x/x, (x, oo,0)).doit() == -log(2) # alternating harmnic series
+    assert Sum((1/2)**x,(x, oo, -1)).doit() == S(2) # geometric series
+    assert Sum(1/x, (x, oo, 0)).doit() == oo # harmonic series, divergent
+    assert Sum((-1)**x/(2*x+1), (x, oo, -1)).doit() == pi/4 # leibniz series
+    assert Sum((((-1)**x) * c**(2*x+1)) / factorial(2*x+1), (x, oo, -1)).doit() == sin(c) # sinusoidal series
+    assert Sum((((-1)**x) * c**(2*x+1)) / (2*x+1), (x, 0, oo)).doit() \
+        == Piecewise((atan(c), Ne(c**2, -1) & (Abs(c**2) <= 1)), \
+                     (Sum((-1)**x*c**(2*x + 1)/(2*x + 1), (x, 0, oo)), True)) # arctangent series
+    assert Sum(binomial(n, x) * c**x, (x, 0, oo)).doit() \
+        == Piecewise(((c + 1)**n, \
+                     ((n <= -1) & (Abs(c) < 1)) \
+                        | ((n > 0) & (Abs(c) <= 1)) \
+                        | ((n <= 0) & (n > -1) & Ne(c, -1) & (Abs(c) <= 1))), \
+                     (Sum(c**x*binomial(n, x), (x, 0, oo)), True)) # binomial series
+    assert Sum(1/x**n, (x, oo, 0)).doit() \
+        == Piecewise((zeta(n), n > 1), (Sum(x**(-n), (x, oo, 0)), True)) # Euler's zeta function
 
 def test_karr_proposition_2a():
     # Test Karr, page 309, proposition 2, part a
