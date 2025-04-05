@@ -245,6 +245,7 @@ class Printer:
 
     _default_settings: dict[str, Any] = {}
 
+    # must be initialized to pass tests and cannot be set to '| None' to pass mypy
     printmethod = None  # type: str
 
     @classmethod

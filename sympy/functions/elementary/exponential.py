@@ -1,5 +1,5 @@
+from __future__ import annotations
 from itertools import product
-from typing import Tuple as tTuple
 
 from sympy.core.add import Add
 from sympy.core.cache import cacheit
@@ -638,7 +638,7 @@ class log(DefinedFunction):
 
     """
 
-    args: tTuple[Expr]
+    args: tuple[Expr]
 
     _singularities = (S.Zero, S.ComplexInfinity)
 

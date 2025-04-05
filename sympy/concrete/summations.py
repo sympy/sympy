@@ -1,4 +1,4 @@
-from typing import Tuple as tTuple
+from __future__ import annotations
 
 from sympy.calculus.singularities import is_decreasing
 from sympy.calculus.accumulationbounds import AccumulationBounds
@@ -174,7 +174,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
 
     __slots__ = ()
 
-    limits: tTuple[tTuple[Symbol, Expr, Expr]]
+    limits: tuple[tuple[Symbol, Expr, Expr]]
 
     def __new__(cls, function, *symbols, **assumptions):
         obj = AddWithLimits.__new__(cls, function, *symbols, **assumptions)
