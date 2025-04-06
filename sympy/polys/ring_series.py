@@ -1789,7 +1789,7 @@ def rs_cosh_sinh(p, x, prec):
     t = rs_exp(p, x, prec)
     t1 = rs_series_inversion(t, x, prec)
     return (t + t1)/2, (t - t1)/2
-    
+
 
 def _tanh(p, x, prec):
     r"""
