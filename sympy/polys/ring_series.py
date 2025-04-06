@@ -1532,10 +1532,28 @@ def rs_cos(p, x, prec):
     return rs_series_from_list(p, c, x, prec)
 
 def rs_cos_sin(p, x, prec):
-    r"""
-    Return the tuple ``(rs_cos(p, x, prec)`, `rs_sin(p, x, prec))``.
+    """
+    Cosine and sine of a series
 
-    Is faster than calling rs_cos and rs_sin separately
+    Return the series expansion of the cosine and sine of ``p``, about 0.
+
+    Examples
+    ========
+
+    >>> from sympy.polys.domains import QQ
+    >>> from sympy.polys.rings import ring
+    >>> from sympy.polys.ring_series import rs_cos_sin
+    >>> R, x, y = ring('x, y', QQ)
+    >>> c, s = rs_cos_sin(x + x*y, x, 4)
+    >>> c
+    -1/2*x**2*y**2 - x**2*y - 1/2*x**2 + 1
+    >>> s
+    -1/6*x**3*y**3 - 1/2*x**3*y**2 - 1/2*x**3*y - 1/6*x**3 + x*y + x
+
+    See Also
+    ========
+
+    rs_cos, rs_sin
     """
     if rs_is_puiseux(p, x):
         return rs_puiseux(rs_cos_sin, p, x, prec)
@@ -1779,10 +1797,28 @@ def rs_cosh(p, x, prec):
     return (t + t1)/2
 
 def rs_cosh_sinh(p, x, prec):
-    r"""
-    Return the tuple ``(rs_cosh(p, x, prec)`, `rs_sinh(p, x, prec))``.
+    """
+    Hyperbolic cosine and sine of a series
 
-    Is faster than calling rs_cosh and rs_sinh separately
+    Return the series expansion of the hyperbolic cosine and sine of ``p``, about 0.
+
+    Examples
+    ========
+
+    >>> from sympy.polys.domains import QQ
+    >>> from sympy.polys.rings import ring
+    >>> from sympy.polys.ring_series import rs_cosh_sinh
+    >>> R, x, y = ring('x, y', QQ)
+    >>> c, s = rs_cosh_sinh(x + x*y, x, 4)
+    >>> c
+    1/2*x**2*y**2 + x**2*y + 1/2*x**2 + 1
+    >>> s
+    1/6*x**3*y**3 + 1/2*x**3*y**2 + 1/2*x**3*y + 1/6*x**3 + x*y + x
+
+    See Also
+    ========
+
+    rs_cosh, rs_sinh
     """
     if rs_is_puiseux(p, x):
         return rs_puiseux(rs_cosh_sinh, p, x, prec)
