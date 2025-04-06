@@ -235,7 +235,6 @@ def _(expr):
 def _(expr):
     return [Equivalent(Q.zero(expr), anyarg(x, Q.zero(x), expr) & allargs(x, Q.finite(x), expr)),
             allargs(x, Q.finite(expr) | Q.infinite(expr), expr) >> (Q.finite(expr) >> allargs(x, Q.finite(x), expr)),
-            allargs(x, Q.finite(x), expr) >> Q.finite(expr),
             allargs(x, Q.positive(x), expr) >> Q.positive(expr),
             allargs(x, Q.real(x), expr) >> Q.real(expr),
             allargs(x, Q.rational(x), expr) >> Q.rational(expr),
