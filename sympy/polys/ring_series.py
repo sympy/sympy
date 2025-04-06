@@ -672,10 +672,6 @@ def rs_series_from_list(p, c, x, prec, concur=1):
     >>> rs_trunc(pc.compose(x, p), x, 4)
     6*x**3 + 11*x**2 + 8*x + 6
 
-    """
-
-    # TODO: Add this when it is documented in Sphinx
-    """
     See Also
     ========
 
@@ -1448,7 +1444,8 @@ def rs_sin(p, x, prec):
 
     # Makes use of SymPy cos, sin functions to evaluate the values of the
     # cos/sin of the constant term.
-        return rs_sin(p1, x, prec)*t2 + rs_cos(p1, x, prec)*t1
+        p_cos, p_sin = rs_cos_sin(p1, x, prec)
+        return p_sin*t2 + p_cos*t1
 
     # Series is calculated in terms of tan as its evaluation is fast.
     if len(p) > 20 and R.ngens == 1:
@@ -1495,19 +1492,20 @@ def rs_cos(p, x, prec):
     if c:
         if R.domain is EX:
             c_expr = c.as_expr()
-            _, _ = sin(c_expr), cos(c_expr)
+            t1, t2 = sin(c_expr), cos(c_expr)
         elif isinstance(c, PolyElement):
             try:
                 c_expr = c.as_expr()
-                _, _ = R(sin(c_expr)), R(cos(c_expr))
+                t1, t2 = R(sin(c_expr)), R(cos(c_expr))
             except ValueError:
                 R = R.add_gens([sin(c_expr), cos(c_expr)])
                 p = p.set_ring(R)
                 x = x.set_ring(R)
                 c = c.set_ring(R)
+                t1, t2 = R(sin(c_expr)), R(cos(c_expr))
         else:
             try:
-                _, _ = R(sin(c)), R(cos(c))
+                t1, t2 = R(sin(c)), R(cos(c))
             except ValueError:
                 raise DomainError("The given series cannot be expanded in "
                     "this domain.")
@@ -1515,12 +1513,7 @@ def rs_cos(p, x, prec):
 
     # Makes use of SymPy cos, sin functions to evaluate the values of the
     # cos/sin of the constant term.
-        p_cos = rs_cos(p1, x, prec)
-        p_sin = rs_sin(p1, x, prec)
-        R = R.compose(p_cos.ring).compose(p_sin.ring)
-        p_cos.set_ring(R)
-        p_sin.set_ring(R)
-        t1, t2 = R(sin(c_expr)), R(cos(c_expr))
+        p_cos, p_sin = rs_cos_sin(p1, x, prec)
         return p_cos*t2 - p_sin*t1
 
     # Series is calculated in terms of tan as its evaluation is fast.
@@ -1724,7 +1717,8 @@ def rs_sinh(p, x, prec):
                                   "this domain.")
 
         p1 = p - c
-        return rs_sinh(p1, x, prec) * t2 + rs_cosh(p1, x, prec) * t1
+        p_cosh, p_sinh = rs_cosh_sinh(p1, x, prec)
+        return p_sinh * t2 + p_cosh * t1
 
     t = rs_exp(p, x, prec)
     t1 = rs_series_inversion(t, x, prec)
@@ -1777,11 +1771,25 @@ def rs_cosh(p, x, prec):
                                   "this domain.")
 
         p1 = p - c
-        return rs_cosh(p1, x, prec) * t2 + rs_sinh(p1, x, prec) * t1
+        p_cosh, p_sinh = rs_cosh_sinh(p1, x, prec)
+        return p_cosh * t2 + p_sinh * t1
 
     t = rs_exp(p, x, prec)
     t1 = rs_series_inversion(t, x, prec)
     return (t + t1)/2
+
+def rs_cosh_sinh(p, x, prec):
+    r"""
+    Return the tuple ``(rs_cosh(p, x, prec)`, `rs_sinh(p, x, prec))``.
+
+    Is faster than calling rs_cosh and rs_sinh separately
+    """
+    if rs_is_puiseux(p, x):
+        return rs_puiseux(rs_cosh_sinh, p, x, prec)
+    t = rs_exp(p, x, prec)
+    t1 = rs_series_inversion(t, x, prec)
+    return (t + t1)/2, (t - t1)/2
+    
 
 def _tanh(p, x, prec):
     r"""
