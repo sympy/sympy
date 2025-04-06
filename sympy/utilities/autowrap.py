@@ -84,6 +84,7 @@ import sys
 import os
 import shutil
 import tempfile
+from pathlib import Path
 from subprocess import STDOUT, CalledProcessError, check_output
 from string import Template
 from warnings import warn
@@ -335,10 +336,9 @@ setup(ext_modules=cythonize(ext_mods, **cy_opts))
         else:
             np_import = ''
 
-        with open(os.path.join(build_dir, 'setup.py'), 'w') as f:
-            includes = str(self._include_dirs).replace("'np.get_include()'",
-                                                       'np.get_include()')
-            f.write(self.setup_template.format(
+        includes = str(self._include_dirs).replace("'np.get_include()'",
+                                                    'np.get_include()')
+        code = self.setup_template.format(
                 ext_args=", ".join(ext_args),
                 np_import=np_import,
                 include_dirs=includes,
@@ -346,8 +346,8 @@ setup(ext_modules=cythonize(ext_mods, **cy_opts))
                 libraries=self._libraries,
                 extra_compile_args=self._extra_compile_args,
                 extra_link_args=self._extra_link_args,
-                cythonize_options=self._cythonize_options
-            ))
+                cythonize_options=self._cythonize_options)
+        Path(os.path.join(build_dir, 'setup.py')).write_text(code)
 
     @classmethod
     def _get_wrapped_function(cls, mod, name):
