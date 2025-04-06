@@ -34,6 +34,7 @@ import tempfile
 import warnings
 from contextlib import contextmanager
 from inspect import unwrap
+from pathlib import Path
 
 from sympy.core.cache import clear_cache
 from sympy.external import import_module
@@ -1577,8 +1578,7 @@ class SymPyDocTests:
                   '    exit("wrong number of args")\n')
 
             for viewer in disable_viewers:
-                with open(os.path.join(tempdir, viewer), 'w') as fh:
-                    fh.write(vw)
+                Path(os.path.join(tempdir, viewer)).write_text(vw)
 
                 # make the file executable
                 os.chmod(os.path.join(tempdir, viewer),

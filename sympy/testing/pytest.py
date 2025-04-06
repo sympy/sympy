@@ -297,8 +297,7 @@ calls the deprecated code (the current stacklevel is showing code from
         targets = []
         for w in warnrec:
             targets.append(w.message.active_deprecations_target)
-        with open(active_deprecations_file, encoding="utf-8") as f:
-            text = f.read()
+        text = pathlib.Path(active_deprecations_file).read_text(encoding="utf-8")
         for target in targets:
             if f'({target})=' not in text:
                 raise Failed(f"The active deprecations target {target!r} does not appear to be a valid target in the active-deprecations.md file ({active_deprecations_file}).")
