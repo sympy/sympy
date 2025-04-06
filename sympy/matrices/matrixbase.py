@@ -1329,7 +1329,7 @@ class MatrixBase(Printable):
     # routines and has a different *args signature.  Make
     # sure the names don't clash by adding `_matrix_` in name.
     def _eval_is_matrix_hermitian(self, simpfunc):
-        herm = lambda i, j: simpfunc(self[i, j] - self[j, i].transpose().conjugate()).is_zero
+        herm = lambda i, j: simpfunc(self[i, j] - self[j, i].adjoint()).is_zero
         return fuzzy_and(herm(i, j) for (i, j), v in self.iter_items())
 
     def _eval_is_zero_matrix(self):
