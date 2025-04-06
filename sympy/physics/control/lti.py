@@ -25,8 +25,7 @@ from sympy.solvers.ode.systems import linodesolve
 from sympy.solvers.solveset import linsolve, linear_eq_to_matrix
 from sympy.logic.boolalg import false, true
 from sympy.solvers.inequalities import reduce_inequalities
-from sympy.physics.control.routh_table import RouthHurwitz
-
+from sympy.physics.control.routh_table import get_negative_real_roots_conditions
 
 from mpmath.libmp.libmpf import prec_to_dps
 
@@ -1229,49 +1228,7 @@ class TransferFunction(SISOLinearTimeInvariant):
         """
         standard_form = self.to_standard_form(cancel_poles_zeros)
 
-        den = Poly(standard_form.den, self.var)
-
-        # If a non-positive coefficient is found, the sign of the
-        # polynomial is flipped.
-        # This ensures that the first row of the Routh-Hurwitz table
-        # will always be made positive.
-        for i, coeff in enumerate(den.all_coeffs()):
-            try:
-                if reduce_inequalities(coeff <= 0) is true:
-                    den = -den
-                    break
-            except NotImplementedError:
-                # If there are more than one symbols,
-                # reduce_inequalities could fail
-                pass
-
-        table = RouthHurwitz(den, self.var)
-
-        if table.zero_row_case:
-            # There is a pole with a real part equal to zero or
-            # a pole with a positive real part.
-            return [False]
-
-        num_conditions = true
-        var_conditions = []
-
-        for eq in table[:, 0]:
-            limit_val = limit(eq, table.infinitesimal_element, 0)
-
-            if limit_val == 0:
-                continue
-
-            elif limit_val.is_number:
-                num_conditions &= limit_val > 0
-
-            else:
-                var_conditions.append(limit_val > 0)
-
-        if num_conditions is false:
-            return [False]
-
-        return var_conditions if len(var_conditions) > 0 else [True]
-
+        return get_negative_real_roots_conditions(standard_form.den, self.var)
 
     def __add__(self, other):
         if hasattr(other, "is_StateSpace_object") and other.is_StateSpace_object:
@@ -5170,3 +5127,34 @@ class StateSpace(LinearTimeInvariant):
 
         """
         return self.controllability_matrix().rank() == self.num_states
+
+    def get_asymptotic_stability_conditions(self):
+        """
+        Returns the asymptotic stability conditions for
+        the state space.
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix
+        >>> from sympy.physics.control import StateSpace
+        >>> from sympy import symbols, reduce_inequalities
+        >>> k = symbols('k')
+        >>> A = Matrix([[0,1,0],[0,0,1], [k-1, -2*k, -1]])
+        >>> B = Matrix([1, 0, 0])
+        >>> C = Matrix([[0, 1, 0]])
+        >>> D = Matrix([0])
+        >>> ss = StateSpace(A, B, C, D)
+        >>> ineq = ss.get_asymptotic_stability_conditions()
+        >>> ineq
+        [3*k - 1 > 0, 1 - k > 0]
+        >>> reduce_inequalities(ineq)
+        (1/3 < k) & (k < 1)
+
+        """
+        s = Symbol('s')
+        n = self.A.shape[0]
+        I = eye(n)
+        determinant = (s*I - self.A).det()
+
+        return get_negative_real_roots_conditions(determinant, s)

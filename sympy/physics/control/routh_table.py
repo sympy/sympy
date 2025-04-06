@@ -1,10 +1,56 @@
 from sympy.matrices.dense import MutableDenseMatrix
-from sympy import Poly
-from sympy import cancel
+from sympy.polys import Poly
+from sympy.polys.polytools  import cancel
 from sympy import symbols, Symbol
+from sympy.logic.boolalg import false, true
+from sympy.solvers.inequalities import reduce_inequalities
+from sympy.series import limit
 
 __all__ = ['RouthHurwitz']
 
+def get_negative_real_roots_conditions(polynomial, var):
+        den = Poly(polynomial, var)
+
+        # If a non-positive coefficient is found, the sign of the
+        # polynomial is flipped.
+        # This ensures that the first row of the Routh-Hurwitz table
+        # will always be made positive.
+        for i, coeff in enumerate(den.all_coeffs()):
+            try:
+                if reduce_inequalities(coeff <= 0) is true:
+                    den = -den
+                    break
+            except NotImplementedError:
+                # If there are more than one symbols,
+                # reduce_inequalities could fail
+                pass
+
+        table = RouthHurwitz(den, var)
+
+        if table.zero_row_case:
+            # There is a pole with a real part equal to zero or
+            # a pole with a positive real part.
+            return [False]
+
+        num_conditions = true
+        var_conditions = []
+
+        for eq in table[:, 0]:
+            limit_val = limit(eq, table.infinitesimal_element, 0)
+
+            if limit_val == 0:
+                continue
+
+            elif limit_val.is_number:
+                num_conditions &= limit_val > 0
+
+            else:
+                var_conditions.append(limit_val > 0)
+
+        if num_conditions is false:
+            return [False]
+
+        return var_conditions if len(var_conditions) > 0 else [True]
 
 class RouthHurwitz(MutableDenseMatrix):
     r"""
