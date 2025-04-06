@@ -5,8 +5,8 @@ from sympy.polys.ring_series import (_invert_monoms, rs_integrate,
     rs_trunc, rs_mul, rs_square, rs_pow, _has_constant_term, rs_hadamard_exp,
     rs_series_from_list, rs_exp, rs_log, rs_newton, rs_series_inversion,
     rs_compose_add, rs_asin, rs_atan, rs_atanh, rs_asinh, rs_tan, rs_cot, rs_sin,
-    rs_cos, rs_cos_sin, rs_sinh, rs_cosh, rs_tanh, _tan1, rs_fun, rs_nth_root,
-    rs_LambertW, rs_series_reversion, rs_is_puiseux, rs_series)
+    rs_cos, rs_cos_sin, rs_sinh, rs_cosh, rs_cosh_sinh, rs_tanh, _tan1, rs_fun,
+    rs_nth_root, rs_LambertW, rs_series_reversion, rs_is_puiseux, rs_series)
 from sympy.testing.pytest import raises, slow
 from sympy.core.symbol import symbols
 from sympy.functions import (sin, cos, exp, tan, cot, sinh, cosh, atan, atanh,
@@ -434,6 +434,15 @@ def test_cosh():
         x**8*y**10/48 + x**8*y**8/40320 + x**7*y**10/6 + \
         x**7*y**8/120 + x**6*y**8/4 + x**6*y**6/720 + x**5*y**6/6 + \
         x**4*y**6/2 + x**4*y**4/24 + x**3*y**4 + x**2*y**2/2 + 1
+
+def test_cosh_sinh():
+    R, x, y = ring('x, y', QQ)
+    cosh, sinh = rs_cosh_sinh(x, x, 9)
+    assert cosh == rs_cosh(x, x, 9)
+    assert sinh == rs_sinh(x, x, 9)
+    cosh, sinh = rs_cosh_sinh(x + x*y, x, 5)
+    assert cosh == rs_cosh(x + x*y, x, 5)
+    assert sinh == rs_sin(x + x*y, x, 5)
 
 def test_tanh():
     R, x, y = ring('x, y', QQ)
