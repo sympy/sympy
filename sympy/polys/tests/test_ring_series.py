@@ -442,7 +442,7 @@ def test_cosh_sinh():
     assert sinh == rs_sinh(x, x, 9)
     cosh, sinh = rs_cosh_sinh(x + x*y, x, 5)
     assert cosh == rs_cosh(x + x*y, x, 5)
-    assert sinh == rs_sin(x + x*y, x, 5)
+    assert sinh == rs_sinh(x + x*y, x, 5)
 
 def test_tanh():
     R, x, y = ring('x, y', QQ)
