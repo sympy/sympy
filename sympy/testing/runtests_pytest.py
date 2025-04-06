@@ -162,15 +162,14 @@ def update_args_with_paths(
 
     def find_tests_matching_keywords(keywords, filepath):
         matches = []
-        with open(filepath, encoding='utf-8') as tests_file:
-            source = tests_file.read()
-            for line in source.splitlines():
-                if line.lstrip().startswith('def '):
-                    for kw in keywords:
-                        if line.lower().find(kw.lower()) != -1:
-                            test_name = line.split(' ')[1].split('(')[0]
-                            full_test_path = filepath + '::' + test_name
-                            matches.append(full_test_path)
+        source = pathlib.Path(filepath).read_text(encoding='utf-8')
+        for line in source.splitlines():
+            if line.lstrip().startswith('def '):
+                for kw in keywords:
+                    if line.lower().find(kw.lower()) != -1:
+                        test_name = line.split(' ')[1].split('(')[0]
+                        full_test_path = filepath + '::' + test_name
+                        matches.append(full_test_path)
         return matches
 
     valid_testpaths_default = []

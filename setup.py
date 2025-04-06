@@ -217,8 +217,7 @@ class sdist_sympy(sdist):
             pass
 
         if commit_hash:
-            with open(commit_hash_filepath, 'w') as f:
-                f.write(commit_hash)
+            Path(commit_hash_filepath).write_text(commit_hash)
 
         super().run()
 
@@ -302,9 +301,8 @@ tests = [
 ]
 
 
-with open(os.path.join(dir_setup, 'sympy', 'release.py')) as f:
-    # Defines __version__
-    exec(f.read())
+# Defines __version__
+exec(Path(os.path.join(dir_setup, 'sympy', 'release.py')).read_text())
 
 
 if __name__ == '__main__':
