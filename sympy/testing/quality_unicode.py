@@ -54,6 +54,7 @@ unicode_whitelist = [
     r'*/sympy/core/symbol.py',
 
     r'*/sympy/polys/ring_series.py',
+    r'*/sympy/polys/tests/test_ring_series.py',
 
 ]
 
