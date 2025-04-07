@@ -10,8 +10,7 @@ from itertools import count
 
 def _pre():
     maxn = 10**5
-    global _factor
-    global _totient
+    global _factor, _totient
     _factor = [0]*maxn
     _totient = [1]*maxn
     lim = int(maxn**0.5) + 5
