@@ -1476,9 +1476,7 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None,
         else:
             raise NotImplementedError('unhandled type: %s' % eq_type)
 
-    # remove null merge results
-    if () in sols:
-        sols.remove(())
+    sols.discard(())
     null = tuple([0]*len(var))
     # if there is no solution, return trivial solution
     if not sols and eq.subs(zip(var, null)).is_zero:
