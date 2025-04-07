@@ -6,7 +6,7 @@ from sympy.polys.ring_series import (_invert_monoms, rs_integrate,
     rs_series_from_list, rs_exp, rs_log, rs_newton, rs_series_inversion,
     rs_compose_add, rs_asin, rs_atan, rs_atanh, rs_asinh, rs_tan, rs_cot, rs_sin,
     rs_cos, rs_cos_sin, rs_sinh, rs_cosh, rs_tanh, _tan1, rs_fun, rs_nth_root,
-    rs_LambertW, rs_series_reversion, rs_is_puiseux, rs_series)
+    rs_LambertW, rs_is_puiseux, rs_series)
 from sympy.testing.pytest import raises, slow
 from sympy.core.symbol import symbols
 from sympy.functions import (sin, cos, exp, tan, cot, sinh, cosh, atan, atanh,
@@ -701,10 +701,7 @@ def test_issue():
     assert rs_series(sin(a**QQ(3,7))*exp(a + b**QQ(6,7)), a,2).as_expr() == \
         a**QQ(10,7)*exp(b**QQ(6,7)) - a**QQ(9,7)*exp(b**QQ(6,7))/6 + a**QQ(3,7)*exp(b**QQ(6,7))
 
-from sympy.polys.rings import ring
-from sympy.polys.domains import ZZ
 import pytest
-from sympy.polys.ring_series import rs_series_inversion
 
 def test_rs_series_inversion_non_unit_raises():
     R, x = ring('x', ZZ)

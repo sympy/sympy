@@ -45,8 +45,7 @@ from sympy.polys.domains import QQ, EX
 from sympy.polys.rings import PolyElement, ring, sring
 from sympy.polys.puiseux import PuiseuxPoly
 from sympy.polys.polyerrors import DomainError
-from sympy.polys.monomials import (monomial_min, monomial_mul, monomial_div,
-                                   monomial_ldiv)
+from sympy.polys.monomials import (monomial_min, monomial_mul, monomial_ldiv)
 from mpmath.libmp.libintmath import ifac
 from sympy.core import PoleError, Function, Expr
 from sympy.core.numbers import Rational
