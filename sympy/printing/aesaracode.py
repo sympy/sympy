@@ -1,4 +1,5 @@
 from __future__ import annotations
+import math
 from typing import Any
 
 from sympy.external import import_module
@@ -225,7 +226,7 @@ class AesaraPrinter(Printer):
                         for i in (expr.start, expr.stop, expr.step)])
 
     def _print_Pi(self, expr, **kwargs):
-        return 3.141592653589793
+        return math.pi
 
     def _print_Piecewise(self, expr, **kwargs):
         import numpy as np

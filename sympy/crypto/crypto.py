@@ -14,6 +14,7 @@ and the Diffie-Hellman key exchange.
 
 from string import whitespace, ascii_uppercase as uppercase, printable
 from functools import reduce
+import string
 import warnings
 
 from itertools import cycle
@@ -84,7 +85,7 @@ def AZ(s=None):
     return rv
 
 bifid5 = AZ().replace('J', '')
-bifid6 = AZ() + '0123456789'
+bifid6 = AZ() + string.digits
 bifid10 = printable
 
 
