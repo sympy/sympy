@@ -31,9 +31,13 @@ x,y = symbols('x y')
 print("Tests")
 print(ask(Q.finite(x*y), Q.infinite(x)))
 print(ask(Q.finite(x*y), ~Q.finite(x)))
+# should return true
+print(satask(Q.zero(x*y),   ((Q.zero(x)) & Q.finite(y)))  )
+print(satask(Q.zero(x*y),   (((Q.zero(x) | Q.zero(y)) & Q.finite(x)) & Q.finite(y)))    )
 
-print(satask(Q.zero(x*y), ((Q.zero(x) & Q.finite(x)) & Q.finite(y))))
-print(satask(Q.zero(x*y), (((Q.zero(x) | Q.zero(y)) & Q.finite(x)) & Q.finite(y))))
+# bruh
+print(satask((Q.zero(x) | Q.zero(y)), Q.nonzero(x*y)))
+
 # print(satask(Q.zero(x) | Q.zero(y), Q.nonzero(x*y)))
 # print(satask(Q.zero(x) | Q.zero(y), Q.finite(x*y)))
 # print(satask(Q.zero(x) | Q.zero(y), Q.positive(x*y)))
