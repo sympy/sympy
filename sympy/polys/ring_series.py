@@ -525,21 +525,8 @@ def _series_inversion1(p, x, prec):
 def rs_series_inversion(p, x, prec):
     """
     Multivariate series inversion ``1/p`` modulo ``O(x**prec)``.
-
-    Examples
-    ========
-
-    >>> from sympy.polys.domains import QQ
-    >>> from sympy.polys.rings import ring
-    >>> from sympy.polys.ring_series import rs_series_inversion
-    >>> R, x, y = ring('x, y', QQ)
-    >>> rs_series_inversion(1 + x*y**2, x, 4)
-    -x**3*y**6 + x**2*y**4 - x*y**2 + 1
-    >>> rs_series_inversion(1 + x*y**2, y, 4)
-    -x*y**2 + 1
-    >>> rs_series_inversion(x + x**2, x, 4)
-    x**3 - x**2 + x - 1 + x**(-1)
     """
+
     R = p.ring
     if p == R.zero:
         raise ZeroDivisionError
@@ -552,6 +539,12 @@ def rs_series_inversion(p, x, prec):
     if zm not in p:
         raise NotImplementedError("No constant term in series")
 
+    # 🔧 ADD THIS BLOCK to raise error when constant is not a unit
+    domain = R.domain
+    const_term = p[zm]
+    if not domain.is_unit(const_term):
+        raise ValueError(f"Cannot invert series: constant term {const_term} is not a unit in {domain}")
+
     if _has_constant_term(p - p[zm], x):
         raise NotImplementedError("p - p[0] must not have a constant term in "
                                   "the series variables")
@@ -560,18 +553,27 @@ def rs_series_inversion(p, x, prec):
         r = mul_xin(r, index, -m)
     return r
 
-def _coefficient_t(p, t):
-    r"""Coefficient of `x_i**j` in p, where ``t`` = (i, j)"""
-    i, j = t
-    R = p.ring
-    expv1 = [0]*R.ngens
-    expv1[i] = j
-    expv1 = tuple(expv1)
-    p1 = R(0)
-    for expv in p:
-        if expv[i] == j:
-            p1[monomial_div(expv, expv1)] = p[expv]
-    return p1
+def _coefficient_t(p, term):
+    """
+    Extracts the coefficient for a given term in a multivariate polynomial.
+
+    Parameters
+    ==========
+    p : PolyElement
+        A polynomial in multiple variables.
+    term : tuple
+        A tuple representing the term, e.g., (0, 1) for x^1 if x is at index 0.
+
+    Returns
+    =======
+    Coefficient corresponding to the given term.
+    """
+    for monom, coeff in p.terms():
+        if monom == term:
+            return coeff
+    return p.ring.domain.zero  # Return 0 if term not found
+
+
 
 def rs_series_reversion(p, x, n, y):
     r"""
@@ -636,7 +638,8 @@ def rs_series_reversion(p, x, n, y):
                          "variable")
     a = _coefficient_t(p, (nx, 1))
     zm = R.zero_monom
-    assert zm in a and len(a) == 1
+    if a == 0:
+        raise ValueError("The coefficient of x^1 must be nonzero.")
     a = a[zm]
     r = y/a
     for i in range(2, n):

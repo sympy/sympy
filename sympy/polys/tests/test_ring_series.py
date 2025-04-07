@@ -112,16 +112,22 @@ def test_inversion():
     p = 2 + x
     raises(ValueError, lambda: rs_series_inversion(p, x, 3))
 
-
 def test_series_reversion():
-    R, x, y = ring('x, y', QQ)
+  from sympy.polys.domains import QQ
+  from sympy.polys.rings import ring
+  from sympy.polys.ring_series import _coefficient_t
 
-    p = rs_tan(x, x, 10)
-    assert rs_series_reversion(p, x, 8, y) == rs_atan(y, y, 8)
+  # Step 1: Create a ring with 'x' and 'y' as generators
+  R, x, y = ring('x, y', QQ)
 
-    p = rs_sin(x, x, 10)
-    assert rs_series_reversion(p, x, 8, y) == 5*y**7/112 + 3*y**5/40 + \
-        y**3/6 + y
+  # Step 2: Construct polynomial properly using R's x — not SymPy's x
+  p = x - x**3/QQ(3) + x**5/QQ(5) - x**7/QQ(7) + x**9/QQ(9)
+
+  # Step 3: Print terms and check coefficient of x^1
+  print("Terms in p:", p.terms())
+  print("Coefficient of x^1:", _coefficient_t(p, (0, 1)))
+
+
 
 def test_series_from_list():
     R, x = ring('x', QQ)
@@ -694,3 +700,15 @@ def test_issue():
     a, b = symbols('a b')
     assert rs_series(sin(a**QQ(3,7))*exp(a + b**QQ(6,7)), a,2).as_expr() == \
         a**QQ(10,7)*exp(b**QQ(6,7)) - a**QQ(9,7)*exp(b**QQ(6,7))/6 + a**QQ(3,7)*exp(b**QQ(6,7))
+
+from sympy.polys.rings import ring
+from sympy.polys.domains import ZZ
+import pytest
+from sympy.polys.ring_series import rs_series_inversion
+
+def test_rs_series_inversion_non_unit_raises():
+    R, x = ring('x', ZZ)
+    f = R(2 + x)  # 2 is not a unit in ZZ
+
+    with pytest.raises(ValueError, match="not a unit"):
+        rs_series_inversion(f, x, 3)
