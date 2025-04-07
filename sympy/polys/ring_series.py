@@ -1382,7 +1382,7 @@ def rs_cot(p, x, prec):
         r = rs_puiseux(rs_cot, p, x, prec)
         return r
     i, m = _check_series_var(p, x, 'cot')
-    prec1 = prec + 2*m
+    prec1 = int(prec + 2*m)
     c, s = rs_cos_sin(p, x, prec1)
     s = mul_xin(s, i, -m)
     s = rs_series_inversion(s, x, prec1)
@@ -1557,10 +1557,49 @@ def rs_cos_sin(p, x, prec):
     """
     if rs_is_puiseux(p, x):
         return rs_puiseux(rs_cos_sin, p, x, prec)
-    t = rs_tan(p/2, x, prec)
-    t2 = rs_square(t, x, prec)
-    p1 = rs_series_inversion(1 + t2, x, prec)
-    return (rs_mul(p1, 1 - t2, x, prec), rs_mul(p1, 2*t, x, prec))
+    R = p.ring
+    if not p:
+        return R(0), R(0)
+    c = _get_constant_term(p, x)
+    if c:
+        if R.domain is EX:
+            c_expr = c.as_expr()
+            t1, t2 = cos(c_expr), sin(c_expr)
+        elif isinstance(c, PolyElement):
+            try:
+                c_expr = c.as_expr()
+                t1, t2 = R(cos(c_expr)), R(sin(c_expr))
+            except ValueError:
+                R = R.add_gens([cos(c_expr), sin(c_expr)])
+                p = p.set_ring(R)
+                x = x.set_ring(R)
+                c = c.set_ring(R)
+                t1, t2 = R(cos(c_expr)), R(sin(c_expr))
+        else:
+            try:
+                t1, t2 = R(cos(c)), R(sin(c))
+            except ValueError:
+                raise DomainError("The given series cannot be expanded in "
+                    "this domain.")
+        p1 = p - c
+        p_cos, p_sin = rs_cos_sin(p1, x, prec)
+        return p_cos*t1 - p_sin*t2, p_cos*t2 + p_sin*t1
+
+    if len(p) > 20 and R.ngens == 1:
+        t = rs_tan(p/2, x, prec)
+        t2 = rs_square(t, x, prec)
+        p1 = rs_series_inversion(1 + t2, x, prec)
+        return (rs_mul(p1, 1 - t2, x, prec), rs_mul(p1, 2*t, x, prec))
+
+    one = R(1)
+    coeffs = []
+    cn, sn = 1, 1
+    for k in range(2, prec+2, 2):
+        coeffs.extend([(one/cn, 0), (0, one/sn)])
+        cn, sn = -cn*k*(k - 1), -sn*k*(k + 1)
+
+    c, s = zip(*coeffs)
+    return (rs_series_from_list(p, c, x, prec), rs_series_from_list(p, s, x, prec))
 
 def _atanh(p, x, prec):
     """
@@ -1822,6 +1861,34 @@ def rs_cosh_sinh(p, x, prec):
     """
     if rs_is_puiseux(p, x):
         return rs_puiseux(rs_cosh_sinh, p, x, prec)
+    R = p.ring
+    if not p:
+        return R(0), R(0)
+    c = _get_constant_term(p, x)
+    if c:
+        if R.domain is EX:
+            c_expr = c.as_expr()
+            t1, t2 = sinh(c_expr), cosh(c_expr)
+        elif isinstance(c, PolyElement):
+            try:
+                c_expr = c.as_expr()
+                t1, t2 = R(sinh(c_expr)), R(cosh(c_expr))
+            except ValueError:
+                R = R.add_gens([sinh(c_expr), cosh(c_expr)])
+                p = p.set_ring(R)
+                x = x.set_ring(R)
+                c = c.set_ring(R)
+                t1, t2 = R(sinh(c_expr)), R(cosh(c_expr))
+        else:
+            try:
+                t1, t2 = R(sinh(c)), R(cosh(c))
+            except ValueError:
+                raise DomainError("The given series cannot be expanded in "
+                                  "this domain.")
+        p1 = p - c
+        p_cosh, p_sinh = rs_cosh_sinh(p1, x, prec)
+        return p_cosh * t2 + p_sinh * t1, p_sinh * t2 + p_cosh * t1
+
     t = rs_exp(p, x, prec)
     t1 = rs_series_inversion(t, x, prec)
     return (t + t1)/2, (t - t1)/2

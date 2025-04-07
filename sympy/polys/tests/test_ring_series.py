@@ -370,12 +370,24 @@ def test_cos():
 
 def test_cos_sin():
     R, x, y = ring('x, y', QQ)
-    cos, sin = rs_cos_sin(x, x, 9)
-    assert cos == rs_cos(x, x, 9)
-    assert sin == rs_sin(x, x, 9)
-    cos, sin = rs_cos_sin(x + x*y, x, 5)
-    assert cos == rs_cos(x + x*y, x, 5)
-    assert sin == rs_sin(x + x*y, x, 5)
+    c, s = rs_cos_sin(x, x, 9)
+    assert c == rs_cos(x, x, 9)
+    assert s == rs_sin(x, x, 9)
+    c, s = rs_cos_sin(x + x*y, x, 5)
+    assert c == rs_cos(x + x*y, x, 5)
+    assert s == rs_sin(x + x*y, x, 5)
+
+    # constant term in series
+    a = symbols('a')
+    R, x, y = ring('x, y', QQ[sin(a), cos(a), a])
+    c, s = rs_cos_sin(x + a, x, 5)
+    assert c == rs_cos(x + a, x, 5)
+    assert s == rs_sin(x + a, x, 5)
+
+    R, x, y = ring('x, y', EX)
+    c, s = rs_cos_sin(x + a, x, 5)
+    assert c == rs_cos(x + a, x, 5)
+    assert s == rs_sin(x + a, x, 5)
 
 def test_atanh():
     R, x, y = ring('x, y', QQ)
@@ -427,6 +439,23 @@ def test_sinh():
         x**6*y**7/24 + x**5*y**7/2 + x**5*y**5/120 + x**4*y**5/2 + \
         x**3*y**3/6 + x**2*y**3 + x*y
 
+    # constant term in series
+    a = symbols('a')
+    R, x, y = ring('x, y', QQ[sinh(a), cosh(a), a])
+    assert rs_sinh(x + a, x, 5) == 1/24*x**4*(sinh(a)) + 1/6*x**3*(cosh(a)) + 1/\
+        2*x**2*(sinh(a)) + x*(cosh(a)) + (sinh(a))
+    assert rs_sinh(x + x**2*y + a, x, 5) == 1/2*(sinh(a))*x**4*y**2 + 1/2*(cosh(a))\
+        *x**4*y + 1/24*(sinh(a))*x**4 + (sinh(a))*x**3*y + 1/6*(cosh(a))*x**3 + \
+        (cosh(a))*x**2*y + 1/2*(sinh(a))*x**2 + (cosh(a))*x + (sinh(a))
+
+    R, x, y = ring('x, y', EX)
+    assert rs_sinh(x + a, x, 5) == EX(sinh(a)/24)*x**4 + EX(cosh(a)/6)*x**3 + \
+        EX(sinh(a)/2)*x**2 + EX(cosh(a))*x + EX(sinh(a))
+    assert rs_sinh(x + x**2*y + a, x, 5) == EX(sinh(a)/2)*x**4*y**2 + EX(cosh(a)/\
+        2)*x**4*y + EX(sinh(a)/24)*x**4 + EX(sinh(a))*x**3*y + EX(cosh(a)/6)*x**3 \
+        + EX(cosh(a))*x**2*y + EX(sinh(a)/2)*x**2 + EX(cosh(a))*x + EX(sinh(a))
+
+
 def test_cosh():
     R, x, y = ring('x, y', QQ)
     assert rs_cosh(x, x, 9) == 1 + x**2/2 + x**4/24 + x**6/720 + x**8/40320
@@ -435,14 +464,40 @@ def test_cosh():
         x**7*y**8/120 + x**6*y**8/4 + x**6*y**6/720 + x**5*y**6/6 + \
         x**4*y**6/2 + x**4*y**4/24 + x**3*y**4 + x**2*y**2/2 + 1
 
+    # constant term in series
+    a = symbols('a')
+    R, x, y = ring('x, y', QQ[sinh(a), cosh(a), a])
+    assert rs_cosh(x + a, x, 5) == 1/24*(cosh(a))*x**4 + 1/6*(sinh(a))*x**3 + \
+        1/2*(cosh(a))*x**2 + (sinh(a))*x + (cosh(a))
+    assert rs_cosh(x + x**2*y + a, x, 5) == 1/2*(cosh(a))*x**4*y**2 + 1/2*(sinh(a))\
+        *x**4*y + 1/24*(cosh(a))*x**4 + (cosh(a))*x**3*y + 1/6*(sinh(a))*x**3 + \
+        (sinh(a))*x**2*y + 1/2*(cosh(a))*x**2 + (sinh(a))*x + (cosh(a))
+    R, x, y = ring('x, y', EX)
+    assert rs_cosh(x + a, x, 5) == EX(cosh(a)/24)*x**4 + EX(sinh(a)/6)*x**3 + \
+        EX(cosh(a)/2)*x**2 + EX(sinh(a))*x + EX(cosh(a))
+    assert rs_cosh(x + x**2*y + a, x, 5) == EX(cosh(a)/2)*x**4*y**2 + EX(sinh(a)/\
+        2)*x**4*y + EX(cosh(a)/24)*x**4 + EX(cosh(a))*x**3*y + EX(sinh(a)/6)*x**3 \
+        + EX(sinh(a))*x**2*y + EX(cosh(a)/2)*x**2 + EX(sinh(a))*x + EX(cosh(a))
+
 def test_cosh_sinh():
     R, x, y = ring('x, y', QQ)
-    cosh, sinh = rs_cosh_sinh(x, x, 9)
-    assert cosh == rs_cosh(x, x, 9)
-    assert sinh == rs_sinh(x, x, 9)
-    cosh, sinh = rs_cosh_sinh(x + x*y, x, 5)
-    assert cosh == rs_cosh(x + x*y, x, 5)
-    assert sinh == rs_sinh(x + x*y, x, 5)
+    ch, sh = rs_cosh_sinh(x, x, 9)
+    assert ch == rs_cosh(x, x, 9)
+    assert sh == rs_sinh(x, x, 9)
+    ch, sh = rs_cosh_sinh(x + x*y, x, 5)
+    assert ch == rs_cosh(x + x*y, x, 5)
+    assert sh == rs_sinh(x + x*y, x, 5)
+
+    # constant term in series
+    a = symbols('a')
+    R, x, y = ring('x, y', QQ[sinh(a), cosh(a), a])
+    ch, sh = rs_cosh_sinh(x + a, x, 5)
+    assert ch == rs_cosh(x + a, x, 5)
+    assert sh == rs_sinh(x + a, x, 5)
+    R, x, y = ring('x, y', EX)
+    ch, sh = rs_cosh_sinh(x + a, x, 5)
+    assert ch == rs_cosh(x + a, x, 5)
+    assert sh == rs_sinh(x + a, x, 5)
 
 def test_tanh():
     R, x, y = ring('x, y', QQ)
