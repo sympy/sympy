@@ -167,7 +167,7 @@ class DiophantineEquationType:
     dimension :
         The number of symbols being solved for
     """
-    name = None  # type: str
+    name: str
 
     def __init__(self, equation, free_symbols=None):
         self.equation = _sympify(equation).expand(force=True)

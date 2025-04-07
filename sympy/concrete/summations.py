@@ -1,4 +1,4 @@
-from typing import Tuple as tTuple
+from __future__ import annotations
 
 from sympy.calculus.singularities import is_decreasing
 from sympy.calculus.accumulationbounds import AccumulationBounds
@@ -174,7 +174,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
 
     __slots__ = ()
 
-    limits: tTuple[tTuple[Symbol, Expr, Expr]]
+    limits: tuple[tuple[Symbol, Expr, Expr]]
 
     def __new__(cls, function, *symbols, **assumptions):
         obj = AddWithLimits.__new__(cls, function, *symbols, **assumptions)
@@ -279,6 +279,8 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         zeta function does not converge unless `s > 1` and `q > 0`
         """
         i, a, b = limits
+        if a.is_comparable and b.is_comparable and a > b:
+            return self.eval_zeta_function(f, (i, b + S.One, a - S.One))
         if b is not S.Infinity:
             return
         w, y, z = Wild('w', exclude=[i]), Wild('y', exclude=[i]), Wild('z', exclude=[i])
@@ -1019,6 +1021,8 @@ def eval_sum(f, limits):
         return f*(b - a + 1)
     if a == b:
         return f.subs(i, a)
+    if a.is_comparable and b.is_comparable and a > b:
+        return eval_sum(f, (i, b + S.One, a - S.One))
     if isinstance(f, Piecewise):
         if not any(i in arg.args[1].free_symbols for arg in f.args):
             # Piecewise conditions do not depend on the dummy summation variable,
@@ -1452,12 +1456,12 @@ def eval_sum_residue(f, i_a_b):
     """
     i, a, b = i_a_b
 
-    def get_function_symmetry(numer, denom):
-        """
-        Returns 'even', 'odd', or 'neither' based on the symmetry of a
-        rational function.
-        """
+    # If lower limit > upper limit: Karr Summation Convention
+    if a.is_comparable and b.is_comparable and a > b:
+        return eval_sum_residue(f, (i, b + S.One, a - S.One))
 
+    def is_even_function(numer, denom):
+        """Test if the rational function is an even function"""
         numer_even = all(i % 2 == 0 for (i,) in numer.monoms())
         denom_even = all(i % 2 == 0 for (i,) in denom.monoms())
         numer_odd = all(i % 2 == 1 for (i,) in numer.monoms())

@@ -1,5 +1,6 @@
 """Domains of Gaussian type."""
 
+from __future__ import annotations
 from sympy.core.numbers import I
 from sympy.polys.polyclasses import DMP
 from sympy.polys.polyerrors import CoercionFailed
@@ -244,7 +245,7 @@ class GaussianRational(GaussianElement):
 
 class GaussianDomain():
     """Base class for Gaussian domains."""
-    dom = None  # type: Domain
+    dom: Domain
 
     is_Numerical = True
     is_Exact = True
