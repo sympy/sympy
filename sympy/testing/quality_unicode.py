@@ -52,6 +52,9 @@ unicode_whitelist = [
 
     # Explanation of symbols uses greek letters
     r'*/sympy/core/symbol.py',
+
+    r'*/sympy/polys/ring_series.py',
+
 ]
 
 unicode_strict_whitelist = [
