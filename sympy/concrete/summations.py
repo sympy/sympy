@@ -1460,8 +1460,12 @@ def eval_sum_residue(f, i_a_b):
     if a.is_comparable and b.is_comparable and a > b:
         return eval_sum_residue(f, (i, b + S.One, a - S.One))
 
-    def is_even_function(numer, denom):
-        """Test if the rational function is an even function"""
+    def get_function_symmetry(numer, denom):
+        """
+        Returns 'even', 'odd', or 'neither' based on the symmetry of a
+        rational function.
+        """
+
         numer_even = all(i % 2 == 0 for (i,) in numer.monoms())
         denom_even = all(i % 2 == 0 for (i,) in denom.monoms())
         numer_odd = all(i % 2 == 1 for (i,) in numer.monoms())
