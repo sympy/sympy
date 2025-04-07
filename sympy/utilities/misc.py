@@ -188,8 +188,7 @@ def debug_decorator(func):
         return func
 
     def maketree(f, *args, **kw):
-        global _debug_tmp
-        global _debug_iter
+        global _debug_tmp, _debug_iter
         oldtmp = _debug_tmp
         _debug_tmp = []
         _debug_iter += 1
