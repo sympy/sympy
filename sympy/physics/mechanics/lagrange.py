@@ -140,7 +140,7 @@ class LagrangesMethod(_Methods):
         self._f_d = Matrix()            # Forcing part of the dynamic equations
         self.lam_coeffs = Matrix()      # The coeffecients of the multipliers
 
-        forcelist = forcelist if forcelist else []
+        forcelist = forcelist or []
         if not iterable(forcelist):
             raise TypeError('Force pairs must be supplied in an iterable.')
         self._forcelist = forcelist

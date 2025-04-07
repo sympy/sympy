@@ -479,7 +479,7 @@ class Collector(DefaultPrinting):
                 word = word*perm_to_free[g]
 
             word = self.collected_word(word)
-            pc_relators[relation] = word if word else ()
+            pc_relators[relation] = word or ()
             self.pc_presentation = pc_relators
 
             collected_gens.append(gen)
@@ -500,7 +500,7 @@ class Collector(DefaultPrinting):
                         word = word*perm_to_free[g]
 
                     word = self.collected_word(word)
-                    pc_relators[relation] = word if word else ()
+                    pc_relators[relation] = word or ()
                     self.pc_presentation = pc_relators
 
         return pc_relators

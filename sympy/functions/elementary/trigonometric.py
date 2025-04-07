@@ -2254,7 +2254,7 @@ class asin(InverseTrigonometricFunction):
             return self.rewrite(log)._eval_as_leading_term(x, logx=logx, cdir=cdir).expand()
         # Handling points lying on branch cuts (-oo, -1) U (1, oo)
         if (1 - x0**2).is_negative:
-            ndir = arg.dir(x, cdir if cdir else 1)
+            ndir = arg.dir(x, cdir or 1)
             if im(ndir).is_negative:
                 if x0.is_negative:
                     return -pi - self.func(x0)
@@ -2298,7 +2298,7 @@ class asin(InverseTrigonometricFunction):
             return res
         # Handling points lying on branch cuts (-oo, -1) U (1, oo)
         if (1 - arg0**2).is_negative:
-            ndir = self.args[0].dir(x, cdir if cdir else 1)
+            ndir = self.args[0].dir(x, cdir or 1)
             if im(ndir).is_negative:
                 if arg0.is_negative:
                     return -pi - res
@@ -2483,7 +2483,7 @@ class acos(InverseTrigonometricFunction):
             return self.rewrite(log)._eval_as_leading_term(x, logx=logx, cdir=cdir)
         # Handling points lying on branch cuts (-oo, -1) U (1, oo)
         if (1 - x0**2).is_negative:
-            ndir = arg.dir(x, cdir if cdir else 1)
+            ndir = arg.dir(x, cdir or 1)
             if im(ndir).is_negative:
                 if x0.is_negative:
                     return 2*pi - self.func(x0)
@@ -2534,7 +2534,7 @@ class acos(InverseTrigonometricFunction):
             return res
         # Handling points lying on branch cuts (-oo, -1) U (1, oo)
         if (1 - arg0**2).is_negative:
-            ndir = self.args[0].dir(x, cdir if cdir else 1)
+            ndir = self.args[0].dir(x, cdir or 1)
             if im(ndir).is_negative:
                 if arg0.is_negative:
                     return 2*pi - res
@@ -2724,7 +2724,7 @@ class atan(InverseTrigonometricFunction):
             return self.rewrite(log)._eval_as_leading_term(x, logx=logx, cdir=cdir).expand()
         # Handling points lying on branch cuts (-I*oo, -I) U (I, I*oo)
         if (1 + x0**2).is_negative:
-            ndir = arg.dir(x, cdir if cdir else 1)
+            ndir = arg.dir(x, cdir or 1)
             if re(ndir).is_negative:
                 if im(x0).is_positive:
                     return self.func(x0) - pi
@@ -2743,7 +2743,7 @@ class atan(InverseTrigonometricFunction):
             return self.rewrite(log)._eval_nseries(x, n, logx=logx, cdir=cdir)
 
         res = super()._eval_nseries(x, n=n, logx=logx)
-        ndir = self.args[0].dir(x, cdir if cdir else 1)
+        ndir = self.args[0].dir(x, cdir or 1)
         if arg0 is S.ComplexInfinity:
             if re(ndir) > 0:
                 return res - pi
@@ -2939,7 +2939,7 @@ class acot(InverseTrigonometricFunction):
             return self.rewrite(log)._eval_as_leading_term(x, logx=logx, cdir=cdir).expand()
         # Handling points lying on branch cuts [-I, I]
         if x0.is_imaginary and (1 + x0**2).is_positive:
-            ndir = arg.dir(x, cdir if cdir else 1)
+            ndir = arg.dir(x, cdir or 1)
             if re(ndir).is_positive:
                 if im(x0).is_positive:
                     return self.func(x0) + pi
@@ -2960,7 +2960,7 @@ class acot(InverseTrigonometricFunction):
         res = super()._eval_nseries(x, n=n, logx=logx)
         if arg0 is S.ComplexInfinity:
             return res
-        ndir = self.args[0].dir(x, cdir if cdir else 1)
+        ndir = self.args[0].dir(x, cdir or 1)
         if arg0.is_zero:
             if re(ndir) < 0:
                 return res - pi
@@ -3163,7 +3163,7 @@ class asec(InverseTrigonometricFunction):
             return self.rewrite(log)._eval_as_leading_term(x, logx=logx, cdir=cdir)
         # Handling points lying on branch cuts (-1, 1)
         if x0.is_real and (1 - x0**2).is_positive:
-            ndir = arg.dir(x, cdir if cdir else 1)
+            ndir = arg.dir(x, cdir or 1)
             if im(ndir).is_negative:
                 if x0.is_positive:
                     return -self.func(x0)
@@ -3203,7 +3203,7 @@ class asec(InverseTrigonometricFunction):
             return res
         # Handling points lying on branch cuts (-1, 1)
         if arg0.is_real and (1 - arg0**2).is_positive:
-            ndir = self.args[0].dir(x, cdir if cdir else 1)
+            ndir = self.args[0].dir(x, cdir or 1)
             if im(ndir).is_negative:
                 if arg0.is_positive:
                     return -res
@@ -3373,7 +3373,7 @@ class acsc(InverseTrigonometricFunction):
             return (1/arg).as_leading_term(x)
         # Handling points lying on branch cuts (-1, 1)
         if x0.is_real and (1 - x0**2).is_positive:
-            ndir = arg.dir(x, cdir if cdir else 1)
+            ndir = arg.dir(x, cdir or 1)
             if im(ndir).is_negative:
                 if x0.is_positive:
                     return pi - self.func(x0)
@@ -3413,7 +3413,7 @@ class acsc(InverseTrigonometricFunction):
             return res
         # Handling points lying on branch cuts (-1, 1)
         if arg0.is_real and (1 - arg0**2).is_positive:
-            ndir = self.args[0].dir(x, cdir if cdir else 1)
+            ndir = self.args[0].dir(x, cdir or 1)
             if im(ndir).is_negative:
                 if arg0.is_positive:
                     return pi - res

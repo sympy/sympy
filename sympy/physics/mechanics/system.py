@@ -865,7 +865,7 @@ class System(_Methods):
         # KanesMethod does not accept empty iterables
         loads = self.loads + tuple(
             load for act in self.actuators for load in act.to_loads())
-        loads = loads if loads else None
+        loads = loads or None
         if issubclass(eom_method, KanesMethod):
             disallowed_kwargs = {
                 "frame", "q_ind", "u_ind", "kd_eqs", "q_dependent",

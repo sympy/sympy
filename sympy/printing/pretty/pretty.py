@@ -2734,7 +2734,7 @@ class PrettyPrinter(Printer):
 
     def _print_DiagramGrid(self, grid):
         from sympy.matrices import Matrix
-        matrix = Matrix([[grid[i, j] if grid[i, j] else Symbol(" ")
+        matrix = Matrix([[grid[i, j] or Symbol(" ")
                           for j in range(grid.width)]
                          for i in range(grid.height)])
         return self._print_matrix_contents(matrix)

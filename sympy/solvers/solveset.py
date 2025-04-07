@@ -1090,7 +1090,7 @@ def _solve_as_poly(f, symbol, domain=S.Complexes):
 def _solve_radical(f, unradf, symbol, solveset_solver):
     """ Helper function to solve equations with radicals """
     res = unradf
-    eq, cov = res if res else (f, [])
+    eq, cov = res or (f, [])
     if not cov:
         result = solveset_solver(eq, symbol) - \
             Union(*[solveset_solver(g, symbol) for g in denoms(f, symbol)])
@@ -3595,7 +3595,7 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
                                 # soln is in domain=S.Reals
                                 intersections[sym] = soln.args[0]
                             soln_new += soln.args[1]
-                        soln = soln_new if soln_new else soln
+                        soln = soln_new or soln
                         if index > 0 and solver == solveset_real:
                             # one symbol's real soln, another symbol may have
                             # corresponding complex soln.

@@ -1786,7 +1786,7 @@ def intcurve_series(vector_field, param, start_point, n=6, coord_sys=None, coeff
         """Return the series for one of the coordinates."""
         return [param**i*iter_vfield(coord_function, i).rcall(start_point)/factorial(i)
                 for i in range(n)]
-    coord_sys = coord_sys if coord_sys else start_point._coord_sys
+    coord_sys = coord_sys or start_point._coord_sys
     coord_functions = coord_sys.coord_functions()
     taylor_terms = [taylor_terms_per_coord(f) for f in coord_functions]
     if coeffs:
@@ -1873,7 +1873,7 @@ def intcurve_diffequ(vector_field, param, start_point, coord_sys=None):
     """
     if contravariant_order(vector_field) != 1 or covariant_order(vector_field):
         raise ValueError('The supplied field was not a vector field.')
-    coord_sys = coord_sys if coord_sys else start_point._coord_sys
+    coord_sys = coord_sys or start_point._coord_sys
     gammas = [Function('f_%d' % i)(param) for i in range(
         start_point._coord_sys.dim)]
     arbitrary_p = Point(coord_sys, gammas)

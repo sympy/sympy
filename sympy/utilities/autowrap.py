@@ -650,7 +650,7 @@ def autowrap(expr, language=None, backend='f2py', tempdir=None, args=None,
     # two cases 1) helpers is an iterable of 3-tuples and 2) helpers is a
     # 3-tuple
     if iterable(helpers) and len(helpers) != 0 and iterable(helpers[0]):
-        helpers = helpers if helpers else ()
+        helpers = helpers or ()
     else:
         helpers = [helpers] if helpers else ()
     args = list(args) if iterable(args, exclude=set) else args
@@ -663,7 +663,7 @@ def autowrap(expr, language=None, backend='f2py', tempdir=None, args=None,
         'CYTHON': CythonCodeWrapper,
         'DUMMY': DummyWrapper
     }[backend.upper()]
-    code_wrapper = CodeWrapperClass(code_gen, tempdir, flags if flags else (),
+    code_wrapper = CodeWrapperClass(code_gen, tempdir, flags or (),
                                     verbose, **kwargs)
 
     helps = []
@@ -1137,8 +1137,8 @@ def ufuncify(args, expr, language=None, backend='numpy', tempdir=None,
     else:
         language = _infer_language(backend)
 
-    helpers = helpers if helpers else ()
-    flags = flags if flags else ()
+    helpers = helpers or ()
+    flags = flags or ()
 
     if backend.upper() == 'NUMPY':
         # maxargs is set by numpy compile-time constant NPY_MAXARGS

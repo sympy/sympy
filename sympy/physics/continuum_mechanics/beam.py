@@ -210,7 +210,7 @@ class Beam:
         self._joined_beam = False
 
     def __str__(self):
-        shape_description = self._cross_section if self._cross_section else self._second_moment
+        shape_description = self._cross_section or self._second_moment
         str_sol = 'Beam({}, {}, {})'.format(sstr(self._length), sstr(self._elastic_modulus), sstr(shape_description))
         return str_sol
 

@@ -302,7 +302,7 @@ def guess_generating_function(v, X=Symbol('x'), types=['all'], maxsqrtn=2):
         # Transform sequence (division by factorial)
         w, f = [], S.One
         for i, k in enumerate(v):
-            f *= i if i else 1
+            f *= i or 1
             w.append(k/f)
         # Perform some convolutions of the sequence with itself
         t = [1] + [0]*(len(w) - 1)
@@ -370,7 +370,7 @@ def guess_generating_function(v, X=Symbol('x'), types=['all'], maxsqrtn=2):
         # Transform sequence / step 1 (division by factorial)
         z, f = [], S.One
         for i, k in enumerate(v):
-            f *= i if i else 1
+            f *= i or 1
             z.append(k/f)
         # Transform sequence / step 2 by computing f'(x)/f(x)
         # because log(f(x)) = integrate( f'(x)/f(x) )

@@ -1311,7 +1311,7 @@ class asinh(InverseHyperbolicFunction):
             return self.rewrite(log)._eval_as_leading_term(x, logx=logx, cdir=cdir)
         # Handling points lying on branch cuts (-I*oo, -I) U (I, I*oo)
         if (1 + x0**2).is_negative:
-            ndir = arg.dir(x, cdir if cdir else 1)
+            ndir = arg.dir(x, cdir or 1)
             if re(ndir).is_positive:
                 if im(x0).is_negative:
                     return -self.func(x0) - I*pi
@@ -1336,7 +1336,7 @@ class asinh(InverseHyperbolicFunction):
 
         # Handling points lying on branch cuts (-I*oo, -I) U (I, I*oo)
         if (1 + arg0**2).is_negative:
-            ndir = arg.dir(x, cdir if cdir else 1)
+            ndir = arg.dir(x, cdir or 1)
             if re(ndir).is_positive:
                 if im(arg0).is_negative:
                     return -res - I*pi
@@ -1499,7 +1499,7 @@ class acosh(InverseHyperbolicFunction):
 
         # Handling points lying on branch cuts (-oo, 1)
         if (x0 - 1).is_negative:
-            ndir = arg.dir(x, cdir if cdir else 1)
+            ndir = arg.dir(x, cdir or 1)
             if im(ndir).is_negative:
                 if (x0 + 1).is_negative:
                     return self.func(x0) - 2*I*pi
@@ -1522,7 +1522,7 @@ class acosh(InverseHyperbolicFunction):
 
         # Handling points lying on branch cuts (-oo, 1)
         if (arg0 - 1).is_negative:
-            ndir = arg.dir(x, cdir if cdir else 1)
+            ndir = arg.dir(x, cdir or 1)
             if im(ndir).is_negative:
                 if (arg0 + 1).is_negative:
                     return res - 2*I*pi
@@ -1668,7 +1668,7 @@ class atanh(InverseHyperbolicFunction):
             return self.rewrite(log)._eval_as_leading_term(x, logx=logx, cdir=cdir)
         # Handling points lying on branch cuts (-oo, -1] U [1, oo)
         if (1 - x0**2).is_negative:
-            ndir = arg.dir(x, cdir if cdir else 1)
+            ndir = arg.dir(x, cdir or 1)
             if im(ndir).is_negative:
                 if x0.is_negative:
                     return self.func(x0) - I*pi
@@ -1693,7 +1693,7 @@ class atanh(InverseHyperbolicFunction):
 
         # Handling points lying on branch cuts (-oo, -1] U [1, oo)
         if (1 - arg0**2).is_negative:
-            ndir = arg.dir(x, cdir if cdir else 1)
+            ndir = arg.dir(x, cdir or 1)
             if im(ndir).is_negative:
                 if arg0.is_negative:
                     return res - I*pi
@@ -1820,7 +1820,7 @@ class acoth(InverseHyperbolicFunction):
             return self.rewrite(log)._eval_as_leading_term(x, logx=logx, cdir=cdir)
         # Handling points lying on branch cuts [-1, 1]
         if x0.is_real and (1 - x0**2).is_positive:
-            ndir = arg.dir(x, cdir if cdir else 1)
+            ndir = arg.dir(x, cdir or 1)
             if im(ndir).is_negative:
                 if x0.is_positive:
                     return self.func(x0) + I*pi
@@ -1845,7 +1845,7 @@ class acoth(InverseHyperbolicFunction):
 
         # Handling points lying on branch cuts [-1, 1]
         if arg0.is_real and (1 - arg0**2).is_positive:
-            ndir = arg.dir(x, cdir if cdir else 1)
+            ndir = arg.dir(x, cdir or 1)
             if im(ndir).is_negative:
                 if arg0.is_positive:
                     return res + I*pi
@@ -1991,7 +1991,7 @@ class asech(InverseHyperbolicFunction):
 
         # Handling points lying on branch cuts (-oo, 0] U (1, oo)
         if x0.is_negative or (1 - x0).is_negative:
-            ndir = arg.dir(x, cdir if cdir else 1)
+            ndir = arg.dir(x, cdir or 1)
             if im(ndir).is_positive:
                 if x0.is_positive or (x0 + 1).is_negative:
                     return -self.func(x0)
@@ -2036,7 +2036,7 @@ class asech(InverseHyperbolicFunction):
 
         # Handling points lying on branch cuts (-oo, 0] U (1, oo)
         if arg0.is_negative or (1 - arg0).is_negative:
-            ndir = arg.dir(x, cdir if cdir else 1)
+            ndir = arg.dir(x, cdir or 1)
             if im(ndir).is_positive:
                 if arg0.is_positive or (arg0 + 1).is_negative:
                     return -res
@@ -2192,7 +2192,7 @@ class acsch(InverseHyperbolicFunction):
             return (1/arg).as_leading_term(x)
         # Handling points lying on branch cuts (-I, I)
         if x0.is_imaginary and (1 + x0**2).is_positive:
-            ndir = arg.dir(x, cdir if cdir else 1)
+            ndir = arg.dir(x, cdir or 1)
             if re(ndir).is_positive:
                 if im(x0).is_positive:
                     return -self.func(x0) - I*pi
@@ -2240,7 +2240,7 @@ class acsch(InverseHyperbolicFunction):
 
         # Handling points lying on branch cuts (-I, I)
         if arg0.is_imaginary and (1 + arg0**2).is_positive:
-            ndir = self.args[0].dir(x, cdir if cdir else 1)
+            ndir = self.args[0].dir(x, cdir or 1)
             if re(ndir).is_positive:
                 if im(arg0).is_positive:
                     return -res - I*pi
