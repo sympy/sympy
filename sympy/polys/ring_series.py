@@ -1564,26 +1564,27 @@ def rs_cos_sin(p, x, prec):
     if c:
         if R.domain is EX:
             c_expr = c.as_expr()
-            t1, t2 = cos(c_expr), sin(c_expr)
+            t1, t2 = sin(c_expr), cos(c_expr)
         elif isinstance(c, PolyElement):
             try:
                 c_expr = c.as_expr()
-                t1, t2 = R(cos(c_expr)), R(sin(c_expr))
+                t1, t2 = R(sin(c_expr)), R(cos(c_expr))
             except ValueError:
-                R = R.add_gens([cos(c_expr), sin(c_expr)])
+                R = R.add_gens([sin(c_expr), cos(c_expr)])
                 p = p.set_ring(R)
                 x = x.set_ring(R)
                 c = c.set_ring(R)
-                t1, t2 = R(cos(c_expr)), R(sin(c_expr))
+                t1, t2 = R(sin(c_expr)), R(cos(c_expr))
         else:
             try:
-                t1, t2 = R(cos(c)), R(sin(c))
+                t1, t2 = R(sin(c)), R(cos(c))
             except ValueError:
                 raise DomainError("The given series cannot be expanded in "
                     "this domain.")
         p1 = p - c
+
         p_cos, p_sin = rs_cos_sin(p1, x, prec)
-        return p_cos*t1 - p_sin*t2, p_cos*t2 + p_sin*t1
+        return p_cos*t2 - p_sin*t1, p_cos*t1 + p_sin*t2
 
     if len(p) > 20 and R.ngens == 1:
         t = rs_tan(p/2, x, prec)
