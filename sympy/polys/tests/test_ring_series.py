@@ -378,6 +378,10 @@ def test_cos_sin():
     assert s == rs_sin(x + x*y, x, 5)
 
     # constant term in series
+    c, s = rs_cos_sin(1 + x + x**2, x, 5)
+    assert c == rs_cos(1 + x + x**2, x, 5)
+    assert s == rs_sin(1 + x + x**2, x, 5)
+
     a = symbols('a')
     R, x, y = ring('x, y', QQ[sin(a), cos(a), a])
     c, s = rs_cos_sin(x + a, x, 5)
@@ -489,6 +493,10 @@ def test_cosh_sinh():
     assert sh == rs_sinh(x + x*y, x, 5)
 
     # constant term in series
+    c, s = rs_cosh_sinh(1 + x + x**2, x, 5)
+    assert c == rs_cosh(1 + x + x**2, x, 5)
+    assert s == rs_sinh(1 + x + x**2, x, 5)
+
     a = symbols('a')
     R, x, y = ring('x, y', QQ[sinh(a), cosh(a), a])
     ch, sh = rs_cosh_sinh(x + a, x, 5)
@@ -597,13 +605,19 @@ def test_puiseux():
     assert r == x**QQ(9,5) + x**QQ(26,15) + x**QQ(22,15) + x**QQ(6,5)/3 + x + \
         x**QQ(2,3) + x**QQ(2,5)
 
+    r = rs_cosh(p, x, 2)
+    assert r == x**QQ(28,15)/6 + x**QQ(5,3) + x**QQ(8,5)/24 + x**QQ(7,5) + \
+        x**QQ(4,3)/2 + x**QQ(16,15) + x**QQ(4,5)/2 + 1
+
     r = rs_sinh(p, x, 2)
     assert r == x**QQ(9,5)/2 + x**QQ(26,15)/2 + x**QQ(22,15)/2 + \
         x**QQ(6,5)/6 + x + x**QQ(2,3) + x**QQ(2,5)
 
-    r = rs_cosh(p, x, 2)
-    assert r == x**QQ(28,15)/6 + x**QQ(5,3) + x**QQ(8,5)/24 + x**QQ(7,5) + \
+    r = rs_cosh_sinh(p, x, 2)
+    assert r[0] == x**QQ(28,15)/6 + x**QQ(5,3) + x**QQ(8,5)/24 + x**QQ(7,5) + \
         x**QQ(4,3)/2 + x**QQ(16,15) + x**QQ(4,5)/2 + 1
+    assert r[1] == x**QQ(9,5)/2 + x**QQ(26,15)/2 + x**QQ(22,15)/2 + \
+        x**QQ(6,5)/6 + x + x**QQ(2,3) + x**QQ(2,5)
 
     r = rs_tanh(p, x, 2)
     assert r == -x**QQ(9,5) - x**QQ(26,15) - x**QQ(22,15) - x**QQ(6,5)/3 + \

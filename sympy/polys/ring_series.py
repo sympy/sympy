@@ -1805,6 +1805,8 @@ def rs_cosh(p, x, prec):
     if rs_is_puiseux(p, x):
         return rs_puiseux(rs_cosh, p, x, prec)
     R = p.ring
+    if not p:
+        return R(0)
     c = _get_constant_term(p, x)
     if c:
         if R.domain is EX:
