@@ -1,7 +1,7 @@
 """This module implements tools for integrating rational functions. """
 
 from sympy.core.function import Lambda
-from sympy.core.numbers import I
+from sympy.core.numbers import Float, I, Rational
 from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, Symbol, symbols)
 from sympy.functions.elementary.exponential import log
@@ -52,7 +52,11 @@ def ratint(f, x, **flags):
     else:
         p, q = f.as_numer_denom()
 
+    p = p.xreplace({c: Rational(c) for c in p.atoms(Float)})
+    q = q.xreplace({c: Rational(c) for c in q.atoms(Float)})
+
     p, q = Poly(p, x, composite=False, field=True), Poly(q, x, composite=False, field=True)
+
 
     coeff, p, q = p.cancel(q)
     poly, p = p.div(q)
@@ -118,6 +122,7 @@ def ratint(f, x, **flags):
                         q, Lambda(t, t*log(h.as_expr())), quadratic=True)
 
         result += eps
+    result = result.xreplace({c: c.evalf(22) for c in result.atoms(Rational)})
 
     return coeff*result
 
