@@ -545,7 +545,7 @@ class PermuteDims(_CodegenArrayAbstract):
         permutation_array_blocks_up = []
         image_form = _af_invert(permutation.array_form)
         counter = 0
-        for i, e in enumerate(subranks):
+        for i in range(len(subranks)):
             current = []
             for j in range(cumul[i], cumul[i+1]):
                 if j in contraction_indices_flat:
