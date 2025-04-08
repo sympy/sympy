@@ -3,54 +3,81 @@ from sympy.polys import Poly
 from sympy.polys.polytools  import cancel
 from sympy import symbols, Symbol
 from sympy.logic.boolalg import false, true
-from sympy.solvers.inequalities import reduce_inequalities
 from sympy.series import limit
+from sympy import Q, ask
 
-__all__ = ['RouthHurwitz']
+__all__ = ['RouthHurwitz', 'neg_roots_conds']
 
-def get_negative_real_roots_conditions(polynomial, var):
-        den = Poly(polynomial, var)
+def neg_roots_conds(polynomial, var):
+    """
+    Returns the conditions for a polynomial to have all its roots with
+    negative real parts.
 
-        # If a non-positive coefficient is found, the sign of the
-        # polynomial is flipped.
-        # This ensures that the first row of the Routh-Hurwitz table
-        # will always be made positive.
-        for i, coeff in enumerate(den.all_coeffs()):
-            try:
-                if reduce_inequalities(coeff <= 0) is true:
-                    den = -den
-                    break
-            except NotImplementedError:
-                # If there are more than one symbols,
-                # reduce_inequalities could fail
-                pass
+    Examples
+    ========
 
-        table = RouthHurwitz(den, var)
+    >>> from sympy.physics.control import neg_roots_conds
+    >>> from sympy import symbols
+    >>> s = symbols('s')
+    >>> p1 = (s+1)*(s+2)*(s+2.5)
+    >>> neg_roots_conds(p1, s)
+    [True]
+    >>> k = symbols('k')
+    >>> p2 = (s+1)*(s+k)
+    >>> neg_roots_conds(p2, s)
+    [k > 0]
+    >>> a = symbols('a', negative = True)
+    >>> p3 = (s+1)*(s+a)
+    >>> neg_roots_conds(p3, s)
+    [False]
 
-        if table.zero_row_case:
-            # There is a pole with a real part equal to zero or
-            # a pole with a positive real part.
-            return [False]
+    """
+    den = Poly(polynomial, var)
 
-        num_conditions = true
-        var_conditions = []
+    # If a non-positive coefficient is found, the sign of the
+    # polynomial is flipped.
+    # This ensures that the first row of the Routh-Hurwitz table
+    # will always be made positive.
+    for coeff in den.all_coeffs():
+        if ask(Q.zero(coeff)) is True:
+            continue
 
-        for eq in table[:, 0]:
-            limit_val = limit(eq, table.infinitesimal_element, 0)
+        if ask(Q.nonnegative(coeff)) is True:
+            break
 
-            if limit_val == 0:
-                continue
+        if ask(Q.nonpositive(coeff)) is True:
+            den = -den
+            break
 
-            elif limit_val.is_number:
-                num_conditions &= limit_val > 0
+        # The coefficient could not satisfy any of the conditions
+        # if it doesn't have assumptions and we can skip it.
 
-            else:
-                var_conditions.append(limit_val > 0)
+    table = RouthHurwitz(den, var)
 
-        if num_conditions is false:
-            return [False]
+    if table.zero_row_case:
+        # There is a pole with a real part equal to zero or
+        # a pole with a positive real part.
+        return [False]
 
-        return var_conditions if len(var_conditions) > 0 else [True]
+    num_conditions = true
+    var_conditions = []
+
+    for eq in table[:, 0]:
+        limit_val = limit(eq, table.infinitesimal_element, 0)
+
+        if limit_val == 0:
+            continue
+
+        elif limit_val.is_number:
+            num_conditions &= limit_val > 0
+
+        else:
+            var_conditions.append(limit_val > 0)
+
+    if num_conditions is false:
+        return [False]
+
+    return var_conditions if len(var_conditions) > 0 else [True]
 
 class RouthHurwitz(MutableDenseMatrix):
     r"""

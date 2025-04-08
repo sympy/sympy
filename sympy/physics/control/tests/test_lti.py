@@ -2280,3 +2280,19 @@ def test_StateSpace_feedback():
                             [Rational(-2, 7), Rational(15, 14), Rational(-1, 2), Rational(-3), Rational(-18, 7)]]), Matrix([
                             [Rational(4, 7), Rational(-9, 7)],
                             [Rational(1, 14), Rational(-11, 14)]]))
+
+def test_StateSpace_stability():
+    k = symbols('k')
+    B = Matrix([1, 0, 0])
+    C = Matrix([[0, 1, 0]])
+    D = Matrix([0])
+
+    A1 = Matrix([[0,1,0],[0,0,1], [k-1, -2*k, -1]])
+    ss1 = StateSpace(A1, B, C, D)
+    ineq = ss1.get_asymptotic_stability_conditions()
+    assert ineq == [3*k - 1 > 0, 1 - k > 0]
+
+    A2 = Matrix([[1,0,0], [0,-1,k], [0,0,-1]])
+    ss2 = StateSpace(A2, B, C, D)
+    ineq = ss2.get_asymptotic_stability_conditions()
+    assert ineq == [False]
