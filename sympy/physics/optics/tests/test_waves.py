@@ -80,3 +80,17 @@ def test_twave():
 
     raises(ValueError, lambda:TWave(A1))
     raises(ValueError, lambda:TWave(A1, f, phi1, t))
+
+def test_initialization_and_direction_normalization():
+    A1, phi1, f = symbols('A1, phi1, f')
+    # Test default direction
+    wave_default = TWave(A1, f, phi1)
+    assert wave_default.direction == (1, 0, 0)
+
+    # Test direction normalization
+    wave = TWave(A1, f, phi1, direction=(2, 0, 0))
+    assert wave.direction == (1, 0, 0)  # Normalized
+
+    wave_2d = TWave(A1, f, phi1, direction=(1, 1, 0))
+    norm = 1/sqrt(2);
+    assert wave_2d.direction == (norm, norm, 0)
