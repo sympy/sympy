@@ -1562,27 +1562,17 @@ def rs_cos_sin(p, x, prec):
         return R(0), R(0)
     c = _get_constant_term(p, x)
     if c:
-        if R.domain is EX:
+        try:
             c_expr = c.as_expr()
-            t1, t2 = sin(c_expr), cos(c_expr)
-        elif isinstance(c, PolyElement):
-            try:
-                c_expr = c.as_expr()
-                t1, t2 = R(sin(c_expr)), R(cos(c_expr))
-            except ValueError:
-                R = R.add_gens([sin(c_expr), cos(c_expr)])
-                p = p.set_ring(R)
-                x = x.set_ring(R)
-                c = c.set_ring(R)
-                t1, t2 = R(sin(c_expr)), R(cos(c_expr))
-        else:
-            try:
-                t1, t2 = R(sin(c)), R(cos(c))
-            except ValueError:
-                raise DomainError("The given series cannot be expanded in "
-                    "this domain.")
-        p1 = p - c
+            t1, t2 = R(sin(c_expr)), R(cos(c_expr))
+        except ValueError:
+            R = R.add_gens([sin(c_expr), cos(c_expr)])
+            p = p.set_ring(R)
+            x = x.set_ring(R)
+            c = c.set_ring(R)
+            t1, t2 = R(sin(c_expr)), R(cos(c_expr))
 
+        p1 = p - c
         p_cos, p_sin = rs_cos_sin(p1, x, prec)
         return p_cos*t2 - p_sin*t1, p_cos*t1 + p_sin*t2
 
@@ -1869,25 +1859,16 @@ def rs_cosh_sinh(p, x, prec):
         return R(0), R(0)
     c = _get_constant_term(p, x)
     if c:
-        if R.domain is EX:
+        try:
             c_expr = c.as_expr()
-            t1, t2 = sinh(c_expr), cosh(c_expr)
-        elif isinstance(c, PolyElement):
-            try:
-                c_expr = c.as_expr()
-                t1, t2 = R(sinh(c_expr)), R(cosh(c_expr))
-            except ValueError:
-                R = R.add_gens([sinh(c_expr), cosh(c_expr)])
-                p = p.set_ring(R)
-                x = x.set_ring(R)
-                c = c.set_ring(R)
-                t1, t2 = R(sinh(c_expr)), R(cosh(c_expr))
-        else:
-            try:
-                t1, t2 = R(sinh(c)), R(cosh(c))
-            except ValueError:
-                raise DomainError("The given series cannot be expanded in "
-                                  "this domain.")
+            t1, t2 = R(sinh(c_expr)), R(cosh(c_expr))
+        except ValueError:
+            R = R.add_gens([sinh(c_expr), cosh(c_expr)])
+            p = p.set_ring(R)
+            x = x.set_ring(R)
+            c = c.set_ring(R)
+            t1, t2 = R(sinh(c_expr)), R(cosh(c_expr))
+
         p1 = p - c
         p_cosh, p_sinh = rs_cosh_sinh(p1, x, prec)
         return p_cosh * t2 + p_sinh * t1, p_sinh * t2 + p_cosh * t1
