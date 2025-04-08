@@ -2125,11 +2125,8 @@ class Basic(Printable):
         # functions for matching expression node names.
 
         clsname = obj.__class__.__name__
-        postprocessors = set()
-        for i in obj.args:
-            for f in _get_postprocessors(clsname, type(i)):
-                postprocessors.add(f)
-
+        postprocessors = {f for i in obj.args
+                            for f in _get_postprocessors(clsname, type(i))}
         for f in postprocessors:
             obj = f(obj)
 
