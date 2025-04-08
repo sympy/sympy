@@ -8,7 +8,7 @@ from sympy.core.expr import unchanged
 from sympy.core.logic import fuzzy_not
 from sympy.core.mul import Mul
 from sympy.core.numbers import (mpf_norm, seterr,
-    Integer, I, pi, comp, Rational, E, nan,
+    Integer, I, pi, comp, Rational, E, nan, _Rational,
     oo, AlgebraicNumber, Number, Float, zoo, equal_valued,
     int_valued, all_close)
 from sympy.core.intfunc import (igcd, igcdex, igcd2, igcd_lehmer,
@@ -33,6 +33,7 @@ from sympy.utilities.decorator import conserve_mpmath_dps
 from sympy.utilities.iterables import permutations
 from sympy.testing.pytest import XFAIL, raises, _both_exp_pow
 from sympy import Add
+from sympy.testing.pytest import warns_deprecated_sympy
 
 from mpmath import mpf
 import mpmath
@@ -363,8 +364,8 @@ def test_Rational_new():
 
     assert Rational(PythonRational(2, 6)) == Rational(1, 3)
 
-    assert Rational(2, 4, gcd=1).q == 4
-    n = Rational(2, -4, gcd=1)
+    assert _Rational(2, 4, gcd=1).q == 4
+    n = _Rational(2, -4, _gcd=1)
     assert n.q == 4
     assert n.p == -2
 
@@ -2327,3 +2328,14 @@ def test_all_close():
     assert not all_close(x + exp(2.*x)*y, 1.*x + 2*exp(2*x)*y)
     assert not all_close(x + exp(2.*x)*y, 1.*x + exp(3*x)*y)
     assert not all_close(x + 2.*y, 1.*x + 3*y)
+
+
+def test_rational_gcd_deprecation():
+    #https://github.com/sympy/sympy/issues/27814
+    with warns_deprecated_sympy():
+        r = Rational(2, 4, gcd=1)
+        assert r.p == 2 and r.q == 4
+
+# TODO: Once `gcd` is removed from Rational constructor, this test should pass and can be uncommented.
+# def test_rational_equality_post_deprecation():
+#     assert Rational(2, 2) == Rational(2, 2, gcd=1)  # Will fail until `gcd` is removed

@@ -75,6 +75,27 @@ SymPy deprecation warnings.
 ```
 
 ## Version 1.14
+(rational-gcd-deprecation)=
+### `gcd` argument in `Rational()`
+
+The `gcd` keyword argument in `sympy.core.numbers.Rational` is deprecated.
+
+This internal-only argument was previously used to bypass simplification of
+the numerator and denominator. However, it introduced inconsistencies in
+behavior especially for equality comparisons and was never intended for
+public use.
+
+Instead, users should construct unreduced Rationals via: Rational(2)/Rational(4)
+or use string parsing example sympify("2/4")
+This change is necessary for future improvements such as switching to
+gmpy2.mpq or flint.fmpq, which don’t support unevaluated rationals.
+
+There is no public replacement for constructing unreduced `Rational` objects.
+
+If you are working on SymPy internals and need to avoid redundant GCD
+calculations, use the new private constructor instead.
+
+Users should **not attempt to bypass simplification** in normal usage.
 
 (deprecated-tensorproduct-simp)=
 ### Deprecated tensor_product_simp from physics.quantum
