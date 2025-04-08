@@ -169,6 +169,7 @@ by ``polys.ring.ring``.
 .. autofunction:: rs_asinh
 .. autofunction:: rs_sinh
 .. autofunction:: rs_cosh
+.. autofunction:: rs_cosh_sinh
 .. autofunction:: rs_tanh
 .. autofunction:: rs_hadamard_exp
 
