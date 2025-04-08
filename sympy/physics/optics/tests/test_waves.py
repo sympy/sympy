@@ -92,5 +92,5 @@ def test_initialization_and_direction_normalization():
     assert wave.direction == (1, 0, 0)  # Normalized
 
     wave_2d = TWave(A1, f, phi1, direction=(1, 1, 0))
-    norm = 1/sqrt(2);
+    norm = 1/sqrt(2)
     assert wave_2d.direction == (norm, norm, 0)
