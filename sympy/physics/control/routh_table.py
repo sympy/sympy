@@ -5,6 +5,7 @@ from sympy import symbols, Symbol
 from sympy.logic.boolalg import false, true
 from sympy.series import limit
 from sympy import Q, ask
+from sympy.solvers.inequalities import reduce_inequalities
 
 __all__ = ['RouthHurwitz', 'neg_roots_conds']
 
@@ -25,11 +26,11 @@ def neg_roots_conds(polynomial, var):
     >>> k = symbols('k')
     >>> p2 = (s+1)*(s+k)
     >>> neg_roots_conds(p2, s)
-    [k > 0]
+    [k + 1 > 0, k > 0]
     >>> a = symbols('a', negative = True)
     >>> p3 = (s+1)*(s+a)
     >>> neg_roots_conds(p3, s)
-    [False]
+    [a + 1 > 0, False]
 
     """
     den = Poly(polynomial, var)
@@ -42,15 +43,16 @@ def neg_roots_conds(polynomial, var):
         if ask(Q.zero(coeff)) is True:
             continue
 
-        if ask(Q.nonnegative(coeff)) is True:
-            break
-
-        if ask(Q.nonpositive(coeff)) is True:
-            den = -den
-            break
-
-        # The coefficient could not satisfy any of the conditions
-        # if it doesn't have assumptions and we can skip it.
+        try:
+            if reduce_inequalities(coeff >=0) is true:
+                break
+            if reduce_inequalities(coeff <= 0) is true:
+                den = -den
+                break
+        except NotImplementedError:
+            # If there are more than one symbols,
+            # reduce_inequalities could fail
+            pass
 
     table = RouthHurwitz(den, var)
 

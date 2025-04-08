@@ -79,3 +79,6 @@ def test_get_negative_real_roots_conditions():
 
     p5 = b0*s**2 + a*s - 3
     assert neg_roots_conds(p5, s) == [-b0 > 0, -a > 0]
+
+    p6 = a*s - b0**2
+    assert neg_roots_conds(p6, s) == [-a > 0, b0**2 > 0]
