@@ -5,8 +5,8 @@ from sympy.polys.ring_series import (_invert_monoms, rs_integrate,
     rs_trunc, rs_mul, rs_square, rs_pow, _has_constant_term, rs_hadamard_exp,
     rs_series_from_list, rs_exp, rs_log, rs_newton, rs_series_inversion,
     rs_compose_add, rs_asin, rs_atan, rs_atanh, rs_asinh, rs_tan, rs_cot, rs_sin,
-    rs_cos, rs_cos_sin, rs_sinh, rs_cosh, rs_tanh, _tan1, rs_fun, rs_nth_root,
-    rs_LambertW, rs_series_reversion, rs_is_puiseux, rs_series)
+    rs_cos, rs_cos_sin, rs_sinh, rs_cosh, rs_cosh_sinh, rs_tanh, _tan1, rs_fun,
+    rs_nth_root, rs_LambertW, rs_series_reversion, rs_is_puiseux, rs_series)
 from sympy.testing.pytest import raises, slow
 from sympy.core.symbol import symbols
 from sympy.functions import (sin, cos, exp, tan, cot, sinh, cosh, atan, atanh,
@@ -370,12 +370,28 @@ def test_cos():
 
 def test_cos_sin():
     R, x, y = ring('x, y', QQ)
-    cos, sin = rs_cos_sin(x, x, 9)
-    assert cos == rs_cos(x, x, 9)
-    assert sin == rs_sin(x, x, 9)
-    cos, sin = rs_cos_sin(x + x*y, x, 5)
-    assert cos == rs_cos(x + x*y, x, 5)
-    assert sin == rs_sin(x + x*y, x, 5)
+    c, s = rs_cos_sin(x, x, 9)
+    assert c == rs_cos(x, x, 9)
+    assert s == rs_sin(x, x, 9)
+    c, s = rs_cos_sin(x + x*y, x, 5)
+    assert c == rs_cos(x + x*y, x, 5)
+    assert s == rs_sin(x + x*y, x, 5)
+
+    # constant term in series
+    c, s = rs_cos_sin(1 + x + x**2, x, 5)
+    assert c == rs_cos(1 + x + x**2, x, 5)
+    assert s == rs_sin(1 + x + x**2, x, 5)
+
+    a = symbols('a')
+    R, x, y = ring('x, y', QQ[sin(a), cos(a), a])
+    c, s = rs_cos_sin(x + a, x, 5)
+    assert c == rs_cos(x + a, x, 5)
+    assert s == rs_sin(x + a, x, 5)
+
+    R, x, y = ring('x, y', EX)
+    c, s = rs_cos_sin(x + a, x, 5)
+    assert c == rs_cos(x + a, x, 5)
+    assert s == rs_sin(x + a, x, 5)
 
 def test_atanh():
     R, x, y = ring('x, y', QQ)
@@ -404,8 +420,8 @@ def test_asinh():
     R, x, y = ring('x, y', QQ)
     assert rs_asinh(x, x, 9) == -5/112*x**7 + 3/40*x**5 - 1/6*x**3 + x
     assert rs_asinh(x*y + x**2*y**3, x, 9) == 3/4*x**8*y**11 - 5/16*x**8*y**9 + \
-           3/4*x**7*y**9 - 5/112*x**7*y**7 - 1/6*x**6*y**9 + 3/8*x**6*y**7 - 1/2*x \
-           **5*y**7 + 3/40*x**5*y**5 - 1/2*x**4*y**5 - 1/6*x**3*y**3 + x**2*y**3 + x*y
+        3/4*x**7*y**9 - 5/112*x**7*y**7 - 1/6*x**6*y**9 + 3/8*x**6*y**7 - 1/2*x \
+        **5*y**7 + 3/40*x**5*y**5 - 1/2*x**4*y**5 - 1/6*x**3*y**3 + x**2*y**3 + x*y
 
     # Constant term in series
     a = symbols('a')
@@ -427,6 +443,23 @@ def test_sinh():
         x**6*y**7/24 + x**5*y**7/2 + x**5*y**5/120 + x**4*y**5/2 + \
         x**3*y**3/6 + x**2*y**3 + x*y
 
+    # constant term in series
+    a = symbols('a')
+    R, x, y = ring('x, y', QQ[sinh(a), cosh(a), a])
+    assert rs_sinh(x + a, x, 5) == 1/24*x**4*(sinh(a)) + 1/6*x**3*(cosh(a)) + 1/\
+        2*x**2*(sinh(a)) + x*(cosh(a)) + (sinh(a))
+    assert rs_sinh(x + x**2*y + a, x, 5) == 1/2*(sinh(a))*x**4*y**2 + 1/2*(cosh(a))\
+        *x**4*y + 1/24*(sinh(a))*x**4 + (sinh(a))*x**3*y + 1/6*(cosh(a))*x**3 + \
+        (cosh(a))*x**2*y + 1/2*(sinh(a))*x**2 + (cosh(a))*x + (sinh(a))
+
+    R, x, y = ring('x, y', EX)
+    assert rs_sinh(x + a, x, 5) == EX(sinh(a)/24)*x**4 + EX(cosh(a)/6)*x**3 + \
+        EX(sinh(a)/2)*x**2 + EX(cosh(a))*x + EX(sinh(a))
+    assert rs_sinh(x + x**2*y + a, x, 5) == EX(sinh(a)/2)*x**4*y**2 + EX(cosh(a)/\
+        2)*x**4*y + EX(sinh(a)/24)*x**4 + EX(sinh(a))*x**3*y + EX(cosh(a)/6)*x**3 \
+        + EX(cosh(a))*x**2*y + EX(sinh(a)/2)*x**2 + EX(cosh(a))*x + EX(sinh(a))
+
+
 def test_cosh():
     R, x, y = ring('x, y', QQ)
     assert rs_cosh(x, x, 9) == 1 + x**2/2 + x**4/24 + x**6/720 + x**8/40320
@@ -434,6 +467,45 @@ def test_cosh():
         x**8*y**10/48 + x**8*y**8/40320 + x**7*y**10/6 + \
         x**7*y**8/120 + x**6*y**8/4 + x**6*y**6/720 + x**5*y**6/6 + \
         x**4*y**6/2 + x**4*y**4/24 + x**3*y**4 + x**2*y**2/2 + 1
+
+    # constant term in series
+    a = symbols('a')
+    R, x, y = ring('x, y', QQ[sinh(a), cosh(a), a])
+    assert rs_cosh(x + a, x, 5) == 1/24*(cosh(a))*x**4 + 1/6*(sinh(a))*x**3 + \
+        1/2*(cosh(a))*x**2 + (sinh(a))*x + (cosh(a))
+    assert rs_cosh(x + x**2*y + a, x, 5) == 1/2*(cosh(a))*x**4*y**2 + 1/2*(sinh(a))\
+        *x**4*y + 1/24*(cosh(a))*x**4 + (cosh(a))*x**3*y + 1/6*(sinh(a))*x**3 + \
+        (sinh(a))*x**2*y + 1/2*(cosh(a))*x**2 + (sinh(a))*x + (cosh(a))
+    R, x, y = ring('x, y', EX)
+    assert rs_cosh(x + a, x, 5) == EX(cosh(a)/24)*x**4 + EX(sinh(a)/6)*x**3 + \
+        EX(cosh(a)/2)*x**2 + EX(sinh(a))*x + EX(cosh(a))
+    assert rs_cosh(x + x**2*y + a, x, 5) == EX(cosh(a)/2)*x**4*y**2 + EX(sinh(a)/\
+        2)*x**4*y + EX(cosh(a)/24)*x**4 + EX(cosh(a))*x**3*y + EX(sinh(a)/6)*x**3 \
+        + EX(sinh(a))*x**2*y + EX(cosh(a)/2)*x**2 + EX(sinh(a))*x + EX(cosh(a))
+
+def test_cosh_sinh():
+    R, x, y = ring('x, y', QQ)
+    ch, sh = rs_cosh_sinh(x, x, 9)
+    assert ch == rs_cosh(x, x, 9)
+    assert sh == rs_sinh(x, x, 9)
+    ch, sh = rs_cosh_sinh(x + x*y, x, 5)
+    assert ch == rs_cosh(x + x*y, x, 5)
+    assert sh == rs_sinh(x + x*y, x, 5)
+
+    # constant term in series
+    c, s = rs_cosh_sinh(1 + x + x**2, x, 5)
+    assert c == rs_cosh(1 + x + x**2, x, 5)
+    assert s == rs_sinh(1 + x + x**2, x, 5)
+
+    a = symbols('a')
+    R, x, y = ring('x, y', QQ[sinh(a), cosh(a), a])
+    ch, sh = rs_cosh_sinh(x + a, x, 5)
+    assert ch == rs_cosh(x + a, x, 5)
+    assert sh == rs_sinh(x + a, x, 5)
+    R, x, y = ring('x, y', EX)
+    ch, sh = rs_cosh_sinh(x + a, x, 5)
+    assert ch == rs_cosh(x + a, x, 5)
+    assert sh == rs_sinh(x + a, x, 5)
 
 def test_tanh():
     R, x, y = ring('x, y', QQ)
@@ -533,13 +605,19 @@ def test_puiseux():
     assert r == x**QQ(9,5) + x**QQ(26,15) + x**QQ(22,15) + x**QQ(6,5)/3 + x + \
         x**QQ(2,3) + x**QQ(2,5)
 
+    r = rs_cosh(p, x, 2)
+    assert r == x**QQ(28,15)/6 + x**QQ(5,3) + x**QQ(8,5)/24 + x**QQ(7,5) + \
+        x**QQ(4,3)/2 + x**QQ(16,15) + x**QQ(4,5)/2 + 1
+
     r = rs_sinh(p, x, 2)
     assert r == x**QQ(9,5)/2 + x**QQ(26,15)/2 + x**QQ(22,15)/2 + \
         x**QQ(6,5)/6 + x + x**QQ(2,3) + x**QQ(2,5)
 
-    r = rs_cosh(p, x, 2)
-    assert r == x**QQ(28,15)/6 + x**QQ(5,3) + x**QQ(8,5)/24 + x**QQ(7,5) + \
+    r = rs_cosh_sinh(p, x, 2)
+    assert r[0] == x**QQ(28,15)/6 + x**QQ(5,3) + x**QQ(8,5)/24 + x**QQ(7,5) + \
         x**QQ(4,3)/2 + x**QQ(16,15) + x**QQ(4,5)/2 + 1
+    assert r[1] == x**QQ(9,5)/2 + x**QQ(26,15)/2 + x**QQ(22,15)/2 + \
+        x**QQ(6,5)/6 + x + x**QQ(2,3) + x**QQ(2,5)
 
     r = rs_tanh(p, x, 2)
     assert r == -x**QQ(9,5) - x**QQ(26,15) - x**QQ(22,15) - x**QQ(6,5)/3 + \
