@@ -64,7 +64,7 @@ def finite_diff_weights(order, x_list, x0=S.One):
     [[[1, 0, 0, 0],
       [1/2, 1/2, 0, 0],
       [3/8, 3/4, -1/8, 0],
-      [5/16, 15/16, -5/16, 1/16]],
+    [5/16, 15/16, -5/16, 1/16]],
      [[0, 0, 0, 0],
       [-1, 1, 0, 0],
       [-1, 1, 0, 0],
@@ -380,15 +380,16 @@ def _as_finite_diff(derivative, points=1, x0=None, wrt=None):
         x0 = wrt
 
     if not iterable(points):
-        if getattr(points, 'is_Function', False) and wrt in points.args:
-            points = points.subs(wrt, x0)
+       if callable(getattr(points, 'subs', None)) and getattr(points, 'is_Function', False):
+          if hasattr(points, 'args') and wrt in points.args:
+             points = points.subs(wrt, x0)
         # points is simply the step-size, let's make it a
         # equidistant sequence centered around x0
-        if order % 2 == 0:
+    if order % 2 == 0:
             # even order => odd number of points, grid point included
             points = [x0 + points*i for i
                       in range(-order//2, order//2 + 1)]
-        else:
+    else:
             # odd order => even number of points, half-way wrt grid point
             points = [x0 + points*S(i)/2 for i
                       in range(-order, order + 1, 2)]
