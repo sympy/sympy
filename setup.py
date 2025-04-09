@@ -229,6 +229,30 @@ class sdist_sympy(sdist):
         except OSError as e:
             print("Error deleting %s - %s." % (e.filename, e.strerror))
 
+class merge_license_files():
+    """Merge LICENSE and LICENSES_SECONDARY for sdist creation
+    Done this way to keep LICENSE in repo as exact BSD. This makes GitHub state correctly how SymPy is licensed.
+    """
+    def __init__(self):
+        self.f1 = 'LICENSE'
+        self.f2 = 'LICENSE_SECONDARY'
+
+    def __enter__(self):
+        """Concatenate files and remove LICENSE_SECONDARY"""
+        with open(self.f1, 'r') as f1:
+            self.bsd_text = f1.read()
+
+        with open(self.f1, 'a') as f1:
+            with open(self.f2, 'r') as f2:
+                self.SECONDARY_text = f2.read()
+                f1.write('\n\n')
+                f1.write(self.SECONDARY_text)
+
+    def __exit__(self, exception_type, exception_value, traceback):
+        """Restore content of both files"""
+        with open(self.f1, 'w') as f:
+            f.write(self.bsd_text)
+
 
 # Check that this list is uptodate against the result of the command:
 # python bin/generate_test_list.py
