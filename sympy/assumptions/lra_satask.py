@@ -153,7 +153,7 @@ def _preprocess(enc_cnf):
                     new_clause.append(new_enc)
                     continue
                 else:
-                    new_props = (Q.gt(arg1, arg2), Q.lt(arg1, arg2))
+                    new_props = (Q.positive(arg1 - arg2), Q.lt(arg1, arg2))
                     for new_prop in new_props:
                         if new_prop not in new_encoding:
                             new_encoding[new_prop] = cur_enc
