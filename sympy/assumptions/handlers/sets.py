@@ -746,7 +746,7 @@ def _(mat, assumptions):
 # expressions are not algebraic.
 # TODO: Update helper function to account for polynomials evaluated at
 #  transcendentals other than E and Pi, including variables assumed to be transcendental.
-def _isNonAlgebraic(expr, assumptions):
+def  _TranscendentalPredicate_number(expr, assumptions):
     # To check if the expression is a rational polynomial evaluated at pi or E, we
     # must check that the expression contains either pi or E but not both (hence the XOR).
     if not (expr.has(E) | expr.has(exp)) ^ expr.has(pi):
@@ -773,7 +773,7 @@ def _(expr, assumptions):
 
 @AlgebraicPredicate.register_many(Add, Mul) # type:ignore
 def _(expr, assumptions):
-    if expr.is_number and _isNonAlgebraic(expr, assumptions):
+    if expr.is_number and  _TranscendentalPredicate_number(expr, assumptions):
         return False
 
     return test_closed_group(expr, assumptions, Q.algebraic)
@@ -800,7 +800,7 @@ def _(expr, assumptions):
         if ask(Q.ne(expr.base,0) & Q.ne(expr.base,1)) and exp_rational is False:
             return False
 
-    if expr.is_number and _isNonAlgebraic(expr.base, assumptions):
+    if expr.is_number and  _TranscendentalPredicate_number(expr.base, assumptions):
         if ask(Q.integer(expr.exp) & ~Q.negative(expr.exp), assumptions):
             return False
 
