@@ -143,3 +143,22 @@ This can be removed once https://github.com/executablebooks/mdit-py-plugins/issu
 .task-list-item-checkbox {
     margin: 0 0.2em 0.25em -1.4em;
 }
+
+html{
+    overflow-y: hidden;
+}
+
+/* Layout and overflow settings for sidebar and main content */
+.sidebar-drawer {
+    justify-content: center;
+    overflow-y: auto;
+    max-height: 100vh;
+    scrollbar-width: thin;
+}
+.main {
+    overflow-y: auto;
+    height: 100vh;
+  }
+.sidebar-scroll{
+    overflow: visible;
+}
