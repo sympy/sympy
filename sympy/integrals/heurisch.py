@@ -587,7 +587,8 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
             if isinstance(term, tan):
                 substituted = _substitute(term)
                 special[1 + substituted**2] = False
-                special[diff(tan(term.args[0]), term.args[0], 2)] = substituted**2 + 1  # New line added
+                if term.args[0].is_Symbol:
+                    special[diff(tan(term.args[0]), term.args[0], 2)] = substituted**2 + 1
             elif isinstance(term, tanh):
                 special[1 + _substitute(term)] = False
                 special[1 - _substitute(term)] = False
