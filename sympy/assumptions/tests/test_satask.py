@@ -5,7 +5,6 @@ from sympy.core.relational import (Eq, Gt)
 from sympy.core.singleton import S
 from sympy.core.symbol import symbols
 from sympy.functions.elementary.complexes import Abs
-from sympy.logic.boolalg import Implies
 from sympy.matrices.expressions.matexpr import MatrixSymbol
 from sympy.assumptions.cnf import CNF, Literal
 from sympy.assumptions.satask import (satask, extract_predargs,
@@ -39,7 +38,16 @@ def test_satask():
     assert satask(Q.positive(x), Q.zero(x)) is False
     assert satask(Q.real(x), Q.zero(x)) is True
     assert satask(Q.zero(x), Q.zero(x*y)) is None
-    assert satask(Q.zero(x*y), Q.zero(x))
+    assert satask(Q.zero(x*y), Q.zero(x) & Q.finite(x) & Q.finite(y))
+
+    # https://github.com/sympy/sympy/issues/27662
+    assert satask(Q.finite(x*y), ~Q.finite(x) & Q.zero(y)) is None
+    assert satask(~Q.finite(x) & Q.zero(y)) is None
+    assert satask(~Q.finite(x) & Q.zero(y) & Q.finite(x*y)) is None
+    assert satask(~Q.finite(x) & Q.zero(y) & ~Q.finite(x*y)) is None
+    assert satask(Q.zero(x*y), Q.zero(x) | Q.zero(y)) is None
+    assert satask(Q.zero(x*y), Q.zero(x)) is None
+    assert satask(Q.zero(x) | Q.zero(y), Q.nonzero(x*y)) is None
 
 
 def test_zero():
@@ -50,9 +58,11 @@ def test_zero():
 
     """
     assert satask(Q.zero(x) | Q.zero(y), Q.zero(x*y)) is True
-    assert satask(Q.zero(x*y), Q.zero(x) | Q.zero(y)) is True
+    assert satask(Q.zero(x*y), (Q.zero(x) | Q.zero(y)) & Q.finite(x) & Q.finite(y)) is True
+    assert satask(Q.zero(x*y), Q.zero(x)) is None
 
-    assert satask(Implies(Q.zero(x), Q.zero(x*y))) is True
+    # https://github.com/sympy/sympy/issues/27662
+    assert (satask(Q.zero(x*y), Q.finite(x) & Q.finite(y) & Q.zero(x))) is True
 
     # This one in particular requires computing the fixed-point of the
     # relevant facts, because going from Q.nonzero(x*y) -> ~Q.zero(x*y) and
