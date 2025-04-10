@@ -2632,7 +2632,7 @@ def _remove_redundant_solutions(eq, solns, order, var):
 
     unique_solns = []
     for soln1 in solns:
-        for soln2 in unique_solns[:]:
+        for soln2 in unique_solns.copy():
             if is_special_case_of(soln1, soln2):
                 break
             elif is_special_case_of(soln2, soln1):
