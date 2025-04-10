@@ -313,11 +313,13 @@ def hypersimp(f, k):
        1. W. Koepf, Algorithms for m-fold Hypergeometric Summation,
           Journal of Symbolic Computation (1995) 20, 399-417
     """
+    from sympy.simplify.gammasimp import gammasimp
+
     f = sympify(f)
 
     g = f.subs(k, k + 1) / f
 
-    g = g.rewrite(gamma)
+    g = gammasimp(g)
     if g.has(Piecewise):
         g = piecewise_fold(g)
         g = g.args[-1][0]
