@@ -46,7 +46,7 @@ def test_dot():
     v2 = C.x * i + C.y * j + C.z * k
     assert Dot(v1, v2) == Dot(C.x*C.i + C.z**2*C.j, C.x*C.i + C.y*C.j + C.z*C.k)
     assert Dot(v1, v2).doit() == C.x**2 + C.y*C.z**2
-    assert Dot(v1, v2).doit() == C.x**2 + C.y*C.z**2
+    assert Dot(v2, v1).doit() == C.x**2 + C.y*C.z**2
     assert Dot(v1, v2) == Dot(v2, v1)
 
 
