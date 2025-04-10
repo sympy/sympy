@@ -113,7 +113,7 @@ def _process_limits(*symbols, discrete=None):
             if discrete:
                 raise TypeError(err_msg)
             variable = V.atoms(Symbol).pop()
-            V = (variable, V.as_set())
+            V = (variable, V.as_set(variable))
         elif isinstance(V, Symbol) or getattr(V, '_diff_wrt', False):
             if isinstance(V, Idx):
                 if V.lower is None or V.upper is None:
