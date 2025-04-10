@@ -964,6 +964,12 @@ def solve(f, *symbols, **flags):
 
         # if we have a Matrix, we need to iterate over its elements again
         if f[i].is_Matrix:
+            try:
+                f[i] = f[i].as_explicit()
+            except ValueError:
+                raise ValueError(
+                    "solve cannot handle matrices with symbolic shape."
+                )
             bare_f = False
             f.extend(list(f[i]))
             f[i] = S.Zero
