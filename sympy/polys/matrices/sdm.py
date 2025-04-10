@@ -1235,12 +1235,71 @@ class SDM(dict):
 
         return (A_null, nonpivots)
 
-    def particular(A):
+    def particular_from_rref(A, pivots=None):
+        """
+        Returns a particular solution for a :py:class:`~.SDM` matrix ``A`` in RREF.
+
+        The domain of the matrix can be any domain.
+
+        The matrix must already be in reduced row echelon form (RREF).
+
+        Examples
+        ========
+
+        >>> from sympy import QQ
+        >>> from sympy.polys.matrices.sdm import SDM
+        >>> A = SDM({0:{0:QQ(1), 1:QQ(2)}, 1:{0: QQ(2), 1: QQ(4)}}, (2, 2), QQ)
+        >>> A_rref, pivots = A.rref()
+        >>> A_particular = A_rref.particular_from_rref(pivots)
+        >>> A_particular
+        {0: {0: 2}}
+
+        See Also
+        ========
+
+        sympy.polys.matrices.domainmatrix.DomainMatrix.particular_from_rref
+            The higher-level function that calls this one.
+        """
         ncols = A.shape[1]
-        B, pivots, nzcols = sdm_irref(A)
-        P = sdm_particular_from_rref(B, ncols, pivots)
+
+        if pivots is None:
+            pivots = sorted(map(min, A.values()))
+
+        P = {}
+        for i, j in enumerate(pivots):
+            Ain = A[i].get(ncols-1, None)
+            if Ain is not None:
+                P[j] = Ain
+
         rep = {0:P} if P else {}
-        return A.new(rep, (1, ncols-1), A.domain)
+        return A.new(rep, (1, ncols-1), A.domain).transpose()
+
+    def particular(A):
+        """
+        Compute particular solution for augmented matrix ``A`` in RREF.
+
+        The domain of the matrix can be any domain.
+
+        The matrix must already be in reduced row echelon form (RREF).
+
+        Examples
+        ========
+
+        >>> from sympy import QQ
+        >>> from sympy.polys.matrices.sdm import SDM
+        >>> A = SDM({0:{0:QQ(1), 1:QQ(2), 2:QQ(3)},
+        ...          1:{0: QQ(2), 1: QQ(4), 2: QQ(6)}}, (2, 3), QQ)
+        >>> A_particular = A.rref()[0].particular()
+        >>> A_particular
+        {0: {0: 3}}
+
+        See Also
+        ========
+
+        particular_from_rref
+        """
+        Aaug, pivots = A.rref()
+        return Aaug.particular_from_rref(pivots).transpose()
 
     def hstack(A, *B):
         """Horizontally stacks :py:class:`~.SDM` matrices.
