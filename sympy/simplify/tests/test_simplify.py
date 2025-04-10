@@ -369,7 +369,7 @@ def test_hypersimp():
     assert hypersimp(term, k) == (k - n)/(k + 1)**2
 
     # issue 27901
-    term = binomial(n+1, k)*(2**(-n-1)  ) - binomial(n, k)*(2**(-n))
+    term = binomial(n+1, k)*(2**(-n-1)) - binomial(n, k)*(2**(-n))
     assert hypersimp(term, k).equals(-(-k + n + 1)*(2*k - n + 1)/((k + 1)*(-2*k + n + 1)))
 
     term = 2**(-n - 1)*binomial(n + 1, k) - binomial(n, k)/2**n
