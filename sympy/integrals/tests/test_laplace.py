@@ -11,7 +11,7 @@ from sympy.core.relational import Eq
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol, symbols
 from sympy.simplify.simplify import simplify
-from sympy.functions.elementary.complexes import Abs, re
+from sympy.functions.elementary.complexes import Abs, re, sign
 from sympy.functions.elementary.exponential import exp, log, exp_polar
 from sympy.functions.elementary.hyperbolic import cosh, sinh, coth, asinh
 from sympy.functions.elementary.miscellaneous import sqrt
@@ -24,7 +24,7 @@ from sympy.functions.special.delta_functions import DiracDelta, Heaviside
 from sympy.functions.special.singularity_functions import SingularityFunction
 from sympy.functions.special.zeta_functions import lerchphi
 from sympy.functions.special.error_functions import (
-    fresnelc, fresnels, erf, erfc, Ei, Ci, expint, E1)
+    fresnelc, fresnels, erf, erfc, erfi, Ei, Ci, expint, E1)
 from sympy.functions.special.bessel import besseli, besselj, besselk, bessely
 from sympy.testing.pytest import slow, warns_deprecated_sympy
 from sympy.matrices import Matrix, eye
@@ -94,7 +94,7 @@ def test_laplace_transform():
     assert (LT(exp(-2*t**2), t, s) ==
             (sqrt(2)*sqrt(pi)*exp(s**2/8)*erfc(sqrt(2)*s/4)/4, 0, True))
     assert (LT(b*exp(2*t**2), t, s) ==
-            (b*LaplaceTransform(exp(2*t**2), t, s), -oo, True))
+            (b * (oo * sign(exp(-s**2 / 8)) + (sqrt(2) * sqrt(pi) * exp(-s**2 / 8) * erfi(s * sqrt(2) / 4)) / 4), -oo, True))
     assert (LT(t*exp(-a*t**2), t, s) ==
             (1/(2*a) - s*erfc(s/(2*sqrt(a)))/(4*sqrt(pi)*a**(S(3)/2)),
              0, True))
