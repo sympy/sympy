@@ -354,22 +354,22 @@ def test_hypersimp():
 
     assert hypersimp(1/factorial(k), k) == 1/(k + 1)
 
-    assert hypersimp(2**k/factorial(k)**2, k) == 2/(k + 1)**2
+    assert hypersimp(2**k/factorial(k)**2, k) == 2/(k**2 + 2*k + 1)
 
     assert hypersimp(binomial(n, k), k) == (n - k)/(k + 1)
     assert hypersimp(binomial(n + 1, k), k) == (n - k + 1)/(k + 1)
 
     term = (4*k + 1)*factorial(k)/factorial(2*k + 1)
-    assert hypersimp(term, k) == S.Half*((4*k + 5)/(3 + 14*k + 8*k**2))
+    assert hypersimp(term, k) == (S.Half*((4*k + 5)/(3 + 14*k + 8*k**2)))
 
     term = 1/((2*k - 1)*factorial(2*k + 1))
-    assert hypersimp(term, k) == (k - S.Half)/((k + 1)*(2*k + 1)*(2*k + 3))
+    assert hypersimp(term, k) == (S.Half*((2*k - 1)/(4*k**3 + 12*k**2 + 11*k + 3)))
 
     term = binomial(n, k)*(-1)**k/factorial(k)
-    assert hypersimp(term, k) == (k - n)/(k + 1)**2
+    assert hypersimp(term, k) == (k - n)/(k**2 + 2*k + 1)
 
     # issue 27901
-    term = binomial(n+1, k)*(2**(-n-1)  ) - binomial(n, k)*(2**(-n))
+    term = binomial(n+1, k)*(2**(-n-1)) - binomial(n, k)*(2**(-n))
     assert hypersimp(term, k).equals(-(-k + n + 1)*(2*k - n + 1)/((k + 1)*(-2*k + n + 1)))
 
     term = 2**(-n - 1)*binomial(n + 1, k) - binomial(n, k)/2**n
