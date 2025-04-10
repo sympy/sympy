@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from sympy import diff
+
 from collections import defaultdict
 from functools import reduce
 from itertools import permutations
@@ -27,6 +29,7 @@ from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.special.delta_functions import Heaviside, DiracDelta
 
 from sympy.simplify.radsimp import collect
+
 
 from sympy.logic.boolalg import And, Or
 from sympy.utilities.iterables import uniq
@@ -582,7 +585,9 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
     for term in terms:
         if term.is_Function:
             if isinstance(term, tan):
-                special[1 + _substitute(term)**2] = False
+                substituted = _substitute(term)
+                special[1 + substituted**2] = False
+                special[diff(tan(term.args[0]), term.args[0], 2)] = substituted**2 + 1  # New line added
             elif isinstance(term, tanh):
                 special[1 + _substitute(term)] = False
                 special[1 - _substitute(term)] = False
