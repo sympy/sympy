@@ -345,7 +345,7 @@ class AntihermitianPredicate(Predicate):
 
 
 class AlgebraicPredicate(Predicate):
-    """
+    r"""
     Algebraic number predicate.
 
     Explanation
@@ -384,7 +384,6 @@ class AlgebraicPredicate(Predicate):
     .. [1] https://en.wikipedia.org/wiki/Algebraic_number..
     .. [2] https://math.stackexchange.com/questions/1875840/references-on-pin-is-transcendental?noredirect=1&lq=1
     .. [3] https://stacks.math.columbia.edu/tag/030D
-
     """
     name = 'algebraic'
     AlgebraicHandler = Dispatcher(
