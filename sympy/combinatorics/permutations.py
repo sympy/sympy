@@ -1080,7 +1080,7 @@ class Permutation(Atom):
         >>> Permutation([[1, 2], [4, 5]]).array_form
         [0, 2, 1, 3, 5, 4]
         """
-        return self._array_form[:]
+        return self._array_form.copy()
 
     def list(self, size=None):
         """Return the permutation as an explicit list, possibly
@@ -1162,7 +1162,7 @@ class Permutation(Atom):
                     cyclic_form.append(cycle)
                     assert cycle == list(minlex(cycle))
         cyclic_form.sort()
-        self._cyclic_form = cyclic_form[:]
+        self._cyclic_form = cyclic_form.copy()
         return cyclic_form
 
     @property
@@ -1753,7 +1753,7 @@ class Permutation(Atom):
 
         rank, unrank_lex
         """
-        perm = self.array_form[:]
+        perm = self.array_form.copy()
         n = len(perm)
         i = n - 2
         while perm[i + 1] < perm[i]:
@@ -1838,7 +1838,7 @@ class Permutation(Atom):
             inv_perm = (~self).array_form
         if not inv_perm:
             return 0
-        perm = self.array_form[:]
+        perm = self.array_form.copy()
         r = _rank1(len(perm), perm, inv_perm)
         return r
 
@@ -1893,7 +1893,7 @@ class Permutation(Atom):
         if self._rank is not None:
             return self._rank
         rank = 0
-        rho = self.array_form[:]
+        rho = self.array_form.copy()
         n = self.size - 1
         size = n + 1
         psize = int(ifac(n))
@@ -2606,7 +2606,7 @@ class Permutation(Atom):
 
         rank_trotterjohnson, unrank_trotterjohnson, sympy.utilities.iterables.generate_bell
         """
-        pi = self.array_form[:]
+        pi = self.array_form.copy()
         n = len(pi)
         st = 0
         rho = pi[:]
