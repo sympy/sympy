@@ -345,7 +345,7 @@ class AntihermitianPredicate(Predicate):
 
 
 class AlgebraicPredicate(Predicate):
-    r"""
+    """
     Algebraic number predicate.
 
     Explanation
