@@ -587,7 +587,7 @@ class MathematicaParser:
         "#": lambda: ["Slot", "1"],
         "##": lambda: ["SlotSequence", "1"],
     }
-
+    # "\u0370-\u03FF" this range of Unicode code refers to Greek and Coptic characters. This range includes Greek characters, which are often used as variables or constants in mathematical expressions.
     _literal = r"[A-Za-z\u0370-\u03FF][A-Za-z0-9\u0370-\u03FF]*"
     _number = r"(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)"
 
