@@ -20,6 +20,7 @@ from sympy.integrals.integrals import Integral
 from sympy.series.limits import Limit
 
 from sympy.core.relational import Eq, Ne, Lt, Le, Gt, Ge
+from sympy.core.parameters import evaluate
 from sympy.physics.quantum.state import Bra, Ket
 from sympy.abc import x, y, z, a, b, c, t, k, n
 antlr4 = import_module("antlr4")
@@ -356,3 +357,8 @@ def test_strict_mode():
     for latex_str in FAILING_BAD_STRINGS:
         with raises(LaTeXParsingError):
             parse_latex(latex_str, strict=True)
+
+def test_parse_without_evaluate():
+    from sympy.parsing.latex import parse_latex
+    with evaluate(False):
+        assert parse_latex(r"a = 42 + 1") == Eq(a, Add(42, 1, evaluate=False))
