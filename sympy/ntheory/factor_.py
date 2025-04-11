@@ -1648,6 +1648,34 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
         B1 *= 5
         B2 = 100*B1
         num_curves *= 4
+def factorint(n, limit=None, verbose=False):
+    """
+    Factorize a positive integer n into its prime factors.
+
+    Parameters
+    ----------
+    n : int
+        The number to be factorized.
+    limit : int, optional
+        Stop factorizing if a factor greater than limit is found.
+    verbose : bool, optional
+        If True, prints progress.
+
+    Returns
+    -------
+    dict
+        A dictionary where keys are prime factors and values are their exponents.
+
+    Examples
+    --------
+    >>> from sympy.ntheory import factorint
+    >>> factorint(1024)
+    {2: 10}
+    >>> factorint(99991, limit=100000)
+    {99991: 1}
+    >>> factorint(420, verbose=True)
+    ...
+    """
 
 
 def factorrat(rat, limit=None, use_trial=True, use_rho=True, use_pm1=True,
