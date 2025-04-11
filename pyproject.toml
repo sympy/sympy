@@ -45,6 +45,7 @@ lint.select = [
     "C4",
     "E",
     "F",
+    "FURB",
     "LOG",
     "PIE810",
     "PLE",
@@ -70,6 +71,9 @@ lint.ignore = [
     "E731",  # Do not assign a `lambda` expression, use a `def`
     "E741",  # Ambiguous variable name: `<VARIABLE>`
     "E743",  # Ambiguous function name: `<FUNCTION>`
+    # Rules from the stable "FURB" set that are ignored. See #27897
+    "FURB161",  # Use of `bin({existing}).count('1')`
+    "FURB187",  # Use of assignment of `reversed` on list `{name}`
 ]
 
 # Exclude paths currently excluded in the flake8 configuration
