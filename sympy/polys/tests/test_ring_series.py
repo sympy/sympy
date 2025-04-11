@@ -586,6 +586,18 @@ def test_puiseux():
     assert r ==  x**QQ(9,5)*y**9/9 + x**QQ(9,5)*y**4 - x**QQ(7,5)*y**7/7 - \
         x**QQ(7,5)*y**2 + x*y**5/5 + x - x**QQ(3,5)*y**3/3 + x**QQ(1,5)*y
 
+    r = rs_tan(p, x, 2)
+    assert r == x**QQ(2,5) + x**QQ(2,3) + x + QQ(1,3)*x**QQ(6,5) + x**QQ(22,15)\
+        + x**QQ(26,15) + x**QQ(9,5)
+
+    r = rs_sin(p, x, 2)
+    assert r == x**QQ(2,5) + x**QQ(2,3) + x - QQ(1,6)*x**QQ(6,5) - QQ(1,2)*x**\
+        QQ(22,15) - QQ(1,2)*x**QQ(26,15) - QQ(1,2)*x**QQ(9,5)
+
+    r = rs_cos(p, x, 2)
+    assert r == 1 - QQ(1,2)*x**QQ(4,5) - x**QQ(16,15) - QQ(1,2)*x**QQ(4,3) - \
+        x**QQ(7,5) + QQ(1,24)*x**QQ(8,5) - x**QQ(5,3) + QQ(1,6)*x**QQ(28,15)
+
     r = rs_asin(p, x, 2)
     assert r == x**QQ(9,5)/2 + x**QQ(26,15)/2 + x**QQ(22,15)/2 + \
         x**QQ(6,5)/6 + x + x**QQ(2,3) + x**QQ(2,5)
@@ -604,6 +616,10 @@ def test_puiseux():
     r = rs_atanh(p, x, 2)
     assert r == x**QQ(9,5) + x**QQ(26,15) + x**QQ(22,15) + x**QQ(6,5)/3 + x + \
         x**QQ(2,3) + x**QQ(2,5)
+
+    r = rs_asinh(p, x, 2)
+    assert r == x**QQ(2,5) + x**QQ(2,3) + x - QQ(1,6)*x**QQ(6,5) - QQ(1,2)*x**\
+        QQ(22,15) - QQ(1,2)*x**QQ(26,15) - QQ(1,2)*x**QQ(9,5)
 
     r = rs_cosh(p, x, 2)
     assert r == x**QQ(28,15)/6 + x**QQ(5,3) + x**QQ(8,5)/24 + x**QQ(7,5) + \
