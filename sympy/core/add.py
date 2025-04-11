@@ -333,7 +333,9 @@ class Add(Expr, AssocOp):
             # 0*s
             if c.is_zero:
                 continue
-            # 1*s
+            # Handle infinite terms like x - x where x is infinite
+            if s.is_infinite and (-s in terms) and (terms[-s] == -c):
+                return [S.NaN], [], None
             elif c is S.One:
                 newseq.append(s)
             # c*s
