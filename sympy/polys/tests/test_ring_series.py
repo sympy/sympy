@@ -282,7 +282,7 @@ def test_atan():
         *x**3*y + EX((3*a**2 - 1)/(3*a**6 + 9*a**4 + 9*a**2 + 3))*x**3 + \
         EX(1/(a**2 + 1))*x**2*y - EX(a/(a**4 + 2*a**2 + 1))*x**2 + EX(1/(a**2 \
         + 1))*x + EX(atan(a))
-        
+
     # Test for _atan faster for small and univariate series
     R, x = ring('x', QQ)
     p = x**2 + 2*x
@@ -441,7 +441,7 @@ def test_atanh():
     p = x + x**2 + 5
     assert rs_atanh(p, x, 10).compose(x, 10) == EX(Rational(-733442653682135, 5079158784) \
         + atanh(5))
-    
+
     # Test for _atanh faster for small and univariate series
     R,x  = ring('x', QQ)
     p = x**2 + 2*x
