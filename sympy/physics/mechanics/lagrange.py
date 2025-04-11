@@ -172,10 +172,48 @@ class LagrangesMethod(_Methods):
         self._hol_coneqs = hol_coneqs
 
     def form_lagranges_equations(self):
-        """Method to form Lagrange's equations of motion.
+        """
+        Generates the symbolic equations of motion using Lagrange's equations of the second kind.
 
-        Returns a vector of equations of motion using Lagrange's equations of
-        the second kind.
+        Explanation
+        ===========
+        This method constructs the equations of motion in the form:
+
+            M * q_ddot = F
+
+        where:
+        - M : Mass matrix (shape n x n)
+        - q_ddot : Vector of generalized accelerations (shape n x 1)
+        - F : Forcing vector (shape n x 1)
+
+        The complete Lagrange equation form is:
+
+            d/dt(dL/d(qdot)) - dL/dq + C.T*lam = Q
+
+        where:
+        - L : Lagrangian of the system
+        - q : Generalized coordinates
+        - qdot : Generalized velocities (d(q)/dt)
+        - C : Constraint Jacobian matrix (shape m x n) if constraints exist
+        - lam : Lagrange multipliers (shape m x 1) if constraints exist
+        - Q : Non-conservative generalized forces
+
+        For constrained systems, the equations are augmented with:
+
+         C * q_ddot = c
+
+        Returns
+        =======
+        Matrix
+            The equations of motion in the form M * q_ddot = F.
+            Dimensions:
+            - M : n x n mass matrix
+            - F : n x 1 forcing vector
+            - q_ddot : n x 1 acceleration vector
+
+          For constrained systems, returns the augmented form:
+          [ M  C.T ] [ q_ddot ] = [ F ]
+          [ C   0  ] [ lam    ]   [ c ]
         """
 
         qds = self._qdots
