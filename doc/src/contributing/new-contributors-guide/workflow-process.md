@@ -24,7 +24,7 @@ pull request, or even before committing a change.
   ./bin/test quality
   flake8 sympy/
   ```
-
+  If you are developing on Windows and `./bin/test quality` doesn't generate any output. Use `python -u bin/test quality` instead as you may need mannually flush the buffer output with `-u`.   
 - [ ] **[Add tests](workflow-process-add-tests).** All new functionality
   should be tested. Bug fixes should add regression tests. Tests are written
   in pytest `assert f(x) == y` style and are included in corresponding `tests`
