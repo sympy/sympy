@@ -1672,6 +1672,46 @@ def test_integer():
     assert ask(Q.integer(x**y), Q.imaginary(x) & Q.zero(y)) is True
 
 
+def test_non_integer():
+    assert ask(Q.noninteger(x)) is None
+    assert ask(Q.noninteger(x), Q.noninteger(x)) is True
+    assert ask(Q.noninteger(x), ~Q.integer(x) & Q.extended_real(x)) is True
+    assert ask(Q.noninteger(x), ~Q.extended_real(x)) is False
+    assert ask(Q.noninteger(x), ~Q.positive(x)) is None
+    assert ask(Q.noninteger(x), Q.even(x) | Q.odd(x)) is False
+
+    assert ask(Q.noninteger(2*x), Q.integer(x)) is False
+    assert ask(Q.noninteger(2*x), Q.even(x)) is False
+    assert ask(Q.noninteger(2*x), Q.prime(x)) is False
+    assert ask(Q.noninteger(2*x), Q.rational(x)) is None
+    assert ask(Q.noninteger(2*x), Q.real(x)) is None
+    assert ask(Q.noninteger(sqrt(2)*x), Q.integer(x)) is True
+    assert ask(Q.noninteger(sqrt(2)*x), Q.irrational(x)) is None
+
+    assert ask(Q.noninteger(x/2), Q.odd(x)) is True
+    assert ask(Q.noninteger(x/2), Q.even(x)) is False
+    assert ask(Q.noninteger(x/3), Q.odd(x)) is None
+    assert ask(Q.noninteger(x/3), Q.even(x)) is None
+
+    assert ask(Q.noninteger(Abs(x)), Q.integer(x)) is False
+    assert ask(Q.noninteger(Abs(-x)), Q.integer(x)) is False
+    assert ask(Q.noninteger(Abs(x)), ~Q.integer(x)) is None
+    assert ask(Q.noninteger(Abs(x)), Q.complex(x)) is None
+    assert ask(Q.noninteger(Abs(x+I*y)), Q.real(x) & Q.real(y)) is None
+
+    assert ask(Q.noninteger(x/y), Q.integer(x) & Q.integer(y)) is None
+    assert ask(Q.noninteger(1/x), Q.integer(x)) is None
+    assert ask(Q.noninteger(x**y), Q.integer(x) & Q.integer(y)) is None
+    assert ask(Q.noninteger(sqrt(5))) is True
+    assert ask(Q.noninteger(x**y), Q.nonzero(x) & Q.zero(y)) is False
+    assert ask(Q.noninteger(x**y), Q.integer(x) & Q.integer(y) & Q.positive(y)) is False
+    assert ask(Q.noninteger(-1**x), Q.integer(x)) is False
+    assert ask(Q.noninteger(x**y), Q.integer(x) & Q.integer(y) & Q.positive(y)) is False
+    assert ask(Q.noninteger(x**y), Q.zero(x) & Q.integer(y) & Q.positive(y)) is False
+    assert ask(Q.noninteger(pi**x), Q.zero(x)) is False
+    assert ask(Q.noninteger(x**y), Q.imaginary(x) & Q.zero(y)) is False
+
+
 def test_negative():
     assert ask(Q.negative(x), Q.negative(x)) is True
     assert ask(Q.negative(x), Q.positive(x)) is False
