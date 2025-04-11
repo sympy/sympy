@@ -550,6 +550,9 @@ def rsolve_hyper(coeffs, f, n, **hints):
 
             s = hypersimp(g, n)
 
+            if s is None:
+                return None
+
             for j in range(1, r + 1):
                 coeff *= s.subs(n, n + j - 1)
 
