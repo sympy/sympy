@@ -687,6 +687,13 @@ EVALUATED_MATRIX_EXPRESSION_PAIRS = [
      (Matrix([[-2*I, 6], [4, 8]])))
 ]
 
+CONTINUOUS_RELATION_EXPRESSION_PAIRS = [
+    (r"a = b = c", Eq(Eq(a, b), c)),
+    (r"a = b = c = d", Eq(Eq(Eq(a, b), c), d) ),
+    (r"a \ne b \ne c", Ne(Ne(a, b), c)),
+    (r"a \ne b \ne x + y", Ne(Ne(a, b), x + y, evaluate=False)),
+    (r"a \ne b = c", Eq(Ne(a, b), c)),
+]
 
 def test_symbol_expressions():
     expected_failures = {6, 7}
@@ -870,3 +877,8 @@ def test_matrix_expressions():
 
     for latex_str, sympy_expr in EVALUATED_MATRIX_EXPRESSION_PAIRS:
         assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+
+def test_continuous_relation_expression_pairs():
+    for i, (latex_str, sympy_expr) in enumerate(CONTINUOUS_RELATION_EXPRESSION_PAIRS):
+        with evaluate(False):
+            assert parse_latex_lark(latex_str) == sympy_expr, latex_str

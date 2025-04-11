@@ -199,7 +199,9 @@ group_curly_parentheses: L_BRACE _expression R_BRACE
 _relation: eq | ne | lt | lte | gt | gte
 
 eq: _expression EQUAL _expression
+    | _relation EQUAL _expression
 ne: _expression NOT_EQUAL _expression
+    |  _relation NOT_EQUAL _expression
 lt: _expression LT _expression
 lte: _expression LTE _expression
 gt: _expression GT _expression
