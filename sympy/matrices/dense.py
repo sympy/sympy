@@ -91,6 +91,25 @@ class DenseMatrix(RepMatrix):
 
     def upper_triangular_solve(self, rhs):
         return _upper_triangular_solve(self, rhs)
+    
+    def jacobian_with_cse(self, vars):
+        # delayed imports to avoid circularity
+        from sympy.simplify.cse_main import cse
+        from sympy import Matrix
+
+        # 1) compute the standard Jacobian
+        J = self.jacobian(vars)
+
+        # 2) flatten J into a list so cse returns a flat list
+        replacements, reduced_list = cse(list(J))
+
+        # 3) rebuild the matrix from J's shape, not self's
+        optimized = Matrix(J.rows, J.cols, reduced_list)
+
+        # 4) substitute the common‐subexpression symbols back
+        return optimized.subs(replacements)
+
+
 
     cholesky.__doc__               = _cholesky.__doc__
     LDLdecomposition.__doc__       = _LDLdecomposition.__doc__

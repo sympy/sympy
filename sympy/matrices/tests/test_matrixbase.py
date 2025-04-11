@@ -26,6 +26,7 @@ from sympy.testing.pytest import (
     warns_deprecated_sympy)
 from sympy.utilities.iterables import capture, iterable
 from importlib.metadata import version
+from sympy import symbols, Matrix
 
 all_classes = (Matrix, SparseMatrix, ImmutableMatrix, ImmutableSparseMatrix)
 mutable_classes = (Matrix, SparseMatrix)
@@ -3793,3 +3794,16 @@ def test_issue_23276():
 def test_issue_27225():
     # https://github.com/sympy/sympy/issues/27225
     raises(TypeError, lambda : floor(Matrix([1, 1, 0])))
+
+
+def test_jacobian_with_cse():
+    a, b = symbols('a b')
+    f = Matrix([(a - x)**2 + b*(y - x**2)**2])
+    vars = [x, y]
+    jac = f.jacobian(vars)
+    
+    # Call the new method directly on the Matrix instance
+    optimized_jac = f.jacobian_with_cse(vars)
+
+    # The optimized Jacobian should be mathematically equal to the original
+    assert jac.equals(optimized_jac)
