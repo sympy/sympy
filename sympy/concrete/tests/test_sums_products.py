@@ -1608,7 +1608,7 @@ def test_summation_by_residues():
     assert eval_sum_residue((1/(k**2+1)), (k, -oo, S(0))) == Rational(1, 2) + pi/(2*tanh(pi))
 
     #An example of function which is neither or odd which works for -oo to k
-    assert eval_sum_residue(1 / (k**2 + 1), (k, -S.Infinity, S(0))) == Rational(1,2) + pi/(2*tanh(pi))
+    assert eval_sum_residue(1 / (k**2 + 2*k +2), (k, -oo, S(0))) == 1 + pi/(2*tanh(pi))
 
     # Odd functions over (-oo to k) are handled by other parts of the summation
     # logic, so eval_sum_residue will return None in such cases.
@@ -1623,7 +1623,6 @@ def test_summation_by_residues():
     # An example of odd function which works for eval_sum_residue
     assert simplify(eval_sum_residue(k / (k**4 + 1), (k, -S.Infinity, S.Infinity))) == 0
     assert simplify(eval_sum_residue(k / (k**2 + 1)**2, (k, -S.Infinity, S.Infinity))) == 0
-
 
 
 @slow
