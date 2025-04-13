@@ -186,7 +186,7 @@ def test_sign():
     expr = sign(cos(x))
     assert rust_code(expr) == "(if (x.cos() == 0.0) { 0.0 } else { (x.cos()).signum() })"
 
-def test_heaviside():
+def test_Heaviside():
     expr = Heaviside(x + y, pow(z, x * 2))
     code = rust_code(expr)
 
@@ -384,4 +384,4 @@ def test_sparse_matrix():
     with raises(NotImplementedError):
         rust_code(SparseMatrix([[1, 2, 3]]))
 
-test_heaviside()
+test_Heaviside()
