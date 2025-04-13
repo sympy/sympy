@@ -10,6 +10,7 @@ document.addEventListener("DOMContentLoaded", function () {
       toggleButton.style.top = "1rem";
       toggleButton.style.left = "1rem";
       toggleButton.style.zIndex = "9999";
+      toggleButton.style.fontSize = "2rem"
       document.body.insertAdjacentElement("afterbegin", toggleButton);
     }
     
