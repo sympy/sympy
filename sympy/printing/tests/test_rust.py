@@ -1,7 +1,7 @@
 from sympy.core import (S, pi, oo, symbols, Rational, Integer,
                         GoldenRatio, EulerGamma, Catalan, Lambda, Dummy,
                         Eq, Ne, Le, Lt, Gt, Ge, Mod)
-from sympy.functions import (Piecewise, Heaviside, 
+from sympy.functions import (Piecewise, Heaviside,
                              sin, cos, Abs, exp, ceiling, sqrt,
                              sign, floor)
 from sympy.logic import ITE
@@ -192,10 +192,10 @@ def test_Heaviside():
 
     prefix = "__cond_"
     index = code.find(prefix)
-    if index != -1:  
-        start = index + len(prefix)  
-        end = start + 8  # 计算结束位置
-        condname = f"__cond_{code[start:end]}"  # 提取8位字符
+    if index != -1:
+        start = index + len(prefix)
+        end = start + 8
+        condname = f"__cond_{code[start:end]}"
         expected = f"""{{
     let {condname} = x + y;
     if {condname} > 0.0 {{ 1.0 }} else if {condname} == 0.0 || {condname} == -0.0 {{ z.powf(2.0*x) }} else {{ 0.0 }}
@@ -383,5 +383,3 @@ def test_sparse_matrix():
     # gh-15791
     with raises(NotImplementedError):
         rust_code(SparseMatrix([[1, 2, 3]]))
-
-test_Heaviside()
