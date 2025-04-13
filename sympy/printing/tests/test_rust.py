@@ -1,7 +1,8 @@
 from sympy.core import (S, pi, oo, symbols, Rational, Integer,
                         GoldenRatio, EulerGamma, Catalan, Lambda, Dummy,
                         Eq, Ne, Le, Lt, Gt, Ge, Mod)
-from sympy.functions import (Piecewise, sin, cos, Abs, exp, ceiling, sqrt,
+from sympy.functions import (Piecewise, Heaviside, 
+                             sin, cos, Abs, exp, ceiling, sqrt,
                              sign, floor)
 from sympy.logic import ITE
 from sympy.testing.pytest import raises
@@ -185,6 +186,24 @@ def test_sign():
     expr = sign(cos(x))
     assert rust_code(expr) == "(if (x.cos() == 0.0) { 0.0 } else { (x.cos()).signum() })"
 
+def test_heaviside():
+    expr = Heaviside(x + y, pow(z, x * 2))
+    code = rust_code(expr)
+
+    prefix = "__cond_"
+    index = code.find(prefix)
+    if index != -1:  
+        start = index + len(prefix)  
+        end = start + 8  # 计算结束位置
+        condname = f"__cond_{code[start:end]}"  # 提取8位字符
+        expected = f"""{{
+    let {condname} = x + y;
+    if {condname} > 0.0 {{ 1.0 }} else if {condname} == 0.0 || {condname} == -0.0 {{ z.powf(2.0*x) }} else {{ 0.0 }}
+}}"""
+        assert code == expected
+    else:
+        assert False, ValueError("Condition not found!")
+
 
 def test_reserved_words():
 
@@ -352,12 +371,17 @@ def test_user_functions():
 
 
 def test_matrix():
-    assert rust_code(Matrix([1, 2, 3])) == '[1, 2, 3]'
-    with raises(ValueError):
-        rust_code(Matrix([[1, 2, 3]]))
+    assert rust_code(Matrix([1, 2, 3])) == '[[1], [2], [3]]'
+    assert rust_code(Matrix([[1, 2, 3]])) == '[[1, 2, 3]]'
+    expr = Matrix([[x, y], [y, x], [z, Heaviside(x, 0.4)]])
+    code = rust_code(expr)
+    assert code.startswith("[[x, y], [y, x], [z, ")
+    assert code.endswith("}]]")
 
 
 def test_sparse_matrix():
     # gh-15791
     with raises(NotImplementedError):
         rust_code(SparseMatrix([[1, 2, 3]]))
+
+test_heaviside()

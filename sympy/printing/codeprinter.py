@@ -103,7 +103,6 @@ class CodePrinter(StrPrinter):
             'frac': ('floor', []),
             'Max': ('Piecewise', []),
             'Min': ('Piecewise', []),
-            'Heaviside': ('Piecewise', []),
             'erf2': ('erf', []),
             'erfc': ('erf', []),
             'Li': ('li', []),

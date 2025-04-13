@@ -507,7 +507,6 @@ class RustCodePrinter(CodePrinter):
         return f"({arg0_printed}).min({arg1_printed})"
 
     def _print_Heaviside(self, expr):
-        # breakpoint()
         arg0 = expr.args[0]
         arg0_printed = self._print(arg0)
         default = expr.args[1] if len(expr.args) > 1 else 0.5
