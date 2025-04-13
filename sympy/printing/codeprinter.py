@@ -1010,7 +1010,7 @@ def rust_code(expr, assign_to=None, **settings):
     >>> rust_code(e.rhs, assign_to=e.lhs, contract=False)
     'Dy[i] = (y[i + 1] - y[i])/(t[i + 1] - t[i]);'
 
-    Matrices are also supported, but a ``MatrixSymbol`` of the same dimensions
+    Matrices are also supported via nested arrays, but a ``MatrixSymbol`` of the same dimensions
     must be provided to ``assign_to``. Note that any expression that can be
     generated normally can also exist inside a Matrix:
 
@@ -1018,11 +1018,11 @@ def rust_code(expr, assign_to=None, **settings):
     >>> mat = Matrix([x**2, Piecewise((x + 1, x > 0), (x, True)), sin(x)])
     >>> A = MatrixSymbol('A', 3, 1)
     >>> print(rust_code(mat, A))
-    A = [x.powi(2), if (x > 0.0) {
+    A = [[x.powi(2)], [if (x > 0.0) {
         x + 1
     } else {
         x
-    }, x.sin()];
+    }], [x.sin()]];
     """
     from sympy.printing.rust import RustCodePrinter
     printer = RustCodePrinter(settings)
