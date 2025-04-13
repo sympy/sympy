@@ -2,6 +2,7 @@ from sympy.core.numbers import oo
 from sympy.core.symbol import symbols
 from sympy.polys.domains import FiniteField, QQ, RationalField, FF
 from sympy.polys.polytools import Poly
+from sympy.polys.rings import ring
 from sympy.solvers.solvers import solve
 from sympy.utilities.iterables import is_sequence
 from sympy.utilities.misc import as_int
@@ -52,9 +53,13 @@ class EllipticCurve:
         self._a3 = a3
         self._a4 = a4
         self._a6 = a6
-        x, y, z = symbols('x y z')
-        self.x, self.y, self.z = x, y, z
-        self._poly = Poly(y**2*z + a1*x*y*z + a3*y*z**2 - x**3 - a2*x**2*z - a4*x*z**2 - a6*z**3, domain=domain)
+
+        self.x, self.y, self.z = xe, ye, ze = symbols('x y z')
+
+        R, x, y, z = ring([xe,ye,ze], domain)
+        poly = y**2*z + a1*x*y*z + a3*y*z**2 - x**3 - a2*x**2*z - a4*x*z**2 - a6*z**3
+        self._poly = Poly.from_dict(poly, [xe,ye,ze], domain=domain)
+
         if isinstance(self._domain, FiniteField):
             self._rank = 0
         elif isinstance(self._domain, RationalField):
