@@ -393,6 +393,9 @@ def test_hypersimp():
     term = (k + 1)*binomial(n, k)/(k + 2)
     assert hypersimp(term, k).equals((-k + n)*(k + 2)**2/((k + 1)**2*(k + 3)))
 
+    term = n*(n + a + b)*a**n*b**n/(factorial(n + a)*factorial(n + b))
+    assert hypersimp(term, n) == (a*b*(n + 1)*(a + b + n + 1)/(n*(a + b + n)*(a + n + 1)*(b + n + 1)))
+    assert hypersimp((a**n)*(n**2), n) == a*(n + 1)**2/n**2
 
 
 def test_nsimplify():
