@@ -553,8 +553,8 @@ if {condname} > 0.0 {{ 1.0 }} else if {condname} == 0.0 || {condname} == -0.0 {{
         return self._print(expr.rewrite(Piecewise, deep=False))
 
     def _print_MatrixBase(self, A):
-        # Print all matrices like matrix, i.e. not vector.
-        # Rust is a staticly typed compiled language. Unlike python, [type; N] in rust is a fixed size type that is suitable to be used for matrix.
+        # Print all matrices with type [[scalar_type; ncols]; nrows]
+        # even if nrows==1 or ncols==1
 
         nrows, ncols = A.shape
         rows = []

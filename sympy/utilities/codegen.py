@@ -1877,7 +1877,7 @@ class RustCodeGen(CodeGen):
         If the routine has multiple result objects, an CodeGenError is
         raised.
 
-        See: https://en.wikipexdia.org/wiki/Function_prototype
+        See: https://en.wikipedia.org/wiki/Function_prototype
 
         """
         results = [RustCodeGen._get_rust_type(res) for res in routine.results]
