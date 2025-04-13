@@ -95,7 +95,6 @@ from sympy.tensor import Idx, Indexed, IndexedBase
 from sympy.matrices import (MatrixSymbol, ImmutableMatrix, MatrixBase,
                             MatrixExpr, MatrixSlice)
 from sympy.utilities.iterables import is_sequence
-from sympy.matrices.matrixbase import MatrixBase
 
 
 __all__ = [
@@ -1881,7 +1880,6 @@ class RustCodeGen(CodeGen):
         See: https://en.wikipexdia.org/wiki/Function_prototype
 
         """
-        # results = [i.get_datatype('Rust') for i in routine.results]
         results = [RustCodeGen._get_rust_type(res) for res in routine.results]
 
         if len(results) == 1:

@@ -495,17 +495,17 @@ class RustCodePrinter(CodePrinter):
 
     def _print_NaN(self, expr, _type=False):
         return "NAN"
-    
+
     def _print_Max(self, expr):
         arg0_printed = self._print(expr.args[0])
         arg1_printed = self._print(expr.args[1])
         return f"({arg0_printed}).max({arg1_printed})"
-    
+
     def _print_Min(self, expr):
         arg0_printed = self._print(expr.args[0])
         arg1_printed = self._print(expr.args[1])
         return f"({arg0_printed}).min({arg1_printed})"
-    
+
     def _print_Heaviside(self, expr):
         # breakpoint()
         arg0 = expr.args[0]
