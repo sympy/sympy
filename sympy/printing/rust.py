@@ -34,6 +34,8 @@ complete source code files.
 from __future__ import annotations
 from functools import reduce
 import operator
+import random
+import string
 from typing import Any
 
 from sympy.codegen.ast import (
@@ -493,6 +495,32 @@ class RustCodePrinter(CodePrinter):
 
     def _print_NaN(self, expr, _type=False):
         return "NAN"
+    
+    def _print_Max(self, expr):
+        arg0_printed = self._print(expr.args[0])
+        arg1_printed = self._print(expr.args[1])
+        return f"({arg0_printed}).max({arg1_printed})"
+    
+    def _print_Min(self, expr):
+        arg0_printed = self._print(expr.args[0])
+        arg1_printed = self._print(expr.args[1])
+        return f"({arg0_printed}).min({arg1_printed})"
+    
+    def _print_Heaviside(self, expr):
+        # breakpoint()
+        arg0 = expr.args[0]
+        arg0_printed = self._print(arg0)
+        default = expr.args[1] if len(expr.args) > 1 else 0.5
+        default_printed = self._print(default)
+
+        charset = string.ascii_letters + string.digits
+        condname = f"__cond_{''.join(random.choices(charset, k=8))}"
+        return f"""{{
+let {condname} = {arg0_printed};
+if {condname} > 0.0 {{ 1.0 }} else if {condname} == 0.0 || {condname} == -0.0 {{ {default_printed} }} else {{ 0.0 }}
+}}"""
+        # return f"if ({arg0_printed}) > 0.0 {{ 1.0 }} else if ({arg0_printed}) == 0.0 || ({arg0_printed}) == -0.0 {{ {default_printed} }} else {{ 0.0 }}"
+
 
     def _print_Piecewise(self, expr):
         if expr.args[-1].cond != True:
@@ -526,10 +554,17 @@ class RustCodePrinter(CodePrinter):
         return self._print(expr.rewrite(Piecewise, deep=False))
 
     def _print_MatrixBase(self, A):
-        if A.cols == 1:
-            return "[%s]" % ", ".join(self._print(a) for a in A)
-        else:
-            raise ValueError("Full Matrix Support in Rust need Crates (https://crates.io/keywords/matrix).")
+        # Print all matrices like matrix, i.e. not vector.
+        # Rust is a staticly typed compiled language. Unlike python, [type; N] in rust is a fixed size type that is suitable to be used for matrix.
+
+        nrows, ncols = A.shape
+        rows = []
+        for irow in range(nrows):
+            row = [self._print(A[irow, icol]) for icol in range(ncols)]
+            row_code = f"[{', '.join(row)}]"
+            rows.append(row_code)
+
+        return f"[{', '.join(rows)}]"
 
     def _print_SparseRepMatrix(self, mat):
         # do not allow sparse matrices to be made dense
