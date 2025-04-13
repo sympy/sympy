@@ -1592,6 +1592,42 @@ def _discrete_log_pohlig_hellman(n, a, b, order=None, order_factors=None):
     return d
 
 
+def _discrete_log_with_prime_order(n, a, b, order):
+    """
+    Compute the discrete logarithm of ``a`` to the base ``b`` modulo ``n``
+    for ``b`` with the prime ``order``.
+
+    Examples
+    ========
+
+    >>> from sympy.ntheory.residue_ntheory import _discrete_log_with_prime_order
+    >>> _discrete_log_with_prime_order(131, 63, 107, 13)
+    11
+
+    See Also
+    ========
+
+    discrete_log
+
+    References
+    ==========
+
+    .. [1] "Handbook of applied cryptography", Menezes, A. J., Van, O. P. C., &
+        Vanstone, S. A. (1997).
+
+    """
+    from math import log
+
+    # Shanks and Pollard rho are O(sqrt(order)) while index calculus is O(exp(2*sqrt(log(n)log(log(n)))))
+    # we compare the expected running times to determine the algorithm which is expected to be faster
+    if 4*sqrt(log(n)*log(log(n))) < log(order) - 10:  # the number 10 was determined experimental
+        return _discrete_log_index_calculus(n, a, b, order)
+    elif order < 1000000000000:
+        # Shanks seems typically faster, but uses O(sqrt(order)) memory
+        return _discrete_log_shanks_steps(n, a, b, order)
+    return _discrete_log_pollard_rho(n, a, b, order)
+
+
 def discrete_log(n, a, b, order=None, prime_order=None):
     """
     Compute the discrete logarithm of ``a`` to the base ``b`` modulo ``n``.
@@ -1624,7 +1660,6 @@ def discrete_log(n, a, b, order=None, prime_order=None):
         Vanstone, S. A. (1997).
 
     """
-    from math import sqrt, log
     n, a, b = as_int(n), as_int(a), as_int(b)
 
     if n < 1:
@@ -1632,52 +1667,63 @@ def discrete_log(n, a, b, order=None, prime_order=None):
     if n == 1:
         return 0
 
-    if order is None:
-        # Compute the order and its factoring in one pass
-        # order = totient(n), factors = factorint(order)
-        factors = {}
-        for px, kx in factorint(n).items():
-            if kx > 1:
-                if px in factors:
-                    factors[px] += kx - 1
-                else:
-                    factors[px] = kx - 1
-            for py, ky in factorint(px - 1).items():
-                if py in factors:
-                    factors[py] += ky
-                else:
-                    factors[py] = ky
-        order = 1
-        for px, kx in factors.items():
-            order *= px**kx
-        # Now the `order` is the order of the group and factors = factorint(order)
-        # The order of `b` divides the order of the group.
-        order_factors = {}
-        for p, e in factors.items():
-            i = 0
-            for _ in range(e):
-                if pow(b, order // p, n) == 1:
-                    order //= p
-                    i += 1
-                else:
-                    break
-            if i < e:
-                order_factors[p] = e - i
+    if prime_order is not None and not isinstance(prime_order, bool):
+        raise ValueError("prime_order should be a boolean")
 
-    if prime_order is None:
-        prime_order = isprime(order)
+    if order is not None:
+        order = as_int(order)
+        if order < 1:
+            raise ValueError("order should be greater or equal to 1")
 
-    if order < 1000:
-        return _discrete_log_trial_mul(n, a, b, order)
-    elif prime_order:
-        # Shanks and Pollard rho are O(sqrt(order)) while index calculus is O(exp(2*sqrt(log(n)log(log(n)))))
-        # we compare the expected running times to determine the algorithm which is expected to be faster
-        if 4*sqrt(log(n)*log(log(n))) < log(order) - 10:  # the number 10 was determined experimental
-            return _discrete_log_index_calculus(n, a, b, order)
-        elif order < 1000000000000:
-            # Shanks seems typically faster, but uses O(sqrt(order)) memory
-            return _discrete_log_shanks_steps(n, a, b, order)
-        return _discrete_log_pollard_rho(n, a, b, order)
+        if order < 1000:
+            return _discrete_log_trial_mul(n, a, b, order)
+
+        if prime_order is None:
+            prime_order = isprime(order)
+
+        if prime_order:
+            return _discrete_log_with_prime_order(n, a, b, order)
+        return _discrete_log_pohlig_hellman(n, a, b, order)
+
+    # Compute the order and its factoring in one pass
+    # `group_order` = totient(n), `group_order_factors` = factorint(group_order)
+    group_order = 1
+    group_order_factors = {}
+    for px, kx in factorint(n).items():
+        if kx > 1:
+            if px in group_order_factors:
+                group_order_factors[px] += kx - 1
+            else:
+                group_order_factors[px] = kx - 1
+        for py, ky in factorint(px - 1).items():
+            if py in group_order_factors:
+                group_order_factors[py] += ky
+            else:
+                group_order_factors[py] = ky
+    for px, kx in group_order_factors.items():
+        group_order *= px**kx
+
+    if group_order < 1000:
+        return _discrete_log_trial_mul(n, a, b, group_order)
+    elif isprime(group_order):
+        # Since the `group_order` is prime we know that the order of `b` is equal to the `group_order`
+        return _discrete_log_with_prime_order(n, a, b, group_order)
+
+    # Compute order of `b` and its factoring
+    # `order` = n_order(b, n), `order_factors` = factorint(order)
+    order_factors = {}
+    order = group_order
+    # The order of `b` divides the order of the group.
+    for p, e in group_order_factors.items():
+        i = 0
+        for _ in range(e):
+            if pow(b, order // p, n) == 1:
+                order //= p
+                i += 1
+            else:
+                break
+        if i < e:
+            order_factors[p] = e - i
 
     return _discrete_log_pohlig_hellman(n, a, b, order, order_factors)
 
