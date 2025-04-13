@@ -166,10 +166,14 @@ jobs:
       - name: Create GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
-        run: >
-          gh release create ${{ env.release_version }} dist/*
-          --title "SymPy ${{ env.release_version }}"
-          --notes "See https://github.com/sympy/sympy/wiki/release-notes-for-${{ env.final_release_version }} for release notes"
+       run: |
+          if [[ ${{ env.release_version }} == ${{ env.final_release_version }} ]]; then
+            PRERELEASE='--prerelease'
+          fi
+          gh release create ${{ env.release_version }} dist/* \
+              $PRERELEASE                                     \
+              --title "SymPy ${{ env.release_version }}"      \
+              --notes "See https://github.com/sympy/sympy/wiki/release-notes-for-${{ env.final_release_version }} for release notes"
 
   # -------------------- Update the docs repository ---------------- #
 
