@@ -143,3 +143,21 @@ This can be removed once https://github.com/executablebooks/mdit-py-plugins/issu
 .task-list-item-checkbox {
     margin: 0 0.2em 0.25em -1.4em;
 }
+
+.sidebar-drawer {
+    transform: translateX(0);
+    transition: transform 0.3s ease-in-out;
+  }
+  
+.sidebar-drawer.collapsed {
+    transform: translateX(-100%);
+  }
+
+/* For screen sizes less than 857px the hamburger provided by Furro is used and
+for screen sizes greater than 857px our custom hamburger button is displayed */
+@media screen and (max-width: 857px) {
+    #sidebar-toggle {
+      display: none !important;
+      visibility: hidden !important;
+    }
+  }
