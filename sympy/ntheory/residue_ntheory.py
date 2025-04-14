@@ -1668,7 +1668,7 @@ def discrete_log(n, a, b, order=None, prime_order=None):
         return 0
 
     if prime_order is not None and not isinstance(prime_order, bool):
-        raise ValueError("prime_order should be a boolean")
+        raise TypeError("prime_order should be a boolean")
 
     if order is not None:
         order = as_int(order)
