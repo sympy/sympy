@@ -31,7 +31,8 @@ from sympy.simplify import simplify
 from sympy.polys.domains.groundtypes import PythonRational
 from sympy.utilities.decorator import conserve_mpmath_dps
 from sympy.utilities.iterables import permutations
-from sympy.testing.pytest import XFAIL, raises, _both_exp_pow
+from sympy.testing.pytest import (XFAIL, raises, _both_exp_pow,
+                                  warns_deprecated_sympy)
 from sympy import Add
 
 from mpmath import mpf
@@ -363,8 +364,10 @@ def test_Rational_new():
 
     assert Rational(PythonRational(2, 6)) == Rational(1, 3)
 
-    assert Rational(2, 4, gcd=1).q == 4
-    n = Rational(2, -4, gcd=1)
+    with warns_deprecated_sympy():
+        assert Rational(2, 4, gcd=1).q == 4
+    with warns_deprecated_sympy():
+        n = Rational(2, -4, gcd=1)
     assert n.q == 4
     assert n.p == -2
 
