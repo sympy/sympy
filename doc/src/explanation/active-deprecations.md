@@ -659,8 +659,8 @@ the ``parent.z`` axis and ``-child.z`` axis. The previous way to specify this
 joint was:
 
 ```py
->>> from sympy.physics.mechanics import Body, PinJoint
->>> parent, child = Body('parent'), Body('child') # doctest: +SKIP
+>>> from sympy.physics.mechanics import PinJoint, RigidBody
+>>> parent, child = RigidBody('parent'), RigidBody('child')
 >>> pin = PinJoint('pin', parent, child, parent_axis=parent.z,
 ...                child_axis=-child.z)   # doctest: +SKIP
 >>> parent.dcm(child)   # doctest: +SKIP
@@ -677,13 +677,13 @@ this exact rotation:
 
 ```py
 >>> from sympy import pi
->>> from sympy.physics.mechanics import Body, PinJoint, ReferenceFrame
->>> parent, child, = Body('parent'), Body('child') # doctest: +SKIP
->>> int_frame = ReferenceFrame('int_frame') # doctest: +SKIP
->>> int_frame.orient_axis(child.frame, child.y, pi) # doctest: +SKIP
+>>> from sympy.physics.mechanics import PinJoint, ReferenceFrame, RigidBody
+>>> parent, child, = RigidBody('parent'), RigidBody('child')
+>>> int_frame = ReferenceFrame('int_frame')
+>>> int_frame.orient_axis(child.frame, child.y, pi)
 >>> pin = PinJoint('pin', parent, child, joint_axis=parent.z,
-...                child_interframe=int_frame) # doctest: +SKIP
->>> parent.dcm(child) # doctest: +SKIP
+...                child_interframe=int_frame)
+>>> parent.frame.dcm(child.frame)
 Matrix([
 [-cos(q_pin(t)), -sin(q_pin(t)),  0],
 [-sin(q_pin(t)),  cos(q_pin(t)),  0],
@@ -697,11 +697,11 @@ that the joint axis expressed in the intermediate frame is aligned with the
 given vector:
 
 ```py
->>> from sympy.physics.mechanics import Body, PinJoint
->>> parent, child = Body('parent'), Body('child') # doctest: +SKIP
+>>> from sympy.physics.mechanics import PinJoint, RigidBody
+>>> parent, child = RigidBody('parent'), RigidBody('child')
 >>> pin = PinJoint('pin', parent, child, parent_interframe=parent.z,
-...                child_interframe=-child.z) # doctest: +SKIP
->>> parent.dcm(child) # doctest: +SKIP
+...                child_interframe=-child.z)
+>>> parent.frame.dcm(child.frame)
 Matrix([
 [-cos(q_pin(t)), -sin(q_pin(t)),  0],
 [-sin(q_pin(t)),  cos(q_pin(t)),  0],
@@ -722,8 +722,8 @@ For example, suppose you want a ``PinJoint`` in the parent to be positioned at
 ``-child.frame.x``. The previous way to specify this was:
 
 ```py
->>> from sympy.physics.mechanics import Body, PinJoint
->>> parent, child = Body('parent'), Body('child') # doctest: +SKIP
+>>> from sympy.physics.mechanics import PinJoint, RigidBody
+>>> parent, child = RigidBody('parent'), RigidBody('child')
 >>> pin = PinJoint('pin', parent, child, parent_joint_pos=parent.frame.x,
 ...                child_joint_pos=-child.frame.x)   # doctest: +SKIP
 >>> pin.parent_point.pos_from(parent.masscenter)   # doctest: +SKIP
@@ -735,28 +735,28 @@ parent_frame.x
 Now you can do the same with either
 
 ```py
->>> from sympy.physics.mechanics import Body, PinJoint
->>> parent, child = Body('parent'), Body('child') # doctest: +SKIP
+>>> from sympy.physics.mechanics import PinJoint, RigidBody
+>>> parent, child = RigidBody('parent'), RigidBody('child')
 >>> pin = PinJoint('pin', parent, child, parent_point=parent.frame.x,
-...                child_point=-child.frame.x) # doctest: +SKIP
->>> pin.parent_point.pos_from(parent.masscenter) # doctest: +SKIP
+...                child_point=-child.frame.x)
+>>> pin.parent_point.pos_from(parent.masscenter)
 parent_frame.x
->>> pin.child_point.pos_from(child.masscenter) # doctest: +SKIP
+>>> pin.child_point.pos_from(child.masscenter)
 - child_frame.x
 ```
 
 Or
 
 ```py
->>> from sympy.physics.mechanics import Body, PinJoint, Point
->>> parent, child = Body('parent'), Body('child') # doctest: +SKIP
->>> parent_point = parent.masscenter.locatenew('parent_point', parent.frame.x) # doctest: +SKIP
->>> child_point = child.masscenter.locatenew('child_point', -child.frame.x) # doctest: +SKIP
+>>> from sympy.physics.mechanics import PinJoint, Point, RigidBody
+>>> parent, child = RigidBody('parent'), RigidBody('child')
+>>> parent_point = parent.masscenter.locatenew('parent_point', parent.frame.x)
+>>> child_point = child.masscenter.locatenew('child_point', -child.frame.x)
 >>> pin = PinJoint('pin', parent, child, parent_point=parent_point,
-...                child_point=child_point) # doctest: +SKIP
->>> pin.parent_point.pos_from(parent.masscenter) # doctest: +SKIP
+...                child_point=child_point)
+>>> pin.parent_point.pos_from(parent.masscenter)
 parent_frame.x
->>> pin.child_point.pos_from(child.masscenter) # doctest: +SKIP
+>>> pin.child_point.pos_from(child.masscenter)
 - child_frame.x
 ```
 
