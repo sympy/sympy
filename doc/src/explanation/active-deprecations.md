@@ -76,6 +76,17 @@ SymPy deprecation warnings.
 
 ## Version 1.14
 
+(deprecated-rational-gcd)=
+### The gcd parameter to Rational
+
+The ``gcd`` parameter to the ``Rational`` constructor can be used to create an
+unevaluated Rational like ``Rational(2, 4, gcd=1)`` in which the numerator and
+denominator are not reduced. This is now deprecated and unevaluated rationals
+will be removed entirely in a future version of SymPy. This is needed so that
+more efficient implementations of rational numbers can be used internally.
+Instead use something like ``Mul(2, Rational(1, 4), evaluate=False)`` or
+``Symbol('2')/Symbol('4')`` depending on what exactly is wanted.
+
 (deprecated-tensorproduct-simp)=
 ### Deprecated tensor_product_simp from physics.quantum
 
