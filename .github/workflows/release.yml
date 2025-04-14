@@ -18,10 +18,10 @@ on:
       - '1.14'
 env:
   release_branch: '1.14'
-  release_version: '1.14.0-dev'
+  release_version: '1.14.0rc1'
   final_release_version: '1.14.0'
-  previous_version: '1.13.0'
-  dev_version: '1.14-dev'
+  previous_version: '1.13.3'
+  dev_version: '1.15-dev'
 
 jobs:
 
@@ -39,7 +39,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
+          python-version: '3.13'
 
       - name: Build release files
         run: release/ci_release_script.sh ${{ env.release_version }} ${{ env.previous_version }}
