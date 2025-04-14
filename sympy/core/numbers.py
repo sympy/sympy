@@ -1391,6 +1391,21 @@ class Rational(Number):
         if gcd > 1:
             p //= gcd
             q //= gcd
+
+        return cls.from_coprime_ints(p, q)
+
+    @classmethod
+    def from_coprime_ints(cls, p: int, q: int) -> Rational:
+        """Create a Rational from a pair of coprime integers.
+
+        Both ``p`` and ``q`` should be strictly of type ``int``.
+
+        The caller should ensure that ``gcd(p,q) == 1`` and ``q > 0``.
+
+        This may be more efficient than ``Rational(p, q)``. The validity of the
+        arguments may or may not be checked so it should not be relied upon to
+        pass unvalidated or invalid arguments to this function.
+        """
         if q == 1:
             return Integer(p)
         if p == 1 and q == 2:

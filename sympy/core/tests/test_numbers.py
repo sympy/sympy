@@ -371,6 +371,9 @@ def test_Rational_new():
     assert n.q == 4
     assert n.p == -2
 
+    assert Rational.from_coprime_ints(3, 5) == Rational(3, 5)
+
+
 def test_issue_24543():
     for p in ('1.5', 1.5, 2):
         for q in ('1.5', 1.5, 2):
