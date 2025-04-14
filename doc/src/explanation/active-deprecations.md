@@ -114,6 +114,11 @@ its usage is in their own code.
 The existing implementation will remain, along with its tests for at least
 one year after the 1.14 release.
 
+(deprecated-aesaraprinter)=
+### Deprecated aesaracode from printing
+sympy's aesaracode module is deprecated because aesara itself
+is umaintained and cannot be installed on Python 3.13.
+
 ## Version 1.13
 
 (deprecated-mechanics-body-class)=
