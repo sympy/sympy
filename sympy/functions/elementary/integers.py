@@ -1,4 +1,4 @@
-from typing import Tuple as tTuple
+from __future__ import annotations
 
 from sympy.core.basic import Basic
 from sympy.core.expr import Expr
@@ -21,7 +21,7 @@ from sympy.multipledispatch import dispatch
 class RoundFunction(DefinedFunction):
     """Abstract base class for rounding functions."""
 
-    args: tTuple[Expr]
+    args: tuple[Expr]
 
     @classmethod
     def eval(cls, arg):

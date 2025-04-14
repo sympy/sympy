@@ -59,7 +59,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.8', '3.9', '3.10', '3.11', '3.12', '3.13-dev', 'pypy-3.8', 'pypy-3.9', 'pypy-3.10']
+        python-version: ['3.9', '3.10', '3.11', '3.12', '3.13-dev', 'pypy-3.9', 'pypy-3.10']
 
     name: Python ${{ matrix.python-version }} test install
     steps:
@@ -144,11 +144,23 @@ jobs:
         # used by the build script should be pinned...
         uses: pypa/gh-action-pypi-publish@76f52bc884231f62b9a034ebfe128415bbaabdfc  # v1.12.4
 
+  # -------------------- Check if this is a final release ---------- #
+
+  check-final:
+    name: Check whether the release is final
+    needs: [build, pypi-publish]
+    runs-on: ubuntu-latest
+    outputs:
+      # The env context is not available in jobs.<job id>.if so we set it here
+      is-final: ${{ env.release_version == env.final_release_version }}
+    steps:
+      - run: echo "null"
+
   # -------------------- Make a GitHub release --------------------- #
 
   github-publish:
     name: Publish GitHub release
-    needs: [build, pypi-publish]
+    needs: [check-final]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -163,26 +175,26 @@ jobs:
           name: release_files
           path: dist
 
-      - name: Create GitHub release
+      - name: Create GitHub prerelease
+        if: ${{ needs.check-final.outputs.is-final != 'true' }}
         env:
           GH_TOKEN: ${{ github.token }}
         run: >
           gh release create ${{ env.release_version }} dist/*
-          --title "SymPy ${{ env.release_version }}"
-          --notes "See https://github.com/sympy/sympy/wiki/release-notes-for-${{ env.final_release_version }} for release notes"
+              --prerelease
+              --title "SymPy ${{ env.release_version }}"
+              --notes "See https://github.com/sympy/sympy/wiki/release-notes-for-${{ env.final_release_version }} for release notes"
+
+      - name: Create Final GitHub release
+        if: ${{ needs.check-final.outputs.is-final == 'true' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >
+          gh release create ${{ env.release_version }} dist/*
+              --title "SymPy ${{ env.release_version }}"
+              --notes "See https://github.com/sympy/sympy/wiki/release-notes-for-${{ env.final_release_version }} for release notes"
 
   # -------------------- Update the docs repository ---------------- #
-
-  # Dummy job to determine whether the release is final
-  check-final:
-    name: Check whether the release is final
-    needs: [build, pypi-publish]
-    runs-on: ubuntu-latest
-    outputs:
-      # The env context is not available in jobs.<job id>.if so we set it here
-      is-final: ${{ env.release_version == env.final_release_version }}
-    steps:
-      - run: echo "null"
 
   update-docs:
     name: Update the docs repository

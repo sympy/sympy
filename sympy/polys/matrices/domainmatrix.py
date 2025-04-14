@@ -9,9 +9,9 @@ convenience routines for converting between Expr and the poly domains as well
 as unifying matrices with different domains.
 
 """
+from __future__ import annotations
 from collections import Counter
 from functools import reduce
-from typing import Union as tUnion, Tuple as tTuple
 
 from sympy.external.gmpy import GROUND_TYPES
 from sympy.utilities.decorator import doctest_depends_on
@@ -131,8 +131,8 @@ class DomainMatrix:
     Poly
 
     """
-    rep: tUnion[SDM, DDM, DFM]
-    shape: tTuple[int, int]
+    rep: SDM | DDM | DFM
+    shape: tuple[int, int]
     domain: Domain
 
     def __new__(cls, rows, shape, domain, *, fmt=None):

@@ -2880,7 +2880,7 @@ class Tensor(TensExpr):
 
     is_commutative = False
 
-    _index_structure = None  # type: _IndexStructure
+    _index_structure: _IndexStructure
     args: tuple[TensorHead, Tuple]
 
     def __new__(cls, tensor_head, indices, *, is_canon_bp=False, **kw_args):
@@ -3346,7 +3346,7 @@ class Tensor(TensExpr):
         expr = Indexed(tens.args[0], *index_symbols)
         return self._check_add_Sum(expr, index_symbols)
 
-    def _eval_partial_derivative(self, s):  # type: (Tensor) -> Expr
+    def _eval_partial_derivative(self, s: Tensor) -> Expr:
 
         if not isinstance(s, Tensor):
             return S.Zero
@@ -3432,7 +3432,7 @@ class TensMul(TensExpr, AssocOp):
     """
     identity = S.One
 
-    _index_structure = None  # type: _IndexStructure
+    _index_structure: _IndexStructure
 
     def __new__(cls, *args, **kw_args):
         is_canon_bp = kw_args.get('is_canon_bp', False)
@@ -3470,7 +3470,7 @@ class TensMul(TensExpr, AssocOp):
 
         obj = TensExpr.__new__(cls, *args)
         obj._indices = indices
-        obj._index_types = index_types[:]
+        obj._index_types = index_types.copy()
         obj._index_structure = index_structure
         obj._free = index_structure.free[:]
         obj._dum = index_structure.dum[:]
@@ -4133,7 +4133,7 @@ class TensMul(TensExpr, AssocOp):
     def _set_indices(self, *indices, is_canon_bp=False, **kw_args):
         if len(indices) != self.ext_rank:
             raise ValueError("indices length mismatch")
-        args = list(self.args)[:]
+        args = list(self.args)
         pos = 0
         for i, arg in enumerate(args):
             if not isinstance(arg, TensExpr):
@@ -5154,7 +5154,7 @@ def get_lines(ex, index_type):
         # if p0 == ta0[0] then G in pos c1 is mult on the right by G in c0
         ta0 = dt[arguments[c0]]
         b0, b1 = (c0, c1) if p0 == ta0[1]  else (c1, c0)
-        lines1 = lines[:]
+        lines1 = lines.copy()
         for line in lines:
             if line[-1] == b0:
                 if line[0] == b1:
