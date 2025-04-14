@@ -32,8 +32,8 @@ def test_DiracDelta():
     assert DiracDelta(j) == 0
     assert DiracDelta(k) == 0
     assert DiracDelta(nan) is nan
-    assert DiracDelta(0).func is DiracDelta
-    assert DiracDelta(x).func is DiracDelta
+    assert isinstance(DiracDelta(0), DiracDelta)
+    assert isinstance(DiracDelta(x), DiracDelta)
     # FIXME: this is generally undefined @ x=0
     #         But then limit(Delta(c)*Heaviside(x),x,-oo)
     #         need's to be implemented.

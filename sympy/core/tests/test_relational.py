@@ -907,7 +907,7 @@ def test_issue_10401():
     zero = symbols('z', zero=True)
     nonzero = symbols('nz', zero=False, finite=True)
 
-    assert Eq(1/(1/x + 1), 1).func is Eq
+    assert isinstance(Eq(1/(1/x + 1), 1), Eq)
     assert Eq(1/(1/x + 1), 1).subs(x, S.ComplexInfinity) is S.true
     assert Eq(1/(1/fin + 1), 1) is S.false
 
