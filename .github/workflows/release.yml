@@ -10,18 +10,18 @@ name: release
 on:
   push:
     branches:
-      - '1.15'
+      - '1.14'
     tags:
-      - 'sympy-1.15.*'
+      - 'sympy-1.14.*'
   pull_request:
     branches:
-      - '1.15'
+      - '1.14'
 env:
-  release_branch: '1.15'
-  release_version: '1.15.0-dev'
-  final_release_version: '1.15.0'
-  previous_version: '1.14.0'
-  dev_version: '1.15-dev'
+  release_branch: '1.14'
+  release_version: '1.14.0-dev'
+  final_release_version: '1.14.0'
+  previous_version: '1.13.0'
+  dev_version: '1.14-dev'
 
 jobs:
 
@@ -39,7 +39,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.13'
+          python-version: '3.12'
 
       - name: Build release files
         run: release/ci_release_script.sh ${{ env.release_version }} ${{ env.previous_version }}
