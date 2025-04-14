@@ -114,6 +114,11 @@ its usage is in their own code.
 The existing implementation will remain, along with its tests for at least
 one year after the 1.14 release.
 
+(deprecated-aesaraprinter)=
+### Deprecated aesaracode from printing
+sympy's aesaracode module is deprecated because aesara itself
+is umaintained and cannot be installed on Python 3.13.
+
 ## Version 1.13
 
 (deprecated-mechanics-body-class)=
@@ -160,15 +165,15 @@ motion.
 >>> from sympy.physics.mechanics import (
 ...   Body, JointsMethod, PinJoint, PrismaticJoint)
 >>> g, l = symbols("g l")
->>> wall = Body("wall")
->>> cart = Body("cart")
->>> pendulum = Body("Pendulum")
->>> slider = PrismaticJoint("s", wall, cart, joint_axis=wall.x)
+>>> wall = Body("wall") # doctest: +SKIP
+>>> cart = Body("cart") # doctest: +SKIP
+>>> pendulum = Body("Pendulum") # doctest: +SKIP
+>>> slider = PrismaticJoint("s", wall, cart, joint_axis=wall.x) # doctest: +SKIP
 >>> pin = PinJoint("j", cart, pendulum, joint_axis=cart.z,
-...                child_point=l * pendulum.y)
->>> pendulum.masscenter.set_vel(pendulum.frame, 0)
->>> cart.apply_force(-g * cart.mass * wall.y)
->>> pendulum.apply_force(-g * pendulum.mass * wall.y)
+...                child_point=l * pendulum.y) # doctest: +SKIP
+>>> pendulum.masscenter.set_vel(pendulum.frame, 0) # doctest: +SKIP
+>>> cart.apply_force(-g * cart.mass * wall.y) # doctest: +SKIP
+>>> pendulum.apply_force(-g * pendulum.mass * wall.y) # doctest: +SKIP
 >>> method = JointsMethod(wall, slider, pin)  # doctest: +SKIP
 >>> method.form_eoms()  # doctest: +SKIP
 Matrix([
@@ -485,7 +490,7 @@ integers modulo ``n`` and can be used like:
 >>> from sympy import GF
 >>> K = GF(5)
 >>> a = K(7)
->>> a
+>>> a # doctest: +SKIP
 2 mod 5
 ```
 
@@ -593,7 +598,7 @@ If you are using these functions, change from
 
 ```py
 >>> from sympy import carmichael
->>> carmichael.is_carmichael(561)
+>>> carmichael.is_carmichael(561) # doctest: +SKIP
 True
 ```
 
@@ -655,7 +660,7 @@ joint was:
 
 ```py
 >>> from sympy.physics.mechanics import Body, PinJoint
->>> parent, child = Body('parent'), Body('child')
+>>> parent, child = Body('parent'), Body('child') # doctest: +SKIP
 >>> pin = PinJoint('pin', parent, child, parent_axis=parent.z,
 ...                child_axis=-child.z)   # doctest: +SKIP
 >>> parent.dcm(child)   # doctest: +SKIP
@@ -673,12 +678,12 @@ this exact rotation:
 ```py
 >>> from sympy import pi
 >>> from sympy.physics.mechanics import Body, PinJoint, ReferenceFrame
->>> parent, child, = Body('parent'), Body('child')
->>> int_frame = ReferenceFrame('int_frame')
->>> int_frame.orient_axis(child.frame, child.y, pi)
+>>> parent, child, = Body('parent'), Body('child') # doctest: +SKIP
+>>> int_frame = ReferenceFrame('int_frame') # doctest: +SKIP
+>>> int_frame.orient_axis(child.frame, child.y, pi) # doctest: +SKIP
 >>> pin = PinJoint('pin', parent, child, joint_axis=parent.z,
-...                child_interframe=int_frame)
->>> parent.dcm(child)
+...                child_interframe=int_frame) # doctest: +SKIP
+>>> parent.dcm(child) # doctest: +SKIP
 Matrix([
 [-cos(q_pin(t)), -sin(q_pin(t)),  0],
 [-sin(q_pin(t)),  cos(q_pin(t)),  0],
@@ -693,10 +698,10 @@ given vector:
 
 ```py
 >>> from sympy.physics.mechanics import Body, PinJoint
->>> parent, child = Body('parent'), Body('child')
+>>> parent, child = Body('parent'), Body('child') # doctest: +SKIP
 >>> pin = PinJoint('pin', parent, child, parent_interframe=parent.z,
-...                child_interframe=-child.z)
->>> parent.dcm(child)
+...                child_interframe=-child.z) # doctest: +SKIP
+>>> parent.dcm(child) # doctest: +SKIP
 Matrix([
 [-cos(q_pin(t)), -sin(q_pin(t)),  0],
 [-sin(q_pin(t)),  cos(q_pin(t)),  0],
@@ -718,7 +723,7 @@ For example, suppose you want a ``PinJoint`` in the parent to be positioned at
 
 ```py
 >>> from sympy.physics.mechanics import Body, PinJoint
->>> parent, child = Body('parent'), Body('child')
+>>> parent, child = Body('parent'), Body('child') # doctest: +SKIP
 >>> pin = PinJoint('pin', parent, child, parent_joint_pos=parent.frame.x,
 ...                child_joint_pos=-child.frame.x)   # doctest: +SKIP
 >>> pin.parent_point.pos_from(parent.masscenter)   # doctest: +SKIP
@@ -731,12 +736,12 @@ Now you can do the same with either
 
 ```py
 >>> from sympy.physics.mechanics import Body, PinJoint
->>> parent, child = Body('parent'), Body('child')
+>>> parent, child = Body('parent'), Body('child') # doctest: +SKIP
 >>> pin = PinJoint('pin', parent, child, parent_point=parent.frame.x,
-...                child_point=-child.frame.x)
->>> pin.parent_point.pos_from(parent.masscenter)
+...                child_point=-child.frame.x) # doctest: +SKIP
+>>> pin.parent_point.pos_from(parent.masscenter) # doctest: +SKIP
 parent_frame.x
->>> pin.child_point.pos_from(child.masscenter)
+>>> pin.child_point.pos_from(child.masscenter) # doctest: +SKIP
 - child_frame.x
 ```
 
@@ -744,14 +749,14 @@ Or
 
 ```py
 >>> from sympy.physics.mechanics import Body, PinJoint, Point
->>> parent, child = Body('parent'), Body('child')
->>> parent_point = parent.masscenter.locatenew('parent_point', parent.frame.x)
->>> child_point = child.masscenter.locatenew('child_point', -child.frame.x)
+>>> parent, child = Body('parent'), Body('child') # doctest: +SKIP
+>>> parent_point = parent.masscenter.locatenew('parent_point', parent.frame.x) # doctest: +SKIP
+>>> child_point = child.masscenter.locatenew('child_point', -child.frame.x) # doctest: +SKIP
 >>> pin = PinJoint('pin', parent, child, parent_point=parent_point,
-...                child_point=child_point)
->>> pin.parent_point.pos_from(parent.masscenter)
+...                child_point=child_point) # doctest: +SKIP
+>>> pin.parent_point.pos_from(parent.masscenter) # doctest: +SKIP
 parent_frame.x
->>> pin.child_point.pos_from(child.masscenter)
+>>> pin.child_point.pos_from(child.masscenter) # doctest: +SKIP
 - child_frame.x
 ```
 

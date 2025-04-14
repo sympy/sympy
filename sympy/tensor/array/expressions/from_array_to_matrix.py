@@ -1,6 +1,7 @@
+from __future__ import annotations
 import itertools
 from collections import defaultdict
-from typing import Tuple as tTuple, Union as tUnion, FrozenSet, Dict as tDict, List, Optional
+from typing import FrozenSet
 from functools import singledispatch
 from itertools import accumulate
 
@@ -25,14 +26,14 @@ from sympy.tensor.array.expressions.array_expressions import PermuteDims, ArrayD
 from sympy.tensor.array.expressions.utils import _get_mapping_from_subranks
 
 
-def _get_candidate_for_matmul_from_contraction(scan_indices: List[Optional[int]], remaining_args: List[_ArgE]) -> tTuple[Optional[_ArgE], bool, int]:
+def _get_candidate_for_matmul_from_contraction(scan_indices: list[int | None], remaining_args: list[_ArgE]) -> tuple[_ArgE | None, bool, int]:
 
-    scan_indices_int: List[int] = [i for i in scan_indices if i is not None]
+    scan_indices_int: list[int] = [i for i in scan_indices if i is not None]
     if len(scan_indices_int) == 0:
         return None, False, -1
 
     transpose: bool = False
-    candidate: Optional[_ArgE] = None
+    candidate: _ArgE | None = None
     candidate_index: int = -1
     for arg_with_ind2 in remaining_args:
         if not isinstance(arg_with_ind2.element, MatrixExpr):
@@ -60,7 +61,7 @@ def _get_candidate_for_matmul_from_contraction(scan_indices: List[Optional[int]]
 
 def _insert_candidate_into_editor(editor: _EditArrayContraction, arg_with_ind: _ArgE, candidate: _ArgE, transpose1: bool, transpose2: bool):
     other = candidate.element
-    other_index: Optional[int]
+    other_index: int | None
     if transpose2:
         other = Transpose(other)
         other_index = candidate.indices[0]
@@ -140,12 +141,12 @@ def _find_trivial_matrices_rewrite(expr: ArrayTensorProduct):
     # "b*a*b.T"
 
     trivial_matrices = []
-    pos: Optional[int] = None
-    first: Optional[MatrixExpr] = None
-    second: Optional[MatrixExpr] = None
-    removed: List[int] = []
+    pos: int | None = None  # must be initialized else causes UnboundLocalError
+    first: MatrixExpr | None = None  # may cause UnboundLocalError if not initialized
+    second: MatrixExpr | None = None  # may cause UnboundLocalError if not initialized
+    removed: list[int] = []
     counter: int = 0
-    args: List[Optional[Basic]] = list(expr.args)
+    args: list[Basic | None] = list(expr.args)
     for i, arg in enumerate(expr.args):
         if isinstance(arg, MatrixExpr):
             if arg.shape == (1, 1):
@@ -168,7 +169,7 @@ def _find_trivial_matrices_rewrite(expr: ArrayTensorProduct):
 
 
 def _find_trivial_kronecker_products_broadcast(expr: ArrayTensorProduct):
-    newargs: List[Basic] = []
+    newargs: list[Basic] = []
     removed = []
     count_dims = 0
     for arg in expr.args:
@@ -217,7 +218,7 @@ def _(expr: ArrayContraction):
     if not isinstance(expr, ArrayContraction):
         return _array2matrix(expr)
     subexpr = expr.expr
-    contraction_indices: tTuple[tTuple[int]] = expr.contraction_indices
+    contraction_indices: tuple[tuple[int]] = expr.contraction_indices
     if contraction_indices == ((0,), (1,)) or (
         contraction_indices == ((0,),) and subexpr.shape[1] == 1
     ) or (
@@ -741,12 +742,12 @@ def _a2m_transpose(arg):
         return Transpose(arg).doit()
 
 
-def identify_hadamard_products(expr: tUnion[ArrayContraction, ArrayDiagonal]):
+def identify_hadamard_products(expr: ArrayContraction | ArrayDiagonal):
 
     editor: _EditArrayContraction = _EditArrayContraction(expr)
 
-    map_contr_to_args: tDict[FrozenSet, List[_ArgE]] = defaultdict(list)
-    map_ind_to_inds: tDict[Optional[int], int] = defaultdict(int)
+    map_contr_to_args: dict[FrozenSet, list[_ArgE]] = defaultdict(list)
+    map_ind_to_inds: dict[int | None, int] = defaultdict(int)
     for arg_with_ind in editor.args_with_ind:
         for ind in arg_with_ind.indices:
             map_ind_to_inds[ind] += 1
@@ -755,7 +756,7 @@ def identify_hadamard_products(expr: tUnion[ArrayContraction, ArrayDiagonal]):
         map_contr_to_args[frozenset(arg_with_ind.indices)].append(arg_with_ind)
 
     k: FrozenSet[int]
-    v: List[_ArgE]
+    v: list[_ArgE]
     for k, v in map_contr_to_args.items():
         make_trace: bool = False
         if len(k) == 1 and next(iter(k)) >= 0 and sum(next(iter(k)) in i for i in map_contr_to_args) == 1:
@@ -866,7 +867,7 @@ def identify_removable_identity_matrices(expr):
 
 def remove_identity_matrices(expr: ArrayContraction):
     editor = _EditArrayContraction(expr)
-    removed: List[int] = []
+    removed: list[int] = []
 
     permutation_map = {}
 
@@ -929,7 +930,7 @@ def remove_identity_matrices(expr: ArrayContraction):
     return ret_expr2, removed
 
 
-def _combine_removed(dim: int, removed1: List[int], removed2: List[int]) -> List[int]:
+def _combine_removed(dim: int, removed1: list[int], removed2: list[int]) -> list[int]:
     # Concatenate two axis removal operations as performed by
     # _remove_trivial_dims,
     removed1 = sorted(removed1)
@@ -955,7 +956,7 @@ def _combine_removed(dim: int, removed1: List[int], removed2: List[int]) -> List
 def _array_contraction_to_diagonal_multiple_identity(expr: ArrayContraction):
     editor = _EditArrayContraction(expr)
     editor.track_permutation_start()
-    removed: List[int] = []
+    removed: list[int] = []
     diag_index_counter: int = 0
     for i in range(editor.number_of_contraction_indices):
         identities = []
