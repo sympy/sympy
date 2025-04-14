@@ -474,7 +474,7 @@ jobs:
 
       - run: git remote add upstream https://github.com/sympy/sympy.git
       - run: git fetch upstream master
-      - run: git fetch upstream 1.13
+      - run: git fetch upstream 1.14
 
       - name: Configure benchmarks
         run: asv machine --yes --config asv.conf.actions.json
@@ -486,8 +486,8 @@ jobs:
         # Output benchmark results
       - run: asv compare upstream/master HEAD --config asv.conf.actions.json --factor 1.5 | tee pr_vs_master.txt
       - run: asv compare upstream/master HEAD --config asv.conf.actions.json --factor 1.5 --only-changed | tee pr_vs_master_changed.txt
-      - run: asv compare upstream/1.13 upstream/master --config asv.conf.actions.json --factor 1.5 | tee master_vs_release.txt
-      - run: asv compare upstream/1.13 upstream/master --config asv.conf.actions.json --factor 1.5 --only-changed | tee master_vs_release_changed.txt
+      - run: asv compare upstream/1.14 upstream/master --config asv.conf.actions.json --factor 1.5 | tee master_vs_release.txt
+      - run: asv compare upstream/1.14 upstream/master --config asv.conf.actions.json --factor 1.5 --only-changed | tee master_vs_release_changed.txt
 
         # we save all outputs as artifacts that can be downloaded from the
         # GitHub Actions summary page.
