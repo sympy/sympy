@@ -1616,7 +1616,7 @@ def _discrete_log_with_prime_order(n, a, b, order):
         Vanstone, S. A. (1997).
 
     """
-    from math import log
+    from math import log, sqrt
 
     # Shanks and Pollard rho are O(sqrt(order)) while index calculus is O(exp(2*sqrt(log(n)log(log(n)))))
     # we compare the expected running times to determine the algorithm which is expected to be faster
