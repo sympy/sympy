@@ -181,9 +181,9 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: >
           gh release create ${{ env.release_version }} dist/*
-              --prerelease
-              --title "SymPy ${{ env.release_version }}"
-              --notes "See https://github.com/sympy/sympy/wiki/release-notes-for-${{ env.final_release_version }} for release notes"
+          --prerelease
+          --title "SymPy ${{ env.release_version }}"
+          --notes "See https://github.com/sympy/sympy/wiki/release-notes-for-${{ env.final_release_version }} for release notes"
 
       - name: Create Final GitHub release
         if: ${{ needs.check-final.outputs.is-final == 'true' }}
@@ -191,8 +191,8 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: >
           gh release create ${{ env.release_version }} dist/*
-              --title "SymPy ${{ env.release_version }}"
-              --notes "See https://github.com/sympy/sympy/wiki/release-notes-for-${{ env.final_release_version }} for release notes"
+          --title "SymPy ${{ env.release_version }}"
+          --notes "See https://github.com/sympy/sympy/wiki/release-notes-for-${{ env.final_release_version }} for release notes"
 
   # -------------------- Update the docs repository ---------------- #
 
