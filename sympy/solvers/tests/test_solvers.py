@@ -22,7 +22,7 @@ from sympy.functions.special.error_functions import (erf, erfc, erfcinv, erfinv)
 from sympy.integrals.integrals import Integral
 from sympy.logic.boolalg import (And, Or)
 from sympy.matrices.dense import Matrix
-from sympy.matrices import SparseMatrix
+from sympy.matrices import MatrixSymbol, SparseMatrix
 from sympy.polys.polytools import Poly, groebner
 from sympy.printing.str import sstr
 from sympy.simplify.radsimp import denom
@@ -637,7 +637,7 @@ def test_solve_transcendental():
     # issue 15325
     assert solve(y**(1/x) - z, x) == [log(y)/log(z)]
 
-    # issue 25685 (basic trig identies should give simple solutions)
+    # issue 25685 (basic trig identities should give simple solutions)
     for yi in [cos(2*x),sin(2*x),cos(x - pi/3)]:
         sol = solve([cos(x) - S(3)/5, yi - y])
         assert (sol[0][y] + sol[1][y]).is_Rational, (yi,sol)
@@ -708,7 +708,8 @@ def test_issue_3725():
     assert solve(e, f(x).diff(x)) in [[(2 - x)/f(x)], [-((x - 2)/f(x))]]
 
 
-def test_issue_3870():
+def test_solve_Matrix():
+    # https://github.com/sympy/sympy/issues/3870
     a, b, c, d = symbols('a b c d')
     A = Matrix(2, 2, [a, b, c, d])
     B = Matrix(2, 2, [0, 2, -3, 0])
@@ -725,6 +726,16 @@ def test_issue_3870():
     assert solve([Eq(A*B, B*A)], [a, b, c, d]) == {a: d, b: Rational(-2, 3)*c}
     assert solve([Eq(A*C, C*A)], [a, b, c, d]) == {a: d - c, b: Rational(2, 3)*c}
     assert solve([Eq(A*B, B*A), Eq(A*C, C*A)], [a, b, c, d]) == {a: d, b: 0, c: 0}
+
+    # https://github.com/sympy/sympy/issues/27854
+    m, n = symbols("m n")
+    A = MatrixSymbol("A", m, n)
+    x = MatrixSymbol("x", n, 1)
+    b = MatrixSymbol('b', m, 1)
+    r = A * x - b
+    f = r.T * r
+    grad_f = f.diff(x)
+    raises(ValueError, lambda: solve(grad_f, x))
 
 
 def test_solve_linear():

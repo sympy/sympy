@@ -30,17 +30,29 @@ markers = [
     "tooslow",
 ]
 
+[tool.coverage.report]
+
+exclude_lines = [
+    "pragma: no cover",
+    "if TYPE_CHECKING:",
+    "assert False",
+]
+
 [tool.ruff]
 # Enable Pyflakes `E` and `F` codes by default.
 lint.select = [
+    "B015",  # Useless comparison: a == b rather than a = b.
     "C4",
     "E",
     "F",
+    "FURB",
     "LOG",
     "PIE810",
     "PLE",
     "PLR1736",
+    "PLW0602", # Global statement used but no assignment
     "SIM101",
+    "SLOT",
     "TRY002",
 ]
 
@@ -59,12 +71,17 @@ lint.ignore = [
     "E731",  # Do not assign a `lambda` expression, use a `def`
     "E741",  # Ambiguous variable name: `<VARIABLE>`
     "E743",  # Ambiguous function name: `<FUNCTION>`
+    # Rules from the stable "FURB" set that are ignored. See #27897
+    # Just to be safe, we'll ignore FURB161 until we drop support for Python 3.9
+    "FURB161",  # Use of `bin({existing}).count('1')`
+    "FURB187",  # Use of assignment of `reversed` on list `{name}`
 ]
 
 # Exclude paths currently excluded in the flake8 configuration
 exclude = [
     "sympy/assumptions/*generated.py",
     "sympy/core/*_generated.py",
+    "sympy/core/benchmarks/",
     "sympy/parsing/latex/_antlr/*",
     "sympy/parsing/autolev/_antlr/*",
     "sympy/parsing/autolev/test-examples/*",

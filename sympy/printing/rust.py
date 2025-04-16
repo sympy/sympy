@@ -95,7 +95,7 @@ known_functions = {
     # "": "trunc",
     # "": "fract",
     "Abs": "abs",
-    "sign": "signum",
+    # "": "signum",
     # "": "is_sign_positive",
     # "": "is_sign_negative",
     # "": "mul_add",
@@ -189,11 +189,12 @@ known_functions = {
 # }
 
 # These are the core reserved words in the Rust language. Taken from:
-# http://doc.rust-lang.org/grammar.html#keywords
+# https://doc.rust-lang.org/reference/keywords.html
 
 reserved_words = ['abstract',
-                  'alignof',
                   'as',
+                  'async',
+                  'await',
                   'become',
                   'box',
                   'break',
@@ -201,6 +202,7 @@ reserved_words = ['abstract',
                   'continue',
                   'crate',
                   'do',
+                  'dyn',
                   'else',
                   'enum',
                   'extern',
@@ -208,6 +210,7 @@ reserved_words = ['abstract',
                   'final',
                   'fn',
                   'for',
+                  'gen',
                   'if',
                   'impl',
                   'in',
@@ -218,22 +221,19 @@ reserved_words = ['abstract',
                   'mod',
                   'move',
                   'mut',
-                  'offsetof',
                   'override',
                   'priv',
-                  'proc',
                   'pub',
-                  'pure',
                   'ref',
                   'return',
                   'Self',
                   'self',
-                  'sizeof',
                   'static',
                   'struct',
                   'super',
                   'trait',
                   'true',
+                  'try',
                   'type',
                   'typeof',
                   'unsafe',
@@ -561,6 +561,10 @@ class RustCodePrinter(CodePrinter):
             lhs_code = self._print(lhs)
             rhs_code = self._print(rhs)
             return self._get_statement("%s = %s" % (lhs_code, rhs_code))
+
+    def _print_sign(self, expr):
+        arg = self._print(expr.args[0])
+        return "(if (%s == 0.0) { 0.0 } else { (%s).signum() })" % (arg, arg)
 
     def _cast_to_float(self, expr):
         if not expr.is_number:

@@ -3,7 +3,6 @@
 # This module provides pure Python implementations of some number theory
 # functions that are alternately used from gmpy2 if it is installed.
 
-import sys
 import math
 
 import mpmath.libmp as mlib
@@ -94,26 +93,8 @@ def sqrtrem(x):
     return (int(s), int(r))
 
 
-if sys.version_info[:2] >= (3, 9):
-    # As of Python 3.9 these can take multiple arguments
-    gcd = math.gcd
-    lcm = math.lcm
-
-else:
-    # Until python 3.8 is no longer supported
-    from functools import reduce
-
-
-    def gcd(*args):
-        """gcd of multiple integers."""
-        return reduce(math.gcd, args, 0)
-
-
-    def lcm(*args):
-        """lcm of multiple integers."""
-        if 0 in args:
-            return 0
-        return reduce(lambda x, y: x*y//math.gcd(x, y), args, 1)
+gcd = math.gcd
+lcm = math.lcm
 
 
 def _sign(n):

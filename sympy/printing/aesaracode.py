@@ -1,8 +1,10 @@
 from __future__ import annotations
+import math
 from typing import Any
 
 from sympy.external import import_module
 from sympy.printing.printer import Printer
+from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.iterables import is_sequence
 import sympy
 from functools import partial
@@ -78,7 +80,12 @@ if aesara:
 
 
 class AesaraPrinter(Printer):
-    """ Code printer which creates Aesara symbolic expression graphs.
+    """
+    .. deprecated:: 1.14.
+        The ``Aesara Code printing`` is deprecated.See its documentation for
+        more information. See :ref:`deprecated-aesaraprinter` for details.
+
+    Code printer which creates Aesara symbolic expression graphs.
 
     Parameters
     ==========
@@ -225,7 +232,7 @@ class AesaraPrinter(Printer):
                         for i in (expr.start, expr.stop, expr.step)])
 
     def _print_Pi(self, expr, **kwargs):
-        return 3.141592653589793
+        return math.pi
 
     def _print_Piecewise(self, expr, **kwargs):
         import numpy as np
@@ -346,6 +353,14 @@ def aesara_code(expr, cache=None, **kwargs):
         expression graph.
 
     """
+    sympy_deprecation_warning(
+        """
+        The aesara_code function is deprecated.
+        """,
+        deprecated_since_version="1.14",
+        active_deprecations_target='deprecated-aesaraprinter',
+    )
+
     if not aesara:
         raise ImportError("aesara is required for aesara_code")
 
@@ -491,6 +506,14 @@ def aesara_function(inputs, outputs, scalar=False, *,
     dim_handling
 
     """
+    sympy_deprecation_warning(
+        """
+        The aesara_function function is deprecated.
+        """,
+        deprecated_since_version="1.14",
+        active_deprecations_target='deprecated-aesaraprinter',
+    )
+
     if not aesara:
         raise ImportError("Aesara is required for aesara_function")
 

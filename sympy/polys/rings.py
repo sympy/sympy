@@ -1,12 +1,12 @@
 """Sparse polynomial rings. """
 
 from __future__ import annotations
-from typing import Any
 
 from operator import add, mul, lt, le, gt, ge
 from functools import reduce
 from types import GeneratorType
 
+from sympy.core.cache import cacheit
 from sympy.core.expr import Expr
 from sympy.core.intfunc import igcd
 from sympy.core.symbol import Symbol, symbols as _symbols
@@ -192,7 +192,6 @@ def _parse_symbols(symbols):
 
     raise GeneratorsError("expected a string, Symbol or expression or a non-empty sequence of strings, Symbols or expressions")
 
-_ring_cache: dict[Any, Any] = {}
 
 class PolyRing(DefaultPrinting, IPolys):
     """Multivariate distributed polynomial ring. """
@@ -210,61 +209,58 @@ class PolyRing(DefaultPrinting, IPolys):
         order = OrderOpt.preprocess(order)
 
         _hash_tuple = (cls.__name__, symbols, ngens, domain, order)
-        obj = _ring_cache.get(_hash_tuple)
 
-        if obj is None:
-            if domain.is_Composite and set(symbols) & set(domain.symbols):
-                raise GeneratorsError("polynomial ring and it's ground domain share generators")
+        if domain.is_Composite and set(symbols) & set(domain.symbols):
+            raise GeneratorsError("polynomial ring and it's ground domain share generators")
 
-            obj = object.__new__(cls)
-            obj._hash_tuple = _hash_tuple
-            obj._hash = hash(_hash_tuple)
-            obj.dtype = type("PolyElement", (PolyElement,), {"ring": obj})
-            obj.symbols = symbols
-            obj.ngens = ngens
-            obj.domain = domain
-            obj.order = order
+        obj = object.__new__(cls)
+        obj._hash_tuple = _hash_tuple
+        obj._hash = hash(_hash_tuple)
+        obj.symbols = symbols
+        obj.ngens = ngens
+        obj.domain = domain
+        obj.order = order
 
-            obj.zero_monom = (0,)*ngens
-            obj.gens = obj._gens()
-            obj._gens_set = set(obj.gens)
+        obj.dtype = PolyElement(obj, ()).new
 
-            obj._one = [(obj.zero_monom, domain.one)]
+        obj.zero_monom = (0,)*ngens
+        obj.gens = obj._gens()
+        obj._gens_set = set(obj.gens)
 
-            if ngens:
-                # These expect monomials in at least one variable
-                codegen = MonomialOps(ngens)
-                obj.monomial_mul = codegen.mul()
-                obj.monomial_pow = codegen.pow()
-                obj.monomial_mulpow = codegen.mulpow()
-                obj.monomial_ldiv = codegen.ldiv()
-                obj.monomial_div = codegen.div()
-                obj.monomial_lcm = codegen.lcm()
-                obj.monomial_gcd = codegen.gcd()
-            else:
-                monunit = lambda a, b: ()
-                obj.monomial_mul = monunit
-                obj.monomial_pow = monunit
-                obj.monomial_mulpow = lambda a, b, c: ()
-                obj.monomial_ldiv = monunit
-                obj.monomial_div = monunit
-                obj.monomial_lcm = monunit
-                obj.monomial_gcd = monunit
+        obj._one = [(obj.zero_monom, domain.one)]
+
+        if ngens:
+            # These expect monomials in at least one variable
+            codegen = MonomialOps(ngens)
+            obj.monomial_mul = codegen.mul()
+            obj.monomial_pow = codegen.pow()
+            obj.monomial_mulpow = codegen.mulpow()
+            obj.monomial_ldiv = codegen.ldiv()
+            obj.monomial_div = codegen.div()
+            obj.monomial_lcm = codegen.lcm()
+            obj.monomial_gcd = codegen.gcd()
+        else:
+            monunit = lambda a, b: ()
+            obj.monomial_mul = monunit
+            obj.monomial_pow = monunit
+            obj.monomial_mulpow = lambda a, b, c: ()
+            obj.monomial_ldiv = monunit
+            obj.monomial_div = monunit
+            obj.monomial_lcm = monunit
+            obj.monomial_gcd = monunit
 
 
-            if order is lex:
-                obj.leading_expv = max
-            else:
-                obj.leading_expv = lambda f: max(f, key=order)
+        if order is lex:
+            obj.leading_expv = max
+        else:
+            obj.leading_expv = lambda f: max(f, key=order)
 
-            for symbol, generator in zip(obj.symbols, obj.gens):
-                if isinstance(symbol, Symbol):
-                    name = symbol.name
+        for symbol, generator in zip(obj.symbols, obj.gens):
+            if isinstance(symbol, Symbol):
+                name = symbol.name
 
-                    if not hasattr(obj, name):
-                        setattr(obj, name, generator)
-
-            _ring_cache[_hash_tuple] = obj
+                if not hasattr(obj, name):
+                    setattr(obj, name, generator)
 
         return obj
 
@@ -304,6 +300,13 @@ class PolyRing(DefaultPrinting, IPolys):
         return not self == other
 
     def clone(self, symbols=None, domain=None, order=None):
+        # Need a hashable tuple for cacheit to work
+        if symbols is not None and isinstance(symbols, list):
+            symbols = tuple(symbols)
+        return self._clone(symbols, domain, order)
+
+    @cacheit
+    def _clone(self, symbols, domain, order):
         return self.__class__(symbols or self.symbols, domain or self.domain, order or self.order)
 
     def monomial_basis(self, i):
@@ -314,11 +317,15 @@ class PolyRing(DefaultPrinting, IPolys):
 
     @property
     def zero(self):
-        return self.dtype()
+        return self.dtype([])
 
     @property
     def one(self):
         return self.dtype(self._one)
+
+    def is_element(self, element):
+        """True if ``element`` is an element of this ring. False otherwise. """
+        return isinstance(element, PolyElement) and element.ring == self
 
     def domain_new(self, element, orig_domain=None):
         return self.domain.convert(element, orig_domain)
@@ -423,7 +430,7 @@ class PolyRing(DefaultPrinting, IPolys):
                 i = -i - 1
             else:
                 raise ValueError("invalid generator index: %s" % gen)
-        elif isinstance(gen, self.dtype):
+        elif self.is_element(gen):
             try:
                 i = self.gens.index(gen)
             except ValueError:
@@ -579,8 +586,24 @@ class PolyRing(DefaultPrinting, IPolys):
 class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
     """Element of multivariate distributed polynomial ring. """
 
+    def __init__(self, ring, init):
+        super().__init__(init)
+        self.ring = ring
+        # This check would be too slow to run every time:
+        # self._check()
+
+    def _check(self):
+        assert isinstance(self, PolyElement)
+        assert isinstance(self.ring, PolyRing)
+        dom = self.ring.domain
+        assert isinstance(dom, Domain)
+        for monom, coeff in self.items():
+            assert dom.of_type(coeff)
+            assert len(monom) == self.ring.ngens
+            assert all(isinstance(exp, int) and exp >= 0 for exp in monom)
+
     def new(self, init):
-        return self.__class__(init)
+        return self.__class__(self.ring, init)
 
     def parent(self):
         return self.ring.to_domain()
@@ -695,7 +718,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         """
         if not p2:
             return not p1
-        elif isinstance(p2, PolyElement) and p2.ring == p1.ring:
+        elif p1.ring.is_element(p2):
             return dict.__eq__(p1, p2)
         elif len(p1) > 1:
             return False
@@ -709,7 +732,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         """Approximate equality test for polynomials. """
         ring = p1.ring
 
-        if isinstance(p2, ring.dtype):
+        if ring.is_element(p2):
             if set(p1.keys()) != set(p2.keys()):
                 return False
 
@@ -733,7 +756,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         return (len(self), self.terms())
 
     def _cmp(p1, p2, op):
-        if isinstance(p2, p1.ring.dtype):
+        if p1.ring.is_element(p2):
             return op(p1.sort_key(), p2.sort_key())
         else:
             return NotImplemented
@@ -956,7 +979,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         if not p2:
             return p1.copy()
         ring = p1.ring
-        if isinstance(p2, ring.dtype):
+        if ring.is_element(p2):
             p = p1.copy()
             get = p.get
             zero = ring.domain.zero
@@ -1032,7 +1055,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         if not p2:
             return p1.copy()
         ring = p1.ring
-        if isinstance(p2, ring.dtype):
+        if ring.is_element(p2):
             p = p1.copy()
             get = p.get
             zero = ring.domain.zero
@@ -1092,6 +1115,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
             for expv in p1:
                 p[expv] = -p1[expv]
             p += n
+            # p._check()
             return p
 
     def __mul__(p1, p2):
@@ -1114,7 +1138,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         p = ring.zero
         if not p1 or not p2:
             return p
-        elif isinstance(p2, ring.dtype):
+        elif ring.is_element(p2):
             get = p.get
             zero = ring.domain.zero
             monomial_mul = ring.monomial_mul
@@ -1124,6 +1148,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
                     exp = monomial_mul(exp1, exp2)
                     p[exp] = get(exp, zero) + v1*v2
             p.strip_zero()
+            # p._check()
             return p
         elif isinstance(p2, PolyElement):
             if isinstance(ring.domain, PolynomialRing) and ring.domain.ring == p2.ring:
@@ -1142,6 +1167,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
                 v = v1*p2
                 if v:
                     p[exp1] = v
+            # p._check()
             return p
 
     def __rmul__(p1, p2):
@@ -1188,6 +1214,11 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         x**3 + 3*x**2*y**2 + 3*x*y**4 + y**6
 
         """
+        if not isinstance(n, int):
+            raise TypeError("exponent must be an integer, got %s" % n)
+        elif n < 0:
+            raise ValueError("exponent must be a non-negative integer, got %s" % n)
+
         ring = self.ring
 
         if not n:
@@ -1202,6 +1233,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
                 p[ring.monomial_pow(monom, n)] = coeff
             else:
                 p[ring.monomial_pow(monom, n)] = coeff**n
+            # p._check()
             return p
 
         # For ring series, we need negative and rational exponent support only
@@ -1300,6 +1332,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
             k2 = monomial_mul(k, k)
             p[k2] = get(k2, zero) + v**2
         p.strip_zero()
+        # p._check()
         return p
 
     def __divmod__(p1, p2):
@@ -1307,7 +1340,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
         if not p2:
             raise ZeroDivisionError("polynomial division")
-        elif isinstance(p2, ring.dtype):
+        elif ring.is_element(p2):
             return p1.div(p2)
         elif isinstance(p2, PolyElement):
             if isinstance(ring.domain, PolynomialRing) and ring.domain.ring == p2.ring:
@@ -1325,14 +1358,20 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
             return (p1.quo_ground(p2), p1.rem_ground(p2))
 
     def __rdivmod__(p1, p2):
-        return NotImplemented
+        ring = p1.ring
+        try:
+            p2 = ring.ground_new(p2)
+        except CoercionFailed:
+            return NotImplemented
+        else:
+            return p2.div(p1)
 
     def __mod__(p1, p2):
         ring = p1.ring
 
         if not p2:
             raise ZeroDivisionError("polynomial division")
-        elif isinstance(p2, ring.dtype):
+        elif ring.is_element(p2):
             return p1.rem(p2)
         elif isinstance(p2, PolyElement):
             if isinstance(ring.domain, PolynomialRing) and ring.domain.ring == p2.ring:
@@ -1350,18 +1389,52 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
             return p1.rem_ground(p2)
 
     def __rmod__(p1, p2):
-        return NotImplemented
+        ring = p1.ring
+        try:
+            p2 = ring.ground_new(p2)
+        except CoercionFailed:
+            return NotImplemented
+        else:
+            return p2.rem(p1)
+
+    def __floordiv__(p1, p2):
+        ring = p1.ring
+
+        if not p2:
+            raise ZeroDivisionError("polynomial division")
+        elif ring.is_element(p2):
+            return p1.quo(p2)
+        elif isinstance(p2, PolyElement):
+            if isinstance(ring.domain, PolynomialRing) and ring.domain.ring == p2.ring:
+                pass
+            elif isinstance(p2.ring.domain, PolynomialRing) and p2.ring.domain.ring == ring:
+                return p2.__rtruediv__(p1)
+            else:
+                return NotImplemented
+
+        try:
+            p2 = ring.domain_new(p2)
+        except CoercionFailed:
+            return NotImplemented
+        else:
+            return p1.quo_ground(p2)
+
+    def __rfloordiv__(p1, p2):
+        ring = p1.ring
+        try:
+            p2 = ring.ground_new(p2)
+        except CoercionFailed:
+            return NotImplemented
+        else:
+            return p2.quo(p1)
 
     def __truediv__(p1, p2):
         ring = p1.ring
 
         if not p2:
             raise ZeroDivisionError("polynomial division")
-        elif isinstance(p2, ring.dtype):
-            if p2.is_monomial:
-                return p1*(p2**(-1))
-            else:
-                return p1.quo(p2)
+        elif ring.is_element(p2):
+            return p1.exquo(p2)
         elif isinstance(p2, PolyElement):
             if isinstance(ring.domain, PolynomialRing) and ring.domain.ring == p2.ring:
                 pass
@@ -1378,12 +1451,13 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
             return p1.quo_ground(p2)
 
     def __rtruediv__(p1, p2):
-        return NotImplemented
-
-    __floordiv__ = __truediv__
-    __rfloordiv__ = __rtruediv__
-
-    # TODO: use // (__floordiv__) for exquo()?
+        ring = p1.ring
+        try:
+            p2 = ring.ground_new(p2)
+        except CoercionFailed:
+            return NotImplemented
+        else:
+            return p2.exquo(p1)
 
     def _term_div(self):
         zm = self.ring.zero_monom
@@ -1738,7 +1812,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         """
         if element == 1:
             return self._get_coeff(self.ring.zero_monom)
-        elif isinstance(element, self.ring.dtype):
+        elif self.ring.is_element(element):
             terms = list(element.iterterms())
             if len(terms) == 1:
                 monom, coeff = terms[0]
@@ -1974,6 +2048,8 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
     def primitive(f):
         """Returns content and a primitive polynomial. """
         cont = f.content()
+        if cont == f.ring.domain.zero:
+            return (cont, f)
         return cont, f.quo_ground(cont)
 
     def monic(f):
@@ -2632,7 +2708,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         >>> g = 2*x + 2
         >>> f.prem(g) # first generator is chosen by default if it is not given
         -4*y + 4
-        >>> f.rem(g) # shows the differnce between prem and rem
+        >>> f.rem(g) # shows the difference between prem and rem
         x**2 + x*y
         >>> f.prem(g, y) # generator is given
         0
@@ -2852,7 +2928,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         >>> h = 2*x + 2
         >>> f.pexquo(g)
         2*x
-        >>> f.exquo(g) # shows the differnce between pexquo and exquo
+        >>> f.exquo(g) # shows the difference between pexquo and exquo
         Traceback (most recent call last):
         ...
         ExactQuotientFailed: 2*x + 2*y does not divide x**2 + x*y

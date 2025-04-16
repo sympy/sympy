@@ -883,7 +883,7 @@ def real_gaunt(l_1, l_2, l_3, mu_1, mu_2, mu_3, prec=None):
     requirement that the sum of the `l_i` be even to yield a non-zero value.
     It also obeys the following symmetry rules:
 
-    - zero for `l_1`, `l_2`, `l_3` not fulfiling the condition
+    - zero for `l_1`, `l_2`, `l_3` not fulfilling the condition
       `l_1 \in \{l_{\text{max}}, l_{\text{max}}-2, \ldots, l_{\text{min}}\}`,
       where `l_{\text{max}} = l_2+l_3`,
 
@@ -1022,6 +1022,11 @@ def wigner_d_small(J, beta):
     .. math ::
         \\mathcal{d}_{\\beta} = \\exp\\big( \\frac{i\\beta}{\\hbar} J_y\\big)
 
+    such that
+
+    .. math ::
+        d^{(J)}_{m',m}(\\beta) = \\mathtt{wigner\\_d\\_small(J,beta)[J-mprime,J-m]}
+
     The components are calculated using the general form [Edmonds74]_,
     equation 4.1.15.
 
@@ -1118,6 +1123,8 @@ def wigner_d_small(J, beta):
     """
     M = [J-i for i in range(2*J+1)]
     d = zeros(2*J+1)
+
+    # Mi corresponds to Edmonds' $m'$, and Mj to $m$.
     for i, Mi in enumerate(M):
         for j, Mj in enumerate(M):
 
@@ -1149,13 +1156,14 @@ def wigner_d(J, alpha, beta, gamma):
         An integer, half-integer, or SymPy symbol for the total angular
         momentum of the angular momentum space being rotated.
     alpha, beta, gamma - Real numbers representing the Euler.
-        Angles of rotation about the so-called vertical, line of nodes, and
-        figure axes. See [Edmonds74]_.
+        Angles of rotation about the so-called figure axis, line of nodes,
+        and vertical. See [Edmonds74]_, however note that the symbols alpha
+        and gamma are swapped in this implementation.
 
     Returns
     =======
 
-    A matrix representing the corresponding Euler angle rotation( in the basis
+    A matrix representing the corresponding Euler angle rotation (in the basis
     of eigenvectors of `J_z`).
 
     .. math ::
@@ -1164,8 +1172,15 @@ def wigner_d(J, alpha, beta, gamma):
         \\exp\\big( \\frac{i\\beta}{\\hbar} J_y\\big)
         \\exp\\big( \\frac{i\\gamma}{\\hbar} J_z\\big)
 
+    such that
+
+    .. math ::
+        \\mathcal{D}^{(J)}_{m',m}(\\alpha, \\beta, \\gamma) =
+        \\mathtt{wigner_d(J, alpha, beta, gamma)[J-mprime,J-m]}
+
     The components are calculated using the general form [Edmonds74]_,
-    equation 4.1.12.
+    equation 4.1.12, however note that the angles alpha and gamma are swapped
+    in this implementation.
 
     Examples
     ========
@@ -1192,6 +1207,7 @@ def wigner_d(J, alpha, beta, gamma):
     """
     d = wigner_d_small(J, beta)
     M = [J-i for i in range(2*J+1)]
+    # Mi corresponds to Edmonds' $m'$, and Mj to $m$.
     D = [[exp(I*Mi*alpha)*d[i, j]*exp(I*Mj*gamma)
           for j, Mj in enumerate(M)] for i, Mi in enumerate(M)]
     return ImmutableMatrix(D)

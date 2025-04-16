@@ -1,6 +1,7 @@
 """Base class for all the objects in SymPy"""
 from __future__ import annotations
 
+from collections import Counter
 from collections.abc import Mapping, Iterable
 from itertools import zip_longest
 from functools import cmp_to_key
@@ -1803,16 +1804,7 @@ class Basic(Printable):
 
         if not group:
             return set(results)
-        else:
-            groups = {}
-
-            for result in results:
-                if result in groups:
-                    groups[result] += 1
-                else:
-                    groups[result] = 1
-
-            return groups
+        return dict(Counter(results))
 
     def count(self, query):
         """Count the number of matching subexpressions."""
@@ -2133,11 +2125,8 @@ class Basic(Printable):
         # functions for matching expression node names.
 
         clsname = obj.__class__.__name__
-        postprocessors = set()
-        for i in obj.args:
-            for f in _get_postprocessors(clsname, type(i)):
-                postprocessors.add(f)
-
+        postprocessors = {f for i in obj.args
+                            for f in _get_postprocessors(clsname, type(i))}
         for f in postprocessors:
             obj = f(obj)
 

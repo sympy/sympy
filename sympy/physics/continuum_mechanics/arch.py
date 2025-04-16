@@ -99,7 +99,7 @@ class Arch:
             self._crown_y = solution[c]
 
         else:
-            raise KeyError("please provide crown_x to contruct arch")
+            raise KeyError("please provide crown_x to construct arch")
 
         return parabola_eqn
 
@@ -337,7 +337,7 @@ class Arch:
                 The x coordinate of the position of the hinge
                 - if not provided, defaults to old value
 
-            crown_y: Flaot
+            crown_y: Float
                 The y coordinate of the position of the hinge
                 - if not provided defaults to None
         """
