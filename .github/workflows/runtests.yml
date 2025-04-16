@@ -223,6 +223,11 @@ jobs:
   python-flint:
     needs: [doctests-latest, tests-latest]
 
+    strategy:
+      fail-fast: false
+      matrix:
+        flint-version: ['0.6.0', '0.7.1']
+
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -231,7 +236,7 @@ jobs:
           python-version: '3.13'
       - run: python -m pip install --upgrade pip
       - run: pip install -r requirements-dev.txt
-      - run: pip install python-flint
+      - run: pip install python-flint==${{ matrix.flint-version }}
       - run: pip install .
       - run: pytest -n auto
 
