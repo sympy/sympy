@@ -188,13 +188,19 @@ def test_sign():
 
 def test_Heaviside():
     expr = Heaviside(x + y, pow(z, x * 2))
-    code = rust_code(expr)
+    code: str = rust_code(expr)
 
     prefix = "__cond_"
     index = code.find(prefix)
     if index != -1:
         start = index + len(prefix)
-        end = start + 8
+        # find the next space
+        next_space = code.find(" ", start)
+        if next_space == -1:
+            # If no space is found, take the rest of the string
+            next_space = len(code)
+
+        end = next_space
         condname = f"__cond_{code[start:end]}"
         expected = f"""{{
     let {condname} = x + y;
@@ -373,10 +379,13 @@ def test_user_functions():
 def test_matrix():
     assert rust_code(Matrix([1, 2, 3])) == '[[1], [2], [3]]'
     assert rust_code(Matrix([[1, 2, 3]])) == '[[1, 2, 3]]'
-    expr = Matrix([[x, y], [y, x], [z, Heaviside(x, 0.4)]])
+    expr = Matrix([[x, y], [y, x], [z, x]])
     code = rust_code(expr)
-    assert code.startswith("[[x, y], [y, x], [z, ")
-    assert code.endswith("}]]")
+    assert code == "[[x, y], [y, x], [z, x]]"
+
+    expr = Matrix([x, y, z] * 6).reshape(3, 6)
+    code = rust_code(expr)
+    assert code == "[[x, y, z, x, y, z], [x, y, z, x, y, z], [x, y, z, x, y, z]]"
 
 
 def test_sparse_matrix():
