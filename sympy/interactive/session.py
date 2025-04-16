@@ -464,7 +464,7 @@ def init_session(console_backend=None, pretty_print=True, order=None,
         except ImportError:
             raise RuntimeError("bpython is not available on this system")
             ip = None
-        
+
     if console_backend == ConsoleBackend.PYTHON:
         ip = init_python_session()
         mainloop = ip.interact
