@@ -223,15 +223,21 @@ jobs:
   python-flint:
     needs: [doctests-latest, tests-latest]
 
+    strategy:
+      fail-fast: false
+      matrix:
+        flint-version: ['0.6.0', '0.7.1']
+
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.13'
+          # flint==0.6.0 needs 3.12
+          python-version: '3.12'
       - run: python -m pip install --upgrade pip
       - run: pip install -r requirements-dev.txt
-      - run: pip install python-flint
+      - run: pip install python-flint==${{ matrix.flint-version }}
       - run: pip install .
       - run: pytest -n auto
 

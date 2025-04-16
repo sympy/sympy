@@ -93,7 +93,7 @@ __all__ = [
 # Tested python-flint version. Future versions might work but we will only use
 # them if explicitly requested by SYMPY_GROUND_TYPES=flint.
 #
-_PYTHON_FLINT_VERSION_NEEDED = ["0.6", "0.7", "0.8", "0.9"]
+_PYTHON_FLINT_VERSION_NEEDED = ["0.6", "0.7", "0.8", "0.9", "0.10"]
 
 
 def _flint_version_okay(flint_version):
