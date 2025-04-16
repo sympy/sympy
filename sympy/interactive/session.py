@@ -461,6 +461,8 @@ def init_session(console_backend=None, pretty_print=True, order=None,
     if console_backend == ConsoleBackend.BPYTHON:
         try:
             import bpython
+            import bpython.translations
+            bpython.translations.init()
         except ImportError:
             raise RuntimeError("bpython is not available on this system")
             ip = None
