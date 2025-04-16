@@ -34,15 +34,13 @@ complete source code files.
 from __future__ import annotations
 from functools import reduce
 import operator
-import random
-import string
 from typing import Any
 
 from sympy.codegen.ast import (
     float32, float64, int32,
     real, integer,  bool_
 )
-from sympy.core import S, Rational, Float, Lambda
+from sympy.core import S, Rational, Float, Lambda, Dummy
 from sympy.core.expr import Expr
 from sympy.core.numbers import equal_valued
 from sympy.functions.elementary.integers import ceiling, floor
@@ -469,9 +467,6 @@ class RustCodePrinter(CodePrinter):
     def _print_Idx(self, expr):
         return expr.label.name
 
-    def _print_Dummy(self, expr):
-        return expr.name
-
     def _print_Exp1(self, expr, _type=False):
         return "E"
 
@@ -512,8 +507,8 @@ class RustCodePrinter(CodePrinter):
         default = expr.args[1] if len(expr.args) > 1 else 0.5
         default_printed = self._print(default)
 
-        charset = string.ascii_letters + string.digits
-        condname = f"__cond_{''.join(random.choices(charset, k=8))}"
+        dummy_cond = Dummy('__cond')
+        condname = f"__cond_{dummy_cond.dummy_index}"
         return f"""{{
 let {condname} = {arg0_printed};
 if {condname} > 0.0 {{ 1.0 }} else if {condname} == 0.0 || {condname} == -0.0 {{ {default_printed} }} else {{ 0.0 }}
