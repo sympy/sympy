@@ -321,7 +321,7 @@ if __name__ == '__main__':
           },
           # Set upper bound when making the release branch.
           install_requires=[
-              'mpmath >= 1.1.0',
+              'mpmath >= 1.1.0, < 1.4',
           ],
           py_modules=['isympy'],
           packages=['sympy'] + modules + tests,
