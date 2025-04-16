@@ -26,8 +26,7 @@ def _PrimePredicate_number(expr, assumptions):
             raise TypeError
     except TypeError:
         return False
-    if exact:
-        return isprime(i)
+    return isprime(i)
     # when not exact, we won't give a True or False
     # since the number represents an approximate value
 
