@@ -10,7 +10,7 @@ from sympy.physics.units import (
     G, centimeter, coulomb, day, degree, gram, hbar, hour, inch, joule, kelvin,
     kilogram, kilometer, length, meter, mile, minute, newton, planck,
     planck_length, planck_mass, planck_temperature, planck_time, radians,
-    second, speed_of_light, steradian, time, km, ft, m, foot)
+    second, speed_of_light, steradian, time, km, ft, m)
 from sympy.physics.units.util import convert_to, check_dimensions
 from sympy.testing.pytest import raises
 from sympy.functions.elementary.miscellaneous import sqrt
