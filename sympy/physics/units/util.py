@@ -128,21 +128,6 @@ def convert_to(expr, target_units, unit_system="SI"):
             return unit_system.get_quantity_scale_factor(expr)
         return expr
 
-    if isinstance(expr, Quantity):
-        scale_def = UnitSystem._quantity_scale_factors_global.get(expr)
-
-        if scale_def:
-            scale, ref_unit = scale_def
-
-            depmat = _get_conversion_matrix_for_expr(ref_unit, target_units, unit_system)
-            # If the reference unit is not convertible to the target units, return the original expression
-            if depmat is None:
-                return expr
-
-            if scale != 1:
-                # Add the reference unit to the expression
-                expr = sympify(scale) * ref_unit
-
     depmat = _get_conversion_matrix_for_expr(expr, target_units, unit_system)
     if depmat is None:
         return expr

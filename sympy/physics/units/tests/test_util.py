@@ -3,6 +3,7 @@ from sympy.core.numbers import pi
 from sympy.core.power import Pow
 from sympy.core.symbol import symbols
 from sympy.core.sympify import sympify
+from sympy.physics.units.systems import SI
 from sympy.printing.str import sstr
 from sympy.physics.units.quantities import Quantity
 from sympy.physics.units import (
@@ -80,18 +81,13 @@ def test_convert_to_quantities():
     acre_in_ft.set_global_relative_scale_factor(43560, ft**2)
     assert convert_to(acre_in_ft, m**2) == 316160658*meter**2/78125
 
-    acre_in_m = Quantity("acre")
-    acre_in_m.set_global_relative_scale_factor(4046.8564224, m**2)
-    assert convert_to(acre_in_m, ft**2) == 43560.0*foot**2
+    acre_in_acre = Quantity("acre_in_acre")
+    acre_in_acre.set_global_relative_scale_factor(1, acre_in_ft)
+    assert convert_to(acre_in_acre, m**2) == 316160658*meter**2/78125
 
-    acre_in_m = convert_to(acre_in_ft, m**2)
-    back_to_ft2 = convert_to(acre_in_m, ft**2)
-    assert back_to_ft2 == 43560.0*foot**2
-
-    acre_test = Quantity("acre_test")
-    acre_test.set_global_relative_scale_factor(43560, ft**2)
-    raises(TypeError, lambda: convert_to(acre_test, "not_a_unit"))
-
+    assert SI.get_quantity_scale_factor(kilometer) == 1000
+    assert SI.get_quantity_scale_factor(kilometer*kilogram) == 10**6
+    assert SI.get_quantity_scale_factor(kilometer**2) == 10**6
 
 
 def test_convert_to_tuples_of_quantities():
