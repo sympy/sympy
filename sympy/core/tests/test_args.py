@@ -6,6 +6,7 @@
 
 import os
 import re
+from pathlib import Path
 
 from sympy.assumptions.ask import Q
 from sympy.core.basic import Basic
@@ -47,8 +48,7 @@ def test_all_classes_are_tested():
             if not file.endswith(".py"):
                 continue
 
-            with open(os.path.join(root, file), encoding='utf-8') as f:
-                text = f.read()
+            text = Path(os.path.join(root, file)).read_text(encoding='utf-8')
 
             submodule = module + '.' + file[:-3]
 

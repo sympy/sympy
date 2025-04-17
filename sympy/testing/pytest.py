@@ -261,7 +261,7 @@ def warns(warningcls, *, match='', test_stacklevel=True):
     for w in warnrec:
         # Should always be true due to the filters above
         assert issubclass(w.category, warningcls)
-        if not re.compile(match, re.I).match(str(w.message)):
+        if not re.compile(match, re.IGNORECASE).match(str(w.message)):
             raise Failed(f"Failed: WRONG MESSAGE. A warning with of the correct category ({warningcls.__name__}) was issued, but it did not match the given match regex ({match!r})")
 
     if test_stacklevel:
@@ -297,8 +297,7 @@ calls the deprecated code (the current stacklevel is showing code from
         targets = []
         for w in warnrec:
             targets.append(w.message.active_deprecations_target)
-        with open(active_deprecations_file, encoding="utf-8") as f:
-            text = f.read()
+        text = pathlib.Path(active_deprecations_file).read_text(encoding="utf-8")
         for target in targets:
             if f'({target})=' not in text:
                 raise Failed(f"The active deprecations target {target!r} does not appear to be a valid target in the active-deprecations.md file ({active_deprecations_file}).")
