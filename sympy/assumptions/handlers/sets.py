@@ -748,12 +748,17 @@ def _(mat, assumptions):
 #  transcendentals other than E and Pi, including variables assumed to be transcendental.
 def  _TranscendentalPredicate_number(expr, assumptions):
     # To check if the expression is a rational polynomial evaluated at pi or E, we
-    # must check that the expression contains either pi or E but not both (hence the XOR).
-    if not (expr.has(E) | expr.has(exp)) ^ expr.has(pi):
+    # must check that the expression contains either pi or E but not both.
+    has_E = expr.has(E) | expr.has(exp)
+    has_pi = expr.has(pi)
+    if has_E == has_pi:
         return None
-    new_expr = expr.subs(E, x).subs(pi, x)
-    if new_expr.is_polynomial(x):
-        expr_poly = Poly(new_expr, x)
+    if has_E:
+        expr = expr.subs(E, x)
+    if has_E:
+        expr = expr.subs(pi, x)
+    if expr.is_polynomial(x):
+        expr_poly = Poly(expr, x)
         if all(coeff.is_Rational for coeff in expr_poly.coeffs()):
             return True
 
