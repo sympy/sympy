@@ -145,6 +145,17 @@ def _doubled_int(value):
         return _doubled_int(float(value))
     raise ValueError("expecting integer or half-integer, got %s" % value)
 
+def _check_dj_couple(dj1, dj2, dj3):
+    """check if three angular momenta couple"""
+    if (dj1 + dj2 + dj3) % 2 != 0:
+        return False
+    if dj1 > dj2 + dj3:
+        return False
+    if dj2 > dj1 + dj3:
+        return False
+    if dj3 > dj1 + dj2:
+        return False
+    return True
 
 def wigner_3j(j_1, j_2, j_3, m_1, m_2, m_3):
     r"""
@@ -399,87 +410,6 @@ def _big_delta_coeff(aa, bb, cc, prec=None):
     return ressqrt
 
 
-def racah(aa, bb, cc, dd, ee, ff, prec=None):
-    r"""
-    Calculate the Racah symbol `W(a,b,c,d;e,f)`.
-
-    Parameters
-    ==========
-
-    a, ..., f :
-        Integer or half integer.
-    prec :
-        Precision, default: ``None``. Providing a precision can
-        drastically speed up the calculation.
-
-    Returns
-    =======
-
-    Rational number times the square root of a rational number
-    (if ``prec=None``), or real number if a precision is given.
-
-    Examples
-    ========
-
-    >>> from sympy.physics.wigner import racah
-    >>> racah(3,3,3,3,3,3)
-    -1/14
-
-    Notes
-    =====
-
-    The Racah symbol is related to the Wigner 6j symbol:
-
-    .. math::
-
-       \operatorname{Wigner6j}(j_1,j_2,j_3,j_4,j_5,j_6)
-       =(-1)^{j_1+j_2+j_4+j_5} W(j_1,j_2,j_5,j_4,j_3,j_6)
-
-    Please see the 6j symbol for its much richer symmetries and for
-    additional properties.
-
-    Algorithm
-    =========
-
-    This function uses the algorithm of [Edmonds74]_ to calculate the
-    value of the 6j symbol exactly. Note that the formula contains
-    alternating sums over large factorials and is therefore unsuitable
-    for finite precision arithmetic and only useful for a computer
-    algebra system [Rasch03]_.
-
-    Authors
-    =======
-
-    - Jens Rasch (2009-03-24): initial version
-    """
-    prefac = _big_delta_coeff(aa, bb, ee, prec) * \
-        _big_delta_coeff(cc, dd, ee, prec) * \
-        _big_delta_coeff(aa, cc, ff, prec) * \
-        _big_delta_coeff(bb, dd, ff, prec)
-    if prefac == 0:
-        return S.Zero
-    imin = max(aa + bb + ee, cc + dd + ee, aa + cc + ff, bb + dd + ff)
-    imax = min(aa + bb + cc + dd, aa + dd + ee + ff, bb + cc + ee + ff)
-
-    maxfact = max(imax + 1, aa + bb + cc + dd, aa + dd + ee + ff,
-                 bb + cc + ee + ff)
-    _calc_factlist(maxfact)
-
-    sumres = 0
-    for kk in range(int(imin), int(imax) + 1):
-        den = _Factlist[int(kk - aa - bb - ee)] * \
-            _Factlist[int(kk - cc - dd - ee)] * \
-            _Factlist[int(kk - aa - cc - ff)] * \
-            _Factlist[int(kk - bb - dd - ff)] * \
-            _Factlist[int(aa + bb + cc + dd - kk)] * \
-            _Factlist[int(aa + dd + ee + ff - kk)] * \
-            _Factlist[int(bb + cc + ee + ff - kk)]
-        sumres = sumres + Integer((-1) ** kk * _Factlist[kk + 1]) / den
-
-    res = prefac * sumres * (-1) ** int(aa + bb + cc + dd)
-    return res
-
-
 def wigner_6j(j_1, j_2, j_3, j_4, j_5, j_6, prec=None):
     r"""
     Calculate the Wigner 6j symbol `\operatorname{Wigner6j}(j_1,j_2,j_3,j_4,j_5,j_6)`.
@@ -576,6 +506,14 @@ def wigner_6j(j_1, j_2, j_3, j_4, j_5, j_6, prec=None):
     """
     dj1, dj2, dj3, dj4, dj5, dj6 = map(_doubled_int, map(sympify,
                 [j_1, j_2, j_3, j_4, j_5, j_6]))
+    if not _check_dj_couple(dj1, dj2, dj3):
+        return S.Zero
+    if not _check_dj_couple(dj1, dj5, dj6):
+        return S.Zero
+    if not _check_dj_couple(dj4, dj2, dj6):
+        return S.Zero
+    if not _check_dj_couple(dj4, dj5, dj3):
+        return S.Zero
     j123 = (dj1 + dj2 + dj3) // 2
     j156 = (dj1 + dj5 + dj6) // 2
     j426 = (dj4 + dj2 + dj6) // 2
@@ -609,6 +547,70 @@ def wigner_6j(j_1, j_2, j_3, j_4, j_5, j_6, prec=None):
     if prec:
         result = result.evalf(prec)
     return result
+
+
+def racah(aa, bb, cc, dd, ee, ff, prec=None):
+    r"""
+    Calculate the Racah symbol `W(a,b,c,d;e,f)`.
+
+    Parameters
+    ==========
+
+    a, ..., f :
+        Integer or half integer.
+    prec :
+        Precision, default: ``None``. Providing a precision can
+        drastically speed up the calculation.
+
+    Returns
+    =======
+
+    Rational number times the square root of a rational number
+    (if ``prec=None``), or real number if a precision is given.
+
+    Examples
+    ========
+
+    >>> from sympy.physics.wigner import racah
+    >>> racah(3,3,3,3,3,3)
+    -1/14
+
+    Notes
+    =====
+
+    The Racah symbol is related to the Wigner 6j symbol:
+
+    .. math::
+
+       \operatorname{Wigner6j}(j_1,j_2,j_3,j_4,j_5,j_6)
+       =(-1)^{j_1+j_2+j_4+j_5} W(j_1,j_2,j_5,j_4,j_3,j_6)
+
+    Please see the 6j symbol for its much richer symmetries and for
+    additional properties.
+
+    Algorithm
+    =========
+
+    This function uses the algorithm of [Edmonds74]_ to calculate the
+    value of the 6j symbol exactly. Note that the formula contains
+    alternating sums over large factorials and is therefore unsuitable
+    for finite precision arithmetic and only useful for a computer
+    algebra system [Rasch03]_.
+
+    Authors
+    =======
+
+    - Jens Rasch (2009-03-24): initial version
+    """
+    aa, bb, cc, dd, ee, ff = map(sympify, [aa, bb, cc, dd, ee, ff])
+    res = wigner_6j(aa, bb, ee, dd, cc, ff)
+    if res == 0:
+        return S.Zero
+    phase = (-1) ** int(aa + bb + cc + dd)
+    res = phase * res
+    if prec:
+        res = res.evalf(prec)
+    return res
 
 
 def wigner_9j(j_1, j_2, j_3, j_4, j_5, j_6, j_7, j_8, j_9, prec=None):
@@ -662,17 +664,81 @@ def wigner_9j(j_1, j_2, j_3, j_4, j_5, j_6, j_7, j_8, j_9, prec=None):
     for finite precision arithmetic and only useful for a computer
     algebra system [Rasch03]_.
     """
-    j_1, j_2, j_3, j_4, j_5, j_6, j_7, j_8, j_9 = map(sympify, \
-                [j_1, j_2, j_3, j_4, j_5, j_6, j_7, j_8, j_9])
-    imax = int(min(j_1 + j_9, j_2 + j_6, j_4 + j_8) * 2)
-    imin = imax % 2
+    dj1, dj2, dj3, dj4, dj5, dj6, dj7, dj8, dj9 = \
+        map(_doubled_int, map(sympify,
+            [j_1, j_2, j_3, j_4, j_5, j_6, j_7, j_8, j_9]))
+    j123 = (dj1 + dj2 + dj3) // 2
+    j456 = (dj4 + dj5 + dj6) // 2
+    j789 = (dj7 + dj8 + dj9) // 2
+    j147 = (dj1 + dj4 + dj7) // 2
+    j258 = (dj2 + dj5 + dj8) // 2
+    j369 = (dj3 + dj6 + dj9) // 2
+    pm123 = (dj1 + dj2 - dj3) // 2
+    pm132 = (dj1 + dj3 - dj2) // 2
+    pm231 = (dj2 + dj3 - dj1) // 2
+    pm456 = (dj4 + dj5 - dj6) // 2
+    pm465 = (dj4 + dj6 - dj5) // 2
+    pm564 = (dj5 + dj6 - dj4) // 2
+    pm789 = (dj7 + dj8 - dj9) // 2
+    pm798 = (dj7 + dj9 - dj8) // 2
+    pm897 = (dj8 + dj9 - dj7) // 2
     sumres = 0
-    for kk in range(imin, int(imax) + 1, 2):
-        sumres = sumres + (kk + 1) * \
-            racah(j_1, j_2, j_9, j_6, j_3, kk / 2, prec) * \
-            racah(j_4, j_6, j_8, j_2, j_5, kk / 2, prec) * \
-            racah(j_1, j_4, j_9, j_8, j_7, kk / 2, prec)
-    return sumres
+    dtmin = max(abs(dj2 - dj6), abs(dj4 - dj8), abs(dj1 - dj9))
+    dtmax = min(dj2 + dj6, dj4 + dj8, dj1 + dj9)
+    for dt in range(dtmin, dtmax + 1, 2):
+        j19t = (dj1 + dj9 + dt) // 2
+        j26t = (dj2 + dj6 + dt) // 2
+        j48t = (dj4 + dj8 + dt) // 2
+        abc = dt + 1
+        xmin = max(j123, j369, j26t, j19t)
+        xmax = min(pm123 + j369, pm132 + j26t, pm231 + j19t)
+        suma = 0
+        for x in range(xmin, xmax + 1):
+            ax = comb(x + 1, j19t + 1) * \
+                comb((dj1 + dj9 - dt) // 2, x - j26t) * \
+                comb((dj1 + dt - dj9) // 2, x - j369) * \
+                comb((dt + dj9 - dj1) // 2, x - j123)
+            suma = ax - suma
+        ymin = max(j456, j258, j26t, j48t)
+        ymax = min(pm456 + j26t, pm465 + j258, pm564 + j48t)
+        sumb = 0
+        for y in range(ymin, ymax + 1):
+            by = comb(y + 1, j26t + 1) * \
+                comb((dj2 + dj6 - dt) // 2, y - j48t) * \
+                comb((dt + dj6 - dj2) // 2, y - j258) * \
+                comb((dj2 + dt - dj6) // 2, y - j456)
+            sumb = by - sumb
+        zmin = max(j789, j147, j48t, j19t)
+        zmax = min(pm789 + j19t, pm798 + j48t, pm897 + j147)
+        sumc = 0
+        for z in range(zmin, zmax + 1):
+            cz = comb(z + 1, j48t + 1) * \
+                comb((dj4 + dj8 - dt) // 2, z - j19t) * \
+                comb((dt + dj8 - dj4) // 2, z - j147) * \
+                comb((dj4 + dt - dj8) // 2, z - j789)
+            sumc = cz - sumc
+        abc = abc * suma * sumb * sumc
+        if (xmax + ymax + zmax) % 2 == 1:
+            abc = -abc
+        sumres += abc
+    if sumres == 0:
+        return S.Zero
+    if dtmax % 2 == 1:
+        sumres = -sumres
+    
+    res_den = (dj3 + 1) * (dj6 + 1) * (dj9 + 1) * \
+        (dj7 + 1) * (dj8 + 1) * (dj9 + 1)
+    res_den *= comb(j123 + 1, dj3 + 1) * comb(dj3, pm231) * \
+        comb(j456 + 1, dj6 + 1) * comb(dj6, pm564) * \
+        comb(j789 + 1, dj9 + 1) * comb(dj9, pm897) * \
+        comb(j147 + 1, dj7 + 1) * comb(dj7, (dj4 + dj7 - dj1) // 2) * \
+        comb(j258 + 1, dj8 + 1) * comb(dj8, (dj5 + dj8 - dj2) // 2) * \
+        comb(j369 + 1, dj9 + 1) * comb(dj9, (dj6 + dj9 - dj3) // 2)
+    
+    res = sumres * sqrt(1/Integer(res_den))
+    if prec:
+        res = res.evalf(prec)
+    return res
 
 
 def gaunt(l_1, l_2, l_3, m_1, m_2, m_3, prec=None):
