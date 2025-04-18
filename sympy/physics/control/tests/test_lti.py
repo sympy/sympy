@@ -1326,15 +1326,17 @@ def test_TransferFunctionMatrix_functions():
     assert H_1.elem_poles() == [[[-sqrt(2)/2 - sqrt(2)*I/2, -sqrt(2)/2 + sqrt(2)*I/2, sqrt(2)/2 - sqrt(2)*I/2, sqrt(2)/2 + sqrt(2)*I/2], []],
         [[], [0]]]
     assert H_2.elem_poles() == [[[0, 0], [sqrt(a), -sqrt(a)]]]
-    assert tfm2.elem_poles() == [[[wn*(-zeta + sqrt((zeta - 1)*(zeta + 1))), wn*(-zeta - sqrt((zeta - 1)*(zeta + 1)))], [], [-p/a2]],
-        [[-a0], [wn*(-zeta + sqrt((zeta - 1)*(zeta + 1))), wn*(-zeta - sqrt((zeta - 1)*(zeta + 1)))], [-p/a2]]]
+    assert tfm2.elem_poles() == [
+        [[wn*(-zeta + sqrt(zeta**2 - 1)), wn*(-zeta - sqrt(zeta**2 - 1))], [], [-p/a2]],
+        [[-a0], [wn*(-zeta + sqrt(zeta**2 - 1)), wn*(-zeta - sqrt(zeta**2 - 1))], [-p/a2]],
+    ]
 
     # elem_zeros()
 
     assert H_1.elem_zeros() == [[[-1, 0, 3], []], [[], []]]
     assert H_2.elem_zeros() == [[[0], [0]]]
     assert tfm2.elem_zeros() == [[[], [], [a2*p]],
-        [[-a2/(2*a1) - sqrt(4*a0*a1 + a2**2)/(2*a1), -a2/(2*a1) + sqrt(4*a0*a1 + a2**2)/(2*a1)], [], [a2*p]]]
+        [[(-a2 + sqrt(4*a0*a1 + a2**2))/(2*a1), (-a2 - sqrt(4*a0*a1 + a2**2))/(2*a1)], [], [a2*p]]]
 
     # doit()
 
