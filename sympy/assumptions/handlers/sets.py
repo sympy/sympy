@@ -741,26 +741,6 @@ def _(mat, assumptions):
 
 
 # AlgebraicPredicate
-# Helper function: Determines if a given expression is a polynomial
-# with rational coefficients evaluated at a transcendental number. Such
-# expressions are not algebraic.
-# TODO: Update helper function to account for polynomials evaluated at
-#  transcendentals other than E and Pi, including variables assumed to be transcendental.
-def  _TranscendentalPredicate_number(expr, assumptions):
-    # To check if the expression is a rational polynomial evaluated at pi or E, we
-    # must check that the expression contains either pi or E but not both.
-    has_E = expr.has(E) | expr.has(exp)
-    has_pi = expr.has(pi)
-    if has_E == has_pi:
-        return None
-    if has_E:
-        expr = expr.subs(E, x)
-    if has_E:
-        expr = expr.subs(pi, x)
-    if expr.is_polynomial(x):
-        expr_poly = Poly(expr, x)
-        if all(coeff.is_Rational for coeff in expr_poly.coeffs()):
-            return True
 
 @AlgebraicPredicate.register_many(AlgebraicNumber, GoldenRatio, # type:ignore
     ImaginaryUnit, TribonacciConstant)
@@ -839,6 +819,27 @@ def _(expr, assumptions):
 
 
 # TranscendentalPredicate
+
+# Helper function: Determines if a given expression is a polynomial
+# with rational coefficients evaluated at a transcendental number. Such
+# expressions are not algebraic.
+# TODO: Update helper function to account for polynomials evaluated at
+#  transcendentals other than E and Pi, including variables assumed to be transcendental.
+def  _TranscendentalPredicate_number(expr, assumptions):
+    # To check if the expression is a rational polynomial evaluated at pi or E, we
+    # must check that the expression contains either pi or E but not both.
+    has_E = expr.has(E) or expr.has(exp)
+    has_pi = expr.has(pi)
+    if has_E == has_pi:
+        return None
+    if has_E:
+        expr = expr.subs(E, x)
+    if has_pi:
+        expr = expr.subs(pi, x)
+    if expr.is_polynomial(x):
+        expr_poly = Poly(expr, x)
+        if all(coeff.is_Rational for coeff in expr_poly.coeffs()):
+            return True
 
 @TranscendentalPredicate.register(Expr)
 def _(expr, assumptions):
