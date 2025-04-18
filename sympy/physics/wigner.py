@@ -235,46 +235,44 @@ def wigner_3j(j_1, j_2, j_3, m_1, m_2, m_3):
     - Jens Rasch (2009-03-24): initial version
     """
 
-    j_1, j_2, j_3, m_1, m_2, m_3 = \
+    dj1, dj2, dj3, dm1, dm2, dm3 = \
         map(_doubled_int, map(sympify,
             [j_1, j_2, j_3, m_1, m_2, m_3]))
 
-    if m_1 + m_2 + m_3 != 0:
+    sumj = (dj1 + dj2 + dj3) // 2
+    jm1 = sumj - dj1
+    jm2 = sumj - dj2
+    jm3 = sumj - dj3
+
+    if dm1 + dm2 + dm3 != 0:
         return S.Zero
-    a1 = j_1 + j_2 - j_3
-    if a1 < 0:
+    if jm1 < 0 or jm2 < 0 or jm3 < 0:
         return S.Zero
-    a2 = j_1 - j_2 + j_3
-    if a2 < 0:
+    if (abs(dm1) > dj1) or (abs(dm2) > dj2) or (abs(dm3) > dj3):
         return S.Zero
-    a3 = -j_1 + j_2 + j_3
-    if a3 < 0:
-        return S.Zero
-    if (abs(m_1) > j_1) or (abs(m_2) > j_2) or (abs(m_3) > j_3):
-        return S.Zero
-    if not ((j_1 - m_1) % 2 == 0 and \
-            (j_2 - m_2) % 2 == 0 and \
-            (j_3 - m_3) % 2 == 0):
+    if not ((dj1 - dm1) % 2 == 0 and \
+            (dj2 - dm2) % 2 == 0 and \
+            (dj3 - dm3) % 2 == 0):
         return S.Zero
 
-    sumj = (j_1 + j_2 + j_3) // 2
-    res_num = comb(j_1, sumj - j_2) * comb(j_2, sumj - j_1)
-    res_den = comb(sumj, sumj - j_3) * \
-            comb(j_1, (j_1 - m_1) // 2) * \
-            comb(j_2, (j_2 - m_2) // 2) * \
-            comb(j_3, (j_3 - m_3) // 2)
-    ressqrt = sqrt(Integer(res_num) / Integer(res_den * (sumj + 1)))
+    j1mm1 = (dj1 - dm1) // 2
+    j2mm2 = (dj2 - dm2) // 2
+    j3mm3 = (dj3 - dm3) // 2
+    j1pm1 = (dj1 + dm1) // 2
+    res_num = comb(dj1, jm2) * comb(dj2, jm1)
+    res_den = comb(sumj, jm3) * comb(dj1, j1mm1) * \
+        comb(dj2, j2mm2) * comb(dj3, j3mm3) * (sumj + 1)
+    ressqrt = sqrt(Integer(res_num) / Integer(res_den))
 
-    imin = max(-j_3 + j_1 + m_2, -j_3 + j_2 - m_1, 0)
-    imax = min(j_2 + m_2, j_1 - m_1, j_1 + j_2 - j_3)
+    imin = max(0, j1pm1 - jm2, j2mm2 - jm1)
+    imax = min(jm3, j1pm1, j2mm2)
     sumres = 0
-    for ii in range(int(imin), int(imax) + 1):
-        ti = comb(sumj - j_3, ii) * \
-           comb(sumj - j_1, (j_2 - m_2) // 2 - ii) * \
-           comb(sumj - j_2, (j_1 + m_1) // 2 - ii)
+    for ii in range(imin, imax + 1):
+        ti = comb(jm3, ii) * comb(jm2, j1pm1 - ii) * \
+            comb(jm1, j2mm2 - ii)
         sumres = ti - sumres
 
-    phase = (-1) ** (j_1 + (j_3 + m_3) // 2 + imax)
+    phase = (-1) ** (dj1 + (dj3 + dm3) // 2 + imax)
     res = phase * ressqrt * sumres
     return res
 
@@ -576,18 +574,18 @@ def wigner_6j(j_1, j_2, j_3, j_4, j_5, j_6, prec=None):
     algebra system [Rasch03]_.
 
     """
-    j1, j2, j3, j4, j5, j6 = map(_doubled_int, map(sympify,
+    dj1, dj2, dj3, dj4, dj5, dj6 = map(_doubled_int, map(sympify,
                 [j_1, j_2, j_3, j_4, j_5, j_6]))
-    j123 = (j1 + j2 + j3) // 2
-    j156 = (j1 + j5 + j6) // 2
-    j426 = (j4 + j2 + j6) // 2
-    j453 = (j4 + j5 + j3) // 2
-    jpm123 = (j1 + j2 - j3) // 2
-    jpm132 = (j1 + j3 - j2) // 2
-    jpm231 = (j2 + j3 - j1) // 2
-    jpm156 = (j1 + j5 - j6) // 2
-    jpm426 = (j4 + j2 - j6) // 2
-    jpm453 = (j4 + j5 - j3) // 2
+    j123 = (dj1 + dj2 + dj3) // 2
+    j156 = (dj1 + dj5 + dj6) // 2
+    j426 = (dj4 + dj2 + dj6) // 2
+    j453 = (dj4 + dj5 + dj3) // 2
+    jpm123 = (dj1 + dj2 - dj3) // 2
+    jpm132 = (dj1 + dj3 - dj2) // 2
+    jpm231 = (dj2 + dj3 - dj1) // 2
+    jpm156 = (dj1 + dj5 - dj6) // 2
+    jpm426 = (dj4 + dj2 - dj6) // 2
+    jpm453 = (dj4 + dj5 - dj3) // 2
     sumres = 0
     imin = max(j123, j453, j426, j156)
     imax = max(jpm123 + j453, jpm132 + j426, jpm231 + j156)
@@ -601,11 +599,11 @@ def wigner_6j(j_1, j_2, j_3, j_4, j_5, j_6, prec=None):
         return S.Zero
     if imax % 2 == 1:
         sumres = -sumres
-    res_num = comb(j123 + 1, j1 + 1) * comb(j1, jpm123)
-    res_den = comb(j156 + 1, j1 + 1) * comb(j1, jpm156) * \
-        comb(j426 + 1, j4 + 1) * comb(j4, jpm426) * \
-        comb(j453 + 1, j4 + 1) * comb(j4, jpm453)
-    res_den = res_den * (j4 + 1) ** 2
+    res_num = comb(j123 + 1, dj1 + 1) * comb(dj1, jpm123)
+    res_den = comb(j156 + 1, dj1 + 1) * comb(dj1, jpm156) * \
+        comb(j426 + 1, dj4 + 1) * comb(dj4, jpm426) * \
+        comb(j453 + 1, dj4 + 1) * comb(dj4, jpm453)
+    res_den = res_den * (dj4 + 1) ** 2
     ressqrt = sqrt(Integer(res_num) / Integer(res_den))
     result = ressqrt * sumres
     if prec:
