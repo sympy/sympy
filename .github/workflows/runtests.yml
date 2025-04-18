@@ -174,7 +174,7 @@ jobs:
         run: pip install aesara
 
       # dependencies to install in all Python versions:
-      - run: pip install numpy numexpr matplotlib ipython cython          \
+      - run: pip install numpy numexpr matplotlib bpython ipython cython  \
                          wurlitzer autowrap lxml lark z3-solver pycosat   \
                          jax jaxlib libclang scipy                        \
                          'antlr4-python3-runtime==4.11.*'                 \
