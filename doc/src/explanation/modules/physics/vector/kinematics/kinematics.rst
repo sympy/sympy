@@ -86,11 +86,11 @@ This is also shown in the following example:
 
 .. math::
   {}^{\mathbf{N}}\boldsymbol{\omega}^{\mathbf{A}} &= 0\\
-  {}^{\mathbf{A}}\boldsymbol{\omega}^{\mathbf{B}} &= \dot{q_1} \mathbf{\hat{a}_x}\\
-  {}^{\mathbf{B}}\boldsymbol{\omega}^{\mathbf{C}} &= - \dot{q_2} \mathbf{\hat{b}_z}\\
-  {}^{\mathbf{C}}\boldsymbol{\omega}^{\mathbf{D}} &= \dot{q_3} \mathbf{\hat{c}_y}\\
-  {}^{\mathbf{N}}\boldsymbol{\omega}^{\mathbf{D}} &= \dot{q_1} \mathbf{\hat{a}_x}
-  - \dot{q_2} \mathbf{\hat{b}_z} + \dot{q_3} \mathbf{\hat{c}_y}\\
+  {}^{\mathbf{A}}\boldsymbol{\omega}^{\mathbf{B}} &= \dot{q}_1 \mathbf{\hat{a}_x}\\
+  {}^{\mathbf{B}}\boldsymbol{\omega}^{\mathbf{C}} &= - \dot{q}_2 \mathbf{\hat{b}_z}\\
+  {}^{\mathbf{C}}\boldsymbol{\omega}^{\mathbf{D}} &= \dot{q}_3 \mathbf{\hat{c}_y}\\
+  {}^{\mathbf{N}}\boldsymbol{\omega}^{\mathbf{D}} &= \dot{q}_1 \mathbf{\hat{a}_x}
+  - \dot{q}_2 \mathbf{\hat{b}_z} + \dot{q}_3 \mathbf{\hat{c}_y}\\
 
 Note the signs used in the angular velocity definitions, which are related to
 how the displacement angle is defined in this case.
@@ -109,7 +109,7 @@ Here we can easily write the angular velocity of the body
 :math:`\mathbf{D}` in the reference frame of the first body :math:`\mathbf{A}`:
 
 .. math::
-  {}^\mathbf{A}\boldsymbol{\omega}^\mathbf{D} = w_1 \mathbf{\hat{p_1}} +
+  {}^{\mathbf{A}}\boldsymbol{\omega}^{\mathbf{D}} = w_1 \mathbf{\hat{p_1}} +
   w_2 \mathbf{\hat{p_2}} + w_3 \mathbf{\hat{p_3}}\\
 
 It is very important to remember to only use this with angular velocities; you
@@ -177,8 +177,8 @@ angular velocity is defined in a body fixed frame, becomes quite simple:
   {}^{\mathbf{N}}\boldsymbol{\alpha}^{\mathbf{B}}&=\frac{d w_x}{dt}\mathbf{\hat{b}_x}
   + \frac{d w_y}{dt}\mathbf{\hat{b}_y} + \frac{d w_z}{dt}\mathbf{\hat{b}_z}\\
 
-  {}^{\mathbf{N}}\boldsymbol{\alpha}^{\mathbf{B}}&= \dot{w_x}\mathbf{\hat{b}_x} +
-  \dot{w_y}\mathbf{\hat{b}_y} + \dot{w_z}\mathbf{\hat{b}_z}\\
+  {}^{\mathbf{N}}\boldsymbol{\alpha}^{\mathbf{B}}&= \dot{w}_x\mathbf{\hat{b}_x} +
+  \dot{w}_y\mathbf{\hat{b}_y} + \dot{w}_z\mathbf{\hat{b}_z}\\
 
 Again, this is only for the case in which the angular velocity of the body is
 defined in body fixed components.
@@ -256,12 +256,12 @@ velocity of the body :math:`\mathbf{B}`, both defined in the reference frame
 of the point :math:`P` in :math:`\mathbf{N}` as follows:
 
 .. math::
-  {}^{\mathbf{N}}\mathbf{v}^P &={}^\mathbf{N}\mathbf{v}^S +
-  {}^\mathbf{N}\boldsymbol{\omega}^\mathbf{B} \times \mathbf{r}^{SP}\\
-  {}^{\mathbf{N}}\mathbf{a}^P &={}^\mathbf{N}\mathbf{a}^S +
-  {}^\mathbf{N}\boldsymbol{\alpha}^\mathbf{B} \times \mathbf{r}^{SP} +
-  {}^\mathbf{N}\boldsymbol{\omega}^\mathbf{B} \times
-  (^\mathbf{N}\boldsymbol{\omega}^\mathbf{B} \times \mathbf{r}^{SP})\\
+  {}^{\mathbf{N}}\mathbf{v}^P &={}^{\mathbf{N}}\mathbf{v}^S +
+  {}^{\mathbf{N}}\boldsymbol{\omega}^{\mathbf{B}} \times \mathbf{r}^{SP}\\
+  {}^{\mathbf{N}}\mathbf{a}^P &={}^{\mathbf{N}}\mathbf{a}^S +
+  {}^{\mathbf{N}}\boldsymbol{\alpha}^{\mathbf{B}} \times \mathbf{r}^{SP} +
+  {}^{\mathbf{N}}\boldsymbol{\omega}^{\mathbf{B}} \times
+  (^{\mathbf{N}}\boldsymbol{\omega}^{\mathbf{B}} \times \mathbf{r}^{SP})\\
 
 When only one of the two points is fixed on a body, the 1 point theorem is used
 instead.
@@ -276,15 +276,15 @@ the velocity of the point :math:`P` is known in the frame associated with body
 :math:`P` in :math:`\mathbf{N}` as:
 
 .. math::
-  {}^{\mathbf{N}}\mathbf{v}^P &={}^\mathbf{B}\mathbf{v}^P +
-  {}^\mathbf{N}\mathbf{v}^S +{}^\mathbf{N}\boldsymbol{\omega}^\mathbf{B} \times
+  {}^{\mathbf{N}}\mathbf{v}^P &={}^{\mathbf{B}}\mathbf{v}^P +
+  {}^{\mathbf{N}}\mathbf{v}^S +{}^{\mathbf{N}}\boldsymbol{\omega}^{\mathbf{B}} \times
   \mathbf{r}^{SP}\\
 
-  {}^{\mathbf{N}}\mathbf{a}^P &={}^\mathbf{B}\mathbf{a}^S +
-  {}^\mathbf{N}\mathbf{a}^O +{}^\mathbf{N}\boldsymbol{\alpha}^\mathbf{B}
-  \times \mathbf{r}^{SP} +{}^\mathbf{N}\boldsymbol{\omega}^\mathbf{B} \times
-  (^\mathbf{N}\boldsymbol{\omega}^\mathbf{B} \times \mathbf{r}^{SP}) +
-  2{}^\mathbf{N}\boldsymbol{\omega}^\mathbf{B} \times{}^\mathbf{B} \mathbf{v}^P \\
+  {}^{\mathbf{N}}\mathbf{a}^P &={}^{\mathbf{B}}\mathbf{a}^S +
+  {}^{\mathbf{N}}\mathbf{a}^O +{}^{\mathbf{N}}\boldsymbol{\alpha}^{\mathbf{B}}
+  \times \mathbf{r}^{SP} +{}^{\mathbf{N}}\boldsymbol{\omega}^{\mathbf{B}} \times
+  (^{\mathbf{N}}\boldsymbol{\omega}^{\mathbf{B}} \times \mathbf{r}^{SP}) +
+  2{}^{\mathbf{N}}\boldsymbol{\omega}^{\mathbf{B}} \times{}^{\mathbf{B}} \mathbf{v}^P \\
 
 
 Examples of applications of the 1 point and 2 point theorem follow.
@@ -297,16 +297,16 @@ define the angular velocity of the body :math:`\mathbf{B}` and velocity of the
 point :math:`O`:
 
 .. math::
-  {}^\mathbf{N}\boldsymbol{\omega}^\mathbf{B} &= u_3 \mathbf{\hat{n}_z} = u_3
+  {}^{\mathbf{N}}\boldsymbol{\omega}^{\mathbf{B}} &= u_3 \mathbf{\hat{n}_z} = u_3
   \mathbf{\hat{b}_z}\\
-  {}^\mathbf{N}\mathbf{v}^O &= u_1 \mathbf{\hat{n}_x} + u_2 \mathbf{\hat{n}_y}\\
+  {}^{\mathbf{N}}\mathbf{v}^O &= u_1 \mathbf{\hat{n}_x} + u_2 \mathbf{\hat{n}_y}\\
 
 and accelerations can be written as:
 
 .. math::
-  {}^\mathbf{N}\boldsymbol{\alpha}^\mathbf{B} &= \dot{u_3} \mathbf{\hat{n}_z} =
-  \dot{u_3} \mathbf{\hat{b}_z}\\
-  {}^\mathbf{N}\mathbf{a}^O &= \dot{u_1} \mathbf{\hat{n}_x} + \dot{u_2}
+  {}^{\mathbf{N}}\boldsymbol{\alpha}^{\mathbf{B}} &= \dot{u}_3 \mathbf{\hat{n}_z} =
+  \dot{u}_3 \mathbf{\hat{b}_z}\\
+  {}^{\mathbf{N}}\mathbf{a}^O &= \dot{u}_1 \mathbf{\hat{n}_x} + \dot{u}_2
   \mathbf{\hat{n}_y}\\
 
 We can use the 2 point theorem to calculate the velocity and acceleration of
@@ -314,21 +314,21 @@ point :math:`P` now.
 
 .. math::
   \mathbf{r}^{OP} &= R \mathbf{\hat{b}_x}\\
-  {}^\mathbf{N}\mathbf{v}^P &={}^\mathbf{N}\mathbf{v}^O +
-  {}^\mathbf{N}\boldsymbol{\omega}^\mathbf{B} \times \mathbf{r}^{OP}\\
-  {}^\mathbf{N}\mathbf{v}^P &= u_1 \mathbf{\hat{n}_x} + u_2 \mathbf{\hat{n}_y}
+  {}^{\mathbf{N}}\mathbf{v}^P &={}^{\mathbf{N}}\mathbf{v}^O +
+  {}^{\mathbf{N}}\boldsymbol{\omega}^{\mathbf{B}} \times \mathbf{r}^{OP}\\
+  {}^{\mathbf{N}}\mathbf{v}^P &= u_1 \mathbf{\hat{n}_x} + u_2 \mathbf{\hat{n}_y}
   + u_3 \mathbf{\hat{b}_z} \times R \mathbf{\hat{b}_x} = u_1
   \mathbf{\hat{n}_x} + u_2 \mathbf{\hat{n}_y} + u_3 R \mathbf{\hat{b}_y}\\
-  {}^{\mathbf{N}}\mathbf{a}^P &={}^\mathbf{N}\mathbf{a}^O +
-  {}^\mathbf{N}\boldsymbol{\alpha}^\mathbf{B} \times \mathbf{r}^{OP} +
-  {}^\mathbf{N}\boldsymbol{\omega}^\mathbf{B} \times
-  (^\mathbf{N}\boldsymbol{\omega}^\mathbf{B} \times \mathbf{r}^{OP})\\
-  {}^{\mathbf{N}}\mathbf{a}^P &= \dot{u_1} \mathbf{\hat{n}_x} + \dot{u_2}
-  \mathbf{\hat{n}_y} + \dot{u_3}\mathbf{\hat{b}_z}\times R \mathbf{\hat{b}_x}
+  {}^{\mathbf{N}}\mathbf{a}^P &={}^{\mathbf{N}}\mathbf{a}^O +
+  {}^{\mathbf{N}}\boldsymbol{\alpha}^{\mathbf{B}} \times \mathbf{r}^{OP} +
+  {}^{\mathbf{N}}\boldsymbol{\omega}^{\mathbf{B}} \times
+  (^{\mathbf{N}}\boldsymbol{\omega}^{\mathbf{B}} \times \mathbf{r}^{OP})\\
+  {}^{\mathbf{N}}\mathbf{a}^P &= \dot{u}_1 \mathbf{\hat{n}_x} + \dot{u}_2
+  \mathbf{\hat{n}_y} + \dot{u}_3\mathbf{\hat{b}_z}\times R \mathbf{\hat{b}_x}
   +u_3\mathbf{\hat{b}_z}\times(u_3\mathbf{\hat{b}_z}\times
   R\mathbf{\hat{b}_x})\\
-  {}^{\mathbf{N}}\mathbf{a}^P &= \dot{u_1} \mathbf{\hat{n}_x} + \dot{u_2}
-  \mathbf{\hat{n}_y} + R\dot{u_3}\mathbf{\hat{b}_y} - R u_3^2
+  {}^{\mathbf{N}}\mathbf{a}^P &= \dot{u}_1 \mathbf{\hat{n}_x} + \dot{u}_2
+  \mathbf{\hat{n}_y} + R\dot{u}_3\mathbf{\hat{b}_y} - R u_3^2
   \mathbf{\hat{b}_x}\\
 
 .. raw:: html
@@ -342,16 +342,16 @@ point :math:`O`'s velocity is zero in :math:`\mathbf{N}`.
 .. math::
   \mathbf{r}^{OQ} &= l \mathbf{\hat{b}_x}\\
   \mathbf{r}^{QP} &= l \mathbf{\hat{c}_x}\\
-  {}^\mathbf{N}\boldsymbol{\omega}^\mathbf{B} &= u_1 \mathbf{\hat{b}_z}\\
-  {}^\mathbf{N}\boldsymbol{\omega}^\mathbf{C} &= u_2 \mathbf{\hat{c}_z}\\
-  {}^\mathbf{N}\mathbf{v}^Q &={}^\mathbf{N}\mathbf{v}^O +
-  {}^\mathbf{N}\boldsymbol{\omega}^\mathbf{B} \times \mathbf{r}^{OQ}\\
-  {}^\mathbf{N}\mathbf{v}^Q &= u_1 l \mathbf{\hat{b}_y}\\
-  {}^\mathbf{N}\mathbf{v}^P &={}^\mathbf{N}\mathbf{v}^Q +
-  {}^\mathbf{N}\boldsymbol{\omega}^\mathbf{C} \times \mathbf{r}^{QP}\\
-  {}^\mathbf{N}\mathbf{v}^Q &= u_1 l \mathbf{\hat{b}_y} +u_2 \mathbf{\hat{c}_z}
+  {}^{\mathbf{N}}\boldsymbol{\omega}^{\mathbf{B}} &= u_1 \mathbf{\hat{b}_z}\\
+  {}^{\mathbf{N}}\boldsymbol{\omega}^{\mathbf{C}} &= u_2 \mathbf{\hat{c}_z}\\
+  {}^{\mathbf{N}}\mathbf{v}^Q &={}^{\mathbf{N}}\mathbf{v}^O +
+  {}^{\mathbf{N}}\boldsymbol{\omega}^{\mathbf{B}} \times \mathbf{r}^{OQ}\\
+  {}^{\mathbf{N}}\mathbf{v}^Q &= u_1 l \mathbf{\hat{b}_y}\\
+  {}^{\mathbf{N}}\mathbf{v}^P &={}^{\mathbf{N}}\mathbf{v}^Q +
+  {}^{\mathbf{N}}\boldsymbol{\omega}^{\mathbf{C}} \times \mathbf{r}^{QP}\\
+  {}^{\mathbf{N}}\mathbf{v}^Q &= u_1 l \mathbf{\hat{b}_y} +u_2 \mathbf{\hat{c}_z}
   \times l \mathbf{\hat{c}_x}\\
-  {}^\mathbf{N}\mathbf{v}^Q &= u_1 l\mathbf{\hat{b}_y}+u_2 l\mathbf{\hat{c}_y}\\
+  {}^{\mathbf{N}}\mathbf{v}^Q &= u_1 l\mathbf{\hat{b}_y}+u_2 l\mathbf{\hat{c}_y}\\
 
 .. raw:: html
    :file: kin_4.svg
@@ -363,21 +363,21 @@ the two point theorem to find the velocity of the center point of the ring,
 the ring.
 
 .. math::
-  {}^\mathbf{N}\boldsymbol{\omega}^\mathbf{C} &= u_1 \mathbf{\hat{n}_x}\\
+  {}^{\mathbf{N}}\boldsymbol{\omega}^{\mathbf{C}} &= u_1 \mathbf{\hat{n}_x}\\
   \mathbf{r}^{OQ} &= -l \mathbf{\hat{c}_z}\\
-  {}^\mathbf{N}\mathbf{v}^Q &= u_1 l \mathbf{\hat{c}_y}\\
-  \mathbf{r}^{QP} &= R(cos(q_2) \mathbf{\hat{c}_x}
-  + sin(q_2) \mathbf{\hat{c}_y} )\\
-  {}^\mathbf{C}\mathbf{v}^P &= R u_2 (-sin(q_2) \mathbf{\hat{c}_x}
-  + cos(q_2) \mathbf{\hat{c}_y} )\\
-  {}^\mathbf{N}\mathbf{v}^P &={}^\mathbf{C}\mathbf{v}^P +^\mathbf{N}\mathbf{v}^Q
-  +{}^\mathbf{N}\boldsymbol{\omega}^\mathbf{C} \times \mathbf{r}^{QP}\\
-  {}^\mathbf{N}\mathbf{v}^P &= R u_2 (-sin(q_2) \mathbf{\hat{c}_x}
-  + cos(q_2) \mathbf{\hat{c}_y} ) + u_1 l \mathbf{\hat{c}_y} +
-  u_1 \mathbf{\hat{c}_x} \times R(cos(q_2) \mathbf{\hat{c}_x}
-  + sin(q_2) \mathbf{\hat{c}_y}\\
-  {}^\mathbf{N}\mathbf{v}^P &= - R u_2 sin(q_2) \mathbf{\hat{c}_x}
-  + (R u_2 cos(q_2)+u_1 l)\mathbf{\hat{c}_y} + R u_1 sin(q_2)
+  {}^{\mathbf{N}}\mathbf{v}^Q &= u_1 l \mathbf{\hat{c}_y}\\
+  \mathbf{r}^{QP} &= R(\cos(q_2) \mathbf{\hat{c}_x}
+  + \sin(q_2) \mathbf{\hat{c}_y} )\\
+  {}^{\mathbf{C}}\mathbf{v}^P &= R u_2 (-\sin(q_2) \mathbf{\hat{c}_x}
+  + \cos(q_2) \mathbf{\hat{c}_y} )\\
+  {}^{\mathbf{N}}\mathbf{v}^P &={}^{\mathbf{C}}\mathbf{v}^P +^{\mathbf{N}}\mathbf{v}^Q
+  +{}^{\mathbf{N}}\boldsymbol{\omega}^{\mathbf{C}} \times \mathbf{r}^{QP}\\
+  {}^{\mathbf{N}}\mathbf{v}^P &= R u_2 (-\sin(q_2) \mathbf{\hat{c}_x}
+  + \cos(q_2) \mathbf{\hat{c}_y} ) + u_1 l \mathbf{\hat{c}_y} +
+  u_1 \mathbf{\hat{c}_x} \times R(\cos(q_2) \mathbf{\hat{c}_x}
+  + \sin(q_2) \mathbf{\hat{c}_y}\\
+  {}^{\mathbf{N}}\mathbf{v}^P &= - R u_2 \sin(q_2) \mathbf{\hat{c}_x}
+  + (R u_2 \cos(q_2)+u_1 l)\mathbf{\hat{c}_y} + R u_1 \sin(q_2)
   \mathbf{\hat{c}_z}\\
 
 A final topic in the description of velocities of points is that of rolling, or
