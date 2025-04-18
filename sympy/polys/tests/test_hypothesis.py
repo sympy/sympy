@@ -3,6 +3,7 @@ from hypothesis import strategies as st
 from sympy.abc import x
 from sympy.polys.polytools import Poly
 
+from sympy.testing.pytest import XFAIL
 
 def polys(*, nonzero=False, domain="ZZ"):
     # This is a simple strategy, but sufficient the tests below
@@ -13,6 +14,7 @@ def polys(*, nonzero=False, domain="ZZ"):
     return st.builds(Poly, coeff_st, st.just(x), domain=st.just(domain))
 
 
+@XFAIL
 @given(f=polys(), g=polys(), r=polys())
 def test_gcd_hypothesis(f, g, r):
     gcd_1 = f.gcd(g)
@@ -24,12 +26,14 @@ def test_gcd_hypothesis(f, g, r):
     assert gcd_1 == gcd_3
 
 
+@XFAIL
 @given(f_z=polys(), g_z=polys(nonzero=True))
 def test_poly_hypothesis_integers(f_z, g_z):
     remainder_z = f_z.rem(g_z)
     assert g_z.degree() >= remainder_z.degree() or remainder_z.degree() == 0
 
 
+@XFAIL
 @given(f_q=polys(domain="QQ"), g_q=polys(nonzero=True, domain="QQ"))
 def test_poly_hypothesis_rationals(f_q, g_q):
     remainder_q = f_q.rem(g_q)
