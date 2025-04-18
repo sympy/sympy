@@ -439,3 +439,12 @@ def test_issue_20286():
     k = Dummy('k', integer = True)
     eq = Sum(Piecewise((-p**k*(1 - p)**(-k + n)*log(p**k*(1 - p)**(-k + n)*binomial(n, k))*binomial(n, k), (k >= 0) & (k <= n)), (nan, True)), (k, 0, n))
     assert eq.dummy_eq(H(B))
+
+def test_issue_20669():
+    from sympy import N
+    X1 = Poisson("X1", 5.2)
+    X2 = Poisson("X2", 5.2)
+    X3 = Poisson("X3", 5)
+    assert N(variance(X1 + X2), 7) == N(variance(X1) + variance(X2), 7)
+    assert N(E(X1*X2), 7) == N(E(X1) * E(X2), 7)
+    assert N(E(X1*X3), 7) == N(E(X1) * E(X3), 7)
