@@ -588,3 +588,105 @@ class DimensionSystem(Basic, _QuantityMapper):
         # dimensions
         # in vector language: the set of vectors do not form a basis
         return self.inv_can_transf_matrix.is_square
+
+    def buckingham_pi_theorem(self, *list_of_derived_quantities):
+        r"""
+
+        Here, ``list_of_derived_quantities`` is the input of derived quantities in the form of objects of ``Dimension`` class which have all the information about
+        the dimensions of the quantity in the ``DimensionSystem``. This function is designed to take in a set of physical variables (all essentially dimensionful) and returns
+        a matrix of the possible exponents, as guided by the Buckingham's pi theorem (we can raise the list of quantities to the list of exponents to get the dimensionless
+        numbers characterising the physical system of interest). Mathematically, the columns of this output matrix represent the null space of the matrix formed by the
+        exponents to which the base dimensions are raised to which constitute the input physical variables.
+
+        Example
+        ========
+
+        As an instance, consider an RLC circuit with resistance `R`, inductance `L` and capacitance `C` connected to a constant
+        voltage source `V_{amp}`, where current `I(t)` is given by the equation
+
+        .. math::
+            \frac{d^2 I}{d t^2} + \frac{R}{L} \frac{d I(t)}{d t} + \frac{1}{LC}I(t) = 0
+
+        In the above equation, the solution could admit a current of amplitude `I_{amp}` and a scale of angular frequency `\omega`. Let's take for this example the MKS
+        convention or the MKS system, where `[M], [L], [I]`, and `[T]` refer to the dimensions of the base quantities mass, length, current and time respectively.
+        One can verify that, in dimensional notation, `[R] = \frac{ML^2}{T^3I^2}`, `[L] = \frac{M L^2}{T^2 I^2}`, `[C] = \frac{T^4 I^2}{M L^2}`, `[V_{amp}] = \frac{M L^2}{I T^3}`,
+        `[I_{amp}] = I` and `[\omega] = T^{-1}`. What this function does is prescribed by the Buckingham's pi representation; it forms the following matrix representation
+        of the dimensional system by taking the logarithm of the variables we just discussed.
+
+        .. math::
+            \begin{bmatrix} log([R]) \\ log([L]) \\ log([C]) \\ log([V_{amp}]) \\ log([I_{amp}]) \\ log([\omega]) \end{bmatrix} = A_{exp} \begin{bmatrix} log([M]) \\ log([L]) \\ log([I]) \\ log([T]) \end{bmatrix}
+
+        where `A_{exp}` is the following exponent matrix.
+
+        .. math::
+            A_{exp} = \begin{bmatrix} 1 & 2 & -2 & -3 \\ 1 & 2 & -2 & -2 \\ -1 & -2 & 2 & 4 \\ 1 & 2 & -1 & -3 \\ 0 & 0 & 1 & 0 \\ 0 & 0 & 0 & -1 \end{bmatrix}
+
+        The function computes the nullspace of the matrix `A_{exp}^T` as is exhibited in the following code fragment.
+
+        >>> from sympy.physics.units import length, mass, time, current
+        >>> from sympy.physics.units.systems.si import dimsys_SI
+        >>> from sympy import pprint
+        >>> resistance = mass*length**2*time**(-3)*current**(-2)
+        >>> inductance = mass*length**2*time**(-2)*current**(-2)
+        >>> capacitance = mass**(-1)*length**(-2)*time**4*current**2
+        >>> voltage_amp = mass*length**2*time**(-3)*current**(-1)
+        >>> current_amp = current
+        >>> omega = time**(-1)
+        >>> pprint(dimsys_SI.buckingham_pi_theorem(resistance, inductance, capacitance, voltage_amp, current_amp, omega))
+        [2 ]  [1 ]  [-1]
+        [  ]  [  ]  [  ]
+        [-1]  [0 ]  [1 ]
+        [  ]  [  ]  [  ]
+        [1 ]  [0 ]  [0 ]
+        [[  ], [  ], [  ]]
+        [0 ]  [-1]  [0 ]
+        [  ]  [  ]  [  ]
+        [0 ]  [1 ]  [0 ]
+        [  ]  [  ]  [  ]
+        [0 ]  [0 ]  [1 ]
+
+        Following from the Buckingham-pi theorem, one can take the matrix product of the transpose of the matrix we just got with the
+        column matrix of the original physical quantities `(log([R]), log([L]), log([C]), log([V_{amp}]), log([I_{amp}]), log([\omega]))^T`
+        to obtain the three dimensionless variables `\langle \frac{R^2 C}{L}, \frac{I_{amp} R}{V_{amp}}, \frac{\omega L}{R}\rangle`. We can
+        test the non-dimensionality of these variables in this framework by the function ``verify_dimensionless_numbers()`` defined a little
+        later. But otherwise too, the physical quantity `\frac{I_{amp} R}{V_{amp}}` is reminiscent of what we expect due to Ohm's law,
+        `\frac{\omega L}{R}` is reminiscent from what is known to be attenuation rate and `\frac{C R^2}{L} = 4 \zeta^2` for a
+        series RLC circuit where `\zeta` is known as the damping factor.
+
+
+        References
+        ==========
+
+        .. [1] https://en.wikipedia.org/wiki/Buckingham_%CF%80_theorem
+        .. [2] https://en.wikipedia.org/wiki/RLC_circuit
+        """
+        number_of_quantities = len(list_of_derived_quantities)
+        exponent_matrix = []
+        # We extract the exponent matrix from the dimensional dependencies of the quantities
+        for m in range(number_of_quantities):
+            element_for_quantity = [0 for k in range(len(self.base_dims))]
+            dimensions = self.get_dimensional_dependencies(list_of_derived_quantities[m])
+            for base_dims in dimensions:
+                element_for_quantity[self.base_dims.index(base_dims)] = dimensions[base_dims]
+            exponent_matrix.append(element_for_quantity)
+        # Next we obtain the null space of the exponent matrix
+        exponent_matrix = Matrix(exponent_matrix)
+        return exponent_matrix.T.nullspace(simplify=True)
+
+    def verify_dimensionless_numbers(self, *list_of_derived_quantities):
+        """
+
+        Give the objects of class ``Dimension`` that represent the dimensionless quantities, and essentially all
+        of them are desired to be of ``Dimension(1)``. To be preferably used only for test purposes, please refer to
+        /units/test/test_dimensionless.py
+
+        """
+        exponents = self.buckingham_pi_theorem(*list_of_derived_quantities)
+        null_space_dims = len(exponents)
+        number_of_quantities = len(list_of_derived_quantities)
+        set_of_dimless_nums = [Dimension(1) for k in range(null_space_dims)]
+        # Here we take the dot product of the nullspace with the derived quantities
+        for k in range(null_space_dims):
+            for m in range(number_of_quantities):
+                set_of_dimless_nums[k] = set_of_dimless_nums[k]*(list_of_derived_quantities[m]**exponents[k][m])
+        return set_of_dimless_nums
