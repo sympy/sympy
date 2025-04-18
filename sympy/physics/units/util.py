@@ -3,11 +3,12 @@ Several methods to simplify expressions involving unit objects.
 """
 from functools import reduce
 from collections.abc import Iterable
-from typing import Optional
+from typing import Any, Dict, Optional, Union
 
 from sympy import default_sort_key
 from sympy.core.add import Add
 from sympy.core.containers import Tuple
+from sympy.core.expr import Expr
 from sympy.core.mul import Mul
 from sympy.core.power import Pow
 from sympy.core.sorting import ordered
@@ -19,6 +20,7 @@ from sympy.physics.units.prefixes import Prefix
 from sympy.physics.units.quantities import Quantity
 from sympy.physics.units.unitsystem import UnitSystem
 from sympy.utilities.iterables import sift
+from sympy.physics.units.definitions import dimension_definitions
 
 
 def _get_conversion_matrix_for_expr(expr, target_units, unit_system):
@@ -195,15 +197,77 @@ def quantity_simplify(expr, across_dimensions: bool=False, unit_system=None):
                 target_dimension = ds_dim
                 break
 
-        if target_dimension is None:
-            # if we can't find a target dimension, we can't do anything. unsure how to handle this case.
-            return expr
+        if target_dimension is not None:
+            target_unit = unit_system.derived_units.get(target_dimension)
+        elif target_dimension is None:
+            # There is no single regular dimension in the unit system that matches
+            # the dimensions of the expression, so we need to build one out of 2
+            # or more existing dimensions.
+            # We'll do this by brute force combining the units in the unit system, flipping them around,
+            # and finding the first that matches the expression's dimensionality.
 
-        target_unit = unit_system.derived_units.get(target_dimension)
+            # TODO: To be true to the spirit of "simplification", we need to find all possible combinations
+            # and then find the one that is "shortest".
+            target_dimension = __find_compound_dimension(dimension_system, dim_deps)
+            # Dimensions are special. When you do math with them, you get a Dimension object, not a normal sympy expression. The sympy expression is actually in the Dimension's symbol: `name`.
+
+            # replace each dimension in target_dimension with derived unit from the unit system
+            dim_map = { symbol: unit_system.derived_units.get(vars(dimension_definitions)[symbol.name]) for symbol in target_dimension.free_symbols }
+            print(dim_map)
+            target_unit = target_dimension.name.subs(dim_map)
+            assert not isinstance(target_unit, Dimension)
+
+            # find Adds that we can safely add together because they have the same dimensions
+            adds = expr.atoms(Add)
+            for add in adds:
+                add_dim_deps = dimension_system.get_dimensional_dependencies(unit_system.get_dimensional_expr(add))
+                if all(is_dimensionally_equivalent(add_dim_deps, arg, unit_system) for arg in add.args):
+                    units = [unit for unit in unit_system.get_units_non_prefixed() if is_dimensionally_equivalent(unit, add_dim_deps, unit_system)]
+                    if units:
+                        new_add = add.xreplace({u: 1 for u in add.atoms(Quantity)}) * units[0]
+                        expr = expr.xreplace({add: new_add})
+                        print("REPLACED", add, "with", new_add)
+
         if target_unit:
             expr = convert_to(expr, target_unit, unit_system)
 
     return expr
+
+
+def __find_compound_dimension(dimension_system: DimensionSystem, dimensional_dependencies) -> Dimension:
+    # This can and should be switched out for something more intelligent.
+
+    all_dimensions = dimension_system.base_dims + dimension_system.derived_dims
+    # test all reciprocals of all dimensions
+    for dim in all_dimensions:
+        new_dim = 1 / dim
+        new_dim_deps = dimension_system.get_dimensional_dependencies(new_dim)
+        if new_dim_deps == dimensional_dependencies:
+            print("FOUND COMPATIBLE: ", new_dim)
+            return new_dim
+
+    # test all 2 dim combinations of all dimensions
+    for dA in all_dimensions:
+        for dB in all_dimensions:
+            if dA == dB:
+                continue
+            new_dim = dA * dB
+            new_dim_deps = dimension_system.get_dimensional_dependencies(new_dim)
+            if new_dim_deps == dimensional_dependencies:
+                print("FOUND COMPATIBLE: ", new_dim)
+                return new_dim
+
+            new_dim = dA / dB
+            new_dim_deps = dimension_system.get_dimensional_dependencies(new_dim)
+            if new_dim_deps == dimensional_dependencies:
+                print("FOUND COMPATIBLE: ", new_dim)
+                return new_dim
+
+            new_dim = dB / dA
+            new_dim_deps = dimension_system.get_dimensional_dependencies(new_dim)
+            if new_dim_deps == dimensional_dependencies:
+                print("FOUND COMPATIBLE: ", new_dim)
+                return new_dim
 
 
 def check_dimensions(expr, unit_system="SI"):
@@ -263,3 +327,23 @@ def check_dimensions(expr, unit_system="SI"):
                 i for i in m.args if not i.is_number])
 
     return expr.xreplace(reps)
+
+
+def is_dimensionally_equivalent(A: Union[Expr, Dimension, Dict[Expr, int]], B: Union[Expr, Dimension, Dict[Expr, int]], unit_system):
+    """Return True if A and B are dimensionally equivalent."""
+
+    unit_system = UnitSystem.get_unit_system(unit_system)
+    dimension_system: DimensionSystem = unit_system.get_dimension_system()
+
+    def _get_dim_deps(expr: Union[Expr, Dimension, Dict[Expr, int]]) -> Dict[Expr, int]:
+        if isinstance(expr, dict):
+            return expr
+        if isinstance(expr, Dimension):
+            return dimension_system.get_dimensional_dependencies(expr)
+        dim_expr = unit_system.get_dimensional_expr(expr)
+        return dimension_system.get_dimensional_dependencies(dim_expr)
+
+    dim_depsA = _get_dim_deps(A)
+    dim_depsB = _get_dim_deps(B)
+
+    return dim_depsA == dim_depsB
