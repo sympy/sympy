@@ -590,7 +590,8 @@ class frac(DefinedFunction):
         return self.args[0].is_extended_real
 
     def _eval_is_imaginary(self):
-        return self.args[0].is_imaginary
+        if self.args[0].is_imaginary:
+            return True
 
     def _eval_is_integer(self):
         return self.args[0].is_integer

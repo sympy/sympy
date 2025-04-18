@@ -21,7 +21,7 @@ def test_symbol_unset():
     x = Symbol('x', real=True, integer=True)
     assert x.is_real is True
     assert x.is_integer is True
-    assert x.is_imaginary is False
+    assert x.is_imaginary is None
     assert x.is_noninteger is False
     assert x.is_number is False
 
@@ -37,7 +37,7 @@ def test_zero():
     assert z.is_complex is True
     assert z.is_noninteger is False
     assert z.is_irrational is False
-    assert z.is_imaginary is False
+    assert z.is_imaginary is True
     assert z.is_positive is False
     assert z.is_negative is False
     assert z.is_nonpositive is True
@@ -390,14 +390,14 @@ def test_symbol_extended_real_false():
 def test_symbol_imaginary():
     a = Symbol('a', imaginary=True)
 
-    assert a.is_real is False
-    assert a.is_integer is False
+    assert a.is_real is None
+    assert a.is_integer is None
     assert a.is_negative is False
     assert a.is_positive is False
-    assert a.is_nonnegative is False
-    assert a.is_nonpositive is False
-    assert a.is_zero is False
-    assert a.is_nonzero is False  # since nonzero -> real
+    assert a.is_nonnegative is None
+    assert a.is_nonpositive is None
+    assert a.is_zero is None
+    assert a.is_nonzero is None
 
 
 def test_symbol_zero():
@@ -1074,22 +1074,21 @@ def test_issue_4149():
     assert (3 + I).is_complex
     assert (3 + I).is_imaginary is False
     assert (3*I + S.Pi*I).is_imaginary
-    # as Zero.is_imaginary is False, see issue 7649
     y = Symbol('y', real=True)
-    assert (3*I + S.Pi*I + y*I).is_imaginary is None
+    assert (3*I + S.Pi*I + y*I).is_imaginary is True
     p = Symbol('p', positive=True)
-    assert (3*I + S.Pi*I + p*I).is_imaginary
+    assert (3*I + S.Pi*I + p*I).is_imaginary is True
     n = Symbol('n', negative=True)
-    assert (-3*I - S.Pi*I + n*I).is_imaginary
+    assert (-3*I - S.Pi*I + n*I).is_imaginary is True
 
     i = Symbol('i', imaginary=True)
     assert ([(i**a).is_imaginary for a in range(4)] ==
-            [False, True, False, True])
+            [False, True, None, True])
 
     # tests from the PR #7887:
     e = S("-sqrt(3)*I/2 + 0.866025403784439*I")
-    assert e.is_real is False
-    assert e.is_imaginary
+    assert e.is_real is None
+    assert e.is_imaginary is True
 
 
 def test_issue_2920():
@@ -1180,7 +1179,7 @@ def test_issue_10302():
     assert (a + r*I).is_zero is None
     assert (a + I).is_imaginary
     assert (a + x + I).is_imaginary is None
-    assert (a + r*I + I).is_imaginary is None
+    assert (a + r*I + I).is_imaginary is True
 
 
 def test_complex_reciprocal_imaginary():
@@ -1301,7 +1300,7 @@ def test_common_assumptions():
         ) == {'algebraic': True, 'irrational': False, 'hermitian':
         True, 'extended_real': True, 'real': True, 'extended_negative':
         False, 'extended_nonnegative': True, 'integer': True,
-        'rational': True, 'imaginary': False, 'complex': True,
+        'rational': True, 'complex': True,
         'commutative': True,'noninteger': False, 'composite': False,
         'infinite': False, 'nonnegative': True, 'finite': True,
         'transcendental': False,'negative': False}

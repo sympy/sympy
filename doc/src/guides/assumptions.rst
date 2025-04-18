@@ -744,7 +744,6 @@ predicates that will help in further manipulations:
      'extended_real': True,
      'finite': True,
      'hermitian': True,
-     'imaginary': False,
      'infinite': False,
      'integer': True,
      'irrational': False,
