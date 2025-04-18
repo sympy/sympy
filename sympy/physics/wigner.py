@@ -69,6 +69,7 @@ from sympy.functions.special.spherical_harmonics import Ynm
 from sympy.matrices.dense import zeros
 from sympy.matrices.immutable import ImmutableMatrix
 from sympy.utilities.misc import as_int
+from math import comb
 
 # This list of precomputed factorials is needed to massively
 # accelerate future calculations of the various coefficients
@@ -124,6 +125,24 @@ def _int_or_halfint(value):
             return value.p  # an int
     elif isinstance(value, Float):
         return _int_or_halfint(float(value))
+    raise ValueError("expecting integer or half-integer, got %s" % value)
+
+def _doubled_int(value):
+    """return double of value so that it is always an Python int"""
+    if isinstance(value, int):
+        return value * 2
+    elif type(value) is float:
+        if value.is_integer():
+            return int(value * 2)
+        if (2*value).is_integer():
+            return int(2*value)
+    elif isinstance(value, Rational):
+        if value.q == 2:
+            return value.p
+        elif value.q == 1:
+            return value.p * 2
+    elif isinstance(value, Float):
+        return _doubled_int(float(value))
     raise ValueError("expecting integer or half-integer, got %s" % value)
 
 
@@ -217,7 +236,7 @@ def wigner_3j(j_1, j_2, j_3, m_1, m_2, m_3):
     """
 
     j_1, j_2, j_3, m_1, m_2, m_3 = \
-        map(_int_or_halfint, map(sympify,
+        map(_doubled_int, map(sympify,
             [j_1, j_2, j_3, m_1, m_2, m_3]))
 
     if m_1 + m_2 + m_3 != 0:
@@ -233,44 +252,30 @@ def wigner_3j(j_1, j_2, j_3, m_1, m_2, m_3):
         return S.Zero
     if (abs(m_1) > j_1) or (abs(m_2) > j_2) or (abs(m_3) > j_3):
         return S.Zero
-    if not (int_valued(j_1 - m_1) and \
-            int_valued(j_2 - m_2) and \
-            int_valued(j_3 - m_3)):
+    if not ((j_1 - m_1) % 2 == 0 and \
+            (j_2 - m_2) % 2 == 0 and \
+            (j_3 - m_3) % 2 == 0):
         return S.Zero
 
-    maxfact = max(j_1 + j_2 + j_3 + 1, j_1 + abs(m_1), j_2 + abs(m_2),
-                  j_3 + abs(m_3))
-    _calc_factlist(int(maxfact))
-
-    argsqrt = Integer(_Factlist[int(j_1 + j_2 - j_3)] *
-                     _Factlist[int(j_1 - j_2 + j_3)] *
-                     _Factlist[int(-j_1 + j_2 + j_3)] *
-                     _Factlist[int(j_1 - m_1)] *
-                     _Factlist[int(j_1 + m_1)] *
-                     _Factlist[int(j_2 - m_2)] *
-                     _Factlist[int(j_2 + m_2)] *
-                     _Factlist[int(j_3 - m_3)] *
-                     _Factlist[int(j_3 + m_3)]) / \
-        _Factlist[int(j_1 + j_2 + j_3 + 1)]
-
-    ressqrt = sqrt(argsqrt)
-    if ressqrt.is_complex or ressqrt.is_infinite:
-        ressqrt = ressqrt.as_real_imag()[0]
+    sumj = (j_1 + j_2 + j_3) // 2
+    res_num = comb(j_1, sumj - j_2) * comb(j_2, sumj - j_1)
+    res_den = comb(sumj, sumj - j_3) * \
+            comb(j_1, (j_1 - m_1) // 2) * \
+            comb(j_2, (j_2 - m_2) // 2) * \
+            comb(j_3, (j_3 - m_3) // 2)
+    ressqrt = sqrt(Integer(res_num) / Integer(res_den * (sumj + 1)))
 
     imin = max(-j_3 + j_1 + m_2, -j_3 + j_2 - m_1, 0)
     imax = min(j_2 + m_2, j_1 - m_1, j_1 + j_2 - j_3)
     sumres = 0
     for ii in range(int(imin), int(imax) + 1):
-        den = _Factlist[ii] * \
-            _Factlist[int(ii + j_3 - j_1 - m_2)] * \
-            _Factlist[int(j_2 + m_2 - ii)] * \
-            _Factlist[int(j_1 - ii - m_1)] * \
-            _Factlist[int(ii + j_3 - j_2 + m_1)] * \
-            _Factlist[int(j_1 + j_2 - j_3 - ii)]
-        sumres = sumres + Integer((-1) ** ii) / den
+        ti = comb(sumj - j_3, ii) * \
+           comb(sumj - j_1, (j_2 - m_2) // 2 - ii) * \
+           comb(sumj - j_2, (j_1 + m_1) // 2 - ii)
+        sumres = ti - sumres
 
-    prefid = Integer((-1) ** int(j_1 - j_2 - m_3))
-    res = ressqrt * sumres * prefid
+    phase = (-1) ** (j_1 + (j_3 + m_3) // 2 + imax)
+    res = phase * ressqrt * sumres
     return res
 
 
