@@ -353,23 +353,37 @@ class AlgebraicPredicate(Predicate):
 
     ``Q.algebraic(x)`` is true iff ``x`` belongs to the set of
     algebraic numbers. ``x`` is algebraic if there is some polynomial
-    in ``p(x)\in \mathbb\{Q\}[x]`` such that ``p(x) = 0``.
+    in `p(x) \in \mathbb{Q}[x]` such that `p(x) = 0`.
+
+    If `t` is transcendental and `f(x) \in \mathbb{Q}[x]` is a non-constant
+    polynomial, then `f(t)` is transcendental (non-algebraic).
+
+    PROOF: Suppose, towards a contradiction, that `t` is transcendental
+    and `f(t)` is algebraic. Since `f(t)` is algebraic, it is the root of
+    some `g(x) \in \mathbb{Q}[x]` such that `g(f(t)) = 0`. Then `t` is a
+    solution to the non-constant polynomial `g \circ f \in \mathbb{Q}[x]`,
+    so `t` is algebraic. But `t` is transcendental by assumption; then by
+    contradiction, `f(t)` is transcendental.
 
     Examples
     ========
 
-    >>> from sympy import ask, Q, sqrt, I, pi
+    >>> from sympy import ask, Q, sqrt, I, pi, E
     >>> ask(Q.algebraic(sqrt(2)))
     True
     >>> ask(Q.algebraic(I))
     True
     >>> ask(Q.algebraic(pi))
     False
+    >>> ask(Q.algebraic(E**2 + E))
+    False
 
     References
     ==========
 
-    .. [1] https://en.wikipedia.org/wiki/Algebraic_number
+    .. [1] https://en.wikipedia.org/wiki/Algebraic_number..
+    .. [2] https://math.stackexchange.com/questions/1875840/references-on-pin-is-transcendental?noredirect=1&lq=1
+    .. [3] https://stacks.math.columbia.edu/tag/030D
 
     """
     name = 'algebraic'
@@ -390,8 +404,24 @@ class TranscendentalPredicate(Predicate):
     transcendental numbers. A transcendental number is a real
     or complex number that is not algebraic.
 
+    Examples
+    ========
+
+    >>> from sympy import ask, Q, pi, exp, GoldenRatio
+    >>> ask(Q.transcendental(GoldenRatio))
+    False
+    >>> ask(Q.transcendental(pi))
+    True
+    >>> ask(Q.transcendental(exp(1)))
+    True
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Transcendental_number
+
     """
-    # TODO: Add examples
+
     name = 'transcendental'
     handler = Dispatcher(
         "Transcendental",

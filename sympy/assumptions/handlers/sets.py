@@ -1,7 +1,7 @@
 """
 Handlers for predicates related to set membership: integer, rational, etc.
 """
-
+from sympy.abc import x
 from sympy.assumptions import Q, ask
 from sympy.core import Add, Basic, Expr, Mul, Pow, S
 from sympy.core.numbers import (AlgebraicNumber, ComplexInfinity, Exp1, Float,
@@ -15,6 +15,7 @@ from sympy.core.relational import Eq
 from sympy.functions.elementary.complexes import conjugate
 from sympy.matrices import Determinant, MatrixBase, Trace
 from sympy.matrices.expressions.matexpr import MatrixElement
+from sympy.polys.polytools import Poly
 
 from sympy.multipledispatch import MDNotImplementedError
 
@@ -22,7 +23,7 @@ from .common import test_closed_group, ask_all, ask_any
 from ..predicates.sets import (IntegerPredicate, RationalPredicate,
     IrrationalPredicate, RealPredicate, ExtendedRealPredicate,
     HermitianPredicate, ComplexPredicate, ImaginaryPredicate,
-    AntihermitianPredicate, AlgebraicPredicate)
+    AntihermitianPredicate, AlgebraicPredicate, TranscendentalPredicate)
 
 
 # IntegerPredicate
@@ -750,11 +751,35 @@ def _(mat, assumptions):
 
 
 # AlgebraicPredicate
+# Helper function: Determines if a given expression is a polynomial
+# with rational coefficients evaluated at a transcendental number. Such
+# expressions are not algebraic.
+# TODO: Update helper function to account for polynomials evaluated at
+#  transcendentals other than E and Pi, including variables assumed to be transcendental.
+def  _TranscendentalPredicate_number(expr, assumptions):
+    # To check if the expression is a rational polynomial evaluated at pi or E, we
+    # must check that the expression contains either pi or E but not both.
+    has_E = expr.has(E) | expr.has(exp)
+    has_pi = expr.has(pi)
+    if has_E == has_pi:
+        return None
+    if has_E:
+        expr = expr.subs(E, x)
+    if has_E:
+        expr = expr.subs(pi, x)
+    if expr.is_polynomial(x):
+        expr_poly = Poly(expr, x)
+        if all(coeff.is_Rational for coeff in expr_poly.coeffs()):
+            return True
 
-@AlgebraicPredicate.register_many(AlgebraicNumber, Float, GoldenRatio, # type:ignore
+@AlgebraicPredicate.register_many(AlgebraicNumber, GoldenRatio, # type:ignore
     ImaginaryUnit, TribonacciConstant)
 def _(expr, assumptions):
     return True
+
+@AlgebraicPredicate.register(Float)
+def _(expr, assumptions):
+    return None
 
 @AlgebraicPredicate.register_many(ComplexInfinity, Exp1, Infinity, # type:ignore
     NegativeInfinity, Pi)
@@ -763,6 +788,9 @@ def _(expr, assumptions):
 
 @AlgebraicPredicate.register_many(Add, Mul) # type:ignore
 def _(expr, assumptions):
+    if expr.is_number and  _TranscendentalPredicate_number(expr, assumptions):
+        return False
+
     return test_closed_group(expr, assumptions, Q.algebraic)
 
 @AlgebraicPredicate.register(Pow) # type:ignore
@@ -785,6 +813,10 @@ def _(expr, assumptions):
         # If the base is algebraic and not equal to 0 or 1, and the exponent
         # is irrational,then the result is transcendental.
         if ask(Q.ne(expr.base,0) & Q.ne(expr.base,1)) and exp_rational is False:
+            return False
+
+    if expr.is_number and  _TranscendentalPredicate_number(expr.base, assumptions):
+        if ask(Q.integer(expr.exp) & ~Q.negative(expr.exp), assumptions):
             return False
 
 @AlgebraicPredicate.register(Rational) # type:ignore
@@ -814,3 +846,20 @@ def _(expr, assumptions):
     x = expr.args[0]
     if ask(Q.algebraic(x), assumptions):
         return ask(~Q.nonzero(x - 1), assumptions)
+
+
+# TranscendentalPredicate
+
+@TranscendentalPredicate.register(Expr)
+def _(expr, assumptions):
+    ret = expr.is_transcendental
+    if ret is not None:
+        return ret
+
+    is_complex = ask(Q.complex(expr), assumptions)
+    if is_complex:
+        is_algebraic = ask(Q.algebraic(expr), assumptions)
+        if is_algebraic is None:
+            return None
+        return not is_algebraic
+    return is_complex
