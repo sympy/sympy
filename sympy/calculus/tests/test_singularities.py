@@ -3,9 +3,10 @@ from sympy.core.singleton import S
 from sympy.core.symbol import Symbol, Dummy
 from sympy.core.function import Lambda
 from sympy.functions.elementary.exponential import (exp, log)
-from sympy.functions.elementary.trigonometric import sec, csc
+from sympy.functions.elementary.trigonometric import sec, csc, sin
 from sympy.functions.elementary.hyperbolic import (coth, sech,
                                                    atanh, asech, acoth, acsch)
+from sympy.functions.elementary.complexes import Abs
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.calculus.singularities import (
     singularities,
@@ -17,8 +18,8 @@ from sympy.calculus.singularities import (
 )
 from sympy.sets import Interval, FiniteSet, Union, ImageSet
 from sympy.testing.pytest import raises
-from sympy.abc import x, y
-
+from sympy.abc import x, y, a, b
+from sympy import Piecewise, limit
 
 def test_singularities():
     x = Symbol('x')
@@ -116,6 +117,37 @@ def test_is_monotonic():
     raises(NotImplementedError, lambda: is_monotonic(x**2 + y + 1))
 
 
+def test_rational_functions_with_complex_numbers():
+    """Test rational functions with complex numbers."""
+    # Rational functions with complex numbers
+    expr = (x + I)/(x**2 + 1)
+    assert singularities(expr, x) == FiniteSet(-I, I)
+    assert is_increasing(Abs(expr), S.Reals)
+    assert is_decreasing(Abs(expr), Interval(1, oo))
+    
+def test_functions_with_parameters():
+    """Test functions with parameters."""
+    expr1 = a*x**2 + b*x + 1
+    expr2 = a*exp(x) + b
+    assert is_increasing(expr1, S.Reals, x)
+    assert not is_strictly_increasing(expr2, Interval(0, 2))
+    
+def test_piecewise_functions():
+    """Test piecewise functions."""
+    expr1 = Piecewise((x**2, x < 1), (x**3, x >= 1))
+    expr2 = Piecewise((x + 1, x < 0), (x - 1, x >= 0))
+    assert is_increasing(expr1, Interval(-1, 2))
+    assert is_decreasing(expr2, Interval(-2, 2))
+    
+def test_limit_function():
+    """Test limit function."""
+    expr = 1/(x**2 +1)
+    assert limit(expr, x, 0) == 1
+    assert limit(expr, x, oo) == 0
+    assert limit(exp(x)/x, x, oo) == oo
+    assert limit(sin(x)/x, x, 0) == 1
+    assert limit(x**2/(x + 1), x, -1) == 0
+    
 def test_issue_23401():
     x = Symbol('x')
     expr = (x + 1)/(-1.0e-3*x**2 + 0.1*x + 0.1)
