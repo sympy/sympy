@@ -1635,6 +1635,11 @@ def test_issue_15640_log_substitutions():
     F = -sqrt(pi)*erfc(sqrt(log(x)))/2 - sqrt(log(x))/x
     assert integrate(f, x) == F and F.diff(x) == f
 
+def test_issue_27675():
+    assert integrate(2.06*(x + 0.20)/(x + 0.34)**2,
+                     (x, 0, 1)) == 2.1922358936689497
+    assert integrate((x + 0.19)/(x + 0.37)**2,
+                     (x, 0, 1)) == 0.95396338801128411
 
 def test_issue_15509():
     from sympy.vector import CoordSys3D
