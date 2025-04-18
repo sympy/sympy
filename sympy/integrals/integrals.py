@@ -1402,7 +1402,8 @@ class Integral(AddWithLimits):
         return I
 
 
-
+from sympy.core.cache import cacheit
+@cacheit
 def integrate(*args, meijerg=None, conds='piecewise', risch=None, heurisch=None, manual=None, **kwargs):
     """integrate(f, var, ...)
 
