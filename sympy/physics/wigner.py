@@ -576,11 +576,41 @@ def wigner_6j(j_1, j_2, j_3, j_4, j_5, j_6, prec=None):
     algebra system [Rasch03]_.
 
     """
-    j_1, j_2, j_3, j_4, j_5, j_6 = map(sympify, \
-                [j_1, j_2, j_3, j_4, j_5, j_6])
-    res = (-1) ** int(j_1 + j_2 + j_4 + j_5) * \
-        racah(j_1, j_2, j_5, j_4, j_3, j_6, prec)
-    return res
+    j1, j2, j3, j4, j5, j6 = map(_doubled_int, map(sympify,
+                [j_1, j_2, j_3, j_4, j_5, j_6]))
+    j123 = (j1 + j2 + j3) // 2
+    j156 = (j1 + j5 + j6) // 2
+    j426 = (j4 + j2 + j6) // 2
+    j453 = (j4 + j5 + j3) // 2
+    jpm123 = (j1 + j2 - j3) // 2
+    jpm132 = (j1 + j3 - j2) // 2
+    jpm231 = (j2 + j3 - j1) // 2
+    jpm156 = (j1 + j5 - j6) // 2
+    jpm426 = (j4 + j2 - j6) // 2
+    jpm453 = (j4 + j5 - j3) // 2
+    sumres = 0
+    imin = max(j123, j453, j426, j156)
+    imax = max(jpm123 + j453, jpm132 + j426, jpm231 + j156)
+    for ii in range(int(imin), int(imax) + 1):
+        ti = comb(ii + 1, j123 + 1) * \
+           comb(jpm123, ii - j453) * \
+           comb(jpm132, ii - j426) * \
+           comb(jpm231, ii - j156)
+        sumres = ti - sumres
+    if sumres == 0:
+        return S.Zero
+    if imax % 2 == 1:
+        sumres = -sumres
+    res_num = comb(j123 + 1, j1 + 1) * comb(j1, jpm123)
+    res_den = comb(j156 + 1, j1 + 1) * comb(j1, jpm156) * \
+        comb(j426 + 1, j4 + 1) * comb(j4, jpm426) * \
+        comb(j453 + 1, j4 + 1) * comb(j4, jpm453)
+    res_den = res_den * (j4 + 1) ** 2
+    ressqrt = sqrt(Integer(res_num) / Integer(res_den))
+    result = ressqrt * sumres
+    if prec:
+        result = result.evalf(prec)
+    return result
 
 
 def wigner_9j(j_1, j_2, j_3, j_4, j_5, j_6, j_7, j_8, j_9, prec=None):
