@@ -19,7 +19,7 @@ from sympy.matrices.expressions.matexpr import MatrixElement
 from sympy.multipledispatch import MDNotImplementedError
 
 from .common import test_closed_group, ask_all, ask_any
-from ..predicates.sets import (IntegerPredicate, RationalPredicate,
+from ..predicates.sets import (IntegerPredicate, NonIntegerPredicate, RationalPredicate,
     IrrationalPredicate, RealPredicate, ExtendedRealPredicate,
     HermitianPredicate, ComplexPredicate, ImaginaryPredicate,
     AntihermitianPredicate, AlgebraicPredicate)
@@ -110,6 +110,13 @@ def _(expr, assumptions):
 @IntegerPredicate.register_many(Determinant, MatrixElement, Trace)
 def _(expr, assumptions):
     return ask(Q.integer_elements(expr.args[0]), assumptions)
+
+
+# NonIntegerPredicate
+
+@NonIntegerPredicate.register(Expr)
+def _(expr, assumptions):
+    return ask(~Q.integer(expr), assumptions) and ask(Q.extended_real(expr), assumptions)
 
 
 # RationalPredicate
