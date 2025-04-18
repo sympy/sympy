@@ -87,7 +87,7 @@ def test_factorial_fail():
     for text in inputs:
         try:
             parse_expr(text)
-            assert False
+            raise AssertionError()
         except TokenError:
             assert True
 
