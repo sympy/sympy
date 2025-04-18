@@ -20,7 +20,7 @@ from sympy.utilities.iterables import (
     strongly_connected_components, subsets, take, topological_sort, unflatten,
     uniq, variations, ordered_partitions, rotations, is_palindromic, iterable,
     NotIterable, multiset_derangements, signed_permutations,
-    sequence_partitions, sequence_partitions_empty)
+    sequence_partitions, sequence_partitions_empty, remove_supersets)
 from sympy.utilities.enumerative import (
     factoring_visitor, multiset_partitions_taocp )
 
@@ -943,3 +943,12 @@ def test_signed_permutations():
     assert list(signed_permutations((0, 1, 1))) == ans
     assert list(signed_permutations((1, 0, 1))) == ans
     assert list(signed_permutations((1, 1, 0))) == ans
+
+
+def test_remove_supersets():
+    assert remove_supersets([]) == []
+    assert remove_supersets([set()]) == [set()]
+    assert remove_supersets([set(), {1}]) == [set()]
+    assert remove_supersets([{1}, {1}]) == [{1}]
+    assert remove_supersets([{1}, {1, 2}]) == [{1}]
+    assert remove_supersets([{1}, {2}]) == [{1}, {2}]

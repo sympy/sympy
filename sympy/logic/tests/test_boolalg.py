@@ -19,7 +19,7 @@ from sympy.logic.boolalg import (
     truth_table, as_Boolean, to_anf, is_anf, distribute_xor_over_and,
     anf_coeffs, ANFform, bool_minterm, bool_maxterm, bool_monomial,
     _check_pair, _convert_to_varsSOP, _convert_to_varsPOS, Exclusive,
-    gateinputcount)
+    gateinputcount, change_form)
 from sympy.assumptions.cnf import CNF
 
 from sympy.testing.pytest import raises, XFAIL, slow
@@ -308,10 +308,22 @@ def test_simplification_boolalg():
     b = (~x & ~y & ~z) | (~x & ~y & z)
     e = And(A, b)
     assert simplify_logic(e) == A & ~x & ~y
+    assert e.equals(A & ~x & ~y)
     raises(ValueError, lambda: simplify_logic(A & (B | C), form='blabla'))
     assert simplify(Or(x <= y, And(x < y, z))) == (x <= y)
     assert simplify(Or(x <= y, And(y > x, z))) == (x <= y)
     assert simplify(Or(x >= y, And(y < x, z))) == (x >= y)
+
+    # handle negated variables even when form is ok and literal
+    assert simplify_logic(x & ~x, 'cnf') == False
+    assert simplify_logic(x | ~x, 'dnf') == True
+
+    # handle simple large cnf to dnf quickly
+    expr = And(*[Or(Dummy(''), Dummy('')) for _ in range(9)])
+    assert len(simplify_logic(expr, 'dnf', force=True).args) == 2**9
+    sy = [Dummy() for i in range(26)]
+    expr = And(*[Or(*sy[i: i + 3]) for i in range(0, len(sy), 2)])
+    assert len(simplify_logic(expr, 'dnf', force=True).args) == 2632
 
     # Check that expressions with nine variables or more are not simplified
     # (without the force-flag)
@@ -1365,3 +1377,14 @@ def test_issue_26985():
 
     assert result_anf == d
     assert result == d
+
+
+def test_change_form():
+    assert change_form(x) == x
+    eq = (x | y) & (x | y | z) & ~x
+    a = change_form(eq)
+    b = change_form(a)
+    assert a == (x & ~x) | (y & ~x)
+    assert b == ~x & (x | y)
+    assert eq.equals(a)
+    assert eq.equals(b)
