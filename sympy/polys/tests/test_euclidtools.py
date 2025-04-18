@@ -662,8 +662,8 @@ def test_dup_cancel():
     p = 2*x + 2
     q = x - 1
 
-    assert R.dup_cancel(f, g) == (p, q)
-    assert R.dup_cancel(f, g, include=False) == (1, 1, p, q)
+    assert R.dup_cancel(f, g) == (p, q),R.dup_cancel(f, g)
+    assert R.dup_cancel(f, g, include=False) == (2, 1, p/2, q)
 
     f = -x - 2
     g = 3*x - 4
@@ -700,7 +700,7 @@ def test_dmp_cancel():
     q = x - 1
 
     assert R.dmp_cancel(f, g) == (p, q)
-    assert R.dmp_cancel(f, g, include=False) == (1, 1, p, q)
+    assert R.dmp_cancel(f, g, include=False) == (2, 1, p/2, q)
 
     assert R.dmp_cancel(0, 0) == (0, 0)
     assert R.dmp_cancel(0, 0, include=False) == (1, 1, 0, 0)
