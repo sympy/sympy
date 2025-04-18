@@ -227,6 +227,9 @@ def test_AccumBounds():
     assert str(AccumBounds(0, a)) == "AccumBounds(0, a)"
     assert str(AccumBounds(0, 1)) == "AccumBounds(0, 1)"
 
+def test_issue_19435():
+    assert str(1/UnevaluatedExpr(sqrt(pi))) == '1/(sqrt(pi))'
+
 
 def test_Lambda():
     assert str(Lambda(d, d**2)) == "Lambda(_d, _d**2)"
