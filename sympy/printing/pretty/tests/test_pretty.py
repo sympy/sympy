@@ -2378,8 +2378,8 @@ __________ __________      \n\
 def test_pretty_Lambda():
     # S.IdentityFunction is a special case
     expr = Lambda(y, y)
-    assert pretty(expr) == "x -> x"
-    assert upretty(expr) == "x ↦ x"
+    assert pretty(expr) == "_x -> _x"
+    assert upretty(expr) == u"_x ↦ _x"
 
     expr = Lambda(x, x+1)
     assert pretty(expr) == "x -> x + 1"

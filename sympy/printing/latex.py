@@ -20,7 +20,7 @@ from sympy.logic.boolalg import true, BooleanTrue, BooleanFalse
 # sympy.printing imports
 from sympy.printing.precedence import precedence_traditional
 from sympy.printing.printer import Printer, print_function
-from sympy.printing.conventions import split_super_sub, requires_partial
+from sympy.printing.conventions import split_super_sub, requires_partial, split_leading_trailing_underscore
 from sympy.printing.precedence import precedence, PRECEDENCE
 
 from mpmath.libmp.libmpf import prec_to_dps, to_str as mlib_to_str
@@ -1627,7 +1627,8 @@ class LatexPrinter(Printer):
         if name is not None:
             return name
 
-        return self._deal_with_super_sub(expr.name, style=style)
+        leading, name, trailing = split_leading_trailing_underscore(expr.name)
+        return leading*r'\_' + self._deal_with_super_sub(expr.name, style=style)
 
     _print_RandomSymbol = _print_Symbol
 
@@ -3316,3 +3317,6 @@ def multiline_latex(lhs, rhs, terms_per_line=1, environment="align*", use_dots=F
         term_count += 1
     result += end_term
     return result
+
+    def _print_Dummy(self, expr):
+        return '\\_' + self._print_Symbol(expr)

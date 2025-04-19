@@ -2935,3 +2935,8 @@ def pager_print(expr, **settings):
     if 'num_columns' not in settings:
         settings['num_columns'] = 500000  # disable line wrap
     pager(pretty(expr, **settings).encode(getpreferredencoding()))
+
+    def _print_Dummy(self, expr):
+        printed = self._print('_')
+        printed = prettyForm(*printed.right(self._print_Symbol(expr)))
+        return printed

@@ -86,3 +86,23 @@ def requires_partial(expr):
         return len(set(expr.variables)) > 1
 
     return sum(not s.is_integer for s in expr.free_symbols) > 1
+
+    def split_leading_trailing_underscore(text):
+    """
+    Removes leading and trailing underscores and returns a tuple as:
+    (number of leading underscores, text without leading and trailing underscores, number of trailing underscores)
+    """
+    leading = 0
+    pos = 0
+    while pos < len(text) and text[pos] == "_":
+        leading += 1
+        pos += 1
+
+    trailing = 0
+    pos = len(text) - 1
+    while pos >= leading and text[pos] == "_":
+        trailing += 1
+        pos -= 1
+
+    trimmed_text = text[leading:len(text)-trailing]
+    return (leading, trimmed_text, trailing)
