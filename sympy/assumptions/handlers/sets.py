@@ -274,7 +274,10 @@ def _(expr, assumptions):
     if expr.is_number:
         return _RealPredicate_number(expr, assumptions)
     result = True
+    check_zero = False
     for arg in expr.args:
+        if ask(Q.eq(arg,0),assumptions) is None:
+            check_zero = None
         if ask(Q.real(arg), assumptions):
             pass
         elif ask(Q.imaginary(arg), assumptions):
@@ -282,6 +285,8 @@ def _(expr, assumptions):
         else:
             break
     else:
+        if check_zero is None and result is False:
+            return None
         return result
 
 @RealPredicate.register(Pow)
