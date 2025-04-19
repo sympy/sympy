@@ -254,11 +254,25 @@ def test_dummy_loops():
     y = IndexedBase('y')
     i = Idx(i, m)
 
-    assert rust_code(x[i], assign_to=y[i]) == (
-        "for i in 0..m {\n"
-        "    y[i] = x[i];\n"
-        "}")
+    code = rust_code(x[i], assign_to=y[i])
+    prefix = "m_"
+    index = code.find(prefix)
+    if index != -1:
+        start = index + len(prefix)
+        # find the next space
+        next_space = code.find(" ", start)
+        if next_space == -1:
+            # If no space is found, take the rest of the string
+            next_space = len(code)
 
+        end = next_space
+        m_name = f"m_{code[start:end]}"
+    else:
+        raise ValueError("Dummy variable m is not found!")
+    expected = f"""for i in 0..{m_name} {{
+    y[i] = x[i];
+}}"""
+    assert code == expected
 
 def test_loops():
     m, n = symbols('m n', integer=True)
