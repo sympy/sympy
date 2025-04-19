@@ -490,10 +490,10 @@ jobs:
         run: asv run --config asv.conf.actions.json
 
         # Output benchmark results
-      - run: asv compare upstream/master HEAD --config asv.conf.actions.json --factor 1.5 | tee pr_vs_master.txt
-      - run: asv compare upstream/master HEAD --config asv.conf.actions.json --factor 1.5 --only-changed | tee pr_vs_master_changed.txt
-      - run: asv compare upstream/1.14 upstream/master --config asv.conf.actions.json --factor 1.5 | tee master_vs_release.txt
-      - run: asv compare upstream/1.14 upstream/master --config asv.conf.actions.json --factor 1.5 --only-changed | tee master_vs_release_changed.txt
+      - run: asv compare upstream/1.14 HEAD --config asv.conf.actions.json --factor 1.5 | tee pr_vs_1.14.txt
+      - run: asv compare upstream/1.14 HEAD --config asv.conf.actions.json --factor 1.5 --only-changed | tee pr_vs_1.14_changed.txt
+      - run: asv compare upstream/1.13 upstream/1.14 --config asv.conf.actions.json --factor 1.5 | tee 1.14_vs_1.13.txt
+      - run: asv compare upstream/1.13 upstream/1.14 --config asv.conf.actions.json --factor 1.5 --only-changed | tee 1.14_vs_1.13_changed.txt
 
         # we save all outputs as artifacts that can be downloaded from the
         # GitHub Actions summary page.
