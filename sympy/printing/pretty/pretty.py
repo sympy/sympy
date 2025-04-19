@@ -2940,3 +2940,4 @@ def pager_print(expr, **settings):
     if 'num_columns' not in settings:
         settings['num_columns'] = 500000  # disable line wrap
     pager(pretty(expr, **settings).encode(getpreferredencoding()))
+    
