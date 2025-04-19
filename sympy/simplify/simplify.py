@@ -324,6 +324,15 @@ def hypersimp(f, k):
     g = expand_func(g)
     g = powsimp(g, deep=True, combine='exp')
 
+    # Check if the expression contains symbols other than k. This is needed because
+    # expand_func does not always simplify expressions optimally when other symbols
+    # are present. By detecting this case, we apply additional expansion and processing
+    # to achieve better simplification.
+    has_other_symbols = any(symbol != k for symbol in g.free_symbols)
+    if has_other_symbols:
+        g = expand(g, multinomial=False)
+        g = powsimp(g, deep=True, combine='exp')
+
     if g.is_rational_function(k):
         return simplify(g, ratio=S.Infinity)
     else:
