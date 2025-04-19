@@ -885,7 +885,7 @@ class Factorable(SingleODESolver):
         for i in factors:
             if i.has(f(x)):
                 self.eqs.append(i)
-        return len(self.eqs)>0 and len(factors)>1
+        return len(self.eqs) > 1
 
     def _get_general_solution(self, *, simplify_flag: bool = True):
         func = self.ode_problem.func.func

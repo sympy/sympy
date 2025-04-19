@@ -34,7 +34,7 @@ Functions that are for internal use:
 """
 from sympy.core.function import (Derivative, diff)
 from sympy.core.mul import Mul
-from sympy.core.numbers import (E, I, Rational, pi)
+from sympy.core.numbers import (E, Float, I, Rational, pi)
 from sympy.core.relational import (Eq, Ne)
 from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, symbols)
@@ -2900,3 +2900,13 @@ def _get_all_examples():
     _get_examples_ode_sol_linear_coefficients
 
     return all_examples
+
+
+def test_issue_27683():
+    # https://github.com/sympy/sympy/issues/27683
+    v = Function('v')(x)
+    EQ1 = Eq(diff(v, x, x) * 4000.0, 1)
+    EQ2 = Eq(diff(v, x, x) * Float(4000), Float(1))
+    expected_result = Eq(v, C1 + C2*x + 0.000125*x**2)
+    assert dsolve(EQ1, v) == expected_result
+    assert dsolve(EQ2, v) == expected_result
