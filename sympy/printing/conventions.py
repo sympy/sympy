@@ -87,7 +87,7 @@ def requires_partial(expr):
 
     return sum(not s.is_integer for s in expr.free_symbols) > 1
 
-    def split_leading_trailing_underscore(text):
+def split_leading_trailing_underscore(text):
     """
     Removes leading and trailing underscores and returns a tuple as:
     (number of leading underscores, text without leading and trailing underscores, number of trailing underscores)
