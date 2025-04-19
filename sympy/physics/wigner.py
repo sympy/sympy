@@ -250,14 +250,10 @@ def wigner_3j(j_1, j_2, j_3, m_1, m_2, m_3):
         map(_doubled_int, map(sympify,
             [j_1, j_2, j_3, m_1, m_2, m_3]))
 
-    sumj = (dj1 + dj2 + dj3) // 2
-    jm1 = sumj - dj1
-    jm2 = sumj - dj2
-    jm3 = sumj - dj3
 
     if dm1 + dm2 + dm3 != 0:
         return S.Zero
-    if jm1 < 0 or jm2 < 0 or jm3 < 0:
+    if not _check_dj_couple(dj1, dj2, dj3):
         return S.Zero
     if (abs(dm1) > dj1) or (abs(dm2) > dj2) or (abs(dm3) > dj3):
         return S.Zero
@@ -266,6 +262,10 @@ def wigner_3j(j_1, j_2, j_3, m_1, m_2, m_3):
             (dj3 - dm3) % 2 == 0):
         return S.Zero
 
+    sumj = (dj1 + dj2 + dj3) // 2
+    jm1 = sumj - dj1
+    jm2 = sumj - dj2
+    jm3 = sumj - dj3
     j1mm1 = (dj1 - dm1) // 2
     j2mm2 = (dj2 - dm2) // 2
     j3mm3 = (dj3 - dm3) // 2
@@ -845,47 +845,47 @@ def gaunt(l_1, l_2, l_3, m_1, m_2, m_3, prec=None):
 
     Jens Rasch (2009-03-24): initial version for Sage.
     """
-    l_1, l_2, l_3, m_1, m_2, m_3 = [
+    l1, l2, l3, m1, m2, m3 = [
         as_int(i) for i in (l_1, l_2, l_3, m_1, m_2, m_3)]
 
-    if l_1 + l_2 - l_3 < 0:
+    if not _check_dj_couple(l1, l2, l3):
         return S.Zero
-    if l_1 - l_2 + l_3 < 0:
+    if (m1 + m2 + m3) != 0:
         return S.Zero
-    if -l_1 + l_2 + l_3 < 0:
-        return S.Zero
-    if (m_1 + m_2 + m_3) != 0:
-        return S.Zero
-    if (abs(m_1) > l_1) or (abs(m_2) > l_2) or (abs(m_3) > l_3):
-        return S.Zero
-    bigL, remL = divmod(l_1 + l_2 + l_3, 2)
-    if remL % 2:
+    if (abs(m1) > l1) or (abs(m2) > l2) or (abs(m3) > l3):
         return S.Zero
 
-    imin = max(-l_3 + l_1 + m_2, -l_3 + l_2 - m_1, 0)
-    imax = min(l_2 + m_2, l_1 - m_1, l_1 + l_2 - l_3)
-
-    _calc_factlist(max(l_1 + l_2 + l_3 + 1, imax + 1))
-
-    ressqrt = sqrt((2 * l_1 + 1) * (2 * l_2 + 1) * (2 * l_3 + 1) * \
-        _Factlist[l_1 - m_1] * _Factlist[l_1 + m_1] * _Factlist[l_2 - m_2] * \
-        _Factlist[l_2 + m_2] * _Factlist[l_3 - m_3] * _Factlist[l_3 + m_3] / \
-        (4*pi))
-
-    prefac = Integer(_Factlist[bigL] * _Factlist[l_2 - l_1 + l_3] *
-                     _Factlist[l_1 - l_2 + l_3] * _Factlist[l_1 + l_2 - l_3])/ \
-        _Factlist[2 * bigL + 1]/ \
-        (_Factlist[bigL - l_1] *
-         _Factlist[bigL - l_2] * _Factlist[bigL - l_3])
+    sumj = l1 + l2 + l3
+    g = sumj // 2
+    jm1 = l2 + l3 - l1
+    jm2 = l1 + l3 - l2
+    jm3 = l1 + l2 - l3
+    j1mm1 = l1 - m1
+    j2mm2 = l2 - m2
+    j3mm3 = l3 - m3
+    j1pm1 = l1 + m1
+    imin = max(0, j1pm1 - jm2, j2mm2 - jm1)
+    imax = min(jm3, j1pm1, j2mm2)
 
     sumres = 0
     for ii in range(int(imin), int(imax) + 1):
-        den = _Factlist[ii] * _Factlist[ii + l_3 - l_1 - m_2] * \
-            _Factlist[l_2 + m_2 - ii] * _Factlist[l_1 - ii - m_1] * \
-            _Factlist[ii + l_3 - l_2 + m_1] * _Factlist[l_1 + l_2 - l_3 - ii]
-        sumres = sumres + Integer((-1) ** ii) / den
+        ti = comb(jm3, ii) * \
+           comb(jm2, j1pm1 - ii) * \
+           comb(jm1, j2mm2 - ii)
+        sumres = ti - sumres
+    if sumres == 0:
+        return S.Zero
+    if ((g + j3mm3 + imax) % 2) == 1:
+        sumres = -sumres
+    
+    sumres *= comb(g, g - l3) * comb(l3, g - l1)
+    res_num = (2 * l3 + 1) * comb(2 * l3, jm1)
+    res_den = comb(2 * l1, j1mm1) * \
+        comb(2 * l2, j2mm2) * comb(2 * l3, j3mm3) * \
+        comb(sumj + 1, 2 * l1 + 1) * comb(sumj + 1, 2 * l2 + 1)
+    ressqrt = sqrt(res_num / ((4*pi) * res_den))
 
-    res = ressqrt * prefac * sumres * Integer((-1) ** (bigL + l_3 + m_1 - m_2))
+    res = ressqrt * sumres
     if prec is not None:
         res = res.n(prec)
     return res
@@ -1231,8 +1231,8 @@ def wigner_d_small(J, beta):
             sigmamax = min([J-Mi, J-Mj])
             sigmamin = max([0, -Mi-Mj])
 
-            dij = sqrt(factorial(J+Mi)*factorial(J-Mi) /
-                       factorial(J+Mj)/factorial(J-Mj))
+            dij = sqrt(binomial(2*J, J+Mj) /
+                       binomial(2*J, J+Mi))
             terms = [(-1)**(J-Mi-s) *
                      binomial(J+Mj, J-Mi-s) *
                      binomial(J-Mj, s) *
