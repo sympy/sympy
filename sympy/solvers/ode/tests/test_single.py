@@ -34,7 +34,7 @@ Functions that are for internal use:
 """
 from sympy.core.function import (Derivative, diff)
 from sympy.core.mul import Mul
-from sympy.core.numbers import (E, I, Rational, pi)
+from sympy.core.numbers import (E, Float, I, Rational, pi)
 from sympy.core.relational import (Eq, Ne)
 from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, symbols)
@@ -1051,11 +1051,6 @@ def _get_examples_ode_sol_factorable():
     'fact_19': {
         'eq': Derivative(f(x), x)**2 - x**3,
         'sol': [Eq(f(x), C1 - 2*x**Rational(5,2)/5), Eq(f(x), C1 + 2*x**Rational(5,2)/5)],
-    },
-
-    'fact_20': {
-        'eq': x*f(x).diff(x, 2) - x*f(x),
-        'sol': [Eq(f(x), C1*exp(-x) + C2*exp(x))],
     },
     }
     }
@@ -2106,6 +2101,11 @@ def _get_examples_ode_sol_2nd_linear_bessel():
         'eq': x**2*f(x).diff(x, 2) + x*f(x).diff(x) + (a**2*x**2/c**2 - b**2)*f(x),
         'sol': [Eq(f(x), C1*besselj(sqrt(b**2), x*sqrt(a**2/c**2)) + C2*bessely(sqrt(b**2), x*sqrt(a**2/c**2)))],
     },
+
+    '2nd_lin_bessel_13': {
+    'eq': x*f(x).diff(x, 2) - x*f(x),
+    'sol': [Eq(f(x), sqrt(x)*(C1*besselj(Rational(1, 2), I*x) + C2*bessely(Rational(1, 2), I*x)))],
+    },
     }
     }
 
@@ -2900,3 +2900,13 @@ def _get_all_examples():
     _get_examples_ode_sol_linear_coefficients
 
     return all_examples
+
+
+def test_issue_27683():
+    # https://github.com/sympy/sympy/issues/27683
+    v = Function('v')(x)
+    EQ1 = Eq(diff(v, x, x) * 4000.0, 1)
+    EQ2 = Eq(diff(v, x, x) * Float(4000), Float(1))
+    expected_result = Eq(v, C1 + C2*x + 0.000125*x**2)
+    assert dsolve(EQ1, v) == expected_result
+    assert dsolve(EQ2, v) == expected_result
