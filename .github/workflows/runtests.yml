@@ -503,7 +503,7 @@ jobs:
         with:
           name: benchmarks
           path: |
-            pr_vs_master.txt
-            pr_vs_master_changed.txt
-            master_vs_release.txt
-            master_vs_release_changed.txt
+            pr_vs_1.14.txt
+            pr_vs_1.14_changed.txt
+            1.14_vs_1.13.txt
+            1.14_vs_1.13_changed.txt
