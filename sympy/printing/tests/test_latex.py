@@ -17,7 +17,7 @@ from sympy.core.singleton import S
 from sympy.core.symbol import (Symbol, Wild, symbols)
 from sympy.functions.combinatorial.factorials import (FallingFactorial, RisingFactorial, binomial, factorial, factorial2, subfactorial)
 from sympy.functions.combinatorial.numbers import (bernoulli, bell, catalan, euler, genocchi,
-                                                   lucas, fibonacci, tribonacci, divisor_sigma, udivisor_sigma,
+                                                   lucas, fibonacci, tribonacci, divisor_sigma, Dummy, udivisor_sigma,
                                                    mobius, primenu, primeomega,
                                                    totient, reduced_totient)
 from sympy.functions.elementary.complexes import (Abs, arg, conjugate, im, polar_lift, re)
