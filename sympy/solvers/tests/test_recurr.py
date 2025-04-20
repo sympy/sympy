@@ -75,6 +75,18 @@ def test_rsolve_hyper():
 
     assert rsolve_hyper([1, -2*n/a - 2/a, 1], 0, n) == 0
 
+    # issue 27901
+    assert rsolve_hyper([-2*2**n, 2*2**n], -2*binomial(n, k) + binomial(n + 1, k), k) is None
+    assert rsolve_hyper([-1, 1], factorial(n**2), n) is None
+    assert rsolve_hyper([-1, 1], n**n, n) is None
+    assert rsolve_hyper([-1, 1], sqrt(n), n) is None
+
+    assert rsolve_hyper([-2, 1], 2**(n**3 + 1), n) is None
+    assert rsolve_hyper([-2, 1], 2**(a*n + 1), n) is None
+
+    assert rsolve_hyper([-1, 1], fibonacci(n), n) is None
+    assert rsolve_hyper([-1, 1], euler(n), n) is None
+    assert rsolve_hyper([-1, 1], harmonic(n), n) is None
 
 @XFAIL
 def test_rsolve_ratio_missed():
