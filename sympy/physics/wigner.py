@@ -54,7 +54,6 @@ Copyright (C) 2008 Jens Rasch <jyr2000@gmail.com>
 """
 from sympy.concrete.summations import Sum
 from sympy.core.add import Add
-from sympy.core.numbers import int_valued
 from sympy.core.function import Function
 from sympy.core.numbers import (Float, I, Integer, pi, Rational)
 from sympy.core.singleton import S
