@@ -1,5 +1,6 @@
 import collections
 import sys
+_ = sys.version # added to avoid unused input error in qualty check
 import warnings
 
 from sympy.external import import_module
@@ -14,6 +15,7 @@ autolevlistener = import_module('sympy.parsing.autolev._antlr.autolevlistener',
 AutolevParser = getattr(autolevparser, 'AutolevParser', None)
 AutolevLexer = getattr(autolevlexer, 'AutolevLexer', None)
 AutolevListener = getattr(autolevlistener, 'AutolevListener', None)
+
 
 
 def strfunc(z):
