@@ -4,6 +4,7 @@ from sympy.core.relational import Eq
 from sympy.core.singleton import S
 from sympy.core.symbol import (Symbol, symbols)
 from sympy.functions.combinatorial.factorials import (rf, binomial, factorial)
+from sympy.functions.combinatorial.numbers import (euler, fibonacci, harmonic)
 from sympy.functions.elementary.complexes import Abs
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import (cos, sin)
@@ -74,6 +75,19 @@ def test_rsolve_hyper():
         C0*(Rational(-1, 2) - sqrt(3)*I/2)**n + C1*(Rational(-1, 2) + sqrt(3)*I/2)**n
 
     assert rsolve_hyper([1, -2*n/a - 2/a, 1], 0, n) == 0
+
+    # issue 27901
+    assert rsolve_hyper([-2*2**n, 2*2**n], -2*binomial(n, k) + binomial(n + 1, k), k) is None
+    assert rsolve_hyper([-1, 1], factorial(n**2), n) is None
+    assert rsolve_hyper([-1, 1], n**n, n) is None
+    assert rsolve_hyper([-1, 1], sqrt(n), n) is None
+
+    assert rsolve_hyper([-2, 1], 2**(n**3 + 1), n) is None
+    assert rsolve_hyper([-2, 1], 2**(a*n + 1), n) is None
+
+    assert rsolve_hyper([-1, 1], fibonacci(n), n) is None
+    assert rsolve_hyper([-1, 1], euler(n), n) is None
+    assert rsolve_hyper([-1, 1], harmonic(n), n) is None
 
 
 @XFAIL
