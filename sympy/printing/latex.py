@@ -3318,5 +3318,5 @@ def multiline_latex(lhs, rhs, terms_per_line=1, environment="align*", use_dots=F
     result += end_term
     return result
 
-    def _print_Dummy(self, expr):
-        return '\\_' + self._print_Symbol(expr)
+def _print_Dummy(self, expr):
+    return '\\_' + self._print_Symbol(expr)
