@@ -913,7 +913,6 @@ def _get_examples_ode_sol_factorable():
     which could be found by Factorable hint. Fact_01 raise exception for
     nth_linear_constant_coeff_undetermined_coefficients"""
 
-    y = Dummy('y')
     return {
             'hint': "factorable",
             'func': f(x),
@@ -1005,12 +1004,6 @@ def _get_examples_ode_sol_factorable():
     },
 
     #Below examples were added for the issue: https://github.com/sympy/sympy/issues/15889
-    'fact_12': {
-        'eq': exp(f(x).diff(x))-f(x)**2,
-        'sol': [Eq(NonElementaryIntegral(1/log(y**2), (y, f(x))), C1 + x)],
-        'XFAIL': ['lie_group'] #It shows not implemented error for lie_group.
-    },
-
     'fact_13': {
         'eq': f(x).diff(x)**2 - f(x)**3,
         'sol': [Eq(f(x), 4/(C1**2 - 2*C1*x + x**2))],
@@ -2421,6 +2414,14 @@ def _get_examples_ode_sol_lie_group():
         'eq': f(x).diff(x)*(f(x).diff(x)+f(x)),
         'sol': [Eq(f(x), C1), Eq(f(x), C1*exp(-x))],
     },
+
+    # https://github.com/sympy/sympy/issues/15889
+    'lie_group_21': {
+        'eq': exp(f(x).diff(x))-f(x)**2,
+        'sol': [Eq(NonElementaryIntegral(1/log(y**2), (y, f(x))), C1 + x)],
+        'XFAIL': ['lie_group'] #It shows not implemented error for lie_group.
+    },
+
     }
     }
 
