@@ -315,7 +315,7 @@ def hypersimp(f, k):
     """
     f = sympify(f)
 
-    g = f.subs(k, k+1) / f
+    g = f.subs(k, k + 1) / f
 
     g = g.rewrite(gamma)
     if g.has(Piecewise):
