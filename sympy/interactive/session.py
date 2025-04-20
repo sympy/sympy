@@ -1,4 +1,6 @@
 """Tools for setting up interactive sessions. """
+import enum
+from code import InteractiveConsole
 
 from sympy.external.gmpy import GROUND_TYPES
 from sympy.external.importtools import version_tuple
@@ -26,6 +28,12 @@ Could not locate IPython. Having IPython installed is greatly recommended.
 See http://ipython.scipy.org for more details. If you use Debian/Ubuntu,
 just install the 'ipython' package and start isympy again.
 """
+
+
+class ConsoleBackend(enum.Enum):
+    PYTHON = "python"
+    IPYTHON = "ipython"
+    BPYTHON = "bpython"
 
 
 def _make_message(ipython=True, quiet=False, source=None):
@@ -297,7 +305,40 @@ def init_python_session():
     return SymPyConsole()
 
 
-def init_session(ipython=None, pretty_print=True, order=None,
+def init_bpython_session():
+    import bpython
+    import bpython.curtsiesfrontend
+    import bpython.curtsiesfrontend.interpreter
+    import bpython.curtsies
+    import bpython.config
+    import bpython.translations
+
+    bpython.translations.init()
+
+    class SympyBPythonConsole(InteractiveConsole):
+        def __init__(self):
+            super().__init__()
+            self.__local_ns = {}
+            self.__interp = bpython.curtsiesfrontend.interpreter.Interp(locals=self.__local_ns)
+            self.__repl = bpython.curtsies.FullCurtsiesRepl(bpython.config.Config(bpython.config.default_config_path()),
+                                                            interp=self.__interp)
+
+        def interact(self, banner=None, exitmsg=None):
+            if banner is not None:
+                print(banner)
+            with self.__repl.input_generator:
+                with self.__repl.window as win_:
+                    with self.__repl:
+                        self.__repl.height, self.__repl.width = win_.t.height, win_.t.width
+                        self.__repl.mainloop()
+
+        def runsource(self, source, filename="<input>", symbol="single"):
+            self.__interp.runsource(source, filename, symbol)
+
+    return SympyBPythonConsole()
+
+
+def init_session(console_backend=None, pretty_print=True, order=None,
                  use_unicode=None, use_latex=None, quiet=False, auto_symbols=False,
                  auto_int_to_Integer=False, str_printer=None, pretty_printer=None,
                  latex_printer=None, argv=[]):
@@ -396,11 +437,12 @@ def init_session(ipython=None, pretty_print=True, order=None,
 
     in_ipython = False
 
-    if ipython is not False:
+    ip = None
+    if console_backend == ConsoleBackend.IPYTHON or console_backend is None:
         try:
             import IPython
         except ImportError:
-            if ipython is True:
+            if console_backend == ConsoleBackend.IPYTHON:
                 raise RuntimeError("IPython is not available on this system")
             ip = None
         else:
@@ -410,13 +452,25 @@ def init_session(ipython=None, pretty_print=True, order=None,
             except ImportError:
                 ip = None
         in_ipython = bool(ip)
-        if ipython is None:
-            ipython = in_ipython
+        if console_backend is None:
+            if in_ipython:
+                console_backend = ConsoleBackend.IPYTHON
+            else:
+                console_backend = ConsoleBackend.PYTHON
 
-    if ipython is False:
+    if console_backend == ConsoleBackend.BPYTHON:
+        try:
+            import bpython
+            import bpython.translations
+            bpython.translations.init()
+        except ImportError:
+            raise RuntimeError("bpython is not available on this system")
+            ip = None
+
+    if console_backend == ConsoleBackend.PYTHON:
         ip = init_python_session()
         mainloop = ip.interact
-    else:
+    elif console_backend == ConsoleBackend.IPYTHON:
         ip = init_ipython_session(ip, argv=argv, auto_symbols=auto_symbols,
                                   auto_int_to_Integer=auto_int_to_Integer)
 
@@ -437,10 +491,18 @@ def init_session(ipython=None, pretty_print=True, order=None,
                 pass
         if not in_ipython:
             mainloop = ip.mainloop
+    elif console_backend == ConsoleBackend.BPYTHON:
+        ip = init_bpython_session()
+        mainloop = ip.interact
+    else:
+        print("Unknown console backend")
+        return
 
-    if auto_symbols and (not ipython or version_tuple(IPython.__version__) < version_tuple('0.11')):
+    if auto_symbols and (
+        console_backend != ConsoleBackend.IPYTHON or version_tuple(IPython.__version__) < version_tuple('0.11')):
         raise RuntimeError("automatic construction of symbols is possible only in IPython 0.11 or above")
-    if auto_int_to_Integer and (not ipython or version_tuple(IPython.__version__) < version_tuple('0.11')):
+    if auto_int_to_Integer and (
+        console_backend != ConsoleBackend.IPYTHON or version_tuple(IPython.__version__) < version_tuple('0.11')):
         raise RuntimeError("automatic int to Integer transformation is possible only in IPython 0.11 or above")
 
     _preexec_source = preexec_source
@@ -451,9 +513,9 @@ def init_session(ipython=None, pretty_print=True, order=None,
                   str_printer=str_printer, pretty_printer=pretty_printer,
                   latex_printer=latex_printer)
 
-    message = _make_message(ipython, quiet, _preexec_source)
+    message = _make_message(console_backend == ConsoleBackend.IPYTHON, quiet, _preexec_source)
 
-    if not in_ipython:
+    if not in_ipython or console_backend == ConsoleBackend.BPYTHON:
         print(message)
         mainloop()
         sys.exit('Exiting ...')

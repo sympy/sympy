@@ -314,15 +314,31 @@ def hypersimp(f, k):
           Journal of Symbolic Computation (1995) 20, 399-417
     """
     f = sympify(f)
-
-    g = f.subs(k, k + 1) / f
-
+    g = f.subs(k, k+1) / f
     g = g.rewrite(gamma)
+
+    if g.is_commutative is False:
+        return None
+
+    has_gamma = False
+    has_exp = False
+    for expr in g.atoms(Function):
+        if expr.func == gamma:
+            has_gamma = True
+        elif expr.func == exp and expr.has(k):
+            has_exp = True
+        if has_gamma and has_exp:
+            break
+
     if g.has(Piecewise):
         g = piecewise_fold(g)
         g = g.args[-1][0]
+
     g = expand_func(g)
-    g = powsimp(g, deep=True, combine='exp')
+    g = powsimp(g, deep=True, combine="exp")
+
+    if has_gamma and has_exp is False:
+        g = factor(g)
 
     if g.is_rational_function(k):
         return simplify(g, ratio=S.Infinity)

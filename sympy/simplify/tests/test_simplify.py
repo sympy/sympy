@@ -360,13 +360,42 @@ def test_hypersimp():
     assert hypersimp(binomial(n + 1, k), k) == (n - k + 1)/(k + 1)
 
     term = (4*k + 1)*factorial(k)/factorial(2*k + 1)
-    assert hypersimp(term, k) == S.Half*((4*k + 5)/(3 + 14*k + 8*k**2))
+    assert hypersimp(term, k) == (S.Half*((4*k + 5)/(8*k**2 + 14*k + 3)))
 
     term = 1/((2*k - 1)*factorial(2*k + 1))
-    assert hypersimp(term, k) == (k - S.Half)/((k + 1)*(2*k + 1)*(2*k + 3))
+    assert hypersimp(term, k) == ((k - S.Half)/((k + 1)*(2*k + 1)*(2*k + 3)))
 
     term = binomial(n, k)*(-1)**k/factorial(k)
     assert hypersimp(term, k) == (k - n)/(k + 1)**2
+
+    # issue 27901
+    term = binomial(n+1, k)*(2**(-n-1)) - binomial(n, k)*(2**(-n))
+    assert hypersimp(term, k).equals(-(-k + n + 1)*(2*k - n + 1)/((k + 1)*(-2*k + n + 1)))
+
+    term = 2**(-n - 1)*binomial(n + 1, k) - binomial(n, k)/2**n
+    assert hypersimp(term, k).equals(-(-k + n + 1)*(2*k - n + 1)/((k + 1)*(-2*k + n + 1)))
+
+    term = -2**(1 - k)*binomial(k + n - 1, k) + binomial(k + n, k)/2**k
+    assert hypersimp(term, k).equals((k + n)*(k - n + 1)/(2*(k + 1)*(k - n)))
+
+    term = -2**(1 - k)*factorial(k + 2)/factorial(k - 1) + factorial(k + 3)/(2**k*factorial(k))
+    assert hypersimp(term, k).equals((k - 2)*(k + 3)/(2*(k - 3)*(k + 1)))
+
+    term = 3**k*binomial(k + n, k)/factorial(k)
+    assert hypersimp(term, k).equals(3*(k + n + 1)/(k + 1)**2)
+
+    term = 2**k*binomial(k, 2)/(k + 1)
+    assert hypersimp(term, k).equals(2*(k + 1)**2/((k - 1)*(k + 2)))
+
+    term = (2*k + 1)*binomial(n, k)
+    assert hypersimp(term, k).equals(-(k - n)*(2*k + 3)/((k + 1)*(2*k + 1)))
+
+    term = (k + 1)*binomial(n, k)/(k + 2)
+    assert hypersimp(term, k).equals((-k + n)*(k + 2)**2/((k + 1)**2*(k + 3)))
+
+    term = n*(n + a + b)*a**n*b**n/(factorial(n + a)*factorial(n + b))
+    assert hypersimp(term, n) == (a*b*(n + 1)*(a + b + n + 1)/(n*(a + b + n)*(a + n + 1)*(b + n + 1)))
+    assert hypersimp((a**n)*(n**2), n) == a*(n + 1)**2/n**2
 
 
 def test_nsimplify():

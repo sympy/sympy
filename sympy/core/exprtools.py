@@ -1363,7 +1363,7 @@ def _mask_nc(eq, name=None):
     nc_obj = set()
     nc_syms = set()
     pot = preorder_traversal(expr, keys=default_sort_key)
-    for i, a in enumerate(pot):
+    for a in pot:
         if any(a == r[0] for r in rep):
             pot.skip()
         elif not a.is_commutative:
