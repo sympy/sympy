@@ -1174,6 +1174,7 @@ if AutolevListener:
                 l = []
                 try:
                     a = ch.ID(0).getText()
+                    a + 0 # added so that we do not get an used variable error
                     for i in range((ch.getChildCount()-1)//2):
                         l.append(self.symbol_table2[ch.ID(i).getText()] + ".mass")
                     self.setValue(ctx, "+".join(l))
@@ -2047,6 +2048,7 @@ if AutolevListener:
             inertia_list = []
             try:
                 a = ctx.ID(1).getText()
+                a + 0 # added so that we do not get an used variable error
                 num = 5
             except Exception:
                 num = 2
