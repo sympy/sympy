@@ -60,7 +60,7 @@ from sympy.core.numbers import (Float, I, Integer, pi, Rational)
 from sympy.core.singleton import S
 from sympy.core.symbol import Dummy
 from sympy.core.sympify import sympify
-from sympy.functions.combinatorial.factorials import (binomial, factorial)
+from sympy.functions.combinatorial.factorials import binomial
 from sympy.functions.elementary.complexes import re
 from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.miscellaneous import sqrt
@@ -70,43 +70,6 @@ from sympy.matrices.dense import zeros
 from sympy.matrices.immutable import ImmutableMatrix
 from sympy.utilities.misc import as_int
 from math import comb
-
-# This list of precomputed factorials is needed to massively
-# accelerate future calculations of the various coefficients
-_Factlist = [1]
-
-
-def _calc_factlist(nn):
-    r"""
-    Function calculates a list of precomputed factorials in order to
-    massively accelerate future calculations of the various
-    coefficients.
-
-    Parameters
-    ==========
-
-    nn : integer
-        Highest factorial to be computed.
-
-    Returns
-    =======
-
-    list of integers :
-        The list of precomputed factorials.
-
-    Examples
-    ========
-
-    Calculate list of factorials::
-
-        sage: from sage.functions.wigner import _calc_factlist
-        sage: _calc_factlist(10)
-        [1, 1, 2, 6, 24, 120, 720, 5040, 40320, 362880, 3628800]
-    """
-    if nn >= len(_Factlist):
-        for ii in range(len(_Factlist), int(nn + 1)):
-            _Factlist.append(_Factlist[ii - 1] * ii)
-    return _Factlist[:int(nn) + 1]
 
 
 def _int_or_halfint(value):
@@ -127,6 +90,7 @@ def _int_or_halfint(value):
         return _int_or_halfint(float(value))
     raise ValueError("expecting integer or half-integer, got %s" % value)
 
+
 def _doubled_int(value):
     """return double of value so that it is always an Python int"""
     if isinstance(value, int):
@@ -145,6 +109,7 @@ def _doubled_int(value):
         return _doubled_int(float(value))
     raise ValueError("expecting integer or half-integer, got %s" % value)
 
+
 def _check_dj_couple(dj1, dj2, dj3):
     """check if three angular momenta couple"""
     if (dj1 + dj2 + dj3) % 2 != 0:
@@ -156,6 +121,7 @@ def _check_dj_couple(dj1, dj2, dj3):
     if dj3 > dj1 + dj2:
         return False
     return True
+
 
 def wigner_3j(j_1, j_2, j_3, m_1, m_2, m_3):
     r"""
@@ -348,66 +314,6 @@ def clebsch_gordan(j_1, j_2, j_3, m_1, m_2, m_3):
     w = wigner_3j(j_1, j_2, j_3, m_1, m_2, -m_3)
 
     return (-1) ** (j_1 - j_2 + m_3) * sqrt(2 * j_3 + 1) * w
-
-
-def _big_delta_coeff(aa, bb, cc, prec=None):
-    r"""
-    Calculates the Delta coefficient of the 3 angular momenta for
-    Racah symbols. Also checks that the differences are of integer
-    value.
-
-    Parameters
-    ==========
-
-    aa :
-        First angular momentum, integer or half integer.
-    bb :
-        Second angular momentum, integer or half integer.
-    cc :
-        Third angular momentum, integer or half integer.
-    prec :
-        Precision of the ``sqrt()`` calculation.
-
-    Returns
-    =======
-
-    double : Value of the Delta coefficient.
-
-    Examples
-    ========
-
-        sage: from sage.functions.wigner import _big_delta_coeff
-        sage: _big_delta_coeff(1,1,1)
-        1/2*sqrt(1/6)
-    """
-
-    # the triangle test will only pass if a) all 3 values are ints or
-    # b) 1 is an int and the other two are half-ints
-    if not int_valued(aa + bb - cc):
-        raise ValueError("j values must be integer or half integer and fulfill the triangle relation")
-    if not int_valued(aa + cc - bb):
-        raise ValueError("j values must be integer or half integer and fulfill the triangle relation")
-    if not int_valued(bb + cc - aa):
-        raise ValueError("j values must be integer or half integer and fulfill the triangle relation")
-    if (aa + bb - cc) < 0:
-        return S.Zero
-    if (aa + cc - bb) < 0:
-        return S.Zero
-    if (bb + cc - aa) < 0:
-        return S.Zero
-
-    maxfact = max(aa + bb - cc, aa + cc - bb, bb + cc - aa, aa + bb + cc + 1)
-    _calc_factlist(maxfact)
-
-    argsqrt = Integer(_Factlist[int(aa + bb - cc)] *
-                     _Factlist[int(aa + cc - bb)] *
-                     _Factlist[int(bb + cc - aa)]) / \
-        Integer(_Factlist[int(aa + bb + cc + 1)])
-
-    ressqrt = sqrt(argsqrt)
-    if prec:
-        ressqrt = ressqrt.evalf(prec).as_real_imag()[0]
-    return ressqrt
 
 
 def wigner_6j(j_1, j_2, j_3, j_4, j_5, j_6, prec=None):
@@ -845,8 +751,7 @@ def gaunt(l_1, l_2, l_3, m_1, m_2, m_3, prec=None):
 
     Jens Rasch (2009-03-24): initial version for Sage.
     """
-    l1, l2, l3, m1, m2, m3 = [
-        as_int(i) for i in (l_1, l_2, l_3, m_1, m_2, m_3)]
+    l1, l2, l3, m1, m2, m3 = map(as_int, (l_1, l_2, l_3, m_1, m_2, m_3))
 
     if not _check_dj_couple(l1, l2, l3):
         return S.Zero
@@ -883,9 +788,9 @@ def gaunt(l_1, l_2, l_3, m_1, m_2, m_3, prec=None):
     res_den = comb(2 * l1, j1mm1) * \
         comb(2 * l2, j2mm2) * comb(2 * l3, j3mm3) * \
         comb(sumj + 1, 2 * l1 + 1) * comb(sumj + 1, 2 * l2 + 1)
-    ressqrt = sqrt(res_num / ((4*pi) * res_den))
+    ressqrt = sqrt(Integer(res_num) / res_den)
 
-    res = ressqrt * sumres
+    res = (ressqrt * sumres) / sqrt(4 * pi)
     if prec is not None:
         res = res.n(prec)
     return res
