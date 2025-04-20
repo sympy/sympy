@@ -631,7 +631,7 @@ def wigner_9j(j_1, j_2, j_3, j_4, j_5, j_6, j_7, j_8, j_9, prec=None):
         return S.Zero
     if dtmax % 2 == 1:
         sumres = -sumres
-    
+
     res_den = (dj3 + 1) * (dj6 + 1) * (dj9 + 1) * \
         (dj7 + 1) * (dj8 + 1) * (dj9 + 1)
     res_den *= comb(j123 + 1, dj3 + 1) * comb(dj3, pm231) * \
@@ -640,7 +640,7 @@ def wigner_9j(j_1, j_2, j_3, j_4, j_5, j_6, j_7, j_8, j_9, prec=None):
         comb(j147 + 1, dj7 + 1) * comb(dj7, (dj4 + dj7 - dj1) // 2) * \
         comb(j258 + 1, dj8 + 1) * comb(dj8, (dj5 + dj8 - dj2) // 2) * \
         comb(j369 + 1, dj9 + 1) * comb(dj9, (dj6 + dj9 - dj3) // 2)
-    
+
     res = sumres * sqrt(1/Integer(res_den))
     if prec:
         res = res.evalf(prec)
@@ -782,7 +782,7 @@ def gaunt(l_1, l_2, l_3, m_1, m_2, m_3, prec=None):
         return S.Zero
     if ((g + j3mm3 + imax) % 2) == 1:
         sumres = -sumres
-    
+
     sumres *= comb(g, g - l3) * comb(l3, g - l1)
     res_num = (2 * l3 + 1) * comb(2 * l3, jm1)
     res_den = comb(2 * l1, j1mm1) * \
