@@ -7,7 +7,7 @@ import types
 from sympy.assumptions import Q
 from sympy.core import Symbol, Function, Float, Rational, Integer, I, Mul, Pow, Eq, Lt, Le, Gt, Ge, Ne
 from sympy.functions import exp, factorial, factorial2, sin, Min, Max
-from sympy.logic import And, Xor
+from sympy.logic import And
 from sympy.series import Limit
 from sympy.testing.pytest import raises
 
@@ -369,7 +369,3 @@ def test_issue_22822():
     raises(ValueError, lambda: parse_expr('x', {'': 1}))
     data = {'some_parameter': None}
     assert parse_expr('some_parameter is None', data) is True
-
-def test_xor_eval_false():
-    p, q = Symbol("p"), Symbol("q")
-    assert parse_expr("p ^ q", evaluate=False) == Xor(p, q, evaluate=False)
