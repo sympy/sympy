@@ -1004,38 +1004,9 @@ def _get_examples_ode_sol_factorable():
     },
 
     #Below examples were added for the issue: https://github.com/sympy/sympy/issues/15889
-    'fact_13': {
-        'eq': f(x).diff(x)**2 - f(x)**3,
-        'sol': [Eq(f(x), 4/(C1**2 - 2*C1*x + x**2))],
-        'XFAIL': ['lie_group'] #It shows not implemented error for lie_group.
-    },
-
-    'fact_14': {
-        'eq': f(x).diff(x)**2 - f(x),
-        'sol': [Eq(f(x), C1**2/4 - C1*x/2 + x**2/4)]
-    },
-
     'fact_15': {
         'eq': f(x).diff(x)**2 - f(x)**2,
         'sol': [Eq(f(x), C1*exp(x)), Eq(f(x), C1*exp(-x))]
-    },
-
-    'fact_16': {
-        'eq': f(x).diff(x)**2 - f(x)**3,
-        'sol': [Eq(f(x), 4/(C1**2 - 2*C1*x + x**2))],
-    },
-
-    # This is from issue: https://github.com/sympy/sympy/issues/9446
-    'fact_18':{
-        'eq': Eq(f(2 * x), sin(Derivative(f(x)))),
-        'sol': [Eq(f(x), C1 + Integral(pi - asin(f(2*x)), x)), Eq(f(x), C1 + Integral(asin(f(2*x)), x))],
-        'checkodesol_XFAIL':True
-    },
-
-    # This is from issue: https://github.com/sympy/sympy/issues/7093
-    'fact_19': {
-        'eq': Derivative(f(x), x)**2 - x**3,
-        'sol': [Eq(f(x), C1 - 2*x**Rational(5,2)/5), Eq(f(x), C1 + 2*x**Rational(5,2)/5)],
     },
 
     'fact_20': {
@@ -1297,6 +1268,16 @@ def _get_examples_ode_sol_nth_algebraic():
         'eq': f(x).diff(x)-(a4*x**4 + a3*x**3 + a2*x**2 + a1*x + a0)**(-1/2),
         'sol': [Eq(f(x), C1 + Integral(1/sqrt(a0 + a1*x + a2*x**2 + a3*x**3 + a4*x**4), x))],
         'slow': True
+    },
+
+    # This is from issue: https://github.com/sympy/sympy/issues/9446
+    # This ODE should probably be rejected by dsolve.
+    # The solution is sort of correct but it is not particularly useful as an
+    # implicit solution.
+    'algeb_25':{
+        'eq': Eq(f(2 * x), sin(Derivative(f(x)))),
+        'sol': [Eq(f(x), C1 + pi*x - Integral(asin(f(2*x)), x)), Eq(f(x), C1 + Integral(asin(f(2*x)), x))],
+        'checkodesol_XFAIL': True,
     },
 
     }
@@ -2420,6 +2401,27 @@ def _get_examples_ode_sol_lie_group():
         'eq': exp(f(x).diff(x))-f(x)**2,
         'sol': [Eq(NonElementaryIntegral(1/log(y**2), (y, f(x))), C1 + x)],
         'XFAIL': ['lie_group'] #It shows not implemented error for lie_group.
+    },
+
+    'lie_group_22': {
+        'eq': f(x).diff(x)**2 - f(x)**3,
+        'sol': [Eq(f(x), 4/(C1**2 + 2*C1*x + x**2))],
+    },
+
+    'lie_group_23': {
+        'eq': f(x).diff(x)**2 - f(x),
+        'sol': [Eq(f(x), (C1 - x)**2/4)],
+    },
+
+    'lie_group_24': {
+        'eq': f(x).diff(x)**2 - f(x)**3,
+        'sol': [Eq(f(x), 4/(C1**2 + 2*C1*x + x**2))],
+    },
+
+    # This is from issue: https://github.com/sympy/sympy/issues/7093
+    'lie_group_25': {
+        'eq': Derivative(f(x), x)**2 - x**3,
+        'sol': [Eq(f(x), C1 - 2*x*sqrt(x**3)/5), Eq(f(x), C1 + 2*x*sqrt(x**3)/5)]
     },
 
     }
