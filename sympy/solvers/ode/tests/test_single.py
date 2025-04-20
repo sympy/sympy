@@ -914,7 +914,6 @@ def _get_examples_ode_sol_factorable():
     nth_linear_constant_coeff_undetermined_coefficients"""
 
     y = Dummy('y')
-    a0,a1,a2,a3,a4 = symbols('a0, a1, a2, a3, a4')
     return {
             'hint': "factorable",
             'func': f(x),
@@ -1031,13 +1030,6 @@ def _get_examples_ode_sol_factorable():
     'fact_16': {
         'eq': f(x).diff(x)**2 - f(x)**3,
         'sol': [Eq(f(x), 4/(C1**2 - 2*C1*x + x**2))],
-    },
-
-    # kamke ode 1.1
-    'fact_17': {
-        'eq': f(x).diff(x)-(a4*x**4 + a3*x**3 + a2*x**2 + a1*x + a0)**(-1/2),
-        'sol': [Eq(f(x), C1 + Integral(1/sqrt(a0 + a1*x + a2*x**2 + a3*x**3 + a4*x**4), x))],
-        'slow': True
     },
 
     # This is from issue: https://github.com/sympy/sympy/issues/9446
@@ -1162,6 +1154,7 @@ def _get_examples_ode_sol_nth_algebraic():
     M, m, r, t = symbols('M m r t')
     phi = Function('phi')
     k = Symbol('k')
+    a0,a1,a2,a3,a4 = symbols('a0, a1, a2, a3, a4')
     # This one needs a substitution f' = g.
     # 'algeb_12': {
     #     'eq': -exp(x) + (x*Derivative(f(x), (x, 2)) + Derivative(f(x), x))/x,
@@ -1305,6 +1298,14 @@ def _get_examples_ode_sol_nth_algebraic():
         'eq': f(x).diff(x) - 3*C1 - 3*x**2,
         'sol': [Eq(f(x), C2 + 3*C1*x + x**3)],
     },
+
+    # kamke ode 1.1
+    'algeb_24': {
+        'eq': f(x).diff(x)-(a4*x**4 + a3*x**3 + a2*x**2 + a1*x + a0)**(-1/2),
+        'sol': [Eq(f(x), C1 + Integral(1/sqrt(a0 + a1*x + a2*x**2 + a3*x**3 + a4*x**4), x))],
+        'slow': True
+    },
+
     }
     }
 
