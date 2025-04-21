@@ -4,10 +4,11 @@ from sympy.core.relational import Eq
 from sympy.core.singleton import S
 from sympy.core.symbol import (Symbol, symbols)
 from sympy.functions.combinatorial.factorials import (rf, binomial, factorial)
-from sympy.functions.combinatorial.numbers import (euler, fibonacci, harmonic)
+from sympy.functions.combinatorial.numbers import (fibonacci, euler, harmonic)
 from sympy.functions.elementary.complexes import Abs
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import (cos, sin)
+from sympy.functions.special.gamma_functions import gamma
 from sympy.polys.polytools import factor
 from sympy.solvers.recurr import rsolve, rsolve_hyper, rsolve_poly, rsolve_ratio
 from sympy.testing.pytest import raises, slow, XFAIL
@@ -77,10 +78,10 @@ def test_rsolve_hyper():
     assert rsolve_hyper([1, -2*n/a - 2/a, 1], 0, n) == 0
 
     # issue 27901
-    assert rsolve_hyper([-2*2**n, 2*2**n], -2*binomial(n, k) + binomial(n + 1, k), k) is None
     assert rsolve_hyper([-1, 1], factorial(n**2), n) is None
     assert rsolve_hyper([-1, 1], n**n, n) is None
     assert rsolve_hyper([-1, 1], sqrt(n), n) is None
+    assert rsolve_hyper([-1, 1], 1/k, k) is None
 
     assert rsolve_hyper([-2, 1], 2**(n**3 + 1), n) is None
     assert rsolve_hyper([-2, 1], 2**(a*n + 1), n) is None
@@ -88,7 +89,7 @@ def test_rsolve_hyper():
     assert rsolve_hyper([-1, 1], fibonacci(n), n) is None
     assert rsolve_hyper([-1, 1], euler(n), n) is None
     assert rsolve_hyper([-1, 1], harmonic(n), n) is None
-
+    assert rsolve_hyper([-(2*k - 1), 1], 1, k) is None
 
 @XFAIL
 def test_rsolve_ratio_missed():
@@ -273,6 +274,12 @@ def test_issue_17990():
     e = sol.subs({C0: 1, C1: 1, C2: 1, n: 1}).evalf()
     assert abs(e + 0.130434782608696) < 1e-13
 
+@XFAIL
+def test_issue_27975():
+    assert rsolve_hyper([-2*2**n, 2*2**n], -2*binomial(n, k) + binomial(n + 1, k), k) is not None
+
+    term = -2**(1 - k)*factorial(k + 2)/factorial(k - 1) + factorial(k + 3)/(2**k*factorial(k))
+    assert rsolve_hyper([-2**n, 2**n], term, k) is not None
 
 def test_issue_8697():
     a = Function('a')
