@@ -55,7 +55,7 @@ Copyright (C) 2008 Jens Rasch <jyr2000@gmail.com>
 from sympy.concrete.summations import Sum
 from sympy.core.add import Add
 from sympy.core.function import Function
-from sympy.core.numbers import (Float, I, Integer, pi, Rational)
+from sympy.core.numbers import (I, Integer, pi)
 from sympy.core.singleton import S
 from sympy.core.symbol import Dummy
 from sympy.core.sympify import sympify
