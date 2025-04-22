@@ -77,11 +77,7 @@ class SingleODEProblem:
     _eq_preprocessed: Expr
     _eq_high_order_free = None
 
-    def __init__(self, eq, func, sym, prep=True, **kwargs):
-        assert isinstance(eq, Expr)
-        assert isinstance(func, AppliedUndef)
-        assert isinstance(sym, Symbol)
-        assert isinstance(prep, bool)
+    def __init__(self, eq: Expr, func: AppliedUndef, sym: Symbol, prep: bool = True, **kwargs):
         self.eq = eq
         self.func = func
         self.sym = sym
@@ -1956,7 +1952,8 @@ class NthOrderReducible(SingleODESolver):
         are considered, and only in them should ``func`` appear.
         """
         # ODE only handles functions of 1 variable so this affirms that state
-        assert len(func.args) == 1
+        if len(func.args) != 1:
+            raise ValueError("Function must have exactly one argument")
         vc = [d.variable_count[0] for d in eq.atoms(Derivative)
             if d.expr == func and len(d.variable_count) == 1]
         ords = [c for v, c in vc if v == x]
