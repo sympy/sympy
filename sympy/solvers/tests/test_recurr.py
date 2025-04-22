@@ -274,9 +274,11 @@ def test_issue_17990():
     assert abs(e + 0.130434782608696) < 1e-13
 
 @XFAIL
-def test_issue_27975():
+def test_issue_27975a():
     assert rsolve_hyper([-2*2**n, 2*2**n], -2*binomial(n, k) + binomial(n + 1, k), k) is not None
 
+@XFAIL
+def test_issue_27975b():
     term = -2**(1 - k)*factorial(k + 2)/factorial(k - 1) + factorial(k + 3)/(2**k*factorial(k))
     assert rsolve_hyper([-2**n, 2**n], term, k) is not None
 
