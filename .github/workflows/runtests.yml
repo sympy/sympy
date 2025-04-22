@@ -309,7 +309,7 @@ jobs:
   # ------------------------- Slow tests --------------------------- #
 
   tests-slow:
-    needs: [doctests-latest, tests-latest]
+    needs: code-quality
 
     runs-on: ubuntu-latest
 
@@ -320,7 +320,7 @@ jobs:
           python-version: '3.13'
       - run: python -m pip install --upgrade pip
       - run: pip install -r requirements-dev.txt
-      - run: pytest -m slow --timeout 595 -n auto
+      - run: pytest -m slow --timeout 595 -n auto -v
 
   # -------------------- Test older (and newer) Python --------------- #
 
@@ -396,7 +396,7 @@ jobs:
   # -------------------- Build the html/latex docs ----------------- #
 
   sphinx:
-    needs: [doctests-latest, tests-latest]
+    needs: code-quality
 
     runs-on: ubuntu-latest
     steps:
