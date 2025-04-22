@@ -71,42 +71,15 @@ from sympy.utilities.misc import as_int
 from math import comb
 
 
-def _int_or_halfint(value):
-    """return Python int unless value is half-int (then return float)"""
-    if isinstance(value, int):
-        return value
-    elif type(value) is float:
-        if value.is_integer():
-            return int(value)  # an int
-        if (2*value).is_integer():
-            return value  # a float
-    elif isinstance(value, Rational):
-        if value.q == 2:
-            return value.p/value.q  # a float
-        elif value.q == 1:
-            return value.p  # an int
-    elif isinstance(value, Float):
-        return _int_or_halfint(float(value))
-    raise ValueError("expecting integer or half-integer, got %s" % value)
-
+def _as_int(value):
+    return as_int(value, strict=False)
 
 def _doubled_int(value):
     """return double of value so that it is always an Python int"""
-    if isinstance(value, int):
-        return value * 2
-    elif type(value) is float:
-        if value.is_integer():
-            return int(value * 2)
-        if (2*value).is_integer():
-            return int(2*value)
-    elif isinstance(value, Rational):
-        if value.q == 2:
-            return value.p
-        elif value.q == 1:
-            return value.p * 2
-    elif isinstance(value, Float):
-        return _doubled_int(float(value))
-    raise ValueError("expecting integer or half-integer, got %s" % value)
+    try:
+        return _as_int(value * 2)
+    except ValueError:
+        raise ValueError("expecting integer or half-integer, got %s" % value)
 
 
 def _check_dj_couple(dj1, dj2, dj3):
@@ -212,8 +185,7 @@ def wigner_3j(j_1, j_2, j_3, m_1, m_2, m_3):
     """
 
     dj1, dj2, dj3, dm1, dm2, dm3 = \
-        map(_doubled_int, map(sympify,
-            [j_1, j_2, j_3, m_1, m_2, m_3]))
+        map(_doubled_int, [j_1, j_2, j_3, m_1, m_2, m_3])
 
 
     if dm1 + dm2 + dm3 != 0:
@@ -303,16 +275,8 @@ def clebsch_gordan(j_1, j_2, j_3, m_1, m_2, m_3):
 
     - Jens Rasch (2009-03-24): initial version
     """
-    j_1 = sympify(j_1)
-    j_2 = sympify(j_2)
-    j_3 = sympify(j_3)
-    m_1 = sympify(m_1)
-    m_2 = sympify(m_2)
-    m_3 = sympify(m_3)
-
     w = wigner_3j(j_1, j_2, j_3, m_1, m_2, -m_3)
-
-    return (-1) ** (j_1 - j_2 + m_3) * sqrt(2 * j_3 + 1) * w
+    return (-1) ** (j_1 - j_2 + m_3) * sqrt(Integer(2 * j_3 + 1)) * w
 
 
 def wigner_6j(j_1, j_2, j_3, j_4, j_5, j_6, prec=None):
@@ -409,8 +373,8 @@ def wigner_6j(j_1, j_2, j_3, j_4, j_5, j_6, prec=None):
     algebra system [Rasch03]_.
 
     """
-    dj1, dj2, dj3, dj4, dj5, dj6 = map(_doubled_int, map(sympify,
-                [j_1, j_2, j_3, j_4, j_5, j_6]))
+    dj1, dj2, dj3, dj4, dj5, dj6 = \
+          map(_doubled_int, [j_1, j_2, j_3, j_4, j_5, j_6])
     if not _check_dj_couple(dj1, dj2, dj3):
         return S.Zero
     if not _check_dj_couple(dj1, dj5, dj6):
@@ -507,7 +471,6 @@ def racah(aa, bb, cc, dd, ee, ff, prec=None):
 
     - Jens Rasch (2009-03-24): initial version
     """
-    aa, bb, cc, dd, ee, ff = map(sympify, [aa, bb, cc, dd, ee, ff])
     res = wigner_6j(aa, bb, ee, dd, cc, ff)
     if res == 0:
         return S.Zero
@@ -570,8 +533,19 @@ def wigner_9j(j_1, j_2, j_3, j_4, j_5, j_6, j_7, j_8, j_9, prec=None):
     algebra system [Rasch03]_.
     """
     dj1, dj2, dj3, dj4, dj5, dj6, dj7, dj8, dj9 = \
-        map(_doubled_int, map(sympify,
-            [j_1, j_2, j_3, j_4, j_5, j_6, j_7, j_8, j_9]))
+        map(_doubled_int, [j_1, j_2, j_3, j_4, j_5, j_6, j_7, j_8, j_9])
+    if not _check_dj_couple(dj1, dj2, dj3):
+        return S.Zero
+    if not _check_dj_couple(dj4, dj5, dj6):
+        return S.Zero
+    if not _check_dj_couple(dj7, dj8, dj9):
+        return S.Zero
+    if not _check_dj_couple(dj1, dj4, dj7):
+        return S.Zero
+    if not _check_dj_couple(dj2, dj5, dj8):
+        return S.Zero
+    if not _check_dj_couple(dj3, dj6, dj9):
+        return S.Zero
     j123 = (dj1 + dj2 + dj3) // 2
     j456 = (dj4 + dj5 + dj6) // 2
     j789 = (dj7 + dj8 + dj9) // 2
@@ -750,7 +724,7 @@ def gaunt(l_1, l_2, l_3, m_1, m_2, m_3, prec=None):
 
     Jens Rasch (2009-03-24): initial version for Sage.
     """
-    l1, l2, l3, m1, m2, m3 = map(as_int, (l_1, l_2, l_3, m_1, m_2, m_3))
+    l1, l2, l3, m1, m2, m3 = map(_as_int, (l_1, l_2, l_3, m_1, m_2, m_3))
 
     if not _check_dj_couple(l1, l2, l3):
         return S.Zero
@@ -915,8 +889,8 @@ def real_gaunt(l_1, l_2, l_3, mu_1, mu_2, mu_3, prec=None):
     coefficient, so it is suitable for finite precision arithmetic in so far
     as the algorithm which computes the Gaunt coefficient is.
     """
-    l_1, l_2, l_3, mu_1, mu_2, mu_3 = [
-        as_int(i) for i in (l_1, l_2, l_3, mu_1, mu_2, mu_3)]
+    l_1, l_2, l_3, mu_1, mu_2, mu_3 = \
+         map(_as_int, [l_1, l_2, l_3, mu_1, mu_2, mu_3])
 
     # check for quick exits
     if sum(1 for i in (mu_1, mu_2, mu_3) if i < 0) % 2:
