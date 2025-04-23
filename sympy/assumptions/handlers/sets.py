@@ -1,7 +1,6 @@
 """
 Handlers for predicates related to set membership: integer, rational, etc.
 """
-from sympy.abc import x
 from sympy.assumptions import Q, ask
 from sympy.core import Add, Basic, Expr, Mul, Pow, S
 from sympy.core.numbers import (AlgebraicNumber, ComplexInfinity, Exp1, Float,
@@ -24,6 +23,7 @@ from ..predicates.sets import (IntegerPredicate, RationalPredicate,
     IrrationalPredicate, RealPredicate, ExtendedRealPredicate,
     HermitianPredicate, ComplexPredicate, ImaginaryPredicate,
     AntihermitianPredicate, AlgebraicPredicate, TranscendentalPredicate)
+from ... import Dummy
 
 
 # IntegerPredicate
@@ -832,12 +832,14 @@ def  _TranscendentalPredicate_number(expr, assumptions):
     has_pi = expr.has(pi)
     if has_E == has_pi:
         return None
+
+    dummy_x = Dummy('x')
     if has_E:
-        expr = expr.subs(E, x)
+        expr = expr.subs(E, dummy_x)
     if has_pi:
-        expr = expr.subs(pi, x)
-    if expr.is_polynomial(x):
-        expr_poly = Poly(expr, x)
+        expr = expr.subs(pi, dummy_x)
+    if expr.is_polynomial(dummy_x):
+        expr_poly = Poly(expr, dummy_x)
         if all(coeff.is_Rational for coeff in expr_poly.coeffs()):
             return True
 
