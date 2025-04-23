@@ -313,19 +313,62 @@ def hypersimp(f, k):
        1. W. Koepf, Algorithms for m-fold Hypergeometric Summation,
           Journal of Symbolic Computation (1995) 20, 399-417
     """
+def hypersimp(f: Expr, k: Expr) -> Expr | None:
     f = sympify(f)
 
-    g = f.subs(k, k + 1) / f
+    if not f.is_commutative:
+        return None
 
-    g = g.rewrite(gamma)
-    if g.has(Piecewise):
-        g = piecewise_fold(g)
-        g = g.args[-1][0]
-    g = expand_func(g)
-    g = powsimp(g, deep=True, combine='exp')
+    f = f.rewrite(gamma)
 
-    if g.is_rational_function(k):
-        return simplify(g, ratio=S.Infinity)
+    f = expand_func(f)
+    f = factor_terms(f)
+    return _get_term_ratio(f, k)
+
+
+def _get_term_ratio(f: Expr, k: Expr) -> Expr | None:
+    if f.is_rational_function(k):
+        # If f is a rational function then its term ratio is as well
+        return f.subs(k, k+1) / f
+
+    elif isinstance(f, Mul):
+        # Compute term ratio for each factor
+        ratios = []
+        for a in f.args:
+            r = _get_term_ratio(a, k)
+            if r is None:
+                return None
+            ratios.append(r)
+        return Mul(*ratios)
+
+    elif isinstance(f, (Pow, exp)):
+        b, e = f.as_base_exp()
+        if e.is_Integer:
+            # f(k)**e, Compute term ratio for f(k)
+            r = _get_term_ratio(b, k)
+            if r is not None:
+                return r**e
+        elif not b.has_xfree({k}):
+            # b**(c*k + ...), ratio is b**c
+            c = _linear_coeff(e, k)
+            if c is not None:
+                return b**c
+
+    elif isinstance(f, gamma):
+        from sympy.functions.combinatorial.factorials import RisingFactorial
+        a: Expr = f.args[0]
+        c = _linear_coeff(a, k)
+        if c is not None and c.is_Integer:
+            # gamma(a) = gamma(c*k + ...)
+            return RisingFactorial(a, c)
+
+    return None
+
+
+def _linear_coeff(e: Expr, k: Expr) -> Expr | None:
+    p = e.as_poly(k)
+    if p is not None and p.degree() == 1:
+        return p.LC()
     else:
         return None
 
