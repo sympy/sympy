@@ -174,7 +174,7 @@ jobs:
         run: pip install aesara
 
       # dependencies to install in all Python versions:
-      - run: pip install numpy numexpr matplotlib ipython cython          \
+      - run: pip install numpy numexpr matplotlib bpython ipython cython  \
                          wurlitzer autowrap lxml lark z3-solver pycosat   \
                          jax jaxlib libclang scipy                        \
                          'antlr4-python3-runtime==4.11.*'                 \
@@ -309,7 +309,7 @@ jobs:
   # ------------------------- Slow tests --------------------------- #
 
   tests-slow:
-    needs: [doctests-latest, tests-latest]
+    needs: code-quality
 
     runs-on: ubuntu-latest
 
@@ -320,7 +320,7 @@ jobs:
           python-version: '3.13'
       - run: python -m pip install --upgrade pip
       - run: pip install -r requirements-dev.txt
-      - run: pytest -m slow --timeout 595 -n auto
+      - run: pytest -m slow --timeout 595 -n auto -v
 
   # -------------------- Test older (and newer) Python --------------- #
 
@@ -396,7 +396,7 @@ jobs:
   # -------------------- Build the html/latex docs ----------------- #
 
   sphinx:
-    needs: [doctests-latest, tests-latest]
+    needs: code-quality
 
     runs-on: ubuntu-latest
     steps:
@@ -474,7 +474,7 @@ jobs:
 
       - run: git remote add upstream https://github.com/sympy/sympy.git
       - run: git fetch upstream master
-      - run: git fetch upstream 1.13
+      - run: git fetch upstream 1.14
 
       - name: Configure benchmarks
         run: asv machine --yes --config asv.conf.actions.json
@@ -486,8 +486,8 @@ jobs:
         # Output benchmark results
       - run: asv compare upstream/master HEAD --config asv.conf.actions.json --factor 1.5 | tee pr_vs_master.txt
       - run: asv compare upstream/master HEAD --config asv.conf.actions.json --factor 1.5 --only-changed | tee pr_vs_master_changed.txt
-      - run: asv compare upstream/1.13 upstream/master --config asv.conf.actions.json --factor 1.5 | tee master_vs_release.txt
-      - run: asv compare upstream/1.13 upstream/master --config asv.conf.actions.json --factor 1.5 --only-changed | tee master_vs_release_changed.txt
+      - run: asv compare upstream/1.14 upstream/master --config asv.conf.actions.json --factor 1.5 | tee master_vs_release.txt
+      - run: asv compare upstream/1.14 upstream/master --config asv.conf.actions.json --factor 1.5 --only-changed | tee master_vs_release_changed.txt
 
         # we save all outputs as artifacts that can be downloaded from the
         # GitHub Actions summary page.
