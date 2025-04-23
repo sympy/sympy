@@ -4864,11 +4864,11 @@ class StateSpace(LinearTimeInvariant):
         transformation matrix `T` such that:
 
         .. math::
-        $$\begin{cases}
-        \bar A=T^{-1}AT\\
-        \bar B=T^{-1}B\\
-        \bar C= CT\\
-        \bar D=D\end{cases}$$
+            \begin{cases}
+            \bar A=T^{-1}AT\\
+            \bar B=T^{-1}B\\
+            \bar C= CT\\
+            \bar D=D\end{cases}
 
         """
         T_inv = transform_matrix.inv()
@@ -4887,22 +4887,19 @@ class StateSpace(LinearTimeInvariant):
         and unobservable subsystems.
 
         .. math::
-
-        \begin{bmatrix}
-        A_{O} & 0\\ A_{O\bar O} & A_{\bar O}
-        \end{bmatrix}
-
-        .. math::
-
-        \begin{bmatrix}
-        B_{O} \\ B_{\bar O}
-        \end{bmatrix}
+            \begin{bmatrix}
+            A_{O} & 0\\ A_{O\bar O} & A_{\bar O}
+            \end{bmatrix}
 
         .. math::
+            \begin{bmatrix}
+            B_{O} \\ B_{\bar O}
+            \end{bmatrix}
 
-        \begin{bmatrix}
-        C_{O} & 0
-        \end{bmatrix}
+        .. math::
+            \begin{bmatrix}
+            C_{O} & 0
+            \end{bmatrix}
 
         Examples
         ========
@@ -4951,22 +4948,19 @@ class StateSpace(LinearTimeInvariant):
         and uncontrollable subsystems.
 
         .. math::
-
-        \begin{bmatrix}
-        A_{R} & A_{R\bar R}\\0  & A_{\bar R}
-        \end{bmatrix}
-
-        .. math::
-
-        \begin{bmatrix}
-        B_{R} \\ 0
-        \end{bmatrix}
+            \begin{bmatrix}
+            A_{R} & A_{R\bar R}\\0  & A_{\bar R}
+            \end{bmatrix}
 
         .. math::
+            \begin{bmatrix}
+            B_{R} \\ 0
+            \end{bmatrix}
 
-        \begin{bmatrix}
-        C_{R} & C_{\bar R}
-        \end{bmatrix}
+        .. math::
+            \begin{bmatrix}
+            C_{R} & C_{\bar R}
+            \end{bmatrix}
 
         Examples
         ========
