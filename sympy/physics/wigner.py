@@ -72,6 +72,7 @@ from math import comb
 
 
 def _as_int(value):
+    """use non-strict conversion to int to handle floats"""
     return as_int(value, strict=False)
 
 def _doubled_int(value):
@@ -207,10 +208,6 @@ def wigner_3j(j_1, j_2, j_3, m_1, m_2, m_3):
     j2mm2 = (dj2 - dm2) // 2
     j3mm3 = (dj3 - dm3) // 2
     j1pm1 = (dj1 + dm1) // 2
-    res_num = comb(dj1, jm2) * comb(dj2, jm1)
-    res_den = comb(sumj, jm3) * comb(dj1, j1mm1) * \
-        comb(dj2, j2mm2) * comb(dj3, j3mm3) * (sumj + 1)
-    ressqrt = sqrt(Integer(res_num) / Integer(res_den))
 
     imin = max(0, j1pm1 - jm2, j2mm2 - jm1)
     imax = min(jm3, j1pm1, j2mm2)
@@ -219,6 +216,13 @@ def wigner_3j(j_1, j_2, j_3, m_1, m_2, m_3):
         ti = comb(jm3, ii) * comb(jm2, j1pm1 - ii) * \
             comb(jm1, j2mm2 - ii)
         sumres = ti - sumres
+    if sumres == 0:
+        return S.Zero
+
+    res_num = comb(dj1, jm2) * comb(dj2, jm1)
+    res_den = comb(sumj, jm3) * comb(dj1, j1mm1) * \
+        comb(dj2, j2mm2) * comb(dj3, j3mm3) * (sumj + 1)
+    ressqrt = sqrt(Integer(res_num) / Integer(res_den))
 
     phase = (-1) ** (dj1 + (dj3 + dm3) // 2 + imax)
     res = phase * ressqrt * sumres

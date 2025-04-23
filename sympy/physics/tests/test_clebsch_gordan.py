@@ -18,6 +18,29 @@ def test_clebsch_gordan_docs():
     assert clebsch_gordan(Rational(3, 2), S.Half, 1, Rational(-1, 2), S.Half, 0) == -sqrt(2)/2
 
 
+def test_trival_zero():
+    x = 0.5
+    assert clebsch_gordan(x, x, 1, x, x, -1) == 0
+    assert clebsch_gordan(x, x, x, x, x, x) == 0
+    assert clebsch_gordan(1, 2, 10, 0, 0, 0) == 0
+    assert clebsch_gordan(-1, 2, 3, 0, 0, 0) == 0
+    assert clebsch_gordan(x, x, 1, 1.5, x, 2) == 0
+    assert clebsch_gordan(1, 2, 3, x, x, 1) == 0
+    assert clebsch_gordan(2, 3, 4, 0, 0, 0) == 0
+
+    assert wigner_6j(x, x, x, x, x, x) == 0
+    assert wigner_6j(x, x, 1, x, x, x) == 0
+    assert wigner_6j(x, x, 1, -1, x, 1) == 0
+    assert wigner_6j(1, 1, 2, x, x, x) == 0
+
+    assert wigner_9j(x, x, x, x, x, x, x, x, x) == 0
+    assert wigner_9j(x, x, 1, x, x, x, x, x, x) == 0
+    assert wigner_9j(x, x, 1, x, x, 1, x, x, x) == 0
+    assert wigner_9j(x, x, 1, x, x, 1, x, x, 1) == 0
+    assert wigner_9j(x, x, 1, x, x, 1, 1, x, x) == 0
+    assert wigner_9j(x, x, 1, x, x, 0, 1, 1, 2) == 0
+
+
 def test_clebsch_gordan():
     # Argument order: (j_1, j_2, j, m_1, m_2, m)
 
@@ -77,6 +100,7 @@ def test_wigner():
     assert wigner_9j(3, 3, 2, 3, 3, 2, 3, 3, 2) == 3221*sqrt(
         70)/(246960*sqrt(105)) - 365/(3528*sqrt(70)*sqrt(105))
     assert wigner_6j(5, 5, 5, 5, 5, 5) == Rational(1, 52)
+    assert wigner_6j(2, 2, 2, 1.5, 1.5, 1.5) == 0
     assert tn(wigner_6j(8, 8, 8, 8, 8, 8, prec=64), Rational(-12219, 965770))
     assert wigner_6j(1, 1, 1, 1.0, np.float64(1.0), 1) == Rational(1, 6)
     assert wigner_6j(3.0, np.float32(3), 3.0, 3, 3, 3) == Rational(-1, 14)
@@ -174,6 +198,7 @@ def test_realgaunt():
 
 
 def test_racah():
+    assert racah(2,2,2,2,1,3) == 0
     assert racah(3,3,3,3,3,3) == Rational(-1,14)
     assert racah(2,2,2,2,2,2) == Rational(-3,70)
     assert racah(7,8,7,1,7,7, prec=4).is_Float
