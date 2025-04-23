@@ -325,7 +325,7 @@ def hypersimp(f, k):
     return _get_term_ratio(f, k)
 
 
-def _get_term_ratio(f: Expr, k: Expr) -> Expr | None:
+def _get_term_ratio(f, k):
     if f.is_rational_function(k):
         # If f is a rational function then its term ratio is as well
         return f.subs(k, k+1) / f
@@ -355,7 +355,7 @@ def _get_term_ratio(f: Expr, k: Expr) -> Expr | None:
 
     elif isinstance(f, gamma):
         from sympy.functions.combinatorial.factorials import RisingFactorial
-        a: Expr = f.args[0]
+        a = f.args[0]
         c = _linear_coeff(a, k)
         if c is not None and c.is_Integer:
             # gamma(a) = gamma(c*k + ...)
@@ -364,7 +364,7 @@ def _get_term_ratio(f: Expr, k: Expr) -> Expr | None:
     return None
 
 
-def _linear_coeff(e: Expr, k: Expr) -> Expr | None:
+def _linear_coeff(e, k):
     p = e.as_poly(k)
     if p is not None and p.degree() == 1:
         return p.LC()
