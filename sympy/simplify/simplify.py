@@ -313,7 +313,6 @@ def hypersimp(f, k):
        1. W. Koepf, Algorithms for m-fold Hypergeometric Summation,
           Journal of Symbolic Computation (1995) 20, 399-417
     """
-def hypersimp(f: Expr, k: Expr) -> Expr | None:
     f = sympify(f)
 
     if not f.is_commutative:
