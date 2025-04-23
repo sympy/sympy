@@ -4845,6 +4845,167 @@ class StateSpace(LinearTimeInvariant):
         D[self.num_outputs:, self.num_inputs:] = other._D
         return StateSpace(A, B, C, D)
 
+    def _calc_orthogonal_complement(self, M, dim):
+        """
+        Returns a basis of the orthogonal complement of a subspace
+        represented by the matrix M.
+        The orthogonal complement is computed as the null space of the
+        transpose of M.
+
+        """
+        if M.shape[0] == 0:
+            return eye(dim).columnspace()
+
+        return M.T.nullspace()
+
+    def apply_similarity_transform(self, transform_matrix):
+        r"""
+        Returns an algebrically equivalent state space model, based on the
+        transformation matrix `T` such that:
+
+        .. math::
+        $$\begin{cases}
+        \bar A=T^{-1}AT\\
+        \bar B=T^{-1}B\\
+        \bar C= CT\\
+        \bar D=D\end{cases}$$
+
+        """
+        T_inv = transform_matrix.inv()
+        A_decomp = T_inv * self._A * transform_matrix
+        B_decomp = T_inv * self._B
+        C_decomp = self._C * transform_matrix
+
+        return StateSpace(A_decomp, B_decomp, C_decomp, self._D)
+
+    def to_observable_form(self):
+        r"""
+        Returns an equivalent state space model decomposed in observable and
+        unobservable parts.
+        The returned system is algebraically similar to the original but with
+        the A and C matrices in block triangular form showing the observable
+        and unobservable subsystems.
+
+        .. math::
+
+        \begin{bmatrix}
+        A_{O} & 0\\ A_{O\bar O} & A_{\bar O}
+        \end{bmatrix}
+
+        .. math::
+
+        \begin{bmatrix}
+        B_{O} \\ B_{\bar O}
+        \end{bmatrix}
+
+        .. math::
+
+        \begin{bmatrix}
+        C_{O} & 0
+        \end{bmatrix}
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix, Rational
+        >>> from sympy.physics.control import StateSpace
+        >>> A = Matrix([[1, 0, 1], [0,0,0],[0,0,-2]])
+        >>> B = Matrix([1,1,0])
+        >>> C = Matrix([1,1,Rational(1,3)]).T
+        >>> ss = StateSpace(A, B, C)
+        >>> ss = ss.to_observable_form()
+        >>> ss.A
+        Matrix([
+        [0,  0,  0],
+        [0,  1,  0],
+        [0, -3, -2]])
+        >>> ss.B
+        Matrix([
+        [    1],
+        [ 3/10],
+        [-3/10]])
+        >>> ss.C
+        Matrix([[1, 10/3, 0]])
+
+        """
+        obs_subsp = Matrix.hstack(*self.observable_subspace())
+        unobs_subsp = Matrix.hstack(*self.unobservable_subspace())
+
+        if unobs_subsp.shape[1] == 0:
+            # fully observable system
+            return self
+
+        if obs_subsp.shape[1] == 0:
+            # fully unobservable system
+            return self
+
+        T = Matrix.hstack(obs_subsp, unobs_subsp)
+        return self.apply_similarity_transform(T)
+
+    def to_controllable_form(self):
+        r"""
+        Returns an equivalent state space model decomposed in controllable and
+        uncontrollable parts.
+        The returned system is algebraically similar to the original but with
+        the A and B matrices in block triangular form showing the controllable
+        and uncontrollable subsystems.
+
+        .. math::
+
+        \begin{bmatrix}
+        A_{R} & A_{R\bar R}\\0  & A_{\bar R}
+        \end{bmatrix}
+
+        .. math::
+
+        \begin{bmatrix}
+        B_{R} \\ 0
+        \end{bmatrix}
+
+        .. math::
+
+        \begin{bmatrix}
+        C_{R} & C_{\bar R}
+        \end{bmatrix}
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix
+        >>> from sympy.physics.control import StateSpace
+        >>> A = Matrix([[1, 0, 1], [0,0,0],[0,0,-2]])
+        >>> B = Matrix([1,1,0])
+        >>> C = Matrix([1,1,0]).T
+        >>> ss = StateSpace(A, B, C)
+        >>> ss = ss.to_controllable_form()
+        >>> ss.A
+        Matrix([
+        [0, 0,  0],
+        [1, 1,  1],
+        [0, 0, -2]])
+        >>> ss.B
+        Matrix([
+        [1],
+        [0],
+        [0]])
+        >>> ss.C
+        Matrix([[2, 1, 0]])
+
+        """
+        contr_subsp = Matrix.hstack(*self.controllable_subspace())
+        uncontr_subsp = Matrix.hstack(*self.uncontrollable_subspace())
+
+        if uncontr_subsp.shape[1] == 0:
+            # fully controllable system
+            return self
+
+        if contr_subsp.shape[1] == 0:
+            # fully uncontrollable system
+            return self
+
+        T = Matrix.hstack(contr_subsp, uncontr_subsp)
+        return self.apply_similarity_transform(T)
+
     def observability_matrix(self):
         """
         Returns the observability matrix of the state space model:
@@ -4876,7 +5037,11 @@ class StateSpace(LinearTimeInvariant):
         for i in range(1,n):
             ob = ob.col_join(self._C * self._A**i)
 
-        return ob
+        return Matrix(ob)
+
+    def unobservable_subspace(self):
+        """Returns the unobservable subspace of the state space model."""
+        return self.observability_matrix().nullspace()
 
     def observable_subspace(self):
         """
@@ -4895,13 +5060,14 @@ class StateSpace(LinearTimeInvariant):
         >>> ob_subspace = ss.observable_subspace()
         >>> ob_subspace
         [Matrix([
-        [0],
-        [1]]), Matrix([
         [1],
-        [0]])]
+        [0]]), Matrix([
+        [0],
+        [1]])]
 
         """
-        return self.observability_matrix().columnspace()
+        M = Matrix.hstack(*self.unobservable_subspace())
+        return self._calc_orthogonal_complement(M, self._A.shape[0])
 
     def is_observable(self):
         """
@@ -4953,7 +5119,12 @@ class StateSpace(LinearTimeInvariant):
         for i in range(1, n):
             co = co.row_join(((self._A)**i) * self._B)
 
-        return co
+        return Matrix(co)
+
+    def uncontrollable_subspace(self):
+        """Returns the uncontrollable subspace of the state space model."""
+        M = Matrix.hstack(*self.controllable_subspace())
+        return self._calc_orthogonal_complement(M, self._A.shape[0])
 
     def controllable_subspace(self):
         """

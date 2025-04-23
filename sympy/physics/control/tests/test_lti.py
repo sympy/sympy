@@ -1834,10 +1834,16 @@ def test_StateSpace_functions():
     assert SS2.is_observable() == False
     assert SS1.observability_matrix() == Matrix([[0, 1], [1, 0]])
     assert SS2.observability_matrix() == Matrix([[-1,  1], [ 1, -1], [ 3, -3], [-3,  3]])
-    assert SS1.observable_subspace() == [Matrix([[0], [1]]), Matrix([[1], [0]])]
-    assert SS2.observable_subspace() == [Matrix([[-1], [ 1], [ 3], [-3]])]
+    assert SS1.observable_subspace() == [Matrix([[1], [0]]), Matrix([[0], [1]])]
+    assert SS2.observable_subspace() == [Matrix([[-1], [ 1]])]
     Qo = SS4.observability_matrix().subs([(a0, 0), (a1, -6), (a2, 1), (a3, -5), (c1, 0), (c2, 1)])
     assert Qo == Matrix([[0, 1], [1, -5]])
+
+    ss_obs = StateSpace(Matrix([[1, 0, 1], [0,0,0],[0,0,-2]]), Matrix([1,1,0]), Matrix([1,1,Rational(1,3)]).T).to_observable_form()
+    A_obs = ss_obs.A[:2, :2]
+    A_nobs = ss_obs.A[2:, 2:]
+    assert A_obs.eigenvals() == {0: 1, 1: 1}
+    assert A_nobs.eigenvals() == {-2: 1}
 
     # Controllability
     assert SS1.is_controllable() == True
@@ -1853,6 +1859,11 @@ def test_StateSpace_functions():
                                           [a2*b1 + a3*b2]])]
     Qc = SS4.controllability_matrix().subs([(a0, 0), (a1, 1), (a2, -6), (a3, -5), (b1, 0), (b2, 1)])
     assert Qc == Matrix([[0, 1], [1, -5]])
+    ss_contr = StateSpace(Matrix([[1, 0, 1], [0,0,0],[0,0,-2]]), Matrix([1,1,0]), Matrix([1,1,0]).T).to_controllable_form()
+    A_contr = ss_contr.A[:2, :2]
+    A_ncontr = ss_contr.A[2:, 2:]
+    assert A_contr.eigenvals() == {0: 1, 1: 1}
+    assert A_ncontr.eigenvals() == {-2: 1}
 
     # Append
     A1 = Matrix([[0, 1], [1, 0]])
