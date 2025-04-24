@@ -20,7 +20,7 @@ from sympy.core.sorting import ordered
 from sympy.core.sympify import _sympify
 from sympy.core.traversal import bottom_up as _bottom_up, walk as _walk
 from sympy.functions import gamma, exp, sqrt, log, exp_polar, re
-from sympy.functions.combinatorial.factorials import CombinatorialFunction
+from sympy.functions.combinatorial.factorials import (CombinatorialFunction, RisingFactorial)
 from sympy.functions.elementary.complexes import unpolarify, Abs, sign
 from sympy.functions.elementary.exponential import ExpBase
 from sympy.functions.elementary.hyperbolic import HyperbolicFunction
@@ -36,6 +36,8 @@ from sympy.logic.boolalg import Boolean
 from sympy.matrices.expressions import (MatrixExpr, MatAdd, MatMul,
                                             MatPow, MatrixSymbol)
 from sympy.polys import together, cancel, factor
+from sympy.polys.matrices.linsolve import _lin_eq2dict
+from sympy.polys.solvers import PolyNonlinearError
 from sympy.polys.numberfields.minpoly import _is_sum_surds, _minimal_polynomial_sq
 from sympy.sets.sets import Set
 from sympy.simplify.combsimp import combsimp
@@ -328,7 +330,7 @@ def hypersimp(f, k):
 def _get_term_ratio(f, k):
     if f.is_rational_function(k):
         # If f is a rational function then its term ratio is as well
-        return f.subs(k, k+1) / f
+        return together(f.subs(k, k+1) / f)
 
     elif isinstance(f, Mul):
         # Compute term ratio for each factor
@@ -354,7 +356,6 @@ def _get_term_ratio(f, k):
                 return b**c
 
     elif isinstance(f, gamma):
-        from sympy.functions.combinatorial.factorials import RisingFactorial
         a = f.args[0]
         c = _linear_coeff(a, k)
         if c is not None and c.is_Integer:
@@ -365,10 +366,10 @@ def _get_term_ratio(f, k):
 
 
 def _linear_coeff(e, k):
-    p = e.as_poly(k)
-    if p is not None and p.degree() == 1:
-        return p.LC()
-    else:
+    try:
+        return _lin_eq2dict(e, {k})[1].get(k, S.Zero)
+    except (PolyNonlinearError, ValueError):
+        # e is not linear in k
         return None
 
 

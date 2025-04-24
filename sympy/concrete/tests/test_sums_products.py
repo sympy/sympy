@@ -1233,12 +1233,12 @@ def test_issue_14640():
 
     assert Sum(a**-i/(a - b), (i, 0, n)).doit() == Sum(
         1/(a*a**i - a**i*b), (i, 0, n)).doit() == Piecewise(
-            (n + 1, Eq(1/a, 1)),
-            ((-a**(-n - 1) + 1)/(1 - 1/a), True))/(a - b)
+            ((n + 1)/(1 - b), Eq(a, 1)),
+            ((a*a**n - 1)/(a**n*(a - 1)*(a - b)), True))
 
     assert Sum((b*a**i - c*a**i)**-2, (i, 0, n)).doit() == Piecewise(
-        (n + 1, Eq(a**(-2), 1)),
-        ((-a**(-2*n - 2) + 1)/(1 - 1/a**2), True))/(b - c)**2
+        ((n + 1)/(b**2 - 2*b*c + c**2), Eq(a, -1)),
+        ((a*a**n - 1)*(a*a**n + 1)/(a**(2*n)*(a - 1)*(a + 1)*(b - c)**2), True))
 
     s = Sum(i*(a**(n - i) - b**(n - i))/(a - b), (i, 0, n)).doit()
     assert not s.has(Sum)
