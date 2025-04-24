@@ -74,7 +74,22 @@ will need to either add a `warnings` filter as above or use pytest to filter
 SymPy deprecation warnings.
 ```
 
+## Version 1.15
+
+There are no deprecations yet for SymPy 1.15.
+
 ## Version 1.14
+
+(deprecated-rational-gcd)=
+### The gcd parameter to Rational
+
+The ``gcd`` parameter to the ``Rational`` constructor can be used to create an
+unevaluated Rational like ``Rational(2, 4, gcd=1)`` in which the numerator and
+denominator are not reduced. This is now deprecated and unevaluated rationals
+will be removed entirely in a future version of SymPy. This is needed so that
+more efficient implementations of rational numbers can be used internally.
+Instead use something like ``Mul(2, Rational(1, 4), evaluate=False)`` or
+``Symbol('2')/Symbol('4')`` depending on what exactly is wanted.
 
 (deprecated-tensorproduct-simp)=
 ### Deprecated tensor_product_simp from physics.quantum
@@ -659,8 +674,8 @@ the ``parent.z`` axis and ``-child.z`` axis. The previous way to specify this
 joint was:
 
 ```py
->>> from sympy.physics.mechanics import Body, PinJoint
->>> parent, child = Body('parent'), Body('child') # doctest: +SKIP
+>>> from sympy.physics.mechanics import PinJoint, RigidBody
+>>> parent, child = RigidBody('parent'), RigidBody('child')
 >>> pin = PinJoint('pin', parent, child, parent_axis=parent.z,
 ...                child_axis=-child.z)   # doctest: +SKIP
 >>> parent.dcm(child)   # doctest: +SKIP
@@ -677,13 +692,13 @@ this exact rotation:
 
 ```py
 >>> from sympy import pi
->>> from sympy.physics.mechanics import Body, PinJoint, ReferenceFrame
->>> parent, child, = Body('parent'), Body('child') # doctest: +SKIP
->>> int_frame = ReferenceFrame('int_frame') # doctest: +SKIP
->>> int_frame.orient_axis(child.frame, child.y, pi) # doctest: +SKIP
+>>> from sympy.physics.mechanics import PinJoint, ReferenceFrame, RigidBody
+>>> parent, child, = RigidBody('parent'), RigidBody('child')
+>>> int_frame = ReferenceFrame('int_frame')
+>>> int_frame.orient_axis(child.frame, child.y, pi)
 >>> pin = PinJoint('pin', parent, child, joint_axis=parent.z,
-...                child_interframe=int_frame) # doctest: +SKIP
->>> parent.dcm(child) # doctest: +SKIP
+...                child_interframe=int_frame)
+>>> parent.frame.dcm(child.frame)
 Matrix([
 [-cos(q_pin(t)), -sin(q_pin(t)),  0],
 [-sin(q_pin(t)),  cos(q_pin(t)),  0],
@@ -697,11 +712,11 @@ that the joint axis expressed in the intermediate frame is aligned with the
 given vector:
 
 ```py
->>> from sympy.physics.mechanics import Body, PinJoint
->>> parent, child = Body('parent'), Body('child') # doctest: +SKIP
+>>> from sympy.physics.mechanics import PinJoint, RigidBody
+>>> parent, child = RigidBody('parent'), RigidBody('child')
 >>> pin = PinJoint('pin', parent, child, parent_interframe=parent.z,
-...                child_interframe=-child.z) # doctest: +SKIP
->>> parent.dcm(child) # doctest: +SKIP
+...                child_interframe=-child.z)
+>>> parent.frame.dcm(child.frame)
 Matrix([
 [-cos(q_pin(t)), -sin(q_pin(t)),  0],
 [-sin(q_pin(t)),  cos(q_pin(t)),  0],
@@ -722,8 +737,8 @@ For example, suppose you want a ``PinJoint`` in the parent to be positioned at
 ``-child.frame.x``. The previous way to specify this was:
 
 ```py
->>> from sympy.physics.mechanics import Body, PinJoint
->>> parent, child = Body('parent'), Body('child') # doctest: +SKIP
+>>> from sympy.physics.mechanics import PinJoint, RigidBody
+>>> parent, child = RigidBody('parent'), RigidBody('child')
 >>> pin = PinJoint('pin', parent, child, parent_joint_pos=parent.frame.x,
 ...                child_joint_pos=-child.frame.x)   # doctest: +SKIP
 >>> pin.parent_point.pos_from(parent.masscenter)   # doctest: +SKIP
@@ -735,28 +750,28 @@ parent_frame.x
 Now you can do the same with either
 
 ```py
->>> from sympy.physics.mechanics import Body, PinJoint
->>> parent, child = Body('parent'), Body('child') # doctest: +SKIP
+>>> from sympy.physics.mechanics import PinJoint, RigidBody
+>>> parent, child = RigidBody('parent'), RigidBody('child')
 >>> pin = PinJoint('pin', parent, child, parent_point=parent.frame.x,
-...                child_point=-child.frame.x) # doctest: +SKIP
->>> pin.parent_point.pos_from(parent.masscenter) # doctest: +SKIP
+...                child_point=-child.frame.x)
+>>> pin.parent_point.pos_from(parent.masscenter)
 parent_frame.x
->>> pin.child_point.pos_from(child.masscenter) # doctest: +SKIP
+>>> pin.child_point.pos_from(child.masscenter)
 - child_frame.x
 ```
 
 Or
 
 ```py
->>> from sympy.physics.mechanics import Body, PinJoint, Point
->>> parent, child = Body('parent'), Body('child') # doctest: +SKIP
->>> parent_point = parent.masscenter.locatenew('parent_point', parent.frame.x) # doctest: +SKIP
->>> child_point = child.masscenter.locatenew('child_point', -child.frame.x) # doctest: +SKIP
+>>> from sympy.physics.mechanics import PinJoint, Point, RigidBody
+>>> parent, child = RigidBody('parent'), RigidBody('child')
+>>> parent_point = parent.masscenter.locatenew('parent_point', parent.frame.x)
+>>> child_point = child.masscenter.locatenew('child_point', -child.frame.x)
 >>> pin = PinJoint('pin', parent, child, parent_point=parent_point,
-...                child_point=child_point) # doctest: +SKIP
->>> pin.parent_point.pos_from(parent.masscenter) # doctest: +SKIP
+...                child_point=child_point)
+>>> pin.parent_point.pos_from(parent.masscenter)
 parent_frame.x
->>> pin.child_point.pos_from(child.masscenter) # doctest: +SKIP
+>>> pin.child_point.pos_from(child.masscenter)
 - child_frame.x
 ```
 

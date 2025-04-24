@@ -146,6 +146,7 @@ module = [
     "theano.*",
     "multiset.*",
     "pysat.*",
+    "bpython.*"
 ]
 ignore_missing_imports = true
 
