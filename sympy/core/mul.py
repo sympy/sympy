@@ -1541,9 +1541,13 @@ class Mul(Expr, AssocOp):
             return self._eval_real_imag(False)
 
     def _eval_is_hermitian(self):
+        if all([((t1 - t2.adjoint()) == 0) for t1, t2 in zip(self.args, self.args[::-1])]):
+            return True
         return self._eval_herm_antiherm(True)
 
     def _eval_is_antihermitian(self):
+        if all([((t1 + t2.adjoint()) == 0) for t1, t2 in zip(self.args, self.args[::-1])]):
+            return True
         return self._eval_herm_antiherm(False)
 
     def _eval_herm_antiherm(self, herm):

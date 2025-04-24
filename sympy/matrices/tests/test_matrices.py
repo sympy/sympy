@@ -2833,6 +2833,8 @@ def test_hermitian():
     assert Matrix([[b, c], [Dagger(c), b]]).is_hermitian is True
     assert Matrix([[b, c], [c, b]]).is_hermitian is False
     assert Matrix([[b, c], [transpose(c), b]]).is_hermitian is False
+    d = c*Dagger(c)
+    assert d.is_hermitian is True
 
 def test_doit():
     a = Matrix([[Add(x,x, evaluate=False)]])
