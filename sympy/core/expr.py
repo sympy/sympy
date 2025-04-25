@@ -106,24 +106,7 @@ class Expr(Basic, EvalfMixin):
     @property
     def is_hermitian(self):
 
-        imply_hermitian = [
-            self.is_real,
-            self.is_composite,
-            self.is_even,
-            self.is_integer,
-            self.is_irrational,
-            self.is_negative,
-            self.is_nonnegative,
-            self.is_nonpositive,
-            self.is_nonzero,
-            self.is_odd,
-            self.is_positive,
-            self.is_prime,
-            self.is_rational,
-            self.is_zero,
-        ]
-
-        if any(imply_hermitian):
+        if self.is_real:
             return True
 
         if callable(getattr(self, '_eval_is_hermitian', None)):
