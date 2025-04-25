@@ -104,6 +104,45 @@ class Expr(Basic, EvalfMixin):
     is_scalar = True  # self derivative is 1
 
     @property
+    def is_hermitian(self):
+
+        imply_hermitian = [
+            self.is_real,
+            self.is_composite,
+            self.is_even,
+            self.is_integer,
+            self.is_irrational,
+            self.is_negative,
+            self.is_nonnegative,
+            self.is_nonpositive,
+            self.is_nonzero,
+            self.is_odd,
+            self.is_positive,
+            self.is_prime,
+            self.is_rational,
+            self.is_zero,
+        ]
+
+        if any(imply_hermitian):
+            return True
+
+        if callable(getattr(self, '_eval_is_hermitian', None)):
+            return self._eval_is_hermitian()
+        return None
+
+    @property
+    def is_antihermitian(self):
+        imply_antihermitian = [
+            self.is_imaginary,
+            self.is_zero
+        ]
+        if any(imply_antihermitian):
+            return True
+        if callable(getattr(self, '_eval_is_antihermitian', None)):
+            return self._eval_is_antihermitian()
+        return None
+
+    @property
     def _diff_wrt(self):
         """Return True if one can differentiate with respect to this
         object, else False.
@@ -4192,3 +4231,4 @@ from .function import Function, _derivative_dispatch
 from .mod import Mod
 from .exprtools import factor_terms
 from .numbers import Float, Integer, Rational, _illegal, int_valued
+
