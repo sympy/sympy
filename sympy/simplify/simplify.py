@@ -362,6 +362,11 @@ def _get_term_ratio(f, k):
             # gamma(a) = gamma(c*k + ...)
             return RisingFactorial(a, c)
 
+    else:
+        g = f.subs(k, k+1)/f
+        if g.is_rational_function(k):
+            return together(g)
+
     return None
 
 
