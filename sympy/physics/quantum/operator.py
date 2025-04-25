@@ -105,11 +105,13 @@ class Operator(QExpr):
     .. [1] https://en.wikipedia.org/wiki/Operator_%28physics%29
     .. [2] https://en.wikipedia.org/wiki/Observable
     """
-    is_hermitian: Optional[bool] = None
+
     is_unitary: Optional[bool] = None
+
     @classmethod
     def default_args(self):
         return ("O",)
+
 
     kind = OperatorKind
 
@@ -210,7 +212,9 @@ class HermitianOperator(Operator):
     H
     """
 
-    is_hermitian = True
+    @property
+    def is_hermitian(self):
+        return True
 
     def _eval_inverse(self):
         if isinstance(self, UnitaryOperator):

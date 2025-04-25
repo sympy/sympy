@@ -201,6 +201,13 @@ def test_Pow_Expr_args():
         with warns(SymPyDeprecationWarning, test_stacklevel=False):
             Pow(base, S.One)
 
+def test_hermitian_antihermitian():
+    x = symbols("x", commutative=False)
+    xh = x + x.adjoint()  # hermitian
+    xa = x - x.adjoint()  # antihermitian
+    assert (xh**10).is_hermitian is True
+    assert (xa**10).is_hermitian is True
+    assert (xa**9).is_antihermitian is True
 
 def test_Pow_signs():
     """Cf. issues 4595 and 5250"""

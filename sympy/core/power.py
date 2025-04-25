@@ -119,6 +119,22 @@ class Pow(Expr):
             ...
 
     @property
+    def is_hermitian(self):
+        if self.exp.is_integer:
+            from sympy.simplify import simplify
+            if simplify(self.base.adjoint()**self.exp - self.func(*self.args)).is_zero:
+                return True
+        return
+
+    @property
+    def is_antihermitian(self):
+        if self.exp.is_integer:
+            from sympy.simplify import simplify
+            if simplify(self.base.adjoint()**self.exp + self.func(*self.args)).is_zero:
+                return True
+        return
+
+    @property
     def base(self) -> Expr:
         return self.args[0]
 

@@ -1540,12 +1540,20 @@ def test_Mul_is_imaginary_real():
     assert (a*ni).is_real is None
     assert (b*ni).is_real is None
 
+def test_Add_hermitian_antihermitian():
+    x = symbols("x", commutative=False)
+    xh = x + x.adjoint()
+    xa = x - x.adjoint()
+    assert xh.is_hermitian is True
+    assert xa.is_antihermitian is True
 
 def test_Mul_hermitian_antihermitian():
-    xz, yz = symbols('xz, yz', zero=True, antihermitian=True)
-    xf, yf = symbols('xf, yf', hermitian=False, antihermitian=False, finite=True)
-    xh, yh = symbols('xh, yh', hermitian=True, antihermitian=False, nonzero=True)
-    xa, ya = symbols('xa, ya', hermitian=False, antihermitian=True, zero=False, finite=True)
+    x, y = symbols('x y', commutative=False)
+    xz, yz = symbols('xz, yz', zero=True)
+    xf, yf = symbols('xf, yf', finite=True)
+    xh, yh = x + x.adjoint(), y + y.adjoint()
+    xa, ya = x - x.adjoint(), y - y.adjoint()
+    assert (2*xh).is_hermitian is True
     assert (xz*xh).is_hermitian is True
     assert (xz*xh).is_antihermitian is True
     assert (xz*xa).is_hermitian is True

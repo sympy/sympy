@@ -481,6 +481,14 @@ class Expr(Basic, EvalfMixin):
         """
         return all(obj.is_number for obj in self.args)
 
+    @property
+    def is_hermitian(self):
+        return None
+
+    @property
+    def is_antihermitian(self):
+        return None
+
     def _eval_is_comparable(self):
         # Basic._eval_is_comparable always returns False, so we override it
         # here
