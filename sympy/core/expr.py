@@ -4231,4 +4231,3 @@ from .function import Function, _derivative_dispatch
 from .mod import Mod
 from .exprtools import factor_terms
 from .numbers import Float, Integer, Rational, _illegal, int_valued
-
