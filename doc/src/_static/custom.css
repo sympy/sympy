@@ -144,6 +144,7 @@ This can be removed once https://github.com/executablebooks/mdit-py-plugins/issu
     margin: 0 0.2em 0.25em -1.4em;
 }
 
+
 .sidebar-drawer {
     transform: translateX(0);
     transition: transform 0.3s ease-in-out;
@@ -162,3 +163,17 @@ for screen sizes greater than 857px our custom hamburger button is displayed */
     }
   }
   
+
+/* Override visited link color in Furo */
+a:visited {
+    color: var(--color-link);
+    text-decoration-color: var(--color-link);
+}
+
+/* Ensure visited links don't turn purple on hover */
+a:visited:hover {
+    color: var(--color-link);
+    text-decoration-color: var(--color-link);
+}
+
+

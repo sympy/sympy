@@ -18,9 +18,8 @@ from sympy.core.mul import Mul
 from sympy.functions import exp, tan, log, sqrt, besselj, bessely, cbrt, airyai, airybi
 from sympy.integrals import Integral
 from sympy.polys import Poly
-from sympy.polys.polytools import cancel, factor, degree
+from sympy.polys.polytools import cancel, factor, factor_list, degree
 from sympy.simplify import collect, simplify, separatevars, logcombine, posify # type: ignore
-from sympy.simplify.radsimp import fraction
 from sympy.utilities import numbered_symbols
 from sympy.solvers.solvers import solve
 from sympy.solvers.deutils import ode_order, _preprocess
@@ -78,11 +77,7 @@ class SingleODEProblem:
     _eq_preprocessed: Expr
     _eq_high_order_free = None
 
-    def __init__(self, eq, func, sym, prep=True, **kwargs):
-        assert isinstance(eq, Expr)
-        assert isinstance(func, AppliedUndef)
-        assert isinstance(sym, Symbol)
-        assert isinstance(prep, bool)
+    def __init__(self, eq: Expr, func: AppliedUndef, sym: Symbol, prep: bool = True, **kwargs):
         self.eq = eq
         self.func = func
         self.sym = sym
@@ -864,28 +859,17 @@ class Factorable(SingleODESolver):
         eq_orig = self.ode_problem.eq
         f = self.ode_problem.func.func
         x = self.ode_problem.sym
-        df = f(x).diff(x)
-        self.eqs = []
-        eq = eq_orig.collect(f(x), func = cancel)
-        eq = fraction(factor(eq))[0]
-        factors = Mul.make_args(factor(eq))
-        roots = [fac.as_base_exp() for fac in factors if len(fac.args)!=0]
-        if len(roots)>1 or roots[0][1]>1:
-            for base, expo in roots:
-                if base.has(f(x)):
-                    self.eqs.append(base)
-            if len(self.eqs)>0:
-                return True
-        roots = solve(eq, df)
-        if len(roots)>0:
-            self.eqs = [(df - root) for root in roots]
-            # Avoid infinite recursion
-            matches = self.eqs != [eq_orig]
-            return matches
-        for i in factors:
-            if i.has(f(x)):
-                self.eqs.append(i)
-        return len(self.eqs)>0 and len(factors)>1
+
+        eq, den = eq_orig.as_numer_denom()
+
+        _, facs_m = factor_list(eq)
+        ms = [m for f, m in facs_m]
+
+        is_reduced = sum(ms) > 1 or den.has(f(x))
+
+        self.eqs = [fac for fac, m in facs_m if fac.has(f(x))]
+
+        return is_reduced
 
     def _get_general_solution(self, *, simplify_flag: bool = True):
         func = self.ode_problem.func.func
@@ -905,7 +889,7 @@ class Factorable(SingleODESolver):
 
         if sols == []:
             raise NotImplementedError("The given ODE " + str(eq) + " cannot be solved by"
-                + " the factorable group method")
+                + " the factorable method")
         return sols
 
 
@@ -1968,7 +1952,8 @@ class NthOrderReducible(SingleODESolver):
         are considered, and only in them should ``func`` appear.
         """
         # ODE only handles functions of 1 variable so this affirms that state
-        assert len(func.args) == 1
+        if len(func.args) != 1:
+            raise ValueError("Function must have exactly one argument")
         vc = [d.variable_count[0] for d in eq.atoms(Derivative)
             if d.expr == func and len(d.variable_count) == 1]
         ords = [c for v, c in vc if v == x]
