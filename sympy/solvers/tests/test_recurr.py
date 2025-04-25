@@ -8,6 +8,7 @@ from sympy.functions.combinatorial.numbers import (fibonacci, euler, harmonic)
 from sympy.functions.elementary.complexes import Abs
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import (cos, sin)
+from sympy.functions.special.gamma_functions import gamma
 from sympy.polys.polytools import factor
 from sympy.solvers.recurr import rsolve, rsolve_hyper, rsolve_poly, rsolve_ratio
 from sympy.testing.pytest import raises, slow, XFAIL
@@ -88,6 +89,16 @@ def test_rsolve_hyper():
     assert rsolve_hyper([-1, 1], euler(n), n) is None
     assert rsolve_hyper([-1, 1], harmonic(n), n) is None
     assert rsolve_hyper([-(2*k - 1), 1], 1, k) is None
+
+    # issue 27975
+    assert rsolve_hyper([-2*2**n, 2*2**n], -2*binomial(n, k) + binomial(n + 1, k), k) == \
+        C0 - S.Half*(gamma(n + 1)/(2**n*gamma(k)*gamma(-k + n + 2)))
+
+    term = -2**(1 - k)*factorial(k + 2)/factorial(k - 1) + factorial(k + 3)/(2**k*factorial(k))
+    assert rsolve_hyper([-2**n, 2**n], term, k) == \
+        2**(-k - n)*k*(k + 1)*(k + 2) + C0
+    assert rsolve_hyper([-2, 1], 2**(a*n + 1), n) == 2**n*C0 + 2**(a*n + 1)/(2**a - 2)
+
 
 @XFAIL
 def test_rsolve_ratio_missed():
@@ -272,18 +283,6 @@ def test_issue_17990():
     e = sol.subs({C0: 1, C1: 1, C2: 1, n: 1}).evalf()
     assert abs(e + 0.130434782608696) < 1e-13
 
-@XFAIL
-def test_issue_27975a():
-    assert rsolve_hyper([-2*2**n, 2*2**n], -2*binomial(n, k) + binomial(n + 1, k), k) is not None
-
-@XFAIL
-def test_issue_27975b():
-    term = -2**(1 - k)*factorial(k + 2)/factorial(k - 1) + factorial(k + 3)/(2**k*factorial(k))
-    assert rsolve_hyper([-2**n, 2**n], term, k) is not None
-
-@XFAIL
-def test_issue_27975c():
-    assert rsolve_hyper([-2, 1], 2**(a*n + 1), n) is not None
 
 def test_issue_8697():
     a = Function('a')
