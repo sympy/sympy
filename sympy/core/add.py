@@ -610,6 +610,21 @@ class Add(Expr, AssocOp):
 
         return _keep_coeff(ncon, n), _keep_coeff(dcon, d)
 
+    @property
+    def is_hermitian(self):
+        from sympy.simplify import simplify
+        if simplify(self.func(*self.args) - self._eval_adjoint()).is_zero:
+            return True
+        return
+
+    @property
+    def is_antihermitian(self):
+        from sympy.simplify import simplify
+        if simplify(self.func(*self.args) + self._eval_adjoint()).is_zero:
+            return True
+        return
+
+
     def _eval_is_polynomial(self, syms):
         return all(term._eval_is_polynomial(syms) for term in self.args)
 
@@ -630,12 +645,8 @@ class Add(Expr, AssocOp):
         (a.is_extended_real for a in self.args), quick_exit=True)
     _eval_is_complex = lambda self: _fuzzy_group(
         (a.is_complex for a in self.args), quick_exit=True)
-    _eval_is_antihermitian = lambda self: _fuzzy_group(
-        (a.is_antihermitian for a in self.args), quick_exit=True)
     _eval_is_finite = lambda self: _fuzzy_group(
         (a.is_finite for a in self.args), quick_exit=True)
-    _eval_is_hermitian = lambda self: _fuzzy_group(
-        (a.is_hermitian for a in self.args), quick_exit=True)
     _eval_is_integer = lambda self: _fuzzy_group(
         (a.is_integer for a in self.args), quick_exit=True)
     _eval_is_rational = lambda self: _fuzzy_group(
