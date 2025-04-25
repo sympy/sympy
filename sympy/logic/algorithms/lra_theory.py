@@ -272,7 +272,7 @@ class LRASolver():
             assert prop.function in ALLOWED_PRED
             if prop.lhs == S.NaN or prop.rhs == S.NaN:
                 raise ValueError(f"{prop} contains nan")
-            if prop.lhs.is_imaginary or prop.rhs.is_imaginary:
+            if prop.lhs.is_real is False or prop.rhs.is_real is False:
                 raise UnhandledInput(f"{prop} contains an imaginary component")
             if prop.lhs == oo or prop.rhs == oo:
                 raise UnhandledInput(f"{prop} contains infinity")
