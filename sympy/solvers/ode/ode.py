@@ -938,7 +938,7 @@ def classify_ode(eq, func=None, dict=False, ics=None, *, prep=True, xi=None, eta
     '1st_homogeneous_coeff_subs_indep_div_dep_Integral',
     '1st_homogeneous_coeff_subs_dep_div_indep_Integral')
     >>> classify_ode(f(x).diff(x, 2) + 3*f(x).diff(x) + 2*f(x) - 4)
-    ('factorable', 'nth_linear_constant_coeff_undetermined_coefficients',
+    ('nth_linear_constant_coeff_undetermined_coefficients',
     'nth_linear_constant_coeff_variation_of_parameters',
     'nth_linear_constant_coeff_variation_of_parameters_Integral')
 
@@ -2632,7 +2632,7 @@ def _remove_redundant_solutions(eq, solns, order, var):
 
     unique_solns = []
     for soln1 in solns:
-        for soln2 in unique_solns[:]:
+        for soln2 in unique_solns.copy():
             if is_special_case_of(soln1, soln2):
                 break
             elif is_special_case_of(soln2, soln1):

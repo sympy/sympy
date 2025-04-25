@@ -261,7 +261,7 @@ def warns(warningcls, *, match='', test_stacklevel=True):
     for w in warnrec:
         # Should always be true due to the filters above
         assert issubclass(w.category, warningcls)
-        if not re.compile(match, re.I).match(str(w.message)):
+        if not re.compile(match, re.IGNORECASE).match(str(w.message)):
             raise Failed(f"Failed: WRONG MESSAGE. A warning with of the correct category ({warningcls.__name__}) was issued, but it did not match the given match regex ({match!r})")
 
     if test_stacklevel:

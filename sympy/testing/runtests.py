@@ -131,7 +131,7 @@ def convert_to_native_paths(lst):
     if the system is case insensitive.
     """
     newlst = []
-    for i, rv in enumerate(lst):
+    for rv in lst:
         rv = os.path.join(*rv.split("/"))
         # on windows the slash after the colon is dropped
         if sys.platform == "win32":
