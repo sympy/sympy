@@ -105,7 +105,6 @@ class Expr(Basic, EvalfMixin):
 
     @property
     def is_hermitian(self):
-
         if self.is_real:
             return True
 
@@ -115,12 +114,9 @@ class Expr(Basic, EvalfMixin):
 
     @property
     def is_antihermitian(self):
-        imply_antihermitian = [
-            self.is_imaginary,
-            self.is_zero
-        ]
-        if any(imply_antihermitian):
+        if self.is_imaginary or self.is_zero:
             return True
+
         if callable(getattr(self, '_eval_is_antihermitian', None)):
             return self._eval_is_antihermitian()
         return None
