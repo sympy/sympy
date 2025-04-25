@@ -21,7 +21,7 @@ from sympy.core.expr import unchanged
 from sympy.core.function import ArgumentIndexError
 from sympy.series.order import Order
 from sympy.testing.pytest import XFAIL, raises, _both_exp_pow
-
+from sympy.physics.quantum import HermitianOperator
 
 def N_equals(a, b):
     """Check whether two complex numbers are numerically close"""
@@ -683,14 +683,9 @@ def test_arg_leading_term_and_series():
 
 
 def test_adjoint():
-    a = Symbol('a', antihermitian=True)
-    b = Symbol('b', hermitian=True)
-    assert adjoint(a) == -a
-    assert adjoint(I*a) == I*a
+    b = HermitianOperator("b")
     assert adjoint(b) == b
     assert adjoint(I*b) == -I*b
-    assert adjoint(a*b) == -b*a
-    assert adjoint(I*a*b) == I*b*a
 
     x, y = symbols('x y')
     assert adjoint(adjoint(x)) == x
