@@ -24,4 +24,3 @@ document.addEventListener("DOMContentLoaded", function () {
       console.error("Toggle button or sidebar-drawer not found");
     }
   });
-  
