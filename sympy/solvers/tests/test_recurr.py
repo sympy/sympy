@@ -92,11 +92,11 @@ def test_rsolve_hyper():
 
     # issue 27975
     assert rsolve_hyper([-2*2**n, 2*2**n], -2*binomial(n, k) + binomial(n + 1, k), k) == \
-        C0 - S.Half*(gamma(n + 1)/(2**n*gamma(k)*gamma(-k + n + 2)))
+        C0 - S.Half*(binomial(n, k - 1)/(2**n))
 
     term = -2**(1 - k)*factorial(k + 2)/factorial(k - 1) + factorial(k + 3)/(2**k*factorial(k))
     assert rsolve_hyper([-2**n, 2**n], term, k) == \
-        2**(-k - n)*k*(k + 1)*(k + 2) + C0
+        2**(-k - n + 1)*k*(k + 1)*(k + 2) + C0
     assert rsolve_hyper([-2, 1], 2**(a*n + 1), n) == 2**n*C0 + 2**(a*n + 1)/(2**a - 2)
 
 

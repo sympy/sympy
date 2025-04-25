@@ -320,10 +320,6 @@ def hypersimp(f, k):
     if not f.is_commutative:
         return None
 
-    g = f.subs(k, k+1) / f
-    if g.is_rational_function(k):
-        return together(g)
-
     f = f.rewrite(gamma)
 
     f = expand_func(f)
