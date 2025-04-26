@@ -694,7 +694,7 @@ class Beam:
             where n is the order of applied load.
             Units for applied loads:
 
-               - For moments: kN.m
+               - For moments: kN*m
                - For point loads: kN
                - For constant distributed loads: kN/m
                - For ramp loads: kN/m**2
