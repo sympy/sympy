@@ -1541,14 +1541,12 @@ class Mul(Expr, AssocOp):
             return self._eval_real_imag(False)
 
     def _eval_is_hermitian(self):
-        from sympy.simplify import simplify
-        if simplify(self.func(*self.args) - self._eval_adjoint()).is_zero:
+        if (self - self._eval_adjoint()).is_zero:
             return True
         return self._eval_herm_antiherm(True)
 
     def _eval_is_antihermitian(self):
-        from sympy.simplify import simplify
-        if simplify(self.func(*self.args) + self._eval_adjoint()).is_zero:
+        if (self + self._eval_adjoint()).is_zero:
             return True
         return self._eval_herm_antiherm(False)
 
