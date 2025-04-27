@@ -4867,8 +4867,39 @@ class StateSpace(LinearTimeInvariant):
             \begin{cases}
             \bar A=T^{-1}AT\\
             \bar B=T^{-1}B\\
-            \bar C= CT\\
+            \bar C=CT\\
             \bar D=D\end{cases}
+
+        Parameters:
+        ==========
+
+        transform_matrix : Matrix
+            The transformation matrix `T` to be applied to the state space
+            model.
+            The transformation matrix must be invertible and have the same
+            dimensions as the state matrix `A`.
+
+        Returns:
+        =======
+
+        StateSpace
+            The transformed state space model.
+
+        Examples:
+        ========
+
+        >>> from sympy import Matrix, Rational
+        >>> from sympy.physics.control import StateSpace
+        >>> A = Matrix([[5, -2, 2], [0, 1, -4], [0, 0, -3]])
+        >>> B = Matrix([1,0,0])
+        >>> C = Matrix([1, 0, 0]).T
+        >>> ss = StateSpace(A, B, C)
+        >>> T = Matrix([[0, Rational(1, 2), 1], [1, 1, 0], [1, 0, 0]])
+        >>> ss.apply_similarity_transform(T).A
+            Matrix([
+            [-3, 0, 0],
+            [ 0, 1, 0],
+            [ 0, 0, 5]])
 
         """
         T_inv = transform_matrix.inv()
@@ -4906,9 +4937,9 @@ class StateSpace(LinearTimeInvariant):
 
         >>> from sympy import Matrix, Rational
         >>> from sympy.physics.control import StateSpace
-        >>> A = Matrix([[1, 0, 1], [0,0,0],[0,0,-2]])
-        >>> B = Matrix([1,1,0])
-        >>> C = Matrix([1,1,Rational(1,3)]).T
+        >>> A = Matrix([[1, 0, 1], [0, 0, 0],[0, 0, -2]])
+        >>> B = Matrix([1, 1, 0])
+        >>> C = Matrix([1, 1, Rational(1,3)]).T
         >>> ss = StateSpace(A, B, C)
         >>> ss = ss.to_observable_form()
         >>> ss.A
@@ -4967,9 +4998,9 @@ class StateSpace(LinearTimeInvariant):
 
         >>> from sympy import Matrix
         >>> from sympy.physics.control import StateSpace
-        >>> A = Matrix([[1, 0, 1], [0,0,0],[0,0,-2]])
-        >>> B = Matrix([1,1,0])
-        >>> C = Matrix([1,1,0]).T
+        >>> A = Matrix([[1, 0, 1], [0, 0, 0],[0, 0, -2]])
+        >>> B = Matrix([1, 1, 0])
+        >>> C = Matrix([1, 1, 0]).T
         >>> ss = StateSpace(A, B, C)
         >>> ss = ss.to_controllable_form()
         >>> ss.A
