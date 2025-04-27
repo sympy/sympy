@@ -4870,7 +4870,7 @@ class StateSpace(LinearTimeInvariant):
             \bar C=CT\\
             \bar D=D\end{cases}
 
-        Parameters:
+        Parameters
         ==========
 
         transform_matrix : Matrix
@@ -4879,13 +4879,13 @@ class StateSpace(LinearTimeInvariant):
             The transformation matrix must be invertible and have the same
             dimensions as the state matrix `A`.
 
-        Returns:
+        Returns
         =======
 
         StateSpace
             The transformed state space model.
 
-        Examples:
+        Examples
         ========
 
         >>> from sympy import Matrix, Rational
