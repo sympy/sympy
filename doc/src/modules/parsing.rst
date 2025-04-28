@@ -74,7 +74,7 @@ ANTLR Backend
 ^^^^^^^^^^^^^
 
 The ANTLR-based `\mathrm{\LaTeX}` parser was ported from
-`latex2sympy <https://github.com/augustt198/latex2sympy>`_. While functional
+`latex2sympy <https://github.com/augustt198/latex2sympy>`_. While it is functional
 and its API should remain stable, the parsing behavior or backend may change in
 future releases.
 
@@ -83,8 +83,8 @@ future releases.
 ANTLR `\mathrm{\LaTeX}` Parser Caveats
 """"""""""""""""""""""""""""""""""""""
 
-In its current definition, the parser may fail to fully parse
-an expression, yet not throw a warning::
+Currently, the parser may fail to fully parse an expression, but not throw a
+warning::
 
     parse_latex(r'x -')
 
@@ -127,10 +127,10 @@ interpretations.
 
 The Lark-based parser exposes a number of internals which allow the user to customize
 the parser's behavior. For example, the user can specify their own `\mathrm{\LaTeX}`
-grammar by passing the path to the grammar file to the `LarkLaTeXParser` while
+grammar by passing the path to the grammar file to the ``LarkLaTeXParser`` while
 instantiating the parser.
 
-The user can also specify their own custom transformer class to the `LarkLaTeXParser`
+The user can also specify their own custom transformer class to the ``LarkLaTeXParser``
 class.
 
 The two examples mentioned above can be found in the
