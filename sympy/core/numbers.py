@@ -2085,9 +2085,7 @@ class Integer(Rational):
         b_pos = int(abs(self.p))
         p = perfect_power(b_pos)
         if p is not False:
-            # XXX: Convert to int because perfect_power may return fmpz
-            # Ideally that should be fixed in perfect_power though...
-            dict = {int(p[0]): int(p[1])}
+            dict = {p[0]: p[1]}
         else:
             dict = Integer(b_pos).factors(limit=2**15)
 
