@@ -326,7 +326,7 @@ def _perfect_power(n, next_p=2):
         if g == 1:
             return False
         factors[n] = multi
-        return math.prod(p**(e//g) for p, e in factors.items()), g
+        return int(math.prod(p**(e//g) for p, e in factors.items())), int(g)
 
     # If n is small, only trial factoring is faster
     if n <= 1_000_000:
@@ -336,7 +336,7 @@ def _perfect_power(n, next_p=2):
         g = gcd(*factors.values())
         if g == 1:
             return False
-        return math.prod(p**(e//g) for p, e in factors.items()), g
+        return math.prod(p**(e//g) for p, e in factors.items()), int(g)
 
     # divide by 2
     if next_p < 3:
@@ -353,7 +353,7 @@ def _perfect_power(n, next_p=2):
                 # Otherwise, there is no possibility of perfect power, especially if `g` is prime.
                 m, _exact = iroot(n, g)
                 if _exact:
-                    return 2*m, g
+                    return int(2*m), g
                 elif isprime(g):
                     return False
         next_p = 3
@@ -380,19 +380,19 @@ def _perfect_power(n, next_p=2):
             if t:
                 n = m
                 t *= multi
-                _g = gcd(g, t)
+                _g = int(gcd(g, t))
                 if _g == 1:
                     return False
                 factors[p] = t
                 if n == 1:
-                    return math.prod(p**(e//_g)
-                                        for p, e in factors.items()), _g
+                    return int(math.prod(p**(e//_g)
+                                        for p, e in factors.items())), _g
                 elif g == 0 or _g < g: # If g is updated
                     g = _g
                     m, _exact = iroot(n**multi, g)
                     if _exact:
-                        return m * math.prod(p**(e//g)
-                                            for p, e in factors.items()), g
+                        return int(m * math.prod(p**(e//g)
+                                            for p, e in factors.items())), g
                     elif isprime(g):
                         return False
         next_p = tf_max
