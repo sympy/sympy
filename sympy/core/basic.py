@@ -262,7 +262,6 @@ class Basic(Printable):
     is_rational: bool | None
     is_extended_nonnegative: bool | None
     is_infinite: bool | None
-    is_antihermitian: bool | None
     is_extended_negative: bool | None
     is_extended_real: bool | None
     is_finite: bool | None
@@ -277,7 +276,6 @@ class Basic(Printable):
     is_commutative: bool | None
     is_nonnegative: bool | None
     is_nonpositive: bool | None
-    is_hermitian: bool | None
     is_irrational: bool | None
     is_real: bool | None
     is_zero: bool | None
@@ -356,7 +354,7 @@ class Basic(Printable):
         {'commutative': True, 'complex': True, 'extended_negative': False,
          'extended_nonnegative': True, 'extended_nonpositive': False,
          'extended_nonzero': True, 'extended_positive': True, 'extended_real':
-         True, 'finite': True, 'hermitian': True, 'imaginary': False,
+         True, 'finite': True, 'imaginary': False,
          'infinite': False, 'negative': False, 'nonnegative': True,
          'nonpositive': False, 'nonzero': True, 'positive': True, 'real':
          True, 'zero': False}

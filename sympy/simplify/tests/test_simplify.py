@@ -589,7 +589,7 @@ def test_posify():
     k = Symbol('k', finite=True)
     eq, rep = posify(k)
     assert eq.assumptions0 == {'positive': True, 'zero': False, 'imaginary': False,
-     'nonpositive': False, 'commutative': True, 'hermitian': True, 'real': True, 'nonzero': True,
+     'nonpositive': False, 'commutative': True, 'real': True, 'nonzero': True,
      'nonnegative': True, 'negative': False, 'complex': True, 'finite': True,
      'infinite': False, 'extended_real':True, 'extended_negative': False,
      'extended_nonnegative': True, 'extended_nonpositive': False,

@@ -104,6 +104,24 @@ class Expr(Basic, EvalfMixin):
     is_scalar = True  # self derivative is 1
 
     @property
+    def is_hermitian(self):
+        if self.is_real:
+            return True
+
+        if callable(getattr(self, '_eval_is_hermitian', None)):
+            return self._eval_is_hermitian()
+        return None
+
+    @property
+    def is_antihermitian(self):
+        if self.is_imaginary or self.is_zero:
+            return True
+
+        if callable(getattr(self, '_eval_is_antihermitian', None)):
+            return self._eval_is_antihermitian()
+        return None
+
+    @property
     def _diff_wrt(self):
         """Return True if one can differentiate with respect to this
         object, else False.
