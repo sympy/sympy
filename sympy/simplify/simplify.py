@@ -329,6 +329,9 @@ def hypersimp(f, k):
             beta
         ], gamma)
 
+    f = expand_func(f)
+    f = factor_terms(f)
+
     return _get_term_ratio(f, k)
 
 
