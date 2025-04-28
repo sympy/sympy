@@ -1265,7 +1265,7 @@ class DomainMatrix:
         ...    [x, x**2],
         ...    [x**3, x**4]], (2, 2), ZZ[x])
         >>> A.rank()
-        2
+        1
 
         Notes
         =====
