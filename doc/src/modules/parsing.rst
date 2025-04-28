@@ -171,9 +171,9 @@ Here is a list of the things which are supported:
     * `\min` and `\max`.
 
 * Complex numbers via the use of `\backslash \mathrm{imaginaryunit}`. For example::
-  
+
     parse_latex(r"5 + 3\imaginaryunit", backend="lark")
-  
+
   gives us the output of ``5 + 3*I``.
 * All the trigonometric functions and their inverses trigonometric functions.
   Powers like ``\sin^4`` are also supported. The power `-1` is interpreted as the
@@ -231,7 +231,7 @@ gives us ::
     [2, 4]])
 
 The Lark-based parser also supports parsing multiline matrix definitions. For example, ::
-  
+
   s = r"""
   \begin{bmatrix}
   \cos \theta & -\sin \theta \\
@@ -259,25 +259,25 @@ Other common matrix operations are also supported:
   default parser only supports the superscript of `T`. For example, ::
 
     parse_latex(r"\begin{bmatrix} 1 & 2 \\ 3 & 4 \end{bmatrix}^T", backend="lark")
-  
+
   returns ::
 
     Matrix([
     [1, 3],
     [2, 4]])
-    
+
   as expected.
 * Conjugate transpose (often denoted by raising a matrix to a superscript
   of `H`). The default parser only supports the superscript of `H`. For example, ::
 
     parse_latex(r"\begin{pmatrix} 1 & \imaginaryunit \\ 3 & 4 \end{pmatrix}^H", backend="lark")
-  
+
   returns ::
 
     Matrix([
     [ 1, 3],
     [-I, 4]])
-    
+
   as expected.
 * Traces: The default parser requires the use of `\backslash \mathrm{trace}`
   in the `\mathrm{\LaTeX}` code to parse it correctly.
@@ -285,15 +285,14 @@ Other common matrix operations are also supported:
   in the `\mathrm{\LaTeX}` code to parse it correctly.
 * Determinants: The parser supports parsing `\det` as well as `\begin{vmatrix} \dots \end{vmatrix}`
   as a determinant. For example, both ::
-  
+
     parse_latex(r"\det(\begin{pmatrix} 1 & 2 \\ 3 & 4 \end{pmatrix})", backend="lark")
-  
+
   and ::
 
     parse_latex(r"\begin{vmatrix} 1 & 2 \\ 3 & 4 \end{vmatrix}", backend="lark")
 
   give us an output of `-2`.
-
 
 Lark `\mathrm{\LaTeX}` Parser Functions
 """""""""""""""""""""""""""""""""""""""
