@@ -1075,7 +1075,7 @@ class TransferFunction(SISOLinearTimeInvariant):
         argnew = TransferFunction(arg_num, arg_den, self.var).to_expr()
         return argnew.expand()
 
-    def is_stable(self, cancel_poles_zeros = False):
+    def is_stable(self, cancel_poles_zeros=False):
         """
         Returns True if the transfer function is asymptotically stable;
         else False.
