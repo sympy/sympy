@@ -1135,7 +1135,7 @@ class TransferFunction(SISOLinearTimeInvariant):
 
         return None
 
-    def to_standard_form(self, cancel_poles_zeros = False):
+    def to_standard_form(self, cancel_poles_zeros=False):
         r"""
         Return the transfer function in its standard form.
 
