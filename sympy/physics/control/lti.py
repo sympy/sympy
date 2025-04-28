@@ -1158,7 +1158,7 @@ class TransferFunction(SISOLinearTimeInvariant):
         >>> feedback = Feedback(tf1, tf2).doit()
         >>> feedback
         TransferFunction(k*(12 - 2*s)*(s**3 + 2*s**2 + 100*s), (s**3 + 2*s**2 + 100*s)*(k*(s**3 + 2*s**2 + 100*s) - 2*s + 12), s)
-        >>> feedback.to_standard_form(cancel_poles_zeros = True)
+        >>> feedback.to_standard_form(cancel_poles_zeros=True)
         TransferFunction(-2*k*s + 12*k, k*s**3 + 2*k*s**2 + s*(100*k - 2) + 12, s)
 
         """
