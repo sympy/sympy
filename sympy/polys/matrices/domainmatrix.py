@@ -1251,7 +1251,7 @@ class DomainMatrix:
         Examples
         ========
 
-        >>> from sympy import ZZ, QQ, Symbol
+        >>> from sympy import ZZ, Symbol
         >>> from sympy.polys.matrices import DomainMatrix
         >>> A = DomainMatrix([
         ...    [ZZ(1), ZZ(2), ZZ(3)],
