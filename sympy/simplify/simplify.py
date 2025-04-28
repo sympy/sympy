@@ -20,7 +20,8 @@ from sympy.core.sorting import ordered
 from sympy.core.sympify import _sympify
 from sympy.core.traversal import bottom_up as _bottom_up, walk as _walk
 from sympy.functions import gamma, exp, sqrt, log, exp_polar, re
-from sympy.functions.combinatorial.factorials import (CombinatorialFunction, RisingFactorial)
+from sympy.functions.combinatorial.factorials import (CombinatorialFunction, RisingFactorial,
+    FallingFactorial, binomial, factorial, factorial2)
 from sympy.functions.elementary.complexes import unpolarify, Abs, sign
 from sympy.functions.elementary.exponential import ExpBase
 from sympy.functions.elementary.hyperbolic import HyperbolicFunction
@@ -30,6 +31,7 @@ from sympy.functions.elementary.piecewise import (Piecewise, piecewise_fold,
 from sympy.functions.elementary.trigonometric import TrigonometricFunction
 from sympy.functions.special.bessel import (BesselBase, besselj, besseli,
                                             besselk, bessely, jn)
+from sympy.functions.special.beta_functions import beta
 from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.integrals.integrals import Integral
 from sympy.logic.boolalg import Boolean
@@ -320,10 +322,13 @@ def hypersimp(f, k):
     if not f.is_commutative:
         return None
 
-    f = f.rewrite(gamma)
+    f = f.rewrite([
+            factorial,
+            factorial2,
+            binomial,
+            beta
+        ], gamma)
 
-    f = expand_func(f)
-    f = factor_terms(f)
     return _get_term_ratio(f, k)
 
 
@@ -341,6 +346,12 @@ def _get_term_ratio(f, k):
                 return None
             ratios.append(r)
         return Mul(*ratios)
+
+    elif isinstance(f, RisingFactorial):
+        return f.args[1] + f.args[0]
+
+    elif isinstance(f, FallingFactorial):
+        return f.args[1] - f.args[0]
 
     elif isinstance(f, (Pow, exp)):
         b, e = f.as_base_exp()
@@ -366,6 +377,22 @@ def _get_term_ratio(f, k):
         g = f.subs(k, k+1)/f
         if g.is_rational_function(k):
             return together(g)
+
+        elif isinstance(f, Piecewise):
+            # Compute term ratio for each piece
+            f = piecewise_fold(f)
+            if any(interval.has_xfree({k}) for _, interval in f.args):
+                return None
+
+            ratios = set()
+            for a in f.args:
+                r = _get_term_ratio(a[0], k)
+                if r is None:
+                    return None
+                ratios.add((r, a[1]))
+            res = Piecewise(*ratios)
+            if res.is_rational_function(k):
+                return res
 
     return None
 
