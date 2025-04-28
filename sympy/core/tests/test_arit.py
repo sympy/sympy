@@ -1573,8 +1573,9 @@ def test_Mul_hermitian_antihermitian():
     assert e6.is_antihermitian is None
 
     xnc = symbols("xnc", commutative=False)
-    assert (xnc*xnc.adjoint()).is_hermitian
-    assert (xnc.adjoint()*10*xnc).is_hermitian
+    assert (xnc*xnc.adjoint()).is_hermitian is True
+    assert (xnc.adjoint()*10*xnc).is_hermitian is True
+    assert (xnc.adjoint()*(I+10)*xnc).is_hermitian is None
 
 
 def test_Add_is_comparable():
