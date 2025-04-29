@@ -43,7 +43,8 @@ def test_trival_zero():
 
 def test_clebsch_gordan():
     # Argument order: (j_1, j_2, j, m_1, m_2, m)
-
+    def tn(a, b):
+        return (a - b).n(64) < S('1e-64')
     h = S.One
     k = S.Half
     l = Rational(3, 2)
@@ -76,6 +77,7 @@ def test_clebsch_gordan():
     assert clebsch_gordan(p, h, n, p, 1, n) == 1
     assert clebsch_gordan(p, h, p, p, 0, p) == sqrt(5)/sqrt(7)
     assert clebsch_gordan(p, h, l, k, 1, l) == 1/sqrt(15)
+    assert tn(clebsch_gordan(5, 5, 5, -1, 3, 2, prec=64), sqrt(195)/39)
 
 
 def test_clebsch_gordan_numpy():

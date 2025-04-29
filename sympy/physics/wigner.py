@@ -30,13 +30,22 @@ References
   Spherical Harmonics and Their Relation to Gaunt Coefficients',
   H. H. H. Homeier and E. O. Steinborn J. Mol. Struct., Volume 368,
   pp. 31-37 (1996)
+.. [Wei99] L. Wei, 'Unified approach for exact calculation of
+  angular momentum coupling and recoupling coefficients',
+  Computer Physics Communications 120, 222 (1999).
+.. [Varshalovich88] D. A. Varshalovich, A. N. Moskalev and
+  V. K. Khersonskii, 'Quantum Theory of Angular Momentum',
+  (World Scientific, 1988).
 
 Credits and Copyright
 =====================
 
-This code was taken from Sage with the permission of all authors:
+The origin code was taken from Sage with the permission of all authors:
 
 https://groups.google.com/forum/#!topic/sage-devel/M4NZdu-7O38
+
+Now it has been rewritten using new formulations base on [Wei99]_ and
+[Varshalovich88]_.
 
 Authors
 =======
@@ -48,6 +57,8 @@ Authors
 - Oscar Gerardo Lazo Arjona (2017-06-18): added Wigner D matrices
 
 - Phil Adam LeMaitre (2022-09-19): added real Gaunt coefficient
+
+- Shaoliang Jin (2025-04-26): rewrote Wigner 3nj and Gaunt coefficient
 
 Copyright (C) 2008 Jens Rasch <jyr2000@gmail.com>
 
@@ -80,7 +91,7 @@ def _doubled_int(value):
     try:
         return _as_int(value * 2)
     except ValueError:
-        raise ValueError("expecting integer or half-integer, got %s" % value)
+        raise ValueError("expecting integer or half-integer, got %s" % value) from None
 
 
 def _check_dj_couple(dj1, dj2, dj3):
@@ -96,7 +107,7 @@ def _check_dj_couple(dj1, dj2, dj3):
     return True
 
 
-def wigner_3j(j_1, j_2, j_3, m_1, m_2, m_3):
+def wigner_3j(j_1, j_2, j_3, m_1, m_2, m_3, prec=None):
     r"""
     Calculate the Wigner 3j symbol `\operatorname{Wigner3j}(j_1,j_2,j_3,m_1,m_2,m_3)`.
 
@@ -105,11 +116,14 @@ def wigner_3j(j_1, j_2, j_3, m_1, m_2, m_3):
 
     j_1, j_2, j_3, m_1, m_2, m_3 :
         Integer or half integer.
+    prec :
+        Precision, default: ``None``.
 
     Returns
     =======
 
-    Rational number times the square root of a rational number.
+    Rational number times the square root of a rational number
+    (if ``prec=None``), or real number if a precision is given.
 
     Examples
     ========
@@ -123,14 +137,14 @@ def wigner_3j(j_1, j_2, j_3, m_1, m_2, m_3):
     It is an error to have arguments that are not integer or half
     integer values::
 
-        sage: wigner_3j(2.1, 6, 4, 0, 0, 0)
+        >>> wigner_3j(2.1, 6, 4, 0, 0, 0)
         Traceback (most recent call last):
         ...
-        ValueError: j values must be integer or half integer
-        sage: wigner_3j(2, 6, 4, 1, 0, -1.1)
+        ValueError: expecting integer or half-integer, got 2.1
+        >>> wigner_3j(2, 6, 4, 1, 0, -1.1)
         Traceback (most recent call last):
         ...
-        ValueError: m values must be integer or half integer
+        ValueError: expecting integer or half-integer, got -1.1
 
     Notes
     =====
@@ -173,9 +187,9 @@ def wigner_3j(j_1, j_2, j_3, m_1, m_2, m_3):
     Algorithm
     =========
 
-    This function uses the algorithm of [Edmonds74]_ to calculate the
+    This function uses the algorithm of [Wei99]_ to calculate the
     value of the 3j symbol exactly. Note that the formula contains
-    alternating sums over large factorials and is therefore unsuitable
+    alternating sums over large binomials and is therefore unsuitable
     for finite precision arithmetic and only useful for a computer
     algebra system [Rasch03]_.
 
@@ -222,14 +236,16 @@ def wigner_3j(j_1, j_2, j_3, m_1, m_2, m_3):
     res_num = comb(dj1, jm2) * comb(dj2, jm1)
     res_den = comb(sumj, jm3) * comb(dj1, j1mm1) * \
         comb(dj2, j2mm2) * comb(dj3, j3mm3) * (sumj + 1)
-    ressqrt = sqrt(Integer(res_num) / Integer(res_den))
+    ressqrt = sqrt(Integer(res_num) / res_den)
 
     phase = (-1) ** (dj1 + (dj3 + dm3) // 2 + imax)
     res = phase * ressqrt * sumres
+    if prec:
+        res = res.evalf(prec)
     return res
 
 
-def clebsch_gordan(j_1, j_2, j_3, m_1, m_2, m_3):
+def clebsch_gordan(j_1, j_2, j_3, m_1, m_2, m_3, prec=None):
     r"""
     Calculates the Clebsch-Gordan coefficient.
     `\left\langle j_1 m_1 \; j_2 m_2 | j_3 m_3 \right\rangle`.
@@ -241,11 +257,14 @@ def clebsch_gordan(j_1, j_2, j_3, m_1, m_2, m_3):
 
     j_1, j_2, j_3, m_1, m_2, m_3 :
         Integer or half integer.
+    prec :
+        Precision, default: ``None``.
 
     Returns
     =======
 
-    Rational number times the square root of a rational number.
+    Rational number times the square root of a rational number
+    (if ``prec=None``), or real number if a precision is given.
 
     Examples
     ========
@@ -279,7 +298,7 @@ def clebsch_gordan(j_1, j_2, j_3, m_1, m_2, m_3):
 
     - Jens Rasch (2009-03-24): initial version
     """
-    w = wigner_3j(j_1, j_2, j_3, m_1, m_2, -m_3)
+    w = wigner_3j(j_1, j_2, j_3, m_1, m_2, -m_3, prec=prec)
     return (-1) ** (j_1 - j_2 + m_3) * sqrt(Integer(2 * j_3 + 1)) * w
 
 
@@ -293,8 +312,7 @@ def wigner_6j(j_1, j_2, j_3, j_4, j_5, j_6, prec=None):
     j_1, ..., j_6 :
         Integer or half integer.
     prec :
-        Precision, default: ``None``. Providing a precision can
-        drastically speed up the calculation.
+        Precision, default: ``None``.
 
     Returns
     =======
@@ -312,16 +330,12 @@ def wigner_6j(j_1, j_2, j_3, j_4, j_5, j_6, prec=None):
     1/52
 
     It is an error to have arguments that are not integer or half
-    integer values or do not fulfill the triangle relation::
+    integer values::
 
-        sage: wigner_6j(2.5,2.5,2.5,2.5,2.5,2.5)
+        >>> wigner_6j(0.5,0.5,1.1,0.5,0.5,1.1)
         Traceback (most recent call last):
         ...
-        ValueError: j values must be integer or half integer and fulfill the triangle relation
-        sage: wigner_6j(0.5,0.5,1.1,0.5,0.5,1.1)
-        Traceback (most recent call last):
-        ...
-        ValueError: j values must be integer or half integer and fulfill the triangle relation
+        ValueError: expecting integer or half-integer, got 1.1
 
     Notes
     =====
@@ -365,12 +379,17 @@ def wigner_6j(j_1, j_2, j_3, j_4, j_5, j_6, prec=None):
     - additional 6 symmetries [Regge59]_ giving rise to 144 symmetries
       in total
 
-    - only non-zero if any triple of `j`'s fulfill a triangle relation
+    - zero if any of the following triples of `j`'s do not fulfill
+      a triangle relation:
+        `\{j_1, j_2, j_3\}`,
+        `\{j_1, j_5, j_6\}`,
+        `\{j_4, j_2, j_6\}`,
+        `\{j_4, j_5, j_3\}`
 
     Algorithm
     =========
 
-    This function uses the algorithm of [Edmonds74]_ to calculate the
+    This function uses the algorithm of [Wei99]_ to calculate the
     value of the 6j symbol exactly. Note that the formula contains
     alternating sums over large factorials and is therefore unsuitable
     for finite precision arithmetic and only useful for a computer
@@ -432,8 +451,7 @@ def racah(aa, bb, cc, dd, ee, ff, prec=None):
     a, ..., f :
         Integer or half integer.
     prec :
-        Precision, default: ``None``. Providing a precision can
-        drastically speed up the calculation.
+        Precision, default: ``None``.
 
     Returns
     =======
@@ -464,9 +482,9 @@ def racah(aa, bb, cc, dd, ee, ff, prec=None):
     Algorithm
     =========
 
-    This function uses the algorithm of [Edmonds74]_ to calculate the
+    This function uses the algorithm of [Wei99]_ to calculate the
     value of the 6j symbol exactly. Note that the formula contains
-    alternating sums over large factorials and is therefore unsuitable
+    alternating sums over large binomials and is therefore unsuitable
     for finite precision arithmetic and only useful for a computer
     algebra system [Rasch03]_.
 
@@ -495,9 +513,8 @@ def wigner_9j(j_1, j_2, j_3, j_4, j_5, j_6, j_7, j_8, j_9, prec=None):
 
     j_1, ..., j_9 :
         Integer or half integer.
-    prec : precision, default
-        ``None``. Providing a precision can
-        drastically speed up the calculation.
+    prec :
+        precision, default: ``None``.
 
     Returns
     =======
@@ -516,23 +533,19 @@ def wigner_9j(j_1, j_2, j_3, j_4, j_5, j_6, j_7, j_8, j_9, prec=None):
     0.1666666666666666666666666666666666666666666666666666666666666667
 
     It is an error to have arguments that are not integer or half
-    integer values or do not fulfill the triangle relation::
+    integer values::
 
-        sage: wigner_9j(0.5,0.5,0.5, 0.5,0.5,0.5, 0.5,0.5,0.5,prec=64)
+        >>> wigner_9j(0.51,0.5,0.5, 0.5,0.5,0.5, 0.5,0.5,0.5)
         Traceback (most recent call last):
         ...
-        ValueError: j values must be integer or half integer and fulfill the triangle relation
-        sage: wigner_9j(1,1,1, 0.5,1,1.5, 0.5,1,2.5,prec=64)
-        Traceback (most recent call last):
-        ...
-        ValueError: j values must be integer or half integer and fulfill the triangle relation
+        ValueError: expecting integer or half-integer, got 0.51
 
     Algorithm
     =========
 
-    This function uses the algorithm of [Edmonds74]_ to calculate the
+    This function uses the algorithm of [Wei99]_ to calculate the
     value of the 3j symbol exactly. Note that the formula contains
-    alternating sums over large factorials and is therefore unsuitable
+    alternating sums over large binomials and is therefore unsuitable
     for finite precision arithmetic and only useful for a computer
     algebra system [Rasch03]_.
     """
@@ -650,9 +663,8 @@ def gaunt(l_1, l_2, l_3, m_1, m_2, m_3, prec=None):
 
     l_1, l_2, l_3, m_1, m_2, m_3 :
         Integer.
-    prec - precision, default: ``None``.
-        Providing a precision can
-        drastically speed up the calculation.
+    prec:
+        precision, default: ``None``.
 
     Returns
     =======
@@ -671,14 +683,14 @@ def gaunt(l_1, l_2, l_3, m_1, m_2, m_3, prec=None):
 
     It is an error to use non-integer values for `l` and `m`::
 
-        sage: gaunt(1.2,0,1.2,0,0,0)
+        >>> gaunt(1.2,0,1.2,0,0,0)
         Traceback (most recent call last):
         ...
-        ValueError: l values must be integer
-        sage: gaunt(1,0,1,1.1,0,-1.1)
+        ValueError: 1.2 is not an integer
+        >>> gaunt(1,0,1,1.1,0,-1.1)
         Traceback (most recent call last):
         ...
-        ValueError: m values must be integer
+        ValueError: 1.1 is not an integer
 
     Notes
     =====
@@ -717,9 +729,9 @@ def gaunt(l_1, l_2, l_3, m_1, m_2, m_3, prec=None):
     Algorithms
     ==========
 
-    This function uses the algorithm of [Liberatodebrito82]_ to
+    This function uses the algorithm of [Wei99]_ and [Varshalovich88] to
     calculate the value of the Gaunt coefficient exactly. Note that
-    the formula contains alternating sums over large factorials and is
+    the formula contains alternating sums over large binomials and is
     therefore unsuitable for finite precision arithmetic and only
     useful for a computer algebra system [Rasch03]_.
 
@@ -826,16 +838,16 @@ def real_gaunt(l_1, l_2, l_3, mu_1, mu_2, mu_3, prec=None):
     ==========
 
     l_1, l_2, l_3, mu_1, mu_2, mu_3 :
-        Integer degree and order
+        Integer degree and order.
 
-    prec - precision, default: ``None``.
-        Providing a precision can
-        drastically speed up the calculation.
+    prec:
+        precision, default: ``None``.
 
     Returns
     =======
 
-    Rational number times the square root of a rational number.
+    Rational number times the square root of a rational number
+    (if ``prec=None``), or real number if a precision is given.
 
     Examples
     ========
@@ -846,15 +858,15 @@ def real_gaunt(l_1, l_2, l_3, mu_1, mu_2, mu_3, prec=None):
     -0.00002480019791932209313156167176797577821140084216297395518482071448
 
     It is an error to use non-integer values for `l` and `\mu`::
-        real_gaunt(2.8,0.5,1.3,0,0,0)
+        >>> real_gaunt(2.8,0.5,1.3,0,0,0)
         Traceback (most recent call last):
         ...
-        ValueError: l values must be integer
+        ValueError: 2.8 is not an integer
 
-        real_gaunt(2,2,4,0.7,1,-3.4)
+        >>> real_gaunt(2,2,4,0.7,1,-3.4)
         Traceback (most recent call last):
         ...
-        ValueError: mu values must be integer
+        ValueError: 0.7 is not an integer
 
     Notes
     =====
@@ -884,11 +896,11 @@ def real_gaunt(l_1, l_2, l_3, mu_1, mu_2, mu_3, prec=None):
     Algorithms
     ==========
 
-    This function uses the algorithms of [Homeier96]_ and [Rasch03]_ to
+    This function uses the algorithms of [Homeier96]_ and [Wei99]_ to
     calculate the value of the real Gaunt coefficient exactly. Note that
-    the formula used in [Rasch03]_ contains alternating sums over large
-    factorials and is therefore unsuitable for finite precision arithmetic
-    and only useful for a computer algebra system [Rasch03]_. However, this
+    the formula used in [Wei99]_ contains alternating sums over large
+    binomials and is therefore unsuitable for finite precision arithmetic
+    and only useful for a computer algebra system [Wei99]_. However, this
     function can in principle use any algorithm that computes the Gaunt
     coefficient, so it is suitable for finite precision arithmetic in so far
     as the algorithm which computes the Gaunt coefficient is.
