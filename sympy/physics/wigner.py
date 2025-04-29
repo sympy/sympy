@@ -729,7 +729,7 @@ def gaunt(l_1, l_2, l_3, m_1, m_2, m_3, prec=None):
     Algorithms
     ==========
 
-    This function uses the algorithm of [Wei99]_ and [Varshalovich88] to
+    This function uses the algorithm of [Wei99]_ and [Varshalovich88]_ to
     calculate the value of the Gaunt coefficient exactly. Note that
     the formula contains alternating sums over large binomials and is
     therefore unsuitable for finite precision arithmetic and only
