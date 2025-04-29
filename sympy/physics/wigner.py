@@ -380,11 +380,11 @@ def wigner_6j(j_1, j_2, j_3, j_4, j_5, j_6, prec=None):
       in total
 
     - zero if any of the following triples of `j`'s do not fulfill
-      a triangle relation:
-        `\{j_1, j_2, j_3\}`,
-        `\{j_1, j_5, j_6\}`,
-        `\{j_4, j_2, j_6\}`,
-        `\{j_4, j_5, j_3\}`
+      the triangle relation
+         `\{j_1, j_2, j_3\}`,
+         `\{j_1, j_5, j_6\}`,
+         `\{j_4, j_2, j_6\}`,
+         `\{j_4, j_5, j_3\}`
 
     Algorithm
     =========
@@ -394,7 +394,6 @@ def wigner_6j(j_1, j_2, j_3, j_4, j_5, j_6, prec=None):
     alternating sums over large factorials and is therefore unsuitable
     for finite precision arithmetic and only useful for a computer
     algebra system [Rasch03]_.
-
     """
     dj1, dj2, dj3, dj4, dj5, dj6 = \
           map(_doubled_int, [j_1, j_2, j_3, j_4, j_5, j_6])
