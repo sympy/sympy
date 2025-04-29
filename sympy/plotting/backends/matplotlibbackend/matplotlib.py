@@ -133,7 +133,7 @@ class MatplotlibBackend(base_backend.Plot):
                     ax.add_collection(collection)
                 else:
                     lbl = _str_or_latex(s.label)
-                    line, = ax.plot(x, y, label=lbl, color=s.line_color)
+                    line, = ax.plot(x, y, label=lbl, color=s.line_color,**s.rendering_kw)
             elif s.is_contour:
                 ax.contour(*s.get_data())
             elif s.is_3Dline:
