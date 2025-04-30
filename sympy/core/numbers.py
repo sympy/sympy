@@ -1287,6 +1287,17 @@ class Rational(Number):
     >>> r.p/r.q
     0.75
 
+    For consistency with Python's abstract base class ``Rational`` [1] and 
+    classes ``int``, ``Fraction`` [2], and others, numerator and denominator 
+    are also available as properties ``.numerator`` and ``.denominator``.
+    Note that up to SymPy 1.8, these were methods instead of properties.
+
+    References
+    ==========
+
+    .. [1] http://docs.python.org/3/library/numbers.html#numbers.Rational
+    .. [2] http://docs.python.org/3/library/fractions.html#fractions.Fraction
+    
     See Also
     ========
     sympy.core.sympify.sympify, sympy.simplify.simplify.nsimplify
@@ -2906,8 +2917,8 @@ class NegativeOne(IntegerConstant, metaclass=Singleton):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/%E2%88%921_%28number%29
-
     """
+
     is_number = True
 
     p = -1
@@ -3384,8 +3395,8 @@ class NaN(Number, metaclass=Singleton):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/NaN
-
     """
+
     is_commutative = True
     is_extended_real = None
     is_real = None
