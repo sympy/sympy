@@ -1560,6 +1560,8 @@ def integrate(*args, meijerg=None, conds='piecewise', risch=None, heurisch=None,
     Integral, Integral.doit
 
     """
+    from sympy.simplify.simplify import nsimplify
+
     doit_flags = {
         'deep': False,
         'meijerg': meijerg,
@@ -1570,9 +1572,14 @@ def integrate(*args, meijerg=None, conds='piecewise', risch=None, heurisch=None,
         }
 
     integral = Integral(*args, **kwargs)
-
     if isinstance(integral, Integral):
-        return integral.doit(**doit_flags)
+        # converts floating coeffs to rational
+        for term in args[0].atoms():
+            if term.is_Float:
+                integral = Integral(nsimplify(args[0]), *args[1:], **kwargs)
+                return integral.doit(**doit_flags).evalf()
+            else:
+                return integral.doit(**doit_flags)
     else:
         new_args = [a.doit(**doit_flags) if isinstance(a, Integral) else a
             for a in integral.args]
