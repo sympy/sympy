@@ -5153,8 +5153,6 @@ class StateSpace(LinearTimeInvariant):
 
         """
         s = Symbol('s')
-        n = self.A.shape[0]
-        I = eye(n)
-        determinant = (s*I - self.A).det()
+        determinant = self.A.charpoly(s)
 
         return neg_roots_conds(determinant, s)
