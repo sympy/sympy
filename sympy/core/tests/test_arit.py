@@ -1586,10 +1586,11 @@ def test_Mul_hermitian_antihermitian():
     assert Mul(I, I*xnc*xnc.adjoint(), I*ync*ync.adjoint(), I*xnc*xnc.adjoint(), evaluate=False).is_hermitian is True
     assert Mul(I, I*xnc*xnc.adjoint(), ync*ync.adjoint(), I*xnc*xnc.adjoint(), evaluate=False).is_hermitian is None
     assert Mul(13, I*xnc*xnc.adjoint(), I*ync*ync.adjoint(), I*xnc*xnc.adjoint(), evaluate=False).is_hermitian is None
-
-
-
-
+    assert Mul(I, I*xnc*xnc.adjoint(), ync*ync.adjoint(), I*xnc*xnc.adjoint(), evaluate=False).is_antihermitian is True
+    assert Mul(13, I*xnc*xnc.adjoint(), I*ync*ync.adjoint(), I*xnc*xnc.adjoint(), evaluate=False).is_antihermitian is True
+    assert Mul(xnc*xnc.adjoint(), I*ync*ync.adjoint(), xnc*xnc.adjoint(), evaluate=False).is_antihermitian is True
+    assert Mul(1+I, xnc, xnc.adjoint()).is_hermitian is None
+    assert Mul(1+I, xnc, xnc.adjoint()).is_antihermitian is None
 
 
 def test_Add_is_comparable():

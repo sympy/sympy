@@ -1596,8 +1596,6 @@ class Mul(Expr, AssocOp):
 
         return self._eval_herm_antiherm(True)
 
-
-
     def _eval_is_antihermitian(self):
         from sympy import adjoint
 
@@ -1648,8 +1646,8 @@ class Mul(Expr, AssocOp):
             else:
                 middle = nc_part[n//2]
                 is_middle_antihermitian = fuzzy_or((
-                    fuzzy_and((middle.is_hermitian, is_list_imaginary(nc_part))),
-                    fuzzy_and((middle.is_antihermitian, is_list_real(nc_part)))
+                    fuzzy_and((middle.is_hermitian, is_list_imaginary(c_part))),
+                    fuzzy_and((middle.is_antihermitian, is_list_real(c_part)))
                 ))
                 if is_middle_antihermitian:
                     return True
