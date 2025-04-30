@@ -12,13 +12,12 @@ from .singleton import S
 from .operations import AssocOp, AssocOpDispatcher
 from .cache import cacheit
 from .intfunc import integer_nthroot, trailing
-from .logic import fuzzy_not, _fuzzy_group
+from .logic import fuzzy_not, _fuzzy_group, fuzzy_and, fuzzy_or
 from .expr import Expr
 from .parameters import global_parameters
 from .kind import KindDispatcher
 from .traversal import bottom_up
 from sympy.utilities.iterables import sift
-
 
 # internal marker to indicate:
 #   "there are still non-commutative objects -- don't forget to process them"
@@ -1541,13 +1540,120 @@ class Mul(Expr, AssocOp):
             return self._eval_real_imag(False)
 
     def _eval_is_hermitian(self):
-        if (self - self._eval_adjoint()).is_zero:
-            return True
+        from sympy import adjoint
+
+        def _is_adjoint_pair(expr1, expr2):
+            if isinstance(expr1, adjoint) and expr1.args[0] == expr2:
+                return True
+            if isinstance(expr2, adjoint) and expr2.args[0] == expr1:
+                return True
+            return fuzzy_and((
+                fuzzy_or((expr1.is_hermitian, expr1.is_antihermitian)),
+                expr1 == expr2
+            ))
+
+        # return True if the product of the list is real
+        def is_list_real(l):
+            n_imaginary = 0
+            for z in l:
+                if z.is_imaginary is True:
+                    n_imaginary += 1
+                elif fuzzy_not(fuzzy_or((z.is_imaginary, z.is_real))):
+                    return None
+            return (n_imaginary % 2 == 0)
+
+        # return True if the product of the list is imaginary
+        def is_list_imaginary(l):
+            n_imaginary = 0
+            for z in l:
+                if z.is_imaginary is True:
+                    n_imaginary += 1
+                elif fuzzy_not(fuzzy_or((z.is_imaginary, z.is_real))):
+                    return None
+            return (n_imaginary % 2 == 1)
+        c_part, nc_part = self.args_cnc()
+        n = len(nc_part)
+
+        if n == 0:
+            return self._eval_herm_antiherm(True)
+
+        all_pairs_adjoint = fuzzy_and(
+            _is_adjoint_pair(nc_part[i], nc_part[n - i - 1])
+            for i in range(n // 2)
+        )
+        if all_pairs_adjoint:
+            if n % 2 == 0 :
+                if is_list_real(c_part):
+                    return True
+            else:
+                middle = nc_part[n//2]
+                is_middle_hermitian = fuzzy_or((
+                    fuzzy_and((middle.is_hermitian, is_list_real(c_part))),
+                    fuzzy_and((middle.is_antihermitian, is_list_imaginary(c_part)))
+                ))
+                if is_middle_hermitian:
+                    return True
+
         return self._eval_herm_antiherm(True)
 
+
+
     def _eval_is_antihermitian(self):
-        if (self + self._eval_adjoint()).is_zero:
-            return True
+        from sympy import adjoint
+
+        def _is_adjoint_pair(expr1, expr2):
+            if isinstance(expr1, adjoint) and expr1.args[0] == expr2:
+                return True
+            if isinstance(expr2, adjoint) and expr2.args[0] == expr1:
+                return True
+            return fuzzy_and((
+                fuzzy_or((expr1.is_hermitian, expr1.is_antihermitian)),
+                expr1 == expr2
+            ))
+
+        # return True if the product of the list is real
+        def is_list_real(l):
+            n_imaginary = 0
+            for z in l:
+                if z.is_imaginary is True:
+                    n_imaginary += 1
+                elif fuzzy_not(fuzzy_or((z.is_imaginary, z.is_real))):
+                    return None
+            return (n_imaginary % 2 == 0)
+
+        # return True if the product of the list is imaginary
+        def is_list_imaginary(l):
+            n_imaginary = 0
+            for z in l:
+                if z.is_imaginary is True:
+                    n_imaginary += 1
+                elif fuzzy_not(fuzzy_or((z.is_imaginary, z.is_real))):
+                    return None
+            return (n_imaginary % 2 == 1)
+
+        c_part, nc_part = self.args_cnc()
+        n = len(nc_part)
+
+        if n == 0:
+            return self._eval_herm_antiherm(False)
+
+        all_pairs_adjoint = fuzzy_and(
+            _is_adjoint_pair(nc_part[i], nc_part[n - i - 1])
+            for i in range(n // 2)
+        )
+
+        if all_pairs_adjoint:
+            if n % 2 == 0 and is_list_imaginary(c_part):
+                return True
+            else:
+                middle = nc_part[n//2]
+                is_middle_antihermitian = fuzzy_or((
+                    fuzzy_and((middle.is_hermitian, is_list_imaginary(nc_part))),
+                    fuzzy_and((middle.is_antihermitian, is_list_real(nc_part)))
+                ))
+                if is_middle_antihermitian:
+                    return True
+
         return self._eval_herm_antiherm(False)
 
     def _eval_herm_antiherm(self, herm):
