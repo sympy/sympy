@@ -1287,8 +1287,8 @@ class Rational(Number):
     >>> r.p/r.q
     0.75
 
-    For consistency with Python's abstract base class ``Rational`` [1] and 
-    classes ``int``, ``Fraction`` [2], and others, numerator and denominator 
+    For consistency with Python's abstract base class ``Rational`` [1] and
+    classes ``int``, ``Fraction`` [2] and others, numerator and denominator
     are also available as properties ``.numerator`` and ``.denominator``.
     Note that up to SymPy 1.8, these were methods instead of properties.
 
@@ -1297,7 +1297,7 @@ class Rational(Number):
 
     .. [1] http://docs.python.org/3/library/numbers.html#numbers.Rational
     .. [2] http://docs.python.org/3/library/fractions.html#fractions.Fraction
-    
+
     See Also
     ========
     sympy.core.sympify.sympify, sympy.simplify.simplify.nsimplify
