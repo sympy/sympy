@@ -180,9 +180,12 @@ def wigner_3j(j_1, j_2, j_3, m_1, m_2, m_3, prec=None):
     - zero for `m_1 + m_2 + m_3 \neq 0`
 
     - zero for violating any one of the conditions
-         `m_1  \in \{-|j_1|, \ldots, |j_1|\}`,
-         `m_2  \in \{-|j_2|, \ldots, |j_2|\}`,
-         `m_3  \in \{-|j_3|, \ldots, |j_3|\}`
+
+      .. math::
+
+         m_1  \in \{-|j_1|, \ldots, |j_1|\},
+         m_2  \in \{-|j_2|, \ldots, |j_2|\},
+         m_3  \in \{-|j_3|, \ldots, |j_3|\}
 
     Algorithm
     =========
@@ -381,10 +384,11 @@ def wigner_6j(j_1, j_2, j_3, j_4, j_5, j_6, prec=None):
 
     - zero if any of the following triples of `j`'s do not fulfill
       the triangle relation
-         `\{j_1, j_2, j_3\}`,
-         `\{j_1, j_5, j_6\}`,
-         `\{j_4, j_2, j_6\}`,
-         `\{j_4, j_5, j_3\}`
+
+      .. math::
+
+         \{j_1, j_2, j_3\}, \{j_1, j_5, j_6\},
+         \{j_4, j_2, j_6\}, \{j_4, j_5, j_3\}
 
     Algorithm
     =========
