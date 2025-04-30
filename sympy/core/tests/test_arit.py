@@ -1572,10 +1572,24 @@ def test_Mul_hermitian_antihermitian():
     assert e5.is_antihermitian is None
     assert e6.is_antihermitian is None
 
-    xnc = symbols("xnc", commutative=False)
+    xnc, ync = symbols("xnc ync", commutative=False)
     assert (xnc*xnc.adjoint()).is_hermitian is True
     assert (xnc.adjoint()*10*xnc).is_hermitian is True
     assert (xnc.adjoint()*(I+10)*xnc).is_hermitian is None
+    assert (I*xnc.adjoint()*xnc).is_antihermitian is True
+    assert (xnc*ync*ync.adjoint()*xnc.adjoint()).is_hermitian is True
+    # assert Mul(xnc, I, 13, ync.adjoint(), I, ync, I, xnc.adjoint(), I, evaluate=False).is_hermitian is True # Issue 24480 mentions this test
+    assert (-4*I*xnc.adjoint()*ync*ync.adjoint()*xnc).is_antihermitian is True
+    assert (xnc*xnc).is_hermitian is None
+    assert Mul(I*xnc*xnc.adjoint(), ync*ync.adjoint(), I*xnc*xnc.adjoint(), evaluate=False).is_hermitian is True
+    assert Mul(xnc*xnc.adjoint(), ync*ync.adjoint(), xnc*xnc.adjoint(), evaluate=False).is_hermitian is True
+    assert Mul(I, I*xnc*xnc.adjoint(), I*ync*ync.adjoint(), I*xnc*xnc.adjoint(), evaluate=False).is_hermitian is True
+    assert Mul(I, I*xnc*xnc.adjoint(), ync*ync.adjoint(), I*xnc*xnc.adjoint(), evaluate=False).is_hermitian is None
+    assert Mul(13, I*xnc*xnc.adjoint(), I*ync*ync.adjoint(), I*xnc*xnc.adjoint(), evaluate=False).is_hermitian is None
+
+
+
+
 
 
 def test_Add_is_comparable():
