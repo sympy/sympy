@@ -9,7 +9,7 @@ from sympy.solvers.inequalities import reduce_inequalities
 
 __all__ = ['RouthHurwitz', 'neg_roots_conds']
 
-def neg_roots_conds(polynomial, var):
+def neg_roots_conds(polynomial: Poly):
     """
     Returns the conditions for a polynomial to have all its roots with
     negative real parts.
@@ -18,43 +18,36 @@ def neg_roots_conds(polynomial, var):
     ========
 
     >>> from sympy.physics.control import neg_roots_conds
-    >>> from sympy import symbols
+    >>> from sympy import symbols, Poly
     >>> s = symbols('s')
-    >>> p1 = (s+1)*(s+2)*(s+2.5)
-    >>> neg_roots_conds(p1, s)
+    >>> p1 = Poly((s+1)*(s+2)*(s+2.5), s)
+    >>> neg_roots_conds(p1)
     [True]
     >>> k = symbols('k')
-    >>> p2 = (s+1)*(s+k)
-    >>> neg_roots_conds(p2, s)
+    >>> p2 = Poly((s+1)*(s+k), s)
+    >>> neg_roots_conds(p2)
     [k + 1 > 0, k > 0]
     >>> a = symbols('a', negative = True)
-    >>> p3 = (s+1)*(s+a)
-    >>> neg_roots_conds(p3, s)
+    >>> p3 = Poly((s+1)*(s+a), s)
+    >>> neg_roots_conds(p3)
     [a + 1 > 0, False]
 
     """
-    den = Poly(polynomial, var)
+    coeffs = polynomial.all_coeffs()
 
-    # If a non-positive coefficient is found, the sign of the
-    # polynomial is flipped.
-    # This ensures that the first row of the Routh-Hurwitz table
-    # will always be made positive.
-    for coeff in den.all_coeffs():
-        if ask(Q.zero(coeff)) is True:
-            continue
-
+    for coeff in coeffs[:2]:
         try:
             if reduce_inequalities(coeff >=0) is true:
                 break
             if reduce_inequalities(coeff <= 0) is true:
-                den = -den
+                polynomial = -polynomial
                 break
         except NotImplementedError:
             # If there are more than one symbols,
             # reduce_inequalities could fail
             pass
 
-    table = RouthHurwitz(den, var)
+    table = RouthHurwitz(polynomial)
 
     if table.zero_row_case:
         # There is a pole with a real part equal to zero or
@@ -167,21 +160,21 @@ class RouthHurwitz(MutableDenseMatrix):
     Examples
     ========
 
-    >>> from sympy import symbols
+    >>> from sympy import symbols, Poly
     >>> from sympy.physics.control import RouthHurwitz
     >>> b1, b2, b3, b4 = symbols('b_1 b_2 b_3 b_4')
     >>> s = symbols("s")
 
     Here is a generic example of how to use the ``RouthHurwitz`` class:
 
-    >>> p = b1*s**3 + b2*s**2 + b3*s + b4
-    >>> RouthHurwitz(p, s)
+    >>> p = Poly(b1*s**3 + b2*s**2 + b3*s + b4, s)
+    >>> RouthHurwitz(p)
     Matrix([
     [                     b_1, b_3],
     [                     b_2, b_4],
     [(-b_1*b_4 + b_2*b_3)/b_2,   0],
     [                     b_4,   0]])
-    >>> RouthHurwitz(p, s)[:, 0]
+    >>> RouthHurwitz(p)[:, 0]
     Matrix([
     [                     b_1],
     [                     b_2],
@@ -190,22 +183,22 @@ class RouthHurwitz(MutableDenseMatrix):
 
     Here you can see how the table appears in the first column zero case:
 
-    >>> p1 = s**4 + s**3 + 3*s**2 + 3*s + 3
-    >>> RouthHurwitz(p1, s)
+    >>> p1 = Poly(s**4 + s**3 + 3*s**2 + 3*s + 3, s)
+    >>> RouthHurwitz(p1)
     Matrix([
     [                      1, 3, 3],
     [                      1, 3, 0],
     [                epsilon, 3, 0],
     [(3*epsilon - 3)/epsilon, 0, 0],
     [                      3, 0, 0]])
-    >>> RouthHurwitz(p1, s).zero_row_case
+    >>> RouthHurwitz(p1).zero_row_case
     False
 
     Here you can see how the table appears in the full row zero case
     (poles with only imaginary part):
 
-    >>> p2 = s**6 + 2*s**5 + 8*s**4 + 12*s**3 + 20*s**2 + 16*s + 16
-    >>> RouthHurwitz(p2, s)
+    >>> p2 = Poly(s**6 + 2*s**5 + 8*s**4 + 12*s**3 + 20*s**2 + 16*s + 16, s)
+    >>> RouthHurwitz(p2)
     Matrix([
     [  1,  8, 20, 16],
     [  2, 12, 16,  0],
@@ -214,9 +207,9 @@ class RouthHurwitz(MutableDenseMatrix):
     [  6, 16,  0,  0],
     [8/3,  0,  0,  0],
     [ 16,  0,  0,  0]])
-    >>> RouthHurwitz(p2, s).zero_row_case
+    >>> RouthHurwitz(p2).zero_row_case
     True
-    >>> RouthHurwitz(p2, s).auxiliary_polynomial
+    >>> RouthHurwitz(p2).auxiliary_polynomial
     Poly(2*s**4 + 12*s**2 + 16, s, domain='ZZ')
 
     References
@@ -225,14 +218,16 @@ class RouthHurwitz(MutableDenseMatrix):
     .. [2] https://www.circuitbread.com/tutorials/routh-hurwitz-criterion-part-2-3-3
 
     """
-    def __new__(cls, polynomial, var, infinitesimal_element = None):
-        if not isinstance(var, Symbol):
-            raise ValueError("var must be a Symbol")
-        n = Poly(polynomial, var).degree()
+    def __new__(cls, polynomial, infinitesimal_element = None):
+        n = polynomial.degree()
 
         return super().__new__(cls, n + 1, n//2 + 1, [0]*(n + 1)*(n//2 + 1))
 
-    def __init__(self, polynomial, var, infinitesimal_element = None):
+    def __init__(self, polynomial, infinitesimal_element = None):
+        [var, ] = polynomial.gens
+        if not isinstance(var, Symbol):
+            raise ValueError("var must be a Symbol")
+
         self._var = var
         self._polynomial = Poly(polynomial, var)
         self._poly_degree = self._polynomial.degree()
@@ -290,7 +285,8 @@ class RouthHurwitz(MutableDenseMatrix):
         if all(self[i, j] == 0 for j in range(self.cols)):
             self._zero_row_case = True
             self._aux_poly_degree = self._poly_degree - i + 1
-            # calculate the row using the auxiliary polynomial coefficients degrees
+            # calculate the row using the auxiliary polynomial coefficients
+            # degrees
             for j in range(self.cols):
                 aux_coeff_deg = self._aux_poly_degree - 2*j
 

@@ -1121,7 +1121,7 @@ class TransferFunction(SISOLinearTimeInvariant):
         """
         tf = self.to_standard_form(cancel_poles_zeros)
 
-        conditions = tf.get_asymptotic_stability_conditions(cancel_poles_zeros = False)
+        conditions = tf.get_asymptotic_stability_conditions(cancel_poles_zeros)
 
         try:
             output = reduce_inequalities(conditions)
@@ -1228,7 +1228,7 @@ class TransferFunction(SISOLinearTimeInvariant):
         """
         standard_form = self.to_standard_form(cancel_poles_zeros)
 
-        return neg_roots_conds(standard_form.den, self.var)
+        return neg_roots_conds(Poly(standard_form.den, self.var))
 
     def __add__(self, other):
         if hasattr(other, "is_StateSpace_object") and other.is_StateSpace_object:
@@ -5152,7 +5152,6 @@ class StateSpace(LinearTimeInvariant):
         (1/3 < k) & (k < 1)
 
         """
-        s = Symbol('s')
-        determinant = self.A.charpoly(s)
+        determinant = self.A.charpoly()
 
-        return neg_roots_conds(determinant, s)
+        return neg_roots_conds(determinant)
