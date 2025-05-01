@@ -30,7 +30,6 @@ from sympy.functions.elementary.piecewise import (Piecewise, piecewise_fold,
 from sympy.functions.elementary.trigonometric import TrigonometricFunction
 from sympy.functions.special.bessel import (BesselBase, besselj, besseli,
                                             besselk, bessely, jn)
-from sympy.functions.special.beta_functions import beta
 from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.integrals.integrals import Integral
 from sympy.logic.boolalg import Boolean
