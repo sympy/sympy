@@ -402,6 +402,15 @@ def test_hypersimp():
 
     assert hypersimp(1/(a*a**i - a**i*b), i) == 1/a
 
+    term = 2**a*Piecewise((2**a/(4*2**b), a - b <= 0), (0, True))/3
+    assert hypersimp(term, c) == Piecewise((4*2**b/2**a, a - b <= 0), (zoo, True)) * \
+        Piecewise((2**a/(4*2**b), a - b <= 0), (0, True))
+    assert hypersimp(Piecewise((k, True)), k) == (k + 1) / k
+    assert hypersimp(Piecewise((k+1, n < 2), (k*i, True)), k) == Piecewise(((k + 1)/k, n >= 2), ((k + 2)/(k + 1), True))
+
+    # interval depends on k
+    assert hypersimp(Piecewise((k+1, k < 2), (k, True)), k) is None
+
 def test_nsimplify():
     x = Symbol("x")
     assert nsimplify(0) == 0
