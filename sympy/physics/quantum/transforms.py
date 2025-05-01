@@ -24,7 +24,7 @@ from sympy.physics.quantum.kind import KetKind, BraKind, OperatorKind
 from sympy.physics.quantum.operator import (
     OuterProduct, IdentityOperator, Operator
 )
-from sympy.physics.quantum.slidingtransform import DipatchingSlidingTransform
+from sympy.physics.quantum.slidingtransform import SlidingTransform
 from sympy.physics.quantum.state import BraBase, KetBase, StateBase
 from sympy.physics.quantum.tensorproduct import TensorProduct
 
@@ -33,7 +33,10 @@ from sympy.physics.quantum.tensorproduct import TensorProduct
 # Multipledispatch based transformed for Mul and Pow
 #-----------------------------------------------------------------------------
 
-_postprocess_state_mul = DipatchingSlidingTransform()
+
+_postprocess_state_mul = SlidingTransform(
+    binary=Dispatcher('_postprocess_state_mul')
+)
 """Transform a pair of expression in a Mul to their canonical form.
 
 All functions that are registered with this dispatcher need to take
@@ -52,7 +55,6 @@ However, users of ``sympy.physics.quantum`` can import this dispatcher and
 register their own transforms to control the canonical form of products
 of quantum expressions.
 """
-
 
 @_postprocess_state_mul.binary.register(Expr, Expr)
 def _transform_expr(a, b):
@@ -82,10 +84,12 @@ def _transform_bra_ket(a, b):
     """Transform a bra*ket -> InnerProduct(bra, ket)."""
     return (InnerProduct(a, b),)
 
+
 @_postprocess_state_mul.binary.register(KetBase, BraBase)
 def _transform_ket_bra(a, b):
     """Transform a keT*bra -> OuterProduct(ket, bra)."""
     return (OuterProduct(a, b),)
+
 
 @_postprocess_state_mul.binary.register(KetBase, KetBase)
 def _transform_ket_ket(a, b):
@@ -97,6 +101,7 @@ def _transform_ket_ket(a, b):
         'Multiplication of two kets is not allowed. Use TensorProduct instead.'
     )
 
+
 @_postprocess_state_mul.binary.register(BraBase, BraBase)
 def _transform_bra_bra(a, b):
     """Raise a TypeError if a user tries to multiply two bras.
@@ -107,13 +112,16 @@ def _transform_bra_bra(a, b):
         'Multiplication of two bras is not allowed. Use TensorProduct instead.'
     )
 
+
 @_postprocess_state_mul.binary.register(OuterProduct, KetBase)
 def _transform_op_ket(a, b):
     return (InnerProduct(a.bra, b), a.ket)
 
+
 @_postprocess_state_mul.binary.register(BraBase, OuterProduct)
 def _transform_bra_op(a, b):
     return (InnerProduct(a, b.ket), b.bra)
+
 
 @_postprocess_state_mul.binary.register(TensorProduct, KetBase)
 def _transform_tp_ket(a, b):
@@ -125,6 +133,7 @@ def _transform_tp_ket(a, b):
         raise TypeError(
             'Multiplication of TensorProduct(*kets)*ket is invalid.'
         )
+
 
 @_postprocess_state_mul.binary.register(KetBase, TensorProduct)
 def _transform_ket_tp(a, b):
@@ -148,6 +157,7 @@ def _transform_tp_bra(a, b):
             'Multiplication of TensorProduct(*bras)*bra is invalid.'
         )
 
+
 @_postprocess_state_mul.binary.register(BraBase, TensorProduct)
 def _transform_bra_tp(a, b):
     """Raise a TypeError if a user tries to multiply bra*TensorProduct(*bras).
@@ -159,6 +169,7 @@ def _transform_bra_tp(a, b):
             'Multiplication of bra*TensorProduct(*bras) is invalid.'
         )
 
+
 @_postprocess_state_mul.binary.register(TensorProduct, TensorProduct)
 def _transform_tp_tp(a, b):
     """Combine a product of tensor products if their number of args matches."""
@@ -168,6 +179,7 @@ def _transform_tp_tp(a, b):
             return tuple([InnerProduct(i, j) for (i, j) in zip(a.args, b.args)])
         else:
             return (TensorProduct(*(i*j for (i, j) in zip(a.args, b.args))), )
+
 
 @_postprocess_state_mul.binary.register(OuterProduct, OuterProduct)
 def _transform_op_op(a, b):
