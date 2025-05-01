@@ -2,9 +2,7 @@ from sympy.core.mul import Mul
 from sympy.core.symbol import symbols
 from sympy.testing.pytest import raises
 
-from sympy.physics.quantum.slidingtransform import (
-    SlidingTransform, DipatchingSlidingTransform
-)
+from sympy.physics.quantum.slidingtransform import SlidingTransform
 
 a, b, c, d, e, f = symbols('a b c d e f', commutative=False)
 

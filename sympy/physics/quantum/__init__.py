@@ -1,6 +1,8 @@
 # Names exposed by 'from sympy.physics.quantum import *'
 
 __all__ = [
+   # 'SlidingTransform', 'DipatchingSlidingTransform'
+
     'AntiCommutator',
 
     'qapply',
@@ -31,6 +33,10 @@ __all__ = [
 
     '_postprocess_state_mul', '_postprocess_state_pow'
 ]
+
+# from .slidingtransform import (
+#     SlidingTransform, DipatchingSlidingTransform
+# )
 
 from .anticommutator import AntiCommutator
 
