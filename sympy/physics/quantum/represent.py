@@ -21,7 +21,6 @@ from sympy.physics.quantum.tensorproduct import TensorProduct
 from sympy.physics.quantum.matrixutils import flatten_scalar
 from sympy.physics.quantum.state import KetBase, BraBase, StateBase
 from sympy.physics.quantum.operator import Operator, OuterProduct
-from sympy.physics.quantum.qapply import qapply
 from sympy.physics.quantum.operatorset import operators_to_state, state_to_operators
 
 
@@ -327,7 +326,7 @@ def rep_expectation(expr, **options):
     <px_2|*X*|px_1>
 
     """
-
+    from sympy.physics.quantum.qapply import qapply
     if "index" not in options:
         options["index"] = 1
 

@@ -10,7 +10,6 @@ from sympy.matrices.dense import MutableDenseMatrix as Matrix
 from sympy.printing.pretty.stringpict import prettyForm
 from sympy.physics.quantum.dagger import Dagger
 from sympy.physics.quantum.operator import HermitianOperator
-from sympy.physics.quantum.represent import represent
 from sympy.physics.quantum.matrixutils import numpy_ndarray, scipy_sparse_matrix, to_numpy
 from sympy.physics.quantum.trace import Tr
 
@@ -191,6 +190,7 @@ class Density(HermitianOperator):
         return Mul(*c_part1)*Mul(*c_part2) * op
 
     def _represent(self, **options):
+        from sympy.physics.quantum.represent import represent
         return represent(self.doit(), **options)
 
     def _print_operator_name_latex(self, printer, *args):
@@ -238,6 +238,7 @@ def entropy(density):
 
     """
     if isinstance(density, Density):
+        from sympy.physics.quantum.represent import represent
         density = represent(density)  # represent in Matrix
 
     if isinstance(density, scipy_sparse_matrix):
@@ -299,6 +300,7 @@ def fidelity(state1, state2):
     .. [1] https://en.wikipedia.org/wiki/Fidelity_of_quantum_states
 
     """
+    from sympy.physics.quantum.represent import represent
     state1 = represent(state1) if isinstance(state1, Density) else state1
     state2 = represent(state2) if isinstance(state2, Density) else state2
 
