@@ -4,7 +4,6 @@ from sympy.polys.polytools  import cancel
 from sympy import symbols, Symbol
 from sympy.logic.boolalg import false, true
 from sympy.series import limit
-from sympy import Q, ask
 from sympy.solvers.inequalities import reduce_inequalities
 
 __all__ = ['RouthHurwitz', 'neg_roots_conds']
