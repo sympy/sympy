@@ -20,8 +20,7 @@ from sympy.core.sorting import ordered
 from sympy.core.sympify import _sympify
 from sympy.core.traversal import bottom_up as _bottom_up, walk as _walk
 from sympy.functions import gamma, exp, sqrt, log, exp_polar, re
-from sympy.functions.combinatorial.factorials import (CombinatorialFunction, RisingFactorial,
-    FallingFactorial, binomial, factorial, factorial2)
+from sympy.functions.combinatorial.factorials import (CombinatorialFunction, RisingFactorial)
 from sympy.functions.elementary.complexes import unpolarify, Abs, sign
 from sympy.functions.elementary.exponential import ExpBase
 from sympy.functions.elementary.hyperbolic import HyperbolicFunction
