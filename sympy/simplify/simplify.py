@@ -380,11 +380,11 @@ def _get_term_ratio(f, k):
                 if r is None:
                     return None
                 ratios.add((r, a[1]))
-            res = Piecewise(*ratios)
+            res = Piecewise(*ratios).simplify()
             if isinstance(res, Piecewise) and any(interval.has_xfree({k}) for _, interval in res.args):
                 return None
 
-            return res.simplify()
+            return res
 
     return None
 
