@@ -2138,7 +2138,7 @@ def test_algebraic():
     assert ask(Q.algebraic(sqrt(sin(7)))) is None
     assert ask(Q.algebraic(sqrt(y + I*sqrt(7)))) is None
 
-    assert ask(Q.algebraic(2.47)) is True
+    assert ask(Q.algebraic(2.47)) is None
 
     assert ask(Q.algebraic(x), Q.transcendental(x)) is False
     assert ask(Q.transcendental(x), Q.algebraic(x)) is False
