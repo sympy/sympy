@@ -10,13 +10,14 @@ from sympy.core.relational import (Eq, Lt, Gt, Ge, Le)
 from sympy.core.singleton import S
 from sympy.core.symbol import (Symbol, symbols)
 from sympy.core.sympify import sympify
-from sympy.functions.combinatorial.factorials import (binomial, factorial)
+from sympy.functions.combinatorial.factorials import (binomial, factorial, ff)
 from sympy.functions.elementary.complexes import (Abs, sign)
 from sympy.functions.elementary.exponential import (exp, exp_polar, log)
 from sympy.functions.elementary.hyperbolic import (cosh, csch, sinh)
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import (acos, asin, atan, cos, sin, sinc, tan)
+from sympy.functions.special.beta_functions import beta
 from sympy.functions.special.error_functions import erf
 from sympy.functions.special.gamma_functions import gamma
 from sympy.functions.special.hyper import hyper
