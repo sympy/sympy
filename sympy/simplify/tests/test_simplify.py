@@ -407,10 +407,10 @@ def test_hypersimp():
     assert hypersimp(term, c) == Piecewise((4*2**b/2**a, a - b <= 0), (zoo, True)) * \
         Piecewise((2**a/(4*2**b), a - b <= 0), (0, True))
     assert hypersimp(Piecewise((k, True)), k) == (k + 1) / k
-    assert hypersimp(Piecewise((k + 1, n < 2), (k * i, True)), k) == Piecewise(((k + 1)/k, n >= 2), ((k + 2)/(k + 1), True))
+    assert hypersimp(Piecewise((k + 1, n < 2), (k * i, True)), k) == Piecewise(((k + 2)/(k + 1), n < 2), ((k + 1)/k, True))
     assert hypersimp(Piecewise((gamma(k + n)/gamma(n), n > 0), ((-1)**k*gamma(1 - n)/gamma(-k - n + 1), True)), k) == k + n
 
-    assert hypersimp(ff(n, k), k) == k - n
+    assert hypersimp(ff(n, k), k) == -k + n
     assert hypersimp(beta(n, k), k) == k / (k + n)
 
     # interval depends on k
