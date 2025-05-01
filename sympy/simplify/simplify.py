@@ -322,12 +322,7 @@ def hypersimp(f, k):
     if not f.is_commutative:
         return None
 
-    f = f.rewrite([
-            factorial,
-            factorial2,
-            binomial,
-            beta
-        ], gamma)
+    f = f.rewrite(gamma)
 
     f = expand_func(f)
     f = factor_terms(f)
@@ -349,12 +344,6 @@ def _get_term_ratio(f, k):
                 return None
             ratios.append(r)
         return Mul(*ratios)
-
-    elif isinstance(f, RisingFactorial):
-        return f.args[1] + f.args[0]
-
-    elif isinstance(f, FallingFactorial):
-        return f.args[1] - f.args[0]
 
     elif isinstance(f, (Pow, exp)):
         b, e = f.as_base_exp()
@@ -383,7 +372,10 @@ def _get_term_ratio(f, k):
 
         elif isinstance(f, Piecewise):
             # Compute term ratio for each piece
-            f = piecewise_exclusive(f)
+            f = piecewise_exclusive(f, skip_nan=True)
+            if not isinstance(f, Piecewise):
+                return _get_term_ratio(f, k)
+
             if any(interval.has_xfree({k}) for _, interval in f.args):
                 return None
 
