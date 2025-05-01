@@ -9,7 +9,7 @@ from sympy.assumptions.handlers import AskHandler
 from sympy.assumptions.ask_generated import (get_all_known_facts,
     get_known_facts_dict)
 from sympy.core.add import Add
-from sympy.core.numbers import (I, Integer, Rational, oo, zoo, pi, E)
+from sympy.core.numbers import (I, Integer, Rational, oo, zoo, pi)
 from sympy.core.singleton import S
 from sympy.core.power import Pow
 from sympy.core.symbol import Str, symbols, Symbol
