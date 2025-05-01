@@ -381,7 +381,7 @@ class AlgebraicPredicate(Predicate):
 
 class TranscendentalPredicate(Predicate):
     """
-    Transcedental number predicate.
+    Transcendental number predicate.
 
     Explanation
     ===========
@@ -404,7 +404,7 @@ class TranscendentalPredicate(Predicate):
     References
     ==========
 
-    .. [1] https://www.britannica.com/science/transcendental-number
+    .. [1] https://en.wikipedia.org/wiki/Transcendental_number
 
     """
 
