@@ -2116,6 +2116,8 @@ def test_algebraic():
     assert ask(Q.algebraic(1 + I*sqrt(3)**Rational(17, 31))) is True
     assert ask(Q.algebraic(1 + I*sqrt(3)**(17/pi))) is None
 
+    assert ask(Q.algebraic(log(3, 2) ** 2)) is None
+
     for f in [exp, sin, tan, asin, atan, cos]:
         assert ask(Q.algebraic(f(7))) is False
         assert ask(Q.algebraic(f(7, evaluate=False))) is False
