@@ -2,7 +2,7 @@
 
 .. module:: sympy
 
-Welcome to SymPy's documentation!
+Welcome to SymPy's documentation.
 ----------------------------------
 
 A `PDF version of these docs <https://github.com/sympy/sympy/releases>`_ is also available.
