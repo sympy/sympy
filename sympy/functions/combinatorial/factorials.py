@@ -977,6 +977,8 @@ class binomial(CombinatorialFunction):
                 and (d - 1).is_zero):
             return n
         if k.is_integer:
+            if k.is_negative and (n.is_negative and n_isint):
+                return S.One
             if k.is_negative or (n_nonneg and n_isint and d.is_negative):
                 return S.Zero
             elif n.is_number:
