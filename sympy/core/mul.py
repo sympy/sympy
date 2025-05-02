@@ -1550,7 +1550,8 @@ class Mul(Expr, AssocOp):
             return fuzzy_and((
                 fuzzy_or((expr1.is_hermitian, expr1.is_antihermitian)),
                 expr1 == expr2
-            ))
+            )) # We check for expr1.is_antihermitian and expr1 == expr2 because
+               # adjoint(A*u*A) = (-A)*adjoint(u)*(-A) = A*adjoint(u)*A
 
         # return True if the product of the list is real
         def is_list_real(l):
@@ -1607,7 +1608,8 @@ class Mul(Expr, AssocOp):
             return fuzzy_and((
                 fuzzy_or((expr1.is_hermitian, expr1.is_antihermitian)),
                 expr1 == expr2
-            ))
+            )) # We check for expr1.is_antihermitian and expr1 == expr2 because
+               # adjoint(A*u*A) = (-A)*adjoint(u)*(-A) = A*adjoint(u)*A
 
         # return True if the product of the list is real
         def is_list_real(l):
