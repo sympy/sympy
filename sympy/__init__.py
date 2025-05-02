@@ -332,8 +332,9 @@ __all__ = [
 
     # sympy.series
     'Order', 'O', 'limit', 'Limit', 'gruntz', 'series', 'approximants',
-    'residue', 'EmptySequence', 'SeqPer', 'SeqFormula', 'sequence', 'SeqAdd',
-    'SeqMul', 'fourier_series', 'fps', 'difference_delta', 'limit_seq',
+    'pade_approximant', 'residue', 'EmptySequence', 'SeqPer', 'SeqFormula',
+    'sequence', 'SeqAdd', 'SeqMul', 'fourier_series', 'fps', 'difference_delta',
+    'limit_seq',
 
     # sympy.functions
     'factorial', 'factorial2', 'rf', 'ff', 'binomial', 'RisingFactorial',
