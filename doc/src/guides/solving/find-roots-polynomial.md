@@ -216,7 +216,7 @@ that only real (not complex or imaginary) roots will be returned.
 >>> cubed = x**3 - 1
 >>> # roots() returns real and complex roots
 >>> roots(cubed)
-{1: 1, -1/2 - sqrt(3)*I/2: 1, -1/2 + sqrt(3)*I/2: 1}
+{1: 1, exp(-2*I*pi/3): 1, exp(2*I*pi/3): 1}
 >>> # real_roots() returns only real roots
 >>> real_roots(cubed)
 [1]

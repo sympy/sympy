@@ -841,9 +841,9 @@ def test_solveset_complex_polynomial():
                   -b/(2*a) + sqrt(-4*a*c + b**2)/(2*a))
 
     assert solveset_complex(x - y**3, y) == FiniteSet(
-        (-x**Rational(1, 3))/2 + I*sqrt(3)*x**Rational(1, 3)/2,
         x**Rational(1, 3),
-        (-x**Rational(1, 3))/2 - I*sqrt(3)*x**Rational(1, 3)/2)
+        x**Rational(1, 3)*exp(-2*I*pi/3),
+        x**Rational(1, 3)*exp(2*I*pi/3))
 
     assert solveset_complex(x + 1/x - 1, x) == \
         FiniteSet(S.Half + I*sqrt(3)/2, S.Half - I*sqrt(3)/2)
@@ -999,14 +999,14 @@ def test_solve_trig():
 
     # This is the only remaining solveset test that actually ends up being solved
     # by _solve_trig2(). All others are handled by the improved _solve_trig1.
-    assert dumeq(solveset_real(2*cos(x)*cos(2*x) - 1, x),
-          Union(ImageSet(Lambda(n, 2*n*pi + 2*atan(sqrt(-2*2**Rational(1, 3)*(67 +
-                  9*sqrt(57))**Rational(2, 3) + 8*2**Rational(2, 3) + 11*(67 +
-                  9*sqrt(57))**Rational(1, 3))/(3*(67 + 9*sqrt(57))**Rational(1, 6)))), S.Integers),
-                  ImageSet(Lambda(n, 2*n*pi - 2*atan(sqrt(-2*2**Rational(1, 3)*(67 +
-                  9*sqrt(57))**Rational(2, 3) + 8*2**Rational(2, 3) + 11*(67 +
-                  9*sqrt(57))**Rational(1, 3))/(3*(67 + 9*sqrt(57))**Rational(1, 6))) +
-                  2*pi), S.Integers)))
+    alpha = atanh(sqrt(
+        -11*(67 + 9*sqrt(57))**(S(1)/3)
+        - 8*2**(S(2)/3)
+        + 2*2**(S(1)/3)*(67 + 9*sqrt(57))**(S(2)/3))
+              /(3*(67 + 9*sqrt(57))**(S(1)/6)))
+    assert dumeq(solveset_real(2*cos(x)*cos(2*x) - 1, x), Union(
+        ImageSet(Lambda(n, 2*n*pi - 2*I*alpha), S.Integers),
+        ImageSet(Lambda(n, 2*n*pi + 2*I*alpha), S.Integers)))
 
     # issue #16870
     assert dumeq(simplify(solveset(sin(x/180*pi) - S.Half, x, S.Reals)), Union(
@@ -3510,17 +3510,20 @@ def test_issue_11184():
 
 
 def test_issue_21890():
-    e = S(2)/3
+    e = 2**(S(2)/3)
     assert nonlinsolve([4*x**3*y**4 - 2*y, 4*x**4*y**3 - 2*x], x, y) == {
-        (2**e/(2*y), y), ((-2**e/4 - 2**e*sqrt(3)*I/4)/y, y),
-        ((-2**e/4 + 2**e*sqrt(3)*I/4)/y, y)}
+        (e/(2*y), y),
+        (e*exp(-2*I*pi/3)/(2*y), y),
+        (e*exp(2*I*pi/3)/(2*y), y)
+        # XXX: (0, 0) should be a solution as well.
+    }
     assert nonlinsolve([(1 - 4*x**2)*exp(-2*x**2 - 2*y**2),
         -4*x*y*exp(-2*x**2)*exp(-2*y**2)], x, y) == {(-S(1)/2, 0), (S(1)/2, 0)}
     rx, ry = symbols('x y', real=True)
     sol = nonlinsolve([4*rx**3*ry**4 - 2*ry, 4*rx**4*ry**3 - 2*rx], rx, ry)
-    ans = {(2**(S(2)/3)/(2*ry), ry),
-        ((-2**(S(2)/3)/4 - 2**(S(2)/3)*sqrt(3)*I/4)/ry, ry),
-        ((-2**(S(2)/3)/4 + 2**(S(2)/3)*sqrt(3)*I/4)/ry, ry)}
+    ans = {(e/(2*ry), ry),
+           (e*exp(-2*I*pi/3)/(2*ry), ry),
+           (e*exp(2*I*pi/3)/(2*ry), ry)}
     assert sol == ans
 
 
