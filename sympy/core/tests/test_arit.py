@@ -1591,6 +1591,9 @@ def test_Mul_hermitian_antihermitian():
     assert Mul(xnc*xnc.adjoint(), I*ync*ync.adjoint(), xnc*xnc.adjoint(), evaluate=False).is_antihermitian is True
     assert Mul(1+I, xnc, xnc.adjoint()).is_hermitian is None
     assert Mul(1+I, xnc, xnc.adjoint()).is_antihermitian is None
+    # assert Mul(2*xnc*xnc.adjoint(), Mul(xnc, xnc.adjoint(), evaluate=False), evaluate=False).is_hermitian is True    # doesn't succeed
+    assert (b*xnc*xnc.adjoint()).is_hermitian is None
+
 
 
 def test_Add_is_comparable():

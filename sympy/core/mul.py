@@ -1540,7 +1540,7 @@ class Mul(Expr, AssocOp):
             return self._eval_real_imag(False)
 
     def _eval_is_hermitian(self):
-        from sympy import adjoint
+        from sympy.functions.elementary.complexes import adjoint
 
         def _is_adjoint_pair(expr1, expr2):
             if isinstance(expr1, adjoint) and expr1.args[0] == expr2:
@@ -1558,7 +1558,7 @@ class Mul(Expr, AssocOp):
             for z in l:
                 if z.is_imaginary is True:
                     n_imaginary += 1
-                elif fuzzy_not(fuzzy_or((z.is_imaginary, z.is_real))):
+                elif fuzzy_not(fuzzy_or((z.is_imaginary, z.is_real))) != False:
                     return None
             return (n_imaginary % 2 == 0)
 
@@ -1568,7 +1568,7 @@ class Mul(Expr, AssocOp):
             for z in l:
                 if z.is_imaginary is True:
                     n_imaginary += 1
-                elif fuzzy_not(fuzzy_or((z.is_imaginary, z.is_real))):
+                elif fuzzy_not(fuzzy_or((z.is_imaginary, z.is_real))) != False:
                     return None
             return (n_imaginary % 2 == 1)
         c_part, nc_part = self.args_cnc()
@@ -1597,7 +1597,7 @@ class Mul(Expr, AssocOp):
         return self._eval_herm_antiherm(True)
 
     def _eval_is_antihermitian(self):
-        from sympy import adjoint
+        from sympy.functions.elementary.complexes import adjoint
 
         def _is_adjoint_pair(expr1, expr2):
             if isinstance(expr1, adjoint) and expr1.args[0] == expr2:
@@ -1615,7 +1615,7 @@ class Mul(Expr, AssocOp):
             for z in l:
                 if z.is_imaginary is True:
                     n_imaginary += 1
-                elif fuzzy_not(fuzzy_or((z.is_imaginary, z.is_real))):
+                elif fuzzy_not(fuzzy_or((z.is_imaginary, z.is_real))) != False:
                     return None
             return (n_imaginary % 2 == 0)
 
@@ -1625,7 +1625,7 @@ class Mul(Expr, AssocOp):
             for z in l:
                 if z.is_imaginary is True:
                     n_imaginary += 1
-                elif fuzzy_not(fuzzy_or((z.is_imaginary, z.is_real))):
+                elif fuzzy_not(fuzzy_or((z.is_imaginary, z.is_real))) != False:
                     return None
             return (n_imaginary % 2 == 1)
 
