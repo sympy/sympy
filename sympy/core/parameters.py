@@ -118,11 +118,11 @@ def distribute(x):
 
     >>> from sympy.abc import x
     >>> from sympy.core.parameters import distribute
-    >>> print(2*(x + 1))
-    2*x + 2
+    >>> print(-1*(x + 1))
+    -x - 1
     >>> with distribute(False):
-    ...     print(2*(x + 1))
-    2*(x + 1)
+    ...     print(-1*(x + 1))
+    -(x + 1)
     """
 
     old = global_parameters.distribute
