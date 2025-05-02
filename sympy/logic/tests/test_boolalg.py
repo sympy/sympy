@@ -863,30 +863,33 @@ def test_true_false():
 
 
 def test_bool_as_set():
-    assert ITE(y <= 0, False, y >= 1).as_set() == Interval(1, oo)
-    assert And(x <= 2, x >= -2).as_set() == Interval(-2, 2)
-    assert Or(x >= 2, x <= -2).as_set() == Interval(-oo, -2) + Interval(2, oo)
-    assert Not(x > 2).as_set() == Interval(-oo, 2)
+    assert ITE(y <= 0, False, y >= 1).as_set(y) == Interval(1, oo)
+    assert And(x <= 2, x >= -2).as_set(x) == Interval(-2, 2)
+    assert Or(x >= 2, x <= -2).as_set(x) == Interval(-oo, -2) + Interval(2, oo)
+    assert Not(x > 2).as_set(x) == Interval(-oo, 2)
     # issue 10240
-    assert Not(And(x > 2, x < 3)).as_set() == \
+    assert Not(And(x > 2, x < 3)).as_set(x) == \
            Union(Interval(-oo, 2), Interval(3, oo))
-    assert true.as_set() == S.UniversalSet
-    assert false.as_set() is S.EmptySet
-    assert x.as_set() == S.UniversalSet
-    assert And(Or(x < 1, x > 3), x < 2).as_set() == Interval.open(-oo, 1)
-    assert And(x < 1, sin(x) < 3).as_set() == (x < 1).as_set()
-    raises(NotImplementedError, lambda: (sin(x) < 1).as_set())
+    assert true.as_set(x) == S.UniversalSet
+    assert false.as_set(x) is S.EmptySet
+    assert x.as_set(x) == S.UniversalSet
+    assert And(Or(x < 1, x > 3), x < 2).as_set(x) == Interval.open(-oo, 1)
+    assert And(x < 1, sin(x) < 3).as_set(x) == (x < 1).as_set(x)
+    raises(NotImplementedError, lambda: (sin(x) < 1).as_set(x))
     # watch for object morph in as_set
-    assert Eq(-1, cos(2 * x) ** 2 / sin(2 * x) ** 2).as_set() is S.EmptySet
+    assert Eq(-1, cos(2 * x) ** 2 / sin(2 * x) ** 2).as_set(x) is S.EmptySet
 
 
 @XFAIL
 def test_multivariate_bool_as_set():
+    from sympy.sets import ConditionSet
+
     x, y = symbols('x,y')
 
-    assert And(x >= 0, y >= 0).as_set() == Interval(0, oo) * Interval(0, oo)
-    assert Or(x >= 0, y >= 0).as_set() == S.Reals * S.Reals - \
-           Interval(-oo, 0, True, True) * Interval(-oo, 0, True, True)
+    assert And(x >= 0, y >= 0).as_set(x) == Interval(0, oo)
+    assert And(x >= 0, y >= 0).as_set(y) == Interval(0, oo)
+    assert Or(x >= 0, y >= 0).as_set(x) == ConditionSet(x, y >= 0, Interval(0, oo))
+    assert Or(y >= 0, y >= 0).as_set(y) == ConditionSet(y, x >= 0, Interval(0, oo))
 
 
 def test_all_or_nothing():
@@ -915,14 +918,14 @@ def test_negated_atoms():
 
 
 def test_issue_8777():
-    assert And(x > 2, x < oo).as_set() == Interval(2, oo, left_open=True)
-    assert And(x >= 1, x < oo).as_set() == Interval(1, oo)
-    assert (x < oo).as_set() == Interval(-oo, oo)
-    assert (x > -oo).as_set() == Interval(-oo, oo)
+    assert And(x > 2, x < oo).as_set(x) == Interval(2, oo, left_open=True)
+    assert And(x >= 1, x < oo).as_set(x) == Interval(1, oo)
+    assert (x < oo).as_set(x) == Interval(-oo, oo)
+    assert (x > -oo).as_set(x) == Interval(-oo, oo)
 
 
 def test_issue_8975():
-    assert Or(And(-oo < x, x <= -2), And(2 <= x, x < oo)).as_set() == \
+    assert Or(And(-oo < x, x <= -2), And(2 <= x, x < oo)).as_set(x) == \
            Interval(-oo, -2) + Interval(2, oo)
 
 

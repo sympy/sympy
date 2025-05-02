@@ -646,7 +646,7 @@ def _rel_as_nonpos(constr, syms):
                 x = freei.pop()
                 if x in unbound:
                     continue  # will handle later
-                ivl = Le(i, 0, evaluate=False).as_set()
+                ivl = Le(i, 0, evaluate=False).as_set(x)
                 if x not in univariate:
                     univariate[x] = ivl
                 else:
