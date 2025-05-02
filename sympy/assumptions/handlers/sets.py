@@ -7,7 +7,7 @@ from sympy.core import Add, Basic, Expr, Mul, Pow, S
 from sympy.core.numbers import (AlgebraicNumber, ComplexInfinity, Exp1, Float,
     GoldenRatio, ImaginaryUnit, Infinity, Integer, NaN, NegativeInfinity,
     Number, NumberSymbol, Pi, pi, Rational, TribonacciConstant, E)
-from sympy.core.logic import fuzzy_bool
+from sympy.core.logic import fuzzy_bool, fuzzy_not
 from sympy.functions import (Abs, acos, acot, asin, atan, cos, cot, exp, im,
     log, re, sin, tan)
 from sympy.core.numbers import I
@@ -817,19 +817,6 @@ def _(expr, assumptions):
 
 # TranscendentalPredicate
 
-@TranscendentalPredicate.register_many(Exp1, Pi)
-def _(expr, assumptions):
-    return True
-
-@TranscendentalPredicate.register_many(AlgebraicNumber, TribonacciConstant,
-    Infinity, ImaginaryUnit, ComplexInfinity, GoldenRatio, NegativeInfinity)
-def _(expr, assumptions):
-    return False
-
-@TranscendentalPredicate.register(Float)
-def _(expr, assumptions):
-    return None
-
 @TranscendentalPredicate.register(Expr)
 def _(expr, assumptions):
     ret = expr.is_transcendental
@@ -839,11 +826,5 @@ def _(expr, assumptions):
     is_complex = ask(Q.complex(expr), assumptions)
     if is_complex:
         is_algebraic = ask(Q.algebraic(expr), assumptions)
-        if is_algebraic is None:
-            return None
-        return not is_algebraic
+        return fuzzy_not(is_algebraic)
     return is_complex
-
-@TranscendentalPredicate.register(NaN)
-def _(expr, assumptions):
-    return None
