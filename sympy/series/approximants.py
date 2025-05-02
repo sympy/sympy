@@ -1,10 +1,12 @@
+from __future__ import annotations
+
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.polys.polytools import lcm
 from sympy.utilities import public
 from sympy import Expr, Poly
 from typing import Generator
-from sympy.polys.polytools import extended_euclidean_algorithm
+from sympy.polys.polytools import gcdex_steps
 
 @public
 def approximants(l, X=Symbol('x'), simplify=False):
@@ -111,7 +113,7 @@ def pade_approximants(
     f: Expr, x: Expr, order: int
 ) -> Generator[tuple[Poly, Poly], None, None]:
     """
-    Returns all pade approximants of the expression f of the desired order
+    Returns all pade approximants of the expression `f' of the desired order
 
     Description
     ===========
@@ -158,23 +160,30 @@ def pade_approximants(
     (-7*x**3/60 + x)/(x**2/20 + 1)
     360*x**2/(7*(60*x**3/7 + 360*x/7))
     x/(7*x**4/360 + x**2/6 + 1)
+
+    See also
+    ========
+
+    sympy.series.approximants.approximants
+    sympy.series.approximants.pade_approximant
     """
 
-    assert order >= 0, "order must be a non-negative integer"
+    if order < 0:
+        raise ValueError("'order' must be a non-negative integer")
 
     f_taylor_poly = f.series(x, n=order + 1).removeO().as_poly(x, field=True)
     remainder_monomial = Poly(x ** (order + 1), x)
 
     yield f_taylor_poly, f_taylor_poly.one
 
-    eea = extended_euclidean_algorithm(remainder_monomial, f_taylor_poly)
+    eea = gcdex_steps(remainder_monomial, f_taylor_poly)
 
     for _, t, r in eea:
         yield r, t
 
 
 @public
-def pade_approximant(f: Expr, x: Expr, m: int, n: int | None = None) -> Expr:
+def pade_approximant(f: Expr, x: Expr, m: int, n: int | None = None) -> Expr | None:
     """
     [m/n] pade approximant of f around x=0
 
@@ -227,6 +236,12 @@ def pade_approximant(f: Expr, x: Expr, m: int, n: int | None = None) -> Expr:
     >>> pade_cos = pade_approximant(sp.cos(x), x, 4, 0)
     >>> pade_cos
     x**4/24 - x**2/2 + 1
+
+    See also
+    ========
+
+    sympy.series.approximants.approximants
+    sympy.series.approximants.pade_approximants
     """
     if n is None:
         n = m

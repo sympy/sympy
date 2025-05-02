@@ -5308,29 +5308,24 @@ def half_gcdex(f, g, *gens, **args):
 
 
 @public
-def extended_euclidean_algorithm(f, g):
+def gcdex_steps(f, g):
     """
-    Generator for all intermediate steps in the extended euclidean algorithm applied to polynomials 'f' and 'g'.
+    Generator for all intermediate steps in the extended Euclidean algorithm applied to polynomials 'f' and 'g'.
 
     Description
     ===========
 
-    Implements the extended euclidean algorithm for polynomials as described in e.g.
-        McEliece, R. J., & Shearer, J. B. (1978).
-        A Property of Euclid's Algorithm and an
-        Application to Pade Approximation.
-        SIAM Journal on Applied Mathematics, 34(4), 611-615.
-        doi:10.1137/0134048
-
     Given polynomials a and b, the algorithm returns a generator to three polynomial sequences s, t, and r
     which enumerate all non-trivial (i.e. excluding (s, t, r) = (1, 0, f), (0, 1, g), and (g, -f, 0)) solutions
     (up to multiplicative constants) to the following conditions:
+
         f*s[i] + g*t[i] = r[i],
         r[i].deg() > r[i + 1].deg()
 
     In particular, the final value of r = gcd(f, g), the greatest common divisor of f and g.
 
-    The sequences s, t, and r also have the following properties (see McEliece and Shearer, 1978):
+    The sequences s, t, and r also have the following properties (see ref. [1] McEliece and Shearer):
+
         t[i]*r[i-1] - t[i-1]*r[i] = (-1)**i*f
         s[i]*r[i-1] - s[i-1]*r[i] = (-1)**(i+1)*g
         s[i]*t[i-1]- s[i-1]*t[i] = (-1)**(i+1)
@@ -5356,11 +5351,11 @@ def extended_euclidean_algorithm(f, g):
 
     >>> from sympy.abc import x
     >>> from sympy import Poly
-    >>> from sympy.polys.polytools import extended_euclidean_algorithm
+    >>> from sympy.polys.polytools import gcdex_steps
 
     >>> f = Poly(x**3 + 2, x)
     >>> g = Poly(x**2 - 1, x)
-    >>> eea_result = extended_euclidean_algorithm(f, g)
+    >>> eea_result = gcdex_steps(f, g)
 
     >>> for s, t, r in eea_result: print(s, t, r)
     Poly(1, x, domain='ZZ') Poly(-x, x, domain='ZZ') Poly(x + 2, x, domain='ZZ')
@@ -5371,15 +5366,28 @@ def extended_euclidean_algorithm(f, g):
     >>> 3 - (-x + 2)*f - (x**2 - 2*x + 1)*g
     Poly(0, x, domain='ZZ')
 
-    When two polynomials shape a common factor, the gcd is the common factor
+    When two polynomials share a common factor, the gcd is the common factor
 
     >>> f = Poly((x + 1)*(x + 2), x)
     >>> g = Poly((x + 1)*(x + 3), x)
-    >>> eea_result = extended_euclidean_algorithm(f, g)
+    >>> eea_result = gcdex_steps(f, g)
     >>> for s, t, r in eea_result: print(s, t, r)
     Poly(1, x, domain='ZZ') Poly(-1, x, domain='ZZ') Poly(-x - 1, x, domain='ZZ')
 
     Here, the final value of r is -(x + 1), so this is the gcd of f and g
+
+    See Also
+    ========
+
+    sympy.polys.polytools.gcdex: Extended Euclidean algorithm witout intermediate steps.
+    sympy.polys.polytools.half_gcdex: Half extended Euclidean algorithm.
+
+    References
+    ==========
+
+    .. [1] McEliece, R. J., & Shearer, J. B. (1978). A Property of Euclid's Algorithm
+           and an application to Pade Approximation. SIAM Journal on Applied Mathematics,
+           34(4), 611-615. doi:10.1137/0134048
     """
     s1, s2 = f.one, f.zero
     t1, t2 = f.zero, f.one

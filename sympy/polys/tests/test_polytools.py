@@ -30,7 +30,7 @@ from sympy.polys.polytools import (
     GroebnerBasis, is_zero_dimensional,
     _torational_factor_list,
     to_rational_coeffs,
-    extended_euclidean_algorithm)
+    gcdex_steps)
 
 from sympy.polys.polyerrors import (
     MultivariatePolynomialError,
@@ -1929,10 +1929,10 @@ def test_issue_7864():
     assert r == 0
 
 
-def test_extended_euclidean_algorithm():
+def test_gcdex_steps():
     f = Poly(x**5 + 2*x**4 - x**2 + 1, x)
     g = Poly(x**4 - 1, x)
-    eea_result = extended_euclidean_algorithm(f, g)
+    eea_result = gcdex_steps(f, g)
 
     r_degree = 5
     for si, ti, ri in eea_result:
