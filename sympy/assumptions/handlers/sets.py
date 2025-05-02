@@ -7,7 +7,7 @@ from sympy.core import Add, Basic, Expr, Mul, Pow, S
 from sympy.core.numbers import (AlgebraicNumber, ComplexInfinity, Exp1, Float,
     GoldenRatio, ImaginaryUnit, Infinity, Integer, NaN, NegativeInfinity,
     Number, NumberSymbol, Pi, pi, Rational, TribonacciConstant, E)
-from sympy.core.logic import fuzzy_bool
+from sympy.core.logic import fuzzy_bool, fuzzy_not
 from sympy.functions import (Abs, acos, acot, asin, atan, cos, cot, exp, im,
     log, re, sin, tan)
 from sympy.core.numbers import I
@@ -22,7 +22,7 @@ from .common import test_closed_group, ask_all, ask_any
 from ..predicates.sets import (IntegerPredicate, RationalPredicate,
     IrrationalPredicate, RealPredicate, ExtendedRealPredicate,
     HermitianPredicate, ComplexPredicate, ImaginaryPredicate,
-    AntihermitianPredicate, AlgebraicPredicate)
+    AntihermitianPredicate, AlgebraicPredicate, TranscendentalPredicate)
 
 
 # IntegerPredicate
@@ -751,10 +751,14 @@ def _(mat, assumptions):
 
 # AlgebraicPredicate
 
-@AlgebraicPredicate.register_many(AlgebraicNumber, Float, GoldenRatio, # type:ignore
+@AlgebraicPredicate.register_many(AlgebraicNumber, GoldenRatio, # type:ignore
     ImaginaryUnit, TribonacciConstant)
 def _(expr, assumptions):
     return True
+
+@AlgebraicPredicate.register(Float)
+def _(expr, assumptions):
+    return None
 
 @AlgebraicPredicate.register_many(ComplexInfinity, Exp1, Infinity, # type:ignore
     NegativeInfinity, Pi)
@@ -787,6 +791,11 @@ def _(expr, assumptions):
         if ask(Q.ne(expr.base, 0) & Q.ne(expr.base, 1)) and exp_rational is False:
             return False
 
+    exp_integer = ask(Q.integer(expr.exp), assumptions)
+    if base_algebraic is False and exp_integer:
+        if expr.exp > 0:
+            return False
+
 @AlgebraicPredicate.register(Rational) # type:ignore
 def _(expr, assumptions):
     return expr.q != 0
@@ -814,3 +823,18 @@ def _(expr, assumptions):
     x = expr.args[0]
     if ask(Q.algebraic(x), assumptions):
         return ask(~Q.nonzero(x - 1), assumptions)
+
+
+# TranscendentalPredicate
+
+@TranscendentalPredicate.register(Expr)
+def _(expr, assumptions):
+    ret = expr.is_transcendental
+    if ret is not None:
+        return ret
+
+    is_complex = ask(Q.complex(expr), assumptions)
+    if is_complex:
+        is_algebraic = ask(Q.algebraic(expr), assumptions)
+        return fuzzy_not(is_algebraic)
+    return is_complex
