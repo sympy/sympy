@@ -246,7 +246,8 @@ def pade_approximant(f: Expr, x: Expr, m: int, n: int | None = None) -> Expr | N
     if n is None:
         n = m
 
-    assert m >= 0 and n >= 0, "m and n must be non-negative integers"
+    if m < 0 or n < 0:
+        raise ValueError("m and n must be non-negative integers")
 
     approximants = pade_approximants(f, x, m + n)
 
