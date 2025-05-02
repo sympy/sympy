@@ -65,7 +65,7 @@ def _(expr, assumptions):
     return test_closed_group(expr, assumptions, Q.integer)
 
 @IntegerPredicate.register(Pow)
-def _(expr,assumptions):
+def _(expr, assumptions):
     if expr.is_number:
         return _IntegerPredicate_number(expr, assumptions)
     if ask_all(~Q.zero(expr.base), Q.finite(expr.base), Q.zero(expr.exp), assumptions=assumptions):
@@ -161,16 +161,16 @@ def _(expr, assumptions):
 
     is_exp_integer = ask(Q.integer(expr.exp), assumptions)
     if is_exp_integer:
-        is_base_rational = ask(Q.rational(expr.base),assumptions)
+        is_base_rational = ask(Q.rational(expr.base), assumptions)
         if is_base_rational:
-            is_base_zero = ask(Q.zero(expr.base),assumptions)
+            is_base_zero = ask(Q.zero(expr.base), assumptions)
             if is_base_zero is False:
                 return True
             if is_base_zero and ask(Q.positive(expr.exp)):
                 return True
-        if ask(Q.algebraic(expr.base),assumptions) is False:
+        if ask(Q.algebraic(expr.base), assumptions) is False:
             return ask(Q.zero(expr.exp), assumptions)
-        if ask(Q.irrational(expr.base),assumptions) and ask(Q.eq(expr.exp,-1)):
+        if ask(Q.irrational(expr.base), assumptions) and ask(Q.eq(expr.exp, -1)):
             return False
         return
     elif ask(Q.rational(expr.exp), assumptions):
@@ -178,7 +178,7 @@ def _(expr, assumptions):
             return False
         if ask(Q.zero(expr.base)) and ask(Q.positive(expr.exp)):
             return True
-        if ask(Q.eq(expr.base,1)):
+        if ask(Q.eq(expr.base, 1)):
             return True
 
 @RationalPredicate.register_many(asin, atan, cos, sin, tan)
@@ -777,14 +777,14 @@ def _(expr, assumptions):
         return
     exp_rational = ask(Q.rational(expr.exp), assumptions)
     base_algebraic = ask(Q.algebraic(expr.base), assumptions)
-    exp_algebraic = ask(Q.algebraic(expr.exp),assumptions)
+    exp_algebraic = ask(Q.algebraic(expr.exp), assumptions)
     if base_algebraic and exp_algebraic:
         if exp_rational:
             return True
         # Check based on the Gelfond-Schneider theorem:
         # If the base is algebraic and not equal to 0 or 1, and the exponent
         # is irrational,then the result is transcendental.
-        if ask(Q.ne(expr.base,0) & Q.ne(expr.base,1)) and exp_rational is False:
+        if ask(Q.ne(expr.base, 0) & Q.ne(expr.base, 1)) and exp_rational is False:
             return False
 
 @AlgebraicPredicate.register(Rational) # type:ignore
