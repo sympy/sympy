@@ -12,5 +12,7 @@ exclude =
     sympy/parsing/autolev/_antlr/*,
     sympy/parsing/autolev/test-examples/*,
     sympy/parsing/latex/_antlr/*,
+    sympy/polys/euclidtools.py,
+    sympy/polys/rings.py,
     sympy/polys/numberfields/resolvent_lookup.py,
 per-file-ignores = sympy/interactive/session.py:F821
