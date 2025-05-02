@@ -502,3 +502,18 @@ def test_minmax_no_evaluate():
         assert Max(0, p).args == (0, p)
         assert Min(0, p) != 0
         assert Min(0, p).args == (0, p)
+
+def test_issue_24026():
+    class local_Max(Max):
+        pass
+
+    class local_Min(Min):
+        pass
+
+    p = Symbol('p')
+    assert Max(3,7) == local_Max(3,7)
+    assert Min(3,7) == local_Min(3,7)
+    assert Max(4, Min(2, p)) == local_Max(4, local_Min(2,p))
+    assert Min(2, Max(3, p)) == local_Min(2, local_Max(3, p))
+    assert Max(4, local_Min(2, p)) == local_Max(4, Min(2,p))
+    assert Min(2, local_Max(3, p)) == local_Min(2, Max(3, p))
