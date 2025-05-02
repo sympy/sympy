@@ -109,8 +109,8 @@ from .polys import (Poly, PurePoly, poly_from_expr, parallel_poly_from_expr,
         Options, ring, xring, vring, sring, field, xfield, vfield, sfield)
 
 from .series import (Order, O, limit, Limit, gruntz, series, approximants,
-        residue, EmptySequence, SeqPer, SeqFormula, sequence, SeqAdd, SeqMul,
-        fourier_series, fps, difference_delta, limit_seq)
+        pade_approximant, residue, EmptySequence, SeqPer, SeqFormula, sequence,
+        SeqAdd, SeqMul, fourier_series, fps, difference_delta, limit_seq)
 
 from .functions import (factorial, factorial2, rf, ff, binomial,
         RisingFactorial, FallingFactorial, subfactorial, carmichael,

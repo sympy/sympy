@@ -4,7 +4,7 @@ from .order import Order
 from .limits import limit, Limit
 from .gruntz import gruntz
 from .series import series
-from .approximants import approximants
+from .approximants import approximants, pade_approximant
 from .residues import residue
 from .sequences import SeqPer, SeqFormula, sequence, SeqAdd, SeqMul
 from .fourier import fourier_series
