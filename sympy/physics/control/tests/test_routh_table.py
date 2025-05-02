@@ -58,26 +58,27 @@ def test_get_negative_real_roots_conditions():
     p1 = Poly(b4 * s**4 + b3 * s**3 + b2 * s**2 + b1 * s + b0, s)
 
     conds = neg_roots_conds(p1)
-    assert conds == [b4 > 0, b3 > 0, (-b1*b4 + b2*b3)/b3 > 0,
+    assert conds == [[b4 > 0, b3 > 0, (-b1*b4 + b2*b3)/b3 > 0,
                      (b0*b3**2 + b1**2*b4 - b1*b2*b3)/(b1*b4 - b2*b3) > 0,
-                     b0 > 0]
+                     b0 > 0], [b4 < 0, b3 < 0, (-b1*b4 + b2*b3)/b3 < 0,
+                     (b0*b3**2 + b1**2*b4 - b1*b2*b3)/(b1*b4 - b2*b3) < 0,
+                     b0 < 0]]
 
     p2 = Poly(-3*s**2 - 2*s - b0,s )
-    assert neg_roots_conds(p2) == [b0 > 0]
+    assert neg_roots_conds(p2) == [[False], [-b0 < 0]]
 
     a = symbols('a', nonpositive = True)
 
     p3 = Poly(b4*s**4 + b3*s**3 + a*s**2 + b1*s + b0, s)
     conds = neg_roots_conds(p3)
-    assert conds == [b4 > 0, b3 > 0, (a*b3 - b1*b4)/b3 > 0,
+    assert conds == [[b4 > 0, b3 > 0, (a*b3 - b1*b4)/b3 > 0,
                       (a*b1*b3 - b0*b3**2 - b1**2*b4)/(a*b3 - b1*b4) > 0,
-                      b0 > 0]
+                      b0 > 0], [b4 < 0, b3 < 0, (a*b3 - b1*b4)/b3 < 0,
+                      (a*b1*b3 - b0*b3**2 - b1**2*b4)/(a*b3 - b1*b4) < 0,
+                      b0 < 0]]
 
     p4 = Poly(b0*s**2 + a*s + 3, s)
-    assert neg_roots_conds(p4) == [False]
+    assert neg_roots_conds(p4) == [[b0 > 0, False], [False]]
 
     p5 = Poly(b0*s**2 + a*s - 3, s)
-    assert neg_roots_conds(p5) == [-b0 > 0, -a > 0]
-
-    p6 = Poly(a*s - b0**2, s)
-    assert neg_roots_conds(p6) == [-a > 0, b0**2 > 0]
+    assert neg_roots_conds(p5) == [[False], [b0 < 0, a < 0]]

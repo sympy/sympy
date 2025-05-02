@@ -2,9 +2,8 @@ from sympy.matrices.dense import MutableDenseMatrix
 from sympy.polys import Poly
 from sympy.polys.polytools  import cancel
 from sympy import symbols, Symbol
-from sympy.logic.boolalg import false, true
+from sympy.logic.boolalg import false, true, Or
 from sympy.series import limit
-from sympy.solvers.inequalities import reduce_inequalities
 
 __all__ = ['RouthHurwitz', 'neg_roots_conds']
 
@@ -21,57 +20,57 @@ def neg_roots_conds(polynomial: Poly):
     >>> s = symbols('s')
     >>> p1 = Poly((s+1)*(s+2)*(s+2.5), s)
     >>> neg_roots_conds(p1)
-    [True]
+    [[True], [False]]
     >>> k = symbols('k')
     >>> p2 = Poly((s+1)*(s+k), s)
     >>> neg_roots_conds(p2)
-    [k + 1 > 0, k > 0]
+    [[k + 1 > 0, k > 0], [False]]
     >>> a = symbols('a', negative = True)
     >>> p3 = Poly((s+1)*(s+a), s)
     >>> neg_roots_conds(p3)
-    [a + 1 > 0, False]
+    [[a + 1 > 0, False], [False]]
 
     """
-    coeffs = polynomial.all_coeffs()
-
-    for coeff in coeffs[:2]:
-        try:
-            if reduce_inequalities(coeff >=0) is true:
-                break
-            if reduce_inequalities(coeff <= 0) is true:
-                polynomial = -polynomial
-                break
-        except NotImplementedError:
-            # If there are more than one symbols,
-            # reduce_inequalities could fail
-            pass
-
     table = RouthHurwitz(polynomial)
 
     if table.zero_row_case:
         # There is a pole with a real part equal to zero or
         # a pole with a positive real part.
-        return [False]
+        return [[False], [False]]
 
-    num_conditions = true
-    var_conditions = []
+    num_conditions = [true, true]
+    var_conditions = [[], []]
 
     for eq in table[:, 0]:
-        limit_val = limit(eq, table.infinitesimal_element, 0)
-
-        if limit_val == 0:
+        limit_p = limit(eq, table.infinitesimal_element, 0)
+        if limit_p == 0:
             continue
 
-        elif limit_val.is_number:
-            num_conditions &= limit_val > 0
+        limit_n = limit(eq, table.infinitesimal_element, 0, dir = "-")
+
+        if limit_p.is_number:
+            num_conditions[0] &= limit_p > 0
+            num_conditions[1] &= limit_n < 0
 
         else:
-            var_conditions.append(limit_val > 0)
+            var_conditions[0].append(limit_p > 0)
+            var_conditions[1].append(limit_n < 0)
 
-    if num_conditions is false:
-        return [False]
+        if Or(num_conditions[0], num_conditions[1]) is false:
+            return [[False], [False]]
 
-    return var_conditions if len(var_conditions) > 0 else [True]
+    # if we are here, num_conditions != [[False], [False]]
+    if num_conditions[0] is false:
+        var_conditions[0] = [False]
+        if len(var_conditions[1]) == 0:
+            var_conditions[1] = [num_conditions[1]]
+
+    elif num_conditions[1] is false:
+        var_conditions[1] = [False]
+        if len(var_conditions[0]) == 0:
+            var_conditions[0] = [num_conditions[0]]
+
+    return var_conditions
 
 class RouthHurwitz(MutableDenseMatrix):
     r"""
