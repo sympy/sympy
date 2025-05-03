@@ -4,10 +4,11 @@ from sympy.polys.polytools  import cancel
 from sympy import symbols, Symbol
 from sympy.logic.boolalg import false, true, Or
 from sympy.series import limit
+from sympy.core.relational import Unequality
 
-__all__ = ['RouthHurwitz', 'neg_roots_conds']
+__all__ = ['RouthHurwitz', 'negative_real_root_conditions']
 
-def neg_roots_conds(polynomial: Poly):
+def negative_real_root_conditions(polynomial: Poly):
     """
     Returns the conditions for a polynomial to have all its roots with
     negative real parts.
@@ -15,19 +16,19 @@ def neg_roots_conds(polynomial: Poly):
     Examples
     ========
 
-    >>> from sympy.physics.control import neg_roots_conds
+    >>> from sympy.physics.control import negative_real_root_conditions
     >>> from sympy import symbols, Poly
     >>> s = symbols('s')
     >>> p1 = Poly((s+1)*(s+2)*(s+2.5), s)
-    >>> neg_roots_conds(p1)
+    >>> negative_real_root_conditions(p1)
     [[True], [False]]
     >>> k = symbols('k')
     >>> p2 = Poly((s+1)*(s+k), s)
-    >>> neg_roots_conds(p2)
+    >>> negative_real_root_conditions(p2)
     [[k + 1 > 0, k > 0], [False]]
     >>> a = symbols('a', negative = True)
     >>> p3 = Poly((s+1)*(s+a), s)
-    >>> neg_roots_conds(p3)
+    >>> negative_real_root_conditions(p3)
     [[a + 1 > 0, False], [False]]
 
     """
@@ -39,7 +40,9 @@ def neg_roots_conds(polynomial: Poly):
         return [[False], [False]]
 
     num_conditions = [true, true]
-    var_conditions = [[], []]
+    var_conditions: list[list] = [[], []]
+
+    _add_zero_col_conds(var_conditions, table)
 
     for eq in table[:, 0]:
         limit_p = limit(eq, table.infinitesimal_element, 0)
@@ -71,6 +74,19 @@ def neg_roots_conds(polynomial: Poly):
             var_conditions[0] = [num_conditions[0]]
 
     return var_conditions
+
+def _add_zero_col_conds(var_conditions, table):
+    """
+    Add checks for rows where the first-column entry is zero,
+    ensuring the row isn't entirely zeros and preventing it from
+    being classified as a Full Row Zero Case.
+
+    """
+    for i in table.zero_col_rows:
+        conds_i = Or(*[Unequality(table[i, j], 0)
+                       for j in range(1, table.shape[1])])
+        var_conditions[0].append(conds_i)
+        var_conditions[1].append(conds_i)
 
 class RouthHurwitz(MutableDenseMatrix):
     r"""
@@ -232,6 +248,7 @@ class RouthHurwitz(MutableDenseMatrix):
         self._coeffs = self._polynomial.all_coeffs()
 
         self._zero_row_case = False
+        self._zero_col_rows = []
         self._aux_poly_degree = 0
 
         self._inf_element = infinitesimal_element
@@ -297,6 +314,15 @@ class RouthHurwitz(MutableDenseMatrix):
 
         if self[i, 0] == 0:
             self[i, 0] = self._inf_element
+            self._zero_col_rows.append(i)
+
+    @property
+    def zero_col_rows(self):
+        """
+        Return a list of rows where the First Column Zero Case occurs.
+
+        """
+        return self._zero_col_rows
 
     @property
     def zero_row_case(self):

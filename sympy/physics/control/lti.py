@@ -25,7 +25,7 @@ from sympy.solvers.ode.systems import linodesolve
 from sympy.solvers.solveset import linsolve, linear_eq_to_matrix
 from sympy.logic.boolalg import false, true, Or
 from sympy.solvers.inequalities import reduce_inequalities
-from sympy.physics.control.routh_table import neg_roots_conds
+from sympy.physics.control.routh_table import negative_real_root_conditions
 
 from mpmath.libmp.libmpf import prec_to_dps
 
@@ -1230,7 +1230,7 @@ class TransferFunction(SISOLinearTimeInvariant):
         """
         standard_form = self.to_standard_form(cancel_poles_zeros)
 
-        return neg_roots_conds(Poly(standard_form.den, self.var))
+        return negative_real_root_conditions(Poly(standard_form.den, self.var))
 
     def __add__(self, other):
         if hasattr(other, "is_StateSpace_object") and other.is_StateSpace_object:
@@ -5158,4 +5158,4 @@ class StateSpace(LinearTimeInvariant):
         """
         determinant = self.A.charpoly()
 
-        return neg_roots_conds(determinant)
+        return negative_real_root_conditions(determinant)

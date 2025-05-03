@@ -1,8 +1,12 @@
 
 from sympy.core.symbol import symbols
-from sympy.physics.control.routh_table import RouthHurwitz, neg_roots_conds
+from sympy.physics.control.routh_table import (RouthHurwitz,
+                                            negative_real_root_conditions)
 from sympy.matrices.dense import Matrix
 from sympy.polys import Poly
+from sympy.core.relational import Unequality
+from sympy.functions.elementary.complexes import sign
+from sympy.core.numbers import oo
 
 s = symbols('s')
 
@@ -53,11 +57,11 @@ def test_table():
     assert t3.zero_row_case is True
     assert t3.auxiliary_polynomial == Poly(2*s**4 + 12*s**2 + 16, s)
 
-def test_get_negative_real_roots_conditions():
+def test_negative_real_root_conditions():
     b0, b1, b2, b3, b4 = symbols('b_0 b_1 b_2 b_3 b_4')
     p1 = Poly(b4 * s**4 + b3 * s**3 + b2 * s**2 + b1 * s + b0, s)
 
-    conds = neg_roots_conds(p1)
+    conds = negative_real_root_conditions(p1)
     assert conds == [[b4 > 0, b3 > 0, (-b1*b4 + b2*b3)/b3 > 0,
                      (b0*b3**2 + b1**2*b4 - b1*b2*b3)/(b1*b4 - b2*b3) > 0,
                      b0 > 0], [b4 < 0, b3 < 0, (-b1*b4 + b2*b3)/b3 < 0,
@@ -65,12 +69,12 @@ def test_get_negative_real_roots_conditions():
                      b0 < 0]]
 
     p2 = Poly(-3*s**2 - 2*s - b0,s )
-    assert neg_roots_conds(p2) == [[False], [-b0 < 0]]
+    assert negative_real_root_conditions(p2) == [[False], [-b0 < 0]]
 
     a = symbols('a', nonpositive = True)
 
     p3 = Poly(b4*s**4 + b3*s**3 + a*s**2 + b1*s + b0, s)
-    conds = neg_roots_conds(p3)
+    conds = negative_real_root_conditions(p3)
     assert conds == [[b4 > 0, b3 > 0, (a*b3 - b1*b4)/b3 > 0,
                       (a*b1*b3 - b0*b3**2 - b1**2*b4)/(a*b3 - b1*b4) > 0,
                       b0 > 0], [b4 < 0, b3 < 0, (a*b3 - b1*b4)/b3 < 0,
@@ -78,7 +82,14 @@ def test_get_negative_real_roots_conditions():
                       b0 < 0]]
 
     p4 = Poly(b0*s**2 + a*s + 3, s)
-    assert neg_roots_conds(p4) == [[b0 > 0, False], [False]]
+    assert negative_real_root_conditions(p4) == [[b0 > 0, False], [False]]
 
     p5 = Poly(b0*s**2 + a*s - 3, s)
-    assert neg_roots_conds(p5) == [[False], [b0 < 0, a < 0]]
+    assert negative_real_root_conditions(p5) == [[False], [b0 < 0, a < 0]]
+
+    p6 = Poly(b0 + b1*s**2 + b1*s + b3*s**4 + b3*s**3, s)
+    expected6 = [[Unequality(b0, 0), b3 > 0, b3 > 0,
+                  -oo*sign(b0*b3) > 0, b0 > 0],
+                [Unequality(b0, 0), b3 < 0, b3 < 0,
+                 oo*sign(b0*b3) < 0, b0 < 0]]
+    assert negative_real_root_conditions(p6) == expected6
