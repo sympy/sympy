@@ -374,12 +374,12 @@ def _get_term_ratio(f, k):
             if not isinstance(f, Piecewise):
                 return _get_term_ratio(f, k)
 
-            ratios = set()
+            ratios = []
             for a in f.args:
                 r = _get_term_ratio(a[0], k)
                 if r is None:
                     return None
-                ratios.add((r, a[1]))
+                ratios.append((r, a[1]))
             res = Piecewise(*ratios).simplify()
             if isinstance(res, Piecewise) and any(interval.has_xfree({k}) for _, interval in res.args):
                 return None
