@@ -57,10 +57,10 @@ def approximants(l, X=Symbol('x'), simplify=False):
     See Also
     ========
 
-    sympy.concrete.guess.guess_generating_function_rational
-    `mpmath.pade`
-    sympy.series.approximants.pade_approximant
-    sympy.series.approximants.pade_approximants
+    - sympy.concrete.guess.guess_generating_function_rational
+    - `mpmath.pade`
+    - sympy.series.approximants.pade_approximant
+    - sympy.series.approximants.pade_approximants
     """
     from sympy.simplify import simplify as simp
     from sympy.simplify.radsimp import denom
@@ -173,7 +173,11 @@ def pade_approximants(
     if order < 0:
         raise ValueError("'order' must be a non-negative integer")
 
-    f_taylor_poly = f.series(x, n=order + 1).removeO().as_poly(x, field=True)
+    if isinstance(f, Poly):
+        f_taylor_poly = f
+    else:
+        f_taylor_poly = f.series(x, n=order + 1).removeO().as_poly(x, field=True)
+
     remainder_monomial = Poly(x ** (order + 1), x)
 
     yield f_taylor_poly, f_taylor_poly.one
