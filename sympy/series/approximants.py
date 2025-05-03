@@ -58,7 +58,7 @@ def approximants(l, X=Symbol('x'), simplify=False):
     ========
 
     sympy.concrete.guess.guess_generating_function_rational
-    mpmath.pade
+    `mpmath.pade`
     sympy.series.approximants.pade_approximant
     sympy.series.approximants.pade_approximants
     """
@@ -121,7 +121,7 @@ def pade_approximants(
     ===========
 
     Given a function f and an integer order, the function computes all pade approximants
-    of order `[m/n]` with `m + n = order`.
+    of order `[m/n]` with `m + n =` order.
 
     Parameters
     ==========
@@ -195,7 +195,7 @@ def pade_approximant(f: Expr, x: Expr, m: int, n: int | None = None) -> Expr | N
     For a function `f` and integers `m` and `n`, the `[m/n]` pade approximant of `f` is the rational function
     `p(x)/q(x)` such that `p(x)` and `q(x)` are polynomials of degree at most `m` and `n` respectively. The pade
     approximation is such that the taylor series of `p(x)/q(x)` around `x=0` matches the taylor series of `f(x)`
-    up to at least `(m + n)`th order in `x`.
+    up to at least order `(m + n)` in `x`.
 
     Parameters
     ==========

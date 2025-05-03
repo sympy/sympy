@@ -192,8 +192,8 @@ def guess_generating_function_rational(v, X=Symbol('x')):
     ========
 
     sympy.series.approximants
-    mpmath.pade
-
+    sympy.concrete.guess.guess_generating_function_rational
+    `mpmath.pade`
     """
     #   a) compute the denominator as q
     q = find_simple_recurrence_vector(v)
@@ -272,6 +272,11 @@ def guess_generating_function(v, X=Symbol('x'), types=['all'], maxsqrtn=2):
 
     >>> ggf([1, 2, 5, 14, 41, 124, 383, 1200, 3799, 12122, 38919])['ogf']
     sqrt(1/(x**4 + 2*x**2 - 4*x + 1))
+
+    See also
+    ========
+
+    sympy.concrete.guess.guess_generating_function_rational
 
     References
     ==========
