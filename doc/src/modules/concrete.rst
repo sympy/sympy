@@ -103,3 +103,7 @@ Concrete Functions Reference
 .. autofunction:: sympy.concrete.gosper.gosper_term
 
 .. autofunction:: sympy.concrete.gosper.gosper_sum
+
+.. autofunction:: sympy.concrete.guess.guess_generating_function_rational
+
+.. autofunction:: sympy.concrete.guess.guess_generating_function
