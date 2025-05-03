@@ -5284,6 +5284,11 @@ def half_gcdex(f, g, *gens, **args):
     >>> half_gcdex(x**4 - 2*x**3 - 6*x**2 + 12*x + 15, x**3 + x**2 - 4*x - 4)
     (3/5 - x/5, x + 1)
 
+    See Also
+    ========
+
+    sympy.polys.polytools.gcdex: Extended Euclidean algorithm.
+    sympy.polys.polytools.gcdex_steps: Intermediate steps of the Extended Euclidean algorithm.
     """
     options.allowed_flags(args, ['auto', 'polys'])
 
@@ -5310,21 +5315,21 @@ def half_gcdex(f, g, *gens, **args):
 @public
 def gcdex_steps(f, g):
     """
-    Generator for all intermediate steps in the extended Euclidean algorithm applied to polynomials 'f' and 'g'.
+    Generator for all intermediate steps in the extended Euclidean algorithm applied to polynomials `f` and `g`.
 
     Description
     ===========
 
     Given polynomials a and b, the algorithm returns a generator to three polynomial sequences s, t, and r
-    which enumerate all non-trivial (i.e. excluding (s, t, r) = (1, 0, f), (0, 1, g), and (g, -f, 0)) solutions
+    which enumerate all non-trivial (i.e. excluding `(s, t, r) = (1, 0, f)`, `(0, 1, g)`, and `(g, -f, 0)`) solutions
     (up to multiplicative constants) to the following conditions:
 
         f*s[i] + g*t[i] = r[i],
         r[i].deg() > r[i + 1].deg()
 
-    In particular, the final value of r = gcd(f, g), the greatest common divisor of f and g.
+    In particular, the final value of `r = gcd(f, g)`, the greatest common divisor of `f` and `g`.
 
-    The sequences s, t, and r also have the following properties (see ref. [1] McEliece and Shearer):
+    The sequences `s`, `t`, and `r` also have the following properties (see ref. [1] McEliece and Shearer):
 
         t[i]*r[i-1] - t[i-1]*r[i] = (-1)**i*f
         s[i]*r[i-1] - s[i-1]*r[i] = (-1)**(i+1)*g
@@ -5344,7 +5349,7 @@ def gcdex_steps(f, g):
     =======
 
     generator : Generator[tuple[Poly, Poly, Poly], None, None]
-        A generator to the sequences s, t, and r
+        A generator to the sequences `s`, `t`, and `r`
 
     Examples
     ========
@@ -5361,7 +5366,7 @@ def gcdex_steps(f, g):
     Poly(1, x, domain='ZZ') Poly(-x, x, domain='ZZ') Poly(x + 2, x, domain='ZZ')
     Poly(-x + 2, x, domain='ZZ') Poly(x**2 - 2*x + 1, x, domain='ZZ') Poly(3, x, domain='ZZ')
 
-    In this case, gcd(f, g) = 3 and we can write 3 = (-x + 2)*f + (x**2 - 2*x + 1)*g
+    In this case, `gcd(f, g) = 3` and we can write `3 = (-x + 2)*f + (x**2 - 2*x + 1)*g`.
 
     >>> 3 - (-x + 2)*f - (x**2 - 2*x + 1)*g
     Poly(0, x, domain='ZZ')
@@ -5374,7 +5379,7 @@ def gcdex_steps(f, g):
     >>> for s, t, r in eea_result: print(s, t, r)
     Poly(1, x, domain='ZZ') Poly(-1, x, domain='ZZ') Poly(-x - 1, x, domain='ZZ')
 
-    Here, the final value of r is -(x + 1), so this is the gcd of f and g
+    Here, the final value of `r` is `-(x + 1)`, so this is the gcd of `f` and `g`
 
     See Also
     ========
@@ -5430,6 +5435,11 @@ def gcdex(f, g, *gens, **args):
     >>> gcdex(x**4 - 2*x**3 - 6*x**2 + 12*x + 15, x**3 + x**2 - 4*x - 4)
     (3/5 - x/5, x**2/5 - 6*x/5 + 2, x + 1)
 
+    See also
+    ========
+
+    sympy.polys.polytools.half_gcdex: Half extended Euclidean algorithm.
+    sympy.polys.polytools.gcdex_steps: Intermediate steps of the extended Euclidean algorithm.
     """
     options.allowed_flags(args, ['auto', 'polys'])
 

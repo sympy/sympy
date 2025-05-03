@@ -115,13 +115,13 @@ def pade_approximants(
     f: Expr, x: Expr, order: int
 ) -> Generator[tuple[Poly, Poly], None, None]:
     """
-    Returns all pade approximants of the expression `f' of the desired order
+    Returns all pade approximants of the expression `f` of the desired order
 
     Description
     ===========
 
     Given a function f and an integer order, the function computes all pade approximants
-    of order [m/n] with m + n = order.
+    of order `[m/n]` with `m + n = order`.
 
     Parameters
     ==========
@@ -187,15 +187,15 @@ def pade_approximants(
 @public
 def pade_approximant(f: Expr, x: Expr, m: int, n: int | None = None) -> Expr | None:
     """
-    [m/n] pade approximant of f around x=0
+    `[m/n]` pade approximant of `f` around `x=0`.
 
     Description
     ===========
 
-    For a function f and integers m and n, the [m/n] pade approximant of f is the rational function
-    p(x)/f(x) such that p(x) and q(x) are polynomials of degree at most m and n respectively. The pade
-    approximation is such that the taylor series of p(x)/q(x) around x=0 matches the taylor series of f(x)
-    up to at least (m + n)th order in x.
+    For a function `f` and integers `m` and `n`, the `[m/n]` pade approximant of `f` is the rational function
+    `p(x)/q(x)` such that `p(x)` and `q(x)` are polynomials of degree at most `m` and `n` respectively. The pade
+    approximation is such that the taylor series of `p(x)/q(x)` around `x=0` matches the taylor series of `f(x)`
+    up to at least `(m + n)`th order in `x`.
 
     Parameters
     ==========
@@ -207,13 +207,13 @@ def pade_approximant(f: Expr, x: Expr, m: int, n: int | None = None) -> Expr | N
     m : int
         The degree of the numerator polynomial
     n : int | None
-        The degree of the denominator polynomial. If None, n = m
+        The degree of the denominator polynomial. If None, `n = m`
 
     Returns
     =======
 
     pade approximant : Expr
-        The pade approximant of f, a rational function
+        The pade approximant of `f`, a rational function
 
     Examples
     ========
@@ -226,14 +226,14 @@ def pade_approximant(f: Expr, x: Expr, m: int, n: int | None = None) -> Expr | N
     >>> pade_exp
     (x**2/4 + 3*x/2 + 3)/(x**2/4 - 3*x/2 + 3)
 
-    The numerators and denominators of an [m/n] pade approximant do not
-    necessarily have order m and n respectively
+    The numerators and denominators of an `[m/n]` pade approximant do not
+    necessarily have order `m` and `n` respectively.
 
     >>> pade_sin = pade_approximant(sp.sin(x), x, 1, 3)
     >>> pade_sin
     36*x/(6*x**2 + 36)
 
-    The [m/0] pade approximant is the mth order taylor polynomial of f
+    The `[m/0]` pade approximant is the mth order taylor polynomial of `f`
 
     >>> pade_cos = pade_approximant(sp.cos(x), x, 4, 0)
     >>> pade_cos
