@@ -31,6 +31,7 @@ Basic polynomial manipulation functions
 .. autofunction:: quo
 .. autofunction:: exquo
 .. autofunction:: half_gcdex
+.. autofunction:: gcdex_steps
 .. autofunction:: gcdex
 .. autofunction:: invert
 .. autofunction:: subresultants
