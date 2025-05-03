@@ -195,8 +195,8 @@ def _(expr, assumptions):
     if base_bounded is False and ask(Q.extended_nonzero(expr.exp), assumptions):
         return False
     if base_bounded and exp_bounded:
-        is_base_zero = ask(Q.zero(expr.base),assumptions)
-        is_exp_negative = ask(Q.negative(expr.exp),assumptions)
+        is_base_zero = ask(Q.zero(expr.base), assumptions)
+        is_exp_negative = ask(Q.negative(expr.exp), assumptions)
         if is_base_zero is True and is_exp_negative is True:
             return False
         if is_base_zero is not False and is_exp_negative is not False:
