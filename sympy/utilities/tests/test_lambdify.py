@@ -73,6 +73,7 @@ tensorflow = import_module('tensorflow')
 cupy = import_module('cupy')
 jax = import_module('jax')
 numba = import_module('numba')
+uncertainties = import_module('uncertainties')
 
 if tensorflow:
     # Hide Tensorflow warnings
@@ -727,6 +728,48 @@ def test_scipy_sparse_matrix():
     B = f(1, 2)
     assert isinstance(B, scipy.sparse.coo_matrix)
 
+
+
+def test_umath_basic_math():
+    if not uncertainties:
+        skip("uncertainties not installed.")
+
+    x, y, z = symbols("x y z")
+    f = lambdify((x, y, z), x**2 + y * z, "umath")
+
+    res = f(uncertainties.ufloat(2.0, 0.1), uncertainties.ufloat(3.0, 0.2), uncertainties.ufloat(4.0, 0.3))
+
+    assert res.nominal_value == 16
+    assert res.std_dev == 1.268857754044952
+
+def test_umath_functions():
+    if not uncertainties:
+        skip("uncertainties not installed.")
+
+    x = symbols("x")
+
+    f = lambdify((x,), log(x, 2), "umath")
+
+    res = f(uncertainties.ufloat(8, 0.25))
+
+    assert res.nominal_value == 3.0
+    assert res.std_dev == 0.045084220027780106
+
+    f = lambdify((x,), sin(x)**2 + cos(x)**2, "umath")
+
+    res = f(uncertainties.ufloat(1, 1))
+
+    prec = 1e-15
+
+    assert abs(res.nominal_value - 1.0) <= prec
+    assert abs(res.std_dev) <= prec
+
+    f = lambdify((x,), sin(x * pi), "umath")
+
+    res = f(uncertainties.ufloat(2, 1.0))
+
+    assert abs(res.nominal_value) <= prec
+    assert abs(res.std_dev - pi) <= prec
 
 def test_python_div_zero_issue_11306():
     if not numpy:

@@ -30,6 +30,7 @@ __doctest_requires__ = {('lambdify',): ['numpy', 'tensorflow']}
 MATH_DEFAULT: dict[str, Any] = {}
 CMATH_DEFAULT: dict[str,Any] = {}
 MPMATH_DEFAULT: dict[str, Any] = {}
+UMATH_DEFAULT: dict[str, Any] = {}
 NUMPY_DEFAULT: dict[str, Any] = {"I": 1j}
 SCIPY_DEFAULT: dict[str, Any] = {"I": 1j}
 CUPY_DEFAULT: dict[str, Any] = {"I": 1j}
@@ -46,6 +47,7 @@ NUMEXPR_DEFAULT: dict[str, Any] = {}
 MATH = MATH_DEFAULT.copy()
 CMATH = CMATH_DEFAULT.copy()
 MPMATH = MPMATH_DEFAULT.copy()
+UMATH = UMATH_DEFAULT.copy()
 NUMPY = NUMPY_DEFAULT.copy()
 SCIPY = SCIPY_DEFAULT.copy()
 CUPY = CUPY_DEFAULT.copy()
@@ -98,6 +100,12 @@ MPMATH_TRANSLATIONS = {
     "betainc_regularized": "betainc",
 }
 
+UMATH_TRANSLATIONS = {
+    "ceiling": "ceil",
+    "E": "e",
+    "ln": "log",
+}
+
 NUMPY_TRANSLATIONS: dict[str, str] = {
     "Heaviside": "heaviside",
 }
@@ -118,6 +126,7 @@ MODULES = {
     "math": (MATH, MATH_DEFAULT, MATH_TRANSLATIONS, ("from math import *",)),
     "cmath": (CMATH, CMATH_DEFAULT, CMATH_TRANSLATIONS, ("import cmath; from cmath import *",)),
     "mpmath": (MPMATH, MPMATH_DEFAULT, MPMATH_TRANSLATIONS, ("from mpmath import *",)),
+    "umath": (UMATH, UMATH_DEFAULT, UMATH_TRANSLATIONS, ("from math import*; from uncertainties.umath import *",)),
     "numpy": (NUMPY, NUMPY_DEFAULT, NUMPY_TRANSLATIONS, ("import numpy; from numpy import *; from numpy.linalg import *",)),
     "scipy": (SCIPY, SCIPY_DEFAULT, SCIPY_TRANSLATIONS, ("import scipy; import numpy; from scipy.special import *",)),
     "cupy": (CUPY, CUPY_DEFAULT, CUPY_TRANSLATIONS, ("import cupy",)),
@@ -138,7 +147,7 @@ def _import(module, reload=False):
     Creates a global translation dictionary for module.
 
     The argument module has to be one of the following strings: "math","cmath"
-    "mpmath", "numpy", "sympy", "tensorflow", "jax".
+    "mpmath", "umath", "numpy", "sympy", "tensorflow", "jax".
     These dictionaries map names of Python functions to their equivalent in
     other modules.
     """
@@ -329,7 +338,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
 
         *modules* can be one of the following types:
 
-        - The strings ``"math"``, ``"cmath"``, ``"mpmath"``, ``"numpy"``, ``"numexpr"``,
+        - The strings ``"math"``, ``"cmath"``, ``"mpmath"``, ``"umath"``, ``"numpy"``, ``"numexpr"``,
           ``"scipy"``, ``"sympy"``, or ``"tensorflow"`` or ``"jax"``. This uses the
           corresponding printer and namespace mapping for that module.
         - A module (e.g., ``math``). This uses the global namespace of the
