@@ -58,7 +58,6 @@ def approximants(l, X=Symbol('x'), simplify=False):
     ========
 
     sympy.concrete.guess.guess_generating_function_rational
-    :py:obj:`!mpmath.pade`
     sympy.series.approximants.pade_approximant
     sympy.series.approximants.pade_approximants
     """

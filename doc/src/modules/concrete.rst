@@ -104,4 +104,17 @@ Concrete Functions Reference
 
 .. autofunction:: sympy.concrete.gosper.gosper_sum
 
+Concrete Guess Functions Reference
+----------------------------------
+
+.. autofunction:: sympy.concrete.guess.guess
+
+.. autofunction:: sympy.concrete.guess.guess_generating_function
+
 .. autofunction:: sympy.concrete.guess.guess_generating_function_rational
+
+.. autofunction:: sympy.concrete.guess.rationalize
+
+.. autofunction:: sympy.concrete.guess.find_simple_recurrence
+
+.. autofunction:: sympy.concrete.guess.find_simple_recurrence_vector
