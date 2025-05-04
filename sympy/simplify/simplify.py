@@ -26,7 +26,7 @@ from sympy.functions.elementary.exponential import ExpBase
 from sympy.functions.elementary.hyperbolic import HyperbolicFunction
 from sympy.functions.elementary.integers import ceiling
 from sympy.functions.elementary.piecewise import (Piecewise, piecewise_fold,
-                                                  piecewise_simplify, piecewise_exclusive)
+                                                  piecewise_simplify)
 from sympy.functions.elementary.trigonometric import TrigonometricFunction
 from sympy.functions.special.bessel import (BesselBase, besselj, besseli,
                                             besselk, bessely, jn)
@@ -370,10 +370,6 @@ def _get_term_ratio(f, k):
 
         elif isinstance(f, Piecewise):
             # Compute term ratio for each piece
-            f = piecewise_fold(f)
-            if not isinstance(f, Piecewise):
-                return _get_term_ratio(f, k)
-
             ratios = []
             for a in f.args:
                 r = _get_term_ratio(a[0], k)
