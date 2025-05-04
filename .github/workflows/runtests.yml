@@ -181,6 +181,7 @@ jobs:
                          symengine                                        \
                          numba llvmlite pymc                              \
                          gmpy2                                            \
+                         uncertainties                                    \
                          #
 
       # Test external imports
