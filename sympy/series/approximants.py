@@ -19,9 +19,10 @@ def approximants(l, X=Symbol('x'), simplify=False):
     Explanation
     ===========
 
-    The input list can contain more complex expressions than integer or rational
-    numbers; symbols may also be involved in the computation. An example below
-    show how to compute the generating function of the whole Pascal triangle.
+    The input list can contain more complex expressions than integer or
+    rational numbers; symbols may also be involved in the computation. An
+    example below show how to compute the generating function of the whole
+    Pascal triangle.
 
     The generator can be asked to apply the sympy.simplify function on each
     generated term, which will make the computation slower; however it may be
@@ -119,8 +120,8 @@ def pade_approximants(
     Description
     ===========
 
-    Given a function f and an integer order, the function computes all pade approximants
-    of order `[m/n]` with `m + n =` order.
+    Given a function f and an integer order, the function computes all pade
+    approximants of order `[m/n]` with `m + n =` order.
 
     Parameters
     ==========
@@ -136,8 +137,8 @@ def pade_approximants(
     =======
 
     pade approximants : Generator[tuple[Poly, Poly], None, None]
-        Generator for (numerator, denominator) pairs of polynomials representing the numerator
-        and denominators of the approximants.
+        Generator for (numerator, denominator) pairs of polynomials
+        representing the numerator and denominators of the approximants.
 
     Examples
     ========
@@ -195,10 +196,11 @@ def pade_approximant(f: Expr, x: Expr, m: int, n: int | None = None) -> Expr | N
     Description
     ===========
 
-    For a function `f` and integers `m` and `n`, the `[m/n]` pade approximant of `f` is the rational function
-    `p(x)/q(x)` such that `p(x)` and `q(x)` are polynomials of degree at most `m` and `n` respectively. The pade
-    approximation is such that the taylor series of `p(x)/q(x)` around `x=0` matches the taylor series of `f(x)`
-    up to at least order `(m + n)` in `x`.
+    For a function `f` and integers `m` and `n`, the `[m/n]` pade approximant
+    of `f` is the rational function `p(x)/q(x)` such that `p(x)` and `q(x)` are
+    polynomials of degree at most `m` and `n` respectively. The pade
+    approximation is such that the taylor series of `p(x)/q(x)` around `x=0`
+    matches the taylor series of `f(x)` up to at least order `(m + n)` in `x`.
 
     Parameters
     ==========
