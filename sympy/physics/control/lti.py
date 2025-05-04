@@ -1230,7 +1230,7 @@ class TransferFunction(SISOLinearTimeInvariant):
         """
         standard_form = self.to_standard_form(cancel_poles_zeros)
 
-        return negative_real_root_conditions(Poly(standard_form.den, self.var))
+        return negative_real_root_conditions(standard_form.den, self.var)
 
     def __add__(self, other):
         if hasattr(other, "is_StateSpace_object") and other.is_StateSpace_object:
@@ -5156,6 +5156,7 @@ class StateSpace(LinearTimeInvariant):
         False
 
         """
-        determinant = self.A.charpoly()
+        s = Symbol('s')
+        determinant = self.A.charpoly(s)
 
-        return negative_real_root_conditions(determinant)
+        return negative_real_root_conditions(determinant, s)
