@@ -370,7 +370,7 @@ def _get_term_ratio(f, k):
 
         elif isinstance(f, Piecewise):
             # Compute term ratio for each piece
-            f = piecewise_exclusive(f, skip_nan=True)
+            f = piecewise_fold(f)
             if not isinstance(f, Piecewise):
                 return _get_term_ratio(f, k)
 
