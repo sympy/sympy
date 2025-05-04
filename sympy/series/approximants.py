@@ -57,10 +57,10 @@ def approximants(l, X=Symbol('x'), simplify=False):
     See Also
     ========
 
-    - sympy.concrete.guess.guess_generating_function_rational
-    - `mpmath.pade`
-    - sympy.series.approximants.pade_approximant
-    - sympy.series.approximants.pade_approximants
+    sympy.concrete.guess.guess_generating_function_rational
+    :py:obj:`!mpmath.pade`
+    sympy.series.approximants.pade_approximant
+    sympy.series.approximants.pade_approximants
     """
     from sympy.simplify import simplify as simp
     from sympy.simplify.radsimp import denom
