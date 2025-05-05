@@ -1542,7 +1542,10 @@ class Mul(Expr, AssocOp):
     def _eval_is_hermitian(self):
         from sympy.functions.elementary.complexes import adjoint
 
-        def _is_adjoint_pair(expr1, expr2):
+        def _is_adjoint_multiple(expr1, expr2):
+            # Return True if expr1 and expr2 are adjoints of each others
+            # or if both are equal and hermitian or antihermitian.
+            # In the other cases, it returns False or None using the fuzzy logic.
             if isinstance(expr1, adjoint) and expr1.args[0] == expr2:
                 return True
             if isinstance(expr2, adjoint) and expr2.args[0] == expr1:
@@ -1550,28 +1553,21 @@ class Mul(Expr, AssocOp):
             return fuzzy_and((
                 fuzzy_or((expr1.is_hermitian, expr1.is_antihermitian)),
                 expr1 == expr2
-            )) # We check for expr1.is_antihermitian and expr1 == expr2 because
-               # adjoint(A*u*A) = (-A)*adjoint(u)*(-A) = A*adjoint(u)*A
+            ))
 
-        # return True if the product of the list is real
-        def is_list_real(l):
+        def get_type(l):
+            # Return the type of the product of the element in the list in parameter.
+            # Return True if the product is real
+            # Return False if the product is imaginary
+            # Return None on the other cases
             n_imaginary = 0
             for z in l:
                 if z.is_imaginary is True:
                     n_imaginary += 1
                 elif fuzzy_not(fuzzy_or((z.is_imaginary, z.is_real))) != False:
                     return None
-            return (n_imaginary % 2 == 0)
+            return n_imaginary % 2 == 0
 
-        # return True if the product of the list is imaginary
-        def is_list_imaginary(l):
-            n_imaginary = 0
-            for z in l:
-                if z.is_imaginary is True:
-                    n_imaginary += 1
-                elif fuzzy_not(fuzzy_or((z.is_imaginary, z.is_real))) != False:
-                    return None
-            return (n_imaginary % 2 == 1)
         c_part, nc_part = self.args_cnc()
         n = len(nc_part)
 
@@ -1579,18 +1575,18 @@ class Mul(Expr, AssocOp):
             return self._eval_herm_antiherm(True)
 
         all_pairs_adjoint = fuzzy_and(
-            _is_adjoint_pair(nc_part[i], nc_part[n - i - 1])
+            _is_adjoint_multiple(nc_part[i], nc_part[n - i - 1])
             for i in range(n // 2)
         )
         if all_pairs_adjoint:
             if n % 2 == 0 :
-                if is_list_real(c_part):
+                if get_type(c_part):
                     return True
             else:
                 middle = nc_part[n//2]
                 is_middle_hermitian = fuzzy_or((
-                    fuzzy_and((middle.is_hermitian, is_list_real(c_part))),
-                    fuzzy_and((middle.is_antihermitian, is_list_imaginary(c_part)))
+                    fuzzy_and((middle.is_hermitian, get_type(c_part))),
+                    fuzzy_and((middle.is_antihermitian, fuzzy_not(get_type(c_part))))
                 ))
                 if is_middle_hermitian:
                     return True
@@ -1600,7 +1596,10 @@ class Mul(Expr, AssocOp):
     def _eval_is_antihermitian(self):
         from sympy.functions.elementary.complexes import adjoint
 
-        def _is_adjoint_pair(expr1, expr2):
+        def _is_adjoint_multiple(expr1, expr2):
+            # Return True if expr1 and expr2 are adjoints of each others
+            # or if both are equal and hermitian or antihermitian.
+            # In the other cases, it returns False or None using the fuzzy logic.
             if isinstance(expr1, adjoint) and expr1.args[0] == expr2:
                 return True
             if isinstance(expr2, adjoint) and expr2.args[0] == expr1:
@@ -1608,28 +1607,20 @@ class Mul(Expr, AssocOp):
             return fuzzy_and((
                 fuzzy_or((expr1.is_hermitian, expr1.is_antihermitian)),
                 expr1 == expr2
-            )) # We check for expr1.is_antihermitian and expr1 == expr2 because
-               # adjoint(A*u*A) = (-A)*adjoint(u)*(-A) = A*adjoint(u)*A
+            ))
 
-        # return True if the product of the list is real
-        def is_list_real(l):
+        def get_type(l):
+            # Return the type of the product of the element in the list in parameter.
+            # Return True if the product is real
+            # Return False if the product is imaginary
+            # Return None on the other cases
             n_imaginary = 0
             for z in l:
                 if z.is_imaginary is True:
                     n_imaginary += 1
                 elif fuzzy_not(fuzzy_or((z.is_imaginary, z.is_real))) != False:
                     return None
-            return (n_imaginary % 2 == 0)
-
-        # return True if the product of the list is imaginary
-        def is_list_imaginary(l):
-            n_imaginary = 0
-            for z in l:
-                if z.is_imaginary is True:
-                    n_imaginary += 1
-                elif fuzzy_not(fuzzy_or((z.is_imaginary, z.is_real))) != False:
-                    return None
-            return (n_imaginary % 2 == 1)
+            return n_imaginary % 2 == 0
 
         c_part, nc_part = self.args_cnc()
         n = len(nc_part)
@@ -1638,18 +1629,18 @@ class Mul(Expr, AssocOp):
             return self._eval_herm_antiherm(False)
 
         all_pairs_adjoint = fuzzy_and(
-            _is_adjoint_pair(nc_part[i], nc_part[n - i - 1])
+            _is_adjoint_multiple(nc_part[i], nc_part[n - i - 1])
             for i in range(n // 2)
         )
 
         if all_pairs_adjoint:
-            if n % 2 == 0 and is_list_imaginary(c_part):
+            if n % 2 == 0 and fuzzy_not(get_type(c_part)):
                 return True
             else:
                 middle = nc_part[n//2]
                 is_middle_antihermitian = fuzzy_or((
-                    fuzzy_and((middle.is_hermitian, is_list_imaginary(c_part))),
-                    fuzzy_and((middle.is_antihermitian, is_list_real(c_part)))
+                    fuzzy_and((middle.is_hermitian, fuzzy_not(get_type(c_part)))),
+                    fuzzy_and((middle.is_antihermitian, get_type(c_part)))
                 ))
                 if is_middle_antihermitian:
                     return True
