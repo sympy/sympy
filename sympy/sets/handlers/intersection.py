@@ -249,7 +249,10 @@ def _(self, other):
     if (len(self.lamda.variables) > 1
             or self.lamda.signature != self.lamda.variables):
         return None
+
     base_set = self.base_sets[0]
+    if base_set is not S.Integers:
+        return
 
     # Intersection between ImageSets with Integers as base set
     # For {f(n) : n in Integers} & {g(m) : m in Integers} we solve the
@@ -258,151 +261,138 @@ def _(self, other):
     # {f(h(t)) : t in integers}.
     # If the solutions for n are {n_1, n_2, ..., n_k} then we return
     # {f(n_i) : 1 <= i <= k}.
-    if base_set is S.Integers:
-        gm = None
-        if isinstance(other, ImageSet) and other.base_sets == (S.Integers,):
-            gm = other.lamda.expr
-            var = other.lamda.variables[0]
-            # Symbol of second ImageSet lambda must be distinct from first
-            m = Dummy('m')
-            gm = gm.subs(var, m)
-        elif other is S.Integers:
-            m = gm = Dummy('m')
-        if gm is not None:
-            fn = self.lamda.expr
-            n = self.lamda.variables[0]
-            try:
-                solns = list(diophantine(fn - gm, syms=(n, m), permute=True))
-            except (TypeError, NotImplementedError):
-                # TypeError if equation not polynomial with rational coeff.
-                # NotImplementedError if correct format but no solver.
-                return
-            # 3 cases are possible for solns:
-            # - empty set,
-            # - one or more parametric (infinite) solutions,
-            # - a finite number of (non-parametric) solution couples.
-            # Among those, there is one type of solution set that is
-            # not helpful here: multiple parametric solutions.
-            if len(solns) == 0:
-                return S.EmptySet
-            elif any(s.free_symbols for tupl in solns for s in tupl):
-                if len(solns) == 1:
-                    soln, solm = solns[0]
-                    (t,) = soln.free_symbols
-                    expr = fn.subs(n, soln.subs(t, n)).expand()
-                    return imageset(Lambda(n, expr), S.Integers)
-                else:
-                    return
-            else:
-                return FiniteSet(*(fn.subs(n, s[0]) for s in solns))
-
-    if other == S.Reals:
-        from sympy.solvers.solvers import denoms, solve_linear
-
-        def _solution_union(exprs, sym):
-            # return a union of linear solutions to i in expr;
-            # if i cannot be solved, use a ConditionSet for solution
-            sols = []
-            for i in exprs:
-                x, xis = solve_linear(i, 0, [sym])
-                if x == sym:
-                    sols.append(FiniteSet(xis))
-                else:
-                    sols.append(ConditionSet(sym, Eq(i, 0)))
-            return Union(*sols)
-
-        f = self.lamda.expr
+    gm = None
+    if isinstance(other, ImageSet) and other.base_sets == (S.Integers,):
+        gm = other.lamda.expr
+        var = other.lamda.variables[0]
+        # Symbol of second ImageSet lambda must be distinct from first
+        m = Dummy('m')
+        gm = gm.subs(var, m)
+    elif other is S.Integers:
+        m = gm = Dummy('m')
+    if gm is not None:
+        fn = self.lamda.expr
         n = self.lamda.variables[0]
-
-        n_ = Dummy(n.name, real=True)
-        f_ = f.subs(n, n_)
-
-        re, im = f_.as_real_imag()
-        im = expand_complex(im)
-
-        re = re.subs(n_, n)
-        im = im.subs(n_, n)
-        ifree = im.free_symbols
-        lam = Lambda(n, re)
-        if im.is_zero:
-            # allow re-evaluation
-            # of self in this case to make
-            # the result canonical
-            pass
-        elif im.is_zero is False:
+        try:
+            solns = list(diophantine(fn - gm, syms=(n, m), permute=True))
+        except (TypeError, NotImplementedError):
+            # TypeError if equation not polynomial with rational coeff.
+            # NotImplementedError if correct format but no solver.
+            return
+        # 3 cases are possible for solns:
+        # - empty set,
+        # - one or more parametric (infinite) solutions,
+        # - a finite number of (non-parametric) solution couples.
+        # Among those, there is one type of solution set that is
+        # not helpful here: multiple parametric solutions.
+        if len(solns) == 0:
             return S.EmptySet
-        elif ifree != {n}:
-            return None
-        else:
-            # univarite imaginary part in same variable;
-            # use numer instead of as_numer_denom to keep
-            # this as fast as possible while still handling
-            # simple cases
-            base_set &= _solution_union(
-                Mul.make_args(numer(im)), n)
-        # exclude values that make denominators 0
-        base_set -= _solution_union(denoms(f), n)
-        return imageset(lam, base_set)
-
-    elif isinstance(other, Interval):
-        from sympy.solvers.solveset import (invert_real, invert_complex,
-                                            solveset)
-
-        f = self.lamda.expr
-        n = self.lamda.variables[0]
-        new_inf, new_sup = None, None
-        new_lopen, new_ropen = other.left_open, other.right_open
-
-        if f.is_real:
-            inverter = invert_real
-        else:
-            inverter = invert_complex
-
-        g1, h1 = inverter(f, other.inf, n)
-        g2, h2 = inverter(f, other.sup, n)
-
-        if all(isinstance(i, FiniteSet) for i in (h1, h2)):
-            if g1 == n:
-                if len(h1) == 1:
-                    new_inf = h1.args[0]
-            if g2 == n:
-                if len(h2) == 1:
-                    new_sup = h2.args[0]
-            # TODO: Design a technique to handle multiple-inverse
-            # functions
-
-            # Any of the new boundary values cannot be determined
-            if any(i is None for i in (new_sup, new_inf)):
-                return
-
-
-            range_set = S.EmptySet
-
-            if all(i.is_real for i in (new_sup, new_inf)):
-                # this assumes continuity of underlying function
-                # however fixes the case when it is decreasing
-                if new_inf > new_sup:
-                    new_inf, new_sup = new_sup, new_inf
-                new_interval = Interval(new_inf, new_sup, new_lopen, new_ropen)
-                range_set = base_set.intersect(new_interval)
+        elif any(s.free_symbols for tupl in solns for s in tupl):
+            if len(solns) == 1:
+                soln, solm = solns[0]
+                (t,) = soln.free_symbols
+                expr = fn.subs(n, soln.subs(t, n)).expand()
+                return imageset(Lambda(n, expr), S.Integers)
             else:
-                if other.is_subset(S.Reals):
-                    solutions = solveset(f, n, S.Reals)
-                    if not isinstance(range_set, (ImageSet, ConditionSet)):
-                        range_set = solutions.intersect(other)
-                    else:
-                        return
-
-            if range_set is S.EmptySet:
-                return S.EmptySet
-            elif isinstance(range_set, Range) and range_set.size is not S.Infinity:
-                range_set = FiniteSet(*list(range_set))
-
-            if range_set is not None:
-                return imageset(Lambda(n, f), range_set)
-            return
+                return
         else:
-            return
+            return FiniteSet(*(fn.subs(n, s[0]) for s in solns))
+
+
+@intersection_sets.register(ImageSet, Reals)
+def _(self, other):
+    # Only handle the straight-forward univariate case
+    if (len(self.lamda.variables) > 1
+            or self.lamda.signature != self.lamda.variables):
+        return None
+
+    base_set = self.base_sets[0]
+
+    from sympy.solvers.solvers import denoms, solve_linear
+
+    def _solution_union(exprs, sym):
+        # return a union of linear solutions to i in expr;
+        # if i cannot be solved, use a ConditionSet for solution
+        sols = []
+        for i in exprs:
+            x, xis = solve_linear(i, 0, [sym])
+            if x == sym:
+                sols.append(FiniteSet(xis))
+            else:
+                sols.append(ConditionSet(sym, Eq(i, 0)))
+        return Union(*sols)
+
+    f = self.lamda.expr
+    n = self.lamda.variables[0]
+
+    n_ = Dummy(n.name, real=True)
+    f_ = f.subs(n, n_)
+
+    re, im = f_.as_real_imag()
+    im = expand_complex(im)
+
+    re = re.subs(n_, n)
+    im = im.subs(n_, n)
+    ifree = im.free_symbols
+    lam = Lambda(n, re)
+    if im.is_zero:
+        # allow re-evaluation
+        # of self in this case to make
+        # the result canonical
+        pass
+    elif im.is_zero is False:
+        return S.EmptySet
+    elif ifree != {n}:
+        return None
+    else:
+        # univarite imaginary part in same variable;
+        # use numer instead of as_numer_denom to keep
+        # this as fast as possible while still handling
+        # simple cases
+        base_set &= _solution_union(
+            Mul.make_args(numer(im)), n)
+    # exclude values that make denominators 0
+    base_set -= _solution_union(denoms(f), n)
+    return imageset(lam, base_set)
+
+
+@intersection_sets.register(ImageSet, Interval)
+def _(self, other):
+    # Handle the straight-forward univariate linear
+    # case by transforming the interval:
+    # {a*n + b: n in S} n [c, d]  -->  {n: n in S} n [(c-b)/a, (d-b)/a]
+
+    if (len(self.lamda.variables) > 1
+            or self.lamda.signature != self.lamda.variables):
+        return None
+
+    base_set = self.base_sets[0]
+
+    f = self.lamda.expr
+    n = self.lamda.variables[0]
+    p = f.as_poly(n)
+
+    if p is not None and p.is_linear:
+        # {a*n + b: n in Z} n [c, d]
+        a, b = p.all_coeffs()
+        c, d, lopen, ropen = other.args
+        if all(v.is_comparable for v in [a, b, c, d]):
+            # S = {n: n in Z} n [(c-b)/a, (d-b)/a]
+            if (a > 0) == True:
+                new_int = Interval((c - b)/a, (d - b)/a, lopen, ropen)
+            elif (a < 0) == True:
+                new_int = Interval((d - b)/a, (c - b)/a, ropen, lopen)
+            else:
+                new_int = None
+
+            if new_int is not None:
+                n_vals = new_int.intersect(base_set)
+                if isinstance(n_vals, Range) and n_vals.size is not S.Infinity:
+                    return FiniteSet(*(a*n + b for n in n_vals))
+                elif not isinstance(n_vals, Intersection):
+                    return imageset(Lambda(n, a*n + b), n_vals)
+
+    return
 
 
 @intersection_sets.register(ProductSet, ProductSet)
