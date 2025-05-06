@@ -53,7 +53,7 @@ class VectorKind(Kind):
         return obj
 
     def __repr__(self):
-        return "VectorKind(%s)" % self.element_kind
+        return f"VectorKind({self.element_kind})"
 
 @Mul._kind_dispatcher.register(_NumberKind, VectorKind)
 def num_vec_mul(k1, k2):

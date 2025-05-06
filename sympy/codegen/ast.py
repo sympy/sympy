@@ -196,7 +196,7 @@ class Token(CodegenAST):
     @classmethod
     def _get_constructor(cls, attr):
         """ Get the constructor function for an attribute by name. """
-        return getattr(cls, '_construct_%s' % attr, lambda x: x)
+        return getattr(cls, f'_construct_{attr}', lambda x: x)
 
     @classmethod
     def _construct(cls, attr, arg):
@@ -216,7 +216,7 @@ class Token(CodegenAST):
             return args[0]
 
         if len(args) > len(cls._fields):
-            raise ValueError("Too many arguments (%d), expected at most %d" % (len(args), len(cls._fields)))
+            raise ValueError(f"Too many arguments ({len(args)}), expected at most {len(cls._fields)}")
 
         attrvals = []
 
@@ -241,7 +241,7 @@ class Token(CodegenAST):
             attrvals.append(cls._construct(attrname, argval))
 
         if kwargs:
-            raise ValueError("Unknown keyword arguments: %s" % ' '.join(kwargs))
+            raise ValueError(f"Unknown keyword arguments: {' '.join(kwargs)}")
 
         # Parent constructor
         basic_args = [
@@ -442,7 +442,7 @@ class AssignmentBase(CodegenAST):
         assignable = (Symbol, MatrixSymbol, MatrixElement, Indexed, Element, Variable,
                 ArrayElement)
         if not isinstance(lhs, assignable):
-            raise TypeError("Cannot assign to lhs of type %s." % type(lhs))
+            raise TypeError(f"Cannot assign to lhs of type {type(lhs)}.")
 
         # Indexed types implement shape, but don't define it until later. This
         # causes issues in assignment validation. For now, matrices are defined
@@ -586,7 +586,7 @@ def aug_assign(lhs, op, rhs):
     AddAugmentedAssignment(x, y)
     """
     if op not in augassign_classes:
-        raise ValueError("Unrecognized operator %s" % op)
+        raise ValueError(f"Unrecognized operator {op}")
     return augassign_classes[op](lhs, rhs)
 
 
@@ -788,8 +788,9 @@ class CodeBlock(CodegenAST):
 
         for i, lhs in enumerate(self.left_hand_sides):
             if lhs in self.left_hand_sides[:i]:
-                raise NotImplementedError("Duplicate assignments to the same "
-                    "variable are not yet supported (%s)" % lhs)
+                raise NotImplementedError(
+                    f"Duplicate assignments to the same variable are not yet supported ({lhs})"
+                )
 
         # Ensure new symbols for subexpressions do not conflict with existing
         existing_symbols = self.atoms(Symbol)
@@ -1157,9 +1158,9 @@ class _SizedIntType(IntBaseType):
 
     def _check(self, value):
         if value < self.min:
-            raise ValueError("Value is too small: %d < %d" % (value, self.min))
+            raise ValueError(f"Value is too small: {value} < {self.min}")
         if value > self.max:
-            raise ValueError("Value is too big: %d > %d" % (value, self.max))
+            raise ValueError(f"Value is too big: {value} > {self.max}")
 
 
 class SignedIntType(_SizedIntType):
@@ -1305,9 +1306,9 @@ class FloatType(FloatBaseType):
 
     def _check(self, value):
         if value < -self.max:
-            raise ValueError("Value is too small: %d < %d" % (value, -self.max))
+            raise ValueError(f"Value is too small: {value} < {-self.max}")
         if value > self.max:
-            raise ValueError("Value is too big: %d > %d" % (value, self.max))
+            raise ValueError(f"Value is too big: {value} > {self.max}")
         if abs(value) < self.tiny:
             raise ValueError("Smallest (absolute) value for data type bigger than new value.")
 
@@ -1399,8 +1400,9 @@ class Attribute(Token):
     def _sympystr(self, printer, *args, **kwargs):
         result = str(self.name)
         if self.parameters:
-            result += '(%s)' % ', '.join((printer._print(
-                arg, *args, **kwargs) for arg in self.parameters))
+            result += (
+                f"({', '.join(printer._print(arg, *args, **kwargs) for arg in self.parameters)})"
+            )
         return result
 
 value_const = Attribute('value_const')
@@ -1547,7 +1549,7 @@ class Variable(Node):
         try:
             rhs = _sympify(rhs)
         except SympifyError:
-            raise TypeError("Invalid comparison %s < %s" % (self, rhs))
+            raise TypeError(f"Invalid comparison {self} < {rhs}")
         return op(self, rhs, evaluate=False)
 
     __lt__ = lambda self, other: self._relation(other, Lt)

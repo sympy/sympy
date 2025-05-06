@@ -36,5 +36,5 @@ def render_as_module(definitions, name, declarations=(), printer_settings=None):
                                                 k, v in printer.module_uses.items()])
     module_use_str += '   implicit none\n'
     module_use_str += '   private\n'
-    module_use_str += '   public %s\n' % ', '.join([str(node.name) for node in definitions if getattr(node, 'name', None)])
+    module_use_str += f"   public {', '.join([str(node.name) for node in definitions if getattr(node, 'name', None)])}\n"
     return fstr.replace(printer.doprint(dummy), module_use_str)

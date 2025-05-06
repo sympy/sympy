@@ -90,8 +90,10 @@ class CompilerRunner:
                     break
             else:
                 self.compiler_vendor, self.compiler_name = list(self.compiler_dict.items())[0]
-                warnings.warn("failed to determine what kind of compiler %s is, assuming %s" %
-                              (self.compiler_binary, self.compiler_name))
+                warnings.warn(
+                    f"failed to determine what kind of compiler {self.compiler_binary} "
+                    f"is, assuming {self.compiler_name}"
+                )
         else:
             # Find a compiler
             if preferred_vendor is None:

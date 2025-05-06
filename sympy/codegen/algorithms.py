@@ -163,7 +163,7 @@ def newtons_method_function(expr, wrt, params=None, func_name="newton", attrs=Tu
     """
     if params is None:
         params = (wrt,)
-    pointer_subs = {p.symbol: Symbol('(*%s)' % p.symbol.name)
+    pointer_subs = {p.symbol: Symbol(f'(*{p.symbol.name})')
                     for p in params if isinstance(p, Pointer)}
     if delta is None:
         delta = Symbol('d_' + wrt.name)
@@ -174,7 +174,7 @@ def newtons_method_function(expr, wrt, params=None, func_name="newton", attrs=Tu
         algo = algo.body
     not_in_params = expr.free_symbols.difference({_symbol_of(p) for p in params})
     if not_in_params:
-        raise ValueError("Missing symbols in params: %s" % ', '.join(map(str, not_in_params)))
+        raise ValueError(f"Missing symbols in params: {', '.join(map(str, not_in_params))}")
     declars = tuple(Variable(p, real) for p in params)
     body = CodeBlock(algo, Return(wrt))
     return FunctionDefinition(real, func_name, declars, body, attrs=attrs)
