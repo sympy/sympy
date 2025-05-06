@@ -730,9 +730,7 @@ def _eval_is_le(lhs, rhs): # noqa: F811
 
     """
     if not rhs.is_extended_real:
-            raise TypeError(
-                "Invalid comparison of %s %s" %
-                (type(rhs), rhs))
+        raise TypeError(f"Invalid comparison of {type(rhs)} {rhs}")
     elif rhs.is_comparable:
         if is_le(lhs.max, rhs):
             return True
@@ -770,9 +768,7 @@ def _eval_is_ge(lhs, rhs): # noqa: F811
     """
 
     if not rhs.is_extended_real:
-        raise TypeError(
-            "Invalid comparison of %s %s" %
-            (type(rhs), rhs))
+        raise TypeError(f"Invalid comparison of {type(rhs)} {rhs}")
     elif rhs.is_comparable:
         if is_ge(lhs.min, rhs):
             return True
@@ -783,9 +779,7 @@ def _eval_is_ge(lhs, rhs): # noqa: F811
 @dispatch(Expr, AccumulationBounds)  # type:ignore
 def _eval_is_ge(lhs, rhs): # noqa:F811
     if not lhs.is_extended_real:
-        raise TypeError(
-            "Invalid comparison of %s %s" %
-            (type(lhs), lhs))
+        raise TypeError(f"Invalid comparison of {type(lhs)} {lhs}")
     elif lhs.is_comparable:
         if is_le(rhs.max, lhs):
             return True

@@ -146,8 +146,7 @@ def _import(module, reload=False):
         namespace, namespace_default, translations, import_commands = MODULES[
             module]
     except KeyError:
-        raise NameError(
-            "'%s' module cannot be used for lambdification" % module)
+        raise NameError(f"'{module}' module cannot be used for lambdification")
 
     # Clear namespace or exit
     if namespace != namespace_default:
@@ -172,8 +171,7 @@ def _import(module, reload=False):
             except ImportError:
                 pass
 
-        raise ImportError(
-            "Cannot import '%s' with '%s' command" % (module, import_command))
+        raise ImportError(f"Cannot import '{module}' with '{import_command}' command")
 
     # Add translated names to namespace
     for sympyname, translation in translations.items():
@@ -898,14 +896,14 @@ or tuple for the function arguments.
     for mod, keys in (getattr(printer, 'module_imports', None) or {}).items():
         for k in keys:
             if k not in namespace:
-                ln = "from %s import %s" % (mod, k)
+                ln = f"from {mod} import {k}"
                 try:
                     exec(ln, {}, namespace)
                 except ImportError:
                     # Tensorflow 2.0 has issues with importing a specific
                     # function from its submodule.
                     # https://github.com/tensorflow/tensorflow/issues/33022
-                    ln = "%s = %s.%s" % (k, mod, k)
+                    ln = f"{k} = {mod}.{k}"
                     exec(ln, {}, namespace)
                 imp_mod_lines.append(ln)
 
@@ -914,7 +912,7 @@ or tuple for the function arguments.
 
     funclocals = {}
     global _lambdify_generated_counter
-    filename = '<lambdifygenerated-%s>' % _lambdify_generated_counter
+    filename = f'<lambdifygenerated-{_lambdify_generated_counter}>'
     _lambdify_generated_counter += 1
     c = compile(funcstr, filename, 'exec')
     exec(c, namespace, funclocals)
@@ -975,7 +973,7 @@ def _get_namespace(m):
     elif hasattr(m, "__dict__"):
         return m.__dict__
     else:
-        raise TypeError("Argument must be either a string, dict or module but it is: %s" % m)
+        raise TypeError(f"Argument must be either a string, dict or module but it is: {m}")
 
 
 def _recursive_to_string(doprint, arg):
@@ -995,7 +993,7 @@ def _recursive_to_string(doprint, arg):
             if not arg:
                 return "()"
         else:
-            raise NotImplementedError("unhandled type: %s, %s" % (type(arg), arg))
+            raise NotImplementedError(f"unhandled type: {type(arg)}, {arg}")
         return left +', '.join(_recursive_to_string(doprint, e) for e in arg) + right
     elif isinstance(arg, str):
         return arg
@@ -1095,12 +1093,12 @@ def lambdastr(args, expr, printer=None, dummify=None):
         dum_args = [str(Dummy(str(i))) for i in range(len(args))]
 
         indexed_args = ','.join([
-            dum_args[ind[0]] + ''.join(["[%s]" % k for k in ind[1:]])
+            dum_args[ind[0]] + ''.join([f"[{k}]" for k in ind[1:]])
                     for ind in flat_indexes(args)])
 
         lstr = lambdastr(flatten(args), expr, printer=printer, dummify=dummify)
 
-        return 'lambda %s: (%s)(%s)' % (','.join(dum_args), lstr, indexed_args)
+        return f'lambda {",".join(dum_args)}: ({lstr})({indexed_args})'
 
     dummies_dict = {}
     if dummify:
@@ -1118,7 +1116,7 @@ def lambdastr(args, expr, printer=None, dummify=None):
         else:
             expr = sub_expr(expr, dummies_dict)
     expr = _recursive_to_string(lambdarepr, expr)
-    return "lambda %s: (%s)" % (args, expr)
+    return f"lambda {args}: ({expr})"
 
 class _EvaluatorPrinter:
     def __init__(self, printer=None, dummify=False):
@@ -1415,9 +1413,7 @@ def _imp_namespace(expr, namespace=None):
         if imp is not None:
             name = expr.func.__name__
             if name in namespace and namespace[name] != imp:
-                raise ValueError('We found more than one '
-                                 'implementation with name '
-                                 '"%s"' % name)
+                raise ValueError(f'We found more than one implementation with name "{name}"')
             namespace[name] = imp
     # and / or they may take Functions as arguments
     if hasattr(expr, 'args'):
