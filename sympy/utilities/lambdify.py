@@ -131,7 +131,7 @@ MODULES = {
     "math": (MATH, MATH_DEFAULT, MATH_TRANSLATIONS, ("from math import *",)),
     "cmath": (CMATH, CMATH_DEFAULT, CMATH_TRANSLATIONS, ("import cmath; from cmath import *",)),
     "mpmath": (MPMATH, MPMATH_DEFAULT, MPMATH_TRANSLATIONS, ("from mpmath import *",)),
-    "umath": (UMATH, UMATH_DEFAULT, UMATH_TRANSLATIONS, ("from math import*; from uncertainties.umath import *",)),
+    "umath": (UMATH, UMATH_DEFAULT, UMATH_TRANSLATIONS, ("from math import pi, e, tau, inf, nan; from uncertainties.umath import *",)),
     "numpy": (NUMPY, NUMPY_DEFAULT, NUMPY_TRANSLATIONS, ("import numpy; from numpy import *; from numpy.linalg import *",)),
     "unumpy": (UNUMPY, UNUMPY_DEFAULT, UNUMPY_TRANSLATIONS, ("import uncertainties.unumpy; from uncertainties.unumpy import *; from uncertainties.unumpy.ulinalg import *",)),
     "scipy": (SCIPY, SCIPY_DEFAULT, SCIPY_TRANSLATIONS, ("import scipy; import numpy; from scipy.special import *",)),
