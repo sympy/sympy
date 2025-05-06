@@ -1295,22 +1295,30 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None,
     ========
 
     >>> from sympy import diophantine
-    >>> from sympy.abc import a, b
+    >>> from sympy.abc import a, b, x, y, z
+
     >>> eq = a**4 + b**4 - (2**4 + 3**4)
     >>> diophantine(eq)
     {(2, 3)}
     >>> diophantine(eq, permute=True)
     {(-3, -2), (-3, 2), (-2, -3), (-2, 3), (2, -3), (2, 3), (3, -2), (3, 2)}
 
-    >>> from sympy.abc import x, y, z
     >>> diophantine(x**2 - y**2)
     {(t_0, -t_0), (t_0, t_0)}
 
     >>> diophantine(x*(2*x + 3*y - z))
     {(0, n1, n2), (t_0, t_1, 2*t_0 + 3*t_1)}
+
     >>> diophantine(x**2 + 3*x*y + 4*x)
     {(0, n1), (-3*t_0 - 4, t_0)}
 
+    >>> # Solve a simple linear Diophantine equation: 4x + 6y = 8
+    >>> diophantine(4*x + 6*y - 8)
+    {(-t_0 + 2, t_0)}
+
+    >>> # Solve a quadratic Diophantine equation: x^2 + y^2 = 13
+    >>> diophantine(x**2 + y**2 - 13)
+    {(-3, 2), (-3, -2), (-2, 3), (-2, -3), (2, -3), (2, 3), (3, -2), (3, 2)}
     See Also
     ========
 
