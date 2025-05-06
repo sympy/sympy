@@ -821,7 +821,7 @@ def modified_subresultants_bezout(p, q, x):
     # and form subresultant polys
     for j in range(2 if degF > degG else 1, degF + 1):
         M = B[0:j, :]
-        k, coeff_L = j - 1, []
+        coeff_L = []
         for k in range(j - 1, degF):
             coeff_L.append(M[:, 0:j].det())
             if k < degF - 1:
