@@ -733,18 +733,21 @@ def test_scipy_sparse_matrix():
 def test_umath_basic_math():
     if not uncertainties:
         skip("uncertainties not installed.")
+    if not numpy:
+        skip("numpy not installed.")
 
     x, y, z = symbols("x y z")
     f = lambdify((x, y, z), x**2 + y * z, "umath")
 
     res = f(uncertainties.ufloat(2.0, 0.1), uncertainties.ufloat(3.0, 0.2), uncertainties.ufloat(4.0, 0.3))
 
-    assert res.nominal_value == 16
-    assert res.std_dev == 1.268857754044952
+    numpy.testing.assert_allclose([res.nominal_value, res.std_dev], [16, 1.268857754044952])
 
 def test_umath_functions():
     if not uncertainties:
         skip("uncertainties not installed.")
+    if not numpy:
+        skip("numpy not installed.")
 
     x = symbols("x")
 
@@ -752,24 +755,19 @@ def test_umath_functions():
 
     res = f(uncertainties.ufloat(8, 0.25))
 
-    assert res.nominal_value == 3.0
-    assert res.std_dev == 0.045084220027780106
+    numpy.testing.assert_allclose([res.nominal_value, res.std_dev], [3, 0.045084220027780106])
 
     f = lambdify((x,), sin(x)**2 + cos(x)**2, "umath")
 
     res = f(uncertainties.ufloat(1, 1))
 
-    prec = 1e-15
-
-    assert abs(res.nominal_value - 1.0) <= prec
-    assert abs(res.std_dev) <= prec
+    numpy.testing.assert_allclose([res.nominal_value, res.std_dev], [1, 0])
 
     f = lambdify((x,), sin(x * pi), "umath")
 
     res = f(uncertainties.ufloat(2, 1.0))
 
-    assert abs(res.nominal_value) <= prec
-    assert abs(res.std_dev - pi) <= prec
+    numpy.testing.assert_allclose([res.nominal_value, res.std_dev], [0, float(pi)], atol=1e-15)
 
 def test_python_div_zero_issue_11306():
     if not numpy:
