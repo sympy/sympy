@@ -32,6 +32,7 @@ CMATH_DEFAULT: dict[str,Any] = {}
 MPMATH_DEFAULT: dict[str, Any] = {}
 UMATH_DEFAULT: dict[str, Any] = {}
 NUMPY_DEFAULT: dict[str, Any] = {"I": 1j}
+UNUMPY_DEFAULT: dict[str, Any] = {"I": 1j}
 SCIPY_DEFAULT: dict[str, Any] = {"I": 1j}
 CUPY_DEFAULT: dict[str, Any] = {"I": 1j}
 JAX_DEFAULT: dict[str, Any] = {"I": 1j}
@@ -49,6 +50,7 @@ CMATH = CMATH_DEFAULT.copy()
 MPMATH = MPMATH_DEFAULT.copy()
 UMATH = UMATH_DEFAULT.copy()
 NUMPY = NUMPY_DEFAULT.copy()
+UNUMPY = UNUMPY_DEFAULT.copy()
 SCIPY = SCIPY_DEFAULT.copy()
 CUPY = CUPY_DEFAULT.copy()
 JAX = JAX_DEFAULT.copy()
@@ -100,7 +102,7 @@ MPMATH_TRANSLATIONS = {
     "betainc_regularized": "betainc",
 }
 
-UMATH_TRANSLATIONS = {
+UMATH_TRANSLATIONS: dict[str, str] = {
     "ceiling": "ceil",
     "E": "e",
     "ln": "log",
@@ -109,6 +111,9 @@ UMATH_TRANSLATIONS = {
 NUMPY_TRANSLATIONS: dict[str, str] = {
     "Heaviside": "heaviside",
 }
+
+UNUMPY_TRANSLATIONS: dict[str, str] = {}
+
 SCIPY_TRANSLATIONS: dict[str, str] = {
     "jn" : "spherical_jn",
     "yn" : "spherical_yn"
@@ -128,6 +133,7 @@ MODULES = {
     "mpmath": (MPMATH, MPMATH_DEFAULT, MPMATH_TRANSLATIONS, ("from mpmath import *",)),
     "umath": (UMATH, UMATH_DEFAULT, UMATH_TRANSLATIONS, ("from math import*; from uncertainties.umath import *",)),
     "numpy": (NUMPY, NUMPY_DEFAULT, NUMPY_TRANSLATIONS, ("import numpy; from numpy import *; from numpy.linalg import *",)),
+    "unumpy": (UNUMPY, UNUMPY_DEFAULT, UNUMPY_TRANSLATIONS, ("import uncertainties.unumpy; from uncertainties.unumpy import *; from uncertainties.unumpy.ulinalg import *",)),
     "scipy": (SCIPY, SCIPY_DEFAULT, SCIPY_TRANSLATIONS, ("import scipy; import numpy; from scipy.special import *",)),
     "cupy": (CUPY, CUPY_DEFAULT, CUPY_TRANSLATIONS, ("import cupy",)),
     "jax": (JAX, JAX_DEFAULT, JAX_TRANSLATIONS, ("import jax",)),
@@ -147,7 +153,7 @@ def _import(module, reload=False):
     Creates a global translation dictionary for module.
 
     The argument module has to be one of the following strings: "math","cmath"
-    "mpmath", "umath", "numpy", "sympy", "tensorflow", "jax".
+    "mpmath", "umath", "numpy", "unumpy", "sympy", "tensorflow", "jax".
     These dictionaries map names of Python functions to their equivalent in
     other modules.
     """
@@ -338,8 +344,8 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
 
         *modules* can be one of the following types:
 
-        - The strings ``"math"``, ``"cmath"``, ``"mpmath"``, ``"umath"``, ``"numpy"``, ``"numexpr"``,
-          ``"scipy"``, ``"sympy"``, or ``"tensorflow"`` or ``"jax"``. This uses the
+        - The strings ``"math"``, ``"cmath"``, ``"mpmath"``, ``"umath"``, ``"numpy"``, ``"unumpy"``,
+          ``"numexpr"``, ``"scipy"``, ``"sympy"``, or ``"tensorflow"`` or ``"jax"``. This uses the
           corresponding printer and namespace mapping for that module.
         - A module (e.g., ``math``). This uses the global namespace of the
           module. If the module is one of the above known modules, it will
@@ -830,6 +836,8 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
         elif _module_present('scipy', namespaces):
             from sympy.printing.numpy import SciPyPrinter as Printer # type: ignore
         elif _module_present('numpy', namespaces):
+            from sympy.printing.numpy import NumPyPrinter as Printer # type: ignore
+        elif _module_present('unumpy', namespaces):
             from sympy.printing.numpy import NumPyPrinter as Printer # type: ignore
         elif _module_present('cupy', namespaces):
             from sympy.printing.numpy import CuPyPrinter as Printer # type: ignore

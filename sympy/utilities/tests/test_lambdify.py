@@ -750,24 +750,41 @@ def test_umath_functions():
         skip("numpy not installed.")
 
     x = symbols("x")
-
     f = lambdify((x,), log(x, 2), "umath")
-
     res = f(uncertainties.ufloat(8, 0.25))
 
     numpy.testing.assert_allclose([res.nominal_value, res.std_dev], [3, 0.045084220027780106])
 
     f = lambdify((x,), sin(x)**2 + cos(x)**2, "umath")
-
     res = f(uncertainties.ufloat(1, 1))
 
     numpy.testing.assert_allclose([res.nominal_value, res.std_dev], [1, 0])
 
     f = lambdify((x,), sin(x * pi), "umath")
-
     res = f(uncertainties.ufloat(2, 1.0))
 
     numpy.testing.assert_allclose([res.nominal_value, res.std_dev], [0, float(pi)], atol=1e-15)
+
+def test_unumpy_vectorized():
+    if not uncertainties:
+        skip("uncertainties not installed.")
+    if not numpy:
+        skip("numpy not installed.")
+
+    x, y = symbols("x y")
+    f = lambdify((x, y), Matrix([x + y, x**2, sqrt(y)]), "unumpy")
+    res = f(uncertainties.ufloat(5, 0.1), uncertainties.ufloat(1, 0.5))
+
+    assert len(res) == 3
+    numpy.testing.assert_allclose([ res[0][0].nominal_value, res[0][0].std_dev ], [ 6, 0.5099019513492785 ])
+    numpy.testing.assert_allclose([ res[1][0].nominal_value, res[1][0].std_dev ], [25, 1])
+    numpy.testing.assert_allclose([ res[2][0].item().nominal_value, res[2][0].item().std_dev ], [1, 0.25])
+
+    f = lambdify((x, y), Matrix([[sin(x), cos(x)]]) * Matrix([1, 2]), "unumpy")
+    res = f(uncertainties.ufloat(pi, 0.2), uncertainties.ufloat(pi/2, 0.2))
+
+    assert len(res) == 1
+    numpy.testing.assert_allclose([ res[0][0].nominal_value, res[0][0].std_dev ], [ -2, 0.2 ])
 
 def test_python_div_zero_issue_11306():
     if not numpy:
