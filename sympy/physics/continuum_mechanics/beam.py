@@ -1108,8 +1108,34 @@ class Beam:
         return integrate(self.shear_force(), x)
 
     def max_bmoment(self):
-        """Returns maximum Shear force and its coordinate
-        in the Beam object."""
+        """
+        Returns maximum Shear force and its coordinate
+        in the Beam object.
+
+        Examples
+        ========
+        There is a beam of length 10 meters. At the left end of the beam
+        there is a fixed support. At two meters from the right end of the 
+        beam there is a roller support. A downwards distributed load of 10 kN/m 
+        is applied between the two supports. At the right end of the beam, a 
+        downwards point load of 50 kN is applied.
+
+        Using the sign convention of upward forces and clockwise moment
+        being positive.
+
+        >>> from sympy.physics.continuum_mechanics.beam import Beam
+        >>> from sympy import symbols
+        >>> E, I = symbols('E, I')
+        >>> b = Beam(10, E, I)
+        >>> b.apply_load(5000, 2, -1)
+        >>> p0, m0 = b.apply_support(0, type='fixed')
+        >>> p8 = b.apply_support(8, type='roller')
+        >>> b.apply_load(20000, 0, 0, end=8)
+        >>> b.apply_load(50000, 10, -1)
+        >>> b.solve_for_reaction_loads(p0, m0, p8)
+        >>> b.max_bmoment()
+        (0, 233125/2)
+        """
         bending_curve = self.bending_moment()
         x = self.variable
 
