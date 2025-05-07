@@ -311,11 +311,6 @@ for const in _numpy_known_constants:
 
 _unumpy_known_functions = {k: 'uncertainties.unumpy.' + v for k, v in _known_functions_numpy.items()}
 
-def _unumpy_print_func(printer):
-    # apply an identity function to the result,
-    # that way numpy automatically converts 0d array to scalar.
-    return lambda expr: f"({printer(expr)} * 1)"
-
 class UnumpyPrinter(NumPyPrinter):
     """
     uncertainties.unumpy printer which handles vectorized piecewise functions,
@@ -325,17 +320,11 @@ class UnumpyPrinter(NumPyPrinter):
     if the input was also a scalar.
     """
 
-    def __init__(self, settings=None):
-        super().__init__(settings=settings)
-
-        for kf in self._kf:
-            setattr(self, f'_print_{kf}', _unumpy_print_func(getattr(super(), f'_print_{kf}')))
-
-    def _print_Pow(self, expr, rational=True):
-        return f"({super()._print_Pow(expr, rational=rational)} * 1)"
+    def doprint(self, expr, assign_to=None):
+        return f"({super().doprint(expr, assign_to=assign_to)}) * 1"
 
 for func in _unumpy_known_functions:
-    setattr(UnumpyPrinter, f'_print_{func}', _unumpy_print_func(_print_known_func))
+    setattr(UnumpyPrinter, f'_print_{func}', _print_known_func)
 
 for const in _numpy_known_constants:
     setattr(UnumpyPrinter, f'_print_{const}', _print_known_const)
