@@ -1115,9 +1115,9 @@ class Beam:
         Examples
         ========
         There is a beam of length 10 meters. At the left end of the beam
-        there is a fixed support. At two meters from the right end of the 
-        beam there is a roller support. A downwards distributed load of 10 kN/m 
-        is applied between the two supports. At the right end of the beam, a 
+        there is a fixed support. At two meters from the right end of the
+        beam there is a roller support. A downwards distributed load of 10 kN/m
+        is applied between the two supports. At the right end of the beam, a
         downwards point load of 50 kN is applied.
 
         Using the sign convention of upward forces and clockwise moment
