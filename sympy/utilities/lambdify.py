@@ -838,7 +838,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
         elif _module_present('numpy', namespaces):
             from sympy.printing.numpy import NumPyPrinter as Printer # type: ignore
         elif _module_present('unumpy', namespaces):
-            from sympy.printing.numpy import NumPyPrinter as Printer # type: ignore
+            from sympy.printing.numpy import UnumpyPrinter as Printer # type: ignore
         elif _module_present('cupy', namespaces):
             from sympy.printing.numpy import CuPyPrinter as Printer # type: ignore
         elif _module_present('jax', namespaces):

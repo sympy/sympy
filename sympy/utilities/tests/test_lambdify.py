@@ -776,15 +776,13 @@ def test_unumpy_vectorized():
     res = f(uncertainties.ufloat(5, 0.1), uncertainties.ufloat(1, 0.5))
 
     assert len(res) == 3
-    numpy.testing.assert_allclose([ res[0][0].nominal_value, res[0][0].std_dev ], [ 6, 0.5099019513492785 ])
-    numpy.testing.assert_allclose([ res[1][0].nominal_value, res[1][0].std_dev ], [25, 1])
-    numpy.testing.assert_allclose([ res[2][0].item().nominal_value, res[2][0].item().std_dev ], [1, 0.25])
+    numpy.testing.assert_allclose(uncertainties.unumpy.nominal_values(res), [ [6], [25], [1] ])
+    numpy.testing.assert_allclose(uncertainties.unumpy.std_devs(res), [ [0.5099019513492785], [1], [0.25] ])
 
-    f = lambdify((x, y), Matrix([[sin(x), cos(x)]]) * Matrix([1, 2]), "unumpy")
+    f = lambdify((x, y), Matrix([sin(x), cos(x)]).dot(Matrix([1, 2])), "unumpy")
     res = f(uncertainties.ufloat(pi, 0.2), uncertainties.ufloat(pi/2, 0.2))
 
-    assert len(res) == 1
-    numpy.testing.assert_allclose([ res[0][0].nominal_value, res[0][0].std_dev ], [ -2, 0.2 ])
+    numpy.testing.assert_allclose([ res.nominal_value, res.std_dev ], [ -2, 0.2 ])
 
 def test_python_div_zero_issue_11306():
     if not numpy:
