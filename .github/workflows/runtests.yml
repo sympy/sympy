@@ -462,7 +462,9 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.13'
-      - run: pip install asv virtualenv packaging
+      # NOTE: Pin virtualenv to <20.31 as a workaround until ASV resolves the issue.
+      # See: https://github.com/airspeed-velocity/asv/issues/1484
+      - run: pip install asv virtualenv==20.30 packaging
       - run: git submodule add https://github.com/sympy/sympy_benchmarks.git
 
         # Need to make sure we can access the branches from the main repo. We
