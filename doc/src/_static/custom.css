@@ -144,6 +144,18 @@ This can be removed once https://github.com/executablebooks/mdit-py-plugins/issu
     margin: 0 0.2em 0.25em -1.4em;
 }
 
+/* Override visited link color in Furo */
+a:visited {
+    color: var(--color-link);
+    text-decoration-color: var(--color-link);
+}
+
+/* Ensure visited links don't turn purple on hover */
+a:visited:hover {
+    color: var(--color-link);
+    text-decoration-color: var(--color-link);
+}
+
 /* Some styles for the TryExamples directive buttons enabled by jupyterlite-sphinx */
 /* The accessibility results are as follows:
 /* https://webaim.org/resources/contrastchecker/?fcolor=FFFFFF&bcolor=22632F, and

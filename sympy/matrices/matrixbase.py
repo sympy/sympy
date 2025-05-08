@@ -1,3 +1,4 @@
+from __future__ import annotations
 from collections import defaultdict
 from collections.abc import Iterable
 from inspect import isfunction
@@ -110,9 +111,9 @@ class MatrixBase(Printable):
     zero = S.Zero
     one = S.One
 
-    _diff_wrt = True  # type: bool
-    rows = None  # type: int
-    cols = None  # type: int
+    _diff_wrt: bool = True
+    rows: int
+    cols: int
     _simplify = None
 
     @classmethod
@@ -1328,7 +1329,7 @@ class MatrixBase(Printable):
     # routines and has a different *args signature.  Make
     # sure the names don't clash by adding `_matrix_` in name.
     def _eval_is_matrix_hermitian(self, simpfunc):
-        herm = lambda i, j: simpfunc(self[i, j] - self[j, i].conjugate()).is_zero
+        herm = lambda i, j: simpfunc(self[i, j] - self[j, i].adjoint()).is_zero
         return fuzzy_and(herm(i, j) for (i, j), v in self.iter_items())
 
     def _eval_is_zero_matrix(self):
@@ -2986,7 +2987,7 @@ class MatrixBase(Printable):
 
     @call_highest_priority('__add__')
     def __radd__(self, other):
-        return self + other
+        return self.__add__(other)
 
     @call_highest_priority('__matmul__')
     def __rmatmul__(self, other):
@@ -4274,7 +4275,7 @@ class MatrixBase(Printable):
         [sin(theta(t)),  cos(theta(t)), 0],
         [            0,              0, 1]])
 
-        We can retrive the angular velocity:
+        We can retrieve the angular velocity:
 
         >>> Omega = R.T * R.diff()
         >>> Omega = trigsimp(Omega)

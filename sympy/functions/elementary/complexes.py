@@ -1,4 +1,4 @@
-from typing import Tuple as tTuple
+from __future__ import annotations
 
 from sympy.core import S, Add, Mul, sympify, Symbol, Dummy, Basic
 from sympy.core.expr import Expr
@@ -59,7 +59,7 @@ class re(DefinedFunction):
     im
     """
 
-    args: tTuple[Expr]
+    args: tuple[Expr]
 
     is_extended_real = True
     unbranched = True  # implicitly works on the projection to C
@@ -181,7 +181,7 @@ class im(DefinedFunction):
     re
     """
 
-    args: tTuple[Expr]
+    args: tuple[Expr]
 
     is_extended_real = True
     unbranched = True  # implicitly works on the projection to C
@@ -501,7 +501,7 @@ class Abs(DefinedFunction):
     sign, conjugate
     """
 
-    args: tTuple[Expr]
+    args: tuple[Expr]
 
     is_extended_real = True
     is_extended_negative = False

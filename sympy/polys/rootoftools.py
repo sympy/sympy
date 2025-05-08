@@ -1062,7 +1062,7 @@ CRootOf = ComplexRootOf
 
 @dispatch(ComplexRootOf, ComplexRootOf)
 def _eval_is_eq(lhs, rhs): # noqa:F811
-    # if we use is_eq to check here, we get infinite recurion
+    # if we use is_eq to check here, we get infinite recursion
     return lhs == rhs
 
 

@@ -753,9 +753,7 @@ class StrPrinter(Printer):
             rv = '-0.' + rv[3:]
         elif rv.startswith('.0'):
             rv = '0.' + rv[2:]
-        if rv.startswith('+'):
-            # e.g., +inf -> inf
-            rv = rv[1:]
+        rv = rv.removeprefix('+') # e.g., +inf -> inf
         return rv
 
     def _print_Relational(self, expr):

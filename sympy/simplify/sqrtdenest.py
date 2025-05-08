@@ -181,7 +181,7 @@ def _sqrt_match(p):
                         rv.append(x)
                 b = Mul._from_args(bv)
                 r = Mul._from_args(rv)
-            # collect terms comtaining r
+            # collect terms containing r
             a1 = []
             b1 = [b]
             for x in v:

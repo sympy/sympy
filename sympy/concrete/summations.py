@@ -1,4 +1,4 @@
-from typing import Tuple as tTuple
+from __future__ import annotations
 
 from sympy.calculus.singularities import is_decreasing
 from sympy.calculus.accumulationbounds import AccumulationBounds
@@ -17,6 +17,7 @@ from sympy.core.sorting import ordered
 from sympy.core.symbol import Dummy, Wild, Symbol, symbols
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.combinatorial.numbers import bernoulli, harmonic
+from sympy.functions.elementary.complexes import re
 from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import cot, csc
@@ -24,7 +25,7 @@ from sympy.functions.special.hyper import hyper
 from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.functions.special.zeta_functions import zeta
 from sympy.integrals.integrals import Integral
-from sympy.logic.boolalg import And
+from sympy.logic.boolalg import And, Not
 from sympy.polys.partfrac import apart
 from sympy.polys.polyerrors import PolynomialError, PolificationFailed
 from sympy.polys.polytools import parallel_poly_from_expr, Poly, factor
@@ -32,6 +33,7 @@ from sympy.polys.rationaltools import together
 from sympy.series.limitseq import limit_seq
 from sympy.series.order import O
 from sympy.series.residues import residue
+from sympy.sets.contains import Contains
 from sympy.sets.sets import FiniteSet, Interval
 from sympy.utilities.iterables import sift
 import itertools
@@ -172,7 +174,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
 
     __slots__ = ()
 
-    limits: tTuple[tTuple[Symbol, Expr, Expr]]
+    limits: tuple[tuple[Symbol, Expr, Expr]]
 
     def __new__(cls, function, *symbols, **assumptions):
         obj = AddWithLimits.__new__(cls, function, *symbols, **assumptions)
@@ -277,13 +279,18 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         zeta function does not converge unless `s > 1` and `q > 0`
         """
         i, a, b = limits
+        if a.is_comparable and b.is_comparable and a > b:
+            return self.eval_zeta_function(f, (i, b + S.One, a - S.One))
+        if b is not S.Infinity:
+            return
         w, y, z = Wild('w', exclude=[i]), Wild('y', exclude=[i]), Wild('z', exclude=[i])
-        result = f.match((w * i + y) ** (-z))
-        if result is not None and b is S.Infinity:
+        if result := f.match((w * i + y) ** (-z)):
             coeff = 1 / result[w] ** result[z]
             s = result[z]
             q = result[y] / result[w] + a
-            return Piecewise((coeff * zeta(s, q), And(q > 0, s > 1)), (self, True))
+            return Piecewise((coeff * zeta(s, q),
+                              And(Not(Contains(-q, S.Naturals0)), re(s) > S.One)),
+                             (self, True))
 
     def _eval_derivative(self, x):
         """
@@ -1014,6 +1021,8 @@ def eval_sum(f, limits):
         return f*(b - a + 1)
     if a == b:
         return f.subs(i, a)
+    if a.is_comparable and b.is_comparable and a > b:
+        return eval_sum(f, (i, b + S.One, a - S.One))
     if isinstance(f, Piecewise):
         if not any(i in arg.args[1].free_symbols for arg in f.args):
             # Piecewise conditions do not depend on the dummy summation variable,
@@ -1446,6 +1455,10 @@ def eval_sum_residue(f, i_a_b):
            https://doi.org/10.1007/978-3-319-94063-2_5
     """
     i, a, b = i_a_b
+
+    # If lower limit > upper limit: Karr Summation Convention
+    if a.is_comparable and b.is_comparable and a > b:
+        return eval_sum_residue(f, (i, b + S.One, a - S.One))
 
     def is_even_function(numer, denom):
         """Test if the rational function is an even function"""

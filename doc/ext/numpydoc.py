@@ -42,7 +42,7 @@ def mangle_docstrings(app, what, name, obj, options, lines,
     if what == 'module':
         # Strip top title
         pattern = '^\\s*[#*=]{4,}\\n[a-z0-9 -]+\\n[#*=]{4,}\\s*'
-        title_re = re.compile(pattern, re.I | re.S)
+        title_re = re.compile(pattern, re.IGNORECASE | re.DOTALL)
         lines[:] = title_re.sub('', u_NL.join(lines)).split(u_NL)
     else:
         # jupyterlite-sphinx uses the "!! processed by numpydoc !!" tag to identify
@@ -77,7 +77,7 @@ def mangle_docstrings(app, what, name, obj, options, lines,
     references = []
     for line in lines:
         line = line.strip()
-        m = re.match('^.. \\[([a-z0-9_.-])\\]', line, re.I)
+        m = re.match('^.. \\[([a-z0-9_.-])\\]', line, re.IGNORECASE)
         if m:
             references.append(m.group(1))
 

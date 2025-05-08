@@ -882,7 +882,7 @@ class Point(Basic):
         """
         Coordinates of the point in given coordinate system. If coordinate system
         is not passed, it returns the coordinates in the coordinate system in which
-        the poin was defined.
+        the point was defined.
         """
         if sys is None:
             return self._coords

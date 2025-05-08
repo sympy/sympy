@@ -217,10 +217,10 @@ def multiplicity(p, n):
                 isinstance(n.args[0], Integer) and
                 n.args[0] >= 0):
             return multiplicity_in_factorial(p, n.args[0])
-        raise ValueError('expecting ints or fractions, got %s and %s' % (p, n))
+        raise ValueError(f"expecting ints or fractions, got {p} and {n}")
 
     if n == 0:
-        raise ValueError('no such integer exists: multiplicity of %s is not-defined' %(n))
+        raise ValueError(f"no such integer exists: multiplicity of {n} is not-defined")
     return remove(n, p)[1]
 
 
@@ -269,10 +269,10 @@ def multiplicity_in_factorial(p, n):
     p, n = as_int(p), as_int(n)
 
     if p <= 0:
-        raise ValueError('expecting positive integer got %s' % p )
+        raise ValueError(f"expecting positive integer got {p}")
 
     if n < 0:
-        raise ValueError('expecting non-negative integer got %s' % n )
+        raise ValueError(f"expecting non-negative integer got {n}")
 
     # keep only the largest of a given multiplicity since those
     # of a given multiplicity will be goverened by the behavior
@@ -326,7 +326,7 @@ def _perfect_power(n, next_p=2):
         if g == 1:
             return False
         factors[n] = multi
-        return math.prod(p**(e//g) for p, e in factors.items()), g
+        return int(math.prod(p**(e//g) for p, e in factors.items())), int(g)
 
     # If n is small, only trial factoring is faster
     if n <= 1_000_000:
@@ -336,7 +336,7 @@ def _perfect_power(n, next_p=2):
         g = gcd(*factors.values())
         if g == 1:
             return False
-        return math.prod(p**(e//g) for p, e in factors.items()), g
+        return math.prod(p**(e//g) for p, e in factors.items()), int(g)
 
     # divide by 2
     if next_p < 3:
@@ -353,7 +353,7 @@ def _perfect_power(n, next_p=2):
                 # Otherwise, there is no possibility of perfect power, especially if `g` is prime.
                 m, _exact = iroot(n, g)
                 if _exact:
-                    return 2*m, g
+                    return int(2*m), g
                 elif isprime(g):
                     return False
         next_p = 3
@@ -380,19 +380,19 @@ def _perfect_power(n, next_p=2):
             if t:
                 n = m
                 t *= multi
-                _g = gcd(g, t)
+                _g = int(gcd(g, t))
                 if _g == 1:
                     return False
                 factors[p] = t
                 if n == 1:
-                    return math.prod(p**(e//_g)
-                                        for p, e in factors.items()), _g
+                    return int(math.prod(p**(e//_g)
+                                        for p, e in factors.items())), _g
                 elif g == 0 or _g < g: # If g is updated
                     g = _g
                     m, _exact = iroot(n**multi, g)
                     if _exact:
-                        return m * math.prod(p**(e//g)
-                                            for p, e in factors.items()), g
+                        return int(m * math.prod(p**(e//g)
+                                            for p, e in factors.items())), g
                     elif isprime(g):
                         return False
         next_p = tf_max
@@ -1110,7 +1110,7 @@ rho_msg = "Pollard's rho with retries %i, max_steps %i and seed %i"
 pm1_msg = "Pollard's p-1 with smoothness bound %i and seed %i"
 ecm_msg = "Elliptic Curve with B1 bound %i, B2 bound %i, num_curves %i"
 factor_msg = '\t%i ** %i'
-fermat_msg = 'Close factors satisying Fermat condition found.'
+fermat_msg = 'Close factors satisfying Fermat condition found.'
 complete_msg = 'Factorization is complete.'
 
 
@@ -1470,8 +1470,7 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
     if verbose:
         sn = str(n)
         if len(sn) > 50:
-            print('Factoring %s' % sn[:5] + \
-                  '..(%i other digits)..' % (len(sn) - 10) + sn[-5:])
+            print(f"Factoring {sn[:5]}..({len(sn) - 10} other digits)..{sn[-5:]}")
         else:
             print('Factoring', n)
 

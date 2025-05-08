@@ -34,6 +34,7 @@ import tempfile
 import warnings
 from contextlib import contextmanager
 from inspect import unwrap
+from pathlib import Path
 
 from sympy.core.cache import clear_cache
 from sympy.external import import_module
@@ -130,7 +131,7 @@ def convert_to_native_paths(lst):
     if the system is case insensitive.
     """
     newlst = []
-    for i, rv in enumerate(lst):
+    for rv in lst:
         rv = os.path.join(*rv.split("/"))
         # on windows the slash after the colon is dropped
         if sys.platform == "win32":
@@ -223,10 +224,6 @@ def run_in_subprocess_with_hash_randomization(
     use a predetermined seed for tests, we must start Python in a separate
     subprocess.
 
-    Hash randomization was added in the minor Python versions 2.6.8, 2.7.3,
-    3.1.5, and 3.2.3, and is enabled by default in all Python versions after
-    and including 3.3.0.
-
     Examples
     ========
 
@@ -244,14 +241,6 @@ def run_in_subprocess_with_hash_randomization(
     cwd = get_sympy_dir()
     # Note, we must return False everywhere, not None, as subprocess.call will
     # sometimes return None.
-
-    # First check if the Python version supports hash randomization
-    # If it does not have this support, it won't recognize the -R flag
-    p = subprocess.Popen([command, "-RV"], stdout=subprocess.PIPE,
-                         stderr=subprocess.STDOUT, cwd=cwd)
-    p.communicate()
-    if p.returncode != 0:
-        return False
 
     hash_seed = os.getenv("PYTHONHASHSEED")
     if not hash_seed:
@@ -1577,8 +1566,7 @@ class SymPyDocTests:
                   '    exit("wrong number of args")\n')
 
             for viewer in disable_viewers:
-                with open(os.path.join(tempdir, viewer), 'w') as fh:
-                    fh.write(vw)
+                Path(os.path.join(tempdir, viewer)).write_text(vw)
 
                 # make the file executable
                 os.chmod(os.path.join(tempdir, viewer),
