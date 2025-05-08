@@ -1311,7 +1311,7 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None,
     >>> diophantine(x**2 + 3*x*y + 4*x)
     {(0, n1), (-3*t_0 - 4, t_0)}
     >>> diophantine(4*x + 6*y - 8)
-    {(3*t_0 - 4, 4 - 2*t_0)}   
+    {(3*t_0 - 4, 4 - 2*t_0)}
     >>> diophantine(x**2 + y**2 - 13)
     {(-3, -2), (-3, 2), (-2, -3), (-2, 3), (2, -3), (2, 3), (3, -2), (3, 2)}
 
