@@ -591,9 +591,9 @@ def is_mersenne_prime(n):
         return False
     result = _lucas_lehmer_primality_test(p)
     if result:
-        raise ValueError(filldedent('''
-            This Mersenne Prime, 2^%s - 1, should
-            be added to SymPy's known values.''' % p))
+        raise ValueError(filldedent(f'''
+            This Mersenne Prime, 2^{p} - 1, should
+            be added to SymPy's known values.'''))
     return result
 
 
