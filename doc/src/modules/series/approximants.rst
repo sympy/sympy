@@ -8,3 +8,4 @@ Provides methods to compute Pade approximants of sequences and functions with po
 .. autofunction:: approximants
 .. autofunction:: pade_approximant
 .. autofunction:: pade_approximants
+.. autofunction:: pade_approximant_gcdex
