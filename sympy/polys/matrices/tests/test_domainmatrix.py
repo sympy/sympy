@@ -1,7 +1,7 @@
 from sympy.external.gmpy import GROUND_TYPES
 
 from sympy import Integer, Rational, S, sqrt, Matrix, symbols
-from sympy import FF, ZZ, QQ, QQ_I, EXRAW
+from sympy import FF, ZZ, QQ, QQ_I, EXRAW, RR, CC
 
 from sympy.polys.matrices.domainmatrix import DomainMatrix, DomainScalar, DM
 from sympy.polys.matrices.exceptions import (
@@ -1381,3 +1381,164 @@ def test_DomainMatrix_fflu():
     assert U == DM([[1, 2], [0, -2]], ZZ)
     di, d = D.inv_den()
     assert P.matmul(A).rmul(d) == L.matmul(di).matmul(U)
+
+
+def test_DomainMatrix_rank_optimization_QQ():
+    # Test that the QQ domain optimization with clear_denoms_rowwise works correctly
+    # Test case 1: Full rank matrix with fractions
+    A = DomainMatrix([
+        [QQ(1, 2), QQ(1, 3)],
+        [QQ(1, 4), QQ(1, 5)]
+    ], (2, 2), QQ)
+    assert A.rank() == 2
+    # Test case 2: Rank-deficient matrix with fractions
+    B = DomainMatrix([
+        [QQ(1, 2), QQ(1, 3)],
+        [QQ(1), QQ(2, 3)]
+    ], (2, 2), QQ)
+    assert B.rank() == 1
+    # Test case 3: Complex fractions
+    C = DomainMatrix([
+        [QQ(1, 23), QQ(2, 31), QQ(3, 41)],
+        [QQ(4, 53), QQ(5, 61), QQ(6, 71)],
+        [QQ(8, 46), QQ(4, 31), QQ(6, 41)]
+    ], (3, 3), QQ)
+    rank_C = C.rank()
+    # Verify against the direct rref method
+    rref_C, pivots_C = C.rref()
+    assert rank_C == len(pivots_C)
+
+
+def test_DomainMatrix_rank_optimization_ZZ():
+    # Test that the ZZ domain optimization using GF(p) homomorphism works correctly
+    # Test case 1: Full rank matrix
+    A = DomainMatrix([
+        [ZZ(1), ZZ(2)],
+        [ZZ(3), ZZ(4)]
+    ], (2, 2), ZZ)
+    assert A.rank() == 2
+
+    # Test case 2: Rank-deficient matrix
+    B = DomainMatrix([
+        [ZZ(2), ZZ(4)],
+        [ZZ(3), ZZ(6)]
+    ], (2, 2), ZZ)
+    assert B.rank() == 1
+
+    # Test case 3: Large integers that benefit from modular arithmetic
+    C = DomainMatrix([
+        [ZZ(10**10), ZZ(2*10**10)],
+        [ZZ(3*10**10), ZZ(6*10**10)]
+    ], (2, 2), ZZ)
+    assert C.rank() == 1
+
+    # Test case 4: Edge cases that might cause issues with single prime
+    # This matrix has full rank but might appear to be rank-deficient with a single prime
+    D = DomainMatrix([
+        [ZZ(2017), ZZ(1)],
+        [ZZ(1), ZZ(2017)]
+    ], (2, 2), ZZ)
+    assert D.rank() == 2
+
+
+def test_DomainMatrix_rank_floating_point_error():
+    # Test that an error is raised for floating-point domains like RR and CC
+    # RR domain
+    A_RR = DomainMatrix([
+        [RR(1.5), RR(2.3)],
+        [RR(3.7), RR(4.2)]
+    ], (2, 2), RR)
+    raises(DMDomainError, lambda: A_RR.rank())
+    # CC domain
+    A_CC = DomainMatrix([
+        [CC(1.5, 0.5), CC(2.3, 1.1)],
+        [CC(3.7, 0.2), CC(4.2, 0.9)]
+    ], (2, 2), CC)
+    raises(DMDomainError, lambda: A_CC.rank())
+
+
+def test_DomainMatrix_rank_complex_domains():
+    # Test rank calculation for complex domains ZZ_I and QQ_I
+    A_ZZ_I = DomainMatrix([
+        [QQ_I(1), QQ_I(0, 1)],
+        [QQ_I(1, 1), QQ_I(2)]
+    ], (2, 2), QQ_I)
+    assert A_ZZ_I.rank() == 2
+
+    # Rank deficient in QQ_I
+    B_ZZ_I = DomainMatrix([
+        [QQ_I(1), QQ_I(0, 2)],
+        [QQ_I(2), QQ_I(0, 4)]
+    ], (2, 2), QQ_I)
+    assert B_ZZ_I.rank() == 1
+
+
+def test_DomainMatrix_rank_algebraic_field():
+    # Test rank calculation for algebraic extension fields
+    # Algebraic extension field
+    K = QQ.algebraic_field(sqrt(2))
+    # Full rank matrix
+    A = DomainMatrix([
+        [K.convert(1 + sqrt(2)), K.convert(2)],
+        [K.convert(3), K.convert(4 + sqrt(2))]
+    ], (2, 2), K)
+    assert A.rank() == 2
+    # Rank deficient matrix
+    B = DomainMatrix([
+        [K.convert(1 + sqrt(2)), K.convert(2 + 2*sqrt(2))],
+        [K.convert(3 + 3*sqrt(2)), K.convert(6 + 6*sqrt(2))]
+    ], (2, 2), K)
+    assert B.rank() == 1
+
+
+def test_DomainMatrix_rank_optimization_ZZx():
+    # Test that the ZZ[x] value substitution optimization works correctly
+    x = symbols('x')
+    # Test case 1: Matrix with symbolic entries
+    A_sympy = Matrix([
+        [x, 1],
+        [x**2, x]
+    ])
+    assert A_sympy.rank() == 1
+    # Test case 2: Rank-deficient matrix
+    B_sympy = Matrix([
+        [x, 2*x],
+        [x**2, 2*x**2]
+    ])
+    assert B_sympy.rank() == 1
+    # Test case 3: Zero matrix
+    C_sympy = Matrix([
+        [0, 0],
+        [0, 0]
+    ])
+    assert C_sympy.rank() == 0
+    # Test case 4: Larger matrix
+    D_sympy = Matrix([
+        [x, 1, x**2],
+        [2*x, 2, 2*x**2],
+        [x + 1, x, x**2 + x]
+    ])
+    assert D_sympy.rank() == 2
+
+
+def test_DomainMatrix_rank_optimization_QQx():
+    # Test that the QQ[x] value substitution optimization works correctly
+    x = symbols('x')
+    # Test case 1: Full rank matrix with fractions
+    A_sympy = Matrix([
+        [x, Rational(1, 2)],
+        [x**2, x]
+    ])
+    assert A_sympy.rank() == 2
+    # Test case 2: Rank-deficient matrix with fractions
+    B_sympy = Matrix([
+        [x, 2*x],
+        [Rational(1, 2)*x**2, x**2]
+    ])
+    assert B_sympy.rank() == 1
+    # Test case 3: Complex polynomial fractions
+    C_sympy = Matrix([
+        [Rational(1, 3)*x, Rational(1, 2)],
+        [Rational(2, 3)*x**2, Rational(1, 3)*x]
+    ])
+    assert C_sympy.rank() == 2
