@@ -553,7 +553,7 @@ def add_terms(terms: list, prec: int, target_prec: int) -> \
             # first: quick test
             if ((delta > working_prec) and
                 ((not sum_man) or
-                 delta - MPZ(sum_man).bit_length() > working_prec)):
+                 delta - sum_man.bit_length() > working_prec)):
                 sum_man = man
                 sum_exp = exp
             else:
@@ -575,7 +575,7 @@ def add_terms(terms: list, prec: int, target_prec: int) -> \
         sum_man = -sum_man
     else:
         sum_sign = 0
-    sum_bc = MPZ(sum_man).bit_length()
+    sum_bc = sum_man.bit_length()
     sum_accuracy = sum_exp + sum_bc - absolute_error
     r = normalize(sum_sign, sum_man, sum_exp, sum_bc, target_prec,
         rnd), sum_accuracy
@@ -715,7 +715,7 @@ def evalf_mul(v: 'Mul', prec: int, options: OPT_DICT) -> TMP_RES:
         acc = min(acc, w_acc)
     sign = (direction & 2) >> 1
     if not complex_factors:
-        v = normalize(sign, man, exp, MPZ(man).bit_length(), prec, rnd)
+        v = normalize(sign, man, exp, man.bit_length(), prec, rnd)
         # multiply by i
         if direction & 1:
             return None, v, None, acc
@@ -725,7 +725,7 @@ def evalf_mul(v: 'Mul', prec: int, options: OPT_DICT) -> TMP_RES:
         # initialize with the first term
         if (man, exp, bc) != start:
             # there was a real part; give it an imaginary part
-            re, im = (sign, man, exp, MPZ(man).bit_length()), (0, MPZ(0), 0, 0)
+            re, im = (sign, man, exp, man.bit_length()), (0, MPZ(0), 0, 0)
             i0 = 0
         else:
             # there is no real part to start (other than the starting 1)
