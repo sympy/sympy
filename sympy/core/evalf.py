@@ -83,10 +83,9 @@ MPF_TUP = tuple[int, int, int, int]  # mpf value tuple
 Explanation
 ===========
 
->>> from sympy.core.evalf import bitcount
 >>> sign, man, exp, bc = 0, 5, 1, 3
 >>> n = [1, -1][sign]*man*2**exp
->>> n, bitcount(man)
+>>> n, man.bit_length()
 (10, 3)
 
 A temporary result is a tuple (re, im, re_acc, im_acc) where
@@ -133,9 +132,9 @@ def fastlog(x: MPF_TUP | None) -> int | Any:
     ========
 
     >>> from sympy import log
-    >>> from sympy.core.evalf import fastlog, bitcount
+    >>> from sympy.core.evalf import fastlog
     >>> s, m, e = 0, 5, 1
-    >>> bc = bitcount(m)
+    >>> bc = m.bit_length()
     >>> n = [1, -1][s]*m*2**e
     >>> n, (log(n)/log(2)).evalf(2), fastlog((s, m, e, bc))
     (10, 3.3, 4)
