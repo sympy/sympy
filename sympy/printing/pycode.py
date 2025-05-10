@@ -206,8 +206,7 @@ class AbstractPythonCodePrinter(CodePrinter):
 
     def _print_Piecewise(self, expr):
         result = []
-        i = 0
-        for arg in expr.args:
+        for i, arg in enumerate(expr.args):
             e = arg.expr
             c = arg.cond
             if i == 0:
@@ -218,7 +217,6 @@ class AbstractPythonCodePrinter(CodePrinter):
             result.append(' if ')
             result.append(self._print(c))
             result.append(' else ')
-            i += 1
         result = result[:-1]
         if result[-1] == 'True':
             result = result[:-2]

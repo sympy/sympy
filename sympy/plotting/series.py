@@ -1167,10 +1167,8 @@ class Line2DBaseSeries(BaseSeries):
                         (points[k][:idx], [prev, e, post], points[k][idx+1:]))
 
                     # add points to the other coordinates
-                    c = 0
-                    for j in j_indeces:
+                    for c, j in enumerate(j_indeces):
                         values = funcs[c](np.array([prev, post]))
-                        c += 1
                         points[j] = np.concatenate(
                             (points[j][:idx], [values[0], np.nan, values[1]], points[j][idx+1:]))
         return points
