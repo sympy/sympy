@@ -363,7 +363,7 @@ def array(symbol, dim, intent=None, *, attrs=(), value=None, type=None):
     """
     if isinstance(dim, Attribute):
         if str(dim.name) != 'dimension':
-            raise ValueError("Got an unexpected Attribute argument as dim: %s" % str(dim))
+            raise ValueError(f"Got an unexpected Attribute argument as dim: {str(dim)}")
     else:
         dim = dimension(*dim)
 
@@ -586,8 +586,7 @@ class FFunction(Function):
     def _fcode(self, printer):
         name = self.__class__.__name__
         if printer._settings['standard'] < self._required_standard:
-            raise NotImplementedError("%s requires Fortran %d or newer" %
-                                      (name, self._required_standard))
+            raise NotImplementedError(f"{name} requires Fortran {self._required_standard} or newer")
         return '{}({})'.format(name, ', '.join(map(printer._print, self.args)))
 
 
