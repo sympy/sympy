@@ -1003,7 +1003,7 @@ def linprog(c, A=None, b=None, A_eq=None, b_eq=None, bounds=None):
 
     ## the equalities
     if A_eq is None:
-        if not b_eq is None:
+        if b_eq is not None:
             raise ValueError("A_eq and b_eq must both be given")
     else:
         A_eq, b_eq = [Matrix(i) for i in (A_eq, b_eq)]
@@ -1070,7 +1070,7 @@ def show_linprog(c, A=None, b=None, A_eq=None, b_eq=None, bounds=None):
 
     ## the equalities
     if A_eq is None:
-        if not b_eq is None:
+        if b_eq is not None:
             raise ValueError("A_eq and b_eq must both be given")
     else:
         A_eq, b_eq = [Matrix(i) for i in (A_eq, b_eq)]
