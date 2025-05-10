@@ -910,7 +910,7 @@ class Float(Number):
                     # don't compute number or else it may
                     # over/underflow
                     return Float._new(
-                        (num[0], num[1], num[2], MPZ(num[1]).bit_length()),
+                        (num[0], num[1], num[2], num[1].bit_length(),
                         precision)
         elif isinstance(num, (Number, NumberSymbol)):
             _mpf_ = num._as_mpf_val(precision)
