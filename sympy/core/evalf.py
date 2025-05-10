@@ -16,7 +16,6 @@ from mpmath.libmp import (from_int, from_man_exp, from_rational, fhalf,
                           mpf_atan, mpf_atan2, mpf_cmp, mpf_cos, mpf_e, mpf_exp, mpf_log, mpf_lt,
                           mpf_mul, mpf_neg, mpf_pi, mpf_pow, mpf_pow_int, mpf_shift, mpf_sin,
                           mpf_sqrt, normalize, round_nearest, to_int, to_str, mpf_tan)
-from mpmath.libmp import bitcount as mpmath_bitcount
 from mpmath.libmp.backend import MPZ
 from mpmath.libmp.libmpc import _infs_nan
 from mpmath.libmp.libmpf import dps_to_prec, prec_to_dps
@@ -50,7 +49,7 @@ rnd = round_nearest
 def bitcount(n):
     """Return smallest integer, b, such that |n|/2**b < 1.
     """
-    return mpmath_bitcount(abs(int(n)))
+    return MPZ(abs(int(n))).bit_length()
 
 # Used in a few places as placeholder values to denote exponents and
 # precision levels, e.g. of exact numbers. Must be careful to avoid

@@ -1,7 +1,8 @@
 from mpmath.libmp import (fzero, from_int, from_rational,
-    fone, fhalf, bitcount, to_int, mpf_mul, mpf_div, mpf_sub,
+    fone, fhalf, to_int, mpf_mul, mpf_div, mpf_sub,
     mpf_add, mpf_sqrt, mpf_pi, mpf_cosh_sinh, mpf_cos, mpf_sin)
 from .residue_ntheory import _sqrt_mod_prime_power, is_quad_residue
+from sympy.core.evalf import bitcount
 from sympy.utilities.decorator import deprecated
 from sympy.utilities.memoization import recurrence_memo
 
@@ -236,7 +237,7 @@ def _partition(n: int) -> int:
         # On average, the terms decrease rapidly in magnitude.
         # Dynamically reducing the precision greatly improves
         # performance.
-        p = bitcount(abs(to_int(d))) + 50
+        p = bitcount(to_int(d)) + 50
     return int(to_int(mpf_add(s, fhalf, prec)))
 
 
