@@ -107,6 +107,7 @@ def get_number_facts(x = None):
 
         # hermitian and antihermitian
         Implies(Q.real(x), Q.hermitian(x)),
+        Implies(~Q.finite(x), Q.infinite(x)),
         Implies(Q.imaginary(x), Q.antihermitian(x)),
         Implies(Q.zero(x), Q.hermitian(x) | Q.antihermitian(x)),
 
@@ -115,8 +116,7 @@ def get_number_facts(x = None):
         Implies(Q.complex(x), Q.finite(x)),
         Implies(Q.negative_infinite(x) | Q.positive_infinite(x), Q.infinite(x)),
 
-        # commutativity
-        Implies(Q.finite(x) | Q.infinite(x), Q.commutative(x)),
+
     )
     return fact
 

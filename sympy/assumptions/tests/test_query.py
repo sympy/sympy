@@ -2569,3 +2569,7 @@ def test_issue_25221():
 def test_issue_27440():
     nan = S.NaN
     assert ask(Q.negative(nan)) is None
+
+def test_issue_27726():
+     x = symbols("x")
+     assert ask(Q.infinite(x), ~Q.finite(x)) is True
