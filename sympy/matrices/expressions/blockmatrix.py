@@ -870,16 +870,16 @@ def _choose_2x2_inversion_formula(A, B, C, D):
     # Try to find a known invertible matrix.  Note that the Schur complement
     # is currently not being considered for this
     A_inv = ask(Q.invertible(A))
-    if A_inv == True:
+    if A_inv:
         return 'A'
     B_inv = ask(Q.invertible(B))
-    if B_inv == True:
+    if B_inv:
         return 'B'
     C_inv = ask(Q.invertible(C))
-    if C_inv == True:
+    if C_inv:
         return 'C'
     D_inv = ask(Q.invertible(D))
-    if D_inv == True:
+    if D_inv:
         return 'D'
     # Otherwise try to find a matrix that isn't known to be non-invertible
     if A_inv != False:

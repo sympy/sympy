@@ -379,13 +379,13 @@ def _simplex(A, B, C, D=None, dual=False):
     argmin_dual = [None] * m
 
     for i, (v, n) in enumerate(X):
-        if v == False:
+        if not v:
             argmax[n] = 0
         else:
             argmin_dual[n] = M[-1, i]
 
     for i, (v, n) in enumerate(Y):
-        if v == True:
+        if v:
             argmin_dual[n] = 0
         else:
             argmax[n] = M[i, -1]
