@@ -486,7 +486,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         if sequence_term.is_Piecewise:
             for func, cond in sequence_term.args:
                 # see if it represents something going to oo
-                if cond == True or cond.as_set().sup is S.Infinity:
+                if cond or cond.as_set().sup is S.Infinity:
                     s = Sum(func, (sym, lower_limit, upper_limit))
                     return s.is_convergent()
             return S.true
@@ -762,7 +762,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
                 term = f.subs(i, a)
                 if term:
                     test = abs(term.evalf(3)) < eps
-                    if test == True:
+                    if test:
                         return s, abs(term)
                     elif not (test == False):
                         # a symbolic Relational class, can't go further
@@ -1354,7 +1354,7 @@ def eval_sum_hyper(f, i_a_b):
                 return
             (res1, cond1), (res2, cond2) = res1, res2
             cond = And(cond1, cond2)
-            if cond == False:
+            if not cond:
                 return None
             return Piecewise((res1 - res2, cond), (old_sum, True))
 
@@ -1366,7 +1366,7 @@ def eval_sum_hyper(f, i_a_b):
         res1, cond1 = res1
         res2, cond2 = res2
         cond = And(cond1, cond2)
-        if cond == False or cond.as_set() == S.EmptySet:
+        if not cond or cond.as_set() == S.EmptySet:
             return None
         return Piecewise((res1 + res2, cond), (old_sum, True))
 
@@ -1374,7 +1374,7 @@ def eval_sum_hyper(f, i_a_b):
     res = _eval_sum_hyper(f, i, a)
     if res is not None:
         r, c = res
-        if c == False:
+        if not c:
             if r.is_number:
                 f = f.subs(i, Dummy('i', integer=True, positive=True) + a)
                 if f.is_positive or f.is_zero:

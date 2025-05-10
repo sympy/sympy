@@ -366,9 +366,9 @@ class ImageSet(Set):
 
         if not set(flambda.variables) & flambda.expr.free_symbols:
             is_empty = fuzzy_or(s.is_empty for s in sets)
-            if is_empty == True:
+            if is_empty:
                 return S.EmptySet
-            elif is_empty == False:
+            elif not is_empty:
                 return FiniteSet(flambda.expr)
 
         return Basic.__new__(cls, flambda, *sets)

@@ -166,7 +166,7 @@ def test_random_problems():
             continue
 
         phi = And(*constraints)
-        if phi == False:
+        if not phi:
             continue
         cnf = CNF.from_prop(phi); enc = EncodedCNF()
         enc.from_cnf(cnf)

@@ -1440,9 +1440,9 @@ def _solve(f, *symbols, **flags):
                 except TypeError:
                     # incompatible type with condition(s)
                     continue
-                if v == False:
+                if not v:
                     continue
-                if v == True:
+                if v:
                     result.add(candidate)
                 else:
                     result.add(Piecewise(

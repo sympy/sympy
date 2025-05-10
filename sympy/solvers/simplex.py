@@ -379,13 +379,13 @@ def _simplex(A, B, C, D=None, dual=False):
     argmin_dual = [None] * m
 
     for i, (v, n) in enumerate(X):
-        if v == False:
+        if not v:
             argmax[n] = 0
         else:
             argmin_dual[n] = M[-1, i]
 
     for i, (v, n) in enumerate(Y):
-        if v == True:
+        if v:
             argmin_dual[n] = 0
         else:
             argmax[n] = M[i, -1]
@@ -566,9 +566,9 @@ def _primal_dual(M, factor=True):
     def ineq(L, r, op):
         rv = []
         for r in (op(i, j) for i, j in zip(L, r)):
-            if r == True:
+            if r:
                 continue
-            elif r == False:
+            elif not r:
                 return [False]
             if factor:
                 f = factor_terms(r)
@@ -627,9 +627,9 @@ def _rel_as_nonpos(constr, syms):
 
     # separate out univariates
     for i in constr:
-        if i == True:
+        if i:
             continue  # ignore
-        if i == False:
+        if not i:
             return  # no solution
         if i.has(S.Infinity, S.NegativeInfinity):
             raise ValueError("only finite bounds are permitted")
@@ -664,7 +664,7 @@ def _rel_as_nonpos(constr, syms):
         i = univariate.get(x, True)
         if not i:
             return None  # no solution possible
-        if i == True:
+        if i:
             unbound.append(x)
             continue
         a, b = i.inf, i.sup

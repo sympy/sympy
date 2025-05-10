@@ -112,7 +112,7 @@ class IntegralTransform(Function):
 
     def _collapse_extra(self, extra):
         cond = And(*extra)
-        if cond == False:
+        if not cond:
             raise IntegralTransformError(self.__class__.name, None, '')
         return cond
 
@@ -179,7 +179,7 @@ class IntegralTransform(Function):
                 elif len(x) > 2:
                     # some region parameters and a condition (Mellin, Laplace)
                     extra += [x[1:]]
-            if simplify==True:
+            if simplify:
                 res = Add(*ress).simplify()
             else:
                 res = Add(*ress)
@@ -808,7 +808,7 @@ def _inverse_mellin_transform(F, s, x_, strip, as_meijerg=False):
         cond += [And(Or(len(G.ap) != len(G.bq), 0 >= re(G.nu) + 1),
                      Abs(arg(G.argument)) == G.delta*pi)]
         cond = Or(*cond)
-        if cond == False:
+        if not cond:
             raise IntegralTransformError(
                 'Inverse Mellin', F, 'does not converge')
         return (h*fac).subs(x, x_), cond

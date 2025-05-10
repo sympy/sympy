@@ -100,7 +100,7 @@ class Probability(Expr):
             raise ValueError("%s is not a relational or combination of relationals"
                     % (given_condition))
 
-        if given_condition == False or condition is S.false:
+        if not given_condition or condition is S.false:
             return S.Zero
         if not isinstance(condition, (Relational, Boolean)):
             raise ValueError("%s is not a relational or combination of relationals"

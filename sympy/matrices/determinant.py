@@ -60,7 +60,7 @@ def _find_reasonable_pivot(col, iszerofunc=_iszero, simpfunc=_simplify):
         # is someone wrote a custom iszerofunc, it may return
         # BooleanFalse or BooleanTrue instead of True or False,
         # so use == for comparison instead of `is`
-        if is_zero == False:
+        if not is_zero:
             # we found something that is definitely not zero
             return (i, x, False, newly_determined)
         possible_zeros.append(is_zero)
@@ -83,7 +83,7 @@ def _find_reasonable_pivot(col, iszerofunc=_iszero, simpfunc=_simplify):
         is_zero = iszerofunc(simped)
         if is_zero in (True, False):
             newly_determined.append((i, simped))
-        if is_zero == False:
+        if not is_zero:
             return (i, simped, False, newly_determined)
         possible_zeros[i] = is_zero
 
@@ -166,7 +166,7 @@ def _find_reasonable_pivot_naive(col, iszerofunc=_iszero, simpfunc=None):
     indeterminates = []
     for i, col_val in enumerate(col):
         col_val_is_zero = iszerofunc(col_val)
-        if col_val_is_zero == False:
+        if not col_val_is_zero:
             # This pivot candidate is non-zero.
             return i, col_val, False, []
         elif col_val_is_zero is None:

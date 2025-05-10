@@ -516,18 +516,18 @@ class BlockMatrix(MatrixExpr):
         orig_i, orig_j = i, j
         for row_block, numrows in enumerate(self.rowblocksizes):
             cmp = i < numrows
-            if cmp == True:
+            if cmp:
                 break
-            elif cmp == False:
+            elif not cmp:
                 i -= numrows
             elif row_block < self.blockshape[0] - 1:
                 # Can't tell which block and it's not the last one, return unevaluated
                 return MatrixElement(self, orig_i, orig_j)
         for col_block, numcols in enumerate(self.colblocksizes):
             cmp = j < numcols
-            if cmp == True:
+            if cmp:
                 break
-            elif cmp == False:
+            elif not cmp:
                 j -= numcols
             elif col_block < self.blockshape[1] - 1:
                 return MatrixElement(self, orig_i, orig_j)
@@ -870,25 +870,25 @@ def _choose_2x2_inversion_formula(A, B, C, D):
     # Try to find a known invertible matrix.  Note that the Schur complement
     # is currently not being considered for this
     A_inv = ask(Q.invertible(A))
-    if A_inv == True:
+    if A_inv:
         return 'A'
     B_inv = ask(Q.invertible(B))
-    if B_inv == True:
+    if B_inv:
         return 'B'
     C_inv = ask(Q.invertible(C))
-    if C_inv == True:
+    if C_inv:
         return 'C'
     D_inv = ask(Q.invertible(D))
-    if D_inv == True:
+    if D_inv:
         return 'D'
     # Otherwise try to find a matrix that isn't known to be non-invertible
-    if A_inv != False:
+    if A_inv:
         return 'A'
-    if B_inv != False:
+    if B_inv:
         return 'B'
-    if C_inv != False:
+    if C_inv:
         return 'C'
-    if D_inv != False:
+    if D_inv:
         return 'D'
     return None
 

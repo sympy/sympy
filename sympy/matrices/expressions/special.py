@@ -221,7 +221,7 @@ class OneMatrix(MatrixExpr):
 
         if evaluate:
             condition = Eq(m, 1) & Eq(n, 1)
-            if condition == True:
+            if condition:
                 return Identity(1)
 
         obj = super().__new__(cls, m, n)
@@ -271,9 +271,9 @@ class OneMatrix(MatrixExpr):
 
     def _eval_determinant(self):
         condition = self._is_1x1()
-        if condition == True:
+        if condition:
             return S.One
-        elif condition == False:
+        elif not condition:
             return S.Zero
         else:
             from sympy.matrices.expressions.determinant import Determinant
@@ -281,9 +281,9 @@ class OneMatrix(MatrixExpr):
 
     def _eval_inverse(self):
         condition = self._is_1x1()
-        if condition == True:
+        if condition:
             return Identity(1)
-        elif condition == False:
+        elif not condition:
             raise NonInvertibleMatrixError("Matrix det == 0; not invertible.")
         else:
             from .inverse import Inverse

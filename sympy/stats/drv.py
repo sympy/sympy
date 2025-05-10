@@ -231,9 +231,9 @@ class DiscretePSpace(PSpace):
             condition = Eq(condition.args[0], condition.args[1])
         try:
             _domain = self.where(condition).set
-            if condition == False or _domain is S.EmptySet:
+            if not condition or _domain is S.EmptySet:
                 return S.Zero
-            if condition == True or _domain == self.domain.set:
+            if condition or _domain == self.domain.set:
                 return S.One
             prob = self.eval_prob(_domain)
         except NotImplementedError:

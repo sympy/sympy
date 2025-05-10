@@ -1511,7 +1511,7 @@ def _rewrite_single(f, x, recursive=True):
                 subs = subs_
                 if not isinstance(hint, bool):
                     hint = hint.subs(subs)
-                if hint == False:
+                if not hint:
                     continue
                 if not isinstance(cond, (bool, BooleanAtom)):
                     cond = unpolarify(cond.subs(subs))
@@ -1852,7 +1852,7 @@ def meijerint_definite(f, x, a, b):
             res1, cond1 = res1
             res2, cond2 = res2
             cond = _condsimp(And(cond1, cond2))
-            if cond == False:
+            if not cond:
                 _debug('  But combined condition is always false.')
                 continue
             res = res1 + res2
@@ -2036,10 +2036,10 @@ def _meijerint_definite_4(f, x, only_double=False):
                 C, f = _rewrite_saxena_1(fac*C, po*x**s, f, x)
                 res += C*_int0oo_1(f, x)
                 cond = And(cond, _check_antecedents_1(f, x))
-                if cond == False:
+                if not cond:
                     break
             cond = _my_unpolarify(cond)
-            if cond == False:
+            if not cond:
                 _debug('But cond is always False.')
             else:
                 _debug('Result before branch substitutions is:', res)
@@ -2062,14 +2062,14 @@ def _meijerint_definite_4(f, x, only_double=False):
                     C, f1_, f2_ = r
                     _debug('Saxena subst for yielded:', C, f1_, f2_)
                     cond = And(cond, _check_antecedents(f1_, f2_, x))
-                    if cond == False:
+                    if not cond:
                         break
                     res += C*_int0oo(f1_, f2_, x)
                 else:
                     continue
                 break
             cond = _my_unpolarify(cond)
-            if cond == False:
+            if not cond:
                 _debugf('But cond is always False (full_pb=%s).', full_pb)
             else:
                 _debugf('Result before branch substitutions is: %s', (res, ))
@@ -2155,7 +2155,7 @@ def meijerint_inversion(f, x, t):
     if x not in f.free_symbols:
         _debug('Expression consists of constant and exp shift:', f, shift)
         cond = Eq(im(shift), 0)
-        if cond == False:
+        if not cond:
             _debug('but shift is nonreal, cannot be a Laplace transform')
             return None
         res = f*DiracDelta(t + shift)
@@ -2172,10 +2172,10 @@ def meijerint_inversion(f, x, t):
             C, f = _rewrite_inversion(fac*C, po*x**s, f, x)
             res += C*_int_inversion(f, x, t)
             cond = And(cond, _check_antecedents_inversion(f, x))
-            if cond == False:
+            if not cond:
                 break
         cond = _my_unpolarify(cond)
-        if cond == False:
+        if not cond:
             _debug('But cond is always False.')
         else:
             _debug('Result before branch substitution:', res)

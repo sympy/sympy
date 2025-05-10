@@ -342,9 +342,9 @@ class ExprWithIntLimits(ExprWithLimits):
         for lim in self.limits:
             dif = lim[1] - lim[2]
             eq = Eq(dif, 1)
-            if eq == True:
+            if eq:
                 return True
-            elif eq == False:
+            elif not eq:
                 continue
             else:
                 ret_None = True

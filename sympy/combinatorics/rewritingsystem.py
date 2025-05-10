@@ -248,7 +248,7 @@ class RewritingSystem:
                             return False
                         lhs.extend(new_keys)
                         added += len(new_keys)
-                    elif new_keys == False:
+                    elif not new_keys:
                         # too many rules were added so the process
                         # couldn't complete
                         return self._is_confluent

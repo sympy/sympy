@@ -471,7 +471,7 @@ def _(mat, assumptions):
             cond = fuzzy_bool(Eq(mat[i, j], conjugate(mat[j, i])))
             if cond is None:
                 ret_val = None
-            if cond == False:
+            if not cond:
                 return False
     if ret_val is None:
         raise MDNotImplementedError
@@ -742,7 +742,7 @@ def _(mat, assumptions):
             cond = fuzzy_bool(Eq(mat[i, j], -conjugate(mat[j, i])))
             if cond is None:
                 ret_val = None
-            if cond == False:
+            if not cond:
                 return False
     if ret_val is None:
         raise MDNotImplementedError

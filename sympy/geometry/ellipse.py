@@ -803,9 +803,9 @@ class Ellipse(GeometrySet):
             return ab[0]
         a, b = ab
         o = b - a < 0
-        if o == True:
+        if o:
             return a
-        elif o == False:
+        elif not o:
             return b
         return self.hradius
 
@@ -850,9 +850,9 @@ class Ellipse(GeometrySet):
             return ab[0]
         a, b = ab
         o = a - b < 0
-        if o == True:
+        if o:
             return a
-        elif o == False:
+        elif not o:
             return b
         return self.vradius
 

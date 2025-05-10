@@ -260,10 +260,10 @@ class LRASolver():
             if isinstance(prop, Predicate):
                 prop = prop(empty_var)
             if not isinstance(prop, AppliedPredicate):
-                if prop == True:
+                if prop:
                     conflicts.append([enc])
                     continue
-                if prop == False:
+                if not prop:
                     conflicts.append([-enc])
                     continue
 
@@ -278,10 +278,10 @@ class LRASolver():
                 raise UnhandledInput(f"{prop} contains infinity")
 
             prop = _eval_binrel(prop)  # simplify variable-less quantities to True / False if possible
-            if prop == True:
+            if prop:
                 conflicts.append([enc])
                 continue
-            elif prop == False:
+            elif not prop:
                 conflicts.append([-enc])
                 continue
             elif prop is None:
@@ -301,10 +301,10 @@ class LRASolver():
                 assert prop.function == Q.eq
                 bool = Eq(expr, 0)
 
-            if bool == True:
+            if bool:
                 conflicts.append([enc])
                 continue
-            elif bool == False:
+            elif not bool:
                 conflicts.append([-enc])
                 continue
 
@@ -777,7 +777,7 @@ def _eval_binrel(binrel):
     elif binrel.function == Q.ne:
         res = Ne(binrel.lhs, binrel.rhs)
 
-    if res == True or res == False:
+    if res or not res:
         return res
     else:
         return None
