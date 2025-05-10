@@ -10,6 +10,7 @@ Todo:
 import math
 
 from sympy.core.add import Add
+from sympy.core.evalf import bitcount
 from sympy.core.mul import Mul
 from sympy.core.numbers import Integer
 from sympy.core.power import Pow
@@ -29,7 +30,6 @@ from sympy.physics.quantum.represent import represent
 from sympy.physics.quantum.matrixutils import (
     numpy_ndarray, scipy_sparse_matrix
 )
-from mpmath.libmp.libintmath import bitcount
 
 __all__ = [
     'Qubit',
@@ -307,7 +307,7 @@ class IntQubitState(QubitState):
         # that integer with the minimal number of bits.
         if len(args) == 1 and args[0] > 1:
             #rvalues is the minimum number of bits needed to express the number
-            rvalues = reversed(range(bitcount(abs(args[0]))))
+            rvalues = reversed(range(bitcount(args[0])))
             qubit_values = [(args[0] >> i) & 1 for i in rvalues]
             return QubitState._eval_args(qubit_values)
         # For two numbers, the second number is the number of bits
@@ -319,7 +319,7 @@ class IntQubitState(QubitState):
 
     @classmethod
     def _eval_args_with_nqubits(cls, number, nqubits):
-        need = bitcount(abs(number))
+        need = bitcount(number)
         if nqubits < need:
             raise ValueError(
                 'cannot represent %s with %s bits' % (number, nqubits))
