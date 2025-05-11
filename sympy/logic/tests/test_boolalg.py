@@ -1370,6 +1370,14 @@ def test_issue_26985():
 def test_and_or_evaluate_false():
     x, y = symbols('x y')
 
+    expr = And(evaluate=False)
+    assert isinstance(expr, And)
+    assert expr.args == ()
+
+    expr = And(x, evaluate=False)
+    assert isinstance(expr, And)
+    assert expr.args == (x,)
+
     expr = And(x, x, evaluate=False)
     assert isinstance(expr, And)
     assert expr.args == (x, x)
@@ -1381,6 +1389,14 @@ def test_and_or_evaluate_false():
     expr = And(y, x, evaluate=False)
     assert isinstance(expr, And)
     assert expr.args == (y, x)
+
+    expr = Or(evaluate=False)
+    assert isinstance(expr, Or)
+    assert expr.args == ()
+
+    expr = Or(x, evaluate=False)
+    assert isinstance(expr, Or)
+    assert expr.args == (x,)
 
     expr = Or(x, x, evaluate=False)
     assert isinstance(expr, Or)

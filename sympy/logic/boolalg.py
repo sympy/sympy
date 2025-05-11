@@ -16,7 +16,7 @@ from sympy.core.decorators import sympify_method_args, sympify_return
 from sympy.core.function import Application, Derivative
 from sympy.core.kind import BooleanKind, NumberKind
 from sympy.core.numbers import Number
-from sympy.core.operations import LatticeOp
+from sympy.core.operations import AssocOp, LatticeOp
 from sympy.core.singleton import Singleton, S
 from sympy.core.sorting import ordered
 from sympy.core.sympify import _sympy_converter, _sympify, sympify
@@ -611,6 +611,10 @@ class And(LatticeOp, BooleanFunction):
             ...
 
     @classmethod
+    def _from_args(cls, args, is_commutative=None):
+        return super(AssocOp, cls).__new__(cls, *args)
+
+    @classmethod
     def _new_args_filter(cls, args):
         args = BooleanFunction.binary_check_and_simplify(*args)
         args = LatticeOp._new_args_filter(args, And)
@@ -776,6 +780,10 @@ class Or(LatticeOp, BooleanFunction):
         @property
         def args(self) -> tuple[Boolean, ...]:
             ...
+
+    @classmethod
+    def _from_args(cls, args, is_commutative=None):
+        return super(AssocOp, cls).__new__(cls, *args)
 
     @classmethod
     def _new_args_filter(cls, args):
