@@ -16,7 +16,6 @@ from mpmath.libmp import (from_int, from_man_exp, from_rational, fhalf,
                           mpf_atan, mpf_atan2, mpf_cmp, mpf_cos, mpf_e, mpf_exp, mpf_log, mpf_lt,
                           mpf_mul, mpf_neg, mpf_pi, mpf_pow, mpf_pow_int, mpf_shift, mpf_sin,
                           mpf_sqrt, normalize, round_nearest, to_int, to_str, mpf_tan)
-from mpmath.libmp import bitcount as mpmath_bitcount
 from mpmath.libmp.backend import MPZ
 from mpmath.libmp.libmpc import _infs_nan
 from mpmath.libmp.libmpf import dps_to_prec, prec_to_dps
@@ -50,7 +49,7 @@ rnd = round_nearest
 def bitcount(n):
     """Return smallest integer, b, such that |n|/2**b < 1.
     """
-    return mpmath_bitcount(abs(int(n)))
+    return MPZ(abs(int(n))).bit_length()
 
 # Used in a few places as placeholder values to denote exponents and
 # precision levels, e.g. of exact numbers. Must be careful to avoid
@@ -84,10 +83,9 @@ MPF_TUP = tuple[int, int, int, int]  # mpf value tuple
 Explanation
 ===========
 
->>> from sympy.core.evalf import bitcount
 >>> sign, man, exp, bc = 0, 5, 1, 3
 >>> n = [1, -1][sign]*man*2**exp
->>> n, bitcount(man)
+>>> n, man.bit_length()
 (10, 3)
 
 A temporary result is a tuple (re, im, re_acc, im_acc) where
@@ -134,9 +132,9 @@ def fastlog(x: MPF_TUP | None) -> int | Any:
     ========
 
     >>> from sympy import log
-    >>> from sympy.core.evalf import fastlog, bitcount
+    >>> from sympy.core.evalf import fastlog
     >>> s, m, e = 0, 5, 1
-    >>> bc = bitcount(m)
+    >>> bc = m.bit_length()
     >>> n = [1, -1][s]*m*2**e
     >>> n, (log(n)/log(2)).evalf(2), fastlog((s, m, e, bc))
     (10, 3.3, 4)
@@ -555,7 +553,7 @@ def add_terms(terms: list, prec: int, target_prec: int) -> \
             # first: quick test
             if ((delta > working_prec) and
                 ((not sum_man) or
-                 delta - bitcount(abs(sum_man)) > working_prec)):
+                 delta - sum_man.bit_length() > working_prec)):
                 sum_man = man
                 sum_exp = exp
             else:
@@ -577,7 +575,7 @@ def add_terms(terms: list, prec: int, target_prec: int) -> \
         sum_man = -sum_man
     else:
         sum_sign = 0
-    sum_bc = bitcount(sum_man)
+    sum_bc = sum_man.bit_length()
     sum_accuracy = sum_exp + sum_bc - absolute_error
     r = normalize(sum_sign, sum_man, sum_exp, sum_bc, target_prec,
         rnd), sum_accuracy
@@ -717,7 +715,7 @@ def evalf_mul(v: 'Mul', prec: int, options: OPT_DICT) -> TMP_RES:
         acc = min(acc, w_acc)
     sign = (direction & 2) >> 1
     if not complex_factors:
-        v = normalize(sign, man, exp, bitcount(man), prec, rnd)
+        v = normalize(sign, man, exp, man.bit_length(), prec, rnd)
         # multiply by i
         if direction & 1:
             return None, v, None, acc
@@ -727,7 +725,7 @@ def evalf_mul(v: 'Mul', prec: int, options: OPT_DICT) -> TMP_RES:
         # initialize with the first term
         if (man, exp, bc) != start:
             # there was a real part; give it an imaginary part
-            re, im = (sign, man, exp, bitcount(man)), (0, MPZ(0), 0, 0)
+            re, im = (sign, man, exp, man.bit_length()), (0, MPZ(0), 0, 0)
             i0 = 0
         else:
             # there is no real part to start (other than the starting 1)
