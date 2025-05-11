@@ -525,8 +525,16 @@ class LatticeOp(AssocOp):
 
     is_commutative = True
 
-    def __new__(cls, *args, **options):
+    def __new__(cls, *args, evaluate=None, **options):
         args = (_sympify_(arg) for arg in args)
+
+        if evaluate is None:
+            evaluate = global_parameters.evaluate
+
+        if not evaluate:
+            obj = super(LatticeOp, cls).__new__(cls, *args, evaluate=False, **options)
+            obj._argset = frozenset(args)
+            return obj
 
         try:
             # /!\ args is a generator and _new_args_filter
