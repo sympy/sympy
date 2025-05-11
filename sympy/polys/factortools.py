@@ -1090,9 +1090,9 @@ def dmp_zz_wang(f, u, K, mod=None, seed=None):
         else:
             mod += eez_mod_step
 
-    s_norm, s_arg, i = None, 0, 0
+    s_norm, s_arg = None, 0
 
-    for s, _, _, _, _ in configs:
+    for i, (s, _, _, _, _) in enumerate(configs):
         _s_norm = dup_max_norm(s, K)
 
         if s_norm is not None:
@@ -1101,8 +1101,6 @@ def dmp_zz_wang(f, u, K, mod=None, seed=None):
                 s_arg = i
         else:
             s_norm = _s_norm
-
-        i += 1
 
     _, cs, E, H, A = configs[s_arg]
     orig_f = f

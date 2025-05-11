@@ -112,10 +112,8 @@ def test_iterator():
     assert array[1] == MutableDenseNDimArray([2, 3])
 
     array = array.reshape(4)
-    j = 0
-    for i in array:
+    for j, i in enumerate(array):
         assert i == j
-        j += 1
 
 
 def test_getitem():
