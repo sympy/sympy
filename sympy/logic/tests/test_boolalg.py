@@ -1365,3 +1365,31 @@ def test_issue_26985():
 
     assert result_anf == d
     assert result == d
+
+
+def test_and_or_evaluate_false():
+    x, y = symbols('x y')
+
+    expr = And(x, x, evaluate=False)
+    assert isinstance(expr, And)
+    assert expr.args == (x, x)
+
+    expr = And(x, y, evaluate=False)
+    assert isinstance(expr, And)
+    assert expr.args == (x, y)
+
+    expr = And(y, x, evaluate=False)
+    assert isinstance(expr, And)
+    assert expr.args == (y, x)
+
+    expr = Or(x, x, evaluate=False)
+    assert isinstance(expr, Or)
+    assert expr.args == (x, x)
+
+    expr = Or(x, y, evaluate=False)
+    assert isinstance(expr, Or)
+    assert expr.args == (x, y)
+
+    expr = Or(y, x, evaluate=False)
+    assert isinstance(expr, Or)
+    assert expr.args == (y, x)
