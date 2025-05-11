@@ -1025,7 +1025,7 @@ class Xor(BooleanFunction):
             return super().__new__(cls, *args, evaluate=evaluate, **kwargs)
 
         argset = set()
-        for arg in args:
+        for arg in map(_sympify, args):
             if isinstance(arg, Number) or arg in (True, False):
                 if arg:
                     arg = true
