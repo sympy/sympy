@@ -23,9 +23,9 @@ from sympy.series import limit
 from sympy.utilities.misc import filldedent
 from sympy.solvers.ode.systems import linodesolve
 from sympy.solvers.solveset import linsolve, linear_eq_to_matrix
-from sympy.logic.boolalg import false, true
+from sympy.logic.boolalg import false, true, Or
 from sympy.solvers.inequalities import reduce_inequalities
-from sympy.physics.control.routh_table import neg_roots_conds
+from sympy.physics.control.routh_table import negative_real_root_conditions
 
 from mpmath.libmp.libmpf import prec_to_dps
 
@@ -1121,15 +1121,17 @@ class TransferFunction(SISOLinearTimeInvariant):
         """
         tf = self.to_standard_form(cancel_poles_zeros)
 
-        conditions = tf.get_asymptotic_stability_conditions(cancel_poles_zeros = False)
+        conditions = tf.get_asymptotic_stability_conditions(cancel_poles_zeros)
 
         try:
-            output = reduce_inequalities(conditions)
+            output1 = reduce_inequalities(conditions[0])
+            output2 = reduce_inequalities(conditions[1])
         except NotImplementedError:
             # If there are more than one symbols,
             # reduce_inequalities could fail
             return None
 
+        output = Or(output1, output2)
         if output in (true, false):
             return bool(output)
 
@@ -1199,21 +1201,21 @@ class TransferFunction(SISOLinearTimeInvariant):
         >>> p1 = b1*s**3 + b2*s**2 + b3*s + b4
         >>> tf1 = TransferFunction(1, p1, s)
         >>> tf1.get_asymptotic_stability_conditions()
-        [b_1 > 0, b_2 > 0, (-b_1*b_4 + b_2*b_3)/b_2 > 0, b_4 > 0]
+        [[b_1 > 0, b_2 > 0, (-b_1*b_4 + b_2*b_3)/b_2 > 0, b_4 > 0], [b_1 < 0, b_2 < 0, (-b_1*b_4 + b_2*b_3)/b_2 < 0, b_4 < 0]]
 
         >>> p2 = s**4 + 3*s**3 + 6*s**2 + 12*s + 8
         >>> solve(p2)
         [-2, -1, -2*I, 2*I]
         >>> tf2 = TransferFunction(1, p2, s)
         >>> tf2.get_asymptotic_stability_conditions()
-        [False]
+        [[False], [False]]
 
         >>> p3 = s**4 + 17*s**3 + 137/2*s**2 + 213/2*s + 54
         >>> solve(p3)
         [-12.0, -1.0, -2.0 - 0.707106781186548*I, -2.0 + 0.707106781186548*I]
         >>> tf3 = TransferFunction(1, p3, s)
         >>> tf3.get_asymptotic_stability_conditions()
-        [True]
+        [[True], [False]]
 
         >>> k = symbols('k')
         >>> tf4 = TransferFunction(-20*s + 20, s**3 + 2*s**2 + 100*s, s)
@@ -1221,14 +1223,14 @@ class TransferFunction(SISOLinearTimeInvariant):
         >>> feedback = Feedback(tf4, tf5).doit()
         >>> ineq = feedback.get_asymptotic_stability_conditions(cancel_poles_zeros = True)
         >>> ineq
-        [k > 0, 2*k > 0, 100*k - 30 > 0]
-        >>> reduce_inequalities(ineq)
+        [[k > 0, 2*k > 0, 100*k - 30 > 0], [False]]
+        >>> reduce_inequalities(ineq[0])
         (3/10 < k) & (k < oo)
 
         """
         standard_form = self.to_standard_form(cancel_poles_zeros)
 
-        return neg_roots_conds(standard_form.den, self.var)
+        return negative_real_root_conditions(standard_form.den, self.var)
 
     def __add__(self, other):
         if hasattr(other, "is_StateSpace_object") and other.is_StateSpace_object:
@@ -5147,12 +5149,14 @@ class StateSpace(LinearTimeInvariant):
         >>> ss = StateSpace(A, B, C, D)
         >>> ineq = ss.get_asymptotic_stability_conditions()
         >>> ineq
-        [3*k - 1 > 0, 1 - k > 0]
-        >>> reduce_inequalities(ineq)
+        [[3*k - 1 > 0, 1 - k > 0], [False]]
+        >>> reduce_inequalities(ineq[0])
         (1/3 < k) & (k < 1)
+        >>> reduce_inequalities(ineq[1])
+        False
 
         """
         s = Symbol('s')
         determinant = self.A.charpoly(s)
 
-        return neg_roots_conds(determinant, s)
+        return negative_real_root_conditions(determinant, s)
