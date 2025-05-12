@@ -301,7 +301,7 @@ def pade_approximant_gcdex(
 @public
 def pade_approximant(
     f: Expr, x: Expr, m: int, n: int | None = None
-    ) -> Expr:
+    ) -> Expr | None:
     """
     `[m/n]` pade approximant of `f` around `x=0`.
 
@@ -383,5 +383,8 @@ def pade_approximant(
     # TODO: if other methods for computing pade approximants are implemented,
     # this function should be modified to automatically select the best method.
     numerator, denominator = pade_approximant_gcdex(f_taylor_poly, m, n)
+
+    if numerator == None or denominator == None:
+        return None
 
     return numerator/denominator
