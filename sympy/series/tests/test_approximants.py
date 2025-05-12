@@ -71,7 +71,7 @@ def test_pade_approximant_gcdex():
 
     assert numerator/numerator.LC() == x**2 + 6*x + 12
     assert numerator/denominator == (x**2/4 + 3*x/2 + 3)/(x**2/4 - 3*x/2 + 3)
-    # print(denominator/denominator)
+
     numerator, denominator = pade_approximant_gcdex(poly_2, 3, 4)
 
     assert numerator/numerator.LC() == x**3 + 2
@@ -85,7 +85,7 @@ def test_pade_approximant_gcdex():
 
     is_error = False
     try:
-        numerator, denominator = pade_approximant_gcdex(poly_3, 0, 4)
+        pade_approximant_gcdex(poly_3, 0, 4)
     except ValueError:
         is_error = True
     assert is_error
@@ -101,7 +101,7 @@ def test_pade_approximant():
 
     is_error = False
     try:
-        pade = pade_approximant(sin(x), x, 0, 4)
+        pade_approximant(sin(x), x, 0, 4)
     except ValueError:
         is_error = True
     assert is_error
