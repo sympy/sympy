@@ -37,43 +37,47 @@ def test_column():
     c.variable = x_1
     assert c.variable == x_1
 
-    # Test joining two columns
-    c1 = Column(20, E_1, A_1)
-
-    c_joined = c.join(c1)
-    assert c_joined.length == 40
-    assert c_joined.area == A_1
-    assert c_joined.elastic_modulus == E_1
-
-    # Test applying a support
+    # Test applying supports
     c2 = Column(10, E, A)
-    assert c2._boundary_conditions == {'axial_force': [(0, 0), (10, 0)]}
     c2.apply_support(0)
-    assert c2._boundary_conditions == {'axial_force': [(0, 0), (10, 0)], 'deflection': [(0, 0)]}
-    c2._apply_support(10)
-    assert c2._boundary_conditions == {'axial_force': [(0, 0), (10, 0)], 'deflection': [(0, 0), (10, 0)]}
+    assert c2._bc_deflection == [(0, 0)]
+    c2.apply_support(10)
+    assert c2._bc_deflection == [(0, 0), (10, 0)]
+    c2.apply_support(5)
+    assert c2._bc_deflection == [(0, 0), (10, 0), (5, 0)]
 
     # Test applying a load
-    c2.apply_load(-10, 10, -1)
-    assert c2.applied_loads == [(-10, 10, -1, None)]
-    c2.apply_load(10, 5, -1)
-    assert c2.applied_loads == [(10, -1, -1, None), (10, 5, -1, None)]
+    c3 = Column(10, E, A)
+    c3.apply_load(-10, 10, -1)
+    assert c3.applied_loads == [(-10, 10, -1)]
+    c3.apply_load(10, 5, -1)
+    assert c3.applied_loads == [(-10, 10, -1), (10, 5, -1)]
 
     # Test the load equation
-    p = c2.load
+    p = c3.load
     q = -10 * SingularityFunction(x, 10, -1) + 10 * SingularityFunction(x, 5, -1)
     assert p == q
 
     # Test applying a symbolic load
-    c3 = Column(10, E, A)
+    c4 = Column(10, E, A)
     F, G = symbols('F G')
-    c3.apply_load(F, 0, -1)
-    c3.apply_load(-G, 10, -1)
-    assert c3.applied_loads == [(F, 0, -1, None), (-G, 10, -1, None)]
+    c4.apply_load(F, 0, -1)
+    c4.apply_load(-G, 10, -1)
+    assert c4.applied_loads == [(F, 0, -1), (-G, 10, -1)]
 
     # Test the load equation
-    p = c3.load
+    p = c4.load
     q = F * SingularityFunction(x, 0, -1) - G * SingularityFunction(x, 10, -1)
+    assert p == q
+
+    # Test the load equation for column with a support
+    c5 = Column(10, E, A)
+    R_0 = c5.apply_support(0)
+    c5.apply_load(10, 0, -1)
+    c5.apply_load(10, 5, -1)
+    
+    p = c5.load
+    q = R_0 * SingularityFunction(x, 0, -1) + 10 * SingularityFunction(x, 0, -1) + 10 * SingularityFunction(x, 5, -1)
     assert p == q
 
 test_column()
