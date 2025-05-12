@@ -145,7 +145,7 @@ def pade_approximants(
     >>> from sympy.series.approximants import pade_approximants
 
     >>> exp_taylor_poly = Poly(1 + x + x**2/2 + x**3/6 + x**4/24, x, domain='QQ')
-    >>> pade_exp = pade_approximants(exp_taylor_poly, x, 2)
+    >>> pade_exp = pade_approximants(exp_taylor_poly, 2)
     >>> for num, denom in pade_exp: print(num, denom)
     Poly(1/2*x**2 + x + 1, x, domain='QQ') Poly(1, x, domain='QQ')
     Poly(2*x + 4, x, domain='QQ') Poly(-2*x + 4, x, domain='QQ')
@@ -153,8 +153,8 @@ def pade_approximants(
 
     To get pade approximants, divide the numerators by the denominators
 
-    >>> sin_taylor_poly = Poly(x - x**3/6 + x**5/120, x, domain='QQ')
-    >>> pade_sin = pade_approximants(sin_taylor_poly, x, 5)
+    >>> sin_taylor_poly = Poly(x - x**3/6 + x**5/120, domain='QQ')
+    >>> pade_sin = pade_approximants(sin_taylor_poly, 5)
     >>> for num, denom in pade_sin: print(num/denom)
     x**5/120 - x**3/6 + x
     -(20*x**4 - 120*x**2)/(120*x)
@@ -195,7 +195,7 @@ def pade_approximants(
 @public
 def pade_approximant_gcdex(
     f: Poly, m: int, n: int | None = None
-    ) -> tuple[Poly, Poly] | None:
+    ) -> tuple[Poly, Poly] | tuple[None, None]:
     """
     `[m/n]` pade approximant of `f` around `x=0`. Computed using the extended euclidean algorithm.
 
@@ -232,7 +232,7 @@ def pade_approximant_gcdex(
     >>> x = sp.symbols('x')
 
     >>> exp_taylor_poly = sp.Poly(x**4/24 + x**3/6 + x**2/2 + x + 1, x, domain='QQ')
-    >>> num_exp, denom_exp = pade_approximant_gcdex(exp_taylor_poly, x, 2)
+    >>> num_exp, denom_exp = pade_approximant_gcdex(exp_taylor_poly, 2)
     >>> print(num_exp, denom_exp)
     Poly(1/4*x**2 + 3/2*x + 3, x, domain='QQ') Poly(1/4*x**2 - 3/2*x + 3, x, domain='QQ')
 
@@ -240,21 +240,21 @@ def pade_approximant_gcdex(
     necessarily have order `m` and `n` respectively.
 
     >>> sin_taylor_poly = sp.Poly(x**5/120 - x**3/6 + x, x, domain='QQ')
-    >>> num_sin, denom_sin = pade_approximant_gcdex(sin_taylor_poly, x, 1, 3)
+    >>> num_sin, denom_sin = pade_approximant_gcdex(sin_taylor_poly, 1, 3)
     >>> print(num_sin, denom_sin)
     Poly(36*x, x, domain='QQ') Poly(6*x**2 + 36, x, domain='QQ')
 
     The `[m/0]` pade approximant is the same a truncating to order `m`
 
     >>> poly = sp.Poly(4*x**4 + 3*x**3 + 2*x**2 + x + 1, x, domain='QQ')
-    >>> num_cos, denom_cos = pade_approximant_gcdex(poly, x, 3, 0)
+    >>> num_cos, denom_cos = pade_approximant_gcdex(poly, 3, 0)
     >>> print(num_cos, denom_cos)
-    Poly(3*x**3 + 2*x**2 + x + 1, x, domain='ZZ') Poly(1, x, domain='ZZ')
+    Poly(3*x**3 + 2*x**2 + x + 1, x, domain='QQ') Poly(1, x, domain='QQ')
 
     The pade approximant does not always exist, for example, the `[1/1]` approximant for `cos(x)`
 
     >>> cos_taylor_poly = sp.Poly(1 - x**2/2, x, domain='QQ')
-    >>> num_cos11, denom_cos11 = pade_approximant_gcdex(cos_taylor_poly, x, 1)
+    >>> num_cos11, denom_cos11 = pade_approximant_gcdex(cos_taylor_poly, 1)
     >>> print(num_cos11, denom_cos11)
     Poly(2*x, x, domain='QQ') Poly(2*x, x, domain='QQ')
 
@@ -301,7 +301,7 @@ def pade_approximant_gcdex(
 @public
 def pade_approximant(
     f: Expr, x: Expr, m: int, n: int | None = None
-    ) -> tuple[Poly, Poly] | None:
+    ) -> Expr:
     """
     `[m/n]` pade approximant of `f` around `x=0`.
 
