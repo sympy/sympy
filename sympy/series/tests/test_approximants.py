@@ -3,7 +3,7 @@ from sympy.series.approximants import pade_approximants, pade_approximant, pade_
 from sympy.core.symbol import symbols
 from sympy.functions.combinatorial.factorials import binomial
 from sympy.functions.combinatorial.numbers import (fibonacci, lucas)
-from sympy import exp, sin, log, Poly, simplify
+from sympy import exp, sin, log, Poly
 
 
 def test_approximants():
