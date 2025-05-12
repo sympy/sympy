@@ -112,7 +112,7 @@ def approximants(l, X=Symbol('x'), simplify=False):
 
 @public
 def pade_approximants(
-    f: Poly, x: Expr, order: int
+    f: Poly, order: int
 ) -> Generator[tuple[Poly, Poly], None, None]:
     """
     Returns all pade approximants of the expression `f` of the desired order.
@@ -126,9 +126,7 @@ def pade_approximants(
     ==========
 
     f : Poly
-        The polynomial to approximate
-    x : Expr
-        The variable of p
+        The polynomial to approximate, must be univariate
     order : int
         The desired order of the pade approximants
 
@@ -175,10 +173,14 @@ def pade_approximants(
     if order < 0:
         raise ValueError("'order' must be a non-negative integer")
 
+    if not f.is_univariate:
+        raise ValueError("f must be a univariate polynomial")
+
     # truncate f so f.degree() <= order
     if f.degree() > order:
-        coefficients = f.all_coeffs()
-        f = Poly.from_list(coefficients[-(order + 1):], gens=x)
+        f = f.slice(0, order+1)
+
+    x = f.gens[0]
 
     remainder_monomial = Poly(x ** (order + 1), x)
 
@@ -192,7 +194,7 @@ def pade_approximants(
 
 @public
 def pade_approximant_gcdex(
-    f: Poly, x: Expr, m: int, n: int | None = None
+    f: Poly, m: int, n: int | None = None
     ) -> tuple[Poly, Poly] | None:
     """
     `[m/n]` pade approximant of `f` around `x=0`. Computed using the extended euclidean algorithm.
@@ -204,15 +206,13 @@ def pade_approximant_gcdex(
     of `f` is a rational function `p(x)/q(x)`, where `p(x)` and `q(x)` are
     polynomials of degree at most `m` and `n` respectively. The pade
     approximation, when it exists, is such that the taylor series of `p(x)/q(x)`
-    around `x=0`matches `f` up to order `(m + n)` in `x`.
+    around `x=0` matches `f` up to order `(m + n)` in `x`.
 
     Parameters
     ==========
 
     f : Poly
-        The polynomial to approximate
-    x : Expr
-        The variable of the function
+        The polynomial to approximate, must be univariate
     m : int
         The degree of the numerator polynomial
     n : int | None
@@ -222,7 +222,7 @@ def pade_approximant_gcdex(
     =======
 
     pade approximant : tuple[Poly, Poly]
-        returns p(x), q(x), where p(x)/q(x) is the pade approximant
+        returns `p(x), q(x)`, where `p(x)/q(x)` is the pade approximant
 
     Examples
     ========
@@ -244,7 +244,7 @@ def pade_approximant_gcdex(
     >>> print(num_sin, denom_sin)
     Poly(36*x, x, domain='QQ') Poly(6*x**2 + 36, x, domain='QQ')
 
-    The `[m/0]` pade approximant is the same a truncating to `m`th order
+    The `[m/0]` pade approximant is the same a truncating to order `m`
 
     >>> poly = sp.Poly(4*x**4 + 3*x**3 + 2*x**2 + x + 1, x, domain='QQ')
     >>> num_cos, denom_cos = pade_approximant_gcdex(poly, x, 3, 0)
@@ -274,12 +274,15 @@ def pade_approximant_gcdex(
     if m < 0 or n < 0:
         raise ValueError("m and n must be non-negative integers")
 
-    min_degree = min(f.as_dict().keys())[0]
+    if not f.is_univariate:
+        raise ValueError("f must be a univariate polynomial")
+
+    min_degree = f.EM()[0]
     if min_degree > m:
         raise ValueError(f"polynomial has zero of order {min_degree}, " \
         f"which is greater than {m}, the requested order of the numerator.")
 
-    approximants = pade_approximants(f, x, m + n)
+    approximants = pade_approximants(f, m + n)
 
     numerator, denominator = next(approximants)
     for next_numerator, next_denominator in approximants:
@@ -375,15 +378,10 @@ def pade_approximant(
     if m < 0 or n < 0:
         raise ValueError("m and n must be non-negative integers")
 
-    if isinstance(f, Poly):
-        f_taylor_poly = f
-    else:
-        f_taylor_poly = f.series(x, n=m + n + 1).removeO().as_poly(x, field=True)
+    f_taylor_poly = f.series(x, n=m + n + 1).removeO().as_poly(x, field=True)
 
-    """
-    TODO: if other methods for computing pade approximants are implemented,
-    this function should be modified to automatically select the best method.
-    """
-    numerator, denominator = pade_approximant_gcdex(f_taylor_poly, x, m, n)
+    # TODO: if other methods for computing pade approximants are implemented,
+    # this function should be modified to automatically select the best method.
+    numerator, denominator = pade_approximant_gcdex(f_taylor_poly, m, n)
 
     return numerator/denominator

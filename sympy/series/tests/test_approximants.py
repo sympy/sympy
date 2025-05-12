@@ -40,7 +40,7 @@ def test_pade_approximants():
 
     exp_series = Poly(1 + x + x**2/2 + x**3/6 + x**4/24 + x**5/120, x, domain='QQ')
 
-    exp_pade = pade_approximants(exp_series, x, 5)
+    exp_pade = pade_approximants(exp_series, 5)
 
     for p_true, (num, denom) in zip(all_order_5_exp_pade_approximations, exp_pade):
         assert (p_true - num/denom).simplify() == 0
@@ -54,7 +54,7 @@ def test_pade_approximants():
 
     sin_series = Poly(x - x**3/6 + x**5/120, x, domain='QQ')
 
-    sin_pade = pade_approximants(sin_series, x, 6)
+    sin_pade = pade_approximants(sin_series, 6)
 
     for p_true, (num, denom) in zip(all_order_6_sin_pade_approximations, sin_pade):
         assert (p_true - num/denom).simplify() == 0
@@ -67,25 +67,25 @@ def test_pade_approximant_gcdex():
     poly_4 = Poly(2 + 2*x/5 - 2*x**2/25 + 8*x**3/375
                    - 4*x**4/625 + 32*x**5/15625 - 32*x**6/46875, x, domain='QQ')
 
-    numerator, denominator = pade_approximant_gcdex(poly_1, x, 2)
+    numerator, denominator = pade_approximant_gcdex(poly_1, 2)
 
     assert numerator/numerator.LC() == x**2 + 6*x + 12
     assert numerator/denominator == (x**2/4 + 3*x/2 + 3)/(x**2/4 - 3*x/2 + 3)
     # print(denominator/denominator)
-    numerator, denominator = pade_approximant_gcdex(poly_2, x, 3, 4)
+    numerator, denominator = pade_approximant_gcdex(poly_2, 3, 4)
 
     assert numerator/numerator.LC() == x**3 + 2
     assert numerator/denominator == (x**3/2 + 1)/(1 - x**3/2)
 
-    numerator, denominator = pade_approximant_gcdex(poly_4, x, 3)
+    numerator, denominator = pade_approximant_gcdex(poly_4, 3)
 
     assert numerator/numerator.LC() - (x**3 + 330*x**2/17 + 1500*x/17 + 1875/17) == 0
     assert (numerator/denominator - (2 + 8*x/5 + 44*x**2/125 + 34*x**3/1875)\
                                     /(1 + 3*x/5 + 12*x**2/125 + 2*x**3/625)).simplify() == 0
-    
+
     is_error = False
     try:
-        numerator, denominator = pade_approximant_gcdex(poly_3, x, 0, 4)
+        numerator, denominator = pade_approximant_gcdex(poly_3, 0, 4)
     except ValueError:
         is_error = True
     assert is_error
@@ -98,7 +98,7 @@ def test_pade_approximant():
     assert pade_approximant(exp(sin(x**3)), x, 3, 4) == (x**3/2 + 1)/(1 - x**3/2)
     assert (pade_approximant(log(1 + x), x, 3, 3)
              - x*(11*x**2 + 60*x + 60)/(3*(x**3 + 12*x**2 + 30*x + 20))).simplify() == 0
-    
+
     is_error = False
     try:
         pade = pade_approximant(sin(x), x, 0, 4)
