@@ -1,5 +1,5 @@
 from sympy.series import approximants
-from sympy.series.approximants import pade_approximants, pade_approximant, pade_approximant_gcdex
+from sympy.series.approximants import pade_approximants_gcdex, pade_approximant, pade_approximant_gcdex
 from sympy.core.symbol import symbols
 from sympy.functions.combinatorial.factorials import binomial
 from sympy.functions.combinatorial.numbers import (fibonacci, lucas)
@@ -25,7 +25,7 @@ def test_approximants():
     assert next(y) == -1/(t*(x + 1) - 1)
 
 
-def test_pade_approximants():
+def test_pade_approximants_gcdex():
     x = symbols("x")
 
     # test exp
@@ -40,7 +40,7 @@ def test_pade_approximants():
 
     exp_series = Poly(1 + x + x**2/2 + x**3/6 + x**4/24 + x**5/120, x, domain='QQ')
 
-    exp_pade = pade_approximants(exp_series, 5)
+    exp_pade = pade_approximants_gcdex(exp_series, 5)
 
     for p_true, (num, denom) in zip(all_order_5_exp_pade_approximations, exp_pade):
         assert (p_true - num/denom).simplify() == 0
@@ -54,7 +54,7 @@ def test_pade_approximants():
 
     sin_series = Poly(x - x**3/6 + x**5/120, x, domain='QQ')
 
-    sin_pade = pade_approximants(sin_series, 6)
+    sin_pade = pade_approximants_gcdex(sin_series, 6)
 
     for p_true, (num, denom) in zip(all_order_6_sin_pade_approximations, sin_pade):
         assert (p_true - num/denom).simplify() == 0

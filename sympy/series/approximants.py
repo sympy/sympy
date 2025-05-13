@@ -60,7 +60,7 @@ def approximants(l, X=Symbol('x'), simplify=False):
 
     sympy.concrete.guess.guess_generating_function_rational
     sympy.series.approximants.pade_approximant
-    sympy.series.approximants.pade_approximants
+    sympy.series.approximants.pade_approximants_gcdex
     """
     from sympy.simplify import simplify as simp
     from sympy.simplify.radsimp import denom
@@ -111,7 +111,7 @@ def approximants(l, X=Symbol('x'), simplify=False):
 
 
 @public
-def pade_approximants(
+def pade_approximants_gcdex(
     f: Poly, order: int
 ) -> Generator[tuple[Poly, Poly], None, None]:
     """
@@ -142,10 +142,10 @@ def pade_approximants(
 
     >>> from sympy.abc import x
     >>> from sympy import Poly
-    >>> from sympy.series.approximants import pade_approximants
+    >>> from sympy.series.approximants import pade_approximants_gcdex
 
     >>> exp_taylor_poly = Poly(1 + x + x**2/2 + x**3/6 + x**4/24, x, domain='QQ')
-    >>> pade_exp = pade_approximants(exp_taylor_poly, 2)
+    >>> pade_exp = pade_approximants_gcdex(exp_taylor_poly, 2)
     >>> for num, denom in pade_exp: print(num, denom)
     Poly(1/2*x**2 + x + 1, x, domain='QQ') Poly(1, x, domain='QQ')
     Poly(2*x + 4, x, domain='QQ') Poly(-2*x + 4, x, domain='QQ')
@@ -154,7 +154,7 @@ def pade_approximants(
     To get pade approximants, divide the numerators by the denominators
 
     >>> sin_taylor_poly = Poly(x - x**3/6 + x**5/120, domain='QQ')
-    >>> pade_sin = pade_approximants(sin_taylor_poly, 5)
+    >>> pade_sin = pade_approximants_gcdex(sin_taylor_poly, 5)
     >>> for num, denom in pade_sin: print(num/denom)
     x**5/120 - x**3/6 + x
     -(20*x**4 - 120*x**2)/(120*x)
@@ -266,7 +266,7 @@ def pade_approximant_gcdex(
 
     sympy.series.approximants.approximants
     sympy.series.approximants.pade_approximant
-    sympy.series.approximants.pade_approximants
+    sympy.series.approximants.pade_approximants_gcdex
     """
     if n is None:
         n = m
@@ -282,7 +282,7 @@ def pade_approximant_gcdex(
         raise ValueError(f"polynomial has zero of order {min_degree}, " \
         f"which is greater than {m}, the requested order of the numerator.")
 
-    approximants = pade_approximants(f, m + n)
+    approximants = pade_approximants_gcdex(f, m + n)
 
     numerator, denominator = next(approximants)
     for next_numerator, next_denominator in approximants:
@@ -370,7 +370,7 @@ def pade_approximant(
 
     sympy.series.approximants.approximants
     sympy.series.approximants.pade_approximant_gcdex
-    sympy.series.approximants.pade_approximants
+    sympy.series.approximants.pade_approximants_gcdex
     """
     if n is None:
         n = m
