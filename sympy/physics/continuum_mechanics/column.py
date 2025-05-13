@@ -11,19 +11,19 @@ from sympy.functions import SingularityFunction
 class Column:
     """
     A column is a structural element that withstands axial
-    loading primarily through compression Columns are
+    loading primarily through compression. Columns are
     characterized by their length, material and cress-sectional
     area.
 
     .. note::
         A consistent sign convention must be used when solving
-        these problems. Forces are positive when aimed in the
-        positive x-direction. Normal forces are positive when
+        these problems. Applied forces are positive when aimed in
+        the positive x-direction. Normal forces are positive when
         they lead to extension, and negative when they lead to
         compression.
 
     .. note::
-        They columns are set up horizontally, from left to right.
+        The columns are set up horizontally, from left to right.
         This is due to it then having better compatability with
         the 2-Dimensional module, where all beams are projected
         horizontally.
@@ -40,19 +40,19 @@ class Column:
         ==========
 
         length: Sympifyable
-            A Symbol or value representing the Column's length.
+            A Symbol or value representing thecColumn's length.
         
         elastic_modulus: Sympifyable
-            A Symbol or value representing the Column's modulus of
+            A Symbol or value representing the column's modulus of
             elasticity. It is a measure of the stiffness of the material.
             (Make function of the length??)
         
         area: Sympifyable
-            A symbol or value representing the Column's cross-sectional
+            A symbol or value representing the column's cross-sectional
             area.
 
         variable : Symbol, optional
-            A Symbol object that will be used as the variable along the Column
+            A Symbol object that will be used as the variable along the column
             while representing the load, axial force, or axial deformation.
             By default, it is set to ``Symbol('x')``.
 
@@ -68,7 +68,6 @@ class Column:
         self._base_char = base_char
         self._bc_deflection = []
         self._applied_supports = []
-        self._support_as_load = []
         self._applied_loads = []
         self._load = 0
     
@@ -78,7 +77,7 @@ class Column:
     
     @property
     def length(self):
-        """Returns the length of the Column."""
+        """Returns the length of the column."""
         return self._length
 
     @length.setter
@@ -87,7 +86,7 @@ class Column:
     
     @property
     def elastic_modulus(self):
-        """Returns the elastic modulus of the Column"""
+        """Returns the elastic modulus of the column"""
         return self._elastic_modulus
     
     @elastic_modulus.setter
@@ -96,7 +95,7 @@ class Column:
 
     @property
     def area(self):
-        """Returns the cross-sectional area of the Column."""
+        """Returns the cross-sectional area of the column."""
         return self._area
 
     @area.setter
@@ -217,8 +216,8 @@ class Column:
     @property
     def applied_loads(self):
         """
-        Returns a list of all loads applied to the column.
-        Each load in the list is a tuple of form (value, start, order).
+        Returns a list of all loads applied to the column. Each
+        load in the list is a tuple of form (value, start, order).
 
         Examples
         ========
