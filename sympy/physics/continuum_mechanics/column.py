@@ -132,7 +132,20 @@ class Column:
 
         Examples
         ========
+        There is a column of 10 meters. It has an area A and 
+        elastic modulus E. The column has fixed supports at
+        both ends.
 
+        >>> from sympy.physics.continuum_mechanics.column import Column
+        >>> from sympy.core.symbol import symbols
+        >>> E, A = symbols('E A ')
+        >>> c = Column(10, E, A)
+        >>> c.apply_support(0)
+        >>> c.apply_support(10)
+        >>> c.apply_load(-10, 10, -1)
+        >>> print(c.load)
+        R_0*SingularityFunction(x, 0, -1) + R_10*SingularityFunction(x, 10, -1) 
+            - 10*SingularityFunction(x, 10, -1)
         """
         loc = sympify(loc)
         if loc in self._applied_supports:
@@ -140,7 +153,7 @@ class Column:
         
         self._applied_supports.append(loc)
         reaction_load = Symbol('R_' + str(loc))
-        self.apply_load(reaction_load, loc, -1)
+        self._load += reaction_load * SingularityFunction(self.variable, loc, -1)
         self._bc_deflection.append((loc, 0))
 
         return reaction_load
@@ -177,6 +190,22 @@ class Column:
         
         Examples
         ========
+        There is a column of 10 meters, area A and elastic modulus E. It
+        is supported only at the left side. There is a negative point load
+        of 10 kN applied to the column at the right end. A positive point
+        load of 5 kN is applied to the left end.
+
+        >>> from sympy.physics.continuum_mechanics.column import Column
+        >>> from sympy.core.symbol import symbols
+        >>> E, A = symbols('E A ')
+        >>> c = Column(10, E, A)
+        >>> c.apply_support(0)
+        >>> c.apply_load(-10, 10, -1)
+        >>> print(c.applied_loads)
+        [(-10, 10, -1)]
+        >>> c.apply_load(5, 0, -1)
+        >>> print(c.applied_loads)
+        [(-10, 10, -1), (5, 0, -1)]
         """
         value = sympify(value)
         start = sympify(start)
@@ -188,11 +217,27 @@ class Column:
     @property
     def applied_loads(self):
         """
-        Returns a list of all loads applied to the Column.
-        Each load in the list is a tuple of form (value, start, order)
+        Returns a list of all loads applied to the column.
+        Each load in the list is a tuple of form (value, start, order).
 
         Examples
         ========
+        There is a column of length L, area A and elastic modulus E. It 
+        is supported at both ends of the column and in the middle. There 
+        is a positive force F applied to the column at 1/4 * L and 
+        3/5 * L.
+
+        >>> from sympy.physics.continuum_mechanics.column import Column
+        >>> from sympy.core.symbol import symbols
+        >>> L, E, A, F = symbols('L E A F')
+        >>> c = Column(L, E, A)
+        >>> c.apply_support(0)
+        >>> c.apply_support(L / 2)
+        >>> c.apply_support(L)
+        >>> c.apply_load(F, L / 4, -1)
+        >>> c.apply_load(F, 3*L / 4, -1)
+        >>> print(c.applied_loads)
+        [(F, L/4, -1), (F, 3*L/4, -1)]
         """
         return self._applied_loads
     
@@ -204,6 +249,24 @@ class Column:
 
         Examples
         ========
+        There is a column of length L, area A and elastic modulus E. It 
+        is supported at both ends of the column and in the middle. There 
+        is a positive force F applied to the column at 1/4 * L and 
+        3/5 * L.
+
+        >>> from sympy.physics.continuum_mechanics.column import Column
+        >>> from sympy.core.symbol import symbols
+        >>> L, E, A, F = symbols('L E A F')
+        >>> c = Column(L, E, A)
+        >>> c.apply_support(0)
+        >>> c.apply_support(L / 2)
+        >>> c.apply_support(L)
+        >>> c.apply_load(F, L / 4, -1)
+        >>> c.apply_load(F, 3*L / 4, -1)
+        >>> print(c.load)
+        F*SingularityFunction(x, L/4, -1) + F*SingularityFunction(x, 3*L/4, -1)
+            + R_0*SingularityFunction(x, 0, -1) + R_L*SingularityFunction(x, L, -1)
+            + R_L/2*SingularityFunction(x, L/2, -1)
         """
         return self._load
 
