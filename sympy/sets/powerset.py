@@ -117,3 +117,7 @@ class PowerSet(Set):
     @property
     def kind(self):
         return SetKind(self.arg.kind)
+
+    @property
+    def _measure(self):
+        raise NotImplementedError("Measure for `PowerSet` is undetermined")
