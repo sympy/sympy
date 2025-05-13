@@ -14,6 +14,15 @@ Beam
 
    beam.rst
 
+Column
+====
+
+.. toctree::
+   :titlesonly:
+
+   column.rst
+
+
 Truss
 =====
 
