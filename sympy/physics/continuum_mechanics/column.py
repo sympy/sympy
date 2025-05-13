@@ -11,26 +11,25 @@ from sympy.functions import SingularityFunction
 class Column:
     """
     A column is a structural element that withstands axial
-    loading primarily through compression Columns are 
-    characterized by their length, material and cress-sectional 
+    loading primarily through compression Columns are
+    characterized by their length, material and cress-sectional
     area.
 
     .. note::
         A consistent sign convention must be used when solving
         these problems. Forces are positive when aimed in the
-        positive x-direction. Normal forces are positive when 
-        they lead to extension, and negative when they lead to 
+        positive x-direction. Normal forces are positive when
+        they lead to extension, and negative when they lead to
         compression.
 
     .. note::
         They columns are set up horizontally, from left to right.
         This is due to it then having better compatability with
-        the 2-Dimensional module, where all beams are projected 
+        the 2-Dimensional module, where all beams are projected
         horizontally.
 
     Examples
     ========
-    Add when finished
     """
 
     def __init__(self, length, elastic_modulus, area, variable=Symbol('x'), base_char='C'):
@@ -44,8 +43,8 @@ class Column:
             A Symbol or value representing the Column's length.
         
         elastic_modulus: Sympifyable
-            A Symbol or value representing the Column's modulus of 
-            elasticity. It is a measure of the stiffness of the material. 
+            A Symbol or value representing the Column's modulus of
+            elasticity. It is a measure of the stiffness of the material.
             (Make function of the length??)
         
         area: Sympifyable
@@ -118,8 +117,8 @@ class Column:
     def apply_support(self, loc):
         """
         This method applies a support that is fixed in the
-        horizontal direction. It returns the name of the 
-        unknown reaction load
+        horizontal direction. It returns the name of the
+        unknown reaction load.
 
         Parameters
         ==========
