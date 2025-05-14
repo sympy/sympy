@@ -15,7 +15,7 @@ Beam
    beam.rst
 
 Column
-====
+======
 
 .. toctree::
    :titlesonly:
