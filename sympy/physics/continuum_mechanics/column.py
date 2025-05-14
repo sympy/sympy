@@ -45,7 +45,6 @@ class Column:
         elastic_modulus: Sympifyable
             A Symbol or value representing the column's modulus of
             elasticity. It is a measure of the stiffness of the material.
-            (Make function of the length??)
         
         area: Sympifyable
             A symbol or value representing the column's cross-sectional
@@ -131,7 +130,7 @@ class Column:
 
         Examples
         ========
-        There is a column of 10 meters. It has an area A and 
+        There is a column of 10 meters. It has an area A and
         elastic modulus E. The column has fixed supports at
         both ends.
 
@@ -143,7 +142,7 @@ class Column:
         >>> c.apply_support(10)
         >>> c.apply_load(-10, 10, -1)
         >>> print(c.load)
-        R_0*SingularityFunction(x, 0, -1) + R_10*SingularityFunction(x, 10, -1) 
+        R_0*SingularityFunction(x, 0, -1) + R_10*SingularityFunction(x, 10, -1)
             - 10*SingularityFunction(x, 10, -1)
         """
         loc = sympify(loc)
@@ -221,9 +220,9 @@ class Column:
 
         Examples
         ========
-        There is a column of length L, area A and elastic modulus E. It 
-        is supported at both ends of the column and in the middle. There 
-        is a positive force F applied to the column at 1/4 * L and 
+        There is a column of length L, area A and elastic modulus E. It
+        is supported at both ends of the column and in the middle. There
+        is a positive force F applied to the column at 1/4 * L and
         3/5 * L.
 
         >>> from sympy.physics.continuum_mechanics.column import Column
@@ -248,9 +247,9 @@ class Column:
 
         Examples
         ========
-        There is a column of length L, area A and elastic modulus E. It 
-        is supported at both ends of the column and in the middle. There 
-        is a positive force F applied to the column at 1/4 * L and 
+        There is a column of length L, area A and elastic modulus E. It
+        is supported at both ends of the column and in the middle. There
+        is a positive force F applied to the column at 1/4 * L and
         3/5 * L.
 
         >>> from sympy.physics.continuum_mechanics.column import Column
