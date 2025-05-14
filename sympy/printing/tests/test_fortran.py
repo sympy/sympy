@@ -332,7 +332,7 @@ def test_fcode_Xlogical():
     assert fcode(Xor(x, Not(y), evaluate=False), source_format="free") == \
         "x .neqv. .not. y"
     assert fcode(Xor(Not(x), y, evaluate=False), source_format="free") == \
-        "y .neqv. .not. x"
+        ".not. x .neqv. y"
     assert fcode(Xor(Not(x), Not(y), evaluate=False),
         source_format="free") == ".not. x .neqv. .not. y"
     assert fcode(Not(Xor(x, y, evaluate=False), evaluate=False),
@@ -377,39 +377,39 @@ def test_fcode_Xlogical():
     assert fcode(Equivalent(Xor(y, z, evaluate=False), x),
         source_format="free") == "x .eqv. (y .neqv. z)"
     assert fcode(Equivalent(Xor(z, x, evaluate=False), y),
-        source_format="free") == "y .eqv. (x .neqv. z)"
+        source_format="free") == "y .eqv. (z .neqv. x)"
     assert fcode(Equivalent(Xor(x, y, evaluate=False), z),
         source_format="free") == "z .eqv. (x .neqv. y)"
     assert fcode(Xor(Equivalent(y, z), x, evaluate=False),
-        source_format="free") == "x .neqv. (y .eqv. z)"
+        source_format="free") == "(y .eqv. z) .neqv. x"
     assert fcode(Xor(Equivalent(z, x), y, evaluate=False),
-        source_format="free") == "y .neqv. (x .eqv. z)"
+        source_format="free") == "(x .eqv. z) .neqv. y"
     assert fcode(Xor(Equivalent(x, y), z, evaluate=False),
-        source_format="free") == "z .neqv. (x .eqv. y)"
+        source_format="free") == "(x .eqv. y) .neqv. z"
     # mixed And/Xor
     assert fcode(Xor(And(y, z), x, evaluate=False), source_format="free") == \
-        "x .neqv. y .and. z"
+        "y .and. z .neqv. x"
     assert fcode(Xor(And(z, x), y, evaluate=False), source_format="free") == \
-        "y .neqv. x .and. z"
+        "x .and. z .neqv. y"
     assert fcode(Xor(And(x, y), z, evaluate=False), source_format="free") == \
-        "z .neqv. x .and. y"
+        "x .and. y .neqv. z"
     assert fcode(And(Xor(y, z, evaluate=False), x), source_format="free") == \
         "x .and. (y .neqv. z)"
     assert fcode(And(Xor(z, x, evaluate=False), y), source_format="free") == \
-        "y .and. (x .neqv. z)"
+        "y .and. (z .neqv. x)"
     assert fcode(And(Xor(x, y, evaluate=False), z), source_format="free") == \
         "z .and. (x .neqv. y)"
     # mixed Or/Xor
     assert fcode(Xor(Or(y, z), x, evaluate=False), source_format="free") == \
-        "x .neqv. y .or. z"
+        "y .or. z .neqv. x"
     assert fcode(Xor(Or(z, x), y, evaluate=False), source_format="free") == \
-        "y .neqv. x .or. z"
+        "x .or. z .neqv. y"
     assert fcode(Xor(Or(x, y), z, evaluate=False), source_format="free") == \
-        "z .neqv. x .or. y"
+        "x .or. y .neqv. z"
     assert fcode(Or(Xor(y, z, evaluate=False), x), source_format="free") == \
         "x .or. (y .neqv. z)"
     assert fcode(Or(Xor(z, x, evaluate=False), y), source_format="free") == \
-        "y .or. (x .neqv. z)"
+        "y .or. (z .neqv. x)"
     assert fcode(Or(Xor(x, y, evaluate=False), z), source_format="free") == \
         "z .or. (x .neqv. y)"
     # trinary Xor
@@ -418,9 +418,9 @@ def test_fcode_Xlogical():
     assert fcode(Xor(x, y, Not(z), evaluate=False), source_format="free") == \
         "x .neqv. y .neqv. .not. z"
     assert fcode(Xor(x, Not(y), z, evaluate=False), source_format="free") == \
-        "x .neqv. z .neqv. .not. y"
+        "x .neqv. .not. y .neqv. z"
     assert fcode(Xor(Not(x), y, z, evaluate=False), source_format="free") == \
-        "y .neqv. z .neqv. .not. x"
+        ".not. x .neqv. y .neqv. z"
 
 
 def test_fcode_Relational():
