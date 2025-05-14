@@ -217,8 +217,8 @@ if we wish to extract the full value out of it.
 Matrix Parsing
 ^^^^^^^^^^^^^^
 
-Matrices inside a ``bmatrix``, ``pmatrix``, and ``array`` environments are fully
-supported, and work as expected.
+Matrices inside a ``bmatrix``, ``pmatrix``, ``matrix``, and ``array`` environments
+are fully supported, and work as expected.
 
 For example::
 
