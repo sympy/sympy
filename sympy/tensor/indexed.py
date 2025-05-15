@@ -171,7 +171,7 @@ class Indexed(Expr):
         IndexedBase._set_assumptions(obj, base.assumptions0)
 
         return obj
-
+        
     def _hashable_content(self):
         return super()._hashable_content() + tuple(sorted(self.assumptions0.items()))
 
@@ -357,6 +357,16 @@ class Indexed(Expr):
             active_deprecations_target="deprecated-expr-free-symbols")
 
         return {self}
+    
+    def index_free_symbols(self):
+        """
+        Return only the free symbols that appear in the indices,
+        excluding the base symbol itself.
+        """
+        syms = set()
+        for idx in self.indices:
+            syms |= idx.free_symbols
+        return syms
 
 
 class IndexedBase(Expr, NotIterable):

@@ -509,3 +509,15 @@ def test_IndexedBase_commutative():
     v = IndexedBase('v')
     assert t[0]*v[0] == v[0]*t[0]
     assert t[0]*u[0] != u[0]*t[0]
+
+def test_indexed_index_free_symbols_only_indices():
+    from sympy import symbols, IndexedBase
+    i = symbols("i")
+    w = IndexedBase("w")
+    expr = w[i]
+
+    # This checks only the free symbols from the indices
+    assert expr.index_free_symbols() == {i}
+
+
+
