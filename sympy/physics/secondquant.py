@@ -1,8 +1,11 @@
 """
 Second quantization operators and states for bosons.
 
-This follow the formulation of Fetter and Welecka, "Quantum Theory
-of Many-Particle Systems."
+This follow the formulation of Fetter and Welecka, "Quantum Theory of
+Many-Particle Systems."
+
+This module is a predecessor of the sympy.physics.quantum package, and it will
+be superseded by it in the future versions.
 """
 from collections import defaultdict
 

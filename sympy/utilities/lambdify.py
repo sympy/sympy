@@ -1075,16 +1075,12 @@ def lambdastr(args, expr, printer=None, dummify=None):
         return iterable(l, exclude=(str, DeferredVector, NotIterable))
 
     def flat_indexes(iterable):
-        n = 0
-
-        for el in iterable:
+        for n, el in enumerate(iterable):
             if isiter(el):
                 for ndeep in flat_indexes(el):
                     yield (n,) + ndeep
             else:
                 yield (n,)
-
-            n += 1
 
     if dummify is None:
         dummify = any(isinstance(a, Basic) and
@@ -1342,16 +1338,12 @@ class _TensorflowEvaluatorPrinter(_EvaluatorPrinter):
         """
 
         def flat_indexes(elems):
-            n = 0
-
-            for el in elems:
+            for n, el in enumerate(elems):
                 if iterable(el):
                     for ndeep in flat_indexes(el):
                         yield (n,) + ndeep
                 else:
                     yield (n,)
-
-                n += 1
 
         indexed = ', '.join('{}[{}]'.format(rvalue, ']['.join(map(str, ind)))
                                 for ind in flat_indexes(lvalues))
@@ -1583,10 +1575,7 @@ def _too_large_for_docstring(expr, limit):
 
     if limit is None:
         return False
-
-    i = 0
-    for _ in postorder_traversal(expr):
-        i += 1
+    for i, _ in enumerate(postorder_traversal(expr), 1):
         if i > limit:
             return True
     return False
