@@ -94,14 +94,25 @@ def test_pade_approximant_gcdex():
 def test_pade_approximant():
     x = symbols("x")
 
-    assert pade_approximant(exp(x), x, 2) == (x**2/4 + 3*x/2 + 3)/(x**2/4 - 3*x/2 + 3)
-    assert pade_approximant(exp(sin(x**3)), x, 3, 4) == (x**3/2 + 1)/(1 - x**3/2)
-    assert (pade_approximant(log(1 + x), x, 3, 3)
-             - x*(11*x**2 + 60*x + 60)/(3*(x**3 + 12*x**2 + 30*x + 20))).simplify() == 0
+    assert pade_approximant(exp(x), x, 0, 2)\
+            == (x**2/4 + 3*x/2 + 3)/(x**2/4 - 3*x/2 + 3)
+
+    assert pade_approximant(exp(sin(x**3)), x, 0, 3, 4)\
+            == (x**3/2 + 1)/(1 - x**3/2)
+
+    assert (
+        pade_approximant(log(1 + x), x, 0, 3) - \
+        x*(11*x**2 + 60*x + 60)/(3*(x**3 + 12*x**2 + 30*x + 20))
+        ).simplify() == 0
+
+    assert (
+        pade_approximant(log(x), x, 1, 3) - \
+        (x-1)*(11*(x-1)**2 + 60*(x-1) + 60)/(3*((x-1)**3 + 12*(x-1)**2 + 30*(x-1) + 20))
+        ).simplify() == 0
 
     is_error = False
     try:
-        pade_approximant(sin(x), x, 0, 4)
+        pade_approximant(sin(x), x, 0, 0, 4)
     except ValueError:
         is_error = True
     assert is_error

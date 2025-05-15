@@ -5315,17 +5315,17 @@ def half_gcdex(f, g, *gens, **args):
 
 
 @public
-def gcdex_steps(f, g):
+def gcdex_steps(f, g, *gens, **args):
     """
-    Generator intermediate steps in the extended Euclidean algorithm.
+    Generator for intermediate steps in the extended Euclidean algorithm.
 
     Description
     ===========
 
-    Given polynomials a and b, the algorithm returns a generator to three
-    polynomial sequences s, t, and r which enumerate all non-trivial (i.e.
-    excluding `(s, t, r) = (1, 0, f)`, `(0, 1, g)`, and `(g, -f, 0)`) solutions
-    (up to multiplicative constants) to the following conditions:
+    Returns a generator to three polynomial sequences `s`, `t`, and `r` that
+    enumerate all solutions apart from the trivial `(s, t, r) = (1, 0, f)`,
+    and `(g, -f, 0)` (up to multiplicative constants) to the following
+    conditions:
 
         f*s[i] + g*t[i] = r[i],
         r[i].deg() > r[i + 1].deg()
@@ -5346,47 +5346,42 @@ def gcdex_steps(f, g):
     ==========
 
     f : Poly
-        The first polynomial
+        The first polynomial.
     g : Poly
-        The second polynomial
+        The second polynomial,
 
     Returns
     =======
 
-    generator : Generator[tuple[Poly, Poly, Poly], None, None]
+    generator : Generator[tuple[Poly, Poly, Poly]] |
+                Generator[tuple[Expr, Expr, Expr]]
         A generator to the sequences `s`, `t`, and `r`
 
     Examples
     ========
 
     >>> from sympy.abc import x
-    >>> from sympy import Poly
+    >>> from sympy import simplify
     >>> from sympy.polys.polytools import gcdex_steps
 
-    >>> f = Poly(x**3 + 2, x)
-    >>> g = Poly(x**2 - 1, x)
-    >>> eea_result = gcdex_steps(f, g)
+    >>> f = x**4 - 2*x**3 - 6*x**2 + 12*x + 15
+    >>> g = x**3 + x**2 - 4*x - 4
+    >>> for step in gcdex_steps(f, g): print(step)
+    (0, 1, x**3 + x**2 - 4*x - 4)
+    (1, 3 - x, x**2 + 4*x + 3)
+    (3 - x, x**2 - 6*x + 10, 5*x + 5)
 
-    >>> for s, t, r in eea_result: print(s, t, r)
-    Poly(1, x, domain='ZZ') Poly(-x, x, domain='ZZ') Poly(x + 2, x, domain='ZZ')
-    Poly(-x + 2, x, domain='ZZ') Poly(x**2 - 2*x + 1, x, domain='ZZ') Poly(3, x, domain='ZZ')
+    Each step `(s, t, r)` satisfies `f*s + g*t = r`
 
-    In this case, `gcd(f, g) = 3` and we can write
-    `3 = (-x + 2)*f + (x**2 - 2*x + 1)*g`.
+    >>> for s, t, r in gcdex_steps(f, g): print(simplify(f*s + g*t - r))
+    0
+    0
+    0
 
-    >>> 3 - (-x + 2)*f - (x**2 - 2*x + 1)*g
-    Poly(0, x, domain='ZZ')
-
-    When two polynomials share a common factor, the gcd is the common factor
-
-    >>> f = Poly((x + 1)*(x + 2), x)
-    >>> g = Poly((x + 1)*(x + 3), x)
-    >>> eea_result = gcdex_steps(f, g)
-    >>> for s, t, r in eea_result: print(s, t, r)
-    Poly(1, x, domain='ZZ') Poly(-1, x, domain='ZZ') Poly(-x - 1, x, domain='ZZ')
-
-    Here, the final value of `r` is `-(x + 1)`, so this is the gcd of `f` and
-    `g`
+    The final output of `gcdex_steps(f, g)` is equivalent to `gcdex(f, g)`
+    >>> from sympy.polys.polytools import gcdex
+    >>> gcdex(f, g)
+    (3/5 - x/5, x**2/5 - 6*x/5 + 2, x + 1)
 
     See Also
     ========
@@ -5403,20 +5398,25 @@ def gcdex_steps(f, g):
            Algorithm and an application to Pade Approximation. SIAM Journal on
            Applied Mathematics, 34(4), 611-615. doi:10.1137/0134048
     """
-    s1, s2 = f.one, f.zero
-    t1, t2 = f.zero, f.one
+    options.allowed_flags(args, ['auto', 'polys'])
 
-    # ensure that a.degree() >= b.degree()
-    if f.degree() < g.degree():
-        f, g = g, f
+    (F, G), opt = parallel_poly_from_expr((f, g), *gens, **args)
+
+    s1, s2 = F.one, F.zero
+    t1, t2 = F.zero, F.one
+    r1, r2 = F, G
+
+    if F.degree() < G.degree():
         s1, t1 = t1, s1
         s2, t2 = t2, s2
+        r1, r2 = r2, r1
 
-    r1, r2 = f, g
+    for _ in range(max(F.degree(), G.degree())):
+        if opt.polys:
+            yield s2, t2, r2
+        else:
+            yield s2.as_expr(), t2.as_expr(), r2.as_expr()
 
-    # r[-1].deg() is strictly decreasing and is initially equal to at most a.degree()
-    # therefore, the loop terminates in at most a.degree() steps
-    for _ in range(f.degree()):
         quotient, remainder = divmod(r1, r2)
         if remainder == 0:
             break
@@ -5424,8 +5424,6 @@ def gcdex_steps(f, g):
         r1, r2 = r2, remainder
         s1, s2 = s2, s1 - quotient * s2
         t1, t2 = t2, t1 - quotient * t2
-
-        yield s2, t2, r2
 
 
 @public
