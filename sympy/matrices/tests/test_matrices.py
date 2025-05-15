@@ -3485,3 +3485,9 @@ def test_issue_15872():
     assert B.rank() == 3
     assert (B**2).rank() == 2
     assert (B**3).rank() == 2
+
+def test_diagonal_empty_matrix():
+    from sympy import Matrix
+    M = Matrix([])
+    # The diagonal of an empty matrix should be an empty matrix (1 x 0)
+    assert M.diagonal() == Matrix(1, 0, [])

@@ -637,9 +637,13 @@ class MatrixBase(Printable):
             r += 1
             c += 1
         if not rv:
-            raise ValueError(filldedent('''
-            The %s diagonal is out of range [%s, %s]''' % (
-            k, 1 - self.rows, self.cols - 1)))
+            if self.rows == 0 or self.cols == 0:
+                # Return empty list or empty matrix diagonal for empty matrices
+                return self._new(1, 0, [])
+            else:
+                raise ValueError(filldedent('''
+                The %s diagonal is out of range [%s, %s]''' % (
+                k, 1 - self.rows, self.cols - 1)))
         return self._new(1, len(rv), rv)
 
     def row(self, i):
