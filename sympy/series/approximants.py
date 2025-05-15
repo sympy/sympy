@@ -131,8 +131,7 @@ def pade_approximants_gcdex(f, order: int):
     Returns
     =======
 
-    pade approximants : Generator[tuple[Poly, Poly]] |
-                        Generator[tuple[Expr, Expr]]
+    pade approximants : Generator[tuple[Poly, Poly]] | Generator[tuple[Expr, Expr]]
         Generator for (numerator, denominator) pairs of polynomials
         representing the numerator and denominators of the approximants.
 
@@ -167,7 +166,6 @@ def pade_approximants_gcdex(f, order: int):
     sympy.series.approximants.pade_approximant_gcdex
     sympy.series.approximants.pade_approximant
     """
-
     if order < 0:
         raise ValueError("'order' must be a non-negative integer.")
 
@@ -268,7 +266,6 @@ def pade_approximant_gcdex(f, m: int, n: int | None = None):
     sympy.series.approximants.pade_approximant
     sympy.series.approximants.pade_approximants_gcdex
     """
-
     if n is None:
         n = m
 
@@ -387,7 +384,6 @@ def pade_approximant(f, x, x0 = 0, m: int = 6, n: int | None = None):
     sympy.series.approximants.pade_approximant_gcdex
     sympy.series.approximants.pade_approximants_gcdex
     """
-
     if n is None:
         n = m
 

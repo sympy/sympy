@@ -5380,6 +5380,7 @@ def gcdex_steps(f, g, *gens, **args):
     0
 
     The final output of `gcdex_steps(f, g)` is equivalent to `gcdex(f, g)`
+
     >>> from sympy.polys.polytools import gcdex
     >>> gcdex(f, g)
     (3/5 - x/5, x**2/5 - 6*x/5 + 2, x + 1)
