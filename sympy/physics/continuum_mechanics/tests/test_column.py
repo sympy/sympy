@@ -49,9 +49,9 @@ def test_column():
     # Test applying a load
     c3 = Column(10, E, A)
     c3.apply_load(-10, 10, -1)
-    assert c3.applied_loads == [(-10, 10, -1)]
+    assert c3.applied_loads == [(-10, 10, -1, None)]
     c3.apply_load(10, 5, -1)
-    assert c3.applied_loads == [(-10, 10, -1), (10, 5, -1)]
+    assert c3.applied_loads == [(-10, 10, -1, None), (10, 5, -1, None)]
 
     # Test the load equation
     p = c3.load
@@ -63,7 +63,7 @@ def test_column():
     F, G = symbols('F G')
     c4.apply_load(F, 0, -1)
     c4.apply_load(-G, 10, -1)
-    assert c4.applied_loads == [(F, 0, -1), (-G, 10, -1)]
+    assert c4.applied_loads == [(F, 0, -1, None), (-G, 10, -1, None)]
 
     # Test the load equation
     p = c4.load
@@ -92,7 +92,7 @@ def test_distributed_loads():
     c.apply_load(5, 4, 1, end=6)
 
     p = c.applied_loads
-    q = [(5, 0, -1), (5, 2, 1, 4), (5, 4, 1, 6)]
+    q = [(5, 0, -1, None), (5, 2, 0, 4), (5, 4, 1, 6)]
     assert p == q
 
     p = c.load
@@ -100,9 +100,9 @@ def test_distributed_loads():
         5 * SingularityFunction(x, 0, -1) +
         5 * SingularityFunction(x, 2, 0) -
         5 * SingularityFunction(x, 4, 0) +
-        5 * SingularityFunction(x, 4, 1) -
-        10 * SingularityFunction(x, 6, 1) -
-        5 * SingularityFunction(x, 6, 0)
+        5 * SingularityFunction(x, 4, 1) +
+        10 * SingularityFunction(x, 6, 0) -
+        5 * SingularityFunction(x, 6, 1)
     )
     assert p == q
 
@@ -116,36 +116,36 @@ def test_remove_load():
 
     # Test applied loads
     p = c.applied_loads
-    q = [(10, 0, -1), (-10, 10, -1)]
+    q = [(10, 0, -1, None), (-10, 10, -1, None)]
     assert p == q
-    c.remove_load(10, 0, -1)
+    c.remove_load(10, 0, -1, None)
     p = c.applied_loads
-    q = [(-10, 10, -1)]
+    q = [(-10, 10, -1, None)]
     assert p == q
 
     # Test load equation
     c.apply_load(5, 0, 0, end=10)
     p = c.load
-    q = -10 * SingularityFunction(x, 0, -1) + 5 * SingularityFunction(x, 0, 0) - 5 * SingularityFunction(x, 10, 0)
+    q = -10 * SingularityFunction(x, 10, -1) + 5 * SingularityFunction(x, 0, 0) - 5 * SingularityFunction(x, 10, 0)
     assert p == q
     c.remove_load(5, 0, 0, end=10)
     p = c.load
-    q = -10 * SingularityFunction(x, 0, -1)
+    q = -10 * SingularityFunction(x, 10, -1)
     assert p == q
 
     # Test load equation for higher orders
     c.apply_load(5, 0, 1, end=5)
     p = c.load
     q = (
-        -10 * SingularityFunction(x, 0, -1)
+        -10 * SingularityFunction(x, 10, -1)
         + 5 * SingularityFunction(x, 0, 1)
         - 25 * SingularityFunction(x, 5, 0)
-        - 25 * SingularityFunction(x, 5, 1)
+        - 5 * SingularityFunction(x, 5, 1)
     )
     assert p == q
     c.remove_load(5, 0, 1, 5)
     p = c.load
-    q = -10 * SingularityFunction(x, 0, -1)
+    q = -10 * SingularityFunction(x, 10, -1)
     assert p == q
     
 test_remove_load()
