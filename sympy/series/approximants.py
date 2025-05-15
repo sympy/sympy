@@ -112,9 +112,7 @@ def approximants(l, X=Symbol('x'), simplify=False):
 
 
 @public
-def pade_approximants_gcdex(
-    f, order: int
-    ) -> Generator[tuple[Poly, Poly]] | Generator[tuple[Expr, Expr]]:
+def pade_approximants_gcdex(f, order: int):
     """
     Returns all pade approximants of the expression `f` of the desired order.
 
@@ -198,9 +196,7 @@ def pade_approximants_gcdex(
 
 
 @public
-def pade_approximant_gcdex(
-    f, m: int, n: int | None = None
-    ) -> tuple[Poly, Poly] | tuple[Expr, Expr] | tuple[None, None]:
+def pade_approximant_gcdex(f, m: int, n: int | None = None):
     """
     `[m/n]` pade approximant of `f` around `x0`.
 
@@ -274,6 +270,7 @@ def pade_approximant_gcdex(
     sympy.series.approximants.pade_approximant
     sympy.series.approximants.pade_approximants_gcdex
     """
+
     if n is None:
         n = m
 
@@ -313,9 +310,7 @@ def pade_approximant_gcdex(
 
 
 @public
-def pade_approximant(
-    f: Expr, x: Expr, x0: DomainElement = 0, m: int = 6, n: int | None = None
-    ) -> Expr | None:
+def pade_approximant(f, x, x0 = 0, m: int = 6, n: int | None = None):
     """
     `[m/n]` pade approximant of `f` around `x=0`.
 
@@ -394,6 +389,7 @@ def pade_approximant(
     sympy.series.approximants.pade_approximant_gcdex
     sympy.series.approximants.pade_approximants_gcdex
     """
+
     if n is None:
         n = m
 

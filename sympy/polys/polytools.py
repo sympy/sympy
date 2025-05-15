@@ -5292,6 +5292,7 @@ def half_gcdex(f, g, *gens, **args):
     sympy.polys.polytools.gcdex_steps:
         Intermediate steps of the Extended Euclidean algorithm.
     """
+
     options.allowed_flags(args, ['auto', 'polys'])
 
     try:
