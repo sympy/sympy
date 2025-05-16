@@ -469,7 +469,6 @@ def test_Subs_with_Indexed():
     assert Subs(A[i]*x, A[i], x).diff(A[k]) == 0
     assert Subs(A[i]*x, A[j], x).diff(A[k]) == x*KroneckerDelta(i, k)
 
-
 def test_complicated_derivative_with_Indexed():
     x, y = symbols("x,y", cls=IndexedBase)
     sigma = symbols("sigma")
@@ -502,7 +501,6 @@ def test_complicated_derivative_with_Indexed():
         )/sigma**2
     )
 
-
 def test_IndexedBase_commutative():
     t = IndexedBase('t', commutative=False)
     u = IndexedBase('u', commutative=False)
@@ -510,7 +508,7 @@ def test_IndexedBase_commutative():
     assert t[0]*v[0] == v[0]*t[0]
     assert t[0]*u[0] != u[0]*t[0]
 
-def test_indexed_index_free_symbols_only_indices():
+def test_index_free_symbols():
     from sympy import symbols, IndexedBase
     i = symbols("i")
     w = IndexedBase("w")
@@ -518,6 +516,3 @@ def test_indexed_index_free_symbols_only_indices():
 
     # This checks only the free symbols from the indices
     assert expr.index_free_symbols() == {i}
-
-
-
