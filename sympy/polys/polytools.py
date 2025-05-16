@@ -5315,6 +5315,27 @@ def half_gcdex(f, g, *gens, **args):
         return s, h
 
 
+def _gcdex_steps_domain(a, b, K):
+    """
+    Generator for intermediate steps in the extended euclidean algorithm
+    on domain elements. Helper function for `gcdex_steps`.
+    """
+    if not K.is_PID:
+        raise DomainError("gcdex_steps is only for Euclidean domains")
+
+    s1, s2 = K.one, K.zero
+    t1, t2 = K.zero, K.one
+
+    while b:
+        yield s2, t2, b
+
+        quotient, remainder = K.div(a, b)
+
+        a, b = b, remainder
+        s1, s2 = s2, s1 - quotient * s2
+        t1, t2 = t2, t1 - quotient * t2
+
+
 @public
 def gcdex_steps(f, g, *gens, **args):
     """
@@ -5407,13 +5428,11 @@ def gcdex_steps(f, g, *gens, **args):
         domain, (a, b) = construct_domain(exc.exprs)
 
         try:
-            steps = domain.gcdex_steps(a, b)
-        except NotImplementedError:
-            raise ComputationFailed('gcdex_steps', 2, exc)
-        else:
-            for s, t, r in steps:
+            for s, t, r in _gcdex_steps_domain(a, b, domain):
                 yield domain.to_sympy(s), domain.to_sympy(t), domain.to_sympy(r)
             return
+        except DomainError as exc:
+            raise ComputationFailed('gcdex_steps', 2, exc)
 
     s1, s2 = F.one, F.zero
     t1, t2 = F.zero, F.one
