@@ -1065,10 +1065,8 @@ def test_diagonal():
     s = SparseMatrix(3, 3, {(1, 1): 1})
     assert type(s.diagonal()) == type(s)
     assert type(m) != type(s)
-    d3 = m.diagonal(3)
-    assert d3.shape[0] * d3.shape[1] == 0
-    dm3 = m.diagonal(-3)
-    assert dm3.shape[0] * dm3.shape[1] == 0
+    assert m.diagonal(3) == Matrix(1, 0, [])
+    assert m.diagonal(3) == Matrix(1, 0, [])
     raises(ValueError, lambda: m.diagonal(pi))
     M = ones(2, 3)
     assert banded({i: list(M.diagonal(i))
