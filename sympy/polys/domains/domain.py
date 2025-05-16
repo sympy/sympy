@@ -1287,6 +1287,10 @@ class Domain:
         s, t, h = self.gcdex(a, b)
         return s, h
 
+    def gcdex_steps(self, a, b):
+        """Intermediate steps of the extended GCD algorithm. """
+        raise NotImplementedError
+
     def gcdex(self, a, b):
         """Extended GCD of ``a`` and ``b``. """
         raise NotImplementedError
