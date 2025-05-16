@@ -316,20 +316,22 @@ def pade_approximant(f, x, x0 = 0, m: int = 6, n: int | None = None):
     of `f` is the rational function `p(x)/q(x)`, where `p(x)` and `q(x)` are
     polynomials of degree at most `m` and `n` respectively. The pade
     approximation, when it exists, is such that the taylor series of
-    `p(x)/q(x)` around `x=0`matches the taylor series of `f(x)` up to at
+    `p(x)/q(x)` around `x=0` matches the taylor series of `f(x)` up to at
     least order `(m + n)` in `x`.
 
     Parameters
     ==========
 
     f : Expr
-        The function to approximate
+        The function to approximate.
     x : Expr
-        The variable of the function
+        The variable of the function.
+    x0 : Expr
+        The value around which the approximant is calculated. Defaults to 0.
     m : int
-        The degree of the numerator polynomial
+        The degree of the numerator polynomial. Defaults to 6.
     n : int | None
-        The degree of the denominator polynomial. If None, `n = m`
+        The degree of the denominator polynomial. If None, `n = m`.
 
     Returns
     =======
