@@ -666,7 +666,7 @@ def test_diagonal():
     d3 = m.diagonal(3)
     assert d3.shape[0] * d3.shape[1] == 0
     dm3 = m.diagonal(-3)
-    assert dm3.shape[0] * dm3.shape[1] == 0 
+    assert dm3.shape[0] * dm3.shape[1] == 0
     raises(ValueError, lambda: m.diagonal(pi))
     M = ones(2, 3)
     assert banded({i: list(M.diagonal(i))
