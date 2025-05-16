@@ -358,6 +358,16 @@ class Indexed(Expr):
 
         return {self}
 
+    def index_free_symbols(self):
+        """
+        Return only the free symbols that appear in the indices,
+        excluding the base symbol itself.
+        """
+        syms = set()
+        for idx in self.indices:
+            syms |= idx.free_symbols
+        return syms
+
 
 class IndexedBase(Expr, NotIterable):
     """Represent the base or stem of an indexed object
