@@ -5401,7 +5401,19 @@ def gcdex_steps(f, g, *gens, **args):
     """
     options.allowed_flags(args, ['auto', 'polys'])
 
-    (F, G), opt = parallel_poly_from_expr((f, g), *gens, **args)
+    try:
+        (F, G), opt = parallel_poly_from_expr((f, g), *gens, **args)
+    except PolificationFailed as exc:
+        domain, (a, b) = construct_domain(exc.exprs)
+
+        try:
+            steps = domain.gcdex_steps(a, b)
+        except NotImplementedError:
+            raise ComputationFailed('gcdex_steps', 2, exc)
+        else:
+            for s, t, r in steps:
+                yield domain.to_sympy(s), domain.to_sympy(t), domain.to_sympy(r)
+            return
 
     s1, s2 = F.one, F.zero
     t1, t2 = F.zero, F.one
