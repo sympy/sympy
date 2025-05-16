@@ -37,3 +37,11 @@ Arch
    :titlesonly:
 
    arches.rst
+
+Structure2D
+===========
+
+.. toctree::
+   :titlesonly:
+
+   structure2d.rst
