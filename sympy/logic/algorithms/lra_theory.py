@@ -367,7 +367,7 @@ class LRASolver():
             var.lower_from_neg = False
             var.upper = LRARational(float("inf"), 0)
             var.upper_from_eq= False
-            var.lower_from_neg = False
+            var.upper_from_neg = False
             var.assign = LRARational(0, 0)
 
     def assert_lit(self, enc_constraint):
