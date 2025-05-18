@@ -5336,6 +5336,38 @@ def _gcdex_steps_domain(a, b, K):
         t1, t2 = t2, t1 - quotient * t2
 
 
+def _gcdex_steps_polynomial(f, g):
+    """
+    Generator for intermediate steps of the extended euclidean algorithm
+    on polynomials. Helper function for `gcdex_steps`.
+    """
+    if f.get_domain().is_Ring:
+        f, g = f.to_field(), g.to_field()
+
+    if not f.is_univariate:
+        raise ValueError('univariate polynomial expected')
+
+    s1, s2 = f.one, f.zero
+    t1, t2 = f.zero, f.one
+    r1, r2 = f, g
+
+    if f.degree() < g.degree():
+        s1, t1 = t1, s1
+        s2, t2 = t2, s2
+        r1, r2 = r2, r1
+
+    for _ in range(max(f.degree(), g.degree()) + 1):
+        yield s2, t2, r2
+
+        quotient, remainder = divmod(r1, r2)
+        if remainder == 0:
+            break
+
+        r1, r2 = r2, remainder
+        s1, s2 = s2, s1 - quotient * s2
+        t1, t2 = t2, t1 - quotient * t2
+
+
 @public
 def gcdex_steps(f, g, *gens, **args):
     """
@@ -5434,28 +5466,11 @@ def gcdex_steps(f, g, *gens, **args):
         except DomainError as exc:
             raise ComputationFailed('gcdex_steps', 2, exc)
 
-    s1, s2 = F.one, F.zero
-    t1, t2 = F.zero, F.one
-    r1, r2 = F, G
-
-    if F.degree() < G.degree():
-        s1, t1 = t1, s1
-        s2, t2 = t2, s2
-        r1, r2 = r2, r1
-
-    for _ in range(max(F.degree(), G.degree())):
+    for s, t, r in _gcdex_steps_polynomial(F, G):
         if opt.polys:
-            yield s2, t2, r2
+            yield s, t, r
         else:
-            yield s2.as_expr(), t2.as_expr(), r2.as_expr()
-
-        quotient, remainder = divmod(r1, r2)
-        if remainder == 0:
-            break
-
-        r1, r2 = r2, remainder
-        s1, s2 = s2, s1 - quotient * s2
-        t1, t2 = t2, t1 - quotient * t2
+            yield s.as_expr(), t.as_expr(), r.as_expr()
 
 
 @public
