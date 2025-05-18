@@ -311,7 +311,7 @@ for const in _numpy_known_constants:
 
 _unumpy_known_functions = {k: 'uncertainties.unumpy.' + v for k, v in _known_functions_numpy.items()}
 
-class UnumpyPrinter(NumPyPrinter):
+class UnumPyPrinter(NumPyPrinter):
     """
     uncertainties.unumpy printer which handles vectorized piecewise functions,
     logical operators, etc.
@@ -324,10 +324,10 @@ class UnumpyPrinter(NumPyPrinter):
         return f"({super().doprint(expr, assign_to=assign_to)}) * 1"
 
 for func in _unumpy_known_functions:
-    setattr(UnumpyPrinter, f'_print_{func}', _print_known_func)
+    setattr(UnumPyPrinter, f'_print_{func}', _print_known_func)
 
 for const in _numpy_known_constants:
-    setattr(UnumpyPrinter, f'_print_{const}', _print_known_const)
+    setattr(UnumPyPrinter, f'_print_{const}', _print_known_const)
 
 
 _known_functions_scipy_special = {
