@@ -238,11 +238,11 @@ def test_wavefunction():
     assert type(k.variables[0]) == Symbol
 
 def test_orthogonal_states():
-    braket = OrthogonalBra(x) * OrthogonalKet(x)
-    assert braket.doit() == 1
+    bracket = OrthogonalBra(x) * OrthogonalKet(x)
+    assert bracket.doit() == 1
 
-    braket = OrthogonalBra(x) * OrthogonalKet(x+1)
-    assert braket.doit() == 0
+    bracket = OrthogonalBra(x) * OrthogonalKet(x+1)
+    assert bracket.doit() == 0
 
-    braket = OrthogonalBra(x) * OrthogonalKet(y)
-    assert braket.doit() == braket
+    bracket = OrthogonalBra(x) * OrthogonalKet(y)
+    assert bracket.doit() == bracket

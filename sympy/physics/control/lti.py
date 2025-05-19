@@ -6,7 +6,6 @@ from sympy.core.containers import Tuple
 from sympy.core.evalf import EvalfMixin
 from sympy.core.expr import Expr
 from sympy.core.function import expand
-from sympy.core.logic import fuzzy_and
 from sympy.core.mul import Mul
 from sympy.core.numbers import I, pi, oo
 from sympy.core.power import Pow
@@ -24,6 +23,9 @@ from sympy.series import limit
 from sympy.utilities.misc import filldedent
 from sympy.solvers.ode.systems import linodesolve
 from sympy.solvers.solveset import linsolve, linear_eq_to_matrix
+from sympy.logic.boolalg import false, true
+from sympy.solvers.inequalities import reduce_inequalities
+from sympy.physics.control.routh_table import neg_roots_conds
 
 from mpmath.libmp.libmpf import prec_to_dps
 
@@ -753,8 +755,7 @@ class TransferFunction(SISOLinearTimeInvariant):
         >>> tf = TransferFunction.from_coeff_lists(num, den, s)
         >>> tf
         TransferFunction(s**2 + 2, 3*s**3 + 2*s**2 + 2*s + 1, s)
-
-        # Create a Transfer Function with more than one variable
+        >>> #Create a Transfer Function with more than one variable
         >>> tf1 = TransferFunction.from_coeff_lists([p, 1], [2*p, 0, 4], s)
         >>> tf1
         TransferFunction(p*s + 1, 2*p*s**2 + 4, s)
@@ -802,13 +803,11 @@ class TransferFunction(SISOLinearTimeInvariant):
         >>> tf = TransferFunction.from_zpk(zeros, poles, gain, s)
         >>> tf
         TransferFunction(7*(s - 3)*(s - 2)*(s - 1), (s - 6)*(s - 5)*(s - 4), s)
-
-        # Create a Transfer Function with variable poles and zeros
+        >>> #Create a Transfer Function with variable poles and zeros
         >>> tf1 = TransferFunction.from_zpk([p, k], [p + k, p - k], 2, s)
         >>> tf1
         TransferFunction(2*(-k + s)*(-p + s), (-k - p + s)*(k - p + s), s)
-
-        # Complex poles or zeros are acceptable
+        >>> #Complex poles or zeros are acceptable
         >>> tf2 = TransferFunction.from_zpk([0], [1-1j, 1+1j, 2], -2, s)
         >>> tf2
         TransferFunction(-2*s, (s - 2)*(s - 1.0 - 1.0*I)*(s - 1.0 + 1.0*I), s)
@@ -903,8 +902,8 @@ class TransferFunction(SISOLinearTimeInvariant):
 
     def _eval_rewrite_as_StateSpace(self, *args):
         """
-        Returns the equivalent space space model of the transfer function model.
-        The state space model will be returned in the controllable cannonical form.
+        Returns the equivalent space model of the transfer function model.
+        The state space model will be returned in the controllable canonical form.
 
         Unlike the space state to transfer function model conversion, the transfer function
         to state space model conversion is not unique. There can be multiple state space
@@ -1076,11 +1075,23 @@ class TransferFunction(SISOLinearTimeInvariant):
         argnew = TransferFunction(arg_num, arg_den, self.var).to_expr()
         return argnew.expand()
 
-    def is_stable(self):
+    def is_stable(self, cancel_poles_zeros=False):
         """
-        Returns True if the transfer function is asymptotically stable; else False.
+        Returns True if the transfer function is asymptotically stable;
+        else False.
 
-        This would not check the marginal or conditional stability of the system.
+        This would not check the marginal or conditional stability
+        of the system.
+
+        Note: Also with cancel_poles_zeros = True, there could be unaccounted
+        pole-zero cancellations.
+
+        Parameters
+        ==========
+
+        cancel_poles_zeros : Boolean
+            If True, cancels common factors between numerator and denominator
+            before checking stability.
 
         Examples
         ========
@@ -1101,9 +1112,123 @@ class TransferFunction(SISOLinearTimeInvariant):
         >>> tf4 = TransferFunction(p + 1, a*p - s**2, p)
         >>> tf4.is_stable() is None   # Not enough info about the symbols to determine stability
         True
+        >>> tf5 = TransferFunction((s+1)*(s-1), (s-1)*(s+2)*(s+4), s)
+        >>> tf5.is_stable()
+        False
+        >>> tf5.is_stable(cancel_poles_zeros = True)
+        True
 
         """
-        return fuzzy_and(pole.as_real_imag()[0].is_negative for pole in self.poles())
+        tf = self.to_standard_form(cancel_poles_zeros)
+
+        conditions = tf.get_asymptotic_stability_conditions(cancel_poles_zeros = False)
+
+        try:
+            output = reduce_inequalities(conditions)
+        except NotImplementedError:
+            # If there are more than one symbols,
+            # reduce_inequalities could fail
+            return None
+
+        if output in (true, false):
+            return bool(output)
+
+        return None
+
+    def to_standard_form(self, cancel_poles_zeros=False):
+        r"""
+        Return the transfer function in its standard form.
+
+        Standard form:
+
+        .. math::
+            \frac{a_n s^n + a_{n-1} s^{n-1} + \cdots + a_1 s + a_0}
+            {b_m s^m + b_{m-1} s^{m-1} + \cdots + b_1 s + b_0}
+
+        Note: Also with cancel_poles_zeros = True, there could be unaccounted
+        pole-zero cancellations.
+
+        Examples
+        ========
+        >>> from sympy import symbols
+        >>> from sympy.physics.control.lti import TransferFunction, Feedback
+        >>> s,k = symbols('s k')
+        >>> tf1 = TransferFunction(-2*s + 12, s**3 + 2*s**2 + 100*s, s)
+        >>> tf2 = TransferFunction(1, k, s)
+        >>> feedback = Feedback(tf1, tf2).doit()
+        >>> feedback
+        TransferFunction(k*(12 - 2*s)*(s**3 + 2*s**2 + 100*s), (s**3 + 2*s**2 + 100*s)*(k*(s**3 + 2*s**2 + 100*s) - 2*s + 12), s)
+        >>> feedback.to_standard_form(cancel_poles_zeros=True)
+        TransferFunction(-2*k*s + 12*k, k*s**3 + 2*k*s**2 + s*(100*k - 2) + 12, s)
+
+        """
+        tf = self.expand()
+
+        num = tf.num
+        den = tf.den
+        if cancel_poles_zeros:
+            num, den = cancel(tf.num / tf.den).as_numer_denom()
+
+        return TransferFunction(num.collect(self.var),
+                                den.collect(self.var), self.var)
+
+    def get_asymptotic_stability_conditions(self, cancel_poles_zeros = False):
+        """
+        Returns the asymptotic stability conditions for
+        the transfer function.
+
+        Note: Also with cancel_poles_zeros = True, the set generated by the
+        inequalities may be a subset of the real asymptotic stability
+        conditions set due to potentially unaccounted pole-zero cancellations.
+
+        Parameters
+        ==========
+
+        cancel_poles_zeros : Boolean
+            If True, cancels common factors between numerator and denominator
+            before checking stability.
+
+        Examples
+        ========
+
+        >>> from sympy import symbols, solve, reduce_inequalities
+        >>> from sympy.abc import s
+        >>> from sympy.physics.control.lti import TransferFunction, Feedback
+
+        >>> b1, b2, b3, b4 = symbols('b_1 b_2 b_3 b_4')
+        >>> p1 = b1*s**3 + b2*s**2 + b3*s + b4
+        >>> tf1 = TransferFunction(1, p1, s)
+        >>> tf1.get_asymptotic_stability_conditions()
+        [b_1 > 0, b_2 > 0, (-b_1*b_4 + b_2*b_3)/b_2 > 0, b_4 > 0]
+
+        >>> p2 = s**4 + 3*s**3 + 6*s**2 + 12*s + 8
+        >>> solve(p2)
+        [-2, -1, -2*I, 2*I]
+        >>> tf2 = TransferFunction(1, p2, s)
+        >>> tf2.get_asymptotic_stability_conditions()
+        [False]
+
+        >>> p3 = s**4 + 17*s**3 + 137/2*s**2 + 213/2*s + 54
+        >>> solve(p3)
+        [-12.0, -1.0, -2.0 - 0.707106781186548*I, -2.0 + 0.707106781186548*I]
+        >>> tf3 = TransferFunction(1, p3, s)
+        >>> tf3.get_asymptotic_stability_conditions()
+        [True]
+
+        >>> k = symbols('k')
+        >>> tf4 = TransferFunction(-20*s + 20, s**3 + 2*s**2 + 100*s, s)
+        >>> tf5 = TransferFunction(1, k, s)
+        >>> feedback = Feedback(tf4, tf5).doit()
+        >>> ineq = feedback.get_asymptotic_stability_conditions(cancel_poles_zeros = True)
+        >>> ineq
+        [k > 0, 2*k > 0, 100*k - 30 > 0]
+        >>> reduce_inequalities(ineq)
+        (3/10 < k) & (k < oo)
+
+        """
+        standard_form = self.to_standard_form(cancel_poles_zeros)
+
+        return neg_roots_conds(standard_form.den, self.var)
 
     def __add__(self, other):
         if hasattr(other, "is_StateSpace_object") and other.is_StateSpace_object:
@@ -4273,11 +4398,11 @@ class StateSpace(LinearTimeInvariant):
             if A.rows != B.rows:
                 raise ShapeError("Matrices A and B must have the same number of rows.")
 
-            # Check Ouput and Feedthrough matrices have same rows
+            # Check Output and Feedthrough matrices have same rows
             if C.rows != D.rows:
                 raise ShapeError("Matrices C and D must have the same number of rows.")
 
-            # Check State and Ouput matrices have same columns
+            # Check State and Output matrices have same columns
             if A.cols != C.cols:
                 raise ShapeError("Matrices A and C must have the same number of columns.")
 
@@ -5002,3 +5127,32 @@ class StateSpace(LinearTimeInvariant):
 
         """
         return self.controllability_matrix().rank() == self.num_states
+
+    def get_asymptotic_stability_conditions(self):
+        """
+        Returns the asymptotic stability conditions for
+        the state space.
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix
+        >>> from sympy.physics.control import StateSpace
+        >>> from sympy import symbols, reduce_inequalities
+        >>> k = symbols('k')
+        >>> A = Matrix([[0,1,0],[0,0,1], [k-1, -2*k, -1]])
+        >>> B = Matrix([1, 0, 0])
+        >>> C = Matrix([[0, 1, 0]])
+        >>> D = Matrix([0])
+        >>> ss = StateSpace(A, B, C, D)
+        >>> ineq = ss.get_asymptotic_stability_conditions()
+        >>> ineq
+        [3*k - 1 > 0, 1 - k > 0]
+        >>> reduce_inequalities(ineq)
+        (1/3 < k) & (k < 1)
+
+        """
+        s = Symbol('s')
+        determinant = self.A.charpoly(s)
+
+        return neg_roots_conds(determinant, s)

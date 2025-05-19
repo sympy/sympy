@@ -55,7 +55,7 @@ class Beam:
        automatically follow the chosen sign convention. However, the
        chosen sign convention must respect the rule that, on the positive
        side of beam's axis (in respect to current section), a loading force
-       giving positive shear yields a negative moment, as below (the
+       giving positive shear yields a negative moment, as below, (the
        curved arrow shows the positive moment and rotation):
 
     .. image:: allowed-sign-conventions.png
@@ -694,12 +694,12 @@ class Beam:
             where n is the order of applied load.
             Units for applied loads:
 
-               - For moments, unit = kN*m
-               - For point loads, unit = kN
-               - For constant distributed load, unit = kN/m
-               - For ramp loads, unit = kN/m/m
-               - For parabolic ramp loads, unit = kN/m/m/m
-               - ... so on.
+               - For moments: kN*m
+               - For point loads: kN
+               - For constant distributed load: kN/m
+               - For ramp loads: kN/m**2
+               - For parabolic ramp loads: kN/m**3
+               - And so on.
 
         start : Sympifyable
             The starting point of the applied load. For point moments and
@@ -1169,7 +1169,7 @@ class Beam:
 
         Examples
         ========
-        There is is 10 meter long overhanging beam. There are
+        There is a 10-meter-long overhanging beam. There are
         two simple supports below the beam. One at the start
         and another one at a distance of 6 meters from the start.
         Point loads of magnitude 10KN and 20KN are applied at
@@ -2092,7 +2092,7 @@ class Beam:
 
         Warning
         =======
-        The values for a = 0 and a = l, with l the lenght of the beam, in
+        The values for a = 0 and a = l, with l the length of the beam, in
         the plot can be incorrect.
 
         Examples
@@ -2170,7 +2170,7 @@ class Beam:
         Warning
         =======
         This method creates equations that can give incorrect results when
-        substituting a = 0 or a = l, with l the lenght of the beam.
+        substituting a = 0 or a = l, with l the length of the beam.
 
         Examples
         ========
@@ -2321,7 +2321,7 @@ class Beam:
             The user must be careful while entering load values.
             The draw function assumes a sign convention which is used
             for plotting loads.
-            Given a right handed coordinate system with XYZ coordinates,
+            Given a right-handed coordinate system with XYZ coordinates,
             the beam's length is assumed to be along the positive X axis.
             The draw function recognizes positive loads(with n>-2) as loads
             acting along negative Y direction and positive moments acting
@@ -2607,7 +2607,7 @@ class Beam3D(Beam):
     There is a beam of l meters long. A constant distributed load of magnitude q
     is applied along y-axis from start till the end of beam. A constant distributed
     moment of magnitude m is also applied along z-axis from start till the end of beam.
-    Beam is fixed at both of its end. So, deflection of the beam at the both ends
+    Beam is fixed at both of ends. So, deflection of the beam at the both ends
     is restricted.
 
     >>> from sympy.physics.continuum_mechanics.beam import Beam3D
@@ -2761,7 +2761,7 @@ class Beam3D(Beam):
     def polar_moment(self):
         """
         Returns the polar moment of area of the beam
-        about the X axis with respect to the centroid.
+        about the X-axis with respect to the centroid.
 
         Examples
         ========
@@ -2878,8 +2878,8 @@ class Beam3D(Beam):
 
         Examples
         ========
-        There is a beam of length 30 meters. It it supported by rollers at
-        of its end. A constant distributed load of magnitude 8 N is applied
+        There is a beam of length 30 meters. It is supported by rollers at
+        of its ends. A constant distributed load of magnitude 8 N is applied
         from start till its end along y-axis. Another linear load having
         slope equal to 9 is applied along z-axis.
 

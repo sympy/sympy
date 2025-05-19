@@ -113,11 +113,6 @@ Here follows a list of possible assumption names:
         as without the extended part, but also including infinity with
         corresponding sign, e.g., extended_positive includes ``oo``
 
-    hermitian
-    antihermitian
-        object belongs to the field of Hermitian
-        (antihermitian) operators.
-
 Examples
 ========
 
@@ -241,9 +236,7 @@ def _generate_assumption_rules():
     'rational       ->  algebraic',
     'algebraic      ->  complex',
     'transcendental ==  complex & !algebraic',
-    'real           ->  hermitian',
     'imaginary      ->  complex',
-    'imaginary      ->  antihermitian',
     'extended_real  ->  commutative',
     'complex        ->  commutative',
     'complex        ->  finite',

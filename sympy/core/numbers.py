@@ -24,7 +24,7 @@ from sympy.external.gmpy import SYMPY_INTS, gmpy, flint
 from sympy.multipledispatch import dispatch
 import mpmath
 import mpmath.libmp as mlib
-from mpmath.libmp import bitcount, round_nearest as rnd
+from mpmath.libmp import round_nearest as rnd
 from mpmath.libmp.backend import MPZ
 from mpmath.libmp import mpf_pow, mpf_pi, mpf_e, phi_fixed
 from mpmath.ctx_mp_python import mpnumeric
@@ -33,6 +33,7 @@ from mpmath.libmp.libmpf import (
     fnan as _mpf_nan, fzero, _normalize as mpf_normalize,
     prec_to_dps, dps_to_prec)
 from sympy.utilities.misc import debug
+from sympy.utilities.exceptions import sympy_deprecation_warning
 from .parameters import global_parameters
 
 _LOG2 = math.log(2)
@@ -886,15 +887,12 @@ class Float(Number):
                 # If we're loading an object pickled in Python 2 into
                 # Python 3, we may need to strip a tailing 'L' because
                 # of a shim for int on Python 3, see issue #13470.
-                if num[1].endswith('L'):
-                    num[1] = num[1][:-1]
                 # Strip leading '0x' - gmpy2 only documents such inputs
                 # with base prefix as valid when the 2nd argument (base) is 0.
                 # When mpmath uses Sage as the backend, however, it
                 # ends up including '0x' when preparing the picklable tuple.
                 # See issue #19690.
-                if num[1].startswith('0x'):
-                    num[1] = num[1][2:]
+                num[1] = num[1].removeprefix('0x').removesuffix('L')
                 # Now we can assume that it is in standard form
                 num[1] = MPZ(num[1], 16)
                 _mpf_ = tuple(num)
@@ -912,7 +910,7 @@ class Float(Number):
                     # don't compute number or else it may
                     # over/underflow
                     return Float._new(
-                        (num[0], num[1], num[2], bitcount(num[1])),
+                        (num[0], num[1], num[2], num[1].bit_length()),
                         precision)
         elif isinstance(num, (Number, NumberSymbol)):
             _mpf_ = num._as_mpf_val(precision)
@@ -1289,16 +1287,6 @@ class Rational(Number):
     >>> r.p/r.q
     0.75
 
-    If an unevaluated Rational is desired, ``gcd=1`` can be passed and
-    this will keep common divisors of the numerator and denominator
-    from being eliminated. It is not possible, however, to leave a
-    negative value in the denominator.
-
-    >>> Rational(2, 4, gcd=1)
-    2/4
-    >>> Rational(2, -4, gcd=1).q
-    4
-
     See Also
     ========
     sympy.core.sympify.sympify, sympy.simplify.simplify.nsimplify
@@ -1347,13 +1335,13 @@ class Rational(Number):
                     except ValueError:
                         pass  # error will raise below
                     else:
-                        return Rational(p.numerator, p.denominator, 1)
+                        return cls._new(p.numerator, p.denominator, 1)
 
                 if not isinstance(p, Rational):
                     raise TypeError('invalid input: %s' % p)
 
             q = 1
-            gcd = 1
+
         Q = 1
 
         if not isinstance(p, SYMPY_INTS):
@@ -1371,7 +1359,20 @@ class Rational(Number):
             Q *= int(q)
         q = Q
 
+        if gcd is not None:
+            sympy_deprecation_warning(
+                "gcd is deprecated in Rational, use nsimplify instead",
+                deprecated_since_version="1.11",
+                active_deprecations_target="deprecated-rational-gcd",
+                stacklevel=4,
+            )
+            return cls._new(p, q, gcd)
+
         # p and q are now ints
+        return cls._new(p, q)
+
+    @classmethod
+    def _new(cls, p, q, gcd=None):
         if q == 0:
             if p == 0:
                 if _errdict["divide"]:
@@ -1379,18 +1380,37 @@ class Rational(Number):
                 else:
                     return S.NaN
             return S.ComplexInfinity
+
         if q < 0:
             q = -q
             p = -p
-        if not gcd:
+
+        if gcd is None:
             gcd = igcd(abs(p), q)
+
         if gcd > 1:
             p //= gcd
             q //= gcd
+
+        return cls.from_coprime_ints(p, q)
+
+    @classmethod
+    def from_coprime_ints(cls, p: int, q: int) -> Rational:
+        """Create a Rational from a pair of coprime integers.
+
+        Both ``p`` and ``q`` should be strictly of type ``int``.
+
+        The caller should ensure that ``gcd(p,q) == 1`` and ``q > 0``.
+
+        This may be more efficient than ``Rational(p, q)``. The validity of the
+        arguments may or may not be checked so it should not be relied upon to
+        pass unvalidated or invalid arguments to this function.
+        """
         if q == 1:
             return Integer(p)
         if p == 1 and q == 2:
             return S.Half
+
         obj = Expr.__new__(cls)
         obj.p = p
         obj.q = q
@@ -1431,7 +1451,7 @@ class Rational(Number):
     def __add__(self, other):
         if global_parameters.evaluate:
             if isinstance(other, Integer):
-                return Rational(self.p + self.q*other.p, self.q, 1)
+                return Rational._new(self.p + self.q*other.p, self.q, 1)
             elif isinstance(other, Rational):
                 #TODO: this can probably be optimized more
                 return Rational(self.p*other.q + self.q*other.p, self.q*other.q)
@@ -1446,7 +1466,7 @@ class Rational(Number):
     def __sub__(self, other):
         if global_parameters.evaluate:
             if isinstance(other, Integer):
-                return Rational(self.p - self.q*other.p, self.q, 1)
+                return Rational._new(self.p - self.q*other.p, self.q, 1)
             elif isinstance(other, Rational):
                 return Rational(self.p*other.q - self.q*other.p, self.q*other.q)
             elif isinstance(other, Float):
@@ -1458,7 +1478,7 @@ class Rational(Number):
     def __rsub__(self, other):
         if global_parameters.evaluate:
             if isinstance(other, Integer):
-                return Rational(self.q*other.p - self.p, self.q, 1)
+                return Rational._new(self.q*other.p - self.p, self.q, 1)
             elif isinstance(other, Rational):
                 return Rational(self.q*other.p - self.p*other.q, self.q*other.q)
             elif isinstance(other, Float):
@@ -1470,9 +1490,9 @@ class Rational(Number):
     def __mul__(self, other):
         if global_parameters.evaluate:
             if isinstance(other, Integer):
-                return Rational(self.p*other.p, self.q, igcd(other.p, self.q))
+                return Rational._new(self.p*other.p, self.q, igcd(other.p, self.q))
             elif isinstance(other, Rational):
-                return Rational(self.p*other.p, self.q*other.q, igcd(self.p, other.q)*igcd(self.q, other.p))
+                return Rational._new(self.p*other.p, self.q*other.q, igcd(self.p, other.q)*igcd(self.q, other.p))
             elif isinstance(other, Float):
                 return other*self
             else:
@@ -1487,9 +1507,9 @@ class Rational(Number):
                 if self.p and other.p == S.Zero:
                     return S.ComplexInfinity
                 else:
-                    return Rational(self.p, self.q*other.p, igcd(self.p, other.p))
+                    return Rational._new(self.p, self.q*other.p, igcd(self.p, other.p))
             elif isinstance(other, Rational):
-                return Rational(self.p*other.q, self.q*other.p, igcd(self.p, other.p)*igcd(self.q, other.q))
+                return Rational._new(self.p*other.q, self.q*other.p, igcd(self.p, other.p)*igcd(self.q, other.q))
             elif isinstance(other, Float):
                 return self*(1/other)
             else:
@@ -1499,9 +1519,9 @@ class Rational(Number):
     def __rtruediv__(self, other):
         if global_parameters.evaluate:
             if isinstance(other, Integer):
-                return Rational(other.p*self.q, self.p, igcd(self.p, other.p))
+                return Rational._new(other.p*self.q, self.p, igcd(self.p, other.p))
             elif isinstance(other, Rational):
-                return Rational(other.p*self.q, other.q*self.p, igcd(self.p, other.p)*igcd(self.q, other.q))
+                return Rational._new(other.p*self.q, other.q*self.p, igcd(self.p, other.p)*igcd(self.q, other.q))
             elif isinstance(other, Float):
                 return other*(1/self)
             else:
@@ -1550,7 +1570,7 @@ class Rational(Number):
                 return S.Zero
             if isinstance(expt, Integer):
                 # (4/3)**2 -> 4**2 / 3**2
-                return Rational(self.p**expt.p, self.q**expt.p, 1)
+                return Rational._new(self.p**expt.p, self.q**expt.p, 1)
             if isinstance(expt, Rational):
                 intpart = expt.p // expt.q
                 if intpart:
@@ -1558,14 +1578,14 @@ class Rational(Number):
                     remfracpart = intpart*expt.q - expt.p
                     ratfracpart = Rational(remfracpart, expt.q)
                     if self.p != 1:
-                        return Integer(self.p)**expt*Integer(self.q)**ratfracpart*Rational(1, self.q**intpart, 1)
-                    return Integer(self.q)**ratfracpart*Rational(1, self.q**intpart, 1)
+                        return Integer(self.p)**expt*Integer(self.q)**ratfracpart*Rational._new(1, self.q**intpart, 1)
+                    return Integer(self.q)**ratfracpart*Rational._new(1, self.q**intpart, 1)
                 else:
                     remfracpart = expt.q - expt.p
                     ratfracpart = Rational(remfracpart, expt.q)
                     if self.p != 1:
-                        return Integer(self.p)**expt*Integer(self.q)**ratfracpart*Rational(1, self.q, 1)
-                    return Integer(self.q)**ratfracpart*Rational(1, self.q, 1)
+                        return Integer(self.p)**expt*Integer(self.q)**ratfracpart*Rational._new(1, self.q, 1)
+                    return Integer(self.q)**ratfracpart*Rational._new(1, self.q, 1)
 
         if self.is_extended_negative and expt.is_even:
             return (-self)**expt
@@ -1870,7 +1890,7 @@ class Integer(Rational):
             elif isinstance(other, Integer):
                 return Integer(self.p + other.p)
             elif isinstance(other, Rational):
-                return Rational(self.p*other.q + other.p, other.q, 1)
+                return Rational._new(self.p*other.q + other.p, other.q, 1)
             return Rational.__add__(self, other)
         else:
             return Add(self, other)
@@ -1880,7 +1900,7 @@ class Integer(Rational):
             if isinstance(other, int):
                 return Integer(other + self.p)
             elif isinstance(other, Rational):
-                return Rational(other.p + self.p*other.q, other.q, 1)
+                return Rational._new(other.p + self.p*other.q, other.q, 1)
             return Rational.__radd__(self, other)
         return Rational.__radd__(self, other)
 
@@ -1891,7 +1911,7 @@ class Integer(Rational):
             elif isinstance(other, Integer):
                 return Integer(self.p - other.p)
             elif isinstance(other, Rational):
-                return Rational(self.p*other.q - other.p, other.q, 1)
+                return Rational._new(self.p*other.q - other.p, other.q, 1)
             return Rational.__sub__(self, other)
         return Rational.__sub__(self, other)
 
@@ -1900,7 +1920,7 @@ class Integer(Rational):
             if isinstance(other, int):
                 return Integer(other - self.p)
             elif isinstance(other, Rational):
-                return Rational(other.p - self.p*other.q, other.q, 1)
+                return Rational._new(other.p - self.p*other.q, other.q, 1)
             return Rational.__rsub__(self, other)
         return Rational.__rsub__(self, other)
 
@@ -1911,7 +1931,7 @@ class Integer(Rational):
             elif isinstance(other, Integer):
                 return Integer(self.p*other.p)
             elif isinstance(other, Rational):
-                return Rational(self.p*other.p, other.q, igcd(self.p, other.q))
+                return Rational._new(self.p*other.p, other.q, igcd(self.p, other.q))
             return Rational.__mul__(self, other)
         return Rational.__mul__(self, other)
 
@@ -1920,7 +1940,7 @@ class Integer(Rational):
             if isinstance(other, int):
                 return Integer(other*self.p)
             elif isinstance(other, Rational):
-                return Rational(other.p*self.p, other.q, igcd(self.p, other.q))
+                return Rational._new(other.p*self.p, other.q, igcd(self.p, other.q))
             return Rational.__rmul__(self, other)
         return Rational.__rmul__(self, other)
 
@@ -2028,7 +2048,7 @@ class Integer(Rational):
             # cases -1, 0, 1 are done in their respective classes
             return S.Infinity + S.ImaginaryUnit*S.Infinity
         if expt is S.NegativeInfinity:
-            return Rational(1, self, 1)**S.Infinity
+            return Rational._new(1, self, 1)**S.Infinity
         if not isinstance(expt, Number):
             # simplify when expt is even
             # (-2)**k --> 2**k
@@ -2046,9 +2066,9 @@ class Integer(Rational):
             # invert base and change sign on exponent
             ne = -expt
             if self.is_negative:
-                return S.NegativeOne**expt*Rational(1, -self, 1)**ne
+                return S.NegativeOne**expt*Rational._new(1, -self.p, 1)**ne
             else:
-                return Rational(1, self.p, 1)**ne
+                return Rational._new(1, self.p, 1)**ne
         # see if base is a perfect root, sqrt(4) --> 2
         x, xexact = integer_nthroot(abs(self.p), expt.q)
         if xexact:
@@ -2086,7 +2106,7 @@ class Integer(Rational):
                 # (2**2)**(1/10) -> 2**(1/5)
                 g = igcd(div_m, expt.q)
                 if g != 1:
-                    out_rad *= Pow(prime, Rational(div_m//g, expt.q//g, 1))
+                    out_rad *= Pow(prime, Rational._new(div_m//g, expt.q//g, 1))
                 else:
                     sqr_dict[prime] = div_m
         # identify gcd of remaining powers
@@ -4200,7 +4220,7 @@ def equal_valued(x, y):
     Explanation
     ===========
 
-    In future SymPy verions Float and Rational might compare unequal and floats
+    In future SymPy versions Float and Rational might compare unequal and floats
     with different precisions might compare unequal. In that context a function
     is needed that can check if a number is equal to 1 or 0 etc. The idea is
     that instead of testing ``if x == 1:`` if we want to accept floats like
@@ -4360,7 +4380,7 @@ def all_close(expr1, expr2, rtol=1e-5, atol=1e-8):
         assert expr1.is_Add or expr2.is_Add
         cd1 = expr1.as_coefficients_dict()
         cd2 = expr2.as_coefficients_dict()
-        # this test will asure that the key of 1 is in
+        # this test will assure that the key of 1 is in
         # each dict and that they have equal values
         if not _close_num(cd1[1], cd2[1]):
             return False
@@ -4401,7 +4421,7 @@ def _eval_is_eq(self, other): # noqa: F811
 
 
 def sympify_fractions(f):
-    return Rational(f.numerator, f.denominator, 1)
+    return Rational._new(f.numerator, f.denominator, 1)
 
 _sympy_converter[fractions.Fraction] = sympify_fractions
 

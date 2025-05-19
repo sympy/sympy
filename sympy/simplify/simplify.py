@@ -264,7 +264,7 @@ def posify(eq):
     [2]
     """
     eq = sympify(eq)
-    if iterable(eq):
+    if not isinstance(eq, Basic) and iterable(eq):
         f = type(eq)
         eq = list(eq)
         syms = set()

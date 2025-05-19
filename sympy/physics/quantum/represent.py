@@ -24,6 +24,7 @@ from sympy.physics.quantum.operator import Operator, OuterProduct
 from sympy.physics.quantum.qapply import qapply
 from sympy.physics.quantum.operatorset import operators_to_state, state_to_operators
 
+
 __all__ = [
     'represent',
     'rep_innerproduct',
@@ -133,9 +134,6 @@ def represent(expr, **options):
     >>> y = XBra('y')
     >>> represent(X*x)
     x*DiracDelta(x - x_2)
-    >>> represent(X*x*y)
-    x*DiracDelta(x - x_3)*DiracDelta(x_1 - y)
-
     """
 
     format = options.get('format', 'sympy')
@@ -199,15 +197,15 @@ def represent(expr, **options):
         A = expr.args[0]
         B = expr.args[1]
         return represent(Mul(A, B) + Mul(B, A), **options)
-    elif isinstance(expr, InnerProduct):
-        return represent(Mul(expr.bra, expr.ket), **options)
-    elif not isinstance(expr, (Mul, OuterProduct)):
+    elif not isinstance(expr, (Mul, OuterProduct, InnerProduct)):
+        # We have removed special handling of inner products that used to be
+        # required (before automatic transforms).
         # For numpy and scipy.sparse, we can only handle numerical prefactors.
         if format in ('numpy', 'scipy.sparse'):
             return _sympy_to_scalar(expr)
         return expr
 
-    if not isinstance(expr, (Mul, OuterProduct)):
+    if not isinstance(expr, (Mul, OuterProduct, InnerProduct)):
         raise TypeError('Mul expected, got: %r' % expr)
 
     if "index" in options:
@@ -302,7 +300,8 @@ def rep_innerproduct(expr, **options):
     result = prod.doit()
 
     format = options.get('format', 'sympy')
-    return expr._format_represent(result, format)
+    result = expr._format_represent(result, format)
+    return result
 
 
 def rep_expectation(expr, **options):
@@ -345,7 +344,8 @@ def rep_expectation(expr, **options):
     bra = basis_kets[1].dual
     ket = basis_kets[0]
 
-    return qapply(bra*expr*ket)
+    result = qapply(bra*expr*ket)
+    return result
 
 
 def integrate_result(orig_expr, result, **options):

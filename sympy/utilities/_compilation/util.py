@@ -65,7 +65,7 @@ def make_dirs(path):
 
 def missing_or_other_newer(path, other_path, cwd=None):
     """
-    Investigate if path is non-existant or older than provided reference
+    Investigate if path is non-existent or older than provided reference
     path.
 
     Parameters
@@ -87,7 +87,7 @@ def missing_or_other_newer(path, other_path, cwd=None):
     if not os.path.exists(path):
         return True
     if os.path.getmtime(other_path) - 1e-6 >= os.path.getmtime(path):
-        # 1e-6 is needed beacuse http://stackoverflow.com/questions/17086426/
+        # 1e-6 is needed because http://stackoverflow.com/questions/17086426/
         return True
     return False
 
@@ -126,7 +126,7 @@ def copy(src, dst, only_update=False, copystat=True, cwd=None,
         if not os.path.isabs(dst):
             dst = os.path.join(cwd, dst)
 
-    if not os.path.exists(src):  # Make sure source file extists
+    if not os.path.exists(src):  # Make sure source file exists
         raise FileNotFoundError("Source: `{}` does not exist".format(src))
 
     # We accept both (re)naming destination file _or_

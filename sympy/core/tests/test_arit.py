@@ -1542,27 +1542,21 @@ def test_Mul_is_imaginary_real():
 
 
 def test_Mul_hermitian_antihermitian():
-    xz, yz = symbols('xz, yz', zero=True, antihermitian=True)
-    xf, yf = symbols('xf, yf', hermitian=False, antihermitian=False, finite=True)
-    xh, yh = symbols('xh, yh', hermitian=True, antihermitian=False, nonzero=True)
-    xa, ya = symbols('xa, ya', hermitian=False, antihermitian=True, zero=False, finite=True)
+    xz, yz = symbols('xz, yz', zero=True)
+    xf, yf = symbols('xf, yf', finite=True)
+    xh, yh = symbols('xh, yh', nonzero=True)
+    xa, ya = symbols('xa, ya', zero=False, finite=True)
     assert (xz*xh).is_hermitian is True
     assert (xz*xh).is_antihermitian is True
     assert (xz*xa).is_hermitian is True
     assert (xz*xa).is_antihermitian is True
     assert (xf*yf).is_hermitian is None
     assert (xf*yf).is_antihermitian is None
-    assert (xh*yh).is_hermitian is True
-    assert (xh*yh).is_antihermitian is False
-    assert (xh*ya).is_hermitian is False
-    assert (xh*ya).is_antihermitian is True
-    assert (xa*ya).is_hermitian is True
-    assert (xa*ya).is_antihermitian is False
 
-    a = Symbol('a', hermitian=True, zero=False)
-    b = Symbol('b', hermitian=True)
-    c = Symbol('c', hermitian=False)
-    d = Symbol('d', antihermitian=True)
+    a = Symbol('a', zero=False)
+    b = Symbol('b')
+    c = Symbol('c')
+    d = Symbol('d')
     e1 = Mul(a, b, c, evaluate=False)
     e2 = Mul(b, a, c, evaluate=False)
     e3 = Mul(a, b, c, d, evaluate=False)
@@ -1633,6 +1627,8 @@ def test_issue_3531():
     # https://github.com/sympy/sympy/issues/3531
     # https://github.com/sympy/sympy/pull/18116
     class MightyNumeric(tuple):
+        __slots__ = ()
+
         def __rtruediv__(self, other):
             return "something"
 
@@ -1905,6 +1901,12 @@ def test_Mod():
     assert Mod(p + 5, -p - 3) == -p - 1
     assert Mod(-p - 5, -p - 3) == -2
     assert Mod(p + 1, p - 1).func is Mod
+
+    # issue 27749
+    n = symbols('n', integer=True, positive=True)
+    assert unchanged(Mod, 1, n)
+    n = symbols('n', prime=True)
+    assert Mod(1, n) == 1
 
     # handling sums
     assert (x + 3) % 1 == Mod(x, 1)

@@ -296,7 +296,7 @@ def remove_ids(mul):
     """ Remove Identities from a MatMul
 
     This is a modified version of sympy.strategies.rm_id.
-    This is necesssary because MatMul may contain both MatrixExprs and Exprs
+    This is necessary because MatMul may contain both MatrixExprs and Exprs
     as args.
 
     See Also

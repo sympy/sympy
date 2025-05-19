@@ -1,5 +1,5 @@
 """
-A module contining deprecated matrix mixin classes.
+A module containing deprecated matrix mixin classes.
 
 The classes in this module are deprecated and will be removed in a future
 release. They are kept here for backwards compatibility in case downstream
@@ -8,7 +8,7 @@ code was subclassing them.
 Importing anything else from this module is deprecated so anything here
 should either not be used or should be imported from somewhere else.
 """
-
+from __future__ import annotations
 from collections import defaultdict
 from collections.abc import Iterable
 from inspect import isfunction
@@ -127,8 +127,8 @@ class _MatrixDeprecatedMeta(type):
 class MatrixRequired(metaclass=_MatrixDeprecatedMeta):
     """Deprecated mixin class for making matrix classes."""
 
-    rows = None  # type: int
-    cols = None  # type: int
+    rows: int
+    cols: int
     _simplify = None
 
     def __init_subclass__(cls, **kwargs):
@@ -3037,7 +3037,7 @@ class MatrixCommon(MatrixArithmetic, MatrixOperations, MatrixProperties,
                   MatrixSpecial, MatrixShaping):
     """All common matrix operations including basic arithmetic, shaping,
     and special matrices like `zeros`, and `eye`."""
-    _diff_wrt = True  # type: bool
+    _diff_wrt: bool = True
 
 
 class _MinimalMatrix:

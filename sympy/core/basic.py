@@ -1,6 +1,7 @@
 """Base class for all the objects in SymPy"""
 from __future__ import annotations
 
+from collections import Counter
 from collections.abc import Mapping, Iterable
 from itertools import zip_longest
 from functools import cmp_to_key
@@ -261,7 +262,6 @@ class Basic(Printable):
     is_rational: bool | None
     is_extended_nonnegative: bool | None
     is_infinite: bool | None
-    is_antihermitian: bool | None
     is_extended_negative: bool | None
     is_extended_real: bool | None
     is_finite: bool | None
@@ -276,7 +276,6 @@ class Basic(Printable):
     is_commutative: bool | None
     is_nonnegative: bool | None
     is_nonpositive: bool | None
-    is_hermitian: bool | None
     is_irrational: bool | None
     is_real: bool | None
     is_zero: bool | None
@@ -355,7 +354,7 @@ class Basic(Printable):
         {'commutative': True, 'complex': True, 'extended_negative': False,
          'extended_nonnegative': True, 'extended_nonpositive': False,
          'extended_nonzero': True, 'extended_positive': True, 'extended_real':
-         True, 'finite': True, 'hermitian': True, 'imaginary': False,
+         True, 'finite': True, 'imaginary': False,
          'infinite': False, 'negative': False, 'nonnegative': True,
          'nonpositive': False, 'nonzero': True, 'positive': True, 'real':
          True, 'zero': False}
@@ -1803,16 +1802,7 @@ class Basic(Printable):
 
         if not group:
             return set(results)
-        else:
-            groups = {}
-
-            for result in results:
-                if result in groups:
-                    groups[result] += 1
-                else:
-                    groups[result] = 1
-
-            return groups
+        return dict(Counter(results))
 
     def count(self, query):
         """Count the number of matching subexpressions."""
@@ -2133,11 +2123,8 @@ class Basic(Printable):
         # functions for matching expression node names.
 
         clsname = obj.__class__.__name__
-        postprocessors = set()
-        for i in obj.args:
-            for f in _get_postprocessors(clsname, type(i)):
-                postprocessors.add(f)
-
+        postprocessors = {f for i in obj.args
+                            for f in _get_postprocessors(clsname, type(i))}
         for f in postprocessors:
             obj = f(obj)
 

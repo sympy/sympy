@@ -232,6 +232,8 @@ def test_issue_5652():
     n = symbols('n', commutative=False)
     assert simplify(n + n**(-n)) == n + n**(-n)
 
+def test_issue_27380():
+    assert simplify(1.0**(x+1)/1.0**x) == 1.0
 
 def test_simplify_fail1():
     x = Symbol('x')
@@ -546,11 +548,15 @@ def test_posify():
     assert str(Sum(posify(1/x**n)[0], (n,1,3)).expand()) == \
         'Sum(_x**(-n), (n, 1, 3))'
 
+    A = Matrix([[1, 2, 3], [4, 5, 6 * Abs(x)]])
+    Ap, rep = posify(A)
+    assert Ap == A.subs(*reversed(rep.popitem()))
+
     # issue 16438
     k = Symbol('k', finite=True)
     eq, rep = posify(k)
     assert eq.assumptions0 == {'positive': True, 'zero': False, 'imaginary': False,
-     'nonpositive': False, 'commutative': True, 'hermitian': True, 'real': True, 'nonzero': True,
+     'nonpositive': False, 'commutative': True, 'real': True, 'nonzero': True,
      'nonnegative': True, 'negative': False, 'complex': True, 'finite': True,
      'infinite': False, 'extended_real':True, 'extended_negative': False,
      'extended_nonnegative': True, 'extended_nonpositive': False,

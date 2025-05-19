@@ -50,8 +50,8 @@ pi(x)
 pi(C, Q)
 
 """
-
-from typing import Any, Dict as tDict
+from __future__ import annotations
+from typing import Any
 
 import string
 
@@ -92,10 +92,10 @@ _greek = list(greeks) # make a copy, so we can mutate it
 _greek.remove("lambda")
 _greek.append("lamda")
 
-ns: tDict[str, Any] = {}
+ns: dict[str, Any] = {}
 exec('from sympy import *', ns)
-_clash1: tDict[str, Any] = {}
-_clash2: tDict[str, Any] = {}
+_clash1: dict[str, Any] = {}
+_clash2: dict[str, Any] = {}
 while ns:
     _k, _ = ns.popitem()
     if _k in _greek:

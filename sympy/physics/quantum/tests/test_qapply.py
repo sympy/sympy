@@ -17,6 +17,7 @@ from sympy.physics.quantum.state import Ket
 from sympy.physics.quantum.density import Density
 from sympy.physics.quantum.qubit import Qubit, QubitBra
 from sympy.physics.quantum.boson import BosonOp, BosonFockKet, BosonFockBra
+from sympy.testing.pytest import warns_deprecated_sympy
 
 
 j, jp, m, mp = symbols("j j' m m'")
@@ -98,7 +99,7 @@ def test_tensorproduct():
     assert qapply(TensorProduct(a, Dagger(b) * b) * ket1) == 2 * ket3
     assert qapply(bra1 * TensorProduct(a, b * b),
                   dagger=True) == sqrt(2) * bra2
-    assert qapply(bra2 * ket1).doit() == TensorProduct(1, 1)
+    assert qapply(bra2 * ket1).doit() == S.One
     assert qapply(TensorProduct(a, b * b) * ket1) == sqrt(2) * ket2
     assert qapply(Dagger(TensorProduct(a, b * b) * ket1),
                   dagger=True) == sqrt(2) * Dagger(ket2)
@@ -142,9 +143,10 @@ def test_issue24158_ket_times_op():
     assert qapply(P1) == QubitBra(0) * XGate(0)     # qapply(P1) -> 0 before fix
     P1 = qapply(P1, dagger = True)  # unsatisfactorily -> <0|*X(0), expect <1| since dagger=True
     assert qapply(P1, dagger = True) == QubitBra(1) # qapply(P1, dagger=True) -> 0 before fix
-    P2 = QubitBra(0) * QubitBra(0) * Qubit(0) * XGate(0) # 'forgot' to set brackets
+    P2 = QubitBra(0) * (QubitBra(0) * Qubit(0)) * XGate(0) # 'forgot' to set brackets
     P2 = qapply(P2, dagger = True) # unsatisfactorily -> <0|*X(0), expect <1| since dagger=True
-    assert qapply(P2, dagger = True) == QubitBra(1) # qapply(P1) -> 0 before fix
+    assert P2 == QubitBra(1) # qapply(P1) -> 0 before fix
     # Pull Request 24237: IdentityOperator from the right without dagger=True option
-    assert qapply(QubitBra(1)*IdentityOperator()) == QubitBra(1)
-    assert qapply(IdentityGate(0)*(Qubit(0) + Qubit(1))) == Qubit(0) + Qubit(1)
+    with warns_deprecated_sympy():
+        assert qapply(QubitBra(1)*IdentityOperator()) == QubitBra(1)
+        assert qapply(IdentityGate(0)*(Qubit(0) + Qubit(1))) == Qubit(0) + Qubit(1)
