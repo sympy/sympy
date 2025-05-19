@@ -329,8 +329,23 @@ quart = quarts = Quantity("quart")
 # Other convenient units and magnitudes
 
 ly = lightyear = lightyears = Quantity("lightyear", abbrev="ly")
+ly.set_global_relative_scale_factor(9_460_730_472_580.8, kilometer)
+
+pc = parsec = Quantity('parsec', abbrev='pc')
+# As defined by the IAU in 2015
+pc.set_global_relative_scale_factor(Rational(96_939_420_213_600_000, pi), meters)
 
 au = astronomical_unit = astronomical_units = Quantity("astronomical_unit", abbrev="AU")
+au.set_global_relative_scale_factor(149_597_870_700, meter)
+
+m_sun = solar_mass = Quantity('solar_mass', abbrev='M_sun')
+m_sun.set_global_relative_scale_factor(1.988_92e30,kilogram)
+
+m_earth = earth_mass = Quantity('earth_mass', abbrev="M_earth")
+m_earth.set_global_relative_scale_factor(1.898e27, kilogram)
+
+m_jupiter = m_jup = jupiter_mass = Quantity('jupiter_mass', abbrev='M_jup')
+m_jupiter.set_global_relative_scale_factor(1.898e27, kilogram)
 
 
 # Fundamental Planck units:
