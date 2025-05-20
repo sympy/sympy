@@ -70,12 +70,12 @@ def test_pade_approximant_gcdex():
     numerator, denominator = pade_approximant_gcdex(poly_1, 2)
 
     assert numerator/numerator.LC() == x**2 + 6*x + 12
-    assert numerator/denominator == (x**2/4 + 3*x/2 + 3)/(x**2/4 - 3*x/2 + 3)
+    assert (numerator/denominator).equals((x**2/4 + 3*x/2 + 3)/(x**2/4 - 3*x/2 + 3))
 
     numerator, denominator = pade_approximant_gcdex(poly_2, 3, 4)
 
     assert numerator/numerator.LC() == x**3 + 2
-    assert numerator/denominator == (x**3/2 + 1)/(1 - x**3/2)
+    assert (numerator/denominator).equals((x**3/2 + 1)/(1 - x**3/2))
 
     numerator, denominator = pade_approximant_gcdex(poly_4, 3)
 

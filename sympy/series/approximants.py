@@ -110,7 +110,7 @@ def approximants(l, X=Symbol('x'), simplify=False):
 
 
 @public
-def pade_approximants_gcdex(f, order: int):
+def pade_approximants_gcdex(f: Poly, order: int):
     """
     Returns all pade approximants of the expression `f` of the desired order.
 
@@ -131,7 +131,7 @@ def pade_approximants_gcdex(f, order: int):
     Returns
     =======
 
-    pade approximants : Generator[tuple[Poly, Poly]] | Generator[tuple[Expr, Expr]]
+    pade approximants : Generator[tuple[Poly, Poly]] | Generator[tuple[None, None]]
         Generator for (numerator, denominator) pairs of polynomials
         representing the numerator and denominators of the approximants.
 
@@ -139,18 +139,19 @@ def pade_approximants_gcdex(f, order: int):
     ========
 
     >>> from sympy.abc import x
+    >>> from sympy import Poly
     >>> from sympy.series.approximants import pade_approximants_gcdex
 
-    >>> exp_taylor_poly = 1 + x + x**2/2 + x**3/6 + x**4/24
+    >>> exp_taylor_poly = Poly(1 + x + x**2/2 + x**3/6 + x**4/24, x)
     >>> pade_exp = pade_approximants_gcdex(exp_taylor_poly, 2)
     >>> for p in pade_exp: print(p)
-    (x**2/2 + x + 1, 1)
-    (2*x + 4, 4 - 2*x)
-    (1, x**2/2 - x + 1)
+    (Poly(1/2*x**2 + x + 1, x, domain='QQ'), Poly(1, x, domain='QQ'))
+    (Poly(2*x + 4, x, domain='QQ'), Poly(-2*x + 4, x, domain='QQ'))
+    (Poly(1, x, domain='QQ'), Poly(1/2*x**2 - x + 1, x, domain='QQ'))
 
     To get pade approximants, divide the numerators by the denominators
 
-    >>> sin_taylor_poly = x - x**3/6 + x**5/120
+    >>> sin_taylor_poly = Poly(x - x**3/6 + x**5/120, x)
     >>> pade_sin = pade_approximants_gcdex(sin_taylor_poly, 5)
     >>> for num, denom in pade_sin: print(num/denom)
     x**5/120 - x**3/6 + x
@@ -169,30 +170,25 @@ def pade_approximants_gcdex(f, order: int):
     if order < 0:
         raise ValueError("'order' must be a non-negative integer.")
 
-    F, opt = poly_from_expr(f)
-
-    if not F.is_univariate:
+    if not f.is_univariate:
         raise ValueError("f must be a univariate polynomial.")
 
-    # truncate F so F.degree() <= order
-    if F.degree() > order:
-        F = F.slice(0, order+1)
+    # truncate f so f.degree() <= order
+    if f.degree() > order:
+        f = f.slice(0, order+1)
 
-    x = F.gens[0]
+    x = f.gens[0]
 
     remainder_monomial = Poly(x ** (order + 1), x)
 
-    euclidean_algorithm_steps = gcdex_steps(remainder_monomial, F)
+    euclidean_algorithm_steps = gcdex_steps(remainder_monomial, f, gens=x)
 
     for _, t, r in euclidean_algorithm_steps:
-        if opt.polys:
-            yield r, t
-        else:
-            yield r.as_expr(), t.as_expr()
+        yield r, t
 
 
 @public
-def pade_approximant_gcdex(f, m: int, n: int | None = None):
+def pade_approximant_gcdex(f: Poly, m: int, n: int | None=None):
     """
     `[m/n]` pade approximant of `f` around `x0`.
 
@@ -218,43 +214,44 @@ def pade_approximant_gcdex(f, m: int, n: int | None = None):
     Returns
     =======
 
-    pade approximant : tuple[Poly, Poly] | tuple[Expr, Expr]
+    pade approximant : tuple[Poly, Poly] | tuple[None, None]
         returns `p(x), q(x)`, where `p(x)/q(x)` is the pade approximant
 
     Examples
     ========
 
     >>> import sympy as sp
+    >>> from sympy import Poly
     >>> from sympy.series.approximants import pade_approximant_gcdex
     >>> x = sp.symbols('x')
 
-    >>> exp_taylor_poly = x**4/24 + x**3/6 + x**2/2 + x + 1
+    >>> exp_taylor_poly = Poly(x**4/24 + x**3/6 + x**2/2 + x + 1, x)
     >>> pade_exp = pade_approximant_gcdex(exp_taylor_poly, 2)
     >>> print(pade_exp)
-    (x**2/4 + 3*x/2 + 3, x**2/4 - 3*x/2 + 3)
+    (Poly(1/4*x**2 + 3/2*x + 3, x, domain='QQ'), Poly(1/4*x**2 - 3/2*x + 3, x, domain='QQ'))
 
     The numerators and denominators of an `[m/n]` pade approximant do not
     necessarily have order `m` and `n` respectively.
 
-    >>> sin_taylor_poly = x**5/120 - x**3/6 + x
+    >>> sin_taylor_poly = Poly(x**5/120 - x**3/6 + x, x)
     >>> pade_sin = pade_approximant_gcdex(sin_taylor_poly, 1, 3)
     >>> print(pade_sin)
-    (36*x, 6*x**2 + 36)
+    (Poly(36*x, x, domain='QQ'), Poly(6*x**2 + 36, x, domain='QQ'))
 
     The `[m/0]` pade approximant is the same a truncating to order `m`
 
-    >>> poly = 4*x**4 + 3*x**3 + 2*x**2 + x + 1
+    >>> poly = Poly(4*x**4 + 3*x**3 + 2*x**2 + x + 1, x, domain='QQ')
     >>> pade_cos = pade_approximant_gcdex(poly, 3, 0)
     >>> print(pade_cos)
-    (3*x**3 + 2*x**2 + x + 1, 1)
+    (Poly(3*x**3 + 2*x**2 + x + 1, x, domain='QQ'), Poly(1, x, domain='QQ'))
 
     The pade approximant does not always exist, for example, the `[1/1]`
     approximant for `cos(x)`
 
-    >>> cos_taylor_poly = 1 - x**2/2 + x**4/24
+    >>> cos_taylor_poly = Poly(1 - x**2/2 + x**4/24, x)
     >>> pade_cos11 = pade_approximant_gcdex(cos_taylor_poly, 1)
     >>> print(pade_cos11)
-    (2*x, 2*x)
+    (Poly(2*x, x, domain='QQ'), Poly(2*x, x, domain='QQ'))
 
     `num_cos11/denom_cos11 == 1`, and `1` does not match the taylor expansion
     of `cos(x)` to second order in `x`.
@@ -272,40 +269,32 @@ def pade_approximant_gcdex(f, m: int, n: int | None = None):
     if m < 0 or n < 0:
         raise ValueError("m and n must be non-negative integers.")
 
-    F, opt = poly_from_expr(f)
-
-    if not F.is_univariate:
+    if not f.is_univariate:
         raise ValueError("f must be a univariate polynomial.")
 
-    min_degree = F.EM()[0]
+    min_degree = f.EM()[0]
     if min_degree > m:
         raise ValueError(f"polynomial has zero of order {min_degree}, " \
         f"which is greater than {m}, the requested order of the numerator.")
 
-    approximants = pade_approximants_gcdex(F, order = m + n)
+    approximants = pade_approximants_gcdex(f, order = m + n)
 
     numerator, denominator = next(approximants)
     for next_numerator, next_denominator in approximants:
         if next_numerator.degree() < m:
-            if opt.polys:
-                return numerator, denominator
-            else:
-                return numerator.as_expr(), denominator.as_expr()
+            return numerator, denominator
 
         numerator, denominator = next_numerator, next_denominator
 
     if numerator.degree() == m:
-        if opt.polys:
-            return numerator, denominator
-        else:
-            return numerator.as_expr(), denominator.as_expr()
+        return numerator, denominator
 
     # if it hasn't returned yet, there is no [m/n] pade approximant
     return None, None
 
 
 @public
-def pade_approximant(f, x, x0 = 0, m: int = 6, n: int | None = None):
+def pade_approximant(f, x, x0=0, m: int=6, n: int | None=None):
     """
     `[m/n]` pade approximant of `f` around `x=0`.
 

@@ -1946,6 +1946,7 @@ def test_gcdex_steps():
         r_degree = ri.degree()
 
         s, t, r = si, ti, ri
+
     leading_coef = r.LC()
     s, t, r = s.mul(1/leading_coef), t.mul(1/leading_coef), r.mul(1/leading_coef)
 
@@ -1972,6 +1973,34 @@ def test_gcdex_steps():
     leading_coef = r.LC()
 
     s2, t2, r2 = gcdex(f, g)
+    s2, t2, r2 = Poly(s2 * leading_coef, x), Poly(t2* leading_coef, x), Poly(r2 * leading_coef, x)
+
+    assert (s2, t2, r2) == (s, t, r)
+
+    # on polynomials with variable coefficients
+    f = x**4 - y
+    g = x*(x**2 - y)
+
+    # must specifiy the generator for mutivariate polynomials
+    raises(ValueError, lambda: next(gcdex_steps(f, g)))
+
+    eea_result = list(gcdex_steps(f, g, gens=x))
+    assert(len(eea_result)==4)
+
+    r_degree = 4
+    s, t, r = 0, 0, 0
+    for si, ti, ri in eea_result:
+        assert (si*f + ti*g).equals(ri)
+        ri_poly = Poly(ri, gens=x)
+        assert ri_poly.degree() < r_degree
+        r_degree = ri_poly.degree()
+
+        s, t, r = si, ti, ri
+
+    s, t, r = Poly(s, x), Poly(t, x), Poly(r, x)
+    leading_coef = r.LC()
+
+    s2, t2, r2 = gcdex(f, g, gens=x)
     s2, t2, r2 = Poly(s2 * leading_coef, x), Poly(t2* leading_coef, x), Poly(r2 * leading_coef, x)
 
     assert (s2, t2, r2) == (s, t, r)

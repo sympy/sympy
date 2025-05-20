@@ -5336,13 +5336,16 @@ def _gcdex_steps_domain(a, b, K):
         t1, t2 = t2, t1 - quotient * t2
 
 
-def _gcdex_steps_polynomial(f, g):
+def _gcdex_steps_polynomial(f, g, auto):
     """
     Generator for intermediate steps of the extended euclidean algorithm
     on polynomials. Helper function for `gcdex_steps`.
     """
-    if f.get_domain().is_Ring:
+    if auto and f.get_domain().is_Ring:
         f, g = f.to_field(), g.to_field()
+
+    if not f.get_domain().is_PID:
+        raise DomainError("gcdex_steps is only for Euclidean domains")
 
     if not f.is_univariate:
         raise ValueError('univariate polynomial expected')
@@ -5413,7 +5416,7 @@ def gcdex_steps(f, g, *gens, **args):
     Examples
     ========
 
-    >>> from sympy.abc import x
+    >>> from sympy.abc import x, y
     >>> from sympy import simplify
     >>> from sympy.polys.polytools import gcdex_steps
 
@@ -5436,6 +5439,21 @@ def gcdex_steps(f, g, *gens, **args):
     >>> from sympy.polys.polytools import gcdex
     >>> gcdex(f, g)
     (3/5 - x/5, x**2/5 - 6*x/5 + 2, x + 1)
+
+    For multivariate polynomials, the variable must be specified. This example
+    treats the polynomials as univariate polynomials over `x`
+
+    >>> f = x**2*y - 2*x*y**2 + 1
+    >>> g = x + 2*y
+    >>> for step in gcdex_steps(f, g, gens=x): print(step)
+    (0, 1, x + 2*y)
+    (1, -x*y + 4*y**2, 8*y**3 + 1)
+
+    This example treats the same polynomials as univariate polynomials over `y`
+
+    >>> for step in gcdex_steps(f, g, gens=y): print(step)
+    (0, 1, x + 2*y)
+    (1, -x**2 + x*y, 1 - x**3)
 
     See Also
     ========
@@ -5466,7 +5484,7 @@ def gcdex_steps(f, g, *gens, **args):
         except DomainError as exc:
             raise ComputationFailed('gcdex_steps', 2, exc)
 
-    for s, t, r in _gcdex_steps_polynomial(F, G):
+    for s, t, r in _gcdex_steps_polynomial(F, G, auto=opt.auto):
         if opt.polys:
             yield s, t, r
         else:
