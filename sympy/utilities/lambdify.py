@@ -329,9 +329,10 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
 
         *modules* can be one of the following types:
 
-        - The strings ``"math"``, ``"cmath"``, ``"mpmath"``, ``"numpy"``, ``"numexpr"``,
-          ``"scipy"``, ``"sympy"``, or ``"tensorflow"`` or ``"jax"``. This uses the
-          corresponding printer and namespace mapping for that module.
+        - The strings ``"math"``, ``"cmath"``, ``"mpmath"``, ``"numpy"``,
+          ``"numexpr"``, ``"scipy"``, ``"sympy"``, ``"tensorflow"``,
+          ``"torch"`` or ``"jax"``. This uses the corresponding printer
+          and namespace mapping for that module.
         - A module (e.g., ``math``). This uses the global namespace of the
           module. If the module is one of the above known modules, it will
           also use the corresponding printer and namespace mapping
