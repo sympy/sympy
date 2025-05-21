@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+from collections.abc import Iterator
+
+from sympy.core.expr import Expr
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.polys.polytools import lcm
@@ -110,7 +113,7 @@ def approximants(l, X=Symbol('x'), simplify=False):
 
 
 @public
-def pade_approximants_gcdex(f: Poly, order: int):
+def pade_approximants_gcdex(f: Poly, order: int) -> Iterator[tuple[Poly, Poly]]:
     """
     Returns all pade approximants of the expression `f` of the desired order.
 
@@ -188,7 +191,9 @@ def pade_approximants_gcdex(f: Poly, order: int):
 
 
 @public
-def pade_approximant_gcdex(f: Poly, m: int, n: int | None=None):
+def pade_approximant_gcdex(
+    f: Poly, m: int, n: int | None=None
+) -> tuple[Poly, Poly] | tuple[None, None]:
     """
     `[m/n]` pade approximant of `f` around `x0`.
 
@@ -294,7 +299,9 @@ def pade_approximant_gcdex(f: Poly, m: int, n: int | None=None):
 
 
 @public
-def pade_approximant(f, x, x0=0, m: int=6, n: int | None=None):
+def pade_approximant(
+    f: Expr, x: Expr, x0: Expr | complex = 0, m: int=6, n: int | None = None
+) -> Expr | None:
     """
     `[m/n]` pade approximant of `f` around `x=0`.
 

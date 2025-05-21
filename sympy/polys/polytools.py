@@ -4,8 +4,9 @@ from __future__ import annotations
 
 from functools import wraps, reduce
 from operator import mul
-from typing import Optional
+from typing import Optional, overload, Literal, Any
 from collections import Counter, defaultdict
+from collections.abc import Iterator
 
 from sympy.core import (
     S, Expr, Add, Tuple
@@ -5371,8 +5372,28 @@ def _gcdex_steps_polynomial(f, g, auto):
         t1, t2 = t2, t1 - quotient * t2
 
 
+@overload
+def gcdex_steps(
+    f: Expr, g: Expr, *gens: Expr, polys: Literal[False] = False, **args: Any
+) -> Iterator[tuple[Expr, Expr, Expr]]:
+    ...
+
+@overload
+def gcdex_steps(
+    f: Expr, g: Expr, *gens: Expr, polys: Literal[True], **args: Any
+) -> Iterator[tuple[Poly, Poly, Poly]]:
+    ...
+
+@overload
+def gcdex_steps(
+    f: Poly, g: Poly, *gens: Expr, **args: Any
+) -> Iterator[tuple[Poly, Poly, Poly]]:
+    ...
+
 @public
-def gcdex_steps(f, g, *gens, **args):
+def gcdex_steps(
+    f: Expr | Poly, g: Expr | Poly, *gens: Expr, **args: Any
+) -> Iterator[tuple[Expr, Expr, Expr]] | Iterator[tuple[Poly, Poly, Poly]]:
     """
     Generator for intermediate steps in the extended Euclidean algorithm.
 
