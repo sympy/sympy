@@ -202,3 +202,8 @@ Dispersion of Polynomials
 
 .. autofunction:: dispersionset
 .. autofunction:: dispersion
+
+Type Annotations
+================
+
+.. py:class:: collections.abc.Iterator

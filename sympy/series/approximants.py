@@ -251,15 +251,15 @@ def pade_approximant_gcdex(
     (Poly(3*x**3 + 2*x**2 + x + 1, x, domain='QQ'), Poly(1, x, domain='QQ'))
 
     The pade approximant does not always exist, for example, the `[1/1]`
-    approximant for `cos(x)`
+    approximant for ``cos(x)``:
 
     >>> cos_taylor_poly = Poly(1 - x**2/2 + x**4/24, x)
     >>> pade_cos11 = pade_approximant_gcdex(cos_taylor_poly, 1)
     >>> print(pade_cos11)
     (Poly(2*x, x, domain='QQ'), Poly(2*x, x, domain='QQ'))
 
-    `num_cos11/denom_cos11 == 1`, and `1` does not match the taylor expansion
-    of `cos(x)` to second order in `x`.
+    ``num_cos11/denom_cos11 == 1``, and `1` does not match the taylor expansion
+    of ``cos(x)`` to second order in `x`.
 
     See also
     ========

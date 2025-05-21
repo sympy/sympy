@@ -5403,7 +5403,7 @@ def gcdex_steps(
     Returns a generator to three polynomial sequences `s`, `t`, and `r` that
     enumerate all solutions apart from the trivial `(s, t, r) = (1, 0, f)`,
     and `(g, -f, 0)` (up to multiplicative constants) to the following
-    conditions:
+    conditions::
 
         f*s[i] + g*t[i] = r[i],
         r[i].deg() > r[i + 1].deg()
@@ -5412,7 +5412,7 @@ def gcdex_steps(
     divisor of `f` and `g`.
 
     The sequences `s`, `t`, and `r` also have the following properties (see
-    ref. [1] McEliece and Shearer):
+    ref. [1] McEliece and Shearer)::
 
         t[i]*r[i-1] - t[i-1]*r[i] = (-1)**i*f
         s[i]*r[i-1] - s[i-1]*r[i] = (-1)**(i+1)*g
