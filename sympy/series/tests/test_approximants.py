@@ -4,6 +4,7 @@ from sympy.core.symbol import symbols
 from sympy.functions.combinatorial.factorials import binomial
 from sympy.functions.combinatorial.numbers import (fibonacci, lucas)
 from sympy import exp, sin, log, Poly
+from sympy.testing.pytest import raises
 
 
 def test_approximants():
@@ -59,6 +60,7 @@ def test_pade_approximants_gcdex():
     for p_true, (num, denom) in zip(all_order_6_sin_pade_approximations, sin_pade):
         assert (p_true - num/denom).simplify() == 0
 
+
 def test_pade_approximant_gcdex():
     x = symbols('x')
     poly_1 = Poly(1 + x + x**2/2 + x**3/6 + x**4/24, x, domain='QQ')
@@ -83,12 +85,7 @@ def test_pade_approximant_gcdex():
     assert (numerator/denominator - (2 + 8*x/5 + 44*x**2/125 + 34*x**3/1875)\
                                     /(1 + 3*x/5 + 12*x**2/125 + 2*x**3/625)).simplify() == 0
 
-    is_error = False
-    try:
-        pade_approximant_gcdex(poly_3, 0, 4)
-    except ValueError:
-        is_error = True
-    assert is_error
+    raises(ValueError, lambda: pade_approximant_gcdex(poly_3, 0, 4))
 
 
 def test_pade_approximant():
@@ -110,9 +107,4 @@ def test_pade_approximant():
         (x-1)*(11*(x-1)**2 + 60*(x-1) + 60)/(3*((x-1)**3 + 12*(x-1)**2 + 30*(x-1) + 20))
         ).simplify() == 0
 
-    is_error = False
-    try:
-        pade_approximant(sin(x), x, 0, 0, 4)
-    except ValueError:
-        is_error = True
-    assert is_error
+    raises(ValueError, lambda: pade_approximant(sin(x), x, 0, 0, 4))
