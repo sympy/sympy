@@ -5341,10 +5341,10 @@ def _gcdex_steps_polynomial(f, g, auto):
     Generator for intermediate steps of the extended euclidean algorithm
     on polynomials. Helper function for `gcdex_steps`.
     """
-    if auto and f.get_domain().is_Ring:
+    if auto and f.domain.is_Ring:
         f, g = f.to_field(), g.to_field()
 
-    if not f.get_domain().is_PID:
+    if not f.domain.is_Field:
         raise DomainError("gcdex_steps is only for Euclidean domains")
 
     if not f.is_univariate:
