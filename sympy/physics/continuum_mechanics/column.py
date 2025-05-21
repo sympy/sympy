@@ -3,10 +3,16 @@ This module can be used to solve column displacement problems
 using singularity functions in mechanics.
 """
 
-from sympy.core import Symbol
+from sympy import nsimplify
+from sympy.core import Symbol, diff, symbols
+from sympy.core.relational import Eq
 from sympy.core.sympify import sympify
+from sympy.functions import SingularityFunction, factorial
+from sympy.integrals import integrate
 from sympy.printing import sstr
-from sympy.functions import SingularityFunction
+from sympy.series import limit
+from sympy.solvers import linsolve
+from sympy.solvers.solvers import solve
 
 class Column:
     """
@@ -68,7 +74,11 @@ class Column:
         self._bc_deflection = []
         self._applied_supports = []
         self._applied_loads = []
+        self._reaction_loads = None
+
         self._load = 0
+        self._axial_force = 0
+        self._deflection = 0
     
     def __str__(self):
         str_sol = 'Column({}, {}, {})'.format(sstr(self._length), sstr(self._elastic_modulus), sstr(self._area))
@@ -149,14 +159,14 @@ class Column:
         if loc in self._applied_supports:
             return ValueError("There is already a support at this location.")
         
-        self._applied_supports.append(loc)
         reaction_load = Symbol('R_' + str(loc))
+        self._applied_supports.append(reaction_load)
         self._load += reaction_load * SingularityFunction(self.variable, loc, -1)
-        self._bc_deflection.append((loc, 0))
+        self._bc_deflection.append(loc)
 
         return reaction_load
     
-    def apply_load(self, value, start, order):
+    def apply_load(self, value, start, order, end=None):
         """
         This method applies a load to the column object. Only
         axial loads can be applied, no moments.
@@ -195,7 +205,7 @@ class Column:
 
         >>> from sympy.physics.continuum_mechanics.column import Column
         >>> from sympy.core.symbol import symbols
-        >>> E, A = symbols('E A ')
+        >>> E, A = symbols('E A')
         >>> c = Column(10, E, A)
         >>> c.apply_support(0)
         >>> c.apply_load(-10, 10, -1)
@@ -209,8 +219,70 @@ class Column:
         start = sympify(start)
         order = sympify(order)
 
-        self._applied_loads.append((value, start, order))
+        self._applied_loads.append((value, start, order, end))
         self._load += value*SingularityFunction(self.variable, start, order)
+
+        if end:
+            self._load -= self._taylor_helper(self.variable, value, start, order, end)
+    
+    def remove_load(self, value, start, order, end=None):
+        """
+        Removes an applied load.
+
+        Examples
+        ========
+        There is a column with a length of 4 meters, area A and elastic
+        modulus E. A point load of -2 kN is applied at x = 2 and a
+        constant distributed load of 2 kN/m is applied along the whole
+        column. Later, the point load is removed.
+
+        >>> from sympy.physics.continuum_mechanics.column import Column
+        >>> from sympy.core.symbol import symbols
+        >>> E, A = symbols('E A')
+        >>> c = Column(4, E, A)
+        >>> c.apply_load(-2, 2, -1)
+        >>> c.apply_load(2, 0, 0, end=4)
+        >>> print(c.load)
+        2*SingularityFunction(x, 0, 0) - 2*SingularityFunction(x, 2, -1) - 2*SingularityFunction(x, 4, 0)
+        >>> c.remove_load(-2, 2, -1)
+        >>> print(c.load)
+        2*SingularityFunction(x, 0, 0) - 2*SingularityFunction(x, 4, 0)
+        """
+        value = sympify(value)
+        start = sympify(start)
+        order = sympify(order)
+
+        if (value, start, order, end) in self._applied_loads:
+            self._load -= value*SingularityFunction(self.variable, start, order)
+            self._applied_loads.remove((value, start, order, end))
+        else:
+            msg = "No such load distribution exists on the column object."
+            raise ValueError(msg)
+        
+        if end:
+            self._load += self._taylor_helper(self.variable, value, start, order, end)
+
+        
+    def _taylor_helper(self, x, value, start, order, end):
+        """
+        This helper function provides a Taylor series that
+        is used to define the summation of singularity
+        that is subtracted from the load equation at 'end'.
+        This helper is only called for loads with a provided
+        'end' value, their order has to be above 0.
+        """
+        if order.is_negative:
+            msg = ("If 'end' is provided the 'order' of the load cannot "
+                    "be negative.")
+            raise ValueError(msg)
+        
+        f = value * (x - start)**order # Symbolic function
+
+        end_load = 0
+        for i in range(0, order + 1):
+            end_load += (f.diff(x, i).subs(x, end - start) *
+                            SingularityFunction(x, end, i)/factorial(i))
+        return end_load
     
     @property
     def applied_loads(self):
@@ -223,7 +295,7 @@ class Column:
         There is a column of length L, area A and elastic modulus E. It
         is supported at both ends of the column and in the middle. There
         is a positive force F applied to the column at 1/4 * L and
-        3/5 * L.
+        3/4 * L.
 
         >>> from sympy.physics.continuum_mechanics.column import Column
         >>> from sympy.core.symbol import symbols
@@ -267,8 +339,65 @@ class Column:
             + R_L/2*SingularityFunction(x, L/2, -1)
         """
         return self._load
-
     
+    def solve_for_reaction_loads(self):
+        """
+        This method solves the horizontal reaction loads.
+
+        Returns
+        =======
+        dict
+            A dictionary of the reaction forces and their value
+
+        Examples
+        ========
+        A column of 10 meters long, with area A and elastic modulus E
+        is supported at both ends. A distributed load of -5 kN/m is
+        applied to the whole column. A point load of -10 kN is applied
+        at x = 4.
+        
+        >>> from sympy.physics.continuum_mechanics.column import Column
+        >>> from sympy.core.symbol import symbols
+        >>> E, A = symbols('E A')
+        >>> c = Column(10, A, E)
+        >>> c.apply_support(0)
+        >>> c.apply_support(10)
+        >>> c.apply_load(-5, 0, 0, end=10)
+        >>> c.apply_load(-10, 4, -1)
+        >>> dic = c.solve_for_reaction_loads()
+        >>> print(dic)
+        {R_0: 31, R_10: 29}
+        """
+        x = self.variable
+        qx = self._load
+        L = self.length
+        A = self.area
+        E = self.elastic_modulus
+
+        C_N, C_u = symbols('C_N, C_u')
+
+        axial_force = -integrate(qx, x) + C_N
+        deflection = -(integrate(integrate(qx, x), x)) / (E * A) + C_N * x + C_u
+
+        eq_axial_force = [
+            limit(axial_force, x, 0, dir='-'),
+            limit(axial_force, x, L, dir='+')
+        ]
+
+        eq_bc_displacement = [Eq(deflection.subs(x, loc), 0) for loc in self._bc_deflection]
+
+        total_eq = eq_axial_force + eq_bc_displacement
+        unknowns = self._applied_supports + [C_N, C_u]
+
+        solution = list((linsolve(total_eq, unknowns).args)[0])
+        solution = [nsimplify(s, rational=True) for s in solution] # To get rid of tiny residuals
+
+        num_supports = len(self._applied_supports)
+        reaction_solutions = solution[:num_supports]
+        self._reaction_loads = dict(zip(self._applied_supports, reaction_solutions))
+        # self._load = self._load.subs(self._reaction_loads) -> Leave the reactions symbolic for now
+
+        return self._reaction_loads
 
 
     
