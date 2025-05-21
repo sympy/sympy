@@ -74,9 +74,13 @@ def satisfiable(expr, algorithm=None, all_models=False, minimal=False, use_lra_t
     UNSAT
 
     """
-    if use_lra_theory:
+    return _satisfiable(expr, algorithm, all_models, minimal, use_lra_theory)
+
+def _satisfiable(expr, algorithm=None, all_models=False, minimal=False, use_lra_theory=False, use_sympy_theory=False):
+
+    if use_lra_theory or use_sympy_theory:
         if algorithm is not None and algorithm != "dpll2":
-            raise ValueError(f"Currently only dpll2 can handle using lra theory. {algorithm} is not handled.")
+            raise ValueError(f"Currently only dpll2 can handle using lra or fc theory. {algorithm} is not handled.")
         algorithm = "dpll2"
 
     if algorithm is None or algorithm == "pycosat":
@@ -105,7 +109,7 @@ def satisfiable(expr, algorithm=None, all_models=False, minimal=False, use_lra_t
         return dpll_satisfiable(expr)
     elif algorithm == "dpll2":
         from sympy.logic.algorithms.dpll2 import dpll_satisfiable
-        return dpll_satisfiable(expr, all_models, use_lra_theory=use_lra_theory)
+        return dpll_satisfiable(expr, all_models, use_lra_theory=use_lra_theory, use_sympy_theory=use_sympy_theory)
     elif algorithm == "pycosat":
         from sympy.logic.algorithms.pycosat_wrapper import pycosat_satisfiable
         return pycosat_satisfiable(expr, all_models)
