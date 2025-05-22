@@ -193,7 +193,7 @@ def pade_approximants_gcdex(f: Poly, order: int) -> Iterator[tuple[Poly, Poly]]:
 @public
 def pade_approximant_gcdex(
     f: Poly, m: int, n: int | None=None
-) -> tuple[Poly, Poly] | tuple[None, None]:
+) -> tuple[Poly, Poly]:
     """
     `[m/n]` pade approximant of `f` around `x0`.
 
@@ -291,14 +291,14 @@ def pade_approximant_gcdex(
 
         numerator, denominator = next_numerator, next_denominator
 
-    if numerator.degree() == m:
-        return numerator, denominator
+    # if it hasnt returned yet, then numerator.degree() == m
+    return numerator, denominator
 
 
 @public
 def pade_approximant(
     f: Expr, x: Expr, x0: Expr | complex = 0, m: int=6, n: int | None = None
-) -> Expr | None:
+) -> Expr:
     """
     `[m/n]` pade approximant of `f` around `x=0`.
 
