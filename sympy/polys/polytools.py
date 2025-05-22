@@ -5431,7 +5431,7 @@ def gcdex_steps(
     Returns
     =======
 
-    generator : Generator[tuple[Poly, Poly, Poly]] | Generator[tuple[Expr, Expr, Expr]]
+    steps : Iterator[tuple[Poly, Poly, Poly]] | Iterator[tuple[Expr, Expr, Expr]]
         A generator to the sequences `s`, `t`, and `r`
 
     Examples

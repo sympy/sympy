@@ -134,7 +134,7 @@ def pade_approximants_gcdex(f: Poly, order: int) -> Iterator[tuple[Poly, Poly]]:
     Returns
     =======
 
-    pade approximants : Generator[tuple[Poly, Poly]] | Generator[tuple[None, None]]
+    pade approximants : Iterator[tuple[Poly, Poly]]
         Generator for (numerator, denominator) pairs of polynomials
         representing the numerator and denominators of the approximants.
 
@@ -171,10 +171,10 @@ def pade_approximants_gcdex(f: Poly, order: int) -> Iterator[tuple[Poly, Poly]]:
     sympy.series.approximants.pade_approximant
     """
     if order < 0:
-        raise ValueError("'order' must be a non-negative integer.")
+        raise ValueError(f"{order=} must be a non-negative integer.")
 
     if not f.is_univariate:
-        raise ValueError("f must be a univariate polynomial.")
+        raise ValueError(f"{f=} must be a univariate polynomial.")
 
     # truncate f so f.degree() <= order
     if f.degree() > order:
@@ -219,7 +219,7 @@ def pade_approximant_gcdex(
     Returns
     =======
 
-    pade approximant : tuple[Poly, Poly] | tuple[None, None]
+    pade approximant : tuple[Poly, Poly]
         returns `p(x), q(x)`, where `p(x)/q(x)` is the pade approximant
 
     Examples
@@ -272,14 +272,14 @@ def pade_approximant_gcdex(
         n = m
 
     if m < 0 or n < 0:
-        raise ValueError("m and n must be non-negative integers.")
+        raise ValueError(f"{m=} and {n=} must be non-negative integers.")
 
     if not f.is_univariate:
-        raise ValueError("f must be a univariate polynomial.")
+        raise ValueError(f"{f=} must be a univariate polynomial.")
 
     min_degree = f.EM()[0]
     if min_degree > m:
-        raise ValueError(f"polynomial has zero of order {min_degree}, " \
+        raise ValueError(f"polynomial {f=} has zero of order {min_degree}, " \
         f"which is greater than {m}, the requested order of the numerator.")
 
     approximants = pade_approximants_gcdex(f, order = m + n)
@@ -293,9 +293,6 @@ def pade_approximant_gcdex(
 
     if numerator.degree() == m:
         return numerator, denominator
-
-    # if it hasn't returned yet, there is no [m/n] pade approximant
-    return None, None
 
 
 @public
@@ -332,8 +329,8 @@ def pade_approximant(
     Returns
     =======
 
-    pade approximant : tuple[Poly, Poly]
-        returns p(x)
+    pade approximant : Expr
+        returns `p(x)/q(x)`, where `p(x)/q(x)` is the pade approximant of `f`.
 
     Examples
     ========
@@ -386,16 +383,16 @@ def pade_approximant(
         n = m
 
     if m < 0 or n < 0:
-        raise ValueError("m and n must be non-negative integers")
+        raise ValueError(f"{m=} and {n=} must be non-negative integers")
 
-    f_taylor_poly = f.subs({x: x + x0}).series(x, n=m + n + 1)\
+    f_taylor_poly = f.series(x, x0, n=m + n + 1).subs(x, x + x0)\
                     .removeO().as_poly(x, field=True)
+
+    if f_taylor_poly is None:
+        raise ValueError(f"{f=} does not have a taylor expansion in x around x0.")
 
     # TODO: if other methods for computing pade approximants are implemented,
     # this should be modified to automatically select the best method.
     numerator, denominator = pade_approximant_gcdex(f_taylor_poly, m, n)
-
-    if numerator == None or denominator == None:
-        return None
 
     return (numerator/denominator).subs(x, x - x0)
