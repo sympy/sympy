@@ -8,7 +8,7 @@ from sympy.codegen.ast import (
 from sympy.codegen.fnodes import (
     allocatable, ArrayConstructor, isign, dsign, cmplx, kind, literal_dp,
     Program, Module, use, Subroutine, dimension, assumed_extent, ImpliedDoLoop,
-    intent_out, size, Do, SubroutineCall, sum_, array, bind_C
+    intent_out, size, Do, SubroutineCall, sum_, array, bind_C, reshape
 )
 from sympy.codegen.futils import render_as_module
 from sympy.core.expr import unchanged
@@ -182,6 +182,26 @@ def test_kind():
 
 def test_literal_dp():
     assert fcode(literal_dp(0), source_format='free') == '0d0'
+
+
+def test_reshape():
+    """Test the reshape function with different parameter combinations.
+    
+    Tests the following cases:
+    1. No pad, no order - basic usage
+    2. With pad, no order - pad parameter is included
+    3. No pad, with order - The order parameter should be included when provided, regardless of pad
+    4. With pad, with order - both optional parameters included
+    """
+    array = Symbol('array')
+    shape = Symbol('shape')
+    pad_array = Symbol('pad_array')
+    order_array = Symbol('order_array')
+    
+    assert fcode(reshape(array, shape), source_format='free') == 'reshape(array, shape)'
+    assert fcode(reshape(array, shape, pad_array), source_format='free') == 'reshape(array, shape, pad_array)'
+    assert fcode(reshape(array, shape, None, order_array), source_format='free') == 'reshape(array, shape, order_array)'
+    assert fcode(reshape(array, shape, pad_array, order_array), source_format='free') == 'reshape(array, shape, pad_array, order_array)'
 
 
 @may_xfail
