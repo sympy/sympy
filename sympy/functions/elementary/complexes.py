@@ -950,6 +950,19 @@ class transpose(DefinedFunction):
     def _eval_transpose(self):
         return self.args[0]
 
+    def _latex(self, printer, exp=None, *args):
+        arg = printer._print(self.args[0])
+        tex = r'%s^T' % arg
+        if exp:
+            tex = r'\left(%s\right)^{%s}' % (tex, exp)
+        return tex
+
+    def _pretty(self, printer, *args):
+        from sympy.printing.pretty.stringpict import prettyForm
+        pform = printer._print(self.args[0], *args)
+        pform = pform**prettyForm('T')
+        return pform
+
 
 class adjoint(DefinedFunction):
     """
