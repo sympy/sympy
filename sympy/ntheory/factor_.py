@@ -217,10 +217,10 @@ def multiplicity(p, n):
                 isinstance(n.args[0], Integer) and
                 n.args[0] >= 0):
             return multiplicity_in_factorial(p, n.args[0])
-        raise ValueError('expecting ints or fractions, got %s and %s' % (p, n))
+        raise ValueError(f"expecting ints or fractions, got {p} and {n}")
 
     if n == 0:
-        raise ValueError('no such integer exists: multiplicity of %s is not-defined' %(n))
+        raise ValueError(f"no such integer exists: multiplicity of {n} is not-defined")
     return remove(n, p)[1]
 
 
@@ -269,10 +269,10 @@ def multiplicity_in_factorial(p, n):
     p, n = as_int(p), as_int(n)
 
     if p <= 0:
-        raise ValueError('expecting positive integer got %s' % p )
+        raise ValueError(f"expecting positive integer got {p}")
 
     if n < 0:
-        raise ValueError('expecting non-negative integer got %s' % n )
+        raise ValueError(f"expecting non-negative integer got {n}")
 
     # keep only the largest of a given multiplicity since those
     # of a given multiplicity will be goverened by the behavior
@@ -1470,8 +1470,7 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
     if verbose:
         sn = str(n)
         if len(sn) > 50:
-            print('Factoring %s' % sn[:5] + \
-                  '..(%i other digits)..' % (len(sn) - 10) + sn[-5:])
+            print(f"Factoring {sn[:5]}..({len(sn) - 10} other digits)..{sn[-5:]}")
         else:
             print('Factoring', n)
 

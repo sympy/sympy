@@ -344,9 +344,10 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
 
         *modules* can be one of the following types:
 
-        - The strings ``"math"``, ``"cmath"``, ``"mpmath"``, ``"umath"``, ``"numpy"``, ``"unumpy"``,
-          ``"numexpr"``, ``"scipy"``, ``"sympy"``, or ``"tensorflow"`` or ``"jax"``. This uses the
-          corresponding printer and namespace mapping for that module.
+        - The strings ``"math"``, ``"cmath"``, ``"mpmath"``, ``"umpmath"``,
+          ``"numpy"``, ``"unumpy"``, ``"numexpr"``, ``"scipy"``, ``"sympy"``,
+          ``"tensorflow"``, ``"torch"`` or ``"jax"``. This uses the corresponding printer
+          and namespace mapping for that module.
         - A module (e.g., ``math``). This uses the global namespace of the
           module. If the module is one of the above known modules, it will
           also use the corresponding printer and namespace mapping
@@ -1092,16 +1093,12 @@ def lambdastr(args, expr, printer=None, dummify=None):
         return iterable(l, exclude=(str, DeferredVector, NotIterable))
 
     def flat_indexes(iterable):
-        n = 0
-
-        for el in iterable:
+        for n, el in enumerate(iterable):
             if isiter(el):
                 for ndeep in flat_indexes(el):
                     yield (n,) + ndeep
             else:
                 yield (n,)
-
-            n += 1
 
     if dummify is None:
         dummify = any(isinstance(a, Basic) and
@@ -1359,16 +1356,12 @@ class _TensorflowEvaluatorPrinter(_EvaluatorPrinter):
         """
 
         def flat_indexes(elems):
-            n = 0
-
-            for el in elems:
+            for n, el in enumerate(elems):
                 if iterable(el):
                     for ndeep in flat_indexes(el):
                         yield (n,) + ndeep
                 else:
                     yield (n,)
-
-                n += 1
 
         indexed = ', '.join('{}[{}]'.format(rvalue, ']['.join(map(str, ind)))
                                 for ind in flat_indexes(lvalues))
@@ -1600,10 +1593,7 @@ def _too_large_for_docstring(expr, limit):
 
     if limit is None:
         return False
-
-    i = 0
-    for _ in postorder_traversal(expr):
-        i += 1
+    for i, _ in enumerate(postorder_traversal(expr), 1):
         if i > limit:
             return True
     return False

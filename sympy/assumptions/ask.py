@@ -490,7 +490,7 @@ def ask(proposition, assumptions=True, context=global_assumptions):
 
     # check the satisfiability of given assumptions
     if local_facts.clauses and satisfiable(enc_cnf) is False:
-        raise ValueError("inconsistent assumptions %s" % assumptions)
+        raise ValueError(f"inconsistent assumptions {assumptions}")
 
     # quick computation for single fact
     res = _ask_single_fact(key, local_facts)

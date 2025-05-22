@@ -11,7 +11,7 @@ from sympy.tensor.array.expressions.array_expressions import (
 from sympy.utilities.lambdify import lambdify
 from sympy.core.relational import Eq, Ne, Ge, Gt, Le, Lt
 from sympy.functions import \
-    Abs, ceiling, exp, floor, sign, sin, asin, cos, \
+    Abs, Min, Max, ceiling, exp, floor, sign, sin, asin, cos, \
     acos, tan, atan, atan2, cosh, acosh, sinh, asinh, tanh, atanh, \
     re, im, arg, erf, loggamma, sqrt
 from sympy.testing.pytest import skip
@@ -215,6 +215,22 @@ def test_torch_relational():
     expr = Lt(x, y)
     assert torch_code(expr) == "torch.lt(x, y)"
     _compare_torch_relational((x, y), expr)
+
+
+def test_torch_max_min():
+    if torch is None:
+        skip("PyTorch not installed")
+
+    x, y = symbols('x y')
+    expr = Max(x, y) + Min(x, y)
+    assert torch_code(expr) == "torch.maximum(x, y) + torch.minimum(x, y)"
+
+    func = lambdify([x, y], expr, "torch")
+    x_test, y_test = torch.rand((2, 3, 4))
+
+    result = func(x_test, y_test)
+    expected = x_test + y_test
+    assert torch.allclose(result, expected)
 
 
 def test_torch_matrix():
