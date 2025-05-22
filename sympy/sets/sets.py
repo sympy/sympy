@@ -25,7 +25,7 @@ from sympy.core.symbol import symbols, Symbol, Dummy, uniquely_named_symbol
 from sympy.core.sympify import _sympify, sympify, _sympy_converter
 from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.miscellaneous import Max, Min
-from sympy.logic.boolalg import And, Or, Not, Xor, true, false
+from sympy.logic.boolalg import And, Or, Not, Xor, true, false, Boolean
 from sympy.utilities.decorator import deprecated
 from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.iterables import (iproduct, sift, roundrobin, iterable,
@@ -37,7 +37,7 @@ from mpmath import mpi, mpf
 from mpmath.libmp.libmpf import prec_to_dps
 
 
-tfn = defaultdict(lambda: None, {
+tfn: dict[bool | Boolean | None, Boolean | None] = defaultdict(lambda: None, {
     True: S.true,
     S.true: S.true,
     False: S.false,
