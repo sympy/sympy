@@ -186,7 +186,7 @@ def test_literal_dp():
 
 def test_reshape():
     """Test the reshape function with different parameter combinations.
-    
+
     Tests the following cases:
     1. No pad, no order - basic usage
     2. With pad, no order - pad parameter is included
@@ -197,7 +197,7 @@ def test_reshape():
     shape = Symbol('shape')
     pad_array = Symbol('pad_array')
     order_array = Symbol('order_array')
-    
+
     assert fcode(reshape(array, shape), source_format='free') == 'reshape(array, shape)'
     assert fcode(reshape(array, shape, pad_array), source_format='free') == 'reshape(array, shape, pad_array)'
     assert fcode(reshape(array, shape, None, order_array), source_format='free') == 'reshape(array, shape, order_array)'
