@@ -772,6 +772,23 @@ class FCodePrinter(CodePrinter):
         fmtstr = "[%s]" if self._settings["standard"] >= 2003 else '(/%s/)'
         return fmtstr % ', '.join((self._print(arg) for arg in ac.elements))
 
+    def _print_FunctionCall(self, expr):
+        return '{name}({args})'.format(
+            name=self._print(expr.name),
+            args=', '.join((self._print(arg) for arg in expr.function_args))
+        )
+
+    def _print_KeywordFunctionCall(self, expr):
+        args = [self._print(arg) for arg in expr.function_args]
+
+        for key, value in expr.keyword_args.items():
+            args.append(f"{key}={self._print(value)}")
+
+        return '{name}({args})'.format(
+            name=self._print(expr.name),
+            args=', '.join(args)
+        )
+
     def _print_ArrayElement(self, elem):
         return '{symbol}({idxs})'.format(
             symbol=self._print(elem.name),

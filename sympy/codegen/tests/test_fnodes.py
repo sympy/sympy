@@ -199,9 +199,9 @@ def test_reshape():
     order_array = Symbol('order_array')
 
     assert fcode(reshape(array, shape), source_format='free') == 'reshape(array, shape)'
-    assert fcode(reshape(array, shape, pad_array), source_format='free') == 'reshape(array, shape, pad_array)'
-    assert fcode(reshape(array, shape, None, order_array), source_format='free') == 'reshape(array, shape, order_array)'
-    assert fcode(reshape(array, shape, pad_array, order_array), source_format='free') == 'reshape(array, shape, pad_array, order_array)'
+    assert fcode(reshape(array, shape, pad_array), source_format='free') == 'reshape(array, shape, pad=pad_array)'
+    assert fcode(reshape(array, shape, None, order_array), source_format='free') == 'reshape(array, shape, order=order_array)'
+    assert fcode(reshape(array, shape, pad_array, order_array), source_format='free') == 'reshape(array, shape, pad=pad_array, order=order_array)'
 
 
 @may_xfail

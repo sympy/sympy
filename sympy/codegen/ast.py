@@ -1892,6 +1892,41 @@ class FunctionCall(Token, Expr):
     _construct_function_args = staticmethod(lambda args: Tuple(*args))
 
 
+class KeywordFunctionCall(FunctionCall):
+    """ Represents a call to a function with keyword arguments in the code.
+
+    Parameters
+    ==========
+
+    name : str
+    function_args : Tuple
+    keyword_args : dict
+        Dictionary mapping parameter names to their values
+
+    Examples
+    ========
+
+    >>> from sympy.codegen.ast import KeywordFunctionCall
+    >>> from sympy import fcode
+    >>> fcall = KeywordFunctionCall('reshape', ['array', 'shape'], {'order': 'order_array'})
+    >>> print(fcode(fcall, source_format='free'))
+    reshape(array, shape, order=order_array)
+
+    """
+    __slots__ = _fields = ('name', 'function_args', 'keyword_args')
+
+    defaults = {'keyword_args': {}}
+
+    _construct_name = String
+    _construct_function_args = staticmethod(lambda args: Tuple(*args))
+
+    @staticmethod
+    def _construct_keyword_args(kwargs):
+        if kwargs is None:
+            return {}
+        return kwargs
+
+
 class Raise(Token):
     """ Prints as 'raise ...' in Python, 'throw ...' in C++"""
     __slots__ = _fields = ('exception',)
