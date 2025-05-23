@@ -1907,20 +1907,22 @@ class KeywordFunctionCall(FunctionCall):
     Examples
     ========
 
-    >>> from sympy.codegen.ast import KeywordFunctionCall
+    >>> from sympy.codegen.ast import KeywordFunctionCall, String
+    >>> from sympy.core.containers import Tuple
     >>> from sympy import fcode
-    >>> fcall = KeywordFunctionCall('reshape', ['array', 'shape'], {'order': 'order_array'})
+    >>> fcall = KeywordFunctionCall(String('reshape'), Tuple(String('array'), String('shape')), {'order': String('order_array')})
     >>> print(fcode(fcall, source_format='free'))
     reshape(array, shape, order=order_array)
 
     """
     __slots__ = ('keyword_args',)
-    _fields = FunctionCall._fields + __slots__
+    _fields = ('name', 'function_args', 'keyword_args')  # type: ignore
 
-    defaults = {'keyword_args': Dict({})}
+    defaults = {'keyword_args': {}}
 
     @staticmethod
     def _construct_keyword_args(kwargs):
+        from sympy.core.containers import Dict
         if kwargs is None:
             return Dict({})
         return Dict(kwargs)
