@@ -5,7 +5,7 @@ from collections.abc import Iterator
 from sympy.core.expr import Expr
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
-from sympy.polys.polytools import lcm, LM
+from sympy.polys.polytools import lcm
 from sympy.utilities import public
 from sympy import Poly
 from sympy.polys.polytools import gcdex_steps
