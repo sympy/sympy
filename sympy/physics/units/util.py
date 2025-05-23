@@ -108,7 +108,7 @@ def convert_to(expr, target_units, unit_system="SI"):
     elif isinstance(expr, Pow) and isinstance(expr.base, Add):
         return handle_Adds(expr.base) ** expr.exp
 
-    expr = sympify(expr)
+    expr = expr.simplify()
     target_units = sympify(target_units)
 
     if isinstance(expr, Function):
