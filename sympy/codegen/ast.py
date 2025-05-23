@@ -137,6 +137,7 @@ from sympy.core.basic import Basic
 from sympy.core.expr import Expr, Atom
 from sympy.core.numbers import Float, Integer, oo
 from sympy.core.sympify import _sympify, sympify, SympifyError
+from sympy.core.containers import Dict
 from sympy.utilities.iterables import (iterable, topological_sort,
                                        numbered_symbols, filter_symbols)
 
@@ -1913,18 +1914,16 @@ class KeywordFunctionCall(FunctionCall):
     reshape(array, shape, order=order_array)
 
     """
-    __slots__ = _fields = ('name', 'function_args', 'keyword_args')
+    __slots__ = ('keyword_args',)
+    _fields = FunctionCall._fields + __slots__
 
-    defaults = {'keyword_args': {}}
-
-    _construct_name = String
-    _construct_function_args = staticmethod(lambda args: Tuple(*args))
+    defaults = {'keyword_args': Dict({})}
 
     @staticmethod
     def _construct_keyword_args(kwargs):
         if kwargs is None:
-            return {}
-        return kwargs
+            return Dict({})
+        return Dict(kwargs)
 
 
 class Raise(Token):
