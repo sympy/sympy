@@ -1,5 +1,7 @@
 """py.test hacks to support XFAIL/XPASS"""
 
+from __future__ import annotations
+
 import platform
 import sys
 import re
@@ -9,13 +11,30 @@ import contextlib
 import warnings
 import inspect
 import pathlib
-from typing import Any, Callable
+from typing import Any, Callable, TYPE_CHECKING, Protocol, overload
 
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 # Imported here for backwards compatibility. Note: do not import this from
 # here in library code (importing sympy.pytest in library code will break the
 # pytest integration).
 from sympy.utilities.exceptions import ignore_warnings # noqa:F401
+
+
+if TYPE_CHECKING:
+    from contextlib import AbstractContextManager
+
+    class _RaisesType(Protocol):
+        @overload
+        def __call__(self, exc: type[Exception], /) -> AbstractContextManager: ...
+        @overload
+        def __call__(
+            self, exc: type[Exception], func: Callable[[], object], /
+        ) -> object: ...
+
+        def __call__(
+            self, exc: type[Exception], func: Callable[[], object] | None = None, /
+        ) -> AbstractContextManager | object: ...
+
 
 ON_CI = os.getenv('CI', None) == "true"
 
@@ -27,7 +46,7 @@ except ImportError:
 
 IS_WASM: bool = sys.platform == 'emscripten' or platform.machine() in ["wasm32", "wasm64"]
 
-raises: Callable[[Any, Any], Any]
+raises: _RaisesType
 XFAIL: Callable[[Any], Any]
 skip: Callable[[Any], Any]
 SKIP: Callable[[Any], Any]
@@ -58,8 +77,28 @@ else:
         def __repr__(self):
             return "<ExceptionInfo {!r}>".format(self.value)
 
+    class RaisesContext:
+        def __init__(self, expectedException):
+            self.expectedException = expectedException
 
-    def raises(expectedException, code=None):
+        def __enter__(self):
+            return self
+
+        def __exit__(self, exc_type, exc_value, traceback):
+            if exc_type is None:
+                raise Failed("DID NOT RAISE")
+            return issubclass(exc_type, self.expectedException)
+
+    @overload
+    def _raises(exc: type[Exception], /) -> RaisesContext:
+        ...
+    @overload
+    def _raises(exc: type[Exception], func: Callable[[], object], /) -> ExceptionInfo:
+        ...
+
+    def _raises(expectedException: type[Exception],
+                code: Callable[[], Any] | None = None, /
+                ) -> RaisesContext | ExceptionInfo:
         """
         Tests that ``code`` raises the exception ``expectedException``.
 
@@ -132,17 +171,7 @@ else:
             raise TypeError(
                 'raises() expects a callable for the 2nd argument.')
 
-    class RaisesContext:
-        def __init__(self, expectedException):
-            self.expectedException = expectedException
-
-        def __enter__(self):
-            return None
-
-        def __exit__(self, exc_type, exc_value, traceback):
-            if exc_type is None:
-                raise Failed("DID NOT RAISE")
-            return issubclass(exc_type, self.expectedException)
+    raises = _raises
 
     class XFail(Exception):
         pass

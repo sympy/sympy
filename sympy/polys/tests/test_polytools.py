@@ -29,7 +29,8 @@ from sympy.polys.polytools import (
     cancel, reduced, groebner,
     GroebnerBasis, is_zero_dimensional,
     _torational_factor_list,
-    to_rational_coeffs)
+    to_rational_coeffs,
+    gcdex_steps)
 
 from sympy.polys.polyerrors import (
     MultivariatePolynomialError,
@@ -1926,6 +1927,99 @@ def test_issue_7864():
     q, r = div(a, .408248290463863*a)
     assert abs(q - 2.44948974278318) < 1e-14
     assert r == 0
+
+
+def test_gcdex_steps():
+    # on polynomials
+    f = Poly(x**5 + 2*x**4 - x**2 + 1, x)
+    g = Poly(x**4 - 1, x)
+
+    eea_result = list(gcdex_steps(f, g))
+    assert(len(eea_result) == 4)
+
+    r_degree = 5
+    s, t, r = Poly(0, x), Poly(0, x), Poly(0, x)
+    for si, ti, ri in eea_result:
+        assert type(si)==type(ti)==type(ri)==Poly
+        assert si*f + ti*g == ri
+        assert ri.degree() < r_degree
+        r_degree = ri.degree()
+
+        s, t, r = si, ti, ri
+
+    leading_coef = r.LC()
+    s, t, r = s.mul(1/leading_coef), t.mul(1/leading_coef), r.mul(1/leading_coef)
+
+    assert gcdex(f, g) == (s, t, r)
+
+    # on polynomials in Expr form
+    f = x*(x-1)*(x-2)
+    g = (I*x-1)*(x+1)
+
+    eea_result = list(gcdex_steps(f, g))
+    assert(len(eea_result)==3)
+
+    r_degree = 4
+    s, t, r = 0, 0, 0
+    for si, ti, ri in eea_result:
+        assert (si*f + ti*g).equals(ri)
+        ri_poly = Poly(ri, gens=x)
+        assert ri_poly.degree() < r_degree
+        r_degree = ri_poly.degree()
+
+        s, t, r = si, ti, ri
+
+    s, t, r = Poly(s, x), Poly(t, x), Poly(r, x)
+    leading_coef = r.LC()
+
+    s2, t2, r2 = gcdex(f, g)
+    s2, t2, r2 = Poly(s2 * leading_coef, x), Poly(t2* leading_coef, x), Poly(r2 * leading_coef, x)
+
+    assert (s2, t2, r2) == (s, t, r)
+
+    # on polynomials with variable coefficients
+    f = x**4 - y
+    g = x*(x**2 - y)
+
+    # must specifiy the generator for mutivariate polynomials
+    raises(ValueError, lambda: next(gcdex_steps(f, g)))
+
+    eea_result = list(gcdex_steps(f, g, gens=x))
+    assert(len(eea_result)==4)
+
+    r_degree = 4
+    s, t, r = 0, 0, 0
+    for si, ti, ri in eea_result:
+        assert (si*f + ti*g).equals(ri)
+        ri_poly = Poly(ri, gens=x)
+        assert ri_poly.degree() < r_degree
+        r_degree = ri_poly.degree()
+
+        s, t, r = si, ti, ri
+
+    s, t, r = Poly(s, x), Poly(t, x), Poly(r, x)
+    leading_coef = r.LC()
+
+    s2, t2, r2 = gcdex(f, g, gens=x)
+    s2, t2, r2 = Poly(s2 * leading_coef, x), Poly(t2* leading_coef, x), Poly(r2 * leading_coef, x)
+
+    assert (s2, t2, r2) == (s, t, r)
+
+    # on elements which are not convertible to polynomials
+    a = 101
+    b = 62
+
+    eea_result = list(gcdex_steps(a, b))
+    assert(len(eea_result)==7)
+
+    s, t, r = 0, 0, 101
+    for si, ti, ri in eea_result:
+        assert si*a + ti*b == ri
+        assert ri < r
+
+        s, t, r = si, ti, ri
+
+    assert gcdex(a, b) == (s, t, r)
 
 
 def test_gcdex():
