@@ -137,7 +137,6 @@ from sympy.core.basic import Basic
 from sympy.core.expr import Expr, Atom
 from sympy.core.numbers import Float, Integer, oo
 from sympy.core.sympify import _sympify, sympify, SympifyError
-from sympy.core.containers import Dict
 from sympy.utilities.iterables import (iterable, topological_sort,
                                        numbered_symbols, filter_symbols)
 
