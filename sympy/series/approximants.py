@@ -5,7 +5,7 @@ from collections.abc import Iterator
 from sympy.core.expr import Expr
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
-from sympy.polys.polytools import lcm
+from sympy.polys.polytools import lcm, LM
 from sympy.utilities import public
 from sympy import Poly
 from sympy.polys.polytools import gcdex_steps
@@ -346,31 +346,32 @@ def pade_approximant(
     The numerators and denominators of an `[m/n]` pade approximant do not
     necessarily have order `m` and `n` respectively.
 
-    >>> pade_sin = pade_approximant(sp.sin(x), x, 0, 1, 3)
-    >>> pade_sin
+    >>> pade_approximant(sp.sin(x), x, 0, 1, 3)
     36*x/(6*x**2 + 36)
 
     `[1/1]` Pade approximant of `log(x)` around `x0=1`
 
-    >>> pade_log = pade_approximant(sp.log(x), x, 1, 1)
-    >>> pade_log
+    >>> pade_approximant(sp.log(x), x, 1, 1)
     4*(x - 1)/(2*x + 2)
 
     The `[m/0]` pade approximant is the mth order taylor polynomial of `f`
 
-    >>> pade_cos = pade_approximant(sp.cos(x), x, 0, 4, 0)
-    >>> pade_cos
+    >>> pade_approximant(sp.cos(x), x, 0, 4, 0)
     x**4/24 - x**2/2 + 1
 
     The pade approximant does not always exist, for example, the `[1/1]`
     approximant for `cos(x)`
 
-    >>> pade_cos11 = pade_approximant(sp.cos(x), x, 0, 1)
-    >>> pade_cos11
+    >>> pade_approximant(sp.cos(x), x, 0, 1)
     1
 
     `1` does not match the taylor expansion of `cos(x)` up to second order in
     `x`.
+
+    `pade_approximant` can handle functions with poles
+
+    >>> pade_approximant(sp.exp(x)/x, x, 0, 2, 1)
+    (x**2/2 + x + 1)/x
 
     See also
     ========
@@ -385,14 +386,22 @@ def pade_approximant(
     if m < 0 or n < 0:
         raise ValueError(f"{m=} and {n=} must be non-negative integers")
 
-    f_taylor_poly = f.series(x, x0, n=m + n + 1).subs(x, x + x0)\
-                    .removeO().as_poly(x, field=True)
+    f_taylor_poly = f.subs(x, x + x0).series(x, n=m + n + 1)\
+                        .removeO().as_poly(gens=(x, 1/x), field=True)
 
     if f_taylor_poly is None:
-        raise ValueError(f"{f=} does not have a taylor expansion in x around x0.")
+        raise ValueError(f"{f=} does not have a laurent expansion in x around x0.")
+
+    highest_order_pole = f_taylor_poly.degree(gen=1/x)
+
+    if n < highest_order_pole:
+        raise ValueError(f"Expression {f=} has pole of order {highest_order_pole}, " \
+        f"which is greater than {n}, the requested order of the denominator.")
+
+    f_taylor_poly = (f_taylor_poly*x**(highest_order_pole)).as_poly(gens=x, field=True)
 
     # TODO: if other methods for computing pade approximants are implemented,
     # this should be modified to automatically select the best method.
-    numerator, denominator = pade_approximant_gcdex(f_taylor_poly, m, n)
+    numerator, denominator = pade_approximant_gcdex(f_taylor_poly, m, n - highest_order_pole)
 
-    return (numerator/denominator).subs(x, x - x0)
+    return (x**(-highest_order_pole)*(numerator/denominator)).subs(x, x - x0)

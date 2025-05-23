@@ -108,5 +108,13 @@ def test_pade_approximant():
         (x-1)*(11*(x-1)**2 + 60*(x-1) + 60)/(3*((x-1)**3 + 12*(x-1)**2 + 30*(x-1) + 20))
         ).simplify() == 0
 
+    assert (
+        pade_approximant(exp(x)/x, x, 0, 2, 3) - \
+        (x**2/4 + 3*x/2 + 3)/(x*(x**2/4 - 3*x/2 + 3))
+    ).simplify() == 0
+
     with raises(ValueError):
         pade_approximant(sin(x), x, 0, 0, 4)
+
+    with raises(ValueError):
+        pade_approximant(1/x, x, 0, 1, 0)
