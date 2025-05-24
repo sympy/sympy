@@ -185,26 +185,23 @@ def test_literal_dp():
 
 
 def test_reshape():
-    """Test the reshape function with different parameter combinations.
+    """Test reshape function with keyword arguments and essential edge cases."""
+    from sympy.codegen.ast import String
 
-    Tests the following cases:
-    1. No pad, no order - basic usage
-    2. With pad, no order - pad parameter is included
-    3. No pad, with order - The order parameter should be included when provided, regardless of pad
-    4. With pad, with order - both optional parameters included
-    """
-    array = Symbol('array')
-    shape = Symbol('shape')
-    pad_array = Symbol('pad_array')
-    order_array = Symbol('order_array')
+    array, shape, pad, order = symbols('array shape pad order')
 
-    assert fcode(reshape(array, shape), source_format='free') == 'reshape(array, shape)'
-    assert fcode(reshape(array, shape, pad_array), source_format='free') == 'reshape(array, shape, pad=pad_array)'
-    assert fcode(reshape(array, shape, None, order_array), source_format='free') == 'reshape(array, shape, order=order_array)'
-    assert fcode(reshape(array, shape, pad_array, order_array), source_format='free') == 'reshape(array, shape, pad=pad_array, order=order_array)'
-    assert fcode(reshape(array, shape, pad=pad_array), source_format='free') == 'reshape(array, shape, pad=pad_array)'
-    assert fcode(reshape(array, shape, order=order_array), source_format='free') == 'reshape(array, shape, order=order_array)'
-    assert fcode(reshape(array, shape, pad=pad_array, order=order_array), source_format='free') == 'reshape(array, shape, pad=pad_array, order=order_array)'
+    cases = [
+        (reshape(array, shape), 'reshape(array, shape)'),
+        (reshape(array, shape, pad), 'reshape(array, shape, pad=pad)'),
+        (reshape(array, shape, None, order), 'reshape(array, shape, order=order)'),
+        (reshape(array, shape, pad, order), 'reshape(array, shape, pad=pad, order=order)'),
+        (reshape(Symbol('a') + Symbol('b'), [Symbol('n') * 2]), 'reshape(a + b, [2*n])'),
+        (reshape(array, shape, None, String('F')), 'reshape(array, shape, order=F)'),
+        (reshape(array, [Symbol('n'), 3]), 'reshape(array, [n, 3])'),
+    ]
+
+    for expr, expected in cases:
+        assert fcode(expr, source_format='free') == expected
 
 
 @may_xfail
