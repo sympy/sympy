@@ -204,6 +204,25 @@ def test_reshape():
         assert fcode(expr, source_format='free') == expected
 
 
+def test_function_call_override():
+    """Test that _print_FunctionCall override enables custom String processing.
+    Demonstrates Fortran intrinsic name conflict resolution - a realistic use case
+    where self._print(expr.name) enables custom processing vs expr.name directly.
+    """
+    from sympy.codegen.ast import FunctionCall
+    from sympy.printing.fortran import FCodePrinter
+
+    class ConflictResolver(FCodePrinter):
+        def _print_String(self, expr):
+            return str(expr) + '_user' if str(expr) in ['sin', 'max'] else str(expr)
+
+    printer = ConflictResolver({'source_format': 'free'})
+
+    assert printer._print(FunctionCall('sin', [Symbol('x')])) == 'sin_user(x)'
+    assert printer._print(FunctionCall('max', [Symbol('a'), Symbol('b')])) == 'max_user(a, b)'
+    assert printer._print(FunctionCall('safe_func', [Symbol('x')])) == 'safe_func(x)'
+
+
 @may_xfail
 def test_bind_C():
     if not has_fortran():
