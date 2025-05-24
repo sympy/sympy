@@ -340,6 +340,14 @@ def test_sympy__codegen__ast__FunctionCall():
     assert _test_args(FunctionCall('pwer', [x]))
 
 
+def test_sympy__codegen__ast__KeywordFunctionCall():
+    from sympy.codegen.ast import KeywordFunctionCall, String
+    from sympy.core.containers import Tuple
+    from sympy.core.symbol import Symbol
+    obj = KeywordFunctionCall(String('reshape'), Tuple(Symbol('x'), Symbol('y')), {'order': Symbol('z')})
+    assert _test_args(obj)
+
+
 def test_sympy__codegen__ast__Element():
     from sympy.codegen.ast import Element
     assert _test_args(Element('x', range(3)))
