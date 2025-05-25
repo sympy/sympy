@@ -984,6 +984,9 @@ class erfcinv (DefinedFunction):
     def _eval_rewrite_as_erfinv(self, z, **kwargs):
         return erfinv(1-z)
 
+    def _eval_evalf(self, prec):
+        return self.rewrite(erfinv).evalf(prec)
+
     def _eval_is_zero(self):
         return (self.args[0] - 1).is_zero
 
