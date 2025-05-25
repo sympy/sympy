@@ -115,37 +115,91 @@ class InfeasibleLPError(Exception):
     pass
 
 
-def _pivot(M, i, j):
-    """
-    The pivot element `M[i, j]` is inverted and the rest of the matrix
-    modified and returned as a new matrix; original is left unmodified.
+class SimplexTableau:
+    Var = namedtuple("Var", ["is_dual", "index"])
 
-    Example
-    =======
+    def __init__(self, A, B, C, D):
+        A, B, C, D = [Matrix(i) for i in (A, B, C, D or [0])]
 
-    >>> from sympy.matrices.dense import Matrix
-    >>> from sympy.solvers.simplex import _pivot
-    >>> from sympy import var
-    >>> Matrix(3, 3, var('a:i'))
-    Matrix([
-    [a, b, c],
-    [d, e, f],
-    [g, h, i]])
-    >>> _pivot(_, 1, 0)
-    Matrix([
-    [-a/d, -a*e/d + b, -a*f/d + c],
-    [ 1/d,        e/d,        f/d],
-    [-g/d,  h - e*g/d,  i - f*g/d]])
-    """
-    Mi, Mj, Mij = M[i, :], M[:, j], M[i, j]
-    if Mij == 0:
-        raise ZeroDivisionError(
-            "Tried to pivot about zero-valued entry.")
-    A = M - Mj * (Mi / Mij)
-    A[i, :] = Mi / Mij
-    A[:, j] = -Mj / Mij
-    A[i, j] = 1 / Mij
-    return A
+        if A and B:
+            self.M = Matrix([[A, B], [C, D]])
+        else:
+            if A or B:
+                raise ValueError("Must give both A and B.")
+            self.M = Matrix([[C, D]])  # No constraints
+
+        if not all(i.is_Float or i.is_Rational for i in self.M):
+            raise TypeError(filldedent("""
+                Only rationals and floats are allowed.
+            """))
+
+        self.n = self.M.cols - 1
+        self.m = self.M.rows - 1
+
+        self.X = [self.Var(False, j) for j in range(self.n)]
+        self.Y = [self.Var(True, i) for i in range(self.m)]
+
+    def _pivot(self, i, j):
+        """
+        Perform a pivot operation about the element at position (i, j)
+        in the simplex tableau. The pivot element is inverted and the
+        tableau updated according to the standard pivot rule.
+
+        This modifies `self.M` in-place.
+
+        Conceptually, the pivot solves the equation in row `i` for the variable
+        in column `j`, and then substitutes that expression into all other
+        equations in the system. This preserves the meaning of the system while
+        changing its form.
+
+        Example
+        -------
+        >>> from sympy import Matrix, var
+        >>> from sympy.solvers.simplex import SimplexTableau
+        >>> a, b, c, d, e, f, g, h, i = var('a:i')
+        >>> T = SimplexTableau([], [], [], [])      # dummy init
+        >>> T.M = Matrix([[a, b, c], [d, e, f], [g, h, i]])
+        >>> T._pivot(1, 0)
+        >>> T.M
+        Matrix([
+        [-a/d, -a*e/d + b, -a*f/d + c],
+        [ 1/d,        e/d,        f/d],
+        [-g/d,  h - e*g/d,  i - f*g/d]])
+        """
+        Mi, Mj, Mij = self.M[i, :], self.M[:, j], self.M[i, j]
+        if Mij == 0:
+            raise ZeroDivisionError("Tried to pivot about zero-valued entry.")
+        A = self.M - Mj * (Mi / Mij)
+        A[i, :] = Mi / Mij
+        A[:, j] = -Mj / Mij
+        A[i, j] = 1 / Mij
+        self.M = A
+
+    def pivot(self, r, c):
+        """
+        Perform a pivot at position (r, c).
+        """
+        self._pivot(r, c)
+        self.X[c], self.Y[r] = self.Y[r], self.X[c]
+
+    def solution(self):
+        argmax = [None] * self.n
+        argmin_dual = [None] * self.m
+
+        for i, var in enumerate(self.X):
+            if not var.is_dual:
+                argmax[var.index] = 0
+            else:
+                argmin_dual[var.index] = self.M[-1, i]
+
+        for i, var in enumerate(self.Y):
+            if var.is_dual:
+                argmin_dual[var.index] = 0
+            else:
+                argmax[var.index] = self.M[i, -1]
+
+        optimal_value = -self.M[-1, -1]
+        return optimal_value, argmax, argmin_dual
 
 
 def _choose_pivot_row(A, B, candidate_rows, pivot_col, Y):
@@ -269,107 +323,66 @@ def _simplex(A, B, C, D=None, dual=False):
 
     """
     A, B, C, D = [Matrix(i) for i in (A, B, C, D or [0])]
+
     if dual:
         _o, d, p = _simplex(-A.T, C.T, B.T, -D)
         return -_o, d, p
 
-    if A and B:
-        M = Matrix([[A, B], [C, D]])
-    else:
-        if A or B:
-            raise ValueError("must give A and B")
-        # no constraints given
-        M = Matrix([[C, D]])
-    n = M.cols - 1
-    m = M.rows - 1
+    tableau = SimplexTableau(A, B, C, D)
 
-    if not all(i.is_Float or i.is_Rational for i in M):
-        # with literal Float and Rational we are guaranteed the
-        # ability of determining whether an expression is 0 or not
-        raise TypeError(filldedent("""
-            Only rationals and floats are allowed.
-            """
-            )
-        )
-
-    # x variables have priority over y variables during Bland's rule
-    # since False < True
-    Var = namedtuple("Var", ["is_dual", "index"])
-    X = [Var(False, j) for j in range(n)]
-    Y = [Var(True, i) for i in range(m)]
-
-    # Phase 1: find a feasible solution or determine none exist
-
+    # Phase 1: find a feasible solution
     while True:
-        B = M[:-1, -1]
-        A = M[:-1, :-1]
-        if all(B[i] >= 0 for i in range(B.rows)):
-            # We have found a feasible solution
+        rhs = tableau.M[:-1, -1]
+        lhs = tableau.M[:-1, :-1]
+        if all(rhs[i] >= 0 for i in range(rhs.rows)):
             break
 
-        # Find k: first row with a negative rightmost entry
-        for k in range(B.rows):
-            if B[k] < 0:
-                break  # use current value of k below
+        for k in range(rhs.rows):
+            if rhs[k] < 0:
+                break
         else:
-            pass  # error will raise below
+            raise InfeasibleLPError(filldedent("""
+                No feasible solution: all RHS entries are non-negative,
+                but pivot selection failed.
+            """))
 
-        # Choose pivot column, c
-        piv_cols = [_ for _ in range(A.cols) if A[k, _] < 0]
+        piv_cols = [_ for _ in range(lhs.cols) if lhs[k, _] < 0]
         if not piv_cols:
             raise InfeasibleLPError(filldedent("""
-                The constraint set is empty!"""))
-        _, c = min((X[i], i) for i in piv_cols) # Bland's rule
+                The constraint set is empty or inconsistent.
+            """))
 
-        # Choose pivot row, r
-        piv_rows = [_ for _ in range(A.rows) if A[_, c] > 0 and B[_] > 0]
+        _, c = min((tableau.X[i], i) for i in piv_cols)
+
+        piv_rows = [_ for _ in range(lhs.rows) if lhs[_, c] > 0 and rhs[_] > 0]
         piv_rows.append(k)
-        r = _choose_pivot_row(A, B, piv_rows, c, Y)
+        r = _choose_pivot_row(lhs, rhs, piv_rows, c, tableau.Y)
 
-        last = r, c
+        tableau.pivot(r, c)
 
-        M = _pivot(M, r, c)
-        X[c], Y[r] = Y[r], X[c]
-
-    # Phase 2: from a feasible solution, pivot to optimal
+    # Phase 2: optimize
     while True:
-        B = M[:-1, -1]
-        A = M[:-1, :-1]
-        C = M[-1, :-1]
+        rhs = tableau.M[:-1, -1]
+        lhs = tableau.M[:-1, :-1]
+        cost = tableau.M[-1, :-1]
 
-        # Choose a pivot column, c
-        piv_cols = [_ for _ in range(n) if C[_] < 0]
+        piv_cols = [_ for _ in range(tableau.n) if cost[_] < 0]
         if not piv_cols:
             break
-        _, c = min((X[i], i) for i in piv_cols)  # Bland's rule
 
-        # Choose a pivot row, r
-        piv_rows = [_ for _ in range(m) if A[_, c] > 0]
+        _, c = min((tableau.X[i], i) for i in piv_cols)
+
+        piv_rows = [_ for _ in range(tableau.m) if lhs[_, c] > 0]
         if not piv_rows:
             raise UnboundedLPError(filldedent("""
-                Objective function can assume
-                arbitrarily large values!"""))
-        r = _choose_pivot_row(A, B, piv_rows, c, Y)
+                Objective function can assume arbitrarily large values.
+            """))
 
-        M = _pivot(M, r, c)
-        X[c], Y[r] = Y[r], X[c]
+        r = _choose_pivot_row(lhs, rhs, piv_rows, c, tableau.Y)
 
-    argmax = [None] * n
-    argmin_dual = [None] * m
+        tableau.pivot(r, c)
 
-    for i, var in enumerate(X):
-        if var.is_dual == False:
-            argmax[var.index] = 0
-        else:
-            argmin_dual[var.index] = M[-1, i]
-
-    for i, var in enumerate(Y):
-        if var.is_dual == True:
-            argmin_dual[var.index] = 0
-        else:
-            argmax[var.index] = M[i, -1]
-
-    return -M[-1, -1], argmax, argmin_dual
+    return tableau.solution()
 
 
 ## routines that use _simplex or support those that do
