@@ -772,15 +772,6 @@ class FCodePrinter(CodePrinter):
         fmtstr = "[%s]" if self._settings["standard"] >= 2003 else '(/%s/)'
         return fmtstr % ', '.join((self._print(arg) for arg in ac.elements))
 
-    def _print_FunctionCall(self, expr):
-        # Override base class to properly handle expr.name through self._print()
-        # instead of using expr.name directly. This ensures complex expressions
-        # in function names are properly formatted for Fortran.
-        return '{name}({args})'.format(
-            name=self._print(expr.name),
-            args=', '.join((self._print(arg) for arg in expr.function_args))
-        )
-
     def _print_KeywordFunctionCall(self, expr):
         args = [self._print(arg) for arg in expr.function_args]
 
