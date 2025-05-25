@@ -340,11 +340,6 @@ def _simplex(A, B, C, D=None, dual=False):
         for k in range(rhs.rows):
             if rhs[k] < 0:
                 break
-        else:
-            raise InfeasibleLPError(filldedent("""
-                No feasible solution: all RHS entries are non-negative,
-                but pivot selection failed.
-            """))
 
         piv_cols = [_ for _ in range(lhs.cols) if lhs[k, _] < 0]
         if not piv_cols:
