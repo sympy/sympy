@@ -795,7 +795,7 @@ def rationalize(tokens: list[TOKEN], local_dict: DICT, global_dict: DICT):
                 passed_float = True
                 tokval = 'Rational'
             result.append((toknum, tokval))
-        elif passed_float == True and toknum == NUMBER:
+        elif passed_float and toknum == NUMBER:
             passed_float = False
             result.append((STRING, tokval))
         else:
