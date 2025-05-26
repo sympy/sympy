@@ -248,3 +248,10 @@ def test_linprog():
         ) == (-2, [0, 2])
     assert linprog([1, -1], [[1, 1]], [5], bounds={1:(3, None)}
         ) == (-5, [0, 5])
+
+
+def test_28089():
+    s, t = symbols('s t')
+    objective = 5
+    constraints = [t >= 0, Eq(s + t, 1), s + 2 * t <= 0]
+    raises(InfeasibleLPError, lambda: lpmin(objective, constraints))
