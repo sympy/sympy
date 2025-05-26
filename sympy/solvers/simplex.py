@@ -139,6 +139,18 @@ class SimplexTableau:
         self.X = [self.Var(False, j) for j in range(self.n)]
         self.Y = [self.Var(True, i) for i in range(self.m)]
 
+    def choose_pivot_column(self, candidates):
+        """Choose pivot column using Bland’s Rule."""
+        _, r = min((self.X[i], i) for i in candidates)
+        return r
+
+    def choose_pivot_row(self, lhs, rhs, candidates, pivot_col):
+        """Choose pivot row using ratio test and Bland’s Rule."""
+        _, _, r = min(
+            ((rhs[i] / lhs[i, pivot_col], self.Y[i], i) for i in candidates)
+        )
+        return r
+
     def _pivot(self, i, j):
         """
         Perform a pivot operation about the element at position (i, j)
@@ -200,12 +212,6 @@ class SimplexTableau:
 
         optimal_value = -self.M[-1, -1]
         return optimal_value, argmax, argmin_dual
-
-
-def _choose_pivot_row(A, B, candidate_rows, pivot_col, Y):
-    # Choose row with smallest ratio
-    # If there are ties, pick using Bland's rule
-    return min(candidate_rows, key=lambda i: (B[i] / A[i, pivot_col], Y[i]))
 
 
 def _simplex(A, B, C, D=None, dual=False):
@@ -347,11 +353,12 @@ def _simplex(A, B, C, D=None, dual=False):
                 The constraint set is empty or inconsistent.
             """))
 
-        _, c = min((tableau.X[i], i) for i in piv_cols)
+        c = tableau.choose_pivot_column(piv_cols)
 
         piv_rows = [_ for _ in range(lhs.rows) if lhs[_, c] > 0 and rhs[_] > 0]
         piv_rows.append(k)
-        r = _choose_pivot_row(lhs, rhs, piv_rows, c, tableau.Y)
+
+        r = tableau.choose_pivot_row(lhs, rhs, piv_rows, c)
 
         tableau.pivot(r, c)
 
@@ -365,7 +372,7 @@ def _simplex(A, B, C, D=None, dual=False):
         if not piv_cols:
             break
 
-        _, c = min((tableau.X[i], i) for i in piv_cols)
+        c = tableau.choose_pivot_column(piv_cols)
 
         piv_rows = [_ for _ in range(tableau.m) if lhs[_, c] > 0]
         if not piv_rows:
@@ -373,7 +380,7 @@ def _simplex(A, B, C, D=None, dual=False):
                 Objective function can assume arbitrarily large values.
             """))
 
-        r = _choose_pivot_row(lhs, rhs, piv_rows, c, tableau.Y)
+        r = tableau.choose_pivot_row(lhs, rhs, piv_rows, c)
 
         tableau.pivot(r, c)
 
