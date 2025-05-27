@@ -19,6 +19,7 @@ from sympy.physics.mechanics import (
     ReferenceFrame,
     WrappingCylinder,
     WrappingSphere,
+    WrappingCone,
     dynamicsymbols,
 )
 from sympy.simplify.simplify import simplify
@@ -361,3 +362,46 @@ class TestWrappingCylinder:
 
         with pytest.raises(ValueError):
             _ = cylinder.geodesic_end_vectors(p1, p2)
+
+
+class TestWrappingCone:
+
+    @staticmethod
+    def test_valid_constructor():
+        N = ReferenceFrame('N')
+        alpha, apex, axis = Symbol('alpha'), Point('p0'), N.z
+        cone = WrappingCone(alpha, apex, axis)
+        assert isinstance(cone, WrappingCone)
+        assert hasattr(cone, 'alpha')
+        assert cone.alpha == alpha
+        assert hasattr(cone, 'apex')
+        assert cone.apex == apex
+        assert hasattr(cone, 'axis')
+        assert cone.axis == axis
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        'position, expected',
+        [
+            (S.Zero, True),
+            (N.x + N.y + N.z, False),
+            (N.x + sqrt(3) * N.z, True),
+            (N.y + sqrt(3) * N.z, True),
+            ((N.x + N.y) / sqrt(2) + sqrt(3) * N.z, True),
+            (N.x / sqrt(3) + sqrt(2) * N.y / sqrt(3) + sqrt(3) * N.z, True),
+            (2 * N.x + sqrt(12) * N.z, True),
+            (2 * N.y + sqrt(12) * N.z, True),
+            (5 * N.x + sqrt(12) * N.z, False),
+            (sqrt(2) * (N.x + N.y) + sqrt(12) * N.z, True)
+        ]
+    )
+    def test_point_on_surface(position, expected):
+        axis = N.z
+        apex = Point('p0')
+        alpha = pi/6
+        cone = WrappingCone(alpha, apex, axis)
+
+        p1 = Point('p1')
+        p1.set_pos(apex, position)
+
+        assert cone.point_on_surface(p1) is expected

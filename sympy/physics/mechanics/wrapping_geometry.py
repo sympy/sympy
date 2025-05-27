@@ -583,6 +583,190 @@ class WrappingCylinder(WrappingGeometryBase):
         )
 
 
+class WrappingCone(WrappingGeometryBase):
+    """A solid (infinite) conical object.
+
+    Explanation
+    ===========
+    A wrapping geometry that allows for circular arcs to be defined between
+    pairs of points on the surface of a cone. These paths are always geodetic
+    (the shortest possible) in the sense that they become straight lines on
+    the unwrapped conical surface.
+
+    Examples
+    ========
+    To create a ``WrappingCone`` instance, a ``Symbol`` denoting its semi-vertical
+    angle, a ``Point`` defining its apex, and a ``Vector`` specifying its axis
+    are needed:
+
+    >>> from sympy import symbols
+    >>> from sympy.physics.mechanics import Point, ReferenceFrame, WrappingCone
+    >>> N = ReferenceFrame('N')
+    >>> alpha = symbols('alpha')
+    >>> pO = Point('pO')
+    >>> ax = N.z
+
+    A cone with semi-vertical angle ``alpha``, apex at ``pO``, and axis aligned
+    with ``N.z`` can be instantiated with:
+
+    >>> WrappingCone(alpha, pO, ax)
+    WrappingCone(alpha=alpha, apex=pO, axis=N.z)
+
+    Parameters
+    ==========
+    alpha : Symbol
+        The semi-vertical angle of the cone.
+    apex : Point
+        The tip of the cone where the curved surface meets.
+    axis : Vector
+        The axis along which the cone is aligned.
+
+    See Also
+    ========
+    WrappingCylinder
+        Cylindrical geometry where wrapping arcs are geodetic on the cylinder.
+    WrappingSphere
+        Spherical geometry where the wrapping direction is always geodetic.
+    """
+    def __init__(self, alpha, apex, axis):
+        """
+        Initializer for ``WrappingCone``.
+
+        Parameters
+        ==========
+
+        alpha: Symbol
+            The semi vertical angle of the cone.
+
+        apex: Point
+            The tip of the cone where the curved surface meets.
+
+        axis: Vector
+            The axis along which the cone is aligned.
+
+        """
+        self._alpha = alpha
+        self._apex = apex
+        self._axis = axis.normalize()
+
+    @property
+    def point(self):
+        return self._apex
+
+    @property
+    def alpha(self):
+        """The semi vertical angle of the cone."""
+        return self._alpha
+
+    @alpha.setter
+    def alpha(self, alpha):
+        self._alpha = alpha
+
+    @property
+    def apex(self):
+        """The tip of the cone where the curved surface meets."""
+        return self._apex
+
+    @apex.setter
+    def apex(self, apex):
+        self._apex = apex
+
+    @property
+    def axis(self):
+        """The axis along which the cone is aligned."""
+        return self._axis
+
+    @axis.setter
+    def axis(self, axis):
+        self._axis = axis.normalize()
+
+    def point_on_surface(self, point):
+        """
+        Returns ``True`` if the point is on the cone's surface.
+
+        Parameters
+        ==========
+
+        point : Point
+            The point for which it's to be ascertained if it's on the
+            cone's surface or not.
+        """
+        position = point.pos_from(self.apex)
+        axis_component = position.dot(self.axis) * self.axis
+        radial_component = position - axis_component
+        lhs = radial_component.dot(radial_component)
+        rhs = axis_component.dot(axis_component) * tan(self.alpha) ** 2
+        return Eq(lhs, rhs) == True
+
+    def geodesic_length(self, point_1, point_2):
+        """
+        point_1 := (x1, y1, z1) and point_2 := (x2, y2, z2)
+        Algorithm:
+            convert points from rectangular coords (x, y, z) to conical coords (s, u)
+            r is length from apex point (origin) to the point
+            u is the planar angle made by the point
+            points may or may not be on the cone's surface
+            if they lie on cones surface:
+                rho = sqrt(x ** 2 + y ** 2) = z * tan(alpha) = k * z
+                let k := tan(alpha)
+                CHECK -> sqrt(x ** 2 + y ** 2) == z * tan(alpha) (they should satisfy this)
+                let phi = atan2(y, x)
+                then now,
+                    x = k * z * cos(phi)
+                    y = k * z * sin(phi)
+                    z = z
+            thus the conical coords will be:
+                s = z / cos(alpha)
+                u = phi * sin(alpha)
+            these are also the polar coords in the PLANE
+
+            NOTE:
+                if the cone is unwrapped, it will look like sector of circle
+                with radius = s and sector angle = 2 * pi * sin(alpha)
+
+            now we have to convert these to the PLANE coordinates by developing the cone
+            thus, x_plane = s * cos(u) and y_plane = s * sin(u)
+
+            for possible "wrap-arounds", we can use:
+                u2 = phi2 * sin(alpha) + 2 * pi * m * sin(alpha) where m in [-1, 0, 1]
+                and then choose the shortest geodesic
+
+            for finding length of geodesic between 2 polar coords,
+                (s1, u1) and (s2, u2)
+                L(m) = sqrt(s1 ** 2 + s2 ** 2 - 2 * s1 * s2 * cos(delta_phi))
+                where delta_phi = (u2 - u1 + 2 * pi * m) * sin(alpha)
+
+                find L(m) for m in [-1, 0, 1]
+                and then choose shortest one if possible
+        """
+        raise NotImplementedError
+
+    def geodesic_end_vectors(self, point_1, point_2):
+        """
+        The tangent vector expression for the geodesic is:
+        T_p = d_s * (sin(alpha) * cos(phi), sin(alpha) * sin(phi), cos(alpha))
+            + d_phi * (-s * sin(alpha) * sin(phi), s * sin(alpha) * cos(phi), 0)
+
+        where:
+            d_s = (x * delta_x + y * delta_y) / s1
+            d_phi = (x * delta_y - y * delta_x) / (s ** 2 * sin(alpha))
+
+        delta_x = x2 - x1 and delta_y = y2 - y1
+        thus we can compute T_p1 by substituting x1 for x and y1 for y and s1 for s
+        in the formula for T_p
+        similarly for T_p2
+        we can normalise these vectors if needed
+        """
+        raise NotImplementedError
+
+    def __repr__(self):
+        """Representation of a ``WrappingCone``."""
+        return (
+            f'{self.__class__.__name__}(alpha={self.alpha}, '
+            f'apex={self.apex}, axis={self.axis})'
+        )
+
+
 def _directional_atan(numerator, denominator):
     """Compute atan in a directional sense as required for geodesics.
 
