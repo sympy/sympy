@@ -243,7 +243,7 @@ class AbstractPythonCodePrinter(CodePrinter):
 
     def _print_ITE(self, expr):
         from sympy.functions.elementary.piecewise import Piecewise
-        return self._print(expr.rewrite(Piecewise))
+        return self._print(expr.rewrite(Piecewise, deep=False))
 
     def _print_Sum(self, expr):
         loops = (

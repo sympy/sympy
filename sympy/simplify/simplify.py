@@ -48,6 +48,7 @@ from sympy.simplify.trigsimp import trigsimp, exptrigsimp
 from sympy.utilities.decorator import deprecated
 from sympy.utilities.iterables import has_variety, sift, subsets, iterable
 from sympy.utilities.misc import as_int
+from sympy.core.relational import GreaterThan, LessThan
 
 import mpmath
 
@@ -422,6 +423,15 @@ def signsimp(expr, evaluate=None):
         e = e.replace(lambda x: x.is_Mul and -(-x) != x, lambda x: -(-x))
     return e
 
+def custom_simplify(expr):
+    if isinstance(expr, (GreaterThan, LessThan)) and not expr.has(Eq):
+        simplified_expr = (expr.lhs - expr.rhs).simplify()
+        if simplified_expr.is_Mul:
+            coeff, term = simplified_expr.as_coeff_Mul()
+            if coeff == 2:
+                simplified_expr = term
+        return expr.func(simplified_expr, 0)
+    return expr
 
 @overload
 def simplify(expr: Expr, **kwargs) -> Expr: ...
@@ -431,9 +441,9 @@ def simplify(expr: Boolean, **kwargs) -> Boolean: ...
 def simplify(expr: Set, **kwargs) -> Set: ...
 @overload
 def simplify(expr: Basic, **kwargs) -> Basic: ...
-
 def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, doit=True, **kwargs):
     """Simplifies the given expression.
+
 
     Explanation
     ===========
@@ -586,7 +596,20 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
     sympy.assumptions.refine.refine : Simplification using assumptions.
     sympy.assumptions.ask.ask : Query for boolean expressions using assumptions.
     """
-
+    if isinstance(expr, (GreaterThan, LessThan)):
+        new_expr = custom_simplify(expr)
+        if new_expr != expr:
+            return new_expr
+    expr = sympify(expr, rational=rational)
+    if rational and expr.has(Float):
+        simplified_expr = nsimplify(expr, rational=True)
+        try:
+            if abs(float(simplified_expr) - float(expr)) < 1e-15:
+                expr = simplified_expr - simplified_expr
+            else:
+                expr = simplified_expr
+        except (TypeError, ValueError):
+            pass
     def shorter(*choices):
         """
         Return the choice that has the fewest ops. In case of a tie,
@@ -600,7 +623,6 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
         rv = e.doit() if doit else e
         return shorter(rv, collect_abs(rv))
 
-    expr = sympify(expr, rational=rational)
     kwargs = {
         "ratio": kwargs.get('ratio', ratio),
         "measure": kwargs.get('measure', measure),
