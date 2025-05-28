@@ -128,6 +128,7 @@ a:hover {
    slow for long pages) */
 html {
     scroll-behavior: auto;
+    overflow-y: hidden;
 }
 
 /* Make checkboxes from the tasklist extension ('- [ ]' in Markdown) not add bullet points to the checkboxes.
@@ -156,3 +157,17 @@ a:visited:hover {
     text-decoration-color: var(--color-link);
 }
 
+/* Layout and overflow settings for sidebar and main content */
+.sidebar-drawer {
+    justify-content: center;
+    overflow-y: auto;
+    max-height: 100vh;
+    scrollbar-width: thin;
+}
+.main {
+    overflow-y: auto;
+    height: 100vh;
+  }
+.sidebar-scroll{
+    overflow: visible;
+}
