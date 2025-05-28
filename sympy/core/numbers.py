@@ -807,7 +807,7 @@ class Float(Number):
             return S.NaN
         elif isinstance(num, (SYMPY_INTS, Integer)):
             num = str(num)
-        elif num in (S.Infinity, S.NegativeInfinity, S.NaN):
+        elif num is S.Infinity or num is S.NegativeInfinity or num is S.NaN:
             return num
         elif _is_numpy_instance(num):  # support for numpy datatypes
             num = _convert_numpy_types(num)
