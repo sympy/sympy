@@ -1634,6 +1634,9 @@ def test_diagonalization():
     assert m.is_symmetric()
     assert m.is_diagonalizable()
 
+    M = Matrix([])
+    assert M.diagonal() == Matrix(1, 0, [])
+
 
 def test_issue_15887():
     # Mutable matrix should not use cache
