@@ -807,11 +807,7 @@ class Float(Number):
             return S.NaN
         elif isinstance(num, (SYMPY_INTS, Integer)):
             num = str(num)
-        elif num is S.Infinity:
-            return num
-        elif num is S.NegativeInfinity:
-            return num
-        elif num is S.NaN:
+        elif num in (S.Infinity, S.NegativeInfinity, S.NaN):
             return num
         elif _is_numpy_instance(num):  # support for numpy datatypes
             num = _convert_numpy_types(num)
@@ -1650,9 +1646,7 @@ class Rational(Number):
         if other.is_Number:
             op = None
             s, o = self, other
-            if other.is_NumberSymbol:
-                op = getattr(o, attr)
-            elif other.is_Float:
+            if other.is_NumberSymbol or other.is_Float:
                 op = getattr(o, attr)
             elif other.is_Rational:
                 s, o = Integer(s.p*o.q), Integer(s.q*o.p)

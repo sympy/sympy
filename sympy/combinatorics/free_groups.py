@@ -330,12 +330,7 @@ class FreeGroup(DefaultPrinting):
         True
 
         """
-        if not isinstance(g, FreeGroupElement):
-            return False
-        elif self != g.group:
-            return False
-        else:
-            return True
+        return isinstance(g, FreeGroupElement) and self == g.group
 
     def center(self):
         """Returns the center of the free group `self`."""

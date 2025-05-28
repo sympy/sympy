@@ -353,9 +353,7 @@ class Relational(Boolean, EvalfMixin):
         if r.rhs.is_number:
             if r.rhs.is_Number and r.lhs.is_Number and r.lhs > r.rhs:
                 r = r.reversed
-        elif r.lhs.is_number:
-            r = r.reversed
-        elif tuple(ordered(args)) != args:
+        elif r.lhs.is_number or tuple(ordered(args)) != args:
             r = r.reversed
 
         LHS_CEMS = getattr(r.lhs, 'could_extract_minus_sign', None)

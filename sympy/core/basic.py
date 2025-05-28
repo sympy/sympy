@@ -1711,9 +1711,7 @@ class Basic(Printable):
         if isinstance(query, type):
             _query = lambda expr: isinstance(expr, query)
 
-            if isinstance(value, type):
-                _value = lambda expr, result: value(*expr.args)
-            elif callable(value):
+            if isinstance(value, type) or callable(value):
                 _value = lambda expr, result: value(*expr.args)
             else:
                 raise TypeError(

@@ -1863,15 +1863,12 @@ class Mul(Expr, AssocOp):
                 for j in range(take):
                     if nc[i + j][0] != old_nc[j][0]:
                         break
-                    elif j == 0:
-                        rat.append(ndiv(nc[i + j][1], old_nc[j][1]))
-                    elif j == take - 1:
+                    elif j == 0 or j == take - 1:
                         rat.append(ndiv(nc[i + j][1], old_nc[j][1]))
                     elif nc[i + j][1] != old_nc[j][1]:
                         break
                     else:
                         rat.append(1)
-                    j += 1
                 else:
                     ndo = min(rat)
                     if ndo:
