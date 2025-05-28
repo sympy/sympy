@@ -67,9 +67,7 @@ class re(DefinedFunction):
 
     @classmethod
     def eval(cls, arg):
-        if arg is S.NaN:
-            return S.NaN
-        elif arg is S.ComplexInfinity:
+        if arg is S.NaN or arg is S.ComplexInfinity:
             return S.NaN
         elif arg.is_extended_real:
             return arg
@@ -189,9 +187,7 @@ class im(DefinedFunction):
 
     @classmethod
     def eval(cls, arg):
-        if arg is S.NaN:
-            return S.NaN
-        elif arg is S.ComplexInfinity:
+        if arg is S.NaN or arg is S.ComplexInfinity:
             return S.NaN
         elif arg.is_extended_real:
             return S.Zero

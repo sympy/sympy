@@ -918,12 +918,10 @@ def evalf_trig(v: Expr, prec: int, options: OPT_DICT) -> TMP_RES:
     if not re:
         if isinstance(v, cos):
             return fone, None, prec, None
-        elif isinstance(v, sin):
-            return None, None, None, None
-        elif isinstance(v,tan):
-            return None, None, None, None
-        else:
-            raise NotImplementedError
+        # Since the type of v has already been checked,
+        # only sin or tan can reach this point.
+        return None, None, None, None
+
     # For trigonometric functions, we are interested in the
     # fixed-point (absolute) accuracy of the argument.
     xsize = fastlog(re)
