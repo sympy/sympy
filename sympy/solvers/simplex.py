@@ -354,7 +354,7 @@ def _simplex(A, B, C, D=None, dual=False):
 
         c = tableau.choose_pivot_column(piv_cols)
 
-        piv_rows = [_ for _ in range(lhs.rows) if lhs[_, c] > 0 and rhs[_] > 0]
+        piv_rows = [_ for _ in range(lhs.rows) if lhs[_, c] > 0 and rhs[_] >= 0]
         piv_rows.append(k)
 
         r = tableau.choose_pivot_row(lhs, rhs, piv_rows, c)
