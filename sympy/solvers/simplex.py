@@ -244,7 +244,7 @@ def _simplex(A, B, C, D=None, dual=False):
     constraint that ``y + 2*x >= 4``. This is the "standard form" of
     a minimization.
 
-    In the nonnegative quadrant, this inequality describes a area above
+    In the nonnegative quadrant, this inequality describes an area above
     a triangle with vertices at (0, 4), (0, 0) and (2, 0). The minimum
     of ``f`` occurs at (2, 0). Define A, B, C, D for the standard
     minimization:
@@ -369,7 +369,7 @@ def _simplex(A, B, C, D=None, dual=False):
 
         piv_cols = [_ for _ in range(tableau.n) if cost[_] < 0]
         if not piv_cols:
-            break
+            break  # No improving direction -> current solution is optimal
 
         c = tableau.choose_pivot_column(piv_cols)
 
