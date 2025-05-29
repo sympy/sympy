@@ -140,12 +140,12 @@ class SimplexTableau:
         self.Y = [self.Var(True, i) for i in range(self.m)]
 
     def choose_pivot_column(self, candidates):
-        """Choose pivot column using Bland’s Rule."""
+        """Choose pivot column using Bland's Rule."""
         _, r = min((self.X[i], i) for i in candidates)
         return r
 
     def choose_pivot_row(self, lhs, rhs, candidates, pivot_col):
-        """Choose pivot row using ratio test and Bland’s Rule."""
+        """Choose pivot row using ratio test and Bland's Rule."""
         _, _, r = min(
             ((rhs[i] / lhs[i, pivot_col], self.Y[i], i) for i in candidates)
         )
