@@ -340,12 +340,11 @@ def _simplex(A, B, C, D=None, dual=False):
     while True:
         rhs = tableau.M[:-1, -1]
         lhs = tableau.M[:-1, :-1]
-        if all(rhs[i] >= 0 for i in range(rhs.rows)):
-            break
 
-        for k in range(rhs.rows):
-            if rhs[k] < 0:
-                break
+        # Find first infeasible row
+        k = next((i for i in range(rhs.rows) if rhs[i] < 0), None)
+        if k is None:
+            break  # All RHS entries >= 0 -> feasible solution found
 
         piv_cols = [_ for _ in range(lhs.cols) if lhs[k, _] < 0]
         if not piv_cols:
