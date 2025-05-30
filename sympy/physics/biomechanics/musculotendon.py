@@ -1413,7 +1413,7 @@ class MusculotendonDeGroote2016(MusculotendonBase):
 
     """
 
-    curves = CharacteristicCurveCollection(
+    curves = CharacteristicCurveCollection( # type: ignore
         tendon_force_length=TendonForceLengthDeGroote2016,
         tendon_force_length_inverse=TendonForceLengthInverseDeGroote2016,
         fiber_force_length_passive=FiberForceLengthPassiveDeGroote2016,
