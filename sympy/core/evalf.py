@@ -625,9 +625,9 @@ def evalf_add(v: 'Add', prec: int, options: OPT_DICT) -> TMP_RES:
 
     options['maxprec'] = oldmaxprec
     if iszero(re, scaled=True):
-        re = scaled_zero(re)
+        re = scaled_zero(re) # type: ignore
     if iszero(im, scaled=True):
-        im = scaled_zero(im)
+        im = scaled_zero(im) # type: ignore
     return re, im, re_acc, im_acc
 
 
@@ -914,7 +914,7 @@ def evalf_trig(v: Expr, prec: int, options: OPT_DICT) -> TMP_RES:
     if im:
         if 'subs' in options:
             v = v.subs(options['subs'])
-        return evalf(v._eval_evalf(prec), prec, options)
+        return evalf(v._eval_evalf(prec), prec, options) # type: ignore
     if not re:
         if isinstance(v, cos):
             return fone, None, prec, None
