@@ -22,7 +22,6 @@ def _expand_powers(factors):
     power expression to a multiplication expression so that that the
     expression can be handled by the normal ordering functions.
     """
-
     new_factors = []
     for factor in factors.args:
         if (isinstance(factor, Pow)
@@ -135,7 +134,6 @@ def _normal_ordered_form_terms(expr, independent=False, recursive_limit=10,
     addition expression and call _normal_ordered_form_factor to perform the
     factor to an normally ordered expression.
     """
-
     new_terms = []
     for term in expr.args:
         if isinstance(term, Mul):
@@ -177,7 +175,6 @@ def normal_ordered_form(expr, independent=False, recursive_limit=10,
     >>> normal_ordered_form(a * Dagger(a))
     1 + Dagger(a)*a
     """
-
     if _recursive_depth > recursive_limit:
         warnings.warn("Too many recursions, aborting")
         return expr
@@ -209,11 +206,9 @@ def _normal_order_factor(product, recursive_limit=10, _recursive_depth=0):
                           _recursive_depth=_recursive_depth)
 
     factors = _expand_powers(product)
-
     n = 0
     new_factors = []
     while n < len(factors) - 1:
-
         if (isinstance(factors[n], BosonOp) and
                 factors[n].is_annihilation):
             # boson
@@ -267,7 +262,6 @@ def _normal_order_terms(expr, recursive_limit=10, _recursive_depth=0):
     expression and call _normal_order_factor to perform the normal ordering
     on the factors.
     """
-
     new_terms = []
     for term in expr.args:
         if isinstance(term, Mul):
