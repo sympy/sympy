@@ -271,7 +271,7 @@ def import_module_from_file(filename, only_if_newer_than=None):
         import importlib.util
         spec = importlib.util.spec_from_file_location(name, filename)
         if spec is None:
-            raise ImportError("Failed to import: '%s'" % filename)
+            raise ImportError(f"Failed to import: '{filename}'")
         mod = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(mod)
     return mod
