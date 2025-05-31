@@ -404,4 +404,5 @@ class TestWrappingCone:
         p1 = Point('p1')
         p1.set_pos(apex, position)
 
-        assert cone.point_on_surface(p1) is expected
+        result = cone.point_on_surface(p1)
+        assert result is expected

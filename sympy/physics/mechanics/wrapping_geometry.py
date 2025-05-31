@@ -588,6 +588,7 @@ class WrappingCone(WrappingGeometryBase):
 
     Explanation
     ===========
+
     A wrapping geometry that allows for circular arcs to be defined between
     pairs of points on the surface of a cone. These paths are always geodetic
     (the shortest possible) in the sense that they become straight lines on
@@ -595,6 +596,7 @@ class WrappingCone(WrappingGeometryBase):
 
     Examples
     ========
+
     To create a ``WrappingCone`` instance, a ``Symbol`` denoting its semi-vertical
     angle, a ``Point`` defining its apex, and a ``Vector`` specifying its axis
     are needed:
@@ -614,6 +616,7 @@ class WrappingCone(WrappingGeometryBase):
 
     Parameters
     ==========
+
     alpha : Symbol
         The semi-vertical angle of the cone.
     apex : Point
@@ -623,10 +626,12 @@ class WrappingCone(WrappingGeometryBase):
 
     See Also
     ========
+
     WrappingCylinder
         Cylindrical geometry where wrapping arcs are geodetic on the cylinder.
     WrappingSphere
         Spherical geometry where the wrapping direction is always geodetic.
+
     """
     def __init__(self, alpha, apex, axis):
         """
