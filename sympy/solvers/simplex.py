@@ -139,17 +139,6 @@ class _SimplexTableau:
         self.X = [self.Var(False, j) for j in range(self.n)]
         self.Y = [self.Var(True, i) for i in range(self.m)]
 
-    def choose_pivot_column(self, candidates):
-        """Choose pivot column using Bland's Rule."""
-        _, r = min((self.X[i], i) for i in candidates)
-        return r
-
-    def choose_pivot_row(self, lhs, rhs, candidates, pivot_col):
-        """Choose pivot row using ratio test and Bland's Rule."""
-        _, _, r = min(
-            ((rhs[i] / lhs[i, pivot_col], self.Y[i], i) for i in candidates)
-        )
-        return r
 
     def _pivot(self, i, j):
         """
@@ -346,20 +335,23 @@ def _simplex(A, B, C, D=None, dual=False):
         if k is None:
             break  # All RHS entries >= 0 -> feasible solution found
 
-        piv_cols = [_ for _ in range(lhs.cols) if lhs[k, _] < 0]
-        if not piv_cols:
+        pivot_column_candidates = [_ for _ in range(lhs.cols) if lhs[k, _] < 0]
+        if not pivot_column_candidates:
             raise InfeasibleLPError(filldedent("""
                 The constraint set is empty or inconsistent.
             """))
 
-        c = tableau.choose_pivot_column(piv_cols)
+        # Choose lexicographically smallest variable (Bland's rule)
+        pivot_column = min(pivot_column_candidates, key=lambda i: tableau.X[i])
 
-        piv_rows = [_ for _ in range(lhs.rows) if lhs[_, c] > 0 and rhs[_] >= 0]
-        piv_rows.append(k)
+        pivot_row_candidates = [_ for _ in range(lhs.rows) if lhs[_, pivot_column] > 0 and rhs[_] >= 0]
+        pivot_row_candidates.append(k)
 
-        r = tableau.choose_pivot_row(lhs, rhs, piv_rows, c)
+        # Choose pivot row with ratio test and break ties with Bland's rule
+        pivot_row = min(pivot_row_candidates,
+                        key=lambda i: (rhs[i] / lhs[i, pivot_column], tableau.Y[i]))
 
-        tableau.pivot(r, c)
+        tableau.pivot(pivot_row, pivot_column)
 
     # Phase 2: optimize
     while True:
@@ -367,21 +359,24 @@ def _simplex(A, B, C, D=None, dual=False):
         lhs = tableau.M[:-1, :-1]
         cost = tableau.M[-1, :-1]
 
-        piv_cols = [_ for _ in range(tableau.n) if cost[_] < 0]
-        if not piv_cols:
+        pivot_column_candidates = [_ for _ in range(tableau.n) if cost[_] < 0]
+        if not pivot_column_candidates:
             break  # No improving direction -> current solution is optimal
 
-        c = tableau.choose_pivot_column(piv_cols)
+        # Choose lexicographically smallest variable (Bland's rule)
+        pivot_column = min(pivot_column_candidates, key=lambda i: tableau.X[i])
 
-        piv_rows = [_ for _ in range(tableau.m) if lhs[_, c] > 0]
-        if not piv_rows:
+        pivot_row_candidates = [_ for _ in range(tableau.m) if lhs[_, pivot_column] > 0]
+        if not pivot_row_candidates:
             raise UnboundedLPError(filldedent("""
                 Objective function can assume arbitrarily large values.
             """))
 
-        r = tableau.choose_pivot_row(lhs, rhs, piv_rows, c)
+        # Choose pivot row with ratio test and break ties with Bland's rule
+        pivot_row = min(pivot_row_candidates,
+                        key=lambda i: (rhs[i] / lhs[i, pivot_column], tableau.Y[i]))
 
-        tableau.pivot(r, c)
+        tableau.pivot(pivot_row, pivot_column)
 
     return tableau.solution()
 
