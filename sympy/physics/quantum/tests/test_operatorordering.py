@@ -43,7 +43,6 @@ def test_normal_ordered_form():
         1 + Dagger(a) * a + a ** 2
     assert normal_ordered_form(a * (Dagger(a) + a)) == \
         1 + Dagger(a) * a + a ** 2
-        
     assert normal_ordered_form(a ** 2 * Dagger(a) + a * Dagger(a)) == \
         1 + Dagger(a) * a + 2 * a + Dagger(a) * a ** 2
     assert normal_ordered_form(a * (a * Dagger(a) + Dagger(a))) == \
