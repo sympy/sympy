@@ -298,9 +298,6 @@ def _simplex(A, B, C, D=None, dual=False):
 
     # Phase 1: find a feasible solution or determine none exist
 
-    ## keep track of last pivot row and column
-    last = None
-
     while True:
         B = M[:-1, -1]
         A = M[:-1, :-1]
@@ -323,31 +320,9 @@ def _simplex(A, B, C, D=None, dual=False):
         _, c = min((X[i], i) for i in piv_cols) # Bland's rule
 
         # Choose pivot row, r
-        piv_rows = [_ for _ in range(A.rows) if A[_, c] > 0 and B[_] > 0]
+        piv_rows = [_ for _ in range(A.rows) if A[_, c] > 0 and B[_] >= 0]
         piv_rows.append(k)
         r = _choose_pivot_row(A, B, piv_rows, c, Y)
-
-        # check for oscillation
-        if (r, c) == last:
-            # Not sure what to do here; it looks like there will be
-            # oscillations; see o1 test added at this commit to
-            # see a system with no solution and the o2 for one
-            # with a solution. In the case of o2, the solution
-            # from linprog is the same as the one from lpmin, but
-            # the matrices created in the lpmin case are different
-            # than those created without replacements in linprog and
-            # the matrices in the linprog case lead to oscillations.
-            # If the matrices could be re-written in linprog like
-            # lpmin does, this behavior could be avoided and then
-            # perhaps the oscillating case would only occur when
-            # there is no solution. For now, the output is checked
-            # before exit if oscillations were detected and an
-            # error is raised there if the solution was invalid.
-            #
-            # cf section 6 of Ferguson for a non-cycling modification
-            last = True
-            break
-        last = r, c
 
         M = _pivot(M, r, c)
         X[c], Y[r] = Y[r], X[c]
@@ -390,11 +365,6 @@ def _simplex(A, B, C, D=None, dual=False):
         else:
             argmax[n] = M[i, -1]
 
-    if last and not all(i >= 0 for i in argmax + argmin_dual):
-        raise InfeasibleLPError(filldedent("""
-            Oscillating system led to invalid solution.
-            If you believe there was a valid solution, please
-            report this as a bug."""))
     return -M[-1, -1], argmax, argmin_dual
 
 
