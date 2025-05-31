@@ -35,6 +35,25 @@ def _expand_powers(factors):
 
     return new_factors
 
+def _distribute_multiplication(product):
+    """
+    Helper function to handle distribution of multiplication over addition.
+    Returns None if no distribution is needed, otherwise returns the distributed form.
+    """
+    if not isinstance(product, Mul):
+        return None
+        
+    for i, factor in enumerate(product.args):
+        if isinstance(factor, Add):
+            # Distribute the multiplication
+            terms = []
+            for term in factor.args:
+                new_args = list(product.args)
+                new_args[i] = term
+                terms.append(Mul(*new_args))
+            return Add(*terms)
+    return None
+
 def _normal_ordered_form_factor(product, independent=False, recursive_limit=10,
                                 _recursive_depth=0):
     """
@@ -44,6 +63,12 @@ def _normal_ordered_form_factor(product, independent=False, recursive_limit=10,
     operator expression is equivalent to the argument, but will in general be
     a sum of operator products instead of a simple product.
     """
+    distributed = _distribute_multiplication(product)
+    if distributed is not None:
+        return normal_ordered_form(distributed,
+                                 independent=independent,
+                                 recursive_limit=recursive_limit,
+                                 _recursive_depth=_recursive_depth)
 
     factors = _expand_powers(product)
 
@@ -96,7 +121,7 @@ def _normal_ordered_form_factor(product, independent=False, recursive_limit=10,
     if new_factors == factors:
         return product
     else:
-        expr = Mul(*new_factors).expand()
+        expr = Mul(*new_factors)
         return normal_ordered_form(expr,
                                    recursive_limit=recursive_limit,
                                    _recursive_depth=_recursive_depth + 1,
@@ -156,7 +181,7 @@ def normal_ordered_form(expr, independent=False, recursive_limit=10,
     if _recursive_depth > recursive_limit:
         warnings.warn("Too many recursions, aborting")
         return expr
-    expr = expr.expand()
+
     if isinstance(expr, Add):
         return _normal_ordered_form_terms(expr,
                                           recursive_limit=recursive_limit,
@@ -177,6 +202,11 @@ def _normal_order_factor(product, recursive_limit=10, _recursive_depth=0):
     with bosonic or fermionic operators. In general the resulting operator
     expression will not be equivalent to original product.
     """
+    distributed = _distribute_multiplication(product)
+    if distributed is not None:
+        return normal_order(distributed,
+                          recursive_limit=recursive_limit,
+                          _recursive_depth=_recursive_depth)
 
     factors = _expand_powers(product)
 
@@ -225,7 +255,7 @@ def _normal_order_factor(product, recursive_limit=10, _recursive_depth=0):
     if new_factors == factors:
         return product
     else:
-        expr = Mul(*new_factors).expand()
+        expr = Mul(*new_factors)
         return normal_order(expr,
                             recursive_limit=recursive_limit,
                             _recursive_depth=_recursive_depth + 1)
