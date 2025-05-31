@@ -255,3 +255,10 @@ def test_28089():
     objective = 5
     constraints = [t >= 0, Eq(s + t, 1), s + 2 * t <= 0]
     raises(InfeasibleLPError, lambda: lpmin(objective, constraints))
+
+
+def test_28104():
+    x, y = symbols('x y')
+    val, var = lpmax(0, [x >= 0, y >= 0])
+    assert var[y] is S.Zero
+    assert var[x] is S.Zero
