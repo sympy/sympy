@@ -39,6 +39,27 @@ def test_normal_ordered_form():
     assert normal_ordered_form(c ** 3 * Dagger(c)) == \
         c ** 2 - Dagger(c) * c ** 3
 
+    assert normal_ordered_form(a * Dagger(a) + a * a) == \
+        1 + Dagger(a) * a + a ** 2
+    assert normal_ordered_form(a * (Dagger(a) + a)) == \
+        1 + Dagger(a) * a + a ** 2
+        
+    assert normal_ordered_form(a ** 2 * Dagger(a) + a * Dagger(a)) == \
+        1 + Dagger(a) * a + 2 * a + Dagger(a) * a ** 2
+    assert normal_ordered_form(a * (a * Dagger(a) + Dagger(a))) == \
+        1 + Dagger(a) * a + 2 * a + Dagger(a) * a ** 2
+
+    assert normal_ordered_form(c * Dagger(c) + c * c) == \
+        1 - Dagger(c) * c
+    assert normal_ordered_form(c * (Dagger(c) + c)) == \
+        1 - Dagger(c) * c
+
+    assert normal_ordered_form(Dagger(c) * c) == Dagger(c) * c
+    assert normal_ordered_form(c * Dagger(c)) == 1 - Dagger(c) * c
+    assert normal_ordered_form(c ** 2 * Dagger(c)) == Dagger(c) * c ** 2
+    assert normal_ordered_form(c ** 3 * Dagger(c)) == \
+        c ** 2 - Dagger(c) * c ** 3
+
     assert normal_ordered_form(a * Dagger(b), True) == Dagger(b) * a
     assert normal_ordered_form(Dagger(a) * b, True) == Dagger(a) * b
     assert normal_ordered_form(b * a, True) == a * b
