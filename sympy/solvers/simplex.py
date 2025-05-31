@@ -60,6 +60,7 @@ Here is a simple 1-D system: minimize `x` given that ``x >= 1``.
     sympy.solvers.simplex.InfeasibleLPError:
     Inconsistent/False constraint
 """
+from collections import namedtuple
 
 from sympy.core import sympify
 from sympy.core.exprtools import factor_terms
@@ -114,43 +115,92 @@ class InfeasibleLPError(Exception):
     pass
 
 
-def _pivot(M, i, j):
-    """
-    The pivot element `M[i, j]` is inverted and the rest of the matrix
-    modified and returned as a new matrix; original is left unmodified.
+class _SimplexTableau:
+    Var = namedtuple("Var", ["is_dual", "index"])
 
-    Example
-    =======
+    def __init__(self, A, B, C, D):
+        A, B, C, D = [Matrix(i) for i in (A, B, C, D or [0])]
 
-    >>> from sympy.matrices.dense import Matrix
-    >>> from sympy.solvers.simplex import _pivot
-    >>> from sympy import var
-    >>> Matrix(3, 3, var('a:i'))
-    Matrix([
-    [a, b, c],
-    [d, e, f],
-    [g, h, i]])
-    >>> _pivot(_, 1, 0)
-    Matrix([
-    [-a/d, -a*e/d + b, -a*f/d + c],
-    [ 1/d,        e/d,        f/d],
-    [-g/d,  h - e*g/d,  i - f*g/d]])
-    """
-    Mi, Mj, Mij = M[i, :], M[:, j], M[i, j]
-    if Mij == 0:
-        raise ZeroDivisionError(
-            "Tried to pivot about zero-valued entry.")
-    A = M - Mj * (Mi / Mij)
-    A[i, :] = Mi / Mij
-    A[:, j] = -Mj / Mij
-    A[i, j] = 1 / Mij
-    return A
+        if A and B:
+            self.M = Matrix([[A, B], [C, D]])
+        else:
+            if A or B:
+                raise ValueError("Must give both A and B.")
+            self.M = Matrix([[C, D]])  # No constraints
+
+        if not all(i.is_Float or i.is_Rational for i in self.M):
+            raise TypeError(filldedent("""
+                Only rationals and floats are allowed.
+            """))
+
+        self.n = self.M.cols - 1
+        self.m = self.M.rows - 1
+
+        self.X = [self.Var(False, j) for j in range(self.n)]
+        self.Y = [self.Var(True, i) for i in range(self.m)]
 
 
-def _choose_pivot_row(A, B, candidate_rows, pivot_col, Y):
-    # Choose row with smallest ratio
-    # If there are ties, pick using Bland's rule
-    return min(candidate_rows, key=lambda i: (B[i] / A[i, pivot_col], Y[i]))
+    def _pivot(self, i, j):
+        """
+        Perform a pivot operation about the element at position (i, j)
+        in the simplex tableau. The pivot element is inverted and the
+        tableau updated according to the standard pivot rule.
+
+        This modifies `self.M` in-place.
+
+        Conceptually, the pivot solves the equation in row `i` for the variable
+        in column `j`, and then substitutes that expression into all other
+        equations in the system. This preserves the meaning of the system while
+        changing its form.
+
+        Example
+        -------
+        >>> from sympy import Matrix, var
+        >>> from sympy.solvers.simplex import _SimplexTableau
+        >>> a, b, c, d, e, f, g, h, i = var('a:i')
+        >>> T = _SimplexTableau([], [], [], [])      # dummy init
+        >>> T.M = Matrix([[a, b, c], [d, e, f], [g, h, i]])
+        >>> T._pivot(1, 0)
+        >>> T.M
+        Matrix([
+        [-a/d, -a*e/d + b, -a*f/d + c],
+        [ 1/d,        e/d,        f/d],
+        [-g/d,  h - e*g/d,  i - f*g/d]])
+        """
+        Mi, Mj, Mij = self.M[i, :], self.M[:, j], self.M[i, j]
+        if Mij == 0:
+            raise ZeroDivisionError("Tried to pivot about zero-valued entry.")
+        A = self.M - Mj * (Mi / Mij)
+        A[i, :] = Mi / Mij
+        A[:, j] = -Mj / Mij
+        A[i, j] = 1 / Mij
+        self.M = A
+
+    def pivot(self, r, c):
+        """
+        Perform a pivot at position (r, c).
+        """
+        self._pivot(r, c)
+        self.X[c], self.Y[r] = self.Y[r], self.X[c]
+
+    def solution(self):
+        argmax = [None] * self.n
+        argmin_dual = [None] * self.m
+
+        for i, var in enumerate(self.X):
+            if not var.is_dual:
+                argmax[var.index] = S.Zero
+            else:
+                argmin_dual[var.index] = self.M[-1, i]
+
+        for i, var in enumerate(self.Y):
+            if var.is_dual:
+                argmin_dual[var.index] = S.Zero
+            else:
+                argmax[var.index] = self.M[i, -1]
+
+        optimal_value = -self.M[-1, -1]
+        return optimal_value, argmax, argmin_dual
 
 
 def _simplex(A, B, C, D=None, dual=False):
@@ -183,7 +233,7 @@ def _simplex(A, B, C, D=None, dual=False):
     constraint that ``y + 2*x >= 4``. This is the "standard form" of
     a minimization.
 
-    In the nonnegative quadrant, this inequality describes a area above
+    In the nonnegative quadrant, this inequality describes an area above
     a triangle with vertices at (0, 4), (0, 0) and (2, 0). The minimum
     of ``f`` occurs at (2, 0). Define A, B, C, D for the standard
     minimization:
@@ -268,134 +318,67 @@ def _simplex(A, B, C, D=None, dual=False):
 
     """
     A, B, C, D = [Matrix(i) for i in (A, B, C, D or [0])]
+
     if dual:
         _o, d, p = _simplex(-A.T, C.T, B.T, -D)
         return -_o, d, p
 
-    if A and B:
-        M = Matrix([[A, B], [C, D]])
-    else:
-        if A or B:
-            raise ValueError("must give A and B")
-        # no constraints given
-        M = Matrix([[C, D]])
-    n = M.cols - 1
-    m = M.rows - 1
+    tableau = _SimplexTableau(A, B, C, D)
 
-    if not all(i.is_Float or i.is_Rational for i in M):
-        # with literal Float and Rational we are guaranteed the
-        # ability of determining whether an expression is 0 or not
-        raise TypeError(filldedent("""
-            Only rationals and floats are allowed.
-            """
-            )
-        )
-
-    # x variables have priority over y variables during Bland's rule
-    # since False < True
-    X = [(False, j) for j in range(n)]
-    Y = [(True, i) for i in range(m)]
-
-    # Phase 1: find a feasible solution or determine none exist
-
-    ## keep track of last pivot row and column
-    last = None
-
+    # Phase 1: find a feasible solution
     while True:
-        B = M[:-1, -1]
-        A = M[:-1, :-1]
-        if all(B[i] >= 0 for i in range(B.rows)):
-            # We have found a feasible solution
-            break
+        rhs = tableau.M[:-1, -1]
+        lhs = tableau.M[:-1, :-1]
 
-        # Find k: first row with a negative rightmost entry
-        for k in range(B.rows):
-            if B[k] < 0:
-                break  # use current value of k below
-        else:
-            pass  # error will raise below
+        # Find first infeasible row
+        k = next((i for i in range(rhs.rows) if rhs[i] < 0), None)
+        if k is None:
+            break  # All RHS entries >= 0 -> feasible solution found
 
-        # Choose pivot column, c
-        piv_cols = [_ for _ in range(A.cols) if A[k, _] < 0]
-        if not piv_cols:
+        pivot_column_candidates = [_ for _ in range(lhs.cols) if lhs[k, _] < 0]
+        if not pivot_column_candidates:
             raise InfeasibleLPError(filldedent("""
-                The constraint set is empty!"""))
-        _, c = min((X[i], i) for i in piv_cols) # Bland's rule
+                The constraint set is empty or inconsistent.
+            """))
 
-        # Choose pivot row, r
-        piv_rows = [_ for _ in range(A.rows) if A[_, c] > 0 and B[_] > 0]
-        piv_rows.append(k)
-        r = _choose_pivot_row(A, B, piv_rows, c, Y)
+        # Choose lexicographically smallest variable (Bland's rule)
+        pivot_column = min(pivot_column_candidates, key=lambda i: tableau.X[i])
 
-        # check for oscillation
-        if (r, c) == last:
-            # Not sure what to do here; it looks like there will be
-            # oscillations; see o1 test added at this commit to
-            # see a system with no solution and the o2 for one
-            # with a solution. In the case of o2, the solution
-            # from linprog is the same as the one from lpmin, but
-            # the matrices created in the lpmin case are different
-            # than those created without replacements in linprog and
-            # the matrices in the linprog case lead to oscillations.
-            # If the matrices could be re-written in linprog like
-            # lpmin does, this behavior could be avoided and then
-            # perhaps the oscillating case would only occur when
-            # there is no solution. For now, the output is checked
-            # before exit if oscillations were detected and an
-            # error is raised there if the solution was invalid.
-            #
-            # cf section 6 of Ferguson for a non-cycling modification
-            last = True
-            break
-        last = r, c
+        pivot_row_candidates = [_ for _ in range(lhs.rows) if lhs[_, pivot_column] > 0 and rhs[_] >= 0]
+        pivot_row_candidates.append(k)
 
-        M = _pivot(M, r, c)
-        X[c], Y[r] = Y[r], X[c]
+        # Choose pivot row with ratio test and break ties with Bland's rule
+        pivot_row = min(pivot_row_candidates,
+                        key=lambda i: (rhs[i] / lhs[i, pivot_column], tableau.Y[i]))
 
-    # Phase 2: from a feasible solution, pivot to optimal
+        tableau.pivot(pivot_row, pivot_column)
+
+    # Phase 2: optimize
     while True:
-        B = M[:-1, -1]
-        A = M[:-1, :-1]
-        C = M[-1, :-1]
+        rhs = tableau.M[:-1, -1]
+        lhs = tableau.M[:-1, :-1]
+        cost = tableau.M[-1, :-1]
 
-        # Choose a pivot column, c
-        piv_cols = [_ for _ in range(n) if C[_] < 0]
-        if not piv_cols:
-            break
-        _, c = min((X[i], i) for i in piv_cols)  # Bland's rule
+        pivot_column_candidates = [_ for _ in range(tableau.n) if cost[_] < 0]
+        if not pivot_column_candidates:
+            break  # No improving direction -> current solution is optimal
 
-        # Choose a pivot row, r
-        piv_rows = [_ for _ in range(m) if A[_, c] > 0]
-        if not piv_rows:
+        # Choose lexicographically smallest variable (Bland's rule)
+        pivot_column = min(pivot_column_candidates, key=lambda i: tableau.X[i])
+
+        pivot_row_candidates = [_ for _ in range(tableau.m) if lhs[_, pivot_column] > 0]
+        if not pivot_row_candidates:
             raise UnboundedLPError(filldedent("""
-                Objective function can assume
-                arbitrarily large values!"""))
-        r = _choose_pivot_row(A, B, piv_rows, c, Y)
+                Objective function can assume arbitrarily large values.
+            """))
 
-        M = _pivot(M, r, c)
-        X[c], Y[r] = Y[r], X[c]
+        # Choose pivot row with ratio test and break ties with Bland's rule
+        pivot_row = min(pivot_row_candidates,
+                        key=lambda i: (rhs[i] / lhs[i, pivot_column], tableau.Y[i]))
 
-    argmax = [None] * n
-    argmin_dual = [None] * m
+        tableau.pivot(pivot_row, pivot_column)
 
-    for i, (v, n) in enumerate(X):
-        if v == False:
-            argmax[n] = 0
-        else:
-            argmin_dual[n] = M[-1, i]
-
-    for i, (v, n) in enumerate(Y):
-        if v == True:
-            argmin_dual[n] = 0
-        else:
-            argmax[n] = M[i, -1]
-
-    if last and not all(i >= 0 for i in argmax + argmin_dual):
-        raise InfeasibleLPError(filldedent("""
-            Oscillating system led to invalid solution.
-            If you believe there was a valid solution, please
-            report this as a bug."""))
-    return -M[-1, -1], argmax, argmin_dual
+    return tableau.solution()
 
 
 ## routines that use _simplex or support those that do
