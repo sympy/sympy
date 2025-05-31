@@ -626,21 +626,12 @@ class MatrixBase(Printable):
 
         diag
         """
-        rv = []
         k = as_int(k)
-        r = 0 if k > 0 else -k
-        c = 0 if r else k
-        while True:
-            if r == self.rows or c == self.cols:
-                break
-            rv.append(self[r, c])
-            r += 1
-            c += 1
-        if not rv:
-            raise ValueError(filldedent('''
-            The %s diagonal is out of range [%s, %s]''' % (
-            k, 1 - self.rows, self.cols - 1)))
-        return self._new(1, len(rv), rv)
+        if -self.rows < k < self.cols:
+            rv = [self[r, r+k] for r in range(max(0, -k), min(self.rows, self.cols - k))]
+            return self._new(1, len(rv), rv)
+        else:
+            raise ValueError("Diagonal does not exist")
 
     def row(self, i):
         """Elementary row selector.
