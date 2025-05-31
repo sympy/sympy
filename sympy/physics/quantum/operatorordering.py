@@ -156,9 +156,7 @@ def normal_ordered_form(expr, independent=False, recursive_limit=10,
     if _recursive_depth > recursive_limit:
         warnings.warn("Too many recursions, aborting")
         return expr
-    
     expr = expr.expand()
-    
     if isinstance(expr, Add):
         return _normal_ordered_form_terms(expr,
                                           recursive_limit=recursive_limit,
