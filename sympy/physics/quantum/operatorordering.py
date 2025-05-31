@@ -41,7 +41,6 @@ def _distribute_multiplication(product):
     """
     if not isinstance(product, Mul):
         return None
-        
     for i, factor in enumerate(product.args):
         if isinstance(factor, Add):
             # Distribute the multiplication
