@@ -189,13 +189,13 @@ class _SimplexTableau:
 
         for i, var in enumerate(self.X):
             if not var.is_dual:
-                argmax[var.index] = 0
+                argmax[var.index] = S.Zero
             else:
                 argmin_dual[var.index] = self.M[-1, i]
 
         for i, var in enumerate(self.Y):
             if var.is_dual:
-                argmin_dual[var.index] = 0
+                argmin_dual[var.index] = S.Zero
             else:
                 argmax[var.index] = self.M[i, -1]
 
