@@ -115,7 +115,7 @@ class InfeasibleLPError(Exception):
     pass
 
 
-class SimplexTableau:
+class _SimplexTableau:
     Var = namedtuple("Var", ["is_dual", "index"])
 
     def __init__(self, A, B, C, D):
@@ -167,9 +167,9 @@ class SimplexTableau:
         Example
         -------
         >>> from sympy import Matrix, var
-        >>> from sympy.solvers.simplex import SimplexTableau
+        >>> from sympy.solvers.simplex import _SimplexTableau
         >>> a, b, c, d, e, f, g, h, i = var('a:i')
-        >>> T = SimplexTableau([], [], [], [])      # dummy init
+        >>> T = _SimplexTableau([], [], [], [])      # dummy init
         >>> T.M = Matrix([[a, b, c], [d, e, f], [g, h, i]])
         >>> T._pivot(1, 0)
         >>> T.M
@@ -334,7 +334,7 @@ def _simplex(A, B, C, D=None, dual=False):
         _o, d, p = _simplex(-A.T, C.T, B.T, -D)
         return -_o, d, p
 
-    tableau = SimplexTableau(A, B, C, D)
+    tableau = _SimplexTableau(A, B, C, D)
 
     # Phase 1: find a feasible solution
     while True:
