@@ -1460,13 +1460,23 @@ def eval_sum_residue(f, i_a_b):
     if a.is_comparable and b.is_comparable and a > b:
         return eval_sum_residue(f, (i, b + S.One, a - S.One))
 
-    def is_even_function(numer, denom):
-        """Test if the rational function is an even function"""
+    def get_function_symmetry(numer, denom):
+        """
+        Returns 'even', 'odd', or 'neither' based on the symmetry of a
+        rational function.
+        """
+
         numer_even = all(i % 2 == 0 for (i,) in numer.monoms())
         denom_even = all(i % 2 == 0 for (i,) in denom.monoms())
         numer_odd = all(i % 2 == 1 for (i,) in numer.monoms())
         denom_odd = all(i % 2 == 1 for (i,) in denom.monoms())
-        return (numer_even and denom_even) or (numer_odd and denom_odd)
+
+        if (numer_even and denom_even) or (numer_odd and denom_odd):
+            return 'even'
+        elif (numer_odd and denom_even) or (numer_even and denom_odd):
+            return 'odd'
+        else:
+            return 'neither'
 
     def match_rational(f, i):
         numer, denom = f.as_numer_denom()
@@ -1543,10 +1553,18 @@ def eval_sum_residue(f, i_a_b):
         residues = [residue(residue_factor, z, root) for root in nonint_roots]
         return -S.Pi * sum(residues)
 
-    if not (a.is_finite and b is S.Infinity):
-        return None
+    rational_function_symmetry = get_function_symmetry(numer, denom)
 
-    if not is_even_function(numer, denom):
+    #for odd function flip the limit and negate
+    #limit (-oo, a) is flipped to (-a, oo) and the answer is negated
+    if (a is S.NegativeInfinity and b.is_finite) and (rational_function_symmetry == 'odd'):
+        res = eval_sum_residue(f, (i, -b, S.Infinity))
+        #if the function was successfully transformed to a
+        #even function by shifting
+        if res is not None:
+            return -res
+
+    elif rational_function_symmetry != 'even':
         # Try shifting summation and check if the summand can be made
         # and even function from the origin.
         # Sum(f(n), (n, a, b)) => Sum(f(n + s), (n, a - s, b - s))
@@ -1560,7 +1578,7 @@ def eval_sum_residue(f, i_a_b):
         numer = numer.shift(shift)
         denom = denom.shift(shift)
 
-        if not is_even_function(numer, denom):
+        if (get_function_symmetry(numer, denom) != 'even'):
             return None
 
         if alternating:
@@ -1568,6 +1586,14 @@ def eval_sum_residue(f, i_a_b):
         else:
             f = numer.as_expr() / denom.as_expr()
         return eval_sum_residue(f, (i, a-shift, b-shift))
+    else:
+        #for even function flip the limit
+        #limit (-oo, a) is flipped to (-a, oo)
+        if a is S.NegativeInfinity and b.is_finite:
+            res = eval_sum_residue(f, (i, -b, S.Infinity))
+            if res is not None:
+                return res
+
 
     poles = get_poles(denom)
     if poles is None:
