@@ -32,7 +32,21 @@ def test_normal_ordered_form():
         2 * a + Dagger(a) * a ** 2
     assert normal_ordered_form(a ** 3 * Dagger(a)) == \
         3 * a ** 2 + Dagger(a) * a ** 3
-
+    
+    assert normal_ordered_form(a * Dagger(a) + a * a) == \
+        1 + Dagger(a) * a + a ** 2
+    assert normal_ordered_form(a * (Dagger(a) + a)) == \
+        1 + Dagger(a) * a + a ** 2
+        
+    assert normal_ordered_form(a ** 2 * Dagger(a) + a * Dagger(a)) == \
+        1 + Dagger(a) * a + 2 * a + Dagger(a) * a ** 2
+    assert normal_ordered_form(a * (a * Dagger(a) + Dagger(a))) == \
+        1 + Dagger(a) * a + 2 * a + Dagger(a) * a ** 2
+    assert normal_ordered_form(c * Dagger(c) + c * c) == \
+        1 - Dagger(c) * c
+    assert normal_ordered_form(c * (Dagger(c) + c)) == \
+        1 - Dagger(c) * c
+    
     assert normal_ordered_form(Dagger(c) * c) == Dagger(c) * c
     assert normal_ordered_form(c * Dagger(c)) == 1 - Dagger(c) * c
     assert normal_ordered_form(c ** 2 * Dagger(c)) == Dagger(c) * c ** 2
