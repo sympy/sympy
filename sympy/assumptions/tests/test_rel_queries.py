@@ -170,3 +170,7 @@ def test_equality_failing():
     assert ask(Q.prime(x), Q.eq(x, y) & Q.prime(y)) is True
     assert ask(Q.real(x), Q.eq(x, y) & Q.real(y)) is True
     assert ask(Q.imaginary(x), Q.eq(x, y) & Q.imaginary(y)) is True
+
+def test_ineq_imp():
+    assert ask(Q.ge(x, y), Q.gt(x, y)) is True
+    assert ask(Q.le(x, y), Q.lt(x, y)) is True
