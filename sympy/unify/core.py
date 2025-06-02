@@ -35,7 +35,8 @@ class Compound:
         return hash((type(self), self.op, self.args))
 
     def __str__(self):
-        return "%s[%s]" % (str(self.op), ', '.join(map(str, self.args)))
+        args = ', '.join(map(str, self.args))
+        return f"{self.op}[{args}]"
 
 class Variable:
     """ A Wild token """
@@ -49,7 +50,7 @@ class Variable:
         return hash((type(self), self.arg))
 
     def __str__(self):
-        return "Variable(%s)" % str(self.arg)
+        return f"Variable({self.arg})"
 
 class CondVariable:
     """ A wild token that matches conditionally.
@@ -70,7 +71,7 @@ class CondVariable:
         return hash((type(self), self.arg, self.valid))
 
     def __str__(self):
-        return "CondVariable(%s)" % str(self.arg)
+        return f"CondVariable({self.arg})"
 
 def unify(x, y, s=None, **fns):
     """ Unify two expressions.
