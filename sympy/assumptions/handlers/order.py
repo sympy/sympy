@@ -204,6 +204,8 @@ def _(expr, assumptions):
 @ZeroPredicate.register(Expr)
 def _(expr, assumptions):
     ret = expr.is_zero
+    if ask(Q.eq(expr, 0), assumptions):
+            return True
     if ret is None:
         raise MDNotImplementedError
     return ret

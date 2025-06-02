@@ -1796,6 +1796,8 @@ def test_zero():
     assert ask(Q.zero(x), Q.odd(x)) is False
     assert ask(Q.zero(x) | Q.zero(y), Q.zero(x*y)) is True
 
+    assert ask(Q.zero(x), Q.eq(x,0)) is True
+
 
 def test_odd_query():
     assert ask(Q.odd(x)) is None
