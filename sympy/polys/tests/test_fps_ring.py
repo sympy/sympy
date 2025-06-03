@@ -1,7 +1,6 @@
 from sympy.abc import x
 from sympy.polys.domains import QQ, ZZ, RR
 from sympy.polys.fps_ring import PowerSeriesElement, PowerSeriesPolyRing
-from sympy.polys.orderings import lex
 from sympy.polys.polyerrors import GeneratorsError
 from sympy.testing.pytest import raises
 
@@ -19,10 +18,8 @@ def test_PowerSeriesPolyRing():
     assert R != PowerSeriesPolyRing('y', QQ)
     assert str(R) == 'Power Series Ring in x over QQ with lex order'
 
-    assert PowerSeriesPolyRing('x', QQ, 4, lex).order == lex
-    assert PowerSeriesPolyRing('x', QQ, 4, 'lex').order == lex
 
-    raises(GeneratorsError, lambda: PowerSeriesPolyRing('', ZZ, 3, lex))
+    raises(GeneratorsError, lambda: PowerSeriesPolyRing('', ZZ, 3))
     raises(GeneratorsError, lambda: PowerSeriesPolyRing('x, y', QQ))
 
     raises(ValueError, lambda: PowerSeriesPolyRing('x', QQ, -1))

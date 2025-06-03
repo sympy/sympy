@@ -20,21 +20,20 @@ class PowerSeriesRing:
     ring: PowerSeriesPolyRing
     gens: tuple[PowerSeriesElement, ...]
     prec: int
-    order: LexOrder | str | None
+    order: LexOrder
     dtype: type[PowerSeriesElement]
 
     def __init__(
         self,
-        domain: Domain | str,
+        domain: Domain,
         symbols: str | list[Expr] | tuple[Expr, ...],
         prec: int | None = None,
-        order: LexOrder | str | None = None
         ) -> None:
 
         if prec is None:
             prec = self.DEFAULT_PRECISION
 
-        ring = PowerSeriesPolyRing(symbols, domain, prec, order)
+        ring = PowerSeriesPolyRing(symbols, domain, prec)
 
         self.ring = ring
         self.dtype = PowerSeriesElement
@@ -42,7 +41,7 @@ class PowerSeriesRing:
         self.symbols = ring.symbols
         self.gens = ring.gens
         self.prec = ring.prec
-        self.order = order
+        self.order = ring.order
 
     @property
     def zero(self) -> PowerSeriesElement:
