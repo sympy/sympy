@@ -924,6 +924,25 @@ def override_signature(new_sig: str):
         A decorator that sets the `__signature__` attribute of the function it wraps.
         This changes how the function appears in tools like IPython's `?` or `help()`,
         without affecting the actual behavior or callable interface of the function.
+
+     Examples
+    --------
+    >>> @override_signature("x, y=1, z='foo'")
+    ... def my_func(x, y=1, z='foo'):
+    ...     return x + y
+
+    >>> import inspect
+    >>> str(inspect.signature(my_func))
+    '(x, y=1, z=\'foo\')'
+
+    References
+    ==========
+
+    .. [1] https://stackoverflow.com/questions/69845887/simplifying-the-calling-signature-for-repeatedly-used-arguments
+           (Simplifying the calling signature for repeatedly-used arguments)
+
+    .. [2] https://stackoverflow.com/questions/2677185/how-can-i-read-a-functions-signature-including-default-argument-values
+           (How can I read a function’s signature including default argument values?)
     """
     def decorator(func):
         func.__signature__ = inspect.signature(eval(f"lambda {new_sig}: None"))
