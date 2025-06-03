@@ -1,28 +1,11 @@
 from sympy.core.expr import Expr
 from sympy.polys.domains import Domain
 from sympy.polys.polyoptions import (Domain as DomainOpt, Order as OrderOpt)
-from sympy.polys.rings import PolyRing, PolyElement
+from sympy.polys.rings import PolyRing, PolyElement, _parse_symbols
 from sympy.polys.orderings import lex, LexOrder
 from sympy.polys.polyerrors import GeneratorsError
 
 from typing import Any
-
-def _parse_symbols(symbols):
-    """Parse symbols from various input formats."""
-    from sympy.core.symbol import symbols as _symbols
-    from sympy.utilities.iterables import is_sequence
-
-    if isinstance(symbols, str):
-        return _symbols(symbols, seq=True) if symbols else ()
-    elif isinstance(symbols, Expr):
-        return (symbols,)
-    elif is_sequence(symbols):
-        if all(isinstance(s, str) for s in symbols):
-            return _symbols(symbols)
-        elif all(isinstance(s, Expr) for s in symbols):
-            return symbols
-
-    raise GeneratorsError("expected a string, Symbol or expression or a non-empty sequence of strings, Symbols or expressions")
 
 
 class PowerSeriesPolyRing:
