@@ -1,6 +1,5 @@
 from sympy.core.expr import Expr
 from sympy.polys.domains import Domain
-from sympy.polys.domains.ring import Ring
 from sympy.polys.fps_ring import PowerSeriesElement, PowerSeriesPolyRing
 from sympy.polys.orderings import LexOrder
 from sympy.utilities import public
