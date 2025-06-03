@@ -6,6 +6,7 @@ from tokenize import (generate_tokens, untokenize, TokenError,
 from keyword import iskeyword
 
 import ast
+import inspect
 import unicodedata
 from io import StringIO
 import builtins
@@ -906,7 +907,30 @@ def eval_expr(code, local_dict: DICT, global_dict: DICT):
         code, global_dict, local_dict)  # take local objects in preference
     return expr
 
+def override_signature(new_sig: str):
+    """
+    Decorator to override the displayed function signature in interactive environments
+    like IPython or Jupyter notebooks.
 
+    Parameters
+    ----------
+    new_sig : str
+        A string representation of the desired function signature. It should be valid
+        as the arguments of a lambda function. Example: "x, y=1, z='foo'".
+
+    Returns
+    -------
+    decorator : Callable
+        A decorator that sets the `__signature__` attribute of the function it wraps.
+        This changes how the function appears in tools like IPython's `?` or `help()`,
+        without affecting the actual behavior or callable interface of the function.
+    """
+    def decorator(func):
+        func.__signature__ = inspect.signature(eval(f"lambda {new_sig}: None"))
+        return func
+    return decorator
+
+@override_signature("s, local_dict=None, transformations='standard', global_dict=None, evaluate=True")
 def parse_expr(s: str, local_dict: DICT | None = None,
                transformations: tuple[TRANS, ...] | str \
                    = standard_transformations,
