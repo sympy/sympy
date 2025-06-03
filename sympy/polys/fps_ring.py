@@ -1,7 +1,6 @@
 from sympy.core.expr import Expr
 from sympy.polys.domains import Domain
-from sympy.polys.polyoptions import (Domain as DomainOpt, Order as OrderOpt)
-from sympy.polys.rings import PolyRing, PolyElement, _parse_symbols
+from sympy.polys.rings import PolyRing, PolyElement
 from sympy.polys.orderings import lex, LexOrder
 from sympy.polys.polyerrors import GeneratorsError
 
@@ -15,36 +14,29 @@ class PowerSeriesPolyRing:
     domain: Domain
     ring: PolyRing
     gens: tuple['PowerSeriesElement', ...]
-    order: LexOrder | str
+    order: LexOrder
     prec: int
 
     def __init__(
         self,
         symbols: str | list[Expr] | tuple[Expr, ...],
-        domain: Domain | str,
-        prec: int = 6,
-        order: LexOrder | str  = lex
+        domain: Domain,
+        prec: int = 6
         ) -> None:
-
-        symbols = _parse_symbols(symbols)
-        domain = DomainOpt.preprocess(domain)
-        processed_order = OrderOpt.preprocess(order)
 
         if prec < 1 or not isinstance(prec, int):
             raise ValueError("Precision must be a positive integer.")
 
-        if domain.is_Composite and set(symbols) & set(domain.symbols):
-            raise GeneratorsError("Power Series ring and it's ground domain share generators")
-        elif len(symbols) != 1:
+        if len(symbols) != 1:
             raise GeneratorsError("Only univatiate power series rings are supported.")
 
         ring = PolyRing(symbols, domain)
 
         self.ring = ring
         self.domain = ring.domain
-        self.prec = prec
         self.symbols = ring.symbols
-        self.order = processed_order
+        self.prec = prec
+        self.order = lex
         self.gens = tuple([self.from_poly(g) for g in ring.gens])
 
     @property
