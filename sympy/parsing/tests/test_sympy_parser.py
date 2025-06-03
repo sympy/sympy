@@ -373,3 +373,10 @@ def test_issue_22822():
 def test_xor_eval_false():
     p, q = Symbol("p"), Symbol("q")
     assert parse_expr("p ^ q", evaluate=False) == Xor(p, q, evaluate=False)
+def test_issue_27417():
+    import inspect
+    from sympy.parsing.sympy_parser import parse_expr
+    sig = str(inspect.signature(parse_expr))
+    expected = "(s, local_dict=None, transformations='standard', global_dict=None, evaluate=True)"
+    assert sig == expected
+
