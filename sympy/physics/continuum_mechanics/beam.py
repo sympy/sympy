@@ -974,8 +974,52 @@ class Beam:
             eqs = deflection_curve.subs(x, position) - value
             deflection_eqs.append(eqs)
 
-        solution = list((linsolve([shear_curve, moment_curve] + shear_force_eqs + bending_moment_eqs + slope_eqs
-                            + deflection_eqs, (C3, C4) + reactions + rotation_jumps + deflection_jumps).args)[0])
+        equations = ([shear_curve, moment_curve]            +
+                 shear_force_eqs + bending_moment_eqs   +
+                 slope_eqs      + deflection_eqs)
+
+        unknowns  = (C3, C4) + reactions + rotation_jumps + deflection_jumps
+
+        try:
+            sol_tuple = linsolve(equations, unknowns).args[0]
+
+        except Exception as err:
+            support_syms = {load[0] for load in self._support_as_loads}
+
+            if not reactions:
+                raise ValueError(
+                    "Unable to solve reaction system - no reaction symbols were "
+                    "supplied."
+                ) from err
+
+            extra = set(reactions) - support_syms
+            if extra:
+                raise KeyError(
+                    "Reaction variable mismatch - the following symbols are not "
+                    f"attached to any support in this Beam: {sorted(extra)}"
+                ) from err
+
+            n_eq  = len(equations)
+            n_unk = len(unknowns)
+
+            if n_unk < n_eq:
+                raise ValueError(
+                    "Unable to solve reaction system - the structure behaves like "
+                    "a *mechanism* (fewer unknowns than independent equations)."
+                ) from err
+
+            if n_unk > n_eq:
+                raise ValueError(
+                    "Unable to solve reaction system - the structure is "
+                    "*statically indeterminate* (more unknowns than equations)."
+                ) from err
+
+            raise ValueError(
+                "Unable to solve reaction system - check boundary conditions, "
+                "loads, or duplicate reaction symbols.") from err
+
+        solution=  list(sol_tuple)
+
         reaction_index = 2+len(reactions)
         rotation_index = reaction_index + len(rotation_jumps)
         reaction_solution = solution[2:reaction_index]

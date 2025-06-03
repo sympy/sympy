@@ -549,6 +549,38 @@ def test_apply_support():
     b.solve_for_reaction_loads(R_0, R_L, M_0, M_L)
     assert b.reaction_loads == {R_0: P/2, R_L: P/2, M_0: -L*P/8, M_L: L*P/8}
 
+def test_solve_for_reaction_loads_error_reporting():
+    E, I = symbols("E I")
+
+    b = Beam(5, E, I)
+    b.apply_support(0, "pin")
+    b.apply_support(5, "roller")
+    with raises(ValueError, match="no reaction symbols were supplied"):
+        b.solve_for_reaction_loads()
+
+    b = Beam(6, E, I)
+    r0 = b.apply_support(0, "pin")
+    b.apply_support(6, "roller")
+    ghost = symbols("R_ghost")
+    with raises(KeyError, match="variable mismatch"):
+        b.solve_for_reaction_loads(r0, ghost)
+
+    b = Beam(8, E, I)
+    r0 = b.apply_support(0, "pin")
+    r8 = b.apply_support(8, "roller")
+    b.apply_load(-2, 4, -1)
+    b.bc_deflection = [(0, 0), (0, 1)]
+    with raises(ValueError, match="Unable to solve reaction system"):
+        b.solve_for_reaction_loads(r0, r8)
+
+    b = Beam(4, E, I)
+    r0 = b.apply_support(0, "pin")
+    r4 = b.apply_support(4, "roller")
+    b.apply_load(-3, 2, -1)
+    b.solve_for_reaction_loads(r0, r4)
+    assert set(b.reaction_loads) == {r0, r4}
+
+
 def test_apply_rotation_hinge():
     b = Beam(15, 20, 20)
     r0, m0 = b.apply_support(0, type='fixed')
