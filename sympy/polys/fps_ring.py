@@ -2,10 +2,10 @@ from sympy.core.expr import Expr
 from sympy.polys.domains import Domain
 from sympy.polys.polyoptions import (Domain as DomainOpt, Order as OrderOpt)
 from sympy.polys.rings import PolyRing, PolyElement
-from sympy.polys.orderings import lex, MonomialOrder
+from sympy.polys.orderings import lex, LexOrder
 from sympy.polys.polyerrors import GeneratorsError
 
-from typing import Any, Union, List, Tuple, Optional
+from typing import Any
 
 def _parse_symbols(symbols):
     """Parse symbols from various input formats."""
@@ -28,17 +28,21 @@ def _parse_symbols(symbols):
 class PowerSeriesPolyRing:
     """A class for representing univariate power series ring."""
 
-    symbols: Tuple[Expr, ...]
+    symbols: tuple[Expr, ...]
     domain: Domain
     ring: PolyRing
-    gens: Tuple['PowerSeriesElement', ...]
-    order: Union[MonomialOrder, str]
+    gens: tuple['PowerSeriesElement', ...]
+    order: LexOrder | str
     prec: int
 
-    def __init__(self, symbols: Union[str, List[Expr], Tuple[Expr, ...]],
-                domain: Union[Domain, str],
-                prec: int = 6,
-                order: Union[MonomialOrder, str] = lex) -> None:
+    def __init__(
+        self,
+        symbols: str | list[Expr] | tuple[Expr, ...],
+        domain: Domain | str,
+        prec: int = 6,
+        order: LexOrder | str  = lex
+        ) -> None:
+
         symbols = _parse_symbols(symbols)
         domain = DomainOpt.preprocess(domain)
         processed_order = OrderOpt.preprocess(order)
@@ -78,13 +82,15 @@ class PowerSeriesPolyRing:
         """String representation of the power series polynomial ring."""
         return f"Power Series Ring in {', '.join(map(str, self.symbols))} over {self.domain} with {self.order} order"
 
-    def __eq__(self, other: Any) -> bool:
+    def __eq__(self, other: object) -> bool:
         """Check if two power series polynomial rings are equal."""
-        return (isinstance(other, PowerSeriesPolyRing) and
-                self.domain == other.domain and
-                self.symbols == other.symbols and
-                self.prec == other.prec and
-                self.order == other.order)
+        return (
+            isinstance(other, PowerSeriesPolyRing)
+            and self.domain == other.domain
+            and self.symbols == other.symbols
+            and self.prec == other.prec
+            and self.order == other.order
+        )
 
     def __hash__(self) -> int:
         """Hash function for the power series polynomial ring."""
@@ -103,17 +109,21 @@ class PowerSeriesElement:
     ring: PowerSeriesPolyRing
     poly: PolyElement
     domain: Domain
-    symbols: Optional[Tuple[Expr, ...]]
+    symbols: tuple[Expr, ...]
     prec: int
 
-    def __new__(cls, ring: PowerSeriesPolyRing, poly: PolyElement) -> 'PowerSeriesElement':
+    def __new__(
+        cls,
+        ring: PowerSeriesPolyRing,
+        poly: PolyElement
+        ) -> 'PowerSeriesElement':
+
         obj = object.__new__(cls)
         obj.ring = ring
         obj.prec = ring.prec
         obj.poly = poly
         obj.domain = ring.domain
         obj.symbols = ring.symbols
-
         return obj
 
     def __repr__(self) -> str:
@@ -128,8 +138,8 @@ class PowerSeriesElement:
 
         symbol: Expr = self.ring.symbols[0]
 
-        signs: List[str] = []
-        expressions: List[str] = []
+        signs: list[str] = []
+        expressions: list[str] = []
 
         for exp, coeff in self.terms():
             e: int = exp[0]
@@ -156,12 +166,14 @@ class PowerSeriesElement:
 
         return f"{series} + O({symbol}**{self.prec})"
 
-    def __eq__(self, other: Any) -> bool:
+    def __eq__(self, other: object) -> bool:
         """Equality check for two power series."""
-        return (isinstance(other, PowerSeriesElement) and
-                self.ring == other.ring and
-                self.poly == other.poly)
+        return (
+            isinstance(other, PowerSeriesElement)
+            and self.ring == other.ring
+            and self.poly == other.poly
+        )
 
-    def terms(self) -> List[Tuple[Tuple[int, ...], Any]]:
+    def terms(self) -> list[tuple[tuple[int, ...], Any]]:
         """Return an iterator over the terms of the power series."""
         return self.poly.terms()

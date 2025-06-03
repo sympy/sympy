@@ -2,7 +2,6 @@ from sympy.core.symbol import symbols
 from sympy.polys.domains import QQ, ZZ, RR
 from sympy.polys.domains.fpsring import PowerSeriesRing
 from sympy.polys.fps_ring import PowerSeriesElement, PowerSeriesPolyRing
-from sympy.utilities.pytest import raises
 
 
 def test_fpsring():
