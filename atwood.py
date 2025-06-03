@@ -18,8 +18,8 @@ from sympy.physics.mechanics import (
 t = sp.symbols("t")
 m1, m2, g, r, h, T = sp.symbols("m1 m2 g r h T", positive=True, real=True)
 
-q = dynamicsymbols("q")   # generalized coordinate: m1 moves downward by q
-u = dynamicsymbols("u")   # generalized speed (u = q̇)
+q = dynamicsymbols("q")  # generalized coordinate: m1 moves downward by q
+u = dynamicsymbols("u")  # generalized speed (u = q̇)
 
 # 2. -------- Inertial frame & pulley center --------
 
@@ -31,13 +31,13 @@ O.set_vel(N, 0)  # pulley center is fixed at O = (0,0,0)
 
 # Mass m1 at P1: (x=0, y=+r, z=−(h + q))
 P1 = Point("P1")
-P1.set_pos(O,   r * N.y + (-(h + q)) * N.z)
+P1.set_pos(O, r * N.y + (-(h + q)) * N.z)
 P1.set_vel(N, P1.pos_from(O).diff(t, N))
 M1 = Particle("M1", P1, m1)
 
 # Mass m2 at P2: (x=0, y=−r, z=−(h − q))
 P2 = Point("P2")
-P2.set_pos(O,  -r * N.y + (-(h - q)) * N.z)
+P2.set_pos(O, -r * N.y + (-(h - q)) * N.z)
 P2.set_vel(N, P2.pos_from(O).diff(t, N))
 M2 = Particle("M2", P2, m2)
 
@@ -46,18 +46,20 @@ M2 = Particle("M2", P2, m2)
 # Cylinder of radius r, centered at O, axis along N.x
 pulley = WrappingCylinder(r, O, N.x)
 
-# 5. -------- Manually find tangent points T1 and T2 (no inbuilt method / object solves this problem) --------
+# 5. -------- Manually find tangent points T1 and T2
+# (no inbuilt method / object solves this problem) --------
 
 # Because P1 is directly below the cylinder’s “eastmost” point (y=+r),
 # the line from P1 to the cylinder is vertical. Tangency requires that
 # the point on the cylinder satisfy y = +r and z = 0.
 T1 = Point("T1")
-T1.set_pos(O,   r * N.y + 0 * N.z)
+T1.set_pos(O, r * N.y + 0 * N.z)
 T1.set_vel(N, 0)
 
-# Similarly, P2 is directly below (x=0, y=−r), so its tangent point is at (y=−r, z=0).
+# Similarly, P2 is directly below (x=0, y=−r),
+# so its tangent point is at (y=−r, z=0).
 T2 = Point("T2")
-T2.set_pos(O,  -r * N.y + 0 * N.z)
+T2.set_pos(O, -r * N.y + 0 * N.z)
 T2.set_vel(N, 0)
 
 wpath = WrappingPathway(T1, T2, pulley)
@@ -80,11 +82,11 @@ L_total = sp.simplify(L1 + L_curve + L2)
 dL_dq = sp.simplify(sp.diff(L_total, q))
 # assert dL_dq == 0, "ERROR: total rope length depends on q!"
 
-print(f"L1      = {L1}")        # should be h + q
-print(f"L_curve = {L_curve}")   # should be π r
-print(f"L2      = {L2}")        # should be h − q
-print(f"L_total = {L_total}")   # should simplify to 2h + πr
-print(f"dL/dq   = {dL_dq}")     # should be 0
+print(f"L1      = {L1}")  # should be h + q
+print(f"L_curve = {L_curve}")  # should be π r
+print(f"L2      = {L2}")  # should be h − q
+print(f"L_total = {L_total}")  # should simplify to 2h + πr
+print(f"dL/dq   = {dL_dq}")  # should be 0
 
 # 7. -------- Gravity forces on each mass --------
 
@@ -143,10 +145,12 @@ print("    q̈ =", qdd_classic)
 
 numeric_vals = {m1: 1.0, m2: 2.0, g: 9.81, h: 5.0, r: 0.5}
 qdd_num = float(qdd_classic.subs(numeric_vals))
-T_num   = float(solution[T_sym].subs(numeric_vals))
+T_num = float(solution[T_sym].subs(numeric_vals))
 
 print("\nNumeric check (m1=1 kg, m2=2 kg, g=9.81 m/s²):")
 print(f"    q̈ = {qdd_num:.6f} m/s²")
 print(f"    Tension T = {T_num:.6f} N")
-print("    Expected q̈ = (m2 - m1)/(m1 + m2) * g =",
-      float((2.0 - 1.0) / (2.0 + 1.0) * 9.81))
+print(
+    "    Expected q̈ = (m2 - m1)/(m1 + m2) * g =",
+    float((2.0 - 1.0) / (2.0 + 1.0) * 9.81),
+)
