@@ -20,7 +20,7 @@ t = sp.symbols("t")
 m1, m2, g, r, h, T = sp.symbols("m1 m2 g r h T", positive=True, real=True)
 
 q = dynamicsymbols("q", real=True)  # generalized coordinate: m1 moves downward by q
-u = dynamicsymbols("u", positive=True, real=True)  # generalized speed (u = q̇)
+u = dynamicsymbols("u", real=True)  # generalized speed (u = q̇)
 
 # 2. -------- Inertial frame & pulley center --------
 
