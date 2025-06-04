@@ -2,6 +2,7 @@
 # Atwood Machine
 # ---------------
 import sympy as sp
+from sympy import Q, refine
 from sympy.physics.mechanics import (
     ReferenceFrame,
     Point,
@@ -18,8 +19,8 @@ from sympy.physics.mechanics import (
 t = sp.symbols("t")
 m1, m2, g, r, h, T = sp.symbols("m1 m2 g r h T", positive=True, real=True)
 
-q = dynamicsymbols("q")  # generalized coordinate: m1 moves downward by q
-u = dynamicsymbols("u")  # generalized speed (u = q̇)
+q = dynamicsymbols("q", real=True)  # generalized coordinate: m1 moves downward by q
+u = dynamicsymbols("u", positive=True, real=True)  # generalized speed (u = q̇)
 
 # 2. -------- Inertial frame & pulley center --------
 
@@ -69,8 +70,12 @@ wpath = WrappingPathway(T1, T2, pulley)
 # Straight‐line segment from P1 to T1: vertical distance = h + q
 L1 = sp.sqrt((P1.pos_from(T1).dot(P1.pos_from(T1))))  # = h + q
 
+L1 = refine(L1, Q.positive(h + q))  # specialised assumption to simplify L1
+
 # Straight‐line segment from P2 to T2: vertical distance = h − q
 L2 = sp.sqrt((P2.pos_from(T2).dot(P2.pos_from(T2))))  # = h − q
+
+L2 = refine(L2, Q.positive(h - q))  # specialised assumption to simplify L2
 
 # Arc (geodesic) on the cylinder between T1 and T2:
 L_curve = wpath.length  # = π * r, independent of q
@@ -80,7 +85,7 @@ L_total = sp.simplify(L1 + L_curve + L2)
 
 # Check that d(L_total)/dq = 0 (inextensible rope)
 dL_dq = sp.simplify(sp.diff(L_total, q))
-# assert dL_dq == 0, "ERROR: total rope length depends on q!"
+assert dL_dq == 0, "ERROR: total rope length depends on q!"
 
 print(f"L1      = {L1}")  # should be h + q
 print(f"L_curve = {L_curve}")  # should be π r
