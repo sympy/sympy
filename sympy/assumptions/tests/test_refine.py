@@ -1,7 +1,7 @@
 from sympy.assumptions.ask import Q
 from sympy.assumptions.refine import refine
 from sympy.core.expr import Expr
-from sympy.core.numbers import (I, Rational, nan, pi)
+from sympy.core.numbers import (I, Rational, oo, zoo, nan, pi)
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.functions.elementary.complexes import (Abs, arg, im, re, sign)
@@ -12,6 +12,7 @@ from sympy.abc import w, x, y, z
 from sympy.core.relational import Eq, Ne
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.matrices.expressions.matexpr import MatrixSymbol
+from sympy import Add
 
 
 def test_Abs():
@@ -225,3 +226,23 @@ def test_matrixelement():
     assert refine(x[1, 0], Q.symmetric(x)) == x[0, 1]
     assert refine(x[i, j], Q.symmetric(x)) == x[j, i]
     assert refine(x[j, i], Q.symmetric(x)) == x[j, i]
+
+def test_refine_infinity():
+    z = Symbol('z')
+    assert refine(sqrt(z) + oo) == oo
+    assert refine(sqrt(z) + -oo) == -oo
+    assert refine(Add(oo, -oo, sqrt(z), evaluate=False)) is nan
+    assert refine(zoo + sqrt(z)) == zoo
+
+    z = Symbol('z', real=True)
+    assert refine(sqrt(z) + oo) == oo
+    assert refine(sqrt(z) + -oo) == -oo
+    assert refine(oo + sqrt(z) + 5) == oo
+    assert refine(-oo + sqrt(z)) == -oo
+    assert refine(sqrt(z) + nan) is nan
+    assert refine(Add(oo, -oo, sqrt(z), evaluate=False)) is nan
+    expr = I * oo + sqrt(z)
+    assert refine(expr) == expr
+    assert refine(Add(oo, I * oo, evaluate=False)) == zoo
+    assert refine(Add(I * oo, -I * oo, evaluate=False)) is nan
+    assert refine(zoo + sqrt(z)) == zoo

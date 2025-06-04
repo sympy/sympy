@@ -1,12 +1,10 @@
 from __future__ import annotations
 from typing import Callable
 
-from sympy.core import S, Add, Expr, Basic, Mul, Pow, Rational
+from sympy.core import S, I, Add, Expr, Basic, Mul, Pow, Rational
 from sympy.core.logic import fuzzy_not
 from sympy.logic.boolalg import Boolean
-
-from sympy.assumptions import ask, Q  # type: ignore
-
+from sympy.assumptions import ask, Q # type: ignore
 
 def refine(expr, assumptions=True):
     """
@@ -393,6 +391,56 @@ def refine_matrixelement(expr, assumptions):
             return expr
         return MatrixElement(matrix, j, i)
 
+def refine_Add(expr, assumptions):
+    """
+    Handler for addition with infinities and NaN.
+
+    Detects special infinite values in a sum and refines the result accordingly.
+
+    Examples
+    ========
+
+    >>> from sympy import S, Add
+    >>> from sympy.assumptions.refine import refine_Add
+
+    >>> refine_Add(Add(S.NaN, 1, evaluate=False), {})
+    nan
+    """
+    finite_terms = []
+    inf = None
+
+    for arg in expr.args:
+        if arg is S.NaN:
+            return S.NaN
+
+        if arg.is_infinite:
+            if inf is None:
+                inf = arg
+            else:
+                inf_real, inf_imag = inf.as_real_imag()
+                arg_real, arg_imag = arg.as_real_imag()
+                if (inf_real.is_infinite and arg_real.is_infinite and inf_real != arg_real) or (inf_imag.is_infinite and arg_imag.is_infinite and inf_imag != arg_imag):
+                    return S.NaN
+                elif (arg_real.is_infinite or inf_real.is_infinite) and (arg_imag.is_infinite or inf_imag.is_infinite):
+                    inf = S.ComplexInfinity
+                elif inf_real.is_finite and arg_real.is_finite:
+                    finite_terms.append(arg_real)
+                elif inf_imag.is_finite and arg_imag.is_finite:
+                    finite_terms.append(arg_imag * I)
+        else:
+            finite_terms.append(arg)
+
+    if inf is not None:
+        inf_real, inf_imag = inf.as_real_imag()
+        if inf is S.ComplexInfinity:
+            return S.ComplexInfinity
+        elif inf_real.is_infinite:
+            return Add(inf_imag * I, *finite_terms, evaluate=False)
+        elif inf_imag.is_infinite:
+            return Add(inf_real, *finite_terms, evaluate=False)
+
+    return expr
+
 handlers_dict: dict[str, Callable[[Expr, Boolean], Expr]] = {
     'Abs': refine_abs,
     'Pow': refine_Pow,
@@ -401,5 +449,6 @@ handlers_dict: dict[str, Callable[[Expr, Boolean], Expr]] = {
     'im': refine_im,
     'arg': refine_arg,
     'sign': refine_sign,
-    'MatrixElement': refine_matrixelement
+    'MatrixElement': refine_matrixelement,
+    'Add': refine_Add
 }
