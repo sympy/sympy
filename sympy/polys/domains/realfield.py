@@ -2,6 +2,7 @@
 
 
 from sympy.external.gmpy import SYMPY_INTS, MPQ
+from sympy.external.mpmath import to_rational as _mpmath_to_rational
 from sympy.core.numbers import Float
 from sympy.polys.domains.field import Field
 from sympy.polys.domains.simpledomain import SimpleDomain
@@ -10,7 +11,6 @@ from sympy.polys.polyerrors import CoercionFailed
 from sympy.utilities import public
 
 from mpmath import MPContext
-from mpmath.libmp import to_rational as _mpmath_to_rational
 
 
 def to_rational(s, max_denom, limit=True):

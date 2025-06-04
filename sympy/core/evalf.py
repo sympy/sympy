@@ -18,7 +18,7 @@ from mpmath.libmp import (from_int, from_man_exp, from_rational, fhalf,
                           mpf_sqrt, normalize, round_nearest, to_int, to_str, mpf_tan)
 from mpmath.libmp.backend import MPZ
 from mpmath.libmp.libmpc import _infs_nan
-from mpmath.libmp.libmpf import dps_to_prec, prec_to_dps
+from sympy.external.mpmath import dps_to_prec, prec_to_dps
 
 from .sympify import sympify
 from .singleton import S

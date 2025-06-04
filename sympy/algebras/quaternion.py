@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, overload
 from sympy.core.numbers import Rational
 from sympy.core.singleton import S
 from sympy.core.relational import is_eq
+from sympy.external.mpmath import prec_to_dps
 from sympy.functions.elementary.complexes import (conjugate, im, re, sign)
 from sympy.functions.elementary.exponential import (exp, log as ln)
 from sympy.functions.elementary.miscellaneous import sqrt
@@ -20,10 +21,12 @@ from sympy.utilities.misc import as_int
 
 from mpmath.libmp.libmpf import prec_to_dps
 
+
 if TYPE_CHECKING:
     from typing import Iterable, Sequence
     from sympy.integrals.integrals import SymbolLimits
     SExpr = Expr | complex
+
 
 def _check_norm(elements: Iterable[Expr], norm: Expr | None) -> None:
     """validate if input norm is consistent"""

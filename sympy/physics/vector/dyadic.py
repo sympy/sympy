@@ -1,8 +1,7 @@
 from sympy import sympify, Add, ImmutableMatrix as Matrix
 from sympy.core.evalf import EvalfMixin
+from sympy.external.mpmath import prec_to_dps
 from sympy.printing.defaults import Printable
-
-from mpmath.libmp.libmpf import prec_to_dps
 
 
 __all__ = ['Dyadic']
