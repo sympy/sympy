@@ -61,7 +61,7 @@ from sympy.utilities.lambdify import MPMATH_TRANSLATIONS
 from sympy.utilities.misc import as_int, filldedent, func_name
 
 import mpmath
-from mpmath.libmp.libmpf import prec_to_dps
+from sympy.external.mpmath import prec_to_dps
 
 import inspect
 from collections import Counter

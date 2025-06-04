@@ -23,6 +23,7 @@ from sympy.core.evalf import (
     evalf, fastlog, _evalf_with_bounded_error, quad_to_mpmath,
 )
 from sympy.core.symbol import symbols, Dummy
+from sympy.external.mpmath import prec_to_dps
 from sympy.polys.densetools import dup_eval
 from sympy.polys.domains import ZZ
 from sympy.polys.orderings import lex
@@ -33,7 +34,6 @@ from sympy.polys.specialpolys import symmetric_poly
 from sympy.utilities.lambdify import lambdify
 
 from mpmath import MPContext
-from mpmath.libmp.libmpf import prec_to_dps
 
 
 class GaloisGroupException(Exception):

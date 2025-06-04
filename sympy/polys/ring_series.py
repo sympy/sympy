@@ -47,14 +47,13 @@ from sympy.polys.puiseux import PuiseuxPoly
 from sympy.polys.polyerrors import DomainError
 from sympy.polys.monomials import (monomial_min, monomial_mul, monomial_div,
                                    monomial_ldiv)
-from mpmath.libmp.libintmath import ifac
+from sympy.external.ntheory import factorial as ifac
 from sympy.core import PoleError, Function, Expr
 from sympy.core.numbers import Rational
 from sympy.core.intfunc import igcd
 from sympy.functions import (sin, cos, tan, atan, exp, atanh, asinh, tanh, log,
                              ceiling, sinh, cosh)
 from sympy.utilities.misc import as_int
-from mpmath.libmp.libintmath import giant_steps
 import math
 
 
@@ -89,10 +88,38 @@ def _invert_monoms(p1):
         p[(deg - mvi[0],)] = cvi
     return p
 
+def _giant_steps_mpmath(start, target, n=2):
+    """
+    Return a list of integers ~=
+
+    [start, n*start, ..., target/n^2, target/n, target]
+
+    but conservatively rounded so that the quotient between two
+    successive elements is actually slightly less than n.
+
+    With n = 2, this describes suitable precision steps for a
+    quadratically convergent algorithm such as Newton's method;
+    with n = 3 steps for cubic convergence (Halley's method), etc.
+
+        >>> from sympy.polys.ring_series import _giant_steps_mpmath
+        >>> _giant_steps_mpmath(50,1000)
+        [66, 128, 253, 502, 1000]
+        >>> _giant_steps_mpmath(50,1000,4)
+        [65, 252, 1000]
+
+    """
+    # This function is copied from mpmath to avoid depending on mpmath
+    # internals. This implementation could possibly be improved for the
+    # particular purpose here though. purpose here though.
+    L = [target]
+    while L[-1] > start*n:
+        L = L + [L[-1]//n + 2]
+    return L[::-1]
+
 def _giant_steps(target):
     """Return a list of precision steps for the Newton's method"""
     # We use ceil here because giant_steps cannot handle flint.fmpq
-    res = giant_steps(2, math.ceil(target))
+    res = _giant_steps_mpmath(2, math.ceil(target))
     if res[0] != 2:
         res = [2] + res
     return res

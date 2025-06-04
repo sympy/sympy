@@ -15,7 +15,7 @@ from sympy.logic.boolalg import And, Or, Xor, Implies, Boolean
 from sympy.logic.boolalg import BooleanTrue, BooleanFalse, BooleanFunction, Not, ITE
 from sympy.printing.printer import Printer
 from sympy.sets import Interval
-from mpmath.libmp.libmpf import prec_to_dps, to_str as mlib_to_str
+from sympy.external.mpmath import prec_to_dps, to_str as mlib_to_str
 from sympy.assumptions.assume import AppliedPredicate
 from sympy.assumptions.relation.binrel import AppliedBinaryRelation
 from sympy.assumptions.ask import Q

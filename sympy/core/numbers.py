@@ -30,8 +30,8 @@ from mpmath.libmp import mpf_pow, mpf_pi, mpf_e, phi_fixed
 from mpmath.ctx_mp_python import mpnumeric
 from mpmath.libmp.libmpf import (
     finf as _mpf_inf, fninf as _mpf_ninf,
-    fnan as _mpf_nan, fzero, _normalize as mpf_normalize,
-    prec_to_dps, dps_to_prec)
+    fnan as _mpf_nan, fzero, _normalize as mpf_normalize)
+from sympy.external.mpmath import prec_to_dps, dps_to_prec
 from sympy.utilities.misc import debug
 from sympy.utilities.exceptions import sympy_deprecation_warning
 from .parameters import global_parameters
@@ -173,7 +173,6 @@ def mpf_norm(mpf, prec):
             return mpf
 
     # Necessary if mpmath is using the gmpy backend
-    from mpmath.libmp.backend import MPZ
     rv = mpf_normalize(sign, MPZ(man), expt, bc, prec, rnd)
     return rv
 

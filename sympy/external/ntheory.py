@@ -82,6 +82,11 @@ def factorial(x):
     return int(mlib.ifac(int(x)))
 
 
+def fibonacci(n):
+    """Return the nth Fibonacci number."""
+    return int(mlib.ifib(int(n)))
+
+
 def sqrt(x):
     """Integer square root of x."""
     return int(mlib.isqrt(int(x)))
