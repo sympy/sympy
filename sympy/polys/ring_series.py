@@ -110,7 +110,7 @@ def _giant_steps_mpmath(start, target, n=2):
     """
     # This function is copied from mpmath to avoid depending on mpmath
     # internals. This implementation could possibly be improved for the
-    # particular purpose here though. purpose here though.
+    # particular purpose here though.
     L = [target]
     while L[-1] > start*n:
         L = L + [L[-1]//n + 2]

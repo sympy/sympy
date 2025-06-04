@@ -33,7 +33,7 @@ from sympy.solvers.solveset import linear_coeffs
 from sympy.utilities.misc import filldedent, func_name
 
 
-# XXX: This should use sympy.core.random rather than using the stedlib random
+# XXX: This should use sympy.core.random rather than using the stdlib random
 # module directly.
 import random
 
