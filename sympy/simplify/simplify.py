@@ -49,6 +49,7 @@ from sympy.utilities.decorator import deprecated
 from sympy.utilities.iterables import has_variety, sift, subsets, iterable
 from sympy.utilities.misc import as_int
 
+from sympy.external.mpmath import prec_to_dps
 import mpmath
 
 
@@ -1467,9 +1468,7 @@ def nsimplify(expr, constants=(), tolerance=None, full=False, rational=None,
     # lower tolerances set, so use them to pick the largest tolerance if None
     # was given
     if tolerance is None:
-        tolerance = 10**-min([15] +
-             [mpmath.libmp.libmpf.prec_to_dps(n._prec)
-             for n in expr.atoms(Float)])
+        tolerance = 10**-min([15] + [prec_to_dps(n._prec) for n in expr.atoms(Float)])
     # XXX should prec be set independent of tolerance or should it be computed
     # from tolerance?
     prec = 30

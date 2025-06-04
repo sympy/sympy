@@ -15,6 +15,7 @@ from sympy.core.logic import fuzzy_bool
 from sympy.core.numbers import Rational, oo
 from sympy.core.sorting import ordered
 from sympy.core.symbol import Dummy, uniquely_named_symbol, _symbol
+from sympy.external.mpmath import prec_to_dps
 from sympy.simplify.simplify import simplify
 from sympy.simplify.trigsimp import trigsimp
 from sympy.functions.elementary.miscellaneous import sqrt, Max
@@ -31,8 +32,9 @@ from sympy.solvers import solve
 from sympy.solvers.solveset import linear_coeffs
 from sympy.utilities.misc import filldedent, func_name
 
-from mpmath.libmp.libmpf import prec_to_dps
 
+# XXX: This should use sympy.core.random rather than using the stedlib random
+# module directly.
 import random
 
 x, y = [Dummy('ellipse_dummy', real=True) for i in range(2)]

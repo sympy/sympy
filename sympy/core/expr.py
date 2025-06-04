@@ -18,7 +18,8 @@ from .kind import NumberKind
 from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.misc import as_int, func_name, filldedent
 from sympy.utilities.iterables import has_variety, _sift_true_false
-from mpmath.libmp import mpf_log, prec_to_dps
+from sympy.external.mpmath import prec_to_dps
+from mpmath.libmp import mpf_log
 from mpmath.libmp.libintmath import giant_steps
 
 
