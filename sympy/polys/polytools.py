@@ -3764,18 +3764,18 @@ class Poly(Basic):
             try:
                 with ctx.workdps(n):
                     roots = ctx.polyroots(coeffs, **opts, extraprec=prec)
+                    # Mpmath puts real roots first, then complex ones (as does
+                    # all_roots) so we make sure this convention holds here,
+                    # too.
+                    key = lambda r: (1 if r.imag else 0, r.real, abs(r.imag), sign(r.imag))
+                    roots = [sympify(r) for r in sorted(roots, key=key)]
+                    break
             except ctx.NoConvergence:
                 continue
-            else:
-                break
         else:
             msg = 'convergence to root failed; try n < %s or maxsteps > %s'
             raise ctx.NoConvergence(msg % (n, maxsteps))
 
-        # Mpmath puts real roots first, then complex ones (as does all_roots)
-        # so we make sure this convention holds here, too.
-        key = lambda r: (1 if r.imag else 0, r.real, abs(r.imag), sign(r.imag))
-        roots = [sympify(r) for r in sorted(roots, key=key)]
 
         return roots
 
