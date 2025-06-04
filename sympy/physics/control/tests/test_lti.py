@@ -238,7 +238,7 @@ def test_TransferFunction_functions():
     assert expect4_.evalf() == expect4
 
     # evaluate the transfer function at particular frequencies.
-    assert tf1.eval_frequency(wn) == wn**2/(wn**2 + 4*wn - 5) + 2*wn/(wn**2 + 4*wn - 5) - 3/(wn**2 + 4*wn - 5)
+    assert tf1.eval_frequency(wn) == wn/(wn + 5) + 3/(wn + 5)
     assert G1.eval_frequency(1 + I) == S(3)/25 + S(4)*I/25
     assert G4.eval_frequency(S(5)/3) == \
         a0*s**s/(a1*a2*s**(S(8)/3) + S(5)*a1*s/3 + 5*a2*b1*s**(S(8)/3)/3 + S(25)*b1*s/9) - 5*3**(S(1)/3)*5**(S(2)/3)*b0/(9*a1*a2*s**(S(8)/3) + 15*a1*s + 15*a2*b1*s**(S(8)/3) + 25*b1*s)
