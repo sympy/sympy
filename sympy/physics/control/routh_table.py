@@ -1,7 +1,6 @@
 from sympy.matrices.dense import MutableDenseMatrix
 from sympy.polys import Poly
 from sympy import Symbol
-from sympy.core.relational import StrictGreaterThan
 
 __all__ = ['RouthHurwitz', 'negative_real_root_conditions']
 
@@ -66,7 +65,7 @@ def _run_checks(func):
     stability functions.
 
     """
-    def wrapper(p: list) -> list[StrictGreaterThan | bool]:
+    def wrapper(p: list):
         if len(p) < 2:
             return [True]
 
@@ -81,7 +80,7 @@ def _run_checks(func):
     return wrapper
 
 @_run_checks
-def _calc_conditions_div(p: list) -> list[StrictGreaterThan | bool]:
+def _calc_conditions_div(p: list):
     """
     Stability check with divisions, used for numeric polynomials.
     Algorithm from:
@@ -96,7 +95,7 @@ def _calc_conditions_div(p: list) -> list[StrictGreaterThan | bool]:
     return [p[0] * p[1] > 0] + _calc_conditions_div(qs)
 
 @_run_checks
-def _calc_conditions_no_div(p: list) -> list[StrictGreaterThan | bool]:
+def _calc_conditions_no_div(p: list):
     """
     Stability check without divisions, used for symbolic polynomials.
     Algorithm is a rivisitation of the one in:
