@@ -22,9 +22,10 @@ from .kind import NumberKind
 from .sorting import ordered
 from sympy.external.gmpy import SYMPY_INTS, gmpy, flint
 from sympy.multipledispatch import dispatch
-import mpmath
-from mpmath.ctx_mp_python import mpnumeric
 from sympy.external.mpmath import (
+    mpnumeric,
+    make_mpf as _make_mpf,
+    mpf as _mpf,
     finf as _mpf_inf,
     fninf as _mpf_ninf,
     fnan as _mpf_nan,
@@ -225,7 +226,7 @@ def seterr(divide=False):
 
 
 def _as_integer_ratio(p):
-    neg_pow, man, expt, _ = getattr(p, '_mpf_', mpmath.mpf(p)._mpf_)
+    neg_pow, man, expt, _ = getattr(p, '_mpf_', _mpf(p)._mpf_)
     p = [1, -1][neg_pow % 2]*man
     if expt < 0:
         q = 2**-expt
@@ -358,7 +359,7 @@ class Number(AtomicExpr):
             return Integer(obj)
         if isinstance(obj, tuple) and len(obj) == 2:
             return Rational(*obj)
-        if isinstance(obj, (float, mpmath.mpf, decimal.Decimal)):
+        if isinstance(obj, (float, _mpf, decimal.Decimal)):
             return Float(obj)
         if isinstance(obj, str):
             _obj = obj.lower()  # float('INF') == float('inf')
@@ -842,7 +843,7 @@ class Float(Number):
             return num
         elif _is_numpy_instance(num):  # support for numpy datatypes
             num = _convert_numpy_types(num)
-        elif isinstance(num, mpmath.mpf):
+        elif isinstance(num, _mpf):
             if precision is None:
                 if dps is None:
                     precision = num.context.prec
@@ -942,7 +943,7 @@ class Float(Number):
         elif isinstance(num, (Number, NumberSymbol)):
             _mpf_ = num._as_mpf_val(precision)
         else:
-            _mpf_ = mpmath.mpf(num, prec=precision)._mpf_
+            _mpf_ = _mpf(num, prec=precision)._mpf_
 
         return cls._new(_mpf_, precision, zero=False)
 
@@ -986,7 +987,7 @@ class Float(Number):
 
     @property
     def num(self):
-        return mpmath.mpf(self._mpf_)
+        return _mpf(self._mpf_)
 
     def _as_mpf_val(self, prec):
         rv = mpf_norm(self._mpf_, prec)
@@ -1618,7 +1619,7 @@ class Rational(Number):
         return _from_rational(self.p, self.q, prec, rnd)
 
     def _mpmath_(self, prec, rnd):
-        return mpmath.make_mpf(_from_rational(self.p, self.q, prec, rnd))
+        return _make_mpf(_from_rational(self.p, self.q, prec, rnd))
 
     def __abs__(self):
         return Rational(abs(self.p), self.q)
@@ -1835,7 +1836,7 @@ class Integer(Rational):
         return _from_int(self.p, prec, rnd)
 
     def _mpmath_(self, prec, rnd):
-        return mpmath.make_mpf(self._as_mpf_val(prec))
+        return _make_mpf(self._as_mpf_val(prec))
 
     @cacheit
     def __new__(cls, i):

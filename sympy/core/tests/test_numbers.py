@@ -29,7 +29,6 @@ from sympy.printing.latex import latex
 from sympy.printing.repr import srepr
 from sympy.simplify import simplify
 from sympy.polys.domains.groundtypes import PythonRational
-from sympy.utilities.decorator import conserve_mpmath_dps
 from sympy.utilities.iterables import permutations
 from sympy.testing.pytest import (raises, _both_exp_pow,
                                   warns_deprecated_sympy)
@@ -37,7 +36,7 @@ from sympy import Add
 
 from mpmath import mpf
 import mpmath
-from sympy.external.mpmath import finf, fninf
+from sympy.external.mpmath import finf, fninf, conserve_mpmath_dps
 from sympy.core import numbers
 t = Symbol('t', real=False)
 

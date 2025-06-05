@@ -20,7 +20,6 @@ from sympy.core.logic import fuzzy_not, fuzzy_or
 from sympy.utilities.misc import as_int
 
 
-
 if TYPE_CHECKING:
     from typing import Iterable, Sequence
     from sympy.integrals.integrals import SymbolLimits
