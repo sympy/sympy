@@ -256,6 +256,9 @@ class betainc(DefinedFunction):
         a, b, x1, x2 = [a._to_mpmath(prec) for a in self.args]
         with local_workprec(prec) as ctx:
             res = ctx.betainc(a, b, x1, x2, 0)
+            # Workaround for bug in mpmath < 1.4
+            if isinstance(res, int):
+                res = ctx.mpf(res)
         return Expr._from_mpmath(res, prec)
 
     def _eval_is_real(self):
@@ -358,6 +361,9 @@ class betainc_regularized(DefinedFunction):
         a, b, x1, x2 = [a._to_mpmath(prec) for a in self.args]
         with local_workprec(prec) as ctx:
             res = ctx.betainc(a, b, x1, x2, 1)
+            # Workaround for bug in mpmath < 1.4
+            if isinstance(res, int):
+                res = ctx.mpf(res)
         return Expr._from_mpmath(res, prec)
 
     def fdiff(self, argindex):
