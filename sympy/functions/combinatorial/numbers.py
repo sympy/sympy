@@ -590,11 +590,11 @@ class bernoulli(DefinedFunction):
             if n == 0:
                 res = mp.mpf(1)
             elif n == 1:
-                res = x - mp.mpf(0.5)
+                res = mp.fsub(x, mp.mpf(0.5))
             elif mp.isint(n) and n >= 0:
                 res = mp.bernoulli(n) if x == 1 else mp.bernpoly(n, x)
             else:
-                res = -n * mp.zeta(1-n, x)
+                res = mp.fmul(mp.fneg(n), mp.zeta(mp.fsub(1, n), x))
         return Expr._from_mpmath(res, prec)
 
 
@@ -1011,7 +1011,7 @@ class harmonic(DefinedFunction):
             if m == 1:
                 res = mp.harmonic(n)
             else:
-                res = mp.zeta(m) - mp.zeta(m, n+1)
+                res = mp.fsub(mp.zeta(m), mp.zeta(m, mp.fadd(n, 1)))
         return Expr._from_mpmath(res, prec)
 
     def fdiff(self, argindex=1):
@@ -1181,12 +1181,19 @@ class euler(DefinedFunction):
                 res = mp.eulernum(m) if x is None else mp.eulerpoly(m, x)
             else:
                 if m == -1:
-                    res = mp.pi if x is None else mp.digamma((x+1)/2) - mp.digamma(x/2)
+                    if x is None:
+                        res = mp.pi
+                    else:
+                        res = mp.fsub(
+                                mp.digamma(mp.fdiv(mp.fadd(x, 1), 2)),
+                                mp.digamma(mp.fdiv(x, 2)))
                 else:
                     y = 0.5 if x is None else x
-                    res = 2 * (mp.zeta(-m, y) - 2**(m+1) * mp.zeta(-m, (y+1)/2))
+                    res = mp.fmul(2, (mp.fsub(mp.zeta(mp.fneg(m), y),
+                               mp.fmul(mp.power(2, mp.fadd(m, 1)),
+                               mp.zeta(mp.fneg(m), mp.fdiv(mp.fadd(y, 1), 2))))))
                 if x is None:
-                    res *= 2**m
+                    res = mp.fmul(res, mp.power(2, m))
         return Expr._from_mpmath(res, prec)
 
 
@@ -1586,8 +1593,9 @@ class andre(DefinedFunction):
             return
         s = self.args[0]._to_mpmath(prec+12)
         with local_workprec(prec+12) as mp:
-            sp, cp = mp.sinpi(s/2), mp.cospi(s/2)
-            res = 2*mp.dirichlet(-s, (-sp, cp, sp, -cp))
+            s2 = mp.fdiv(s, 2)
+            sp, cp = mp.sinpi(s2), mp.cospi(s2)
+            res = mp.fmul(2, mp.dirichlet(mp.fneg(s), (mp.fneg(sp), cp, sp, mp.fneg(cp))))
         return Expr._from_mpmath(res, prec)
 
 
