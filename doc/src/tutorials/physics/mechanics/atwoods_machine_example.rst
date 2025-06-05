@@ -34,15 +34,15 @@ generalized speed.
     >>> import sympy as sp
     >>> from sympy import Q, refine
     >>> from sympy.physics.mechanics import (
-    >>>      ReferenceFrame,
-    >>>      Point,
-    >>>      Particle,
-    >>>      KanesMethod,
-    >>>      dynamicsymbols,
-    >>>      WrappingCylinder,
-    >>>      WrappingPathway,
-    >>>      Force,
-    >>>  )
+    ...      ReferenceFrame,
+    ...      Point,
+    ...      Particle,
+    ...      KanesMethod,
+    ...      dynamicsymbols,
+    ...      WrappingCylinder,
+    ...      WrappingPathway,
+    ...      Force,
+    ...  )
     >>>
     >>> t = sp.symbols("t")
     >>>
@@ -229,26 +229,26 @@ is independent of $q$. We verify :math:`\frac{d L_\text{total}}{dq} = 0`.
     >>> L1 = sp.sqrt((P1.pos_from(T1).dot(P1.pos_from(T1))))
     >>> L1 = refine(L1, Q.positive(h + q))  # enforces h+q > 0
     >>> L1
-    h + q
+    h + q(t)
     >>>
     >>> # Segment length from P2 to T2
     >>>
     >>> L2 = sp.sqrt((P2.pos_from(T2).dot(P2.pos_from(T2))))
     >>> L2 = refine(L2, Q.positive(h - q))  # enforces h-q > 0
     >>> L2
-    h - q
+    h - q(t)
     >>>
     >>> # Curved segment on the pulley
     >>>
     >>> L_curve = wpath.length
     >>> L_curve
-    π·r
+    pi*r
     >>>
     >>> # Total length and its derivative
     >>>
     >>> L_total = sp.simplify(L1 + L_curve + L2)
     >>> L_total
-    2h + π·r
+    2*h + pi*r
     >>> dL_dq = sp.simplify(sp.diff(L_total, q))
     >>> dL_dq
     0
