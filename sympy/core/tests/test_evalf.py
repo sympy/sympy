@@ -33,7 +33,7 @@ from sympy.core.numbers import comp
 from sympy.core.evalf import (complex_accuracy, PrecisionExhausted,
                               scaled_zero, get_integer_part, as_mpmath, evalf, _evalf_with_bounded_error)
 from mpmath import inf, ninf, make_mpc
-from mpmath.libmp import from_float, fzero
+from sympy.external.mpmath import from_float, fzero, finf
 from sympy.core.expr import unchanged
 from sympy.testing.pytest import raises, XFAIL
 from sympy.abc import n, x, y
@@ -44,7 +44,6 @@ def NS(e, n=15, **options):
 
 
 def test_evalf_helpers():
-    from mpmath.libmp import finf
     assert complex_accuracy((from_float(2.0), None, 35, None)) == 35
     assert complex_accuracy((from_float(2.0), from_float(10.0), 35, 100)) == 37
     assert complex_accuracy(

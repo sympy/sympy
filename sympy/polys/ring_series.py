@@ -48,7 +48,7 @@ from sympy.polys.polyerrors import DomainError
 from sympy.polys.monomials import (monomial_min, monomial_mul, monomial_div,
                                    monomial_ldiv)
 from sympy.external.ntheory import factorial as ifac
-from sympy.external.mpmath import _giant_steps_mpmath
+from sympy.external.mpmath import giant_steps
 from sympy.core import PoleError, Function, Expr
 from sympy.core.numbers import Rational
 from sympy.core.intfunc import igcd
@@ -92,7 +92,7 @@ def _invert_monoms(p1):
 def _giant_steps(target):
     """Return a list of precision steps for the Newton's method"""
     # We use ceil here because giant_steps cannot handle flint.fmpq
-    res = _giant_steps_mpmath(2, math.ceil(target))
+    res = giant_steps(2, math.ceil(target))
     if res[0] != 2:
         res = [2] + res
     return res
