@@ -16,6 +16,7 @@ from sympy.core.mod import Mod
 from sympy.core.symbol import Symbol, Dummy
 from sympy.core.sympify import sympify, _sympify
 from sympy.core.function import diff
+from sympy.external.mpmath import _matrix as _mpmath_matrix
 from sympy.polys import cancel
 from sympy.functions.elementary.complexes import Abs, re, im
 from sympy.printing import sstr
@@ -27,7 +28,6 @@ from sympy.printing.str import StrPrinter
 from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.combinatorial.factorials import binomial, factorial
 
-import mpmath as mp
 from collections.abc import Callable
 from sympy.utilities.iterables import reshape
 from sympy.core.expr import Expr
@@ -4219,7 +4219,7 @@ class MatrixBase(Printable):
             elif isinstance(arg1, Basic) and arg1.is_Matrix:
                 return arg1.rows, arg1.cols, arg1.as_explicit().flat() # type: ignore
 
-            elif isinstance(args[0], mp.matrix):
+            elif isinstance(args[0], _mpmath_matrix):
                 M = args[0]
                 flat_list = [cls._sympify(x) for x in M]
                 return M.rows, M.cols, flat_list

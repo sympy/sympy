@@ -23,6 +23,7 @@ from sympy.core.singleton import Singleton, S
 from sympy.core.sorting import ordered
 from sympy.core.symbol import symbols, Symbol, Dummy, uniquely_named_symbol
 from sympy.core.sympify import _sympify, sympify, _sympy_converter
+from sympy.external.mpmath import prec_to_dps, mpf, mpi
 from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.miscellaneous import Max, Min
 from sympy.logic.boolalg import And, Or, Not, Xor, true, false, Boolean
@@ -31,10 +32,6 @@ from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.iterables import (iproduct, sift, roundrobin, iterable,
                                        subsets)
 from sympy.utilities.misc import func_name, filldedent
-
-from mpmath import mpi, mpf
-
-from sympy.external.mpmath import prec_to_dps
 
 
 tfn: dict[bool | Boolean | None, Boolean | None] = defaultdict(lambda: None, {

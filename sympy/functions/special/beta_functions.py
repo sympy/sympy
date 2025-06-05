@@ -1,21 +1,17 @@
 from sympy.core import S
+from sympy.core.expr import Expr
 from sympy.core.function import DefinedFunction, ArgumentIndexError
 from sympy.core.symbol import Dummy, uniquely_named_symbol
+from sympy.external.mpmath import local_workprec
 from sympy.functions.special.gamma_functions import gamma, digamma
 from sympy.functions.combinatorial.numbers import catalan
 from sympy.functions.elementary.complexes import conjugate
 
-# See mpmath #569 and SymPy #20569
-def betainc_mpmath_fix(a, b, x1, x2, reg=0):
-    from mpmath import betainc, mpf
-    if x1 == x2:
-        return mpf(0)
-    else:
-        return betainc(a, b, x1, x2, reg)
 
 ###############################################################################
 ############################ COMPLETE BETA  FUNCTION ##########################
 ###############################################################################
+
 
 class beta(DefinedFunction):
     r"""
@@ -256,8 +252,11 @@ class betainc(DefinedFunction):
         else:
             raise ArgumentIndexError(self, argindex)
 
-    def _eval_mpmath(self):
-        return betainc_mpmath_fix, self.args
+    def _eval_evalf(self, prec):
+        a, b, x1, x2 = [a._to_mpmath(prec) for a in self.args]
+        with local_workprec(prec) as ctx:
+            res = ctx.betainc(a, b, x1, x2, 0)
+        return Expr._from_mpmath(res, prec)
 
     def _eval_is_real(self):
         if all(arg.is_real for arg in self.args):
@@ -355,8 +354,11 @@ class betainc_regularized(DefinedFunction):
     def __new__(cls, a, b, x1, x2):
         return super().__new__(cls, a, b, x1, x2)
 
-    def _eval_mpmath(self):
-        return betainc_mpmath_fix, (*self.args, S(1))
+    def _eval_evalf(self, prec):
+        a, b, x1, x2 = [a._to_mpmath(prec) for a in self.args]
+        with local_workprec(prec) as ctx:
+            res = ctx.betainc(a, b, x1, x2, 1)
+        return Expr._from_mpmath(res, prec)
 
     def fdiff(self, argindex):
         a, b, x1, x2 = self.args
