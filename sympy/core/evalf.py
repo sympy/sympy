@@ -8,7 +8,7 @@ from typing import Callable, TYPE_CHECKING, Any, overload, Type
 import math
 
 from sympy.external.mpmath import (
-    inf as mpmath_inf, make_mpf, make_mpc, mp, mpc, mpf,
+    inf as mpmath_inf, make_mpf, make_mpc, mpc, mpf,
     MPZ, from_int, from_man_exp, from_rational, fhalf, fnan, finf, fninf,
     fnone, fone, fzero, mpf_abs, mpf_add, mpf_atan, mpf_atan2, mpf_cmp,
     mpf_cos, mpf_e, mpf_exp, mpf_log, mpf_lt, mpf_mul, mpf_neg, mpf_pi,
@@ -1108,7 +1108,7 @@ def do_integral(expr: 'Integral', prec: int, options: OPT_DICT) -> TMP_RES:
 
         def f(t: Expr) -> mpc | mpf:
             nonlocal max_real_term, max_imag_term
-            re, im, re_acc, im_acc = evalf(func, mp.prec, {'subs': {x: t}})
+            re, im, re_acc, im_acc = evalf(func, ctx.prec, {'subs': {x: t}})
 
             have_part[0] = re or have_part[0]
             have_part[1] = im or have_part[1]
@@ -1117,8 +1117,8 @@ def do_integral(expr: 'Integral', prec: int, options: OPT_DICT) -> TMP_RES:
             max_imag_term = max(max_imag_term, fastlog(im))
 
             if im:
-                return mpc(re or fzero, im)
-            return mpf(re or fzero)
+                return ctx.mpc(re or fzero, im)
+            return ctx.mpf(re or fzero)
 
         if options.get('quad') == 'osc':
             A = Wild('A', exclude=[x])
@@ -1254,61 +1254,63 @@ def hypsum(expr: Expr, n: Symbol, start: int, prec: int) -> mpf:
         raise NotImplementedError("a hypergeometric series is required")
     num, den = hs.as_numer_denom()
 
-    func1 = lambdify(n, num)
-    func2 = lambdify(n, den)
+    with local_workprec(prec) as ctx:
 
-    h, g, p = check_convergence(num, den, n)
+        func1 = lambdify(n, num, modules=ctx)
+        func2 = lambdify(n, den, modules=ctx)
 
-    if h < 0:
-        raise ValueError("Sum diverges like (n!)^%i" % (-h))
+        h, g, p = check_convergence(num, den, n)
 
-    eterm = expr.subs(n, 0)
-    if not eterm.is_Rational:
-        raise NotImplementedError("Non rational term functionality is not implemented.")
+        if h < 0:
+            raise ValueError("Sum diverges like (n!)^%i" % (-h))
 
-    term: Rational = eterm # type: ignore
+        eterm = expr.subs(n, 0)
+        if not eterm.is_Rational:
+            raise NotImplementedError("Non rational term functionality is not implemented.")
 
-    # Direct summation if geometric or faster
-    if h > 0 or (h == 0 and abs(g) > 1):
-        term = (MPZ(term.p) << prec) // term.q
-        s = term
-        k = 1
-        while abs(term) > 5:
-            term *= MPZ(func1(k - 1))
-            term //= MPZ(func2(k - 1))
-            s += term
-            k += 1
-        return from_man_exp(s, -prec)
-    else:
-        alt = g < 0
-        if abs(g) < 1:
-            raise ValueError("Sum diverges like (%i)^n" % abs(1/g))
-        if p < 1 or (equal_valued(p, 1) and not alt):
-            raise ValueError("Sum diverges like n^%i" % (-p))
-        # We have polynomial convergence: use Richardson extrapolation
-        vold = None
-        ndig = prec_to_dps(prec)
-        while True:
-            # Need to use at least quad precision because a lot of cancellation
-            # might occur in the extrapolation process; we check the answer to
-            # make sure that the desired precision has been reached, too.
-            prec2 = 4*prec
-            term0 = (MPZ(term.p) << prec2) // term.q
+        term: Rational = eterm # type: ignore
 
-            def summand(k, _term=[term0]):
-                if k:
-                    k = int(k)
-                    _term[0] *= MPZ(func1(k - 1))
-                    _term[0] //= MPZ(func2(k - 1))
-                return make_mpf(from_man_exp(_term[0], -prec2))
+        # Direct summation if geometric or faster
+        if h > 0 or (h == 0 and abs(g) > 1):
+            term = (MPZ(term.p) << prec) // term.q
+            s = term
+            k = 1
+            while abs(term) > 5:
+                term *= MPZ(func1(k - 1))
+                term //= MPZ(func2(k - 1))
+                s += term
+                k += 1
+            return from_man_exp(s, -prec)
+        else:
+            alt = g < 0
+            if abs(g) < 1:
+                raise ValueError("Sum diverges like (%i)^n" % abs(1/g))
+            if p < 1 or (equal_valued(p, 1) and not alt):
+                raise ValueError("Sum diverges like n^%i" % (-p))
+            # We have polynomial convergence: use Richardson extrapolation
+            vold = None
+            ndig = prec_to_dps(prec)
+            while True:
+                # Need to use at least quad precision because a lot of cancellation
+                # might occur in the extrapolation process; we check the answer to
+                # make sure that the desired precision has been reached, too.
+                prec2 = 4*prec
+                term0 = (MPZ(term.p) << prec2) // term.q
 
-            with local_workprec(prec) as ctx:
+                def summand(k, _term=[term0]):
+                    if k:
+                        k = int(k)
+                        _term[0] *= MPZ(func1(k - 1))
+                        _term[0] //= MPZ(func2(k - 1))
+                    return ctx.make_mpf(from_man_exp(_term[0], -prec2))
+
+                ctx.prec = prec
                 v = ctx.nsum(summand, [0, mpmath_inf], method='richardson')
-            vf = Float(v, ndig)
-            if vold is not None and vold == vf:
-                break
-            prec += prec  # double precision each time
-            vold = vf
+                vf = Float(v, ndig)
+                if vold is not None and vold == vf:
+                    break
+                prec += prec  # double precision each time
+                vold = vf
 
         return v._mpf_
 
