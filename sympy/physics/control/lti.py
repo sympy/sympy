@@ -23,7 +23,7 @@ from sympy.series import limit
 from sympy.utilities.misc import filldedent
 from sympy.solvers.ode.systems import linodesolve
 from sympy.solvers.solveset import linsolve, linear_eq_to_matrix
-from sympy.logic.boolalg import false, true, Or
+from sympy.logic.boolalg import false, true
 from sympy.solvers.inequalities import reduce_inequalities
 from sympy.physics.control.routh_table import negative_real_root_conditions
 
