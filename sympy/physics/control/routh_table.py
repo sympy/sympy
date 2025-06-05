@@ -111,7 +111,7 @@ def _calc_conditions_no_div(p: list) -> list[StrictGreaterThan | bool]:
 class RouthHurwitz(MutableDenseMatrix):
     r"""
     A class for creating a Routh-Hurwitz table from a given polynomial.
-    It handles special cases with methods discussed in [1].
+    It handles special cases with methods discussed in [1]_.
 
     Note: When at least a row of the table is zero,
     the property ``zero_row_case`` is set to True.
@@ -136,14 +136,14 @@ class RouthHurwitz(MutableDenseMatrix):
 
     1.  First Column Zero Case:
         If a zero appears in the first column of a row (while the row is not
-        entirely zero), the Extended Routh's Table is constructed [3] and every
+        entirely zero), the Extended Routh's Table is constructed [2]_ and every
         information of these rows is stored in  ``zero_col_infos``.
 
     2.  Full Row Zero Case:
         If an entire row becomes zero, we can substitute the row with the
         coefficients of the derivative of an auxiliary polynomial.
         The auxiliary polynomial is constructed using the row immediately
-        above the zero row.
+        above the zero row [3]_.
         For instance, consider the following example:
 
         .. math::
@@ -246,8 +246,8 @@ class RouthHurwitz(MutableDenseMatrix):
     References
     ==========
     .. [1] https://en.wikipedia.org/wiki/Routh-Hurwitz_stability_criterion
-    .. [2] https://www.circuitbread.com/tutorials/routh-hurwitz-criterion-part-2-3-3
-    .. [3] https://citeseerx.ist.psu.edu/document?repid=rep1&type=pdf&doi=b1ed2c8cbd00da0a4aac7b7e9684255a833af6b4
+    .. [2] https://citeseerx.ist.psu.edu/document?repid=rep1&type=pdf&doi=b1ed2c8cbd00da0a4aac7b7e9684255a833af6b4
+    .. [3] https://www.circuitbread.com/tutorials/routh-hurwitz-criterion-part-2-3-3
 
     """
     def __new__(cls, polynomial, var):
