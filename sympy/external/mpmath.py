@@ -10,14 +10,15 @@ from functools import update_wrapper as _update_wrapper
 
 from mpmath import (
     MPContext,
+    MPIntervalContext,
     bernfrac,
     diff,
     eulernum,
     fac,
     findroot,
     inf,
-    make_mpf,
     make_mpc,
+    make_mpf,
     mp,
     mpc,
     mpf,
@@ -29,6 +30,7 @@ from mpmath import (
 
 NoConvergence = mp.NoConvergence
 
+from mpmath.ctx_mp_python import mpnumeric
 from mpmath.libmp import (
     MPZ,
     MPZ_ONE,
@@ -97,13 +99,12 @@ from mpmath.libmp import (
     to_rational,
     to_str,
 )
-
 from mpmath.libmp.libintmath import giant_steps
 from mpmath.matrices.matrices import _matrix
-from mpmath.ctx_mp_python import mpnumeric
 
 __all__ = [
     "MPContext",
+    "MPIntervalContext",
     "MPZ",
     "MPZ_ONE",
     "ComplexResult",
@@ -211,6 +212,15 @@ def conserve_mpmath_dps(func):
     return func_wrapper
 
 
+def _new_mpcontext() -> MPContext:
+    # Note sure how much is really needed here...
+    ctx = MPContext()
+    iv = MPIntervalContext()
+    ctx._iv = iv
+    ctx.mpi = iv._mpi
+    return ctx
+
+
 class local_workprec:
     """Context manager to borrow an mpmath MPContext with given precision.
 
@@ -235,6 +245,7 @@ class local_workprec:
 
     local_workdps
     """
+
     _contexts: list[MPContext] = []
     _ctx: MPContext
 
@@ -243,7 +254,7 @@ class local_workprec:
         try:
             self._ctx = self._contexts.pop()
         except IndexError:
-            self._ctx = MPContext()
+            self._ctx = _new_mpcontext()
         self._ctx.prec = prec
 
     def __enter__(self) -> MPContext:
@@ -265,6 +276,7 @@ class local_workdps:
 
     local_workprec
     """
+
     _contexts: list[MPContext] = []
     _ctx: MPContext
 
@@ -273,7 +285,7 @@ class local_workdps:
         try:
             self._ctx = self._contexts.pop()
         except IndexError:
-            self._ctx = MPContext()
+            self._ctx = _new_mpcontext()
         self._ctx.dps = dps
 
     def __enter__(self) -> MPContext:

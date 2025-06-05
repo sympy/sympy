@@ -435,7 +435,7 @@ class Expr(Basic, EvalfMixin):
         return super().__format__(format_spec)
 
     @staticmethod
-    def _from_mpmath(x, prec):
+    def _from_mpmath(x, prec) -> Expr:
         if hasattr(x, "_mpf_"):
             return Float._new(x._mpf_, prec)
         elif hasattr(x, "_mpc_"):
