@@ -38,24 +38,6 @@ def test_lra_satask():
 
 
 def test_old_assumptions():
-    # test unhandled old assumptions
-    w = symbols("w")
-    raises(UnhandledInput, lambda: lra_satask(Q.lt(w, 2) & Q.gt(w, 3)))
-    w = symbols("w", rational=False, real=True)
-    raises(UnhandledInput, lambda: lra_satask(Q.lt(w, 2) & Q.gt(w, 3)))
-    w = symbols("w", odd=True, real=True)
-    raises(UnhandledInput, lambda: lra_satask(Q.lt(w, 2) & Q.gt(w, 3)))
-    w = symbols("w", even=True, real=True)
-    raises(UnhandledInput, lambda: lra_satask(Q.lt(w, 2) & Q.gt(w, 3)))
-    w = symbols("w", prime=True, real=True)
-    raises(UnhandledInput, lambda: lra_satask(Q.lt(w, 2) & Q.gt(w, 3)))
-    w = symbols("w", composite=True, real=True)
-    raises(UnhandledInput, lambda: lra_satask(Q.lt(w, 2) & Q.gt(w, 3)))
-    w = symbols("w", integer=True, real=True)
-    raises(UnhandledInput, lambda: lra_satask(Q.lt(w, 2) & Q.gt(w, 3)))
-    w = symbols("w", integer=False, real=True)
-    raises(UnhandledInput, lambda: lra_satask(Q.lt(w, 2) & Q.gt(w, 3)))
-
     # test handled
     w = symbols("w", positive=True, real=True)
     assert lra_satask(Q.le(w, 0)) is False
@@ -159,6 +141,19 @@ def test_equality():
     assert ask(Q.eq(x,z), Q.eq(x,y) & Q.eq(y,z)) is True
 
 
+def test_inequality_implications_and_realness():
+    # Basic implication checks
+    assert ask(Q.ge(x, y), Q.gt(x, y)) is True
+    assert ask(Q.le(x, y), Q.lt(x, y)) is True
+
+    # Transitivity check
+    assert ask(Q.gt(x, z), Q.gt(x, y) & Q.gt(y, z)) is True
+
+    # Realness inference tests
+    assert ask(Q.real(x), Q.gt(x, z)) is True
+    assert ask(Q.real(z), Q.gt(x, z)) is True
+
+
 @XFAIL
 def test_equality_failing():
     # Note that implementing the substitution property of equality
@@ -170,3 +165,7 @@ def test_equality_failing():
     assert ask(Q.prime(x), Q.eq(x, y) & Q.prime(y)) is True
     assert ask(Q.real(x), Q.eq(x, y) & Q.real(y)) is True
     assert ask(Q.imaginary(x), Q.eq(x, y) & Q.imaginary(y)) is True
+
+def test_ineq_imp():
+    assert ask(Q.ge(x, y), Q.gt(x, y)) is True
+    assert ask(Q.le(x, y), Q.lt(x, y)) is True

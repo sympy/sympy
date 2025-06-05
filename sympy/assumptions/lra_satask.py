@@ -49,7 +49,7 @@ def check_satisfiability(prop, _prop, factbase):
     sat_true.add_from_cnf(prop)
     sat_false.add_from_cnf(_prop)
 
-    all_pred, all_exprs = get_all_pred_and_expr_from_enc_cnf(sat_true)
+    all_pred, all_exprs, realness_preds = get_all_pred_and_expr_from_enc_cnf(sat_true)
 
     for pred in all_pred:
         if pred.function not in WHITE_LIST and pred.function != Q.ne:
@@ -62,7 +62,7 @@ def check_satisfiability(prop, _prop, factbase):
 
     # convert old assumptions into predicates and add them to sat_true and sat_false
     # also check for unhandled predicates
-    for assm in extract_pred_from_old_assum(all_exprs):
+    for assm in extract_pred_from_old_assum(all_exprs, realness_preds):
         n = len(sat_true.encoding)
         if assm not in sat_true.encoding:
             sat_true.encoding[assm] = n+1
@@ -216,14 +216,22 @@ pred_to_pos_neg_zero = {
 def get_all_pred_and_expr_from_enc_cnf(enc_cnf):
     all_exprs = set()
     all_pred = set()
+    realness_preds = set()
     for pred in enc_cnf.encoding.keys():
         if isinstance(pred, AppliedPredicate):
+            if pred.function in (Q.gt, Q.lt):
+                lhs, rhs = pred.arguments
+                if lhs.is_Symbol:
+                    realness_preds.add(Q.real(lhs))
+                if rhs.is_Symbol:
+                    realness_preds.add(Q.real(rhs))
             all_pred.add(pred)
             all_exprs.update(pred.arguments)
 
-    return all_pred, all_exprs
+    return all_pred, all_exprs, realness_preds
 
-def extract_pred_from_old_assum(all_exprs):
+
+def extract_pred_from_old_assum(all_exprs, realness_preds=None):
     """
     Returns a list of relevant new assumption predicate
     based on any old assumptions.
@@ -258,7 +266,12 @@ def extract_pred_from_old_assum(all_exprs):
             continue
 
         if expr.is_real is not True:
-            raise UnhandledInput(f"LRASolver: {expr} must be real")
+            if expr.is_Symbol:
+                if Q.real(expr) not in realness_preds:
+                    raise UnhandledInput(f"LRASolver: {expr} must be real")
+            else:
+                raise UnhandledInput(f"LRASolver: {expr} must be real")
+
         # test for I times imaginary variable; such expressions are considered real
         if isinstance(expr, Mul) and any(arg.is_real is not True for arg in expr.args):
             raise UnhandledInput(f"LRASolver: {expr} must be real")
