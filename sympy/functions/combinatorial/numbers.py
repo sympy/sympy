@@ -20,8 +20,8 @@ from sympy.core.logic import fuzzy_not
 from sympy.core.mul import Mul
 from sympy.core.numbers import E, I, pi, oo, Rational, Integer
 from sympy.core.relational import Eq, is_le, is_gt, is_lt
-from sympy.external.gmpy import SYMPY_INTS, remove, lcm, legendre, jacobi, kronecker
-from sympy.external.ntheory import fibonacci as _ifib
+from sympy.external.gmpy import (SYMPY_INTS, remove, lcm, legendre, jacobi,
+                                 kronecker, fibonacci as _ifib)
 from sympy.functions.combinatorial.factorials import (binomial,
     factorial, subfactorial)
 from sympy.functions.elementary.exponential import log
