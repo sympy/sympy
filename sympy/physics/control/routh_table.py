@@ -2,17 +2,31 @@ from sympy.matrices.dense import MutableDenseMatrix
 from sympy.polys import Poly
 from sympy import Symbol
 from sympy.core.relational import StrictGreaterThan
-from sympy.core.expr import Expr
 
 __all__ = ['RouthHurwitz', 'negative_real_root_conditions']
 
 def negative_real_root_conditions(
-        polynomial: Expr | Poly,
+        polynomial,
         var: Symbol | None = None, /,
-        *, domain=None) -> list[StrictGreaterThan | bool]:
+        *, domain=None):
     """
     Returns a list of conditions for a polynomial to have all its roots with
     negative real parts.
+
+    Parameters
+    ==========
+        polynomial : Expr, Number
+            The polynomial whose roots are to be analyzed.
+        var : Symbol
+            The symbol representing the variable in the polynomial.
+        domain : None, Domain, optional
+            The domain in which the polynomial is defined.
+
+    Returns
+    =======
+        list[StrictGreaterThan | bool]
+            A list of conditions that must be satisfied for the polynomial to
+            have all its roots with negative real parts.
 
     Examples
     ========
