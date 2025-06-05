@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from .cartan_type import CartanType
-from mpmath import fac
+from sympy.external.mpmath import fac
 from sympy.core.backend import Matrix, eye, Rational, igcd
 from sympy.core.basic import Atom
 

@@ -1,9 +1,8 @@
 """Numerical Methods for Holonomic Functions"""
 
 from sympy.core.sympify import sympify
+from sympy.external.mpmath import mp
 from sympy.holonomic.holonomic import DMFsubs
-
-from mpmath import mp
 
 
 def _evalf(func, points, derivatives=False, method='RK4'):

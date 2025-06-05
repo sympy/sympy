@@ -1,4 +1,4 @@
-from mpmath.libmp import (fzero, from_int, from_rational,
+from sympy.external.mpmath import (fzero, from_int, from_rational,
     fone, fhalf, to_int, mpf_mul, mpf_div, mpf_sub,
     mpf_add, mpf_sqrt, mpf_pi, mpf_cosh_sinh, mpf_cos, mpf_sin)
 from .residue_ntheory import _sqrt_mod_prime_power, is_quad_residue
