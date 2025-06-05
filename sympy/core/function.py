@@ -61,7 +61,8 @@ from sympy.utilities.lambdify import MPMATH_TRANSLATIONS
 from sympy.utilities.misc import as_int, filldedent, func_name
 
 import mpmath
-from sympy.external.mpmath import prec_to_dps
+from sympy.external.mpmath import (prec_to_dps, mpf, mpc, mp, workprec, diff as
+                                   mpmath_diff)
 
 import inspect
 from collections import Counter
@@ -570,7 +571,6 @@ class Function(Application, Expr):
         try:
             args = [arg._to_mpmath(prec + 5) for arg in args]
             def bad(m):
-                from mpmath import mpf, mpc
                 # the precision of an mpf value is the last element
                 # if that is 1 (and m[1] is not 1 which would indicate a
                 # power of 2), then the eval failed; so check that none of
@@ -592,7 +592,12 @@ class Function(Application, Expr):
         except ValueError:
             return
 
-        with mpmath.workprec(prec):
+        # XXX: This should really use local_workprec rather than
+        # mpmath.workprec to avoid messing with mpmath's global precision. That
+        # would be incompatible with any class that uses _eval_mpmath though
+        # since those would have to use the global precision.
+
+        with workprec(prec):
             v = func(*args)
 
         return Expr._from_mpmath(v, prec)
@@ -1650,13 +1655,17 @@ class Derivative(Expr):
             raise NotImplementedError('partials and higher order derivatives')
         z = list(self.free_symbols)[0]
 
+        # XXX: This should not depend on the precision that is set in mp.
+        # The precision should be a parameter.
+
         def eval(x):
-            f0 = self.expr.subs(z, Expr._from_mpmath(x, prec=mpmath.mp.prec))
-            f0 = f0.evalf(prec_to_dps(mpmath.mp.prec))
-            return f0._to_mpmath(mpmath.mp.prec)
-        return Expr._from_mpmath(mpmath.diff(eval,
-                                             z0._to_mpmath(mpmath.mp.prec)),
-                                 mpmath.mp.prec)
+            f0 = self.expr.subs(z, Expr._from_mpmath(x, prec=mp.prec))
+            f0 = f0.evalf(prec_to_dps(mp.prec))
+            return f0._to_mpmath(mp.prec)
+
+        fp = mpmath_diff(eval, z0._to_mpmath(mp.prec))
+
+        return Expr._from_mpmath(fp, mp.prec)
 
     @property
     def expr(self):

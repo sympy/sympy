@@ -24,7 +24,7 @@ import sympy
 
 import mpmath
 from sympy.abc import x, y, z
-from sympy.utilities.decorator import conserve_mpmath_dps
+from sympy.external.mpmath import conserve_mpmath_dps
 from sympy.utilities.exceptions import ignore_warnings
 from sympy.testing.pytest import raises
 
