@@ -1,15 +1,19 @@
 from sympy.matrices.dense import MutableDenseMatrix
 from sympy.polys import Poly
-from sympy.polys.polytools  import cancel
 from sympy import Symbol
 from sympy.logic.boolalg import false, true, Or
-from sympy.core.relational import Unequality
+from sympy.core.relational import Unequality, StrictGreaterThan
+from sympy.core.expr import Expr
+from sympy.polys.domains import RR
 
 __all__ = ['RouthHurwitz', 'negative_real_root_conditions']
 
-def negative_real_root_conditions(polynomial, var):
+def negative_real_root_conditions(
+        polynomial: Expr | Poly,
+        var: Symbol | None = None, /,
+        *, domain=None) -> list[StrictGreaterThan | bool]:
     """
-    Returns the conditions for a polynomial to have all its roots with
+    Returns a list of conditions for a polynomial to have all its roots with
     negative real parts.
 
     Examples
@@ -20,67 +24,77 @@ def negative_real_root_conditions(polynomial, var):
     >>> s = symbols('s')
     >>> p1 = (s+1)*(s+2)*(s+2.5)
     >>> negative_real_root_conditions(p1, s)
-    [[True], [False]]
+    [True, True, True]
     >>> k = symbols('k')
     >>> p2 = (s+1)*(s+k)
     >>> negative_real_root_conditions(p2, s)
-    [[k + 1 > 0, k > 0], [False]]
+    [k + 1 > 0, k*(k + 1)**3 > 0]
     >>> a = symbols('a', negative = True)
     >>> p3 = (s+1)*(s+a)
     >>> negative_real_root_conditions(p3, s)
-    [[a + 1 > 0, False], [False]]
+    [a + 1 > 0, a*(a + 1)**3 > 0]
 
     """
-    table = RouthHurwitz(polynomial, var)
+    p: Poly = Poly(polynomial, var, domain = domain)
 
-    if table.zero_row_case:
-        # There is a pole with a real part equal to zero or
-        # a pole with a positive real part.
-        return [[False], [False]]
+    _, p = p.clear_denoms(convert=True)
 
-    num_conditions = [true, true]
-    var_conditions: list[list] = [[], []]
+    coeffs = p.all_coeffs()
 
-    _add_zero_col_conds(var_conditions, table)
+    if all(c.is_number for c in coeffs):
+        return _calc_conditions_div(coeffs)
 
-    for eq in table[:, 0]:
-        if eq.is_number:
-            num_conditions[0] &= eq > 0
-            num_conditions[1] &= eq < 0
+    return _calc_conditions_no_div(coeffs)
 
-        else:
-            var_conditions[0].append(eq > 0)
-            var_conditions[1].append(eq < 0)
-
-        if Or(num_conditions[0], num_conditions[1]) is false:
-            return [[False], [False]]
-
-    # if we are here, num_conditions != [[False], [False]]
-    if num_conditions[0] is false:
-        var_conditions[0] = [False]
-        if len(var_conditions[1]) == 0:
-            var_conditions[1] = [num_conditions[1]]
-
-    elif num_conditions[1] is false:
-        var_conditions[1] = [False]
-        if len(var_conditions[0]) == 0:
-            var_conditions[0] = [num_conditions[0]]
-
-    return var_conditions
-
-def _add_zero_col_conds(var_conditions, table):
+def _run_checks(func):
     """
-    Add checks for rows where the first-column entry is zero,
-    ensuring the row isn't entirely zeros and preventing it from
-    being classified as a Full Row Zero Case.
+    Decorator to provide the basic checks for the recursive
+    stability functions.
 
     """
-    for info in table.zero_col_infos:
-        i, j = info
-        conds_i = Or(*[Unequality(table[i, k], 0)
-                       for k in range(j, table.shape[1])])
-        var_conditions[0].append(conds_i)
-        var_conditions[1].append(conds_i)
+    def wrapper(p: list) -> list[StrictGreaterThan | bool]:
+        if len(p) < 2:
+            return [True]
+
+        if (p[0]*p[1]).is_nonpositive:
+            return [False]
+
+        if len(p) == 2:
+            return [p[0] * p[1] > 0]
+
+        return func(p)
+
+    return wrapper
+
+@_run_checks
+def _calc_conditions_div(p: list) -> list[StrictGreaterThan | bool]:
+    """
+    Stability check with divisions, used for numeric polynomials.
+    Algorithm from:
+    https://courses.washington.edu/mengr471/resources/Routh_Hurwitz_Proof.pdf
+
+    """
+    qs = p.copy()
+    for i in range(1, len(p), 2):
+        qs[i - 1] -= p[i] * p[0] / p[1]
+    qs = qs[1:]
+
+    return [p[0] * p[1] > 0] + _calc_conditions_div(qs)
+
+@_run_checks
+def _calc_conditions_no_div(p: list) -> list[StrictGreaterThan | bool]:
+    """
+    Stability check without divisions, used for symbolic polynomials.
+    Algorithm is a rivisitation of the one in:
+    https://courses.washington.edu/mengr471/resources/Routh_Hurwitz_Proof.pdf
+
+    """
+    qs = [p[1] * qi for qi in p]
+    for i in range(1, len(p), 2):
+        qs[i - 1] -= p[i] * p[0]
+    qs = qs[1:]
+
+    return [p[0] * p[1] > 0] + _calc_conditions_no_div(qs)
 
 class RouthHurwitz(MutableDenseMatrix):
     r"""
@@ -279,7 +293,7 @@ class RouthHurwitz(MutableDenseMatrix):
                    - self[i-2, 0] * self[i-1, j+1])
             den = self[i-1, 0]
 
-            self[i, j] = cancel(num / den)
+            self[i, j] = num / den
 
     def _handle_special_cases(self, i):
         active_row_length = self.cols - i//2

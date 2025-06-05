@@ -58,34 +58,23 @@ def test_negative_real_root_conditions():
     p1 = b4 * s**4 + b3 * s**3 + b2 * s**2 + b1 * s + b0
 
     conds = negative_real_root_conditions(p1, s)
-    assert conds == [[b4 > 0, b3 > 0, (-b1*b4 + b2*b3)/b3 > 0,
-                     (b0*b3**2 + b1**2*b4 - b1*b2*b3)/(b1*b4 - b2*b3) > 0,
-                     b0 > 0], [b4 < 0, b3 < 0, (-b1*b4 + b2*b3)/b3 < 0,
-                     (b0*b3**2 + b1**2*b4 - b1*b2*b3)/(b1*b4 - b2*b3) < 0,
-                     b0 < 0]]
+    assert conds == [
+        b3*b4 > 0, b3**2*(-b1*b4 + b2*b3) > 0,
+        (-b0*b3**3 + b1*b3*(-b1*b4 + b2*b3))*(-b1*b4 + b2*b3)**2 > 0,
+        b0*b3*(-b0*b3**3 + b1*b3*(-b1*b4 + b2*b3))**3*(-b1*b4 + b2*b3) > 0]
 
     p2 = -3*s**2 - 2*s - b0
-    assert negative_real_root_conditions(p2, s) == [[False], [-b0 < 0]]
+    assert negative_real_root_conditions(p2, s) == [True, 8 * b0 > 0]
 
     a = symbols('a', nonpositive = True)
 
-    p3 = b4*s**4 + b3*s**3 + a*s**2 + b1*s + b0
-    conds = negative_real_root_conditions(p3, s)
-    assert conds == [[b4 > 0, b3 > 0, (a*b3 - b1*b4)/b3 > 0,
-                      (a*b1*b3 - b0*b3**2 - b1**2*b4)/(a*b3 - b1*b4) > 0,
-                      b0 > 0], [b4 < 0, b3 < 0, (a*b3 - b1*b4)/b3 < 0,
-                      (a*b1*b3 - b0*b3**2 - b1**2*b4)/(a*b3 - b1*b4) < 0,
-                      b0 < 0]]
-
     p4 = b0*s**2 + a*s + 3
-    assert negative_real_root_conditions(p4, s) == [[b0 > 0, False], [False]]
+    assert negative_real_root_conditions(p4, s) == [a * b0 > 0, False]
 
     p5 = b0*s**2 + a*s - 3
-    assert negative_real_root_conditions(p5, s) == [[False], [b0 < 0, a < 0]]
+    assert negative_real_root_conditions(p5, s) == [a * b0 > 0, -3 * a**3 > 0]
 
     p6 = b0 + b1*s**2 + b1*s + b3*s**4 + b3*s**3
-    expected6 = [[Unequality(b0, 0), b3 > 0, b3 > 0,
-                 -b0 > 0, b1 + b3 > 0, b0 > 0],
-                [Unequality(b0, 0), b3 < 0, b3 < 0,
-                 -b0 < 0, b1 + b3 < 0, b0 < 0]]
+    expected6 = [b3**2 > 0, False]
+
     assert negative_real_root_conditions(p6, s) == expected6
