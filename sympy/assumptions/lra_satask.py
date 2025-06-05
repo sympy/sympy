@@ -1,6 +1,6 @@
 from sympy.assumptions.assume import global_assumptions
 from sympy.assumptions.cnf import CNF, EncodedCNF
-from sympy.assumptions.ask import Q, ask
+from sympy.assumptions.ask import Q
 from sympy.logic.inference import satisfiable
 from sympy.logic.algorithms.lra_theory import UnhandledInput, ALLOWED_PRED
 from sympy.matrices.kind import MatrixKind
@@ -8,7 +8,6 @@ from sympy.core.kind import NumberKind
 from sympy.assumptions.assume import AppliedPredicate
 from sympy.core.mul import Mul
 from sympy.core.singleton import S
-from sympy import And
 
 
 def lra_satask(proposition, assumptions=True, context=global_assumptions):
