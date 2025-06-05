@@ -7,7 +7,7 @@ __all__ = ['RouthHurwitz', 'negative_real_root_conditions']
 
 def negative_real_root_conditions(
         polynomial,
-        var: Symbol | None = None, /,
+        var = None, /,
         *, domain=None):
     """
     Returns a list of conditions for a polynomial to have all its roots with
@@ -17,7 +17,7 @@ def negative_real_root_conditions(
     ==========
         polynomial : Expr, Number
             The polynomial whose roots are to be analyzed.
-        var : Symbol
+        var : Symbol, None, optional
             The symbol representing the variable in the polynomial.
         domain : None, Domain, optional
             The domain in which the polynomial is defined.
