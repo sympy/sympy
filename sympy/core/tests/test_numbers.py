@@ -37,6 +37,7 @@ from sympy import Add
 
 from mpmath import mpf
 import mpmath
+from sympy.external.mpmath import finf, fninf
 from sympy.core import numbers
 t = Symbol('t', real=False)
 
@@ -1905,7 +1906,6 @@ def test_Float_eq():
 
 
 def test_issue_6640():
-    from mpmath.libmp import finf, fninf
     # fnan is not included because Float no longer returns fnan,
     # but otherwise, the same sort of test could apply
     assert Float(finf).is_zero is False
