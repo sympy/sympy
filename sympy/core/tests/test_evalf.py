@@ -33,7 +33,7 @@ from sympy.core.numbers import comp
 from sympy.core.evalf import (complex_accuracy, PrecisionExhausted,
                               scaled_zero, get_integer_part, as_mpmath, evalf, _evalf_with_bounded_error)
 from mpmath import inf, ninf, make_mpc
-from mpmath.libmp.libmpf import from_float, fzero
+from mpmath.libmp import from_float, fzero
 from sympy.core.expr import unchanged
 from sympy.testing.pytest import raises, XFAIL
 from sympy.abc import n, x, y
