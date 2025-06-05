@@ -15,18 +15,20 @@ def negative_real_root_conditions(
 
     Parameters
     ==========
-        polynomial : Expr, Number
-            The polynomial whose roots are to be analyzed.
-        var : Symbol, None, optional
-            The symbol representing the variable in the polynomial.
-        domain : None, Domain, optional
-            The domain in which the polynomial is defined.
+
+    polynomial : Expr, Number
+        The polynomial whose roots are to be analyzed.
+    var : Symbol, None, optional
+        The symbol representing the variable in the polynomial.
+    domain : None, Domain, optional
+        The domain in which the polynomial is defined.
 
     Returns
     =======
-        list[StrictGreaterThan | bool]
-            A list of conditions that must be satisfied for the polynomial to
-            have all its roots with negative real parts.
+
+    list[StrictGreaterThan | bool]
+        A list of conditions that must be satisfied for the polynomial to
+        have all its roots with negative real parts.
 
     Examples
     ========
