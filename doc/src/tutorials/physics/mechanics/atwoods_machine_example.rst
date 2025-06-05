@@ -4,6 +4,9 @@
 Atwood Machine Example
 ======================
 
+.. _fig-atwood-machine:
+.. figure:: atwood_machine.png
+
 The Atwood machine consists of two particles of masses $m_1$ and $m_2$
 connected by a massless, inextensible rope that passes over a fixed pulley of
 radius $r$. As one mass descends by a displacement $q$, the other ascends
@@ -374,3 +377,9 @@ $\,L_\text{total} = 2\,h + \pi r$ is independent of the generalized
 coordinate $q$.  Kane's method then yields the customary second-order
 equation of motion, and recovers the classic acceleration formula
 $\ddot q = \tfrac{m_1 - m_2}{m_1 + m_2} \,g$.
+
+References
+==========
+
+.. [1] https://en.wikipedia.org/wiki/Atwood_machine
+.. [2] https://www.aplusphysics.com/courses/honors/dynamics/Atwood.html
