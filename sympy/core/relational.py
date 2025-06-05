@@ -1408,12 +1408,6 @@ def is_ge(lhs, rhs, assumptions=None):
     if not (isinstance(lhs, Expr) and isinstance(rhs, Expr)):
         raise TypeError("Can only compare inequalities with Expr")
 
-    if assumptions is not None:
-        from sympy.assumptions import Q, ask
-        gt_result = ask(Q.gt(lhs, rhs), assumptions)
-        if gt_result is True:
-            return True
-
     retval = _eval_is_ge(lhs, rhs)
 
     if retval is not None:
