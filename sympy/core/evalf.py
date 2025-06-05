@@ -11,13 +11,11 @@ import mpmath.libmp as libmp
 from mpmath import (
     make_mpc, make_mpf, mp, mpc, mpf, nsum, quadts, quadosc, workprec)
 from mpmath import inf as mpmath_inf
-from mpmath.libmp import (from_int, from_man_exp, from_rational, fhalf,
+from mpmath.libmp import (MPZ, from_int, from_man_exp, from_rational, fhalf,
                           fnan, finf, fninf, fnone, fone, fzero, mpf_abs, mpf_add,
                           mpf_atan, mpf_atan2, mpf_cmp, mpf_cos, mpf_e, mpf_exp, mpf_log, mpf_lt,
                           mpf_mul, mpf_neg, mpf_pi, mpf_pow, mpf_pow_int, mpf_shift, mpf_sin,
                           mpf_sqrt, normalize, round_nearest, to_int, to_str, mpf_tan)
-from mpmath.libmp.backend import MPZ
-from mpmath.libmp.libmpc import _infs_nan
 from sympy.external.mpmath import dps_to_prec, prec_to_dps
 
 from .sympify import sympify
@@ -56,6 +54,7 @@ def bitcount(n):
 # passing these to mpmath functions or returning them in final results.
 INF = float(mpmath_inf)
 MINUS_INF = float(-mpmath_inf)
+_infs_nan = (finf, fninf, fnan)
 
 # ~= 100 digits. Real men set this to INF.
 DEFAULT_MAXPREC = 333

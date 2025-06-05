@@ -18,9 +18,8 @@ from .kind import NumberKind
 from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.misc import as_int, func_name, filldedent
 from sympy.utilities.iterables import has_variety, sift, _sift_true_false
-from sympy.external.mpmath import prec_to_dps
+from sympy.external.mpmath import prec_to_dps, _giant_steps_mpmath
 from mpmath.libmp import mpf_log
-from mpmath.libmp.libintmath import giant_steps
 
 
 if TYPE_CHECKING:
@@ -599,7 +598,7 @@ class Expr(Basic, EvalfMixin):
             # precision to see if we can get any significance
 
             # evaluate
-            for prec in giant_steps(2, DEFAULT_MAXPREC):
+            for prec in _giant_steps_mpmath(2, DEFAULT_MAXPREC):
                 nmag = abs(self.evalf(prec, subs=reps))
                 if nmag._prec != 1:
                     break
