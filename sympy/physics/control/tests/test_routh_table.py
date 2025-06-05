@@ -4,7 +4,6 @@ from sympy.physics.control.routh_table import (RouthHurwitz,
                                             negative_real_root_conditions)
 from sympy.matrices.dense import Matrix
 from sympy.polys import Poly
-from sympy.core.relational import Unequality
 
 s = symbols('s')
 

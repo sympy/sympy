@@ -1,10 +1,8 @@
 from sympy.matrices.dense import MutableDenseMatrix
 from sympy.polys import Poly
 from sympy import Symbol
-from sympy.logic.boolalg import false, true, Or
-from sympy.core.relational import Unequality, StrictGreaterThan
+from sympy.core.relational import StrictGreaterThan
 from sympy.core.expr import Expr
-from sympy.polys.domains import RR
 
 __all__ = ['RouthHurwitz', 'negative_real_root_conditions']
 
