@@ -444,6 +444,7 @@ def ask(proposition, assumptions=True, context=global_assumptions):
     will not give a meaningful result.
 
     >>> ask(Q.positive(x), x > 0)
+    True
 
     It is however a work in progress.
 

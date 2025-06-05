@@ -231,7 +231,7 @@ def get_all_pred_and_expr_from_enc_cnf(enc_cnf):
     return all_pred, all_exprs, realness_preds
 
 
-def extract_pred_from_old_assum(all_exprs, realness_preds):
+def extract_pred_from_old_assum(all_exprs, realness_preds=None):
     """
     Returns a list of relevant new assumption predicate
     based on any old assumptions.
