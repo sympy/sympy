@@ -8,6 +8,7 @@
 #
 from functools import update_wrapper as _update_wrapper
 
+
 from mpmath import (
     MPContext,
     MPIntervalContext,
