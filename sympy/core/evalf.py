@@ -34,6 +34,7 @@ if TYPE_CHECKING:
     from sympy.integrals.integrals import Integral
     from sympy.concrete.summations import Sum
     from sympy.concrete.products import Product
+    from sympy.external.mpmath import MPContext
     from sympy.functions.elementary.exponential import exp, log
     from sympy.functions.elementary.complexes import Abs, re, im
     from sympy.functions.elementary.integers import ceiling, floor
@@ -1054,7 +1055,9 @@ def evalf_alg_num(a: 'AlgebraicNumber', prec: int, options: OPT_DICT) -> TMP_RES
 #----------------------------------------------------------------------------#
 
 
-def as_mpmath(x: Any, prec: int, options: OPT_DICT) -> mpc | mpf:
+def as_mpmath(
+    x: Any, prec: int, options: OPT_DICT, ctx: MPContext | None = None
+) -> mpc | mpf:
     from .numbers import Infinity, NegativeInfinity, Zero
     x = sympify(x)
     if isinstance(x, Zero) or x == 0.0:
@@ -1065,7 +1068,7 @@ def as_mpmath(x: Any, prec: int, options: OPT_DICT) -> mpc | mpf:
         return mpf('-inf')
     # XXX
     result = evalf(x, prec, options)
-    return quad_to_mpmath(result)
+    return quad_to_mpmath(result, ctx)
 
 
 def do_integral(expr: 'Integral', prec: int, options: OPT_DICT) -> TMP_RES:
@@ -1087,8 +1090,8 @@ def do_integral(expr: 'Integral', prec: int, options: OPT_DICT) -> TMP_RES:
     options['maxprec'] = min(oldmaxprec, 2*prec)
 
     with local_workprec(prec + 5) as ctx:
-        xlow = as_mpmath(xlow, prec + 15, options)
-        xhigh = as_mpmath(xhigh, prec + 15, options)
+        xlow = as_mpmath(xlow, prec + 15, options, ctx)
+        xhigh = as_mpmath(xhigh, prec + 15, options, ctx)
 
         # Integration is like summation, and we can phone home from
         # the integrand function to update accuracy summation style
@@ -1127,7 +1130,7 @@ def do_integral(expr: 'Integral', prec: int, options: OPT_DICT) -> TMP_RES:
             if not m:
                 raise ValueError("An integrand of the form sin(A*x+B)*f(x) "
                   "or cos(A*x+B)*f(x) is required for oscillatory quadrature")
-            period = as_mpmath(2*S.Pi/m[A], prec + 15, options)
+            period = as_mpmath(2*S.Pi/m[A], prec + 15, options, ctx)
             result = ctx.quadosc(f, [xlow, xhigh], period=period)
             # XXX: quadosc does not do error detection yet
             quadrature_error = MINUS_INF
