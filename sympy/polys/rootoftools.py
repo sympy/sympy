@@ -8,8 +8,7 @@ from sympy.core import (S, Expr, Integer, Float, I, oo, Add, Lambda,
 from sympy.core.cache import cacheit
 from sympy.core.relational import is_le
 from sympy.core.sorting import ordered
-from sympy.external.mpmath import (mpf, mpc, local_workprec, dps_to_prec,
-                                   prec_to_dps)
+from sympy.external.mpmath import local_workprec, dps_to_prec, prec_to_dps
 from sympy.polys.domains import QQ
 from sympy.polys.polyerrors import (
     MultivariatePolynomialError,
@@ -896,41 +895,41 @@ class ComplexRootOf(RootOf):
                 d = Dummy('x')
                 if self.is_imaginary:
                     d *= I
-                func = lambdify(d, self.expr.subs(g, d))
+                func = lambdify(d, self.expr.subs(g, d), modules=mp)
             else:
                 expr = self.expr
                 if self.is_imaginary:
                     expr = self.expr.subs(g, I*g)
-                func = lambdify(g, expr)
+                func = lambdify(g, expr, modules=mp)
 
             interval = self._get_interval()
             while True:
                 if self.is_real:
-                    a = mpf(str(interval.a))
-                    b = mpf(str(interval.b))
+                    a = mp.mpf(str(interval.a))
+                    b = mp.mpf(str(interval.b))
                     if a == b:
                         root = a
                         break
-                    x0 = mpf(str(interval.center))
-                    x1 = x0 + mpf(str(interval.dx))/4
+                    x0 = mp.mpf(str(interval.center))
+                    x1 = mp.fadd(x0, mp.fdiv(mp.mpf(str(interval.dx)), 4))
                 elif self.is_imaginary:
-                    a = mpf(str(interval.ay))
-                    b = mpf(str(interval.by))
+                    a = mp.mpf(str(interval.ay))
+                    b = mp.mpf(str(interval.by))
                     if a == b:
-                        root = mpc(mpf('0'), a)
+                        root = mp.mpc(mp.mpf('0'), a)
                         break
-                    x0 = mpf(str(interval.center[1]))
-                    x1 = x0 + mpf(str(interval.dy))/4
+                    x0 = mp.mpf(str(interval.center[1]))
+                    x1 = mp.fadd(x0, mp.fdiv(mp.mpf(str(interval.dy)), 4))
                 else:
-                    ax = mpf(str(interval.ax))
-                    bx = mpf(str(interval.bx))
-                    ay = mpf(str(interval.ay))
-                    by = mpf(str(interval.by))
+                    ax = mp.mpf(str(interval.ax))
+                    bx = mp.mpf(str(interval.bx))
+                    ay = mp.mpf(str(interval.ay))
+                    by = mp.mpf(str(interval.by))
                     if ax == bx and ay == by:
-                        root = mpc(ax, ay)
+                        root = mp.mpc(ax, ay)
                         break
-                    x0 = mpc(*map(str, interval.center))
-                    x1 = x0 + mpc(*map(str, (interval.dx, interval.dy)))/4
+                    x0 = mp.mpc(*map(str, interval.center))
+                    x1 = mp.fadd(x0, mp.fdiv(mp.mpc(*map(str, (interval.dx, interval.dy))), 4))
                 try:
                     # without a tolerance, this will return when (to within
                     # the given precision) x_i == x_{i-1}
@@ -953,7 +952,7 @@ class ComplexRootOf(RootOf):
                         if not bool(root.imag) == self.is_real and (
                                 a <= root <= b):
                             if self.is_imaginary:
-                                root = mpc(mpf('0'), root.real)
+                                root = mp.mpc(mp.mpf('0'), root.real)
                             break
                     elif (ax <= root.real <= bx and ay <= root.imag <= by):
                         break

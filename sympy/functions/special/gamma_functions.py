@@ -849,15 +849,18 @@ class polygamma(DefinedFunction):
             return
         s = self.args[0]._to_mpmath(prec+12)
         z = self.args[1]._to_mpmath(prec+12)
-        with local_workprec(prec+12) as ctx:
-            if ctx.isint(z) and z <= 0:
+        with local_workprec(prec+12) as mp:
+            if mp.isint(z) and z <= 0:
                 return S.ComplexInfinity
-            if ctx.isint(s) and s >= 0:
-                res = ctx.polygamma(s, z)
+            if mp.isint(s) and s >= 0:
+                res = mp.polygamma(s, z)
             else:
-                zt = ctx.zeta(s+1, z)
-                dzt = ctx.zeta(s+1, z, 1)
-                res = (dzt + (ctx.euler + ctx.digamma(-s)) * zt) * ctx.rgamma(-s)
+                zt = mp.zeta(mp.fadd(s,1), z)
+                dzt = mp.zeta(mp.fadd(s,1), z, 1)
+                res = mp.fmul(
+                    mp.fadd(dzt, mp.fmul(mp.fadd(mp.euler, mp.digamma(mp.fneg(s))), zt)),
+                    mp.rgamma(mp.fneg(s))
+                )
         return Expr._from_mpmath(res, prec)
 
 
