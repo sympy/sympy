@@ -8,6 +8,8 @@ from sympy.core import (S, Expr, Integer, Float, I, oo, Add, Lambda,
 from sympy.core.cache import cacheit
 from sympy.core.relational import is_le
 from sympy.core.sorting import ordered
+from sympy.external.mpmath import (mpf, mpc, local_workprec, dps_to_prec,
+                                   prec_to_dps)
 from sympy.polys.domains import QQ
 from sympy.polys.polyerrors import (
     MultivariatePolynomialError,
@@ -25,8 +27,6 @@ from sympy.polys.rootisolation import (
     dup_isolate_real_roots_sqf)
 from sympy.utilities import lambdify, public, sift, numbered_symbols
 
-from mpmath import mpf, mpc, findroot, workprec
-from sympy.external.mpmath import dps_to_prec, prec_to_dps
 from sympy.multipledispatch import dispatch
 from itertools import chain
 
@@ -890,7 +890,7 @@ class ComplexRootOf(RootOf):
         root bounds, the bounds will be made smaller and updated.
         """
         prec = dps_to_prec(n)
-        with workprec(prec):
+        with local_workprec(prec) as mp:
             g = self.poly.gen
             if not g.is_Symbol:
                 d = Dummy('x')
@@ -934,7 +934,7 @@ class ComplexRootOf(RootOf):
                 try:
                     # without a tolerance, this will return when (to within
                     # the given precision) x_i == x_{i-1}
-                    root = findroot(func, (x0, x1))
+                    root = mp.findroot(func, (x0, x1))
                     # If the (real or complex) root is not in the 'interval',
                     # then keep refining the interval. This happens if findroot
                     # accidentally finds a different root outside of this

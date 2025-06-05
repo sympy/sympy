@@ -19,8 +19,6 @@ from sympy.core.sympify import sympify, _sympify
 from sympy.core.logic import fuzzy_not, fuzzy_or
 from sympy.utilities.misc import as_int
 
-from mpmath.libmp.libmpf import prec_to_dps
-
 
 if TYPE_CHECKING:
     from typing import Iterable, Sequence

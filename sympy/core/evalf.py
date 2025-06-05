@@ -7,17 +7,15 @@ from typing import Callable, TYPE_CHECKING, Any, overload, Type
 
 import math
 
-from mpmath import (
-    make_mpc, make_mpf, mp, mpc, mpf, nsum, quadts, quadosc, workprec)
-from mpmath import inf as mpmath_inf
-
 from sympy.external.mpmath import (
+    inf as mpmath_inf, make_mpf, make_mpc, mp, mpc, mpf,
     MPZ, from_int, from_man_exp, from_rational, fhalf, fnan, finf, fninf,
     fnone, fone, fzero, mpf_abs, mpf_add, mpf_atan, mpf_atan2, mpf_cmp,
     mpf_cos, mpf_e, mpf_exp, mpf_log, mpf_lt, mpf_mul, mpf_neg, mpf_pi,
     mpf_pow, mpf_pow_int, mpf_shift, mpf_sin, mpf_sqrt, normalize,
     round_nearest, to_int, to_str, mpf_tan, mpc_abs, mpc_pow, mpc_pow_mpf,
-    mpc_pow_int, mpc_sqrt, mpc_exp, dps_to_prec, prec_to_dps
+    mpc_pow_int, mpc_sqrt, mpc_exp, dps_to_prec, prec_to_dps,
+    local_workprec,
 )
 
 from .sympify import sympify
@@ -1088,7 +1086,7 @@ def do_integral(expr: 'Integral', prec: int, options: OPT_DICT) -> TMP_RES:
     oldmaxprec = options.get('maxprec', DEFAULT_MAXPREC)
     options['maxprec'] = min(oldmaxprec, 2*prec)
 
-    with workprec(prec + 5):
+    with local_workprec(prec + 5) as ctx:
         xlow = as_mpmath(xlow, prec + 15, options)
         xhigh = as_mpmath(xhigh, prec + 15, options)
 
@@ -1130,11 +1128,11 @@ def do_integral(expr: 'Integral', prec: int, options: OPT_DICT) -> TMP_RES:
                 raise ValueError("An integrand of the form sin(A*x+B)*f(x) "
                   "or cos(A*x+B)*f(x) is required for oscillatory quadrature")
             period = as_mpmath(2*S.Pi/m[A], prec + 15, options)
-            result = quadosc(f, [xlow, xhigh], period=period)
+            result = ctx.quadosc(f, [xlow, xhigh], period=period)
             # XXX: quadosc does not do error detection yet
             quadrature_error = MINUS_INF
         else:
-            result, quadrature_err = quadts(f, [xlow, xhigh], error=1)
+            result, quadrature_err = ctx.quadts(f, [xlow, xhigh], error=1)
             quadrature_error = fastlog(quadrature_err._mpf_)
 
     options['maxprec'] = oldmaxprec
@@ -1301,8 +1299,8 @@ def hypsum(expr: Expr, n: Symbol, start: int, prec: int) -> mpf:
                     _term[0] //= MPZ(func2(k - 1))
                 return make_mpf(from_man_exp(_term[0], -prec2))
 
-            with workprec(prec):
-                v = nsum(summand, [0, mpmath_inf], method='richardson')
+            with local_workprec(prec) as ctx:
+                v = ctx.nsum(summand, [0, mpmath_inf], method='richardson')
             vf = Float(v, ndig)
             if vold is not None and vold == vf:
                 break
