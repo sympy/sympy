@@ -135,7 +135,7 @@ the pulley (i.e., $y=\pm r$ and $z=0$ on the cylinder), the tangent points
 are fixed:
 
 $$
-T_1: (x=0,\, y=+r,\, z=0), 
+T_1: (x=0,\, y=+r,\, z=0),
 \quad
 T_2: (x=0,\, y=-r,\, z=0).
 $$
@@ -164,7 +164,7 @@ WrappingPathway Over the Cylinder
 =================================
 
 With the two tangent points $T_1$ and $T_2$ and the ``WrappingCylinder`` pulley
-object, we construct a ``WrappingPathway`` $wpath$. 
+object, we construct a ``WrappingPathway`` $wpath$.
 Internally, this object computes the geodesic (shortest-path) on the
 cylinder's surface connecting $T_1$ and $T_2$, which here is a
 half-circumference of length $\pi r$, independent of $q$.
@@ -340,7 +340,7 @@ forces in the system.
     >>> sp.pprint(qdd, use_unicode=True)
     g⋅(m₁ - m₂)
     ───────────
-      m₁ + m₂  
+      m₁ + m₂
 
 
     Thus we obtain the familiar result of acceleration in an Atwood's Machine.
