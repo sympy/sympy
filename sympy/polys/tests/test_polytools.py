@@ -66,7 +66,7 @@ from sympy.core.numbers import (Float, I, Integer, Rational, oo, pi)
 from sympy.core.power import Pow
 from sympy.core.relational import Eq
 from sympy.core.singleton import S
-from sympy.core.symbol import Symbol
+from sympy.core.symbol import Symbol, symbols
 from sympy.functions.elementary.complexes import (im, re)
 from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.hyperbolic import tanh
@@ -4068,3 +4068,35 @@ def test_issue_20985():
     w, R = symbols('w R')
     poly = Poly(1.0 + I*w/R, w, 1/R)
     assert poly.degree() == S(1)
+
+
+def test_Poly_from_roots():
+
+    x, a, b = symbols('x a b')
+
+    assert Poly.from_roots([], x) == Poly(1, x)
+    assert Poly.from_roots([1], x) == Poly(x - 1, x)
+    assert Poly.from_roots([-2], x) == Poly(x + 2, x)
+
+    assert Poly.from_roots([1, 1], x) == Poly(x**2 - 2*x + 1, x)
+    assert Poly.from_roots([2, 2, 2], x) == Poly(x**3 - 6*x**2 + 12*x - 8, x)
+
+    assert Poly.from_roots([1, 2, 3], x) == Poly(x**3 - 6*x**2 + 11*x - 6, x)
+    assert Poly.from_roots([1, 2, 3, 4], x) == Poly(x**4 - 10*x**3 + 35*x**2 - 50*x + 24, x)
+
+    assert Poly.from_roots([-1, -2], x) == Poly(x**2 + 3*x + 2, x)
+    assert Poly.from_roots([-1, -2, -3], x) == Poly(x**3 + 6*x**2 + 11*x + 6, x)
+
+    assert Poly.from_roots([0], x) == Poly(x, x)
+    assert Poly.from_roots([0, 0], x) == Poly(x**2, x)
+    assert Poly.from_roots([0, 1, 2], x) == Poly(x**3 - 3*x**2 + 2*x, x)
+
+    assert Poly.from_roots([a], x) == Poly(x - a, x)
+    assert Poly.from_roots([a, b], x) == Poly(x**2 - (a + b)*x + a*b, x)
+
+    assert Poly.from_roots([Rational(1, 2), 2], x) == Poly(x**2 - Rational(5, 2)*x + 1, x)
+    assert Poly.from_roots([Rational(7, 2), 5], x) == Poly(x**2 - Rational(17, 2)*x + Rational(35, 2), x, domain='QQ')
+
+    coeffs = Poly.from_roots([Rational(7, 2), 5], x).all_coeffs()
+    poly = 2 * 3 * Poly(coeffs, x, domain='QQ')
+    assert poly == Poly(6*x**2 - 51*x + 105, x, domain='QQ')
