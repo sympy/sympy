@@ -221,7 +221,13 @@ def test_matrixelement():
     x = MatrixSymbol('x', 3, 3)
     i = Symbol('i', positive = True)
     j = Symbol('j', positive = True)
+    assert refine(x[i, i], Q.diagonal(x)) == x[i, i]
+    assert refine(x[i, i + 1], Q.diagonal(x)) == 0
     assert refine(x[0, 1], Q.symmetric(x)) == x[0, 1]
     assert refine(x[1, 0], Q.symmetric(x)) == x[0, 1]
     assert refine(x[i, j], Q.symmetric(x)) == x[j, i]
     assert refine(x[j, i], Q.symmetric(x)) == x[j, i]
+    assert refine(x[0, 1], Q.hermitian(x)) == x[0, 1]
+    assert refine(x[1, 0], Q.hermitian(x)) == x[0, 1].conjugate()
+    assert refine(x[i, j], Q.hermitian(x)) == x[j, i].conjugate()
+    assert refine(x[j, i], Q.hermitian(x)) == x[j, i]
