@@ -15,7 +15,7 @@ Understanding Expression Trees
 Before we can do this, we need to understand how expressions are represented
 in SymPy.  A mathematical expression is represented as a tree.  Let us take
 the expression `x^2 + xy`, i.e., ``x**2 + x*y``.  We can see what this
-expression looks like internally by using ``srepr``
+expression looks like internally by using :func:`~sympy.printing.repr.srepr`
 
     >>> from sympy import *
     >>> x, y, z = symbols('x y z')
@@ -76,11 +76,11 @@ we could have also done
     >>> x = Symbol('x')
 
 Either way, we get a Symbol with the name "x" [#symbols-fn]_.  For the number in the
-expression, 2, we got ``Integer(2)``.  ``Integer`` is the SymPy class for
+expression, 2, we got ``Integer(2)``. :class:`~sympy.core.numbers.Integer` is the SymPy class for
 integers.  It is similar to the Python built-in type ``int``, except that
-``Integer`` plays nicely with other SymPy types.
+:class:`~sympy.core.numbers.Integer` plays nicely with other SymPy types.
 
-When we write ``x**2``, this creates a ``Pow`` object.  ``Pow`` is short for
+When we write ``x**2``, this creates a :class:`sympy.core.power.Pow` object.  :class:`sympy.core.power.Pow` is short for
 "power".
 
     >>> srepr(x**2)
@@ -91,11 +91,11 @@ We could have created the same object by calling ``Pow(x, 2)``
     >>> Pow(x, 2)
     x**2
 
-Note that in the ``srepr`` output, we see ``Integer(2)``, the SymPy version of
+Note that in the `~sympy.printing.repr.srepr` output, we see ``Integer(2)``, the SymPy version of
 integers, even though technically, we input ``2``, a Python int.  In general,
 whenever you combine a SymPy object with a non-SymPy object via some function
 or operation, the non-SymPy object will be converted into a SymPy object.  The
-function that does this is ``sympify`` [#sympify-fn]_.
+function that does this is :func:`sympy.core.sympify.sympify` [#sympify-fn]_.
 
     >>> type(2)
     <... 'int'>
@@ -104,7 +104,7 @@ function that does this is ``sympify`` [#sympify-fn]_.
 
 We have seen that ``x**2`` is represented as ``Pow(x, 2)``.  What about
 ``x*y``?  As we might expect, this is the multiplication of ``x`` and ``y``.
-The SymPy class for multiplication is ``Mul``.
+The SymPy class for multiplication is :class:`~sympy.core.mul.Mul`.
 
     >>> srepr(x*y)
     "Mul(Symbol('x'), Symbol('y'))"
@@ -270,7 +270,7 @@ numbers are always combined into a single term in a multiplication, so that
 when we divide by 2, it is represented as multiplying by 1/2.
 
 Finally, one last note.  You may have noticed that the order we entered our
-expression and the order that it came out from ``srepr`` or in the graph were
+expression and the order that it came out from `~sympy.printing.repr.srepr` or in the graph were
 different.  You may have also noticed this phenomenon earlier in the
 tutorial.  For example
 
@@ -278,7 +278,7 @@ tutorial.  For example
      x + 1
 
 This because in SymPy, the arguments of the commutative operations ``Add`` and
-``Mul`` are stored in an arbitrary (but consistent!) order, which is
+:class:`~sympy.core.mul.Mul` are stored in an arbitrary (but consistent!) order, which is
 independent of the order inputted (if you're worried about noncommutative
 multiplication, don't be.  In SymPy, you can create noncommutative Symbols
 using ``Symbol('A', commutative=False)``, and the order of multiplication for
@@ -309,7 +309,7 @@ important attributes, ``func``, and ``args``.
 func
 ----
 
-``func`` is the head of the object. For example, ``(x*y).func`` is ``Mul``.
+``func`` is the head of the object. For example, ``(x*y).func`` is :class:`~sympy.core.mul.Mul`.
 Usually it is the same as the class of the object (though there are exceptions
 to this rule).
 
@@ -321,13 +321,13 @@ as the one used to create it.  For example
     <class 'sympy.core.mul.Mul'>
 
 We created ``Add(x, x)``, so we might expect ``expr.func`` to be ``Add``, but
-instead we got ``Mul``.  Why is that?  Let's take a closer look at ``expr``.
+instead we got :class:`~sympy.core.mul.Mul`.  Why is that?  Let's take a closer look at ``expr``.
 
     >>> expr
     2*x
 
 ``Add(x, x)``, i.e., ``x + x``, was automatically converted into ``Mul(2,
-x)``, i.e., ``2*x``, which is a ``Mul``.   SymPy classes make heavy use of the
+x)``, i.e., ``2*x``, which is a :class:`~sympy.core.mul.Mul`.   SymPy classes make heavy use of the
 ``__new__`` class constructor, which, unlike ``__init__``, allows a different
 class to be returned from the constructor.
 
@@ -342,7 +342,7 @@ Second, some classes are special-cased, usually for efficiency reasons
     <class 'sympy.core.numbers.NegativeOne'>
 
 For the most part, these issues will not bother us.  The special classes
-``Zero``, ``One``, ``NegativeOne``, and so on are subclasses of ``Integer``,
+``Zero``, ``One``, ``NegativeOne``, and so on are subclasses of :class:`~sympy.core.numbers.Integer`,
 so as long as you use ``isinstance``, it will not be an issue.
 
 args
@@ -367,7 +367,7 @@ that we can completely reconstruct ``expr`` from its ``func`` and its
     True
 
 Note that although we entered ``3*y**2*x``, the ``args`` are ``(3, x, y**2)``.
-In a ``Mul``, the Rational coefficient will come first in the ``args``, but
+In a :class:`~sympy.core.mul.Mul`, the Rational coefficient will come first in the ``args``, but
 other than that, the order of everything else follows no special pattern.  To
 be sure, though, there is an order.
 
@@ -375,11 +375,11 @@ be sure, though, there is an order.
     >>> expr.args
     (3, x, y**2)
 
-Mul's ``args`` are sorted, so that the same ``Mul`` will have the same
+Mul's ``args`` are sorted, so that the same :class:`~sympy.core.mul.Mul` will have the same
 ``args``.  But the sorting is based on some criteria designed to make the
 sorting unique and efficient that has no mathematical significance.
 
-The ``srepr`` form of our ``expr`` is ``Mul(3, x, Pow(y, 2))``.  What if we
+The `~sympy.printing.repr.srepr` form of our ``expr`` is ``Mul(3, x, Pow(y, 2))``.  What if we
 want to get at the ``args`` of ``Pow(y, 2)``.  Notice that the ``y**2`` is in
 the third slot of ``expr.args``, i.e., ``expr.args[2]``.
 
@@ -484,7 +484,7 @@ For example:
 
 If you don't remember the class corresponding to the expression you
 want to build (operator overloading usually assumes ``evaluate=True``),
-just use ``sympify`` and pass a string:
+just use :func:`sympy.core.sympify.sympify` and pass a string:
 
     >>> from sympy import sympify
     >>> sympify("x + x", evaluate=False)
@@ -567,7 +567,7 @@ just use ``.doit()``:
   ``symbols('x y z')`` returns a tuple of three ``Symbol``\ s.  ``Symbol('x y
   z')`` returns a single ``Symbol`` called ``x y z``.
 .. [#sympify-fn] Technically, it is an internal function called ``_sympify``,
-  which differs from ``sympify`` in that it does not convert strings.  ``x +
+  which differs from :func:`sympy.core.sympify.sympify` in that it does not convert strings.  ``x +
   '2'`` is not allowed.
 .. [#singleton-fn] Classes like ``One`` and ``Zero`` are singletonized, meaning
   that only one object is ever created, no matter how many times the class is
