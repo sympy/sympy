@@ -248,6 +248,23 @@ class MatrixBase(Printable):
             out_flat[i * cols + j] = val
         return cls._new(rows, cols, out_flat)
 
+    def _eval_todod(self):
+        rowsdict = {}
+        Mlol = self.tolist()
+        for i, Mi in enumerate(Mlol):
+            row = {j: Mij for j, Mij in enumerate(Mi) if Mij}
+            if row:
+                rowsdict[i] = row
+        return rowsdict
+
+    @classmethod
+    def _eval_from_dod(cls, rows, cols, dod):
+        flat_list = [S.Zero]*(rows*cols)
+        for i, rowdict in dod.items():
+            for j, val in rowdict.items():
+                flat_list[i*cols + j] = val
+        return cls._new(rows, cols, flat_list)
+
     def _eval_vec(self):
         rows = self.rows
 
@@ -715,7 +732,7 @@ class MatrixBase(Printable):
             return [[] for i in range(self.rows)]
         return self._eval_tolist()
 
-    def todod(M):
+    def todod(self):
         """Returns matrix as dict of dicts containing non-zero elements of the Matrix
 
         Examples
@@ -730,15 +747,45 @@ class MatrixBase(Printable):
         >>> A.todod()
         {0: {1: 1}, 1: {1: 3}}
 
+        See Also
+        ========
 
+        todok
+        from_dod
         """
-        rowsdict = {}
-        Mlol = M.tolist()
-        for i, Mi in enumerate(Mlol):
-            row = {j: Mij for j, Mij in enumerate(Mi) if Mij}
-            if row:
-                rowsdict[i] = row
-        return rowsdict
+        return self._eval_todod()
+
+    @classmethod
+    def from_dod(cls, rows, cols, dod):
+        """Construct a matrix from a dict of dicts containing non-zero elements
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix
+        >>> A = Matrix([[0, 1],[0, 3]])
+        >>> A
+        Matrix([
+        [0, 1],
+        [0, 3]])
+        >>> dod = A.todod()
+        >>> dod
+        {0: {1: 1}, 1: {1: 3}}
+        >>> Matrix.from_dod(2, 2, dod) == A
+        True
+
+        See Also
+        ========
+
+        todod
+        """
+        dod_sym = {}
+        for i, row in dod.items():
+            dod_sym[i] = {j: cls._sympify(v) for j, v in row.items()}
+
+        rows, cols = as_int(rows), as_int(cols)
+
+        return cls._eval_from_dod(rows, cols, dod_sym)
 
     def vec(self):
         """Return the Matrix converted into a one column matrix by stacking columns

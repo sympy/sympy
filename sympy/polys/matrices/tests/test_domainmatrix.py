@@ -770,10 +770,10 @@ def test_DomainMatrix_nullspace():
 
     Arref, den, pivots = A.rref_den()
     assert den == ZZ(2)
-    assert Arref.nullspace_from_rref() == Anull
-    assert Arref.nullspace_from_rref(pivots) == Anull
-    assert Arref.to_sparse().nullspace_from_rref() == Anull.to_sparse()
-    assert Arref.to_sparse().nullspace_from_rref(pivots) == Anull.to_sparse()
+    assert Arref.nullspace_from_rref() == (Anull, [1])
+    assert Arref.nullspace_from_rref(pivots) == (Anull, [1])
+    assert Arref.to_sparse().nullspace_from_rref() == (Anull.to_sparse(), [1])
+    assert Arref.to_sparse().nullspace_from_rref(pivots) == (Anull.to_sparse(), [1])
 
 
 def test_DomainMatrix_solve():

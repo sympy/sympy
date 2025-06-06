@@ -47,7 +47,8 @@ from sympy.strategies.rl import rebuild
 from sympy.matrices.exceptions import NonInvertibleMatrixError
 from sympy.matrices import Matrix, zeros
 from sympy.polys import roots, cancel, factor, Poly
-from sympy.polys.solvers import sympy_eqs_to_ring, solve_lin_sys
+from sympy.polys.domains import EX
+from sympy.polys.matrices.linsolve import _linsolve_aug
 from sympy.polys.polyerrors import GeneratorsNeeded, PolynomialError
 from sympy.polys.polytools import gcd
 from sympy.utilities.lambdify import lambdify
@@ -2342,12 +2343,15 @@ def solve_linear_system(system, *symbols, **flags):
     """
     assert system.shape[1] == len(symbols) + 1
 
-    # This is just a wrapper for solve_lin_sys
-    eqs = list(system * Matrix(symbols + (-1,)))
-    eqs, ring = sympy_eqs_to_ring(eqs, symbols)
-    sol = solve_lin_sys(eqs, ring, _raw=False)
+    Aaug = system.to_DM(extension=True)
+    if Aaug.domain.is_EXRAW:
+        Aaug = Aaug.convert_to(EX)
+
+    sol = _linsolve_aug(Aaug, symbols)
+
     if sol is not None:
         sol = {sym:val for sym, val in sol.items() if sym != val}
+
     return sol
 
 

@@ -35,8 +35,9 @@ from sympy.core.singleton import S
 from sympy.polys.constructor import construct_domain
 from sympy.polys.solvers import PolyNonlinearError
 
+from .domainmatrix import DomainMatrix
+from .exceptions import DMNonInvertibleMatrixError
 from .sdm import (
-    SDM,
     sdm_irref,
     sdm_particular_from_rref,
     sdm_nullspace_from_rref
@@ -68,42 +69,63 @@ def _linsolve(eqs, syms):
     {x: -y, y: y}
 
     """
-    # Number of unknowns (columns in the non-augmented matrix)
-    nsyms = len(syms)
-
-    # Convert to sparse augmented matrix (len(eqs) x (nsyms+1))
+    # Convert to sparse augmented matrix (len(eqs) x (len(syms)+1))
     eqsdict, const = _linear_eq_to_dict(eqs, syms)
     Aaug = sympy_dict_to_dm(eqsdict, const, syms)
+    return _linsolve_aug(Aaug, syms)
+
+
+def _linsolve_aug(Aaug, syms):
+    """Solve linear system represented as an augmented DomainMatrix.
+
+    Examples
+    ========
+
+    >>> from sympy import symbols, Matrix, linear_eq_to_matrix
+    >>> from sympy.polys.matrices.linsolve import _linsolve_aug
+    >>> x, y = symbols('x, y')
+    >>> eqs = [x + y - 1, x - y - 2]
+    >>> A, b = linear_eq_to_matrix(eqs, [x, y])
+    >>> Aaug = Matrix.hstack(A, b).to_DM()
+    >>> Aaug
+    DomainMatrix({0: {0: 1, 1: 1, 2: 1}, 1: {0: 1, 1: -1, 2: 2}}, (2, 3), ZZ)
+    >>> _linsolve_aug(Aaug, [x, y])
+    {x: 3/2, y: -1/2}
+    """
     K = Aaug.domain
 
-    # sdm_irref has issues with float matrices. This uses the ddm_rref()
-    # function. When sdm_rref() can handle float matrices reasonably this
-    # should be removed...
-    if K.is_RealField or K.is_ComplexField:
-        Aaug = Aaug.to_ddm().rref()[0].to_sdm()
-
-    # Compute reduced-row echelon form (RREF)
-    Arref, pivots, nzcols = sdm_irref(Aaug)
-
-    # No solution:
-    if pivots and pivots[-1] == nsyms:
+    try:
+        P, den, V, free_variables = Aaug[:,:-1].solve_den_general(Aaug[:,-1])
+    except DMNonInvertibleMatrixError:
         return None
 
-    # Particular solution for non-homogeneous system:
-    P = sdm_particular_from_rref(Arref, nsyms+1, pivots)
+    Kf = K
 
-    # Nullspace - general solution to homogeneous system
-    # Note: using nsyms not nsyms+1 to ignore last column
-    V, nonpivots = sdm_nullspace_from_rref(Arref, K.one, nsyms, pivots, nzcols)
+    if not K.is_one(den):
+        if not K.is_Field:
+            Kf = K.get_field()
+            P = P.convert_to(Kf)
+            V = V.convert_to(Kf)
+        P = P / den
+        V = V / den
+
+    P = P.transpose().to_dod().get(0, {})
+    Vd = V.to_dod()
+    assert len(Vd) == len(free_variables)
+    V = [Vd[i] for i in range(len(free_variables))]
+
+    # No solution:
+    if P is None:
+        return None
 
     # Collect together terms from particular and nullspace:
     sol = defaultdict(list)
     for i, v in P.items():
-        sol[syms[i]].append(K.to_sympy(v))
-    for npi, Vi in zip(nonpivots, V):
+        sol[syms[i]].append(Kf.to_sympy(v))
+    for npi, Vi in zip(free_variables, V):
         sym = syms[npi]
         for i, v in Vi.items():
-            sol[syms[i]].append(sym * K.to_sympy(v))
+            sol[syms[i]].append(sym * Kf.to_sympy(v))
 
     # Use a single call to Add for each term:
     sol = {s: Add(*terms) for s, terms in sol.items()}
@@ -117,11 +139,47 @@ def _linsolve(eqs, syms):
     return sol
 
 
+def _particular_nullspace(Aaug):
+    """Return a particular solution and nullspace basis for the
+    augmented matrix ``Aaug``. The augmented matrix is assumed to
+    be in reduced row echelon form. The particular solution is
+    returned as a dictionary mapping column indices to the
+    corresponding values.
+    """
+    # Number of unknowns (columns in the non-augmented matrix)
+    nsyms = Aaug.shape[1] - 1
+
+    K = Aaug.domain
+
+    # sdm_irref has issues with float matrices. This uses the ddm_rref()
+    # function. When sdm_rref() can handle float matrices reasonably this
+    # should be removed...
+    if K.is_RealField or K.is_ComplexField:
+        Aaug = Aaug.to_ddm().rref()[0].to_sdm()
+
+    # Compute reduced-row echelon form (RREF)
+    Arref, pivots, nzcols = sdm_irref(Aaug)
+
+    # No solution:
+    if pivots and pivots[-1] == nsyms:
+        return None, None, None
+
+    # Particular solution for non-homogeneous system:
+    P = sdm_particular_from_rref(Arref, nsyms+1, pivots)
+
+    # Nullspace - general solution to homogeneous system
+    # Note: using nsyms not nsyms+1 to ignore last column
+    V, free_variables = sdm_nullspace_from_rref(Arref, K.one, nsyms, pivots, nzcols)
+
+    return P, V, free_variables
+
+
 def sympy_dict_to_dm(eqs_coeffs, eqs_rhs, syms):
     """Convert a system of dict equations to a sparse augmented matrix"""
     elems = set(eqs_rhs).union(*(e.values() for e in eqs_coeffs))
     K, elems_K = construct_domain(elems, field=True, extension=True)
     elem_map = dict(zip(elems, elems_K))
+
     neqs = len(eqs_coeffs)
     nsyms = len(syms)
     sym2index = dict(zip(syms, range(nsyms)))
@@ -132,8 +190,12 @@ def sympy_dict_to_dm(eqs_coeffs, eqs_rhs, syms):
             eqdict[nsyms] = -elem_map[rhs]
         if eqdict:
             eqsdict.append(eqdict)
-    sdm_aug = SDM(enumerate(eqsdict), (neqs, nsyms + 1), K)
-    return sdm_aug
+
+    dod = dict(enumerate(eqsdict))
+    shape = (neqs, nsyms + 1)
+    Aaug = DomainMatrix.from_dod(dod, shape, K)
+
+    return Aaug
 
 
 def _linear_eq_to_dict(eqs, syms):
