@@ -1007,7 +1007,6 @@ class Expr(Basic, EvalfMixin):
             return B - A
 
         value = B - A
-
         if a.is_comparable and b.is_comparable:
             if a < b:
                 domain = Interval(a, b)
