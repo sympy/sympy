@@ -229,8 +229,7 @@ def test_solve_polynomial1():
 
     assert solve(x - y**3, x) == [y**3]
     rx = root(x, 3)
-    assert solve(x - y**3, y) == [
-        rx, -rx/2 - sqrt(3)*I*rx/2, -rx/2 +  sqrt(3)*I*rx/2]
+    assert solve(x - y**3, y) == [rx, rx*exp(-2*I*pi/3), rx*exp(2*I*pi/3)]
     a11, a12, a21, a22, b1, b2 = symbols('a11,a12,a21,a22,b1,b2')
 
     assert solve([a11*x + a12*y - b1, a21*x + a22*y - b2], x, y) == \
@@ -556,26 +555,17 @@ def test_solve_transcendental():
     assert solve(exp(x) + 1, x) == [pi*I]
 
     eq = 2*(3*x + 4)**5 - 6*7**(3*x + 9)
-    result = solve(eq, x)
-    x0 = -log(2401)
-    x1 = 3**Rational(1, 5)
-    x2 = log(7**(7*x1/20))
-    x3 = sqrt(2)
-    x4 = sqrt(5)
-    x5 = x3*sqrt(x4 - 5)
-    x6 = x4 + 1
-    x7 = 1/(3*log(7))
-    x8 = -x4
-    x9 = x3*sqrt(x8 - 5)
-    x10 = x8 + 1
-    ans = [x7*(x0 - 5*LambertW(x2*(-x5 + x6))),
-           x7*(x0 - 5*LambertW(x2*(x5 + x6))),
-           x7*(x0 - 5*LambertW(x2*(x10 - x9))),
-           x7*(x0 - 5*LambertW(x2*(x10 + x9))),
-           x7*(x0 - 5*LambertW(-log(7**(7*x1/5))))]
-    assert result == ans, result
+    ans = [
+        (-log(2401) - 5*LambertW(-(-1)**(S(2)/5)*log(7**(7*3**(S(1)/5)/5))))/(3*log(7)),
+        (-log(2401) - 5*LambertW((-1)**(S(3)/5)*log(7**(7*3**(S(1)/5)/5))))/(3*log(7)),
+        (-log(2401) - 5*LambertW(-(-1)**(S(4)/5)*log(7**(7*3**(S(1)/5)/5))))/(3*log(7)),
+        (-log(2401) - 5*LambertW(-log(7**(7*3**(S(1)/5)/5))))/(3*log(7)),
+        -S(4)/3 - 5*LambertW(7*(-3)**(S(1)/5)*log(7)/5)/(3*log(7))
+    ]
+    assert solve(eq, x) == ans
+
     # it works if expanded, too
-    assert solve(eq.expand(), x) == result
+    assert solve(eq.expand(), x) == ans
 
     assert solve(z*cos(x) - y, x) == [-acos(y/z) + 2*pi, acos(y/z)]
     assert solve(z*cos(2*x) - y, x) == [-acos(y/z)/2 + pi, acos(y/z)/2]
@@ -908,6 +898,7 @@ def test_PR1964():
     assert solve(exp(3*x) - exp(3), x) in [
         [1, log(E*(Rational(-1, 2) - sqrt(3)*I/2)), log(E*(Rational(-1, 2) + sqrt(3)*I/2))],
         [1, log(-E/2 - sqrt(3)*E*I/2), log(-E/2 + sqrt(3)*E*I/2)],
+        [1, log(E*exp(-2*I*pi/3)), log(E*exp(2*I*pi/3))],
         ]
 
     # coverage test
@@ -2003,26 +1994,16 @@ def test_lambert_bivariate():
         -I*sqrt(-LambertW(1) + 1), sqrt(-1 + LambertW(1))]
     # check collection
     ax = a**(3*x + 5)
-    ans = solve(3*log(ax) + b*log(ax) + ax, x)
-    x0 = 1/log(a)
-    x1 = sqrt(3)*I
-    x2 = b + 3
-    x3 = x2*LambertW(1/x2)/a**5
-    x4 = x3**Rational(1, 3)/2
-    assert ans == [
-        x0*log(x4*(-x1 - 1)),
-        x0*log(x4*(x1 - 1)),
-        x0*log(x3)/3]
-    x1 = LambertW(Rational(1, 3))
-    x2 = a**(-5)
-    x3 = -3**Rational(1, 3)
-    x4 = 3**Rational(5, 6)*I
-    x5 = x1**Rational(1, 3)*x2**Rational(1, 3)/2
-    ans = solve(3*log(ax) + ax, x)
-    assert ans == [
-        x0*log(3*x1*x2)/3,
-        x0*log(x5*(x3 - x4)),
-        x0*log(x5*(x3 + x4))]
+    assert solve(3*log(ax) + b*log(ax) + ax, x) == [
+        log(-(-1)**(S(1)/3)*((b + 3)*LambertW(1/(b + 3))/a**5)**(S(1)/3))/log(a),
+        log((-1)**(S(2)/3)*((b + 3)*LambertW(1/(b + 3))/a**5)**(S(1)/3))/log(a),
+        log((b + 3)*LambertW(1/(b + 3))/a**5)/(3*log(a)),
+    ]
+    assert solve(3*log(ax) + ax, x) == [
+        (log((-1)**(S(2)/3)*(a**(-5))**(S(1)/3)) + log(3*LambertW(S(1)/3))/3)/log(a),
+        (log(-(-3)**(S(1)/3)*(a**(-5))**(S(1)/3)) + log(LambertW(S(1)/3))/3)/log(a),
+        log(3*LambertW(S(1)/3)/a**5)/(3*log(a)),
+    ]
     # coverage
     p = symbols('p', positive=True)
     eq = 4*2**(2*p + 3) - 2*p - 3
@@ -2035,17 +2016,19 @@ def test_lambert_bivariate():
         exp(-z + LambertW(2*z**4*exp(2*z))/2)/z]
     # cases when p != S.One
     # issue 4271
-    ans = solve((a/x + exp(x/2)).diff(x, 2), x)
-    x0 = (-a)**Rational(1, 3)
-    x1 = sqrt(3)*I
-    x2 = x0/6
-    assert ans == [
-        6*LambertW(x0/3),
-        6*LambertW(x2*(-x1 - 1)),
-        6*LambertW(x2*(x1 - 1))]
-    assert solve((1/x + exp(x/2)).diff(x, 2), x) == \
-                [6*LambertW(Rational(-1, 3)), 6*LambertW(Rational(1, 6) - sqrt(3)*I/6), \
-                6*LambertW(Rational(1, 6) + sqrt(3)*I/6), 6*LambertW(Rational(-1, 3), -1)]
+    assert solve((a/x + exp(x/2)).diff(x, 2), x) == [
+        6*LambertW(-a**(S(1)/3)/3),
+        6*LambertW((-1)**(S(1)/3)*a**(S(1)/3)/3),
+        6*LambertW(-(-1)**(S(2)/3)*a**(S(1)/3)/3)
+    ]
+
+    assert solve((1/x + exp(x/2)).diff(x, 2), x) == [
+         6*LambertW(-(S(1)/3)),
+         6*LambertW((-1)**((S(1)/3))/3),
+         6*LambertW(-(-1)**(S(2)/3)/3),
+         6*LambertW(-(S(1)/3), -1)
+     ]
+
     assert solve(x**2 - y**2/exp(x), x, y, dict=True) == \
                 [{x: 2*LambertW(-y/2)}, {x: 2*LambertW(y/2)}]
     # this is slow but not exceedingly slow
@@ -2296,9 +2279,9 @@ def test_issue_11538():
     assert solve(x + E) == [-E]
     assert solve(x**2 + E) == [-I*sqrt(E), I*sqrt(E)]
     assert solve(x**3 + 2*E) == [
-        -cbrt(2 * E),
-        cbrt(2)*cbrt(E)/2 - cbrt(2)*sqrt(3)*I*cbrt(E)/2,
-        cbrt(2)*cbrt(E)/2 + cbrt(2)*sqrt(3)*I*cbrt(E)/2]
+            -cbrt(2)*cbrt(E),
+            cbrt(2)*cbrt(E)*exp(-I*pi/3),
+            cbrt(2)*cbrt(E)*exp(I*pi/3)]
     assert solve([x + 4, y + E], x, y) == {x: -4, y: -E}
     assert solve([x**2 + 4, y + E], x, y) == [
         (-2*I, -E), (2*I, -E)]
@@ -2545,10 +2528,11 @@ def test_issue_11553():
 
 def test_issue_19113_19102():
     t = S(1)/3
-    solve(cos(x)**5-sin(x)**5)
     assert solve(4*cos(x)**3 - 2*sin(x)**3) == [
-        atan(2**(t)), -atan(2**(t)*(1 - sqrt(3)*I)/2),
-        -atan(2**(t)*(1 + sqrt(3)*I)/2)]
+            I*atanh((-1)**(S(1)/6)*2**t),
+            -atan((-2)**t),
+            atan(2**t)
+        ]
     h = S.Half
     assert solve(cos(x)**2 + sin(x)) == [
         2*atan(-h + sqrt(5)/2 + sqrt(2)*sqrt(1 - sqrt(5))/2),
@@ -2648,9 +2632,9 @@ def test_solver_flags():
 
 def test_issue_22768():
     eq = 2*x**3 - 16*(y - 1)**6*z**3
-    assert solve(eq.expand(), x, simplify=False
-        ) == [2*z*(y - 1)**2, z*(-1 + sqrt(3)*I)*(y - 1)**2,
-        -z*(1 + sqrt(3)*I)*(y - 1)**2]
+    base = 2*z*(y - 1)**2
+    ans = [base, base*exp(-2*I*pi/3), base*exp(2*I*pi/3)]
+    assert solve(eq.expand(), x, simplify=False) == ans
 
 
 def test_issue_22717():
