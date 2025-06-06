@@ -9,9 +9,9 @@ from sympy.core.sorting import ordered
 from sympy.functions.elementary.miscellaneous import Max, Min
 from sympy.logic.boolalg import (And, Boolean, distribute_and_over_or, Not,
     true, false, Or, ITE, simplify_logic, to_cnf, distribute_or_over_and)
+from sympy.logic.boolalg import BooleanTrue
 from sympy.utilities.iterables import uniq, sift, common_prefix
 from sympy.utilities.misc import filldedent, func_name
-
 from itertools import product
 
 Undefined = S.NaN  # Piecewise()
@@ -889,13 +889,13 @@ class Piecewise(DefinedFunction):
     def _eval_rewrite_as_ITE(self, *args, **kwargs):
         byfree = {}
         args = list(args)
-        default = any(c == True for b, c in args)
+        default = any(isinstance(c, BooleanTrue) for b, c in args)
         for i, (b, c) in enumerate(args):
             if not isinstance(b, Boolean) and b != True:
                 raise TypeError(filldedent('''
                     Expecting Boolean or bool but got `%s`
                     ''' % func_name(b)))
-            if c == True:
+            if isinstance(c, BooleanTrue):
                 break
             # loop over independent conditions for this b
             for c in c.args if isinstance(c, Or) else [c]:
@@ -917,11 +917,11 @@ class Piecewise(DefinedFunction):
                 if byfree[x] in (S.UniversalSet, S.Reals):
                     # collapse the ith condition to True and break
                     args[i] = list(args[i])
-                    c = args[i][1] = True
+                    c = args[i][1] = S.true
                     break
-            if c == True:
+            if isinstance(c, BooleanTrue):
                 break
-        if c != True:
+        if not isinstance(c, BooleanTrue):
             raise ValueError(filldedent('''
                 Conditions must cover all reals or a final default
                 condition `(foo, True)` must be given.
