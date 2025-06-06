@@ -32,6 +32,7 @@ from sympy.utilities.iterables import is_sequence
 from sympy.utilities.misc import filldedent
 
 
+
 class Integral(AddWithLimits):
     """Represents unevaluated integral."""
 
@@ -820,8 +821,10 @@ class Integral(AddWithLimits):
                 rv += self.func(arg, (x, a, b))
         return rv
 
-    def _eval_integral(self, f, x, meijerg=None, risch=None, manual=None,
-                       heurisch=None, conds='piecewise',final=None):
+    def _eval_integral(self, f, x, **eval_kwargs):
+        
+        if f == exp(-x ** 2)* erf(x)
+   
         """
         Calculate the anti-derivative to the function f(x).
 
