@@ -439,20 +439,6 @@ def _check_other_MIMO(func):
             return func(*args, **kwargs)
     return wrapper
 
-def _avoid_tfbase_usage(func):
-    """
-    A decorator for classmethods.
-    Used to avoid using TransferFunctionBase directly.
-    """
-    def wrapper(cls, *args, **kwargs):
-        if cls is TransferFunctionBase:
-            raise NotImplementedError(
-                """This method is intended to be used in subclasses.
-                """)
-        return func(cls, *args, **kwargs)
-
-    return wrapper
-
 class TransferFunctionBase(SISOLinearTimeInvariant):
     r"""
     A class for representing LTI (Linear, time-invariant) systems that can be strictly described
@@ -639,7 +625,12 @@ class TransferFunctionBase(SISOLinearTimeInvariant):
     .. [2] https://en.wikipedia.org/wiki/Laplace_transform
 
     """
-    def __new__(cls, num, den, var):
+    def __new__(cls, num, den, var, *args, **kwargs):
+        if cls is TransferFunctionBase:
+            raise NotImplementedError(
+                """
+                The TransferFunctionBase class is not meant tobe used directly.
+                """)
         num, den = _sympify(num), _sympify(den)
 
         if not isinstance(var, Symbol):
@@ -656,10 +647,12 @@ class TransferFunctionBase(SISOLinearTimeInvariant):
 
         if num_accepted and den_accepted:
             cls.is_StateSpace_object = False
-            return super(TransferFunctionBase, cls).__new__(cls, num, den, var)
+            return super(TransferFunctionBase, cls).__new__(cls, num, den, var,
+                                                            *args, **kwargs)
 
         else:
-            raise TypeError("Unsupported type for numerator or denominator of TransferFunction.")
+            raise TypeError("""Unsupported type for numerator or denominator of
+                            TransferFunction.""")
 
     def _additional_constructor_args(self) -> dict:
         """
@@ -673,7 +666,6 @@ class TransferFunctionBase(SISOLinearTimeInvariant):
             """)
 
     @classmethod
-    @_avoid_tfbase_usage
     def from_rational_expression(cls, expr, var=None, *args, **kwargs):
         r"""
         Creates a new ``TransferFunction`` efficiently from a rational expression.
@@ -756,7 +748,6 @@ class TransferFunctionBase(SISOLinearTimeInvariant):
         return cls(_num, _den, var, *args, **kwargs)
 
     @classmethod
-    @_avoid_tfbase_usage
     def from_coeff_lists(cls, num_list, den_list, var, *args, **kwargs):
         r"""
         Creates a new ``TransferFunction`` efficiently from a list of coefficients.
@@ -794,11 +785,6 @@ class TransferFunctionBase(SISOLinearTimeInvariant):
         TransferFunction(p*s + 1, 2*p*s**2 + 4, s)
 
         """
-        if cls is TransferFunctionBase:
-            raise NotImplementedError(
-                """This method is intended to be used in subclasses.
-                """)
-
         num_list = num_list[::-1]
         den_list = den_list[::-1]
         num_var_powers = [var**i for i in range(len(num_list))]
@@ -813,7 +799,6 @@ class TransferFunctionBase(SISOLinearTimeInvariant):
         return cls(_num, _den, var, *args, **kwargs)
 
     @classmethod
-    @_avoid_tfbase_usage
     def from_zpk(cls, zeros, poles, gain, var, *args, **kwargs):
         r"""
         Creates a new ``TransferFunction`` from given zeros, poles and gain.
@@ -1541,7 +1526,8 @@ class DTTransferFunction(TransferFunctionBase):
         if sampling_time == 0:
             return TransferFunction(num, den, var)
 
-        return super(DTTransferFunction, cls).__new__(cls, num, den, var)
+        return super(DTTransferFunction, cls).__new__(cls, num, den, var,
+                                                      sampling_time)
 
     def __init__(self, num, den, var, sampling_time = 1):
         super().__init__()
@@ -1557,18 +1543,18 @@ class DTTransferFunction(TransferFunctionBase):
 
     @classmethod
     def from_rational_expression(cls, expr, var=None, sampling_time = 1):
-        return super().from_rational_expression(cls, expr, var,
+        return super().from_rational_expression(expr, var,
                                          sampling_time = sampling_time)
 
     @classmethod
     def from_coeff_lists(cls, num_list, den_list, var, sampling_time = 1):
-        return super().from_coeff_lists(cls, num_list, den_list,
+        return super().from_coeff_lists(num_list, den_list,
                                         var, sampling_time = sampling_time)
 
     @classmethod
-    def from_zpk(cls, zeros, poles, gain, var, *args, sampling_time = 1):
-        return super().from_zpk(cls, zeros, poles, gain,
-                                var, *args, sampling_time = sampling_time)
+    def from_zpk(cls, zeros, poles, gain, var, sampling_time = 1):
+        return super().from_zpk(zeros, poles, gain,
+                                var, sampling_time = sampling_time)
 
     def dc_gain(self):
         m = Mul(self.num, Pow(self.den, -1, evaluate=False), evaluate=False)
