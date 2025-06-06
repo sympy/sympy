@@ -597,7 +597,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         assert isinstance(self.ring, PolyRing)
         dom = self.ring.domain
         assert isinstance(dom, Domain)
-        for monom, coeff in self.iterterms():
+        for monom, coeff in self.terms():
             assert dom.of_type(coeff)
             assert len(monom) == self.ring.ngens
             assert all(isinstance(exp, int) and exp >= 0 for exp in monom)
@@ -621,7 +621,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         # low-level class.
         _hash = self._hash
         if _hash is None:
-            self._hash = _hash = hash((self.ring, frozenset(self.iterterms())))
+            self._hash = _hash = hash((self.ring, frozenset(self.terms())))
         return _hash
 
     def set_ring(self, new_ring):
@@ -810,14 +810,6 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         return self in self.ring._gens_set
 
     @property
-    def is_ground(self):
-        return self._is_ground()
-
-    @property
-    def is_monomial(self):
-        return self._is_monomial()
-
-    @property
     def is_term(self):
         return len(self) <= 1
 
@@ -838,10 +830,6 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         return self.ring.domain.is_nonpositive(self.LC)
 
     @property
-    def is_zero(self):
-        return self._is_zero()
-
-    @property
     def is_one(self):
         return self == self.ring.one
 
@@ -860,18 +848,6 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
     @property
     def is_quadratic(self):
         return all(sum(monom) <= 2 for monom in self.itermonoms())
-
-    @property
-    def is_squarefree(self):
-        return self._is_squarefree()
-
-    @property
-    def is_irreducible(self):
-        return self._is_irreducible()
-
-    @property
-    def is_cyclotomic(self):
-        return self._is_cyclotomic()
 
     def __neg__(self):
         return self.new([ (monom, -coeff) for monom, coeff in self.iterterms() ])
@@ -960,28 +936,13 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         else:
             return p1._sub_ground(cp2)
 
-    def __rsub__(p1, n):
-        """n - p1 with n convertible to the coefficient domain.
-
-        Examples
-        ========
-
-        >>> from sympy.polys.domains import ZZ
-        >>> from sympy.polys.rings import ring
-
-        >>> _, x, y = ring('x, y', ZZ)
-        >>> p = x + y
-        >>> 4 - p
-        -x - y + 4
-        """
-        ring = p1.ring
+    def __rsub__(self, n):
+        ring = self.ring
         try:
             n = ring.domain_new(n)
         except CoercionFailed:
             return NotImplemented
-        else:
-            p = p1._negate()
-            return p._add_ground(n)
+        return self._rsub_ground(n) # will be overridden as a single step in python-flint
 
     def __pow__(self, n):
         """raise polynomial to power `n`
@@ -1012,22 +973,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         elif len(self) == 1:
             return self._pow_single_term(n)
 
-        # For ring series, we need negative and rational exponent support only
-        # with monomials.
-        n = int(n)
-        if n < 0:
-            raise ValueError("Negative exponent")
-
-        elif n == 1:
-            return self.copy()
-        elif n == 2:
-            return self.square()
-        elif n == 3:
-            return self * self.square()
-        elif len(self) <= 5:  # TODO: use an actual density measure
-            return self._pow_multinomial(n)
-        else:
-            return self._pow_generic(n)
+        return self._pow_int(n)
 
     def square(self):
         """square of a polynomial
@@ -1230,33 +1176,6 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         else:
             raise ExactQuotientFailed(self, G)
 
-    def degree(f, x=None):
-        """
-        The leading degree in ``x`` or the main variable.
-
-        Note that the degree of 0 is negative infinity (``float('-inf')``)
-
-        """
-        i = f.ring.index(x)
-        if not f:
-            return ninf
-        elif i < 0:
-            return 0
-        else:
-            return f._degree(i)
-
-    def degrees(f):
-        """
-        A tuple containing leading degrees in all variables.
-
-        Note that the degree of 0 is negative infinity (``float('-inf')``)
-
-        """
-        if not f:
-            return (ninf,) * f.ring.ngens
-        else:
-            return f._degrees()
-
     def tail_degree(f, x=None):
         """
         The tail degree in ``x`` or the main variable.
@@ -1343,18 +1262,6 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         else:
             raise ValueError("expected a monomial, got %s" % element)
         return self._coeff(monom)
-
-    @property
-    def LC(self):
-        return self._LC()
-
-    @property
-    def LM(self):
-        return self._LM()
-
-    @property
-    def LT(self):
-        return self._LT()
 
     def leading_monom(self):
         """
@@ -2182,26 +2089,32 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
     def to_dict(self):
         return dict(self)
 
-    def _is_ground(self):
+    @property
+    def is_ground(self):
         return not self or (len(self) == 1 and self.ring.zero_monom in self)
 
-    def _is_monomial(self):
+    @property
+    def is_monomial(self):
         return not self or (len(self) == 1 and self.LC == 1)
 
-    def _is_zero(self):
+    @property
+    def is_zero(self):
         return not self
 
-    def _is_squarefree(self):
+    @property
+    def is_squarefree(self):
         if not self.ring.ngens:
             return True
         return self.ring.dmp_sqf_p(self)
 
-    def _is_irreducible(self):
+    @property
+    def is_irreducible(self):
         if not self.ring.ngens:
             return True
         return self.ring.dmp_irreducible_p(self)
 
-    def _is_cyclotomic(self):
+    @property
+    def is_cyclotomic(self):
         if self.ring.is_univariate:
             return self.ring.dup_cyclotomic_p(self)
         else:
@@ -2263,6 +2176,10 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
             p[expv] = -self._get_coeff(expv)
         return p
 
+    def _rsub_ground(self, n):
+        p = self._negate()
+        return p._add_ground(n)
+
     def mul_ground(f, x):
         if not x:
             return f.ring.zero
@@ -2323,6 +2240,20 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
                 del poly[monom]
 
         return poly
+
+    def _pow_int(self, n):
+        # For ring series, negative exponents are only supported with monomials,
+        # so this method assumes n >= 0.
+        if n == 1:
+            return self.copy()
+        elif n == 2:
+            return self.square()
+        elif n == 3:
+            return self * self.square()
+        elif len(self) <= 5:  # TODO: use an actual density measure
+            return self._pow_multinomial(n)
+        else:
+            return self._pow_generic(n)
 
     def _square(self):
         ring = self.ring
@@ -2521,19 +2452,43 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
                     ltf = ltm, f._get_coeff(ltm)
         return r
 
-    def _degree(self, i):
-        return max(monom[i] for monom in self.itermonoms())
+    def degree(f, x=None):
+        """
+        The leading degree in ``x`` or the main variable.
 
-    def _degrees(self):
-        return tuple(map(max, list(zip(*self.itermonoms()))))
+        Note that the degree of 0 is negative infinity (``float('-inf')``)
+
+        """
+        i = f.ring.index(x)
+
+        if not f:
+            return ninf
+        elif i < 0:
+            return 0
+        else:
+            return max(monom[i] for monom in f.itermonoms())
+
+    def degrees(f):
+        """
+        A tuple containing leading degrees in all variables.
+
+        Note that the degree of 0 is negative infinity (``float('-inf')``)
+
+        """
+        if not f:
+            return (ninf,)*f.ring.ngens
+        else:
+            return tuple(map(max, list(zip(*f.itermonoms()))))
 
     def _coeff(self, monom):
         return self._get_coeff(monom)
 
-    def _LC(self):
+    @property
+    def LC(self):
         return self._get_coeff(self.leading_expv())
 
-    def _LM(self):
+    @property
+    def LM(self):
         expv = self.leading_expv()
         if expv is None:
             return self.ring.zero_monom
@@ -2547,7 +2502,8 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
             p[expv] = self.ring.domain.one
         return p
 
-    def _LT(self):
+    @property
+    def LT(self):
         expv = self.leading_expv()
         if expv is None:
             return (self.ring.zero_monom, self.ring.domain.zero)
