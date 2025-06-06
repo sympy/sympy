@@ -1880,8 +1880,11 @@ def dmp_cancel(f, g, u, K, include=True):
 
         cq, f = dmp_clear_denoms(f, u, K0, K, convert=True)
         cp, g = dmp_clear_denoms(g, u, K0, K, convert=True)
+        # domain is now K
     else:
-        cp, cq = K.one, K.one
+        # remove gcd
+        cp, f = dmp_ground_primitive(f, u, K)
+        cq, g = dmp_ground_primitive(g, u, K)
 
     _, p, q = dmp_inner_gcd(f, g, u, K)
 
