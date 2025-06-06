@@ -49,6 +49,8 @@ A = ampere = amperes = Quantity("ampere", abbrev='A')
 ampere.set_global_dimension(current)
 K = kelvin = kelvins = Quantity("kelvin", abbrev='K')
 kelvin.set_global_dimension(temperature)
+degC = degree_celsius = Quantity("degree_celsius", abbrev='degC', latex_repr=r"^\circC")
+degree_celsius.set_global_dimension(temperature)
 mol = mole = moles = Quantity("mole", abbrev="mol")
 mole.set_global_dimension(amount_of_substance)
 cd = candela = candelas = Quantity("candela", abbrev="cd")
@@ -307,6 +309,8 @@ atmosphere = atmospheres = atm = Quantity("atmosphere", abbrev="atm")
 
 kPa = kilopascal = Quantity("kilopascal", abbrev="kPa")
 kilopascal.set_global_relative_scale_factor(kilo, Pa)
+MPa = megapascal = Quantity("megapascal", abbrev="MPa")
+megapascal.set_global_relative_scale_factor(mega, Pa)
 
 bar = bars = Quantity("bar", abbrev="bar")
 
