@@ -266,13 +266,10 @@ class PolyRing(DefaultPrinting, IPolys):
 
     def _gens(self):
         """Return a list of polynomial generators. """
-        one = self.domain.one
         _gens = []
         for i in range(self.ngens):
-            expv = self.monomial_basis(i)
-            poly = self.zero
-            poly[expv] = one
-            _gens.append(poly)
+            generator = self._construct_generator(i)
+            _gens.append(generator)
         return tuple(_gens)
 
     def __getnewargs__(self):
@@ -281,11 +278,9 @@ class PolyRing(DefaultPrinting, IPolys):
     def __getstate__(self):
         state = self.__dict__.copy()
         del state["leading_expv"]
-
         for key in state:
             if key.startswith("monomial_"):
                 del state[key]
-
         return state
 
     def __hash__(self):
@@ -305,10 +300,6 @@ class PolyRing(DefaultPrinting, IPolys):
             symbols = tuple(symbols)
         return self._clone(symbols, domain, order)
 
-    @cacheit
-    def _clone(self, symbols, domain, order):
-        return self.__class__(symbols or self.symbols, domain or self.domain, order or self.order)
-
     def monomial_basis(self, i):
         """Return the ith-basis element. """
         basis = [0]*self.ngens
@@ -317,28 +308,24 @@ class PolyRing(DefaultPrinting, IPolys):
 
     @property
     def zero(self):
+        """Return the zero polynomial in this ring."""
         return self.dtype([])
 
     @property
     def one(self):
+        """Return the multiplicative identity polynomial (1) in this ring."""
         return self.dtype(self._one)
 
     def is_element(self, element):
-        """True if ``element`` is an element of this ring. False otherwise. """
+        """True if ``element`` is an element of this ring. False otherwise."""
         return isinstance(element, PolyElement) and element.ring == self
 
     def domain_new(self, element, orig_domain=None):
+        """Convert an element into the ring's coefficient domain."""
         return self.domain.convert(element, orig_domain)
 
     def ground_new(self, coeff):
         return self.term_new(self.zero_monom, coeff)
-
-    def term_new(self, monom, coeff):
-        coeff = self.domain_new(coeff)
-        poly = self.zero
-        if coeff:
-            poly[monom] = coeff
-        return poly
 
     def ring_new(self, element):
         if isinstance(element, PolyElement):
@@ -366,47 +353,21 @@ class PolyRing(DefaultPrinting, IPolys):
 
     def from_dict(self, element, orig_domain=None):
         domain_new = self.domain_new
-        poly = self.zero
-
+        poly_dict = {}
         for monom, coeff in element.items():
             coeff = domain_new(coeff, orig_domain)
             if coeff:
-                poly[monom] = coeff
-
-        return poly
+                poly_dict[monom] = coeff
+        return self._construct_from_dict(poly_dict)
 
     def from_terms(self, element, orig_domain=None):
         return self.from_dict(dict(element), orig_domain)
 
     def from_list(self, element):
-        return self.from_dict(dmp_to_dict(element, self.ngens-1, self.domain))
-
-    def _rebuild_expr(self, expr, mapping):
-        domain = self.domain
-
-        def _rebuild(expr):
-            generator = mapping.get(expr)
-
-            if generator is not None:
-                return generator
-            elif expr.is_Add:
-                return reduce(add, list(map(_rebuild, expr.args)))
-            elif expr.is_Mul:
-                return reduce(mul, list(map(_rebuild, expr.args)))
-            else:
-                # XXX: Use as_base_exp() to handle Pow(x, n) and also exp(n)
-                # XXX: E can be a generator e.g. sring([exp(2)]) -> ZZ[E]
-                base, exp = expr.as_base_exp()
-                if exp.is_Integer and exp > 1:
-                    return _rebuild(base)**int(exp)
-                else:
-                    return self.ground_new(domain.convert(expr))
-
-        return _rebuild(sympify(expr))
+        return self.from_dict(dmp_to_dict(element, self.ngens - 1, self.domain))
 
     def from_expr(self, expr):
         mapping = dict(list(zip(self.symbols, self.gens)))
-
         try:
             poly = self._rebuild_expr(expr, mapping)
         except CoercionFailed:
@@ -581,6 +542,66 @@ class PolyRing(DefaultPrinting, IPolys):
                 monom = tuple(int(i in s) for i in range(self.ngens))
                 poly += self.term_new(monom, self.domain.one)
             return poly
+
+#<--------------------------INTERFACE / IMPLEMENTATION DIVIDER-------------------------->#
+
+    def _construct_generator(self, i):
+        # use fmpz_mpoly_gen when available in python-flint
+        one = self.domain.one
+        expv = self.monomial_basis(i)
+        poly = self.zero
+        poly[expv] = one
+        return poly
+
+    @cacheit
+    def _clone(self, symbols, domain, order):
+        return self.__class__(symbols or self.symbols, domain or self.domain, order or self.order)
+
+    def term_new(self, monom, coeff):
+        # Use fmpz_mpoly and fmpq_mpoly's "Coefficient" method(s) here
+        coeff = self.domain_new(coeff)
+        poly = self.zero
+        if coeff:
+            poly[monom] = coeff
+        return poly
+
+    def _construct_from_dict(self, poly_dict):
+        if not poly_dict:
+            return self.zero
+        poly = self.zero
+        for monom, coeff in poly_dict.items():
+            poly[monom] = coeff
+        return poly
+
+    def _rebuild_expr(self, expr, mapping):
+        domain = self.domain
+
+        def _rebuild(expr):
+            generator = mapping.get(expr)
+            if generator is not None:
+                return generator
+            elif expr.is_Add:
+                return reduce(add, list(map(_rebuild, expr.args)))
+            elif expr.is_Mul:
+                return reduce(mul, list(map(_rebuild, expr.args)))
+            else:
+                # XXX: Use as_base_exp() to handle Pow(x, n) and also exp(n)
+                # XXX: E can be a generator e.g. sring([exp(2)]) -> ZZ[E]
+                base, exp = expr.as_base_exp()
+                if exp.is_Integer and exp > 1:
+                    return _rebuild(base) ** int(exp)
+                else:
+                    return self.ground_new(domain.convert(expr))
+
+        return _rebuild(sympify(expr))
+
+#<-------------------------REFACTORED ABOVE/ TO REFACTOR BELOW-------------------------->#
+
+
+
+
+
+
 
 
 class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
