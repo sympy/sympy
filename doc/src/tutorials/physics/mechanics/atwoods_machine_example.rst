@@ -5,7 +5,7 @@ Atwood Machine Example
 ======================
 
 .. _fig-atwood-machine:
-.. figure:: atwood_machine.png
+.. figure:: atwood_machine.svg
 
 The Atwood machine consists of two particles of masses $m_1$ and $m_2$
 connected by a massless, inextensible rope that passes over a fixed pulley of
@@ -27,12 +27,6 @@ First, import the necessary symbols, frames, points, and classes. We introduce
 a single generalized coordinate $q(t)$, which measures the downward
 displacement of mass $m_1$. Its time derivative $u(t) = \dot q(t)$ is the
 generalized speed.
-
-.. plot::
-    :format: doctest
-    :include-source: True
-    :context: reset
-    :nofigs:
 
     >>> import sympy as sp
     >>> from sympy import Q, refine
@@ -62,13 +56,7 @@ Inertial Frame and Pulley Center
 ================================
 
 We define an inertial frame $N$ and fix the pulley's center $O$ at the
-origin. The pulley axis is aligned with the $N.x$ direction.
-
-.. plot::
-    :format: doctest
-    :include-source: True
-    :context: close-figs
-    :nofigs:
+origin. The pulley axis is aligned with the $\hat{\mathbf{N}}_x$ direction.
 
     >>> # Define inertial reference frame and pulley center
     >>>
@@ -96,37 +84,28 @@ $$
 We set their velocities by differentiating their position vectors in frame
 $N$.
 
-.. plot::
-    :format: doctest
-    :include-source: True
-    :context: close-figs
-    :nofigs:
-
     >>> # Mass m1 at P1: (x=0, y=+r, z=-(h+q))
     >>>
     >>> P1 = Point("P1")
     >>> P1.set_pos(O, r * N.y + (-(h + q)) * N.z)
-    >>> P1.set_vel(N, P1.pos_from(O).diff(t, N))
+    >>> P1.vel(N)
+    - Derivative(q(t), t)*N.z
     >>> M1 = Particle("M1", P1, m1)
     >>>
     >>> # Mass m2 at P2: (x=0, y=-r, z=-(h-q))
     >>>
     >>> P2 = Point("P2")
     >>> P2.set_pos(O, -r * N.y + (-(h - q)) * N.z)
-    >>> P2.set_vel(N, P2.pos_from(O).diff(t, N))
+    >>> P2.vel(N)
+    Derivative(q(t), t)*N.z
     >>> M2 = Particle("M2", P2, m2)
 
 Create WrappingCylinder for the Pulley
 ======================================
 
 We model the pulley as an ideal cylinder of radius $r$, centered at $O$,
-with its rotational axis along $N.x$. This is done via ``WrappingCylinder(r, O, N.x)``.
+with its rotational axis along $\hat{\mathbf{N}}_x$. This is done via ``WrappingCylinder(r, O, N.x)``.
 
-.. plot::
-    :format: doctest
-    :include-source: True
-    :context: close-figs
-    :nofigs:
 
     >>> pulley = WrappingCylinder(r, O, N.x)
 
@@ -145,11 +124,6 @@ $$
 
 We place points $T_1$ and $T_2$ there and set their velocities to zero.
 
-.. plot::
-    :format: doctest
-    :include-source: True
-    :context: close-figs
-    :nofigs:
 
     >>> # Tangent point for P1 (eastmost)
     >>>
@@ -172,17 +146,15 @@ Internally, this object computes the geodesic (shortest-path) on the
 cylinder's surface connecting $T_1$ and $T_2$, which here is a
 half-circumference of length $\pi r$, independent of $q$.
 
-.. plot::
-    :format: doctest
-    :include-source: True
-    :context: close-figs
-    :nofigs:
 
     >>> wpath = WrappingPathway(T1, T2, pulley)
 
 Compute Segment Lengths and Verify Inextensible Rope
 ====================================================
 
+Note that this section is only for demonstrating the capabilities of ``WrappingPathway``
+and is not required to obtain the correct acceleration result. We verify the 
+inextensibility of the rope in the following way.
 The rope consists of three segments:
 
 1. **Segment 1** from $P_1$ down to $T_1$.  Its length is
@@ -221,11 +193,6 @@ Hence, the total rope length
 
 is independent of $q$. We verify :math:`\frac{d L_\text{total}}{dq} = 0`.
 
-.. plot::
-    :format: doctest
-    :include-source: True
-    :context: close-figs
-    :nofigs:
 
     >>> # Segment length from P1 to T1
     >>>
@@ -260,13 +227,8 @@ is independent of $q$. We verify :math:`\frac{d L_\text{total}}{dq} = 0`.
 Define Gravity Forces on Each Mass
 ==================================
 
-Each particle is subjected to its weight in the negative $N.z$ direction:
+Each particle is subjected to its weight in the negative $\hat{\mathbf{N}}_z$ direction:
 
-.. plot::
-    :format: doctest
-    :include-source: True
-    :context: close-figs
-    :nofigs:
 
     >>> grav1 = Force(P1, -m1 * g * N.z)
     >>> grav2 = Force(P2, -m2 * g * N.z)
@@ -285,11 +247,6 @@ three ``Force`` objects:
 
 We combine these with the gravity forces.
 
-.. plot::
-    :format: doctest
-    :include-source: True
-    :context: close-figs
-    :nofigs:
 
     >>> loads = wpath.to_loads(T) + [grav1, grav2]
 
@@ -298,11 +255,6 @@ Kinematic Differential Equation
 
 We declare the usual kinematic relationship $\;u = \dot q$:
 
-.. plot::
-    :format: doctest
-    :include-source: True
-    :context: close-figs
-    :nofigs:
 
     >>> kin_diff = [u - q.diff()]
 
@@ -314,31 +266,16 @@ kinematic relation $\;u - \dot q = 0$, we form a ``KanesMethod`` object.
 The two particle bodies $M1$ and $M2$ and the ``loads`` list specify all
 forces in the system.
 
-.. plot::
-    :format: doctest
-    :include-source: True
-    :context: close-figs
-    :nofigs:
 
     >>> kane = KanesMethod(N, (q,), (u,), kd_eqs=kin_diff)
     >>> bodies = [M1, M2]
     >>> Fr, Frs = kane.kanes_equations(bodies, loads)
-    >>> mass_matrix = kane.mass_matrix
-    >>> forcing_vec = kane.forcing
 
     Solve for $\ddot q$ (i.e. $\dot u$) in terms of $q$, $u$, and $T$.
     Since $T$ is an unknown reaction, the symbolic result will contain $T$.
     We then simplify to obtain the standard second-order equation of motion:
 
-.. plot::
-    :format: doctest
-    :include-source: True
-    :context: close-figs
-    :nofigs:
-
-    >>> # Solve mass_matrix * u̇ = forcing_vec for u̇
-    >>>
-    >>> u_dot = sp.solve((mass_matrix * u.diff() - forcing_vec), u.diff())[u.diff()]
+    >>> [u, u_dot] = kane.rhs()
     >>> qdd = sp.simplify(u_dot)
     >>> sp.pprint(qdd, use_unicode=True)
     g⋅(m₁ - m₂)
@@ -355,11 +292,6 @@ Finally, we substitute $m_1=1$, $m_2=2$, $g=9.81$, $h=5.0$, $r=0.5$
 and confirm numerically that $\ddot q$ matches
 $\,\frac{m_1 - m_2}{m_1 + m_2} g$.
 
-.. plot::
-    :format: doctest
-    :include-source: True
-    :context: close-figs
-    :nofigs:
 
     >>> numeric_vals = {m1: 1.0, m2: 2.0, g: 9.81, h: 5.0, r: 0.5}
     >>> qdd_num = float(qdd.subs(numeric_vals))
