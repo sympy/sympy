@@ -2758,9 +2758,3 @@ def test_StateSpace_stability():
     ss2 = StateSpace(A2, B, C, D)
     ineq = ss2.get_asymptotic_stability_conditions()
     assert ineq == [False]
-
-
-
-
-
-
