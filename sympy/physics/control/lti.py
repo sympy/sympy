@@ -53,8 +53,8 @@ def gbt(tf, sample_per, alpha):
     Where H(z) is the corresponding discretized transfer function,
     discretized with the generalised bilinear transformation method.
     H(z) is obtained from the continuous transfer function H(s)
-    by substituting $s(z) = \frac{z-1}{T(\alpha z + (1-\alpha))}$ into H(s), where T is the
-    sample period.
+    by substituting $s(z) = \frac{z-1}{T(\alpha z + (1-\alpha))}$ into H(s),
+    where T is the sample period.
     Coefficients are falling, i.e. $H(z) = \frac{az+b}{cz+d}$ is returned
     as [a, b], [c, d].
 
@@ -129,8 +129,8 @@ def bilinear(tf, sample_per):
     Where H(z) is the corresponding discretized transfer function,
     discretized with the bilinear transform method.
     H(z) is obtained from the continuous transfer function H(s)
-    by substituting $s(z) = \frac{2}{T}\frac{z-1}{z+1}$ into H(s), where T is the
-    sample period.
+    by substituting $s(z) = \frac{2}{T}\frac{z-1}{z+1}$ into H(s), where T is
+    the sample period.
     Coefficients are falling, i.e. $H(z) = \frac{az+b}{cz+d}$ is returned
     as [a, b], [c, d].
 
@@ -1522,7 +1522,7 @@ class TransferFunction(TransferFunctionBase):
         return 0 #XXX: it could be useful also in TransferFunction
 
 class DTTransferFunction(TransferFunctionBase):
-    def __new__(cls, num, den, var, sampling_time: int | float = 1):
+    def __new__(cls, num, den, var, sampling_time = 1):
         if sampling_time == 0:
             return TransferFunction(num, den, var)
 
@@ -1555,6 +1555,171 @@ class DTTransferFunction(TransferFunctionBase):
     def from_zpk(cls, zeros, poles, gain, var, sampling_time = 1):
         return super().from_zpk(zeros, poles, gain,
                                 var, sampling_time = sampling_time)
+
+    # discretization methods #TODO: add tests
+    @classmethod
+    def gbt(cls, cont_tf, sampling_time, alpha, var):
+        r"""
+        Returns the discretized transfer function H(z) from a continuous
+        transfer function H(s).
+
+        Explanation
+        ===========
+
+        Where H(z) is the corresponding discretized transfer function,
+        discretized with the generalised bilinear transformation method.
+        H(z) is obtained from the continuous transfer function H(s)
+        by substituting $s(z) = \frac{z-1}{T(\alpha z + (1-\alpha))}$ into H(s),
+        where T is the sample time.
+
+        Examples
+        ========
+
+        >>> from sympy.physics.control.lti import TransferFunction, DTTransferFunction
+        >>> from sympy.abc import s, z, L, R, T
+
+        >>> tf = TransferFunction(1, s*L + R, s)
+        >>> dttf1 = DTTransferFunction.gbt(tf, T, 0.5, z)
+        >>> dttf1.num
+        T*z/(2*(L + R*T/2)) + T/(2*(L + R*T/2))
+        >>> dttf1.den
+        z + (-L + R*T/2)/(L + R*T/2)
+        >>> dttf1.sampling_time
+        T
+
+        >>> dttf2 = DTTransferFunction.gbt(tf, T, 0, z)
+        >>> dttf2.num
+        T/L
+        >>> dttf2.den
+        z + (-L + R*T)/L
+        >>> dttf2.sampling_time
+        T
+
+        >>> dttf3 = DTTransferFunction.gbt(tf, T, 1, z)
+        >>> dttf3.num
+        T*z/(L + R*T)
+        >>> dttf3.den
+        -L/(L + R*T) + z
+        >>> dttf3.sampling_time
+        T
+
+        >>> dttf4 = DTTransferFunction.gbt(tf, T, 0.3, z)
+        >>> dttf4.num
+        3*T*z/(10*(L + 3*R*T/10)) + 7*T/(10*(L + 3*R*T/10))
+        >>> dttf4.den
+        z + (-L + 7*R*T/10)/(L + 3*R*T/10)
+        >>> dttf4.sampling_time
+        T
+
+        References
+        ==========
+
+        .. [1] https://www.polyu.edu.hk/ama/profile/gfzhang/Research/ZCC09_IJC.pdf
+        """
+        num, den = gbt(cont_tf, sampling_time, alpha)
+        return cls.from_coeff_lists(num, den, var, sampling_time)
+
+    @classmethod
+    def bilinear(cls, cont_tf, sampling_time, var):
+        r"""
+        Returns the discretized transfer function H(z) from a continuous
+        transfer function H(s).
+
+        Explanation
+        ===========
+
+        Where H(z) is the corresponding discretized transfer function,
+        discretized with the bilinear transform method.
+        H(z) is obtained from the continuous transfer function H(s)
+        by substituting $s(z) = \frac{2}{T}\frac{z-1}{z+1}$ into H(s), where T
+        is the sample time.
+
+        Examples
+        ========
+
+        >>> from sympy.physics.control.lti import TransferFunction, DTTransferFunction
+        >>> from sympy.abc import s, z, L, R, T
+
+        >>> tf = TransferFunction(1, s*L + R, s)
+        >>> dttf = DTTransferFunction.bilinear(tf, T, z)
+        >>> dttf.num
+        T*z/(2*(L + R*T/2)) + T/(2*(L + R*T/2))
+        >>> dttf.den
+        z + (-L + R*T/2)/(L + R*T/2)
+        >>> dttf.sampling_time
+        T
+
+        """
+        num, den = bilinear(cont_tf, sampling_time)
+        return cls.from_coeff_lists(num, den, var, sampling_time)
+
+    @classmethod
+    def forward_diff(cls, cont_tf, sampling_time, var):
+        r"""
+        Returns the discretized transfer function H(z) from a continuous
+        transfer function H(s).
+
+        Explanation
+        ===========
+
+        Where H(z) is the corresponding discretized transfer function,
+        discretized with the forward difference transform method.
+        H(z) is obtained from the continuous transfer function H(s)
+        by substituting $s(z) = \frac{z-1}{T}$ into H(s), where T is the
+        sample time.
+
+        Examples
+        ========
+
+        >>> from sympy.physics.control.lti import TransferFunction, DTTransferFunction
+        >>> from sympy.abc import s, z, L, R, T
+
+        >>> tf = TransferFunction(1, s*L + R, s)
+        >>> dttf = DTTransferFunction.forward_diff(tf, T, z)
+        >>> dttf.num
+        T/L
+        >>> dttf.den
+        z + (-L + R*T)/L
+        >>> dttf.sampling_time
+        T
+
+        """
+        num, den = forward_diff(cont_tf, sampling_time)
+        return cls.from_coeff_lists(num, den, var, sampling_time)
+
+    @classmethod
+    def backward_diff(cls, cont_tf, sampling_time, var):
+        r"""
+        Returns the discretized transfer function H(z) from a continuous
+        transfer function H(s).
+
+        Explanation
+        ===========
+
+        Where H(z) is the corresponding discretized transfer function,
+        discretized with the backward difference transform method.
+        H(z) is obtained from the continuous transfer function H(s)
+        by substituting $s(z) =  \frac{z-1}{Tz}$ into H(s), where T is the
+        sample time.
+
+        Examples
+        ========
+
+        >>> from sympy.physics.control.lti import TransferFunction, DTTransferFunction
+        >>> from sympy.abc import s, z, L, R, T
+
+        >>> tf = TransferFunction(1, s*L + R, s)
+        >>> dttf = DTTransferFunction.backward_diff(tf, T, z)
+        >>> dttf.num
+        T*z/(L + R*T)
+        >>> dttf.den
+        -L/(L + R*T) + z
+        >>> dttf.sampling_time
+        T
+
+        """
+        num, den = backward_diff(cont_tf, sampling_time)
+        return cls.from_coeff_lists(num, den, var, sampling_time)
 
     def dc_gain(self):
         m = Mul(self.num, Pow(self.den, -1, evaluate=False), evaluate=False)
