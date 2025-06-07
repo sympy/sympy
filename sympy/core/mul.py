@@ -1668,7 +1668,7 @@ class Mul(Expr, AssocOp):
 
     def _eval_is_even(self):
         from sympy.simplify.radsimp import fraction
-        n, d = fraction(self)
+        n, d = fraction(self, exact=True)
         if n.is_Integer and n.is_even:
             # if minimal power of 2 in den vs num is not
             # negative then this is not an integer and
