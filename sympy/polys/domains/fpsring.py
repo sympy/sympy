@@ -426,7 +426,7 @@ class PowerSeriesElement:
         >>> x = R.gen
         >>> f =  1 + x + x**4
         >>> f**2
-        1 + 2*x + x**2 + x**8 + O(x**10)
+        1 + 2*x + x**2 + 2*x**4 + 2*x**5 + x**8 + O(x**10)
         """
         if not isinstance(n, int):
             raise ValueError("Exponent must be an integer.")
