@@ -834,6 +834,109 @@ def test_DTTransferFunction_functions():
     assert tf11.to_expr() == Pow(1, -1, evaluate=False)
 
 
+def test_DTTransferFunction_addition_and_subtraction():
+    #TODO: manage different sample_time
+    tf1 = DTTransferFunction(s + 6, s - 5, s, 20)
+    tf2 = DTTransferFunction(s + 3, s + 1, s)
+    tf3 = DTTransferFunction(s + 1, s**2 + s + 1, s)
+    tf4 = DTTransferFunction(p, 2 - p, p)
+
+    # addition
+    assert tf1 + tf2 == Parallel(tf1, tf2)
+    assert tf3 + tf1 == Parallel(tf3, tf1)
+    assert -tf1 + tf2 + tf3 == Parallel(-tf1, tf2, tf3)
+    assert tf1 + (tf2 + tf3) == Parallel(tf1, tf2, tf3)
+
+    c = symbols("c", commutative=False)
+    raises(ValueError, lambda: tf1 + Matrix([1, 2, 3]))
+    raises(ValueError, lambda: tf2 + c)
+    raises(ValueError, lambda: tf3 + tf4)
+    raises(ValueError, lambda: tf1 + (s - 1))
+    raises(ValueError, lambda: tf1 + 8)
+    raises(ValueError, lambda: (1 - p**3) + tf1)
+
+    # subtraction
+    assert tf1 - tf2 == Parallel(tf1, -tf2)
+    assert tf3 - tf2 == Parallel(tf3, -tf2)
+    assert -tf1 - tf3 == Parallel(-tf1, -tf3)
+    assert tf1 - tf2 + tf3 == Parallel(tf1, -tf2, tf3)
+
+    raises(ValueError, lambda: tf1 - Matrix([1, 2, 3]))
+    raises(ValueError, lambda: tf3 - tf4)
+    raises(ValueError, lambda: tf1 - (s - 1))
+    raises(ValueError, lambda: tf1 - 8)
+    raises(ValueError, lambda: (s + 5) - tf2)
+    raises(ValueError, lambda: (1 + p**4) - tf1)
+
+
+def test_DTTransferFunction_multiplication_and_division():
+    #TODO: manage different sample_time
+    G1 = DTTransferFunction(s + 3, -s**3 + 9, s)
+    G2 = DTTransferFunction(s + 1, s - 5, s)
+    G3 = DTTransferFunction(p, p**4 - 6, p)
+    G4 = DTTransferFunction(p + 4, p - 5, p)
+    G5 = DTTransferFunction(s + 6, s - 5, s)
+    G6 = DTTransferFunction(s + 3, s + 1, s)
+    G7 = DTTransferFunction(1, 1, s)
+
+    # multiplication
+    assert G1*G2 == Series(G1, G2)
+    assert -G1*G5 == Series(-G1, G5)
+    assert -G2*G5*-G6 == Series(-G2, G5, -G6)
+    assert -G1*-G2*-G5*-G6 == Series(-G1, -G2, -G5, -G6)
+    assert G3*G4 == Series(G3, G4)
+    assert (G1*G2)*-(G5*G6) == \
+        Series(G1, G2, DTTransferFunction(-1, 1, s), Series(G5, G6))
+    assert G1*G2*(G5 + G6) == Series(G1, G2, Parallel(G5, G6))
+
+    # division - See ``test_Feedback_functions()`` for division by Parallel objects.
+    assert G5/G6 == Series(G5, pow(G6, -1))
+    assert -G3/G4 == Series(-G3, pow(G4, -1))
+    assert (G5*G6)/G7 == Series(G5, G6, pow(G7, -1))
+
+    c = symbols("c", commutative=False)
+    raises(ValueError, lambda: G3 * Matrix([1, 2, 3]))
+    raises(ValueError, lambda: G1 * c)
+    raises(ValueError, lambda: G3 * G5)
+    raises(ValueError, lambda: G5 * (s - 1))
+    raises(ValueError, lambda: 9 * G5)
+
+    raises(ValueError, lambda: G3 / Matrix([1, 2, 3]))
+    raises(ValueError, lambda: G6 / 0)
+    raises(ValueError, lambda: G3 / G5)
+    raises(ValueError, lambda: G5 / 2)
+    raises(ValueError, lambda: G5 / s**2)
+    raises(ValueError, lambda: (s - 4*s**2) / G2)
+    raises(ValueError, lambda: 0 / G4)
+    raises(ValueError, lambda: G7 / (1 + G6))
+    raises(ValueError, lambda: G7 / (G5 * G6))
+    raises(ValueError, lambda: G7 / (G7 + (G5 + G6)))
+
+
+def test_DTTransferFunction_is_strictly_proper():
+    omega_o, zeta, tau = symbols('omega_o, zeta, tau')
+    tf1 = DTTransferFunction(omega_o**2, s**2 + p*omega_o*zeta*s + omega_o**2, omega_o)
+    tf2 = DTTransferFunction(tau - s**3, tau + p**4, tau)
+    tf3 = DTTransferFunction(a*b*s**3 + s**2 - a*p + s, b - s*p**2, p)
+    tf4 = DTTransferFunction(b*s**2 + p**2 - a*p + s, b - p**2, s)
+    assert not tf1.is_strictly_proper
+    assert not tf2.is_strictly_proper
+    assert tf3.is_strictly_proper
+    assert not tf4.is_strictly_proper
+
+
+def test_DTTransferFunction_is_biproper():
+    tau, omega_o, zeta = symbols('tau, omega_o, zeta')
+    tf1 = DTTransferFunction(omega_o**2, s**2 + p*omega_o*zeta*s + omega_o**2, omega_o)
+    tf2 = DTTransferFunction(tau - s**3, tau + p**4, tau)
+    tf3 = DTTransferFunction(a*b*s**3 + s**2 - a*p + s, b - s*p**2, p)
+    tf4 = DTTransferFunction(b*s**2 + p**2 - a*p + s, b - p**2, s)
+    assert tf1.is_biproper
+    assert tf2.is_biproper
+    assert not tf3.is_biproper
+    assert not tf4.is_biproper
+
+
 def test_PIDController():
     kp, ki, kd, tf = symbols("kp ki kd tf")
     p1 = PIDController(kp, ki, kd, tf)
@@ -2655,3 +2758,9 @@ def test_StateSpace_stability():
     ss2 = StateSpace(A2, B, C, D)
     ineq = ss2.get_asymptotic_stability_conditions()
     assert ineq == [False]
+
+
+
+
+
+

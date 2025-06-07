@@ -390,6 +390,12 @@ class LinearTimeInvariant(Basic, EvalfMixin):
                 values found."""))
 
     @property
+    def is_continuous(self):
+        """Returns `True` if the passed LTI system is continuous,
+        else returns `False`."""
+        return self._is_continuous
+
+    @property
     def is_SISO(self):
         """Returns `True` if the passed LTI system is SISO else returns False."""
         return self._is_SISO
@@ -1521,6 +1527,8 @@ class TransferFunction(TransferFunctionBase):
     def sampling_time(self) -> int | float:
         return 0 #XXX: it could be useful also in TransferFunction
 
+    _is_continuous = True
+
 class DTTransferFunction(TransferFunctionBase):
     def __new__(cls, num, den, var, sampling_time = 1):
         if sampling_time == 0:
@@ -1740,6 +1748,8 @@ class DTTransferFunction(TransferFunctionBase):
     def sampling_time(self) -> int | float: #XXX: should we add the possibility to use also symbols ?
         return self._sampling_time
 
+    _is_continuous = False
+
 class PIDController(TransferFunction):
     r"""
     A class for representing PID (Proportional-Integral-Derivative)
@@ -1854,6 +1864,7 @@ class PIDController(TransferFunction):
         """
         return TransferFunction(self.num, self.den, self.var)
 
+    _is_continuous = True
 
 def _flatten_args(args, _cls):
     temp_args = []
@@ -1876,6 +1887,16 @@ def _dummify_args(_arg, var):
         dummy_arg_list.append(dummy_arg)
 
     return dummy_arg_list, dummy_dict
+
+def _check_compatibility(systems):
+    """Checks compatibility between different systems"""
+    continuous = systems[0].is_continuous
+    for system in systems[1:]:
+        if system.is_continuous != continuous:
+            raise TypeError("""
+                Incompatible systems detected.
+                All systems should be either continuous-time or discrete-time.
+                Found: {} and {}""".format(systems[0], system,))
 
 
 class Series(SISOLinearTimeInvariant):
@@ -1993,6 +2014,9 @@ class Series(SISOLinearTimeInvariant):
             cls._is_series_StateSpace = False
             cls._check_args(args)
 
+        _check_compatibility(args)
+        cls._is_continuous = args[0].is_continuous
+
         obj = super().__new__(cls, *args)
 
         return obj.doit() if evaluate else obj
@@ -2075,6 +2099,13 @@ class Series(SISOLinearTimeInvariant):
             return self.doit().rewrite(TransferFunction)[0][0]
         return self.doit()
 
+    def _eval_rewrite_as_DTTransferFunction(self, *args, **kwargs):
+        if self._is_series_StateSpace: #TODO: differentiate between DTStateSpace and StateSpace, raise errors
+            return self.doit().rewrite(DTTransferFunction)[0][0]
+        return self.doit()
+
+    #TODO: add compatibility checks
+
     @_check_other_SISO
     def __add__(self, other):
 
@@ -2100,14 +2131,18 @@ class Series(SISOLinearTimeInvariant):
         return Series(*arg_list, other)
 
     def __truediv__(self, other):
-        if isinstance(other, TransferFunction):
-            return Series(*self.args, TransferFunction(other.den, other.num, other.var))
+        tf_class = TransferFunction if self.is_continuous\
+                            else DTTransferFunction
+
+        if isinstance(other, TransferFunctionBase):
+            return Series(*self.args, other.__class__(other.den, other.num,
+                                                      other.var))
         elif isinstance(other, Series):
-            tf_self = self.rewrite(TransferFunction)
-            tf_other = other.rewrite(TransferFunction)
+            tf_self = self.rewrite(tf_class)
+            tf_other = other.rewrite(tf_class)
             return tf_self / tf_other
         elif (isinstance(other, Parallel) and len(other.args) == 2
-            and isinstance(other.args[0], TransferFunction) and isinstance(other.args[1], Series)):
+            and isinstance(other.args[0], tf_class) and isinstance(other.args[1], Series)):
 
             if not self.var == other.var:
                 raise ValueError(filldedent("""
@@ -2126,7 +2161,7 @@ class Series(SISOLinearTimeInvariant):
             raise ValueError("This transfer function expression is invalid.")
 
     def __neg__(self):
-        return Series(TransferFunction(-1, 1, self.var), self)
+        return Series(self.args[0].__class__(-1, 1, self.var), self)
 
     def to_expr(self):
         """Returns the equivalent ``Expr`` object."""
@@ -2367,6 +2402,9 @@ class MIMOSeries(MIMOLinearTimeInvariant):
                     Number of input signals do not match the number
                     of output signals of adjacent systems for some args."""))
 
+        _check_compatibility(args)
+        cls._is_continuous = args[0].is_continuous
+
         return obj.doit() if evaluate else obj
 
     @property
@@ -2606,6 +2644,9 @@ class Parallel(SISOLinearTimeInvariant):
             cls._is_parallel_StateSpace = False
             cls._check_args(args)
         obj = super().__new__(cls, *args)
+
+        _check_compatibility(args)
+        cls._is_continuous = args[0].is_continuous
 
         return obj.doit() if evaluate else obj
 
@@ -2939,6 +2980,9 @@ class MIMOParallel(MIMOLinearTimeInvariant):
             cls._is_parallel_StateSpace = False
         obj = super().__new__(cls, *args)
 
+        _check_compatibility(args)
+        cls._is_continuous = args[0].is_continuous
+
         return obj.doit() if evaluate else obj
 
     @property
@@ -3170,12 +3214,15 @@ class Feedback(SISOLinearTimeInvariant):
     """
     def __new__(cls, sys1, sys2=None, sign=-1):
         if not sys2:
-            sys2 = TransferFunction(1, 1, sys1.var)
+            if sys1.is_continuous:
+                sys2 = TransferFunction(1, 1, sys1.var)
+            else:
+                sys2 = DTTransferFunction(1, 1, sys1.var)
 
-        if not isinstance(sys1, (TransferFunction, Series, StateSpace, Feedback)):
+        if not isinstance(sys1, (TransferFunctionBase, Series, StateSpace, Feedback)):
             raise TypeError("Unsupported type for `sys1` in Feedback.")
 
-        if not isinstance(sys2, (TransferFunction, Series, StateSpace, Feedback)):
+        if not isinstance(sys2, (TransferFunctionBase, Series, StateSpace, Feedback)):
             raise TypeError("Unsupported type for `sys2` in Feedback.")
 
         if not (sys1.num_inputs == sys1.num_outputs == sys2.num_inputs ==
@@ -3198,6 +3245,9 @@ class Feedback(SISOLinearTimeInvariant):
                 raise ValueError(filldedent("""Both `sys1` and `sys2` should be using the
                 same complex variable."""))
             cls.is_StateSpace_object = False
+
+        _check_compatibility([sys1, sys2])
+        cls._is_continuous = sys1.is_continuous
 
         return super(SISOLinearTimeInvariant, cls).__new__(cls, sys1, sys2, _sympify(sign))
 
@@ -3645,6 +3695,9 @@ class MIMOFeedback(MIMOLinearTimeInvariant):
             raise ValueError(filldedent("""
                 Both `sys1` and `sys2` should be using the
                 same complex variable."""))
+
+        _check_compatibility([sys1, sys2])
+        cls._is_continuous = sys1.is_continuous
 
         return super().__new__(cls, sys1, sys2, _sympify(sign))
 
@@ -4315,6 +4368,9 @@ class TransferFunctionMatrix(MIMOLinearTimeInvariant):
                 temp.append(element.to_expr())
             expr_mat_arg.append(temp)
 
+        _check_compatibility([sys for row in arg for sys in row])
+        cls._is_continuous = arg[0][0].is_continuous
+
         if isinstance(arg, (tuple, list, Tuple)):
             # Making nested Tuple (sympy.core.containers.Tuple) from nested list or nested Python tuple
             arg = Tuple(*(Tuple(*r, sympify=False) for r in arg), sympify=False)
@@ -4322,10 +4378,11 @@ class TransferFunctionMatrix(MIMOLinearTimeInvariant):
         obj = super(TransferFunctionMatrix, cls).__new__(cls, arg)
         obj._expr_mat = ImmutableMatrix(expr_mat_arg)
         obj.is_StateSpace_object = False
+
         return obj
 
     @classmethod
-    def from_Matrix(cls, matrix, var):
+    def from_Matrix(cls, matrix, var): #TODO: expand for discrete systems
         """
         Creates a new ``TransferFunctionMatrix`` efficiently from a SymPy Matrix of ``Expr`` objects.
 
@@ -5464,9 +5521,12 @@ class StateSpace(StateSpaceBase):
     def __init__(super, A=None, B=None, C=None, D=None):
         ...
 
+    _is_continuous = True
 class DTStateSpace(StateSpaceBase):
     def __new__(cls, A=None, B=None, C=None, D=None, sampling_time = 1):
         return super(DTStateSpace, cls).__new__(cls, A, B, C, D)
 
     def __init__(self, A=None, B=None, C=None, D=None, sampling_time = 1):
         self._sampling_time = sampling_time
+
+    _is_continuous = False
