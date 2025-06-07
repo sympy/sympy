@@ -29,9 +29,11 @@ from sympy.physics.control.routh_table import neg_roots_conds
 
 from mpmath.libmp.libmpf import prec_to_dps
 
-__all__ = ['TransferFunction', 'PIDController', 'Series', 'MIMOSeries', 'Parallel', 'MIMOParallel',
-    'Feedback', 'MIMOFeedback', 'TransferFunctionMatrix', 'StateSpace', 'gbt', 'bilinear', 'forward_diff', 'backward_diff',
-    'phase_margin', 'gain_margin']
+__all__ = ['TransferFunction', 'DTTransferFunction', 'PIDController', 'Series',
+           'MIMOSeries', 'Parallel', 'MIMOParallel', 'Feedback', 'MIMOFeedback',
+           'TransferFunctionMatrix', 'StateSpace', 'DTStateSpace', 'gbt',
+           'bilinear', 'forward_diff', 'backward_diff', 'phase_margin',
+           'gain_margin']
 
 def _roots(poly, var):
     """ like roots, but works on higher-order polynomials. """
@@ -51,8 +53,8 @@ def gbt(tf, sample_per, alpha):
     Where H(z) is the corresponding discretized transfer function,
     discretized with the generalised bilinear transformation method.
     H(z) is obtained from the continuous transfer function H(s)
-    by substituting $s(z) = \frac{z-1}{T(\alpha z + (1-\alpha))}$ into H(s), where T is the
-    sample period.
+    by substituting $s(z) = \frac{z-1}{T(\alpha z + (1-\alpha))}$ into H(s),
+    where T is the sample period.
     Coefficients are falling, i.e. $H(z) = \frac{az+b}{cz+d}$ is returned
     as [a, b], [c, d].
 
@@ -127,8 +129,8 @@ def bilinear(tf, sample_per):
     Where H(z) is the corresponding discretized transfer function,
     discretized with the bilinear transform method.
     H(z) is obtained from the continuous transfer function H(s)
-    by substituting $s(z) = \frac{2}{T}\frac{z-1}{z+1}$ into H(s), where T is the
-    sample period.
+    by substituting $s(z) = \frac{2}{T}\frac{z-1}{z+1}$ into H(s), where T is
+    the sample period.
     Coefficients are falling, i.e. $H(z) = \frac{az+b}{cz+d}$ is returned
     as [a, b], [c, d].
 
@@ -388,6 +390,12 @@ class LinearTimeInvariant(Basic, EvalfMixin):
                 values found."""))
 
     @property
+    def is_continuous(self):
+        """Returns `True` if the passed LTI system is continuous,
+        else returns `False`."""
+        return self._is_continuous
+
+    @property
     def is_SISO(self):
         """Returns `True` if the passed LTI system is SISO else returns False."""
         return self._is_SISO
@@ -437,8 +445,7 @@ def _check_other_MIMO(func):
             return func(*args, **kwargs)
     return wrapper
 
-
-class TransferFunction(SISOLinearTimeInvariant):
+class TransferFunctionBase(SISOLinearTimeInvariant):
     r"""
     A class for representing LTI (Linear, time-invariant) systems that can be strictly described
     by ratio of polynomials in the Laplace transform complex variable. The arguments
@@ -624,7 +631,12 @@ class TransferFunction(SISOLinearTimeInvariant):
     .. [2] https://en.wikipedia.org/wiki/Laplace_transform
 
     """
-    def __new__(cls, num, den, var):
+    def __new__(cls, num, den, var, *args, **kwargs):
+        if cls is TransferFunctionBase:
+            raise NotImplementedError(
+                """
+                The TransferFunctionBase class is not meant tobe used directly.
+                """)
         num, den = _sympify(num), _sympify(den)
 
         if not isinstance(var, Symbol):
@@ -633,16 +645,34 @@ class TransferFunction(SISOLinearTimeInvariant):
         if den == 0:
             raise ValueError("TransferFunction cannot have a zero denominator.")
 
-        if (((isinstance(num, (Expr, TransferFunction, Series, Parallel)) and num.has(Symbol)) or num.is_number) and
-            ((isinstance(den, (Expr, TransferFunction, Series, Parallel)) and den.has(Symbol)) or den.is_number)):
+        accepted_istances = (Expr, TransferFunctionBase, Series, Parallel)
+        num_accepted = ((isinstance(num, accepted_istances) and num.has(Symbol))
+                    or num.is_number)
+        den_accepted = ((isinstance(den, accepted_istances) and den.has(Symbol))
+                    or den.is_number)
+
+        if num_accepted and den_accepted:
             cls.is_StateSpace_object = False
-            return super(TransferFunction, cls).__new__(cls, num, den, var)
+            return super(TransferFunctionBase, cls).__new__(cls, num, den, var,
+                                                            *args, **kwargs)
 
         else:
-            raise TypeError("Unsupported type for numerator or denominator of TransferFunction.")
+            raise TypeError("""Unsupported type for numerator or denominator of
+                            TransferFunction.""")
+
+    def _additional_constructor_args(self) -> dict:
+        """
+        Returns a dictionary of additional keyword arguments required
+        for constructing an instance of this specific class, beyond
+        num, den, and var.
+        """
+        raise NotImplementedError(
+            """
+            This method should be overridden by subclasses.
+            """)
 
     @classmethod
-    def from_rational_expression(cls, expr, var=None):
+    def from_rational_expression(cls, expr, var=None, *args, **kwargs):
         r"""
         Creates a new ``TransferFunction`` efficiently from a rational expression.
 
@@ -721,10 +751,10 @@ class TransferFunction(SISOLinearTimeInvariant):
         _num, _den = expr.as_numer_denom()
         if _den == 0 or _num.has(S.ComplexInfinity):
             raise ZeroDivisionError("TransferFunction cannot have a zero denominator.")
-        return cls(_num, _den, var)
+        return cls(_num, _den, var, *args, **kwargs)
 
     @classmethod
-    def from_coeff_lists(cls, num_list, den_list, var):
+    def from_coeff_lists(cls, num_list, den_list, var, *args, **kwargs):
         r"""
         Creates a new ``TransferFunction`` efficiently from a list of coefficients.
 
@@ -772,10 +802,10 @@ class TransferFunction(SISOLinearTimeInvariant):
         if _den == 0:
             raise ZeroDivisionError("TransferFunction cannot have a zero denominator.")
 
-        return cls(_num, _den, var)
+        return cls(_num, _den, var, *args, **kwargs)
 
     @classmethod
-    def from_zpk(cls, zeros, poles, gain, var):
+    def from_zpk(cls, zeros, poles, gain, var, *args, **kwargs):
         r"""
         Creates a new ``TransferFunction`` from given zeros, poles and gain.
 
@@ -820,7 +850,7 @@ class TransferFunction(SISOLinearTimeInvariant):
         for pole in poles:
             den_poly *= var - pole
 
-        return cls(gain*num_poly, den_poly, var)
+        return cls(gain*num_poly, den_poly, var, *args, **kwargs)
 
     @property
     def num(self):
@@ -884,21 +914,31 @@ class TransferFunction(SISOLinearTimeInvariant):
         return self.args[2]
 
     def _eval_subs(self, old, new):
+        if old == self.var:
+            return self
+
         arg_num = self.num.subs(old, new)
         arg_den = self.den.subs(old, new)
-        argnew = TransferFunction(arg_num, arg_den, self.var)
-        return self if old == self.var else argnew
+
+        additional_args = self._additional_constructor_args()
+        argnew = self.__class__(arg_num, arg_den, self.var, **additional_args)
+
+        return argnew
 
     def _eval_evalf(self, prec):
-        return TransferFunction(
+        additional_args = self._additional_constructor_args()
+        return self.__class__(
             self.num._eval_evalf(prec),
             self.den._eval_evalf(prec),
-            self.var)
+            self.var, **additional_args)
 
     def _eval_simplify(self, **kwargs):
-        tf = cancel(Mul(self.num, 1/self.den, evaluate=False), expand=False).as_numer_denom()
+        tf = cancel(Mul(self.num, 1/self.den, evaluate=False),
+                    expand=False).as_numer_denom()
         num_, den_ = tf[0], tf[1]
-        return TransferFunction(num_, den_, self.var)
+
+        additional_args = self._additional_constructor_args()
+        return self.__class__(num_, den_, self.var, **additional_args)
 
     def _eval_rewrite_as_StateSpace(self, *args):
         """
@@ -956,7 +996,7 @@ class TransferFunction(SISOLinearTimeInvariant):
 
         D = Matrix([num_coeffs[0]])
 
-        return StateSpace(A, B, C, D)
+        return StateSpace(A, B, C, D) #TODO: return also Discrete StateSpace
 
     def expand(self):
         """
@@ -976,7 +1016,9 @@ class TransferFunction(SISOLinearTimeInvariant):
         TransferFunction(-3*b**2 + 2*b*p + p**2, -2*b**2 + b*p + p**2, p)
 
         """
-        return TransferFunction(expand(self.num), expand(self.den), self.var)
+        additional_args = self._additional_constructor_args()
+        return self.__class__(expand(self.num), expand(self.den), self.var,
+                              **additional_args)
 
     def dc_gain(self):
         """
@@ -1003,8 +1045,10 @@ class TransferFunction(SISOLinearTimeInvariant):
         oo
 
         """
-        m = Mul(self.num, Pow(self.den, -1, evaluate=False), evaluate=False)
-        return limit(m, self.var, 0)
+        raise NotImplementedError(
+            """
+            This method should be overridden by subclasses.
+            """)
 
     def poles(self):
         """
@@ -1063,17 +1107,17 @@ class TransferFunction(SISOLinearTimeInvariant):
         >>> tf1 = TransferFunction(1, s**2 + 2*s + 1, s)
         >>> omega = 0.1
         >>> tf1.eval_frequency(I*omega)
-        1/(0.99 + 0.2*I)
+        0.970493088912852 - 0.196059209881384*I
         >>> tf2 = TransferFunction(s**2, a*s + p, s)
         >>> tf2.eval_frequency(2)
         4/(2*a + p)
         >>> tf2.eval_frequency(I*2)
         -4/(2*I*a + p)
         """
-        arg_num = self.num.subs(self.var, other)
-        arg_den = self.den.subs(self.var, other)
-        argnew = TransferFunction(arg_num, arg_den, self.var).to_expr()
-        return argnew.expand()
+        raise NotImplementedError(
+            """
+            This method should be overridden by subclasses.
+            """)
 
     def is_stable(self, cancel_poles_zeros=False):
         """
@@ -1119,21 +1163,10 @@ class TransferFunction(SISOLinearTimeInvariant):
         True
 
         """
-        tf = self.to_standard_form(cancel_poles_zeros)
-
-        conditions = tf.get_asymptotic_stability_conditions(cancel_poles_zeros = False)
-
-        try:
-            output = reduce_inequalities(conditions)
-        except NotImplementedError:
-            # If there are more than one symbols,
-            # reduce_inequalities could fail
-            return None
-
-        if output in (true, false):
-            return bool(output)
-
-        return None
+        raise NotImplementedError(
+            """
+            This method should be overridden by subclasses.
+            """)
 
     def to_standard_form(self, cancel_poles_zeros=False):
         r"""
@@ -1226,29 +1259,30 @@ class TransferFunction(SISOLinearTimeInvariant):
         (3/10 < k) & (k < oo)
 
         """
-        standard_form = self.to_standard_form(cancel_poles_zeros)
-
-        return neg_roots_conds(standard_form.den, self.var)
+        raise NotImplementedError(
+            """
+            This method should be overridden by subclasses.
+            """)
 
     def __add__(self, other):
         if hasattr(other, "is_StateSpace_object") and other.is_StateSpace_object:
             return Parallel(self, other)
-        elif isinstance(other, (TransferFunction, Series, Feedback)):
+        elif isinstance(other, (self.__class__, Series, Feedback)):
             if not self.var == other.var:
                 raise ValueError(filldedent("""
-                    All the transfer functions should use the same complex variable
-                    of the Laplace transform."""))
+                    All the transfer functions should use the same complex
+                    variable of the Laplace domain or z-domain.""")) #TODO: discuss this behavior
             return Parallel(self, other)
         elif isinstance(other, Parallel):
             if not self.var == other.var:
                 raise ValueError(filldedent("""
-                    All the transfer functions should use the same complex variable
-                    of the Laplace transform."""))
+                    All the transfer functions should use the same complex
+                    variable of the Laplace domain or z-domain."""))
             arg_list = list(other.args)
             return Parallel(self, *arg_list)
         else:
-            raise ValueError("TransferFunction cannot be added with {}.".
-                format(type(other)))
+            raise ValueError("{} cannot be added with {}.".
+                format(type(self), type(other)))
 
     def __radd__(self, other):
         return self + other
@@ -1256,22 +1290,22 @@ class TransferFunction(SISOLinearTimeInvariant):
     def __sub__(self, other):
         if hasattr(other, "is_StateSpace_object") and other.is_StateSpace_object:
             return Parallel(self, -other)
-        elif isinstance(other, (TransferFunction, Series)):
+        elif isinstance(other, (self.__class__, Series)):
             if not self.var == other.var:
                 raise ValueError(filldedent("""
-                    All the transfer functions should use the same complex variable
-                    of the Laplace transform."""))
+                    All the transfer functions should use the same complex
+                    variable of the Laplace domain or z-domain."""))
             return Parallel(self, -other)
         elif isinstance(other, Parallel):
             if not self.var == other.var:
                 raise ValueError(filldedent("""
-                    All the transfer functions should use the same complex variable
-                    of the Laplace transform."""))
+                    All the transfer functions should use the same complex
+                    variable of the Laplace transform."""))
             arg_list = [-i for i in list(other.args)]
             return Parallel(self, *arg_list)
         else:
-            raise ValueError("{} cannot be subtracted from a TransferFunction."
-                .format(type(other)))
+            raise ValueError("{} cannot be subtracted from a {}."
+                .format(type(self), type(other)))
 
     def __rsub__(self, other):
         return -self + other
@@ -1279,40 +1313,40 @@ class TransferFunction(SISOLinearTimeInvariant):
     def __mul__(self, other):
         if hasattr(other, "is_StateSpace_object") and other.is_StateSpace_object:
             return Series(self, other)
-        elif isinstance(other, (TransferFunction, Parallel, Feedback)):
+        elif isinstance(other, (self.__class__, Parallel, Feedback)):
             if not self.var == other.var:
                 raise ValueError(filldedent("""
                     All the transfer functions should use the same complex variable
-                    of the Laplace transform."""))
+                    of the Laplace domain or z-domain."""))
             return Series(self, other)
         elif isinstance(other, Series):
             if not self.var == other.var:
                 raise ValueError(filldedent("""
                     All the transfer functions should use the same complex variable
-                    of the Laplace transform."""))
+                    of the Laplace domain or z-domain."""))
             arg_list = list(other.args)
             return Series(self, *arg_list)
         else:
-            raise ValueError("TransferFunction cannot be multiplied with {}."
-                .format(type(other)))
+            raise ValueError("{} cannot be multiplied with {}."
+                .format(type(self), type(other)))
 
     __rmul__ = __mul__
 
     def __truediv__(self, other):
-        if isinstance(other, TransferFunction):
+        if isinstance(other, self.__class__):
             if not self.var == other.var:
                 raise ValueError(filldedent("""
-                    All the transfer functions should use the same complex variable
-                    of the Laplace transform."""))
-            return Series(self, TransferFunction(other.den, other.num, self.var))
+                    All the transfer functions should use the same complex
+                    variable of the Laplace domain or z-domain."""))
+            return Series(self, self.__class__(other.den, other.num, self.var))
         elif (isinstance(other, Parallel) and len(other.args
-                ) == 2 and isinstance(other.args[0], TransferFunction)
-            and isinstance(other.args[1], (Series, TransferFunction))):
+                ) == 2 and isinstance(other.args[0], self.__class__)
+            and isinstance(other.args[1], (Series, self.__class__))):
 
             if not self.var == other.var:
                 raise ValueError(filldedent("""
                     Both TransferFunction and Parallel should use the
-                    same complex variable of the Laplace transform."""))
+                    same complex variable of the Laplace domain or z-domain."""))
             if other.args[1] == self:
                 # plant and controller with unit feedback.
                 return Feedback(self, other.args[0])
@@ -1330,8 +1364,8 @@ class TransferFunction(SISOLinearTimeInvariant):
             else:
                 return Feedback(self, Series(*other_arg_list))
         else:
-            raise ValueError("TransferFunction cannot be divided by {}.".
-                format(type(other)))
+            raise ValueError("{} cannot be divided by {}.".
+                format(type(self), type(other)))
 
     __rtruediv__ = __truediv__
 
@@ -1340,17 +1374,17 @@ class TransferFunction(SISOLinearTimeInvariant):
         if not p.is_Integer:
             raise ValueError("Exponent must be an integer.")
         if p is S.Zero:
-            return TransferFunction(1, 1, self.var)
+            return self.__class__(1, 1, self.var)
         elif p > 0:
             num_, den_ = self.num**p, self.den**p
         else:
             p = abs(p)
             num_, den_ = self.den**p, self.num**p
 
-        return TransferFunction(num_, den_, self.var)
+        return self.__class__(num_, den_, self.var)
 
     def __neg__(self):
-        return TransferFunction(-self.num, self.den, self.var)
+        return self.__class__(-self.num, self.den, self.var)
 
     @property
     def is_proper(self):
@@ -1444,6 +1478,277 @@ class TransferFunction(SISOLinearTimeInvariant):
         else:
             return Pow(self.den, -1, evaluate=False)
 
+class TransferFunction(TransferFunctionBase):
+    def __new__(cls, num, den, var):
+        return super(TransferFunction, cls).__new__(cls, num, den, var)
+
+    def __init__(self, num, den, var):
+        ...
+
+    def _additional_constructor_args(self) -> dict:
+        """
+        Returns a void dictionary for the TransferFunction class.
+
+        """
+        return {}
+
+    def dc_gain(self):
+        m = Mul(self.num, Pow(self.den, -1, evaluate=False), evaluate=False)
+        return limit(m, self.var, 0)
+
+    def is_stable(self, cancel_poles_zeros=False):
+        tf = self.to_standard_form(cancel_poles_zeros)
+
+        conditions = tf.get_asymptotic_stability_conditions(cancel_poles_zeros = False)
+
+        try:
+            output = reduce_inequalities(conditions)
+        except NotImplementedError:
+            # If there are more than one symbols,
+            # reduce_inequalities could fail
+            return None
+
+        if output in (true, false):
+            return bool(output)
+
+        return None
+
+    def get_asymptotic_stability_conditions(self, cancel_poles_zeros = False):
+        standard_form = self.to_standard_form(cancel_poles_zeros)
+
+        return neg_roots_conds(standard_form.den, self.var)
+
+    def eval_frequency(self, other):
+        arg_num = self.num.subs(self.var, other)
+        arg_den = self.den.subs(self.var, other)
+        return Mul(arg_num, S.One / arg_den).expand()
+
+    @property
+    def sampling_time(self) -> int | float:
+        return 0 #XXX: it could be useful also in TransferFunction
+
+    _is_continuous = True
+
+class DTTransferFunction(TransferFunctionBase):
+    def __new__(cls, num, den, var, sampling_time = 1):
+        if sampling_time == 0:
+            return TransferFunction(num, den, var)
+
+        return super(DTTransferFunction, cls).__new__(cls, num, den, var,
+                                                      sampling_time)
+
+    def __init__(self, num, den, var, sampling_time = 1):
+        super().__init__()
+        self._sampling_time = sampling_time
+
+    def _additional_constructor_args(self) -> dict:
+        """
+        Returns a dictionary with the sampling_time for the
+        DTTransferFunction class.
+
+        """
+        return {'sampling_time': self._sampling_time}
+
+    @classmethod
+    def from_rational_expression(cls, expr, var=None, sampling_time = 1):
+        return super().from_rational_expression(expr, var,
+                                         sampling_time = sampling_time)
+
+    @classmethod
+    def from_coeff_lists(cls, num_list, den_list, var, sampling_time = 1):
+        return super().from_coeff_lists(num_list, den_list,
+                                        var, sampling_time = sampling_time)
+
+    @classmethod
+    def from_zpk(cls, zeros, poles, gain, var, sampling_time = 1):
+        return super().from_zpk(zeros, poles, gain,
+                                var, sampling_time = sampling_time)
+
+    # discretization methods #TODO: add tests
+    @classmethod
+    def gbt(cls, cont_tf, sampling_time, alpha, var):
+        r"""
+        Returns the discretized transfer function H(z) from a continuous
+        transfer function H(s).
+
+        Explanation
+        ===========
+
+        Where H(z) is the corresponding discretized transfer function,
+        discretized with the generalised bilinear transformation method.
+        H(z) is obtained from the continuous transfer function H(s)
+        by substituting $s(z) = \frac{z-1}{T(\alpha z + (1-\alpha))}$ into H(s),
+        where T is the sample time.
+
+        Examples
+        ========
+
+        >>> from sympy.physics.control.lti import TransferFunction, DTTransferFunction
+        >>> from sympy.abc import s, z, L, R, T
+
+        >>> tf = TransferFunction(1, s*L + R, s)
+        >>> dttf1 = DTTransferFunction.gbt(tf, T, 0.5, z)
+        >>> dttf1.num
+        T*z/(2*(L + R*T/2)) + T/(2*(L + R*T/2))
+        >>> dttf1.den
+        z + (-L + R*T/2)/(L + R*T/2)
+        >>> dttf1.sampling_time
+        T
+
+        >>> dttf2 = DTTransferFunction.gbt(tf, T, 0, z)
+        >>> dttf2.num
+        T/L
+        >>> dttf2.den
+        z + (-L + R*T)/L
+        >>> dttf2.sampling_time
+        T
+
+        >>> dttf3 = DTTransferFunction.gbt(tf, T, 1, z)
+        >>> dttf3.num
+        T*z/(L + R*T)
+        >>> dttf3.den
+        -L/(L + R*T) + z
+        >>> dttf3.sampling_time
+        T
+
+        >>> dttf4 = DTTransferFunction.gbt(tf, T, 0.3, z)
+        >>> dttf4.num
+        3*T*z/(10*(L + 3*R*T/10)) + 7*T/(10*(L + 3*R*T/10))
+        >>> dttf4.den
+        z + (-L + 7*R*T/10)/(L + 3*R*T/10)
+        >>> dttf4.sampling_time
+        T
+
+        References
+        ==========
+
+        .. [1] https://www.polyu.edu.hk/ama/profile/gfzhang/Research/ZCC09_IJC.pdf
+        """
+        num, den = gbt(cont_tf, sampling_time, alpha)
+        return cls.from_coeff_lists(num, den, var, sampling_time)
+
+    @classmethod
+    def bilinear(cls, cont_tf, sampling_time, var):
+        r"""
+        Returns the discretized transfer function H(z) from a continuous
+        transfer function H(s).
+
+        Explanation
+        ===========
+
+        Where H(z) is the corresponding discretized transfer function,
+        discretized with the bilinear transform method.
+        H(z) is obtained from the continuous transfer function H(s)
+        by substituting $s(z) = \frac{2}{T}\frac{z-1}{z+1}$ into H(s), where T
+        is the sample time.
+
+        Examples
+        ========
+
+        >>> from sympy.physics.control.lti import TransferFunction, DTTransferFunction
+        >>> from sympy.abc import s, z, L, R, T
+
+        >>> tf = TransferFunction(1, s*L + R, s)
+        >>> dttf = DTTransferFunction.bilinear(tf, T, z)
+        >>> dttf.num
+        T*z/(2*(L + R*T/2)) + T/(2*(L + R*T/2))
+        >>> dttf.den
+        z + (-L + R*T/2)/(L + R*T/2)
+        >>> dttf.sampling_time
+        T
+
+        """
+        num, den = bilinear(cont_tf, sampling_time)
+        return cls.from_coeff_lists(num, den, var, sampling_time)
+
+    @classmethod
+    def forward_diff(cls, cont_tf, sampling_time, var):
+        r"""
+        Returns the discretized transfer function H(z) from a continuous
+        transfer function H(s).
+
+        Explanation
+        ===========
+
+        Where H(z) is the corresponding discretized transfer function,
+        discretized with the forward difference transform method.
+        H(z) is obtained from the continuous transfer function H(s)
+        by substituting $s(z) = \frac{z-1}{T}$ into H(s), where T is the
+        sample time.
+
+        Examples
+        ========
+
+        >>> from sympy.physics.control.lti import TransferFunction, DTTransferFunction
+        >>> from sympy.abc import s, z, L, R, T
+
+        >>> tf = TransferFunction(1, s*L + R, s)
+        >>> dttf = DTTransferFunction.forward_diff(tf, T, z)
+        >>> dttf.num
+        T/L
+        >>> dttf.den
+        z + (-L + R*T)/L
+        >>> dttf.sampling_time
+        T
+
+        """
+        num, den = forward_diff(cont_tf, sampling_time)
+        return cls.from_coeff_lists(num, den, var, sampling_time)
+
+    @classmethod
+    def backward_diff(cls, cont_tf, sampling_time, var):
+        r"""
+        Returns the discretized transfer function H(z) from a continuous
+        transfer function H(s).
+
+        Explanation
+        ===========
+
+        Where H(z) is the corresponding discretized transfer function,
+        discretized with the backward difference transform method.
+        H(z) is obtained from the continuous transfer function H(s)
+        by substituting $s(z) =  \frac{z-1}{Tz}$ into H(s), where T is the
+        sample time.
+
+        Examples
+        ========
+
+        >>> from sympy.physics.control.lti import TransferFunction, DTTransferFunction
+        >>> from sympy.abc import s, z, L, R, T
+
+        >>> tf = TransferFunction(1, s*L + R, s)
+        >>> dttf = DTTransferFunction.backward_diff(tf, T, z)
+        >>> dttf.num
+        T*z/(L + R*T)
+        >>> dttf.den
+        -L/(L + R*T) + z
+        >>> dttf.sampling_time
+        T
+
+        """
+        num, den = backward_diff(cont_tf, sampling_time)
+        return cls.from_coeff_lists(num, den, var, sampling_time)
+
+    def dc_gain(self):
+        m = Mul(self.num, Pow(self.den, -1, evaluate=False), evaluate=False)
+        return limit(m, self.var, 1)
+
+    def is_stable(self, cancel_poles_zeros=False):
+        ...
+
+    def get_asymptotic_stability_conditions(self, cancel_poles_zeros = False):
+        ...
+
+    def eval_frequency(self, other):
+        arg_num = self.num.subs(self.var, exp(other)) #XXX: check for other * sampling time
+        arg_den = self.den.subs(self.var, exp(other))
+        return Mul(arg_num, S.One / arg_den).expand()
+
+    @property
+    def sampling_time(self) -> int | float: #XXX: should we add the possibility to use also symbols ?
+        return self._sampling_time
+
+    _is_continuous = False
 
 class PIDController(TransferFunction):
     r"""
@@ -1512,8 +1817,13 @@ class PIDController(TransferFunction):
         num = kp*tf*var**2 + kp*var + ki*tf*var + ki + kd*var**2
         den = tf*var**2 + var
         obj = TransferFunction.__new__(cls, num, den, var)
-        obj._kp, obj._ki, obj._kd, obj._tf = kp, ki, kd, tf
         return obj
+
+    def __init__(self, kp=Symbol('kp'), ki=Symbol('ki'), kd=Symbol('kd'), tf=0, var=Symbol('s')):
+        self._kp = kp
+        self._ki = ki
+        self._kd = kd
+        self._tf = tf
 
     def __repr__(self):
         return f"PIDController({self.kp}, {self.ki}, {self.kd}, {self.tf}, {self.var})"
@@ -1554,6 +1864,7 @@ class PIDController(TransferFunction):
         """
         return TransferFunction(self.num, self.den, self.var)
 
+    _is_continuous = True
 
 def _flatten_args(args, _cls):
     temp_args = []
@@ -1576,6 +1887,16 @@ def _dummify_args(_arg, var):
         dummy_arg_list.append(dummy_arg)
 
     return dummy_arg_list, dummy_dict
+
+def _check_compatibility(systems):
+    """Checks compatibility between different systems"""
+    continuous = systems[0].is_continuous
+    for system in systems[1:]:
+        if system.is_continuous != continuous:
+            raise TypeError("""
+                Incompatible systems detected.
+                All systems should be either continuous-time or discrete-time.
+                Found: {} and {}""".format(systems[0], system,))
 
 
 class Series(SISOLinearTimeInvariant):
@@ -1693,6 +2014,9 @@ class Series(SISOLinearTimeInvariant):
             cls._is_series_StateSpace = False
             cls._check_args(args)
 
+        _check_compatibility(args)
+        cls._is_continuous = args[0].is_continuous
+
         obj = super().__new__(cls, *args)
 
         return obj.doit() if evaluate else obj
@@ -1775,6 +2099,13 @@ class Series(SISOLinearTimeInvariant):
             return self.doit().rewrite(TransferFunction)[0][0]
         return self.doit()
 
+    def _eval_rewrite_as_DTTransferFunction(self, *args, **kwargs):
+        if self._is_series_StateSpace: #TODO: differentiate between DTStateSpace and StateSpace, raise errors
+            return self.doit().rewrite(DTTransferFunction)[0][0]
+        return self.doit()
+
+    #TODO: add compatibility checks
+
     @_check_other_SISO
     def __add__(self, other):
 
@@ -1800,14 +2131,18 @@ class Series(SISOLinearTimeInvariant):
         return Series(*arg_list, other)
 
     def __truediv__(self, other):
-        if isinstance(other, TransferFunction):
-            return Series(*self.args, TransferFunction(other.den, other.num, other.var))
+        tf_class = TransferFunction if self.is_continuous\
+                            else DTTransferFunction
+
+        if isinstance(other, TransferFunctionBase):
+            return Series(*self.args, other.__class__(other.den, other.num,
+                                                      other.var))
         elif isinstance(other, Series):
-            tf_self = self.rewrite(TransferFunction)
-            tf_other = other.rewrite(TransferFunction)
+            tf_self = self.rewrite(tf_class)
+            tf_other = other.rewrite(tf_class)
             return tf_self / tf_other
         elif (isinstance(other, Parallel) and len(other.args) == 2
-            and isinstance(other.args[0], TransferFunction) and isinstance(other.args[1], Series)):
+            and isinstance(other.args[0], tf_class) and isinstance(other.args[1], Series)):
 
             if not self.var == other.var:
                 raise ValueError(filldedent("""
@@ -1826,7 +2161,7 @@ class Series(SISOLinearTimeInvariant):
             raise ValueError("This transfer function expression is invalid.")
 
     def __neg__(self):
-        return Series(TransferFunction(-1, 1, self.var), self)
+        return Series(self.args[0].__class__(-1, 1, self.var), self)
 
     def to_expr(self):
         """Returns the equivalent ``Expr`` object."""
@@ -2067,6 +2402,9 @@ class MIMOSeries(MIMOLinearTimeInvariant):
                     Number of input signals do not match the number
                     of output signals of adjacent systems for some args."""))
 
+        _check_compatibility(args)
+        cls._is_continuous = args[0].is_continuous
+
         return obj.doit() if evaluate else obj
 
     @property
@@ -2306,6 +2644,9 @@ class Parallel(SISOLinearTimeInvariant):
             cls._is_parallel_StateSpace = False
             cls._check_args(args)
         obj = super().__new__(cls, *args)
+
+        _check_compatibility(args)
+        cls._is_continuous = args[0].is_continuous
 
         return obj.doit() if evaluate else obj
 
@@ -2639,6 +2980,9 @@ class MIMOParallel(MIMOLinearTimeInvariant):
             cls._is_parallel_StateSpace = False
         obj = super().__new__(cls, *args)
 
+        _check_compatibility(args)
+        cls._is_continuous = args[0].is_continuous
+
         return obj.doit() if evaluate else obj
 
     @property
@@ -2870,12 +3214,15 @@ class Feedback(SISOLinearTimeInvariant):
     """
     def __new__(cls, sys1, sys2=None, sign=-1):
         if not sys2:
-            sys2 = TransferFunction(1, 1, sys1.var)
+            if sys1.is_continuous:
+                sys2 = TransferFunction(1, 1, sys1.var)
+            else:
+                sys2 = DTTransferFunction(1, 1, sys1.var)
 
-        if not isinstance(sys1, (TransferFunction, Series, StateSpace, Feedback)):
+        if not isinstance(sys1, (TransferFunctionBase, Series, StateSpace, Feedback)):
             raise TypeError("Unsupported type for `sys1` in Feedback.")
 
-        if not isinstance(sys2, (TransferFunction, Series, StateSpace, Feedback)):
+        if not isinstance(sys2, (TransferFunctionBase, Series, StateSpace, Feedback)):
             raise TypeError("Unsupported type for `sys2` in Feedback.")
 
         if not (sys1.num_inputs == sys1.num_outputs == sys2.num_inputs ==
@@ -2898,6 +3245,9 @@ class Feedback(SISOLinearTimeInvariant):
                 raise ValueError(filldedent("""Both `sys1` and `sys2` should be using the
                 same complex variable."""))
             cls.is_StateSpace_object = False
+
+        _check_compatibility([sys1, sys2])
+        cls._is_continuous = sys1.is_continuous
 
         return super(SISOLinearTimeInvariant, cls).__new__(cls, sys1, sys2, _sympify(sign))
 
@@ -3345,6 +3695,9 @@ class MIMOFeedback(MIMOLinearTimeInvariant):
             raise ValueError(filldedent("""
                 Both `sys1` and `sys2` should be using the
                 same complex variable."""))
+
+        _check_compatibility([sys1, sys2])
+        cls._is_continuous = sys1.is_continuous
 
         return super().__new__(cls, sys1, sys2, _sympify(sign))
 
@@ -3996,7 +4349,7 @@ class TransferFunctionMatrix(MIMOLinearTimeInvariant):
         except TypeError:
             raise ValueError(filldedent("""
                 `arg` param in TransferFunctionMatrix should
-                strictly be a nested list containing TransferFunction
+                strictly be a nested list containing TransferFunctionBase
                 objects."""))
         for row in arg:
             temp = []
@@ -4010,10 +4363,13 @@ class TransferFunctionMatrix(MIMOLinearTimeInvariant):
                     raise ValueError(filldedent("""
                         Conflicting value(s) found for `var`. All TransferFunction
                         instances in TransferFunctionMatrix should use the same
-                        complex variable in Laplace domain."""))
+                        complex variable in Laplace domain or z-domain."""))
 
                 temp.append(element.to_expr())
             expr_mat_arg.append(temp)
+
+        _check_compatibility([sys for row in arg for sys in row])
+        cls._is_continuous = arg[0][0].is_continuous
 
         if isinstance(arg, (tuple, list, Tuple)):
             # Making nested Tuple (sympy.core.containers.Tuple) from nested list or nested Python tuple
@@ -4022,10 +4378,11 @@ class TransferFunctionMatrix(MIMOLinearTimeInvariant):
         obj = super(TransferFunctionMatrix, cls).__new__(cls, arg)
         obj._expr_mat = ImmutableMatrix(expr_mat_arg)
         obj.is_StateSpace_object = False
+
         return obj
 
     @classmethod
-    def from_Matrix(cls, matrix, var):
+    def from_Matrix(cls, matrix, var): #TODO: expand for discrete systems
         """
         Creates a new ``TransferFunctionMatrix`` efficiently from a SymPy Matrix of ``Expr`` objects.
 
@@ -4309,7 +4666,7 @@ class TransferFunctionMatrix(MIMOLinearTimeInvariant):
         expand_mat = self._expr_mat.expand(**hints)
         return _to_TFM(expand_mat, self.var)
 
-class StateSpace(LinearTimeInvariant):
+class StateSpaceBase(LinearTimeInvariant):
     r"""
     State space model (ssm) of a linear, time invariant control system.
 
@@ -4410,7 +4767,7 @@ class StateSpace(LinearTimeInvariant):
             if B.cols != D.cols:
                 raise ShapeError("Matrices B and D must have the same number of columns.")
 
-            obj = super(StateSpace, cls).__new__(cls, A, B, C, D)
+            obj = super(StateSpaceBase, cls).__new__(cls, A, B, C, D)
             obj._A = A
             obj._B = B
             obj._C = C
@@ -5156,3 +5513,20 @@ class StateSpace(LinearTimeInvariant):
         determinant = self.A.charpoly(s)
 
         return neg_roots_conds(determinant, s)
+
+class StateSpace(StateSpaceBase):
+    def __new__(cls, A=None, B=None, C=None, D=None):
+        return super(StateSpace, cls).__new__(cls, A, B, C, D)
+
+    def __init__(super, A=None, B=None, C=None, D=None):
+        ...
+
+    _is_continuous = True
+class DTStateSpace(StateSpaceBase):
+    def __new__(cls, A=None, B=None, C=None, D=None, sampling_time = 1):
+        return super(DTStateSpace, cls).__new__(cls, A, B, C, D)
+
+    def __init__(self, A=None, B=None, C=None, D=None, sampling_time = 1):
+        self._sampling_time = sampling_time
+
+    _is_continuous = False

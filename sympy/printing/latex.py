@@ -2625,6 +2625,11 @@ class LatexPrinter(Printer):
         num, den = self._print(expr.num), self._print(expr.den)
         return r"\frac{%s}{%s}" % (num, den)
 
+    def _print_DTTransferFunction(self, expr):
+        num, den = self._print(expr.num), self._print(expr.den)
+        sampling_time = self._print(expr.sampling_time)
+        return r"\frac{%s}{%s} \text{ sampling_time: } {%s}" % (num, den, sampling_time)
+
     def _print_Series(self, expr):
         args = list(expr.args)
         parens = lambda x: self.parenthesize(x, precedence_traditional(expr),
