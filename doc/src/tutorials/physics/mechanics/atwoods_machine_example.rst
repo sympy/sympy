@@ -153,7 +153,7 @@ Compute Segment Lengths and Verify Inextensible Rope
 ====================================================
 
 Note that this section is only for demonstrating the capabilities of ``WrappingPathway``
-and is not required to obtain the correct acceleration result. We verify the 
+and is not required to obtain the correct acceleration result. We verify the
 inextensibility of the rope in the following way.
 The rope consists of three segments:
 
