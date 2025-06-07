@@ -375,6 +375,7 @@ class PowerSeriesElement:
         >>> from sympy import QQ
         >>> from sympy.polys.domains.fpsring import PowerSeriesRing
         >>> R = PowerSeriesRing(QQ, 'x', 10)
+        >>> x = R.gen
         >>> f = 1 + 2*x + 3*x**2
         >>> g =  5 + 6*x + x**4
         >>> f * g
