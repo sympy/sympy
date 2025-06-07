@@ -1014,13 +1014,11 @@ class GeneralSumOfSquares(DiophantineEquationType):
         signs = [-1 if x.is_nonpositive else 1 for x in var]
         negs = signs.count(-1) != 0
 
-        took = 0
-        for t in sum_of_squares(k, n, zeros=True):
+        for took, t in enumerate(sum_of_squares(k, n, zeros=True), 1):
             if negs:
                 result.add([signs[i]*j for i, j in enumerate(t)])
             else:
                 result.add(t)
-            took += 1
             if took == limit:
                 break
         return result
@@ -1182,13 +1180,11 @@ class GeneralSumOfEvenPowers(DiophantineEquationType):
         sign = [-1 if x.is_nonpositive else 1 for x in var]
         negs = sign.count(-1) != 0
 
-        took = 0
-        for t in power_representation(n, p, k):
+        for took, t in enumerate(power_representation(n, p, k), 1):
             if negs:
                 result.add([sign[i]*j for i, j in enumerate(t)])
             else:
                 result.add(t)
-            took += 1
             if took == limit:
                 break
         return result

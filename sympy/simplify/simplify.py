@@ -1659,7 +1659,7 @@ def _real_to_rational(expr, tolerance=None, rational_conversion='base10'):
     return p.subs(reps, simultaneous=True)
 
 
-def clear_coefficients(expr, rhs=S.Zero):
+def clear_coefficients(expr: Expr, rhs: Expr = S.Zero) -> tuple[Expr, Expr]:
     """Return `p, r` where `p` is the expression obtained when Rational
     additive and multiplicative coefficients of `expr` have been stripped
     away in a naive fashion (i.e. without simplification). The operations

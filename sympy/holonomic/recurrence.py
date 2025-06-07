@@ -324,10 +324,8 @@ class HolonomicSequence:
             return str_sol
         else:
             cond_str = ''
-            seq_str = 0
-            for i in self.u0:
+            for seq_str, i in enumerate(self.u0):
                 cond_str += ', u(%s) = %s' % (sstr(seq_str), sstr(i))
-                seq_str += 1
 
             sol = str_sol + cond_str
             return sol

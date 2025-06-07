@@ -95,12 +95,9 @@ def heuristics(e, z, z0, dir):
                         return heuristics(m, z, z0, dir)
                     return
                 return
-            elif isinstance(l, Limit):
+            if isinstance(l, Limit) or l is S.NaN:
                 return
-            elif l is S.NaN:
-                return
-            else:
-                r.append(l)
+            r.append(l)
         if r:
             rv = e.func(*r)
             if rv is S.NaN and e.is_Mul and any(isinstance(rr, AccumBounds) for rr in r):

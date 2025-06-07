@@ -61,8 +61,8 @@ class TorchPrinter(ArrayPrinter, AbstractPythonCodePrinter):
         sympy.And: "torch.logical_and",
         sympy.Or: "torch.logical_or",
         sympy.Not: "torch.logical_not",
-        sympy.Max: "torch.max",
-        sympy.Min: "torch.min",
+        sympy.Max: "torch.maximum",
+        sympy.Min: "torch.minimum",
 
         # Matrices
         sympy.MatAdd: "torch.add",

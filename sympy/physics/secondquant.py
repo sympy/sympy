@@ -1,8 +1,11 @@
 """
 Second quantization operators and states for bosons.
 
-This follow the formulation of Fetter and Welecka, "Quantum Theory
-of Many-Particle Systems."
+This follow the formulation of Fetter and Welecka, "Quantum Theory of
+Many-Particle Systems."
+
+This module is a predecessor of the sympy.physics.quantum package, and it will
+be superseded by it in the future versions.
 """
 from collections import defaultdict
 
@@ -2921,12 +2924,7 @@ def wicks(e, **kw_args):
     opts.update(kw_args)
 
     # check if we are already normally ordered
-    if isinstance(e, NO):
-        if opts['keep_only_fully_contracted']:
-            return S.Zero
-        else:
-            return e
-    elif isinstance(e, FermionicOperator):
+    if isinstance(e, (NO, FermionicOperator)):
         if opts['keep_only_fully_contracted']:
             return S.Zero
         else:

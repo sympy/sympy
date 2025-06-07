@@ -485,7 +485,7 @@ class CodePrinter(StrPrinter):
         return pmeth(obj.args, seq_orders)
 
     # Don't inherit the str-printer method for Heaviside to the code printers
-    _print_Heaviside = None
+    _print_Heaviside = None # type: ignore
 
     def _print_NumberSymbol(self, expr):
         if self._settings.get("inline", False):

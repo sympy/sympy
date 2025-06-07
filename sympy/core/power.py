@@ -439,19 +439,13 @@ class Pow(Expr):
                 return True
             if self.exp.is_even:
                 return False
-        elif self.base.is_extended_positive:
-            if self.exp.is_extended_real:
-                return False
-        elif self.base.is_zero:
+        elif self.base.is_extended_positive or self.base.is_zero:
             if self.exp.is_extended_real:
                 return False
         elif self.base.is_extended_nonnegative:
             if self.exp.is_extended_nonnegative:
                 return False
-        elif self.base.is_extended_nonpositive:
-            if self.exp.is_even:
-                return False
-        elif self.base.is_extended_real:
+        elif self.base.is_extended_nonpositive or self.base.is_extended_real:
             if self.exp.is_even:
                 return False
 
