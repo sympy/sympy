@@ -24,8 +24,8 @@ from sympy.physics.control.lti import (
     backward_diff, phase_margin, gain_margin)
 from sympy.testing.pytest import raises
 
-a, x, b, c, s, g, d, p, k, tau, zeta, wn, T = symbols('a, x, b, c, s, g, d, p, k,\
-    tau, zeta, wn, T')
+a, x, b, c, s, g, d, p, k, tau, zeta, wn, T, z = symbols('a, x, b, c, s, g, d,\
+    p, k, tau, zeta, wn, T, z')
 a0, a1, a2, a3, b0, b1, b2, b3, b4, c0, c1, c2, c3, d0, d1, d2, d3 = symbols('a0:4,\
     b0:5, c0:4, d0:4')
 TF1 = TransferFunction(1, s**2 + 2*zeta*wn*s + wn**2, s)
@@ -485,7 +485,6 @@ def test_TransferFunction_is_biproper():
 
 
 def test_DTTransferFunction_construction():
-    z = symbols("z")
     tf = DTTransferFunction(z + 1, z**2 + z + 1, z, 10)
     assert tf.num == (z + 1)
     assert tf.den == (z**2 + z + 1)
@@ -835,17 +834,19 @@ def test_DTTransferFunction_functions():
 
 
 def test_DTTransferFunction_addition_and_subtraction():
-    #TODO: manage different sample_time
-    tf1 = DTTransferFunction(s + 6, s - 5, s, 20)
+    tf1 = DTTransferFunction(s + 6, s - 5, s)
     tf2 = DTTransferFunction(s + 3, s + 1, s)
     tf3 = DTTransferFunction(s + 1, s**2 + s + 1, s)
     tf4 = DTTransferFunction(p, 2 - p, p)
+    tf5 = DTTransferFunction(p, p + 5, p, 20)
+    tf6 = DTTransferFunction(1, p - 1, p, 20)
 
     # addition
     assert tf1 + tf2 == Parallel(tf1, tf2)
     assert tf3 + tf1 == Parallel(tf3, tf1)
     assert -tf1 + tf2 + tf3 == Parallel(-tf1, tf2, tf3)
     assert tf1 + (tf2 + tf3) == Parallel(tf1, tf2, tf3)
+    assert tf5 + tf6 == Parallel(tf5, tf6)
 
     c = symbols("c", commutative=False)
     raises(ValueError, lambda: tf1 + Matrix([1, 2, 3]))
@@ -854,12 +855,14 @@ def test_DTTransferFunction_addition_and_subtraction():
     raises(ValueError, lambda: tf1 + (s - 1))
     raises(ValueError, lambda: tf1 + 8)
     raises(ValueError, lambda: (1 - p**3) + tf1)
+    raises(TypeError, lambda: tf5 + tf1)
 
     # subtraction
     assert tf1 - tf2 == Parallel(tf1, -tf2)
     assert tf3 - tf2 == Parallel(tf3, -tf2)
     assert -tf1 - tf3 == Parallel(-tf1, -tf3)
     assert tf1 - tf2 + tf3 == Parallel(tf1, -tf2, tf3)
+    assert tf5 - tf6 == Parallel(tf5, -tf6)
 
     raises(ValueError, lambda: tf1 - Matrix([1, 2, 3]))
     raises(ValueError, lambda: tf3 - tf4)
@@ -867,10 +870,12 @@ def test_DTTransferFunction_addition_and_subtraction():
     raises(ValueError, lambda: tf1 - 8)
     raises(ValueError, lambda: (s + 5) - tf2)
     raises(ValueError, lambda: (1 + p**4) - tf1)
-
+    raises(TypeError, lambda: tf5 + tf1)
+    raises(TypeError, lambda: tf5 - tf1)
+    raises(TypeError, lambda: (tf5 + tf6) + tf1)
+    raises(TypeError, lambda: (tf5 - tf6) - tf1)
 
 def test_DTTransferFunction_multiplication_and_division():
-    #TODO: manage different sample_time
     G1 = DTTransferFunction(s + 3, -s**3 + 9, s)
     G2 = DTTransferFunction(s + 1, s - 5, s)
     G3 = DTTransferFunction(p, p**4 - 6, p)
@@ -878,6 +883,8 @@ def test_DTTransferFunction_multiplication_and_division():
     G5 = DTTransferFunction(s + 6, s - 5, s)
     G6 = DTTransferFunction(s + 3, s + 1, s)
     G7 = DTTransferFunction(1, 1, s)
+    G8 = DTTransferFunction(p, p + 1, p, 12)
+    G9 = DTTransferFunction(1, p, p, 12)
 
     # multiplication
     assert G1*G2 == Series(G1, G2)
@@ -888,11 +895,13 @@ def test_DTTransferFunction_multiplication_and_division():
     assert (G1*G2)*-(G5*G6) == \
         Series(G1, G2, DTTransferFunction(-1, 1, s), Series(G5, G6))
     assert G1*G2*(G5 + G6) == Series(G1, G2, Parallel(G5, G6))
+    assert G8*G9 == Series(G8, G9)
 
     # division - See ``test_Feedback_functions()`` for division by Parallel objects.
     assert G5/G6 == Series(G5, pow(G6, -1))
     assert -G3/G4 == Series(-G3, pow(G4, -1))
     assert (G5*G6)/G7 == Series(G5, G6, pow(G7, -1))
+    assert G8/G9 == Series(G8, pow(G9, -1))
 
     c = symbols("c", commutative=False)
     raises(ValueError, lambda: G3 * Matrix([1, 2, 3]))
@@ -911,6 +920,10 @@ def test_DTTransferFunction_multiplication_and_division():
     raises(ValueError, lambda: G7 / (1 + G6))
     raises(ValueError, lambda: G7 / (G5 * G6))
     raises(ValueError, lambda: G7 / (G7 + (G5 + G6)))
+
+    raises(TypeError, lambda: G8 * G2)
+    raises(TypeError, lambda: (G8 * G9) * G2)
+    raises(TypeError, lambda: (G8 / G9) * G2)
 
 
 def test_DTTransferFunction_is_strictly_proper():
@@ -988,6 +1001,15 @@ def test_Series_construction():
     inp = Function('X_d')(s)
     out = Function('X')(s)
 
+    dtf = DTTransferFunction(a0*s**3 + a1*s**2 - a2*s, b0*p**4 + b1*p**3 - b2*s*p, s)
+    dtf2 = DTTransferFunction(a2*p - s, a2*s + p, s)
+    dtf3 = DTTransferFunction(a0*p + p**a1 - s, p, p)
+    dtf4 = DTTransferFunction(1, s**2 + 2*zeta*wn*s + wn**2, s)
+
+    assert tf.is_continuous is True
+    assert dtf.is_continuous is False
+
+    # continuous-time tests
     s0 = Series(tf, tf2)
     assert s0.args == (tf, tf2)
     assert s0.var == s
@@ -1021,6 +1043,41 @@ def test_Series_construction():
     raises(TypeError, lambda: Series(2, tf, tf4))
     raises(TypeError, lambda: Series(s**2 + p*s, tf3, tf2))
     raises(TypeError, lambda: Series(tf3, Matrix([1, 2, 3, 4])))
+
+    # discrete-time tests
+    ds0 = Series(dtf, dtf2)
+    assert ds0.args == (dtf, dtf2)
+    assert ds0.var == s
+
+    ds1 = Series(Parallel(dtf, -dtf2), dtf2)
+    assert ds1.args == (Parallel(dtf, -dtf2), dtf2)
+    assert ds1.var == s
+
+    dtf3_ = DTTransferFunction(inp, 1, s)
+    dtf4_ = DTTransferFunction(-out, 1, s)
+    ds2 = Series(dtf, Parallel(dtf3_, dtf4_), dtf2)
+    assert ds2.args == (dtf, Parallel(dtf3_, dtf4_), dtf2)
+
+    ds3 = Series(dtf, dtf2, dtf4)
+    assert ds3.args == (dtf, dtf2, dtf4)
+
+    ds4 = Series(dtf3_, dtf4_)
+    assert ds4.args == (dtf3_, dtf4_)
+    assert ds4.var == s
+
+    ds6 = Series(dtf2, dtf4, Parallel(dtf2, -dtf), dtf4)
+    assert ds6.args == (dtf2, dtf4, Parallel(dtf2, -dtf), dtf4)
+
+    ds7 = Series(dtf, dtf2)
+    assert ds0 == ds7
+    assert not ds0 == ds2
+
+    raises(ValueError, lambda: Series(dtf, dtf3))
+    raises(ValueError, lambda: Series(dtf, dtf2, dtf3, dtf4))
+    raises(ValueError, lambda: Series(-dtf3, dtf2))
+    raises(TypeError, lambda: Series(2, dtf, dtf4))
+    raises(TypeError, lambda: Series(s**2 + p*s, dtf3, dtf2))
+    raises(TypeError, lambda: Series(dtf3, Matrix([1, 2, 3, 4])))
 
 
 def test_MIMOSeries_construction():
@@ -1074,8 +1131,15 @@ def test_Series_functions():
     tf4 = TransferFunction(a0*p + p**a1 - s, p, p)
     tf5 = TransferFunction(a1*s**2 + a2*s - a0, s + a0, s)
 
-    assert tf1*tf2*tf3 == Series(tf1, tf2, tf3) == Series(Series(tf1, tf2), tf3) \
-        == Series(tf1, Series(tf2, tf3))
+    dtf1 = DTTransferFunction(1, s**2 + 2*zeta*wn*s + wn**2, s)
+    dtf2 = DTTransferFunction(k, 1, s)
+    dtf3 = DTTransferFunction(a2*p - s, a2*s + p, s)
+    dtf4 = DTTransferFunction(a0*p + p**a1 - s, p, p)
+    dtf5 = DTTransferFunction(a1*s**2 + a2*s - a0, s + a0, s)
+
+    # test continuous-time Transfer Functions
+    assert tf1*tf2*tf3 == Series(tf1, tf2, tf3) == \
+        Series(Series(tf1, tf2), tf3) == Series(tf1, Series(tf2, tf3))
     assert tf1*(tf2 + tf3) == Series(tf1, Parallel(tf2, tf3))
     assert tf1*tf2 + tf5 == Parallel(Series(tf1, tf2), tf5)
     assert tf1*tf2 - tf5 == Parallel(Series(tf1, tf2), -tf5)
@@ -1083,7 +1147,9 @@ def test_Series_functions():
     assert tf1*tf2 - tf3 - tf5 == Parallel(Series(tf1, tf2), -tf3, -tf5)
     assert tf1*tf2 - tf3 + tf5 == Parallel(Series(tf1, tf2), -tf3, tf5)
     assert tf1*tf2 + tf3*tf5 == Parallel(Series(tf1, tf2), Series(tf3, tf5))
-    assert tf1*tf2 - tf3*tf5 == Parallel(Series(tf1, tf2), Series(TransferFunction(-1, 1, s), Series(tf3, tf5)))
+    assert tf1*tf2 - tf3*tf5 == \
+        Parallel(Series(tf1, tf2),
+        Series(TransferFunction(-1, 1, s), Series(tf3, tf5)))
     assert tf2*tf3*(tf2 - tf1)*tf3 == Series(tf2, tf3, Parallel(tf2, -tf1), tf3)
     assert -tf1*tf2 == Series(-tf1, tf2)
     assert -(tf1*tf2) == Series(TransferFunction(-1, 1, s), Series(tf1, tf2))
@@ -1094,24 +1160,36 @@ def test_Series_functions():
     # evaluate=True -> doit()
     assert Series(tf1, tf2, evaluate=True) == Series(tf1, tf2).doit() == \
         TransferFunction(k, s**2 + 2*s*wn*zeta + wn**2, s)
-    assert Series(tf1, tf2, Parallel(tf1, -tf3), evaluate=True) == Series(tf1, tf2, Parallel(tf1, -tf3)).doit() == \
-        TransferFunction(k*(a2*s + p + (-a2*p + s)*(s**2 + 2*s*wn*zeta + wn**2)), (a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2)**2, s)
-    assert Series(tf2, tf1, -tf3, evaluate=True) == Series(tf2, tf1, -tf3).doit() == \
-        TransferFunction(k*(-a2*p + s), (a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2), s)
+    assert Series(tf1, tf2, Parallel(tf1, -tf3), evaluate=True) ==\
+        Series(tf1, tf2, Parallel(tf1, -tf3)).doit() == \
+        TransferFunction(k*(a2*s + p + \
+                            (-a2*p + s)*(s**2 + 2*s*wn*zeta + wn**2)),
+                        (a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2)**2, s)
+    assert Series(tf2, tf1, -tf3, evaluate=True) == \
+        Series(tf2, tf1, -tf3).doit() == \
+            TransferFunction(k*(-a2*p + s),
+                             (a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2), s)
     assert not Series(tf1, -tf2, evaluate=False) == Series(tf1, -tf2).doit()
 
     assert Series(Parallel(tf1, tf2), Parallel(tf2, -tf3)).doit() == \
-        TransferFunction((k*(s**2 + 2*s*wn*zeta + wn**2) + 1)*(-a2*p + k*(a2*s + p) + s), (a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2), s)
+        TransferFunction((k*(s**2 + 2*s*wn*zeta + wn**2) + 1)*\
+                         (-a2*p + k*(a2*s + p) + s), (a2*s + p)*\
+                            (s**2 + 2*s*wn*zeta + wn**2), s)
     assert Series(-tf1, -tf2, -tf3).doit() == \
-        TransferFunction(k*(-a2*p + s), (a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2), s)
+        TransferFunction(k*(-a2*p + s), (a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2),
+                          s)
     assert -Series(tf1, tf2, tf3).doit() == \
-        TransferFunction(-k*(a2*p - s), (a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2), s)
+        TransferFunction(-k*(a2*p - s), (a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2),
+                          s)
     assert Series(tf2, tf3, Parallel(tf2, -tf1), tf3).doit() == \
-        TransferFunction(k*(a2*p - s)**2*(k*(s**2 + 2*s*wn*zeta + wn**2) - 1), (a2*s + p)**2*(s**2 + 2*s*wn*zeta + wn**2), s)
+        TransferFunction(k*(a2*p - s)**2*(k*(s**2 + 2*s*wn*zeta + wn**2) - 1),
+                         (a2*s + p)**2*(s**2 + 2*s*wn*zeta + wn**2), s)
 
-    assert Series(tf1, tf2).rewrite(TransferFunction) == TransferFunction(k, s**2 + 2*s*wn*zeta + wn**2, s)
+    assert Series(tf1, tf2).rewrite(TransferFunction) == \
+        TransferFunction(k, s**2 + 2*s*wn*zeta + wn**2, s)
     assert Series(tf2, tf1, -tf3).rewrite(TransferFunction) == \
-        TransferFunction(k*(-a2*p + s), (a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2), s)
+        TransferFunction(k*(-a2*p + s), (a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2),
+                          s)
 
     S1 = Series(Parallel(tf1, tf2), Parallel(tf2, -tf3))
     assert S1.is_proper
@@ -1128,6 +1206,83 @@ def test_Series_functions():
     assert S3.is_strictly_proper
     assert not S3.is_biproper
 
+    # test discrete-time Transfer Functions
+    assert dtf1*dtf2*dtf3 == Series(dtf1, dtf2, dtf3) == \
+        Series(Series(dtf1, dtf2), dtf3) == Series(dtf1, Series(dtf2, dtf3))
+    assert dtf1*(dtf2 + dtf3) == Series(dtf1, Parallel(dtf2, dtf3))
+    assert dtf1*dtf2 + dtf5 == Parallel(Series(dtf1, dtf2), dtf5)
+    assert dtf1*dtf2 - dtf5 == Parallel(Series(dtf1, dtf2), -dtf5)
+    assert dtf1*dtf2 + dtf3 + dtf5 == Parallel(Series(dtf1, dtf2), dtf3, dtf5)
+    assert dtf1*dtf2 - dtf3 - dtf5 == Parallel(Series(dtf1, dtf2), -dtf3, -dtf5)
+    assert dtf1*dtf2 - dtf3 + dtf5 == Parallel(Series(dtf1, dtf2), -dtf3, dtf5)
+    assert dtf1*dtf2 + dtf3*dtf5 == Parallel(Series(dtf1, dtf2),
+                                             Series(dtf3, dtf5))
+    assert dtf1*dtf2 - dtf3*dtf5 == \
+        Parallel(Series(dtf1, dtf2),
+        Series(DTTransferFunction(-1, 1, s), Series(dtf3, dtf5)))
+    assert dtf2*dtf3*(dtf2 - dtf1)*dtf3 == Series(dtf2, dtf3,
+                                                  Parallel(dtf2, -dtf1), dtf3)
+    assert -dtf1*dtf2 == Series(-dtf1, dtf2)
+    assert -(dtf1*dtf2) == Series(DTTransferFunction(-1, 1, s),
+                                  Series(dtf1, dtf2))
+    raises(ValueError, lambda: dtf1*dtf2*dtf4)
+    raises(ValueError, lambda: dtf1*(dtf2 - dtf4))
+    raises(ValueError, lambda: dtf3*Matrix([1, 2, 3]))
+
+    # evaluate=True -> doit()
+    assert Series(dtf1, dtf2, evaluate=True) == Series(dtf1, dtf2).doit() == \
+        DTTransferFunction(k, s**2 + 2*s*wn*zeta + wn**2, s)
+    assert Series(dtf1, dtf2, Parallel(dtf1, -dtf3), evaluate=True) == \
+        Series(dtf1,dtf2, Parallel(dtf1, -dtf3)).doit() == \
+        DTTransferFunction(k*(a2*s + p + (-a2*p + s)*\
+                              (s**2 + 2*s*wn*zeta + wn**2)),
+                           (a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2)**2, s)
+    assert Series(dtf2, dtf1, -dtf3, evaluate=True) == \
+        Series(dtf2, dtf1, -dtf3).doit() == \
+        DTTransferFunction(k*(-a2*p + s), (a2*s + p)*\
+                           (s**2 + 2*s*wn*zeta + wn**2), s)
+    assert not Series(dtf1, -dtf2, evaluate=False) == Series(dtf1, -dtf2).doit()
+
+    assert Series(Parallel(dtf1, dtf2), Parallel(dtf2, -dtf3)).doit() == \
+        DTTransferFunction((k*(s**2 + 2*s*wn*zeta + wn**2) + 1)*\
+                           (-a2*p +k*(a2*s + p) + s), (a2*s + p)*\
+                            (s**2 + 2*s*wn*zeta + wn**2), s)
+    assert Series(-dtf1, -dtf2, -dtf3).doit() == \
+        DTTransferFunction(k*(-a2*p + s), (a2*s + p)*\
+                           (s**2 + 2*s*wn*zeta + wn**2), s)
+    assert -Series(dtf1, dtf2, dtf3).doit() == \
+        DTTransferFunction(-k*(a2*p - s), (a2*s + p)*\
+                           (s**2 + 2*s*wn*zeta + wn**2), s)
+    assert Series(dtf2, dtf3, Parallel(dtf2, -dtf1), dtf3).doit() == \
+        DTTransferFunction(k*(a2*p - s)**2*(k*(s**2 + 2*s*wn*zeta + wn**2) - 1),
+                           (a2*s + p)**2*(s**2 + 2*s*wn*zeta + wn**2), s)
+
+    assert Series(dtf1, dtf2).rewrite(DTTransferFunction) == \
+        DTTransferFunction(k, s**2 + 2*s*wn*zeta + wn**2, s)
+    assert Series(dtf2, dtf1, -dtf3).rewrite(DTTransferFunction) == \
+        DTTransferFunction(k*(-a2*p + s), (a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2),
+                          s)
+
+    S1 = Series(Parallel(dtf1, dtf2), Parallel(dtf2, -dtf3))
+    assert S1.is_proper
+    assert not S1.is_strictly_proper
+    assert S1.is_biproper
+
+    S2 = Series(dtf1, dtf2, dtf3)
+    assert S2.is_proper
+    assert S2.is_strictly_proper
+    assert not S2.is_biproper
+
+    S3 = Series(dtf1, -dtf2, Parallel(dtf1, -dtf3))
+    assert S3.is_proper
+    assert S3.is_strictly_proper
+    assert not S3.is_biproper
+
+    # test compatibility
+    raises(TypeError, lambda:
+           Series(dtf1, dtf2).rewrite(TransferFunction))
+    raises(TypeError, lambda:
+           Series(tf1, tf2).rewrite(DTTransferFunction))
 
 def test_MIMOSeries_functions():
     tfm1 = TransferFunctionMatrix([[TF1, TF2, TF3], [-TF3, -TF2, TF1]])
@@ -1204,6 +1359,15 @@ def test_Parallel_construction():
     inp = Function('X_d')(s)
     out = Function('X')(s)
 
+    dtf = DTTransferFunction(a0*s**3 + a1*s**2 - a2*s, b0*p**4 + b1*p**3 - b2*s*p, s)
+    dtf2 = DTTransferFunction(a2*p - s, a2*s + p, s)
+    dtf3 = DTTransferFunction(a0*p + p**a1 - s, p, p)
+    dtf4 = DTTransferFunction(1, s**2 + 2*zeta*wn*s + wn**2, s)
+
+    assert tf.is_continuous is True
+    assert dtf.is_continuous is False
+
+    # continuous-time tests
     p0 = Parallel(tf, tf2)
     assert p0.args == (tf, tf2)
     assert p0.var == s
@@ -1241,6 +1405,43 @@ def test_Parallel_construction():
     raises(TypeError, lambda: Parallel(s**2 + p*s, tf3, tf2))
     raises(TypeError, lambda: Parallel(tf3, Matrix([1, 2, 3, 4])))
 
+    # discrete-time tests
+    dp0 = Parallel(dtf, dtf2)
+    assert dp0.args == (dtf, dtf2)
+    assert dp0.var == s
+
+    dp1 = Parallel(Series(dtf, -dtf2), dtf2)
+    assert dp1.args == (Series(dtf, -dtf2), dtf2)
+    assert dp1.var == s
+
+    dtf3_ = DTTransferFunction(inp, 1, s)
+    dtf4_ = DTTransferFunction(-out, 1, s)
+    dp2 = Parallel(dtf, Series(dtf3_, -dtf4_), dtf2)
+    assert dp2.args == (dtf, Series(dtf3_, -dtf4_), dtf2)
+
+    dp3 = Parallel(dtf, dtf2, dtf4)
+    assert dp3.args == (dtf, dtf2, dtf4)
+
+    dp4 = Parallel(dtf3_, dtf4_)
+    assert dp4.args == (dtf3_, dtf4_)
+    assert dp4.var == s
+
+    dp5 = Parallel(dtf, dtf2)
+    assert dp0 == dp5
+    assert not dp0 == dp1
+
+    dp6 = Parallel(dtf2, dtf4, Series(dtf2, -dtf4))
+    assert dp6.args == (dtf2, dtf4, Series(dtf2, -dtf4))
+
+    dp7 = Parallel(dtf2, dtf4, Series(dtf2, -dtf), dtf4)
+    assert dp7.args == (dtf2, dtf4, Series(dtf2, -dtf), dtf4)
+
+    raises(ValueError, lambda: Parallel(dtf, dtf3))
+    raises(ValueError, lambda: Parallel(dtf, dtf2, dtf3, dtf4))
+    raises(ValueError, lambda: Parallel(-dtf3, dtf4))
+    raises(TypeError, lambda: Parallel(2, dtf, dtf4))
+    raises(TypeError, lambda: Parallel(s**2 + p*s, dtf3, dtf2))
+    raises(TypeError, lambda: Parallel(dtf3, Matrix([1, 2, 3, 4])))
 
 def test_MIMOParallel_construction():
     tfm1 = TransferFunctionMatrix([[TF1], [TF2], [TF3]])
@@ -1302,6 +1503,13 @@ def test_Parallel_functions():
     tf4 = TransferFunction(a0*p + p**a1 - s, p, p)
     tf5 = TransferFunction(a1*s**2 + a2*s - a0, s + a0, s)
 
+    dtf1 = DTTransferFunction(1, s**2 + 2*zeta*wn*s + wn**2, s)
+    dtf2 = DTTransferFunction(k, 1, s)
+    dtf3 = DTTransferFunction(a2*p - s, a2*s + p, s)
+    dtf4 = DTTransferFunction(a0*p + p**a1 - s, p, p)
+    dtf5 = DTTransferFunction(a1*s**2 + a2*s - a0, s + a0, s)
+
+    # continuous-time tests
     assert tf1 + tf2 + tf3 == Parallel(tf1, tf2, tf3)
     assert tf1 + tf2 + tf3 + tf5 == Parallel(tf1, tf2, tf3, tf5)
     assert tf1 + tf2 - tf3 - tf5 == Parallel(tf1, tf2, -tf3, -tf5)
@@ -1366,6 +1574,98 @@ def test_Parallel_functions():
     assert not P3.is_strictly_proper
     assert P3.is_biproper
 
+    # discrete-time tests
+    assert dtf1 + dtf2 + dtf3 == Parallel(dtf1, dtf2, dtf3)
+    assert dtf1 + dtf2 + dtf3 + dtf5 == Parallel(dtf1, dtf2, dtf3, dtf5)
+    assert dtf1 + dtf2 - dtf3 - dtf5 == Parallel(dtf1, dtf2, -dtf3, -dtf5)
+    assert dtf1 + dtf2*dtf3 == Parallel(dtf1, Series(dtf2, dtf3))
+    assert dtf1 - dtf2*dtf3 == Parallel(dtf1, -Series(dtf2,dtf3))
+    assert -dtf1 - dtf2 == Parallel(-dtf1, -dtf2)
+    assert -(dtf1 + dtf2) == Series(DTTransferFunction(-1, 1, s),
+                                    Parallel(dtf1, dtf2))
+    assert (dtf2 + dtf3)*dtf1 == Series(Parallel(dtf2, dtf3), dtf1)
+    assert (dtf1 + dtf2)*(dtf3*dtf5) == Series(Parallel(dtf1, dtf2), dtf3, dtf5)
+    assert -(dtf2 + dtf3)*-dtf5 == Series(DTTransferFunction(-1, 1, s),
+                                       Parallel(dtf2, dtf3), -dtf5)
+    assert dtf2 + dtf3 + dtf2*dtf1 + dtf5 == Parallel(dtf2, dtf3,
+                                                      Series(dtf2, dtf1), dtf5)
+    assert dtf2 + dtf3 + dtf2*dtf1 - dtf3 == \
+        Parallel(dtf2, dtf3, Series(dtf2, dtf1), -dtf3)
+    assert (dtf1 + dtf2 + dtf5)*(dtf3 + dtf5) == \
+        Series(Parallel(dtf1, dtf2, dtf5), Parallel(dtf3, dtf5))
+
+    raises(ValueError, lambda: dtf1 + dtf2 + dtf4)
+    raises(ValueError, lambda: dtf1 - dtf2*dtf4)
+    raises(ValueError, lambda: dtf3 + Matrix([1, 2, 3]))
+
+    # evaluate=True -> doit()
+    assert Parallel(dtf1, dtf2, evaluate=True) == \
+        Parallel(dtf1, dtf2).doit() == \
+        DTTransferFunction(k*(s**2 + 2*s*wn*zeta + wn**2) + 1,
+                           s**2 + 2*s*wn*zeta + wn**2, s)
+    assert Parallel(dtf1, dtf2, Series(-dtf1, dtf3), evaluate=True) == \
+        Parallel(dtf1, dtf2, Series(-dtf1, dtf3)).doit() == \
+        DTTransferFunction(k*(a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2)**2 + \
+            (-a2*p + s)*(s**2 + 2*s*wn*zeta + wn**2) + (a2*s + p)*\
+                (s**2 + 2*s*wn*zeta + wn**2), (a2*s + p)*(s**2 + \
+                2*s*wn*zeta + wn**2)**2, s)
+    assert Parallel(dtf2, dtf1, -dtf3, evaluate=True) == \
+        Parallel(dtf2, dtf1, -dtf3).doit() == \
+        DTTransferFunction(a2*s + k*(a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2) +\
+                            p + (-a2*p + s)*(s**2 + 2*s*wn*zeta + wn**2) \
+                        , (a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2), s)
+    assert not Parallel(dtf1, -dtf2, evaluate=False) == \
+          Parallel(dtf1, -dtf2).doit()
+
+    assert Parallel(Series(dtf1, dtf2), Series(dtf2, dtf3)).doit() == \
+        DTTransferFunction(k*(a2*p - s)*(s**2 + 2*s*wn*zeta + wn**2) +\
+                            k*(a2*s + p),
+                          (a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2), s)
+    assert Parallel(-dtf1, -dtf2, -dtf3).doit() == \
+        DTTransferFunction(-a2*s - k*(a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2) - \
+                            p + (-a2*p + s)*(s**2 + 2*s*wn*zeta + wn**2), \
+            (a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2), s)
+    assert -Parallel(dtf1, dtf2, dtf3).doit() == \
+        DTTransferFunction(-a2*s - k*(a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2) - \
+                            p - (a2*p - s)*(s**2 + 2*s*wn*zeta + wn**2), \
+            (a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2), s)
+    assert Parallel(dtf2, dtf3, Series(dtf2, -dtf1), dtf3).doit() == \
+        DTTransferFunction(k*(a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2) - \
+                            k*(a2*s + p) + (2*a2*p - 2*s)*(s**2 + 2*s*wn*zeta \
+            + wn**2), (a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2), s)
+
+    assert Parallel(dtf1, dtf2).rewrite(DTTransferFunction) == \
+        DTTransferFunction(k*(s**2 + 2*s*wn*zeta + wn**2) + 1,
+                            s**2 + 2*s*wn*zeta + wn**2, s)
+    assert Parallel(dtf2, dtf1, -dtf3).rewrite(DTTransferFunction) == \
+        DTTransferFunction(a2*s + k*(a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2) + \
+                            p + (-a2*p + s)*(s**2 + 2*s*wn*zeta + \
+             wn**2), (a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2), s)
+
+    assert Parallel(dtf1, Parallel(dtf2, dtf3)) == \
+           Parallel(dtf1, dtf2, dtf3) == Parallel(Parallel(dtf1, dtf2), dtf3)
+
+    P1 = Parallel(Series(dtf1, dtf2), Series(dtf2, dtf3))
+    assert P1.is_proper
+    assert not P1.is_strictly_proper
+    assert P1.is_biproper
+
+    P2 = Parallel(dtf1, -dtf2, -dtf3)
+    assert P2.is_proper
+    assert not P2.is_strictly_proper
+    assert P2.is_biproper
+
+    P3 = Parallel(dtf1, -dtf2, Series(dtf1, dtf3))
+    assert P3.is_proper
+    assert not P3.is_strictly_proper
+    assert P3.is_biproper
+
+    # test compatibility
+    raises(TypeError, lambda:
+           Parallel(dtf1, dtf2).rewrite(TransferFunction))
+    raises(TypeError, lambda:
+           Parallel(tf1, tf2).rewrite(DTTransferFunction))
+
 
 def test_MIMOParallel_functions():
     tf4 = TransferFunction(a0*p + p**a1 - s, p, p)
@@ -1427,6 +1727,17 @@ def test_Feedback_construction():
     tf5 = TransferFunction(a1*s**2 + a2*s - a0, s + a0, s)
     tf6 = TransferFunction(s - p, p + s, p)
 
+    dtf1 = DTTransferFunction(1, s**2 + 2*zeta*wn*s + wn**2, s)
+    dtf2 = DTTransferFunction(k, 1, s)
+    dtf3 = DTTransferFunction(a2*p - s, a2*s + p, s)
+    dtf4 = DTTransferFunction(a0*p + p**a1 - s, p, p)
+    dtf5 = DTTransferFunction(a1*s**2 + a2*s - a0, s + a0, s)
+    dtf6 = DTTransferFunction(s - p, p + s, p)
+
+    assert tf1.is_continuous is True
+    assert dtf1.is_continuous is False
+
+    # continuous-time tests
     f1 = Feedback(TransferFunction(1, 1, s), tf1*tf2*tf3)
     assert f1.args == (TransferFunction(1, 1, s), Series(tf1, tf2, tf3), -1)
     assert f1.sys1 == TransferFunction(1, 1, s)
@@ -1472,6 +1783,55 @@ def test_Feedback_construction():
     raises(ValueError, lambda: Feedback(tf1, -tf1**-1))  # denominator can't be zero
     raises(ValueError, lambda: Feedback(tf4, tf5))  # Both systems should use the same `var`
 
+    # discrete-time tests
+    df1 = Feedback(DTTransferFunction(1, 1, s), dtf1*dtf2*dtf3)
+    assert df1.args == (DTTransferFunction(1, 1, s), Series(dtf1, dtf2, dtf3),
+                        -1)
+    assert df1.sys1 == DTTransferFunction(1, 1, s)
+    assert df1.sys2 == Series(dtf1, dtf2, dtf3)
+    assert df1.var == s
+
+    df2 = Feedback(dtf1, dtf2*dtf3)
+    assert df2.args == (dtf1, Series(dtf2, dtf3), -1)
+    assert df2.sys1 == dtf1
+    assert df2.sys2 == Series(dtf2, dtf3)
+    assert df2.var == s
+
+    df3 = Feedback(dtf1*dtf2, dtf5)
+    assert df3.args == (Series(dtf1, dtf2), dtf5, -1)
+    assert df3.sys1 == Series(dtf1, dtf2)
+
+    df4 = Feedback(dtf4, dtf6)
+    assert df4.args == (dtf4, dtf6, -1)
+    assert df4.sys1 == dtf4
+    assert df4.var == p
+
+    df5 = Feedback(dtf5, DTTransferFunction(1, 1, s))
+    assert df5.args == (dtf5, DTTransferFunction(1, 1, s), -1)
+    assert df5.var == s
+    assert df5 == Feedback(dtf5)  # When sys2 is not passed explicitly, it is assumed to be unit tf.
+
+    df6 = Feedback(DTTransferFunction(1, 1, p), dtf4)
+    assert df6.args == (DTTransferFunction(1, 1, p), dtf4, -1)
+    assert df6.var == p
+
+    df7 = -Feedback(dtf4*dtf6, DTTransferFunction(1, 1, p))
+    assert df7.args == (Series(DTTransferFunction(-1, 1, p),
+                               Series(dtf4, dtf6)),
+                               -DTTransferFunction(1, 1, p), -1)
+    assert df7.sys1 == Series(DTTransferFunction(-1, 1, p), Series(dtf4, dtf6))
+
+    # denominator can't be a Parallel instance
+    raises(TypeError, lambda: Feedback(dtf1, dtf2 + dtf3))
+    raises(TypeError, lambda: Feedback(dtf1, Matrix([1, 2, 3])))
+    raises(TypeError, lambda: Feedback(DTTransferFunction(1, 1, s), s - 1))
+    raises(TypeError, lambda: Feedback(1, 1))
+    # raises(ValueError, lambda: Feedback(TransferFunction(1, 1, s), TransferFunction(1, 1, s)))
+    raises(ValueError, lambda: Feedback(dtf2, dtf4*dtf5))
+    raises(ValueError, lambda: Feedback(dtf2, dtf1, 1.5))  # `sign` can only be -1 or 1
+    raises(ValueError, lambda: Feedback(dtf1, -dtf1**-1))  # denominator can't be zero
+    raises(ValueError, lambda: Feedback(dtf4, dtf5))  # Both systems should use the same `var`
+
 
 def test_Feedback_functions():
     tf = TransferFunction(1, 1, s)
@@ -1482,6 +1842,15 @@ def test_Feedback_functions():
     tf5 = TransferFunction(a1*s**2 + a2*s - a0, s + a0, s)
     tf6 = TransferFunction(s - p, p + s, p)
 
+    dtf = DTTransferFunction(1, 1, s)
+    dtf1 = DTTransferFunction(1, s**2 + 2*zeta*wn*s + wn**2, s)
+    dtf2 = DTTransferFunction(k, 1, s)
+    dtf3 = DTTransferFunction(a2*p - s, a2*s + p, s)
+    dtf4 = DTTransferFunction(a0*p + p**a1 - s, p, p)
+    dtf5 = DTTransferFunction(a1*s**2 + a2*s - a0, s + a0, s)
+    dtf6 = DTTransferFunction(s - p, p + s, p)
+
+    # continuous-time tests
     assert (tf1*tf2*tf3 / tf3*tf5) == Series(tf1, tf2, tf3, pow(tf3, -1), tf5)
     assert (tf1*tf2*tf3) / (tf3*tf5) == Series((tf1*tf2*tf3).doit(), pow((tf3*tf5).doit(),-1))
     assert tf / (tf + tf1) == Feedback(tf, tf1)
@@ -1523,6 +1892,69 @@ def test_Feedback_functions():
     assert Feedback(TransferFunction(1, 1, p), tf4).rewrite(TransferFunction) == \
         TransferFunction(p, a0*p + p + p**a1 - s, p)
 
+    # discrete-time tests
+    assert (dtf1*dtf2*dtf3 / dtf3*dtf5) == Series(dtf1, dtf2, dtf3,
+                                                  pow(dtf3, -1), dtf5)
+    assert (dtf1*dtf2*dtf3) / (dtf3*dtf5) == Series((dtf1*dtf2*dtf3).doit(),
+                                                    pow((dtf3*dtf5).doit(),-1))
+    assert dtf / (dtf + dtf1) == Feedback(dtf, dtf1)
+    assert dtf / (dtf + dtf1*dtf2*dtf3) == Feedback(dtf, dtf1*dtf2*dtf3)
+    assert dtf1 / (dtf + dtf1*dtf2*dtf3) == Feedback(dtf1, dtf2*dtf3)
+    assert (dtf1*dtf2) / (dtf + dtf1*dtf2) == Feedback(dtf1*dtf2, dtf)
+    assert (dtf1*dtf2) / (dtf + dtf1*dtf2*dtf5) == Feedback(dtf1*dtf2, dtf5)
+    assert (dtf1*dtf2) / (dtf + dtf1*dtf2*dtf5*dtf3) in (
+        Feedback(dtf1*dtf2, dtf5*dtf3), Feedback(dtf1*dtf2, dtf3*dtf5))
+    assert dtf4 / (DTTransferFunction(1, 1, p) + dtf4*dtf6) == \
+        Feedback(dtf4, dtf6)
+    assert dtf5 / (dtf + dtf5) == Feedback(dtf5, dtf)
+
+    raises(TypeError, lambda: dtf1*dtf2*dtf3 / (1 + dtf1*dtf2*dtf3))
+    raises(ValueError, lambda: dtf2*dtf3 / (dtf + dtf2*dtf3*dtf4))
+
+    assert Feedback(dtf, dtf1*dtf2*dtf3).doit() == \
+        DTTransferFunction((a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2),
+                           k*(a2*p - s) + (a2*s + p)* \
+                            (s**2 + 2*s*wn*zeta + wn**2), s)
+    assert Feedback(dtf, dtf1*dtf2*dtf3).sensitivity == \
+        1/(k*(a2*p - s)/((a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2)) + 1)
+    assert Feedback(dtf1, dtf2*dtf3).doit() == \
+        DTTransferFunction((a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2),
+                           (k*(a2*p - s) + (a2*s + p)* \
+                            (s**2 + 2*s*wn*zeta + wn**2))*\
+                            (s**2 + 2*s*wn*zeta + wn**2), s)
+    assert Feedback(dtf1, dtf2*dtf3).sensitivity == \
+        1/(k*(a2*p - s)/((a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2)) + 1)
+    assert Feedback(dtf1*dtf2, dtf5).doit() == \
+        DTTransferFunction(k*(a0 + s)*(s**2 + 2*s*wn*zeta + wn**2),
+                           (k*(-a0 + a1*s**2 + a2*s) + (a0 + s)* \
+                            (s**2 + 2*s*wn*zeta + wn**2))* \
+                                (s**2 + 2*s*wn*zeta + wn**2), s)
+    assert Feedback(dtf1*dtf2, dtf5, 1).sensitivity == \
+        1/(-k*(-a0 + a1*s**2 + a2*s)/((a0 + s)* \
+        (s**2 + 2*s*wn*zeta + wn**2)) + 1)
+    assert Feedback(dtf4, dtf6).doit() == \
+        DTTransferFunction(p*(p + s)*(a0*p + p**a1 - s),
+                           p*(p*(p + s) + (-p + s)*(a0*p + p**a1 - s)), p)
+    assert -Feedback(dtf4*dtf6, DTTransferFunction(1, 1, p)).doit() == \
+        DTTransferFunction(-p*(-p + s)*(p + s)*(a0*p + p**a1 - s),
+                           p*(p + s)*(p*(p + s) + (-p + s)*(a0*p + p**a1 - s)),
+                           p)
+    assert Feedback(dtf, dtf).doit() == DTTransferFunction(1, 2, s)
+
+    assert Feedback(dtf1, dtf2*dtf5).rewrite(DTTransferFunction) == \
+        DTTransferFunction((a0 + s)*(s**2 + 2*s*wn*zeta + wn**2),
+                           (k*(-a0 + a1*s**2 + a2*s) + (a0 + s)* \
+                            (s**2 + 2*s*wn*zeta + wn**2))* \
+                            (s**2 + 2*s*wn*zeta + wn**2), s)
+    assert Feedback(DTTransferFunction(1, 1, p),
+                    dtf4).rewrite(DTTransferFunction) == \
+        DTTransferFunction(p, a0*p + p + p**a1 - s, p)
+
+    # test compatibility
+    raises(TypeError, lambda:
+           Feedback(dtf1, dtf2).rewrite(TransferFunction))
+    raises(TypeError, lambda:
+           Feedback(tf1, tf2).rewrite(DTTransferFunction))
 
 def test_Feedback_with_Series():
     # Solves issue https://github.com/sympy/sympy/issues/26161
@@ -1532,6 +1964,16 @@ def test_Feedback_with_Series():
     fd2 = Feedback(tf1, tf2, 1) # Positive Feedback system
     unit = TransferFunction(1, 1, s)
 
+    dtf1 = DTTransferFunction(s+1, 1, s)
+    dtf2 = DTTransferFunction(s+2, 1, s)
+    dfd1 = Feedback(dtf1, dtf2, -1) # Negative Feedback system
+    dfd2 = Feedback(dtf1, dtf2, 1) # Positive Feedback system
+    dunit = DTTransferFunction(1, 1, s)
+
+    assert tf1.is_continuous is True
+    assert dtf1.is_continuous is False
+
+    # continuous-time tests
     # Checking the type
     assert isinstance(fd1, SISOLinearTimeInvariant)
     assert isinstance(fd1, Feedback)
@@ -1560,6 +2002,38 @@ def test_Feedback_with_Series():
     tf3 = TransferFunction(tf1*fd1, tf2, s)
     assert tf3 == TransferFunction(Series(tf1, fd1), tf2, s)
     assert tf3.num == tf1*fd1
+
+    # discrete-time tests
+    # Checking the type
+    assert isinstance(dfd1, SISOLinearTimeInvariant)
+    assert isinstance(dfd1, Feedback)
+
+    # Testing the numerator and denominator
+    assert dfd1.num == dtf1
+    assert dfd2.num == dtf1
+    assert dfd1.den == Parallel(dunit, Series(dtf2, dtf1))
+    assert dfd2.den == Parallel(dunit, -Series(dtf2, dtf1))
+
+    # Testing the Series and Parallel Combination with Feedback and TransferFunction
+    ds1 = Series(dtf1, dfd1)
+    dp1 = Parallel(dtf1, dfd1)
+    assert dtf1 * dfd1 == ds1
+    assert dtf1 + dfd1 == dp1
+    assert ds1.doit() == DTTransferFunction((s + 1)**2, (s + 1)*(s + 2) + 1, s)
+    assert dp1.doit() == DTTransferFunction(s + (s + 1)* \
+                                            ((s + 1)*(s + 2) + 1) + 1,
+                                            (s + 1)*(s + 2) + 1, s)
+
+    # Testing the use of Feedback and TransferFunction with Feedback
+    dfd3 = Feedback(dtf1*dfd1, dtf2, -1)
+    assert dfd3 == Feedback(Series(dtf1, dfd1), dtf2)
+    assert dfd3.num == dtf1 * dfd1
+    assert dfd3.den == Parallel(dunit, Series(dtf2, Series(dtf1, dfd1)))
+
+    # Testing the use of Feedback and TransferFunction with TransferFunction
+    dtf3 = DTTransferFunction(dtf1*dfd1, dtf2, s)
+    assert dtf3 == DTTransferFunction(Series(dtf1, dfd1), dtf2, s)
+    assert dtf3.num == dtf1*dfd1
 
 
 def test_issue_26161():

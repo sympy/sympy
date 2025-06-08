@@ -396,6 +396,12 @@ class LinearTimeInvariant(Basic, EvalfMixin):
         return self._is_continuous
 
     @property
+    def sampling_time(self):
+        """Returns the sampling time of the passed LTI system."""
+        raise NotImplementedError("""
+                            This method should be overridden by subclasses.""")
+
+    @property
     def is_SISO(self):
         """Returns `True` if the passed LTI system is SISO else returns False."""
         return self._is_SISO
@@ -444,6 +450,45 @@ def _check_other_MIMO(func):
         else:
             return func(*args, **kwargs)
     return wrapper
+
+
+def _check_compatibility(systems):
+    """Checks compatibility between different systems"""
+    if not all(isinstance(system, SISOLinearTimeInvariant) for system in systems):
+        return
+
+    continuous = systems[0].is_continuous
+    sampling_time = systems[0].sampling_time
+    for system in systems[1:]:
+        if system.is_continuous != continuous:
+            raise TypeError("""
+                Incompatible systems detected.
+                All systems should be either continuous-time or discrete-time.
+                Found: {} and {}""".format(systems[0], system,))
+        if system.sampling_time != sampling_time:
+            raise TypeError("""
+                Incompatible sampling times detected.
+                All systems should have the same sampling time.
+                Found sampling time: {} and {}""".\
+                    format(systems[0].sampling_time, system.sampling_time))
+
+def _compatibility_decorator(func):
+    """
+    Decorator to check compatibility of systems before performing operations.
+    """
+    def wrapper(self, *args, **kwargs):
+        _check_compatibility([self] + list(args))
+        return func(self, *args, **kwargs)
+    return wrapper
+
+
+def new_tf(num, den, var, sampling_time):
+    """
+    Creates a new transfer function object.
+    sampling_time == 0 means continuous time transfer function.
+    sampling_time > 0 means discrete time transfer function.
+    """
+    return DTTransferFunction(num, den, var, sampling_time) #if sampling_time == 0 DTTransferFunction returns TransferFunction
 
 class TransferFunctionBase(SISOLinearTimeInvariant):
     r"""
@@ -659,17 +704,6 @@ class TransferFunctionBase(SISOLinearTimeInvariant):
         else:
             raise TypeError("""Unsupported type for numerator or denominator of
                             TransferFunction.""")
-
-    def _additional_constructor_args(self) -> dict:
-        """
-        Returns a dictionary of additional keyword arguments required
-        for constructing an instance of this specific class, beyond
-        num, den, and var.
-        """
-        raise NotImplementedError(
-            """
-            This method should be overridden by subclasses.
-            """)
 
     @classmethod
     def from_rational_expression(cls, expr, var=None, *args, **kwargs):
@@ -920,25 +954,22 @@ class TransferFunctionBase(SISOLinearTimeInvariant):
         arg_num = self.num.subs(old, new)
         arg_den = self.den.subs(old, new)
 
-        additional_args = self._additional_constructor_args()
-        argnew = self.__class__(arg_num, arg_den, self.var, **additional_args)
+        argnew = new_tf(arg_num, arg_den, self.var, self.sampling_time)
 
         return argnew
 
     def _eval_evalf(self, prec):
-        additional_args = self._additional_constructor_args()
-        return self.__class__(
+        return new_tf(
             self.num._eval_evalf(prec),
             self.den._eval_evalf(prec),
-            self.var, **additional_args)
+            self.var, self.sampling_time)
 
     def _eval_simplify(self, **kwargs):
         tf = cancel(Mul(self.num, 1/self.den, evaluate=False),
                     expand=False).as_numer_denom()
         num_, den_ = tf[0], tf[1]
 
-        additional_args = self._additional_constructor_args()
-        return self.__class__(num_, den_, self.var, **additional_args)
+        return new_tf(num_, den_, self.var, self.sampling_time)
 
     def _eval_rewrite_as_StateSpace(self, *args):
         """
@@ -1016,9 +1047,8 @@ class TransferFunctionBase(SISOLinearTimeInvariant):
         TransferFunction(-3*b**2 + 2*b*p + p**2, -2*b**2 + b*p + p**2, p)
 
         """
-        additional_args = self._additional_constructor_args()
-        return self.__class__(expand(self.num), expand(self.den), self.var,
-                              **additional_args)
+        return new_tf(expand(self.num), expand(self.den), self.var,
+                              self.sampling_time)
 
     def dc_gain(self):
         """
@@ -1202,8 +1232,8 @@ class TransferFunctionBase(SISOLinearTimeInvariant):
         if cancel_poles_zeros:
             num, den = cancel(tf.num / tf.den).as_numer_denom()
 
-        return TransferFunction(num.collect(self.var),
-                                den.collect(self.var), self.var)
+        return new_tf(num.collect(self.var), den.collect(self.var),
+                      self.var, self.sampling_time)
 
     def get_asymptotic_stability_conditions(self, cancel_poles_zeros = False):
         """
@@ -1264,10 +1294,11 @@ class TransferFunctionBase(SISOLinearTimeInvariant):
             This method should be overridden by subclasses.
             """)
 
+    @_compatibility_decorator
     def __add__(self, other):
         if hasattr(other, "is_StateSpace_object") and other.is_StateSpace_object:
             return Parallel(self, other)
-        elif isinstance(other, (self.__class__, Series, Feedback)):
+        if isinstance(other, (self.__class__, Series, Feedback)):
             if not self.var == other.var:
                 raise ValueError(filldedent("""
                     All the transfer functions should use the same complex
@@ -1284,9 +1315,11 @@ class TransferFunctionBase(SISOLinearTimeInvariant):
             raise ValueError("{} cannot be added with {}.".
                 format(type(self), type(other)))
 
+    @_compatibility_decorator
     def __radd__(self, other):
         return self + other
 
+    @_compatibility_decorator
     def __sub__(self, other):
         if hasattr(other, "is_StateSpace_object") and other.is_StateSpace_object:
             return Parallel(self, -other)
@@ -1307,9 +1340,11 @@ class TransferFunctionBase(SISOLinearTimeInvariant):
             raise ValueError("{} cannot be subtracted from a {}."
                 .format(type(self), type(other)))
 
+    @_compatibility_decorator
     def __rsub__(self, other):
         return -self + other
 
+    @_compatibility_decorator
     def __mul__(self, other):
         if hasattr(other, "is_StateSpace_object") and other.is_StateSpace_object:
             return Series(self, other)
@@ -1332,13 +1367,15 @@ class TransferFunctionBase(SISOLinearTimeInvariant):
 
     __rmul__ = __mul__
 
+    @_compatibility_decorator
     def __truediv__(self, other):
         if isinstance(other, self.__class__):
             if not self.var == other.var:
                 raise ValueError(filldedent("""
                     All the transfer functions should use the same complex
                     variable of the Laplace domain or z-domain."""))
-            return Series(self, self.__class__(other.den, other.num, self.var))
+            return Series(self, new_tf(other.den, other.num,
+                                       self.var, self.sampling_time))
         elif (isinstance(other, Parallel) and len(other.args
                 ) == 2 and isinstance(other.args[0], self.__class__)
             and isinstance(other.args[1], (Series, self.__class__))):
@@ -1374,17 +1411,17 @@ class TransferFunctionBase(SISOLinearTimeInvariant):
         if not p.is_Integer:
             raise ValueError("Exponent must be an integer.")
         if p is S.Zero:
-            return self.__class__(1, 1, self.var)
+            return new_tf(1, 1, self.var, self.sampling_time)
         elif p > 0:
             num_, den_ = self.num**p, self.den**p
         else:
             p = abs(p)
             num_, den_ = self.den**p, self.num**p
 
-        return self.__class__(num_, den_, self.var)
+        return new_tf(num_, den_, self.var, self.sampling_time)
 
     def __neg__(self):
-        return self.__class__(-self.num, self.den, self.var)
+        return new_tf(-self.num, self.den, self.var, self.sampling_time)
 
     @property
     def is_proper(self):
@@ -1524,8 +1561,8 @@ class TransferFunction(TransferFunctionBase):
         return Mul(arg_num, S.One / arg_den).expand()
 
     @property
-    def sampling_time(self) -> int | float:
-        return 0 #XXX: it could be useful also in TransferFunction
+    def sampling_time(self):
+        return S.Zero
 
     _is_continuous = True
 
@@ -1534,6 +1571,7 @@ class DTTransferFunction(TransferFunctionBase):
         if sampling_time == 0:
             return TransferFunction(num, den, var)
 
+        sampling_time = sympify(sampling_time)
         return super(DTTransferFunction, cls).__new__(cls, num, den, var,
                                                       sampling_time)
 
@@ -1745,7 +1783,7 @@ class DTTransferFunction(TransferFunctionBase):
         return Mul(arg_num, S.One / arg_den).expand()
 
     @property
-    def sampling_time(self) -> int | float: #XXX: should we add the possibility to use also symbols ?
+    def sampling_time(self):
         return self._sampling_time
 
     _is_continuous = False
@@ -1888,17 +1926,6 @@ def _dummify_args(_arg, var):
 
     return dummy_arg_list, dummy_dict
 
-def _check_compatibility(systems):
-    """Checks compatibility between different systems"""
-    continuous = systems[0].is_continuous
-    for system in systems[1:]:
-        if system.is_continuous != continuous:
-            raise TypeError("""
-                Incompatible systems detected.
-                All systems should be either continuous-time or discrete-time.
-                Found: {} and {}""".format(systems[0], system,))
-
-
 class Series(SISOLinearTimeInvariant):
     r"""
     A class for representing a series configuration of SISO systems.
@@ -2015,9 +2042,9 @@ class Series(SISOLinearTimeInvariant):
             cls._check_args(args)
 
         _check_compatibility(args)
-        cls._is_continuous = args[0].is_continuous
 
         obj = super().__new__(cls, *args)
+        obj._is_continuous = args[0].is_continuous
 
         return obj.doit() if evaluate else obj
 
@@ -2092,20 +2119,31 @@ class Series(SISOLinearTimeInvariant):
         _den_arg = (arg.doit().den for arg in self.args)
         res_num = Mul(*_num_arg, evaluate=True)
         res_den = Mul(*_den_arg, evaluate=True)
-        return TransferFunction(res_num, res_den, self.var)
+
+        sampling_time = self.args[0].sampling_time
+        return new_tf(res_num, res_den, self.var, sampling_time)
 
     def _eval_rewrite_as_TransferFunction(self, *args, **kwargs):
+        if not self.is_continuous:
+            raise TypeError("""
+                    Cannot rewrite a discrete-time Series object as a
+                    TransferFunction.""")
         if self._is_series_StateSpace:
             return self.doit().rewrite(TransferFunction)[0][0]
         return self.doit()
 
     def _eval_rewrite_as_DTTransferFunction(self, *args, **kwargs):
-        if self._is_series_StateSpace: #TODO: differentiate between DTStateSpace and StateSpace, raise errors
+        if self.is_continuous:
+            raise TypeError("""
+                    Cannot rewrite a continuous-time Series object as a
+                    DTTransferFunction.""")
+        if self._is_series_StateSpace:
             return self.doit().rewrite(DTTransferFunction)[0][0]
         return self.doit()
 
     #TODO: add compatibility checks
 
+    @_compatibility_decorator
     @_check_other_SISO
     def __add__(self, other):
 
@@ -2117,19 +2155,23 @@ class Series(SISOLinearTimeInvariant):
 
     __radd__ = __add__
 
+    @_compatibility_decorator
     @_check_other_SISO
     def __sub__(self, other):
         return self + (-other)
 
+    @_compatibility_decorator
     def __rsub__(self, other):
         return -self + other
 
+    @_compatibility_decorator
     @_check_other_SISO
     def __mul__(self, other):
 
         arg_list = list(self.args)
         return Series(*arg_list, other)
 
+    @_compatibility_decorator
     def __truediv__(self, other):
         tf_class = TransferFunction if self.is_continuous\
                             else DTTransferFunction
@@ -2161,7 +2203,7 @@ class Series(SISOLinearTimeInvariant):
             raise ValueError("This transfer function expression is invalid.")
 
     def __neg__(self):
-        return Series(self.args[0].__class__(-1, 1, self.var), self)
+        return Series(new_tf(-1, 1, self.var, self.sampling_time), self)
 
     def to_expr(self):
         """Returns the equivalent ``Expr`` object."""
@@ -2245,6 +2287,10 @@ class Series(SISOLinearTimeInvariant):
     @property
     def is_StateSpace_object(self):
         return self._is_series_StateSpace
+
+    @property
+    def sampling_time(self):
+        return self.args[0].sampling_time
 
 def _mat_mul_compatible(*args):
     """To check whether shapes are compatible for matrix mul."""
@@ -2646,7 +2692,7 @@ class Parallel(SISOLinearTimeInvariant):
         obj = super().__new__(cls, *args)
 
         _check_compatibility(args)
-        cls._is_continuous = args[0].is_continuous
+        obj._is_continuous = args[0].is_continuous
 
         return obj.doit() if evaluate else obj
 
@@ -2708,13 +2754,29 @@ class Parallel(SISOLinearTimeInvariant):
 
         _arg = (arg.doit().to_expr() for arg in self.args)
         res = Add(*_arg).as_numer_denom()
-        return TransferFunction(*res, self.var)
+
+        sampling_time = self.args[0].sampling_time
+        return new_tf(*res, self.var, sampling_time)
 
     def _eval_rewrite_as_TransferFunction(self, *args, **kwargs):
+        if not self.is_continuous:
+            raise TypeError("""
+                    Cannot rewrite a discrete-time Parallel object as a
+                    TransferFunction.""")
         if self._is_parallel_StateSpace:
             return self.doit().rewrite(TransferFunction)[0][0]
         return self.doit()
 
+    def _eval_rewrite_as_DTTransferFunction(self, *args, **kwargs):
+        if self.is_continuous:
+            raise TypeError("""
+                    Cannot rewrite a continuous-time Parallel object as a
+                    DTTransferFunction.""")
+        if self._is_parallel_StateSpace:
+            return self.doit().rewrite(DTTransferFunction)[0][0]
+        return self.doit()
+
+    @_compatibility_decorator
     @_check_other_SISO
     def __add__(self, other):
 
@@ -2723,13 +2785,16 @@ class Parallel(SISOLinearTimeInvariant):
 
     __radd__ = __add__
 
+    @_compatibility_decorator
     @_check_other_SISO
     def __sub__(self, other):
         return self + (-other)
 
+    @_compatibility_decorator
     def __rsub__(self, other):
         return -self + other
 
+    @_compatibility_decorator
     @_check_other_SISO
     def __mul__(self, other):
 
@@ -2740,7 +2805,7 @@ class Parallel(SISOLinearTimeInvariant):
         return Series(self, other)
 
     def __neg__(self):
-        return Series(TransferFunction(-1, 1, self.var), self)
+        return Series(new_tf(-1, 1, self.var, self.sampling_time), self)
 
     def to_expr(self):
         """Returns the equivalent ``Expr`` object."""
@@ -2825,6 +2890,9 @@ class Parallel(SISOLinearTimeInvariant):
     def is_StateSpace_object(self):
         return self._is_parallel_StateSpace
 
+    @property
+    def sampling_time(self):
+        return self.args[0].sampling_time
 
 class MIMOParallel(MIMOLinearTimeInvariant):
     r"""
@@ -3247,9 +3315,10 @@ class Feedback(SISOLinearTimeInvariant):
             cls.is_StateSpace_object = False
 
         _check_compatibility([sys1, sys2])
-        cls._is_continuous = sys1.is_continuous
 
-        return super(SISOLinearTimeInvariant, cls).__new__(cls, sys1, sys2, _sympify(sign))
+        obj = super(SISOLinearTimeInvariant, cls).__new__(cls, sys1, sys2, _sympify(sign))
+        obj._is_continuous = sys1.is_continuous
+        return obj
 
     def __repr__(self):
         return f"Feedback({self.sys1}, {self.sys2}, {self.sign})"
@@ -3352,7 +3421,7 @@ class Feedback(SISOLinearTimeInvariant):
         """
         Returns the denominator of the closed loop feedback model.
         """
-        unit = TransferFunction(1, 1, self.var)
+        unit = new_tf(1, 1, self.var, self.args[0].sampling_time)
         arg_list = list(self.sys1.args) if isinstance(self.sys1, Series) else [self.sys1]
         if self.sign == 1:
             return Parallel(unit, -Series(self.sys2, *arg_list))
@@ -3470,13 +3539,16 @@ class Feedback(SISOLinearTimeInvariant):
 
         arg_list = list(self.sys1.args) if isinstance(self.sys1, Series) else [self.sys1]
         # F_n and F_d are resultant TFs of num and den of Feedback.
-        F_n, unit = self.sys1.doit(), TransferFunction(1, 1, self.sys1.var)
+        F_n = self.sys1.doit()
+        unit = new_tf(1, 1, self.sys1.var, self.sys1.sampling_time)
+
         if self.sign == -1:
             F_d = Parallel(unit, Series(self.sys2, *arg_list)).doit()
         else:
             F_d = Parallel(unit, -Series(self.sys2, *arg_list)).doit()
 
-        _resultant_tf = TransferFunction(F_n.num * F_d.den, F_n.den * F_d.num, F_n.var)
+        _resultant_tf = new_tf(F_n.num * F_d.den, F_n.den * F_d.num,
+                               F_n.var, self.sys1.sampling_time)
 
         if cancel:
             _resultant_tf = _resultant_tf.simplify()
@@ -3487,8 +3559,21 @@ class Feedback(SISOLinearTimeInvariant):
         return _resultant_tf
 
     def _eval_rewrite_as_TransferFunction(self, num, den, sign, **kwargs):
+        if not self.is_continuous:
+            raise TypeError("""
+                    Cannot rewrite a discrete-time Feedback object as a
+                    TransferFunction.""")
         if self.is_StateSpace_object:
             return self.doit().rewrite(TransferFunction)[0][0]
+        return self.doit()
+
+    def _eval_rewrite_as_DTTransferFunction(self, *args, **kwargs):
+        if self.is_continuous:
+            raise TypeError("""
+                    Cannot rewrite a continuous-time Feedback object as a
+                    DTTransferFunction.""")
+        if self.is_StateSpace_object:
+            return self.doit().rewrite(DTTransferFunction)[0][0]
         return self.doit()
 
     def to_expr(self):
@@ -3514,6 +3599,10 @@ class Feedback(SISOLinearTimeInvariant):
 
     def __neg__(self):
         return Feedback(-self.sys1, -self.sys2, self.sign)
+
+    @property
+    def sampling_time(self):
+        return self.sys1.sampling_time
 
 
 def _is_invertible(a, b, sign):
@@ -5527,6 +5616,7 @@ class DTStateSpace(StateSpaceBase):
         return super(DTStateSpace, cls).__new__(cls, A, B, C, D)
 
     def __init__(self, A=None, B=None, C=None, D=None, sampling_time = 1):
+        sampling_time = sympify(sampling_time)
         self._sampling_time = sampling_time
 
     _is_continuous = False
