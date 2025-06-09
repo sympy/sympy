@@ -79,7 +79,7 @@ class BinaryRelation(Predicate):
 
     def __call__(self, *args):
         if not len(args) == 2:
-            raise ValueError(f"Binary relation takes two arguments, but got {len(args)}.")
+            raise TypeError(f"Q.{self.name} takes two arguments, but got {len(args)}.")
         return AppliedBinaryRelation(self, *args)
 
     @property
