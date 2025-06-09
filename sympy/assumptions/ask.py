@@ -357,7 +357,7 @@ def _extract_all_facts(assump, exprs):
                     break
               else:
                 args.append(Literal(literal.lit.function, literal.is_Not))
-            else: 
+            else:
                 break
         else:
             if args:
