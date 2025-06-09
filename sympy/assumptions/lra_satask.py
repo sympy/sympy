@@ -219,6 +219,12 @@ def get_all_pred_and_expr_from_enc_cnf(enc_cnf):
     realness_preds = set()
     for pred in enc_cnf.encoding.keys():
         if isinstance(pred, AppliedPredicate):
+            if pred.function is Q.eq:
+                lhs, rhs = pred.arguments
+                if lhs.is_real and not rhs.is_real:
+                    realness_preds.add(Q.real(rhs))
+                if rhs.is_real and not lhs.is_real:
+                    realness_preds.add(Q.real(lhs))
             if pred.function in (Q.gt, Q.lt):
                 lhs, rhs = pred.arguments
                 if lhs.is_Symbol:

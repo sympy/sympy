@@ -440,11 +440,20 @@ def ask(proposition, assumptions=True, context=global_assumptions):
     Notes
     =====
 
-    Relations in assumptions are not implemented (yet), so the following
-    will not give a meaningful result.
+    Basic relational assumptions are partially supported.
+    For example, single-variable queries involving inequalities
+    may return meaningful results:
 
     >>> ask(Q.positive(x), x > 0)
     True
+
+    However, multi-variable relations, especially where variables
+    are not explicitly assumed to be real, are not fully supported yet.
+    For example, the following query will not give a meaningful result.
+
+    >>> a,c = symbols('a c')
+    >>> b = symbols('b',real=True)
+    >>> ask(Q.real(a), a + b > b + c)
 
     It is however a work in progress.
 

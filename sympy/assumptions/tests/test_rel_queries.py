@@ -143,15 +143,36 @@ def test_equality():
 
 def test_inequality_implications_and_realness():
     # Basic implication checks
-    assert ask(Q.ge(x, y), Q.gt(x, y)) is True
-    assert ask(Q.le(x, y), Q.lt(x, y)) is True
+    a,b,c = symbols('a b c')
+    assert ask(Q.ge(a, b), Q.gt(a, b)) is True
+    assert ask(Q.le(a, b), Q.lt(a, b)) is True
 
     # Transitivity check
-    assert ask(Q.gt(x, z), Q.gt(x, y) & Q.gt(y, z)) is True
+    assert ask(Q.gt(a, c), Q.gt(a, b) & Q.gt(b, c)) is True
 
     # Realness inference tests
-    assert ask(Q.real(x), Q.gt(x, z)) is True
-    assert ask(Q.real(z), Q.gt(x, z)) is True
+    assert ask(Q.real(a), Q.gt(a, b)) is True
+    assert ask(Q.real(a), Q.gt(a, b)) is True
+
+    # Equality check
+    assert ask(Q.zero(a), Q.eq(a,0)) is True
+
+
+@XFAIL
+def test_inequality_failing():
+    # Note: Current logic in the assumptions framework handles inequalities
+    # involving single variables, but does not yet generalize to multi-variable
+    # expressions. For instance, Q.gt(a + b, b + c) does not imply anything about
+    # the realness of a, even if b is real. This test fails because we have not
+    # yet added simplification or refinement logic to reduce such expressions
+    # to forms where existing rules can apply (e.g., canceling b from both sides).
+
+    a, c = symbols('a c')
+    b = symbols('b', real=True)
+
+    # These should be inferable if simplification reduced the expression.
+    assert ask(Q.real(a), Q.gt(a + b, b + c)) is True
+    assert ask(Q.real(a), Q.gt(a * b, b * c)) is True
 
 
 @XFAIL
@@ -165,7 +186,3 @@ def test_equality_failing():
     assert ask(Q.prime(x), Q.eq(x, y) & Q.prime(y)) is True
     assert ask(Q.real(x), Q.eq(x, y) & Q.real(y)) is True
     assert ask(Q.imaginary(x), Q.eq(x, y) & Q.imaginary(y)) is True
-
-def test_ineq_imp():
-    assert ask(Q.ge(x, y), Q.gt(x, y)) is True
-    assert ask(Q.le(x, y), Q.lt(x, y)) is True
