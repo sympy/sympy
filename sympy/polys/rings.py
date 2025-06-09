@@ -598,12 +598,6 @@ class PolyRing(DefaultPrinting, IPolys):
 #<-------------------------REFACTORED ABOVE/ TO REFACTOR BELOW-------------------------->#
 
 
-
-
-
-
-
-
 class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
     """Element of multivariate distributed polynomial ring. """
 
@@ -2008,6 +2002,97 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
         return R
 
+    def symmetrize(self):
+        r"""
+        Rewrite *self* in terms of elementary symmetric polynomials.
+
+        Explanation
+        ===========
+
+        If this :py:class:`~.PolyElement` belongs to a ring of $n$ variables,
+        we can try to write it as a function of the elementary symmetric
+        polynomials on $n$ variables. We compute a symmetric part, and a
+        remainder for any part we were not able to symmetrize.
+
+        Examples
+        ========
+
+        >>> from sympy.polys.rings import ring
+        >>> from sympy.polys.domains import ZZ
+        >>> R, x, y = ring("x,y", ZZ)
+
+        >>> f = x**2 + y**2
+        >>> f.symmetrize()
+        (x**2 - 2*y, 0, [(x, x + y), (y, x*y)])
+
+        >>> f = x**2 - y**2
+        >>> f.symmetrize()
+        (x**2 - 2*y, -2*y**2, [(x, x + y), (y, x*y)])
+
+        Returns
+        =======
+
+        Triple ``(p, r, m)``
+            ``p`` is a :py:class:`~.PolyElement` that represents our attempt
+            to express *self* as a function of elementary symmetric
+            polynomials. Each variable in ``p`` stands for one of the
+            elementary symmetric polynomials. The correspondence is given
+            by ``m``.
+
+            ``r`` is the remainder.
+
+            ``m`` is a list of pairs, giving the mapping from variables in
+            ``p`` to elementary symmetric polynomials.
+
+            The triple satisfies the equation ``p.compose(m) + r == self``.
+            If the remainder ``r`` is zero, *self* is symmetric. If it is
+            nonzero, we were not able to represent *self* as symmetric.
+
+        See Also
+        ========
+
+        sympy.polys.polyfuncs.symmetrize
+
+        References
+        ==========
+
+        .. [1] Lauer, E. Algorithms for symmetrical polynomials, Proc. 1976
+            ACM Symp. on Symbolic and Algebraic Computing, NY 242-247.
+            https://dl.acm.org/doi/pdf/10.1145/800205.806342
+        """
+        f = self.copy()
+        ring = f.ring
+        n = ring.ngens
+
+        if not n:
+            return f, ring.zero, []
+
+        polys = [ring.symmetric_poly(i + 1) for i in range(n)]
+
+        poly_powers = {}
+
+        def get_poly_power(i, n):
+            if (i, n) not in poly_powers:
+                poly_powers[(i, n)] = polys[i] ** n
+            return poly_powers[(i, n)]
+
+        indices = list(range(n - 1))
+        weights = list(range(n, 0, -1))
+        symmetric = ring.zero
+
+        while f:
+            monom, coeff = self._get_leading_term(f, indices, weights)
+            if monom is None:
+                break
+
+            exponents = self._compute_exponents(monom, n)
+            symmetric, f = self._update_symmetric_part(
+                symmetric, f, exponents, coeff, ring, get_poly_power
+            )
+
+        mapping = list(zip(ring.gens, polys))
+        return symmetric, f, mapping
+
 
 #<--------------------------INTERFACE / IMPLEMENTATION DIVIDER-------------------------->#
 
@@ -2935,6 +3020,34 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
     def factor_list(f):
         return f.ring.dmp_factor_list(f)
 
+    def _get_leading_term(self, f, indices, weights):
+        """Find the leading term in f according to the weighted ordering."""
+        _height, _monom, _coeff = -1, None, None
+
+        for monom, coeff in f.terms():
+            if all(monom[i] >= monom[i + 1] for i in indices):
+                height = max(n * m for n, m in zip(weights, monom))
+                if height > _height:
+                    _height, _monom, _coeff = height, monom, coeff
+
+        return _monom, _coeff
+
+    def _compute_exponents(self, monom, n):
+        """Compute the exponents for the symmetric part from the leading monomial."""
+        exponents = []
+        for m1, m2 in zip(monom, monom[1:] + (0,)):
+            exponents.append(m1 - m2)
+        return exponents
+
+    def _update_symmetric_part(self, symmetric, f, exponents, coeff, ring, get_poly_power):
+        """Update the symmetric part and remainder by subtracting the leading symmetric term."""
+        symmetric += ring.term_new(tuple(exponents), coeff)
+        product = coeff
+        for i, n in enumerate(exponents):
+            product *= get_poly_power(i, n)
+        f -= product
+        return symmetric, f
+
 #<-------------------------REFACTORED ABOVE/ TO REFACTOR BELOW-------------------------->#
 
     def __mul__(p1, p2):
@@ -3017,112 +3130,3 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
                 if v:
                     p[exp1] = v
             return p
-
-    def symmetrize(self):
-        r"""
-        Rewrite *self* in terms of elementary symmetric polynomials.
-
-        Explanation
-        ===========
-
-        If this :py:class:`~.PolyElement` belongs to a ring of $n$ variables,
-        we can try to write it as a function of the elementary symmetric
-        polynomials on $n$ variables. We compute a symmetric part, and a
-        remainder for any part we were not able to symmetrize.
-
-        Examples
-        ========
-
-        >>> from sympy.polys.rings import ring
-        >>> from sympy.polys.domains import ZZ
-        >>> R, x, y = ring("x,y", ZZ)
-
-        >>> f = x**2 + y**2
-        >>> f.symmetrize()
-        (x**2 - 2*y, 0, [(x, x + y), (y, x*y)])
-
-        >>> f = x**2 - y**2
-        >>> f.symmetrize()
-        (x**2 - 2*y, -2*y**2, [(x, x + y), (y, x*y)])
-
-        Returns
-        =======
-
-        Triple ``(p, r, m)``
-            ``p`` is a :py:class:`~.PolyElement` that represents our attempt
-            to express *self* as a function of elementary symmetric
-            polynomials. Each variable in ``p`` stands for one of the
-            elementary symmetric polynomials. The correspondence is given
-            by ``m``.
-
-            ``r`` is the remainder.
-
-            ``m`` is a list of pairs, giving the mapping from variables in
-            ``p`` to elementary symmetric polynomials.
-
-            The triple satisfies the equation ``p.compose(m) + r == self``.
-            If the remainder ``r`` is zero, *self* is symmetric. If it is
-            nonzero, we were not able to represent *self* as symmetric.
-
-        See Also
-        ========
-
-        sympy.polys.polyfuncs.symmetrize
-
-        References
-        ==========
-
-        .. [1] Lauer, E. Algorithms for symmetrical polynomials, Proc. 1976
-            ACM Symp. on Symbolic and Algebraic Computing, NY 242-247.
-            https://dl.acm.org/doi/pdf/10.1145/800205.806342
-
-        """
-        f = self.copy()
-        ring = f.ring
-        n = ring.ngens
-
-        if not n:
-            return f, ring.zero, []
-
-        polys = [ring.symmetric_poly(i+1) for i in range(n)]
-
-        poly_powers = {}
-        def get_poly_power(i, n):
-            if (i, n) not in poly_powers:
-                poly_powers[(i, n)] = polys[i]**n
-            return poly_powers[(i, n)]
-
-        indices = list(range(n - 1))
-        weights = list(range(n, 0, -1))
-
-        symmetric = ring.zero
-
-        while f:
-            _height, _monom, _coeff = -1, None, None
-
-            for i, (monom, coeff) in enumerate(f.terms()):
-                if all(monom[i] >= monom[i + 1] for i in indices):
-                    height = max(n*m for n, m in zip(weights, monom))
-
-                    if height > _height:
-                        _height, _monom, _coeff = height, monom, coeff
-
-            if _height != -1:
-                monom, coeff = _monom, _coeff
-            else:
-                break
-
-            exponents = []
-            for m1, m2 in zip(monom, monom[1:] + (0,)):
-                exponents.append(m1 - m2)
-
-            symmetric += ring.term_new(tuple(exponents), coeff)
-
-            product = coeff
-            for i, n in enumerate(exponents):
-                product *= get_poly_power(i, n)
-            f -= product
-
-        mapping = list(zip(ring.gens, polys))
-
-        return symmetric, f, mapping
