@@ -176,7 +176,7 @@ def get_all_known_number_facts():
 @cacheit
 def get_known_facts_dict():
     """
-    Logical relations between unary predicates as dictionary.
+    Logical relations between predicates as dictionary.
 
     Each key is a predicate, and item is two groups of predicates.
     First group contains the predicates which are implied by the key, and
@@ -184,6 +184,8 @@ def get_known_facts_dict():
 
     """
     return {
+        Q.gt: (set([Q.ge]),set([Q.le,Q.lt])),
+        Q.lt: (set([Q.le]),set([Q.ge,Q.gt])),
         Q.algebraic: (set([Q.algebraic, Q.commutative, Q.complex, Q.finite]),
         set([Q.infinite, Q.negative_infinite, Q.positive_infinite,
         Q.transcendental])),

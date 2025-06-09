@@ -347,17 +347,18 @@ def _extract_all_facts(assump, exprs):
     for clause in assump.clauses:
         args = []
         for literal in clause:
-            if isinstance(literal.lit, AppliedPredicate) and len(literal.lit.arguments) == 1:
+            if isinstance(literal.lit, AppliedPredicate):
+              if len(literal.lit.arguments) == 1:
                 if literal.lit.arg in exprs:
                     # Add literal if it has matching in it
                     args.append(Literal(literal.lit.function, literal.is_Not))
                 else:
                     # If any of the literals doesn't have matching expr don't add the whole clause.
                     break
-            else:
-                # If any of the literals aren't unary predicate don't add the whole clause.
+              else:
+                args.append(Literal(literal.lit.function, literal.is_Not))
+            else: 
                 break
-
         else:
             if args:
                 facts.add(frozenset(args))

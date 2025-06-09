@@ -159,6 +159,13 @@ def test_equality():
     assert ask(Q.eq(x,z), Q.eq(x,y) & Q.eq(y,z)) is True
 
 
+def test_inequality_implications():
+    # Basic implication checks
+    a,b,c = symbols('a b c')
+    assert ask(Q.ge(a, b), Q.gt(a, b)) is True
+    assert ask(Q.le(a, b), Q.lt(a, b)) is True
+
+
 @XFAIL
 def test_equality_failing():
     # Note that implementing the substitution property of equality
