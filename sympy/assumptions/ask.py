@@ -451,6 +451,7 @@ def ask(proposition, assumptions=True, context=global_assumptions):
     are not explicitly assumed to be real, are not fully supported yet.
     For example, the following query will not give a meaningful result.
 
+    >>> from sympy import symbols
     >>> a,c = symbols('a c')
     >>> b = symbols('b',real=True)
     >>> ask(Q.real(a), a + b > b + c)
