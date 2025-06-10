@@ -7,7 +7,6 @@ from sympy.physics.mechanics import (
     WrappingPathway,
     inertia,
     RigidBody,
-    Force,
     KanesMethod,
 )
 
@@ -92,7 +91,7 @@ forcing = kane.forcing
 u_dot = MM.inv() * forcing
 
 # Output
-print(f"L_total: ")
+print("L_total: ")
 sp.pprint(L_total, use_unicode=True)
 print("\nmoment_arm:")
 sp.pprint(moment_arm, use_unicode=True)
