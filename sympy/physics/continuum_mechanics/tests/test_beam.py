@@ -290,7 +290,7 @@ def test_no_symbols_supplied():
     I = Symbol('I')
 
     b5 = Beam(10, E, I)
-    R1=b5.apply_support(0, type='roller')
+    R1=b5.apply_support(0,'roller') # noqa: F841
     b5.apply_load(10, 10, -1)
 
     with raises(ValueError, match="No symbols supplied to solve_for_reaction_loads()."):
@@ -301,8 +301,8 @@ def test_duplicate_symbols_supplied():
     I = Symbol('I')
 
     b5 = Beam(10, E, I)
-    R1=b5.apply_support(0, type='roller')
-    R2= b5.apply_support(10, type='roller')
+    R1=b5.apply_support(0,'roller')
+    R2=b5.apply_support(10,'roller') # noqa: F841
 
     with raises(ValueError, match="Duplicate symbols supplied to solve_for_reaction_loads()."):
         b5.solve_for_reaction_loads(R1, R1)
@@ -313,7 +313,7 @@ def test_statically_determinate():
     R0, M0 = symbols('R0, M0')
 
     b5 = Beam(10, E, I)
-    R0,M0 = b5.apply_support(0, type='fixed')
+    R0,M0 = b5.apply_support(0, 'fixed')
     b5.apply_load(-10, 10, -1)
 
     b5.solve_for_reaction_loads(R0, M0)
@@ -349,7 +349,7 @@ def test_statically_inconsistent():
     R1 = symbols( 'R1')
 
     b5 = Beam(10, E, I)
-    R1=b5.apply_support(0, type='roller')
+    R1=b5.apply_support(0, 'roller')
     b5.apply_load(10, 10, -1)
 
     with raises(ValueError, match="System is statically inconsistent."):
