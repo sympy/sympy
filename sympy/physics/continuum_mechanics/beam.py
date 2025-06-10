@@ -10,7 +10,7 @@ from sympy.core.function import (Derivative, Function)
 from sympy.core.mul import Mul
 from sympy.core.relational import Eq
 from sympy.core.sympify import sympify
-from sympy.solvers import linsolve
+from sympy.solvers import linsolve, linear_eq_to_matrix
 from sympy.solvers.ode.ode import dsolve
 from sympy.solvers.solvers import solve
 from sympy.printing import sstr
@@ -939,6 +939,12 @@ class Beam:
             + 120*SingularityFunction(x, 30, -2) + 2*SingularityFunction(x, 30, -1)
         """
 
+        if not reactions:
+            raise ValueError("No symbols supplied to solve_for_reaction_loads().")
+
+        if len(set(reactions)) != len(reactions):
+            raise ValueError("Duplicate symbols supplied to solve_for_reaction_loads().")
+
         x = self.variable
         l = self.length
         C3 = Symbol('C3')
@@ -974,51 +980,23 @@ class Beam:
             eqs = deflection_curve.subs(x, position) - value
             deflection_eqs.append(eqs)
 
-        equations = ([shear_curve, moment_curve]            +
-                 shear_force_eqs + bending_moment_eqs   +
-                 slope_eqs      + deflection_eqs)
+        equations = [shear_curve, moment_curve] + shear_force_eqs + bending_moment_eqs + slope_eqs + deflection_eqs
+        unknowns = (C3, C4) + reactions + rotation_jumps + deflection_jumps
 
-        unknowns  = (C3, C4) + reactions + rotation_jumps + deflection_jumps
+        A, b = linear_eq_to_matrix(equations, unknowns)
+        rank_A = A.rank()
+        rank_Ab = A.row_join(b).rank()
+
+        if rank_A != rank_Ab:
+            raise ValueError("System is statically inconsistent. No Solution.")
 
         try:
-            sol_tuple = linsolve(equations, unknowns).args[0]
-
-        except Exception as err:
-            support_syms = {load[0] for load in self._support_as_loads}
-
-            if not reactions:
-                raise ValueError(
-                    "Unable to solve reaction system - no reaction symbols were "
-                    "supplied."
-                ) from err
-
-            extra = set(reactions) - support_syms
-            if extra:
-                raise KeyError(
-                    "Reaction variable mismatch - the following symbols are not "
-                    f"attached to any support in this Beam: {sorted(extra)}"
-                ) from err
-
-            n_eq  = len(equations)
-            n_unk = len(unknowns)
-
-            if n_unk < n_eq:
-                raise ValueError(
-                    "Unable to solve reaction system - the structure behaves like "
-                    "a *mechanism* (fewer unknowns than independent equations)."
-                ) from err
-
-            if n_unk > n_eq:
-                raise ValueError(
-                    "Unable to solve reaction system - the structure is "
-                    "*statically indeterminate* (more unknowns than equations)."
-                ) from err
-
-            raise ValueError(
-                "Unable to solve reaction system - check boundary conditions, "
-                "loads, or duplicate reaction symbols.") from err
-
-        solution=  list(sol_tuple)
+            solutions = linsolve(equations, unknowns)
+            if not solutions:
+                raise ValueError("Could not find a solution.")
+            solution = list(solutions.args[0])
+        except Exception as e:
+            raise ValueError("Could not solve system: {}".format(str(e)))
 
         reaction_index = 2+len(reactions)
         rotation_index = reaction_index + len(rotation_jumps)

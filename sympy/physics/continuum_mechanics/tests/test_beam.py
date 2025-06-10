@@ -266,6 +266,7 @@ def test_insufficient_bconditions():
     b.apply_load(-P, L/2, -1)
     b.solve_for_reaction_loads(R1, R2)
 
+
     p = b.slope()
     q = P*SingularityFunction(x, 0, 2)/4 - P*SingularityFunction(x, L/2, 2)/2 + P*SingularityFunction(x, L, 2)/4
     assert p == q/(E*I) + a3
@@ -284,6 +285,41 @@ def test_insufficient_bconditions():
     q = -L**2*P*x/16 + P*SingularityFunction(x, 0, 3)/12 - P*SingularityFunction(x, L/2, 3)/6 + P*SingularityFunction(x, L, 3)/12
     assert p == q/(E*I)
 
+def test_no_symbols_supplied():
+    E = Symbol('E')
+    I = Symbol('I')
+
+    b5 = Beam(10, E, I)
+    R1=b5.apply_support(0, type='roller')
+    b5.apply_load(10, 10, -1)
+
+    with raises(ValueError, match="No symbols supplied to solve_for_reaction_loads()."):
+        b5.solve_for_reaction_loads()
+
+def test_duplicate_symbols_supplied():
+    E = Symbol('E')
+    I = Symbol('I')
+
+    b5 = Beam(10, E, I)
+    R1=b5.apply_support(0, type='roller')
+    R2= b5.apply_support(10, type='roller')
+
+    with raises(ValueError, match="Duplicate symbols supplied to solve_for_reaction_loads()."):
+        b5.solve_for_reaction_loads(R1, R1)
+
+def test_statically_determinate():
+    E = Symbol('E')
+    I = Symbol('I')
+    R0, M0 = symbols('R0, M0')
+
+    b5 = Beam(10, E, I)
+    R0,M0 = b5.apply_support(0, type='fixed')
+    b5.apply_load(-10, 10, -1)
+
+    b5.solve_for_reaction_loads(R0, M0)
+    p = b5.reaction_loads
+    q = {R0:10, M0: -100}
+    assert p == q
 
 def test_statically_indeterminate():
     E = Symbol('E')
@@ -307,6 +343,17 @@ def test_statically_indeterminate():
     q = {R1: F/2, R2: F/2, M1: -F*l/8, M2: F*l/8}
     assert p == q
 
+def test_statically_inconsistent():
+    E = Symbol('E')
+    I = Symbol('I')
+    R1 = symbols( 'R1')
+
+    b5 = Beam(10, E, I)
+    R1=b5.apply_support(0, type='roller')
+    b5.apply_load(10, 10, -1)
+
+    with raises(ValueError, match="System is statically inconsistent."):
+        b5.solve_for_reaction_loads(R1)
 
 def test_beam_units():
     E = Symbol('E')
@@ -548,38 +595,6 @@ def test_apply_support():
     R_0, R_L, M_0, M_L = symbols('R_0, R_L, M_0, M_L')
     b.solve_for_reaction_loads(R_0, R_L, M_0, M_L)
     assert b.reaction_loads == {R_0: P/2, R_L: P/2, M_0: -L*P/8, M_L: L*P/8}
-
-def test_solve_for_reaction_loads_error_reporting():
-    E, I = symbols("E I")
-
-    b = Beam(5, E, I)
-    b.apply_support(0, "pin")
-    b.apply_support(5, "roller")
-    with raises(ValueError, match="no reaction symbols were supplied"):
-        b.solve_for_reaction_loads()
-
-    b = Beam(6, E, I)
-    r0 = b.apply_support(0, "pin")
-    b.apply_support(6, "roller")
-    ghost = symbols("R_ghost")
-    with raises(KeyError, match="variable mismatch"):
-        b.solve_for_reaction_loads(r0, ghost)
-
-    b = Beam(8, E, I)
-    r0 = b.apply_support(0, "pin")
-    r8 = b.apply_support(8, "roller")
-    b.apply_load(-2, 4, -1)
-    b.bc_deflection = [(0, 0), (0, 1)]
-    with raises(ValueError, match="Unable to solve reaction system"):
-        b.solve_for_reaction_loads(r0, r8)
-
-    b = Beam(4, E, I)
-    r0 = b.apply_support(0, "pin")
-    r4 = b.apply_support(4, "roller")
-    b.apply_load(-3, 2, -1)
-    b.solve_for_reaction_loads(r0, r4)
-    assert set(b.reaction_loads) == {r0, r4}
-
 
 def test_apply_rotation_hinge():
     b = Beam(15, 20, 20)
