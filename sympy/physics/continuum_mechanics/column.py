@@ -9,6 +9,7 @@ from sympy.core.relational import Eq
 from sympy.core.sympify import sympify
 from sympy.functions import SingularityFunction, factorial
 from sympy.integrals import integrate
+from sympy.plotting import plot, PlotGrid
 from sympy.printing import sstr
 from sympy.series import limit
 from sympy.solvers import linsolve
@@ -72,13 +73,20 @@ class Column:
         self.variable = variable
         self._base_char = base_char
         self._bc_deflection = []
+        self._bc_hinge = []
         self._applied_supports = []
+        self._applied_hinges = []
         self._applied_loads = []
-        self._reaction_loads = None
+
+        self._reaction_loads = {}
+        self._hinge_deflections = {}
+        self._integration_constants = {}
 
         self._load = 0
         self._axial_force = 0
         self._deflection = 0
+
+        self._is_solved = False
     
     def __str__(self):
         str_sol = 'Column({}, {}, {})'.format(sstr(self._length), sstr(self._elastic_modulus), sstr(self._area))
@@ -122,6 +130,16 @@ class Column:
         else:
             raise TypeError("""The variable should be a Symbol object.""")
     
+    @property
+    def reaction_loads(self):
+        """Returns the reactions loads as dictionary."""
+        return self._reaction_loads
+
+    @property
+    def hinge_deflections(self):
+        """Returns the hinge deflections as dictionary."""
+        return self._hinge_deflections
+    
     def apply_support(self, loc):
         """
         This method applies a support that is fixed in the
@@ -159,7 +177,11 @@ class Column:
         if loc in self._applied_supports:
             return ValueError("There is already a support at this location.")
         
-        reaction_load = Symbol('R_' + str(loc))
+        if loc.is_number:
+            reaction_load = Symbol(f'R_{float(loc):g}')
+        else:
+            reaction_load = Symbol(f'R_{str(loc)}')
+
         self._applied_supports.append(reaction_load)
         self._load += reaction_load * SingularityFunction(self.variable, loc, -1)
         self._bc_deflection.append(loc)
@@ -311,6 +333,37 @@ class Column:
         """
         return self._applied_loads
     
+    def apply_telescope_hinge(self, loc):
+        """
+        Applies a telescope hinge at the given location. At this location,
+        the column is free to move in the axial direction. 
+
+        Parameters
+        ==========
+        loc: Sympifyable
+            Location at which the telescope hinge is applied.
+
+        Returns
+        =======
+        Symbol
+            The unknown deflection as a symbol.
+
+        Examples
+        ========
+
+        """
+        loc = sympify(loc)
+        self._bc_hinge.append(loc)
+
+        if loc.is_number:
+            deflection = Symbol(f'u_{float(loc):g}')
+        else:
+            deflection = Symbol(f'u_{str(loc)}')
+
+        self._applied_hinges.append(deflection)
+        self._load += deflection * SingularityFunction(self.variable, loc, -2)
+        return deflection
+    
     @property
     def load(self):
         """
@@ -364,8 +417,9 @@ class Column:
         >>> c.apply_support(10)
         >>> c.apply_load(-5, 0, 0, end=10)
         >>> c.apply_load(-10, 4, -1)
-        >>> dic = c.solve_for_reaction_loads()
-        >>> print(dic)
+        >>> c.solve_for_reaction_loads()
+        >>> reactions = c.reaction_loads
+        >>> print(reactions)
         {R_0: 31, R_10: 29}
         """
         x = self.variable
@@ -386,8 +440,10 @@ class Column:
 
         eq_bc_displacement = [Eq(deflection.subs(x, loc), 0) for loc in self._bc_deflection]
 
-        total_eq = eq_axial_force + eq_bc_displacement
-        unknowns = self._applied_supports + [C_N, C_u]
+        eq_bc_hinge = [Eq(limit(axial_force, x, loc, dir='+'), 0) for loc in self._bc_hinge] # Just right to avoid infinity
+
+        total_eq = eq_axial_force + eq_bc_displacement + eq_bc_hinge
+        unknowns = self._applied_supports + self._applied_hinges + [C_N, C_u] 
 
         solution = list((linsolve(total_eq, unknowns).args)[0])
         solution = [nsimplify(s, rational=True) for s in solution] # To get rid of tiny residuals
@@ -395,10 +451,176 @@ class Column:
         num_supports = len(self._applied_supports)
         reaction_solutions = solution[:num_supports]
         self._reaction_loads = dict(zip(self._applied_supports, reaction_solutions))
-        # self._load = self._load.subs(self._reaction_loads) -> Leave the reactions symbolic for now
 
-        return self._reaction_loads
+        displacement_solutions = solution[num_supports:-1]
+        self._hinge_deflections = dict(zip(self._applied_hinges, displacement_solutions))
 
+        integration_constants = solution[-2:]
+        self._integration_constants = dict(zip([C_N, C_u], integration_constants))
 
+        self._is_solved = True
     
+    def _solved_load(self):
+        """
+        Helper function that fills in the solved unknowns into
+        the load equation.
+        """
+        solved_load = self._load 
+        solved_load = solved_load.subs(self._reaction_loads)
+        solved_load = solved_load.subs(self._hinge_deflections)
+        return solved_load
+    
+    def axial_force(self):
+        """
+        Returns a singularity function expression that 
+        represents the axial forces in the column.
+
+        Examples
+        ========
+        A column with a length of 10 meters, elastic modulus E and
+        area A is supported at both ends and in the middle. At x = 3
+        the column is loaded by a point load of magnitude -1 kN. Between
+        x = 5 and x = 10 the column is loaded by a uniform distributed
+        load of -1 kN/m.
+        
+        >>> from sympy.physics.continuum_mechanics.column import Column
+        >>> from sympy.core.symbol import symbols
+        >>> E, A = symbols('E A') 
+        >>> c = Column(10, E, A)
+        >>> c.apply_support(0)
+        >>> c.apply_support(5)
+        >>> c.apply_support(10)
+        >>> c.apply_load(-5, 3, -1)
+        >>> c.apply_load(-1, 5, 0, end=10)
+        >>> R_0, R_5, R_10 = symbols("R_0 R_5 R_10")
+        >>> print(c.axial_force())
+        C_N - R_0*SingularityFunction(x, 0, 0) - R_10*SingularityFunction(x, 10, 0)
+            - R_5*SingularityFunction(x, 5, 0) + 5*SingularityFunction(x, 3, 0)
+            + SingularityFunction(x, 5, 1) - SingularityFunction(x, 10, 1)
+        >>> c.solve_for_reaction_loads()
+        >>> print(c.axial_force())
+        -2*SingularityFunction(x, 0, 0) + 5*SingularityFunction(x, 3, 0)
+            - 11*SingularityFunction(x, 5, 0)/2 + SingularityFunction(x, 5, 1)
+            - 5*SingularityFunction(x, 10, 0)/2 - SingularityFunction(x, 10, 1)
+        """
+        load_equation = self._solved_load()
+        x = self.variable
+        C_N = self._integration_constants[Symbol('C_N')] if self._is_solved else Symbol('C_N')
+        return -integrate(load_equation, x) + C_N
+    
+    def deflection(self):
+        """
+        Returns a singularity function expression that 
+        represents the deflection of the column.
+
+        Examples
+        ========
+        A column with a length of 10 meters has an elastic
+        modulus of 210000 kN/m^2 and an area of 1 m^2. It
+        is supported at both ends and is loaded by a point
+        load of 10 kN at x = 5.
+
+        >>> from sympy.physics.continuum_mechanics.column import Column
+        >>> from sympy.core.symbol import symbols 
+        >>> c = Column(10, 210000, 1)
+        >>> c.apply_support(0)
+        >>> c.apply_support(10)
+        >>> c.apply_load(10, 5, -1)
+        >>> R_0, R_10 = symbols("R_0 R_10")
+        >>> print(c.deflection())
+        C_N*x + C_u - R_0*SingularityFunction(x, 0, 1)/210000
+        - R_10*SingularityFunction(x, 10, 1)/210000 - SingularityFunction(x, 5, 1)/21000
+        >>> c.solve_for_reaction_loads()
+        >>> print(c.deflection())
+        SingularityFunction(x, 0, 1)/42000 - SingularityFunction(x, 5, 1)/21000
+        + SingularityFunction(x, 10, 1)/42000
+        """
+        load_equation = self._solved_load()
+        x = self.variable
+        E = self.elastic_modulus
+        A = self.area
+        C_N = self._integration_constants[Symbol('C_N')] if self._is_solved else Symbol('C_N')
+        C_u = self._integration_constants[Symbol('C_u')] if self._is_solved else Symbol('C_u')
+        return -(integrate(integrate(load_equation, x), x)) / (E * A) + C_N * x + C_u
+    
+    def plot_axial_force(self):
+        """
+        Returns a plot for the axial forces in the column.
+
+        Examples
+        ========
+        There is a column with a length of 10 meters, an elastic
+        modulus of 210000 kN/m^2 and an area of 1 m^2. It is supported
+        at x = 0, x = 8 and x = 10. There is a uniform distributed load
+        of 5 kN applied to the whole column. Furthermore, there are
+        point loads of -10 kN and 5 kN at x = 5 and x = 8, respectively.
+
+        Negative axial force loads to compression, and positive axial
+        force leads to extension.
+
+        .. plot::
+            :context: close-figs
+            :format: doctest
+            :include-source: True
+
+            >>> from sympy.physics.continuum_mechanics.column import Column
+            >>> from sympy.core.symbol import symbols 
+            >>> c = Column(10, 210000, 1)
+            >>> c.apply_support(0)
+            >>> c.apply_support(8)
+            >>> c.apply_support(10)
+            >>> c.apply_load(5, 0, 0, end=10)
+            >>> c.apply_load(-10, 5, -1)
+            >>> c.apply_load(5, 8, -1)
+            >>> R_0, R_8, R_10 = symbols("R_0 R_8 R_10")
+            >>> c.solve_for_reaction_loads()
+            >>> c.plot_axial_force()
+            Plot object containing:
+            [0]: cartesian line: 65*SingularityFunction(x, 0, 0)/4
+            - 5*SingularityFunction(x, 0, 1) + 10*SingularityFunction(x, 5, 0)
+            + 75*SingularityFunction(x, 8, 0)/4 + 5*SingularityFunction(x, 10, 0)
+            + 5*SingularityFunction(x, 10, 1) for x over (0.0, 10.0)
+        """
+        return plot(self.axial_force(), (self.variable, 0, self.length), title='Axial Force',
+                xlabel=r'$\mathrm{x}$', ylabel=r'$\mathrm{N(x)}$', line_color='r')
+
+    def plot_deflection(self):
+        """
+        Returns a plot for the deflections in the column. To plot
+        the deflection, numeric values for elastic modulus E and
+        are A should be provided.
+
+        Examples
+        ========
+        There is a column with a length of 10 meters, an elastic
+        modulus of 210000 kN/m^2 and an area of 1 m^2. It is supported
+        at x = 0, x = 8 and x = 10. There is a uniform distributed load
+        of 5 kN applied to the whole column. Furthermore, there are
+        point loads of -10 kN and 5 kN at x = 5 and x = 8, respectively.
+
+        .. plot::
+            :context: close-figs
+            :format: doctest
+            :include-source: True
+
+            >>> from sympy.physics.continuum_mechanics.column import Column
+            >>> from sympy.core.symbol import symbols 
+            >>> c = Column(10, 210000, 1)
+            >>> c.apply_support(0)
+            >>> c.apply_support(8)
+            >>> c.apply_support(10)
+            >>> c.apply_load(5, 0, 0, end=10)
+            >>> c.apply_load(-10, 5, -1)
+            >>> c.apply_load(5, 8, -1)
+            >>> R_0, R_8, R_10 = symbols("R_0 R_8 R_10")
+            >>> c.solve_for_reaction_loads()
+            >>> c.plot_deflection()
+            Plot object containing:
+            [0]: cartesian line: 13*SingularityFunction(x, 0, 1)/168000
+            - SingularityFunction(x, 0, 2)/84000 + SingularityFunction(x, 5, 1)/21000
+            + SingularityFunction(x, 8, 1)/11200 + SingularityFunction(x, 10, 1)/42000
+            + SingularityFunction(x, 10, 2)/84000 for x over (0.0, 10.0)
+        """
+        return plot(self.deflection(), (self.variable, 0, self.length), title='Deflection',
+                xlabel=r'$\mathrm{x}$', ylabel=r'$\mathrm{u(x)}$', line_color='b')
 
