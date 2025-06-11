@@ -21,7 +21,7 @@ from sympy.utilities.misc import filldedent, func_name
 
 
 if TYPE_CHECKING:
-    from typing import ClassVar, TypeVar, Any
+    from typing import ClassVar, TypeVar, Any, Hashable
     from typing_extensions import Self
     from .assumptions import StdFactKB
     from .symbol import Symbol
@@ -294,7 +294,7 @@ class Basic(Printable):
     def copy(self):
         return self.func(*self.args)
 
-    def __getnewargs__(self):
+    def __getnewargs__(self) -> tuple[Basic, ...] | tuple[Hashable, ...]:
         return self.args
 
     def __getstate__(self):
@@ -319,7 +319,7 @@ class Basic(Printable):
             self._mhash = h
         return h
 
-    def _hashable_content(self):
+    def _hashable_content(self) -> tuple[Hashable, ...]:
         """Return a tuple of information about self that can be used to
         compute the hash. If a class defines additional attributes,
         like ``name`` in Symbol, then this method should be updated
@@ -1283,7 +1283,7 @@ class Basic(Printable):
             rv = fallback(self, old, new)
         return rv
 
-    def _eval_subs(self, old, new) -> Basic | None:
+    def _eval_subs(self, old: Basic, new: Basic) -> Basic | None:
         """Override this stub if you want to do anything more than
         attempt a replacement of old with new in the arguments of self.
 
@@ -1711,9 +1711,7 @@ class Basic(Printable):
         if isinstance(query, type):
             _query = lambda expr: isinstance(expr, query)
 
-            if isinstance(value, type):
-                _value = lambda expr, result: value(*expr.args)
-            elif callable(value):
+            if isinstance(value, type) or callable(value):
                 _value = lambda expr, result: value(*expr.args)
             else:
                 raise TypeError(

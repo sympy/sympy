@@ -16,7 +16,8 @@ from sympy.core.decorators import sympify_method_args, sympify_return
 from sympy.core.function import Application, Derivative
 from sympy.core.kind import BooleanKind, NumberKind
 from sympy.core.numbers import Number
-from sympy.core.operations import LatticeOp
+from sympy.core.operations import AssocOp, LatticeOp
+from sympy.core.parameters import global_parameters
 from sympy.core.singleton import Singleton, S
 from sympy.core.sorting import ordered
 from sympy.core.sympify import _sympy_converter, _sympify, sympify
@@ -603,12 +604,16 @@ class And(LatticeOp, BooleanFunction):
 
     if TYPE_CHECKING:
 
-        def __new__(cls, *args: Boolean | bool) -> Boolean: # type: ignore
+        def __new__(cls, *args: Boolean | bool, evaluate: bool | None = None) -> Boolean: # type: ignore
             ...
 
         @property
         def args(self) -> tuple[Boolean, ...]:
             ...
+
+    @classmethod
+    def _from_args(cls, args, is_commutative=None):
+        return super(AssocOp, cls).__new__(cls, *args)
 
     @classmethod
     def _new_args_filter(cls, args):
@@ -770,12 +775,16 @@ class Or(LatticeOp, BooleanFunction):
 
     if TYPE_CHECKING:
 
-        def __new__(cls, *args: Boolean | bool) -> Boolean: # type: ignore
+        def __new__(cls, *args: Boolean | bool, evaluate: bool | None = None) -> Boolean: # type: ignore
             ...
 
         @property
         def args(self) -> tuple[Boolean, ...]:
             ...
+
+    @classmethod
+    def _from_args(cls, args, is_commutative=None):
+        return super(AssocOp, cls).__new__(cls, *args)
 
     @classmethod
     def _new_args_filter(cls, args):
@@ -1009,10 +1018,14 @@ class Xor(BooleanFunction):
     x
 
     """
-    def __new__(cls, *args, remove_true=True, **kwargs):
+    def __new__(cls, *args, remove_true=True, evaluate=None, **kwargs):
+        if evaluate is None:
+            evaluate = global_parameters.evaluate
+        if not evaluate:
+            return super().__new__(cls, *args, evaluate=evaluate, **kwargs)
+
         argset = set()
-        obj = super().__new__(cls, *args, **kwargs)
-        for arg in obj._args:
+        for arg in map(_sympify, args):
             if isinstance(arg, Number) or arg in (True, False):
                 if arg:
                     arg = true
@@ -1052,17 +1065,7 @@ class Xor(BooleanFunction):
         elif True in argset and remove_true:
             argset.remove(True)
             return Not(Xor(*argset))
-        else:
-            obj._args = tuple(ordered(argset))
-            obj._argset = frozenset(argset)
-            return obj
-
-    # XXX: This should be cached on the object rather than using cacheit
-    # Maybe it can be computed in __new__?
-    @property  # type: ignore
-    @cacheit
-    def args(self):
-        return tuple(ordered(self._argset))
+        return super().__new__(cls, *ordered(argset))
 
     def to_nnf(self, simplify=True):
         args = []
@@ -1307,7 +1310,12 @@ class Equivalent(BooleanFunction):
     True
 
     """
-    def __new__(cls, *args, **options):
+    def __new__(cls, *args, evaluate=None, **kwargs):
+        if evaluate is None:
+            evaluate = global_parameters.evaluate
+        if not evaluate:
+            return super().__new__(cls, *args, evaluate=evaluate, **kwargs)
+
         from sympy.core.relational import Relational
         args = [_sympify(arg) for arg in args]
 
@@ -1341,17 +1349,7 @@ class Equivalent(BooleanFunction):
         if False in argset:
             argset.discard(False)
             return And(*[Not(arg) for arg in argset])
-        _args = frozenset(argset)
-        obj = super().__new__(cls, _args)
-        obj._argset = _args
-        return obj
-
-    # XXX: This should be cached on the object rather than using cacheit
-    # Maybe it can be computed in __new__?
-    @property  # type: ignore
-    @cacheit
-    def args(self):
-        return tuple(ordered(self._argset))
+        return super().__new__(cls, *ordered(argset))
 
     def to_nnf(self, simplify=True):
         args = []

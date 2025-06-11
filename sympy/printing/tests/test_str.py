@@ -1044,7 +1044,7 @@ def test_Equivalent():
     assert str(Equivalent(y, x)) == "Equivalent(x, y)"
 
 def test_Xor():
-    assert str(Xor(y, x, evaluate=False)) == "x ^ y"
+    assert str(Xor(y, x, evaluate=False)) == "y ^ x"
 
 def test_Complement():
     assert str(Complement(S.Reals, S.Naturals)) == 'Complement(Reals, Naturals)'
