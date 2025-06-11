@@ -11,10 +11,11 @@ from sympy.core.numbers import I, pi, oo
 from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.core.symbol import Dummy, Symbol
-from sympy.functions import Abs
 from sympy.core.sympify import sympify, _sympify
-from sympy.matrices import Matrix, ImmutableMatrix, ImmutableDenseMatrix, eye, ShapeError, zeros
+from sympy.external.mpmath import prec_to_dps
+from sympy.functions import Abs
 from sympy.functions.elementary.exponential import (exp, log)
+from sympy.matrices import Matrix, ImmutableMatrix, ImmutableDenseMatrix, eye, ShapeError, zeros
 from sympy.matrices.expressions import MatMul, MatAdd
 from sympy.polys import Poly, rootof
 from sympy.polys.polyroots import roots
@@ -27,7 +28,6 @@ from sympy.logic.boolalg import false, true
 from sympy.solvers.inequalities import reduce_inequalities
 from sympy.physics.control.routh_table import neg_roots_conds
 
-from mpmath.libmp.libmpf import prec_to_dps
 
 __all__ = ['TransferFunction', 'PIDController', 'Series', 'MIMOSeries', 'Parallel', 'MIMOParallel',
     'Feedback', 'MIMOFeedback', 'TransferFunctionMatrix', 'StateSpace', 'gbt', 'bilinear', 'forward_diff', 'backward_diff',

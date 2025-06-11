@@ -54,9 +54,7 @@ from sympy.utilities.lambdify import lambdify
 from sympy.utilities.misc import filldedent, debugf
 from sympy.utilities.iterables import (connected_components,
     generate_bell, uniq, iterable, is_sequence, subsets, flatten, sift)
-from sympy.utilities.decorator import conserve_mpmath_dps
-
-from mpmath import findroot
+from sympy.external.mpmath import conserve_mpmath_dps, findroot
 
 from sympy.solvers.polysys import solve_poly_system
 
@@ -3020,6 +3018,8 @@ def nsolve(*args, dict=False, **kwargs):
             "solver".'''))
 
     if 'prec' in kwargs:
+        # XXX: This should use local_workprec instead of changing the global
+        # precision.
         import mpmath
         mpmath.mp.dps = kwargs.pop('prec')
 
