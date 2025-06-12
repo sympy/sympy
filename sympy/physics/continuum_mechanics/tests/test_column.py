@@ -77,7 +77,7 @@ def test_column():
     R_0 = c5.apply_support(0)
     c5.apply_load(10, 0, -1)
     c5.apply_load(10, 5, -1)
-    
+
     p = c5.load
     q = R_0 * SingularityFunction(x, 0, -1) + 10 * SingularityFunction(x, 0, -1) + 10 * SingularityFunction(x, 5, -1)
     assert p == q
@@ -186,7 +186,7 @@ def test_remove_load():
     p = c.load
     q = -F * SingularityFunction(x, L, -1)
     assert p == q
-    
+
 test_remove_load()
 
 def test_reactions_point_loads():
@@ -385,7 +385,7 @@ def test_reactions_higher_orders():
     q = {R_10: -Rational(1000,3)}
     assert p == q
 
-    # Test combination of loads 
+    # Test combination of loads
     c5 = Column(10, E, A)
     c5.apply_support(0)
     c5.apply_support(10)
@@ -426,9 +426,9 @@ def test_telescope_hinge():
     R_0, R_10 = symbols('R_0, R_10')
     q = (
         R_0 * SingularityFunction(x, 0, -1) +
-        10 * SingularityFunction(x, 5, -1) + 
+        10 * SingularityFunction(x, 5, -1) +
         E*A*Symbol('u_7.5') * SingularityFunction(x, 7.5, -2) +
-        R_10 * SingularityFunction(x, 10, -1) 
+        R_10 * SingularityFunction(x, 10, -1)
     )
     assert p == q
 
@@ -439,7 +439,7 @@ def test_telescope_hinge():
     assert p == q
 
     p = c.hinge_deflections
-    q = {Symbol('u_7.5'): 50/(E*A)} 
+    q = {Symbol('u_7.5'): 50/(E*A)}
     assert p == q
 
     # Test numeric solution, multiple forces
