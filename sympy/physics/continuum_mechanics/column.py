@@ -4,16 +4,15 @@ using singularity functions in mechanics.
 """
 
 from sympy import nsimplify
-from sympy.core import Symbol, diff, symbols
+from sympy.core import Symbol, symbols
 from sympy.core.relational import Eq
 from sympy.core.sympify import sympify
 from sympy.functions import SingularityFunction, factorial
 from sympy.integrals import integrate
-from sympy.plotting import plot, PlotGrid
+from sympy.plotting import plot
 from sympy.printing import sstr
 from sympy.series import limit
 from sympy.solvers import linsolve
-from sympy.solvers.solvers import solve
 
 class Column:
     """
