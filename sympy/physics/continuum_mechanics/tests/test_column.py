@@ -330,7 +330,7 @@ test_reactions_point_loads()
 def test_reactions_higher_orders():
     E, A = symbols('E A')
 
-    # Test UDE, one support 
+    # Test UDE, one support
     c = Column(10, E, A)
     c.apply_support(0)
     c.apply_load(-1, 0, 0, end=10)
