@@ -181,7 +181,7 @@ class Column:
         ==========
         loc: Sympifyable
             Location at which the fixed support is applied.
-        
+
         Returns
         =======
         Symbol
