@@ -74,11 +74,12 @@ def test_column():
 
     # Test the load equation for column with a support
     c5 = Column(10, E, A)
-    R_0 = c5.apply_support(0)
+    c5.apply_support(0)
     c5.apply_load(10, 0, -1)
     c5.apply_load(10, 5, -1)
 
     p = c5.load
+    R_0 = Symbol('R_0')
     q = R_0 * SingularityFunction(x, 0, -1) + 10 * SingularityFunction(x, 0, -1) + 10 * SingularityFunction(x, 5, -1)
     assert p == q
 
