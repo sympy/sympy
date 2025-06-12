@@ -489,7 +489,7 @@ class Column:
         eq_bc_hinge = [Eq(limit(axial_force, x, loc, dir='+'), 0) for loc in self._bc_hinge] # Just right to avoid infinity
 
         total_eq = eq_axial_force + eq_bc_displacement + eq_bc_hinge
-        unknowns = self._applied_supports + self._applied_hinges + [C_N, C_u] 
+        unknowns = self._applied_supports + self._applied_hinges + [C_N, C_u]
 
         solution = list((linsolve(total_eq, unknowns).args)[0])
         solution = [nsimplify(s, rational=True) for s in solution] # To get rid of tiny residuals
@@ -511,14 +511,14 @@ class Column:
         Helper function that fills in the solved unknowns into
         the load equation.
         """
-        solved_load = self._load 
+        solved_load = self._load
         solved_load = solved_load.subs(self._reaction_loads)
         solved_load = solved_load.subs(self._hinge_deflections)
         return solved_load
 
     def axial_force(self):
         """
-        Returns a singularity function expression that 
+        Returns a singularity function expression that
         represents the axial forces in the column.
 
         Examples
@@ -610,7 +610,7 @@ class Column:
             :include-source: True
 
             >>> from sympy.physics.continuum_mechanics.column import Column
-            >>> from sympy.core.symbol import symbols 
+            >>> from sympy.core.symbol import symbols
             >>> c = Column(10, 210000, 1)
             >>> c.apply_support(0)
             >>> c.apply_support(8)
