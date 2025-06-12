@@ -32,11 +32,42 @@ class Column:
     .. note::
         The columns are set up horizontally, from left to right.
         This is due to it then having better compatability with
-        the 2-Dimensional module, where all beams are projected
+        the 2-Dimensional module, where all objects are projected
         horizontally.
 
     Examples
     ========
+    The is a column with a length of 20 meters. It has an area of
+    0.75 m^2 and an elastic modulus of 20.000 kN/m^2. The column is
+    fixed at both ends. From x = 0 to x = 10 there is a constant
+    distributed load of 5 kN/m. At x = 12 and x = 16 there are point
+    loads of 20 kN. Loads aiming to the right are positive, and positive
+    axial forces lead to extension.
+
+    >>> from sympy.physics.continuum_mechanics.column import Column
+    >>> c = Column(20, 20000, 0.75)
+    >>> c.apply_support(0)
+    >>> c.apply_support(20)
+    >>> c.apply_load(5, 0, 0, end=10)
+    >>> c.apply_load(20, 12, -1)
+    >>> c.apply_load(20, 16, -1)
+    >>> c.applied_loads
+    [(5, 0, 0, 10), (20, 12, -1, None), (20, 16, -1, None)]
+    >>> c.load
+    R_0*SingularityFunction(x, 0, -1) + R_20*SingularityFunction(x, 20, -1)
+    + 5*SingularityFunction(x, 0, 0) - 5*SingularityFunction(x, 10, 0)
+    + 20*SingularityFunction(x, 12, -1) + 20*SingularityFunction(x, 16, -1)
+    >>> c.solve_for_reaction_loads()
+    >>> c.reaction_loads
+    {R_0: -99/2, R_20: -81/2}
+    >>> c.axial_force()
+    99*SingularityFunction(x, 0, 0)/2 - 5*SingularityFunction(x, 0, 1)
+    + 5*SingularityFunction(x, 10, 1) - 20*SingularityFunction(x, 12, 0)
+    - 20*SingularityFunction(x, 16, 0) + 81*SingularityFunction(x, 20, 0)/2
+    >>> c.deflection
+    0.0033*SingularityFunction(x, 0, 1) - 0.000166666666666667*SingularityFunction(x, 0, 2)
+    + 0.000166666666666667*SingularityFunction(x, 10, 2) - 0.00133333333333333*SingularityFunction(x, 12, 1)
+    - 0.00133333333333333*SingularityFunction(x, 16, 1) + 0.0027*SingularityFunction(x, 20, 1)
     """
 
     def __init__(self, length, elastic_modulus, area, variable=Symbol('x'), base_char='C'):
@@ -350,8 +381,27 @@ class Column:
 
         Examples
         ========
+        There is a column with a length of 10 meters, elastic
+        modulus E and area A. At x = 5 the column is loaded axially
+        by a point load of 10 kN. At x = 8, there is a telescope hinge.
 
+        >>> from sympy.physics.continuum_mechanics.column import Column
+        >>> c = Column(10, 20000, 0.5)
+        >>> c.apply_support(0)
+        >>> c.apply_support(10)
+        >>> c.apply_telescope_hinge(8)
+        >>> c.apply_load(10, 5, -1)
+        >>> c.solve_for_reaction_loads()
+        >>> p = c.reaction_loads
+        >>> print(p)
+        {R_0: -10, R_10: 0}
+        >>> p = c.hinge_deflections
+        >>> print(p)
+        {u_8: 1/200}
         """
+        E = self.elastic_modulus
+        A = self.area
+
         loc = sympify(loc)
         self._bc_hinge.append(loc)
 
@@ -361,7 +411,7 @@ class Column:
             deflection = Symbol(f'u_{str(loc)}')
 
         self._applied_hinges.append(deflection)
-        self._load += deflection * SingularityFunction(self.variable, loc, -2)
+        self._load += (E * A * deflection) * SingularityFunction(self.variable, loc, -2)
         return deflection
     
     @property
