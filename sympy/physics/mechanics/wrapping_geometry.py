@@ -177,7 +177,7 @@ class WrappingSphere(WrappingGeometryBase):
             point_radius_squared = dot(point_vector, point_vector)
         else:
             point_radius_squared = point_vector**2
-        return Eq(point_radius_squared, self.radius**2) == True
+        return Eq(trigsimp(point_radius_squared), self.radius**2) == True
 
     def geodesic_length(self, point_1, point_2):
         r"""Returns the shortest distance between two points on the sphere's
