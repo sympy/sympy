@@ -79,7 +79,7 @@ class Column:
 
         length: Sympifyable
             A Symbol or value representing the column's length.
-            
+
         elastic_modulus: Sympifyable
             A Symbol or value representing the column's modulus of
             elasticity. It is a measure of the stiffness of the material.
@@ -333,7 +333,7 @@ class Column:
 
         end_load = 0
         for i in range(0, order + 1):
-            end_load += (f.diff(x, i).subs(x, end - start) *
+            end_load += (f.diff(x, i).subs(x, end) *
                             SingularityFunction(x, end, i)/factorial(i))
         return end_load
     
