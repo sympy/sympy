@@ -78,8 +78,8 @@ class Column:
         ==========
 
         length: Sympifyable
-            A Symbol or value representing thecColumn's length.
-        
+            A Symbol or value representing the column's length.
+            
         elastic_modulus: Sympifyable
             A Symbol or value representing the column's modulus of
             elasticity. It is a measure of the stiffness of the material.
