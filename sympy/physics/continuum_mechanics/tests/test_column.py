@@ -390,24 +390,39 @@ def test_telescope_hinge():
     q = (
         R_0 * SingularityFunction(x, 0, -1) +
         10 * SingularityFunction(x, 5, -1) + 
-        Symbol('u_7.5') * SingularityFunction(x, 7.5, -2) +
+        E*A*Symbol('u_7.5') * SingularityFunction(x, 7.5, -2) +
         R_10 * SingularityFunction(x, 10, -1) 
     )
     assert p == q
 
     # Test solution single telescope hinge
-    # c.solve_for_reaction_loads()
-    # p = c.reaction_loads
-    # q = {R_0: -10, R_10: 0}
-    # assert p == q
+    c.solve_for_reaction_loads()
+    p = c.reaction_loads
+    q = {R_0: -10, R_10: 0}
+    assert p == q
 
-    # p = c.hinge_deflections
-    # q = {Symbol('u_7.5'): 50} ??
-    # assert p == q
+    p = c.hinge_deflections
+    q = {Symbol('u_7.5'): 50/(E*A)} 
+    assert p == q
 
-    # Test solution multiple telescope hinges
+    # Test numeric solution, multiple forces
+    c2 = Column(10, 20000, 0.5)
+    c2.apply_support(0)
+    c2.apply_support(10)
+    c2.apply_telescope_hinge(4)
+    c2.apply_load(-5, 3, -1)
+    c2.apply_load(-10, 8, -1)
 
-    # Test load on top of telescope hinge
+    c2.solve_for_reaction_loads()
+
+    p = c2.reaction_loads
+    q = {R_0: 5, R_10: 10}
+    assert p == q
+
+    p = c2.hinge_deflections
+    u_4 = Symbol('u_4')
+    q = {u_4: Rational(1, 2000)}
+    assert p == q
 
 test_telescope_hinge()
 
