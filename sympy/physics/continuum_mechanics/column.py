@@ -181,11 +181,6 @@ class Column:
         loc: Sympifyable
             Location at which the fixed support is applied.
 
-        Returns
-        =======
-        Symbol
-            The unknown reaction load as a symbol.
-
         Examples
         ========
         There is a column of 10 meters. It has an area A and
@@ -215,8 +210,6 @@ class Column:
         self._applied_supports.append(reaction_load)
         self._load += reaction_load * SingularityFunction(self.variable, loc, -1)
         self._bc_deflection.append(loc)
-
-        return reaction_load
 
     def apply_load(self, value, start, order, end=None):
         """
@@ -372,11 +365,6 @@ class Column:
         loc: Sympifyable
             Location at which the telescope hinge is applied.
 
-        Returns
-        =======
-        Symbol
-            The unknown deflection as a symbol.
-
         Examples
         ========
         There is a column with a length of 10 meters, elastic
@@ -408,7 +396,6 @@ class Column:
 
         self._applied_hinges.append(deflection)
         self._load += (E * A * deflection) * SingularityFunction(self.variable, loc, -2)
-        return deflection
 
     @property
     def load(self):
@@ -537,7 +524,6 @@ class Column:
         >>> c.apply_support(10)
         >>> c.apply_load(-5, 3, -1)
         >>> c.apply_load(-1, 5, 0, end=10)
-        >>> R_0, R_5, R_10 = symbols("R_0 R_5 R_10")
         >>> c.axial_force()
         C_N - R_0*SingularityFunction(x, 0, 0) - R_10*SingularityFunction(x, 10, 0)
             - R_5*SingularityFunction(x, 5, 0) + 5*SingularityFunction(x, 3, 0)
@@ -571,7 +557,6 @@ class Column:
         >>> c.apply_support(0)
         >>> c.apply_support(10)
         >>> c.apply_load(10, 5, -1)
-        >>> R_0, R_10 = symbols("R_0 R_10")
         >>> c.deflection()
         C_N*x + C_u - R_0*SingularityFunction(x, 0, 1)/210000
         - R_10*SingularityFunction(x, 10, 1)/210000 - SingularityFunction(x, 5, 1)/21000
@@ -617,7 +602,6 @@ class Column:
             >>> c.apply_load(5, 0, 0, end=10)
             >>> c.apply_load(-10, 5, -1)
             >>> c.apply_load(5, 8, -1)
-            >>> R_0, R_8, R_10 = symbols("R_0 R_8 R_10")
             >>> c.solve_for_reaction_loads()
             >>> c.plot_axial_force()
             Plot object containing:
@@ -657,7 +641,6 @@ class Column:
             >>> c.apply_load(5, 0, 0, end=10)
             >>> c.apply_load(-10, 5, -1)
             >>> c.apply_load(5, 8, -1)
-            >>> R_0, R_8, R_10 = symbols("R_0 R_8 R_10")
             >>> c.solve_for_reaction_loads()
             >>> c.plot_deflection()
             Plot object containing:
