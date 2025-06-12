@@ -516,7 +516,6 @@ class Column:
         load of -1 kN/m.
 
         >>> from sympy.physics.continuum_mechanics.column import Column
-        >>> from sympy.core.symbol import symbols
         >>> E, A = symbols('E A')
         >>> c = Column(10, E, A)
         >>> c.apply_support(0)
@@ -552,7 +551,6 @@ class Column:
         load of 10 kN at x = 5.
 
         >>> from sympy.physics.continuum_mechanics.column import Column
-        >>> from sympy.core.symbol import symbols
         >>> c = Column(10, 210000, 1)
         >>> c.apply_support(0)
         >>> c.apply_support(10)
@@ -594,7 +592,6 @@ class Column:
             :include-source: True
 
             >>> from sympy.physics.continuum_mechanics.column import Column
-            >>> from sympy.core.symbol import symbols
             >>> c = Column(10, 210000, 1)
             >>> c.apply_support(0)
             >>> c.apply_support(8)
@@ -633,7 +630,6 @@ class Column:
             :include-source: True
 
             >>> from sympy.physics.continuum_mechanics.column import Column
-            >>> from sympy.core.symbol import symbols
             >>> c = Column(10, 210000, 1)
             >>> c.apply_support(0)
             >>> c.apply_support(8)
