@@ -266,6 +266,7 @@ def test_insufficient_bconditions():
     b.apply_load(-P, L/2, -1)
     b.solve_for_reaction_loads(R1, R2)
 
+
     p = b.slope()
     q = P*SingularityFunction(x, 0, 2)/4 - P*SingularityFunction(x, L/2, 2)/2 + P*SingularityFunction(x, L, 2)/4
     assert p == q/(E*I) + a3
@@ -284,6 +285,41 @@ def test_insufficient_bconditions():
     q = -L**2*P*x/16 + P*SingularityFunction(x, 0, 3)/12 - P*SingularityFunction(x, L/2, 3)/6 + P*SingularityFunction(x, L, 3)/12
     assert p == q/(E*I)
 
+def test_no_symbols_supplied():
+    E = Symbol('E')
+    I = Symbol('I')
+
+    b5 = Beam(10, E, I)
+    R1=b5.apply_support(0,'roller') # noqa: F841
+    b5.apply_load(10, 10, -1)
+
+    with raises(ValueError, match="No symbols supplied to solve_for_reaction_loads()."):
+        b5.solve_for_reaction_loads()
+
+def test_duplicate_symbols_supplied():
+    E = Symbol('E')
+    I = Symbol('I')
+
+    b5 = Beam(10, E, I)
+    R1=b5.apply_support(0,'roller')
+    R2=b5.apply_support(10,'roller') # noqa: F841
+
+    with raises(ValueError, match="Duplicate symbols supplied to solve_for_reaction_loads()."):
+        b5.solve_for_reaction_loads(R1, R1)
+
+def test_statically_determinate():
+    E = Symbol('E')
+    I = Symbol('I')
+    R0, M0 = symbols('R0, M0')
+
+    b5 = Beam(10, E, I)
+    R0,M0 = b5.apply_support(0, 'fixed')
+    b5.apply_load(-10, 10, -1)
+
+    b5.solve_for_reaction_loads(R0, M0)
+    p = b5.reaction_loads
+    q = {R0:10, M0: -100}
+    assert p == q
 
 def test_statically_indeterminate():
     E = Symbol('E')
@@ -307,6 +343,17 @@ def test_statically_indeterminate():
     q = {R1: F/2, R2: F/2, M1: -F*l/8, M2: F*l/8}
     assert p == q
 
+def test_statically_inconsistent():
+    E = Symbol('E')
+    I = Symbol('I')
+    R1 = symbols( 'R1')
+
+    b5 = Beam(10, E, I)
+    R1=b5.apply_support(0, 'roller')
+    b5.apply_load(10, 10, -1)
+
+    with raises(ValueError, match="System is statically inconsistent."):
+        b5.solve_for_reaction_loads(R1)
 
 def test_beam_units():
     E = Symbol('E')
