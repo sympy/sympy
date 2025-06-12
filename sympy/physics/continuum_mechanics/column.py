@@ -118,11 +118,11 @@ class Column:
         self._deflection = 0
 
         self._is_solved = False
-    
+
     def __str__(self):
         str_sol = 'Column({}, {}, {})'.format(sstr(self._length), sstr(self._elastic_modulus), sstr(self._area))
         return str_sol
-    
+
     @property
     def length(self):
         """Returns the length of the column."""
@@ -131,12 +131,12 @@ class Column:
     @length.setter
     def length(self, l):
         self._length = sympify(l)
-    
+
     @property
     def elastic_modulus(self):
         """Returns the elastic modulus of the column"""
         return self._elastic_modulus
-    
+
     @elastic_modulus.setter
     def elastic_modulus(self, E):
         self._elastic_modulus = sympify(E)
@@ -207,7 +207,7 @@ class Column:
         loc = sympify(loc)
         if loc in self._applied_supports:
             return ValueError("There is already a support at this location.")
-        
+
         if loc.is_number:
             reaction_load = Symbol(f'R_{float(loc):g}')
         else:
@@ -218,7 +218,7 @@ class Column:
         self._bc_deflection.append(loc)
 
         return reaction_load
-    
+
     def apply_load(self, value, start, order, end=None):
         """
         This method applies a load to the column object. Only
@@ -236,7 +236,7 @@ class Column:
                 - For ramp loads: kN/m**2
                 - For parabolic ramp loads: kN/m**3
                 - And so on.
-        
+
         loc: Sympifyable
             The starting point of the applied load. For
             point loads this is simply the location.
@@ -248,7 +248,7 @@ class Column:
                 - For ramp loads, order = 1
                 - For parabolic ramp loads, order = 2
                 - ... so on.
-        
+
         Examples
         ========
         There is a column of 10 meters, area A and elastic modulus E. It
@@ -277,7 +277,7 @@ class Column:
 
         if end:
             self._load -= self._taylor_helper(self.variable, value, start, order, end)
-    
+
     def remove_load(self, value, start, order, end=None):
         """
         Removes an applied load.
@@ -311,11 +311,10 @@ class Column:
         else:
             msg = "No such load distribution exists on the column object."
             raise ValueError(msg)
-        
+
         if end:
             self._load += self._taylor_helper(self.variable, value, start, order, end)
 
-        
     def _taylor_helper(self, x, value, start, order, end):
         """
         This helper function provides a Taylor series that
@@ -328,7 +327,7 @@ class Column:
             msg = ("If 'end' is provided the 'order' of the load cannot "
                     "be negative.")
             raise ValueError(msg)
-        
+
         f = value * (x - start)**order # Symbolic function
 
         end_load = 0
@@ -336,7 +335,7 @@ class Column:
             end_load += (f.diff(x, i).subs(x, end) *
                             SingularityFunction(x, end, i)/factorial(i))
         return end_load
-    
+
     @property
     def applied_loads(self):
         """
@@ -363,7 +362,7 @@ class Column:
         [(F, L/4, -1), (F, 3*L/4, -1)]
         """
         return self._applied_loads
-    
+
     def apply_telescope_hinge(self, loc):
         """
         Applies a telescope hinge at the given location. At this location,
@@ -413,7 +412,7 @@ class Column:
         self._applied_hinges.append(deflection)
         self._load += (E * A * deflection) * SingularityFunction(self.variable, loc, -2)
         return deflection
-    
+
     @property
     def load(self):
         """
@@ -442,7 +441,7 @@ class Column:
             + R_L/2*SingularityFunction(x, L/2, -1)
         """
         return self._load
-    
+
     def solve_for_reaction_loads(self):
         """
         This method solves the horizontal reaction loads.
@@ -509,7 +508,7 @@ class Column:
         self._integration_constants = dict(zip([C_N, C_u], integration_constants))
 
         self._is_solved = True
-    
+
     def _solved_load(self):
         """
         Helper function that fills in the solved unknowns into
