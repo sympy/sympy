@@ -307,4 +307,3 @@ pred_to_pos_neg_zero = {
     Q.negative_infinite: False,
     Q.positive_infinite: False
 }
-
