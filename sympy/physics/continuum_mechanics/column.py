@@ -83,7 +83,7 @@ class Column:
         elastic_modulus: Sympifyable
             A Symbol or value representing the column's modulus of
             elasticity. It is a measure of the stiffness of the material.
-        
+
         area: Sympifyable
             A symbol or value representing the column's cross-sectional
             area.
@@ -153,14 +153,14 @@ class Column:
     @property
     def variable(self):
         return self._variable
-    
+
     @variable.setter
     def variable(self, v):
         if isinstance(v, Symbol):
             self._variable = v
         else:
             raise TypeError("""The variable should be a Symbol object.""")
-    
+
     @property
     def reaction_loads(self):
         """Returns the reactions loads as dictionary."""
@@ -170,7 +170,7 @@ class Column:
     def hinge_deflections(self):
         """Returns the hinge deflections as dictionary."""
         return self._hinge_deflections
-    
+
     def apply_support(self, loc):
         """
         This method applies a support that is fixed in the
