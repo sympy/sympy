@@ -366,8 +366,8 @@ class Column:
     def apply_telescope_hinge(self, loc):
         """
         Applies a telescope hinge at the given location. At this location,
-        the column is free to move in the axial direction. 
-
+        the column is free to move in the axial direction.
+    
         Parameters
         ==========
         loc: Sympifyable
@@ -391,11 +391,9 @@ class Column:
         >>> c.apply_telescope_hinge(8)
         >>> c.apply_load(10, 5, -1)
         >>> c.solve_for_reaction_loads()
-        >>> p = c.reaction_loads
-        >>> print(p)
+        >>> c.reaction_loads
         {R_0: -10, R_10: 0}
-        >>> p = c.hinge_deflections
-        >>> print(p)
+        >>> c.hinge_deflections
         {u_8: 1/200}
         """
         E = self.elastic_modulus
@@ -435,7 +433,7 @@ class Column:
         >>> c.apply_support(L)
         >>> c.apply_load(F, L / 4, -1)
         >>> c.apply_load(F, 3*L / 4, -1)
-        >>> print(c.load)
+        >>> c.load
         F*SingularityFunction(x, L/4, -1) + F*SingularityFunction(x, 3*L/4, -1)
             + R_0*SingularityFunction(x, 0, -1) + R_L*SingularityFunction(x, L, -1)
             + R_L/2*SingularityFunction(x, L/2, -1)
@@ -457,7 +455,7 @@ class Column:
         is supported at both ends. A distributed load of -5 kN/m is
         applied to the whole column. A point load of -10 kN is applied
         at x = 4.
-        
+
         >>> from sympy.physics.continuum_mechanics.column import Column
         >>> from sympy.core.symbol import symbols
         >>> E, A = symbols('E A')
@@ -467,8 +465,7 @@ class Column:
         >>> c.apply_load(-5, 0, 0, end=10)
         >>> c.apply_load(-10, 4, -1)
         >>> c.solve_for_reaction_loads()
-        >>> reactions = c.reaction_loads
-        >>> print(reactions)
+        >>> c.reaction_loads
         {R_0: 31, R_10: 29}
         """
         x = self.variable
@@ -531,10 +528,10 @@ class Column:
         the column is loaded by a point load of magnitude -1 kN. Between
         x = 5 and x = 10 the column is loaded by a uniform distributed
         load of -1 kN/m.
-        
+
         >>> from sympy.physics.continuum_mechanics.column import Column
         >>> from sympy.core.symbol import symbols
-        >>> E, A = symbols('E A') 
+        >>> E, A = symbols('E A')
         >>> c = Column(10, E, A)
         >>> c.apply_support(0)
         >>> c.apply_support(5)
@@ -542,12 +539,12 @@ class Column:
         >>> c.apply_load(-5, 3, -1)
         >>> c.apply_load(-1, 5, 0, end=10)
         >>> R_0, R_5, R_10 = symbols("R_0 R_5 R_10")
-        >>> print(c.axial_force())
+        >>> c.axial_force()
         C_N - R_0*SingularityFunction(x, 0, 0) - R_10*SingularityFunction(x, 10, 0)
             - R_5*SingularityFunction(x, 5, 0) + 5*SingularityFunction(x, 3, 0)
             + SingularityFunction(x, 5, 1) - SingularityFunction(x, 10, 1)
         >>> c.solve_for_reaction_loads()
-        >>> print(c.axial_force())
+        >>> c.axial_force()
         -2*SingularityFunction(x, 0, 0) + 5*SingularityFunction(x, 3, 0)
             - 11*SingularityFunction(x, 5, 0)/2 + SingularityFunction(x, 5, 1)
             - 5*SingularityFunction(x, 10, 0)/2 - SingularityFunction(x, 10, 1)
@@ -556,10 +553,10 @@ class Column:
         x = self.variable
         C_N = self._integration_constants[Symbol('C_N')] if self._is_solved else Symbol('C_N')
         return -integrate(load_equation, x) + C_N
-    
+
     def deflection(self):
         """
-        Returns a singularity function expression that 
+        Returns a singularity function expression that
         represents the deflection of the column.
 
         Examples
@@ -570,17 +567,17 @@ class Column:
         load of 10 kN at x = 5.
 
         >>> from sympy.physics.continuum_mechanics.column import Column
-        >>> from sympy.core.symbol import symbols 
+        >>> from sympy.core.symbol import symbols
         >>> c = Column(10, 210000, 1)
         >>> c.apply_support(0)
         >>> c.apply_support(10)
         >>> c.apply_load(10, 5, -1)
         >>> R_0, R_10 = symbols("R_0 R_10")
-        >>> print(c.deflection())
+        >>> c.deflection()
         C_N*x + C_u - R_0*SingularityFunction(x, 0, 1)/210000
         - R_10*SingularityFunction(x, 10, 1)/210000 - SingularityFunction(x, 5, 1)/21000
         >>> c.solve_for_reaction_loads()
-        >>> print(c.deflection())
+        >>> c.deflection()
         SingularityFunction(x, 0, 1)/42000 - SingularityFunction(x, 5, 1)/21000
         + SingularityFunction(x, 10, 1)/42000
         """
@@ -591,7 +588,7 @@ class Column:
         C_N = self._integration_constants[Symbol('C_N')] if self._is_solved else Symbol('C_N')
         C_u = self._integration_constants[Symbol('C_u')] if self._is_solved else Symbol('C_u')
         return -(integrate(integrate(load_equation, x), x)) / (E * A) + C_N * x + C_u
-    
+
     def plot_axial_force(self):
         """
         Returns a plot for the axial forces in the column.
@@ -653,7 +650,7 @@ class Column:
             :include-source: True
 
             >>> from sympy.physics.continuum_mechanics.column import Column
-            >>> from sympy.core.symbol import symbols 
+            >>> from sympy.core.symbol import symbols
             >>> c = Column(10, 210000, 1)
             >>> c.apply_support(0)
             >>> c.apply_support(8)
