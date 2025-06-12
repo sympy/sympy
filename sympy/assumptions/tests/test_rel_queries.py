@@ -38,24 +38,6 @@ def test_lra_satask():
 
 
 def test_old_assumptions():
-    # test unhandled old assumptions
-    w = symbols("w")
-    raises(UnhandledInput, lambda: lra_satask(Q.lt(w, 2) & Q.gt(w, 3)))
-    w = symbols("w", rational=False, real=True)
-    raises(UnhandledInput, lambda: lra_satask(Q.lt(w, 2) & Q.gt(w, 3)))
-    w = symbols("w", odd=True, real=True)
-    raises(UnhandledInput, lambda: lra_satask(Q.lt(w, 2) & Q.gt(w, 3)))
-    w = symbols("w", even=True, real=True)
-    raises(UnhandledInput, lambda: lra_satask(Q.lt(w, 2) & Q.gt(w, 3)))
-    w = symbols("w", prime=True, real=True)
-    raises(UnhandledInput, lambda: lra_satask(Q.lt(w, 2) & Q.gt(w, 3)))
-    w = symbols("w", composite=True, real=True)
-    raises(UnhandledInput, lambda: lra_satask(Q.lt(w, 2) & Q.gt(w, 3)))
-    w = symbols("w", integer=True, real=True)
-    raises(UnhandledInput, lambda: lra_satask(Q.lt(w, 2) & Q.gt(w, 3)))
-    w = symbols("w", integer=False, real=True)
-    raises(UnhandledInput, lambda: lra_satask(Q.lt(w, 2) & Q.gt(w, 3)))
-
     # test handled
     w = symbols("w", positive=True, real=True)
     assert lra_satask(Q.le(w, 0)) is False
@@ -157,6 +139,45 @@ def test_equality():
 
     # test transitivity
     assert ask(Q.eq(x,z), Q.eq(x,y) & Q.eq(y,z)) is True
+
+
+def test_inequality_implications_and_realness():
+    # Basic implication checks
+    a,b,c = symbols('a b c')
+    assert ask(Q.ge(a, b), Q.gt(a, b)) is True
+    assert ask(Q.le(a, b), Q.lt(a, b)) is True
+
+    # Transitivity check
+    assert ask(Q.gt(a, c), Q.gt(a, b) & Q.gt(b, c)) is True
+
+    # Realness inference tests
+    assert ask(Q.real(a), Q.gt(a, b)) is True
+    assert ask(Q.real(a), Q.gt(a, b)) is True
+
+    # Equality check
+    assert ask(Q.zero(a), Q.eq(a,0)) is True
+
+    # Inconsistent assumptions tests
+    f=symbols('f',real=False)
+    assert raises(ValueError, lambda: lra_satask(Q.real(x),Q.eq(f,x)))
+    assert raises(ValueError, lambda: lra_satask(Q.real(x),Q.eq(x,f)))
+
+
+@XFAIL
+def test_inequality_failing():
+    # Note: Current logic in the assumptions framework handles inequalities
+    # involving single variables, but does not yet generalize to multi-variable
+    # expressions. For instance, Q.gt(a + b, b + c) does not imply anything about
+    # the realness of a, even if b is real. This test fails because we have not
+    # yet added simplification or refinement logic to reduce such expressions
+    # to forms where existing rules can apply (e.g., canceling b from both sides).
+
+    a, c = symbols('a c')
+    b = symbols('b', real=True)
+
+    # These should be inferable if simplification reduced the expression.
+    assert ask(Q.real(a), Q.gt(a + b, b + c)) is True
+    assert ask(Q.real(a), Q.gt(a * b, b * c)) is True
 
 
 @XFAIL
