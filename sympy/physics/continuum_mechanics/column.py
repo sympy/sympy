@@ -367,7 +367,7 @@ class Column:
         """
         Applies a telescope hinge at the given location. At this location,
         the column is free to move in the axial direction.
-    
+
         Parameters
         ==========
         loc: Sympifyable
@@ -515,7 +515,7 @@ class Column:
         solved_load = solved_load.subs(self._reaction_loads)
         solved_load = solved_load.subs(self._hinge_deflections)
         return solved_load
-    
+
     def axial_force(self):
         """
         Returns a singularity function expression that 
@@ -669,4 +669,3 @@ class Column:
         """
         return plot(self.deflection(), (self.variable, 0, self.length), title='Deflection',
                 xlabel=r'$\mathrm{x}$', ylabel=r'$\mathrm{u(x)}$', line_color='b')
-
