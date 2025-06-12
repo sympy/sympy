@@ -63,7 +63,7 @@ class Column:
     99*SingularityFunction(x, 0, 0)/2 - 5*SingularityFunction(x, 0, 1)
     + 5*SingularityFunction(x, 10, 1) - 20*SingularityFunction(x, 12, 0)
     - 20*SingularityFunction(x, 16, 0) + 81*SingularityFunction(x, 20, 0)/2
-    >>> c.deflection
+    >>> c.deflection()
     0.0033*SingularityFunction(x, 0, 1) - 0.000166666666666667*SingularityFunction(x, 0, 2)
     + 0.000166666666666667*SingularityFunction(x, 10, 2) - 0.00133333333333333*SingularityFunction(x, 12, 1)
     - 0.00133333333333333*SingularityFunction(x, 16, 1) + 0.0027*SingularityFunction(x, 20, 1)
@@ -254,11 +254,11 @@ class Column:
         >>> c = Column(10, E, A)
         >>> c.apply_support(0)
         >>> c.apply_load(-10, 10, -1)
-        >>> print(c.applied_loads)
-        [(-10, 10, -1)]
+        >>> c.applied_loads
+        [(-10, 10, -1, None)]
         >>> c.apply_load(5, 0, -1)
-        >>> print(c.applied_loads)
-        [(-10, 10, -1), (5, 0, -1)]
+        >>> c.applied_loads
+        [(-10, 10, -1, None), (5, 0, -1, None)]
         """
         value = sympify(value)
         start = sympify(start)
@@ -350,8 +350,8 @@ class Column:
         >>> c.apply_support(L)
         >>> c.apply_load(F, L / 4, -1)
         >>> c.apply_load(F, 3*L / 4, -1)
-        >>> print(c.applied_loads)
-        [(F, L/4, -1), (F, 3*L/4, -1)]
+        >>> c.applied_loads
+        [(F, L/4, -1, None), (F, 3*L/4, -1, None)]
         """
         return self._applied_loads
 
@@ -516,6 +516,7 @@ class Column:
         load of -1 kN/m.
 
         >>> from sympy.physics.continuum_mechanics.column import Column
+        >>> from sympy.core.symbol import symbols
         >>> E, A = symbols('E A')
         >>> c = Column(10, E, A)
         >>> c.apply_support(0)
