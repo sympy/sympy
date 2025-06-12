@@ -86,9 +86,7 @@ muscle_load = (A, tau_muscle * A.z)
 kane = KanesMethod(N, q_ind=[q], u_ind=[u], kd_eqs=[u - q.diff(t)])
 fr, frstar = kane.kanes_equations([body], [grav_load, muscle_load])
 
-MM = kane.mass_matrix
-forcing = kane.forcing
-u_dot = MM.inv() * forcing
+u_dot = kane.rhs()
 
 # Output
 print("L_total: ")
