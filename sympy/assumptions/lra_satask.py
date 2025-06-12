@@ -44,13 +44,70 @@ WHITE_LIST = ALLOWED_PRED | {Q.positive, Q.negative, Q.zero, Q.nonzero, Q.nonpos
 
 
 def check_satisfiability(prop, _prop, factbase):
+    """
+    Determines the satisfiability of a given logical proposition `prop` and its negation `_prop`
+    under a provided fact base (`factbase`).
+
+    This function attempts to answer whether the proposition is always true, always false, or
+    indeterminate based on the current assumptions. It incorporates assumptions about realness,
+    rationality, and sign of the expressions.
+
+    Parameters
+    ----------
+    prop : CNF
+        The CNF form of the proposition to test for satisfiability.
+    _prop : CNF
+        The CNF form of the negation of the proposition.
+    factbase : CNFEncoding
+        A base of facts and assumptions to be included in the satisfiability checking.
+
+    Returns
+    -------
+    True if the proposition can only be true.
+    False if the proposition can only be false.
+    None if the proposition can be both true and false under current assumptions.
+
+    Raises
+    ------
+    ValueError
+        If there are inconsistent assumptions (e.g., real vs. non-real variables).
+    UnhandledInput
+        If the expression contains unsupported constructs or is not entirely real/rational.
+    """
     sat_true = factbase.copy()
     sat_false = factbase.copy()
     sat_true.add_from_cnf(prop)
     sat_false.add_from_cnf(_prop)
 
-    all_pred, all_exprs, realness_preds = get_all_pred_and_expr_from_enc_cnf(sat_true)
+    all_exprs = set()
+    all_pred = set()
+    realness_preds = set()
 
+    # Collect all predicates and expressions, while deducing realness
+    for pred in sat_true.encoding.keys():
+        if isinstance(pred, AppliedPredicate):
+            if pred.function is Q.eq:
+                lhs, rhs = pred.arguments
+                if lhs.is_real:
+                    if rhs.is_real is None:
+                        realness_preds.add(Q.real(rhs))
+                    elif rhs.is_real is False:
+                        raise ValueError("Inconsistent assumptions")
+                if rhs.is_real:
+                    if lhs.is_real is None:
+                        realness_preds.add(Q.real(lhs))
+                    elif lhs.is_real is False:
+                        raise ValueError("Inconsistent assumptions")
+            if pred.function in (Q.gt, Q.lt):
+                lhs, rhs = pred.arguments
+                if lhs.is_Symbol:
+                    realness_preds.add(Q.real(lhs))
+                if rhs.is_Symbol:
+                    realness_preds.add(Q.real(rhs))
+            all_pred.add(pred)
+            all_exprs.update(pred.arguments)
+
+    # Ensure only supported predicates are used
     for pred in all_pred:
         if pred.function not in WHITE_LIST and pred.function != Q.ne:
             raise UnhandledInput(f"LRASolver: {pred} is an unhandled predicate")
@@ -60,9 +117,47 @@ def check_satisfiability(prop, _prop, factbase):
         if expr == S.NaN:
             raise UnhandledInput("LRASolver: nan")
 
-    # convert old assumptions into predicates and add them to sat_true and sat_false
-    # also check for unhandled predicates
-    for assm in extract_pred_from_old_assum(all_exprs, realness_preds):
+    # Extract new assumptions from expressions
+    ret = []
+    for expr in all_exprs:
+        if not hasattr(expr, "free_symbols"):
+            continue
+        if len(expr.free_symbols) == 0:
+            continue
+
+        if expr.is_real is not True:
+            if expr.is_Symbol:
+                if Q.real(expr) not in realness_preds:
+                    raise UnhandledInput(f"LRASolver: {expr} must be real")
+            else:
+                raise UnhandledInput(f"LRASolver: {expr} must be real")
+
+        # test for I times imaginary variable; such expressions are considered real
+        if isinstance(expr, Mul) and any(arg.is_real is not True for arg in expr.args):
+            raise UnhandledInput(f"LRASolver: {expr} must be real")
+
+        if expr.is_integer == True and expr.is_zero != True:
+            raise UnhandledInput(f"LRASolver: {expr} is an integer")
+        if expr.is_integer == False:
+            raise UnhandledInput(f"LRASolver: {expr} can't be an integer")
+        if expr.is_rational == False:
+            raise UnhandledInput(f"LRASolver: {expr} is irational")
+
+        if expr.is_zero:
+            ret.append(Q.zero(expr))
+        elif expr.is_positive:
+            ret.append(Q.positive(expr))
+        elif expr.is_negative:
+            ret.append(Q.negative(expr))
+        elif expr.is_nonzero:
+            ret.append(Q.nonzero(expr))
+        elif expr.is_nonpositive:
+            ret.append(Q.nonpositive(expr))
+        elif expr.is_nonnegative:
+            ret.append(Q.nonnegative(expr))
+
+    # Add new assumptions to both SAT encodings
+    for assm in ret:
         n = len(sat_true.encoding)
         if assm not in sat_true.encoding:
             sat_true.encoding[assm] = n+1
@@ -73,7 +168,7 @@ def check_satisfiability(prop, _prop, factbase):
             sat_false.encoding[assm] = n+1
         sat_false.data.append([sat_false.encoding[assm]])
 
-
+    # Apply preprocessing and check satisfiability
     sat_true = _preprocess(sat_true)
     sat_false = _preprocess(sat_false)
 
@@ -221,10 +316,16 @@ def get_all_pred_and_expr_from_enc_cnf(enc_cnf):
         if isinstance(pred, AppliedPredicate):
             if pred.function is Q.eq:
                 lhs, rhs = pred.arguments
-                if lhs.is_real and not rhs.is_real:
-                    realness_preds.add(Q.real(rhs))
-                if rhs.is_real and not lhs.is_real:
-                    realness_preds.add(Q.real(lhs))
+                if lhs.is_real:
+                    if rhs.is_real is None:
+                        realness_preds.add(Q.real(rhs))
+                    elif rhs.is_real is False:
+                        raise ValueError("Inconsistent assumptions")
+                if rhs.is_real:
+                    if lhs.is_real is None:
+                        realness_preds.add(Q.real(lhs))
+                    elif lhs.is_real is False:
+                        raise ValueError("Inconsistent assumptions")
             if pred.function in (Q.gt, Q.lt):
                 lhs, rhs = pred.arguments
                 if lhs.is_Symbol:

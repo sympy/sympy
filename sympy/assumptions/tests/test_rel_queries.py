@@ -157,6 +157,11 @@ def test_inequality_implications_and_realness():
     # Equality check
     assert ask(Q.zero(a), Q.eq(a,0)) is True
 
+    # Inconsistent assumptions tests
+    f=symbols('f',real=False)
+    assert raises(ValueError, lambda: lra_satask(Q.real(x),Q.eq(f,x)))
+    assert raises(ValueError, lambda: lra_satask(Q.real(x),Q.eq(x,f)))
+
 
 @XFAIL
 def test_inequality_failing():
