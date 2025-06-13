@@ -20,7 +20,7 @@ from sympy.functions.elementary.trigonometric import sin, cos
 from sympy.physics.control.lti import (
     TransferFunctionBase, TransferFunction, DTTransferFunction, PIDController,
     Series, Parallel, Feedback, TransferFunctionMatrix, MIMOSeries,
-    MIMOParallel, MIMOFeedback, StateSpace, gbt, bilinear, forward_diff,
+    MIMOParallel, MIMOFeedback, StateSpace, DTStateSpace, gbt, bilinear, forward_diff,
     backward_diff, phase_margin, gain_margin)
 from sympy.testing.pytest import raises
 
@@ -31,6 +31,8 @@ a0, a1, a2, a3, b0, b1, b2, b3, b4, c0, c1, c2, c3, d0, d1, d2, d3 = symbols('a0
 TF1 = TransferFunction(1, s**2 + 2*zeta*wn*s + wn**2, s)
 TF2 = TransferFunction(k, 1, s)
 TF3 = TransferFunction(a2*p - s, a2*s + p, s)
+
+# TODO: add tests for compatibility
 
 def test_TransferFunctionBase():
     raises(NotImplementedError,
@@ -2655,6 +2657,7 @@ def test_SymPy_substitution_functions():
 
 def test_conversion():
     # StateSpace to TransferFunction for SISO
+    #TODO: DTTransferFunction
     A1 = Matrix([[-5, -1], [3, -1]])
     B1 = Matrix([2, 5])
     C1 = Matrix([[1, 2]])
@@ -2696,9 +2699,30 @@ def test_conversion():
                    Matrix([[0]]))
     assert SS.rewrite(TransferFunction)[0][0] == TF1
 
+    # TransferFunction cannot be converted to DTStateSpace
+    raises(TypeError, lambda: TF1.rewrite(DTStateSpace))
+
     # Transfer function has to be proper
     raises(ValueError, lambda: TransferFunction(b*s**2 + p**2 - a*p + s, b - p**2, s).rewrite(StateSpace))
 
+    # DTTransferFunction to DTStateSpace
+    dtf1 = DTTransferFunction(z+5, z**3+2*z**2+4*z+3, z, 0.1)
+    DSS = dtf1.rewrite(DTStateSpace)
+    A = Matrix([[0, 1, 0], [0, 0, 1], [-3, -4, -2]])
+    B = Matrix([0, 0, 1])
+    C = Matrix([[5, 1, 0]])
+    D = Matrix([[0]])
+
+    assert DSS == \
+            DTStateSpace(A, B, C, D, 0.1)
+
+    # TODO: assert DSS.rewrite(DTTransferFunction)[0][0] == dtf1
+
+    # DTTransferFunction cannot be converted to DTStateSpace
+    raises(TypeError, lambda: dtf1.rewrite(StateSpace))
+
+    # discrete-time Transfer function has to be proper
+    raises(ValueError, lambda: DTTransferFunction(b2*z**2 + b1*z + b0, z + a0, z).rewrite(DTStateSpace))
 
 def test_StateSpace_dsolve():
     # https://web.mit.edu/2.14/www/Handouts/StateSpaceResponse.pdf
