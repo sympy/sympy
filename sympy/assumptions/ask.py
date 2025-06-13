@@ -395,7 +395,7 @@ def _normalize_predicate(expr):
         return expr.func(*new_args)
 
     return expr
-        
+
 
 def _ask_recursive(proposition, assumptions=True, context=global_assumptions):
     """
