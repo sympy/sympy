@@ -10,7 +10,7 @@ from sympy.core.function import (Derivative, Function)
 from sympy.core.mul import Mul
 from sympy.core.relational import Eq
 from sympy.core.sympify import sympify
-from sympy.solvers import linsolve
+from sympy.solvers import linsolve, solveset
 from sympy.solvers.ode.ode import dsolve
 from sympy.solvers.solvers import solve
 from sympy.printing import sstr
@@ -20,7 +20,7 @@ from sympy.series import limit
 from sympy.plotting import plot, PlotGrid
 from sympy.geometry.entity import GeometryEntity
 from sympy.external import import_module
-from sympy.sets.sets import Interval
+from sympy.sets.sets import Interval, FiniteSet, Union
 from sympy.utilities.lambdify import lambdify
 from sympy.utilities.decorator import doctest_depends_on
 from sympy.utilities.iterables import iterable
@@ -1217,6 +1217,7 @@ class Beam:
         distribute load of magnitude of magnitude 3KN/m is also
         applied on top starting from 6 meters away from starting
         point till end.
+
         Using the sign convention of upward forces and clockwise moment
         being positive.
 
@@ -1232,6 +1233,10 @@ class Beam:
         >>> b.point_cflexure()
         [10/3]
         """
+
+        x = self.variable
+        bm = self.bending_moment()
+
         #Removes the singularity functions of order < 0 from the bending moment equation used in this method
         non_singular_bending_moment = sum(arg for arg in self.bending_moment().args if not arg.args[1].args[2] < 0)
 
@@ -1239,16 +1244,57 @@ class Beam:
         moment_curve = Piecewise((float("nan"), self.variable<=0),
                 (non_singular_bending_moment, self.variable<self.length),
                 (float("nan"), True))
-        try:
-            points = solve(moment_curve.rewrite(Piecewise), self.variable,
-                           domain=S.Reals)
-        except NotImplementedError as e:
-            if "An expression is already zero when" in str(e):
-                raise NotImplementedError("This method cannot be used when a whole region of "
-                                          "the bending moment line is equal to 0.")
-            else:
-                raise
 
+        roots = set()
+
+        for expr, cond in moment_curve.as_expr_set_pairs():
+            if expr.equals(0):
+                continue
+
+            try:
+                sol = solveset(expr, x, domain=cond)
+                if isinstance(sol, FiniteSet):
+                    roots.update(sol)
+                elif isinstance(sol, Union):
+                    for part in sol.args:
+                        if isinstance(part, FiniteSet):
+                            roots.update(part)
+            except NotImplementedError:
+                continue
+
+            if hasattr(cond, 'start') and hasattr(cond, 'end'):
+                for pt in [cond.start, cond.end]:
+                    if pt.is_real:
+                        try:
+                            val = expr.subs(x, pt).evalf()
+                            if val == 0:
+                                roots.add(pt)
+
+                        except Exception:
+                            pass
+
+        # Checks for the sign change at roots
+        epsilon = 1e-6
+        points = []
+
+        for point in sorted(roots, key=lambda r: r.evalf()):
+            if not point.is_number:
+                continue
+            if point.evalf() <= 0 or point.evalf() >= self.length:
+                continue
+
+            try:
+                left = bm.subs(x, point - epsilon).evalf()
+                right = bm.subs(x, point + epsilon).evalf()
+
+                # Strict condition that shows a shift in bending moment at roots
+                if left * right < 0:
+                    points.append(point)
+
+            except Exception:
+                continue
+
+        # Returns Valid points of contraflexure
         return points
 
     def slope(self):
