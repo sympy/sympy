@@ -21,7 +21,7 @@ from sympy.functions.elementary.trigonometric import (
     acos, acot, asin, atan, cos, cot, sin, tan)
 from sympy.logic.boolalg import Equivalent, Implies, Xor, And, to_cnf
 from sympy.matrices import Matrix, SparseMatrix
-from sympy.testing.pytest import (XFAIL, slow, raises, warns, warns_deprecated_sympy,
+from sympy.testing.pytest import (XFAIL, slow, raises, warns,
     _both_exp_pow)
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 import math
