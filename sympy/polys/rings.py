@@ -388,17 +388,17 @@ class PolyRing(DefaultPrinting, IPolys):
         return poly
 
     # Polynomial creation from various formats
-    def from_dict(self, element):
+    def from_dict(self, element, orig_domain=None):
         """Create polynomial from dictionary of monomials to coefficients."""
         if not isinstance(element, dict):
             raise TypeError(
                 "Input must be a dictionary mapping monomials to coefficients"
             )
-        return self._from_dict_ground(element)
+        return self._from_dict_ground(element, orig_domain)
 
-    def from_terms(self, element):
+    def from_terms(self, element, orig_domain=None):
         """Create polynomial from sequence of (monomial, coefficient) pairs."""
-        return self.from_dict(dict(element))
+        return self.from_dict(dict(element), orig_domain)
 
     def from_list(self, element):
         """Create polynomial from list(dense) representation."""
@@ -636,7 +636,7 @@ class PolyRing(DefaultPrinting, IPolys):
         return ((self.symbols, self.domain, self.ngens, self.order) ==
                 (other.symbols, other.domain, other.ngens, other.order))
 
-    def _from_dict_ground(self, element):
+    def _from_dict_ground(self, element, orig_domain=None):
         # Create polynomial from dictionary with ground domain conversion.
         poly = self.zero
         domain_new = self.domain_new
@@ -698,7 +698,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
             terms = self._reorder_terms(self.ring.symbols, new_ring.symbols)
             return new_ring.from_terms(terms, self.ring.domain)
         else:
-            return new_ring.from_dict(self)
+            return new_ring.from_dict(self, self.ring.domain)
 
     def as_expr(self, *symbols):
         if not symbols:
