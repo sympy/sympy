@@ -516,7 +516,7 @@ def ask(proposition, assumptions=True, context=global_assumptions):
 
     if isinstance(assumptions, Predicate) or assumptions.kind is not BooleanKind:
         raise TypeError("assumptions must be a valid logical expression")
-    
+
     proposition = _normalize_predicate(proposition)
     assumptions = _normalize_predicate(assumptions)
 
