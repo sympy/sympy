@@ -2052,6 +2052,9 @@ def test_real_pow():
     assert ask(Q.real(x**y), Q.zero(x) & Q.real(y)) is None
     assert ask(Q.real(x**y), Q.zero(x) & Q.positive(y)) is True
 
+    # https://github.com/sympy/sympy/issues/28142
+    assert ask(Q.real(sqrt(x)), Q.real(x)) is None
+
 
 @_both_exp_pow
 def test_real_functions():
