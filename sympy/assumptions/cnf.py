@@ -433,6 +433,10 @@ class EncodedCNF:
     [{1, -2}]
     >>> encoded_cnf.encoding  #doctest: +SKIP
     {a: 1, b: 2}
+    >>> encoded_cnf.decode_literal(-2)  #doctest: +SKIP
+    ~b
+    >>> encoded_cnf.decode()  #doctest: +SKIP
+    a | ~b
     """
     def __init__(self, data=None, encoding=None):
         if not data and not encoding:
@@ -482,3 +486,25 @@ class EncodedCNF:
 
     def encode(self, clause):
         return {self.encode_arg(arg) if not arg.lit == S.false else 0 for arg in clause}
+    
+    def decode_literal(self, encoded_arg):
+        symbol = self._symbols[abs(encoded_arg) - 1]
+        literal = ~symbol if encoded_arg < 0 else symbol
+        return literal
+
+    def _decode_clause(self, encoded_clause):
+        clause = []
+        for encoded_arg in encoded_clause:
+            if encoded_arg == 0:
+                clause.append(False)
+            else:
+                literal = self.decode_literal(encoded_arg)
+                clause.append(literal)
+        return Or(*clause)
+
+    def decode(self):
+        decoded_cnf = []
+        for encoded_clause in self.data:
+            clause = self._decode_clause(encoded_clause)
+            decoded_cnf.append(clause)
+        return And(*decoded_cnf)
