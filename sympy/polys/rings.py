@@ -643,7 +643,7 @@ class PolyRing(DefaultPrinting, IPolys):
 
         for monom, coeff in element.items():
             if coeff:  # Skip zero coefficients
-                coeff = domain_new(coeff)
+                coeff = domain_new(coeff, orig_domain)
                 poly[monom] = coeff
 
         return poly
