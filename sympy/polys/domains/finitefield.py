@@ -268,7 +268,7 @@ class FiniteField(Field, SimpleDomain):
         if a.is_Integer or int_valued(a):
             return self.dtype(self.dom.dtype(int(a)))
         elif a.is_Rational:
-            return self.dtype(self.dom.dtype(int(a.numerator))) / self.dtype(self.dom.dtype(int(a.denominator)))
+            return self.dtype(self.dom.dtype(a.numerator)) / self.dtype(self.dom.dtype(a.denominator))
         raise CoercionFailed("expected an integer, got %s" % a)
 
     def to_int(self, a):
