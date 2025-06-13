@@ -363,6 +363,56 @@ def _extract_all_facts(assump, exprs):
                 facts.add(frozenset(args))
     return CNF(facts)
 
+def _normalize_predicate(expr):
+    from sympy.logic.boolalg import BooleanFunction
+    binrelpreds = {Eq: Q.eq, Ne: Q.ne, Gt: Q.gt, Lt: Q.lt, Ge: Q.ge, Le: Q.le}
+    # If expr is atomic or has no args, return as is
+    if not hasattr(expr, 'args') or not expr.args:
+        return expr
+
+    # If expr is a Boolean function, recurse on args
+    if isinstance(expr, BooleanFunction):
+        new_args = tuple(_normalize_predicate(arg) for arg in expr.args)
+        expr = expr.func(*new_args)
+
+    # Now normalize inequalities at this level
+    if isinstance(expr, AppliedPredicate):
+        if expr.function == Q.gt:
+            return Q.lt(expr.arguments[1], expr.arguments[0])
+        elif expr.function == Q.ge:
+            return Q.le(expr.arguments[1], expr.arguments[0])
+        else:
+            return expr
+
+    # If expr is a relational (Gt, Ge, ...), map to Q predicate and normalize recursively
+    if expr.func in binrelpreds:
+        q_pred = binrelpreds[expr.func](*expr.args)
+        return _normalize_predicate(q_pred)
+
+    # For other expressions with args, rebuild with normalized args
+    if hasattr(expr, 'args') and expr.args:
+        new_args = tuple(_normalize_predicate(arg) for arg in expr.args)
+        return expr.func(*new_args)
+
+    return expr
+        
+
+def _ask_recursive(proposition, assumptions=True, context=global_assumptions):
+    """
+    Recursive helper for ask() that evaluates the proposition without preprocessing.
+    Handlers should call this instead of ask() for recursion.
+    """
+    # Determine key and args from proposition
+    if isinstance(proposition, AppliedPredicate):
+        key, args = proposition.function, proposition.arguments
+    else:
+        key, args = Q.is_true, (proposition,)
+
+    # Call the handler's _eval_ask method, which may call _ask_recursive recursively
+    res = key(*args)._eval_ask(assumptions)
+    if res is not None:
+        return bool(res)
+
 
 def ask(proposition, assumptions=True, context=global_assumptions):
     """
@@ -466,12 +516,12 @@ def ask(proposition, assumptions=True, context=global_assumptions):
 
     if isinstance(assumptions, Predicate) or assumptions.kind is not BooleanKind:
         raise TypeError("assumptions must be a valid logical expression")
+    
+    proposition = _normalize_predicate(proposition)
+    assumptions = _normalize_predicate(assumptions)
 
-    binrelpreds = {Eq: Q.eq, Ne: Q.ne, Gt: Q.gt, Lt: Q.lt, Ge: Q.ge, Le: Q.le}
     if isinstance(proposition, AppliedPredicate):
         key, args = proposition.function, proposition.arguments
-    elif proposition.func in binrelpreds:
-        key, args = binrelpreds[type(proposition)], proposition.args
     else:
         key, args = Q.is_true, (proposition,)
 
@@ -497,10 +547,11 @@ def ask(proposition, assumptions=True, context=global_assumptions):
     if res is not None:
         return res
 
-    # direct resolution method, no logic
-    res = key(*args)._eval_ask(assumptions)
+    # Call the recursive helper without redundant preprocessing. 
+    # Note: This is a direct resolution method, no logic involved.
+    res = _ask_recursive(proposition, assumptions, context)
     if res is not None:
-        return bool(res)
+        return res
 
     # using satask (still costly)
     res = satask(proposition, assumptions=assumptions, context=context)

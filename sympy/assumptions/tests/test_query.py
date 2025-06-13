@@ -21,8 +21,9 @@ from sympy.functions.elementary.trigonometric import (
     acos, acot, asin, atan, cos, cot, sin, tan)
 from sympy.logic.boolalg import Equivalent, Implies, Xor, And, to_cnf
 from sympy.matrices import Matrix, SparseMatrix
-from sympy.testing.pytest import (XFAIL, slow, raises, warns_deprecated_sympy,
+from sympy.testing.pytest import (XFAIL, slow, raises, warns, warns_deprecated_sympy,
     _both_exp_pow)
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 import math
 
 
@@ -2236,16 +2237,16 @@ def test_key_extensibility():
         def Symbol(expr, assumptions):
             return True
     try:
-        with warns_deprecated_sympy():
+        with warns(SymPyDeprecationWarning, test_stacklevel=False):
             register_handler('my_key', MyAskHandler)
-        with warns_deprecated_sympy():
+        with warns(SymPyDeprecationWarning, test_stacklevel=False):
             assert ask(Q.my_key(x)) is True
-        with warns_deprecated_sympy():
+        with warns(SymPyDeprecationWarning, test_stacklevel=False):
             assert ask(Q.my_key(x + 1)) is None
     finally:
         # We have to disable the stacklevel testing here because this raises
         # the warning twice from two different places
-        with warns_deprecated_sympy():
+        with warns(SymPyDeprecationWarning, test_stacklevel=False):
             remove_handler('my_key', MyAskHandler)
         del Q.my_key
     raises(AttributeError, lambda: ask(Q.my_key(x)))
@@ -2484,15 +2485,21 @@ def test_custom_AskHandler():
             if expr in conjuncts(assumptions):
                 return True
     try:
-        with warns_deprecated_sympy():
+        with warns(SymPyDeprecationWarning, test_stacklevel=False):
             register_handler('mersenne', MersenneHandler)
         n = Symbol('n', integer=True)
-        with warns_deprecated_sympy():
+        with warns(SymPyDeprecationWarning, test_stacklevel=False):
             assert ask(Q.mersenne(7))
-        with warns_deprecated_sympy():
+        with warns(SymPyDeprecationWarning, test_stacklevel=False):
             assert ask(Q.mersenne(n), Q.mersenne(n))
     finally:
-        del Q.mersenne
+        try:
+            with warns(SymPyDeprecationWarning, test_stacklevel=False):
+                remove_handler('mersenne', MersenneHandler)
+        except KeyError:
+            pass
+        if hasattr(Q, 'mersenne'):
+            del Q.mersenne
 
     # New handler system
     class MersennePredicate(Predicate):
