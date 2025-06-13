@@ -547,7 +547,7 @@ def ask(proposition, assumptions=True, context=global_assumptions):
     if res is not None:
         return res
 
-    # Call the recursive helper without redundant preprocessing. 
+    # Call the recursive helper without redundant preprocessing.
     # Note: This is a direct resolution method, no logic involved.
     res = _ask_recursive(proposition, assumptions, context)
     if res is not None:
