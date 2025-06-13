@@ -194,7 +194,7 @@ def _parse_symbols(symbols):
 
 
 class PolyRing(DefaultPrinting, IPolys):
-    """Multivariate distributed polynomial ring. """
+    """Multivariate distributed polynomial ring."""
 
     gens: tuple[PolyElement, ...]
     symbols: tuple[Expr, ...]
@@ -203,135 +203,387 @@ class PolyRing(DefaultPrinting, IPolys):
     order: MonomialOrder
 
     def __new__(cls, symbols, domain, order=lex):
+        # Create a new ring instance.
         symbols = tuple(_parse_symbols(symbols))
         ngens = len(symbols)
         domain = DomainOpt.preprocess(domain)
         order = OrderOpt.preprocess(order)
 
-        _hash_tuple = (cls.__name__, symbols, ngens, domain, order)
-
+        # Validate that symbols do not overlap with domain symbols
         if domain.is_Composite and set(symbols) & set(domain.symbols):
-            raise GeneratorsError("polynomial ring and it's ground domain share generators")
+            raise GeneratorsError(
+                "polynomial ring and its ground domain share generators"
+            )
 
+        # Create and initialize instance
         obj = object.__new__(cls)
-        obj._hash_tuple = _hash_tuple
-        obj._hash = hash(_hash_tuple)
+        obj._hash_tuple = (cls.__name__, symbols, ngens, domain, order)
+        obj._hash = hash(obj._hash_tuple)
         obj.symbols = symbols
         obj.ngens = ngens
         obj.domain = domain
         obj.order = order
 
+        # Set up polynomial creation and basic elements
         obj.dtype = PolyElement(obj, ()).new
-
-        obj.zero_monom = (0,)*ngens
+        obj.zero_monom = (0,) * ngens
         obj.gens = obj._gens()
         obj._gens_set = set(obj.gens)
-
         obj._one = [(obj.zero_monom, domain.one)]
 
-        if ngens:
-            # These expect monomials in at least one variable
-            codegen = MonomialOps(ngens)
-            obj.monomial_mul = codegen.mul()
-            obj.monomial_pow = codegen.pow()
-            obj.monomial_mulpow = codegen.mulpow()
-            obj.monomial_ldiv = codegen.ldiv()
-            obj.monomial_div = codegen.div()
-            obj.monomial_lcm = codegen.lcm()
-            obj.monomial_gcd = codegen.gcd()
-        else:
-            monunit = lambda a, b: ()
-            obj.monomial_mul = monunit
-            obj.monomial_pow = monunit
-            obj.monomial_mulpow = lambda a, b, c: ()
-            obj.monomial_ldiv = monunit
-            obj.monomial_div = monunit
-            obj.monomial_lcm = monunit
-            obj.monomial_gcd = monunit
+        # Initialize monomial operations
+        obj._init_monomial_operations()
 
+        # Set up leading exponent function
+        obj._init_leading_expv_function(order)
 
-        if order is lex:
-            obj.leading_expv = max
-        else:
-            obj.leading_expv = lambda f: max(f, key=order)
-
-        for symbol, generator in zip(obj.symbols, obj.gens):
-            if isinstance(symbol, Symbol):
-                name = symbol.name
-
-                if not hasattr(obj, name):
-                    setattr(obj, name, generator)
+        # Add generator attributes for Symbol names
+        obj._add_generator_attributes()
 
         return obj
 
-    def _gens(self):
-        """Return a list of polynomial generators. """
-        _gens = []
-        for i in range(self.ngens):
-            generator = self._construct_generator(i)
-            _gens.append(generator)
-        return tuple(_gens)
+    def _init_monomial_operations(self):
+        # Initialize monomial operations based on number of generators.
+        if self.ngens:
+            # Operations for rings with at least one variable
+            codegen = MonomialOps(self.ngens)
+            self.monomial_mul = codegen.mul()
+            self.monomial_pow = codegen.pow()
+            self.monomial_mulpow = codegen.mulpow()
+            self.monomial_ldiv = codegen.ldiv()
+            self.monomial_div = codegen.div()
+            self.monomial_lcm = codegen.lcm()
+            self.monomial_gcd = codegen.gcd()
+        else:
+            # No variables, all operations return empty tuple
+            monunit = lambda a, b: ()
+            self.monomial_mul = monunit
+            self.monomial_pow = monunit
+            self.monomial_mulpow = lambda a, b, c: ()
+            self.monomial_ldiv = monunit
+            self.monomial_div = monunit
+            self.monomial_lcm = monunit
+            self.monomial_gcd = monunit
 
+    def _init_leading_expv_function(self, order):
+        # Initialize the leading exponent vector function.
+        if order is lex:
+            self.leading_expv = max
+        else:
+            self.leading_expv = lambda f: max(f, key=order)
+
+    def _add_generator_attributes(self):
+        """Add generator attributes for Symbol names."""
+        for symbol, generator in zip(self.symbols, self.gens):
+            if isinstance(symbol, Symbol):
+                name = symbol.name
+                if not hasattr(self, name):
+                    setattr(self, name, generator)
+
+    # Pickle support
     def __getnewargs__(self):
-        return (self.symbols, self.domain, self.order)
+        return self.symbols, self.domain, self.order
 
-    def __getstate__(self):
-        state = self.__dict__.copy()
-        del state["leading_expv"]
-        for key in state:
-            if key.startswith("monomial_"):
-                del state[key]
-        return state
-
+    # Hash and equality
     def __hash__(self):
         return self._hash
 
     def __eq__(self, other):
-        return isinstance(other, PolyRing) and \
-            (self.symbols, self.domain, self.ngens, self.order) == \
-            (other.symbols, other.domain, other.ngens, other.order)
+        return isinstance(other, PolyRing) and self._ring_equality(other)
 
     def __ne__(self, other):
         return not self == other
 
-    def clone(self, symbols=None, domain=None, order=None):
-        # Need a hashable tuple for cacheit to work
-        if symbols is not None and isinstance(symbols, list):
-            symbols = tuple(symbols)
-        return self._clone(symbols, domain, order)
+    def __getitem__(self, key):
+        # Get a subring with subset of symbols.
+        symbols = self.symbols[key]
 
-    def monomial_basis(self, i):
-        """Return the ith-basis element. """
-        basis = [0]*self.ngens
-        basis[i] = 1
-        return tuple(basis)
+        if not symbols:
+            return self.domain
+        else:
+            return self.clone(symbols=symbols)
 
+    # Properties
     @property
     def zero(self):
-        """Return the zero polynomial in this ring."""
+        """The zero polynomial."""
         return self.dtype([])
 
     @property
     def one(self):
-        """Return the multiplicative identity polynomial (1) in this ring."""
+        """The unit polynomial."""
         return self.dtype(self._one)
 
+    @property
+    def is_univariate(self):
+        """True if this is a univariate ring."""
+        return self.ngens == 1
+
+    @property
+    def is_multivariate(self):
+        """True if this is a multivariate ring."""
+        return self.ngens > 1
+
+    # Ring operations and cloning
+    def clone(self, symbols=None, domain=None, order=None):
+        """Create a clone with modified parameters."""
+        # Convert list to tuple for hashability
+        if symbols is not None and isinstance(symbols, list):
+            symbols = tuple(symbols)
+        return self._clone(symbols, domain, order)
+
+    @cacheit
+    def _clone(self, symbols, domain, order):
+        # Cached clone implementation.
+        return self.__class__(
+            symbols or self.symbols,
+            domain or self.domain,
+            order or self.order
+        )
+
+    def compose(self, other):
+        """Add the generators of other ring to this ring."""
+        if self != other:
+            syms = set(self.symbols).union(set(other.symbols))
+            return self.clone(symbols=list(syms))
+        else:
+            return self
+
+    # Domain conversions
+    def to_domain(self):
+        """Convert to a domain."""
+        return PolynomialRing(self)
+
+    def to_field(self):
+        """Convert to a field of fractions."""
+        from sympy.polys.fields import FracField
+        return FracField(self.symbols, self.domain, self.order)
+
+    def to_ground(self):
+        """Convert to ground domain."""
+        if self.domain.is_Composite or hasattr(self.domain, 'domain'):
+            return self.clone(domain=self.domain.domain)
+        else:
+            raise ValueError(f"{self.domain} is not a composite domain")
+
+    # Element creation and testing
     def is_element(self, element):
-        """True if ``element`` is an element of this ring. False otherwise."""
+        """Check if element belongs to this ring."""
         return isinstance(element, PolyElement) and element.ring == self
 
     def domain_new(self, element, orig_domain=None):
-        """Convert an element into the ring's coefficient domain."""
+        """Create a new element of the ground domain."""
         return self.domain.convert(element, orig_domain)
 
     def ground_new(self, coeff):
+        """Create a constant polynomial with given coefficient."""
         return self.term_new(self.zero_monom, coeff)
 
+    def term_new(self, monom, coeff):
+        """Create a polynomial with a single term."""
+        coeff = self.domain_new(coeff)
+        poly = self.zero
+        if coeff:
+            poly[monom] = coeff
+        return poly
+
+    # Polynomial creation from various formats
+    def from_dict(self, element):
+        """Create polynomial from dictionary of monomials to coefficients."""
+        if not isinstance(element, dict):
+            raise TypeError(
+                "Input must be a dictionary mapping monomials to coefficients"
+            )
+        return self._from_dict_ground(element)
+
+    def from_terms(self, element):
+        """Create polynomial from sequence of (monomial, coefficient) pairs."""
+        return self.from_dict(dict(element))
+
+    def from_list(self, element):
+        """Create polynomial from list(dense) representation."""
+        return self.from_dict(dmp_to_dict(element, self.ngens - 1, self.domain))
+
+    def from_expr(self, expr):
+        """Create polynomial from SymPy expression."""
+        mapping = dict(zip(self.symbols, self.gens))
+
+        try:
+            poly = self._rebuild_expr(expr, mapping)
+        except CoercionFailed:
+            raise ValueError(
+                f"expected an expression convertible to a polynomial in {self}, "
+                f"got {expr}"
+            )
+        else:
+            return self.ring_new(poly)
+
+    def _rebuild_expr(self, expr, mapping):
+        # Rebuild expression as polynomial.
+        domain = self.domain
+
+        def _rebuild(expr):
+            generator = mapping.get(expr)
+
+            if generator is not None:
+                return generator
+            elif expr.is_Add:
+                return reduce(add, map(_rebuild, expr.args))
+            elif expr.is_Mul:
+                return reduce(mul, map(_rebuild, expr.args))
+            else:
+                # Handle powers and other expressions
+                base, exp = expr.as_base_exp()
+                if exp.is_Integer and exp > 1:
+                    return _rebuild(base) ** int(exp)
+                else:
+                    return self.ground_new(domain.convert(expr))
+
+        return _rebuild(sympify(expr))
+
+    # Generator operations
+    def monomial_basis(self, i):
+        """Return the i-th basis element."""
+        basis = [0] * self.ngens
+        basis[i] = 1
+        return tuple(basis)
+
+    def index(self, gen):
+        """Get index of generator in the ring."""
+        if gen is None:
+            return 0 if self.ngens else -1  # Impossible choice indicator
+        elif isinstance(gen, (int, str)):
+            return self._gen_index(gen)
+        elif self.is_element(gen):
+            try:
+                return self.gens.index(gen)
+            except ValueError:
+                raise ValueError(f"invalid generator: {gen}")
+        else:
+            raise ValueError(
+                f"expected a polynomial generator, an integer, a string or None, "
+                f"got {gen}"
+            )
+
+    def _gen_index(self, gen):
+        # Get generator index from int or string.
+        if isinstance(gen, int):
+            if 0 <= gen < self.ngens:
+                return gen
+            elif -self.ngens <= gen <= -1:
+                return gen + self.ngens
+            else:
+                raise ValueError(f"invalid generator index: {gen}")
+        else:  # gen is a string
+            try:
+                return self.symbols.index(gen)
+            except ValueError:
+                raise ValueError(f"invalid generator: {gen}")
+
+    def add_gens(self, symbols):
+        """Add new generators to the ring."""
+        syms = set(self.symbols).union(set(symbols))
+        return self.clone(symbols=list(syms))
+
+    def drop(self, *gens):
+        """Remove specified generators from the ring."""
+        indices = set(map(self.index, gens))
+        symbols = [s for i, s in enumerate(self.symbols) if i not in indices]
+
+        if not symbols:
+            return self.domain
+        else:
+            return self.clone(symbols=symbols)
+
+    def drop_to_ground(self, *gens):
+        """Remove generators and inject them into the ground domain."""
+        indices = set(map(self.index, gens))
+        symbols = [s for i, s in enumerate(self.symbols) if i not in indices]
+        gens_to_drop = [gen for i, gen in enumerate(self.gens) if i not in indices]
+
+        if not symbols:
+            return self
+        else:
+            return self.clone(symbols=symbols, domain=self.drop(*gens_to_drop))
+
+    # Polynomial operations
+    def add(self, *objs):
+        """
+        Add a sequence of polynomials or containers of polynomials.
+
+        Examples
+        ========
+
+        >>> from sympy.polys.rings import ring
+        >>> from sympy.polys.domains import ZZ
+
+        >>> R, x = ring("x", ZZ)
+        >>> R.add([ x**2 + 2*i + 3 for i in range(4) ])
+        4*x**2 + 24
+        >>> _.factor_list()
+        (4, [(x**2 + 6, 1)])
+
+        """
+        result = self.zero
+
+        for obj in objs:
+            if is_sequence(obj, include=GeneratorType):
+                result += self.add(*obj)
+            else:
+                result += obj
+
+        return result
+
+    def mul(self, *objs):
+        """
+        Multiply a sequence of polynomials or containers of polynomials.
+
+        Examples
+        ========
+
+        >>> from sympy.polys.rings import ring
+        >>> from sympy.polys.domains import ZZ
+
+        >>> R, x = ring("x", ZZ)
+        >>> R.mul([ x**2 + 2*i + 3 for i in range(4) ])
+        x**8 + 24*x**6 + 206*x**4 + 744*x**2 + 945
+        >>> _.factor_list()
+        (1, [(x**2 + 3, 1), (x**2 + 5, 1), (x**2 + 7, 1), (x**2 + 9, 1)])
+
+        """
+        result = self.one
+
+        for obj in objs:
+            if is_sequence(obj, include=GeneratorType):
+                result *= self.mul(*obj)
+            else:
+                result *= obj
+
+        return result
+
+    def symmetric_poly(self, n):
+        """Return the elementary symmetric polynomial of degree n."""
+        if n < 0 or n > self.ngens:
+            raise ValueError(
+                f"Cannot generate symmetric polynomial of order {n} for {self.gens}"
+            )
+        elif not n:
+            return self.one
+        else:
+            poly = self.zero
+            for s in subsets(range(self.ngens), int(n)):
+                monom = tuple(int(i in s) for i in range(self.ngens))
+                poly += self.term_new(monom, self.domain.one)
+            return poly
+
+    # Main element creation method
     def ring_new(self, element):
+        """Create a ring element from various input types."""
         if isinstance(element, PolyElement):
             if self == element.ring:
                 return element
-            elif isinstance(self.domain, PolynomialRing) and self.domain.ring == element.ring:
+            elif (isinstance(self.domain, PolynomialRing) and
+                  self.domain.ring == element.ring):
                 return self.ground_new(element)
             else:
                 raise NotImplementedError("conversion")
@@ -351,251 +603,51 @@ class PolyRing(DefaultPrinting, IPolys):
 
     __call__ = ring_new
 
-    def from_dict(self, element, orig_domain=None):
-        domain_new = self.domain_new
-        poly_dict = {}
-        for monom, coeff in element.items():
-            coeff = domain_new(coeff, orig_domain)
-            if coeff:
-                poly_dict[monom] = coeff
-        return self._construct_from_dict(poly_dict)
+    # Serialization support
+    def __getstate__(self):
+        state = self.__dict__.copy()
 
-    def from_terms(self, element, orig_domain=None):
-        return self.from_dict(dict(element), orig_domain)
+        # Remove function objects that can't be pickled
+        state.pop("leading_expv", None)
 
-    def from_list(self, element):
-        return self.from_dict(dmp_to_dict(element, self.ngens - 1, self.domain))
+        # Remove monomial operation functions
+        for key in list(state.keys()):
+            if key.startswith("monomial_"):
+                state.pop(key, None)
 
-    def from_expr(self, expr):
-        mapping = dict(list(zip(self.symbols, self.gens)))
-        try:
-            poly = self._rebuild_expr(expr, mapping)
-        except CoercionFailed:
-            raise ValueError("expected an expression convertible to a polynomial in %s, got %s" % (self, expr))
-        else:
-            return self.ring_new(poly)
+        return state
 
-    def index(self, gen):
-        """Compute index of ``gen`` in ``self.gens``. """
-        if gen is None:
-            if self.ngens:
-                i = 0
-            else:
-                i = -1  # indicate impossible choice
-        elif isinstance(gen, int):
-            i = gen
-
-            if 0 <= i and i < self.ngens:
-                pass
-            elif -self.ngens <= i and i <= -1:
-                i = -i - 1
-            else:
-                raise ValueError("invalid generator index: %s" % gen)
-        elif self.is_element(gen):
-            try:
-                i = self.gens.index(gen)
-            except ValueError:
-                raise ValueError("invalid generator: %s" % gen)
-        elif isinstance(gen, str):
-            try:
-                i = self.symbols.index(gen)
-            except ValueError:
-                raise ValueError("invalid generator: %s" % gen)
-        else:
-            raise ValueError("expected a polynomial generator, an integer, a string or None, got %s" % gen)
-
-        return i
-
-    def drop(self, *gens):
-        """Remove specified generators from this ring. """
-        indices = set(map(self.index, gens))
-        symbols = [ s for i, s in enumerate(self.symbols) if i not in indices ]
-
-        if not symbols:
-            return self.domain
-        else:
-            return self.clone(symbols=symbols)
-
-    def __getitem__(self, key):
-        symbols = self.symbols[key]
-
-        if not symbols:
-            return self.domain
-        else:
-            return self.clone(symbols=symbols)
-
-    def to_ground(self):
-        # TODO: should AlgebraicField be a Composite domain?
-        if self.domain.is_Composite or hasattr(self.domain, 'domain'):
-            return self.clone(domain=self.domain.domain)
-        else:
-            raise ValueError("%s is not a composite domain" % self.domain)
-
-    def to_domain(self):
-        return PolynomialRing(self)
-
-    def to_field(self):
-        from sympy.polys.fields import FracField
-        return FracField(self.symbols, self.domain, self.order)
-
-    @property
-    def is_univariate(self):
-        return len(self.gens) == 1
-
-    @property
-    def is_multivariate(self):
-        return len(self.gens) > 1
-
-    def add(self, *objs):
-        """
-        Add a sequence of polynomials or containers of polynomials.
-
-        Examples
-        ========
-
-        >>> from sympy.polys.rings import ring
-        >>> from sympy.polys.domains import ZZ
-
-        >>> R, x = ring("x", ZZ)
-        >>> R.add([ x**2 + 2*i + 3 for i in range(4) ])
-        4*x**2 + 24
-        >>> _.factor_list()
-        (4, [(x**2 + 6, 1)])
-
-        """
-        p = self.zero
-
-        for obj in objs:
-            if is_sequence(obj, include=GeneratorType):
-                p += self.add(*obj)
-            else:
-                p += obj
-
-        return p
-
-    def mul(self, *objs):
-        """
-        Multiply a sequence of polynomials or containers of polynomials.
-
-        Examples
-        ========
-
-        >>> from sympy.polys.rings import ring
-        >>> from sympy.polys.domains import ZZ
-
-        >>> R, x = ring("x", ZZ)
-        >>> R.mul([ x**2 + 2*i + 3 for i in range(4) ])
-        x**8 + 24*x**6 + 206*x**4 + 744*x**2 + 945
-        >>> _.factor_list()
-        (1, [(x**2 + 3, 1), (x**2 + 5, 1), (x**2 + 7, 1), (x**2 + 9, 1)])
-
-        """
-        p = self.one
-
-        for obj in objs:
-            if is_sequence(obj, include=GeneratorType):
-                p *= self.mul(*obj)
-            else:
-                p *= obj
-
-        return p
-
-    def drop_to_ground(self, *gens):
-        r"""
-        Remove specified generators from the ring and inject them into
-        its domain.
-        """
-        indices = set(map(self.index, gens))
-        symbols = [s for i, s in enumerate(self.symbols) if i not in indices]
-        gens = [gen for i, gen in enumerate(self.gens) if i not in indices]
-
-        if not symbols:
-            return self
-        else:
-            return self.clone(symbols=symbols, domain=self.drop(*gens))
-
-    def compose(self, other):
-        """Add the generators of ``other`` to ``self``"""
-        if self != other:
-            syms = set(self.symbols).union(set(other.symbols))
-            return self.clone(symbols=list(syms))
-        else:
-            return self
-
-    def add_gens(self, symbols):
-        """Add the elements of ``symbols`` as generators to ``self``"""
-        syms = set(self.symbols).union(set(symbols))
-        return self.clone(symbols=list(syms))
-
-    def symmetric_poly(self, n):
-        """
-        Return the elementary symmetric polynomial of degree *n* over
-        this ring's generators.
-        """
-        if n < 0 or n > self.ngens:
-            raise ValueError("Cannot generate symmetric polynomial of order %s for %s" % (n, self.gens))
-        elif not n:
-            return self.one
-        else:
-            poly = self.zero
-            for s in subsets(range(self.ngens), int(n)):
-                monom = tuple(int(i in s) for i in range(self.ngens))
-                poly += self.term_new(monom, self.domain.one)
-            return poly
-
-#<--------------------------INTERFACE / IMPLEMENTATION DIVIDER-------------------------->#
-
-    def _construct_generator(self, i):
-        # use fmpz_mpoly_gen when available in python-flint
+    # Internal helper methods
+    def _gens(self):
+        # Generate the polynomial generators.
         one = self.domain.one
-        expv = self.monomial_basis(i)
+        generators = []
+
+        for i in range(self.ngens):
+            expv = self.monomial_basis(i)
+            poly = self.zero
+            poly[expv] = one
+            generators.append(poly)
+
+        return tuple(generators)
+
+    def _ring_equality(self, other):
+        # Check equality of two polynomial rings.
+        return ((self.symbols, self.domain, self.ngens, self.order) ==
+                (other.symbols, other.domain, other.ngens, other.order))
+
+    def _from_dict_ground(self, element):
+        # Create polynomial from dictionary with ground domain conversion.
         poly = self.zero
-        poly[expv] = one
+        domain_new = self.domain_new
+
+        for monom, coeff in element.items():
+            if coeff:  # Skip zero coefficients
+                coeff = domain_new(coeff)
+                poly[monom] = coeff
+
         return poly
 
-    @cacheit
-    def _clone(self, symbols, domain, order):
-        return self.__class__(symbols or self.symbols, domain or self.domain, order or self.order)
-
-    def term_new(self, monom, coeff):
-        # Use fmpz_mpoly and fmpq_mpoly's "Coefficient" method(s) here
-        coeff = self.domain_new(coeff)
-        poly = self.zero
-        if coeff:
-            poly[monom] = coeff
-        return poly
-
-    def _construct_from_dict(self, poly_dict):
-        if not poly_dict:
-            return self.zero
-        poly = self.zero
-        for monom, coeff in poly_dict.items():
-            poly[monom] = coeff
-        return poly
-
-    def _rebuild_expr(self, expr, mapping):
-        domain = self.domain
-
-        def _rebuild(expr):
-            generator = mapping.get(expr)
-            if generator is not None:
-                return generator
-            elif expr.is_Add:
-                return reduce(add, list(map(_rebuild, expr.args)))
-            elif expr.is_Mul:
-                return reduce(mul, list(map(_rebuild, expr.args)))
-            else:
-                # XXX: Use as_base_exp() to handle Pow(x, n) and also exp(n)
-                # XXX: E can be a generator e.g. sring([exp(2)]) -> ZZ[E]
-                base, exp = expr.as_base_exp()
-                if exp.is_Integer and exp > 1:
-                    return _rebuild(base) ** int(exp)
-                else:
-                    return self.ground_new(domain.convert(expr))
-
-        return _rebuild(sympify(expr))
-
-#<-------------------------REFACTORED ABOVE/ TO REFACTOR BELOW-------------------------->#
 
 
 class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
@@ -646,7 +698,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
             terms = self._reorder_terms(self.ring.symbols, new_ring.symbols)
             return new_ring.from_terms(terms, self.ring.domain)
         else:
-            return new_ring.from_dict(self, self.ring.domain)
+            return new_ring.from_dict(self)
 
     def as_expr(self, *symbols):
         if not symbols:
