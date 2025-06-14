@@ -473,7 +473,8 @@ class exp(ExpBase, metaclass=ExpMeta):
 
     def _eval_is_extended_positive(self):
         if self.exp.is_extended_real:
-            return self.args[0] is not S.NegativeInfinity
+            if self.args[0].is_real or self.args[0].is_extended_nonnegative:
+                return True
         elif self.exp.is_imaginary:
             arg2 = -I * self.args[0] / pi
             return arg2.is_even
