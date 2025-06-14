@@ -343,7 +343,7 @@ def _(expr, assumptions):
                     ask(Q.even(expr.exp.q), assumptions):
                 return ask(Q.positive(expr.base), assumptions)
             if ask(Q.zero(expr.base), assumptions) is not False:
-                if ask(Q.positive(expr.exp), assumptions):
+                if ask(Q.nonnegative(expr.exp), assumptions) and ask(Q.nonnegative(expr.base), assumptions):
                     return True
                 return
             if ask(Q.integer(expr.exp), assumptions):
