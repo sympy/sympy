@@ -200,7 +200,7 @@ class Column:
         """
         loc = sympify(loc)
         if loc in self._applied_supports:
-            return ValueError("There is already a support at this location.")
+            raise ValueError("There is already a support at this location.")
 
         if loc.is_number:
             reaction_load = Symbol(f'R_{float(loc):g}')
@@ -428,12 +428,8 @@ class Column:
 
     def solve_for_reaction_loads(self):
         """
-        This method solves the horizontal reaction loads.
-
-        Returns
-        =======
-        dict
-            A dictionary of the reaction forces and their value
+        This method solves the horizontal reaction loads and unknown
+        displacement jumps due to telescope hinges.
 
         Examples
         ========
@@ -484,7 +480,7 @@ class Column:
         reaction_solutions = solution[:num_supports]
         self._reaction_loads = dict(zip(self._applied_supports, reaction_solutions))
 
-        displacement_solutions = solution[num_supports:-1]
+        displacement_solutions = solution[num_supports:-2]
         self._hinge_deflections = dict(zip(self._applied_hinges, displacement_solutions))
 
         integration_constants = solution[-2:]
