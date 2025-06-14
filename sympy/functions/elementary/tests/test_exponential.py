@@ -395,6 +395,8 @@ def test_log_exp():
 @_both_exp_pow
 def test_exp_assumptions():
     r = Symbol('r', real=True)
+    er = Symbol('er', extended_real=True)
+    enn = Symbol('enn', extended_nonnegative=True)
     i = Symbol('i', imaginary=True)
     for e in exp, exp_polar:
         assert e(x).is_real is None
@@ -405,6 +407,9 @@ def test_exp_assumptions():
         assert e(r).is_imaginary is False
         assert e(re(x)).is_extended_real is True
         assert e(re(x)).is_imaginary is False
+        assert e(x).is_positive is True
+        assert e(er).is_positive is None
+        assert e(enn).is_positive is True
 
     assert Pow(E, I*pi, evaluate=False).is_imaginary == False
     assert Pow(E, 2*I*pi, evaluate=False).is_imaginary == False
