@@ -409,9 +409,12 @@ def test_exp_assumptions():
         assert e(re(x)).is_imaginary is False
 
         # https://github.com/sympy/sympy/issues/28141
-        assert e(x).is_positive is True
-        assert e(er).is_positive is None
-        assert e(enn).is_positive is True
+        assert e(x).is_extended_positive is True
+        assert e(er).is_extended_positive is None
+        assert e(enn).is_extended_positive is True
+        assert e(x).is_zero is False
+        assert e(er).is_zero is None
+        assert e(enn).is_zero is False
         assert sign(e(x)) == 1
         assert sign(e(er)) == sign(e(er), evaluate=False)
         assert sign(e(enn)) == 1
