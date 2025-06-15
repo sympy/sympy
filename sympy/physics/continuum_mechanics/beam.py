@@ -984,19 +984,29 @@ class Beam:
         unknowns = (C3, C4) + reactions + rotation_jumps + deflection_jumps
 
         A, b = linear_eq_to_matrix(equations, unknowns)
-        rank_A = A.rank()
-        rank_Ab = A.row_join(b).rank()
 
-        if rank_A != rank_Ab:
-            raise ValueError("System is statically inconsistent. No Solution.")
+        A_rref, pivots = A.rref()
+        num_pivots = len(pivots)
+        total_unknowns = len(unknowns)
 
-        try:
-            solutions = linsolve(equations, unknowns)
-            if not solutions:
-                raise ValueError("Could not find a solution.")
-            solution = list(solutions.args[0])
-        except Exception as e:
-            raise ValueError("Could not solve system: {}".format(str(e)))
+        if num_pivots < total_unknowns:
+            n_def = len(self._boundary_conditions['deflection'])
+            n_slope = len(self._boundary_conditions['slope'])
+
+            total_constraints = n_def + n_slope
+            # Condition check for mechanism
+            if total_constraints < 2:
+                raise ValueError("System is under-constrained (mechanism): insufficient support "
+                    + "or boundary conditions. Please add appropriate supports "
+                    + "or deflection/slope boundary conditions.")
+
+        # condition check for overconstrained
+        if A.rank() != A.row_join(b).rank():
+            raise ValueError("System is over-constrained (inconsistent): contradictory or "
+                + "excessive support/boundary conditions-no valid solution exists.")
+        solutions = linsolve(equations, unknowns)
+
+        solution = list(solutions.args[0])
 
         reaction_index = 2+len(reactions)
         rotation_index = reaction_index + len(rotation_jumps)
