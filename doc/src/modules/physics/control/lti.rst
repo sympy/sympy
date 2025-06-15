@@ -7,7 +7,13 @@ lti
 
 .. module:: sympy.physics.control.lti
 
+.. autoclass:: TransferFunctionBase
+   :members:
+
 .. autoclass:: TransferFunction
+   :members:
+
+.. autoclass:: DTTransferFunction
    :members:
 
 .. autoclass:: Series
