@@ -2,7 +2,8 @@
 Handlers related to order relations: positive, negative, etc.
 """
 
-from sympy.assumptions import Q, ask
+from sympy.assumptions import Q
+from sympy.assumptions.ask import _ask_recursive
 from sympy.core import Add, Basic, Expr, Mul, Pow, S
 from sympy.core.logic import fuzzy_not, fuzzy_and, fuzzy_or
 from sympy.core.numbers import E, ImaginaryUnit, NaN, I, pi
@@ -65,14 +66,14 @@ def _(expr, assumptions):
     if expr.is_number:
         return _NegativePredicate_number(expr, assumptions)
 
-    r = ask(Q.real(expr), assumptions)
+    r = _ask_recursive(Q.real(expr), assumptions)
     if r is not True:
         return r
 
     nonpos = 0
     for arg in expr.args:
-        if ask(Q.negative(arg), assumptions) is not True:
-            if ask(Q.positive(arg), assumptions) is False:
+        if _ask_recursive(Q.negative(arg), assumptions) is not True:
+            if _ask_recursive(Q.positive(arg), assumptions) is False:
                 nonpos += 1
             else:
                 break
@@ -88,9 +89,9 @@ def _(expr, assumptions):
     for arg in expr.args:
         if result is None:
             result = False
-        if ask(Q.negative(arg), assumptions):
+        if _ask_recursive(Q.negative(arg), assumptions):
             result = not result
-        elif ask(Q.positive(arg), assumptions):
+        elif _ask_recursive(Q.positive(arg), assumptions):
             pass
         else:
             return
@@ -105,20 +106,20 @@ def _(expr, assumptions):
     """
     if expr.base == E:
         # Exponential is always positive:
-        if ask(Q.real(expr.exp), assumptions):
+        if _ask_recursive(Q.real(expr.exp), assumptions):
             return False
         return
 
     if expr.is_number:
         return _NegativePredicate_number(expr, assumptions)
-    if ask(Q.real(expr.base), assumptions):
-        if ask(Q.positive(expr.base), assumptions):
-            if ask(Q.real(expr.exp), assumptions):
+    if _ask_recursive(Q.real(expr.base), assumptions):
+        if _ask_recursive(Q.positive(expr.base), assumptions):
+            if _ask_recursive(Q.real(expr.exp), assumptions):
                 return False
-        if ask(Q.even(expr.exp), assumptions):
+        if _ask_recursive(Q.even(expr.exp), assumptions):
             return False
-        if ask(Q.odd(expr.exp), assumptions):
-            return ask(Q.negative(expr.base), assumptions)
+        if _ask_recursive(Q.odd(expr.exp), assumptions):
+            return _ask_recursive(Q.negative(expr.base), assumptions)
 
 @NegativePredicate.register_many(Abs, ImaginaryUnit)
 def _(expr, assumptions):
@@ -126,7 +127,7 @@ def _(expr, assumptions):
 
 @NegativePredicate.register(exp)
 def _(expr, assumptions):
-    if ask(Q.real(expr.exp), assumptions):
+    if _ask_recursive(Q.real(expr.exp), assumptions):
         return False
     raise MDNotImplementedError
 
@@ -138,7 +139,7 @@ def _(expr, assumptions):
     if expr.is_number:
         notnegative = fuzzy_not(_NegativePredicate_number(expr, assumptions))
         if notnegative:
-            return ask(Q.real(expr), assumptions)
+            return _ask_recursive(Q.real(expr), assumptions)
         else:
             return notnegative
 
@@ -161,7 +162,7 @@ def _(expr, assumptions):
 
 @NonZeroPredicate.register(Basic)
 def _(expr, assumptions):
-    if ask(Q.real(expr)) is False:
+    if _ask_recursive(Q.real(expr)) is False:
         return False
     if expr.is_number:
         # if there are no symbols just evalf
@@ -173,14 +174,14 @@ def _(expr, assumptions):
 
 @NonZeroPredicate.register(Add)
 def _(expr, assumptions):
-    if all(ask(Q.positive(x), assumptions) for x in expr.args) \
-            or all(ask(Q.negative(x), assumptions) for x in expr.args):
+    if all(_ask_recursive(Q.positive(x), assumptions) for x in expr.args) \
+            or all(_ask_recursive(Q.negative(x), assumptions) for x in expr.args):
         return True
 
 @NonZeroPredicate.register(Mul)
 def _(expr, assumptions):
     for arg in expr.args:
-        result = ask(Q.nonzero(arg), assumptions)
+        result = _ask_recursive(Q.nonzero(arg), assumptions)
         if result:
             continue
         return result
@@ -188,11 +189,11 @@ def _(expr, assumptions):
 
 @NonZeroPredicate.register(Pow)
 def _(expr, assumptions):
-    return ask(Q.nonzero(expr.base), assumptions)
+    return _ask_recursive(Q.nonzero(expr.base), assumptions)
 
 @NonZeroPredicate.register(Abs)
 def _(expr, assumptions):
-    return ask(Q.nonzero(expr.args[0]), assumptions)
+    return _ask_recursive(Q.nonzero(expr.args[0]), assumptions)
 
 @NonZeroPredicate.register(NaN)
 def _(expr, assumptions):
@@ -210,13 +211,16 @@ def _(expr, assumptions):
 
 @ZeroPredicate.register(Basic)
 def _(expr, assumptions):
-    return fuzzy_and([fuzzy_not(ask(Q.nonzero(expr), assumptions)),
-        ask(Q.real(expr), assumptions)])
+    return fuzzy_and([fuzzy_not(_ask_recursive
+(Q.nonzero(expr), assumptions)),
+        _ask_recursive
+(Q.real(expr), assumptions)])
 
 @ZeroPredicate.register(Mul)
 def _(expr, assumptions):
     # TODO: This should be deducible from the nonzero handler
-    return fuzzy_or(ask(Q.zero(arg), assumptions) for arg in expr.args)
+    return fuzzy_or(_ask_recursive
+(Q.zero(arg), assumptions) for arg in expr.args)
 
 
 # NonPositivePredicate
@@ -233,7 +237,7 @@ def _(expr, assumptions):
     if expr.is_number:
         notpositive = fuzzy_not(_PositivePredicate_number(expr, assumptions))
         if notpositive:
-            return ask(Q.real(expr), assumptions)
+            return _ask_recursive(Q.real(expr), assumptions)
         else:
             return notpositive
 
@@ -277,9 +281,9 @@ def _(expr, assumptions):
         return _PositivePredicate_number(expr, assumptions)
     result = True
     for arg in expr.args:
-        if ask(Q.positive(arg), assumptions):
+        if _ask_recursive(Q.positive(arg), assumptions):
             continue
-        elif ask(Q.negative(arg), assumptions):
+        elif _ask_recursive(Q.negative(arg), assumptions):
             result = result ^ True
         else:
             return
@@ -290,14 +294,14 @@ def _(expr, assumptions):
     if expr.is_number:
         return _PositivePredicate_number(expr, assumptions)
 
-    r = ask(Q.real(expr), assumptions)
+    r = _ask_recursive(Q.real(expr), assumptions)
     if r is not True:
         return r
 
     nonneg = 0
     for arg in expr.args:
-        if ask(Q.positive(arg), assumptions) is not True:
-            if ask(Q.negative(arg), assumptions) is False:
+        if _ask_recursive(Q.positive(arg), assumptions) is not True:
+            if _ask_recursive(Q.negative(arg), assumptions) is False:
                 nonneg += 1
             else:
                 break
@@ -308,44 +312,44 @@ def _(expr, assumptions):
 @PositivePredicate.register(Pow)
 def _(expr, assumptions):
     if expr.base == E:
-        if ask(Q.real(expr.exp), assumptions):
+        if _ask_recursive(Q.real(expr.exp), assumptions):
             return True
-        if ask(Q.imaginary(expr.exp), assumptions):
-            return ask(Q.even(expr.exp/(I*pi)), assumptions)
+        if _ask_recursive(Q.imaginary(expr.exp), assumptions):
+            return _ask_recursive(Q.even(expr.exp/(I*pi)), assumptions)
         return
 
     if expr.is_number:
         return _PositivePredicate_number(expr, assumptions)
-    if ask(Q.positive(expr.base), assumptions):
-        if ask(Q.real(expr.exp), assumptions):
+    if _ask_recursive(Q.positive(expr.base), assumptions):
+        if _ask_recursive(Q.real(expr.exp), assumptions):
             return True
-    if ask(Q.negative(expr.base), assumptions):
-        if ask(Q.even(expr.exp), assumptions):
+    if _ask_recursive(Q.negative(expr.base), assumptions):
+        if _ask_recursive(Q.even(expr.exp), assumptions):
             return True
-        if ask(Q.odd(expr.exp), assumptions):
+        if _ask_recursive(Q.odd(expr.exp), assumptions):
             return False
 
 @PositivePredicate.register(exp)
 def _(expr, assumptions):
-    if ask(Q.real(expr.exp), assumptions):
+    if _ask_recursive(Q.real(expr.exp), assumptions):
         return True
-    if ask(Q.imaginary(expr.exp), assumptions):
-        return ask(Q.even(expr.exp/(I*pi)), assumptions)
+    if _ask_recursive(Q.imaginary(expr.exp), assumptions):
+        return _ask_recursive(Q.even(expr.exp/(I*pi)), assumptions)
 
 @PositivePredicate.register(log)
 def _(expr, assumptions):
-    r = ask(Q.real(expr.args[0]), assumptions)
+    r = _ask_recursive(Q.real(expr.args[0]), assumptions)
     if r is not True:
         return r
-    if ask(Q.positive(expr.args[0] - 1), assumptions):
+    if _ask_recursive(Q.positive(expr.args[0] - 1), assumptions):
         return True
-    if ask(Q.negative(expr.args[0] - 1), assumptions):
+    if _ask_recursive(Q.negative(expr.args[0] - 1), assumptions):
         return False
 
 @PositivePredicate.register(factorial)
 def _(expr, assumptions):
     x = expr.args[0]
-    if ask(Q.integer(x) & Q.positive(x), assumptions):
+    if _ask_recursive(Q.integer(x) & Q.positive(x), assumptions):
             return True
 
 @PositivePredicate.register(ImaginaryUnit)
@@ -354,45 +358,45 @@ def _(expr, assumptions):
 
 @PositivePredicate.register(Abs)
 def _(expr, assumptions):
-    return ask(Q.nonzero(expr), assumptions)
+    return _ask_recursive(Q.nonzero(expr), assumptions)
 
 @PositivePredicate.register(Trace)
 def _(expr, assumptions):
-    if ask(Q.positive_definite(expr.arg), assumptions):
+    if _ask_recursive(Q.positive_definite(expr.arg), assumptions):
         return True
 
 @PositivePredicate.register(Determinant)
 def _(expr, assumptions):
-    if ask(Q.positive_definite(expr.arg), assumptions):
+    if _ask_recursive(Q.positive_definite(expr.arg), assumptions):
         return True
 
 @PositivePredicate.register(MatrixElement)
 def _(expr, assumptions):
     if (expr.i == expr.j
-            and ask(Q.positive_definite(expr.parent), assumptions)):
+            and _ask_recursive(Q.positive_definite(expr.parent), assumptions)):
         return True
 
 @PositivePredicate.register(atan)
 def _(expr, assumptions):
-    return ask(Q.positive(expr.args[0]), assumptions)
+    return _ask_recursive(Q.positive(expr.args[0]), assumptions)
 
 @PositivePredicate.register(asin)
 def _(expr, assumptions):
     x = expr.args[0]
-    if ask(Q.positive(x) & Q.nonpositive(x - 1), assumptions):
+    if _ask_recursive(Q.positive(x) & Q.nonpositive(x - 1), assumptions):
         return True
-    if ask(Q.negative(x) & Q.nonnegative(x + 1), assumptions):
+    if _ask_recursive(Q.negative(x) & Q.nonnegative(x + 1), assumptions):
         return False
 
 @PositivePredicate.register(acos)
 def _(expr, assumptions):
     x = expr.args[0]
-    if ask(Q.nonpositive(x - 1) & Q.nonnegative(x + 1), assumptions):
+    if _ask_recursive(Q.nonpositive(x - 1) & Q.nonnegative(x + 1), assumptions):
         return True
 
 @PositivePredicate.register(acot)
 def _(expr, assumptions):
-    return ask(Q.real(expr.args[0]), assumptions)
+    return _ask_recursive(Q.real(expr.args[0]), assumptions)
 
 @PositivePredicate.register(NaN)
 def _(expr, assumptions):
@@ -403,22 +407,21 @@ def _(expr, assumptions):
 
 @ExtendedNegativePredicate.register(object)
 def _(expr, assumptions):
-    return ask(Q.negative(expr) | Q.negative_infinite(expr), assumptions)
+    return _ask_recursive(Q.negative(expr) | Q.negative_infinite(expr), assumptions)
 
 
 # ExtendedPositivePredicate
 
 @ExtendedPositivePredicate.register(object)
 def _(expr, assumptions):
-    return ask(Q.positive(expr) | Q.positive_infinite(expr), assumptions)
+    return _ask_recursive(Q.positive(expr) | Q.positive_infinite(expr), assumptions)
 
 
 # ExtendedNonZeroPredicate
 
 @ExtendedNonZeroPredicate.register(object)
 def _(expr, assumptions):
-    return ask(
-        Q.negative_infinite(expr) | Q.negative(expr) | Q.positive(expr) | Q.positive_infinite(expr),
+    return _ask_recursive(Q.negative_infinite(expr) | Q.negative(expr) | Q.positive(expr) | Q.positive_infinite(expr),
         assumptions)
 
 
@@ -426,8 +429,7 @@ def _(expr, assumptions):
 
 @ExtendedNonPositivePredicate.register(object)
 def _(expr, assumptions):
-    return ask(
-        Q.negative_infinite(expr) | Q.negative(expr) | Q.zero(expr),
+    return _ask_recursive(Q.negative_infinite(expr) | Q.negative(expr) | Q.zero(expr),
         assumptions)
 
 
@@ -435,6 +437,5 @@ def _(expr, assumptions):
 
 @ExtendedNonNegativePredicate.register(object)
 def _(expr, assumptions):
-    return ask(
-        Q.zero(expr) | Q.positive(expr) | Q.positive_infinite(expr),
+    return _ask_recursive(Q.zero(expr) | Q.positive(expr) | Q.positive_infinite(expr),
         assumptions)

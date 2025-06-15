@@ -3,7 +3,8 @@ This module contains query handlers responsible for calculus queries:
 infinitesimal, finite, etc.
 """
 
-from sympy.assumptions import Q, ask
+from sympy.assumptions import Q
+from sympy.assumptions.ask import _ask_recursive
 from sympy.core import Expr, Add, Mul, Pow, Symbol
 from sympy.core.numbers import (NegativeInfinity, GoldenRatio,
     Infinity, Exp1, ComplexInfinity, ImaginaryUnit, NaN, Number, Pi, E,
@@ -94,10 +95,10 @@ def _(expr, assumptions):
     sign = -1  # sign of unknown or infinite
     result = True
     for arg in expr.args:
-        _bounded = ask(Q.finite(arg), assumptions)
+        _bounded = _ask_recursive(Q.finite(arg), assumptions)
         if _bounded:
             continue
-        s = ask(Q.extended_positive(arg), assumptions)
+        s = _ask_recursive(Q.extended_positive(arg), assumptions)
         # if there has been more than one sign or if the sign of this arg
         # is None and Bounded is None or there was already
         # an unknown sign, return None
@@ -153,16 +154,16 @@ def _(expr, assumptions):
     result = True
     possible_zero = False
     for arg in expr.args:
-        _bounded = ask(Q.finite(arg), assumptions)
+        _bounded = _ask_recursive(Q.finite(arg), assumptions)
         if _bounded:
-            if ask(Q.zero(arg), assumptions) is not False:
+            if _ask_recursive(Q.zero(arg), assumptions) is not False:
                 if result is False:
                     return None
                 possible_zero = True
         elif _bounded is None:
             if result is None:
                 return None
-            if ask(Q.extended_nonzero(arg), assumptions) is None:
+            if _ask_recursive(Q.extended_nonzero(arg), assumptions) is None:
                 return None
             if result is not False:
                 result = None
@@ -186,25 +187,25 @@ def _(expr, assumptions):
     * Otherwise unknown
     """
     if expr.base == E:
-        return ask(Q.finite(expr.exp), assumptions)
+        return _ask_recursive(Q.finite(expr.exp), assumptions)
 
-    base_bounded = ask(Q.finite(expr.base), assumptions)
-    exp_bounded = ask(Q.finite(expr.exp), assumptions)
+    base_bounded = _ask_recursive(Q.finite(expr.base), assumptions)
+    exp_bounded = _ask_recursive(Q.finite(expr.exp), assumptions)
     if base_bounded is None and exp_bounded is None:  # Common Case
         return None
-    if base_bounded is False and ask(Q.extended_nonzero(expr.exp), assumptions):
+    if base_bounded is False and _ask_recursive(Q.extended_nonzero(expr.exp), assumptions):
         return False
     if base_bounded and exp_bounded:
-        is_base_zero = ask(Q.zero(expr.base), assumptions)
-        is_exp_negative = ask(Q.negative(expr.exp), assumptions)
+        is_base_zero = _ask_recursive(Q.zero(expr.base), assumptions)
+        is_exp_negative = _ask_recursive(Q.negative(expr.exp), assumptions)
         if is_base_zero is True and is_exp_negative is True:
             return False
         if is_base_zero is not False and is_exp_negative is not False:
             return None
         return True
-    if (abs(expr.base) <= 1) == True and ask(Q.extended_positive(expr.exp), assumptions):
+    if (abs(expr.base) <= 1) == True and _ask_recursive(Q.extended_positive(expr.exp), assumptions):
         return True
-    if (abs(expr.base) >= 1) == True and ask(Q.extended_negative(expr.exp), assumptions):
+    if (abs(expr.base) >= 1) == True and _ask_recursive(Q.extended_negative(expr.exp), assumptions):
         return True
     if (abs(expr.base) >= 1) == True and exp_bounded is False:
         return False
@@ -212,15 +213,15 @@ def _(expr, assumptions):
 
 @FinitePredicate.register(exp)
 def _(expr, assumptions):
-    return ask(Q.finite(expr.exp), assumptions)
+    return _ask_recursive(Q.finite(expr.exp), assumptions)
 
 @FinitePredicate.register(log)
 def _(expr, assumptions):
     # After complex -> finite fact is registered to new assumption system,
     # querying Q.infinite may be removed.
-    if ask(Q.infinite(expr.args[0]), assumptions):
+    if _ask_recursive(Q.infinite(expr.args[0]), assumptions):
         return False
-    return ask(~Q.zero(expr.args[0]), assumptions)
+    return _ask_recursive(~Q.zero(expr.args[0]), assumptions)
 
 @FinitePredicate.register_many(cos, sin, Number, Pi, Exp1, GoldenRatio,
     TribonacciConstant, ImaginaryUnit, sign)
