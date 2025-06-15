@@ -10,7 +10,7 @@ from sympy.core.function import (Derivative, Function)
 from sympy.core.mul import Mul
 from sympy.core.relational import Eq
 from sympy.core.sympify import sympify
-from sympy.solvers import linsolve
+from sympy.solvers import linsolve, linear_eq_to_matrix
 from sympy.solvers.ode.ode import dsolve
 from sympy.solvers.solvers import solve
 from sympy.printing import sstr
@@ -939,6 +939,12 @@ class Beam:
             + 120*SingularityFunction(x, 30, -2) + 2*SingularityFunction(x, 30, -1)
         """
 
+        if not reactions:
+            raise ValueError("No symbols supplied to solve_for_reaction_loads().")
+
+        if len(set(reactions)) != len(reactions):
+            raise ValueError("Duplicate symbols supplied to solve_for_reaction_loads().")
+
         x = self.variable
         l = self.length
         C3 = Symbol('C3')
@@ -974,8 +980,34 @@ class Beam:
             eqs = deflection_curve.subs(x, position) - value
             deflection_eqs.append(eqs)
 
-        solution = list((linsolve([shear_curve, moment_curve] + shear_force_eqs + bending_moment_eqs + slope_eqs
-                            + deflection_eqs, (C3, C4) + reactions + rotation_jumps + deflection_jumps).args)[0])
+        equations = [shear_curve, moment_curve] + shear_force_eqs + bending_moment_eqs + slope_eqs + deflection_eqs
+        unknowns = (C3, C4) + reactions + rotation_jumps + deflection_jumps
+
+        A, b = linear_eq_to_matrix(equations, unknowns)
+
+        A_rref, pivots = A.rref()
+        num_pivots = len(pivots)
+        total_unknowns = len(unknowns)
+
+        if num_pivots < total_unknowns:
+            n_def = len(self._boundary_conditions['deflection'])
+            n_slope = len(self._boundary_conditions['slope'])
+
+            total_constraints = n_def + n_slope
+            # Condition check for mechanism
+            if total_constraints < 2:
+                raise ValueError("System is under-constrained (mechanism): insufficient support "
+                    + "or boundary conditions. Please add appropriate supports "
+                    + "or deflection/slope boundary conditions.")
+
+        # condition check for overconstrained
+        if A.rank() != A.row_join(b).rank():
+            raise ValueError("System is over-constrained (inconsistent): contradictory or "
+                + "excessive support/boundary conditions-no valid solution exists.")
+        solutions = linsolve(equations, unknowns)
+
+        solution = list(solutions.args[0])
+
         reaction_index = 2+len(reactions)
         rotation_index = reaction_index + len(rotation_jumps)
         reaction_solution = solution[2:reaction_index]
