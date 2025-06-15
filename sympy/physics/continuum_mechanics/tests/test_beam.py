@@ -1,6 +1,5 @@
 from sympy.core.function import expand
 from sympy.core.numbers import (Rational, pi)
-from sympy.core.singleton import S
 from sympy.core.symbol import (Symbol, symbols)
 from sympy.sets.sets import Interval
 from sympy.simplify.simplify import simplify
@@ -280,7 +279,7 @@ def test_no_symbols_supplied():
     with raises(ValueError, match="No symbols supplied to solve_for_reaction_loads()."):
         b5.solve_for_reaction_loads()
 
-def test_duplicate_symbols_supplied():
+def test_duplicate_symbols_supplied_1():
     E = Symbol('E')
     I = Symbol('I')
 
@@ -290,6 +289,18 @@ def test_duplicate_symbols_supplied():
 
     with raises(ValueError, match="Duplicate symbols supplied to solve_for_reaction_loads()."):
         b5.solve_for_reaction_loads(R1, M1, R1)
+
+def test_duplicate_symbols_supplied_2():
+    E, I = Symbol('E'), Symbol('I')
+    b = Beam(10, E, I)
+
+    b.apply_load(R1, 0, -1)
+    b.apply_load(R1, 10, -1)
+
+    b.bc_deflection = [(0, 0), (10, 0)]
+
+    with raises(ValueError, match="Duplicate symbols supplied to solve_for_reaction_loads()."):
+        b.solve_for_reaction_loads(Symbol('R1'),Symbol('R1'))
 
 def test_statically_determinate_1():
     E = Symbol('E')
