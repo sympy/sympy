@@ -1438,3 +1438,11 @@ def test_issue_26991():
 def test_issue_27278():
     expr = (1/(x*log((x + 3)/x)))**x*((x + 1)*log((x + 4)/(x + 1)))**(x + 1)/3
     assert limit(expr, x, oo) == 1
+
+def test_issue_28130():
+    #https://github.com/sympy/sympy/issues/28130
+    x = symbols('x')
+    assert limit(2**x, x, -oo) == 0
+    assert limit(3**x, x, -oo) == 0
+    assert limit(E**x, x, -oo) == 0
+    assert limit((0.3)**x, x, -oo) == oo
