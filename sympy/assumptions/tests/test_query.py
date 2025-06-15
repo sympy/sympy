@@ -2061,7 +2061,10 @@ def test_real_pow():
     assert ask(Q.real(Pow(zero, 1, evaluate=False))) is True
     assert ask(Q.real(Pow(zero, zero, evaluate=False))) is True
     assert ask(Q.real(Pow(zero, -1, evaluate=False))) is False
-
+    two_thirds = Rational(2, 3)
+    assert ask(Q.real(Pow(zero, two_thirds, evaluate=False))) is True
+    assert ask(Q.real(Pow(zero, pi, evaluate=False))) is True
+    assert ask(Q.real(Pow(zero, sqrt(2), evaluate=False))) is True
 
 @_both_exp_pow
 def test_real_functions():
