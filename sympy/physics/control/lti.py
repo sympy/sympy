@@ -1126,10 +1126,9 @@ class TransferFunctionBase(SISOLinearTimeInvariant):
         >>> tf2.eval_frequency(I*2)
         -4/(2*I*a + p)
         """
-        raise NotImplementedError(
-            """
-            This method should be overridden by subclasses.
-            """)
+        arg_num = self.num.subs(self.var, other)
+        arg_den = self.den.subs(self.var, other)
+        return Mul(arg_num, S.One / arg_den).expand()
 
     def is_stable(self, cancel_poles_zeros=False):
         """
@@ -1591,14 +1590,6 @@ class TransferFunction(TransferFunctionBase):
 
         return neg_roots_conds(standard_form.den, self.var)
 
-    def eval_frequency(self, other):
-        r"""
-        See :func:`TransferFunctionBase.eval_frequency`.
-        """
-        arg_num = self.num.subs(self.var, other)
-        arg_den = self.den.subs(self.var, other)
-        return Mul(arg_num, S.One / arg_den).expand()
-
     def _eval_rewrite_as_StateSpace(self, *args):
         """
         Returns the equivalent space model of the transfer function model.
@@ -1862,14 +1853,6 @@ class DTTransferFunction(TransferFunctionBase):
         See :func:`TransferFunctionBase.get_asymptotic_stability_conditions`.
         """
         ...
-
-    def eval_frequency(self, other):
-        r"""
-        See :func:`TransferFunctionBase.eval_frequency`.
-        """
-        arg_num = self.num.subs(self.var, exp(other)) #XXX: check for other * sampling time
-        arg_den = self.den.subs(self.var, exp(other))
-        return Mul(arg_num, S.One / arg_den).expand()
 
     def _eval_rewrite_as_DTStateSpace(self, *args):
         """
@@ -2300,19 +2283,20 @@ class Series(SISOLinearTimeInvariant):
                             else DTTransferFunction
 
         if isinstance(other, TransferFunctionBase):
-            return Series(*self.args, other.__class__(other.den, other.num,
-                                                      other.var))
+            return Series(*self.args, new_tf(other.den, other.num,
+                                             other.var, other.sampling_time))
         elif isinstance(other, Series):
             tf_self = self.rewrite(tf_class)
             tf_other = other.rewrite(tf_class)
             return tf_self / tf_other
         elif (isinstance(other, Parallel) and len(other.args) == 2
-            and isinstance(other.args[0], tf_class) and isinstance(other.args[1], Series)):
+            and isinstance(other.args[0], tf_class) and \
+                isinstance(other.args[1], Series)):
 
             if not self.var == other.var:
                 raise ValueError(filldedent("""
-                    All the transfer functions should use the same complex variable
-                    of the Laplace transform."""))
+                    All the transfer functions should use the same complex
+                    variable of the Laplace transform or z-transform."""))
             self_arg_list = set(self.args)
             other_arg_list = set(other.args[1].args)
             res = list(self_arg_list ^ other_arg_list)
@@ -3405,10 +3389,7 @@ class Feedback(SISOLinearTimeInvariant):
     """
     def __new__(cls, sys1, sys2=None, sign=-1):
         if not sys2:
-            if sys1.is_continuous:
-                sys2 = TransferFunction(1, 1, sys1.var)
-            else:
-                sys2 = DTTransferFunction(1, 1, sys1.var)
+            sys2 = new_tf(1, 1, sys1.var, sys1.sampling_time)
 
         if not isinstance(sys1, (TransferFunctionBase, Series, StateSpace, Feedback)):
             raise TypeError("Unsupported type for `sys1` in Feedback.")
