@@ -2055,16 +2055,16 @@ def test_real_pow():
     # https://github.com/sympy/sympy/issues/28142
     from sympy.core import Mul, Pow
     assert ask(Q.real(sqrt(x)), Q.real(x)) is None
-    one_half = Mul((S.One / 2), 1, evaluate=False)
+    one_half = Mul(S.Half, 1, evaluate=False)
     assert ask(Q.real(x ** one_half), Q.real(x)) is None
-    zero = symbols("zero", zero=True)
-    assert ask(Q.real(Pow(zero, 1, evaluate=False))) is True
-    assert ask(Q.real(Pow(zero, zero, evaluate=False))) is True
-    assert ask(Q.real(Pow(zero, -1, evaluate=False))) is False
+    assert ask(Q.real(Pow(x, 1, evaluate=False)), Q.zero(x)) is True
+    assert ask(Q.real(x**x), Q.zero(x)) is True
+    assert ask(Q.real(Pow(x, -1, evaluate=False)), Q.zero(x)) is False
     two_thirds = Rational(2, 3)
-    assert ask(Q.real(Pow(zero, two_thirds, evaluate=False))) is True
-    assert ask(Q.real(Pow(zero, pi, evaluate=False))) is True
-    assert ask(Q.real(Pow(zero, sqrt(2), evaluate=False))) is True
+    assert ask(Q.real(x**two_thirds), Q.zero(x)) is True
+    assert ask(Q.real(x**pi), Q.zero(x)) is True
+    assert ask(Q.real(x**sqrt(2)), Q.zero(x)) is True
+
 
 @_both_exp_pow
 def test_real_functions():
