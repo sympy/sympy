@@ -1318,6 +1318,7 @@ def test_issue_24276():
     assert fx.rewrite(sin).limit(x, oo) == 2
     assert fx.rewrite(sin).simplify().limit(x, oo) == 2
 
+
 def test_issue_25230():
     a = Symbol('a', real = True)
     b = Symbol('b', positive = True)
@@ -1434,6 +1435,7 @@ def test_issue_22982_15323():
 
 def test_issue_26991():
     assert limit(x/((x - 6)*sinh(tanh(0.03*x)) + tanh(x) - 0.5), x, oo) == 1/sinh(1)
+
 
 def test_issue_27278():
     expr = (1/(x*log((x + 3)/x)))**x*((x + 1)*log((x + 4)/(x + 1)))**(x + 1)/3
