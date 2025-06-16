@@ -587,12 +587,14 @@ class MathematicaParser:
         "#": lambda: ["Slot", "1"],
         "##": lambda: ["SlotSequence", "1"],
     }
-
-    _literal = r"[A-Za-z][A-Za-z0-9]*"
+    # "\u0370-\u03FF" this range of Unicode code refers to Greek and Coptic characters. This range includes Greek characters, which are often used as variables or constants in mathematical expressions.
+    _literal = r"[A-Za-z\u0370-\u03FF][A-Za-z0-9\u0370-\u03FF]*"
     _number = r"(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)"
 
     _enclosure_open = ["(", "[", "[[", "{"]
     _enclosure_close = [")", "]", "]]", "}"]
+
+    _known_constant_symbols = {'\u03c0'} # Pi is a known constant
 
     @classmethod
     def _get_neg(cls, x):
@@ -656,9 +658,8 @@ class MathematicaParser:
             code_splits[i] = code_split
 
         # Tokenize the input strings with a regular expression:
-        token_lists = [tokenizer.findall(i) if isinstance(i, str) and i.isascii() else [i] for i in code_splits]
+        token_lists = [tokenizer.findall(i) if isinstance(i, str) and self._is_valid_string(i) else [i] for i in code_splits]
         tokens = [j for i in token_lists for j in i]
-
         # Remove newlines at the beginning
         while tokens and tokens[0] == "\n":
             tokens.pop(0)
@@ -667,6 +668,16 @@ class MathematicaParser:
             tokens.pop(-1)
 
         return tokens
+
+    # This function will check is all characters in the string are either
+    # ASCII or Greek (Unicode range \u0370 to \u03FF).
+    def _is_valid_string(self, string: str) -> bool:
+        if string in self._known_constant_symbols:
+            return True
+        return all(
+            c.isascii() or ('\u0370' <= c <= '\u03FF' and c not in self._known_constant_symbols)
+            for c in string
+        )
 
     def _is_op(self, token: str | list) -> bool:
         if isinstance(token, list):
