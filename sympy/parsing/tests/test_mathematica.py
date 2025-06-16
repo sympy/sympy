@@ -10,13 +10,13 @@ def test_mathematica():
         '- 6x': '-6*x',
         'Sin[x]^2': 'sin(x)**2',
         '2(x-1)': '2*(x-1)',
-        'Sqrt[2]*σ' : 'sqrt(2)*σ', # test case for issue 27868
         '3y+8': '3*y+8',
         'ArcSin[2x+9(4-x)^2]/x': 'asin(2*x+9*(4-x)**2)/x',
         'x+y': 'x+y',
         '355/113': '355/113',
         '2.718281828': '2.718281828',
-        'Cos(1/2 * π)': 'Cos(π/2)',
+        'Cos(1/2 * π)': 'Cos*π/2',
+        'Cos[1/2 * π]': 'cos(π/2)',
         'Sin[12]': 'sin(12)',
         'Exp[Log[4]]': 'exp(log(4))',
         '(x+1)(x+3)': '(x+1)*(x+3)',
@@ -70,6 +70,25 @@ def test_mathematica():
         'Prime[5]': 'prime(5)',
         'PrimeQ[5]': 'isprime(5)',
         'Rational[2,19]': 'Rational(2,19)',    # test case for issue 25716
+        'Pi' : 'pi',  # test cases from issue 27868
+        '3*Pi' : '3*pi',
+        'Ωπ' : 'Ωπ',
+        '3*Ωπ' : '3*Ωπ',
+        '3 Ω π' : '3*Ω*π',
+        'Pi*Ω' : 'pi*Ω',
+        'Sqrt[2]*σ' : 'sqrt(2)*σ',
+        'Log[e^2]' : 'log(e**2)',
+        'Log[E^2]' : '2',
+        'Log[ExponentialE^2]' : '2',
+        '(3*數學)/數' : '(3*數學)/數',
+        'I^2' : '-1',
+        'ImaginaryI^2' : '-1',
+        'ImaginaryJ^2' : '-1',
+        '\\[Alpha]': 'α',
+        'x\\[Beta]y': 'xβy',
+        'x \\[Beta] y': 'x*β*y',
+        'a + b\\[Gamma]\\[CapitalGamma]d': 'a + bγΓd',
+        'a + b \\[Gamma] \\[CapitalGamma] d': 'a + b*γ*Γ*d',
         }
 
     for e in d:
@@ -98,8 +117,21 @@ def test_parser_mathematica_tokenizer():
     assert chain("-1") == "-1"
     assert chain("- 3") == "-3"
     assert chain("α") == "α"
+    assert chain("α + β") == ["Plus", "α", "β"]
+    assert chain("αβγ") == "αβγ"
+    assert chain("α̇𝔟⃗𝒞̂") == "α̇𝔟⃗𝒞̂"
+    assert chain("α β γ") == ["Times", "α", "β", "γ"]
+    assert chain("μ1ν2") == "μ1ν2"
+    assert chain("μ1 ν2") == ["Times", "μ1", "ν2"]
+    assert chain("α + βγ") == ["Plus", "α", "βγ"]
+    assert chain("α + β γ") == ["Plus", "α", ["Times", "β", "γ"]]
+    assert chain("α̇ + 𝔟⃗ 𝒞̂") == ["Plus", "α̇", ["Times", "𝔟⃗", "𝒞̂"]]
     assert chain("+Sin[x]") == ["Sin", "x"]
     assert chain("-Sin[x]") == ["Times", "-1", ["Sin", "x"]]
+    assert chain("Cos(1/2 * π)") == ["Times", "Cos", ["Times", "1", ["Power", "2", "-1"], "π"]]
+    assert chain("Cos[1/2 * π]") == ["Cos", ["Times", "1", ["Power", "2", "-1"], "π"]]
+    assert chain("Cos[x]==Sin[y]") == ["Equal", ["Cos", "x"], ["Sin", "y"]]
+    assert chain("Cos[x]!=Sin[y]") == ["Unequal", ["Cos", "x"], ["Sin", "y"]]
     assert chain("x(a+1)") == ["Times", "x", ["Plus", "a", "1"]]
     assert chain("(x)") == "x"
     assert chain("(+x)") == "x"
@@ -222,6 +254,7 @@ def test_parser_mathematica_tokenizer():
     assert chain("#") == ["Slot", "1"]
     assert chain("#3") == ["Slot", "3"]
     assert chain("#n") == ["Slot", "n"]
+    assert chain("#name") == ["Slot", "name"]
     assert chain("##") == ["SlotSequence", "1"]
     assert chain("##a") == ["SlotSequence", "a"]
 

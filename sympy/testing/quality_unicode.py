@@ -27,6 +27,7 @@ unicode_whitelist = [
     r'*/sympy/physics/vector/tests/test_printing.py',
     r'*/physics/quantum/tests/test_printing.py',
     r'*/sympy/vector/tests/test_printing.py',
+    r'*/sympy/parsing/mathematica.py',
     r'*/sympy/parsing/tests/test_sympy_parser.py',
     r'*/sympy/printing/pretty/stringpict.py',
     r'*/sympy/printing/pretty/tests/test_pretty.py',
