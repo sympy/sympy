@@ -1503,7 +1503,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
             x, a = args
             return self._evaluate_single(x, a)
         elif not args and kwargs:
-            eval_list = [(gen, val) for gen, val in kwargs.items()]
+            eval_list = list(kwargs.items())
             return self._evaluate_list(eval_list)
         else:
             raise ValueError("Invalid arguments for evaluate()")
