@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Callable, TYPE_CHECKING, overload
+from typing import Any, TYPE_CHECKING, overload
 from functools import reduce
 from collections import defaultdict
 from collections.abc import Mapping, Iterable
@@ -2183,7 +2183,9 @@ class FiniteSet(Set):
             return self._args_set == other
         return super().__eq__(other)
 
-    __hash__ : Callable[[Basic], Any] = Basic.__hash__
+    def __hash__(self):
+        return Basic.__hash__(self)
+
 
 _sympy_converter[set] = lambda x: FiniteSet(*x)
 _sympy_converter[frozenset] = lambda x: FiniteSet(*x)
