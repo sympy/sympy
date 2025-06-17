@@ -4068,3 +4068,17 @@ def test_issue_20985():
     w, R = symbols('w R')
     poly = Poly(1.0 + I*w/R, w, 1/R)
     assert poly.degree() == S(1)
+
+
+def test_issue_28156():
+    from sympy.core.symbol import symbols
+
+    ax = symbols("a")
+    field = FF(340282366762482138434845932244680310783)
+    rhs = Poly(
+        ax**3 + field(3) * ax + field(5),
+        ax,
+        domain=field,
+    )
+    roots = rhs.ground_roots()
+    assert roots
