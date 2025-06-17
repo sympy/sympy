@@ -58,7 +58,6 @@ def is_unary_predicate(pred):
     --------
     >>> from sympy.assumptions.ask import Q
     >>> from sympy.abc import x, y
-    >>> from sympy.assumptions.assume import AppliedPredicate
     >>> from sympy.assumptions.euf import is_unary_predicate
     >>> is_unary_predicate(Q.prime(x))
     True
