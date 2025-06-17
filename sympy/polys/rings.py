@@ -1516,7 +1516,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
             x, a = args
             return self._subs_single(x, a)
         elif not args and kwargs:
-            subs_list = list((gen, val) for gen, val in kwargs.items())
+            subs_list = list(kwargs.items())
             return self._subs_list(subs_list)
         else:
             raise ValueError("Invalid arguments for subs()")
