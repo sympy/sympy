@@ -1654,6 +1654,147 @@ def heaviside_pattern(symbol):
 
     return pattern, m, b, g
 
+def extract_heaviside_factors(expr, symbol):
+    """
+    Extract all Heaviside factors from a product expression.
+
+    Returns:
+        heaviside_factors: list of Heaviside functions
+        other_factors: product of non-Heaviside factors
+    """
+    from sympy.core.mul import Mul
+    from sympy.core.numbers import S
+
+    if not isinstance(expr, Mul):
+        if isinstance(expr, Heaviside):
+            return [expr], S.One
+        else:
+            return [], expr
+
+    heaviside_factors = []
+    other_factors = []
+
+    for factor in expr.args:
+        if isinstance(factor, Heaviside):
+            heaviside_factors.append(factor)
+        else:
+            other_factors.append(factor)
+
+    if other_factors:
+        other_product = Mul(*other_factors)
+    else:
+        other_product = S.One
+
+    return heaviside_factors, other_product
+
+def count_total_heaviside_functions(expr):
+    """
+    Count the total number of Heaviside functions in an expression,
+    including those in sums, differences, and nested expressions.
+    """
+    from sympy.functions.special.delta_functions import Heaviside
+
+    if isinstance(expr, Heaviside):
+        return 1
+    elif hasattr(expr, 'args'):
+        return sum(count_total_heaviside_functions(arg) for arg in expr.args)
+    else:
+        return 0
+
+def expand_heaviside_products(expr, symbol):
+    """
+    Expand expressions containing products and sums/differences of Heaviside functions.
+    Convert expressions like H(a)*(H(b) - H(c)) to H(a)*H(b) - H(a)*H(c).
+    """
+    from sympy import expand
+
+    expanded = expand(expr)
+    return expanded
+
+def heaviside_product_to_piecewise(heaviside_factors, symbol):
+    """
+    Convert a product of Heaviside functions to a single Piecewise expression
+    that represents the intersection of all the step function intervals.
+
+    For integration purposes, we focus on getting the intervals right rather than
+    the exact boundary values (which are measure-zero sets anyway).
+    """
+    from sympy.functions.elementary.piecewise import Piecewise
+    from sympy.core.numbers import S
+    from sympy.logic.boolalg import And, Or
+
+    if not heaviside_factors:
+        return S.One
+
+    if len(heaviside_factors) == 1:
+        return heaviside_factors[0]
+
+    intervals = []
+
+    for h in heaviside_factors:
+        arg = h.args[0]
+
+        from sympy import Poly
+        try:
+            poly = Poly(arg, symbol)
+            if poly.degree() == 1:
+                coeffs = poly.all_coeffs()
+                a, b = coeffs[0], coeffs[1]
+                critical_point = -b/a
+
+                if a > 0:
+                    intervals.append((critical_point, S.Infinity))
+                else:
+                    intervals.append((-S.Infinity, critical_point))
+            else:
+                return _fallback_piecewise_product(heaviside_factors, symbol)
+        except:
+            return _fallback_piecewise_product(heaviside_factors, symbol)
+
+    if not intervals:
+        return S.One
+
+    left_bound = intervals[0][0]
+    right_bound = intervals[0][1]
+
+    for left, right in intervals[1:]:
+        left_bound = max(left_bound, left)
+        right_bound = min(right_bound, right)
+
+    if left_bound >= right_bound:
+        return S.Zero
+
+    if left_bound == -S.Infinity and right_bound == S.Infinity:
+        return S.One
+    elif left_bound == -S.Infinity:
+        return Piecewise((S.One, symbol < right_bound), (S.Zero, True))
+    elif right_bound == S.Infinity:
+        return Piecewise((S.Zero, symbol < left_bound), (S.One, True))
+    else:
+        return Piecewise(
+            (S.Zero, symbol < left_bound),
+            (S.One, symbol < right_bound),
+            (S.Zero, True)
+        )
+
+def _fallback_piecewise_product(heaviside_factors, symbol):
+    """Fallback method using direct multiplication of Piecewise expressions"""
+    from sympy.functions.elementary.piecewise import piecewise_fold
+    from sympy.core.numbers import S
+
+    piecewise_list = []
+    for h in heaviside_factors:
+        pw = h.rewrite(Piecewise)
+        piecewise_list.append(pw)
+
+    result = piecewise_list[0]
+    for pw in piecewise_list[1:]:
+        result = result * pw
+
+    result = piecewise_fold(result)
+
+    return result
+
 def uncurry(func):
     def uncurry_rl(args):
         return func(*args)
@@ -1855,10 +1996,78 @@ def heaviside_rule(integral):
     pattern, m, b, g = heaviside_pattern(symbol)
     match = integrand.match(pattern)
     if match and 0 != match[g]:
-        # f = Heaviside(m*x + b)*g
-        substep = integral_steps(match[g], symbol)
+        g_value = match[g]
+        if g_value.has(Heaviside):
+            # Check total Heaviside count in the entire integrand
+            total_heaviside_count = count_total_heaviside_functions(integrand)
+            if total_heaviside_count >= 3:
+                return multiple_heaviside_rule(integral)
+
+        substep = integral_steps(g_value, symbol)
         m, b = match[m], match[b]
         return HeavisideRule(integrand, symbol, m*symbol + b, -b/m, substep)
+
+def multiple_heaviside_rule(integral):
+    """
+    Handle integration of products of multiple Heaviside functions.
+    This rule is applied when the standard heaviside_rule doesn't match.
+    """
+    integrand, symbol = integral
+
+    # First check if we have multiple Heaviside functions in the expression
+    total_heaviside_count = count_total_heaviside_functions(integrand)
+
+    if total_heaviside_count >= 3:
+        # Try expanding the expression to handle sums/differences
+        expanded_integrand = expand_heaviside_products(integrand, symbol)
+
+        # If expansion changed the expression, try to process each term separately
+        if expanded_integrand != integrand:
+            try:
+                # Handle linear combinations by processing each term
+                from sympy.core.add import Add
+                if isinstance(expanded_integrand, Add):
+                    # Process each term separately and combine
+                    processed_terms = []
+                    for term in expanded_integrand.args:
+                        heaviside_factors, other_factors = extract_heaviside_factors(term, symbol)
+                        if len(heaviside_factors) > 1:
+                            heaviside_piecewise = heaviside_product_to_piecewise(heaviside_factors, symbol)
+                            processed_term = heaviside_piecewise * other_factors
+                        else:
+                            processed_term = term
+                        processed_terms.append(processed_term)
+
+                    new_integrand = Add(*processed_terms)
+                    from sympy.functions.elementary.piecewise import piecewise_fold
+                    new_integrand = piecewise_fold(new_integrand)
+
+                    substep = integral_steps(new_integrand, symbol)
+                    return RewriteRule(integrand, symbol, new_integrand, substep)
+                else:
+                    # Single term after expansion
+                    substep = integral_steps(expanded_integrand, symbol)
+                    return RewriteRule(integrand, symbol, expanded_integrand, substep)
+            except Exception:
+                pass
+
+    # Fall back to the original approach for direct products
+    heaviside_factors, other_factors = extract_heaviside_factors(integrand, symbol)
+
+    if len(heaviside_factors) > 1:
+        try:
+            heaviside_piecewise = heaviside_product_to_piecewise(heaviside_factors, symbol)
+            new_integrand = heaviside_piecewise * other_factors
+
+            from sympy.functions.elementary.piecewise import piecewise_fold
+            new_integrand = piecewise_fold(new_integrand)
+
+            substep = integral_steps(new_integrand, symbol)
+            return RewriteRule(integrand, symbol, new_integrand, substep)
+        except Exception:
+            return None
+
+    return None
 
 
 def dirac_delta_rule(integral: IntegralInfo):
@@ -2072,7 +2281,8 @@ def integral_steps(integrand, symbol, **options):
             exp: exp_rule,
             Add: add_rule,
             Mul: do_one(null_safe(mul_rule), null_safe(trig_product_rule),
-                        null_safe(heaviside_rule), null_safe(quadratic_denom_rule),
+                        null_safe(heaviside_rule), null_safe(multiple_heaviside_rule),
+                        null_safe(quadratic_denom_rule),
                         null_safe(sqrt_linear_rule),
                         null_safe(sqrt_quadratic_rule)),
             Derivative: derivative_rule,

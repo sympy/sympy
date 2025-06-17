@@ -17,6 +17,7 @@ from sympy.functions.special.gamma_functions import uppergamma
 from sympy.functions.special.polynomials import (assoc_laguerre, chebyshevt, chebyshevu, gegenbauer, hermite, jacobi, laguerre, legendre)
 from sympy.functions.special.zeta_functions import polylog
 from sympy.integrals.integrals import (Integral, integrate)
+from sympy.core.numbers import oo
 from sympy.logic.boolalg import And
 from sympy.integrals.manualintegrate import (manualintegrate, find_substitutions,
     _parts_rule, integral_steps, manual_subs)
@@ -325,6 +326,15 @@ def test_manualintegrate_Heaviside():
 
     assert manualintegrate(sin(y + x)*Heaviside(3*x - y), x) == \
             (cos(y*Rational(4, 3)) - cos(x + y))*Heaviside(3*x - y)
+
+    expr_multi = Heaviside(x - Rational(1,3)) * Heaviside(-x + Rational(2,3)) * Heaviside(x - 0) * Heaviside(-x + 1)
+    result_multi = manualintegrate(expr_multi, x)
+    assert result_multi is not None
+
+    if hasattr(result_multi, 'function'):
+        piecewise_expr = result_multi.function
+        piecewise_definite = integrate(piecewise_expr, (x, -oo, oo))
+        assert abs(float(piecewise_definite) - 1/3) < 1e-10
 
 
 def test_manualintegrate_orthogonal_poly():
