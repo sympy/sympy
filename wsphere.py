@@ -1,97 +1,112 @@
 import sympy as sp
+from sympy import Matrix
 from sympy.physics.mechanics import (
-    ReferenceFrame,
-    Point,
-    dynamicsymbols,
-    WrappingSphere,
-    WrappingPathway,
-    inertia,
-    RigidBody,
-    KanesMethod,
+    ReferenceFrame, Point, dynamicsymbols,
+    KanesMethod, inertia, RigidBody,
+    WrappingSphere, WrappingPathway
 )
+import time
 
-# Symbols and dynamic variables
-t = sp.symbols("t")
-q = dynamicsymbols("q")
-u = dynamicsymbols("u")
-k, L0, c, r_sph, g, I_bone, m_bone, L_b = sp.symbols(
-    "k L0 c r_sph g I_bone m_bone L_b", positive=True, real=True
-)
+# Symbols and dynamic/constant variables
+t = sp.symbols('t')
+q1, q2 = dynamicsymbols('q1 q2')  # 2 DOF coordinates
+u1, u2 = dynamicsymbols('u1 u2')  # generalized speeds
+r_sph, d = sp.symbols('r_sph d', positive=True, real=True)  # sphere radius + offset
+L1, L2 = sp.symbols('L1 L2', positive=True, real=True)
+m1, m2 = sp.symbols('m1 m2', positive=True, real=True)
+I1xx, I1yy, I1zz = sp.symbols('I1xx I1yy I1zz', positive=True, real=True)
+I2xx, I2yy, I2zz = sp.symbols('I2xx I2yy I2zz', positive=True, real=True)
+g = sp.symbols('g', positive=True, real=True)
+T = sp.symbols('T', real=True)  # muscle tension
 
-# Inertial frame and origin
-N = ReferenceFrame("N")
-O = Point("O")
+# Kinematic differential equations
+kin_diff = [u1 - q1.diff(t), u2 - q2.diff(t)]
+
+# Reference frames and origin
+N = ReferenceFrame('N')
+A1 = N.orientnew('A1', 'Axis', [q1, N.z])
+A2 = A1.orientnew('A2', 'Axis', [q2, A1.x])
+print(f"A1 ReferenceFrame: ")
+print(A1.dcm(N))
+print(f"A2 ReferenceFrame: ")
+print(A2.dcm(N))
+
+O = Point('O')
 O.set_vel(N, 0)
 
-# Muscle origin (fixed) and insertion (rotating)
-P_orig = Point("P_orig")
-P_orig.set_pos(O, -r_sph * N.x)
-P_orig.set_vel(N, 0)
+# Link1 COM and dynamics
+P1_cm = O.locatenew('P1_cm', (L1/2)*A1.y)
+P1_cm.v2pt_theory(O, N, A1)
+I1 = inertia(A1, I1xx, I1yy, I1zz)
+Body1 = RigidBody('Link1', P1_cm, A1, m1, (I1, P1_cm))
 
-A = N.orientnew("A", "Axis", [q, N.z])
-P_ins = Point("P_ins")
-P_ins.set_pos(O, L_b * A.y)
-P_ins.v2pt_theory(O, N, A)
+# Link2 COM and dynamics
+P2_cm = O.locatenew('P2_cm', L1*A1.y + (L2/2)*A2.y)
+P2_cm.v2pt_theory(O, N, A2)
+I2 = inertia(A2, I2xx, I2yy, I2zz)
+Body2 = RigidBody('Link2', P2_cm, A2, m2, (I2, P2_cm))
 
-sphere = WrappingSphere(r_sph, O)
+# Muscle origin & insertion points
+o = O.locatenew('P_orig', (r_sph + d)*N.x) # o -> P_original
+o.set_vel(N, 0)
+i = O.locatenew('P_ins', L1*A1.y + L2*A2.y) # i -> P_insertion
+i.v2pt_theory(O, N, A2)
 
-# Tangent point variables
-x1, y1, x2, y2 = sp.symbols("x1 y1 x2 y2", real=True)
-P1 = Point("T1")
-P2 = Point("T2")
-P1.set_pos(O, x1 * N.x + y1 * N.y)
-P2.set_pos(O, x2 * N.x + y2 * N.y)
+# Wrapping sphere at origin
+C = Point('C'); C.set_pos(O, 0*N.x + 0*N.y + 0*N.z)
+C.set_vel(N, 0)
+sphere = WrappingSphere(r_sph, C) # Point C is just Point O (origin)
 
-# Tangent constraints
-orig_vec = P_orig.pos_from(O).to_matrix(N)
-ins_vec = P_ins.pos_from(O).to_matrix(N)
-eqs = [
-    x1**2 + y1**2 - r_sph**2,
-    (x1 - orig_vec[0]) * x1 + (y1 - orig_vec[1]) * y1,
-    x2**2 + y2**2 - r_sph**2,
-    (x2 - ins_vec[0]) * x2 + (y2 - ins_vec[1]) * y2,
-]
+# Symbols for tangent points
+x1, y1, z1, x2, y2, z2 = sp.symbols('x1 y1 z1 x2 y2 z2', real=True)
 
-sol = sp.solve(eqs, [x1, y1, x2, y2], dict=True)[0]
+# Compute plane normal through C, origin, insertion
+v_orig = o.pos_from(C).to_matrix(N)
+v_ins  = i.pos_from(C).to_matrix(N)
+n = v_orig.cross(v_ins)
 
-# Set tangent points
-P1.set_pos(O, sol[x1] * N.x + sol[y1] * N.y)
-P2.set_pos(O, sol[x2] * N.x + sol[y2] * N.y)
+# Build 6 equations for two tangent points
+eqs = []
+for xi, yi, zi, vec in [(x1, y1, z1, v_orig), (x2, y2, z2, v_ins)]:
+    # point on sphere surface
+    eqs.append(xi**2 + yi**2 + zi**2 - r_sph**2)
+    # radius perpendicular to rope
+    eqs.append((Matrix([xi, yi, zi]) - vec).dot(Matrix([xi, yi, zi])))
+    # coplanarity: dot with plane normal = 0
+    eqs.append(Matrix([xi, yi, zi]).dot(n))
 
-# Muscle path
-L1 = P_orig.pos_from(P1).magnitude()
-L2 = P_ins.pos_from(P2).magnitude()
+# Solve for tangent coordinates
+start = time.time()
+sol = sp.solve(eqs, [x1, y1, z1, x2, y2, z2], dict=True)[0] # very CPU intensive and time consuming
+print(f"sol = ")
+print(sol)
+print(f"Time consumed by call to sympy.solve() = {time.time() - start}")
+
+# Define tangent points in N
+P1 = O.locatenew('P1', sol[x1]*N.x + sol[y1]*N.y + sol[z1]*N.z)
+P2 = O.locatenew('P2', sol[x2]*N.x + sol[y2]*N.y + sol[z2]*N.z)
+
+# Muscle path: straight + wrap + straight
 wpath = WrappingPathway(P1, P2, sphere)
-L_curve = wpath.length
-L_total = sp.simplify(L1 + L_curve + L2)
+L_total = o.pos_from(P1).magnitude() + wpath.length + i.pos_from(P2).magnitude()
 
-moment_arm = sp.diff(L_total, q)
-L_dot = sp.diff(L_total, t)
-T_muscle = k * (L_total - L0) + c * L_dot
-tau_muscle = moment_arm * T_muscle
+# Moment arms about each DOF
+# is the sign correct?
+m_arm_q1 = sp.diff(L_total, q1)
+m_arm_q2 = sp.diff(L_total, q2)
 
-# Bone body definition
-P_cm = Point("P_cm")
-P_cm.set_pos(O, (L_b / 2) * A.y)
-P_cm.v2pt_theory(O, N, A)
+# Applied loads: gravity + muscle torques
+gravity_loads = [(P1_cm, -m1*g*N.y), (P2_cm, -m2*g*N.y)]
+muscle_loads = [(A1, m_arm_q1*T*A1.z), (A2, m_arm_q2*T*A2.x)]
 
-Ib = inertia(A, 0, 0, I_bone)
-body = RigidBody("Bone", P_cm, A, m_bone, (Ib, P_cm))
-
-# Forces and torques
-grav_load = (P_cm, -m_bone * g * N.y)
-muscle_load = (A, tau_muscle * A.z)
+loads = gravity_loads + muscle_loads
 
 # Kane's method
-kane = KanesMethod(N, q_ind=[q], u_ind=[u], kd_eqs=[u - q.diff(t)])
-fr, frstar = kane.kanes_equations([body], [grav_load, muscle_load])
+kane = KanesMethod(N, q_ind=[q1, q2], u_ind=[u1, u2], kd_eqs=kin_diff)
+fr, frstar = kane.kanes_equations(
+    bodies=[Body1, Body2], loads=loads
+)
 
+# Generalized speeds derivatives
 u_dot = kane.rhs()
-
-# Output
-print("L_total: ")
-sp.pprint(L_total, use_unicode=True)
-print("\nmoment_arm:")
-sp.pprint(moment_arm, use_unicode=True)
-print("\n(u̇):")
-print(u_dot)
+print('Generalized speed derivatives:', u_dot)
