@@ -26,9 +26,9 @@ kin_diff = [u1 - q1.diff(t), u2 - q2.diff(t)]
 N = ReferenceFrame('N')
 A1 = N.orientnew('A1', 'Axis', [q1, N.z])
 A2 = A1.orientnew('A2', 'Axis', [q2, A1.x])
-print(f"A1 ReferenceFrame: ")
+print("A1 ReferenceFrame: ")
 print(A1.dcm(N))
-print(f"A2 ReferenceFrame: ")
+print("A2 ReferenceFrame: ")
 print(A2.dcm(N))
 
 O = Point('O')
@@ -78,7 +78,7 @@ for xi, yi, zi, vec in [(x1, y1, z1, v_orig), (x2, y2, z2, v_ins)]:
 # Solve for tangent coordinates
 start = time.time()
 sol = sp.solve(eqs, [x1, y1, z1, x2, y2, z2], dict=True)[0] # very CPU intensive and time consuming
-print(f"sol = ")
+print("sol = ")
 print(sol)
 print(f"Time consumed by call to sympy.solve() = {time.time() - start}")
 
