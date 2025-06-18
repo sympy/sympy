@@ -1,3 +1,24 @@
+[project]
+name = "sympy"
+requires-python = ">=3.9"
+dynamic = [
+    "version",
+    "keywords",
+    "description",
+    "classifiers",
+    "urls",
+    "optional-dependencies",
+    "dependencies",
+    "scripts",
+    "authors",
+    "license",
+    "readme",
+]
+
+[build-system]
+requires = ["setuptools>=40.8.0"]
+build-backend = "setuptools.build_meta:__legacy__"
+
 [tool.pytest.ini_options]
 # Don't run the tests marked as slow by default.
 addopts = "-m 'not slow and not tooslow'"
@@ -8,10 +29,7 @@ filterwarnings = [
 
 # Only run tests under the sympy/ directory. Otherwise pytest will attempt to
 # collect tests from e.g. the bin/ directory as well.
-testpaths = [
-    "sympy",
-    "doc/src",
-]
+testpaths = ["sympy", "doc/src"]
 
 # Normalise output of doctests.
 doctest_optionflags = [
@@ -21,27 +39,18 @@ doctest_optionflags = [
     "FLOAT_CMP",
 ]
 
-norecursedirs = [
-    "sympy/parsing/autolev/test-examples",
-]
+norecursedirs = ["sympy/parsing/autolev/test-examples"]
 
-markers = [
-    "nocache_fail",
-    "tooslow",
-]
+markers = ["nocache_fail", "tooslow"]
 
 [tool.coverage.report]
 
-exclude_lines = [
-    "pragma: no cover",
-    "if TYPE_CHECKING:",
-    "assert False",
-]
+exclude_lines = ["pragma: no cover", "if TYPE_CHECKING:", "assert False"]
 
 [tool.ruff]
 # Enable Pyflakes `E` and `F` codes by default.
 lint.select = [
-    "B015",  # Useless comparison: a == b rather than a = b.
+    "B015",    # Useless comparison: a == b rather than a = b.
     "C4",
     "E",
     "F",
@@ -58,24 +67,27 @@ lint.select = [
 
 # Ignore rules that currently fail on the SymPy codebase
 lint.ignore = [
-    "E401",  # Multiple imports on one line
-    "E402",  # Module level import not at top of file
-    "E501",  # Line too long (<LENGTH> > 88 characters)
-    "E701",  # Multiple statements on one line (colon)
-    "E702",  # Multiple statements on one line (semicolon)
-    "E711",  # Comparison to `None` should be `cond is not None`
-    "E712",  # Comparison to `<BOOL>` should be `cond is <BOOL>`
-    "E713",  # Test for membership should be `not in`
-    "E714",  # Test for object identity should be `is not`
-    "E721",  # Do not compare types, use `isinstance()`
-    "E731",  # Do not assign a `lambda` expression, use a `def`
-    "E741",  # Ambiguous variable name: `<VARIABLE>`
-    "E743",  # Ambiguous function name: `<FUNCTION>`
+    "E401", # Multiple imports on one line
+    "E402", # Module level import not at top of file
+    "E501", # Line too long (<LENGTH> > 88 characters)
+    "E701", # Multiple statements on one line (colon)
+    "E702", # Multiple statements on one line (semicolon)
+    "E711", # Comparison to `None` should be `cond is not None`
+    "E712", # Comparison to `<BOOL>` should be `cond is <BOOL>`
+    "E713", # Test for membership should be `not in`
+    "E714", # Test for object identity should be `is not`
+    "E721", # Do not compare types, use `isinstance()`
+    "E731", # Do not assign a `lambda` expression, use a `def`
+    "E741", # Ambiguous variable name: `<VARIABLE>`
+    "E743", # Ambiguous function name: `<FUNCTION>`
     # Rules from the stable "FURB" set that are ignored. See #27897
     # Just to be safe, we'll ignore FURB161 until we drop support for Python 3.9
-    "FURB161",  # Use of `bin({existing}).count('1')`
-    "FURB187",  # Use of assignment of `reversed` on list `{name}`
+    "FURB161", # Use of `bin({existing}).count('1')`
+    "FURB187", # Use of assignment of `reversed` on list `{name}`
 ]
+
+# Allow unused variables when underscore-prefixed.
+lint.dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 
 # Exclude paths currently excluded in the flake8 configuration
 exclude = [
@@ -91,9 +103,6 @@ exclude = [
 # Black default, although irrelevant with E501 ignored
 line-length = 88
 
-# Allow unused variables when underscore-prefixed.
-lint.dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
-
 # Per-file ignores currently specified in the flake8 configuration
 [tool.ruff.lint.per-file-ignores]
 "sympy/interactive/session.py" = ["F821"]
@@ -101,9 +110,7 @@ lint.dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 # Global mypy settings:
 [tool.mypy]
 warn_unused_configs = true
-exclude = [
-    "sympy/parsing/autolev/test-examples",
-]
+exclude = ["sympy/parsing/autolev/test-examples"]
 
 # Per module settings:
 [[tool.mypy.overrides]]
@@ -146,7 +153,7 @@ module = [
     "theano.*",
     "multiset.*",
     "pysat.*",
-    "bpython.*"
+    "bpython.*",
 ]
 ignore_missing_imports = true
 
@@ -169,3 +176,67 @@ exclude-modules = '''
     |sympy.plotting.pygletplot
 )
 '''
+
+[dependency-groups]
+dev = [
+    "flake8",
+    "flake8-comprehensions",
+    "pytest",
+    "hypothesis",
+    "pytest-doctestplus",
+    "pytest-split",
+    "pytest-timeout",
+    "pytest-xdist",
+]
+
+lint = ["ruff", "sphinx-lint", "mypy"]
+
+all-optional = [
+    "numpy",
+    "scipy",
+    "numexpr",
+    "matplotlib",
+    "bpython",
+    "ipython",
+    "cython",
+    "wurlitzer",
+    "autowrap",
+    "lxml",
+    "lark",
+    "z3-solver",
+    "pycosat",
+    "jax",
+    "jaxlib",
+    "libclang",
+    "antlr4-python3-runtime==4.11.*",
+    "symengine",
+    "numba",
+    "llvmlite",
+    "pymc",
+    "gmpy2",
+]
+
+doc = [
+    "furo",
+    "intersphinx-registry",
+    "linkify-it-py",
+    "matplotlib",
+    "matplotlib-inline",
+    "myst-parser",
+    "scipy",
+    "sphinx",
+    "sphinx-autobuild",
+    "sphinx-copybutton",
+    "sphinx-math-dollar",
+    "sphinx-reredirects",
+    "sphinxcontrib-applehelp",
+    "sphinxcontrib-devhelp",
+    "sphinxcontrib-htmlhelp",
+    "sphinxcontrib-jquery",
+    "sphinxcontrib-jsmath",
+    "sphinxcontrib-qthelp",
+    "sphinxcontrib-serializinghtml",
+]
+
+[tool.uv]
+default-groups = ["dev", "lint"]
