@@ -590,7 +590,7 @@ class MathematicaParser:
         "##": lambda: ["SlotSequence", "1"],
     }
 
-    # This regex matches any valid python identifier — excluding
+    # This regex matches any valid python identifier -- excluding
     # underscores, which Mathematica uses to denote patterns, and
     # therefore can't be part of a variable name.  The regex has the
     # form "[a][b]*", where `a` is the set of characters that can
