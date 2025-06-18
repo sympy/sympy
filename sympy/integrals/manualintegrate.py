@@ -1737,7 +1737,6 @@ def heaviside_product_to_piecewise(heaviside_factors, symbol):
     """
     from sympy.functions.elementary.piecewise import Piecewise
     from sympy.core.numbers import S
-    from sympy.logic.boolalg import And, Or
 
     if not heaviside_factors:
         return S.One
@@ -1756,7 +1755,7 @@ def heaviside_product_to_piecewise(heaviside_factors, symbol):
             if poly.degree() == 1:
                 coeffs = poly.all_coeffs()
                 a, b = coeffs[0], coeffs[1]
-                critical_point = -b/a
+                critical_point = -b / a
 
                 if a > 0:
                     intervals.append((critical_point, S.Infinity))
@@ -1793,10 +1792,10 @@ def heaviside_product_to_piecewise(heaviside_factors, symbol):
             (S.Zero, True)
         )
 
+
 def _fallback_piecewise_product(heaviside_factors, symbol):
     """Fallback method using direct multiplication of Piecewise expressions"""
     from sympy.functions.elementary.piecewise import piecewise_fold
-    from sympy.core.numbers import S
 
     piecewise_list = []
     for h in heaviside_factors:
@@ -1831,50 +1830,50 @@ sincos_botheven_condition = uncurry(
     m.is_nonnegative and n.is_nonnegative)
 
 sincos_botheven = trig_rewriter(
-    lambda a, b, m, n, i, symbol: ( (((1 - cos(2*a*symbol)) / 2) ** (m / 2)) *
-                                    (((1 + cos(2*b*symbol)) / 2) ** (n / 2)) ))
+    lambda a, b, m, n, i, symbol: ( (((1 - cos(2 * a * symbol)) / 2) ** (m / 2)) *
+                                    (((1 + cos(2 * b * symbol)) / 2) ** (n / 2)) ))
 
 sincos_sinodd_condition = uncurry(lambda a, b, m, n, i, s: m.is_odd and m >= 3)
 
 sincos_sinodd = trig_rewriter(
-    lambda a, b, m, n, i, symbol: ( (1 - cos(a*symbol)**2)**((m - 1) / 2) *
-                                    sin(a*symbol) *
-                                    cos(b*symbol) ** n))
+    lambda a, b, m, n, i, symbol: ( (1 - cos(a * symbol)**2)**((m - 1) / 2) *
+                                    sin(a * symbol) *
+                                    cos(b * symbol) ** n))
 
 sincos_cosodd_condition = uncurry(lambda a, b, m, n, i, s: n.is_odd and n >= 3)
 
 sincos_cosodd = trig_rewriter(
-    lambda a, b, m, n, i, symbol: ( (1 - sin(b*symbol)**2)**((n - 1) / 2) *
-                                    cos(b*symbol) *
-                                    sin(a*symbol) ** m))
+    lambda a, b, m, n, i, symbol: ( (1 - sin(b * symbol)**2)**((n - 1) / 2) *
+                                    cos(b * symbol) *
+                                    sin(a * symbol) ** m))
 
 tansec_seceven_condition = uncurry(lambda a, b, m, n, i, s: n.is_even and n >= 4)
 tansec_seceven = trig_rewriter(
-    lambda a, b, m, n, i, symbol: ( (1 + tan(b*symbol)**2) ** (n/2 - 1) *
-                                    sec(b*symbol)**2 *
-                                    tan(a*symbol) ** m ))
+    lambda a, b, m, n, i, symbol: ( (1 + tan(b * symbol)**2) ** (n / 2 - 1) *
+                                    sec(b * symbol)**2 *
+                                    tan(a * symbol) ** m ))
 
 tansec_tanodd_condition = uncurry(lambda a, b, m, n, i, s: m.is_odd)
 tansec_tanodd = trig_rewriter(
-    lambda a, b, m, n, i, symbol: ( (sec(a*symbol)**2 - 1) ** ((m - 1) / 2) *
-                                     tan(a*symbol) *
-                                     sec(b*symbol) ** n ))
+    lambda a, b, m, n, i, symbol: ( (sec(a * symbol)**2 - 1) ** ((m - 1) / 2) *
+                                     tan(a * symbol) *
+                                     sec(b * symbol) ** n ))
 
 tan_tansquared_condition = uncurry(lambda a, b, m, n, i, s: m == 2 and n == 0)
 tan_tansquared = trig_rewriter(
-    lambda a, b, m, n, i, symbol: ( sec(a*symbol)**2 - 1))
+    lambda a, b, m, n, i, symbol: ( sec(a * symbol)**2 - 1))
 
 cotcsc_csceven_condition = uncurry(lambda a, b, m, n, i, s: n.is_even and n >= 4)
 cotcsc_csceven = trig_rewriter(
-    lambda a, b, m, n, i, symbol: ( (1 + cot(b*symbol)**2) ** (n/2 - 1) *
-                                    csc(b*symbol)**2 *
-                                    cot(a*symbol) ** m ))
+    lambda a, b, m, n, i, symbol: ( (1 + cot(b * symbol)**2) ** (n / 2 - 1) *
+                                    csc(b * symbol)**2 *
+                                    cot(a * symbol) ** m ))
 
 cotcsc_cotodd_condition = uncurry(lambda a, b, m, n, i, s: m.is_odd)
 cotcsc_cotodd = trig_rewriter(
-    lambda a, b, m, n, i, symbol: ( (csc(a*symbol)**2 - 1) ** ((m - 1) / 2) *
-                                    cot(a*symbol) *
-                                    csc(b*symbol) ** n ))
+    lambda a, b, m, n, i, symbol: ( (csc(a * symbol)**2 - 1) ** ((m - 1) / 2) *
+                                    cot(a * symbol) *
+                                    csc(b * symbol) ** n ))
 
 def trig_sincos_rule(integral):
     integrand, symbol = integral
@@ -1937,10 +1936,10 @@ def trig_cotcsc_rule(integral):
 
 def trig_sindouble_rule(integral):
     integrand, symbol = integral
-    a = Wild('a', exclude=[sin(2*symbol)])
-    match = integrand.match(sin(2*symbol)*a)
+    a = Wild('a', exclude=[sin(2 * symbol)])
+    match = integrand.match(sin(2 * symbol) * a)
     if match:
-        sin_double = 2*sin(symbol)*cos(symbol)/sin(2*symbol)
+        sin_double = 2 * sin(symbol) * cos(symbol) / sin(2 * symbol)
         return integral_steps(integrand * sin_double, symbol)
 
 def trig_powers_products_rule(integral):
@@ -1954,7 +1953,7 @@ def trig_substitution_rule(integral):
     A = Wild('a', exclude=[0, symbol])
     B = Wild('b', exclude=[0, symbol])
     theta = Dummy("theta")
-    target_pattern = A + B*symbol**2
+    target_pattern = A + B * symbol**2
 
     matches = integrand.find(target_pattern)
     for expr in matches:
@@ -1969,19 +1968,19 @@ def trig_substitution_rule(integral):
         x_func = None
         if a_positive and b_positive:
             # a**2 + b*x**2. Assume sec(theta) > 0, -pi/2 < theta < pi/2
-            x_func = (sqrt(a)/sqrt(b)) * tan(theta)
+            x_func = (sqrt(a) / sqrt(b)) * tan(theta)
             # Do not restrict the domain: tan(theta) takes on any real
             # value on the interval -pi/2 < theta < pi/2 so x takes on
             # any value
             restriction = True
         elif a_positive and b_negative:
             # a**2 - b*x**2. Assume cos(theta) > 0, -pi/2 < theta < pi/2
-            constant = sqrt(a)/sqrt(-b)
+            constant = sqrt(a) / sqrt(-b)
             x_func = constant * sin(theta)
             restriction = And(symbol > -constant, symbol < constant)
         elif a_negative and b_positive:
             # b*x**2 - a**2. Assume sin(theta) > 0, 0 < theta < pi
-            constant = sqrt(-a)/sqrt(b)
+            constant = sqrt(-a) / sqrt(b)
             x_func = constant * sec(theta)
             restriction = And(symbol > -constant, symbol < constant)
         if x_func:
@@ -1991,17 +1990,17 @@ def trig_substitution_rule(integral):
             for f in [sin, cos, tan,
                       sec, csc, cot]:
                 substitutions[sqrt(f(theta)**2)] = f(theta)
-                substitutions[sqrt(f(theta)**(-2))] = 1/f(theta)
+                substitutions[sqrt(f(theta)**(-2))] = 1 / f(theta)
 
             replaced = integrand.subs(symbol, x_func).trigsimp()
             replaced = manual_subs(replaced, substitutions)
             if not replaced.has(symbol):
                 replaced *= manual_diff(x_func, theta)
                 replaced = replaced.trigsimp()
-                secants = replaced.find(1/cos(theta))
+                secants = replaced.find(1 / cos(theta))
                 if secants:
                     replaced = replaced.xreplace({
-                        1/cos(theta): sec(theta)
+                        1 / cos(theta): sec(theta)
                     })
 
                 substep = integral_steps(replaced, theta)
@@ -2023,7 +2022,7 @@ def heaviside_rule(integral):
 
         substep = integral_steps(g_value, symbol)
         m, b = match[m], match[b]
-        return HeavisideRule(integrand, symbol, m*symbol + b, -b/m, substep)
+        return HeavisideRule(integrand, symbol, m * symbol + b, -b / m, substep)
 
 def multiple_heaviside_rule(integral):
     """
@@ -2107,7 +2106,7 @@ def dirac_delta_rule(integral: IntegralInfo):
     if not n.is_Integer or n < 0:
         return
     a, b = Wild('a', exclude=[x]), Wild('b', exclude=[x, 0])
-    match = integrand.args[0].match(a+b*x)
+    match = integrand.args[0].match(a + b * x)
     if not match:
         return
     a, b = match[a], match[b]
@@ -2206,11 +2205,29 @@ def derivative_rule(integral):
     else:
         return ConstantRule(*integral)
 
+def piecewise_rule(integral):
+    """Handle integration of Piecewise expressions."""
+    integrand, symbol = integral
+
+    if not isinstance(integrand, Piecewise):
+        return None
+
+    # Integrate each piece separately
+    pieces = []
+    for expr, cond in integrand.args:
+        substep = integral_steps(expr, symbol)
+        if substep.contains_dont_know():
+            return None
+        pieces.append((substep, cond))
+
+    return PiecewiseRule(integrand, symbol, pieces)
+
+
 def rewrites_rule(integral):
     integrand, symbol = integral
 
-    if integrand.match(1/cos(symbol)):
-        rewritten = integrand.subs(1/cos(symbol), sec(symbol))
+    if integrand.match(1 / cos(symbol)):
+        rewritten = integrand.subs(1 / cos(symbol), sec(symbol))
         return RewriteRule(integrand, symbol, rewritten, integral_steps(rewritten, symbol))
 
 def fallback_rule(integral):
@@ -2318,6 +2335,7 @@ def integral_steps(integrand, symbol, **options):
             Heaviside: heaviside_rule,
             DiracDelta: dirac_delta_rule,
             OrthogonalPolynomial: orthogonal_poly_rule,
+            Piecewise: piecewise_rule,
             Number: constant_rule
         })),
         do_one(
