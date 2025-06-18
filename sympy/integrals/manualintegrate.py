@@ -1749,7 +1749,6 @@ def heaviside_product_to_piecewise(heaviside_factors, symbol):
     for h in heaviside_factors:
         arg = h.args[0]
 
-        from sympy import Poly
         try:
             poly = Poly(arg, symbol)
             if poly.degree() == 1:
