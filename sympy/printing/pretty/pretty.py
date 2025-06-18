@@ -1112,9 +1112,16 @@ class PrettyPrinter(Printer):
     def _print_TransferFunctionMatrix(self, expr):
         mat = self._print(expr._expr_mat)
         mat.baseline = mat.height() - 1
-        subscript = greek_unicode['tau'] if self._use_unicode else r'{t}'
+        if expr.sampling_time == 0:
+            subscript = greek_unicode['tau'] if self._use_unicode else r'{t}'
+        else:
+            subscript = r'{k}'
         mat = prettyForm(*mat.right(subscript))
-        return mat
+
+        if expr.sampling_time == 0:
+            return mat
+
+        return prettyForm(*mat.right(f", sampling_time: {expr.sampling_time}"))
 
     def _print_StateSpace(self, expr):
         from sympy.matrices.expressions.blockmatrix import BlockMatrix

@@ -991,9 +991,23 @@ def test_DTTransferFunction_multiplication_and_division():
     raises(TypeError, lambda: (G8 / G9) * G2)
 
 
+def test_DTTransferFunction_is_proper():
+    omega_o, zeta, tau = symbols('omega_o, zeta, tau')
+    G1 = DTTransferFunction(omega_o**2, s**2 + p*omega_o*zeta*s + omega_o**2,
+                          omega_o)
+    G2 = DTTransferFunction(tau - s**3, tau + p**4, tau)
+    G3 = DTTransferFunction(a*b*s**3 + s**2 - a*p + s, b - s*p**2, p)
+    G4 = DTTransferFunction(b*s**2 + p**2 - a*p + s, b - p**2, s)
+    assert G1.is_proper
+    assert G2.is_proper
+    assert G3.is_proper
+    assert not G4.is_proper
+
+
 def test_DTTransferFunction_is_strictly_proper():
     omega_o, zeta, tau = symbols('omega_o, zeta, tau')
-    tf1 = DTTransferFunction(omega_o**2, s**2 + p*omega_o*zeta*s + omega_o**2, omega_o)
+    tf1 = DTTransferFunction(omega_o**2, s**2 + p*omega_o*zeta*s + omega_o**2,
+                             omega_o)
     tf2 = DTTransferFunction(tau - s**3, tau + p**4, tau)
     tf3 = DTTransferFunction(a*b*s**3 + s**2 - a*p + s, b - s*p**2, p)
     tf4 = DTTransferFunction(b*s**2 + p**2 - a*p + s, b - p**2, s)
@@ -1157,9 +1171,18 @@ def test_Series_construction():
 
 
 def test_MIMOSeries_construction():
-    tf_1 = TransferFunction(a0*s**3 + a1*s**2 - a2*s, b0*p**4 + b1*p**3 - b2*s*p, s)
+    tf_1 = TransferFunction(a0*s**3 + a1*s**2 - a2*s,
+                            b0*p**4 + b1*p**3 - b2*s*p, s)
     tf_2 = TransferFunction(a2*p - s, a2*s + p, s)
     tf_3 = TransferFunction(1, s**2 + 2*zeta*wn*s + wn**2, s)
+
+    dtf_1 = DTTransferFunction(a0*s**3 + a1*s**2 - a2*s,
+                               b0*p**4 + b1*p**3 - b2*s*p, s, 2)
+    dtf_2 = DTTransferFunction(a2*p - s, a2*s + p, s, 2)
+    dtf_3 = DTTransferFunction(1, s**2 + 2*zeta*wn*s + wn**2, s, 2)
+    dTF1 = DTTransferFunction(1, s**2 + 2*zeta*wn*s + wn**2, s, 2)
+    dTF2 = DTTransferFunction(k, 1, s, 2)
+    dTF3 = DTTransferFunction(a2*p - s, a2*s + p, s, 2)
 
     tfm_1 = TransferFunctionMatrix([[tf_1, tf_2, tf_3], [-tf_3, -tf_2, tf_1]])
     tfm_2 = TransferFunctionMatrix([[-tf_2], [-tf_2], [-tf_3]])
@@ -1167,10 +1190,18 @@ def test_MIMOSeries_construction():
     tfm_4 = TransferFunctionMatrix([[TF3], [TF2], [-TF1]])
     tfm_5 = TransferFunctionMatrix.from_Matrix(Matrix([1/p]), p)
 
+    dtfm_1 = TransferFunctionMatrix([[dtf_1, dtf_2, dtf_3],
+                                     [-dtf_3, -dtf_2, dtf_1]])
+    dtfm_2 = TransferFunctionMatrix([[-dtf_2], [-dtf_2], [-dtf_3]])
+    dtfm_3 = TransferFunctionMatrix([[-dtf_3]])
+    dtfm_4 = TransferFunctionMatrix([[dTF3], [dTF2], [-dTF1]])
+
+    # continuous-time tests
     s8 = MIMOSeries(tfm_2, tfm_1)
     assert s8.args == (tfm_2, tfm_1)
     assert s8.var == s
     assert s8.shape == (s8.num_outputs, s8.num_inputs) == (2, 1)
+    assert s8.is_continuous is True
 
     s9 = MIMOSeries(tfm_3, tfm_2, tfm_1)
     assert s9.args == (tfm_3, tfm_2, tfm_1)
@@ -1180,6 +1211,24 @@ def test_MIMOSeries_construction():
     s11 = MIMOSeries(tfm_3, MIMOParallel(-tfm_2, -tfm_4), tfm_1)
     assert s11.args == (tfm_3, MIMOParallel(-tfm_2, -tfm_4), tfm_1)
     assert s11.shape == (s11.num_outputs, s11.num_inputs) == (2, 1)
+
+    # discrete-time tests
+    ds8 = MIMOSeries(dtfm_2, dtfm_1)
+    assert ds8.args == (dtfm_2, dtfm_1)
+    assert ds8.var == s
+    assert ds8.shape == (ds8.num_outputs, ds8.num_inputs) == (2, 1)
+    assert ds8.is_continuous is False
+    assert ds8.sampling_time == 2
+
+    ds9 = MIMOSeries(dtfm_3, dtfm_2, dtfm_1)
+    assert ds9.args == (dtfm_3, dtfm_2, dtfm_1)
+    assert ds9.var == s
+    assert ds9.shape == (ds9.num_outputs, ds9.num_inputs) == (2, 1)
+
+    ds11 = MIMOSeries(dtfm_3, MIMOParallel(-dtfm_2, -dtfm_4), dtfm_1)
+    assert ds11.args == (dtfm_3, MIMOParallel(-dtfm_2, -dtfm_4), dtfm_1)
+    assert ds11.shape == (ds11.num_outputs, ds11.num_inputs) == (2, 1)
+    assert ds11.sampling_time == 2
 
     # arg cannot be empty tuple.
     raises(ValueError, lambda: MIMOSeries())
@@ -1198,6 +1247,11 @@ def test_MIMOSeries_construction():
     raises(TypeError, lambda: MIMOSeries(2, tfm_2, tfm_3))
     raises(TypeError, lambda: MIMOSeries(s**2 + p*s, -tfm_2, tfm_3))
     raises(TypeError, lambda: MIMOSeries(Matrix([1/p]), tfm_3))
+
+    # compatibility checks
+    dtfm_6 = TransferFunctionMatrix.from_Matrix(Matrix(eye(3)) * s, s, 12)
+    raises(TypeError, lambda: MIMOSeries(dtfm_6, dtfm_1))
+    raises(TypeError, lambda: MIMOSeries(dtfm_2, tfm_1))
 
 
 def test_Series_functions():
@@ -1373,11 +1427,28 @@ def test_MIMOSeries_functions():
     tfm6 = TransferFunctionMatrix([[-TF3], [TF1]])
     tfm7 = TransferFunctionMatrix([[TF1], [-TF2]])
 
+    dTF1 = DTTransferFunction(1, s**2 + 2*zeta*wn*s + wn**2, s, 0.001)
+    dTF2 = DTTransferFunction(k, 1, s, 0.001)
+    dTF3 = DTTransferFunction(a2*p - s, a2*s + p, s, 0.001)
+
+    dtfm1 = TransferFunctionMatrix([[dTF1, dTF2, dTF3], [-dTF3, -dTF2, dTF1]])
+    dtfm2 = TransferFunctionMatrix([[-dTF1], [-dTF2], [-dTF3]])
+    dtfm3 = TransferFunctionMatrix([[-dTF1]])
+    dtfm4 = TransferFunctionMatrix([[-dTF2, -dTF3], [-dTF1, dTF2]])
+    dtfm5 = TransferFunctionMatrix([[dTF2, -dTF2], [-dTF3, -dTF2]])
+    dtfm6 = TransferFunctionMatrix([[-dTF3], [dTF1]])
+    dtfm7 = TransferFunctionMatrix([[dTF1], [-dTF2]])
+
+    # continuous-time tests
     assert tfm1*tfm2 + tfm6 == MIMOParallel(MIMOSeries(tfm2, tfm1), tfm6)
-    assert tfm1*tfm2 + tfm7 + tfm6 == MIMOParallel(MIMOSeries(tfm2, tfm1), tfm7, tfm6)
-    assert tfm1*tfm2 - tfm6 - tfm7 == MIMOParallel(MIMOSeries(tfm2, tfm1), -tfm6, -tfm7)
-    assert tfm4*tfm5 + (tfm4 - tfm5) == MIMOParallel(MIMOSeries(tfm5, tfm4), tfm4, -tfm5)
-    assert tfm4*-tfm6 + (-tfm4*tfm6) == MIMOParallel(MIMOSeries(-tfm6, tfm4), MIMOSeries(tfm6, -tfm4))
+    assert tfm1*tfm2 + tfm7 + tfm6 == MIMOParallel(
+        MIMOSeries(tfm2, tfm1), tfm7, tfm6)
+    assert tfm1*tfm2 - tfm6 - tfm7 == MIMOParallel(
+        MIMOSeries(tfm2, tfm1), -tfm6, -tfm7)
+    assert tfm4*tfm5 + (tfm4 - tfm5) == MIMOParallel(
+        MIMOSeries(tfm5, tfm4), tfm4, -tfm5)
+    assert tfm4*-tfm6 + (-tfm4*tfm6) == MIMOParallel(
+        MIMOSeries(-tfm6, tfm4), MIMOSeries(tfm6, -tfm4))
 
     raises(ValueError, lambda: tfm1*tfm2 + TF1)
     raises(TypeError, lambda: tfm1*tfm2 + a0)
@@ -1403,32 +1474,160 @@ def test_MIMOSeries_functions():
     raises(TypeError, lambda: (-p**3 + 1)*tfm5*tfm4)
 
     # Transfer function matrix in the arguments.
-    assert (MIMOSeries(tfm2, tfm1, evaluate=True) == MIMOSeries(tfm2, tfm1).doit()
-        == TransferFunctionMatrix(((TransferFunction(-k**2*(a2*s + p)**2*(s**2 + 2*s*wn*zeta + wn**2)**2 + (-a2*p + s)*(a2*p - s)*(s**2 + 2*s*wn*zeta + wn**2)**2 - (a2*s + p)**2,
+    assert (MIMOSeries(tfm2, tfm1, evaluate=True) == \
+            MIMOSeries(tfm2, tfm1).doit() == \
+            TransferFunctionMatrix((
+                (TransferFunction(-k**2*(a2*s + p)**2*\
+                                  (s**2 + 2*s*wn*zeta + wn**2)**2 + \
+                                    (-a2*p + s)*(a2*p - s)*\
+                                        (s**2 + 2*s*wn*zeta + wn**2)**2 - \
+                                            (a2*s + p)**2,
         (a2*s + p)**2*(s**2 + 2*s*wn*zeta + wn**2)**2, s),),
-        (TransferFunction(k**2*(a2*s + p)**2*(s**2 + 2*s*wn*zeta + wn**2)**2 + (-a2*p + s)*(a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2) + (a2*p - s)*(a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2),
+        (TransferFunction(k**2*(a2*s + p)**2*(s**2 + 2*s*wn*zeta + wn**2)**2 + \
+                          (-a2*p + s)*(a2*s + p)*\
+                            (s**2 + 2*s*wn*zeta + wn**2) + \
+                                (a2*p - s)*(a2*s + p)*\
+                                    (s**2 + 2*s*wn*zeta + wn**2),
         (a2*s + p)**2*(s**2 + 2*s*wn*zeta + wn**2)**2, s),))))
 
     # doit() should not cancel poles and zeros.
     mat_1 = Matrix([[1/(1+s), (1+s)/(1+s**2+2*s)**3]])
     mat_2 = Matrix([[(1+s)], [(1+s**2+2*s)**3/(1+s)]])
-    tm_1, tm_2 = TransferFunctionMatrix.from_Matrix(mat_1, s), TransferFunctionMatrix.from_Matrix(mat_2, s)
+    tm_1 = TransferFunctionMatrix.from_Matrix(mat_1, s)
+    tm_2 = TransferFunctionMatrix.from_Matrix(mat_2, s)
     assert (MIMOSeries(tm_2, tm_1).doit()
-        == TransferFunctionMatrix(((TransferFunction(2*(s + 1)**2*(s**2 + 2*s + 1)**3, (s + 1)**2*(s**2 + 2*s + 1)**3, s),),)))
-    assert MIMOSeries(tm_2, tm_1).doit().simplify() == TransferFunctionMatrix(((TransferFunction(2, 1, s),),))
+        == TransferFunctionMatrix((
+            (TransferFunction(2*(s + 1)**2*(s**2 + 2*s + 1)**3,
+                              (s + 1)**2*(s**2 + 2*s + 1)**3, s),),)))
+    assert MIMOSeries(tm_2, tm_1).doit().simplify() == \
+        TransferFunctionMatrix(((TransferFunction(2, 1, s),),))
 
     # calling doit() will expand the internal Series and Parallel objects.
     assert (MIMOSeries(-tfm3, -tfm2, tfm1, evaluate=True)
         == MIMOSeries(-tfm3, -tfm2, tfm1).doit()
-        == TransferFunctionMatrix(((TransferFunction(k**2*(a2*s + p)**2*(s**2 + 2*s*wn*zeta + wn**2)**2 + (a2*p - s)**2*(s**2 + 2*s*wn*zeta + wn**2)**2 + (a2*s + p)**2,
+        == TransferFunctionMatrix((
+            (TransferFunction(k**2*(a2*s + p)**2*\
+                              (s**2 + 2*s*wn*zeta + wn**2)**2 + \
+                                (a2*p - s)**2*\
+                                    (s**2 + 2*s*wn*zeta + wn**2)**2 + \
+                                        (a2*s + p)**2,
         (a2*s + p)**2*(s**2 + 2*s*wn*zeta + wn**2)**3, s),),
-        (TransferFunction(-k**2*(a2*s + p)**2*(s**2 + 2*s*wn*zeta + wn**2)**2 + (-a2*p + s)*(a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2) + (a2*p - s)*(a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2),
+        (TransferFunction(-k**2*(a2*s + p)**2*\
+                          (s**2 + 2*s*wn*zeta + wn**2)**2 + (-a2*p + s)*\
+                            (a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2) + \
+                                (a2*p - s)*(a2*s + p)*\
+                                    (s**2 + 2*s*wn*zeta + wn**2),
         (a2*s + p)**2*(s**2 + 2*s*wn*zeta + wn**2)**3, s),))))
     assert (MIMOSeries(MIMOParallel(tfm4, tfm5), tfm5, evaluate=True)
         == MIMOSeries(MIMOParallel(tfm4, tfm5), tfm5).doit()
-        == TransferFunctionMatrix(((TransferFunction(-k*(-a2*s - p + (-a2*p + s)*(s**2 + 2*s*wn*zeta + wn**2)), (a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2), s), TransferFunction(k*(-a2*p - \
-            k*(a2*s + p) + s), a2*s + p, s)), (TransferFunction(-k*(-a2*s - p + (-a2*p + s)*(s**2 + 2*s*wn*zeta + wn**2)), (a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2), s), \
-            TransferFunction((-a2*p + s)*(-a2*p - k*(a2*s + p) + s), (a2*s + p)**2, s)))) == MIMOSeries(MIMOParallel(tfm4, tfm5), tfm5).rewrite(TransferFunctionMatrix))
+        == TransferFunctionMatrix((
+            (TransferFunction(-k*(-a2*s - p + (-a2*p + s)*\
+                                  (s**2 + 2*s*wn*zeta + wn**2)),
+                                  (a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2), s),
+                                  TransferFunction(k*(-a2*p - k*(a2*s + p) + s),
+                                                    a2*s + p, s)),
+            (TransferFunction(-k*(-a2*s - p + (-a2*p + s)*\
+                                  (s**2 + 2*s*wn*zeta + wn**2)),
+                             (a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2), s),
+             TransferFunction((-a2*p + s)*(-a2*p - k*(a2*s + p) + s),
+                              (a2*s + p)**2, s))))
+        == MIMOSeries(MIMOParallel(tfm4, tfm5), tfm5).\
+            rewrite(TransferFunctionMatrix))
+
+    # discrete-time tests
+    assert dtfm1*dtfm2 + dtfm6 == MIMOParallel(MIMOSeries(dtfm2, dtfm1), dtfm6)
+    assert dtfm1*dtfm2 + dtfm7 + dtfm6 == MIMOParallel(
+        MIMOSeries(dtfm2, dtfm1), dtfm7, dtfm6)
+    assert dtfm1*dtfm2 - dtfm6 - dtfm7 == MIMOParallel(
+        MIMOSeries(dtfm2, dtfm1), -dtfm6, -dtfm7)
+    assert dtfm4*dtfm5 + (dtfm4 - dtfm5) == MIMOParallel(
+        MIMOSeries(dtfm5, dtfm4), dtfm4, -dtfm5)
+    assert dtfm4*-dtfm6 + (-dtfm4*dtfm6) == MIMOParallel(
+        MIMOSeries(-dtfm6, dtfm4), MIMOSeries(dtfm6, -dtfm4))
+
+    raises(ValueError, lambda: dtfm1*dtfm2 + dTF1)
+    raises(TypeError, lambda: dtfm1*dtfm2 + a0)
+    raises(TypeError, lambda: dtfm4*dtfm6 - (s - 1))
+    raises(TypeError, lambda: dtfm4*-dtfm6 - 8)
+    raises(TypeError, lambda: (-1 + p**5) + dtfm1*dtfm2)
+
+    # Shape criteria.
+
+    raises(TypeError, lambda: -dtfm1*dtfm2 + dtfm4)
+    raises(TypeError, lambda: dtfm1*dtfm2 - dtfm4 + dtfm5)
+    raises(TypeError, lambda: dtfm1*dtfm2 - dtfm4*dtfm5)
+
+    assert dtfm1*dtfm2*-dtfm3 == MIMOSeries(-dtfm3, dtfm2, dtfm1)
+    assert (dtfm1*-dtfm2)*dtfm3 == MIMOSeries(dtfm3, -dtfm2, dtfm1)
+
+    # Multiplication of a Series object with a SISO TF not allowed.
+
+    raises(ValueError, lambda: dtfm4*dtfm5*dTF1)
+    raises(TypeError, lambda: dtfm4*dtfm5*a1)
+    raises(TypeError, lambda: dtfm4*-dtfm5*(s - 2))
+    raises(TypeError, lambda: dtfm5*dtfm4*9)
+    raises(TypeError, lambda: (-p**3 + 1)*dtfm5*dtfm4)
+
+    # Transfer function matrix in the arguments.
+    assert (MIMOSeries(dtfm2, dtfm1, evaluate=True) == \
+            MIMOSeries(dtfm2, dtfm1).doit() == \
+            TransferFunctionMatrix((
+                (DTTransferFunction(-k**2*(a2*s + p)**2*\
+                                  (s**2 + 2*s*wn*zeta + wn**2)**2 + \
+                                    (-a2*p + s)*(a2*p - s)*\
+                                        (s**2 + 2*s*wn*zeta + wn**2)**2 - \
+                                            (a2*s + p)**2,
+        (a2*s + p)**2*(s**2 + 2*s*wn*zeta + wn**2)**2, s, 0.001),),
+        (DTTransferFunction(k**2*(a2*s + p)**2*(s**2 + 2*s*wn*zeta + wn**2)**2 + \
+                          (-a2*p + s)*(a2*s + p)*\
+                            (s**2 + 2*s*wn*zeta + wn**2) + \
+                                (a2*p - s)*(a2*s + p)*\
+                                    (s**2 + 2*s*wn*zeta + wn**2),
+        (a2*s + p)**2*(s**2 + 2*s*wn*zeta + wn**2)**2, s, 0.001),))))
+
+    # doit() should not cancel poles and zeros.
+    dmat_1 = Matrix([[1/(1+s), (1+s)/(1+s**2+2*s)**3]])
+    dmat_2 = Matrix([[(1+s)], [(1+s**2+2*s)**3/(1+s)]])
+    dtm_1 = TransferFunctionMatrix.from_Matrix(dmat_1, s, 0.001)
+    dtm_2 = TransferFunctionMatrix.from_Matrix(dmat_2, s, 0.001)
+    assert (MIMOSeries(dtm_2, dtm_1).doit()
+        == TransferFunctionMatrix((
+            (DTTransferFunction(2*(s + 1)**2*(s**2 + 2*s + 1)**3,
+                              (s + 1)**2*(s**2 + 2*s + 1)**3, s, 0.001),),)))
+    assert MIMOSeries(dtm_2, dtm_1).doit().simplify() == \
+        TransferFunctionMatrix(((DTTransferFunction(2, 1, s, 0.001),),))
+
+    # calling doit() will expand the internal Series and Parallel objects.
+    assert (MIMOSeries(-dtfm3, -dtfm2, dtfm1, evaluate=True)
+        == MIMOSeries(-dtfm3, -dtfm2, dtfm1).doit()
+        == TransferFunctionMatrix((
+            (DTTransferFunction(k**2*(a2*s + p)**2*\
+                              (s**2 + 2*s*wn*zeta + wn**2)**2 + \
+                                (a2*p - s)**2*\
+                                    (s**2 + 2*s*wn*zeta + wn**2)**2 + \
+                                        (a2*s + p)**2,
+        (a2*s + p)**2*(s**2 + 2*s*wn*zeta + wn**2)**3, s, 0.001),),
+        (DTTransferFunction(-k**2*(a2*s + p)**2*\
+                          (s**2 + 2*s*wn*zeta + wn**2)**2 + (-a2*p + s)*\
+                            (a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2) + \
+                                (a2*p - s)*(a2*s + p)*\
+                                    (s**2 + 2*s*wn*zeta + wn**2),
+        (a2*s + p)**2*(s**2 + 2*s*wn*zeta + wn**2)**3, s, 0.001),))))
+    assert (MIMOSeries(MIMOParallel(dtfm4, dtfm5), dtfm5, evaluate=True)
+        == MIMOSeries(MIMOParallel(dtfm4, dtfm5), dtfm5).doit()
+        == TransferFunctionMatrix((
+            (DTTransferFunction(-k*(-a2*s - p + (-a2*p + s)*\
+                                  (s**2 + 2*s*wn*zeta + wn**2)),
+                                  (a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2), s, 0.001),
+                                  DTTransferFunction(k*(-a2*p - k*(a2*s + p) + s),
+                                                    a2*s + p, s, 0.001)),
+            (DTTransferFunction(-k*(-a2*s - p + (-a2*p + s)*\
+                                  (s**2 + 2*s*wn*zeta + wn**2)),
+                             (a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2), s, 0.001),
+             DTTransferFunction((-a2*p + s)*(-a2*p - k*(a2*s + p) + s),
+                              (a2*s + p)**2, s, 0.001))))
+        == MIMOSeries(MIMOParallel(dtfm4, dtfm5), dtfm5).\
+            rewrite(TransferFunctionMatrix))
 
 
 def test_Parallel_construction():
@@ -1545,10 +1744,23 @@ def test_MIMOParallel_construction():
     tfm6 = TransferFunctionMatrix([[TF2, TF1], [TF1, TF2]])
     tfm7 = TransferFunctionMatrix.from_Matrix(Matrix([[1/p]]), p)
 
+    dTF1 = DTTransferFunction(1, s**2 + 2*zeta*wn*s + wn**2, s, 0.5)
+    dTF2 = DTTransferFunction(k, 1, s, 0.5)
+    dTF3 = DTTransferFunction(a2*p - s, a2*s + p, s, 0.5)
+
+    dtfm1 = TransferFunctionMatrix([[dTF1], [dTF2], [dTF3]])
+    dtfm2 = TransferFunctionMatrix([[-dTF3], [dTF2], [dTF1]])
+    dtfm3 = TransferFunctionMatrix([[dTF1]])
+    dtfm4 = TransferFunctionMatrix([[dTF2], [dTF1], [dTF3]])
+    dtfm5 = TransferFunctionMatrix([[dTF1, dTF2], [dTF2, dTF1]])
+    dtfm6 = TransferFunctionMatrix([[dTF2, dTF1], [dTF1, dTF2]])
+
+    # continuous-time tests
     p8 = MIMOParallel(tfm1, tfm2)
     assert p8.args == (tfm1, tfm2)
     assert p8.var == s
     assert p8.shape == (p8.num_outputs, p8.num_inputs) == (3, 1)
+    assert p8.is_continuous is True
 
     p9 = MIMOParallel(MIMOSeries(tfm3, tfm1), tfm2)
     assert p9.args == (MIMOSeries(tfm3, tfm1), tfm2)
@@ -1572,6 +1784,36 @@ def test_MIMOParallel_construction():
     assert p13.args == (tfm2, tfm4, MIMOSeries(-tfm3, tfm4), -tfm4)
     assert p13.shape == (p13.num_outputs, p13.num_inputs) == (3, 1)
 
+    # discrete-time tests
+    dp8 = MIMOParallel(dtfm1, dtfm2)
+    assert dp8.args == (dtfm1, dtfm2)
+    assert dp8.var == s
+    assert dp8.shape == (dp8.num_outputs, dp8.num_inputs) == (3, 1)
+    assert dp8.sampling_time == 0.5
+    assert dp8.is_continuous is False
+
+    dp9 = MIMOParallel(MIMOSeries(dtfm3, dtfm1), dtfm2)
+    assert dp9.args == (MIMOSeries(dtfm3, dtfm1), dtfm2)
+    assert dp9.var == s
+    assert dp9.shape == (dp9.num_outputs, dp9.num_inputs) == (3, 1)
+
+    dp10 = MIMOParallel(dtfm1, MIMOSeries(dtfm3, dtfm4), dtfm2)
+    assert dp10.args == (dtfm1, MIMOSeries(dtfm3, dtfm4), dtfm2)
+    assert dp10.var == s
+    assert dp10.shape == (dp10.num_outputs, dp10.num_inputs) == (3, 1)
+
+    dp11 = MIMOParallel(dtfm2, dtfm1, dtfm4)
+    assert dp11.args == (dtfm2, dtfm1, dtfm4)
+    assert dp11.shape == (dp11.num_outputs, dp11.num_inputs) == (3, 1)
+
+    dp12 = MIMOParallel(dtfm6, dtfm5)
+    assert dp12.args == (dtfm6, dtfm5)
+    assert dp12.shape == (dp12.num_outputs, dp12.num_inputs) == (2, 2)
+
+    dp13 = MIMOParallel(dtfm2, dtfm4, MIMOSeries(-dtfm3, dtfm4), -dtfm4)
+    assert dp13.args == (dtfm2, dtfm4, MIMOSeries(-dtfm3, dtfm4), -dtfm4)
+    assert dp13.shape == (dp13.num_outputs, dp13.num_inputs) == (3, 1)
+
     # arg cannot be empty tuple.
     raises(TypeError, lambda: MIMOParallel(()))
 
@@ -1588,6 +1830,10 @@ def test_MIMOParallel_construction():
     raises(TypeError, lambda: MIMOParallel(2, tfm1, tfm4))
     raises(TypeError, lambda: MIMOParallel(s**2 + p*s, -tfm4, tfm2))
 
+    # compatibility checks
+    dtfm_6 = TransferFunctionMatrix.from_Matrix(Matrix(eye(2)) * s, s, T)
+    raises(TypeError, lambda: MIMOParallel(dtfm_6, dtfm1))
+    raises(TypeError, lambda: MIMOParallel(dtfm1, tfm2))
 
 def test_Parallel_functions():
     tf1 = TransferFunction(1, s**2 + 2*zeta*wn*s + wn**2, s)
@@ -1784,6 +2030,9 @@ def test_MIMOParallel_functions():
     tf4 = TransferFunction(a0*p + p**a1 - s, p, p)
     tf5 = TransferFunction(a1*s**2 + a2*s - a0, s + a0, s)
 
+    dtf4 = DTTransferFunction(a0*p + p**a1 - s, p, p, Rational(1,2))
+    dtf5 = DTTransferFunction(a1*s**2 + a2*s - a0, s + a0, s, Rational(1,2))
+
     tfm1 = TransferFunctionMatrix([[TF1], [TF2], [TF3]])
     tfm2 = TransferFunctionMatrix([[-TF2], [tf5], [-TF1]])
     tfm3 = TransferFunctionMatrix([[tf5], [-tf5], [TF2]])
@@ -1792,10 +2041,26 @@ def test_MIMOParallel_functions():
     tfm6 = TransferFunctionMatrix([[-TF2]])
     tfm7 = TransferFunctionMatrix([[tf4], [-tf4], [tf4]])
 
-    assert tfm1 + tfm2 + tfm3 == MIMOParallel(tfm1, tfm2, tfm3) == MIMOParallel(MIMOParallel(tfm1, tfm2), tfm3)
+    dTF1 = DTTransferFunction(1, s**2 + 2*zeta*wn*s + wn**2, s, Rational(1,2))
+    dTF2 = DTTransferFunction(k, 1, s, Rational(1,2))
+    dTF3 = DTTransferFunction(a2*p - s, a2*s + p, s, Rational(1,2))
+
+    dtfm1 = TransferFunctionMatrix([[dTF1], [dTF2], [dTF3]])
+    dtfm2 = TransferFunctionMatrix([[-dTF2], [dtf5], [-dTF1]])
+    dtfm3 = TransferFunctionMatrix([[dtf5], [-dtf5], [dTF2]])
+    dtfm4 = TransferFunctionMatrix([[dTF2, -dtf5], [dTF1, dtf5]])
+    dtfm5 = TransferFunctionMatrix([[dTF1, dTF2], [dTF3, -dtf5]])
+    dtfm6 = TransferFunctionMatrix([[-dTF2]])
+    dtfm7 = TransferFunctionMatrix([[dtf4], [-dtf4], [dtf4]])
+
+    # continuous-time tests
+    assert tfm1 + tfm2 + tfm3 == MIMOParallel(tfm1, tfm2, tfm3) == \
+        MIMOParallel(MIMOParallel(tfm1, tfm2), tfm3)
     assert tfm2 - tfm1 - tfm3 == MIMOParallel(tfm2, -tfm1, -tfm3)
-    assert tfm2 - tfm3 + (-tfm1*tfm6*-tfm6) == MIMOParallel(tfm2, -tfm3, MIMOSeries(-tfm6, tfm6, -tfm1))
-    assert tfm1 + tfm1 - (-tfm1*tfm6) == MIMOParallel(tfm1, tfm1, -MIMOSeries(tfm6, -tfm1))
+    assert tfm2 - tfm3 + (-tfm1*tfm6*-tfm6) == \
+        MIMOParallel(tfm2, -tfm3, MIMOSeries(-tfm6, tfm6, -tfm1))
+    assert tfm1 + tfm1 - (-tfm1*tfm6) == \
+        MIMOParallel(tfm1, tfm1, -MIMOSeries(tfm6, -tfm1))
     assert tfm2 - tfm3 - tfm1 + tfm2 == MIMOParallel(tfm2, -tfm3, -tfm1, tfm2)
     assert tfm1 + tfm2 - tfm3 - tfm1 == MIMOParallel(tfm1, tfm2, -tfm3, -tfm1)
     raises(ValueError, lambda: tfm1 + tfm2 + TF2)
@@ -1811,8 +2076,10 @@ def test_MIMOParallel_functions():
     raises(TypeError, lambda: (tfm1 - tfm2) - tfm4)
 
     assert (tfm1 + tfm2)*tfm6 == MIMOSeries(tfm6, MIMOParallel(tfm1, tfm2))
-    assert (tfm2 - tfm3)*tfm6*-tfm6 == MIMOSeries(-tfm6, tfm6, MIMOParallel(tfm2, -tfm3))
-    assert (tfm2 - tfm1 - tfm3)*(tfm6 + tfm6) == MIMOSeries(MIMOParallel(tfm6, tfm6), MIMOParallel(tfm2, -tfm1, -tfm3))
+    assert (tfm2 - tfm3)*tfm6*-tfm6 == \
+        MIMOSeries(-tfm6, tfm6, MIMOParallel(tfm2, -tfm3))
+    assert (tfm2 - tfm1 - tfm3)*(tfm6 + tfm6) == \
+        MIMOSeries(MIMOParallel(tfm6, tfm6), MIMOParallel(tfm2, -tfm1, -tfm3))
     raises(ValueError, lambda: (tfm4 + tfm5)*TF1)
     raises(TypeError, lambda: (tfm2 - tfm3)*a2)
     raises(TypeError, lambda: (tfm3 + tfm2)*(s - 6))
@@ -1825,11 +2092,71 @@ def test_MIMOParallel_functions():
     raises(ValueError, lambda: (tfm1 - tfm2)*tfm5)
 
     # TFM in the arguments.
-    assert (MIMOParallel(tfm1, tfm2, evaluate=True) == MIMOParallel(tfm1, tfm2).doit()
+    assert (MIMOParallel(tfm1, tfm2, evaluate=True) == \
+            MIMOParallel(tfm1, tfm2).doit()
     == MIMOParallel(tfm1, tfm2).rewrite(TransferFunctionMatrix)
-    == TransferFunctionMatrix(((TransferFunction(-k*(s**2 + 2*s*wn*zeta + wn**2) + 1, s**2 + 2*s*wn*zeta + wn**2, s),), \
-        (TransferFunction(-a0 + a1*s**2 + a2*s + k*(a0 + s), a0 + s, s),), (TransferFunction(-a2*s - p + (a2*p - s)* \
-        (s**2 + 2*s*wn*zeta + wn**2), (a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2), s),))))
+    == TransferFunctionMatrix((
+        (TransferFunction(-k*(s**2 + 2*s*wn*zeta + wn**2) + 1,
+                          s**2 + 2*s*wn*zeta + wn**2, s),), \
+        (TransferFunction(-a0 + a1*s**2 + a2*s + k*(a0 + s), a0 + s, s),),
+        (TransferFunction(-a2*s - p + (a2*p - s)* \
+        (s**2 + 2*s*wn*zeta + wn**2),
+        (a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2), s),))))
+
+    # discrete-time tests
+    assert dtfm1 + dtfm2 + dtfm3 == MIMOParallel(dtfm1, dtfm2, dtfm3) == \
+        MIMOParallel(MIMOParallel(dtfm1, dtfm2), dtfm3)
+    assert dtfm2 - dtfm1 - dtfm3 == MIMOParallel(dtfm2, -dtfm1, -dtfm3)
+    assert dtfm2 - dtfm3 + (-dtfm1*dtfm6*-dtfm6) == \
+        MIMOParallel(dtfm2, -dtfm3, MIMOSeries(-dtfm6, dtfm6, -dtfm1))
+    assert dtfm1 + dtfm1 - (-dtfm1*dtfm6) == \
+        MIMOParallel(dtfm1, dtfm1, -MIMOSeries(dtfm6, -dtfm1))
+    assert dtfm2 - dtfm3 - dtfm1 + dtfm2 == MIMOParallel(dtfm2, -dtfm3,
+                                                         -dtfm1, dtfm2)
+    assert dtfm1 + dtfm2 - dtfm3 - dtfm1 == MIMOParallel(dtfm1, dtfm2,
+                                                         -dtfm3, -dtfm1)
+    raises(ValueError, lambda: dtfm1 + dtfm2 + dTF2)
+    raises(TypeError, lambda: dtfm1 - dtfm2 - a1)
+    raises(TypeError, lambda: dtfm2 - dtfm3 - (s - 1))
+    raises(TypeError, lambda: -dtfm3 - dtfm2 - 9)
+    raises(TypeError, lambda: (1 - p**3) - dtfm3 - dtfm2)
+    # All TFMs must use the same complex var. dtfm7 uses 'p'.
+    raises(ValueError, lambda: dtfm3 - dtfm2 - dtfm7)
+    raises(ValueError, lambda: dtfm2 - dtfm1 + dtfm7)
+    # (dtfm1 +/- dtfm2) has (3, 1) shape while dtfm4 has (2, 2) shape.
+    raises(TypeError, lambda: dtfm1 + dtfm2 + dtfm4)
+    raises(TypeError, lambda: (dtfm1 - dtfm2) - dtfm4)
+
+    assert (dtfm1 + dtfm2)*dtfm6 == MIMOSeries(dtfm6, MIMOParallel(dtfm1,
+                                                                   dtfm2))
+    assert (dtfm2 - dtfm3)*dtfm6*-dtfm6 == \
+        MIMOSeries(-dtfm6, dtfm6, MIMOParallel(dtfm2, -dtfm3))
+    assert (dtfm2 - dtfm1 - dtfm3)*(dtfm6 + dtfm6) == \
+        MIMOSeries(MIMOParallel(dtfm6, dtfm6), MIMOParallel(dtfm2, -dtfm1,
+                                                            -dtfm3))
+    raises(ValueError, lambda: (dtfm4 + dtfm5)*dTF1)
+    raises(TypeError, lambda: (dtfm2 - dtfm3)*a2)
+    raises(TypeError, lambda: (dtfm3 + dtfm2)*(s - 6))
+    raises(TypeError, lambda: (dtfm1 + dtfm2 + dtfm3)*0)
+    raises(TypeError, lambda: (1 - p**3)*(dtfm1 + dtfm3))
+
+    # (dtfm3 - dtfm2) has (3, 1) shape while dtfm4*dtfm5 has (2, 2) shape.
+    raises(ValueError, lambda: (dtfm3 - dtfm2)*dtfm4*dtfm5)
+    # (dtfm1 - dtfm2) has (3, 1) shape while dtfm5 has (2, 2) shape.
+    raises(ValueError, lambda: (dtfm1 - dtfm2)*dtfm5)
+
+    # TFM in the arguments.
+    assert (MIMOParallel(dtfm1, dtfm2, evaluate=True) == \
+            MIMOParallel(dtfm1, dtfm2).doit()
+    == MIMOParallel(dtfm1, dtfm2).rewrite(TransferFunctionMatrix)
+    == TransferFunctionMatrix((
+        (DTTransferFunction(-k*(s**2 + 2*s*wn*zeta + wn**2) + 1,
+                          s**2 + 2*s*wn*zeta + wn**2, s, Rational(1,2)),), \
+        (DTTransferFunction(-a0 + a1*s**2 + a2*s + k*(a0 + s), a0 + s, s,
+         Rational(1,2)),),
+        (DTTransferFunction(-a2*s - p + (a2*p - s)* \
+        (s**2 + 2*s*wn*zeta + wn**2),
+        (a2*s + p)*(s**2 + 2*s*wn*zeta + wn**2), s, Rational(1,2)),))))
 
 
 def test_Feedback_construction():
@@ -2209,10 +2536,20 @@ def test_MIMOFeedback_construction():
     tf3 = TransferFunction(s, s + 1, s)
     tf4 = TransferFunction(s, s**2 + 1, s)
 
+    dtf1 = DTTransferFunction(1, s, s, 0.5)
+    dtf2 = DTTransferFunction(s, s**3 - 1, s, 0.5)
+    dtf3 = DTTransferFunction(s, s + 1, s, 0.5)
+    dtf4 = DTTransferFunction(s, s**2 + 1, s, 0.5)
+
     tfm_1 = TransferFunctionMatrix([[tf1, tf2], [tf3, tf4]])
     tfm_2 = TransferFunctionMatrix([[tf2, tf3], [tf4, tf1]])
     tfm_3 = TransferFunctionMatrix([[tf3, tf4], [tf1, tf2]])
 
+    dtfm_1 = TransferFunctionMatrix([[dtf1, dtf2], [dtf3, dtf4]])
+    dtfm_2 = TransferFunctionMatrix([[dtf2, dtf3], [dtf4, dtf1]])
+    dtfm_3 = TransferFunctionMatrix([[dtf3, dtf4], [dtf1, dtf2]])
+
+    # continuous-time tests
     f1 = MIMOFeedback(tfm_1, tfm_2)
     assert f1.args == (tfm_1, tfm_2, -1)
     assert f1.sys1 == tfm_1
@@ -2220,6 +2557,7 @@ def test_MIMOFeedback_construction():
     assert f1.var == s
     assert f1.sign == -1
     assert -(-f1) == f1
+    assert f1.is_continuous is True
 
     f2 = MIMOFeedback(tfm_2, tfm_1, 1)
     assert f2.args == (tfm_2, tfm_1, 1)
@@ -2227,6 +2565,7 @@ def test_MIMOFeedback_construction():
     assert f2.sys2 == tfm_1
     assert f2.var == s
     assert f2.sign == 1
+    assert f2.is_continuous is True
 
     f3 = MIMOFeedback(tfm_1, MIMOSeries(tfm_3, tfm_2))
     assert f3.args == (tfm_1, MIMOSeries(tfm_3, tfm_2), -1)
@@ -2234,12 +2573,58 @@ def test_MIMOFeedback_construction():
     assert f3.sys2 == MIMOSeries(tfm_3, tfm_2)
     assert f3.var == s
     assert f3.sign == -1
+    assert f3.is_continuous is True
 
     mat = Matrix([[1, 1/s], [0, 1]])
     sys1 = controller = TransferFunctionMatrix.from_Matrix(mat, s)
     f4 = MIMOFeedback(sys1, controller)
     assert f4.args == (sys1, controller, -1)
     assert f4.sys1 == f4.sys2 == sys1
+    assert f4.is_continuous is True
+
+    # discrete-time tests
+    df1 = MIMOFeedback(dtfm_1, dtfm_2)
+    assert df1.args == (dtfm_1, dtfm_2, -1)
+    assert df1.sys1 == dtfm_1
+    assert df1.sys2 == dtfm_2
+    assert df1.var == s
+    assert df1.sign == -1
+    assert df1.sampling_time == 0.5
+    assert -(-df1) == df1
+    assert df1.is_continuous is False
+
+    df2 = MIMOFeedback(dtfm_2, dtfm_1, 1)
+    assert df2.args == (dtfm_2, dtfm_1, 1)
+    assert df2.sys1 == dtfm_2
+    assert df2.sys2 == dtfm_1
+    assert df2.var == s
+    assert df2.sign == 1
+    assert df2.sampling_time == 0.5
+    assert df2.is_continuous is False
+
+    df3 = MIMOFeedback(dtfm_1, MIMOSeries(dtfm_3, dtfm_2))
+    assert df3.args == (dtfm_1, MIMOSeries(dtfm_3, dtfm_2), -1)
+    assert df3.sys1 == dtfm_1
+    assert df3.sys2 == MIMOSeries(dtfm_3, dtfm_2)
+    assert df3.var == s
+    assert df3.sign == -1
+    assert df3.sampling_time == 0.5
+    assert df3.is_continuous is False
+
+    dmat = Matrix([[1, 1/s], [0, 1]])
+    dsys1 = dcontroller = TransferFunctionMatrix.from_Matrix(dmat, s, 0.5)
+
+    df4 = MIMOFeedback(dsys1, dcontroller)
+    assert df4.args == (dsys1, dcontroller, -1)
+    assert df4.sys1 == df4.sys2 == dsys1
+    assert df4.sampling_time == 0.5
+    assert df4.is_continuous is False
+
+    # test compatibility
+    raises(TypeError, lambda: MIMOFeedback(dtfm_1, tfm_2))
+    dtfm_4 = TransferFunctionMatrix.from_Matrix(eye(2) * s, var=s,
+                                                sampling_time=0.1)
+    raises(TypeError, lambda: MIMOFeedback(tfm_1, dtfm_4))
 
 
 def test_MIMOFeedback_errors():
@@ -2250,6 +2635,13 @@ def test_MIMOFeedback_errors():
     tf5 = TransferFunction(1, 1, s)
     tf6 = TransferFunction(-1, s - 1, s)
 
+    dtf1 = DTTransferFunction(1, s, s, 0.5)
+    dtf2 = DTTransferFunction(s, s**3 - 1, s, 0.5)
+    dtf3 = DTTransferFunction(s, s - 1, s, 0.5)
+    dtf4 = DTTransferFunction(s, s**2 + 1, s, 0.5)
+    dtf5 = DTTransferFunction(1, 1, s, 0.5)
+    dtf6 = DTTransferFunction(-1, s - 1, s, 0.5)
+
     tfm_1 = TransferFunctionMatrix([[tf1, tf2], [tf3, tf4]])
     tfm_2 = TransferFunctionMatrix([[tf2, tf3], [tf4, tf1]])
     tfm_3 = TransferFunctionMatrix.from_Matrix(eye(2), var=s)
@@ -2259,6 +2651,16 @@ def test_MIMOFeedback_errors():
     tfm_6 = TransferFunctionMatrix([[-tf3]])
     tfm_7 = TransferFunctionMatrix([[tf3, tf4]])
 
+    dtfm_1 = TransferFunctionMatrix([[dtf1, dtf2], [dtf3, dtf4]])
+    dtfm_2 = TransferFunctionMatrix([[dtf2, dtf3], [dtf4, dtf1]])
+    dtfm_3 = TransferFunctionMatrix.from_Matrix(eye(2), var=s)
+    dtfm_4 = TransferFunctionMatrix([[dtf1, dtf5], [dtf5, dtf5]])
+    dtfm_5 = TransferFunctionMatrix([[-dtf3, dtf3], [dtf3, dtf6]])
+    # dtfm_4 is inverse of dtfm_5. Therefore dtfm_5*dtfm_4 = I
+    dtfm_6 = TransferFunctionMatrix([[-dtf3]])
+    dtfm_7 = TransferFunctionMatrix([[dtf3, dtf4]])
+
+    # continuous-time tests
     # Unsupported Types
     raises(TypeError, lambda: MIMOFeedback(tf1, tf2))
     raises(TypeError, lambda: MIMOFeedback(MIMOParallel(tfm_1, tfm_2), tfm_3))
@@ -2275,6 +2677,25 @@ def test_MIMOFeedback_errors():
     tfm_8 = TransferFunctionMatrix.from_Matrix(eye(2), var=p)
     raises(ValueError, lambda: MIMOFeedback(tfm_1, tfm_8, 1))
 
+    # ciscrete-time tests
+    # Unsupported Types
+    raises(TypeError, lambda: MIMOFeedback(dtf1, dtf2))
+    raises(TypeError, lambda: MIMOFeedback(MIMOParallel(dtfm_1, dtfm_2), dtfm_3))
+    # Shape Errors
+    raises(ValueError, lambda: MIMOFeedback(dtfm_1, dtfm_6, 1))
+    raises(ValueError, lambda: MIMOFeedback(dtfm_7, dtfm_7))
+    # sign not 1/-1
+    raises(ValueError, lambda: MIMOFeedback(dtfm_1, dtfm_2, -2))
+    # Non-Invertible Systems
+    raises(ValueError, lambda: MIMOFeedback(dtfm_5, dtfm_4, 1))
+    raises(ValueError, lambda: MIMOFeedback(dtfm_4, -dtfm_5))
+    raises(ValueError, lambda: MIMOFeedback(dtfm_3, dtfm_3, 1))
+    # Variable not same in both the systems
+    dtfm_8 = TransferFunctionMatrix.from_Matrix(eye(2), var=p)
+    raises(ValueError, lambda: MIMOFeedback(dtfm_1, dtfm_8, 1))
+    # Mixed continuous/discrete-time systems
+    raises(TypeError, lambda: MIMOFeedback(tfm_1, dtfm_2))
+    raises(TypeError, lambda: MIMOFeedback(dtfm_1, tfm_2))
 
 def test_MIMOFeedback_functions():
     tf1 = TransferFunction(1, s, s)
@@ -2282,11 +2703,23 @@ def test_MIMOFeedback_functions():
     tf3 = TransferFunction(1, 1, s)
     tf4 = TransferFunction(-1, s - 1, s)
 
+    dtf1 = DTTransferFunction(1, s, s, 0.4)
+    dtf2 = DTTransferFunction(s, s - 1, s, 0.4)
+    dtf3 = DTTransferFunction(1, 1, s, 0.4)
+    dtf4 = DTTransferFunction(-1, s - 1, s, 0.4)
+
     tfm_1 = TransferFunctionMatrix.from_Matrix(eye(2), var=s)
     tfm_2 = TransferFunctionMatrix([[tf1, tf3], [tf3, tf3]])
     tfm_3 = TransferFunctionMatrix([[-tf2, tf2], [tf2, tf4]])
     tfm_4 = TransferFunctionMatrix([[tf1, tf2], [-tf2, tf1]])
 
+    dtfm_1 = TransferFunctionMatrix.from_Matrix(eye(2), var=s,
+                                                sampling_time=0.4)
+    dtfm_2 = TransferFunctionMatrix([[dtf1, dtf3], [dtf3, dtf3]])
+    dtfm_3 = TransferFunctionMatrix([[-dtf2, dtf2], [dtf2, dtf4]])
+    dtfm_4 = TransferFunctionMatrix([[dtf1, dtf2], [-dtf2, dtf1]])
+
+    # continuous-time tests
     # sensitivity, doit(), rewrite()
     F_1 = MIMOFeedback(tfm_2, tfm_3)
     F_2 = MIMOFeedback(tfm_2, MIMOSeries(tfm_4, -tfm_1), 1)
@@ -2300,30 +2733,94 @@ def test_MIMOFeedback_functions():
         TransferFunction(1, 2, s)), (TransferFunction(1, 2, s),
         TransferFunction(1, 2, s)))) == F_1.rewrite(TransferFunctionMatrix)
     assert F_2.doit(cancel=False, expand=True) == \
-        TransferFunctionMatrix(((TransferFunction(-s**5 + 2*s**4 - 2*s**3 + s**2, s**5 - 2*s**4 + 3*s**3 - 2*s**2 + s, s),
-        TransferFunction(-2*s**4 + 2*s**3, s**2 - s + 1, s)), (TransferFunction(0, 1, s), TransferFunction(-s**2 + s, 1, s))))
+        TransferFunctionMatrix(((
+            TransferFunction(-s**5 + 2*s**4 - 2*s**3 + s**2, s**5 - 2*s**4 + \
+                             3*s**3 - 2*s**2 + s, s),
+            TransferFunction(-2*s**4 + 2*s**3, s**2 - s + 1, s)),
+            (TransferFunction(0, 1, s), TransferFunction(-s**2 + s, 1, s))))
     assert F_2.doit(cancel=False) == \
-        TransferFunctionMatrix(((TransferFunction(s*(2*s**3 - s**2)*(s**2 - s + 1) + \
-        (-2*s**4 + s**2)*(s**2 - s + 1), s*(s**2 - s + 1)**2, s), TransferFunction(-2*s**4 + 2*s**3, s**2 - s + 1, s)),
+        TransferFunctionMatrix(((
+            TransferFunction(s*(2*s**3 - s**2)*(s**2 - s + 1) + \
+                             (-2*s**4 + s**2)*(s**2 - s + 1),
+                             s*(s**2 - s + 1)**2, s),
+            TransferFunction(-2*s**4 + 2*s**3, s**2 - s + 1, s)),
         (TransferFunction(0, 1, s), TransferFunction(-s**2 + s, 1, s))))
     assert F_2.doit() == \
-        TransferFunctionMatrix(((TransferFunction(s*(-2*s**2 + s*(2*s - 1) + 1), s**2 - s + 1, s),
-        TransferFunction(-2*s**3*(s - 1), s**2 - s + 1, s)), (TransferFunction(0, 1, s), TransferFunction(s*(1 - s), 1, s))))
+        TransferFunctionMatrix(((TransferFunction(s*(-2*s**2 + s*(2*s - 1) + 1),
+                                                   s**2 - s + 1, s),
+        TransferFunction(-2*s**3*(s - 1), s**2 - s + 1, s)),
+        (TransferFunction(0, 1, s), TransferFunction(s*(1 - s), 1, s))))
     assert F_2.doit(expand=True) == \
-        TransferFunctionMatrix(((TransferFunction(-s**2 + s, s**2 - s + 1, s), TransferFunction(-2*s**4 + 2*s**3, s**2 - s + 1, s)),
+        TransferFunctionMatrix(((
+            TransferFunction(-s**2 + s, s**2 - s + 1, s),
+            TransferFunction(-2*s**4 + 2*s**3, s**2 - s + 1, s)),
         (TransferFunction(0, 1, s), TransferFunction(-s**2 + s, 1, s))))
 
     assert -(F_1.doit()) == (-F_1).doit()  # First negating then calculating vs calculating then negating.
+
+    # continuous-time tests
+    dF_1 = MIMOFeedback(dtfm_2, dtfm_3)
+    dF_2 = MIMOFeedback(dtfm_2, MIMOSeries(dtfm_4, -dtfm_1), 1)
+
+    assert dF_1.sampling_time == 0.4
+    assert dF_2.sampling_time == 0.4
+
+    assert dF_1.sensitivity == Matrix([[S.Half, 0], [0, S.Half]])
+    assert dF_2.sensitivity == Matrix([[(-2*s**4 + s**2)/(s**2 - s + 1),
+        (2*s**3 - s**2)/(s**2 - s + 1)], [-s**2, s]])
+
+    assert dF_1.doit() == \
+        TransferFunctionMatrix(((
+            DTTransferFunction(1, 2*s, s, 0.4),
+            DTTransferFunction(1, 2, s, 0.4)),
+            (DTTransferFunction(1, 2, s, 0.4),
+             DTTransferFunction(1, 2, s, 0.4)))) == \
+        dF_1.rewrite(TransferFunctionMatrix)
+    assert dF_2.doit(cancel=False, expand=True) == \
+        TransferFunctionMatrix(((
+            DTTransferFunction(-s**5 + 2*s**4 - 2*s**3 + s**2, s**5 - 2*s**4 + \
+                             3*s**3 - 2*s**2 + s, s, 0.4),
+            DTTransferFunction(-2*s**4 + 2*s**3, s**2 - s + 1, s, 0.4)),
+            (DTTransferFunction(0, 1, s, 0.4),
+             DTTransferFunction(-s**2 + s, 1, s, 0.4))))
+    assert dF_2.doit(cancel=False) == \
+        TransferFunctionMatrix(((
+            DTTransferFunction(s*(2*s**3 - s**2)*(s**2 - s + 1) + \
+                             (-2*s**4 + s**2)*(s**2 - s + 1),
+                             s*(s**2 - s + 1)**2, s, 0.4),
+            DTTransferFunction(-2*s**4 + 2*s**3, s**2 - s + 1, s, 0.4)),
+            (DTTransferFunction(0, 1, s, 0.4),
+             DTTransferFunction(-s**2 + s, 1, s, 0.4))))
+    assert dF_2.doit() == \
+        TransferFunctionMatrix(((
+            DTTransferFunction(s*(-2*s**2 + s*(2*s - 1) + 1),
+                               s**2 - s + 1, s, 0.4),
+            DTTransferFunction(-2*s**3*(s - 1), s**2 - s + 1, s, 0.4)),
+            (DTTransferFunction(0, 1, s, 0.4), DTTransferFunction(s*(1 - s),
+                                                                  1, s, 0.4))))
+    assert dF_2.doit(expand=True) == \
+        TransferFunctionMatrix(((
+            DTTransferFunction(-s**2 + s, s**2 - s + 1, s, 0.4),
+            DTTransferFunction(-2*s**4 + 2*s**3, s**2 - s + 1, s, 0.4)),
+            (DTTransferFunction(0, 1, s, 0.4),
+             DTTransferFunction(-s**2 + s, 1, s, 0.4))))
+
+    assert -(dF_1.doit()) == (-dF_1).doit()  # First negating then calculating vs calculating then negating.
 
 
 def test_TransferFunctionMatrix_construction():
     tf5 = TransferFunction(a1*s**2 + a2*s - a0, s + a0, s)
     tf4 = TransferFunction(a0*p + p**a1 - s, p, p)
 
+    dtf1 = DTTransferFunction(a1*z**2 + a2*z - a0, z + a0, z, 2)
+    dtf2 = DTTransferFunction(z, z - 1, z, 2)
+    dtf3 = DTTransferFunction(a0*p + p**a1 - s, p, p, 3)
+
     tfm3_ = TransferFunctionMatrix([[-TF3]])
     assert tfm3_.shape == (tfm3_.num_outputs, tfm3_.num_inputs) == (1, 1)
     assert tfm3_.args == Tuple(Tuple(Tuple(-TF3)))
     assert tfm3_.var == s
+    assert tfm3_.sampling_time == 0
 
     tfm5 = TransferFunctionMatrix([[TF1, -TF2], [TF3, tf5]])
     assert tfm5.shape == (tfm5.num_outputs, tfm5.num_inputs) == (2, 2)
@@ -2332,8 +2829,20 @@ def test_TransferFunctionMatrix_construction():
 
     tfm7 = TransferFunctionMatrix([[TF1, TF2], [TF3, -tf5], [-tf5, TF2]])
     assert tfm7.shape == (tfm7.num_outputs, tfm7.num_inputs) == (3, 2)
-    assert tfm7.args == Tuple(Tuple(Tuple(TF1, TF2), Tuple(TF3, -tf5), Tuple(-tf5, TF2)))
+    assert tfm7.args == Tuple(Tuple(Tuple(TF1, TF2), Tuple(TF3, -tf5),
+                                    Tuple(-tf5, TF2)))
     assert tfm7.var == s
+
+    dtfm1 = TransferFunctionMatrix([[dtf1, dtf2], [-dtf1 + dtf2, dtf2 * dtf1]])
+    assert dtfm1.shape == (dtfm1.num_outputs, dtfm1.num_inputs) == (2, 2)
+    assert dtfm1.args == Tuple(Tuple(Tuple(dtf1, dtf2),
+                                     Tuple(-dtf1 + dtf2, dtf2 * dtf1)
+                                    ))
+    assert dtfm1.var == z
+    assert dtfm1.sampling_time == 2
+
+    assert tfm3_.is_continuous is True
+    assert dtfm1.is_continuous is False
 
     # all transfer functions will use the same complex variable. tf4 uses 'p'.
     raises(ValueError, lambda: TransferFunctionMatrix([[TF1], [TF2], [tf4]]))
@@ -2351,6 +2860,13 @@ def test_TransferFunctionMatrix_construction():
     raises(ValueError, lambda: TransferFunctionMatrix([TF1, TF2, tf5]))
     raises(ValueError, lambda: TransferFunctionMatrix([TF1]))
 
+    # all transfer function should be either continuous or discrete.
+    raises(ValueError, lambda: TransferFunctionMatrix([[TF1, dtf2],
+                                                       [TF3, tf5]]))
+    # all transfer function should have the same sampling time.
+    raises(ValueError, lambda: TransferFunctionMatrix([[dtf1, dtf2],
+                                                       [dtf3, dtf1]]))
+
 def test_TransferFunctionMatrix_functions():
     tf5 = TransferFunction(a1*s**2 + a2*s - a0, s + a0, s)
 
@@ -2363,13 +2879,30 @@ def test_TransferFunctionMatrix_functions():
     mat_2 = ImmutableMatrix([[(2*s + 1)/(s**2 - 9)]])
     mat_3 = ImmutableMatrix([[1, 2], [3, 4]])
     assert TransferFunctionMatrix.from_Matrix(mat_1, s) == \
-        TransferFunctionMatrix([[TransferFunction(s*(s - 3)*(s + 1), s**4 + 1, s), TransferFunction(2, 1, s)],
-        [TransferFunction(p, 1, s), TransferFunction(p, s, s)]])
+        TransferFunctionMatrix([
+            [TransferFunction(s*(s - 3)*(s + 1), s**4 + 1, s),
+             TransferFunction(2, 1, s)],
+            [TransferFunction(p, 1, s),
+             TransferFunction(p, s, s)]])
     assert TransferFunctionMatrix.from_Matrix(mat_2, s) == \
         TransferFunctionMatrix([[TransferFunction(2*s + 1, s**2 - 9, s)]])
     assert TransferFunctionMatrix.from_Matrix(mat_3, p) == \
-        TransferFunctionMatrix([[TransferFunction(1, 1, p), TransferFunction(2, 1, p)],
-        [TransferFunction(3, 1, p), TransferFunction(4, 1, p)]])
+        TransferFunctionMatrix([
+            [TransferFunction(1, 1, p), TransferFunction(2, 1, p)],
+            [TransferFunction(3, 1, p), TransferFunction(4, 1, p)]])
+
+    assert TransferFunctionMatrix.from_Matrix(mat_1, s, 2) == \
+        TransferFunctionMatrix([
+            [DTTransferFunction(s*(s - 3)*(s + 1), s**4 + 1, s, 2),
+             DTTransferFunction(2, 1, s, 2)],
+            [DTTransferFunction(p, 1, s, 2),
+             DTTransferFunction(p, s, s, 2)]])
+    assert TransferFunctionMatrix.from_Matrix(mat_2, s, 0.1) == \
+        TransferFunctionMatrix([[DTTransferFunction(2*s + 1, s**2 - 9, s, 0.1)]])
+    assert TransferFunctionMatrix.from_Matrix(mat_3, p, T) == \
+        TransferFunctionMatrix([
+            [DTTransferFunction(1, 1, p, T), DTTransferFunction(2, 1, p, T)],
+            [DTTransferFunction(3, 1, p, T), DTTransferFunction(4, 1, p, T)]])
 
     #  Negating a TFM
 
@@ -2377,83 +2910,192 @@ def test_TransferFunctionMatrix_functions():
     assert -tfm1 == TransferFunctionMatrix([[-TF1], [-TF2]])
 
     tfm2 = TransferFunctionMatrix([[TF1, TF2, TF3], [tf5, -TF1, -TF3]])
-    assert -tfm2 == TransferFunctionMatrix([[-TF1, -TF2, -TF3], [-tf5, TF1, TF3]])
+    assert -tfm2 == TransferFunctionMatrix([[-TF1, -TF2, -TF3],
+                                            [-tf5, TF1, TF3]])
 
     # subs()
 
     H_1 = TransferFunctionMatrix.from_Matrix(mat_1, s)
-    H_2 = TransferFunctionMatrix([[TransferFunction(a*p*s, k*s**2, s), TransferFunction(p*s, k*(s**2 - a), s)]])
-    assert H_1.subs(p, 1) == TransferFunctionMatrix([[TransferFunction(s*(s - 3)*(s + 1), s**4 + 1, s), TransferFunction(2, 1, s)], [TransferFunction(1, 1, s), TransferFunction(1, s, s)]])
-    assert H_1.subs({p: 1}) == TransferFunctionMatrix([[TransferFunction(s*(s - 3)*(s + 1), s**4 + 1, s), TransferFunction(2, 1, s)], [TransferFunction(1, 1, s), TransferFunction(1, s, s)]])
-    assert H_1.subs({p: 1, s: 1}) == TransferFunctionMatrix([[TransferFunction(s*(s - 3)*(s + 1), s**4 + 1, s), TransferFunction(2, 1, s)], [TransferFunction(1, 1, s), TransferFunction(1, s, s)]]) # This should ignore `s` as it is `var`
-    assert H_2.subs(p, 2) == TransferFunctionMatrix([[TransferFunction(2*a*s, k*s**2, s), TransferFunction(2*s, k*(-a + s**2), s)]])
-    assert H_2.subs(k, 1) == TransferFunctionMatrix([[TransferFunction(a*p*s, s**2, s), TransferFunction(p*s, -a + s**2, s)]])
-    assert H_2.subs(a, 0) == TransferFunctionMatrix([[TransferFunction(0, k*s**2, s), TransferFunction(p*s, k*s**2, s)]])
-    assert H_2.subs({p: 1, k: 1, a: a0}) == TransferFunctionMatrix([[TransferFunction(a0*s, s**2, s), TransferFunction(s, -a0 + s**2, s)]])
+    H_2 = TransferFunctionMatrix([[TransferFunction(a*p*s, k*s**2, s),
+                                   TransferFunction(p*s, k*(s**2 - a), s)]])
+    assert H_1.subs(p, 1) == TransferFunctionMatrix([
+        [TransferFunction(s*(s - 3)*(s + 1), s**4 + 1, s),
+         TransferFunction(2, 1, s)],
+         [TransferFunction(1, 1, s),
+          TransferFunction(1, s, s)]])
+    assert H_1.subs({p: 1}) == TransferFunctionMatrix([
+        [TransferFunction(s*(s - 3)*(s + 1), s**4 + 1, s),
+         TransferFunction(2, 1, s)],
+         [TransferFunction(1, 1, s),
+          TransferFunction(1, s, s)]])
+    assert H_1.subs({p: 1, s: 1}) == TransferFunctionMatrix([
+        [TransferFunction(s*(s - 3)*(s + 1), s**4 + 1, s),
+         TransferFunction(2, 1, s)],
+         [TransferFunction(1, 1, s),
+          TransferFunction(1, s, s)]]) # This should ignore `s` as it is `var`
+    assert H_2.subs(p, 2) == TransferFunctionMatrix([
+        [TransferFunction(2*a*s, k*s**2, s),
+         TransferFunction(2*s, k*(-a + s**2), s)]])
+    assert H_2.subs(k, 1) == TransferFunctionMatrix([
+        [TransferFunction(a*p*s, s**2, s),
+         TransferFunction(p*s, -a + s**2, s)]])
+    assert H_2.subs(a, 0) == TransferFunctionMatrix([
+        [TransferFunction(0, k*s**2, s),
+         TransferFunction(p*s, k*s**2, s)]])
+    assert H_2.subs({p: 1, k: 1, a: a0}) == TransferFunctionMatrix([
+        [TransferFunction(a0*s, s**2, s),
+         TransferFunction(s, -a0 + s**2, s)]])
 
     # eval_frequency()
-    assert H_2.eval_frequency(S(1)/2 + I) == Matrix([[2*a*p/(5*k) - 4*I*a*p/(5*k), I*p/(-a*k - 3*k/4 + I*k) + p/(-2*a*k - 3*k/2 + 2*I*k)]])
+    assert H_2.eval_frequency(S(1)/2 + I) == \
+        Matrix([[2*a*p/(5*k) - 4*I*a*p/(5*k),
+                 I*p/(-a*k - 3*k/4 + I*k) + p/(-2*a*k - 3*k/2 + 2*I*k)]])
 
     # transpose()
 
-    assert H_1.transpose() == TransferFunctionMatrix([[TransferFunction(s*(s - 3)*(s + 1), s**4 + 1, s), TransferFunction(p, 1, s)], [TransferFunction(2, 1, s), TransferFunction(p, s, s)]])
-    assert H_2.transpose() == TransferFunctionMatrix([[TransferFunction(a*p*s, k*s**2, s)], [TransferFunction(p*s, k*(-a + s**2), s)]])
+    assert H_1.transpose() == TransferFunctionMatrix([
+        [TransferFunction(s*(s - 3)*(s + 1), s**4 + 1, s),
+         TransferFunction(p, 1, s)],
+         [TransferFunction(2, 1, s),
+          TransferFunction(p, s, s)]])
+    assert H_2.transpose() == TransferFunctionMatrix([
+        [TransferFunction(a*p*s, k*s**2, s)],
+        [TransferFunction(p*s, k*(-a + s**2), s)]])
     assert H_1.transpose().transpose() == H_1
     assert H_2.transpose().transpose() == H_2
 
     # elem_poles()
 
-    assert H_1.elem_poles() == [[[-sqrt(2)/2 - sqrt(2)*I/2, -sqrt(2)/2 + sqrt(2)*I/2, sqrt(2)/2 - sqrt(2)*I/2, sqrt(2)/2 + sqrt(2)*I/2], []],
+    assert H_1.elem_poles() == [[
+        [-sqrt(2)/2 - sqrt(2)*I/2, -sqrt(2)/2 + sqrt(2)*I/2,
+         sqrt(2)/2 - sqrt(2)*I/2, sqrt(2)/2 + sqrt(2)*I/2], []],
         [[], [0]]]
     assert H_2.elem_poles() == [[[0, 0], [sqrt(a), -sqrt(a)]]]
-    assert tfm2.elem_poles() == [[[wn*(-zeta + sqrt((zeta - 1)*(zeta + 1))), wn*(-zeta - sqrt((zeta - 1)*(zeta + 1)))], [], [-p/a2]],
-        [[-a0], [wn*(-zeta + sqrt((zeta - 1)*(zeta + 1))), wn*(-zeta - sqrt((zeta - 1)*(zeta + 1)))], [-p/a2]]]
+    assert tfm2.elem_poles() == [[[wn*(-zeta + sqrt((zeta - 1)*(zeta + 1))),
+                                   wn*(-zeta - sqrt((zeta - 1)*(zeta + 1)))],
+                                   [], [-p/a2]],
+        [[-a0], [wn*(-zeta + sqrt((zeta - 1)*(zeta + 1))),
+                 wn*(-zeta - sqrt((zeta - 1)*(zeta + 1)))], [-p/a2]]]
 
     # elem_zeros()
 
     assert H_1.elem_zeros() == [[[-1, 0, 3], []], [[], []]]
     assert H_2.elem_zeros() == [[[0], [0]]]
     assert tfm2.elem_zeros() == [[[], [], [a2*p]],
-        [[-a2/(2*a1) - sqrt(4*a0*a1 + a2**2)/(2*a1), -a2/(2*a1) + sqrt(4*a0*a1 + a2**2)/(2*a1)], [], [a2*p]]]
+        [[-a2/(2*a1) - sqrt(4*a0*a1 + a2**2)/(2*a1),
+          -a2/(2*a1) + sqrt(4*a0*a1 + a2**2)/(2*a1)], [], [a2*p]]]
 
     # doit()
 
-    H_3 = TransferFunctionMatrix([[Series(TransferFunction(1, s**3 - 3, s), TransferFunction(s**2 - 2*s + 5, 1, s), TransferFunction(1, s, s))]])
-    H_4 = TransferFunctionMatrix([[Parallel(TransferFunction(s**3 - 3, 4*s**4 - s**2 - 2*s + 5, s), TransferFunction(4 - s**3, 4*s**4 - s**2 - 2*s + 5, s))]])
+    H_3 = TransferFunctionMatrix([
+        [Series(TransferFunction(1, s**3 - 3, s),
+            TransferFunction(s**2 - 2*s + 5, 1, s),
+            TransferFunction(1, s, s))]])
+    H_4 = TransferFunctionMatrix([
+        [Parallel(TransferFunction(s**3 - 3, 4*s**4 - s**2 - 2*s + 5, s),
+                  TransferFunction(4 - s**3, 4*s**4 - s**2 - 2*s + 5, s))]])
 
-    assert H_3.doit() == TransferFunctionMatrix([[TransferFunction(s**2 - 2*s + 5, s*(s**3 - 3), s)]])
-    assert H_4.doit() == TransferFunctionMatrix([[TransferFunction(1, 4*s**4 - s**2 - 2*s + 5, s)]])
+    assert H_3.doit() == TransferFunctionMatrix([
+        [TransferFunction(s**2 - 2*s + 5, s*(s**3 - 3), s)]])
+    assert H_4.doit() == TransferFunctionMatrix([
+        [TransferFunction(1, 4*s**4 - s**2 - 2*s + 5, s)]])
+
+    dH_3 = TransferFunctionMatrix([
+        [Series(DTTransferFunction(1, s**3 - 3, s, 0.1),
+            DTTransferFunction(s**2 - 2*s + 5, 1, s, 0.1),
+            DTTransferFunction(1, s, s, 0.1))]])
+    dH_4 = TransferFunctionMatrix([
+        [Parallel(DTTransferFunction(s**3 - 3, 4*s**4 - s**2 - 2*s + 5, s, 0.1),
+                  DTTransferFunction(4 - s**3, 4*s**4 - s**2 - 2*s + 5, s, 0.1))
+                  ]])
+
+    assert dH_3.doit() == TransferFunctionMatrix([
+        [DTTransferFunction(s**2 - 2*s + 5, s*(s**3 - 3), s, 0.1)]])
+    assert dH_4.doit() == TransferFunctionMatrix([
+        [DTTransferFunction(1, 4*s**4 - s**2 - 2*s + 5, s, 0.1)]])
 
     # _flat()
 
-    assert H_1._flat() == [TransferFunction(s*(s - 3)*(s + 1), s**4 + 1, s), TransferFunction(2, 1, s), TransferFunction(p, 1, s), TransferFunction(p, s, s)]
-    assert H_2._flat() == [TransferFunction(a*p*s, k*s**2, s), TransferFunction(p*s, k*(-a + s**2), s)]
-    assert H_3._flat() == [Series(TransferFunction(1, s**3 - 3, s), TransferFunction(s**2 - 2*s + 5, 1, s), TransferFunction(1, s, s))]
-    assert H_4._flat() == [Parallel(TransferFunction(s**3 - 3, 4*s**4 - s**2 - 2*s + 5, s), TransferFunction(4 - s**3, 4*s**4 - s**2 - 2*s + 5, s))]
+    assert H_1._flat() == [TransferFunction(s*(s - 3)*(s + 1), s**4 + 1, s),
+                           TransferFunction(2, 1, s),
+                           TransferFunction(p, 1, s),
+                           TransferFunction(p, s, s)]
+    assert H_2._flat() == [TransferFunction(a*p*s, k*s**2, s),
+                           TransferFunction(p*s, k*(-a + s**2), s)]
+    assert H_3._flat() == [Series(TransferFunction(1, s**3 - 3, s),
+                                  TransferFunction(s**2 - 2*s + 5, 1, s),
+                                  TransferFunction(1, s, s))]
+    assert H_4._flat() == [Parallel(
+        TransferFunction(s**3 - 3, 4*s**4 - s**2 - 2*s + 5, s),
+        TransferFunction(4 - s**3, 4*s**4 - s**2 - 2*s + 5, s))]
 
     # evalf()
 
     assert H_1.evalf() == \
-        TransferFunctionMatrix(((TransferFunction(s*(s - 3.0)*(s + 1.0), s**4 + 1.0, s), TransferFunction(2.0, 1, s)), (TransferFunction(1.0*p, 1, s), TransferFunction(p, s, s))))
+        TransferFunctionMatrix((
+            (TransferFunction(s*(s - 3.0)*(s + 1.0), s**4 + 1.0, s),
+             TransferFunction(2.0, 1, s)),
+            (TransferFunction(1.0*p, 1, s),
+             TransferFunction(p, s, s))))
     assert H_2.subs({a:3.141, p:2.88, k:2}).evalf() == \
         TransferFunctionMatrix(((TransferFunction(4.5230399999999999494093572138808667659759521484375, s, s),
         TransferFunction(2.87999999999999989341858963598497211933135986328125*s, 2.0*s**2 - 6.282000000000000028421709430404007434844970703125, s)),))
 
+    dH_1 = TransferFunctionMatrix.from_Matrix(mat_1, s, T)
+    dH_2 = TransferFunctionMatrix([[DTTransferFunction(a*p*s, k*s**2, s, T),
+                                   DTTransferFunction(p*s, k*(s**2 - a), s, T)
+                                   ]])
+    assert dH_1.evalf() == \
+        TransferFunctionMatrix((
+            (DTTransferFunction(s*(s - 3.0)*(s + 1.0), s**4 + 1.0, s, T),
+             DTTransferFunction(2.0, 1, s, T)),
+            (DTTransferFunction(1.0*p, 1, s, T),
+             DTTransferFunction(p, s, s, T))))
+    assert dH_2.subs({a:3.141, p:2.88, k:2}).evalf() == \
+        TransferFunctionMatrix(((DTTransferFunction(4.5230399999999999494093572138808667659759521484375, s, s, T),
+        DTTransferFunction(2.87999999999999989341858963598497211933135986328125*s, 2.0*s**2 - 6.282000000000000028421709430404007434844970703125, s, T)),))
     # simplify()
 
-    H_5 = TransferFunctionMatrix([[TransferFunction(s**5 + s**3 + s, s - s**2, s),
+    H_5 = TransferFunctionMatrix([[
+        TransferFunction(s**5 + s**3 + s, s - s**2, s),
         TransferFunction((s + 3)*(s - 1), (s - 1)*(s + 5), s)]])
 
     assert H_5.simplify() == simplify(H_5) == \
-        TransferFunctionMatrix(((TransferFunction(-s**4 - s**2 - 1, s - 1, s), TransferFunction(s + 3, s + 5, s)),))
+        TransferFunctionMatrix(((
+            TransferFunction(-s**4 - s**2 - 1, s - 1, s),
+            TransferFunction(s + 3, s + 5, s)),))
+
+    dH_5 = TransferFunctionMatrix([[
+        DTTransferFunction(s**5 + s**3 + s, s - s**2, s, 2),
+        DTTransferFunction((s + 3)*(s - 1), (s - 1)*(s + 5), s, 2)]])
+
+    assert dH_5.simplify() == simplify(dH_5) == \
+        TransferFunctionMatrix(((
+            DTTransferFunction(-s**4 - s**2 - 1, s - 1, s, 2),
+            DTTransferFunction(s + 3, s + 5, s, 2)),))
 
     # expand()
 
     assert (H_1.expand()
-            == TransferFunctionMatrix(((TransferFunction(s**3 - 2*s**2 - 3*s, s**4 + 1, s), TransferFunction(2, 1, s)),
-            (TransferFunction(p, 1, s), TransferFunction(p, s, s)))))
+            == TransferFunctionMatrix((
+                (TransferFunction(s**3 - 2*s**2 - 3*s, s**4 + 1, s),
+                 TransferFunction(2, 1, s)),
+                (TransferFunction(p, 1, s), TransferFunction(p, s, s)))))
     assert H_5.expand() == \
-        TransferFunctionMatrix(((TransferFunction(s**5 + s**3 + s, -s**2 + s, s), TransferFunction(s**2 + 2*s - 3, s**2 + 4*s - 5, s)),))
+        TransferFunctionMatrix((
+            (TransferFunction(s**5 + s**3 + s, -s**2 + s, s),
+             TransferFunction(s**2 + 2*s - 3, s**2 + 4*s - 5, s)),))
+
+    assert (dH_1.expand()
+            == TransferFunctionMatrix((
+                (DTTransferFunction(s**3 - 2*s**2 - 3*s, s**4 + 1, s, T),
+                 DTTransferFunction(2, 1, s, T)),
+                (DTTransferFunction(p, 1, s, T), DTTransferFunction(p, s, s, T))
+                )))
+    assert dH_5.expand() == \
+        TransferFunctionMatrix((
+            (DTTransferFunction(s**5 + s**3 + s, -s**2 + s, s, 2),
+             DTTransferFunction(s**2 + 2*s - 3, s**2 + 4*s - 5, s, 2)),))
 
 def test_TransferFunction_gbt():
     # simple transfer function, e.g. ohms law

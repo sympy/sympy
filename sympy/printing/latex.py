@@ -2628,7 +2628,8 @@ class LatexPrinter(Printer):
     def _print_DTTransferFunction(self, expr):
         num, den = self._print(expr.num), self._print(expr.den)
         sampling_time = self._print(expr.sampling_time)
-        return r"\frac{%s}{%s} \text{ sampling_time: } {%s}" % (num, den, sampling_time)
+        return r"\frac{%s}{%s} \text{, sampling\_time: } {%s}" % \
+            (num, den, sampling_time)
 
     def _print_Series(self, expr):
         args = list(expr.args)
@@ -2690,11 +2691,17 @@ class LatexPrinter(Printer):
         inv_mat = self._print(MIMOSeries(expr.sys2, expr.sys1))
         sys1 = self._print(expr.sys1)
         _sign = "+" if expr.sign == -1 else "-"
-        return r"\left(I_{\tau} %s %s\right)^{-1} \cdot %s" % (_sign, inv_mat, sys1)
+        return r"\left(I_{\tau} %s %s\right)^{-1} \cdot %s" % (_sign, inv_mat,
+                                                               sys1)
 
     def _print_TransferFunctionMatrix(self, expr):
         mat = self._print(expr._expr_mat)
-        return r"%s_\tau" % mat
+        if expr.sampling_time == 0:
+            print_mat = r"%s_\tau" % mat
+        else:
+            print_mat = r"%s_k \text{, sampling\_time: } {%s}" % (mat,
+                                                           expr.sampling_time)
+        return print_mat
 
     def _print_DFT(self, expr):
         return r"\text{{{}}}_{{{}}}".format(expr.__class__.__name__, expr.n)

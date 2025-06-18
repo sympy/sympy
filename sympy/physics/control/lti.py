@@ -454,7 +454,8 @@ def _check_other_MIMO(func):
 
 def _check_compatibility(systems):
     """Checks compatibility between different systems"""
-    if not all(isinstance(system, SISOLinearTimeInvariant) for system in systems):
+    if not all(isinstance(system, LinearTimeInvariant) \
+               for system in systems):
         return
 
     continuous = systems[0].is_continuous
@@ -1283,7 +1284,7 @@ class TransferFunctionBase(SISOLinearTimeInvariant):
             if not self.var == other.var:
                 raise ValueError(filldedent("""
                     All the transfer functions should use the same complex
-                    variable of the Laplace domain or z-domain.""")) #TODO: discuss this behavior
+                    variable of the Laplace domain or z-domain."""))
             return Parallel(self, other)
         elif isinstance(other, Parallel):
             if not self.var == other.var:
@@ -1670,7 +1671,6 @@ class DTTransferFunction(TransferFunctionBase):
         return super().from_zpk(zeros, poles, gain,
                                 var, sampling_time = sampling_time)
 
-    # discretization methods #TODO: add tests
     @classmethod
     def gbt(cls, cont_tf, sampling_time, alpha, var):
         r"""
@@ -2533,13 +2533,14 @@ class MIMOSeries(MIMOLinearTimeInvariant):
 
     """
     def __new__(cls, *args, evaluate=False):
-
-        if args and any(isinstance(arg, StateSpace) or (hasattr(arg, 'is_StateSpace_object')
-                                            and arg.is_StateSpace_object) for arg in args):
+        is_StateSpace = lambda arg: isinstance(arg, StateSpace) or \
+            (hasattr(arg, 'is_StateSpace_object') and arg.is_StateSpace_object)
+        if args and any(is_StateSpace(arg) for arg in args):
             # Check compatibility
             for i in range(1, len(args)):
                 if args[i].num_inputs != args[i - 1].num_outputs:
-                    raise ValueError(filldedent("""Systems with incompatible inputs and outputs
+                    raise ValueError(filldedent("""
+                        Systems with incompatible inputs and outputs
                         cannot be connected in MIMOSeries."""))
             obj = super().__new__(cls, *args)
             cls._is_series_StateSpace = True
@@ -2556,7 +2557,7 @@ class MIMOSeries(MIMOLinearTimeInvariant):
                     of output signals of adjacent systems for some args."""))
 
         _check_compatibility(args)
-        cls._is_continuous = args[0].is_continuous
+        obj._is_continuous = args[0].is_continuous
 
         return obj.doit() if evaluate else obj
 
@@ -2640,7 +2641,8 @@ class MIMOSeries(MIMOLinearTimeInvariant):
 
         _dummy_args, _dummy_dict = _dummify_args(_arg, self.var)
         res = MatMul(*_dummy_args, evaluate=True)
-        temp_tfm = TransferFunctionMatrix.from_Matrix(res, self.var)
+        temp_tfm = TransferFunctionMatrix.from_Matrix(res, self.var,
+                                                      self.sampling_time)
         return temp_tfm.subs(_dummy_dict)
 
     def _eval_rewrite_as_TransferFunctionMatrix(self, *args, **kwargs):
@@ -2682,6 +2684,9 @@ class MIMOSeries(MIMOLinearTimeInvariant):
         arg_list[0] = -arg_list[0]
         return MIMOSeries(*arg_list)
 
+    @property
+    def sampling_time(self):
+        return self.args[0].sampling_time
 
 class Parallel(SISOLinearTimeInvariant):
     r"""
@@ -3141,12 +3146,17 @@ class MIMOParallel(MIMOLinearTimeInvariant):
         args = _flatten_args(args, MIMOParallel)
 
         # For StateSpace Parallel connection
-        if args and any(isinstance(arg, StateSpace) or (hasattr(arg, 'is_StateSpace_object')
-                                    and arg.is_StateSpace_object) for arg in args):
-            if any(arg.num_inputs != args[0].num_inputs or arg.num_outputs != args[0].num_outputs
+        is_StateSpace = lambda arg: isinstance(arg, StateSpace) or \
+            (hasattr(arg, 'is_StateSpace_object') and arg.is_StateSpace_object)
+
+        if args and any(is_StateSpace(arg) for arg in args):
+            compatible_input = lambda arg: arg.num_inputs != args[0].num_inputs
+            compatible_output = lambda arg: arg.num_outputs != \
+                                                            args[0].num_outputs
+            if any(compatible_input(arg) or compatible_output(arg)
                    for arg in args[1:]):
-                raise ShapeError("Systems with incompatible inputs and outputs cannot be "
-                                 "connected in MIMOParallel.")
+                raise ShapeError("Systems with incompatible inputs and outputs"
+                                 "cannot be connected in MIMOParallel.")
             cls._is_parallel_StateSpace = True
         else:
             cls._check_args(args)
@@ -3156,7 +3166,7 @@ class MIMOParallel(MIMOLinearTimeInvariant):
         obj = super().__new__(cls, *args)
 
         _check_compatibility(args)
-        cls._is_continuous = args[0].is_continuous
+        obj._is_continuous = args[0].is_continuous
 
         return obj.doit() if evaluate else obj
 
@@ -3203,8 +3213,8 @@ class MIMOParallel(MIMOLinearTimeInvariant):
 
     def doit(self, **hints):
         """
-        Returns the resultant transfer function matrix or StateSpace obtained after evaluating
-        the MIMO systems arranged in a parallel configuration.
+        Returns the resultant transfer function matrix or StateSpace obtained
+        after evaluating the MIMO systems arranged in a parallel configuration.
 
         Examples
         ========
@@ -3233,11 +3243,14 @@ class MIMOParallel(MIMOLinearTimeInvariant):
             return res
         _arg = (arg.doit()._expr_mat for arg in self.args)
         res = MatAdd(*_arg, evaluate=True)
-        return TransferFunctionMatrix.from_Matrix(res, self.var)
+        return TransferFunctionMatrix.from_Matrix(res, self.var,
+                                                  self.sampling_time)
 
     def _eval_rewrite_as_TransferFunctionMatrix(self, *args, **kwargs):
+        tf_class = TransferFunction if self.is_continuous \
+                                    else DTTransferFunction
         if self._is_parallel_StateSpace:
-            return self.doit().rewrite(TransferFunction)
+            return self.doit().rewrite(tf_class)
         return self.doit()
 
     @_check_other_MIMO
@@ -3268,6 +3281,9 @@ class MIMOParallel(MIMOLinearTimeInvariant):
         arg_list = [-arg for arg in list(self.args)]
         return MIMOParallel(*arg_list)
 
+    @property
+    def sampling_time(self):
+        return self.args[0].sampling_time
 
 class Feedback(SISOLinearTimeInvariant):
     r"""
@@ -3859,10 +3875,12 @@ class MIMOFeedback(MIMOLinearTimeInvariant):
 
     """
     def __new__(cls, sys1, sys2, sign=-1):
-        if not isinstance(sys1, (TransferFunctionMatrix, MIMOSeries, StateSpace)):
+        if not isinstance(sys1,
+                          (TransferFunctionMatrix, MIMOSeries, StateSpace)):
             raise TypeError("Unsupported type for `sys1` in MIMO Feedback.")
 
-        if not isinstance(sys2, (TransferFunctionMatrix, MIMOSeries, StateSpace)):
+        if not isinstance(sys2,
+                          (TransferFunctionMatrix, MIMOSeries, StateSpace)):
             raise TypeError("Unsupported type for `sys2` in MIMO Feedback.")
 
         if sys1.num_inputs != sys2.num_outputs or \
@@ -3890,9 +3908,10 @@ class MIMOFeedback(MIMOLinearTimeInvariant):
                 same complex variable."""))
 
         _check_compatibility([sys1, sys2])
-        cls._is_continuous = sys1.is_continuous
+        obj = super().__new__(cls, sys1, sys2, _sympify(sign))
+        obj._is_continuous = sys1.is_continuous
 
-        return super().__new__(cls, sys1, sys2, _sympify(sign))
+        return obj
 
     @property
     def sys1(self):
@@ -4155,7 +4174,7 @@ class MIMOFeedback(MIMOLinearTimeInvariant):
 
         _mat = self.sensitivity * self.sys1.doit()._expr_mat
 
-        _resultant_tfm = _to_TFM(_mat, self.var)
+        _resultant_tfm = _to_TFM(_mat, self.var, self.sampling_time)
 
         if cancel:
             _resultant_tfm = _resultant_tfm.simplify()
@@ -4171,10 +4190,20 @@ class MIMOFeedback(MIMOLinearTimeInvariant):
     def __neg__(self):
         return MIMOFeedback(-self.sys1, -self.sys2, self.sign)
 
+    @property
+    def sampling_time(self):
+        return self.sys1.sampling_time
 
-def _to_TFM(mat, var):
-    """Private method to convert ImmutableMatrix to TransferFunctionMatrix efficiently"""
-    to_tf = lambda expr: TransferFunction.from_rational_expression(expr, var)
+
+def _to_TFM(mat, var, sampling_time):
+    """Private method to convert ImmutableMatrix to TransferFunctionMatrix
+    efficiently"""
+    if sampling_time == 0:
+        to_tf = lambda expr: \
+            TransferFunction.from_rational_expression(expr,var)
+    else:
+        to_tf = lambda expr: \
+            DTTransferFunction.from_rational_expression(expr,var, sampling_time)
     arg = [[to_tf(expr) for expr in row] for row in mat.tolist()]
     return TransferFunctionMatrix(arg)
 
@@ -4531,7 +4560,7 @@ class TransferFunctionMatrix(MIMOLinearTimeInvariant):
     See Also
     ========
 
-    TransferFunction, MIMOSeries, MIMOParallel, Feedback
+    DTTransferFunction, TransferFunction, MIMOSeries, MIMOParallel, Feedback
 
     """
     def __new__(cls, arg):
@@ -4554,15 +4583,15 @@ class TransferFunctionMatrix(MIMOLinearTimeInvariant):
 
                 if var != element.var:
                     raise ValueError(filldedent("""
-                        Conflicting value(s) found for `var`. All TransferFunction
-                        instances in TransferFunctionMatrix should use the same
-                        complex variable in Laplace domain or z-domain."""))
+                        Conflicting value(s) found for `var`.
+                        All TransferFunction instances in TransferFunctionMatrix
+                        should use the same complex variable in Laplace domain
+                        or z-domain."""))
 
                 temp.append(element.to_expr())
             expr_mat_arg.append(temp)
 
         _check_compatibility([sys for row in arg for sys in row])
-        cls._is_continuous = arg[0][0].is_continuous
 
         if isinstance(arg, (tuple, list, Tuple)):
             # Making nested Tuple (sympy.core.containers.Tuple) from nested list or nested Python tuple
@@ -4571,11 +4600,12 @@ class TransferFunctionMatrix(MIMOLinearTimeInvariant):
         obj = super(TransferFunctionMatrix, cls).__new__(cls, arg)
         obj._expr_mat = ImmutableMatrix(expr_mat_arg)
         obj.is_StateSpace_object = False
+        obj._is_continuous = arg[0][0].is_continuous
 
         return obj
 
     @classmethod
-    def from_Matrix(cls, matrix, var): #TODO: expand for discrete systems
+    def from_Matrix(cls, matrix, var, sampling_time = 0):
         """
         Creates a new ``TransferFunctionMatrix`` efficiently from a SymPy Matrix
         of ``Expr`` objects.
@@ -4585,13 +4615,18 @@ class TransferFunctionMatrix(MIMOLinearTimeInvariant):
 
         matrix : ``ImmutableMatrix`` having ``Expr``/``Number`` elements.
         var : Symbol
-            Complex variable of the Laplace transform which will be used by the
-            all the ``TransferFunction`` objects in the ``TransferFunctionMatrix``.
+            Complex variable of the Laplace transform or z-transform which will
+            be used by the all the transfer function objects in the
+            ``TransferFunctionMatrix``.
+        sampling_time : Number, Symbol, optional
+            Sampling time for the discrete-time transfer function matrix.
+            Default is 0, which means that the transfer function matrix will be
+            treated as a continuous-time transfer function matrix.
 
         Examples
         ========
 
-        >>> from sympy.abc import s
+        >>> from sympy.abc import s, z
         >>> from sympy.physics.control.lti import TransferFunctionMatrix
         >>> from sympy import Matrix, pprint
         >>> M = Matrix([[s, 1/s], [1/(s+1), s]])
@@ -4608,9 +4643,22 @@ class TransferFunctionMatrix(MIMOLinearTimeInvariant):
         [[[], [0]], [[-1], []]]
         >>> M_tf.elem_zeros()
         [[[0], []], [[], [0]]]
+        >>> M_2 = Matrix([[z/(z-1), z/(z-8)], [z**2/(z**2-2+1), z]])
+        >>> M2_tf = TransferFunctionMatrix.from_Matrix(M_2, z, 0.1)
+        >>> pprint(M2_tf, use_unicode=False)
+        [  z       z  ]
+        [-----   -----]
+        [z - 1   z - 8]
+        [             ]
+        [   2         ]
+        [  z       z  ]
+        [------    -  ]
+        [ 2        1  ]
+        [z  - 1       ]{k}, sampling_time: 0.1
+
 
         """
-        return _to_TFM(matrix, var)
+        return _to_TFM(matrix, var, sampling_time)
 
     @property
     def var(self):
@@ -4696,7 +4744,8 @@ class TransferFunctionMatrix(MIMOLinearTimeInvariant):
     @property
     def shape(self):
         """
-        Returns the shape of the transfer function matrix, that is, ``(# of outputs, # of inputs)``.
+        Returns the shape of the transfer function matrix, that is,
+        ``(# of outputs, # of inputs)``.
 
         Examples
         ========
@@ -4718,7 +4767,7 @@ class TransferFunctionMatrix(MIMOLinearTimeInvariant):
 
     def __neg__(self):
         neg = -self._expr_mat
-        return _to_TFM(neg, self.var)
+        return _to_TFM(neg, self.var, self.sampling_time)
 
     @_check_other_MIMO
     def __add__(self, other):
@@ -4743,20 +4792,33 @@ class TransferFunctionMatrix(MIMOLinearTimeInvariant):
     def __getitem__(self, key):
         trunc = self._expr_mat.__getitem__(key)
         if isinstance(trunc, ImmutableMatrix):
-            return _to_TFM(trunc, self.var)
-        return TransferFunction.from_rational_expression(trunc, self.var)
+            return _to_TFM(trunc, self.var, self.sampling_time)
+
+        if self.sampling_time == 0:
+            to_tf = lambda expr: \
+                TransferFunction.from_rational_expression(expr, self.var)
+        else:
+            to_tf = lambda expr: \
+                DTTransferFunction.from_rational_expression(expr, self.var,
+                                                            self.sampling_time)
+        return to_tf(trunc)
 
     def transpose(self):
-        """Returns the transpose of the ``TransferFunctionMatrix`` (switched input and output layers)."""
+        """
+        Returns the transpose of the ``TransferFunctionMatrix``
+        (switched input and output layers).
+
+        """
         transposed_mat = self._expr_mat.transpose()
-        return _to_TFM(transposed_mat, self.var)
+        return _to_TFM(transposed_mat, self.var, self.sampling_time)
 
     def elem_poles(self):
         """
         Returns the poles of each element of the ``TransferFunctionMatrix``.
 
         .. note::
-            Actual poles of a MIMO system are NOT the poles of individual elements.
+            Actual poles of a MIMO system are NOT the poles of individual
+            elements.
 
         Examples
         ========
@@ -4779,14 +4841,16 @@ class TransferFunctionMatrix(MIMOLinearTimeInvariant):
         elem_zeros
 
         """
-        return [[element.poles() for element in row] for row in self.doit().args[0]]
+        return [[element.poles() for element in row] for row in \
+                                                        self.doit().args[0]]
 
     def elem_zeros(self):
         """
         Returns the zeros of each element of the ``TransferFunctionMatrix``.
 
         .. note::
-            Actual zeros of a MIMO system are NOT the zeros of individual elements.
+            Actual zeros of a MIMO system are NOT the zeros of individual
+            elements.
 
         Examples
         ========
@@ -4809,11 +4873,13 @@ class TransferFunctionMatrix(MIMOLinearTimeInvariant):
         elem_poles
 
         """
-        return [[element.zeros() for element in row] for row in self.doit().args[0]]
+        return [[element.zeros() for element in row] for row in \
+                                                        self.doit().args[0]]
 
     def eval_frequency(self, other):
         """
-        Evaluates system response of each transfer function in the ``TransferFunctionMatrix`` at any point in the real or complex plane.
+        Evaluates system response of each transfer function in the
+        ``TransferFunctionMatrix`` at any point in the real or complex plane.
 
         Examples
         ========
@@ -4845,20 +4911,28 @@ class TransferFunctionMatrix(MIMOLinearTimeInvariant):
         return [elem for tup in self.args[0] for elem in tup]
 
     def _eval_evalf(self, prec):
-        """Calls evalf() on each transfer function in the transfer function matrix"""
+        """
+        Calls evalf() on each transfer function in the transfer function
+        matrix
+
+        """
         dps = prec_to_dps(prec)
         mat = self._expr_mat.applyfunc(lambda a: a.evalf(n=dps))
-        return _to_TFM(mat, self.var)
+        return _to_TFM(mat, self.var, self.sampling_time)
 
     def _eval_simplify(self, **kwargs):
         """Simplifies the transfer function matrix"""
         simp_mat = self._expr_mat.applyfunc(lambda a: cancel(a, expand=False))
-        return _to_TFM(simp_mat, self.var)
+        return _to_TFM(simp_mat, self.var, self.sampling_time)
 
     def expand(self, **hints):
         """Expands the transfer function matrix"""
         expand_mat = self._expr_mat.expand(**hints)
-        return _to_TFM(expand_mat, self.var)
+        return _to_TFM(expand_mat, self.var, self.sampling_time)
+
+    @property
+    def sampling_time(self):
+        return self.args[0][0][0].sampling_time
 
 def new_state_space(A=None, B=None, C=None, D=None, sampling_time = 0):
     #TODO: finish
