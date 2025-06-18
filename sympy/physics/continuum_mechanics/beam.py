@@ -180,7 +180,16 @@ class Beam:
             location of the moving load in ILD calculations. By default, it
             is set to ``Symbol('a')``.
         """
-        self.length = length
+        self._user_map = {}
+        self._user_map_inv = {}
+        def _wrap_positive(S):
+            if isinstance(S, Symbol) and not S.is_positive:
+                S_pos = Symbol(str(S) + ' ', positive=True)
+                self._user_map[S] = S_pos
+                self._user_map_inv[S_pos] = S
+                return S_pos
+            return S
+        self._length = _wrap_positive(sympify(length))
         self.elastic_modulus = elastic_modulus
         if isinstance(second_moment, GeometryEntity):
             self.cross_section = second_moment
@@ -217,7 +226,7 @@ class Beam:
     @property
     def reaction_loads(self):
         """ Returns the reaction forces in a dictionary."""
-        return self._reaction_loads
+        return {k: v.xreplace(self._user_map_inv) for k, v in self._reaction_loads.items()}
 
     @property
     def rotation_jumps(self):
@@ -273,7 +282,7 @@ class Beam:
     @property
     def length(self):
         """Length of the Beam."""
-        return self._length
+        return self._length.xreplace(self._user_map_inv)
 
     @length.setter
     def length(self, l):
@@ -533,7 +542,7 @@ class Beam:
         - 8*SingularityFunction(x, 10, -1) + 100*SingularityFunction(x, 20, -2)
         + 10*SingularityFunction(x, 20, -1)
         """
-        loc = sympify(loc)
+        loc = sympify(loc).xreplace(self._user_map)
 
         self._applied_supports.append((loc, type))
         if type in ("pin", "roller"):
@@ -618,7 +627,7 @@ class Beam:
         + 1875*SingularityFunction(x, 12, -1)/16 + 75*SingularityFunction(x, 15, 0)/2
         + 5*SingularityFunction(x, 15, 1) - 5*SingularityFunction(x, 15, 2)/2
         """
-        loc = sympify(loc)
+        loc = sympify(loc).xreplace(self._user_map)
         E = self.elastic_modulus
         I = self._get_I(loc)
 
@@ -672,7 +681,7 @@ class Beam:
         -SingularityFunction(x, 0, 2)/16 + SingularityFunction(x, 0, 3)/240
         - SingularityFunction(x, 5, 3)/240 + 85*SingularityFunction(x, 8, 0)/24
         """
-        loc = sympify(loc)
+        loc = sympify(loc).xreplace(self._user_map)
         E = self.elastic_modulus
         I = self._get_I(loc)
 
@@ -740,7 +749,7 @@ class Beam:
         """
         x = self.variable
         value = sympify(value)
-        start = sympify(start)
+        start = sympify(start).xreplace(self._user_map)
         order = sympify(order)
 
         self._applied_loads.append((value, start, order, end))
@@ -748,6 +757,7 @@ class Beam:
         self._original_load += value*SingularityFunction(x, start, order)
 
         if end:
+            end=sympify(end).xreplace(self._user_map)
             # load has an end point within the length of the beam.
             self._handle_end(x, value, start, order, end, type="apply")
 
@@ -800,7 +810,7 @@ class Beam:
         """
         x = self.variable
         value = sympify(value)
-        start = sympify(start)
+        start = sympify(start).xreplace(self._user_map)
         order = sympify(order)
 
         if (value, start, order, end) in self._applied_loads:
@@ -812,6 +822,7 @@ class Beam:
             raise ValueError(msg)
 
         if end:
+            end=sympify(end).xreplace(self._user_map)
             # load has an end point within the length of the beam.
             self._handle_end(x, value, start, order, end, type="remove")
 
@@ -872,7 +883,8 @@ class Beam:
         >>> b.load
         -3*SingularityFunction(x, 0, -2) + 4*SingularityFunction(x, 2, -1) - 2*SingularityFunction(x, 3, 2)
         """
-        return self._load
+        load_expr = self._load
+        return load_expr.xreplace(self._user_map_inv)
 
     @property
     def applied_loads(self):
@@ -940,14 +952,16 @@ class Beam:
         """
 
         x = self.variable
-        l = self.length
+        l = self._length
         C3 = Symbol('C3')
         C4 = Symbol('C4')
         rotation_jumps = tuple(self._rotation_hinge_symbols)
         deflection_jumps = tuple(self._sliding_hinge_symbols)
 
-        shear_curve = limit(self.shear_force(), x, l)
-        moment_curve = limit(self.bending_moment(), x, l)
+        shear_force = self.shear_force().xreplace(self._user_map)
+        bending_moment = self.bending_moment().xreplace(self._user_map)
+        shear_curve = limit(shear_force, x, l)
+        moment_curve = limit(bending_moment, x, l)
 
         shear_force_eqs = []
         bending_moment_eqs = []
@@ -955,22 +969,26 @@ class Beam:
         deflection_eqs = []
 
         for position, value in self._boundary_conditions['shear_force']:
-            eqs = self.shear_force().subs(x, position) - value
+            position = sympify(position).xreplace(self._user_map)
+            eqs = shear_force.subs(x, position) - value
             new_eqs = sum(arg for arg in eqs.args if not any(num.is_infinite for num in arg.args))
             shear_force_eqs.append(new_eqs)
 
         for position, value in self._boundary_conditions['bending_moment']:
-            eqs = self.bending_moment().subs(x, position) - value
+            position = sympify(position).xreplace(self._user_map)
+            eqs = bending_moment.subs(x, position) - value
             new_eqs = sum(arg for arg in eqs.args if not any(num.is_infinite for num in arg.args))
             bending_moment_eqs.append(new_eqs)
 
-        slope_curve = integrate(self.bending_moment(), x) + C3
+        slope_curve = integrate(bending_moment, x) + C3
         for position, value in self._boundary_conditions['slope']:
+            position = sympify(position).xreplace(self._user_map)
             eqs = slope_curve.subs(x, position) - value
             slope_eqs.append(eqs)
 
         deflection_curve = integrate(slope_curve, x) + C4
         for position, value in self._boundary_conditions['deflection']:
+            position = sympify(position).xreplace(self._user_map)
             eqs = deflection_curve.subs(x, position) - value
             deflection_eqs.append(eqs)
 
@@ -982,12 +1000,12 @@ class Beam:
         rotation_solution = solution[reaction_index:rotation_index]
         deflection_solution = solution[rotation_index:]
 
-        self._reaction_loads = dict(zip(reactions, reaction_solution))
-        self._rotation_jumps = dict(zip(rotation_jumps, rotation_solution))
-        self._deflection_jumps = dict(zip(deflection_jumps, deflection_solution))
-        self._load = self._load.subs(self._reaction_loads)
-        self._load = self._load.subs(self._rotation_jumps)
-        self._load = self._load.subs(self._deflection_jumps)
+        self._reaction_loads = {r: s.xreplace(self._user_map_inv) for r, s in zip(reactions, reaction_solution)}
+        self._rotation_jumps = {r: s.xreplace(self._user_map_inv) for r, s in zip(rotation_jumps, rotation_solution)}
+        self._deflection_jumps = {d: s.xreplace(self._user_map_inv) for d, s in zip(deflection_jumps, deflection_solution)}
+        self._load = self._load.subs({k: v.xreplace(self._user_map) for k, v in self._reaction_loads.items()})
+        self._load = self._load.subs({k: v.xreplace(self._user_map) for k, v in self._rotation_jumps.items()})
+        self._load = self._load.subs({k: v.xreplace(self._user_map) for k, v in self._deflection_jumps.items()})
 
     def shear_force(self):
         """

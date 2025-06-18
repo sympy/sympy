@@ -253,6 +253,167 @@ def test_Beam():
     with raises(TypeError):
         b4.variable = 1
 
+def test_symbolic_length_with_positive_setting_1():
+
+    E, I, L, P = symbols('E, I, L, P')
+    L = symbols("L", positive=True)
+    b = Beam(L, E, I)
+    R1 = b.apply_support(0, 'pin')
+    R2 = b.apply_support(L, 'pin')
+    b.apply_load(-P, L/4, -1)
+    b.solve_for_reaction_loads(R1, R2)
+    assert b.reaction_loads=={R1: 3*P/4, R2: P/4}
+
+def test_symbolic_length_without_positive_setting_1():
+
+    E, I, L, P = symbols('E, I, L, P')
+    b = Beam(L, E, I)
+    R1 = b.apply_support(0, 'pin')
+    R2 = b.apply_support(L, 'pin')
+    b.apply_load(-P, L/4, -1)
+    b.solve_for_reaction_loads(R1, R2)
+    assert b.reaction_loads=={R1: 3*P/4, R2: P/4}
+
+def test_symbolic_length_with_positive_setting_2():
+
+    E, I, L, P = symbols('E, I, L, P')
+    R1, R2 = symbols('R1, R2')
+    L = symbols("L", positive=True)
+    b = Beam(L, E, I)
+    b.apply_load(R1, 0, -1)
+    b.apply_load(R2, L, -1)
+    b.apply_load(-P, L/4, -1)
+    b.bc_deflection = [(0, 0), (L, 0)]
+    b.solve_for_reaction_loads(R1, R2)
+    assert b.reaction_loads =={R1: 3*P/4, R2: P/4}
+
+def test_symbolic_length_without_positive_setting_2():
+
+    E, I, L, P = symbols('E, I, L, P')
+    R1, R2 = symbols('R1, R2')
+    b = Beam(L, E, I)
+    b.apply_load(R1, 0, -1)
+    b.apply_load(R2, L, -1)
+    b.apply_load(-P, L/4, -1)
+    b.bc_deflection = [(0, 0), (L, 0)]
+    b.solve_for_reaction_loads(R1, R2)
+    assert b.reaction_loads =={R1: 3*P/4, R2: P/4}
+
+
+def test_symbolic_length_with_positive_setting_3():
+
+    E, I, L, q = symbols('E, I, L, q')
+    L=symbols("L",positive=True)
+    b = Beam(L, E, I)
+    R1 = b.apply_support(0, 'pin')
+    R2 = b.apply_support(L, 'pin')
+    b.apply_load(-q, 0, 0, L)
+    b.solve_for_reaction_loads(R1, R2)
+    assert b.reaction_loads=={R1: L*q/2, R2: L*q/2}
+
+def test_symbolic_length_without_positive_setting_3():
+
+    E, I, L, q = symbols('E, I, L, q')
+    b = Beam(L, E, I)
+    R1 = b.apply_support(0, 'pin')
+    R2 = b.apply_support(L, 'pin')
+    b.apply_load(-q, 0, 0, L)
+    b.solve_for_reaction_loads(R1, R2)
+    assert b.reaction_loads=={R1: L*q/2, R2: L*q/2}
+
+def test_symbolic_length_with_positive_setting_4():
+
+    E, I, L, P = symbols('E, I, L, P')
+    R1, R2 = symbols('R1, R2')
+    L=symbols("L",positive=True)
+    b = Beam(L, E, I)
+    b.apply_load(R1, 0, -1)
+    b.apply_load(R2, L, -1)
+    b.apply_load(-P, L/4, -1)
+    b.bc_deflection = [(0, 0), (L, 0)]
+    b.solve_for_reaction_loads(R1, R2)
+    assert b.reaction_loads=={R1: 3*P/4, R2: P/4}
+
+def test_symbolic_length_without_positive_setting_4():
+
+    E, I, L, P = symbols('E, I, L, P')
+    R1, R2 = symbols('R1, R2')
+    b = Beam(L, E, I)
+    b.apply_load(R1, 0, -1)
+    b.apply_load(R2, L, -1)
+    b.apply_load(-P, L/4, -1)
+    b.bc_deflection = [(0, 0), (L, 0)]
+    b.solve_for_reaction_loads(R1, R2)
+    assert b.reaction_loads=={R1: 3*P/4, R2: P/4}
+
+def test_symbolic_length_with_positive_setting_5():
+
+    E, I, L, P = symbols('E, I, L, P')
+    L=symbols("L", positive=True)
+    b = Beam(L, E, I)
+    R1, M1 = b.apply_support(0, 'fixed')
+    R2 = b.apply_support(L, 'pin')
+    b.apply_sliding_hinge(L/3)
+    b.apply_load(-P, L/2, -1)
+    b.solve_for_reaction_loads(R1, M1, R2)
+    expected = {R1: 0, M1: L*P/2, R2: P}
+    assert b.reaction_loads==expected
+
+def test_symbolic_length_without_positive_setting_5():
+
+    E, I, L, P = symbols('E, I, L, P')
+    b = Beam(L, E, I)
+    R1, M1 = b.apply_support(0, 'fixed')
+    R2 = b.apply_support(L, 'pin')
+    b.apply_sliding_hinge(L/3)
+    b.apply_load(-P, L/2, -1)
+    b.solve_for_reaction_loads(R1, M1, R2)
+    expected = {R1: 0, M1: L*P/2, R2: P}
+    assert b.reaction_loads==expected
+
+def test_symbolic_length_with_positive_setting_6():
+
+    E, I, L, P = symbols('E, I, L, P')
+    L = symbols("L", positive=True)
+    b = Beam(L, E, I)
+    R1,M1 = b.apply_support(0, 'fixed')
+    R2 = b.apply_support(L, 'pin')
+    b.apply_rotation_hinge(L/2)
+    b.apply_load(-P, L/4, -1)
+    b.solve_for_reaction_loads(R1,M1, R2)
+    assert b.reaction_loads=={R1: P, M1: -L*P/4, R2: 0}
+
+def test_symbolic_length_without_positive_setting_6():
+
+    E, I, L, P = symbols('E, I, L, P')
+    b = Beam(L, E, I)
+    R1,M1 = b.apply_support(0, 'fixed')
+    R2 = b.apply_support(L, 'pin')
+    b.apply_rotation_hinge(L/2)
+    b.apply_load(-P, L/4, -1)
+    b.solve_for_reaction_loads(R1,M1, R2)
+    assert b.reaction_loads=={R1: P, M1: -L*P/4, R2: 0}
+
+def test_symbolic_length_with_positive_setting_7():
+
+    E, I, L, P = symbols('E, I, L, P')
+    L = symbols("L", positive=True)
+    b = Beam(L, E, I)
+    R1, M1 = b.apply_support(0, 'fixed')
+    R2 = b.apply_support(L, 'roller')
+    b.apply_load(-P, L/2, -1)
+    b.solve_for_reaction_loads(R1, M1, R2)
+    assert b.reaction_loads=={R1: 11*P/16, M1: -3*L*P/16, R2: 5*P/16}
+
+def test_symbolic_length_without_positive_setting_7():
+
+    E, I, L, P = symbols('E, I, L, P')
+    b = Beam(L, E, I)
+    R1, M1 = b.apply_support(0, 'fixed')
+    R2 = b.apply_support(L, 'roller')
+    b.apply_load(-P, L/2, -1)
+    b.solve_for_reaction_loads(R1, M1, R2)
+    assert b.reaction_loads=={R1: 11*P/16, M1: -3*L*P/16, R2: 5*P/16}
 
 def test_insufficient_bconditions():
     # Test cases when required number of boundary conditions
