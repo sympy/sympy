@@ -89,6 +89,7 @@ def test_mathematica():
         'x \\[Beta] y': 'x*β*y',
         'a + b\\[Gamma]\\[CapitalGamma]d': 'a + bγΓd',
         'a + b \\[Gamma] \\[CapitalGamma] d': 'a + b*γ*Γ*d',
+        'a\\[LongEqual]b': 'Eq(a,b)',
         }
 
     for e in d:
@@ -285,6 +286,11 @@ def test_parser_mathematica_tokenizer():
     raises(SyntaxError, lambda: chain("(,"))
     raises(SyntaxError, lambda: chain("()"))
     raises(SyntaxError, lambda: chain("a (* b"))
+    raises(SyntaxError, lambda: parse_mathematica(r"\[Gamma[y"))
+    raises(SyntaxError, lambda: parse_mathematica(r"\[Gamma\[Alpha]]"))
+    raises(SyntaxError, lambda: parse_mathematica(r"]Gamma\["))
+    raises(IndexError, lambda: parse_mathematica(r"]c"))
+    raises(IndexError, lambda: parse_mathematica(r"]\[Gamma]"))
 
 
 def test_parser_mathematica_exp_alt():
