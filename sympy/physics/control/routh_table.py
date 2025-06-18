@@ -351,10 +351,11 @@ class RouthHurwitz(MutableDenseMatrix):
     def zero_col_infos(self):
         """
         Return a list of tuple.
+
         - The first element of the tuple represents the index of a row in which
-        the First Column Zero Case occurs.
+          the First Column Zero Case occurs.
         - The second element of the tuple represents the index of the first
-        column different from 0 before the Extended Routh's Table construction.
+          column different from 0 before the Extended Routh's Table construction.
 
         """
         return self._zero_col_infos
