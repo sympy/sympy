@@ -4,7 +4,7 @@ sympy/logic/tests/test_euf_theory.py
 Tests for the EUF (Equality with Uninterpreted Functions) theory solver.
 """
 from sympy.assumptions.ask import Q
-from sympy.logic.algorithms.euf_theory import EUFSolver, EUFUnhandledInput
+from sympy.logic.algorithms.euf_theory import EUFSolver
 from sympy import symbols, Symbol
 from sympy.assumptions.cnf import CNF, EncodedCNF
 from sympy.assumptions.ask_generated import get_known_facts_dict
