@@ -42,20 +42,21 @@ from sympy.core.singleton import S
 from sympy.core.symbol import Dummy, Symbol, Wild
 from sympy.functions.elementary.complexes import Abs
 from sympy.functions.elementary.exponential import exp, log
-from sympy.functions.elementary.hyperbolic import (HyperbolicFunction, csch,
-    cosh, coth, sech, sinh, tanh, asinh)
+from sympy.functions.elementary.hyperbolic import (
+    HyperbolicFunction, csch, cosh, coth, sech, sinh, tanh, asinh)
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
-from sympy.functions.elementary.trigonometric import (TrigonometricFunction,
-    cos, sin, tan, cot, csc, sec, acos, asin, atan, acot, acsc, asec)
+from sympy.functions.elementary.trigonometric import (
+    TrigonometricFunction, cos, sin, tan, cot, csc, sec, acos, asin, atan,
+    acot, acsc, asec)
 from sympy.functions.special.delta_functions import Heaviside, DiracDelta
-from sympy.functions.special.error_functions import (erf, erfi, fresnelc,
-    fresnels, Ci, Chi, Si, Shi, Ei, li)
+from sympy.functions.special.error_functions import (
+    erf, erfi, fresnelc, fresnels, Ci, Chi, Si, Shi, Ei, li)
 from sympy.functions.special.gamma_functions import uppergamma
 from sympy.functions.special.elliptic_integrals import elliptic_e, elliptic_f
-from sympy.functions.special.polynomials import (chebyshevt, chebyshevu,
-    legendre, hermite, laguerre, assoc_laguerre, gegenbauer, jacobi,
-    OrthogonalPolynomial)
+from sympy.functions.special.polynomials import (
+    chebyshevt, chebyshevu, legendre, hermite, laguerre, assoc_laguerre,
+    gegenbauer, jacobi, OrthogonalPolynomial)
 from sympy.functions.special.zeta_functions import polylog
 from .integrals import Integral
 from sympy.logic.boolalg import And, Boolean
@@ -119,7 +120,7 @@ class PowerRule(AtomicRule):
 
     def eval(self) -> Expr:
         return Piecewise(
-            ((self.base**(self.exp + 1))/(self.exp + 1), Ne(self.exp, -1)),
+            ((self.base**(self.exp + 1)) / (self.exp + 1), Ne(self.exp, -1)),
             (log(self.base), True),
         )
 
@@ -183,7 +184,8 @@ class PartsRule(Rule):
 
     def contains_dont_know(self) -> bool:
         return self.v_step.contains_dont_know() or (
-            self.second_step is not None and self.second_step.contains_dont_know())
+            self.second_step is not None and
+            self.second_step.contains_dont_know())
 
 
 @dataclass
@@ -201,7 +203,8 @@ class CyclicPartsRule(Rule):
         return Add(*result) / (1 - self.coefficient)
 
     def contains_dont_know(self) -> bool:
-        return any(substep.contains_dont_know() for substep in self.parts_rules)
+        return any(substep.contains_dont_know()
+                   for substep in self.parts_rules)
 
 
 @dataclass
@@ -305,14 +308,16 @@ class ArcsinhRule(AtomicRule):
 
 @dataclass
 class ReciprocalSqrtQuadraticRule(AtomicRule):
-    """integrate(1/sqrt(a+b*x+c*x**2), x) -> log(2*sqrt(c)*sqrt(a+b*x+c*x**2)+b+2*c*x)/sqrt(c)"""
+    """integrate(1/sqrt(a+b*x+c*x**2), x) ->
+    log(2*sqrt(c)*sqrt(a+b*x+c*x**2)+b+2*c*x)/sqrt(c)"""
     a: Expr
     b: Expr
     c: Expr
 
     def eval(self) -> Expr:
         a, b, c, x = self.a, self.b, self.c, self.variable
-        return log(2*sqrt(c)*sqrt(a+b*x+c*x**2)+b+2*c*x)/sqrt(c)
+        return (log(2 * sqrt(c) * sqrt(a + b * x + c * x**2) + b + 2 * c * x)
+                / sqrt(c))
 
 
 @dataclass
@@ -324,7 +329,8 @@ class SqrtQuadraticDenomRule(AtomicRule):
     coeffs: list[Expr]
 
     def eval(self) -> Expr:
-        a, b, c, coeffs, x = self.a, self.b, self.c, self.coeffs.copy(), self.variable
+        a, b, c, coeffs, x = (self.a, self.b, self.c,
+                              self.coeffs.copy(), self.variable)
         # Integrate poly/sqrt(a+b*x+c*x**2) using recursion.
         # coeffs are coefficients of the polynomial.
         # Let I_n = x**n/sqrt(a+b*x+c*x**2), then
@@ -333,22 +339,22 @@ class SqrtQuadraticDenomRule(AtomicRule):
         # See https://github.com/sympy/sympy/pull/23608 for proof.
         result_coeffs = []
         coeffs = coeffs.copy()
-        for i in range(len(coeffs)-2):
-            n = len(coeffs)-1-i
-            coeff = coeffs[i]/(c*n)
+        for i in range(len(coeffs) - 2):
+            n = len(coeffs) - 1 - i
+            coeff = coeffs[i] / (c * n)
             result_coeffs.append(coeff)
-            coeffs[i+1] -= (2*n-1)*b/2*coeff
-            coeffs[i+2] -= (n-1)*a*coeff
+            coeffs[i + 1] -= (2 * n - 1) * b / 2 * coeff
+            coeffs[i + 2] -= (n - 1) * a * coeff
         d, e = coeffs[-1], coeffs[-2]
-        s = sqrt(a+b*x+c*x**2)
-        constant = d-b*e/(2*c)
+        s = sqrt(a + b * x + c * x**2)
+        constant = d - b * e / (2 * c)
         if constant == 0:
             I0 = 0
         else:
-            step = inverse_trig_rule(IntegralInfo(1/s, x), degenerate=False)
-            I0 = constant*step.eval()
-        return Add(*(result_coeffs[i]*x**(len(coeffs)-2-i)
-                     for i in range(len(result_coeffs))), e/c)*s + I0
+            step = inverse_trig_rule(IntegralInfo(1 / s, x), degenerate=False)
+            I0 = constant * step.eval()
+        return Add(*(result_coeffs[i] * x**(len(coeffs) - 2 - i)
+                     for i in range(len(result_coeffs))), e / c) * s + I0
 
 
 @dataclass
@@ -359,7 +365,8 @@ class SqrtQuadraticRule(AtomicRule):
     c: Expr
 
     def eval(self) -> Expr:
-        step = sqrt_quadratic_rule(IntegralInfo(self.integrand, self.variable), degenerate=False)
+        step = sqrt_quadratic_rule(IntegralInfo(self.integrand, self.variable),
+                                   degenerate=False)
         return step.eval()
 
 
@@ -372,7 +379,8 @@ class AlternativeRule(Rule):
         return self.alternatives[0].eval()
 
     def contains_dont_know(self) -> bool:
-        return any(substep.contains_dont_know() for substep in self.alternatives)
+        return any(substep.contains_dont_know()
+                   for substep in self.alternatives)
 
 
 @dataclass
@@ -426,7 +434,8 @@ class PiecewiseRule(Rule):
                            for substep, cond in self.subfunctions])
 
     def contains_dont_know(self) -> bool:
-        return any(substep.contains_dont_know() for substep, _ in self.subfunctions)
+        return any(substep.contains_dont_know()
+                   for substep, _ in self.subfunctions)
 
 
 @dataclass
@@ -441,7 +450,8 @@ class HeavisideRule(Rule):
         # then there needs to be continuity at -b/m == ibnd,
         # so we subtract the appropriate term.
         result = self.substep.eval()
-        return Heaviside(self.harg) * (result - result.subs(self.variable, self.ibnd))
+        return Heaviside(self.harg) * (result -
+                                       result.subs(self.variable, self.ibnd))
 
     def contains_dont_know(self) -> bool:
         return self.substep.contains_dont_know()
@@ -456,8 +466,8 @@ class DiracDeltaRule(AtomicRule):
     def eval(self) -> Expr:
         n, a, b, x = self.n, self.a, self.b, self.variable
         if n == 0:
-            return Heaviside(a+b*x)/b
-        return DiracDelta(a+b*x, n-1)/b
+            return Heaviside(a + b * x) / b
+        return DiracDelta(a + b * x, n - 1) / b
 
 
 @dataclass
@@ -470,9 +480,9 @@ class TrigSubstitutionRule(Rule):
 
     def eval(self) -> Expr:
         theta, func, x = self.theta, self.func, self.variable
-        func = func.subs(sec(theta), 1/cos(theta))
-        func = func.subs(csc(theta), 1/sin(theta))
-        func = func.subs(cot(theta), 1/tan(theta))
+        func = func.subs(sec(theta), 1 / cos(theta))
+        func = func.subs(csc(theta), 1 / sin(theta))
+        func = func.subs(cot(theta), 1 / tan(theta))
 
         trig_function = list(func.find(TrigonometricFunction))
         assert len(trig_function) == 1
@@ -498,13 +508,14 @@ class TrigSubstitutionRule(Rule):
             inverse = atan(relation[0])
 
         substitution = [
-            (sin(theta), opposite/hypotenuse),
-            (cos(theta), adjacent/hypotenuse),
-            (tan(theta), opposite/adjacent),
+            (sin(theta), opposite / hypotenuse),
+            (cos(theta), adjacent / hypotenuse),
+            (tan(theta), opposite / adjacent),
             (theta, inverse)
         ]
         return Piecewise(
-                (self.substep.eval().subs(substitution).trigsimp(), self.restriction) # type: ignore
+                (self.substep.eval().subs(substitution).trigsimp(),
+                 self.restriction)  # type: ignore
         )
 
     def contains_dont_know(self) -> bool:
@@ -520,7 +531,7 @@ class ArctanRule(AtomicRule):
 
     def eval(self) -> Expr:
         a, b, c, x = self.a, self.b, self.c, self.variable
-        return a/b / sqrt(c/b) * atan(x/sqrt(c/b))
+        return a / b / sqrt(c / b) * atan(x / sqrt(c / b))
 
 
 @dataclass
@@ -536,9 +547,9 @@ class JacobiRule(OrthogonalPolyRule):
     def eval(self) -> Expr:
         n, a, b, x = self.n, self.a, self.b, self.variable
         return Piecewise(
-            (2*jacobi(n + 1, a - 1, b - 1, x)/(n + a + b), Ne(n + a + b, 0)),
+            (2 * jacobi(n + 1, a - 1, b - 1, x) / (n + a + b), Ne(n + a + b, 0)),
             (x, Eq(n, 0)),
-            ((a + b + 2)*x**2/4 + (a - b)*x/2, Eq(n, 1)))
+            ((a + b + 2) * x**2 / 4 + (a - b) * x / 2, Eq(n, 1)))
 
 
 @dataclass
@@ -548,8 +559,8 @@ class GegenbauerRule(OrthogonalPolyRule):
     def eval(self) -> Expr:
         n, a, x = self.n, self.a, self.variable
         return Piecewise(
-            (gegenbauer(n + 1, a - 1, x)/(2*(a - 1)), Ne(a, 1)),
-            (chebyshevt(n + 1, x)/(n + 1), Ne(n, -1)),
+            (gegenbauer(n + 1, a - 1, x) / (2 * (a - 1)), Ne(a, 1)),
+            (chebyshevt(n + 1, x) / (n + 1), Ne(n, -1)),
             (S.Zero, True))
 
 
@@ -558,9 +569,9 @@ class ChebyshevTRule(OrthogonalPolyRule):
     def eval(self) -> Expr:
         n, x = self.n, self.variable
         return Piecewise(
-            ((chebyshevt(n + 1, x)/(n + 1) -
-              chebyshevt(n - 1, x)/(n - 1))/2, Ne(Abs(n), 1)),
-            (x**2/2, True))
+            ((chebyshevt(n + 1, x) / (n + 1) -
+              chebyshevt(n - 1, x) / (n - 1)) / 2, Ne(Abs(n), 1)),
+            (x**2 / 2, True))
 
 
 @dataclass
@@ -568,7 +579,7 @@ class ChebyshevURule(OrthogonalPolyRule):
     def eval(self) -> Expr:
         n, x = self.n, self.variable
         return Piecewise(
-            (chebyshevt(n + 1, x)/(n + 1), Ne(n, -1)),
+            (chebyshevt(n + 1, x) / (n + 1), Ne(n, -1)),
             (S.Zero, True))
 
 
@@ -576,14 +587,14 @@ class ChebyshevURule(OrthogonalPolyRule):
 class LegendreRule(OrthogonalPolyRule):
     def eval(self) -> Expr:
         n, x = self.n, self.variable
-        return(legendre(n + 1, x) - legendre(n - 1, x))/(2*n + 1)
+        return (legendre(n + 1, x) - legendre(n - 1, x)) / (2 * n + 1)
 
 
 @dataclass
 class HermiteRule(OrthogonalPolyRule):
     def eval(self) -> Expr:
         n, x = self.n, self.variable
-        return hermite(n + 1, x)/(2*(n + 1))
+        return hermite(n + 1, x) / (2 * (n + 1))
 
 
 @dataclass
@@ -611,42 +622,42 @@ class IRule(AtomicRule, ABC):
 class CiRule(IRule):
     def eval(self) -> Expr:
         a, b, x = self.a, self.b, self.variable
-        return cos(b)*Ci(a*x) - sin(b)*Si(a*x)
+        return cos(b) * Ci(a * x) - sin(b) * Si(a * x)
 
 
 @dataclass
 class ChiRule(IRule):
     def eval(self) -> Expr:
         a, b, x = self.a, self.b, self.variable
-        return cosh(b)*Chi(a*x) + sinh(b)*Shi(a*x)
+        return cosh(b) * Chi(a * x) + sinh(b) * Shi(a * x)
 
 
 @dataclass
 class EiRule(IRule):
     def eval(self) -> Expr:
         a, b, x = self.a, self.b, self.variable
-        return exp(b)*Ei(a*x)
+        return exp(b) * Ei(a * x)
 
 
 @dataclass
 class SiRule(IRule):
     def eval(self) -> Expr:
         a, b, x = self.a, self.b, self.variable
-        return sin(b)*Ci(a*x) + cos(b)*Si(a*x)
+        return sin(b) * Ci(a * x) + cos(b) * Si(a * x)
 
 
 @dataclass
 class ShiRule(IRule):
     def eval(self) -> Expr:
         a, b, x = self.a, self.b, self.variable
-        return sinh(b)*Chi(a*x) + cosh(b)*Shi(a*x)
+        return sinh(b) * Chi(a * x) + cosh(b) * Shi(a * x)
 
 
 @dataclass
 class LiRule(IRule):
     def eval(self) -> Expr:
         a, b, x = self.a, self.b, self.variable
-        return li(a*x + b)/a
+        return li(a * x + b) / a
 
 
 @dataclass
