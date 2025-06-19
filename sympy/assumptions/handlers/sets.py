@@ -230,6 +230,35 @@ def _(expr, assumptions):
 # RealPredicate
 
 def _RealPredicate_number(expr, assumptions):
+    """
+    Evaluate whether a given numeric expression is real.
+
+    This function is used by the assumptions system to determine whether
+    a numeric expression can be considered real. It first checks for
+    known undefined cases such as division by zero in Pow(0, negative number),
+    and then applies structural checks based on the imaginary part.
+
+    Examples
+    ========
+
+    >>> from sympy import Pow, Q, ask
+
+    >>> ask(Q.real(Pow(0, -1, evaluate=False)))
+    False
+
+    >>> ask(Q.real(Pow(0, 2, evaluate=False)))
+    True
+
+    >>> ask(Q.real(Pow(0, 0, evaluate=False)))
+    True
+
+    """
+    if isinstance(expr, Pow):
+        base, exp = expr.args
+        # Check if it's Pow(0, negative number)
+        if base == 0 and exp.is_number and exp.evalf() < 0:
+            return False  # Division by zero -> not real
+
     # let as_real_imag() work first since the expression may
     # be simpler to evaluate
     i = expr.as_real_imag()[1].evalf(2)
