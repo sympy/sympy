@@ -1791,6 +1791,31 @@ def test_inverse_symbolic_float_issue_26821():
     assert max(abs(f) for f in Mi.atoms(Float)) < 1e3
 
 
+def test_inverse_symbolic_float_FF_cancel():
+    s = Symbol('s')
+    A = Matrix([
+        [-0.123213848521462, 0, 0, 0, 0],
+        [0, -0.000476190476190476, 1, 1, 1],
+        [0, 0, -50.0000000000000, 0, 0],
+        [0, 0, 0, -50.0000000000000, 0],
+        [0, 0, 0, 0, -50.0000000000000]
+    ])
+    As = (s*eye(5) - A)
+    # We care about the form of the result here that the degrees of numerators
+    # and denominators match but otherwise it might be better if e.g. the
+    # upper left entry was 1/(s + ...) instead of
+    # 10259304520115.0/(10259304520115.0*s + 1264088393077.0)
+    Asi = Matrix([
+        [10259304520115.0/(10259304520115.0*s + 1264088393077.0), 0, 0, 0, 0],
+        [0, 2100.0/(2100.0*s + 1.0), 2100.0/(2100.0*s**2 + 105001.0*s + 50.0),
+                                     2100.0/(2100.0*s**2 + 105001.0*s + 50.0),
+                                     2100.0/(2100.0*s**2 + 105001.0*s + 50.0)],
+        [0, 0, 1.0/(1.0*s + 50.0), 0, 0],
+        [0, 0, 0, 1.0/(1.0*s + 50.0), 0],
+        [0, 0, 0, 0, 1.0/(1.0*s + 50.0)]])
+    assert As.inv() == Asi
+
+
 @slow
 def test_matrix_exponential_issue_26821():
     # The symbol names matter in the original bug...
