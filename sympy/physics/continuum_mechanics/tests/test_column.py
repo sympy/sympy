@@ -188,6 +188,20 @@ def test_remove_load():
     q = -F * SingularityFunction(x, L, -1)
     assert p == q
 
+    # Ramp load in opposite direction
+    c1 = Column(10, E, A)
+    c1.apply_load(1, 5, -1)
+    c1.apply_load(10, 10, 1, end=0)
+    print(c1.applied_loads)
+    c1.remove_load(10, 10, 1, end=0)
+
+    p = c1.applied_loads
+    assert p == q
+
+    p = c1.load
+    q = SingularityFunction(x, 5, -1)
+    assert p == q
+
 test_remove_load()
 
 def test_reactions_point_loads():
