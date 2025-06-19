@@ -403,6 +403,29 @@ def test_reactions_higher_orders():
     q = {R_0: -Rational(1088,5), R_10: -Rational(2516,15)}
     assert p == q
 
+    # Test ramp load in opposite direction
+    c6 = Column(8, 20000, 0.75)
+    c6.apply_support(0)
+    c6.apply_support(8)
+    c6.apply_load(-100, 8, -1)
+    c6.apply_load(-20, 0, 0, end = 8)
+    c6.apply_load(-10, 4, 1, end = 0) # Ramp load, starts at x = 4
+    c6.solve_for_reaction_loads()
+
+    p = c6.load
+    R_8 = Symbol('R_8')
+    q = (R_0*SingularityFunction(x, 0, -1)
+         + R_8*SingularityFunction(x, 8, -1)
+         - 60*SingularityFunction(x, 0, 0)
+         + 10*SingularityFunction(x, 0, 1)
+         - 10*SingularityFunction(x, 4, 1)
+         - 100*SingularityFunction(x, 8, -1)
+         + 20*SingularityFunction(x, 8, 0))
+    assert p == q
+
+    p = c6.reaction_loads
+    q = {R_0: Rational(440,3), R_10: Rational(580,3)}
+
 test_reactions_higher_orders()
 
 def test_telescope_hinge():
