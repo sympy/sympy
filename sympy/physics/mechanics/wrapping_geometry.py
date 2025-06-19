@@ -150,7 +150,7 @@ class WrappingSphere(WrappingGeometryBase):
     @deprecated(
         """
         Checking if a Point lies on sphere's surface by
-        calling point_on_surface() is deprecated. 
+        calling point_on_surface() is deprecated.
         """,
         deprecated_since_version="1.15.0",
         active_deprecations_target="deprecated-point-on-surface-check-sphere"
@@ -383,7 +383,7 @@ class WrappingCylinder(WrappingGeometryBase):
     @deprecated(
         """
         Checking if a Point lies on cylinder's surface by
-        calling point_on_surface() is deprecated. 
+        calling point_on_surface() is deprecated.
         """,
         deprecated_since_version="1.15.0",
         active_deprecations_target="deprecated-point-on-surface-check-cylinder"
