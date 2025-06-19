@@ -192,10 +192,10 @@ def test_remove_load():
     c1 = Column(10, E, A)
     c1.apply_load(1, 5, -1)
     c1.apply_load(10, 10, 1, end=0)
-    print(c1.applied_loads)
     c1.remove_load(10, 10, 1, end=0)
 
     p = c1.applied_loads
+    q = [(1, 5, -1, None)]
     assert p == q
 
     p = c1.load
