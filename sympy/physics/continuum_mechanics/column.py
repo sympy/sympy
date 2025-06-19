@@ -3,7 +3,7 @@ This module can be used to solve column displacement problems
 using singularity functions in mechanics.
 """
 
-from sympy import nsimplify
+from sympy import nsimplify, simplify
 from sympy.core import Symbol, symbols
 from sympy.core.relational import Eq
 from sympy.core.sympify import sympify
@@ -264,11 +264,20 @@ class Column:
         start = sympify(start)
         order = sympify(order)
 
-        self._applied_loads.append((value, start, order, end))
-        self._load += value*SingularityFunction(self.variable, start, order)
+        if end is not None:
+            end = sympify(end)
+            self._applied_loads.append((value, start, order, end))
+            self._load += value * SingularityFunction(self.variable, start, order)
 
-        if end:
-            self._load -= self._taylor_helper(self.variable, value, start, order, end)
+            if simplify(start - end).is_positive:
+                self._load += self._taylor_helper(self.variable, -value, start, order, end)
+
+            else:
+                self._load -= self._taylor_helper(self.variable, value, start, order, end)
+
+        else:
+            self._applied_loads.append((value, start, order, None))
+            self._load += value * SingularityFunction(self.variable, start, order)
 
     def remove_load(self, value, start, order, end=None):
         """
@@ -304,8 +313,11 @@ class Column:
             msg = "No such load distribution exists on the column object."
             raise ValueError(msg)
 
-        if end:
-            self._load += self._taylor_helper(self.variable, value, start, order, end)
+        if end is not None:
+            if simplify(start - end).is_positive:
+                self._load -= self._taylor_helper(self.variable, -value, start, order, end)
+            else:
+                self._load += self._taylor_helper(self.variable, value, start, order, end)
 
     def _taylor_helper(self, x, value, start, order, end):
         """
