@@ -2571,4 +2571,5 @@ def test_issue_27440():
     assert ask(Q.negative(nan)) is None
 
 def test_issue_28150():
-    assert ask(Q.real(Pow(0, -1, evaluate=False))) == False
+    # https://github.com/sympy/sympy/issues/28150
+    assert ask(Q.real(Pow(0, -1, evaluate=False))) is False
