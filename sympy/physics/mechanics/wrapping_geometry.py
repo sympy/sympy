@@ -8,6 +8,7 @@ from sympy.functions.elementary.trigonometric import atan2
 from sympy.polys.polytools import cancel
 from sympy.physics.vector import Vector, dot
 from sympy.simplify.simplify import trigsimp
+from sympy.utilities.decorator import deprecated
 
 
 __all__ = [
@@ -32,19 +33,6 @@ class WrappingGeometryBase(ABC):
     @abstractmethod
     def point(cls):
         """The point with which the geometry is associated."""
-        pass
-
-    @abstractmethod
-    def point_on_surface(self, point):
-        """Returns ``True`` if a point is on the geometry's surface.
-
-        Parameters
-        ==========
-        point : Point
-            The point for which it's to be ascertained if it's on the
-            geometry's surface or not.
-
-        """
         pass
 
     @abstractmethod
@@ -159,8 +147,18 @@ class WrappingSphere(WrappingGeometryBase):
     def point(self, point):
         self._point = point
 
+    @deprecated(
+        """
+        Checking if a Point lies on sphere's surface by
+        calling point_on_surface() is deprecated.
+        """,
+        deprecated_since_version="1.15.0",
+        active_deprecations_target="deprecated-point-on-surface-check-sphere"
+    )
     def point_on_surface(self, point):
         """Returns ``True`` if a point is on the sphere's surface.
+
+        .. deprecated:: <1.15.0>
 
         Parameters
         ==========
@@ -234,9 +232,10 @@ class WrappingSphere(WrappingGeometryBase):
         >>> sphere.geodesic_length(p1, p2)
         pi*r/2
 
-        If the ``geodesic_length`` method is passed an argument, the ``Point``
-        that doesn't lie on the sphere's surface then a ``ValueError`` is
-        raised because it's not possible to calculate a value in this case.
+        If the ``geodesic_length`` method is passed an argument that doesn't
+        lie on the sphere's surface then unexpected results may be obtained.
+        It is the user's responsibility to ensure that the points lie on the
+        sphere's surface.
 
         Parameters
         ==========
@@ -247,15 +246,6 @@ class WrappingSphere(WrappingGeometryBase):
             Point to which the geodesic length should be calculated.
 
         """
-        for point in (point_1, point_2):
-            if not self.point_on_surface(point):
-                msg = (
-                    f'Geodesic length cannot be calculated as point {point} '
-                    f'with radius {point.pos_from(self.point).magnitude()} '
-                    f'from the sphere\'s center {self.point} does not lie on '
-                    f'the surface of {self} with radius {self.radius}.'
-                )
-                raise ValueError(msg)
         point_1_vector = point_1.pos_from(self.point).normalize()
         point_2_vector = point_2.pos_from(self.point).normalize()
         central_angle = acos(point_2_vector.dot(point_1_vector))
@@ -399,8 +389,18 @@ class WrappingCylinder(WrappingGeometryBase):
     def axis(self, axis):
         self._axis = axis.normalize()
 
+    @deprecated(
+        """
+        Checking if a Point lies on cylinder's surface by
+        calling point_on_surface() is deprecated.
+        """,
+        deprecated_since_version="1.15.0",
+        active_deprecations_target="deprecated-point-on-surface-check-cylinder"
+    )
     def point_on_surface(self, point):
         """Returns ``True`` if a point is on the cylinder's surface.
+
+        .. deprecated:: <1.15.0>
 
         Parameters
         ==========
@@ -476,8 +476,9 @@ class WrappingCylinder(WrappingGeometryBase):
         sqrt(r**2*q(t)**2 + 1)
 
         If the ``geodesic_length`` method is passed an argument ``Point`` that
-        doesn't lie on the sphere's surface then a ``ValueError`` is raised
-        because it's not possible to calculate a value in this case.
+        doesn't lie on the cylinder's surface then unexpected results may occur.
+        It is the user's responsibility to ensure that the points lie on the
+        cylinder's surface.
 
         Parameters
         ==========
@@ -488,17 +489,6 @@ class WrappingCylinder(WrappingGeometryBase):
             Point to which the geodesic length should be calculated.
 
         """
-        for point in (point_1, point_2):
-            if not self.point_on_surface(point):
-                msg = (
-                    f'Geodesic length cannot be calculated as point {point} '
-                    f'with radius {point.pos_from(self.point).magnitude()} '
-                    f'from the cylinder\'s center {self.point} does not lie on '
-                    f'the surface of {self} with radius {self.radius} and axis '
-                    f'{self.axis}.'
-                )
-                raise ValueError(msg)
-
         relative_position = point_2.pos_from(point_1)
         parallel_length = relative_position.dot(self.axis)
 
