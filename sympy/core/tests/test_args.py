@@ -4357,9 +4357,9 @@ def test_sympy__physics__control__lti__TransferFunction():
     assert _test_args(TransferFunction(2, 3, x))
 
 
-def test_sympy__physics__control__lti__DTTransferFunction():
-    # Direct instances of TransferFunctionBase class are not allowed.
-    pass
+def test_sympy__physics__control__lti__DiscreteTransferFunction():
+    from sympy.physics.control.lti import DiscreteTransferFunction
+    assert _test_args(DiscreteTransferFunction(2,3,x, 0.1))
 
 def _test_args_PIDController(obj):
     from sympy.physics.control.lti import PIDController
