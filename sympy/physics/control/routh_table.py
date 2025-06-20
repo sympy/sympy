@@ -1,6 +1,7 @@
 from sympy.matrices.dense import MutableDenseMatrix
 from sympy.polys import Poly
 from sympy import Symbol
+from sympy.logic.boolalg import true, false
 
 __all__ = ['RouthHurwitz', 'negative_real_root_conditions']
 
@@ -25,7 +26,7 @@ def negative_real_root_conditions(
     Returns
     =======
 
-    list[StrictGreaterThan | bool]
+    list[StrictGreaterThan | Boolean]
         A list of conditions that must be satisfied for the polynomial to
         have all its roots with negative real parts.
 
@@ -67,10 +68,10 @@ def _run_checks(func):
     """
     def wrapper(p: list):
         if len(p) < 2:
-            return [True]
+            return [true]
 
         if (p[0]*p[1]).is_nonpositive:
-            return [False]
+            return [false]
 
         if len(p) == 2:
             return [p[0] * p[1] > 0]

@@ -4,6 +4,7 @@ from sympy.physics.control.routh_table import (RouthHurwitz,
                                             negative_real_root_conditions)
 from sympy.matrices.dense import Matrix
 from sympy.polys import Poly
+from sympy.logic.boolalg import true, false
 
 s = symbols('s')
 
@@ -63,17 +64,17 @@ def test_negative_real_root_conditions():
         b0*b3*(-b0*b3**3 + b1*b3*(-b1*b4 + b2*b3))**3*(-b1*b4 + b2*b3) > 0]
 
     p2 = -3*s**2 - 2*s - b0
-    assert negative_real_root_conditions(p2, s) == [True, 8 * b0 > 0]
+    assert negative_real_root_conditions(p2, s) == [true, 8 * b0 > 0]
 
     a = symbols('a', nonpositive = True)
 
     p4 = b0*s**2 + a*s + 3
-    assert negative_real_root_conditions(p4, s) == [a * b0 > 0, False]
+    assert negative_real_root_conditions(p4, s) == [a * b0 > 0, false]
 
     p5 = b0*s**2 + a*s - 3
     assert negative_real_root_conditions(p5, s) == [a * b0 > 0, -3 * a**3 > 0]
 
     p6 = b0 + b1*s**2 + b1*s + b3*s**4 + b3*s**3
-    expected6 = [b3**2 > 0, False]
+    expected6 = [b3**2 > 0, false]
 
     assert negative_real_root_conditions(p6, s) == expected6
