@@ -1,4 +1,4 @@
-from .lti import (TransferFunction, DTTransferFunction, PIDController, Series,
+from .lti import (TransferFunction, DiscreteTransferFunction, PIDController, Series,
     MIMOSeries, Parallel, MIMOParallel, Feedback, MIMOFeedback,
     TransferFunctionMatrix, StateSpace, DTStateSpace, gbt, bilinear,
     forward_diff, backward_diff, phase_margin, gain_margin)
@@ -11,7 +11,7 @@ from .control_plots import (pole_zero_numerical_data, pole_zero_plot,
     nyquist_plot, nichols_plot_expr, nichols_plot)
 from .routh_table import RouthHurwitz, neg_roots_conds
 
-__all__ = ['TransferFunction', 'DTTransferFunction', 'PIDController', 'Series',
+__all__ = ['TransferFunction', 'DiscreteTransferFunction', 'PIDController', 'Series',
     'MIMOSeries', 'Parallel', 'MIMOParallel', 'Feedback', 'MIMOFeedback',
     'TransferFunctionMatrix', 'StateSpace', 'DTStateSpace', 'gbt', 'bilinear',
     'forward_diff', 'backward_diff', 'phase_margin', 'gain_margin',

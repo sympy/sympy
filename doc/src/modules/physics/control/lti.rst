@@ -13,7 +13,7 @@ lti
 .. autoclass:: TransferFunction
    :members:
 
-.. autoclass:: DTTransferFunction
+.. autoclass:: DiscreteTransferFunction
    :members:
 
 .. autoclass:: Series

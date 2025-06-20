@@ -26,10 +26,11 @@ from sympy.solvers.solveset import linsolve, linear_eq_to_matrix
 from sympy.logic.boolalg import false, true
 from sympy.solvers.inequalities import reduce_inequalities
 from sympy.physics.control.routh_table import neg_roots_conds
+from abc import ABC, abstractmethod
 
 from mpmath.libmp.libmpf import prec_to_dps
 
-__all__ = ['TransferFunction', 'DTTransferFunction', 'PIDController', 'Series',
+__all__ = ['TransferFunction', 'DiscreteTransferFunction', 'PIDController', 'Series',
            'MIMOSeries', 'Parallel', 'MIMOParallel', 'Feedback', 'MIMOFeedback',
            'TransferFunctionMatrix', 'StateSpace', 'DTStateSpace', 'gbt',
            'bilinear', 'forward_diff', 'backward_diff', 'phase_margin',
@@ -365,7 +366,7 @@ def gain_margin(system):
 
     return gm
 
-class LinearTimeInvariant(Basic, EvalfMixin):
+class LinearTimeInvariant(Basic, EvalfMixin, ABC):
     """A common class for all the Linear Time-Invariant Dynamical Systems."""
 
     _clstype: Type
@@ -396,10 +397,10 @@ class LinearTimeInvariant(Basic, EvalfMixin):
         return self._is_continuous
 
     @property
+    @abstractmethod
     def sampling_time(self):
         """Returns the sampling time of the passed LTI system."""
-        raise NotImplementedError("""
-                            This method should be overridden by subclasses.""")
+        pass
 
     @property
     def is_SISO(self):
@@ -489,9 +490,9 @@ def new_tf(num, den, var, sampling_time):
     sampling_time == 0 means continuous time transfer function.
     sampling_time > 0 means discrete time transfer function.
     """
-    return DTTransferFunction(num, den, var, sampling_time) #if sampling_time == 0 DTTransferFunction returns TransferFunction
+    return DiscreteTransferFunction(num, den, var, sampling_time) #if sampling_time == 0 DiscreteTransferFunction returns TransferFunction
 
-class TransferFunctionBase(SISOLinearTimeInvariant):
+class TransferFunctionBase(SISOLinearTimeInvariant, ABC):
     r"""
     Base class for transfer tunction objects.
     This class is not meant to be used directly.
@@ -687,7 +688,7 @@ class TransferFunctionBase(SISOLinearTimeInvariant):
     See Also
     ========
 
-    TransferFunction, DTTransferFunction, Feedback, Series, Parallel
+    TransferFunction, DiscreteTransferFunction, Feedback, Series, Parallel
 
     References
     ==========
@@ -701,7 +702,7 @@ class TransferFunctionBase(SISOLinearTimeInvariant):
         if cls is TransferFunctionBase:
             raise NotImplementedError(
                 """
-                The TransferFunctionBase class is not meant tobe used directly.
+                The TransferFunctionBase class is not meant to be used directly.
                 """)
         num, den = _sympify(num), _sympify(den)
 
@@ -761,7 +762,7 @@ class TransferFunctionBase(SISOLinearTimeInvariant):
         ========
 
         >>> from sympy.abc import s, p, a, z
-        >>> from sympy.physics.control.lti import TransferFunction, DTTransferFunction
+        >>> from sympy.physics.control.lti import TransferFunction, DiscreteTransferFunction
         >>> expr1 = (s + 5)/(3*s**2 + 2*s + 1)
         >>> tf1 = TransferFunction.from_rational_expression(expr1)
         >>> tf1
@@ -771,9 +772,9 @@ class TransferFunctionBase(SISOLinearTimeInvariant):
         >>> tf2
         TransferFunction(a*p**3 - a*p**2 + p*s, a**2 + p, p)
         >>> expr3 = (z + 1)/(z**2 + 2*z + 1)  # Discrete time transfer function
-        >>> dtf = DTTransferFunction.from_rational_expression(expr3, z, sampling_time=0.1)
+        >>> dtf = DiscreteTransferFunction.from_rational_expression(expr3, z, sampling_time=0.1)
         >>> dtf
-        DTTransferFunction(z + 1, z**2 + 2*z + 1, z, 0.1)
+        DiscreteTransferFunction(z + 1, z**2 + 2*z + 1, z, 0.1)
 
         In case of conflict between two or more variables in a expression, SymPy will
         raise a ``ValueError``, if ``var`` is not passed by the user.
@@ -845,7 +846,7 @@ class TransferFunctionBase(SISOLinearTimeInvariant):
         ========
 
         >>> from sympy.abc import s, p, z
-        >>> from sympy.physics.control.lti import TransferFunction, DTTransferFunction
+        >>> from sympy.physics.control.lti import TransferFunction, DiscreteTransferFunction
         >>> num = [1, 0, 2]
         >>> den = [3, 2, 2, 1]
         >>> tf = TransferFunction.from_coeff_lists(num, den, s)
@@ -855,9 +856,9 @@ class TransferFunctionBase(SISOLinearTimeInvariant):
         >>> tf1 = TransferFunction.from_coeff_lists([p, 1], [2*p, 0, 4], s)
         >>> tf1
         TransferFunction(p*s + 1, 2*p*s**2 + 4, s)
-        >>> dtf = DTTransferFunction.from_coeff_lists([2, 1, -3], [1, 4, 3, 2], z, sampling_time=0.1)
+        >>> dtf = DiscreteTransferFunction.from_coeff_lists([2, 1, -3], [1, 4, 3, 2], z, sampling_time=0.1)
         >>> dtf
-        DTTransferFunction(2*z**2 + z - 3, z**3 + 4*z**2 + 3*z + 2, z, 0.1)
+        DiscreteTransferFunction(2*z**2 + z - 3, z**3 + 4*z**2 + 3*z + 2, z, 0.1)
 
         """
         num_list = num_list[::-1]
@@ -1018,18 +1019,19 @@ class TransferFunctionBase(SISOLinearTimeInvariant):
         ========
 
         >>> from sympy.abc import s, p, a, b
-        >>> from sympy.physics.control.lti import TransferFunction, DTTransferFunction
+        >>> from sympy.physics.control.lti import TransferFunction, DiscreteTransferFunction
         >>> G1 = TransferFunction((a - s)**2, (s**2 + a)**2, s)
         >>> G1.expand()
         TransferFunction(a**2 - 2*a*s + s**2, a**2 + 2*a*s**2 + s**4, s)
-        >>> G2 = DTTransferFunction((p + 3*b)*(p - b), (p - b)*(p + 2*b), p, 12)
+        >>> G2 = DiscreteTransferFunction((p + 3*b)*(p - b), (p - b)*(p + 2*b), p, 12)
         >>> G2.expand()
-        DTTransferFunction(-3*b**2 + 2*b*p + p**2, -2*b**2 + b*p + p**2, p, 12)
+        DiscreteTransferFunction(-3*b**2 + 2*b*p + p**2, -2*b**2 + b*p + p**2, p, 12)
 
         """
         return new_tf(expand(self.num), expand(self.den), self.var,
                               self.sampling_time)
 
+    @abstractmethod
     def dc_gain(self):
         """
         Computes the gain of the response as the frequency approaches zero.
@@ -1040,7 +1042,7 @@ class TransferFunctionBase(SISOLinearTimeInvariant):
         ========
 
         >>> from sympy.abc import s, p, a, b, z
-        >>> from sympy.physics.control.lti import TransferFunction, DTTransferFunction
+        >>> from sympy.physics.control.lti import TransferFunction, DiscreteTransferFunction
         >>> tf1 = TransferFunction(s + 3, s**2 - 9, s)
         >>> tf1.dc_gain()
         -1/3
@@ -1053,15 +1055,12 @@ class TransferFunctionBase(SISOLinearTimeInvariant):
         >>> tf4 = TransferFunction(1, s, s)
         >>> tf4.dc_gain()
         oo
-        >>> dtf1 = DTTransferFunction(z, z - 1, z, 0.1)
+        >>> dtf1 = DiscreteTransferFunction(z, z - 1, z, 0.1)
         >>> dtf1.dc_gain()
         oo
 
         """
-        raise NotImplementedError(
-            """
-            This method should be overridden by subclasses.
-            """)
+        pass
 
     def poles(self):
         """
@@ -1131,6 +1130,7 @@ class TransferFunctionBase(SISOLinearTimeInvariant):
         arg_den = self.den.subs(self.var, other)
         return Mul(arg_num, S.One / arg_den).expand()
 
+    @abstractmethod
     def is_stable(self, cancel_poles_zeros=False):
         """
         Returns True if the transfer function is asymptotically stable;
@@ -1175,10 +1175,7 @@ class TransferFunctionBase(SISOLinearTimeInvariant):
         True
 
         """
-        raise NotImplementedError(
-            """
-            This method should be overridden by subclasses.
-            """)
+        pass
 
     def to_standard_form(self, cancel_poles_zeros=False):
         r"""
@@ -1217,6 +1214,7 @@ class TransferFunctionBase(SISOLinearTimeInvariant):
         return new_tf(num.collect(self.var), den.collect(self.var),
                       self.var, self.sampling_time)
 
+    @abstractmethod
     def get_asymptotic_stability_conditions(self, cancel_poles_zeros = False):
         """
         Returns the asymptotic stability conditions for
@@ -1271,10 +1269,7 @@ class TransferFunctionBase(SISOLinearTimeInvariant):
         (3/10 < k) & (k < oo)
 
         """
-        raise NotImplementedError(
-            """
-            This method should be overridden by subclasses.
-            """)
+        pass
 
     @_compatibility_decorator
     def __add__(self, other):
@@ -1556,6 +1551,27 @@ class TransferFunction(TransferFunctionBase):
     def __init__(self, num, den, var):
         ...
 
+    @classmethod
+    def from_rational_expression(cls, expr, var=None):
+        r"""
+        See :func:`TransferFunctionBase.from_rational_expression`.
+        """
+        return super().from_rational_expression(expr, var)
+
+    @classmethod
+    def from_coeff_lists(cls, num_list, den_list, var):
+        r"""
+        See :func:`TransferFunctionBase.from_coeff_lists`.
+        """
+        return super().from_coeff_lists(num_list, den_list, var)
+
+    @classmethod
+    def from_zpk(cls, zeros, poles, gain, var):
+        r"""
+        See :func:`TransferFunctionBase.from_zpk`.
+        """
+        return super().from_zpk(zeros, poles, gain, var)
+
     def dc_gain(self):
         r"""
         See :func:`TransferFunctionBase.dc_gain`.
@@ -1634,13 +1650,13 @@ class TransferFunction(TransferFunctionBase):
 
     _is_continuous = True
 
-class DTTransferFunction(TransferFunctionBase):
+class DiscreteTransferFunction(TransferFunctionBase):
     def __new__(cls, num, den, var, sampling_time = 1):
         if sampling_time == 0:
             return TransferFunction(num, den, var)
 
         sampling_time = sympify(sampling_time)
-        return super(DTTransferFunction, cls).__new__(cls, num, den, var,
+        return super(DiscreteTransferFunction, cls).__new__(cls, num, den, var,
                                                       sampling_time)
 
     def __init__(self, num, den, var, sampling_time = 1):
@@ -1689,11 +1705,11 @@ class DTTransferFunction(TransferFunctionBase):
         Examples
         ========
 
-        >>> from sympy.physics.control.lti import TransferFunction, DTTransferFunction
+        >>> from sympy.physics.control.lti import TransferFunction, DiscreteTransferFunction
         >>> from sympy.abc import s, z, L, R, T
 
         >>> tf = TransferFunction(1, s*L + R, s)
-        >>> dttf1 = DTTransferFunction.gbt(tf, T, 0.5, z)
+        >>> dttf1 = DiscreteTransferFunction.gbt(tf, T, 0.5, z)
         >>> dttf1.num
         T*z/(2*(L + R*T/2)) + T/(2*(L + R*T/2))
         >>> dttf1.den
@@ -1701,7 +1717,7 @@ class DTTransferFunction(TransferFunctionBase):
         >>> dttf1.sampling_time
         T
 
-        >>> dttf2 = DTTransferFunction.gbt(tf, T, 0, z)
+        >>> dttf2 = DiscreteTransferFunction.gbt(tf, T, 0, z)
         >>> dttf2.num
         T/L
         >>> dttf2.den
@@ -1709,7 +1725,7 @@ class DTTransferFunction(TransferFunctionBase):
         >>> dttf2.sampling_time
         T
 
-        >>> dttf3 = DTTransferFunction.gbt(tf, T, 1, z)
+        >>> dttf3 = DiscreteTransferFunction.gbt(tf, T, 1, z)
         >>> dttf3.num
         T*z/(L + R*T)
         >>> dttf3.den
@@ -1717,7 +1733,7 @@ class DTTransferFunction(TransferFunctionBase):
         >>> dttf3.sampling_time
         T
 
-        >>> dttf4 = DTTransferFunction.gbt(tf, T, 0.3, z)
+        >>> dttf4 = DiscreteTransferFunction.gbt(tf, T, 0.3, z)
         >>> dttf4.num
         3*T*z/(10*(L + 3*R*T/10)) + 7*T/(10*(L + 3*R*T/10))
         >>> dttf4.den
@@ -1751,11 +1767,11 @@ class DTTransferFunction(TransferFunctionBase):
         Examples
         ========
 
-        >>> from sympy.physics.control.lti import TransferFunction, DTTransferFunction
+        >>> from sympy.physics.control.lti import TransferFunction, DiscreteTransferFunction
         >>> from sympy.abc import s, z, L, R, T
 
         >>> tf = TransferFunction(1, s*L + R, s)
-        >>> dttf = DTTransferFunction.bilinear(tf, T, z)
+        >>> dttf = DiscreteTransferFunction.bilinear(tf, T, z)
         >>> dttf.num
         T*z/(2*(L + R*T/2)) + T/(2*(L + R*T/2))
         >>> dttf.den
@@ -1785,11 +1801,11 @@ class DTTransferFunction(TransferFunctionBase):
         Examples
         ========
 
-        >>> from sympy.physics.control.lti import TransferFunction, DTTransferFunction
+        >>> from sympy.physics.control.lti import TransferFunction, DiscreteTransferFunction
         >>> from sympy.abc import s, z, L, R, T
 
         >>> tf = TransferFunction(1, s*L + R, s)
-        >>> dttf = DTTransferFunction.forward_diff(tf, T, z)
+        >>> dttf = DiscreteTransferFunction.forward_diff(tf, T, z)
         >>> dttf.num
         T/L
         >>> dttf.den
@@ -1819,11 +1835,11 @@ class DTTransferFunction(TransferFunctionBase):
         Examples
         ========
 
-        >>> from sympy.physics.control.lti import TransferFunction, DTTransferFunction
+        >>> from sympy.physics.control.lti import TransferFunction, DiscreteTransferFunction
         >>> from sympy.abc import s, z, L, R, T
 
         >>> tf = TransferFunction(1, s*L + R, s)
-        >>> dttf = DTTransferFunction.backward_diff(tf, T, z)
+        >>> dttf = DiscreteTransferFunction.backward_diff(tf, T, z)
         >>> dttf.num
         T*z/(L + R*T)
         >>> dttf.den
@@ -1868,8 +1884,8 @@ class DTTransferFunction(TransferFunctionBase):
         ========
 
         >>> from sympy.abc import z
-        >>> from sympy.physics.control import DTTransferFunction, DTStateSpace
-        >>> dtf = DTTransferFunction(z**2 + 1, z**3 + z*2 + 10, z, 0.1)
+        >>> from sympy.physics.control import DiscreteTransferFunction, DTStateSpace
+        >>> dtf = DiscreteTransferFunction(z**2 + 1, z**3 + z*2 + 10, z, 0.1)
         >>> dtf.rewrite(DTStateSpace)
         DTStateSpace(Matrix([
         [  0,  1, 0],
@@ -1891,7 +1907,7 @@ class DTTransferFunction(TransferFunctionBase):
 
     @property
     def sampling_time(self):
-        """Returns the sampling time of the DTTransferFunction."""
+        """Returns the sampling time of the DiscreteTransferFunction."""
         return self._sampling_time
 
     _is_continuous = False
@@ -2240,13 +2256,13 @@ class Series(SISOLinearTimeInvariant):
             return self.doit().rewrite(TransferFunction)[0][0]
         return self.doit()
 
-    def _eval_rewrite_as_DTTransferFunction(self, *args, **kwargs):
+    def _eval_rewrite_as_DiscreteTransferFunction(self, *args, **kwargs):
         if self.is_continuous:
             raise TypeError("""
                     Cannot rewrite a continuous-time Series object as a
-                    DTTransferFunction.""")
+                    DiscreteTransferFunction.""")
         if self._is_series_StateSpace:
-            return self.doit().rewrite(DTTransferFunction)[0][0]
+            return self.doit().rewrite(DiscreteTransferFunction)[0][0]
         return self.doit()
 
     @_compatibility_decorator
@@ -2280,7 +2296,7 @@ class Series(SISOLinearTimeInvariant):
     @_compatibility_decorator
     def __truediv__(self, other):
         tf_class = TransferFunction if self.is_continuous\
-                            else DTTransferFunction
+                            else DiscreteTransferFunction
 
         if isinstance(other, TransferFunctionBase):
             return Series(*self.args, new_tf(other.den, other.num,
@@ -2879,13 +2895,13 @@ class Parallel(SISOLinearTimeInvariant):
             return self.doit().rewrite(TransferFunction)[0][0]
         return self.doit()
 
-    def _eval_rewrite_as_DTTransferFunction(self, *args, **kwargs):
+    def _eval_rewrite_as_DiscreteTransferFunction(self, *args, **kwargs):
         if self.is_continuous:
             raise TypeError("""
                     Cannot rewrite a continuous-time Parallel object as a
-                    DTTransferFunction.""")
+                    DiscreteTransferFunction.""")
         if self._is_parallel_StateSpace:
-            return self.doit().rewrite(DTTransferFunction)[0][0]
+            return self.doit().rewrite(DiscreteTransferFunction)[0][0]
         return self.doit()
 
     @_compatibility_decorator
@@ -3248,7 +3264,7 @@ class MIMOParallel(MIMOLinearTimeInvariant):
 
     def _eval_rewrite_as_TransferFunctionMatrix(self, *args, **kwargs):
         tf_class = TransferFunction if self.is_continuous \
-                                    else DTTransferFunction
+                                    else DiscreteTransferFunction
         if self._is_parallel_StateSpace:
             return self.doit().rewrite(tf_class)
         return self.doit()
@@ -3687,13 +3703,13 @@ class Feedback(SISOLinearTimeInvariant):
             return self.doit().rewrite(TransferFunction)[0][0]
         return self.doit()
 
-    def _eval_rewrite_as_DTTransferFunction(self, *args, **kwargs):
+    def _eval_rewrite_as_DiscreteTransferFunction(self, *args, **kwargs):
         if self.is_continuous:
             raise TypeError("""
                     Cannot rewrite a continuous-time Feedback object as a
-                    DTTransferFunction.""")
+                    DiscreteTransferFunction.""")
         if self.is_StateSpace_object:
-            return self.doit().rewrite(DTTransferFunction)[0][0]
+            return self.doit().rewrite(DiscreteTransferFunction)[0][0]
         return self.doit()
 
     def to_expr(self):
@@ -4203,7 +4219,7 @@ def _to_TFM(mat, var, sampling_time):
             TransferFunction.from_rational_expression(expr,var)
     else:
         to_tf = lambda expr: \
-            DTTransferFunction.from_rational_expression(expr,var, sampling_time)
+            DiscreteTransferFunction.from_rational_expression(expr,var, sampling_time)
     arg = [[to_tf(expr) for expr in row] for row in mat.tolist()]
     return TransferFunctionMatrix(arg)
 
@@ -4560,7 +4576,7 @@ class TransferFunctionMatrix(MIMOLinearTimeInvariant):
     See Also
     ========
 
-    DTTransferFunction, TransferFunction, MIMOSeries, MIMOParallel, Feedback
+    DiscreteTransferFunction, TransferFunction, MIMOSeries, MIMOParallel, Feedback
 
     """
     def __new__(cls, arg):
@@ -4799,7 +4815,7 @@ class TransferFunctionMatrix(MIMOLinearTimeInvariant):
                 TransferFunction.from_rational_expression(expr, self.var)
         else:
             to_tf = lambda expr: \
-                DTTransferFunction.from_rational_expression(expr, self.var,
+                DiscreteTransferFunction.from_rational_expression(expr, self.var,
                                                             self.sampling_time)
         return to_tf(trunc)
 
