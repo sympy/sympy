@@ -4,8 +4,7 @@ from sympy.simplify.trigsimp import trigsimp
 from sympy.printing.defaults import Printable
 from sympy.utilities.misc import filldedent
 from sympy.core.evalf import EvalfMixin
-
-from mpmath.libmp.libmpf import prec_to_dps
+from sympy.external.mpmath import prec_to_dps
 
 
 __all__ = ['Vector']

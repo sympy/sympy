@@ -55,7 +55,7 @@ from sympy.printing.lambdarepr import LambdaPrinter
 from sympy.printing.numpy import NumPyPrinter
 from sympy.utilities.lambdify import implemented_function, lambdastr
 from sympy.testing.pytest import skip
-from sympy.utilities.decorator import conserve_mpmath_dps
+from sympy.external.mpmath import conserve_mpmath_dps
 from sympy.utilities.exceptions import ignore_warnings
 from sympy.external import import_module
 from sympy.functions.special.gamma_functions import uppergamma, lowergamma
