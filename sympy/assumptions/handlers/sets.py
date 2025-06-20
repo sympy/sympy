@@ -341,15 +341,18 @@ def _(expr, assumptions):
         if ask(Q.real(expr.exp), assumptions):
             if expr.exp.is_Rational and \
                     ask(Q.even(expr.exp.q), assumptions):
-                return ask(Q.positive(expr.base), assumptions)
-            if ask(Q.zero(expr.base), assumptions) is not False:
-                if ask(Q.nonnegative(expr.exp), assumptions) and ask(Q.nonnegative(expr.base), assumptions):
-                    return True
-                return
-            if ask(Q.integer(expr.exp), assumptions):
-                return True
+                return ask(Q.nonnegative(expr.base), assumptions)
             elif ask(Q.positive(expr.base), assumptions):
                 return True
+            is_base_zero = ask(Q.zero(expr.base), assumptions)
+            if is_base_zero:
+                return ask(Q.nonnegative(expr.exp), assumptions)
+            elif is_base_zero is None:
+                if ask(Q.nonnegative(expr.exp) & Q.integer(expr.exp), assumptions):
+                    return True
+                return
+            elif ask(Q.integer(expr.exp), assumptions):
+                return fuzzy_not(is_base_zero)
 
 @RealPredicate.register_many(cos, sin)
 def _(expr, assumptions):

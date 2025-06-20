@@ -2053,7 +2053,21 @@ def test_real_pow():
     assert ask(Q.real(x**y), Q.zero(x) & Q.positive(y)) is True
 
     # https://github.com/sympy/sympy/issues/28142
+    from sympy.core import Mul, Pow
     assert ask(Q.real(sqrt(x)), Q.real(x)) is None
+    assert ask(Q.real(sqrt(x)), Q.real(x)) is None
+    one_half = Mul(S.Half, 1, evaluate=False)
+    assert ask(Q.real(x ** one_half), Q.real(x)) is None
+    assert ask(Q.real(Pow(x, 1, evaluate=False)), Q.zero(x)) is True
+    assert ask(Q.real(x**x), Q.zero(x)) is True
+    assert ask(Q.real(Pow(x, -1, evaluate=False)), Q.zero(x)) is False
+    zero = symbols("zero", zero=True)
+    ask(Q.real(Pow(zero, S.Half, evaluate=False)))
+    ask(Q.real(Pow(zero, Rational(3, 2), evaluate=False)))
+    two_thirds = Rational(2, 3)
+    assert ask(Q.real(x**two_thirds), Q.zero(x)) is True
+    assert ask(Q.real(x**pi), Q.zero(x)) is True
+    assert ask(Q.real(x**sqrt(2)), Q.zero(x)) is True
 
 
 @_both_exp_pow
