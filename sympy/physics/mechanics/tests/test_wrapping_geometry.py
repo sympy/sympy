@@ -22,7 +22,7 @@ from sympy.physics.mechanics import (
     dynamicsymbols,
 )
 from sympy.simplify.simplify import simplify
-
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 r = Symbol('r', positive=True)
 x = Symbol('x')
@@ -42,22 +42,6 @@ class TestWrappingSphere:
         assert sphere.radius == r
         assert hasattr(sphere, 'point')
         assert sphere.point == pO
-
-    @staticmethod
-    @pytest.mark.parametrize('position', [S.Zero, Integer(2)*r*N.x])
-    def test_geodesic_length_point_not_on_surface_invalid(position):
-        r = Symbol('r', positive=True)
-        pO = Point('pO')
-        sphere = WrappingSphere(r, pO)
-
-        p1 = Point('p1')
-        p1.set_pos(pO, position)
-        p2 = Point('p2')
-        p2.set_pos(pO, position)
-
-        error_msg = r'point .* does not lie on the surface of'
-        with pytest.raises(ValueError, match=error_msg):
-            sphere.geodesic_length(p1, p2)
 
     @staticmethod
     @pytest.mark.parametrize(
@@ -213,23 +197,13 @@ class TestWrappingCylinder:
         p1 = Point('p1')
         p1.set_pos(pO, position)
 
-        assert cylinder.point_on_surface(p1) is expected
+        deprecation_warning = (
+            r"Checking if a Point lies on cylinder's surface by\s+"
+            r"calling point_on_surface\(\) is deprecated\."
+        )
 
-    @staticmethod
-    @pytest.mark.parametrize('position', [S.Zero, Integer(2)*r*N.y])
-    def test_geodesic_length_point_not_on_surface_invalid(position):
-        r = Symbol('r', positive=True)
-        pO = Point('pO')
-        cylinder = WrappingCylinder(r, pO, N.x)
-
-        p1 = Point('p1')
-        p1.set_pos(pO, position)
-        p2 = Point('p2')
-        p2.set_pos(pO, position)
-
-        error_msg = r'point .* does not lie on the surface of'
-        with pytest.raises(ValueError, match=error_msg):
-            cylinder.geodesic_length(p1, p2)
+        with pytest.warns(SymPyDeprecationWarning, match=deprecation_warning):
+            assert cylinder.point_on_surface(p1) is expected
 
     @staticmethod
     @pytest.mark.parametrize(

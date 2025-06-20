@@ -232,9 +232,10 @@ class WrappingSphere(WrappingGeometryBase):
         >>> sphere.geodesic_length(p1, p2)
         pi*r/2
 
-        If the ``geodesic_length`` method is passed an argument, the ``Point``
-        that doesn't lie on the sphere's surface then a ``ValueError`` is
-        raised because it's not possible to calculate a value in this case.
+        If the ``geodesic_length`` method is passed an argument that doesn't
+        lie on the sphere's surface then unexpected results may be obtained.
+        It is the user's responsibility to ensure that the points lie on the
+        sphere's surface.
 
         Parameters
         ==========
@@ -267,6 +268,14 @@ class WrappingSphere(WrappingGeometryBase):
         pO = self.point
         pA_vec = pA.pos_from(pO)
         pB_vec = pB.pos_from(pO)
+
+        if pA_vec.cross(pB_vec) == 0:
+            msg = (
+                f'Can\'t compute geodesic end vectors for the pair of points '
+                f'{pA} and {pB} on a sphere {self} as they are diametrically '
+                f'opposed, thus the geodesic is not defined.'
+            )
+            raise ValueError(msg)
 
         return (
             pA_vec.cross(pB.pos_from(pA)).cross(pA_vec).normalize(),
@@ -467,7 +476,9 @@ class WrappingCylinder(WrappingGeometryBase):
         sqrt(r**2*q(t)**2 + 1)
 
         If the ``geodesic_length`` method is passed an argument ``Point`` that
-        doesn't lie on the sphere's surface then unexpected results may occur.
+        doesn't lie on the cylinder's surface then unexpected results may occur.
+        It is the user's responsibility to ensure that the points lie on the
+        cylinder's surface.
 
         Parameters
         ==========
@@ -518,6 +529,13 @@ class WrappingCylinder(WrappingGeometryBase):
         """
         point_1_from_origin_point = point_1.pos_from(self.point)
         point_2_from_origin_point = point_2.pos_from(self.point)
+
+        if point_1_from_origin_point == point_2_from_origin_point:
+            msg = (
+                f'Cannot compute geodesic end vectors for coincident points '
+                f'{point_1} and {point_2} as no geodesic exists.'
+            )
+            raise ValueError(msg)
 
         point_1_parallel = point_1_from_origin_point.dot(self.axis) * self.axis
         point_2_parallel = point_2_from_origin_point.dot(self.axis) * self.axis
