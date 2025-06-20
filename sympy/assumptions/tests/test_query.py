@@ -9,6 +9,7 @@ from sympy.assumptions.handlers import AskHandler
 from sympy.assumptions.ask_generated import (get_all_known_facts,
     get_known_facts_dict)
 from sympy.core.add import Add
+from sympy.core.mul import Mul
 from sympy.core.numbers import (I, Integer, Rational, oo, zoo, pi)
 from sympy.core.singleton import S
 from sympy.core.power import Pow
@@ -2571,5 +2572,5 @@ def test_issue_27440():
     assert ask(Q.negative(nan)) is None
 
 def test_issue_28150():
-    # https://github.com/sympy/sympy/issues/28150
     assert ask(Q.real(Pow(0, -1, evaluate=False))) is False
+    assert ask(Q.real(Pow(Mul(0, -1, evaluate=False), -1, evaluate=False))) is False
