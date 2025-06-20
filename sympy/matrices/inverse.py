@@ -327,18 +327,23 @@ def _inv_DM(dM, cancel=True):
     except DMNonInvertibleMatrixError:
         raise NonInvertibleMatrixError("Matrix det == 0; not invertible.")
 
-    if use_exact:
-        dMi = dMi.convert_to(dom)
-        den = dom.convert_from(den, dom_exact)
-
     if cancel:
         # Convert to field and cancel with the denominator.
+        # Do this in the exact domain so that polynomial GCD is exact.
         if not dMi.domain.is_Field:
             dMi = dMi.to_field()
-        Mi = (dMi / den).to_Matrix()
-    else:
-        # Convert to Matrix and divide without cancelling
-        Mi = dMi.to_Matrix() / dMi.domain.to_sympy(den)
+            dom = dom.get_field()
+        dMi = (dMi / den)
+        den = dMi.domain.one
+
+    if use_exact:
+        dMi = dMi.convert_to(dom)
+        den = dom.convert_from(den, dMi.domain)
+
+    # Convert to Matrix and divide without cancelling
+    Mi = dMi.to_Matrix()
+    if den != dMi.domain.one:
+        Mi = Mi / dMi.domain.to_sympy(den)
 
     return Mi
 
