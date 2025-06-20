@@ -1083,7 +1083,7 @@ def parse_expr(s: str, local_dict: DICT | None = None,
         for i in local_dict.pop(null, ()):
             local_dict[i] = null
         return rv
-    except Exception as e:
+    except Exception as e: # noqa: BLE001
         # restore neutral definitions for names
         for i in local_dict.pop(null, ()):
             local_dict[i] = null
