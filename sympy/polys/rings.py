@@ -3252,9 +3252,3 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         return f.ring.dmp_factor_list(f)
 
 #<-------------------------REFACTORED ABOVE/ TO REFACTOR BELOW-------------------------->#
-
-
-
-
-
-
