@@ -5,10 +5,7 @@ from sympy.logic.boolalg import true, false
 
 __all__ = ['RouthHurwitz', 'negative_real_root_conditions']
 
-def negative_real_root_conditions(
-        polynomial,
-        var = None, /,
-        *, domain=None):
+def negative_real_root_conditions(polynomial, var, /, *, domain=None):
     """
     Returns a list of conditions for a polynomial to have all its roots with
     negative real parts.
