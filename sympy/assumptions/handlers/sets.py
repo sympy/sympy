@@ -231,7 +231,7 @@ def _(expr, assumptions):
 
 def _RealPredicate_number(expr, assumptions):
     if isinstance(expr, Pow):
-        if expr.base.equals(0) and expr.exp.is_negative:
+        if ask(Q.eq(expr.base, 0), assumptions) and expr.exp.is_negative:
             return False  # Division by zero -> not real
 
     # let as_real_imag() work first since the expression may
