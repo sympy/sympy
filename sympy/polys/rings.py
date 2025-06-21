@@ -775,25 +775,15 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         else:
             return p1._sub_ground(cp2)
 
-    def __rsub__(p1, n):
-        ring = p1.ring
-
-        if isinstance(n, PolyElement):
-            try:
-                cp2 = ring.ring_new(n)
-            except CoercionFailed:
-                return NotImplemented
-            else:
-                return cp2._sub(p1)
-
+    def __rsub__(self, n):
+        ring = self.ring
         try:
-            cn = ring.domain_new(n)
+            n = ring.domain_new(n)
         except CoercionFailed:
             return NotImplemented
         else:
-            zero_poly = ring.zero
-            neg_p1 = zero_poly._sub(p1)
-            return neg_p1._add_ground(cn)
+            p = self.__neg__()
+            return p._add_ground(n)
 
     def __mul__(p1, p2):
         """Multiply two polynomials.
@@ -928,7 +918,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
             if p2.ring == ring:
                 return p1._mod(p2)
             elif isinstance(ring.domain, PolynomialRing) and ring.domain.ring == p2.ring:
-                pass  # Preserving original logic
+                pass
             elif isinstance(p2.ring.domain, PolynomialRing) and p2.ring.domain.ring == ring:
                 return p2.__rmod__(p1)
             else:
@@ -1497,29 +1487,80 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
             raise ValueError("expected at least 1 and at most %s values, got %s" % (f.ring.ngens, len(values)))
 
     def evaluate(self, *args, **kwargs):
+        eval_dict = {}
+        ring = self.ring
+
         if len(args) == 1 and isinstance(args[0], list) and not kwargs:
-            return self._evaluate_list(args[0])
+            for gen, val in args[0]:
+                idx = ring.index(gen)
+                eval_dict[idx] = ring.domain.convert(val)
+
         elif len(args) == 2 and not kwargs:
             x, a = args
-            return self._evaluate_single(x, a)
+            idx = ring.index(x)
+            eval_dict[idx] = ring.domain.convert(a)
+
         elif not args and kwargs:
-            eval_list = list(kwargs.items())
-            return self._evaluate_list(eval_list)
+            for gen, val in kwargs.items():
+                idx = ring.index(gen)
+                eval_dict[idx] = ring.domain.convert(val)
         else:
             raise ValueError("Invalid arguments for evaluate()")
 
+        if not eval_dict:
+            return self
+
+        if len(eval_dict) == ring.ngens:
+            return self._evaluate(eval_dict)
+        else:
+            temp_result = self._subs(eval_dict)
+            new_ring = ring.drop(*[ring.gens[i] for i in eval_dict.keys()])
+
+            result_poly = new_ring.zero
+            remaining_indices = [i for i in range(ring.ngens) if i not in eval_dict]
+
+            for monom, coeff in temp_result.iterterms():
+                new_monom = tuple(monom[i] for i in remaining_indices)
+
+                if new_monom in result_poly:
+                    result_poly[new_monom] += coeff
+                    if not result_poly[new_monom]:
+                        del result_poly[new_monom]
+                else:
+                    if coeff:
+                        result_poly[new_monom] = coeff
+
+            return result_poly
+
     def subs(self, *args, **kwargs):
+        subs_dict = {}
+        ring = self.ring
 
         if len(args) == 1 and isinstance(args[0], list) and not kwargs:
-            return self._subs_list(args[0])
+            for gen, val in args[0]:
+                idx = ring.index(gen)
+                subs_dict[idx] = ring.domain.convert(val)
+
         elif len(args) == 2 and not kwargs:
             x, a = args
-            return self._subs_single(x, a)
+            idx = ring.index(x)
+            subs_dict[idx] = ring.domain.convert(a)
+
         elif not args and kwargs:
-            subs_list = list(kwargs.items())
-            return self._subs_list(subs_list)
+            for gen, val in kwargs.items():
+                idx = ring.index(gen)
+                subs_dict[idx] = ring.domain.convert(val)
         else:
             raise ValueError("Invalid arguments for subs()")
+
+        if not subs_dict:
+            return self
+
+        if len(subs_dict) == ring.ngens:
+            result = self._evaluate(subs_dict)
+            return ring.ground_new(result)
+        else:
+            return self._subs(subs_dict)
 
 #<--------------------------INTERFACE / IMPLEMENTATION DIVIDER-------------------------->#
 
@@ -2626,128 +2667,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
         return poly
 
-    def _evaluate_single(self, x, a):
-        ring = self.ring
-        i = ring.index(x)
-        a = ring.domain.convert(a)
 
-        if ring.ngens == 1:
-            return self._evaluate_complete({0: a})
-        else:
-            return self._evaluate_partial({i: a})
-
-    def _evaluate_list(self, eval_pairs):
-        if not eval_pairs:
-            return self
-
-        ring = self.ring
-
-        eval_dict = {}
-        for gen, val in eval_pairs:
-            idx = ring.index(gen)
-            eval_dict[idx] = ring.domain.convert(val)
-
-        if len(eval_dict) == ring.ngens:
-            return self._evaluate_complete(eval_dict)
-        else:
-            return self._evaluate_partial(eval_dict)
-
-    def _evaluate_complete(self, eval_dict):
-        result = self.ring.domain.zero
-
-        for monom, coeff in self.iterterms():
-            monom_value = self.ring.domain.one
-            for i, exp in enumerate(monom):
-                if exp > 0:
-                    monom_value *= eval_dict[i] ** exp
-
-            result += coeff * monom_value
-
-        return result
-
-    def _evaluate_partial(self, eval_dict):
-        ring = self.ring
-
-        new_ring = ring.drop(*[ring.gens[i] for i in eval_dict.keys()])
-        result_poly = new_ring.zero
-
-        for monom, coeff in self.iterterms():
-            eval_monom_value = ring.domain.one
-            remaining_monom = []
-
-            for i, exp in enumerate(monom):
-                if i in eval_dict:
-                    if exp > 0:
-                        eval_monom_value *= eval_dict[i] ** exp
-                else:
-                    remaining_monom.append(exp)
-
-            new_coeff = coeff * eval_monom_value
-
-            if new_coeff:
-                remaining_monom = tuple(remaining_monom)
-                if remaining_monom in result_poly:
-                    result_poly[remaining_monom] += new_coeff
-                    if not result_poly[remaining_monom]:
-                        del result_poly[remaining_monom]
-                else:
-                    result_poly[remaining_monom] = new_coeff
-
-        return result_poly
-
-    def _subs_single(self, x, a):
-        ring = self.ring
-        i = ring.index(x)
-        a = ring.domain.convert(a)
-
-        if ring.ngens == 1:
-            result = self._evaluate_complete({0: a})
-            return ring.ground_new(result)
-        else:
-            return self._subs_partial({i: a})
-
-    def _subs_list(self, subs_pairs):
-        if not subs_pairs:
-            return self
-
-        ring = self.ring
-
-        subs_dict = {}
-        for gen, val in subs_pairs:
-            idx = ring.index(gen)
-            subs_dict[idx] = ring.domain.convert(val)
-
-        if len(subs_dict) == ring.ngens:
-            result = self._evaluate_complete(subs_dict)
-            return ring.ground_new(result)
-        else:
-            return self._subs_partial(subs_dict)
-
-    def _subs_partial(self, subs_dict):
-
-        ring = self.ring
-        result_poly = ring.zero
-
-        for monom, coeff in self.iterterms():
-            new_coeff = coeff
-            new_monom = list(monom)
-
-            for i, val in subs_dict.items():
-                exp = monom[i]
-                if exp > 0:
-                    new_coeff *= val ** exp
-                new_monom[i] = 0
-
-            if new_coeff:
-                new_monom = tuple(new_monom)
-                if new_monom in result_poly:
-                    result_poly[new_monom] += new_coeff
-                    if not result_poly[new_monom]:
-                        del result_poly[new_monom]
-                else:
-                    result_poly[new_monom] = new_coeff
-
-        return result_poly
 
 
     # The following p* and subresultants methods can just be converted to pure python
@@ -3127,65 +3047,30 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
         return R
 
-    # TODO: following methods should point to polynomial
-    # representation independent algorithm implementations.
+    def _subs(self, subs_dict):
+        ring = self.ring
+        result_poly = ring.zero
 
-    def half_gcdex(f, g):
-        return f.ring.dmp_half_gcdex(f, g)
+        for monom, coeff in self.iterterms():
+            new_coeff = coeff
+            new_monom = list(monom)
 
-    def gcdex(f, g):
-        return f.ring.dmp_gcdex(f, g)
+            for i, val in subs_dict.items():
+                exp = monom[i]
+                if exp > 0:
+                    new_coeff *= val ** exp
+                new_monom[i] = 0
 
-    def resultant(f, g):
-        return f.ring.dmp_resultant(f, g)
+            if new_coeff:
+                new_monom = tuple(new_monom)
+                if new_monom in result_poly:
+                    result_poly[new_monom] += new_coeff
+                    if not result_poly[new_monom]:
+                        del result_poly[new_monom]
+                else:
+                    result_poly[new_monom] = new_coeff
 
-    def discriminant(f):
-        return f.ring.dmp_discriminant(f)
-
-    def decompose(f):
-        if f.ring.is_univariate:
-            return f.ring.dup_decompose(f)
-        else:
-            raise MultivariatePolynomialError("polynomial decomposition")
-
-    def shift(f, a):
-        if f.ring.is_univariate:
-            return f.ring.dup_shift(f, a)
-        else:
-            raise MultivariatePolynomialError("shift: use shift_list instead")
-
-    def shift_list(f, a):
-        return f.ring.dmp_shift(f, a)
-
-    def sturm(f):
-        if f.ring.is_univariate:
-            return f.ring.dup_sturm(f)
-        else:
-            raise MultivariatePolynomialError("sturm sequence")
-
-    def gff_list(f):
-        return f.ring.dmp_gff_list(f)
-
-    def norm(f):
-        return f.ring.dmp_norm(f)
-
-    def sqf_norm(f):
-        return f.ring.dmp_sqf_norm(f)
-
-    def sqf_part(f):
-        return f.ring.dmp_sqf_part(f)
-
-    def sqf_list(f, all=False):
-        return f.ring.dmp_sqf_list(f, all=all)
-
-    def factor_list(f):
-        return f.ring.dmp_factor_list(f)
-
-#<-------------------------REFACTORED ABOVE/ TO REFACTOR BELOW-------------------------->#
-
-
-
-
+        return result_poly
 
     def symmetrize(self):
         r"""
@@ -3246,6 +3131,9 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
             https://dl.acm.org/doi/pdf/10.1145/800205.806342
 
         """
+        # For the python-flint override this can just be converted back to
+        # the pure python version until python-flint provides some
+        # equivalent functionality.
         f = self.copy()
         ring = f.ring
         n = ring.ngens
@@ -3295,3 +3183,78 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         mapping = list(zip(ring.gens, polys))
 
         return symmetric, f, mapping
+
+    def _evaluate(self, eval_dict):
+        result = self.ring.domain.zero
+
+        for monom, coeff in self.iterterms():
+            monom_value = self.ring.domain.one
+            for i, exp in enumerate(monom):
+                if exp > 0:
+                    monom_value *= eval_dict[i] ** exp
+
+            result += coeff * monom_value
+
+        return result
+
+    # TODO: following methods should point to polynomial
+    # representation independent algorithm implementations.
+
+    def half_gcdex(f, g):
+        return f.ring.dmp_half_gcdex(f, g)
+
+    def gcdex(f, g):
+        return f.ring.dmp_gcdex(f, g)
+
+    def resultant(f, g):
+        return f.ring.dmp_resultant(f, g)
+
+    def discriminant(f):
+        return f.ring.dmp_discriminant(f)
+
+    def decompose(f):
+        if f.ring.is_univariate:
+            return f.ring.dup_decompose(f)
+        else:
+            raise MultivariatePolynomialError("polynomial decomposition")
+
+    def shift(f, a):
+        if f.ring.is_univariate:
+            return f.ring.dup_shift(f, a)
+        else:
+            raise MultivariatePolynomialError("shift: use shift_list instead")
+
+    def shift_list(f, a):
+        return f.ring.dmp_shift(f, a)
+
+    def sturm(f):
+        if f.ring.is_univariate:
+            return f.ring.dup_sturm(f)
+        else:
+            raise MultivariatePolynomialError("sturm sequence")
+
+    def gff_list(f):
+        return f.ring.dmp_gff_list(f)
+
+    def norm(f):
+        return f.ring.dmp_norm(f)
+
+    def sqf_norm(f):
+        return f.ring.dmp_sqf_norm(f)
+
+    def sqf_part(f):
+        return f.ring.dmp_sqf_part(f)
+
+    def sqf_list(f, all=False):
+        return f.ring.dmp_sqf_list(f, all=all)
+
+    def factor_list(f):
+        return f.ring.dmp_factor_list(f)
+
+#<-------------------------REFACTORED ABOVE/ TO REFACTOR BELOW-------------------------->#
+
+
+
+
+
+
