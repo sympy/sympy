@@ -18,7 +18,7 @@ from sympy.utilities import public
 import math
 
 @public
-class IntegerRing(Ring, CharacteristicZero, SimpleDomain):
+class IntegerRing(Ring[MPZ], CharacteristicZero, SimpleDomain):
     r"""The domain ``ZZ`` representing the integers `\mathbb{Z}`.
 
     The :py:class:`IntegerRing` class represents the ring of integers as a
@@ -39,7 +39,6 @@ class IntegerRing(Ring, CharacteristicZero, SimpleDomain):
     zero = dtype(0)
     one = dtype(1)
     tp = type(one)
-
 
     is_IntegerRing = is_ZZ = True
     is_Numerical = True

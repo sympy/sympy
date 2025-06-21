@@ -27,7 +27,7 @@ def test_puiseux_ring():
 
 
 def test_puiseux_ring_attributes():
-    R1, px1, py1 = ring('x, y', QQ)
+    R1, _, _ = ring('x, y', QQ)
     R2, px2, py2 = puiseux_ring('x, y', QQ)
     assert R2.domain == QQ
     assert R2.symbols == (x, y)
@@ -36,19 +36,19 @@ def test_puiseux_ring_attributes():
     assert R2.poly_ring == R1
     assert R2.zero == PuiseuxPoly(R1.zero, R2)
     assert R2.one == PuiseuxPoly(R1.one, R2)
-    assert R2.zero_monom == R1.zero_monom == (0, 0) # type: ignore
+    assert R2.zero_monom == R1.zero_monom == (0, 0)
     assert R2.monomial_mul((1, 2), (3, 4)) == (4, 6)
 
 
 def test_puiseux_ring_methods():
-    R1, px1, py1 = ring('x, y', QQ)
+    _, px1, _ = ring('x, y', QQ)
     R2, px2, py2 = puiseux_ring('x, y', QQ)
-    assert R2({(1, 2): 3}) == 3*px2*py2**2
     assert R2(px1) == px2
     assert R2(1) == R2.one
     assert R2(QQ(1,2)) == QQ(1,2)*R2.one
     assert R2.from_poly(px1) == px2
     assert R2.from_poly(px1) != py2
+    assert R2.from_dict({(1, 2): 3}) == 3*px2*py2**2
     assert R2.from_dict({(1, 2): QQ(3)}) == 3*px2*py2**2
     assert R2.from_dict({(QQ(1,2), 2): QQ(3)}) == 3*px2**QQ(1,2)*py2**2
     assert R2.from_int(3) == 3*R2.one
@@ -61,7 +61,7 @@ def test_puiseux_ring_methods():
 
 
 def test_puiseux_poly():
-    R1, px1 = ring('x', QQ)
+    _, px1 = ring('x', QQ)
     R2, px2 = puiseux_ring('x', QQ)
     assert PuiseuxPoly(px1, R2) == px2
     assert px2.ring == R2
@@ -95,7 +95,7 @@ def test_puiseux_poly_monoms():
     assert R({(-QQ(1,3),): 1}).monoms() == [(-QQ(1,3),)]
     p = x**QQ(1,6)
     assert p[(QQ(1,6),)] == 1
-    raises(KeyError, lambda: p[(1,)])
+    raises(KeyError, lambda: p[(1,)]) # type: ignore
     assert p.to_dict() == {(QQ(1,6),): 1}
     assert R(p.to_dict()) == p
     assert PuiseuxPoly.from_dict({(QQ(1,6),): 1}, R) == p
@@ -130,8 +130,8 @@ def test_puiseux_poly_unify():
 
 
 def test_puiseux_poly_arit():
-    R, x = puiseux_ring('x', QQ)
-    R2, y = puiseux_ring('y', QQ)
+    _, x = puiseux_ring('x', QQ)
+    _, y = puiseux_ring('y', QQ)
     p = x**2 + 1
     assert +p == p
     assert -p == -1 - x**2
@@ -151,17 +151,17 @@ def test_puiseux_poly_arit():
     raises(ValueError, lambda: x + y)
     raises(ValueError, lambda: x - y)
     raises(ValueError, lambda: x * y)
-    raises(TypeError, lambda: x + None)
-    raises(TypeError, lambda: x - None)
-    raises(TypeError, lambda: x * None)
-    raises(TypeError, lambda: None + x)
-    raises(TypeError, lambda: None - x)
-    raises(TypeError, lambda: None * x)
+    raises(TypeError, lambda: x + None) # type: ignore
+    raises(TypeError, lambda: x - None) # type: ignore
+    raises(TypeError, lambda: x * None) # type: ignore
+    raises(TypeError, lambda: None + x) # type: ignore
+    raises(TypeError, lambda: None - x) # type: ignore
+    raises(TypeError, lambda: None * x) # type: ignore
 
 
 def test_puiseux_poly_div():
     R, x = puiseux_ring('x', QQ)
-    R2, y = puiseux_ring('y', QQ)
+    _, y = puiseux_ring('y', QQ)
     p = x**2 - 1
     assert p / 1 == p
     assert p / QQ(1,2) == 2*p == 2*x**2 - 2
@@ -172,8 +172,8 @@ def test_puiseux_poly_div():
     raises(ValueError, lambda: (x + 1) / (x + 2))
     raises(ValueError, lambda: (x + 1) / (x + 1))
     raises(ValueError, lambda: x / y)
-    raises(TypeError, lambda: x / None)
-    raises(TypeError, lambda: None / x)
+    raises(TypeError, lambda: x / None) # type: ignore
+    raises(TypeError, lambda: None / x) # type: ignore
 
 
 def test_puiseux_poly_pow():
@@ -188,7 +188,7 @@ def test_puiseux_poly_pow():
     assert (2*x)**-1 == 1/(2*x) == QQ(1,2)/x == QQ(1,2)*x**-1 == R({(-1,): QQ(1,2)})
     assert 2/x**2 == 2*x**-2 == R({(-2,): 2})
     assert 2/xz**2 == 2*xz**-2 == Rz({(-2,): 2})
-    raises(TypeError, lambda: x**None)
+    raises(TypeError, lambda: x**None) # type: ignore
     raises(ValueError, lambda: (x + 1)**-1)
     raises(ValueError, lambda: (x + 1)**QQ(1,2))
     raises(ValueError, lambda: (2*x)**QQ(1,2))
@@ -196,7 +196,7 @@ def test_puiseux_poly_pow():
 
 
 def test_puiseux_poly_diff():
-    R, x, y = puiseux_ring('x, y', QQ)
+    _, x, y = puiseux_ring('x, y', QQ)
     assert (x**2 + 1).diff(x) == 2*x
     assert (x**2 + 1).diff(y) == 0
     assert (x**2 + y**2).diff(x) == 2*x

@@ -19,26 +19,45 @@ non-negative integers.
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING, Generic, Protocol, TypeVar
+
+from math import gcd, lcm
+
+from sympy.external.gmpy import MPQ
+from sympy.polys.domains.domain import Er
 from sympy.polys.domains import QQ
 from sympy.polys.rings import PolyRing, PolyElement
 from sympy.core.add import Add
 from sympy.core.mul import Mul
-from sympy.external.gmpy import gcd, lcm
-
-
-from typing import TYPE_CHECKING
 
 
 if TYPE_CHECKING:
-    from typing import Any, Unpack
+    from typing import Unpack
     from sympy.core.expr import Expr
     from sympy.polys.domains import Domain
     from collections.abc import Iterable, Iterator
 
 
+K = TypeVar("K", covariant=True)
+V = TypeVar("V", covariant=True)
+
+
+class Map(Protocol[K, V]):
+    """A dict mapping from keys to values."""
+
+    def items(self) -> Iterable[tuple[K, V]]: ...
+    def __iter__(self) -> Iterator[K]: ...
+
+
+MonI = tuple[int, ...]
+MonQ = tuple[MPQ, ...]
+
+
 def puiseux_ring(
-    symbols: str | list[Expr], domain: Domain
-) -> tuple[PuiseuxRing, Unpack[tuple[PuiseuxPoly, ...]]]:
+    symbols: str | list[Expr],
+    domain: Domain[Er],
+    /,
+) -> tuple[PuiseuxRing[Er], Unpack[tuple[PuiseuxPoly[Er], ...]]]:
     """Construct a Puiseux ring.
 
     This function constructs a Puiseux ring with the given symbols and domain.
@@ -53,10 +72,10 @@ def puiseux_ring(
     7*y**(-1) + 5*x**(1/2)
     """
     ring = PuiseuxRing(symbols, domain)
-    return (ring,) + ring.gens # type: ignore
+    return (ring,) + ring.gens  # type: ignore
 
 
-class PuiseuxRing:
+class PuiseuxRing(Generic[Er]):
     """Ring of Puiseux polynomials.
 
     A Puiseux polynomial is a truncated Puiseux series. The exponents of the
@@ -93,8 +112,8 @@ class PuiseuxRing:
     sympy.polys.ring_series.rs_series
     PuiseuxPoly
     """
-    def __init__(self, symbols: str | list[Expr], domain: Domain):
 
+    def __init__(self, symbols: str | list[Expr], domain: Domain[Er]):
         poly_ring = PolyRing(symbols, domain)
 
         domain = poly_ring.domain
@@ -110,18 +129,18 @@ class PuiseuxRing:
         self.zero = self.from_poly(poly_ring.zero)
         self.one = self.from_poly(poly_ring.one)
 
-        self.zero_monom = poly_ring.zero_monom # type: ignore
-        self.monomial_mul = poly_ring.monomial_mul # type: ignore
+        self.zero_monom = poly_ring.zero_monom
+        self.monomial_mul = poly_ring.monomial_mul
 
     def __repr__(self) -> str:
         return f"PuiseuxRing({self.symbols}, {self.domain})"
 
-    def __eq__(self, other: Any) -> bool:
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, PuiseuxRing):
             return NotImplemented
         return self.symbols == other.symbols and self.domain == other.domain
 
-    def from_poly(self, poly: PolyElement) -> PuiseuxPoly:
+    def from_poly(self, poly: PolyElement[Er]) -> PuiseuxPoly[Er]:
         """Create a Puiseux polynomial from a polynomial.
 
         >>> from sympy.polys.domains import QQ
@@ -134,7 +153,9 @@ class PuiseuxRing:
         """
         return PuiseuxPoly(poly, self)
 
-    def from_dict(self, terms: dict[tuple[int, ...], Any]) -> PuiseuxPoly:
+    def from_dict(
+        self, terms: Map[tuple[MPQ | int, ...], Er | Expr | int]
+    ) -> PuiseuxPoly[Er]:
         """Create a Puiseux polynomial from a dictionary of terms.
 
         >>> from sympy.polys.domains import QQ
@@ -143,9 +164,10 @@ class PuiseuxRing:
         >>> R.from_dict({(QQ(1,2),): QQ(3)})
         3*x**(1/2)
         """
-        return PuiseuxPoly.from_dict(terms, self)
+        terms_q = {_to_monq(m): coeff for m, coeff in terms.items()}
+        return PuiseuxPoly.from_dict(terms_q, self)
 
-    def from_int(self, n: int) -> PuiseuxPoly:
+    def from_int(self, n: int) -> PuiseuxPoly[Er]:
         """Create a Puiseux polynomial from an integer.
 
         >>> from sympy.polys.domains import QQ
@@ -156,7 +178,7 @@ class PuiseuxRing:
         """
         return self.from_poly(self.poly_ring(n))
 
-    def domain_new(self, arg: Any) -> Any:
+    def domain_new(self, arg: Expr | Er | int) -> Er:
         """Create a new element of the domain.
 
         >>> from sympy.polys.domains import QQ
@@ -169,7 +191,7 @@ class PuiseuxRing:
         """
         return self.poly_ring.domain_new(arg)
 
-    def ground_new(self, arg: Any) -> PuiseuxPoly:
+    def ground_new(self, arg: Expr | Er | int) -> PuiseuxPoly[Er]:
         """Create a new element from a ground element.
 
         >>> from sympy.polys.domains import QQ
@@ -182,7 +204,14 @@ class PuiseuxRing:
         """
         return self.from_poly(self.poly_ring.ground_new(arg))
 
-    def __call__(self, arg: Any) -> PuiseuxPoly:
+    def __call__(
+        self,
+        arg: Expr
+        | PolyElement[Er]
+        | Er
+        | int
+        | Map[tuple[MPQ | int, ...], Er | Expr | int],
+    ) -> PuiseuxPoly[Er]:
         """Coerce an element into the ring.
 
         >>> from sympy.polys.domains import QQ
@@ -198,7 +227,7 @@ class PuiseuxRing:
         else:
             return self.from_poly(self.poly_ring(arg))
 
-    def index(self, x: PuiseuxPoly) -> int:
+    def index(self, x: PuiseuxPoly[Er]) -> int:
         """Return the index of a generator.
 
         >>> from sympy.polys.domains import QQ
@@ -212,23 +241,28 @@ class PuiseuxRing:
         return self.gens.index(x)
 
 
-def _div_poly_monom(poly: PolyElement, monom: Iterable[int]) -> PolyElement:
+def _to_monq(monom: tuple[MPQ | int, ...]) -> MonQ:
+    """Convert a tuple of MPQ or int to a tuple of MPQ."""
+    return tuple(MPQ(mi) for mi in monom)
+
+
+def _div_poly_monom(poly: PolyElement[Er], monom: MonI) -> PolyElement[Er]:
     ring = poly.ring
     div = ring.monomial_div
     return ring.from_dict({div(m, monom): c for m, c in poly.terms()})
 
 
-def _mul_poly_monom(poly: PolyElement, monom: Iterable[int]) -> PolyElement:
+def _mul_poly_monom(poly: PolyElement[Er], monom: MonI) -> PolyElement[Er]:
     ring = poly.ring
     mul = ring.monomial_mul
     return ring.from_dict({mul(m, monom): c for m, c in poly.terms()})
 
 
-def _div_monom(monom: Iterable[int], div: Iterable[int]) -> tuple[int, ...]:
+def _div_monom(monom: Iterable[int], div: Iterable[int]) -> MonI:
     return tuple(mi - di for mi, di in zip(monom, div))
 
 
-class PuiseuxPoly:
+class PuiseuxPoly(Generic[Er]):
     """Puiseux polynomial. Represents a truncated Puiseux series.
 
     See the :class:`PuiseuxRing` class for more information.
@@ -270,33 +304,33 @@ class PuiseuxPoly:
     sympy.polys.rings.PolyElement
     """
 
-    ring: PuiseuxRing
-    poly: PolyElement
-    monom: tuple[int, ...] | None
-    ns: tuple[int, ...] | None
+    ring: PuiseuxRing[Er]
+    poly: PolyElement[Er]
+    monom: MonI | None
+    ns: MonI | None
 
-    def __new__(cls, poly: PolyElement, ring: PuiseuxRing) -> PuiseuxPoly:
+    def __new__(cls, poly: PolyElement[Er], ring: PuiseuxRing[Er]) -> PuiseuxPoly[Er]:
         return cls._new(ring, poly, None, None)
 
     @classmethod
     def _new(
         cls,
-        ring: PuiseuxRing,
-        poly: PolyElement,
-        monom: tuple[int, ...] | None,
-        ns: tuple[int, ...] | None,
-    ) -> PuiseuxPoly:
+        ring: PuiseuxRing[Er],
+        poly: PolyElement[Er],
+        monom: MonI | None,
+        ns: MonI | None,
+    ) -> PuiseuxPoly[Er]:
         poly, monom, ns = cls._normalize(poly, monom, ns)
         return cls._new_raw(ring, poly, monom, ns)
 
     @classmethod
     def _new_raw(
         cls,
-        ring: PuiseuxRing,
-        poly: PolyElement,
-        monom: tuple[int, ...] | None,
-        ns: tuple[int, ...] | None,
-    ) -> PuiseuxPoly:
+        ring: PuiseuxRing[Er],
+        poly: PolyElement[Er],
+        monom: MonI | None,
+        ns: MonI | None,
+    ) -> PuiseuxPoly[Er]:
         obj = object.__new__(cls)
         obj.ring = ring
         obj.poly = poly
@@ -304,7 +338,7 @@ class PuiseuxPoly:
         obj.ns = ns
         return obj
 
-    def __eq__(self, other: Any) -> bool:
+    def __eq__(self, other: object) -> bool:
         if isinstance(other, PuiseuxPoly):
             return (
                 self.poly == other.poly
@@ -319,15 +353,15 @@ class PuiseuxPoly:
     @classmethod
     def _normalize(
         cls,
-        poly: PolyElement,
-        monom: tuple[int, ...] | None,
-        ns: tuple[int, ...] | None,
-    ) -> tuple[PolyElement, tuple[int, ...] | None, tuple[int, ...] | None]:
+        poly: PolyElement[Er],
+        monom: MonI | None,
+        ns: MonI | None,
+    ) -> tuple[PolyElement[Er], MonI | None, MonI | None]:
         if monom is None and ns is None:
             return poly, None, None
 
         if monom is not None:
-            degs = [max(d, 0) for d in poly.tail_degrees()]
+            degs: MonI = tuple([max(d, 0) for d in poly.tail_degrees()])  # type: ignore
             if all(di >= mi for di, mi in zip(degs, monom)):
                 poly = _div_poly_monom(poly, monom)
                 monom = None
@@ -369,10 +403,10 @@ class PuiseuxPoly:
     @classmethod
     def _monom_fromint(
         cls,
-        monom: tuple[int, ...],
-        dmonom: tuple[int, ...] | None,
-        ns: tuple[int, ...] | None,
-    ) -> tuple[Any, ...]:
+        monom: MonI,
+        dmonom: MonI | None,
+        ns: MonI | None,
+    ) -> MonQ:
         if dmonom is not None and ns is not None:
             return tuple(QQ(mi - di, ni) for mi, di, ni in zip(monom, dmonom, ns))
         elif dmonom is not None:
@@ -385,10 +419,10 @@ class PuiseuxPoly:
     @classmethod
     def _monom_toint(
         cls,
-        monom: tuple[Any, ...],
-        dmonom: tuple[int, ...] | None,
-        ns: tuple[int, ...] | None,
-    ) -> tuple[int, ...]:
+        monom: MonQ,
+        dmonom: MonI | None,
+        ns: MonI | None,
+    ) -> MonI:
         if dmonom is not None and ns is not None:
             return tuple(
                 int((mi * ni).numerator + di) for mi, di, ni in zip(monom, dmonom, ns)
@@ -400,7 +434,7 @@ class PuiseuxPoly:
         else:
             return tuple(int(mi.numerator) for mi in monom)
 
-    def itermonoms(self) -> Iterator[tuple[Any, ...]]:
+    def itermonoms(self) -> Iterator[MonQ]:
         """Iterate over the monomials of a Puiseux polynomial.
 
         >>> from sympy import QQ
@@ -416,21 +450,21 @@ class PuiseuxPoly:
         for m in self.poly.itermonoms():
             yield self._monom_fromint(m, monom, ns)
 
-    def monoms(self) -> list[tuple[Any, ...]]:
+    def monoms(self) -> list[MonQ]:
         """Return a list of the monomials of a Puiseux polynomial."""
         return list(self.itermonoms())
 
-    def __iter__(self) -> Iterator[tuple[tuple[Any, ...], Any]]:
+    def __iter__(self) -> Iterator[MonQ]:
         return self.itermonoms()
 
-    def __getitem__(self, monom: tuple[int, ...]) -> Any:
-        monom = self._monom_toint(monom, self.monom, self.ns)
-        return self.poly[monom]
+    def __getitem__(self, monom: MonQ) -> Er:
+        monomq = self._monom_toint(monom, self.monom, self.ns)
+        return self.poly[monomq]
 
     def __len__(self) -> int:
         return len(self.poly)
 
-    def iterterms(self) -> Iterator[tuple[tuple[Any, ...], Any]]:
+    def iterterms(self) -> Iterator[tuple[MonQ, Er]]:
         """Iterate over the terms of a Puiseux polynomial.
 
         >>> from sympy import QQ
@@ -445,7 +479,7 @@ class PuiseuxPoly:
             mq = self._monom_fromint(m, monom, ns)
             yield mq, coeff
 
-    def terms(self) -> list[tuple[tuple[Any, ...], Any]]:
+    def terms(self) -> list[tuple[MonQ, Er]]:
         """Return a list of the terms of a Puiseux polynomial."""
         return list(self.iterterms())
 
@@ -454,14 +488,16 @@ class PuiseuxPoly:
         """Return True if the Puiseux polynomial is a single term."""
         return self.poly.is_term
 
-    def to_dict(self) -> dict[tuple[int, ...], Any]:
+    def to_dict(self) -> dict[MonQ, Er]:
         """Return a dictionary representation of a Puiseux polynomial."""
         return dict(self.iterterms())
 
     @classmethod
     def from_dict(
-        cls, terms: dict[tuple[Any, ...], Any], ring: PuiseuxRing
-    ) -> PuiseuxPoly:
+        cls,
+        terms: Map[MonQ, Er | Expr | int],
+        ring: PuiseuxRing[Er],
+    ) -> PuiseuxPoly[Er]:
         """Create a Puiseux polynomial from a dictionary of terms.
 
         >>> from sympy import QQ
@@ -473,7 +509,7 @@ class PuiseuxPoly:
         3*x**(1/2)
         """
         ns = [1] * ring.ngens
-        mon = [0] * ring.ngens
+        mon: list[MPQ | int] = [0] * ring.ngens
         for mo in terms:
             ns = [lcm(n, m.denominator) for n, m in zip(ns, mo)]
             mon = [min(m, n) for m, n in zip(mo, mon)]
@@ -488,7 +524,10 @@ class PuiseuxPoly:
         else:
             ns_final = tuple(ns)
 
-        terms_p = {cls._monom_toint(m, monom, ns_final): coeff for m, coeff in terms.items()}
+        def conv(m: MonQ) -> MonI:
+            return cls._monom_toint(m, monom, ns_final)
+
+        terms_p = {conv(m): coeff for m, coeff in terms.items()}
 
         poly = ring.poly_ring.from_dict(terms_p)
 
@@ -519,8 +558,7 @@ class PuiseuxPoly:
         return Add(*terms)
 
     def __repr__(self) -> str:
-
-        def format_power(base: str, exp: int) -> str:
+        def format_power(base: str, exp: MPQ) -> str:
             if exp == 1:
                 return base
             elif exp >= 0 and int(exp) == exp:
@@ -548,10 +586,8 @@ class PuiseuxPoly:
         return " + ".join(terms_str)
 
     def _unify(
-        self, other: PuiseuxPoly
-    ) -> tuple[
-        PolyElement, PolyElement, tuple[int, ...] | None, tuple[int, ...] | None
-    ]:
+        self, other: PuiseuxPoly[Er]
+    ) -> tuple[PolyElement[Er], PolyElement[Er], MonI | None, MonI | None]:
         """Bring two Puiseux polynomials to a common monom and ns."""
         poly1, monom1, ns1 = self.poly, self.monom, self.ns
         poly2, monom2, ns2 = other.poly, other.monom, other.ns
@@ -601,13 +637,13 @@ class PuiseuxPoly:
 
         return poly1, poly2, monom, ns
 
-    def __pos__(self) -> PuiseuxPoly:
+    def __pos__(self) -> PuiseuxPoly[Er]:
         return self
 
-    def __neg__(self) -> PuiseuxPoly:
+    def __neg__(self) -> PuiseuxPoly[Er]:
         return self._new_raw(self.ring, -self.poly, self.monom, self.ns)
 
-    def __add__(self, other: Any) -> PuiseuxPoly:
+    def __add__(self, other: PuiseuxPoly[Er] | Er | int) -> PuiseuxPoly[Er]:
         if isinstance(other, PuiseuxPoly):
             if self.ring != other.ring:
                 raise ValueError("Cannot add Puiseux polynomials from different rings")
@@ -620,7 +656,7 @@ class PuiseuxPoly:
         else:
             return NotImplemented
 
-    def __radd__(self, other: Any) -> PuiseuxPoly:
+    def __radd__(self, other: Er | int) -> PuiseuxPoly[Er]:
         domain = self.ring.domain
         if isinstance(other, int):
             return self._add_ground(domain.convert_from(QQ(other), QQ))
@@ -629,7 +665,7 @@ class PuiseuxPoly:
         else:
             return NotImplemented
 
-    def __sub__(self, other: Any) -> PuiseuxPoly:
+    def __sub__(self, other: PuiseuxPoly[Er] | Er | int) -> PuiseuxPoly[Er]:
         if isinstance(other, PuiseuxPoly):
             if self.ring != other.ring:
                 raise ValueError(
@@ -644,7 +680,7 @@ class PuiseuxPoly:
         else:
             return NotImplemented
 
-    def __rsub__(self, other: Any) -> PuiseuxPoly:
+    def __rsub__(self, other: Er | int) -> PuiseuxPoly[Er]:
         domain = self.ring.domain
         if isinstance(other, int):
             return self._rsub_ground(domain.convert_from(QQ(other), QQ))
@@ -653,7 +689,7 @@ class PuiseuxPoly:
         else:
             return NotImplemented
 
-    def __mul__(self, other: Any) -> PuiseuxPoly:
+    def __mul__(self, other: PuiseuxPoly[Er] | Er | int) -> PuiseuxPoly[Er]:
         if isinstance(other, PuiseuxPoly):
             if self.ring != other.ring:
                 raise ValueError(
@@ -668,7 +704,7 @@ class PuiseuxPoly:
         else:
             return NotImplemented
 
-    def __rmul__(self, other: Any) -> PuiseuxPoly:
+    def __rmul__(self, other: Er | int) -> PuiseuxPoly[Er]:
         domain = self.ring.domain
         if isinstance(other, int):
             return self._mul_ground(domain.convert_from(QQ(other), QQ))
@@ -677,7 +713,7 @@ class PuiseuxPoly:
         else:
             return NotImplemented
 
-    def __pow__(self, other: Any) -> PuiseuxPoly:
+    def __pow__(self, other: int | MPQ) -> PuiseuxPoly[Er]:
         if isinstance(other, int):
             if other >= 0:
                 return self._pow_pint(other)
@@ -688,7 +724,7 @@ class PuiseuxPoly:
         else:
             return NotImplemented
 
-    def __truediv__(self, other: Any) -> PuiseuxPoly:
+    def __truediv__(self, other: PuiseuxPoly[Er] | Er | int) -> PuiseuxPoly[Er]:
         if isinstance(other, PuiseuxPoly):
             if self.ring != other.ring:
                 raise ValueError(
@@ -703,7 +739,7 @@ class PuiseuxPoly:
         else:
             return NotImplemented
 
-    def __rtruediv__(self, other: Any) -> PuiseuxPoly:
+    def __rtruediv__(self, other: Er | int) -> PuiseuxPoly[Er]:
         if isinstance(other, int):
             return self._inv()._mul_ground(self.ring.domain.convert_from(QQ(other), QQ))
         elif self.ring.domain.of_type(other):
@@ -711,46 +747,46 @@ class PuiseuxPoly:
         else:
             return NotImplemented
 
-    def _add(self, other: PuiseuxPoly) -> PuiseuxPoly:
+    def _add(self, other: PuiseuxPoly[Er]) -> PuiseuxPoly[Er]:
         poly1, poly2, monom, ns = self._unify(other)
         return self._new(self.ring, poly1 + poly2, monom, ns)
 
-    def _add_ground(self, ground: Any) -> PuiseuxPoly:
+    def _add_ground(self, ground: Er) -> PuiseuxPoly[Er]:
         return self._add(self.ring.ground_new(ground))
 
-    def _sub(self, other: PuiseuxPoly) -> PuiseuxPoly:
+    def _sub(self, other: PuiseuxPoly[Er]) -> PuiseuxPoly[Er]:
         poly1, poly2, monom, ns = self._unify(other)
         return self._new(self.ring, poly1 - poly2, monom, ns)
 
-    def _sub_ground(self, ground: Any) -> PuiseuxPoly:
+    def _sub_ground(self, ground: Er) -> PuiseuxPoly[Er]:
         return self._sub(self.ring.ground_new(ground))
 
-    def _rsub_ground(self, ground: Any) -> PuiseuxPoly:
+    def _rsub_ground(self, ground: Er) -> PuiseuxPoly[Er]:
         return self.ring.ground_new(ground)._sub(self)
 
-    def _mul(self, other: PuiseuxPoly) -> PuiseuxPoly:
+    def _mul(self, other: PuiseuxPoly[Er]) -> PuiseuxPoly[Er]:
         poly1, poly2, monom, ns = self._unify(other)
         if monom is not None:
             monom = tuple(2 * e for e in monom)
         return self._new(self.ring, poly1 * poly2, monom, ns)
 
-    def _mul_ground(self, ground: Any) -> PuiseuxPoly:
+    def _mul_ground(self, ground: Er) -> PuiseuxPoly[Er]:
         return self._new_raw(self.ring, self.poly * ground, self.monom, self.ns)
 
-    def _div_ground(self, ground: Any) -> PuiseuxPoly:
+    def _div_ground(self, ground: Er) -> PuiseuxPoly[Er]:
         return self._new_raw(self.ring, self.poly / ground, self.monom, self.ns)
 
-    def _pow_pint(self, n: int) -> PuiseuxPoly:
+    def _pow_pint(self, n: int) -> PuiseuxPoly[Er]:
         assert n >= 0
         monom = self.monom
         if monom is not None:
             monom = tuple(m * n for m in monom)
         return self._new(self.ring, self.poly**n, monom, self.ns)
 
-    def _pow_nint(self, n: int) -> PuiseuxPoly:
+    def _pow_nint(self, n: int) -> PuiseuxPoly[Er]:
         return self._inv()._pow_pint(n)
 
-    def _pow_rational(self, n: Any) -> PuiseuxPoly:
+    def _pow_rational(self, n: MPQ) -> PuiseuxPoly[Er]:
         if not self.is_term:
             raise ValueError("Only monomials can be raised to a rational power")
         [(monom, coeff)] = self.terms()
@@ -760,7 +796,7 @@ class PuiseuxPoly:
         monom = tuple(m * n for m in monom)
         return self.ring.from_dict({monom: domain.one})
 
-    def _inv(self) -> PuiseuxPoly:
+    def _inv(self) -> PuiseuxPoly[Er]:
         if not self.is_term:
             raise ValueError("Only terms can be inverted")
         [(monom, coeff)] = self.terms()
@@ -768,10 +804,10 @@ class PuiseuxPoly:
         if not domain.is_Field and not domain.is_one(coeff):
             raise ValueError("Cannot invert non-unit coefficient")
         monom = tuple(-m for m in monom)
-        coeff = 1 / coeff
+        coeff = 1 / coeff  # type: ignore
         return self.ring.from_dict({monom: coeff})
 
-    def diff(self, x: PuiseuxPoly) -> PuiseuxPoly:
+    def diff(self, x: PuiseuxPoly[Er]) -> PuiseuxPoly[Er]:
         """Differentiate a Puiseux polynomial with respect to a variable.
 
         >>> from sympy import QQ
@@ -785,11 +821,11 @@ class PuiseuxPoly:
         """
         ring = self.ring
         i = ring.index(x)
-        g = {}
+        g: dict[MonQ, Er] = {}
         for expv, coeff in self.iterterms():
             n = expv[i]
             if n:
                 e = list(expv)
                 e[i] -= 1
                 g[tuple(e)] = coeff * n
-        return ring(g)
+        return ring.from_dict(g)
