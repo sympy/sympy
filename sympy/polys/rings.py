@@ -1515,22 +1515,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         else:
             temp_result = self._subs(eval_dict)
             new_ring = ring.drop(*[ring.gens[i] for i in eval_dict.keys()])
-
-            result_poly = new_ring.zero
-            remaining_indices = [i for i in range(ring.ngens) if i not in eval_dict]
-
-            for monom, coeff in temp_result.iterterms():
-                new_monom = tuple(monom[i] for i in remaining_indices)
-
-                if new_monom in result_poly:
-                    result_poly[new_monom] += coeff
-                    if not result_poly[new_monom]:
-                        del result_poly[new_monom]
-                else:
-                    if coeff:
-                        result_poly[new_monom] = coeff
-
-            return result_poly
+            return temp_result.set_ring(new_ring)
 
     def subs(self, *args, **kwargs):
         subs_dict = {}
