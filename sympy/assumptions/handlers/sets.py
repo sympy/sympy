@@ -230,6 +230,10 @@ def _(expr, assumptions):
 # RealPredicate
 
 def _RealPredicate_number(expr, assumptions):
+    if isinstance(expr, Pow):
+        if ask(Q.eq(expr.base, 0), assumptions) and expr.exp.is_negative:
+            return False  # Division by zero -> not real
+
     # let as_real_imag() work first since the expression may
     # be simpler to evaluate
     i = expr.as_real_imag()[1].evalf(2)
