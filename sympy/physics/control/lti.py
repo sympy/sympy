@@ -595,96 +595,6 @@ class TransferFunctionBase(SISOLinearTimeInvariant, ABC):
     ValueError
         When ``den`` is zero.
 
-    Examples
-    ========
-
-    >>> from sympy.abc import s, p, a
-    >>> from sympy.physics.control.lti import TransferFunction
-    >>> tf1 = TransferFunction(s + a, s**2 + s + 1, s)
-    >>> tf1
-    TransferFunction(a + s, s**2 + s + 1, s)
-    >>> tf1.num
-    a + s
-    >>> tf1.den
-    s**2 + s + 1
-    >>> tf1.var
-    s
-    >>> tf1.args
-    (a + s, s**2 + s + 1, s)
-
-    Any complex variable can be used for ``var``.
-
-    >>> tf2 = TransferFunction(a*p**3 - a*p**2 + s*p, p + a**2, p)
-    >>> tf2
-    TransferFunction(a*p**3 - a*p**2 + p*s, a**2 + p, p)
-    >>> tf3 = TransferFunction((p + 3)*(p - 1), (p - 1)*(p + 5), p)
-    >>> tf3
-    TransferFunction((p - 1)*(p + 3), (p - 1)*(p + 5), p)
-
-    To negate a transfer function the ``-`` operator can be prepended:
-
-    >>> tf4 = TransferFunction(-a + s, p**2 + s, p)
-    >>> -tf4
-    TransferFunction(a - s, p**2 + s, p)
-    >>> tf5 = TransferFunction(s**4 - 2*s**3 + 5*s + 4, s + 4, s)
-    >>> -tf5
-    TransferFunction(-s**4 + 2*s**3 - 5*s - 4, s + 4, s)
-
-    You can use a float or an integer (or other constants) as numerator and denominator:
-
-    >>> tf6 = TransferFunction(1/2, 4, s)
-    >>> tf6.num
-    0.500000000000000
-    >>> tf6.den
-    4
-    >>> tf6.var
-    s
-    >>> tf6.args
-    (0.5, 4, s)
-
-    You can take the integer power of a transfer function using the ``**`` operator:
-
-    >>> tf7 = TransferFunction(s + a, s - a, s)
-    >>> tf7**3
-    TransferFunction((a + s)**3, (-a + s)**3, s)
-    >>> tf7**0
-    TransferFunction(1, 1, s)
-    >>> tf8 = TransferFunction(p + 4, p - 3, p)
-    >>> tf8**-1
-    TransferFunction(p - 3, p + 4, p)
-
-    Addition, subtraction, and multiplication of transfer functions can form
-    unevaluated ``Series`` or ``Parallel`` objects.
-
-    >>> tf9 = TransferFunction(s + 1, s**2 + s + 1, s)
-    >>> tf10 = TransferFunction(s - p, s + 3, s)
-    >>> tf11 = TransferFunction(4*s**2 + 2*s - 4, s - 1, s)
-    >>> tf12 = TransferFunction(1 - s, s**2 + 4, s)
-    >>> tf9 + tf10
-    Parallel(TransferFunction(s + 1, s**2 + s + 1, s), TransferFunction(-p + s, s + 3, s))
-    >>> tf10 - tf11
-    Parallel(TransferFunction(-p + s, s + 3, s), TransferFunction(-4*s**2 - 2*s + 4, s - 1, s))
-    >>> tf9 * tf10
-    Series(TransferFunction(s + 1, s**2 + s + 1, s), TransferFunction(-p + s, s + 3, s))
-    >>> tf10 - (tf9 + tf12)
-    Parallel(TransferFunction(-p + s, s + 3, s), TransferFunction(-s - 1, s**2 + s + 1, s), TransferFunction(s - 1, s**2 + 4, s))
-    >>> tf10 - (tf9 * tf12)
-    Parallel(TransferFunction(-p + s, s + 3, s), Series(TransferFunction(-1, 1, s), TransferFunction(s + 1, s**2 + s + 1, s), TransferFunction(1 - s, s**2 + 4, s)))
-    >>> tf11 * tf10 * tf9
-    Series(TransferFunction(4*s**2 + 2*s - 4, s - 1, s), TransferFunction(-p + s, s + 3, s), TransferFunction(s + 1, s**2 + s + 1, s))
-    >>> tf9 * tf11 + tf10 * tf12
-    Parallel(Series(TransferFunction(s + 1, s**2 + s + 1, s), TransferFunction(4*s**2 + 2*s - 4, s - 1, s)), Series(TransferFunction(-p + s, s + 3, s), TransferFunction(1 - s, s**2 + 4, s)))
-    >>> (tf9 + tf12) * (tf10 + tf11)
-    Series(Parallel(TransferFunction(s + 1, s**2 + s + 1, s), TransferFunction(1 - s, s**2 + 4, s)), Parallel(TransferFunction(-p + s, s + 3, s), TransferFunction(4*s**2 + 2*s - 4, s - 1, s)))
-
-    These unevaluated ``Series`` or ``Parallel`` objects can convert into the
-    resultant transfer function using ``.doit()`` method or by ``.rewrite(TransferFunction)``.
-
-    >>> ((tf9 + tf10) * tf12).doit()
-    TransferFunction((1 - s)*((-p + s)*(s**2 + s + 1) + (s + 1)*(s + 3)), (s + 3)*(s**2 + 4)*(s**2 + s + 1), s)
-    >>> (tf9 * tf10 - tf11 * tf12).rewrite(TransferFunction)
-    TransferFunction(-(1 - s)*(s + 3)*(s**2 + s + 1)*(4*s**2 + 2*s - 4) + (-p + s)*(s - 1)*(s + 1)*(s**2 + 4), (s - 1)*(s + 3)*(s**2 + 4)*(s**2 + s + 1), s)
-
     See Also
     ========
 
@@ -1544,6 +1454,123 @@ class TransferFunction(TransferFunctionBase):
     ``num`` and ``den`` can be either polynomials or numbers, whereas ``var``
     has to be a :py:class:`~.Symbol`.
 
+    See :class:`TransferFunctionBase` for more information.
+
+    Parameters
+    ==========
+
+    num : Expr, Number
+        The numerator polynomial of the transfer function.
+    den : Expr, Number
+        The denominator polynomial of the transfer function.
+    var : Symbol
+        Complex variable of the Laplace transform used by the
+        polynomials of the transfer function.
+
+    Raises
+    ======
+
+    TypeError
+        When ``var`` is not a Symbol or when ``num`` or ``den`` is not a
+        number or a polynomial.
+    ValueError
+        When ``den`` is zero.
+
+    Examples
+    ========
+
+    >>> from sympy.abc import s, p, a
+    >>> from sympy.physics.control.lti import TransferFunction
+    >>> tf1 = TransferFunction(s + a, s**2 + s + 1, s)
+    >>> tf1
+    TransferFunction(a + s, s**2 + s + 1, s)
+    >>> tf1.num
+    a + s
+    >>> tf1.den
+    s**2 + s + 1
+    >>> tf1.var
+    s
+    >>> tf1.args
+    (a + s, s**2 + s + 1, s)
+
+    Any complex variable can be used for ``var``.
+
+    >>> tf2 = TransferFunction(a*p**3 - a*p**2 + s*p, p + a**2, p)
+    >>> tf2
+    TransferFunction(a*p**3 - a*p**2 + p*s, a**2 + p, p)
+    >>> tf3 = TransferFunction((p + 3)*(p - 1), (p - 1)*(p + 5), p)
+    >>> tf3
+    TransferFunction((p - 1)*(p + 3), (p - 1)*(p + 5), p)
+
+    To negate a transfer function the ``-`` operator can be prepended:
+
+    >>> tf4 = TransferFunction(-a + s, p**2 + s, p)
+    >>> -tf4
+    TransferFunction(a - s, p**2 + s, p)
+    >>> tf5 = TransferFunction(s**4 - 2*s**3 + 5*s + 4, s + 4, s)
+    >>> -tf5
+    TransferFunction(-s**4 + 2*s**3 - 5*s - 4, s + 4, s)
+
+    You can use a float or an integer (or other constants) as numerator and denominator:
+
+    >>> tf6 = TransferFunction(1/2, 4, s)
+    >>> tf6.num
+    0.500000000000000
+    >>> tf6.den
+    4
+    >>> tf6.var
+    s
+    >>> tf6.args
+    (0.5, 4, s)
+
+    You can take the integer power of a transfer function using the ``**`` operator:
+
+    >>> tf7 = TransferFunction(s + a, s - a, s)
+    >>> tf7**3
+    TransferFunction((a + s)**3, (-a + s)**3, s)
+    >>> tf7**0
+    TransferFunction(1, 1, s)
+    >>> tf8 = TransferFunction(p + 4, p - 3, p)
+    >>> tf8**-1
+    TransferFunction(p - 3, p + 4, p)
+
+    Addition, subtraction, and multiplication of transfer functions can form
+    unevaluated ``Series`` or ``Parallel`` objects.
+
+    >>> tf9 = TransferFunction(s + 1, s**2 + s + 1, s)
+    >>> tf10 = TransferFunction(s - p, s + 3, s)
+    >>> tf11 = TransferFunction(4*s**2 + 2*s - 4, s - 1, s)
+    >>> tf12 = TransferFunction(1 - s, s**2 + 4, s)
+    >>> tf9 + tf10
+    Parallel(TransferFunction(s + 1, s**2 + s + 1, s), TransferFunction(-p + s, s + 3, s))
+    >>> tf10 - tf11
+    Parallel(TransferFunction(-p + s, s + 3, s), TransferFunction(-4*s**2 - 2*s + 4, s - 1, s))
+    >>> tf9 * tf10
+    Series(TransferFunction(s + 1, s**2 + s + 1, s), TransferFunction(-p + s, s + 3, s))
+    >>> tf10 - (tf9 + tf12)
+    Parallel(TransferFunction(-p + s, s + 3, s), TransferFunction(-s - 1, s**2 + s + 1, s), TransferFunction(s - 1, s**2 + 4, s))
+    >>> tf10 - (tf9 * tf12)
+    Parallel(TransferFunction(-p + s, s + 3, s), Series(TransferFunction(-1, 1, s), TransferFunction(s + 1, s**2 + s + 1, s), TransferFunction(1 - s, s**2 + 4, s)))
+    >>> tf11 * tf10 * tf9
+    Series(TransferFunction(4*s**2 + 2*s - 4, s - 1, s), TransferFunction(-p + s, s + 3, s), TransferFunction(s + 1, s**2 + s + 1, s))
+    >>> tf9 * tf11 + tf10 * tf12
+    Parallel(Series(TransferFunction(s + 1, s**2 + s + 1, s), TransferFunction(4*s**2 + 2*s - 4, s - 1, s)), Series(TransferFunction(-p + s, s + 3, s), TransferFunction(1 - s, s**2 + 4, s)))
+    >>> (tf9 + tf12) * (tf10 + tf11)
+    Series(Parallel(TransferFunction(s + 1, s**2 + s + 1, s), TransferFunction(1 - s, s**2 + 4, s)), Parallel(TransferFunction(-p + s, s + 3, s), TransferFunction(4*s**2 + 2*s - 4, s - 1, s)))
+
+    These unevaluated ``Series`` or ``Parallel`` objects can convert into the
+    resultant transfer function using ``.doit()`` method or by ``.rewrite(TransferFunction)``.
+
+    >>> ((tf9 + tf10) * tf12).doit()
+    TransferFunction((1 - s)*((-p + s)*(s**2 + s + 1) + (s + 1)*(s + 3)), (s + 3)*(s**2 + 4)*(s**2 + s + 1), s)
+    >>> (tf9 * tf10 - tf11 * tf12).rewrite(TransferFunction)
+    TransferFunction(-(1 - s)*(s + 3)*(s**2 + s + 1)*(4*s**2 + 2*s - 4) + (-p + s)*(s - 1)*(s + 1)*(s**2 + 4), (s - 1)*(s + 3)*(s**2 + 4)*(s**2 + s + 1), s)
+
+    See Also
+    ========
+
+    TransferFunctionBase, DiscreteTransferFunction, Feedback, Series, Parallel
+
     """
     def __new__(cls, num, den, var):
         return super(TransferFunction, cls).__new__(cls, num, den, var)
@@ -1651,6 +1678,150 @@ class TransferFunction(TransferFunctionBase):
     _is_continuous = True
 
 class DiscreteTransferFunction(TransferFunctionBase):
+    r"""
+    A class for representing LTI (Linear, time-invariant) systems that can be
+    strictly described by ratio of polynomials in the z-transform complex
+    variable.
+    The arguments are ``num``, ``den``, ``var``, and ``sampling_time``,
+    where ``num`` and ``den`` are numerator and denominator polynomials of the
+    ``DiscreteTransferFunction`` respectively, the third argument is
+    a complex variable of the z-transform used by these polynomials of the
+    transfer function, and the fourth represents the time interval between two
+    consecutive sampling instants. If not specified, it defaults to 1 and, if
+    it's set to 0, an instance of :class:`TransferFunction` is returned.
+    ``num`` and ``den`` can be either polynomials or numbers, ``var``
+    has to be a :py:class:`~.Symbol` and ``sampling_time`` can be both
+    :py:class:`~.Symbol` or numbers.
+
+    See :class:`TransferFunctionBase` for more information.
+
+    Parameters
+    ==========
+
+    num : Expr, Number
+        The numerator polynomial of the transfer function.
+    den : Expr, Number
+        The denominator polynomial of the transfer function.
+    var : Symbol
+        Complex variable of the z-transform used by the
+        polynomials of the transfer function.
+    sampling_time : Symbol, Number
+        Time interval between two consecutive sampling instants
+        Defaults to 1.
+        If sampling_time == 0, an instance of :class:`TransferFunction` is
+        returned.
+
+    Raises
+    ======
+
+    TypeError
+        When ``var`` is not a Symbol or when ``num`` or ``den`` is not a
+        number or a polynomial.
+    ValueError
+        When ``den`` is zero.
+
+    Examples
+    ========
+
+    >>> from sympy.abc import z, p, a, k
+    >>> from sympy.physics.control.lti import DiscreteTransferFunction
+    >>> dtf1 = DiscreteTransferFunction(z**2 + a*z, z**2 + z + 1, z, 0.1)
+    >>> dtf1
+    DiscreteTransferFunction(a*z + z**2, z**2 + z + 1, z, 0.1)
+    >>> dtf1.num
+    a*z + z**2
+    >>> dtf1.den
+    z**2 + z + 1
+    >>> dtf1.var
+    z
+    >>> dtf1.sampling_time
+    0.1
+    >>> dtf1.args
+    (a*z + z**2, z**2 + z + 1, z, 0.1)
+
+    Any complex variable can be used for ``var``.
+
+    >>> dtf2 = DiscreteTransferFunction(a*p**3 - a*p**2 + z*p, p + a**2, p, k)
+    >>> dtf2
+    DiscreteTransferFunction(a*p**3 - a*p**2 + p*z, a**2 + p, p, k)
+    >>> dtf3 = DiscreteTransferFunction((p + 3)*(p - 1), (p - 1)*(p + 5), p, k)
+    >>> dtf3
+    DiscreteTransferFunction((p - 1)*(p + 3), (p - 1)*(p + 5), p, k)
+
+    To negate a transfer function the ``-`` operator can be prepended:
+
+    >>> dtf4 = DiscreteTransferFunction(-a + z, p**2 + z, p, 0.2)
+    >>> -dtf4
+    DiscreteTransferFunction(a - z, p**2 + z, p, 0.2)
+    >>> dtf5 = DiscreteTransferFunction(z**4 - 2*z**3 + 5*z + 4, z + 4, z, 12)
+    >>> -dtf5
+    DiscreteTransferFunction(-z**4 + 2*z**3 - 5*z - 4, z + 4, z, 12)
+
+    You can use a float or an integer (or other constants) as numerator and
+    denominator:
+
+    >>> dtf6 = DiscreteTransferFunction(1/2, 4, z, k)
+    >>> dtf6.num
+    0.500000000000000
+    >>> dtf6.den
+    4
+    >>> dtf6.var
+    z
+    >>> dtf6.sampling_time
+    k
+    >>> dtf6.args
+    (0.5, 4, z, k)
+
+    You can take the integer power of a transfer function using the ``**``
+    operator:
+
+    >>> dtf7 = DiscreteTransferFunction(z + a, z - a, z, 0.3)
+    >>> dtf7**3
+    DiscreteTransferFunction((a + z)**3, (-a + z)**3, z, 0.3)
+    >>> dtf7**0
+    DiscreteTransferFunction(1, 1, z, 0.3)
+    >>> dtf8 = DiscreteTransferFunction(p + 4, p - 3, p, k)
+    >>> dtf8**-1
+    DiscreteTransferFunction(p - 3, p + 4, p, k)
+
+    Addition, subtraction, and multiplication of transfer functions can form
+    unevaluated ``Series`` or ``Parallel`` objects.
+
+    >>> dtf9 = DiscreteTransferFunction(z + 1, z**2 + z + 1, z, k)
+    >>> dtf10 = DiscreteTransferFunction(z - p, z + 3, z, k)
+    >>> dtf11 = DiscreteTransferFunction(4*z**2 + 2*z - 4, z - 1, z, k)
+    >>> dtf12 = DiscreteTransferFunction(1 - z, z**2 + 4, z, k)
+    >>> dtf9 + dtf10
+    Parallel(DiscreteTransferFunction(z + 1, z**2 + z + 1, z, k), DiscreteTransferFunction(-p + z, z + 3, z, k))
+    >>> dtf10 - dtf11
+    Parallel(DiscreteTransferFunction(-p + z, z + 3, z, k), DiscreteTransferFunction(-4*z**2 - 2*z + 4, z - 1, z, k))
+    >>> dtf9 * dtf10
+    Series(DiscreteTransferFunction(z + 1, z**2 + z + 1, z, k), DiscreteTransferFunction(-p + z, z + 3, z, k))
+    >>> dtf10 - (dtf9 + dtf12)
+    Parallel(DiscreteTransferFunction(-p + z, z + 3, z, k), DiscreteTransferFunction(-z - 1, z**2 + z + 1, z, k), DiscreteTransferFunction(z - 1, z**2 + 4, z, k))
+    >>> dtf10 - (dtf9 * dtf12)
+    Parallel(DiscreteTransferFunction(-p + z, z + 3, z, k), Series(DiscreteTransferFunction(-1, 1, z, k), DiscreteTransferFunction(z + 1, z**2 + z + 1, z, k), DiscreteTransferFunction(1 - z, z**2 + 4, z, k)))
+    >>> dtf11 * dtf10 * dtf9
+    Series(DiscreteTransferFunction(4*z**2 + 2*z - 4, z - 1, z, k), DiscreteTransferFunction(-p + z, z + 3, z, k), DiscreteTransferFunction(z + 1, z**2 + z + 1, z, k))
+    >>> dtf9 * dtf11 + dtf10 * dtf12
+    Parallel(Series(DiscreteTransferFunction(z + 1, z**2 + z + 1, z, k), DiscreteTransferFunction(4*z**2 + 2*z - 4, z - 1, z, k)), Series(DiscreteTransferFunction(-p + z, z + 3, z, k), DiscreteTransferFunction(1 - z, z**2 + 4, z, k)))
+    >>> (dtf9 + dtf12) * (dtf10 + dtf11)
+    Series(Parallel(DiscreteTransferFunction(z + 1, z**2 + z + 1, z, k), DiscreteTransferFunction(1 - z, z**2 + 4, z, k)), Parallel(DiscreteTransferFunction(-p + z, z + 3, z, k), DiscreteTransferFunction(4*z**2 + 2*z - 4, z - 1, z, k)))
+
+    These unevaluated ``Series`` or ``Parallel`` objects can convert into the
+    resultant transfer function using ``.doit()`` method or by ``.rewrite(DiscreteTransferFunction)``.
+
+    >>> ((dtf9 + dtf10) * dtf12).doit()
+    DiscreteTransferFunction((1 - z)*((-p + z)*(z**2 + z + 1) + (z + 1)*(z + 3)), (z + 3)*(z**2 + 4)*(z**2 + z + 1), z, k)
+    >>> (dtf9 * dtf10 - dtf11 * dtf12).rewrite(DiscreteTransferFunction)
+    DiscreteTransferFunction(-(1 - z)*(z + 3)*(z**2 + z + 1)*(4*z**2 + 2*z - 4) + (-p + z)*(z - 1)*(z + 1)*(z**2 + 4), (z - 1)*(z + 3)*(z**2 + 4)*(z**2 + z + 1), z, k)
+
+    See Also
+    ========
+
+    TransferFunctionBase, TransferFunction, Feedback, Series, Parallel
+
+    """
     def __new__(cls, num, den, var, sampling_time = 1):
         if sampling_time == 0:
             return TransferFunction(num, den, var)
