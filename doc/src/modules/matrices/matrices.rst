@@ -608,7 +608,6 @@ Type Aliases
 ^^^^^^^^^^^^
 
 .. class:: collections.abc.Callable
-.. class:: collections.abc.Sequence
 .. class:: SBasic
 .. class:: Slice
 .. class:: Tmat
