@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 import copy
 
 from sympy.core import S
@@ -10,7 +14,19 @@ from .utilities import _get_intermediate_simp, _iszero
 from .determinant import _find_reasonable_pivot_naive
 
 
-def _rank_decomposition(M, iszerofunc=_iszero, simplify=False):
+if TYPE_CHECKING:
+    from typing import Callable, TypeVar
+    from sympy.core.expr import Expr
+    from sympy.matrices.matrixbase import MatrixBase
+    from sympy.matrices.sparse import SparseMatrix
+    Tmat = TypeVar('Tmat', bound=MatrixBase)
+
+
+def _rank_decomposition(
+        M: Tmat,
+        iszerofunc: Callable[[Expr], bool | None] = _iszero,
+        simplify: bool | Callable[[Expr], Expr] = False,
+    ) -> tuple[Tmat, Tmat]:
     r"""Returns a pair of matrices (`C`, `F`) with matching rank
     such that `A = C F`.
 
@@ -193,7 +209,7 @@ def _row_structure_symbolic_cholesky(M):
     return Lrow
 
 
-def _cholesky(M, hermitian=True):
+def _cholesky(M: Tmat, hermitian: bool = True) -> Tmat:
     """Returns the Cholesky-type decomposition L of a matrix A
     such that L * L.H == A if hermitian flag is True,
     or L * L.T == A if hermitian is False.
@@ -285,7 +301,7 @@ def _cholesky(M, hermitian=True):
             L[i, i] = sqrt(M[i, i] -
                 sum(L[i, k]**2 for k in range(i)))
 
-    return M._new(L)
+    return M._as_type(L)
 
 def _cholesky_sparse(M, hermitian=True):
     """
@@ -400,7 +416,7 @@ def _cholesky_sparse(M, hermitian=True):
     return M._new(C)
 
 
-def _LDLdecomposition(M, hermitian=True):
+def _LDLdecomposition(M: Tmat, hermitian: bool = True) -> tuple[Tmat, Tmat]:
     """Returns the LDL Decomposition (L, D) of matrix A,
     such that L * D * L.H == A if hermitian flag is True, or
     L * D * L.T == A if hermitian is False.
@@ -485,7 +501,7 @@ def _LDLdecomposition(M, hermitian=True):
 
             D[i, i] = M[i, i] - sum(L[i, k]**2*D[k, k] for k in range(i))
 
-    return M._new(L), M._new(D)
+    return M._as_type(L), M._as_type(D)
 
 def _LDLdecomposition_sparse(M, hermitian=True):
     """
@@ -986,7 +1002,7 @@ def _LUdecomposition_Simple(M, iszerofunc=_iszero, simpfunc=None,
                                 " rankcheck=False to compute"
                                 " the LU decomposition of this matrix.")
 
-        candidate_pivot_row = None if pivot_row_offset is None else pivot_row + pivot_row_offset
+        candidate_pivot_row = None if pivot_row_offset is None else pivot_row + pivot_row_offset # type: ignore
 
         if candidate_pivot_row is None and iszeropivot:
             # If candidate_pivot_row is None and iszeropivot is True
@@ -997,7 +1013,7 @@ def _LUdecomposition_Simple(M, iszerofunc=_iszero, simpfunc=None,
             return lu, row_swaps
 
         # Update entries simplified during pivot search.
-        for offset, val in ind_simplified_pairs:
+        for offset, val in ind_simplified_pairs: # type: ignore
             lu[pivot_row + offset, pivot_col] = val
 
         if pivot_row != candidate_pivot_row:
@@ -1064,7 +1080,7 @@ def _LUdecomposition_Simple(M, iszerofunc=_iszero, simpfunc=None,
 
     return lu, row_swaps
 
-def _LUdecompositionFF(M):
+def _LUdecompositionFF(M: MatrixBase) -> tuple[SparseMatrix, SparseMatrix, SparseMatrix, MatrixBase]:
     """Compute a fraction-free LU decomposition.
 
     Returns 4 matrices P, L, D, U such that PA = L D**-1 U.
@@ -1091,7 +1107,7 @@ def _LUdecompositionFF(M):
     zeros    = SparseMatrix.zeros
     eye      = SparseMatrix.eye
     n, m     = M.rows, M.cols
-    U, L, P  = M.as_mutable(), eye(n), eye(n)
+    U, L, P  = M.as_mutable(), eye(n), eye(n) # type: ignore
     DD       = zeros(n, n)
     oldpivot = 1
 
@@ -1124,7 +1140,7 @@ def _LUdecompositionFF(M):
 
     return P, L, DD, U
 
-def _singular_value_decomposition(A):
+def _singular_value_decomposition(A: Tmat) -> tuple[Tmat, Tmat, Tmat]:
     r"""Returns a Condensed Singular Value decomposition.
 
     Explanation
@@ -1304,8 +1320,8 @@ def _singular_value_decomposition(A):
     if m >= n:
         V, S = (AH * A).diagonalize()
 
-        ranked = []
-        for i, x in enumerate(S.diagonal()):
+        ranked: list[int] = []
+        for i, x in enumerate(S.diagonal().flat()):
             if not x.is_zero:
                 ranked.append(i)
 
@@ -1320,7 +1336,7 @@ def _singular_value_decomposition(A):
         U, S = (A * AH).diagonalize()
 
         ranked = []
-        for i, x in enumerate(S.diagonal()):
+        for i, x in enumerate(S.diagonal().flat()):
             if not x.is_zero:
                 ranked.append(i)
 

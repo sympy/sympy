@@ -63,7 +63,7 @@ def _csrtodok(csr):
     return SparseMatrix(*shape, smat)
 
 
-def banded(*args, **kwargs):
+def banded(*args, **kwargs) -> SparseMatrix:
     """Returns a SparseMatrix from the given dictionary describing
     the diagonals of the matrix. The keys are positive for upper
     diagonals and negative for those below the main diagonal. The
@@ -237,22 +237,22 @@ def banded(*args, **kwargs):
                 i += extra
                 if is_sequence(vi):
                     vi = SparseMatrix(vi)
-                    smat[r + i, c + i] = vi
+                    smat[r + i, c + i] = vi # type: ignore
                     extra += min(vi.shape) - 1
                 else:
-                    smat[r + i, c + i] = vi
+                    smat[r + i, c + i] = vi # type: ignore
         elif is_sequence(v):
             v = SparseMatrix(v)
             rv, cv = v.shape
             if rows and cols:
                 nr, xr = divmod(rows - r, rv)
-                nc, xc = divmod(cols - c, cv)
+                nc, xc = divmod(cols - c, cv) # type: ignore
                 x = xr or xc
                 do = min(nr, nc)
             elif rows:
                 do, x = divmod(rows - r, rv)
             elif cols:
-                do, x = divmod(cols - c, cv)
+                do, x = divmod(cols - c, cv) # type: ignore
             else:
                 do = 1
                 x = 0
@@ -264,12 +264,12 @@ def banded(*args, **kwargs):
             for i in range(do):
                 smat[r, c] = v
                 r += j
-                c += j
+                c += j # type: ignore
         elif v:
-            smat[r, c] = tba
+            smat[r, c] = tba # type: ignore
             undone.append((d, v))
     s = SparseMatrix(None, smat)  # to expand matrices
-    smat = s.todok()
+    smat = s.todok() # type: ignore
     # check for dim errors here
     if rows is not None and rows < s.rows:
         raise ValueError('Designated rows %s < needed %s' % (rows, s.rows))
