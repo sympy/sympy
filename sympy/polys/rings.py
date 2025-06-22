@@ -3198,59 +3198,18 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
         return result_poly
 
-    # TODO: following methods should point to polynomial
-    # representation independent algorithm implementations.
+    def _evaluate(self, eval_dict):
+        result = self.ring.domain.zero
 
-    def half_gcdex(f, g):
-        return f.ring.dmp_half_gcdex(f, g)
+        for monom, coeff in self.iterterms():
+            monom_value = self.ring.domain.one
+            for i, exp in enumerate(monom):
+                if exp > 0:
+                    monom_value *= eval_dict[i] ** exp
 
-    def gcdex(f, g):
-        return f.ring.dmp_gcdex(f, g)
+            result += coeff * monom_value
 
-    def resultant(f, g):
-        return f.ring.dmp_resultant(f, g)
-
-    def discriminant(f):
-        return f.ring.dmp_discriminant(f)
-
-    def decompose(f):
-        if f.ring.is_univariate:
-            return f.ring.dup_decompose(f)
-        else:
-            raise MultivariatePolynomialError("polynomial decomposition")
-
-    def shift(f, a):
-        if f.ring.is_univariate:
-            return f.ring.dup_shift(f, a)
-        else:
-            raise MultivariatePolynomialError("shift: use shift_list instead")
-
-    def shift_list(f, a):
-        return f.ring.dmp_shift(f, a)
-
-    def sturm(f):
-        if f.ring.is_univariate:
-            return f.ring.dup_sturm(f)
-        else:
-            raise MultivariatePolynomialError("sturm sequence")
-
-    def gff_list(f):
-        return f.ring.dmp_gff_list(f)
-
-    def norm(f):
-        return f.ring.dmp_norm(f)
-
-    def sqf_norm(f):
-        return f.ring.dmp_sqf_norm(f)
-
-    def sqf_part(f):
-        return f.ring.dmp_sqf_part(f)
-
-    def sqf_list(f, all=False):
-        return f.ring.dmp_sqf_list(f, all=all)
-
-    def factor_list(f):
-        return f.ring.dmp_factor_list(f)
+        return result
 
     def _symmetrize(self):
         # For the python-flint override this can just be converted back to
@@ -3307,18 +3266,59 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
         return symmetric, f, mapping
 
-    def _evaluate(self, eval_dict):
-        result = self.ring.domain.zero
+    # TODO: following methods should point to polynomial
+    # representation independent algorithm implementations.
 
-        for monom, coeff in self.iterterms():
-            monom_value = self.ring.domain.one
-            for i, exp in enumerate(monom):
-                if exp > 0:
-                    monom_value *= eval_dict[i] ** exp
+    def half_gcdex(f, g):
+        return f.ring.dmp_half_gcdex(f, g)
 
-            result += coeff * monom_value
+    def gcdex(f, g):
+        return f.ring.dmp_gcdex(f, g)
 
-        return result
+    def resultant(f, g):
+        return f.ring.dmp_resultant(f, g)
+
+    def discriminant(f):
+        return f.ring.dmp_discriminant(f)
+
+    def decompose(f):
+        if f.ring.is_univariate:
+            return f.ring.dup_decompose(f)
+        else:
+            raise MultivariatePolynomialError("polynomial decomposition")
+
+    def shift(f, a):
+        if f.ring.is_univariate:
+            return f.ring.dup_shift(f, a)
+        else:
+            raise MultivariatePolynomialError("shift: use shift_list instead")
+
+    def shift_list(f, a):
+        return f.ring.dmp_shift(f, a)
+
+    def sturm(f):
+        if f.ring.is_univariate:
+            return f.ring.dup_sturm(f)
+        else:
+            raise MultivariatePolynomialError("sturm sequence")
+
+    def gff_list(f):
+        return f.ring.dmp_gff_list(f)
+
+    def norm(f):
+        return f.ring.dmp_norm(f)
+
+    def sqf_norm(f):
+        return f.ring.dmp_sqf_norm(f)
+
+    def sqf_part(f):
+        return f.ring.dmp_sqf_part(f)
+
+    def sqf_list(f, all=False):
+        return f.ring.dmp_sqf_list(f, all=all)
+
+    def factor_list(f):
+        return f.ring.dmp_factor_list(f)
 
 
 # <-------------------------REFACTORED ABOVE/ TO REFACTOR BELOW-------------------------->#
