@@ -797,7 +797,7 @@ def solve(f, *symbols, **flags):
             Allows ``solve`` to return a solution for a pattern in terms of
             other functions that contain that pattern; this is only
             needed if the pattern is inside of some invertible function
-            like cos, exp, ect.
+            like cos, exp, etc.
         particular=True (default is False)
             Instructs ``solve`` to try to find a particular solution to
             a linear system with as many zeros as possible; this is very
@@ -964,6 +964,12 @@ def solve(f, *symbols, **flags):
 
         # if we have a Matrix, we need to iterate over its elements again
         if f[i].is_Matrix:
+            try:
+                f[i] = f[i].as_explicit()
+            except ValueError:
+                raise ValueError(
+                    "solve cannot handle matrices with symbolic shape."
+                )
             bare_f = False
             f.extend(list(f[i]))
             f[i] = S.Zero
@@ -1791,7 +1797,7 @@ def _solve_system(exprs, symbols, **flags):
                 if not isinstance(subsol, list):
                     subsol = [subsol]
                 subsols.append(subsol)
-            # Full solution is cartesion product of subsystems
+            # Full solution is cartesian product of subsystems
             sols = []
             for soldicts in product(*subsols):
                 sols.append(dict(item for sd in soldicts

@@ -13,8 +13,8 @@ from sympy.functions.elementary.trigonometric import (cos, sin)
 from sympy.simplify.trigsimp import trigsimp
 from sympy.integrals.integrals import integrate
 from sympy.matrices.dense import MutableDenseMatrix as Matrix
-from sympy.core.sympify import sympify, _sympify
 from sympy.core.expr import Expr
+from sympy.core.sympify import sympify, _sympify
 from sympy.core.logic import fuzzy_not, fuzzy_or
 from sympy.utilities.misc import as_int
 
@@ -1043,7 +1043,7 @@ class Quaternion(Expr):
 
         return Quaternion(a, b, c, d)
 
-    def _eval_subs(self, old: Expr, new: Expr) -> Quaternion:
+    def _eval_subs(self, old: Expr, new: Expr) -> Quaternion: # type: ignore
         e1, e2, e3, e4 = [i.subs(old, new) for i in self.args]
         norm = self._norm
         if norm is not None:
@@ -1142,7 +1142,6 @@ class Quaternion(Expr):
         4 + 8*i + 12*j + 16*k
 
         """
-        # TODO: is this expression correct?
         return Quaternion(integrate(self.a, *symbols), integrate(self.b, *symbols),
                           integrate(self.c, *symbols), integrate(self.d, *symbols))
 

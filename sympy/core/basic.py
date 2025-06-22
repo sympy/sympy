@@ -1,6 +1,7 @@
 """Base class for all the objects in SymPy"""
 from __future__ import annotations
 
+from collections import Counter
 from collections.abc import Mapping, Iterable
 from itertools import zip_longest
 from functools import cmp_to_key
@@ -20,7 +21,7 @@ from sympy.utilities.misc import filldedent, func_name
 
 
 if TYPE_CHECKING:
-    from typing import ClassVar, TypeVar, Any
+    from typing import ClassVar, TypeVar, Any, Hashable
     from typing_extensions import Self
     from .assumptions import StdFactKB
     from .symbol import Symbol
@@ -261,7 +262,6 @@ class Basic(Printable):
     is_rational: bool | None
     is_extended_nonnegative: bool | None
     is_infinite: bool | None
-    is_antihermitian: bool | None
     is_extended_negative: bool | None
     is_extended_real: bool | None
     is_finite: bool | None
@@ -276,7 +276,6 @@ class Basic(Printable):
     is_commutative: bool | None
     is_nonnegative: bool | None
     is_nonpositive: bool | None
-    is_hermitian: bool | None
     is_irrational: bool | None
     is_real: bool | None
     is_zero: bool | None
@@ -295,7 +294,7 @@ class Basic(Printable):
     def copy(self):
         return self.func(*self.args)
 
-    def __getnewargs__(self):
+    def __getnewargs__(self) -> tuple[Basic, ...] | tuple[Hashable, ...]:
         return self.args
 
     def __getstate__(self):
@@ -320,7 +319,7 @@ class Basic(Printable):
             self._mhash = h
         return h
 
-    def _hashable_content(self):
+    def _hashable_content(self) -> tuple[Hashable, ...]:
         """Return a tuple of information about self that can be used to
         compute the hash. If a class defines additional attributes,
         like ``name`` in Symbol, then this method should be updated
@@ -355,7 +354,7 @@ class Basic(Printable):
         {'commutative': True, 'complex': True, 'extended_negative': False,
          'extended_nonnegative': True, 'extended_nonpositive': False,
          'extended_nonzero': True, 'extended_positive': True, 'extended_real':
-         True, 'finite': True, 'hermitian': True, 'imaginary': False,
+         True, 'finite': True, 'imaginary': False,
          'infinite': False, 'negative': False, 'nonnegative': True,
          'nonpositive': False, 'nonzero': True, 'positive': True, 'real':
          True, 'zero': False}
@@ -1284,7 +1283,7 @@ class Basic(Printable):
             rv = fallback(self, old, new)
         return rv
 
-    def _eval_subs(self, old, new) -> Basic | None:
+    def _eval_subs(self, old: Basic, new: Basic) -> Basic | None:
         """Override this stub if you want to do anything more than
         attempt a replacement of old with new in the arguments of self.
 
@@ -1712,9 +1711,7 @@ class Basic(Printable):
         if isinstance(query, type):
             _query = lambda expr: isinstance(expr, query)
 
-            if isinstance(value, type):
-                _value = lambda expr, result: value(*expr.args)
-            elif callable(value):
+            if isinstance(value, type) or callable(value):
                 _value = lambda expr, result: value(*expr.args)
             else:
                 raise TypeError(
@@ -1803,16 +1800,7 @@ class Basic(Printable):
 
         if not group:
             return set(results)
-        else:
-            groups = {}
-
-            for result in results:
-                if result in groups:
-                    groups[result] += 1
-                else:
-                    groups[result] = 1
-
-            return groups
+        return dict(Counter(results))
 
     def count(self, query):
         """Count the number of matching subexpressions."""
@@ -2133,11 +2121,8 @@ class Basic(Printable):
         # functions for matching expression node names.
 
         clsname = obj.__class__.__name__
-        postprocessors = set()
-        for i in obj.args:
-            for f in _get_postprocessors(clsname, type(i)):
-                postprocessors.add(f)
-
+        postprocessors = {f for i in obj.args
+                            for f in _get_postprocessors(clsname, type(i))}
         for f in postprocessors:
             obj = f(obj)
 

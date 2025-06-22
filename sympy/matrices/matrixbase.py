@@ -716,21 +716,12 @@ class MatrixBase(Printable):
 
         diag
         """
-        rv = []
         k = as_int(k)
-        r = 0 if k > 0 else -k
-        c = 0 if r else k
-        while True:
-            if r == self.rows or c == self.cols:
-                break
-            rv.append(self[r, c])
-            r += 1
-            c += 1
-        if not rv:
-            raise ValueError(filldedent('''
-            The %s diagonal is out of range [%s, %s]''' % (
-            k, 1 - self.rows, self.cols - 1)))
-        return self._new(1, len(rv), rv)
+        if -self.rows < k < self.cols:
+            rv = [self[r, r+k] for r in range(max(0, -k), min(self.rows, self.cols - k))]
+            return self._new(1, len(rv), rv)
+        else:
+            raise ValueError("Diagonal does not exist")
 
     def row(self, i: int, /) -> Self:
         """Elementary row selector.
@@ -1528,8 +1519,8 @@ class MatrixBase(Printable):
     # routines and has a different *args signature.  Make
     # sure the names don't clash by adding `_matrix_` in name.
     def _eval_is_matrix_hermitian(self, simpfunc: Callable[[Expr], Expr]) -> bool | None:
-        herm = lambda i, j: simpfunc(self[i, j] - self[j, i].conjugate()).is_zero
-        return fuzzy_and(herm(i, j) for (i, j), _ in self.iter_items())
+        herm = lambda i, j: simpfunc(self[i, j] - self[j, i].adjoint()).is_zero
+        return fuzzy_and(herm(i, j) for (i, j), v in self.iter_items())
 
     def _eval_is_zero_matrix(self) -> bool | None:
         return fuzzy_and(v.is_zero for v in self.iter_values())
@@ -2240,7 +2231,7 @@ class MatrixBase(Printable):
         return self._eval_iter_items()
 
     def _eval_adjoint(self) -> Self:
-        return self.transpose().conjugate()
+        return self.transpose().applyfunc(lambda x: x.adjoint())
 
     def _eval_applyfunc(self, f: Callable[[Expr], Expr]) -> Self:
         cols = self.cols
@@ -2430,7 +2421,7 @@ class MatrixBase(Printable):
         conjugate: By-element conjugation
         sympy.matrices.matrixbase.MatrixBase.D: Dirac conjugation
         """
-        return self.T.C
+        return self.adjoint()
 
     def permute(self,
             perm: list[int] | list[list[int]] | Permutation,
@@ -4577,7 +4568,7 @@ class MatrixBase(Printable):
         [sin(theta(t)),  cos(theta(t)), 0],
         [            0,              0, 1]])
 
-        We can retrive the angular velocity:
+        We can retrieve the angular velocity:
 
         >>> Omega = R.T * R.diff()
         >>> Omega = trigsimp(Omega)

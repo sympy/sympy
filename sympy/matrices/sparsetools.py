@@ -266,10 +266,10 @@ def banded(*args, **kwargs) -> SparseMatrix:
                 r += j
                 c += j # type: ignore
         elif v:
-            smat[r, c] = tba
+            smat[r, c] = tba # type: ignore
             undone.append((d, v))
     s = SparseMatrix(None, smat)  # to expand matrices
-    smat = s.todok()
+    smat = s.todok() # type: ignore
     # check for dim errors here
     if rows is not None and rows < s.rows:
         raise ValueError('Designated rows %s < needed %s' % (rows, s.rows))

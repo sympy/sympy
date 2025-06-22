@@ -21,6 +21,8 @@ from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.elementary.miscellaneous import (Max, Min, sqrt)
 from sympy.functions.elementary.trigonometric import (cos, sin, tan)
 from sympy.integrals.integrals import integrate
+from sympy.matrices.expressions.transpose import transpose
+from sympy.physics.quantum.operator import HermitianOperator, Operator, Dagger
 from sympy.polys.polytools import (Poly, PurePoly)
 from sympy.polys.rootoftools import RootOf
 from sympy.printing.str import sstr
@@ -2639,6 +2641,18 @@ def test_adjoint():
     for cls in classes:
         assert ans == cls(dat).adjoint()
 
+
+def test_adjoint_with_operator():
+    # Regression test for issue 25130: adjoint() should propagate to operators
+    import sympy.physics.quantum
+    a = sympy.physics.quantum.operator.Operator('a')
+    a_dag = sympy.physics.quantum.Dagger(a)
+    dat = [[0, I * a], [0, a_dag]]
+    ans = Matrix([[0, 0], [-I * a_dag, a]])
+    for cls in classes:
+        assert ans == cls(dat).adjoint()
+
+
 def test_simplify_immutable():
     assert simplify(ImmutableMatrix([[sin(x)**2 + cos(x)**2]])) == \
                     ImmutableMatrix([[1]])
@@ -2813,6 +2827,12 @@ def test_hermitian():
     assert a.is_hermitian is None
     a[0, 1] = a[1, 0]*I
     assert a.is_hermitian is False
+    b = HermitianOperator("b")
+    c = Operator("c")
+    assert Matrix([[b]]).is_hermitian is True
+    assert Matrix([[b, c], [Dagger(c), b]]).is_hermitian is True
+    assert Matrix([[b, c], [c, b]]).is_hermitian is False
+    assert Matrix([[b, c], [transpose(c), b]]).is_hermitian is False
 
 def test_doit():
     a = Matrix([[Add(x,x, evaluate=False)]])
