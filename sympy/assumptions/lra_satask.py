@@ -83,29 +83,28 @@ def check_satisfiability(prop, _prop, factbase):
     all_pred = set()
     realness_preds = set()
 
-    # Collect all predicates and expressions, while deducing realness
+    # Deduce realness with heuristics and collect all_exprs and all_pred
     for pred in sat_true.encoding.keys():
-        if isinstance(pred, AppliedPredicate):
-            if pred.function is Q.eq:
-                lhs, rhs = pred.arguments
-                if lhs.is_real:
-                    if rhs.is_real is None:
-                        realness_preds.add(Q.real(rhs))
-                    elif rhs.is_real is False:
+        if not isinstance(pred, AppliedPredicate):
+            continue
+
+        if pred.function is Q.eq:
+            lhs, rhs = pred.arguments
+            for a, b in [(lhs, rhs), (rhs, lhs)]:
+                if a.is_real:
+                    if b.is_real is None:
+                        realness_preds.add(Q.real(b))
+                    elif b.is_real is False:
                         raise ValueError("Inconsistent assumptions")
-                if rhs.is_real:
-                    if lhs.is_real is None:
-                        realness_preds.add(Q.real(lhs))
-                    elif lhs.is_real is False:
-                        raise ValueError("Inconsistent assumptions")
-            if pred.function in (Q.gt, Q.lt):
-                lhs, rhs = pred.arguments
-                if lhs.is_Symbol:
-                    realness_preds.add(Q.real(lhs))
-                if rhs.is_Symbol:
-                    realness_preds.add(Q.real(rhs))
-            all_pred.add(pred)
-            all_exprs.update(pred.arguments)
+        if pred.function in (Q.gt, Q.lt):
+            lhs, rhs = pred.arguments
+            if lhs.is_Symbol:
+                realness_preds.add(Q.real(lhs))
+            if rhs.is_Symbol:
+                realness_preds.add(Q.real(rhs))
+
+        all_pred.add(pred)
+        all_exprs.update(pred.arguments)
 
     # Ensure only supported predicates are used
     for pred in all_pred:
