@@ -274,7 +274,7 @@ pred_to_pos_neg_zero = {
     Q.positive_infinite: False
 }
 
-def extract_pred_from_old_assum(all_exprs, realness_preds):
+def extract_pred_from_old_assum(all_exprs, realness_preds=None):
     """
     Returns a list of relevant new assumption predicate
     based on any old assumptions.
