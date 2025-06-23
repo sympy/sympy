@@ -3,13 +3,16 @@ from __future__ import annotations
 from contextlib import contextmanager
 from typing import Any, TypeVar
 
-from flint import ctx, fmpq_poly, fmpq_series, fmpz_poly, fmpz_series
 from sympy.polys.domains import Domain, QQ, ZZ
 from sympy.polys.series.powerseriesring import _series_from_list, PowerSeriesRing
 
+try:
+    from flint import ctx, fmpq_poly, fmpq_series, fmpz_poly, fmpz_series
+except ImportError:
+    pass
 
-ZZSeries = TypeVar("ZZSeries", bound=fmpz_series | fmpz_poly)
-QQSeries = TypeVar("QQSeries", bound=fmpq_series | fmpq_poly)
+ZZSeries = TypeVar("ZZSeries", bound='fmpz_series | fmpz_poly')
+QQSeries = TypeVar("QQSeries", bound='fmpq_series | fmpq_poly')
 
 
 def _get_series_precision(s: ZZSeries | QQSeries) -> int:
