@@ -2854,6 +2854,8 @@ class ANP(CantSympify):
         else:
             mod = DMP(dup_strip(mod), dom, 0)
 
+        rep = rep.rem(mod)
+
         return cls.new(rep, mod, dom)
 
     @classmethod
