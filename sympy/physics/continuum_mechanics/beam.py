@@ -2,7 +2,6 @@
 This module can be used to solve 2D beam bending problems with
 singularity functions in mechanics.
 """
-
 from sympy.core import S, Symbol, diff, symbols
 from sympy.core.add import Add
 from sympy.core.expr import Expr
@@ -40,6 +39,7 @@ __doctest_requires__ = {
 
 
 numpy = import_module('numpy', import_kwargs={'fromlist':['arange']})
+
 
 
 class Beam:
@@ -700,7 +700,6 @@ class Beam:
         self.apply_load(E * I * deflection_jump, loc, -4)
         self.bc_shear_force.append((loc, 0))
         return deflection_jump
-
     def apply_load(self, value, start, order, end=None):
         """
         This method adds up the loads given to a particular beam object.
@@ -759,15 +758,23 @@ class Beam:
         x = self.variable
         value = sympify(value)
         start = sympify(start)
-        order = sympify(order)
 
         self._applied_loads.append((value, start, order, end))
         self._load += value*SingularityFunction(x, start, order)
         self._original_load += value*SingularityFunction(x, start, order)
 
-        if end:
-            # load has an end point within the length of the beam.
-            self._handle_end(x, value, start, order, end, type="apply")
+        if end is not None:
+            if order < 0:
+                msg = ("If 'end' is provided the 'order' of the load cannot "
+                       "be negative, i.e. 'end' is only valid for distributed loads.")
+                raise ValueError(msg)
+
+            f = value * (x - start)**order
+            for i in range(0, order + 1):
+                coeff = f.diff(x, i).subs(x, end)
+                term = coeff * SingularityFunction(x, end, i) / factorial(i)
+                self._load -= term
+                self._original_load -= term
 
     def remove_load(self, value, start, order, end=None):
         """
@@ -819,7 +826,6 @@ class Beam:
         x = self.variable
         value = sympify(value)
         start = sympify(start)
-        order = sympify(order)
 
         if (value, start, order, end) in self._applied_loads:
             self._load -= value*SingularityFunction(x, start, order)
@@ -829,40 +835,18 @@ class Beam:
             msg = "No such load distribution exists on the beam object."
             raise ValueError(msg)
 
-        if end:
-            # load has an end point within the length of the beam.
-            self._handle_end(x, value, start, order, end, type="remove")
+        if end is not None:
+            if order < 0:
+                msg = ("If 'end' is provided the 'order' of the load cannot "
+                       "be negative, i.e. 'end' is only valid for distributed loads.")
+                raise ValueError(msg)
 
-    def _handle_end(self, x, value, start, order, end, type):
-        """
-        This functions handles the optional `end` value in the
-        `apply_load` and `remove_load` functions. When the value
-        of end is not NULL, this function will be executed.
-        """
-        if order.is_negative:
-            msg = ("If 'end' is provided the 'order' of the load cannot "
-                    "be negative, i.e. 'end' is only valid for distributed "
-                    "loads.")
-            raise ValueError(msg)
-        # NOTE : A Taylor series can be used to define the summation of
-        # singularity functions that subtract from the load past the end
-        # point such that it evaluates to zero past 'end'.
-        f = value*x**order
-
-        if type == "apply":
-            # iterating for "apply_load" method
+            f = value * (x - start)**order
             for i in range(0, order + 1):
-                self._load -= (f.diff(x, i).subs(x, end - start) *
-                                SingularityFunction(x, end, i)/factorial(i))
-                self._original_load -= (f.diff(x, i).subs(x, end - start) *
-                                SingularityFunction(x, end, i)/factorial(i))
-        elif type == "remove":
-            # iterating for "remove_load" method
-            for i in range(0, order + 1):
-                self._load += (f.diff(x, i).subs(x, end - start) *
-                                SingularityFunction(x, end, i)/factorial(i))
-                self._original_load += (f.diff(x, i).subs(x, end - start) *
-                                SingularityFunction(x, end, i)/factorial(i))
+                coeff = f.diff(x, i).subs(x, end)
+                term = coeff * SingularityFunction(x, end, i) / factorial(i)
+                self._load += term
+                self._original_load += term
 
 
     @property
