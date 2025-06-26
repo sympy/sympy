@@ -339,15 +339,12 @@ def _(expr, assumptions):
 
     if ask(Q.real(expr.base), assumptions):
         if ask(Q.real(expr.exp), assumptions):
-            if ask(Q.zero(expr.base), assumptions) is not False:
-                if ask(Q.positive(expr.exp), assumptions):
-                    return True
-                return
             if expr.exp.is_Rational and \
                     ask(Q.even(expr.exp.q), assumptions):
                 return ask(Q.positive(expr.base), assumptions)
             elif ask(Q.integer(expr.exp), assumptions):
-                return True
+                is_not_real = ask_all(Q.zero(expr.base), Q.negative(expr.exp), assumptions=assumptions)
+                return fuzzy_not(is_not_real)
             elif ask(Q.positive(expr.base), assumptions):
                 return True
 
