@@ -247,15 +247,6 @@ class WrappingSphere(WrappingGeometryBase):
             Point to which the geodesic length should be calculated.
 
         """
-        for point in (point_1, point_2):
-            if not self.point_on_surface(point):
-                msg = (
-                    f'Geodesic length cannot be calculated as point {point} '
-                    f'with radius {point.pos_from(self.point).magnitude()} '
-                    f'from the sphere\'s center {self.point} does not lie on '
-                    f'the surface of {self} with radius {self.radius}.'
-                )
-                raise ValueError(msg)
         point_1_vector = point_1.pos_from(self.point).normalize()
         point_2_vector = point_2.pos_from(self.point).normalize()
         central_angle = acos(point_2_vector.dot(point_1_vector))
