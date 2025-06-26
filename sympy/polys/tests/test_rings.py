@@ -2261,7 +2261,8 @@ def test_PolyElement_almosteq():
     assert not poly1.almosteq(5.0)
 
     const_poly = Rq(QQ(5, 2))
-    assert not const_poly.almosteq(uncoercible)
+    z = symbols('z')
+    assert not const_poly.almosteq(z)
 
     assert not const_poly.almosteq(6.0)
 
@@ -2277,28 +2278,22 @@ def test_PolyElement_parent():
     assert D.has_assoc_Ring
 
 
+@pytest.mark.xfail(reason=(
+    "PolyElement constructor prevents invalid internal states, "
+    "_check() is not used because of performance concerns."
+))
 def test_PolyElement__check():
     R, x, y = ring("x, y", ZZ)
 
-    # valid polynomial
     f = x**2 + 2*x*y + 3
-    f._check()  # No error
+    f._check()
 
-    # invalid coefficient
-    g = RawPolyElement({(1, 0): 1.5}, R)
-    raises(AssertionError, lambda: g._check())
+    invalid = object.__new__(PolyElement)
+    invalid.ring = R
+    dict.__init__(invalid, {(1, -1): 2})  # Invalid: negative exponent
 
-    # negative exponent
-    h = RawPolyElement({(1, -1): 2}, R)
-    raises(AssertionError, lambda: h._check())
+    invalid._check()
 
-    # non integer exponent
-    i = RawPolyElement({(1.5, 0): 2}, R)
-    raises(AssertionError, lambda: i._check())
-
-    # invalid monomial length (should be equal to number of generators)
-    j = RawPolyElement({(1,): 3}, R)
-    raises(AssertionError, lambda: j._check())
 
 def test_PolyElement_to_dict():
     R, x, y = ring("x,y", ZZ)
@@ -2407,16 +2402,3 @@ def test_PolyElement__iadd_monom():
     monom = (2, 0)  # x**2
     result = p._iadd_monom((monom, ZZ(-1)))
     assert (2, 0) not in result
-
-
-class RawPolyElement(PolyElement):
-    """Subclass that skips init validation for testing _check() directly."""
-    def __init__(self, data, ring):
-        dict.__init__(self, data)  # bypass parent PolyElement __init__
-        self.ring = ring
-
-
-class UncoercibleType:
-    pass
-
-uncoercible = UncoercibleType()

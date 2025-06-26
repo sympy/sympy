@@ -1098,7 +1098,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         return all(sum(monom) <= 2 for monom in self.itermonoms())
 
     def _check(self):
-        """Validate polynomial structure (expensive - use sparingly)."""
+        """Validate polynomial structure."""
         assert isinstance(self, PolyElement)
         assert isinstance(self.ring, PolyRing)
 
