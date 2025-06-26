@@ -1,7 +1,7 @@
 
 from sympy.core.symbol import symbols
 from sympy.physics.control.routh_table import (RouthHurwitz,
-                                            negative_real_root_conditions)
+                                            negative_real_part_conditions)
 from sympy.matrices.dense import Matrix
 from sympy.polys import Poly, PurePoly
 from sympy.logic.boolalg import true, false
@@ -54,31 +54,31 @@ def test_table():
     assert t3.zero_row_case is True
     assert t3.auxiliary_polynomials == [Poly(2*s**4 + 12*s**2 + 16, s)]
 
-def test_negative_real_root_conditions():
+def test_negative_real_part_conditions():
     b0, b1, b2, b3, b4 = symbols('b_0 b_1 b_2 b_3 b_4')
     p1 = b4 * s**4 + b3 * s**3 + b2 * s**2 + b1 * s + b0
 
-    conds = negative_real_root_conditions(p1, s)
+    conds = negative_real_part_conditions(p1, s)
     assert conds == [
         b3*b4 > 0, b3**2*(-b1*b4 + b2*b3) > 0,
         (-b0*b3**3 + b1*b3*(-b1*b4 + b2*b3))*(-b1*b4 + b2*b3)**2 > 0,
         b0*b3*(-b0*b3**3 + b1*b3*(-b1*b4 + b2*b3))**3*(-b1*b4 + b2*b3) > 0]
 
     p2 = -3*s**2 - 2*s - b0
-    assert negative_real_root_conditions(p2, s) == [true, 8 * b0 > 0]
+    assert negative_real_part_conditions(p2, s) == [true, 8 * b0 > 0]
 
     a = symbols('a', nonpositive = True)
 
     p4 = b0*s**2 + a*s + 3
-    assert negative_real_root_conditions(p4, s) == [a * b0 > 0, false]
+    assert negative_real_part_conditions(p4, s) == [a * b0 > 0, false]
 
     p5 = b0*s**2 + a*s - 3
-    assert negative_real_root_conditions(p5, s) == [a * b0 > 0, -3 * a**3 > 0]
+    assert negative_real_part_conditions(p5, s) == [a * b0 > 0, -3 * a**3 > 0]
 
     p6 = b0 + b1*s**2 + b1*s + b3*s**4 + b3*s**3
     expected6 = [b3**2 > 0, false]
 
-    assert negative_real_root_conditions(p6, s) == expected6
+    assert negative_real_part_conditions(p6, s) == expected6
 
     # test for issue https://github.com/sympy/sympy/issues/28010
     # In that test we want to be sure that negative_real_conditions works fast
@@ -242,4 +242,4 @@ def test_negative_real_root_conditions():
                 Symbol('s_11')), Mul(Integer(-1), Symbol('k_01'), Symbol('k_10'),
                 Symbol('s_01'), Symbol('s_10'))))), Symbol('s'))
 
-    negative_real_root_conditions(p7, s)
+    negative_real_part_conditions(p7, s)

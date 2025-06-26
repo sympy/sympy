@@ -3,9 +3,9 @@ from sympy.polys import Poly
 from sympy import Symbol
 from sympy.logic.boolalg import true, false
 
-__all__ = ['RouthHurwitz', 'negative_real_root_conditions']
+__all__ = ['RouthHurwitz', 'negative_real_part_conditions']
 
-def negative_real_root_conditions(polynomial, var, /, *, domain=None):
+def negative_real_part_conditions(polynomial, var, /, *, domain=None):
     """
     Returns a list of conditions for a polynomial to have all its roots with
     negative real parts.
@@ -30,19 +30,19 @@ def negative_real_root_conditions(polynomial, var, /, *, domain=None):
     Examples
     ========
 
-    >>> from sympy.physics.control import negative_real_root_conditions
+    >>> from sympy.physics.control import negative_real_part_conditions
     >>> from sympy import symbols
     >>> s = symbols('s')
     >>> p1 = (s+1)*(s+2)*(s+2.5)
-    >>> negative_real_root_conditions(p1, s)
+    >>> negative_real_part_conditions(p1, s)
     [True, True, True]
     >>> k = symbols('k')
     >>> p2 = (s+1)*(s+k)
-    >>> negative_real_root_conditions(p2, s)
+    >>> negative_real_part_conditions(p2, s)
     [k + 1 > 0, k*(k + 1)**3 > 0]
     >>> a = symbols('a', negative = True)
     >>> p3 = (s+1)*(s+a)
-    >>> negative_real_root_conditions(p3, s)
+    >>> negative_real_part_conditions(p3, s)
     [a + 1 > 0, a*(a + 1)**3 > 0]
 
     """
