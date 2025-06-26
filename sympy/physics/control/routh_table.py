@@ -10,6 +10,9 @@ def negative_real_part_conditions(polynomial, var, /, *, domain=None):
     Returns a list of conditions for a polynomial to have all its roots with
     negative real parts.
 
+    Note: This method assumes that the leading coefficient is non-zero.
+    In the opposite case, additional verification is required.
+
     Parameters
     ==========
 
