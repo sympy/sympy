@@ -795,7 +795,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
                 isinstance(p2.ring.domain, PolynomialRing)
                 and p2.ring.domain.ring == ring
             ):
-                return p2._rsub(p1)
+                return p2.__rsub__(p1)
             else:
                 return NotImplemented
 
@@ -1582,18 +1582,12 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
             x, a = args
             idx = ring.index(x)
             eval_dict[idx] = ring.domain.convert(a)
-
-        elif not args and kwargs:
-            for gen, val in kwargs.items():
-                idx = ring.index(gen)
-                eval_dict[idx] = ring.domain.convert(val)
         else:
             raise ValueError("Invalid arguments for evaluate()")
 
         if not eval_dict:
             return self
-
-        if len(eval_dict) == ring.ngens:
+        elif len(eval_dict) == ring.ngens:
             return self._evaluate(eval_dict)
         else:
             temp_result = self._subs(eval_dict)
@@ -1613,18 +1607,12 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
             x, a = args
             idx = ring.index(x)
             subs_dict[idx] = ring.domain.convert(a)
-
-        elif not args and kwargs:
-            for gen, val in kwargs.items():
-                idx = ring.index(gen)
-                subs_dict[idx] = ring.domain.convert(val)
         else:
             raise ValueError("Invalid arguments for subs()")
 
         if not subs_dict:
             return self
-
-        if len(subs_dict) == ring.ngens:
+        elif len(subs_dict) == ring.ngens:
             result = self._evaluate(subs_dict)
             return ring.ground_new(result)
         else:
@@ -1994,8 +1982,8 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
     def _sub_ground(p1, cp2):
         p = p1.copy()
-        if not cp2:
-            return p
+        #if not cp2:
+            #return p
         ring = p1.ring
         zm = ring.zero_monom
         v = p1.get(zm, ring.domain.zero) - cp2
@@ -2077,7 +2065,6 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
                 poly[monom] = coeff
             elif monom in poly:
                 del poly[monom]
-
         return poly
 
     def _square(self):
@@ -3011,7 +2998,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
             r += p
         if ret_single:
             if not qv:
-                return ring.zero, r
+                return ring.zero, r # This never happens since this branch can never be True
             else:
                 return qv[0], r
         else:
@@ -3320,5 +3307,3 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
     def factor_list(f):
         return f.ring.dmp_factor_list(f)
 
-
-# <-------------------------REFACTORED ABOVE/ TO REFACTOR BELOW-------------------------->#
