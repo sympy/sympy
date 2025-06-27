@@ -434,8 +434,6 @@ to a distributed constant load of 10 KN/m from the starting point till
     >>> b.apply_load(10, 0, 0, end=2)
     >>> b.apply_load(20, 5, -1)
     >>> b.apply_load(8, 7.5, -1)
-    >>> b.bc_deflection.append((1, 0))
-    >>> b.bc_deflection.append((7, 0))
     >>> b.solve_for_reaction_loads(R1, R2)
     >>> b.reaction_loads
     {R₁: -26, R₂: -22}
@@ -451,6 +449,7 @@ to a distributed constant load of 10 KN/m from the starting point till
            2             1            2             1             1              1
     - 5⋅<x>  + 26⋅<x - 1>  + 5⋅<x - 2>  - 20⋅<x - 5>  + 22⋅<x - 7>  - 8⋅<x - 7.5>
 
+    >>> b.bc_deflection = [(1, 0), (7, 0)]
     >>> b.slope()
          3                          3
     5⋅<x>              2   5⋅<x - 2>              2             2              2   679
@@ -504,8 +503,6 @@ away from start.
     >>> b.apply_load(4, 0, 0, end=2)
     >>> b.apply_load(12, 4, -1)
     >>> b.apply_load(1, 3, 1, end=6)
-    >>> b.bc_deflection = [(0, 0)]
-    >>> b.bc_slope = [(0, 0)]
     >>> b.solve_for_reaction_loads(V, M)
     >>> b.reaction_loads
     {M: 157/2, V: -49/2}
@@ -524,6 +521,8 @@ away from start.
       157⋅<x>    49⋅<x>         2            2   <x - 3>              1   3⋅<x - 6>    <x - 6>
     - ──────── + ─────── - 2⋅<x>  + 2⋅<x - 2>  - ──────── - 12⋅<x - 4>  + ────────── + ────────
          2          2                               6                         2           6
+    >>> b.bc_deflection = [(0, 0)]
+    >>> b.bc_slope = [(0, 0)]
     >>> b.slope()
      ⎛         1         2        3            3          4                       3          4⎞
      ⎜  157⋅<x>    49⋅<x>    2⋅<x>    2⋅<x - 2>    <x - 3>             2   <x - 6>    <x - 6> ⎟
@@ -571,7 +570,6 @@ overhanging end.
     >>> b.apply_load(2, 2, 0, end=6)
     >>> b.apply_load(R2, 8, -1)
     >>> b.apply_load(5, 11, -2)
-    >>> b.bc_deflection = [(0, 0), (8, 0)]
     >>> b.solve_for_reaction_loads(R1, R2)
     >>> b.reaction_loads
     {R₁: -37/8, R₂: -27/8}
@@ -590,6 +588,7 @@ overhanging end.
       37⋅<x>           2          2   27⋅<x - 8>              0
       ─────── - <x - 2>  + <x - 6>  + ─────────── - 5⋅<x - 11>
          8                                 8
+    >>> b.bc_deflection = [(0, 0), (8, 0)]
     >>> b.slope()
             2          3          3             2
       37⋅<x>    <x - 2>    <x - 6>    27⋅<x - 8>              1
@@ -1042,4 +1041,3 @@ is applied between ``2*l`` and ``3*l``. The beam has a sliding hinge located at 
     ⎝         324                108              108             6            6                  12                  72                  72               12              12                24               24      ⎠
     ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
                                                                                                             E⋅I
-

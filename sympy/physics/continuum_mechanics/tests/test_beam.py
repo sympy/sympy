@@ -1,5 +1,6 @@
 from sympy.core.function import expand
 from sympy.core.numbers import (Rational, pi)
+from sympy.core.singleton import S
 from sympy.core.symbol import (Symbol, symbols)
 from sympy.sets.sets import Interval
 from sympy.simplify.simplify import simplify
@@ -263,58 +264,26 @@ def test_insufficient_bconditions():
     b.apply_load(R2, L, -1)
     b.apply_load(R1, 0, -1)
     b.apply_load(-P, L/2, -1)
-    with raises(ValueError, match="System is under-constrained \\(mechanism\\): insufficient support "
-            +  "or boundary conditions. Please add appropriate supports "
-            +  "or deflection/slope boundary conditions."):
-        b.solve_for_reaction_loads(R1,R2)
+    b.solve_for_reaction_loads(R1, R2)
 
-def test_no_symbols_supplied():
-    E = Symbol('E')
-    I = Symbol('I')
+    p = b.slope()
+    q = P*SingularityFunction(x, 0, 2)/4 - P*SingularityFunction(x, L/2, 2)/2 + P*SingularityFunction(x, L, 2)/4
+    assert p == q/(E*I) + a3
 
-    b5 = Beam(10, E, I)
-    R1=b5.apply_support(0,'roller') # noqa: F841
-    b5.apply_load(10, 10, -1)
+    p = b.deflection()
+    q = P*SingularityFunction(x, 0, 3)/12 - P*SingularityFunction(x, L/2, 3)/6 + P*SingularityFunction(x, L, 3)/12
+    assert p == q/(E*I) + a3*x + a4
 
-    with raises(ValueError, match="No symbols supplied to solve_for_reaction_loads()."):
-        b5.solve_for_reaction_loads()
+    b.bc_deflection = [(0, 0)]
+    p = b.deflection()
+    q = a3*x + P*SingularityFunction(x, 0, 3)/12 - P*SingularityFunction(x, L/2, 3)/6 + P*SingularityFunction(x, L, 3)/12
+    assert p == q/(E*I)
 
-def test_duplicate_symbols_supplied_1():
-    E = Symbol('E')
-    I = Symbol('I')
+    b.bc_deflection = [(0, 0), (L, 0)]
+    p = b.deflection()
+    q = -L**2*P*x/16 + P*SingularityFunction(x, 0, 3)/12 - P*SingularityFunction(x, L/2, 3)/6 + P*SingularityFunction(x, L, 3)/12
+    assert p == q/(E*I)
 
-    b5 = Beam(10, E, I)
-    R1,M1=b5.apply_support(0,'fixed')
-    R2=b5.apply_support(10,'roller') # noqa: F841
-
-    with raises(ValueError, match="Duplicate symbols supplied to solve_for_reaction_loads()."):
-        b5.solve_for_reaction_loads(R1, M1, R1)
-
-def test_duplicate_symbols_supplied_2():
-    E, I = Symbol('E'), Symbol('I')
-    b = Beam(10, E, I)
-
-    b.apply_load(R1, 0, -1)
-    b.apply_load(R1, 10, -1)
-
-    b.bc_deflection = [(0, 0), (10, 0)]
-
-    with raises(ValueError, match="Duplicate symbols supplied to solve_for_reaction_loads()."):
-        b.solve_for_reaction_loads(Symbol('R1'),Symbol('R1'))
-
-def test_statically_determinate_1():
-    E = Symbol('E')
-    I = Symbol('I')
-    R0, M0 = symbols('R0, M0')
-
-    b5 = Beam(10, E, I)
-    R0,M0 = b5.apply_support(0, 'fixed')
-    b5.apply_load(-10, 10, -1)
-
-    b5.solve_for_reaction_loads(R0, M0)
-    p = b5.reaction_loads
-    q = {R0:10, M0: -100}
-    assert p == q
 
 def test_statically_indeterminate():
     E = Symbol('E')
@@ -338,74 +307,74 @@ def test_statically_indeterminate():
     q = {R1: F/2, R2: F/2, M1: -F*l/8, M2: F*l/8}
     assert p == q
 
-def test_statically_determinate_2():
-    E, I = Symbol('E'), Symbol('I')
-    b = Beam(10, E, I)
-
-    R1, M1 = b.apply_support(0, 'fixed')
-    R2, M2 = b.apply_support(10, 'fixed')
-
-    b.apply_load(-10, 5, -1)
-    b.solve_for_reaction_loads(R1, R2, M1, M2)
-
-    assert b.reaction_loads[R1] == 5
-    assert b.reaction_loads[R2] == 5
-
-def test_overconstrained_1():
-    E, I = Symbol('E'), Symbol('I')
-
-    b = Beam(8, E, I)
-    R0, M0 = b.apply_support(0, 'fixed')
-    R8, M8 = b.apply_support(8, 'fixed')
-
-    b.bc_slope.append((8, 1))
-
-    b.apply_load(5, 4, -1)
-
-    with raises(ValueError,
-                match="System is over-constrained \\(inconsistent\\): contradictory or "
-                + "excessive support/boundary conditions-no valid solution exists."):
-        b.solve_for_reaction_loads(R0, R8, M0, M8)
-
-def test_overconstrained_2():
+def tests_for_error_reporting_solve_for_reaction_loads():
+    #No symbols supplied to solve_for_reaction_loads()
     E = Symbol('E')
     I = Symbol('I')
-    R1 = symbols( 'R1')
-
     b5 = Beam(10, E, I)
-    R1=b5.apply_support(0, 'roller')
-    R2,M2=b5.apply_support(8,'fixed')
-    b5.bc_slope.append((8,7))
+    R1=b5.apply_support(0,'roller') # noqa: F841
     b5.apply_load(10, 10, -1)
+    with raises(ValueError, match="No symbols supplied to solve_for_reaction_loads()."):
+        b5.solve_for_reaction_loads()
 
-    with raises(ValueError, match="System is over-constrained \\(inconsistent\\): contradictory or "
-            + "excessive support/boundary conditions-no valid solution exists."):
-        b5.solve_for_reaction_loads(R1,R2,M2)
+    #Duplicate symbols supplied to solve_for_reaction_loads()
+    E = Symbol('E')
+    I = Symbol('I')
+    b5 = Beam(10, E, I)
+    R1,M1=b5.apply_support(0,'fixed')
+    R2=b5.apply_support(10,'roller') # noqa: F841
+    with raises(ValueError, match="Duplicate symbols supplied to solve_for_reaction_loads()."):
+        b5.solve_for_reaction_loads(R1, M1, R1)
 
-def test_underconstrained_1():
+    # Duplicate symbols supplied to solve_for_reaction_loads()
     E, I = Symbol('E'), Symbol('I')
     b = Beam(10, E, I)
+    b.apply_load(R1, 0, -1)
+    b.apply_load(R1, 10, -1)
+    b.bc_deflection = [(0, 0), (10, 0)]
+    with raises(ValueError, match="Duplicate symbols supplied to solve_for_reaction_loads()."):
+        b.solve_for_reaction_loads(Symbol('R1'),Symbol('R1'))
 
+    # Inconsistent system of equations with rotation hinge
+    E, I, P = Symbol('E'), Symbol('I'), Symbol('P')
+    b = Beam(10, E, I)
+    r1 = b.apply_support(0, 'pin')
+    r2 = b.apply_support(10, 'roller')
+    h = b.apply_rotation_hinge(4)
+    b.apply_load(-P, 4, -1)
+    with raises(ValueError,match="This means your supports/BCs generate contradictory or insufficient constraints."):
+        b.solve_for_reaction_loads(r1, r2)
+
+    # Inconsistent system of equations with rotation hinges
+    E = Symbol('E')
+    I = Symbol('I')
+    Q= Symbol('Q')
+    b = Beam(15, E, I)
+    b.apply_rotation_hinge(5)
+    b.apply_rotation_hinge(10)
+    r0 = b.apply_support(0, 'pin')
+    r15 = b.apply_support(15, 'roller')
+    b.apply_load(-Q, 0, 0, end=15)
+    with raises(ValueError, match="This means your supports/BCs generate contradictory or insufficient constraints."):
+        b.solve_for_reaction_loads(r0, r15)
+
+    # Inconsistent system of equations without enough boundary conditions
+    E, I = Symbol('E'), Symbol('I')
+    b = Beam(10, E, I)
     R1=b.apply_support(0,'pin')
     b.apply_load(10, 10, -1)
-    with raises(ValueError, match="System is under-constrained \\(mechanism\\): insufficient support "
-                    +  "or boundary conditions. Please add appropriate supports "
-                    +  "or deflection/slope boundary conditions."):
+    with raises(ValueError, match="This means your supports/BCs generate contradictory or insufficient constraints."):
         b.solve_for_reaction_loads(R1)
 
-def test_underconstrained_2():
+    # Inconsistent system of equations with sliding hinge
     E, I = Symbol('E'), Symbol('I')
     b = Beam(8, E, I)
     R1=b.apply_support(0,'roller')
-    b.apply_rotation_hinge(4)
+    b.apply_sliding_hinge(4)
     b.apply_load(5, 8, -1)
-
     R1 = Symbol('R1')
-    with raises(ValueError, match="System is under-constrained \\(mechanism\\): insufficient support "
-            + "or boundary conditions. Please add appropriate supports "
-            + "or deflection/slope boundary conditions."):
+    with raises(ValueError, match="This means your supports/BCs generate contradictory or insufficient constraints."):
         b.solve_for_reaction_loads(R1)
-
 
 def test_beam_units():
     E = Symbol('E')
@@ -782,26 +751,27 @@ def test_max_shear_force():
     E = Symbol('E')
     I = Symbol('I')
 
-    b = Beam(4, E, I)
+    b = Beam(3, E, I)
     R, M = symbols('R, M')
-    R1,M1=b.apply_support(0,"fixed")
+    b.apply_load(R, 0, -1)
+    b.apply_load(M, 0, -2)
     b.apply_load(2, 3, -1)
     b.apply_load(4, 2, -1)
-    b.apply_load(2, 2, 0,3)
-    b.solve_for_reaction_loads(R1, M1)
+    b.apply_load(2, 2, 0, end=3)
+    b.solve_for_reaction_loads(R, M)
     assert b.max_shear_force() == (Interval(0, 2), 8)
 
     l = symbols('l', positive=True)
     P = Symbol('P')
     b = Beam(l, E, I)
     R1, R2 = symbols('R1, R2')
-    R1,M1=b.apply_support(0,"fixed")
-    R2=b.apply_support(l, "pin")
+    b.apply_load(R1, 0, -1)
+    b.apply_load(R2, l, -1)
     b.apply_load(P, 0, 0, end=l)
-    b.solve_for_reaction_loads(R1, M1, R2)
+    b.solve_for_reaction_loads(R1, R2)
     max_shear = b.max_shear_force()
     assert max_shear[0] == 0
-    assert simplify(max_shear[1] - (5*l*Abs(Abs(P))/8)) == 0
+    assert simplify(max_shear[1] - (l*Abs(P)/2)) == 0
 
 
 def test_max_bmoment():
@@ -811,19 +781,21 @@ def test_max_bmoment():
 
     b = Beam(l, E, I)
     R1, R2 = symbols('R1, R2')
-    R1,M1=b.apply_support( 0,"fixed")
-    R2=b.apply_support( l,"pin")
+    b.apply_load(R1, 0, -1)
+    b.apply_load(R2, l, -1)
     b.apply_load(P, l/2, -1)
-    b.solve_for_reaction_loads(R1,M1, R2)
-    assert b.max_bmoment() == (0, 3*P*l/16)
+    b.solve_for_reaction_loads(R1, R2)
+    b.reaction_loads
+    assert b.max_bmoment() == (l/2, P*l/4)
 
     b = Beam(l, E, I)
     R1, R2 = symbols('R1, R2')
-    R1=b.apply_support(0,"pin")
-    R2,M2=b.apply_support(l,"fixed")
+    b.apply_load(R1, 0, -1)
+    b.apply_load(R2, l, -1)
     b.apply_load(P, 0, 0, end=l)
-    b.solve_for_reaction_loads(R1, R2,M2)
-    assert b.max_bmoment() == (l, P*l**2/8)
+    b.solve_for_reaction_loads(R1, R2)
+    assert b.max_bmoment() == (l/2, P*l**2/8)
+
 
 def test_max_deflection():
     E, I, l, F = symbols('E, I, l, F', positive=True)
@@ -1132,33 +1104,21 @@ def test_cross_section():
     assert b1.cross_section == Circle((0, 0), r)
     assert b1.second_moment == pi*r*Abs(r)**3/4
 
-    b1.apply_load(-10, 5, -1)
-    R1,M1=b1.apply_support(0, "fixed")
-    R2=b1.apply_support(50,"pin")
+    b1.apply_load(-10, 0, -1)
+    b1.apply_load(R1, 5, -1)
+    b1.apply_load(R2, 50, -1)
     b1.apply_load(90, 45, -2)
-    b1.solve_for_reaction_loads(R1,M1, R2)
-    assert b1.load == ( 9*SingularityFunction(x, 0, -2)/10 + 3591*SingularityFunction(x, 0, -1)/500 - 10*SingularityFunction(x, 5, -1) + 90*SingularityFunction(x, 45, -2) + 1409*SingularityFunction(x, 50, -1)/500)
-    assert b1.bending_moment() == (-9*SingularityFunction(x, 0, 0)/10 - 3591*SingularityFunction(x, 0, 1)/500 + 10*SingularityFunction(x, 5, 1) - 90*SingularityFunction(x, 45, 0) - 1409*SingularityFunction(x, 50, 1)/500)
-    num = -9*SingularityFunction(x, 0, 1)/10 \
-          - 3591*SingularityFunction(x, 0, 2)/1000 \
-          + 5*SingularityFunction(x, 5, 2) \
-          - 90*SingularityFunction(x, 45, 1) \
-          - 1409*SingularityFunction(x, 50, 2)/1000
-    expected = -4 * num / (pi*E*r*Abs(r)**3)
-
-    # compare after simplification
-    assert simplify(b1.slope() - expected) == 0
-
-    num = (
-         -9*SingularityFunction(x, 0, 2)/20
-         - 1197*SingularityFunction(x, 0, 3)/1000
-         +  5*SingularityFunction(x, 5, 3)/3
-         - 45*SingularityFunction(x, 45, 2)
-         - 1409*SingularityFunction(x, 50, 3)/3000
-            )
-    expected = -4 * num / (pi*E*r*Abs(r)**3)
-
-    assert simplify(b1.deflection() - expected) == 0
+    b1.solve_for_reaction_loads(R1, R2)
+    assert b1.load == (-10*SingularityFunction(x, 0, -1) + 82*SingularityFunction(x, 5, -1)/S(9)
+                         + 90*SingularityFunction(x, 45, -2) + 8*SingularityFunction(x, 50, -1)/9)
+    assert b1.bending_moment() == (10*SingularityFunction(x, 0, 1) - 82*SingularityFunction(x, 5, 1)/9
+                                     - 90*SingularityFunction(x, 45, 0) - 8*SingularityFunction(x, 50, 1)/9)
+    q = (-5*SingularityFunction(x, 0, 2) + 41*SingularityFunction(x, 5, 2)/S(9)
+           + 90*SingularityFunction(x, 45, 1) + 4*SingularityFunction(x, 50, 2)/S(9))/(pi*E*r*Abs(r)**3)
+    assert b1.slope() == C3 + 4*q
+    q = (-5*SingularityFunction(x, 0, 3)/3 + 41*SingularityFunction(x, 5, 3)/27 + 45*SingularityFunction(x, 45, 2)
+           + 4*SingularityFunction(x, 50, 3)/27)/(pi*E*r*Abs(r)**3)
+    assert b1.deflection() == C3*x + C4 + 4*q
 
     # beam with a recatangular cross-section
     b2 = Beam(20, E, Polygon((0, 0), (a, 0), (a, c), (0, c)))

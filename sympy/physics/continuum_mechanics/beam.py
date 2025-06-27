@@ -985,27 +985,18 @@ class Beam:
 
         A, b = linear_eq_to_matrix(equations, unknowns)
 
-        A_rref, pivots = A.rref()
-        num_pivots = len(pivots)
-        total_unknowns = len(unknowns)
-
-        if num_pivots < total_unknowns:
-            n_def = len(self._boundary_conditions['deflection'])
-            n_slope = len(self._boundary_conditions['slope'])
-
-            total_constraints = n_def + n_slope
-            # Condition check for mechanism
-            if total_constraints < 2:
-                raise ValueError("System is under-constrained (mechanism): insufficient support "
-                    + "or boundary conditions. Please add appropriate supports "
-                    + "or deflection/slope boundary conditions.")
-
-        # condition check for overconstrained
+        # condition check for Inconsistent system
         if A.rank() != A.row_join(b).rank():
-            raise ValueError("System is over-constrained (inconsistent): contradictory or "
-                + "excessive support/boundary conditions-no valid solution exists.")
-        solutions = linsolve(equations, unknowns)
+            eqs_str = "\n".join(f"  {equation}" for equation in equations)
+            unks_str = ", ".join(str(unknown) for unknown in unknowns)
+            raise ValueError(
+                f" Inconsistent system detected!\n"
+                f"  • Equations ({len(equations)}):\n{eqs_str}\n"
+                f"  • Unknowns ({len(unknowns)}): {unks_str}\n\n"
+                "This means your supports/BCs generate contradictory or insufficient constraints."
+                )
 
+        solutions = linsolve(equations, unknowns)
         solution = list(solutions.args[0])
 
         reaction_index = 2+len(reactions)
