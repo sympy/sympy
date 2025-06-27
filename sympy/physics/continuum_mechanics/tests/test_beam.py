@@ -340,7 +340,7 @@ def tests_for_error_reporting_solve_for_reaction_loads():
     b = Beam(10, E, I)
     r1 = b.apply_support(0, 'pin')
     r2 = b.apply_support(10, 'roller')
-    h = b.apply_rotation_hinge(4)
+    b.apply_rotation_hinge(4)
     b.apply_load(-P, 4, -1)
     with raises(ValueError,match="This means your supports/BCs generate contradictory or insufficient constraints."):
         b.solve_for_reaction_loads(r1, r2)
