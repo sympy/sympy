@@ -138,15 +138,12 @@ def Y_lm(l, m, phi, theta, complex=False):
 
     """
     l, m, theta, phi = map(S, [l, m, theta, phi])
-    if abs(m) > l:
+    if m.is_integer and l.is_integer and abs(m) > l:
         raise ValueError("|'m'| must be less or equal 'l'")
-    elif m.is_integer and l.is_integer:
-        if complex:
-            return Ynm_c(l, m, theta, phi).expand(func=True)
-        else:
-            return Ynm(l, m, theta, phi).expand(func=True)
+    elif complex:
+        return Ynm_c(l, m, theta, phi).expand(func=True)
     else:
-        raise ValueError("'m' and 'l' must be integers")
+        return Ynm(l, m, theta, phi).expand(func=True)
 
 
 def Psi_nlm(n, l, m, r, phi, theta, Z=1):
