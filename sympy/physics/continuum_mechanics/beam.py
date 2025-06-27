@@ -991,8 +991,8 @@ class Beam:
             unks_str = ", ".join(str(unknown) for unknown in unknowns)
             raise ValueError(
                 f" Inconsistent system detected!\n"
-                f"  • Equations ({len(equations)}):\n{eqs_str}\n"
-                f"  • Unknowns ({len(unknowns)}): {unks_str}\n\n"
+                f"   Equations ({len(equations)}):\n{eqs_str}\n"
+                f"   Unknowns ({len(unknowns)}): {unks_str}\n\n"
                 "This means your supports/BCs generate contradictory or insufficient constraints."
                 )
 
