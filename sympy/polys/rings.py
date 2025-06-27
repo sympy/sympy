@@ -486,7 +486,8 @@ class PolyRing(DefaultPrinting, IPolys):
             if 0 <= gen < self.ngens:
                 return gen
             elif -self.ngens <= gen <= -1:
-                return gen + self.ngens
+                gen = -gen - 1
+                return gen
             else:
                 raise ValueError(f"invalid generator index: {gen}")
         else:  # gen is a string
@@ -623,14 +624,11 @@ class PolyRing(DefaultPrinting, IPolys):
     # Serialization support
     def __getstate__(self):
         state = self.__dict__.copy()
+        del state["leading_expv"]
 
-        # Remove function objects that can't be pickled
-        state.pop("leading_expv", None)
-
-        # Remove monomial operation functions
-        for key in list(state.keys()):
+        for key in state:
             if key.startswith("monomial_"):
-                state.pop(key, None)
+                del state[key]
 
         return state
 
