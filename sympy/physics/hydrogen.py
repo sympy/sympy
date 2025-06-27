@@ -134,7 +134,7 @@ def Y_lm(l, m, phi, theta, complex=False):
 
     >>> dz2 = Y_lm(2, 0, phi, theta)**2
     >>> [sol.evalf() for sol in sympy.solve(dz2)]
-    [4.09690927171430, 5.32786868905508, 2.18627603546528, 0.955316618124509]
+    [4.0969092717143, 5.32786868905508, 2.18627603546528, 0.955316618124509]
 
     """
     l, m, theta, phi = map(S, [l, m, theta, phi])
