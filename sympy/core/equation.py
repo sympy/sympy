@@ -636,7 +636,7 @@ class Equation(Basic, EvalfMixin):
     #     # default output for command line python and allows access to
     #     # str(self) and repr(self) independently.
     #     return 'Equation(%s, %s)' % (repr(self.lhs), repr(self.rhs))
-    # 
+    #
     # __srepr__ = __repr__
 
 Eqn = Equation
