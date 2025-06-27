@@ -117,6 +117,7 @@ def Y_lm(l, m, phi, theta, complex=False):
     ========
 
     >>> import sympy
+    >>> from sympy.physics.hydrogen import Y_lm
     >>> phi, theta = sympy.symbols('phi theta')
     >>> Y_lm(1, 0, phi, theta)
     sqrt(3)*cos(theta)/(2*sqrt(pi))
