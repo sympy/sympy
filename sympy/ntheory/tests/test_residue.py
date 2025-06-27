@@ -265,6 +265,9 @@ def test_residue():
     assert _discrete_log_pohlig_hellman(78723213, 11**31, 11) == 31
     assert _discrete_log_pohlig_hellman(32942478, 11**98, 11) == 98
     assert _discrete_log_pohlig_hellman(14789363, 11**444, 11) == 444
+    assert discrete_log(1, 0, 2) == 0
+    raises(ValueError, lambda: discrete_log(-4, 1, 3))
+    raises(ValueError, lambda: discrete_log(10, 3, 2))
     assert discrete_log(587, 2**9, 2) == 9
     assert discrete_log(2456747, 3**51, 3) == 51
     assert discrete_log(32942478, 11**127, 11) == 127
@@ -287,6 +290,7 @@ def test_residue():
     assert quadratic_congruence(5, 10, 14, 2) == [0]
     assert quadratic_congruence(10, 17, 19, 2) == [1]
     assert quadratic_congruence(10, 14, 20, 2) == [0, 1]
+    assert quadratic_congruence(2**48-7, 2**48-1, 4, 2**48) == [8249717183797, 31960993774868]
     assert polynomial_congruence(6*x**5 + 10*x**4 + 5*x**3 + x**2 + x + 1,
         972000) == [220999, 242999, 463999, 485999, 706999, 728999, 949999, 971999]
 

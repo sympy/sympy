@@ -1,4 +1,4 @@
-from sympy.core import Rational, S, Add, Mul
+from sympy.core import Rational, S, Add, Mul, I
 from sympy.simplify import simplify, trigsimp
 from sympy.core.function import (Derivative, Function, diff)
 from sympy.core.numbers import pi
@@ -14,6 +14,8 @@ from sympy.vector.vector import Cross, Dot, cross
 from sympy.testing.pytest import raises
 from sympy.vector.kind import VectorKind
 from sympy.core.kind import NumberKind
+from sympy.testing.pytest import XFAIL
+
 
 C = CoordSys3D('C')
 
@@ -28,6 +30,14 @@ def test_cross():
     assert Cross(v1, v2).doit() == C.z**3*C.i + (-C.x*C.z)*C.j + (C.x*C.y - C.x*C.z**2)*C.k
     assert cross(v1, v2) == C.z**3*C.i + (-C.x*C.z)*C.j + (C.x*C.y - C.x*C.z**2)*C.k
     assert Cross(v1, v2) == -Cross(v2, v1)
+    # XXX: Cannot use Cross here. See XFAIL test below:
+    assert cross(v1, v2) + cross(v2, v1) == Vector.zero
+
+
+@XFAIL
+def test_cross_xfail():
+    v1 = C.x * i + C.z * C.z * j
+    v2 = C.x * i + C.y * j + C.z * k
     assert Cross(v1, v2) + Cross(v2, v1) == Vector.zero
 
 
@@ -36,7 +46,7 @@ def test_dot():
     v2 = C.x * i + C.y * j + C.z * k
     assert Dot(v1, v2) == Dot(C.x*C.i + C.z**2*C.j, C.x*C.i + C.y*C.j + C.z*C.k)
     assert Dot(v1, v2).doit() == C.x**2 + C.y*C.z**2
-    assert Dot(v1, v2).doit() == C.x**2 + C.y*C.z**2
+    assert Dot(v2, v1).doit() == C.x**2 + C.y*C.z**2
     assert Dot(v1, v2) == Dot(v2, v1)
 
 
@@ -117,6 +127,7 @@ def test_vector():
 
     assert isinstance(v1, VectorAdd)
     assert v1 - v1 == Vector.zero
+    assert v1*0.0 == Vector.zero
     assert v1 + Vector.zero == v1
     assert v1.dot(i) == a
     assert v1.dot(j) == b
@@ -206,6 +217,26 @@ def test_vector_simplify():
     assert trigsimp(v) == v.trigsimp()
 
     assert simplify(Vector.zero) == Vector.zero
+
+
+def test_vector_equals():
+    assert (2*i).equals(j) is False
+    assert i.equals(i) is True
+
+    # https://github.com/sympy/sympy/issues/25915
+    A = (sqrt(2) + sqrt(6)) / sqrt(sqrt(3) + 2)
+    assert (A*i).equals(2*i) is True
+    assert (A*i).equals(3*i) is False
+
+    # Test comparing vectors in different coordinate systems
+    D = C.orient_new_axis('D', pi/2, C.k)
+    assert (D.i).equals(C.j) is True
+    assert (D.i).equals(C.i) is False
+
+
+def test_vector_conjugate():
+    # https://github.com/sympy/sympy/issues/27094
+    assert (I*i + (1 + I)*j + 2*k).conjugate() == -I*i + (1 - I)*j + 2*k
 
 
 def test_vector_dot():

@@ -654,10 +654,8 @@ def _helper_simplify(eq, hint, match, simplify=True, ics=None, **kwargs):
 
     if isinstance(match, SingleODESolver):
         solvefunc = match
-    elif hint.endswith('_Integral'):
-        solvefunc = globals()['ode_' + hint[:-len('_Integral')]]
     else:
-        solvefunc = globals()['ode_' + hint]
+        solvefunc = globals()['ode_' + hint.removesuffix('_Integral')]
 
     free = eq.free_symbols
     cons = lambda s: s.free_symbols.difference(free)
@@ -940,7 +938,7 @@ def classify_ode(eq, func=None, dict=False, ics=None, *, prep=True, xi=None, eta
     '1st_homogeneous_coeff_subs_indep_div_dep_Integral',
     '1st_homogeneous_coeff_subs_dep_div_indep_Integral')
     >>> classify_ode(f(x).diff(x, 2) + 3*f(x).diff(x) + 2*f(x) - 4)
-    ('factorable', 'nth_linear_constant_coeff_undetermined_coefficients',
+    ('nth_linear_constant_coeff_undetermined_coefficients',
     'nth_linear_constant_coeff_variation_of_parameters',
     'nth_linear_constant_coeff_variation_of_parameters_Integral')
 
@@ -1029,8 +1027,7 @@ def classify_ode(eq, func=None, dict=False, ics=None, *, prep=True, xi=None, eta
     # Used when dsolve is called without an explicit hint.
     # We exit early to return the first valid match
     early_exit = (user_hint=='default')
-    if user_hint.endswith('_Integral'):
-        user_hint = user_hint[:-len('_Integral')]
+    user_hint = user_hint.removesuffix('_Integral')
     user_map = solver_map
     # An explicit hint has been given to dsolve
     # Skip matching code for other hints
@@ -2520,7 +2517,7 @@ def ode_2nd_power_series_regular(eq, func, order, match):
             # Only one series solution exists in this case.
             m1 = m2 = sollist.pop()
             if terms-m1-1 <= 0:
-              return Eq(f(x), Order(terms))
+                return Eq(f(x), Order(terms))
             serdict1 = _frobenius(terms-m1-1, m1, p0, q0, p, q, x0, x, C0)
 
         else:
@@ -2635,7 +2632,7 @@ def _remove_redundant_solutions(eq, solns, order, var):
 
     unique_solns = []
     for soln1 in solns:
-        for soln2 in unique_solns[:]:
+        for soln2 in unique_solns.copy():
             if is_special_case_of(soln1, soln2):
                 break
             elif is_special_case_of(soln2, soln1):

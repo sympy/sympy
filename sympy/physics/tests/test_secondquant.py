@@ -1,3 +1,5 @@
+from sympy.functions.elementary.complexes import conjugate
+from sympy.functions.elementary.exponential import exp
 from sympy.physics.secondquant import (
     Dagger, Bd, VarBosonicBasis, BBra, B, BKet, FixedBosonicBasis,
     matrix_rep, apply_operators, InnerProduct, Commutator, KroneckerDelta,
@@ -87,6 +89,8 @@ def test_dagger():
     assert Dagger(B(n)**10) == Dagger(B(n))**10
     assert Dagger('a') == Dagger(Symbol('a'))
     assert Dagger(Dagger('a')) == Symbol('a')
+    assert Dagger(exp(2 * I)) == exp(-2 * I)
+    assert Dagger(i) == conjugate(i)
 
 
 def test_operator():
@@ -301,6 +305,8 @@ def test_create_f():
     assert srepr(Fd(p)) == "CreateFermion(Symbol('p'))"
     assert latex(Fd(p)) == r'{a^\dagger_{p}}'
     assert latex(Fd(p1)) == r'{a^\dagger_{p_{1}}}'
+    assert latex(FKet([a,i], 1)) == r"\left|\left( a, \  i\right)\right\rangle"
+    assert latex(FKet([j,i,b,a], 2)) == r"\left|\left( a, \  b, \  i, \  j\right)\right\rangle"
 
 
 def test_annihilate_f():

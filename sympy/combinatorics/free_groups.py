@@ -161,6 +161,14 @@ class FreeGroup(DefaultPrinting):
 
         return obj
 
+    def __getnewargs__(self):
+        """Return a tuple of arguments that must be passed to __new__ in order to support pickling this object."""
+        return (self.symbols,)
+
+    def __getstate__(self):
+        # Don't pickle any fields because they are regenerated within __new__
+        return None
+
     def _generators(group):
         """Returns the generators of the FreeGroup.
 
@@ -322,12 +330,7 @@ class FreeGroup(DefaultPrinting):
         True
 
         """
-        if not isinstance(g, FreeGroupElement):
-            return False
-        elif self != g.group:
-            return False
-        else:
-            return True
+        return isinstance(g, FreeGroupElement) and self == g.group
 
     def center(self):
         """Returns the center of the free group `self`."""
@@ -345,6 +348,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
     `FreeGroup` class.
 
     """
+    __slots__ = ()
     is_assoc_word = True
 
     def new(self, init):

@@ -381,7 +381,7 @@ class AlgebraicPredicate(Predicate):
 
 class TranscendentalPredicate(Predicate):
     """
-    Transcedental number predicate.
+    Transcendental number predicate.
 
     Explanation
     ===========
@@ -390,8 +390,24 @@ class TranscendentalPredicate(Predicate):
     transcendental numbers. A transcendental number is a real
     or complex number that is not algebraic.
 
+    Examples
+    ========
+
+    >>> from sympy import ask, Q, pi, exp, GoldenRatio
+    >>> ask(Q.transcendental(GoldenRatio))
+    False
+    >>> ask(Q.transcendental(pi))
+    True
+    >>> ask(Q.transcendental(exp(1)))
+    True
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Transcendental_number
+
     """
-    # TODO: Add examples
+
     name = 'transcendental'
     handler = Dispatcher(
         "Transcendental",

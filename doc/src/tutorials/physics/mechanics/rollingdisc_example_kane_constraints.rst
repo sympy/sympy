@@ -5,7 +5,7 @@ A rolling disc, with Kane's method and constraint forces
 We will now revisit the rolling disc example, except this time we are bringing
 the non-contributing (constraint) forces into evidence. See [Kane1985]_ for a
 more thorough explanation of this. Here, we will turn on the automatic
-simplifcation done when doing vector operations. It makes the outputs nicer for
+simplification done when doing vector operations. It makes the outputs nicer for
 small problems, but can cause larger vector operations to hang. ::
 
   >>> from sympy import symbols, sin, cos, tan

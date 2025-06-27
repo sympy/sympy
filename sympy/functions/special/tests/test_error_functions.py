@@ -353,6 +353,9 @@ def test_erfcinv():
     assert erfcinv(z).rewrite('erfinv') == erfinv(1-z)
     assert erfcinv(z).inverse() == erfc
 
+    # issue sympy/sympy#24684
+    assert abs( erfcinv(Float(0.4)) - 0.59511608144999484) < 1E-13
+
 
 def test_erf2inv():
     assert erf2inv(0, 0) is S.Zero
@@ -636,12 +639,12 @@ def test_si():
     assert tn_arg(Si)
     assert tn_arg(Shi)
 
-    assert Si(x)._eval_as_leading_term(x) == x
-    assert Si(2*x)._eval_as_leading_term(x) == 2*x
-    assert Si(sin(x))._eval_as_leading_term(x) == x
-    assert Si(x + 1)._eval_as_leading_term(x) == Si(1)
-    assert Si(1/x)._eval_as_leading_term(x, cdir=1) == \
-        Si(1/x)._eval_as_leading_term(x, cdir=-1) == Si(1/x)
+    assert Si(x)._eval_as_leading_term(x, None, 1) == x
+    assert Si(2*x)._eval_as_leading_term(x, None, 1) == 2*x
+    assert Si(sin(x))._eval_as_leading_term(x, None, 1) == x
+    assert Si(x + 1)._eval_as_leading_term(x, None, 1) == Si(1)
+    assert Si(1/x)._eval_as_leading_term(x, None, 1) == \
+        Si(1/x)._eval_as_leading_term(x, None, -1) == Si(1/x)
 
     assert Si(x).nseries(x, n=8) == \
         x - x**3/18 + x**5/600 - x**7/35280 + O(x**8)

@@ -533,7 +533,7 @@ def param_poly_rischDE(a, b, q, n, DE):
     if a.is_ground:
         # Normalization: a = 1.
         a = a.LC()
-        b, q = b.quo_ground(a), [qi.quo_ground(a) for qi in q]
+        b, q = b.to_field().exquo_ground(a), [qi.to_field().exquo_ground(a) for qi in q]
 
         if not b.is_zero and (DE.case == 'base' or
                 b.degree() > max(0, DE.d.degree() - 1)):

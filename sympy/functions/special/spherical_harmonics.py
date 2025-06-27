@@ -1,5 +1,5 @@
 from sympy.core.expr import Expr
-from sympy.core.function import Function, ArgumentIndexError
+from sympy.core.function import DefinedFunction, ArgumentIndexError
 from sympy.core.numbers import I, pi
 from sympy.core.singleton import S
 from sympy.core.symbol import Dummy
@@ -12,7 +12,7 @@ from sympy.functions.elementary.trigonometric import sin, cos, cot
 
 _x = Dummy("x")
 
-class Ynm(Function):
+class Ynm(DefinedFunction):
     r"""
     Spherical harmonics defined as
 
@@ -264,7 +264,7 @@ def Ynm_c(n, m, theta, phi):
     return conjugate(Ynm(n, m, theta, phi))
 
 
-class Znm(Function):
+class Znm(DefinedFunction):
     r"""
     Real spherical harmonics defined as
 

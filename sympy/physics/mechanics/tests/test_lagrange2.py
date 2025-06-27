@@ -4,10 +4,10 @@ from sympy.physics.mechanics import ReferenceFrame, Point, Particle
 from sympy.physics.mechanics import LagrangesMethod, Lagrangian
 
 ### This test asserts that a system with more than one external forces
-### is acurately formed with Lagrange method (see issue #8626)
+### is accurately formed with Lagrange method (see issue #8626)
 
 def test_lagrange_2forces():
-    ### Equations for two damped springs in serie with two forces
+    ### Equations for two damped springs in series with two forces
 
     ### generalized coordinates
     q1, q2 = dynamicsymbols('q1, q2')

@@ -18,7 +18,7 @@ def apart(f, x=None, full=False, **options):
 
     Given a rational function ``f``, computes the partial fraction
     decomposition of ``f``. Two algorithms are available: One is based on the
-    undertermined coefficients method, the other is Bronstein's full partial
+    undetermined coefficients method, the other is Bronstein's full partial
     fraction decomposition algorithm.
 
     The undetermined coefficients method (selected by ``full=False``) uses

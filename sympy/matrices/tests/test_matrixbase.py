@@ -8,7 +8,7 @@ from sympy import (
     ImmutableSparseMatrix, Integer, KroneckerDelta, MatPow, Matrix,
     MatrixSymbol, Max, Min, MutableDenseMatrix, MutableSparseMatrix, Poly, Pow,
     PurePoly, Q, Quaternion, Rational, RootOf, S, SparseMatrix, Symbol, Tuple,
-    Wild, banded, casoratian, cos, diag, diff, exp, expand, eye, hessian,
+    Wild, banded, casoratian, cos, diag, diff, exp, expand, eye, floor, hessian,
     integrate, log, matrix_multiply_elementwise, nan, ones, oo, pi, randMatrix,
     rot_axis1, rot_axis2, rot_axis3, rot_ccw_axis1, rot_ccw_axis2,
     rot_ccw_axis3, signsimp, simplify, sin, sqrt, sstr, symbols, sympify, tan,
@@ -1506,7 +1506,10 @@ def test_creation():
     with raises(IndexError):
         Matrix((1, 2))[3] = 5
 
-    assert Matrix() == Matrix([]) == Matrix([[]]) == Matrix(0, 0, [])
+    assert Matrix() == Matrix([]) == Matrix(0, 0, [])
+    assert Matrix([[]]) == Matrix(1, 0, [])
+    assert Matrix([[], []]) == Matrix(2, 0, [])
+
     # anything used to be allowed in a matrix
     with warns_deprecated_sympy():
         assert Matrix([[[1], (2,)]]).tolist() == [[[1], (2,)]]
@@ -2459,8 +2462,8 @@ def test_jordan_form_complex_issue_9274():
                 [-4,  2,  0,  1],
                 [ 0,  0,  2,  4],
                 [ 0,  0, -4,  2]])
-    p = 2 - 4*I;
-    q = 2 + 4*I;
+    p = 2 - 4*I
+    q = 2 + 4*I
     Jmust1 = Matrix([[p, 1, 0, 0],
                      [0, p, 0, 0],
                      [0, 0, q, 1],
@@ -3457,7 +3460,7 @@ def test_from_ndarray():
         lambda: Matrix(array([[[1, 2], [3, 4]], [[5, 6], [7, 8]]])))
     assert Matrix([array([1, 2]), array([3, 4])]) == Matrix([[1, 2], [3, 4]])
     assert Matrix([array([1, 2]), [3, 4]]) == Matrix([[1, 2], [3, 4]])
-    assert Matrix([array([]), array([])]) == Matrix([])
+    assert Matrix([array([]), array([])]) == Matrix(2, 0, []) != Matrix([])
 
 
 def test_17522_numpy():
@@ -3785,3 +3788,8 @@ def test_issue_23276():
     assert integrate(M, (x, 0, 1), (y, 0, 1)) == Matrix([
         [S.Half],
         [S.Half]])
+
+
+def test_issue_27225():
+    # https://github.com/sympy/sympy/issues/27225
+    raises(TypeError, lambda : floor(Matrix([1, 1, 0])))

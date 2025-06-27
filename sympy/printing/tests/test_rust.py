@@ -175,15 +175,15 @@ def test_dereference_printing():
 
 def test_sign():
     expr = sign(x) * y
-    assert rust_code(expr) == "y*x.signum() as f64"
-    assert rust_code(expr, assign_to='r') == "r = y*x.signum() as f64;"
+    assert rust_code(expr) == "y*(if (x == 0.0) { 0.0 } else { (x).signum() }) as f64"
+    assert rust_code(expr, assign_to='r') == "r = y*(if (x == 0.0) { 0.0 } else { (x).signum() }) as f64;"
 
     expr = sign(x + y) + 42
-    assert rust_code(expr) == "(x + y).signum() + 42"
-    assert rust_code(expr, assign_to='r') == "r = (x + y).signum() + 42;"
+    assert rust_code(expr) == "(if (x + y == 0.0) { 0.0 } else { (x + y).signum() }) + 42"
+    assert rust_code(expr, assign_to='r') == "r = (if (x + y == 0.0) { 0.0 } else { (x + y).signum() }) + 42;"
 
     expr = sign(cos(x))
-    assert rust_code(expr) == "x.cos().signum()"
+    assert rust_code(expr) == "(if (x.cos() == 0.0) { 0.0 } else { (x.cos()).signum() })"
 
 
 def test_reserved_words():

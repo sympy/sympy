@@ -8,7 +8,7 @@ SymPy historically had its own testing framework that aimed to:
 - have no magic, just import the test file and execute the test functions; and
 - be portable.
 
-To reduce the maintence burden of developing an independent testing framework
+To reduce the maintenance burden of developing an independent testing framework
 and to leverage the benefits of existing Python testing infrastructure, SymPy
 now uses pytest (and various of its plugins) to run the test suite.
 
@@ -94,18 +94,6 @@ def sympy_dir() -> pathlib.Path:
     return pathlib.Path(__file__).parents[2]
 
 
-def update_args_with_rootdir(args: List[str]) -> List[str]:
-    """Adds `--rootdir` and path to the args `list` passed to `pytest.main`.
-
-    This is required to ensure that pytest is able to find the SymPy tests in
-    instances where it gets confused determining the root directory, e.g. when
-    running with Pyodide (e.g. `bin/test_pyodide.mjs`).
-
-    """
-    args.extend(['--rootdir', str(sympy_dir())])
-    return args
-
-
 def update_args_with_paths(
     paths: List[str],
     keywords: Optional[Tuple[str]],
@@ -174,15 +162,14 @@ def update_args_with_paths(
 
     def find_tests_matching_keywords(keywords, filepath):
         matches = []
-        with open(filepath, encoding='utf-8') as tests_file:
-            source = tests_file.read()
-            for line in source.splitlines():
-                if line.lstrip().startswith('def '):
-                    for kw in keywords:
-                        if line.lower().find(kw.lower()) != -1:
-                            test_name = line.split(' ')[1].split('(')[0]
-                            full_test_path = filepath + '::' + test_name
-                            matches.append(full_test_path)
+        source = pathlib.Path(filepath).read_text(encoding='utf-8')
+        for line in source.splitlines():
+            if line.lstrip().startswith('def '):
+                for kw in keywords:
+                    if line.lower().find(kw.lower()) != -1:
+                        test_name = line.split(' ')[1].split('(')[0]
+                        full_test_path = filepath + '::' + test_name
+                        matches.append(full_test_path)
         return matches
 
     valid_testpaths_default = []
@@ -264,7 +251,7 @@ def test(*paths, subprocess=True, rerun=0, **kwargs):
 
     Note that a `pytest.ExitCode`, which is an `enum`, is returned. This is
     different to the legacy SymPy test runner which would return a `bool`. If
-    all tests sucessfully pass the `pytest.ExitCode.OK` with value `0` is
+    all tests successfully pass the `pytest.ExitCode.OK` with value `0` is
     returned, whereas the legacy SymPy test runner would return `True`. In any
     other scenario, a non-zero `enum` value is returned, whereas the legacy
     SymPy test runner would return `False`. Users need to, therefore, be careful
@@ -389,7 +376,6 @@ def test(*paths, subprocess=True, rerun=0, **kwargs):
         pytest.main()
 
     args = []
-    args = update_args_with_rootdir(args)
 
     if kwargs.get('verbose', False):
         args.append('--verbose')

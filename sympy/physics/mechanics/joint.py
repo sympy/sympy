@@ -39,9 +39,9 @@ class Joint(ABC):
 
     name : string
         A unique name for the joint.
-    parent : Particle or RigidBody or Body
+    parent : Particle or RigidBody
         The parent body of joint.
-    child : Particle or RigidBody or Body
+    child : Particle or RigidBody
         The child body of joint.
     coordinates : iterable of dynamicsymbols, optional
         Generalized coordinates of the joint.
@@ -95,9 +95,9 @@ class Joint(ABC):
 
     name : string
         The joint's name.
-    parent : Particle or RigidBody or Body
+    parent : Particle or RigidBody
         The joint's parent body.
-    child : Particle or RigidBody or Body
+    child : Particle or RigidBody
         The joint's child body.
     coordinates : Matrix
         Matrix of the joint's generalized coordinates.
@@ -576,9 +576,9 @@ class PinJoint(Joint):
 
     name : string
         A unique name for the joint.
-    parent : Particle or RigidBody or Body
+    parent : Particle or RigidBody
         The parent body of joint.
-    child : Particle or RigidBody or Body
+    child : Particle or RigidBody
         The child body of joint.
     coordinates : dynamicsymbol, optional
         Generalized coordinates of the joint.
@@ -635,9 +635,9 @@ class PinJoint(Joint):
 
     name : string
         The joint's name.
-    parent : Particle or RigidBody or Body
+    parent : Particle or RigidBody
         The joint's parent body.
-    child : Particle or RigidBody or Body
+    child : Particle or RigidBody
         The joint's child body.
     coordinates : Matrix
         Matrix of the joint's generalized coordinates. The default value is
@@ -841,9 +841,9 @@ class PrismaticJoint(Joint):
 
     name : string
         A unique name for the joint.
-    parent : Particle or RigidBody or Body
+    parent : Particle or RigidBody
         The parent body of joint.
-    child : Particle or RigidBody or Body
+    child : Particle or RigidBody
         The child body of joint.
     coordinates : dynamicsymbol, optional
         Generalized coordinates of the joint. The default value is
@@ -902,9 +902,9 @@ class PrismaticJoint(Joint):
 
     name : string
         The joint's name.
-    parent : Particle or RigidBody or Body
+    parent : Particle or RigidBody
         The joint's parent body.
-    child : Particle or RigidBody or Body
+    child : Particle or RigidBody
         The joint's child body.
     coordinates : Matrix
         Matrix of the joint's generalized coordinates.
@@ -1107,9 +1107,9 @@ class CylindricalJoint(Joint):
 
     name : string
         A unique name for the joint.
-    parent : Particle or RigidBody or Body
+    parent : Particle or RigidBody
         The parent body of joint.
-    child : Particle or RigidBody or Body
+    child : Particle or RigidBody
         The child body of joint.
     rotation_coordinate : dynamicsymbol, optional
         Generalized coordinate corresponding to the rotation angle. The default
@@ -1152,9 +1152,9 @@ class CylindricalJoint(Joint):
 
     name : string
         The joint's name.
-    parent : Particle or RigidBody or Body
+    parent : Particle or RigidBody
         The joint's parent body.
-    child : Particle or RigidBody or Body
+    child : Particle or RigidBody
         The joint's child body.
     rotation_coordinate : dynamicsymbol
         Generalized coordinate corresponding to the rotation angle.
@@ -1423,9 +1423,9 @@ class PlanarJoint(Joint):
 
     name : string
         A unique name for the joint.
-    parent : Particle or RigidBody or Body
+    parent : Particle or RigidBody
         The parent body of joint.
-    child : Particle or RigidBody or Body
+    child : Particle or RigidBody
         The child body of joint.
     rotation_coordinate : dynamicsymbol, optional
         Generalized coordinate corresponding to the rotation angle. The default
@@ -1465,9 +1465,9 @@ class PlanarJoint(Joint):
 
     name : string
         The joint's name.
-    parent : Particle or RigidBody or Body
+    parent : Particle or RigidBody
         The joint's parent body.
-    child : Particle or RigidBody or Body
+    child : Particle or RigidBody
         The joint's child body.
     rotation_coordinate : dynamicsymbol
         Generalized coordinate corresponding to the rotation angle.
@@ -1764,9 +1764,9 @@ class SphericalJoint(Joint):
 
     name : string
         A unique name for the joint.
-    parent : Particle or RigidBody or Body
+    parent : Particle or RigidBody
         The parent body of joint.
-    child : Particle or RigidBody or Body
+    child : Particle or RigidBody
         The child body of joint.
     coordinates: iterable of dynamicsymbols, optional
         Generalized coordinates of the joint.
@@ -1821,9 +1821,9 @@ class SphericalJoint(Joint):
 
     name : string
         The joint's name.
-    parent : Particle or RigidBody or Body
+    parent : Particle or RigidBody
         The joint's parent body.
-    child : Particle or RigidBody or Body
+    child : Particle or RigidBody
         The joint's child body.
     coordinates : Matrix
         Matrix of the joint's generalized coordinates.
@@ -2009,9 +2009,9 @@ class WeldJoint(Joint):
 
     name : string
         A unique name for the joint.
-    parent : Particle or RigidBody or Body
+    parent : Particle or RigidBody
         The parent body of joint.
-    child : Particle or RigidBody or Body
+    child : Particle or RigidBody
         The child body of joint.
     parent_point : Point or Vector, optional
         Attachment point where the joint is fixed to the parent body. If a
@@ -2039,9 +2039,9 @@ class WeldJoint(Joint):
 
     name : string
         The joint's name.
-    parent : Particle or RigidBody or Body
+    parent : Particle or RigidBody
         The joint's parent body.
-    child : Particle or RigidBody or Body
+    child : Particle or RigidBody
         The joint's child body.
     coordinates : Matrix
         Matrix of the joint's generalized coordinates. The default value is

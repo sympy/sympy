@@ -82,6 +82,9 @@ Series Classes
 .. autoclass:: sympy.plotting.series::ParametricSurfaceSeries
    :members:
 
+.. autoclass:: sympy.plotting.series::GenericDataSeries
+   :members:
+
 .. autoclass:: sympy.plotting.series::ImplicitSeries
    :members:
 
@@ -286,7 +289,7 @@ origin and of radius 2 units.
     >>> x,y = symbols('x y')
     >>> plot_implicit(Eq(x**2+y**2, 4))
 
-Similarly, :func:`~.plot_implicit()` may be used to plot any 2-D geometric structure from
+Similarly, :func:`~.plot_implicit` may be used to plot any 2-D geometric structure from
 its implicit equation.
 
 Plotting polygons (Polygon, RegularPolygon, Triangle) are not supported

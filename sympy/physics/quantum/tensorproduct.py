@@ -2,23 +2,27 @@
 
 from sympy.core.add import Add
 from sympy.core.expr import Expr
+from sympy.core.kind import KindDispatcher
 from sympy.core.mul import Mul
 from sympy.core.power import Pow
 from sympy.core.sympify import sympify
 from sympy.matrices.dense import DenseMatrix as Matrix
 from sympy.matrices.immutable import ImmutableDenseMatrix as ImmutableMatrix
 from sympy.printing.pretty.stringpict import prettyForm
+from sympy.utilities.exceptions import sympy_deprecation_warning
 
-from sympy.physics.quantum.qexpr import QuantumError
 from sympy.physics.quantum.dagger import Dagger
-from sympy.physics.quantum.commutator import Commutator
-from sympy.physics.quantum.anticommutator import AntiCommutator
-from sympy.physics.quantum.state import Ket, Bra
+from sympy.physics.quantum.kind import (
+    KetKind, _KetKind,
+    BraKind, _BraKind,
+    OperatorKind, _OperatorKind
+)
 from sympy.physics.quantum.matrixutils import (
     numpy_ndarray,
     scipy_sparse_matrix,
     matrix_tensor_product
 )
+from sympy.physics.quantum.state import Ket, Bra
 from sympy.physics.quantum.trace import Tr
 
 
@@ -119,6 +123,14 @@ class TensorProduct(Expr):
         AxC + BxC
     """
     is_commutative = False
+
+    _kind_dispatcher = KindDispatcher("TensorProduct_kind_dispatcher", commutative=True)
+
+    @property
+    def kind(self):
+        """Calculate the kind of a tensor product by looking at its children."""
+        arg_kinds = (a.kind for a in self.args)
+        return self._kind_dispatcher(*arg_kinds)
 
     def __new__(cls, *args):
         if isinstance(args[0], (Matrix, ImmutableMatrix, numpy_ndarray,
@@ -263,7 +275,7 @@ class TensorProduct(Expr):
 
     def _eval_trace(self, **kwargs):
         indices = kwargs.get('indices', None)
-        exp = tensor_product_simp(self)
+        exp = self
 
         if indices is None or len(indices) == 0:
             return Mul(*[Tr(arg).doit() for arg in exp.args])
@@ -273,153 +285,79 @@ class TensorProduct(Expr):
 
 
 def tensor_product_simp_Mul(e):
-    """Simplify a Mul with TensorProducts.
+    """Simplify a Mul with tensor products.
 
-    Current the main use of this is to simplify a ``Mul`` of ``TensorProduct``s
-    to a ``TensorProduct`` of ``Muls``. It currently only works for relatively
-    simple cases where the initial ``Mul`` only has scalars and raw
-    ``TensorProduct``s, not ``Add``, ``Pow``, ``Commutator``s of
-    ``TensorProduct``s.
+    .. deprecated:: 1.14.
+        The transformations applied by this function are not done automatically
+        when tensor products are combined.
 
-    Parameters
-    ==========
-
-    e : Expr
-        A ``Mul`` of ``TensorProduct``s to be simplified.
-
-    Returns
-    =======
-
-    e : Expr
-        A ``TensorProduct`` of ``Mul``s.
-
-    Examples
-    ========
-
-    This is an example of the type of simplification that this function
-    performs::
-
-        >>> from sympy.physics.quantum.tensorproduct import \
-                    tensor_product_simp_Mul, TensorProduct
-        >>> from sympy import Symbol
-        >>> A = Symbol('A',commutative=False)
-        >>> B = Symbol('B',commutative=False)
-        >>> C = Symbol('C',commutative=False)
-        >>> D = Symbol('D',commutative=False)
-        >>> e = TensorProduct(A,B)*TensorProduct(C,D)
-        >>> e
-        AxB*CxD
-        >>> tensor_product_simp_Mul(e)
-        (A*C)x(B*D)
-
+    Originally, the main use of this function is to simplify a ``Mul`` of
+    ``TensorProduct``s to a ``TensorProduct`` of ``Muls``.
     """
-    # TODO: This won't work with Muls that have other composites of
-    # TensorProducts, like an Add, Commutator, etc.
-    # TODO: This only works for the equivalent of single Qbit gates.
-    if not isinstance(e, Mul):
-        return e
-    c_part, nc_part = e.args_cnc()
-    n_nc = len(nc_part)
-    if n_nc == 0:
-        return e
-    elif n_nc == 1:
-        if isinstance(nc_part[0], Pow):
-            return  Mul(*c_part) * tensor_product_simp_Pow(nc_part[0])
-        return e
-    elif e.has(TensorProduct):
-        current = nc_part[0]
-        if not isinstance(current, TensorProduct):
-            if isinstance(current, Pow):
-                if isinstance(current.base, TensorProduct):
-                    current = tensor_product_simp_Pow(current)
-            else:
-                raise TypeError('TensorProduct expected, got: %r' % current)
-        n_terms = len(current.args)
-        new_args = list(current.args)
-        for next in nc_part[1:]:
-            # TODO: check the hilbert spaces of next and current here.
-            if isinstance(next, TensorProduct):
-                if n_terms != len(next.args):
-                    raise QuantumError(
-                        'TensorProducts of different lengths: %r and %r' %
-                        (current, next)
-                    )
-                for i in range(len(new_args)):
-                    new_args[i] = new_args[i] * next.args[i]
-            else:
-                if isinstance(next, Pow):
-                    if isinstance(next.base, TensorProduct):
-                        new_tp = tensor_product_simp_Pow(next)
-                        for i in range(len(new_args)):
-                            new_args[i] = new_args[i] * new_tp.args[i]
-                    else:
-                        raise TypeError('TensorProduct expected, got: %r' % next)
-                else:
-                    raise TypeError('TensorProduct expected, got: %r' % next)
-            current = next
-        return Mul(*c_part) * TensorProduct(*new_args)
-    elif e.has(Pow):
-        new_args = [ tensor_product_simp_Pow(nc) for nc in nc_part ]
-        return tensor_product_simp_Mul(Mul(*c_part) * TensorProduct(*new_args))
-    else:
-        return e
+    sympy_deprecation_warning(
+        """
+        tensor_product_simp_Mul has been deprecated. The transformations
+        performed by this function are now done automatically when
+        tensor products are multiplied.
+        """,
+        deprecated_since_version="1.14",
+        active_deprecations_target='deprecated-tensorproduct-simp'
+    )
+    return e
 
 def tensor_product_simp_Pow(e):
-    """Evaluates ``Pow`` expressions whose base is ``TensorProduct``"""
-    if not isinstance(e, Pow):
-        return e
+    """Evaluates ``Pow`` expressions whose base is ``TensorProduct``
 
-    if isinstance(e.base, TensorProduct):
-        return TensorProduct(*[ b**e.exp for b in e.base.args])
-    else:
-        return e
+    .. deprecated:: 1.14.
+        The transformations applied by this function are not done automatically
+        when tensor products are combined.
+    """
+    sympy_deprecation_warning(
+        """
+        tensor_product_simp_Pow has been deprecated. The transformations
+        performed by this function are now done automatically when
+        tensor products are exponentiated.
+        """,
+        deprecated_since_version="1.14",
+        active_deprecations_target='deprecated-tensorproduct-simp'
+    )
+    return e
+
 
 def tensor_product_simp(e, **hints):
-    """Try to simplify and combine TensorProducts.
+    """Try to simplify and combine tensor products.
 
-    In general this will try to pull expressions inside of ``TensorProducts``.
-    It currently only works for relatively simple cases where the products have
+    .. deprecated:: 1.14.
+        The transformations applied by this function are not done automatically
+        when tensor products are combined.
+
+    Originally, this function tried to pull expressions inside of ``TensorProducts``.
+    It only worked for relatively simple cases where the products have
     only scalars, raw ``TensorProducts``, not ``Add``, ``Pow``, ``Commutators``
-    of ``TensorProducts``. It is best to see what it does by showing examples.
-
-    Examples
-    ========
-
-    >>> from sympy.physics.quantum import tensor_product_simp
-    >>> from sympy.physics.quantum import TensorProduct
-    >>> from sympy import Symbol
-    >>> A = Symbol('A',commutative=False)
-    >>> B = Symbol('B',commutative=False)
-    >>> C = Symbol('C',commutative=False)
-    >>> D = Symbol('D',commutative=False)
-
-    First see what happens to products of tensor products:
-
-    >>> e = TensorProduct(A,B)*TensorProduct(C,D)
-    >>> e
-    AxB*CxD
-    >>> tensor_product_simp(e)
-    (A*C)x(B*D)
-
-    This is the core logic of this function, and it works inside, powers, sums,
-    commutators and anticommutators as well:
-
-    >>> tensor_product_simp(e**2)
-    (A*C)x(B*D)**2
-
+    of ``TensorProducts``.
     """
-    if isinstance(e, Add):
-        return Add(*[tensor_product_simp(arg) for arg in e.args])
-    elif isinstance(e, Pow):
-        if isinstance(e.base, TensorProduct):
-            return tensor_product_simp_Pow(e)
-        else:
-            return tensor_product_simp(e.base) ** e.exp
-    elif isinstance(e, Mul):
-        return tensor_product_simp_Mul(e)
-    elif isinstance(e, Commutator):
-        return Commutator(*[tensor_product_simp(arg) for arg in e.args])
-    elif isinstance(e, AntiCommutator):
-        return AntiCommutator(*[tensor_product_simp(arg) for arg in e.args])
-    else:
-        return e
+    sympy_deprecation_warning(
+        """
+        tensor_product_simp has been deprecated. The transformations
+        performed by this function are now done automatically when
+        tensor products are combined.
+        """,
+        deprecated_since_version="1.14",
+        active_deprecations_target='deprecated-tensorproduct-simp'
+    )
+    return e
+
+
+@TensorProduct._kind_dispatcher.register(_OperatorKind, _OperatorKind)
+def find_op_kind(e1, e2):
+    return OperatorKind
+
+
+@TensorProduct._kind_dispatcher.register(_KetKind, _KetKind)
+def find_ket_kind(e1, e2):
+    return KetKind
+
+
+@TensorProduct._kind_dispatcher.register(_BraKind, _BraKind)
+def find_bra_kind(e1, e2):
+    return BraKind

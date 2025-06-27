@@ -260,11 +260,6 @@ Most code printers generate Python strings, and therefore do not require the
 given library or language compiler as a dependency. However, a few code
 printers generate Python functions instead of strings:
 
-- **Aesara**: The {mod}`sympy.printing.aesaracode` module contains functions
-  to convert SymPy expressions into a functions using the
-  [Aeseara](https://aesara.readthedocs.io/en/latest) (previously Theano)
-  library. The Aesara code generation functions return Aesara graph objects.
-
 - **llvmlite**: The `sympy.printing.llvmjitcode` module supports generating LLVM Jit
   from a SymPy expression. The functions make use of
   [llvmlite](https://llvmlite.readthedocs.io/en/latest/), a Python wrapper
@@ -369,7 +364,7 @@ library code should be imported with `import_module()`.
 
 - **pytest**: [Pytest](https://docs.pytest.org/en/latest/) is not a required dependency
   for the SymPy test suite. SymPy has its own test runner, which can be
-  accessed via the `bin/test` script in the SymPy source directory or the
+  accessed by running `python bin/test` script in the SymPy source directory or the
   {func}`~.test` function.
 
   However, if you prefer to use pytest, you can use it to run the tests

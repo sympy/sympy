@@ -86,11 +86,9 @@ def _choose_factor(factors, x, v, dom=QQ, prec=200, bound=5):
 
 
 def _is_sum_surds(p):
-    args = p.args if p.is_Add else [p]
-    for y in args:
-        if not ((y**2).is_Rational and y.is_extended_real):
-            return False
-    return True
+    return all(f.is_Rational or f.is_Pow and
+        f.base.is_Rational and (2*f.exp).is_Integer and f.is_extended_real
+        for t in Add.make_args(p) for f in Mul.make_args(t))
 
 
 def _separate_sq(p):

@@ -1,3 +1,4 @@
+from __future__ import annotations
 from collections import defaultdict
 from collections.abc import Iterable
 from inspect import isfunction
@@ -110,9 +111,9 @@ class MatrixBase(Printable):
     zero = S.Zero
     one = S.One
 
-    _diff_wrt = True  # type: bool
-    rows = None  # type: int
-    cols = None  # type: int
+    _diff_wrt: bool = True
+    rows: int
+    cols: int
     _simplify = None
 
     @classmethod
@@ -505,7 +506,9 @@ class MatrixBase(Printable):
         """
         if self.rows * self.cols != rows * cols:
             raise ValueError("Invalid reshape parameters %d %d" % (rows, cols))
-        return self._new(rows, cols, lambda i, j: self[i * cols + j])
+        dok = {divmod(i*self.cols + j, cols):
+            v for (i, j), v in self.todok().items()}
+        return self._eval_from_dok(rows, cols, dok)
 
     def row_del(self, row):
         """Delete the specified row."""
@@ -623,21 +626,12 @@ class MatrixBase(Printable):
 
         diag
         """
-        rv = []
         k = as_int(k)
-        r = 0 if k > 0 else -k
-        c = 0 if r else k
-        while True:
-            if r == self.rows or c == self.cols:
-                break
-            rv.append(self[r, c])
-            r += 1
-            c += 1
-        if not rv:
-            raise ValueError(filldedent('''
-            The %s diagonal is out of range [%s, %s]''' % (
-            k, 1 - self.rows, self.cols - 1)))
-        return self._new(1, len(rv), rv)
+        if -self.rows < k < self.cols:
+            rv = [self[r, r+k] for r in range(max(0, -k), min(self.rows, self.cols - k))]
+            return self._new(1, len(rv), rv)
+        else:
+            raise ValueError("Diagonal does not exist")
 
     def row(self, i):
         """Elementary row selector.
@@ -1326,7 +1320,7 @@ class MatrixBase(Printable):
     # routines and has a different *args signature.  Make
     # sure the names don't clash by adding `_matrix_` in name.
     def _eval_is_matrix_hermitian(self, simpfunc):
-        herm = lambda i, j: simpfunc(self[i, j] - self[j, i].conjugate()).is_zero
+        herm = lambda i, j: simpfunc(self[i, j] - self[j, i].adjoint()).is_zero
         return fuzzy_and(herm(i, j) for (i, j), v in self.iter_items())
 
     def _eval_is_zero_matrix(self):
@@ -2027,7 +2021,7 @@ class MatrixBase(Printable):
         return self._eval_iter_items()
 
     def _eval_adjoint(self):
-        return self.transpose().conjugate()
+        return self.transpose().applyfunc(lambda x: x.adjoint())
 
     def _eval_applyfunc(self, f):
         cols = self.cols
@@ -2189,7 +2183,7 @@ class MatrixBase(Printable):
         conjugate: By-element conjugation
         sympy.matrices.matrixbase.MatrixBase.D: Dirac conjugation
         """
-        return self.T.C
+        return self.adjoint()
 
     def permute(self, perm, orientation='rows', direction='forward'):
         r"""Permute the rows or columns of a matrix by the given list of
@@ -2984,7 +2978,7 @@ class MatrixBase(Printable):
 
     @call_highest_priority('__add__')
     def __radd__(self, other):
-        return self + other
+        return self.__add__(other)
 
     @call_highest_priority('__matmul__')
     def __rmatmul__(self, other):
@@ -3733,45 +3727,45 @@ class MatrixBase(Printable):
 
     @classmethod
     def irregular(cls, ntop, *matrices, **kwargs):
-      """Return a matrix filled by the given matrices which
-      are listed in order of appearance from left to right, top to
-      bottom as they first appear in the matrix. They must fill the
-      matrix completely.
+        """Return a matrix filled by the given matrices which
+        are listed in order of appearance from left to right, top to
+        bottom as they first appear in the matrix. They must fill the
+        matrix completely.
 
-      Examples
-      ========
+        Examples
+        ========
 
-      >>> from sympy import ones, Matrix
-      >>> Matrix.irregular(3, ones(2,1), ones(3,3)*2, ones(2,2)*3,
-      ...   ones(1,1)*4, ones(2,2)*5, ones(1,2)*6, ones(1,2)*7)
-      Matrix([
-        [1, 2, 2, 2, 3, 3],
-        [1, 2, 2, 2, 3, 3],
-        [4, 2, 2, 2, 5, 5],
-        [6, 6, 7, 7, 5, 5]])
-      """
-      ntop = as_int(ntop)
-      # make sure we are working with explicit matrices
-      b = [i.as_explicit() if hasattr(i, 'as_explicit') else i
-          for i in matrices]
-      q = list(range(len(b)))
-      dat = [i.rows for i in b]
-      active = [q.pop(0) for _ in range(ntop)]
-      cols = sum(b[i].cols for i in active)
-      rows = []
-      while any(dat):
-          r = []
-          for a, j in enumerate(active):
-              r.extend(b[j][-dat[j], :])
-              dat[j] -= 1
-              if dat[j] == 0 and q:
-                  active[a] = q.pop(0)
-          if len(r) != cols:
-            raise ValueError(filldedent('''
-                Matrices provided do not appear to fill
-                the space completely.'''))
-          rows.append(r)
-      return cls._new(rows)
+        >>> from sympy import ones, Matrix
+        >>> Matrix.irregular(3, ones(2,1), ones(3,3)*2, ones(2,2)*3,
+        ...   ones(1,1)*4, ones(2,2)*5, ones(1,2)*6, ones(1,2)*7)
+        Matrix([
+            [1, 2, 2, 2, 3, 3],
+            [1, 2, 2, 2, 3, 3],
+            [4, 2, 2, 2, 5, 5],
+            [6, 6, 7, 7, 5, 5]])
+        """
+        ntop = as_int(ntop)
+        # make sure we are working with explicit matrices
+        b = [i.as_explicit() if hasattr(i, 'as_explicit') else i
+            for i in matrices]
+        q = list(range(len(b)))
+        dat = [i.rows for i in b]
+        active = [q.pop(0) for _ in range(ntop)]
+        cols = sum(b[i].cols for i in active)
+        rows = []
+        while any(dat):
+            r = []
+            for a, j in enumerate(active):
+                r.extend(b[j][-dat[j], :])
+                dat[j] -= 1
+                if dat[j] == 0 and q:
+                    active[a] = q.pop(0)
+            if len(r) != cols:
+                raise ValueError(filldedent('''
+                    Matrices provided do not appear to fill
+                    the space completely.'''))
+            rows.append(r)
+        return cls._new(rows)
 
     @classmethod
     def _handle_ndarray(cls, arg):
@@ -3895,8 +3889,14 @@ class MatrixBase(Printable):
                     if isinstance(dat, (list, tuple)):
                         dat = [make_explicit_row(row) for row in dat]
 
-                if dat in ([], [[]]):
+                if len(dat) == 0:
                     rows = cols = 0
+                    flat_list = []
+                elif all(raw(i) for i in dat) and len(dat[0]) == 0:
+                    if not all(len(i) == 0 for i in dat):
+                        raise ValueError('mismatched dimensions')
+                    rows = len(dat)
+                    cols = 0
                     flat_list = []
                 elif not any(raw(i) or ismat(i) for i in dat):
                     # a column as a list of values
@@ -4266,7 +4266,7 @@ class MatrixBase(Printable):
         [sin(theta(t)),  cos(theta(t)), 0],
         [            0,              0, 1]])
 
-        We can retrive the angular velocity:
+        We can retrieve the angular velocity:
 
         >>> Omega = R.T * R.diff()
         >>> Omega = trigsimp(Omega)
@@ -5388,7 +5388,7 @@ def a2idx(j, n=None):
     return int(j)
 
 
-class DeferredVector(Symbol, NotIterable):
+class DeferredVector(Symbol, NotIterable): # type: ignore
     """A vector whose components are deferred (e.g. for use with lambdify).
 
     Examples

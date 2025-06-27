@@ -180,7 +180,7 @@ class LLVMJitCode:
 
     def _create_function_base(self):
         """Create function with name and type signature"""
-        global link_names, current_link_suffix
+        global current_link_suffix
         default_link_name = 'jit_func'
         current_link_suffix += 1
         self.link_name = default_link_name + str(current_link_suffix)
@@ -263,7 +263,6 @@ class LLVMJitCode:
         return vals
 
     def _compile_function(self, strmod):
-        global exe_engines
         llmod = llvm.parse_assembly(strmod)
 
         pmb = llvm.create_pass_manager_builder()

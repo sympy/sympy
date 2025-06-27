@@ -1,7 +1,6 @@
 """Sparse rational function fields. """
 
 from __future__ import annotations
-from typing import Any
 from functools import reduce
 
 from operator import add, mul, lt, le, gt, ge
@@ -13,15 +12,16 @@ from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.core.sympify import CantSympify, sympify
 from sympy.functions.elementary.exponential import ExpBase
+from sympy.polys.domains.domain import Domain
 from sympy.polys.domains.domainelement import DomainElement
 from sympy.polys.domains.fractionfield import FractionField
 from sympy.polys.domains.polynomialring import PolynomialRing
 from sympy.polys.constructor import construct_domain
-from sympy.polys.orderings import lex
+from sympy.polys.orderings import lex, MonomialOrder
 from sympy.polys.polyerrors import CoercionFailed
 from sympy.polys.polyoptions import build_options
 from sympy.polys.polyutils import _parallel_dict_from_expr
-from sympy.polys.rings import PolyElement
+from sympy.polys.rings import PolyRing, PolyElement
 from sympy.printing.defaults import DefaultPrinting
 from sympy.utilities import public
 from sympy.utilities.iterables import is_sequence
@@ -99,13 +99,18 @@ def sfield(exprs, *symbols, **options):
     else:
         return (_field, fracs)
 
-_field_cache: dict[Any, Any] = {}
 
 class FracField(DefaultPrinting):
     """Multivariate distributed rational function field. """
 
+    ring: PolyRing
+    gens: tuple[FracElement, ...]
+    symbols: tuple[Expr, ...]
+    ngens: int
+    domain: Domain
+    order: MonomialOrder
+
     def __new__(cls, symbols, domain, order=lex):
-        from sympy.polys.rings import PolyRing
         ring = PolyRing(symbols, domain, order)
         symbols = ring.symbols
         ngens = ring.ngens
@@ -113,32 +118,29 @@ class FracField(DefaultPrinting):
         order = ring.order
 
         _hash_tuple = (cls.__name__, symbols, ngens, domain, order)
-        obj = _field_cache.get(_hash_tuple)
 
-        if obj is None:
-            obj = object.__new__(cls)
-            obj._hash_tuple = _hash_tuple
-            obj._hash = hash(_hash_tuple)
-            obj.ring = ring
-            obj.dtype = type("FracElement", (FracElement,), {"field": obj})
-            obj.symbols = symbols
-            obj.ngens = ngens
-            obj.domain = domain
-            obj.order = order
+        obj = object.__new__(cls)
+        obj._hash_tuple = _hash_tuple
+        obj._hash = hash(_hash_tuple)
+        obj.ring = ring
+        obj.symbols = symbols
+        obj.ngens = ngens
+        obj.domain = domain
+        obj.order = order
 
-            obj.zero = obj.dtype(ring.zero)
-            obj.one = obj.dtype(ring.one)
+        obj.dtype = FracElement(obj, ring.zero).raw_new
 
-            obj.gens = obj._gens()
+        obj.zero = obj.dtype(ring.zero)
+        obj.one = obj.dtype(ring.one)
 
-            for symbol, generator in zip(obj.symbols, obj.gens):
-                if isinstance(symbol, Symbol):
-                    name = symbol.name
+        obj.gens = obj._gens()
 
-                    if not hasattr(obj, name):
-                        setattr(obj, name, generator)
+        for symbol, generator in zip(obj.symbols, obj.gens):
+            if isinstance(symbol, Symbol):
+                name = symbol.name
 
-            _field_cache[_hash_tuple] = obj
+                if not hasattr(obj, name):
+                    setattr(obj, name, generator)
 
         return obj
 
@@ -153,7 +155,7 @@ class FracField(DefaultPrinting):
         return self._hash
 
     def index(self, gen):
-        if isinstance(gen, self.dtype):
+        if self.is_element(gen):
             return self.ring.index(gen.to_poly())
         else:
             raise ValueError("expected a %s, got %s instead" % (self.dtype,gen))
@@ -166,8 +168,13 @@ class FracField(DefaultPrinting):
     def __ne__(self, other):
         return not self == other
 
+    def is_element(self, element):
+        """True if ``element`` is an element of this field. False otherwise. """
+        return isinstance(element, FracElement) and element.field == self
+
     def raw_new(self, numer, denom=None):
         return self.dtype(numer, denom)
+
     def new(self, numer, denom=None):
         if denom is None: denom = self.ring.one
         numer, denom = numer.cancel(denom)
@@ -280,23 +287,24 @@ class FracField(DefaultPrinting):
         return FractionField(self)
 
     def to_ring(self):
-        from sympy.polys.rings import PolyRing
         return PolyRing(self.symbols, self.domain, self.order)
 
 class FracElement(DomainElement, DefaultPrinting, CantSympify):
     """Element of multivariate distributed rational function field. """
 
-    def __init__(self, numer, denom=None):
+    def __init__(self, field, numer, denom=None):
         if denom is None:
-            denom = self.field.ring.one
+            denom = field.ring.one
         elif not denom:
             raise ZeroDivisionError("zero denominator")
 
+        self.field = field
         self.numer = numer
         self.denom = denom
 
-    def raw_new(f, numer, denom):
-        return f.__class__(numer, denom)
+    def raw_new(f, numer, denom=None):
+        return f.__class__(f.field, numer, denom)
+
     def new(f, numer, denom):
         return f.raw_new(*numer.cancel(denom))
 
@@ -350,7 +358,7 @@ class FracElement(DomainElement, DefaultPrinting, CantSympify):
         return (self.denom.sort_key(), self.numer.sort_key())
 
     def _cmp(f1, f2, op):
-        if isinstance(f2, f1.field.dtype):
+        if f1.field.is_element(f2):
             return op(f1.sort_key(), f2.sort_key())
         else:
             return NotImplemented
@@ -400,12 +408,12 @@ class FracElement(DomainElement, DefaultPrinting, CantSympify):
             return f
         elif not f:
             return g
-        elif isinstance(g, field.dtype):
+        elif field.is_element(g):
             if f.denom == g.denom:
                 return f.new(f.numer + g.numer, f.denom)
             else:
                 return f.new(f.numer*g.denom + f.denom*g.numer, f.denom*g.denom)
-        elif isinstance(g, field.ring.dtype):
+        elif field.ring.is_element(g):
             return f.new(f.numer + f.denom*g, f.denom)
         else:
             if isinstance(g, FracElement):
@@ -424,7 +432,7 @@ class FracElement(DomainElement, DefaultPrinting, CantSympify):
         return f.__radd__(g)
 
     def __radd__(f, c):
-        if isinstance(c, f.field.ring.dtype):
+        if f.field.ring.is_element(c):
             return f.new(f.numer + f.denom*c, f.denom)
 
         op, g_numer, g_denom = f._extract_ground(c)
@@ -444,12 +452,12 @@ class FracElement(DomainElement, DefaultPrinting, CantSympify):
             return f
         elif not f:
             return -g
-        elif isinstance(g, field.dtype):
+        elif field.is_element(g):
             if f.denom == g.denom:
                 return f.new(f.numer - g.numer, f.denom)
             else:
                 return f.new(f.numer*g.denom - f.denom*g.numer, f.denom*g.denom)
-        elif isinstance(g, field.ring.dtype):
+        elif field.ring.is_element(g):
             return f.new(f.numer - f.denom*g, f.denom)
         else:
             if isinstance(g, FracElement):
@@ -475,7 +483,7 @@ class FracElement(DomainElement, DefaultPrinting, CantSympify):
             return f.new(f.numer*g_denom - f.denom*g_numer, f.denom*g_denom)
 
     def __rsub__(f, c):
-        if isinstance(c, f.field.ring.dtype):
+        if f.field.ring.is_element(c):
             return f.new(-f.numer + f.denom*c, f.denom)
 
         op, g_numer, g_denom = f._extract_ground(c)
@@ -493,9 +501,9 @@ class FracElement(DomainElement, DefaultPrinting, CantSympify):
 
         if not f or not g:
             return field.zero
-        elif isinstance(g, field.dtype):
+        elif field.is_element(g):
             return f.new(f.numer*g.numer, f.denom*g.denom)
-        elif isinstance(g, field.ring.dtype):
+        elif field.ring.is_element(g):
             return f.new(f.numer*g, f.denom)
         else:
             if isinstance(g, FracElement):
@@ -514,7 +522,7 @@ class FracElement(DomainElement, DefaultPrinting, CantSympify):
         return f.__rmul__(g)
 
     def __rmul__(f, c):
-        if isinstance(c, f.field.ring.dtype):
+        if f.field.ring.is_element(c):
             return f.new(f.numer*c, f.denom)
 
         op, g_numer, g_denom = f._extract_ground(c)
@@ -532,9 +540,9 @@ class FracElement(DomainElement, DefaultPrinting, CantSympify):
 
         if not g:
             raise ZeroDivisionError
-        elif isinstance(g, field.dtype):
+        elif field.is_element(g):
             return f.new(f.numer*g.denom, f.denom*g.numer)
-        elif isinstance(g, field.ring.dtype):
+        elif field.ring.is_element(g):
             return f.new(f.numer, f.denom*g)
         else:
             if isinstance(g, FracElement):
@@ -562,7 +570,7 @@ class FracElement(DomainElement, DefaultPrinting, CantSympify):
     def __rtruediv__(f, c):
         if not f:
             raise ZeroDivisionError
-        elif isinstance(c, f.field.ring.dtype):
+        elif f.field.ring.is_element(c):
             return f.new(f.denom*c, f.numer)
 
         op, g_numer, g_denom = f._extract_ground(c)

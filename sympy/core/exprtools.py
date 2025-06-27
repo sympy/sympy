@@ -1,5 +1,7 @@
 """Tools for manipulating of large commutative expressions. """
 
+from __future__ import annotations
+
 from .add import Add
 from .mul import Mul, _keep_coeff
 from .power import Pow
@@ -19,7 +21,6 @@ from sympy.utilities.iterables import (common_prefix, common_suffix,
         variations, iterable, is_sequence)
 
 from collections import defaultdict
-from typing import Tuple as tTuple
 
 
 _eps = Dummy(positive=True)
@@ -214,7 +215,7 @@ def _monotonic_sign(self):
             return rv.subs(_eps, 0)
 
 
-def decompose_power(expr: Expr) -> tTuple[Expr, int]:
+def decompose_power(expr: Expr) -> tuple[Expr, int]:
     """
     Decompose power into symbolic base and integer exponent.
 
@@ -258,7 +259,7 @@ def decompose_power(expr: Expr) -> tTuple[Expr, int]:
     return base, e
 
 
-def decompose_power_rat(expr: Expr) -> tTuple[Expr, Rational]:
+def decompose_power_rat(expr: Expr) -> tuple[Expr, Rational]:
     """
     Decompose power into symbolic base and rational exponent;
     if the exponent is not a Rational, then separate only the
@@ -277,8 +278,11 @@ def decompose_power_rat(expr: Expr) -> tTuple[Expr, Rational]:
     (exp(x/2), -3)
 
     """
-    _ = base, exp = expr.as_base_exp()
-    return _ if exp.is_Rational else decompose_power(expr)
+    base, exp = expr.as_base_exp()
+    if not exp.is_Rational:
+        base, exp_i = decompose_power(expr)
+        exp = Integer(exp_i)
+    return base, exp # type: ignore
 
 
 class Factors:
@@ -1153,7 +1157,7 @@ def _factor_sum_int(expr, **kwargs):
         return i * expr.func(d, *limits)
 
 
-def factor_terms(expr, radical=False, clear=False, fraction=False, sign=True):
+def factor_terms(expr: Expr | complex, radical=False, clear=False, fraction=False, sign=True) -> Expr:
     """Remove common factors from terms in all arguments without
     changing the underlying structure of the expr. No expansion or
     simplification (and no processing of non-commutatives) is performed.
@@ -1263,8 +1267,8 @@ def factor_terms(expr, radical=False, clear=False, fraction=False, sign=True):
                 *[do(a) for a in p.args])
         rv = _keep_coeff(cont, p, clear=clear, sign=sign)
         return rv
-    expr = sympify(expr)
-    return do(expr)
+    expr2 = sympify(expr)
+    return do(expr2)
 
 
 def _mask_nc(eq, name=None):
@@ -1359,7 +1363,7 @@ def _mask_nc(eq, name=None):
     nc_obj = set()
     nc_syms = set()
     pot = preorder_traversal(expr, keys=default_sort_key)
-    for i, a in enumerate(pot):
+    for a in pot:
         if any(a == r[0] for r in rep):
             pot.skip()
         elif not a.is_commutative:

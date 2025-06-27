@@ -8,6 +8,8 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import (cos, sin)
 from sympy.matrices.dense import Matrix
 from sympy.abc import alpha, beta, gamma, j, m
+from sympy.simplify import simplify
+
 from sympy.physics.quantum import hbar, represent, Commutator, InnerProduct
 from sympy.physics.quantum.qapply import qapply
 from sympy.physics.quantum.tensorproduct import TensorProduct
@@ -26,6 +28,16 @@ from sympy.testing.pytest import raises, slow
 j1, j2, j3, j4, m1, m2, m3, m4 = symbols('j1:5 m1:5')
 j12, j13, j24, j34, j123, j134, mi, mi1, mp = symbols(
     'j12 j13 j24 j34 j123 j134 mi mi1 mp')
+
+
+def assert_simplify_expand(e1, e2):
+    """Helper for simplifying and expanding results.
+
+    This is needed to help us test complex expressions whose form
+    might change in subtle ways as the rest of sympy evolves.
+    """
+    assert simplify(e1.expand(tensorproduct=True)) == \
+        simplify(e2.expand(tensorproduct=True))
 
 
 def test_represent_spin_operators():
@@ -3738,18 +3750,22 @@ def test_jplus():
         hbar*sqrt(j**2 + j - m**2 - m)*JzKetCoupled(j, m + 1, (j1, j2))
     # Uncoupled operators, uncoupled states
     # Numerical
-    assert qapply(TensorProduct(Jplus, 1)*TensorProduct(JxKet(1, 1), JxKet(1, -1))) == \
-        -hbar*sqrt(2)*TensorProduct(JxKet(1, 0), JxKet(1, -1))/2 + \
+    e1 = qapply(TensorProduct(Jplus, 1)*TensorProduct(JxKet(1, 1), JxKet(1, -1)))
+    e2 = -hbar*sqrt(2)*TensorProduct(JxKet(1, 0), JxKet(1, -1))/2 + \
         hbar*TensorProduct(JxKet(1, 1), JxKet(1, -1))
-    assert qapply(TensorProduct(1, Jplus)*TensorProduct(JxKet(1, 1), JxKet(1, -1))) == \
-        -hbar*TensorProduct(JxKet(1, 1), JxKet(1, -1)) + \
+    assert_simplify_expand(e1, e2)
+    e1 = qapply(TensorProduct(1, Jplus)*TensorProduct(JxKet(1, 1), JxKet(1, -1)))
+    e2 = -hbar*TensorProduct(JxKet(1, 1), JxKet(1, -1)) + \
         hbar*sqrt(2)*TensorProduct(JxKet(1, 1), JxKet(1, 0))/2
-    assert qapply(TensorProduct(Jplus, 1)*TensorProduct(JyKet(1, 1), JyKet(1, -1))) == \
-        hbar*sqrt(2)*TensorProduct(JyKet(1, 0), JyKet(1, -1))/2 + \
+    assert_simplify_expand(e1, e2)
+    e1 = qapply(TensorProduct(Jplus, 1)*TensorProduct(JyKet(1, 1), JyKet(1, -1)))
+    e2 = hbar*sqrt(2)*TensorProduct(JyKet(1, 0), JyKet(1, -1))/2 + \
         hbar*I*TensorProduct(JyKet(1, 1), JyKet(1, -1))
-    assert qapply(TensorProduct(1, Jplus)*TensorProduct(JyKet(1, 1), JyKet(1, -1))) == \
-        -hbar*I*TensorProduct(JyKet(1, 1), JyKet(1, -1)) + \
+    assert_simplify_expand(e1, e2)
+    e1 = qapply(TensorProduct(1, Jplus)*TensorProduct(JyKet(1, 1), JyKet(1, -1)))
+    e2 = -hbar*I*TensorProduct(JyKet(1, 1), JyKet(1, -1)) + \
         hbar*sqrt(2)*TensorProduct(JyKet(1, 1), JyKet(1, 0))/2
+    assert_simplify_expand(e1, e2)
     assert qapply(
         TensorProduct(Jplus, 1)*TensorProduct(JzKet(1, 1), JzKet(1, -1))) == 0
     assert qapply(TensorProduct(1, Jplus)*TensorProduct(JzKet(1, 1), JzKet(1, -1))) == \
@@ -3826,18 +3842,22 @@ def test_jminus():
         hbar*sqrt(j**2 + j - m**2 + m)*JzKetCoupled(j, m - 1, (j1, j2))
     # Uncoupled operators, uncoupled states
     # Numerical
-    assert qapply(TensorProduct(Jminus, 1)*TensorProduct(JxKet(1, 1), JxKet(1, -1))) == \
-        hbar*sqrt(2)*TensorProduct(JxKet(1, 0), JxKet(1, -1))/2 + \
+    e1 = qapply(TensorProduct(Jminus, 1)*TensorProduct(JxKet(1, 1), JxKet(1, -1)))
+    e2 = hbar*sqrt(2)*TensorProduct(JxKet(1, 0), JxKet(1, -1))/2 + \
         hbar*TensorProduct(JxKet(1, 1), JxKet(1, -1))
-    assert qapply(TensorProduct(1, Jminus)*TensorProduct(JxKet(1, 1), JxKet(1, -1))) == \
-        -hbar*TensorProduct(JxKet(1, 1), JxKet(1, -1)) - \
+    assert_simplify_expand(e1, e2)
+    e1 = qapply(TensorProduct(1, Jminus)*TensorProduct(JxKet(1, 1), JxKet(1, -1)))
+    e2 = -hbar*TensorProduct(JxKet(1, 1), JxKet(1, -1)) - \
         hbar*sqrt(2)*TensorProduct(JxKet(1, 1), JxKet(1, 0))/2
-    assert qapply(TensorProduct(Jminus, 1)*TensorProduct(JyKet(1, 1), JyKet(1, -1))) == \
-        hbar*sqrt(2)*TensorProduct(JyKet(1, 0), JyKet(1, -1))/2 - \
+    assert_simplify_expand(e1, e2)
+    e1 = qapply(TensorProduct(Jminus, 1)*TensorProduct(JyKet(1, 1), JyKet(1, -1)))
+    e2 = hbar*sqrt(2)*TensorProduct(JyKet(1, 0), JyKet(1, -1))/2 - \
         hbar*I*TensorProduct(JyKet(1, 1), JyKet(1, -1))
-    assert qapply(TensorProduct(1, Jminus)*TensorProduct(JyKet(1, 1), JyKet(1, -1))) == \
-        hbar*I*TensorProduct(JyKet(1, 1), JyKet(1, -1)) + \
+    assert_simplify_expand(e1, e2)
+    e1 = qapply(TensorProduct(1, Jminus)*TensorProduct(JyKet(1, 1), JyKet(1, -1)))
+    e2 = hbar*I*TensorProduct(JyKet(1, 1), JyKet(1, -1)) + \
         hbar*sqrt(2)*TensorProduct(JyKet(1, 1), JyKet(1, 0))/2
+    assert_simplify_expand(e1, e2)
     assert qapply(TensorProduct(Jminus, 1)*TensorProduct(JzKet(1, 1), JzKet(1, -1))) == \
         sqrt(2)*hbar*TensorProduct(JzKet(1, 0), JzKet(1, -1))
     assert qapply(TensorProduct(
@@ -3915,24 +3935,30 @@ def test_j2():
     assert qapply(TensorProduct(1, J2)*TensorProduct(JzKet(1, 1), JzKet(1, -1))) == \
         2*hbar**2*TensorProduct(JzKet(1, 1), JzKet(1, -1))
     # Symbolic
-    assert qapply(TensorProduct(J2, 1)*TensorProduct(JxKet(j1, m1), JxKet(j2, m2))) == \
-        hbar**2*j1**2*TensorProduct(JxKet(j1, m1), JxKet(j2, m2)) + \
+    e1 = qapply(TensorProduct(J2, 1)*TensorProduct(JxKet(j1, m1), JxKet(j2, m2)))
+    e2 = hbar**2*j1**2*TensorProduct(JxKet(j1, m1), JxKet(j2, m2)) + \
         hbar**2*j1*TensorProduct(JxKet(j1, m1), JxKet(j2, m2))
-    assert qapply(TensorProduct(1, J2)*TensorProduct(JxKet(j1, m1), JxKet(j2, m2))) == \
-        hbar**2*j2**2*TensorProduct(JxKet(j1, m1), JxKet(j2, m2)) + \
+    assert_simplify_expand(e1, e2)
+    e1 = qapply(TensorProduct(1, J2)*TensorProduct(JxKet(j1, m1), JxKet(j2, m2)))
+    e2 = hbar**2*j2**2*TensorProduct(JxKet(j1, m1), JxKet(j2, m2)) + \
         hbar**2*j2*TensorProduct(JxKet(j1, m1), JxKet(j2, m2))
-    assert qapply(TensorProduct(J2, 1)*TensorProduct(JyKet(j1, m1), JyKet(j2, m2))) == \
-        hbar**2*j1**2*TensorProduct(JyKet(j1, m1), JyKet(j2, m2)) + \
+    assert_simplify_expand(e1, e2)
+    e1 = qapply(TensorProduct(J2, 1)*TensorProduct(JyKet(j1, m1), JyKet(j2, m2)))
+    e2 = hbar**2*j1**2*TensorProduct(JyKet(j1, m1), JyKet(j2, m2)) + \
         hbar**2*j1*TensorProduct(JyKet(j1, m1), JyKet(j2, m2))
-    assert qapply(TensorProduct(1, J2)*TensorProduct(JyKet(j1, m1), JyKet(j2, m2))) == \
-        hbar**2*j2**2*TensorProduct(JyKet(j1, m1), JyKet(j2, m2)) + \
+    assert_simplify_expand(e1, e2)
+    e1 = qapply(TensorProduct(1, J2)*TensorProduct(JyKet(j1, m1), JyKet(j2, m2)))
+    e2 = hbar**2*j2**2*TensorProduct(JyKet(j1, m1), JyKet(j2, m2)) + \
         hbar**2*j2*TensorProduct(JyKet(j1, m1), JyKet(j2, m2))
-    assert qapply(TensorProduct(J2, 1)*TensorProduct(JzKet(j1, m1), JzKet(j2, m2))) == \
-        hbar**2*j1**2*TensorProduct(JzKet(j1, m1), JzKet(j2, m2)) + \
+    assert_simplify_expand(e1, e2)
+    e1 = qapply(TensorProduct(J2, 1)*TensorProduct(JzKet(j1, m1), JzKet(j2, m2)))
+    e2 = hbar**2*j1**2*TensorProduct(JzKet(j1, m1), JzKet(j2, m2)) + \
         hbar**2*j1*TensorProduct(JzKet(j1, m1), JzKet(j2, m2))
-    assert qapply(TensorProduct(1, J2)*TensorProduct(JzKet(j1, m1), JzKet(j2, m2))) == \
-        hbar**2*j2**2*TensorProduct(JzKet(j1, m1), JzKet(j2, m2)) + \
+    assert_simplify_expand(e1, e2)
+    e1 = qapply(TensorProduct(1, J2)*TensorProduct(JzKet(j1, m1), JzKet(j2, m2)))
+    e2 = hbar**2*j2**2*TensorProduct(JzKet(j1, m1), JzKet(j2, m2)) + \
         hbar**2*j2*TensorProduct(JzKet(j1, m1), JzKet(j2, m2))
+    assert_simplify_expand(e1, e2)
 
 
 def test_jx():
@@ -4016,14 +4042,16 @@ def test_jx():
         TensorProduct(Sum(hbar*mi*WignerD(j1, mi, m1, 0, 0, pi/2) * Sum(WignerD(j1, mi1, mi, pi*Rational(3, 2), 0, 0)*JyKet(j1, mi1), (mi1, -j1, j1)), (mi, -j1, j1)), JyKet(j2, m2))
     assert qapply(TensorProduct(1, Jx)*TensorProduct(JyKet(j1, m1), JyKet(j2, m2))) == \
         TensorProduct(JyKet(j1, m1), Sum(hbar*mi*WignerD(j2, mi, m2, 0, 0, pi/2) * Sum(WignerD(j2, mi1, mi, pi*Rational(3, 2), 0, 0)*JyKet(j2, mi1), (mi1, -j2, j2)), (mi, -j2, j2)))
-    assert qapply(TensorProduct(Jx, 1)*TensorProduct(JzKet(j1, m1), JzKet(j2, m2))) == \
-        hbar*sqrt(j1**2 + j1 - m1**2 - m1)*TensorProduct(JzKet(j1, m1 + 1), JzKet(j2, m2))/2 + \
+    e1 = qapply(TensorProduct(Jx, 1)*TensorProduct(JzKet(j1, m1), JzKet(j2, m2)))
+    e2 = hbar*sqrt(j1**2 + j1 - m1**2 - m1)*TensorProduct(JzKet(j1, m1 + 1), JzKet(j2, m2))/2 + \
         hbar*sqrt(
             j1**2 + j1 - m1**2 + m1)*TensorProduct(JzKet(j1, m1 - 1), JzKet(j2, m2))/2
-    assert qapply(TensorProduct(1, Jx)*TensorProduct(JzKet(j1, m1), JzKet(j2, m2))) == \
-        hbar*sqrt(j2**2 + j2 - m2**2 - m2)*TensorProduct(JzKet(j1, m1), JzKet(j2, m2 + 1))/2 + \
+    assert_simplify_expand(e1, e2)
+    e1 = qapply(TensorProduct(1, Jx)*TensorProduct(JzKet(j1, m1), JzKet(j2, m2)))
+    e2 = hbar*sqrt(j2**2 + j2 - m2**2 - m2)*TensorProduct(JzKet(j1, m1), JzKet(j2, m2 + 1))/2 + \
         hbar*sqrt(
             j2**2 + j2 - m2**2 + m2)*TensorProduct(JzKet(j1, m1), JzKet(j2, m2 - 1))/2
+    assert_simplify_expand(e1, e2)
 
 
 def test_jy():
@@ -4107,14 +4135,16 @@ def test_jy():
         hbar*m1*TensorProduct(JyKet(j1, m1), JyKet(j2, m2))
     assert qapply(TensorProduct(1, Jy)*TensorProduct(JyKet(j1, m1), JyKet(j2, m2))) == \
         hbar*m2*TensorProduct(JyKet(j1, m1), JyKet(j2, m2))
-    assert qapply(TensorProduct(Jy, 1)*TensorProduct(JzKet(j1, m1), JzKet(j2, m2))) == \
-        -hbar*I*sqrt(j1**2 + j1 - m1**2 - m1)*TensorProduct(JzKet(j1, m1 + 1), JzKet(j2, m2))/2 + \
+    e1 = qapply(TensorProduct(Jy, 1)*TensorProduct(JzKet(j1, m1), JzKet(j2, m2)))
+    e2 = -hbar*I*sqrt(j1**2 + j1 - m1**2 - m1)*TensorProduct(JzKet(j1, m1 + 1), JzKet(j2, m2))/2 + \
         hbar*I*sqrt(
             j1**2 + j1 - m1**2 + m1)*TensorProduct(JzKet(j1, m1 - 1), JzKet(j2, m2))/2
-    assert qapply(TensorProduct(1, Jy)*TensorProduct(JzKet(j1, m1), JzKet(j2, m2))) == \
-        -hbar*I*sqrt(j2**2 + j2 - m2**2 - m2)*TensorProduct(JzKet(j1, m1), JzKet(j2, m2 + 1))/2 + \
+    assert_simplify_expand(e1, e2)
+    e1 = qapply(TensorProduct(1, Jy)*TensorProduct(JzKet(j1, m1), JzKet(j2, m2)))
+    e2 = -hbar*I*sqrt(j2**2 + j2 - m2**2 - m2)*TensorProduct(JzKet(j1, m1), JzKet(j2, m2 + 1))/2 + \
         hbar*I*sqrt(
             j2**2 + j2 - m2**2 + m2)*TensorProduct(JzKet(j1, m1), JzKet(j2, m2 - 1))/2
+    assert_simplify_expand(e1, e2)
 
 
 def test_jz():

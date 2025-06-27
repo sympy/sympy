@@ -1813,8 +1813,8 @@ def test_issue_15810():
 def test_issue_21024():
     x = Symbol('x', real=True, nonzero=True)
     f = log(x)*log(4*x) + log(3*x + exp(2))
-    F = x*log(x)**2 + x*(1 - 2*log(2)) + (-2*x + 2*x*log(2))*log(x) + \
-        (x + exp(2)/6)*log(3*x + exp(2)) + exp(2)*log(3*x + exp(2))/6
+    F = x*log(x)**2 + x*log(3*x + exp(2)) + x*(1 - 2*log(2)) + \
+        (-2*x + 2*x*log(2))*log(x) + exp(2)*log(3*x + exp(2))/3
     assert F == integrate(f, x)
 
     f = (x + exp(3))/x**2
@@ -2139,3 +2139,49 @@ def test_old_issues():
     # https://github.com/sympy/sympy/issues/6278
     I3 = integrate(1/(cos(x)+2),(x,0,2*pi))
     assert I3 == 2*sqrt(3)*pi/3
+
+
+def test_integral_issue_26566():
+    # Define the symbols
+    x = symbols('x', real=True)
+    a = symbols('a', real=True, positive=True)
+
+    # Define the integral expression
+    integral_expr = sin(a * (x + pi))**2
+    symbolic_result = integrate(integral_expr, (x, -pi, -pi/2))
+
+    # Known correct result
+    correct_result = pi / 4
+
+    # Substitute a specific value for 'a' to evaluate both results
+    a_value = 1
+    numeric_symbolic_result = symbolic_result.subs(a, a_value).evalf()
+    numeric_correct_result = correct_result.evalf()
+
+    # Assert that the symbolic result matches the correct value
+    assert simplify(numeric_symbolic_result - numeric_correct_result) == 0
+
+
+def test_definite_integral_with_floats_issue_27231():
+    # Define the symbol and the integral expression
+    x = symbols('x', real=True)
+    integral_expr = sqrt(1 - 0.5625 * (x + 0.333333333333333) ** 2)
+
+    # Perform the definite integral with the known limits
+    result_symbolic = integrate(integral_expr, (x, -1, 1))
+    result_numeric = result_symbolic.evalf()
+
+    # Expected result with higher precision
+    expected_result = sqrt(3) / 6 + 4 * pi / 9
+
+    # Verify that the result is approximately equal within a larger tolerance
+    assert abs(result_numeric - expected_result.evalf()) < 1e-8
+
+
+def test_issue_27374():
+    #https://github.com/sympy/sympy/issues/27374
+    r = sqrt(x**2 + z**2)
+    u = erf(a*r/sqrt(2))/r
+    Ec = diff(u, z, z).subs([(x, sqrt(b*b-z*z))])
+    expected_result = -2*sqrt(2)*b*a**3*exp(-b**2*a**2/2)/(3*sqrt(pi))
+    assert simplify(integrate(Ec, (z, -b, b))) == expected_result

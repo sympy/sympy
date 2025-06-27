@@ -1,0 +1,183 @@
+# Adapted from NumPy https://github.com/numpy/numpy/pull/25894
+# https://github.com/numpy/numpy/blob/d2d2c25fa81b47810f5cbd85ea6485eb3a3ffec3/.github/workflows/emscripten.yml
+#
+
+name: Pyodide
+
+on: [push, pull_request]
+
+env:
+  FORCE_COLOR: 3
+  DURATIONS_CACHE_NAME: sympy_pyodide_test_durations_gha_cache
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read # to fetch code (actions/checkout)
+
+jobs:
+  pyodide-test:
+    name: Test group ${{ matrix.group }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        splits: [4] # keep in sync with number of groups below
+        group: [1, 2, 3, 4]
+    env:
+      PYODIDE_VERSION: 0.27.2
+      # PYTHON_VERSION and EMSCRIPTEN_VERSION are determined by PYODIDE_VERSION.
+      # The appropriate versions can be found in the Pyodide repodata.json
+      # "info" field, or in Makefile.envs:
+      # https://github.com/pyodide/pyodide/blob/d85f9cda735e47f16b3f032832fab73bd1c12a30/Makefile.envs#L1-L3
+      PYTHON_VERSION: 3.12 # any Python 3.12.x version works
+      EMSCRIPTEN_VERSION: 3.1.58
+      NODE_VERSION: 20
+    steps:
+      - name: Checkout SymPy
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@0a5c61591373683505ea898e09a3ea4f39ef2b9c # v5.0.0
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Set up Emscripten toolchain
+        uses: mymindstorm/setup-emsdk@6ab9eb1bda2574c4ddb79809fc9247783eaf9021 # v14
+        with:
+          version: ${{ env.EMSCRIPTEN_VERSION }}
+          actions-cache-folder: emsdk-cache
+
+      # XXX: Remove this later...
+      # https://github.com/sympy/sympy/issues/27883
+      - name: Pin the wheel package
+        run: pip install 'wheel != 0.46.0'
+
+      - name: Install pyodide-build
+        run: pip install pyodide-build
+
+      - name: Set up Node.js
+        uses: actions/setup-node@cdca7365b2dadb8aad0a33bc7601856ffabcc48e # v4.3.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Retrieve previous test durations from GHA cache
+        id: restore-test-durations
+        uses: actions/cache/restore@v4
+        with:
+          path: test_durations_merged.json
+          key: ${{ env.DURATIONS_CACHE_NAME }}
+
+      - name: Rename test duration artifacts
+        if: steps.restore-test-durations.outputs.cache-hit == 'true'
+        run: mv test_durations_merged.json .test_durations
+
+      - name: Set up Pyodide virtual environment and test SymPy for Pyodide
+        run: |
+          # Set up Pyodide virtual environment
+          pyodide xbuildenv install ${{ env.PYODIDE_VERSION }}
+          pyodide venv .venv-pyodide
+
+          # Activate the virtual environment and install SymPy
+          source .venv-pyodide/bin/activate
+          pip install .
+
+          # Install dependencies and optional test dependencies
+          pip install pytest pytest-split hypothesis
+          pip install matplotlib numpy scipy
+
+          # Trigger test suite (slow and tooslow tests are skipped by default)
+          pytest -svra --pyargs sympy \
+          --durations 20 \
+          --splits ${{ matrix.splits }} --group ${{ matrix.group }} \
+          --store-durations
+
+      - name: Move and rename test duration artifacts
+        if: always()
+        run: mv .test_durations test_durations_group_${{ matrix.group }}.json
+
+      - name: Upload test duration artifacts
+        if: always()
+        uses: actions/upload-artifact@v4.4.3
+        with:
+          name: pytest_durations_${{ matrix.group }}
+          path: test_durations_group_${{ matrix.group }}.json
+          if-no-files-found: error
+          # dotfiles are hidden by default, so we rename them above
+          # post actions/upload-artifact@v4.4.0 to make them visible
+          # and to avoid needing the `include-hidden-files` option
+
+  # We delete the previous cache to avoid storing outdated test durations.
+  # This is currently not possible to do with the actions/cache action:
+  # https://github.com/actions/toolkit/issues/505
+  # https://github.com/actions/cache/issues/342
+  #
+  # so we use the gh cache CLI to get around this limitation and delete
+  # any previous test durations before saving new ones. This exists
+  # as a separate job in order to scope run permissions differently
+  # from other jobs for security reasons.
+  delete-test-durations-caches:
+    name: Delete previous test duration caches
+    runs-on: ubuntu-latest
+    needs: [pyodide-test]
+    permissions:
+      contents: read
+      actions: write # to allow deletion of caches
+    if: always() && github.event_name == 'pull_request'
+    steps:
+      # Don't fail if the cache doesn't exist or if there are
+      # insufficient permissions to delete it. This is a best-effort
+      # attempt to delete the cache.
+      #
+      # This will fail for PRs from forks opened by contributors
+      # who do not have write permissions to the repository, but PRs
+      # via branches from the main repository and PRs from users
+      # with write access to the repository will succeed.
+      - name: Delete previous cached test durations
+        run: |
+          gh extension install actions/gh-actions-cache
+          gh actions-cache delete ${{ env.DURATIONS_CACHE_NAME }} \
+          -R ${{ github.repository }} \
+          -B ${{ github.head_ref }} \
+          --confirm || true
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+  # We will collect the test durations from all groups in this job
+  # and merge them into a single file. Once all groups have finished,
+  # we will save the merged file as a persistent cache that GHA will
+  # retrieve in the next run.
+  handle-test-durations-files:
+    name: Merge and cache new test durations
+    runs-on: ubuntu-latest
+    needs: [delete-test-durations-caches]
+    if: always()
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4.1.8
+        with:
+          path: all_test_durations
+          merge-multiple: true
+
+      - name: Merge test duration artifacts
+        shell: bash
+        run: |
+          # Move all test duration files to the root directory
+          mv all_test_durations/*.json .
+          # All four files are JSON. We use JQ to merge them into one JSON file.
+          jq -s 'add' test_durations_group_*.json > test_durations_merged.json
+
+      - name: Save test durations as an artifact for debugging
+        uses: actions/upload-artifact@v4.4.3
+        with:
+          name: test_durations_merged
+          path: test_durations_merged.json
+          if-no-files-found: error
+
+      - name: Cache test durations file for subsequent runs
+        uses: actions/cache/save@v4
+        with:
+          path: test_durations_merged.json
+          key: ${{ env.DURATIONS_CACHE_NAME }}

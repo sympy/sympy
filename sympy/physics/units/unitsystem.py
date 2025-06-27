@@ -1,8 +1,7 @@
 """
 Unit system for physical quantities; include definition of constants.
 """
-
-from typing import Dict as tDict, Set as tSet
+from __future__ import annotations
 
 from sympy.core.add import Add
 from sympy.core.function import (Derivative, Function)
@@ -25,9 +24,9 @@ class UnitSystem(_QuantityMapper):
     It is much better if all base units have a symbol.
     """
 
-    _unit_systems = {}  # type: tDict[str, UnitSystem]
+    _unit_systems: dict[str, UnitSystem] = {}
 
-    def __init__(self, base_units, units=(), name="", descr="", dimension_system=None, derived_units: tDict[Dimension, Quantity]={}):
+    def __init__(self, base_units, units=(), name="", descr="", dimension_system=None, derived_units: dict[Dimension, Quantity]={}):
 
         UnitSystem._unit_systems[name] = self
 
@@ -59,7 +58,7 @@ class UnitSystem(_QuantityMapper):
     def __repr__(self):
         return '<UnitSystem: %s>' % repr(self._base_units)
 
-    def extend(self, base, units=(), name="", description="", dimension_system=None, derived_units: tDict[Dimension, Quantity]={}):
+    def extend(self, base, units=(), name="", description="", dimension_system=None, derived_units: dict[Dimension, Quantity]={}):
         """Extend the current system into a new one.
 
         Take the base and normal units of the current system to merge
@@ -124,7 +123,7 @@ class UnitSystem(_QuantityMapper):
         return self.get_dimension_system().is_consistent
 
     @property
-    def derived_units(self) -> tDict[Dimension, Quantity]:
+    def derived_units(self) -> dict[Dimension, Quantity]:
         return self._derived_units
 
     def get_dimensional_expr(self, expr):
@@ -198,7 +197,7 @@ class UnitSystem(_QuantityMapper):
         else:
             return expr, Dimension(1)
 
-    def get_units_non_prefixed(self) -> tSet[Quantity]:
+    def get_units_non_prefixed(self) -> set[Quantity]:
         """
         Return the units of the system that do not have a prefix.
         """

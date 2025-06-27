@@ -6,7 +6,7 @@ from sympy.external import import_module
 from sympy.printing.codeprinter import ccode
 from sympy.utilities._compilation import compile_link_import_strings, has_c
 from sympy.utilities._compilation.util import may_xfail
-from sympy.testing.pytest import skip
+from sympy.testing.pytest import skip, skip_under_pyodide
 from sympy.codegen.ast import (
     FunctionDefinition, FunctionPrototype, Variable, Pointer, real, Assignment,
     integer, CodeBlock, While
@@ -40,6 +40,7 @@ def _render_compile_import(funcdef, build_dir):
 
 
 @may_xfail
+@skip_under_pyodide("Emscripten does not support process spawning")
 def test_copying_function():
     if not np:
         skip("numpy not installed.")

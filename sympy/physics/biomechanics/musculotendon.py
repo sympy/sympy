@@ -265,7 +265,7 @@ class MusculotendonBase(ForceActuator, _NamedMixin):
         # actual force has been calculated by
         # `self._<MUSCULOTENDON FORMULATION>_musculotendon_dynamics`.
         # Note that `self._force` assumes forces are expansile, musculotendon
-        # forces are contractile hence the minus sign preceeding `self._F_T`
+        # forces are contractile hence the minus sign preceding `self._F_T`
         # (the tendon force).
         self._force = -self._F_T
 
@@ -1413,7 +1413,7 @@ class MusculotendonDeGroote2016(MusculotendonBase):
 
     """
 
-    curves = CharacteristicCurveCollection(
+    curves = CharacteristicCurveCollection( # type: ignore
         tendon_force_length=TendonForceLengthDeGroote2016,
         tendon_force_length_inverse=TendonForceLengthInverseDeGroote2016,
         fiber_force_length_passive=FiberForceLengthPassiveDeGroote2016,

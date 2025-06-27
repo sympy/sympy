@@ -1,3 +1,4 @@
+from __future__ import annotations
 import random
 
 from sympy.core.basic import Basic
@@ -33,7 +34,7 @@ class DenseMatrix(RepMatrix):
     # Sparse classes should be implemented here.
     #
 
-    is_MatrixExpr = False  # type: bool
+    is_MatrixExpr: bool = False
 
     _op_priority = 10.01
     _class_priority = 4
@@ -213,7 +214,7 @@ def rot_givens(i, j, theta, dim=3):
     j : int between ``0`` and ``dim - 1``
         Represents second axis
     dim : int bigger than 1
-        Number of dimentions. Defaults to 3.
+        Number of dimensions. Defaults to 3.
 
     Examples
     ========

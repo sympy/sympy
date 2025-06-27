@@ -334,7 +334,7 @@ class ReferenceFrame:
         possible_connecting_paths = [[self]]
         oldlist = [[]]
         while possible_connecting_paths != oldlist:
-            oldlist = possible_connecting_paths[:]  # make a copy
+            oldlist = possible_connecting_paths.copy()
             for frame_list in possible_connecting_paths:
                 frames_adjacent_to_last = frame_list[-1]._dlist[num].keys()
                 for adjacent_frame in frames_adjacent_to_last:

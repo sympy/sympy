@@ -105,8 +105,6 @@ Reference
 
 .. autofunction:: sympy.series.gruntz::mrv_leadterm
 
-.. autofunction:: sympy.series.gruntz::calculate_series
-
 .. autofunction:: sympy.series.gruntz::limitinf
 
 .. autofunction:: sympy.series.gruntz::sign

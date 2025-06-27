@@ -93,7 +93,7 @@ the end of this guide.
 Formatting
 -------------
 
-Docstrings are are written in `reStructuredText
+Docstrings are written in `reStructuredText
 <https://docutils.sourceforge.io/rst.html>`_ format extended by `Sphinx
 <https://www.sphinx-doc.org/en/master/>`_. Here is a concise guide to `Quick
 reStructuredText <https://docutils.sourceforge.io/docs/user/rst/quickref.html>`_. More in-depth
@@ -224,8 +224,8 @@ tested. They should demonstrate the API of the function to the user (i.e., what
 the input parameters look like, what the output looks like, and what it does).
 If you only want to test something, add a test to the relevant ``test_*.py file``.
 
-You can use the ``./bin/coverage_doctest.py`` script to test the doctest
-coverage of a file or module. Run the doctests with ``./bin/doctest``.
+You can use the ``bin/coverage_doctest.py`` script to test the doctest
+coverage of a file or module. Run the doctests with ``python bin/doctest``.
 
 You should only skip the testing of an example if it is impossible to test it.
 If necessary, testing of an example can be skipped by adding a special comment.
@@ -274,7 +274,7 @@ sympy`` or ``from sympy import *``. To define symbols, use ``from sympy.abc
 import x``, unless the name is not in ``sympy.abc`` (for instance, if it has
 assumptions), in which case use ``symbols`` like ``x, y = symbols('x y')``.
 
-In general, you should run ``./bin/doctest`` to make sure your examples run
+In general, you should run ``python bin/doctest`` to make sure your examples run
 correctly, and fix them if they do not.
 
 4. Parameters Section
@@ -742,7 +742,7 @@ Here are some troubleshooting tips to fix the errors:
   names that are specific to the text at hand. In general, if the object cannot
   be accessed as ``sympy.something.something.object``, it cannot be
   cross-referenced and you should not use the ``:obj:`` syntax.
-* If you are using are using one of the `type specific
+* If you are using one of the `type specific
   <https://www.sphinx-doc.org/en/master/usage/restructuredtext/domains.html#cross-referencing-python-objects>`_
   identifiers like ``:func:``, be sure that the type for it is correct.
   ``:func:`` only refers to Python functions. For classes, you need to use

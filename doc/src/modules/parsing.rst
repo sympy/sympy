@@ -102,7 +102,7 @@ Lark `\mathrm{\LaTeX}` Parser Features
 """"""""""""""""""""""""""""""""""""""
 
 One thing to note is that the Lark backend does not support ill-formed expressions,
-and it does not try to fix any sort of common mistakes that may have occured. For
+and it does not try to fix any sort of common mistakes that may have occurred. For
 example, as mentioned in :ref:`the earlier section <ANTLR parser caveats>`, the
 ANTLR-based parser would simply find ``x`` if we run::
 

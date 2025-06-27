@@ -2587,7 +2587,7 @@ class Line3D(LinearEntity3D, Line):
         # eliminate k from equations by solving first eq with k for k
         for i, e in enumerate(eqs):
             if e.has(k):
-                kk = solve(eqs[i], k)[0]
+                kk = solve(e, k)[0]
                 eqs.pop(i)
                 break
         return Tuple(*[i.subs(k, kk).as_numer_denom()[0] for i in eqs])

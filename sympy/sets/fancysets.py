@@ -8,7 +8,7 @@ from sympy.core.function import Lambda
 from sympy.core.logic import fuzzy_not, fuzzy_or, fuzzy_and
 from sympy.core.mod import Mod
 from sympy.core.intfunc import igcd
-from sympy.core.numbers import oo, Rational
+from sympy.core.numbers import oo, Rational, Integer
 from sympy.core.relational import Eq, is_eq
 from sympy.core.kind import NumberKind
 from sympy.core.singleton import Singleton, S
@@ -100,7 +100,7 @@ class Naturals(Set, metaclass=Singleton):
     """
 
     is_iterable = True
-    _inf = S.One
+    _inf: Integer = S.One
     _sup = S.Infinity
     is_empty = False
     is_finite_set = False

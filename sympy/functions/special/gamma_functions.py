@@ -2,7 +2,7 @@ from math import prod
 
 from sympy.core import Add, S, Dummy, expand_func
 from sympy.core.expr import Expr
-from sympy.core.function import Function, ArgumentIndexError, PoleError
+from sympy.core.function import DefinedFunction, ArgumentIndexError, PoleError
 from sympy.core.logic import fuzzy_and, fuzzy_not
 from sympy.core.numbers import Rational, pi, oo, I
 from sympy.core.power import Pow
@@ -31,7 +31,7 @@ def intlike(n):
 ############################ COMPLETE GAMMA FUNCTION ##########################
 ###############################################################################
 
-class gamma(Function):
+class gamma(DefinedFunction):
     r"""
     The gamma function
 
@@ -202,7 +202,7 @@ class gamma(Function):
         t = self.args[0] - x0
         return (self.func(t + 1)/rf(self.args[0], -x0 + 1))._eval_nseries(x, n, logx)
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx, cdir):
         arg = self.args[0]
         x0 = arg.subs(x, 0)
 
@@ -219,7 +219,7 @@ class gamma(Function):
 ################## LOWER and UPPER INCOMPLETE GAMMA FUNCTIONS #################
 ###############################################################################
 
-class lowergamma(Function):
+class lowergamma(DefinedFunction):
     r"""
     The lower incomplete gamma function.
 
@@ -395,7 +395,7 @@ class lowergamma(Function):
             return True
 
 
-class uppergamma(Function):
+class uppergamma(DefinedFunction):
     r"""
     The upper incomplete gamma function.
 
@@ -561,7 +561,7 @@ class uppergamma(Function):
 ###################### POLYGAMMA and LOGGAMMA FUNCTIONS #######################
 ###############################################################################
 
-class polygamma(Function):
+class polygamma(DefinedFunction):
     r"""
     The function ``polygamma(n, z)`` returns ``log(gamma(z)).diff(n + 1)``.
 
@@ -787,7 +787,7 @@ class polygamma(Function):
             else:
                 return S.NegativeOne**(n+1) * factorial(n) * (zeta(n+1) - harmonic(z-1, n+1))
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx, cdir):
         from sympy.series.order import Order
         n, z = [a.as_leading_term(x) for a in self.args]
         o = Order(z, x)
@@ -862,7 +862,7 @@ class polygamma(Function):
         return Expr._from_mpmath(res, prec)
 
 
-class loggamma(Function):
+class loggamma(DefinedFunction):
     r"""
     The ``loggamma`` function implements the logarithm of the
     gamma function (i.e., $\log\Gamma(x)$).
@@ -1057,7 +1057,7 @@ class loggamma(Function):
             raise ArgumentIndexError(self, argindex)
 
 
-class digamma(Function):
+class digamma(DefinedFunction):
     r"""
     The ``digamma`` function is the first derivative of the ``loggamma``
     function
@@ -1145,13 +1145,13 @@ class digamma(Function):
     def _eval_rewrite_as_polygamma(self, z, **kwargs):
         return polygamma(0, z)
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx, cdir):
         z = self.args[0]
         return polygamma(0, z).as_leading_term(x)
 
 
 
-class trigamma(Function):
+class trigamma(DefinedFunction):
     r"""
     The ``trigamma`` function is the second derivative of the ``loggamma``
     function
@@ -1242,7 +1242,7 @@ class trigamma(Function):
     def _eval_rewrite_as_harmonic(self, z, **kwargs):
         return -harmonic(z - 1, 2) + pi**2 / 6
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx, cdir):
         z = self.args[0]
         return polygamma(1, z).as_leading_term(x)
 
@@ -1252,7 +1252,7 @@ class trigamma(Function):
 ###############################################################################
 
 
-class multigamma(Function):
+class multigamma(DefinedFunction):
     r"""
     The multivariate gamma function is a generalization of the gamma function
 

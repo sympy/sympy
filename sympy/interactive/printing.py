@@ -1,12 +1,12 @@
 """Tools for setting up printing in interactive sessions. """
 
-from sympy.external.importtools import version_tuple
 from io import BytesIO
 
 from sympy.printing.latex import latex as default_latex
 from sympy.printing.preview import preview
 from sympy.utilities.misc import debug
 from sympy.printing.defaults import Printable
+from sympy.external import import_module
 
 
 def _init_python_printing(stringify_func, **settings):
@@ -34,6 +34,7 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
                            backcolor, fontsize, latex_mode, print_builtin,
                            latex_printer, scale, **settings):
     """Setup printing in IPython interactive session. """
+    IPython = import_module("IPython", min_module_version="1.0")
     try:
         from IPython.lib.latextools import latex_to_png
     except ImportError:
@@ -216,93 +217,69 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
                 return '$\\displaystyle %s$' % s
             return s
 
-    def _result_display(self, arg):
-        """IPython's pretty-printer display hook, for use in IPython 0.10
+    # Printable is our own type, so we handle it with methods instead of
+    # the approach required by builtin types. This allows downstream
+    # packages to override the methods in their own subclasses of Printable,
+    # which avoids the effects of gh-16002.
+    printable_types = [float, tuple, list, set, frozenset, dict, int]
 
-           This function was adapted from:
+    plaintext_formatter = ip.display_formatter.formatters['text/plain']
 
-            ipython/IPython/hooks.py:155
+    # Exception to the rule above: IPython has better dispatching rules
+    # for plaintext printing (xref ipython/ipython#8938), and we can't
+    # use `_repr_pretty_` without hitting a recursion error in _print_plain.
+    for cls in printable_types + [Printable]:
+        plaintext_formatter.for_type(cls, _print_plain)
 
-        """
-        if self.rc.pprint:
-            out = stringify_func(arg)
-
-            if '\n' in out:
-                print()
-
-            print(out)
-        else:
-            print(repr(arg))
-
-    import IPython
-    if version_tuple(IPython.__version__) >= version_tuple('0.11'):
-
-        # Printable is our own type, so we handle it with methods instead of
-        # the approach required by builtin types. This allows downstream
-        # packages to override the methods in their own subclasses of Printable,
-        # which avoids the effects of gh-16002.
-        printable_types = [float, tuple, list, set, frozenset, dict, int]
-
-        plaintext_formatter = ip.display_formatter.formatters['text/plain']
-
-        # Exception to the rule above: IPython has better dispatching rules
-        # for plaintext printing (xref ipython/ipython#8938), and we can't
-        # use `_repr_pretty_` without hitting a recursion error in _print_plain.
-        for cls in printable_types + [Printable]:
-            plaintext_formatter.for_type(cls, _print_plain)
-
-        svg_formatter = ip.display_formatter.formatters['image/svg+xml']
-        if use_latex in ('svg', ):
-            debug("init_printing: using svg formatter")
-            for cls in printable_types:
-                svg_formatter.for_type(cls, _print_latex_svg)
-            Printable._repr_svg_ = _print_latex_svg
-        else:
-            debug("init_printing: not using any svg formatter")
-            for cls in printable_types:
-                # Better way to set this, but currently does not work in IPython
-                #png_formatter.for_type(cls, None)
-                if cls in svg_formatter.type_printers:
-                    svg_formatter.type_printers.pop(cls)
-            Printable._repr_svg_ = Printable._repr_disabled
-
-        png_formatter = ip.display_formatter.formatters['image/png']
-        if use_latex in (True, 'png'):
-            debug("init_printing: using png formatter")
-            for cls in printable_types:
-                png_formatter.for_type(cls, _print_latex_png)
-            Printable._repr_png_ = _print_latex_png
-        elif use_latex == 'matplotlib':
-            debug("init_printing: using matplotlib formatter")
-            for cls in printable_types:
-                png_formatter.for_type(cls, _print_latex_matplotlib)
-            Printable._repr_png_ = _print_latex_matplotlib
-        else:
-            debug("init_printing: not using any png formatter")
-            for cls in printable_types:
-                # Better way to set this, but currently does not work in IPython
-                #png_formatter.for_type(cls, None)
-                if cls in png_formatter.type_printers:
-                    png_formatter.type_printers.pop(cls)
-            Printable._repr_png_ = Printable._repr_disabled
-
-        latex_formatter = ip.display_formatter.formatters['text/latex']
-        if use_latex in (True, 'mathjax'):
-            debug("init_printing: using mathjax formatter")
-            for cls in printable_types:
-                latex_formatter.for_type(cls, _print_latex_text)
-            Printable._repr_latex_ = _print_latex_text
-        else:
-            debug("init_printing: not using text/latex formatter")
-            for cls in printable_types:
-                # Better way to set this, but currently does not work in IPython
-                #latex_formatter.for_type(cls, None)
-                if cls in latex_formatter.type_printers:
-                    latex_formatter.type_printers.pop(cls)
-            Printable._repr_latex_ = Printable._repr_disabled
-
+    svg_formatter = ip.display_formatter.formatters['image/svg+xml']
+    if use_latex in ('svg', ):
+        debug("init_printing: using svg formatter")
+        for cls in printable_types:
+            svg_formatter.for_type(cls, _print_latex_svg)
+        Printable._repr_svg_ = _print_latex_svg
     else:
-        ip.set_hook('result_display', _result_display)
+        debug("init_printing: not using any svg formatter")
+        for cls in printable_types:
+            # Better way to set this, but currently does not work in IPython
+            #png_formatter.for_type(cls, None)
+            if cls in svg_formatter.type_printers:
+                svg_formatter.type_printers.pop(cls)
+        Printable._repr_svg_ = Printable._repr_disabled
+
+    png_formatter = ip.display_formatter.formatters['image/png']
+    if use_latex in (True, 'png'):
+        debug("init_printing: using png formatter")
+        for cls in printable_types:
+            png_formatter.for_type(cls, _print_latex_png)
+        Printable._repr_png_ = _print_latex_png
+    elif use_latex == 'matplotlib':
+        debug("init_printing: using matplotlib formatter")
+        for cls in printable_types:
+            png_formatter.for_type(cls, _print_latex_matplotlib)
+        Printable._repr_png_ = _print_latex_matplotlib
+    else:
+        debug("init_printing: not using any png formatter")
+        for cls in printable_types:
+            # Better way to set this, but currently does not work in IPython
+            #png_formatter.for_type(cls, None)
+            if cls in png_formatter.type_printers:
+                png_formatter.type_printers.pop(cls)
+        Printable._repr_png_ = Printable._repr_disabled
+
+    latex_formatter = ip.display_formatter.formatters['text/latex']
+    if use_latex in (True, 'mathjax'):
+        debug("init_printing: using mathjax formatter")
+        for cls in printable_types:
+            latex_formatter.for_type(cls, _print_latex_text)
+        Printable._repr_latex_ = _print_latex_text
+    else:
+        debug("init_printing: not using text/latex formatter")
+        for cls in printable_types:
+            # Better way to set this, but currently does not work in IPython
+            #latex_formatter.for_type(cls, None)
+            if cls in latex_formatter.type_printers:
+                latex_formatter.type_printers.pop(cls)
+        Printable._repr_latex_ = Printable._repr_disabled
 
 def _is_ipython(shell):
     """Is a shell instance an IPython shell?"""
@@ -400,11 +377,11 @@ def init_printing(pretty_print=True, order=None, use_unicode=None,
         printer will only print SymPy types.
     str_printer : function, optional, default=None
         A custom string printer function. This should mimic
-        :func:`~.sstrrepr()`.
+        :func:`~.sstrrepr`.
     pretty_printer : function, optional, default=None
-        A custom pretty printer. This should mimic :func:`~.pretty()`.
+        A custom pretty printer. This should mimic :func:`~.pretty`.
     latex_printer : function, optional, default=None
-        A custom LaTeX printer. This should mimic :func:`~.latex()`.
+        A custom LaTeX printer. This should mimic :func:`~.latex`.
     scale : float, optional, default=1.0
         Scale the LaTeX output when using the ``'png'`` or ``'svg'`` backends.
         Useful for high dpi screens.
@@ -509,14 +486,7 @@ def init_printing(pretty_print=True, order=None, use_unicode=None,
 
     if in_ipython and pretty_print:
         try:
-            import IPython
-            # IPython 1.0 deprecates the frontend module, so we import directly
-            # from the terminal module to prevent a deprecation message from being
-            # shown.
-            if version_tuple(IPython.__version__) >= version_tuple('1.0'):
-                from IPython.terminal.interactiveshell import TerminalInteractiveShell
-            else:
-                from IPython.frontend.terminal.interactiveshell import TerminalInteractiveShell
+            from IPython.terminal.interactiveshell import TerminalInteractiveShell
             from code import InteractiveConsole
         except ImportError:
             pass

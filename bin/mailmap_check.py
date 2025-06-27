@@ -27,7 +27,6 @@ def sympy_dir():
 
 # put sympy on the path
 sys.path.insert(0, str(sympy_dir()))
-import sympy
 from sympy.utilities.misc import filldedent
 from sympy.external.importtools import version_tuple
 
@@ -230,17 +229,6 @@ def author_name(line):
 
 def get_authors_from_git():
     git_command = ["git", "log", "--topo-order", "--reverse", "--format=%aN <%aE>"]
-
-    parents = run(["git", "rev-list", "--no-walk", "--count", "HEAD^@"],
-                  stdout=PIPE, encoding='utf-8').stdout.strip()
-    if parents != '1':
-        # Skip the most recent commit. Used to ignore the merge commit created
-        # when this script runs in CI. If HEAD is a merge commit parents will
-        # typically be '2'. We use HEAD^2 rather than HEAD^1 to select the
-        # parent commit that is part of the PR rather than the parent commit
-        # that was the previous tip of master.
-        git_command.append("HEAD^"+parents)
-
     git_people = run(git_command, stdout=PIPE, encoding='utf-8').stdout.strip().split("\n")
 
     # remove duplicates, keeping the original order
@@ -284,6 +272,10 @@ def get_authors_from_git():
         "whitesource-bolt-for-github[bot] " +
         "<whitesource-bolt-for-github[bot]@users.noreply.github.com>")
     git_people.pop(index)
+    index = git_people.index(
+        "dependabot[bot] " +
+        "<49699333+dependabot[bot]@users.noreply.github.com>")
+    git_people.pop(index)
 
     return git_people
 
@@ -318,7 +310,7 @@ def sort_lines_mailmap(lines):
 
 def read_lines(path):
     with open(path, 'r', encoding='utf-8') as fin:
-        return [line.strip() for line in fin.readlines()]
+        return [line.strip() for line in fin]
 
 
 def write_lines(path, lines):

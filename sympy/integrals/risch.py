@@ -796,7 +796,7 @@ def gcdex_diophantine(a, b, c):
     """
     # Extended Euclidean Algorithm (Diophantine Version) pg. 13
     # TODO: This should go in densetools.py.
-    # XXX: Bettter name?
+    # XXX: Better name?
 
     s, g = a.half_gcdex(b)
     s *= c.exquo(g)  # Inexact division means c is not in (a, b)

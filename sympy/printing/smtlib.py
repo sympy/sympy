@@ -559,11 +559,11 @@ def _auto_infer_smtlib_types(
     }, float)
 
     # EQUALITY RELATION RULE
-    rels = [rel for expr in exprs for rel in expr.atoms(Equality)]
+    rels_eq = [rel for expr in exprs for rel in expr.atoms(Equality)]
     rels = [
-               (rel.lhs, rel.rhs) for rel in rels if rel.lhs.is_Symbol
+               (rel.lhs, rel.rhs) for rel in rels_eq if rel.lhs.is_Symbol
            ] + [
-               (rel.rhs, rel.lhs) for rel in rels if rel.rhs.is_Symbol
+               (rel.rhs, rel.lhs) for rel in rels_eq if rel.rhs.is_Symbol
            ]
     for infer, reltd in rels:
         inference = (

@@ -120,6 +120,8 @@ class Inertia(namedtuple('Inertia', ['dyadic', 'point'])):
     ((N.x|N.x) + (N.y|N.y) + (N.z|N.z), Po)
 
     """
+    __slots__ = ()
+
     def __new__(cls, dyadic, point):
         # Switch order if given in the wrong order
         if isinstance(dyadic, Point) and isinstance(point, Dyadic):

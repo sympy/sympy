@@ -762,7 +762,7 @@ class _LeftRightArgs:
 
     @property
     def first_pointer(self):
-       return self._first_pointer_parent[self._first_pointer_index]
+        return self._first_pointer_parent[self._first_pointer_index]
 
     @first_pointer.setter
     def first_pointer(self, value):

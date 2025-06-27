@@ -13,7 +13,6 @@ Beam
    :titlesonly:
 
    beam.rst
-   beam_problems.rst
 
 Truss
 =====

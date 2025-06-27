@@ -1,5 +1,5 @@
 from sympy.core import S, oo, diff
-from sympy.core.function import Function, ArgumentIndexError
+from sympy.core.function import DefinedFunction, ArgumentIndexError
 from sympy.core.logic import fuzzy_not
 from sympy.core.relational import Eq
 from sympy.functions.elementary.complexes import im
@@ -11,7 +11,7 @@ from sympy.functions.special.delta_functions import Heaviside
 ###############################################################################
 
 
-class SingularityFunction(Function):
+class SingularityFunction(DefinedFunction):
     r"""
     Singularity functions are a class of discontinuous functions.
 
@@ -209,7 +209,7 @@ class SingularityFunction(Function):
         if n.is_nonnegative:
             return (x - a)**n*Heaviside(x - a, 1)
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx, cdir):
         z, a, n = self.args
         shift = (z - a).subs(x, 0)
         if n < 0:

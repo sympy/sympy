@@ -549,6 +549,8 @@ def rsolve_hyper(coeffs, f, n, **hints):
             denoms = [S.One]*(r + 1)
 
             s = hypersimp(g, n)
+            if s is None:
+                return None
 
             for j in range(1, r + 1):
                 coeff *= s.subs(n, n + j - 1)

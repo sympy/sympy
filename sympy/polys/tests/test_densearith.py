@@ -41,10 +41,12 @@ from sympy.polys.polyerrors import (
     ExactQuotientFailed,
 )
 
-from sympy.polys.specialpolys import f_polys
-from sympy.polys.domains import FF, ZZ, QQ
+from sympy.polys.specialpolys import f_polys, Symbol, Poly
+from sympy.polys.domains import FF, ZZ, QQ, CC
 
 from sympy.testing.pytest import raises
+
+x = Symbol('x')
 
 f_0, f_1, f_2, f_3, f_4, f_5, f_6 = [ f.to_dense() for f in f_polys() ]
 F_0 = dmp_mul_ground(dmp_normal(f_0, 2, QQ), QQ(1, 7), 2, QQ)
@@ -995,3 +997,11 @@ def test_dmp_expand():
     assert dmp_expand(([[1], [2], [3]], [[1], [2]], [[7], [5], [4], [3]]), 1, ZZ) == \
         dmp_mul([[1], [2], [3]], dmp_mul([[1], [2]], [[7], [5], [
                 4], [3]], 1, ZZ), 1, ZZ)
+
+def test_dup_mul_poly():
+    p = Poly(18786186952704.0*x**165 + 9.31746684052255e+31*x**82, x, domain='RR')
+    px = Poly(18786186952704.0*x**166 + 9.31746684052255e+31*x**83, x, domain='RR')
+
+    assert p * x == px
+    assert p.set_domain(QQ) * x == px.set_domain(QQ)
+    assert p.set_domain(CC) * x == px.set_domain(CC)

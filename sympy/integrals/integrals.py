@@ -1,4 +1,4 @@
-from typing import Tuple as tTuple
+from __future__ import annotations
 
 from sympy.concrete.expr_with_limits import AddWithLimits
 from sympy.core.add import Add
@@ -37,9 +37,9 @@ class Integral(AddWithLimits):
 
     __slots__ = ()
 
-    args: tTuple[Expr, Tuple]
+    args: tuple[Expr, Tuple] # type: ignore
 
-    def __new__(cls, function, *symbols, **assumptions):
+    def __new__(cls, function, *symbols, **assumptions) -> Integral:
         """Create an unevaluated integral.
 
         Explanation
@@ -1184,7 +1184,7 @@ class Integral(AddWithLimits):
         order = [o.subs(symb, x) for o in order]
         return integrate(terms, *self.limits) + Add(*order)*x
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx, cdir):
         series_gen = self.args[0].lseries(x)
         for leading_term in series_gen:
             if leading_term != 0:
@@ -1568,6 +1568,7 @@ def integrate(*args, meijerg=None, conds='piecewise', risch=None, heurisch=None,
         'heurisch': heurisch,
         'manual': manual
         }
+
     integral = Integral(*args, **kwargs)
 
     if isinstance(integral, Integral):
@@ -1576,7 +1577,6 @@ def integrate(*args, meijerg=None, conds='piecewise', risch=None, heurisch=None,
         new_args = [a.doit(**doit_flags) if isinstance(a, Integral) else a
             for a in integral.args]
         return integral.func(*new_args)
-
 
 def line_integrate(field, curve, vars):
     """line_integrate(field, Curve, variables)

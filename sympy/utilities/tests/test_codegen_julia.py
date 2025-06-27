@@ -201,7 +201,7 @@ def test_jl_output_arg_mixed_unordered():
     name_expr = ("foo", [cos(2*x), Equality(y, sin(x)), cos(x), Equality(a, sin(2*x))])
     result, = codegen(name_expr, "Julia", header=False, empty=False)
     assert result[0] == "foo.jl"
-    source = result[1];
+    source = result[1]
     expected = (
         'function foo(x)\n'
         '    out1 = cos(2 * x)\n'
@@ -259,7 +259,7 @@ def test_jl_multifcns_per_file():
     name_expr = [ ("foo", [2*x, 3*y]), ("bar", [y**2, 4*y]) ]
     result = codegen(name_expr, "Julia", header=False, empty=False)
     assert result[0][0] == "foo.jl"
-    source = result[0][1];
+    source = result[0][1]
     expected = (
         "function foo(x, y)\n"
         "    out1 = 2 * x\n"
@@ -279,7 +279,7 @@ def test_jl_multifcns_per_file_w_header():
     name_expr = [ ("foo", [2*x, 3*y]), ("bar", [y**2, 4*y]) ]
     result = codegen(name_expr, "Julia", header=True, empty=False)
     assert result[0][0] == "foo.jl"
-    source = result[0][1];
+    source = result[0][1]
     expected = (
         "#   Code generated with SymPy " + sympy.__version__ + "\n"
         "#\n"

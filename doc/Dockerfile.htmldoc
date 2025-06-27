@@ -54,7 +54,7 @@
 #
 ###############################################################################
 
-FROM python:3.8.12-slim-buster
+FROM python:3.13.3-slim-bookworm
 
 RUN apt-get update
 RUN apt-get install -y make librsvg2-bin imagemagick graphviz git

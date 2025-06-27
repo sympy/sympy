@@ -196,10 +196,10 @@ class PSpace(Basic):
     sympy.stats.frv.FinitePSpace
     """
 
-    is_Finite = None  # type: bool
-    is_Continuous = None  # type: bool
-    is_Discrete = None  # type: bool
-    is_real = None  # type: bool
+    is_Finite: bool | None = None  # Fails test if not set to None
+    is_Continuous: bool | None = None  # Fails test if not set to None
+    is_Discrete: bool | None = None  # Fails test if not set to None
+    is_real: bool | None
 
     @property
     def domain(self):
@@ -1639,7 +1639,7 @@ class Distribution(Basic):
                 import pymc3 as pymc
 
             with pymc.Model():
-                if do_sample_pymc(self):
+                if do_sample_pymc(self) is not None:
                     samps = pymc.sample(draws=prod(size), chains=1, compute_convergence_checks=False,
                             progressbar=False, random_seed=seed, return_inferencedata=False)[:]['X']
                     samps = samps.reshape(size)

@@ -246,7 +246,7 @@ of the set of points at `(x_{1},F_{1})` in terms of values at `(x_{2},F_{2})` an
 Also,  we note that output of formats appropriate to Fortran,  C,  etc. may be done in the examples
 given above.
 
-Next we show how to perform these and many other discritizations of derivatives,  but using a
+Next we show how to perform these and many other discretizations of derivatives, but using a
 much more efficient approach originally due to Bengt Fornberg and now incorporated into SymPy.
 
 :ref:`calculus-finite-differences`

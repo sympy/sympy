@@ -4,7 +4,7 @@ except ImportError:
     pass
 
 import pyglet.gl as pgl
-from math import sqrt as _sqrt, acos as _acos
+from math import sqrt as _sqrt, acos as _acos, pi
 
 
 def cross(a, b):
@@ -43,7 +43,7 @@ def get_sphere_mapping(x, y, width, height):
         sz = 0
         return norm((sx, sy, sz))
 
-rad2deg = 180.0 / 3.141592
+rad2deg = 180.0 / pi
 
 
 def get_spherical_rotatation(p1, p2, width, height, theta_multiplier):

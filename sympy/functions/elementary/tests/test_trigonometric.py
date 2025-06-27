@@ -1547,14 +1547,6 @@ def test_real_imag():
         assert cot(a).as_real_imag(deep=deep) == (cot(a), 0)
 
 
-@XFAIL
-def test_sin_cos_with_infinity():
-    # Test for issue 5196
-    # https://github.com/sympy/sympy/issues/5196
-    assert sin(oo) is S.NaN
-    assert cos(oo) is S.NaN
-
-
 @slow
 def test_sincos_rewrite_sqrt():
     # equivalent to testing rewrite(pow)

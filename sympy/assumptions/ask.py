@@ -66,7 +66,7 @@ class AssumptionKeys:
 
     @memoize_property
     def transcendental(self):
-        from .predicates.sets import TranscendentalPredicate
+        from .handlers.sets import TranscendentalPredicate
         return TranscendentalPredicate()
 
     @memoize_property
@@ -374,7 +374,7 @@ def ask(proposition, assumptions=True, context=global_assumptions):
     This function evaluates the proposition to ``True`` or ``False`` if
     the truth value can be determined. If not, it returns ``None``.
 
-    It should be discerned from :func:`~.refine()` which, when applied to a
+    It should be discerned from :func:`~.refine` which, when applied to a
     proposition, simplifies the argument to symbolic ``Boolean`` instead of
     Python built-in ``True``, ``False`` or ``None``.
 
@@ -490,7 +490,7 @@ def ask(proposition, assumptions=True, context=global_assumptions):
 
     # check the satisfiability of given assumptions
     if local_facts.clauses and satisfiable(enc_cnf) is False:
-        raise ValueError("inconsistent assumptions %s" % assumptions)
+        raise ValueError(f"inconsistent assumptions {assumptions}")
 
     # quick computation for single fact
     res = _ask_single_fact(key, local_facts)

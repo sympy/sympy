@@ -1,4 +1,5 @@
 from sympy.core import EulerGamma
+from sympy.core.function import Function
 from sympy.core.numbers import (E, I, Integer, Rational, oo, pi)
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
@@ -12,7 +13,7 @@ from sympy.polys.polytools import cancel
 from sympy.functions.elementary.hyperbolic import cosh, coth, sinh, tanh
 from sympy.series.gruntz import compare, mrv, rewrite, mrv_leadterm, gruntz, \
     sign
-from sympy.testing.pytest import XFAIL, skip, slow
+from sympy.testing.pytest import XFAIL, raises, skip, slow
 
 """
 This test suite is testing the limit algorithm using the bottom up approach.
@@ -473,6 +474,14 @@ def test_issue_6682():
 def test_issue_7096():
     from sympy.functions import sign
     assert gruntz(x**-pi, x, 0, dir='-') == oo*sign((-1)**(-pi))
+
+
+def test_issue_7391_8166():
+    f = Function('f')
+    # limit should depend on the continuity of the expression at the point passed
+    raises(ValueError, lambda: gruntz(f(x), x, 4))
+    raises(ValueError, lambda: gruntz(x*f(x)**2/(x**2 + f(x)**4), x, 0))
+
 
 def test_issue_24210_25885():
     eq = exp(x)/(1+1/x)**x**2

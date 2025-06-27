@@ -442,10 +442,10 @@ def test_eval_partial_derivative_expr1():
         L.delta(L_0, -k)*A(-L_0)*A(j) +
         A(L_0)*L.metric(-L_0, -L_1)*L.delta(L_1, -k)*A(j) +
         A(L_0)*A(-L_0)*L.delta(j, -k) +
-        L.delta(L_0, -k)*H(-L_0, j))).expand() == 0
+        L.delta(L_0, -k)*H(-L_0, j))).expand().doit() == 0
 
     assert (vector_derivative.contract_metric(L.metric).contract_delta(L.delta) -
-        (tau**alpha*L.delta(j, -k) + A(L_0)*A(-L_0)*L.delta(j, -k) + H(-k, j) + 2*A(j)*A(-k))).expand() == 0
+        (tau**alpha*L.delta(j, -k) + A(L_0)*A(-L_0)*L.delta(j, -k) + H(-k, j) + 2*A(j)*A(-k))).expand().doit() == 0
 
     assert scalar_derivative - alpha*1/tau*tau**alpha*A(j) == 0
 
@@ -458,7 +458,7 @@ def test_eval_partial_derivative_mixed_scalar_tensor_expr2():
 
     vector_expression = PartialDerivative(base_expr2, A(k))._perform_derivative()
     assert  (vector_expression -
-        (L.delta(L_0, -k)*A(-L_0) + A(L_0)*L.metric(-L_0, -L_1)*L.delta(L_1, -k))).expand() == 0
+        (L.delta(L_0, -k)*A(-L_0) + A(L_0)*L.metric(-L_0, -L_1)*L.delta(L_1, -k))).expand().doit() == 0
 
     scalar_expression = PartialDerivative(base_expr2, tau)._perform_derivative()
     assert scalar_expression == 2*tau

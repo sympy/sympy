@@ -112,7 +112,7 @@ class RealField(Field, CharacteristicZero, SimpleDomain):
 
     @property
     def tp(self):
-        # XXX: Domain treats tp as an alis of dtype. Here we need to two
+        # XXX: Domain treats tp as an alias of dtype. Here we need to two
         # separate things: dtype is a callable to make/convert instances.
         # We use tp with isinstance to check if an object is an instance
         # of the domain already.
@@ -171,10 +171,7 @@ class RealField(Field, CharacteristicZero, SimpleDomain):
         return self.from_sympy(base.to_sympy(element).evalf(self.dps))
 
     def from_RealField(self, element, base):
-        if self == base:
-            return element
-        else:
-            return self.dtype(element)
+        return self.dtype(element)
 
     def from_ComplexField(self, element, base):
         if not element.imag:

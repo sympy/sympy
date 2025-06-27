@@ -622,7 +622,7 @@ def dmp_sqf_list(f, u, K, all=False):
     Explanation
     ===========
 
-    Uses Yun's algorithm for univariate polynomials from [Yun76]_ recrusively.
+    Uses Yun's algorithm for univariate polynomials from [Yun76]_ recursively.
     The multivariate polynomial is treated as a univariate polynomial in its
     leading variable. Then Yun's algorithm computes the square-free
     factorization of the primitive and the content is factored recursively.

@@ -26,10 +26,13 @@ States and Operators
 .. toctree::
    :titlesonly:
 
+   boson.rst
    cartesian.rst
+   fermion.rst
    hilbert.rst
    operator.rst
    operatorset.rst
+   pauli.rst
    qapply.rst
    represent.rst
    spin.rst

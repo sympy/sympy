@@ -9,20 +9,20 @@ from sympy.core import (Catalan, EulerGamma)
 from sympy.core.facts import InconsistentAssumptions
 from sympy.core.mod import Mod
 from sympy.core.numbers import (E, I, Rational, nan, oo, pi)
-from sympy.core.relational import Eq
+from sympy.core.relational import Eq, Ne
 from sympy.core.numbers import Float
 from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, Symbol, symbols)
 from sympy.core.sympify import sympify
 from sympy.functions.combinatorial.factorials import (rf, binomial, factorial)
 from sympy.functions.combinatorial.numbers import harmonic
-from sympy.functions.elementary.complexes import Abs
+from sympy.functions.elementary.complexes import Abs, re
 from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.elementary.hyperbolic import (sinh, tanh)
 from sympy.functions.elementary.integers import floor
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
-from sympy.functions.elementary.trigonometric import (cos, sin)
+from sympy.functions.elementary.trigonometric import (cos, sin, atan)
 from sympy.functions.special.gamma_functions import (gamma, lowergamma)
 from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.functions.special.zeta_functions import zeta
@@ -32,6 +32,7 @@ from sympy.matrices.expressions.matexpr import MatrixSymbol
 from sympy.matrices.expressions.special import Identity
 from sympy.matrices import (Matrix, SparseMatrix,
     ImmutableDenseMatrix, ImmutableSparseMatrix, diag)
+from sympy.sets.contains import Contains
 from sympy.sets.fancysets import Range
 from sympy.sets.sets import Interval
 from sympy.simplify.combsimp import combsimp
@@ -137,6 +138,26 @@ def test_karr_convention():
     s = Sum(e, (i, 0, 11))
     assert s.n(3) == s.doit().n(3)
 
+    # issue #27893
+    n = Symbol('n', integer=True)
+    assert Sum(1/(x**2 + 1), (x, oo, 0)).doit(deep=False) == Rational(-1, 2) + pi / (2 * tanh(pi))
+    assert Sum(c**x/factorial(x), (x, oo, 0)).doit(deep=False).simplify() == exp(c) - 1 # exponential series
+    assert Sum((-1)**x/x, (x, oo,0)).doit() == -log(2) # alternating harmnic series
+    assert Sum((1/2)**x,(x, oo, -1)).doit() == S(2) # geometric series
+    assert Sum(1/x, (x, oo, 0)).doit() == oo # harmonic series, divergent
+    assert Sum((-1)**x/(2*x+1), (x, oo, -1)).doit() == pi/4 # leibniz series
+    assert Sum((((-1)**x) * c**(2*x+1)) / factorial(2*x+1), (x, oo, -1)).doit() == sin(c) # sinusoidal series
+    assert Sum((((-1)**x) * c**(2*x+1)) / (2*x+1), (x, 0, oo)).doit() \
+        == Piecewise((atan(c), Ne(c**2, -1) & (Abs(c**2) <= 1)), \
+                     (Sum((-1)**x*c**(2*x + 1)/(2*x + 1), (x, 0, oo)), True)) # arctangent series
+    assert Sum(binomial(n, x) * c**x, (x, 0, oo)).doit() \
+        == Piecewise(((c + 1)**n, \
+                     ((n <= -1) & (Abs(c) < 1)) \
+                        | ((n > 0) & (Abs(c) <= 1)) \
+                        | ((n <= 0) & (n > -1) & Ne(c, -1) & (Abs(c) <= 1))), \
+                     (Sum(c**x*binomial(n, x), (x, 0, oo)), True)) # binomial series
+    assert Sum(1/x**n, (x, oo, 0)).doit() \
+        == Piecewise((zeta(n), n > 1), (Sum(x**(-n), (x, oo, 0)), True)) # Euler's zeta function
 
 def test_karr_proposition_2a():
     # Test Karr, page 309, proposition 2, part a
@@ -636,18 +657,21 @@ def test_Sum_doit():
                     (0, True)), (n, 1, nmax))
 
     q, s = symbols('q, s')
-    assert summation(1/n**(2*s), (n, 1, oo)) == Piecewise((zeta(2*s), 2*s > 1),
+    assert summation(1/n**(2*s), (n, 1, oo)) == Piecewise((zeta(2*s), 2*re(s) > 1),
         (Sum(n**(-2*s), (n, 1, oo)), True))
-    assert summation(1/(n+1)**s, (n, 0, oo)) == Piecewise((zeta(s), s > 1),
+    assert summation(1/(n+1)**s, (n, 0, oo)) == Piecewise((zeta(s), re(s) > 1),
         (Sum((n + 1)**(-s), (n, 0, oo)), True))
     assert summation(1/(n+q)**s, (n, 0, oo)) == Piecewise(
-        (zeta(s, q), And(q > 0, s > 1)),
+        (zeta(s, q), And(~Contains(-q, S.Naturals0), re(s) > 1)),
         (Sum((n + q)**(-s), (n, 0, oo)), True))
     assert summation(1/(n+q)**s, (n, q, oo)) == Piecewise(
-        (zeta(s, 2*q), And(2*q > 0, s > 1)),
+        (zeta(s, 2*q), And(~Contains(-2*q, S.Naturals0), re(s) > 1)),
         (Sum((n + q)**(-s), (n, q, oo)), True))
     assert summation(1/n**2, (n, 1, oo)) == zeta(2)
     assert summation(1/n**s, (n, 0, oo)) == Sum(n**(-s), (n, 0, oo))
+    assert summation(1/(n+1)**(2+I), (n, 0, oo)) == zeta(2+I)
+    t = symbols('t', real=True, positive=True)
+    assert summation(1/(n+I)**(t+1), (n, 0, oo)) == zeta(t+1, I)
 
 
 def test_Product_doit():
@@ -1057,6 +1081,7 @@ def test_is_convergent():
     assert Sum((-1)**n*n, (n, 3, oo)).is_convergent() is S.false
     assert Sum((-1)**n, (n, 1, oo)).is_convergent() is S.false
     assert Sum(log(1/n), (n, 2, oo)).is_convergent() is S.false
+    assert Sum(sin(n), (n, 1, oo)).is_convergent() is S.false
 
     # Raabe's test --
     assert Sum(Product((3*m),(m,1,n))/Product((3*m+4),(m,1,n)),(n,1,oo)).is_convergent() is S.true
@@ -1155,6 +1180,11 @@ def test_issue_10156():
 
 def test_issue_10973():
     assert Sum((-n + (n**3 + 1)**(S(1)/3))/log(n), (n, 1, oo)).is_convergent() is S.true
+
+
+def test_issue_14103():
+    assert Sum(sin(n)**2 + cos(n)**2 - 1, (n, 1, oo)).is_convergent() is S.true
+    assert Sum(sin(pi*n), (n, 1, oo)).is_convergent() is S.true
 
 
 def test_issue_14129():

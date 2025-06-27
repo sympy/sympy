@@ -52,7 +52,6 @@ def _print_timestack(stack, level=1):
 
 def timethis(name):
     def decorator(func):
-        global _do_timings
         if name not in _do_timings:
             return func
 

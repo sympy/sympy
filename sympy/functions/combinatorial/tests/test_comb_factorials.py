@@ -83,8 +83,8 @@ def test_rf_eval_apply():
         a, b = Dummy(), Dummy()
         r = lambda x, k: o(a, b).rewrite(n).subs({a:x,b:k})
         for i in range(-5,5):
-          for j in range(-5,5):
-              assert o(i, j) == r(i, j), (o, n, i, j)
+            for j in range(-5,5):
+                assert o(i, j) == r(i, j), (o, n, i, j)
     check(x, k, rf, ff)
     check(x, k, rf, binomial)
     check(n, k, rf, factorial)
@@ -169,8 +169,8 @@ def test_ff_eval_apply():
         a, b = Dummy(), Dummy()
         r = lambda x, k: o(a, b).rewrite(n).subs({a:x,b:k})
         for i in range(-5,5):
-          for j in range(-5,5):
-              assert o(i, j) == r(i, j), (o, n)
+            for j in range(-5,5):
+                assert o(i, j) == r(i, j), (o, n)
     check(x, k, ff, rf)
     check(x, k, ff, gamma)
     check(n, k, ff, factorial)
@@ -211,7 +211,7 @@ def test_rf_ff_eval_hiprec():
     assert abs(us - maple)/us < 1e-31
 
     maple = Float('34.007346127440197150854651814225')
-    us = rf(Float('4.4', 32), Float('2.2', 32));
+    us = rf(Float('4.4', 32), Float('2.2', 32))
     assert abs(us - maple)/us < 1e-31
 
 

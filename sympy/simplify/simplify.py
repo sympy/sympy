@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+from typing import overload
+
 from collections import defaultdict
 
 from sympy.concrete.products import Product
@@ -28,10 +32,12 @@ from sympy.functions.special.bessel import (BesselBase, besselj, besseli,
                                             besselk, bessely, jn)
 from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.integrals.integrals import Integral
+from sympy.logic.boolalg import Boolean
 from sympy.matrices.expressions import (MatrixExpr, MatAdd, MatMul,
                                             MatPow, MatrixSymbol)
 from sympy.polys import together, cancel, factor
 from sympy.polys.numberfields.minpoly import _is_sum_surds, _minimal_polynomial_sq
+from sympy.sets.sets import Set
 from sympy.simplify.combsimp import combsimp
 from sympy.simplify.cse_opts import sub_pre, sub_post
 from sympy.simplify.hyperexpand import hyperexpand
@@ -258,7 +264,7 @@ def posify(eq):
     [2]
     """
     eq = sympify(eq)
-    if iterable(eq):
+    if not isinstance(eq, Basic) and iterable(eq):
         f = type(eq)
         eq = list(eq)
         syms = set()
@@ -417,6 +423,15 @@ def signsimp(expr, evaluate=None):
     return e
 
 
+@overload
+def simplify(expr: Expr, **kwargs) -> Expr: ...
+@overload
+def simplify(expr: Boolean, **kwargs) -> Boolean: ...
+@overload
+def simplify(expr: Set, **kwargs) -> Set: ...
+@overload
+def simplify(expr: Basic, **kwargs) -> Basic: ...
+
 def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, doit=True, **kwargs):
     """Simplifies the given expression.
 
@@ -562,7 +577,7 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
     :obj:`~.Eq()` or :obj:`~.Or()`), simplification will return ``True`` or
     ``False`` if truth value can be determined. If the expression is not
     evaluated by default (such as :obj:`~.Predicate()`), simplification will
-    not reduce it and you should use :func:`~.refine()` or :func:`~.ask()`
+    not reduce it and you should use :func:`~.refine` or :func:`~.ask`
     function. This inconsistency will be resolved in future version.
 
     See Also
@@ -631,7 +646,6 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
     # TODO: Apply different strategies, considering expression pattern:
     # is it a purely rational function? Is there any trigonometric function?...
     # See also https://github.com/sympy/sympy/pull/185.
-
 
     # rationalize Floats
     floats = False
@@ -813,7 +827,6 @@ def sum_combine(s_t):
 
     return result
 
-
 def factor_sum(self, limits=None, radical=False, clear=False, fraction=False, sign=True):
     """Return Sum with constant factors extracted.
 
@@ -832,6 +845,7 @@ def factor_sum(self, limits=None, radical=False, clear=False, fraction=False, si
     >>> factor_sum(s.function, s.limits)
     y*Sum(x, (x, 1, 3))
     """
+
     # XXX deprecate in favor of direct call to factor_terms
     kwargs = {"radical": radical, "clear": clear,
         "fraction": fraction, "sign": sign}
@@ -1582,7 +1596,7 @@ def _real_to_rational(expr, tolerance=None, rational_conversion='base10'):
     return p.subs(reps, simultaneous=True)
 
 
-def clear_coefficients(expr, rhs=S.Zero):
+def clear_coefficients(expr: Expr, rhs: Expr = S.Zero) -> tuple[Expr, Expr]:
     """Return `p, r` where `p` is the expression obtained when Rational
     additive and multiplicative coefficients of `expr` have been stripped
     away in a naive fashion (i.e. without simplification). The operations
@@ -1810,13 +1824,16 @@ def nc_simplify(expr, deep=True):
                             not isinstance(args[i].args[0], _Symbol)):
                 subterm = args[i].args[0].args
                 l = len(subterm)
-                if args[i-l:i] == subterm:
+                # Only apply optimization if power base matches subterm pattern
+                if (args[i-l:i] == subterm and
+                    args[i].args[0] == _Mul(*subterm)):
                     # e.g. a*b in a*b*(a*b)**2 is not repeated
                     # in args (= [a, b, (a*b)**2]) but it
                     # can be matched here
                     p += 1
                     start -= l
-                if args[i+1:i+1+l] == subterm:
+                if (args[i+1:i+1+l] == subterm and
+                    args[i].args[0] == _Mul(*subterm)):
                     # e.g. a*b in (a*b)**2*a*b
                     p += 1
                     end += l
