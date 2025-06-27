@@ -205,6 +205,10 @@ class ReprPrinter(Printer):
     def _print_PythonRational(self, expr):
         return "%s(%d, %d)" % (expr.__class__.__name__, expr.p, expr.q)
 
+    def _print_Equation(self, expr):
+        return 'Equation(%r, %r)' %(self._print(expr.lhs), self._print(
+            expr.rhs))
+
     def _print_Fraction(self, expr):
         return 'Fraction(%s, %s)' % (self._print(expr.numerator), self._print(expr.denominator))
 

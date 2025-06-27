@@ -32,7 +32,8 @@ class Equation(Basic, EvalfMixin):
     NOTE: If used with `algebra_with_sympy`
     (https://github.com/gutow/Algebra_with_Sympy) you can get human-readable
     output.
-    >>> from sympy import var, Equation, Eqn, exp, log, diff, Derivative
+    >>> from sympy import *
+    >>> from sympy import var, Equation, Eqn, exp, log, diff
     >>> from sympy import integrate, Integral
     >>> a, b, c, x = var('a b c x')
     >>> Equation(a,b/c)
@@ -492,8 +493,6 @@ class Equation(Basic, EvalfMixin):
         Equation(c + 9, 5*a*c*x)
 
         """
-        import functools
-        from sympy import Add
         new_args = args
         if all(isinstance(a, self.func) for a in args):
             new_args = [{a.args[0]: a.args[1] for a in args}]
@@ -631,14 +630,14 @@ class Equation(Basic, EvalfMixin):
     #####
     # Output helper functions
     #####
-    def __repr__(self):
-        # Included here because if put this into repr.py it is not possible to
-        # access this executable representation, you only get the str(self),
-        # even when calling repr(self). With it here this defines the
-        # default output for command line python and allows access to
-        # str(self) and repr(self) independently.
-        return 'Equation(%s, %s)' % (repr(self.lhs), repr(self.rhs))
-
-    __srepr__ = __repr__
+    # def __repr__(self):
+    #     # Included here because if put this into repr.py it is not possible to
+    #     # access this executable representation, you only get the str(self),
+    #     # even when calling repr(self). With it here this defines the
+    #     # default output for command line python and allows access to
+    #     # str(self) and repr(self) independently.
+    #     return 'Equation(%s, %s)' % (repr(self.lhs), repr(self.rhs))
+    # 
+    # __srepr__ = __repr__
 
 Eqn = Equation

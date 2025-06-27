@@ -18,7 +18,7 @@ doctest_optionflags = [
     "NORMALIZE_WHITESPACE",
     "IGNORE_EXCEPTION_DETAIL",
     "ELLIPSIS",
-    "FLOAT_CMP",
+    # "FLOAT_CMP",
 ]
 
 norecursedirs = [
