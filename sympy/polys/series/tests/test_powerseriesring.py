@@ -1,197 +1,205 @@
-from sympy.polys.domains import QQ, ZZ
-from sympy.polys.series.seriesring import power_series_ring
+from sympy.polys.domains import ZZ, QQ
+from sympy.polys.series.python_powerseriesring import (
+    PythonPowerSeriesRingZZ,
+    PythonPowerSeriesRingQQ,
+)
+from sympy.external.gmpy import GROUND_TYPES
+import pytest
+from sympy.testing.pytest import raises
+
+flint = False
+if GROUND_TYPES == "flint":
+    from sympy.polys.series.flint_powerseriesring import (
+        FlintPowerSeriesRingZZ,
+        FlintPowerSeriesRingQQ,
+    )
+
+    flint = True
+
+# Rings
+Ring_ZZ = [PythonPowerSeriesRingZZ]
+Ring_QQ = [PythonPowerSeriesRingQQ]
+
+if flint:
+    Ring_ZZ.append(FlintPowerSeriesRingZZ)
+    Ring_QQ.append(FlintPowerSeriesRingQQ)
 
 
-def test_edge_cases():
-    R = power_series_ring(ZZ, 0)
+def same(R, s, coeffs_l, prec):
+    """
+    Helper function to assert equality of two power series.
+    """
+    domain = R.domain
+    domain_coeffs = []
+    for coeff in coeffs_l:
+        if isinstance(coeff, tuple):
+            domain_coeffs.append(domain(*coeff))
+        else:
+            domain_coeffs.append(domain(coeff))
+
+    return R.equal_repr(s, R.from_list(domain_coeffs, prec))
+
+@pytest.mark.parametrize("r", list(Ring_ZZ + Ring_QQ))
+def test_equal(r):
+    R = r()
+
+    assert R.equal(R.from_list([1, 2, 3]), R.from_list([1, 2, 3])) is True
+    assert R.equal(R.from_list([1, 2, 3], 3), R.from_list([1, 2, 3], 3)) is None
+    assert R.equal(R.from_list([1, 2, 13], 3), R.from_list([1, 2, 3], 3)) is False
+    assert R.equal(R.from_list([1, 2, 3], 3), R.from_list([1, 2, 3], 10)) is None
+    assert R.equal(R.from_list([1, 21, 3], 3), R.from_list([1, 2, 3], 10)) is False
+
+@pytest.mark.parametrize("r", list(Ring_ZZ + Ring_QQ))
+def test_basics(r):
+    R = r()
+    R0 = r(0)
+    gen0 = R0.gen
+
+    assert R == r(6)
+    assert hash(R) == hash(r(6))
+    assert R.to_list(R.gen) == [0, 1], None
+    assert R0.equal_repr(R0.zero, R0.one)
+    assert R0.pretty(gen0) == "O(x**0)"
+
+    assert same(R0, gen0, [], 0)
+    assert same(R0, R0.multiply(gen0, gen0), [], 0)
+    assert same(R, R.from_list([1, 2, 3, 4, 5, 6, 7]), [1, 2, 3, 4, 5, 6], 6)
+    assert same(R, R.add(R.from_list([2, 4, 5], 3), R.from_list([5], 2)), [7, 4], 2)
+
+
+@pytest.mark.parametrize("r", list(Ring_ZZ + Ring_QQ))
+def test_int(r):
+    R = r()
     x = R.gen
-    assert R.pretty(x) == 'O(x**0)'
-    assert R.pretty(R.zero) == 'O(x**0)'
-    assert R.pretty(R.one) == 'O(x**0)'
+    one = R.one
+    zero = R.zero
 
-    R = power_series_ring(QQ, 1)
+    R3 = r(3)
+    x3 = R3.gen
+    one3 = R3.one
+
+    R10 = r(10)
+    x10 = R10.gen
+    one10 = R10.one
+
+    assert same(R, zero, [], None)
+    assert same(R, one, [1], None)
+    assert same(R, x, [0, 1], None)
+
+    assert same(R, R.negative(R.add(x, one)), [-1, -1], None)
+    assert same(R3, R3.add(x3, one3), [1, 1], None)
+    assert same(R3, R3.add(one3, R3.pow_int(x3, 4)), [1], 3)
+
+    assert same(R, R.subtract(R.multiply(x, x), x), [0, -1, 1], None)
+    assert same(R3, R3.subtract(R3.pow_int(R3.add(one3, x3), 4), x3), [1, 3, 6], 3)
+
+    assert same(R, R.multiply(x, x), [0, 0, 1], None)
+    assert same(R3, R3.multiply(R3.square(R3.add(x3, one3)),
+        R3.add(x3, one3)), [1, 3, 3], 3)
+    assert same(R10, R10.multiply(R10.add(x10, one10),
+        R10.add(x10, one10)), [1, 2, 1], None)
+
+    assert same(R, R.multiply_ground(one, 1), [1], None)
+    assert same(R, R.multiply_ground(x, -1), [0, -1], None)
+    assert same(R, R.multiply_ground(x, 0), [], None)
+    assert same(R, R.multiply_ground(R.square(x), 1), [0, 0, 1], None)
+    assert same(R, R.multiply_ground(R.add(x, one), ZZ(3)), [3, 3], None)
+
+    assert not same(R, R.square(R.add(x, one)), [1, 1, 1], None)
+    assert same(R3, R3.square(R3.multiply(x3, R3.add(x3, one3))),
+        [0, 0, 1], 3)
+
+    assert same(R, R.pow_int(x, 0), [1], None)
+    assert same(R, R.pow_int(R.add(x, one), 6), [1, 6, 15, 20, 15, 6], 6)
+    assert same(R, R.pow_int(x, 10), [], 6)
+    assert same(R3, R3.pow_int(R3.add(x3, one3), 5), [1, 5, 10], 3)
+    assert same(R10, R10.pow_int(x10, 7), [0, 0, 0, 0, 0, 0, 0, 1], None)
+    assert same(R10, R10.pow_int(R10.add(x10, one10), 12),
+        [1, 12, 66, 220, 495, 792, 924, 792, 495, 220], 10)
+
+    assert same(R, R.truncate(R.pow_int(x, 3), 4), [0, 0, 0, 1], None)
+    assert same(R, R.truncate(R.pow_int(R.add(x, one), 5), 3), [1, 5, 10], 3)
+
+    assert same(R, R.differentiate(R.pow_int(x, 3)), [0, 0, 3], None)
+    assert same(R, R.differentiate(R.add(R.multiply(x, x), x)), [1, 2], None)
+    assert same(R3, R3.differentiate(R3.multiply(x3, x3)), [0, 2], None)
+    assert same(R3, R3.differentiate(R3.add(x3, one3)), [1], None)
+    assert same(R10, R10.differentiate(R10.pow_int(x10, 4)), [0, 0, 0, 4], None)
+    assert same(R10, R10.differentiate(R10.add(R10.multiply(x10, x10), x10)),
+        [1, 2], None)
+
+
+@pytest.mark.parametrize(
+    "r", Ring_QQ
+)
+def test_rational(r):
+    R = r()
     x = R.gen
-    assert R.pretty(x) == '0 + O(x**1)'
-    assert R.pretty(R.zero) == '0'
-    assert R.pretty(R.one) == '1'
+    one = R.one
 
+    R3 = r(3)
+    x3 = R3.gen
+    one3 = R3.one
 
-def test_equality():
+    R10 = r(10)
+    x10 = R10.gen
+    one10 = R10.one
 
-    # Ring equality
-    R1 = power_series_ring(ZZ)
-    R2 = power_series_ring(QQ, 5)
+    assert same(R, one, [(1, 1)], None)
+    assert same(R, x, [(0, 1), (1, 1)], None)
 
-    assert R1 == power_series_ring(ZZ, prec=6)
-    assert R1 != R2
+    assert same(R, R.negative(R.add(x, one)), [(-1, 1), (-1, 1)], None)
+    assert same(R, R.add(R.negative(one), one), [], None)
+    assert same(R, R.subtract(R.multiply(x, x), x), [(0, 1), (-1, 1), (1, 1)], None)
 
-    # Series equality
-    x = R1.gen
-    x2 = R2.gen
+    assert same(R, R.multiply(x, x), [(0, 1), (0, 1), (1, 1)], None)
+    assert same(R, R.multiply(R.add(x, one), R.add(x, one)),
+        [(1, 1), (2, 1), (1, 1)], None)
+    assert same(R, R.multiply(R.subtract(x, one), R.add(x, one)),
+        [(-1, 1), (0, 1), (1, 1)], None)
+    assert same(R3, R3.multiply(R3.square(R3.add(x3, one3)),
+        R3.add(x3, one3)), [(1, 1), (3, 1), (3, 1)], 3)
 
-    assert x == x2
+    assert same(R, R.multiply_ground(x, QQ(1, 2)), [(0, 1), (1, 2)], None)
+    assert same(R, R.multiply(R.multiply_ground(x, QQ(1, 2)),
+        R.multiply_ground(x, QQ(1, 3))), [(0, 1), (0, 1), (1, 6)], None)
 
-    s1 = R1.pow_int(R1.multiply(R1.add(x, R1.one), x), 6)
-    s2 = R2.pow_int(R2.multiply(x2, x2), 6)
+    assert not same(R, R.square(R.add(x, one)), [(1, 1), (1, 1), (1, 1)],
+        None)
+    assert same(R10, R10.square(R10.subtract(x10, one10)),
+        [(1, 1), (-2, 1), (1, 1)], None)
 
-    assert R1.equal(s1, s1) is None
-    assert R1.equal(s1, s1) is None
-    assert R1.equal(s1, s2) is False
+    assert same(R, R.pow_int(x, 3), [(0, 1), (0, 1), (0, 1), (1, 1)], None)
+    assert same(R, R.pow_int(R.add(x, one), 6),
+        [(1, 1), (6, 1), (15, 1), (20, 1), (15, 1), (6, 1)], 6)
+    assert same(R, R.pow_int(x, 10), [], 6)
+    assert same(R3, R3.pow_int(R3.add(x3, one3), 5), [(1, 1), (5, 1), (10, 1)], 3)
+    assert same(R10, R10.pow_int(R10.add(x10, one10), 12),
+        [(1, 1), (12, 1), (66, 1), (220, 1), (495, 1), (792, 1), (924, 1),
+        (792, 1), (495, 1), (220, 1)], 10)
 
+    assert same(R, R.differentiate(R.pow_int(x, 3)), [(0, 1), (0, 1), (3, 1)], None)
+    assert same(R, R.differentiate(R.add(R.multiply(x, x), x)), [(1, 1), (2, 1)], None)
+    assert same(R3, R3.differentiate(R3.multiply(x3, x3)), [(0, 1), (2, 1)], None)
+    assert same(R3, R3.differentiate(R3.add(x3, one3)), [(1, 1)], None)
+    assert same(R10, R10.differentiate(R10.pow_int(x10, 4)),
+        [(0, 1), (0, 1), (0, 1), (4, 1)], None)
+    assert same(R10, R10.differentiate(R10.add(R10.multiply(x10, x10), x10)),
+        [(1, 1), (2, 1)], None)
 
-def test_arithematic_zz():
-    R = power_series_ring(ZZ)
-    x = R.gen
-    assert R.pretty(x) == 'x'
+    assert same(R, R.integrate(R.add(x, one)), [(0, 1), (1, 1), (1, 2)], None)
+    assert same(R, R.integrate(R.multiply(x, x)), [(0, 1), (0, 1), (0, 1), (1, 3)], None)
+    assert same(R3, R3.integrate(R3.add(x3, one3)), [(0, 1), (1, 1), (1, 2)], None)
+    assert same(R3, R3.integrate(R3.multiply(x3, x3)),
+        [(0, 1), (0, 1), (0, 1), (1, 3)], None)
+    assert same(R10, R10.integrate(R10.add(x10, one10)), [(0, 1), (1, 1), (1, 2)], None)
+    assert same(R10, R10.integrate(R10.pow_int(x10, 2)),
+        [(0, 1), (0, 1), (0, 1), (1, 3)], None)
 
-    p1 = R.multiply(R.add(x, R.one), x)
-    s1 = R.multiply(p1, R.multiply(p1, p1))
-    s2 = R.subtract(s1, p1)
+@pytest.mark.parametrize("r", list(Ring_ZZ + Ring_QQ))
+def test_error(r):
+    R = r()
 
-    assert R.pretty(p1) == 'x + x**2'
-    assert R.pretty(s1) == 'x**3 + 3*x**4 + 3*x**5 + O(x**6)'
-    assert R.pretty(s2) == '-x - x**2 + x**3 + 3*x**4 + 3*x**5 + O(x**6)'
-
-    p2 = R.multiply_ground(R.one, 5)
-    p3 = R.add(p2, R.multiply_ground(x, -3))
-    p4 = R.multiply(p3, p3)
-
-    assert R.pretty(p2) == '5'
-    assert R.pretty(p3) == '5 - 3*x'
-    assert R.pretty(p4) == '25 - 30*x + 9*x**2'
-
-    p5 = R.subtract(R.zero, x)
-    p6 = R.multiply(p5, R.multiply(p5, p5))
-
-    assert R.pretty(p5) == '-x'
-    assert R.pretty(p6) == '-x**3'
-
-    p7 = R.add(R.one, R.multiply_ground(R.multiply(x, x), 2))
-    p8 = R.subtract(p7, R.multiply_ground(R.multiply(R.multiply(x, x), x),
-                                          -4))
-    p9 = R.multiply_ground(R.multiply(R.multiply(x, x),
-                                      R.multiply(x, x)), 7)
-    p10 = R.add(p8, p9)
-
-    assert R.pretty(p7) == '1 + 2*x**2'
-    assert R.pretty(p8) == '1 + 2*x**2 + 4*x**3'
-    assert R.pretty(p9) == '7*x**4'
-    assert R.pretty(p10) == '1 + 2*x**2 + 4*x**3 + 7*x**4'
-
-    p11 = R.multiply_ground(R.multiply(x, x), -1)
-    p12 = R.add(p11, R.multiply_ground(R.multiply(R.multiply(x, x), x), 6))
-    p13 = R.multiply(p12, x)
-
-    assert R.pretty(p11) == '-x**2'
-    assert R.pretty(p12) == '-x**2 + 6*x**3'
-    assert R.pretty(p13) == '-x**3 + 6*x**4'
-
-    sq1 = R.square(x)
-    sq2 = R.square(R.add(x, R.one))
-    sq3 = R.square(R.multiply_ground(x, 3))
-    sq4 = R.square(R.add(R.multiply_ground(x, 2),
-                         R.multiply_ground(R.one, 3)))
-    sq5 = R.square(R.subtract(R.multiply_ground(x, 4),
-                              R.multiply_ground(R.one, 1)))
-    sq6 = R.square(R.add(R.multiply_ground(R.multiply(x, x), 2),
-                         R.multiply_ground(x, -5)))
-
-    assert R.pretty(sq1) == 'x**2'
-    assert R.pretty(sq2) == '1 + 2*x + x**2'
-    assert R.pretty(sq3) == '9*x**2'
-    assert R.pretty(sq4) == '9 + 12*x + 4*x**2'
-    assert R.pretty(sq5) == '1 - 8*x + 16*x**2'
-    assert R.pretty(sq6) == '25*x**2 - 20*x**3 + 4*x**4'
-
-    pow1 = R.pow_int(x, 3)
-    pow2 = R.pow_int(R.add(x, R.one), 2)
-    pow3 = R.pow_int(R.multiply_ground(x, 2), 4)
-    pow4 = R.pow_int(R.add(R.multiply_ground(x, 2), R.one), 7)
-
-    assert R.pretty(pow1) == 'x**3'
-    assert R.pretty(pow2) == '1 + 2*x + x**2'
-    assert R.pretty(pow3) == '16*x**4'
-    assert R.pretty(pow4) == ('1 + 14*x + 84*x**2 + 280*x**3 + 560*x**4 + '
-                              '672*x**5 + O(x**6)')
-
-
-def test_arithematic_qq():
-    R = power_series_ring(QQ)
-    x = R.gen
-    assert R.pretty(x) == 'x'
-
-    p1 = R.multiply_ground(R.one, QQ(1, 2))
-    p2 = R.add(p1, R.multiply_ground(x, QQ(3, 4)))
-    p3 = R.multiply(p2, p2)
-
-    assert R.pretty(p1) == '1/2'
-    assert R.pretty(p2) == '1/2 + 3/4*x'
-    assert R.pretty(p3) == '1/4 + 3/4*x + 9/16*x**2'
-
-    p4 = R.subtract(R.one, R.multiply_ground(x, QQ(1, 3)))
-    p5 = R.multiply(p4, R.multiply(p4, x))
-
-    assert R.pretty(p4) == '1 - 1/3*x'
-    assert R.pretty(p5) == 'x - 2/3*x**2 + 1/9*x**3'
-
-    p6 = R.add(R.multiply_ground(R.one, QQ(-2, 5)),
-                R.multiply_ground(R.multiply(x, x), QQ(7, 8)))
-    p7 = R.subtract(p6, R.multiply_ground(R.multiply(R.multiply(x, x), x),
-                                          QQ(1, 6)))
-
-    assert R.pretty(p6) == '-2/5 + 7/8*x**2'
-    assert R.pretty(p7) == '-2/5 + 7/8*x**2 - 1/6*x**3'
-
-    p8 = R.multiply_ground(x, QQ(-1, 4))
-    p9 = R.multiply(p8, R.multiply(p8, p8))
-
-    assert R.pretty(p8) == '-1/4*x'
-    assert R.pretty(p9) == '-1/64*x**3'
-
-    p10 = R.add(R.multiply_ground(R.one, QQ(3, 7)),
-                 R.multiply_ground(R.multiply(x, x), QQ(-5, 9)))
-    p11 = R.multiply(p10, R.multiply(x, x))
-    p12 = R.add(p11, R.multiply_ground(R.multiply(R.multiply(x, x),
-                                                  R.multiply(x, x)),
-                                       QQ(2, 11)))
-
-    assert R.pretty(p10) == '3/7 - 5/9*x**2'
-    assert R.pretty(p11) == '3/7*x**2 - 5/9*x**4'
-    assert R.pretty(p12) == '3/7*x**2 - 37/99*x**4'
-
-    p13 = R.multiply_ground(R.multiply(R.multiply(x, x), x), QQ(-4, 13))
-    p14 = R.subtract(R.multiply_ground(R.one, QQ(1, 2)), p13)
-    p15 = R.multiply(p14, p14)
-
-    assert R.pretty(p13) == '-4/13*x**3'
-    assert R.pretty(p14) == '1/2 + 4/13*x**3'
-    assert R.pretty(p15) == '1/4 + 4/13*x**3 + O(x**6)'
-
-    sq1 = R.square(x)
-    sq2 = R.square(R.add(x, R.multiply_ground(R.one, QQ(1, 2))))
-    sq3 = R.square(R.multiply_ground(x, QQ(2, 3)))
-    sq4 = R.square(R.add(R.multiply_ground(x, QQ(3, 4)),
-                         R.multiply_ground(R.one, QQ(2, 5))))
-    sq5 = R.square(R.subtract(R.multiply_ground(x, QQ(5, 6)),
-                              R.multiply_ground(R.one, QQ(1, 7))))
-    sq6 = R.square(R.add(R.multiply_ground(R.multiply(x, x), QQ(1, 3)),
-                         R.multiply_ground(x, QQ(-2, 5))))
-
-    assert R.pretty(sq1) == 'x**2'
-    assert R.pretty(sq2) == '1/4 + x + x**2'
-    assert R.pretty(sq3) == '4/9*x**2'
-    assert R.pretty(sq4) == '4/25 + 3/5*x + 9/16*x**2'
-    assert R.pretty(sq5) == '1/49 - 5/21*x + 25/36*x**2'
-    assert R.pretty(sq6) == '4/25*x**2 - 4/15*x**3 + 1/9*x**4'
-
-    pow1 = R.pow_int(x, 11)
-    pow2 = R.pow_int(R.add(x, R.multiply_ground(R.one, QQ(1, 3))), 3)
-    pow3 = R.pow_int(R.multiply_ground(x, QQ(3, 2)), 4)
-    pow4 = R.pow_int(R.add(R.multiply_ground(x, QQ(1, 2)),
-                           R.multiply_ground(R.one, QQ(2, 3))), 4)
-
-    assert R.pretty(pow1) == '0 + O(x**6)'
-    assert R.pretty(pow2) == '1/27 + 1/3*x + x**2 + x**3'
-    assert R.pretty(pow3) == '81/16*x**4'
-    assert R.pretty(pow4) == ('16/81 + 16/27*x + 2/3*x**2 + 1/3*x**3 + '
-                              '1/16*x**4')
+    raises(ValueError, lambda: r(-1))
+    raises(ValueError, lambda: R.pow_int(R.gen, -1))
+    raises(ValueError, lambda: R.truncate(R.gen, -1))

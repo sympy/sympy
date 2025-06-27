@@ -8,11 +8,12 @@ from sympy.polys.domains import Domain
 _x: Symbol = Symbol("x")
 TSeries = TypeVar("TSeries")
 
+
 def _series_from_list(series: list[Any], prec: int | None) -> str:
     """Convert a list of coefficients into a string representation of a power series."""
     terms = []
 
-    if prec is not None and prec == 0:
+    if prec == 0:
         return f"O({_x}**{prec})"
 
     for i, coeff in enumerate(series):
@@ -32,7 +33,7 @@ def _series_from_list(series: list[Any], prec: int | None) -> str:
         terms.append((i, term))
 
     if not terms:
-        if prec:
+        if prec is not None:
             return f"0 + O({_x}**{prec})"
         else:
             return "0"
@@ -91,7 +92,7 @@ class PowerSeriesRing(Protocol[TSeries]):
         """Return a pretty string representation of a power series."""
         ...
 
-    def print(self, s: TSeries) -> str:
+    def print(self, s: TSeries) -> None:
         """Return a printable string representation of a power series."""
         ...
 
@@ -105,6 +106,10 @@ class PowerSeriesRing(Protocol[TSeries]):
 
     def equal(self, s1: TSeries, s2: TSeries) -> bool | None:
         """Check if two power series are equal."""
+        ...
+
+    def equal_repr(self, s1: TSeries, s2: TSeries) -> bool:
+        """Check if two power series have the same representation."""
         ...
 
     def negative(self, s: TSeries) -> TSeries:
@@ -137,4 +142,8 @@ class PowerSeriesRing(Protocol[TSeries]):
 
     def truncate(self, s: TSeries, n: int) -> TSeries:
         """Truncate a power series to the first n terms."""
+        ...
+
+    def differentiate(self, s: TSeries) -> TSeries:
+        """Return the derivative of a power series."""
         ...
