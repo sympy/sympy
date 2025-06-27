@@ -55,7 +55,7 @@ def test_functions_extensions():
                 tst = obj(*tempargs)
                 if not (tst == Equation(obj(*largs), obj(*rargs))):
                     failures.append(func + ' extended but did not work.')
-            except Exception as e:
+            except Exception as e: # noqa: BLE001
                 failures.append(str(func) + ': ' + str(e))
     assert (failures == [])
     pass
