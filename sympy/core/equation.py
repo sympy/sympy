@@ -32,7 +32,6 @@ class Equation(Basic, EvalfMixin):
     NOTE: If used with `algebra_with_sympy`
     (https://github.com/gutow/Algebra_with_Sympy) you can get human-readable
     output.
-    >>> from sympy import *
     >>> from sympy import var, Equation, Eqn, exp, log, diff
     >>> from sympy import integrate, Integral
     >>> a, b, c, x = var('a b c x')
