@@ -48,6 +48,16 @@ def gbt(tf, sample_per, alpha):
     r"""
     Returns falling coefficients of H(z) from numerator and denominator.
 
+    Parameters
+    ==========
+
+    tf : TransferFunction
+        The continuous transfer function H(s) to be discretized.
+    sample_per : Symbol, Number
+        Time interval between two consecutive sampling instants.
+    alpha: Symbol, Number
+        The parameter for the generalised bilinear transformation method.
+
     Explanation
     ===========
 
@@ -124,6 +134,14 @@ def bilinear(tf, sample_per):
     r"""
     Returns falling coefficients of H(z) from numerator and denominator.
 
+    Parameters
+    ==========
+
+    tf : TransferFunction
+        The continuous transfer function H(s) to be discretized.
+    sampling_time : Symbol, Number
+        Time interval between two consecutive sampling instants.
+
     Explanation
     ===========
 
@@ -154,6 +172,14 @@ def forward_diff(tf, sample_per):
     r"""
     Returns falling coefficients of H(z) from numerator and denominator.
 
+    Parameters
+    ==========
+
+    tf : TransferFunction
+        The continuous transfer function H(s) to be discretized.
+    sampling_time : Symbol, Number
+        Time interval between two consecutive sampling instants.
+
     Explanation
     ===========
 
@@ -183,6 +209,14 @@ def forward_diff(tf, sample_per):
 def backward_diff(tf, sample_per):
     r"""
     Returns falling coefficients of H(z) from numerator and denominator.
+
+    Parameters
+    ==========
+
+    tf : TransferFunction
+        The continuous transfer function H(s) to be discretized.
+    sampling_time : Symbol, Number
+        Time interval between two consecutive sampling instants.
 
     Explanation
     ===========
@@ -1865,6 +1899,19 @@ class DiscreteTransferFunction(TransferFunctionBase):
         Returns the discretized transfer function H(z) from a continuous
         transfer function H(s).
 
+        Parameters
+        ==========
+
+        cont_tf : TransferFunction
+            The continuous transfer function H(s) to be discretized.
+        sampling_time : Symbol, Number
+            Time interval between two consecutive sampling instants.
+        alpha: Symbol, Number
+            The parameter for the generalised bilinear transformation method.
+        var: Symbol
+            The complex variable of the z-transform used by the polynomials
+            of the transfer function.
+
         Explanation
         ===========
 
@@ -1927,6 +1974,17 @@ class DiscreteTransferFunction(TransferFunctionBase):
         Returns the discretized transfer function H(z) from a continuous
         transfer function H(s).
 
+        Parameters
+        ==========
+
+        cont_tf : TransferFunction
+            The continuous transfer function H(s) to be discretized.
+        sampling_time : Symbol, Number
+            Time interval between two consecutive sampling instants.
+        var: Symbol
+            The complex variable of the z-transform used by the polynomials
+            of the transfer function.
+
         Explanation
         ===========
 
@@ -1961,6 +2019,17 @@ class DiscreteTransferFunction(TransferFunctionBase):
         Returns the discretized transfer function H(z) from a continuous
         transfer function H(s).
 
+        Parameters
+        ==========
+
+        cont_tf : TransferFunction
+            The continuous transfer function H(s) to be discretized.
+        sampling_time : Symbol, Number
+            Time interval between two consecutive sampling instants.
+        var: Symbol
+            The complex variable of the z-transform used by the polynomials
+            of the transfer function.
+
         Explanation
         ===========
 
@@ -1994,6 +2063,17 @@ class DiscreteTransferFunction(TransferFunctionBase):
         r"""
         Returns the discretized transfer function H(z) from a continuous
         transfer function H(s).
+
+        Parameters
+        ==========
+
+        cont_tf : TransferFunction
+            The continuous transfer function H(s) to be discretized.
+        sampling_time : Symbol, Number
+            Time interval between two consecutive sampling instants.
+        var: Symbol
+            The complex variable of the z-transform used by the polynomials
+            of the transfer function.
 
         Explanation
         ===========
