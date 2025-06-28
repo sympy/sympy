@@ -14,7 +14,9 @@ from sympy.physics.mechanics import (
     Point,
     dot,
     LagrangesMethod,
+    Lagrangian,
     WrappingSphere,
+    Particle,
 )
 
 init_printing(use_unicode=True)
@@ -46,8 +48,9 @@ P.set_pos(O, x * N.x + y * N.y + z * N.z)
 # Velocity of the wrapping point
 P.set_vel(N, P.pos_from(O).diff(t, N))
 
-# Kinetic energy
-T = simplify(Rational(1, 2) * m * dot(P.vel(N), P.vel(N)))
+# Kinetic energy of point P
+P_particle = Particle("P_particle", P, m)
+T = simplify(P_particle.kinetic_energy(N))
 
 # Muscle origin and insertion points fixed in space
 Ax, Ay, Az = symbols("Ax Ay Az")
@@ -84,10 +87,10 @@ print("\nTotal Length:")
 pprint(L_tot, use_unicode=True)
 
 # Potential energy due to muscle stretch
-V = Rational(1, 2) * k * (L_tot - L0) ** 2
+P_particle.potential_energy = Rational(1, 2) * k * (L_tot - L0) ** 2
 
 # Lagrangian
-Lag = T - V
+Lag = Lagrangian(N, P_particle)
 
 # Lagrange
 LM = LagrangesMethod(Lag, [theta, phi])
@@ -113,7 +116,7 @@ eqns = LM.form_lagranges_equations()
 print("\nKinetic Energy:")
 pprint(T, use_unicode=True)
 print("\nPotential Energy:")
-pprint(V, use_unicode=True)
+pprint(P_particle.potential_energy, use_unicode=True)
 print("\nLagrangian:")
 pprint(Lag, use_unicode=True)
 print("\nEquations of Motion")
