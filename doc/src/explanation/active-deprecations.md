@@ -76,21 +76,7 @@ SymPy deprecation warnings.
 
 ## Version 1.15
 
-(deprecated-point-on-surface-check-sphere)=
-### Deprecated point_on_surface method in WrappingSphere
-
-This method has been deprecated as it is deemed no longer necessary
-to check whether input points to ``WrappingSphere.geodesic_length`` and
-``WrappingSphere.geodesic_end_vectors`` lie on the surface of the sphere
-or not. These methods now rely on the user to supply valid points.
-
-(deprecated-point-on-surface-check-cylinder)=
-### Deprecated point_on_surface method in WrappingCylinder
-
-This method has been deprecated as it is deemed no longer necessary
-to check whether input points to ``WrappingCylinder.geodesic_length`` and
-``WrappingCylinder.geodesic_end_vectors`` lie on the surface of the cylinder
-or not. These methods now rely on the user to supply valid points.
+There are no deprecations yet for SymPy 1.15.
 
 ## Version 1.14
 

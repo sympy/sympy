@@ -8,7 +8,6 @@ from sympy.functions.elementary.trigonometric import atan2
 from sympy.polys.polytools import cancel
 from sympy.physics.vector import Vector, dot
 from sympy.simplify.simplify import trigsimp
-from sympy.utilities.decorator import deprecated
 
 
 __all__ = [
@@ -147,27 +146,15 @@ class WrappingSphere(WrappingGeometryBase):
     def point(self, point):
         self._point = point
 
-    @deprecated(
-        """
-        Checking if a Point lies on sphere's surface by
-        calling point_on_surface() is deprecated.
-        """,
-        deprecated_since_version="1.15.0",
-        active_deprecations_target="deprecated-point-on-surface-check-sphere"
-    )
     def point_on_surface(self, point):
-        """Returns ``True`` if a point is on the sphere's surface.
-
-        .. deprecated:: <1.15.0>
+        """Returns a symbolic equality for whether a point is on the sphere's
+        surface.
 
         Parameters
         ==========
 
         point : Point
-            The point for which it's to be ascertained if it's on the sphere's
-            surface or not. This point's position relative to the sphere's
-            center must be a simple expression involving the radius of the
-            sphere, otherwise this check will likely not work.
+            The point for which the expression is to be generated.
 
         """
         point_vector = point.pos_from(self.point)
@@ -175,7 +162,7 @@ class WrappingSphere(WrappingGeometryBase):
             point_radius_squared = dot(point_vector, point_vector)
         else:
             point_radius_squared = point_vector**2
-        return Eq(point_radius_squared, self.radius**2) == True
+        return Eq(point_radius_squared, self.radius**2, evaluate=False)
 
     def geodesic_length(self, point_1, point_2):
         r"""Returns the shortest distance between two points on the sphere's
@@ -389,27 +376,15 @@ class WrappingCylinder(WrappingGeometryBase):
     def axis(self, axis):
         self._axis = axis.normalize()
 
-    @deprecated(
-        """
-        Checking if a Point lies on cylinder's surface by
-        calling point_on_surface() is deprecated.
-        """,
-        deprecated_since_version="1.15.0",
-        active_deprecations_target="deprecated-point-on-surface-check-cylinder"
-    )
     def point_on_surface(self, point):
-        """Returns ``True`` if a point is on the cylinder's surface.
-
-        .. deprecated:: <1.15.0>
+        """Returns a symbolic equality for whether a point is on the cylinder's
+        surface.
 
         Parameters
         ==========
 
         point : Point
-            The point for which it's to be ascertained if it's on the
-            cylinder's surface or not. This point's position relative to the
-            cylinder's axis must be a simple expression involving the radius of
-            the sphere, otherwise this check will likely not work.
+            The point for which the expression is to be generated.
 
         """
         relative_position = point.pos_from(self.point)
@@ -419,7 +394,7 @@ class WrappingCylinder(WrappingGeometryBase):
             point_radius_squared = dot(point_vector, point_vector)
         else:
             point_radius_squared = point_vector**2
-        return Eq(trigsimp(point_radius_squared), self.radius**2) == True
+        return Eq(trigsimp(point_radius_squared), self.radius**2, evaluate=False)
 
     def geodesic_length(self, point_1, point_2):
         """The shortest distance between two points on a geometry's surface.

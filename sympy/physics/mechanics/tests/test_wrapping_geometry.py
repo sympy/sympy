@@ -22,7 +22,6 @@ from sympy.physics.mechanics import (
     dynamicsymbols,
 )
 from sympy.simplify.simplify import simplify
-from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 r = Symbol('r', positive=True)
 x = Symbol('x')
@@ -178,15 +177,15 @@ class TestWrappingCylinder:
     @pytest.mark.parametrize(
         'position, expected',
         [
-            (S.Zero, False),
-            (r*N.y, True),
-            (r*N.z, True),
-            (r*(N.y + N.z).normalize(), True),
-            (Integer(2)*r*N.y, False),
-            (r*(N.x + N.y), True),
-            (r*(Integer(2)*N.x + N.y), True),
-            (Integer(2)*N.x + r*(Integer(2)*N.y + N.z).normalize(), True),
-            (r*(cos(q)*N.y + sin(q)*N.z), True)
+            (S.Zero, Eq(0, r**2, evaluate=False)),
+            (r*N.y, Eq(r**2, r**2, evaluate=False)),
+            (r*N.z, Eq(r**2, r**2, evaluate=False)),
+            (r*(N.y + N.z).normalize(), Eq(r**2, r**2, evaluate=False)),
+            (Integer(2)*r*N.y, Eq(4*r**2, r**2, evaluate=False)),
+            (r*(N.x + N.y), Eq(r**2, r**2, evaluate=False)),
+            (r*(Integer(2)*N.x + N.y), Eq(r**2, r**2, evaluate=False)),
+            (Integer(2)*N.x + r*(Integer(2)*N.y + N.z).normalize(), Eq(r**2, r**2, evaluate=False)),
+            (r*(cos(q)*N.y + sin(q)*N.z), Eq(r**2, r**2, evaluate=False))
         ]
     )
     def test_point_is_on_surface(position, expected):
@@ -197,13 +196,7 @@ class TestWrappingCylinder:
         p1 = Point('p1')
         p1.set_pos(pO, position)
 
-        deprecation_warning = (
-            r"Checking if a Point lies on cylinder's surface by\s+"
-            r"calling point_on_surface\(\) is deprecated\."
-        )
-
-        with pytest.warns(SymPyDeprecationWarning, match=deprecation_warning):
-            assert cylinder.point_on_surface(p1) is expected
+        assert cylinder.point_on_surface(p1) == expected
 
     @staticmethod
     @pytest.mark.parametrize(
