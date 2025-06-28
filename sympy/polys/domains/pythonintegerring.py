@@ -18,9 +18,9 @@ class PythonIntegerRing(IntegerRing):
     installed. Elements are instances of the standard Python ``int`` type.
     """
 
-    dtype = PythonInteger
-    zero = dtype(0)
-    one = dtype(1)
+    dtype = PythonInteger # type: ignore
+    zero = dtype(0) # type: ignore
+    one = dtype(1) # type: ignore
     alias = 'ZZ_python'
 
     def __init__(self):
