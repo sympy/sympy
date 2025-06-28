@@ -5337,9 +5337,7 @@ class StateSpace(LinearTimeInvariant):
 
         """
         M = self.observability_matrix()
-        conds = self._get_full_rank_conditions(M)
-
-        return conds
+        return self._get_full_rank_conditions(M)
 
     def controllability_matrix(self):
         """
@@ -5437,7 +5435,36 @@ class StateSpace(LinearTimeInvariant):
         [  0.5]])]
 
         """
-        return self.controllability_matrix().rank() == self.num_states
+        return self.controllability_matrix().columnspace()
+
+    def is_controllable(self):
+        """
+        Returns conditions for the state space model to be controllable.
+
+        Examples
+        ========
+
+        >>> from sympy import symbols, Matrix
+        >>> from sympy.physics.control import StateSpace
+        >>> A1 = Matrix([[-1.5, -2], [1, 0]])
+        >>> B1 = Matrix([0.5, 0])
+        >>> C1 = Matrix([[0, 1]])
+        >>> D1 = Matrix([1])
+        >>> ss1 = StateSpace(A1, B1, C1, D1)
+        >>> ss1.is_controllable()
+        True
+
+        >>> a = symbols("a")
+        >>> A2 = Matrix([[1, 0, 1], [1, 1, 0], [0, 0, a]])
+        >>> B2 = Matrix([0.5, 1, 1])
+        >>> C2 = Matrix([[0, 1, 0]])
+        >>> ss2 = StateSpace(A2, B2, C2)
+        >>> ss2.is_controllable()
+        [Ne(0.25*a**2 - 1.5*a + 2.25, 0)]
+
+        """
+        M = self.controllability_matrix()
+        return self._get_full_rank_conditions(M)
 
     def get_asymptotic_stability_conditions(self):
         """
