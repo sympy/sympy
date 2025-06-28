@@ -450,10 +450,10 @@ class Function(Application, Expr):
             return cls._new_(*args, **options)  # type: ignore
 
     @classmethod
-    def _new_(cls, *args, **options) -> Expr:
+    def _new_(cls, *args, **options) -> Expr|Equation:
         n = len(args)
         from sympy.core.equation import Equation
-        eqnloc = None
+        eqnloc: int
         neqns = 0
         newargs = []
         for k in args:
