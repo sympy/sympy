@@ -2995,10 +2995,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         if expv == ring.zero_monom:
             r += p
         if ret_single:
-            if not qv:
-                return ring.zero, r # This never happens since this branch can never be True
-            else:
-                return qv[0], r
+            return qv[0], r
         else:
             return qv, r
 
