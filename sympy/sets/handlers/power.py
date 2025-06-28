@@ -51,11 +51,7 @@ def _(x, exponent):
         right_open = x.left_open
         sleft = s1
 
-    if x.start.is_positive:
-        return Interval(
-            Min(s1, s2),
-            Max(s1, s2), left_open, right_open)
-    elif x.end.is_negative:
+    if x.start.is_positive or x.end.is_negative:
         return Interval(
             Min(s1, s2),
             Max(s1, s2), left_open, right_open)

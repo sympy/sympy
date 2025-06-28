@@ -795,7 +795,7 @@ def rationalize(tokens: list[TOKEN], local_dict: DICT, global_dict: DICT):
                 passed_float = True
                 tokval = 'Rational'
             result.append((toknum, tokval))
-        elif passed_float == True and toknum == NUMBER:
+        elif passed_float and toknum == NUMBER:
             passed_float = False
             result.append((STRING, tokval))
         else:
@@ -1083,7 +1083,7 @@ def parse_expr(s: str, local_dict: DICT | None = None,
         for i in local_dict.pop(null, ()):
             local_dict[i] = null
         return rv
-    except Exception as e:
+    except Exception as e: # noqa: BLE001
         # restore neutral definitions for names
         for i in local_dict.pop(null, ()):
             local_dict[i] = null

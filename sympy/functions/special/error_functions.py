@@ -984,6 +984,9 @@ class erfcinv (DefinedFunction):
     def _eval_rewrite_as_erfinv(self, z, **kwargs):
         return erfinv(1-z)
 
+    def _eval_evalf(self, prec):
+        return self.rewrite(erfinv)._eval_evalf(prec)
+
     def _eval_is_zero(self):
         return (self.args[0] - 1).is_zero
 
@@ -1746,7 +1749,7 @@ class Li(DefinedFunction):
             raise ArgumentIndexError(self, argindex)
 
     def _eval_evalf(self, prec):
-        return self.rewrite(li).evalf(prec)
+        return self.rewrite(li)._eval_evalf(prec)
 
     def _eval_rewrite_as_li(self, z, **kwargs):
         return li(z) - li(2)

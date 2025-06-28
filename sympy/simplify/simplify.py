@@ -1596,7 +1596,7 @@ def _real_to_rational(expr, tolerance=None, rational_conversion='base10'):
     return p.subs(reps, simultaneous=True)
 
 
-def clear_coefficients(expr, rhs=S.Zero):
+def clear_coefficients(expr: Expr, rhs: Expr = S.Zero) -> tuple[Expr, Expr]:
     """Return `p, r` where `p` is the expression obtained when Rational
     additive and multiplicative coefficients of `expr` have been stripped
     away in a naive fashion (i.e. without simplification). The operations
@@ -1824,13 +1824,16 @@ def nc_simplify(expr, deep=True):
                             not isinstance(args[i].args[0], _Symbol)):
                 subterm = args[i].args[0].args
                 l = len(subterm)
-                if args[i-l:i] == subterm:
+                # Only apply optimization if power base matches subterm pattern
+                if (args[i-l:i] == subterm and
+                    args[i].args[0] == _Mul(*subterm)):
                     # e.g. a*b in a*b*(a*b)**2 is not repeated
                     # in args (= [a, b, (a*b)**2]) but it
                     # can be matched here
                     p += 1
                     start -= l
-                if args[i+1:i+1+l] == subterm:
+                if (args[i+1:i+1+l] == subterm and
+                    args[i].args[0] == _Mul(*subterm)):
                     # e.g. a*b in (a*b)**2*a*b
                     p += 1
                     end += l

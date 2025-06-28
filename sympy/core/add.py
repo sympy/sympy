@@ -810,9 +810,7 @@ class Add(Expr, AssocOp):
             return saw_INF.pop()
         elif unknown_sign:
             return
-        elif not nonpos and not nonneg and pos:
-            return True
-        elif not nonpos and pos:
+        elif pos and not nonpos:
             return True
         elif not pos and not nonneg:
             return False
@@ -894,9 +892,7 @@ class Add(Expr, AssocOp):
             return saw_INF.pop()
         elif unknown_sign:
             return
-        elif not nonneg and not nonpos and neg:
-            return True
-        elif not nonneg and neg:
+        elif neg and not nonneg:
             return True
         elif not neg and not nonpos:
             return False

@@ -301,16 +301,12 @@ def sylvester(f, g, x, method = 1):
 
     # C:: m == 0 and n < 0 or m < 0 and n == 0
     # (i.e. one poly is constant and the other is 0)
-    if m == 0 and n < 0:
-        return Matrix([])
-    elif m < 0 and n == 0:
+    if (m == 0 and n < 0) or (m < 0 and n == 0):
         return Matrix([])
 
     # D:: m >= 1 and n < 0 or m < 0 and n >=1
     # (i.e. one poly is of degree >=1 and the other is 0)
-    if m >= 1 and n < 0:
-        return Matrix([0])
-    elif m < 0 and n >= 1:
+    if (m >= 1 and n < 0) or (m < 0 and n >= 1):
         return Matrix([0])
 
     fp = Poly(f, x).all_coeffs()
@@ -319,20 +315,12 @@ def sylvester(f, g, x, method = 1):
     # Sylvester's matrix of 1840 (default; a.k.a. sylvester1)
     if method <= 1:
         M = zeros(m + n)
-        k = 0
         for i in range(n):
-            j = k
-            for coeff in fp:
+            for j, coeff in enumerate(fp, i):
                 M[i, j] = coeff
-                j = j + 1
-            k = k + 1
-        k = 0
         for i in range(n, m + n):
-            j = k
-            for coeff in gp:
+            for j, coeff in enumerate(gp, i - n):
                 M[i, j] = coeff
-                j = j + 1
-            k = k + 1
         return M
 
     # Sylvester's matrix of 1853 (a.k.a sylvester2)
@@ -350,17 +338,11 @@ def sylvester(f, g, x, method = 1):
         mx = max(m, n)
         dim = 2*mx
         M = zeros( dim )
-        k = 0
         for i in range( mx ):
-            j = k
-            for coeff in fp:
+            for j, coeff in enumerate(fp, i):
                 M[2*i, j] = coeff
-                j = j + 1
-            j = k
-            for coeff in gp:
+            for j, coeff in enumerate(gp, i):
                 M[2*i + 1, j] = coeff
-                j = j + 1
-            k = k + 1
         return M
 
 def process_matrix_output(poly_seq, x):
@@ -436,9 +418,7 @@ def subresultants_sylv(f, g, x):
 
     # pick appropriate submatrices of S
     # and form subresultant polys
-    j = m - 1
-
-    while j > 0:
+    for j in range(m - 1, 0, -1):
         Sp = S[:, :]  # copy of S
         # delete last j rows of coeffs of g
         for ind in range(m + n - j, m + n):
@@ -448,15 +428,13 @@ def subresultants_sylv(f, g, x):
             Sp.row_del(m - j)
 
         # evaluate determinants and form coefficients list
-        coeff_L, k, l = [], Sp.rows, 0
-        while l <= j:
+        coeff_L, k = [], Sp.rows
+        for l in range(j + 1):
             coeff_L.append(Sp[:, 0:k].det())
             Sp.col_swap(k - 1, k + l)
-            l += 1
 
         # form poly and append to SP_L
         SR_L.append(Poly(coeff_L, x).as_expr())
-        j -= 1
 
     # j = 0
     SR_L.append(S.det())
@@ -509,22 +487,18 @@ def modified_subresultants_sylv(f, g, x):
 
     # pick appropriate submatrices of S
     # and form modified subresultant polys
-    j = m - 1
-
-    while j > 0:
+    for j in range(m - 1, 0, -1):
         # delete last 2*j rows of pairs of coeffs of f, g
         Sp = S[0:2*n - 2*j, :]  # copy of first 2*n - 2*j rows of S
 
         # evaluate determinants and form coefficients list
-        coeff_L, k, l = [], Sp.rows, 0
-        while l <= j:
+        coeff_L, k = [], Sp.rows
+        for l in range(j + 1):
             coeff_L.append(Sp[:, 0:k].det())
             Sp.col_swap(k - 1, k + l)
-            l += 1
 
         # form poly and append to SP_L
         SR_L.append(Poly(coeff_L, x).as_expr())
-        j -= 1
 
     # j = 0
     SR_L.append(S.det())
@@ -667,16 +641,12 @@ def bezout(p, q, x, method='bz'):
 
     # C:: m == 0 and n < 0 or m < 0 and n == 0
     # (i.e. one poly is constant and the other is 0)
-    if m == 0 and n < 0:
-        return Matrix([])
-    elif m < 0 and n == 0:
+    if (m == 0 and n < 0) or (m < 0 and n == 0):
         return Matrix([])
 
     # D:: m >= 1 and n < 0 or m < 0 and n >=1
     # (i.e. one poly is of degree >=1 and the other is 0)
-    if m >= 1 and n < 0:
-        return Matrix([0])
-    elif m < 0 and n >= 1:
+    if (m >= 1 and n < 0) or (m < 0 and n >= 1):
         return Matrix([0])
 
     y = var('y')
@@ -841,24 +811,18 @@ def modified_subresultants_bezout(p, q, x):
 
     # pick appropriate submatrices of B
     # and form subresultant polys
-    if degF > degG:
-        j = 2
-    if degF == degG:
-        j = 1
-    while j <= degF:
+    for j in range(2 if degF > degG else 1, degF + 1):
         M = B[0:j, :]
-        k, coeff_L = j - 1, []
-        while k <= degF - 1:
+        coeff_L = []
+        for k in range(j - 1, degF):
             coeff_L.append(M[:, 0:j].det())
             if k < degF - 1:
                 M.col_swap(j - 1, k + 1)
-            k = k + 1
 
         ## Theorem 2.1 in the paper by Toca & Vega 2004 is _not needed_
         ## in this case since
         ## the bezout matrix is equivalent to sylvester2
         SR_L.append(( Poly(coeff_L, x)).as_expr())
-        j = j + 1
 
     return process_matrix_output(SR_L, x)
 
