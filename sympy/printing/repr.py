@@ -206,7 +206,7 @@ class ReprPrinter(Printer):
         return "%s(%d, %d)" % (expr.__class__.__name__, expr.p, expr.q)
 
     def _print_Equation(self, expr):
-        return 'Equation(%r, %r)' %(self._print(expr.lhs), self._print(
+        return 'Equation(%s, %s)' %(self._print(expr.lhs), self._print(
             expr.rhs))
 
     def _print_Fraction(self, expr):

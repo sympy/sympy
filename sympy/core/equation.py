@@ -627,16 +627,24 @@ class Equation(Basic, EvalfMixin):
                 raise AttributeError('`side` must equal "lhs" or "rhs".')
 
     #####
-    # Output helper functions
+    # TODO: Output helper functions
     #####
-    def __repr__(self):
+    #def __repr__(self):
         # Included here because if put this into repr.py it is not possible to
         # access this executable representation, you only get the str(self),
         # even when calling repr(self). With it here this defines the
         # default output for command line python and allows access to
         # str(self) and repr(self) independently.
-        return 'Equation(%s, %s)' % (repr(self.lhs), repr(self.rhs))
-    
-    __srepr__ = __repr__
+        # If this def is active then command line sympy gives this executable
+        # version of the expression. If not then sympy on the command line
+        # yields the human readable version, which is not executable.
+        # Doctests always generate the human readable form because they seem
+        # to call print(xxx) not repr(xxx) as command line usually does.
+        # Sympy is determined to not follow Python standards on this.
+        # This may have to live in Algebra_with_Sympy to recover normal
+        # python behavior.
+        #return 'Equation(%s, %s)' % (repr(self.lhs), repr(self.rhs))
+
+    #__srepr__ = __repr__
 
 Eqn = Equation
