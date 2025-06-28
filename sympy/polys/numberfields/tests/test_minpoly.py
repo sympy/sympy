@@ -402,10 +402,12 @@ def test_minpoly_fraction_field():
     raises(GeneratorsError, lambda: minimal_polynomial(sqrt(x) - y, x))
     raises(NotImplementedError, lambda: minimal_polynomial(sqrt(x), y, compose=False))
 
+
 @slow
 def test_minpoly_fraction_field_slow():
     assert minimal_polynomial(minimal_polynomial(sqrt(x**Rational(1,5) - 1),
         y).subs(y, sqrt(x**Rational(1,5) - 1)), z) == z
+
 
 def test_minpoly_domain():
     assert minimal_polynomial(sqrt(2), x, domain=QQ.algebraic_field(sqrt(2))) == \
@@ -428,8 +430,8 @@ def test_issue_14831():
 
 def test_issue_18248():
     assert nonlinsolve([x*y**3-sqrt(2)/3, x*y**6-4/(9*(sqrt(3)))],x,y) == \
-            FiniteSet((sqrt(3)/2, sqrt(6)/3), (sqrt(3)/2, -sqrt(6)/6 - sqrt(2)*I/2),
-            (sqrt(3)/2, -sqrt(6)/6 + sqrt(2)*I/2))
+            FiniteSet((sqrt(3)/2, sqrt(6)/3), (sqrt(3)/2, sqrt(6)*exp(-2*I*pi/3)/3),
+            (sqrt(3)/2, sqrt(6)*exp(2*I*pi/3)/3))
 
 
 def test_issue_13230():
@@ -439,6 +441,7 @@ def test_issue_13230():
     + 9*sqrt(5)/29 + sqrt(196*sqrt(35) + 1941)/29), -2*sqrt(7)/29 + 9*sqrt(5)/29
     + sqrt(196*sqrt(35) + 1941)/29), Point2D(-1 + (-sqrt(7) + sqrt(5))*(-sqrt(196*sqrt(35)
     + 1941)/29 - 2*sqrt(7)/29 + 9*sqrt(5)/29), -sqrt(196*sqrt(35) + 1941)/29 - 2*sqrt(7)/29 + 9*sqrt(5)/29)]
+
 
 def test_issue_19760():
     e = 1/(sqrt(1 + sqrt(2)) - sqrt(2)*sqrt(1 + sqrt(2))) + 1

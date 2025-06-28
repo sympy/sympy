@@ -130,8 +130,13 @@ def test_heurisch_trigonometric():
 
     assert heurisch(sin(x)/(cos(x)**2+1), x) == -atan(cos(x)) #fixes issue 13723
     assert heurisch(1/(cos(x)+2), x) == 2*sqrt(3)*atan(sqrt(3)*tan(x/2)/3)/3
-    assert heurisch(2*sin(x)*cos(x)/(sin(x)**4 + 1), x) == atan(sqrt(2)*sin(x)
-        - 1) - atan(sqrt(2)*sin(x) + 1)
+
+    assert heurisch(2*sin(x)*cos(x)/(sin(x)**4 + 1), x) == (
+            -I*log(sin(x) - exp(-3*I*pi/4))/2
+            + I*log(sin(x) - exp(-I*pi/4))/2
+            - I*log(sin(x) - exp(I*pi/4))/2
+            + I*log(sin(x) - exp(3*I*pi/4))/2
+        )
 
     assert heurisch(1/cosh(x), x) == 2*atan(tanh(x/2))
 
