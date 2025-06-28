@@ -6,7 +6,8 @@ from sympy.core.containers import Tuple
 from sympy.core.evalf import EvalfMixin
 from sympy.core.expr import Expr
 from sympy.core.function import expand
-from sympy.core.logic import fuzzy_and
+from sympy.core.logic import fuzzy_and, fuzzy_or
+from sympy.core.relational import Unequality
 from sympy.core.mul import Mul
 from sympy.core.numbers import I, pi, oo
 from sympy.core.power import Pow
@@ -5065,12 +5066,58 @@ class StateSpace(LinearTimeInvariant):
         return Matrix(ob)
 
     def unobservable_subspace(self):
-        """Returns the unobservable subspace of the state space model."""
-        return self.observability_matrix().nullspace()
+        """
+        Returns the unobservable subspace of the state space model.
+
+        Note: this method raises an error for matrices with symbolic entries
+        because it is not possible determine the unobservable subspace
+        in general.
+
+        Raises
+        ======
+        NotImplementedError
+            If the state space model has symbolic entries, the unobservable
+            subspace cannot be determined in general.
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix
+        >>> from sympy.physics.control import StateSpace
+        >>> A = Matrix([[-1.5, -2], [1, 0]])
+        >>> B = Matrix([0.5, 0])
+        >>> C = Matrix([[0, 1]])
+        >>> D = Matrix([1])
+        >>> ss = StateSpace(A, B, C, D)
+        >>> ob_subspace = ss.observable_subspace()
+        >>> ob_subspace
+        [Matrix([
+        [1],
+        [0]]), Matrix([
+        [0],
+        [1]])]
+        """
+        M = self.observability_matrix()
+        if len(M.free_symbols) > 0:
+            raise NotImplementedError(
+                "Unbservable subspace cannot be determined for " \
+                "symbolic matrices."
+            )
+        return M.nullspace()
 
     def observable_subspace(self):
         """
         Returns the observable subspace of the state space model.
+
+        Note: this method raises an error for matrices with symbolic entries
+        because it is not possible determine the observable subspace
+        in general.
+
+        Raises
+        ======
+        NotImplementedError
+            If the state space model has symbolic entries, the observable
+            subspace cannot be determined in general.
 
         Examples
         ========
@@ -5092,27 +5139,78 @@ class StateSpace(LinearTimeInvariant):
 
         """
         M = Matrix.hstack(*self.unobservable_subspace())
+        if len(M.free_symbols) > 0:
+                raise NotImplementedError(
+                    "Observable subspace cannot be determined for " \
+                    "symbolic matrices."
+                )
         return self._calc_orthogonal_complement(M, self._A.shape[0])
+
+    def _get_full_rank_conditions(self, M):
+        rows, cols = M.shape
+
+        if rows == 0 or cols == 0:
+            return []
+
+        square_size = min(rows, cols)
+        determinant_conditions = []
+
+        num_iterations = max(rows, cols) - square_size + 1
+
+        vertical_scan = rows >= cols
+        for i in range(num_iterations):
+            if vertical_scan:
+                submatrix = M[i:i + square_size, :]
+            else:
+                submatrix = M[:, i:i + square_size]
+
+            determinant_conditions.append(Unequality(submatrix.det(), 0))
+
+        rank_evaluation = fuzzy_or(determinant_conditions)
+
+        if rank_evaluation is False:
+            # if every determinants are zero numerically, the system is not
+            # full rank
+            return False
+        if rank_evaluation is True:
+            # if any determinant is non-zero numerically, the system is
+            # full rank
+            return True
+
+        # if we cannot determine conditions because of symbolic expressions,
+        # we return the list of conditions
+        return determinant_conditions
 
     def is_observable(self):
         """
-        Returns if the state space model is observable.
+        Returns conditions for the state space model to be observable.
 
         Examples
         ========
 
-        >>> from sympy import Matrix
+        >>> from sympy import symbols, Matrix
         >>> from sympy.physics.control import StateSpace
-        >>> A = Matrix([[-1.5, -2], [1, 0]])
-        >>> B = Matrix([0.5, 0])
-        >>> C = Matrix([[0, 1]])
-        >>> D = Matrix([1])
-        >>> ss = StateSpace(A, B, C, D)
-        >>> ss.is_observable()
+        >>> A1 = Matrix([[-1.5, -2], [1, 0]])
+        >>> B1 = Matrix([0.5, 0])
+        >>> C1 = Matrix([[0, 1]])
+        >>> D1 = Matrix([1])
+        >>> ss1 = StateSpace(A1, B1, C1, D1)
+        >>> ss1.is_observable()
         True
 
+        >>> a = symbols("a")
+        >>> A2 = Matrix([[1, 0, 1], [1, 1, 0], [0, 0, a]])
+        >>> B2 = Matrix([0.5, 1, 1])
+        >>> C2 = Matrix([[3, 1, 2]])
+        >>> ss2 = StateSpace(A2, B2, C2)
+        >>> ss2.is_observable()
+        [Ne(-2*a**2 + a, 0)]
+
         """
-        return self.observability_matrix().rank() == self.num_states
+        M = self.observability_matrix()
+        conds = self._get_full_rank_conditions(M)
+
+        return conds
 
     def controllability_matrix(self):
         """
@@ -5147,8 +5245,44 @@ class StateSpace(LinearTimeInvariant):
         return Matrix(co)
 
     def uncontrollable_subspace(self):
-        """Returns the uncontrollable subspace of the state space model."""
+        """
+        Returns the uncontrollable subspace of the state space model.
+
+        Note: this method raises an error for matrices with symbolic entries
+        because it is not possible determine the uncontrollable subspace
+        in general.
+
+        Raises
+        ======
+        NotImplementedError
+            If the state space model has symbolic entries, the uncontrollable
+            subspace cannot be determined in general.
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix
+        >>> from sympy.physics.control import StateSpace
+        >>> A = Matrix([[-1.5, -2], [1, 0]])
+        >>> B = Matrix([0.5, 0])
+        >>> C = Matrix([[0, 1]])
+        >>> D = Matrix([1])
+        >>> ss = StateSpace(A, B, C, D)
+        >>> co_subspace = ss.controllable_subspace()
+        >>> co_subspace
+        [Matrix([
+        [0.5],
+        [  0]]), Matrix([
+        [-0.75],
+        [  0.5]])]
+
+        """
         M = Matrix.hstack(*self.controllable_subspace())
+        if len(M.free_symbols) > 0:
+            raise NotImplementedError(
+                "Uncontrollable subspace cannot be determined for " \
+                "symbolic matrices."
+            )
         return self._calc_orthogonal_complement(M, self._A.shape[0])
 
     def controllable_subspace(self):
@@ -5178,20 +5312,31 @@ class StateSpace(LinearTimeInvariant):
 
     def is_controllable(self):
         """
-        Returns if the state space model is controllable.
+        Returns conditions for the state space model to be controllable.
 
         Examples
         ========
 
-        >>> from sympy import Matrix
+        >>> from sympy import symbols, Matrix
         >>> from sympy.physics.control import StateSpace
-        >>> A = Matrix([[-1.5, -2], [1, 0]])
-        >>> B = Matrix([0.5, 0])
-        >>> C = Matrix([[0, 1]])
-        >>> D = Matrix([1])
-        >>> ss = StateSpace(A, B, C, D)
-        >>> ss.is_controllable()
+        >>> A1 = Matrix([[-1.5, -2], [1, 0]])
+        >>> B1 = Matrix([0.5, 0])
+        >>> C1 = Matrix([[0, 1]])
+        >>> D1 = Matrix([1])
+        >>> ss1 = StateSpace(A1, B1, C1, D1)
+        >>> ss1.is_controllable()
         True
 
+        >>> a = symbols("a")
+        >>> A2 = Matrix([[1, 0, 1], [1, 1, 0], [0, 0, a]])
+        >>> B2 = Matrix([0.5, 1, 1])
+        >>> C2 = Matrix([[0, 1, 0]])
+        >>> ss2 = StateSpace(A2, B2, C2)
+        >>> ss2.is_controllable()
+        [Ne(0.25*a**2 - 1.5*a + 2.25, 0)]
+
         """
-        return self.controllability_matrix().rank() == self.num_states
+        M = self.controllability_matrix()
+        conds = self._get_full_rank_conditions(M)
+
+        return conds

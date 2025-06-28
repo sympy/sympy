@@ -5,6 +5,7 @@ from sympy.core.numbers import (I, pi, Rational, oo)
 from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.core.symbol import symbols
+from sympy.core.relational import Unequality
 from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.special.delta_functions import Heaviside
 from sympy.functions.elementary.miscellaneous import sqrt
@@ -1832,10 +1833,19 @@ def test_StateSpace_functions():
     # Observability
     assert SS1.is_observable() == True
     assert SS2.is_observable() == False
+    assert SS4.is_observable() == \
+        [Unequality(-a0*c1*c2 + a1*c1**2 - a2*c2**2 + a3*c1*c2, 0)]
     assert SS1.observability_matrix() == Matrix([[0, 1], [1, 0]])
     assert SS2.observability_matrix() == Matrix([[-1,  1], [ 1, -1], [ 3, -3], [-3,  3]])
+    assert SS4.observability_matrix() == \
+        Matrix([[c1, c2], [a0*c1 + a2*c2, a1*c1 + a3*c2]])
     assert SS1.observable_subspace() == [Matrix([[1], [0]]), Matrix([[0], [1]])]
     assert SS2.observable_subspace() == [Matrix([[-1], [ 1]])]
+    raises(NotImplementedError, lambda: SS4.observable_subspace())
+    assert SS1.unobservable_subspace() == []
+    assert SS2.unobservable_subspace() == [Matrix([[1],[1]])]
+    raises(NotImplementedError, lambda: SS4.unobservable_subspace())
+
     Qo = SS4.observability_matrix().subs([(a0, 0), (a1, -6), (a2, 1), (a3, -5), (c1, 0), (c2, 1)])
     assert Qo == Matrix([[0, 1], [1, -5]])
 
@@ -1848,8 +1858,12 @@ def test_StateSpace_functions():
     # Controllability
     assert SS1.is_controllable() == True
     assert SS3.is_controllable() == False
+    assert SS4.is_controllable() == \
+        [Unequality(-a0*b1*b2 - a1*b2**2 + a2*b1**2 + a3*b1*b2, 0)]
     assert SS1.controllability_matrix() ==  Matrix([[0.5, -0.75], [  0,   0.5]])
     assert SS3.controllability_matrix() == Matrix([[1, -1, 2, -2], [1, -1, 2, -2]])
+    assert SS4.controllability_matrix() == \
+        Matrix([[b1, a0*b1 + a1*b2], [b2, a2*b1 + a3*b2]])
     assert SS1.controllable_subspace() == [Matrix([[0.5], [  0]]), Matrix([[-0.75], [  0.5]])]
     assert SS3.controllable_subspace() == [Matrix([[1], [1]])]
     assert SS4.controllable_subspace() == [Matrix([
@@ -1857,6 +1871,10 @@ def test_StateSpace_functions():
                                           [b2]]), Matrix([
                                           [a0*b1 + a1*b2],
                                           [a2*b1 + a3*b2]])]
+    assert SS1.uncontrollable_subspace() == []
+    assert SS3.uncontrollable_subspace() == [Matrix([[-1], [1]])]
+    raises(NotImplementedError, lambda: SS4.uncontrollable_subspace()) # uncontrollable subspace fo symbols not implemented
+
     Qc = SS4.controllability_matrix().subs([(a0, 0), (a1, 1), (a2, -6), (a3, -5), (b1, 0), (b2, 1)])
     assert Qc == Matrix([[0, 1], [1, -5]])
     ss_contr = StateSpace(Matrix([[1, 0, 1], [0,0,0],[0,0,-2]]), Matrix([1,1,0]), Matrix([1,1,0]).T).to_controllable_form()
