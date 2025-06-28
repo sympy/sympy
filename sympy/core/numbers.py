@@ -24,7 +24,7 @@ from sympy.external.gmpy import SYMPY_INTS, gmpy, flint
 from sympy.multipledispatch import dispatch
 import mpmath
 import mpmath.libmp as mlib
-from mpmath.libmp import bitcount, round_nearest as rnd
+from mpmath.libmp import round_nearest as rnd
 from mpmath.libmp.backend import MPZ
 from mpmath.libmp import mpf_pow, mpf_pi, mpf_e, phi_fixed
 from mpmath.ctx_mp_python import mpnumeric
@@ -807,11 +807,7 @@ class Float(Number):
             return S.NaN
         elif isinstance(num, (SYMPY_INTS, Integer)):
             num = str(num)
-        elif num is S.Infinity:
-            return num
-        elif num is S.NegativeInfinity:
-            return num
-        elif num is S.NaN:
+        elif num is S.Infinity or num is S.NegativeInfinity or num is S.NaN:
             return num
         elif _is_numpy_instance(num):  # support for numpy datatypes
             num = _convert_numpy_types(num)
@@ -910,7 +906,7 @@ class Float(Number):
                     # don't compute number or else it may
                     # over/underflow
                     return Float._new(
-                        (num[0], num[1], num[2], bitcount(num[1])),
+                        (num[0], num[1], num[2], num[1].bit_length()),
                         precision)
         elif isinstance(num, (Number, NumberSymbol)):
             _mpf_ = num._as_mpf_val(precision)
@@ -1650,9 +1646,7 @@ class Rational(Number):
         if other.is_Number:
             op = None
             s, o = self, other
-            if other.is_NumberSymbol:
-                op = getattr(o, attr)
-            elif other.is_Float:
+            if other.is_NumberSymbol or other.is_Float:
                 op = getattr(o, attr)
             elif other.is_Rational:
                 s, o = Integer(s.p*o.q), Integer(s.q*o.p)
@@ -2085,9 +2079,7 @@ class Integer(Rational):
         b_pos = int(abs(self.p))
         p = perfect_power(b_pos)
         if p is not False:
-            # XXX: Convert to int because perfect_power may return fmpz
-            # Ideally that should be fixed in perfect_power though...
-            dict = {int(p[0]): int(p[1])}
+            dict = {p[0]: p[1]}
         else:
             dict = Integer(b_pos).factors(limit=2**15)
 

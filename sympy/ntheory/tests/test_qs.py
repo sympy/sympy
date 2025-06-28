@@ -42,17 +42,17 @@ def test_qs_2() -> None:
     assert g.a == 1133107
     assert g.b == 682543
     assert [factor_base[i].soln1 for i in range(15)] == \
-        [0, 0, 3, 7, 13, 0, 8, 19, 9, 43, 27, 25, 63, 29, 19]
+        [None, 0, 3, 7, 13, 0, 8, 19, 9, 43, 27, 25, 63, 29, 19]
     assert [factor_base[i].soln2 for i in range(15)] == \
-        [0, 1, 1, 3, 12, 16, 15, 6, 15, 1, 56, 55, 61, 58, 16]
+        [None, 1, 1, 3, 12, 16, 15, 6, 15, 1, 56, 55, 61, 58, 16]
     assert [factor_base[i].b_ainv for i in range(5)] == \
-        [[0, 0], [0, 2], [3, 0], [3, 9], [13, 13]]
+        [None, [0, 2], [3, 0], [3, 9], [13, 13]]
 
     g_1 = next(it)
     assert g_1.a == 1133107
     assert g_1.b == 136765
 
-    sieve_array = _gen_sieve_array(M, factor_base)
+    sieve_array = _gen_sieve_array(M, factor_base, g_1)
     assert sieve_array[0:5] == [8424, 13603, 1835, 5335, 710]
 
     assert _check_smoothness(9645, factor_base) == (36028797018963972, 5)

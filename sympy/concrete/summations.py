@@ -176,7 +176,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
 
     limits: tuple[tuple[Symbol, Expr, Expr]]
 
-    def __new__(cls, function, *symbols, **assumptions):
+    def __new__(cls, function, *symbols, **assumptions) -> Sum:
         obj = AddWithLimits.__new__(cls, function, *symbols, **assumptions)
         if not hasattr(obj, 'limits'):
             return obj

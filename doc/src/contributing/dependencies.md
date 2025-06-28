@@ -364,7 +364,7 @@ library code should be imported with `import_module()`.
 
 - **pytest**: [Pytest](https://docs.pytest.org/en/latest/) is not a required dependency
   for the SymPy test suite. SymPy has its own test runner, which can be
-  accessed via the `bin/test` script in the SymPy source directory or the
+  accessed by running `python bin/test` script in the SymPy source directory or the
   {func}`~.test` function.
 
   However, if you prefer to use pytest, you can use it to run the tests

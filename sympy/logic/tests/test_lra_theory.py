@@ -378,6 +378,7 @@ def test_unhandled_input():
     enc = boolean_formula_to_encoded_cnf(bf)
     raises(UnhandledInput, lambda: LRASolver.from_encoded_cnf(enc, testing_mode=True))
 
+
 @XFAIL
 def test_infinite_strict_inequalities():
     # Extensive testing of the interaction between strict inequalities
@@ -408,27 +409,47 @@ def test_pivot():
 
 
 def test_reset_bounds():
+    """
+    Tests that reset_bounds properly resets all state variables to their default values.
+    """
+    # Test solver behavior after reset
     bf = Q.ge(x, 1) & Q.lt(x, 1)
     enc = boolean_formula_to_encoded_cnf(bf)
     lra, _ = LRASolver.from_encoded_cnf(enc, testing_mode=True)
+
     for clause in enc.data:
         for lit in clause:
             lra.assert_lit(lit)
-    assert len(lra.enc_to_boundary) == 2
-    assert lra.check()[0] == False
 
+    assert lra.check()[0] == False
     lra.reset_bounds()
     assert lra.check()[0] == True
-    for var in lra.all_var:
-        assert var.upper == LRARational(float("inf"), 0)
-        assert var.upper_from_eq == False
-        assert var.upper_from_neg == False
-        assert var.lower == LRARational(-float("inf"), 0)
-        assert var.lower_from_eq == False
-        assert var.lower_from_neg == False
-        assert var.assign == LRARational(0, 0)
-        assert var.var is not None
-        assert var.col_idx is not None
+
+    # Test individual state variable resets
+    bf = Q.ge(x, 0) & Q.le(x, 1)
+    enc = boolean_formula_to_encoded_cnf(bf)
+    lra, _ = LRASolver.from_encoded_cnf(enc, testing_mode=True)
+
+    state_variables = [
+        ('lower', LRARational(10, 0), LRARational(-float("inf"), 0)),
+        ('upper', LRARational(10, 0), LRARational(float("inf"), 0)),
+        ('lower_from_eq', True, False),
+        ('lower_from_neg', True, False),
+        ('upper_from_eq', True, False),
+        ('upper_from_neg', True, False),
+        ('assign', LRARational(10, 0), LRARational(0, 0))
+    ]
+
+    for attr_name, test_value, expected_reset_value in state_variables:
+        for var in lra.all_var:
+            setattr(var, attr_name, test_value)
+
+        lra.reset_bounds()
+
+        for var in lra.all_var:
+            actual_value = getattr(var, attr_name)
+            assert actual_value == expected_reset_value, \
+                f"Failed to reset {attr_name}: expected {expected_reset_value}, got {actual_value}"
 
 
 def test_empty_cnf():

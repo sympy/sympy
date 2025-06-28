@@ -224,10 +224,6 @@ def run_in_subprocess_with_hash_randomization(
     use a predetermined seed for tests, we must start Python in a separate
     subprocess.
 
-    Hash randomization was added in the minor Python versions 2.6.8, 2.7.3,
-    3.1.5, and 3.2.3, and is enabled by default in all Python versions after
-    and including 3.3.0.
-
     Examples
     ========
 
@@ -245,14 +241,6 @@ def run_in_subprocess_with_hash_randomization(
     cwd = get_sympy_dir()
     # Note, we must return False everywhere, not None, as subprocess.call will
     # sometimes return None.
-
-    # First check if the Python version supports hash randomization
-    # If it does not have this support, it won't recognize the -R flag
-    p = subprocess.Popen([command, "-RV"], stdout=subprocess.PIPE,
-                         stderr=subprocess.STDOUT, cwd=cwd)
-    p.communicate()
-    if p.returncode != 0:
-        return False
 
     hash_seed = os.getenv("PYTHONHASHSEED")
     if not hash_seed:
@@ -1246,7 +1234,7 @@ class SymPyTests:
             except ImportError:
                 reporter.import_error(filename, sys.exc_info())
                 return
-            except Exception:
+            except Exception: # noqa: BLE001
                 reporter.test_exception(sys.exc_info())
 
             clear_cache()
@@ -1316,7 +1304,7 @@ class SymPyTests:
                     reporter.test_skip("KeyboardInterrupt")
                 else:
                     raise
-            except Exception:
+            except Exception: # noqa: BLE001
                 if timeout:
                     signal.alarm(0)  # Disable the alarm. It could not be handled before.
                 t, v, tr = sys.exc_info()
