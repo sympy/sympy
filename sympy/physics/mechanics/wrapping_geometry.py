@@ -35,19 +35,6 @@ class WrappingGeometryBase(ABC):
         pass
 
     @abstractmethod
-    def point_on_surface(self, point):
-        """Returns ``True`` if a point is on the geometry's surface.
-
-        Parameters
-        ==========
-        point : Point
-            The point for which it's to be ascertained if it's on the
-            geometry's surface or not.
-
-        """
-        pass
-
-    @abstractmethod
     def geodesic_length(self, point_1, point_2):
         """Returns the shortest distance between two points on a geometry's
         surface.
@@ -160,16 +147,14 @@ class WrappingSphere(WrappingGeometryBase):
         self._point = point
 
     def point_on_surface(self, point):
-        """Returns ``True`` if a point is on the sphere's surface.
+        """Returns a symbolic equality for whether a point is on the sphere's
+        surface.
 
         Parameters
         ==========
 
         point : Point
-            The point for which it's to be ascertained if it's on the sphere's
-            surface or not. This point's position relative to the sphere's
-            center must be a simple expression involving the radius of the
-            sphere, otherwise this check will likely not work.
+            The point for which the expression is to be generated.
 
         """
         point_vector = point.pos_from(self.point)
@@ -177,7 +162,7 @@ class WrappingSphere(WrappingGeometryBase):
             point_radius_squared = dot(point_vector, point_vector)
         else:
             point_radius_squared = point_vector**2
-        return Eq(point_radius_squared, self.radius**2) == True
+        return Eq(point_radius_squared, self.radius**2, evaluate=False)
 
     def geodesic_length(self, point_1, point_2):
         r"""Returns the shortest distance between two points on the sphere's
@@ -234,9 +219,10 @@ class WrappingSphere(WrappingGeometryBase):
         >>> sphere.geodesic_length(p1, p2)
         pi*r/2
 
-        If the ``geodesic_length`` method is passed an argument, the ``Point``
-        that doesn't lie on the sphere's surface then a ``ValueError`` is
-        raised because it's not possible to calculate a value in this case.
+        If the ``geodesic_length`` method is passed an argument that doesn't
+        lie on the sphere's surface then unexpected results may be obtained.
+        It is the user's responsibility to ensure that the points lie on the
+        sphere's surface.
 
         Parameters
         ==========
@@ -247,15 +233,6 @@ class WrappingSphere(WrappingGeometryBase):
             Point to which the geodesic length should be calculated.
 
         """
-        for point in (point_1, point_2):
-            if not self.point_on_surface(point):
-                msg = (
-                    f'Geodesic length cannot be calculated as point {point} '
-                    f'with radius {point.pos_from(self.point).magnitude()} '
-                    f'from the sphere\'s center {self.point} does not lie on '
-                    f'the surface of {self} with radius {self.radius}.'
-                )
-                raise ValueError(msg)
         point_1_vector = point_1.pos_from(self.point).normalize()
         point_2_vector = point_2.pos_from(self.point).normalize()
         central_angle = acos(point_2_vector.dot(point_1_vector))
@@ -400,16 +377,14 @@ class WrappingCylinder(WrappingGeometryBase):
         self._axis = axis.normalize()
 
     def point_on_surface(self, point):
-        """Returns ``True`` if a point is on the cylinder's surface.
+        """Returns a symbolic equality for whether a point is on the cylinder's
+        surface.
 
         Parameters
         ==========
 
         point : Point
-            The point for which it's to be ascertained if it's on the
-            cylinder's surface or not. This point's position relative to the
-            cylinder's axis must be a simple expression involving the radius of
-            the sphere, otherwise this check will likely not work.
+            The point for which the expression is to be generated.
 
         """
         relative_position = point.pos_from(self.point)
@@ -419,7 +394,7 @@ class WrappingCylinder(WrappingGeometryBase):
             point_radius_squared = dot(point_vector, point_vector)
         else:
             point_radius_squared = point_vector**2
-        return Eq(trigsimp(point_radius_squared), self.radius**2) == True
+        return Eq(trigsimp(point_radius_squared), self.radius**2, evaluate=False)
 
     def geodesic_length(self, point_1, point_2):
         """The shortest distance between two points on a geometry's surface.
@@ -476,8 +451,9 @@ class WrappingCylinder(WrappingGeometryBase):
         sqrt(r**2*q(t)**2 + 1)
 
         If the ``geodesic_length`` method is passed an argument ``Point`` that
-        doesn't lie on the sphere's surface then a ``ValueError`` is raised
-        because it's not possible to calculate a value in this case.
+        doesn't lie on the cylinder's surface then unexpected results may occur.
+        It is the user's responsibility to ensure that the points lie on the
+        cylinder's surface.
 
         Parameters
         ==========
@@ -488,17 +464,6 @@ class WrappingCylinder(WrappingGeometryBase):
             Point to which the geodesic length should be calculated.
 
         """
-        for point in (point_1, point_2):
-            if not self.point_on_surface(point):
-                msg = (
-                    f'Geodesic length cannot be calculated as point {point} '
-                    f'with radius {point.pos_from(self.point).magnitude()} '
-                    f'from the cylinder\'s center {self.point} does not lie on '
-                    f'the surface of {self} with radius {self.radius} and axis '
-                    f'{self.axis}.'
-                )
-                raise ValueError(msg)
-
         relative_position = point_2.pos_from(point_1)
         parallel_length = relative_position.dot(self.axis)
 
