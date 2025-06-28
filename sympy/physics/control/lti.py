@@ -1125,7 +1125,7 @@ class TransferFunctionBase(SISOLinearTimeInvariant, ABC):
                       self.var, self.sampling_time)
 
     @abstractmethod
-    def get_asymptotic_stability_conditions(self, cancel_poles_zeros = False):
+    def get_asymptotic_stability_conditions(self, cancel_poles_zeros=False):
         """
         Returns the asymptotic stability conditions for
         the transfer function.
@@ -1443,7 +1443,6 @@ class TransferFunctionBase(SISOLinearTimeInvariant, ABC):
         else:
             return Pow(self.den, -1, evaluate=False)
 
-#TODO: finish documentations
 class TransferFunction(TransferFunctionBase):
     r"""
     A class for representing LTI (Linear, time-invariant) systems that can be
@@ -1612,7 +1611,9 @@ class TransferFunction(TransferFunctionBase):
         """
         tf = self.to_standard_form(cancel_poles_zeros)
 
-        conditions = tf.get_asymptotic_stability_conditions(cancel_poles_zeros = False)
+        conditions = tf.get_asymptotic_stability_conditions(
+            cancel_poles_zeros = False
+        )
 
         try:
             output = reduce_inequalities(conditions)
@@ -1626,7 +1627,7 @@ class TransferFunction(TransferFunctionBase):
 
         return None
 
-    def get_asymptotic_stability_conditions(self, cancel_poles_zeros = False):
+    def get_asymptotic_stability_conditions(self, cancel_poles_zeros=False):
         r"""
         See :func:`TransferFunctionBase.get_asymptotic_stability_conditions`.
         """
@@ -1822,7 +1823,7 @@ class DiscreteTransferFunction(TransferFunctionBase):
     TransferFunctionBase, TransferFunction, Feedback, Series, Parallel
 
     """
-    def __new__(cls, num, den, var, sampling_time = 1):
+    def __new__(cls, num, den, var, sampling_time=1):
         if sampling_time == 0:
             return TransferFunction(num, den, var)
 
@@ -1830,28 +1831,28 @@ class DiscreteTransferFunction(TransferFunctionBase):
         return super(DiscreteTransferFunction, cls).__new__(cls, num, den, var,
                                                       sampling_time)
 
-    def __init__(self, num, den, var, sampling_time = 1):
+    def __init__(self, num, den, var, sampling_time=1):
         super().__init__()
         self._sampling_time = sampling_time
 
     @classmethod
-    def from_rational_expression(cls, expr, var=None, sampling_time = 1):
+    def from_rational_expression(cls, expr, var=None, sampling_time=1):
         r"""
         See :func:`TransferFunctionBase.from_rational_expression`.
         """
         return super().from_rational_expression(expr, var,
-                                         sampling_time = sampling_time)
+                                                sampling_time=sampling_time)
 
     @classmethod
-    def from_coeff_lists(cls, num_list, den_list, var, sampling_time = 1):
+    def from_coeff_lists(cls, num_list, den_list, var, sampling_time=1):
         r"""
         See :func:`TransferFunctionBase.from_coeff_lists`.
         """
-        return super().from_coeff_lists(num_list, den_list,
-                                        var, sampling_time = sampling_time)
+        return super().from_coeff_lists(num_list, den_list, var,
+                                        sampling_time=sampling_time)
 
     @classmethod
-    def from_zpk(cls, zeros, poles, gain, var, sampling_time = 1):
+    def from_zpk(cls, zeros, poles, gain, var, sampling_time=1):
         r"""
         See :func:`TransferFunctionBase.from_zpk`.
         """
@@ -2035,7 +2036,7 @@ class DiscreteTransferFunction(TransferFunctionBase):
         """
         ...
 
-    def get_asymptotic_stability_conditions(self, cancel_poles_zeros = False):
+    def get_asymptotic_stability_conditions(self, cancel_poles_zeros=False):
         r"""
         See :func:`TransferFunctionBase.get_asymptotic_stability_conditions`.
         """
@@ -4792,7 +4793,7 @@ class TransferFunctionMatrix(MIMOLinearTimeInvariant):
         return obj
 
     @classmethod
-    def from_Matrix(cls, matrix, var, sampling_time = 0):
+    def from_Matrix(cls, matrix, var, sampling_time=0):
         """
         Creates a new ``TransferFunctionMatrix`` efficiently from a SymPy Matrix
         of ``Expr`` objects.
@@ -5121,7 +5122,7 @@ class TransferFunctionMatrix(MIMOLinearTimeInvariant):
     def sampling_time(self):
         return self.args[0][0][0].sampling_time
 
-def new_state_space(A=None, B=None, C=None, D=None, sampling_time = 0):
+def new_state_space(A=None, B=None, C=None, D=None, sampling_time=0):
     #TODO: finish
     return DTStateSpace(A, B, C, D, sampling_time)
 
@@ -5975,7 +5976,6 @@ class StateSpaceBase(LinearTimeInvariant):
         return neg_roots_conds(determinant, s)
 
 class StateSpace(StateSpaceBase):
-    #TODO: set stampling_time
     def __new__(cls, A=None, B=None, C=None, D=None):
         return super(StateSpace, cls).__new__(cls, A, B, C, D)
 

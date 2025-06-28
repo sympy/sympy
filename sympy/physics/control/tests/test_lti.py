@@ -406,6 +406,13 @@ def test_TransferFunction_addition_and_subtraction():
     raises(ValueError, lambda: (s + 5) - tf2)
     raises(ValueError, lambda: (1 + p**4) - tf1)
 
+    dtf1 = DiscreteTransferFunction(s, s+1, s, 0.01)
+    dtf2 = DiscreteTransferFunction(s + 1, s + 2, s, 0.01)
+    # addition and subtraction with discrete transfer functions raises TypeError
+    raises(TypeError, lambda: dtf1 + tf1)
+    raises(TypeError, lambda: dtf1 - tf1)
+    raises(TypeError, lambda: (dtf2 + dtf1) - tf1)
+    raises(TypeError, lambda: (dtf1 - dtf2) + tf1)
 
 def test_TransferFunction_multiplication_and_division():
     G1 = TransferFunction(s + 3, -s**3 + 9, s)
@@ -448,6 +455,14 @@ def test_TransferFunction_multiplication_and_division():
     raises(ValueError, lambda: G7 / (1 + G6))
     raises(ValueError, lambda: G7 / (G5 * G6))
     raises(ValueError, lambda: G7 / (G7 + (G5 + G6)))
+
+    dtf1 = DiscreteTransferFunction(s, s+1, s, 0.01)
+    dtf2 = DiscreteTransferFunction(s + 1, s + 2, s, 0.01)
+    # multiplication and division with discrete transfer functions raises TypeError
+    raises(TypeError, lambda: dtf1 * G1)
+    raises(TypeError, lambda: dtf1 / G1)
+    raises(TypeError, lambda: (dtf1 * dtf2) / G2)
+    raises(TypeError, lambda: (dtf1 / dtf2) * G2)
 
 
 def test_TransferFunction_is_proper():
@@ -869,7 +884,6 @@ def test_DiscreteTransferFunction_addition_and_subtraction():
     raises(ValueError, lambda: tf1 + (s - 1))
     raises(ValueError, lambda: tf1 + 8)
     raises(ValueError, lambda: (1 - p**3) + tf1)
-    raises(TypeError, lambda: tf5 + tf1)
 
     # subtraction
     assert tf1 - tf2 == Parallel(tf1, -tf2)
@@ -884,6 +898,7 @@ def test_DiscreteTransferFunction_addition_and_subtraction():
     raises(ValueError, lambda: tf1 - 8)
     raises(ValueError, lambda: (s + 5) - tf2)
     raises(ValueError, lambda: (1 + p**4) - tf1)
+    # can't add systems with different sampling time
     raises(TypeError, lambda: tf5 + tf1)
     raises(TypeError, lambda: tf5 - tf1)
     raises(TypeError, lambda: (tf5 + tf6) + tf1)
@@ -935,6 +950,7 @@ def test_DiscreteTransferFunction_multiplication_and_division():
     raises(ValueError, lambda: G7 / (G5 * G6))
     raises(ValueError, lambda: G7 / (G7 + (G5 + G6)))
 
+    # can't add systems with different sampling time
     raises(TypeError, lambda: G8 * G2)
     raises(TypeError, lambda: (G8 * G9) * G2)
     raises(TypeError, lambda: (G8 / G9) * G2)
@@ -1112,7 +1128,8 @@ def test_Series_construction():
     raises(ValueError, lambda: Series(dtf, dtf3))
     raises(ValueError, lambda: Series(dtf, dtf2, dtf3, dtf4))
     raises(ValueError, lambda: Series(-dtf3, dtf2))
-    raises(TypeError, lambda: Series(dtf5, dtf))
+    raises(TypeError, lambda: Series(dtf5, dtf)) # can't do Series with different sampling time systems
+    raises(TypeError, lambda: Series(dtf5, tf)) # can't do Series with continuous and discrete time systems
     raises(TypeError, lambda: Series(2, dtf, dtf4))
     raises(TypeError, lambda: Series(s**2 + p*s, dtf3, dtf2))
     raises(TypeError, lambda: Series(dtf3, Matrix([1, 2, 3, 4])))
@@ -1288,11 +1305,9 @@ def test_Series_functions():
     assert -(dtf1*dtf2) == Series(DiscreteTransferFunction(-1, 1, s, 0.2),
                                   Series(dtf1, dtf2))
 
-    dtf6 = DiscreteTransferFunction(s, s-1, s, 3)
     raises(ValueError, lambda: dtf1*dtf2*dtf4)
     raises(ValueError, lambda: dtf1*(dtf2 - dtf4))
     raises(ValueError, lambda: dtf3*Matrix([1, 2, 3]))
-    raises(TypeError, lambda: dtf3*dtf6)
 
     # evaluate=True -> doit()
     assert Series(dtf1, dtf2, evaluate=True) == Series(dtf1, dtf2).doit() == \
@@ -1634,7 +1649,8 @@ def test_Parallel_construction():
     raises(ValueError, lambda: Parallel(dtf, dtf3))
     raises(ValueError, lambda: Parallel(dtf, dtf2, dtf3, dtf4))
     raises(ValueError, lambda: Parallel(-dtf3, dtf4))
-    raises(TypeError, lambda: Parallel(dtf5, dtf))
+    raises(TypeError, lambda: Parallel(dtf5, dtf)) # can't do Parallel with different sampling time systems
+    raises(TypeError, lambda: Parallel(dtf5, tf)) # can't do Parallel with continuous and discrete time systems
     raises(TypeError, lambda: Parallel(2, dtf, dtf4))
     raises(TypeError, lambda: Parallel(s**2 + p*s, dtf3, dtf2))
     raises(TypeError, lambda: Parallel(dtf3, Matrix([1, 2, 3, 4])))
@@ -1837,11 +1853,9 @@ def test_Parallel_functions():
     assert (dtf1 + dtf2 + dtf5)*(dtf3 + dtf5) == \
         Series(Parallel(dtf1, dtf2, dtf5), Parallel(dtf3, dtf5))
 
-    dtf6 = DiscreteTransferFunction(s, s-1, s, 4)
     raises(ValueError, lambda: dtf1 + dtf2 + dtf4)
     raises(ValueError, lambda: dtf1 - dtf2*dtf4)
     raises(ValueError, lambda: dtf3 + Matrix([1, 2, 3]))
-    raises(TypeError, lambda: dtf6 * dtf3)
 
     # evaluate=True -> doit()
     assert Parallel(dtf1, dtf2, evaluate=True) == \
@@ -2146,14 +2160,16 @@ def test_Feedback_construction():
                                -DiscreteTransferFunction(1, 1, p, 2), -1)
     assert df7.sys1 == Series(DiscreteTransferFunction(-1, 1, p, 2),
                               Series(dtf4, dtf6))
-    assert df6.sampling_time == 2
+    assert df7.sampling_time == 2
 
     # denominator can't be a Parallel instance
     raises(TypeError, lambda: Feedback(dtf1, dtf2 + dtf3))
     raises(TypeError, lambda: Feedback(dtf1, Matrix([1, 2, 3])))
     raises(TypeError, lambda: Feedback(DiscreteTransferFunction(1, 1, s), s - 1))
     raises(TypeError, lambda: Feedback(1, 1))
-    raises(TypeError, lambda: Feedback(f1, df1))
+    dtf_ = DiscreteTransferFunction(s, s + 1, s, 0.1)
+    raises(TypeError, lambda: Feedback(dtf_, dtf1)) # can't do Feedback with different sampling time systems
+    raises(TypeError, lambda: Feedback(f1, df1)) # can't do Feedback with continuous and discrete time systems
     raises(ValueError, lambda: Feedback(dtf2, dtf4*dtf5))
     raises(ValueError, lambda: Feedback(dtf2, dtf1, 1.5))  # `sign` can only be -1 or 1
     raises(ValueError, lambda: Feedback(dtf1, -dtf1**-1))  # denominator can't be zero
@@ -2238,8 +2254,6 @@ def test_Feedback_functions():
         Feedback(dtf4, dtf6)
     assert dtf5 / (dtf + dtf5) == Feedback(dtf5, dtf)
 
-    dtf7 = DiscreteTransferFunction(s, s + 1, s, 0.1)
-    raises(TypeError, lambda: dtf7*dtf)
     raises(TypeError, lambda: dtf1*dtf2*dtf3 / (1 + dtf1*dtf2*dtf3))
     raises(ValueError, lambda: dtf2*dtf3 / (dtf + dtf2*dtf3*dtf4))
 
@@ -2346,7 +2360,7 @@ def test_Feedback_with_Series():
     assert dfd1.den == Parallel(dunit, Series(dtf2, dtf1))
     assert dfd2.den == Parallel(dunit, -Series(dtf2, dtf1))
 
-    # Testing the Series and Parallel Combination with Feedback and TransferFunction
+    # Testing the Series and Parallel Combination with Feedback and DiscreteTransferFunction
     ds1 = Series(dtf1, dfd1)
     dp1 = Parallel(dtf1, dfd1)
     assert dtf1 * dfd1 == ds1
@@ -2356,13 +2370,13 @@ def test_Feedback_with_Series():
                                             ((s + 1)*(s + 2) + 1) + 1,
                                             (s + 1)*(s + 2) + 1, s)
 
-    # Testing the use of Feedback and TransferFunction with Feedback
+    # Testing the use of Feedback and DiscreteTransferFunction with Feedback
     dfd3 = Feedback(dtf1*dfd1, dtf2, -1)
     assert dfd3 == Feedback(Series(dtf1, dfd1), dtf2)
     assert dfd3.num == dtf1 * dfd1
     assert dfd3.den == Parallel(dunit, Series(dtf2, Series(dtf1, dfd1)))
 
-    # Testing the use of Feedback and TransferFunction with TransferFunction
+    # Testing the use of Feedback and DiscreteTransferFunction with DiscreteTransferFunction
     dtf3 = DiscreteTransferFunction(dtf1*dfd1, dtf2, s)
     assert dtf3 == DiscreteTransferFunction(Series(dtf1, dfd1), dtf2, s)
     assert dtf3.num == dtf1*dfd1
@@ -2494,7 +2508,7 @@ def test_MIMOFeedback_construction():
     raises(TypeError, lambda: MIMOFeedback(dtfm_1, tfm_2))
     dtfm_4 = TransferFunctionMatrix.from_Matrix(eye(2) * s, var=s,
                                                 sampling_time=0.1)
-    raises(TypeError, lambda: MIMOFeedback(tfm_1, dtfm_4))
+    raises(TypeError, lambda: MIMOFeedback(dtfm_1, dtfm_4))
 
 
 def test_MIMOFeedback_errors():
