@@ -189,7 +189,7 @@ else:
         def wrapper():
             try:
                 func()
-            except Exception as e:
+            except Exception as e: # noqa: BLE001
                 message = str(e)
                 if message != "Timeout":
                     raise XFail(func.__name__)
