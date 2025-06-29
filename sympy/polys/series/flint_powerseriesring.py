@@ -5,7 +5,11 @@ from typing import Any, Union
 
 from sympy.polys.domains import Domain, QQ, ZZ
 from sympy.polys.series.powerseriesring import _series_from_list, PowerSeriesRing
-from flint import ctx, fmpq_poly, fmpq_series, fmpz_poly, fmpz_series
+
+try:
+    from flint import ctx, fmpq_poly, fmpq_series, fmpz_poly, fmpz_series
+except ImportError:
+    ctx = fmpq_poly = fmpq_series = fmpz_poly = fmpz_series = None
 
 
 ZZSeries = Union[fmpz_series, fmpz_poly]
