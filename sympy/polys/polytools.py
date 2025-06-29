@@ -64,12 +64,22 @@ from sympy.utilities.iterables import iterable, sift
 # Required to avoid errors
 import sympy.polys
 
-import mpmath
-from mpmath.libmp.libhyper import NoConvergence
+from mpmath import MPContext
 
 
 if TYPE_CHECKING:
     from typing_extensions import Self
+
+
+_mpmath_ctx: MPContext | None = None
+
+
+def _get_mpmath_ctx():
+    """Get the mpmath context, creating it if necessary."""
+    global _mpmath_ctx
+    if _mpmath_ctx is None:
+        _mpmath_ctx = MPContext()
+    return _mpmath_ctx
 
 
 def _polifyit(func):
@@ -3706,6 +3716,8 @@ class Poly(Basic):
         if f.degree() <= 0:
             return []
 
+        ctx = _get_mpmath_ctx()
+
         # For integer and rational coefficients, convert them to integers only
         # (for accuracy). Otherwise just try to convert the coefficients to
         # mpmath.mpc and raise an exception if the conversion fails.
@@ -3716,42 +3728,31 @@ class Poly(Basic):
             fac = ilcm(*denoms)
             coeffs = [int(coeff*fac) for coeff in f.all_coeffs()]
         else:
-            coeffs = [coeff.evalf(n=n).as_real_imag()
-                    for coeff in f.all_coeffs()]
-            with mpmath.workdps(n):
+            coeffs = [coeff.evalf(n=n).as_real_imag() for coeff in f.all_coeffs()]
+            with ctx.workdps(n):
                 try:
-                    coeffs = [mpmath.mpc(*coeff) for coeff in coeffs]
+                    coeffs = [ctx.mpc(*coeff) for coeff in coeffs]
                 except TypeError:
-                    raise DomainError("Numerical domain expected, got %s" % \
-                            f.rep.dom)
-
-        dps = mpmath.mp.dps
-        mpmath.mp.dps = n
+                    raise DomainError("Numerical domain expected, got %s" % f.rep.dom)
 
         from sympy.functions.elementary.complexes import sign
-        try:
-            # We need to add extra precision to guard against losing accuracy.
-            # 10 times the degree of the polynomial seems to work well.
-            roots = mpmath.polyroots(coeffs, maxsteps=maxsteps,
-                    cleanup=cleanup, error=False, extraprec=f.degree()*10)
-
-            # Mpmath puts real roots first, then complex ones (as does all_roots)
-            # so we make sure this convention holds here, too.
-            roots = list(map(sympify,
-                sorted(roots, key=lambda r: (1 if r.imag else 0, r.real, abs(r.imag), sign(r.imag)))))
-        except NoConvergence:
+        opts = {'maxsteps': maxsteps, 'cleanup': cleanup, 'error': False}
+        for prec in [f.degree()*10, f.degree()*15]:
             try:
-                # If roots did not converge try again with more extra precision.
-                roots = mpmath.polyroots(coeffs, maxsteps=maxsteps,
-                    cleanup=cleanup, error=False, extraprec=f.degree()*15)
-                roots = list(map(sympify,
-                    sorted(roots, key=lambda r: (1 if r.imag else 0, r.real, abs(r.imag), sign(r.imag)))))
-            except NoConvergence:
-                raise NoConvergence(
-                    'convergence to root failed; try n < %s or maxsteps > %s' % (
-                    n, maxsteps))
-        finally:
-            mpmath.mp.dps = dps
+                with ctx.workdps(n):
+                    roots = ctx.polyroots(coeffs, **opts, extraprec=prec)
+            except ctx.NoConvergence:
+                continue
+            else:
+                break
+        else:
+            msg = 'convergence to root failed; try n < %s or maxsteps > %s'
+            raise ctx.NoConvergence(msg % (n, maxsteps))
+
+        # Mpmath puts real roots first, then complex ones (as does all_roots)
+        # so we make sure this convention holds here, too.
+        key = lambda r: (1 if r.imag else 0, r.real, abs(r.imag), sign(r.imag))
+        roots = [sympify(r) for r in sorted(roots, key=key)]
 
         return roots
 
