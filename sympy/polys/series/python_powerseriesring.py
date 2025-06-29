@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, TypeVar
+from typing import Any, TypeVar, Union
 from sympy.polys.densearith import dup_add, dup_mul, dup_mul_ground, dup_neg, dup_sub
 from sympy.polys.densebasic import dup_degree, dup_reverse, dup_slice
 from sympy.polys.densetools import dup_diff, dup_integrate
@@ -10,7 +10,7 @@ from sympy.polys.series.powerseriesring import _series_from_list, PowerSeriesRin
 
 T = TypeVar("T")
 DUP = list[T]
-USeries = tuple[DUP[T], int | None]
+USeries = tuple[DUP[T], Union[int, None]]
 
 
 def _useries(
@@ -52,14 +52,20 @@ def _unify_prec(
     return coeffs1, coeffs2, unified_prec
 
 
-def _useries_equality(s1: USeries[T], s2: USeries[T]) -> bool | None:
+def _useries_equality(s1: USeries[T], s2: USeries[T], dom: Domain) -> bool | None:
     """Check if two power series are equal."""
     coeffs1, prec1 = s1
     coeffs2, prec2 = s2
 
     if prec1 is None and prec2 is None:
         return s1 == s2
+    elif prec1 is None or prec2 is None:
+        return False
+    else:
+        min_prec = min(prec1, prec2)
 
+    coeffs1 = dup_slice(coeffs1, 0, min_prec, dom)
+    coeffs2 = dup_slice(coeffs2, 0, min_prec, dom)
     if coeffs1 != coeffs2:
         return False
     return None
@@ -198,7 +204,7 @@ def _useries_integrate(s: USeries[T], dom: Domain, ring_prec: int) -> USeries[T]
     return _useries(series, prec, dom, ring_prec)
 
 
-class PythonPowerSeriesRingZZ(PowerSeriesRing[USeries[T]]):
+class PythonPowerSeriesRingZZ(PowerSeriesRing):
     """Python implementation of power series ring over integers ring."""
 
     _domain = ZZ
@@ -210,7 +216,7 @@ class PythonPowerSeriesRingZZ(PowerSeriesRing[USeries[T]]):
 
     def __repr__(self) -> str:
         return (
-            f"Python Power Series Ring over {self.domain} with precision {self._prec}"
+            f"Python Power Series Ring over {self._domain} with precision {self._prec}"
         )
 
     def __eq__(self, other: Any) -> bool:
@@ -219,7 +225,7 @@ class PythonPowerSeriesRingZZ(PowerSeriesRing[USeries[T]]):
         return self._prec == other.prec
 
     def __hash__(self) -> int:
-        return hash((self.domain, self._prec))
+        return hash((self._domain, self._prec))
 
     @property
     def domain(self) -> Domain:
@@ -235,7 +241,7 @@ class PythonPowerSeriesRingZZ(PowerSeriesRing[USeries[T]]):
     def one(self) -> USeries:
         if self._prec == 0:
             return ([], 0)
-        return ([self.domain.one], None)
+        return ([self._domain.one], None)
 
     @property
     def zero(self) -> USeries:
@@ -247,7 +253,7 @@ class PythonPowerSeriesRingZZ(PowerSeriesRing[USeries[T]]):
     def gen(self) -> USeries:
         if self._prec < 2:
             return ([], self._prec)
-        return ([self.domain.one, self.domain.zero], None)
+        return ([self._domain.one, self._domain.zero], None)
 
     def pretty(self, series: USeries[T]) -> str:
         coeffs, prec = series
@@ -268,12 +274,12 @@ class PythonPowerSeriesRingZZ(PowerSeriesRing[USeries[T]]):
         >>> R = PythonPowerSeriesRingZZ(5)
         >>> s = R.from_list([1, 2, 3, 4, 5])
         >>> R.print(s)
-        1 + 2*x + 3*x**2 + 4*x**3 + 5*x**4 + O(x**5)
+        1 + 2*x + 3*x**2 + 4*x**3 + 5*x**4
         """
         coeffs = dup_reverse(coeffs)
         if prec is None and len(coeffs) > self._prec:
             prec = self._prec
-            coeffs = dup_slice(coeffs, 0, prec, self.domain)
+            coeffs = dup_slice(coeffs, 0, prec, self._domain)
 
         return coeffs, prec
 
@@ -294,7 +300,7 @@ class PythonPowerSeriesRingZZ(PowerSeriesRing[USeries[T]]):
 
     def equal(self, s1: USeries[T], s2: USeries[T]) -> bool | None:
         """Check if two power series are equal."""
-        return _useries_equality(s1, s2)
+        return _useries_equality(s1, s2, self._domain)
 
     def equal_repr(self, s1: USeries[T], s2: USeries[T]) -> bool:
         """
@@ -324,7 +330,7 @@ class PythonPowerSeriesRingZZ(PowerSeriesRing[USeries[T]]):
         >>> R.print(R.negative(x))
         -x
         """
-        return _useries_neg(s, self.domain)
+        return _useries_neg(s, self._domain)
 
     def add(self, s1: USeries[T], s2: USeries[T]) -> USeries[T]:
         """Add two power series.
@@ -339,7 +345,7 @@ class PythonPowerSeriesRingZZ(PowerSeriesRing[USeries[T]]):
         >>> R.print(R.add(s1, s2))
         4 + 6*x + 8*x**2 + O(x**3)
         """
-        return _useries_add(s1, s2, self.domain, self._prec)
+        return _useries_add(s1, s2, self._domain, self._prec)
 
     def subtract(self, s1: USeries[T], s2: USeries[T]) -> USeries[T]:
         """
@@ -355,7 +361,7 @@ class PythonPowerSeriesRingZZ(PowerSeriesRing[USeries[T]]):
         >>> R.print(R.subtract(s1, s2))
         -2 - 2*x - 2*x**2 + O(x**3)
         """
-        return _useries_sub(s1, s2, self.domain, self._prec)
+        return _useries_sub(s1, s2, self._domain, self._prec)
 
     def multiply(self, s1: USeries[T], s2: USeries[T]) -> USeries[T]:
         """
@@ -371,7 +377,7 @@ class PythonPowerSeriesRingZZ(PowerSeriesRing[USeries[T]]):
         >>> R.print(R.multiply(s1, s2))
         1 + 7*x + 21*x**2 + 35*x**3 + 35*x**4 + O(x**5)
         """
-        return _useries_mul(s1, s2, self.domain, self._prec)
+        return _useries_mul(s1, s2, self._domain, self._prec)
 
     def multiply_ground(self, s: USeries[T], n: Any) -> USeries[T]:
         """
@@ -385,7 +391,7 @@ class PythonPowerSeriesRingZZ(PowerSeriesRing[USeries[T]]):
         >>> R.print(R.multiply_ground(x, 3))
         3*x
         """
-        return _useries_mul_ground(s, n, self.domain, self._prec)
+        return _useries_mul_ground(s, n, self._domain, self._prec)
 
     def pow_int(self, s: USeries[T], n: int) -> USeries[T]:
         """
@@ -400,7 +406,7 @@ class PythonPowerSeriesRingZZ(PowerSeriesRing[USeries[T]]):
         >>> R.print(R.pow_int(s, 5))
         1 + 10*x + 45*x**2 + 120*x**3 + 210*x**4 + O(x**5)
         """
-        return _useries_pow_int(s, n, self.domain, self._prec)
+        return _useries_pow_int(s, n, self._domain, self._prec)
 
     def square(self, s: USeries[T]) -> USeries[T]:
         """
@@ -415,7 +421,7 @@ class PythonPowerSeriesRingZZ(PowerSeriesRing[USeries[T]]):
         >>> R.print(R.square(s))
         1 + 4*x + 6*x**2 + 4*x**3 + x**4
         """
-        return _useries_mul(s, s, self.domain, self._prec)
+        return _useries_mul(s, s, self._domain, self._prec)
 
     def truncate(self, s: USeries[T], n: int) -> USeries[T]:
         """
@@ -433,7 +439,7 @@ class PythonPowerSeriesRingZZ(PowerSeriesRing[USeries[T]]):
         >>> R.print(t)
         1 + 2*x + 3*x**2 + O(x**3)
         """
-        return _useries_truncate(s, n, self.domain)
+        return _useries_truncate(s, n, self._domain)
 
     def differentiate(self, s: USeries[T]) -> USeries[T]:
         """
@@ -446,12 +452,12 @@ class PythonPowerSeriesRingZZ(PowerSeriesRing[USeries[T]]):
         >>> R = PythonPowerSeriesRingZZ(5)
         >>> s = R.from_list([1, 2, 3])
         >>> R.print(R.differentiate(s))
-        2 + 6*x + O(x**2)
+        2 + 6*x
         """
-        return _useries_derivative(s, self.domain, self._prec)
+        return _useries_derivative(s, self._domain, self._prec)
 
 
-class PythonPowerSeriesRingQQ(PowerSeriesRing[USeries[T]]):
+class PythonPowerSeriesRingQQ(PowerSeriesRing):
     """Python implementation of power series ring over rational field."""
 
     _domain = QQ
@@ -463,7 +469,7 @@ class PythonPowerSeriesRingQQ(PowerSeriesRing[USeries[T]]):
 
     def __repr__(self) -> str:
         return (
-            f"Python Power Series Ring over {self.domain} with precision {self._prec}"
+            f"Python Power Series Ring over {self._domain} with precision {self._prec}"
         )
 
     def __eq__(self, other: Any) -> bool:
@@ -472,7 +478,7 @@ class PythonPowerSeriesRingQQ(PowerSeriesRing[USeries[T]]):
         return self._prec == other.prec
 
     def __hash__(self) -> int:
-        return hash((self.domain, self._prec))
+        return hash((self._domain, self._prec))
 
     @property
     def domain(self) -> Domain:
@@ -527,7 +533,7 @@ class PythonPowerSeriesRingQQ(PowerSeriesRing[USeries[T]]):
         coeffs = dup_reverse(coeffs)
         if prec is None and len(coeffs) > self._prec:
             prec = self._prec
-            coeffs = dup_slice(coeffs, 0, prec, self.domain)
+            coeffs = dup_slice(coeffs, 0, prec, self._domain)
 
         return coeffs, prec
 
@@ -549,7 +555,7 @@ class PythonPowerSeriesRingQQ(PowerSeriesRing[USeries[T]]):
 
     def equal(self, s1: USeries[T], s2: USeries[T]) -> bool | None:
         """Check if two power series are equal."""
-        return _useries_equality(s1, s2)
+        return _useries_equality(s1, s2, self._domain)
 
     def equal_repr(self, s1: USeries[T], s2: USeries[T]) -> bool:
         """
@@ -581,7 +587,7 @@ class PythonPowerSeriesRingQQ(PowerSeriesRing[USeries[T]]):
         >>> R.print(R.negative(x))
         -x
         """
-        return _useries_neg(s, self.domain)
+        return _useries_neg(s, self._domain)
 
     def add(self, s1: USeries[T], s2: USeries[T]) -> USeries[T]:
         """Add two power series.
@@ -597,7 +603,7 @@ class PythonPowerSeriesRingQQ(PowerSeriesRing[USeries[T]]):
         >>> R.print(R.add(s1, s2))
         5/4 + 22/15*x
         """
-        return _useries_add(s1, s2, self.domain, self._prec)
+        return _useries_add(s1, s2, self._domain, self._prec)
 
     def subtract(self, s1: USeries[T], s2: USeries[T]) -> USeries[T]:
         """
@@ -614,7 +620,7 @@ class PythonPowerSeriesRingQQ(PowerSeriesRing[USeries[T]]):
         >>> R.print(R.subtract(s1, s2))
         -1/4 - 2/15*x
         """
-        return _useries_sub(s1, s2, self.domain, self._prec)
+        return _useries_sub(s1, s2, self._domain, self._prec)
 
     def multiply(self, s1: USeries[T], s2: USeries[T]) -> USeries[T]:
         """
@@ -631,7 +637,7 @@ class PythonPowerSeriesRingQQ(PowerSeriesRing[USeries[T]]):
         >>> R.print(R.multiply(s1, s2))
         1 + 13/6*x + x**2
         """
-        return _useries_mul(s1, s2, self.domain, self._prec)
+        return _useries_mul(s1, s2, self._domain, self._prec)
 
     def multiply_ground(self, s: USeries[T], n: Any) -> USeries[T]:
         """
@@ -646,7 +652,7 @@ class PythonPowerSeriesRingQQ(PowerSeriesRing[USeries[T]]):
         >>> R.print(R.multiply_ground(x, QQ(3,2)))
         3/2*x
         """
-        return _useries_mul_ground(s, n, self.domain, self._prec)
+        return _useries_mul_ground(s, n, self._domain, self._prec)
 
     def pow_int(self, s: USeries[T], n: int) -> USeries[T]:
         """
@@ -660,9 +666,9 @@ class PythonPowerSeriesRingQQ(PowerSeriesRing[USeries[T]]):
         >>> R = PythonPowerSeriesRingQQ(5)
         >>> s = R.from_list([QQ(1,2), QQ(1,3)])
         >>> R.print(R.pow_int(s, 3))
-        1/8 + 1/4*x + 19/72*x**2 + 1/18*x**3 + 5/324*x**4 + O(x**5)
+        1/8 + 1/4*x + 1/6*x**2 + 1/27*x**3
         """
-        return _useries_pow_int(s, n, self.domain, self._prec)
+        return _useries_pow_int(s, n, self._domain, self._prec)
 
     def square(self, s: USeries[T]) -> USeries[T]:
         """
@@ -678,7 +684,7 @@ class PythonPowerSeriesRingQQ(PowerSeriesRing[USeries[T]]):
         >>> R.print(R.square(s))
         1/4 + 1/3*x + 1/9*x**2
         """
-        return _useries_mul(s, s, self.domain, self._prec)
+        return _useries_mul(s, s, self._domain, self._prec)
 
     def truncate(self, s: USeries[T], n: int) -> USeries[T]:
         """
@@ -692,12 +698,12 @@ class PythonPowerSeriesRingQQ(PowerSeriesRing[USeries[T]]):
         >>> R = PythonPowerSeriesRingQQ(5)
         >>> s = R.from_list([QQ(1,2), QQ(2,3), QQ(3,4), QQ(4,5), QQ(5,6)])
         >>> R.print(s)
-        1/2 + 2/3*x + 3/4*x**2 + 4/5*x**3 + 5/6*x**4 + O(x**5)
+        1/2 + 2/3*x + 3/4*x**2 + 4/5*x**3 + 5/6*x**4
         >>> t = R.truncate(s, 3)
         >>> R.print(t)
         1/2 + 2/3*x + 3/4*x**2 + O(x**3)
         """
-        return _useries_truncate(s, n, self.domain)
+        return _useries_truncate(s, n, self._domain)
 
     def differentiate(self, s: USeries[T]) -> USeries[T]:
         """
@@ -711,9 +717,9 @@ class PythonPowerSeriesRingQQ(PowerSeriesRing[USeries[T]]):
         >>> R = PythonPowerSeriesRingQQ(5)
         >>> s = R.from_list([QQ(1,2), QQ(2,3), QQ(3,4)])
         >>> R.print(R.differentiate(s))
-        2/3 + 3/2*x + O(x**2)
+        2/3 + 3/2*x
         """
-        return _useries_derivative(s, self.domain, self._prec)
+        return _useries_derivative(s, self._domain, self._prec)
 
     def integrate(self, s: USeries[T]) -> USeries[T]:
         """
@@ -727,6 +733,6 @@ class PythonPowerSeriesRingQQ(PowerSeriesRing[USeries[T]]):
         >>> R = PythonPowerSeriesRingQQ(5)
         >>> s = R.from_list([QQ(1,2), QQ(2,3), QQ(3,4)])
         >>> R.print(R.integrate(s))
-        1/2*x + 1/6*x**2 + 1/12*x**3 + O(x**4)
+        1/2*x + 1/3*x**2 + 1/4*x**3
         """
-        return _useries_integrate(s, self.domain, self._prec)
+        return _useries_integrate(s, self._domain, self._prec)
