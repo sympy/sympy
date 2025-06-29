@@ -6,7 +6,6 @@ from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, Symbol)
 from sympy.functions.elementary.exponential import log
 from sympy.functions.elementary.trigonometric import atan
-from sympy.polys.polyerrors import DomainError
 from sympy.polys.polyroots import roots
 from sympy.polys.polytools import cancel
 from sympy.polys.rootoftools import RootSum
@@ -323,21 +322,6 @@ def log_to_atan(f, g):
         A = 2*atan(u.as_expr())
 
         return A + log_to_atan(s, t)
-
-
-def _get_real_roots(f, x):
-    """get real roots of f if possible"""
-    rs = roots(f, filter='R')
-
-    try:
-        num_roots = f.count_roots()
-    except DomainError:
-        return rs
-    else:
-        if len(rs) == num_roots:
-            return rs
-        else:
-            return None
 
 
 def _roots_real_complex(poly):
