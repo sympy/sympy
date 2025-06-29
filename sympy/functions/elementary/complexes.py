@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import TYPE_CHECKING, overload
+
 from sympy.core import S, Add, Mul, sympify, Symbol, Dummy, Basic
 from sympy.core.expr import Expr
 from sympy.core.exprtools import factor_terms
@@ -11,6 +13,12 @@ from sympy.core.power import Pow
 from sympy.core.relational import Eq
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
+
+if TYPE_CHECKING:
+    from typing import TypeVar
+    from sympy.algebras.quaternion import Quaternion
+    from sympy.matrices.matrixbase import MatrixBase
+    Tmat = TypeVar('Tmat', bound=MatrixBase)
 
 ###############################################################################
 ######################### REAL and IMAGINARY PARTS ############################
@@ -64,6 +72,17 @@ class re(DefinedFunction):
     is_extended_real = True
     unbranched = True  # implicitly works on the projection to C
     _singularities = True  # non-holomorphic
+
+    if TYPE_CHECKING:
+
+        @overload
+        def __new__(cls, arg: Tmat, evaluate: bool = True) -> Tmat: ... # type: ignore
+        @overload
+        def __new__(cls, arg: Expr, evaluate: bool = True) -> Expr: ... # type: ignore
+
+        def __new__(cls, arg: MatrixBase | Expr, evaluate: bool = True # type: ignore
+                    ) -> MatrixBase | Expr:
+            ...
 
     @classmethod
     def eval(cls, arg):
@@ -858,6 +877,15 @@ class conjugate(DefinedFunction):
     .. [1] https://en.wikipedia.org/wiki/Complex_conjugation
     """
     _singularities = True  # non-holomorphic
+
+    if TYPE_CHECKING:
+
+        @overload
+        def __new__(cls, arg: Quaternion) -> Quaternion: ... # type: ignore
+        @overload
+        def __new__(cls, arg: Expr) -> Expr: ... # type: ignore
+
+        def __new__(cls, arg: Basic) -> Basic: ... # type: ignore
 
     @classmethod
     def eval(cls, arg):
