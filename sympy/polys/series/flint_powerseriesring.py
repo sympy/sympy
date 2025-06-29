@@ -3,9 +3,15 @@ from __future__ import annotations
 from contextlib import contextmanager
 from typing import Any, Union
 
+from sympy.external.gmpy import GROUND_TYPES
 from sympy.polys.domains import Domain, QQ, ZZ
 from sympy.polys.series.powerseriesring import _series_from_list, PowerSeriesRing
-from flint import ctx, fmpq_poly, fmpq_series, fmpz_poly, fmpz_series
+
+
+if GROUND_TYPES == "flint":
+    from flint import fmpq_poly, fmpq_series, fmpz_poly, fmpz_series, ctx
+else:
+    fmpq_poly = fmpq_series = fmpz_poly = fmpz_series = None
 
 
 ZZSeries = Union[fmpz_series, fmpz_poly]
@@ -33,7 +39,7 @@ def _global_cap(cap: int):
         ctx.cap = old_cap
 
 
-class FlintPowerSeriesRingZZ(PowerSeriesRing[ZZSeries]):
+class FlintPowerSeriesRingZZ(PowerSeriesRing):
     """Flint implementation of power series ring over integer ring."""
 
     _domain = ZZ
@@ -101,11 +107,12 @@ class FlintPowerSeriesRingZZ(PowerSeriesRing[ZZSeries]):
         Examples
         ========
 
-        >>> from sympy.polys.series.flint_powerseriesring import FlintPowerSeriesRingZZ
-        >>> R = FlintPowerSeriesRingZZ(5)
+        >>> from sympy.polys.domains import ZZ
+        >>> from sympy.polys.series import power_series_ring
+        >>> R = power_series_ring(ZZ, 5)
         >>> s = R.from_list([1, 2, 3, 4, 5])
         >>> R.print(s)
-        1 + 2*x + 3*x**2 + 4*x**3 + 5*x**4 + O(x**5)
+        1 + 2*x + 3*x**2 + 4*x**3 + 5*x**4
         """
         if prec is None:
             if len(coeffs) <= self._prec:
@@ -120,8 +127,9 @@ class FlintPowerSeriesRingZZ(PowerSeriesRing[ZZSeries]):
 
         Examples
         ========
-        >>> from sympy.polys.series.flint_powerseriesring import FlintPowerSeriesRingZZ
-        >>> R = FlintPowerSeriesRingZZ(5)
+        >>> from sympy.polys.domains import ZZ
+        >>> from sympy.polys.series import power_series_ring
+        >>> R = power_series_ring(ZZ, 5)
         >>> x = R.gen
         >>> R.to_list(x)
         [0, 1]
@@ -131,8 +139,16 @@ class FlintPowerSeriesRingZZ(PowerSeriesRing[ZZSeries]):
     def equal(self, s1: ZZSeries, s2: ZZSeries) -> bool | None:
         if isinstance(s1, fmpz_poly) and isinstance(s2, fmpz_poly):
             return s1 == s2
+        elif isinstance(s1, fmpz_poly) or isinstance(s2, fmpz_poly):
+            return False
+        else:
+            # Fetching precision from this function is not efficient.
+            min_prec = min(_get_series_precision(s1), _get_series_precision(s2))
 
-        if s1.coeffs() != s2.coeffs():
+        coeffs1 = s1.coeffs()[:min_prec]
+        coeffs2 = s2.coeffs()[:min_prec]
+
+        if coeffs1 != coeffs2:
             return False
         return None
 
@@ -143,8 +159,9 @@ class FlintPowerSeriesRingZZ(PowerSeriesRing[ZZSeries]):
         Examples
         ========
 
-        >>> from sympy.polys.series.flint_powerseriesring import FlintPowerSeriesRingZZ
-        >>> R = FlintPowerSeriesRingZZ(5)
+        >>> from sympy.polys.domains import ZZ
+        >>> from sympy.polys.series import power_series_ring
+        >>> R = power_series_ring(ZZ, 5)
         >>> s1 = R.from_list([1, 2, 1])
         >>> s2 = R.square(R.add(R.one, R.gen))
         >>> R.equal_repr(s1, s2)
@@ -164,8 +181,9 @@ class FlintPowerSeriesRingZZ(PowerSeriesRing[ZZSeries]):
         Examples
         ========
 
-        >>> from sympy.polys.series.flint_powerseriesring import FlintPowerSeriesRingZZ
-        >>> R = FlintPowerSeriesRingZZ(5)
+        >>> from sympy.polys.domains import ZZ
+        >>> from sympy.polys.series import power_series_ring
+        >>> R = power_series_ring(ZZ, 5)
         >>> x = R.gen
         >>> R.print(R.negative(x))
         -x
@@ -179,8 +197,9 @@ class FlintPowerSeriesRingZZ(PowerSeriesRing[ZZSeries]):
         Examples
         ========
 
-        >>> from sympy.polys.series.flint_powerseriesring import FlintPowerSeriesRingZZ
-        >>> R = FlintPowerSeriesRingZZ(3)
+        >>> from sympy.polys.domains import ZZ
+        >>> from sympy.polys.series import power_series_ring
+        >>> R = power_series_ring(ZZ, 3)
         >>> s1 = R.from_list([1, 2, 3, 4])
         >>> s2 = R.from_list([3, 4, 5, 6])
         >>> R.print(R.add(s1, s2))
@@ -202,8 +221,9 @@ class FlintPowerSeriesRingZZ(PowerSeriesRing[ZZSeries]):
         Examples
         ========
 
-        >>> from sympy.polys.series.flint_powerseriesring import FlintPowerSeriesRingZZ
-        >>> R = FlintPowerSeriesRingZZ(3)
+        >>> from sympy.polys.domains import ZZ
+        >>> from sympy.polys.series import power_series_ring
+        >>> R = power_series_ring(ZZ, 3)
         >>> s1 = R.from_list([1, 2, 3, 4])
         >>> s2 = R.from_list([3, 4, 5, 6])
         >>> R.print(R.subtract(s1, s2))
@@ -225,8 +245,9 @@ class FlintPowerSeriesRingZZ(PowerSeriesRing[ZZSeries]):
         Examples
         ========
 
-        >>> from sympy.polys.series.flint_powerseriesring import FlintPowerSeriesRingZZ
-        >>> R = FlintPowerSeriesRingZZ(5)
+        >>> from sympy.polys.domains import ZZ
+        >>> from sympy.polys.series import power_series_ring
+        >>> R = power_series_ring(ZZ, 5)
         >>> s1 = R.from_list([1, 3, 3, 1])
         >>> s2 = R.from_list([1, 4, 6, 4, 1])
         >>> R.print(R.multiply(s1, s2))
@@ -248,8 +269,9 @@ class FlintPowerSeriesRingZZ(PowerSeriesRing[ZZSeries]):
         Examples
         ========
 
-        >>> from sympy.polys.series.flint_powerseriesring import FlintPowerSeriesRingZZ
-        >>> R = FlintPowerSeriesRingZZ(5)
+        >>> from sympy.polys.domains import ZZ
+        >>> from sympy.polys.series import power_series_ring
+        >>> R = power_series_ring(ZZ, 5)
         >>> x = R.gen
         >>> R.print(R.multiply_ground(x, 3))
         3*x
@@ -270,8 +292,9 @@ class FlintPowerSeriesRingZZ(PowerSeriesRing[ZZSeries]):
         Examples
         ========
 
-        >>> from sympy.polys.series.flint_powerseriesring import FlintPowerSeriesRingZZ
-        >>> R = FlintPowerSeriesRingZZ(5)
+        >>> from sympy.polys.domains import ZZ
+        >>> from sympy.polys.series import power_series_ring
+        >>> R = power_series_ring(ZZ, 5)
         >>> s = R.from_list([1, 2, 1])
         >>> R.print(R.pow_int(s, 5))
         1 + 10*x + 45*x**2 + 120*x**3 + 210*x**4 + O(x**5)
@@ -295,8 +318,9 @@ class FlintPowerSeriesRingZZ(PowerSeriesRing[ZZSeries]):
         Examples
         ========
 
-        >>> from sympy.polys.series.flint_powerseriesring import FlintPowerSeriesRingZZ
-        >>> R = FlintPowerSeriesRingZZ(5)
+        >>> from sympy.polys.domains import ZZ
+        >>> from sympy.polys.series import power_series_ring
+        >>> R = power_series_ring(ZZ, 5)
         >>> s = R.from_list([1, 2, 1])
         >>> R.print(R.square(s))
         1 + 4*x + 6*x**2 + 4*x**3 + x**4
@@ -310,8 +334,9 @@ class FlintPowerSeriesRingZZ(PowerSeriesRing[ZZSeries]):
         Examples
         ========
 
-        >>> from sympy.polys.series.flint_powerseriesring import FlintPowerSeriesRingZZ
-        >>> R = FlintPowerSeriesRingZZ(5)
+        >>> from sympy.polys.domains import ZZ
+        >>> from sympy.polys.series import power_series_ring
+        >>> R = power_series_ring(ZZ, 5)
         >>> s = R.from_list([1, 2, 3, 4, 5, 6])
         >>> R.print(s)
         1 + 2*x + 3*x**2 + 4*x**3 + 5*x**4 + O(x**5)
@@ -335,17 +360,18 @@ class FlintPowerSeriesRingZZ(PowerSeriesRing[ZZSeries]):
         Examples
         ========
 
-        >>> from sympy.polys.series.flint_powerseriesring import FlintPowerSeriesRingZZ
-        >>> R = FlintPowerSeriesRingZZ(5)
+        >>> from sympy.polys.domains import ZZ
+        >>> from sympy.polys.series import power_series_ring
+        >>> R = power_series_ring(ZZ, 5)
         >>> s = R.from_list([1, 2, 1])
         >>> R.print(R.differentiate(s))
-        2 + 2*x + O(x**2)
+        2 + 2*x
         """
         with _global_cap(self._prec):
             return s.derivative()
 
 
-class FlintPowerSeriesRingQQ(PowerSeriesRing[QQSeries]):
+class FlintPowerSeriesRingQQ(PowerSeriesRing):
     """Flint implementation of power series ring over rational fields."""
 
     _domain = QQ
@@ -413,9 +439,9 @@ class FlintPowerSeriesRingQQ(PowerSeriesRing[QQSeries]):
         Examples
         ========
 
-        >>> from sympy import QQ
-        >>> from sympy.polys.series.flint_powerseriesring import FlintPowerSeriesRingQQ
-        >>> R = FlintPowerSeriesRingQQ(5)
+        >>> from sympy.polys.domains import QQ
+        >>> from sympy.polys.series import power_series_ring
+        >>> R = power_series_ring(QQ, 5)
         >>> s = R.from_list([QQ(1,2), QQ(3,4)])
         >>> R.print(s)
         1/2 + 3/4*x
@@ -434,8 +460,9 @@ class FlintPowerSeriesRingQQ(PowerSeriesRing[QQSeries]):
         Examples
         ========
 
-        >>> from sympy.polys.series.flint_powerseriesring import FlintPowerSeriesRingQQ
-        >>> R = FlintPowerSeriesRingQQ(5)
+        >>> from sympy.polys.domains import QQ
+        >>> from sympy.polys.series import power_series_ring
+        >>> R = power_series_ring(QQ, 5)
         >>> x = R.gen
         >>> R.to_list(x)
         [0, 1]
@@ -445,8 +472,16 @@ class FlintPowerSeriesRingQQ(PowerSeriesRing[QQSeries]):
     def equal(self, s1: QQSeries, s2: QQSeries) -> bool | None:
         if isinstance(s1, fmpq_poly) and isinstance(s2, fmpq_poly):
             return s1 == s2
+        elif isinstance(s1, fmpq_poly) or isinstance(s2, fmpq_poly):
+            return False
+        else:
+            # Fetching precision from this function is not efficient.
+            min_prec = min(_get_series_precision(s1), _get_series_precision(s2))
 
-        if s1.coeffs() != s2.coeffs():
+        coeffs1 = s1.coeffs()[:min_prec]
+        coeffs2 = s2.coeffs()[:min_prec]
+
+        if coeffs1 != coeffs2:
             return False
         return None
 
@@ -457,9 +492,9 @@ class FlintPowerSeriesRingQQ(PowerSeriesRing[QQSeries]):
         Examples
         ========
 
-        >>> from sympy import QQ
-        >>> from sympy.polys.series.flint_powerseriesring import FlintPowerSeriesRingQQ
-        >>> R = FlintPowerSeriesRingQQ(5)
+        >>> from sympy.polys.domains import QQ
+        >>> from sympy.polys.series import power_series_ring
+        >>> R = power_series_ring(QQ, 5)
         >>> s1 = R.from_list([QQ(1), QQ(2), QQ(1)])
         >>> s2 = R.square(R.add(R.one, R.gen))
         >>> R.equal_repr(s1, s2)
@@ -479,8 +514,9 @@ class FlintPowerSeriesRingQQ(PowerSeriesRing[QQSeries]):
         Examples
         ========
 
-        >>> from sympy.polys.series.flint_powerseriesring import FlintPowerSeriesRingQQ
-        >>> R = FlintPowerSeriesRingQQ(5)
+        >>> from sympy.polys.domains import QQ
+        >>> from sympy.polys.series import power_series_ring
+        >>> R = power_series_ring(QQ, 5)
         >>> x = R.gen
         >>> R.print(R.negative(x))
         -x
@@ -494,9 +530,9 @@ class FlintPowerSeriesRingQQ(PowerSeriesRing[QQSeries]):
         Examples
         ========
 
-        >>> from sympy import QQ
-        >>> from sympy.polys.series.flint_powerseriesring import FlintPowerSeriesRingQQ
-        >>> R = FlintPowerSeriesRingQQ(3)
+        >>> from sympy.polys.domains import QQ
+        >>> from sympy.polys.series import power_series_ring
+        >>> R = power_series_ring(QQ, 3)
         >>> s1 = R.from_list([QQ(1,2), QQ(2,3)])
         >>> s2 = R.from_list([QQ(3,4), QQ(4,5)])
         >>> R.print(R.add(s1, s2))
@@ -518,9 +554,9 @@ class FlintPowerSeriesRingQQ(PowerSeriesRing[QQSeries]):
         Examples
         ========
 
-        >>> from sympy import QQ
-        >>> from sympy.polys.series.flint_powerseriesring import FlintPowerSeriesRingQQ
-        >>> R = FlintPowerSeriesRingQQ(3)
+        >>> from sympy.polys.domains import QQ
+        >>> from sympy.polys.series import power_series_ring
+        >>> R = power_series_ring(QQ, 3)
         >>> s1 = R.from_list([QQ(1,2), QQ(2,3)])
         >>> s2 = R.from_list([QQ(3,4), QQ(4,5)])
         >>> R.print(R.subtract(s1, s2))
@@ -542,9 +578,9 @@ class FlintPowerSeriesRingQQ(PowerSeriesRing[QQSeries]):
         Examples
         ========
 
-        >>> from sympy import QQ
-        >>> from sympy.polys.series.flint_powerseriesring import FlintPowerSeriesRingQQ
-        >>> R = FlintPowerSeriesRingQQ(5)
+        >>> from sympy.polys.domains import QQ
+        >>> from sympy.polys.series import power_series_ring
+        >>> R = power_series_ring(QQ, 5)
         >>> s1 = R.from_list([QQ(1,2), QQ(1,3)])
         >>> s2 = R.from_list([QQ(2), QQ(3)])
         >>> R.print(R.multiply(s1, s2))
@@ -566,9 +602,9 @@ class FlintPowerSeriesRingQQ(PowerSeriesRing[QQSeries]):
         Examples
         ========
 
-        >>> from sympy import QQ
-        >>> from sympy.polys.series.flint_powerseriesring import FlintPowerSeriesRingQQ
-        >>> R = FlintPowerSeriesRingQQ(5)
+        >>> from sympy.polys.domains import QQ
+        >>> from sympy.polys.series import power_series_ring
+        >>> R = power_series_ring(QQ, 5)
         >>> x = R.gen
         >>> R.print(R.multiply_ground(x, QQ(3,2)))
         3/2*x
@@ -589,12 +625,12 @@ class FlintPowerSeriesRingQQ(PowerSeriesRing[QQSeries]):
         Examples
         ========
 
-        >>> from sympy import QQ
-        >>> from sympy.polys.series.flint_powerseriesring import FlintPowerSeriesRingQQ
-        >>> R = FlintPowerSeriesRingQQ(5)
+        >>> from sympy.polys.domains import QQ
+        >>> from sympy.polys.series import power_series_ring
+        >>> R = power_series_ring(QQ, 5)
         >>> s = R.from_list([QQ(1,2), QQ(1,3)])
         >>> R.print(R.pow_int(s, 3))
-        1/8 + 1/4*x + 19/72*x**2 + 1/18*x**3 + 5/324*x**4 + O(x**5)
+        1/8 + 1/4*x + 1/6*x**2 + 1/27*x**3
         """
         if n < 0:
             raise ValueError("Power must be non-negative")
@@ -615,9 +651,9 @@ class FlintPowerSeriesRingQQ(PowerSeriesRing[QQSeries]):
         Examples
         ========
 
-        >>> from sympy import QQ
-        >>> from sympy.polys.series.flint_powerseriesring import FlintPowerSeriesRingQQ
-        >>> R = FlintPowerSeriesRingQQ(5)
+        >>> from sympy.polys.domains import QQ
+        >>> from sympy.polys.series import power_series_ring
+        >>> R = power_series_ring(QQ, 5)
         >>> s = R.from_list([QQ(1,2), QQ(1,3)])
         >>> R.print(R.square(s))
         1/4 + 1/3*x + 1/9*x**2
@@ -631,10 +667,10 @@ class FlintPowerSeriesRingQQ(PowerSeriesRing[QQSeries]):
         Examples
         ========
 
-        >>> from sympy import QQ
-        >>> from sympy.polys.series.flint_powerseriesring import FlintPowerSeriesRingQQ
-        >>> R = FlintPowerSeriesRingQQ(5)
-        >>> s = R.from_list([QQ(1,2), QQ(2,3), QQ(3,4), QQ(4,5), QQ(5,6)])
+        >>> from sympy.polys.domains import QQ
+        >>> from sympy.polys.series import power_series_ring
+        >>> R = power_series_ring(QQ, 5)
+        >>> s = R.from_list([QQ(1,2), QQ(2,3), QQ(3,4), QQ(4,5), QQ(5,6), QQ(1)])
         >>> R.print(s)
         1/2 + 2/3*x + 3/4*x**2 + 4/5*x**3 + 5/6*x**4 + O(x**5)
         >>> t = R.truncate(s, 3)
@@ -657,12 +693,12 @@ class FlintPowerSeriesRingQQ(PowerSeriesRing[QQSeries]):
         Examples
         ========
 
-        >>> from sympy import QQ
-        >>> from sympy.polys.series.flint_powerseriesring import FlintPowerSeriesRingQQ
-        >>> R = FlintPowerSeriesRingQQ(5)
+        >>> from sympy.polys.domains import QQ
+        >>> from sympy.polys.series import power_series_ring
+        >>> R = power_series_ring(QQ, 5)
         >>> s = R.from_list([QQ(1,2), QQ(1,3)])
         >>> R.print(R.differentiate(s))
-        1/3 + 2/3*x + O(x**2)
+        1/3
         """
         with _global_cap(self._prec):
             return s.derivative()
@@ -674,12 +710,12 @@ class FlintPowerSeriesRingQQ(PowerSeriesRing[QQSeries]):
         Examples
         ========
 
-        >>> from sympy import QQ
-        >>> from sympy.polys.series.flint_powerseriesring import FlintPowerSeriesRingQQ
-        >>> R = FlintPowerSeriesRingQQ(5)
+        >>> from sympy.polys.domains import QQ
+        >>> from sympy.polys.series import power_series_ring
+        >>> R = power_series_ring(QQ, 5)
         >>> s = R.from_list([QQ(1,2), QQ(1,3)])
         >>> R.print(R.integrate(s))
-        1/2*x + 1/6*x**2 + O(x**3)
+        1/2*x + 1/6*x**2
         """
         if isinstance(s, fmpq_poly):
             poly = s.integral()

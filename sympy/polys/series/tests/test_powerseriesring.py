@@ -1,4 +1,5 @@
 from sympy.polys.domains import ZZ, QQ
+from sympy.polys.series.powerseriesring import PowerSeriesRing
 from sympy.polys.series.python_powerseriesring import (
     PythonPowerSeriesRingZZ,
     PythonPowerSeriesRingQQ,
@@ -17,8 +18,8 @@ if GROUND_TYPES == "flint":
     flint = True
 
 # Rings
-Ring_ZZ = [PythonPowerSeriesRingZZ]
-Ring_QQ = [PythonPowerSeriesRingQQ]
+Ring_ZZ: list[type[PowerSeriesRing]] = [PythonPowerSeriesRingZZ]
+Ring_QQ: list[type[PowerSeriesRing]] = [PythonPowerSeriesRingQQ]
 
 if flint:
     Ring_ZZ.append(FlintPowerSeriesRingZZ)
@@ -39,6 +40,7 @@ def same(R, s, coeffs_l, prec):
 
     return R.equal_repr(s, R.from_list(domain_coeffs, prec))
 
+
 @pytest.mark.parametrize("r", list(Ring_ZZ + Ring_QQ))
 def test_equal(r):
     R = r()
@@ -48,6 +50,8 @@ def test_equal(r):
     assert R.equal(R.from_list([1, 2, 13], 3), R.from_list([1, 2, 3], 3)) is False
     assert R.equal(R.from_list([1, 2, 3], 3), R.from_list([1, 2, 3], 10)) is None
     assert R.equal(R.from_list([1, 21, 3], 3), R.from_list([1, 2, 3], 10)) is False
+    assert R.equal(R.from_list([1, 2, 3], 3), R.from_list([1, 2, 3, 4, 5], 10)) is None
+
 
 @pytest.mark.parametrize("r", list(Ring_ZZ + Ring_QQ))
 def test_basics(r):
@@ -94,10 +98,12 @@ def test_int(r):
     assert same(R3, R3.subtract(R3.pow_int(R3.add(one3, x3), 4), x3), [1, 3, 6], 3)
 
     assert same(R, R.multiply(x, x), [0, 0, 1], None)
-    assert same(R3, R3.multiply(R3.square(R3.add(x3, one3)),
-        R3.add(x3, one3)), [1, 3, 3], 3)
-    assert same(R10, R10.multiply(R10.add(x10, one10),
-        R10.add(x10, one10)), [1, 2, 1], None)
+    assert same(
+        R3, R3.multiply(R3.square(R3.add(x3, one3)), R3.add(x3, one3)), [1, 3, 3], 3
+    )
+    assert same(
+        R10, R10.multiply(R10.add(x10, one10), R10.add(x10, one10)), [1, 2, 1], None
+    )
 
     assert same(R, R.multiply_ground(one, 1), [1], None)
     assert same(R, R.multiply_ground(x, -1), [0, -1], None)
@@ -106,16 +112,19 @@ def test_int(r):
     assert same(R, R.multiply_ground(R.add(x, one), ZZ(3)), [3, 3], None)
 
     assert not same(R, R.square(R.add(x, one)), [1, 1, 1], None)
-    assert same(R3, R3.square(R3.multiply(x3, R3.add(x3, one3))),
-        [0, 0, 1], 3)
+    assert same(R3, R3.square(R3.multiply(x3, R3.add(x3, one3))), [0, 0, 1], 3)
 
     assert same(R, R.pow_int(x, 0), [1], None)
     assert same(R, R.pow_int(R.add(x, one), 6), [1, 6, 15, 20, 15, 6], 6)
     assert same(R, R.pow_int(x, 10), [], 6)
     assert same(R3, R3.pow_int(R3.add(x3, one3), 5), [1, 5, 10], 3)
     assert same(R10, R10.pow_int(x10, 7), [0, 0, 0, 0, 0, 0, 0, 1], None)
-    assert same(R10, R10.pow_int(R10.add(x10, one10), 12),
-        [1, 12, 66, 220, 495, 792, 924, 792, 495, 220], 10)
+    assert same(
+        R10,
+        R10.pow_int(R10.add(x10, one10), 12),
+        [1, 12, 66, 220, 495, 792, 924, 792, 495, 220],
+        10,
+    )
 
     assert same(R, R.truncate(R.pow_int(x, 3), 4), [0, 0, 0, 1], None)
     assert same(R, R.truncate(R.pow_int(R.add(x, one), 5), 3), [1, 5, 10], 3)
@@ -125,13 +134,12 @@ def test_int(r):
     assert same(R3, R3.differentiate(R3.multiply(x3, x3)), [0, 2], None)
     assert same(R3, R3.differentiate(R3.add(x3, one3)), [1], None)
     assert same(R10, R10.differentiate(R10.pow_int(x10, 4)), [0, 0, 0, 4], None)
-    assert same(R10, R10.differentiate(R10.add(R10.multiply(x10, x10), x10)),
-        [1, 2], None)
+    assert same(
+        R10, R10.differentiate(R10.add(R10.multiply(x10, x10), x10)), [1, 2], None
+    )
 
 
-@pytest.mark.parametrize(
-    "r", Ring_QQ
-)
+@pytest.mark.parametrize("r", Ring_QQ)
 def test_rational(r):
     R = r()
     x = R.gen
@@ -153,48 +161,92 @@ def test_rational(r):
     assert same(R, R.subtract(R.multiply(x, x), x), [(0, 1), (-1, 1), (1, 1)], None)
 
     assert same(R, R.multiply(x, x), [(0, 1), (0, 1), (1, 1)], None)
-    assert same(R, R.multiply(R.add(x, one), R.add(x, one)),
-        [(1, 1), (2, 1), (1, 1)], None)
-    assert same(R, R.multiply(R.subtract(x, one), R.add(x, one)),
-        [(-1, 1), (0, 1), (1, 1)], None)
-    assert same(R3, R3.multiply(R3.square(R3.add(x3, one3)),
-        R3.add(x3, one3)), [(1, 1), (3, 1), (3, 1)], 3)
+    assert same(
+        R, R.multiply(R.add(x, one), R.add(x, one)), [(1, 1), (2, 1), (1, 1)], None
+    )
+    assert same(
+        R,
+        R.multiply(R.subtract(x, one), R.add(x, one)),
+        [(-1, 1), (0, 1), (1, 1)],
+        None,
+    )
+    assert same(
+        R3,
+        R3.multiply(R3.square(R3.add(x3, one3)), R3.add(x3, one3)),
+        [(1, 1), (3, 1), (3, 1)],
+        3,
+    )
 
     assert same(R, R.multiply_ground(x, QQ(1, 2)), [(0, 1), (1, 2)], None)
-    assert same(R, R.multiply(R.multiply_ground(x, QQ(1, 2)),
-        R.multiply_ground(x, QQ(1, 3))), [(0, 1), (0, 1), (1, 6)], None)
+    assert same(
+        R,
+        R.multiply(R.multiply_ground(x, QQ(1, 2)), R.multiply_ground(x, QQ(1, 3))),
+        [(0, 1), (0, 1), (1, 6)],
+        None,
+    )
 
-    assert not same(R, R.square(R.add(x, one)), [(1, 1), (1, 1), (1, 1)],
-        None)
-    assert same(R10, R10.square(R10.subtract(x10, one10)),
-        [(1, 1), (-2, 1), (1, 1)], None)
+    assert not same(R, R.square(R.add(x, one)), [(1, 1), (1, 1), (1, 1)], None)
+    assert same(
+        R10, R10.square(R10.subtract(x10, one10)), [(1, 1), (-2, 1), (1, 1)], None
+    )
 
     assert same(R, R.pow_int(x, 3), [(0, 1), (0, 1), (0, 1), (1, 1)], None)
-    assert same(R, R.pow_int(R.add(x, one), 6),
-        [(1, 1), (6, 1), (15, 1), (20, 1), (15, 1), (6, 1)], 6)
+    assert same(
+        R,
+        R.pow_int(R.add(x, one), 6),
+        [(1, 1), (6, 1), (15, 1), (20, 1), (15, 1), (6, 1)],
+        6,
+    )
     assert same(R, R.pow_int(x, 10), [], 6)
     assert same(R3, R3.pow_int(R3.add(x3, one3), 5), [(1, 1), (5, 1), (10, 1)], 3)
-    assert same(R10, R10.pow_int(R10.add(x10, one10), 12),
-        [(1, 1), (12, 1), (66, 1), (220, 1), (495, 1), (792, 1), (924, 1),
-        (792, 1), (495, 1), (220, 1)], 10)
+    assert same(
+        R10,
+        R10.pow_int(R10.add(x10, one10), 12),
+        [
+            (1, 1),
+            (12, 1),
+            (66, 1),
+            (220, 1),
+            (495, 1),
+            (792, 1),
+            (924, 1),
+            (792, 1),
+            (495, 1),
+            (220, 1),
+        ],
+        10,
+    )
 
     assert same(R, R.differentiate(R.pow_int(x, 3)), [(0, 1), (0, 1), (3, 1)], None)
     assert same(R, R.differentiate(R.add(R.multiply(x, x), x)), [(1, 1), (2, 1)], None)
     assert same(R3, R3.differentiate(R3.multiply(x3, x3)), [(0, 1), (2, 1)], None)
     assert same(R3, R3.differentiate(R3.add(x3, one3)), [(1, 1)], None)
-    assert same(R10, R10.differentiate(R10.pow_int(x10, 4)),
-        [(0, 1), (0, 1), (0, 1), (4, 1)], None)
-    assert same(R10, R10.differentiate(R10.add(R10.multiply(x10, x10), x10)),
-        [(1, 1), (2, 1)], None)
+    assert same(
+        R10,
+        R10.differentiate(R10.pow_int(x10, 4)),
+        [(0, 1), (0, 1), (0, 1), (4, 1)],
+        None,
+    )
+    assert same(
+        R10,
+        R10.differentiate(R10.add(R10.multiply(x10, x10), x10)),
+        [(1, 1), (2, 1)],
+        None,
+    )
 
     assert same(R, R.integrate(R.add(x, one)), [(0, 1), (1, 1), (1, 2)], None)
-    assert same(R, R.integrate(R.multiply(x, x)), [(0, 1), (0, 1), (0, 1), (1, 3)], None)
+    assert same(
+        R, R.integrate(R.multiply(x, x)), [(0, 1), (0, 1), (0, 1), (1, 3)], None
+    )
     assert same(R3, R3.integrate(R3.add(x3, one3)), [(0, 1), (1, 1), (1, 2)], None)
-    assert same(R3, R3.integrate(R3.multiply(x3, x3)),
-        [(0, 1), (0, 1), (0, 1), (1, 3)], None)
+    assert same(
+        R3, R3.integrate(R3.multiply(x3, x3)), [(0, 1), (0, 1), (0, 1), (1, 3)], None
+    )
     assert same(R10, R10.integrate(R10.add(x10, one10)), [(0, 1), (1, 1), (1, 2)], None)
-    assert same(R10, R10.integrate(R10.pow_int(x10, 2)),
-        [(0, 1), (0, 1), (0, 1), (1, 3)], None)
+    assert same(
+        R10, R10.integrate(R10.pow_int(x10, 2)), [(0, 1), (0, 1), (0, 1), (1, 3)], None
+    )
+
 
 @pytest.mark.parametrize("r", list(Ring_ZZ + Ring_QQ))
 def test_error(r):
