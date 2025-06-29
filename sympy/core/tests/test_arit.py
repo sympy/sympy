@@ -2481,3 +2481,24 @@ def test_issue_22613():
 
 def test_issue_25176():
     assert sqrt(-4*3**(S(3)/4)*I/3) == 2*3**(S(7)/8)*sqrt(-I)/3
+
+
+def test_Mul_is_zero_with_zero_factor():
+    # When evaluate=False, 0 * unknown should return None (conservative)
+    # since the unknown could potentially be infinite
+    x = symbols('x')
+    assert Mul(0, x, evaluate=False).is_zero is None
+    assert Mul(x, 0, evaluate=False).is_zero is None
+    # Definite cases
+    assert Mul(0, 1, evaluate=False).is_zero is True
+    assert Mul(0, 0, evaluate=False).is_zero is True
+    assert Mul(0, oo, evaluate=False).is_zero is None
+    assert Mul(0, -oo, evaluate=False).is_zero is None
+    assert Mul(0, zoo, evaluate=False).is_zero is None
+    # Multiple args with unknowns
+    assert Mul(0, x, x, evaluate=False).is_zero is None
+    assert Mul(x, 0, x, evaluate=False).is_zero is None
+    assert Mul(x, x, 0, evaluate=False).is_zero is None
+    # No zero
+    assert Mul(x, x, evaluate=False).is_zero is None
+    assert Mul(1, x, evaluate=False).is_zero is None

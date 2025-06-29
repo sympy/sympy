@@ -417,7 +417,7 @@ class ArrayPrinter:
         from sympy.tensor.array.expressions.from_indexed_to_array import convert_indexed_to_array
         try:
             return convert_indexed_to_array(indexed)
-        except Exception:
+        except Exception: # noqa: BLE001
             return indexed
 
     def _get_einsum_string(self, subranks, contraction_indices):
