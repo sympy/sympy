@@ -82,6 +82,17 @@ def _get_mpmath_ctx():
     return _mpmath_ctx
 
 
+_mpmath_ctx: MPContext | None = None
+
+
+def _get_mpmath_ctx():
+    """Get the mpmath context, creating it if necessary."""
+    global _mpmath_ctx
+    if _mpmath_ctx is None:
+        _mpmath_ctx = MPContext()
+    return _mpmath_ctx
+
+
 def _polifyit(func):
     @wraps(func)
     def wrapper(f, g):
@@ -3776,6 +3787,10 @@ class Poly(Basic):
             msg = 'convergence to root failed; try n < %s or maxsteps > %s'
             raise ctx.NoConvergence(msg % (n, maxsteps))
 
+        # Mpmath puts real roots first, then complex ones (as does all_roots)
+        # so we make sure this convention holds here, too.
+        key = lambda r: (1 if r.imag else 0, r.real, abs(r.imag), sign(r.imag))
+        roots = [sympify(r) for r in sorted(roots, key=key)]
 
         return roots
 
