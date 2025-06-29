@@ -198,7 +198,7 @@ def _useries_integrate(s: USeries[T], dom: Domain, ring_prec: int) -> USeries[T]
     return _useries(series, prec, dom, ring_prec)
 
 
-class PythonPowerSeriesRingZZ(PowerSeriesRing[USeries[T]]):
+class PythonPowerSeriesRingZZ(PowerSeriesRing):
     """Python implementation of power series ring over integers ring."""
 
     _domain = ZZ
@@ -268,7 +268,7 @@ class PythonPowerSeriesRingZZ(PowerSeriesRing[USeries[T]]):
         >>> R = PythonPowerSeriesRingZZ(5)
         >>> s = R.from_list([1, 2, 3, 4, 5])
         >>> R.print(s)
-        1 + 2*x + 3*x**2 + 4*x**3 + 5*x**4 + O(x**5)
+        1 + 2*x + 3*x**2 + 4*x**3 + 5*x**4
         """
         coeffs = dup_reverse(coeffs)
         if prec is None and len(coeffs) > self._prec:
@@ -446,12 +446,12 @@ class PythonPowerSeriesRingZZ(PowerSeriesRing[USeries[T]]):
         >>> R = PythonPowerSeriesRingZZ(5)
         >>> s = R.from_list([1, 2, 3])
         >>> R.print(R.differentiate(s))
-        2 + 6*x + O(x**2)
+        2 + 6*x
         """
         return _useries_derivative(s, self.domain, self._prec)
 
 
-class PythonPowerSeriesRingQQ(PowerSeriesRing[USeries[T]]):
+class PythonPowerSeriesRingQQ(PowerSeriesRing):
     """Python implementation of power series ring over rational field."""
 
     _domain = QQ
@@ -660,7 +660,7 @@ class PythonPowerSeriesRingQQ(PowerSeriesRing[USeries[T]]):
         >>> R = PythonPowerSeriesRingQQ(5)
         >>> s = R.from_list([QQ(1,2), QQ(1,3)])
         >>> R.print(R.pow_int(s, 3))
-        1/8 + 1/4*x + 19/72*x**2 + 1/18*x**3 + 5/324*x**4 + O(x**5)
+        1/8 + 1/4*x + 1/6*x**2 + 1/27*x**3
         """
         return _useries_pow_int(s, n, self.domain, self._prec)
 
@@ -692,7 +692,7 @@ class PythonPowerSeriesRingQQ(PowerSeriesRing[USeries[T]]):
         >>> R = PythonPowerSeriesRingQQ(5)
         >>> s = R.from_list([QQ(1,2), QQ(2,3), QQ(3,4), QQ(4,5), QQ(5,6)])
         >>> R.print(s)
-        1/2 + 2/3*x + 3/4*x**2 + 4/5*x**3 + 5/6*x**4 + O(x**5)
+        1/2 + 2/3*x + 3/4*x**2 + 4/5*x**3 + 5/6*x**4
         >>> t = R.truncate(s, 3)
         >>> R.print(t)
         1/2 + 2/3*x + 3/4*x**2 + O(x**3)
@@ -711,7 +711,7 @@ class PythonPowerSeriesRingQQ(PowerSeriesRing[USeries[T]]):
         >>> R = PythonPowerSeriesRingQQ(5)
         >>> s = R.from_list([QQ(1,2), QQ(2,3), QQ(3,4)])
         >>> R.print(R.differentiate(s))
-        2/3 + 3/2*x + O(x**2)
+        2/3 + 3/2*x
         """
         return _useries_derivative(s, self.domain, self._prec)
 
@@ -727,6 +727,6 @@ class PythonPowerSeriesRingQQ(PowerSeriesRing[USeries[T]]):
         >>> R = PythonPowerSeriesRingQQ(5)
         >>> s = R.from_list([QQ(1,2), QQ(2,3), QQ(3,4)])
         >>> R.print(R.integrate(s))
-        1/2*x + 1/6*x**2 + 1/12*x**3 + O(x**4)
+        1/2*x + 1/3*x**2 + 1/4*x**3
         """
         return _useries_integrate(s, self.domain, self._prec)

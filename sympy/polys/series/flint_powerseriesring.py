@@ -5,11 +5,13 @@ from typing import Any, Union
 
 from sympy.polys.domains import Domain, QQ, ZZ
 from sympy.polys.series.powerseriesring import _series_from_list, PowerSeriesRing
+from sympy.external.gmpy import GROUND_TYPES
 
-try:
-    from flint import ctx, fmpq_poly, fmpq_series, fmpz_poly, fmpz_series
-except ImportError:
-    ctx = fmpq_poly = fmpq_series = fmpz_poly = fmpz_series = None
+if GROUND_TYPES == "flint":
+    from flint import fmpq_poly, fmpq_series, fmpz_poly, fmpz_series, ctx
+else:
+    __doctest_skip__ = ["FlintPowerSeriesRingZZ", "FlintPowerSeriesRingQQ"]
+    fmpq_poly = fmpq_series = fmpz_poly = fmpz_series = None
 
 
 ZZSeries = Union[fmpz_series, fmpz_poly]
@@ -37,7 +39,7 @@ def _global_cap(cap: int):
         ctx.cap = old_cap
 
 
-class FlintPowerSeriesRingZZ(PowerSeriesRing[ZZSeries]):
+class FlintPowerSeriesRingZZ(PowerSeriesRing):
     """Flint implementation of power series ring over integer ring."""
 
     _domain = ZZ
@@ -98,7 +100,7 @@ class FlintPowerSeriesRingZZ(PowerSeriesRing[ZZSeries]):
         print(self.pretty(s))
 
     def from_list(self, coeffs: list[Any], prec: int | None = None) -> ZZSeries:
-        """
+        """ #doctest: +SKIP
         Create a power series from a list of coefficients in ascending order of
         exponents. If `prec` is not specified, it defaults to the ring's precision.
 
@@ -109,7 +111,7 @@ class FlintPowerSeriesRingZZ(PowerSeriesRing[ZZSeries]):
         >>> R = FlintPowerSeriesRingZZ(5)
         >>> s = R.from_list([1, 2, 3, 4, 5])
         >>> R.print(s)
-        1 + 2*x + 3*x**2 + 4*x**3 + 5*x**4 + O(x**5)
+        1 + 2*x + 3*x**2 + 4*x**3 + 5*x**4
         """
         if prec is None:
             if len(coeffs) <= self._prec:
@@ -343,13 +345,13 @@ class FlintPowerSeriesRingZZ(PowerSeriesRing[ZZSeries]):
         >>> R = FlintPowerSeriesRingZZ(5)
         >>> s = R.from_list([1, 2, 1])
         >>> R.print(R.differentiate(s))
-        2 + 2*x + O(x**2)
+        2 + 2*x
         """
         with _global_cap(self._prec):
             return s.derivative()
 
 
-class FlintPowerSeriesRingQQ(PowerSeriesRing[QQSeries]):
+class FlintPowerSeriesRingQQ(PowerSeriesRing):
     """Flint implementation of power series ring over rational fields."""
 
     _domain = QQ
@@ -598,7 +600,7 @@ class FlintPowerSeriesRingQQ(PowerSeriesRing[QQSeries]):
         >>> R = FlintPowerSeriesRingQQ(5)
         >>> s = R.from_list([QQ(1,2), QQ(1,3)])
         >>> R.print(R.pow_int(s, 3))
-        1/8 + 1/4*x + 19/72*x**2 + 1/18*x**3 + 5/324*x**4 + O(x**5)
+        1/8 + 1/4*x + 1/6*x**2 + 1/27*x**3
         """
         if n < 0:
             raise ValueError("Power must be non-negative")
@@ -638,7 +640,7 @@ class FlintPowerSeriesRingQQ(PowerSeriesRing[QQSeries]):
         >>> from sympy import QQ
         >>> from sympy.polys.series.flint_powerseriesring import FlintPowerSeriesRingQQ
         >>> R = FlintPowerSeriesRingQQ(5)
-        >>> s = R.from_list([QQ(1,2), QQ(2,3), QQ(3,4), QQ(4,5), QQ(5,6)])
+        >>> s = R.from_list([QQ(1,2), QQ(2,3), QQ(3,4), QQ(4,5), QQ(5,6), QQ(1)])
         >>> R.print(s)
         1/2 + 2/3*x + 3/4*x**2 + 4/5*x**3 + 5/6*x**4 + O(x**5)
         >>> t = R.truncate(s, 3)
@@ -666,7 +668,7 @@ class FlintPowerSeriesRingQQ(PowerSeriesRing[QQSeries]):
         >>> R = FlintPowerSeriesRingQQ(5)
         >>> s = R.from_list([QQ(1,2), QQ(1,3)])
         >>> R.print(R.differentiate(s))
-        1/3 + 2/3*x + O(x**2)
+        1/3
         """
         with _global_cap(self._prec):
             return s.derivative()
@@ -683,7 +685,7 @@ class FlintPowerSeriesRingQQ(PowerSeriesRing[QQSeries]):
         >>> R = FlintPowerSeriesRingQQ(5)
         >>> s = R.from_list([QQ(1,2), QQ(1,3)])
         >>> R.print(R.integrate(s))
-        1/2*x + 1/6*x**2 + O(x**3)
+        1/2*x + 1/6*x**2
         """
         if isinstance(s, fmpq_poly):
             poly = s.integral()
