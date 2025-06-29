@@ -5,6 +5,7 @@ from sympy.core.numbers import (I, pi, Rational, oo)
 from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.core.symbol import symbols
+from sympy.core.numbers import Number
 from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.special.delta_functions import Heaviside
 from sympy.functions.elementary.miscellaneous import sqrt
@@ -508,10 +509,12 @@ def test_DiscreteTransferFunction_construction():
     assert tf.args == (z + 1, z**2 + z + 1, z, 10)
     assert tf.sampling_time == 10
 
-    tf1 = DiscreteTransferFunction(z + 4, z - 5, z)
+    tf1 = DiscreteTransferFunction(z + 4, z - 5, z, 0.1)
     assert tf1.num == (z + 4)
     assert tf1.den == (z - 5)
-    assert tf1.args == (z + 4, z - 5, z, 1)
+    assert tf1.sampling_time == 0.1
+    assert isinstance(tf1.sampling_time, Number) is True # ensure it is a sympy object, not just a python float
+    assert tf1.args == (z + 4, z - 5, z, 0.1)
 
     # using different polynomial variables.
     tf2 = DiscreteTransferFunction(p + 3, p**2 - 9, p, 12)

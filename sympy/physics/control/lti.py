@@ -1867,7 +1867,7 @@ class DiscreteTransferFunction(TransferFunctionBase):
 
     def __init__(self, num, den, var, sampling_time=1):
         super().__init__()
-        self._sampling_time = sampling_time
+        self._sampling_time = sympify(sampling_time)
 
     @classmethod
     def from_rational_expression(cls, expr, var=None, sampling_time=1):
@@ -6073,7 +6073,8 @@ class DTStateSpace(StateSpaceBase):
     def __new__(cls, A=None, B=None, C=None, D=None, sampling_time = 1):
         if sampling_time == 0:
             return StateSpace(A, B, C, D)
-        return super(DTStateSpace, cls).__new__(cls, A, B, C, D, sampling_time)
+        return super(DTStateSpace, cls).__new__(cls, A, B,
+                                                C, D, sympify(sampling_time))
 
     def __init__(self, A=None, B=None, C=None, D=None, sampling_time = 1):
         sampling_time = sympify(sampling_time)
