@@ -168,7 +168,16 @@ def test_inverse_inexact():
 
     d = 1.0*x**3 - 1.42*x**2 + 0.4249*x - 0.0546540000000002
 
-    Mi = Mn / d
+    Mn2 = Matrix([
+        [500000.0*x**2 - 560000.0*x + 73650.0, 30000.0*x + 23700.0, 110000.0*x - 40500.0],
+        [230000.0*x - 118500.0, 500000.0*x**2 - 470000.0*x + 80600.0, 205000.0*x - 10900.0],
+        [70000.0*x + 56100.0, 195000.0*x - 54300.0, 500000.0*x**2 - 390000.0*x + 58200.0]
+    ])
+
+    d2 = 500000.0*x**3 - 710000.0*x**2 + 212450.0*x - 27327.0
+
+    Mi_monic = Mn / d
+    Mi_primitive = Mn2 / d2
 
     M_dm = M.to_DM()
     M_dmd = M_dm.to_dense()
@@ -176,18 +185,24 @@ def test_inverse_inexact():
     M_dmd_num, M_dmd_den = M_dmd.inv_den()
 
     # XXX: We don't check M_dm().to_field().inv() which currently uses division
-    # and produces a more complicate result from gcd cancellation failing.
+    # and produces a more complicated result from gcd cancellation failing.
     # DomainMatrix.inv() over RR(x) should be changed to clear denominators and
     # use DomainMatrix.inv_den().
 
-    Minvs = [
+    Minvs_primitive = [
         M.inv(),
+    ]
+    Minvs_monic = [
         (M_dm_num.to_field() / M_dm_den).to_Matrix(),
         (M_dmd_num.to_field() / M_dmd_den).to_Matrix(),
         M_dm_num.to_Matrix() / M_dm_den.as_expr(),
         M_dmd_num.to_Matrix() / M_dmd_den.as_expr(),
     ]
 
-    for Minv in Minvs:
-        for Mi1, Mi2 in zip(Minv.flat(), Mi.flat()):
+    for Minv in Minvs_monic:
+        for Mi1, Mi2 in zip(Minv.flat(), Mi_monic.flat()):
+            assert all_close(Mi2, Mi1)
+
+    for Minv in Minvs_primitive:
+        for Mi1, Mi2 in zip(Minv.flat(), Mi_primitive.flat()):
             assert all_close(Mi2, Mi1)
