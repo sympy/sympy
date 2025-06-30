@@ -993,7 +993,7 @@ class PrettyPrinter(Printer):
         else:
             return self._print(1)/self._print(expr.den)
 
-    def _print_DTTransferFunction(self, expr):
+    def _print_DiscreteTransferFunction(self, expr):
         if not expr.num == 1:
             num, den = expr.num, expr.den
             res = Mul(num, Pow(den, -1, evaluate=False), evaluate=False)
