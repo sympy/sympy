@@ -38,6 +38,22 @@ def test_lra_satask():
 
 
 def test_old_assumptions():
+    # test unhandled old assumptions
+    w = symbols("w", rational=False, real=True)
+    raises(UnhandledInput, lambda: lra_satask(Q.lt(w, 2) & Q.gt(w, 3)))
+    w = symbols("w", odd=True, real=True)
+    raises(UnhandledInput, lambda: lra_satask(Q.lt(w, 2) & Q.gt(w, 3)))
+    w = symbols("w", even=True, real=True)
+    raises(UnhandledInput, lambda: lra_satask(Q.lt(w, 2) & Q.gt(w, 3)))
+    w = symbols("w", prime=True, real=True)
+    raises(UnhandledInput, lambda: lra_satask(Q.lt(w, 2) & Q.gt(w, 3)))
+    w = symbols("w", composite=True, real=True)
+    raises(UnhandledInput, lambda: lra_satask(Q.lt(w, 2) & Q.gt(w, 3)))
+    w = symbols("w", integer=True, real=True)
+    raises(UnhandledInput, lambda: lra_satask(Q.lt(w, 2) & Q.gt(w, 3)))
+    w = symbols("w", integer=False, real=True)
+    raises(UnhandledInput, lambda: lra_satask(Q.lt(w, 2) & Q.gt(w, 3)))
+
     # test handled
     w = symbols("w", positive=True, real=True)
     assert lra_satask(Q.le(w, 0)) is False
