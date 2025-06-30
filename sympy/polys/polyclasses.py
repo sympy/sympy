@@ -1733,7 +1733,7 @@ class DMP_Python(DMP):
 
 
 class DUP_Flint(DMP):
-    """Dense Multivariate Polynomials over `K`. """
+    """Dense Univariate Polynomials over `K`. """
 
     lev = 0
 
@@ -2426,6 +2426,11 @@ class DUP_Flint(DMP):
         else:
             # This is what dup_cyclotomic_p does...
             return False
+
+
+class DMP_Flint(DMP):
+    """Dense Multivariate Polynomials over `K`. """
+    pass
 
 
 def init_normal_DMF(num, den, lev, dom):
