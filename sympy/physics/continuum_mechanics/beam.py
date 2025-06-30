@@ -1461,7 +1461,7 @@ class Beam:
         """
         return self.shear_force()/self._area
 
-    def plot_shear_stress(self, subs=None):
+    def plot_shear_stress(self, subs=None, show=True):
         """
 
         Returns a plot of shear stress present in the beam object.
@@ -1522,10 +1522,10 @@ class Beam:
         # Returns Plot of Shear Stress
         return plot (shear_stress.subs(subs), (x, 0, length),
         title='Shear Stress', xlabel=r'$\mathrm{x}$', ylabel=r'$\tau$',
-        line_color='r')
+        line_color='r', show=show)
 
 
-    def plot_shear_force(self, subs=None):
+    def plot_shear_force(self, subs=None, show=True):
         """
 
         Returns a plot for Shear force present in the Beam object.
@@ -1581,9 +1581,9 @@ class Beam:
         else:
             length = self.length
         return plot(shear_force.subs(subs), (self.variable, 0, length), title='Shear Force',
-                xlabel=r'$\mathrm{x}$', ylabel=r'$\mathrm{V}$', line_color='g')
+                xlabel=r'$\mathrm{x}$', ylabel=r'$\mathrm{V}$', line_color='g', show=show)
 
-    def plot_bending_moment(self, subs=None):
+    def plot_bending_moment(self, subs=None, show=True):
         """
 
         Returns a plot for Bending moment present in the Beam object.
@@ -1639,9 +1639,9 @@ class Beam:
         else:
             length = self.length
         return plot(bending_moment.subs(subs), (self.variable, 0, length), title='Bending Moment',
-                xlabel=r'$\mathrm{x}$', ylabel=r'$\mathrm{M}$', line_color='b')
+                xlabel=r'$\mathrm{x}$', ylabel=r'$\mathrm{M}$', line_color='b', show=show)
 
-    def plot_slope(self, subs=None):
+    def plot_slope(self, subs=None, show=True):
         """
 
         Returns a plot for slope of deflection curve of the Beam object.
@@ -1697,9 +1697,9 @@ class Beam:
         else:
             length = self.length
         return plot(slope.subs(subs), (self.variable, 0, length), title='Slope',
-                xlabel=r'$\mathrm{x}$', ylabel=r'$\theta$', line_color='m')
+                xlabel=r'$\mathrm{x}$', ylabel=r'$\theta$', line_color='m', show=show)
 
-    def plot_deflection(self, subs=None):
+    def plot_deflection(self, subs=None, show=True):
         """
 
         Returns a plot for deflection curve of the Beam object.
@@ -1757,7 +1757,7 @@ class Beam:
             length = self.length
         return plot(deflection.subs(subs), (self.variable, 0, length),
                     title='Deflection', xlabel=r'$\mathrm{x}$', ylabel=r'$\delta$',
-                    line_color='r')
+                    line_color='r', show=show)
 
 
     def plot_loading_results(self, subs=None):
