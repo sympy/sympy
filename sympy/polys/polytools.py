@@ -548,6 +548,7 @@ class Poly(Basic):
         Poly(y + 1, y, domain='ZZ')
 
         """
+        # mnemonic: "per" is the reverse of "rep"
         if gens is None:
             gens = f.gens
 
@@ -4024,7 +4025,10 @@ class Poly(Basic):
 
     def cancel(f, g, include=False):
         """
-        Cancel common factors in a rational function ``f/g``.
+        Cancel common factors in a rational function ``f/g``, returning
+        ``(p/q, n, d)`` if ``include`` is False, else ``(N, D)`` where
+        ``N/D = (p*n)/(q*d)``, i.e. ``p`` and ``q`` are included in ``N``
+        and ``D``.
 
         Examples
         ========
@@ -4033,7 +4037,7 @@ class Poly(Basic):
         >>> from sympy.abc import x
 
         >>> Poly(2*x**2 - 2, x).cancel(Poly(x**2 - 2*x + 1, x))
-        (1, Poly(2*x + 2, x, domain='ZZ'), Poly(x - 1, x, domain='ZZ'))
+        (2, Poly(x + 1, x, domain='ZZ'), Poly(x - 1, x, domain='ZZ'))
 
         >>> Poly(2*x**2 - 2, x).cancel(Poly(x**2 - 2*x + 1, x), include=True)
         (Poly(2*x + 2, x, domain='ZZ'), Poly(x - 1, x, domain='ZZ'))
@@ -7599,7 +7603,13 @@ def cancel(f, *gens, _signsimp=True, **args):
             if not isinstance(f, Tuple):
                 return f.expand()
             else:
-                return S.One, p, q
+                if q:
+                    r = p/q
+                else:
+                    r = p or 1
+                if r < 0:
+                    return -r, S.NegativeOne, S.One
+                return r, S.One, S.One
     except PolynomialError as msg:
         if f.is_commutative and not f.has(Piecewise):
             raise PolynomialError(msg)
@@ -7624,14 +7634,31 @@ def cancel(f, *gens, _signsimp=True, **args):
                     pass
             return f.xreplace(dict(reps))
 
-    c, (P, Q) = 1, F.cancel(G)
+    P, Q = F.cancel(G)
     if opt.get('polys', False) and 'gens' not in opt:
         opt['gens'] = R.symbols
 
     if not isinstance(f, Tuple):
-        return c*(P.as_expr()/Q.as_expr())
+        return P.as_expr()/Q.as_expr()
     else:
         P, Q = P.as_expr(), Q.as_expr()
+        cp, _ = factor_terms(P).as_coeff_Mul()
+        cq, _ = factor_terms(Q).as_coeff_Mul()
+        if cp and cq:
+            c = cp/cq
+            Q = Q/cq
+            P = P/cp
+        elif cp:
+            c = cp
+            P = P/cp
+        elif cq:
+            c = 1/cq
+            Q = Q/cq
+        else:
+            c = S.One
+        if c < 0:
+            P = -P
+            c = -c
         if not opt.get('polys', False):
             return c, P, Q
         else:

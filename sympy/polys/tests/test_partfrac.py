@@ -197,22 +197,22 @@ def test_apart_list():
 
     f = (-2*x - 2*x**2) / (3*x**2 - 6*x)
     got = apart_list(f, x, dummies=numbered_symbols("w"))
-    ans = (-1, Poly(Rational(2, 3), x, domain='QQ'),
-        [(Poly(w0 - 2, w0, domain='ZZ'), Lambda(_a, 2), Lambda(_a, -_a + x), 1)])
+    ans = (-Rational(2, 3), Poly(1, x, domain='ZZ'),
+        [(Poly(w0 - 2, w0, domain='ZZ'), Lambda(_a, 3), Lambda(_a, -_a + x), 1)])
     assert dummy_eq(got, ans)
 
     got = apart_list(2/(x**2-2), x, dummies=numbered_symbols("w"))
-    ans = (1, Poly(0, x, domain='ZZ'), [(Poly(w0**2 - 2, w0, domain='ZZ'),
-        Lambda(_a, _a/2),
+    ans = (2, Poly(0, x, domain='ZZ'), [(Poly(w0**2 - 2, w0, domain='ZZ'),
+        Lambda(_a, _a/4),
         Lambda(_a, -_a + x), 1)])
     assert dummy_eq(got, ans)
 
     f = 36 / (x**5 - 2*x**4 - 2*x**3 + 4*x**2 + x - 2)
     got = apart_list(f, x, dummies=numbered_symbols("w"))
-    ans = (1, Poly(0, x, domain='ZZ'),
-        [(Poly(w0 - 2, w0, domain='ZZ'), Lambda(_a, 4), Lambda(_a, -_a + x), 1),
-        (Poly(w1**2 - 1, w1, domain='ZZ'), Lambda(_a, -3*_a - 6), Lambda(_a, -_a + x), 2),
-        (Poly(w2 + 1, w2, domain='ZZ'), Lambda(_a, -4), Lambda(_a, -_a + x), 1)])
+    ans = (36, Poly(0, x, domain='ZZ'),
+        [(Poly(w0 - 2, w0, domain='ZZ'), Lambda(_a, 1/S(9)), Lambda(_a, -_a + x), 1),
+        (Poly(w1**2 - 1, w1, domain='ZZ'), Lambda(_a, -_a/12 - 1/S(6)), Lambda(_a, -_a + x), 2),
+        (Poly(w2 + 1, w2, domain='ZZ'), Lambda(_a, -1/S(9)), Lambda(_a, -_a + x), 1)])
     assert dummy_eq(got, ans)
 
 

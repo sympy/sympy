@@ -744,7 +744,7 @@ def test_to_meijerg():
     p = hyper((Rational(-1, 2), -3), (), x)
     assert from_hyper(p).to_meijerg() == hyperexpand(p)
     p = hyper((S.One, S(3)), (S(2), ), x)
-    assert (hyperexpand(from_hyper(p).to_meijerg()) - hyperexpand(p)).expand() == 0
+    assert (hyperexpand(from_hyper(p).to_meijerg()) - hyperexpand(p)).cancel() == 0
     p = from_hyper(hyper((-2, -3), (S.Half, ), x))
     s = hyperexpand(hyper((-2, -3), (S.Half, ), x))
     C_0 = Symbol('C_0')
