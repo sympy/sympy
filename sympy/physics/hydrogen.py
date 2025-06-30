@@ -114,8 +114,7 @@ def Y_lm(l, m, phi, theta):
     =====
 
     This function follows the Condon-Shortley phase convention and may return
-    real or complex values depending on values for ``l`` and ``m``. See Z_lm()
-    for real-valued spherical harmonics.
+    real or complex values depending on values for ``l`` and ``m``.
 
     Examples
     ========
@@ -138,6 +137,22 @@ def Y_lm(l, m, phi, theta):
     >>> dz2 = Y_lm(2, 0, phi, theta)**2
     >>> [sol.evalf() for sol in sympy.solve(dz2)]
     [4.0969092717143, 5.32786868905508, 2.18627603546528, 0.955316618124509]
+
+    See Also
+    ========
+
+    Z_lm, sympy.functions.special.spherical_harmonics.Ynm,
+    sympy.functions.special.spherical_harmonics.Ynm_c,
+    sympy.functions.special.spherical_harmonics.Znm
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Spherical_harmonics
+    .. [2] https://en.wikipedia.org/wiki/Table_of_spherical_harmonics
+    .. [3] https://mathworld.wolfram.com/SphericalHarmonic.html
+    .. [4] https://functions.wolfram.com/Polynomials/SphericalHarmonicY/
+    .. [5] https://dlmf.nist.gov/14.30
 
     """
     return Ynm(l, m, theta, phi).expand(func=True)
@@ -190,6 +205,22 @@ def Z_lm(l, m, phi, theta):
     >>> dz2 = Z_lm(2, 0, phi, theta)**2
     >>> [sol.evalf() for sol in sympy.solve(dz2)]
     [4.0969092717143, 5.32786868905508, 2.18627603546528, 0.955316618124509]
+
+    See Also
+    ========
+
+    Y_lm, sympy.functions.special.spherical_harmonics.Ynm,
+    sympy.functions.special.spherical_harmonics.Ynm_c,
+    sympy.functions.special.spherical_harmonics.Znm
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Spherical_harmonics
+    .. [2] https://en.wikipedia.org/wiki/Table_of_spherical_harmonics
+    .. [3] https://mathworld.wolfram.com/SphericalHarmonic.html
+    .. [4] https://functions.wolfram.com/Polynomials/SphericalHarmonicY/
+    .. [5] https://dlmf.nist.gov/14.30
 
     """
     return Znm(l, m, theta, phi).expand(func=True)
