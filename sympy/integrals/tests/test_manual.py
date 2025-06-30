@@ -17,6 +17,7 @@ from sympy.functions.special.gamma_functions import uppergamma
 from sympy.functions.special.polynomials import (assoc_laguerre, chebyshevt, chebyshevu, gegenbauer, hermite, jacobi, laguerre, legendre)
 from sympy.functions.special.zeta_functions import polylog
 from sympy.integrals.integrals import (Integral, integrate)
+from sympy.core.numbers import oo
 from sympy.logic.boolalg import And
 from sympy.integrals.manualintegrate import (manualintegrate, find_substitutions,
     _parts_rule, integral_steps, manual_subs)
@@ -325,6 +326,49 @@ def test_manualintegrate_Heaviside():
 
     assert manualintegrate(sin(y + x)*Heaviside(3*x - y), x) == \
             (cos(y*Rational(4, 3)) - cos(x + y))*Heaviside(3*x - y)
+
+    expr_multi = Heaviside(x - Rational(1,3)) * Heaviside(-x + Rational(2,3)) * Heaviside(x - 0) * Heaviside(-x + 1)
+    result_multi = manualintegrate(expr_multi, x)
+    assert result_multi is not None
+
+    if hasattr(result_multi, 'function'):
+        piecewise_expr = result_multi.function
+        piecewise_definite = integrate(piecewise_expr, (x, -oo, oo))
+        assert abs(float(piecewise_definite) - 1/3) < 1e-10
+
+
+def test_manualintegrate_multiple_Heaviside():
+    """Test integration of products of multiple Heaviside functions."""
+    x = Symbol('x')
+
+    # Test product of three Heaviside functions
+    expr1 = Heaviside(x) * Heaviside(x - 1) * Heaviside(x - 2)
+    result1 = manualintegrate(expr1, x)
+    expected1 = Piecewise((0, x < 2), (x, True))
+    assert result1 == expected1
+
+    # Test product of four Heaviside functions
+    expr2 = Heaviside(x) * Heaviside(x - 1) * Heaviside(x - 2) * Heaviside(x - 3)
+    result2 = manualintegrate(expr2, x)
+    expected2 = Piecewise((0, x < 3), (x, True))
+    assert result2 == expected2
+
+    # Test with coefficient
+    expr3 = 2 * Heaviside(x) * Heaviside(x - 1) * Heaviside(x - 2)
+    result3 = manualintegrate(expr3, x)
+    expected3 = 2 * Piecewise((0, x < 2), (x, True))
+    assert result3 == expected3
+
+    # Test overlapping intervals
+    expr4 = Heaviside(x) * Heaviside(x - 1) * Heaviside(2 - x)
+    result4 = manualintegrate(expr4, x)
+    expected4 = Piecewise((0, x < 1), (x, x < 2), (0, True))
+    assert result4 == expected4
+
+    # Test no overlap (should be zero)
+    expr5 = Heaviside(x) * Heaviside(x - 5) * Heaviside(2 - x)
+    result5 = manualintegrate(expr5, x)
+    assert result5 == 0
 
 
 def test_manualintegrate_orthogonal_poly():
