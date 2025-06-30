@@ -170,11 +170,11 @@ class Routine:
                 input_symbols.add(arg.name)
                 symbols.update(arg.expr.free_symbols - arg.expr.atoms(Indexed))
             else:
-                raise ValueError("Unknown Routine argument: %s" % arg)
+                raise ValueError(f"Unknown Routine argument: {arg}")
 
         for r in results:
             if not isinstance(r, Result):
-                raise ValueError("Unknown Routine result: %s" % r)
+                raise ValueError(f"Unknown Routine result: {r}")
             symbols.update(r.expr.free_symbols - r.expr.atoms(Indexed))
 
         local_symbols = set()
@@ -328,7 +328,7 @@ class Variable:
         self.precision = precision
 
     def __str__(self):
-        return "%s(%r)" % (self.__class__.__name__, self.name)
+        return f"{self.__class__.__name__}({repr(self.name)})"
 
     __repr__ = __str__
 
@@ -354,8 +354,7 @@ class Variable:
         try:
             return self._datatype[language.upper()]
         except KeyError:
-            raise CodeGenError("Has datatypes for languages: %s" %
-                    ", ".join(self._datatype))
+            raise CodeGenError(f"Has datatypes for languages: {', '.join(self._datatype)}")
 
 
 class Argument(Variable):
@@ -384,8 +383,7 @@ class ResultBase:
         self.result_var = result_var
 
     def __str__(self):
-        return "%s(%r, %r)" % (self.__class__.__name__, self.expr,
-            self.result_var)
+        return f"{self.__class__.__name__}({repr(self.expr)}, {repr(self.result_var)})"
 
     __repr__ = __str__
 
@@ -431,7 +429,7 @@ class OutputArgument(Argument, ResultBase):
         ResultBase.__init__(self, expr, result_var)
 
     def __str__(self):
-        return "%s(%r, %r, %r)" % (self.__class__.__name__, self.name, self.result_var, self.expr)
+        return f"{self.__class__.__name__}({repr(self.name)}, {repr(self.result_var)}, {repr(self.expr)})"
 
     __repr__ = __str__
 
@@ -448,8 +446,10 @@ class InOutArgument(Argument, ResultBase):
 
 
     def __str__(self):
-        return "%s(%r, %r, %r)" % (self.__class__.__name__, self.name, self.expr,
-            self.result_var)
+        return (
+            f"{self.__class__.__name__}("
+            f"{repr(self.name)}, {repr(self.expr)}, {repr(self.result_var)})"
+        )
 
     __repr__ = __str__
 
@@ -503,7 +503,7 @@ class Result(Variable, ResultBase):
             raise TypeError("The first argument must be a SymPy expression.")
 
         if name is None:
-            name = 'result_%d' % abs(hash(expr))
+            name = f"result_{abs(hash(expr))}"
 
         if datatype is None:
             #try to infer data type from the expression
@@ -523,8 +523,10 @@ class Result(Variable, ResultBase):
         ResultBase.__init__(self, expr, result_var)
 
     def __str__(self):
-        return "%s(%r, %r, %r)" % (self.__class__.__name__, self.expr, self.name,
-            self.result_var)
+        return (
+            f"{self.__class__.__name__}({repr(self.expr)}, "
+            f"{repr(self.name)}, {repr(self.result_var)})"
+        )
 
     __repr__ = __str__
 
@@ -558,7 +560,7 @@ class CodeGen:
         else:
             constants, not_supported, expr_str = self.printer.doprint(s)
             if constants or not_supported:
-                raise ValueError("Failed to print %s" % str(s))
+                raise ValueError(f"Failed to print {str(s)}")
         return expr_str.strip()
 
     def __init__(self, project="project", cse=False):
@@ -680,7 +682,7 @@ class CodeGen:
                     symbols.remove(symbol)
             elif isinstance(expr, (ImmutableMatrix, MatrixSlice)):
                 # Create a "dummy" MatrixSymbol to use as the Output arg
-                out_arg = MatrixSymbol('out_%s' % abs(hash(expr)), *expr.shape)
+                out_arg = MatrixSymbol(f'out_{abs(hash(expr))}', *expr.shape)
                 dims = tuple([(S.Zero, dim - 1) for dim in out_arg.shape])
                 output_args.append(
                     OutputArgument(out_arg, out_arg, expr, dimensions=dims))
@@ -776,13 +778,13 @@ class CodeGen:
         """
         if to_files:
             for dump_fn in self.dump_fns:
-                filename = "%s.%s" % (prefix, dump_fn.extension)
+                filename = f"{prefix}.{dump_fn.extension}"
                 with open(filename, "w") as f:
                     dump_fn(self, routines, f, prefix, header, empty)
         else:
             result = []
             for dump_fn in self.dump_fns:
-                filename = "%s.%s" % (prefix, dump_fn.extension)
+                filename = f"{prefix}.{dump_fn.extension}"
                 contents = StringIO()
                 dump_fn(self, routines, contents, prefix, header, empty)
                 result.append((filename, contents.getvalue()))
@@ -888,7 +890,7 @@ class CCodeGen(CodeGen):
         tmp = header_comment % {"version": sympy_version,
                                 "project": self.project}
         for line in tmp.splitlines():
-            code_lines.append(" *%s*\n" % line.center(76))
+            code_lines.append(f" *{line.center(76)}*\n")
         code_lines.append(" " + "*"*78 + "/\n")
         return code_lines
 
@@ -912,11 +914,11 @@ class CCodeGen(CodeGen):
         for arg in routine.arguments:
             name = self.printer.doprint(arg.name)
             if arg.dimensions or isinstance(arg, ResultBase):
-                type_args.append((arg.get_datatype('C'), "*%s" % name))
+                type_args.append((arg.get_datatype('C'), f"*{name}"))
             else:
                 type_args.append((arg.get_datatype('C'), name))
-        arguments = ", ".join([ "%s %s" % t for t in type_args])
-        return "%s %s(%s)" % (ctype, routine.name, arguments)
+        arguments = ", ".join([f"{t[0]} {t[1]}" for t in type_args])
+        return f"{ctype} {routine.name}({arguments})"
 
     def _preprocessor_statements(self, prefix):
         code_lines = []
@@ -927,7 +929,7 @@ class CCodeGen(CodeGen):
 
     def _get_routine_opening(self, routine):
         prototype = self.get_prototype(routine)
-        return ["%s {\n" % prototype]
+        return [f"{prototype} {{\n"]
 
     def _declare_arguments(self, routine):
         # arguments are declared in prototype
@@ -971,7 +973,7 @@ class CCodeGen(CodeGen):
                 result.expr, assign_to=assign_to)
 
             for name, value in sorted(constants, key=str):
-                code_lines.append("double const %s = %s;\n" % (name, value))
+                code_lines.append(f"double const {name} = {value};\n")
 
             code_lines.append("{}{}\n".format(prefix, c_expr))
 
@@ -1004,18 +1006,17 @@ class CCodeGen(CodeGen):
                     result.expr, assign_to=assign_to)
             except AssignmentError:
                 assign_to = result.result_var
-                code_lines.append(
-                    "%s %s;\n" % (result.get_datatype('c'), str(assign_to)))
+                code_lines.append(f"{result.get_datatype('c')} {assign_to};\n")
                 constants, not_c, c_expr = self._printer_method_with_settings(
                     'doprint', {"human": False, "dereference": dereference, "strict": False},
                     result.expr, assign_to=assign_to)
 
             for name, value in sorted(constants, key=str):
-                code_lines.append("double const %s = %s;\n" % (name, value))
-            code_lines.append("%s\n" % c_expr)
+                code_lines.append(f"double const {name} = {value};\n")
+            code_lines.append(f"{c_expr}\n")
 
         if return_val:
-            code_lines.append("   return %s;\n" % return_val)
+            code_lines.append(f"   return {return_val};\n")
         return code_lines
 
     def _get_routine_ending(self, routine):
@@ -1055,19 +1056,21 @@ class CCodeGen(CodeGen):
         """
         if header:
             print(''.join(self._get_header()), file=f)
-        guard_name = "%s__%s__H" % (self.project.replace(
-            " ", "_").upper(), prefix.replace("/", "_").upper())
+        guard_name = (
+            f"{self.project.replace(' ', '_').upper()}__"
+            f"{prefix.replace('/', '_').upper()}__H"
+        )
         # include guards
         if empty:
             print(file=f)
-        print("#ifndef %s" % guard_name, file=f)
-        print("#define %s" % guard_name, file=f)
+        print(f"#ifndef {guard_name}", file=f)
+        print(f"#define {guard_name}", file=f)
         if empty:
             print(file=f)
         # declaration of the function prototypes
         for routine in routines:
             prototype = self.get_prototype(routine)
-            print("%s;" % prototype, file=f)
+            print(f"{prototype};", file=f)
         # end if include guards
         if empty:
             print(file=f)
@@ -1108,7 +1111,7 @@ class FCodeGen(CodeGen):
         tmp = header_comment % {"version": sympy_version,
             "project": self.project}
         for line in tmp.splitlines():
-            code_lines.append("!*%s*\n" % line.center(76))
+            code_lines.append(f"!*{line.center(76)}*\n")
         code_lines.append("!" + "*"*78 + '\n')
         return code_lines
 
@@ -1128,8 +1131,7 @@ class FCodeGen(CodeGen):
         else:
             code_list.append("subroutine")
 
-        args = ", ".join("%s" % self._get_symbol(arg.name)
-                        for arg in routine.arguments)
+        args = ", ".join(f"{self._get_symbol(arg.name)}" for arg in routine.arguments)
 
         call_sig = "{}({})\n".format(routine.name, args)
         # Fortran 95 requires all lines be less than 132 characters, so wrap
@@ -1150,25 +1152,24 @@ class FCodeGen(CodeGen):
         for arg in routine.arguments:
 
             if isinstance(arg, InputArgument):
-                typeinfo = "%s, intent(in)" % arg.get_datatype('fortran')
+                typeinfo = f"{arg.get_datatype('fortran')}, intent(in)"
             elif isinstance(arg, InOutArgument):
-                typeinfo = "%s, intent(inout)" % arg.get_datatype('fortran')
+                typeinfo = f"{arg.get_datatype('fortran')}, intent(inout)"
             elif isinstance(arg, OutputArgument):
-                typeinfo = "%s, intent(out)" % arg.get_datatype('fortran')
+                typeinfo = f"{arg.get_datatype('fortran')}, intent(out)"
             else:
-                raise CodeGenError("Unknown Argument type: %s" % type(arg))
+                raise CodeGenError(f"Unknown Argument type: {type(arg)}")
 
             fprint = self._get_symbol
 
             if arg.dimensions:
                 # fortran arrays start at 1
-                dimstr = ", ".join(["%s:%s" % (
-                    fprint(dim[0] + 1), fprint(dim[1] + 1))
-                    for dim in arg.dimensions])
-                typeinfo += ", dimension(%s)" % dimstr
-                array_list.append("%s :: %s\n" % (typeinfo, fprint(arg.name)))
+                dimstr = ", ".join([f"{fprint(dim[0] + 1)}:{fprint(dim[1] + 1)}"
+                                    for dim in arg.dimensions])
+                typeinfo += f", dimension({dimstr})"
+                array_list.append(f"{typeinfo} :: {fprint(arg.name)}\n")
             else:
-                scalar_list.append("%s :: %s\n" % (typeinfo, fprint(arg.name)))
+                scalar_list.append(f"{typeinfo} :: {fprint(arg.name)}\n")
 
         # scalars first, because they can be used in array declarations
         code_list.extend(scalar_list)
@@ -1185,8 +1186,7 @@ class FCodeGen(CodeGen):
         code_list = []
         for var in sorted(routine.local_vars, key=str):
             typeinfo = get_default_datatype(var)
-            code_list.append("%s :: %s\n" % (
-                typeinfo.fname, self._get_symbol(var)))
+            code_list.append(f"{typeinfo.fname} :: {self._get_symbol(var)}\n")
         return code_list
 
     def _get_routine_ending(self, routine):
@@ -1229,17 +1229,16 @@ class FCodeGen(CodeGen):
 
             for obj, v in sorted(constants, key=str):
                 t = get_default_datatype(obj)
-                declarations.append(
-                    "%s, parameter :: %s = %s\n" % (t.fname, obj, v))
+                declarations.append(f"{t.fname}, parameter :: {obj} = {v}\n")
             for obj in sorted(not_fortran, key=str):
                 t = get_default_datatype(obj)
                 if isinstance(obj, Function):
                     name = obj.func
                 else:
                     name = obj
-                declarations.append("%s :: %s\n" % (t.fname, name))
+                declarations.append(f"{t.fname} :: {name}\n")
 
-            code_lines.append("%s\n" % f_expr)
+            code_lines.append(f"{f_expr}\n")
         return declarations + code_lines
 
     def _indent_code(self, codelines):
@@ -1252,8 +1251,10 @@ class FCodeGen(CodeGen):
             lowercase = {str(x).lower() for x in r.variables}
             orig_case = {str(x) for x in r.variables}
             if len(lowercase) < len(orig_case):
-                raise CodeGenError("Fortran ignores case. Got symbols: %s" %
-                        (", ".join([str(var) for var in r.variables])))
+                raise CodeGenError(
+                    f"Fortran ignores case. Got symbols: "
+                    f"{', '.join(str(var) for var in r.variables)}"
+                )
         self.dump_code(routines, f, prefix, header, empty)
     dump_f95.extension = code_extension  # type: ignore
     dump_f95.__doc__ = CodeGen.dump_code.__doc__
@@ -1364,7 +1365,7 @@ class JuliaCodeGen(CodeGen):
 
             else:
                 # we have no name for this output
-                return_vals.append(Result(expr, name='out%d' % (i+1)))
+                return_vals.append(Result(expr, name=f'out{i+1}'))
 
         # setup input argument list
         output_args.sort(key=lambda x: str(x.name))
@@ -1415,7 +1416,7 @@ class JuliaCodeGen(CodeGen):
             if line == '':
                 code_lines.append("#\n")
             else:
-                code_lines.append("#   %s\n" % line)
+                code_lines.append(f"#   {line}\n")
         return code_lines
 
     def _preprocessor_statements(self, prefix):
@@ -1430,12 +1431,11 @@ class JuliaCodeGen(CodeGen):
         args = []
         for arg in routine.arguments:
             if isinstance(arg, OutputArgument):
-                raise CodeGenError("Julia: invalid argument of type %s" %
-                                   str(type(arg)))
+                raise CodeGenError(f"Julia: invalid argument of type {str(type(arg))}")
             if isinstance(arg, (InputArgument, InOutArgument)):
-                args.append("%s" % self._get_symbol(arg.name))
+                args.append(f"{self._get_symbol(arg.name)}")
         args = ", ".join(args)
-        code_list.append("%s(%s)\n" % (routine.name, args))
+        code_list.append(f"{routine.name}({args})\n")
         code_list = [ "".join(code_list) ]
 
         return code_list
@@ -1473,16 +1473,14 @@ class JuliaCodeGen(CodeGen):
                 'doprint', {"human": False, "strict": False}, result.expr, assign_to=assign_to)
 
             for obj, v in sorted(constants, key=str):
-                declarations.append(
-                    "%s = %s\n" % (obj, v))
+                declarations.append(f"{obj} = {v}\n")
             for obj in sorted(not_supported, key=str):
                 if isinstance(obj, Function):
                     name = obj.func
                 else:
                     name = obj
-                declarations.append(
-                    "# unsupported: %s\n" % (name))
-            code_lines.append("%s\n" % (jl_expr))
+                declarations.append(f"# unsupported: {name}\n")
+            code_lines.append(f"{jl_expr}\n")
         return declarations + code_lines
 
     def _indent_code(self, codelines):
@@ -1623,7 +1621,7 @@ class OctaveCodeGen(CodeGen):
             if line == '':
                 code_lines.append("%\n")
             else:
-                code_lines.append("%%   %s\n" % line)
+                code_lines.append(f"%   {line}\n")
         return code_lines
 
     def _preprocessor_statements(self, prefix):
@@ -1653,12 +1651,11 @@ class OctaveCodeGen(CodeGen):
         args = []
         for arg in routine.arguments:
             if isinstance(arg, (OutputArgument, InOutArgument)):
-                raise CodeGenError("Octave: invalid argument of type %s" %
-                                   str(type(arg)))
+                raise CodeGenError(f"Octave: invalid argument of type {str(type(arg))}")
             if isinstance(arg, InputArgument):
-                args.append("%s" % self._get_symbol(arg.name))
+                args.append(f"{self._get_symbol(arg.name)}")
         args = ", ".join(args)
-        code_list.append("%s(%s)\n" % (routine.name, args))
+        code_list.append(f"{routine.name}({args})\n")
         code_list = [ "".join(code_list) ]
 
         return code_list
@@ -1691,16 +1688,14 @@ class OctaveCodeGen(CodeGen):
                 'doprint', {"human": False, "strict": False}, result.expr, assign_to=assign_to)
 
             for obj, v in sorted(constants, key=str):
-                declarations.append(
-                    "  %s = %s;  %% constant\n" % (obj, v))
+                declarations.append(f" {obj} = {v}; % constant\n")
             for obj in sorted(not_supported, key=str):
                 if isinstance(obj, Function):
                     name = obj.func
                 else:
                     name = obj
-                declarations.append(
-                    "  %% unsupported: %s\n" % (name))
-            code_lines.append("%s\n" % (oct_expr))
+                declarations.append(f"  % unsupported: {name}\n")
+            code_lines.append(f"{oct_expr}\n")
         return declarations + code_lines
 
     def _indent_code(self, codelines):
@@ -1803,7 +1798,7 @@ class RustCodeGen(CodeGen):
 
             else:
                 # we have no name for this output
-                return_vals.append(Result(expr, name='out%d' % (i+1)))
+                return_vals.append(Result(expr, name=f'out{i+1}'))
 
         # setup input argument list
         output_args.sort(key=lambda x: str(x.name))
@@ -1853,7 +1848,7 @@ class RustCodeGen(CodeGen):
         tmp = header_comment % {"version": sympy_version,
                                 "project": self.project}
         for line in tmp.splitlines():
-            code_lines.append((" *%s" % line.center(76)).rstrip() + "\n")
+            code_lines.append(f" *{line.center(76).rstrip()}\n")
         code_lines.append(" */\n")
         return code_lines
 
@@ -1879,11 +1874,11 @@ class RustCodeGen(CodeGen):
         for arg in routine.arguments:
             name = self.printer.doprint(arg.name)
             if arg.dimensions or isinstance(arg, ResultBase):
-                type_args.append(("*%s" % name, arg.get_datatype('Rust')))
+                type_args.append((f"*{name}", arg.get_datatype('Rust')))
             else:
                 type_args.append((name, arg.get_datatype('Rust')))
-        arguments = ", ".join([ "%s: %s" % t for t in type_args])
-        return "fn %s(%s)%s" % (routine.name, arguments, rstype)
+        arguments = ", ".join([f"{t[0]}: {t[1]}" for t in type_args])
+        return f"fn {routine.name}({arguments}){rstype}"
 
     def _preprocessor_statements(self, prefix):
         code_lines = []
@@ -1892,7 +1887,7 @@ class RustCodeGen(CodeGen):
 
     def _get_routine_opening(self, routine):
         prototype = self.get_prototype(routine)
-        return ["%s {\n" % prototype]
+        return [f"{prototype} {{\n"]
 
     def _declare_arguments(self, routine):
         # arguments are declared in prototype
@@ -1931,16 +1926,16 @@ class RustCodeGen(CodeGen):
                 'doprint', {"human": False, "strict": False}, result.expr, assign_to=assign_to)
 
             for name, value in sorted(constants, key=str):
-                declarations.append("const %s: f64 = %s;\n" % (name, value))
+                declarations.append(f"const {name}: f64 = {value};\n")
 
             for obj in sorted(not_supported, key=str):
                 if isinstance(obj, Function):
                     name = obj.func
                 else:
                     name = obj
-                declarations.append("// unsupported: %s\n" % (name))
+                declarations.append(f"// unsupported: {name}\n")
 
-            code_lines.append("let %s\n" % rs_expr)
+            code_lines.append(f"let {rs_expr}\n")
 
         if len(returns) > 1:
             returns = ['(' + ', '.join(returns) + ')']
@@ -1978,7 +1973,7 @@ def get_code_generator(language, project=None, standard=None, printer = None):
                     "OCTAVE": OctaveCodeGen,
                     "RUST": RustCodeGen}.get(language.upper())
     if CodeGenClass is None:
-        raise ValueError("Language '%s' is not supported." % language)
+        raise ValueError(f"Language '{language}' is not supported.")
     return CodeGenClass(project, printer)
 
 
