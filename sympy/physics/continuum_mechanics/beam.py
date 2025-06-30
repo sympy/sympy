@@ -42,6 +42,7 @@ __doctest_requires__ = {
 numpy = import_module('numpy', import_kwargs={'fromlist':['arange']})
 
 
+
 class Beam:
     """
     A Beam is a structural element that is capable of withstanding load
@@ -682,7 +683,6 @@ class Beam:
         self.apply_load(E * I * deflection_jump, loc, -4)
         self.bc_shear_force.append((loc, 0))
         return deflection_jump
-
     def apply_load(self, value, start, order, end=None):
         """
         This method adds up the loads given to a particular beam object.
@@ -747,9 +747,13 @@ class Beam:
         self._load += value*SingularityFunction(x, start, order)
         self._original_load += value*SingularityFunction(x, start, order)
 
-        if end:
+        if end!=None:
+            if start - end>0:
+                # If load is applied in reverse (start > end), reverse the effect by applying a negative load at the end.
+                self._handle_end(x, -value, start, order, end,type = "remove")
             # load has an end point within the length of the beam.
-            self._handle_end(x, value, start, order, end, type="apply")
+            else:
+                self._handle_end(x, value, start, order, end, type="apply")
 
     def remove_load(self, value, start, order, end=None):
         """
@@ -811,9 +815,12 @@ class Beam:
             msg = "No such load distribution exists on the beam object."
             raise ValueError(msg)
 
-        if end:
+        if end!=None:
+            if start - end>0:
+                self._handle_end(x, -value, start, order, end,type = "apply")
             # load has an end point within the length of the beam.
-            self._handle_end(x, value, start, order, end, type="remove")
+            else:
+                self._handle_end(x, value, start, order, end, type="remove")
 
     def _handle_end(self, x, value, start, order, end, type):
         """
