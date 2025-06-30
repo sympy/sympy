@@ -1605,10 +1605,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
         if expv == ring.zero_monom:
             r += p
         if ret_single:
-            if not qv:
-                return ring.zero, r
-            else:
-                return qv[0], r
+            return qv[0], r
         else:
             return qv, r
 
