@@ -18,7 +18,7 @@ from sympy.core.expr import Expr
 from sympy.core.function import ArgumentIndexError, DefinedFunction, expand_mul
 from sympy.core.logic import fuzzy_not
 from sympy.core.mul import Mul
-from sympy.core.numbers import E, I, pi, oo, Rational, Integer
+from sympy.core.numbers import E, I, pi, oo, Rational, Integer, Float
 from sympy.core.relational import Eq, is_le, is_gt, is_lt
 from sympy.external.gmpy import SYMPY_INTS, remove, lcm, legendre, jacobi, kronecker
 from sympy.functions.combinatorial.factorials import (binomial,
@@ -897,35 +897,47 @@ class harmonic(DefinedFunction):
     @classmethod
     def eval(cls, n, m=None):
         from sympy.functions.special.zeta_functions import zeta
-        if m is S.One:
-            return cls(n)
         if m is None:
             m = S.One
-        if n.is_zero:
-            return S.Zero
-        elif m.is_zero:
-            return n
-        elif n is S.Infinity:
+
+            # Handle symbolic infinity case early
+        if n is S.Infinity:
             if m.is_negative:
                 return S.NaN
             elif is_le(m, S.One):
                 return S.Infinity
             elif is_gt(m, S.One):
                 return zeta(m)
+
+            # Normalize harmonic(n, 1) to harmonic(n) and avoid recursion
+        if m == S.One and not isinstance(n, (Float, Rational)):
+            return cls.__new__(cls, n, evaluate=False)
+
+            # Guard: avoid evaluation for very large n
+        if n.is_Integer and n.is_positive and int(n) > 10 ** 5:
+            return cls.__new__(cls, n, m, evaluate=False)
+
+        if n.is_zero:
+            return S.Zero
+        elif m.is_zero:
+            return n
         elif m.is_Integer and m.is_nonpositive:
-            return (bernoulli(1-m, n+1) - bernoulli(1-m)) / (1-m)
+            return (bernoulli(1 - m, n + 1) - bernoulli(1 - m)) / (1 - m)
+
         elif n.is_Integer:
             if n.is_negative and (m.is_integer is False or m.is_nonpositive is False):
-                return S.ComplexInfinity if m is S.One else S.NaN
+                return S.ComplexInfinity if m == S.One else S.NaN
+
             if n.is_nonnegative:
                 if m.is_Integer:
                     if m not in cls.harmonic_cache:
                         @recurrence_memo([0])
                         def f(n, prev):
-                            return prev[-1] + S.One / n**m
+                            return prev[-1] + S.One / n ** m
+
                         cls.harmonic_cache[m] = f
                     return cls.harmonic_cache[m](int(n))
-                return Add(*(k**(-m) for k in range(1, int(n) + 1)))
+                return Add(*(k ** (-m) for k in range(1, int(n) + 1)))
 
     def _eval_rewrite_as_polygamma(self, n, m=S.One, **kwargs):
         from sympy.functions.special.gamma_functions import gamma, polygamma
