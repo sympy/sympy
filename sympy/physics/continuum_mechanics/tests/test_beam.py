@@ -500,7 +500,7 @@ def test_apply_support():
     I = Symbol('I')
 
     b = Beam(4, E, I)
-    b.apply_support(0, "cantilever")
+    b.apply_support(0, "fixed")
     b.apply_load(20, 4, -1)
     M_0, R_0 = symbols('M_0, R_0')
     b.solve_for_reaction_loads(R_0, M_0)
