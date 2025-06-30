@@ -4,7 +4,7 @@ from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.special.polynomials import assoc_laguerre
-from sympy.functions.special.spherical_harmonics import Ynm
+from sympy.functions.special.spherical_harmonics import Ynm, Znm
 
 
 def R_nl(n, l, r, Z=1):
@@ -90,6 +90,69 @@ def R_nl(n, l, r, Z=1):
     # some books. Both coefficients seem to be the same fast:
     # C =  S(2)/n**2 * sqrt(1/a**3 * factorial(n_r) / (factorial(n+l)))
     return C * r0**l * assoc_laguerre(n_r, 2*l + 1, r0).expand() * exp(-r0/2)
+
+
+def Y_lm(l, m, phi, theta, real=False):
+    """
+    Returns the spherical harmonic or angular function Y_{l}^{m}.
+
+    Parameters
+    ==========
+
+    l : integer
+        ``l`` is the Angular Momentum Quantum Number with
+        values ranging from 0 to ``n-1``.
+    m : iteger
+        ``m`` is the Magnetic Quantum Number with values
+        ranging from ``-l`` to ``l``.
+    phi :
+        azimuthal angle
+    theta :
+        polar angle
+    real : bool
+        return the real spherical harmonic if True instead of complex
+
+    Notes
+    =====
+
+    This function follows the Condon-Shortley phase convention.
+
+    If the imaginary component does not cancel for real representations of
+    the spherical harmonic, try setting your phi and theta symbol assumptions
+    to real.
+
+    Examples
+    ========
+
+    >>> import sympy
+    >>> from sympy.physics.hydrogen import Y_lm
+    >>> phi, theta = sympy.symbols('phi theta', real=True)
+    >>> Y_lm(1, 0, phi, theta)
+    sqrt(3)*cos(theta)/(2*sqrt(pi))
+    >>> Y_lm(2, 0, phi, theta).simplify()
+    sqrt(5)*(3*cos(theta)**2 - 1)/(4*sqrt(pi))
+    >>> Y_lm(1, -1, phi, theta, real=True).simplify()
+    -sqrt(3)*sin(phi)*sin(theta)/(2*sqrt(pi))
+    >>> Y_lm(1, -1, phi, theta, real=False).simplify()
+    sqrt(6)*exp(-I*phi)*sin(theta)/(4*sqrt(pi))
+    >>> Y_lm(1, 1, 1, 1).evalf()
+    -0.157078470548806 - 0.244635223409689*I
+
+    Find angular nodes in dz2 atomic orbital by solving for zero probability.
+    This returns the node theta angles in radians.
+
+    >>> dz2 = Y_lm(2, 0, phi, theta)**2
+    >>> [sol.evalf() for sol in sympy.solve(dz2)]
+    [4.0969092717143, 5.32786868905508, 2.18627603546528, 0.955316618124509]
+
+    """
+    l, m, theta, phi = map(S, [l, m, theta, phi])
+    if m.is_integer and l.is_integer and abs(m) > l:
+        raise ValueError("|'m'| must be less or equal 'l'")
+    if real:
+        return Znm(l, m, theta, phi).expand(func=True)
+    else:
+        return Ynm(l, m, theta, phi).expand(func=True)
 
 
 def Psi_nlm(n, l, m, r, phi, theta, Z=1):
