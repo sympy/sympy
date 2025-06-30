@@ -363,6 +363,32 @@ def _extract_all_facts(assump, exprs):
                 facts.add(frozenset(args))
     return CNF(facts)
 
+def _normalize_applied_predicates(expr):
+    # Replace Q.gt(a,b) with Q.lt(b,a)
+    expr = expr.replace(
+        lambda e: hasattr(e, 'function') and e.function == Q.gt,
+        lambda e: Q.lt(e.arguments[1], e.arguments[0])
+    )
+    # Replace Q.ge(a,b) with Q.le(b,a)
+    expr = expr.replace(
+        lambda e: hasattr(e, 'function') and e.function == Q.ge,
+        lambda e: Q.le(e.arguments[1], e.arguments[0])
+    )
+    return expr
+
+def _normalize_relations(expr):
+    expr = expr.replace(Gt, lambda a, b: Q.lt(b, a))
+    expr = expr.replace(Ge, lambda a, b: Q.le(b, a))
+    expr = expr.replace(Lt, lambda a, b: Q.lt(a, b))
+    expr = expr.replace(Le, lambda a, b: Q.le(a, b))
+    expr = expr.replace(Eq, lambda a, b: Q.eq(a, b))
+    expr = expr.replace(Ne, lambda a, b: Q.ne(a, b))
+    return expr
+
+def _normalize_expr(expr):
+    expr = _normalize_relations(expr)
+    expr = _normalize_applied_predicates(expr)
+    return expr
 
 def ask(proposition, assumptions=True, context=global_assumptions):
     """
@@ -467,11 +493,12 @@ def ask(proposition, assumptions=True, context=global_assumptions):
     if isinstance(assumptions, Predicate) or assumptions.kind is not BooleanKind:
         raise TypeError("assumptions must be a valid logical expression")
 
-    binrelpreds = {Eq: Q.eq, Ne: Q.ne, Gt: Q.gt, Lt: Q.lt, Ge: Q.ge, Le: Q.le}
+    # Normalize both proposition and assumptions
+    proposition = _normalize_expr(proposition)
+    assumptions = _normalize_expr(assumptions)
+
     if isinstance(proposition, AppliedPredicate):
         key, args = proposition.function, proposition.arguments
-    elif proposition.func in binrelpreds:
-        key, args = binrelpreds[type(proposition)], proposition.args
     else:
         key, args = Q.is_true, (proposition,)
 
