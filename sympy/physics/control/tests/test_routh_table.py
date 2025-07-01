@@ -82,164 +82,46 @@ def test_negative_real_part_conditions():
 
     # test for issue https://github.com/sympy/sympy/issues/28010
     # In that test we want to be sure that negative_real_conditions works fast
-    p7 = PurePoly(Add(Pow(Symbol('s'), Integer(4)), Mul(Pow(Symbol('s'),
-                Integer(3)),
-                Pow(Add(Mul(Symbol('I_L', nonnegative=True, real=True), Symbol('I_T',
-                nonnegative=True, real=True)), Mul(Symbol('I_L', nonnegative=True, real=True),
-                Pow(Symbol('d_T', nonnegative=True, real=True), Integer(2)), Symbol('m_T',
-                nonnegative=True, real=True)), Mul(Symbol('I_T', nonnegative=True, real=True),
-                Pow(Symbol('d_L', nonnegative=True, real=True), Integer(2)), Symbol('m_L',
-                nonnegative=True, real=True)), Mul(Symbol('I_T', nonnegative=True, real=True),
-                Pow(Symbol('l_L', nonnegative=True, real=True), Integer(2)), Symbol('m_T',
-                nonnegative=True, real=True)), Mul(Pow(Symbol('d_L', nonnegative=True,
-                real=True), Integer(2)), Pow(Symbol('d_T', nonnegative=True, real=True),
-                Integer(2)), Symbol('m_L', nonnegative=True, real=True), Symbol('m_T',
-                nonnegative=True, real=True))), Integer(-1)), Add(Mul(Symbol('I_L',
-                nonnegative=True, real=True), Symbol('k_13'), Symbol('s_13')), Mul(Symbol('I_T',
-                nonnegative=True, real=True), Symbol('k_02'), Symbol('s_02')), Mul(Integer(-1),
-                Symbol('I_T', nonnegative=True, real=True), Symbol('k_03'), Symbol('s_03')),
-                Mul(Integer(-1), Symbol('I_T', nonnegative=True, real=True), Symbol('k_12'),
-                Symbol('s_12')), Mul(Symbol('I_T', nonnegative=True, real=True), Symbol('k_13'),
-                Symbol('s_13')), Mul(Pow(Symbol('d_L', nonnegative=True, real=True),
-                Integer(2)), Symbol('k_13'), Symbol('m_L', nonnegative=True, real=True),
-                Symbol('s_13')), Mul(Pow(Symbol('d_T', nonnegative=True, real=True),
-                Integer(2)), Symbol('k_02'), Symbol('m_T', nonnegative=True, real=True),
-                Symbol('s_02')), Mul(Integer(-1), Pow(Symbol('d_T', nonnegative=True,
-                real=True), Integer(2)), Symbol('k_03'), Symbol('m_T', nonnegative=True,
-                real=True), Symbol('s_03')), Mul(Integer(-1), Pow(Symbol('d_T',
-                nonnegative=True, real=True), Integer(2)), Symbol('k_12'), Symbol('m_T',
-                nonnegative=True, real=True), Symbol('s_12')), Mul(Pow(Symbol('d_T',
-                nonnegative=True, real=True), Integer(2)), Symbol('k_13'), Symbol('m_T',
-                nonnegative=True, real=True), Symbol('s_13')), Mul(Integer(-1), Symbol('d_T',
-                nonnegative=True, real=True), Symbol('k_03'), Symbol('l_L', nonnegative=True,
-                real=True), Symbol('m_T', nonnegative=True, real=True), Symbol('s_03')),
-                Mul(Integer(-1), Symbol('d_T', nonnegative=True, real=True), Symbol('k_12'),
-                Symbol('l_L', nonnegative=True, real=True), Symbol('m_T', nonnegative=True,
-                real=True), Symbol('s_12')), Mul(Integer(2), Symbol('d_T', nonnegative=True,
-                real=True), Symbol('k_13'), Symbol('l_L', nonnegative=True, real=True),
-                Symbol('m_T', nonnegative=True, real=True), Symbol('s_13')), Mul(Symbol('k_13'),
-                Pow(Symbol('l_L', nonnegative=True, real=True), Integer(2)), Symbol('m_T',
-                nonnegative=True, real=True), Symbol('s_13')))), Mul(Pow(Symbol('s'),
-                Integer(2)), Pow(Add(Mul(Symbol('I_L', nonnegative=True, real=True),
-                Symbol('I_T', nonnegative=True, real=True)), Mul(Symbol('I_L', nonnegative=True,
-                real=True), Pow(Symbol('d_T', nonnegative=True, real=True), Integer(2)),
-                Symbol('m_T', nonnegative=True, real=True)), Mul(Symbol('I_T', nonnegative=True,
-                real=True), Pow(Symbol('d_L', nonnegative=True, real=True), Integer(2)),
-                Symbol('m_L', nonnegative=True, real=True)), Mul(Symbol('I_T', nonnegative=True,
-                real=True), Pow(Symbol('l_L', nonnegative=True, real=True), Integer(2)),
-                Symbol('m_T', nonnegative=True, real=True)), Mul(Pow(Symbol('d_L',
-                nonnegative=True, real=True), Integer(2)), Pow(Symbol('d_T', nonnegative=True,
-                real=True), Integer(2)), Symbol('m_L', nonnegative=True, real=True),
-                Symbol('m_T', nonnegative=True, real=True))), Integer(-1)),
-                Add(Mul(Symbol('I_L', nonnegative=True, real=True), Symbol('d_T',
-                nonnegative=True, real=True), Symbol('g', nonnegative=True, real=True),
-                Symbol('m_T', nonnegative=True, real=True)), Mul(Integer(-1), Symbol('I_L',
-                nonnegative=True, real=True), Symbol('k_11'), Symbol('s_11')), Mul(Symbol('I_T',
-                nonnegative=True, real=True), Symbol('d_L', nonnegative=True, real=True),
-                Symbol('g', nonnegative=True, real=True), Symbol('m_L', nonnegative=True,
-                real=True)), Mul(Symbol('I_T', nonnegative=True, real=True), Symbol('g',
-                nonnegative=True, real=True), Symbol('l_L', nonnegative=True, real=True),
-                Symbol('m_T', nonnegative=True, real=True)), Mul(Integer(-1), Symbol('I_T',
-                nonnegative=True, real=True), Symbol('k_00'), Symbol('s_00')), Mul(Symbol('I_T',
-                nonnegative=True, real=True), Symbol('k_01'), Symbol('s_01')), Mul(Symbol('I_T',
-                nonnegative=True, real=True), Symbol('k_10'), Symbol('s_10')), Mul(Integer(-1),
-                Symbol('I_T', nonnegative=True, real=True), Symbol('k_11'), Symbol('s_11')),
-                Mul(Pow(Symbol('d_L', nonnegative=True, real=True), Integer(2)), Symbol('d_T',
-                nonnegative=True, real=True), Symbol('g', nonnegative=True, real=True),
-                Symbol('m_L', nonnegative=True, real=True), Symbol('m_T', nonnegative=True,
-                real=True)), Mul(Integer(-1), Pow(Symbol('d_L', nonnegative=True, real=True),
-                Integer(2)), Symbol('k_11'), Symbol('m_L', nonnegative=True, real=True),
-                Symbol('s_11')), Mul(Symbol('d_L', nonnegative=True, real=True),
-                Pow(Symbol('d_T', nonnegative=True, real=True), Integer(2)), Symbol('g',
-                nonnegative=True, real=True), Symbol('m_L', nonnegative=True, real=True),
-                Symbol('m_T', nonnegative=True, real=True)), Mul(Pow(Symbol('d_T',
-                nonnegative=True, real=True), Integer(2)), Symbol('g', nonnegative=True,
-                real=True), Symbol('l_L', nonnegative=True, real=True), Pow(Symbol('m_T',
-                nonnegative=True, real=True), Integer(2))), Mul(Integer(-1), Pow(Symbol('d_T',
-                nonnegative=True, real=True), Integer(2)), Symbol('k_00'), Symbol('m_T',
-                nonnegative=True, real=True), Symbol('s_00')), Mul(Pow(Symbol('d_T',
-                nonnegative=True, real=True), Integer(2)), Symbol('k_01'), Symbol('m_T',
-                nonnegative=True, real=True), Symbol('s_01')), Mul(Pow(Symbol('d_T',
-                nonnegative=True, real=True), Integer(2)), Symbol('k_10'), Symbol('m_T',
-                nonnegative=True, real=True), Symbol('s_10')), Mul(Integer(-1),
-                Pow(Symbol('d_T', nonnegative=True, real=True), Integer(2)), Symbol('k_11'),
-                Symbol('m_T', nonnegative=True, real=True), Symbol('s_11')), Mul(Symbol('d_T',
-                nonnegative=True, real=True), Symbol('g', nonnegative=True, real=True),
-                Pow(Symbol('l_L', nonnegative=True, real=True), Integer(2)), Pow(Symbol('m_T',
-                nonnegative=True, real=True), Integer(2))), Mul(Symbol('d_T', nonnegative=True,
-                real=True), Symbol('k_01'), Symbol('l_L', nonnegative=True, real=True),
-                Symbol('m_T', nonnegative=True, real=True), Symbol('s_01')), Mul(Symbol('d_T',
-                nonnegative=True, real=True), Symbol('k_10'), Symbol('l_L', nonnegative=True,
-                real=True), Symbol('m_T', nonnegative=True, real=True), Symbol('s_10')),
-                Mul(Integer(-1), Integer(2), Symbol('d_T', nonnegative=True, real=True),
-                Symbol('k_11'), Symbol('l_L', nonnegative=True, real=True), Symbol('m_T',
-                nonnegative=True, real=True), Symbol('s_11')), Mul(Symbol('k_02'),
-                Symbol('k_13'), Symbol('s_02'), Symbol('s_13')), Mul(Integer(-1),
-                Symbol('k_03'), Symbol('k_12'), Symbol('s_03'), Symbol('s_12')),
-                Mul(Integer(-1), Symbol('k_11'), Pow(Symbol('l_L', nonnegative=True, real=True),
-                Integer(2)), Symbol('m_T', nonnegative=True, real=True), Symbol('s_11')))),
-                Mul(Symbol('s'), Pow(Add(Mul(Symbol('I_L', nonnegative=True, real=True),
-                Symbol('I_T', nonnegative=True, real=True)), Mul(Symbol('I_L', nonnegative=True,
-                real=True), Pow(Symbol('d_T', nonnegative=True, real=True), Integer(2)),
-                Symbol('m_T', nonnegative=True, real=True)), Mul(Symbol('I_T', nonnegative=True,
-                real=True), Pow(Symbol('d_L', nonnegative=True, real=True), Integer(2)),
-                Symbol('m_L', nonnegative=True, real=True)), Mul(Symbol('I_T', nonnegative=True,
-                real=True), Pow(Symbol('l_L', nonnegative=True, real=True), Integer(2)),
-                Symbol('m_T', nonnegative=True, real=True)), Mul(Pow(Symbol('d_L',
-                nonnegative=True, real=True), Integer(2)), Pow(Symbol('d_T', nonnegative=True,
-                real=True), Integer(2)), Symbol('m_L', nonnegative=True, real=True),
-                Symbol('m_T', nonnegative=True, real=True))), Integer(-1)),
-                Add(Mul(Symbol('d_L', nonnegative=True, real=True), Symbol('g',
-                nonnegative=True, real=True), Symbol('k_13'), Symbol('m_L', nonnegative=True,
-                real=True), Symbol('s_13')), Mul(Symbol('d_T', nonnegative=True, real=True),
-                Symbol('g', nonnegative=True, real=True), Symbol('k_02'), Symbol('m_T',
-                nonnegative=True, real=True), Symbol('s_02')), Mul(Integer(-1), Symbol('d_T',
-                nonnegative=True, real=True), Symbol('g', nonnegative=True, real=True),
-                Symbol('k_03'), Symbol('m_T', nonnegative=True, real=True), Symbol('s_03')),
-                Mul(Integer(-1), Symbol('d_T', nonnegative=True, real=True), Symbol('g',
-                nonnegative=True, real=True), Symbol('k_12'), Symbol('m_T', nonnegative=True,
-                real=True), Symbol('s_12')), Mul(Symbol('d_T', nonnegative=True, real=True),
-                Symbol('g', nonnegative=True, real=True), Symbol('k_13'), Symbol('m_T',
-                nonnegative=True, real=True), Symbol('s_13')), Mul(Symbol('g', nonnegative=True,
-                real=True), Symbol('k_13'), Symbol('l_L', nonnegative=True, real=True),
-                Symbol('m_T', nonnegative=True, real=True), Symbol('s_13')), Mul(Integer(-1),
-                Symbol('k_00'), Symbol('k_13'), Symbol('s_00'), Symbol('s_13')),
-                Mul(Symbol('k_01'), Symbol('k_12'), Symbol('s_01'), Symbol('s_12')),
-                Mul(Integer(-1), Symbol('k_02'), Symbol('k_11'), Symbol('s_02'),
-                Symbol('s_11')), Mul(Symbol('k_03'), Symbol('k_10'), Symbol('s_03'),
-                Symbol('s_10')))), Mul(Pow(Add(Mul(Symbol('I_L', nonnegative=True, real=True),
-                Symbol('I_T', nonnegative=True, real=True)), Mul(Symbol('I_L', nonnegative=True,
-                real=True), Pow(Symbol('d_T', nonnegative=True, real=True), Integer(2)),
-                Symbol('m_T', nonnegative=True, real=True)), Mul(Symbol('I_T', nonnegative=True,
-                real=True), Pow(Symbol('d_L', nonnegative=True, real=True), Integer(2)),
-                Symbol('m_L', nonnegative=True, real=True)), Mul(Symbol('I_T', nonnegative=True,
-                real=True), Pow(Symbol('l_L', nonnegative=True, real=True), Integer(2)),
-                Symbol('m_T', nonnegative=True, real=True)), Mul(Pow(Symbol('d_L',
-                nonnegative=True, real=True), Integer(2)), Pow(Symbol('d_T', nonnegative=True,
-                real=True), Integer(2)), Symbol('m_L', nonnegative=True, real=True),
-                Symbol('m_T', nonnegative=True, real=True))), Integer(-1)),
-                Add(Mul(Symbol('d_L', nonnegative=True, real=True), Symbol('d_T',
-                nonnegative=True, real=True), Pow(Symbol('g', nonnegative=True, real=True),
-                Integer(2)), Symbol('m_L', nonnegative=True, real=True), Symbol('m_T',
-                nonnegative=True, real=True)), Mul(Integer(-1), Symbol('d_L', nonnegative=True,
-                real=True), Symbol('g', nonnegative=True, real=True), Symbol('k_11'),
-                Symbol('m_L', nonnegative=True, real=True), Symbol('s_11')), Mul(Symbol('d_T',
-                nonnegative=True, real=True), Pow(Symbol('g', nonnegative=True, real=True),
-                Integer(2)), Symbol('l_L', nonnegative=True, real=True), Pow(Symbol('m_T',
-                nonnegative=True, real=True), Integer(2))), Mul(Integer(-1), Symbol('d_T',
-                nonnegative=True, real=True), Symbol('g', nonnegative=True, real=True),
-                Symbol('k_00'), Symbol('m_T', nonnegative=True, real=True), Symbol('s_00')),
-                Mul(Symbol('d_T', nonnegative=True, real=True), Symbol('g', nonnegative=True,
-                real=True), Symbol('k_01'), Symbol('m_T', nonnegative=True, real=True),
-                Symbol('s_01')), Mul(Symbol('d_T', nonnegative=True, real=True), Symbol('g',
-                nonnegative=True, real=True), Symbol('k_10'), Symbol('m_T', nonnegative=True,
-                real=True), Symbol('s_10')), Mul(Integer(-1), Symbol('d_T', nonnegative=True,
-                real=True), Symbol('g', nonnegative=True, real=True), Symbol('k_11'),
-                Symbol('m_T', nonnegative=True, real=True), Symbol('s_11')), Mul(Integer(-1),
-                Symbol('g', nonnegative=True, real=True), Symbol('k_11'), Symbol('l_L',
-                nonnegative=True, real=True), Symbol('m_T', nonnegative=True, real=True),
-                Symbol('s_11')), Mul(Symbol('k_00'), Symbol('k_11'), Symbol('s_00'),
-                Symbol('s_11')), Mul(Integer(-1), Symbol('k_01'), Symbol('k_10'),
-                Symbol('s_01'), Symbol('s_10'))))), Symbol('s'))
+    I_L = Symbol('I_L', nonnegative=True, real=True)
+    I_T = Symbol('I_T', nonnegative=True, real=True)
+    d_L = Symbol('d_L', nonnegative=True, real=True)
+    d_T = Symbol('d_T', nonnegative=True, real=True)
+    l_L = Symbol('l_L', nonnegative=True, real=True)
+    m_L = Symbol('m_L', nonnegative=True, real=True)
+    m_T = Symbol('m_T', nonnegative=True, real=True)
+    g = Symbol('g', nonnegative=True, real=True)
+    k_00, k_01, k_02, k_03 = symbols('k_00 k_01 k_02 k_03')
+    k_10, k_11, k_12, k_13 = symbols('k_10 k_11 k_12 k_13')
+    s_00, s_01, s_02, s_03 = symbols('s_00 s_01 s_02 s_03')
+    s_10, s_11, s_12, s_13 = symbols('s_10 s_11 s_12 s_13')
+
+    common_denom = (I_L*I_T + I_L*d_T**2*m_T + I_T*d_L**2*m_L +
+                    I_T*l_L**2*m_T + d_L**2*d_T**2*m_L*m_T)
+
+    p7 = PurePoly(
+        s**4 + s**3/common_denom*(
+            I_L*k_13*s_13 + I_T*k_02*s_02- I_T*k_03*s_03 - I_T*k_12*s_12 +
+            I_T*k_13*s_13 + d_L**2*k_13*m_L*s_13 + d_T**2*k_02*m_T*s_02 -
+            d_T**2*k_03*m_T*s_03 - d_T**2*k_12*m_T*s_12 + d_T**2*k_13*m_T*s_13 -
+            d_T*k_03*l_L*m_T*s_03 - d_T*k_12*l_L*m_T*s_12 +
+            2*d_T*k_13*l_L*m_T*s_13 + k_13*l_L**2*m_T*s_13) +
+        s**2/common_denom*(
+            I_L*d_T*g*m_T - I_L*k_11*s_11 + I_T*d_L*g*m_L + I_T*g*l_L*m_T -
+            I_T*k_00*s_00 + I_T*k_01*s_01 + I_T*k_10*s_10 - I_T*k_11*s_11 +
+            d_L**2*d_T*g*m_L*m_T - d_L**2*k_11*m_L*s_11 + d_L*d_T**2*g*m_L*m_T +
+            d_T**2*g*l_L*m_T**2 - d_T**2*k_00*m_T*s_00 + d_T**2*k_01*m_T*s_01 +
+            d_T**2*k_10*m_T*s_10 - d_T**2*k_11*m_T*s_11 + d_T*g*l_L**2*m_T**2 +
+            d_T*k_01*l_L*m_T*s_01 + d_T*k_10*l_L*m_T*s_10 -
+            2*d_T*k_11*l_L*m_T*s_11 + k_02*k_13*s_02*s_13 - k_03*k_12*s_03*s_12
+            - k_11*l_L**2*m_T*s_11) +
+        s/common_denom*(
+            d_L*g*k_13*m_L*s_13 +d_T*g*k_02*m_T*s_02 - d_T*g*k_03*m_T*s_03 -
+            d_T*g*k_12*m_T*s_12 + d_T*g*k_13*m_T*s_13 + g*k_13*l_L*m_T*s_13 -
+            k_00*k_13*s_00*s_13 + k_01*k_12*s_01*s_12 - k_02*k_11*s_02*s_11 +
+            k_03*k_10*s_03*s_10) +
+            1/common_denom*(d_L*d_T*g**2*m_L*m_T - d_L*g*k_11*m_L*s_11 +
+            d_T*g**2*l_L*m_T**2 - d_T*g*k_00*m_T*s_00 + d_T*g*k_01*m_T*s_01 +
+            d_T*g*k_10*m_T*s_10 - d_T*g*k_11*m_T*s_11 - g*k_11*l_L*m_T*s_11 +
+            k_00*k_11*s_00*s_11 - k_01*k_10*s_01*s_10), s)
 
     negative_real_part_conditions(p7, s)
