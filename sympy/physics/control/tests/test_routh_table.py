@@ -1,11 +1,10 @@
 
-from sympy.core.symbol import symbols
+from sympy.core.symbol import symbols, Symbol
 from sympy.physics.control.routh_table import (RouthHurwitz,
                                             negative_real_part_conditions)
 from sympy.matrices.dense import Matrix
 from sympy.polys import Poly, PurePoly
 from sympy.logic.boolalg import true, false
-from sympy import Symbol, Add, Mul, Integer, Pow
 
 s = symbols('s')
 
