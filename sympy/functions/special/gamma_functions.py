@@ -6,6 +6,7 @@ from sympy.core.function import DefinedFunction, ArgumentIndexError, PoleError
 from sympy.core.logic import fuzzy_and, fuzzy_not
 from sympy.core.numbers import Rational, pi, oo, I
 from sympy.core.power import Pow
+from sympy.external.mpmath import prec_to_dps, local_workprec
 from sympy.functions.special.zeta_functions import zeta
 from sympy.functions.special.error_functions import erf, erfc, Ei
 from sympy.functions.elementary.complexes import re, unpolarify
@@ -17,8 +18,6 @@ from sympy.functions.combinatorial.numbers import bernoulli, harmonic
 from sympy.functions.combinatorial.factorials import factorial, rf, RisingFactorial
 from sympy.utilities.misc import as_int
 
-from mpmath import mp, workprec
-from mpmath.libmp.libmpf import prec_to_dps
 
 def intlike(n):
     try:
@@ -342,8 +341,8 @@ class lowergamma(DefinedFunction):
         if all(x.is_number for x in self.args):
             a = self.args[0]._to_mpmath(prec)
             z = self.args[1]._to_mpmath(prec)
-            with workprec(prec):
-                res = mp.gammainc(a, 0, z)
+            with local_workprec(prec) as ctx:
+                res = ctx.gammainc(a, 0, z)
             return Expr._from_mpmath(res, prec)
         else:
             return self
@@ -476,8 +475,8 @@ class uppergamma(DefinedFunction):
         if all(x.is_number for x in self.args):
             a = self.args[0]._to_mpmath(prec)
             z = self.args[1]._to_mpmath(prec)
-            with workprec(prec):
-                res = mp.gammainc(a, z, mp.inf)
+            with local_workprec(prec) as ctx:
+                res = ctx.gammainc(a, z, ctx.inf)
             return Expr._from_mpmath(res, prec)
         return self
 
@@ -850,15 +849,18 @@ class polygamma(DefinedFunction):
             return
         s = self.args[0]._to_mpmath(prec+12)
         z = self.args[1]._to_mpmath(prec+12)
-        if mp.isint(z) and z <= 0:
-            return S.ComplexInfinity
-        with workprec(prec+12):
+        with local_workprec(prec+12) as mp:
+            if mp.isint(z) and z <= 0:
+                return S.ComplexInfinity
             if mp.isint(s) and s >= 0:
                 res = mp.polygamma(s, z)
             else:
-                zt = mp.zeta(s+1, z)
-                dzt = mp.zeta(s+1, z, 1)
-                res = (dzt + (mp.euler + mp.digamma(-s)) * zt) * mp.rgamma(-s)
+                zt = mp.zeta(mp.fadd(s,1), z)
+                dzt = mp.zeta(mp.fadd(s,1), z, 1)
+                res = mp.fmul(
+                    mp.fadd(dzt, mp.fmul(mp.fadd(mp.euler, mp.digamma(mp.fneg(s))), zt)),
+                    mp.rgamma(mp.fneg(s))
+                )
         return Expr._from_mpmath(res, prec)
 
 
