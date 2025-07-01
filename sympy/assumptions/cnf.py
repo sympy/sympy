@@ -479,7 +479,7 @@ class EncodedCNF:
 
     def encode(self, clause):
         return {self.encode_arg(arg) if not arg.lit == S.false else 0 for arg in clause}
-    
+
     def decode_literal(self, encoded_arg):
         symbol = self._symbols[abs(encoded_arg) - 1]
         literal = ~symbol if encoded_arg < 0 else symbol
