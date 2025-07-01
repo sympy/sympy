@@ -7,12 +7,15 @@ from sympy import nsimplify, simplify
 from sympy.core import Symbol, symbols
 from sympy.core.relational import Eq
 from sympy.core.sympify import sympify
-from sympy.functions import SingularityFunction, factorial
+from sympy.core.mul import Mul
+from sympy.functions import SingularityFunction,Piecewise, factorial
 from sympy.integrals import integrate
 from sympy.plotting import plot
 from sympy.printing import sstr
 from sympy.series import limit
 from sympy.solvers import linsolve
+from sympy.solvers.solvers import solve
+from sympy.sets.sets import Interval
 
 class Column:
     """
@@ -547,6 +550,61 @@ class Column:
         C_N = self._integration_constants[Symbol('C_N')] if self._is_solved else Symbol('C_N')
         return -integrate(load_equation, x) + C_N
 
+    def max_axial_force(self):
+        """
+        Returns the maximum absolute axial force and
+        its location (point or interval) in the column.
+        """
+        axial_force = self.axial_force()
+        x = self.variable
+
+        terms = axial_force.args
+        singularities = []        # Points at which Axial force function changes
+        for term in terms:
+            if isinstance(term, Mul):
+                term = term.args[-1]    # SingularityFunction in the term
+            singularities.append(term.args[1])
+        singularities = list(set(singularities))
+        singularities.sort()
+
+        intervals = []    # List of Intervals with discrete value of Axial force
+        axial_values = []   # List of values of axial force in each interval
+        for i, s in enumerate(singularities):
+            if s==0:
+                continue
+            try:
+                load_expr = self._load
+                points = solve(Piecewise(
+                    (float("nan"), x <= singularities[i-1]),
+                    (load_expr.rewrite(Piecewise), x < s),
+                    (float("nan"), True)
+                ), x)
+                values = []
+                for point in points:
+                    values.append(abs(axial_force.subs(x, point)))
+                points.extend([singularities[i-1], s])
+                values += [abs(limit(axial_force, x, singularities[i-1], '+')), abs(limit(axial_force, x, s, '-'))]
+                max_axial_value = max(values)
+                axial_values.append(max_axial_value)
+                intervals.append(points[values.index(max_axial_value)])
+
+            # Handles cases where axial force is constant or linear, causing solve to raise NotImplementedError
+            except NotImplementedError:
+                axial_start = limit(axial_force, x, singularities[i-1], '+')
+                axial_end = limit(axial_force, x, s, '-')
+                # If axial force is linear within the interval.
+                if axial_force.subs(x, (singularities[i-1] + s)/2) == (axial_start + axial_end)/2 and axial_start != axial_end:
+                    axial_values.extend([axial_start, axial_end])
+                    intervals.extend([singularities[i-1], s])
+                else:    # axial_force has same value in whole Interval
+                    axial_values.append(axial_end)
+                    intervals.append(Interval(singularities[i-1], s))
+
+        axial_values = list(map(abs, axial_values))
+        maximum_axial_value = max(axial_values)
+        point = intervals[axial_values.index(maximum_axial_value)]
+        return (point, maximum_axial_value)
+
     def deflection(self):
         """
         Returns a singularity function expression that
@@ -579,6 +637,57 @@ class Column:
         C_N = self._integration_constants[Symbol('C_N')] if self._is_solved else Symbol('C_N')
         C_u = self._integration_constants[Symbol('C_u')] if self._is_solved else Symbol('C_u')
         return -(integrate(integrate(load_equation, x), x)) / (E * A) + C_N * x + C_u
+
+    def max_deflection(self):
+        """
+        Returns the maximum absolute deflection and
+        its location (point or interval) in the column.
+        """
+        axial_force=self.axial_force()
+        deflection = self.deflection()
+        x = self.variable
+
+        terms = deflection.args
+        singularities = []        # Points at which deflection function changes
+        for term in terms:
+            if isinstance(term, Mul):
+                term = term.args[-1]    # SingularityFunction in the term
+            singularities.append(term.args[1])
+        singularities = list(set(singularities))
+        singularities.sort()
+
+        intervals = []    # List of Intervals with discrete value of deflection
+        deflection_values = []   # List of values of deflection in each interval
+        for i, s in enumerate(singularities):
+            if s == 0:
+                continue
+            try:
+                deflection_slope = Piecewise((float("nan"), x<=singularities[i-1]),(axial_force.rewrite(Piecewise), x<s), (float("nan"), True))
+                points = solve(deflection_slope, x)
+                values = []
+                for point in points:
+                    values.append(abs(deflection.subs(x, point)))
+                points.extend([singularities[i-1], s])
+                values += [abs(limit(deflection, x, singularities[i-1], '+')), abs(limit(deflection, x, s, '-'))]
+                max_deflection = max(values)
+                deflection_values.append(max_deflection)
+                intervals.append(points[values.index(max_deflection)])
+            # Handles cases where deflection is constant or linear, causing solve to raise NotImplementedError
+            except NotImplementedError:
+                deflection_start = limit(deflection, x, singularities[i-1], '+')
+                deflection_end = limit(deflection, x, s, '-')
+                # If deflection is linear within the interval.
+                if deflection.subs(x, (singularities[i-1] + s)/2) == (deflection_start + deflection_end)/2 and deflection_start != deflection_end:
+                    deflection_values.extend([deflection_start, deflection_end])
+                    intervals.extend([singularities[i-1], s])
+                else:    # deflection has same value in the whole Interval
+                    deflection_values.append(deflection_end)
+                    intervals.append(Interval(singularities[i-1], s))
+
+        deflection_values = list(map(abs, deflection_values))
+        maximum_deflection = max(deflection_values)
+        point = intervals[deflection_values.index(maximum_deflection)]
+        return (point, maximum_deflection)
 
     def plot_axial_force(self):
         """

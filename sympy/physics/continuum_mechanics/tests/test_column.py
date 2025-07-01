@@ -2,6 +2,7 @@ from sympy.physics.continuum_mechanics.column import Column
 from sympy.functions import SingularityFunction
 from sympy.core.numbers import Rational
 from sympy.core.symbol import (Symbol, symbols)
+from sympy.sets.sets import Interval
 
 
 x = Symbol('x')
@@ -489,7 +490,6 @@ def test_telescope_hinge():
     c2.apply_load(-10, 8, -1)
 
     c2.solve_for_reaction_loads()
-
     p = c2.reaction_loads
     q = {R_0: 5, R_10: 10}
     assert p == q
@@ -548,3 +548,73 @@ def test_equations():
     assert p == q
 
 test_equations()
+
+def test_max_normal_force():
+
+    #Point Load and Maximum Over an Interval
+    c1 = Column(10, 210000, 1)
+    c1.apply_support(0)
+    c1.apply_support(10)
+    c1.apply_load(5, 8, -1)
+    c1.solve_for_reaction_loads()
+    p=c1.max_axial_force()
+    q=(Interval(8, 10), 4)
+    assert p==q
+
+    #Distributed Loads
+    c2 = Column(8, 20000, 0.75)
+    c2.apply_support(0)
+    c2.apply_support(8)
+    c2.apply_load(-100, 8, -1)
+    c2.apply_load(-20, 0, 0, end = 8)
+    c2.apply_load(-10, 4, 1, end = 0)
+    c2.solve_for_reaction_loads()
+    p=c2.max_axial_force()
+    q=(0,Rational(440,3))
+    assert p==q
+
+    #Point Loads and  Maximum over an Interval
+    c3 = Column(10, 20000, 0.5)
+    c3.apply_support(0)
+    c3.apply_support(10)
+    c3.apply_load(-5, 3, -1)
+    c3.apply_load(-10, 8, -1)
+    c3.solve_for_reaction_loads()
+    p=c3.max_axial_force()
+    q=(Interval(8, 10), Rational(19,2))
+    assert p==q
+
+def test_max_deflection():
+
+    #Point Load and single point maximum
+    c1 = Column(10, 210000, 1)
+    c1.apply_support(0)
+    c1.apply_support(10)
+    c1.apply_load(5, 8, -1)
+    c1.solve_for_reaction_loads()
+    p=c1.max_deflection()
+    q=(8, Rational(1,26250))
+    assert p==q
+
+    #Point Loads and single point maximum
+    c2 = Column(10, 20000, 0.5)
+    c2.apply_support(0)
+    c2.apply_support(10)
+    c2.apply_load(-5, 3, -1)
+    c2.apply_load(-10, 8, -1)
+    c2.solve_for_reaction_loads()
+    p=c2.max_deflection()
+    q=(8, Rational(19,10000))
+    assert p==q
+
+    #Symbolic Length and Symbolic load
+    L= symbols('L', positive=True)
+    F=symbols('F',positive=True)
+    c3 = Column(L, 20000, 1)
+    c3.apply_support(0)
+    c3.apply_support(L)
+    c3.apply_load(-F, L/2, -1)
+    c3.solve_for_reaction_loads()
+    p=c3.max_deflection()
+    q=(L/2, F*L*Rational(1,80000))
+    assert p==q
