@@ -12,7 +12,7 @@ The wrapping sphere muscle model consists of a muscle that runs from an origin p
 The complete muscle path is composed of three segments:
 
 1. **Straight line segment** from origin $A$ to tangent point $T_A$
-2. **Geodesic segment** on the sphere surface from $T_A$ to $T_B$  
+2. **Geodesic segment** on the sphere surface from $T_A$ to $T_B$
 3. **Straight line segment** from tangent point $T_B$ to insertion $B$
 
 Here, $T_A$ and $T_B$ are the tangent points on the sphere where the straight lines from $A$ and $B$ touch the spherical surface. This model is particularly useful in biomechanics for analyzing how muscles wrap around bones and joints during movement.
