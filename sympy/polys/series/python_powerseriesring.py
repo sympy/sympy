@@ -59,13 +59,8 @@ def _useries_equality(s1: USeries[T], s2: USeries[T], dom: Domain) -> bool | Non
 
     if prec1 is None and prec2 is None:
         return s1 == s2
-    elif prec1 is None or prec2 is None:
-        return False
-    else:
-        min_prec = min(prec1, prec2)
 
-    coeffs1 = dup_slice(coeffs1, 0, min_prec, dom)
-    coeffs2 = dup_slice(coeffs2, 0, min_prec, dom)
+    coeffs1, coeffs2, _ = _unify_prec(s1, s2, dom, None)
     if coeffs1 != coeffs2:
         return False
     return None
@@ -75,10 +70,10 @@ def _useries_equal_repr(s1: USeries[T], s2: USeries[T]) -> bool:
     return s1 == s2
 
 
-def _useries_neg(s: USeries[T], dom: Domain) -> USeries[T]:
+def _useries_neg(s: USeries[T], dom: Domain, ring_prec: int) -> USeries[T]:
     coeffs, prec = s
     neg_coeffs = dup_neg(coeffs, dom)
-    return neg_coeffs, prec
+    return _useries(neg_coeffs, prec, dom, ring_prec)
 
 
 def _useries_add(
@@ -137,7 +132,7 @@ def _useries_mul_ground(
     if n == 1:
         return s
     if n == -1:
-        return _useries_neg(s, dom)
+        return _useries_neg(s, dom, ring_prec)
 
     series = dup_mul_ground(coeffs, n, dom)
     return _useries(series, prec, dom, ring_prec)
@@ -318,6 +313,21 @@ class PythonPowerSeriesRingZZ(PowerSeriesRing):
         """
         return _useries_equal_repr(s1, s2)
 
+    def positive(self, s: USeries[T]) -> USeries[T]:
+        """
+        Return the positive of a power series (which is the same as the series itself).
+
+        Examples
+        ========
+
+        >>> from sympy.polys.series.python_powerseriesring import PythonPowerSeriesRingZZ
+        >>> R = PythonPowerSeriesRingZZ(5)
+        >>> x = R.gen
+        >>> R.print(R.positive(x))
+        x
+        """
+        return _useries(s[0], s[1], self._domain, self._prec)
+
     def negative(self, s: USeries[T]) -> USeries[T]:
         """
         Negate all the coeffs of power series.
@@ -330,7 +340,7 @@ class PythonPowerSeriesRingZZ(PowerSeriesRing):
         >>> R.print(R.negative(x))
         -x
         """
-        return _useries_neg(s, self._domain)
+        return _useries_neg(s, self._domain, self._prec)
 
     def add(self, s1: USeries[T], s2: USeries[T]) -> USeries[T]:
         """Add two power series.
@@ -574,6 +584,21 @@ class PythonPowerSeriesRingQQ(PowerSeriesRing):
         """
         return _useries_equal_repr(s1, s2)
 
+    def positive(self, s: USeries[T]) -> USeries[T]:
+        """
+        Return the positive of a power series (which is the same as the series itself).
+
+        Examples
+        ========
+
+        >>> from sympy.polys.series.python_powerseriesring import PythonPowerSeriesRingQQ
+        >>> R = PythonPowerSeriesRingQQ(5)
+        >>> x = R.gen
+        >>> R.print(R.positive(x))
+        x
+        """
+        return _useries(s[0], s[1], self._domain, self._prec)
+
     def negative(self, s: USeries[T]) -> USeries[T]:
         """
         Return the negative of a power series.
@@ -587,7 +612,7 @@ class PythonPowerSeriesRingQQ(PowerSeriesRing):
         >>> R.print(R.negative(x))
         -x
         """
-        return _useries_neg(s, self._domain)
+        return _useries_neg(s, self._domain, self._prec)
 
     def add(self, s1: USeries[T], s2: USeries[T]) -> USeries[T]:
         """Add two power series.

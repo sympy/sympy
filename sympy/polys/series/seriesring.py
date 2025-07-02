@@ -4,13 +4,19 @@ from sympy.polys.series.powerseriesring import PowerSeriesRing
 
 # Make use of flint implementation if flint available.
 flint: bool = False
-if GROUND_TYPES == 'flint':
+if GROUND_TYPES == "flint":
     from sympy.polys.series.flint_powerseriesring import (
-        FlintPowerSeriesRingZZ, FlintPowerSeriesRingQQ)
+        FlintPowerSeriesRingZZ,
+        FlintPowerSeriesRingQQ,
+    )
+
     flint = True
 else:
     from sympy.polys.series.python_powerseriesring import (
-        PythonPowerSeriesRingZZ, PythonPowerSeriesRingQQ)
+        PythonPowerSeriesRingZZ,
+        PythonPowerSeriesRingQQ,
+    )
+
 
 def power_series_ring(domain: Domain, prec: int = 6) -> PowerSeriesRing:
     """

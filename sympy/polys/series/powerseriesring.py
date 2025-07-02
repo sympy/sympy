@@ -112,6 +112,10 @@ class PowerSeriesRing(Protocol[TSeries]):
         """Check if two power series have the same representation."""
         ...
 
+    def positive(self, s: TSeries) -> TSeries:
+        """Return the positive of a power series."""
+        ...
+
     def negative(self, s: TSeries) -> TSeries:
         """Return the additive inverse of a power series."""
         ...
@@ -142,8 +146,4 @@ class PowerSeriesRing(Protocol[TSeries]):
 
     def truncate(self, s: TSeries, n: int) -> TSeries:
         """Truncate a power series to the first n terms."""
-        ...
-
-    def differentiate(self, s: TSeries) -> TSeries:
-        """Return the derivative of a power series."""
         ...
