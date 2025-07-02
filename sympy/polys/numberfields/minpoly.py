@@ -274,7 +274,7 @@ def _minpoly_op_algebraic_element(op, ex1, ex2, x, dom, mp1=None, mp2=None):
         r = resultant(mp1a, mp2, gens=[y, x])
     else:
         r = rs_compose_add(p1, p2)
-        r = expr_from_dict(r._as_expr_dict(), x)
+        r = expr_from_dict(r.as_expr_dict(), x)
 
     deg1 = degree(mp1, x)
     deg2 = degree(mp2, y)
