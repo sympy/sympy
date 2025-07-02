@@ -5171,5 +5171,5 @@ class StateSpace(LinearTimeInvariant):
         _A = self.A.to_DM(domain = domain)
 
         charpoly = _A.charpoly()
-        charpoly = Poly(charpoly, s, domain = domain)
-        return negative_real_part_conditions(charpoly, s, domain = domain)
+        charpoly = Poly(charpoly, s, domain = _A.domain)
+        return negative_real_part_conditions(charpoly, s, domain = _A.domain)
