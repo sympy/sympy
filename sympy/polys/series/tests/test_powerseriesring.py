@@ -8,20 +8,16 @@ from sympy.external.gmpy import GROUND_TYPES
 import pytest
 from sympy.testing.pytest import raises
 
-flint = False
+# Rings
+Ring_ZZ: list[type[PowerSeriesRing]] = [PythonPowerSeriesRingZZ]
+Ring_QQ: list[type[PowerSeriesRing]] = [PythonPowerSeriesRingQQ]
+
 if GROUND_TYPES == "flint":
     from sympy.polys.series.flint_powerseriesring import (
         FlintPowerSeriesRingZZ,
         FlintPowerSeriesRingQQ,
     )
 
-    flint = True
-
-# Rings
-Ring_ZZ: list[type[PowerSeriesRing]] = [PythonPowerSeriesRingZZ]
-Ring_QQ: list[type[PowerSeriesRing]] = [PythonPowerSeriesRingQQ]
-
-if flint:
     Ring_ZZ.append(FlintPowerSeriesRingZZ)
     Ring_QQ.append(FlintPowerSeriesRingQQ)
 
@@ -46,11 +42,15 @@ def test_equal(r):
     R = r()
 
     assert R.equal(R.from_list([1, 2, 3]), R.from_list([1, 2, 3])) is True
+    assert R.equal(R.from_list([1, 21, 3]), R.from_list([1, 2, 3])) is False
     assert R.equal(R.from_list([1, 2, 3], 3), R.from_list([1, 2, 3], 3)) is None
     assert R.equal(R.from_list([1, 2, 13], 3), R.from_list([1, 2, 3], 3)) is False
     assert R.equal(R.from_list([1, 2, 3], 3), R.from_list([1, 2, 3], 10)) is None
     assert R.equal(R.from_list([1, 21, 3], 3), R.from_list([1, 2, 3], 10)) is False
     assert R.equal(R.from_list([1, 2, 3], 3), R.from_list([1, 2, 3, 4, 5], 10)) is None
+    assert R.equal(R.from_list([1, 2, 3, 4], None), R.from_list([1, 2, 3], 2)) is None
+    assert R.equal(R.from_list([1, 2, 3, 4], None), R.from_list([1, 1, 3], 2)) is False
+    assert R.equal(R.from_list([1, 2], None), R.from_list([1, 2, 3], 2)) is None # this should be False
 
 
 @pytest.mark.parametrize("r", list(Ring_ZZ + Ring_QQ))
@@ -66,6 +66,16 @@ def test_basics(r):
     assert R0.pretty(gen0) == "O(x**0)"
 
     assert same(R0, gen0, [], 0)
+    assert same(
+        R, R.positive(R.from_list([1, 2, 3, 4, 5, 6, 7], None)), [1, 2, 3, 4, 5, 6], 6
+    )
+    assert same(R, R.negative(R.gen), [0, -1], None)
+    assert same(
+        R,
+        R.negative(R.from_list([1, 2, 3, 4, 5, 6, 7], None)),
+        [-1, -2, -3, -4, -5, -6],
+        6,
+    )
     assert same(R0, R0.multiply(gen0, gen0), [], 0)
     assert same(R, R.from_list([1, 2, 3, 4, 5, 6, 7]), [1, 2, 3, 4, 5, 6], 6)
     assert same(R, R.add(R.from_list([2, 4, 5], 3), R.from_list([5], 2)), [7, 4], 2)
@@ -90,7 +100,6 @@ def test_int(r):
     assert same(R, one, [1], None)
     assert same(R, x, [0, 1], None)
 
-    assert same(R, R.negative(R.add(x, one)), [-1, -1], None)
     assert same(R3, R3.add(x3, one3), [1, 1], None)
     assert same(R3, R3.add(one3, R3.pow_int(x3, 4)), [1], 3)
 
@@ -133,6 +142,7 @@ def test_int(r):
     assert same(R, R.differentiate(R.add(R.multiply(x, x), x)), [1, 2], None)
     assert same(R3, R3.differentiate(R3.multiply(x3, x3)), [0, 2], None)
     assert same(R3, R3.differentiate(R3.add(x3, one3)), [1], None)
+    assert same(R3, R3.differentiate(R.pow_int(R3.add(x3, one3), 4)), [4, 12, 12], 3)
     assert same(R10, R10.differentiate(R10.pow_int(x10, 4)), [0, 0, 0, 4], None)
     assert same(
         R10, R10.differentiate(R10.add(R10.multiply(x10, x10), x10)), [1, 2], None
@@ -156,7 +166,6 @@ def test_rational(r):
     assert same(R, one, [(1, 1)], None)
     assert same(R, x, [(0, 1), (1, 1)], None)
 
-    assert same(R, R.negative(R.add(x, one)), [(-1, 1), (-1, 1)], None)
     assert same(R, R.add(R.negative(one), one), [], None)
     assert same(R, R.subtract(R.multiply(x, x), x), [(0, 1), (-1, 1), (1, 1)], None)
 

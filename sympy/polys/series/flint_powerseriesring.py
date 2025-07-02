@@ -5,8 +5,11 @@ from typing import Any, Union
 
 from sympy.external.gmpy import GROUND_TYPES
 from sympy.polys.domains import Domain, QQ, ZZ
-from sympy.polys.series.powerseriesring import _series_from_list, PowerSeriesRing
-
+from sympy.polys.series.powerseriesring import (
+    _series_from_list,
+    PowerSeriesRing,
+    TSeries,
+)
 
 if GROUND_TYPES == "flint":
     from flint import fmpq_poly, fmpq_series, fmpz_poly, fmpz_series, ctx
@@ -139,10 +142,11 @@ class FlintPowerSeriesRingZZ(PowerSeriesRing):
     def equal(self, s1: ZZSeries, s2: ZZSeries) -> bool | None:
         if isinstance(s1, fmpz_poly) and isinstance(s2, fmpz_poly):
             return s1 == s2
-        elif isinstance(s1, fmpz_poly) or isinstance(s2, fmpz_poly):
-            return False
+        elif isinstance(s1, fmpz_poly):
+            min_prec = _get_series_precision(s2)
+        elif isinstance(s2, fmpz_poly):
+            min_prec = _get_series_precision(s1)
         else:
-            # Fetching precision from this function is not efficient.
             min_prec = min(_get_series_precision(s1), _get_series_precision(s2))
 
         coeffs1 = s1.coeffs()[:min_prec]
@@ -174,6 +178,27 @@ class FlintPowerSeriesRingZZ(PowerSeriesRing):
         else:
             return False
 
+    def positive(self, s: ZZSeries) -> ZZSeries:
+        """
+        Return the positive of a power series.
+
+        Examples
+        ========
+
+        >>> from sympy.polys.domains import ZZ
+        >>> from sympy.polys.series import power_series_ring
+        >>> R = power_series_ring(ZZ, 5)
+        >>> x = R.gen
+        >>> R.print(R.positive(x))
+        x
+        """
+        if isinstance(s, fmpz_poly):
+            poly = s
+            if poly.degree() < self._prec:
+                return poly
+            return fmpz_series(poly, prec=self._prec)
+        return s
+
     def negative(self, s: ZZSeries) -> ZZSeries:
         """
         Return the negative of a power series.
@@ -188,7 +213,7 @@ class FlintPowerSeriesRingZZ(PowerSeriesRing):
         >>> R.print(R.negative(x))
         -x
         """
-        return -s
+        return self.positive(-s)
 
     def add(self, s1: ZZSeries, s2: ZZSeries) -> ZZSeries:
         """
@@ -367,8 +392,16 @@ class FlintPowerSeriesRingZZ(PowerSeriesRing):
         >>> R.print(R.differentiate(s))
         2 + 2*x
         """
-        with _global_cap(self._prec):
-            return s.derivative()
+        if isinstance(s, fmpz_poly):
+            poly = s.derivative()
+            if poly.degree() < self._prec:
+                return poly
+            return fmpz_series(poly, prec=self._prec)
+
+        poly = fmpz_poly(s.coeffs())
+        derivative = poly.derivative()
+        prec = _get_series_precision(s)
+        return fmpz_series(derivative, prec=prec)
 
 
 class FlintPowerSeriesRingQQ(PowerSeriesRing):
@@ -472,10 +505,11 @@ class FlintPowerSeriesRingQQ(PowerSeriesRing):
     def equal(self, s1: QQSeries, s2: QQSeries) -> bool | None:
         if isinstance(s1, fmpq_poly) and isinstance(s2, fmpq_poly):
             return s1 == s2
-        elif isinstance(s1, fmpq_poly) or isinstance(s2, fmpq_poly):
-            return False
+        elif isinstance(s1, fmpq_poly):
+            min_prec = _get_series_precision(s2)
+        elif isinstance(s2, fmpq_poly):
+            min_prec = _get_series_precision(s1)
         else:
-            # Fetching precision from this function is not efficient.
             min_prec = min(_get_series_precision(s1), _get_series_precision(s2))
 
         coeffs1 = s1.coeffs()[:min_prec]
@@ -507,6 +541,27 @@ class FlintPowerSeriesRingQQ(PowerSeriesRing):
         else:
             return False
 
+    def positive(self, s: QQSeries) -> QQSeries:
+        """
+        Return the positive of a power series.
+
+        Examples
+        ========
+
+        >>> from sympy.polys.domains import QQ
+        >>> from sympy.polys.series import power_series_ring
+        >>> R = power_series_ring(QQ, 5)
+        >>> x = R.gen
+        >>> R.print(R.positive(x))
+        x
+        """
+        if isinstance(s, fmpq_poly):
+            poly = s
+            if poly.degree() < self._prec:
+                return poly
+            return fmpq_series(poly, prec=self._prec)
+        return s
+
     def negative(self, s: QQSeries) -> QQSeries:
         """
         Return the negative of a power series.
@@ -521,7 +576,7 @@ class FlintPowerSeriesRingQQ(PowerSeriesRing):
         >>> R.print(R.negative(x))
         -x
         """
-        return -s
+        return self.positive(-s)
 
     def add(self, s1: QQSeries, s2: QQSeries) -> QQSeries:
         """
@@ -595,7 +650,7 @@ class FlintPowerSeriesRingQQ(PowerSeriesRing):
         with _global_cap(self._prec):
             return s1 * s2
 
-    def multiply_ground(self, s1: QQSeries, n: Any) -> QQSeries:
+    def multiply_ground(self, s: QQSeries, n: Any) -> QQSeries:
         """
         Multiply a power series by a rational number.
 
@@ -609,14 +664,14 @@ class FlintPowerSeriesRingQQ(PowerSeriesRing):
         >>> R.print(R.multiply_ground(x, QQ(3,2)))
         3/2*x
         """
-        if isinstance(s1, fmpq_poly):
-            poly = s1 * n
+        if isinstance(s, fmpq_poly):
+            poly = s * n
             if poly.degree() < self._prec:
                 return poly
             return fmpq_series(poly, prec=self._prec)
 
         with _global_cap(self._prec):
-            return s1 * n
+            return s * n
 
     def pow_int(self, s: QQSeries, n: int) -> QQSeries:
         """
@@ -700,8 +755,16 @@ class FlintPowerSeriesRingQQ(PowerSeriesRing):
         >>> R.print(R.differentiate(s))
         1/3
         """
-        with _global_cap(self._prec):
-            return s.derivative()
+        if isinstance(s, fmpq_poly):
+            poly = s.derivative()
+            if poly.degree() < self._prec:
+                return poly
+            return fmpq_series(poly, prec=self._prec)
+
+        poly = fmpq_poly(s.coeffs())
+        derivative = poly.derivative()
+        prec = _get_series_precision(s)
+        return fmpq_series(derivative, prec=prec)
 
     def integrate(self, s: QQSeries) -> QQSeries:
         """
