@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, overload
+
 from sympy.core.numbers import Rational
 from sympy.core.singleton import S
 from sympy.core.relational import is_eq
@@ -9,26 +13,30 @@ from sympy.functions.elementary.trigonometric import (cos, sin)
 from sympy.simplify.trigsimp import trigsimp
 from sympy.integrals.integrals import integrate
 from sympy.matrices.dense import MutableDenseMatrix as Matrix
-from sympy.core.sympify import sympify, _sympify
 from sympy.core.expr import Expr
+from sympy.core.sympify import sympify, _sympify
 from sympy.core.logic import fuzzy_not, fuzzy_or
 from sympy.utilities.misc import as_int
 
 from mpmath.libmp.libmpf import prec_to_dps
 
+if TYPE_CHECKING:
+    from typing import Iterable, Sequence
+    from sympy.integrals.integrals import SymbolLimits
+    SExpr = Expr | complex
 
-def _check_norm(elements, norm):
+def _check_norm(elements: Iterable[Expr], norm: Expr | None) -> None:
     """validate if input norm is consistent"""
     if norm is not None and norm.is_number:
         if norm.is_positive is False:
             raise ValueError("Input norm must be positive.")
 
         numerical = all(i.is_number and i.is_real is True for i in elements)
-        if numerical and is_eq(norm**2, sum(i**2 for i in elements)) is False:
+        if numerical and is_eq(norm**2, sum((i**2 for i in elements), S.Zero)) is False:
             raise ValueError("Incompatible value for norm.")
 
 
-def _is_extrinsic(seq):
+def _is_extrinsic(seq: str) -> bool:
     """validate seq and return True if seq is lowercase and False if uppercase"""
     if type(seq) != str:
         raise ValueError('Expected seq to be a string.')
@@ -42,7 +50,7 @@ def _is_extrinsic(seq):
                          "rotations), or fully lowercase, for intrinsic "
                          "rotations).")
 
-    i, j, k = seq.lower()
+    i, j, k = list(seq.lower())
     if (i == j) or (j == k):
         raise ValueError("Consecutive axes must be different")
 
@@ -108,17 +116,29 @@ class Quaternion(Expr):
 
     is_commutative = False
 
-    def __new__(cls, a=0, b=0, c=0, d=0, real_field=True, norm=None):
+    if TYPE_CHECKING:
+
+        @property
+        def args(self) -> tuple[Expr, Expr, Expr, Expr]: ...
+
+        _real_field: bool
+        _norm: Expr | None
+
+    def __new__(cls, a: SExpr = 0, b: SExpr = 0, c: SExpr = 0, d: SExpr = 0,
+                     real_field: bool = True,
+                     norm: SExpr | None = None) -> Quaternion:
+
         a, b, c, d = map(sympify, (a, b, c, d))
 
         if any(i.is_commutative is False for i in [a, b, c, d]):
             raise ValueError("arguments have to be commutative")
+
         obj = super().__new__(cls, a, b, c, d)
         obj._real_field = real_field
         obj.set_norm(norm)
         return obj
 
-    def set_norm(self, norm):
+    def set_norm(self, norm: SExpr | None) -> None:
         """Sets norm of an already instantiated quaternion.
 
         Parameters
@@ -150,32 +170,33 @@ class Quaternion(Expr):
         sqrt(a**2 + b**2 + c**2 + d**2)
 
         """
-        norm = sympify(norm)
+        if norm is not None:
+            norm = sympify(norm)
         _check_norm(self.args, norm)
         self._norm = norm
 
     @property
-    def a(self):
+    def a(self) -> Expr:
         return self.args[0]
 
     @property
-    def b(self):
+    def b(self) -> Expr:
         return self.args[1]
 
     @property
-    def c(self):
+    def c(self) -> Expr:
         return self.args[2]
 
     @property
-    def d(self):
+    def d(self) -> Expr:
         return self.args[3]
 
     @property
-    def real_field(self):
+    def real_field(self) -> bool:
         return self._real_field
 
     @property
-    def product_matrix_left(self):
+    def product_matrix_left(self) -> Matrix:
         r"""Returns 4 x 4 Matrix equivalent to a Hamilton product from the
         left. This can be useful when treating quaternion elements as column
         vectors. Given a quaternion $q = a + bi + cj + dk$ where a, b, c and d
@@ -225,7 +246,7 @@ class Quaternion(Expr):
                 [self.d, -self.c, self.b, self.a]])
 
     @property
-    def product_matrix_right(self):
+    def product_matrix_right(self) -> Matrix:
         r"""Returns 4 x 4 Matrix equivalent to a Hamilton product from the
         right. This can be useful when treating quaternion elements as column
         vectors. Given a quaternion $q = a + bi + cj + dk$ where a, b, c and d
@@ -279,7 +300,7 @@ class Quaternion(Expr):
                 [self.c, -self.d, self.a, self.b],
                 [self.d, self.c, -self.b, self.a]])
 
-    def to_Matrix(self, vector_only=False):
+    def to_Matrix(self, vector_only: bool = False) -> Matrix:
         """Returns elements of quaternion as a column vector.
         By default, a ``Matrix`` of length 4 is returned, with the real part as the
         first element.
@@ -329,7 +350,7 @@ class Quaternion(Expr):
             return Matrix(self.args)
 
     @classmethod
-    def from_Matrix(cls, elements):
+    def from_Matrix(cls, elements: Matrix | Sequence[SExpr]) -> Quaternion:
         """Returns quaternion from elements of a column vector`.
         If vector_only is True, returns only imaginary part as a Matrix of
         length 3.
@@ -361,18 +382,23 @@ class Quaternion(Expr):
         0 + b*i + c*j + d*k
 
         """
-        length = len(elements)
-        if length != 3 and length != 4:
+        if isinstance(elements, Matrix):
+            elements_list = elements.flat()
+        else:
+            elements_list = elements
+        length = len(elements_list)
+        if length == 3:
+            e1, e2, e3 = elements_list
+            return Quaternion(0, e1, e2, e3)
+        elif length == 4:
+            e1, e2, e3, e4 = elements_list
+            return Quaternion(e1, e2, e3, e4)
+        else:
             raise ValueError("Input elements must have length 3 or 4, got {} "
                              "elements".format(length))
 
-        if length == 3:
-            return Quaternion(0, *elements)
-        else:
-            return Quaternion(*elements)
-
     @classmethod
-    def from_euler(cls, angles, seq):
+    def from_euler(cls, angles: Sequence[SExpr], seq: str) -> Quaternion:
         """Returns quaternion equivalent to rotation represented by the Euler
         angles, in the sequence defined by ``seq``.
 
@@ -418,24 +444,27 @@ class Quaternion(Expr):
             raise ValueError("3 angles must be given.")
 
         extrinsic = _is_extrinsic(seq)
-        i, j, k = seq.lower()
+        i, j, k = list(seq.lower())
 
-        # get elementary basis vectors
-        ei = [1 if n == i else 0 for n in 'xyz']
-        ej = [1 if n == j else 0 for n in 'xyz']
-        ek = [1 if n == k else 0 for n in 'xyz']
+        e = {
+            'x': (1, 0, 0),
+            'y': (0, 1, 0),
+            'z': (0, 0, 1),
+        }
 
         # calculate distinct quaternions
-        qi = cls.from_axis_angle(ei, angles[0])
-        qj = cls.from_axis_angle(ej, angles[1])
-        qk = cls.from_axis_angle(ek, angles[2])
+        qi = cls.from_axis_angle(e[i], angles[0])
+        qj = cls.from_axis_angle(e[j], angles[1])
+        qk = cls.from_axis_angle(e[k], angles[2])
 
         if extrinsic:
             return trigsimp(qk * qj * qi)
         else:
             return trigsimp(qi * qj * qk)
 
-    def to_euler(self, seq, angle_addition=True, avoid_square_root=False):
+    def to_euler(self, seq: str,
+                       angle_addition: bool = True,
+                       avoid_square_root: bool = False) -> tuple[Expr, Expr, Expr]:
         r"""Returns Euler angles representing same rotation as the quaternion,
         in the sequence given by ``seq``. This implements the method described
         in [1]_.
@@ -502,15 +531,13 @@ class Quaternion(Expr):
         if self.is_zero_quaternion():
             raise ValueError('Cannot convert a quaternion with norm 0.')
 
-        angles = [0, 0, 0]
-
         extrinsic = _is_extrinsic(seq)
-        i, j, k = seq.lower()
+        i1, j1, k1 = list(seq.lower())
 
         # get index corresponding to elementary basis vectors
-        i = 'xyz'.index(i) + 1
-        j = 'xyz'.index(j) + 1
-        k = 'xyz'.index(k) + 1
+        i = 'xyz'.index(i1) + 1
+        j = 'xyz'.index(j1) + 1
+        k = 'xyz'.index(k1) + 1
 
         if not extrinsic:
             i, k = k, i
@@ -536,14 +563,14 @@ class Quaternion(Expr):
         if avoid_square_root:
             if symmetric:
                 n2 = self.norm()**2
-                angles[1] = acos((a * a + b * b - c * c - d * d) / n2)
+                angles1 = acos((a * a + b * b - c * c - d * d) / n2)
             else:
                 n2 = 2 * self.norm()**2
-                angles[1] = asin((c * c + d * d - a * a - b * b) / n2)
+                angles1 = asin((c * c + d * d - a * a - b * b) / n2)
         else:
-            angles[1] = 2 * atan2(sqrt(c * c + d * d), sqrt(a * a + b * b))
+            angles1 = 2 * atan2(sqrt(c * c + d * d), sqrt(a * a + b * b))
             if not symmetric:
-                angles[1] -= S.Pi / 2
+                angles1 -= S.Pi / 2
 
         # Check for singularities in numerical cases
         case = 0
@@ -554,31 +581,37 @@ class Quaternion(Expr):
 
         if case == 0:
             if angle_addition:
-                angles[0] = atan2(b, a) + atan2(d, c)
-                angles[2] = atan2(b, a) - atan2(d, c)
+                angles0 = atan2(b, a) + atan2(d, c)
+                angles2 = atan2(b, a) - atan2(d, c)
             else:
-                angles[0] = atan2(b*c + a*d, a*c - b*d)
-                angles[2] = atan2(b*c - a*d, a*c + b*d)
-
-        else:  # any degenerate case
-            angles[2 * (not extrinsic)] = S.Zero
-            if case == 1:
-                angles[2 * extrinsic] = 2 * atan2(b, a)
+                angles0 = atan2(b*c + a*d, a*c - b*d)
+                angles2 = atan2(b*c - a*d, a*c + b*d)
+        elif case == 1:
+            if extrinsic:
+                angles0 = S.Zero
+                angles2 = 2 * atan2(b, a)
             else:
-                angles[2 * extrinsic] = 2 * atan2(d, c)
-                angles[2 * extrinsic] *= (-1 if extrinsic else 1)
+                angles0 = 2 * atan2(b, a)
+                angles2 = S.Zero
+        else:
+            if extrinsic:
+                angles0 = S.Zero
+                angles2 = -2 * atan2(d, c)
+            else:
+                angles0 = 2*atan2(d,c)
+                angles2 = S.Zero
 
         # for Tait-Bryan angles
         if not symmetric:
-            angles[0] *= sign
+            angles0 *= sign
 
         if extrinsic:
-            return tuple(angles[::-1])
+            return (angles2, angles1, angles0)
         else:
-            return tuple(angles)
+            return (angles0, angles1, angles2)
 
     @classmethod
-    def from_axis_angle(cls, vector, angle):
+    def from_axis_angle(cls, vector: tuple[SExpr, SExpr, SExpr], angle: SExpr) -> Quaternion:
         """Returns a rotation quaternion given the axis and the angle of rotation.
 
         Parameters
@@ -664,41 +697,42 @@ class Quaternion(Expr):
 
         return Quaternion(a, b, c, d)
 
-    def __add__(self, other):
+    def __add__(self, other: SExpr | Quaternion) -> Quaternion:
         return self.add(other)
 
-    def __radd__(self, other):
+    def __radd__(self, other: SExpr) -> Quaternion:
         return self.add(other)
 
-    def __sub__(self, other):
+    def __sub__(self, other: SExpr | Quaternion) -> Quaternion:
         return self.add(other*-1)
 
-    def __mul__(self, other):
+    def __mul__(self, other: SExpr | Quaternion) -> Quaternion:
         return self._generic_mul(self, _sympify(other))
 
-    def __rmul__(self, other):
+    def __rmul__(self, other: SExpr) -> Quaternion:
         return self._generic_mul(_sympify(other), self)
 
-    def __pow__(self, p):
+    def __pow__(self, p: int, mod: None = None) -> Quaternion:
         return self.pow(p)
 
-    def __neg__(self):
+    def __neg__(self) -> Quaternion:
         return Quaternion(-self.a, -self.b, -self.c, -self.d)
 
-    def __truediv__(self, other):
+    def __truediv__(self, other: SExpr | Quaternion) -> Quaternion:
         return self * sympify(other)**-1
 
-    def __rtruediv__(self, other):
+    def __rtruediv__(self, other: SExpr) -> Quaternion:
         return sympify(other) * self**-1
 
-    def _eval_Integral(self, *args):
+    def _eval_Integral(self, *args) -> Quaternion:
         return self.integrate(*args)
 
     def diff(self, *symbols, **kwargs):
         kwargs.setdefault('evaluate', True)
-        return self.func(*[a.diff(*symbols, **kwargs) for a  in self.args])
+        a, b, c, d = [arg.diff(*symbols, **kwargs) for arg in self.args]
+        return self.func(a, b, c, d)
 
-    def add(self, other):
+    def add(self, other: SExpr | Quaternion) -> Quaternion:
         """Adds quaternions.
 
         Parameters
@@ -752,7 +786,7 @@ class Quaternion(Expr):
         return Quaternion(q1.a + q2.a, q1.b + q2.b, q1.c + q2.c, q1.d
                           + q2.d)
 
-    def mul(self, other):
+    def mul(self, other: SExpr | Quaternion) -> Quaternion:
         """Multiplies quaternions.
 
         Parameters
@@ -793,8 +827,18 @@ class Quaternion(Expr):
         """
         return self._generic_mul(self, _sympify(other))
 
+    @overload
     @staticmethod
-    def _generic_mul(q1, q2):
+    def _generic_mul(q1: Quaternion, q2: Expr) -> Quaternion: ...
+    @overload
+    @staticmethod
+    def _generic_mul(q1: Expr, q2: Quaternion) -> Quaternion: ...
+    @overload
+    @staticmethod
+    def _generic_mul(q1: Expr, q2: Expr) -> Expr: ...
+
+    @staticmethod
+    def _generic_mul(q1: Quaternion | Expr, q2: Quaternion | Expr) -> Quaternion | Expr:
         """Generic multiplication.
 
         Parameters
@@ -836,11 +880,20 @@ class Quaternion(Expr):
 
         """
         # None is a Quaternion:
-        if not isinstance(q1, Quaternion) and not isinstance(q2, Quaternion):
-            return q1 * q2
+        if isinstance(q1, Quaternion) and isinstance(q2, Quaternion):
+            if q1._norm is None and q2._norm is None:
+                norm = None
+            else:
+                norm = q1.norm() * q2.norm()
+
+            return Quaternion(-q1.b*q2.b - q1.c*q2.c - q1.d*q2.d + q1.a*q2.a,
+                              q1.b*q2.a + q1.c*q2.d - q1.d*q2.c + q1.a*q2.b,
+                              -q1.b*q2.d + q1.c*q2.a + q1.d*q2.b + q1.a*q2.c,
+                              q1.b*q2.c - q1.c*q2.b + q1.d*q2.a + q1.a * q2.d,
+                              norm=norm)
 
         # If q1 is a number or a SymPy expression instead of a quaternion
-        if not isinstance(q1, Quaternion):
+        elif isinstance(q2, Quaternion):
             if q2.real_field and q1.is_complex:
                 return Quaternion(re(q1), im(q1), 0, 0) * q2
             elif q1.is_commutative:
@@ -849,7 +902,7 @@ class Quaternion(Expr):
                 raise ValueError("Only commutative expressions can be multiplied with a Quaternion.")
 
         # If q2 is a number or a SymPy expression instead of a quaternion
-        if not isinstance(q2, Quaternion):
+        elif isinstance(q1, Quaternion):
             if q1.real_field and q2.is_complex:
                 return q1 * Quaternion(re(q2), im(q2), 0, 0)
             elif q2.is_commutative:
@@ -858,23 +911,15 @@ class Quaternion(Expr):
                 raise ValueError("Only commutative expressions can be multiplied with a Quaternion.")
 
         # If any of the quaternions has a fixed norm, pre-compute norm
-        if q1._norm is None and q2._norm is None:
-            norm = None
         else:
-            norm = q1.norm() * q2.norm()
+            return q1 * q2
 
-        return Quaternion(-q1.b*q2.b - q1.c*q2.c - q1.d*q2.d + q1.a*q2.a,
-                          q1.b*q2.a + q1.c*q2.d - q1.d*q2.c + q1.a*q2.b,
-                          -q1.b*q2.d + q1.c*q2.a + q1.d*q2.b + q1.a*q2.c,
-                          q1.b*q2.c - q1.c*q2.b + q1.d*q2.a + q1.a * q2.d,
-                          norm=norm)
-
-    def _eval_conjugate(self):
+    def _eval_conjugate(self) -> Quaternion:
         """Returns the conjugate of the quaternion."""
         q = self
         return Quaternion(q.a, -q.b, -q.c, -q.d, norm=q._norm)
 
-    def norm(self):
+    def norm(self) -> Expr:
         """Returns the norm of the quaternion."""
         if self._norm is None:  # check if norm is pre-defined
             q = self
@@ -884,19 +929,19 @@ class Quaternion(Expr):
 
         return self._norm
 
-    def normalize(self):
+    def normalize(self) -> Quaternion:
         """Returns the normalized form of the quaternion."""
         q = self
         return q * (1/q.norm())
 
-    def inverse(self):
+    def inverse(self) -> Quaternion:
         """Returns the inverse of the quaternion."""
         q = self
         if not q.norm():
             raise ValueError("Cannot compute inverse for a quaternion with zero norm")
         return conjugate(q) * (1/q.norm()**2)
 
-    def pow(self, p):
+    def pow(self, p: int) -> Quaternion:
         """Finds the pth power of the quaternion.
 
         Parameters
@@ -941,7 +986,7 @@ class Quaternion(Expr):
 
         return res
 
-    def exp(self):
+    def exp(self) -> Quaternion:
         """Returns the exponential of $q$, given by $e^q$.
 
         Returns
@@ -998,15 +1043,16 @@ class Quaternion(Expr):
 
         return Quaternion(a, b, c, d)
 
-    def _eval_subs(self, *args):
-        elements = [i.subs(*args) for i in self.args]
+    def _eval_subs(self, old: Expr, new: Expr) -> Quaternion: # type: ignore
+        e1, e2, e3, e4 = [i.subs(old, new) for i in self.args]
         norm = self._norm
         if norm is not None:
-            norm = norm.subs(*args)
+            norm = norm.subs(old, new)
+        elements = (e1, e2, e3, e4)
         _check_norm(elements, norm)
         return Quaternion(*elements, norm=norm)
 
-    def _eval_evalf(self, prec):
+    def _eval_evalf(self, prec: int) -> Quaternion:
         """Returns the floating point approximations (decimal numbers) of the quaternion.
 
         Returns
@@ -1029,9 +1075,10 @@ class Quaternion(Expr):
 
         """
         nprec = prec_to_dps(prec)
-        return Quaternion(*[arg.evalf(n=nprec) for arg in self.args])
+        a, b, c, d = [arg.evalf(n=nprec) for arg in self.args]
+        return Quaternion(a, b, c, d)
 
-    def pow_cos_sin(self, p):
+    def pow_cos_sin(self, p: int) -> Quaternion:
         """Computes the pth power in the cos-sin form.
 
         Parameters
@@ -1066,7 +1113,7 @@ class Quaternion(Expr):
         q2 = Quaternion.from_axis_angle(v, p * angle)
         return q2 * (q.norm()**p)
 
-    def integrate(self, *args):
+    def integrate(self, *symbols: SymbolLimits) -> Quaternion:
         """Computes integration of quaternion.
 
         Returns
@@ -1095,11 +1142,13 @@ class Quaternion(Expr):
         4 + 8*i + 12*j + 16*k
 
         """
-        return Quaternion(integrate(self.a, *args), integrate(self.b, *args),
-                          integrate(self.c, *args), integrate(self.d, *args))
+        return Quaternion(integrate(self.a, *symbols), integrate(self.b, *symbols),
+                          integrate(self.c, *symbols), integrate(self.d, *symbols))
 
     @staticmethod
-    def rotate_point(pin, r):
+    def rotate_point(pin: tuple[SExpr, SExpr, SExpr],
+                     r: Quaternion | tuple[tuple[SExpr, SExpr, SExpr], SExpr]
+                ) -> tuple[Expr, Expr, Expr]:
         """Returns the coordinates of the point pin (a 3 tuple) after rotation.
 
         Parameters
@@ -1143,7 +1192,7 @@ class Quaternion(Expr):
         pout = q * Quaternion(0, pin[0], pin[1], pin[2]) * conjugate(q)
         return (pout.b, pout.c, pout.d)
 
-    def to_axis_angle(self):
+    def to_axis_angle(self) -> tuple[tuple[Expr, Expr, Expr], Expr]:
         """Returns the axis and angle of rotation of a quaternion.
 
         Returns
@@ -1183,7 +1232,8 @@ class Quaternion(Expr):
 
         return t
 
-    def to_rotation_matrix(self, v=None, homogeneous=True):
+    def to_rotation_matrix(self, v: tuple[SExpr, SExpr, SExpr] | None = None,
+                                homogeneous: bool = True) -> Matrix:
         """Returns the equivalent rotation transformation matrix of the quaternion
         which represents rotation about the origin if ``v`` is not passed.
 
@@ -1259,7 +1309,7 @@ class Quaternion(Expr):
             return Matrix([[m00, m01, m02, m03], [m10, m11, m12, m13],
                           [m20, m21, m22, m23], [m30, m31, m32, m33]])
 
-    def scalar_part(self):
+    def scalar_part(self) -> Expr:
         r"""Returns scalar part($\mathbf{S}(q)$) of the quaternion q.
 
         Explanation
@@ -1279,7 +1329,7 @@ class Quaternion(Expr):
 
         return self.a
 
-    def vector_part(self):
+    def vector_part(self) -> Quaternion:
         r"""
         Returns $\mathbf{V}(q)$, the vector part of the quaternion $q$.
 
@@ -1304,7 +1354,7 @@ class Quaternion(Expr):
 
         return Quaternion(0, self.b, self.c, self.d)
 
-    def axis(self):
+    def axis(self) -> Quaternion:
         r"""
         Returns $\mathbf{Ax}(q)$, the axis of the quaternion $q$.
 
@@ -1333,7 +1383,7 @@ class Quaternion(Expr):
 
         return Quaternion(0, axis.b, axis.c, axis.d)
 
-    def is_pure(self):
+    def is_pure(self) -> bool | None:
         """
         Returns true if the quaternion is pure, false if the quaternion is not pure
         or returns none if it is unknown.
@@ -1360,7 +1410,7 @@ class Quaternion(Expr):
 
         return self.a.is_zero
 
-    def is_zero_quaternion(self):
+    def is_zero_quaternion(self) -> bool | None:
         """
         Returns true if the quaternion is a zero quaternion or false if it is not a zero quaternion
         and None if the value is unknown.
@@ -1392,7 +1442,7 @@ class Quaternion(Expr):
 
         return self.norm().is_zero
 
-    def angle(self):
+    def angle(self) -> Expr:
         r"""
         Returns the angle of the quaternion measured in the real-axis plane.
 
@@ -1418,7 +1468,7 @@ class Quaternion(Expr):
         return 2 * atan2(self.vector_part().norm(), self.scalar_part())
 
 
-    def arc_coplanar(self, other):
+    def arc_coplanar(self, other: Quaternion) -> bool | None:
         """
         Returns True if the transformation arcs represented by the input quaternions happen in the same plane.
 
@@ -1466,7 +1516,7 @@ class Quaternion(Expr):
         return fuzzy_or([(self.axis() - other.axis()).is_zero_quaternion(), (self.axis() + other.axis()).is_zero_quaternion()])
 
     @classmethod
-    def vector_coplanar(cls, q1, q2, q3):
+    def vector_coplanar(cls, q1: Quaternion, q2: Quaternion, q3: Quaternion) -> bool | None:
         r"""
         Returns True if the axis of the pure quaternions seen as 3D vectors
         ``q1``, ``q2``, and ``q3`` are coplanar.
@@ -1525,7 +1575,7 @@ class Quaternion(Expr):
         M = Matrix([[q1.b, q1.c, q1.d], [q2.b, q2.c, q2.d], [q3.b, q3.c, q3.d]]).det()
         return M.is_zero
 
-    def parallel(self, other):
+    def parallel(self, other) -> bool | None:
         """
         Returns True if the two pure quaternions seen as 3D vectors are parallel.
 
@@ -1567,7 +1617,7 @@ class Quaternion(Expr):
 
         return (self*other - other*self).is_zero_quaternion()
 
-    def orthogonal(self, other):
+    def orthogonal(self, other: Quaternion) -> bool | None:
         """
         Returns the orthogonality of two quaternions.
 
@@ -1609,7 +1659,7 @@ class Quaternion(Expr):
 
         return (self*other + other*self).is_zero_quaternion()
 
-    def index_vector(self):
+    def index_vector(self) -> Quaternion:
         r"""
         Returns the index vector of the quaternion.
 
@@ -1639,10 +1689,9 @@ class Quaternion(Expr):
         norm
 
         """
-
         return self.norm() * self.axis()
 
-    def mensor(self):
+    def mensor(self) -> Expr:
         """
         Returns the natural logarithm of the norm(magnitude) of the quaternion.
 
