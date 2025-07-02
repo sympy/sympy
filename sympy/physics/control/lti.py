@@ -19,6 +19,7 @@ from sympy.matrices.expressions import MatMul, MatAdd
 from sympy.polys import Poly, rootof
 from sympy.polys.polyroots import roots
 from sympy.polys.polytools import (cancel, degree)
+from sympy.polys.domains import EXRAW
 from sympy.series import limit
 from sympy.utilities.misc import filldedent
 from sympy.solvers.ode.systems import linodesolve
@@ -5132,10 +5133,18 @@ class StateSpace(LinearTimeInvariant):
         """
         return self.controllability_matrix().rank() == self.num_states
 
-    def get_asymptotic_stability_conditions(self):
+    def get_asymptotic_stability_conditions(self, simplify=True):
         """
         Returns the asymptotic stability conditions for
         the state space.
+
+        Note: Computing the inequalities for matrices with many symbols
+        can take a long time, so it is recommended to set ``simplify=False``.
+
+        Parameters
+        ==========
+        simplify : bool, default=True
+            If True, the inequalities will be in a simplified form.
 
         Examples
         ========
@@ -5156,7 +5165,11 @@ class StateSpace(LinearTimeInvariant):
         (1/3 < k) & (k < 1)
 
         """
-        s = Symbol('s')
-        determinant = self.A.charpoly(s)
+        s = Symbol('s', dummy = True)
+        domain = None if simplify is True else EXRAW
+        # if domain is None, to_DM will find the domain automatically
+        _A = self.A.to_DM(domain = domain)
 
-        return negative_real_part_conditions(determinant, s)
+        charpoly = _A.charpoly()
+        charpoly = Poly(charpoly, s, domain = domain)
+        return negative_real_part_conditions(charpoly, s, domain = domain)
