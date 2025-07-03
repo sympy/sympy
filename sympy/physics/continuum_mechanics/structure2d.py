@@ -11,6 +11,7 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import atan2, cos, sin, tan
 from sympy.geometry.polygon import deg, rad
 from sympy.physics.continuum_mechanics.beam import Beam
+from sympy.physics.continuum_mechanics.column import Column
 from sympy.simplify import nsimplify, simplify
 
 plt = import_module(
