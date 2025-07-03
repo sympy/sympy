@@ -180,7 +180,9 @@ may be slightly more efficient.)
 .. autofunction:: dmp_lift
 .. autofunction:: dup_sign_variations
 .. autofunction:: dmp_clear_denoms
+.. autofunction:: dup_revert
 .. autofunction:: dmp_revert
+.. autofunction:: dup_reversion
 
 Manipulation of dense, univariate polynomials with finite field coefficients
 ****************************************************************************

@@ -16,6 +16,7 @@ from sympy.polys.densearith import (
 )
 from sympy.polys.densebasic import (
     dup_strip, dmp_strip,
+    dup_slice,
     dup_convert, dmp_convert,
     dup_degree, dmp_degree,
     dmp_to_dict,
@@ -1431,3 +1432,63 @@ def dmp_revert(f, g, u, K):
         return dup_revert(f, g, K)
     else:
         raise MultivariatePolynomialError(f, g)
+
+def dup_reversion(f, n, K):
+    """
+    Computes the compositional inverse of f using Newton iteration.
+    The result is computed modulo x**n.
+
+    Algorithm
+    =========
+
+    Let $f(x) = a_1 x + a_2 x^2 + \dots$ with $a_1$ invertible.
+
+    We seek $g(x)$ such that:
+    $$
+    f(g(x)) = x \mod x^n
+    $$
+
+    Let $g_i$ be the approximation at step $i$.
+    Then Newton iteration updates via:
+    $$
+    g_{i+1}(x) = g_i(x) - \frac{f(g_i(x)) - x}{a_1}
+    $$
+
+    Starting from:
+    $$
+    g_1(x) = \frac{x}{a_1}
+    $$
+
+    Each update improves the precision by one term modulo $x^k$ for $k = 2, 3, \dots, n$.
+
+    Examples
+    ========
+    >>> from sympy.polys import QQ
+    >>> from sympy.polys.densetools import dup_reversion
+    >>> f = [QQ(1, 2), QQ(1, 3), QQ(1, 4), QQ(1, 5), QQ(1, 6), QQ(1, 7), 0]
+    >>> dup_reversion(f, 8, QQ)
+    [-7812952441/32400, 467419477/16200, -789929/216, 40817/90, -343/6, 7, 0]
+    """
+    if len(f) < 2 or f[-1] != K.zero:
+        raise ValueError("f must have zero constant term")
+    if f[-2] == K.zero:
+        raise ValueError("f must have nonzero linear term")
+
+    a = f[-2]
+    g = [K.revert(a), K.zero]
+
+    for k in range(2, n + 1):
+        fg = dup_compose(f, g, K)
+        fg = dup_slice(fg, 0, k - 1, K)
+
+        x_poly = [K.zero] * k
+        x_poly[-2] = K.one
+
+        delta = dup_sub(fg, x_poly, K)
+        delta = dup_slice(delta, 0, k - 1, K)
+        delta_div = [K.quo(c, a) for c in delta]
+
+        g_new = dup_sub(g, delta_div, K)
+        g = dup_slice(g_new, 0, k - 1, K)
+
+    return dup_slice(g, 0, n, K)

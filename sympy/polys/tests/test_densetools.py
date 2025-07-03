@@ -27,6 +27,7 @@ from sympy.polys.densetools import (
     dmp_lift,
     dup_sign_variations,
     dup_revert, dmp_revert,
+    dup_reversion
 )
 from sympy.polys.polyclasses import ANP
 
@@ -280,6 +281,19 @@ def test_dmp_revert():
     assert dmp_revert(f, 8, 0, QQ) == g
 
     raises(MultivariatePolynomialError, lambda: dmp_revert([[1]], 2, 1, QQ))
+
+
+def test_dup_reversion():
+    from sympy import QQ
+
+    f = [QQ(4), QQ(3), QQ(4), QQ(1), QQ(0)]
+    g = [-QQ(4043832), QQ(340156), -QQ(29596), QQ(2699), -QQ(264), QQ(29), -QQ(4),
+        QQ(1), QQ(0)]
+
+    assert dup_reversion(f, 10, QQ) == g
+
+    raises(ValueError, lambda: dup_reversion([QQ(1), QQ(1)], 5, QQ))
+    raises(ValueError, lambda: dup_reversion([QQ(1), QQ(0), QQ(0)], 5, QQ))
 
 
 def test_dup_trunc():
