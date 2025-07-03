@@ -876,7 +876,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
             try:
                 cp2 = ring.ring_new(other)
             except CoercionFailed:
-                return NotImplemented
+                return NotImplemented # unreachable
             else:
                 return self._mul(cp2)
 
@@ -1152,7 +1152,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
                 f"got {len(symbols)}"
             )
 
-        return expr_from_dict(self._as_expr_dict(), *symbols)
+        return expr_from_dict(self.as_expr_dict(), *symbols)
 
     def set_ring(self, new_ring):
         """Change the ring of this polynomial."""
@@ -1911,8 +1911,6 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         """
         return self._symmetrize()
 
-    # <--------------------------INTERFACE / IMPLEMENTATION DIVIDER-------------------------->#
-
     def __eq__(self, other):
         """Equality test for polynomials.
 
@@ -2402,7 +2400,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         else:
             return new_ring.from_dict(self, self.ring.domain)
 
-    def _as_expr_dict(self):
+    def as_expr_dict(self):
         # Can just use self.flint_poly.to_dict() in case of python-flint
         # Or this can just directly go into the baseclass as is since iterterms
         # will be implemented separately for pure python and flint versions anyways
@@ -2807,7 +2805,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         elif len(self) == 1:
             h, cff, cfg = self._gcd_monom(other)
             return h, cff, cfg
-        elif len(self) == 1:
+        elif len(other) == 1:
             h, cfg, cff = other._gcd_monom(self)
             return h, cff, cfg
 
