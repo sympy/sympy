@@ -422,6 +422,12 @@ def test_composite_beam():
                     - 133*SingularityFunction(x, 1, 3)/405000 + SingularityFunction(x, 3, 3)/3000\
                     - 37*SingularityFunction(x, 4, 3)/202500
 
+    E = Symbol('E')
+    I = Symbol('I')
+    b=Beam(6, E, I)
+    c=Beam(6, E, I)
+    with raises(ValueError, match="Invalid joining method. Choose from 'fixed' or 'hinge'."):
+        b.join(c, "hige")
 
 def test_point_cflexure():
     E = Symbol('E')
@@ -548,6 +554,12 @@ def test_apply_support():
     R_0, R_L, M_0, M_L = symbols('R_0, R_L, M_0, M_L')
     b.solve_for_reaction_loads(R_0, R_L, M_0, M_L)
     assert b.reaction_loads == {R_0: P/2, R_L: P/2, M_0: -L*P/8, M_L: L*P/8}
+
+    E = Symbol('E')
+    I = Symbol('I')
+    b=Beam(6, E, I)
+    with raises(ValueError, match="Invalid support type. Choose from 'pin', 'roller', or 'fixed'."):
+        b.apply_support(0,"pen")
 
 def test_apply_rotation_hinge():
     b = Beam(15, 20, 20)
