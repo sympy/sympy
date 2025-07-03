@@ -925,7 +925,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
             try:
                 p2 = ring.ring_new(other)
             except CoercionFailed:
-                return NotImplemented
+                return NotImplemented # unreachable
             else:
                 return self._mul(p2)
 
@@ -1190,10 +1190,6 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
         x**2 + 2*x*y + y**2 + 3
         """
         return self.new(self)
-
-    def as_expr_dict(self) -> dict[tuple[int, ...], Expr]:
-        to_sympy = self.ring.domain.to_sympy
-        return {monom: to_sympy(coeff) for monom, coeff in self.iterterms()}
 
     def set_ring(self, new_ring: PolyRing[Es]) -> PolyElement[Es]:
         """Change the ring of this polynomial."""
@@ -1952,8 +1948,6 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
         """
         return self._symmetrize()
 
-    # <--------------------------INTERFACE / IMPLEMENTATION DIVIDER-------------------------->#
-
     def __eq__(self, other):
         """Equality test for polynomials.
 
@@ -2443,7 +2437,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
         else:
             return new_ring.from_dict(self, self.ring.domain)
 
-    def _as_expr_dict(self):
+    def as_expr_dict(self) -> dict[tuple[int, ...], Expr]:
         # Can just use self.flint_poly.to_dict() in case of python-flint
         # Or this can just directly go into the baseclass as is since iterterms
         # will be implemented separately for pure python and flint versions anyways
@@ -2848,7 +2842,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
         elif len(self) == 1:
             h, cff, cfg = self._gcd_monom(other)
             return h, cff, cfg
-        elif len(self) == 1:
+        elif len(other) == 1:
             h, cfg, cff = other._gcd_monom(self)
             return h, cff, cfg
 

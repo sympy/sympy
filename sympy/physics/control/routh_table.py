@@ -1,93 +1,122 @@
 from sympy.matrices.dense import MutableDenseMatrix
 from sympy.polys import Poly
-from sympy.polys.polytools  import cancel
-from sympy import symbols, Symbol
-from sympy.logic.boolalg import false, true
-from sympy.series import limit
-from sympy import Q, ask
-from sympy.solvers.inequalities import reduce_inequalities
+from sympy import Symbol
+from sympy.logic.boolalg import true, false
 
-__all__ = ['RouthHurwitz', 'neg_roots_conds']
+__all__ = ['RouthHurwitz', 'negative_real_part_conditions']
 
-def neg_roots_conds(polynomial, var):
+def negative_real_part_conditions(polynomial, var, /, *, domain=None):
     """
-    Returns the conditions for a polynomial to have all its roots with
+    Returns a list of conditions for a polynomial to have all its roots with
     negative real parts.
+
+    Note: This method assumes that the leading coefficient is non-zero.
+    In the opposite case, additional verification is required.
+
+    Parameters
+    ==========
+
+    polynomial : Expr, Number
+        The polynomial whose roots are to be analyzed.
+    var : Symbol, None, optional
+        The symbol representing the variable in the polynomial.
+    domain : None, Domain, optional
+        The domain in which the polynomial is defined.
+
+    Returns
+    =======
+
+    list[StrictGreaterThan | Boolean]
+        A list of conditions that must be satisfied for the polynomial to
+        have all its roots with negative real parts.
 
     Examples
     ========
 
-    >>> from sympy.physics.control import neg_roots_conds
+    >>> from sympy.physics.control import negative_real_part_conditions
     >>> from sympy import symbols
     >>> s = symbols('s')
     >>> p1 = (s+1)*(s+2)*(s+2.5)
-    >>> neg_roots_conds(p1, s)
-    [True]
+    >>> negative_real_part_conditions(p1, s)
+    [True, True, True]
     >>> k = symbols('k')
     >>> p2 = (s+1)*(s+k)
-    >>> neg_roots_conds(p2, s)
-    [k + 1 > 0, k > 0]
+    >>> negative_real_part_conditions(p2, s)
+    [k + 1 > 0, k*(k + 1)**3 > 0]
     >>> a = symbols('a', negative = True)
     >>> p3 = (s+1)*(s+a)
-    >>> neg_roots_conds(p3, s)
-    [a + 1 > 0, False]
+    >>> negative_real_part_conditions(p3, s)
+    [a + 1 > 0, a*(a + 1)**3 > 0]
 
     """
-    den = Poly(polynomial, var)
+    p: Poly = Poly(polynomial, var, domain = domain)
 
-    # If a non-positive coefficient is found, the sign of the
-    # polynomial is flipped.
-    # This ensures that the first row of the Routh-Hurwitz table
-    # will always be made positive.
-    for coeff in den.all_coeffs():
-        if ask(Q.zero(coeff)) is True:
-            continue
+    _, p = p.clear_denoms(convert=True)
 
-        try:
-            if reduce_inequalities(coeff >=0) is true:
-                break
-            if reduce_inequalities(coeff <= 0) is true:
-                den = -den
-                break
-        except NotImplementedError:
-            # If there are more than one symbols,
-            # reduce_inequalities could fail
-            pass
+    coeffs = p.all_coeffs()
 
-    table = RouthHurwitz(den, var)
+    if all(c.is_number for c in coeffs):
+        return _calc_conditions_div(coeffs)
 
-    if table.zero_row_case:
-        # There is a pole with a real part equal to zero or
-        # a pole with a positive real part.
-        return [False]
+    return _calc_conditions_no_div(coeffs)
 
-    num_conditions = true
-    var_conditions = []
+def _run_checks(func):
+    """
+    Decorator to provide the basic checks for the recursive
+    stability functions.
 
-    for eq in table[:, 0]:
-        limit_val = limit(eq, table.infinitesimal_element, 0)
+    """
+    def wrapper(p: list):
+        if len(p) < 2:
+            return [true]
 
-        if limit_val == 0:
-            continue
+        if (p[0]*p[1]).is_nonpositive:
+            return [false]
 
-        elif limit_val.is_number:
-            num_conditions &= limit_val > 0
+        if len(p) == 2:
+            return [p[0] * p[1] > 0]
 
-        else:
-            var_conditions.append(limit_val > 0)
+        return func(p)
 
-    if num_conditions is false:
-        return [False]
+    return wrapper
 
-    return var_conditions if len(var_conditions) > 0 else [True]
+@_run_checks
+def _calc_conditions_div(p: list):
+    """
+    Stability check with divisions, used for numeric polynomials.
+    Algorithm from:
+    https://courses.washington.edu/mengr471/resources/Routh_Hurwitz_Proof.pdf
+
+    """
+    qs = p.copy()
+    for i in range(1, len(p), 2):
+        qs[i - 1] -= p[i] * p[0] / p[1]
+    qs = qs[1:]
+
+    return [p[0] * p[1] > 0] + _calc_conditions_div(qs)
+
+@_run_checks
+def _calc_conditions_no_div(p: list):
+    """
+    Stability check without divisions, used for symbolic polynomials.
+    Algorithm is a rivisitation of the one in:
+    https://courses.washington.edu/mengr471/resources/Routh_Hurwitz_Proof.pdf
+
+    """
+    qs = [p[1] * qi for qi in p]
+    for i in range(1, len(p), 2):
+        qs[i - 1] -= p[i] * p[0]
+    qs = qs[1:]
+
+    return [p[0] * p[1] > 0] + _calc_conditions_no_div(qs)
 
 class RouthHurwitz(MutableDenseMatrix):
     r"""
     A class for creating a Routh-Hurwitz table from a given polynomial.
-    It handle special cases with methods discussed in [1].
+    It handles special cases with methods discussed in [1]_.
 
-    Note: When a row of the table is zero, the property ``zero_row_case``
-    is set to True.
+    Note: When at least a row of the table is zero,
+    the property ``zero_row_case`` is set to True.
 
     Explanation
     ============
@@ -109,19 +138,14 @@ class RouthHurwitz(MutableDenseMatrix):
 
     1.  First Column Zero Case:
         If a zero appears in the first column of a row (while the row is not
-        entirely zero), the zero is replaced with a small symbolic infinitesimal
-        (:math:`\epsilon`, by default).
-        When checking for sign changes, the limit :math:`\epsilon \to 0`
-        is taken.
-        Specifically, if the other elements in the column are positive, then
-        :math:`\epsilon \to 0^+`; if they are negative, then
-        :math:`\epsilon \to 0^-`; otherwise, :math:`\epsilon \to 0^\pm`.
+        entirely zero), the Extended Routh's Table is constructed [2]_ and every
+        information of these rows is stored in  ``zero_col_infos``.
 
     2.  Full Row Zero Case:
         If an entire row becomes zero, we can substitute the row with the
         coefficients of the derivative of an auxiliary polynomial.
         The auxiliary polynomial is constructed using the row immediately
-        above the zero row.
+        above the zero row [3]_.
         For instance, consider the following example:
 
         .. math::
@@ -193,11 +217,13 @@ class RouthHurwitz(MutableDenseMatrix):
     >>> p1 = s**4 + s**3 + 3*s**2 + 3*s + 3
     >>> RouthHurwitz(p1, s)
     Matrix([
-    [                      1, 3, 3],
-    [                      1, 3, 0],
-    [                epsilon, 3, 0],
-    [(3*epsilon - 3)/epsilon, 0, 0],
-    [                      3, 0, 0]])
+    [ 1, 3, 3],
+    [ 1, 3, 0],
+    [-3, 3, 0],
+    [ 4, 0, 0],
+    [ 3, 0, 0]])
+    >>> RouthHurwitz(p1, s).zero_col_infos
+    [(2, 1)]
     >>> RouthHurwitz(p1, s).zero_row_case
     False
 
@@ -216,34 +242,32 @@ class RouthHurwitz(MutableDenseMatrix):
     [ 16,  0,  0,  0]])
     >>> RouthHurwitz(p2, s).zero_row_case
     True
-    >>> RouthHurwitz(p2, s).auxiliary_polynomial
-    Poly(2*s**4 + 12*s**2 + 16, s, domain='ZZ')
+    >>> RouthHurwitz(p2, s).auxiliary_polynomials
+    [Poly(2*s**4 + 12*s**2 + 16, s, domain='ZZ')]
 
     References
     ==========
     .. [1] https://en.wikipedia.org/wiki/Routh-Hurwitz_stability_criterion
-    .. [2] https://www.circuitbread.com/tutorials/routh-hurwitz-criterion-part-2-3-3
+    .. [2] https://citeseerx.ist.psu.edu/document?repid=rep1&type=pdf&doi=b1ed2c8cbd00da0a4aac7b7e9684255a833af6b4
+    .. [3] https://www.circuitbread.com/tutorials/routh-hurwitz-criterion-part-2-3-3
 
     """
-    def __new__(cls, polynomial, var, infinitesimal_element = None):
+    def __new__(cls, polynomial, var):
         if not isinstance(var, Symbol):
             raise ValueError("var must be a Symbol")
         n = Poly(polynomial, var).degree()
 
         return super().__new__(cls, n + 1, n//2 + 1, [0]*(n + 1)*(n//2 + 1))
 
-    def __init__(self, polynomial, var, infinitesimal_element = None):
+    def __init__(self, polynomial, var):
         self._var = var
         self._polynomial = Poly(polynomial, var)
         self._poly_degree = self._polynomial.degree()
         self._coeffs = self._polynomial.all_coeffs()
 
         self._zero_row_case = False
-        self._aux_poly_degree = 0
-
-        self._inf_element = infinitesimal_element
-        if infinitesimal_element is None:
-            self._inf_element = symbols("epsilon", dummy=True)
+        self._zero_col_infos: list[tuple] = []
+        self._aux_poly_degrees = []
 
         if self._poly_degree < 1:
             self[0, 0] = self._coeffs[0]
@@ -277,22 +301,25 @@ class RouthHurwitz(MutableDenseMatrix):
             self._handle_special_cases(i)
 
     def _calculate_row(self, i):
-        trailing_columns = i//2
-        for j in range(self.cols - trailing_columns):
+        active_row_length = self.cols - i//2
+        for j in range(active_row_length):
             num = (self[i-1, 0] * self[i-2, j+1]
                    - self[i-2, 0] * self[i-1, j+1])
             den = self[i-1, 0]
 
-            self[i, j] = cancel(num / den)
+            self[i, j] = num / den
 
     def _handle_special_cases(self, i):
+        active_row_length = self.cols - i//2
         """Handle the first column zero case and the full row zero case."""
-        if all(self[i, j] == 0 for j in range(self.cols)):
+        if all(self[i, j] == 0 for j in range(active_row_length)):
             self._zero_row_case = True
-            self._aux_poly_degree = self._poly_degree - i + 1
-            # calculate the row using the auxiliary polynomial coefficients degrees
+            aux_poly_degree = self._poly_degree - i + 1
+            self._aux_poly_degrees.append(aux_poly_degree)
+            # calculate the row using the auxiliary polynomial coefficients
+            # degrees
             for j in range(self.cols):
-                aux_coeff_deg = self._aux_poly_degree - 2*j
+                aux_coeff_deg = aux_poly_degree - 2*j
 
                 if aux_coeff_deg < 0:
                     continue
@@ -302,7 +329,37 @@ class RouthHurwitz(MutableDenseMatrix):
             return
 
         if self[i, 0] == 0:
-            self[i, 0] = self._inf_element
+            n_zeros = self._count_consecutive_zeros(i)
+            self._zero_col_infos.append((i, n_zeros))
+
+            for k, expr in enumerate(self[i, n_zeros:active_row_length]):
+                self[i, k] = self[i, k] + (-1)**n_zeros * expr
+
+    def _count_consecutive_zeros(self, i):
+        """
+        Count the number of consecutive zeros in the i-th row of the table.
+
+        """
+        count = 0
+        for expr in self[i, :]:
+            if expr != 0:
+                break
+            count += 1
+
+        return count
+
+    @property
+    def zero_col_infos(self):
+        """
+        Return a list of tuple.
+
+        - The first element of the tuple represents the index of a row in which
+          the First Column Zero Case occurs.
+        - The second element of the tuple represents the index of the first
+          column different from 0 before the Extended Routh's Table construction.
+
+        """
+        return self._zero_col_infos
 
     @property
     def zero_row_case(self):
@@ -314,14 +371,9 @@ class RouthHurwitz(MutableDenseMatrix):
         return self._zero_row_case
 
     @property
-    def infinitesimal_element(self):
-        """Return the infinitesimal element used in the table."""
-        return self._inf_element
-
-    @property
-    def auxiliary_polynomial(self):
+    def auxiliary_polynomials(self):
         """
-        If the zero_row_case is True, return the auxiliary polynomial
+        If ``zero_row_case`` is True, returns a list of auxiliary polynomials
         associated with the Full Row Zero Case.
         Otherwise, return None.
 
@@ -332,10 +384,14 @@ class RouthHurwitz(MutableDenseMatrix):
         if self.zero_row_case is False:
             return None
 
-        aux_poly = 0
-        aux_poly_row = self._poly_degree - self._aux_poly_degree
+        polys = []
+        for aux_poly_degree in self._aux_poly_degrees:
+            aux_poly = 0
+            aux_poly_row = self._poly_degree - aux_poly_degree
 
-        for j, exp in enumerate(range(self._aux_poly_degree, -1, -2)):
-            aux_poly += self[aux_poly_row, j] * self._var**exp
+            for j, exp in enumerate(range(aux_poly_degree, -1, -2)):
+                aux_poly += self[aux_poly_row, j] * self._var**exp
 
-        return Poly(aux_poly, self._var)
+            polys.append(Poly(aux_poly, self._var))
+
+        return polys
