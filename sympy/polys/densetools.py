@@ -1433,33 +1433,38 @@ def dmp_revert(f, g, u, K):
     else:
         raise MultivariatePolynomialError(f, g)
 
+
 def dup_reversion(f, n, K):
-    """
+    r"""
     Computes the compositional inverse of f using Newton iteration.
     The result is computed modulo x**n.
 
     Algorithm
     =========
 
-    Let $f(x) = a_1 x + a_2 x^2 + \dots$ with $a_1$ invertible.
+    Given $f(x) = a_1 x + a_2 x^2 + \dots$ with $a_1$ invertible.
 
-    We seek $g(x)$ such that:
-    $$
+    The goal is to find $g(x)$ such that:
+    $
     f(g(x)) = x \mod x^n
-    $$
+    $
 
-    Let $g_i$ be the approximation at step $i$.
-    Then Newton iteration updates via:
-    $$
-    g_{i+1}(x) = g_i(x) - \frac{f(g_i(x)) - x}{a_1}
-    $$
+    The algorithm uses iterative refinement where $g_k$ is the approximation modulo $x^k$.
 
-    Starting from:
-    $$
-    g_1(x) = \frac{x}{a_1}
-    $$
+    Initial approximation:
+    $
+    g_1(x) = x/a_1
+    $
 
-    Each update improves the precision by one term modulo $x^k$ for $k = 2, 3, \dots, n$.
+    Iterative step for $k = 2, 3, \dots, n$:
+    $
+    \delta = f(g_{k-1}(x)) - x \mod x^k
+    $
+    $
+    g_k(x) = g_{k-1}(x) - \delta/a_1 \mod x^k
+    $
+
+    This process incrementally builds the correct coefficients of the compositional inverse.
 
     Examples
     ========
