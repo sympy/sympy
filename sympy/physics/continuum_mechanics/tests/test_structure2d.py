@@ -454,3 +454,28 @@ def test_structure2d_symbolic_onebend(test_beam_fixture_one_bend, test_data):
         print(math.isclose(float(s.bending_moment(loc)),float(expected_bm),rel_tol=1e-2,abs_tol=1e-2))
 
         assert math.isclose(float(s.bending_moment(loc)),float(expected_bm),rel_tol=1e-2,abs_tol=1e-2) == True
+def test_structure2d_multiple_horizontal_reactions():
+    """Test that the structure can handle multiple horizontal reactions."""
+    E, I, A, Q = symbols('E I A Q')
+    s = Structure2d()
+    s.add_member(0, 0, 6, 0, E, I, A)
+
+    # Apply supports
+    T_1,Rv_1, Rh_1 = s.apply_support(x=0, y=0, type='fixed')
+    Rv_2,Rh_2 = s.apply_support(x=6, y=0, type='pin')
+
+    # Apply horizontal loads
+    s.apply_load(0, 0, -Q, global_angle=0, order=0, end_x=6, end_y=0)
+    s.apply_load(0, 0, -Q, global_angle=90, order=0, end_x=6, end_y=0)
+
+    # Solve for reaction loads
+    s.solve_for_reaction_loads(T_1,Rv_1, Rh_1, Rv_2, Rh_2)
+    p= s.reaction_loads
+    q = {
+        Symbol('R_v__0,__0'): -15*Q/4,
+        Symbol('R_v__6,__0'):  -9*Q/4,
+        Symbol('T__0,__0'):    9*Q/2,
+        Symbol('R_h__0,__0'):  3*Q,
+        Symbol('R_h__6,__0'):  3*Q,
+    }
+    assert p==q
