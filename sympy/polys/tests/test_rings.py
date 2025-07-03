@@ -252,7 +252,8 @@ def test_PolyRing_index():
     assert ring.index(0) == 0
     assert ring.index(1) == 1
     assert ring.index(2) == 2
-    assert ring.index(-1) == 0
+
+    raises(ValueError, lambda: ring.index(-1)) # negative generator indices not allowed
 
     R = PolyRing('x,y,z', ZZ, lex)
     x, y, z = ring.gens
