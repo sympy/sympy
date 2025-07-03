@@ -547,14 +547,18 @@ class Structure2d:
 
                     if nn[i] == 2:
                         self.beam.apply_load(B[i] * cos(oo[-1]), bb[i], -1)
+                        self.column.apply_load(B[i] * sin(oo[-1]), bb[i], -1)
 
                     if nn[i] == 3:
+                        self.beam.apply_load(B[i] * sin(oo[-1]), bb[i], -1)
                         self.column.apply_load(B[i] * cos(oo[-1]), bb[i], -1)
 
                     if nn[i] == 4:
                         self.beam.apply_load(B[i] * cos(oo[-1]), bb[i], 0)
+                        self.column.apply_load(B[i] * sin(oo[-1]), bb[i], 0)
 
                     if nn[i] == 5:
+                        self.beam.apply_load(B[i] * sin(oo[-1]), bb[i], 0)
                         self.column.apply_load(B[i] * cos(oo[-1]), bb[i], 0)
 
                     break
@@ -565,14 +569,18 @@ class Structure2d:
 
                         if nn[i] == 2:
                             self.beam.apply_load(B[i] * cos(oo[j - 1]), bb[i], -1)
+                            self.column.apply_load(B[i] * sin(oo[j - 1]), bb[i], -1)
 
                         if nn[i] == 3:
+                            self.beam.apply_load(B[i] * sin(oo[j - 1]), bb[i], -1)
                             self.column.apply_load(B[i] * cos(oo[j - 1]), bb[i], -1)
 
                         if nn[i] == 4:
                             self.beam.apply_load(B[i] * cos(oo[j - 1]), bb[i], 0)
+                            self.column.apply_load(B[i] * sin(oo[j - 1]), bb[i], 0)
 
                         if nn[i] == 5:
+                            self.beam.apply_load(B[i] * sin(oo[j - 1]), bb[i], 0)
                             self.column.apply_load(B[i] * cos(oo[j - 1]), bb[i], 0)
                         break
 
@@ -583,8 +591,14 @@ class Structure2d:
                         self.beam.apply_load(
                             B[i] * (cos(oo[j]) - cos(oo[j - 1])), aa[j], -1
                         )
+                        self.column.apply_load(
+                            B[i] * (sin(oo[j]) - sin(oo[j - 1])), aa[j], -1
+                        )
 
                     if nn[i] == 3:
+                        self.beam.apply_load(
+                            B[i] * (sin(oo[j]) - sin(oo[j - 1])), aa[j], -1
+                        )
                         self.column.apply_load(
                             B[i] * (cos(oo[j]) - cos(oo[j - 1])), aa[j], -1
                         )
@@ -598,11 +612,25 @@ class Structure2d:
                             aa[j],
                             -1,
                         )
+                        self.column.apply_load(
+                            B[i] * (sin(oo[j]) - sin(oo[j - 1])), aa[j], 0
+                        )
+                        self.column.apply_load(
+                            B[i] * (aa[j] - bb[i]) * (sin(oo[j]) - sin(oo[j - 1])),
+                            aa[j],
+                            -1,
+                        )
 
                     if nn[i] == 5:
-                        self.column.apply_load(
-                            B[i] * (cos(oo[j]) - cos(oo[j - 1])), aa[j], 0
+                        self.beam.apply_load(
+                            B[i] * (sin(oo[j]) - sin(oo[j - 1])), aa[j], 0
                         )
+                        self.beam.apply_load(
+                            B[i] * (aa[j] - bb[i]) * (sin(oo[j]) - sin(oo[j - 1])),
+                            aa[j],
+                            -1,
+                        )
+                        self.column.apply_load(B[i] * (cos(oo[j]) - cos(oo[j - 1])), aa[j], 0)
                         self.column.apply_load(
                             B[i] * (aa[j] - bb[i]) * (cos(oo[j]) - cos(oo[j - 1])),
                             aa[j],
@@ -893,6 +921,7 @@ class Structure2d:
         # Solve for moment and vertical reaction loads using the beam solver
         # print(args_for_beam_solver)
         self.beam.solve_for_reaction_loads(*args_for_beam_solver)
+        self.column.solve_for_reaction_loads()
 
         # Compute the horizontal reaction load by summing up all horizontal forces
         sum_horizontal = 0
