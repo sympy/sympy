@@ -11,6 +11,7 @@ from sympy.core.numbers import I, pi, oo
 from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.core.symbol import Dummy, Symbol
+from sympy.core.logic import fuzzy_and
 from sympy.functions import Abs
 from sympy.core.sympify import sympify, _sympify
 from sympy.matrices import Matrix, ImmutableMatrix, ImmutableDenseMatrix, eye, ShapeError, zeros
@@ -2111,16 +2112,21 @@ class DiscreteTransferFunction(TransferFunctionBase):
         return limit(m, self.var, 1)
 
     def is_stable(self, cancel_poles_zeros=False):
+        # TODO: write tests
         r"""
         See :func:`TransferFunctionBase.is_stable`.
         """
-        ...
+        return fuzzy_and(abs(pole) < 1 for pole in self.poles())
 
     def get_asymptotic_stability_conditions(self, cancel_poles_zeros=False):
         r"""
         See :func:`TransferFunctionBase.get_asymptotic_stability_conditions`.
         """
-        ...
+        # TODO
+        raise NotImplementedError("""
+            The asymptotic stability conditions for the discrete transfer
+            function model are not implemented yet.
+            """)
 
     def _eval_rewrite_as_DTStateSpace(self, *args):
         """
