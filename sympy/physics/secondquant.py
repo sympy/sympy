@@ -2924,12 +2924,7 @@ def wicks(e, **kw_args):
     opts.update(kw_args)
 
     # check if we are already normally ordered
-    if isinstance(e, NO):
-        if opts['keep_only_fully_contracted']:
-            return S.Zero
-        else:
-            return e
-    elif isinstance(e, FermionicOperator):
+    if isinstance(e, (NO, FermionicOperator)):
         if opts['keep_only_fully_contracted']:
             return S.Zero
         else:

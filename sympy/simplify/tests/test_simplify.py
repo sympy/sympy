@@ -869,6 +869,9 @@ def test_nc_simplify():
     _check(a*b*(c*d)**2, a*b*(c*d)**2)
     expr = b**-1*(a**-1*b**-1 - a**-1*c*b**-1)**-1*a**-1
     assert nc_simplify(expr) == (1-c)**-1
+    # test that powers of adjoint are correctly handled
+    assert nc_simplify(a*a.adjoint()**2*a) == a*a.adjoint()**2*a
+    assert nc_simplify(a.adjoint()*a*a.adjoint()) == a.adjoint()*a*a.adjoint()
     # commutative expressions should be returned without an error
     assert nc_simplify(2*x**2) == 2*x**2
 

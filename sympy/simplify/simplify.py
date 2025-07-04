@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import overload
+from typing import overload, TYPE_CHECKING
 
 from collections import defaultdict
 
@@ -50,6 +50,10 @@ from sympy.utilities.iterables import has_variety, sift, subsets, iterable
 from sympy.utilities.misc import as_int
 
 import mpmath
+
+
+if TYPE_CHECKING:
+    from typing import Literal
 
 
 def separatevars(expr, symbols=[], dict=False, force=False):
@@ -1824,13 +1828,16 @@ def nc_simplify(expr, deep=True):
                             not isinstance(args[i].args[0], _Symbol)):
                 subterm = args[i].args[0].args
                 l = len(subterm)
-                if args[i-l:i] == subterm:
+                # Only apply optimization if power base matches subterm pattern
+                if (args[i-l:i] == subterm and
+                    args[i].args[0] == _Mul(*subterm)):
                     # e.g. a*b in a*b*(a*b)**2 is not repeated
                     # in args (= [a, b, (a*b)**2]) but it
                     # can be matched here
                     p += 1
                     start -= l
-                if args[i+1:i+1+l] == subterm:
+                if (args[i+1:i+1+l] == subterm and
+                    args[i].args[0] == _Mul(*subterm)):
                     # e.g. a*b in (a*b)**2*a*b
                     p += 1
                     end += l
@@ -1970,7 +1977,17 @@ def nc_simplify(expr, deep=True):
     return simp
 
 
-def dotprodsimp(expr, withsimp=False):
+@overload
+def dotprodsimp(expr: Expr, withsimp: Literal[False] = False) -> Expr:
+    ...
+@overload
+def dotprodsimp(expr: Expr, withsimp: Literal[True]) -> tuple[Expr, bool]:
+    ...
+@overload
+def dotprodsimp(expr: Expr, withsimp: bool) -> Expr | tuple[Expr, bool]:
+    ...
+
+def dotprodsimp(expr: Expr, withsimp: bool = False) -> Expr | tuple[Expr, bool]:
     """Simplification for a sum of products targeted at the kind of blowup that
     occurs during summation of products. Intended to reduce expression blowup
     during matrix multiplication or other similar operations. Only works with
@@ -1986,7 +2003,7 @@ def dotprodsimp(expr, withsimp=False):
         simplify an expression repetitively which does not simplify.
     """
 
-    def count_ops_alg(expr):
+    def count_ops_alg(expr: Expr) -> tuple[int, bool]:
         """Optimized count algebraic operations with no recursion into
         non-algebraic args that ``core.function.count_ops`` does. Also returns
         whether rational functions may be present according to negative
@@ -2002,8 +2019,8 @@ def dotprodsimp(expr, withsimp=False):
             which ``cancel`` MIGHT optimize.
         """
 
-        ops     = 0
-        args    = [expr]
+        ops = 0
+        args: list[Basic] = [expr]
         ratfunc = False
 
         while args:
@@ -2012,11 +2029,11 @@ def dotprodsimp(expr, withsimp=False):
             if not isinstance(a, Basic):
                 continue
 
-            if a.is_Rational:
+            if isinstance(a, Rational):
                 if a is not S.One: # -1/3 = NEG + DIV
                     ops += bool (a.p < 0) + bool (a.q != 1)
 
-            elif a.is_Mul:
+            elif isinstance(a, Mul):
                 if a.could_extract_minus_sign():
                     ops += 1
                     if a.args[0] is S.NegativeOne:
@@ -2042,7 +2059,7 @@ def dotprodsimp(expr, withsimp=False):
                     ops += len(a.args) - 1
                     args.extend(a.args)
 
-            elif a.is_Add:
+            elif isinstance(a, Add):
                 laargs = len(a.args)
                 negs   = 0
 
@@ -2054,7 +2071,7 @@ def dotprodsimp(expr, withsimp=False):
 
                 ops += laargs - (negs != laargs) # -x - y = NEG + SUB
 
-            elif a.is_Pow:
+            elif isinstance(a, Pow):
                 ops += 1
                 args.append(a.base)
 
@@ -2063,7 +2080,7 @@ def dotprodsimp(expr, withsimp=False):
 
         return ops, ratfunc
 
-    def nonalg_subs_dummies(expr, dummies):
+    def nonalg_subs_dummies(expr: Expr, dummies: dict[Expr, Dummy]) -> Expr:
         """Substitute dummy variables for non-algebraic expressions to avoid
         evaluation of non-algebraic terms that ``polys.polytools.cancel`` does.
         """
@@ -2071,11 +2088,11 @@ def dotprodsimp(expr, withsimp=False):
         if not expr.args:
             return expr
 
-        if expr.is_Add or expr.is_Mul or expr.is_Pow:
+        if isinstance(expr, (Add, Mul, Pow)):
             args = None
 
             for i, a in enumerate(expr.args):
-                c = nonalg_subs_dummies(a, dummies)
+                c = nonalg_subs_dummies(a, dummies) # type: ignore
 
                 if c is a:
                     continue
@@ -2106,7 +2123,7 @@ def dotprodsimp(expr, withsimp=False):
 
         if exprops >= 6: # empirically tested cutoff for expensive simplification
             if ratfunc:
-                dummies = {}
+                dummies: dict[Expr, Dummy] = {}
                 expr2   = nonalg_subs_dummies(expr, dummies)
 
                 if expr2 is expr or count_ops_alg(expr2)[0] >= 6: # check again after substitution
@@ -2120,8 +2137,8 @@ def dotprodsimp(expr, withsimp=False):
         elif (exprops == 5 and expr.is_Add and expr.args [0].is_Mul and
                 expr.args [1].is_Mul and expr.args [0].args [-1].is_Pow and
                 expr.args [1].args [-1].is_Pow and
-                expr.args [0].args [-1].exp is S.NegativeOne and
-                expr.args [1].args [-1].exp is S.NegativeOne):
+              expr.args [0].args [-1].exp is S.NegativeOne and # type: ignore
+              expr.args [1].args [-1].exp is S.NegativeOne): # type: ignore
 
             expr2    = together (expr)
             expr2ops = count_ops_alg(expr2)[0]

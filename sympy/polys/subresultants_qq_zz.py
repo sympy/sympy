@@ -301,16 +301,12 @@ def sylvester(f, g, x, method = 1):
 
     # C:: m == 0 and n < 0 or m < 0 and n == 0
     # (i.e. one poly is constant and the other is 0)
-    if m == 0 and n < 0:
-        return Matrix([])
-    elif m < 0 and n == 0:
+    if (m == 0 and n < 0) or (m < 0 and n == 0):
         return Matrix([])
 
     # D:: m >= 1 and n < 0 or m < 0 and n >=1
     # (i.e. one poly is of degree >=1 and the other is 0)
-    if m >= 1 and n < 0:
-        return Matrix([0])
-    elif m < 0 and n >= 1:
+    if (m >= 1 and n < 0) or (m < 0 and n >= 1):
         return Matrix([0])
 
     fp = Poly(f, x).all_coeffs()
@@ -645,16 +641,12 @@ def bezout(p, q, x, method='bz'):
 
     # C:: m == 0 and n < 0 or m < 0 and n == 0
     # (i.e. one poly is constant and the other is 0)
-    if m == 0 and n < 0:
-        return Matrix([])
-    elif m < 0 and n == 0:
+    if (m == 0 and n < 0) or (m < 0 and n == 0):
         return Matrix([])
 
     # D:: m >= 1 and n < 0 or m < 0 and n >=1
     # (i.e. one poly is of degree >=1 and the other is 0)
-    if m >= 1 and n < 0:
-        return Matrix([0])
-    elif m < 0 and n >= 1:
+    if (m >= 1 and n < 0) or (m < 0 and n >= 1):
         return Matrix([0])
 
     y = var('y')

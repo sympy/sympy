@@ -164,7 +164,7 @@ def test_quaternion_functions():
         Rational(-7, 225), Rational(-1, 225), Rational(-1, 150), Rational(-2, 225))
     assert q1**(-2) == Quaternion(
         Rational(-7, 225), Rational(-1, 225), Rational(-1, 150), Rational(-2, 225))
-    assert q1.pow(-0.5) == NotImplemented
+    assert q1.pow(-0.5) == NotImplemented # type: ignore
     raises(TypeError, lambda: q1**(-0.5))
 
     assert q1.exp() == \
@@ -431,7 +431,7 @@ def test_to_euler_options():
                 else:
                     seq = ''.join(seq_tuple)
 
-                for elements in product([-1, 0, 1], repeat=4):
-                    q = Quaternion(*elements)
+                for e1, e2, e3, e4 in product([-1, 0, 1], repeat=4):
+                    q = Quaternion(e1, e2, e3, e4)
                     if not q.is_zero_quaternion():
                         test_one_case(q)
