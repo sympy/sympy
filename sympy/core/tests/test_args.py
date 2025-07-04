@@ -4367,7 +4367,7 @@ def test_sympy__physics__control__lti__TransferFunction():
 
 def test_sympy__physics__control__lti__DiscreteTransferFunction():
     from sympy.physics.control.lti import DiscreteTransferFunction
-    assert _test_args(DiscreteTransferFunction(2,3,x, 0.1))
+    assert _test_args(DiscreteTransferFunction(2, 3, x, 0.1))
 
 def _test_args_PIDController(obj):
     from sympy.physics.control.lti import PIDController
@@ -4457,7 +4457,7 @@ def test_sympy__physics__control__lti__StateSpace():
     assert _test_args(StateSpace(A, B, C, D))
 
 
-def test_sympy__physics__control__lti__DTStateSpace():
+def test_sympy__physics__control__lti__DiscreteStateSpace():
     #TODO
     pass
 
