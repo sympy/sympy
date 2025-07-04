@@ -33,7 +33,7 @@ from mpmath.libmp.libmpf import prec_to_dps
 
 __all__ = ['TransferFunction', 'DiscreteTransferFunction', 'PIDController', 'Series',
            'MIMOSeries', 'Parallel', 'MIMOParallel', 'Feedback', 'MIMOFeedback',
-           'TransferFunctionMatrix', 'StateSpace', 'DTStateSpace', 'gbt',
+           'TransferFunctionMatrix', 'StateSpace', 'DiscreteStateSpace', 'gbt',
            'bilinear', 'forward_diff', 'backward_diff', 'phase_margin',
            'gain_margin']
 
@@ -1613,9 +1613,6 @@ class TransferFunction(TransferFunctionBase):
     def __new__(cls, num, den, var):
         return super(TransferFunction, cls).__new__(cls, num, den, var)
 
-    def __init__(self, num, den, var):
-        ...
-
     @classmethod
     def from_rational_expression(cls, expr, var=None):
         r"""
@@ -1704,7 +1701,7 @@ class TransferFunction(TransferFunctionBase):
         A, B, C, D = self._StateSpace_matrices_equivalent()
         return StateSpace(A, B, C, D)
 
-    def _eval_rewrite_as_DTStateSpace(self, *args):
+    def _eval_rewrite_as_DiscreteStateSpace(self, *args):
         raise TypeError("""
             The continuous transfer function model cannot be rewritten as a
             discrete-time state space model.
@@ -1867,12 +1864,10 @@ class DiscreteTransferFunction(TransferFunctionBase):
             return TransferFunction(num, den, var)
 
         sampling_time = sympify(sampling_time)
-        return super(DiscreteTransferFunction, cls).__new__(cls, num, den, var,
+        obj = super(DiscreteTransferFunction, cls).__new__(cls, num, den, var,
                                                       sampling_time)
-
-    def __init__(self, num, den, var, sampling_time=1):
-        super().__init__()
-        self._sampling_time = sympify(sampling_time)
+        obj._sampling_time = sampling_time
+        return obj
 
     @classmethod
     def from_rational_expression(cls, expr, var=None, sampling_time=1):
@@ -2132,7 +2127,7 @@ class DiscreteTransferFunction(TransferFunctionBase):
             function model are not implemented yet.
             """)
 
-    def _eval_rewrite_as_DTStateSpace(self, *args):
+    def _eval_rewrite_as_DiscreteStateSpace(self, *args):
         """
         Returns the equivalent space model of the transfer function model.
         The state space model will be returned in the controllable canonical
@@ -2146,10 +2141,10 @@ class DiscreteTransferFunction(TransferFunctionBase):
         ========
 
         >>> from sympy.abc import z
-        >>> from sympy.physics.control import DiscreteTransferFunction, DTStateSpace
+        >>> from sympy.physics.control import DiscreteTransferFunction, DiscreteStateSpace
         >>> dtf = DiscreteTransferFunction(z**2 + 1, z**3 + z*2 + 10, z, 0.1)
-        >>> dtf.rewrite(DTStateSpace)
-        DTStateSpace(Matrix([
+        >>> dtf.rewrite(DiscreteStateSpace)
+        DiscreteStateSpace(Matrix([
         [  0,  1, 0],
         [  0,  0, 1],
         [-10, -2, 0]]), Matrix([
@@ -2159,7 +2154,7 @@ class DiscreteTransferFunction(TransferFunctionBase):
 
         """
         A, B, C, D = self._StateSpace_matrices_equivalent()
-        return DTStateSpace(A, B, C, D, self.sampling_time)
+        return DiscreteStateSpace(A, B, C, D, self.sampling_time)
 
     def _eval_rewrite_as_StateSpace(self, *args):
         raise TypeError("""
@@ -5214,7 +5209,7 @@ class TransferFunctionMatrix(MIMOLinearTimeInvariant):
 
 def new_state_space(A=None, B=None, C=None, D=None, sampling_time=0):
     #TODO: finish
-    return DTStateSpace(A, B, C, D, sampling_time)
+    return DiscreteStateSpace(A, B, C, D, sampling_time)
 
 class StateSpaceBase(LinearTimeInvariant):
     r"""
@@ -6069,26 +6064,23 @@ class StateSpace(StateSpaceBase):
     def __new__(cls, A=None, B=None, C=None, D=None):
         return super(StateSpace, cls).__new__(cls, A, B, C, D)
 
-    def __init__(super, A=None, B=None, C=None, D=None):
-        ...
-
     @property
     def sampling_time(self):
         return 0
 
     _is_continuous = True
 
-class DTStateSpace(StateSpaceBase):
+class DiscreteStateSpace(StateSpaceBase):
     #TODO: add it to latex and pretty printer
     def __new__(cls, A=None, B=None, C=None, D=None, sampling_time = 1):
         if sampling_time == 0:
             return StateSpace(A, B, C, D)
-        return super(DTStateSpace, cls).__new__(cls, A, B,
-                                                C, D, sympify(sampling_time))
 
-    def __init__(self, A=None, B=None, C=None, D=None, sampling_time = 1):
         sampling_time = sympify(sampling_time)
-        self._sampling_time = sampling_time
+        obj = super(DiscreteStateSpace, cls).__new__(cls, A, B, C, D, sampling_time)
+        obj._sampling_time = sampling_time
+
+        return obj
 
     @property
     def sampling_time(self):

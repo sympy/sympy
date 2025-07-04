@@ -382,11 +382,11 @@ Solution
         >>> W = Feedback(W_partial, G3)
         >>> W = W.doit().to_standard_form(cancel_poles_zeros = True)
         >>> pprint(W, use_unicode=False)
-	       2
-	    2*z
-	------------, sampling_time: 1
-	   2
-	2*z  + z - 1
+               2
+            2*z
+        ------------, sampling_time: 1
+           2
+        2*z  + z - 1
 
         Subpart 2
 
@@ -415,9 +415,9 @@ Solution
         >>> Y = (W * DiscreteTransferFunction(z + 1, z, z))
         >>> Y = Y.doit().to_standard_form(cancel_poles_zeros = True)
         >>> pprint(Y, use_unicode = False)
-	  2*z
-	-------, sampling_time: 1
-	2*z - 1
+          2*z
+        -------, sampling_time: 1
+        2*z - 1
         >>> Y.is_stable()
         True
 
