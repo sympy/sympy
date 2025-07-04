@@ -30,7 +30,7 @@ from sympy.polys.densetools import (
     dmp_lift,
     dup_sign_variations,
     dup_revert, dmp_revert,
-    dup_reversion
+    dup_series_reversion
 )
 from sympy.polys.polyclasses import ANP
 
@@ -54,6 +54,12 @@ from sympy.abc import x
 from sympy.testing.pytest import raises
 
 f_0, f_1, f_2, f_3, f_4, f_5, f_6 = [ f.to_dense() for f in f_polys() ]
+
+
+def _dup_random(lo, hi, deg, domain):
+    """Generate a random dense polynomial of given degree and domain."""
+    return dup_normal([domain(randint(lo, hi)) for _ in range(deg)], domain)
+
 
 def test_dup_integrate():
     assert dup_integrate([], 1, QQ) == []
@@ -286,16 +292,18 @@ def test_dmp_revert():
     raises(MultivariatePolynomialError, lambda: dmp_revert([[1]], 2, 1, QQ))
 
 
-def test_dup_reversion(trials=50):
+def test_dup_series_reversion(trials=50):
     for _ in range(trials):
         deg = randint(2, 10)
-        f = [QQ(randint(-10, 10), randint(1, 10)) for _ in range(deg)]
+        f = _dup_random(-10, 10, deg, QQ)
+        if len(f) < 2:
+            continue
 
         f[-1] = QQ(0)
         if f[-2] == 0:
             f[-2] = QQ(1, 1)
 
-        g = dup_reversion(f, deg, QQ)
+        g = dup_series_reversion(f, deg, QQ)
         composed = dup_slice(dup_compose(f, g, QQ), 0, deg, QQ)
 
         expected = [QQ(1), QQ(0)]
@@ -304,10 +312,10 @@ def test_dup_reversion(trials=50):
     f = [QQ(4), QQ(3), QQ(4), QQ(1), QQ(0)]
     g = [QQ(49313847), -QQ(4043832), QQ(340156), -QQ(29596), QQ(2699), -QQ(264),
         QQ(29), -QQ(4), QQ(1), QQ(0)]
-    assert dup_reversion(f, 10, QQ) == g
+    assert dup_series_reversion(f, 10, QQ) == g
 
-    raises(ValueError, lambda: dup_reversion([QQ(1), QQ(1)], 5, QQ))
-    raises(ValueError, lambda: dup_reversion([QQ(1), QQ(0), QQ(0)], 5, QQ))
+    raises(ValueError, lambda: dup_series_reversion([QQ(1), QQ(1)], 5, QQ))
+    raises(ValueError, lambda: dup_series_reversion([QQ(1), QQ(0), QQ(0)], 5, QQ))
 
 
 def test_dup_trunc():

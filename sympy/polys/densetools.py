@@ -1434,7 +1434,7 @@ def dmp_revert(f, g, u, K):
         raise MultivariatePolynomialError(f, g)
 
 
-def dup_reversion(f, n, K):
+def dup_series_reversion(f, n, K):
     r"""
     Computes the compositional inverse of f using Newton iteration.
     The result is computed modulo x**n.
@@ -1469,9 +1469,9 @@ def dup_reversion(f, n, K):
     Examples
     ========
     >>> from sympy.polys import QQ
-    >>> from sympy.polys.densetools import dup_reversion
+    >>> from sympy.polys.densetools import dup_series_reversion
     >>> f = [QQ(1, 2), QQ(1, 3), QQ(1, 4), QQ(1, 5), QQ(1, 6), QQ(1, 7), 0]
-    >>> dup_reversion(f, 7, QQ)
+    >>> dup_series_reversion(f, 7, QQ)
     [-7812952441/32400, 467419477/16200, -789929/216, 40817/90, -343/6, 7, 0]
     """
     if len(f) < 2 or f[-1] != K.zero:
