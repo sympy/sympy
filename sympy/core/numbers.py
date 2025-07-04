@@ -24,7 +24,7 @@ from sympy.external.gmpy import SYMPY_INTS, gmpy, flint
 from sympy.multipledispatch import dispatch
 import mpmath
 import mpmath.libmp as mlib
-from mpmath.libmp import bitcount, round_nearest as rnd
+from mpmath.libmp import round_nearest as rnd
 from mpmath.libmp.backend import MPZ
 from mpmath.libmp import mpf_pow, mpf_pi, mpf_e, phi_fixed
 from mpmath.ctx_mp_python import mpnumeric
@@ -910,7 +910,7 @@ class Float(Number):
                     # don't compute number or else it may
                     # over/underflow
                     return Float._new(
-                        (num[0], num[1], num[2], bitcount(num[1])),
+                        (num[0], num[1], num[2], num[1].bit_length()),
                         precision)
         elif isinstance(num, (Number, NumberSymbol)):
             _mpf_ = num._as_mpf_val(precision)
