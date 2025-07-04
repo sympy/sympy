@@ -1471,7 +1471,7 @@ def dup_reversion(f, n, K):
     >>> from sympy.polys import QQ
     >>> from sympy.polys.densetools import dup_reversion
     >>> f = [QQ(1, 2), QQ(1, 3), QQ(1, 4), QQ(1, 5), QQ(1, 6), QQ(1, 7), 0]
-    >>> dup_reversion(f, 8, QQ)
+    >>> dup_reversion(f, 7, QQ)
     [-7812952441/32400, 467419477/16200, -789929/216, 40817/90, -343/6, 7, 0]
     """
     if len(f) < 2 or f[-1] != K.zero:
@@ -1484,16 +1484,16 @@ def dup_reversion(f, n, K):
 
     for k in range(2, n + 1):
         fg = dup_compose(f, g, K)
-        fg = dup_slice(fg, 0, k - 1, K)
+        fg = dup_slice(fg, 0, k, K)
 
         x_poly = [K.zero] * k
         x_poly[-2] = K.one
 
         delta = dup_sub(fg, x_poly, K)
-        delta = dup_slice(delta, 0, k - 1, K)
+        delta = dup_slice(delta, 0, k, K)
         delta_div = [K.quo(c, a) for c in delta]
 
         g_new = dup_sub(g, delta_div, K)
-        g = dup_slice(g_new, 0, k - 1, K)
+        g = dup_slice(g_new, 0, k, K)
 
     return dup_slice(g, 0, n, K)

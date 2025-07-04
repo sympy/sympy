@@ -1,5 +1,6 @@
 """Tests for dense recursive polynomials' tools. """
 
+from random import randint
 from sympy.polys.densebasic import (
     dup_normal, dmp_normal,
     dup_from_raw_dict,
@@ -7,6 +8,8 @@ from sympy.polys.densebasic import (
 )
 
 from sympy.polys.densearith import dmp_mul_ground
+
+from sympy.polys.densebasic import dup_slice
 
 from sympy.polys.densetools import (
     dup_clear_denoms, dmp_clear_denoms,
@@ -283,13 +286,24 @@ def test_dmp_revert():
     raises(MultivariatePolynomialError, lambda: dmp_revert([[1]], 2, 1, QQ))
 
 
-def test_dup_reversion():
-    from sympy import QQ
+def test_dup_reversion(trials=50):
+    for _ in range(trials):
+        deg = randint(2, 10)
+        f = [QQ(randint(-10, 10), randint(1, 10)) for _ in range(deg)]
+
+        f[-1] = QQ(0)
+        if f[-2] == 0:
+            f[-2] = QQ(1, 1)
+
+        g = dup_reversion(f, deg, QQ)
+        composed = dup_slice(dup_compose(f, g, QQ), 0, deg, QQ)
+
+        expected = [QQ(1), QQ(0)]
+        assert composed == expected
 
     f = [QQ(4), QQ(3), QQ(4), QQ(1), QQ(0)]
-    g = [-QQ(4043832), QQ(340156), -QQ(29596), QQ(2699), -QQ(264), QQ(29), -QQ(4),
-        QQ(1), QQ(0)]
-
+    g = [QQ(49313847), -QQ(4043832), QQ(340156), -QQ(29596), QQ(2699), -QQ(264),
+        QQ(29), -QQ(4), QQ(1), QQ(0)]
     assert dup_reversion(f, 10, QQ) == g
 
     raises(ValueError, lambda: dup_reversion([QQ(1), QQ(1)], 5, QQ))
