@@ -781,7 +781,19 @@ def test_DiscreteTransferFunction_functions():
            DiscreteTransferFunction(x**2, a0*x**10 + x + x**2, x).poles())
 
     # Stability of a transfer function.
-    # TODO
+    stable_tf = DiscreteTransferFunction(
+        z,
+        (z - Rational(1,2))*(z + Rational(9,10)), z, 0.1)
+    marginally_stable_tf = DiscreteTransferFunction(
+        z, (z - Rational(1,4))*(z + 1), z)
+    unstable_tf = DiscreteTransferFunction(
+        z, (z - Rational(1,4))*(z + 2), z, T)
+
+    assert stable_tf.is_stable() == True
+    assert marginally_stable_tf.is_stable() == False
+    assert unstable_tf.is_stable() == False
+    assert DiscreteTransferFunction(
+        z, (z+Rational(1,8))*(z+k), z).is_stable() == None
 
     # Zeros of a transfer function.
     assert G1.zeros() == [1, 1]

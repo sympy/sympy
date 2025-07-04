@@ -2111,7 +2111,6 @@ class DiscreteTransferFunction(TransferFunctionBase):
         return limit(m, self.var, 1)
 
     def is_stable(self, cancel_poles_zeros=False):
-        # TODO: write tests
         r"""
         See :func:`TransferFunctionBase.is_stable`.
         """
