@@ -842,7 +842,7 @@ class DefinedFunction(Function):
     """Base class for defined functions like ``sin``, ``cos``, ..."""
 
     @cacheit
-    def __new__(cls, *args, **options) -> Expr:  # type: ignore
+    def __new__(cls, *args, **options) -> Expr | Equation:  # type: ignore
         return cls._new_(*args, **options)
 
 
