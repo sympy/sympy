@@ -134,6 +134,7 @@ class Equation(Basic, EvalfMixin):
 
     Substitution (#'s and units. NOTE: algebra-with-sympy extension package
     has a convenience shorthand for defining units)
+    >>> L, atm, mol, K = var('L atm mol K', positive=True, real=True) # units
     >>> eq2.subs({R:0.08206*L*atm/mol/K,T:273*K,n:1.00*mol,V:24.0*L})
     p = 0.9334325*atm
     >>> eq2.subs({R:0.08206*L*atm/mol/K,T:273*K,n:1.00*mol,V:24.0*L}).evalf(4)
