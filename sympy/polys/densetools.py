@@ -6,16 +6,17 @@ from sympy.polys.densearith import (
     dup_lshift,
     dup_add, dmp_add,
     dup_sub, dmp_sub,
-    dup_mul, dmp_mul,
+    dup_mul, dmp_mul, dup_series_mul,
     dup_sqr,
     dup_div,
+    dup_series_pow,
     dup_rem, dmp_rem,
     dup_mul_ground, dmp_mul_ground,
     dup_quo_ground, dmp_quo_ground,
     dup_exquo_ground, dmp_exquo_ground,
 )
 from sympy.polys.densebasic import (
-    dup_strip, dmp_strip,
+    dup_strip, dmp_strip, dup_truncate,
     dup_slice,
     dup_convert, dmp_convert,
     dup_degree, dmp_degree,
@@ -1025,6 +1026,59 @@ def dmp_compose(f, g, u, K):
         h = dmp_add_term(h, c, 0, u, K)
 
     return h
+
+
+def _dup_series_compose(f, g, n, K):
+    """
+    Helper function for dup_series_compose using divide and conquer.
+    """
+    if len(f) == 1:
+        return [f[0]]
+
+    m = len(f) // 2
+    f_high = f[:-m]
+    f_low = f[-m:]
+
+    comp0 = _dup_series_compose(f_low, g, n, K)
+    comp1 = _dup_series_compose(f_high, g, n, K)
+
+    g_rev = list(reversed(g))
+    comp1_rev = list(reversed(comp1))
+
+    g_power = dup_series_pow(g_rev, m, n, K)
+    high_term_rev = dup_series_mul(comp1_rev, g_power, n, K)
+
+    high_term = list(reversed(high_term_rev))
+
+    result = dup_add(high_term, comp0, K)
+    return dup_truncate(result, n, K)
+
+
+def dup_series_compose(f, g, n, K):
+    """
+    Compute f(g) mod x^n using divide and conquer composition.
+
+    This function efficiently computes the first n terms of the composition f(g(x)).
+
+    Examples
+    ========
+    >>> from sympy import ZZ
+    >>> from sympy.polys.densetools import dup_series_compose
+    >>> f = [1, 1, 1]
+    >>> g = [1, 1]
+    >>> dup_series_compose(f, g, 3, ZZ)
+    [1, 3, 3]
+    """
+    f = dup_truncate(f, n, K)
+    g = dup_truncate(g, n, K)
+
+    if len(g) <= 1:
+        return dup_strip([dup_eval(f, dup_LC(g, K), K)])
+
+    if not f:
+        return []
+
+    return _dup_series_compose(f, g, n, K)
 
 
 def _dup_right_decompose(f, s, K):

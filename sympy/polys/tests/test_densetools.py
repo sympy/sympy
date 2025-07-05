@@ -9,7 +9,7 @@ from sympy.polys.densebasic import (
 
 from sympy.polys.densearith import dmp_mul_ground
 
-from sympy.polys.densebasic import dup_slice
+from sympy.polys.densebasic import dup_slice, dup_truncate
 
 from sympy.polys.densetools import (
     dup_clear_denoms, dmp_clear_denoms,
@@ -25,7 +25,7 @@ from sympy.polys.densetools import (
     dup_real_imag,
     dup_mirror, dup_scale, dup_shift, dmp_shift,
     dup_transform,
-    dup_compose, dmp_compose,
+    dup_compose, dmp_compose, dup_series_compose,
     dup_decompose,
     dmp_lift,
     dup_sign_variations,
@@ -607,6 +607,19 @@ def test_dmp_compose():
 
     assert dmp_compose(
         [[1], [2], [1]], [[1], [2], [1]], 1, ZZ) == [[1], [4], [8], [8], [4]]
+
+
+def test_dup_series_compose(trials=50):
+
+    for _ in range(trials):
+        deg = randint(2, 10)
+        f = _dup_random(-10, 10, deg, QQ)
+        g = _dup_random(11, 20, deg, QQ)
+
+        series_composed = dup_series_compose(f, g, deg, QQ)
+        expected = dup_compose(f, g, QQ)
+
+        assert series_composed == dup_truncate(expected, deg, QQ)
 
 
 def test_dup_decompose():

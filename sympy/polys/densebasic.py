@@ -1841,6 +1841,23 @@ def dmp_slice(f, m, n, u, K):
     return dmp_slice_in(f, m, n, 0, u, K)
 
 
+def dup_truncate(f, n, K):
+    """
+    Truncate ``f`` to the first ``n`` terms in ``K[x]``.
+
+    Examples
+    ========
+
+    >>> from sympy.polys.domains import ZZ
+    >>> from sympy.polys.densebasic import dup_truncate
+
+    >>> dup_truncate([1, 2, 3, 4, 5], 3, ZZ)
+    [3, 4, 5]
+
+    """
+    return dup_slice(f, 0, n, K)
+
+
 def dmp_slice_in(f, m, n, j, u, K):
     """Take a continuous subsequence of terms of ``f`` in ``x_j`` in ``K[X]``. """
     if j < 0 or j > u:

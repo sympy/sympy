@@ -2,7 +2,7 @@
 
 
 from sympy.polys.densebasic import (
-    dup_slice,
+    dup_slice, dup_truncate,
     dup_LC, dmp_LC,
     dup_degree, dmp_degree,
     dup_strip, dmp_strip,
@@ -832,6 +832,37 @@ def dmp_mul(f, g, u, K):
     return dmp_strip(h, u)
 
 
+def dup_series_mul(f, g, prec, K):
+    """
+    Multiply dense polynomials in ``K[[x]]`` up to ``x**prec``.
+
+    Examples
+    ========
+    >>> from sympy import ZZ
+    >>> from sympy.polys.densearith import dup_series_mul
+    >>> f = [1, 0, 1]
+    >>> g = [2, 1]
+    >>> dup_series_mul(f, g, 4, ZZ)
+    [2, 1, 2, 1]
+    """
+    if not f or not g:
+        return []
+
+    df = dup_degree(f)
+    dg = dup_degree(g)
+    max_deg = min(df + dg, prec - 1)
+
+    h = [K.zero] * (max_deg + 1)
+
+    for i in range(0, max_deg + 1):
+        coeff = K.zero
+        for j in range(max(0, i - dg), min(i, df) + 1):
+            coeff += f[j] * g[i - j]
+        h[i] = coeff
+
+    return dup_truncate(h, prec, K)
+
+
 def dup_sqr(f, K):
     """
     Square dense polynomials in ``K[x]``.
@@ -995,6 +1026,46 @@ def dmp_pow(f, n, u, K):
         f = dmp_sqr(f, u, K)
 
     return g
+
+
+def _dup_recurse_pow(f, exp, prec, K):
+    """
+    Helper function for dup_series_pow.
+    """
+    if exp == 1:
+        return dup_truncate(f, prec, K)
+
+    q, r = divmod(exp, 2)
+    half = _dup_recurse_pow(f, q, prec, K)
+    square = dup_series_mul(half, half, prec, K)
+
+    if r == 0:
+        return square
+    return dup_series_mul(square, f, prec, K)
+
+
+def dup_series_pow(f, n, prec, K):
+    """
+    Raise ``f`` to the ``n``-th power in ``K[[x]]`` up to ``x**prec``.
+
+    Examples
+    ========
+    >>> from sympy import ZZ
+    >>> from sympy.polys.densearith import dup_series_pow
+    >>> f = [1, 2, 3]
+    >>> dup_series_pow(f, 2, 5, ZZ)
+    [1, 4, 10, 12, 9]
+    """
+    if not f:
+        return []
+    if n < 0:
+        raise ValueError("Negative exponent not supported")
+    if n == 0:
+        return [K.one]
+    if n == 1 or f == [K.one]:
+        return dup_truncate(f, prec, K)
+
+    return _dup_recurse_pow(f, n, prec, K)
 
 
 def dup_pdiv(f, g, K):

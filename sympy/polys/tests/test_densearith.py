@@ -20,9 +20,9 @@ from sympy.polys.densearith import (
     dup_neg, dmp_neg,
     dup_add, dmp_add,
     dup_sub, dmp_sub,
-    dup_mul, dmp_mul,
+    dup_mul, dmp_mul, dup_series_mul,
     dup_sqr, dmp_sqr,
-    dup_pow, dmp_pow,
+    dup_pow, dmp_pow, dup_series_pow,
     dup_add_mul, dmp_add_mul,
     dup_sub_mul, dmp_sub_mul,
     dup_pdiv, dup_prem, dup_pquo, dup_pexquo,
@@ -679,6 +679,22 @@ def test_dmp_mul():
         [[K(2)], [K(1)]], [[K(3)], [K(4)]], 1, K) == [[K(5)], [K(4)]]
 
 
+def test_dup_series_mul():
+    assert dup_series_mul([], [], 0, ZZ) == []
+    assert dup_series_mul([ZZ(1), ZZ(0), ZZ(1)], [ZZ(2), ZZ(1)], 5, ZZ) == [ZZ(2),
+        ZZ(1), ZZ(2), ZZ(1)]
+    assert dup_series_mul([ZZ(1), ZZ(2), ZZ(3)], [ZZ(4), ZZ(5)], 3, ZZ) == [ZZ(4),
+        ZZ(13), ZZ(22)]
+    assert dup_series_mul([QQ(2, 3), QQ(1, 2)], [QQ(1, 4), QQ(3, 5)], 4, QQ) == [
+        QQ(1, 6), QQ(21, 40), QQ(3, 10)]
+
+    K = FF(7)
+    assert dup_series_mul([K(2), K(3)], [K(5), K(1)], 4, K) == [K(3), K(3), K(3)]
+
+    assert dup_series_mul([ZZ(1), ZZ(2), ZZ(3)], [ZZ(1), ZZ(0)], 2, ZZ) == [ZZ(1), ZZ(2)]
+    assert dup_series_mul([ZZ(0), ZZ(0), ZZ(1)], [ZZ(1)], 5, ZZ) == [ZZ(1)]
+
+
 def test_dup_sqr():
     assert dup_sqr([], ZZ) == []
     assert dup_sqr([ZZ(2)], ZZ) == [ZZ(4)]
@@ -762,6 +778,25 @@ def test_dmp_pow():
     f = dup_normal([2, 0, 0, 1, 7], ZZ)
 
     assert dmp_pow(f, 2, 0, ZZ) == dup_pow(f, 2, ZZ)
+
+
+def test_dup_series_pow():
+    assert dup_series_pow([ZZ(1), ZZ(1)], 3, 4, ZZ) == [ZZ(1), ZZ(3), ZZ(3), ZZ(1)]
+    assert dup_series_pow([ZZ(2), ZZ(0), ZZ(1)], 2, 5, ZZ) == [ZZ(4), ZZ(0), ZZ(4),
+        ZZ(0), ZZ(1)]
+    assert dup_series_pow([ZZ(1), ZZ(1)], 5, 6, ZZ) == [ZZ(1), ZZ(5), ZZ(10), ZZ(10),
+        ZZ(5), ZZ(1)]
+    assert dup_series_pow([ZZ(1), ZZ(0), ZZ(1)], 3, 7, ZZ) == [ZZ(1), ZZ(0), ZZ(3),
+        ZZ(0), ZZ(3), ZZ(0), ZZ(1)]
+
+    assert dup_series_pow([QQ(1, 2), QQ(1, 2)], 2, 3, QQ) == [
+        QQ(1, 4), QQ(1, 2), QQ(1, 4)]
+    assert dup_series_pow([QQ(2), QQ(0), QQ(1)], 2, 5, QQ) == [QQ(4), QQ(0), QQ(4),
+        QQ(0), QQ(1)]
+
+    K = FF(7)
+    assert dup_series_pow([K(1), K(1)], 3, 4, K) == [K(1), K(3), K(3), K(1)]
+    assert dup_series_pow([K(2), K(1)], 4, 5, K) == [K(2), K(4), K(3), K(1), K(1)]
 
 
 def test_dup_pdiv():
