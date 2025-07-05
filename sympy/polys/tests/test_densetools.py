@@ -1,5 +1,6 @@
 """Tests for dense recursive polynomials' tools. """
 
+from random import randint
 from sympy.polys.densebasic import (
     dup_normal, dmp_normal,
     dup_from_raw_dict,
@@ -7,6 +8,8 @@ from sympy.polys.densebasic import (
 )
 
 from sympy.polys.densearith import dmp_mul_ground
+
+from sympy.polys.densebasic import dup_slice, dup_truncate
 
 from sympy.polys.densetools import (
     dup_clear_denoms, dmp_clear_denoms,
@@ -22,11 +25,12 @@ from sympy.polys.densetools import (
     dup_real_imag,
     dup_mirror, dup_scale, dup_shift, dmp_shift,
     dup_transform,
-    dup_compose, dmp_compose,
+    dup_compose, dmp_compose, dup_series_compose,
     dup_decompose,
     dmp_lift,
     dup_sign_variations,
     dup_revert, dmp_revert,
+    dup_series_reversion
 )
 from sympy.polys.polyclasses import ANP
 
@@ -50,6 +54,12 @@ from sympy.abc import x
 from sympy.testing.pytest import raises
 
 f_0, f_1, f_2, f_3, f_4, f_5, f_6 = [ f.to_dense() for f in f_polys() ]
+
+
+def _dup_random(lo, hi, deg, domain):
+    """Generate a random dense polynomial of given degree and domain."""
+    return dup_normal([domain(randint(lo, hi)) for _ in range(deg)], domain)
+
 
 def test_dup_integrate():
     assert dup_integrate([], 1, QQ) == []
@@ -280,6 +290,32 @@ def test_dmp_revert():
     assert dmp_revert(f, 8, 0, QQ) == g
 
     raises(MultivariatePolynomialError, lambda: dmp_revert([[1]], 2, 1, QQ))
+
+
+def test_dup_series_reversion(trials=50):
+    for _ in range(trials):
+        deg = randint(2, 10)
+        f = _dup_random(-10, 10, deg, QQ)
+        if len(f) < 2:
+            continue
+
+        f[-1] = QQ(0)
+        if f[-2] == 0:
+            f[-2] = QQ(1, 1)
+
+        g = dup_series_reversion(f, deg, QQ)
+        composed = dup_slice(dup_compose(f, g, QQ), 0, deg, QQ)
+
+        expected = [QQ(1), QQ(0)]
+        assert composed == expected
+
+    f = [QQ(4), QQ(3), QQ(4), QQ(1), QQ(0)]
+    g = [QQ(49313847), -QQ(4043832), QQ(340156), -QQ(29596), QQ(2699), -QQ(264),
+        QQ(29), -QQ(4), QQ(1), QQ(0)]
+    assert dup_series_reversion(f, 10, QQ) == g
+
+    raises(ValueError, lambda: dup_series_reversion([QQ(1), QQ(1)], 5, QQ))
+    raises(ValueError, lambda: dup_series_reversion([QQ(1), QQ(0), QQ(0)], 5, QQ))
 
 
 def test_dup_trunc():
@@ -571,6 +607,19 @@ def test_dmp_compose():
 
     assert dmp_compose(
         [[1], [2], [1]], [[1], [2], [1]], 1, ZZ) == [[1], [4], [8], [8], [4]]
+
+
+def test_dup_series_compose(trials=50):
+
+    for _ in range(trials):
+        deg = randint(2, 10)
+        f = _dup_random(-10, 10, deg, QQ)
+        g = _dup_random(11, 20, deg, QQ)
+
+        series_composed = dup_series_compose(f, g, deg, QQ)
+        expected = dup_compose(f, g, QQ)
+
+        assert series_composed == dup_truncate(expected, deg, QQ)
 
 
 def test_dup_decompose():

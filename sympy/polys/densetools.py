@@ -6,16 +6,18 @@ from sympy.polys.densearith import (
     dup_lshift,
     dup_add, dmp_add,
     dup_sub, dmp_sub,
-    dup_mul, dmp_mul,
+    dup_mul, dmp_mul, dup_series_mul,
     dup_sqr,
     dup_div,
+    dup_series_pow,
     dup_rem, dmp_rem,
     dup_mul_ground, dmp_mul_ground,
     dup_quo_ground, dmp_quo_ground,
     dup_exquo_ground, dmp_exquo_ground,
 )
 from sympy.polys.densebasic import (
-    dup_strip, dmp_strip,
+    dup_strip, dmp_strip, dup_truncate,
+    dup_slice,
     dup_convert, dmp_convert,
     dup_degree, dmp_degree,
     dmp_to_dict,
@@ -1031,6 +1033,59 @@ def dmp_compose(f, g, u, K):
     return h
 
 
+def _dup_series_compose(f, g, n, K):
+    """
+    Helper function for dup_series_compose using divide and conquer.
+    """
+    if len(f) == 1:
+        return [f[0]]
+
+    m = len(f) // 2
+    f_high = f[:-m]
+    f_low = f[-m:]
+
+    comp0 = _dup_series_compose(f_low, g, n, K)
+    comp1 = _dup_series_compose(f_high, g, n, K)
+
+    g_rev = list(reversed(g))
+    comp1_rev = list(reversed(comp1))
+
+    g_power = dup_series_pow(g_rev, m, n, K)
+    high_term_rev = dup_series_mul(comp1_rev, g_power, n, K)
+
+    high_term = list(reversed(high_term_rev))
+
+    result = dup_add(high_term, comp0, K)
+    return dup_truncate(result, n, K)
+
+
+def dup_series_compose(f, g, n, K):
+    """
+    Compute f(g) mod x^n using divide and conquer composition.
+
+    This function efficiently computes the first n terms of the composition f(g(x)).
+
+    Examples
+    ========
+    >>> from sympy import ZZ
+    >>> from sympy.polys.densetools import dup_series_compose
+    >>> f = [1, 1, 1]
+    >>> g = [1, 1]
+    >>> dup_series_compose(f, g, 3, ZZ)
+    [1, 3, 3]
+    """
+    f = dup_truncate(f, n, K)
+    g = dup_truncate(g, n, K)
+
+    if len(g) <= 1:
+        return dup_strip([dup_eval(f, dup_LC(g, K), K)])
+
+    if not f:
+        return []
+
+    return _dup_series_compose(f, g, n, K)
+
+
 def _dup_right_decompose(f, s, K):
     """Helper function for :func:`_dup_decompose`."""
     n = len(f) - 1
@@ -1436,3 +1491,68 @@ def dmp_revert(f, g, u, K):
         return dup_revert(f, g, K)
     else:
         raise MultivariatePolynomialError(f, g)
+
+
+def dup_series_reversion(f, n, K):
+    r"""
+    Computes the compositional inverse of f using Newton iteration.
+    The result is computed modulo x**n.
+
+    Algorithm
+    =========
+
+    Given $f(x) = a_1 x + a_2 x^2 + \dots$ with $a_1$ invertible.
+
+    The goal is to find $g(x)$ such that:
+    $
+    f(g(x)) = x \mod x^n
+    $
+
+    The algorithm uses iterative refinement where $g_k$ is the approximation modulo $x^k$.
+
+    Initial approximation:
+    $
+    g_1(x) = x/a_1
+    $
+
+    Iterative step for $k = 2, 3, \dots, n$:
+    $
+    \delta = f(g_{k-1}(x)) - x \mod x^k
+    $
+    $
+    g_k(x) = g_{k-1}(x) - \delta/a_1 \mod x^k
+    $
+
+    This process incrementally builds the correct coefficients of the compositional inverse.
+
+    Examples
+    ========
+    >>> from sympy.polys import QQ
+    >>> from sympy.polys.densetools import dup_series_reversion
+    >>> f = [QQ(1, 2), QQ(1, 3), QQ(1, 4), QQ(1, 5), QQ(1, 6), QQ(1, 7), 0]
+    >>> dup_series_reversion(f, 7, QQ)
+    [-7812952441/32400, 467419477/16200, -789929/216, 40817/90, -343/6, 7, 0]
+    """
+    if len(f) < 2 or f[-1] != K.zero:
+        raise ValueError("f must have zero constant term")
+    if f[-2] == K.zero:
+        raise ValueError("f must have nonzero linear term")
+
+    a = f[-2]
+    g = [K.revert(a), K.zero]
+
+    for k in range(2, n + 1):
+        fg = dup_compose(f, g, K)
+        fg = dup_slice(fg, 0, k, K)
+
+        x_poly = [K.zero] * k
+        x_poly[-2] = K.one
+
+        delta = dup_sub(fg, x_poly, K)
+        delta = dup_slice(delta, 0, k, K)
+        delta_div = [K.quo(c, a) for c in delta]
+
+        g_new = dup_sub(g, delta_div, K)
+        g = dup_slice(g_new, 0, k, K)
+
+    return dup_slice(g, 0, n, K)
