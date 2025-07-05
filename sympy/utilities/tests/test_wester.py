@@ -1031,7 +1031,9 @@ def test_M23():
     x = symbols('x', complex=True)
     # TODO: Replace solve with solveset, as of now test fails for solveset
     assert solve(x - 1/sqrt(1 + x**2)) == [
-        -I*sqrt(S.Half + sqrt(5)/2), sqrt(Rational(-1, 2) + sqrt(5)/2)]
+        sqrt(2)*sqrt(-1 + sqrt(5))/2,
+        -sqrt(2)*I*sqrt(1 + sqrt(5))/2,
+    ]
 
 
 def test_M24():
@@ -2508,6 +2510,7 @@ def test_W9():
 
 
 @XFAIL
+@tooslow
 def test_W10():
     # integrate(1/[1 + x + x^2 + ... + x^(2 n)], x = -infinity..infinity) =
     #        2 pi/(2 n + 1) [1 + cos(pi/[2 n + 1])] csc(2 pi/[2 n + 1])
