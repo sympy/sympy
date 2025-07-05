@@ -43,6 +43,7 @@ from .containers import Tuple, Dict
 from .decorators import _sympifyit
 from .evalf import pure_complex
 from .expr import Expr, AtomicExpr
+from .equation import Equation, Eqn
 from .logic import fuzzy_and, fuzzy_or, fuzzy_not, FuzzyBool
 from .mul import Mul
 from .numbers import Rational, Float, Integer
@@ -452,7 +453,6 @@ class Function(Application, Expr):
     @classmethod
     def _new_(cls, *args, **options) -> Expr|Equation:
         n = len(args)
-        from sympy.core.equation import Equation
         eqnloc: int
         neqns = 0
         newargs = []
