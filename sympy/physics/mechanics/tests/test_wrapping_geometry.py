@@ -23,6 +23,7 @@ from sympy.physics.mechanics import (
 )
 from sympy.simplify.simplify import simplify
 
+
 r = Symbol('r', positive=True)
 x = Symbol('x')
 q = dynamicsymbols('q')
