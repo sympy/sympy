@@ -24,7 +24,6 @@ from itertools import product
 
 
 if TYPE_CHECKING:
-
     from typing import Any, Literal, Iterable, Callable
     from typing_extensions import Self
 
@@ -638,7 +637,7 @@ class Wild(Symbol):
     def __new__(cls, name: str,
                 exclude: Iterable[Expr | complex] = (),
                 properties: Iterable[Callable[[Expr], bool | None]] = (),
-                **assumptions: bool | None
+                **assumptions: bool | None,
             ) -> Self:
         exclude = tuple([sympify(x) for x in exclude])
         properties = tuple(properties)

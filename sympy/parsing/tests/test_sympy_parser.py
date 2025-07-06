@@ -6,6 +6,7 @@ import types
 
 from sympy.assumptions import Q
 from sympy.core import Symbol, Function, Float, Rational, Integer, I, Mul, Pow, Eq, Lt, Le, Gt, Ge, Ne
+from sympy.core.singleton import S
 from sympy.functions import exp, factorial, factorial2, sin, Min, Max
 from sympy.logic import And, Xor
 from sympy.series import Limit
@@ -294,6 +295,16 @@ def test_issue_24288():
     raises(ValueError, lambda: parse_expr("1 is 2", evaluate=False))
     raises(ValueError, lambda: parse_expr("1 not in 2", evaluate=False))
     raises(ValueError, lambda: parse_expr("1 is not 2", evaluate=False))
+
+    x = Symbol('x')
+    assert parse_expr("1 < sin(x) < 2", evaluate=False) == \
+        And(Lt(1, sin(x), evaluate=False), Lt(sin(x), 2, evaluate=False), evaluate=False)
+    assert parse_expr("1 < sin(pi) < 2", evaluate=False) == \
+        And(
+            Lt(1, sin(S.Pi, evaluate=False), evaluate=False),
+            Lt(sin(S.Pi, evaluate=False), 2, evaluate=False),
+            evaluate=False
+        )
 
 def test_split_symbols_numeric():
     transformations = (
