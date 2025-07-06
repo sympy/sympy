@@ -1042,13 +1042,8 @@ def _dup_series_compose(f, g, n, K):
     comp0 = _dup_series_compose(f_low, g, n, K)
     comp1 = _dup_series_compose(f_high, g, n, K)
 
-    g_rev = list(reversed(g))
-    comp1_rev = list(reversed(comp1))
-
-    g_power = dup_series_pow(g_rev, m, n, K)
-    high_term_rev = dup_series_mul(comp1_rev, g_power, n, K)
-
-    high_term = list(reversed(high_term_rev))
+    g_power = dup_series_pow(g, m, n, K)
+    high_term = dup_series_mul(comp1, g_power, n, K)
 
     result = dup_add(high_term, comp0, K)
     return dup_truncate(result, n, K)
@@ -1492,33 +1487,6 @@ def dup_series_reversion(f, n, K):
     r"""
     Computes the compositional inverse of f using Newton iteration.
     The result is computed modulo x**n.
-
-    Algorithm
-    =========
-
-    Given $f(x) = a_1 x + a_2 x^2 + \dots$ with $a_1$ invertible.
-
-    The goal is to find $g(x)$ such that:
-    $
-    f(g(x)) = x \mod x^n
-    $
-
-    The algorithm uses iterative refinement where $g_k$ is the approximation modulo $x^k$.
-
-    Initial approximation:
-    $
-    g_1(x) = x/a_1
-    $
-
-    Iterative step for $k = 2, 3, \dots, n$:
-    $
-    \delta = f(g_{k-1}(x)) - x \mod x^k
-    $
-    $
-    g_k(x) = g_{k-1}(x) - \delta/a_1 \mod x^k
-    $
-
-    This process incrementally builds the correct coefficients of the compositional inverse.
 
     Examples
     ========

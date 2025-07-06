@@ -845,22 +845,25 @@ def dup_series_mul(f, g, prec, K):
     >>> dup_series_mul(f, g, 4, ZZ)
     [2, 1, 2, 1]
     """
-    if not f or not g:
+    if not f or not g or prec <= 0:
         return []
 
     df = dup_degree(f)
     dg = dup_degree(g)
-    max_deg = min(df + dg, prec - 1)
+    h = [K.zero] * prec
 
-    h = [K.zero] * (max_deg + 1)
+    for i in range(len(f)):
+        deg_i = df - i
+        for j in range(len(g)):
+            deg_j = dg - j
+            deg_total = deg_i + deg_j
+            if deg_total >= prec:
+                continue
 
-    for i in range(0, max_deg + 1):
-        coeff = K.zero
-        for j in range(max(0, i - dg), min(i, df) + 1):
-            coeff += f[j] * g[i - j]
-        h[i] = coeff
+            k = prec - 1 - deg_total
+            h[k] += f[i] * g[j]
 
-    return dup_truncate(h, prec, K)
+    return dup_strip(h)
 
 
 def dup_sqr(f, K):

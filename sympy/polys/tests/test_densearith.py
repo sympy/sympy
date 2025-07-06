@@ -683,15 +683,15 @@ def test_dup_series_mul():
     assert dup_series_mul([], [], 0, ZZ) == []
     assert dup_series_mul([ZZ(1), ZZ(0), ZZ(1)], [ZZ(2), ZZ(1)], 5, ZZ) == [ZZ(2),
         ZZ(1), ZZ(2), ZZ(1)]
-    assert dup_series_mul([ZZ(1), ZZ(2), ZZ(3)], [ZZ(4), ZZ(5)], 3, ZZ) == [ZZ(4),
-        ZZ(13), ZZ(22)]
+    assert dup_series_mul([ZZ(1), ZZ(2), ZZ(3)], [ZZ(4), ZZ(5)], 3, ZZ) == [
+        ZZ(13), ZZ(22), ZZ(15)]
     assert dup_series_mul([QQ(2, 3), QQ(1, 2)], [QQ(1, 4), QQ(3, 5)], 4, QQ) == [
         QQ(1, 6), QQ(21, 40), QQ(3, 10)]
 
     K = FF(7)
     assert dup_series_mul([K(2), K(3)], [K(5), K(1)], 4, K) == [K(3), K(3), K(3)]
 
-    assert dup_series_mul([ZZ(1), ZZ(2), ZZ(3)], [ZZ(1), ZZ(0)], 2, ZZ) == [ZZ(1), ZZ(2)]
+    assert dup_series_mul([ZZ(1), ZZ(2), ZZ(3)], [ZZ(1), ZZ(0)], 2, ZZ) == [ZZ(3), ZZ(0)]
     assert dup_series_mul([ZZ(0), ZZ(0), ZZ(1)], [ZZ(1)], 5, ZZ) == [ZZ(1)]
 
 
