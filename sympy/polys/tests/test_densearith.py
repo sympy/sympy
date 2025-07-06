@@ -1,9 +1,10 @@
 """Tests for dense recursive polynomials' arithmetics. """
+from random import randint
 
 from sympy.external.gmpy import GROUND_TYPES
 
 from sympy.polys.densebasic import (
-    dup_normal, dmp_normal,
+    dup_normal, dmp_normal, dup_truncate,
 )
 
 from sympy.polys.densearith import (
@@ -48,6 +49,12 @@ from sympy.testing.pytest import raises
 
 f_0, f_1, f_2, f_3, f_4, f_5, f_6 = [ f.to_dense() for f in f_polys() ]
 F_0 = dmp_mul_ground(dmp_normal(f_0, 2, QQ), QQ(1, 7), 2, QQ)
+
+
+def _dup_random(lo, hi, deg, domain):
+    """Generate a random dense polynomial of given degree and domain."""
+    return dup_normal([domain(randint(lo, hi)) for _ in range(deg)], domain)
+
 
 def test_dup_add_term():
     f = dup_normal([], ZZ)
@@ -679,7 +686,16 @@ def test_dmp_mul():
         [[K(2)], [K(1)]], [[K(3)], [K(4)]], 1, K) == [[K(5)], [K(4)]]
 
 
-def test_dup_series_mul():
+def test_dup_series_mul(trials=100):
+    for i in range(trials):
+        deg = randint(1, 10)
+        f = _dup_random(-20, 0,deg, ZZ)
+        g = _dup_random(0, 20,deg, ZZ)
+
+        mul = dup_series_mul(f, g, deg, ZZ)
+        expected = dup_truncate(dup_mul(f, g, ZZ), deg, ZZ)
+        assert mul == expected
+
     assert dup_series_mul([], [], 0, ZZ) == []
     assert dup_series_mul([ZZ(1), ZZ(0), ZZ(1)], [ZZ(2), ZZ(1)], 5, ZZ) == [ZZ(2),
         ZZ(1), ZZ(2), ZZ(1)]
@@ -780,7 +796,16 @@ def test_dmp_pow():
     assert dmp_pow(f, 2, 0, ZZ) == dup_pow(f, 2, ZZ)
 
 
-def test_dup_series_pow():
+def test_dup_series_pow(trials=100):
+    for i in range(trials):
+        deg = randint(1, 10)
+        f = _dup_random(-20, 0, deg, ZZ)
+        n = randint(1, 5)
+
+        pow = dup_series_pow(f, n, deg, ZZ)
+        expected = dup_truncate(dup_pow(f, n, ZZ), deg, ZZ)
+        assert pow == expected
+
     assert dup_series_pow([ZZ(1), ZZ(1)], 3, 4, ZZ) == [ZZ(1), ZZ(3), ZZ(3), ZZ(1)]
     assert dup_series_pow([ZZ(2), ZZ(0), ZZ(1)], 2, 5, ZZ) == [ZZ(4), ZZ(0), ZZ(4),
         ZZ(0), ZZ(1)]

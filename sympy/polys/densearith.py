@@ -832,9 +832,9 @@ def dmp_mul(f, g, u, K):
     return dmp_strip(h, u)
 
 
-def dup_series_mul(f, g, prec, K):
+def dup_series_mul(f, g, n, K):
     """
-    Multiply dense polynomials in ``K[[x]]`` up to ``x**prec``.
+    Multiply dense polynomials in ``K[[x]]`` modulo ``x**n``.
 
     Examples
     ========
@@ -845,25 +845,57 @@ def dup_series_mul(f, g, prec, K):
     >>> dup_series_mul(f, g, 4, ZZ)
     [2, 1, 2, 1]
     """
-    if not f or not g or prec <= 0:
+    if not f or not g or n <= 0:
         return []
 
     df = dup_degree(f)
     dg = dup_degree(g)
-    h = [K.zero] * prec
+    total_deg = df + dg
 
-    for i in range(len(f)):
-        deg_i = df - i
-        for j in range(len(g)):
-            deg_j = dg - j
-            deg_total = deg_i + deg_j
-            if deg_total >= prec:
-                continue
+    if total_deg + 1 <= n:
+        return dup_mul(f, g, K)
 
-            k = prec - 1 - deg_total
-            h[k] += f[i] * g[j]
+    if min(len(f), len(g)) < 32:
+        h = [K.zero] * n
+        for i in range(len(f)):
+            deg_i = df - i
+            for j in range(len(g)):
+                deg_j = dg - j
+                deg_total = deg_i + deg_j
+                if deg_total >= n:
+                    continue
+                k = n - 1 - deg_total
+                h[k] += f[i] * g[j]
+        return dup_strip(h)
 
-    return dup_strip(h)
+    n2 = n // 2
+
+    fl = dup_slice(f, 0, n2, K)
+    gl = dup_slice(g, 0, n2, K)
+
+    fh = dup_rshift(dup_slice(f, n2, len(f), K), n2, K)
+    gh = dup_rshift(dup_slice(g, n2, len(g), K), n2, K)
+
+    lo = dup_series_mul(fl, gl, n, K)
+
+    hi = []
+    if 2 * n2 < n:
+        hi = dup_series_mul(fh, gh, n - 2 * n2, K)
+
+    mid = []
+    if n2 < n:
+        a = dup_add(fl, fh, K)
+        b = dup_add(gl, gh, K)
+        mid = dup_series_mul(a, b, n - n2, K)
+        mid = dup_sub(dup_sub(mid, lo, K), hi, K)
+
+    res = lo
+    if mid:
+        res = dup_add(res, dup_lshift(mid, n2, K), K)
+    if hi:
+        res = dup_add(res, dup_lshift(hi, 2 * n2, K), K)
+
+    return dup_strip(res)
 
 
 def dup_sqr(f, K):
@@ -1049,7 +1081,7 @@ def _dup_recurse_pow(f, exp, prec, K):
 
 def dup_series_pow(f, n, prec, K):
     """
-    Raise ``f`` to the ``n``-th power in ``K[[x]]`` up to ``x**prec``.
+    Raise polynomial ``f`` to power ``n`` modulo ``x**prec`` in ``K[[x]]``.
 
     Examples
     ========

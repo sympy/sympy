@@ -3,7 +3,7 @@
 
 from sympy.polys.densearith import (
     dup_add_term, dmp_add_term,
-    dup_lshift,
+    dup_lshift, dup_rshift,
     dup_add, dmp_add,
     dup_sub, dmp_sub,
     dup_mul, dmp_mul, dup_series_mul,
@@ -17,7 +17,6 @@ from sympy.polys.densearith import (
 )
 from sympy.polys.densebasic import (
     dup_strip, dmp_strip, dup_truncate,
-    dup_slice,
     dup_convert, dmp_convert,
     dup_degree, dmp_degree,
     dmp_to_dict,
@@ -29,13 +28,14 @@ from sympy.polys.densebasic import (
     dup_to_raw_dict, dup_from_raw_dict,
     dmp_zeros,
     dmp_include,
+    dup_nth,
 )
 from sympy.polys.polyerrors import (
     MultivariatePolynomialError,
     DomainError
 )
 
-from math import ceil as _ceil, log2 as _log2
+from math import ceil as _ceil, log2 as _log2, sqrt
 
 
 def dup_integrate(f, m, K):
@@ -1051,9 +1051,7 @@ def _dup_series_compose(f, g, n, K):
 
 def dup_series_compose(f, g, n, K):
     """
-    Compute f(g) mod x^n using divide and conquer composition.
-
-    This function efficiently computes the first n terms of the composition f(g(x)).
+    Compute ``f(g(x))`` mod ``x**n`` using divide and conquer composition.
 
     Examples
     ========
@@ -1485,7 +1483,7 @@ def dmp_revert(f, g, u, K):
 
 def dup_series_reversion(f, n, K):
     r"""
-    Computes the compositional inverse of f using Newton iteration.
+    Computes the compositional inverse of f using fast lagrange inversion.
     The result is computed modulo x**n.
 
     Examples
@@ -1495,26 +1493,68 @@ def dup_series_reversion(f, n, K):
     >>> f = [QQ(1, 2), QQ(1, 3), QQ(1, 4), QQ(1, 5), QQ(1, 6), QQ(1, 7), 0]
     >>> dup_series_reversion(f, 7, QQ)
     [-7812952441/32400, 467419477/16200, -789929/216, 40817/90, -343/6, 7, 0]
+
+    References
+    ==========
+
+    .. [1] Johansson, F. A fast algorithm for reversion of power series.
+        https://arxiv.org/abs/1403.4676
+
     """
+    if not f:
+        return []
+
     if len(f) < 2 or f[-1] != K.zero:
         raise ValueError("f must have zero constant term")
     if f[-2] == K.zero:
         raise ValueError("f must have nonzero linear term")
 
-    a = f[-2]
-    g = [K.revert(a), K.zero]
+    # Step 0: h = x / f mod x**(n-1)
+    f1 = dup_rshift(f, 1, K)
+    f1_inv = dup_revert(f1, n, K)
+    h = dup_truncate(f1_inv, n, K)
 
-    for k in range(2, n + 1):
-        fg = dup_series_compose(f, g, n, K)
+    m = _ceil(sqrt(n - 1))
 
-        x_poly = [K.zero] * k
-        x_poly[-2] = K.one
+    # Precompute powers of h: h, h^2, ..., h^m mod x**(n-1)
+    H = [h]
+    for _ in range(1, m):
+        h_prev = H[-1]
+        h_next = dup_series_mul(h_prev, h, n, K)
+        H.append(h_next)
 
-        delta = dup_sub(fg, x_poly, K)
-        delta = dup_truncate(delta, k, K)
-        delta_div = [K.quo(c, a) for c in delta]
+    # Initialize g with n zeros
+    g = [K.zero] * n
 
-        g_new = dup_sub(g, delta_div, K)
-        g = dup_truncate(g_new, k, K)
+    # First block: compute g[i] for i = 1 to m - 1
+    for i in range(1, m):
+        coeff = dup_nth(H[i-1], i - 1, K)  # coeff = [x**(i-1)](h^i)
+        # (1/i) * [x**(i-1)](h^i)
+        g[-(i + 1)] = K.quo(coeff, K(i))
 
-    return dup_slice(g, 0, n, K)
+    # t = h^m
+    t = H[m - 1]
+
+    # Loop over blocks of size m
+    for i in range(m, n, m):
+        # g[i] = (1 / i) * [x**(i-1)](t)
+        coeff = dup_nth(t, i - 1, K)
+        g[-(i + 1)] = K.quo(coeff, K(i))
+
+        # Now fill g[i + j] for 1 <= j < m
+        for j in range(1, m):
+            if i + j >= n:
+                break
+
+            s = K.zero
+            for k in range(0, i + j):
+                c1 = dup_nth(t, k, K)
+                c2 = dup_nth(H[j-1], i + j - k - 1, K)
+                s += c1 * c2
+
+            g[-(i + j + 1)] = K.quo(s, K(i + j))
+
+        # t = t * h^m mod x**(n-1)
+        t = dup_series_mul(t, H[m - 1], n, K)
+
+    return dup_strip(g)
