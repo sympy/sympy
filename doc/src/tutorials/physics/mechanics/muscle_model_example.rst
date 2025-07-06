@@ -1,8 +1,8 @@
-.. _wrapping_sphere_muscle_example:
+.. _muscle_model_example:
 
-===========================
-Wrapping Sphere Muscle Path
-===========================
+====================================
+Muscle Model Example Wrapping Sphere
+====================================
 
 .. _fig-muscle-model:
 .. figure:: muscle_model.svg
@@ -12,7 +12,7 @@ The wrapping sphere muscle model consists of a muscle that runs from an origin p
 The complete muscle path is composed of three segments:
 
 1. **Straight line segment** from origin $A$ to tangent point $T_A$
-2. **Geodesic segment** on the sphere surface from $T_A$ to $T_B$  
+2. **Geodesic segment** on the sphere surface from $T_A$ to $T_B$
 3. **Straight line segment** from tangent point $T_B$ to insertion $B$
 
 Here, $T_A$ and $T_B$ are the tangent points on the sphere where the straight lines from $A$ and $B$ touch the spherical surface. This model is particularly useful in biomechanics for analyzing how muscles wrap around bones and joints during movement.
@@ -249,25 +249,25 @@ In matrix form, the system can be written as:
 
 .. math::
 
-   \begin{bmatrix} 
-   mR^2 & 0 \\ 
-   0 & mR^2\sin^2\theta 
-   \end{bmatrix} 
-   \begin{bmatrix} 
-   \ddot{\theta} \\ 
-   \ddot{\phi} 
-   \end{bmatrix} + 
-   \begin{bmatrix} 
-   -\frac{1}{2}mR^2\sin(2\theta)\dot{\phi}^2 \\ 
-   mR^2\sin(2\theta)\dot{\theta}\dot{\phi} 
-   \end{bmatrix} + 
-   \begin{bmatrix} 
-   k\frac{\partial L_{total}}{\partial \theta}(L_{total} - L_0) \\ 
-   k\frac{\partial L_{total}}{\partial \phi}(L_{total} - L_0) 
-   \end{bmatrix} = 
-   \begin{bmatrix} 
-   0 \\ 
-   0 
+   \begin{bmatrix}
+   mR^2 & 0 \\
+   0 & mR^2\sin^2\theta
+   \end{bmatrix}
+   \begin{bmatrix}
+   \ddot{\theta} \\
+   \ddot{\phi}
+   \end{bmatrix} +
+   \begin{bmatrix}
+   -\frac{1}{2}mR^2\sin(2\theta)\dot{\phi}^2 \\
+   mR^2\sin(2\theta)\dot{\theta}\dot{\phi}
+   \end{bmatrix} +
+   \begin{bmatrix}
+   k\frac{\partial L_{total}}{\partial \theta}(L_{total} - L_0) \\
+   k\frac{\partial L_{total}}{\partial \phi}(L_{total} - L_0)
+   \end{bmatrix} =
+   \begin{bmatrix}
+   0 \\
+   0
    \end{bmatrix}
 
 Physical Interpretation of the Equations
