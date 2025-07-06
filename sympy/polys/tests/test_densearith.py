@@ -688,9 +688,9 @@ def test_dmp_mul():
 
 def test_dup_series_mul(trials=100):
     for i in range(trials):
-        deg = randint(1, 10)
-        f = _dup_random(-20, 0,deg, ZZ)
-        g = _dup_random(0, 20,deg, ZZ)
+        deg = randint(2, 10)
+        f = _dup_random(-20, 0, deg, ZZ)
+        g = _dup_random(0, 20, randint(1, 10), ZZ)
 
         mul = dup_series_mul(f, g, deg, ZZ)
         expected = dup_truncate(dup_mul(f, g, ZZ), deg, ZZ)
@@ -798,8 +798,8 @@ def test_dmp_pow():
 
 def test_dup_series_pow(trials=100):
     for i in range(trials):
-        deg = randint(1, 10)
-        f = _dup_random(-20, 0, deg, ZZ)
+        deg = randint(2, 10)
+        f = _dup_random(-20, 0, randint(1, 10), ZZ)
         n = randint(1, 5)
 
         pow = dup_series_pow(f, n, deg, ZZ)

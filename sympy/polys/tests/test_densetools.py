@@ -295,7 +295,7 @@ def test_dmp_revert():
 def test_dup_series_reversion(trials=50):
     for _ in range(trials):
         deg = randint(2, 10)
-        f = _dup_random(-10, 10, deg, QQ)
+        f = _dup_random(-10, 10, randint(1, 10), QQ)
         if len(f) < 2:
             continue
 
@@ -614,7 +614,7 @@ def test_dup_series_compose(trials=50):
     for _ in range(trials):
         deg = randint(2, 10)
         f = _dup_random(-10, 10, deg, QQ)
-        g = _dup_random(11, 20, deg, QQ)
+        g = _dup_random(11, 20, randint(1, 10), QQ)
 
         series_composed = dup_series_compose(f, g, deg, QQ)
         expected = dup_compose(f, g, QQ)
