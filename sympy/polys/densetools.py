@@ -1505,17 +1505,16 @@ def dup_series_reversion(f, n, K):
     g = [K.revert(a), K.zero]
 
     for k in range(2, n + 1):
-        fg = dup_compose(f, g, K)
-        fg = dup_slice(fg, 0, k, K)
+        fg = dup_series_compose(f, g, n, K)
 
         x_poly = [K.zero] * k
         x_poly[-2] = K.one
 
         delta = dup_sub(fg, x_poly, K)
-        delta = dup_slice(delta, 0, k, K)
+        delta = dup_truncate(delta, k, K)
         delta_div = [K.quo(c, a) for c in delta]
 
         g_new = dup_sub(g, delta_div, K)
-        g = dup_slice(g_new, 0, k, K)
+        g = dup_truncate(g_new, k, K)
 
     return dup_slice(g, 0, n, K)
