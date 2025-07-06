@@ -22,7 +22,7 @@ from sympy.polys.domains.domainelement import DomainElement
 from sympy.polys.domains.polynomialring import PolynomialRing
 from sympy.polys.heuristicgcd import heugcd
 from sympy.polys.monomials import MonomialOps
-from sympy.polys.orderings import lex, MonomialOrder
+from sympy.polys.orderings import lex, MonomialOrder, LexOrder, GradedLexOrder
 from sympy.polys.polyerrors import (
     CoercionFailed,
     GeneratorsError,
@@ -244,9 +244,13 @@ class PolyRing(DefaultPrinting, IPolys):
 
         # delegation to appropriate subclass
         if flint is not None and _supported_flint_domain(preprocessed_domain):
-            return FlintPolyRing.__new__(FlintPolyRing, symbols, preprocessed_domain, order)
+            return FlintPolyRing._new(symbols, preprocessed_domain, order)
         else:
-            return PythonPolyRing.__new__(PythonPolyRing, symbols, preprocessed_domain, order)
+            return PythonPolyRing._new(symbols, preprocessed_domain, order)
+
+    @classmethod
+    def _new(cls, symbols, domain, order):
+        raise NotImplementedError("Must be implemented by subclass")
 
     def _init_instance(self, symbols, domain, order):
         # initialize the instance with common attributes.
@@ -254,7 +258,7 @@ class PolyRing(DefaultPrinting, IPolys):
         self.ngens = len(symbols)
         self.domain = domain
         self.order = order
-        self._hash_tuple = (self.__class__.__name__, symbols, self.ngens, domain, order)
+        self._hash_tuple = ("PolyRing", symbols, self.ngens, domain, order)
         self._hash = hash(self._hash_tuple)
 
         # set up polynomial creation and basic elements
@@ -274,7 +278,7 @@ class PolyRing(DefaultPrinting, IPolys):
         self._add_generator_attributes()
 
     def _init_monomial_operations(self):
-        # onitialize monomial operations based on number of generators
+        # initialize monomial operations based on number of generators
         if self.ngens:
             # operations for rings with at least one generator
             codegen = MonomialOps(self.ngens)
@@ -477,8 +481,18 @@ class PolyRing(DefaultPrinting, IPolys):
         """Get index of generator in the ring."""
         if gen is None:
             return 0 if self.ngens else -1  # Impossible choice indicator
-        elif isinstance(gen, (int, str)):
-            return self._gen_index(gen)
+        if isinstance(gen, int):
+            if 0 <= gen < self.ngens:
+                return self._gen_index(gen)
+            else:
+                raise ValueError(f"invalid generator index: {gen}")
+
+        elif isinstance(gen, str):
+            if gen in self.symbols:
+                return self._gen_index(gen)
+            else:
+                raise ValueError(f"invalid generator name: {gen}")
+
         elif self.is_element(gen):
             try:
                 return self.gens.index(gen)
@@ -620,29 +634,15 @@ class PolyRing(DefaultPrinting, IPolys):
 class PythonPolyRing(PolyRing):
     """Multivariate distributed polynomial rings."""
 
-    def __new__(cls, symbols, domain, order=lex):
-        # validate inputs
-        symbols = tuple(_parse_symbols(symbols))
-        domain = DomainOpt.preprocess(domain)
-        order = OrderOpt.preprocess(order)
-
-        # initialize instance
+    @classmethod
+    def _new(cls, symbols, domain, order):
         obj = object.__new__(cls)
         obj._init_instance(symbols, domain, order)
         return obj
 
     def _gen_index(self, gen):
         # get generator index from int or str
-        if isinstance(gen, int):
-            if 0 <= gen < self.ngens:
-                return gen
-            else:
-                raise ValueError(f"invalid generator index: {gen}")
-        else:  # gen is a string
-            try:
-                return self.symbols.index(gen)
-            except ValueError:
-                raise ValueError(f"invalid generator: {gen}")
+        return gen if isinstance(gen, int) else self.symbols.index(gen)
 
     def add_gens(self, symbols):
         """Add new generator(s) to the ring."""
@@ -682,52 +682,73 @@ class PythonPolyRing(PolyRing):
 
 
 class FlintPolyRing(PolyRing):
-    """Multivariate distributed polynomial rings."""
+    """Multivariate distributed polynomial rings backed by FLINT."""
 
-    def __new__(cls, symbols, domain, order=lex):
-        # validate inputs
-        symbols = tuple(_parse_symbols(symbols))
-        domain = DomainOpt.preprocess(domain)
-        order = OrderOpt.preprocess(order)
-
-        # initialize instance
+    @classmethod
+    def _new(cls, symbols, domain, order):
         obj = object.__new__(cls)
         obj._init_instance(symbols, domain, order)
+        obj._python_ring = PythonPolyRing._new(symbols, domain, order)
+        obj.flint_ctx = None
+        str_symbols = [str(s) for s in symbols]
+        str_order = cls._get_flint_order(order)
 
-        # for now, store a reference to the equivalent PythonPolyRing
-        # for fallback operations until flint methods are implemented
-        obj._python_ring = PythonPolyRing(symbols, domain, order)
+        # Initialize FLINT context based on domain
+        if domain.is_ZZ:
+            obj.flint_ctx = flint.fmpz_mpoly_ctx.get(str_symbols, str_order)
+        elif domain.is_QQ:
+            obj.flint_ctx = flint.fmpq_mpoly_ctx.get(str_symbols, str_order)
+        else:
+            raise NotImplementedError(f"Unsupported domain for FlintPolyRing: {domain}")
 
         return obj
 
+    @staticmethod
+    def _get_flint_order(order):
+        """Convert SymPy monomial order to FLINT order string."""
+        if isinstance(order, LexOrder):
+            return "lex"
+        elif isinstance(order, GradedLexOrder):
+            return "deglex"
+        else:
+            return "degrevlex"
+
     def _gen_index(self, gen):
         # get generator index from int or str
-        # for now, delegate to Python implementation
-        return self._python_ring._gen_index(gen)
+        return self.flint_ctx.variable_to_index(gen)
 
     def add_gens(self, symbols):
         """Add new generator(s) to the ring."""
-        # for now, delegate to Python implementation
-        return self._python_ring.add_gens(symbols)
+        if isinstance(symbols, (str, Symbol)):
+            symbols = [symbols]
+
+        str_symbols = [str(s) for s in symbols]
+
+        new_flint_ctx = self.flint_ctx.append_gens(*str_symbols)
+        new_symbols = self.symbols + tuple(Symbol(s) if isinstance(s, str) else s for s in symbols)
+        new_ring = self.clone(symbols=new_symbols)
+        new_ring.flint_ctx = new_flint_ctx
+        new_ring.flint_ctx = new_flint_ctx
+
+        return new_ring
 
     def drop(self, *gens):
         """Remove specified generator(s) from the ring."""
-        # for now, delegate to Python implementation
         return self._python_ring.drop(*gens)
 
     def _ring_equality(self, other):
-        # for ring attribute comparison
-        # for now, delegate to Python implementation
-        return self._python_ring._ring_equality(other)
+        """Check ring equality for ring attribute comparison."""
+        # For now, delegate to Python implementation
+        if isinstance(other, FlintPolyRing):
+            return self.flint_ctx == other.flint_ctx
+        else:
+            return self._python_ring._ring_equality(other)
 
     def _from_dict_ground(self, element, orig_domain=None):
-        # create polynomial from dict
-        # for now, delegate to Python implementation
+        """Create polynomial from dict."""
+        # For now, delegate to Python implementation
+        # TODO: Implement direct polynomial creation from dict once FlintPolyElement is ready
         return self._python_ring._from_dict_ground(element, orig_domain)
-
-    # TODO: Implement python-flint backed methods here
-    # each method should be implemented one by one to use flint operations
-    # instead of falling back to the Python implementation
 
 
 class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
@@ -1602,7 +1623,6 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
     def compose(self, x, a=None):
         ring = self.ring
         poly = ring.zero
-        gens_map = dict(zip(ring.gens, range(ring.ngens)))
 
         if a is not None:
             replacements = [(x, a)]
@@ -1610,13 +1630,13 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
             if isinstance(x, list):
                 replacements = list(x)
             elif isinstance(x, dict):
-                replacements = sorted(x.items(), key=lambda k: gens_map[k[0]])
+                replacements = sorted(x.items(), key=lambda k: ring.index(k[0]))
             else:
                 raise ValueError(
                     "expected a generator, value pair a sequence of such pairs"
                 )
 
-        replacements = [(gens_map[x], ring.ring_new(g)) for x, g in replacements]
+        replacements = [(ring.index(x), ring.ring_new(g)) for x, g in replacements]
 
         return self._compose(replacements, initial_poly=poly)
 
