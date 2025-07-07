@@ -335,17 +335,17 @@ def tests_for_error_reporting_solve_for_reaction_loads():
     with raises(ValueError, match="Duplicate symbols supplied to solve_for_reaction_loads()."):
         b.solve_for_reaction_loads(Symbol('R1'),Symbol('R1'))
 
-    # Inconsistent system of equations with rotation hinge
+    # conditional consistent system of equations with rotation hinge
     E, I, P = Symbol('E'), Symbol('I'), Symbol('P')
     b = Beam(10, E, I)
     r1 = b.apply_support(0, 'pin')
     r2 = b.apply_support(10, 'roller')
     b.apply_rotation_hinge(4)
     b.apply_load(-P, 4, -1)
-    with raises(ValueError,match="This means your supports/BCs generate contradictory or insufficient constraints."):
+    with raises(ValueError,match="The system is only solvable with symbolic constraint"):
         b.solve_for_reaction_loads(r1, r2)
 
-    # Inconsistent system of equations with rotation hinges
+    # conditional consistent system of equations with rotation hinges
     E = Symbol('E')
     I = Symbol('I')
     Q= Symbol('Q')
@@ -355,7 +355,7 @@ def tests_for_error_reporting_solve_for_reaction_loads():
     r0 = b.apply_support(0, 'pin')
     r15 = b.apply_support(15, 'roller')
     b.apply_load(-Q, 0, 0, end=15)
-    with raises(ValueError, match="This means your supports/BCs generate contradictory or insufficient constraints."):
+    with raises(ValueError, match="The system is only solvable with symbolic constraint"):
         b.solve_for_reaction_loads(r0, r15)
 
     # Inconsistent system of equations without enough boundary conditions
@@ -366,14 +366,45 @@ def tests_for_error_reporting_solve_for_reaction_loads():
     with raises(ValueError, match="This means your supports/BCs generate contradictory or insufficient constraints."):
         b.solve_for_reaction_loads(R1)
 
-    # Inconsistent system of equations with sliding hinge
+    # conditional consistent system of equations with sliding hinge
     E, I = Symbol('E'), Symbol('I')
     b = Beam(8, E, I)
     R1=b.apply_support(0,'roller')
     b.apply_sliding_hinge(4)
     b.apply_load(5, 8, -1)
     R1 = Symbol('R1')
-    with raises(ValueError, match="This means your supports/BCs generate contradictory or insufficient constraints."):
+    with raises(ValueError, match="The system is only solvable with symbolic constraint"):
+        b.solve_for_reaction_loads(R1)
+
+    E = Symbol('E')
+    I = Symbol('I')
+    Q= Symbol('Q')
+    b = Beam(15, E, I)
+    b.apply_rotation_hinge(5)
+    b.apply_rotation_hinge(10)
+    r0 = b.apply_support(0, 'pin')
+    r15 = b.apply_support(15, 'roller')
+    b.apply_load(-Q, 0, 0, end=15)
+
+    with raises(ValueError, match="The system is only solvable with symbolic constraint"):
+        b.solve_for_reaction_loads(R1)
+
+    b = Beam(12, E, I)
+    b.apply_rotation_hinge(3)
+    b.apply_rotation_hinge(8)
+    r1 = b.apply_support(0, 'pin')
+    r2 = b.apply_support(12, 'roller')
+    b.apply_load(-P, 6, -1)
+    b.apply_load(Q,9,-1)
+    with raises(ValueError, match="The system is only solvable with symbolic constraint"):
+        b.solve_for_reaction_loads(R1)
+
+    b = Beam(10, E, I)
+    R=b.apply_support(0, 'fixed')
+    b.apply_rotation_hinge(5)
+    K=b.apply_support(10, 'fixed')
+    b.apply_load(-P, 5, -1)
+    with raises(ValueError, match="The system is only solvable with symbolic constraint"):
         b.solve_for_reaction_loads(R1)
 
 def test_beam_units():
