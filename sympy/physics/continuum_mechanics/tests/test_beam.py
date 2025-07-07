@@ -400,9 +400,9 @@ def tests_for_error_reporting_solve_for_reaction_loads():
         b.solve_for_reaction_loads(R1)
 
     b = Beam(10, E, I)
-    R=b.apply_support(0, 'fixed')
+    b.apply_support(0, 'fixed')
     b.apply_rotation_hinge(5)
-    K=b.apply_support(10, 'fixed')
+    b.apply_support(10, 'fixed')
     b.apply_load(-P, 5, -1)
     with raises(ValueError, match="The system is only solvable with symbolic constraint"):
         b.solve_for_reaction_loads(R1)
