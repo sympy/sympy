@@ -108,6 +108,66 @@ def _deco(cls):
     return cls
 
 
+def _literal_character_ranges(initial):
+    """List all characters that may be used in identifiers
+
+    Mathematica identifiers cannot contain underscores.  This function
+    returns a regex range matching all characters that may be used in
+    a Python identifier, excluding underscores.  The `initial` argument
+    is a bool indicating whether this range describes valid initial
+    characters (True) or valid subsequent characters (False).
+    """
+    import sys
+    def valid(character):
+        if character == "_":
+            return False
+        elif initial:
+            return character.isidentifier()
+        else:
+            return ("x" + character).isidentifier()
+
+    # Note that 0 corresponds to the NUL character, which is not an
+    # identifier, so we can use it as a signal that we haven't found a
+    # valid character yet.
+    characters = ""
+    range_begin_character = ""
+    range_begin_index = 0
+    range_end_character = ""
+    range_end_index = 0
+
+    for codepoint in range(sys.maxunicode + 1):
+        character = chr(codepoint)
+        if valid(character):
+            if range_begin_index == 0:
+                range_begin_character = character
+                range_begin_index = codepoint
+            range_end_character = character
+            range_end_index = codepoint
+        elif range_begin_index != 0:
+            # We have reached the end of a range (length 1, 2, or n),
+            # so we add it to our list of characters.
+            if range_begin_index == range_end_index:
+                characters += range_begin_character
+            elif range_begin_index + 1 == range_end_index:
+                characters += range_begin_character + range_end_character
+            else:
+                characters += f"{range_begin_character}-{range_end_character}"
+            # Reset the range
+            range_begin_character = ""
+            range_begin_index = 0
+
+    # In case the loop above ended on a valid character we add it / close the range here
+    if range_begin_index != 0:
+        if range_begin_index == range_end_index:
+            characters += range_begin_character
+        elif range_begin_index + 1 == range_end_index:
+            characters += range_begin_character + range_end_character
+        else:
+            characters += f"{range_begin_character}-{range_end_character}"
+
+    return characters
+
+
 @_deco
 class MathematicaParser:
     """
@@ -599,9 +659,9 @@ class MathematicaParser:
     # unicode combining characters.
     _literal = (
         "["
-        + "".join(c for c in map(chr, range(sys.maxunicode+1)) if c!="_" and c.isidentifier())
+        + _literal_character_ranges(True)
         + "]["
-        + "".join(c for c in map(chr, range(sys.maxunicode+1)) if c!="_" and ("x"+c).isidentifier())
+        + _literal_character_ranges(False)
         + "]*"
     )
 
