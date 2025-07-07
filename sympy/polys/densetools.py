@@ -1481,6 +1481,38 @@ def dmp_revert(f, g, u, K):
         raise MultivariatePolynomialError(f, g)
 
 
+def _dup_series_reversion_small(f, n, K):
+    """
+    Helper function for :func:`dup_series_reversion`.
+    ``n`` should be less than or equal to 4.
+    """
+    if n < 1 or n > 4:
+        raise ValueError("Only n <= 4 supported")
+
+    f = dup_truncate(f, n, K)
+    f = [K.zero] * (4 - len(f)) + f
+    a, b, c, d = f
+
+    if not K.is_zero(d):
+        raise ValueError("f must have zero constant term")
+    if K.is_zero(c):
+        raise ValueError("f must have nonzero linear term")
+
+    cinv = K.revert(c)
+    g = [K.zero] * n
+
+    if n >= 2:
+        g[-2] = cinv
+
+    if n >= 3:
+        g[-3] = -b * cinv ** 3
+
+    if n >= 4:
+        g[-4] = (2 * b ** 2 - a * c) * cinv ** 5
+
+    return dup_strip(g)
+
+
 def dup_series_reversion(f, n, K):
     r"""
     Computes the compositional inverse of f using fast lagrange inversion.
@@ -1504,10 +1536,12 @@ def dup_series_reversion(f, n, K):
     if not f:
         return []
 
-    if len(f) < 2 or f[-1] != K.zero:
+    if f[-1] != K.zero:
         raise ValueError("f must have zero constant term")
-    if f[-2] == K.zero:
+    if len(f) < 2 or f[-2] == K.zero:
         raise ValueError("f must have nonzero linear term")
+    if n<=4:
+        return _dup_series_reversion_small(f, n, K)
 
     # Step 0: h = x / f mod x**(n-1)
     f1 = dup_rshift(f, 1, K)

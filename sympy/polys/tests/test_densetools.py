@@ -9,7 +9,7 @@ from sympy.polys.densebasic import (
 
 from sympy.polys.densearith import dmp_mul_ground
 
-from sympy.polys.densebasic import dup_slice, dup_truncate
+from sympy.polys.densebasic import dup_truncate
 
 from sympy.polys.densetools import (
     dup_clear_denoms, dmp_clear_denoms,
@@ -30,6 +30,7 @@ from sympy.polys.densetools import (
     dmp_lift,
     dup_sign_variations,
     dup_revert, dmp_revert,
+    _dup_series_reversion_small,
     dup_series_reversion
 )
 from sympy.polys.polyclasses import ANP
@@ -51,7 +52,7 @@ from sympy.core.singleton import S
 from sympy.functions.elementary.trigonometric import sin
 
 from sympy.abc import x
-from sympy.testing.pytest import raises
+from sympy.testing.pytest import raises, slow
 
 f_0, f_1, f_2, f_3, f_4, f_5, f_6 = [ f.to_dense() for f in f_polys() ]
 
@@ -304,7 +305,7 @@ def test_dup_series_reversion(trials=50):
             f[-2] = QQ(1, 1)
 
         g = dup_series_reversion(f, deg, QQ)
-        composed = dup_slice(dup_compose(f, g, QQ), 0, deg, QQ)
+        composed = dup_series_compose(f, g, deg, QQ)
 
         expected = [QQ(1), QQ(0)]
         assert composed == expected
@@ -316,6 +317,34 @@ def test_dup_series_reversion(trials=50):
 
     raises(ValueError, lambda: dup_series_reversion([QQ(1), QQ(1)], 5, QQ))
     raises(ValueError, lambda: dup_series_reversion([QQ(1), QQ(0), QQ(0)], 5, QQ))
+
+
+def test_dup_series_reversion_small():
+    assert _dup_series_reversion_small(ZZ.map([1, 1, 0]), 3, ZZ) == [-1, 1, 0]
+    assert _dup_series_reversion_small(ZZ.map([12, 7, 1, 0]), 4, ZZ) == [86, -7, 1, 0]
+    assert _dup_series_reversion_small(ZZ.map([2, 1, 0]), 2, ZZ) == [1, 0]
+
+    raises(ValueError, lambda: _dup_series_reversion_small(ZZ.map([1, 1, 0]), 1, ZZ))
+    raises(ValueError, lambda: _dup_series_reversion_small(ZZ.map([0]), 0, ZZ))
+
+
+@slow
+def test_dup_series_reversion_large(trials=3):
+    for _ in range(trials):
+        deg = randint(100, 200)
+        f = _dup_random(-10, 10, randint(100, 200), QQ)
+        if len(f) < 2:
+            continue
+
+        f[-1] = QQ(0)
+        if f[-2] == 0:
+            f[-2] = QQ(1, 1)
+
+        g = dup_series_reversion(f, deg, QQ)
+        composed = dup_series_compose(f, g, deg, QQ)
+
+        expected = [QQ(1), QQ(0)]
+        assert composed == expected
 
 
 def test_dup_trunc():
@@ -612,7 +641,7 @@ def test_dmp_compose():
 def test_dup_series_compose(trials=50):
 
     for _ in range(trials):
-        deg = randint(2, 10)
+        deg = randint(2, 100)
         f = _dup_random(-10, 10, deg, QQ)
         g = _dup_random(11, 20, randint(1, 10), QQ)
 

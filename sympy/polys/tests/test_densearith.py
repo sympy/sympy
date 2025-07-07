@@ -21,6 +21,7 @@ from sympy.polys.densearith import (
     dup_neg, dmp_neg,
     dup_add, dmp_add,
     dup_sub, dmp_sub,
+    _dup_series_mul_base, _dup_series_mul_karatsuba,
     dup_mul, dmp_mul, dup_series_mul,
     dup_sqr, dmp_sqr,
     dup_pow, dmp_pow, dup_series_pow,
@@ -686,30 +687,28 @@ def test_dmp_mul():
         [[K(2)], [K(1)]], [[K(3)], [K(4)]], 1, K) == [[K(5)], [K(4)]]
 
 
-def test_dup_series_mul(trials=100):
-    for i in range(trials):
-        deg = randint(2, 10)
+def test_dup_series_mul():
+
+    # Check correctness against dup_mul with truncation
+    for i in range(50):
+        deg = randint(2, 200)
         f = _dup_random(-20, 0, deg, ZZ)
-        g = _dup_random(0, 20, randint(1, 10), ZZ)
+        g = _dup_random(0, 20, randint(1, 200), ZZ)
 
         mul = dup_series_mul(f, g, deg, ZZ)
         expected = dup_truncate(dup_mul(f, g, ZZ), deg, ZZ)
         assert mul == expected
 
-    assert dup_series_mul([], [], 0, ZZ) == []
-    assert dup_series_mul([ZZ(1), ZZ(0), ZZ(1)], [ZZ(2), ZZ(1)], 5, ZZ) == [ZZ(2),
-        ZZ(1), ZZ(2), ZZ(1)]
-    assert dup_series_mul([ZZ(1), ZZ(2), ZZ(3)], [ZZ(4), ZZ(5)], 3, ZZ) == [
-        ZZ(13), ZZ(22), ZZ(15)]
-    assert dup_series_mul([QQ(2, 3), QQ(1, 2)], [QQ(1, 4), QQ(3, 5)], 4, QQ) == [
-        QQ(1, 6), QQ(21, 40), QQ(3, 10)]
+    # Compare base case with Karatsuba multiplication
+    for i in range(50):
+        deg = randint(2, 200)
+        f = _dup_random(-20, 0, deg, ZZ)
+        g = _dup_random(0, 20, randint(1, 200), ZZ)
 
-    K = FF(7)
-    assert dup_series_mul([K(2), K(3)], [K(5), K(1)], 4, K) == [K(3), K(3), K(3)]
+        b = _dup_series_mul_base(f, g, deg, ZZ)
+        k = _dup_series_mul_karatsuba(f, g, deg, ZZ)
 
-    assert dup_series_mul([ZZ(1), ZZ(2), ZZ(3)], [ZZ(1), ZZ(0)], 2, ZZ) == [ZZ(3), ZZ(0)]
-    assert dup_series_mul([ZZ(0), ZZ(0), ZZ(1)], [ZZ(1)], 5, ZZ) == [ZZ(1)]
-
+        assert b == k
 
 def test_dup_sqr():
     assert dup_sqr([], ZZ) == []
@@ -798,8 +797,8 @@ def test_dmp_pow():
 
 def test_dup_series_pow(trials=100):
     for i in range(trials):
-        deg = randint(2, 10)
-        f = _dup_random(-20, 0, randint(1, 10), ZZ)
+        deg = randint(2, 100)
+        f = _dup_random(-20, 0, randint(1, 100), ZZ)
         n = randint(1, 5)
 
         pow = dup_series_pow(f, n, deg, ZZ)

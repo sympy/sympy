@@ -3,6 +3,7 @@
 
 from sympy.polys.densebasic import (
     dup_slice, dup_truncate,
+    dup_reverse,
     dup_LC, dmp_LC,
     dup_degree, dmp_degree,
     dup_strip, dmp_strip,
@@ -832,6 +833,68 @@ def dmp_mul(f, g, u, K):
     return dmp_strip(h, u)
 
 
+def _dup_series_mul_base(f, g, n, K):
+    """
+    Helper function for dup_series_mul that uses a naive O(n^2) algorithm
+    """
+    if not f or not g or n <= 0:
+        return []
+
+    f = dup_truncate(f, n, K)[::-1]
+    g = dup_truncate(g, n, K)[::-1]
+
+    h = [K.zero] * n
+    for i in range(len(f)):
+        for j in range(len(g)):
+            if i+j >= n:
+                break
+            h[i + j] += f[i] * g[j]
+
+    return dup_reverse(h)
+
+
+def _dup_series_mul_karatsuba(f, g, prec, K):
+    """
+    Helper function for dup_series_mul that uses Karatsuba's algorithm
+    """
+    if not f or not g or prec <= 0:
+        return []
+
+    df = dup_degree(f)
+    dg = dup_degree(g)
+
+    n = max(df, dg) + 1
+    n2 =  n // 2
+
+    fl = dup_slice(f, 0, n2, K)
+    gl = dup_slice(g, 0, n2, K)
+
+    fh = dup_rshift(dup_slice(f, n2, n, K), n2, K)
+    gh = dup_rshift(dup_slice(g, n2, n, K), n2, K)
+
+    lo = dup_series_mul(fl, gl, prec, K)
+
+    hi = []
+    mid = []
+    if n2 < prec:
+        hi = dup_series_mul(fh, gh, prec - n2, K)
+
+        a = dup_add(fl, fh, K)
+        b = dup_add(gl, gh, K)
+
+        mid = dup_series_mul(a, b, prec - n2, K)
+        mid = dup_sub(mid, dup_add(lo, hi, K), K)
+
+    res = lo
+    if mid:
+        res = dup_add(res, dup_lshift(mid, n2, K), K)
+    if hi:
+        res = dup_add(res, dup_lshift(hi, 2 * n2, K), K)
+
+    res = dup_truncate(res, prec, K)
+    return dup_strip(res)
+
+
 def dup_series_mul(f, g, n, K):
     """
     Multiply dense polynomials in ``K[[x]]`` modulo ``x**n``.
@@ -848,54 +911,10 @@ def dup_series_mul(f, g, n, K):
     if not f or not g or n <= 0:
         return []
 
-    df = dup_degree(f)
-    dg = dup_degree(g)
-    total_deg = df + dg
-
-    if total_deg + 1 <= n:
-        return dup_mul(f, g, K)
-
-    if min(len(f), len(g)) < 32:
-        h = [K.zero] * n
-        for i in range(len(f)):
-            deg_i = df - i
-            for j in range(len(g)):
-                deg_j = dg - j
-                deg_total = deg_i + deg_j
-                if deg_total >= n:
-                    continue
-                k = n - 1 - deg_total
-                h[k] += f[i] * g[j]
-        return dup_strip(h)
-
-    n2 = n // 2
-
-    fl = dup_slice(f, 0, n2, K)
-    gl = dup_slice(g, 0, n2, K)
-
-    fh = dup_rshift(dup_slice(f, n2, len(f), K), n2, K)
-    gh = dup_rshift(dup_slice(g, n2, len(g), K), n2, K)
-
-    lo = dup_series_mul(fl, gl, n, K)
-
-    hi = []
-    if 2 * n2 < n:
-        hi = dup_series_mul(fh, gh, n - 2 * n2, K)
-
-    mid = []
-    if n2 < n:
-        a = dup_add(fl, fh, K)
-        b = dup_add(gl, gh, K)
-        mid = dup_series_mul(a, b, n - n2, K)
-        mid = dup_sub(dup_sub(mid, lo, K), hi, K)
-
-    res = lo
-    if mid:
-        res = dup_add(res, dup_lshift(mid, n2, K), K)
-    if hi:
-        res = dup_add(res, dup_lshift(hi, 2 * n2, K), K)
-
-    return dup_strip(res)
+    if min(len(f), len(g)) < 100:
+        return _dup_series_mul_base(f, g, n, K)
+    else:
+        return _dup_series_mul_karatsuba(f, g, n, K)
 
 
 def dup_sqr(f, K):
