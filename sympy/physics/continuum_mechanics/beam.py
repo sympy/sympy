@@ -985,16 +985,26 @@ class Beam:
 
         A, b = linear_eq_to_matrix(equations, unknowns)
 
-        # condition check for Inconsistent system
-        if A.rank() != A.row_join(b).rank():
-            eqs_str = "\n".join(f"  {equation}" for equation in equations)
-            unks_str = ", ".join(str(unknown) for unknown in unknowns)
-            raise ValueError(
-                f" Inconsistent system detected!\n"
-                f"   Equations ({len(equations)}):\n{eqs_str}\n"
-                f"   Unknowns ({len(unknowns)}): {unks_str}\n\n"
-                "This means your supports/BCs generate contradictory or insufficient constraints."
-                )
+        rref_A, rref_b = A.rref_rhs(b)
+        for i in range(rref_A.rows):
+            row_sum = sum(rref_A[i, :])
+            rhs = rref_b[i]
+
+            if row_sum == 0 and rhs != 0:
+                if not rhs.is_number:
+                    raise ValueError(
+                            f"The system is only solvable with symbolic constraint"
+                            f" {rhs} = 0.substitute to proceed"
+                    )
+                else:
+                    eqs_str = "\n".join(f"  {equation}" for equation in equations)
+                    unks_str = ", ".join(str(unknown) for unknown in unknowns)
+                    raise ValueError(
+                        f" Inconsistent system detected!\n"
+                        f"   Equations ({len(equations)}):\n{eqs_str}\n"
+                        f"   Unknowns ({len(unknowns)}): {unks_str}\n\n"
+                        "This means your supports/BCs generate contradictory or insufficient constraints."
+                        )
 
         solutions = linsolve(equations, unknowns)
         solution = list(solutions.args[0])
