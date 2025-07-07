@@ -112,6 +112,8 @@ may be slightly more efficient.)
 .. autofunction:: dmp_slice
 .. autofunction:: dup_truncate
 .. autofunction:: dup_random
+.. autofunction:: dup_from_list
+.. autofunction:: dup_print
 
 **Arithmetic operations:**
 

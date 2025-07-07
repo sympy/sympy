@@ -1057,10 +1057,13 @@ def dup_series_compose(f, g, n, K):
     ========
     >>> from sympy import ZZ
     >>> from sympy.polys.densetools import dup_series_compose
-    >>> f = [1, 1, 1]
-    >>> g = [1, 1]
-    >>> dup_series_compose(f, g, 3, ZZ)
-    [1, 3, 3]
+    >>> from sympy.polys.densebasic import dup_from_list, dup_print
+    >>> f = dup_from_list([1, 1, 1], ZZ)
+    >>> g = dup_from_list([1, 1], ZZ)
+    >>> comp = dup_series_compose(f, g, 3, ZZ)
+    >>> dup_print(comp, 'x')
+    x**2 + 3*x + 3
+
     """
     f = dup_truncate(f, n, K)
     g = dup_truncate(g, n, K)
@@ -1522,9 +1525,11 @@ def dup_series_reversion(f, n, K):
     ========
     >>> from sympy.polys import QQ
     >>> from sympy.polys.densetools import dup_series_reversion
-    >>> f = [QQ(1, 2), QQ(1, 3), QQ(1, 4), QQ(1, 5), QQ(1, 6), QQ(1, 7), 0]
-    >>> dup_series_reversion(f, 7, QQ)
-    [-7812952441/32400, 467419477/16200, -789929/216, 40817/90, -343/6, 7, 0]
+    >>> from sympy.polys.densebasic import dup_from_list, dup_print
+    >>> f = dup_from_list([QQ(1, 3), QQ(1, 4), QQ(1, 5), QQ(1, 6), QQ(1, 7), 0], QQ)
+    >>> rev = dup_series_reversion(f, 7, QQ)
+    >>> dup_print(rev, 'x')
+    5528444159/32400*x**6 + 467419477/16200*x**5 - 789929/216*x**4 + 40817/90*x**3 - 343/6*x**2 + 7*x
 
     References
     ==========

@@ -903,10 +903,13 @@ def dup_series_mul(f, g, n, K):
     ========
     >>> from sympy import ZZ
     >>> from sympy.polys.densearith import dup_series_mul
-    >>> f = [1, 0, 1]
-    >>> g = [2, 1]
-    >>> dup_series_mul(f, g, 4, ZZ)
-    [2, 1, 2, 1]
+    >>> from sympy.polys.densebasic import dup_from_list, dup_print
+    >>> f = dup_from_list([1, 0, 1], ZZ)
+    >>> g = dup_from_list([2, 1], ZZ)
+    >>> h = dup_series_mul(f, g, 4, ZZ)
+    >>> dup_print(h, 'x')
+    2*x**3 + x**2 + 2*x + 1
+
     """
     if not f or not g or n <= 0:
         return []
@@ -1106,9 +1109,12 @@ def dup_series_pow(f, n, prec, K):
     ========
     >>> from sympy import ZZ
     >>> from sympy.polys.densearith import dup_series_pow
-    >>> f = [1, 2, 3]
-    >>> dup_series_pow(f, 2, 5, ZZ)
-    [1, 4, 10, 12, 9]
+    >>> from sympy.polys.densebasic import dup_from_list, dup_print
+    >>> f = dup_from_list([1, 2, 3], ZZ)
+    >>> p = dup_series_pow(f, 2, 5, ZZ)
+    >>> dup_print(p, 'x')
+    x**4 + 4*x**3 + 10*x**2 + 12*x + 9
+
     """
     if not f:
         return []

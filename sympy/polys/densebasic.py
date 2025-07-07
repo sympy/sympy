@@ -1850,9 +1850,11 @@ def dup_truncate(f, n, K):
 
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densebasic import dup_truncate
-
-    >>> dup_truncate([1, 2, 3, 4, 5], 3, ZZ)
-    [3, 4, 5]
+    >>> from sympy.polys.densebasic import dup_from_list, dup_print
+    >>> f = dup_from_list([1, 2, 3, 4, 5], ZZ)
+    >>> t = dup_truncate(f, 3, ZZ)
+    >>> dup_print(t, 'x')
+    3*x**2 + 4*x + 5
 
     """
     return dup_slice(f, 0, n, K)
@@ -1902,3 +1904,75 @@ def dup_random(n, a, b, K):
         f[0] = K.convert(random.randint(a, b))
 
     return f
+
+
+def dup_from_list(f, K):
+    """
+    Create a ``K[x]`` polynomial from a list.
+
+    Examples
+    ========
+
+    >>> from sympy.polys.domains import QQ
+    >>> from sympy.polys.densebasic import dup_from_list
+
+    >>> dup_from_list([1, 0, 5, 0, 7], QQ)
+     [1, 0, 5, 0, 7]
+
+    """
+    if not f:
+        return []
+
+    return dup_strip([K.convert(c) for c in f])
+
+
+def dup_print(f, sym):
+    """
+    Print a polynomial in ``K[x]``.
+
+    Examples
+    ========
+
+    >>> from sympy.polys.domains import ZZ
+    >>> from sympy.polys.densebasic import dup_print, dup_from_list
+    >>> f = dup_from_list([1, 0, 5, 0, 7], ZZ)
+    >>> dup_print(f, 'x')
+    x**4 + 5*x**2 + 7
+
+    """
+    if isinstance(sym, tuple):
+        sym = sym[0]
+
+    if not f:
+        return "0"
+
+    deg = dup_degree(f)
+    terms = []
+
+    for i, coeff in enumerate(f):
+        d = deg - i
+
+        if coeff == 0:
+            continue
+
+        if d == 0:
+            term = f"{coeff}"
+        elif d == 1:
+            if coeff == 1:
+                term = f"{sym}"
+            elif coeff == -1:
+                term = f"-{sym}"
+            else:
+                term = f"{coeff}*{sym}"
+        else:
+            if coeff == 1:
+                term = f"{sym}**{d}"
+            elif coeff == -1:
+                term = f"-{sym}**{d}"
+            else:
+                term = f"{coeff}*{sym}**{d}"
+
+        terms.append(term)
+
+    poly = " + ".join(terms).replace("+ -", "- ")
+    print(poly)
