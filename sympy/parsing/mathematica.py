@@ -1,5 +1,4 @@
 from __future__ import annotations
-import sys
 import re
 import typing
 from itertools import product
