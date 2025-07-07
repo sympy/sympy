@@ -1038,8 +1038,10 @@ class Beam:
         return -integrate(self.load, x)
 
     def max_shear_force(self):
-        """Returns maximum Shear force and its coordinate
-        in the Beam object."""
+        """
+        Returns the maximum shear force magnitude in the beam,
+        along with its location(s) which can be points or  intervals.
+        """
         shear_curve = self.shear_force()
         x = self.variable
 
@@ -1073,7 +1075,6 @@ class Beam:
         shear_values = list(map(abs, shear_values))
         maximum_shear = max(shear_values)
 
-        points =[]
         points = [intervals[i] for i, shear in enumerate(shear_values) if shear == maximum_shear]
 
         return (points, maximum_shear)
