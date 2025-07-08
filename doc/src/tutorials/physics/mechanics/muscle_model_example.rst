@@ -1,8 +1,8 @@
 .. _muscle_model_example:
 
-====================================
-Muscle Model Example Wrapping Sphere
-====================================
+=================================================
+Muscle Wrapping over a Spherical Bone in 3D Space
+=================================================
 
 .. _fig-muscle-model:
 .. figure:: muscle_model.svg
