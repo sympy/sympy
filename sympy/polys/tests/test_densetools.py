@@ -316,7 +316,7 @@ def test_dup_series_reversion(trials=50):
     assert dup_series_reversion(f, 10, QQ) == g
 
     raises(ValueError, lambda: dup_series_reversion([QQ(1), QQ(1)], 5, QQ))
-    raises(ValueError, lambda: dup_series_reversion([QQ(1), QQ(0), QQ(0)], 5, QQ))
+    raises(NotReversible, lambda: dup_series_reversion([QQ(1), QQ(0), QQ(0)], 5, QQ))
 
 
 def test_dup_series_reversion_small():
@@ -324,7 +324,7 @@ def test_dup_series_reversion_small():
     assert _dup_series_reversion_small(ZZ.map([12, 7, 1, 0]), 4, ZZ) == [86, -7, 1, 0]
     assert _dup_series_reversion_small(ZZ.map([2, 1, 0]), 2, ZZ) == [1, 0]
 
-    raises(ValueError, lambda: _dup_series_reversion_small(ZZ.map([1, 1, 0]), 1, ZZ))
+    raises(NotReversible, lambda: _dup_series_reversion_small(ZZ.map([1, 1, 0]), 1, ZZ))
     raises(ValueError, lambda: _dup_series_reversion_small(ZZ.map([0]), 0, ZZ))
 
 

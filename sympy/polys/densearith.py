@@ -845,9 +845,7 @@ def _dup_series_mul_base(f, g, n, K):
 
     h = [K.zero] * n
     for i in range(len(f)):
-        for j in range(len(g)):
-            if i+j >= n:
-                break
+        for j in range(min(len(g), n - i)):
             h[i + j] += f[i] * g[j]
 
     return dup_reverse(h)

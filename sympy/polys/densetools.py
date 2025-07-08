@@ -1498,8 +1498,6 @@ def _dup_series_reversion_small(f, n, K):
 
     if not K.is_zero(d):
         raise ValueError("f must have zero constant term")
-    if K.is_zero(c):
-        raise ValueError("f must have nonzero linear term")
 
     cinv = K.revert(c)
     g = [K.zero] * n
@@ -1543,8 +1541,6 @@ def dup_series_reversion(f, n, K):
 
     if f[-1] != K.zero:
         raise ValueError("f must have zero constant term")
-    if len(f) < 2 or f[-2] == K.zero:
-        raise ValueError("f must have nonzero linear term")
     if n<=4:
         return _dup_series_reversion_small(f, n, K)
 

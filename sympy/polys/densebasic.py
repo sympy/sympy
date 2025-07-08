@@ -1916,8 +1916,15 @@ def dup_from_list(f, K):
     >>> from sympy.polys.domains import QQ
     >>> from sympy.polys.densebasic import dup_from_list
 
-    >>> dup_from_list([1, 0, 5, 0, 7], QQ)
-     [1, 0, 5, 0, 7]
+    >>> p = dup_from_list([1, 0, 5, 0, 7], QQ); p
+    [1, 0, 5, 0, 7]
+    >>> QQ.of_type(1)
+    False
+    >>> QQ.of_type(p[0])
+    True
+
+    >>> dup_from_list([0, 0, 0, 2, 1, 0, 0], QQ)
+    [2, 1, 0, 0]
 
     """
     if not f:
