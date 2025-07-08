@@ -386,8 +386,30 @@ def tests_for_error_reporting_solve_for_reaction_loads():
     r15 = b.apply_support(15, 'roller')
     b.apply_load(-Q, 0, 0, end=15)
 
+    with raises(ValueError, match="Expected at least"):
+        b.solve_for_reaction_loads(r0)
+
+    E = Symbol('E')
+    I = Symbol('I')
+    Q= Symbol('Q')
+    b = Beam(15, E, I)
+    b.apply_rotation_hinge(5)
+    b.apply_rotation_hinge(10)
+    r0 = b.apply_support(0, 'pin')
+    r15 = b.apply_support(15, 'roller')
+    b.apply_load(-Q, 0, 0, end=15)
     with raises(ValueError, match="The system is only solvable with symbolic constraint"):
-        b.solve_for_reaction_loads(R1)
+        b.solve_for_reaction_loads(r0,r15)
+
+    b = Beam(12, E, I)
+    b.apply_rotation_hinge(3)
+    b.apply_rotation_hinge(8)
+    r1 = b.apply_support(0, 'pin')
+    r2= b.apply_support(12, 'roller')
+    b.apply_load(-P, 6, -1)
+    b.apply_load(Q, 9,-1)
+    with raises(ValueError, match="The system is only solvable with symbolic constraint"):
+        b.solve_for_reaction_loads(r1,r2)
 
     b = Beam(12, E, I)
     b.apply_rotation_hinge(3)
@@ -396,7 +418,7 @@ def tests_for_error_reporting_solve_for_reaction_loads():
     r2 = b.apply_support(12, 'roller')
     b.apply_load(-P, 6, -1)
     b.apply_load(Q,9,-1)
-    with raises(ValueError, match="The system is only solvable with symbolic constraint"):
+    with raises(ValueError, match="Expected at least"):
         b.solve_for_reaction_loads(R1)
 
     b = Beam(10, E, I)
@@ -404,8 +426,11 @@ def tests_for_error_reporting_solve_for_reaction_loads():
     b.apply_rotation_hinge(5)
     b.apply_support(10, 'fixed')
     b.apply_load(-P, 5, -1)
-    with raises(ValueError, match="The system is only solvable with symbolic constraint"):
+    with raises(ValueError, match="Expected at least"):
         b.solve_for_reaction_loads(R1)
+
+
+
 
 def test_beam_units():
     E = Symbol('E')
