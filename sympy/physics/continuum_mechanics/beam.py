@@ -945,6 +945,11 @@ class Beam:
         if len(set(reactions)) != len(reactions):
             raise ValueError("Duplicate symbols supplied to solve_for_reaction_loads().")
 
+        required = len(self.bc_deflection) + len(self.bc_slope)
+        if len(reactions) < required:
+            raise ValueError(f"Expected at least {required} reaction symbols (based on deflection and slope BCs), but got {len(reactions)}.")
+
+
         x = self.variable
         l = self.length
         C3 = Symbol('C3')
