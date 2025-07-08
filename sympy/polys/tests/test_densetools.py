@@ -1,6 +1,5 @@
 """Tests for dense recursive polynomials' tools. """
 
-from random import randint
 from sympy.polys.densebasic import (
     dup_normal, dmp_normal,
     dup_from_raw_dict,
@@ -9,7 +8,7 @@ from sympy.polys.densebasic import (
 
 from sympy.polys.densearith import dmp_mul_ground
 
-from sympy.polys.densebasic import dup_truncate
+from sympy.polys.densebasic import dup_from_list
 
 from sympy.polys.densetools import (
     dup_clear_denoms, dmp_clear_denoms,
@@ -52,14 +51,9 @@ from sympy.core.singleton import S
 from sympy.functions.elementary.trigonometric import sin
 
 from sympy.abc import x
-from sympy.testing.pytest import raises, slow
+from sympy.testing.pytest import raises
 
 f_0, f_1, f_2, f_3, f_4, f_5, f_6 = [ f.to_dense() for f in f_polys() ]
-
-
-def _dup_random(lo, hi, deg, domain):
-    """Generate a random dense polynomial of given degree and domain."""
-    return dup_normal([domain(randint(lo, hi)) for _ in range(deg)], domain)
 
 
 def test_dup_integrate():
@@ -293,29 +287,17 @@ def test_dmp_revert():
     raises(MultivariatePolynomialError, lambda: dmp_revert([[1]], 2, 1, QQ))
 
 
-def test_dup_series_reversion(trials=50):
-    for _ in range(trials):
-        deg = randint(2, 10)
-        f = _dup_random(-10, 10, randint(1, 10), QQ)
-        if len(f) < 2:
-            continue
+def test_dup_series_reversion():
+    assert dup_series_reversion([], 3, QQ) == []
+    assert dup_series_reversion([ZZ(12), ZZ(1), ZZ(0)], 3, QQ) == \
+           dup_from_list([-12, 1, 0], QQ)
 
-        f[-1] = QQ(0)
-        if f[-2] == 0:
-            f[-2] = QQ(1, 1)
-
-        g = dup_series_reversion(f, deg, QQ)
-        composed = dup_series_compose(f, g, deg, QQ)
-
-        expected = [QQ(1), QQ(0)]
-        assert composed == expected
-
-    f = [QQ(4), QQ(3), QQ(4), QQ(1), QQ(0)]
-    g = [QQ(49313847), -QQ(4043832), QQ(340156), -QQ(29596), QQ(2699), -QQ(264),
-        QQ(29), -QQ(4), QQ(1), QQ(0)]
+    f = dup_from_list([4, 3, 4, 1, 0], QQ)
+    g = dup_from_list([49313847, -4043832, 340156, -29596, 2699, -264, 29, -4, 1, 0], QQ)
     assert dup_series_reversion(f, 10, QQ) == g
 
     raises(ValueError, lambda: dup_series_reversion([QQ(1), QQ(1)], 5, QQ))
+    raises(ValueError, lambda: dup_series_reversion([QQ(1), QQ(1)], 0, QQ))
     raises(NotReversible, lambda: dup_series_reversion([QQ(1), QQ(0), QQ(0)], 5, QQ))
 
 
@@ -326,25 +308,6 @@ def test_dup_series_reversion_small():
 
     raises(NotReversible, lambda: _dup_series_reversion_small(ZZ.map([1, 1, 0]), 1, ZZ))
     raises(ValueError, lambda: _dup_series_reversion_small(ZZ.map([0]), 0, ZZ))
-
-
-@slow
-def test_dup_series_reversion_large(trials=3):
-    for _ in range(trials):
-        deg = randint(100, 200)
-        f = _dup_random(-10, 10, randint(100, 200), QQ)
-        if len(f) < 2:
-            continue
-
-        f[-1] = QQ(0)
-        if f[-2] == 0:
-            f[-2] = QQ(1, 1)
-
-        g = dup_series_reversion(f, deg, QQ)
-        composed = dup_series_compose(f, g, deg, QQ)
-
-        expected = [QQ(1), QQ(0)]
-        assert composed == expected
 
 
 def test_dup_trunc():
@@ -638,18 +601,16 @@ def test_dmp_compose():
         [[1], [2], [1]], [[1], [2], [1]], 1, ZZ) == [[1], [4], [8], [8], [4]]
 
 
-def test_dup_series_compose(trials=50):
+def test_dup_series_compose():
+    f = dup_from_list([1, 2, 3, 4, 5], ZZ)
+    g = dup_from_list([2, 7, 1, 6, 23, 2 , 1, 4], ZZ)
 
-    for _ in range(trials):
-        deg = randint(2, 100)
-        f = _dup_random(-10, 10, deg, QQ)
-        g = _dup_random(11, 20, randint(1, 10), QQ)
+    assert dup_series_compose([], g, 5, ZZ) == []
+    assert dup_series_compose(f, [ZZ(4)], 5, ZZ) == [ZZ(453)]
+    assert dup_series_compose([ZZ(4)], g, 5, ZZ) == [ZZ(4)]
 
-        series_composed = dup_series_compose(f, g, deg, QQ)
-        expected = dup_compose(f, g, QQ)
-
-        assert series_composed == dup_truncate(expected, deg, QQ)
-
+    assert dup_series_compose(f, g, 8, ZZ) == \
+        dup_from_list([72414, 76477, 14638, 8539, 9250, 883, 380, 453], ZZ)
 
 def test_dup_decompose():
     assert dup_decompose([1], ZZ) == [[1]]

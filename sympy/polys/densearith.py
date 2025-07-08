@@ -837,14 +837,11 @@ def _dup_series_mul_base(f, g, n, K):
     """
     Helper function for dup_series_mul that uses a naive O(n^2) algorithm
     """
-    if not f or not g or n <= 0:
-        return []
-
-    f = dup_truncate(f, n, K)[::-1]
-    g = dup_truncate(g, n, K)[::-1]
+    f = f[::-1]
+    g = g[::-1]
 
     h = [K.zero] * n
-    for i in range(len(f)):
+    for i in range(min(len(f), n)):
         for j in range(min(len(g), n - i)):
             h[i + j] += f[i] * g[j]
 
@@ -855,9 +852,6 @@ def _dup_series_mul_karatsuba(f, g, prec, K):
     """
     Helper function for dup_series_mul that uses Karatsuba's algorithm
     """
-    if not f or not g or prec <= 0:
-        return []
-
     df = dup_degree(f)
     dg = dup_degree(g)
 

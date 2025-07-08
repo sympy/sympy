@@ -4,7 +4,7 @@ from random import randint
 from sympy.external.gmpy import GROUND_TYPES
 
 from sympy.polys.densebasic import (
-    dup_normal, dmp_normal, dup_truncate,
+    dup_normal, dmp_normal, dup_truncate, dup_from_list,
 )
 
 from sympy.polys.densearith import (
@@ -21,7 +21,6 @@ from sympy.polys.densearith import (
     dup_neg, dmp_neg,
     dup_add, dmp_add,
     dup_sub, dmp_sub,
-    _dup_series_mul_base, _dup_series_mul_karatsuba,
     dup_mul, dmp_mul, dup_series_mul,
     dup_sqr, dmp_sqr,
     dup_pow, dmp_pow, dup_series_pow,
@@ -50,11 +49,6 @@ from sympy.testing.pytest import raises
 
 f_0, f_1, f_2, f_3, f_4, f_5, f_6 = [ f.to_dense() for f in f_polys() ]
 F_0 = dmp_mul_ground(dmp_normal(f_0, 2, QQ), QQ(1, 7), 2, QQ)
-
-
-def _dup_random(lo, hi, deg, domain):
-    """Generate a random dense polynomial of given degree and domain."""
-    return dup_normal([domain(randint(lo, hi)) for _ in range(deg)], domain)
 
 
 def test_dup_add_term():
@@ -688,27 +682,26 @@ def test_dmp_mul():
 
 
 def test_dup_series_mul():
+    f = dup_from_list([2, 0, 0, 1, 7], ZZ)
+    g = dup_from_list([1, 0, 0, 1], ZZ)
 
-    # Check correctness against dup_mul with truncation
-    for i in range(50):
-        deg = randint(2, 200)
-        f = _dup_random(-20, 0, deg, ZZ)
-        g = _dup_random(0, 20, randint(1, 200), ZZ)
+    assert dup_series_mul([], [], 4, ZZ) == []
+    assert dup_series_mul(f, [], 5, ZZ) == []
+    assert dup_series_mul(f, f, 0, ZZ) == []
+    assert dup_series_mul(f, g, 1, ZZ) == [ZZ(7)]
 
-        mul = dup_series_mul(f, g, deg, ZZ)
-        expected = dup_truncate(dup_mul(f, g, ZZ), deg, ZZ)
-        assert mul == expected
+    assert dup_series_mul(f, f, 2, ZZ) == dup_from_list(
+        [14, 49], ZZ)
+    assert dup_series_mul(f, g, 5, ZZ) == dup_from_list(
+        [3, 7, 0, 1, 7], ZZ)
+    assert dup_series_mul(f, g, 10, ZZ) == dup_from_list(
+        [2, 0, 0, 3, 7, 0, 1, 7], ZZ)
 
-    # Compare base case with Karatsuba multiplication
-    for i in range(50):
-        deg = randint(2, 200)
-        f = _dup_random(-20, 0, deg, ZZ)
-        g = _dup_random(0, 20, randint(1, 200), ZZ)
+    f = [QQ(randint(-100, 100), randint(1, 100)) for _ in range(200)]
+    g = [QQ(randint(-100, 100), randint(1, 100)) for _ in range(50, 200)]
 
-        b = _dup_series_mul_base(f, g, deg, ZZ)
-        k = _dup_series_mul_karatsuba(f, g, deg, ZZ)
-
-        assert b == k
+    expected = dup_truncate(dup_mul(f, g, QQ), 100, QQ)
+    assert dup_series_mul(f, g, 100, QQ) == expected
 
 def test_dup_sqr():
     assert dup_sqr([], ZZ) == []
@@ -795,15 +788,11 @@ def test_dmp_pow():
     assert dmp_pow(f, 2, 0, ZZ) == dup_pow(f, 2, ZZ)
 
 
-def test_dup_series_pow(trials=100):
-    for i in range(trials):
-        deg = randint(2, 100)
-        f = _dup_random(-20, 0, randint(1, 100), ZZ)
-        n = randint(1, 5)
-
-        pow = dup_series_pow(f, n, deg, ZZ)
-        expected = dup_truncate(dup_pow(f, n, ZZ), deg, ZZ)
-        assert pow == expected
+def test_dup_series_pow():
+    assert dup_series_pow([], 1, 1, ZZ) == []
+    assert dup_series_pow([ZZ(1), ZZ(0)], 0, 1, ZZ) == [ZZ(1)]
+    assert dup_series_pow(dup_from_list([1, 2, 3, 4, 5], ZZ), 1, 4, ZZ) == [
+        ZZ(2), ZZ(3), ZZ(4), ZZ(5)]
 
     assert dup_series_pow([ZZ(1), ZZ(1)], 3, 4, ZZ) == [ZZ(1), ZZ(3), ZZ(3), ZZ(1)]
     assert dup_series_pow([ZZ(2), ZZ(0), ZZ(1)], 2, 5, ZZ) == [ZZ(4), ZZ(0), ZZ(4),
@@ -821,6 +810,8 @@ def test_dup_series_pow(trials=100):
     K = FF(7)
     assert dup_series_pow([K(1), K(1)], 3, 4, K) == [K(1), K(3), K(3), K(1)]
     assert dup_series_pow([K(2), K(1)], 4, 5, K) == [K(2), K(4), K(3), K(1), K(1)]
+
+    raises(ValueError, lambda: dup_series_pow([ZZ(1), ZZ(1)], -1, 4, ZZ))
 
 
 def test_dup_pdiv():

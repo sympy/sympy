@@ -29,6 +29,7 @@ from sympy.polys.densebasic import (
     dmp_zeros,
     dmp_include,
     dup_nth,
+    dup_normal,
 )
 from sympy.polys.polyerrors import (
     MultivariatePolynomialError,
@@ -1496,9 +1497,6 @@ def _dup_series_reversion_small(f, n, K):
     f = [K.zero] * (4 - len(f)) + f
     a, b, c, d = f
 
-    if not K.is_zero(d):
-        raise ValueError("f must have zero constant term")
-
     cinv = K.revert(c)
     g = [K.zero] * n
 
@@ -1511,7 +1509,7 @@ def _dup_series_reversion_small(f, n, K):
     if n >= 4:
         g[-4] = (2 * b ** 2 - a * c) * cinv ** 5
 
-    return dup_strip(g)
+    return dup_normal(g, K)
 
 
 def dup_series_reversion(f, n, K):
