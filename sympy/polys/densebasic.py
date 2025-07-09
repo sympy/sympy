@@ -1933,7 +1933,59 @@ def dup_from_list(f, K):
     return dup_strip([K.convert(c) for c in f])
 
 
-def dup_print(f, sym):
+def dup_pretty(f, sym, *, ascending=False):
+    """
+    Return a string representation of a polynomial in ``K[x]``.
+
+    Examples
+    ========
+
+    >>> from sympy.polys.domains import ZZ
+    >>> from sympy.polys.densebasic import dup_pretty, dup_from_list
+    >>> f = dup_from_list([1, 0, 5, 0, 7], ZZ)
+    >>> dup_pretty(f, 'x')
+    'x**4 + 5*x**2 + 7'
+    >>> dup_pretty(f, 'x', ascending=True)
+    '7 + 5*x**2 + x**4'
+    """
+    if isinstance(sym, tuple):
+        sym = sym[0]
+
+    if not f:
+        return "0"
+
+    deg = dup_degree(f)
+
+    def format_term(coeff, exp):
+        if coeff == 0:
+            return None
+        if exp == 0:
+            return str(coeff)
+        elif exp == 1:
+            base = sym
+        else:
+            base = f"{sym}**{exp}"
+
+        if coeff == 1:
+            return base
+        elif coeff == -1:
+            return f"-{base}"
+        else:
+            return f"{coeff}*{base}"
+
+    terms = [
+        format_term(coeff, deg - i)
+        for i, coeff in enumerate(f)
+    ]
+    terms = [term for term in terms if term is not None]
+
+    if ascending:
+        terms.reverse()
+
+    return " + ".join(terms).replace("+ -", "- ")
+
+
+def dup_print(f, sym, *, ascending=False):
     """
     Print a polynomial in ``K[x]``.
 
@@ -1945,41 +1997,7 @@ def dup_print(f, sym):
     >>> f = dup_from_list([1, 0, 5, 0, 7], ZZ)
     >>> dup_print(f, 'x')
     x**4 + 5*x**2 + 7
-
+    >>> dup_print(f, 'x', ascending=True)
+    7 + 5*x**2 + x**4
     """
-    if isinstance(sym, tuple):
-        sym = sym[0]
-
-    if not f:
-        return "0"
-
-    deg = dup_degree(f)
-    terms = []
-
-    for i, coeff in enumerate(f):
-        d = deg - i
-
-        if coeff == 0:
-            continue
-
-        if d == 0:
-            term = f"{coeff}"
-        elif d == 1:
-            if coeff == 1:
-                term = f"{sym}"
-            elif coeff == -1:
-                term = f"-{sym}"
-            else:
-                term = f"{coeff}*{sym}"
-        else:
-            if coeff == 1:
-                term = f"{sym}**{d}"
-            elif coeff == -1:
-                term = f"-{sym}**{d}"
-            else:
-                term = f"{coeff}*{sym}**{d}"
-
-        terms.append(term)
-
-    poly = " + ".join(terms).replace("+ -", "- ")
-    print(poly)
+    print(dup_pretty(f, sym, ascending=ascending))
