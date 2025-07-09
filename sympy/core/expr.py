@@ -3844,7 +3844,7 @@ class Expr(Basic, EvalfMixin):
     def round(self, n=None):
         """Return x rounded to the given decimal place.
 
-        If a complex number would results, apply round to the real
+        If a complex number would result, apply round to the real
         and imaginary components of the number.
 
         Examples
