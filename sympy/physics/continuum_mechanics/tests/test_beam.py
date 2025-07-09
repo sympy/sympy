@@ -428,8 +428,8 @@ def test_composite_beam():
     c=Beam(6, E, I)
     with raises(ValueError, match="Invalid joining method. Choose from 'fixed' or 'hinge'."):
         b.join(c, "hige")
-def test_point_cflexure1():
-
+def test_point_cflexure():
+    #single contraflexure
     E = Symbol('E')
     I = Symbol('I')
     b = Beam(10, E, I)
@@ -440,8 +440,7 @@ def test_point_cflexure1():
     b.apply_load(3, 6, 0)
     assert b.point_cflexure() == [Rational(10, 3)]
 
-def test_point_cflexure2():
-
+    # Multiple contraflexure points
     E = Symbol('E')
     I = Symbol('I')
     b = Beam(15, E, I)
@@ -454,8 +453,50 @@ def test_point_cflexure2():
     b.solve_for_reaction_loads(r0, r10, r15, m15)
     assert b.point_cflexure() == [Rational(1200, 163), 12, Rational(163, 12)]
 
-def test_point_cflexure3():
+    # constant zero region in the end
+    E = Symbol('E')
+    I = Symbol('I')
+    b = Beam(10, E, I)
+    r0, m0 = b.apply_support(0, type='fixed')
+    r4 = b.apply_support(4, type='pin')
+    r7,m7 = b.apply_support(7, type='fixed')
+    b.apply_rotation_hinge(2)
+    b.apply_rotation_hinge(5)
+    b.apply_load(-5, 0, 0, 2)
+    b.apply_load(7,3,-1)
+    b.solve_for_reaction_loads(r0, m0, r4, r7,m7)
+    assert b.point_cflexure() == [Rational(173,260),2,Rational(1490,381),5]
 
+    # Symbolic load
+    E = symbols('E')
+    I = symbols('I')
+    P = symbols('P',positive=True)
+    b = Beam(15, E, I)
+    r0 = b.apply_support(0, type='pin')
+    r10 = b.apply_support(10, type='pin')
+    r15, m15 = b.apply_support(15, type='fixed')
+    b.apply_rotation_hinge(12)
+    b.apply_load(-P, 5, -1)
+    b.solve_for_reaction_loads(r0, r10, r15, m15)
+    assert b.point_cflexure()==[Rational(25,3),12]
+
+    #symbolic load using bcs
+    E = Symbol('E')
+    I = Symbol('I')
+    M1, M2, R1, R2 = symbols('M1, M2, R1,R2')
+    F = Symbol('F',positive=True)
+    b5 = Beam(10, E, I)
+    b5.bc_deflection = [(0, 0),(10, 0)]
+    b5.bc_slope = [(0, 0),(10, 0)]
+    b5.apply_load(R1, 0, -1)
+    b5.apply_load(M1, 0, -2)
+    b5.apply_load(R2, 10, -1)
+    b5.apply_load(M2, 10, -2)
+    b5.apply_load(-F, 5, -1)
+    b5.solve_for_reaction_loads(R1, R2, M1, M2)
+    assert b5.point_cflexure()==[Rational(5,2),Rational(15,2)]
+
+    # constant zero region at start
     E = Symbol('E')
     I = Symbol('I')
     b = Beam(15, E, I)
@@ -469,8 +510,7 @@ def test_point_cflexure3():
     b.solve_for_reaction_loads(r0, r10, r15, m15)
     assert b.point_cflexure() == [12]
 
-def test_point_cflexure4():
-
+    #points that are not simple
     E = Symbol('E')
     E = 200
     I = Symbol('I')
@@ -488,8 +528,7 @@ def test_point_cflexure4():
     b.solve_for_reaction_loads(r0, r10, r15, m15)
     assert b.point_cflexure()==[5, Rational(149,8) - 3*sqrt(209)/8]
 
-def test_point_cflexure5():
-
+    # zero contra flexure points
     E = Symbol('E')
     I = Symbol('I')
     b = Beam(10, E, I)
@@ -500,23 +539,23 @@ def test_point_cflexure5():
     b.solve_for_reaction_loads(R_0, R_10)
     assert b.point_cflexure() == []
 
-def test_point_cflexure6():
-
+    # Join method with symbolic
     E = Symbol('E')
     I = Symbol('I')
+    P = Symbol('P', positive=True)
+    Z = Symbol('Z', positive=True)
     b1 = Beam(5, E, I)
     b2 = Beam(3, E, I)
     b = b1.join(b2, via="hinge")
     b.apply_support(0, type='fixed')
     b.apply_support(8, type='pin')
-    b.apply_load(-10, 2, -1)
-    b.apply_load(-5, 5, 0, 8)
+    b.apply_load(-P, 2, -1)
+    b.apply_load(-Z, 5, 0, 8)
     r0, m0, r8 = symbols('R_0, M_0, R_8')
     b.solve_for_reaction_loads(r0, m0, r8)
     assert b.point_cflexure() == [5]
 
-def test_point_cflexure7():
-
+    # with roots touching axis but never crossing
     E = Symbol('E')
     I = Symbol('I')
     b1 = Beam(5, E, I)
@@ -530,8 +569,7 @@ def test_point_cflexure7():
     b.solve_for_reaction_loads(r0, m0, r8)
     assert b.point_cflexure() == []
 
-def test_point_cflexure8():
-
+    # zero constant region
     E = Symbol('E')
     I = Symbol('I')
     b1 = Beam(5, E, I)
@@ -544,8 +582,7 @@ def test_point_cflexure8():
     b.solve_for_reaction_loads(r0, m0, r8)
     assert b.point_cflexure() == []
 
-def test_point_cflexure9():
-
+    # non zero moment at ends
     E = Symbol('E')
     I = Symbol('I')
     b = Beam(7, E, I)
@@ -558,8 +595,6 @@ def test_point_cflexure9():
     b.apply_load(-10, 6, -1)
     b.solve_for_reaction_loads(r0, m0, r4, r7)
     assert b.point_cflexure() == [1,2,5]
-
-def test_point_cflexure10():
 
     E = Symbol('E')
     I = Symbol('I')
@@ -575,8 +610,7 @@ def test_point_cflexure10():
     b.solve_for_reaction_loads(r0, m0, r4, r7,m7)
     assert b.point_cflexure() == [Rational(73,260), 2, 5, Rational(2705,437)]
 
-def test_point_cflexure11():
-
+    # with a jump at 4
     E = Symbol('E')
     I = Symbol('I')
     b = Beam(10, E, I)
