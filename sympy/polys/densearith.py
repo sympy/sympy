@@ -2,7 +2,8 @@
 
 
 from sympy.polys.densebasic import (
-    dup_slice,
+    dup_slice, dup_truncate,
+    dup_reverse,
     dup_LC, dmp_LC,
     dup_degree, dmp_degree,
     dup_strip, dmp_strip,
@@ -832,6 +833,85 @@ def dmp_mul(f, g, u, K):
     return dmp_strip(h, u)
 
 
+def _dup_series_mul_base(f, g, n, K):
+    """
+    Helper function for dup_series_mul that uses a naive O(n^2) algorithm
+    """
+    f = f[::-1]
+    g = g[::-1]
+
+    h = [K.zero] * n
+    for i in range(min(len(f), n)):
+        for j in range(min(len(g), n - i)):
+            h[i + j] += f[i] * g[j]
+
+    return dup_reverse(h)
+
+
+def _dup_series_mul_karatsuba(f, g, prec, K):
+    """
+    Helper function for dup_series_mul that uses Karatsuba's algorithm
+    """
+    df = dup_degree(f)
+    dg = dup_degree(g)
+
+    n = max(df, dg) + 1
+    n2 =  n // 2
+
+    fl = dup_slice(f, 0, n2, K)
+    gl = dup_slice(g, 0, n2, K)
+
+    fh = dup_rshift(dup_slice(f, n2, n, K), n2, K)
+    gh = dup_rshift(dup_slice(g, n2, n, K), n2, K)
+
+    lo = dup_series_mul(fl, gl, prec, K)
+
+    hi = []
+    mid = []
+    if n2 < prec:
+        hi = dup_series_mul(fh, gh, prec - n2, K)
+
+        a = dup_add(fl, fh, K)
+        b = dup_add(gl, gh, K)
+
+        mid = dup_series_mul(a, b, prec - n2, K)
+        mid = dup_sub(mid, dup_add(lo, hi, K), K)
+
+    res = lo
+    if mid:
+        res = dup_add(res, dup_lshift(mid, n2, K), K)
+    if hi:
+        res = dup_add(res, dup_lshift(hi, 2 * n2, K), K)
+
+    res = dup_truncate(res, prec, K)
+    return dup_strip(res)
+
+
+def dup_series_mul(f, g, n, K):
+    """
+    Multiply dense polynomials in ``K[[x]]`` modulo ``x**n``.
+
+    Examples
+    ========
+    >>> from sympy import ZZ
+    >>> from sympy.polys.densearith import dup_series_mul
+    >>> from sympy.polys.densebasic import dup_from_list, dup_print
+    >>> f = dup_from_list([1, 0, 1], ZZ)
+    >>> g = dup_from_list([2, 1], ZZ)
+    >>> h = dup_series_mul(f, g, 4, ZZ)
+    >>> dup_print(h, 'x')
+    2*x**3 + x**2 + 2*x + 1
+
+    """
+    if not f or not g or n <= 0:
+        return []
+
+    if min(len(f), len(g)) < 100:
+        return _dup_series_mul_base(f, g, n, K)
+    else:
+        return _dup_series_mul_karatsuba(f, g, n, K)
+
+
 def dup_sqr(f, K):
     """
     Square dense polynomials in ``K[x]``.
@@ -995,6 +1075,49 @@ def dmp_pow(f, n, u, K):
         f = dmp_sqr(f, u, K)
 
     return g
+
+
+def _dup_recurse_pow(f, exp, prec, K):
+    """
+    Helper function for dup_series_pow.
+    """
+    if exp == 1:
+        return dup_truncate(f, prec, K)
+
+    q, r = divmod(exp, 2)
+    half = _dup_recurse_pow(f, q, prec, K)
+    square = dup_series_mul(half, half, prec, K)
+
+    if r == 0:
+        return square
+    return dup_series_mul(square, f, prec, K)
+
+
+def dup_series_pow(f, n, prec, K):
+    """
+    Raise polynomial ``f`` to power ``n`` modulo ``x**prec`` in ``K[[x]]``.
+
+    Examples
+    ========
+    >>> from sympy import ZZ
+    >>> from sympy.polys.densearith import dup_series_pow
+    >>> from sympy.polys.densebasic import dup_from_list, dup_print
+    >>> f = dup_from_list([1, 2, 3], ZZ)
+    >>> p = dup_series_pow(f, 2, 5, ZZ)
+    >>> dup_print(p, 'x')
+    x**4 + 4*x**3 + 10*x**2 + 12*x + 9
+
+    """
+    if not f:
+        return []
+    if n < 0:
+        raise ValueError("Negative exponent not supported")
+    if n == 0:
+        return [K.one]
+    if n == 1 or f == [K.one]:
+        return dup_truncate(f, prec, K)
+
+    return _dup_recurse_pow(f, n, prec, K)
 
 
 def dup_pdiv(f, g, K):
