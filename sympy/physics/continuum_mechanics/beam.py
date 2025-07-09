@@ -1235,66 +1235,104 @@ class Beam:
         """
 
         x = self.variable
+        l = self.length
+
         bm = self.bending_moment()
 
-        #Removes the singularity functions of order < 0 from the bending moment equation used in this method
-        non_singular_bending_moment = sum(arg for arg in self.bending_moment().args if not arg.args[1].args[2] < 0)
+        # Filter out singularity terms with order < 0
+        terms = []
+        for term in bm.args:
+            sfs = [atom for atom in term.atoms(SingularityFunction)]
+            if not sfs:
+                terms.append(term)
+            else:
+                for sf in sfs:
+                    order = sf.args[2]
+                    if order >= 0:
+                        terms.append(term)
 
-        # To restrict the range within length of the Beam
-        moment_curve = Piecewise((float("nan"), self.variable<=0),
-                (non_singular_bending_moment, self.variable<self.length),
-                (float("nan"), True))
+        non_singular_bending_moment = sum(terms)
 
+        # Identify singularity points to define intervals
+        singularity_points = set()
+        for term in non_singular_bending_moment.atoms(SingularityFunction):
+            location = term.args[1]
+            singularity_points.add(location)
+        singularity_points = sorted(singularity_points, key=lambda p: p.evalf())
+
+        # Define intervals
+        intervals = []
+        points = [0] + [p for p in singularity_points if p != 0 and p != l] + [l]
+        for i in range(len(points) - 1):
+            start, end = points[i], points[i + 1]
+            if start != end:
+                intervals.append(Interval(start, end))
+
+        # Solve for roots in each interval
         roots = set()
+        for interval in intervals:
+            expr = non_singular_bending_moment
+            for sf in expr.atoms(SingularityFunction):
+                loc, order = sf.args[1], sf.args[2]
+                if interval.end <= loc:
+                    expr = expr.subs(sf, 0)
+                elif interval.start > loc:
+                    expr = expr.subs(sf, (x - loc)**order)
+                else:
+                    if not (loc == interval.start or loc == interval.end):
+                        continue
 
-        for expr, cond in moment_curve.as_expr_set_pairs():
-            if expr.equals(0):
-                continue
+            expr = expr.simplify()
+            sol = solveset(expr, x, domain=interval)
+            if isinstance(sol, FiniteSet):
+                for r in sol:
+                    roots.add(r)
+            elif isinstance(sol, Union):
+                for part in sol.args:
+                    if isinstance(part, FiniteSet):
+                        for r in part:
+                            roots.add(r)
+                    elif isinstance(part, Interval):
+                        roots.add(part.start)
+                        roots.add(part.end)
 
-            try:
-                sol = solveset(expr, x, domain=cond)
-                if isinstance(sol, FiniteSet):
-                    roots.update(sol)
-                elif isinstance(sol, Union):
-                    for part in sol.args:
-                        if isinstance(part, FiniteSet):
-                            roots.update(part)
-            except NotImplementedError:
-                continue
+            elif isinstance(sol, Interval):
+                roots.add(sol.start)
+                roots.add(sol.end)
 
-            if hasattr(cond, 'start') and hasattr(cond, 'end'):
-                for pt in [cond.start, cond.end]:
-                    if pt.is_real:
-                        try:
-                            val = expr.subs(x, pt).evalf()
-                            if val == 0:
-                                roots.add(pt)
+        # Add boundary condition locations for jumps
+        jumps = set()
+        for loc, _ in self.bc_slope:
+            roots.add(loc)
+            jumps.add(loc)
 
-                        except Exception:
-                            pass
+        roots = sorted(roots)
 
-        # Checks for the sign change at roots
-        epsilon = 1e-6
+        # Check for sign changes
         points = []
+        if len(roots) <= 1:
+            return []
 
-        for point in sorted(roots, key=lambda r: r.evalf()):
-            if not point.is_number:
+        for i, point in enumerate(roots):
+            if point in jumps:
                 continue
-            if point.evalf() <= 0 or point.evalf() >= self.length:
-                continue
+            if i == 0:
+                left_mid = (0 + point) / 2
+                right_mid = (point + roots[i + 1]) / 2
+            elif i == len(roots) - 1:
+                left_mid = (roots[i - 1] + point) / 2
+                right_mid = (point + self.length) / 2
+            else:
+                left_mid = (roots[i - 1] + point) / 2
+                right_mid = (point + roots[i + 1]) / 2
 
-            try:
-                left = bm.subs(x, point - epsilon).evalf()
-                right = bm.subs(x, point + epsilon).evalf()
+            left_val = bm.subs(x, left_mid).evalf()
+            right_val = bm.subs(x, right_mid).evalf()
 
-                # Strict condition that shows a shift in bending moment at roots
-                if left * right < 0:
+            product=left_val*right_val
+            if isinstance(product,Expr):
+                if product.is_negative:
                     points.append(point)
-
-            except Exception:
-                continue
-
-        # Returns Valid points of contraflexure
         return points
 
     def slope(self):
