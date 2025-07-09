@@ -584,13 +584,13 @@ class BlockDiagMatrix(BlockMatrix):
     sympy.matrices.dense.diag
     """
     def __new__(cls, *mats):
-        # Validate that all arguments are matrix-like objects
+        mats = [_sympify(m) for m in mats]
         for mat in mats:
-            if not hasattr(mat, 'rows') or not hasattr(mat, 'cols'):
+            if not isinstance(mat, MatrixExpr):
                 raise ValueError(
-                    f"BlockDiagMatrix requires matrix-like objects with 'rows' and 'cols' "
-                    f"attributes. Got {type(mat).__name__} with value {mat}")
-        return Basic.__new__(BlockDiagMatrix, *[_sympify(m) for m in mats])
+                    f"BlockDiagMatrix requires matrix-like objects. "
+                    f"Got {type(mat).__name__} with value {mat}")
+        return Basic.__new__(BlockDiagMatrix, *mats)
 
     @property
     def diag(self):
