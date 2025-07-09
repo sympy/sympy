@@ -45,10 +45,10 @@ from sympy.simplify.trigsimp import trigsimp
 from sympy.tensor.indexed import Indexed
 from sympy.physics.units import meter
 
+import pytest
 from sympy.testing.pytest import raises, XFAIL
 
 from sympy.abc import a, b, c, n, t, u, x, y, z
-
 
 f, g, h = symbols('f,g,h', cls=Function)
 
@@ -2222,6 +2222,11 @@ def test_issue_10755():
     x = symbols('x')
     raises(TypeError, lambda: int(log(x)))
     raises(TypeError, lambda: log(x).round(2))
+
+@pytest.mark.parametrize('expr', [I / 3, I / 200])
+def test_issue_28221(expr):
+    with pytest.raises(TypeError, match="Cannot convert complex to int"):
+        int(expr)
 
 
 def test_issue_11877():

@@ -358,28 +358,44 @@ class Expr(Basic, EvalfMixin):
     def __int__(self) -> int:
         if not self.is_number:
             raise TypeError("Cannot convert symbols to int")
+        if self.is_complex and not self.is_real:
+            raise TypeError("Cannot convert complex to int")
+        if not self.is_comparable:
+            raise TypeError("Cannot convert non-comparable expression to int")
+    
         r = self.round(2)
         if not r.is_Number:
-            raise TypeError("Cannot convert complex to int")
+            raise TypeError("Cannot convert %s to int" % r)
         if r in (S.NaN, S.Infinity, S.NegativeInfinity):
             raise TypeError("Cannot convert %s to int" % r)
+
         i = int(r)
         if not i:
             return i
+
         if int_valued(r):
-            # non-integer self should pass one of these tests
-            if (self > i) is S.true:
-                return i
-            if (self < i) is S.true:
-                return i - 1
-            ok = self.equals(i)
-            if ok is None:
-                raise TypeError('cannot compute int value accurately')
-            if ok:
-                return i
-            # off by one
-            return i - (1 if i > 0 else -1)
+            return self._handle_int_valued_case(i)
+
         return i
+
+    def _handle_int_valued_case(self, i):
+        """Handle the case where the rounded value is integer-valued."""
+        # Check if self is greater than the rounded integer
+        if (self > i) is S.true:
+            return i
+        # Check if self is less than the rounded integer
+        if (self < i) is S.true:
+            return i - 1
+
+        # Check if self equals the rounded integer
+        ok = self.equals(i)
+        if ok is None:
+            raise TypeError('cannot compute int value accurately')
+        if ok:
+            return i
+
+        # Handle off-by-one case
+        return i - (1 if i > 0 else -1)
 
     def __float__(self) -> float:
         # Don't bother testing if it's a number; if it's not this is going
