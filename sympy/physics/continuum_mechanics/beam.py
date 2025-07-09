@@ -1242,7 +1242,8 @@ class Beam:
         # Filter out singularity terms with order < 0
         terms = []
         for term in bm.args:
-            sfs = [atom for atom in term.atoms(SingularityFunction)]
+            sfs = list(term.atoms(SingularityFunction))
+
             if not sfs:
                 terms.append(term)
             else:
