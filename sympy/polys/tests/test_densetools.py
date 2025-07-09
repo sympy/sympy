@@ -300,6 +300,14 @@ def test_dup_series_reversion():
     raises(ValueError, lambda: dup_series_reversion([QQ(1), QQ(1)], 0, QQ))
     raises(NotReversible, lambda: dup_series_reversion([QQ(1), QQ(0), QQ(0)], 5, QQ))
 
+    f = dup_from_list([QQ(1, 2), QQ(1, 3), QQ(0)], QQ)
+    assert dup_series_reversion(f, 4, QQ) == dup_from_list(
+        [QQ(243, 2), QQ(-27, 2), QQ(3), QQ(0)], QQ)
+
+    g = dup_from_list([QQ(2, 3), QQ(1, 4), QQ(1, 6), QQ(0)], QQ)
+    assert dup_series_reversion(g, 5, QQ) == dup_from_list(
+        [QQ(17010), QQ(108), QQ(-54), QQ(6), QQ(0)], QQ)
+
 
 def test_dup_series_reversion_small():
     assert _dup_series_reversion_small(ZZ.map([1, 1, 0]), 3, ZZ) == [-1, 1, 0]
@@ -611,6 +619,17 @@ def test_dup_series_compose():
 
     assert dup_series_compose(f, g, 8, ZZ) == \
         dup_from_list([72414, 76477, 14638, 8539, 9250, 883, 380, 453], ZZ)
+
+    f = dup_from_list([QQ(1, 2), QQ(1, 3), QQ(1, 4)], QQ)
+    g = dup_from_list([QQ(2, 3), QQ(1, 5)], QQ)
+    assert dup_series_compose(f, g, 4, QQ) == dup_from_list(
+        [QQ(2, 9), QQ(16, 45), QQ(101, 300)], QQ)
+
+    f = dup_from_list([QQ(1, 3), QQ(-1, 2), QQ(1, 6)], QQ)
+    g = dup_from_list([QQ(1, 4), QQ(1, 2), QQ(1, 3)], QQ)
+    assert dup_series_compose(f, g, 5, QQ) == dup_from_list(
+        [QQ(1, 48), QQ(1, 12), QQ(1, 72), QQ(-5, 36), QQ(1, 27)], QQ)
+
 
 def test_dup_decompose():
     assert dup_decompose([1], ZZ) == [[1]]

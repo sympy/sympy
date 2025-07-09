@@ -703,6 +703,17 @@ def test_dup_series_mul():
     expected = dup_truncate(dup_mul(f, g, QQ), 100, QQ)
     assert dup_series_mul(f, g, 100, QQ) == expected
 
+    f = dup_from_list([QQ(3, 4), QQ(-1, 2), QQ(1, 6)], QQ)
+    g = dup_from_list([QQ(1, 3), QQ(2, 5)], QQ)
+    assert dup_series_mul(f, g, 3, QQ) == dup_from_list(
+        [QQ(2, 15), QQ(-13, 90), QQ(1, 15)], QQ)
+
+    f = dup_from_list([QQ(1, 2), QQ(0), QQ(1, 3), QQ(1, 4)], QQ)
+    g = dup_from_list([QQ(2), QQ(1, 2)], QQ)
+    assert dup_series_mul(f, g, 4, QQ) == dup_from_list(
+        [QQ(1, 4), QQ(2, 3), QQ(2, 3), QQ(1, 8)], QQ)
+
+
 def test_dup_sqr():
     assert dup_sqr([], ZZ) == []
     assert dup_sqr([ZZ(2)], ZZ) == [ZZ(4)]
@@ -812,6 +823,14 @@ def test_dup_series_pow():
     assert dup_series_pow([K(2), K(1)], 4, 5, K) == [K(2), K(4), K(3), K(1), K(1)]
 
     raises(ValueError, lambda: dup_series_pow([ZZ(1), ZZ(1)], -1, 4, ZZ))
+
+    f = dup_from_list([QQ(1, 2), QQ(1, 3)], QQ)
+    assert dup_series_pow(f, 2, 3, QQ) == dup_from_list(
+        [QQ(1, 4), QQ(1, 3), QQ(1, 9)], QQ)
+
+    g = dup_from_list([QQ(2, 3), QQ(1, 4)], QQ)
+    assert dup_series_pow(g, 3, 4, QQ) == dup_from_list(
+        [QQ(8, 27), QQ(1, 3), QQ(1, 8), QQ(1, 64)], QQ)
 
 
 def test_dup_pdiv():
