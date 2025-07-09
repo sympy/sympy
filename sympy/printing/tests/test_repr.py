@@ -248,14 +248,10 @@ def test_PolyRing():
     R2 = ring("x,y", QQ, grlex)
     R3 = ring("x,y,z", ZZ["t"], lex)
 
-    if GROUND_TYPES != 'flint':
-        assert srepr(R1[0]) == "PythonPolyRing((Symbol('x'),), ZZ, lex)"
-        assert srepr(R2[0]) == "PythonPolyRing((Symbol('x'), Symbol('y')), QQ, grlex)"
-    else:
-        assert srepr(R1[0]) == "FlintPolyRing((Symbol('x'),), ZZ, lex)"
-        assert srepr(R2[0]) == "FlintPolyRing((Symbol('x'), Symbol('y')), QQ, grlex)"
+    assert srepr(R1[0]) == "PolyRing((Symbol('x'),), ZZ, lex)"
+    assert srepr(R2[0]) == "PolyRing((Symbol('x'), Symbol('y')), QQ, grlex)"
 
-    assert srepr(R3[0]) == "PythonPolyRing((Symbol('x'), Symbol('y'), Symbol('z')), ZZ[t], lex)"
+    assert srepr(R3[0]) == "PolyRing((Symbol('x'), Symbol('y'), Symbol('z')), ZZ[t], lex)"
 
 def test_FracField():
     assert srepr(field("x", ZZ, lex)[0]) == "FracField((Symbol('x'),), ZZ, lex)"
@@ -266,10 +262,8 @@ def test_FracField():
 def test_PolyElement():
     R, x, y = ring("x,y", ZZ)
 
-    if GROUND_TYPES != 'flint':
-        assert srepr(3*x**2*y + 1) == "PolyElement(PythonPolyRing((Symbol('x'), Symbol('y')), ZZ, lex), [((2, 1), 3), ((0, 0), 1)])"
-    else:
-        assert srepr(3*x**2*y + 1) == "PolyElement(FlintPolyRing((Symbol('x'), Symbol('y')), ZZ, lex), [((2, 1), 3), ((0, 0), 1)])"
+    assert srepr(3*x**2*y + 1) == "PolyElement(PolyRing((Symbol('x'), Symbol('y')), ZZ, lex), [((2, 1), 3), ((0, 0), 1)])"
+
 
 def test_FracElement():
     F, x, y = field("x,y", ZZ)

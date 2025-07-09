@@ -11,6 +11,7 @@ from sympy.core.numbers import Integer
 from sympy.core.relational import Relational
 from sympy.core.sorting import default_sort_key
 from sympy.utilities.iterables import sift
+from sympy.external.gmpy import GROUND_TYPES
 from .precedence import precedence, PRECEDENCE
 from .printer import Printer, print_function
 
@@ -504,9 +505,17 @@ class StrPrinter(Printer):
         return 'pi'
 
     def _print_PolyRing(self, ring):
-        return "Polynomial ring in %s over %s with %s order" % \
-            (", ".join((self._print(rs) for rs in ring.symbols)),
-            self._print(ring.domain), self._print(ring.order))
+        from sympy.polys.rings import FlintPolyRing
+
+        if GROUND_TYPES == 'flint' and isinstance(ring, FlintPolyRing):
+            return "FLINT Polynomial ring in %s over %s with %s order" % \
+                (", ".join((self._print(rs) for rs in ring.symbols)),
+                 self._print(ring.domain), self._print(ring.order))
+
+        else:
+            return "Polynomial ring in %s over %s with %s order" % \
+                (", ".join((self._print(rs) for rs in ring.symbols)),
+                 self._print(ring.domain), self._print(ring.order))
 
     def _print_FracField(self, field):
         return "Rational function field in %s over %s with %s order" % \

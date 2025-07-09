@@ -280,8 +280,7 @@ class ReprPrinter(Printer):
             self._print(expr.root), self._print(expr.coeffs()))
 
     def _print_PolyRing(self, ring):
-        return "%s(%s, %s, %s)" % (ring.__class__.__name__,
-            self._print(ring.symbols), self._print(ring.domain), self._print(ring.order))
+        return "PolyRing(%s, %s, %s)" % (self._print(ring.symbols), self._print(ring.domain), self._print(ring.order))
 
     def _print_FracField(self, field):
         return "%s(%s, %s, %s)" % (field.__class__.__name__,
