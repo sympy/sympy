@@ -8,8 +8,6 @@ from sympy.polys.densebasic import (
 
 from sympy.polys.densearith import dmp_mul_ground
 
-from sympy.polys.densebasic import dup_from_list
-
 from sympy.polys.densetools import (
     dup_clear_denoms, dmp_clear_denoms,
     dup_integrate, dmp_integrate, dmp_integrate_in,
@@ -24,13 +22,11 @@ from sympy.polys.densetools import (
     dup_real_imag,
     dup_mirror, dup_scale, dup_shift, dmp_shift,
     dup_transform,
-    dup_compose, dmp_compose, dup_series_compose,
+    dup_compose, dmp_compose,
     dup_decompose,
     dmp_lift,
     dup_sign_variations,
     dup_revert, dmp_revert,
-    _dup_series_reversion_small,
-    dup_series_reversion
 )
 from sympy.polys.polyclasses import ANP
 
@@ -54,7 +50,6 @@ from sympy.abc import x
 from sympy.testing.pytest import raises
 
 f_0, f_1, f_2, f_3, f_4, f_5, f_6 = [ f.to_dense() for f in f_polys() ]
-
 
 def test_dup_integrate():
     assert dup_integrate([], 1, QQ) == []
@@ -285,37 +280,6 @@ def test_dmp_revert():
     assert dmp_revert(f, 8, 0, QQ) == g
 
     raises(MultivariatePolynomialError, lambda: dmp_revert([[1]], 2, 1, QQ))
-
-
-def test_dup_series_reversion():
-    assert dup_series_reversion([], 3, QQ) == []
-    assert dup_series_reversion([ZZ(12), ZZ(1), ZZ(0)], 3, QQ) == \
-           dup_from_list([-12, 1, 0], QQ)
-
-    f = dup_from_list([4, 3, 4, 1, 0], QQ)
-    g = dup_from_list([49313847, -4043832, 340156, -29596, 2699, -264, 29, -4, 1, 0], QQ)
-    assert dup_series_reversion(f, 10, QQ) == g
-
-    raises(ValueError, lambda: dup_series_reversion([QQ(1), QQ(1)], 5, QQ))
-    raises(ValueError, lambda: dup_series_reversion([QQ(1), QQ(1)], 0, QQ))
-    raises(NotReversible, lambda: dup_series_reversion([QQ(1), QQ(0), QQ(0)], 5, QQ))
-
-    f = dup_from_list([QQ(1, 2), QQ(1, 3), QQ(0)], QQ)
-    assert dup_series_reversion(f, 4, QQ) == dup_from_list(
-        [QQ(243, 2), QQ(-27, 2), QQ(3), QQ(0)], QQ)
-
-    g = dup_from_list([QQ(2, 3), QQ(1, 4), QQ(1, 6), QQ(0)], QQ)
-    assert dup_series_reversion(g, 5, QQ) == dup_from_list(
-        [QQ(17010), QQ(108), QQ(-54), QQ(6), QQ(0)], QQ)
-
-
-def test_dup_series_reversion_small():
-    assert _dup_series_reversion_small(ZZ.map([1, 1, 0]), 3, ZZ) == [-1, 1, 0]
-    assert _dup_series_reversion_small(ZZ.map([12, 7, 1, 0]), 4, ZZ) == [86, -7, 1, 0]
-    assert _dup_series_reversion_small(ZZ.map([2, 1, 0]), 2, ZZ) == [1, 0]
-
-    raises(NotReversible, lambda: _dup_series_reversion_small(ZZ.map([1, 1, 0]), 1, ZZ))
-    raises(ValueError, lambda: _dup_series_reversion_small(ZZ.map([0]), 0, ZZ))
 
 
 def test_dup_trunc():
@@ -607,28 +571,6 @@ def test_dmp_compose():
 
     assert dmp_compose(
         [[1], [2], [1]], [[1], [2], [1]], 1, ZZ) == [[1], [4], [8], [8], [4]]
-
-
-def test_dup_series_compose():
-    f = dup_from_list([1, 2, 3, 4, 5], ZZ)
-    g = dup_from_list([2, 7, 1, 6, 23, 2 , 1, 4], ZZ)
-
-    assert dup_series_compose([], g, 5, ZZ) == []
-    assert dup_series_compose(f, [ZZ(4)], 5, ZZ) == [ZZ(453)]
-    assert dup_series_compose([ZZ(4)], g, 5, ZZ) == [ZZ(4)]
-
-    assert dup_series_compose(f, g, 8, ZZ) == \
-        dup_from_list([72414, 76477, 14638, 8539, 9250, 883, 380, 453], ZZ)
-
-    f = dup_from_list([QQ(1, 2), QQ(1, 3), QQ(1, 4)], QQ)
-    g = dup_from_list([QQ(2, 3), QQ(1, 5)], QQ)
-    assert dup_series_compose(f, g, 4, QQ) == dup_from_list(
-        [QQ(2, 9), QQ(16, 45), QQ(101, 300)], QQ)
-
-    f = dup_from_list([QQ(1, 3), QQ(-1, 2), QQ(1, 6)], QQ)
-    g = dup_from_list([QQ(1, 4), QQ(1, 2), QQ(1, 3)], QQ)
-    assert dup_series_compose(f, g, 5, QQ) == dup_from_list(
-        [QQ(1, 48), QQ(1, 12), QQ(1, 72), QQ(-5, 36), QQ(1, 27)], QQ)
 
 
 def test_dup_decompose():
