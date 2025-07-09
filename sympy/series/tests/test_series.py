@@ -212,6 +212,19 @@ def test_issue_8805():
     assert series(1, n=8) == 1
 
 
+def test_issue_9173():
+    p0,p1,p2,p3,b0,b1,b2=symbols('p0 p1 p2 p3 b0 b1 b2')
+    Q=(p0+(p1+(p2+p3/y)/y)/y)/(1+((p3/(b0*y)+(b0*p2-b1*p3)/b0**2)/y+\
+       (b0**2*p1-b0*b1*p2-p3*(b0*b2-b1**2))/b0**3)/y)
+
+    series = Q.series(y,n=3)
+
+    assert series == y*(b0*p2/p3+b0*(-p2/p3+b1/b0))+y**2*(b0*p1/p3+b0*p2*\
+            (-p2/p3+b1/b0)/p3+b0*(-p1/p3+(p2/p3-b1/b0)**2+b1*p2/(b0*p3)+\
+            b2/b0-b1**2/b0**2))+b0+O(y**3)
+    assert series.simplify() == b2*y**2 + b1*y + b0 + O(y**3)
+
+
 def test_issue_9549():
     y = (x**2 + x + 1) / (x**3 + x**2)
     assert series(y, x, oo) == x**(-5) - 1/x**4 + x**(-3) + 1/x + O(x**(-6), (x, oo))
@@ -367,9 +380,9 @@ def test_issue_20697():
 def test_issue_21245():
     fi = (1 + sqrt(5))/2
     assert (1/(1 - x - x**2)).series(x, 1/fi, 1).factor() == \
-        (-4812 - 2152*sqrt(5) + 1686*x + 754*sqrt(5)*x\
-        + O((x - 2/(1 + sqrt(5)))**2, (x, 2/(1 + sqrt(5)))))/((1 + sqrt(5))\
-        *(20 + 9*sqrt(5))**2*(x + sqrt(5)*x - 2))
+        (-37*sqrt(5) - 83 + 13*sqrt(5)*x + 29*x + O((x - 2/(1 + sqrt(5)))**2, (x\
+            , 2/(1 + sqrt(5)))))/((2*sqrt(5) + 5)**2*(x + sqrt(5)*x - 2))
+
 
 
 def test_issue_21938():
@@ -402,3 +415,7 @@ def test_issue_24266():
     #type3: f(y)**g(x)
     assert ((y)**(I*pi*(2*x+1))).series(x, 0, 2) == exp(I*pi*log(y)) + 2*I*pi*x*exp(I*pi*log(y))*log(y) + O(x**2)
     assert ((I*y)**(I*pi*(2*x+1))).series(x, 0, 2) == exp(I*pi*log(I*y)) + 2*I*pi*x*exp(I*pi*log(I*y))*log(I*y) + O(x**2)
+
+
+def test_issue_26856():
+    raises(ValueError, lambda: (2**x).series(x, oo, -1))

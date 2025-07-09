@@ -36,9 +36,9 @@ should have a hypergeometric series at ``x0``.
 ``Frobenius method`` when the solutions need to have `\log` terms. This happens
 when at least one pair of the roots of the indicial equation differ by an integer and
 frobenius method yields linearly dependent series solutions. Since we use this while converting
-to expressions, sometimes :func:`~HolonomicFunction.to_expr()` fails.
+to expressions, sometimes :func:`~HolonomicFunction.to_expr` fails.
 
-3. There doesn't seem to be a way for computing indefinite integrals, so :func:`~HolonomicFunction.integrate()`
+3. There doesn't seem to be a way for computing indefinite integrals, so :func:`~HolonomicFunction.integrate`
 basically computes `\int_{x_0}^{x} f(x)dx` if no limits are given, where `x_0` is the point at
 which initial conditions for the integrand are stored. Sometimes this gives an additional constant in the result.
 For instance:

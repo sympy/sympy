@@ -609,7 +609,8 @@ def _chinese_remainder_reconstruction_multivariate(hp, hq, p, q):
     hpmonoms.difference_update(monoms)
     hqmonoms.difference_update(monoms)
 
-    zero = hp.ring.domain.zero
+    domain = hp.ring.domain
+    zero = domain.zero
 
     hpq = hp.ring.zero
 
@@ -617,7 +618,7 @@ def _chinese_remainder_reconstruction_multivariate(hp, hq, p, q):
         crt_ = _chinese_remainder_reconstruction_multivariate
     else:
         def crt_(cp, cq, p, q):
-            return crt([p, q], [cp, cq], symmetric=True)[0]
+            return domain(crt([p, q], [cp, cq], symmetric=True)[0])
 
     for monom in monoms:
         hpq[monom] = crt_(hp[monom], hq[monom], p, q)
@@ -2140,7 +2141,7 @@ def func_field_modgcd(f, g):
     This is done by calculating the GCD in
     `\mathbb{Z}_p(x_1, \ldots, x_{n-1})[z]/(\check m_{\alpha}(z))[x_0]` for
     suitable primes `p` and then reconstructing the coefficients with the
-    Chinese Remainder Theorem and Rational Reconstuction. The GCD over
+    Chinese Remainder Theorem and Rational Reconstruction. The GCD over
     `\mathbb{Z}_p(x_1, \ldots, x_{n-1})[z]/(\check m_{\alpha}(z))[x_0]` is
     computed with a recursive subroutine, which evaluates the polynomials at
     `x_{n-1} = a` for suitable evaluation points `a \in \mathbb Z_p` and

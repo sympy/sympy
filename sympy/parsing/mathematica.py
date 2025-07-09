@@ -1,4 +1,5 @@
 from __future__ import annotations
+import sys
 import re
 import typing
 from itertools import product
@@ -8,7 +9,7 @@ import sympy
 from sympy import Mul, Add, Pow, Rational, log, exp, sqrt, cos, sin, tan, asin, acos, acot, asec, acsc, sinh, cosh, tanh, asinh, \
     acosh, atanh, acoth, asech, acsch, expand, im, flatten, polylog, cancel, expand_trig, sign, simplify, \
     UnevaluatedExpr, S, atan, atan2, Mod, Max, Min, rf, Ei, Si, Ci, airyai, airyaiprime, airybi, primepi, prime, \
-    isprime, cot, sec, csc, csch, sech, coth, Function, I, pi, Tuple, GreaterThan, StrictGreaterThan, StrictLessThan, \
+    isprime, cot, sec, csc, csch, sech, coth, Function, E, I, pi, Tuple, GreaterThan, StrictGreaterThan, StrictLessThan, \
     LessThan, Equality, Or, And, Lambda, Integer, Dummy, symbols
 from sympy.core.sympify import sympify, _sympify
 from sympy.functions.special.bessel import airybiprime
@@ -449,7 +450,7 @@ class MathematicaParser:
 
         s = m.string                # whole string
         anc = m.end() + 1           # pointing the first letter of arguments
-        square, curly = [], []      # stack for brakets
+        square, curly = [], []      # stack for brackets
         args = []
 
         # current cursor
@@ -533,10 +534,11 @@ class MathematicaParser:
         return s
 
     def parse(self, s):
-        s2 = self._from_mathematica_to_tokens(s)
-        s3 = self._from_tokens_to_fullformlist(s2)
-        s4 = self._from_fullformlist_to_sympy(s3)
-        return s4
+        s2 = named_characters_to_unicode(s)
+        s3 = self._from_mathematica_to_tokens(s2)
+        s4 = self._from_tokens_to_fullformlist(s3)
+        s5 = self._from_fullformlist_to_sympy(s4)
+        return s5
 
     INFIX = "Infix"
     PREFIX = "Prefix"
@@ -588,7 +590,21 @@ class MathematicaParser:
         "##": lambda: ["SlotSequence", "1"],
     }
 
-    _literal = r"[A-Za-z][A-Za-z0-9]*"
+    # This regex matches any valid python identifier -- excluding
+    # underscores, which Mathematica uses to denote patterns, and
+    # therefore can't be part of a variable name.  The regex has the
+    # form "[a][b]*", where `a` is the set of characters that can
+    # start an identifier, and `b` is the set of characters that can
+    # continue an identifier, which may also include numbers and
+    # unicode combining characters.
+    _literal = (
+        "["
+        + "".join(c for c in map(chr, range(sys.maxunicode+1)) if c!="_" and c.isidentifier())
+        + "]["
+        + "".join(c for c in map(chr, range(sys.maxunicode+1)) if c!="_" and ("x"+c).isidentifier())
+        + "]*"
+    )
+
     _number = r"(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)"
 
     _enclosure_open = ["(", "[", "[[", "{"]
@@ -656,9 +672,15 @@ class MathematicaParser:
             code_splits[i] = code_split
 
         # Tokenize the input strings with a regular expression:
-        token_lists = [tokenizer.findall(i) if isinstance(i, str) and i.isascii() else [i] for i in code_splits]
-        tokens = [j for i in token_lists for j in i]
+        def token_split(code):
+            if isinstance(code, str):
+                m = tokenizer.findall(code)
+                if m or code.isascii():
+                    return m
+            return [code]
 
+        token_lists = [token_split(code) for code in code_splits]
+        tokens = [j for i in token_lists for j in i]
         # Remove newlines at the beginning
         while tokens and tokens[0] == "\n":
             tokens.pop(0)
@@ -983,7 +1005,6 @@ class MathematicaParser:
         "Log": lambda *a: log(*reversed(a)),
         "Log2": lambda x: log(x, 2),
         "Log10": lambda x: log(x, 10),
-        "Rational": Rational,
         "Exp": exp,
         "Sqrt": sqrt,
 
@@ -1062,6 +1083,9 @@ class MathematicaParser:
     _atom_conversions = {
         "I": I,
         "Pi": pi,
+        "ExponentialE": E,
+        "ImaginaryI": I,
+        "ImaginaryJ": I,
     }
 
     def _from_fullformlist_to_sympy(self, full_form_list):
@@ -1084,3 +1108,27 @@ class MathematicaParser:
         for mma_form, sympy_node in self._node_conversions.items():
             expr = expr.replace(Function(mma_form), sympy_node)
         return expr
+
+
+def named_characters_to_unicode(s: str) -> str:
+    """
+    Convert Mathematica's named characters to SymPy equivalents.
+
+    The list of named characters is available at
+
+        https://reference.wolfram.com/language/guide/ListingOfNamedCharacters.html
+    """
+    from .mathematica_named_characters import mathematica_named_characters
+    # Mathematica's named characters always start with `\[`, end with
+    # `]`, and have only characters in [a-zA-Z] in between.
+    if r"\[" in s:  # Don't bother if there's no `\[`
+        pattern = r"\\\[([a-zA-Z]+)\]"
+        def replace(match):
+            name = match.group(1)
+            if name not in mathematica_named_characters:
+                raise ValueError(f"Unknown Mathematica named character: {name}")
+            return mathematica_named_characters[name]
+        s = re.sub(pattern, replace, s)
+    if r"\[" in s:
+        raise SyntaxError(f"Unmatched '\\[' in '{s}'")
+    return s

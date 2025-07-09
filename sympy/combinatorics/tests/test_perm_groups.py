@@ -195,12 +195,11 @@ def test_coset_rank():
     gens = [Permutation(p) for p in gens_cube]
     G = PermutationGroup(gens)
     i = 0
-    for h in G.generate(af=True):
+    for i, h in enumerate(G.generate(af=True)):
         rk = G.coset_rank(h)
         assert rk == i
         h1 = G.coset_unrank(rk, af=True)
         assert h == h1
-        i += 1
     assert G.coset_unrank(48) is None
     assert G.coset_unrank(G.coset_rank(gens[0])) == gens[0]
 
@@ -833,7 +832,7 @@ def test_coset_transvesal():
 
 def test_coset_table():
     G = PermutationGroup(Permutation(0,1,2,3), Permutation(0,1,2),
-         Permutation(0,4,2,7), Permutation(5,6), Permutation(0,7));
+         Permutation(0,4,2,7), Permutation(5,6), Permutation(0,7))
     H = PermutationGroup(Permutation(0,1,2,3), Permutation(0,7))
     assert G.coset_table(H) == \
         [[0, 0, 0, 0, 1, 2, 3, 3, 0, 0], [4, 5, 2, 5, 6, 0, 7, 7, 1, 1],

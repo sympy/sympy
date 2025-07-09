@@ -1,5 +1,6 @@
 from sympy.liealgebras.cartan_type import CartanType
 from sympy.matrices import Matrix
+from sympy.core.backend import Rational
 
 def test_type_E():
     c = CartanType("E6")
@@ -17,3 +18,5 @@ def test_type_E():
     assert c.dynkin_diagram() == diag
     posroots = c.positive_roots()
     assert posroots[8] == [1, 0, 0, 0, 1, 0, 0, 0]
+    assert posroots[21] == [Rational(1,2),Rational(1,2),Rational(1,2),Rational(1,2),
+                            Rational(1,2),Rational(-1,2),Rational(-1,2),Rational(1,2)]

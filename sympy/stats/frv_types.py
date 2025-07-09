@@ -346,6 +346,9 @@ def Coin(name, p=S.Half):
     r"""
     Create a Finite Random Variable representing a Coin toss.
 
+    This is an equivalent of a Bernoulli random variable with
+    "H" and "T" as success and failure events respectively.
+
     Parameters
     ==========
 
@@ -677,7 +680,7 @@ class IdealSolitonDistribution(SingleFiniteDistribution):
 
     @staticmethod
     def check(k):
-         _value_check(k.is_integer and k.is_positive,
+        _value_check(k.is_integer and k.is_positive,
                     "'k' must be a positive integer.")
 
     @property

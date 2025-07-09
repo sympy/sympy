@@ -2,18 +2,86 @@ from sympy.testing.pytest import raises
 
 from sympy.core.symbol import Symbol
 from sympy.polys.matrices.normalforms import (
-    invariant_factors, smith_normal_form,
-    hermite_normal_form, _hermite_normal_form, _hermite_normal_form_modulo_D)
+    invariant_factors,
+    smith_normal_form,
+    smith_normal_decomp,
+    is_smith_normal_form,
+    hermite_normal_form,
+    _hermite_normal_form,
+    _hermite_normal_form_modulo_D
+)
 from sympy.polys.domains import ZZ, QQ
 from sympy.polys.matrices import DomainMatrix, DM
 from sympy.polys.matrices.exceptions import DMDomainError, DMShapeError
 
 
+def test_is_smith_normal_form():
+
+    snf_examples = [
+        DM([[0, 0], [0, 0]], ZZ),
+        DM([[1, 0], [0, 0]], ZZ),
+        DM([[1, 0], [0, 1]], ZZ),
+        DM([[1, 0], [0, 2]], ZZ),
+    ]
+
+    non_snf_examples = [
+        DM([[0, 1], [0, 0]], ZZ),
+        DM([[0, 0], [0, 1]], ZZ),
+        DM([[2, 0], [0, 3]], ZZ),
+    ]
+
+    for m in snf_examples:
+        assert is_smith_normal_form(m) is True
+
+    for m in non_snf_examples:
+        assert is_smith_normal_form(m) is False
+
+
 def test_smith_normal():
 
-    m = DM([[12, 6, 4, 8], [3, 9, 6, 12], [2, 16, 14, 28], [20, 10, 10, 20]], ZZ)
-    smf = DM([[1, 0, 0, 0], [0, 10, 0, 0], [0, 0, -30, 0], [0, 0, 0, 0]], ZZ)
+    m = DM([
+        [12, 6, 4, 8],
+        [3, 9, 6, 12],
+        [2, 16, 14, 28],
+        [20, 10, 10, 20]], ZZ)
+
+    smf = DM([
+        [1, 0, 0, 0],
+        [0, 10, 0, 0],
+        [0, 0, 30, 0],
+        [0, 0, 0, 0]], ZZ)
+
+    s = DM([
+        [0, 1, -1, 0],
+        [1, -4, 0, 0],
+        [0, -2, 3, 0],
+        [-2, 2, -1, 1]], ZZ)
+
+    t = DM([
+        [1, 1, 10, 0],
+        [0, -1, -2, 0],
+        [0, 1, 3, -2],
+        [0, 0, 0, 1]], ZZ)
+
     assert smith_normal_form(m).to_dense() == smf
+    assert smith_normal_decomp(m) == (smf, s, t)
+    assert is_smith_normal_form(smf)
+    assert smf == s * m * t
+
+    m00 = DomainMatrix.zeros((0, 0), ZZ).to_dense()
+    m01 = DomainMatrix.zeros((0, 1), ZZ).to_dense()
+    m10 = DomainMatrix.zeros((1, 0), ZZ).to_dense()
+    i11 = DM([[1]], ZZ)
+
+    assert smith_normal_form(m00) == m00.to_sparse()
+    assert smith_normal_form(m01) == m01.to_sparse()
+    assert smith_normal_form(m10) == m10.to_sparse()
+    assert smith_normal_form(i11) == i11.to_sparse()
+
+    assert smith_normal_decomp(m00) == (m00, m00, m00)
+    assert smith_normal_decomp(m01) == (m01, m00, i11)
+    assert smith_normal_decomp(m10) == (m10, i11, m00)
+    assert smith_normal_decomp(i11) == (i11, i11, i11)
 
     x = Symbol('x')
     m = DM([[x-1,  1, -1],
@@ -28,12 +96,25 @@ def test_smith_normal():
     assert smith_normal_form(zc).to_dense() == zc
 
     assert smith_normal_form(DM([[2, 4]], ZZ)).to_dense() == DM([[2, 0]], ZZ)
-    assert smith_normal_form(DM([[0, -2]], ZZ)).to_dense() == DM([[-2, 0]], ZZ)
-    assert smith_normal_form(DM([[0], [-2]], ZZ)).to_dense() == DM([[-2], [0]], ZZ)
+    assert smith_normal_form(DM([[0, -2]], ZZ)).to_dense() == DM([[2, 0]], ZZ)
+    assert smith_normal_form(DM([[0], [-2]], ZZ)).to_dense() == DM([[2], [0]], ZZ)
+
+    assert smith_normal_decomp(DM([[0, -2]], ZZ)) == (
+        DM([[2, 0]], ZZ), DM([[-1]], ZZ), DM([[0, 1], [1, 0]], ZZ)
+    )
+    assert smith_normal_decomp(DM([[0], [-2]], ZZ)) == (
+        DM([[2], [0]], ZZ), DM([[0, -1], [1, 0]], ZZ), DM([[1]], ZZ)
+    )
 
     m =   DM([[3, 0, 0, 0], [0, 0, 0, 0], [0, 0, 2, 0]], ZZ)
     snf = DM([[1, 0, 0, 0], [0, 6, 0, 0], [0, 0, 0, 0]], ZZ)
+    s = DM([[1, 0, 1], [2, 0, 3], [0, 1, 0]], ZZ)
+    t = DM([[1, -2, 0, 0], [0, 0, 0, 1], [-1, 3, 0, 0], [0, 0, 1, 0]], ZZ)
+
     assert smith_normal_form(m).to_dense() == snf
+    assert smith_normal_decomp(m) == (snf, s, t)
+    assert is_smith_normal_form(snf)
+    assert snf == s * m * t
 
     raises(ValueError, lambda: smith_normal_form(DM([[1]], ZZ[x])))
 

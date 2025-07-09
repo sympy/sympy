@@ -227,6 +227,7 @@ class ReprPrinter(Printer):
         d = expr._assumptions_orig
         # print the dummy_index like it was an assumption
         if expr.is_Dummy:
+            d = d.copy()
             d['dummy_index'] = expr.dummy_index
 
         if d == {}:

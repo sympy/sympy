@@ -14,6 +14,7 @@ and the Diffie-Hellman key exchange.
 
 from string import whitespace, ascii_uppercase as uppercase, printable
 from functools import reduce
+import string
 import warnings
 
 from itertools import cycle
@@ -84,7 +85,7 @@ def AZ(s=None):
     return rv
 
 bifid5 = AZ().replace('J', '')
-bifid6 = AZ() + '0123456789'
+bifid6 = AZ() + string.digits
 bifid10 = printable
 
 
@@ -869,8 +870,10 @@ def encipher_hill(msg, key, symbols=None, pad="Q"):
     decipher_hill
 
     """
-    assert key.is_square
-    assert len(pad) == 1
+    if not key.is_square:
+        raise ValueError("key must be a square matrix")
+    if len(pad) != 1:
+        raise ValueError("pad must be a single character")
     msg, pad, A = _prep(msg, pad, symbols)
     map = {c: i for i, c in enumerate(A)}
     P = [map[c] for c in msg]
@@ -938,7 +941,8 @@ def decipher_hill(msg, key, symbols=None):
     encipher_hill
 
     """
-    assert key.is_square
+    if not key.is_square:
+        raise ValueError("key must be a square matrix")
     msg, _, A = _prep(msg, '', symbols)
     map = {c: i for i, c in enumerate(A)}
     C = [map[c] for c in msg]
@@ -1010,7 +1014,7 @@ def encipher_bifid(msg, key, symbols=None):
             'Length of alphabet (%s) is not a square number.' % len(A))
     N = int(n)
     if len(long_key) < N**2:
-      long_key = list(long_key) + [x for x in A if x not in long_key]
+        long_key = list(long_key) + [x for x in A if x not in long_key]
 
     # the fractionalization
     row_col = {ch: divmod(i, N) for i, ch in enumerate(long_key)}
@@ -2226,7 +2230,8 @@ def encode_morse(msg, sep='|', mapping=None):
     """
 
     mapping = mapping or char_morse
-    assert sep not in mapping
+    if sep in mapping:
+        raise ValueError(f"Separator {sep!r} is already used in the mapping.")
     word_sep = 2*sep
     mapping[" "] = word_sep
     suffix = msg and msg[-1] in whitespace
@@ -2638,7 +2643,7 @@ def encipher_elgamal(i, key, seed=None):
     ``i`` is a plaintext message expressed as an integer.
     ``key`` is public key (p, r, e). In order to encrypt
     a message, a random number ``a`` in ``range(2, p)``
-    is generated and the encryped message is returned as
+    is generated and the encrypted message is returned as
     `c_{1}` and `c_{2}` where:
 
     `c_{1} \equiv r^{a} \pmod p`

@@ -3,7 +3,7 @@ from functools import reduce
 
 from sympy.core import S, sympify, Dummy, Mod
 from sympy.core.cache import cacheit
-from sympy.core.function import Function, ArgumentIndexError, PoleError
+from sympy.core.function import DefinedFunction, ArgumentIndexError, PoleError
 from sympy.core.logic import fuzzy_and
 from sympy.core.numbers import Integer, pi, I
 from sympy.core.relational import Eq
@@ -14,7 +14,7 @@ from sympy.polys.polytools import Poly
 
 from math import factorial as _factorial, prod, sqrt as _sqrt
 
-class CombinatorialFunction(Function):
+class CombinatorialFunction(DefinedFunction):
     """Base class for combinatorial functions. """
 
     def _eval_simplify(self, **kwargs):
@@ -269,7 +269,7 @@ class factorial(CombinatorialFunction):
         if x.is_nonnegative or x.is_noninteger:
             return True
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx, cdir):
         arg = self.args[0].as_leading_term(x)
         arg0 = arg.subs(x, 0)
         if arg0.is_zero:
@@ -598,9 +598,7 @@ class RisingFactorial(CombinatorialFunction):
                                           range(int(k)), 1)
 
                 else:
-                    if x is S.Infinity:
-                        return S.Infinity
-                    elif x is S.NegativeInfinity:
+                    if x is S.Infinity or x is S.NegativeInfinity:
                         return S.Infinity
                     else:
                         if isinstance(x, Poly):
@@ -759,9 +757,7 @@ class FallingFactorial(CombinatorialFunction):
                             return reduce(lambda r, i: r*(x - i),
                                           range(int(k)), 1)
                 else:
-                    if x is S.Infinity:
-                        return S.Infinity
-                    elif x is S.NegativeInfinity:
+                    if x is S.Infinity or x is S.NegativeInfinity:
                         return S.Infinity
                     else:
                         if isinstance(x, Poly):
@@ -1128,6 +1124,6 @@ class binomial(CombinatorialFunction):
             elif k.is_even is False:
                 return  False
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx, cdir):
         from sympy.functions.special.gamma_functions import gamma
         return self.rewrite(gamma)._eval_as_leading_term(x, logx=logx, cdir=cdir)

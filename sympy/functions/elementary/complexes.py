@@ -1,10 +1,12 @@
-from typing import Tuple as tTuple
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, overload
 
 from sympy.core import S, Add, Mul, sympify, Symbol, Dummy, Basic
 from sympy.core.expr import Expr
 from sympy.core.exprtools import factor_terms
-from sympy.core.function import (Function, Derivative, ArgumentIndexError,
-    AppliedUndef, expand_mul)
+from sympy.core.function import (DefinedFunction, Derivative, ArgumentIndexError,
+    AppliedUndef, expand_mul, PoleError)
 from sympy.core.logic import fuzzy_not, fuzzy_or
 from sympy.core.numbers import pi, I, oo
 from sympy.core.power import Pow
@@ -12,12 +14,18 @@ from sympy.core.relational import Eq
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
 
+if TYPE_CHECKING:
+    from typing import TypeVar
+    from sympy.algebras.quaternion import Quaternion
+    from sympy.matrices.matrixbase import MatrixBase
+    Tmat = TypeVar('Tmat', bound=MatrixBase)
+
 ###############################################################################
 ######################### REAL and IMAGINARY PARTS ############################
 ###############################################################################
 
 
-class re(Function):
+class re(DefinedFunction):
     """
     Returns real part of expression. This function performs only
     elementary analysis and so it will fail to decompose properly
@@ -59,17 +67,26 @@ class re(Function):
     im
     """
 
-    args: tTuple[Expr]
+    args: tuple[Expr]
 
     is_extended_real = True
     unbranched = True  # implicitly works on the projection to C
     _singularities = True  # non-holomorphic
 
+    if TYPE_CHECKING:
+
+        @overload
+        def __new__(cls, arg: Tmat, evaluate: bool = True) -> Tmat: ... # type: ignore
+        @overload
+        def __new__(cls, arg: Expr, evaluate: bool = True) -> Expr: ... # type: ignore
+
+        def __new__(cls, arg: MatrixBase | Expr, evaluate: bool = True # type: ignore
+                    ) -> MatrixBase | Expr:
+            ...
+
     @classmethod
     def eval(cls, arg):
-        if arg is S.NaN:
-            return S.NaN
-        elif arg is S.ComplexInfinity:
+        if arg is S.NaN or arg is S.ComplexInfinity:
             return S.NaN
         elif arg.is_extended_real:
             return arg
@@ -139,7 +156,7 @@ class re(Function):
             return True
 
 
-class im(Function):
+class im(DefinedFunction):
     """
     Returns imaginary part of expression. This function performs only
     elementary analysis and so it will fail to decompose properly more
@@ -181,7 +198,7 @@ class im(Function):
     re
     """
 
-    args: tTuple[Expr]
+    args: tuple[Expr]
 
     is_extended_real = True
     unbranched = True  # implicitly works on the projection to C
@@ -189,9 +206,7 @@ class im(Function):
 
     @classmethod
     def eval(cls, arg):
-        if arg is S.NaN:
-            return S.NaN
-        elif arg is S.ComplexInfinity:
+        if arg is S.NaN or arg is S.ComplexInfinity:
             return S.NaN
         elif arg.is_extended_real:
             return S.Zero
@@ -262,7 +277,7 @@ class im(Function):
 ############### SIGN, ABSOLUTE VALUE, ARGUMENT and CONJUGATION ################
 ###############################################################################
 
-class sign(Function):
+class sign(DefinedFunction):
     """
     Returns the complex sign of an expression:
 
@@ -443,7 +458,7 @@ class sign(Function):
         return self.func(factor_terms(self.args[0]))  # XXX include doit?
 
 
-class Abs(Function):
+class Abs(DefinedFunction):
     """
     Return the absolute value of the argument.
 
@@ -501,7 +516,7 @@ class Abs(Function):
     sign, conjugate
     """
 
-    args: tTuple[Expr]
+    args: tuple[Expr]
 
     is_extended_real = True
     is_extended_negative = False
@@ -693,7 +708,7 @@ class Abs(Function):
         return sqrt(arg*conjugate(arg))
 
 
-class arg(Function):
+class arg(DefinedFunction):
     r"""
     Returns the argument (in radians) of a complex number. The argument is
     evaluated in consistent convention with ``atan2`` where the branch-cut is
@@ -797,8 +812,27 @@ class arg(Function):
         x, y = self.args[0].as_real_imag()
         return atan2(y, x)
 
+    def _eval_as_leading_term(self, x, logx, cdir):
+        arg0 = self.args[0]
+        t = Dummy('t', positive=True)
+        if cdir == 0:
+            cdir = 1
+        z = arg0.subs(x, cdir*t)
+        if z.is_positive:
+            return S.Zero
+        elif z.is_negative:
+            return S.Pi
+        else:
+            raise PoleError("Cannot expand %s around 0" % (self))
 
-class conjugate(Function):
+    def _eval_nseries(self, x, n, logx, cdir=0):
+        from sympy.series.order import Order
+        if n <= 0:
+            return Order(1)
+        return self._eval_as_leading_term(x, logx=logx, cdir=cdir)
+
+
+class conjugate(DefinedFunction):
     """
     Returns the *complex conjugate* [1]_ of an argument.
     In mathematics, the complex conjugate of a complex number
@@ -844,6 +878,15 @@ class conjugate(Function):
     """
     _singularities = True  # non-holomorphic
 
+    if TYPE_CHECKING:
+
+        @overload
+        def __new__(cls, arg: Quaternion) -> Quaternion: ... # type: ignore
+        @overload
+        def __new__(cls, arg: Expr) -> Expr: ... # type: ignore
+
+        def __new__(cls, arg: Basic) -> Basic: ... # type: ignore
+
     @classmethod
     def eval(cls, arg):
         obj = arg._eval_conjugate()
@@ -875,7 +918,7 @@ class conjugate(Function):
         return self.args[0].is_algebraic
 
 
-class transpose(Function):
+class transpose(DefinedFunction):
     """
     Linear map transposition.
 
@@ -932,7 +975,7 @@ class transpose(Function):
         return self.args[0]
 
 
-class adjoint(Function):
+class adjoint(DefinedFunction):
     """
     Conjugate transpose or Hermite conjugation.
 
@@ -998,7 +1041,7 @@ class adjoint(Function):
 ###############################################################################
 
 
-class polar_lift(Function):
+class polar_lift(DefinedFunction):
     """
     Lift argument to the Riemann surface of the logarithm, using the
     standard branch.
@@ -1083,7 +1126,7 @@ class polar_lift(Function):
         return Abs(self.args[0], evaluate=True)
 
 
-class periodic_argument(Function):
+class periodic_argument(DefinedFunction):
     r"""
     Represent the argument on a quotient of the Riemann surface of the
     logarithm. That is, given a period $P$, always return a value in
@@ -1211,7 +1254,7 @@ def unbranched_argument(arg):
     return periodic_argument(arg, oo)
 
 
-class principal_branch(Function):
+class principal_branch(DefinedFunction):
     """
     Represent a polar number reduced to its principal branch on a quotient
     of the Riemann surface of the logarithm.

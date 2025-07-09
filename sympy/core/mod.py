@@ -1,14 +1,15 @@
 from .add import Add
 from .exprtools import gcd_terms
-from .function import Function
+from .function import DefinedFunction
 from .kind import NumberKind
 from .logic import fuzzy_and, fuzzy_not
 from .mul import Mul
 from .numbers import equal_valued
+from .relational import is_le, is_lt, is_ge, is_gt
 from .singleton import S
 
 
-class Mod(Function):
+class Mod(DefinedFunction):
     """Represents a modulo operation on symbolic expressions.
 
     Parameters
@@ -96,21 +97,20 @@ class Mod(Function):
 
             # by difference
             # -2|q| < p < 2|q|
-            d = abs(p)
-            for _ in range(2):
-                d -= abs(q)
-                if d.is_negative:
-                    if q.is_positive:
-                        if p.is_positive:
-                            return d + q
-                        elif p.is_negative:
-                            return -d
-                    elif q.is_negative:
-                        if p.is_positive:
-                            return d
-                        elif p.is_negative:
-                            return -d + q
-                    break
+            if q.is_positive:
+                comp1, comp2 = is_le, is_lt
+            elif q.is_negative:
+                comp1, comp2 = is_ge, is_gt
+            else:
+                return
+            ls = -2*q
+            r = p - q
+            for _ in range(4):
+                if not comp1(ls, p):
+                    return
+                if comp2(r, ls):
+                    return p - ls
+                ls += q
 
         rv = number_eval(p, q)
         if rv is not None:
@@ -251,7 +251,7 @@ class Mod(Function):
         from sympy.functions.elementary.integers import floor
         return a - b*floor(a/b)
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx, cdir):
         from sympy.functions.elementary.integers import floor
         return self.rewrite(floor)._eval_as_leading_term(x, logx=logx, cdir=cdir)
 

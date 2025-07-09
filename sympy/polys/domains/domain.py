@@ -116,7 +116,7 @@ class Domain:
     ZZ[x]
     >>> type(K)             # class of the domain
     <class 'sympy.polys.domains.polynomialring.PolynomialRing'>
-    >>> K.dtype             # class of the elements
+    >>> K.dtype             # doctest: +SKIP
     <class 'sympy.polys.rings.PolyElement'>
     >>> p_expr = x**2 + 1   # Expr
     >>> p_expr
@@ -469,7 +469,7 @@ class Domain:
 
     def of_type(self, element):
         """Check if ``a`` is of type ``dtype``. """
-        return isinstance(element, self.tp) # XXX: this isn't correct, e.g. PolyElement
+        return isinstance(element, self.tp)
 
     def __contains__(self, a):
         """Check if ``a`` belongs to this domain. """

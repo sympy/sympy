@@ -269,7 +269,7 @@ def test_C24():
 
 
 def test_D1():
-    assert 0.0 / sqrt(2) == 0.0
+    assert 0.0 / sqrt(2) == 0
 
 
 def test_D2():
@@ -1238,7 +1238,6 @@ def test_N6():
     assert ask(k*x**n > k*y**n, (x > y) & (y > 0) & (k > 0) & (n > 0)) is True
 
 
-@XFAIL
 def test_N7():
     x, y = symbols('x y', real=True)
     assert ask(y > 0, (x > 1) & (y >= x - 1)) is True

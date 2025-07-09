@@ -1001,10 +1001,13 @@ def test_acos():
     assert acos(-sqrt(2)/2) == pi*Rational(3, 4)
 
     # check round-trip for exact values:
-    for d in [5, 6, 8, 10, 12]:
+    for d in range(5, 13):
         for num in range(d):
             if gcd(num, d) == 1:
                 assert acos(cos(num*pi/d)) == num*pi/d
+                assert acos(-cos(num*pi/d)) == pi - num*pi/d
+                assert acos(sin(num*pi/d)) == pi/2 - asin(sin(num*pi/d))
+                assert acos(-sin(num*pi/d)) == pi/2 - asin(-sin(num*pi/d))
 
     assert acos(2*I) == pi/2 - asin(2*I)
 
@@ -1544,14 +1547,6 @@ def test_real_imag():
         assert cot(a).as_real_imag(deep=deep) == (cot(a), 0)
 
 
-@XFAIL
-def test_sin_cos_with_infinity():
-    # Test for issue 5196
-    # https://github.com/sympy/sympy/issues/5196
-    assert sin(oo) is S.NaN
-    assert cos(oo) is S.NaN
-
-
 @slow
 def test_sincos_rewrite_sqrt():
     # equivalent to testing rewrite(pow)
@@ -1824,6 +1819,14 @@ def test_asec():
     assert asec(sqrt(2 + 2*sqrt(5)/5)) == pi*Rational(3, 10)
     assert asec(-sqrt(2 + 2*sqrt(5)/5)) == pi*Rational(7, 10)
     assert asec(sqrt(2) - sqrt(6)) == pi*Rational(11, 12)
+
+    for d in [3, 4, 6]:
+        for num in range(d):
+            if gcd(num, d) == 1:
+                assert asec(sec(num*pi/d)) == num*pi/d
+                assert asec(-sec(num*pi/d)) == pi - num*pi/d
+                assert asec(csc(num*pi/d)) == pi/2 - acsc(csc(num*pi/d))
+                assert asec(-csc(num*pi/d)) == pi/2 - acsc(-csc(num*pi/d))
 
     assert asec(x).diff(x) == 1/(x**2*sqrt(1 - 1/x**2))
 

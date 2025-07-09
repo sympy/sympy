@@ -70,6 +70,73 @@ class Vector(BasisDependent):
         """
         return self / self.magnitude()
 
+    def equals(self, other):
+        """
+        Check if ``self`` and ``other`` are identically equal vectors.
+
+        Explanation
+        ===========
+
+        Checks if two vector expressions are equal for all possible values of
+        the symbols present in the expressions.
+
+        Examples
+        ========
+
+        >>> from sympy.vector import CoordSys3D
+        >>> from sympy.abc import x, y
+        >>> from sympy import pi
+        >>> C = CoordSys3D('C')
+
+        Compare vectors that are equal or not:
+
+        >>> C.i.equals(C.j)
+        False
+        >>> C.i.equals(C.i)
+        True
+
+        These two vectors are equal if `x = y` but are not identically equal
+        as expressions since for some values of `x` and `y` they are unequal:
+
+        >>> v1 = x*C.i + C.j
+        >>> v2 = y*C.i + C.j
+        >>> v1.equals(v1)
+        True
+        >>> v1.equals(v2)
+        False
+
+        Vectors from different coordinate systems can be compared:
+
+        >>> D = C.orient_new_axis('D', pi/2, C.i)
+        >>> D.j.equals(C.j)
+        False
+        >>> D.j.equals(C.k)
+        True
+
+        Parameters
+        ==========
+
+        other: Vector
+            The other vector expression to compare with.
+
+        Returns
+        =======
+
+        ``True``, ``False`` or ``None``. A return value of ``True`` indicates
+        that the two vectors are identically equal. A return value of ``False``
+        indicates that they are not. In some cases it is not possible to
+        determine if the two vectors are identically equal and ``None`` is
+        returned.
+
+        See Also
+        ========
+
+        sympy.core.expr.Expr.equals
+        """
+        diff = self - other
+        diff_mag2 = diff.dot(diff)
+        return diff_mag2.equals(0)
+
     def dot(self, other):
         """
         Returns the dot product of this Vector, either with another
@@ -421,6 +488,9 @@ class BaseVector(Vector, AtomicExpr):
     @property
     def free_symbols(self):
         return {self}
+
+    def _eval_conjugate(self):
+        return self
 
 
 class VectorAdd(BasisDependentAdd, Vector):

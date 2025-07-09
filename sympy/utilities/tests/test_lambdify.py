@@ -1,10 +1,12 @@
 from itertools import product
 import math
 import inspect
-
-
+import linecache
+import gc
 
 import mpmath
+import cmath
+
 from sympy.testing.pytest import raises, warns_deprecated_sympy
 from sympy.concrete.summations import Sum
 from sympy.core.function import (Function, Lambda, diff)
@@ -16,17 +18,19 @@ from sympy.functions.combinatorial.factorials import (RisingFactorial, factorial
 from sympy.functions.combinatorial.numbers import bernoulli, harmonic
 from sympy.functions.elementary.complexes import Abs, sign
 from sympy.functions.elementary.exponential import exp, log
-from sympy.functions.elementary.hyperbolic import acosh
+from sympy.functions.elementary.hyperbolic import asinh,acosh,atanh
 from sympy.functions.elementary.integers import floor
 from sympy.functions.elementary.miscellaneous import (Max, Min, sqrt)
 from sympy.functions.elementary.piecewise import Piecewise
-from sympy.functions.elementary.trigonometric import (acos, cos, cot, sin,
+from sympy.functions.elementary.trigonometric import (asin, acos, atan, cos, cot, sin,
                                                       sinc, tan)
+from sympy.functions import sinh,cosh,tanh
 from sympy.functions.special.bessel import (besseli, besselj, besselk, bessely, jn, yn)
 from sympy.functions.special.beta_functions import (beta, betainc, betainc_regularized)
 from sympy.functions.special.delta_functions import (Heaviside)
 from sympy.functions.special.error_functions import (Ei, erf, erfc, fresnelc, fresnels, Si, Ci)
 from sympy.functions.special.gamma_functions import (digamma, gamma, loggamma, polygamma)
+from sympy.functions.special.zeta_functions import zeta
 from sympy.integrals.integrals import Integral
 from sympy.logic.boolalg import (And, false, ITE, Not, Or, true)
 from sympy.matrices.expressions.dotproduct import DotProduct
@@ -39,13 +43,14 @@ from sympy.utilities.iterables import numbered_symbols
 from sympy.vector import CoordSys3D
 from sympy.core.expr import UnevaluatedExpr
 from sympy.codegen.cfunctions import expm1, log1p, exp2, log2, log10, hypot, isnan, isinf
-from sympy.codegen.numpy_nodes import logaddexp, logaddexp2
+from sympy.codegen.numpy_nodes import logaddexp, logaddexp2, amin, amax, minimum, maximum
 from sympy.codegen.scipy_nodes import cosm1, powm1
 from sympy.functions.elementary.complexes import re, im, arg
 from sympy.functions.special.polynomials import \
     chebyshevt, chebyshevu, legendre, hermite, laguerre, gegenbauer, \
     assoc_legendre, assoc_laguerre, jacobi
 from sympy.matrices import Matrix, MatrixSymbol, SparseMatrix
+from sympy.printing.codeprinter import PrintMethodNotImplementedError
 from sympy.printing.lambdarepr import LambdaPrinter
 from sympy.printing.numpy import NumPyPrinter
 from sympy.utilities.lambdify import implemented_function, lambdastr
@@ -296,6 +301,187 @@ def test_numexpr_printer():
         args = arg_tuple[:nargs]
         f = lambdify(args, ssym(*args), modules='numexpr')
         assert f(*(1, )*nargs) is not None
+
+
+def test_cmath_sqrt():
+    f = lambdify(x, sqrt(x), "cmath")
+    assert f(0) == 0
+    assert f(1) == 1
+    assert f(4) == 2
+    assert abs(f(2) - 1.414) < 0.001
+    assert f(-1) == 1j
+    assert f(-4) == 2j
+
+
+def test_cmath_log():
+    f = lambdify(x, log(x), "cmath")
+    assert abs(f(1) - 0) < 1e-15
+    assert abs(f(cmath.e) - 1) < 1e-15
+    assert abs(f(-1) - cmath.log(-1)) < 1e-15
+
+
+def test_cmath_sinh():
+    f = lambdify(x, sinh(x), "cmath")
+    assert abs(f(0) - cmath.sinh(0)) < 1e-15
+    assert abs(f(pi) - cmath.sinh(pi)) < 1e-15
+    assert abs(f(-pi) - cmath.sinh(-pi)) < 1e-15
+    assert abs(f(1j) - cmath.sinh(1j)) < 1e-15
+
+
+def test_cmath_cosh():
+    f = lambdify(x, cosh(x), "cmath")
+    assert abs(f(0) - cmath.cosh(0)) < 1e-15
+    assert abs(f(pi) - cmath.cosh(pi)) < 1e-15
+    assert abs(f(-pi) - cmath.cosh(-pi)) < 1e-15
+    assert abs(f(1j) - cmath.cosh(1j)) < 1e-15
+
+
+def test_cmath_tanh():
+    f = lambdify(x, tanh(x), "cmath")
+    assert abs(f(0) - cmath.tanh(0)) < 1e-15
+    assert abs(f(pi) - cmath.tanh(pi)) < 1e-15
+    assert abs(f(-pi) - cmath.tanh(-pi)) < 1e-15
+    assert abs(f(1j) - cmath.tanh(1j)) < 1e-15
+
+
+def test_cmath_sin():
+    f = lambdify(x, sin(x), "cmath")
+    assert abs(f(0) - cmath.sin(0)) < 1e-15
+    assert abs(f(pi) - cmath.sin(pi)) < 1e-15
+    assert abs(f(-pi) - cmath.sin(-pi)) < 1e-15
+    assert abs(f(1j) - cmath.sin(1j)) < 1e-15
+
+
+def test_cmath_cos():
+    f = lambdify(x, cos(x), "cmath")
+    assert abs(f(0) - cmath.cos(0)) < 1e-15
+    assert abs(f(pi) - cmath.cos(pi)) < 1e-15
+    assert abs(f(-pi) - cmath.cos(-pi)) < 1e-15
+    assert abs(f(1j) - cmath.cos(1j)) < 1e-15
+
+
+def test_cmath_tan():
+    f = lambdify(x, tan(x), "cmath")
+    assert abs(f(0) - cmath.tan(0)) < 1e-15
+    assert abs(f(1j) - cmath.tan(1j)) < 1e-15
+
+
+def test_cmath_asin():
+    f = lambdify(x, asin(x), "cmath")
+    assert abs(f(0) - cmath.asin(0)) < 1e-15
+    assert abs(f(1) - cmath.asin(1)) < 1e-15
+    assert abs(f(-1) - cmath.asin(-1)) < 1e-15
+    assert abs(f(2) - cmath.asin(2)) < 1e-15
+    assert abs(f(1j) - cmath.asin(1j)) < 1e-15
+
+
+def test_cmath_acos():
+    f = lambdify(x, acos(x), "cmath")
+    assert abs(f(1) - cmath.acos(1)) < 1e-15
+    assert abs(f(-1) - cmath.acos(-1)) < 1e-15
+    assert abs(f(2) - cmath.acos(2)) < 1e-15
+    assert abs(f(1j) - cmath.acos(1j)) < 1e-15
+
+
+def test_cmath_atan():
+    f = lambdify(x, atan(x), "cmath")
+    assert abs(f(0) - cmath.atan(0)) < 1e-15
+    assert abs(f(1) - cmath.atan(1)) < 1e-15
+    assert abs(f(-1) - cmath.atan(-1)) < 1e-15
+    assert abs(f(2) - cmath.atan(2)) < 1e-15
+    assert abs(f(2j) - cmath.atan(2j)) < 1e-15
+
+
+def test_cmath_asinh():
+    f = lambdify(x, asinh(x), "cmath")
+    assert abs(f(0) - cmath.asinh(0)) < 1e-15
+    assert abs(f(1) - cmath.asinh(1)) < 1e-15
+    assert abs(f(-1) - cmath.asinh(-1)) < 1e-15
+    assert abs(f(2) - cmath.asinh(2)) < 1e-15
+    assert abs(f(2j) - cmath.asinh(2j)) < 1e-15
+
+
+def test_cmath_acosh():
+    f = lambdify(x, acosh(x), "cmath")
+    assert abs(f(1) - cmath.acosh(1)) < 1e-15
+    assert abs(f(2) - cmath.acosh(2)) < 1e-15
+    assert abs(f(-1) - cmath.acosh(-1)) < 1e-15
+    assert abs(f(2j) - cmath.acosh(2j)) < 1e-15
+
+
+def test_cmath_atanh():
+    f = lambdify(x, atanh(x), "cmath")
+    assert abs(f(0) - cmath.atanh(0)) < 1e-15
+    assert abs(f(0.5) - cmath.atanh(0.5)) < 1e-15
+    assert abs(f(-0.5) - cmath.atanh(-0.5)) < 1e-15
+    assert abs(f(2) - cmath.atanh(2)) < 1e-15
+    assert abs(f(-2) - cmath.atanh(-2)) < 1e-15
+    assert abs(f(2j) - cmath.atanh(2j)) < 1e-15
+
+
+def test_cmath_complex_identities():
+    # Define symbol
+    z = symbols('z')
+
+    # Trigonometric identity using re(z) and im(z)
+    expr = cos(z) - cos(re(z)) * cosh(im(z)) + I * sin(re(z)) * sinh(im(z))
+    func = lambdify([z], expr, modules=["cmath", "math"])
+    hpi = math.pi / 2
+    assert abs(func(hpi + 1j * hpi)) < 4e-16
+
+    # Euler's Formula: e^(i*z) = cos(z) + i*sin(z)
+    func = lambdify([z], exp(I * z) - (cos(z) + I * sin(z)), modules=["cmath", "math"])
+    assert abs(func(hpi)) < 4e-16
+
+    # Exponential Identity: e^z = e^(Re(z)) * (cos(Im(z)) + i*sin(Im(z)))
+    func_exp = lambdify([z], exp(z) - exp(re(z)) * (cos(im(z)) + I * sin(im(z))),
+                        modules=["cmath", "math"])
+    assert abs(func_exp(hpi + 1j * hpi)) < 4e-16
+
+    # Complex Cosine Identity: cos(z) = cos(Re(z)) * cosh(Im(z)) - i*sin(Re(z)) * sinh(Im(z))
+    func_cos = lambdify([z], cos(z) - (cos(re(z)) * cosh(im(z)) - I * sin(re(z)) * sinh(im(z))),
+                        modules=["cmath", "math"])
+    assert abs(func_cos(hpi + 1j * hpi)) < 4e-16
+
+    # Complex Sine Identity: sin(z) = sin(Re(z)) * cosh(Im(z)) + i*cos(Re(z)) * sinh(Im(z))
+    func_sin = lambdify([z], sin(z) - (sin(re(z)) * cosh(im(z)) + I * cos(re(z)) * sinh(im(z))),
+                        modules=["cmath", "math"])
+    assert abs(func_sin(hpi + 1j * hpi)) < 4e-16
+
+    # Complex Hyperbolic Cosine Identity: cosh(z) = cosh(Re(z)) * cos(Im(z)) + i*sinh(Re(z)) * sin(Im(z))
+    func_cosh_1 = lambdify([z], cosh(z) - (cosh(re(z)) * cos(im(z)) + I * sinh(re(z)) * sin(im(z))),
+                         modules=["cmath", "math"])
+    assert abs(func_cosh_1(hpi + 1j * hpi)) < 4e-16
+
+    # Complex Hyperbolic Sine Identity: sinh(z) = sinh(Re(z)) * cos(Im(z)) + i*cosh(Re(z)) * sin(Im(z))
+    func_sinh = lambdify([z], sinh(z) - (sinh(re(z)) * cos(im(z)) + I * cosh(re(z)) * sin(im(z))),
+                         modules=["cmath", "math"])
+    assert abs(func_sinh(hpi + 1j * hpi)) < 4e-16
+
+    # cosh(z) = (e^z + e^(-z)) / 2
+    func_cosh_2 = lambdify([z], cosh(z) - (exp(z) + exp(-z)) / 2, modules=["cmath", "math"])
+    assert abs(func_cosh_2(hpi)) < 4e-16
+
+    # Additional expressions testing log and exp with real and imaginary parts
+    expr1 = log(re(z)) + log(im(z)) - log(re(z) * im(z))
+    expr2 = exp(re(z)) * exp(im(z) * I) - exp(z)
+    expr3 = log(exp(re(z))) - re(z)
+    expr4 = exp(log(re(z))) - re(z)
+    expr5 = log(exp(re(z) + im(z))) - (re(z) + im(z))
+    expr6 = exp(log(re(z) + im(z))) - (re(z) + im(z))
+    func1 = lambdify([z], expr1, modules=["cmath", "math"])
+    func2 = lambdify([z], expr2, modules=["cmath", "math"])
+    func3 = lambdify([z], expr3, modules=["cmath", "math"])
+    func4 = lambdify([z], expr4, modules=["cmath", "math"])
+    func5 = lambdify([z], expr5, modules=["cmath", "math"])
+    func6 = lambdify([z], expr6, modules=["cmath", "math"])
+    test_value = 3 + 4j
+    assert abs(func1(test_value)) < 4e-16
+    assert abs(func2(test_value)) < 4e-16
+    assert abs(func3(test_value)) < 4e-16
+    assert abs(func4(test_value)) < 4e-16
+    assert abs(func5(test_value)) < 4e-16
+    assert abs(func6(test_value)) < 4e-16
 
 
 def test_issue_9334():
@@ -980,6 +1166,18 @@ def test_lambdify_docstring():
     assert func.__doc__.splitlines()[:len(ref)] == ref
 
 
+def test_lambdify_linecache():
+    func = lambdify(x, x + 1)
+    source = 'def _lambdifygenerated(x):\n    return x + 1\n'
+    assert inspect.getsource(func) == source
+    filename = inspect.getsourcefile(func)
+    assert filename.startswith('<lambdifygenerated-')
+    assert filename in linecache.cache
+    assert linecache.cache[filename] == (len(source), None, source.splitlines(True), filename)
+    del func
+    gc.collect()
+    assert filename not in linecache.cache
+
 #================== Test special printers ==========================
 
 
@@ -1057,6 +1255,48 @@ def test_Min_Max():
     assert lambdify((x, y, z), Max(x, y, z))(1, 2, 3) == 3
 
 
+def test_amin_amax_minimum_maximum():
+    if not numpy:
+        skip("numpy not installed")
+
+    a234 = numpy.array([2, 3, 4])
+    a152 = numpy.array([1, 5, 2])
+
+    a254 = numpy.array([2, 5, 4])
+    a132 = numpy.array([1, 3, 2])
+    # 2 args
+    assert numpy.all(lambdify((x, y), maximum(x, y))(a234, a152) == a254)
+    assert numpy.all(lambdify((x, y), minimum(x, y))(a234, a152) == a132)
+
+    # 3 args
+    assert numpy.all(lambdify((x, y, z), maximum(x, y, z))(a234, a152, a234) == a254)
+    assert numpy.all(lambdify((x, y, z), minimum(x, y, z))(a234, a152, a234) == a132)
+
+    # 1 arg
+    assert numpy.all(lambdify((x,), maximum(x))(a234) == a234)
+    assert numpy.all(lambdify((x,), minimum(x))(a234) == a234)
+
+    # 4 args, mixed length
+    assert numpy.all(lambdify((x, y, z, w), maximum(x, y, z, w))(a234, a152, a234, 3) == [3, 5, 4])
+    assert numpy.all(lambdify((x, y, z, w), minimum(x, y, z, w))(a234, a152, a234, 2) == [1, 2, 2])
+
+    # amin & amax
+    assert lambdify((x, y), [amin(x), amax(y)])(a234, a152) == [2, 5]
+    A = numpy.array([
+        [0, 4, 8],
+        [1, 5, 9],
+        [2, 6, 10],
+    ])
+    min_, max_ = lambdify((x,), [amin(x, axis=0), amax(x, axis=1)])(A)
+    assert numpy.all(min_ == numpy.amin(A, axis=0))
+    assert numpy.all(max_ == numpy.amax(A, axis=1))
+
+    # see gh-25659
+    assert numpy.all(lambdify((x, y), Max(x, y))([1, 2, 3], [3, 2, 1]) == [3, 2, 3])
+    assert numpy.all(lambdify((x), Min(2, x))([1, 2, 3]) == [1, 2, 2])
+
+
+
 def test_Indexed():
     # Issue #10934
     if not numpy:
@@ -1066,6 +1306,12 @@ def test_Indexed():
     i, j = symbols('i j')
     b = numpy.array([[1, 2], [3, 4]])
     assert lambdify(a, Sum(a[x, y], (x, 0, 1), (y, 0, 1)))(b) == 10
+
+def test_Sum():
+    e = Sum(z, (y, 0, x), (x, 0, 10))
+    ref = 66*z
+    assert e.doit() == ref
+    assert lambdify([z], e)(7) == ref.subs(z, 7)
 
 def test_Idx():
     # Issue 26888
@@ -1279,6 +1525,65 @@ def test_lambdify_Derivative_arg_issue_16468():
     assert eval(lambdastr((fx, f), f/fx, dummify=True))(S(10), 5) == S.Half
     assert lambdify(fx, 1 + fx)(41) == 42
     assert eval(lambdastr(fx, 1 + fx, dummify=True))(41) == 42
+
+
+def test_lambdify_Derivative_zeta():
+    # This is related to gh-11802 (and to lesser extent gh-26663)
+    expr1 = zeta(x).diff(x, evaluate=False)
+    f1 = lambdify(x, expr1, modules=['mpmath'])
+    ans1 = f1(2)
+    ref1 = (zeta(2+1e-8).evalf()-zeta(2).evalf())/1e-8
+    assert abs(ans1 - ref1)/abs(ref1) < 1e-7
+
+    expr2 = zeta(x**2).diff(x)
+    f2 = lambdify(x, expr2, modules=['mpmath'])
+    ans2 = f2(2**0.5)
+    ref2 = 2*2**0.5*ref1
+    assert abs(ans2-ref2)/abs(ref2) < 1e-7
+
+
+def test_lambdify_Derivative_custom_printer():
+    func1 = Function('func1')
+    func2 = Function('func2')
+
+    class MyPrinter(NumPyPrinter):
+
+        def _print_Derivative_func1(self, args, seq_orders):
+            arg, = args
+            order, = seq_orders
+            return '42'
+
+    expr1 = func1(x).diff(x)
+    raises(PrintMethodNotImplementedError, lambda: lambdify([x], expr1))
+    f1 = lambdify([x], expr1, printer=MyPrinter)
+    assert f1(7) == 42
+
+    expr2 = func2(x).diff(x)
+    raises(PrintMethodNotImplementedError, lambda: lambdify([x], expr2, printer=MyPrinter))
+
+
+def test_lambdify_derivative_and_functions_as_arguments():
+    # see: https://github.com/sympy/sympy/issues/26663#issuecomment-2157179517
+    t, a, b = symbols('t, a, b')
+    f = Function('f')(t)
+    args = f.diff(t, 2), f.diff(t), f, a, b
+    expr1 = a*f.diff(t, 2) + b*f.diff(t) + a*b*f + a**2
+    num_args = 2.0, 3.0, 4.0, 5.0, 6.0
+    ref1 = 5*2 + 6*3 + 5*6*4 + 5**2
+
+    expr2 = a*f.diff(t, 2) + b*f.diff(t) - a*b*f + b**2 - a**2
+    ref2 = 5*2 + 6*3 - 5*6*4 + 6**2 - 5**2
+
+    for dummify, _cse in product([False, None, True], [False, True]):
+        func1 = lambdify(args, expr1, cse=_cse, dummify=dummify)
+        res1 = func1(*num_args)
+        assert abs(res1 - ref1) < 1e-12
+
+        func12 = lambdify(args, [expr1, expr2], cse=_cse, dummify=dummify)
+        res12 = func12(*num_args)
+        assert len(res12) == 2
+        assert abs(res12[0] - ref1) < 1e-12
+        assert abs(res12[1] - ref2) < 1e-12
 
 
 def test_imag_real():
@@ -1911,6 +2216,7 @@ def test_lambdify_empty_tuple():
     f = lambdify(a, expr)
     result = f(1)
     assert result == ((), (1,)), "Lambdify did not handle the empty tuple correctly."
+
 
 def test_assoc_legendre_numerical_evaluation():
 

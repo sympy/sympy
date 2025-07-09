@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Callable
+from typing import Callable, TYPE_CHECKING
 from itertools import product
 
 from .sympify import _sympify
@@ -112,25 +112,43 @@ class Pow(Expr):
 
     __slots__ = ('is_commutative',)
 
-    args: tuple[Expr, Expr]
-    _args: tuple[Expr, Expr]
+    if TYPE_CHECKING:
+
+        @property
+        def args(self) -> tuple[Expr, Expr]:
+            ...
+
+    @property
+    def base(self) -> Expr:
+        return self.args[0]
+
+    @property
+    def exp(self) -> Expr:
+        return self.args[1]
+
+    @property
+    def kind(self):
+        if self.exp.kind is NumberKind:
+            return self.base.kind
+        else:
+            return UndefinedKind
 
     @cacheit
-    def __new__(cls, b, e, evaluate=None):
+    def __new__(cls, b: Expr | complex, e: Expr | complex, evaluate=None) -> Expr: # type: ignore
         if evaluate is None:
             evaluate = global_parameters.evaluate
 
-        b = _sympify(b)
-        e = _sympify(e)
+        base = _sympify(b)
+        exp = _sympify(e)
 
         # XXX: This can be removed when non-Expr args are disallowed rather
         # than deprecated.
         from .relational import Relational
-        if isinstance(b, Relational) or isinstance(e, Relational):
+        if isinstance(base, Relational) or isinstance(exp, Relational):
             raise TypeError('Relational cannot be used in Pow')
 
         # XXX: This should raise TypeError once deprecation period is over:
-        for arg in [b, e]:
+        for arg in [base, exp]:
             if not isinstance(arg, Expr):
                 sympy_deprecation_warning(
                     f"""
@@ -145,73 +163,73 @@ class Pow(Expr):
                 )
 
         if evaluate:
-            if e is S.ComplexInfinity:
+            if exp is S.ComplexInfinity:
                 return S.NaN
-            if e is S.Infinity:
-                if is_gt(b, S.One):
+            if exp is S.Infinity:
+                if is_gt(base, S.One):
                     return S.Infinity
-                if is_gt(b, S.NegativeOne) and is_lt(b, S.One):
+                if is_gt(base, S.NegativeOne) and is_lt(base, S.One):
                     return S.Zero
-                if is_lt(b, S.NegativeOne):
-                    if b.is_finite:
+                if is_lt(base, S.NegativeOne):
+                    if base.is_finite:
                         return S.ComplexInfinity
-                    if b.is_finite is False:
+                    if base.is_finite is False:
                         return S.NaN
-            if e is S.Zero:
+            if exp is S.Zero:
                 return S.One
-            elif e is S.One:
-                return b
-            elif e == -1 and not b:
+            elif exp is S.One:
+                return base
+            elif exp == -1 and not base:
                 return S.ComplexInfinity
-            elif e.__class__.__name__ == "AccumulationBounds":
-                if b == S.Exp1:
+            elif exp.__class__.__name__ == "AccumulationBounds":
+                if base == S.Exp1:
                     from sympy.calculus.accumulationbounds import AccumBounds
-                    return AccumBounds(Pow(b, e.min), Pow(b, e.max))
+                    return AccumBounds(Pow(base, exp.min), Pow(base, exp.max))
             # autosimplification if base is a number and exp odd/even
             # if base is Number then the base will end up positive; we
             # do not do this with arbitrary expressions since symbolic
             # cancellation might occur as in (x - 1)/(1 - x) -> -1. If
             # we returned Piecewise((-1, Ne(x, 1))) for such cases then
             # we could do this...but we don't
-            elif (e.is_Symbol and e.is_integer or e.is_Integer
-                    ) and (b.is_number and b.is_Mul or b.is_Number
-                    ) and b.could_extract_minus_sign():
-                if e.is_even:
-                    b = -b
-                elif e.is_odd:
-                    return -Pow(-b, e)
-            if S.NaN in (b, e):  # XXX S.NaN**x -> S.NaN under assumption that x != 0
+            elif (exp.is_Symbol and exp.is_integer or exp.is_Integer
+                    ) and (base.is_number and base.is_Mul or base.is_Number
+                    ) and base.could_extract_minus_sign():
+                if exp.is_even:
+                    base = -base
+                elif exp.is_odd:
+                    return -Pow(-base, exp)
+            if S.NaN in (base, exp):  # XXX S.NaN**x -> S.NaN under assumption that x != 0
                 return S.NaN
-            elif b is S.One:
-                if abs(e).is_infinite:
+            elif base is S.One:
+                if abs(exp).is_infinite:
                     return S.NaN
                 return S.One
             else:
                 # recognize base as E
                 from sympy.functions.elementary.exponential import exp_polar
-                if not e.is_Atom and b is not S.Exp1 and not isinstance(b, exp_polar):
+                if not exp.is_Atom and base is not S.Exp1 and not isinstance(base, exp_polar):
                     from .exprtools import factor_terms
                     from sympy.functions.elementary.exponential import log
                     from sympy.simplify.radsimp import fraction
-                    c, ex = factor_terms(e, sign=False).as_coeff_Mul()
+                    c, ex = factor_terms(exp, sign=False).as_coeff_Mul()
                     num, den = fraction(ex)
-                    if isinstance(den, log) and den.args[0] == b:
+                    if isinstance(den, log) and den.args[0] == base:
                         return S.Exp1**(c*num)
                     elif den.is_Add:
                         from sympy.functions.elementary.complexes import sign, im
-                        s = sign(im(b))
+                        s = sign(im(base))
                         if s.is_Number and s and den == \
-                                log(-factor_terms(b, sign=False)) + s*S.ImaginaryUnit*S.Pi:
+                                log(-factor_terms(base, sign=False)) + s*S.ImaginaryUnit*S.Pi:
                             return S.Exp1**(c*num)
 
-                obj = b._eval_power(e)
+                obj = base._eval_power(exp)
                 if obj is not None:
                     return obj
-        obj = Expr.__new__(cls, b, e)
+        obj = Expr.__new__(cls, base, exp)
         obj = cls._exec_constructor_postprocessors(obj)
         if not isinstance(obj, Pow):
             return obj
-        obj.is_commutative = (b.is_commutative and e.is_commutative)
+        obj.is_commutative = (base.is_commutative and exp.is_commutative)
         return obj
 
     def inverse(self, argindex=1):
@@ -219,21 +237,6 @@ class Pow(Expr):
             from sympy.functions.elementary.exponential import log
             return log
         return None
-
-    @property
-    def base(self) -> Expr:
-        return self._args[0]
-
-    @property
-    def exp(self) -> Expr:
-        return self._args[1]
-
-    @property
-    def kind(self):
-        if self.exp.kind is NumberKind:
-            return self.base.kind
-        else:
-            return UndefinedKind
 
     @classmethod
     def class_key(cls):
@@ -248,13 +251,13 @@ class Pow(Expr):
             elif ask(Q.odd(e), assumptions):
                 return -Pow(-b, e)
 
-    def _eval_power(self, other):
+    def _eval_power(self, expt):
         b, e = self.as_base_exp()
         if b is S.NaN:
-            return (b**e)**other  # let __new__ handle it
+            return (b**e)**expt  # let __new__ handle it
 
         s = None
-        if other.is_integer:
+        if expt.is_integer:
             s = 1
         elif b.is_polar:  # e.g. exp_polar, besselj, var('p', polar=True)...
             s = 1
@@ -282,18 +285,18 @@ class Pow(Expr):
                     pass
             # ===================================================
             if e.is_extended_real:
-                # we need _half(other) with constant floor or
+                # we need _half(expt) with constant floor or
                 # floor(S.Half - e*arg(b)/2/pi) == 0
 
 
                 # handle -1 as special case
                 if e == -1:
                     # floor arg. is 1/2 + arg(b)/2/pi
-                    if _half(other):
+                    if _half(expt):
                         if b.is_negative is True:
-                            return S.NegativeOne**other*Pow(-b, e*other)
+                            return S.NegativeOne**expt*Pow(-b, e*expt)
                         elif b.is_negative is False:  # XXX ok if im(b) != 0?
-                            return Pow(b, -other)
+                            return Pow(b, -expt)
                 elif e.is_even:
                     if b.is_extended_real:
                         b = abs(b)
@@ -306,8 +309,8 @@ class Pow(Expr):
                     s = 1  # floor = 0
                 elif re(b).is_extended_nonnegative and (abs(e) < 2) == True:
                     s = 1  # floor = 0
-                elif _half(other):
-                    s = exp(2*S.Pi*S.ImaginaryUnit*other*floor(
+                elif _half(expt):
+                    s = exp(2*S.Pi*S.ImaginaryUnit*expt*floor(
                         S.Half - e*arg(b)/(2*S.Pi)))
                     if s.is_extended_real and _n2(sign(s) - s) == 0:
                         s = sign(s)
@@ -315,10 +318,10 @@ class Pow(Expr):
                         s = None
             else:
                 # e.is_extended_real is False requires:
-                #     _half(other) with constant floor or
+                #     _half(expt) with constant floor or
                 #     floor(S.Half - im(e*log(b))/2/pi) == 0
                 try:
-                    s = exp(2*S.ImaginaryUnit*S.Pi*other*
+                    s = exp(2*S.ImaginaryUnit*S.Pi*expt*
                         floor(S.Half - im(e*log(b))/2/S.Pi))
                     # be careful to test that s is -1 or 1 b/c sign(I) == I:
                     # so check that s is real
@@ -330,7 +333,7 @@ class Pow(Expr):
                     s = None
 
         if s is not None:
-            return s*Pow(b, e*other)
+            return s*Pow(b, e*expt)
 
     def _eval_Mod(self, q):
         r"""A dispatched function to compute `b^e \bmod q`, dispatched
@@ -436,19 +439,13 @@ class Pow(Expr):
                 return True
             if self.exp.is_even:
                 return False
-        elif self.base.is_extended_positive:
-            if self.exp.is_extended_real:
-                return False
-        elif self.base.is_zero:
+        elif self.base.is_extended_positive or self.base.is_zero:
             if self.exp.is_extended_real:
                 return False
         elif self.base.is_extended_nonnegative:
             if self.exp.is_extended_nonnegative:
                 return False
-        elif self.base.is_extended_nonpositive:
-            if self.exp.is_even:
-                return False
-        elif self.base.is_extended_real:
+        elif self.base.is_extended_nonpositive or self.base.is_extended_real:
             if self.exp.is_even:
                 return False
 
@@ -1533,7 +1530,8 @@ class Pow(Expr):
                 return res
 
         f = b.as_leading_term(x, logx=logx)
-        g = (b/f - S.One).cancel(expand=False)
+        g = (_mexpand(b) - f).cancel()
+        g = g/f
         if not m.is_number:
             raise NotImplementedError()
         maxpow = n - m*e
@@ -1583,8 +1581,8 @@ class Pow(Expr):
             # Convert floats like 0.5 to exact SymPy numbers like S.Half, to
             # prevent rounding errors which can induce wrong values of d leading
             # to a NotImplementedError being returned from the block below.
-            from sympy.simplify.simplify import nsimplify
-            _, d = nsimplify(g).leadterm(x, logx=logx)
+            g = g.replace(lambda x: x.is_Float, lambda x: Rational(x))
+            _, d = g.leadterm(x, logx=logx)
         if not d.is_positive:
             g = g.simplify()
             if g.is_zero:
@@ -1643,7 +1641,7 @@ class Pow(Expr):
                 return exp(e*log(b))._eval_nseries(x, n=n, logx=logx, cdir=cdir)
         return res
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx, cdir):
         from sympy.functions.elementary.exponential import exp, log
         e = self.exp
         b = self.base

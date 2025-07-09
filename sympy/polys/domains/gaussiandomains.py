@@ -1,5 +1,6 @@
 """Domains of Gaussian type."""
 
+from __future__ import annotations
 from sympy.core.numbers import I
 from sympy.polys.polyclasses import DMP
 from sympy.polys.polyerrors import CoercionFailed
@@ -244,7 +245,7 @@ class GaussianRational(GaussianElement):
 
 class GaussianDomain():
     """Base class for Gaussian domains."""
-    dom = None  # type: Domain
+    dom: Domain
 
     is_Numerical = True
     is_Exact = True
@@ -436,6 +437,7 @@ class GaussianIntegerRing(GaussianDomain, Ring):
 
     is_GaussianRing = True
     is_ZZ_I = True
+    is_PID = True
 
     def __init__(self):  # override Domain.__init__
         """For constructing ZZ_I."""
@@ -481,6 +483,21 @@ class GaussianIntegerRing(GaussianDomain, Ring):
         while b:
             a, b = b, a % b
         return self.normalize(a)
+
+    def gcdex(self, a, b):
+        """Return x, y, g such that x * a + y * b = g = gcd(a, b)"""
+        x_a = self.one
+        x_b = self.zero
+        y_a = self.zero
+        y_b = self.one
+        while b:
+            q = a // b
+            a, b = b, a - q * b
+            x_a, x_b = x_b, x_a - q * x_b
+            y_a, y_b = y_b, y_a - q * y_b
+
+        a, x_a, y_a = self.normalize(a, x_a, y_a)
+        return x_a, y_a, a
 
     def lcm(self, a, b):
         """Least common multiple of a and b over ZZ_I."""

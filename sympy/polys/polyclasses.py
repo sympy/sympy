@@ -140,6 +140,9 @@ class DMP(CantSympify):
 
     __slots__ = ()
 
+    lev: int
+    dom: Domain
+
     def __new__(cls, rep, dom, lev=None):
 
         if lev is None:
@@ -1761,7 +1764,7 @@ class DUP_Flint(DMP):
             return flint.fmpz_poly
         elif dom.is_QQ:
             return flint.fmpq_poly
-        elif dom.is_FF:
+        elif dom.is_FF and dom._is_flint:
             return dom._poly_ctx
         else:
             raise RuntimeError("Domain %s is not supported with flint" % dom)
@@ -1770,19 +1773,7 @@ class DUP_Flint(DMP):
     def from_rep(cls, rep, dom):
         """Create a DMP from the given representation. """
 
-        if dom.is_ZZ:
-            assert isinstance(rep, flint.fmpz_poly)
-            _cls = flint.fmpz_poly
-        elif dom.is_QQ:
-            assert isinstance(rep, flint.fmpq_poly)
-            _cls = flint.fmpq_poly
-        elif dom.is_FF:
-            assert isinstance(rep, (flint.nmod_poly, flint.fmpz_mod_poly))
-            c = dom.characteristic()
-            __cls = type(rep)
-            _cls = lambda e: __cls(e, c)
-        else:
-            raise RuntimeError("Domain %s is not supported with flint" % dom)
+        _cls = cls._get_flint_poly_cls(dom)
 
         obj = object.__new__(cls)
         obj.dom = dom
@@ -2215,6 +2206,8 @@ class DUP_Flint(DMP):
     def primitive(f):
         """Returns content and a primitive form of ``f``. """
         cont = f.content()
+        if f.is_zero:
+            return f.dom.zero, f
         prim = f._exquo_ground(cont)
         return cont, prim
 
@@ -2860,6 +2853,8 @@ class ANP(CantSympify):
             mod = DMP(dup_from_dict(mod, dom), dom, 0)
         else:
             mod = DMP(dup_strip(mod), dom, 0)
+
+        rep = rep.rem(mod)
 
         return cls.new(rep, mod, dom)
 

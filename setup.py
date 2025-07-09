@@ -46,8 +46,9 @@ extra_kwargs = {
     }
 }
 
-if sys.version_info < (3, 8):
-    print("SymPy requires Python 3.8 or newer. Python %d.%d detected"
+# Keep in sync with sympy/__init__.py and python_requires below
+if sys.version_info < (3, 9):
+    print("SymPy requires Python 3.9 or newer. Python %d.%d detected"
           % sys.version_info[:2])
     sys.exit(-1)
 
@@ -212,12 +213,11 @@ class sdist_sympy(sdist):
             commit_hash = commit_hash.rstrip()
             print('Commit hash found : {}.'.format(commit_hash))
             print('Writing it to {}.'.format(commit_hash_filepath))
-        except:
+        except Exception:
             pass
 
         if commit_hash:
-            with open(commit_hash_filepath, 'w') as f:
-                f.write(commit_hash)
+            Path(commit_hash_filepath).write_text(commit_hash)
 
         super().run()
 
@@ -301,14 +301,13 @@ tests = [
 ]
 
 
-with open(os.path.join(dir_setup, 'sympy', 'release.py')) as f:
-    # Defines __version__
-    exec(f.read())
+# Defines __version__
+exec(Path(os.path.join(dir_setup, 'sympy', 'release.py')).read_text())
 
 
 if __name__ == '__main__':
     setup(name='sympy',
-          version=__version__,
+          version=__version__, # noqa: F821
           description='Computer algebra system (CAS) in Python',
           long_description=(Path(__file__).parent / 'README.md').read_text("UTF-8"),
           long_description_content_type='text/markdown',
@@ -345,7 +344,8 @@ if __name__ == '__main__':
                     'antlr': antlr,
                     'sdist': sdist_sympy,
                     },
-          python_requires='>=3.8',
+          # Keep in sync with version check above and sympy/__init__.py
+          python_requires='>=3.9',
           classifiers=[
             'License :: OSI Approved :: BSD License',
             'Operating System :: OS Independent',
@@ -354,10 +354,11 @@ if __name__ == '__main__':
             'Topic :: Scientific/Engineering :: Mathematics',
             'Topic :: Scientific/Engineering :: Physics',
             'Programming Language :: Python :: 3',
-            'Programming Language :: Python :: 3.8',
             'Programming Language :: Python :: 3.9',
             'Programming Language :: Python :: 3.10',
             'Programming Language :: Python :: 3.11',
+            'Programming Language :: Python :: 3.12',
+            'Programming Language :: Python :: 3.13',
             'Programming Language :: Python :: 3 :: Only',
             'Programming Language :: Python :: Implementation :: CPython',
             'Programming Language :: Python :: Implementation :: PyPy',

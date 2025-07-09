@@ -1,4 +1,6 @@
-from typing import Tuple as tTuple
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 
 from sympy.concrete.expr_with_limits import AddWithLimits
 from sympy.core.add import Add
@@ -32,14 +34,18 @@ from sympy.utilities.iterables import is_sequence
 from sympy.utilities.misc import filldedent
 
 
+if TYPE_CHECKING:
+    SymbolLimits = Expr | tuple[Expr, Expr] | tuple[Expr, Expr, Expr]
+
+
 class Integral(AddWithLimits):
     """Represents unevaluated integral."""
 
     __slots__ = ()
 
-    args: tTuple[Expr, Tuple]
+    args: tuple[Expr, Tuple] # type: ignore
 
-    def __new__(cls, function, *symbols, **assumptions):
+    def __new__(cls, function, *symbols, **assumptions) -> Integral:
         """Create an unevaluated integral.
 
         Explanation
@@ -1184,7 +1190,7 @@ class Integral(AddWithLimits):
         order = [o.subs(symb, x) for o in order]
         return integrate(terms, *self.limits) + Add(*order)*x
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx, cdir):
         series_gen = self.args[0].lseries(x)
         for leading_term in series_gen:
             if leading_term != 0:
@@ -1403,7 +1409,8 @@ class Integral(AddWithLimits):
 
 
 
-def integrate(*args, meijerg=None, conds='piecewise', risch=None, heurisch=None, manual=None, **kwargs):
+def integrate(function, *symbols: SymbolLimits, meijerg=None, conds='piecewise',
+                        risch=None, heurisch=None, manual=None, **kwargs):
     """integrate(f, var, ...)
 
     .. deprecated:: 1.6
@@ -1568,7 +1575,8 @@ def integrate(*args, meijerg=None, conds='piecewise', risch=None, heurisch=None,
         'heurisch': heurisch,
         'manual': manual
         }
-    integral = Integral(*args, **kwargs)
+
+    integral = Integral(function, *symbols, **kwargs)
 
     if isinstance(integral, Integral):
         return integral.doit(**doit_flags)
@@ -1576,7 +1584,6 @@ def integrate(*args, meijerg=None, conds='piecewise', risch=None, heurisch=None,
         new_args = [a.doit(**doit_flags) if isinstance(a, Integral) else a
             for a in integral.args]
         return integral.func(*new_args)
-
 
 def line_integrate(field, curve, vars):
     """line_integrate(field, Curve, variables)

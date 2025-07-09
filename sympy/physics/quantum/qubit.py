@@ -29,7 +29,6 @@ from sympy.physics.quantum.represent import represent
 from sympy.physics.quantum.matrixutils import (
     numpy_ndarray, scipy_sparse_matrix
 )
-from mpmath.libmp.libintmath import bitcount
 
 __all__ = [
     'Qubit',
@@ -307,7 +306,7 @@ class IntQubitState(QubitState):
         # that integer with the minimal number of bits.
         if len(args) == 1 and args[0] > 1:
             #rvalues is the minimum number of bits needed to express the number
-            rvalues = reversed(range(bitcount(abs(args[0]))))
+            rvalues = reversed(range(int(args[0]).bit_length()))
             qubit_values = [(args[0] >> i) & 1 for i in rvalues]
             return QubitState._eval_args(qubit_values)
         # For two numbers, the second number is the number of bits
@@ -319,7 +318,7 @@ class IntQubitState(QubitState):
 
     @classmethod
     def _eval_args_with_nqubits(cls, number, nqubits):
-        need = bitcount(abs(number))
+        need = int(number).bit_length()
         if nqubits < need:
             raise ValueError(
                 'cannot represent %s with %s bits' % (number, nqubits))
@@ -493,7 +492,7 @@ def matrix_to_qubit(matrix):
             element = matrix[0, i]
         if format in ('numpy', 'scipy.sparse'):
             element = complex(element)
-        if element != 0.0:
+        if element:
             # Form Qubit array; 0 in bit-locations where i is 0, 1 in
             # bit-locations where i is 1
             qubit_array = [int(i & (1 << x) != 0) for x in range(nqubits)]
@@ -582,7 +581,7 @@ def measure_all(qubit, format='sympy', normalize=True):
         size = max(m.shape)  # Max of shape to account for bra or ket
         nqubits = int(math.log(size)/math.log(2))
         for i in range(size):
-            if m[i] != 0.0:
+            if m[i]:
                 results.append(
                     (Qubit(IntQubit(i, nqubits=nqubits)), m[i]*conjugate(m[i]))
                 )
@@ -804,7 +803,7 @@ def measure_all_oneshot(qubit, format='sympy'):
             if total > random_number:
                 break
             result += 1
-        return Qubit(IntQubit(result, int(math.log2(max(m.shape)) + .1)))
+        return Qubit(IntQubit(result, nqubits=int(math.log2(max(m.shape)) + .1)))
     else:
         raise NotImplementedError(
             "This function cannot handle non-SymPy matrix formats yet"

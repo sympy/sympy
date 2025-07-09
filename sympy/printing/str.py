@@ -27,6 +27,7 @@ class StrPrinter(Printer):
         "perm_cyclic": True,
         "min": None,
         "max": None,
+        "dps" : None
     }
 
     _relationals: dict[str, str] = {}
@@ -736,10 +737,9 @@ class StrPrinter(Printer):
 
     def _print_Float(self, expr):
         prec = expr._prec
-        if prec < 5:
-            dps = 0
-        else:
-            dps = prec_to_dps(expr._prec)
+        dps = self._settings.get('dps', None)
+        if dps is None:
+            dps = 0 if prec < 5 else prec_to_dps(expr._prec)
         if self._settings["full_prec"] is True:
             strip = False
         elif self._settings["full_prec"] is False:
@@ -753,9 +753,7 @@ class StrPrinter(Printer):
             rv = '-0.' + rv[3:]
         elif rv.startswith('.0'):
             rv = '0.' + rv[2:]
-        if rv.startswith('+'):
-            # e.g., +inf -> inf
-            rv = rv[1:]
+        rv = rv.removeprefix('+') # e.g., +inf -> inf
         return rv
 
     def _print_Relational(self, expr):
@@ -1006,7 +1004,6 @@ class StrReprPrinter(StrPrinter):
     def _print_Str(self, s):
         # Str does not to be printed same as str here
         return "%s(%s)" % (s.__class__.__name__, self._print(s.name))
-
 
 @print_function(StrReprPrinter)
 def sstrrepr(expr, **settings):

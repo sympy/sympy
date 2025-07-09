@@ -107,21 +107,21 @@ def test_dsolve_options():
         '1st_homogeneous_coeff_subs_indep_div_dep_Integral', '1st_linear',
         '1st_linear_Integral', 'Bernoulli', 'Bernoulli_Integral',
         'almost_linear', 'almost_linear_Integral', 'best', 'best_hint',
-        'default', 'factorable', 'lie_group',
+        'default', 'lie_group',
         'nth_linear_euler_eq_homogeneous', 'order',
         'separable', 'separable_Integral']
     Integral_keys = ['1st_exact_Integral',
         '1st_homogeneous_coeff_subs_dep_div_indep_Integral',
         '1st_homogeneous_coeff_subs_indep_div_dep_Integral', '1st_linear_Integral',
         'Bernoulli_Integral', 'almost_linear_Integral', 'best', 'best_hint', 'default',
-        'factorable', 'nth_linear_euler_eq_homogeneous',
+        'nth_linear_euler_eq_homogeneous',
         'order', 'separable_Integral']
     assert sorted(a.keys()) == keys
     assert a['order'] == ode_order(eq, f(x))
     assert a['best'] == Eq(f(x), C1/x)
     assert dsolve(eq, hint='best') == Eq(f(x), C1/x)
-    assert a['default'] == 'factorable'
-    assert a['best_hint'] == 'factorable'
+    assert a['default'] == 'separable'
+    assert a['best_hint'] == 'separable'
     assert not a['1st_exact'].has(Integral)
     assert not a['separable'].has(Integral)
     assert not a['1st_homogeneous_coeff_best'].has(Integral)
@@ -137,8 +137,8 @@ def test_dsolve_options():
     assert b['order'] == ode_order(eq, f(x))
     assert b['best'] == Eq(f(x), C1/x)
     assert dsolve(eq, hint='best', simplify=False) == Eq(f(x), C1/x)
-    assert b['default'] == 'factorable'
-    assert b['best_hint'] == 'factorable'
+    assert b['default'] == 'separable'
+    assert b['best_hint'] == '1st_linear'
     assert a['separable'] != b['separable']
     assert a['1st_homogeneous_coeff_subs_dep_div_indep'] != \
         b['1st_homogeneous_coeff_subs_dep_div_indep']
@@ -255,7 +255,7 @@ def test_classify_ode():
 
     assert classify_ode(
         2*x*f(x)*f(x).diff(x) + (1 + x)*f(x)**2 - exp(x), f(x)
-    ) == ('factorable', '1st_exact', 'Bernoulli', 'almost_linear', 'lie_group',
+    ) == ('1st_exact', 'Bernoulli', 'almost_linear', 'lie_group',
         '1st_exact_Integral', 'Bernoulli_Integral', 'almost_linear_Integral')
     assert 'Riccati_special_minus2' in \
         classify_ode(2*f(x).diff(x) + f(x)**2 - f(x)/x + 3*x**(-2), f(x))
@@ -269,7 +269,7 @@ def test_classify_ode():
         '1st_power_series', 'lie_group', 'separable_Integral', '1st_exact_Integral',
         '1st_linear_Integral', 'Bernoulli_Integral')
     # preprocessing
-    ans = ('factorable', 'nth_algebraic', 'separable', '1st_exact', '1st_linear', 'Bernoulli',
+    ans = ('nth_algebraic', 'separable', '1st_exact', '1st_linear', 'Bernoulli',
         '1st_homogeneous_coeff_best',
         '1st_homogeneous_coeff_subs_indep_div_dep',
         '1st_homogeneous_coeff_subs_dep_div_indep',
@@ -319,7 +319,7 @@ def test_classify_ode():
 
     # test issue 22155
     a = classify_ode(f(x).diff(x) - exp(f(x) - x), f(x))
-    assert a == ('separable',
+    assert a == ('factorable', 'separable',
         '1st_exact', '1st_power_series',
         'lie_group', 'separable_Integral',
         '1st_exact_Integral')
@@ -441,7 +441,8 @@ def test_classify_sysode():
     P1, P2, P3, Q1, Q2, R1, R2 = symbols('P1, P2, P3, Q1, Q2, R1, R2', cls=Function)
     x, y, z = symbols('x, y, z', cls=Function)
     t = symbols('t')
-    x1 = diff(x(t),t) ; y1 = diff(y(t),t) ;
+    x1 = diff(x(t),t)
+    y1 = diff(y(t),t)
 
     eq6 = (Eq(x1, exp(k*x(t))*P(x(t),y(t))), Eq(y1,r(y(t))*P(x(t),y(t))))
     sol6 = {'no_of_equation': 2, 'func_coeff': {(0, x(t), 0): 0, (1, x(t), 1): 0, (0, x(t), 1): 1, (1, y(t), 0): 0, \
@@ -760,7 +761,7 @@ def test_undetermined_coefficients_match():
 def test_issue_4785_22462():
     from sympy.abc import A
     eq = x + A*(x + diff(f(x), x) + f(x)) + diff(f(x), x) + f(x) + 2
-    assert classify_ode(eq, f(x)) == ('factorable', '1st_exact', '1st_linear',
+    assert classify_ode(eq, f(x)) == ('1st_exact', '1st_linear',
         'Bernoulli', 'almost_linear', '1st_power_series', 'lie_group',
         'nth_linear_constant_coeff_undetermined_coefficients',
         'nth_linear_constant_coeff_variation_of_parameters',
@@ -769,7 +770,7 @@ def test_issue_4785_22462():
         'nth_linear_constant_coeff_variation_of_parameters_Integral')
     # issue 4864
     eq = (x**2 + f(x)**2)*f(x).diff(x) - 2*x*f(x)
-    assert classify_ode(eq, f(x)) == ('factorable', '1st_exact',
+    assert classify_ode(eq, f(x)) == ('1st_exact',
         '1st_homogeneous_coeff_best',
         '1st_homogeneous_coeff_subs_indep_div_dep',
         '1st_homogeneous_coeff_subs_dep_div_indep',
@@ -933,7 +934,7 @@ def test_2nd_power_series_ordinary():
     assert checkodesol(eq, sol) == (True, 0)
 
     eq = (1 + x**2)*(f(x).diff(x, 2)) + 2*x*(f(x).diff(x)) -2*f(x)
-    assert classify_ode(eq) == ('factorable', '2nd_hypergeometric', '2nd_hypergeometric_Integral',
+    assert classify_ode(eq) == ('2nd_hypergeometric', '2nd_hypergeometric_Integral',
     '2nd_power_series_ordinary')
 
     sol = Eq(f(x), C2*(-x**4/3 + x**2 + 1) + C1*x + O(x**6))
@@ -941,7 +942,7 @@ def test_2nd_power_series_ordinary():
     assert checkodesol(eq, sol) == (True, 0)
 
     eq = f(x).diff(x, 2) + x*(f(x).diff(x)) + f(x)
-    assert classify_ode(eq) == ('factorable', '2nd_power_series_ordinary',)
+    assert classify_ode(eq) == ('2nd_power_series_ordinary',)
     sol = Eq(f(x), C2*(x**4/8 - x**2/2 + 1) + C1*x*(-x**2/3 + 1) + O(x**6))
     assert dsolve(eq) == sol
     # FIXME: checkodesol fails for this solution...
@@ -1102,3 +1103,16 @@ def test_issue_25820():
     y = Function('y')
     eq = y(x)**3*y(x).diff(x, 2) + 49
     assert dsolve(eq, y(x)) is not None  # doesn't raise
+
+
+def test_issue_27683():
+    from sympy import Float
+    x = Symbol('x')
+    u = Function('u')(x)
+    eq1 = Eq(diff(u, x, x) * 4000.0, 1)
+    eq2 = Eq(diff(u, x, x) * Float(4000), Float(1))
+    sol1 = dsolve(eq1, u)
+    sol2 = dsolve(eq2, u)
+    expected = Eq(u, C1 + C2*x + 0.000125*x**2)
+    assert sol1 == expected
+    assert sol2 == expected

@@ -1,14 +1,14 @@
-from typing import Tuple as tTuple
+from __future__ import annotations
 
 from sympy.core.basic import Basic
 from sympy.core.expr import Expr
 
 from sympy.core import Add, S
 from sympy.core.evalf import get_integer_part, PrecisionExhausted
-from sympy.core.function import Function
-from sympy.core.logic import fuzzy_or
+from sympy.core.function import DefinedFunction
+from sympy.core.logic import fuzzy_or, fuzzy_and
 from sympy.core.numbers import Integer, int_valued
-from sympy.core.relational import Gt, Lt, Ge, Le, Relational, is_eq
+from sympy.core.relational import Gt, Lt, Ge, Le, Relational, is_eq, is_le, is_lt
 from sympy.core.sympify import _sympify
 from sympy.functions.elementary.complexes import im, re
 from sympy.multipledispatch import dispatch
@@ -18,15 +18,16 @@ from sympy.multipledispatch import dispatch
 ###############################################################################
 
 
-class RoundFunction(Function):
+class RoundFunction(DefinedFunction):
     """Abstract base class for rounding functions."""
 
-    args: tTuple[Expr]
+    args: tuple[Expr]
 
     @classmethod
     def eval(cls, arg):
-        v = cls._eval_number(arg)
-        if v is not None:
+        if (v := cls._eval_number(arg)) is not None:
+            return v
+        if (v := cls._eval_const_number(arg)) is not None:
             return v
 
         if arg.is_integer or arg.is_finite is False:
@@ -135,13 +136,45 @@ class floor(RoundFunction):
     def _eval_number(cls, arg):
         if arg.is_Number:
             return arg.floor()
-        elif any(isinstance(i, j)
+        if any(isinstance(i, j)
                 for i in (arg, -arg) for j in (floor, ceiling)):
             return arg
         if arg.is_NumberSymbol:
             return arg.approximation_interval(Integer)[0]
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    @classmethod
+    def _eval_const_number(cls, arg):
+        if arg.is_real:
+            if arg.is_zero:
+                return S.Zero
+            if arg.is_positive:
+                num, den = arg.as_numer_denom()
+                s = den.is_negative
+                if s is None:
+                    return None
+                if s:
+                    num, den = -num, -den
+                # 0 <= num/den < 1 -> 0
+                if is_lt(num, den):
+                    return S.Zero
+                # 1 <= num/den < 2 -> 1
+                if fuzzy_and([is_le(den, num), is_lt(num, 2*den)]):
+                    return S.One
+            if arg.is_negative:
+                num, den = arg.as_numer_denom()
+                s = den.is_negative
+                if s is None:
+                    return None
+                if s:
+                    num, den = -num, -den
+                # -1 <= num/den < 0 -> -1
+                if is_le(-den, num):
+                    return S.NegativeOne
+                # -2 <= num/den < -1 -> -2
+                if fuzzy_and([is_le(-2*den, num), is_lt(num, -den)]):
+                    return Integer(-2)
+
+    def _eval_as_leading_term(self, x, logx, cdir):
         from sympy.calculus.accumulationbounds import AccumBounds
         arg = self.args[0]
         arg0 = arg.subs(x, 0)
@@ -219,7 +252,7 @@ class floor(RoundFunction):
                 return self.args[0] >= other
             if other.is_number and other.is_real:
                 return self.args[0] >= ceiling(other)
-        if self.args[0] == other and other.is_real:
+        if self.args[0] == other and other.is_real and other.is_noninteger:
             return S.false
         if other is S.NegativeInfinity and self.is_finite:
             return S.true
@@ -247,8 +280,8 @@ class floor(RoundFunction):
                 return self.args[0] < other
             if other.is_number and other.is_real:
                 return self.args[0] < ceiling(other)
-        if self.args[0] == other and other.is_real:
-            return S.false
+        if self.args[0] == other and other.is_real and other.is_noninteger:
+            return S.true
         if other is S.Infinity and self.is_finite:
             return S.true
 
@@ -257,7 +290,7 @@ class floor(RoundFunction):
 
 @dispatch(floor, Expr)
 def _eval_is_eq(lhs, rhs): # noqa:F811
-   return is_eq(lhs.rewrite(ceiling), rhs) or \
+    return is_eq(lhs.rewrite(ceiling), rhs) or \
         is_eq(lhs.rewrite(frac),rhs)
 
 
@@ -303,13 +336,45 @@ class ceiling(RoundFunction):
     def _eval_number(cls, arg):
         if arg.is_Number:
             return arg.ceiling()
-        elif any(isinstance(i, j)
+        if any(isinstance(i, j)
                 for i in (arg, -arg) for j in (floor, ceiling)):
             return arg
         if arg.is_NumberSymbol:
             return arg.approximation_interval(Integer)[1]
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    @classmethod
+    def _eval_const_number(cls, arg):
+        if arg.is_real:
+            if arg.is_zero:
+                return S.Zero
+            if arg.is_positive:
+                num, den = arg.as_numer_denom()
+                s = den.is_negative
+                if s is None:
+                    return None
+                if s:
+                    num, den = -num, -den
+                # 0 < num/den <= 1 -> 1
+                if is_le(num, den):
+                    return S.One
+                # 1 < num/den <= 2 -> 2
+                if fuzzy_and([is_lt(den, num), is_le(num, 2*den)]):
+                    return Integer(2)
+            if arg.is_negative:
+                num, den = arg.as_numer_denom()
+                s = den.is_negative
+                if s is None:
+                    return None
+                if s:
+                    num, den = -num, -den
+                # -1 < num/den <= 0 -> 0
+                if is_lt(-den, num):
+                    return S.Zero
+                # -2 < num/den <= -1 -> -1
+                if fuzzy_and([is_lt(-2*den, num), is_le(num, -den)]):
+                    return S.NegativeOne
+
+    def _eval_as_leading_term(self, x, logx, cdir):
         from sympy.calculus.accumulationbounds import AccumBounds
         arg = self.args[0]
         arg0 = arg.subs(x, 0)
@@ -387,8 +452,8 @@ class ceiling(RoundFunction):
                 return self.args[0] > other
             if other.is_number and other.is_real:
                 return self.args[0] > floor(other)
-        if self.args[0] == other and other.is_real:
-            return S.false
+        if self.args[0] == other and other.is_real and other.is_noninteger:
+            return S.true
         if other is S.NegativeInfinity and self.is_finite:
             return S.true
 
@@ -415,7 +480,7 @@ class ceiling(RoundFunction):
                 return self.args[0] <= other
             if other.is_number and other.is_real:
                 return self.args[0] <= floor(other)
-        if self.args[0] == other and other.is_real:
+        if self.args[0] == other and other.is_real and other.is_noninteger:
             return S.false
         if other is S.Infinity and self.is_finite:
             return S.true
@@ -428,7 +493,7 @@ def _eval_is_eq(lhs, rhs): # noqa:F811
     return is_eq(lhs.rewrite(floor), rhs) or is_eq(lhs.rewrite(frac),rhs)
 
 
-class frac(Function):
+class frac(DefinedFunction):
     r"""Represents the fractional part of x
 
     For real numbers it is defined [1]_ as
@@ -487,12 +552,9 @@ class frac(Function):
             if arg.is_integer:
                 return S.Zero
             if arg.is_number:
-                if arg is S.NaN:
+                if arg is S.NaN or arg is S.ComplexInfinity:
                     return S.NaN
-                elif arg is S.ComplexInfinity:
-                    return S.NaN
-                else:
-                    return arg - floor(arg)
+                return arg - floor(arg)
             return cls(arg, evaluate=False)
 
         real, imag = S.Zero, S.Zero
@@ -593,7 +655,7 @@ class frac(Function):
             if other.is_integer and other.is_positive:
                 return S.true
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx, cdir):
         from sympy.calculus.accumulationbounds import AccumBounds
         arg = self.args[0]
         arg0 = arg.subs(x, 0)

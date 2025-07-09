@@ -12,9 +12,10 @@ See the webpage for more information and documentation:
 """
 
 
+# Keep this in sync with setup.py/pyproject.toml
 import sys
-if sys.version_info < (3, 8):
-    raise ImportError("Python version 3.8 or above is required for SymPy.")
+if sys.version_info < (3, 9):
+    raise ImportError("Python version 3.9 or above is required for SymPy.")
 del sys
 
 
@@ -47,7 +48,9 @@ def __sympy_debug():
     else:
         raise RuntimeError("unrecognized value for SYMPY_DEBUG: %s" %
                            debug_str)
+# Fails py2 test if using type hinting
 SYMPY_DEBUG = __sympy_debug()  # type: bool
+
 
 from .core import (sympify, SympifyError, cacheit, Basic, Atom,
         preorder_traversal, S, Expr, AtomicExpr, UnevaluatedExpr, Symbol,
@@ -106,8 +109,8 @@ from .polys import (Poly, PurePoly, poly_from_expr, parallel_poly_from_expr,
         Options, ring, xring, vring, sring, field, xfield, vfield, sfield)
 
 from .series import (Order, O, limit, Limit, gruntz, series, approximants,
-        residue, EmptySequence, SeqPer, SeqFormula, sequence, SeqAdd, SeqMul,
-        fourier_series, fps, difference_delta, limit_seq)
+        pade_approximant, residue, EmptySequence, SeqPer, SeqFormula, sequence,
+        SeqAdd, SeqMul, fourier_series, fps, difference_delta, limit_seq)
 
 from .functions import (factorial, factorial2, rf, ff, binomial,
         RisingFactorial, FallingFactorial, subfactorial, carmichael,
@@ -138,7 +141,7 @@ from .functions import (factorial, factorial2, rf, ff, binomial,
 from .ntheory import (nextprime, prevprime, prime, primerange,
         randprime, Sieve, sieve, primorial, cycle_length, composite,
         compositepi, isprime, divisors, proper_divisors, factorint,
-        multiplicity, perfect_power, pollard_pm1, pollard_rho, primefactors,
+        multiplicity, perfect_power, factor_cache, pollard_pm1, pollard_rho, primefactors,
         divisor_count, proper_divisor_count,
         factorrat,
         mersenne_prime_exponent, is_perfect, is_mersenne_prime, is_abundant,
@@ -174,7 +177,7 @@ from .solvers import (solve, solve_linear_system, solve_linear_system_LU,
         solve_undetermined_coeffs, nsolve, solve_linear, checksol, det_quick,
         inv_quick, check_assumptions, failing_assumptions, diophantine,
         rsolve, rsolve_poly, rsolve_ratio, rsolve_hyper, checkodesol,
-        classify_ode, dsolve, homogeneous_order, solve_poly_system,
+        classify_ode, dsolve, homogeneous_order, solve_poly_system, factor_system,
         solve_triangulated, pde_separate, pde_separate_add, pde_separate_mul,
         pdsolve, classify_pde, checkpdesol, ode_order, reduce_inequalities,
         reduce_abs_inequality, reduce_abs_inequalities, solve_poly_inequality,
@@ -329,8 +332,9 @@ __all__ = [
 
     # sympy.series
     'Order', 'O', 'limit', 'Limit', 'gruntz', 'series', 'approximants',
-    'residue', 'EmptySequence', 'SeqPer', 'SeqFormula', 'sequence', 'SeqAdd',
-    'SeqMul', 'fourier_series', 'fps', 'difference_delta', 'limit_seq',
+    'pade_approximant', 'residue', 'EmptySequence', 'SeqPer', 'SeqFormula',
+    'sequence', 'SeqAdd', 'SeqMul', 'fourier_series', 'fps', 'difference_delta',
+    'limit_seq',
 
     # sympy.functions
     'factorial', 'factorial2', 'rf', 'ff', 'binomial', 'RisingFactorial',
@@ -367,7 +371,7 @@ __all__ = [
     'nextprime', 'prevprime', 'prime', 'primerange', 'randprime',
     'Sieve', 'sieve', 'primorial', 'cycle_length', 'composite', 'compositepi',
     'isprime', 'divisors', 'proper_divisors', 'factorint', 'multiplicity',
-    'perfect_power', 'pollard_pm1', 'pollard_rho', 'primefactors',
+    'perfect_power', 'pollard_pm1', 'factor_cache', 'pollard_rho', 'primefactors',
     'divisor_count', 'proper_divisor_count',
     'factorrat',
     'mersenne_prime_exponent', 'is_perfect', 'is_mersenne_prime',
@@ -411,7 +415,7 @@ __all__ = [
     'det_quick', 'inv_quick', 'check_assumptions', 'failing_assumptions',
     'diophantine', 'rsolve', 'rsolve_poly', 'rsolve_ratio', 'rsolve_hyper',
     'checkodesol', 'classify_ode', 'dsolve', 'homogeneous_order',
-    'solve_poly_system', 'solve_triangulated', 'pde_separate',
+    'solve_poly_system', 'factor_system', 'solve_triangulated', 'pde_separate',
     'pde_separate_add', 'pde_separate_mul', 'pdsolve', 'classify_pde',
     'checkpdesol', 'ode_order', 'reduce_inequalities',
     'reduce_abs_inequality', 'reduce_abs_inequalities',

@@ -1,7 +1,7 @@
 from sympy.core import (S, pi, oo, symbols, Function, Rational, Integer,
                         Tuple, Symbol, Eq, Ne, Le, Lt, Gt, Ge)
 from sympy.core import EulerGamma, GoldenRatio, Catalan, Lambda, Mul, Pow
-from sympy.functions import Piecewise, sqrt, ceiling, exp, sin, cos
+from sympy.functions import Piecewise, sqrt, ceiling, exp, sin, cos, sinc
 from sympy.testing.pytest import raises
 from sympy.utilities.lambdify import implemented_function
 from sympy.matrices import (eye, Matrix, MatrixSymbol, Identity,
@@ -147,12 +147,16 @@ def test_boolean():
     assert julia_code((x & y) | z) == "z || x && y"
     assert julia_code((x | y) & z) == "z && (x || y)"
 
+def test_sinc():
+    assert julia_code(sinc(x)) == 'sinc(x / pi)'
+    assert julia_code(sinc(x + 3)) == 'sinc((x + 3) / pi)'
+    assert julia_code(sinc(pi * (x + 3))) == 'sinc(x + 3)'
 
 def test_Matrices():
     assert julia_code(Matrix(1, 1, [10])) == "[10]"
     A = Matrix([[1, sin(x/2), abs(x)],
                 [0, 1, pi],
-                [0, exp(1), ceiling(x)]]);
+                [0, exp(1), ceiling(x)]])
     expected = ("[1 sin(x / 2)  abs(x);\n"
                 "0          1      pi;\n"
                 "0          e ceil(x)]")
@@ -322,8 +326,8 @@ def test_julia_not_supported():
 
 def test_trick_indent_with_end_else_words():
     # words starting with "end" or "else" do not confuse the indenter
-    t1 = S('endless');
-    t2 = S('elsewhere');
+    t1 = S('endless')
+    t2 = S('elsewhere')
     pw = Piecewise((t1, x < 0), (t2, x <= 1), (1, True))
     assert julia_code(pw, inline=False) == (
         "if (x < 0)\n"
@@ -351,11 +355,11 @@ def test_haramard():
 
 def test_sparse():
     M = SparseMatrix(5, 6, {})
-    M[2, 2] = 10;
-    M[1, 2] = 20;
-    M[1, 3] = 22;
-    M[0, 3] = 30;
-    M[3, 0] = x*y;
+    M[2, 2] = 10
+    M[1, 2] = 20
+    M[1, 3] = 22
+    M[0, 3] = 30
+    M[3, 0] = x*y
     assert julia_code(M) == (
         "sparse([4, 2, 3, 1, 2], [1, 3, 3, 4, 4], [x .* y, 20, 10, 30, 22], 5, 6)"
     )

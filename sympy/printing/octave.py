@@ -339,7 +339,7 @@ class OctaveCodePrinter(CodePrinter):
 
     def _print_SparseRepMatrix(self, A):
         from sympy.matrices import Matrix
-        L = A.col_list();
+        L = A.col_list()
         # make row vectors of the indices and entries
         I = Matrix([[k[0] + 1 for k in L]])
         J = Matrix([[k[1] + 1 for k in L]])

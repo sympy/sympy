@@ -21,6 +21,8 @@ from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.elementary.miscellaneous import (Max, Min, sqrt)
 from sympy.functions.elementary.trigonometric import (cos, sin, tan)
 from sympy.integrals.integrals import integrate
+from sympy.matrices.expressions.transpose import transpose
+from sympy.physics.quantum.operator import HermitianOperator, Operator, Dagger
 from sympy.polys.polytools import (Poly, PurePoly)
 from sympy.polys.rootoftools import RootOf
 from sympy.printing.str import sstr
@@ -749,7 +751,10 @@ def test_creation():
     with raises(IndexError):
         Matrix((1, 2))[3] = 5
 
-    assert Matrix() == Matrix([]) == Matrix([[]]) == Matrix(0, 0, [])
+    assert Matrix() == Matrix([]) == Matrix(0, 0, [])
+    assert Matrix([[]]) == Matrix(1, 0, [])
+    assert Matrix([[], []]) == Matrix(2, 0, [])
+
     # anything used to be allowed in a matrix
     with warns_deprecated_sympy():
         assert Matrix([[[1], (2,)]]).tolist() == [[[1], (2,)]]
@@ -1723,8 +1728,8 @@ def test_jordan_form_complex_issue_9274():
                 [-4,  2,  0,  1],
                 [ 0,  0,  2,  4],
                 [ 0,  0, -4,  2]])
-    p = 2 - 4*I;
-    q = 2 + 4*I;
+    p = 2 - 4*I
+    q = 2 + 4*I
     Jmust1 = Matrix([[p, 1, 0, 0],
                      [0, p, 0, 0],
                      [0, 0, q, 1],
@@ -2636,6 +2641,18 @@ def test_adjoint():
     for cls in classes:
         assert ans == cls(dat).adjoint()
 
+
+def test_adjoint_with_operator():
+    # Regression test for issue 25130: adjoint() should propagate to operators
+    import sympy.physics.quantum
+    a = sympy.physics.quantum.operator.Operator('a')
+    a_dag = sympy.physics.quantum.Dagger(a)
+    dat = [[0, I * a], [0, a_dag]]
+    ans = Matrix([[0, 0], [-I * a_dag, a]])
+    for cls in classes:
+        assert ans == cls(dat).adjoint()
+
+
 def test_simplify_immutable():
     assert simplify(ImmutableMatrix([[sin(x)**2 + cos(x)**2]])) == \
                     ImmutableMatrix([[1]])
@@ -2761,7 +2778,7 @@ def test_from_ndarray():
         lambda: Matrix(array([[[1, 2], [3, 4]], [[5, 6], [7, 8]]])))
     assert Matrix([array([1, 2]), array([3, 4])]) == Matrix([[1, 2], [3, 4]])
     assert Matrix([array([1, 2]), [3, 4]]) == Matrix([[1, 2], [3, 4]])
-    assert Matrix([array([]), array([])]) == Matrix([])
+    assert Matrix([array([]), array([])]) == Matrix(2, 0, []) != Matrix(0, 0, [])
 
 def test_17522_numpy():
     from sympy.matrices.common import _matrixify
@@ -2810,6 +2827,12 @@ def test_hermitian():
     assert a.is_hermitian is None
     a[0, 1] = a[1, 0]*I
     assert a.is_hermitian is False
+    b = HermitianOperator("b")
+    c = Operator("c")
+    assert Matrix([[b]]).is_hermitian is True
+    assert Matrix([[b, c], [Dagger(c), b]]).is_hermitian is True
+    assert Matrix([[b, c], [c, b]]).is_hermitian is False
+    assert Matrix([[b, c], [transpose(c), b]]).is_hermitian is False
 
 def test_doit():
     a = Matrix([[Add(x,x, evaluate=False)]])

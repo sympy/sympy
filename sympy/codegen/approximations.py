@@ -5,7 +5,7 @@ from sympy.codegen.rewriting import Optimization
 from sympy.core.function import UndefinedFunction
 
 """
-This module collects classes useful for approimate rewriting of expressions.
+This module collects classes useful for approximate rewriting of expressions.
 This can be beneficial when generating numeric code for which performance is
 of greater importance than precision (e.g. for preconditioners used in iterative
 methods).

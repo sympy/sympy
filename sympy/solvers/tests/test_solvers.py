@@ -22,8 +22,8 @@ from sympy.functions.special.error_functions import (erf, erfc, erfcinv, erfinv)
 from sympy.integrals.integrals import Integral
 from sympy.logic.boolalg import (And, Or)
 from sympy.matrices.dense import Matrix
-from sympy.matrices import SparseMatrix
-from sympy.polys.polytools import Poly
+from sympy.matrices import MatrixSymbol, SparseMatrix
+from sympy.polys.polytools import Poly, groebner
 from sympy.printing.str import sstr
 from sympy.simplify.radsimp import denom
 from sympy.solvers.solvers import (nsolve, solve, solve_linear)
@@ -328,7 +328,6 @@ def test_quintics_2():
         CRootOf(x**5 - 6*x**3 - 6*x**2 + x - 6, 2),
         CRootOf(x**5 - 6*x**3 - 6*x**2 + x - 6, 3),
         CRootOf(x**5 - 6*x**3 - 6*x**2 + x - 6, 4)]
-
 
 def test_quintics_3():
     y = x**5 + x**3 - 2**Rational(1, 3)
@@ -638,7 +637,7 @@ def test_solve_transcendental():
     # issue 15325
     assert solve(y**(1/x) - z, x) == [log(y)/log(z)]
 
-    # issue 25685 (basic trig identies should give simple solutions)
+    # issue 25685 (basic trig identities should give simple solutions)
     for yi in [cos(2*x),sin(2*x),cos(x - pi/3)]:
         sol = solve([cos(x) - S(3)/5, yi - y])
         assert (sol[0][y] + sol[1][y]).is_Rational, (yi,sol)
@@ -709,7 +708,8 @@ def test_issue_3725():
     assert solve(e, f(x).diff(x)) in [[(2 - x)/f(x)], [-((x - 2)/f(x))]]
 
 
-def test_issue_3870():
+def test_solve_Matrix():
+    # https://github.com/sympy/sympy/issues/3870
     a, b, c, d = symbols('a b c d')
     A = Matrix(2, 2, [a, b, c, d])
     B = Matrix(2, 2, [0, 2, -3, 0])
@@ -726,6 +726,16 @@ def test_issue_3870():
     assert solve([Eq(A*B, B*A)], [a, b, c, d]) == {a: d, b: Rational(-2, 3)*c}
     assert solve([Eq(A*C, C*A)], [a, b, c, d]) == {a: d - c, b: Rational(2, 3)*c}
     assert solve([Eq(A*B, B*A), Eq(A*C, C*A)], [a, b, c, d]) == {a: d, b: 0, c: 0}
+
+    # https://github.com/sympy/sympy/issues/27854
+    m, n = symbols("m n")
+    A = MatrixSymbol("A", m, n)
+    x = MatrixSymbol("x", n, 1)
+    b = MatrixSymbol('b', m, 1)
+    r = A * x - b
+    f = r.T * r
+    grad_f = f.diff(x)
+    raises(ValueError, lambda: solve(grad_f, x))
 
 
 def test_solve_linear():
@@ -2568,6 +2578,18 @@ def test_issue_20747():
             / (1 - exp(c0/(DBH*c3 + THT*c4 + c2))))
     sol = [THT*term**(1/c1) - term**(1/c1) + 1]
     assert solve(eq, HT) == sol
+
+
+def test_issue_27001():
+    assert solve((x, x**2), (x, y, z), dict=True) == [{x: 0}]
+    s = a1, a2, a3, a4, a5 = symbols('a1:6')
+    eqs = [8*a1**4*a2 + 4*a1**2*a2**3 - 8*a1**2*a2*a4 + a2**5/2 - 2*a2**3*a4 +
+        8*a2*a3**2 + 2*a2*a4**2 + 8*a2*a5, 12*a1**4 + 6*a1**2*a2**2 -
+        8*a1**2*a4 + 3*a2**4/4 - 2*a2**2*a4 + 4*a3**2 + a4**2 + 4*a5, 16*a1**3
+        + 4*a1*a2**2 - 8*a1*a4, -8*a1**2*a2 - 2*a2**3 + 4*a2*a4]
+    sol = [{a4: 2*a1**2 + a2**2/2, a5: -a3**2}, {a1: 0, a2: 0, a5: -a3**2 - a4**2/4}]
+    assert solve(eqs, s, dict=True) == sol
+    assert (g:=solve(groebner(eqs, s), dict=True)) == sol, g
 
 
 def test_issue_20902():

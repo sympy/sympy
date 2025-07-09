@@ -48,6 +48,7 @@ from sympy.matrices.expressions.kronecker import KroneckerProduct
 from sympy.matrices.expressions.matexpr import MatrixSymbol
 from sympy.matrices.expressions.permutation import PermutationMatrix
 from sympy.matrices.expressions.slice import MatrixSlice
+from sympy.matrices.expressions.dotproduct import DotProduct
 from sympy.physics.control.lti import TransferFunction, Series, Parallel, Feedback, TransferFunctionMatrix, MIMOSeries, MIMOParallel, MIMOFeedback
 from sympy.physics.quantum import Commutator, Operator
 from sympy.physics.quantum.trace import Tr
@@ -2568,6 +2569,15 @@ def test_MatrixSymbol_printing():
     assert latex(-A*B - A*B*C - B) == r"- A B - A B C - B"
 
 
+def test_DotProduct_printing():
+    X = MatrixSymbol('X', 3, 1)
+    Y = MatrixSymbol('Y', 3, 1)
+    a = Symbol('a')
+    assert latex(DotProduct(X, Y)) == r"X \cdot Y"
+    assert latex(DotProduct(a * X, Y)) == r"a X \cdot Y"
+    assert latex(a * DotProduct(X, Y)) == r"a \left(X \cdot Y\right)"
+
+
 def test_KroneckerProduct_printing():
     A = MatrixSymbol('A', 3, 3)
     B = MatrixSymbol('B', 2, 2)
@@ -3146,3 +3156,9 @@ def test_Array():
 def test_latex_with_unevaluated():
     with evaluate(False):
         assert latex(a * a) == r"a a"
+
+
+def test_latex_disable_split_super_sub():
+    assert latex(Symbol('u^a_b')) == 'u^{a}_{b}'
+    assert latex(Symbol('u^a_b'), disable_split_super_sub=False) == 'u^{a}_{b}'
+    assert latex(Symbol('u^a_b'), disable_split_super_sub=True) == 'u\\^a\\_b'

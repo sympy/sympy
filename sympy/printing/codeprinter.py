@@ -418,7 +418,6 @@ class CodePrinter(StrPrinter):
         return self._print(expr.symbol)
 
     def _print_Symbol(self, expr):
-
         name = super()._print_Symbol(expr)
 
         if name in self.reserved_words:
@@ -465,8 +464,28 @@ class CodePrinter(StrPrinter):
 
     _print_Expr = _print_Function
 
+    def _print_Derivative(self, expr):
+        obj, *wrt_order_pairs = expr.args
+        for func_arg in obj.args:
+            if not func_arg.is_Symbol:
+                raise ValueError("%s._print_Derivative(...) only supports functions with symbols as arguments." %
+                                 self.__class__.__name__)
+        meth_name = '_print_Derivative_%s' % obj.func.__name__
+        pmeth = getattr(self, meth_name, None)
+        if pmeth is None:
+            if self._settings.get('strict', False):
+                raise PrintMethodNotImplementedError(
+                    f"Unsupported by {type(self)}: {type(expr)}" +
+                    f"\nPrinter has no method: {meth_name}" +
+                    "\nSet the printer option 'strict' to False in order to generate partially printed code."
+                )
+            return self._print_not_supported(expr)
+        orders = dict(wrt_order_pairs)
+        seq_orders = [orders[arg] for arg in obj.args]
+        return pmeth(obj.args, seq_orders)
+
     # Don't inherit the str-printer method for Heaviside to the code printers
-    _print_Heaviside = None
+    _print_Heaviside = None # type: ignore
 
     def _print_NumberSymbol(self, expr):
         if self._settings.get("inline", False):
@@ -588,8 +607,10 @@ class CodePrinter(StrPrinter):
 
     def _print_not_supported(self, expr):
         if self._settings.get('strict', False):
-            raise PrintMethodNotImplementedError("Unsupported by %s: %s" % (str(type(self)), str(type(expr))) + \
-                             "\nSet the printer option 'strict' to False in order to generate partially printed code.")
+            raise PrintMethodNotImplementedError(
+                f"Unsupported by {type(self)}: {type(expr)}" +
+                "\nSet the printer option 'strict' to False in order to generate partially printed code."
+            )
         try:
             self._not_supported.add(expr)
         except TypeError:
@@ -600,7 +621,6 @@ class CodePrinter(StrPrinter):
     # The following can not be simply translated into C or Fortran
     _print_Basic = _print_not_supported
     _print_ComplexInfinity = _print_not_supported
-    _print_Derivative = _print_not_supported
     _print_ExprCondPair = _print_not_supported
     _print_GeometryEntity = _print_not_supported
     _print_Infinity = _print_not_supported

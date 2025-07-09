@@ -7,16 +7,21 @@ from sympy.functions import arg, Abs
 from sympy.integrals.laplace import _fast_inverse_laplace
 from sympy.physics.control.lti import SISOLinearTimeInvariant
 from sympy.plotting.series import LineOver1DRangeSeries
+from sympy.plotting.plot import plot_parametric
 from sympy.polys.domains import ZZ, QQ
 from sympy.polys.polytools import Poly
 from sympy.printing.latex import latex
+from sympy.geometry.polygon import deg
 
 __all__ = ['pole_zero_numerical_data', 'pole_zero_plot',
     'step_response_numerical_data', 'step_response_plot',
     'impulse_response_numerical_data', 'impulse_response_plot',
     'ramp_response_numerical_data', 'ramp_response_plot',
     'bode_magnitude_numerical_data', 'bode_phase_numerical_data',
-    'bode_magnitude_plot', 'bode_phase_plot', 'bode_plot']
+    'bode_magnitude_plot', 'bode_phase_plot', 'bode_plot',
+    'nyquist_plot_expr', 'nyquist_plot', 'nichols_plot_expr',
+    'nichols_plot']
+
 
 matplotlib = import_module(
         'matplotlib', import_kwargs={'fromlist': ['pyplot']},
@@ -977,3 +982,154 @@ def bode_plot(system, initial_exp=-5, final_exp=5,
         return
 
     return plt
+
+
+def nyquist_plot_expr(system):
+    """Function to get the expression for Nyquist plot."""
+    s = system.var
+    w = Dummy('w', real=True)
+    repl = I * w
+    expr = system.to_expr()
+    w_expr = expr.subs({s: repl})
+    w_expr = w_expr.as_real_imag()
+    real_expr = w_expr[0]
+    imag_expr = w_expr[1]
+    return real_expr, imag_expr, w
+
+
+def nichols_plot_expr(system):
+    """Function to get the expression for Nichols plot."""
+    s = system.var
+    w = Dummy('w', real=True)
+    sys_expr = system.to_expr()
+    H_jw = sys_expr.subs(s, I*w)
+    mag_expr = Abs(H_jw)
+    mag_dB_expr = 20*log(mag_expr, 10)
+    phase_expr = arg(H_jw)
+    phase_deg_expr = deg(phase_expr)
+    return mag_dB_expr, phase_deg_expr, w
+
+
+def nyquist_plot(system, initial_omega=0.01, final_omega=100, show=True,
+                color='b', **kwargs):
+    r"""
+    Generates the Nyquist plot for a continuous-time system.
+
+    Parameters
+    ==========
+
+    system : SISOLinearTimeInvariant
+        The LTI SISO system for which the Nyquist plot is to be generated.
+    initial_omega : float, optional
+        The starting frequency value. Defaults to 0.01.
+    final_omega : float, optional
+        The ending frequency value. Defaults to 100.
+    show : bool, optional
+        If True, the plot is displayed. Default is True.
+    color : str, optional
+        The color of the Nyquist plot. Default is 'b' (blue).
+    grid : bool, optional
+        If True, grid lines are displayed. Default is False.
+    **kwargs
+        Additional keyword arguments for customization.
+
+    Examples
+    ========
+
+    .. plot::
+        :context: close-figs
+        :format: doctest
+        :include-source: True
+
+        >>> from sympy.abc import s
+        >>> from sympy.physics.control.lti import TransferFunction
+        >>> from sympy.physics.control.control_plots import nyquist_plot
+        >>> tf1 = TransferFunction(2*s**2 + 5*s + 1, s**2 + 2*s + 3, s)
+        >>> nyquist_plot(tf1)   # doctest: +SKIP
+
+    See Also
+    ========
+
+    nichols_plot, bode_plot
+
+    """
+    _check_system(system)
+    real_expr, imag_expr, w = nyquist_plot_expr(system)
+    w_values = [(w, initial_omega, final_omega)]
+    p = plot_parametric(
+        (real_expr, imag_expr),   # The curve
+        (real_expr, -imag_expr),  # Its mirror image
+        *w_values,
+        show=False,
+        line_color=color,
+        adaptive=True,
+        title=f'Nyquist Plot of ${latex(system)}$',
+        xlabel='Real Axis',
+        ylabel='Imaginary Axis',
+        size=(6, 5),
+        kwargs=kwargs)
+    if show:
+        p.show()
+        return
+    return p
+
+
+def nichols_plot(system, initial_omega=0.01, final_omega=100, show=True, color='b', **kwargs):
+    r"""
+    Generates the Nichols plot for a LTI system.
+
+    Parameters
+    ==========
+
+    system : SISOLinearTimeInvariant
+        The LTI SISO system for which the Nyquist plot is to be generated.
+    initial_omega : float, optional
+        The starting frequency value. Defaults to 0.01.
+    final_omega : float, optional
+        The ending frequency value. Defaults to 100.
+    show : bool, optional
+        If True, the plot is displayed. Default is True.
+    color : str, optional
+        The color of the Nyquist plot. Default is 'b' (blue).
+    grid : bool, optional
+        If True, grid lines are displayed. Default is False.
+    **kwargs
+        Additional keyword arguments for customization.
+
+    Examples
+    ========
+
+    .. plot::
+        :context: close-figs
+        :format: doctest
+        :include-source: True
+
+        >>> from sympy.abc import s
+        >>> from sympy.physics.control.lti import TransferFunction
+        >>> from sympy.physics.control.control_plots import nichols_plot
+        >>> tf1 = TransferFunction(1.5, s**2+14*s+40.02, s)
+        >>> nichols_plot(tf1)   # doctest: +SKIP
+
+    See Also
+    ========
+
+    nyquist_plot, bode_plot
+
+    """
+    _check_system(system)
+    magnitude_dB_expr, phase_deg_expr, w = nichols_plot_expr(system)
+    w_values = [(w, initial_omega, final_omega)]
+    p = plot_parametric(
+        (phase_deg_expr, magnitude_dB_expr),
+        *w_values,
+        show=False,
+        line_color=color,
+        title=f'Nichols Plot of ${latex(system)}$',
+        xlabel='Phase [deg]',
+        ylabel='Magnitude [dB]',
+        size=(6,5),
+        kwargs=kwargs)
+    if show:
+        p.show()
+        return
+    return p

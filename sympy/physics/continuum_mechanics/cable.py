@@ -4,7 +4,7 @@ to 2D Cables.
 """
 
 from sympy.core.sympify import sympify
-from sympy.core.symbol import Symbol,symbols
+from sympy.core.symbol import Symbol, symbols
 from sympy import sin, cos, pi, atan, diff, Piecewise, solve, rad
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.solvers.solveset import linsolve
@@ -620,7 +620,7 @@ class Cable:
         >>> p = c.draw()
         >>> p # doctest: +ELLIPSIS
         Plot object containing:
-        [0]: cartesian line: 39.9955291375291*(0.0170706725844998*x - 1)**2 + 0.00447086247086247 for x over (0.0, 100.0)
+        [0]: cartesian line: 0.0116550116550117*(x - 58.58)**2 + 0.00447086247086247 for x over (0.0, 100.0)
         [1]: cartesian line: -7.49552913752915 for x over (0.0, 100.0)
         ...
         >>> p.show()

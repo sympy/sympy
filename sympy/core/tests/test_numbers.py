@@ -31,7 +31,8 @@ from sympy.simplify import simplify
 from sympy.polys.domains.groundtypes import PythonRational
 from sympy.utilities.decorator import conserve_mpmath_dps
 from sympy.utilities.iterables import permutations
-from sympy.testing.pytest import XFAIL, raises, _both_exp_pow
+from sympy.testing.pytest import (XFAIL, raises, _both_exp_pow,
+                                  warns_deprecated_sympy)
 from sympy import Add
 
 from mpmath import mpf
@@ -280,7 +281,7 @@ def test_igcdex():
     assert igcdex(2, 3) == (-1, 1, 1)
     assert igcdex(10, 12) == (-1, 1, 2)
     assert igcdex(100, 2004) == (-20, 1, 4)
-    assert igcdex(0, 0) == (0, 1, 0)
+    assert igcdex(0, 0) == (0, 0, 0)
     assert igcdex(1, 0) == (1, 0, 1)
 
 
@@ -363,10 +364,15 @@ def test_Rational_new():
 
     assert Rational(PythonRational(2, 6)) == Rational(1, 3)
 
-    assert Rational(2, 4, gcd=1).q == 4
-    n = Rational(2, -4, gcd=1)
+    with warns_deprecated_sympy():
+        assert Rational(2, 4, gcd=1).q == 4
+    with warns_deprecated_sympy():
+        n = Rational(2, -4, gcd=1)
     assert n.q == 4
     assert n.p == -2
+
+    assert Rational.from_coprime_ints(3, 5) == Rational(3, 5)
+
 
 def test_issue_24543():
     for p in ('1.5', 1.5, 2):
@@ -455,13 +461,27 @@ def test_Float():
         t = Float("1.0E-15")
         return (-t < a - b < t)
 
-    zeros = (0, S.Zero, 0., Float(0))
-    for i, j in permutations(zeros[:-1], 2):
-        assert i == j
-    for i, j in permutations(zeros[-2:], 2):
-        assert i == j
-    for z in zeros:
-        assert z in zeros
+    equal_pairs = [
+        (0, 0.0), # This is just how Python works...
+        (0, S.Zero),
+        (0.0, Float(0)),
+    ]
+    unequal_pairs = [
+        (0.0, S.Zero),
+        (0, Float(0)),
+        (S.Zero, Float(0)),
+    ]
+    for p1, p2 in equal_pairs:
+        assert (p1 == p2) is True
+        assert (p1 != p2) is False
+        assert (p2 == p1) is True
+        assert (p2 != p1) is False
+    for p1, p2 in unequal_pairs:
+        assert (p1 == p2) is False
+        assert (p1 != p2) is True
+        assert (p2 == p1) is False
+        assert (p2 != p1) is True
+
     assert S.Zero.is_zero
 
     a = Float(2) ** Float(3)

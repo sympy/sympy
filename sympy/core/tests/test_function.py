@@ -568,8 +568,7 @@ def test_function__eval_nseries():
 
     # issue 6725:
     assert expint(Rational(3, 2), -x)._eval_nseries(x, 5, None) == \
-        2 - 2*sqrt(pi)*sqrt(-x) - 2*x + x**2 + x**3/3 + x**4/12 + 4*I*x**(S(3)/2)*sqrt(-x)/3 + \
-        2*I*x**(S(5)/2)*sqrt(-x)/5 + 2*I*x**(S(7)/2)*sqrt(-x)/21 + O(x**5)
+        2 - 2*x - x**2/3 - x**3/15 - x**4/84 - 2*I*sqrt(pi)*sqrt(x) + O(x**5)
     assert sin(sqrt(x))._eval_nseries(x, 3, None) == \
         sqrt(x) - x**Rational(3, 2)/6 + x**Rational(5, 2)/120 + O(x**3)
 
@@ -1453,3 +1452,8 @@ def test_eval_classmethod_check():
         class F(Function):
             def eval(self, x):
                 pass
+
+
+def test_issue_27163():
+    # https://github.com/sympy/sympy/issues/27163
+    raises(TypeError, lambda: Derivative(f, t))

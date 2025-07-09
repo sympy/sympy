@@ -9,10 +9,10 @@ from sympy.testing.pytest import raises
 
 # TODO: The code below could be made more granular with something like:
 #
-# @requires('IPython', version=">=0.11")
+# @requires('IPython', version=">=1.0")
 # def test_automatic_symbols(ipython):
 
-ipython = import_module("IPython", min_module_version="0.11")
+ipython = import_module("IPython", min_module_version="1.0")
 
 if not ipython:
     #bin/test will not execute any tests now

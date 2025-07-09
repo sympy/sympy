@@ -20,7 +20,7 @@ from sympy.core.function import (expand_mul, expand_log, Derivative,
                                  AppliedUndef, UndefinedFunction, nfloat,
                                  Function, expand_power_exp, _mexpand, expand,
                                  expand_func)
-from sympy.core.logic import fuzzy_not
+from sympy.core.logic import fuzzy_not, fuzzy_and
 from sympy.core.numbers import Float, Rational, _illegal
 from sympy.core.intfunc import integer_log, ilcm
 from sympy.core.power import Pow
@@ -247,15 +247,7 @@ def checksol(f, symbol, sol=None, **flags):
     if iterable(f):
         if not f:
             raise ValueError('no functions to check')
-        rv = True
-        for fi in f:
-            check = checksol(fi, sol, **flags)
-            if check:
-                continue
-            if check is False:
-                return False
-            rv = None  # don't return, wait to see if there's a False
-        return rv
+        return fuzzy_and(checksol(fi, sol, **flags) for fi in f)
 
     f = _sympify(f)
 
@@ -805,7 +797,7 @@ def solve(f, *symbols, **flags):
             Allows ``solve`` to return a solution for a pattern in terms of
             other functions that contain that pattern; this is only
             needed if the pattern is inside of some invertible function
-            like cos, exp, ect.
+            like cos, exp, etc.
         particular=True (default is False)
             Instructs ``solve`` to try to find a particular solution to
             a linear system with as many zeros as possible; this is very
@@ -828,7 +820,7 @@ def solve(f, *symbols, **flags):
     ========
 
     rsolve: For solving recurrence relationships
-    dsolve: For solving differential equations
+    sympy.solvers.ode.dsolve: For solving differential equations
 
     """
     from .inequalities import reduce_inequalities
@@ -972,6 +964,12 @@ def solve(f, *symbols, **flags):
 
         # if we have a Matrix, we need to iterate over its elements again
         if f[i].is_Matrix:
+            try:
+                f[i] = f[i].as_explicit()
+            except ValueError:
+                raise ValueError(
+                    "solve cannot handle matrices with symbolic shape."
+                )
             bare_f = False
             f.extend(list(f[i]))
             f[i] = S.Zero
@@ -1241,18 +1239,13 @@ def solve(f, *symbols, **flags):
         got_None = []  # solutions for which one or more symbols gave None
         no_False = []  # solutions for which no symbols gave False
         for sol in solution:
-            a_None = False
-            for symb, val in sol.items():
-                test = check_assumptions(val, **symb.assumptions0)
-                if test:
-                    continue
-                if test is False:
-                    break
-                a_None = True
-            else:
-                no_False.append(sol)
-                if a_None:
-                    got_None.append(sol)
+            v = fuzzy_and(check_assumptions(val, **symb.assumptions0)
+                          for symb, val in sol.items())
+            if v is False:
+                continue
+            no_False.append(sol)
+            if v is None:
+                got_None.append(sol)
 
         solution = no_False
         if warn and got_None:
@@ -1804,7 +1797,7 @@ def _solve_system(exprs, symbols, **flags):
                 if not isinstance(subsol, list):
                     subsol = [subsol]
                 subsols.append(subsol)
-            # Full solution is cartesion product of subsystems
+            # Full solution is cartesian product of subsystems
             sols = []
             for soldicts in product(*subsols):
                 sols.append(dict(item for sd in soldicts
@@ -1872,7 +1865,7 @@ def _solve_system(exprs, symbols, **flags):
                 free = list(ordered(free.intersection(symbols)))
                 got_s = set()
                 result = []
-                for syms in subsets(free, len(polys)):
+                for syms in subsets(free, min(len(free), len(polys))):
                     try:
                         # returns [], None or list of tuples
                         res = solve_poly_system(polys, *syms)
@@ -1893,7 +1886,7 @@ def _solve_system(exprs, symbols, **flags):
                 if got_s:
                     solved_syms = list(got_s)
                 else:
-                    raise NotImplementedError('no valid subset found')
+                    failed.extend([g.as_expr() for g in polys])
             else:
                 try:
                     result = solve_poly_system(polys, *symbols)
@@ -1985,10 +1978,13 @@ def _solve_system(exprs, symbols, **flags):
                         # check that it is independent of previous solutions
                         iset = set(rnew.items())
                         for i in newresult:
-                            if len(i) < len(iset) and not set(i.items()) - iset:
-                                # this is a superset of a known solution that
-                                # is smaller
-                                break
+                            if len(i) < len(iset):
+                                # update i with what is known
+                                i_items_updated = {(k, v.xreplace(rnew)) for k, v in i.items()}
+                                if not i_items_updated - iset:
+                                    # this is a superset of a known solution that
+                                    # is smaller
+                                    break
                         else:
                             # keep it
                             newresult.append(rnew)
