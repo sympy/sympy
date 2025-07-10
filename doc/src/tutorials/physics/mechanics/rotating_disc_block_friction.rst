@@ -6,19 +6,18 @@ A Block on a Rotating Disc
 
 This page demonstrates how to use the functionalities in :obj:`sympy.physics.mechanics`
 and the :class:`~.CoulombKineticFriction` actuator to model a sliding block on a rotating disc.
-The block is located at a point on the disc surface and is subjected to forces, including
-friction force with additional Stribeck and viscous effects.
+This is a nonholonomic system affected by friction, including Coulomb friction with the
+Stribeck effect, viscous friction, and other constraints.
 
 .. raw:: html
-   :file: rotating_disc_block.svg
+   :file: block_on_rotating_disc.svg
 
-This system will be modeled using Kane's method. Here, :math:`F_f` is the friction force.
-We assume that the block is initially sliding (relative motion is non-zero), moving
-in the direction opposite to the disc's rotation due to the relative motion, and the
-kinetic friction acts in the direction opposite to this relative motion.
-The disc has an infinite radius, preventing the block from flying off the disc at any
-point in this model. The normal force is a positive scalar, which allows the valid usage
-of the :class:`~.CoulombKineticFriction` actuator.
+This system will be modeled using Lagrange's method. We treat the block as a point mass that
+slides under friction on top of a rotating disc. The disc rotates with constant angular speed, and
+the block is allowed to move radially and tangentially relative to the disc.
+
+Friction forces are modeled using the :class:`~.CoulombKineticFriction` actuator, which supports regularized
+static and kinetic Coulomb friction along with viscous damping.
 
    >>> import sympy as sm
    >>> import sympy.physics.mechanics as me
@@ -26,45 +25,47 @@ of the :class:`~.CoulombKineticFriction` actuator.
 
 Let's define the necessary variables and coordinates.
 
-   >>> m, g, mu_k, mu_s, v_s, sigma, Ix, Iy, M = sm.symbols('m, g, mu_k, mu_s, v_s, sigma, Ix, Iy, M')
-   >>> q1, q2, q3 = me.dynamicsymbols('q1:4')
-   >>> q1d, q2d, q3d = me.dynamicsymbols('q1:4', level=1)
-   >>> u1, u2, u3 = me.dynamicsymbols('u1:4')
-   >>> u1d, u2d, u3d = me.dynamicsymbols('u1:4', level=1)
+   >>> t = sm.Symbol('t')
+   >>> r, theta = me.dynamicsymbols('r, theta') # generalized coordinates
+   >>> r_dot, theta_dot = me.dynamicsymbols('r, theta', 1)
 
-- :math:`q1`: Generalized coordinate representing the angular velocity of the disc w.r.t. the inertial frame
-- :math:`q2, q3`: Generalized coordinates of the block w.r.t the disc
-- :math:`mu_k, mu_s`: coefficient of kinetic and static friction
-- :math:`v_s`: Stribeck friction coefficient
-- :math:`sigma`: viscous friction coefficient
-- :math:`m, M`: mass of the block and disc
-- :math:`g`: gravitational constant
-- :math:`Ix, Iy`: x, y inertia elements of the disc
+   >>> m, omega = sm.symbols('m omega')
+   >>> mu_kr, mu_sr, vr_s, br = sm.symbols('mu_kr mu_sr v_sr b_r')
+   >>> mu_kt, mu_st, vt_s, bt = sm.symbols('mu_kt mu_st v_st b_t')
+   >>> F_nr, F_nt = sm.symbols('F_nr F_nt', positive=True)
 
-We will also define the necessary reference frames, points, and velocities.
+- :math:`r(t)`: Generalized coordinate representing the radial position of the block from the disc center
+- :math:`\\theta(t)`: Generalized coordinate representing the angular position of the block in the disc’s rotating frame
+- :math:`m`: Mass of the block
+- :math:`\\omega`: Angular velocity of the rotating disc (assumed constant)
+- :math:`\\mu_{kr}, \\mu_{kt}`: Coefficients of kinetic friction (radial / tangential)
+- :math:`\\mu_{sr}, \\mu_{st}`: Coefficients of static friction (radial / tangential)
+- :math:`v_{sr}, v_{st}`: Velocity thresholds for Stribeck effect smoothing (radial / tangential)
+- :math:`b_r, b_t`: Smoothing steepness parameters in exponential regularization (radial / tangential)
+- :math:`F_{nr}, F_{nt}`: Positive normal forces associated with radial / tangential friction
+
+Reference frames, points, and velocities are defined next.
 :math:`N` is the inertial reference frame and :math:`A` is the rotating reference frame.
 :math:`O` is the center of the disc, :math:`P` is the actual contact point between
-the block and the disc, and :math:`Q` is the point on the disc, starting from the same
-location as point :math:`P`.
+the block and the disc, and :math:`Q` is a nearby point on the disc, offset by a small angle
+:math:`dtheta` from :math:`P`, at the same radius :math:`r`.
 
    >>> N = me.ReferenceFrame('N')
-   >>> A = me.ReferenceFrame('A')
-   >>> A.set_ang_vel(N, u1 * N.x)
-   >>> A.ang_vel_in(N)
-   u1 n_x
-
    >>> O = me.Point('O')
-   >>> P = O.locatenew('P', q2 * N.x + q3 * N.y)
-   >>> Q = P.locatenew('Q', 0 * N.x + 0 * N.y)
-
    >>> O.set_vel(N, 0)
-   >>> P.v2pt_theory(P, N, A)
-   q2'(t) n_x + q3'(t) n_y
-   >>> Q.v2pt_theory(Q, N, A)
-   q2'(t) n_x + q3'(t) n_y
+   
+   >>> A = N.orientnew('A', 'Axis', [omega * t, N.z])
+   >>> A.set_ang_vel(N, omega * N.z)
 
-We define the particle, pathway, and forces using :class:`~.CoulombKineticFriction`.
-A unique custom pathway, SlidingPathway, represent the motion of the block along a plane.
+   >>> P = O.locatenew('P', r * sm.cos(theta) * A.x + r * sm.sin(theta) * A.y)
+   >>> P.set_vel(N, P.pos_from(O).dt(N)) # velocity in inertial frame
+   >>> P.set_vel(A, P.vel(N).express(A))
+
+We define the block as a particle with mass :math:`m` located at :math:`P`.
+
+   >>> block = me.Particle('Block', P, m)
+
+We now define a custom ``SlidingPathway`` that describes how the block slides on the disc surface.
 
    >>> class SlidingPathway(me.PathwayBase):
    ...
@@ -111,13 +112,6 @@ A unique custom pathway, SlidingPathway, represent the motion of the block along
    ...         return self.contact_point.vel(self.frame).magnitude()
    ...
    ...     def to_loads(self, force):
-   ...         """Loads in the correct format to be supplied to `KanesMethod`.
-   ...
-   ...         Forces applied to the ``contact_point`` and ``fixed_point``
-   ...         based on the friction force.
-   ...
-   ...         """
-   ...
    ...         direction = self.contact_point.vel(self.frame).normalize()
    ...         force = self.extension_velocity * force
    ...
@@ -126,40 +120,70 @@ A unique custom pathway, SlidingPathway, represent the motion of the block along
    ...             me.Force(self.contact_point, force * direction),
    ...             ]
 
-   >>> block = me.Particle('block', P, m)
-   >>> disc = me.Particle('disc', Q, M)
+The ``SlidingPathway`` allows friction to act along the relative motion direction between
+two points in a given reference frame. In our model, we define two such directions:
 
-   >>> inertia_disc = me.inertia(A, Ix, Iy, 0)
-   >>> disc_body = me.RigidBody('disc_body', O, A, M, (inertia_disc, Q))
+- **Radial**: along the line from center :math:`O` to block :math:`P`
+- **Tangential**: perpendicular to the radial, around the disc's edge
 
-   >>> normal_force = (m + M) * g
+We now define both friction forces.
 
-   >>> pathway = SlidingPathway(P, Q, N)
-   >>> friction = me.CoulombKineticFriction(mu_k, normal_force, pathway, v_s=v_s, sigma=sigma, mu_s=mu_s)
+**Radial Friction**:
 
-   >>> loads = friction.to_loads()
-   >>> loads
-          /                                 /                                                      /      2         2\ \                             \               /                                 /                                                      /      2         2\ \                             \                  /                                 /                                                      /      2         2\ \                             \              /                                 /                                                      /      2         2\ \                             \
-          |                                 |                                                     -\q2'(t)  + q3'(t) / |                             |               |                                 |                                                     -\q2'(t)  + q3'(t) / |                             |                  |                                 |                                                     -\q2'(t)  + q3'(t) / |                             |              |                                 |                                                     -\q2'(t)  + q3'(t) / |                             |
-          |                                 |                                                     ---------------------|                             |               |                                 |                                                     ---------------------|                             |                  |                                 |                                                     ---------------------|                             |              |                                 |                                                     ---------------------|                             |
-          |           ___________________   |                                                                2         |     /   ___________________\|               |           ___________________   |                                                                2         |     /   ___________________\|                  |           ___________________   |                                                                2         |     /   ___________________\|              |           ___________________   |                                                                2         |     /   ___________________\|
-          |          /       2         2    |                                                             v_s          |     |  /       2         2 ||               |          /       2         2    |                                                             v_s          |     |  /       2         2 ||                  |          /       2         2    |                                                             v_s          |     |  /       2         2 ||              |          /       2         2    |                                                             v_s          |     |  /       2         2 ||
-    [(P, -\- sigma*\/  q2'(t)  + q3'(t)   - \g*mu_k*(M + m) + (-g*mu_k*(M + m) + g*mu_s*(M + m))*e                     /*sign\\/  q2'(t)  + q3'(t)  //*q2'(t) n_x + -\- sigma*\/  q2'(t)  + q3'(t)   - \g*mu_k*(M + m) + (-g*mu_k*(M + m) + g*mu_s*(M + m))*e                     /*sign\\/  q2'(t)  + q3'(t)  //*q3'(t) n_y), (Q, \- sigma*\/  q2'(t)  + q3'(t)   - \g*mu_k*(M + m) + (-g*mu_k*(M + m) + g*mu_s*(M + m))*e                     /*sign\\/  q2'(t)  + q3'(t)  //*q2'(t) n_x + \- sigma*\/  q2'(t)  + q3'(t)   - \g*mu_k*(M + m) + (-g*mu_k*(M + m) + g*mu_s*(M + m))*e                     /*sign\\/  q2'(t)  + q3'(t)  //*q3'(t) n_y)]
+   >>> radial_pathway = SlidingPathway(O, P, A)
+   >>> radial_friction = me.CoulombKineticFriction(mu_kr, F_nr, radial_pathway,
+   ...                                             mu_s=mu_sr, v_s=vr_s, sigma=br)
 
-Now, we're ready to use Kane's method to obtain the equations of motion.
+**Tangential Friction**: To define a direction of motion in the tangential direction,
+we construct a nearby point :math:`Q` slightly ahead of :math:`P` in the angular direction.
 
-   >>> BL = [block, disc]
-   >>> kane = me.KanesMethod(
-   ...     N,
-   ...     q_ind=[q2, q3],
-   ...     u_ind=[u2, u3],
-   ...     kd_eqs=[q2d - u2, q3d - u3],
-   ...     bodies=BL
-   ...     )
+   >>> dtheta = sm.Symbol('dtheta') # small angle increment
+   >>> Q = O.locatenew('Q', r * sm.cos(theta + dtheta) * A.x + r * sm.sin(theta + dtheta) * A.y)
+   >>> Q.set_vel(N, Q.pos_from(O).dt(N))
+   >>> Q.set_vel(A, Q.vel(N).express(A))
 
-   >>> fr, frstar = kane.kanes_equations(BL, loads)
-   >>> eom = fr + frstar
-   >>> eom
-   [-(M + m)*u2'(t)]
-   [               ]
-   [-(M + m)*u3'(t)]
+   >>> tangent_pathway = SlidingPathway(Q, P, A)
+   >>> tangent_friction = me.CoulombKineticFriction(mu_kt, F_nt, tangent_pathway,
+   ...                                              mu_s=mu_st, v_s=vt_s, sigma=bt)
+
+We now collect the forces applied by both friction actuators.
+
+   >>> loads = radial_friction.to_loads() + tangent_friction.to_loads()
+
+Now, we use Lagrange's method to obtain the equations of motion.
+
+   >>> coordinates = [r, theta]
+   >>> speeds = [r.diff(t), theta.diff(t)]
+
+   >>> L = me.Lagrangian(N, block)
+   >>> L
+   ⎛                                                                  2                                                                    2⎞
+   ⎜⎛                                   d                    d       ⎞    ⎛                                  d                    d       ⎞ ⎟
+   m⋅⎜⎜-ω⋅r(t)⋅sin(θ(t)) - r(t)⋅sin(θ(t))⋅──(θ(t)) + cos(θ(t))⋅──(r(t))⎟  + ⎜ω⋅r(t)⋅cos(θ(t)) + r(t)⋅cos(θ(t))⋅──(θ(t)) + sin(θ(t))⋅──(r(t))⎟ ⎟
+   ⎝⎝                                   dt                   dt      ⎠    ⎝                                  dt                   dt      ⎠ ⎠
+   ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+                                                                        2
+
+   >>> lagranges_method = me.LagrangesMethod(L, coordinates, forcelist=loads, frame=N)
+   >>> lagranges_method.form_lagranges_equations()
+
+The obtained Lagrangian matches our theoretical Lagrangian:
+
+.. math::
+
+   L = \frac{1}{2} m \left( \dot{r}^2 + r^2 (\dot{\theta} + \omega)^2 \right)
+
+The resulting equations of motion are nonlinear and coupled, due to friction and the interaction
+between radial and tangential components.
+
+**Equation 1**: Radial
+
+.. math::
+
+   m \ddot{r} = m r (\omega + \dot{\theta})^2 + F_r
+
+**Equation 2**: Angular
+
+.. math::
+
+   m \left( 2 r \dot{r} (\omega + \dot{\theta}) + r^2 \ddot{\theta} \right) = r F_\theta
