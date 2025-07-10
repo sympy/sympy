@@ -660,7 +660,7 @@ class Column:
         point = intervals[axial_values.index(maximum_axial_value)]
         return (point, maximum_axial_value)
 
-    def deflection(self):
+    def extension(self):
         """
         Returns a singularity function expression that
         represents the extension of the column.
@@ -693,17 +693,17 @@ class Column:
         C_u = self._integration_constants[Symbol('C_u')] if self._is_solved else Symbol('C_u')
         return -(integrate(integrate(load_equation, x), x)) / (E * A) + C_N * x + C_u
 
-    def max_deflection(self):
+    def max_extension(self):
         """
-        Returns the maximum absolute deflection and
+        Returns the maximum absolute extension and
         its location (point or interval) in the column.
         """
         axial_force=self.axial_force()
-        deflection = self.deflection()
+        extension = self.extension()
         x = self.variable
 
-        terms = deflection.args
-        singularities = []        # Points at which deflection function changes
+        terms = extension.args
+        singularities = []        # Points at which extension function changes
         for term in terms:
             if isinstance(term, Mul):
                 term = term.args[-1]    # SingularityFunction in the term
@@ -711,38 +711,38 @@ class Column:
         singularities = list(set(singularities))
         singularities.sort()
 
-        intervals = []    # List of Intervals with discrete value of deflection
-        deflection_values = []   # List of values of deflection in each interval
+        intervals = []    # List of Intervals with discrete value of extension
+        extension_values = []   # List of values of extension in each interval
         for i, s in enumerate(singularities):
             if s == 0:
                 continue
             try:
-                deflection_slope = Piecewise((float("nan"), x<=singularities[i-1]),(axial_force.rewrite(Piecewise), x<s), (float("nan"), True))
-                points = solve(deflection_slope, x)
+                extension_slope = Piecewise((float("nan"), x<=singularities[i-1]),(axial_force.rewrite(Piecewise), x<s), (float("nan"), True))
+                points = solve(extension_slope, x)
                 values = []
                 for point in points:
-                    values.append(abs(deflection.subs(x, point)))
+                    values.append(abs(extension.subs(x, point)))
                 points.extend([singularities[i-1], s])
-                values += [abs(limit(deflection, x, singularities[i-1], '+')), abs(limit(deflection, x, s, '-'))]
-                max_deflection = max(values)
-                deflection_values.append(max_deflection)
-                intervals.append(points[values.index(max_deflection)])
-            # Handles cases where deflection is constant or linear, causing solve to raise NotImplementedError
+                values += [abs(limit(extension, x, singularities[i-1], '+')), abs(limit(extension, x, s, '-'))]
+                max_extension = max(values)
+                extension_values.append(max_extension)
+                intervals.append(points[values.index(max_extension)])
+            # Handles cases where extension is constant or linear, causing solve to raise NotImplementedError
             except NotImplementedError:
-                deflection_start = limit(deflection, x, singularities[i-1], '+')
-                deflection_end = limit(deflection, x, s, '-')
-                # If deflection is linear within the interval.
-                if deflection.subs(x, (singularities[i-1] + s)/2) == (deflection_start + deflection_end)/2 and deflection_start != deflection_end:
-                    deflection_values.extend([deflection_start, deflection_end])
+                extension_start = limit(extension, x, singularities[i-1], '+')
+                extension_end = limit(extension, x, s, '-')
+                # If extension is linear within the interval.
+                if extension.subs(x, (singularities[i-1] + s)/2) == (extension_start + extension_end)/2 and extension_start != extension_end:
+                    extension_values.extend([extension_start, extension_end])
                     intervals.extend([singularities[i-1], s])
-                else:    # deflection has same value in the whole Interval
-                    deflection_values.append(deflection_end)
+                else:    # extension has same value in the whole Interval
+                    extension_values.append(extension_end)
                     intervals.append(Interval(singularities[i-1], s))
 
-        deflection_values = list(map(abs, deflection_values))
-        maximum_deflection = max(deflection_values)
-        point = intervals[deflection_values.index(maximum_deflection)]
-        return (point, maximum_deflection)
+        extension_values = list(map(abs, extension_values))
+        maximum_extension = max(extension_values)
+        point = intervals[extension_values.index(maximum_extension)]
+        return (point, maximum_extension)
 
     def plot_axial_force(self):
         """
@@ -818,5 +818,5 @@ class Column:
             + SingularityFunction(x, 8, 1)/11200 + SingularityFunction(x, 10, 1)/42000
             + SingularityFunction(x, 10, 2)/84000 for x over (0.0, 10.0)
         """
-        return plot(self.deflection(), (self.variable, 0, self.length), title='Deflection',
+        return plot(self.extension(), (self.variable, 0, self.length), title='extension',
                 xlabel=r'$\mathrm{x}$', ylabel=r'$\mathrm{u(x)}$', line_color='b')
