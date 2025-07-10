@@ -2223,9 +2223,10 @@ def test_issue_10755():
     raises(TypeError, lambda: int(log(x)))
     raises(TypeError, lambda: log(x).round(2))
 
+
 @pytest.mark.parametrize('expr', [I / 3, I / 200])
 def test_issue_28221(expr):
-    with pytest.raises(TypeError, match="Cannot convert complex to int"):
+    with pytest.raises(TypeError, match="Cannot convert non-comparable expression to int"):
         int(expr)
 
 
