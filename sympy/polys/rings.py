@@ -22,7 +22,7 @@ from sympy.polys.domains.domainelement import DomainElement
 from sympy.polys.domains.polynomialring import PolynomialRing
 from sympy.polys.heuristicgcd import heugcd
 from sympy.polys.monomials import MonomialOps
-from sympy.polys.orderings import lex, MonomialOrder, LexOrder, GradedLexOrder
+from sympy.polys.orderings import lex, MonomialOrder, LexOrder, GradedLexOrder, ReversedGradedLexOrder
 from sympy.polys.polyerrors import (
     CoercionFailed,
     GeneratorsError,
@@ -47,7 +47,6 @@ from sympy.utilities.magic import pollute
 
 if GROUND_TYPES == 'flint':
     import flint
-    from sympy.polys.orderings import LexOrder, GradedLexOrder, ReversedGradedLexOrder
 
     def _supported_flint_domain(domain):
         return domain.is_ZZ or domain.is_QQ
@@ -331,7 +330,12 @@ class PolyRing(DefaultPrinting, IPolys):
         return self._hash
 
     def __eq__(self, other):
-        return isinstance(other, PolyRing) and self._ring_equality(other)
+        return isinstance(other, PolyRing) and (self.symbols, self.domain, self.ngens, self.order) == (
+            other.symbols,
+            other.domain,
+            other.ngens,
+            other.order,
+        )
 
     def __ne__(self, other):
         return not self == other
@@ -523,6 +527,11 @@ class PolyRing(DefaultPrinting, IPolys):
         else:
             return self.clone(symbols=symbols)
 
+    def add_gens(self, symbols):
+        """Add new generator(s) to the ring."""
+        syms = set(self.symbols).union(set(symbols))
+        return self.clone(symbols=list(syms))
+
     # Polynomial operations
     def add(self, *objs):
         """Add a sequence of polynomials or containers of polynomials."""
@@ -622,14 +631,6 @@ class PolyRing(DefaultPrinting, IPolys):
         # get generator index from int or str
         raise NotImplementedError("Must be implemented by subclass")
 
-    def add_gens(self, symbols):
-        """Add new generator(s) to the ring."""
-        raise NotImplementedError("Must be implemented by subclass")
-
-    def _ring_equality(self, other):
-        # for ring attribute comparison
-        raise NotImplementedError("Must be implemented by subclass")
-
     def _from_dict_ground(self, element, orig_domain=None):
         # create polynomial from dict
         raise NotImplementedError("Must be implemented by subclass")
@@ -659,20 +660,6 @@ class PythonPolyRing(PolyRing):
         # get generator index from int or str
         return gen if isinstance(gen, int) else self.symbols.index(gen)
 
-    def add_gens(self, symbols):
-        """Add new generator(s) to the ring."""
-        syms = set(self.symbols).union(set(symbols))
-        return self.clone(symbols=list(syms))
-
-    def _ring_equality(self, other):
-        # for ring attribute comparison
-        return (self.symbols, self.domain, self.ngens, self.order) == (
-            other.symbols,
-            other.domain,
-            other.ngens,
-            other.order,
-        )
-
     def _from_dict_ground(self, element, orig_domain=None):
         # create polynomial from dict
         poly = self.zero
@@ -695,46 +682,37 @@ class FlintPolyRing(PolyRing):
         obj._init_instance(symbols, domain, order)
         obj._python_ring = PythonPolyRing._new(symbols, domain, order)
         obj.flint_ctx = None
-        obj._init_flint_mapping(symbols)
+        flint_names = cls._flint_mapping(symbols)
         str_order = cls._get_flint_order(order)
 
         # Initialize FLINT context based on domain
         if domain.is_ZZ:
-            obj.flint_ctx = flint.fmpz_mpoly_ctx.get(obj._flint_names, str_order)
+            obj.flint_ctx = flint.fmpz_mpoly_ctx.get(flint_names, str_order)
         elif domain.is_QQ:
-            obj.flint_ctx = flint.fmpq_mpoly_ctx.get(obj._flint_names, str_order)
+            obj.flint_ctx = flint.fmpq_mpoly_ctx.get(flint_names, str_order)
         else:
             raise NotImplementedError(f"Unsupported domain for FlintPolyRing: {domain}")
 
         return obj
 
-    def _init_flint_mapping(self, symbols):
-        self._sympy_to_flint = {}
-        self._flint_to_sympy = {}
-        self._flint_names = []
-
+    @staticmethod
+    def _flint_mapping(symbols):
+        flint_names = []
         used_names = set()
 
         for sym in symbols:
             base_name = str(sym)
             flint_name = base_name
 
-            # handle name clash via counter
             counter = 1
             while flint_name in used_names:
                 flint_name = f"{base_name}_{counter}"
                 counter += 1
 
             used_names.add(flint_name)
-            self._sympy_to_flint[sym] = flint_name
-            self._flint_to_sympy[flint_name] = sym
-            self._flint_names.append(flint_name)
+            flint_names.append(flint_name)
 
-    def _sympy_to_flint_name(self, sym):
-        return self._sympy_to_flint.get(sym, str(sym))
-
-    def _flint_to_sympy_symbol(self, flint_name):
-        return self._flint_to_sympy.get(flint_name)
+        return flint_names
 
     @staticmethod
     def _get_flint_order(order):
@@ -749,34 +727,6 @@ class FlintPolyRing(PolyRing):
     def _gen_index(self, gen):
         # get generator index from int or str
         return self.flint_ctx.variable_to_index(gen)
-
-    def add_gens(self, symbols):
-        """Add new generator(s) to the ring."""
-        if isinstance(symbols, (str, Symbol)):
-            symbols = [symbols]
-
-        new_symbols = []
-        for s in symbols:
-            if isinstance(s, str):
-                new_symbols.append(Symbol(s))
-            else:
-                new_symbols.append(s)
-
-        all_symbols = self.symbols + tuple(new_symbols)
-        new_ring = self.clone(symbols=all_symbols)
-
-        new_flint_names = [new_ring._sympy_to_flint[sym] for sym in new_symbols]
-        new_ring.flint_ctx = self.flint_ctx.append_gens(*new_flint_names)
-
-        return new_ring
-
-    def _ring_equality(self, other):
-        """Check ring equality for ring attribute comparison."""
-        # For now, delegate to Python implementation
-        if isinstance(other, FlintPolyRing):
-            return self.flint_ctx == other.flint_ctx
-        else:
-            return self._python_ring._ring_equality(other)
 
     def _from_dict_ground(self, element, orig_domain=None):
         """Create polynomial from dict."""
