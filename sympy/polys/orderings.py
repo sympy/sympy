@@ -196,7 +196,7 @@ _monomial_key = {
     'igrevlex': igrevlex
 }
 
-def monomial_key(order=None, gens=None):
+def monomial_key(order=None, gens=None) -> MonomialOrder:
     """
     Return a function defining admissible order on monomials.
 
@@ -234,7 +234,7 @@ def monomial_key(order=None, gens=None):
         if gens is not None:
             def _order(expr):
                 return order(expr.as_poly(*gens).degree_list())
-            return _order
+            return _order # type: ignore
         return order
     else:
         raise ValueError("monomial ordering specification must be a string or a callable, got %s" % order)

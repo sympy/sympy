@@ -2715,6 +2715,9 @@ class DMF(PicklableWithSlots, CantSympify):
         return dmp_one_p(f.num, f.lev, f.dom) and \
             dmp_one_p(f.den, f.lev, f.dom)
 
+    def __pos__(f):
+        return f
+
     def __neg__(f):
         return f.neg()
 

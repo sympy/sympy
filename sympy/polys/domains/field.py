@@ -1,12 +1,14 @@
 """Implementation of :class:`Field` class. """
 
 
+from sympy.polys.domains.domain import Ef
 from sympy.polys.domains.ring import Ring
 from sympy.polys.polyerrors import NotReversible, DomainError
 from sympy.utilities import public
 
+
 @public
-class Field(Ring):
+class Field(Ring[Ef]):
     """Represents a field domain. """
 
     is_Field = True

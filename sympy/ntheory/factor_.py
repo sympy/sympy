@@ -764,7 +764,8 @@ class FactorCache(MutableMapping):
     def add(self, n: int, factors: list[int]) -> None:
         for p in sorted(factors, reverse=True):
             self[n] = p
-            n, _ = remove(n, p)
+            nz, _ = remove(n, p)
+            n = int(nz)
 
     def get_external(self, n: int) -> list[int] | None:
         return None
