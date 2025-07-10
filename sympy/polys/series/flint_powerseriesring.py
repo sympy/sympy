@@ -3,18 +3,13 @@ from __future__ import annotations
 from contextlib import contextmanager
 from typing import Any, Union
 
-from sympy.external.gmpy import GROUND_TYPES
 from sympy.polys.domains import Domain, QQ, ZZ
 from sympy.polys.series.powerseriesring import (
     _series_from_list,
     PowerSeriesRing,
-    TSeries,
 )
 
-if GROUND_TYPES == "flint":
-    from flint import fmpq_poly, fmpq_series, fmpz_poly, fmpz_series, ctx
-else:
-    fmpq_poly = fmpq_series = fmpz_poly = fmpz_series = None
+from flint import fmpq_poly, fmpq_series, fmpz_poly, fmpz_series, ctx # type: ignore
 
 
 ZZSeries = Union[fmpz_series, fmpz_poly]
@@ -287,7 +282,7 @@ class FlintPowerSeriesRingZZ(PowerSeriesRing):
         with _global_cap(self._prec):
             return s1 * s2
 
-    def multiply_ground(self, s1: ZZSeries, n: Any) -> ZZSeries:
+    def multiply_ground(self, s: ZZSeries, n: Any) -> ZZSeries:
         """
         Multiply a power series by an integer or a polynomial.
 
@@ -301,14 +296,14 @@ class FlintPowerSeriesRingZZ(PowerSeriesRing):
         >>> R.print(R.multiply_ground(x, 3))
         3*x
         """
-        if isinstance(s1, fmpz_poly):
-            poly = s1 * n
+        if isinstance(s, fmpz_poly):
+            poly = s * n
             if poly.degree() < self._prec:
                 return poly
             return fmpz_series(poly, prec=self._prec)
 
         with _global_cap(self._prec):
-            return s1 * n
+            return s * n
 
     def pow_int(self, s: ZZSeries, n: int) -> ZZSeries:
         """

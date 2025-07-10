@@ -60,7 +60,7 @@ def _useries_equality(s1: USeries[T], s2: USeries[T], dom: Domain) -> bool | Non
     if prec1 is None and prec2 is None:
         return s1 == s2
 
-    coeffs1, coeffs2, _ = _unify_prec(s1, s2, dom, None)
+    coeffs1, coeffs2, _ = _unify_prec(s1, s2, dom, 0)
     if coeffs1 != coeffs2:
         return False
     return None
@@ -250,12 +250,12 @@ class PythonPowerSeriesRingZZ(PowerSeriesRing):
             return ([], self._prec)
         return ([self._domain.one, self._domain.zero], None)
 
-    def pretty(self, series: USeries[T]) -> str:
-        coeffs, prec = series
+    def pretty(self, s: USeries[T]) -> str:
+        coeffs, prec = s
         return _series_from_list(coeffs[::-1], prec)
 
-    def print(self, series: USeries[T]) -> None:
-        print(self.pretty(series))
+    def print(self, s: USeries[T]) -> None:
+        print(self.pretty(s))
 
     def from_list(self, coeffs: list[T], prec: int | None = None) -> USeries[T]:
         """
@@ -278,7 +278,7 @@ class PythonPowerSeriesRingZZ(PowerSeriesRing):
 
         return coeffs, prec
 
-    def to_list(self, series: USeries[T]) -> list[T]:
+    def to_list(self, s: USeries[T]) -> list[T]:
         """
         Returns the list of coefficients.
 
@@ -290,7 +290,7 @@ class PythonPowerSeriesRingZZ(PowerSeriesRing):
         >>> R.to_list(x)
         [0, 1]
         """
-        coeffs, _ = series
+        coeffs, _ = s
         return coeffs[::-1]
 
     def equal(self, s1: USeries[T], s2: USeries[T]) -> bool | None:
@@ -518,12 +518,12 @@ class PythonPowerSeriesRingQQ(PowerSeriesRing):
             return ([], self._prec)
         return ([QQ(1), QQ(0)], None)
 
-    def pretty(self, series: USeries[T]) -> str:
-        coeffs, prec = series
+    def pretty(self, s: USeries[T]) -> str:
+        coeffs, prec = s
         return _series_from_list(coeffs[::-1], prec)
 
-    def print(self, series: USeries[T]) -> None:
-        print(self.pretty(series))
+    def print(self, s: USeries[T]) -> None:
+        print(self.pretty(s))
 
     def from_list(self, coeffs: list[T], prec: int | None = None) -> USeries[T]:
         """
@@ -547,7 +547,7 @@ class PythonPowerSeriesRingQQ(PowerSeriesRing):
 
         return coeffs, prec
 
-    def to_list(self, series: USeries[T]) -> list[T]:
+    def to_list(self, s: USeries[T]) -> list[T]:
         """
         Returns the list of coefficients.
 
@@ -560,7 +560,7 @@ class PythonPowerSeriesRingQQ(PowerSeriesRing):
         >>> R.to_list(x)
         [0, 1]
         """
-        coeffs, _ = series
+        coeffs, _ = s
         return coeffs[::-1]
 
     def equal(self, s1: USeries[T], s2: USeries[T]) -> bool | None:
