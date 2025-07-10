@@ -428,6 +428,7 @@ def test_composite_beam():
     c=Beam(6, E, I)
     with raises(ValueError, match="Invalid joining method. Choose from 'fixed' or 'hinge'."):
         b.join(c, "hige")
+
 def test_point_cflexure():
     #single contraflexure
     E = Symbol('E')
