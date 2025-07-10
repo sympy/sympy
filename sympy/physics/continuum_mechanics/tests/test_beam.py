@@ -623,7 +623,7 @@ def test_point_cflexure():
     b.apply_load(-10, 6, -1)
     b.apply_load(7,3,-1)
     b.solve_for_reaction_loads(r0, m0, r4,m4, r7,m7)
-    assert b.point_cflexure() == [Rational(13,16),2,Rational(482,129),5,Rational(83,13)]
+    assert b.point_cflexure() == [Rational(13,16),2,Rational(482,129),4,5,Rational(83,13)]
 
 
 def test_remove_load():

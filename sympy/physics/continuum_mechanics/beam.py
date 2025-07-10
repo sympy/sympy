@@ -1315,8 +1315,6 @@ class Beam:
             return []
 
         for i, point in enumerate(roots):
-            if point in jumps:
-                continue
             if i == 0:
                 left_mid = (0 + point) / 2
                 right_mid = (point + roots[i + 1]) / 2
