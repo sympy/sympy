@@ -53,7 +53,7 @@ the block and the disc, and :math:`Q` is a nearby point on the disc, offset by a
    >>> N = me.ReferenceFrame('N')
    >>> O = me.Point('O')
    >>> O.set_vel(N, 0)
-   
+
    >>> A = N.orientnew('A', 'Axis', [omega * t, N.z])
    >>> A.set_ang_vel(N, omega * N.z)
 
@@ -157,11 +157,9 @@ Now, we use Lagrange's method to obtain the equations of motion.
 
    >>> L = me.Lagrangian(N, block)
    >>> L
-   ⎛                                                                  2                                                                    2⎞
-   ⎜⎛                                   d                    d       ⎞    ⎛                                  d                    d       ⎞ ⎟
-   m⋅⎜⎜-ω⋅r(t)⋅sin(θ(t)) - r(t)⋅sin(θ(t))⋅──(θ(t)) + cos(θ(t))⋅──(r(t))⎟  + ⎜ω⋅r(t)⋅cos(θ(t)) + r(t)⋅cos(θ(t))⋅──(θ(t)) + sin(θ(t))⋅──(r(t))⎟ ⎟
-   ⎝⎝                                   dt                   dt      ⎠    ⎝                                  dt                   dt      ⎠ ⎠
-   ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+     /                                                                 2                                                                   2\
+    m*\(-omega*r*sin(theta) - r*sin(theta)*theta'(t) + cos(theta)*r'(t))  + (omega*r*cos(theta) + r*cos(theta)*theta'(t) + sin(theta)*r'(t)) /
+    ------------------------------------------------------------------------------------------------------------------------------------------
                                                                         2
 
    >>> lagranges_method = me.LagrangesMethod(L, coordinates, forcelist=loads, frame=N)
