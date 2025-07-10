@@ -43,11 +43,11 @@ def test_column():
     # Test applying supports
     c2 = Column(10, E, A)
     c2.apply_support(0)
-    assert c2._bc_deflection == [0]
+    assert c2._bc_extension == [0]
     c2.apply_support(10)
-    assert c2._bc_deflection == [0, 10]
+    assert c2._bc_extension == [0, 10]
     c2.apply_support(5)
-    assert c2._bc_deflection == [0, 10, 5]
+    assert c2._bc_extension == [0, 10, 5]
 
     # Test applying a load
     c3 = Column(10, E, A)
@@ -477,7 +477,7 @@ def test_telescope_hinge():
     q = {R_0: -10, R_10: 0}
     assert p == q
 
-    p = c.hinge_deflections
+    p = c.hinge_extensions
     q = {Symbol('u_7.5'): 50/(E*A)}
     assert p == q
 
@@ -494,7 +494,7 @@ def test_telescope_hinge():
     q = {R_0: 5, R_10: 10}
     assert p == q
 
-    p = c2.hinge_deflections
+    p = c2.hinge_extensions
     u_4 = Symbol('u_4')
     q = {u_4: Rational(1, 2000)}
     assert p == q
@@ -519,7 +519,7 @@ def test_equations():
     )
     assert p == q
 
-    p = c.deflection()
+    p = c.extension()
     q = (
         C_N*x + C_u
         - R_0*SingularityFunction(x, 0, 1)/210000
@@ -539,7 +539,7 @@ def test_equations():
     )
     assert p == q
 
-    p = c.deflection()
+    p = c.extension()
     q = (
         SingularityFunction(x, 0, 1)/210000
         - SingularityFunction(x, 8, 1)/42000
@@ -584,7 +584,7 @@ def test_max_normal_force():
     q=(Interval(8, 10), Rational(19,2))
     assert p==q
 
-def test_max_deflection():
+def test_max_extension():
 
     #Point Load and single point maximum
     c1 = Column(10, 210000, 1)
@@ -592,7 +592,7 @@ def test_max_deflection():
     c1.apply_support(10)
     c1.apply_load(5, 8, -1)
     c1.solve_for_reaction_loads()
-    p=c1.max_deflection()
+    p=c1.max_extension()
     q=(8, Rational(1,26250))
     assert p==q
 
@@ -603,7 +603,7 @@ def test_max_deflection():
     c2.apply_load(-5, 3, -1)
     c2.apply_load(-10, 8, -1)
     c2.solve_for_reaction_loads()
-    p=c2.max_deflection()
+    p=c2.max_extension()
     q=(8, Rational(19,10000))
     assert p==q
 
@@ -615,6 +615,6 @@ def test_max_deflection():
     c3.apply_support(L)
     c3.apply_load(-F, L/2, -1)
     c3.solve_for_reaction_loads()
-    p=c3.max_deflection()
+    p=c3.max_extension()
     q=(L/2, F*L*Rational(1,80000))
     assert p==q
