@@ -45,6 +45,7 @@ from sympy.simplify.trigsimp import trigsimp
 from sympy.tensor.indexed import Indexed
 from sympy.physics.units import meter
 
+import pytest
 from sympy.testing.pytest import raises, XFAIL
 
 from sympy.abc import a, b, c, n, t, u, x, y, z
@@ -2227,6 +2228,12 @@ def test_issue_10755():
 def test_issue_11877():
     x = symbols('x')
     assert integrate(log(S.Half - x), (x, 0, S.Half)) == Rational(-1, 2) -log(2)/2
+
+
+@pytest.mark.parametrize('expr', [I / 3, I / 200])
+def test_issue_28221(expr):
+    with pytest.raises(TypeError, match="Cannot convert non-comparable expression to int"):
+        int(expr)
 
 
 def test_normal():
