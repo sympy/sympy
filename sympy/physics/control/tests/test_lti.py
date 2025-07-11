@@ -25,8 +25,8 @@ from sympy.testing.pytest import raises
 
 a, x, b, c, s, g, d, p, k, tau, zeta, wn, T = symbols('a, x, b, c, s, g, d, p, k,\
     tau, zeta, wn, T')
-a0, a1, a2, a3, b0, b1, b2, b3, b4, c0, c1, c2, c3, d0, d1, d2, d3 = symbols('a0:4,\
-    b0:5, c0:4, d0:4')
+a0, a1, a2, a3, b0, b1, b2, b3, b4, c0, c1, c2, c3, c4 , d0, d1, d2, d3 = \
+    symbols('a0:4, b0:5, c0:5, d0:4')
 TF1 = TransferFunction(1, s**2 + 2*zeta*wn*s + wn**2, s)
 TF2 = TransferFunction(k, 1, s)
 TF3 = TransferFunction(a2*p - s, a2*s + p, s)
@@ -1835,15 +1835,23 @@ def test_StateSpace_functions():
     C_mat = Matrix([[0, 1]])
     D_mat = Matrix([1])
     SS1 = StateSpace(A_mat, B_mat, C_mat, D_mat)
-    SS2 = StateSpace(Matrix([[1, 1], [4, -2]]),Matrix([[0, 1], [0, 2]]),Matrix([[-1, 1], [1, -1]]))
+    SS2 = StateSpace(Matrix([[1, 1], [4, -2]]),Matrix([[0, 1], [0, 2]]),
+                     Matrix([[-1, 1], [1, -1]]))
     SS3 = StateSpace(Matrix([[1, 1], [4, -2]]),Matrix([[1, -1], [1, -1]]))
-    SS4 = StateSpace(Matrix([[a0, a1], [a2, a3]]), Matrix([[b1], [b2]]), Matrix([[c1, c2]]))
+    SS4 = StateSpace(Matrix([[a0, a1], [a2, a3]]), Matrix([[b1], [b2]]),
+                     Matrix([[c1, c2]]))
+    SS6 = StateSpace(Matrix([[a0, a1], [a2, a3]]), Matrix([[b1, b3], [b2, b4]]),
+                     Matrix([[c1, c2], [c3, c4]]))
 
     # Observability
     assert SS1.is_observable() == True
     assert SS2.is_observable() == False
     assert SS4.is_observable() == \
         [Unequality(-a0*c1*c2 + a1*c1**2 - a2*c2**2 + a3*c1*c2, 0)]
+    assert SS6.is_observable() == \
+        [Unequality(c1*c4 - c2*c3, 0),
+         Unequality(-a0*c1*c4 + a1*c1*c3 - a2*c2*c4 + a3*c2*c3, 0),
+         Unequality(a0*a3*c1*c4 - a0*a3*c2*c3 - a1*a2*c1*c4 + a1*a2*c2*c3, 0)]
     assert SS1.observability_matrix() == Matrix([[0, 1], [1, 0]])
     assert SS2.observability_matrix() == Matrix([[-1,  1], [ 1, -1], [ 3, -3], [-3,  3]])
     assert SS4.observability_matrix() == \
@@ -1869,6 +1877,10 @@ def test_StateSpace_functions():
     assert SS3.is_controllable() == False
     assert SS4.is_controllable() == \
         [Unequality(-a0*b1*b2 - a1*b2**2 + a2*b1**2 + a3*b1*b2, 0)]
+    assert SS6.is_controllable() == \
+        [Unequality(b1*b4 - b2*b3, 0),
+         Unequality(-a0*b1*b4 - a1*b2*b4 + a2*b1*b3 + a3*b2*b3, 0),
+         Unequality(a0*a3*b1*b4 - a0*a3*b2*b3 - a1*a2*b1*b4 + a1*a2*b2*b3, 0)]
     assert SS1.controllability_matrix() ==  Matrix([[0.5, -0.75], [  0,   0.5]])
     assert SS3.controllability_matrix() == Matrix([[1, -1, 2, -2], [1, -1, 2, -2]])
     assert SS4.controllability_matrix() == \
