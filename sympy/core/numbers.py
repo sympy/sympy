@@ -1690,10 +1690,8 @@ class Rational(Number):
 
     def __hash__(self):
         return super().__hash__()
-    
     def __format__(self, format_spec):
         return format(fractions.Fraction(self.p, self.q), format_spec)
-
     def factors(self, limit=None, use_trial=True, use_rho=False,
                 use_pm1=False, verbose=False, visual=False):
         """A wrapper to factorint which return factors of self that are
