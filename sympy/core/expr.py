@@ -358,6 +358,8 @@ class Expr(Basic, EvalfMixin):
     def __int__(self) -> int:
         if not self.is_number:
             raise TypeError("Cannot convert symbols to int")
+        if not self.is_comparable:
+            raise TypeError("Cannot convert non-comparable expression to int")
         r = self.round(2)
         if not r.is_Number:
             raise TypeError("Cannot convert complex to int")
