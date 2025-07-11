@@ -63,6 +63,9 @@ else:
     def _supported_flint_order(order):
         return False
 
+flint = None
+
+
 @public
 def ring(symbols, domain, order: MonomialOrder | str = lex):
     """Construct a polynomial ring returning ``(ring, x_1, ..., x_n)``.
@@ -735,14 +738,20 @@ class FlintPolyRing(PolyRing):
         return self._python_ring._from_dict_ground(element, orig_domain)
 
 
-class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
+class PolyElement(DomainElement, DefaultPrinting, CantSympify):
     """Element of multivariate distributed polynomial ring."""
 
-    def __init__(self, ring, init):
-        super().__init__(init)
-        self.ring = ring
-        # This check would be too slow to run every time:
-        # self._check()
+    def __new__(cls, ring, init):
+        # Delegation to appropriate subclass based on ring type
+        if isinstance(ring, FlintPolyRing):
+            return FlintPolyElement._new(ring, init)
+        else:
+            return PythonPolyElement._new(ring, init)
+
+    @classmethod
+    def _new(cls, ring, init):
+        """Create a new polynomial element - to be implemented by subclasses."""
+        raise NotImplementedError("Must be implemented by subclass")
 
     def __getnewargs__(self):
         return (self.ring, list(self.iterterms()))
@@ -1992,6 +2001,612 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         >>> p1 == 2*(x**2 + y**2)
         True
         """
+        return self._equality(other)
+
+    def _equality(self, other):
+        raise NotImplementedError("_equality will be implemented in subclass")
+
+    def __neg__(self):
+        # Return (-1) * self in case of python-flint
+        return self._negate()
+
+    def _negate(self):
+        raise NotImplementedError("_negate will be implemented in subclass")
+
+    def _add(self, p2):
+        raise NotImplementedError
+
+    def _add_ground(self, cp2):
+        raise NotImplementedError
+
+    def _sub(self, p2):
+        raise NotImplementedError
+
+    def _sub_ground(self, cp2):
+        raise NotImplementedError
+
+    def _mul(self, other):
+        raise NotImplementedError
+
+    def mul_ground(self, x):
+        raise NotImplementedError
+
+    def _pow_int(self, n):
+        raise NotImplementedError
+
+    def _pow_generic(self, n):
+        raise NotImplementedError
+
+    def _pow_multinomial(self, n):
+        raise NotImplementedError
+
+    def _square(self):
+        raise NotImplementedError
+
+    def _divmod(self, other):
+        raise NotImplementedError
+
+    def _divmod_ground(self, x):
+        raise NotImplementedError
+
+    def _floordiv(self, p2):
+        raise NotImplementedError
+
+    def _floordiv_ground(self, p2):
+        raise NotImplementedError
+
+    def _truediv(self, p2):
+        raise NotImplementedError
+
+    def _term_div(self):
+        raise NotImplementedError
+
+    def rem(self, G):
+        raise NotImplementedError
+
+    def quo(self, G):
+        raise NotImplementedError
+
+    def exquo(self, G):
+        raise NotImplementedError
+
+    def _iadd_monom(self, mc):
+        """add to self the monomial coeff*x0**i0*x1**i1*...
+        unless self is a generator -- then just return the sum of the two.
+
+        mc is a tuple, (monom, coeff), where monomial is (i0, i1, ...)
+
+        Examples
+        ========
+
+        >>> from sympy.polys.rings import ring
+        >>> from sympy.polys.domains import ZZ
+
+        >>> _, x, y = ring('x, y', ZZ)
+        >>> p = x**4 + 2*y
+        >>> m = (1, 2)
+        >>> p1 = p._iadd_monom((m, 5))
+        >>> p1
+        x**4 + 5*x*y**2 + 2*y
+        >>> p1 is p
+        True
+        >>> p = x
+        >>> p1 = p._iadd_monom((m, 5))
+        >>> p1
+        5*x*y**2 + x
+        >>> p1 is p
+        False
+
+        """
+        raise NotImplementedError
+
+    def _iadd_poly_monom(self, p2, mc):
+        """add to self the product of (p)*(coeff*x0**i0*x1**i1*...)
+        unless self is a generator -- then just return the sum of the two.
+
+        mc is a tuple, (monom, coeff), where monomial is (i0, i1, ...)
+
+        Examples
+        ========
+
+        >>> from sympy.polys.rings import ring
+        >>> from sympy.polys.domains import ZZ
+
+        >>> _, x, y, z = ring('x, y, z', ZZ)
+        >>> p1 = x**4 + 2*y
+        >>> p2 = y + z
+        >>> m = (1, 2, 3)
+        >>> p1 = p1._iadd_poly_monom(p2, (m, 3))
+        >>> p1
+        x**4 + 3*x*y**3*z**3 + 3*x*y**2*z**4 + 2*y
+
+        """
+        raise NotImplementedError
+
+    def imul_num(self, c):
+        """multiply inplace the polynomial p by an element in the
+        coefficient ring, provided p is not one of the generators;
+        else multiply not inplace
+
+        Examples
+        ========
+
+        >>> from sympy.polys.rings import ring
+        >>> from sympy.polys.domains import ZZ
+
+        >>> _, x, y = ring('x, y', ZZ)
+        >>> p = x + y**2
+        >>> p1 = p.imul_num(3)
+        >>> p1
+        3*x + 3*y**2
+        >>> p1 is p
+        True
+        >>> p = x
+        >>> p1 = p.imul_num(3)
+        >>> p1
+        3*x
+        >>> p1 is p
+        False
+
+        """
+        raise NotImplementedError
+
+    def _rem(self, G):
+        raise NotImplementedError
+
+    def _mod(self, other):
+        raise NotImplementedError
+
+    def _mod_ground(self, x):
+        raise NotImplementedError
+
+    @property
+    def is_ground(self):
+        # Return self.flint_poly.is_constant() in case of python-flint
+        raise NotImplementedError
+
+    @property
+    def is_zero(self):
+        # Return self.flint_poly.is_zero() in case of python-flint
+        raise NotImplementedError
+
+    @property
+    def is_one(self):
+        # Return self.flint_poly.is_one() in case of python-flint
+        raise NotImplementedError
+
+    @property
+    def is_squarefree(self):
+        raise NotImplementedError
+
+    @property
+    def is_irreducible(self):
+        raise NotImplementedError
+
+    @property
+    def is_cyclotomic(self):
+        raise NotImplementedError
+
+    @property
+    def LC(self):
+        # Just use leafing_coefficient() in case of python-flint
+        raise NotImplementedError
+
+    @property
+    def LM(self):
+        # Use monomial(0) in case of python-flint
+        raise NotImplementedError
+
+    @property
+    def LT(self):
+        # Use monomial(0) and leafing_coefficient() in case of python-flint
+        raise NotImplementedError
+
+    def clear_denoms(self):
+        """Clear denominators from polynomial coefficients."""
+        raise NotImplementedError
+
+    def _change_ring(self, new_ring):
+        # Use fmpz_mpoly.compose() or fmpz_mpoly.compose() in case of python-flint
+        raise NotImplementedError
+
+    def as_expr_dict(self):
+        # Can just use self.flint_poly.to_dict() in case of python-flint
+        # Or this can just directly go into the baseclass as is since iterterms
+        # will be implemented separately for pure python and flint versions anyways
+        raise NotImplementedError
+
+    def _cmp(self, other, op):
+        # We can override this for python-flint version
+        # to use the native lt, le, gt, ge methods
+        raise NotImplementedError
+
+    def to_dense(self):
+        raise NotImplementedError
+
+    def to_dict(self):
+        # Return a self.flint_poly.to_dict() in case of python-flint
+        raise NotImplementedError
+
+    def str(self, printer, precedence, exp_pattern, mul_symbol):
+        # Use str(self.flint_poly).replace("^", "**") in case of python-flint
+        raise NotImplementedError
+
+    def _degree(self, i):
+        raise NotImplementedError
+
+    def _degrees(self):
+        raise NotImplementedError
+
+    def leading_expv(self):
+        """Leading monomial tuple according to the monomial ordering.
+
+        Examples
+        ========
+
+        >>> from sympy.polys.rings import ring
+        >>> from sympy.polys.domains import ZZ
+
+        >>> _, x, y, z = ring('x, y, z', ZZ)
+        >>> p = x**4 + x**3*y + x**2*z**2 + z**7
+        >>> p.leading_expv()
+        (4, 0, 0)
+
+        """
+        # Use fmpz_mpoly.monomial(1) or fmpq_mpoly.monomial(1) in case of python-flint
+        raise NotImplementedError
+
+    def _get_coeff(self, expv):
+        raise NotImplementedError
+
+    def const(self):
+        # Use
+        """Returns the constant coefficient."""
+        raise NotImplementedError
+
+    def coeff(self, element):
+        """
+        Returns the coefficient that stands next to the given monomial.
+
+        Parameters
+        ==========
+
+        element : PolyElement (with ``is_monomial = True``) or 1
+
+        Examples
+        ========
+
+        >>> from sympy.polys.rings import ring
+        >>> from sympy.polys.domains import ZZ
+
+        >>> _, x, y, z = ring("x,y,z", ZZ)
+        >>> f = 3*x**2*y - x*y*z + 7*z**3 + 23
+
+        >>> f.coeff(x**2*y)
+        3
+        >>> f.coeff(x*y)
+        0
+        >>> f.coeff(1)
+        23
+
+        """
+        raise NotImplementedError
+
+    def leading_monom(self):
+        """
+        Leading monomial as a polynomial element.
+
+        Examples
+        ========
+
+        >>> from sympy.polys.rings import ring
+        >>> from sympy.polys.domains import ZZ
+
+        >>> _, x, y = ring('x, y', ZZ)
+        >>> (3*x*y + y**2).leading_monom()
+        x*y
+
+        """
+        raise NotImplementedError
+
+    def leading_term(self):
+        """Leading term as a polynomial element.
+
+        Examples
+        ========
+
+        >>> from sympy.polys.rings import ring
+        >>> from sympy.polys.domains import ZZ
+
+        >>> _, x, y = ring('x, y', ZZ)
+        >>> (3*x*y + y**2).leading_term()
+        3*x*y
+
+        """
+        raise NotImplementedError
+
+    def coeffs(self, order=None):
+        """Ordered list of polynomial coefficients.
+
+        Parameters
+        ==========
+
+        order : :class:`~.MonomialOrder` or coercible, optional
+
+        Examples
+        ========
+
+        >>> from sympy.polys.rings import ring
+        >>> from sympy.polys.domains import ZZ
+        >>> from sympy.polys.orderings import lex, grlex
+
+        >>> _, x, y = ring("x, y", ZZ, lex)
+        >>> f = x*y**7 + 2*x**2*y**3
+
+        >>> f.coeffs()
+        [2, 1]
+        >>> f.coeffs(grlex)
+        [1, 2]
+
+        """
+        raise NotImplementedError
+
+    def monoms(self, order=None):
+        """Ordered list of polynomial monomials.
+
+        Parameters
+        ==========
+
+        order : :class:`~.MonomialOrder` or coercible, optional
+
+        Examples
+        ========
+
+        >>> from sympy.polys.rings import ring
+        >>> from sympy.polys.domains import ZZ
+        >>> from sympy.polys.orderings import lex, grlex
+
+        >>> _, x, y = ring("x, y", ZZ, lex)
+        >>> f = x*y**7 + 2*x**2*y**3
+
+        >>> f.monoms()
+        [(2, 3), (1, 7)]
+        >>> f.monoms(grlex)
+        [(1, 7), (2, 3)]
+
+        """
+        raise NotImplementedError
+
+    def terms(self, order=None):
+        """Ordered list of polynomial terms.
+
+        Parameters
+        ==========
+
+        order : :class:`~.MonomialOrder` or coercible, optional
+
+        Examples
+        ========
+
+        >>> from sympy.polys.rings import ring
+        >>> from sympy.polys.domains import ZZ
+        >>> from sympy.polys.orderings import lex, grlex
+
+        >>> _, x, y = ring("x, y", ZZ, lex)
+        >>> f = x*y**7 + 2*x**2*y**3
+
+        >>> f.terms()
+        [((2, 3), 2), ((1, 7), 1)]
+        >>> f.terms(grlex)
+        [((1, 7), 1), ((2, 3), 2)]
+
+        """
+        raise NotImplementedError
+
+    def _sorted(self, seq, order):
+        raise NotImplementedError
+
+    def itercoeffs(self):
+        """Iterator over coefficients of a polynomial."""
+        raise NotImplementedError
+
+    def itermonoms(self):
+        """Iterator over monomials of a polynomial."""
+        raise NotImplementedError
+
+    def iterterms(self):
+        """Iterator over terms of a polynomial."""
+        raise NotImplementedError
+
+    def listcoeffs(self):
+        """Unordered list of polynomial coefficients."""
+        raise NotImplementedError
+
+    def listmonoms(self):
+        """Unordered list of polynomial monomials."""
+        raise NotImplementedError
+
+    def listterms(self):
+        """Unordered list of polynomial terms."""
+        raise NotImplementedError
+
+    def content(self):
+        """Returns GCD of polynomial's coefficients."""
+        # In the flint version, we will have to override
+        # this to use the native content() method for ZZ
+        # and use the pure python technique for other domains
+        raise NotImplementedError
+
+    def primitive(self):
+        """Returns content and a primitive polynomial."""
+        raise NotImplementedError
+
+    def mul_monom(self, monom):
+        raise NotImplementedError
+
+    def mul_term(self, term):
+        raise NotImplementedError
+
+    def _quo_ground(self, x):
+        raise NotImplementedError
+
+    def _quo_term(self, term):
+        raise NotImplementedError
+
+    def _deflate(self, J, polys):
+        raise NotImplementedError
+
+    def inflate(self, J):
+        raise NotImplementedError
+
+    def gcd(self, other):
+        return self.cofactors(other)[0]
+
+    def _diff(self, i):
+        # Use the native derivative() method in case of python-flint
+        raise NotImplementedError
+
+    def cofactors(self, other):
+        raise NotImplementedError
+
+    def _gcd_zero(self, other):
+        raise NotImplementedError
+
+    def _gcd_monom(self, other):
+        raise NotImplementedError
+
+    def _gcd(self, other):
+        raise NotImplementedError
+
+    def _gcd_ZZ(self, other):
+        raise NotImplementedError
+
+    def _gcd_QQ(self, g):
+        raise NotImplementedError
+
+    def cancel(self, g):
+        """
+        Cancel common factors in a rational function ``f/g``.
+
+        Examples
+        ========
+
+        >>> from sympy.polys import ring, ZZ
+        >>> R, x,y = ring("x,y", ZZ)
+
+        >>> (2*x**2 - 2).cancel(x**2 - 2*x + 1)
+        (2*x + 2, x - 1)
+
+        """
+        raise NotImplementedError
+
+    def _compose(self, replacements, initial_poly):
+        raise NotImplementedError
+
+    def _div(self, fv):
+        # Implement the same algorithm from [CLO] p64. in python-flint
+        raise NotImplementedError
+
+    # The following _p* and _subresultants methods can just be converted to pure python
+    # methods in case of python-flint since their speeds don't exactly matter wrt the
+    # flint version.
+    def _prem(self, g, x):
+        raise NotImplementedError
+
+    def _pdiv(self, g, x):
+        raise NotImplementedError
+
+    def _pquo(self, g, x):
+        raise NotImplementedError
+
+    def _pexquo(self, g, x):
+        raise NotImplementedError
+
+    def _subresultants(self, g, x):
+        raise NotImplementedError
+
+    def _subs(self, subs_dict):
+        raise NotImplementedError
+
+    def _evaluate(self, eval_dict):
+        raise NotImplementedError
+
+    def _symmetrize(self):
+        # For the python-flint override this can just be converted back to
+        # the pure python version until python-flint provides some
+        # equivalent functionality.
+        raise NotImplementedError
+
+    # TODO: following methods should point to polynomial
+    # representation independent algorithm implementations.
+
+    def half_gcdex(self, other):
+        raise NotImplementedError
+
+    def gcdex(self, other):
+        raise NotImplementedError
+
+    def resultant(self, other):
+        raise NotImplementedError
+
+    def discriminant(self):
+        raise NotImplementedError
+
+    def decompose(self):
+        raise NotImplementedError
+
+    def shift(self, a):
+        raise NotImplementedError
+
+    def shift_list(self, a):
+        raise NotImplementedError
+
+    def sturm(self):
+        raise NotImplementedError
+
+    def gff_list(self):
+        raise NotImplementedError
+
+    def norm(self):
+        raise NotImplementedError
+
+    def sqf_norm(self):
+        raise NotImplementedError
+
+    def sqf_part(self):
+        raise NotImplementedError
+
+    def sqf_list(self, all=False):
+        raise NotImplementedError
+
+    def factor_list(self):
+        raise NotImplementedError
+
+
+class PythonPolyElement(PolyElement, dict):
+    """Python-based sparse multivariate polynomial element."""
+
+    @classmethod
+    def _new(cls, ring, init):
+        obj = dict.__new__(cls)
+        dict.__init__(obj, init)
+        obj.ring = ring
+        obj._hash = None
+        return obj
+
+    def __init__(self, ring, init):
+        # This is called by the old-style constructor, but _new handles the real initialization
+        # We need this for compatibility but the actual initialization is done in _new
+        if not hasattr(self, 'ring'):  # Only initialize if not already done by _new
+            super().__init__(init)
+            self.ring = ring
+            self._hash = None
+
+    def items(self):
+        """Return iterator over (monomial, coefficient) pairs."""
+        return dict.items(self)
+
+    def _equality(self, other):
         if not other:
             return not self
         elif self.ring.is_element(other):
@@ -2001,8 +2616,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         else:
             return self.get(self.ring.zero_monom) == other
 
-    def __neg__(self):
-        # Return (-1) * self in case of python-flint
+    def _negate(self):
         return self.new([(monom, -coeff) for monom, coeff in self.iterterms()])
 
     def _add(self, p2):
@@ -2222,33 +2836,6 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
             raise ExactQuotientFailed(self, G)
 
     def _iadd_monom(self, mc):
-        """add to self the monomial coeff*x0**i0*x1**i1*...
-        unless self is a generator -- then just return the sum of the two.
-
-        mc is a tuple, (monom, coeff), where monomial is (i0, i1, ...)
-
-        Examples
-        ========
-
-        >>> from sympy.polys.rings import ring
-        >>> from sympy.polys.domains import ZZ
-
-        >>> _, x, y = ring('x, y', ZZ)
-        >>> p = x**4 + 2*y
-        >>> m = (1, 2)
-        >>> p1 = p._iadd_monom((m, 5))
-        >>> p1
-        x**4 + 5*x*y**2 + 2*y
-        >>> p1 is p
-        True
-        >>> p = x
-        >>> p1 = p._iadd_monom((m, 5))
-        >>> p1
-        5*x*y**2 + x
-        >>> p1 is p
-        False
-
-        """
         if self in self.ring._gens_set:
             cpself = self.copy()
         else:
@@ -2266,26 +2853,6 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         return cpself
 
     def _iadd_poly_monom(self, p2, mc):
-        """add to self the product of (p)*(coeff*x0**i0*x1**i1*...)
-        unless self is a generator -- then just return the sum of the two.
-
-        mc is a tuple, (monom, coeff), where monomial is (i0, i1, ...)
-
-        Examples
-        ========
-
-        >>> from sympy.polys.rings import ring
-        >>> from sympy.polys.domains import ZZ
-
-        >>> _, x, y, z = ring('x, y, z', ZZ)
-        >>> p1 = x**4 + 2*y
-        >>> p2 = y + z
-        >>> m = (1, 2, 3)
-        >>> p1 = p1._iadd_poly_monom(p2, (m, 3))
-        >>> p1
-        x**4 + 3*x*y**3*z**3 + 3*x*y**2*z**4 + 2*y
-
-        """
         p1 = self
         if p1 in p1.ring._gens_set:
             p1 = p1.copy()
@@ -2303,31 +2870,6 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         return p1
 
     def imul_num(self, c):
-        """multiply inplace the polynomial p by an element in the
-        coefficient ring, provided p is not one of the generators;
-        else multiply not inplace
-
-        Examples
-        ========
-
-        >>> from sympy.polys.rings import ring
-        >>> from sympy.polys.domains import ZZ
-
-        >>> _, x, y = ring('x, y', ZZ)
-        >>> p = x + y**2
-        >>> p1 = p.imul_num(3)
-        >>> p1
-        3*x + 3*y**2
-        >>> p1 is p
-        True
-        >>> p = x
-        >>> p1 = p.imul_num(3)
-        >>> p1
-        3*x
-        >>> p1 is p
-        False
-
-        """
         if self in self.ring._gens_set:
             return self * c
         if not c:
@@ -2385,17 +2927,14 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
     @property
     def is_ground(self):
-        # Return self.flint_poly.is_constant() in case of python-flint
         return not self or (len(self) == 1 and self.ring.zero_monom in self)
 
     @property
     def is_zero(self):
-        # Return self.flint_poly.is_zero() in case of python-flint
         return not self
 
     @property
     def is_one(self):
-        # Return self.flint_poly.is_one() in case of python-flint
         return self == self.ring.one
 
     @property
@@ -2419,12 +2958,10 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
     @property
     def LC(self):
-        # Just use leafing_coefficient() in case of python-flint
         return self._get_coeff(self.leading_expv())
 
     @property
     def LM(self):
-        # Use monomial(0) in case of python-flint
         expv = self.leading_expv()
         if expv is None:
             return self.ring.zero_monom
@@ -2433,7 +2970,6 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
     @property
     def LT(self):
-        # Use monomial(0) and leafing_coefficient() in case of python-flint
         expv = self.leading_expv()
         if expv is None:
             return (self.ring.zero_monom, self.ring.domain.zero)
@@ -2441,7 +2977,6 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
             return (expv, self._get_coeff(expv))
 
     def clear_denoms(self):
-        """Clear denominators from polynomial coefficients."""
         domain = self.ring.domain
 
         if not domain.is_Field or not domain.has_assoc_Ring:
@@ -2459,7 +2994,6 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         return common, poly
 
     def _change_ring(self, new_ring):
-        # Use fmpz_mpoly.compose() or fmpz_mpoly.compose() in case of python-flint
         if self.ring.symbols != new_ring.symbols:
             terms = list(zip(*_dict_reorder(self, self.ring.symbols, new_ring.symbols)))
             return new_ring.from_terms(terms, self.ring.domain)
@@ -2467,15 +3001,10 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
             return new_ring.from_dict(self, self.ring.domain)
 
     def as_expr_dict(self):
-        # Can just use self.flint_poly.to_dict() in case of python-flint
-        # Or this can just directly go into the baseclass as is since iterterms
-        # will be implemented separately for pure python and flint versions anyways
         to_sympy = self.ring.domain.to_sympy
         return {monom: to_sympy(coeff) for monom, coeff in self.iterterms()}
 
     def _cmp(self, other, op):
-        # We can override this for python-flint version
-        # to use the native lt, le, gt, ge methods
         if self.ring.is_element(other):
             return op(self.sort_key(), other.sort_key())
         else:
@@ -2485,11 +3014,9 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         return dmp_from_dict(self, self.ring.ngens - 1, self.ring.domain)
 
     def to_dict(self):
-        # Return a self.flint_poly.to_dict() in case of python-flint
         return dict(self)
 
     def str(self, printer, precedence, exp_pattern, mul_symbol):
-        # Use str(self.flint_poly).replace("^", "**") in case of python-flint
         if not self:
             return printer._print(self.ring.domain.zero)
         prec_mul = precedence["Mul"]
@@ -2544,21 +3071,6 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         return tuple(map(max, list(zip(*self.itermonoms()))))
 
     def leading_expv(self):
-        """Leading monomial tuple according to the monomial ordering.
-
-        Examples
-        ========
-
-        >>> from sympy.polys.rings import ring
-        >>> from sympy.polys.domains import ZZ
-
-        >>> _, x, y, z = ring('x, y, z', ZZ)
-        >>> p = x**4 + x**3*y + x**2*z**2 + z**7
-        >>> p.leading_expv()
-        (4, 0, 0)
-
-        """
-        # Use fmpz_mpoly.monomial(1) or fmpq_mpoly.monomial(1) in case of python-flint
         if self:
             return self.ring.leading_expv(self)
         else:
@@ -2568,36 +3080,9 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         return self.get(expv, self.ring.domain.zero)
 
     def const(self):
-        # Use
-        """Returns the constant coefficient."""
         return self._get_coeff(self.ring.zero_monom)
 
     def coeff(self, element):
-        """
-        Returns the coefficient that stands next to the given monomial.
-
-        Parameters
-        ==========
-
-        element : PolyElement (with ``is_monomial = True``) or 1
-
-        Examples
-        ========
-
-        >>> from sympy.polys.rings import ring
-        >>> from sympy.polys.domains import ZZ
-
-        >>> _, x, y, z = ring("x,y,z", ZZ)
-        >>> f = 3*x**2*y - x*y*z + 7*z**3 + 23
-
-        >>> f.coeff(x**2*y)
-        3
-        >>> f.coeff(x*y)
-        0
-        >>> f.coeff(1)
-        23
-
-        """
         if element == 1:
             return self._get_coeff(self.ring.zero_monom)
         elif self.ring.is_element(element):
@@ -2610,20 +3095,6 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         raise ValueError("expected a monomial, got %s" % element)
 
     def leading_monom(self):
-        """
-        Leading monomial as a polynomial element.
-
-        Examples
-        ========
-
-        >>> from sympy.polys.rings import ring
-        >>> from sympy.polys.domains import ZZ
-
-        >>> _, x, y = ring('x, y', ZZ)
-        >>> (3*x*y + y**2).leading_monom()
-        x*y
-
-        """
         p = self.ring.zero
         expv = self.leading_expv()
         if expv:
@@ -2631,19 +3102,6 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         return p
 
     def leading_term(self):
-        """Leading term as a polynomial element.
-
-        Examples
-        ========
-
-        >>> from sympy.polys.rings import ring
-        >>> from sympy.polys.domains import ZZ
-
-        >>> _, x, y = ring('x, y', ZZ)
-        >>> (3*x*y + y**2).leading_term()
-        3*x*y
-
-        """
         p = self.ring.zero
         expv = self.leading_expv()
         if expv is not None:
@@ -2651,81 +3109,12 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         return p
 
     def coeffs(self, order=None):
-        """Ordered list of polynomial coefficients.
-
-        Parameters
-        ==========
-
-        order : :class:`~.MonomialOrder` or coercible, optional
-
-        Examples
-        ========
-
-        >>> from sympy.polys.rings import ring
-        >>> from sympy.polys.domains import ZZ
-        >>> from sympy.polys.orderings import lex, grlex
-
-        >>> _, x, y = ring("x, y", ZZ, lex)
-        >>> f = x*y**7 + 2*x**2*y**3
-
-        >>> f.coeffs()
-        [2, 1]
-        >>> f.coeffs(grlex)
-        [1, 2]
-
-        """
         return [coeff for _, coeff in self.terms(order)]
 
     def monoms(self, order=None):
-        """Ordered list of polynomial monomials.
-
-        Parameters
-        ==========
-
-        order : :class:`~.MonomialOrder` or coercible, optional
-
-        Examples
-        ========
-
-        >>> from sympy.polys.rings import ring
-        >>> from sympy.polys.domains import ZZ
-        >>> from sympy.polys.orderings import lex, grlex
-
-        >>> _, x, y = ring("x, y", ZZ, lex)
-        >>> f = x*y**7 + 2*x**2*y**3
-
-        >>> f.monoms()
-        [(2, 3), (1, 7)]
-        >>> f.monoms(grlex)
-        [(1, 7), (2, 3)]
-
-        """
         return [monom for monom, _ in self.terms(order)]
 
     def terms(self, order=None):
-        """Ordered list of polynomial terms.
-
-        Parameters
-        ==========
-
-        order : :class:`~.MonomialOrder` or coercible, optional
-
-        Examples
-        ========
-
-        >>> from sympy.polys.rings import ring
-        >>> from sympy.polys.domains import ZZ
-        >>> from sympy.polys.orderings import lex, grlex
-
-        >>> _, x, y = ring("x, y", ZZ, lex)
-        >>> f = x*y**7 + 2*x**2*y**3
-
-        >>> f.terms()
-        [((2, 3), 2), ((1, 7), 1)]
-        >>> f.terms(grlex)
-        [((1, 7), 1), ((2, 3), 2)]
-
-        """
         return self._sorted(list(self.items()), order)
 
     def _sorted(self, seq, order):
@@ -2740,34 +3129,24 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
             return sorted(seq, key=lambda monom: order(monom[0]), reverse=True)
 
     def itercoeffs(self):
-        """Iterator over coefficients of a polynomial."""
         return iter(self.values())
 
     def itermonoms(self):
-        """Iterator over monomials of a polynomial."""
         return iter(self.keys())
 
     def iterterms(self):
-        """Iterator over terms of a polynomial."""
         return iter(self.items())
 
     def listcoeffs(self):
-        """Unordered list of polynomial coefficients."""
         return list(self.values())
 
     def listmonoms(self):
-        """Unordered list of polynomial monomials."""
         return list(self.keys())
 
     def listterms(self):
-        """Unordered list of polynomial terms."""
         return list(self.items())
 
     def content(self):
-        """Returns GCD of polynomial's coefficients."""
-        # In the flint version, we will have to override
-        # this to use the native content() method for ZZ
-        # and use the pure python technique for other domains
         domain = self.ring.domain
         cont = domain.zero
         gcd = domain.gcd
@@ -2778,7 +3157,6 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         return cont
 
     def primitive(self):
-        """Returns content and a primitive polynomial."""
         cont = self.content()
         if cont == self.ring.domain.zero:
             return (cont, self)
@@ -2943,19 +3321,6 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         return h, cff, cfg
 
     def cancel(self, g):
-        """
-        Cancel common factors in a rational function ``f/g``.
-
-        Examples
-        ========
-
-        >>> from sympy.polys import ring, ZZ
-        >>> R, x,y = ring("x,y", ZZ)
-
-        >>> (2*x**2 - 2).cancel(x**2 - 2*x + 1)
-        (2*x + 2, x - 1)
-
-        """
         f = self
         ring = f.ring
 
@@ -3017,7 +3382,6 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         return poly
 
     def _div(self, fv):
-        # Implement the same algorithm from [CLO] p64. in python-flint
         ring = self.ring
         ret_single = False
         if isinstance(fv, PolyElement):
@@ -3063,9 +3427,6 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         else:
             return qv, r
 
-    # The following _p* and _subresultants methods can just be converted to pure python
-    # methods in case of python-flint since their speeds don't exactly matter wrt the
-    # flint version.
     def _prem(self, g, x):
         f = self
         x = f.ring.index(x)
@@ -3312,9 +3673,6 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
         return symmetric, f, mapping
 
-    # TODO: following methods should point to polynomial
-    # representation independent algorithm implementations.
-
     def half_gcdex(self, other):
         return self.ring.dmp_half_gcdex(self, other)
 
@@ -3367,9 +3725,55 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         return self.ring.dmp_factor_list(self)
 
 
-class PythonPolyElement(PolyElement):
-    pass
-
 
 class FlintPolyElement(PolyElement):
-    pass
+    """FLINT-backed sparse multivariate polynomial element."""
+
+    def __init__(self, ring, init):
+        # This should not be called directly, use _new instead
+        raise RuntimeError("FlintPolyElement should be created via _new classmethod")
+
+    @classmethod
+    def _new(cls, ring, init):
+        obj = object.__new__(cls)
+        obj.ring = ring
+        obj._hash = None
+
+        # Initialize the FLINT polynomial based on domain
+        if ring.domain.is_ZZ:
+            obj._flint_poly_cls = flint.fmpz_mpoly
+        elif ring.domain.is_QQ:
+            obj._flint_poly_cls = flint.fmpq_mpoly
+        else:
+            raise NotImplementedError(f"Unsupported domain for FlintPolyElement: {ring.domain}")
+
+        # Create the FLINT polynomial
+        obj._flint_poly = obj._create_flint_poly(init, ring.flint_ctx)
+
+        return obj
+
+    def _create_flint_poly(self, init, flint_ctx):
+        """Create FLINT polynomial from initialization data."""
+        if isinstance(init, dict):
+            # Create polynomial from dictionary of monomials to coefficients
+            poly = self._flint_poly_cls(flint_ctx)
+            for monom, coeff in init.items():
+                if coeff:  # Skip zero coefficients
+                    poly[monom] = coeff
+            return poly
+        elif hasattr(init, '__iter__') and not isinstance(init, (str, bytes)):
+            # Handle iterable of (monomial, coefficient) pairs
+            return self._create_flint_poly(dict(init), flint_ctx)
+        else:
+            # Create empty polynomial
+            return self._flint_poly_cls(flint_ctx)
+
+    def to_PythonPolyElement(self):
+        """Convert to PythonPolyElement for fallback operations."""
+        # Convert FLINT polynomial to dictionary representation
+        poly_dict = {}
+        for monom, coeff in self._flint_poly.items():
+            if coeff:  # Only include non-zero coefficients
+                poly_dict[monom] = coeff
+
+        return PythonPolyElement._new(self.ring._python_ring, poly_dict)
