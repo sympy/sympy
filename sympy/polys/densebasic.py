@@ -71,7 +71,7 @@ def dup_LC(f: dup[Er], K: Domain[Er]) -> Er:
     >>> from sympy.polys.densebasic import dup_LC
 
     >>> dup_LC([1, 2, 3], ZZ)
-    3
+    1
 
     """
     if not f:
@@ -110,14 +110,16 @@ def dmp_LC(f: dmp[Er], K: Domain[Er]) -> dmp[Er]:
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densebasic import dmp_LC
 
-    >>> f = ZZ.map([[[1], [2, 3]]])
+    >>> f = ZZ.map([[1], [2, 3]])
 
     >>> dmp_LC(f, ZZ)
-    [[1]]
+    [1]
 
     """
     if not f:
-        return dmp_zero(1)
+        # XXX: Remove this. It should not be needed since a zero dmp is
+        # represented like [[[]]].
+        return K.zero # type: ignore
     else:
         return f[0]
 
@@ -132,14 +134,14 @@ def dmp_TC(f: dmp[Er], K: Domain[Er]) -> dmp[Er]:
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densebasic import dmp_TC
 
-    >>> f = ZZ.map([[[1], [2, 3]]])
+    >>> f = ZZ.map([[1], [2, 3]])
 
     >>> dmp_TC(f, ZZ)
-    [[3]]
+    [2, 3]
 
     """
     if not f:
-        return dmp_zero(1)
+        return K.zero # type: ignore
     else:
         return f[-1]
 
