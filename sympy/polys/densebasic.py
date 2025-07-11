@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 
-from typing import TYPE_CHECKING, TypeAlias, TypeVar, Iterable, Callable, Any
+from typing import TYPE_CHECKING, TypeVar, Iterable, Callable, Any
 
 from sympy.core import igcd
 from sympy.core.expr import Expr
@@ -31,6 +31,7 @@ monom: TypeAlias = tuple[int, ...]
 
 
 if TYPE_CHECKING:
+    from typing import TypeAlias
     from sympy.polys.rings import PolyElement
 
     def _dup(p: dmp[_T], /) -> dup[_T]: ...

@@ -1,5 +1,7 @@
 """Tools and arithmetics for monomials of distributed polynomials. """
 
+from __future__ import annotations
+
 
 from itertools import combinations_with_replacement, product
 from textwrap import dedent
