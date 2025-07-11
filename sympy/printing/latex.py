@@ -1077,7 +1077,15 @@ class LatexPrinter(Printer):
 
     def _print_log(self, expr, exp=None):
         if not self._settings["ln_notation"]:
-            tex = r"\log{\left(%s \right)}" % self._print(expr.args[0])
+            if len(expr.args) == 2:
+                argument = self._print(expr.args[0])
+                base = self._print(expr.args[1])
+                if len(base) == 1:
+                    tex = r"\log_%s{\left(%s \right)}" % (base, argument)
+                else:
+                    tex = r"\log_{%s}{\left(%s \right)}" % (base, argument)
+            else:
+                tex = r"\log{\left(%s \right)}" % self._print(expr.args[0])
         else:
             tex = r"\ln{\left(%s \right)}" % self._print(expr.args[0])
 
