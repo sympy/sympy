@@ -6,7 +6,7 @@ from sympy.polys.domains import Domain
 
 
 _x: Symbol = Symbol("x")
-TSeries = TypeVar("TSeries")
+Sr = TypeVar("Sr")
 
 
 def _series_from_list(series: list[Any], prec: int | None) -> str:
@@ -44,7 +44,7 @@ def _series_from_list(series: list[Any], prec: int | None) -> str:
     return poly
 
 
-class PowerSeriesRing(Protocol[TSeries]):
+class PowerSeriesRing(Protocol[Sr]):
     """Protocol for power series ring over the integer ring (ZZ).
 
     Attributes
@@ -55,95 +55,95 @@ class PowerSeriesRing(Protocol[TSeries]):
         The default precision for power series operations.
     """
 
-    def __init__(self, prec: int = 6) -> None:
+    def __init__(self, prec: int = 6, /) -> None:
         """Initialize a power series ring over ZZ."""
         ...
 
-    def __repr__(self) -> str:
+    def __repr__(self, /) -> str:
         """Return string representation of the ring."""
         ...
 
     @property
-    def domain(self) -> Domain:
+    def domain(self, /) -> Domain:
         """Return the ground domain of the power series ring."""
         ...
 
     @property
-    def prec(self) -> int:
+    def prec(self, /) -> int:
         """Return the default precision for power series operations."""
         ...
 
     @property
-    def one(self) -> TSeries:
+    def one(self, /) -> Sr:
         """Return the multiplicative identity (1) as a power series."""
         ...
 
     @property
-    def zero(self) -> TSeries:
+    def zero(self, /) -> Sr:
         """Return the additive identity (0) as a power series."""
         ...
 
     @property
-    def gen(self) -> TSeries:
+    def gen(self, /) -> Sr:
         """Return the generator (x) as a power series."""
         ...
 
-    def pretty(self, s: TSeries) -> str:
+    def pretty(self, s: Sr, /) -> str:
         """Return a pretty string representation of a power series."""
         ...
 
-    def print(self, s: TSeries) -> None:
+    def print(self, s: Sr, /) -> None:
         """Return a printable string representation of a power series."""
         ...
 
-    def from_list(self, coeffs: list[Any], prec: int | None = None) -> TSeries:
+    def from_list(self, coeffs: list[Any], prec: int | None = None, /) -> Sr:
         """Create a power series from a list of coefficients."""
         ...
 
-    def to_list(self, s: TSeries) -> list[Any]:
+    def to_list(self, s: Sr, /) -> list[Any]:
         """Return the coefficients of a power series as a list."""
         ...
 
-    def equal(self, s1: TSeries, s2: TSeries) -> bool | None:
+    def equal(self, s1: Sr, s2: Sr, /) -> bool | None:
         """Check if two power series are equal."""
         ...
 
-    def equal_repr(self, s1: TSeries, s2: TSeries) -> bool:
+    def equal_repr(self, s1: Sr, s2: Sr, /) -> bool:
         """Check if two power series have the same representation."""
         ...
 
-    def positive(self, s: TSeries) -> TSeries:
+    def positive(self, s: Sr, /) -> Sr:
         """Return the positive of a power series."""
         ...
 
-    def negative(self, s: TSeries) -> TSeries:
+    def negative(self, s: Sr, /) -> Sr:
         """Return the additive inverse of a power series."""
         ...
 
-    def add(self, s1: TSeries, s2: TSeries) -> TSeries:
+    def add(self, s1: Sr, s2: Sr, /) -> Sr:
         """Add two power series."""
         ...
 
-    def subtract(self, s1: TSeries, s2: TSeries) -> TSeries:
+    def subtract(self, s1: Sr, s2: Sr, /) -> Sr:
         """Subtract two power series."""
         ...
 
-    def multiply(self, s1: TSeries, s2: TSeries) -> TSeries:
+    def multiply(self, s1: Sr, s2: Sr, /) -> Sr:
         """Multiply two power series."""
         ...
 
-    def multiply_ground(self, s: TSeries, n: Any) -> TSeries:
-        """Multiply a power series by a ground element."""
+    def multiply_ground(self, s: Sr, n: Any, /) -> Sr:
+        """Multiply a power series by a ground element (integer or rational)."""
         ...
 
-    def pow_int(self, s: TSeries, n: int) -> TSeries:
+    def pow_int(self, s: Sr, n: int, /) -> Sr:
         """Raise a power series to an integer power."""
         ...
 
-    def square(self, s: TSeries) -> TSeries:
+    def square(self, s: Sr, /) -> Sr:
         """Return the square of a power series."""
         ...
 
-    def truncate(self, s: TSeries, n: int) -> TSeries:
+    def truncate(self, s: Sr, n: int, /) -> Sr:
         """Truncate a power series to the first n terms."""
         ...

@@ -1,20 +1,20 @@
+from typing import Optional, Type
 from sympy.external.gmpy import GROUND_TYPES
 from sympy.polys.domains import Domain
 from sympy.polys.series.powerseriesring import PowerSeriesRing
+from sympy.polys.series.python_powerseriesring import (
+    PythonPowerSeriesRingZZ,
+    PythonPowerSeriesRingQQ,
+)
 
 # Make use of flint implementation if flint available.
-flint: bool = False
+FlintPowerSeriesRingZZ: Optional[Type[PowerSeriesRing]] = None
+FlintPowerSeriesRingQQ: Optional[Type[PowerSeriesRing]] = None
+
 if GROUND_TYPES == "flint":
     from sympy.polys.series.flint_powerseriesring import (
         FlintPowerSeriesRingZZ,
         FlintPowerSeriesRingQQ,
-    )
-
-    flint = True
-else:
-    from sympy.polys.series.python_powerseriesring import (
-        PythonPowerSeriesRingZZ,
-        PythonPowerSeriesRingQQ,
     )
 
 
@@ -43,11 +43,11 @@ def power_series_ring(domain: Domain, prec: int = 6) -> PowerSeriesRing:
     >>> R_QQ = power_series_ring(QQ, 10)
     """
     if domain.is_ZZ:
-        if flint:
+        if FlintPowerSeriesRingZZ is not None:
             return FlintPowerSeriesRingZZ(prec)
         return PythonPowerSeriesRingZZ(prec)
     if domain.is_QQ:
-        if flint:
+        if FlintPowerSeriesRingQQ is not None:
             return FlintPowerSeriesRingQQ(prec)
         return PythonPowerSeriesRingQQ(prec)
     raise TypeError("Ground domain must be an instance of QQ or ZZ")

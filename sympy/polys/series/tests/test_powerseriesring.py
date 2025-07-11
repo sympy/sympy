@@ -38,7 +38,7 @@ def same(R, s, coeffs_l, prec):
     return R.equal_repr(s, R.from_list(domain_coeffs, prec))
 
 
-@pytest.fixture(params=Ring_ZZ+Ring_QQ)
+@pytest.fixture(params=Ring_ZZ + Ring_QQ)
 def rd_int(request):
     r = request.param
     R = r()
@@ -199,7 +199,7 @@ def test_int_square(rd_int):
 
 
 def test_rational_square(rd_rational):
-    R, x, one, *_, R10, x10, one10, _ = rd_rational
+    R, x, one, _, _, _, R10, x10, one10, _ = rd_rational
     assert not same(R, R.square(R.add(x, one)), [(1, 1), (1, 1), (1, 1)], None)
     assert same(
         R10, R10.square(R10.subtract(x10, one10)), [(1, 1), (-2, 1), (1, 1)], None
@@ -271,7 +271,7 @@ def test_int_differentiate(rd_int):
 
 
 def test_rational_differentiate(rd_rational):
-    R, x, _, R3, x3, one3, R10, x10, _, _ = rd_rational
+    R, x, _, R3, x3, one3, R10, x10, *_ = rd_rational
     assert same(R, R.differentiate(R.pow_int(x, 3)), [(0, 1), (0, 1), (3, 1)], None)
     assert same(R, R.differentiate(R.add(R.multiply(x, x), x)), [(1, 1), (2, 1)], None)
     assert same(R3, R3.differentiate(R3.multiply(x3, x3)), [(0, 1), (2, 1)], None)
@@ -316,228 +316,152 @@ def test_error(rd_int):
 def test_int_compose(rd_int):
     R, x, one, R3, x3, one3, R10, x10, one10, _ = rd_int
 
+    assert same(R, R.compose(R.from_list([2]), R.from_list([0, 1, 1])), [2], None)
     assert same(R, R.compose(R.add(one, x), x), [1, 1], None)
     assert same(R, R.compose(R.multiply(x, x), R.add(one, x)), [1, 2, 1], None)
-    comp = R.compose(R.from_list([1, 1, 1]), R.square(x))
-    comp_coeffs = R.to_list(comp)[:5]
-    assert comp_coeffs == [1, 0, 1, 0, 1]
+    assert same(
+        R, R.compose(R.from_list([1, 1, 1]), R.square(x)), [1, 0, 1, 0, 1], None
+    )
+    assert same(
+        R3, R3.compose(R3.from_list([1, 2, 3]), R3.from_list([0, 1, 1])), [1, 2, 5], 3
+    )
 
-    # Test with higher precision
-    f3 = R3.from_list([1, 2, 3])
-    g3 = R3.from_list([0, 1, 1])
-    comp3 = R3.compose(f3, g3)
-    comp3_coeffs = R3.to_list(comp3)[:3]
-    assert comp3_coeffs == [1, 2, 5]  # 1 + 2*(x+x^2) + 3*(x+x^2)^2 = 1 + 2x + 2x^2 + 3x^2 + ... = 1 + 2x + 5x^2
-
-    # Empty series
-    empty_f = R.from_list([])
-    assert same(R, R.compose(empty_f, x), [], None)
-
-    # Constant function f(x) = 2, g(x) = x + x^2 -> f(g(x)) = 2
-    f_const = R.from_list([2])
-    g_poly = R.from_list([0, 1, 1])
-    comp_const = R.compose(f_const, g_poly)
-    assert R.to_list(comp_const)[0] == 2
+    raises(
+        ValueError, lambda: R.compose(R.from_list([1, 2], 2), R.from_list([1, 2, 3], 2))
+    )
 
 
 def test_rational_compose(rd_rational):
-    R, x, one, R3, x3, one3, R10, x10, one10, _ = rd_rational
+    R, _, _, R3, *_ = rd_rational
 
-    f = R.from_list([R.domain(1, 2), R.domain(3, 4)])
-    g = R.from_list([R.domain(0, 1), R.domain(2, 1)])
-    comp = R.compose(f, g)
-    expected = [R.domain(1, 2), R.domain(3, 2)]
-    assert R.to_list(comp)[:2] == expected
+    f1 = R.from_list([QQ(1, 2), QQ(3, 4)])
+    g1 = R.from_list([QQ(1, 3), QQ(2, 5)])
+    assert same(R, R.compose(f1, g1), [(3, 4), (3, 10)], None)
 
-    f = R.from_list([R.domain(1, 1), R.domain(1, 2), R.domain(1, 3)])
-    g = R.from_list([R.domain(0, 1), R.domain(1, 2)])
-    comp = R.compose(f, g)
-    expected = [R.domain(1, 1), R.domain(1, 4), R.domain(1, 12)]
-    assert R.to_list(comp)[:3] == expected
+    f3 = R.from_list([QQ(2, 3), QQ(5, 7)])
+    g3 = R.from_list([QQ(0, 1), QQ(3, 4), QQ(1, 6)])
+    assert same(R, R.compose(f3, g3), [(2, 3), (15, 28), (5, 42)], None)
 
-    empty_f = R.from_list([])
-    assert same(R, R.compose(empty_f, x), [], None)
-
-    f_with_zero = R.from_list([R.domain(0, 1), R.domain(1, 1)])
-    g_with_const = R.from_list([R.domain(2, 1)])
-    comp = R.compose(f_with_zero, g_with_const)
-    assert R.to_list(comp)[0] == R.domain(2, 1)  # f(g(x)) = 0 + 1*g(x) = 0 + 1*2 = 2
+    f3_2 = R3.from_list([QQ(1, 4), QQ(1, 2), QQ(1, 8)])
+    g3_2 = R3.from_list([QQ(0, 1), QQ(1, 3)])
+    assert same(R3, R3.compose(f3_2, g3_2), [(1, 4), (1, 6), (1, 72)], 3)
 
 
 def test_int_inversion(rd_int):
     R, x, one, R3, x3, one3, R10, x10, one10, _ = rd_int
 
-    s = R.add(one, x)
-    inv_s = R.inversion(s)
-    # Check that the first 6 coefficients match the expected pattern
-    inv_coeffs = R.to_list(inv_s)[:6]
-    assert inv_coeffs == [1, -1, 1, -1, 1, -1]
+    assert same(R, R.inversion(R.add(one, x)), [1, -1, 1, -1, 1, -1], 6)
+    assert same(
+        R,
+        R.inversion(R.add(R.pow_int(R.multiply(R.add(one, x), x), 3), one)),
+        [1, 0, 0, -1, -3, -3],
+        6,
+    )
+    assert same(R3, R3.inversion(R3.from_list([1, 3, -2])), [1, -3, 11], 3)
+    assert same(
+        R10,
+        R10.inversion(R10.from_list([1, -2, 3])),
+        [1, 2, 1, -4, -11, -10, 13, 56, 73, -22],
+        10,
+    )
 
-    product = R.multiply(s, inv_s)
-    product_coeffs = R.to_list(product)
-    assert product_coeffs[0] == 1  # Constant term should be 1
-    assert all(c == 0 for c in product_coeffs[1:min(6, len(product_coeffs))])  # Higher terms should be 0
-
-    s = R.from_list([1, 2])
-    # Skip this test for Python QQ due to type conversion issues in dup_revert
-    if not (str(R._domain) == 'QQ' and 'Python' in str(type(R))):
-        inv_s = R.inversion(s)
-        inv_coeffs = R.to_list(inv_s)[:6]
-        assert inv_coeffs == [1, -2, 4, -8, 16, -32]
-
-    s3 = R3.from_list([1, 2, 3])
-    # Skip this test for Python QQ due to type conversion issues in dup_revert
-    if not (str(R._domain) == 'QQ' and 'Python' in str(type(R))):
-        inv_s3 = R3.inversion(s3)
-        product3 = R3.multiply(s3, inv_s3)
-        product3_coeffs = R3.to_list(product3)
-        assert product3_coeffs[0] == 1
-        assert all(c == 0 for c in product3_coeffs[1:min(3, len(product3_coeffs))])
-
-    # Empty series should raise NotReversible error
-    empty_s = R.from_list([])
-    with pytest.raises(NotReversible):
-        R.inversion(empty_s)
-
-    # Zero series (equivalent to empty) should also raise error
-    with pytest.raises(NotReversible):
-        R.inversion(R.zero)
-
-    # Series starting with 0 should raise error
+    raises(NotReversible, lambda: R.inversion(R.zero))
     raises(NotReversible, lambda: R.inversion(R.from_list([0, 1, 2])))
-
-    # Non-unit constant term test only applies to ZZ (not QQ)
-    # In ZZ, only ±1 are units; in QQ, any non-zero value is a unit
-    if str(R._domain) == 'ZZ':
-        raises(NotReversible, lambda: R.inversion(R.from_list([2, 1])))
-    # elif not ('Python' in str(type(R))):  # Only test for Flint QQ, not Python QQ
-    #     # 2 is a unit in QQ, so this should work
-    #     s_two = R.from_list([2, 1])
-    #     inv_two = R.inversion(s_two)
-    #     product_two = R.multiply(s_two, inv_two)
-    #     product_two_coeffs = R.to_list(product_two)
-    #     assert product_two_coeffs[0] == 1
-
-    # Comment out problematic tests for Python QQ - investigate these later
-    if not (str(R._domain) == 'QQ' and 'Python' in str(type(R))):
-        unit_only = R.from_list([1])  # Use 1 instead of 3 since 3 is not a unit in ZZ for inversion
-        inv_unit = R.inversion(unit_only)
-        product_unit = R.multiply(unit_only, inv_unit)
-        product_unit_coeffs = R.to_list(product_unit)
-        assert product_unit_coeffs[0] == 1
-
-        # Test with -1 (also a unit in ZZ)
-        neg_unit = R.from_list([-1])
-        inv_neg_unit = R.inversion(neg_unit)
-        product_neg = R.multiply(neg_unit, inv_neg_unit)
-        product_neg_coeffs = R.to_list(product_neg)
-        assert product_neg_coeffs[0] == 1
 
 
 def test_rational_inversion(rd_rational):
-    R, x, one, R3, x3, one3, R10, x10, one10, _ = rd_rational
+    R, _, _, R3, _, _, R10, *_ = rd_rational
 
-    s = R.from_list([R.domain(1, 1), R.domain(1, 2)])
-    inv_s = R.inversion(s)
-    inv_coeffs = R.to_list(inv_s)[:6]
-    expected = [R.domain(1, 1), R.domain(-1, 2), R.domain(1, 4), R.domain(-1, 8), R.domain(1, 16), R.domain(-1, 32)]
-    assert inv_coeffs == expected
+    f_r = R.from_list([QQ(2, 3), QQ(-1, 4), QQ(3, 5)])
+    assert same(
+        R,
+        R.inversion(f_r),
+        [
+            (3, 2),
+            (9, 16),
+            (-729, 640),
+            (-4779, 5120),
+            (138267, 204800),
+            (1791153, 1638400),
+        ],
+        6,
+    )
 
-    product = R.multiply(s, inv_s)
-    product_coeffs = R.to_list(product)
-    assert product_coeffs[0] == R.domain(1, 1)
-    assert all(c == R.domain(0, 1) for c in product_coeffs[1:min(6, len(product_coeffs))])
+    f3 = R3.from_list([QQ(1, 2), QQ(-3, 4), QQ(5, 6)])
+    assert same(R3, R3.inversion(f3), [(2, 1), (3, 1), (7, 6)], 3)
 
-    empty_s = R.from_list([])
-    with pytest.raises(NotReversible):
-        R.inversion(empty_s)
-
-    raises(NotReversible, lambda: R.inversion(R.from_list([R.domain(0, 1), R.domain(1, 1)])))
-
-    # Test fractional constant
-    frac_s = R.from_list([R.domain(3, 4), R.domain(1, 2)])
-    inv_frac = R.inversion(frac_s)
-    product_frac = R.multiply(frac_s, inv_frac)
-    product_frac_coeffs = R.to_list(product_frac)
-    assert product_frac_coeffs[0] == R.domain(1, 1)
+    f10 = R10.from_list([QQ(3, 5), QQ(1, 7), QQ(-2, 9)])
+    assert same(
+        R10,
+        R10.inversion(f10),
+        [
+            (5, 3),
+            (-25, 63),
+            (2825, 3969),
+            (-26375, 83349),
+            (1779875, 5250987),
+            (-7274375, 36756909),
+            (1199485625, 6947055801),
+            (-16690759375, 145888171821),
+            (838109346875, 9190954824723),
+            (-12369018828125, 193010051319183),
+        ],
+        10,
+    )
 
 
 def test_int_reversion(rd_int):
     R, x, one, R3, x3, one3, R10, x10, one10, _ = rd_int
 
-    s = R.from_list([0, 1, 1])
-    # Skip this test for Python QQ due to type conversion issues in dup_revert
-    if not (str(R._domain) == 'QQ' and 'Python' in str(type(R))):
-        rev_s = R.reversion(s)
-        assert same(R, rev_s, [0, 1, -1, 2, -5, 14], 6)
+    assert same(R, R.reversion(x), [0, 1], 6)
+    assert same(R, R.reversion(R.multiply(R.add(one, x), x)), [0, 1, -1, 2, -5, 14], 6)
+    assert same(
+        R,
+        R.reversion(R.from_list([0, 1, 53, 2, 1, 3, 2])),
+        [0, 1, -53, 5616, -743856, 110349083],
+        6,
+    )
+    assert same(R3, R3.reversion(R3.multiply(R3.add(one3, x3), x3)), [0, 1, -1], 3)
+    assert same(
+        R10,
+        R10.reversion(R10.from_list([0, 1, 2, -1, 3])),
+        [0, 1, -2, 9, -53, 347, -2429, 17808, -134991, 1049422],
+        10,
+    )
 
-    s = R.from_list([0, 1, 2])
-    # Skip this test for Python QQ due to type conversion issues in dup_revert
-    if not (str(R._domain) == 'QQ' and 'Python' in str(type(R))):
-        rev_s = R.reversion(s)
-        comp = R.compose(s, rev_s)
-        comp_coeffs = R.to_list(comp)[:2]
-        assert comp_coeffs == [0, 1]
-
-    s3 = R3.from_list([0, 1, 1, 1])
-    # Skip this test for Python QQ due to type conversion issues in dup_revert
-    if not (str(R._domain) == 'QQ' and 'Python' in str(type(R))):
-        rev_s3 = R3.reversion(s3)
-        comp3 = R3.compose(s3, rev_s3)
-        comp3_coeffs = R3.to_list(comp3)[:2]
-        assert comp3_coeffs == [0, 1]
-
-    raises(NotReversible, lambda: R.reversion(R.from_list([1, 1, 2])))
-    raises(NotReversible, lambda: R.reversion(R.from_list([0, 0, 1])))
-
-    # Linear coefficient must be a unit for reversion
-    # In ZZ, only ±1 are units; in QQ, any non-zero value is a unit
-    if str(R._domain) == 'ZZ':
-        raises(NotReversible, lambda: R.reversion(R.from_list([0, 2])))
-        raises(NotReversible, lambda: R.reversion(R.from_list([0, 3, 1])))
-    # elif not ('Python' in str(type(R))):  # Only test for Flint QQ, not Python QQ
-    #     s_two = R.from_list([0, 2])
-    #     rev_two = R.reversion(s_two)
-    #     comp_two = R.compose(s_two, rev_two)
-    #     comp_two_coeffs = R.to_list(comp_two)[:2]
-    #     assert comp_two_coeffs == [0, 1]
-
-    # Empty series should raise NotReversible error
-    empty_s = R.from_list([])
-    with pytest.raises(NotReversible):
-        R.reversion(empty_s)
-
-    # Comment out problematic tests for Python QQ - investigate these later
-    if not (str(R._domain) == 'QQ' and 'Python' in str(type(R))):
-        linear_only = R.from_list([0, 1])
-        rev_linear = R.reversion(linear_only)
-        # The reversion of x should be x (but with precision set)
-        rev_coeffs = R.to_list(rev_linear)
-        assert rev_coeffs == [0, 1]
+    raises(NotReversible, lambda: R.reversion(R.zero))
+    raises(NotReversible, lambda: R.reversion(R.from_list([0, 0, 2])))
 
 
 def test_rational_reversion(rd_rational):
-    R, x, one, R3, x3, one3, R10, x10, one10, _ = rd_rational
+    R, _, _, R3, _, _, R10, *_ = rd_rational
 
-    s = R.from_list([R.domain(0, 1), R.domain(1, 1), R.domain(1, 1)])
-    rev_s = R.reversion(s)
-    expected = [R.domain(0, 1), R.domain(1, 1), R.domain(-1, 1), R.domain(2, 1), R.domain(-5, 1), R.domain(14, 1)]
-    assert same(R, rev_s, expected, 6)
+    f1 = R.from_list([QQ(0, 1), QQ(3, 2), QQ(1, 4), QQ(-2, 5)])
+    assert same(
+        R,
+        R.reversion(f1),
+        [(0, 1), (2, 3), (-2, 27), (116, 1215), (-106, 2187), (24604, 492075)],
+        6,
+    )
 
-    comp = R.compose(s, rev_s)
-    comp_coeffs = R.to_list(comp)[:2]
-    assert comp_coeffs == [R.domain(0, 1), R.domain(1, 1)]
+    f3 = R3.from_list([QQ(0, 1), QQ(5, 4), QQ(-1, 3)])
+    assert same(R3, R3.reversion(f3), [(0, 1), (4, 5), (64, 375)], 3)
 
-    raises(NotReversible, lambda: R.reversion(R.from_list([R.domain(1, 1), R.domain(1, 1)])))
-    raises(NotReversible, lambda: R.reversion(R.from_list([R.domain(0, 1), R.domain(0, 1)])))
-
-    empty_s = R.from_list([])
-    with pytest.raises(NotReversible):
-        R.reversion(empty_s)
-
-    # Test with fractional linear coefficient
-    frac_s = R.from_list([R.domain(0, 1), R.domain(2, 3), R.domain(1, 4)])
-    rev_frac = R.reversion(frac_s)
-    comp_frac = R.compose(frac_s, rev_frac)
-    comp_frac_coeffs = R.to_list(comp_frac)[:2]
-    assert comp_frac_coeffs == [R.domain(0, 1), R.domain(1, 1)]
+    f10 = R10.from_list([QQ(0, 1), QQ(2, 3), QQ(1, 5), QQ(-3, 7), QQ(1, 2)])
+    assert same(
+        R10,
+        R10.reversion(f10),
+        [
+            (0, 1),
+            (3, 2),
+            (-27, 40),
+            (486, 175),
+            (-209709, 22400),
+            (116634897, 3920000),
+            (-2627149059, 22400000),
+            (157012806591, 343000000),
+            (-1627722349764129, 878080000000),
+            (47642334773213367, 6146560000000),
+        ],
+        10,
+    )
