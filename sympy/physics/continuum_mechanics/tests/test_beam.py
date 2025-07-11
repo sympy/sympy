@@ -429,6 +429,7 @@ def test_composite_beam():
     with raises(ValueError, match="Invalid joining method. Choose from 'fixed' or 'hinge'."):
         b.join(c, "hige")
 
+
 def test_point_cflexure():
     E = Symbol('E')
     I = Symbol('I')
@@ -465,6 +466,7 @@ def test_point_cflexure():
     b.solve_for_reaction_loads(r0, r10, r15, m15)
     with raises(NotImplementedError):
         b.point_cflexure()
+
 
 def test_remove_load():
     E = Symbol('E')
@@ -561,6 +563,7 @@ def test_apply_support():
     with raises(ValueError, match="Invalid support type. Choose from 'pin', 'roller', or 'fixed'."):
         b.apply_support(0,"pen")
 
+
 def test_apply_rotation_hinge():
     b = Beam(15, 20, 20)
     r0, m0 = b.apply_support(0, type='fixed')
@@ -639,6 +642,7 @@ def test_apply_rotation_hinge():
             *SingularityFunction(x, l1, -1)/(6*l2**2 + 12*l2*l3 + 6*l3**2))
     assert simplify(b.bending_moment().expand()) == simplify(expected_bending_moment.expand())
 
+
 def test_apply_sliding_hinge():
     b = Beam(13, 20, 20)
     r0, m0 = b.apply_support(0, type="fixed")
@@ -691,6 +695,7 @@ def test_apply_sliding_hinge():
                              - q*SingularityFunction(x, l1, 4)/24
                              + (l1**3*l2*q/24 + l1**3*l3*q/24)*SingularityFunction(x, l1 + l2, 0))/(E*I)
 
+
 def test_max_shear_force():
     # Pont load and distributed load system with no bcs
     # Interval maximum
@@ -702,11 +707,30 @@ def test_max_shear_force():
     b.apply_load(M, 0, -2)
     b.apply_load(2, 3, -1)
     b.apply_load(4, 2, -1)
-    b.apply_load(2, 2, 0, end=3)
+    b.apply_load(2, 2, 0, end = 3)
     b.solve_for_reaction_loads(R, M)
-    p=b.max_shear_force()
-    q=([Interval(0, 2)], 8)
-    assert p==q
+    p = b.max_shear_force()
+    q = ([Interval(0, 2)], 8)
+    assert p == q
+
+    # same problem with all symbols loads and length
+    E = Symbol('E')
+    I = Symbol('I')
+    P = Symbol('P',positive = True)
+    K = Symbol('K',positive = True)
+    J = Symbol('J',positive = True)
+    l = Symbol('l',positive = True)
+    b = Beam(l, E, I)
+    R, M = symbols('R, M')
+    b.apply_load(R, 0, -1)
+    b.apply_load(M, 0, -2)
+    b.apply_load(P, l, -1)
+    b.apply_load(K, 2*l/3, -1)
+    b.apply_load(J, 2*l/3, 0, end = l)
+    b.solve_for_reaction_loads(R, M)
+    p = b.max_shear_force()
+    q = ([Interval(0, 2*l/3)], Rational(1,3)*J*l + K + P)
+    assert p == q
 
      # Interval maximum
     E = Symbol('E')
@@ -717,30 +741,32 @@ def test_max_shear_force():
     b.apply_load(10, 2, -1)
     b.apply_load(20, 4, -1)
     b.apply_load(3, 6, 0)
-    p=b.max_shear_force()
-    q=([Interval(4, 6)], 26)
-    assert p==q
+    p = b.max_shear_force()
+    q = ([Interval(4, 6)], 26)
+    assert p == q
 
     # Symbolic length and Symbolic distributed load
     # Point maximum
-    l = symbols('l', positive=True)
-    P = Symbol('P')
+    l = Symbol('l', positive = True)
+    E = Symbol('E')
+    I = Symbol('I')
+    A = Symbol('A')
     b = Beam(l, E, I)
     R1, R2 = symbols('R1, R2')
     b.apply_load(R1, 0, -1)
     b.apply_load(R2, l, -1)
-    b.apply_load(P, 0, 0, end=l)
+    b.apply_load(A, 0, 0, end = l)
     b.solve_for_reaction_loads(R1, R2)
-    p=b.max_shear_force()
-    q=([0, l], l*Abs(P)/2)
-    assert p==q
+    p = b.max_shear_force()
+    q = ([0, l], l*Abs(A)/2)
+    assert p == q
 
     # symbolic length and symbolic load
     E = Symbol('E')
     I = Symbol('I')
     M1, M2, R1, R2 = symbols('M1, M2, R1,R2')
     F = Symbol('F')
-    l = Symbol('l', positive=True)
+    l = Symbol('l', positive = True)
     b5 = Beam(l, E, I)
     b5.bc_deflection = [(0, 0),(l, 0)]
     b5.bc_slope = [(0, 0),(l, 0)]
@@ -750,102 +776,102 @@ def test_max_shear_force():
     b5.apply_load(M2, l, -2)
     b5.apply_load(-F, l/2, -1)
     b5.solve_for_reaction_loads(R1, R2, M1, M2)
-    p=b5.max_shear_force()
-    q=([Interval(0, l/2), Interval(l/2, l)], Abs(F)/2)
-    assert p==q
+    p = b5.max_shear_force()
+    q = ([Interval(0, l/2), Interval(l/2, l)], Abs(F)/2)
+    assert p == q
 
     # symbolic length and symbolic load
     E = Symbol('E')
     I = Symbol('I')
-    l, P = symbols('l, P', positive=True)
+    l, P = symbols('l, P', positive = True)
     b = Beam(l, E, I)
-    R1, R2 = symbols('R1, R2')
-    R1,M1=b.apply_support( 0,"fixed")
-    R2=b.apply_support( l,"pin")
+    R1, R2, M1 = symbols('R1 R2 M1')
+    R1,M1 = b.apply_support( 0,"fixed")
+    R2 = b.apply_support( l,"pin")
     b.apply_load(-P, l/2, -1)
-    b.solve_for_reaction_loads(R1,M1, R2)
-    p=b.max_shear_force()
-    q=([Interval(0, l/2)], 11*P*Rational(1,16))
-    assert p==q
+    b.solve_for_reaction_loads(R1, M1, R2)
+    p = b.max_shear_force()
+    q = ([Interval(0, l/2)], 11*P*Rational(1,16))
+    assert p == q
 
     # system with hinges
     # Point maximum with Rational value
     E = symbols('E')
     I = symbols('I')
     b = Beam(15, E, I)
-    r0 = b.apply_support(0, type='pin')
-    r10 = b.apply_support(10, type='pin')
-    r15, m15 = b.apply_support(15, type='fixed')
+    r0 = b.apply_support(0, type = 'pin')
+    r10 = b.apply_support(10, type = 'pin')
+    r15, m15 = b.apply_support(15, type = 'fixed')
     b.apply_rotation_hinge(12)
     b.apply_load(-10, 5, -1)
     b.apply_load(-5, 10, 0, 15)
     b.solve_for_reaction_loads(r0, r10, r15, m15)
-    p=b.max_shear_force()
-    q=([10], Rational(335,24))
-    assert p==q
+    p = b.max_shear_force()
+    q = ([10], Rational(335,24))
+    assert p == q
 
     # system with hinges
     # Point maximum with Rational value
     E = Symbol('E')
     I = Symbol('I')
     b = Beam(7, E, I)
-    r0, m0 = b.apply_support(0, type='fixed')
-    r4 = b.apply_support(4, type='pin')
-    r7 = b.apply_support(7, type='pin')
+    r0, m0 = b.apply_support(0, type = 'fixed')
+    r4 = b.apply_support(4, type = 'pin')
+    r7 = b.apply_support(7, type = 'pin')
     b.apply_rotation_hinge(2)
     b.apply_rotation_hinge(5)
     b.apply_load(-5, 0, 0, 2)
     b.apply_load(-10, 6, -1)
     b.solve_for_reaction_loads(r0, m0, r4, r7)
-    p=b.max_shear_force()
-    q=([0], Rational(15,2))
-    assert p==q
+    p = b.max_shear_force()
+    q = ([0], Rational(15,2))
+    assert p == q
 
     #point maximum system containing hinges
     E = Symbol('E')
     I = Symbol('I')
     b = Beam(15, E, I)
-    r0 = b.apply_support(0, type='pin')
-    r10 = b.apply_support(10, type='pin')
-    r15, m15 = b.apply_support(15, type='fixed')
+    r0 = b.apply_support(0, type = 'pin')
+    r10 = b.apply_support(10, type = 'pin')
+    r15, m15 = b.apply_support(15, type = 'fixed')
     b.apply_rotation_hinge(6)
     b.apply_rotation_hinge(12)
     b.apply_load(-10, 5, -1)
     b.apply_load(-5, 10, 0, 15)
     b.solve_for_reaction_loads(r0, r10, r15, m15)
-    p=b.max_shear_force()
-    q=([10], Rational(65,3))
-    assert p==q
+    p = b.max_shear_force()
+    q = ([10], Rational(65,3))
+    assert p == q
 
     # with distributed loads and point load
     E = Symbol('E')
     I = Symbol('I')
     b = Beam(10, E, I)
-    r0, m0 = b.apply_support(0, type='fixed')
-    r4,m4 = b.apply_support(4, type='fixed')
-    r7,m7 = b.apply_support(7, type='fixed')
+    r0, m0 = b.apply_support(0, type = 'fixed')
+    r4,m4 = b.apply_support(4, type = 'fixed')
+    r7,m7 = b.apply_support(7, type = 'fixed')
     b.apply_rotation_hinge(2)
     b.apply_rotation_hinge(5)
     b.apply_load(-5, 0, 0, 2)
     b.apply_load(-10, 6, -1)
     b.apply_load(7,3,-1)
     b.solve_for_reaction_loads(r0, m0, r4,m4, r7,m7)
-    p=b.max_shear_force()
-    q=([Interval(6, 7)], Rational(65,9))
-    assert p==q
+    p = b.max_shear_force()
+    q = ([Interval(6, 7)], Rational(65,9))
+    assert p == q
 
     # Maximum at multiple intervals
     E = Symbol('E')
     I = Symbol('I')
     b = Beam(10, E, I)
-    b.apply_support(0, type="pin")
-    b.apply_support(10, type="pin")
+    b.apply_support(0, type = "pin")
+    b.apply_support(10, type = "pin")
     b.apply_load(-20, 5, -1)
     R_0, R_10 = symbols('R_0, R_10')
     b.solve_for_reaction_loads(R_0, R_10)
-    p=b.max_shear_force()
-    q=([Interval(0, 5), Interval(5, 10)], 10)
-    assert p==q
+    p = b.max_shear_force()
+    q = ([Interval(0, 5), Interval(5, 10)], 10)
+    assert p == q
 
     #join system
     # maximum at multiple intervals Rational maximum value
@@ -853,64 +879,78 @@ def test_max_shear_force():
     I = Symbol('I')
     b1 = Beam(5, E, I)
     b2 = Beam(3, E, I)
-    b = b1.join(b2, via="hinge")
-    b.apply_support(0, type='fixed')
-    b.apply_support(8, type='pin')
+    b = b1.join(b2, via = "hinge")
+    b.apply_support(0, type = 'fixed')
+    b.apply_support(8, type = 'pin')
     b.apply_load(-10, 5, -1)
     b.apply_load(10, 7, -1)
     r0, m0, r8 = symbols('R_0, M_0, R_8')
     b.solve_for_reaction_loads(r0, m0, r8)
-    p=b.max_shear_force()
-    q=([Interval(0, 5), Interval(7, 8)], Rational(20,3))
-    assert p==q
+    p = b.max_shear_force()
+    q = ([Interval(0, 5), Interval(7, 8)], Rational(20,3))
+    assert p == q
 
     #join system
     E = Symbol('E')
     I = Symbol('I')
     b1 = Beam(5, E, I)
     b2 = Beam(3, E, I)
-    b = b1.join(b2, via="hinge")
-    b.apply_support(0, type='fixed')
-    b.apply_support(8, type='pin')
+    b = b1.join(b2, via = "hinge")
+    b.apply_support(0, type = 'fixed')
+    b.apply_support(8, type = 'pin')
     b.apply_load(-10, 2, -1)
     b.apply_load(-5, 5, 0, 8)
     r0, m0, r8 = symbols('R_0, M_0, R_8')
     b.solve_for_reaction_loads(r0, m0, r8)
-    p=b.max_shear_force()
-    q=([Interval(0, 2)], Rational(35,2))
-    assert p==q
+    p = b.max_shear_force()
+    q = ([Interval(0, 2)], Rational(35,2))
+    assert p == q
 
     # constant zero region at the end
     E = Symbol('E')
     I = Symbol('I')
     b = Beam(10, E, I)
-    r0, m0 = b.apply_support(0, type='fixed')
-    r4 = b.apply_support(4, type='pin')
-    r7,m7 = b.apply_support(7, type='fixed')
+    r0, m0 = b.apply_support(0, type = 'fixed')
+    r4 = b.apply_support(4, type = 'pin')
+    r7, m7 = b.apply_support(7, type = 'fixed')
     b.apply_rotation_hinge(2)
     b.apply_rotation_hinge(5)
     b.apply_load(-5, 0, 0, 2)
     b.apply_load(7,3,-1)
     b.solve_for_reaction_loads(r0, m0, r4, r7,m7)
-    p=b.max_shear_force()
-    q=([0], Rational(693,104))
-    assert p==q
+    p = b.max_shear_force()
+    q = ([0], Rational(693,104))
+    assert p == q
 
-    # constant zero region
+    # constant zero region at start
     E = Symbol('E')
     I = Symbol('I')
     b = Beam(15, E, I)
-    r0 = b.apply_support(0, type='pin')
-    r10 = b.apply_support(10, type='pin')
-    r15, m15 = b.apply_support(15, type='fixed')
+    r0 = b.apply_support(0, type = 'pin')
+    r10 = b.apply_support(10, type = 'pin')
+    r15, m15 = b.apply_support(15, type = 'fixed')
     b.apply_rotation_hinge(5)
     b.apply_rotation_hinge(12)
     b.apply_load(-10, 5, -1)
     b.apply_load(-5, 10, 0, 15)
     b.solve_for_reaction_loads(r0, r10, r15, m15)
-    p=b.max_shear_force()
-    q=([10], 30)
-    assert p==q
+    p = b.max_shear_force()
+    q = ([10], 30)
+    assert p == q
+
+    # constant zero region in between non zero regions
+    E = Symbol('E')
+    I = Symbol('I')
+    b = Beam(10, E, I)
+    R1, R2 = symbols('R1, R2')
+    R1 = b.apply_support( 0,"pin")
+    R2 = b.apply_support( 10,"roller")
+    b.apply_load(-5, 3, -1)
+    b.apply_load(-5,7,-1)
+    b.solve_for_reaction_loads(R1, R2)
+    p = b.max_shear_force()
+    q = ([Interval(0, 3),Interval(7,10)], 5)
+    assert p == q
 
     # linear shear across ends
     P = Symbol('P')
@@ -918,11 +958,24 @@ def test_max_shear_force():
     R1, R2 = symbols('R1, R2')
     b.apply_load(R1, 0, -1)
     b.apply_load(R2, 10, -1)
-    b.apply_load(10, 0, 0, end=10)
+    b.apply_load(10, 0, 0, end = 10)
     b.solve_for_reaction_loads(R1, R2)
-    p=b.max_shear_force()
-    q=([0, 10], 50)
-    assert p==q
+    p = b.max_shear_force()
+    q = ([0, 10], 50)
+    assert p == q
+
+    # same problem with symbolic length and symbolic load
+    P = Symbol('P',positive = True)
+    l = Symbol('l',positive = True)
+    b = Beam(l, E, I)
+    R1, R2 = symbols('R1, R2')
+    b.apply_load(R1, 0, -1)
+    b.apply_load(R2, l, -1)
+    b.apply_load(P, 0, 0, end=l)
+    b.solve_for_reaction_loads(R1, R2)
+    p = b.max_shear_force()
+    q = ([0,l],l*P*Rational(1,2))
+    assert p == q
 
 
 def test_max_bmoment():
@@ -959,6 +1012,7 @@ def test_max_deflection():
     b.apply_load(F*l/8, l, -2)
     b.apply_load(-F, l/2, -1)
     assert b.max_deflection() == (l/2, F*l**3/(192*E*I))
+
 
 def test_solve_for_ild_reactions():
     E = Symbol('E')
@@ -1003,6 +1057,7 @@ def test_solve_for_ild_reactions():
     assert b.ild_reactions[r20].subs(a, 12) == -Rational(83, 475)
     assert b.ild_reactions[m20].subs(a, 12) == -Rational(264, 475)
 
+
 def test_solve_for_ild_shear():
     E = Symbol('E')
     I = Symbol('I')
@@ -1036,6 +1091,7 @@ def test_solve_for_ild_shear():
     assert b.ild_shear.subs(a, 12) == Rational(96, 475)
     assert b.ild_shear.subs(a, 4) == -Rational(216, 2375)
 
+
 def test_solve_for_ild_moment():
     E = Symbol('E')
     I = Symbol('I')
@@ -1061,6 +1117,7 @@ def test_solve_for_ild_moment():
     b.solve_for_ild_moment(5, 1, r0, r5, r10, r20, m20)
     assert b.ild_moment.subs(a, 12) == -Rational(96, 475)
     assert b.ild_moment.subs(a, 4) == Rational(36, 95)
+
 
 def test_ild_with_rotation_hinge():
     E = Symbol('E')
@@ -1088,6 +1145,7 @@ def test_ild_with_rotation_hinge():
     assert b.ild_moment.subs(a, 1).subs(L1, 5).subs(L2, 5).subs(L3, 10) == -F/2
     assert b.ild_moment.subs(a, 8).subs(L1, 5).subs(L2, 5).subs(L3, 10) == -F
 
+
 def test_ild_with_sliding_hinge():
     b = Beam(13, 200, 200)
     r0 = b.apply_support(0, type="pin")
@@ -1107,6 +1165,7 @@ def test_ild_with_sliding_hinge():
     assert b.ild_shear.subs(a, 8) == -Rational(200, 343)
     b.solve_for_ild_moment(8, 1, r0, r6, r13, m13)
     assert b.ild_moment.subs(a, 3) == -Rational(12, 7)
+
 
 def test_Beam3D():
     l, E, G, I, A = symbols('l, E, G, I, A')
@@ -1295,6 +1354,7 @@ def test_cross_section():
     assert b.slope().subs(x, 25) == 52200/(E*g*h**3) + 39600/(E*a*c**3)
     assert b.deflection().subs(x, 30) == -537000/(E*g*h**3) - 712000/(E*a*c**3)
 
+
 def test_max_shear_force_Beam3D():
     x = symbols('x')
     b = Beam3D(20, 40, 21, 100, 25)
@@ -1303,6 +1363,7 @@ def test_max_shear_force_Beam3D():
     b.bc_deflection = [(0, [0, 0, 0]), (20, [0, 0, 0])]
     assert b.max_shear_force() == [(0, 0), (20, 2400), (20, 300)]
 
+
 def test_max_bending_moment_Beam3D():
     x = symbols('x')
     b = Beam3D(20, 40, 21, 100, 25)
@@ -1310,6 +1371,7 @@ def test_max_bending_moment_Beam3D():
     b.apply_load(12*x, start=0, order=0, dir="y")
     b.bc_deflection = [(0, [0, 0, 0]), (20, [0, 0, 0])]
     assert b.max_bmoment() == [(0, 0), (20, 3000), (20, 16000)]
+
 
 def test_max_deflection_Beam3D():
     x = symbols('x')
@@ -1322,6 +1384,7 @@ def test_max_deflection_Beam3D():
     p = sympify("-10 + 10*sqrt(10793)/43")
     q = sympify("(10 - 10*sqrt(10793)/43)**3/160 - 20/7 + (10 - 10*sqrt(10793)/43)**4/6400 + 20*sqrt(10793)/301 + 27*(10 - 10*sqrt(10793)/43)**2/560")
     assert b.max_deflection() == [(0, 0), (10, c), (p, q)]
+
 
 def test_torsion_Beam3D():
     x = symbols('x')
