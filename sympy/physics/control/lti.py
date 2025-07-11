@@ -5165,7 +5165,7 @@ class StateSpace(LinearTimeInvariant):
         (1/3 < k) & (k < 1)
 
         """
-        s = Symbol('s', dummy = True)
+        s = Symbol('s')
         domain = None if simplify is True else EXRAW
         # if domain is None, to_DM will find the domain automatically
         _A = self.A.to_DM(domain = domain)
