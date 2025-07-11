@@ -2,28 +2,29 @@
 This module can be used to solve 2D beam bending problems with
 singularity functions in mechanics.
 """
-from sympy.core import S, Symbol, diff, symbols
+from __future__ import annotations
+from sympy.core import S, Symbol, diff, symbols, oo, Integer
 from sympy.core.add import Add
 from sympy.core.expr import Expr
 from sympy.core.function import (Derivative, Function)
 from sympy.core.mul import Mul
 from sympy.core.relational import Eq
 from sympy.core.sympify import sympify
+from sympy.calculus.util import maximum, minimum
 from sympy.solvers import linsolve, solveset
 from sympy.solvers.ode.ode import dsolve
 from sympy.solvers.solvers import solve
 from sympy.printing import sstr
-from sympy.functions import SingularityFunction, Piecewise, factorial
+from sympy.functions import SingularityFunction, Piecewise, factorial, Max, Min, Abs
 from sympy.integrals import integrate
 from sympy.series import limit
 from sympy.plotting import plot, PlotGrid
 from sympy.geometry.entity import GeometryEntity
 from sympy.external import import_module
-from sympy.sets.sets import Interval, FiniteSet
+from sympy.sets.sets import Interval, FiniteSet, Union
 from sympy.utilities.lambdify import lambdify
 from sympy.utilities.decorator import doctest_depends_on
 from sympy.utilities.iterables import iterable
-from sympy import maximum, minimum, Abs, Max, Min, Union, oo, Integer
 import warnings
 
 
@@ -1093,17 +1094,15 @@ class Beam:
         if singularity[0] != 0:
             singularity.insert(0, 0)
         eqns = {} # Stores SF eqn in each intervals.
-        prev_point = 0
-        for i in range(1, len(singularity)):
+        for i in range(len(singularity) - 1):
             eq=Integer(0)
             for term in terms:
-                if term.args[-1].args[1] < singularity[i]:
+                if term.args[-1].args[1] < singularity[i+1]:
                     term = term.rewrite(Piecewise)
                     if term.has(oo):
                         continue
                     eq += Mul(*term.args[:-1]) * term.args[-1].args[0][0] # Creates algebraic form of eqns.
-            eqns[Interval(prev_point, singularity[i])] = eq
-            prev_point = singularity[i]
+            eqns[Interval(singularity[i], singularity[i+1])] = eq
 
         max_shears = {} # Stores local maximum of SF in each intercals.
         for interval, eq in eqns.items():
@@ -1163,7 +1162,7 @@ class Beam:
 
     def max_bmoment(self):
         """
-        Returns maximum bending moment and its coordinate
+        Returns maximum Shear force and its coordinate
         in the Beam object.
 
         Examples

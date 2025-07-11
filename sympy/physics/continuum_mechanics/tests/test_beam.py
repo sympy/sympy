@@ -2,7 +2,7 @@ from sympy.core.function import expand
 from sympy.core.numbers import (Rational, pi)
 from sympy.core.singleton import S
 from sympy.core.symbol import (Symbol, symbols)
-from sympy.sets.sets import Interval
+from sympy.sets.sets import Interval, Union
 from sympy.simplify.simplify import simplify
 from sympy.physics.continuum_mechanics.beam import Beam
 from sympy.functions import SingularityFunction, Piecewise, meijerg, Abs, log, sqrt, factorial
@@ -428,6 +428,7 @@ def test_composite_beam():
     c=Beam(6, E, I)
     with raises(ValueError, match="Invalid joining method. Choose from 'fixed' or 'hinge'."):
         b.join(c, "hige")
+
 
 def test_point_cflexure():
     #single contraflexure
@@ -864,6 +865,7 @@ def test_apply_rotation_hinge():
             *SingularityFunction(x, l1, -1)/(6*l2**2 + 12*l2*l3 + 6*l3**2))
     assert simplify(b.bending_moment().expand()) == simplify(expected_bending_moment.expand())
 
+
 def test_apply_sliding_hinge():
     b = Beam(13, 20, 20)
     r0, m0 = b.apply_support(0, type="fixed")
@@ -916,8 +918,8 @@ def test_apply_sliding_hinge():
                              - q*SingularityFunction(x, l1, 4)/24
                              + (l1**3*l2*q/24 + l1**3*l3*q/24)*SingularityFunction(x, l1 + l2, 0))/(E*I)
 
+
 def test_max_shear_force():
-    from sympy import Union
     E = Symbol('E')
     I = Symbol('I')
 
@@ -1155,6 +1157,7 @@ def test_max_deflection():
     b.apply_load(-F, l/2, -1)
     assert b.max_deflection() == (l/2, F*l**3/(192*E*I))
 
+
 def test_solve_for_ild_reactions():
     E = Symbol('E')
     I = Symbol('I')
@@ -1198,6 +1201,7 @@ def test_solve_for_ild_reactions():
     assert b.ild_reactions[r20].subs(a, 12) == -Rational(83, 475)
     assert b.ild_reactions[m20].subs(a, 12) == -Rational(264, 475)
 
+
 def test_solve_for_ild_shear():
     E = Symbol('E')
     I = Symbol('I')
@@ -1231,6 +1235,7 @@ def test_solve_for_ild_shear():
     assert b.ild_shear.subs(a, 12) == Rational(96, 475)
     assert b.ild_shear.subs(a, 4) == -Rational(216, 2375)
 
+
 def test_solve_for_ild_moment():
     E = Symbol('E')
     I = Symbol('I')
@@ -1257,6 +1262,7 @@ def test_solve_for_ild_moment():
     assert b.ild_moment.subs(a, 12) == -Rational(96, 475)
     assert b.ild_moment.subs(a, 4) == Rational(36, 95)
 
+
 def test_ild_with_rotation_hinge():
     E = Symbol('E')
     I = Symbol('I')
@@ -1282,6 +1288,7 @@ def test_ild_with_rotation_hinge():
     b.solve_for_ild_moment(L1, F, r0, r1, r2)
     assert b.ild_moment.subs(a, 1).subs(L1, 5).subs(L2, 5).subs(L3, 10) == -F/2
     assert b.ild_moment.subs(a, 8).subs(L1, 5).subs(L2, 5).subs(L3, 10) == -F
+
 
 def test_ild_with_sliding_hinge():
     b = Beam(13, 200, 200)
@@ -1541,6 +1548,7 @@ def test_cross_section():
     assert b.slope().subs(x, 25) == 52200/(E*g*h**3) + 39600/(E*a*c**3)
     assert b.deflection().subs(x, 30) == -537000/(E*g*h**3) - 712000/(E*a*c**3)
 
+
 def test_max_shear_force_Beam3D():
     x = symbols('x')
     b = Beam3D(20, 40, 21, 100, 25)
@@ -1549,6 +1557,7 @@ def test_max_shear_force_Beam3D():
     b.bc_deflection = [(0, [0, 0, 0]), (20, [0, 0, 0])]
     assert b.max_shear_force() == [(0, 0), (20, 2400), (20, 300)]
 
+
 def test_max_bending_moment_Beam3D():
     x = symbols('x')
     b = Beam3D(20, 40, 21, 100, 25)
@@ -1556,6 +1565,7 @@ def test_max_bending_moment_Beam3D():
     b.apply_load(12*x, start=0, order=0, dir="y")
     b.bc_deflection = [(0, [0, 0, 0]), (20, [0, 0, 0])]
     assert b.max_bmoment() == [(0, 0), (20, 3000), (20, 16000)]
+
 
 def test_max_deflection_Beam3D():
     x = symbols('x')
@@ -1568,6 +1578,7 @@ def test_max_deflection_Beam3D():
     p = sympify("-10 + 10*sqrt(10793)/43")
     q = sympify("(10 - 10*sqrt(10793)/43)**3/160 - 20/7 + (10 - 10*sqrt(10793)/43)**4/6400 + 20*sqrt(10793)/301 + 27*(10 - 10*sqrt(10793)/43)**2/560")
     assert b.max_deflection() == [(0, 0), (10, c), (p, q)]
+
 
 def test_torsion_Beam3D():
     x = symbols('x')
