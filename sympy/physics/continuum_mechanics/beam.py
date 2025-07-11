@@ -1039,9 +1039,10 @@ class Beam:
 
     def max_shear_force(self):
         """
-        Returns the maximum shear force magnitude in the beam,
-        along with its location(s) which can be points or  intervals.
+        Returns the maximum absolute shear force in the beam and all x-location(s)
+        or interval(s) where it occurs (e.g. a point or continuous region).
         """
+
         shear_curve = self.shear_force()
         x = self.variable
 
@@ -1057,20 +1058,40 @@ class Beam:
         intervals = []    # List of Intervals with discrete value of shear force
         shear_values = []   # List of values of shear force in each interval
         for i in range(1,len(singularity)):
-            start=singularity[i-1]
-            end=singularity[i]
+            start = singularity[i-1]
+            end = singularity[i]
 
-            lf=limit(shear_curve,x,start,"+")
-            rf=limit(shear_curve,x,end,"-")
-            if lf==rf:
-                intervals.append(Interval(start, end))
-                shear_values.append(shear_curve.subs(x,(start+end)/2))
+            length=end-start
+
+            left_mid = start + 0.25 * length
+            mid = start + 0.5 * length
+            right_mid = start + 0.75 * length
+
+            shear_left = shear_curve.subs(x, left_mid)
+            shear_middle = shear_curve.subs(x, mid)
+            shear_right = shear_curve.subs(x, right_mid)
+
+            # skips zero constant regions
+            if shear_left == shear_middle == shear_right == 0:
+                continue
             else:
-                intervals.append(start)
-                shear_values.append(lf)
-
-                intervals.append(end)
-                shear_values.append(rf)
+                left_val=limit(shear_curve, x, start, "+")
+                right_val=limit(shear_curve, x, end, "-")
+                if left_val == right_val:
+                    intervals.append(Interval(start, end))
+                    shear_values.append(left_val)
+                else:
+                    if abs(right_val) < abs(left_val):
+                        intervals.append(start)
+                        shear_values.append(left_val)
+                    elif abs(right_val) > abs(left_val):
+                        intervals.append(end)
+                        shear_values.append(right_val)
+                    else:
+                        intervals.append(start)
+                        shear_values.append(left_val)
+                        intervals.append(end)
+                        shear_values.append(right_val)
 
         shear_values = list(map(abs, shear_values))
         maximum_shear = max(shear_values)
