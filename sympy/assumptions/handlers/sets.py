@@ -230,9 +230,13 @@ def _(expr, assumptions):
 # RealPredicate
 
 def _RealPredicate_number(expr, assumptions):
+    if isinstance(expr, Pow):
+        if expr.base.is_zero and expr.exp.is_negative:
+            return False
+
     # let as_real_imag() work first since the expression may
     # be simpler to evaluate
-    i = expr.as_real_imag()[1].evalf(2)
+    i = im(expr).evalf(2)
     if i._prec != 1:
         return not i
     # allow None to be returned if we couldn't show for sure
