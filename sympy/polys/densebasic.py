@@ -16,11 +16,11 @@ import random
 
 
 _T = TypeVar("_T")
-dup: TypeAlias = list[_T]
-dmp: TypeAlias = list["dmp[_T]"]
-dup_tup: TypeAlias = tuple[_T, ...]
-dmp_tup: TypeAlias = tuple["dmp_tup[_T]", ...]
-monom: TypeAlias = tuple[int, ...]
+dup: TypeAlias = "list[_T]"
+dmp: TypeAlias = "list[dmp[_T]]"
+dup_tup: TypeAlias = "tuple[_T, ...]"
+dmp_tup: TypeAlias = "tuple[dmp_tup[_T], ...]"
+monom: TypeAlias = "tuple[int, ...]"
 
 
 # The _dup and _dmp functions do not do anything but are needed so that a type
