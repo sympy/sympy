@@ -807,15 +807,15 @@ def test_DiscreteTransferFunction_functions():
     assert G2.zeros() == []
     assert tf1.zeros() == [-3, 1]
     assert expect4_.zeros() == [
-        7**(Rational(2, 3))*(-s)**(Rational(1, 3))/7,
-        -7**(Rational(2, 3))*(-s)**(Rational(1, 3))/14 -
-            sqrt(3)*7**(Rational(2, 3))*I*(-s)**(Rational(1, 3))/14,
-        -7**(Rational(2, 3))*(-s)**(Rational(1, 3))/14 +
-            sqrt(3)*7**(Rational(2, 3))*I*(-s)**(Rational(1, 3))/14]
+        -7**(S(2)/3)*s**(S(1)/3)/7,
+        7**(S(2)/3)*s**(S(1)/3)/14 - sqrt(3)*7**(S(2)/3)*I*s**(S(1)/3)/14,
+        7**(S(2)/3)*s**(S(1)/3)/14 + sqrt(3)*7**(S(2)/3)*I*s**(S(1)/3)/14
+    ]
     assert SP4.zeros() == [
-        (s/a1)**(Rational(1, 3)),
-        -(s/a1)**(Rational(1, 3))/2 - sqrt(3)*I*(s/a1)**(Rational(1, 3))/2,
-        -(s/a1)**(Rational(1, 3))/2 + sqrt(3)*I*(s/a1)**(Rational(1, 3))/2]
+        s**(S(1)/3)/a1**(S(1)/3),
+        -s**(S(1)/3)/(2*a1**(S(1)/3)) - sqrt(3)*I*s**(S(1)/3)/(2*a1**(S(1)/3)),
+        -s**(S(1)/3)/(2*a1**(S(1)/3)) + sqrt(3)*I*s**(S(1)/3)/(2*a1**(S(1)/3))
+    ]
     assert str(expect3.zeros()) == \
         str([0.125 - 1.11102430216445*sqrt(-0.405063291139241*p**3 - 1.0),
         1.11102430216445*sqrt(-0.405063291139241*p**3 - 1.0) + 0.125])
