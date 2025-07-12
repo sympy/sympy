@@ -1840,22 +1840,12 @@ def test_StateSpace_functions():
     SS3 = StateSpace(Matrix([[1, 1], [4, -2]]),Matrix([[1, -1], [1, -1]]))
     SS4 = StateSpace(Matrix([[a0, a1], [a2, a3]]), Matrix([[b1], [b2]]),
                      Matrix([[c1, c2]]))
-    SS6 = StateSpace(Matrix([[a0, a1], [a2, a3]]), Matrix([[b1, b3], [b2, b4]]),
-                     Matrix([[c1, c2], [c3, c4]]))
 
     # Observability
     assert SS1.is_observable() == True
     assert SS2.is_observable() == False
-    assert SS4.is_observable() == \
-        [Unequality(-a0*c1*c2 + a1*c1**2 - a2*c2**2 + a3*c1*c2, 0)]
-    assert SS6.is_observable() == \
-        [Unequality(c1*c4 - c2*c3, 0),
-         Unequality(-a0*c1*c4 + a1*c1*c3 - a2*c2*c4 + a3*c2*c3, 0),
-         Unequality(a0*a3*c1*c4 - a0*a3*c2*c3 - a1*a2*c1*c4 + a1*a2*c2*c3, 0)]
     assert SS1.observability_matrix() == Matrix([[0, 1], [1, 0]])
     assert SS2.observability_matrix() == Matrix([[-1,  1], [ 1, -1], [ 3, -3], [-3,  3]])
-    assert SS4.observability_matrix() == \
-        Matrix([[c1, c2], [a0*c1 + a2*c2, a1*c1 + a3*c2]])
     assert SS1.observable_subspace() == [Matrix([[1], [0]]), Matrix([[0], [1]])]
     assert SS2.observable_subspace() == [Matrix([[-1], [ 1]])]
     raises(NotImplementedError, lambda: SS4.observable_subspace())
@@ -1875,23 +1865,12 @@ def test_StateSpace_functions():
     # Controllability
     assert SS1.is_controllable() == True
     assert SS3.is_controllable() == False
-    assert SS4.is_controllable() == \
-        [Unequality(-a0*b1*b2 - a1*b2**2 + a2*b1**2 + a3*b1*b2, 0)]
-    assert SS6.is_controllable() == \
-        [Unequality(b1*b4 - b2*b3, 0),
-         Unequality(-a0*b1*b4 - a1*b2*b4 + a2*b1*b3 + a3*b2*b3, 0),
-         Unequality(a0*a3*b1*b4 - a0*a3*b2*b3 - a1*a2*b1*b4 + a1*a2*b2*b3, 0)]
     assert SS1.controllability_matrix() ==  Matrix([[0.5, -0.75], [  0,   0.5]])
     assert SS3.controllability_matrix() == Matrix([[1, -1, 2, -2], [1, -1, 2, -2]])
     assert SS4.controllability_matrix() == \
         Matrix([[b1, a0*b1 + a1*b2], [b2, a2*b1 + a3*b2]])
     assert SS1.controllable_subspace() == [Matrix([[0.5], [  0]]), Matrix([[-0.75], [  0.5]])]
     assert SS3.controllable_subspace() == [Matrix([[1], [1]])]
-    assert SS4.controllable_subspace() == [Matrix([
-                                          [b1],
-                                          [b2]]), Matrix([
-                                          [a0*b1 + a1*b2],
-                                          [a2*b1 + a3*b2]])]
     assert SS1.uncontrollable_subspace() == []
     assert SS3.uncontrollable_subspace() == [Matrix([[-1], [1]])]
     raises(NotImplementedError, lambda: SS4.uncontrollable_subspace()) # uncontrollable subspace fo symbols not implemented

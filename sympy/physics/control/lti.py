@@ -5275,41 +5275,6 @@ class StateSpace(LinearTimeInvariant):
                 )
         return self._calc_orthogonal_complement(M, self._A.shape[0])
 
-    def _get_full_rank_conditions(self, M):
-        rows, cols = M.shape
-
-        if rows == 0 or cols == 0:
-            return []
-
-        square_size = min(rows, cols)
-        determinant_conditions = []
-
-        num_iterations = max(rows, cols) - square_size + 1
-
-        vertical_scan = rows >= cols
-        for i in range(num_iterations):
-            if vertical_scan:
-                submatrix = M[i:i + square_size, :]
-            else:
-                submatrix = M[:, i:i + square_size]
-
-            determinant_conditions.append(Unequality(submatrix.det(), 0))
-
-        rank_evaluation = fuzzy_or(determinant_conditions)
-
-        if rank_evaluation is False:
-            # if every determinants are zero numerically, the system is not
-            # full rank
-            return False
-        if rank_evaluation is True:
-            # if any determinant is non-zero numerically, the system is
-            # full rank
-            return True
-
-        # if we cannot determine conditions because of symbolic expressions,
-        # we return the list of conditions
-        return determinant_conditions
-
     def is_observable(self):
         """
         Returns conditions for the state space model to be observable.
@@ -5327,17 +5292,8 @@ class StateSpace(LinearTimeInvariant):
         >>> ss1.is_observable()
         True
 
-        >>> a = symbols("a")
-        >>> A2 = Matrix([[1, 0, 1], [1, 1, 0], [0, 0, a]])
-        >>> B2 = Matrix([0.5, 1, 1])
-        >>> C2 = Matrix([[3, 1, 2]])
-        >>> ss2 = StateSpace(A2, B2, C2)
-        >>> ss2.is_observable()
-        [Ne(-2*a**2 + a, 0)]
-
         """
-        M = self.observability_matrix()
-        return self._get_full_rank_conditions(M)
+        return self.observability_matrix().rank() == self.num_states
 
     def controllability_matrix(self):
         """
@@ -5459,12 +5415,9 @@ class StateSpace(LinearTimeInvariant):
         >>> B2 = Matrix([0.5, 1, 1])
         >>> C2 = Matrix([[0, 1, 0]])
         >>> ss2 = StateSpace(A2, B2, C2)
-        >>> ss2.is_controllable()
-        [Ne(0.25*a**2 - 1.5*a + 2.25, 0)]
 
         """
-        M = self.controllability_matrix()
-        return self._get_full_rank_conditions(M)
+        return self.controllability_matrix().rank() == self.num_states
 
     def get_asymptotic_stability_conditions(self):
         """
