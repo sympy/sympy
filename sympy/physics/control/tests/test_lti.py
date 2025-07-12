@@ -5,7 +5,6 @@ from sympy.core.numbers import (I, pi, Rational, oo)
 from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.core.symbol import symbols
-from sympy.core.relational import Unequality
 from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.special.delta_functions import Heaviside
 from sympy.functions.elementary.miscellaneous import sqrt

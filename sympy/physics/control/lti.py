@@ -6,8 +6,6 @@ from sympy.core.containers import Tuple
 from sympy.core.evalf import EvalfMixin
 from sympy.core.expr import Expr
 from sympy.core.function import expand
-from sympy.core.logic import fuzzy_or
-from sympy.core.relational import Unequality
 from sympy.core.mul import Mul
 from sympy.core.numbers import I, pi, oo
 from sympy.core.power import Pow
