@@ -496,13 +496,39 @@ def reshape(source, shape, pad=None, order=None):
 
     source : Symbol or String
     shape : ArrayExpr
+    pad : Symbol or String, optional
+        The padding array
+    order : Symbol or String, optional
+        The order of the elements in the array
+
+    Examples
+    ========
+
+    >>> from sympy import fcode, symbols
+    >>> from sympy.codegen.fnodes import reshape
+    >>> array, shape, pad, order = symbols('array shape pad order')
+    >>> fcode(reshape(array, shape), source_format='free')
+    'reshape(array, shape)'
+    >>> fcode(reshape(array, shape, pad), source_format='free')
+    'reshape(array, shape, pad=pad)'
+    >>> fcode(reshape(array, shape, None, order), source_format='free')
+    'reshape(array, shape, order=order)'
+    >>> fcode(reshape(array, shape, pad, order), source_format='free')
+    'reshape(array, shape, pad=pad, order=order)'
 
     """
-    return FunctionCall(
+    from sympy.codegen.ast import KeywordFunctionCall
+
+    kwargs = {}
+    if pad is not None:
+        kwargs['pad'] = _printable(pad)
+    if order is not None:
+        kwargs['order'] = _printable(order)
+
+    return KeywordFunctionCall(
         'reshape',
-        [_printable(source), _printable(shape)] +
-        ([_printable(pad)] if pad else []) +
-        ([_printable(order)] if pad else [])
+        [_printable(source), _printable(shape)],
+        kwargs
     )
 
 

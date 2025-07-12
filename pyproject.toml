@@ -54,6 +54,7 @@ lint.select = [
     "SIM101",
     "SLOT",
     "TRY002",
+    "BLE001", # except Exception or except BaseException
 ]
 
 # Ignore rules that currently fail on the SymPy codebase
@@ -85,6 +86,9 @@ exclude = [
     "sympy/parsing/latex/_antlr/*",
     "sympy/parsing/autolev/_antlr/*",
     "sympy/parsing/autolev/test-examples/*",
+    "sympy/plotting/pygletplot/*",
+    "sympy/parsing/latex/_parse_latex_antlr.py",
+    "sympy/parsing/autolev/_listener_autolev_antlr.py",
     "sympy/integrals/rubi/*",
 ]
 
@@ -153,6 +157,13 @@ ignore_missing_imports = true
 # pyright type checker settings:
 [tool.pyright]
 include = ["sympy"]
+exclude = [
+    "sympy/matrices/common.py",
+    "sympy/matrices/matrices.py",
+    "sympy/matrices/tests/test_matrices.py",
+    "sympy/matrices/tests/test_commonmatrix.py",
+    "sympy/matrices/benchmarks",
+]
 
 # This complains when self or cls is not used as the parameter name for an
 # instance method or class method. Since this is used a lot in SymPy we disable

@@ -22,9 +22,7 @@ def literal_symbol(literal):
 
     """
 
-    if literal is True or literal is False:
-        return literal
-    elif literal.is_Symbol:
+    if literal is True or literal is False or literal.is_Symbol:
         return literal
     elif literal.is_Not:
         return literal_symbol(literal.args[0])

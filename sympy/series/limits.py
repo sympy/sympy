@@ -95,12 +95,9 @@ def heuristics(e, z, z0, dir):
                         return heuristics(m, z, z0, dir)
                     return
                 return
-            elif isinstance(l, Limit):
+            if isinstance(l, Limit) or l is S.NaN:
                 return
-            elif l is S.NaN:
-                return
-            else:
-                r.append(l)
+            r.append(l)
         if r:
             rv = e.func(*r)
             if rv is S.NaN and e.is_Mul and any(isinstance(rr, AccumBounds) for rr in r):
@@ -180,8 +177,7 @@ class Limit(Expr):
         return isyms
 
 
-    def pow_heuristics(self, e):
-        _, z, z0, _ = self.args
+    def pow_heuristics(self, e, z, z0):
         b1, e1 = e.base, e.exp
         if not b1.has(z):
             res = limit(e1*log(b1), z, z0)
@@ -342,7 +338,7 @@ class Limit(Expr):
             from sympy.simplify.powsimp import powsimp
             e = powsimp(e)
             if e.is_Pow:
-                r = self.pow_heuristics(e)
+                r = self.pow_heuristics(e, z, z0)
                 if r is not None:
                     return r
             try:

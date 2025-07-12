@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, overload
+from typing import TYPE_CHECKING, overload, Literal
 from collections.abc import Iterable, Mapping
 from functools import reduce
 import re
@@ -17,13 +17,13 @@ from .sorting import default_sort_key
 from .kind import NumberKind
 from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.misc import as_int, func_name, filldedent
-from sympy.utilities.iterables import has_variety, sift
+from sympy.utilities.iterables import has_variety, sift, _sift_true_false
 from mpmath.libmp import mpf_log, prec_to_dps
 from mpmath.libmp.libintmath import giant_steps
 
 
 if TYPE_CHECKING:
-    from typing import Any
+    from typing import Any, Hashable
     from typing_extensions import Self
     from .numbers import Number
 
@@ -95,7 +95,7 @@ class Expr(Basic, EvalfMixin):
             ...
 
         def evalf(self, n: int = 15, subs: dict[Basic, Basic | float] | None = None,
-                  maxn: int = 100, chop: bool = False, strict: bool  = False,
+                  maxn: int = 100, chop: bool | int = False, strict: bool  = False,
                   quad: str | None = None, verbose: bool = False) -> Expr:
             ...
 
@@ -122,7 +122,7 @@ class Expr(Basic, EvalfMixin):
         return None
 
     @property
-    def _diff_wrt(self):
+    def _diff_wrt(self) -> bool:
         """Return True if one can differentiate with respect to this
         object, else False.
 
@@ -200,7 +200,7 @@ class Expr(Basic, EvalfMixin):
 
         return expr.class_key(), args, exp, coeff
 
-    def _hashable_content(self):
+    def _hashable_content(self) -> tuple[Basic, ...] | tuple[Hashable, ...]:
         """Return a tuple of information about self that can be used to
         compute the hash. If a class defines additional attributes,
         like ``name`` in Symbol, then this method should be updated
@@ -248,32 +248,32 @@ class Expr(Basic, EvalfMixin):
 
     @sympify_return([('other', 'Expr')], NotImplemented)
     @call_highest_priority('__radd__')
-    def __add__(self, other) -> Expr:
+    def __add__(self, other: complex) -> Expr:
         return Add(self, other)
 
     @sympify_return([('other', 'Expr')], NotImplemented)
     @call_highest_priority('__add__')
-    def __radd__(self, other) -> Expr:
+    def __radd__(self, other: Expr | complex) -> Expr:
         return Add(other, self)
 
     @sympify_return([('other', 'Expr')], NotImplemented)
     @call_highest_priority('__rsub__')
-    def __sub__(self, other) -> Expr:
+    def __sub__(self, other: complex) -> Expr:
         return Add(self, -other)
 
     @sympify_return([('other', 'Expr')], NotImplemented)
     @call_highest_priority('__sub__')
-    def __rsub__(self, other) -> Expr:
+    def __rsub__(self, other: Expr | complex) -> Expr:
         return Add(other, -self)
 
     @sympify_return([('other', 'Expr')], NotImplemented)
     @call_highest_priority('__rmul__')
-    def __mul__(self, other) -> Expr:
+    def __mul__(self, other: complex) -> Expr:
         return Mul(self, other)
 
     @sympify_return([('other', 'Expr')], NotImplemented)
     @call_highest_priority('__mul__')
-    def __rmul__(self, other) -> Expr:
+    def __rmul__(self, other: Expr | complex) -> Expr:
         return Mul(other, self)
 
     @sympify_return([('other', 'Expr')], NotImplemented)
@@ -1157,7 +1157,11 @@ class Expr(Basic, EvalfMixin):
         None
 
         """
-        from sympy.polys.polyerrors import PolynomialError, GeneratorsNeeded
+        from sympy.polys.polyerrors import (
+            PolynomialError,
+            GeneratorsNeeded,
+            CoercionFailed,
+        )
         from sympy.polys.polytools import Poly
 
         try:
@@ -1167,12 +1171,13 @@ class Expr(Basic, EvalfMixin):
                 return None
             else:
                 return poly
-        except (PolynomialError, GeneratorsNeeded):
+        except (PolynomialError, GeneratorsNeeded, CoercionFailed):
             # PolynomialError is caught for e.g. exp(x).as_poly(x)
             # GeneratorsNeeded is caught for e.g. S(2).as_poly()
+            # CoercionFailed is caught for e.g. pi.as_poly(x, domain='QQ')
             return None
 
-    def as_ordered_terms(self, order=None, data=False):
+    def as_ordered_terms(self, order=None, data: Literal[False] = False) -> list[Expr]:
         """
         Transform an expression to an ordered list of terms.
 
@@ -1210,14 +1215,7 @@ class Expr(Basic, EvalfMixin):
         if not any(term.is_Order for term, _ in terms):
             ordered = sorted(terms, key=key, reverse=reverse)
         else:
-            _terms, _order = [], []
-
-            for term, repr in terms:
-                if not term.is_Order:
-                    _terms.append((term, repr))
-                else:
-                    _order.append((term, repr))
-
+            _order, _terms = _sift_true_false(terms, lambda x: x[0].is_Order)
             ordered = sorted(_terms, key=key, reverse=True) \
                 + sorted(_order, key=key, reverse=True)
 
@@ -1226,23 +1224,23 @@ class Expr(Basic, EvalfMixin):
         else:
             return [term for term, _ in ordered]
 
-    def as_terms(self):
+    def as_terms(self) -> tuple[list[tuple[Expr, Any]], list[Expr]]:
         """Transform an expression to a list of terms. """
         from .exprtools import decompose_power
 
-        gens, terms = set(), []
+        gens_set, terms = set(), []
 
         for term in Add.make_args(self):
             coeff, _term = term.as_coeff_Mul()
 
-            coeff = complex(coeff)
+            coeff_complex = complex(coeff)
             cpart, ncpart = {}, []
 
             if _term is not S.One:
                 for factor in Mul.make_args(_term):
                     if factor.is_number:
                         try:
-                            coeff *= complex(factor)
+                            coeff_complex *= complex(factor)
                         except (TypeError, ValueError):
                             pass
                         else:
@@ -1252,16 +1250,16 @@ class Expr(Basic, EvalfMixin):
                         base, exp = decompose_power(factor)
 
                         cpart[base] = exp
-                        gens.add(base)
+                        gens_set.add(base)
                     else:
                         ncpart.append(factor)
 
-            coeff = coeff.real, coeff.imag
-            ncpart = tuple(ncpart)
+            coeff_tuple = coeff_complex.real, coeff_complex.imag
+            ncpart_tuple = tuple(ncpart)
 
-            terms.append((term, (coeff, cpart, ncpart)))
+            terms.append((term, (coeff_tuple, cpart, ncpart_tuple)))
 
-        gens = sorted(gens, key=default_sort_key)
+        gens = sorted(gens_set, key=default_sort_key)
 
         k, indices = len(gens), {}
 
@@ -1270,13 +1268,13 @@ class Expr(Basic, EvalfMixin):
 
         result = []
 
-        for term, (coeff, cpart, ncpart) in terms:
+        for term, (coeff_tuple, cpart, ncpart_tuple) in terms:
             monom = [0]*k
 
             for base, exp in cpart.items():
                 monom[indices[base]] = exp
 
-            result.append((term, (coeff, tuple(monom), ncpart)))
+            result.append((term, (coeff_tuple, tuple(monom), ncpart_tuple)))
 
         return result, gens
 
@@ -1401,7 +1399,7 @@ class Expr(Basic, EvalfMixin):
                                  [ci for ci in c if list(self.args).count(ci) > 1])
         return [c, nc]
 
-    def coeff(self, x: Expr, n=1, right=False, _first=True):
+    def coeff(self, x: Expr | complex, n=1, right=False, _first=True):
         """
         Returns the coefficient from the term(s) containing ``x**n``. If ``n``
         is zero then all terms independent of ``x`` will be returned.
@@ -1513,40 +1511,40 @@ class Expr(Basic, EvalfMixin):
         sympy.polys.polytools.Poly.coeff_monomial: efficiently find the single coefficient of a monomial in Poly
         sympy.polys.polytools.Poly.nth: like coeff_monomial but powers of monomial terms are used
         """
-        x = sympify(x)
-        if not isinstance(x, Basic):
+        xe = sympify(x)
+        if not isinstance(xe, Basic):
             return S.Zero
 
         n = as_int(n)
 
-        if not x:
+        if not xe:
             return S.Zero
 
-        if x == self:
+        if xe == self:
             if n == 1:
                 return S.One
             return S.Zero
 
         co2: list[Expr]
 
-        if x is S.One:
+        if xe is S.One:
             co2 = [a for a in Add.make_args(self) if a.as_coeff_Mul()[0] is S.One]
             if not co2:
                 return S.Zero
             return Add(*co2)
 
         if n == 0:
-            if x.is_Add and self.is_Add:
-                c = self.coeff(x, right=right)
+            if xe.is_Add and self.is_Add:
+                c = self.coeff(xe, right=right)
                 if not c:
                     return S.Zero
                 if not right:
-                    return self - Add(*[a*x for a in Add.make_args(c)])
-                return self - Add(*[x*a for a in Add.make_args(c)])
-            return self.as_independent(x, as_Add=True)[0]
+                    return self - Add(*[a*xe for a in Add.make_args(c)])
+                return self - Add(*[xe*a for a in Add.make_args(c)])
+            return self.as_independent(xe, as_Add=True)[0]
 
-        # continue with the full method, looking for this power of x:
-        x = x**n
+        # continue with the full method, looking for this power of xe:
+        xe = xe**n
 
         def incommon(l1, l2):
             if not l1 or not l2:
@@ -1596,15 +1594,15 @@ class Expr(Basic, EvalfMixin):
         co: list[tuple[set[Expr], list[Expr]]] = []
         args = Add.make_args(self)
         self_c = self.is_commutative
-        x_c = x.is_commutative
+        x_c = xe.is_commutative
         if self_c and not x_c:
             return S.Zero
         if _first and self.is_Add and not self_c and not x_c:
-            # get the part that depends on x exactly
-            xargs = Mul.make_args(x)
-            d = Add(*[i for i in Add.make_args(self.as_independent(x)[1])
+            # get the part that depends on xe exactly
+            xargs = Mul.make_args(xe)
+            d = Add(*[i for i in Add.make_args(self.as_independent(xe)[1])
                 if all(xi in Mul.make_args(i) for xi in xargs)])
-            rv = d.coeff(x, right=right, _first=False)
+            rv = d.coeff(xe, right=right, _first=False)
             if not rv.is_Add or not right:
                 return rv
             c_part, nc_part = zip(*[i.args_cnc() for i in rv.args])
@@ -1613,7 +1611,7 @@ class Expr(Basic, EvalfMixin):
             return Add(*[Mul._from_args(i) for i in nc_part])
 
         one_c = self_c or x_c
-        xargs, nx = x.args_cnc(cset=True, warn=bool(not x_c))
+        xargs, nx = xe.args_cnc(cset=True, warn=bool(not x_c))
         # find the parts that pass the commutative terms
         for a in args:
             margs, nc = a.args_cnc(cset=True, warn=bool(not self_c))
@@ -2262,7 +2260,7 @@ class Expr(Basic, EvalfMixin):
         else:
             return n/d
 
-    def extract_multiplicatively(self, c: Expr) -> Expr | None:
+    def extract_multiplicatively(self, c: Expr | complex) -> Expr | None:
         """Return None if it's not possible to make self in the form
            c * something in a nice way, i.e. preserving the properties
            of arguments of self.
@@ -3619,7 +3617,7 @@ class Expr(Basic, EvalfMixin):
     ##################### DERIVATIVE, INTEGRAL, FUNCTIONAL METHODS ####################
     ###################################################################################
 
-    def diff(self, *symbols, **assumptions):
+    def diff(self, *symbols, **assumptions) -> Expr:
         assumptions.setdefault("evaluate", True)
         return _derivative_dispatch(self, *symbols, **assumptions)
 

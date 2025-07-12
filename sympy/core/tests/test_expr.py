@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from sympy.assumptions.refine import refine
 from sympy.concrete.summations import Sum
 from sympy.core.add import Add
@@ -5,7 +7,7 @@ from sympy.core.basic import Basic
 from sympy.core.containers import Tuple
 from sympy.core.expr import (ExprBuilder, unchanged, Expr,
     UnevaluatedExpr)
-from sympy.core.function import (Function, expand, WildFunction,
+from sympy.core.function import (Function, DefinedFunction, expand, WildFunction,
     AppliedUndef, Derivative, diff, Subs)
 from sympy.core.mul import Mul, _unevaluated_Mul
 from sympy.core.numbers import (NumberSymbol, E, zoo, oo, Float, I,
@@ -63,6 +65,8 @@ class DummyNumber:
     then one needs to make sure that the class works with Python integers and
     with itself.
     """
+
+    number: int | float
 
     def __radd__(self, a):
         if isinstance(a, (int, float)):
@@ -521,7 +525,7 @@ def test_as_leading_term4():
 
 
 def test_as_leading_term_stub():
-    class foo(Function):
+    class foo(DefinedFunction):
         pass
     assert foo(1/x).as_leading_term(x) == foo(1/x)
     assert foo(1).as_leading_term(x) == foo(1)
@@ -1196,6 +1200,7 @@ def test_as_poly_as_expr():
     # https://github.com/sympy/sympy/issues/20610
     assert S(2).as_poly() is None
     assert sqrt(2).as_poly(extension=True) is None
+    assert pi.as_poly(x, domain='QQ') is None
 
     raises(AttributeError, lambda: Tuple(x, x).as_poly(x))
     raises(AttributeError, lambda: Tuple(x ** 2, x, y).as_poly(x))
@@ -1375,7 +1380,7 @@ def test_extractions():
     assert ((x + x*y)/y).could_extract_minus_sign() is False
     assert ((-x - y)/(x + y)).could_extract_minus_sign() is False
 
-    class sign_invariant(Function, Expr):
+    class sign_invariant(DefinedFunction, Expr):
         nargs = 1
         def __neg__(self):
             return self
@@ -1390,7 +1395,7 @@ def test_extractions():
     assert (1 - sqrt(2)).could_extract_minus_sign() is False
     # check that result is canonical
     eq = (3*x + 15*y).extract_multiplicatively(3)
-    assert eq.args == eq.func(*eq.args).args
+    assert eq is not None and eq.args == eq.func(*eq.args).args
 
 
 def test_nan_extractions():
@@ -1419,7 +1424,7 @@ def test_coeff():
     assert (10*x).coeff(x, 0) == 0
     assert (10*x).coeff(10*x, 0) == 0
 
-    n1, n2 = symbols('n1 n2', commutative=False)
+    n1, n2 = symbols('n1 n2', commutative=False, seq=True)
     assert (n1*n2).coeff(n1) == 1
     assert (n1*n2).coeff(n2) == n1
     assert (n1*n2 + x*n1).coeff(n1) == 1  # 1*n1*(n2+x)
@@ -1601,12 +1606,14 @@ def test_args_cnc():
 def test_new_rawargs():
     n = Symbol('n', commutative=False)
     a = x + n
+    assert isinstance(a, Add)
     assert a.is_commutative is False
     assert a._new_rawargs(x).is_commutative
     assert a._new_rawargs(x, y).is_commutative
     assert a._new_rawargs(x, n).is_commutative is False
     assert a._new_rawargs(x, y, n).is_commutative is False
     m = x*n
+    assert isinstance(m, Mul)
     assert m.is_commutative is False
     assert m._new_rawargs(x).is_commutative
     assert m._new_rawargs(n).is_commutative is False
@@ -1765,7 +1772,7 @@ def test_as_ordered_factors():
 
     assert expr.as_ordered_factors() == args
 
-    A, B = symbols('A,B', commutative=False)
+    A, B = symbols('A,B', commutative=False, seq=True)
 
     assert (A*B).as_ordered_factors() == [A, B]
     assert (B*A).as_ordered_factors() == [B, A]
@@ -1801,8 +1808,8 @@ def test_as_ordered_terms():
     assert e.as_ordered_terms(order="rev-lex") == [2, y, x*y**4, x**2*y**2]
     assert e.as_ordered_terms(order="rev-grlex") == [2, y, x**2*y**2, x*y**4]
 
-    k = symbols('k')
-    assert k.as_ordered_terms(data=True) == ([(k, ((1.0, 0.0), (1,), ()))], [k])
+    k = Symbol('k')
+    assert k.as_ordered_terms(data=True) == ([(k, ((1.0, 0.0), (1,), ()))], [k]) # type: ignore
 
 
 def test_sort_key_atomic_expr():
