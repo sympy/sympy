@@ -263,7 +263,7 @@ def test_int_differentiate(rd_int):
     assert same(R, R.differentiate(R.add(R.multiply(x, x), x)), [1, 2], None)
     assert same(R3, R3.differentiate(R3.multiply(x3, x3)), [0, 2], None)
     assert same(R3, R3.differentiate(R3.add(x3, one3)), [1], None)
-    assert same(R3, R3.differentiate(r(3).pow_int(R3.add(x3, one3), 4)), [4, 12], 3)
+    assert same(R3, R3.differentiate(r(3).pow_int(R3.add(x3, one3), 4)), [4, 12], 2)
     assert same(R10, R10.differentiate(R10.pow_int(x10, 4)), [0, 0, 0, 4], None)
     assert same(
         R10, R10.differentiate(R10.add(R10.multiply(x10, x10), x10)), [1, 2], None
@@ -276,6 +276,7 @@ def test_rational_differentiate(rd_rational):
     assert same(R, R.differentiate(R.add(R.multiply(x, x), x)), [(1, 1), (2, 1)], None)
     assert same(R3, R3.differentiate(R3.multiply(x3, x3)), [(0, 1), (2, 1)], None)
     assert same(R3, R3.differentiate(R3.add(x3, one3)), [(1, 1)], None)
+    assert same(R3, R3.differentiate(R.pow_int(R3.add(x3, one3), 4)), [4, 12, 12], 3)
     assert same(
         R10,
         R10.differentiate(R10.pow_int(x10, 4)),
@@ -304,6 +305,12 @@ def test_rational_integrate(rd_rational):
     assert same(
         R10, R10.integrate(R10.pow_int(x10, 2)), [(0, 1), (0, 1), (0, 1), (1, 3)], None
     )
+    assert same(
+        R10,
+        R10.integrate(R10.from_list([2, 3, 4], 3)),
+        [(0, 1), (2, 1), (3, 2), (4, 3)],
+        4,
+    )
 
 
 def test_error(rd_int):
@@ -325,6 +332,14 @@ def test_int_compose(rd_int):
     assert same(
         R3, R3.compose(R3.from_list([1, 2, 3]), R3.from_list([0, 1, 1])), [1, 2, 5], 3
     )
+    assert same(
+        R10,
+        R10.compose(
+            R10.from_list([2, 4, 5, 1, 6, 2], 7), R10.from_list([0, 1, 1, 2, 3, 4], 7)
+        ),
+        [2, 4, 9, 19, 46, 101, 206],
+        7,
+    )
 
     raises(
         ValueError, lambda: R.compose(R.from_list([1, 2], 2), R.from_list([1, 2, 3], 2))
@@ -332,7 +347,7 @@ def test_int_compose(rd_int):
 
 
 def test_rational_compose(rd_rational):
-    R, _, _, R3, *_ = rd_rational
+    R, _, _, R3, _, _, R10, *_ = rd_rational
 
     f1 = R.from_list([QQ(1, 2), QQ(3, 4)])
     g1 = R.from_list([QQ(1, 3), QQ(2, 5)])
@@ -345,6 +360,10 @@ def test_rational_compose(rd_rational):
     f3_2 = R3.from_list([QQ(1, 4), QQ(1, 2), QQ(1, 8)])
     g3_2 = R3.from_list([QQ(0, 1), QQ(1, 3)])
     assert same(R3, R3.compose(f3_2, g3_2), [(1, 4), (1, 6), (1, 72)], 3)
+
+    f10 = R10.from_list([QQ(1, 2), QQ(3, 4), QQ(5, 6)], 4)
+    g10 = R10.from_list([QQ(0, 1), QQ(2, 3), QQ(1, 5), QQ(-3, 7)], 4)
+    assert same(R10, R10.compose(f10, g10), [(1, 2), (1, 2), (281, 540), (-25, 252)], 4)
 
 
 def test_int_inversion(rd_int):
