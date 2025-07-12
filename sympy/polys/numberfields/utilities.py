@@ -1,6 +1,7 @@
 """Utilities for algebraic number theory. """
 
 from sympy.core.sympify import sympify
+from sympy.external.mpmath import local_workprec
 from sympy.ntheory.factor_ import factorint
 from sympy.polys.domains.rationalfield import QQ
 from sympy.polys.domains.integerring import ZZ
@@ -9,8 +10,6 @@ from sympy.polys.numberfields.minpoly import minpoly
 from sympy.printing.lambdarepr import IntervalPrinter
 from sympy.utilities.decorator import public
 from sympy.utilities.lambdify import lambdify
-
-from mpmath import mp
 
 
 def is_rat(c):
@@ -448,14 +447,15 @@ def isolate(alg, eps=None, fast=False):
         raise NotImplementedError(
             "complex algebraic numbers are not supported")
 
-    func = lambdify((), alg, modules="mpmath", printer=IntervalPrinter())
+    with local_workprec(53) as mp:
 
-    poly = minpoly(alg, polys=True)
-    intervals = poly.intervals(sqf=True)
+        func = lambdify((), alg, modules=mp, printer=IntervalPrinter())
 
-    dps, done = mp.dps, False
+        poly = minpoly(alg, polys=True)
+        intervals = poly.intervals(sqf=True)
 
-    try:
+        done = False
+
         while not done:
             alg = func()
 
@@ -464,9 +464,7 @@ def isolate(alg, eps=None, fast=False):
                     done = True
                     break
             else:
-                mp.dps *= 2
-    finally:
-        mp.dps = dps
+                mp.prec *= 2
 
     if eps is not None:
         a, b = poly.refine_root(a, b, eps=eps, fast=fast)
