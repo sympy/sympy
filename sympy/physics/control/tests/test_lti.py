@@ -612,6 +612,7 @@ def test_DiscreteTransferFunction_construction():
     raises(TypeError, lambda: DiscreteTransferFunction(p + 1, 5 - p, 4))
     raises(TypeError, lambda: DiscreteTransferFunction(3, 4, 8))
 
+    raises(ValueError, lambda: DiscreteTransferFunction(s + 1, s**2 + 2, s, 0)) # sampling time cannot be zero
 
 def test_DiscreteTransferFunction_functions():
     # classmethod from_rational_expression

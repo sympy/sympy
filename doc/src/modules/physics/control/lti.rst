@@ -7,6 +7,8 @@ lti
 
 .. module:: sympy.physics.control.lti
 
+.. autofunction:: new_tf
+
 .. autoclass:: TransferFunctionBase
    :members:
 

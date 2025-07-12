@@ -524,8 +524,47 @@ def new_tf(num, den, var, sampling_time):
     Creates a new transfer function object.
     sampling_time == 0 means continuous time transfer function.
     sampling_time > 0 means discrete time transfer function.
+
+    Parameters
+    ==========
+
+    num : Expr, Number
+        The numerator polynomial of the transfer function.
+    den : Expr, Number
+        The denominator polynomial of the transfer function.
+    var : Symbol
+        Complex variable of the Laplace or z transform used by the
+        polynomials of the transfer function.
+    sampling_time : Symbol, Number
+        Time interval between two consecutive sampling instants.
+        If sampling_time == 0, it is a continuous time transfer function,
+        else it is a discrete time transfer function.
+
+    Examples
+    ========
+
+    >>> from sympy.abc import s, z
+    >>> from sympy.physics.control.lti import new_tf, TransferFunction, DiscreteTransferFunction
+    >>> num = s + 5
+    >>> den = 3*s**2 + 2*s + 1
+    >>> tf = new_tf(num, den, s, 0)
+    >>> tf
+    TransferFunction(s + 5, 3*s**2 + 2*s + 1, s)
+    >>> num = z
+    >>> den = z + 1
+    >>> dtf = new_tf(num, den, z, 0.1)
+    >>> dtf
+    DiscreteTransferFunction(z, z + 1, z, 0.1)
+
+    See Also
+    ========
+
+    TransferFunction, DiscreteTransferFunction
+
     """
-    return DiscreteTransferFunction(num, den, var, sampling_time) #if sampling_time == 0 DiscreteTransferFunction returns TransferFunction
+    if sampling_time == 0:
+        return TransferFunction(num, den, var)
+    return DiscreteTransferFunction(num, den, var, sampling_time)
 
 class TransferFunctionBase(SISOLinearTimeInvariant, ABC):
     r"""
@@ -1861,7 +1900,10 @@ class DiscreteTransferFunction(TransferFunctionBase):
     """
     def __new__(cls, num, den, var, sampling_time=1):
         if sampling_time == 0:
-            return TransferFunction(num, den, var)
+            raise ValueError(filldedent("""
+                The sampling time cannot be zero.
+                If you want to create a continuous transfer function,
+                use the TransferFunction class instead."""))
 
         sampling_time = sympify(sampling_time)
         obj = super(DiscreteTransferFunction, cls).__new__(cls, num, den, var,
