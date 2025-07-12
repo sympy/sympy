@@ -4355,10 +4355,19 @@ def test_sympy__physics__control__lti__MIMOLinearTimeInvariant():
     pass
 
 
+def test_sympy__physics__control__lti__TransferFunctionBase():
+    # Direct instances of TransferFunctionBase class are not allowed.
+    pass
+
+
 def test_sympy__physics__control__lti__TransferFunction():
     from sympy.physics.control.lti import TransferFunction
     assert _test_args(TransferFunction(2, 3, x))
 
+
+def test_sympy__physics__control__lti__DiscreteTransferFunction():
+    from sympy.physics.control.lti import DiscreteTransferFunction
+    assert _test_args(DiscreteTransferFunction(2, 3, x, 0.1))
 
 def _test_args_PIDController(obj):
     from sympy.physics.control.lti import PIDController
@@ -4433,6 +4442,11 @@ def test_sympy__physics__control__lti__TransferFunctionMatrix():
     assert _test_args(TransferFunctionMatrix([[tf1, tf2]]))
 
 
+def test_sympy__physics__control__lti__StateSpaceBase():
+    # Direct instances of StateSpaceBase class are not allowed.
+    pass
+
+
 def test_sympy__physics__control__lti__StateSpace():
     from sympy.matrices.dense import Matrix
     from sympy.physics.control import StateSpace
@@ -4441,6 +4455,11 @@ def test_sympy__physics__control__lti__StateSpace():
     C = Matrix([[1, 2]])
     D = Matrix([0])
     assert _test_args(StateSpace(A, B, C, D))
+
+
+def test_sympy__physics__control__lti__DiscreteStateSpace():
+    #TODO
+    pass
 
 
 def test_sympy__physics__units__dimensions__Dimension():
