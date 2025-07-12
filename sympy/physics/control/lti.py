@@ -5280,7 +5280,7 @@ class StateSpace(LinearTimeInvariant):
         Examples
         ========
 
-        >>> from sympy import symbols, Matrix
+        >>> from sympy import Matrix
         >>> from sympy.physics.control import StateSpace
         >>> A1 = Matrix([[-1.5, -2], [1, 0]])
         >>> B1 = Matrix([0.5, 0])
