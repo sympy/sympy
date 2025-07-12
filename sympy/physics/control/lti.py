@@ -544,7 +544,7 @@ def new_tf(num, den, var, sampling_time):
     ========
 
     >>> from sympy.abc import s, z
-    >>> from sympy.physics.control.lti import new_tf, TransferFunction, DiscreteTransferFunction
+    >>> from sympy.physics.control.lti import new_tf
     >>> num = s + 5
     >>> den = 3*s**2 + 2*s + 1
     >>> tf = new_tf(num, den, s, 0)
