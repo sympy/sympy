@@ -384,9 +384,9 @@ class FlintPowerSeriesRingZZ(PowerSeriesRing):
             else:
                 return fmpz_series(comp, prec=ring_prec)
 
-        if dup2 and not dom.is_unit(dup2[0]):
+        if dup2 and not dom.is_zero(dup2[-1]):
             raise ValueError(
-                "Series composition requires the second series to have a unit constant term."
+                "Series composition requires the second series to have a zero constant term."
             )
 
         prec1 = _get_series_precision(s1) if isinstance(s1, fmpz_series) else ring_prec
@@ -509,7 +509,7 @@ class FlintPowerSeriesRingZZ(PowerSeriesRing):
         poly = fmpz_poly(s.coeffs())
         derivative = poly.derivative()
         prec = _get_series_precision(s)
-        return fmpz_series(derivative, prec=prec)
+        return fmpz_series(derivative, prec=prec - 1)
 
 
 class FlintPowerSeriesRingQQ(PowerSeriesRing):
@@ -880,7 +880,7 @@ class FlintPowerSeriesRingQQ(PowerSeriesRing):
             else:
                 return fmpq_series(comp, prec=ring_prec)
 
-        if dup2 and not dom.is_zero(dup2[0]):
+        if dup2 and not dom.is_zero(dup2[-1]):
             raise ValueError(
                 "Series composition requires the second series to have a zero constant term."
             )
@@ -980,7 +980,7 @@ class FlintPowerSeriesRingQQ(PowerSeriesRing):
         poly = fmpq_poly(s.coeffs())
         derivative = poly.derivative()
         prec = _get_series_precision(s)
-        return fmpq_series(derivative, prec=prec)
+        return fmpq_series(derivative, prec=prec - 1)
 
     def integrate(self, s: QQSeries) -> QQSeries:
         """

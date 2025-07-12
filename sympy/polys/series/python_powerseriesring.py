@@ -252,6 +252,8 @@ def _useries_derivative(s: USeries[Er], dom: Domain, ring_prec: int) -> USeries[
     """Compute the first derivative of a power series."""
     coeffs, prec = s
     series = dup_diff(coeffs, 1, dom)
+    if prec:
+        prec -= 1
     return _useries(series, prec, dom, ring_prec)
 
 
@@ -259,6 +261,8 @@ def _useries_integrate(s: USeries[Er], dom: Domain, ring_prec: int) -> USeries[E
     """Compute the integral of a power series."""
     coeffs, prec = s
     series = dup_integrate(coeffs, 1, dom)
+    if prec:
+        prec += 1
     return _useries(series, prec, dom, ring_prec)
 
 
