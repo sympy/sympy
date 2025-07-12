@@ -94,7 +94,7 @@ class Expr(Basic, EvalfMixin):
         def simplify(self, **kwargs) -> Expr:
             ...
 
-        def evalf(self, n: int = 15, subs: dict[Basic, Basic | float] | None = None,
+        def evalf(self, n: int | None = 15, subs: dict[Basic, Basic | float] | None = None,
                   maxn: int = 100, chop: bool | int = False, strict: bool  = False,
                   quad: str | None = None, verbose: bool = False) -> Expr:
             ...
@@ -358,6 +358,8 @@ class Expr(Basic, EvalfMixin):
     def __int__(self) -> int:
         if not self.is_number:
             raise TypeError("Cannot convert symbols to int")
+        if not self.is_comparable:
+            raise TypeError("Cannot convert non-comparable expression to int")
         r = self.round(2)
         if not r.is_Number:
             raise TypeError("Cannot convert complex to int")
@@ -3844,7 +3846,7 @@ class Expr(Basic, EvalfMixin):
     def round(self, n=None):
         """Return x rounded to the given decimal place.
 
-        If a complex number would results, apply round to the real
+        If a complex number would result, apply round to the real
         and imaginary components of the number.
 
         Examples

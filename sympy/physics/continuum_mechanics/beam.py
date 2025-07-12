@@ -471,6 +471,13 @@ class Beam:
         else:
             new_second_moment = self.second_moment
 
+        if via== "fixed" or via=="hinge":
+            pass
+        else:
+            raise ValueError(
+                "Invalid joining method. Choose from 'fixed' or 'hinge'."
+            )
+
         if via == "fixed":
             new_beam = Beam(new_length, E, new_second_moment, x)
             new_beam._joined_beam = True
@@ -534,6 +541,13 @@ class Beam:
         + 10*SingularityFunction(x, 20, -1)
         """
         loc = sympify(loc)
+
+        if type == "fixed" or type=="roller" or type=="pin":
+            pass
+        else:
+            raise ValueError(
+                "Invalid support type. Choose from 'pin', 'roller', or 'fixed'."
+            )
 
         self._applied_supports.append((loc, type))
         if type in ("pin", "roller"):
@@ -2887,6 +2901,12 @@ class Beam3D(Beam):
             self._load_Singularity[0] += value*SingularityFunction(x, start, order)
 
     def apply_support(self, loc, type="fixed"):
+        if type in ("pin", "roller", "fixed"):
+            pass
+        else:
+            raise ValueError(
+                "Invalid support type. Choose from 'pin', 'roller', or 'fixed'."
+            )
         if type in ("pin", "roller"):
             reaction_load = Symbol('R_'+str(loc))
             self._reaction_loads[reaction_load] = reaction_load
