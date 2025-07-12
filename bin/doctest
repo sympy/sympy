@@ -16,6 +16,9 @@ blacklist = [
     'doc/src/explanation/modules/physics/biomechanics/biomechanics.rst',
     'doc/src/explanation/modules/physics/mechanics/autolev_parser.rst',
     'doc/src/tutorials/physics/biomechanics/biomechanics.rst',
+
+    # Flint-based series ring: not tested unless Flint is installed
+    'sympy/polys/series/flint_powerseriesring.py',
 ]
 
 import sys
