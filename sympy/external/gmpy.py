@@ -198,6 +198,8 @@ GROUND_TYPES: str
 
 if TYPE_CHECKING:
 
+    HAS_GMPY = 0
+
     class MPZ:
         """
         Dummy class for type checking purposes. This will be either int,
@@ -308,6 +310,7 @@ if TYPE_CHECKING:
     def iroot(x: MPZ | int, n: int) -> tuple[MPZ, bool]: ...
 
     def jacobi(x: MPZ | int, y: MPZ | int) -> int: ...
+    def fibonacci(x: MPZ | int) -> MPZ: ...
     def legendre(x: MPZ | int, y: MPZ | int) -> int: ...
     def kronecker(x: MPZ | int, y: MPZ | int) -> int: ...
 
