@@ -198,6 +198,8 @@ GROUND_TYPES: str
 
 if TYPE_CHECKING:
 
+    HAS_GMPY = 0
+
     class MPZ:
         """
         Dummy class for type checking purposes. This will be either int,
