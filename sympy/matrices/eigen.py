@@ -28,7 +28,6 @@ from .utilities import _iszero, _simplify
 
 if TYPE_CHECKING:
     from typing import TypeVar, Callable, Any, Literal
-    from sympy.core.expr import Expr
     from sympy.matrices.matrixbase import MatrixBase
     Tmat = TypeVar('Tmat', bound=MatrixBase)
 
