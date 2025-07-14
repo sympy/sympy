@@ -44,7 +44,41 @@ def _global_cap(cap: int):
 
 
 class FlintPowerSeriesRingZZ(PowerSeriesRing):
-    """Flint implementation of power series ring over integer ring."""
+    """
+    Flint implementation of power series ring over integers (ZZ).
+
+    This class provides high-performance power series operations over the integer ring,
+    leveraging the FLINT library for optimized arithmetic and series manipulations
+    precision handling and truncation.
+
+    Parameters
+    ==========
+
+    prec : int, optional
+        The default precision for power series operations. Default is 6.
+
+    Examples
+    ========
+
+    >>> from sympy.polys.series.flint_powerseriesring import FlintPowerSeriesRingZZ
+    >>> R = FlintPowerSeriesRingZZ(5)
+    >>> R
+    Flint Power Series Ring over ZZ with precision 5
+
+    >>> s = R([1, 2, 3])
+    >>> R.print(s)
+    1 + 2*x + 3*x**2
+
+    >>> x = R.gen
+    >>> squared = R.square(R.add(R.one, x))  # (1+x)^2
+    >>> R.print(squared)
+    1 + 2*x + x**2
+
+    >>> # Geometric series: 1/(1-x)
+    >>> geom = R.inverse(R.subtract(R.one, x))
+    >>> R.print(geom)
+    1 + x + x**2 + x**3 + x**4 + O(x**5)
+    """
 
     _domain = ZZ
 
@@ -63,6 +97,11 @@ class FlintPowerSeriesRingZZ(PowerSeriesRing):
 
     def __hash__(self) -> int:
         return hash((self.domain, self._prec))
+
+    def __call__(self, coeffs: list[MPZ], prec: int | None = None) -> ZZSeries:
+        """Create a power series from a list of coefficients. If `prec` is not specified,
+        it defaults to the ring's precision."""
+        return self.from_list(coeffs, prec)
 
     @property
     def domain(self) -> Domain:
@@ -400,7 +439,7 @@ class FlintPowerSeriesRingZZ(PowerSeriesRing):
         comp = comp[::-1]
         return fmpz_series(comp, prec=min_prec)
 
-    def inversion(self, s: ZZSeries) -> ZZSeries:
+    def inverse(self, s: ZZSeries) -> ZZSeries:
         """
         Compute the inverse of a power series.
 
@@ -411,7 +450,7 @@ class FlintPowerSeriesRingZZ(PowerSeriesRing):
         >>> from sympy.polys.series import power_series_ring
         >>> R = power_series_ring(ZZ, 5)
         >>> s = R.from_list([1, 2, 3])
-        >>> R.print(R.inversion(s))
+        >>> R.print(R.inverse(s))
         1 - 2*x + x**2 + 4*x**3 - 11*x**4 + O(x**5)
         """
         dom = self._domain
@@ -419,7 +458,7 @@ class FlintPowerSeriesRingZZ(PowerSeriesRing):
 
         if not coeffs or not dom.is_unit(coeffs[0]):
             raise NotReversible(
-                "Series inversion requires the constant term to be a unit"
+                "Series inverse requires the constant term to be a unit"
             )
 
         prec = _get_series_precision(s) if isinstance(s, fmpz_series) else self._prec
@@ -513,7 +552,42 @@ class FlintPowerSeriesRingZZ(PowerSeriesRing):
 
 
 class FlintPowerSeriesRingQQ(PowerSeriesRing):
-    """Flint implementation of power series ring over rational fields."""
+    """
+    Flint implementation of power series ring over rational field (QQ).
+
+    This class provides high-performance power series operations over the rational field,
+    leveraging the FLINT library for optimized arithmetic and series manipulations
+    with  precision handling and truncation. It extends the integer ring functionality
+    with support for rational coefficients and integration.
+
+    Parameters
+    ==========
+
+    prec : int, optional
+        The default precision for power series operations. Default is 6.
+
+    Examples
+    ========
+
+    >>> from sympy import QQ
+    >>> from sympy.polys.series.flint_powerseriesring import FlintPowerSeriesRingQQ
+    >>> R = FlintPowerSeriesRingQQ(5)
+    >>> R
+    Flint Power Series Ring over QQ with precision 5
+
+    >>> s = R([QQ(1,2), QQ(2,3)])
+    >>> R.print(s)
+    1/2 + 2/3*x
+
+    >>> x = R.gen
+    >>> integrated = R.integrate(R.add(R.one, x))
+    >>> R.print(integrated)
+    x + 1/2*x**2
+
+    >>> inv = R.inverse(s)
+    >>> R.print(inv)
+    2 - 8/3*x + 32/9*x**2 - 128/27*x**3 + 512/81*x**4 + O(x**5)
+    """
 
     _domain = QQ
 
@@ -532,6 +606,11 @@ class FlintPowerSeriesRingQQ(PowerSeriesRing):
 
     def __hash__(self) -> int:
         return hash((self.domain, self._prec))
+
+    def __call__(self, coeffs: list[MPQ], prec: int | None = None) -> QQSeries:
+        """Create a power series from a list of coefficients. If `prec` is not specified,
+        it defaults to the ring's precision."""
+        return self.from_list(coeffs, prec)
 
     @property
     def domain(self) -> Domain:
@@ -896,7 +975,7 @@ class FlintPowerSeriesRingQQ(PowerSeriesRing):
         comp = comp[::-1]
         return fmpq_series(comp, prec=min_prec)
 
-    def inversion(self, s: QQSeries) -> QQSeries:
+    def inverse(self, s: QQSeries) -> QQSeries:
         """
         Compute the inverse of a power series.
 
@@ -907,7 +986,7 @@ class FlintPowerSeriesRingQQ(PowerSeriesRing):
         >>> from sympy.polys.series import power_series_ring
         >>> R = power_series_ring(QQ, 5)
         >>> s = R.from_list([QQ(1,2), QQ(1,3)])
-        >>> R.print(R.inversion(s))
+        >>> R.print(R.inverse(s))
         2 - 4/3*x + 8/9*x**2 - 16/27*x**3 + 32/81*x**4 + O(x**5)
         """
         dom = self._domain
@@ -916,7 +995,7 @@ class FlintPowerSeriesRingQQ(PowerSeriesRing):
 
         if not coeffs or not dom.is_unit(coeffs[0]):
             raise NotReversible(
-                "Series inversion requires the constant term to be a unit"
+                "Series inverse requires the constant term to be a unit"
             )
 
         prec = _get_series_precision(s) if isinstance(s, fmpq_series) else ring_prec

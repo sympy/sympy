@@ -216,12 +216,12 @@ def _useries_compose(
     return comp, min_prec
 
 
-def _useries_inversion(s: USeries[Er], dom: Domain, ring_prec: int) -> USeries[Er]:
+def _useries_inverse(s: USeries[Er], dom: Domain, ring_prec: int) -> USeries[Er]:
     """Compute the series multiplicative inverse of a power series."""
     coeffs, prec = s
 
     if not coeffs or not dom.is_unit(coeffs[-1]):
-        raise NotReversible("Series inversion requires the constant term to be a unit")
+        raise NotReversible("Series inverse requires the constant term to be a unit")
 
     if prec is None:
         prec = ring_prec
@@ -267,7 +267,40 @@ def _useries_integrate(s: USeries[Er], dom: Domain, ring_prec: int) -> USeries[E
 
 
 class PythonPowerSeriesRingZZ(PowerSeriesRing[USeries[MPZ]]):
-    """Python implementation of power series ring over integers ring."""
+    """
+    Python implementation of power series ring over integers (ZZ).
+
+    This class provides comprehensive power series operations over the integer ring,
+    supporting both series manipulations with precision handling and truncation.
+
+    Parameters
+    ==========
+
+    prec : int, optional
+        The default precision for power series operations. Default is 6.
+
+    Examples
+    ========
+
+    >>> from sympy.polys.series.python_powerseriesring import PythonPowerSeriesRingZZ
+    >>> R = PythonPowerSeriesRingZZ(5)
+    >>> R
+    Python Power Series Ring over ZZ with precision 5
+
+    >>> s = R([1, 2, 3])
+    >>> R.print(s)
+    1 + 2*x + 3*x**2
+
+    >>> x = R.gen
+    >>> squared = R.square(R.add(R.one, x))
+    >>> R.print(squared)
+    1 + 2*x + x**2
+
+    >>> # Geometric series: 1/(1-x)
+    >>> geom = R.inverse(R.subtract(R.one, x))
+    >>> R.print(geom)
+    1 + x + x**2 + x**3 + x**4 + O(x**5)
+    """
 
     _domain = ZZ
 
@@ -288,6 +321,13 @@ class PythonPowerSeriesRingZZ(PowerSeriesRing[USeries[MPZ]]):
 
     def __hash__(self) -> int:
         return hash((self._domain, self._prec))
+
+    def __call__(self, coeffs: list[MPZ], prec: int | None = None) -> USeries[MPZ]:
+        """
+        Create a power series from a list of coefficients. If `prec` is not specified,
+        it defaults to the ring's precision.
+        """
+        return self.from_list(coeffs, prec)
 
     @property
     def domain(self) -> Domain:
@@ -517,7 +557,7 @@ class PythonPowerSeriesRingZZ(PowerSeriesRing[USeries[MPZ]]):
         """
         return _useries_compose(s1, s2, self._domain, self._prec)
 
-    def inversion(self, s: USeries[MPZ]) -> USeries[MPZ]:
+    def inverse(self, s: USeries[MPZ]) -> USeries[MPZ]:
         """
         Compute the series multiplicative inverse of a power series.
 
@@ -527,10 +567,10 @@ class PythonPowerSeriesRingZZ(PowerSeriesRing[USeries[MPZ]]):
         >>> from sympy.polys.series.python_powerseriesring import PythonPowerSeriesRingZZ
         >>> R = PythonPowerSeriesRingZZ(5)
         >>> s = R.from_list([1, 2, 3])
-        >>> R.print(R.inversion(s))
+        >>> R.print(R.inverse(s))
         1 - 2*x + x**2 + 4*x**3 - 11*x**4 + O(x**5)
         """
-        return _useries_inversion(s, self._domain, self._prec)
+        return _useries_inverse(s, self._domain, self._prec)
 
     def reversion(self, s: USeries[MPZ]) -> USeries[MPZ]:
         """
@@ -582,7 +622,42 @@ class PythonPowerSeriesRingZZ(PowerSeriesRing[USeries[MPZ]]):
 
 
 class PythonPowerSeriesRingQQ(PowerSeriesRing[USeries[MPQ]]):
-    """Python implementation of power series ring over rational field."""
+    """
+    Python implementation of power series ring over rational field (QQ).
+
+    This class provides comprehensive power series operations over the rational field,
+    supporting series manipulations with precision handling and truncation.
+    It extends the integer ring functionality with support for rational coefficients
+    and integration.
+
+    Parameters
+    ==========
+
+    prec : int, optional
+        The default precision for power series operations. Default is 6.
+
+    Examples
+    ========
+
+    >>> from sympy import QQ
+    >>> from sympy.polys.series.python_powerseriesring import PythonPowerSeriesRingQQ
+    >>> R = PythonPowerSeriesRingQQ(5)
+    >>> R
+    Python Power Series Ring over QQ with precision 5
+
+    >>> s = R([QQ(1,2), QQ(2,3)])
+    >>> R.print(s)
+    1/2 + 2/3*x
+
+    >>> x = R.gen
+    >>> integrated = R.integrate(R.add(R.one, x))
+    >>> R.print(integrated)
+    x + 1/2*x**2
+
+    >>> inv = R.inverse(s)
+    >>> R.print(inv)
+    2 - 8/3*x + 32/9*x**2 - 128/27*x**3 + 512/81*x**4 + O(x**5)
+    """
 
     _domain = QQ
 
@@ -603,6 +678,13 @@ class PythonPowerSeriesRingQQ(PowerSeriesRing[USeries[MPQ]]):
 
     def __hash__(self) -> int:
         return hash((self._domain, self._prec))
+
+    def __call__(self, coeffs: list[MPQ], prec: int | None = None) -> USeries[MPQ]:
+        """
+        Create a power series from a list of coefficients. If `prec` is not specified,
+        it defaults to the ring's precision.
+        """
+        return self.from_list(coeffs, prec)
 
     @property
     def domain(self) -> Domain:
@@ -843,7 +925,7 @@ class PythonPowerSeriesRingQQ(PowerSeriesRing[USeries[MPQ]]):
         """
         return _useries_compose(s1, s2, self._domain, self._prec)
 
-    def inversion(self, s: USeries[MPQ]) -> USeries[MPQ]:
+    def inverse(self, s: USeries[MPQ]) -> USeries[MPQ]:
         """
         Compute the series multiplicative inverse of a power series.
 
@@ -854,10 +936,10 @@ class PythonPowerSeriesRingQQ(PowerSeriesRing[USeries[MPQ]]):
         >>> from sympy.polys.series.python_powerseriesring import PythonPowerSeriesRingQQ
         >>> R = PythonPowerSeriesRingQQ(5)
         >>> s = R.from_list([QQ(1,2), QQ(1,3)])
-        >>> R.print(R.inversion(s))
+        >>> R.print(R.inverse(s))
         2 - 4/3*x + 8/9*x**2 - 16/27*x**3 + 32/81*x**4 + O(x**5)
         """
-        return _useries_inversion(s, self._domain, self._prec)
+        return _useries_inverse(s, self._domain, self._prec)
 
     def reversion(self, s: USeries[MPQ]) -> USeries[MPQ]:
         """

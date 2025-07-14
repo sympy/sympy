@@ -45,15 +45,7 @@ def _series_from_list(series: list[Any], prec: int | None) -> str:
 
 
 class PowerSeriesRing(Protocol[Sr]):
-    """Protocol for power series ring over the integer ring (ZZ).
-
-    Attributes
-    ----------
-    domain : Domain
-        The ground domain (ZZ).
-    prec : int
-        The default precision for power series operations.
-    """
+    """A protocol for a power series ring."""
 
     def __init__(self, prec: int = 6, /) -> None:
         """Initialize a power series ring over ZZ."""
