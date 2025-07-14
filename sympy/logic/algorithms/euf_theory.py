@@ -22,7 +22,7 @@ and follows the data structures and logic outlined in the referenced paper.
 """
 
 from dataclasses import dataclass
-from typing import Any, Tuple, List, Dict
+from typing import Any, Tuple, List, Dict, Deque, DefaultDict
 from collections import defaultdict, deque
 
 # --- Term and Atom Representation ---
@@ -151,6 +151,9 @@ class EUFCongruenceClosure:
         # Maps terms to unique ids and vice versa
         self._id_of: Dict[Any, int] = {}
         self._term_of: List[Any] = []
+        self.lookup: Dict[Tuple[Function, Tuple[Any, ...]], int] = {}
+        self.use: DefaultDict[int, List[Tuple[Function, Tuple[Any, ...], int]]] = defaultdict(list)
+        self._pending: Deque[Tuple[int, int]] = deque()
 
         def _cid(term):
             """Assigns and returns a unique integer id for each term."""
@@ -326,5 +329,5 @@ class EUFCongruenceClosure:
             True if t1 and t2 are congruent, False otherwise.
         """
         if t1 not in self._id_of or t2 not in self._id_of:
-            return None
+            return False
         return self._find(self._id_of[t1]) == self._find(self._id_of[t2])
