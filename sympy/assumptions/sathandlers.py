@@ -6,6 +6,7 @@ from sympy.core.numbers import ImaginaryUnit
 from sympy.functions.elementary.complexes import Abs
 from sympy.logic.boolalg import (Equivalent, And, Or, Implies)
 from sympy.matrices.expressions import MatMul
+from sympy import S
 
 # APIs here may be subject to change
 
@@ -287,6 +288,12 @@ def _(expr):
 
 @class_fact_registry.multiregister(Pow)
 def _(expr):
+    if (expr is S.NaN or expr.base is S.NaN or expr.exp is S.NaN or
+        expr is S.ComplexInfinity or expr.base is S.ComplexInfinity or expr.exp is S.ComplexInfinity):
+        return []
+    # Handle Pow(0, negative, evaluate=False)
+    if expr.base.is_zero and getattr(expr.exp, 'is_negative', False):
+        return []
     base, exp = expr.base, expr.exp
     return [
         (Q.real(base) & Q.even(exp) & Q.nonnegative(exp)) >> Q.nonnegative(expr),

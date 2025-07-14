@@ -2574,3 +2574,5 @@ def test_issue_27440():
 def test_issue_28150():
     assert ask(Q.real(Pow(0, -1, evaluate=False))) is False
     assert ask(Q.real(Pow(Mul(0, -1, evaluate=False), -1, evaluate=False))) is False
+    assert ask(Q.real(Pow(S.NaN, -1, evaluate=False))) is None
+    assert ask(Q.real(Pow(Pow(0,-1, evaluate=False), -1, evaluate=False))) is True

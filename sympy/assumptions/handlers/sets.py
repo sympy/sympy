@@ -306,6 +306,8 @@ def _(expr, assumptions):
     * Real**Real                 -> ? e.g. sqrt(-1) is imaginary and
                                     sqrt(2) is not
     """
+    if expr.base is S.NaN or expr.exp is S.NaN:
+        return None
     if expr.is_number:
         return _RealPredicate_number(expr, assumptions)
 
