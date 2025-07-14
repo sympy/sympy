@@ -108,4 +108,3 @@ def test_internal_structures_and_methods():
     key = (f, tuple(cc._id_of[arg] for arg in fx.args))
     assert key in cc.lookup
     assert isinstance(cc.use[cc._id_of[x]], list)
-
