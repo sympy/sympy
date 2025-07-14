@@ -45,18 +45,44 @@ WHITE_LIST = ALLOWED_PRED | {Q.positive, Q.negative, Q.zero, Q.nonzero, Q.nonpos
 
 def check_satisfiability(prop, _prop, factbase):
     """
-    Check whether a given logical proposition is always true, always false,
-    or indeterminate under a given set of assumptions.
+    Determines the satisfiability of a logical proposition within the linear real arithmetic (LRA) domain,
+    given a base of known assumptions.
 
-    This function evaluates the satisfiability of both a proposition (`prop`) and its
-    negation (`_prop`) using a provided fact base (`factbase`) of known truths.
+    This function evaluates both a logical proposition (`prop`) and its negation (`_prop`) to determine
+    whether the proposition is always true, always false, or indeterminate under a given set of
+    facts (`factbase`). It is an extension of the baseline `check_satisfiability()` in
+    `sympy.assumptions.satask`, but adds domain-specific logic for linear real arithmetic (LRA),
+    with stricter type enforcement and domain reasoning.
 
-    Compared to the baseline `check_satisfiability()` in `sympy.assumptions.satask`,
-    this version adds:
-      - Validation of predicates for supported types (e.g., only real/rational domain)
-      - Enforcement of realness and rationality assumptions
-      - Preprocessing to infer and inject implicit assumptions (e.g., sign, realness)
-      - Early rejection of unsupported expressions (e.g., NaN, matrix-like)
+    Compared to `sympy.assumptions.satask.check_satisfiability`, this version introduces:
+
+    1. Domain Restriction to LRA (Linear Real Arithmetic):
+        - Only predicates and expressions involving real or rational scalar values are supported.
+        - Types such as matrices, complex values, `NaN`, or symbolic constructs not known to be real
+          are explicitly disallowed and will raise errors.
+        - This ensures that satisfiability checking is compatible with solvers or theories designed
+          for linear real arithmetic.
+
+    2. Realness Enforcement:
+        - The function ensures that all symbols involved in arithmetic comparisons are explicitly
+          assumed to be real where required.
+
+    3. Preprocessing and Implicit Assumption Injection:
+        - Realness assumptions are introduced only under the following conditions:
+            - Inequalities (Q.gt, Q.lt): If both sides are single symbolic variables and lack explicit domains, Q.real(x) and Q.real(y) are added.
+            - Equalities (Q.eq): If one side is a single symbol known to be real and the other is a single symbol with unknown domain, realness is inferred. If one is real and the other explicitly not real, a ValueError is raised.
+            - Explicit declarations: Symbols explicitly declared real (e.g., x.is_real == True) are recognized and used to avoid redundant inference.
+        - This preprocessing helps the solver reason with more complete context, avoiding false
+          negatives due to missing domain constraints.
+
+    4. Early Rejection of Unsupported Inputs:
+        - Before attempting satisfiability checks, the function scans the input for invalid constructs,
+          such as:
+            - `NaN` values
+            - Matrix-like expressions
+            - Unsupported predicate functions (anything not in the supported LRA predicate list)
+        - If such constructs are found, the function raises `UnhandledInput` instead of continuing.
+        - This guards against undefined or nonsensical logical evaluations.
 
     Parameters
     ----------
@@ -96,6 +122,7 @@ def check_satisfiability(prop, _prop, factbase):
 
         if pred.function is Q.eq:
             lhs, rhs = pred.arguments
+            # heuristic: x = y & real(x) → add real(y)
             for a, b in [(lhs, rhs), (rhs, lhs)]:
                 if a.is_real:
                     if b.is_real is None:
@@ -104,6 +131,7 @@ def check_satisfiability(prop, _prop, factbase):
                         raise ValueError("Inconsistent assumptions")
         if pred.function in (Q.gt, Q.lt):
             lhs, rhs = pred.arguments
+            # heuristic: x > y → add real(x) and real(y), if they are symbols
             if lhs.is_Symbol:
                 realness_preds.add(Q.real(lhs))
             if rhs.is_Symbol:
