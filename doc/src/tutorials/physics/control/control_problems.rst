@@ -386,7 +386,7 @@ Subpart 1
 >>> W_partial = Feedback(G1, G3) * G2 # the operator * is used for Series connection
 >>> W = Feedback(W_partial, G3)
 >>> W = W.doit().to_standard_form(cancel_poles_zeros = True)
->>> pprint(W, use_unicode=False)
+>>> pprint(W, use_unicode = False)
        2
     2*z
 ------------, sampling time: 1
@@ -425,7 +425,7 @@ We can check that the output is asymptotically stable:
 >>> Y = Y.doit().to_standard_form(cancel_poles_zeros = True)
 >>> pprint(Y, use_unicode = False)
   2*z
--------, sampling_time: 1
+-------, sampling time: 1
 2*z - 1
 >>> Y.is_stable()
 True
