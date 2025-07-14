@@ -325,7 +325,6 @@ class EUFCongruenceClosure:
         bool
             True if t1 and t2 are congruent, False otherwise.
         """
-       
         if t1 not in self._id_of or t2 not in self._id_of:
             return None
         return self._find(self._id_of[t1]) == self._find(self._id_of[t2])
