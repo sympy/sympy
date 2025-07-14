@@ -364,6 +364,7 @@ Find
 
 1. The transfer function :math:`W(z)` from input :math:`r(k)` to output
 :math:`y(k)`.
+
 2. Determine a finite-duration input signal :math:`u(k)` (i.e., such that there
 exists an :math:`h \in \mathbb{N}` for which :math:`u(k) = 0` for all
 :math:`k \geq h`) so that the resulting forced response :math:`y_f(k)` converges
