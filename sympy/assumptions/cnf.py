@@ -397,22 +397,29 @@ class EncodedCNF:
     EncodedCNF is used to represent logical expressions in CNF using integer-based
     encodings, where each symbol (variable) is assigned a unique positive integer,
     and its negation is represented by the corresponding negative integer.
+
     Attributes
     ==========
+
     data : list[set[int]]
         A list of clauses, where each clause is a set of integers representing
         literals. Positive integers correspond to variables, and negative integers
         represent their negations. For example, `{1, -2}` encodes "x1 OR NOT x2".
+
     encoding : dict
         A dictionary mapping SymPy symbols to unique positive integers, used for
         converting symbolic clauses to encoded integer form.
+
     symbols : list
         The list of symbols (variables) used in the CNF. The order of symbols
         determines their assigned encoding. For example, if `symbols = [b, a, c]`,
         then `encoding = {b: 1, a: 2, c: 3}`.
+
     Examples
     ========
+
     Note: Encoding order is not deterministic and depends on symbol discovery order.
+
     >>> from sympy.assumptions.cnf import CNF, EncodedCNF
     >>> from sympy.abc import a, b
     >>> from sympy.logic.boolalg import Or, Not
