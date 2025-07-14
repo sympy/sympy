@@ -122,7 +122,7 @@ def check_satisfiability(prop, _prop, factbase):
 
         if pred.function is Q.eq:
             lhs, rhs = pred.arguments
-            # heuristic: x = y & real(x) → add real(y)
+            # heuristic: x = y & real(x) -> add real(y)
             for a, b in [(lhs, rhs), (rhs, lhs)]:
                 if a.is_real:
                     if b.is_real is None:
@@ -131,7 +131,7 @@ def check_satisfiability(prop, _prop, factbase):
                         raise ValueError("Inconsistent assumptions")
         if pred.function in (Q.gt, Q.lt):
             lhs, rhs = pred.arguments
-            # heuristic: x > y → add real(x) and real(y), if they are symbols
+            # heuristic: x > y -> add real(x) and real(y), if they are symbols
             if lhs.is_Symbol:
                 realness_preds.add(Q.real(lhs))
             if rhs.is_Symbol:
