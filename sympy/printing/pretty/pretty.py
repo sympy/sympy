@@ -999,7 +999,8 @@ class PrettyPrinter(Printer):
             res = Mul(num, Pow(den, -1, evaluate=False), evaluate=False)
 
             result = self._print_Mul(res)
-            result = prettyForm(*result.right(f", sampling_time: {expr.sampling_time}"))
+            result = prettyForm(\
+                *result.right(f", sampling time: {expr.sampling_time}"))
             return result
         else:
             return self._print(1)/self._print(expr.den)
@@ -1121,7 +1122,7 @@ class PrettyPrinter(Printer):
         if expr.sampling_time == 0:
             return mat
 
-        return prettyForm(*mat.right(f", sampling_time: {expr.sampling_time}"))
+        return prettyForm(*mat.right(f", sampling time: {expr.sampling_time}"))
 
     def _print_StateSpace(self, expr):
         from sympy.matrices.expressions.blockmatrix import BlockMatrix

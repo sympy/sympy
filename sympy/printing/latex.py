@@ -2628,7 +2628,7 @@ class LatexPrinter(Printer):
     def _print_DiscreteTransferFunction(self, expr):
         num, den = self._print(expr.num), self._print(expr.den)
         sampling_time = self._print(expr.sampling_time)
-        return r"\frac{%s}{%s} \text{, sampling\_time: } {%s}" % \
+        return r"\frac{%s}{%s} \text{, sampling time: } {%s}" % \
             (num, den, sampling_time)
 
     def _print_Series(self, expr):
@@ -2699,7 +2699,7 @@ class LatexPrinter(Printer):
         if expr.sampling_time == 0:
             print_mat = r"%s_\tau" % mat
         else:
-            print_mat = r"%s_k \text{, sampling\_time: } {%s}" % (mat,
+            print_mat = r"%s_k \text{, sampling time: } {%s}" % (mat,
                                                            expr.sampling_time)
         return print_mat
 
