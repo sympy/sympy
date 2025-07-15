@@ -573,25 +573,16 @@ class Pow(Expr):
             return True
 
     def _eval_is_imaginary(self):
-        # Guard for undefined expressions that could cause comparison errors
-        if (isinstance(self.base, Pow) and
-            self.base.base.is_zero and getattr(self.base.exp, 'is_negative', False)):
-            return None
-        if self.base.is_zero and getattr(self.exp, 'is_negative', False):
-            return None
-        # Guard for zoo and other special values that could cause comparison errors
-        if self.base in (S.ComplexInfinity, S.Infinity, S.NegativeInfinity):
-            return None
-        if self.exp in (S.ComplexInfinity, S.Infinity, S.NegativeInfinity):
-            return None
         if self.base.is_commutative is False:
             return False
+
         if self.base.is_imaginary:
             if self.exp.is_integer:
                 odd = self.exp.is_odd
                 if odd is not None:
                     return odd
                 return
+
         if self.base == S.Exp1:
             f = 2 * self.exp / (S.Pi*S.ImaginaryUnit)
             # exp(pi*integer) = 1 or -1, so not imaginary
@@ -601,11 +592,13 @@ class Pow(Expr):
             if f.is_odd:
                 return True
             return None
+
         if self.exp.is_imaginary:
             from sympy.functions.elementary.exponential import log
             imlog = log(self.base).is_imaginary
             if imlog is not None:
                 return False  # I**i -> real; (2*I)**i -> complex ==> not imaginary
+
         if self.base.is_extended_real and self.exp.is_extended_real:
             if self.base.is_positive:
                 return False
@@ -620,6 +613,7 @@ class Pow(Expr):
                     if half:
                         return self.base.is_negative
                     return half
+
         if self.base.is_extended_real is False:  # we already know it's not imag
             from sympy.functions.elementary.complexes import arg
             i = arg(self.base)*self.exp/S.Pi

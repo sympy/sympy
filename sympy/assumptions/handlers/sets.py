@@ -226,18 +226,28 @@ def _(expr, assumptions):
     else:
         return _real
 
+def is_undefined_pow(e):
+    if isinstance(e, Pow):
+        if e.base.is_zero and ask(Q.negative):
+            return True
+        if e.base is NaN or exp is NaN:
+            return True
+        return is_undefined_pow(e.base) or is_undefined_pow(e.exp)
+    return False
 
 # RealPredicate
 
 def _RealPredicate_number(expr, assumptions):
-    if isinstance(expr, Pow):
-        if expr.base.is_zero and expr.exp.is_negative:
-            return False
-
+    if expr is (NaN, ComplexInfinity):
+        return False
+    if is_undefined_pow(expr):
+        return None
+    if getattr(expr, 'is_finite', None) is False:
+        return None
     # let as_real_imag() work first since the expression may
     # be simpler to evaluate
     i = im(expr).evalf(2)
-    if i._prec != 1:
+    if hasattr(i, '_prec') and i._prec != 1:
         return not i
     # allow None to be returned if we couldn't show for sure
     # that i was 0
@@ -306,6 +316,13 @@ def _(expr, assumptions):
     * Real**Real                 -> ? e.g. sqrt(-1) is imaginary and
                                     sqrt(2) is not
     """
+    if expr.base.is_zero and getattr(expr.exp, 'is_negative', False):
+        return False
+    if isinstance(expr.base, Pow):
+        if expr.base.base.is_zero and getattr(expr.base.exp, 'is_negative', False):
+            if expr.exp == -1:
+                return True
+            return None
     if expr.base is S.NaN or expr.exp is S.NaN:
         return None
     if expr.is_number:
