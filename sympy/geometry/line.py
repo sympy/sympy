@@ -242,6 +242,57 @@ class LinearEntity(GeometrySet):
         v1, v2 = l1.direction, l2.direction
         return acos(abs(v1.dot(v2))/(abs(v1)*abs(v2)))
 
+    def nearest_points(l1, l2):
+        """return the closest distance of separation between l1 and l2
+        and the points connecting the lines with that distance of
+        separation.
+
+        Examples
+        ========
+
+        >>> from sympy.geometry.line import nearest_points
+        >>> from sympy import Line, Point
+        >>> f = nearest_points
+        >>> l3 = Line(Point(0, 0, 0), Point(-1, 1, 0))
+
+        There is no separation between collinear lines:
+
+        >>> l3b = Line(Point(0, 0, 0), Point(1, -1, 0))
+        >>> f(l3, l3b)
+        (0, Point3D(-t, t, 0))
+
+        There is a uniform distance between non-intersecting
+        parallel lines:
+
+        >>> lp = Line(Point(1, 0, 0), Point(0, 1, 0))
+        >>> f(l3, lp)
+        (sqrt(2)/2, [Point3D(-t, t, 0), Point3D(1/2 - t, t + 1/2, 0)])
+        >>> l4 = Line(Point(1, 0, 1), Point(1, 1, 1))
+        >>> f(l3, l4)
+        (1, [Point3D(1, -1, 0), Point3D(1, -1, 1)])
+        """
+        from sympy.core.symbol import uniquely_named_symbol
+        from sympy.solvers.solvers import solve
+        u = uniquely_named_symbol('t', (l1, l2))
+        same = l1.equals(l2)
+        if same:
+            return S.Zero, l1.arbitrary_point(u)
+        assert same == False  # if we aren't sure, don't continue
+        p1 = l1.arbitrary_point(u)
+        if l1.is_parallel(l2):
+            d = l2.distance(p1)
+            p2 = l1.perpendicular_line(p1).intersection(l2)[0]
+            return d, [p1, p2]
+        p2 = l2.arbitrary_point(u)
+        pts = []
+        for i in range(2):
+            d = l2.distance(p1)
+            v = solve(d.diff(u), u)[0]
+            pts.append(p1.subs(u, v))
+            l2, l1 = l1, l2
+            p1, p2 = p2, p1
+        return d.subs(u, v), pts
+
     def arbitrary_point(self, parameter='t'):
         """A parameterized point on the Line.
 
