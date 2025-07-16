@@ -1,6 +1,8 @@
 """Advanced tools for dense recursive polynomials in ``K[x]`` or ``K[X]``. """
 
+from __future__ import annotations
 
+from sympy.polys.domains.domain import Domain, Er
 from sympy.polys.densearith import (
     dup_add_term, dmp_add_term,
     dup_lshift, dup_rshift,
@@ -16,7 +18,7 @@ from sympy.polys.densearith import (
     dup_exquo_ground, dmp_exquo_ground,
 )
 from sympy.polys.densebasic import (
-    dup_strip, dmp_strip, dup_truncate,
+    dup, dup_strip, dmp_strip, dup_truncate,
     dup_convert, dmp_convert,
     dup_degree, dmp_degree,
     dmp_to_dict,
@@ -945,7 +947,7 @@ def dmp_shift(f, a, u, K):
     return dmp_strip(f, u)
 
 
-def dup_transform(f, p, q, K):
+def dup_transform(f: dup[Er], p: dup[Er], q: dup[Er], K: Domain[Er]) -> dup[Er]:
     """
     Evaluate functional transformation ``q**n * f(p/q)`` in ``K[x]``.
 

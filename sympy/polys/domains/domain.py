@@ -62,6 +62,8 @@ class FieldElement(RingElement[T], Protocol[T]):
 
 Er = TypeVar('Er', bound=RingElement)
 Es = TypeVar('Es', bound=RingElement)
+Et = TypeVar('Et', bound=RingElement)
+Eg = TypeVar('Eg', bound=RingElement)
 Ef = TypeVar('Ef', bound=FieldElement)
 
 
@@ -990,7 +992,7 @@ class Domain(Generic[Er]):
         """Returns a ring associated with ``self``. """
         raise DomainError('there is no ring associated with %s' % self)
 
-    def get_field(self) -> Field:
+    def get_field(self) -> Field[Ef]:
         """Returns a field associated with ``self``. """
         raise DomainError('there is no field associated with %s' % self)
 

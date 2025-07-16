@@ -1,6 +1,15 @@
 """Square-free decomposition algorithms and related tools. """
 
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from sympy.polys.domains.algebraicfield import AlgebraicField
+    from sympy.polys.polyclasses import ANP
+
+from sympy.polys.domains.domain import Eg
 from sympy.polys.densearith import (
     dup_neg, dmp_neg,
     dup_sub, dmp_sub,
@@ -8,6 +17,7 @@ from sympy.polys.densearith import (
     dup_quo, dmp_quo,
     dup_mul_ground, dmp_mul_ground)
 from sympy.polys.densebasic import (
+    dup, dmp, _dup, _dmp,
     dup_strip,
     dup_LC, dmp_ground_LC,
     dmp_zero_p,
@@ -102,7 +112,7 @@ def dmp_sqf_p(f, u, K):
     return True
 
 
-def dup_sqf_norm(f, K):
+def dup_sqf_norm(f: dup[ANP[Eg]], K: AlgebraicField[ANP[Eg], Eg]) -> tuple[int, dup[ANP[Eg]], dup[Eg]]:
     r"""
     Find a shift of `f` in `K[x]` that has square-free norm.
 
@@ -173,15 +183,17 @@ def dup_sqf_norm(f, K):
     s, g = 0, dmp_raise(K.mod.to_list(), 1, 0, K.dom)
 
     while True:
-        h, _ = dmp_inject(f, 0, K, front=True)
+        h, _ = dmp_inject(_dmp(f), 0, K, front=True)
         r = dmp_resultant(g, h, 1, K.dom)
 
-        if dup_sqf_p(r, K.dom):
+        r2: dmp[Eg] = r # type: ignore
+
+        if dup_sqf_p(r2, K.dom):
             break
         else:
             f, s = dup_shift(f, -K.unit, K), s + 1
 
-    return s, f, r
+    return s, f, _dup(r2)
 
 
 def _dmp_sqf_norm_shifts(f, u, K):
@@ -224,7 +236,9 @@ def _dmp_sqf_norm_shifts(f, u, K):
         yield sj, fj
 
 
-def dmp_sqf_norm(f, u, K):
+def dmp_sqf_norm(
+    f: dmp[ANP[Eg]], u: int, K: AlgebraicField[ANP[Eg], Eg]
+) -> tuple[list[int], dmp[ANP[Eg]], dmp[Eg]]:
     r"""
     Find a shift of ``f`` in ``K[X]`` that has square-free norm.
 
@@ -291,8 +305,8 @@ def dmp_sqf_norm(f, u, K):
         High-level interface for using this function.
     """
     if not u:
-        s, g, r = dup_sqf_norm(f, K)
-        return [s], g, r
+        s, g, r = dup_sqf_norm(_dup(f), K)
+        return [s], _dmp(g), _dmp(r)
 
     if not K.is_Algebraic:
         raise DomainError("ground domain must be algebraic")
@@ -304,10 +318,14 @@ def dmp_sqf_norm(f, u, K):
         h, _ = dmp_inject(f, u, K, front=True)
         r = dmp_resultant(g, h, u + 1, K.dom)
 
-        if dmp_sqf_p(r, u, K.dom):
-            break
+        r2: dmp[Eg] = r # type: ignore
 
-    return s, f, r
+        if dmp_sqf_p(r2, u, K.dom):
+            break
+    else:
+        assert False
+
+    return s, f, r2
 
 
 def dmp_norm(f, u, K):

@@ -7,10 +7,10 @@ from typing import TYPE_CHECKING, TypeVar, Iterable, Callable, Any
 
 from sympy.core import igcd
 from sympy.core.expr import Expr
-from sympy.polys.domains.domain import Domain, Er, Es
+from sympy.polys.domains.domain import Domain, Er, Es, Eg
 from sympy.polys.domains.polynomialring import PolynomialRing
 from sympy.polys.monomials import monomial_min, monomial_ldiv
-from sympy.polys.orderings import monomial_key
+from sympy.polys.orderings import monomial_key, MonomialOrder
 
 import random
 
@@ -33,6 +33,9 @@ monom: TypeAlias = "tuple[int, ...]"
 if TYPE_CHECKING:
     from typing import TypeAlias
     from sympy.polys.rings import PolyElement
+    from sympy.polys.domains.algebraicfield import AlgebraicField
+    from sympy.polys.polyclasses import ANP
+    Epa = TypeVar("Epa", PolyElement, ANP)
 
     def _dup(p: dmp[_T], /) -> dup[_T]: ...
     def _dmp(p: dup[_T], /) -> dmp[_T]: ...
@@ -610,7 +613,7 @@ def dmp_normal(f: dmp[Er], u: int, K: Domain[Er]) -> dmp[Er]:
     return dmp_strip([dmp_normal(c, v, K) for c in f], u)
 
 
-def dup_convert(f: dup[Er], K0: Domain[Er], K1: Domain[Es]) -> dup[Es]:
+def dup_convert(f: dup[Er], K0: Domain[Er] | None, K1: Domain[Es]) -> dup[Es]:
     """
     Convert the ground domain of ``f`` from ``K0`` to ``K1``.
 
@@ -635,7 +638,7 @@ def dup_convert(f: dup[Er], K0: Domain[Er], K1: Domain[Es]) -> dup[Es]:
         return dup_strip([K1.convert(c, K0) for c in f])
 
 
-def dmp_convert(f: dmp[Er], u: int, K0: Domain[Er], K1: Domain[Es]) -> dmp[Es]:
+def dmp_convert(f: dmp[Er], u: int, K0: Domain[Er] | None, K1: Domain[Es]) -> dmp[Es]:
     """
     Convert the ground domain of ``f`` from ``K0`` to ``K1``.
 
@@ -1669,9 +1672,12 @@ def dmp_include(f: dmp[Er], J: list[int], u: int, K: Domain[Er]) -> dmp[Er]:
     return dmp_from_dict(d, u, K)
 
 
+# XXX: K could be a PolynomialRing or an AlgebraicField or ...
 def dmp_inject(
-    f: dmp[PolyElement[Er]], u: int, K: PolynomialRing[Er], front: bool = False
-) -> tuple[dmp[Er], int]:
+    f: dmp[Epa]
+    , u: int, K: PolynomialRing[Eg] | AlgebraicField[Epa, Eg]
+    , front: bool = False
+) -> tuple[dmp[Eg], int]:
     """
     Convert ``f`` from ``K[X][Y]`` to ``K[X,Y]``.
 
@@ -1690,8 +1696,8 @@ def dmp_inject(
     ([[[1]], [[1, 2]]], 2)
 
     """
-    d: dict[tuple[int, ...], PolyElement[Er]]
-    h: dict[tuple[int, ...], Er]
+    d: dict[monom, Epa]
+    h: dict[monom, Eg]
 
     d = dmp_to_dict(f, u)
     h = {}
@@ -1838,7 +1844,7 @@ def _rec_list_terms(g: dmp[Er], v: int, monom: monom) -> list[tuple[monom, Er]]:
 
 
 def dmp_list_terms(
-    f: dmp[Er], u: int, K: Domain[Er], order: str | None = None
+    f: dmp[Er], u: int, K: Domain[Er], order: MonomialOrder | str | None = None
 ) -> list[tuple[monom, Er]]:
     """
     List all non-zero terms from ``f`` in the given order ``order``.
