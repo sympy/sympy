@@ -2,9 +2,18 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Generic, Literal, Self, overload, Callable, TypeVar, TypeAlias
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Generic,
+    Literal,
+    overload,
+    Callable,
+    TypeVar,
+)
 
 if TYPE_CHECKING:
+    from typing import Self, TypeAlias
     from sympy.polys.rings import PolyElement
 
 from sympy.external.gmpy import GROUND_TYPES, MPQ
