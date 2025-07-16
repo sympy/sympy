@@ -1148,7 +1148,7 @@ class Beam:
         >>> b.apply_load(50000, 10, -1)
         >>> b.solve_for_reaction_loads(p0, m0, p8)
         >>> b.max_bmoment()
-        (0, 233125/2)
+        ([0], 233125/2)
         """
         x = self.variable
         l = self.length
