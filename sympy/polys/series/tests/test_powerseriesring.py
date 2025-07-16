@@ -27,15 +27,7 @@ def same(R, s, coeffs_l, prec):
     """
     Helper function to assert equality of two power series.
     """
-    domain = R.domain
-    domain_coeffs = []
-    for coeff in coeffs_l:
-        if isinstance(coeff, tuple):
-            domain_coeffs.append(domain(*coeff))
-        else:
-            domain_coeffs.append(domain(coeff))
-
-    return R.equal_repr(s, R(domain_coeffs, prec))
+    return R.equal_repr(s, R(coeffs_l, prec))
 
 
 @pytest.fixture(params=Ring_ZZ + Ring_QQ)
@@ -172,13 +164,72 @@ def test_rational_multiply_ground(rd_rational):
     SeriesRing = rd_rational
     R = SeriesRing()
     assert same(R, R.multiply_ground(R.gen, QQ(1, 2)), [(0, 1), (1, 2)], None)
+    assert same(R, R.multiply_ground(R.one, QQ(3, 4)), [(3, 4)], None)
+    assert same(
+        R, R.multiply_ground(R([(2, 3), (1, 5)]), QQ(1, 2)), [(1, 3), (1, 10)], None
+    )
+    assert same(
+        R, R.multiply_ground(R.square(R.gen), QQ(2, 7)), [(0, 1), (0, 1), (2, 7)], None
+    )
+
+
+def test_int_divide(rd_int):
+    SeriesRing = rd_int
+    R = SeriesRing()
+    R3 = SeriesRing(3)
+    R10 = SeriesRing(10)
+    assert same(R, R.divide(R.add(R.gen, R.one), R.one), [1, 1], 6)
     assert same(
         R,
-        R.multiply(
-            R.multiply_ground(R.gen, QQ(1, 2)), R.multiply_ground(R.gen, QQ(1, 3))
-        ),
-        [(0, 1), (0, 1), (1, 6)],
-        None,
+        R.divide(R.add(R.gen, R.one), R.subtract(R.one, R.gen)),
+        [1, 2, 2, 2, 2, 2],
+        6,
+    )
+    assert same(
+        R,
+        R.divide(R.pow_int(R.gen, 3), R.add(R.add(R.one, R.gen), R.square(R.gen))),
+        [0, 0, 0, 1, -1, 0],
+        6,
+    )
+    assert same(R3, R3.divide(R3([1, 2, 3]), R3.add(R3.one, R3.gen)), [1, 1, 2], 3)
+    assert same(
+        R10,
+        R10.divide(R10([0, 0, 2, 4, 6, 8, 2, 14]), R10([0, 0, 1, 3, 4, 5, 1])),
+        [2, -2, 4, -6, 12, -16, 26, -68],
+        8,
+    )
+
+    raises(ZeroDivisionError, lambda: R.divide(R.gen, R.zero))
+    raises(ValueError, lambda: R.divide(R.one, R.gen))
+    raises(ValueError, lambda: R.divide(R([0, 1]), R([0, 0, 2])))
+
+
+def test_rational_divide(rd_rational):
+    SeriesRing = rd_rational
+    R = SeriesRing()
+    assert same(
+        R,
+        R.divide(R.add(R.one, R.gen), R.subtract(R.one, R.gen)),
+        [(1, 1), (2, 1), (2, 1), (2, 1), (2, 1), (2, 1)],
+        6,
+    )
+    assert same(
+        R,
+        R.divide(R.pow_int(R.gen, 2), R.add(R.one, R.gen)),
+        [(0, 1), (0, 1), (1, 1), (-1, 1), (1, 1), (-1, 1)],
+        6,
+    )
+    assert same(
+        R,
+        R.divide(R([(1, 2), (3, 4), (1, 6)]), R([(1, 3), (2, 5)])),
+        [(3, 2), (9, 20), (-1, 25), (6, 125), (-36, 625), (216, 3125)],
+        6,
+    )
+    assert same(
+        R,
+        R.divide(R([(2, 3), (1, 4), (5, 6)]), R([(1, 2), (3, 7)])),
+        [(4, 3), (-9, 14), (326, 147), (-652, 343), (3912, 2401), (-23472, 16807)],
+        6,
     )
 
 
@@ -391,20 +442,20 @@ def test_rational_compose(rd_rational):
     R3 = SeriesRing(3)
     R10 = SeriesRing(10)
 
-    f1 = R([QQ(1, 2), QQ(3, 4)])
-    g1 = R([QQ(1, 3), QQ(2, 5)])
+    f1 = R([(1, 2), (3, 4)])
+    g1 = R([(1, 3), (2, 5)])
     assert same(R, R.compose(f1, g1), [(3, 4), (3, 10)], None)
 
-    f3 = R([QQ(2, 3), QQ(5, 7)])
-    g3 = R([QQ(0, 1), QQ(3, 4), QQ(1, 6)])
+    f3 = R([(2, 3), (5, 7)])
+    g3 = R([(0, 1), (3, 4), (1, 6)])
     assert same(R, R.compose(f3, g3), [(2, 3), (15, 28), (5, 42)], None)
 
-    f3_2 = R3([QQ(1, 4), QQ(1, 2), QQ(1, 8)])
-    g3_2 = R3([QQ(0, 1), QQ(1, 3)])
+    f3_2 = R3([(1, 4), (1, 2), (1, 8)])
+    g3_2 = R3([(0, 1), (1, 3)])
     assert same(R3, R3.compose(f3_2, g3_2), [(1, 4), (1, 6), (1, 72)], 3)
 
-    f10 = R10([QQ(1, 2), QQ(3, 4), QQ(5, 6)], 4)
-    g10 = R10([QQ(0, 1), QQ(2, 3), QQ(1, 5), QQ(-3, 7)], 4)
+    f10 = R10([(1, 2), (3, 4), (5, 6)], 4)
+    g10 = R10([(0, 1), (2, 3), (1, 5), (-3, 7)], 4)
     assert same(R10, R10.compose(f10, g10), [(1, 2), (1, 2), (281, 540), (-25, 252)], 4)
 
 
@@ -439,7 +490,7 @@ def test_rational_inverse(rd_rational):
     R3 = SeriesRing(3)
     R10 = SeriesRing(10)
 
-    f_r = R([QQ(2, 3), QQ(-1, 4), QQ(3, 5)])
+    f_r = R([(2, 3), (-1, 4), (3, 5)])
     assert same(
         R,
         R.inverse(f_r),
@@ -454,10 +505,10 @@ def test_rational_inverse(rd_rational):
         6,
     )
 
-    f3 = R3([QQ(1, 2), QQ(-3, 4), QQ(5, 6)])
+    f3 = R3([(1, 2), (-3, 4), (5, 6)])
     assert same(R3, R3.inverse(f3), [(2, 1), (3, 1), (7, 6)], 3)
 
-    f10 = R10([QQ(3, 5), QQ(1, 7), QQ(-2, 9)])
+    f10 = R10([(3, 5), (1, 7), (-2, 9)])
     assert same(
         R10,
         R10.inverse(f10),
@@ -513,7 +564,7 @@ def test_rational_reversion(rd_rational):
     R3 = SeriesRing(3)
     R10 = SeriesRing(10)
 
-    f1 = R([QQ(0, 1), QQ(3, 2), QQ(1, 4), QQ(-2, 5)])
+    f1 = R([(0, 1), (3, 2), (1, 4), (-2, 5)])
     assert same(
         R,
         R.reversion(f1),
@@ -521,10 +572,10 @@ def test_rational_reversion(rd_rational):
         6,
     )
 
-    f3 = R3([QQ(0, 1), QQ(5, 4), QQ(-1, 3)])
+    f3 = R3([(0, 1), (5, 4), (-1, 3)])
     assert same(R3, R3.reversion(f3), [(0, 1), (4, 5), (64, 375)], 3)
 
-    f10 = R10([QQ(0, 1), QQ(2, 3), QQ(1, 5), QQ(-3, 7), QQ(1, 2)])
+    f10 = R10([(0, 1), (2, 3), (1, 5), (-3, 7), (1, 2)])
     assert same(
         R10,
         R10.reversion(f10),

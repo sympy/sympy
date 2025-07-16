@@ -9,8 +9,9 @@ from sympy.polys.densearith import (
     dup_sub,
     dup_series_mul,
     dup_series_pow,
+    dup_rshift,
 )
-from sympy.polys.densebasic import dup_degree, dup_reverse, dup_truncate, dup_from_list
+from sympy.polys.densebasic import dup_degree, dup_reverse, dup_truncate
 from sympy.polys.densetools import (
     dup_diff,
     dup_integrate,
@@ -42,6 +43,23 @@ def _useries(
         series_prec = ring_prec
     coeffs = dup_truncate(coeffs, series_prec, dom)
     return coeffs, series_prec
+
+
+def _useries_valuation(s: USeries[Er], dom: Domain) -> int:
+    """
+    Returns the valuation of this power series.
+    If there are no known nonzero coefficients, returns -1.
+    """
+    coeffs, _ = s
+
+    if not coeffs:
+        return -1
+
+    i = -1
+    while dom.is_zero(coeffs[i]):
+        i -= 1
+
+    return -i - 1
 
 
 def _unify_prec(
@@ -152,6 +170,47 @@ def _useries_mul_ground(
 
     series = dup_mul_ground(coeffs, n, dom)
     return _useries(series, prec, dom, ring_prec)
+
+
+def _useries_div(
+    s1: USeries[Er], s2: USeries[Er], dom: Domain, ring_prec: int
+) -> USeries[Er]:
+    coeffs1, prec1 = s1
+    coeffs2, prec2 = s2
+
+    if not coeffs2:
+        raise ZeroDivisionError("Series division by zero")
+
+    val1 = _useries_valuation(s1, dom)
+    val2 = _useries_valuation(s2, dom)
+
+    if val1 < val2:
+        raise ValueError("quotient would not be a power series")
+
+    if not dom.is_unit(coeffs2[-val2 - 1]):
+        raise ValueError("Trailing coefficient of the divisor must be a unit")
+
+    if val2 == 0:
+        _, _, prec = _unify_prec(s1, s2, dom, ring_prec)
+        s2_inv = _useries_inverse(s2, dom, prec)
+        return _useries_mul(s1, s2_inv, dom, prec)
+    else:
+        # Shift both series to make divisor's valuation zero
+        shifted_coeffs1 = dup_rshift(coeffs1, val2, dom)
+        shifted_coeffs2 = dup_rshift(coeffs2, val2, dom)
+
+        cap = ring_prec - val2
+
+        prec1 = (prec1 if prec1 is not None else ring_prec) - val2
+        prec2 = (prec2 if prec2 is not None else ring_prec) - val2
+
+        shifted_s1 = _useries(shifted_coeffs1, prec1, dom, cap)
+        shifted_s2 = _useries(shifted_coeffs2, prec2, dom, cap)
+
+        q_coeffs = _useries_div(shifted_s1, shifted_s2, dom, cap)[0]
+
+        _, _, prec = _unify_prec(shifted_s1, shifted_s2, dom, ring_prec)
+        return q_coeffs, prec
 
 
 def _useries_pow_int(
@@ -283,23 +342,36 @@ class PythonPowerSeriesRingZZ(PowerSeriesRing[USeries[MPZ]]):
     ========
 
     >>> from sympy.polys.series.python_powerseriesring import PythonPowerSeriesRingZZ
-    >>> R = PythonPowerSeriesRingZZ(5)
-    >>> R
-    Python Power Series Ring over ZZ with precision 5
-
-    >>> s = R([1, 2, 3])
+    >>> R = PythonPowerSeriesRingZZ()
+    >>> s = R([1, 2, 3])  # 1 + 2*x + 3*x^2
     >>> R.print(s)
     1 + 2*x + 3*x**2
 
-    >>> x = R.gen
-    >>> squared = R.square(R.add(R.one, x))
-    >>> R.print(squared)
-    1 + 2*x + x**2
+    >>> s_pow = R.pow_int(s, 2)  # Square the series
+    >>> R.print(s_pow)
+    1 + 4*x + 10*x**2 + 12*x**3 + 9*x**4
 
-    >>> # Geometric series: 1/(1-x)
-    >>> geom = R.inverse(R.subtract(R.one, x))
-    >>> R.print(geom)
-    1 + x + x**2 + x**3 + x**4 + O(x**5)
+    >>> s_inv = R.inverse(R([1, 1]))  # Inverse of 1 + x
+    >>> R.print(s_inv)
+    1 - x + x**2 - x**3 + x**4 - x**5 + O(x**6)
+
+    Note
+    ====
+
+    The recommended way to create a power series ring is using the factory function:
+
+    >>> from sympy.polys.series import power_series_ring
+    >>> from sympy import ZZ
+    >>> R = power_series_ring(ZZ, prec=6)
+
+    This function automatically uses the Flint implementation if available for better
+    performance, falling back to the Python implementation otherwise.
+
+    See Also
+    ========
+
+    sympy.polys.series.flint_powerseriesring.FlintPowerSeriesRingZZ
+    sympy.polys.series.seriesring.power_series_ring
     """
 
     _domain = ZZ
@@ -322,12 +394,21 @@ class PythonPowerSeriesRingZZ(PowerSeriesRing[USeries[MPZ]]):
     def __hash__(self) -> int:
         return hash((self._domain, self._prec))
 
-    def __call__(self, coeffs: list[MPZ], prec: int | None = None) -> USeries[MPZ]:
+    def __call__(self, coeffs: list[Any], prec: int | None = None) -> USeries[MPZ]:
         """
         Create a power series from a list of coefficients. If `prec` is not specified,
         it defaults to the ring's precision.
         """
-        return self.from_list(coeffs, prec)
+        dup: list[MPZ] = []
+        for c in coeffs:
+            if isinstance(c, MPZ):
+                dup.append(c)
+            elif isinstance(c, int):
+                dup.append(self._domain(c))
+            else:
+                raise TypeError(f"Unsupported coefficient type: {type(c)}")
+
+        return self.from_list(dup, prec)
 
     @property
     def domain(self) -> Domain:
@@ -368,18 +449,8 @@ class PythonPowerSeriesRingZZ(PowerSeriesRing[USeries[MPZ]]):
         """
         Create a power series from a list of coefficients in ascending order of
         expononets. If `prec` is not specified, it defaults to the ring's precision.
-
-        Examples
-        ========
-
-        >>> from sympy.polys.series.python_powerseriesring import PythonPowerSeriesRingZZ
-        >>> R = PythonPowerSeriesRingZZ(5)
-        >>> s = R.from_list([1, 2, 3, 4, 5])
-        >>> R.print(s)
-        1 + 2*x + 3*x**2 + 4*x**3 + 5*x**4
         """
         coeffs = dup_reverse(coeffs)
-        coeffs = dup_from_list(coeffs, self._domain)
         if prec is None and len(coeffs) > self._prec:
             prec = self._prec
             coeffs = dup_truncate(coeffs, prec, self._domain)
@@ -389,14 +460,6 @@ class PythonPowerSeriesRingZZ(PowerSeriesRing[USeries[MPZ]]):
     def to_list(self, s: USeries[MPZ]) -> list[MPZ]:
         """
         Returns the list of coefficients.
-
-        Examples
-        ========
-        >>> from sympy.polys.series.python_powerseriesring import PythonPowerSeriesRingZZ
-        >>> R = PythonPowerSeriesRingZZ(5)
-        >>> x = R.gen
-        >>> R.to_list(x)
-        [0, 1]
         """
         coeffs, _ = s
         return coeffs[::-1]
@@ -408,215 +471,88 @@ class PythonPowerSeriesRingZZ(PowerSeriesRing[USeries[MPZ]]):
     def equal_repr(self, s1: USeries[MPZ], s2: USeries[MPZ]) -> bool:
         """
         Check if two power series are equal coeffs and precision.
-
-        Examples
-        ========
-
-        >>> from sympy.polys.series.python_powerseriesring import PythonPowerSeriesRingZZ
-        >>> R = PythonPowerSeriesRingZZ(5)
-        >>> s1 = R.from_list([1, 2, 1])
-        >>> s2 = R.square(R.add(R.one, R.gen))
-        >>> R.equal_repr(s1, s2)
-        True
         """
         return _useries_equal_repr(s1, s2)
 
     def positive(self, s: USeries[MPZ]) -> USeries[MPZ]:
         """
         Return the positive of a power series (which is the same as the series itself).
-
-        Examples
-        ========
-
-        >>> from sympy.polys.series.python_powerseriesring import PythonPowerSeriesRingZZ
-        >>> R = PythonPowerSeriesRingZZ(5)
-        >>> x = R.gen
-        >>> R.print(R.positive(x))
-        x
         """
         return _useries(s[0], s[1], self._domain, self._prec)
 
     def negative(self, s: USeries[MPZ]) -> USeries[MPZ]:
         """
         Negate all the coeffs of power series.
-        Examples
-        =========
-
-        >>> from sympy.polys.series.python_powerseriesring import PythonPowerSeriesRingZZ
-        >>> R = PythonPowerSeriesRingZZ(5)
-        >>> x = R.gen
-        >>> R.print(R.negative(x))
-        -x
         """
         return _useries_neg(s, self._domain, self._prec)
 
     def add(self, s1: USeries[MPZ], s2: USeries[MPZ]) -> USeries[MPZ]:
-        """Add two power series.
-
-        Examples
-        ========
-
-        >>> from sympy.polys.series.python_powerseriesring import PythonPowerSeriesRingZZ
-        >>> R = PythonPowerSeriesRingZZ(3)
-        >>> s1 = R.from_list([1, 2, 3, 4])
-        >>> s2 = R.from_list([3, 4, 5, 6])
-        >>> R.print(R.add(s1, s2))
-        4 + 6*x + 8*x**2 + O(x**3)
-        """
+        """Add two power series."""
         return _useries_add(s1, s2, self._domain, self._prec)
 
     def subtract(self, s1: USeries[MPZ], s2: USeries[MPZ]) -> USeries[MPZ]:
         """
         Subtract two power series.
-
-        Examples
-        ========
-
-        >>> from sympy.polys.series.python_powerseriesring import PythonPowerSeriesRingZZ
-        >>> R = PythonPowerSeriesRingZZ(3)
-        >>> s1 = R.from_list([1, 2, 3, 4])
-        >>> s2 = R.from_list([3, 4, 5, 6])
-        >>> R.print(R.subtract(s1, s2))
-        -2 - 2*x - 2*x**2 + O(x**3)
         """
         return _useries_sub(s1, s2, self._domain, self._prec)
 
     def multiply(self, s1: USeries[MPZ], s2: USeries[MPZ]) -> USeries[MPZ]:
         """
         Multiply two power series.
-
-        Examples
-        ========
-
-        >>> from sympy.polys.series.python_powerseriesring import PythonPowerSeriesRingZZ
-        >>> R = PythonPowerSeriesRingZZ(5)
-        >>> s1 = R.from_list([1, 3, 3, 1])
-        >>> s2 = R.from_list([1 , 4 , 6, 4, 1])
-        >>> R.print(R.multiply(s1, s2))
-        1 + 7*x + 21*x**2 + 35*x**3 + 35*x**4 + O(x**5)
         """
         return _useries_mul(s1, s2, self._domain, self._prec)
 
     def multiply_ground(self, s: USeries[MPZ], n: MPZ) -> USeries[MPZ]:
         """
         Multiply a power series by a ground element.
-
-        Examples
-        ========
-        >>> from sympy.polys.series.python_powerseriesring import PythonPowerSeriesRingZZ
-        >>> R = PythonPowerSeriesRingZZ(5)
-        >>> x = R.gen
-        >>> R.print(R.multiply_ground(x, 3))
-        3*x
         """
         return _useries_mul_ground(s, n, self._domain, self._prec)
+
+    def divide(self, s1: USeries[MPZ], s2: USeries[MPZ]) -> USeries[MPZ]:
+        """
+        Divide two power series.
+        """
+        return _useries_div(s1, s2, self._domain, self._prec)
 
     def pow_int(self, s: USeries[MPZ], n: int) -> USeries[MPZ]:
         """
         Raise a power series to an integer power.
-
-        Examples
-        ========
-
-        >>> from sympy.polys.series.python_powerseriesring import PythonPowerSeriesRingZZ
-        >>> R = PythonPowerSeriesRingZZ(5)
-        >>> s = R.from_list([1, 2, 1])
-        >>> R.print(R.pow_int(s, 5))
-        1 + 10*x + 45*x**2 + 120*x**3 + 210*x**4 + O(x**5)
         """
         return _useries_pow_int(s, n, self._domain, self._prec)
 
     def square(self, s: USeries[MPZ]) -> USeries[MPZ]:
         """
         Return the square of a power series.
-
-        Examples
-        ========
-
-        >>> from sympy.polys.series.python_powerseriesring import PythonPowerSeriesRingZZ
-        >>> R = PythonPowerSeriesRingZZ(5)
-        >>> s = R.from_list([1, 2, 1])
-        >>> R.print(R.square(s))
-        1 + 4*x + 6*x**2 + 4*x**3 + x**4
         """
         return _useries_mul(s, s, self._domain, self._prec)
 
     def compose(self, s1: USeries[MPZ], s2: USeries[MPZ]) -> USeries[MPZ]:
         """
         Compose two power series.
-
-        Examples
-        ========
-
-        >>> from sympy.polys.series.python_powerseriesring import PythonPowerSeriesRingZZ
-        >>> R = PythonPowerSeriesRingZZ(5)
-        >>> s1 = R.from_list([1, 2])
-        >>> s2 = R.from_list([0, 3])
-        >>> R.print(R.compose(s1, s2))
-        1 + 6*x
         """
         return _useries_compose(s1, s2, self._domain, self._prec)
 
     def inverse(self, s: USeries[MPZ]) -> USeries[MPZ]:
         """
         Compute the series multiplicative inverse of a power series.
-
-        Examples
-        ========
-
-        >>> from sympy.polys.series.python_powerseriesring import PythonPowerSeriesRingZZ
-        >>> R = PythonPowerSeriesRingZZ(5)
-        >>> s = R.from_list([1, 2, 3])
-        >>> R.print(R.inverse(s))
-        1 - 2*x + x**2 + 4*x**3 - 11*x**4 + O(x**5)
         """
         return _useries_inverse(s, self._domain, self._prec)
 
     def reversion(self, s: USeries[MPZ]) -> USeries[MPZ]:
         """
         Compute the composite inverse of a power series.
-
-        Examples
-        ========
-
-        >>> from sympy.polys.series.python_powerseriesring import PythonPowerSeriesRingZZ
-        >>> R = PythonPowerSeriesRingZZ(5)
-        >>> s = R.from_list([0, 1, 1])
-        >>> R.print(R.reversion(s))
-        x - x**2 + 2*x**3 - 5*x**4 + O(x**5)
         """
         return _useries_reversion(s, self._domain, self._prec)
 
     def truncate(self, s: USeries[MPZ], n: int) -> USeries[MPZ]:
         """
         Truncate a power series to the first n terms.
-
-        Examples
-        ========
-
-        >>> from sympy.polys.series.python_powerseriesring import PythonPowerSeriesRingZZ
-        >>> R = PythonPowerSeriesRingZZ(5)
-        >>> s = R.from_list([1, 2, 3, 4, 5, 6])
-        >>> R.print(s)
-        1 + 2*x + 3*x**2 + 4*x**3 + 5*x**4 + O(x**5)
-        >>> t = R.truncate(s, 3)
-        >>> R.print(t)
-        1 + 2*x + 3*x**2 + O(x**3)
         """
         return _useries_truncate(s, n, self._domain)
 
     def differentiate(self, s: USeries[MPZ]) -> USeries[MPZ]:
         """
         Compute the derivative of a power series.
-
-        Examples
-        ========
-
-        >>> from sympy.polys.series.python_powerseriesring import PythonPowerSeriesRingZZ
-        >>> R = PythonPowerSeriesRingZZ(5)
-        >>> s = R.from_list([1, 2, 3])
-        >>> R.print(R.differentiate(s))
-        2 + 6*x
         """
         return _useries_derivative(s, self._domain, self._prec)
 
@@ -639,24 +575,37 @@ class PythonPowerSeriesRingQQ(PowerSeriesRing[USeries[MPQ]]):
     Examples
     ========
 
-    >>> from sympy import QQ
     >>> from sympy.polys.series.python_powerseriesring import PythonPowerSeriesRingQQ
-    >>> R = PythonPowerSeriesRingQQ(5)
-    >>> R
-    Python Power Series Ring over QQ with precision 5
-
-    >>> s = R([QQ(1,2), QQ(2,3)])
+    >>> R = PythonPowerSeriesRingQQ()
+    >>> s = R([1, (1, 2), (1, 3)])  # 1 + x/2 + x^2/3
     >>> R.print(s)
-    1/2 + 2/3*x
+    1 + 1/2*x + 1/3*x**2
 
-    >>> x = R.gen
-    >>> integrated = R.integrate(R.add(R.one, x))
-    >>> R.print(integrated)
-    x + 1/2*x**2
+    >>> s_int = R.integrate(s)  # Integration
+    >>> R.print(s_int)
+    x + 1/4*x**2 + 1/9*x**3
 
-    >>> inv = R.inverse(s)
-    >>> R.print(inv)
-    2 - 8/3*x + 32/9*x**2 - 128/27*x**3 + 512/81*x**4 + O(x**5)
+    >>> s_inv = R.inverse(R([1, (1, 2)]))  # Inverse of 1 + x/2
+    >>> R.print(s_inv)
+    1 - 1/2*x + 1/4*x**2 - 1/8*x**3 + 1/16*x**4 - 1/32*x**5 + O(x**6)
+
+    Note
+    ====
+
+    The recommended way to create a power series ring is using the factory function:
+
+    >>> from sympy.polys.series import power_series_ring
+    >>> from sympy import QQ
+    >>> R = power_series_ring(QQ, prec=6)
+
+    This function automatically uses the Flint implementation if available for better
+    performance, falling back to the Python implementation otherwise.
+
+    See Also
+    ========
+
+    sympy.polys.series.flint_powerseriesring.FlintPowerSeriesRingQQ
+    sympy.polys.series.seriesring.power_series_ring
     """
 
     _domain = QQ
@@ -679,12 +628,23 @@ class PythonPowerSeriesRingQQ(PowerSeriesRing[USeries[MPQ]]):
     def __hash__(self) -> int:
         return hash((self._domain, self._prec))
 
-    def __call__(self, coeffs: list[MPQ], prec: int | None = None) -> USeries[MPQ]:
+    def __call__(self, coeffs: list[Any], prec: int | None = None) -> USeries[MPQ]:
         """
         Create a power series from a list of coefficients. If `prec` is not specified,
         it defaults to the ring's precision.
         """
-        return self.from_list(coeffs, prec)
+        dup: list[MPQ] = []
+        for c in coeffs:
+            if isinstance(c, MPQ):
+                dup.append(c)
+            elif isinstance(c, int):
+                dup.append(self._domain(c))
+            elif isinstance(c, tuple):
+                dup.append(self._domain(*c))
+            else:
+                raise TypeError(f"Unsupported coefficient type: {type(c)}")
+
+        return self.from_list(dup, prec)
 
     @property
     def domain(self) -> Domain:
@@ -725,19 +685,8 @@ class PythonPowerSeriesRingQQ(PowerSeriesRing[USeries[MPQ]]):
         """
         Create a power series from a list of coefficients in ascending order of
         expononets. If `prec` is not specified, it defaults to the ring's precision.
-
-        Examples
-        ========
-
-        >>> from sympy import QQ
-        >>> from sympy.polys.series.python_powerseriesring import PythonPowerSeriesRingQQ
-        >>> R = PythonPowerSeriesRingQQ(5)
-        >>> s = R.from_list([QQ(1,2), QQ(3,4)])
-        >>> R.print(s)
-        1/2 + 3/4*x
         """
         coeffs = dup_reverse(coeffs)
-        coeffs = dup_from_list(coeffs, self._domain)
         if prec is None and len(coeffs) > self._prec:
             prec = self._prec
             coeffs = dup_truncate(coeffs, prec, self._domain)
@@ -747,15 +696,6 @@ class PythonPowerSeriesRingQQ(PowerSeriesRing[USeries[MPQ]]):
     def to_list(self, s: USeries[MPQ]) -> list[MPQ]:
         """
         Returns the list of coefficients.
-
-        Examples
-        ========
-
-        >>> from sympy.polys.series.python_powerseriesring import PythonPowerSeriesRingQQ
-        >>> R = PythonPowerSeriesRingQQ(5)
-        >>> x = R.gen
-        >>> R.to_list(x)
-        [0, 1]
         """
         coeffs, _ = s
         return coeffs[::-1]
@@ -767,243 +707,93 @@ class PythonPowerSeriesRingQQ(PowerSeriesRing[USeries[MPQ]]):
     def equal_repr(self, s1: USeries[MPQ], s2: USeries[MPQ]) -> bool:
         """
         Check if two power series are equal coeffs and precision.
-
-        Examples
-        ========
-
-        >>> from sympy import QQ
-        >>> from sympy.polys.series.python_powerseriesring import PythonPowerSeriesRingQQ
-        >>> R = PythonPowerSeriesRingQQ(5)
-        >>> s1 = R.from_list([QQ(1), QQ(2), QQ(1)])
-        >>> s2 = R.square(R.add(R.one, R.gen))
-        >>> R.equal_repr(s1, s2)
-        True
         """
         return _useries_equal_repr(s1, s2)
 
     def positive(self, s: USeries[MPQ]) -> USeries[MPQ]:
         """
         Return the positive of a power series (which is the same as the series itself).
-
-        Examples
-        ========
-
-        >>> from sympy.polys.series.python_powerseriesring import PythonPowerSeriesRingQQ
-        >>> R = PythonPowerSeriesRingQQ(5)
-        >>> x = R.gen
-        >>> R.print(R.positive(x))
-        x
         """
         return _useries(s[0], s[1], self._domain, self._prec)
 
     def negative(self, s: USeries[MPQ]) -> USeries[MPQ]:
         """
         Return the negative of a power series.
-
-        Examples
-        ========
-
-        >>> from sympy.polys.series.python_powerseriesring import PythonPowerSeriesRingQQ
-        >>> R = PythonPowerSeriesRingQQ(5)
-        >>> x = R.gen
-        >>> R.print(R.negative(x))
-        -x
         """
         return _useries_neg(s, self._domain, self._prec)
 
     def add(self, s1: USeries[MPQ], s2: USeries[MPQ]) -> USeries[MPQ]:
-        """Add two power series.
-
-        Examples
-        ========
-
-        >>> from sympy import QQ
-        >>> from sympy.polys.series.python_powerseriesring import PythonPowerSeriesRingQQ
-        >>> R = PythonPowerSeriesRingQQ(3)
-        >>> s1 = R.from_list([QQ(1,2), QQ(2,3)])
-        >>> s2 = R.from_list([QQ(3,4), QQ(4,5)])
-        >>> R.print(R.add(s1, s2))
-        5/4 + 22/15*x
-        """
+        """Add two power series."""
         return _useries_add(s1, s2, self._domain, self._prec)
 
     def subtract(self, s1: USeries[MPQ], s2: USeries[MPQ]) -> USeries[MPQ]:
         """
         Subtract two power series.
-
-        Examples
-        ========
-
-        >>> from sympy import QQ
-        >>> from sympy.polys.series.python_powerseriesring import PythonPowerSeriesRingQQ
-        >>> R = PythonPowerSeriesRingQQ(3)
-        >>> s1 = R.from_list([QQ(1,2), QQ(2,3)])
-        >>> s2 = R.from_list([QQ(3,4), QQ(4,5)])
-        >>> R.print(R.subtract(s1, s2))
-        -1/4 - 2/15*x
         """
         return _useries_sub(s1, s2, self._domain, self._prec)
 
     def multiply(self, s1: USeries[MPQ], s2: USeries[MPQ]) -> USeries[MPQ]:
         """
         Multiply two power series.
-
-        Examples
-        ========
-
-        >>> from sympy import QQ
-        >>> from sympy.polys.series.python_powerseriesring import PythonPowerSeriesRingQQ
-        >>> R = PythonPowerSeriesRingQQ(5)
-        >>> s1 = R.from_list([QQ(1,2), QQ(1,3)])
-        >>> s2 = R.from_list([QQ(2), QQ(3)])
-        >>> R.print(R.multiply(s1, s2))
-        1 + 13/6*x + x**2
         """
         return _useries_mul(s1, s2, self._domain, self._prec)
 
     def multiply_ground(self, s: USeries[MPQ], n: MPQ) -> USeries[MPQ]:
         """
         Multiply a power series by a ground element.
-
-        Examples
-        ========
-        >>> from sympy import QQ
-        >>> from sympy.polys.series.python_powerseriesring import PythonPowerSeriesRingQQ
-        >>> R = PythonPowerSeriesRingQQ(5)
-        >>> x = R.gen
-        >>> R.print(R.multiply_ground(x, QQ(3,2)))
-        3/2*x
         """
         return _useries_mul_ground(s, n, self._domain, self._prec)
+
+    def divide(self, s1: USeries[MPQ], s2: USeries[MPQ]) -> USeries[MPQ]:
+        """
+        Divide two power series.
+        """
+        return _useries_div(s1, s2, self._domain, self._prec)
 
     def pow_int(self, s: USeries[MPQ], n: int) -> USeries[MPQ]:
         """
         Raise a power series to an integer power.
-
-        Examples
-        ========
-
-        >>> from sympy import QQ
-        >>> from sympy.polys.series.python_powerseriesring import PythonPowerSeriesRingQQ
-        >>> R = PythonPowerSeriesRingQQ(5)
-        >>> s = R.from_list([QQ(1,2), QQ(1,3)])
-        >>> R.print(R.pow_int(s, 3))
-        1/8 + 1/4*x + 1/6*x**2 + 1/27*x**3
         """
         return _useries_pow_int(s, n, self._domain, self._prec)
 
     def square(self, s: USeries[MPQ]) -> USeries[MPQ]:
         """
         Return the square of a power series.
-
-        Examples
-        ========
-
-        >>> from sympy import QQ
-        >>> from sympy.polys.series.python_powerseriesring import PythonPowerSeriesRingQQ
-        >>> R = PythonPowerSeriesRingQQ(5)
-        >>> s = R.from_list([QQ(1,2), QQ(1,3)])
-        >>> R.print(R.square(s))
-        1/4 + 1/3*x + 1/9*x**2
         """
         return _useries_mul(s, s, self._domain, self._prec)
 
     def compose(self, s1: USeries[MPQ], s2: USeries[MPQ]) -> USeries[MPQ]:
         """
         Compose two power series.
-
-        Examples
-        ========
-
-        >>> from sympy import QQ
-        >>> from sympy.polys.series.python_powerseriesring import PythonPowerSeriesRingQQ
-        >>> R = PythonPowerSeriesRingQQ(5)
-        >>> s1 = R.from_list([QQ(1,2), QQ(2,3)])
-        >>> s2 = R.from_list([QQ(0,1), QQ(3,4)])
-        >>> R.print(R.compose(s1, s2))
-        1/2 + 1/2*x
         """
         return _useries_compose(s1, s2, self._domain, self._prec)
 
     def inverse(self, s: USeries[MPQ]) -> USeries[MPQ]:
         """
         Compute the series multiplicative inverse of a power series.
-
-        Examples
-        ========
-
-        >>> from sympy import QQ
-        >>> from sympy.polys.series.python_powerseriesring import PythonPowerSeriesRingQQ
-        >>> R = PythonPowerSeriesRingQQ(5)
-        >>> s = R.from_list([QQ(1,2), QQ(1,3)])
-        >>> R.print(R.inverse(s))
-        2 - 4/3*x + 8/9*x**2 - 16/27*x**3 + 32/81*x**4 + O(x**5)
         """
         return _useries_inverse(s, self._domain, self._prec)
 
     def reversion(self, s: USeries[MPQ]) -> USeries[MPQ]:
         """
         Compute the composite inverse of a power series.
-
-        Examples
-        ========
-
-        >>> from sympy import QQ
-        >>> from sympy.polys.series.python_powerseriesring import PythonPowerSeriesRingQQ
-        >>> R = PythonPowerSeriesRingQQ(5)
-        >>> s = R.from_list([QQ(0), QQ(1,2)])
-        >>> R.print(R.reversion(s))
-        2*x + O(x**5)
         """
         return _useries_reversion(s, self._domain, self._prec)
 
     def truncate(self, s: USeries[MPQ], n: int) -> USeries[MPQ]:
         """
         Truncate a power series to the first n terms.
-
-        Examples
-        ========
-
-        >>> from sympy import QQ
-        >>> from sympy.polys.series.python_powerseriesring import PythonPowerSeriesRingQQ
-        >>> R = PythonPowerSeriesRingQQ(5)
-        >>> s = R.from_list([QQ(1,2), QQ(2,3), QQ(3,4), QQ(4,5), QQ(5,6)])
-        >>> R.print(s)
-        1/2 + 2/3*x + 3/4*x**2 + 4/5*x**3 + 5/6*x**4
-        >>> t = R.truncate(s, 3)
-        >>> R.print(t)
-        1/2 + 2/3*x + 3/4*x**2 + O(x**3)
         """
         return _useries_truncate(s, n, self._domain)
 
     def differentiate(self, s: USeries[MPQ]) -> USeries[MPQ]:
         """
         Compute the derivative of a power series.
-
-        Examples
-        ========
-
-        >>> from sympy import QQ
-        >>> from sympy.polys.series.python_powerseriesring import PythonPowerSeriesRingQQ
-        >>> R = PythonPowerSeriesRingQQ(5)
-        >>> s = R.from_list([QQ(1,2), QQ(2,3), QQ(3,4)])
-        >>> R.print(R.differentiate(s))
-        2/3 + 3/2*x
         """
         return _useries_derivative(s, self._domain, self._prec)
 
     def integrate(self, s: USeries[MPQ]) -> USeries[MPQ]:
         """
         Compute the integral of a power series.
-
-        Examples
-        ========
-
-        >>> from sympy import QQ
-        >>> from sympy.polys.series.python_powerseriesring import PythonPowerSeriesRingQQ
-        >>> R = PythonPowerSeriesRingQQ(5)
-        >>> s = R.from_list([QQ(1,2), QQ(2,3), QQ(3,4)])
-        >>> R.print(R.integrate(s))
-        1/2*x + 1/3*x**2 + 1/4*x**3
         """
         return _useries_integrate(s, self._domain, self._prec)
