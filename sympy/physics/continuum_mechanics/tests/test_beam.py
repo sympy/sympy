@@ -719,27 +719,217 @@ def test_max_shear_force():
 
 
 def test_max_bmoment():
+    # only symbolic point loads
     E = Symbol('E')
     I = Symbol('I')
     l, P = symbols('l, P', positive=True)
-
     b = Beam(l, E, I)
     R1, R2 = symbols('R1, R2')
     b.apply_load(R1, 0, -1)
     b.apply_load(R2, l, -1)
     b.apply_load(P, l/2, -1)
     b.solve_for_reaction_loads(R1, R2)
-    b.reaction_loads
-    assert b.max_bmoment() == (l/2, P*l/4)
+    p = b.max_bmoment()
+    q = ([l/2], P*l/4)
+    assert  p == q
 
+    # only symbolic distributed load
+    E = Symbol('E')
+    I = Symbol('I')
+    l, P = symbols('l, P', positive=True)
     b = Beam(l, E, I)
     R1, R2 = symbols('R1, R2')
     b.apply_load(R1, 0, -1)
     b.apply_load(R2, l, -1)
     b.apply_load(P, 0, 0, end=l)
     b.solve_for_reaction_loads(R1, R2)
-    assert b.max_bmoment() == (l/2, P*l**2/8)
+    p = b.max_bmoment()
+    q = ([l/2], P*l**2/8)
+    assert p == q
 
+    # maximum at multiple points
+    # symbolic length and symbolic load
+    E = Symbol('E')
+    I = Symbol('I')
+    M1, M2, R1, R2 = symbols('M1, M2, R1,R2')
+    F = Symbol('F')
+    l = Symbol('l', positive=True)
+    F = Symbol('F', positive=True)
+    b = Beam(l, E, I)
+    b.bc_deflection = [(0, 0),(l, 0)]
+    b.bc_slope = [(0, 0),(l, 0)]
+    b.apply_load(R1, 0, -1)
+    b.apply_load(M1, 0, -2)
+    b.apply_load(R2, l, -1)
+    b.apply_load(M2, l, -2)
+    b.apply_load(-F, l/2, -1)
+    b.solve_for_reaction_loads(R1, R2, M1, M2)
+    p = b.max_bmoment()
+    q = ([0,l/2,l],F*l*Rational(1/8))
+    assert p == q
+
+    # point load,UDL load and a hinge
+    E = symbols('E')
+    I = symbols('I')
+    b = Beam(15, E, I)
+    r0 = b.apply_support(0, type='pin')
+    r10 = b.apply_support(10, type='pin')
+    r15, m15 = b.apply_support(15, type='fixed')
+    b.apply_rotation_hinge(12)
+    b.apply_load(-10, 5, -1)
+    b.apply_load(-5, 10, 0, 15)
+    b.solve_for_reaction_loads(r0, r10, r15, m15)
+    p = b.max_bmoment()
+    q = ([10],Rational(215,12))
+    assert p == q
+
+    # with join method
+    E = Symbol('E')
+    I = Symbol('I')
+    b1 = Beam(5, E, I)
+    b2 = Beam(3, E, I)
+    b = b1.join(b2, via="fixed")
+    b.apply_support(0, type='pin')
+    b.apply_support(8, type='pin')
+    b.apply_load(-10, 2, -1)
+    b.apply_load(-5, 5, 0, 8)
+    r0, m0, r8 = symbols('R_0, M_0, R_8')
+    b.solve_for_reaction_loads(r0, m0, r8)
+    p = b.max_bmoment()
+    q = ([5],Rational(345,16))
+    assert p==q
+
+    E = Symbol('E')
+    I = Symbol('I')
+    b1 = Beam(5, E, I)
+    b2 = Beam(3, E, I)
+    b = b1.join(b2, via="fixed")
+    b.apply_support(0, type='fixed')
+    b.apply_support(8, type='pin')
+    b.apply_load(-10, 2, -1)
+    b.apply_load(-5, 5, 0, 8)
+    r0, m0, r8 = symbols('R_0, M_0, R_8')
+    b.solve_for_reaction_loads(r0, m0, r8)
+    p = b.max_bmoment()
+    q = ([0],Rational(12075,512))
+    assert p == q
+
+    E = Symbol('E')
+    I = Symbol('I')
+    b1 = Beam(5, E, I)
+    b2 = Beam(3, E, I)
+    b = b1.join(b2, via="fixed")
+    b.apply_support(0, type='fixed')
+    b.apply_support(8, type='pin')
+    b.apply_load(-10, 5, -1)
+    b.apply_load(10, 7, -1)
+    r0, m0, r8 = symbols('R_0, M_0, R_8')
+    b.solve_for_reaction_loads(r0, m0, r8)
+    p = b.max_bmoment()
+    q = ([5],Rational(2435,256))
+    assert p == q
+
+    E = Symbol('E')
+    I = Symbol('I')
+    b = Beam(10, E, I)
+    b.apply_load(-4, 0, -1)
+    b.apply_load(-46, 6, -1)
+    b.apply_load(10, 2, -1)
+    b.apply_load(20, 4, -1)
+    b.apply_load(3, 6, 0)
+    p = b.max_bmoment()
+    q = ([6],56)
+    assert p == q
+
+    # maximum occurence at multiple points
+    E = Symbol('E')
+    I = Symbol('I')
+    b = Beam(7, E, I)
+    r0, m0 = b.apply_support(0, type='fixed')
+    r4 = b.apply_support(4, type='pin')
+    r7 = b.apply_support(7, type='pin')
+    b.apply_rotation_hinge(2)
+    b.apply_rotation_hinge(5)
+    b.apply_load(-5, 0, 0, 2)
+    b.apply_load(-10, 6, -1)
+    b.solve_for_reaction_loads(r0, m0, r4, r7)
+    p = b.max_bmoment()
+    q = ([0,4,6],5)
+    assert p == q
+
+    # constant zero region at start
+    E = Symbol('E')
+    I = Symbol('I')
+    b = Beam(15, E, I)
+    r0 = b.apply_support(0, type='pin')
+    r10 = b.apply_support(10, type='pin')
+    r15, m15 = b.apply_support(15, type='fixed')
+    b.apply_rotation_hinge(5)
+    b.apply_rotation_hinge(12)
+    b.apply_load(-10, 5, -1)
+    b.apply_load(-5, 10, 0, 15)
+    b.solve_for_reaction_loads(r0, r10, r15, m15)
+    p = b.max_bmoment()
+    q = ([10],50)
+    assert p == q
+
+    # constant zero region at the end
+    E = Symbol('E')
+    I = Symbol('I')
+    b = Beam(10, E, I)
+    r0, m0 = b.apply_support(0, type='fixed')
+    r4 = b.apply_support(4, type='pin')
+    r7,m7 = b.apply_support(7, type='fixed')
+    b.apply_rotation_hinge(2)
+    b.apply_rotation_hinge(5)
+    b.apply_load(-5, 0, 0, 2)
+    b.apply_load(7,3,-1)
+    b.solve_for_reaction_loads(r0, m0, r4, r7,m7)
+    p = b.max_bmoment()
+    q = ([3],Rational(347,104))
+    assert p == q
+
+    E = Symbol('E')
+    I = Symbol('I')
+    b = Beam(10, E, I)
+    r0, m0 = b.apply_support(0, type='fixed')
+    r4,m4 = b.apply_support(4, type='fixed')
+    r7,m7 = b.apply_support(7, type='fixed')
+    b.apply_rotation_hinge(2)
+    b.apply_rotation_hinge(5)
+    b.apply_load(-5, 0, 0, 2)
+    b.apply_load(-10, 6, -1)
+    b.apply_load(7,3,-1)
+    b.solve_for_reaction_loads(r0, m0, r4,m4, r7,m7)
+    p = b.max_bmoment()
+    q = ([7],Rational(40,9))
+    assert p == q
+
+    # parabolic
+    E = Symbol('E')
+    I = Symbol('I')
+    b = Beam(10, E, I)
+    R1, R2 = symbols('R1, R2')
+    b.apply_load(R1, 0, -1)
+    b.apply_load(R2, 10, -1)
+    b.apply_load(10, 0, 0, end=10)
+    b.solve_for_reaction_loads(R1, R2)
+    p = b.max_bmoment()
+    q = ([5],125)
+    assert p == q
+
+    # interval maximum
+    E = Symbol('E')
+    I = Symbol('I')
+    b = Beam(10, E, I)
+    R0 = b.apply_support(0, 'pin')
+    RL = b.apply_support(10, 'roller')
+    b.apply_load(-5, 3, -1)
+    b.apply_load(-5, 7, -1)
+    b.solve_for_reaction_loads(R0, RL)
+    p = b.max_bmoment()
+    q = ([3, Interval(3, 7), 7], 15)
+    assert p == q
 
 def test_max_deflection():
     E, I, l, F = symbols('E, I, l, F', positive=True)
