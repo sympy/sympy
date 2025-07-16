@@ -1941,14 +1941,14 @@ class Expr(Basic, EvalfMixin):
                 return has_other
             return has_other or e.has(*(e.free_symbols & sym))
 
-        if (want is not func or
-                func is not Add and func is not Mul):
+        if (not issubclass(func, want) or
+            not issubclass(func, Add) and not issubclass(func, Mul)):
             if has(self):
                 return (want.identity, self)
             else:
                 return (self, want.identity)
         else:
-            if func is Add:
+            if issubclass(func, Add):
                 args = list(self.args)
             else:
                 args, nc = self.args_cnc()
@@ -1956,15 +1956,15 @@ class Expr(Basic, EvalfMixin):
         d = sift(args, has)
         depend = d[True]
         indep = d[False]
-        if func is Add:  # all terms were treated as commutative
-            return (Add(*indep), _unevaluated_Add(*depend))
+        if issubclass(func, Add):  # all terms were treated as commutative
+            return (func(*indep), _unevaluated_Add(*depend))
         else:  # handle noncommutative by stopping at first dependent term
             for i, n in enumerate(nc):
                 if has(n):
                     depend.extend(nc[i:])
                     break
                 indep.append(n)
-            return Mul(*indep), _unevaluated_Mul(*depend)
+            return func(*indep), _unevaluated_Mul(*depend)
 
     def as_real_imag(self, deep=True, **hints) -> tuple[Expr, Expr]:
         """Performs complex expansion on 'self' and returns a tuple
