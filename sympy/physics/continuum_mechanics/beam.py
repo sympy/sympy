@@ -1150,56 +1150,67 @@ class Beam:
         >>> b.max_bmoment()
         (0, 233125/2)
         """
-        bending_curve = self.bending_moment()
         x = self.variable
+        l = self.length
+        bm = self.bending_moment()
 
-        terms = bending_curve.args
-        singularity = []        # Points at which bending moment changes
-        for term in terms:
-            if isinstance(term, Mul):
-                term = term.args[-1]    # SingularityFunction in the term
-            singularity.append(term.args[1])
-        singularity = list(set(singularity))
-        singularity.sort()
+        terms = []
+        for term in bm.args:
+            sfs = list(term.atoms(SingularityFunction))
+            if not sfs:
+                terms.append(term)
+            else:
+                for sf in sfs:
+                    if sf.args[2] >= 0:  # order >= 0
+                        terms.append(term)
+        filtered_bm = sum(terms)
 
-        intervals = []    # List of Intervals with discrete value of bending moment
-        moment_values = []   # List of values of bending moment in each interval
-        for i, s in enumerate(singularity):
-            if s == 0:
+        singularities = set()
+        for sf in filtered_bm.atoms(SingularityFunction):
+            loc = sf.args[1]
+            singularities.add(loc)
+        singularities = sorted(singularities)
+
+        boundary_points = [0] + [s for s in singularities if 0 < s < l] + [l]
+        intervals = []
+        for i in range(len(boundary_points) - 1):
+            start, end = boundary_points[i], boundary_points[i + 1]
+            if start != end:
+                intervals.append(Interval(start, end))
+
+        moment_locations = []
+        moment_values = []
+
+        for interval in intervals:
+            a, b = interval.start, interval.end
+            p1 = a + (b - a) / 4
+            p2 = (a + b) / 2
+            p3 = b - (b - a) / 4
+
+            values = [filtered_bm.subs(x, pt) for pt in [p1, p2, p3]]
+
+            if values[0] == values[1] == values[2] == 0:
                 continue
-            try:
-                moment_slope = Piecewise(
-                    (float("nan"), x <= singularity[i - 1]),
-                    (self.shear_force().rewrite(Piecewise), x < s),
-                    (float("nan"), True))
-                points = solve(moment_slope, x)
-                val = []
-                for point in points:
-                    val.append(abs(bending_curve.subs(x, point)))
-                points.extend([singularity[i-1], s])
-                val += [abs(limit(bending_curve, x, singularity[i-1], '+')), abs(limit(bending_curve, x, s, '-'))]
-                max_moment = max(val)
-                moment_values.append(max_moment)
-                intervals.append(points[val.index(max_moment)])
 
-            # If bending moment in a particular Interval has zero or constant
-            # slope, then above block gives NotImplementedError as solve
-            # can't represent Interval solutions.
-            except NotImplementedError:
-                initial_moment = limit(bending_curve, x, singularity[i-1], '+')
-                final_moment = limit(bending_curve, x, s, '-')
-                # If bending_curve has a constant slope(it is a line).
-                if bending_curve.subs(x, (singularity[i-1] + s)/2) == (initial_moment + final_moment)/2 and initial_moment != final_moment:
-                    moment_values.extend([initial_moment, final_moment])
-                    intervals.extend([singularity[i-1], s])
-                else:    # bending_curve has same value in whole Interval
-                    moment_values.append(final_moment)
-                    intervals.append(Interval(singularity[i-1], s))
+            left_lim = limit(filtered_bm, x, a, '+')
+            right_lim = limit(filtered_bm, x, b, '-')
+            mid_val = filtered_bm.subs(x, p2)
 
-        moment_values = list(map(abs, moment_values))
-        maximum_moment = max(moment_values)
-        point = intervals[moment_values.index(maximum_moment)]
-        return (point, maximum_moment)
+            if left_lim == mid_val == right_lim:
+                moment_locations.append(Interval(a, b))
+                moment_values.append(abs(left_lim))
+            else:
+                for pt, val in [(a, left_lim), (p2, mid_val), (b, right_lim)]:
+                    if pt not in moment_locations:
+                        moment_locations.append(pt)
+                        moment_values.append(abs(val))
+
+        if not moment_values:
+            return ([], 0)
+
+        max_val = max(moment_values)
+        max_locations = [loc for loc, val in zip(moment_locations, moment_values) if val == max_val]
+        return (max_locations, max_val)
 
     def point_cflexure(self):
         """
