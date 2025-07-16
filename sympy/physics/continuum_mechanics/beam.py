@@ -1163,7 +1163,7 @@ class Beam:
 
     def max_bmoment(self):
         """
-        Returns maximum Shear force and its coordinate
+        Returns maximum bending moment and its coordinate
         in the Beam object.
 
         Examples
