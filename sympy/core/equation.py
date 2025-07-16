@@ -36,79 +36,79 @@ class Equation(Basic, EvalfMixin):
     >>> from sympy import integrate, Integral
     >>> a, b, c, x = var('a b c x')
     >>> Equation(a,b/c)
-    a = b/c
+    Eqn(a, b/c)
     >>> t=Eqn(a,b/c)
     >>> t
-    a = b/c
+    Eqn(a, b/c)
     >>> t*c
-    a*c = b
+    Eqn(a*c, b)
     >>> c*t
-    a*c = b
+    Eqn(a*c, b)
     >>> exp(t)
-    exp(a) = exp(b/c)
+    Eqn(exp(a), exp(b/c))
     >>> exp(log(t))
-    a = b/c
+    Eqn(a, b/c)
 
     Simplification and Expansion
     >>> from sympy import simplify, expand, factor, collect
     >>> f = Eqn(x**2 - 1, c)
     >>> f
-    x**2 - 1 = c
+    Eqn(x**2 - 1, c)
     >>> f/(x+1)
-    (x**2 - 1)/(x + 1) = c/(x + 1)
+    Eqn((x**2 - 1)/(x + 1), c/(x + 1))
     >>> (f/(x+1)).simplify()
-    x - 1 = c/(x + 1)
+    Eqn(x - 1, c/(x + 1))
     >>> simplify(f/(x+1))
-    x - 1 = c/(x + 1)
+    Eqn(x - 1, c/(x + 1))
     >>> (f/(x+1)).expand()
-    x**2/(x + 1) - 1/(x + 1) = c/(x + 1)
+    Eqn(x**2/(x + 1) - 1/(x + 1), c/(x + 1))
     >>> expand(f/(x+1))
-    x**2/(x + 1) - 1/(x + 1) = c/(x + 1)
+    Eqn(x**2/(x + 1) - 1/(x + 1), c/(x + 1))
     >>> factor(f)
-    (x - 1)*(x + 1) = c
+    Eqn((x - 1)*(x + 1), c)
     >>> f.factor()
-    (x - 1)*(x + 1) = c
+    Eqn((x - 1)*(x + 1), c)
     >>> f2 = f+a*x**2+b*x +c
     >>> f2
-    a*x**2 + b*x + c + x**2 - 1 = a*x**2 + b*x + 2*c
+    Eqn(a*x**2 + b*x + c + x**2 - 1, a*x**2 + b*x + 2*c)
     >>> collect(f2,x)
-    b*x + c + x**2*(a + 1) - 1 = a*x**2 + b*x + 2*c
+    Eqn(b*x + c + x**2*(a + 1) - 1, a*x**2 + b*x + 2*c)
 
     Apply operation to only one side
     >>> poly = Eqn(a*x**2 + b*x + c*x**2, a*x**3 + b*x**3 + c*x)
     >>> poly.applyrhs(factor,x)
-    a*x**2 + b*x + c*x**2 = x*(c + x**2*(a + b))
+    Eqn(a*x**2 + b*x + c*x**2, x*(c + x**2*(a + b)))
     >>> poly.applylhs(factor)
-    x*(a*x + b + c*x) = a*x**3 + b*x**3 + c*x
+    Eqn(x*(a*x + b + c*x), a*x**3 + b*x**3 + c*x)
     >>> poly.applylhs(collect,x)
-    b*x + x**2*(a + c) = a*x**3 + b*x**3 + c*x
+    Eqn(b*x + x**2*(a + c), a*x**3 + b*x**3 + c*x)
 
     ``.apply...`` also works with user defined python functions
     >>> def addsquare(eqn):
     ...     return eqn+eqn**2
     ...
     >>> t.apply(addsquare)
-    a**2 + a = b**2/c**2 + b/c
+    Eqn(a**2 + a, b**2/c**2 + b/c)
     >>> t.applyrhs(addsquare)
-    a = b**2/c**2 + b/c
+    Eqn(a, b**2/c**2 + b/c)
     >>> t.apply(addsquare, side = 'rhs')
-    a = b**2/c**2 + b/c
+    Eqn(a, b**2/c**2 + b/c)
     >>> t.applylhs(addsquare)
-    a**2 + a = b/c
+    Eqn(a**2 + a, b/c)
     >>> addsquare(t)
-    a**2 + a = b**2/c**2 + b/c
+    Eqn(a**2 + a, b**2/c**2 + b/c)
 
     Inaddition to ``.apply...`` there is also the less general ``.do``,
     ``.dolhs``, ``.dorhs``, which only works for operations defined on the
     ``Expr`` class (e.g.``.collect(), .factor(), .expand()``, etc...).
     >>> poly.dolhs.collect(x)
-    b*x + x**2*(a + c) = a*x**3 + b*x**3 + c*x
+    Eqn(b*x + x**2*(a + c), a*x**3 + b*x**3 + c*x)
     >>> poly.dorhs.collect(x)
-    a*x**2 + b*x + c*x**2 = c*x + x**3*(a + b)
+    Eqn(a*x**2 + b*x + c*x**2, c*x + x**3*(a + b))
     >>> poly.do.collect(x)
-    b*x + x**2*(a + c) = c*x + x**3*(a + b)
+    Eqn(b*x + x**2*(a + c), c*x + x**3*(a + b))
     >>> poly.dorhs.factor()
-    a*x**2 + b*x + c*x**2 = x*(a*x**2 + b*x**2 + c)
+    Eqn(a*x**2 + b*x + c*x**2, x*(a*x**2 + b*x**2 + c))
 
     ``poly.do.exp()`` or other sympy math functions will raise an error.
 
@@ -116,29 +116,29 @@ class Equation(Basic, EvalfMixin):
     >>> p, V, n, R, T = var('p V n R T')
     >>> eq1=Eqn(p*V,n*R*T)
     >>> eq1
-    V*p = R*T*n
+    Eqn(V*p, R*T*n)
     >>> eq2 =eq1/V
     >>> eq2
-    p = R*T*n/V
+    Eqn(p, R*T*n/V)
     >>> eq3 = eq2/R/T
     >>> eq3
-    p/(R*T) = n/V
+    Eqn(p/(R*T), n/V)
     >>> eq4 = eq3*R/p
     >>> eq4
-    1/T = R*n/(V*p)
+    Eqn(1/T, R*n/(V*p))
     >>> 1/eq4
-    T = V*p/(R*n)
+    Eqn(T, V*p/(R*n))
     >>> eq5 = 1/eq4 - T
     >>> eq5
-    0 = -T + V*p/(R*n)
+    Eqn(0, -T + V*p/(R*n))
 
-    Substitution (#'s and units. NOTE: algebra-with-sympy extension package
-    has a convenience shorthand for defining units)
+    Substitution (#'s and units)
+    >>> L, atm, mol, K = var('L atm mol K', positive=True, real=True) # units
     >>> L, atm, mol, K = var('L atm mol K', positive=True, real=True) # units
     >>> eq2.subs({R:0.08206*L*atm/mol/K,T:273*K,n:1.00*mol,V:24.0*L})
-    p = 0.9334325*atm
+    Eqn(p, 0.9334325*atm)
     >>> eq2.subs({R:0.08206*L*atm/mol/K,T:273*K,n:1.00*mol,V:24.0*L}).evalf(4)
-    p = 0.9334*atm
+    Eqn(p, 0.9334*atm)
 
     Substituting an equation into another equation:
     >>> P, P1, P2, A1, A2, E1, E2 = var("P, P1, P2, A1, A2, E1, E2")
@@ -146,29 +146,29 @@ class Equation(Basic, EvalfMixin):
     >>> eq2 = Eqn(P1 / (A1 * E1), P2 / (A2 * E2))
     >>> P1_val = (eq1 - P2).swap
     >>> P1_val
-    P1 = P - P2
+    Eqn(P1, P - P2)
     >>> eq2 = eq2.subs(P1_val)
     >>> eq2
-    (P - P2)/(A1*E1) = P2/(A2*E2)
+    Eqn((P - P2)/(A1*E1), P2/(A2*E2))
 
     Combining equations (Math with equations: lhs with lhs and rhs with rhs)
     >>> q = Eqn(a*c, b/c**2)
     >>> q
-    a*c = b/c**2
+    Eqn(a*c, b/c**2)
     >>> t
-    a = b/c
+    Eqn(a, b/c)
     >>> q+t
-    a*c + a = b/c + b/c**2
+    Eqn(a*c + a, b/c + b/c**2)
     >>> q/t
-    c = 1/c
+    Eqn(c, 1/c)
     >>> t**q
-    a**(a*c) = (b/c)**(b/c**2)
+    Eqn(a**(a*c), (b/c)**(b/c**2))
 
     Utility operations
     >>> t.reversed
-    b/c = a
+    Eqn(b/c, a)
     >>> t.swap
-    b/c = a
+    Eqn(b/c, a)
     >>> t.lhs
     a
     >>> t.rhs
@@ -188,29 +188,29 @@ class Equation(Basic, EvalfMixin):
     both sides.
     >>> q=Eqn(a*c, b/c**2)
     >>> q
-    a*c = b/c**2
+    Eqn(a*c, b/c**2)
     >>> diff(q,b)
-    Derivative(a*c, b) = c**(-2)
+    Eqn(Derivative(a*c, b), c**(-2))
     >>> diff(q,c)
-    a = -2*b/c**3
+    Eqn(a, -2*b/c**3)
     >>> diff(log(q),b)
-    Derivative(log(a*c), b) = 1/b
+    Eqn(Derivative(log(a*c), b), 1/b)
     >>> diff(q,c,2)
-    Derivative(a, c) = 6*b/c**4
+    Eqn(Derivative(a, c), 6*b/c**4)
 
     If you specify multiple differentiation all at once the assumption
     is order of differentiation matters and the lhs will not be
     evaluated.
     >>> diff(q,c,b)
-    Derivative(a*c, b, c) = -2/c**3
+    Eqn(Derivative(a*c, b, c), -2/c**3)
 
     To overcome this specify the order of operations.
     >>> diff(diff(q,c),b)
-    Derivative(a, b) = -2/c**3
+    Eqn(Derivative(a, b), -2/c**3)
 
     But the reverse order returns an unevaulated lhs (a may depend on b).
     >>> diff(diff(q,b),c)
-    Derivative(a*c, b, c) = -2/c**3
+    Eqn(Derivative(a*c, b, c), -2/c**3)
 
     Integration can only be performed on one side at a time.
     >>> q=Eqn(a*c,b/c)
@@ -221,11 +221,11 @@ class Equation(Basic, EvalfMixin):
 
     Make a pretty statement of integration from an equation
     >>> Eqn(Integral(q.lhs,b),integrate(q,b,side='rhs'))
-    Integral(a*c, b) = b**2/(2*c)
+    Eqn(Integral(a*c, b), b**2/(2*c))
 
     Integration of each side with respect to different variables
     >>> q.dorhs.integrate(b).dolhs.integrate(a)
-    a**2*c/2 = b**2/(2*c)
+    Eqn(a**2*c/2, b**2/(2*c))
     """
 
     def __new__(cls, lhs, rhs, **kwargs):
@@ -403,7 +403,7 @@ class Equation(Basic, EvalfMixin):
         >>> from sympy import Equation
         >>> eq = Equation(x + b, x - b)
         >>> eq.rewrite(Add)
-        2*b = 0
+        Eqn(2*b, 0)
         >>> eq.rewrite(Add, evaluate=None).lhs.args
         (b, b, x, -x)
         >>> eq.rewrite(Add, evaluate=False).lhs.args
@@ -469,20 +469,20 @@ class Equation(Basic, EvalfMixin):
         Substitute a single value:
 
         >>> eq.subs(b, 4)
-        a + x = 4*c
+        Eqn(a + x, 4*c)
 
         Substitute a multiple values:
 
         >>> eq.subs([(a, 2), (b, 4)])
-        x + 2 = 4*c
+        Eqn(x + 2, 4*c)
         >>> eq.subs({a: 2, b: 4})
-        x + 2 = 4*c
+        Eqn(x + 2, 4*c)
 
         Substitute an equation into another equation:
 
         >>> eq2 = Equation(x + a, 4)
         >>> eq.subs(eq2)
-        4 = b*c
+        Eqn(4, b*c)
 
         Substitute multiple equations into another equation:
 
@@ -490,7 +490,7 @@ class Equation(Basic, EvalfMixin):
         >>> eq2 = Equation(x + a, 4)
         >>> eq3 = Equation(b, 5)
         >>> eq1.subs(eq2, eq3)
-        c + 9 = 5*a*c*x
+        Eqn(c + 9, 5*a*c*x)
 
         """
         new_args = args
@@ -626,26 +626,5 @@ class Equation(Basic, EvalfMixin):
                 return (getattr(self, side).integrate(*args, **kwargs))
             except AttributeError:
                 raise AttributeError('`side` must equal "lhs" or "rhs".')
-
-    #####
-    # TODO: Output helper functions
-    #####
-    #def __repr__(self):
-        # Included here because if put this into repr.py it is not possible to
-        # access this executable representation, you only get the str(self),
-        # even when calling repr(self). With it here this defines the
-        # default output for command line python and allows access to
-        # str(self) and repr(self) independently.
-        # If this def is active then command line sympy gives this executable
-        # version of the expression. If not then sympy on the command line
-        # yields the human readable version, which is not executable.
-        # Doctests always generate the human readable form because they seem
-        # to call print(xxx) not repr(xxx) as command line usually does.
-        # Sympy is determined to not follow Python standards on this.
-        # This may have to live in Algebra_with_Sympy to recover normal
-        # python behavior.
-        #return 'Equation(%s, %s)' % (repr(self.lhs), repr(self.rhs))
-
-    #__srepr__ = __repr__
 
 Eqn = Equation

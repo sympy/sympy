@@ -284,4 +284,4 @@ def test_subs():
 def test_output_helpers():
     a, b, c = symbols('a b c')
     tsteqn = Equation(a, b / c)
-    assert repr(tsteqn) == 'a = b/c'
+    assert repr(tsteqn) == 'Eqn(a, b/c)'
