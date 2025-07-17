@@ -61,7 +61,7 @@ def test_issue_5223():
     assert D(x**2 + x**3*y**2, x, 2, y, 1).series(x).doit() == 12*x*y
     assert next(D(cos(x), x).lseries()) == D(1, x)
     assert D(
-        exp(x), x).series(n=3) == D(1, x) + D(x, x) + D(x**2/2, x) + D(x**3/6, x) + O(x**3)
+        exp(x), x).series(n=3) == D(x, x) + D(x**2/2, x) + D(x**3/6, x) + O(x**3)
 
     assert Integral(x, (x, 1, 3), (y, 1, x)).series(x) == -4 + 4*x
 

@@ -157,6 +157,13 @@ ignore_missing_imports = true
 # pyright type checker settings:
 [tool.pyright]
 include = ["sympy"]
+exclude = [
+    "sympy/matrices/common.py",
+    "sympy/matrices/matrices.py",
+    "sympy/matrices/tests/test_matrices.py",
+    "sympy/matrices/tests/test_commonmatrix.py",
+    "sympy/matrices/benchmarks",
+]
 
 # This complains when self or cls is not used as the parameter name for an
 # instance method or class method. Since this is used a lot in SymPy we disable

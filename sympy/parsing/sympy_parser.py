@@ -1216,10 +1216,13 @@ class EvaluateFalseTransformer(ast.NodeTransformer):
         return node
 
     def visit_Call(self, node):
-        new_node = self.generic_visit(node)
         if isinstance(node.func, ast.Name) and node.func.id in self.functions:
-            new_node.keywords.append(ast.keyword(arg='evaluate', value=ast.Constant(value=False)))
-        return new_node
+            func = self.visit(node.func)
+            args = [self.visit(arg) for arg in node.args]
+            keywords = [ast.keyword(arg=keyword.arg, value=self.visit(keyword.value)) for keyword in node.keywords]
+            keywords.append(ast.keyword(arg='evaluate', value=ast.Constant(value=False)))
+            return ast.Call(func=func, args=args, keywords=keywords)
+        return self.generic_visit(node)
 
 
 _transformation = {  # items can be added but never re-ordered

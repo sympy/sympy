@@ -122,7 +122,7 @@ class Ynm(DefinedFunction):
     See Also
     ========
 
-    Ynm_c, Znm
+    Ynm_c, Znm, sympy.physics.hydrogen.Y_lm, sympy.physics.hydrogen.Z_lm
 
     References
     ==========
@@ -251,7 +251,7 @@ def Ynm_c(n, m, theta, phi):
     See Also
     ========
 
-    Ynm, Znm
+    Ynm, Znm, sympy.physics.hydrogen.Y_lm, sympy.physics.hydrogen.Z_lm
 
     References
     ==========
@@ -311,7 +311,7 @@ class Znm(DefinedFunction):
     See Also
     ========
 
-    Ynm, Ynm_c
+    Ynm, Ynm_c, sympy.physics.hydrogen.Y_lm, sympy.physics.hydrogen.Z_lm
 
     References
     ==========

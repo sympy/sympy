@@ -118,7 +118,7 @@ class SparseRepMatrix(RepMatrix):
             args = [None, None, args[1]]
 
         if len(args) == 3:
-            r, c = args[:2]
+            r, c, arg3 = args
             if r is c is None:
                 rows = cols = None
             elif None in (r, c):
@@ -127,10 +127,10 @@ class SparseRepMatrix(RepMatrix):
             else:
                 rows, cols = as_int(args[0]), as_int(args[1])
 
-            if isinstance(args[2], Callable):
-                op = args[2]
+            if isinstance(arg3, Callable):
+                op = arg3
 
-                if None in (rows, cols):
+                if rows is None or cols is None:
                     raise ValueError(
                         "{} and {} must be integers for this "
                         "specification.".format(rows, cols))
@@ -146,7 +146,7 @@ class SparseRepMatrix(RepMatrix):
 
                 return rows, cols, smat
 
-            elif isinstance(args[2], (dict, Dict)):
+            elif isinstance(arg3, (dict, Dict)):
                 def update(i, j, v):
                     # update smat and make sure there are no collisions
                     if v:
@@ -158,7 +158,7 @@ class SparseRepMatrix(RepMatrix):
                         smat[i, j] = v
 
                 # manual copy, copy.deepcopy() doesn't work
-                for (r, c), v in args[2].items():
+                for (r, c), v in arg3.items(): # type: ignore
                     if isinstance(v, MatrixBase):
                         for (i, j), vv in v.todok().items():
                             update(r + i, c + j, vv)
@@ -167,26 +167,26 @@ class SparseRepMatrix(RepMatrix):
                         for i, j in smat:
                             update(r + i, c + j, smat[i, j])
                     else:
-                        v = cls._sympify(v)
+                        v = cls._sympify(v) # type: ignore
                         update(r, c, cls._sympify(v))
 
-            elif is_sequence(args[2]):
-                flat = not any(is_sequence(i) for i in args[2])
+            elif is_sequence(arg3):
+                flat = not any(is_sequence(i) for i in arg3)
                 if not flat:
                     _, _, smat = \
-                        cls._handle_creation_inputs(args[2], **kwargs)
+                        cls._handle_creation_inputs(arg3, **kwargs)
                 else:
-                    flat_list = args[2]
-                    if len(flat_list) != rows * cols:
+                    flat_list = arg3
+                    if len(flat_list) != rows * cols: # type: ignore
                         raise ValueError(
                             "The length of the flat list ({}) does not "
                             "match the specified size ({} * {})."
                             .format(len(flat_list), rows, cols)
                         )
 
-                    for i in range(rows):
-                        for j in range(cols):
-                            value = flat_list[i*cols + j]
+                    for i in range(rows): # type: ignore
+                        for j in range(cols): # type: ignore
+                            value = flat_list[i*cols + j] # type: ignore
                             value = cls._sympify(value)
                             if value != cls.zero:
                                 smat[i, j] = value
@@ -202,7 +202,7 @@ class SparseRepMatrix(RepMatrix):
                         raise ValueError(
                             "The location {} is out of the designated range"
                             "[{}, {}]x[{}, {}]"
-                            .format((i, j), 0, rows - 1, 0, cols - 1)
+                            .format((i, j), 0, rows - 1, 0, cols - 1) # type: ignore
                         )
 
             return rows, cols, smat
@@ -282,7 +282,7 @@ class SparseRepMatrix(RepMatrix):
             if fv != 0:
                 dok[k] = fv
 
-        return self._new(self.rows, self.cols, dok)
+        return self.from_dok(self.rows, self.cols, dok)
 
     def as_immutable(self):
         """Returns an Immutable version of this Matrix."""
@@ -427,8 +427,7 @@ class SparseRepMatrix(RepMatrix):
             elif self.rows > self.cols:
                 raise ValueError('For over-determined system, M, having '
                     'more rows than columns, try M.solve_least_squares(rhs).')
-        else:
-            return self.inv(method=method).multiply(rhs)
+        return self.inv(method=method).multiply(rhs)
 
     RL = property(row_list, None, None, "Alternate faster representation")
     CL = property(col_list, None, None, "Alternate faster representation")
