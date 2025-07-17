@@ -1918,7 +1918,7 @@ class Expr(Basic, EvalfMixin):
 
         func = self.func
         want: type[Add] | type[Mul]
-        if hint.get('as_Add', isinstance(self, Add) ):
+        if hint.get('as_Add', self.is_Add):
             want = Add
         else:
             want = Mul
@@ -1952,7 +1952,7 @@ class Expr(Basic, EvalfMixin):
             else:
                 return (self, S.One)
         else:
-            if issubclass(func, Add):
+            if func.is_Add:
                 args = list(self.args)
             else:
                 args, nc = self.args_cnc()
@@ -1960,7 +1960,7 @@ class Expr(Basic, EvalfMixin):
         d = sift(args, has)
         depend = d[True]
         indep = d[False]
-        if issubclass(func, Add):  # all terms were treated as commutative
+        if func.is_Add:  # all terms were treated as commutative
             return (func(*indep), _unevaluated_Add(*depend))
         else:  # handle noncommutative by stopping at first dependent term
             for i, n in enumerate(nc):
