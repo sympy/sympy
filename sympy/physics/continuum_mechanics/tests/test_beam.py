@@ -307,6 +307,130 @@ def test_statically_indeterminate():
     q = {R1: F/2, R2: F/2, M1: -F*l/8, M2: F*l/8}
     assert p == q
 
+def tests_for_error_reporting_solve_for_reaction_loads():
+    #No symbols supplied to solve_for_reaction_loads()
+    E = Symbol('E')
+    I = Symbol('I')
+    b5 = Beam(10, E, I)
+    R1=b5.apply_support(0,'roller') # noqa: F841
+    b5.apply_load(10, 10, -1)
+    with raises(ValueError, match="No symbols supplied to solve_for_reaction_loads()."):
+        b5.solve_for_reaction_loads()
+
+    #Duplicate symbols supplied to solve_for_reaction_loads()
+    E = Symbol('E')
+    I = Symbol('I')
+    b5 = Beam(10, E, I)
+    R1,M1=b5.apply_support(0,'fixed')
+    R2=b5.apply_support(10,'roller') # noqa: F841
+    with raises(ValueError, match="Duplicate symbols supplied to solve_for_reaction_loads()."):
+        b5.solve_for_reaction_loads(R1, M1, R1)
+
+    # Duplicate symbols supplied to solve_for_reaction_loads()
+    E, I = Symbol('E'), Symbol('I')
+    b = Beam(10, E, I)
+    b.apply_load(R1, 0, -1)
+    b.apply_load(R1, 10, -1)
+    b.bc_deflection = [(0, 0), (10, 0)]
+    with raises(ValueError, match="Duplicate symbols supplied to solve_for_reaction_loads()."):
+        b.solve_for_reaction_loads(Symbol('R1'),Symbol('R1'))
+
+    # conditional consistent system of equations with rotation hinge
+    E, I, P = Symbol('E'), Symbol('I'), Symbol('P')
+    b = Beam(10, E, I)
+    r1 = b.apply_support(0, 'pin')
+    r2 = b.apply_support(10, 'roller')
+    b.apply_rotation_hinge(4)
+    b.apply_load(-P, 4, -1)
+    with raises(ValueError,match="The system is only solvable with symbolic constraint"):
+        b.solve_for_reaction_loads(r1, r2)
+
+    # conditional consistent system of equations with rotation hinges
+    E = Symbol('E')
+    I = Symbol('I')
+    Q= Symbol('Q')
+    b = Beam(15, E, I)
+    b.apply_rotation_hinge(5)
+    b.apply_rotation_hinge(10)
+    r0 = b.apply_support(0, 'pin')
+    r15 = b.apply_support(15, 'roller')
+    b.apply_load(-Q, 0, 0, end=15)
+    with raises(ValueError, match="The system is only solvable with symbolic constraint"):
+        b.solve_for_reaction_loads(r0, r15)
+
+    # Inconsistent system of equations without enough boundary conditions
+    E, I = Symbol('E'), Symbol('I')
+    b = Beam(10, E, I)
+    R1=b.apply_support(0,'pin')
+    b.apply_load(10, 10, -1)
+    with raises(ValueError, match="This means your supports/BCs generate contradictory or insufficient constraints."):
+        b.solve_for_reaction_loads(R1)
+
+    # conditional consistent system of equations with sliding hinge
+    E, I = Symbol('E'), Symbol('I')
+    b = Beam(8, E, I)
+    R1=b.apply_support(0,'roller')
+    b.apply_sliding_hinge(4)
+    b.apply_load(5, 8, -1)
+    R1 = Symbol('R1')
+    with raises(ValueError, match="The system is only solvable with symbolic constraint"):
+        b.solve_for_reaction_loads(R1)
+
+    E = Symbol('E')
+    I = Symbol('I')
+    Q= Symbol('Q')
+    b = Beam(15, E, I)
+    b.apply_rotation_hinge(5)
+    b.apply_rotation_hinge(10)
+    r0 = b.apply_support(0, 'pin')
+    r15 = b.apply_support(15, 'roller')
+    b.apply_load(-Q, 0, 0, end=15)
+
+    with raises(ValueError, match="Expected at least"):
+        b.solve_for_reaction_loads(r0)
+
+    E = Symbol('E')
+    I = Symbol('I')
+    Q= Symbol('Q')
+    b = Beam(15, E, I)
+    b.apply_rotation_hinge(5)
+    b.apply_rotation_hinge(10)
+    r0 = b.apply_support(0, 'pin')
+    r15 = b.apply_support(15, 'roller')
+    b.apply_load(-Q, 0, 0, end=15)
+    with raises(ValueError, match="The system is only solvable with symbolic constraint"):
+        b.solve_for_reaction_loads(r0,r15)
+
+    b = Beam(12, E, I)
+    b.apply_rotation_hinge(3)
+    b.apply_rotation_hinge(8)
+    r1 = b.apply_support(0, 'pin')
+    r2= b.apply_support(12, 'roller')
+    b.apply_load(-P, 6, -1)
+    b.apply_load(Q, 9,-1)
+    with raises(ValueError, match="The system is only solvable with symbolic constraint"):
+        b.solve_for_reaction_loads(r1,r2)
+
+    b = Beam(12, E, I)
+    b.apply_rotation_hinge(3)
+    b.apply_rotation_hinge(8)
+    r1 = b.apply_support(0, 'pin')
+    r2 = b.apply_support(12, 'roller')
+    b.apply_load(-P, 6, -1)
+    b.apply_load(Q,9,-1)
+    with raises(ValueError, match="Expected at least"):
+        b.solve_for_reaction_loads(R1)
+
+    b = Beam(10, E, I)
+    b.apply_support(0, 'fixed')
+    b.apply_rotation_hinge(5)
+    b.apply_support(10, 'fixed')
+    b.apply_load(-P, 5, -1)
+    with raises(ValueError, match="Expected at least"):
+        b.solve_for_reaction_loads(R1)
+
+
+
 
 def test_beam_units():
     E = Symbol('E')
