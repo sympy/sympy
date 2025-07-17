@@ -348,6 +348,88 @@ Solution
 
 
 
+Example 6
+---------
+
+.. image:: Control_Problems_Q6.svg
+
+Given
+
+.. math::
+        G_1(z) &= \frac{z}{z - \frac{1}{2}}\\
+
+        G_2(z) &= \frac{z}{z - 1}\\
+
+Find
+
+1. The transfer function :math:`W(z)` from input :math:`r(k)` to output
+:math:`y(k)`.
+
+2. Determine a finite-duration input signal :math:`u(k)` (i.e., such that there
+exists an :math:`h \in \mathbb{N}` for which :math:`u(k) = 0` for all
+:math:`k \geq h`) so that the resulting forced response :math:`y_f(k)` converges
+to zero.
+
+Solution
+
+>>> # Imports
+>>> from sympy import *
+>>> from sympy.abc import z
+>>> from sympy.physics.control import *
+>>> # Transfer function definitions
+>>> G1 = DiscreteTransferFunction(z, z - Rational(1,2), z)
+>>> G2 = DiscreteTransferFunction(z, z - 1, z)
+>>> G3 = DiscreteTransferFunction(1, z, z)
+
+Subpart 1
+
+>>> W_partial = Feedback(G1, G3) * G2 # the operator * is used for Series connection
+>>> W = Feedback(W_partial, G3)
+>>> W = W.doit().to_standard_form(cancel_poles_zeros = True)
+>>> pprint(W, use_unicode = False)
+       2
+    2*z
+------------, sampling time: 1
+   2
+2*z  + z - 1
+
+Subpart 2
+
+First of all we need to study the poles and the stability of the system.
+
+>>> W.poles()
+[-1, 1/2]
+>>> W.is_stable()
+False
+
+The system is not asymptotically stable, so we need to find a
+finite-duration input signal :math:`u(k)` such that the pole in
+:math:`-1` is cancelled out.
+
+.. math::
+        Y(z) = W(z) \cdot U(z)
+
+In the numerator of U(z) we need :math:`(z + 1)` as a factor, and in the
+denominator we need something that permits :math:`u(k)` to be
+finite-duration.
+A simple solution is:
+
+.. math::
+        U(z) = \frac{z + 1}{z}
+
+as :math:`u(k) = \delta(k) + \delta(k - 1)`
+
+We can check that the output is asymptotically stable:
+
+>>> Y = (W * DiscreteTransferFunction(z + 1, z, z))
+>>> Y = Y.doit().to_standard_form(cancel_poles_zeros = True)
+>>> pprint(Y, use_unicode = False)
+  2*z
+-------, sampling time: 1
+2*z - 1
+>>> Y.is_stable()
+True
+
 References
 ^^^^^^^^^^
 1. `testbook.com <https://testbook.com/objective-questions/mcq-on-transfer-function--5eea6a1039140f30f369e952>`_
