@@ -1941,12 +1941,16 @@ class Expr(Basic, EvalfMixin):
                 return has_other
             return has_other or e.has(*(e.free_symbols & sym))
 
-        if (not issubclass(func, want) or
-            not issubclass(func, Add) and not issubclass(func, Mul)):
+        if want is Add and not self.is_Add:
             if has(self):
-                return (want.identity, self)
+                return (S.Zero, self)
             else:
-                return (self, want.identity)
+                return (self, S.Zero)
+        elif want is Mul and not self.is_Mul:
+            if has(self):
+                return (S.One, self)
+            else:
+                return (self, S.One)
         else:
             if issubclass(func, Add):
                 args = list(self.args)
