@@ -132,7 +132,7 @@ def test_Dummy():
 def test_Equation():
     a, b, c = symbols('a b c')
     tsteqn = Equation(a, b / c)
-    assert str(tsteqn) == 'a = b/c'
+    assert str(tsteqn) == 'Eqn(a, b/c)'
 
 
 def test_EulerGamma():
