@@ -735,9 +735,7 @@ class WrappingCone(WrappingGeometryBase):
         in the formula for T_p
         similarly for T_p2
         we can normalise these vectors if needed
-        """
-        # TODO: REVIEW GPT CODE
-        """
+        """"""
         pos1 = point_1.pos_from(self.apex)
         pos2 = point_2.pos_from(self.apex)
         # Handle coincident
