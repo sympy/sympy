@@ -18,7 +18,7 @@ class Equation(Basic, EvalfMixin):
     stumbling over missed details such as a negative sign.
 
     In IPython/Jupyter environments equations are displayed as human readable
-    expressions with and equals sign. For extended control over the display
+    expressions with an equals sign. For extended control over the display
     it is recommended to use this class via the `algebra_with_sympy` package.
 
     Create an equation with the call ``Equation(lhs,rhs)``, where ``lhs`` and
