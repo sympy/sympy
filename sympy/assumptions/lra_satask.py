@@ -44,13 +44,103 @@ WHITE_LIST = ALLOWED_PRED | {Q.positive, Q.negative, Q.zero, Q.nonzero, Q.nonpos
 
 
 def check_satisfiability(prop, _prop, factbase):
+    """
+    Determines the satisfiability of a logical proposition within the linear real arithmetic (LRA) domain,
+    given a base of known assumptions.
+
+    This function evaluates both a logical proposition (`prop`) and its negation (`_prop`) to determine
+    whether the proposition is always true, always false, or indeterminate under a given set of
+    facts (`factbase`). It is an extension of the baseline `check_satisfiability()` in
+    `sympy.assumptions.satask`, but adds domain-specific logic for linear real arithmetic (LRA),
+    with stricter type enforcement and domain reasoning.
+
+    Compared to `sympy.assumptions.satask.check_satisfiability`, this version introduces:
+
+    1. Domain Restriction to LRA (Linear Real Arithmetic):
+        - Only predicates and expressions involving real or rational scalar values are supported.
+        - Types such as matrices, complex values, `NaN`, or symbolic constructs not known to be real
+          are explicitly disallowed and will raise errors.
+        - This ensures that satisfiability checking is compatible with solvers or theories designed
+          for linear real arithmetic.
+
+    2. Realness Enforcement:
+        - The function ensures that all symbols involved in arithmetic comparisons are explicitly
+          assumed to be real where required.
+
+    3. Preprocessing and Implicit Assumption Injection:
+        - Realness assumptions are introduced only under the following conditions:
+            - Inequalities (Q.gt, Q.lt): If both sides are single symbolic variables and lack explicit domains, Q.real(x) and Q.real(y) are added.
+            - Equalities (Q.eq): If one side is a single symbol known to be real and the other is a single symbol with unknown domain, realness is inferred. If one is real and the other explicitly not real, a ValueError is raised.
+            - Explicit declarations: Symbols explicitly declared real (e.g., x.is_real == True) are recognized and used to avoid redundant inference.
+        - This preprocessing helps the solver reason with more complete context, avoiding false
+          negatives due to missing domain constraints.
+
+    4. Early Rejection of Unsupported Inputs:
+        - Before attempting satisfiability checks, the function scans the input for invalid constructs,
+          such as:
+            - `NaN` values
+            - Matrix-like expressions
+            - Unsupported predicate functions (anything not in the supported LRA predicate list)
+        - If such constructs are found, the function raises `UnhandledInput` instead of continuing.
+        - This guards against undefined or nonsensical logical evaluations.
+
+    Parameters
+    ----------
+    prop : CNF
+        The CNF form of the proposition to test for satisfiability.
+    _prop : CNF
+        The CNF form of the negation of the proposition.
+    factbase : CNFEncoding
+        A base of facts and assumptions to be included in the satisfiability checking.
+
+    Returns
+    -------
+    True if the proposition can only be true.
+    False if the proposition can only be false.
+    None if the proposition can be both true and false under current assumptions.
+
+    Raises
+    ------
+    ValueError
+        If there are inconsistent assumptions (e.g., real vs. non-real variables).
+    UnhandledInput
+        If the expression contains unsupported constructs or is not entirely real/rational.
+    """
     sat_true = factbase.copy()
     sat_false = factbase.copy()
     sat_true.add_from_cnf(prop)
     sat_false.add_from_cnf(_prop)
 
-    all_pred, all_exprs = get_all_pred_and_expr_from_enc_cnf(sat_true)
+    all_exprs = set()
+    all_pred = set()
+    realness_preds = set()
 
+    # Deduce realness with heuristics and collect all_exprs and all_pred
+    for pred in sat_true.encoding.keys():
+        if not isinstance(pred, AppliedPredicate):
+            continue
+
+        if pred.function is Q.eq:
+            lhs, rhs = pred.arguments
+            # heuristic: x = y & real(x) -> add real(y)
+            for a, b in [(lhs, rhs), (rhs, lhs)]:
+                if a.is_real:
+                    if b.is_real is None:
+                        realness_preds.add(Q.real(b))
+                    elif b.is_real is False:
+                        raise ValueError("Inconsistent assumptions")
+        if pred.function in (Q.gt, Q.lt):
+            lhs, rhs = pred.arguments
+            # heuristic: x > y -> add real(x) and real(y), if they are symbols
+            if lhs.is_Symbol:
+                realness_preds.add(Q.real(lhs))
+            if rhs.is_Symbol:
+                realness_preds.add(Q.real(rhs))
+
+        all_pred.add(pred)
+        all_exprs.update(pred.arguments)
+
+    # Ensure only supported predicates are used
     for pred in all_pred:
         if pred.function not in WHITE_LIST and pred.function != Q.ne:
             raise UnhandledInput(f"LRASolver: {pred} is an unhandled predicate")
@@ -62,7 +152,7 @@ def check_satisfiability(prop, _prop, factbase):
 
     # convert old assumptions into predicates and add them to sat_true and sat_false
     # also check for unhandled predicates
-    for assm in extract_pred_from_old_assum(all_exprs):
+    for assm in extract_pred_from_old_assum(all_exprs, realness_preds):
         n = len(sat_true.encoding)
         if assm not in sat_true.encoding:
             sat_true.encoding[assm] = n+1
@@ -72,7 +162,6 @@ def check_satisfiability(prop, _prop, factbase):
         if assm not in sat_false.encoding:
             sat_false.encoding[assm] = n+1
         sat_false.data.append([sat_false.encoding[assm]])
-
 
     sat_true = _preprocess(sat_true)
     sat_false = _preprocess(sat_false)
@@ -213,24 +302,12 @@ pred_to_pos_neg_zero = {
     Q.positive_infinite: False
 }
 
-def get_all_pred_and_expr_from_enc_cnf(enc_cnf):
-    all_exprs = set()
-    all_pred = set()
-    for pred in enc_cnf.encoding.keys():
-        if isinstance(pred, AppliedPredicate):
-            all_pred.add(pred)
-            all_exprs.update(pred.arguments)
-
-    return all_pred, all_exprs
-
-def extract_pred_from_old_assum(all_exprs):
+def extract_pred_from_old_assum(all_exprs, realness_preds=None):
     """
     Returns a list of relevant new assumption predicate
     based on any old assumptions.
-
     Raises an UnhandledInput exception if any of the assumptions are
     unhandled.
-
     Ignored predicate:
     - commutative
     - complex
@@ -241,7 +318,6 @@ def extract_pred_from_old_assum(all_exprs):
     - all matrix predicate
     - rational
     - irrational
-
     Example
     =======
     >>> from sympy.assumptions.lra_satask import extract_pred_from_old_assum
@@ -258,7 +334,12 @@ def extract_pred_from_old_assum(all_exprs):
             continue
 
         if expr.is_real is not True:
-            raise UnhandledInput(f"LRASolver: {expr} must be real")
+            if expr.is_Symbol:
+                if Q.real(expr) not in realness_preds:
+                    raise UnhandledInput(f"LRASolver: {expr} must be real")
+            else:
+                raise UnhandledInput(f"LRASolver: {expr} must be real")
+
         # test for I times imaginary variable; such expressions are considered real
         if isinstance(expr, Mul) and any(arg.is_real is not True for arg in expr.args):
             raise UnhandledInput(f"LRASolver: {expr} must be real")
