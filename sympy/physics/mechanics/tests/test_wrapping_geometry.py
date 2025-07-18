@@ -8,6 +8,7 @@ from sympy import (
     S,
     Symbol,
     acos,
+    atan,
     cos,
     pi,
     sin,
@@ -351,16 +352,16 @@ class TestWrappingCone:
     @pytest.mark.parametrize(
         'position, expected',
         [
-            (S.Zero, True),
-            (N.x + N.y + N.z, False),
-            (N.x + sqrt(3) * N.z, True),
-            (N.y + sqrt(3) * N.z, True),
-            ((N.x + N.y) / sqrt(2) + sqrt(3) * N.z, True),
-            (N.x / sqrt(3) + sqrt(2) * N.y / sqrt(3) + sqrt(3) * N.z, True),
-            (2 * N.x + sqrt(12) * N.z, True),
-            (2 * N.y + sqrt(12) * N.z, True),
-            (5 * N.x + sqrt(12) * N.z, False),
-            (sqrt(2) * (N.x + N.y) + sqrt(12) * N.z, True)
+            (S.Zero, Eq(0, 0, evaluate=False)),
+            (N.x + N.y + N.z, Eq(2, Rational(1, 3), evaluate=False)),
+            (N.x + sqrt(3) * N.z, Eq(1, 1, evaluate=False)),
+            (N.y + sqrt(3) * N.z, Eq(1, 1, evaluate=False)),
+            ((N.x + N.y) / sqrt(2) + sqrt(3) * N.z, Eq(1, 1, evaluate=False)),
+            (N.x / sqrt(3) + sqrt(2) * N.y / sqrt(3) + sqrt(3) * N.z, Eq(1, 1, evaluate=False)),
+            (2 * N.x + sqrt(12) * N.z, Eq(4, 4, evaluate=False)),
+            (2 * N.y + sqrt(12) * N.z, Eq(4, 4, evaluate=False)),
+            (5 * N.x + sqrt(12) * N.z, Eq(25, 4, evaluate=False)),
+            (sqrt(2) * (N.x + N.y) + sqrt(12) * N.z, Eq(4, 4, evaluate=False))
         ]
     )
     def test_point_on_surface(position, expected):
@@ -372,5 +373,31 @@ class TestWrappingCone:
         p1 = Point('p1')
         p1.set_pos(apex, position)
 
-        result = cone.point_on_surface(p1)
-        assert result is expected
+        assert cone.point_on_surface(p1) == expected
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        'axis, alpha, position_1, position_2, expected',
+        [
+            (N.z, pi/4, (N.x + N.z) / sqrt(2), (N.y + N.z) / sqrt(2), sqrt(2)),
+            (N.z, pi/6, N.x / sqrt(3) + N.z, N.y / sqrt(3) + N.z, 1),
+            (N.z, pi/4, (N.x + N.z) / sqrt(2), (2*N.x + 2*N.z) / sqrt(2), 1),
+            (N.z, pi/4, (N.x + N.z) / sqrt(2), (-N.x + N.z) / sqrt(2), 2*sqrt(2)),
+            (N.z, pi/4, (N.x + N.z) / sqrt(2), (N.y + N.z) / sqrt(2), sqrt(2)),
+            (N.x, pi/3, (N.y + N.x) / 2, (N.z + N.x) / 2, 2*sqrt(3)/3),
+            (N.z, pi/6, (N.x + N.z*sqrt(3)) / 2, (N.y + N.z*sqrt(3)) / 2, sqrt(3)),
+            (N.z, pi/3, (N.x*sqrt(3) + N.z) / 2, (N.y*sqrt(3) + N.z) / 2, sqrt(3)),           
+            (N.z, pi/4, (N.x + N.z) / sqrt(5), (N.x + N.z) / sqrt(5), 0),
+        ]
+    )
+    def test_geodesic_length(axis, alpha, position_1, position_2, expected):
+        apex = Point('p0')
+        cone = WrappingCone(alpha, apex, axis)
+
+        p1 = Point('p1')
+        p1.set_pos(apex, position_1)
+
+        p2 = Point('p2')
+        p2.set_pos(apex, position_2)
+
+        assert cone.geodesic_length(p1, p2) == expected

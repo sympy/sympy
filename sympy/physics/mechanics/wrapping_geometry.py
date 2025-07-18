@@ -2,7 +2,7 @@
 
 from abc import ABC, abstractmethod
 
-from sympy import Integer, acos, pi, sqrt, sympify, tan
+from sympy import Integer, acos, pi, sqrt, sympify, tan, cos, sin
 from sympy.core.relational import Eq
 from sympy.functions.elementary.trigonometric import atan2
 from sympy.polys.polytools import cancel
@@ -652,64 +652,73 @@ class WrappingCone(WrappingGeometryBase):
 
     def point_on_surface(self, point):
         """
-        Returns ``True`` if the point is on the cone's surface.
+        Returns a symbolic equality for whether a point is on the cone's
+        surface.
 
         Parameters
         ==========
 
         point : Point
-            The point for which it's to be ascertained if it's on the
-            cone's surface or not.
+            The point for which the expression is to be generated.
         """
         position = point.pos_from(self.apex)
         axis_component = position.dot(self.axis) * self.axis
         radial_component = position - axis_component
         lhs = radial_component.dot(radial_component)
         rhs = axis_component.dot(axis_component) * tan(self.alpha) ** 2
-        return Eq(lhs, rhs) == True
+        return Eq(lhs, rhs, evaluate=False)
 
     def geodesic_length(self, point_1, point_2):
         """
-        point_1 := (x1, y1, z1) and point_2 := (x2, y2, z2)
-        Algorithm:
-            convert points from rectangular coords (x, y, z) to conical coords (s, u)
-            r is length from apex point (origin) to the point
-            u is the planar angle made by the point
-            points may or may not be on the cone's surface
-            if they lie on cones surface:
-                rho = sqrt(x ** 2 + y ** 2) = z * tan(alpha) = k * z
-                let k := tan(alpha)
-                CHECK -> sqrt(x ** 2 + y ** 2) == z * tan(alpha) (they should satisfy this)
-                let phi = atan2(y, x)
-                then now,
-                    x = k * z * cos(phi)
-                    y = k * z * sin(phi)
-                    z = z
-            thus the conical coords will be:
-                s = z / cos(alpha)
-                u = phi * sin(alpha)
-            these are also the polar coords in the PLANE
+        The shortest distance between two points on a conical surface.
 
-            NOTE:
-                if the cone is unwrapped, it will look like sector of circle
-                with radius = s and sector angle = 2 * pi * sin(alpha)
+        Explanation
+        ===========
+        Computes the geodesic by “unwrapping” the cone into a planar sector
+        and measuring the straight line distance between the corresponding
+        points in that sector.
 
-            now we have to convert these to the PLANE coordinates by developing the cone
-            thus, x_plane = s * cos(u) and y_plane = s * sin(u)
+        Examples
+        ========
+        >>> from sympy import pi, sqrt
+        >>> from sympy.physics.mechanics import Point, ReferenceFrame, WrappingCone
+        >>> N = ReferenceFrame('N')
+        >>> alpha = pi/4
+        >>> apex = Point('O')
+        >>> cone = WrappingCone(alpha, apex, N.z)
+        >>> z = sqrt(2)/2
+        >>> p1 = Point('A'); p1.set_pos(apex, z*N.z + z*N.x)
+        >>> p2 = Point('B'); p2.set_pos(apex, z*N.z + z*N.y)
+        >>> cone.geodesic_length(p1, p2).simplify()
+        sqrt(2)
 
-            for possible "wrap-arounds", we can use:
-                u2 = phi2 * sin(alpha) + 2 * pi * m * sin(alpha) where m in [-1, 0, 1]
-                and then choose the shortest geodesic
+        Parameters
+        ==========
+        point_1 : Point
+            Starting point on the cone's surface.
+        point_2 : Point
+            Ending point on the cone's surface.
 
-            for finding length of geodesic between 2 polar coords,
-                (s1, u1) and (s2, u2)
-                L(m) = sqrt(s1 ** 2 + s2 ** 2 - 2 * s1 * s2 * cos(delta_phi))
-                where delta_phi = (u2 - u1 + 2 * pi * m) * sin(alpha)
-
-                find L(m) for m in [-1, 0, 1]
-                and then choose shortest one if possible
+        Returns
+        =======
+        Expr
+            Symbolic expression for the geodesic distance.
         """
-        raise NotImplementedError
+        pos1 = point_1.pos_from(self.apex)
+        pos2 = point_2.pos_from(self.apex)
+        z1 = pos1.dot(self.axis)
+        z2 = pos2.dot(self.axis)
+        s1 = z1 / cos(self.alpha)
+        s2 = z2 / cos(self.alpha)
+        n1 = (pos1 - z1 * self.axis).normalize()
+        n2 = (pos2 - z2 * self.axis).normalize()
+        central = _directional_atan(
+            cancel((n1.cross(n2)).dot(self.axis)),
+            cancel(n1.dot(n2))
+        )
+        delta_u = central * tan(self.alpha)
+        return sqrt(s1**2 + s2**2 - 2*s1*s2*cos(delta_u))
+
 
     def geodesic_end_vectors(self, point_1, point_2):
         """
@@ -727,7 +736,30 @@ class WrappingCone(WrappingGeometryBase):
         similarly for T_p2
         we can normalise these vectors if needed
         """
-        raise NotImplementedError
+        # TODO: REVIEW GPT CODE
+        """
+        pos1 = point_1.pos_from(self.apex)
+        pos2 = point_2.pos_from(self.apex)
+        # Handle coincident
+        if pos1 == pos2:
+            raise ValueError(f'No geodesic exists for coincident points {point_1} and {point_2}.')
+        # Length and projections
+        delta = point_2.pos_from(point_1)
+        parallel_len = delta.dot(self.axis)
+        L = self.geodesic_length(point_1, point_2)
+        # Planar (around-cone) component
+        planar = sqrt(L**2 - parallel_len**2)
+        # Radial normals
+        h1 = pos1.dot(self.axis)
+        n1 = (pos1 - h1 * self.axis).normalize()
+        # Circumferential directions
+        circ1 = self.axis.cross(n1).normalize()
+        circ2 = -self.axis.cross((pos2 - pos2.dot(self.axis)*self.axis).normalize()).normalize()
+        # Tangent vectors at endpoints
+        v1 = (parallel_len*self.axis + planar*circ1).normalize()
+        v2 = (-parallel_len*self.axis + planar*circ2).normalize()
+        return (v1, v2)
+        """
 
     def __repr__(self):
         """Representation of a ``WrappingCone``."""
