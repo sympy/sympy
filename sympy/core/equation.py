@@ -17,6 +17,10 @@ class Equation(Basic, EvalfMixin):
     way more people can successfully perform algebraic rearrangements without
     stumbling over missed details such as a negative sign.
 
+    In IPython/Jupyter environments equations are displayed as human readable
+    expressions with an equals sign. For extended control over the display
+    it is recommended to use this class via the `algebra_with_sympy` package.
+
     Create an equation with the call ``Equation(lhs,rhs)``, where ``lhs`` and
     ``rhs`` are any valid Sympy expression. ``Eqn(...)`` is a synonym for
     ``Equation(...)``.
@@ -29,9 +33,13 @@ class Equation(Basic, EvalfMixin):
 
     Examples
     ========
-    NOTE: If used with `algebra_with_sympy`
-    (https://github.com/gutow/Algebra_with_Sympy) you can get human-readable
-    output.
+    NOTE: The algebra_with_sympy package for interactive algebra
+    (https://github.com/gutow/Algebra_with_Sympy and
+    https://gutow.github.io/Algebra_with_Sympy/algebra_with_sympy.html)
+    leverages this class to provide an environment with equation labels,
+    on the fly control over the display format (human readable, code and
+    combinations, labels ...), and extensions to the solve operations for
+    prettier output.
     >>> from sympy import var, Equation, Eqn, exp, log, diff
     >>> from sympy import integrate, Integral
     >>> a, b, c, x = var('a b c x')
