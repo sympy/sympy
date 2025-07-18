@@ -1897,8 +1897,8 @@ class Poly(Basic):
         if hasattr(f.rep, 'degree'):
             d = f.rep.degree(j)
             if d < 0:
-                d = S.NegativeInfinity
-            return d
+                return S.NegativeInfinity
+            return d # type: ignore
         else:  # pragma: no cover
             raise OperationNotSupported(f, 'degree')
 

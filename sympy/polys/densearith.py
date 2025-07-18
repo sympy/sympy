@@ -1,7 +1,11 @@
 """Arithmetics for dense recursive polynomials in ``K[x]`` or ``K[X]``. """
 
+from __future__ import annotations
+
+from sympy.polys.domains.domain import Domain, Er
 
 from sympy.polys.densebasic import (
+    dup, dmp, _dup, _dmp,
     dup_slice, dup_truncate,
     dup_reverse,
     dup_LC, dmp_LC,
@@ -511,7 +515,7 @@ def dmp_neg(f, u, K):
     return [ dmp_neg(cf, v, K) for cf in f ]
 
 
-def dup_add(f, g, K):
+def dup_add(f: dup[Er], g: dup[Er], K: Domain[Er]) -> dup[Er]:
     """
     Add dense polynomials in ``K[x]``.
 
@@ -530,8 +534,8 @@ def dup_add(f, g, K):
     if not g:
         return f
 
-    df = dup_degree(f)
-    dg = dup_degree(g)
+    df: int = dup_degree(f) # type: ignore
+    dg: int = dup_degree(g) # type: ignore
 
     if df == dg:
         return dup_strip([ a + b for a, b in zip(f, g) ])
@@ -546,7 +550,7 @@ def dup_add(f, g, K):
         return h + [ a + b for a, b in zip(f, g) ]
 
 
-def dmp_add(f, g, u, K):
+def dmp_add(f: dmp[Er], g: dmp[Er], u: int, K: Domain[Er]) -> dmp[Er]:
     """
     Add dense polynomials in ``K[X]``.
 
@@ -561,14 +565,14 @@ def dmp_add(f, g, u, K):
 
     """
     if not u:
-        return dup_add(f, g, K)
+        return _dmp(dup_add(_dup(f), _dup(g), K))
 
-    df = dmp_degree(f, u)
+    df: int = dmp_degree(f, u) # type: ignore
 
     if df < 0:
         return g
 
-    dg = dmp_degree(g, u)
+    dg: int = dmp_degree(g, u) # type: ignore
 
     if dg < 0:
         return f
@@ -1867,7 +1871,7 @@ def dmp_max_norm(f, u, K):
     return max(dmp_max_norm(c, v, K) for c in f)
 
 
-def dup_l1_norm(f, K):
+def dup_l1_norm(f: dup[Er], K: Domain[Er]) -> Er:
     """
     Returns l1 norm of a polynomial in ``K[x]``.
 
@@ -1884,10 +1888,10 @@ def dup_l1_norm(f, K):
     if not f:
         return K.zero
     else:
-        return sum(dup_abs(f, K))
+        return K.sum(dup_abs(f, K))
 
 
-def dmp_l1_norm(f, u, K):
+def dmp_l1_norm(f: dmp[Er], u: int, K: Domain[Er]) -> Er:
     """
     Returns l1 norm of a polynomial in ``K[X]``.
 
@@ -1902,14 +1906,14 @@ def dmp_l1_norm(f, u, K):
 
     """
     if not u:
-        return dup_l1_norm(f, K)
+        return dup_l1_norm(_dup(f), K)
 
     v = u - 1
 
-    return sum(dmp_l1_norm(c, v, K) for c in f)
+    return K.sum(dmp_l1_norm(c, v, K) for c in f)
 
 
-def dup_l2_norm_squared(f, K):
+def dup_l2_norm_squared(f: dup[Er], K: Domain[Er]) -> Er:
     """
     Returns squared l2 norm of a polynomial in ``K[x]``.
 
@@ -1923,10 +1927,10 @@ def dup_l2_norm_squared(f, K):
     14
 
     """
-    return sum([coeff**2 for coeff in f], K.zero)
+    return K.sum([coeff**2 for coeff in f])
 
 
-def dmp_l2_norm_squared(f, u, K):
+def dmp_l2_norm_squared(f: dmp[Er], u: int, K: Domain[Er]) -> Er:
     """
     Returns squared l2 norm of a polynomial in ``K[X]``.
 
@@ -1941,11 +1945,11 @@ def dmp_l2_norm_squared(f, u, K):
 
     """
     if not u:
-        return dup_l2_norm_squared(f, K)
+        return dup_l2_norm_squared(_dup(f), K)
 
     v = u - 1
 
-    return sum(dmp_l2_norm_squared(c, v, K) for c in f)
+    return K.sum(dmp_l2_norm_squared(c, v, K) for c in f)
 
 
 def dup_expand(polys, K):
