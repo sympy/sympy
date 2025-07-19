@@ -379,14 +379,41 @@ class TestWrappingCone:
         'axis, alpha, position_1, position_2, expected',
         [
             (N.z, pi/4, (N.x + N.z) / sqrt(2), (N.y + N.z) / sqrt(2), sqrt(2)),
-            (N.z, pi/6, N.x / sqrt(3) + N.z, N.y / sqrt(3) + N.z, 1),
+            (N.z, pi/6, N.x / sqrt(3) + N.z, N.y / sqrt(3) + N.z, sqrt(Rational(8, 3) - 8*cos(sqrt(3)*pi/6)/3)),
             (N.z, pi/4, (N.x + N.z) / sqrt(2), (2*N.x + 2*N.z) / sqrt(2), 1),
-            (N.z, pi/4, (N.x + N.z) / sqrt(2), (-N.x + N.z) / sqrt(2), 2*sqrt(2)),
-            (N.z, pi/4, (N.x + N.z) / sqrt(2), (N.y + N.z) / sqrt(2), sqrt(2)),
-            (N.x, pi/3, (N.y + N.x) / 2, (N.z + N.x) / 2, 2*sqrt(3)/3),
-            (N.z, pi/6, (N.x + N.z*sqrt(3)) / 2, (N.y + N.z*sqrt(3)) / 2, sqrt(3)),
-            (N.z, pi/3, (N.x*sqrt(3) + N.z) / 2, (N.y*sqrt(3) + N.z) / 2, sqrt(3)),
-            (N.z, pi/4, (N.x + N.z) / sqrt(5), (N.x + N.z) / sqrt(5), 0),
+            (N.z, pi/4, (N.x + N.z) / sqrt(2), (-N.x + N.z) / sqrt(2), 2),
+            (N.x, pi/3, (N.y + N.x) / 2, (N.z + N.x) / 2, sqrt(2 - 2*cos(sqrt(3)*pi/2))),
+            (N.z, pi/6, (N.x + N.z*sqrt(3)) / 2, (N.y + N.z*sqrt(3)) / 2, sqrt(2 - 2*cos(sqrt(3)*pi/6))),
+            (N.z, pi/3, (N.x*sqrt(3) + N.z) / 2, (N.y*sqrt(3) + N.z) / 2, sqrt(2 - 2*cos(sqrt(3)*pi/2))),
+            (N.z, pi/4, (N.x + N.z) / sqrt(11), (N.x + N.z) / sqrt(11), 0),
+            (
+                N.z,
+                pi/6,
+                N.x/sqrt(3) + N.z,
+                2*N.y/sqrt(3) + 2*N.z,
+                sqrt(Rational(20, 3) - 16*cos(pi/(2*sqrt(3)))/3)
+            ),
+            (
+                N.z,
+                pi/6,
+                (N.x + N.y)/(sqrt(2)*sqrt(3)) + N.z,
+                (3*N.x - 3*N.y)/(sqrt(2)*sqrt(3)) + 3*N.z,
+                sqrt(Rational(40, 3) - 8*cos(sqrt(3)*pi/2))
+            ),
+            (
+                N.z,
+                pi/4,
+                (cos(pi/6)*N.x + sin(pi/6)*N.y + N.z)/sqrt(2),
+                (3*cos(2*pi/3)*N.x + 3*sin(2*pi/3)*N.y + 3*N.z)/sqrt(2),
+                sqrt(10)
+            ),
+            (
+                N.z,
+                pi/4,
+                (N.x + N.z)/sqrt(2),
+                (2*N.y + 2*N.z)/sqrt(2),
+                sqrt(5)
+            ),
         ]
     )
     def test_geodesic_length(axis, alpha, position_1, position_2, expected):

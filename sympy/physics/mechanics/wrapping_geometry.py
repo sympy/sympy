@@ -683,14 +683,15 @@ class WrappingCone(WrappingGeometryBase):
         >>> from sympy import pi, sqrt
         >>> from sympy.physics.mechanics import Point, ReferenceFrame, WrappingCone
         >>> N = ReferenceFrame('N')
-        >>> alpha = pi/4
+        >>> alpha = pi/6
         >>> apex = Point('O')
         >>> cone = WrappingCone(alpha, apex, N.z)
-        >>> z = sqrt(2)/2
-        >>> p1 = Point('A'); p1.set_pos(apex, z*N.z + z*N.x)
-        >>> p2 = Point('B'); p2.set_pos(apex, z*N.z + z*N.y)
-        >>> cone.geodesic_length(p1, p2).simplify()
-        sqrt(2)
+        >>> p1 = Point('A')
+        >>> p1.set_pos(apex, N.x / sqrt(3) + N.z)
+        >>> p2 = Point('B')
+        >>> p2.set_pos(apex, N.y / sqrt(3) + N.z)
+        >>> cone.geodesic_length(p1, p2)
+        sqrt(8/3 - 8*cos(sqrt(3)*pi/6)/3)
 
         Parameters
         ==========
@@ -698,11 +699,6 @@ class WrappingCone(WrappingGeometryBase):
             Starting point on the cone's surface.
         point_2 : Point
             Ending point on the cone's surface.
-
-        Returns
-        =======
-        Expr
-            Symbolic expression for the geodesic distance.
         """
         pos1 = point_1.pos_from(self.apex)
         pos2 = point_2.pos_from(self.apex)
@@ -735,7 +731,6 @@ class WrappingCone(WrappingGeometryBase):
         in the formula for T_p
         similarly for T_p2
         we can normalise these vectors if needed
-        """"""
         pos1 = point_1.pos_from(self.apex)
         pos2 = point_2.pos_from(self.apex)
         # Handle coincident
