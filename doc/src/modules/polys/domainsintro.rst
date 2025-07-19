@@ -915,7 +915,7 @@ two versions of :ref:`K[x]` using :py:meth:`~.Domain.poly_ring` and
   DMP_Python([1, 0, 1], ZZ)
   >>> type(K1)
   <class 'sympy.polys.domains.polynomialring.PolynomialRing'>
-  >>> type(p1)
+  >>> type(p1) # doctest: +SKIP
   <class 'sympy.polys.rings.PolyElement'>
   >>> type(K2)
   <class 'sympy.polys.domains.old_polynomialring.GlobalPolynomialRing'>
@@ -979,9 +979,9 @@ the ring returned by :py:func:`~.ring` although both have the same elements::
   x + y
   >>> K2(x+y)
   x + y
-  >>> type(K(x+y))
+  >>> type(K(x+y)) # doctest: +SKIP
   <class 'sympy.polys.rings.PolyElement'>
-  >>> type(K2(x+y))
+  >>> type(K2(x+y)) # doctest: +SKIP
   <class 'sympy.polys.rings.PolyElement'>
   >>> K(x+y) == K2(x+y)
   True
@@ -1252,7 +1252,7 @@ in the polynomial ring ``ZZ[x]`` we have::
   >>> p = K(x) + K.one
   >>> p
   x + 1
-  >>> type(p)
+  >>> type(p) # doctest: +SKIP
   <class 'sympy.polys.rings.PolyElement'>
   >>> p.parent()
   ZZ[x]

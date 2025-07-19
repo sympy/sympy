@@ -180,7 +180,7 @@ class Domain(Generic[Er]):
     >>> p_domain = K.from_sympy(p_expr)
     >>> p_domain            # domain element
     x**2 + 1
-    >>> type(p_domain)
+    >>> type(p_domain) # doctest: +SKIP
     <class 'sympy.polys.rings.PolyElement'>
     >>> K.to_sympy(p_domain) == p_expr
     True

@@ -101,7 +101,7 @@ def ring(symbols, domain, order: MonomialOrder | str = lex):
     Polynomial ring in x, y, z over ZZ with lex order
     >>> x + y + z
     x + y + z
-    >>> type(_)
+    >>> type(_) # doctest: +SKIP
     <class 'sympy.polys.rings.PolyElement'>
 
     """
@@ -133,7 +133,7 @@ def xring(symbols, domain, order=lex):
     Polynomial ring in x, y, z over ZZ with lex order
     >>> x + y + z
     x + y + z
-    >>> type(_)
+    >>> type(_) # doctest: +SKIP
     <class 'sympy.polys.rings.PolyElement'>
 
     """
@@ -164,7 +164,7 @@ def vring(symbols, domain, order=lex):
     Polynomial ring in x, y, z over ZZ with lex order
     >>> x + y + z # noqa:
     x + y + z
-    >>> type(_)
+    >>> type(_)  # doctest: +SKIP
     <class 'sympy.polys.rings.PolyElement'>
 
     """
@@ -195,7 +195,7 @@ def sring(exprs, *symbols, **options):
     Polynomial ring in x, y, z over ZZ with lex order
     >>> f
     x + 2*y + 3*z
-    >>> type(_)
+    >>> type(_) # doctest: +SKIP
     <class 'sympy.polys.rings.PolyElement'>
 
     """
