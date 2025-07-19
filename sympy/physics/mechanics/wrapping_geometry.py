@@ -2,7 +2,7 @@
 
 from abc import ABC, abstractmethod
 
-from sympy import Integer, acos, pi, sqrt, sympify, tan, cos, sin
+from sympy import Integer, acos, pi, sqrt, sympify, tan, cos
 from sympy.core.relational import Eq
 from sympy.functions.elementary.trigonometric import atan2
 from sympy.polys.polytools import cancel
@@ -674,7 +674,7 @@ class WrappingCone(WrappingGeometryBase):
 
         Explanation
         ===========
-        Computes the geodesic by “unwrapping” the cone into a planar sector
+        Computes the geodesic by "unwrapping" the cone into a planar sector
         and measuring the straight line distance between the corresponding
         points in that sector.
 

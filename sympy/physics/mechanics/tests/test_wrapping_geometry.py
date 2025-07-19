@@ -8,7 +8,6 @@ from sympy import (
     S,
     Symbol,
     acos,
-    atan,
     cos,
     pi,
     sin,
@@ -386,7 +385,7 @@ class TestWrappingCone:
             (N.z, pi/4, (N.x + N.z) / sqrt(2), (N.y + N.z) / sqrt(2), sqrt(2)),
             (N.x, pi/3, (N.y + N.x) / 2, (N.z + N.x) / 2, 2*sqrt(3)/3),
             (N.z, pi/6, (N.x + N.z*sqrt(3)) / 2, (N.y + N.z*sqrt(3)) / 2, sqrt(3)),
-            (N.z, pi/3, (N.x*sqrt(3) + N.z) / 2, (N.y*sqrt(3) + N.z) / 2, sqrt(3)),           
+            (N.z, pi/3, (N.x*sqrt(3) + N.z) / 2, (N.y*sqrt(3) + N.z) / 2, sqrt(3)),
             (N.z, pi/4, (N.x + N.z) / sqrt(5), (N.x + N.z) / sqrt(5), 0),
         ]
     )
