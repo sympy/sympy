@@ -505,9 +505,9 @@ class StrPrinter(Printer):
         return 'pi'
 
     def _print_PolyRing(self, ring):
-        from sympy.polys.rings import FlintPolyRing
+        from sympy.polys.rings import FPolyRing
 
-        if GROUND_TYPES == 'flint' and isinstance(ring, FlintPolyRing):
+        if GROUND_TYPES == 'flint' and isinstance(ring, FPolyRing):
             return "FLINT Polynomial ring in %s over %s with %s order" % \
                 (", ".join((self._print(rs) for rs in ring.symbols)),
                  self._print(ring.domain), self._print(ring.order))

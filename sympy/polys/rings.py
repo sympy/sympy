@@ -63,6 +63,7 @@ else:
     def _supported_flint_order(order):
         return False
 
+
 flint = None
 
 
@@ -255,9 +256,9 @@ class PolyRing(DefaultPrinting, IPolys):
 
         # delegation to appropriate subclass
         if flint is not None and _supported_flint_domain(preprocessed_domain):
-            return FlintPolyRing._new(symbols, preprocessed_domain, order)
+            return FPolyRing._new(symbols, preprocessed_domain, order)
         else:
-            return PythonPolyRing._new(symbols, preprocessed_domain, order)
+            return PyPolyRing._new(symbols, preprocessed_domain, order)
 
     @classmethod
     def _new(cls, symbols, domain, order):
@@ -650,7 +651,7 @@ class PolyRing(DefaultPrinting, IPolys):
             return self.clone(symbols=symbols, domain=self.drop(*gens_to_drop))
 
 
-class PythonPolyRing(PolyRing):
+class PyPolyRing(PolyRing):
     """Multivariate distributed polynomial rings."""
 
     @classmethod
@@ -676,14 +677,14 @@ class PythonPolyRing(PolyRing):
         return poly
 
 
-class FlintPolyRing(PolyRing):
+class FPolyRing(PolyRing):
     """Multivariate distributed polynomial rings backed by FLINT."""
 
     @classmethod
     def _new(cls, symbols, domain, order):
         obj = object.__new__(cls)
         obj._init_instance(symbols, domain, order)
-        obj._python_ring = PythonPolyRing._new(symbols, domain, order)
+        obj._python_ring = PyPolyRing._new(symbols, domain, order)
         obj.flint_ctx = None
         flint_names = cls._flint_mapping(symbols)
         str_order = cls._get_flint_order(order)
@@ -694,7 +695,7 @@ class FlintPolyRing(PolyRing):
         elif domain.is_QQ:
             obj.flint_ctx = flint.fmpq_mpoly_ctx.get(flint_names, str_order)
         else:
-            raise NotImplementedError(f"Unsupported domain for FlintPolyRing: {domain}")
+            raise NotImplementedError(f"Unsupported domain for FPolyRing: {domain}")
 
         return obj
 
@@ -734,7 +735,7 @@ class FlintPolyRing(PolyRing):
     def _from_dict_ground(self, element, orig_domain=None):
         """Create polynomial from dict."""
         # For now, delegate to Python implementation
-        # TODO: Implement direct polynomial creation from dict once FlintPolyElement is ready
+        # TODO: Implement direct polynomial creation from dict once FPolyElement is ready
         return self._python_ring._from_dict_ground(element, orig_domain)
 
 
@@ -743,10 +744,10 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify):
 
     def __new__(cls, ring, init):
         # Delegation to appropriate subclass based on ring type
-        if isinstance(ring, FlintPolyRing):
-            return FlintPolyElement._new(ring, init)
+        if isinstance(ring, FPolyRing):
+            return FPolyElement._new(ring, init)
         else:
-            return PythonPolyElement._new(ring, init)
+            return PyPolyElement._new(ring, init)
 
     @classmethod
     def _new(cls, ring, init):
@@ -2583,7 +2584,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify):
         raise NotImplementedError
 
 
-class PythonPolyElement(PolyElement, dict):
+class PyPolyElement(PolyElement, dict):
     """Python-based sparse multivariate polynomial element."""
 
     @classmethod
@@ -2595,16 +2596,10 @@ class PythonPolyElement(PolyElement, dict):
         return obj
 
     def __init__(self, ring, init):
-        # This is called by the old-style constructor, but _new handles the real initialization
-        # We need this for compatibility but the actual initialization is done in _new
         if not hasattr(self, 'ring'):  # Only initialize if not already done by _new
             super().__init__(init)
             self.ring = ring
             self._hash = None
-
-    def items(self):
-        """Return iterator over (monomial, coefficient) pairs."""
-        return dict.items(self)
 
     def _equality(self, other):
         if not other:
@@ -3726,54 +3721,7 @@ class PythonPolyElement(PolyElement, dict):
 
 
 
-class FlintPolyElement(PolyElement):
+class FPolyElement(PolyElement):
     """FLINT-backed sparse multivariate polynomial element."""
 
-    def __init__(self, ring, init):
-        # This should not be called directly, use _new instead
-        raise RuntimeError("FlintPolyElement should be created via _new classmethod")
-
-    @classmethod
-    def _new(cls, ring, init):
-        obj = object.__new__(cls)
-        obj.ring = ring
-        obj._hash = None
-
-        # Initialize the FLINT polynomial based on domain
-        if ring.domain.is_ZZ:
-            obj._flint_poly_cls = flint.fmpz_mpoly
-        elif ring.domain.is_QQ:
-            obj._flint_poly_cls = flint.fmpq_mpoly
-        else:
-            raise NotImplementedError(f"Unsupported domain for FlintPolyElement: {ring.domain}")
-
-        # Create the FLINT polynomial
-        obj._flint_poly = obj._create_flint_poly(init, ring.flint_ctx)
-
-        return obj
-
-    def _create_flint_poly(self, init, flint_ctx):
-        """Create FLINT polynomial from initialization data."""
-        if isinstance(init, dict):
-            # Create polynomial from dictionary of monomials to coefficients
-            poly = self._flint_poly_cls(flint_ctx)
-            for monom, coeff in init.items():
-                if coeff:  # Skip zero coefficients
-                    poly[monom] = coeff
-            return poly
-        elif hasattr(init, '__iter__') and not isinstance(init, (str, bytes)):
-            # Handle iterable of (monomial, coefficient) pairs
-            return self._create_flint_poly(dict(init), flint_ctx)
-        else:
-            # Create empty polynomial
-            return self._flint_poly_cls(flint_ctx)
-
-    def to_PythonPolyElement(self):
-        """Convert to PythonPolyElement for fallback operations."""
-        # Convert FLINT polynomial to dictionary representation
-        poly_dict = {}
-        for monom, coeff in self._flint_poly.items():
-            if coeff:  # Only include non-zero coefficients
-                poly_dict[monom] = coeff
-
-        return PythonPolyElement._new(self.ring._python_ring, poly_dict)
+    pass
