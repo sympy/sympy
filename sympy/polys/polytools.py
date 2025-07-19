@@ -1898,11 +1898,11 @@ class Poly(Basic):
             d = f.rep.degree(j)
             if d < 0:
                 return S.NegativeInfinity
-            return d # type: ignore
+            return d
         else:  # pragma: no cover
             raise OperationNotSupported(f, 'degree')
 
-    def degree_list(f):
+    def degree_list(f) -> tuple[int | NegativeInfinity, ...]:
         """
         Returns a list of degrees of ``f``.
 
@@ -1917,11 +1917,12 @@ class Poly(Basic):
 
         """
         if hasattr(f.rep, 'degree_list'):
-            return f.rep.degree_list()
+            degrees = f.rep.degree_list()
+            return tuple(d if d >= 0 else S.NegativeInfinity for d in degrees)
         else:  # pragma: no cover
             raise OperationNotSupported(f, 'degree_list')
 
-    def total_degree(f):
+    def total_degree(f) -> int | NegativeInfinity:
         """
         Returns the total degree of ``f``.
 
@@ -1938,7 +1939,8 @@ class Poly(Basic):
 
         """
         if hasattr(f.rep, 'total_degree'):
-            return f.rep.total_degree()
+            d = f.rep.total_degree()
+            return d if d >= 0 else S.NegativeInfinity
         else:  # pragma: no cover
             raise OperationNotSupported(f, 'total_degree')
 
