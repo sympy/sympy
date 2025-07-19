@@ -19,6 +19,7 @@ from sympy.matrices.expressions import MatMul, MatAdd
 from sympy.polys import Poly, rootof
 from sympy.polys.polyroots import roots
 from sympy.polys.polytools import (cancel, degree)
+from sympy.polys.domains import EXRAW
 from sympy.series import limit
 from sympy.utilities.misc import filldedent
 from sympy.solvers.ode.systems import linodesolve
@@ -5132,10 +5133,32 @@ class StateSpace(LinearTimeInvariant):
         """
         return self.controllability_matrix().rank() == self.num_states
 
-    def get_asymptotic_stability_conditions(self):
+    def get_asymptotic_stability_conditions(self, canonical=True):
         """
         Returns the asymptotic stability conditions for
         the state space.
+
+        Note: Computing the inequalities for matrices with many symbols
+        can take a long time, so it is recommended to set ``canonical=False``.
+
+        Explanation
+        ===========
+
+        ``canonical`` controls how the calculation is performed.
+        If ``canonical=True``, the algorithm will use domains.
+        This allows it to simplify inequalities as much as possible.
+        If ``canonical=False``, the algorithm will instead use the ``EXRAW``
+        domain.
+        In this mode, calculations are done directly on the expression form,
+        and fewer simplifications and cancellations are performed.
+        This is useful when the matrix contains many symbolic elements,
+        since computing the full domain and performing all simplifications can
+        be very time-consuming.
+
+        Parameters
+        ==========
+        canonical : bool, default=True
+            If True, the inequalities will be in a simplified form.
 
         Examples
         ========
@@ -5157,6 +5180,10 @@ class StateSpace(LinearTimeInvariant):
 
         """
         s = Symbol('s')
-        determinant = self.A.charpoly(s)
+        domain = None if canonical is True else EXRAW
+        # if domain is None, to_DM will find the domain automatically
+        _A = self.A.to_DM(domain = domain)
 
-        return negative_real_part_conditions(determinant, s)
+        charpoly = _A.charpoly()
+        charpoly = Poly(charpoly, s, domain = _A.domain)
+        return negative_real_part_conditions(charpoly, s, domain = _A.domain)
