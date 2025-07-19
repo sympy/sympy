@@ -210,3 +210,8 @@ by ``polys.ring.ring``.
 
 .. autoclass:: PuiseuxPoly
     :members:
+
+.. autoclass:: Map
+.. py:class:: MPQ
+.. py:class:: MonQ
+.. py:class:: flint.types.fmpq.fmpq

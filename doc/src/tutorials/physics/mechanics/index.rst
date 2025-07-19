@@ -19,3 +19,4 @@ Each example includes clear explanations, mathematical formulations, and code to
    four_bar_linkage_example.rst
    bicycle_example.rst
    atwoods_machine_example.rst
+   muscle_model_example.rst

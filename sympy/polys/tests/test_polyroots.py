@@ -10,7 +10,6 @@ from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import (acos, cos, sin)
 from sympy.polys.domains.integerring import ZZ
 from sympy.sets.sets import Interval
-from sympy.simplify.powsimp import powsimp
 
 from sympy.polys import Poly, cyclotomic_poly, intervals, nroots, rootof
 
@@ -325,8 +324,14 @@ def test_roots_binomial():
     r0 = roots_quadratic(Poly(a1*x**2 + b1, x))
     r1 = roots_binomial(Poly(a1*x**2 + b1, x))
 
-    assert powsimp(r0[0]) == powsimp(r1[0])
-    assert powsimp(r0[1]) == powsimp(r1[1])
+    # XXX: roots_quadratic should be improved to handle signs under the radical
+    # like roots_binomial. It is much better to get the minus sign out of the
+    # radical and have an I outside:
+    assert r0 == [-sqrt(b1)*sqrt(-1/a1), sqrt(b1)*sqrt(-1/a1)]
+    assert r1 == [-I*sqrt(b1)/sqrt(a1), I*sqrt(b1)/sqrt(a1)]
+    # assert powsimp(r0[0]) == powsimp(r1[0])
+    # assert powsimp(r0[1]) == powsimp(r1[1])
+
     for a, b, s, n in product((1, 2), (1, 2), (-1, 1), (2, 3, 4, 5)):
         if a == b and a != 1:  # a == b == 1 is sufficient
             continue
@@ -750,9 +755,8 @@ def test_issue_20913():
 
 
 def test_issue_22768():
-    e = Rational(1, 3)
-    r = (-1/a)**e*(a + 1)**(5*e)
     assert roots(Poly(a*x**3 + (a + 1)**5, x)) == {
-        r: 1,
-        -r*(1 + sqrt(3)*I)/2: 1,
-        r*(-1 + sqrt(3)*I)/2: 1}
+        -(a + 1)**(S(5)/3)/a**(S(1)/3): 1,
+        (1 - sqrt(3)*I)*(a + 1)**(S(5)/3)/(2*a**(S(1)/3)): 1,
+        (1 + sqrt(3)*I)*(a + 1)**(S(5)/3)/(2*a**(S(1)/3)): 1,
+    }
