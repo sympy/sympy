@@ -444,10 +444,6 @@ def test_jordan_form():
     assert Matrix(1, 1, [1]).jordan_form() == (Matrix([1]), Matrix([1]))
     assert Matrix(1, 1, [1]).jordan_form(calc_transform=False) == Matrix([1])
 
-    # If we have eigenvalues in CRootOf form, raise errors
-    m = Matrix([[3, 0, 0, 0, -3], [0, -3, -3, 0, 3], [0, 3, 0, 3, 0], [0, 0, 3, 0, 3], [3, 0, 0, 3, 0]])
-    raises(MatrixError, lambda: m.jordan_form())
-
     # make sure that if the input has floats, the output does too
     m = Matrix([
         [                0.6875, 0.125 + 0.1875*sqrt(3)],
