@@ -23,6 +23,7 @@ from sympy.physics.mechanics import (
     dynamicsymbols,
 )
 from sympy.simplify.simplify import simplify
+from sympy.polys.polytools import cancel
 
 
 r = Symbol('r', positive=True)
@@ -404,57 +405,57 @@ class TestWrappingCone:
 
         assert cone.geodesic_length(p1, p2) == expected
 
-    delta_u1 = pi*sqrt(2)/4
-    L1 = sqrt(4 - 4*cos(delta_u1))
-    delta_u2 = pi*sqrt(2)/4
-    L2 = sqrt(10 - 8*cos(delta_u2))
-    delta_u3 = pi/4
-    L3 = sqrt(20 - 8*sqrt(2))
 
     @staticmethod
     @pytest.mark.parametrize(
-        'axis, alpha, position_1, position_2, expected_v1, expected_v2',
+        'axis, alpha, position_1, position_2',
         [
-            (
-                N.z, pi/4, N.x + N.z, N.y + N.z,
-                (((cos(delta_u1) - 1)/L1) * (N.x + N.z) + (sqrt(2)*sin(delta_u1)/L1) * N.y),
-                (((cos(delta_u1) - 1)/L1) * (N.y + N.z) + (sqrt(2)*sin(delta_u1)/L1) * N.x)
-            ),
-            (
-                N.z, pi/6, N.x/sqrt(3) + N.z, 2*N.x/sqrt(3) + 2*N.z,
-                (N.x/2 + sqrt(3)/2*N.z),
-                -(N.x/2 + sqrt(3)/2*N.z)
-            ),
-            (
-                N.x, pi/4, N.y + N.x, N.z + 2*N.x,
-                (((2*cos(delta_u2) - 1)/L2)*(N.x + N.y) + (2*sqrt(2)*sin(delta_u2)/L2)*N.z),
-                (((cos(delta_u2)/2 - 1)/L2)*(2*N.x + N.z) + (sin(delta_u2)/L2)*(-N.y))
-            ),
-            (
-                N.z, pi/6, N.x/sqrt(3) + N.z, 2*N.y/sqrt(3) + 2*N.z,
-                (1/L3) * ((sqrt(2)-1)*N.x + 2*sqrt(2)*N.y + (sqrt(6)-sqrt(3))*N.z),
-                (1/L3) * (sqrt(2)*N.x + (2*sqrt(2)-4)*N.y + (sqrt(6)-2*sqrt(3))*N.z)
-            ),
+            (N.z, pi/4, N.x + N.z, N.y + N.z),
+            (N.z, pi/6, N.x/sqrt(3) + N.z, 2*N.x/sqrt(3) + 2*N.z),
+            (N.x, pi/4, N.y + N.x, N.z + 2*N.x),
+            (N.z, pi/6, N.x/sqrt(3) + N.z, 2*N.y/sqrt(3) + 2*N.z),
         ]
     )
-    def test_geodesic_end_vectors(axis, alpha, position_1, position_2,
-                                  expected_v1, expected_v2):
+    def test_geodesic_end_vectors(axis, alpha, position_1, position_2):
+        """
+        Tests the symbolic correctness by comparing the method's output to
+        a vector constructed from the theoretical formulas.
+        """
         apex = Point('p0')
         cone = WrappingCone(alpha, apex, axis)
         p1 = Point('p1'); p1.set_pos(apex, position_1)
         p2 = Point('p2'); p2.set_pos(apex, position_2)
 
-        v1, v2 = cone.geodesic_end_vectors(p1, p2)
+        v1_calc, v2_calc = cone.geodesic_end_vectors(p1, p2)
 
-        # Test equality of both vectors component wise
-        expected_vec = {
-            v1: expected_v1,
-            v2: expected_v2
-        }
-        for vec in [v1, v2]:
-            for component in [N.x, N.y, N.z]:
-                assert simplify(vec.dot(component)) == simplify(expected_vec[vec].dot(component))
+        pos1 = p1.pos_from(apex)
+        pos2 = p2.pos_from(apex)
+        z1 = pos1.dot(axis)
+        z2 = pos2.dot(axis)
+        s1 = z1 / cos(alpha)
+        s2 = z2 / cos(alpha)
+        L = cone.geodesic_length(p1, p2)
+        n1 = (pos1 - z1*axis).normalize()
+        n2 = (pos2 - z2*axis).normalize()
 
+        central = acos(cancel(n1.dot(n2)))
+        delta_u = central * sin(alpha)
+
+        g1 = pos1.normalize()
+        c1 = axis.cross(n1)
+        g2 = pos2.normalize()
+        c2 = axis.cross(n2)
+
+        v1_radial_comp = (s2 * cos(delta_u) - s1) / L
+        v1_circ_comp = (s2 * sin(delta_u)) / L
+        expected_v1 = v1_radial_comp * g1 + v1_circ_comp * c1
+
+        v2_radial_comp = (s1 * cos(delta_u) - s2) / L
+        v2_circ_comp = (-s1 * sin(delta_u)) / L
+        expected_v2 = v2_radial_comp * g2 + v2_circ_comp * c2
+
+        assert v1_calc == expected_v1
+        assert v2_calc == expected_v2
 
     @staticmethod
     @pytest.mark.parametrize(
