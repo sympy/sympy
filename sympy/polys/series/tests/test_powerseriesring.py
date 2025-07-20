@@ -66,7 +66,9 @@ def test_basics(rd_int):
 def test_positive(rd_int):
     SeriesRing = rd_int
     R = SeriesRing()
-    assert R.equal_repr(R.positive(R([1, 2, 3, 4, 5, 6, 7], None)), R([1, 2, 3, 4, 5, 6], 6))
+    assert R.equal_repr(
+        R.positive(R([1, 2, 3, 4, 5, 6, 7], None)), R([1, 2, 3, 4, 5, 6], 6)
+    )
 
 
 def test_negative(rd_int):
@@ -90,7 +92,9 @@ def test_int_subtract(rd_int):
     SeriesRing = rd_int
     R = SeriesRing()
     R3 = SeriesRing(3)
-    assert R.equal_repr(R.subtract(R.multiply(R.gen, R.gen), R.gen), R([0, -1, 1], None))
+    assert R.equal_repr(
+        R.subtract(R.multiply(R.gen, R.gen), R.gen), R([0, -1, 1], None)
+    )
     assert R3.equal_repr(
         R3.subtract(R3.pow_int(R3.add(R3.one, R3.gen), 4), R3.gen), R3([1, 3, 6], 3)
     )
@@ -168,7 +172,9 @@ def test_int_divide(rd_int):
         R.divide(R.pow_int(R.gen, 3), R.add(R.add(R.one, R.gen), R.square(R.gen))),
         R([0, 0, 0, 1, -1, 0], 6),
     )
-    assert R3.equal_repr(R3.divide(R3([1, 2, 3]), R3.add(R3.one, R3.gen)), R3([1, 1, 2], 3))
+    assert R3.equal_repr(
+        R3.divide(R3([1, 2, 3]), R3.add(R3.one, R3.gen)), R3([1, 1, 2], 3)
+    )
     assert R10.equal_repr(
         R10.divide(R10([0, 0, 2, 4, 6, 8, 2, 14]), R10([0, 0, 1, 3, 4, 5, 1])),
         R10([2, -2, 4, -6, 12, -16, 26, -68], 8),
@@ -196,7 +202,10 @@ def test_rational_divide(rd_rational):
     )
     assert R.equal_repr(
         R.divide(R([(2, 3), (1, 4), (5, 6)]), R([(1, 2), (3, 7)])),
-        R([(4, 3), (-9, 14), (326, 147), (-652, 343), (3912, 2401), (-23472, 16807)], 6),
+        R(
+            [(4, 3), (-9, 14), (326, 147), (-652, 343), (3912, 2401), (-23472, 16807)],
+            6,
+        ),
     )
 
 
@@ -214,7 +223,9 @@ def test_rational_square(rd_rational):
     SeriesRing = rd_rational
     R = SeriesRing()
     R10 = SeriesRing(10)
-    assert not R.equal_repr(R.square(R.add(R.gen, R.one)), R([(1, 1), (1, 1), (1, 1)], None))
+    assert not R.equal_repr(
+        R.square(R.add(R.gen, R.one)), R([(1, 1), (1, 1), (1, 1)], None)
+    )
     assert R10.equal_repr(
         R10.square(R10.subtract(R10.gen, R10.one)), R10([(1, 1), (-2, 1), (1, 1)], None)
     )
@@ -247,21 +258,26 @@ def test_rational_pow(rd_rational):
         R([(1, 1), (6, 1), (15, 1), (20, 1), (15, 1), (6, 1)], 6),
     )
     assert R.equal_repr(R.pow_int(R.gen, 10), R([], 6))
-    assert R3.equal_repr(R3.pow_int(R3.add(R3.gen, R3.one), 5), R3([(1, 1), (5, 1), (10, 1)], 3))
+    assert R3.equal_repr(
+        R3.pow_int(R3.add(R3.gen, R3.one), 5), R3([(1, 1), (5, 1), (10, 1)], 3)
+    )
     assert R10.equal_repr(
         R10.pow_int(R10.add(R10.gen, R10.one), 12),
-        R10([
-            (1, 1),
-            (12, 1),
-            (66, 1),
-            (220, 1),
-            (495, 1),
-            (792, 1),
-            (924, 1),
-            (792, 1),
-            (495, 1),
-            (220, 1),
-        ], 10),
+        R10(
+            [
+                (1, 1),
+                (12, 1),
+                (66, 1),
+                (220, 1),
+                (495, 1),
+                (792, 1),
+                (924, 1),
+                (792, 1),
+                (495, 1),
+                (220, 1),
+            ],
+            10,
+        ),
     )
 
 
@@ -269,7 +285,9 @@ def test_truncate(rd_int):
     SeriesRing = rd_int
     R = SeriesRing()
     assert R.equal_repr(R.truncate(R.pow_int(R.gen, 3), 4), R([0, 0, 0, 1], None))
-    assert R.equal_repr(R.truncate(R.pow_int(R.add(R.gen, R.one), 5), 3), R([1, 5, 10], 3))
+    assert R.equal_repr(
+        R.truncate(R.pow_int(R.add(R.gen, R.one), 5), 3), R([1, 5, 10], 3)
+    )
 
 
 def test_int_differentiate(rd_int):
@@ -281,13 +299,17 @@ def test_int_differentiate(rd_int):
     assert R.equal_repr(
         R.differentiate(R.add(R.multiply(R.gen, R.gen), R.gen)), R([1, 2], None)
     )
-    assert R3.equal_repr(R3.differentiate(R3.multiply(R3.gen, R3.gen)), R3([0, 2], None))
+    assert R3.equal_repr(
+        R3.differentiate(R3.multiply(R3.gen, R3.gen)), R3([0, 2], None)
+    )
     assert R3.equal_repr(R3.differentiate(R3.add(R3.gen, R3.one)), R3([1], None))
     assert R3.equal_repr(
         R3.differentiate(SeriesRing(3).pow_int(R3.add(R3.gen, R3.one), 4)),
         R3([4, 12], 2),
     )
-    assert R10.equal_repr(R10.differentiate(R10.pow_int(R10.gen, 4)), R10([0, 0, 0, 4], None))
+    assert R10.equal_repr(
+        R10.differentiate(R10.pow_int(R10.gen, 4)), R10([0, 0, 0, 4], None)
+    )
     assert R10.equal_repr(
         R10.differentiate(R10.add(R10.multiply(R10.gen, R10.gen), R10.gen)),
         R10([1, 2], None),
@@ -299,7 +321,9 @@ def test_rational_differentiate(rd_rational):
     R = SeriesRing()
     R3 = SeriesRing(3)
     R10 = SeriesRing(10)
-    assert R.equal_repr(R.differentiate(R.pow_int(R.gen, 3)), R([(0, 1), (0, 1), (3, 1)], None))
+    assert R.equal_repr(
+        R.differentiate(R.pow_int(R.gen, 3)), R([(0, 1), (0, 1), (3, 1)], None)
+    )
     assert R.equal_repr(
         R.differentiate(R.add(R.multiply(R.gen, R.gen), R.gen)),
         R([(1, 1), (2, 1)], None),
@@ -308,7 +332,9 @@ def test_rational_differentiate(rd_rational):
         R3.differentiate(R3.multiply(R3.gen, R3.gen)), R3([(0, 1), (2, 1)], None)
     )
     assert R3.equal_repr(R3.differentiate(R3.add(R3.gen, R3.one)), R3([(1, 1)], None))
-    assert R3.equal_repr(R3.differentiate(R.pow_int(R3.add(R3.gen, R3.one), 4)), R3([4, 12, 12], 3))
+    assert R3.equal_repr(
+        R3.differentiate(R.pow_int(R3.add(R3.gen, R3.one), 4)), R3([4, 12, 12], 3)
+    )
     assert R10.equal_repr(
         R10.differentiate(R10.pow_int(R10.gen, 4)),
         R10([(0, 1), (0, 1), (0, 1), (4, 1)], None),
@@ -324,7 +350,9 @@ def test_rational_integrate(rd_rational):
     R = SeriesRing()
     R3 = SeriesRing(3)
     R10 = SeriesRing(10)
-    assert R.equal_repr(R.integrate(R.add(R.gen, R.one)), R([(0, 1), (1, 1), (1, 2)], None))
+    assert R.equal_repr(
+        R.integrate(R.add(R.gen, R.one)), R([(0, 1), (1, 1), (1, 2)], None)
+    )
     assert R.equal_repr(
         R.integrate(R.multiply(R.gen, R.gen)), R([(0, 1), (0, 1), (0, 1), (1, 3)], None)
     )
@@ -367,7 +395,9 @@ def test_int_compose(rd_int):
     assert R.equal_repr(
         R.compose(R.multiply(R.gen, R.gen), R.add(R.one, R.gen)), R([1, 2, 1], None)
     )
-    assert R.equal_repr(R.compose(R([1, 1, 1]), R.square(R.gen)), R([1, 0, 1, 0, 1], None))
+    assert R.equal_repr(
+        R.compose(R([1, 1, 1]), R.square(R.gen)), R([1, 0, 1, 0, 1], None)
+    )
     assert R3.equal_repr(R3.compose(R3([1, 2, 3]), R3([0, 1, 1])), R3([1, 2, 5], 3))
     assert R10.equal_repr(
         R10.compose(R10([2, 4, 5, 1, 6, 2], 7), R10([0, 1, 1, 2, 3, 4], 7)),
@@ -397,7 +427,9 @@ def test_rational_compose(rd_rational):
 
     f10 = R10([(1, 2), (3, 4), (5, 6)], 4)
     g10 = R10([(0, 1), (2, 3), (1, 5), (-3, 7)], 4)
-    assert R10.equal_repr(R10.compose(f10, g10), R10([(1, 2), (1, 2), (281, 540), (-25, 252)], 4))
+    assert R10.equal_repr(
+        R10.compose(f10, g10), R10([(1, 2), (1, 2), (281, 540), (-25, 252)], 4)
+    )
 
 
 def test_int_inverse(rd_int):
@@ -430,14 +462,17 @@ def test_rational_inverse(rd_rational):
     f_r = R([(2, 3), (-1, 4), (3, 5)])
     assert R.equal_repr(
         R.inverse(f_r),
-        R([
-            (3, 2),
-            (9, 16),
-            (-729, 640),
-            (-4779, 5120),
-            (138267, 204800),
-            (1791153, 1638400),
-        ], 6),
+        R(
+            [
+                (3, 2),
+                (9, 16),
+                (-729, 640),
+                (-4779, 5120),
+                (138267, 204800),
+                (1791153, 1638400),
+            ],
+            6,
+        ),
     )
 
     f3 = R3([(1, 2), (-3, 4), (5, 6)])
@@ -446,18 +481,21 @@ def test_rational_inverse(rd_rational):
     f10 = R10([(3, 5), (1, 7), (-2, 9)])
     assert R10.equal_repr(
         R10.inverse(f10),
-        R10([
-            (5, 3),
-            (-25, 63),
-            (2825, 3969),
-            (-26375, 83349),
-            (1779875, 5250987),
-            (-7274375, 36756909),
-            (1199485625, 6947055801),
-            (-16690759375, 145888171821),
-            (838109346875, 9190954824723),
-            (-12369018828125, 193010051319183),
-        ], 10),
+        R10(
+            [
+                (5, 3),
+                (-25, 63),
+                (2825, 3969),
+                (-26375, 83349),
+                (1779875, 5250987),
+                (-7274375, 36756909),
+                (1199485625, 6947055801),
+                (-16690759375, 145888171821),
+                (838109346875, 9190954824723),
+                (-12369018828125, 193010051319183),
+            ],
+            10,
+        ),
     )
 
 
@@ -505,16 +543,19 @@ def test_rational_reversion(rd_rational):
     f10 = R10([(0, 1), (2, 3), (1, 5), (-3, 7), (1, 2)])
     assert R10.equal_repr(
         R10.reversion(f10),
-        R10([
-            (0, 1),
-            (3, 2),
-            (-27, 40),
-            (486, 175),
-            (-209709, 22400),
-            (116634897, 3920000),
-            (-2627149059, 22400000),
-            (157012806591, 343000000),
-            (-1627722349764129, 878080000000),
-            (47642334773213367, 6146560000000),
-        ], 10),
+        R10(
+            [
+                (0, 1),
+                (3, 2),
+                (-27, 40),
+                (486, 175),
+                (-209709, 22400),
+                (116634897, 3920000),
+                (-2627149059, 22400000),
+                (157012806591, 343000000),
+                (-1627722349764129, 878080000000),
+                (47642334773213367, 6146560000000),
+            ],
+            10,
+        ),
     )
