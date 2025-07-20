@@ -378,42 +378,18 @@ class TestWrappingCone:
     @pytest.mark.parametrize(
         'axis, alpha, position_1, position_2, expected',
         [
-            (N.z, pi/4, (N.x + N.z) / sqrt(2), (N.y + N.z) / sqrt(2), sqrt(2)),
-            (N.z, pi/6, N.x / sqrt(3) + N.z, N.y / sqrt(3) + N.z, sqrt(Rational(8, 3) - 8*cos(sqrt(3)*pi/6)/3)),
-            (N.z, pi/4, (N.x + N.z) / sqrt(2), (2*N.x + 2*N.z) / sqrt(2), 1),
-            (N.z, pi/4, (N.x + N.z) / sqrt(2), (-N.x + N.z) / sqrt(2), 2),
-            (N.x, pi/3, (N.y + N.x) / 2, (N.z + N.x) / 2, sqrt(2 - 2*cos(sqrt(3)*pi/2))),
-            (N.z, pi/6, (N.x + N.z*sqrt(3)) / 2, (N.y + N.z*sqrt(3)) / 2, sqrt(2 - 2*cos(sqrt(3)*pi/6))),
-            (N.z, pi/3, (N.x*sqrt(3) + N.z) / 2, (N.y*sqrt(3) + N.z) / 2, sqrt(2 - 2*cos(sqrt(3)*pi/2))),
-            (N.z, pi/4, (N.x + N.z) / sqrt(11), (N.x + N.z) / sqrt(11), 0),
-            (
-                N.z,
-                pi/6,
-                N.x/sqrt(3) + N.z,
-                2*N.y/sqrt(3) + 2*N.z,
-                sqrt(Rational(20, 3) - 16*cos(pi/(2*sqrt(3)))/3)
-            ),
-            (
-                N.z,
-                pi/6,
-                (N.x + N.y)/(sqrt(2)*sqrt(3)) + N.z,
-                (3*N.x - 3*N.y)/(sqrt(2)*sqrt(3)) + 3*N.z,
-                sqrt(Rational(40, 3) - 8*cos(sqrt(3)*pi/2))
-            ),
-            (
-                N.z,
-                pi/4,
-                (cos(pi/6)*N.x + sin(pi/6)*N.y + N.z)/sqrt(2),
-                (3*cos(2*pi/3)*N.x + 3*sin(2*pi/3)*N.y + 3*N.z)/sqrt(2),
-                sqrt(10)
-            ),
-            (
-                N.z,
-                pi/4,
-                (N.x + N.z)/sqrt(2),
-                (2*N.y + 2*N.z)/sqrt(2),
-                sqrt(5)
-            ),
+            (N.z, pi/4, (N.x + N.z)/sqrt(2), (N.y + N.z)/sqrt(2), sqrt(2 - 2*cos(pi/(2*sqrt(2))))),
+            (N.z, pi/6, N.x/sqrt(3) + N.z, N.y/sqrt(3) + N.z, sqrt(Rational(8, 3) - 4*sqrt(2)/3)),
+            (N.z, pi/4, (N.x + N.z)/sqrt(2), (2*N.x + 2*N.z)/sqrt(2), 1),
+            (N.z, pi/4, (N.x + N.z)/sqrt(2), (-N.x + N.z)/sqrt(2), sqrt(2 - 2*cos(pi/sqrt(2)))),
+            (N.x, pi/3, (N.y + N.x)/2, (N.z + N.x)/2, sqrt(2 - 2*cos(pi*sqrt(3)/4))),
+            (N.z, pi/6, (N.x + N.z*sqrt(3))/2, (N.y + N.z*sqrt(3))/2, sqrt(2 - sqrt(2))),
+            (N.z, pi/3, (N.x*sqrt(3) + N.z)/2, (N.y*sqrt(3) + N.z)/2, sqrt(2 - 2*cos(pi*sqrt(3)/4))),
+            (N.z, pi/4, (N.x + N.z)/sqrt(11), (N.x + N.z)/sqrt(11), 0),
+            (N.z, pi/6, N.x/sqrt(3) + N.z, 2*N.y/sqrt(3) + 2*N.z, sqrt(Rational(20, 3) - 8*sqrt(2)/3)),
+            (N.z, pi/6, (N.x + N.y)/(sqrt(2)*sqrt(3)) + N.z, (3*N.x - 3*N.y)/(sqrt(2)*sqrt(3)) + 3*N.z, sqrt(Rational(40, 3) - 4*sqrt(2))),
+            (N.z, pi/4, (cos(pi/6)*N.x + sin(pi/6)*N.y + N.z)/sqrt(2), (3*cos(2*pi/3)*N.x + 3*sin(2*pi/3)*N.y + 3*N.z)/sqrt(2), sqrt(10 - 6*cos(pi/(2*sqrt(2))))),
+            (N.z, pi/4, (N.x + N.z)/sqrt(2), (2*N.y + 2*N.z)/sqrt(2), sqrt(5 - 4*cos(pi/(2*sqrt(2))))),
         ]
     )
     def test_geodesic_length(axis, alpha, position_1, position_2, expected):
@@ -427,3 +403,74 @@ class TestWrappingCone:
         p2.set_pos(apex, position_2)
 
         assert cone.geodesic_length(p1, p2) == expected
+
+    delta_u1 = pi*sqrt(2)/4
+    L1 = sqrt(4 - 4*cos(delta_u1))
+    delta_u2 = pi*sqrt(2)/4
+    L2 = sqrt(10 - 8*cos(delta_u2))
+    delta_u3 = pi/4
+    L3 = sqrt(20 - 8*sqrt(2))
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        'axis, alpha, position_1, position_2, expected_v1, expected_v2',
+        [
+            (
+                N.z, pi/4, N.x + N.z, N.y + N.z,
+                (((cos(delta_u1) - 1)/L1) * (N.x + N.z) + (sqrt(2)*sin(delta_u1)/L1) * N.y),
+                (((cos(delta_u1) - 1)/L1) * (N.y + N.z) + (sqrt(2)*sin(delta_u1)/L1) * N.x)
+            ),
+            (
+                N.z, pi/6, N.x/sqrt(3) + N.z, 2*N.x/sqrt(3) + 2*N.z,
+                (N.x/2 + sqrt(3)/2*N.z),
+                -(N.x/2 + sqrt(3)/2*N.z)
+            ),
+            (
+                N.x, pi/4, N.y + N.x, N.z + 2*N.x,
+                (((2*cos(delta_u2) - 1)/L2)*(N.x + N.y) + (2*sqrt(2)*sin(delta_u2)/L2)*N.z),
+                (((cos(delta_u2)/2 - 1)/L2)*(2*N.x + N.z) + (sin(delta_u2)/L2)*(-N.y))
+            ),
+            (
+                N.z, pi/6, N.x/sqrt(3) + N.z, 2*N.y/sqrt(3) + 2*N.z,
+                (1/L3) * ((sqrt(2)-1)*N.x + 2*sqrt(2)*N.y + (sqrt(6)-sqrt(3))*N.z),
+                (1/L3) * (sqrt(2)*N.x + (2*sqrt(2)-4)*N.y + (sqrt(6)-2*sqrt(3))*N.z)
+            ),
+        ]
+    )
+    def test_geodesic_end_vectors(axis, alpha, position_1, position_2,
+                                  expected_v1, expected_v2):
+        apex = Point('p0')
+        cone = WrappingCone(alpha, apex, axis)
+        p1 = Point('p1'); p1.set_pos(apex, position_1)
+        p2 = Point('p2'); p2.set_pos(apex, position_2)
+
+        v1, v2 = cone.geodesic_end_vectors(p1, p2)
+
+        # Test equality of both vectors component wise
+        expected_vec = {
+            v1: expected_v1,
+            v2: expected_v2
+        }
+        for vec in [v1, v2]:
+            for component in [N.x, N.y, N.z]:
+                assert simplify(vec.dot(component)) == simplify(expected_vec[vec].dot(component))
+
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        'position',
+        [
+            (N.x + N.z),
+            (N.y/sqrt(3) + 2*N.z),
+        ]
+    )
+    def test_geodesic_end_vectors_invalid_coincident(position):
+        apex = Point('p0')
+        cone = WrappingCone(pi/6, apex, N.z)
+
+        p1 = Point('p1')
+        p1.set_pos(apex, position)
+
+        with pytest.raises(ValueError,
+                           match='No unique geodesic exists for coincident points'):
+            cone.geodesic_end_vectors(p1, p1)

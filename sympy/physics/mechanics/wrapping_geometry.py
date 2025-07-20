@@ -2,7 +2,7 @@
 
 from abc import ABC, abstractmethod
 
-from sympy import Integer, acos, pi, sqrt, sympify, tan, cos
+from sympy import Integer, acos, pi, sqrt, sympify, tan, cos, sin
 from sympy.core.relational import Eq
 from sympy.functions.elementary.trigonometric import atan2
 from sympy.polys.polytools import cancel
@@ -712,47 +712,81 @@ class WrappingCone(WrappingGeometryBase):
             cancel((n1.cross(n2)).dot(self.axis)),
             cancel(n1.dot(n2))
         )
-        delta_u = central * tan(self.alpha)
+
+        if central > pi:
+            central = 2 * pi - central
+
+        delta_u = central * sin(self.alpha)
         return sqrt(s1**2 + s2**2 - 2*s1*s2*cos(delta_u))
 
 
     def geodesic_end_vectors(self, point_1, point_2):
         """
-        The tangent vector expression for the geodesic is:
-        T_p = d_s * (sin(alpha) * cos(phi), sin(alpha) * sin(phi), cos(alpha))
-            + d_phi * (-s * sin(alpha) * sin(phi), s * sin(alpha) * cos(phi), 0)
+        Computes the unit tangent vectors for the geodesic path at its
+        endpoints.
 
-        where:
-            d_s = (x * delta_x + y * delta_y) / s1
-            d_phi = (x * delta_y - y * delta_x) / (s ** 2 * sin(alpha))
-
-        delta_x = x2 - x1 and delta_y = y2 - y1
-        thus we can compute T_p1 by substituting x1 for x and y1 for y and s1 for s
-        in the formula for T_p
-        similarly for T_p2
-        we can normalise these vectors if needed
+        The tangent vector of the geodesic is found by considering the
+        straight-line path in the unrolled planar sector representation of the
+        cone. This vector is then mapped back to the 3D space at each
+        endpoint.
+        """
         pos1 = point_1.pos_from(self.apex)
         pos2 = point_2.pos_from(self.apex)
-        # Handle coincident
+
         if pos1 == pos2:
-            raise ValueError(f'No geodesic exists for coincident points {point_1} and {point_2}.')
-        # Length and projections
-        delta = point_2.pos_from(point_1)
-        parallel_len = delta.dot(self.axis)
+            raise ValueError(
+                f'No unique geodesic exists for coincident points {point_1} and {point_2}.'
+            )
+
+        # Handle cases where one point is the apex
+        if pos1.magnitude() == 0:
+            v = pos2.normalize()
+            return (v, -v)
+        if pos2.magnitude() == 0:
+            v = pos1.normalize()
+            return (-v, v)
+
+        z1 = pos1.dot(self.axis)
+        z2 = pos2.dot(self.axis)
+        s1 = z1 / cos(self.alpha)
+        s2 = z2 / cos(self.alpha)
+
         L = self.geodesic_length(point_1, point_2)
-        # Planar (around-cone) component
-        planar = sqrt(L**2 - parallel_len**2)
-        # Radial normals
-        h1 = pos1.dot(self.axis)
-        n1 = (pos1 - h1 * self.axis).normalize()
-        # Circumferential directions
-        circ1 = self.axis.cross(n1).normalize()
-        circ2 = -self.axis.cross((pos2 - pos2.dot(self.axis)*self.axis).normalize()).normalize()
-        # Tangent vectors at endpoints
-        v1 = (parallel_len*self.axis + planar*circ1).normalize()
-        v2 = (-parallel_len*self.axis + planar*circ2).normalize()
+
+        # Handle zero length case to avoid division by zero
+        if L == 0:
+            return (Vector(0), Vector(0))
+
+        n1 = (pos1 - z1 * self.axis).normalize()
+        n2 = (pos2 - z2 * self.axis).normalize()
+
+        central = _directional_atan(
+            cancel((n1.cross(n2)).dot(self.axis)),
+            cancel(n1.dot(n2))
+        )
+
+        # Ensure the shortest path is used for vector calculation
+        if central > pi:
+            central = 2 * pi - central
+
+        delta_u = central * sin(self.alpha)
+
+        # Define the tangent plane basis vectors for each point
+        g1 = pos1.normalize()
+        c1 = self.axis.cross(n1)
+        g2 = pos2.normalize()
+        c2 = self.axis.cross(n2)
+
+        # Components of the tangent vector in the unrolled plane
+        v1_radial_comp = (s2 * cos(delta_u) - s1) / L
+        v1_circ_comp = (s2 * sin(delta_u)) / L
+        v1 = v1_radial_comp * g1 + v1_circ_comp * c1
+
+        v2_radial_comp = (s1 * cos(delta_u) - s2) / L
+        v2_circ_comp = (-s1 * sin(delta_u)) / L
+        v2 = v2_radial_comp * g2 + v2_circ_comp * c2
+
         return (v1, v2)
-        """
 
     def __repr__(self):
         """Representation of a ``WrappingCone``."""
