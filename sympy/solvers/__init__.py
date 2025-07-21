@@ -36,6 +36,7 @@ from .decompogen import decompogen
 from .solveset import solveset, linsolve, linear_eq_to_matrix, nonlinsolve, substitution
 
 from .simplex import lpmin, lpmax, linprog
+from .laplace_solver import laplace_solve
 
 # This is here instead of sympy/sets/__init__.py to avoid circular import issues
 from ..core.singleton import S
