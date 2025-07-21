@@ -2,7 +2,7 @@
 This module can be used to solve 2D beam bending problems with
 singularity functions in mechanics.
 """
-
+from sympy.simplify import simplify
 from sympy.core import S, Symbol, diff, symbols
 from sympy.core.add import Add
 from sympy.core.expr import Expr
@@ -40,6 +40,7 @@ __doctest_requires__ = {
 
 
 numpy = import_module('numpy', import_kwargs={'fromlist':['arange']})
+
 
 
 class Beam:
@@ -696,7 +697,6 @@ class Beam:
         self.apply_load(E * I * deflection_jump, loc, -4)
         self.bc_shear_force.append((loc, 0))
         return deflection_jump
-
     def apply_load(self, value, start, order, end=None):
         """
         This method adds up the loads given to a particular beam object.
@@ -761,8 +761,7 @@ class Beam:
         self._load += value*SingularityFunction(x, start, order)
         self._original_load += value*SingularityFunction(x, start, order)
 
-        if end:
-            # load has an end point within the length of the beam.
+        if end!=None:
             self._handle_end(x, value, start, order, end, type="apply")
 
     def remove_load(self, value, start, order, end=None):
@@ -825,8 +824,7 @@ class Beam:
             msg = "No such load distribution exists on the beam object."
             raise ValueError(msg)
 
-        if end:
-            # load has an end point within the length of the beam.
+        if end!=None:
             self._handle_end(x, value, start, order, end, type="remove")
 
     def _handle_end(self, x, value, start, order, end, type):
@@ -843,6 +841,14 @@ class Beam:
         # NOTE : A Taylor series can be used to define the summation of
         # singularity functions that subtract from the load past the end
         # point such that it evaluates to zero past 'end'.
+
+        if simplify(start - end).is_positive:
+            value=-value
+            if(type=="apply"):
+                type = "remove"
+            else:
+                type = "apply"
+
         f = value*x**order
 
         if type == "apply":
