@@ -56,7 +56,7 @@ __all__ = [
     'solve_poly_system', 'solve_triangulated', 'factor_system',
 
     'pde_separate', 'pde_separate_add', 'pde_separate_mul', 'pdsolve',
-    'classify_pde', 'checkpdesol',
+    'classify_pde', 'checkpdesol','laplace_solve',
 
     'ode_order',
 
