@@ -1,6 +1,10 @@
 from __future__ import annotations
 
-from typing import Any, Sequence, TypeAlias, Union
+from typing import Any, Sequence, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from typing import TypeAlias, Union
+
 from sympy.polys.densearith import (
     dup_add,
     dup_mul,
