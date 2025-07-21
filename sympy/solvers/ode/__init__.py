@@ -7,10 +7,12 @@ from .subscheck import checkodesol
 
 from .systems import (canonical_odes, linear_ode_to_matrix,
         linodesolve)
+from .laplace_solver import laplace_solve
+
 
 
 __all__ = [
     'allhints', 'checkinfsol', 'checkodesol', 'classify_ode', 'constantsimp',
     'dsolve', 'homogeneous_order', 'infinitesimals', 'canonical_odes', 'linear_ode_to_matrix',
-    'linodesolve'
+    'linodesolve','laplace_solve'
 ]
