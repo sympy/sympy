@@ -42,20 +42,21 @@ from sympy.core.singleton import S
 from sympy.core.symbol import Dummy, Symbol, Wild
 from sympy.functions.elementary.complexes import Abs
 from sympy.functions.elementary.exponential import exp, log
-from sympy.functions.elementary.hyperbolic import (HyperbolicFunction, csch,
-    cosh, coth, sech, sinh, tanh, asinh)
+from sympy.functions.elementary.hyperbolic import (
+    HyperbolicFunction, csch, cosh, coth, sech, sinh, tanh, asinh)
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
-from sympy.functions.elementary.trigonometric import (TrigonometricFunction,
-    cos, sin, tan, cot, csc, sec, acos, asin, atan, acot, acsc, asec)
+from sympy.functions.elementary.trigonometric import (
+    TrigonometricFunction, cos, sin, tan, cot, csc, sec, acos, asin, atan,
+    acot, acsc, asec)
 from sympy.functions.special.delta_functions import Heaviside, DiracDelta
-from sympy.functions.special.error_functions import (erf, erfi, fresnelc,
-    fresnels, Ci, Chi, Si, Shi, Ei, li)
+from sympy.functions.special.error_functions import (
+    erf, erfi, fresnelc, fresnels, Ci, Chi, Si, Shi, Ei, li)
 from sympy.functions.special.gamma_functions import uppergamma
 from sympy.functions.special.elliptic_integrals import elliptic_e, elliptic_f
-from sympy.functions.special.polynomials import (chebyshevt, chebyshevu,
-    legendre, hermite, laguerre, assoc_laguerre, gegenbauer, jacobi,
-    OrthogonalPolynomial)
+from sympy.functions.special.polynomials import (
+    chebyshevt, chebyshevu, legendre, hermite, laguerre, assoc_laguerre,
+    gegenbauer, jacobi, OrthogonalPolynomial)
 from sympy.functions.special.zeta_functions import polylog
 from .integrals import Integral
 from sympy.logic.boolalg import And, Boolean
@@ -119,7 +120,7 @@ class PowerRule(AtomicRule):
 
     def eval(self) -> Expr:
         return Piecewise(
-            ((self.base**(self.exp + 1))/(self.exp + 1), Ne(self.exp, -1)),
+            ((self.base**(self.exp + 1)) / (self.exp + 1), Ne(self.exp, -1)),
             (log(self.base), True),
         )
 
@@ -183,7 +184,8 @@ class PartsRule(Rule):
 
     def contains_dont_know(self) -> bool:
         return self.v_step.contains_dont_know() or (
-            self.second_step is not None and self.second_step.contains_dont_know())
+            self.second_step is not None and
+            self.second_step.contains_dont_know())
 
 
 @dataclass
@@ -201,7 +203,8 @@ class CyclicPartsRule(Rule):
         return Add(*result) / (1 - self.coefficient)
 
     def contains_dont_know(self) -> bool:
-        return any(substep.contains_dont_know() for substep in self.parts_rules)
+        return any(substep.contains_dont_know()
+                   for substep in self.parts_rules)
 
 
 @dataclass
@@ -305,14 +308,16 @@ class ArcsinhRule(AtomicRule):
 
 @dataclass
 class ReciprocalSqrtQuadraticRule(AtomicRule):
-    """integrate(1/sqrt(a+b*x+c*x**2), x) -> log(2*sqrt(c)*sqrt(a+b*x+c*x**2)+b+2*c*x)/sqrt(c)"""
+    """integrate(1/sqrt(a+b*x+c*x**2), x) ->
+    log(2*sqrt(c)*sqrt(a+b*x+c*x**2)+b+2*c*x)/sqrt(c)"""
     a: Expr
     b: Expr
     c: Expr
 
     def eval(self) -> Expr:
         a, b, c, x = self.a, self.b, self.c, self.variable
-        return log(2*sqrt(c)*sqrt(a+b*x+c*x**2)+b+2*c*x)/sqrt(c)
+        return (log(2 * sqrt(c) * sqrt(a + b * x + c * x**2) + b + 2 * c * x)
+                / sqrt(c))
 
 
 @dataclass
@@ -324,7 +329,8 @@ class SqrtQuadraticDenomRule(AtomicRule):
     coeffs: list[Expr]
 
     def eval(self) -> Expr:
-        a, b, c, coeffs, x = self.a, self.b, self.c, self.coeffs.copy(), self.variable
+        a, b, c, coeffs, x = (self.a, self.b, self.c,
+                              self.coeffs.copy(), self.variable)
         # Integrate poly/sqrt(a+b*x+c*x**2) using recursion.
         # coeffs are coefficients of the polynomial.
         # Let I_n = x**n/sqrt(a+b*x+c*x**2), then
@@ -333,22 +339,22 @@ class SqrtQuadraticDenomRule(AtomicRule):
         # See https://github.com/sympy/sympy/pull/23608 for proof.
         result_coeffs = []
         coeffs = coeffs.copy()
-        for i in range(len(coeffs)-2):
-            n = len(coeffs)-1-i
-            coeff = coeffs[i]/(c*n)
+        for i in range(len(coeffs) - 2):
+            n = len(coeffs) - 1 - i
+            coeff = coeffs[i] / (c * n)
             result_coeffs.append(coeff)
-            coeffs[i+1] -= (2*n-1)*b/2*coeff
-            coeffs[i+2] -= (n-1)*a*coeff
+            coeffs[i + 1] -= (2 * n - 1) * b / 2 * coeff
+            coeffs[i + 2] -= (n - 1) * a * coeff
         d, e = coeffs[-1], coeffs[-2]
-        s = sqrt(a+b*x+c*x**2)
-        constant = d-b*e/(2*c)
+        s = sqrt(a + b * x + c * x**2)
+        constant = d - b * e / (2 * c)
         if constant == 0:
             I0 = 0
         else:
-            step = inverse_trig_rule(IntegralInfo(1/s, x), degenerate=False)
-            I0 = constant*step.eval()
-        return Add(*(result_coeffs[i]*x**(len(coeffs)-2-i)
-                     for i in range(len(result_coeffs))), e/c)*s + I0
+            step = inverse_trig_rule(IntegralInfo(1 / s, x), degenerate=False)
+            I0 = constant * step.eval()
+        return Add(*(result_coeffs[i] * x**(len(coeffs) - 2 - i)
+                     for i in range(len(result_coeffs))), e / c) * s + I0
 
 
 @dataclass
@@ -359,7 +365,8 @@ class SqrtQuadraticRule(AtomicRule):
     c: Expr
 
     def eval(self) -> Expr:
-        step = sqrt_quadratic_rule(IntegralInfo(self.integrand, self.variable), degenerate=False)
+        step = sqrt_quadratic_rule(IntegralInfo(self.integrand, self.variable),
+                                   degenerate=False)
         return step.eval()
 
 
@@ -372,7 +379,8 @@ class AlternativeRule(Rule):
         return self.alternatives[0].eval()
 
     def contains_dont_know(self) -> bool:
-        return any(substep.contains_dont_know() for substep in self.alternatives)
+        return any(substep.contains_dont_know()
+                   for substep in self.alternatives)
 
 
 @dataclass
@@ -426,7 +434,8 @@ class PiecewiseRule(Rule):
                            for substep, cond in self.subfunctions])
 
     def contains_dont_know(self) -> bool:
-        return any(substep.contains_dont_know() for substep, _ in self.subfunctions)
+        return any(substep.contains_dont_know()
+                   for substep, _ in self.subfunctions)
 
 
 @dataclass
@@ -441,7 +450,8 @@ class HeavisideRule(Rule):
         # then there needs to be continuity at -b/m == ibnd,
         # so we subtract the appropriate term.
         result = self.substep.eval()
-        return Heaviside(self.harg) * (result - result.subs(self.variable, self.ibnd))
+        return Heaviside(self.harg) * (result -
+                                       result.subs(self.variable, self.ibnd))
 
     def contains_dont_know(self) -> bool:
         return self.substep.contains_dont_know()
@@ -456,8 +466,8 @@ class DiracDeltaRule(AtomicRule):
     def eval(self) -> Expr:
         n, a, b, x = self.n, self.a, self.b, self.variable
         if n == 0:
-            return Heaviside(a+b*x)/b
-        return DiracDelta(a+b*x, n-1)/b
+            return Heaviside(a + b * x) / b
+        return DiracDelta(a + b * x, n - 1) / b
 
 
 @dataclass
@@ -470,9 +480,9 @@ class TrigSubstitutionRule(Rule):
 
     def eval(self) -> Expr:
         theta, func, x = self.theta, self.func, self.variable
-        func = func.subs(sec(theta), 1/cos(theta))
-        func = func.subs(csc(theta), 1/sin(theta))
-        func = func.subs(cot(theta), 1/tan(theta))
+        func = func.subs(sec(theta), 1 / cos(theta))
+        func = func.subs(csc(theta), 1 / sin(theta))
+        func = func.subs(cot(theta), 1 / tan(theta))
 
         trig_function = list(func.find(TrigonometricFunction))
         assert len(trig_function) == 1
@@ -498,13 +508,14 @@ class TrigSubstitutionRule(Rule):
             inverse = atan(relation[0])
 
         substitution = [
-            (sin(theta), opposite/hypotenuse),
-            (cos(theta), adjacent/hypotenuse),
-            (tan(theta), opposite/adjacent),
+            (sin(theta), opposite / hypotenuse),
+            (cos(theta), adjacent / hypotenuse),
+            (tan(theta), opposite / adjacent),
             (theta, inverse)
         ]
         return Piecewise(
-                (self.substep.eval().subs(substitution).trigsimp(), self.restriction) # type: ignore
+                (self.substep.eval().subs(substitution).trigsimp(),
+                 self.restriction)  # type: ignore
         )
 
     def contains_dont_know(self) -> bool:
@@ -520,7 +531,7 @@ class ArctanRule(AtomicRule):
 
     def eval(self) -> Expr:
         a, b, c, x = self.a, self.b, self.c, self.variable
-        return a/b / sqrt(c/b) * atan(x/sqrt(c/b))
+        return a / b / sqrt(c / b) * atan(x / sqrt(c / b))
 
 
 @dataclass
@@ -536,9 +547,9 @@ class JacobiRule(OrthogonalPolyRule):
     def eval(self) -> Expr:
         n, a, b, x = self.n, self.a, self.b, self.variable
         return Piecewise(
-            (2*jacobi(n + 1, a - 1, b - 1, x)/(n + a + b), Ne(n + a + b, 0)),
+            (2 * jacobi(n + 1, a - 1, b - 1, x) / (n + a + b), Ne(n + a + b, 0)),
             (x, Eq(n, 0)),
-            ((a + b + 2)*x**2/4 + (a - b)*x/2, Eq(n, 1)))
+            ((a + b + 2) * x**2 / 4 + (a - b) * x / 2, Eq(n, 1)))
 
 
 @dataclass
@@ -548,8 +559,8 @@ class GegenbauerRule(OrthogonalPolyRule):
     def eval(self) -> Expr:
         n, a, x = self.n, self.a, self.variable
         return Piecewise(
-            (gegenbauer(n + 1, a - 1, x)/(2*(a - 1)), Ne(a, 1)),
-            (chebyshevt(n + 1, x)/(n + 1), Ne(n, -1)),
+            (gegenbauer(n + 1, a - 1, x) / (2 * (a - 1)), Ne(a, 1)),
+            (chebyshevt(n + 1, x) / (n + 1), Ne(n, -1)),
             (S.Zero, True))
 
 
@@ -558,9 +569,9 @@ class ChebyshevTRule(OrthogonalPolyRule):
     def eval(self) -> Expr:
         n, x = self.n, self.variable
         return Piecewise(
-            ((chebyshevt(n + 1, x)/(n + 1) -
-              chebyshevt(n - 1, x)/(n - 1))/2, Ne(Abs(n), 1)),
-            (x**2/2, True))
+            ((chebyshevt(n + 1, x) / (n + 1) -
+              chebyshevt(n - 1, x) / (n - 1)) / 2, Ne(Abs(n), 1)),
+            (x**2 / 2, True))
 
 
 @dataclass
@@ -568,7 +579,7 @@ class ChebyshevURule(OrthogonalPolyRule):
     def eval(self) -> Expr:
         n, x = self.n, self.variable
         return Piecewise(
-            (chebyshevt(n + 1, x)/(n + 1), Ne(n, -1)),
+            (chebyshevt(n + 1, x) / (n + 1), Ne(n, -1)),
             (S.Zero, True))
 
 
@@ -576,14 +587,14 @@ class ChebyshevURule(OrthogonalPolyRule):
 class LegendreRule(OrthogonalPolyRule):
     def eval(self) -> Expr:
         n, x = self.n, self.variable
-        return(legendre(n + 1, x) - legendre(n - 1, x))/(2*n + 1)
+        return (legendre(n + 1, x) - legendre(n - 1, x)) / (2 * n + 1)
 
 
 @dataclass
 class HermiteRule(OrthogonalPolyRule):
     def eval(self) -> Expr:
         n, x = self.n, self.variable
-        return hermite(n + 1, x)/(2*(n + 1))
+        return hermite(n + 1, x) / (2 * (n + 1))
 
 
 @dataclass
@@ -611,42 +622,42 @@ class IRule(AtomicRule, ABC):
 class CiRule(IRule):
     def eval(self) -> Expr:
         a, b, x = self.a, self.b, self.variable
-        return cos(b)*Ci(a*x) - sin(b)*Si(a*x)
+        return cos(b) * Ci(a * x) - sin(b) * Si(a * x)
 
 
 @dataclass
 class ChiRule(IRule):
     def eval(self) -> Expr:
         a, b, x = self.a, self.b, self.variable
-        return cosh(b)*Chi(a*x) + sinh(b)*Shi(a*x)
+        return cosh(b) * Chi(a * x) + sinh(b) * Shi(a * x)
 
 
 @dataclass
 class EiRule(IRule):
     def eval(self) -> Expr:
         a, b, x = self.a, self.b, self.variable
-        return exp(b)*Ei(a*x)
+        return exp(b) * Ei(a * x)
 
 
 @dataclass
 class SiRule(IRule):
     def eval(self) -> Expr:
         a, b, x = self.a, self.b, self.variable
-        return sin(b)*Ci(a*x) + cos(b)*Si(a*x)
+        return sin(b) * Ci(a * x) + cos(b) * Si(a * x)
 
 
 @dataclass
 class ShiRule(IRule):
     def eval(self) -> Expr:
         a, b, x = self.a, self.b, self.variable
-        return sinh(b)*Chi(a*x) + cosh(b)*Shi(a*x)
+        return sinh(b) * Chi(a * x) + cosh(b) * Shi(a * x)
 
 
 @dataclass
 class LiRule(IRule):
     def eval(self) -> Expr:
         a, b, x = self.a, self.b, self.variable
-        return li(a*x + b)/a
+        return li(a * x + b) / a
 
 
 @dataclass
@@ -1654,10 +1665,156 @@ def heaviside_pattern(symbol):
 
     return pattern, m, b, g
 
+def extract_heaviside_factors(expr, symbol):
+    """
+    Extract all Heaviside factors from a product expression.
+
+    Returns:
+        heaviside_factors: list of Heaviside functions
+        other_factors: product of non-Heaviside factors
+    """
+    from sympy.core.mul import Mul
+    from sympy.core.numbers import S
+
+    if not isinstance(expr, Mul):
+        if isinstance(expr, Heaviside):
+            return [expr], S.One
+        else:
+            return [], expr
+
+    heaviside_factors = []
+    other_factors = []
+
+    for factor in expr.args:
+        if isinstance(factor, Heaviside):
+            heaviside_factors.append(factor)
+        else:
+            other_factors.append(factor)
+
+    if other_factors:
+        other_product = Mul(*other_factors)
+    else:
+        other_product = S.One
+
+    return heaviside_factors, other_product
+
+
+def count_total_heaviside_functions(expr):
+    """
+    Count the total number of Heaviside functions in an expression,
+    including those in sums, differences, and nested expressions.
+    """
+    from sympy.functions.special.delta_functions import Heaviside
+
+    if isinstance(expr, Heaviside):
+        return 1
+    elif hasattr(expr, 'args'):
+        return sum(count_total_heaviside_functions(arg) for arg in expr.args)
+    else:
+        return 0
+
+
+def expand_heaviside_products(expr, symbol):
+    """
+    Expand expressions containing products and sums/differences of Heaviside
+    functions. Convert expressions like H(a)*(H(b) - H(c)) to
+    H(a)*H(b) - H(a)*H(c).
+    """
+    from sympy import expand
+
+    expanded = expand(expr)
+    return expanded
+
+
+def heaviside_product_to_piecewise(heaviside_factors, symbol):
+    """
+    Convert a product of Heaviside functions to a single Piecewise
+    expression that represents the intersection of all the step function
+    intervals.
+
+    For integration purposes, we focus on getting the intervals right rather
+    than the exact boundary values (which are measure-zero sets anyway).
+    """
+    from sympy.functions.elementary.piecewise import Piecewise
+    from sympy.core.numbers import S
+
+    if not heaviside_factors:
+        return S.One
+
+    if len(heaviside_factors) == 1:
+        return heaviside_factors[0]
+
+    intervals = []
+
+    for h in heaviside_factors:
+        arg = h.args[0]
+
+        try:
+            poly = Poly(arg, symbol)
+            if poly.degree() == 1:
+                coeffs = poly.all_coeffs()
+                a, b = coeffs[0], coeffs[1]
+                critical_point = -b / a
+
+                if a > 0:
+                    intervals.append((critical_point, S.Infinity))
+                else:
+                    intervals.append((-S.Infinity, critical_point))
+            else:
+                return _fallback_piecewise_product(heaviside_factors, symbol)
+        except Exception:
+            return _fallback_piecewise_product(heaviside_factors, symbol)
+
+    if not intervals:
+        return S.One
+
+    left_bound = intervals[0][0]
+    right_bound = intervals[0][1]
+
+    for left, right in intervals[1:]:
+        left_bound = max(left_bound, left)
+        right_bound = min(right_bound, right)
+
+    if left_bound >= right_bound:
+        return S.Zero
+
+    if left_bound == -S.Infinity and right_bound == S.Infinity:
+        return S.One
+    elif left_bound == -S.Infinity:
+        return Piecewise((S.One, symbol < right_bound), (S.Zero, True))
+    elif right_bound == S.Infinity:
+        return Piecewise((S.Zero, symbol < left_bound), (S.One, True))
+    else:
+        return Piecewise(
+            (S.Zero, symbol < left_bound),
+            (S.One, symbol < right_bound),
+            (S.Zero, True)
+        )
+
+
+def _fallback_piecewise_product(heaviside_factors, symbol):
+    """Fallback method using direct multiplication of Piecewise expressions"""
+    from sympy.functions.elementary.piecewise import piecewise_fold
+
+    piecewise_list = []
+    for h in heaviside_factors:
+        pw = h.rewrite(Piecewise)
+        piecewise_list.append(pw)
+
+    result = piecewise_list[0]
+    for pw in piecewise_list[1:]:
+        result = result * pw
+
+    result = piecewise_fold(result)
+
+    return result
+
+
 def uncurry(func):
     def uncurry_rl(args):
         return func(*args)
     return uncurry_rl
+
 
 def trig_rewriter(rewrite):
     def trig_rewriter_rl(args):
@@ -1672,50 +1829,50 @@ sincos_botheven_condition = uncurry(
     m.is_nonnegative and n.is_nonnegative)
 
 sincos_botheven = trig_rewriter(
-    lambda a, b, m, n, i, symbol: ( (((1 - cos(2*a*symbol)) / 2) ** (m / 2)) *
-                                    (((1 + cos(2*b*symbol)) / 2) ** (n / 2)) ))
+    lambda a, b, m, n, i, symbol: ( (((1 - cos(2 * a * symbol)) / 2) ** (m / 2)) *
+                                    (((1 + cos(2 * b * symbol)) / 2) ** (n / 2)) ))
 
 sincos_sinodd_condition = uncurry(lambda a, b, m, n, i, s: m.is_odd and m >= 3)
 
 sincos_sinodd = trig_rewriter(
-    lambda a, b, m, n, i, symbol: ( (1 - cos(a*symbol)**2)**((m - 1) / 2) *
-                                    sin(a*symbol) *
-                                    cos(b*symbol) ** n))
+    lambda a, b, m, n, i, symbol: ( (1 - cos(a * symbol)**2)**((m - 1) / 2) *
+                                    sin(a * symbol) *
+                                    cos(b * symbol) ** n))
 
 sincos_cosodd_condition = uncurry(lambda a, b, m, n, i, s: n.is_odd and n >= 3)
 
 sincos_cosodd = trig_rewriter(
-    lambda a, b, m, n, i, symbol: ( (1 - sin(b*symbol)**2)**((n - 1) / 2) *
-                                    cos(b*symbol) *
-                                    sin(a*symbol) ** m))
+    lambda a, b, m, n, i, symbol: ( (1 - sin(b * symbol)**2)**((n - 1) / 2) *
+                                    cos(b * symbol) *
+                                    sin(a * symbol) ** m))
 
 tansec_seceven_condition = uncurry(lambda a, b, m, n, i, s: n.is_even and n >= 4)
 tansec_seceven = trig_rewriter(
-    lambda a, b, m, n, i, symbol: ( (1 + tan(b*symbol)**2) ** (n/2 - 1) *
-                                    sec(b*symbol)**2 *
-                                    tan(a*symbol) ** m ))
+    lambda a, b, m, n, i, symbol: ( (1 + tan(b * symbol)**2) ** (n / 2 - 1) *
+                                    sec(b * symbol)**2 *
+                                    tan(a * symbol) ** m ))
 
 tansec_tanodd_condition = uncurry(lambda a, b, m, n, i, s: m.is_odd)
 tansec_tanodd = trig_rewriter(
-    lambda a, b, m, n, i, symbol: ( (sec(a*symbol)**2 - 1) ** ((m - 1) / 2) *
-                                     tan(a*symbol) *
-                                     sec(b*symbol) ** n ))
+    lambda a, b, m, n, i, symbol: ( (sec(a * symbol)**2 - 1) ** ((m - 1) / 2) *
+                                     tan(a * symbol) *
+                                     sec(b * symbol) ** n ))
 
 tan_tansquared_condition = uncurry(lambda a, b, m, n, i, s: m == 2 and n == 0)
 tan_tansquared = trig_rewriter(
-    lambda a, b, m, n, i, symbol: ( sec(a*symbol)**2 - 1))
+    lambda a, b, m, n, i, symbol: ( sec(a * symbol)**2 - 1))
 
 cotcsc_csceven_condition = uncurry(lambda a, b, m, n, i, s: n.is_even and n >= 4)
 cotcsc_csceven = trig_rewriter(
-    lambda a, b, m, n, i, symbol: ( (1 + cot(b*symbol)**2) ** (n/2 - 1) *
-                                    csc(b*symbol)**2 *
-                                    cot(a*symbol) ** m ))
+    lambda a, b, m, n, i, symbol: ( (1 + cot(b * symbol)**2) ** (n / 2 - 1) *
+                                    csc(b * symbol)**2 *
+                                    cot(a * symbol) ** m ))
 
 cotcsc_cotodd_condition = uncurry(lambda a, b, m, n, i, s: m.is_odd)
 cotcsc_cotodd = trig_rewriter(
-    lambda a, b, m, n, i, symbol: ( (csc(a*symbol)**2 - 1) ** ((m - 1) / 2) *
-                                    cot(a*symbol) *
-                                    csc(b*symbol) ** n ))
+    lambda a, b, m, n, i, symbol: ( (csc(a * symbol)**2 - 1) ** ((m - 1) / 2) *
+                                    cot(a * symbol) *
+                                    csc(b * symbol) ** n ))
 
 def trig_sincos_rule(integral):
     integrand, symbol = integral
@@ -1778,10 +1935,10 @@ def trig_cotcsc_rule(integral):
 
 def trig_sindouble_rule(integral):
     integrand, symbol = integral
-    a = Wild('a', exclude=[sin(2*symbol)])
-    match = integrand.match(sin(2*symbol)*a)
+    a = Wild('a', exclude=[sin(2 * symbol)])
+    match = integrand.match(sin(2 * symbol) * a)
     if match:
-        sin_double = 2*sin(symbol)*cos(symbol)/sin(2*symbol)
+        sin_double = 2 * sin(symbol) * cos(symbol) / sin(2 * symbol)
         return integral_steps(integrand * sin_double, symbol)
 
 def trig_powers_products_rule(integral):
@@ -1795,7 +1952,7 @@ def trig_substitution_rule(integral):
     A = Wild('a', exclude=[0, symbol])
     B = Wild('b', exclude=[0, symbol])
     theta = Dummy("theta")
-    target_pattern = A + B*symbol**2
+    target_pattern = A + B * symbol**2
 
     matches = integrand.find(target_pattern)
     for expr in matches:
@@ -1810,19 +1967,19 @@ def trig_substitution_rule(integral):
         x_func = None
         if a_positive and b_positive:
             # a**2 + b*x**2. Assume sec(theta) > 0, -pi/2 < theta < pi/2
-            x_func = (sqrt(a)/sqrt(b)) * tan(theta)
+            x_func = (sqrt(a) / sqrt(b)) * tan(theta)
             # Do not restrict the domain: tan(theta) takes on any real
             # value on the interval -pi/2 < theta < pi/2 so x takes on
             # any value
             restriction = True
         elif a_positive and b_negative:
             # a**2 - b*x**2. Assume cos(theta) > 0, -pi/2 < theta < pi/2
-            constant = sqrt(a)/sqrt(-b)
+            constant = sqrt(a) / sqrt(-b)
             x_func = constant * sin(theta)
             restriction = And(symbol > -constant, symbol < constant)
         elif a_negative and b_positive:
             # b*x**2 - a**2. Assume sin(theta) > 0, 0 < theta < pi
-            constant = sqrt(-a)/sqrt(b)
+            constant = sqrt(-a) / sqrt(b)
             x_func = constant * sec(theta)
             restriction = And(symbol > -constant, symbol < constant)
         if x_func:
@@ -1832,17 +1989,17 @@ def trig_substitution_rule(integral):
             for f in [sin, cos, tan,
                       sec, csc, cot]:
                 substitutions[sqrt(f(theta)**2)] = f(theta)
-                substitutions[sqrt(f(theta)**(-2))] = 1/f(theta)
+                substitutions[sqrt(f(theta)**(-2))] = 1 / f(theta)
 
             replaced = integrand.subs(symbol, x_func).trigsimp()
             replaced = manual_subs(replaced, substitutions)
             if not replaced.has(symbol):
                 replaced *= manual_diff(x_func, theta)
                 replaced = replaced.trigsimp()
-                secants = replaced.find(1/cos(theta))
+                secants = replaced.find(1 / cos(theta))
                 if secants:
                     replaced = replaced.xreplace({
-                        1/cos(theta): sec(theta)
+                        1 / cos(theta): sec(theta)
                     })
 
                 substep = integral_steps(replaced, theta)
@@ -1855,10 +2012,88 @@ def heaviside_rule(integral):
     pattern, m, b, g = heaviside_pattern(symbol)
     match = integrand.match(pattern)
     if match and 0 != match[g]:
-        # f = Heaviside(m*x + b)*g
-        substep = integral_steps(match[g], symbol)
+        g_value = match[g]
+        if g_value.has(Heaviside):
+            # Check total Heaviside count in the entire integrand
+            total_heaviside_count = count_total_heaviside_functions(integrand)
+            if total_heaviside_count >= 3:
+                return multiple_heaviside_rule(integral)
+
+        substep = integral_steps(g_value, symbol)
         m, b = match[m], match[b]
-        return HeavisideRule(integrand, symbol, m*symbol + b, -b/m, substep)
+        return HeavisideRule(integrand, symbol, m * symbol + b, -b / m, substep)
+
+def multiple_heaviside_rule(integral):
+    """
+    Handle integration of products of multiple Heaviside functions.
+    This rule is applied when the standard heaviside_rule doesn't match.
+    """
+    integrand, symbol = integral
+
+    # First check if we have multiple Heaviside functions in the expression
+    total_heaviside_count = count_total_heaviside_functions(integrand)
+
+    if total_heaviside_count >= 3:
+        # Try expanding the expression to handle sums/differences
+        expanded_integrand = expand_heaviside_products(integrand, symbol)
+
+        # If expansion changed the expression, try to process each term
+        # separately
+        if expanded_integrand != integrand:
+            try:
+                # Handle linear combinations by processing each term
+                from sympy.core.add import Add
+                if isinstance(expanded_integrand, Add):
+                    # Process each term separately and combine
+                    processed_terms = []
+                    for term in expanded_integrand.args:
+                        heaviside_factors, other_factors = \
+                            extract_heaviside_factors(term, symbol)
+                        if len(heaviside_factors) > 1:
+                            heaviside_piecewise = \
+                                heaviside_product_to_piecewise(
+                                    heaviside_factors, symbol)
+                            processed_term = \
+                                heaviside_piecewise * other_factors
+                        else:
+                            processed_term = term
+                        processed_terms.append(processed_term)
+
+                    new_integrand = Add(*processed_terms)
+                    from sympy.functions.elementary.piecewise import \
+                        piecewise_fold
+                    new_integrand = piecewise_fold(new_integrand)
+
+                    substep = integral_steps(new_integrand, symbol)
+                    return RewriteRule(integrand, symbol, new_integrand,
+                                       substep)
+                else:
+                    # Single term after expansion
+                    substep = integral_steps(expanded_integrand, symbol)
+                    return RewriteRule(integrand, symbol, expanded_integrand,
+                                       substep)
+            except Exception:
+                pass
+
+    # Fall back to the original approach for direct products
+    heaviside_factors, other_factors = \
+        extract_heaviside_factors(integrand, symbol)
+
+    if len(heaviside_factors) > 1:
+        try:
+            heaviside_piecewise = \
+                heaviside_product_to_piecewise(heaviside_factors, symbol)
+            new_integrand = heaviside_piecewise * other_factors
+
+            from sympy.functions.elementary.piecewise import piecewise_fold
+            new_integrand = piecewise_fold(new_integrand)
+
+            substep = integral_steps(new_integrand, symbol)
+            return RewriteRule(integrand, symbol, new_integrand, substep)
+        except Exception:
+            return None
+
+    return None
 
 
 def dirac_delta_rule(integral: IntegralInfo):
@@ -1870,7 +2105,7 @@ def dirac_delta_rule(integral: IntegralInfo):
     if not n.is_Integer or n < 0:
         return
     a, b = Wild('a', exclude=[x]), Wild('b', exclude=[x, 0])
-    match = integrand.args[0].match(a+b*x)
+    match = integrand.args[0].match(a + b * x)
     if not match:
         return
     a, b = match[a], match[b]
@@ -1969,11 +2204,29 @@ def derivative_rule(integral):
     else:
         return ConstantRule(*integral)
 
+def piecewise_rule(integral):
+    """Handle integration of Piecewise expressions."""
+    integrand, symbol = integral
+
+    if not isinstance(integrand, Piecewise):
+        return None
+
+    # Integrate each piece separately
+    pieces = []
+    for expr, cond in integrand.args:
+        substep = integral_steps(expr, symbol)
+        if substep.contains_dont_know():
+            return None
+        pieces.append((substep, cond))
+
+    return PiecewiseRule(integrand, symbol, pieces)
+
+
 def rewrites_rule(integral):
     integrand, symbol = integral
 
-    if integrand.match(1/cos(symbol)):
-        rewritten = integrand.subs(1/cos(symbol), sec(symbol))
+    if integrand.match(1 / cos(symbol)):
+        rewritten = integrand.subs(1 / cos(symbol), sec(symbol))
         return RewriteRule(integrand, symbol, rewritten, integral_steps(rewritten, symbol))
 
 def fallback_rule(integral):
@@ -2072,7 +2325,8 @@ def integral_steps(integrand, symbol, **options):
             exp: exp_rule,
             Add: add_rule,
             Mul: do_one(null_safe(mul_rule), null_safe(trig_product_rule),
-                        null_safe(heaviside_rule), null_safe(quadratic_denom_rule),
+                        null_safe(heaviside_rule), null_safe(multiple_heaviside_rule),
+                        null_safe(quadratic_denom_rule),
                         null_safe(sqrt_linear_rule),
                         null_safe(sqrt_quadratic_rule)),
             Derivative: derivative_rule,
@@ -2080,6 +2334,7 @@ def integral_steps(integrand, symbol, **options):
             Heaviside: heaviside_rule,
             DiracDelta: dirac_delta_rule,
             OrthogonalPolynomial: orthogonal_poly_rule,
+            Piecewise: piecewise_rule,
             Number: constant_rule
         })),
         do_one(
