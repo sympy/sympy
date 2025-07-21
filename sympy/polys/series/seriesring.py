@@ -1,6 +1,6 @@
 from typing import Optional, Type
 from sympy.external.gmpy import GROUND_TYPES
-from sympy.polys.domains import Domain
+from sympy.polys.domains.domain import Domain, Er
 from sympy.polys.series.powerseriesring import PowerSeriesRing
 from sympy.polys.series.python_powerseriesring import (
     PythonPowerSeriesRingZZ,
@@ -18,7 +18,7 @@ if GROUND_TYPES == "flint":
     )
 
 
-def power_series_ring(domain: Domain, prec: int = 6) -> PowerSeriesRing:
+def power_series_ring(domain: Domain[Er], prec: int = 6) -> PowerSeriesRing:
     """
     Create a power series ring over the given domain.
 

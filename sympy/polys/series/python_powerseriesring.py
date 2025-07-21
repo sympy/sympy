@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Union
+from typing import Any, Sequence, Union, TYPE_CHECKING
 from sympy.polys.densearith import (
     dup_add,
     dup_mul,
@@ -22,16 +22,20 @@ from sympy.polys.densetools import (
 from sympy.polys.polyerrors import NotReversible
 from sympy.polys.domains import Domain, QQ, ZZ
 from sympy.polys.domains.domain import Er
-from sympy.polys.series.powerseriesring import _series_from_list, PowerSeriesRing
+from sympy.polys.series.powerseriesring import series_pprint, PowerSeriesRing
 from sympy.external.gmpy import MPZ, MPQ
 
+if TYPE_CHECKING:
+    from sympy.polys.densebasic import dup
+else:
+    dup = list
 
-DUP = list[Er]
-USeries = tuple[DUP[Er], Union[int, None]]
+
+USeries = tuple[dup[Er], Union[int, None]]
 
 
 def _useries(
-    coeffs: DUP[Er], series_prec: int | None, dom: Domain, ring_prec: int
+    coeffs: dup[Er], series_prec: int | None, dom: Domain[Er], ring_prec: int
 ) -> USeries[Er]:
     """Helper function to decide if the polynomial can be exact or it become a useries
     element."""
@@ -63,8 +67,8 @@ def _useries_valuation(s: USeries[Er], dom: Domain) -> int:
 
 
 def _unify_prec(
-    s1: USeries[Er], s2: USeries[Er], dom: Domain, ring_prec: int
-) -> tuple[DUP[Er], DUP[Er], int]:
+    s1: USeries[Er], s2: USeries[Er], dom: Domain[Er], ring_prec: int
+) -> tuple[dup[Er], dup[Er], int]:
     """Unify the precision of two series."""
     coeffs1, prec1 = s1
     coeffs2, prec2 = s2
@@ -86,7 +90,7 @@ def _unify_prec(
     return coeffs1, coeffs2, unified_prec
 
 
-def _useries_equality(s1: USeries[Er], s2: USeries[Er], dom: Domain) -> bool | None:
+def _useries_equality(s1: USeries[Er], s2: USeries[Er], dom: Domain[Er]) -> bool | None:
     """Check if two power series are equal."""
     coeffs1, prec1 = s1
     coeffs2, prec2 = s2
@@ -104,14 +108,34 @@ def _useries_equal_repr(s1: USeries[Er], s2: USeries[Er]) -> bool:
     return s1 == s2
 
 
-def _useries_neg(s: USeries[Er], dom: Domain, ring_prec: int) -> USeries[Er]:
+def _useries_pos(s: USeries[Er], dom: Domain[Er], ring_prec: int) -> USeries[Er]:
+    """
+    Return the positive of a power series (which is the same as the series itself).
+    """
+    coeffs, prec = s
+    deg = dup_degree(coeffs)
+
+    if prec is None:
+        if deg >= ring_prec:
+            coeffs = dup_truncate(coeffs, ring_prec, dom)
+            prec = ring_prec
+    else:
+        prec = min(prec, ring_prec)
+        if deg >= prec:
+            coeffs = dup_truncate(coeffs, prec, dom)
+
+    return coeffs, prec
+
+
+def _useries_neg(s: USeries[Er], dom: Domain[Er], ring_prec: int) -> USeries[Er]:
     coeffs, prec = s
     neg_coeffs = dup_neg(coeffs, dom)
-    return _useries(neg_coeffs, prec, dom, ring_prec)
+    s = neg_coeffs, prec
+    return _useries_pos(s, dom, ring_prec)
 
 
 def _useries_add(
-    s1: USeries[Er], s2: USeries[Er], dom: Domain, ring_prec: int
+    s1: USeries[Er], s2: USeries[Er], dom: Domain[Er], ring_prec: int
 ) -> USeries[Er]:
     coeffs1, prec1 = s1
     coeffs2, prec2 = s2
@@ -126,7 +150,7 @@ def _useries_add(
 
 
 def _useries_sub(
-    s1: USeries[Er], s2: USeries[Er], dom: Domain, ring_prec: int
+    s1: USeries[Er], s2: USeries[Er], dom: Domain[Er], ring_prec: int
 ) -> USeries[Er]:
     coeffs1, prec1 = s1
     coeffs2, prec2 = s2
@@ -141,7 +165,7 @@ def _useries_sub(
 
 
 def _useries_mul(
-    s1: USeries[Er], s2: USeries[Er], dom: Domain, ring_prec: int
+    s1: USeries[Er], s2: USeries[Er], dom: Domain[Er], ring_prec: int
 ) -> USeries[Er]:
     coeffs1, prec1 = s1
     coeffs2, prec2 = s2
@@ -157,7 +181,7 @@ def _useries_mul(
 
 
 def _useries_mul_ground(
-    s: USeries[Er], n: Any, dom: Domain, ring_prec: int
+    s: USeries[Er], n: Any, dom: Domain[Er], ring_prec: int
 ) -> USeries[Er]:
     coeffs, prec = s
 
@@ -172,8 +196,20 @@ def _useries_mul_ground(
     return _useries(series, prec, dom, ring_prec)
 
 
+def _useries_div_direct(
+    s1: USeries[Er], s2: USeries[Er], dom: Domain[Er], ring_prec: int
+) -> USeries[Er]:
+    """Direct division when divisor has zero valuation."""
+    if not dom.is_unit(s2[0][-1]):
+        raise ValueError("Trailing coefficient of the divisor must be a unit")
+
+    _, _, prec = _unify_prec(s1, s2, dom, ring_prec)
+    s2_inv = _useries_inverse(s2, dom, prec)
+    return _useries_mul(s1, s2_inv, dom, prec)
+
+
 def _useries_div(
-    s1: USeries[Er], s2: USeries[Er], dom: Domain, ring_prec: int
+    s1: USeries[Er], s2: USeries[Er], dom: Domain[Er], ring_prec: int
 ) -> USeries[Er]:
     coeffs1, prec1 = s1
     coeffs2, prec2 = s2
@@ -187,13 +223,8 @@ def _useries_div(
     if val1 < val2:
         raise ValueError("quotient would not be a power series")
 
-    if not dom.is_unit(coeffs2[-val2 - 1]):
-        raise ValueError("Trailing coefficient of the divisor must be a unit")
-
     if val2 == 0:
-        _, _, prec = _unify_prec(s1, s2, dom, ring_prec)
-        s2_inv = _useries_inverse(s2, dom, prec)
-        return _useries_mul(s1, s2_inv, dom, prec)
+        return _useries_div_direct(s1, s2, dom, ring_prec)
     else:
         # Shift both series to make divisor's valuation zero
         shifted_coeffs1 = dup_rshift(coeffs1, val2, dom)
@@ -207,14 +238,14 @@ def _useries_div(
         shifted_s1 = _useries(shifted_coeffs1, prec1, dom, cap)
         shifted_s2 = _useries(shifted_coeffs2, prec2, dom, cap)
 
-        q_coeffs = _useries_div(shifted_s1, shifted_s2, dom, cap)[0]
+        q_coeffs = _useries_div_direct(shifted_s1, shifted_s2, dom, cap)[0]
 
         _, _, prec = _unify_prec(shifted_s1, shifted_s2, dom, ring_prec)
         return q_coeffs, prec
 
 
 def _useries_pow_int(
-    s: USeries[Er], n: int, dom: Domain, ring_prec: int
+    s: USeries[Er], n: int, dom: Domain[Er], ring_prec: int
 ) -> USeries[Er]:
     """Raise a power series to a non-negative integer power with truncation."""
     if n < 0:
@@ -235,7 +266,7 @@ def _useries_pow_int(
     return series, prec
 
 
-def _useries_truncate(s: USeries[Er], n: int, dom: Domain) -> USeries[Er]:
+def _useries_truncate(s: USeries[Er], n: int, dom: Domain[Er]) -> USeries[Er]:
     """Truncate a power series to the first n terms."""
     coeffs, prec = s
 
@@ -249,7 +280,7 @@ def _useries_truncate(s: USeries[Er], n: int, dom: Domain) -> USeries[Er]:
 
 
 def _useries_compose(
-    s1: USeries[Er], s2: USeries[Er], dom: Domain, ring_prec: int
+    s1: USeries[Er], s2: USeries[Er], dom: Domain[Er], ring_prec: int
 ) -> USeries[Er]:
     """Compose two power series."""
     coeffs1, prec1 = s1
@@ -260,7 +291,8 @@ def _useries_compose(
 
         deg1 = dup_degree(coeffs1)
         deg2 = dup_degree(coeffs2)
-        if deg1 + deg2 < ring_prec:
+
+        if deg1 * deg2 < ring_prec:
             return comp, None
         else:
             return comp, ring_prec
@@ -275,7 +307,7 @@ def _useries_compose(
     return comp, min_prec
 
 
-def _useries_inverse(s: USeries[Er], dom: Domain, ring_prec: int) -> USeries[Er]:
+def _useries_inverse(s: USeries[Er], dom: Domain[Er], ring_prec: int) -> USeries[Er]:
     """Compute the series multiplicative inverse of a power series."""
     coeffs, prec = s
 
@@ -290,15 +322,21 @@ def _useries_inverse(s: USeries[Er], dom: Domain, ring_prec: int) -> USeries[Er]
     return inv, prec
 
 
-def _useries_reversion(s: USeries[Er], dom: Domain, ring_prec: int) -> USeries[Er]:
+def _useries_compositional_inverse(
+    s: USeries[Er], dom: Domain[Er], ring_prec: int
+) -> USeries[Er]:
     """Compute the composite inverse of a power series."""
     coeffs, prec = s
 
     if not coeffs or not dom.is_zero(coeffs[-1]):
-        raise NotReversible("Series reversion requires the constant term to be zero.")
+        raise NotReversible(
+            "Series compositional inverse requires the constant term to be zero."
+        )
 
     if len(coeffs) >= 2 and not dom.is_unit(coeffs[-2]):
-        raise NotReversible("Series reversion requires the linear term to be unit.")
+        raise NotReversible(
+            "Series compositional inverse requires the linear term to be unit."
+        )
 
     if prec is None:
         prec = ring_prec
@@ -307,7 +345,7 @@ def _useries_reversion(s: USeries[Er], dom: Domain, ring_prec: int) -> USeries[E
     return series, prec
 
 
-def _useries_derivative(s: USeries[Er], dom: Domain, ring_prec: int) -> USeries[Er]:
+def _useries_derivative(s: USeries[Er], dom: Domain[Er], ring_prec: int) -> USeries[Er]:
     """Compute the first derivative of a power series."""
     coeffs, prec = s
     series = dup_diff(coeffs, 1, dom)
@@ -316,7 +354,7 @@ def _useries_derivative(s: USeries[Er], dom: Domain, ring_prec: int) -> USeries[
     return _useries(series, prec, dom, ring_prec)
 
 
-def _useries_integrate(s: USeries[Er], dom: Domain, ring_prec: int) -> USeries[Er]:
+def _useries_integrate(s: USeries[Er], dom: Domain[Er], ring_prec: int) -> USeries[Er]:
     """Compute the integral of a power series."""
     coeffs, prec = s
     series = dup_integrate(coeffs, 1, dom)
@@ -325,7 +363,7 @@ def _useries_integrate(s: USeries[Er], dom: Domain, ring_prec: int) -> USeries[E
     return _useries(series, prec, dom, ring_prec)
 
 
-class PythonPowerSeriesRingZZ(PowerSeriesRing[USeries[MPZ]]):
+class PythonPowerSeriesRingZZ(PowerSeriesRing[USeries[MPZ], MPZ]):
     """
     Python implementation of power series ring over integers (ZZ).
 
@@ -394,24 +432,26 @@ class PythonPowerSeriesRingZZ(PowerSeriesRing[USeries[MPZ]]):
     def __hash__(self) -> int:
         return hash((self._domain, self._prec))
 
-    def __call__(self, coeffs: list[Any], prec: int | None = None) -> USeries[MPZ]:
+    def __call__(
+        self, coeffs: Sequence[MPZ | int], prec: int | None = None
+    ) -> USeries[MPZ]:
         """
         Create a power series from a list of coefficients. If `prec` is not specified,
         it defaults to the ring's precision.
         """
-        dup: list[MPZ] = []
+        s: list[MPZ] = []
         for c in coeffs:
             if isinstance(c, MPZ):
-                dup.append(c)
+                s.append(c)
             elif isinstance(c, int):
-                dup.append(self._domain(c))
+                s.append(self._domain(c))
             else:
                 raise TypeError(f"Unsupported coefficient type: {type(c)}")
 
-        return self.from_list(dup, prec)
+        return self.from_list(s, prec)
 
     @property
-    def domain(self) -> Domain:
+    def domain(self) -> Domain[MPZ]:
         """Return the ground domain of the power series ring."""
         return self._domain
 
@@ -440,7 +480,7 @@ class PythonPowerSeriesRingZZ(PowerSeriesRing[USeries[MPZ]]):
 
     def pretty(self, s: USeries[MPZ]) -> str:
         coeffs, prec = s
-        return _series_from_list(coeffs[::-1], prec)
+        return series_pprint(coeffs[::-1], prec)
 
     def print(self, s: USeries[MPZ]) -> None:
         print(self.pretty(s))
@@ -478,7 +518,7 @@ class PythonPowerSeriesRingZZ(PowerSeriesRing[USeries[MPZ]]):
         """
         Return the positive of a power series (which is the same as the series itself).
         """
-        return _useries(s[0], s[1], self._domain, self._prec)
+        return _useries_pos(s, self._domain, self._prec)
 
     def negative(self, s: USeries[MPZ]) -> USeries[MPZ]:
         """
@@ -538,11 +578,11 @@ class PythonPowerSeriesRingZZ(PowerSeriesRing[USeries[MPZ]]):
         """
         return _useries_inverse(s, self._domain, self._prec)
 
-    def reversion(self, s: USeries[MPZ]) -> USeries[MPZ]:
+    def compositional_inverse(self, s: USeries[MPZ]) -> USeries[MPZ]:
         """
         Compute the composite inverse of a power series.
         """
-        return _useries_reversion(s, self._domain, self._prec)
+        return _useries_compositional_inverse(s, self._domain, self._prec)
 
     def truncate(self, s: USeries[MPZ], n: int) -> USeries[MPZ]:
         """
@@ -557,7 +597,7 @@ class PythonPowerSeriesRingZZ(PowerSeriesRing[USeries[MPZ]]):
         return _useries_derivative(s, self._domain, self._prec)
 
 
-class PythonPowerSeriesRingQQ(PowerSeriesRing[USeries[MPQ]]):
+class PythonPowerSeriesRingQQ(PowerSeriesRing[USeries[MPQ], MPQ]):
     """
     Python implementation of power series ring over rational field (QQ).
 
@@ -628,26 +668,28 @@ class PythonPowerSeriesRingQQ(PowerSeriesRing[USeries[MPQ]]):
     def __hash__(self) -> int:
         return hash((self._domain, self._prec))
 
-    def __call__(self, coeffs: list[Any], prec: int | None = None) -> USeries[MPQ]:
+    def __call__(
+        self, coeffs: Sequence[MPQ | int | Sequence], prec: int | None = None
+    ) -> USeries[MPQ]:
         """
         Create a power series from a list of coefficients. If `prec` is not specified,
         it defaults to the ring's precision.
         """
-        dup: list[MPQ] = []
+        s: list[MPQ] = []
         for c in coeffs:
             if isinstance(c, MPQ):
-                dup.append(c)
+                s.append(c)
             elif isinstance(c, int):
-                dup.append(self._domain(c))
+                s.append(self._domain(c))
             elif isinstance(c, tuple):
-                dup.append(self._domain(*c))
+                s.append(self._domain(*c))
             else:
                 raise TypeError(f"Unsupported coefficient type: {type(c)}")
 
-        return self.from_list(dup, prec)
+        return self.from_list(s, prec)
 
     @property
-    def domain(self) -> Domain:
+    def domain(self) -> Domain[MPQ]:
         """Return the ground domain of the power series ring."""
         return self._domain
 
@@ -672,11 +714,11 @@ class PythonPowerSeriesRingQQ(PowerSeriesRing[USeries[MPQ]]):
     def gen(self) -> USeries[MPQ]:
         if self._prec < 2:
             return ([], self._prec)
-        return ([QQ(1), QQ(0)], None)
+        return ([self._domain.one, self._domain.zero], None)
 
     def pretty(self, s: USeries[MPQ]) -> str:
         coeffs, prec = s
-        return _series_from_list(coeffs[::-1], prec)
+        return series_pprint(coeffs[::-1], prec)
 
     def print(self, s: USeries[MPQ]) -> None:
         print(self.pretty(s))
@@ -714,7 +756,7 @@ class PythonPowerSeriesRingQQ(PowerSeriesRing[USeries[MPQ]]):
         """
         Return the positive of a power series (which is the same as the series itself).
         """
-        return _useries(s[0], s[1], self._domain, self._prec)
+        return _useries_pos(s, self._domain, self._prec)
 
     def negative(self, s: USeries[MPQ]) -> USeries[MPQ]:
         """
@@ -774,11 +816,11 @@ class PythonPowerSeriesRingQQ(PowerSeriesRing[USeries[MPQ]]):
         """
         return _useries_inverse(s, self._domain, self._prec)
 
-    def reversion(self, s: USeries[MPQ]) -> USeries[MPQ]:
+    def compositional_inverse(self, s: USeries[MPQ]) -> USeries[MPQ]:
         """
         Compute the composite inverse of a power series.
         """
-        return _useries_reversion(s, self._domain, self._prec)
+        return _useries_compositional_inverse(s, self._domain, self._prec)
 
     def truncate(self, s: USeries[MPQ], n: int) -> USeries[MPQ]:
         """

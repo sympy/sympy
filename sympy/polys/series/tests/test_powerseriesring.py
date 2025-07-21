@@ -69,6 +69,9 @@ def test_positive(rd_int):
     assert R.equal_repr(
         R.positive(R([1, 2, 3, 4, 5, 6, 7], None)), R([1, 2, 3, 4, 5, 6], 6)
     )
+    assert R.equal_repr(
+        R.positive(R([1, 2, 3, 4, 5, 6, 7, 8, 9], 8)), R([1, 2, 3, 4, 5, 6], 6)
+    )
 
 
 def test_negative(rd_int):
@@ -77,6 +80,10 @@ def test_negative(rd_int):
     assert R.equal_repr(R.negative(R.gen), R([0, -1], None))
     assert R.equal_repr(
         R.negative(R([1, 2, 3, 4, 5, 6, 7], None)),
+        R([-1, -2, -3, -4, -5, -6], 6),
+    )
+    assert R.equal_repr(
+        R.negative(R([1, 2, 3, 4, 5, 6, 7, 8, 9], 8)),
         R([-1, -2, -3, -4, -5, -6], 6),
     )
 
@@ -423,7 +430,7 @@ def test_rational_compose(rd_rational):
 
     f3_2 = R3([(1, 4), (1, 2), (1, 8)])
     g3_2 = R3([(0, 1), (1, 3)])
-    assert R3.equal_repr(R3.compose(f3_2, g3_2), R3([(1, 4), (1, 6), (1, 72)], 3))
+    assert R3.equal_repr(R3.compose(f3_2, g3_2), R3([(1, 4), (1, 6), (1, 72)], None))
 
     f10 = R10([(1, 2), (3, 4), (5, 6)], 4)
     g10 = R10([(0, 1), (2, 3), (1, 5), (-3, 7)], 4)
@@ -499,33 +506,35 @@ def test_rational_inverse(rd_rational):
     )
 
 
-def test_int_reversion(rd_int):
+def test_int_compositional_inverse(rd_int):
     SeriesRing = rd_int
     R = SeriesRing()
     R3 = SeriesRing(3)
     R10 = SeriesRing(10)
 
-    assert R.equal_repr(R.reversion(R.gen), R([0, 1], 6))
+    assert R.equal_repr(R.compositional_inverse(R.gen), R([0, 1], 6))
     assert R.equal_repr(
-        R.reversion(R.multiply(R.add(R.one, R.gen), R.gen)), R([0, 1, -1, 2, -5, 14], 6)
+        R.compositional_inverse(R.multiply(R.add(R.one, R.gen), R.gen)),
+        R([0, 1, -1, 2, -5, 14], 6),
     )
     assert R.equal_repr(
-        R.reversion(R([0, 1, 53, 2, 1, 3, 2])),
+        R.compositional_inverse(R([0, 1, 53, 2, 1, 3, 2])),
         R([0, 1, -53, 5616, -743856, 110349083], 6),
     )
     assert R3.equal_repr(
-        R3.reversion(R3.multiply(R3.add(R3.one, R3.gen), R3.gen)), R3([0, 1, -1], 3)
+        R3.compositional_inverse(R3.multiply(R3.add(R3.one, R3.gen), R3.gen)),
+        R3([0, 1, -1], 3),
     )
     assert R10.equal_repr(
-        R10.reversion(R10([0, 1, 2, -1, 3])),
+        R10.compositional_inverse(R10([0, 1, 2, -1, 3])),
         R10([0, 1, -2, 9, -53, 347, -2429, 17808, -134991, 1049422], 10),
     )
 
-    raises(NotReversible, lambda: R.reversion(R.zero))
-    raises(NotReversible, lambda: R.reversion(R([0, 0, 2])))
+    raises(NotReversible, lambda: R.compositional_inverse(R.zero))
+    raises(NotReversible, lambda: R.compositional_inverse(R([0, 0, 2])))
 
 
-def test_rational_reversion(rd_rational):
+def test_rational_compositional_inverse(rd_rational):
     SeriesRing = rd_rational
     R = SeriesRing()
     R3 = SeriesRing(3)
@@ -533,16 +542,18 @@ def test_rational_reversion(rd_rational):
 
     f1 = R([(0, 1), (3, 2), (1, 4), (-2, 5)])
     assert R.equal_repr(
-        R.reversion(f1),
+        R.compositional_inverse(f1),
         R([(0, 1), (2, 3), (-2, 27), (116, 1215), (-106, 2187), (24604, 492075)], 6),
     )
 
     f3 = R3([(0, 1), (5, 4), (-1, 3)])
-    assert R3.equal_repr(R3.reversion(f3), R3([(0, 1), (4, 5), (64, 375)], 3))
+    assert R3.equal_repr(
+        R3.compositional_inverse(f3), R3([(0, 1), (4, 5), (64, 375)], 3)
+    )
 
     f10 = R10([(0, 1), (2, 3), (1, 5), (-3, 7), (1, 2)])
     assert R10.equal_repr(
-        R10.reversion(f10),
+        R10.compositional_inverse(f10),
         R10(
             [
                 (0, 1),

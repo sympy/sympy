@@ -1,24 +1,23 @@
 from __future__ import annotations
 
 from contextlib import contextmanager
-from typing import Any, Union, TYPE_CHECKING
+from typing import Any, Sequence, Union, TYPE_CHECKING
 
 from sympy.polys.densebasic import dup_reverse
 from sympy.polys.domains import Domain, QQ, ZZ
 from sympy.polys.series.powerseriesring import (
-    _series_from_list,
+    series_pprint,
     PowerSeriesRing,
 )
 from sympy.external.gmpy import GROUND_TYPES, MPZ, MPQ
 from sympy.utilities.decorator import doctest_depends_on
 from sympy.polys.polyerrors import NotReversible
-from sympy.polys.densetools import dup_revert, dup_series_compose
-from sympy.polys.densetools import dup_truncate
-from sympy.polys.series.python_powerseriesring import _unify_prec
+from sympy.polys.densetools import dup_revert, dup_truncate
+from sympy.polys.densebasic import dup
 
 
 if TYPE_CHECKING:
-    from flint import fmpq_poly, fmpq_series, fmpz_poly, fmpz_series, ctx # type: ignore
+    from flint import fmpq_poly, fmpq_series, fmpz_poly, fmpz_series, ctx  # type: ignore
 elif GROUND_TYPES == "flint":
     from flint import fmpq_poly, fmpq_series, fmpz_poly, fmpz_series, ctx
 else:
@@ -52,7 +51,7 @@ def _global_cap(cap: int):
 
 
 @doctest_depends_on(ground_types=["flint"])
-class FlintPowerSeriesRingZZ(PowerSeriesRing):
+class FlintPowerSeriesRingZZ(PowerSeriesRing[ZZSeries, MPZ]):
     """
     Flint implementation of power series ring over integers (ZZ).
 
@@ -110,7 +109,9 @@ class FlintPowerSeriesRingZZ(PowerSeriesRing):
         self._prec = prec
 
     def __repr__(self) -> str:
-        return f"Flint Power Series Ring over {self.domain} with precision {self._prec}"
+        return (
+            f"Flint Power Series Ring over {self._domain} with precision {self._prec}"
+        )
 
     def __eq__(self, other: Any) -> bool:
         if not isinstance(other, FlintPowerSeriesRingZZ):
@@ -118,24 +119,26 @@ class FlintPowerSeriesRingZZ(PowerSeriesRing):
         return self._prec == other.prec
 
     def __hash__(self) -> int:
-        return hash((self.domain, self._prec))
+        return hash((self._domain, self._prec))
 
-    def __call__(self, coeffs: list[Any], prec: int | None = None) -> ZZSeries:
+    def __call__(
+        self, coeffs: Sequence[MPZ | int], prec: int | None = None
+    ) -> ZZSeries:
         """Create a power series from a list of coefficients. If `prec` is not specified,
         it defaults to the ring's precision."""
-        dup: list[MPZ] = []
+        s: list[MPZ] = []
         for c in coeffs:
             if isinstance(c, MPZ):
-                dup.append(c)
+                s.append(c)
             elif isinstance(c, int):
-                dup.append(self._domain(c))
+                s.append(self._domain(c))
             else:
                 raise TypeError(f"Unsupported coefficient type: {type(c)}")
 
-        return self.from_list(dup, prec)
+        return self.from_list(s, prec)
 
     @property
-    def domain(self) -> Domain:
+    def domain(self) -> Domain[MPZ]:
         """Return the ground domain of the power series ring."""
         return self._domain
 
@@ -165,10 +168,10 @@ class FlintPowerSeriesRingZZ(PowerSeriesRing):
     def pretty(self, s: ZZSeries) -> str:
         """Pretty print a power series with improved formatting."""
         if isinstance(s, fmpz_poly):
-            return _series_from_list(s.coeffs(), None)
+            return series_pprint(s.coeffs(), None)
 
         prec = _get_series_precision(s)
-        return _series_from_list(s.coeffs(), prec)
+        return series_pprint(s.coeffs(), prec)
 
     def print(self, s: ZZSeries) -> None:
         print(self.pretty(s))
@@ -223,97 +226,118 @@ class FlintPowerSeriesRingZZ(PowerSeriesRing):
         """
         Return the positive of a power series.
         """
+        ring_prec = self._prec
         if isinstance(s, fmpz_poly):
-            poly = s
-            if poly.degree() < self._prec:
-                return poly
-            return fmpz_series(poly, prec=self._prec)
-        return s
+            if s.degree() >= ring_prec:
+                return fmpz_series(s, prec=ring_prec)
+            return s
+
+        prec = min(_get_series_precision(s), ring_prec)
+        return fmpz_series(s.coeffs(), prec=prec)
 
     def negative(self, s: ZZSeries) -> ZZSeries:
         """
         Return the negative of a power series.
         """
-        return self.positive(-s)
+        with _global_cap(self._prec):
+            return self.positive(-s)
 
     def add(self, s1: ZZSeries, s2: ZZSeries) -> ZZSeries:
         """
         Add two power series.
         """
+        ring_prec = self._prec
         if isinstance(s1, fmpz_poly) and isinstance(s2, fmpz_poly):
             poly = s1 + s2
-            if poly.degree() < self._prec:
+            if poly.degree() < ring_prec:
                 return poly
-            return fmpz_series(poly, prec=self._prec)
+            return fmpz_series(poly, prec=ring_prec)
 
-        with _global_cap(self._prec):
+        with _global_cap(ring_prec):
             return s1 + s2
 
     def subtract(self, s1: ZZSeries, s2: ZZSeries) -> ZZSeries:
         """
         Subtract two power series.
         """
+        ring_prec = self._prec
         if isinstance(s1, fmpz_poly) and isinstance(s2, fmpz_poly):
             poly = s1 - s2
-            if poly.degree() < self._prec:
+            if poly.degree() < ring_prec:
                 return poly
-            return fmpz_series(poly, prec=self._prec)
+            return fmpz_series(poly, prec=ring_prec)
 
-        with _global_cap(self._prec):
+        with _global_cap(ring_prec):
             return s1 - s2
 
     def multiply(self, s1: ZZSeries, s2: ZZSeries) -> ZZSeries:
         """
         Multiply two power series.
         """
+        ring_prec = self._prec
         if isinstance(s1, fmpz_poly) and isinstance(s2, fmpz_poly):
-            poly = s1 * s2
-            if poly.degree() < self._prec:
-                return poly
-            return fmpz_series(poly, prec=self._prec)
+            deg1 = s1.degree()
+            deg2 = s2.degree()
 
-        with _global_cap(self._prec):
+            if deg1 + deg2 < ring_prec:
+                return s1 * s2
+
+            if deg1 > ring_prec:
+                s1 = self.truncate(s1, ring_prec)
+            if deg2 > ring_prec:
+                s2 = self.truncate(s2, ring_prec)
+
+            poly = s1 * s2
+            return fmpz_series(poly, prec=ring_prec)
+
+        with _global_cap(ring_prec):
             return s1 * s2
 
     def multiply_ground(self, s: ZZSeries, n: MPZ) -> ZZSeries:
         """
         Multiply a power series by an integer or a polynomial.
         """
+        ring_prec = self._prec
         if isinstance(s, fmpz_poly):
             poly = s * n
-            if poly.degree() < self._prec:
+            if poly.degree() < ring_prec:
                 return poly
-            return fmpz_series(poly, prec=self._prec)
+            return fmpz_series(poly, prec=ring_prec)
 
-        with _global_cap(self._prec):
+        with _global_cap(ring_prec):
             return s * n
 
     def divide(self, s1: ZZSeries, s2: ZZSeries) -> ZZSeries:
         """
         Divide two power series.
         """
+        ring_prec = self._prec
         if isinstance(s1, fmpz_poly):
-            s1 = fmpz_series(s1.coeffs(), prec=self._prec)
+            s1 = fmpz_series(s1.coeffs(), prec=ring_prec)
         if isinstance(s2, fmpz_poly):
-            s2 = fmpz_series(s2.coeffs(), prec=self._prec)
+            s2 = fmpz_series(s2.coeffs(), prec=ring_prec)
 
-        with _global_cap(self._prec):
+        with _global_cap(ring_prec):
             return s1 / s2
 
     def pow_int(self, s: ZZSeries, n: int) -> ZZSeries:
         """
         Raise a power series to an integer power.
         """
+        ring_prec = self._prec
         if n < 0:
             raise ValueError("Power must be non-negative")
 
         if isinstance(s, fmpz_poly):
-            poly = s**n
-            if poly.degree() < self._prec:
-                return poly
-            return fmpz_series(poly, prec=self._prec)
+            if s.degree() * n < ring_prec:
+                return s**n
 
-        with _global_cap(self._prec):
+            if s.degree() > ring_prec:
+                s = self.truncate(s, ring_prec)
+            poly = s**n
+            return fmpz_series(poly, prec=ring_prec)
+
+        with _global_cap(ring_prec):
             return s**n
 
     def square(self, s: ZZSeries) -> ZZSeries:
@@ -326,71 +350,69 @@ class FlintPowerSeriesRingZZ(PowerSeriesRing):
         """
         Compose two power series.
         """
-        dom = self._domain
-        ring_prec = self._prec
-        dup1 = dup_reverse(s1.coeffs())
-        dup2 = dup_reverse(s2.coeffs())
+        dom: Domain[MPZ] = self._domain
+        ring_prec: int = self._prec
 
         if isinstance(s1, fmpz_poly) and isinstance(s2, fmpz_poly):
-            comp = dup_series_compose(dup1, dup2, ring_prec, dom)
-            comp = comp[::-1]
+            comp: fmpz_poly = s1(s2)
 
-            deg1 = s1.degree()
-            deg2 = s2.degree()
-            if deg1 + deg2 < ring_prec:
+            if comp.degree() < ring_prec:
                 return fmpz_poly(comp)
             else:
-                return fmpz_series(comp, prec=ring_prec)
+                return fmpz_series(comp.coeffs(), prec=ring_prec)
 
-        if dup2 and not dom.is_zero(dup2[-1]):
+        if s2 and not dom.is_zero(s2.coeffs()[0]):
             raise ValueError(
                 "Series composition requires the second series to have a zero constant term."
             )
 
-        prec1 = _get_series_precision(s1) if isinstance(s1, fmpz_series) else ring_prec
-        prec2 = _get_series_precision(s2) if isinstance(s2, fmpz_series) else ring_prec
+        if isinstance(s1, fmpz_poly):
+            prec2: int = _get_series_precision(s2)
+            s1 = fmpz_series(s1, prec=prec2)
+        if isinstance(s2, fmpz_poly):
+            prec1: int = _get_series_precision(s1)
+            s2 = fmpz_series(s2, prec=prec1)
 
-        DUP1 = (dup1, prec1)
-        DUP2 = (dup2, prec2)
-
-        coeffs1, coeffs2, min_prec = _unify_prec(DUP1, DUP2, dom, ring_prec)
-        comp = dup_series_compose(coeffs1, coeffs2, min_prec, dom)
-        comp = comp[::-1]
-        return fmpz_series(comp, prec=min_prec)
+        with _global_cap(ring_prec):
+            return s1(s2)
 
     def inverse(self, s: ZZSeries) -> ZZSeries:
         """
         Compute the inverse of a power series.
         """
-        dom = self._domain
-        coeffs = s.coeffs()
+        dom: Domain[MPZ] = self._domain
+        ring_prec: int = self._prec
+        coeffs: list[MPZ] = s.coeffs()
 
         if not coeffs or not dom.is_unit(coeffs[0]):
             raise NotReversible(
                 "Series inverse requires the constant term to be a unit"
             )
 
-        prec = _get_series_precision(s) if isinstance(s, fmpz_series) else self._prec
+        prec: int = (
+            _get_series_precision(s) if isinstance(s, fmpz_series) else ring_prec
+        )
 
-        dup = dup_reverse(coeffs)
-        inv = dup_revert(dup, prec, dom)
-        inv = dup_truncate(inv, prec, dom)[::-1]
-        return fmpz_series(inv, prec=prec)
+        Dup: dup[MPZ] = dup_reverse(coeffs)
+        inv: dup[MPZ] = dup_truncate(dup_revert(Dup, prec, dom), prec, dom)
+        return fmpz_series(inv[::-1], prec=prec)
 
-    def reversion(self, s: ZZSeries) -> ZZSeries:
+    def compositional_inverse(self, s: ZZSeries) -> ZZSeries:
         """
-        Compute the reversion of a power series.
+        Compute the compositional inverse of a power series.
         """
         dom = self._domain
         coeffs = s.coeffs()
 
         if not coeffs or not dom.is_zero(coeffs[0]):
             raise NotReversible(
-                "Series reversion requires the constant term to be zero."
+                "Series compositional inverse requires the constant term to be zero."
             )
 
         if len(coeffs) >= 2 and not dom.is_unit(coeffs[1]):
-            raise NotReversible("Series reversion requires the linear term to be unit.")
+            raise NotReversible(
+                "Series compositional inverse requires the linear term to be unit."
+            )
 
         if isinstance(s, fmpz_poly):
             s = fmpz_series(coeffs, prec=self._prec)
@@ -428,7 +450,7 @@ class FlintPowerSeriesRingZZ(PowerSeriesRing):
 
 
 @doctest_depends_on(ground_types=["flint"])
-class FlintPowerSeriesRingQQ(PowerSeriesRing):
+class FlintPowerSeriesRingQQ(PowerSeriesRing[QQSeries, MPQ]):
     """
     Flint implementation of power series ring over rational field (QQ).
 
@@ -487,7 +509,9 @@ class FlintPowerSeriesRingQQ(PowerSeriesRing):
         self._prec = prec
 
     def __repr__(self) -> str:
-        return f"Flint Power Series Ring over {self.domain} with precision {self._prec}"
+        return (
+            f"Flint Power Series Ring over {self._domain} with precision {self._prec}"
+        )
 
     def __eq__(self, other: Any) -> bool:
         if not isinstance(other, FlintPowerSeriesRingQQ):
@@ -495,26 +519,28 @@ class FlintPowerSeriesRingQQ(PowerSeriesRing):
         return self._prec == other.prec
 
     def __hash__(self) -> int:
-        return hash((self.domain, self._prec))
+        return hash((self._domain, self._prec))
 
-    def __call__(self, coeffs: list[Any], prec: int | None = None) -> QQSeries:
+    def __call__(
+        self, coeffs: Sequence[MPQ | int | Sequence], prec: int | None = None
+    ) -> QQSeries:
         """Create a power series from a list of coefficients. If `prec` is not specified,
         it defaults to the ring's precision."""
-        dup: list[MPQ] = []
+        s: list[MPQ] = []
         for c in coeffs:
             if isinstance(c, MPQ):
-                dup.append(c)
+                s.append(c)
             elif isinstance(c, int):
-                dup.append(self._domain(c))
+                s.append(self._domain(c))
             elif isinstance(c, tuple):
-                dup.append(self._domain(*c))
+                s.append(self._domain(*c))
             else:
                 raise TypeError(f"Unsupported coefficient type: {type(c)}")
 
-        return self.from_list(dup, prec)
+        return self.from_list(s, prec)
 
     @property
-    def domain(self) -> Domain:
+    def domain(self) -> Domain[MPQ]:
         """Return the ground domain of the power series ring."""
         return self._domain
 
@@ -544,10 +570,10 @@ class FlintPowerSeriesRingQQ(PowerSeriesRing):
     def pretty(self, s: QQSeries) -> str:
         """Pretty print a power series with improved formatting."""
         if isinstance(s, fmpq_poly):
-            return _series_from_list(s.coeffs(), None)
+            return series_pprint(s.coeffs(), None)
 
         prec = _get_series_precision(s)
-        return _series_from_list(s.coeffs(), prec)
+        return series_pprint(s.coeffs(), prec)
 
     def print(self, s: QQSeries) -> None:
         print(self.pretty(s))
@@ -602,97 +628,118 @@ class FlintPowerSeriesRingQQ(PowerSeriesRing):
         """
         Return the positive of a power series.
         """
+        ring_prec = self._prec
         if isinstance(s, fmpq_poly):
-            poly = s
-            if poly.degree() < self._prec:
-                return poly
-            return fmpq_series(poly, prec=self._prec)
-        return s
+            if s.degree() >= ring_prec:
+                return fmpq_series(s, prec=ring_prec)
+            return s
+
+        prec = min(_get_series_precision(s), ring_prec)
+        return fmpq_series(s.coeffs(), prec=prec)
 
     def negative(self, s: QQSeries) -> QQSeries:
         """
         Return the negative of a power series.
         """
-        return self.positive(-s)
+        with _global_cap(self._prec):
+            return self.positive(-s)
 
     def add(self, s1: QQSeries, s2: QQSeries) -> QQSeries:
         """
         Add two power series.
         """
+        ring_prec = self._prec
         if isinstance(s1, fmpq_poly) and isinstance(s2, fmpq_poly):
             poly = s1 + s2
-            if poly.degree() < self._prec:
+            if poly.degree() < ring_prec:
                 return poly
-            return fmpq_series(poly, prec=self._prec)
+            return fmpq_series(poly, prec=ring_prec)
 
-        with _global_cap(self._prec):
+        with _global_cap(ring_prec):
             return s1 + s2
 
     def subtract(self, s1: QQSeries, s2: QQSeries) -> QQSeries:
         """
         Subtract two power series.
         """
+        ring_prec = self._prec
         if isinstance(s1, fmpq_poly) and isinstance(s2, fmpq_poly):
             poly = s1 - s2
-            if poly.degree() < self._prec:
+            if poly.degree() < ring_prec:
                 return poly
-            return fmpq_series(poly, prec=self._prec)
+            return fmpq_series(poly, prec=ring_prec)
 
-        with _global_cap(self._prec):
+        with _global_cap(ring_prec):
             return s1 - s2
 
     def multiply(self, s1: QQSeries, s2: QQSeries) -> QQSeries:
         """
         Multiply two power series.
         """
+        ring_prec = self._prec
         if isinstance(s1, fmpq_poly) and isinstance(s2, fmpq_poly):
-            poly = s1 * s2
-            if poly.degree() < self._prec:
-                return poly
-            return fmpq_series(poly, prec=self._prec)
+            deg1 = s1.degree()
+            deg2 = s2.degree()
 
-        with _global_cap(self._prec):
+            if deg1 + deg2 < ring_prec:
+                return s1 * s2
+
+            if deg1 > ring_prec:
+                s1 = self.truncate(s1, ring_prec)
+            if deg2 > ring_prec:
+                s2 = self.truncate(s2, ring_prec)
+
+            poly = s1 * s2
+            return fmpq_series(poly, prec=ring_prec)
+
+        with _global_cap(ring_prec):
             return s1 * s2
 
     def multiply_ground(self, s: QQSeries, n: MPQ) -> QQSeries:
         """
         Multiply a power series by a rational number.
         """
+        ring_prec = self._prec
         if isinstance(s, fmpq_poly):
             poly = s * n
-            if poly.degree() < self._prec:
+            if poly.degree() < ring_prec:
                 return poly
-            return fmpq_series(poly, prec=self._prec)
+            return fmpq_series(poly, prec=ring_prec)
 
-        with _global_cap(self._prec):
+        with _global_cap(ring_prec):
             return s * n
 
     def divide(self, s1: QQSeries, s2: QQSeries) -> QQSeries:
         """
         Divide two power series.
         """
+        ring_prec = self._prec
         if isinstance(s1, fmpq_poly):
-            s1 = fmpq_series(s1.coeffs(), prec=self._prec)
+            s1 = fmpq_series(s1.coeffs(), prec=ring_prec)
         if isinstance(s2, fmpq_poly):
-            s2 = fmpq_series(s2.coeffs(), prec=self._prec)
+            s2 = fmpq_series(s2.coeffs(), prec=ring_prec)
 
-        with _global_cap(self._prec):
+        with _global_cap(ring_prec):
             return s1 / s2
 
     def pow_int(self, s: QQSeries, n: int) -> QQSeries:
         """
         Raise a power series to an integer power.
         """
+        ring_prec = self._prec
         if n < 0:
             raise ValueError("Power must be non-negative")
 
         if isinstance(s, fmpq_poly):
-            poly = s**n
-            if poly.degree() < self._prec:
-                return poly
-            return fmpq_series(poly, prec=self._prec)
+            if s.degree() * n < ring_prec:
+                return s**n
 
-        with _global_cap(self._prec):
+            if s.degree() > ring_prec:
+                s = self.truncate(s, ring_prec)
+            poly = s**n
+            return fmpq_series(poly, prec=ring_prec)
+
+        with _global_cap(ring_prec):
             return s**n
 
     def square(self, s: QQSeries) -> QQSeries:
@@ -718,72 +765,67 @@ class FlintPowerSeriesRingQQ(PowerSeriesRing):
         """
         Compose two power series.
         """
-        dom = self._domain
-        ring_prec = self._prec
-        dup1 = dup_reverse(s1.coeffs())
-        dup2 = dup_reverse(s2.coeffs())
+        dom: Domain[MPQ] = self._domain
+        ring_prec: int = self._prec
 
         if isinstance(s1, fmpq_poly) and isinstance(s2, fmpq_poly):
-            comp = dup_series_compose(dup1, dup2, ring_prec, dom)
-            comp = comp[::-1]
+            comp: fmpq_poly = s1(s2)
 
-            deg1 = s1.degree()
-            deg2 = s2.degree()
-            if deg1 + deg2 < ring_prec:
+            if comp.degree() < ring_prec:
                 return fmpq_poly(comp)
             else:
                 return fmpq_series(comp, prec=ring_prec)
 
-        if dup2 and not dom.is_zero(dup2[-1]):
+        if s2 and not dom.is_zero(s2.coeffs()[0]):
             raise ValueError(
                 "Series composition requires the second series to have a zero constant term."
             )
 
-        prec1 = _get_series_precision(s1) if isinstance(s1, fmpq_series) else ring_prec
-        prec2 = _get_series_precision(s2) if isinstance(s2, fmpq_series) else ring_prec
+        if isinstance(s1, fmpq_poly):
+            prec2: int = _get_series_precision(s2)
+            s1 = fmpq_series(s1, prec=prec2)
+        if isinstance(s2, fmpq_poly):
+            prec1: int = _get_series_precision(s1)
+            s2 = fmpq_series(s2, prec=prec1)
 
-        DUP1 = (dup1, prec1)
-        DUP2 = (dup2, prec2)
-
-        coeffs1, coeffs2, min_prec = _unify_prec(DUP1, DUP2, dom, ring_prec)
-        comp = dup_series_compose(coeffs1, coeffs2, min_prec, dom)
-        comp = comp[::-1]
-        return fmpq_series(comp, prec=min_prec)
+        with _global_cap(ring_prec):
+            return s1(s2)
 
     def inverse(self, s: QQSeries) -> QQSeries:
         """
         Compute the inverse of a power series.
         """
-        dom = self._domain
-        ring_prec = self._prec
-        coeffs = s.coeffs()
+        dom: Domain[MPQ] = self._domain
+        ring_prec: int = self._prec
+        coeffs: list[MPQ] = s.coeffs()
 
         if not coeffs or not dom.is_unit(coeffs[0]):
             raise NotReversible(
                 "Series inverse requires the constant term to be a unit"
             )
 
-        prec = _get_series_precision(s) if isinstance(s, fmpq_series) else ring_prec
+        if isinstance(s, fmpq_poly):
+            s = fmpq_series(coeffs, prec=ring_prec)
 
-        dup = dup_reverse(coeffs)
-        inv = dup_revert(dup, prec, dom)
-        inv = dup_truncate(inv, prec, dom)[::-1]
-        return fmpq_series(inv, prec=prec)
+        with _global_cap(ring_prec):
+            return s.inv()
 
-    def reversion(self, s: QQSeries) -> QQSeries:
+    def compositional_inverse(self, s: QQSeries) -> QQSeries:
         """
-        Compute the reversion of a power series.
+        Compute the compositional inverse of a power series.
         """
         dom = self._domain
         coeffs = s.coeffs()
 
         if not coeffs or not dom.is_zero(coeffs[0]):
             raise NotReversible(
-                "Series reversion requires the constant term to be zero."
+                "Series compositional inverse requires the constant term to be zero."
             )
 
         if len(coeffs) >= 2 and not dom.is_unit(coeffs[1]):
-            raise NotReversible("Series reversion requires the linear term to be unit.")
+            raise NotReversible(
+                "Series compositional inverse requires the linear term to be unit."
+            )
 
         if isinstance(s, fmpq_poly):
             s = fmpq_series(coeffs, prec=self._prec)
