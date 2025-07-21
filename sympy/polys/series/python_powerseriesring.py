@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Sequence, Union, TYPE_CHECKING
+from typing import Any, Sequence, TypeAlias, Union
 from sympy.polys.densearith import (
     dup_add,
     dup_mul,
@@ -13,6 +13,7 @@ from sympy.polys.densearith import (
 )
 from sympy.polys.densebasic import dup_degree, dup_reverse, dup_truncate
 from sympy.polys.densetools import (
+    dup,
     dup_diff,
     dup_integrate,
     dup_revert,
@@ -25,13 +26,8 @@ from sympy.polys.domains.domain import Er
 from sympy.polys.series.powerseriesring import series_pprint, PowerSeriesRing
 from sympy.external.gmpy import MPZ, MPQ
 
-if TYPE_CHECKING:
-    from sympy.polys.densebasic import dup
-else:
-    dup = list
 
-
-USeries = tuple[dup[Er], Union[int, None]]
+USeries: TypeAlias = "tuple[dup[Er], Union[int, None]]"
 
 
 def _useries(
@@ -363,7 +359,7 @@ def _useries_integrate(s: USeries[Er], dom: Domain[Er], ring_prec: int) -> USeri
     return _useries(series, prec, dom, ring_prec)
 
 
-class PythonPowerSeriesRingZZ(PowerSeriesRing[USeries[MPZ], MPZ]):
+class PythonPowerSeriesRingZZ(PowerSeriesRing[USeries, MPZ]):
     """
     Python implementation of power series ring over integers (ZZ).
 
@@ -597,7 +593,7 @@ class PythonPowerSeriesRingZZ(PowerSeriesRing[USeries[MPZ], MPZ]):
         return _useries_derivative(s, self._domain, self._prec)
 
 
-class PythonPowerSeriesRingQQ(PowerSeriesRing[USeries[MPQ], MPQ]):
+class PythonPowerSeriesRingQQ(PowerSeriesRing[USeries, MPQ]):
     """
     Python implementation of power series ring over rational field (QQ).
 
