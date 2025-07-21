@@ -1,4 +1,4 @@
-from sympy import symbols, Function, Eq, Derivative, simplify, solve, inverse_laplace_transform, laplace_transform, apart
+from sympy import symbols, Derivative, simplify, solve, inverse_laplace_transform,apart
 from sympy.abc import t, s
 
 def laplace_solve(ode, y, y0=0, y1=0):
