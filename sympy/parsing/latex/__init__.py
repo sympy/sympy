@@ -148,8 +148,8 @@ def check_cases_env(latex_str):
     """
     if r"\begin{cases}" in latex_str:
         raise LaTeXParsingError(
-            "The 'cases' environment is not currently supported by parse_latex. "
-            "If you're trying to parse a piecewise function or a block of expressions, "
+            "The 'cases' environment is not currently supported by parse_latex. \n"
+            "If you're trying to parse a piecewise function or a block of expressions, \n"
             "consider breaking them into separate parse_latex calls."
         )
 

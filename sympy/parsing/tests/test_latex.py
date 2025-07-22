@@ -356,3 +356,10 @@ def test_strict_mode():
     for latex_str in FAILING_BAD_STRINGS:
         with raises(LaTeXParsingError):
             parse_latex(latex_str, strict=True)
+
+def test_latex_cases_environment_error():
+    from sympy.parsing.latex import parse_latex, LaTeXParsingError
+    import pytest
+    latex_string = r"\begin{cases} x=1 \\ y=2 \end{cases}"
+    with pytest.raises(LaTeXParsingError, match="The 'cases' environment is not currently supported"):
+        parse_latex(latex_string)
