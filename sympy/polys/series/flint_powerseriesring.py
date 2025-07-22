@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from contextlib import contextmanager
-from typing import Any, Sequence, Union, TYPE_CHECKING
+from typing import Sequence, Union, TYPE_CHECKING
 
 from sympy.polys.densebasic import dup_reverse
 from sympy.polys.domains import Domain, QQ, ZZ
@@ -113,7 +113,7 @@ class FlintPowerSeriesRingZZ(PowerSeriesRing[ZZSeries, MPZ]):
             f"Flint Power Series Ring over {self._domain} with precision {self._prec}"
         )
 
-    def __eq__(self, other: Any) -> bool:
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, FlintPowerSeriesRingZZ):
             return NotImplemented
         return self._prec == other.prec
@@ -124,8 +124,11 @@ class FlintPowerSeriesRingZZ(PowerSeriesRing[ZZSeries, MPZ]):
     def __call__(
         self, coeffs: Sequence[MPZ | int], prec: int | None = None
     ) -> ZZSeries:
-        """Create a power series from a list of coefficients. If `prec` is not specified,
-        it defaults to the ring's precision."""
+        """
+        Create a power series from a list of coefficients.
+
+        If `prec` is not specified, it defaults to the ring's precision.
+        """
         s: list[MPZ] = []
         for c in coeffs:
             if isinstance(c, MPZ):
@@ -144,7 +147,7 @@ class FlintPowerSeriesRingZZ(PowerSeriesRing[ZZSeries, MPZ]):
 
     @property
     def prec(self) -> int:
-        """Return the default precision for power series operations."""
+        """Return the ring's precision."""
         return self._prec
 
     @property
@@ -166,7 +169,7 @@ class FlintPowerSeriesRingZZ(PowerSeriesRing[ZZSeries, MPZ]):
         return fmpz_poly([0, 1])
 
     def pretty(self, s: ZZSeries) -> str:
-        """Pretty print a power series with improved formatting."""
+        """Return a pretty-printed string representation of a power series."""
         if isinstance(s, fmpz_poly):
             return series_pprint(s.coeffs(), None)
 
@@ -174,12 +177,14 @@ class FlintPowerSeriesRingZZ(PowerSeriesRing[ZZSeries, MPZ]):
         return series_pprint(s.coeffs(), prec)
 
     def print(self, s: ZZSeries) -> None:
+        """Print a pretty-printed representation of a power series."""
         print(self.pretty(s))
 
     def from_list(self, coeffs: list[MPZ], prec: int | None = None) -> ZZSeries:
         """
-        Create a power series from a list of coefficients in ascending order of
-        exponents. If `prec` is not specified, it defaults to the ring's precision.
+        Create a power series from a list of ground coefficients.
+
+        If `prec` is not specified, it defaults to the ring's precision.
         """
         if prec is None:
             if len(coeffs) <= self._prec:
@@ -189,12 +194,11 @@ class FlintPowerSeriesRingZZ(PowerSeriesRing[ZZSeries, MPZ]):
         return fmpz_series(coeffs, prec=prec)
 
     def to_list(self, s: ZZSeries) -> list[MPZ]:
-        """
-        Returns the list of coefficients.
-        """
+        """Returns the list of series coefficients."""
         return s.coeffs()
 
     def equal(self, s1: ZZSeries, s2: ZZSeries) -> bool | None:
+        """Check if two power series are equal up to their minimum precision."""
         if isinstance(s1, fmpz_poly) and isinstance(s2, fmpz_poly):
             return s1 == s2
         elif isinstance(s1, fmpz_poly):
@@ -212,9 +216,7 @@ class FlintPowerSeriesRingZZ(PowerSeriesRing[ZZSeries, MPZ]):
         return None
 
     def equal_repr(self, s1: ZZSeries, s2: ZZSeries) -> bool:
-        """
-        Check if two power series have the same representation.
-        """
+        """Check if two power series have the same representation."""
         if isinstance(s1, fmpz_poly) and isinstance(s2, fmpz_poly):
             return s1 == s2
         elif isinstance(s1, fmpz_series) and isinstance(s2, fmpz_series):
@@ -223,9 +225,7 @@ class FlintPowerSeriesRingZZ(PowerSeriesRing[ZZSeries, MPZ]):
             return False
 
     def positive(self, s: ZZSeries) -> ZZSeries:
-        """
-        Return the positive of a power series.
-        """
+        """Return the unary positive of a power series, adjusted to the ring's precision."""
         ring_prec = self._prec
         if isinstance(s, fmpz_poly):
             if s.degree() >= ring_prec:
@@ -236,16 +236,12 @@ class FlintPowerSeriesRingZZ(PowerSeriesRing[ZZSeries, MPZ]):
         return fmpz_series(s.coeffs(), prec=prec)
 
     def negative(self, s: ZZSeries) -> ZZSeries:
-        """
-        Return the negative of a power series.
-        """
+        """Return the unary negative of a power series."""
         with _global_cap(self._prec):
             return self.positive(-s)
 
     def add(self, s1: ZZSeries, s2: ZZSeries) -> ZZSeries:
-        """
-        Add two power series.
-        """
+        """Add two power series."""
         ring_prec = self._prec
         if isinstance(s1, fmpz_poly) and isinstance(s2, fmpz_poly):
             poly = s1 + s2
@@ -257,9 +253,7 @@ class FlintPowerSeriesRingZZ(PowerSeriesRing[ZZSeries, MPZ]):
             return s1 + s2
 
     def subtract(self, s1: ZZSeries, s2: ZZSeries) -> ZZSeries:
-        """
-        Subtract two power series.
-        """
+        """Subtract two power series."""
         ring_prec = self._prec
         if isinstance(s1, fmpz_poly) and isinstance(s2, fmpz_poly):
             poly = s1 - s2
@@ -271,9 +265,7 @@ class FlintPowerSeriesRingZZ(PowerSeriesRing[ZZSeries, MPZ]):
             return s1 - s2
 
     def multiply(self, s1: ZZSeries, s2: ZZSeries) -> ZZSeries:
-        """
-        Multiply two power series.
-        """
+        """Multiply two power series."""
         ring_prec = self._prec
         if isinstance(s1, fmpz_poly) and isinstance(s2, fmpz_poly):
             deg1 = s1.degree()
@@ -294,9 +286,7 @@ class FlintPowerSeriesRingZZ(PowerSeriesRing[ZZSeries, MPZ]):
             return s1 * s2
 
     def multiply_ground(self, s: ZZSeries, n: MPZ) -> ZZSeries:
-        """
-        Multiply a power series by an integer or a polynomial.
-        """
+        """Multiply a power series by a ground element."""
         ring_prec = self._prec
         if isinstance(s, fmpz_poly):
             poly = s * n
@@ -308,9 +298,7 @@ class FlintPowerSeriesRingZZ(PowerSeriesRing[ZZSeries, MPZ]):
             return s * n
 
     def divide(self, s1: ZZSeries, s2: ZZSeries) -> ZZSeries:
-        """
-        Divide two power series.
-        """
+        """Divide two power series."""
         ring_prec = self._prec
         if isinstance(s1, fmpz_poly):
             s1 = fmpz_series(s1.coeffs(), prec=ring_prec)
@@ -321,9 +309,7 @@ class FlintPowerSeriesRingZZ(PowerSeriesRing[ZZSeries, MPZ]):
             return s1 / s2
 
     def pow_int(self, s: ZZSeries, n: int) -> ZZSeries:
-        """
-        Raise a power series to an integer power.
-        """
+        """Raise a power series to a non-negative integer power."""
         ring_prec = self._prec
         if n < 0:
             raise ValueError("Power must be non-negative")
@@ -341,15 +327,11 @@ class FlintPowerSeriesRingZZ(PowerSeriesRing[ZZSeries, MPZ]):
             return s**n
 
     def square(self, s: ZZSeries) -> ZZSeries:
-        """
-        Return the square of a power series.
-        """
+        """Compute the square of a power series."""
         return self.pow_int(s, 2)
 
     def compose(self, s1: ZZSeries, s2: ZZSeries) -> ZZSeries:
-        """
-        Compose two power series.
-        """
+        """Compose two power series, `s1(s2)`."""
         dom: Domain[MPZ] = self._domain
         ring_prec: int = self._prec
 
@@ -377,9 +359,7 @@ class FlintPowerSeriesRingZZ(PowerSeriesRing[ZZSeries, MPZ]):
             return s1(s2)
 
     def inverse(self, s: ZZSeries) -> ZZSeries:
-        """
-        Compute the inverse of a power series.
-        """
+        """Compute the multiplicative inverse of a power series."""
         dom: Domain[MPZ] = self._domain
         ring_prec: int = self._prec
         coeffs: list[MPZ] = s.coeffs()
@@ -398,9 +378,7 @@ class FlintPowerSeriesRingZZ(PowerSeriesRing[ZZSeries, MPZ]):
         return fmpz_series(inv[::-1], prec=prec)
 
     def compositional_inverse(self, s: ZZSeries) -> ZZSeries:
-        """
-        Compute the compositional inverse of a power series.
-        """
+        """Compute the compositional inverse of a power series."""
         dom = self._domain
         coeffs = s.coeffs()
 
@@ -421,9 +399,7 @@ class FlintPowerSeriesRingZZ(PowerSeriesRing[ZZSeries, MPZ]):
             return s.reversion()
 
     def truncate(self, s: ZZSeries, n: int) -> ZZSeries:
-        """
-        Truncate a power series to the first n terms.
-        """
+        """Truncate a power series to `n` terms."""
         if n < 0:
             raise ValueError("Truncation precision must be non-negative")
 
@@ -434,9 +410,7 @@ class FlintPowerSeriesRingZZ(PowerSeriesRing[ZZSeries, MPZ]):
         return fmpz_series(coeffs, prec=n)
 
     def differentiate(self, s: ZZSeries) -> ZZSeries:
-        """
-        Compute the derivative of a power series.
-        """
+        """Compute the derivative of a power series."""
         if isinstance(s, fmpz_poly):
             poly = s.derivative()
             if poly.degree() < self._prec:
@@ -513,7 +487,7 @@ class FlintPowerSeriesRingQQ(PowerSeriesRing[QQSeries, MPQ]):
             f"Flint Power Series Ring over {self._domain} with precision {self._prec}"
         )
 
-    def __eq__(self, other: Any) -> bool:
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, FlintPowerSeriesRingQQ):
             return NotImplemented
         return self._prec == other.prec
@@ -524,8 +498,11 @@ class FlintPowerSeriesRingQQ(PowerSeriesRing[QQSeries, MPQ]):
     def __call__(
         self, coeffs: Sequence[MPQ | int | Sequence], prec: int | None = None
     ) -> QQSeries:
-        """Create a power series from a list of coefficients. If `prec` is not specified,
-        it defaults to the ring's precision."""
+        """
+        Create a power series from a list of coefficients.
+
+        If `prec` is not specified, it defaults to the ring's precision.
+        """
         s: list[MPQ] = []
         for c in coeffs:
             if isinstance(c, MPQ):
@@ -546,7 +523,7 @@ class FlintPowerSeriesRingQQ(PowerSeriesRing[QQSeries, MPQ]):
 
     @property
     def prec(self) -> int:
-        """Return the default precision for power series operations."""
+        """Return the ring's precision."""
         return self._prec
 
     @property
@@ -568,7 +545,7 @@ class FlintPowerSeriesRingQQ(PowerSeriesRing[QQSeries, MPQ]):
         return fmpq_poly([0, 1])
 
     def pretty(self, s: QQSeries) -> str:
-        """Pretty print a power series with improved formatting."""
+        """Return a pretty-printed string representation of a power series."""
         if isinstance(s, fmpq_poly):
             return series_pprint(s.coeffs(), None)
 
@@ -576,12 +553,14 @@ class FlintPowerSeriesRingQQ(PowerSeriesRing[QQSeries, MPQ]):
         return series_pprint(s.coeffs(), prec)
 
     def print(self, s: QQSeries) -> None:
+        """Print a pretty-printed representation of a power series."""
         print(self.pretty(s))
 
     def from_list(self, coeffs: list[MPQ], prec: int | None = None) -> QQSeries:
         """
-        Create a power series from a list of coefficients in ascending order of
-        exponents. If `prec` is not specified, it defaults to the ring's precision.
+        Create a power series from a list of ground coefficients.
+
+        If `prec` is not specified, it defaults to the ring's precision.
         """
         if prec is None:
             if len(coeffs) <= self._prec:
@@ -591,12 +570,11 @@ class FlintPowerSeriesRingQQ(PowerSeriesRing[QQSeries, MPQ]):
         return fmpq_series(coeffs, prec=prec)
 
     def to_list(self, s: QQSeries) -> list[MPQ]:
-        """
-        Returns the list of coefficients.
-        """
+        """Returns the list of series coefficients."""
         return s.coeffs()
 
     def equal(self, s1: QQSeries, s2: QQSeries) -> bool | None:
+        """Check if two power series are equal up to their minimum precision."""
         if isinstance(s1, fmpq_poly) and isinstance(s2, fmpq_poly):
             return s1 == s2
         elif isinstance(s1, fmpq_poly):
@@ -614,9 +592,7 @@ class FlintPowerSeriesRingQQ(PowerSeriesRing[QQSeries, MPQ]):
         return None
 
     def equal_repr(self, s1: QQSeries, s2: QQSeries) -> bool:
-        """
-        Check if two power series have the same representation.
-        """
+        """Check if two power series have the same representation."""
         if isinstance(s1, fmpq_poly) and isinstance(s2, fmpq_poly):
             return s1 == s2
         elif isinstance(s1, fmpq_series) and isinstance(s2, fmpq_series):
@@ -625,9 +601,7 @@ class FlintPowerSeriesRingQQ(PowerSeriesRing[QQSeries, MPQ]):
             return False
 
     def positive(self, s: QQSeries) -> QQSeries:
-        """
-        Return the positive of a power series.
-        """
+        """Return the unary positive of a power series, adjusted to the ring's precision."""
         ring_prec = self._prec
         if isinstance(s, fmpq_poly):
             if s.degree() >= ring_prec:
@@ -638,16 +612,12 @@ class FlintPowerSeriesRingQQ(PowerSeriesRing[QQSeries, MPQ]):
         return fmpq_series(s.coeffs(), prec=prec)
 
     def negative(self, s: QQSeries) -> QQSeries:
-        """
-        Return the negative of a power series.
-        """
+        """Return the unary negative of a power series."""
         with _global_cap(self._prec):
             return self.positive(-s)
 
     def add(self, s1: QQSeries, s2: QQSeries) -> QQSeries:
-        """
-        Add two power series.
-        """
+        """Add two power series."""
         ring_prec = self._prec
         if isinstance(s1, fmpq_poly) and isinstance(s2, fmpq_poly):
             poly = s1 + s2
@@ -659,9 +629,7 @@ class FlintPowerSeriesRingQQ(PowerSeriesRing[QQSeries, MPQ]):
             return s1 + s2
 
     def subtract(self, s1: QQSeries, s2: QQSeries) -> QQSeries:
-        """
-        Subtract two power series.
-        """
+        """Subtract two power series."""
         ring_prec = self._prec
         if isinstance(s1, fmpq_poly) and isinstance(s2, fmpq_poly):
             poly = s1 - s2
@@ -673,9 +641,7 @@ class FlintPowerSeriesRingQQ(PowerSeriesRing[QQSeries, MPQ]):
             return s1 - s2
 
     def multiply(self, s1: QQSeries, s2: QQSeries) -> QQSeries:
-        """
-        Multiply two power series.
-        """
+        """Multiply two power series."""
         ring_prec = self._prec
         if isinstance(s1, fmpq_poly) and isinstance(s2, fmpq_poly):
             deg1 = s1.degree()
@@ -696,9 +662,7 @@ class FlintPowerSeriesRingQQ(PowerSeriesRing[QQSeries, MPQ]):
             return s1 * s2
 
     def multiply_ground(self, s: QQSeries, n: MPQ) -> QQSeries:
-        """
-        Multiply a power series by a rational number.
-        """
+        """Multiply a power series by a ground element."""
         ring_prec = self._prec
         if isinstance(s, fmpq_poly):
             poly = s * n
@@ -710,9 +674,7 @@ class FlintPowerSeriesRingQQ(PowerSeriesRing[QQSeries, MPQ]):
             return s * n
 
     def divide(self, s1: QQSeries, s2: QQSeries) -> QQSeries:
-        """
-        Divide two power series.
-        """
+        """Divide two power series."""
         ring_prec = self._prec
         if isinstance(s1, fmpq_poly):
             s1 = fmpq_series(s1.coeffs(), prec=ring_prec)
@@ -723,9 +685,7 @@ class FlintPowerSeriesRingQQ(PowerSeriesRing[QQSeries, MPQ]):
             return s1 / s2
 
     def pow_int(self, s: QQSeries, n: int) -> QQSeries:
-        """
-        Raise a power series to an integer power.
-        """
+        """Raise a power series to a non-negative integer power."""
         ring_prec = self._prec
         if n < 0:
             raise ValueError("Power must be non-negative")
@@ -743,15 +703,11 @@ class FlintPowerSeriesRingQQ(PowerSeriesRing[QQSeries, MPQ]):
             return s**n
 
     def square(self, s: QQSeries) -> QQSeries:
-        """
-        Return the square of a power series.
-        """
+        """Compute the square of a power series."""
         return self.pow_int(s, 2)
 
     def truncate(self, s: QQSeries, n: int) -> QQSeries:
-        """
-        Truncate a power series to the first n terms.
-        """
+        """Truncate a power series to `n` terms."""
         if n < 0:
             raise ValueError("Truncation precision must be non-negative")
 
@@ -762,9 +718,7 @@ class FlintPowerSeriesRingQQ(PowerSeriesRing[QQSeries, MPQ]):
         return fmpq_series(coeffs, prec=n)
 
     def compose(self, s1: QQSeries, s2: QQSeries) -> QQSeries:
-        """
-        Compose two power series.
-        """
+        """Compose two power series, `s1(s2)`."""
         dom: Domain[MPQ] = self._domain
         ring_prec: int = self._prec
 
@@ -792,9 +746,7 @@ class FlintPowerSeriesRingQQ(PowerSeriesRing[QQSeries, MPQ]):
             return s1(s2)
 
     def inverse(self, s: QQSeries) -> QQSeries:
-        """
-        Compute the inverse of a power series.
-        """
+        """Compute the multiplicative inverse of a power series."""
         dom: Domain[MPQ] = self._domain
         ring_prec: int = self._prec
         coeffs: list[MPQ] = s.coeffs()
@@ -811,9 +763,7 @@ class FlintPowerSeriesRingQQ(PowerSeriesRing[QQSeries, MPQ]):
             return s.inv()
 
     def compositional_inverse(self, s: QQSeries) -> QQSeries:
-        """
-        Compute the compositional inverse of a power series.
-        """
+        """Compute the compositional inverse of a power series."""
         dom = self._domain
         coeffs = s.coeffs()
 
@@ -834,9 +784,7 @@ class FlintPowerSeriesRingQQ(PowerSeriesRing[QQSeries, MPQ]):
             return s.reversion()
 
     def differentiate(self, s: QQSeries) -> QQSeries:
-        """
-        Compute the derivative of a power series.
-        """
+        """Compute the derivative of a power series."""
         if isinstance(s, fmpq_poly):
             poly = s.derivative()
             if poly.degree() < self._prec:
@@ -849,9 +797,7 @@ class FlintPowerSeriesRingQQ(PowerSeriesRing[QQSeries, MPQ]):
         return fmpq_series(derivative, prec=prec - 1)
 
     def integrate(self, s: QQSeries) -> QQSeries:
-        """
-        Compute the integral of a power series.
-        """
+        """Compute the integral of a power series."""
         if isinstance(s, fmpq_poly):
             poly = s.integral()
             if poly.degree() < self._prec:

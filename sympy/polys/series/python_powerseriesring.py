@@ -26,7 +26,7 @@ from sympy.polys.densetools import (
 )
 from sympy.polys.polyerrors import NotReversible
 from sympy.polys.domains import Domain, QQ, ZZ
-from sympy.polys.domains.domain import Er
+from sympy.polys.domains.domain import Er, Ef
 from sympy.polys.series.powerseriesring import series_pprint, PowerSeriesRing
 from sympy.external.gmpy import MPZ, MPQ
 
@@ -52,6 +52,7 @@ def _useries(
 def _useries_valuation(s: USeries[Er], dom: Domain) -> int:
     """
     Returns the valuation of this power series.
+
     If there are no known nonzero coefficients, returns -1.
     """
     coeffs, _ = s
@@ -109,9 +110,7 @@ def _useries_equal_repr(s1: USeries[Er], s2: USeries[Er]) -> bool:
 
 
 def _useries_pos(s: USeries[Er], dom: Domain[Er], ring_prec: int) -> USeries[Er]:
-    """
-    Return the positive of a power series (which is the same as the series itself).
-    """
+    """Return the positive of a power series (which is the same as the series itself)."""
     coeffs, prec = s
     deg = dup_degree(coeffs)
 
@@ -354,7 +353,7 @@ def _useries_derivative(s: USeries[Er], dom: Domain[Er], ring_prec: int) -> USer
     return _useries(series, prec, dom, ring_prec)
 
 
-def _useries_integrate(s: USeries[Er], dom: Domain[Er], ring_prec: int) -> USeries[Er]:
+def _useries_integrate(s: USeries[Ef], dom: Domain[Ef], ring_prec: int) -> USeries[Ef]:
     """Compute the integral of a power series."""
     coeffs, prec = s
     series = dup_integrate(coeffs, 1, dom)
@@ -424,7 +423,7 @@ class PythonPowerSeriesRingZZ(PowerSeriesRing[USeries, MPZ]):
             f"Python Power Series Ring over {self._domain} with precision {self._prec}"
         )
 
-    def __eq__(self, other: Any) -> bool:
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, PythonPowerSeriesRingZZ):
             return NotImplemented
         return self._prec == other.prec
@@ -436,8 +435,9 @@ class PythonPowerSeriesRingZZ(PowerSeriesRing[USeries, MPZ]):
         self, coeffs: Sequence[MPZ | int], prec: int | None = None
     ) -> USeries[MPZ]:
         """
-        Create a power series from a list of coefficients. If `prec` is not specified,
-        it defaults to the ring's precision.
+        Create a power series from a list of coefficients.
+
+        If `prec` is not specified, it defaults to the ring's precision.
         """
         s: list[MPZ] = []
         for c in coeffs:
@@ -457,7 +457,7 @@ class PythonPowerSeriesRingZZ(PowerSeriesRing[USeries, MPZ]):
 
     @property
     def prec(self) -> int:
-        """Return the default precision for power series operations."""
+        """Return the ring's precision."""
         return self._prec
 
     @property
@@ -479,16 +479,19 @@ class PythonPowerSeriesRingZZ(PowerSeriesRing[USeries, MPZ]):
         return ([self._domain.one, self._domain.zero], None)
 
     def pretty(self, s: USeries[MPZ]) -> str:
+        """Return a pretty-printed string representation of a power series."""
         coeffs, prec = s
         return series_pprint(coeffs[::-1], prec)
 
     def print(self, s: USeries[MPZ]) -> None:
+        """Print a pretty-printed representation of a power series."""
         print(self.pretty(s))
 
     def from_list(self, coeffs: list[MPZ], prec: int | None = None) -> USeries[MPZ]:
         """
-        Create a power series from a list of coefficients in ascending order of
-        expononets. If `prec` is not specified, it defaults to the ring's precision.
+        Create a power series from a list of ground coefficients.
+
+        If `prec` is not specified, it defaults to the ring's precision.
         """
         coeffs = dup_reverse(coeffs)
         if prec is None and len(coeffs) > self._prec:
@@ -498,32 +501,24 @@ class PythonPowerSeriesRingZZ(PowerSeriesRing[USeries, MPZ]):
         return coeffs, prec
 
     def to_list(self, s: USeries[MPZ]) -> list[MPZ]:
-        """
-        Returns the list of coefficients.
-        """
+        """Returns the list of series coefficients."""
         coeffs, _ = s
         return coeffs[::-1]
 
     def equal(self, s1: USeries[MPZ], s2: USeries[MPZ]) -> bool | None:
-        """Check if two power series are equal."""
+        """Check if two power series are equal up to their minimum precision."""
         return _useries_equality(s1, s2, self._domain)
 
     def equal_repr(self, s1: USeries[MPZ], s2: USeries[MPZ]) -> bool:
-        """
-        Check if two power series are equal coeffs and precision.
-        """
+        """Check if two power series have the same representation."""
         return _useries_equal_repr(s1, s2)
 
     def positive(self, s: USeries[MPZ]) -> USeries[MPZ]:
-        """
-        Return the positive of a power series (which is the same as the series itself).
-        """
+        """Return the unary positive of a power series, adjusted to the ring's precision."""
         return _useries_pos(s, self._domain, self._prec)
 
     def negative(self, s: USeries[MPZ]) -> USeries[MPZ]:
-        """
-        Negate all the coeffs of power series.
-        """
+        """Return the unary negative of a power series."""
         return _useries_neg(s, self._domain, self._prec)
 
     def add(self, s1: USeries[MPZ], s2: USeries[MPZ]) -> USeries[MPZ]:
@@ -531,69 +526,47 @@ class PythonPowerSeriesRingZZ(PowerSeriesRing[USeries, MPZ]):
         return _useries_add(s1, s2, self._domain, self._prec)
 
     def subtract(self, s1: USeries[MPZ], s2: USeries[MPZ]) -> USeries[MPZ]:
-        """
-        Subtract two power series.
-        """
+        """Subtract two power series."""
         return _useries_sub(s1, s2, self._domain, self._prec)
 
     def multiply(self, s1: USeries[MPZ], s2: USeries[MPZ]) -> USeries[MPZ]:
-        """
-        Multiply two power series.
-        """
+        """Multiply two power series."""
         return _useries_mul(s1, s2, self._domain, self._prec)
 
     def multiply_ground(self, s: USeries[MPZ], n: MPZ) -> USeries[MPZ]:
-        """
-        Multiply a power series by a ground element.
-        """
+        """Multiply a power series by a ground element."""
         return _useries_mul_ground(s, n, self._domain, self._prec)
 
     def divide(self, s1: USeries[MPZ], s2: USeries[MPZ]) -> USeries[MPZ]:
-        """
-        Divide two power series.
-        """
+        """Divide two power series."""
         return _useries_div(s1, s2, self._domain, self._prec)
 
     def pow_int(self, s: USeries[MPZ], n: int) -> USeries[MPZ]:
-        """
-        Raise a power series to an integer power.
-        """
+        """Raise a power series to a non-negative integer power."""
         return _useries_pow_int(s, n, self._domain, self._prec)
 
     def square(self, s: USeries[MPZ]) -> USeries[MPZ]:
-        """
-        Return the square of a power series.
-        """
+        """Compute the square of a power series."""
         return _useries_mul(s, s, self._domain, self._prec)
 
     def compose(self, s1: USeries[MPZ], s2: USeries[MPZ]) -> USeries[MPZ]:
-        """
-        Compose two power series.
-        """
+        """Compose two power series, `s1(s2)`."""
         return _useries_compose(s1, s2, self._domain, self._prec)
 
     def inverse(self, s: USeries[MPZ]) -> USeries[MPZ]:
-        """
-        Compute the series multiplicative inverse of a power series.
-        """
+        """Compute the multiplicative inverse of a power series."""
         return _useries_inverse(s, self._domain, self._prec)
 
     def compositional_inverse(self, s: USeries[MPZ]) -> USeries[MPZ]:
-        """
-        Compute the composite inverse of a power series.
-        """
+        """Compute the compositional inverse of a power series."""
         return _useries_compositional_inverse(s, self._domain, self._prec)
 
     def truncate(self, s: USeries[MPZ], n: int) -> USeries[MPZ]:
-        """
-        Truncate a power series to the first n terms.
-        """
+        """Truncate a power series to `n` terms."""
         return _useries_truncate(s, n, self._domain)
 
     def differentiate(self, s: USeries[MPZ]) -> USeries[MPZ]:
-        """
-        Compute the derivative of a power series.
-        """
+        """Compute the derivative of a power series."""
         return _useries_derivative(s, self._domain, self._prec)
 
 
@@ -660,7 +633,7 @@ class PythonPowerSeriesRingQQ(PowerSeriesRing[USeries, MPQ]):
             f"Python Power Series Ring over {self._domain} with precision {self._prec}"
         )
 
-    def __eq__(self, other: Any) -> bool:
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, PythonPowerSeriesRingQQ):
             return NotImplemented
         return self._prec == other.prec
@@ -672,8 +645,9 @@ class PythonPowerSeriesRingQQ(PowerSeriesRing[USeries, MPQ]):
         self, coeffs: Sequence[MPQ | int | Sequence], prec: int | None = None
     ) -> USeries[MPQ]:
         """
-        Create a power series from a list of coefficients. If `prec` is not specified,
-        it defaults to the ring's precision.
+        Create a power series from a list of coefficients.
+
+        If `prec` is not specified, it defaults to the ring's precision.
         """
         s: list[MPQ] = []
         for c in coeffs:
@@ -695,7 +669,7 @@ class PythonPowerSeriesRingQQ(PowerSeriesRing[USeries, MPQ]):
 
     @property
     def prec(self) -> int:
-        """Return the default precision for power series operations."""
+        """Return the ring's precision."""
         return self._prec
 
     @property
@@ -717,16 +691,19 @@ class PythonPowerSeriesRingQQ(PowerSeriesRing[USeries, MPQ]):
         return ([self._domain.one, self._domain.zero], None)
 
     def pretty(self, s: USeries[MPQ]) -> str:
+        """Return a pretty-printed string representation of a power series."""
         coeffs, prec = s
         return series_pprint(coeffs[::-1], prec)
 
     def print(self, s: USeries[MPQ]) -> None:
+        """Print a pretty-printed representation of a power series."""
         print(self.pretty(s))
 
     def from_list(self, coeffs: list[MPQ], prec: int | None = None) -> USeries[MPQ]:
         """
-        Create a power series from a list of coefficients in ascending order of
-        expononets. If `prec` is not specified, it defaults to the ring's precision.
+        Create a power series from a list of ground coefficients.
+
+        If `prec` is not specified, it defaults to the ring's precision.
         """
         coeffs = dup_reverse(coeffs)
         if prec is None and len(coeffs) > self._prec:
@@ -736,32 +713,24 @@ class PythonPowerSeriesRingQQ(PowerSeriesRing[USeries, MPQ]):
         return coeffs, prec
 
     def to_list(self, s: USeries[MPQ]) -> list[MPQ]:
-        """
-        Returns the list of coefficients.
-        """
+        """Return the list of series coefficients."""
         coeffs, _ = s
         return coeffs[::-1]
 
     def equal(self, s1: USeries[MPQ], s2: USeries[MPQ]) -> bool | None:
-        """Check if two power series are equal."""
+        """Check if two power series are equal up to their minimum precision."""
         return _useries_equality(s1, s2, self._domain)
 
     def equal_repr(self, s1: USeries[MPQ], s2: USeries[MPQ]) -> bool:
-        """
-        Check if two power series are equal coeffs and precision.
-        """
+        """Check if two power series have the same representation."""
         return _useries_equal_repr(s1, s2)
 
     def positive(self, s: USeries[MPQ]) -> USeries[MPQ]:
-        """
-        Return the positive of a power series (which is the same as the series itself).
-        """
+        """Return the unary positive of a power series, adjusted to the ring's precision."""
         return _useries_pos(s, self._domain, self._prec)
 
     def negative(self, s: USeries[MPQ]) -> USeries[MPQ]:
-        """
-        Return the negative of a power series.
-        """
+        """Return the unary negative of a power series."""
         return _useries_neg(s, self._domain, self._prec)
 
     def add(self, s1: USeries[MPQ], s2: USeries[MPQ]) -> USeries[MPQ]:
@@ -769,73 +738,49 @@ class PythonPowerSeriesRingQQ(PowerSeriesRing[USeries, MPQ]):
         return _useries_add(s1, s2, self._domain, self._prec)
 
     def subtract(self, s1: USeries[MPQ], s2: USeries[MPQ]) -> USeries[MPQ]:
-        """
-        Subtract two power series.
-        """
+        """Subtract two power series."""
         return _useries_sub(s1, s2, self._domain, self._prec)
 
     def multiply(self, s1: USeries[MPQ], s2: USeries[MPQ]) -> USeries[MPQ]:
-        """
-        Multiply two power series.
-        """
+        """Multiply two power series."""
         return _useries_mul(s1, s2, self._domain, self._prec)
 
     def multiply_ground(self, s: USeries[MPQ], n: MPQ) -> USeries[MPQ]:
-        """
-        Multiply a power series by a ground element.
-        """
+        """Multiply a power series by a ground element."""
         return _useries_mul_ground(s, n, self._domain, self._prec)
 
     def divide(self, s1: USeries[MPQ], s2: USeries[MPQ]) -> USeries[MPQ]:
-        """
-        Divide two power series.
-        """
+        """Divide two power series."""
         return _useries_div(s1, s2, self._domain, self._prec)
 
     def pow_int(self, s: USeries[MPQ], n: int) -> USeries[MPQ]:
-        """
-        Raise a power series to an integer power.
-        """
+        """Raise a power series to a non-negative integer power."""
         return _useries_pow_int(s, n, self._domain, self._prec)
 
     def square(self, s: USeries[MPQ]) -> USeries[MPQ]:
-        """
-        Return the square of a power series.
-        """
+        """Compute the square of a power series."""
         return _useries_mul(s, s, self._domain, self._prec)
 
     def compose(self, s1: USeries[MPQ], s2: USeries[MPQ]) -> USeries[MPQ]:
-        """
-        Compose two power series.
-        """
+        """Compose two power series, `s1(s2)`."""
         return _useries_compose(s1, s2, self._domain, self._prec)
 
     def inverse(self, s: USeries[MPQ]) -> USeries[MPQ]:
-        """
-        Compute the series multiplicative inverse of a power series.
-        """
+        """Compute the multiplicative inverse of a power series."""
         return _useries_inverse(s, self._domain, self._prec)
 
     def compositional_inverse(self, s: USeries[MPQ]) -> USeries[MPQ]:
-        """
-        Compute the composite inverse of a power series.
-        """
+        """Compute the compositional inverse of a power series."""
         return _useries_compositional_inverse(s, self._domain, self._prec)
 
     def truncate(self, s: USeries[MPQ], n: int) -> USeries[MPQ]:
-        """
-        Truncate a power series to the first n terms.
-        """
+        """Truncate a power series to `n` terms."""
         return _useries_truncate(s, n, self._domain)
 
     def differentiate(self, s: USeries[MPQ]) -> USeries[MPQ]:
-        """
-        Compute the derivative of a power series.
-        """
+        """Compute the derivative of a power series."""
         return _useries_derivative(s, self._domain, self._prec)
 
     def integrate(self, s: USeries[MPQ]) -> USeries[MPQ]:
-        """
-        Compute the integral of a power series.
-        """
+        """Compute the integral of a power series."""
         return _useries_integrate(s, self._domain, self._prec)
