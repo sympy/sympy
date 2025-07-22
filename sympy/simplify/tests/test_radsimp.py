@@ -1,7 +1,7 @@
 from sympy.core.add import Add
 from sympy.core.function import (Derivative, Function, diff)
 from sympy.core.mul import Mul
-from sympy.core.numbers import (I, Rational)
+from sympy.core.numbers import (I, Rational, Integer)
 from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.core.symbol import (Symbol, Wild, symbols)
@@ -465,6 +465,12 @@ def test_issue_14608():
     raises(AttributeError, lambda: collect(a*b + b*a, a))
     assert collect(x*y + y*(x+1), a) == x*y + y*(x+1)
     assert collect(x*y + y*(x+1) + a*b + b*a, y) == y*(2*x + 1) + a*b + b*a
+
+
+def test_issue_22788():
+    from sympy.parsing.sympy_parser import parse_expr
+    z = Pow(I, Integer(-8), evaluate=False)
+    assert fraction(z, exact=True) == (1, parse_expr("I**8", evaluate=False))
 
 
 def test_collect_abs():
