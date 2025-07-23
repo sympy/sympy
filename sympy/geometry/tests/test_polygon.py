@@ -269,7 +269,7 @@ def test_polygon():
     assert t1.exradii[t1.sides[2]] == 5*sqrt(2)/2
 
     # Excenters
-    assert t1.excenters[t1.sides[2]] == Point2D(25*sqrt(2), -5*sqrt(2)/2)
+    assert t1.excenters[t1.sides[2]] == Point2D(5*sqrt(2)/2, -5*sqrt(2)/2)
 
     # Circumcircle
     assert t1.circumcircle.center == Point(2.5, 2.5)
