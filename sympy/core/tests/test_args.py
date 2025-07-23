@@ -5529,9 +5529,8 @@ def test_sympy__combinatorics__perm_groups__Coset():
 def test_sympy__logic__algorithms__euf_theory__Apply():
     f = EUFFunction("f", 2)
     term = Apply(f, (x, y))
-
     assert isinstance(term.args, tuple)
-    assert len(term.args) == 3  # function + 2 args in Basic
+    assert len(term.args) == 3  # f is first argument of Basic, then x, y
     assert term.args[0] == f
     assert term.args[1] == x
     assert term.args[2] == y
