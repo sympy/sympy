@@ -9,6 +9,8 @@ from __future__ import annotations
 from typing import Any
 
 from sympy.core.function import AppliedUndef
+from sympy.core.mul import Mul
+from sympy.core.add import Add
 from mpmath.libmp import repr_dps, to_str as mlib_to_str
 
 from .printer import Printer, print_function
@@ -47,7 +49,8 @@ class ReprPrinter(Printer):
             return str(expr)
 
     def _print_Add(self, expr, order=None):
-        args = map(self._print, expr.args)
+        args = Add.make_args(expr)
+        args = map(self._print, args)
         clsname = type(expr).__name__
         return clsname + "(%s)" % ", ".join(args)
 
@@ -191,7 +194,8 @@ class ReprPrinter(Printer):
         return "nan"
 
     def _print_Mul(self, expr, order=None):
-        args = map(self._print, expr.args)
+        args = Mul.make_args(expr)
+        args = map(self._print, args)
         clsname = type(expr).__name__
         return clsname + "(%s)" % ", ".join(args)
 
