@@ -444,7 +444,7 @@ def test_bisectors():
 def test_incenter():
     assert Triangle(Point(0, 0), Point(1, 0), Point(0, 1)).incenter \
         == Point(1 - sqrt(2)/2, 1 - sqrt(2)/2)
-        
+
 def test_excenters():
     t = Triangle(Point(0, 0), Point(6, 0), Point(0, 2))
     assert t.excenters[t.sides[0]] == Point(sqrt(10) + 4, sqrt(10) + 4)
