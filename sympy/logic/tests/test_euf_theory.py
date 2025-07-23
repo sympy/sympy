@@ -4,7 +4,7 @@ from sympy.logic.algorithms.euf_theory import EUFCongruenceClosure, EUFFunction
 
 def test_euf_basic_chain_equality():
     """
-    Test simple equality chain propagation: x = y, y = z ⇒ x = z.
+    Test simple equality chain propagation: x = y, y = z -> x = z.
     """
 
     x, y, z = symbols("x y z")
@@ -17,7 +17,7 @@ def test_euf_basic_chain_equality():
 
 def test_euf_function_congruence_equal_args():
     """
-    Test congruence: if x = y ⇒ f(x) = f(y);
+    Test congruence: if x = y -> f(x) = f(y);
     and verify propagation of equality through function applications.
     """
 
@@ -50,7 +50,7 @@ def test_euf_nested_function_application():
 
 def test_euf_different_functions_do_not_propagate():
     """
-    If f(x) ≠ g(x), even when x is equal, f and g must not cause spurious merges.
+    If f(x) != g(x), even when x is equal, f and g must not cause spurious merges.
     """
 
     x = symbols("x")
