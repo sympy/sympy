@@ -61,14 +61,6 @@ class EUFFunction:
         The name of the uninterpreted function symbol.
     arity : int
         The number of arguments the function accepts.
-
-    Examples
-    ========
-
-    >>> from sympy import symbols
-    >>> f = EUFFunction("f", 2)
-    >>> x, y = symbols('x y')
-    >>> fx = f(x, y)
     """
 
     def __init__(self, name: str, arity: int):
