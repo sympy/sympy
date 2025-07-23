@@ -65,6 +65,7 @@ class EUFFunction:
     Examples
     ========
 
+    >>> from sympy import symbols
     >>> f = EUFFunction("f", 2)
     >>> x, y = symbols('x y')
     >>> fx = f(x, y)
@@ -173,6 +174,7 @@ class EUFCongruenceClosure:
     Examples
     ========
 
+    >>> from sympy import symbols
     >>> x, y = symbols("x y")
     >>> f = EUFFunction('f', 1)
     >>> fx, fy = f(x), f(y)
