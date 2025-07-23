@@ -5529,7 +5529,7 @@ def test_sympy__combinatorics__perm_groups__Coset():
 def test_sympy__logic__algorithms__euf_theory__Apply():
     """
     Required by test_all_classes_are_tested to verify Apply class has valid .args
-    structure and works with SymPy’s expression mechanics.
+    structure and works with SymPy's expression mechanics.
     """
     f = EUFFunction("f", 2)
     term = Apply(f, (x, y))
