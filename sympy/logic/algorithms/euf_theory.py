@@ -19,7 +19,7 @@ Supported input:
     - EUFFunction objects (for uninterpreted functions of fixed arity)
     - Apply objects (custom, see below), for ground applications of EUFFunction to arguments.
     - Equations (sympy.Eq), e.g. `Eq(f(x), y)`
-    
+
 Key Classes and Structures:
 ---------------------------
 
