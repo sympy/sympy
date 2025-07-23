@@ -4,7 +4,7 @@ from sympy.logic.algorithms.euf_theory import EUFCongruenceClosure, EUFFunction
 
 def test_euf_basic_chain_equality():
     """
-    Test simple equality chain propagation: x = y, y = z -> x = z.
+    Test simple equality chain propagation: x = y, y = z => x = z.
     """
 
     x, y, z = symbols("x y z")
@@ -17,7 +17,7 @@ def test_euf_basic_chain_equality():
 
 def test_euf_function_congruence_equal_args():
     """
-    Test congruence: if x = y -> f(x) = f(y);
+    Test congruence: if x = y => f(x) = f(y);
     and verify propagation of equality through function applications.
     """
 
@@ -100,6 +100,6 @@ def test_euf_nested_equalities():
     cc = EUFCongruenceClosure(eqs)
 
     assert cc.are_equal(fx, fy)      # f(x) = f(y) from x = y
-    assert cc.are_equal(a, b)        # f(x) = a, f(y) = b ⇒ a = b
+    assert cc.are_equal(a, b)        # f(x) = a, f(y) = b => a = b
     assert cc.are_equal(gfx, gfy)    # congruence: g(f(x)) = g(f(y))
-    assert not cc.are_equal(x, z)    # unrelated term z ⇒ different class
+    assert not cc.are_equal(x, z)    # unrelated term z => different class
