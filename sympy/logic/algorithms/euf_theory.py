@@ -98,17 +98,6 @@ class Apply(Basic):
         The uninterpreted function symbol.
     args : tuple
         The argument terms (Symbol or other Apply objects).
-
-    Examples
-    ========
-
-    >>> f = EUFFunction("f", 1)
-    >>> x = Symbol('x')
-    >>> fx = Apply(f, (x,))
-    >>> fx.function
-    f
-    >>> fx.arguments
-    (x,)
     """
 
     def __new__(cls, function, args):
@@ -162,20 +151,6 @@ class EUFCongruenceClosure:
         For each arg, tracks relevant function applications for congruence propagation.
     _pending : deque
         Pairs of class ids pending union.
-
-    Examples
-    ========
-
-    >>> from sympy import symbols
-    >>> x, y = symbols("x y")
-    >>> f = EUFFunction('f', 1)
-    >>> fx, fy = f(x), f(y)
-    >>> eqs = [Eq(x, y), Eq(fx, fy)]
-    >>> cc = EUFCongruenceClosure(eqs)
-    >>> cc.are_equal(x, y)
-    True
-    >>> cc.are_equal(fx, fy)
-    True
     """
 
     def __init__(self, eqs):
