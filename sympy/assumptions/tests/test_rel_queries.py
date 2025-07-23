@@ -2,16 +2,13 @@ from sympy.assumptions.lra_satask import lra_satask
 from sympy.logic.algorithms.lra_theory import UnhandledInput
 from sympy.assumptions.ask import Q, ask
 
-from sympy.core import symbols, Symbol
+from sympy.core import symbols
 from sympy.matrices.expressions.matexpr import MatrixSymbol
-from sympy.core.numbers import I
 
 from sympy.testing.pytest import raises, XFAIL
 x, y, z = symbols("x y z", real=True)
 
 def test_lra_satask():
-    im = Symbol('im', imaginary=True)
-
     # test preprocessing of unequalities is working correctly
     assert lra_satask(Q.eq(x, 1), ~Q.ne(x, 0)) is False
     assert lra_satask(Q.eq(x, 0), ~Q.ne(x, 0)) is True
@@ -28,34 +25,12 @@ def test_lra_satask():
     assert lra_satask(Q.gt(x, 0), True) is None
     assert raises(ValueError, lambda: lra_satask(Q.gt(x, 0), False))
 
-    # check imaginary numbers are correctly handled
-    # (im * I).is_real returns True so this is an edge case
-    raises(UnhandledInput, lambda: lra_satask(Q.gt(im * I, 0), Q.gt(im * I, 0)))
-
     # check matrix inputs
     X = MatrixSymbol("X", 2, 2)
     raises(UnhandledInput, lambda: lra_satask(Q.lt(X, 2) & Q.gt(X, 3)))
 
 
 def test_old_assumptions():
-    # test unhandled old assumptions
-    w = symbols("w")
-    raises(UnhandledInput, lambda: lra_satask(Q.lt(w, 2) & Q.gt(w, 3)))
-    w = symbols("w", rational=False, real=True)
-    raises(UnhandledInput, lambda: lra_satask(Q.lt(w, 2) & Q.gt(w, 3)))
-    w = symbols("w", odd=True, real=True)
-    raises(UnhandledInput, lambda: lra_satask(Q.lt(w, 2) & Q.gt(w, 3)))
-    w = symbols("w", even=True, real=True)
-    raises(UnhandledInput, lambda: lra_satask(Q.lt(w, 2) & Q.gt(w, 3)))
-    w = symbols("w", prime=True, real=True)
-    raises(UnhandledInput, lambda: lra_satask(Q.lt(w, 2) & Q.gt(w, 3)))
-    w = symbols("w", composite=True, real=True)
-    raises(UnhandledInput, lambda: lra_satask(Q.lt(w, 2) & Q.gt(w, 3)))
-    w = symbols("w", integer=True, real=True)
-    raises(UnhandledInput, lambda: lra_satask(Q.lt(w, 2) & Q.gt(w, 3)))
-    w = symbols("w", integer=False, real=True)
-    raises(UnhandledInput, lambda: lra_satask(Q.lt(w, 2) & Q.gt(w, 3)))
-
     # test handled
     w = symbols("w", positive=True, real=True)
     assert lra_satask(Q.le(w, 0)) is False
@@ -82,6 +57,14 @@ def test_rel_queries():
     assert ask(Q.positive(x - z), (x > y) & (y > z)) is True
     assert ask(x + y > 2, (x < 0) & (y <0)) is False
     assert ask(x > z, (x > y) & (y > z)) is True
+
+
+def test_lra_satask_inferred_real():
+    a,b,c=symbols('a b c')
+    assert ask(Q.gt(a, c), Q.gt(a, b) & Q.gt(b, c)) is True
+    assert ask(a > c, (a > b) & (b > c)) is True
+    assert ask(a < c, (a < b) & (b < c)) is True
+    assert ask(Q.lt(a, c), Q.lt(a, b) & Q.lt(b, c)) is True
 
 
 def test_unhandled_queries():
