@@ -5,15 +5,11 @@ from typing import Sequence, Union, TYPE_CHECKING
 
 from sympy.polys.densebasic import dup_reverse
 from sympy.polys.domains import Domain, QQ, ZZ
-from sympy.polys.series.powerseriesring import (
-    series_pprint,
-    PowerSeriesRing,
-)
+from sympy.polys.series.powerseriesring import series_pprint
 from sympy.external.gmpy import GROUND_TYPES, MPZ, MPQ
 from sympy.utilities.decorator import doctest_depends_on
 from sympy.polys.polyerrors import NotReversible
 from sympy.polys.densetools import dup_revert, dup_truncate
-from sympy.polys.densebasic import dup
 
 
 if TYPE_CHECKING:
@@ -22,7 +18,6 @@ elif GROUND_TYPES == "flint":
     from flint import fmpq_poly, fmpq_series, fmpz_poly, fmpz_series, ctx
 else:
     fmpq_poly = fmpq_series = fmpz_poly = fmpz_series = ctx = None
-    __doctest_skip__ = ["*"]
 
 
 ZZSeries = Union[fmpz_series, fmpz_poly]
@@ -51,7 +46,7 @@ def _global_cap(cap: int):
 
 
 @doctest_depends_on(ground_types=["flint"])
-class FlintPowerSeriesRingZZ(PowerSeriesRing[ZZSeries, MPZ]):
+class FlintPowerSeriesRingZZ:
     """
     Flint implementation of power series ring over integers (ZZ).
 
@@ -343,7 +338,7 @@ class FlintPowerSeriesRingZZ(PowerSeriesRing[ZZSeries, MPZ]):
             else:
                 return fmpz_series(comp.coeffs(), prec=ring_prec)
 
-        if s2 and not dom.is_zero(s2.coeffs()[0]):
+        if s2 and not dom.is_zero(s2[0]):
             raise ValueError(
                 "Series composition requires the second series to have a zero constant term."
             )
@@ -373,8 +368,8 @@ class FlintPowerSeriesRingZZ(PowerSeriesRing[ZZSeries, MPZ]):
             _get_series_precision(s) if isinstance(s, fmpz_series) else ring_prec
         )
 
-        Dup: dup[MPZ] = dup_reverse(coeffs)
-        inv: dup[MPZ] = dup_truncate(dup_revert(Dup, prec, dom), prec, dom)
+        dup = dup_reverse(coeffs)
+        inv = dup_truncate(dup_revert(dup, prec, dom), prec, dom)
         return fmpz_series(inv[::-1], prec=prec)
 
     def compositional_inverse(self, s: ZZSeries) -> ZZSeries:
@@ -424,7 +419,7 @@ class FlintPowerSeriesRingZZ(PowerSeriesRing[ZZSeries, MPZ]):
 
 
 @doctest_depends_on(ground_types=["flint"])
-class FlintPowerSeriesRingQQ(PowerSeriesRing[QQSeries, MPQ]):
+class FlintPowerSeriesRingQQ:
     """
     Flint implementation of power series ring over rational field (QQ).
 
@@ -730,7 +725,7 @@ class FlintPowerSeriesRingQQ(PowerSeriesRing[QQSeries, MPQ]):
             else:
                 return fmpq_series(comp, prec=ring_prec)
 
-        if s2 and not dom.is_zero(s2.coeffs()[0]):
+        if s2 and not dom.is_zero(s2[0]):
             raise ValueError(
                 "Series composition requires the second series to have a zero constant term."
             )

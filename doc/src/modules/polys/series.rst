@@ -59,7 +59,7 @@ less than the ring's precision, the exact result is returned.
 However, if an operation produces a result that exceeds the precision threshold,
 it is automatically truncated.
 
-    >>> r = R([1, 2, 3, 4, 5, 6, 7, 8]) 
+    >>> r = R([1, 2, 3, 4, 5, 6, 7, 8])
     >>> s = R([0, 1, 1])
     >>> R.print(R.multiply(r, s))
     x + 3*x**2 + 5*x**3 + 7*x**4 + 9*x**5 + 11*x**6 + 13*x**7 + O(x**8)

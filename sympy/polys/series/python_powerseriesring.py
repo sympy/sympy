@@ -27,7 +27,7 @@ from sympy.polys.densetools import (
 from sympy.polys.polyerrors import NotReversible
 from sympy.polys.domains import Domain, QQ, ZZ
 from sympy.polys.domains.domain import Er, Ef
-from sympy.polys.series.powerseriesring import series_pprint, PowerSeriesRing
+from sympy.polys.series.powerseriesring import series_pprint
 from sympy.external.gmpy import MPZ, MPQ
 
 
@@ -362,7 +362,7 @@ def _useries_integrate(s: USeries[Ef], dom: Domain[Ef], ring_prec: int) -> USeri
     return _useries(series, prec, dom, ring_prec)
 
 
-class PythonPowerSeriesRingZZ(PowerSeriesRing[USeries, MPZ]):
+class PythonPowerSeriesRingZZ:
     """
     Python implementation of power series ring over integers (ZZ).
 
@@ -570,7 +570,7 @@ class PythonPowerSeriesRingZZ(PowerSeriesRing[USeries, MPZ]):
         return _useries_derivative(s, self._domain, self._prec)
 
 
-class PythonPowerSeriesRingQQ(PowerSeriesRing[USeries, MPQ]):
+class PythonPowerSeriesRingQQ:
     """
     Python implementation of power series ring over rational field (QQ).
 
