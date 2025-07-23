@@ -1411,6 +1411,8 @@ def test_latex_log():
         r"\ln{\left(x \right)}^{x}"
     assert latex(log(x, y, evaluate=False)) == r"\log_y{\left(x \right)}"
     assert latex(log(x, 10, evaluate=False)) == r"\log_{10}{\left(x \right)}"
+    assert latex(log(x, y, evaluate=False), ln_notation=True) == r"\log_y{\left(x \right)}"
+    assert latex(log(x, 10, evaluate=False), ln_notation=True) == r"\log_{10}{\left(x \right)}"
 
 
 def test_issue_3568():
