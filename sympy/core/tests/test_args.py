@@ -18,6 +18,7 @@ from sympy.core.symbol import symbols
 from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import sin
+from sympy.logic.algorithms.euf_theory import Apply, EUFFunction
 
 from sympy.testing.pytest import SKIP, warns_deprecated_sympy
 
@@ -5523,3 +5524,18 @@ def test_sympy__combinatorics__perm_groups__Coset():
     b = Permutation(0, 1)
     G = PermutationGroup([a, b])
     assert _test_args(Coset(a, G))
+
+
+def test_sympy__logic__algorithms__euf_theory__Apply():
+    """
+    Required by test_all_classes_are_tested to verify Apply class has valid .args
+    structure and works with SymPy’s expression mechanics.
+    """
+    f = EUFFunction("f", 2)
+    term = Apply(f, (x, y))
+
+    assert isinstance(term.args, tuple)
+    assert len(term.args) == 3  # function + 2 args in Basic
+    assert term.args[0] == f
+    assert term.args[1] == x
+    assert term.args[2] == y
