@@ -10,6 +10,7 @@ from typing import Any
 
 from sympy.core.function import AppliedUndef
 from sympy.core.mul import Mul
+from sympy.core.add import Add
 from mpmath.libmp import repr_dps, to_str as mlib_to_str
 
 from .printer import Printer, print_function
@@ -48,7 +49,7 @@ class ReprPrinter(Printer):
             return str(expr)
 
     def _print_Add(self, expr, order=None):
-        args = self._as_ordered_terms(expr, order=order)
+        args = Add.make_args(expr)
         args = map(self._print, args)
         clsname = type(expr).__name__
         return clsname + "(%s)" % ", ".join(args)
@@ -193,12 +194,7 @@ class ReprPrinter(Printer):
         return "nan"
 
     def _print_Mul(self, expr, order=None):
-        if self.order not in ('old', 'none'):
-            args = expr.as_ordered_factors()
-        else:
-            # use make_args in case expr was something like -x -> x
-            args = Mul.make_args(expr)
-
+        args = Mul.make_args(expr)
         args = map(self._print, args)
         clsname = type(expr).__name__
         return clsname + "(%s)" % ", ".join(args)
