@@ -407,8 +407,8 @@ class PythonPowerSeriesRingZZ(PowerSeriesRing[USeries, MPZ]):
     See Also
     ========
 
-    sympy.polys.series.flint_powerseriesring.FlintPowerSeriesRingZZ
-    sympy.polys.series.seriesring.power_series_ring
+    FlintPowerSeriesRingZZ
+    power_series_ring
     """
 
     _domain = ZZ
@@ -617,8 +617,8 @@ class PythonPowerSeriesRingQQ(PowerSeriesRing[USeries, MPQ]):
     See Also
     ========
 
-    sympy.polys.series.flint_powerseriesring.FlintPowerSeriesRingQQ
-    sympy.polys.series.seriesring.power_series_ring
+    FlintPowerSeriesRingQQ
+    power_series_ring
     """
 
     _domain = QQ

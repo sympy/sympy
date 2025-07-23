@@ -28,6 +28,7 @@ Contents
    domainsref.rst
    internals.rst
    ringseries.rst
+   series.rst
    literature.rst
    solvers.rst
    domainmatrix.rst

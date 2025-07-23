@@ -37,10 +37,13 @@ def power_series_ring(domain: Domain[Er], prec: int = 6) -> PowerSeriesRing:
 
     Examples
     --------
-    >>> from sympy.polys.domains import ZZ, QQ
-    >>> from sympy.polys.series.seriesring import power_series_ring
-    >>> R_ZZ = power_series_ring(ZZ, 5)
-    >>> R_QQ = power_series_ring(QQ, 10)
+    >>> from sympy import QQ
+    >>> from sympy.polys.series import power_series_ring
+    >>> R_QQ = power_series_ring(QQ, 5)
+    >>> inv = R_QQ.inverse(R_QQ([1, 2, (3, 4), (5, 6)]))
+    >>> R_QQ.print(inv)
+    1 - 2*x + 13/4*x**2 - 35/6*x**3 + 523/48*x**4 + O(x**5)
+
     """
     if domain.is_ZZ:
         if FlintPowerSeriesRingZZ is not None:
