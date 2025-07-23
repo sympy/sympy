@@ -1,333 +1,308 @@
 """
-EUFCongruenceClosure: Congruence Closure Algorithm for Equality with Uninterpreted Functions (EUF)
+EUF Congruence Closure for Equality with Uninterpreted Functions (EUF)
+======================================================================
 
-This module implements the congruence closure algorithm as described in:
-    "Congruence Closure with Integer Offsets" by Robert Nieuwenhuis and Albert Oliveras,
-    Technical University of Catalonia, 2003.
+Implements the congruence-closure algorithm for the ground theory
+of Equality with Uninterpreted Functions (EUF) as described in:
+
+    "Congruence Closure with Integer Offsets"
+    Robert Nieuwenhuis and Albert Oliveras,
+    Technical University of Catalonia, 2003,
     https://www.cs.upc.edu/~oliveras/dpllt.pdf
 
-The algorithm efficiently computes the congruence closure of a set of ground equalities
-and function applications, supporting the core reasoning required for EUF solvers in SMT
-and DPLL(T) frameworks.
+The core algorithm efficiently decides equalities among variables and
+(uninterpreted) function applications, using union-find data structures and
+a pending queue to enforce function application congruence.
 
-Key components:
-    - Symbol: Represents variables or constants.
-    - Function: Represents uninterpreted function symbols.
-    - Apply: Application of a function to arguments (terms).
-    - Eq / Neq: Equality and disequality atoms.
-    - EUFCongruenceClosure: The core congruence closure engine.
+Supported input:
+    - SymPy Symbol objects (as variables/constants)
+    - EUFFunction objects (for uninterpreted functions of fixed arity)
+    - Apply objects (custom, see below), for ground applications of EUFFunction to arguments.
+    - Equations (sympy.Eq), e.g. `Eq(f(x), y)`
+    
+Key Classes and Structures:
+---------------------------
 
-The implementation is designed for integration with SymPy's SAT-based assumption system
-and follows the data structures and logic outlined in the referenced paper.
+- EUFFunction:  Uninterpreted function symbol (fixed arity).
+- Apply:        Application of an EUFFunction to argument tuple.
+- EUFCongruenceClosure: Implements the congruence closure engine.
+    - Uses union-find to represent equivalence classes of terms.
+    - Uses `lookup` and `use` for efficient congruence propagation.
+    - Processes equations and propagates function congruence as per the literature.
+
+Design:
+-------
+
+This implementation is suitable for integration with SymPy's SAT-based
+assumptions and logic systems. It is ground (quantifier-free), works
+directly with SymPy Symbol and Eq objects (no need for special encoding),
+and supports efficient incremental equality propagation.
+
+References:
+-----------
+
+- R. Nieuwenhuis and A. Oliveras, "Congruence Closure with Integer Offsets", 2003.
+- Ganzinger, Nieuwenhuis, Oliveras, Tinelli, "DPLL(T): Fast Decision Procedures", 2004.
 """
 
-from dataclasses import dataclass
-from typing import Any, Tuple, List, Dict, Deque, DefaultDict
-from collections import defaultdict, deque
+from sympy import Symbol, Eq
+from sympy.core import Basic
+from collections import deque, defaultdict
 
-# --- Term and Atom Representation ---
 
-@dataclass(frozen=True)
-class Symbol:
+class EUFFunction:
     """
-    Represents a variable or constant in the signature.
-    """
-    name: str
-
-@dataclass(frozen=True)
-class Function:
-    """
-    Represents an uninterpreted function symbol with a specified arity.
-    """
-    name: str
-    arity: int
-
-@dataclass(frozen=True)
-class Apply:
-    """
-    Represents the application of a function to one or more arguments.
+    Uninterpreted function symbol for use in EUF reasoning.
 
     Parameters
     ----------
 
-    func : Function
-        The function symbol being applied.
-    args : Tuple[Any, ...]
-        The arguments (Symbols or nested Apply objects).
+    name : str
+        The name of the uninterpreted function symbol.
+    arity : int
+        The number of arguments the function accepts.
+
+    Examples
+    ========
+
+    >>> f = EUFFunction("f", 2)
+    >>> x, y = symbols('x y')
+    >>> fx = f(x, y)
     """
-    func: Function
-    args: Tuple[Any, ...]  # args are Symbol or Apply
 
-def _sym(name: str) -> Symbol:
-    """Convenience constructor for Symbol."""
-    return Symbol(name)
+    def __init__(self, name: str, arity: int):
+        self.name = name
+        self.arity = arity
 
-def _func(name: str, arity: int = 1) -> Function:
-    """Convenience constructor for Function."""
-    return Function(name, arity)
+    def __call__(self, *args):
+        assert len(args) == self.arity, (
+            f"{self.name} expects {self.arity} args, got {len(args)}"
+        )
+        return Apply(self, args)
 
-def _apply(func: Function, *args: Any) -> Apply:
+    def __repr__(self):
+        return self.name
+
+    def __eq__(self, other):
+        return (
+            isinstance(other, EUFFunction)
+            and self.name == other.name
+            and self.arity == other.arity
+        )
+
+    def __hash__(self):
+        return hash((self.name, self.arity))
+
+
+class Apply(Basic):
     """
-    Constructs an Apply term, ensuring arity matches.
+    Application of an EUFFunction to arguments, suitable for congruence closure.
 
     Parameters
     ----------
 
-    func : Function
-        The function symbol.
-    *args : Any
-        The arguments to the function.
+    function : EUFFunction
+        The uninterpreted function symbol.
+    args : tuple
+        The argument terms (Symbol or other Apply objects).
 
-    Returns
-    -------
+    Examples
+    ========
 
-    Apply
+    >>> f = EUFFunction("f", 1)
+    >>> x = Symbol('x')
+    >>> fx = Apply(f, (x,))
+    >>> fx.function
+    f
+    >>> fx.arguments
+    (x,)
     """
-    assert func.arity == len(args), f"Function {func.name} expects {func.arity} args, got {len(args)}"
-    return Apply(func, args)
 
-@dataclass(frozen=True)
-class Eq:
-    """
-    Represents an equality atom between two terms.
-    """
-    left: Any
-    right: Any
+    def __new__(cls, function, args):
+        args = tuple(args)
+        obj = Basic.__new__(cls, function, *args)
+        obj._function = function
+        obj._arguments = args
+        return obj
 
-@dataclass(frozen=True)
-class Neq:
-    """
-    Represents a disequality atom between two terms.
-    """
-    left: Any
-    right: Any
+    @property
+    def function(self):
+        """Return the EUFFunction applied."""
+        return self._function
 
-def _Eq(left: Any, right: Any) -> Eq:
-    """Convenience constructor for Eq."""
-    return Eq(left, right)
+    @property
+    def arguments(self):
+        """Return the tuple of argument terms."""
+        return self._arguments
 
-def _Neq(left: Any, right: Any) -> Neq:
-    """Convenience constructor for Neq."""
-    return Neq(left, right)
+    def __repr__(self):
+        return f"{self._function}({', '.join(map(str, self._arguments))})"
 
-# --- Congruence Closure Engine ---
 
 class EUFCongruenceClosure:
     """
-    Implements the O(n log n) congruence closure algorithm for ground EUF.
-
-    This class maintains the equivalence classes of terms under the congruence
-    generated by a set of equalities and function applications. It supports efficient
-    queries and incremental addition of equalities.
+    Implements O(n log n) ground congruence-closure for EUF.
 
     Parameters
     ----------
 
-    eqs : List[Any]
-        A list of Eq objects (and/or Apply terms) representing the input equations.
+    eqs : list
+        A list of SymPy Eq objects or Apply terms encoding the constraints.
 
     Attributes
     ----------
 
-    _id_of : Dict[Any, int]
-        Maps each term to a unique integer id.
-    _term_of : List[Any]
-        Maps ids back to terms.
-    rep : List[int]
-        Union-find representative array.
-    rank : List[int]
-        Union-by-rank optimization.
-    cls : List[List[int]]
-        Class lists for each equivalence class.
-    lookup : Dict[Tuple[Function, Tuple[int, ...]], int]
-        Maps (function, tuple of argument reps) to result id.
-    use : Dict[int, List[Tuple[Function, Tuple[Any, ...], int]]]
-        For each id, tracks where it appears as an argument.
+    _id_of : dict
+        Maps term objects to unique integer ids.
+    _term_of : list
+        Maps integer ids to term objects.
+    rep : list
+        Union-find representative ids for each class.
+    rank : list
+        Union-find rank structure.
+    cls : list
+        Lists of equivalence class members.
+
+    lookup : dict
+        Maps (function, tuple of argument reps) to result id (for congruence).
+    use : defaultdict
+        For each arg, tracks relevant function applications for congruence propagation.
     _pending : deque
-        Queue of pairs of ids to merge.
+        Pairs of class ids pending union.
+
+    Examples
+    ========
+
+    >>> x, y = symbols("x y")
+    >>> f = EUFFunction('f', 1)
+    >>> fx, fy = f(x), f(y)
+    >>> eqs = [Eq(x, y), Eq(fx, fy)]
+    >>> cc = EUFCongruenceClosure(eqs)
+    >>> cc.are_equal(x, y)
+    True
+    >>> cc.are_equal(fx, fy)
+    True
     """
 
-    def __init__(self, eqs: List[Any]):
-        # Maps terms to unique ids and vice versa
-        self._id_of: Dict[Any, int] = {}
-        self._term_of: List[Any] = []
-        self.lookup: Dict[Tuple[Function, Tuple[Any, ...]], int] = {}
-        self.use: DefaultDict[int, List[Tuple[Function, Tuple[Any, ...], int]]] = defaultdict(list)
-        self._pending: Deque[Tuple[int, int]] = deque()
+    def __init__(self, eqs):
+        self._id_of = {}          # term object -> id
+        self._term_of = []        # id -> term
+        self.rep = []
+        self.rank = []
+        self.cls = []
+
+        self.lookup = {}                  # (func, tuple[rep_ids]) -> id
+        self.use = defaultdict(list)      # arg_id -> applications
+        self._pending = deque()
 
         def _cid(term):
-            """Assigns and returns a unique integer id for each term."""
             if term not in self._id_of:
-                self._id_of[term] = len(self._term_of)
+                tid = len(self._term_of)
+                self._id_of[term] = tid
                 self._term_of.append(term)
+                self.rep.append(tid)
+                self.rank.append(0)
+                self.cls.append([tid])
             return self._id_of[term]
 
-        # Union-find structures
-        n_hint = 2 * len(eqs) + 1  # Heuristic for initial array sizes
-        self.rep = list(range(n_hint))      # Representative array
-        self.rank = [0] * n_hint           # Union-by-rank array
-        self.cls = [[i] for i in range(n_hint)]  # Class lists
-
-        # Congruence closure tables
-        self.lookup = {}  # (func, tuple of arg ids) -> result id
-        self.use = defaultdict(list)  # id -> list of function applications
-        self._pending = deque()  # Queue of (id, id) pairs to merge
-
-        # Flatten and process equations
         for eq in eqs:
             if isinstance(eq, Eq):
-                # Process equality: flatten both sides and add to pending
-                i = _cid(self._flatten(eq.left, _cid))
-                j = _cid(self._flatten(eq.right, _cid))
-                self._pending.append((i, j))
-            elif isinstance(eq, Apply):
-                # For function applications, ensure all subterms are assigned ids
-                _cid(self._flatten(eq, _cid))
+                lhs = self._flatten(eq.lhs, _cid)
+                rhs = self._flatten(eq.rhs, _cid)
+                self._pending.append((_cid(lhs), _cid(rhs)))
+            else:
+                self._flatten(eq, _cid)
 
         self._process_pending_unions()
 
     def _flatten(self, term, _cid):
         """
-        Recursively assigns ids to all subterms and builds lookup/use tables.
-
-        Parameters
-        ----------
-
-        term : Any
-            The term to flatten (Symbol, Function, or Apply).
-        _cid : Callable
-            Function to assign/get ids.
-
-        Returns
-        -------
-
-        Any
-            The flattened term (with ids assigned).
+        Recursively flattens terms (Symbol or Apply) for use in congruence closure.
+        Internally registers all terms and argument tuples.
         """
-        if isinstance(term, (Symbol, Function)):
-            _cid(term)  # Ensure id assignment
-            return term
-        elif isinstance(term, Apply):
-            flat_args = tuple(self._flatten(arg, _cid) for arg in term.args)
-            flat_apply = Apply(term.func, flat_args)
-            _cid(flat_apply)  # Ensure id assignment for the application itself
-            # Register all argument ids and update use/lookup tables
-            for arg in flat_args:
-                _cid(arg)
-                self.use[self._id_of[arg]].append((term.func, flat_args, self._id_of[flat_apply]))
-            self.lookup[(term.func, tuple(self._id_of[arg] for arg in flat_args))] = self._id_of[flat_apply]
-            return flat_apply
-        else:
+        if isinstance(term, (Symbol, int)):
             _cid(term)
             return term
+        elif isinstance(term, Apply):
+            flat_args = tuple(self._flatten(arg, _cid) for arg in term.arguments)
+            flat_term = Apply(term.function, flat_args)
+            tid = _cid(flat_term)
+            for arg in flat_args:
+                aid = _cid(arg)
+                self.use[aid].append((term.function, flat_args, tid))
+            self.lookup[(term.function, tuple(_cid(arg) for arg in flat_args))] = tid
+            return flat_term
+        else:
+            raise TypeError(f"Unsupported term in congruence closure: {term!r}")
 
-    def _find(self, i: int) -> int:
+    def _find(self, i):
         """
-        Finds the representative of the class containing id i, with path compression.
-
-        Parameters
-        ----------
-
-        i : int
-            The id to find the representative for.
-
-        Returns
-        -------
-
-        int
-            The representative id.
+        Find the representative id for a given id, with path compression.
         """
         while self.rep[i] != i:
             self.rep[i] = self.rep[self.rep[i]]
             i = self.rep[i]
         return i
 
-    def _union(self, i: int, j: int):
+    def _union(self, i, j):
         """
-        Merges the equivalence classes of i and j.
-
-        Parameters
-        ----------
-        i, j : int
-            The ids to merge.
+        Merge the equivalence classes of ids i and j.
         """
         i, j = self._find(i), self._find(j)
         if i == j:
             return
-        # Union by rank for efficiency
         if self.rank[i] < self.rank[j]:
             i, j = j, i
         self.rep[j] = i
         if self.rank[i] == self.rank[j]:
             self.rank[i] += 1
-        # Merge class lists and propagate congruence
         self.cls[i].extend(self.cls[j])
-        self.cls[j].clear()
+        self.cls[j] = []
         self._merge_effects(i, j)
 
     def _process_pending_unions(self):
         """
-        Processes all pending unions, merging classes and propagating congruence.
+        Processes all pending unions, applying congruence closure to class merge queue.
         """
         while self._pending:
             i, j = self._pending.popleft()
             self._union(i, j)
 
-    def _merge_effects(self, ra: int, rb: int):
+    def _merge_effects(self, ra, rb):
         """
-        After merging classes ra and rb, checks all function applications where
-        one of the reps appears. If two applications now have all arguments equal,
-        their results must also be merged.
-
-        Parameters
-        ----------
-
-        ra, rb : int
-            The ids of the merged class representatives.
+        Propagate congruence after merging equivalence classes ra and rb.
+        Scans all function applications affected by merged arguments, and
+        schedules new unions if two app results (with congruent args) now exist.
         """
         for r in (ra, rb):
             tmp = self.use.pop(r, [])
             for (func, arg_terms, res_id) in tmp:
-                # Find representatives for all argument terms
                 rep_args = tuple(self._find(self._id_of[arg]) for arg in arg_terms)
                 key = (func, rep_args)
                 if key in self.lookup:
-                    # If this application already exists, merge their results
                     self._pending.append((res_id, self.lookup[key]))
                 else:
-                    # Otherwise, register this application for future merges
                     self.lookup[key] = res_id
                     for aid in rep_args:
                         self.use[aid].append((func, rep_args, res_id))
 
-    def add_equality(self, t1: Any, t2: Any):
+    def add_equality(self, a, b):
         """
-        Adds an equality between two terms and processes the resulting congruence.
+        Add an equality a == b (incremental), given as Symbol or Apply.
 
-        Parameters
-        ----------
-
-        t1, t2 : Any
-            The terms to be equated.
+        Useful for interactive or stepwise usage.
         """
-        i, j = self._id_of[t1], self._id_of[t2]
-        self._pending.append((self._find(i), self._find(j)))
+        if a not in self._id_of or b not in self._id_of:
+            raise KeyError("Term not registered.")
+        self._pending.append((self._find(self._id_of[a]), self._find(self._id_of[b])))
         self._process_pending_unions()
 
-    def are_equal(self, t1: Any, t2: Any) -> bool:
+    def are_equal(self, a, b):
         """
-        Checks if two terms are in the same equivalence class.
+        Return True iff a and b are currently known to be equal in the congruence closure.
 
-        Parameters
-        ----------
-        t1, t2 : Any
-            The terms to compare.
-
-        Returns
-        -------
-        bool
-            True if t1 and t2 are congruent, False otherwise.
+        If a or b are not present in the current congruence, returns False.
         """
-        if t1 not in self._id_of or t2 not in self._id_of:
+        if a not in self._id_of or b not in self._id_of:
             return False
-        return self._find(self._id_of[t1]) == self._find(self._id_of[t2])
+        return self._find(self._id_of[a]) == self._find(self._id_of[b])
