@@ -563,7 +563,7 @@ class PythonCodePrinter(AbstractPythonCodePrinter):
     def _print_Indexed(self, expr):
         base = expr.args[0]
         index = expr.args[1:]
-        return "{}[{}]".format(str(base), ", ".join([self._print(ind) for ind in index]))
+        return "{}[{}]".format(self._print(base), ", ".join([self._print(ind) for ind in index]))
 
     def _print_Pow(self, expr, rational=False):
         return self._hprint_Pow(expr, rational=rational)
