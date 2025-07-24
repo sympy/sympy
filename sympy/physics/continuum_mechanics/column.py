@@ -45,8 +45,8 @@ class Column:
 
     >>> from sympy.physics.continuum_mechanics.column import Column
     >>> c = Column(20, 20000, 0.75)
-    >>> c.apply_support(0)
-    >>> c.apply_support(20)
+    >>> r1 = c.apply_support(0)
+    >>> r2 = c.apply_support(20)
     >>> c.apply_load(5, 0, 0, end=10)
     >>> c.apply_load(20, 12, -1)
     >>> c.apply_load(20, 16, -1)
@@ -56,7 +56,7 @@ class Column:
     R_0*SingularityFunction(x, 0, -1) + R_20*SingularityFunction(x, 20, -1)
     + 5*SingularityFunction(x, 0, 0) - 5*SingularityFunction(x, 10, 0)
     + 20*SingularityFunction(x, 12, -1) + 20*SingularityFunction(x, 16, -1)
-    >>> c.solve_for_reaction_loads()
+    >>> c.solve_for_reaction_loads(r1, r2)
     >>> c.reaction_loads
     {R_0: -99/2, R_20: -81/2}
     >>> c.axial_force()
@@ -386,11 +386,11 @@ class Column:
 
         >>> from sympy.physics.continuum_mechanics.column import Column
         >>> c = Column(10, 20000, 0.5)
-        >>> c.apply_support(0)
-        >>> c.apply_support(10)
+        >>> r1 = c.apply_support(0)
+        >>> r2 = c.apply_support(10)
         >>> c.apply_telescope_hinge(8)
         >>> c.apply_load(10, 5, -1)
-        >>> c.solve_for_reaction_loads()
+        >>> c.solve_for_reaction_loads(r1, r2)
         >>> c.reaction_loads
         {R_0: -10, R_10: 0}
         >>> c.hinge_deflections
@@ -528,16 +528,16 @@ class Column:
         >>> from sympy.core.symbol import symbols
         >>> E, A = symbols('E A')
         >>> c = Column(10, E, A)
-        >>> c.apply_support(0)
-        >>> c.apply_support(5)
-        >>> c.apply_support(10)
+        >>> r1 = c.apply_support(0)
+        >>> r2 = c.apply_support(5)
+        >>> r3 = c.apply_support(10)
         >>> c.apply_load(-5, 3, -1)
         >>> c.apply_load(-1, 5, 0, end=10)
         >>> c.axial_force()
         C_N - R_0*SingularityFunction(x, 0, 0) - R_10*SingularityFunction(x, 10, 0)
             - R_5*SingularityFunction(x, 5, 0) + 5*SingularityFunction(x, 3, 0)
             + SingularityFunction(x, 5, 1) - SingularityFunction(x, 10, 1)
-        >>> c.solve_for_reaction_loads()
+        >>> c.solve_for_reaction_loads(r1, r2, r3)
         >>> c.axial_force()
         -2*SingularityFunction(x, 0, 0) + 5*SingularityFunction(x, 3, 0)
             - 11*SingularityFunction(x, 5, 0)/2 + SingularityFunction(x, 5, 1)
@@ -562,13 +562,13 @@ class Column:
 
         >>> from sympy.physics.continuum_mechanics.column import Column
         >>> c = Column(10, 210000, 1)
-        >>> c.apply_support(0)
-        >>> c.apply_support(10)
+        >>> r1 = c.apply_support(0)
+        >>> r2 = c.apply_support(10)
         >>> c.apply_load(10, 5, -1)
         >>> c.deflection()
         C_N*x + C_u - R_0*SingularityFunction(x, 0, 1)/210000
         - R_10*SingularityFunction(x, 10, 1)/210000 - SingularityFunction(x, 5, 1)/21000
-        >>> c.solve_for_reaction_loads()
+        >>> c.solve_for_reaction_loads(r1, r2)
         >>> c.deflection()
         SingularityFunction(x, 0, 1)/42000 - SingularityFunction(x, 5, 1)/21000
         + SingularityFunction(x, 10, 1)/42000
@@ -603,13 +603,13 @@ class Column:
 
             >>> from sympy.physics.continuum_mechanics.column import Column
             >>> c = Column(10, 210000, 1)
-            >>> c.apply_support(0)
-            >>> c.apply_support(8)
-            >>> c.apply_support(10)
+            >>> r1 = c.apply_support(0)
+            >>> r2 = c.apply_support(8)
+            >>> r3 = c.apply_support(10)
             >>> c.apply_load(5, 0, 0, end=10)
             >>> c.apply_load(-10, 5, -1)
             >>> c.apply_load(5, 8, -1)
-            >>> c.solve_for_reaction_loads()
+            >>> c.solve_for_reaction_loads(r1, r2, r3)
             >>> c.plot_axial_force()
             Plot object containing:
             [0]: cartesian line: 65*SingularityFunction(x, 0, 0)/4
@@ -641,13 +641,13 @@ class Column:
 
             >>> from sympy.physics.continuum_mechanics.column import Column
             >>> c = Column(10, 210000, 1)
-            >>> c.apply_support(0)
-            >>> c.apply_support(8)
-            >>> c.apply_support(10)
+            >>> r1 = c.apply_support(0)
+            >>> r2 = c.apply_support(8)
+            >>> r3 = c.apply_support(10)
             >>> c.apply_load(5, 0, 0, end=10)
             >>> c.apply_load(-10, 5, -1)
             >>> c.apply_load(5, 8, -1)
-            >>> c.solve_for_reaction_loads()
+            >>> c.solve_for_reaction_loads(r1, r2, r3)
             >>> c.plot_deflection()
             Plot object containing:
             [0]: cartesian line: 13*SingularityFunction(x, 0, 1)/168000
