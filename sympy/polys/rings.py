@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Generic, Callable, Iterable, TYPE_CHECKING
+from typing import Generic, Callable, Iterable, TYPE_CHECKING, Any
 
 from operator import add, mul, lt, le, gt, ge
 from functools import reduce
@@ -458,11 +458,7 @@ class PolyRing(DefaultPrinting, IPolys, Generic[Er]):
 
     def term_new(self, monom, coeff) -> PolyElement[Er]:
         """Create a polynomial with a single term."""
-        coeff = self.domain_new(coeff)
-        poly = self.zero
-        if coeff:
-            poly[monom] = coeff
-        return poly
+        raise NotImplementedError
 
     # Polynomial creation from various formats
     def from_dict(self, element, orig_domain=None) -> PolyElement[Er]:
@@ -708,8 +704,19 @@ class PyPolyRing(PolyRing):
 
         return poly
 
+    def term_new(self, monom, coeff) -> PolyElement[Er]:
+        coeff = self.domain_new(coeff)
+        poly = self.zero
+        if coeff:
+            poly[monom] = coeff
+        return poly
+
+
 class FPolyRing(PolyRing):
     """Multivariate distributed polynomial rings backed by FLINT."""
+
+    _python_ring: PyPolyRing  # type annotation to satisfy mypy
+    flint_ctx: Any  # putting placeholder for flint context
 
     @classmethod
     def _new(cls, symbols, domain, order):
@@ -769,6 +776,10 @@ class FPolyRing(PolyRing):
         # TODO: Implement direct polynomial creation from dict once FPolyElement is ready
         return self._python_ring._from_dict_ground(element, orig_domain)
 
+    def term_new(self, monom, coeff) -> PolyElement[Er]:
+        # TODO: Implement direct polynomial creation from term once FPolyElement is ready
+        return self._python_ring.term_new(monom, coeff)
+
 
 class PolyElement(DomainElement, DefaultPrinting, CantSympify, Generic[Er]):
     """Element of multivariate distributed polynomial ring."""
@@ -786,14 +797,22 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, Generic[Er]):
         raise NotImplementedError("Must be implemented by subclass")
 
     def __init__(self, ring: PolyRing[Er], init: dict[Mon, Er] | Iterable[tuple[Mon, Er]]):
-        super().__init__(init)
+        super().__init__()
         self.ring = ring
         # This check would be too slow to run every time:
         # self._check()
 
-
     def __getnewargs__(self):
         return (self.ring, list(self.iterterms()))
+
+    def __setitem__(self, monom, coeff):
+        raise NotImplementedError
+
+    def __getitem__(self, monom):
+        raise NotImplementedError
+
+    def __len__(self):
+        raise NotImplementedError
 
     _hash = None
 
@@ -2620,7 +2639,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, Generic[Er]):
         raise NotImplementedError
 
 
-class PyPolyElement(PolyElement, dict):
+class PyPolyElement(PolyElement, dict): # type: ignore
     """Python-based sparse multivariate polynomial element."""
 
     @classmethod
@@ -2636,6 +2655,15 @@ class PyPolyElement(PolyElement, dict):
             super().__init__(init)
             self.ring = ring
             self._hash = None
+
+    def __setitem__(self, monom, coeff):
+        dict.__setitem__(self, monom, coeff)
+
+    def __getitem__(self, monom):
+        return dict.__getitem__(self, monom)
+
+    def __len__(self):
+        return dict.__len__(self)
 
     def _equality(self, other):
         if not other:
