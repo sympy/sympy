@@ -225,6 +225,8 @@ class FlintPowerSeriesRingZZ:
                 return fmpz_series(s, prec=ring_prec)
             return s
 
+        # XXX: This shold simply be: fmpz_series(s, prec=ring_prec)
+        # https://github.com/flintlib/python-flint/issues/304
         prec = min(_get_series_precision(s), ring_prec)
         return fmpz_series(s.coeffs(), prec=prec)
 
@@ -362,15 +364,14 @@ class FlintPowerSeriesRingZZ:
         """Compute the multiplicative inverse of a power series."""
         dom: Domain[MPZ] = self._domain
         ring_prec: int = self._prec
-        coeffs: list[MPZ] = s.coeffs()
 
-        if not coeffs or not dom.is_unit(coeffs[0]):
+        if not s or not dom.is_unit(s[0]):
             raise NotReversible(
                 "Series inverse requires the constant term to be a unit"
             )
 
         if isinstance(s, fmpz_poly):
-            s = fmpz_series(coeffs, prec=ring_prec)
+            s = fmpz_series(s, prec=ring_prec)
 
         with _global_cap(ring_prec):
             return 1 / s
@@ -378,20 +379,19 @@ class FlintPowerSeriesRingZZ:
     def reversion(self, s: ZZSeries) -> ZZSeries:
         """Compute the compositional inverse of a power series."""
         dom = self._domain
-        coeffs = s.coeffs()
 
-        if not coeffs or not dom.is_zero(coeffs[0]):
+        if not s or not dom.is_zero(s[0]):
             raise NotReversible(
                 "Series compositional inverse requires the constant term to be zero."
             )
 
-        if len(coeffs) >= 2 and not dom.is_unit(coeffs[1]):
+        if len(s) >= 2 and not dom.is_unit(s[1]):
             raise NotReversible(
                 "Series compositional inverse requires the linear term to be unit."
             )
 
         if isinstance(s, fmpz_poly):
-            s = fmpz_series(coeffs, prec=self._prec)
+            s = fmpz_series(s, prec=self._prec)
 
         with _global_cap(self._prec):
             return s.reversion()
@@ -404,6 +404,8 @@ class FlintPowerSeriesRingZZ:
         if len(s) <= n:
             return s
 
+        # XXX: This should simply be: return fmpz_series(s, prec=n)
+        # https://github.com/flintlib/python-flint/issues/304
         coeffs = s.coeffs()[:n]
         return fmpz_series(coeffs, prec=n)
 
@@ -606,6 +608,8 @@ class FlintPowerSeriesRingQQ:
                 return fmpq_series(s, prec=ring_prec)
             return s
 
+        # XXX: This should simply be: fmpq_series(s, prec=ring_prec)
+        # https://github.com/flintlib/python-flint/issues/304
         prec = min(_get_series_precision(s), ring_prec)
         return fmpq_series(s.coeffs(), prec=prec)
 
@@ -703,17 +707,6 @@ class FlintPowerSeriesRingQQ:
         """Compute the square of a power series."""
         return self.pow_int(s, 2)
 
-    def truncate(self, s: QQSeries, n: int) -> QQSeries:
-        """Truncate a power series to `n` terms."""
-        if n < 0:
-            raise ValueError("Truncation precision must be non-negative")
-
-        if len(s) <= n:
-            return s
-
-        coeffs = s.coeffs()[:n]
-        return fmpq_series(coeffs, prec=n)
-
     def compose(self, s1: QQSeries, s2: QQSeries) -> QQSeries:
         """Compose two power series, `s1(s2)`."""
         dom: Domain[MPQ] = self._domain
@@ -754,15 +747,14 @@ class FlintPowerSeriesRingQQ:
         """Compute the multiplicative inverse of a power series."""
         dom: Domain[MPQ] = self._domain
         ring_prec: int = self._prec
-        coeffs: list[MPQ] = s.coeffs()
 
-        if not coeffs or not dom.is_unit(coeffs[0]):
+        if not s or not dom.is_unit(s[0]):
             raise NotReversible(
                 "Series inverse requires the constant term to be a unit"
             )
 
         if isinstance(s, fmpq_poly):
-            s = fmpq_series(coeffs, prec=ring_prec)
+            s = fmpq_series(s, prec=ring_prec)
 
         with _global_cap(ring_prec):
             return s.inv()
@@ -770,23 +762,35 @@ class FlintPowerSeriesRingQQ:
     def reversion(self, s: QQSeries) -> QQSeries:
         """Compute the compositional inverse of a power series."""
         dom = self._domain
-        coeffs = s.coeffs()
 
-        if not coeffs or not dom.is_zero(coeffs[0]):
+        if not s or not dom.is_zero(s[0]):
             raise NotReversible(
                 "Series compositional inverse requires the constant term to be zero."
             )
 
-        if len(coeffs) >= 2 and not dom.is_unit(coeffs[1]):
+        if len(s) >= 2 and not dom.is_unit(s[1]):
             raise NotReversible(
                 "Series compositional inverse requires the linear term to be unit."
             )
 
         if isinstance(s, fmpq_poly):
-            s = fmpq_series(coeffs, prec=self._prec)
+            s = fmpq_series(s, prec=self._prec)
 
         with _global_cap(self._prec):
             return s.reversion()
+
+    def truncate(self, s: QQSeries, n: int) -> QQSeries:
+        """Truncate a power series to `n` terms."""
+        if n < 0:
+            raise ValueError("Truncation precision must be non-negative")
+
+        if len(s) <= n:
+            return s
+
+        # XXX: This should simply be: return fmpq_series(s, prec=n)
+        # https://github.com/flintlib/python-flint/issues/304
+        coeffs = s.coeffs()[:n]
+        return fmpq_series(coeffs, prec=n)
 
     def differentiate(self, s: QQSeries) -> QQSeries:
         """Compute the derivative of a power series."""
