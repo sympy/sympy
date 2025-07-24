@@ -191,9 +191,9 @@ class Column:
         >>> from sympy.core.symbol import symbols
         >>> E, A = symbols('E A ')
         >>> c = Column(10, E, A)
-        >>> c.apply_support(0)
-        >>> c.apply_support(10)
-        >>> c.apply_load(-10, 10, -1)
+        >>> r1 = c.apply_support(0)
+        >>> r2 = c.apply_support(10)
+        >>> r3 = c.apply_load(-10, 10, -1)
         >>> print(c.load)
         R_0*SingularityFunction(x, 0, -1) + R_10*SingularityFunction(x, 10, -1)
             - 10*SingularityFunction(x, 10, -1)
@@ -253,7 +253,7 @@ class Column:
         >>> from sympy.core.symbol import symbols
         >>> E, A = symbols('E A')
         >>> c = Column(10, E, A)
-        >>> c.apply_support(0)
+        >>> r1 = c.apply_support(0)
         >>> c.apply_load(-10, 10, -1)
         >>> c.applied_loads
         [(-10, 10, -1, None)]
@@ -358,9 +358,9 @@ class Column:
         >>> from sympy.core.symbol import symbols
         >>> L, E, A, F = symbols('L E A F')
         >>> c = Column(L, E, A)
-        >>> c.apply_support(0)
-        >>> c.apply_support(L / 2)
-        >>> c.apply_support(L)
+        >>> r1 = c.apply_support(0)
+        >>> r2 = c.apply_support(L / 2)
+        >>> r3 = c.apply_support(L)
         >>> c.apply_load(F, L / 4, -1)
         >>> c.apply_load(F, 3*L / 4, -1)
         >>> c.applied_loads
@@ -427,9 +427,9 @@ class Column:
         >>> from sympy.core.symbol import symbols
         >>> L, E, A, F = symbols('L E A F')
         >>> c = Column(L, E, A)
-        >>> c.apply_support(0)
-        >>> c.apply_support(L / 2)
-        >>> c.apply_support(L)
+        >>> r1 = c.apply_support(0)
+        >>> r2 = c.apply_support(L / 2)
+        >>> r3 = c.apply_support(L)
         >>> c.apply_load(F, L / 4, -1)
         >>> c.apply_load(F, 3*L / 4, -1)
         >>> c.load
