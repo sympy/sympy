@@ -1,4 +1,4 @@
-from .lti import (TransferFunction, DiscreteTransferFunction, new_transfer_function,
+from .lti import (TransferFunction, DiscreteTransferFunction, create_transfer_function,
     PIDController, Series, MIMOSeries, Parallel, MIMOParallel, Feedback,
     MIMOFeedback, TransferFunctionMatrix, StateSpace, DiscreteStateSpace, gbt,
     bilinear, forward_diff, backward_diff, phase_margin, gain_margin)
@@ -12,7 +12,7 @@ from .control_plots import (pole_zero_numerical_data, pole_zero_plot,
 from .routh_table import RouthHurwitz, negative_real_part_conditions
 
 __all__ = ['TransferFunction', 'DiscreteTransferFunction',
-    'new_transfer_function', 'PIDController', 'Series', 'MIMOSeries',
+    'create_transfer_function', 'PIDController', 'Series', 'MIMOSeries',
     'Parallel', 'MIMOParallel', 'Feedback', 'MIMOFeedback',
     'TransferFunctionMatrix', 'StateSpace', 'DiscreteStateSpace', 'gbt',
     'bilinear', 'forward_diff', 'backward_diff', 'phase_margin', 'gain_margin',

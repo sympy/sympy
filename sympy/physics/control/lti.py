@@ -519,7 +519,7 @@ def _compatibility_decorator(func):
     return wrapper
 
 
-def new_transfer_function(num, den, var, sampling_time):
+def create_transfer_function(num, den, var, sampling_time=0):
     """
     Creates a new transfer function object.
     sampling_time == 0 means continuous time transfer function.
@@ -535,7 +535,8 @@ def new_transfer_function(num, den, var, sampling_time):
     var : Symbol
         Complex variable of the Laplace or z transform used by the
         polynomials of the transfer function.
-    sampling_time : Symbol, Number
+    sampling_time : Symbol, Number, optional
+        Default is 0.
         Time interval between two consecutive sampling instants.
         If sampling_time == 0, it is a continuous time transfer function,
         else it is a discrete time transfer function.
@@ -544,15 +545,15 @@ def new_transfer_function(num, den, var, sampling_time):
     ========
 
     >>> from sympy.abc import s, z
-    >>> from sympy.physics.control.lti import new_transfer_function
+    >>> from sympy.physics.control.lti import create_transfer_function
     >>> num = s + 5
     >>> den = 3*s**2 + 2*s + 1
-    >>> tf = new_transfer_function(num, den, s, 0)
+    >>> tf = create_transfer_function(num, den, s)
     >>> tf
     TransferFunction(s + 5, 3*s**2 + 2*s + 1, s)
     >>> num = z
     >>> den = z + 1
-    >>> dtf = new_transfer_function(num, den, z, 0.1)
+    >>> dtf = create_transfer_function(num, den, z, 0.1)
     >>> dtf
     DiscreteTransferFunction(z, z + 1, z, 0.1)
 
@@ -977,12 +978,12 @@ class TransferFunctionBase(SISOLinearTimeInvariant, ABC):
         arg_num = self.num.subs(old, new)
         arg_den = self.den.subs(old, new)
 
-        argnew = new_transfer_function(arg_num, arg_den, self.var, self.sampling_time)
+        argnew = create_transfer_function(arg_num, arg_den, self.var, self.sampling_time)
 
         return argnew
 
     def _eval_evalf(self, prec):
-        return new_transfer_function(
+        return create_transfer_function(
             self.num._eval_evalf(prec),
             self.den._eval_evalf(prec),
             self.var, self.sampling_time)
@@ -992,7 +993,7 @@ class TransferFunctionBase(SISOLinearTimeInvariant, ABC):
                     expand=False).as_numer_denom()
         num_, den_ = tf[0], tf[1]
 
-        return new_transfer_function(num_, den_, self.var, self.sampling_time)
+        return create_transfer_function(num_, den_, self.var, self.sampling_time)
 
     def expand(self):
         """
@@ -1012,7 +1013,7 @@ class TransferFunctionBase(SISOLinearTimeInvariant, ABC):
         DiscreteTransferFunction(-3*b**2 + 2*b*p + p**2, -2*b**2 + b*p + p**2, p, 12)
 
         """
-        return new_transfer_function(expand(self.num), expand(self.den), self.var,
+        return create_transfer_function(expand(self.num), expand(self.den), self.var,
                               self.sampling_time)
 
     @abstractmethod
@@ -1195,7 +1196,7 @@ class TransferFunctionBase(SISOLinearTimeInvariant, ABC):
         if cancel_poles_zeros:
             num, den = cancel(tf.num / tf.den).as_numer_denom()
 
-        return new_transfer_function(num.collect(self.var), den.collect(self.var),
+        return create_transfer_function(num.collect(self.var), den.collect(self.var),
                       self.var, self.sampling_time)
 
     @abstractmethod
@@ -1339,7 +1340,7 @@ class TransferFunctionBase(SISOLinearTimeInvariant, ABC):
                 raise ValueError(filldedent("""
                     All the transfer functions should use the same complex
                     variable of the Laplace domain or z-domain."""))
-            return Series(self, new_transfer_function(other.den, other.num,
+            return Series(self, create_transfer_function(other.den, other.num,
                                        self.var, self.sampling_time))
         elif (isinstance(other, Parallel) and len(other.args
                 ) == 2 and isinstance(other.args[0], self.__class__)
@@ -1376,17 +1377,17 @@ class TransferFunctionBase(SISOLinearTimeInvariant, ABC):
         if not p.is_Integer:
             raise ValueError("Exponent must be an integer.")
         if p is S.Zero:
-            return new_transfer_function(1, 1, self.var, self.sampling_time)
+            return create_transfer_function(1, 1, self.var, self.sampling_time)
         elif p > 0:
             num_, den_ = self.num**p, self.den**p
         else:
             p = abs(p)
             num_, den_ = self.den**p, self.num**p
 
-        return new_transfer_function(num_, den_, self.var, self.sampling_time)
+        return create_transfer_function(num_, den_, self.var, self.sampling_time)
 
     def __neg__(self):
-        return new_transfer_function(-self.num, self.den, self.var, self.sampling_time)
+        return create_transfer_function(-self.num, self.den, self.var, self.sampling_time)
 
     def _StateSpace_matrices_equivalent(self):
         """
@@ -2543,7 +2544,7 @@ class Series(SISOLinearTimeInvariant):
         res_den = Mul(*_den_arg, evaluate=True)
 
         sampling_time = self.args[0].sampling_time
-        return new_transfer_function(res_num, res_den, self.var, sampling_time)
+        return create_transfer_function(res_num, res_den, self.var, sampling_time)
 
     def _eval_rewrite_as_TransferFunction(self, *args, **kwargs):
         if not self.is_continuous:
@@ -2597,7 +2598,7 @@ class Series(SISOLinearTimeInvariant):
                             else DiscreteTransferFunction
 
         if isinstance(other, TransferFunctionBase):
-            return Series(*self.args, new_transfer_function(other.den, other.num,
+            return Series(*self.args, create_transfer_function(other.den, other.num,
                                              other.var, other.sampling_time))
         elif isinstance(other, Series):
             tf_self = self.rewrite(tf_class)
@@ -2624,7 +2625,7 @@ class Series(SISOLinearTimeInvariant):
             raise ValueError("This transfer function expression is invalid.")
 
     def __neg__(self):
-        return Series(new_transfer_function(-1, 1, self.var, self.sampling_time), self)
+        return Series(create_transfer_function(-1, 1, self.var, self.sampling_time), self)
 
     def to_expr(self):
         """Returns the equivalent ``Expr`` object."""
@@ -3182,7 +3183,7 @@ class Parallel(SISOLinearTimeInvariant):
         res = Add(*_arg).as_numer_denom()
 
         sampling_time = self.args[0].sampling_time
-        return new_transfer_function(*res, self.var, sampling_time)
+        return create_transfer_function(*res, self.var, sampling_time)
 
     def _eval_rewrite_as_TransferFunction(self, *args, **kwargs):
         if not self.is_continuous:
@@ -3231,7 +3232,7 @@ class Parallel(SISOLinearTimeInvariant):
         return Series(self, other)
 
     def __neg__(self):
-        return Series(new_transfer_function(-1, 1, self.var, self.sampling_time), self)
+        return Series(create_transfer_function(-1, 1, self.var, self.sampling_time), self)
 
     def to_expr(self):
         """Returns the equivalent ``Expr`` object."""
@@ -3719,7 +3720,7 @@ class Feedback(SISOLinearTimeInvariant):
     """
     def __new__(cls, sys1, sys2=None, sign=-1):
         if not sys2:
-            sys2 = new_transfer_function(1, 1, sys1.var, sys1.sampling_time)
+            sys2 = create_transfer_function(1, 1, sys1.var, sys1.sampling_time)
 
         if not isinstance(sys1, (TransferFunctionBase, Series, StateSpace, Feedback)):
             raise TypeError("Unsupported type for `sys1` in Feedback.")
@@ -3855,7 +3856,7 @@ class Feedback(SISOLinearTimeInvariant):
         """
         Returns the denominator of the closed loop feedback model.
         """
-        unit = new_transfer_function(1, 1, self.var, self.args[0].sampling_time)
+        unit = create_transfer_function(1, 1, self.var, self.args[0].sampling_time)
         arg_list = list(self.sys1.args) if isinstance(self.sys1, Series) else [self.sys1]
         if self.sign == 1:
             return Parallel(unit, -Series(self.sys2, *arg_list))
@@ -3974,14 +3975,14 @@ class Feedback(SISOLinearTimeInvariant):
         arg_list = list(self.sys1.args) if isinstance(self.sys1, Series) else [self.sys1]
         # F_n and F_d are resultant TFs of num and den of Feedback.
         F_n = self.sys1.doit()
-        unit = new_transfer_function(1, 1, self.sys1.var, self.sys1.sampling_time)
+        unit = create_transfer_function(1, 1, self.sys1.var, self.sys1.sampling_time)
 
         if self.sign == -1:
             F_d = Parallel(unit, Series(self.sys2, *arg_list)).doit()
         else:
             F_d = Parallel(unit, -Series(self.sys2, *arg_list)).doit()
 
-        _resultant_tf = new_transfer_function(F_n.num * F_d.den, F_n.den * F_d.num,
+        _resultant_tf = create_transfer_function(F_n.num * F_d.den, F_n.den * F_d.num,
                                F_n.var, self.sys1.sampling_time)
 
         if cancel:

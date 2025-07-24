@@ -19,10 +19,11 @@ from sympy.core.containers import Tuple
 from sympy.matrices import ImmutableMatrix, Matrix, ShapeError
 from sympy.functions.elementary.trigonometric import sin, cos
 from sympy.physics.control.lti import (
-    TransferFunctionBase, TransferFunction, DiscreteTransferFunction, PIDController,
-    Series, Parallel, Feedback, TransferFunctionMatrix, MIMOSeries,
-    MIMOParallel, MIMOFeedback, StateSpace, DiscreteStateSpace, gbt, bilinear,
-    forward_diff, backward_diff, phase_margin, gain_margin)
+    create_transfer_function,TransferFunctionBase, TransferFunction,
+    DiscreteTransferFunction, PIDController,Series, Parallel, Feedback,
+    TransferFunctionMatrix, MIMOSeries, MIMOParallel, MIMOFeedback, StateSpace,
+    DiscreteStateSpace, gbt, bilinear, forward_diff, backward_diff,
+    phase_margin, gain_margin)
 from sympy.testing.pytest import raises
 from sympy.logic.boolalg import true, false
 
@@ -33,6 +34,19 @@ a0, a1, a2, a3, b0, b1, b2, b3, b4, c0, c1, c2, c3, d0, d1, d2, d3 = \
 TF1 = TransferFunction(1, s**2 + 2*zeta*wn*s + wn**2, s)
 TF2 = TransferFunction(k, 1, s)
 TF3 = TransferFunction(a2*p - s, a2*s + p, s)
+
+def test_create_transfer_function():
+    cont_tf1 = create_transfer_function(s+1, s**2 + 2, s)
+    assert isinstance(cont_tf1, TransferFunction)
+
+    cont_tf2 = create_transfer_function(s+1, s**2 + 2, s, sampling_time = 0)
+    assert isinstance(cont_tf2, TransferFunction)
+
+    disc_tf1 = create_transfer_function(z, z + 1, z, 0.1)
+    assert isinstance(disc_tf1, DiscreteTransferFunction)
+
+    disc_tf2 = create_transfer_function(z, z + 1, z, T)
+    assert isinstance(disc_tf2, DiscreteTransferFunction)
 
 def test_TransferFunctionBase():
     raises(NotImplementedError,
