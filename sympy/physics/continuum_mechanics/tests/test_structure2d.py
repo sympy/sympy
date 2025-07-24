@@ -1,4 +1,4 @@
-from sympy.physics.continuum_mechanics.structure2d import Structure2d, Node, Load
+from sympy.physics.continuum_mechanics.structure2d import Structure2d
 from sympy.physics.continuum_mechanics.beam import Beam
 from sympy.physics.continuum_mechanics.column import Column
 from sympy.core.symbol import Symbol, symbols
