@@ -3,13 +3,11 @@ from __future__ import annotations
 from contextlib import contextmanager
 from typing import Sequence, Union, TYPE_CHECKING
 
-from sympy.polys.densebasic import dup_reverse
 from sympy.polys.domains import Domain, QQ, ZZ
 from sympy.polys.series.powerseriesring import series_pprint
 from sympy.external.gmpy import GROUND_TYPES, MPZ, MPQ
 from sympy.utilities.decorator import doctest_depends_on
 from sympy.polys.polyerrors import NotReversible
-from sympy.polys.densetools import dup_revert, dup_truncate
 
 
 if TYPE_CHECKING:
@@ -48,7 +46,7 @@ def _global_cap(cap: int):
 @doctest_depends_on(ground_types=["flint"])
 class FlintPowerSeriesRingZZ:
     """
-    Flint implementation of power series ring over integers (ZZ).
+    Flint implementation of power series ring over integers ::ref`ZZ`.
 
     This class provides high-performance power series operations over the integer ring,
     leveraging the FLINT library for optimized arithmetic and series manipulations
@@ -268,14 +266,13 @@ class FlintPowerSeriesRingZZ:
 
             if deg1 + deg2 < ring_prec:
                 return s1 * s2
+            else:
+                if deg1 >= ring_prec:
+                    s1 = self.truncate(s1, ring_prec)
+                if deg2 >= ring_prec:
+                    s2 = self.truncate(s2, ring_prec)
 
-            if deg1 > ring_prec:
-                s1 = self.truncate(s1, ring_prec)
-            if deg2 > ring_prec:
-                s2 = self.truncate(s2, ring_prec)
-
-            poly = s1 * s2
-            return fmpz_series(poly, prec=ring_prec)
+                return fmpz_series(s1 * s2, prec=ring_prec)
 
         with _global_cap(ring_prec):
             return s1 * s2
@@ -330,18 +327,26 @@ class FlintPowerSeriesRingZZ:
         dom: Domain[MPZ] = self._domain
         ring_prec: int = self._prec
 
-        if isinstance(s1, fmpz_poly) and isinstance(s2, fmpz_poly):
-            comp: fmpz_poly = s1(s2)
-
-            if comp.degree() < ring_prec:
-                return fmpz_poly(comp)
-            else:
-                return fmpz_series(comp.coeffs(), prec=ring_prec)
-
         if s2 and not dom.is_zero(s2[0]):
             raise ValueError(
                 "Series composition requires the second series to have a zero constant term."
             )
+
+        if isinstance(s1, fmpz_poly) and isinstance(s2, fmpz_poly):
+            deg1: int = s1.degree()
+            deg2: int = s2.degree()
+
+            if deg1 * deg2 < ring_prec:
+                return s1(s2)
+
+            if deg1 <= ring_prec and deg2 <= ring_prec:
+                return self.truncate(s1(s2), ring_prec)
+            else:
+                s1 = fmpz_series(s1, prec=ring_prec)
+                s2 = fmpz_series(s2, prec=ring_prec)
+
+                with _global_cap(ring_prec):
+                    return s1(s2)
 
         if isinstance(s1, fmpz_poly):
             prec2: int = _get_series_precision(s2)
@@ -364,15 +369,13 @@ class FlintPowerSeriesRingZZ:
                 "Series inverse requires the constant term to be a unit"
             )
 
-        prec: int = (
-            _get_series_precision(s) if isinstance(s, fmpz_series) else ring_prec
-        )
+        if isinstance(s, fmpz_poly):
+            s = fmpz_series(coeffs, prec=ring_prec)
 
-        dup = dup_reverse(coeffs)
-        inv = dup_truncate(dup_revert(dup, prec, dom), prec, dom)
-        return fmpz_series(inv[::-1], prec=prec)
+        with _global_cap(ring_prec):
+            return 1 / s
 
-    def compositional_inverse(self, s: ZZSeries) -> ZZSeries:
+    def reversion(self, s: ZZSeries) -> ZZSeries:
         """Compute the compositional inverse of a power series."""
         dom = self._domain
         coeffs = s.coeffs()
@@ -421,7 +424,7 @@ class FlintPowerSeriesRingZZ:
 @doctest_depends_on(ground_types=["flint"])
 class FlintPowerSeriesRingQQ:
     """
-    Flint implementation of power series ring over rational field (QQ).
+    Flint implementation of power series ring over rational field ::ref`QQ`.
 
     This class provides high-performance power series operations over the rational field,
     leveraging the FLINT library for optimized arithmetic and series manipulations
@@ -644,14 +647,13 @@ class FlintPowerSeriesRingQQ:
 
             if deg1 + deg2 < ring_prec:
                 return s1 * s2
+            else:
+                if deg1 >= ring_prec:
+                    s1 = self.truncate(s1, ring_prec)
+                if deg2 >= ring_prec:
+                    s2 = self.truncate(s2, ring_prec)
 
-            if deg1 > ring_prec:
-                s1 = self.truncate(s1, ring_prec)
-            if deg2 > ring_prec:
-                s2 = self.truncate(s2, ring_prec)
-
-            poly = s1 * s2
-            return fmpq_series(poly, prec=ring_prec)
+                return fmpq_series(s1 * s2, prec=ring_prec)
 
         with _global_cap(ring_prec):
             return s1 * s2
@@ -717,18 +719,26 @@ class FlintPowerSeriesRingQQ:
         dom: Domain[MPQ] = self._domain
         ring_prec: int = self._prec
 
-        if isinstance(s1, fmpq_poly) and isinstance(s2, fmpq_poly):
-            comp: fmpq_poly = s1(s2)
-
-            if comp.degree() < ring_prec:
-                return fmpq_poly(comp)
-            else:
-                return fmpq_series(comp, prec=ring_prec)
-
         if s2 and not dom.is_zero(s2[0]):
             raise ValueError(
                 "Series composition requires the second series to have a zero constant term."
             )
+
+        if isinstance(s1, fmpq_poly) and isinstance(s2, fmpq_poly):
+            deg1: int = s1.degree()
+            deg2: int = s2.degree()
+
+            if deg1 * deg2 < ring_prec:
+                return s1(s2)
+
+            if deg1 <= ring_prec and deg2 <= ring_prec:
+                return self.truncate(s1(s2), ring_prec)
+            else:
+                s1 = fmpq_series(s1, prec=ring_prec)
+                s2 = fmpq_series(s2, prec=ring_prec)
+
+                with _global_cap(ring_prec):
+                    return s1(s2)
 
         if isinstance(s1, fmpq_poly):
             prec2: int = _get_series_precision(s2)
@@ -757,7 +767,7 @@ class FlintPowerSeriesRingQQ:
         with _global_cap(ring_prec):
             return s.inv()
 
-    def compositional_inverse(self, s: QQSeries) -> QQSeries:
+    def reversion(self, s: QQSeries) -> QQSeries:
         """Compute the compositional inverse of a power series."""
         dom = self._domain
         coeffs = s.coeffs()

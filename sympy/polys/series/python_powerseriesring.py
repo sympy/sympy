@@ -27,6 +27,7 @@ from sympy.polys.densetools import (
 from sympy.polys.polyerrors import NotReversible
 from sympy.polys.domains import Domain, QQ, ZZ
 from sympy.polys.domains.domain import Er, Ef
+from sympy.polys.domains.field import Field
 from sympy.polys.series.powerseriesring import series_pprint
 from sympy.external.gmpy import MPZ, MPQ
 
@@ -285,6 +286,11 @@ def _useries_compose(
     coeffs1, prec1 = s1
     coeffs2, prec2 = s2
 
+    if coeffs2 and not dom.is_zero(coeffs2[-1]):
+        raise ValueError(
+            "Series composition requires the constant term of the second series to be zero."
+        )
+
     if prec1 is None and prec2 is None:
         comp = dup_series_compose(coeffs1, coeffs2, ring_prec, dom)
 
@@ -295,11 +301,6 @@ def _useries_compose(
             return comp, None
         else:
             return comp, ring_prec
-
-    if coeffs2 and not dom.is_zero(coeffs2[-1]):
-        raise ValueError(
-            "Series composition requires the constant term of the second series to be zero."
-        )
 
     coeffs1, coeffs2, min_prec = _unify_prec(s1, s2, dom, ring_prec)
     comp = dup_series_compose(coeffs1, coeffs2, min_prec, dom)
@@ -321,9 +322,7 @@ def _useries_inverse(s: USeries[Er], dom: Domain[Er], ring_prec: int) -> USeries
     return inv, prec
 
 
-def _useries_compositional_inverse(
-    s: USeries[Er], dom: Domain[Er], ring_prec: int
-) -> USeries[Er]:
+def _useries_reversion(s: USeries[Er], dom: Domain[Er], ring_prec: int) -> USeries[Er]:
     """Compute the composite inverse of a power series."""
     coeffs, prec = s
 
@@ -353,7 +352,7 @@ def _useries_derivative(s: USeries[Er], dom: Domain[Er], ring_prec: int) -> USer
     return _useries(series, prec, dom, ring_prec)
 
 
-def _useries_integrate(s: USeries[Ef], dom: Domain[Ef], ring_prec: int) -> USeries[Ef]:
+def _useries_integrate(s: USeries[Ef], dom: Field[Ef], ring_prec: int) -> USeries[Ef]:
     """Compute the integral of a power series."""
     coeffs, prec = s
     series = dup_integrate(coeffs, 1, dom)
@@ -364,7 +363,7 @@ def _useries_integrate(s: USeries[Ef], dom: Domain[Ef], ring_prec: int) -> USeri
 
 class PythonPowerSeriesRingZZ:
     """
-    Python implementation of power series ring over integers (ZZ).
+    Python implementation of power series ring over integers ::ref`ZZ`.
 
     This class provides comprehensive power series operations over the integer ring,
     supporting both series manipulations with precision handling and truncation.
@@ -557,9 +556,9 @@ class PythonPowerSeriesRingZZ:
         """Compute the multiplicative inverse of a power series."""
         return _useries_inverse(s, self._domain, self._prec)
 
-    def compositional_inverse(self, s: USeries[MPZ]) -> USeries[MPZ]:
+    def reversion(self, s: USeries[MPZ]) -> USeries[MPZ]:
         """Compute the compositional inverse of a power series."""
-        return _useries_compositional_inverse(s, self._domain, self._prec)
+        return _useries_reversion(s, self._domain, self._prec)
 
     def truncate(self, s: USeries[MPZ], n: int) -> USeries[MPZ]:
         """Truncate a power series to `n` terms."""
@@ -572,7 +571,7 @@ class PythonPowerSeriesRingZZ:
 
 class PythonPowerSeriesRingQQ:
     """
-    Python implementation of power series ring over rational field (QQ).
+    Python implementation of power series ring over rational field ::ref`QQ`.
 
     This class provides comprehensive power series operations over the rational field,
     supporting series manipulations with precision handling and truncation.
@@ -769,9 +768,9 @@ class PythonPowerSeriesRingQQ:
         """Compute the multiplicative inverse of a power series."""
         return _useries_inverse(s, self._domain, self._prec)
 
-    def compositional_inverse(self, s: USeries[MPQ]) -> USeries[MPQ]:
+    def reversion(self, s: USeries[MPQ]) -> USeries[MPQ]:
         """Compute the compositional inverse of a power series."""
-        return _useries_compositional_inverse(s, self._domain, self._prec)
+        return _useries_reversion(s, self._domain, self._prec)
 
     def truncate(self, s: USeries[MPQ], n: int) -> USeries[MPQ]:
         """Truncate a power series to `n` terms."""
