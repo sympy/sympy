@@ -210,6 +210,7 @@ class Column:
         self._applied_supports.append(reaction_load)
         self._load += reaction_load * SingularityFunction(self.variable, loc, -1)
         self._bc_deflection.append(loc)
+        return reaction_load
 
     def apply_load(self, value, start, order, end=None):
         """
@@ -438,7 +439,7 @@ class Column:
         """
         return self._load
 
-    def solve_for_reaction_loads(self):
+    def solve_for_reaction_loads(self, *reactions):
         """
         This method solves the horizontal reaction loads and unknown
         displacement jumps due to telescope hinges.
@@ -454,11 +455,11 @@ class Column:
         >>> from sympy.core.symbol import symbols
         >>> E, A = symbols('E A')
         >>> c = Column(10, A, E)
-        >>> c.apply_support(0)
-        >>> c.apply_support(10)
+        >>> r1 = c.apply_support(0)
+        >>> r2 = c.apply_support(10)
         >>> c.apply_load(-5, 0, 0, end=10)
         >>> c.apply_load(-10, 4, -1)
-        >>> c.solve_for_reaction_loads()
+        >>> c.solve_for_reaction_loads(r1, r2)
         >>> c.reaction_loads
         {R_0: 31, R_10: 29}
         """
@@ -483,14 +484,14 @@ class Column:
         eq_bc_hinge = [Eq(limit(axial_force, x, loc, dir='+'), 0) for loc in self._bc_hinge] # Just right to avoid infinity
 
         total_eq = eq_axial_force + eq_bc_displacement + eq_bc_hinge
-        unknowns = self._applied_supports + self._applied_hinges + [C_N, C_u]
+        unknowns = list(reactions) + self._applied_hinges + [C_N, C_u]
 
         solution = list((linsolve(total_eq, unknowns).args)[0])
         solution = [nsimplify(s, rational=True) for s in solution] # To get rid of tiny residuals
 
-        num_supports = len(self._applied_supports)
+        num_supports = len(reactions)
         reaction_solutions = solution[:num_supports]
-        self._reaction_loads = dict(zip(self._applied_supports, reaction_solutions))
+        self._reaction_loads = dict(zip(reactions, reaction_solutions))
 
         displacement_solutions = solution[num_supports:-2]
         self._hinge_deflections = dict(zip(self._applied_hinges, displacement_solutions))

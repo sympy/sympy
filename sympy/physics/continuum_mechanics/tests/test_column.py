@@ -209,11 +209,11 @@ def test_reactions_point_loads():
 
     # Test for one fixed support at x=0
     c = Column(5, E, A)
-    c.apply_support(0)
+    R_0=c.apply_support(0)
     c.apply_load(-1, 2.5, -1)
     c.apply_load(2, 5, -1)
 
-    c.solve_for_reaction_loads()
+    c.solve_for_reaction_loads(R_0)
     p = c.reaction_loads
     R_0 = Symbol('R_0')
     q = {R_0: -1}
@@ -221,11 +221,11 @@ def test_reactions_point_loads():
 
     # Test for one fixed support at x=L
     c1 = Column(5, E, A)
-    c1.apply_support(5)
+    r1=c1.apply_support(5)
     c1.apply_load(-4, 2.5, -1)
     c1.apply_load(2, 5, -1)
 
-    c1.solve_for_reaction_loads()
+    c1.solve_for_reaction_loads(r1)
     p = c1.reaction_loads
     R_5 = Symbol('R_5')
     q = {R_5: 2}
@@ -233,11 +233,11 @@ def test_reactions_point_loads():
 
     # Test for two supports at ends
     c2 = Column(10, E, A)
-    c2.apply_support(10) # Check if order of applying supports matters
-    c2.apply_support(0)
+    r1=c2.apply_support(10) # Check if order of applying supports matters
+    r2=c2.apply_support(0)
     c2.apply_load(-1, 5, -1)
 
-    c2.solve_for_reaction_loads()
+    c2.solve_for_reaction_loads(r1,r2)
     p = c2.reaction_loads
     R_10 = Symbol('R_10')
     q = {R_0: Rational(1,2), R_10: Rational(1,2)}
@@ -245,13 +245,13 @@ def test_reactions_point_loads():
 
     # Test for two supports, not at ends
     c3 = Column(10, E, A)
-    c3.apply_support(2)
-    c3.apply_support(8)
+    r1=c3.apply_support(2)
+    r2=c3.apply_support(8)
     c3.apply_load(-1, 5, -1)
     c3.apply_load(-1, 0, -1)
     c3.apply_load(-1, 10, -1)
 
-    c3.solve_for_reaction_loads()
+    c3.solve_for_reaction_loads(r1,r2)
     p = c3.reaction_loads
     R_2, R_8 = symbols('R_2 R_8')
     q = {R_2: Rational(3,2), R_8: Rational(3,2)}
@@ -259,49 +259,49 @@ def test_reactions_point_loads():
 
     # Test for two supports at ends, unsymmetrical load
     c4 = Column(10, E, A)
-    c4.apply_support(0)
-    c4.apply_support(10)
+    r1=c4.apply_support(0)
+    r2=c4.apply_support(10)
     c4.apply_load(-1, 6, -1)
 
-    c4.solve_for_reaction_loads()
+    c4.solve_for_reaction_loads(r1,r2)
     p = c4.reaction_loads
     q = {R_0: Rational(2,5), R_10: Rational(3,5)}
     assert p == q
 
     # Test for two supports, one at end and one not
     c5 = Column(10, E, A)
-    c5.apply_support(10)
-    c5.apply_support(2)
+    r1=c5.apply_support(10)
+    r2=c5.apply_support(2)
     c5.apply_load(-1, 0, -1)
     c5.apply_load(2, 5, -1)
     c5.apply_load(-3, 8, -1)
 
-    c5.solve_for_reaction_loads()
+    c5.solve_for_reaction_loads(r1,r2)
     p = c5.reaction_loads
     q = {R_2: Rational(1,2), R_10: Rational(3,2)}
     assert p == q
 
     # Test for three supports
     c6 = Column(10, E, A)
-    c6.apply_support(0)
-    c6.apply_support(5)
-    c6.apply_support(10)
+    r1=c6.apply_support(0)
+    r2=c6.apply_support(5)
+    r3=c6.apply_support(10)
     c6.apply_load(-1, 2, -1)
     c6.apply_load(-1, 8, -1)
 
-    c6.solve_for_reaction_loads()
+    c6.solve_for_reaction_loads(r1,r2,r3)
     p = c6.reaction_loads
     q = {R_0: Rational(3,5), R_5: Rational(4,5), R_10: Rational(3,5)}
     assert p == q
 
     # Test for three supports, force on one member
     c6 = Column(10, E, A)
-    c6.apply_support(0)
-    c6.apply_support(5)
-    c6.apply_support(10)
+    r1=c6.apply_support(0)
+    r2=c6.apply_support(5)
+    r3=c6.apply_support(10)
     c6.apply_load(-1, 2, -1)
 
-    c6.solve_for_reaction_loads()
+    c6.solve_for_reaction_loads(r1,r2,r3)
     p = c6.reaction_loads
     q = {R_0: Rational(3,5), R_5: Rational(2,5), R_10: 0}
     assert p == q
@@ -310,11 +310,11 @@ def test_reactions_point_loads():
     L, F = symbols('L F', positive=True)
 
     c7 = Column(L, E, A)
-    c7.apply_support(0)
-    c7.apply_support(L)
+    r1=c7.apply_support(0)
+    r2=c7.apply_support(L)
     c7.apply_load(-F, L/2, -1)
 
-    c7.solve_for_reaction_loads()
+    c7.solve_for_reaction_loads(r1,r2)
     p = c7.reaction_loads
     R_L = Symbol('R_L')
     q = {R_0: F/2, R_L: F/2}
@@ -322,20 +322,20 @@ def test_reactions_point_loads():
 
     # Test removing a load
     c8 = Column(10, E, A)
-    c8.apply_support(0)
-    c8.apply_support(10)
+    r1=c8.apply_support(0)
+    r2=c8.apply_support(10)
     c8.apply_load(-1, 0, -1)
     c8.apply_load(-1, 5, -1)
     c8.apply_load(-1, 10, -1)
 
-    c8.solve_for_reaction_loads()
+    c8.solve_for_reaction_loads(r1,r2)
     p = c8.reaction_loads
     q = {R_0: Rational(3,2), R_10: Rational(3,2)}
     assert p == q
 
     c8.remove_load(-1, 10, -1)
 
-    c8.solve_for_reaction_loads()
+    c8.solve_for_reaction_loads(r1,r2)
     p = c8.reaction_loads
     q = {R_0: Rational(3,2), R_10: Rational(1,2)}
     assert p == q
@@ -347,10 +347,10 @@ def test_reactions_higher_orders():
 
     # Test UDE, one support
     c = Column(10, E, A)
-    c.apply_support(0)
+    r1=c.apply_support(0)
     c.apply_load(-1, 0, 0, end=10)
 
-    c.solve_for_reaction_loads()
+    c.solve_for_reaction_loads(r1)
     p = c.reaction_loads
     R_0 = Symbol('R_0')
     q = {R_0: 10}
@@ -358,12 +358,12 @@ def test_reactions_higher_orders():
 
     # Test UDE, two supports
     c1 = Column(10, E, A)
-    c1.apply_support(0)
-    c1.apply_support(10)
+    r1=c1.apply_support(0)
+    r2=c1.apply_support(10)
     c1.apply_load(1, 0, 0, end=5)
     c1.apply_load(2, 5, 0, end=10)
 
-    c1.solve_for_reaction_loads()
+    c1.solve_for_reaction_loads(r1,r2)
     p = c1.reaction_loads
     R_10 = Symbol('R_10')
     q = {R_0: -Rational(25,4), R_10: -Rational(35,4)}
@@ -371,39 +371,39 @@ def test_reactions_higher_orders():
 
     # Test ramp load, one support
     c2 = Column(10, E, A)
-    c2.apply_support(10)
+    r1=c2.apply_support(10)
     c2.apply_load(1, 0, 1, end=5)
 
-    c2.solve_for_reaction_loads()
+    c2.solve_for_reaction_loads(r1)
     p = c2.reaction_loads
     q = {R_10: -Rational(25,2)}
     assert p == q
 
     # Test ramp loads, two supports
     c3 = Column(10, E, A)
-    c3.apply_support(0)
-    c3.apply_support(10)
+    r1=c3.apply_support(0)
+    r2=c3.apply_support(10)
     c3.apply_load(1, 0, 1, end=10)
 
-    c3.solve_for_reaction_loads()
+    c3.solve_for_reaction_loads(r1,r2)
     p = c3.reaction_loads
     q = {R_0: -Rational(50,3), R_10: -Rational(100,3)}
     assert p == q
 
     # Test parabolic load
     c4 = Column(10, E, A)
-    c4.apply_support(10)
+    r1=c4.apply_support(10)
     c4.apply_load(1, 0, 2, end=10)
 
-    c4.solve_for_reaction_loads()
+    c4.solve_for_reaction_loads(r1)
     p = c4.reaction_loads
     q = {R_10: -Rational(1000,3)}
     assert p == q
 
     # Test combination of loads
     c5 = Column(10, E, A)
-    c5.apply_support(0)
-    c5.apply_support(10)
+    r1=c5.apply_support(0)
+    r2=c5.apply_support(10)
 
     c5.apply_load(100, 0, -1)
     c5.apply_load(20, 0, 0, end=4)
@@ -412,19 +412,19 @@ def test_reactions_higher_orders():
     c5.apply_load(40, 8, 0, end=10)
     c5.apply_load(2, 8, 2, end=10)
 
-    c5.solve_for_reaction_loads()
+    c5.solve_for_reaction_loads(r1,r2)
     p = c5.reaction_loads
     q = {R_0: -Rational(1088,5), R_10: -Rational(2516,15)}
     assert p == q
 
     # Test ramp load in opposite direction
     c6 = Column(8, 20000, 0.75)
-    c6.apply_support(0)
-    c6.apply_support(8)
+    r1=c6.apply_support(0)
+    r2=c6.apply_support(8)
     c6.apply_load(-100, 8, -1)
     c6.apply_load(-20, 0, 0, end = 8)
     c6.apply_load(-10, 4, 1, end = 0) # Ramp load, starts at x = 4
-    c6.solve_for_reaction_loads()
+    c6.solve_for_reaction_loads(r1,r2)
 
     p = c6.load
     R_8 = Symbol('R_8')
@@ -445,8 +445,8 @@ test_reactions_higher_orders()
 def test_telescope_hinge():
     E, A = symbols('E A')
     c = Column(10, E, A)
-    c.apply_support(0)
-    c.apply_support(10)
+    r1=c.apply_support(0)
+    r2=c.apply_support(10)
     c.apply_load(10, 5, -1)
     c.apply_telescope_hinge(7.5)
 
@@ -471,7 +471,7 @@ def test_telescope_hinge():
     assert p == q
 
     # Test solution single telescope hinge
-    c.solve_for_reaction_loads()
+    c.solve_for_reaction_loads(r1,r2)
     p = c.reaction_loads
     q = {R_0: -10, R_10: 0}
     assert p == q
@@ -482,13 +482,13 @@ def test_telescope_hinge():
 
     # Test numeric solution, multiple forces
     c2 = Column(10, 20000, 0.5)
-    c2.apply_support(0)
-    c2.apply_support(10)
+    r1=c2.apply_support(0)
+    r2=c2.apply_support(10)
     c2.apply_telescope_hinge(4)
     c2.apply_load(-5, 3, -1)
     c2.apply_load(-10, 8, -1)
 
-    c2.solve_for_reaction_loads()
+    c2.solve_for_reaction_loads(r1,r2)
 
     p = c2.reaction_loads
     q = {R_0: 5, R_10: 10}
@@ -503,10 +503,13 @@ test_telescope_hinge()
 
 def test_equations():
     c = Column(10, 210000, 1)
-    c.apply_support(0)
-    c.apply_support(10)
-    c.apply_load(5, 8, -1)
     R_0, R_10 = symbols("R_0 R_10")
+    c.apply_load(R_0,0,-1)
+    c.apply_load(R_10,10,-1)
+    c._bc_deflection.append(0)
+    c._bc_deflection.append(10)
+    c.apply_load(5, 8, -1)
+
     C_N, C_u = symbols("C_N C_u")
 
     # Test before solving the unkowns
@@ -529,7 +532,7 @@ def test_equations():
     assert p == q
 
     # Test after solving the unknowns
-    c.solve_for_reaction_loads()
+    c.solve_for_reaction_loads(R_0,R_10)
 
     p = c.axial_force()
     q = (
