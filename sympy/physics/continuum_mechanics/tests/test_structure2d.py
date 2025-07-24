@@ -460,9 +460,6 @@ def test_structure2d_symbolic_onebend(test_beam_fixture_one_bend, test_data):
 
 
 def test_structure2d_beam_column_initialization():
-    x = Symbol('x')
-    E, I, A = Symbol('E'), Symbol('I'), Symbol('A')
-
     s = Structure2d()
 
     assert isinstance(s.beam, Beam)
@@ -479,7 +476,6 @@ def test_structure2d_beam_column_initialization():
 
 def test_structure2d_beam_column_supports():
     E, I, A=symbols('E I A')
-    R_0, R_10=symbols('R_0 R_10')
     s=Structure2d()
     s.add_member(0,0,10,0,E,I,A)
     s.apply_support(0,0,"fixed")
