@@ -363,7 +363,7 @@ def _useries_integrate(s: USeries[Ef], dom: Field[Ef], ring_prec: int) -> USerie
 
 class PythonPowerSeriesRingZZ:
     """
-    Python implementation of power series ring over integers ::ref`ZZ`.
+    Python implementation of power series ring over integers :ref:`ZZ`.
 
     This class provides comprehensive power series operations over the integer ring,
     supporting both series manipulations with precision handling and truncation.
@@ -571,7 +571,7 @@ class PythonPowerSeriesRingZZ:
 
 class PythonPowerSeriesRingQQ:
     """
-    Python implementation of power series ring over rational field ::ref`QQ`.
+    Python implementation of power series ring over rational field :ref:`QQ`.
 
     This class provides comprehensive power series operations over the rational field,
     supporting series manipulations with precision handling and truncation.

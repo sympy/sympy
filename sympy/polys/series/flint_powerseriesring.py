@@ -46,7 +46,7 @@ def _global_cap(cap: int):
 @doctest_depends_on(ground_types=["flint"])
 class FlintPowerSeriesRingZZ:
     """
-    Flint implementation of power series ring over integers ::ref`ZZ`.
+    Flint implementation of power series ring over integers :ref:`ZZ`.
 
     This class provides high-performance power series operations over the integer ring,
     leveraging the FLINT library for optimized arithmetic and series manipulations
@@ -424,7 +424,7 @@ class FlintPowerSeriesRingZZ:
 @doctest_depends_on(ground_types=["flint"])
 class FlintPowerSeriesRingQQ:
     """
-    Flint implementation of power series ring over rational field ::ref`QQ`.
+    Flint implementation of power series ring over rational field :ref:`QQ`.
 
     This class provides high-performance power series operations over the rational field,
     leveraging the FLINT library for optimized arithmetic and series manipulations

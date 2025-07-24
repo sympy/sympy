@@ -5,7 +5,7 @@ Power Series Ring
 =================
 
 This module provides tools for creating and performing arithmetic on univariate
-power series. It supports rings over the integer ::ref`ZZ` and rational ::ref`QQ`
+power series. It supports rings over the integer :ref:`ZZ` and rational :ref:`QQ`
 domains.
 
 A power series is represented as a finite sequence of coefficients up to a
