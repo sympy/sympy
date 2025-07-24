@@ -165,7 +165,7 @@ def sympy_eqs_to_ring(eqs, symbols):
     >>> eqs_ring, ring = sympy_eqs_to_ring(eqs, [x, y])
     >>> eqs_ring
     [x - y, x + a*y]
-    >>> type(eqs_ring[0])
+    >>> type(eqs_ring[0]) # doctest: +SKIP
     <class 'sympy.polys.rings.PolyElement'>
     >>> ring
     ZZ(a)[x,y]

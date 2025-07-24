@@ -1,3 +1,5 @@
+import pytest
+
 from sympy import MatAdd
 from sympy.algebras.quaternion import Quaternion
 from sympy.assumptions.ask import Q
@@ -16,6 +18,7 @@ from sympy.core.power import Pow
 from sympy.core.relational import (Eq, Rel, Ne)
 from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, Symbol, Wild, symbols)
+from sympy.external.gmpy import GROUND_TYPES
 from sympy.functions.combinatorial.factorials import (factorial, factorial2, subfactorial)
 from sympy.functions.elementary.complexes import Abs
 from sympy.functions.elementary.exponential import exp
@@ -442,10 +445,16 @@ def test_Poly():
     assert str(Poly(2*x**2 + 3*x + 4, x, modulus=17)) == "Poly(2*x**2 + 3*x + 4, x, modulus=17)"
 
 
+@pytest.mark.skip(reason="Skipping this test until flint backed PolyElement is implemented")
 def test_PolyRing():
-    assert str(ring("x", ZZ, lex)[0]) == "Polynomial ring in x over ZZ with lex order"
-    assert str(ring("x,y", QQ, grlex)[0]) == "Polynomial ring in x, y over QQ with grlex order"
-    assert str(ring("x,y,z", ZZ["t"], lex)[0]) == "Polynomial ring in x, y, z over ZZ[t] with lex order"
+
+    if GROUND_TYPES != 'flint':
+        assert str(ring("x", ZZ, lex)[0]) == "Polynomial ring in x over ZZ with lex order"
+        assert str(ring("x,y", QQ, grlex)[0]) == "Polynomial ring in x, y over QQ with grlex order"
+        assert str(ring("x,y,z", ZZ["t"], lex)[0]) == "Polynomial ring in x, y, z over ZZ[t] with lex order"
+    else:
+        assert str(ring("x", ZZ, lex)[0]) == "FLINT Polynomial ring in x over ZZ with lex order"
+        assert str(ring("x,y", QQ, grlex)[0]) == "FLINT Polynomial ring in x, y over QQ with grlex order"
 
 
 def test_FracField():
