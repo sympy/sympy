@@ -2569,3 +2569,20 @@ def test_issue_25221():
 def test_issue_27440():
     nan = S.NaN
     assert ask(Q.negative(nan)) is None
+
+from sympy import Pow, Q
+from sympy.assumptions.handlers.custom_real_pow import CustomRealPowHandler
+
+def test_custom_real_pow_zero_inverse_direct():
+    expr = Pow(0, -1, evaluate=False)
+    handler = CustomRealPowHandler()
+    result = handler._eval_ask(expr, Q.real)
+    assert result is False
+
+def test_custom_real_pow_zero_inverse_direct():
+    expr = Pow(0, -1, evaluate=False)
+    assert ask(Q.real(expr)) is False
+
+
+
+

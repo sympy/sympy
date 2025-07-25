@@ -11,3 +11,6 @@ __all__ = [
     'AskHandler', 'CommonHandler',
     'test_closed_group'
 ]
+import sympy.assumptions.handlers.custom_real_pow
+from sympy.assumptions.handlers import custom_real_pow
+

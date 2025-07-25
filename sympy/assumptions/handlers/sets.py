@@ -17,12 +17,14 @@ from sympy.matrices import Determinant, MatrixBase, Trace
 from sympy.matrices.expressions.matexpr import MatrixElement
 
 from sympy.multipledispatch import MDNotImplementedError
+from sympy import Pow
 
 from .common import test_closed_group, ask_all, ask_any
 from ..predicates.sets import (IntegerPredicate, RationalPredicate,
     IrrationalPredicate, RealPredicate, ExtendedRealPredicate,
     HermitianPredicate, ComplexPredicate, ImaginaryPredicate,
     AntihermitianPredicate, AlgebraicPredicate, TranscendentalPredicate)
+
 
 
 # IntegerPredicate
@@ -230,13 +232,15 @@ def _(expr, assumptions):
 # RealPredicate
 
 def _RealPredicate_number(expr, assumptions):
-    # let as_real_imag() work first since the expression may
-    # be simpler to evaluate
+    if isinstance(expr, Pow):
+        base, exp = expr.args
+        if base.is_zero and exp.is_negative:
+            return False  # <-- Add this line
+
     i = expr.as_real_imag()[1].evalf(2)
     if i._prec != 1:
         return not i
-    # allow None to be returned if we couldn't show for sure
-    # that i was 0
+
 
 @RealPredicate.register_many(Abs, Exp1, Float, GoldenRatio, im, Pi, Rational,
     re, TribonacciConstant)
