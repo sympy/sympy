@@ -17,7 +17,7 @@ from sympy.matrices import Determinant, MatrixBase, Trace
 from sympy.matrices.expressions.matexpr import MatrixElement
 
 from sympy.multipledispatch import MDNotImplementedError
-from sympy import Pow
+
 
 from .common import test_closed_group, ask_all, ask_any
 from ..predicates.sets import (IntegerPredicate, RationalPredicate,

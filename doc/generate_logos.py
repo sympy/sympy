@@ -13,6 +13,7 @@ from argparse import ArgumentParser
 import xml.dom.minidom
 import os.path
 import logging
+logger = logging.getLogger(__name__)
 import subprocess
 import sys
 from pathlib import Path
@@ -154,7 +155,7 @@ def convert_to_png(fn_source, output_dir, sizes):
                          stderr=subprocess.STDOUT)
     p.communicate()
     if p.returncode == 127:
-        logging.error(
+        logger.error(
             "%s: command not found. Install librsvg" % cmd)
         sys.exit(p.returncode)
 
@@ -192,12 +193,12 @@ def convert_to_png(fn_source, output_dir, sizes):
                                  stderr=subprocess.STDOUT)
             p.communicate()
             if p.returncode != 0:
-                logging.error("Return code is not 0: Command: %s" % cmd)
-                logging.error("return code: %s" % p.returncode)
+                logger.error("Return code is not 0: Command: %s" % cmd)
+                logger.error("return code: %s" % p.returncode)
                 sys.exit(p.returncode)
             else:
-                logging.debug("command: %s" % cmd)
-                logging.debug("return code: %s" % p.returncode)
+                logger.debug("command: %s" % cmd)
+                logger.debug("return code: %s" % p.returncode)
 
 
 def convert_to_ico(fn_source, output_dir, sizes):
@@ -217,7 +218,7 @@ def convert_to_ico(fn_source, output_dir, sizes):
                          stderr=subprocess.STDOUT)
     p.communicate()
     if p.returncode == 127:
-        logging.error("%s: command not found. Install imagemagick" % cmd)
+        logger.error("%s: command not found. Install imagemagick" % cmd)
         sys.exit(p.returncode)
 
     if system()[0:3].lower() == "win":
@@ -250,12 +251,12 @@ def convert_to_ico(fn_source, output_dir, sizes):
                              stderr=subprocess.STDOUT)
         p.communicate()
         if p.returncode != 0:
-            logging.error("Return code is not 0: Command: %s" % cmd)
-            logging.error("return code: %s" % p.returncode)
+            logger.error("Return code is not 0: Command: %s" % cmd)
+            logger.error("return code: %s" % p.returncode)
             sys.exit(p.returncode)
         else:
-            logging.debug("command: %s" % cmd)
-            logging.debug("return code: %s" % p.returncode)
+            logger.debug("command: %s" % cmd)
+            logger.debug("return code: %s" % p.returncode)
 
 
 def versionkey_to_boolean_tuple(ver):
@@ -294,6 +295,6 @@ def load_svg(fn):
 def save_svg(fn, doc):
     xmlstr = doc.toxml("utf-8")
     Path(fn).write_bytes(xmlstr)
-    logging.info(" File saved: %s" % fn)
+    logger.info(" File saved: %s" % fn)
 
 main()
