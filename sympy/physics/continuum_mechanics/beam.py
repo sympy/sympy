@@ -526,15 +526,16 @@ class Beam:
         >>> from sympy.physics.continuum_mechanics.beam import Beam
         >>> from sympy import symbols
         >>> E, I = symbols('E, I')
+        >>> R_0 = symbols('R_0')
         >>> b = Beam(20, E, I)
-        >>> p0, m0 = b.apply_support(0, 'fixed')
-        >>> p1 = b.apply_support(20, 'roller')
+        >>> b.apply_support(0, 'fixed')
+        >>> b.apply_support(20, 'roller')
         >>> b.apply_load(-8, 10, -1)
         >>> b.apply_load(100, 20, -2)
-        >>> b.solve_for_reaction_loads(p0, m0, p1)
+        >>> b.solve_for_reaction_loads()
         >>> b.reaction_loads
         {M_0: 20, R_0: -2, R_20: 10}
-        >>> b.reaction_loads[p0]
+        >>> b.reaction_loads[R_0]
         -2
         >>> b.load
         20*SingularityFunction(x, 0, -2) - 2*SingularityFunction(x, 0, -1)
@@ -612,14 +613,14 @@ class Beam:
         >>> E = Symbol('E')
         >>> I = Symbol('I')
         >>> b = Beam(15, E, I)
-        >>> r0 = b.apply_support(0, type='pin')
-        >>> r10 = b.apply_support(10, type='pin')
-        >>> r15, m15 = b.apply_support(15, type='fixed')
+        >>> b.apply_support(0, type='pin')
+        >>> b.apply_support(10, type='pin')
+        >>> b.apply_support(15, type='fixed')
         >>> p5 = b.apply_rotation_hinge(5)
         >>> p12 = b.apply_rotation_hinge(12)
         >>> b.apply_load(-10, 5, -1)
         >>> b.apply_load(-5, 10, 0, 15)
-        >>> b.solve_for_reaction_loads(r0, r10, r15, m15)
+        >>> b.solve_for_reaction_loads()
         >>> b.reaction_loads
         {M_15: -75/2, R_0: 0, R_10: 40, R_15: -5}
         >>> b.rotation_jumps
@@ -668,11 +669,11 @@ class Beam:
 
         >>> from sympy.physics.continuum_mechanics.beam import Beam
         >>> b = Beam(13, 20, 20)
-        >>> r0, m0 = b.apply_support(0, type="fixed")
+        >>> b.apply_support(0, type="fixed")
         >>> s8 = b.apply_sliding_hinge(8)
-        >>> r13 = b.apply_support(13, type="pin")
+        >>> b.apply_support(13, type="pin")
         >>> b.apply_load(-10, 5, -1)
-        >>> b.solve_for_reaction_loads(r0, m0, r13)
+        >>> b.solve_for_reaction_loads()
         >>> b.reaction_loads
         {M_0: -50, R_0: 10, R_13: 0}
         >>> b.deflection_jumps
@@ -1144,11 +1145,11 @@ class Beam:
         >>> E, I = symbols('E, I')
         >>> b = Beam(10, E, I)
         >>> b.apply_load(5000, 2, -1)
-        >>> p0, m0 = b.apply_support(0, type='fixed')
-        >>> p8 = b.apply_support(8, type='roller')
+        >>> b.apply_support(0, type='fixed')
+        >>> b.apply_support(8, type='roller')
         >>> b.apply_load(20000, 0, 0, end=8)
         >>> b.apply_load(50000, 10, -1)
-        >>> b.solve_for_reaction_loads(p0, m0, p8)
+        >>> b.solve_for_reaction_loads()
         >>> b.max_bmoment()
         (0, 233125/2)
         """
@@ -1957,9 +1958,9 @@ class Beam:
             >>> E, I = symbols('E, I')
             >>> R_0, R_10 = symbols('R_0, R_10')
             >>> b = Beam(10, E, I)
-            >>> p0 = b.apply_support(0, 'pin')
-            >>> p10 = b.apply_support(10, 'roller')
-            >>> b.solve_for_ild_reactions(1,R_0,R_10)
+            >>> b.apply_support(0, 'pin')
+            >>> b.apply_support(10, 'roller')
+            >>> b.solve_for_ild_reactions(1)
             >>> b.ild_reactions
             {R_0: -SingularityFunction(a, 0, 0) + SingularityFunction(a, 0, 1)/10 - SingularityFunction(a, 10, 1)/10,
             R_10: -SingularityFunction(a, 0, 1)/10 + SingularityFunction(a, 10, 0) + SingularityFunction(a, 10, 1)/10}
@@ -2068,10 +2069,10 @@ class Beam:
             >>> E, I = symbols('E, I')
             >>> R_0, R_7 = symbols('R_0, R_7')
             >>> b = Beam(10, E, I)
-            >>> p0 = b.apply_support(0, 'roller')
-            >>> p7 = b.apply_support(7, 'roller')
+            >>> b.apply_support(0, 'roller')
+            >>> b.apply_support(7, 'roller')
             >>> b.apply_load(5,4,-1)
-            >>> b.solve_for_ild_reactions(1,R_0,R_7)
+            >>> b.solve_for_ild_reactions(1)
             >>> b.ild_reactions
             {R_0: -SingularityFunction(a, 0, 0) + SingularityFunction(a, 0, 1)/7
             - 3*SingularityFunction(a, 10, 0)/7  - SingularityFunction(a, 10, 1)/7 - 15/7,
@@ -2152,10 +2153,10 @@ class Beam:
             >>> E, I = symbols('E, I')
             >>> R_0, R_8 = symbols('R_0, R_8')
             >>> b = Beam(12, E, I)
-            >>> p0 = b.apply_support(0, 'roller')
-            >>> p8 = b.apply_support(8, 'roller')
-            >>> b.solve_for_ild_reactions(1, R_0, R_8)
-            >>> b.solve_for_ild_shear(4, 1, R_0, R_8)
+            >>> b.apply_support(0, 'roller')
+            >>> b.apply_support(8, 'roller')
+            >>> b.solve_for_ild_reactions(1)
+            >>> b.solve_for_ild_shear(4, 1)
             >>> b.ild_shear
             -(-SingularityFunction(a, 0, 0) + SingularityFunction(a, 12, 0) + 2)*SingularityFunction(a, 4, 0)
             - SingularityFunction(-a, 0, 0) - SingularityFunction(a, 0, 0) + SingularityFunction(a, 0, 1)/8
@@ -2220,10 +2221,10 @@ class Beam:
             >>> E, I = symbols('E, I')
             >>> R_0, R_8 = symbols('R_0, R_8')
             >>> b = Beam(12, E, I)
-            >>> p0 = b.apply_support(0, 'roller')
-            >>> p8 = b.apply_support(8, 'roller')
-            >>> b.solve_for_ild_reactions(1, R_0, R_8)
-            >>> b.solve_for_ild_shear(4, 1, R_0, R_8)
+            >>> b.apply_support(0, 'roller')
+            >>> b.apply_support(8, 'roller')
+            >>> b.solve_for_ild_reactions(1)
+            >>> b.solve_for_ild_shear(4, 1)
             >>> b.ild_shear
             -(-SingularityFunction(a, 0, 0) + SingularityFunction(a, 12, 0) + 2)*SingularityFunction(a, 4, 0)
             - SingularityFunction(-a, 0, 0) - SingularityFunction(a, 0, 0) + SingularityFunction(a, 0, 1)/8
@@ -2297,10 +2298,10 @@ class Beam:
             >>> E, I = symbols('E, I')
             >>> R_0, R_8 = symbols('R_0, R_8')
             >>> b = Beam(12, E, I)
-            >>> p0 = b.apply_support(0, 'roller')
-            >>> p8 = b.apply_support(8, 'roller')
-            >>> b.solve_for_ild_reactions(1, R_0, R_8)
-            >>> b.solve_for_ild_moment(4, 1, R_0, R_8)
+            >>> b.apply_support(0, 'roller')
+            >>> b.apply_support(8, 'roller')
+            >>> b.solve_for_ild_reactions(1)
+            >>> b.solve_for_ild_moment(4, 1)
             >>> b.ild_moment
             -(4*SingularityFunction(a, 0, 0) - SingularityFunction(a, 0, 1) + SingularityFunction(a, 4, 1))*SingularityFunction(a, 4, 0)
             - SingularityFunction(a, 0, 1)/2 + SingularityFunction(a, 4, 1) - 2*SingularityFunction(a, 12, 0)
@@ -2367,10 +2368,10 @@ class Beam:
             >>> E, I = symbols('E, I')
             >>> R_0, R_8 = symbols('R_0, R_8')
             >>> b = Beam(12, E, I)
-            >>> p0 = b.apply_support(0, 'roller')
-            >>> p8 = b.apply_support(8, 'roller')
-            >>> b.solve_for_ild_reactions(1, R_0, R_8)
-            >>> b.solve_for_ild_moment(4, 1, R_0, R_8)
+            >>> b.apply_support(0, 'roller')
+            >>> b.apply_support(8, 'roller')
+            >>> b.solve_for_ild_reactions(1)
+            >>> b.solve_for_ild_moment(4, 1)
             >>> b.ild_moment
             -(4*SingularityFunction(a, 0, 0) - SingularityFunction(a, 0, 1) + SingularityFunction(a, 4, 1))*SingularityFunction(a, 4, 0)
             - SingularityFunction(a, 0, 1)/2 + SingularityFunction(a, 4, 1) - 2*SingularityFunction(a, 12, 0)
@@ -2461,9 +2462,9 @@ class Beam:
             >>> b.apply_load(10, 30, 1, 50)
             >>> b.apply_load(M, 15, -2)
             >>> b.apply_load(-M, 30, -2)
-            >>> p50 = b.apply_support(50, "pin")
-            >>> p0, m0 = b.apply_support(0, "fixed")
-            >>> p20 = b.apply_support(20, "roller")
+            >>> b.apply_support(50, "pin")
+            >>> b.apply_support(0, "fixed")
+            >>> b.apply_support(20, "roller")
             >>> p = b.draw()  # doctest: +SKIP
             >>> p  # doctest: +ELLIPSIS,+SKIP
             Plot object containing:
