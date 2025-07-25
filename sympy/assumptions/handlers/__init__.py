@@ -13,7 +13,4 @@ __all__ = [
     'test_closed_group',
     'custom_real_pow',
 ]
-
-
 from sympy.assumptions.handlers import custom_real_pow
-

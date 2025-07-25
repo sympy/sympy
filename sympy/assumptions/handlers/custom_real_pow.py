@@ -10,4 +10,3 @@ class CustomRealPowHandler(AskHandler):
 
         # Let SymPy handle everything else
         return None
-

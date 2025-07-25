@@ -2578,9 +2578,3 @@ def test_custom_real_pow_zero_inverse_direct():
     handler = CustomRealPowHandler()
     result = handler._eval_ask(expr, Q.real)
     assert result is False
-
-
-
-
-
-
