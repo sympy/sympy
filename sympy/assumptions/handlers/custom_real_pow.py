@@ -1,5 +1,3 @@
-from sympy.core.power import Pow
-from sympy.assumptions import Q
 from sympy.assumptions.handlers import AskHandler
 
 class CustomRealPowHandler(AskHandler):
