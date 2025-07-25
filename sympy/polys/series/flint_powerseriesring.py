@@ -4,6 +4,7 @@ from contextlib import contextmanager
 from typing import Sequence, Union, TYPE_CHECKING
 
 from sympy.polys.domains import Domain, QQ, ZZ
+from sympy.polys.series.python_powerseriesring import _useries_valuation
 from sympy.polys.series.powerseriesring import series_pprint
 from sympy.external.gmpy import GROUND_TYPES, MPZ, MPQ
 from sympy.utilities.decorator import doctest_depends_on
@@ -12,8 +13,10 @@ from sympy.polys.polyerrors import NotReversible
 
 if TYPE_CHECKING:
     from flint import fmpq_poly, fmpq_series, fmpz_poly, fmpz_series, ctx  # type: ignore
+    from flint.utils.flint_exceptions import DomainError  # type: ignore
 elif GROUND_TYPES == "flint":
     from flint import fmpq_poly, fmpq_series, fmpz_poly, fmpz_series, ctx
+    from flint.utils.flint_exceptions import DomainError
 else:
     fmpq_poly = fmpq_series = fmpz_poly = fmpz_series = ctx = None
 
@@ -90,6 +93,7 @@ class FlintPowerSeriesRingZZ:
     See Also
     ========
 
+    FlintPowerSeriesRingQQ
     PythonPowerSeriesRingZZ
     power_series_ring
     """
@@ -294,10 +298,15 @@ class FlintPowerSeriesRingZZ:
     def divide(self, s1: ZZSeries, s2: ZZSeries) -> ZZSeries:
         """Divide two power series."""
         ring_prec = self._prec
-        if isinstance(s1, fmpz_poly):
-            s1 = fmpz_series(s1.coeffs(), prec=ring_prec)
-        if isinstance(s2, fmpz_poly):
-            s2 = fmpz_series(s2.coeffs(), prec=ring_prec)
+        if isinstance(s1, fmpz_poly) and isinstance(s2, fmpz_poly):
+            try:
+                return s1 / s2
+            except DomainError:
+                ring_prec = ring_prec + _useries_valuation(
+                    (s2.coeffs()[::-1], None), self._domain
+                )
+                s1 = fmpz_series(s1, prec=ring_prec)
+                s2 = fmpz_series(s2, prec=ring_prec)
 
         with _global_cap(ring_prec):
             return s1 / s2
@@ -471,6 +480,7 @@ class FlintPowerSeriesRingQQ:
     See Also
     ========
 
+    FlintPowerSeriesRingZZ
     PythonPowerSeriesRingQQ
     power_series_ring
     """
@@ -677,10 +687,15 @@ class FlintPowerSeriesRingQQ:
     def divide(self, s1: QQSeries, s2: QQSeries) -> QQSeries:
         """Divide two power series."""
         ring_prec = self._prec
-        if isinstance(s1, fmpq_poly):
-            s1 = fmpq_series(s1.coeffs(), prec=ring_prec)
-        if isinstance(s2, fmpq_poly):
-            s2 = fmpq_series(s2.coeffs(), prec=ring_prec)
+        if isinstance(s1, fmpq_poly) and isinstance(s2, fmpq_poly):
+            try:
+                return s1 / s2
+            except DomainError:
+                ring_prec = ring_prec + _useries_valuation(
+                    (s2.coeffs()[::-1], None), self._domain
+                )
+                s1 = fmpq_series(s1, prec=ring_prec)
+                s2 = fmpq_series(s2, prec=ring_prec)
 
         with _global_cap(ring_prec):
             return s1 / s2

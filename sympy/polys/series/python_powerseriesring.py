@@ -11,6 +11,7 @@ from sympy.polys.densearith import (
     dup_mul_ground,
     dup_neg,
     dup_sub,
+    dup_exquo,
     dup_series_mul,
     dup_series_pow,
     dup_rshift,
@@ -24,7 +25,7 @@ from sympy.polys.densetools import (
     dup_series_compose,
     dup_series_reversion,
 )
-from sympy.polys.polyerrors import NotReversible
+from sympy.polys.polyerrors import NotReversible, ExactQuotientFailed
 from sympy.polys.domains import Domain, QQ, ZZ
 from sympy.polys.domains.domain import Er, Ef
 from sympy.polys.domains.field import Field
@@ -223,6 +224,13 @@ def _useries_div(
     if val1 < val2:
         raise ValueError("quotient would not be a power series")
 
+    if prec1 is None and prec2 is None:
+        try:
+            q = dup_exquo(coeffs1, coeffs2, dom)
+            return q, None
+        except ExactQuotientFailed:
+            pass
+
     if val2 == 0:
         return _useries_div_direct(s1, s2, dom, ring_prec)
     else:
@@ -232,8 +240,8 @@ def _useries_div(
 
         cap = ring_prec - val2
 
-        prec1 = (prec1 if prec1 is not None else ring_prec) - val2
-        prec2 = (prec2 if prec2 is not None else ring_prec) - val2
+        prec1 = prec1 - val2 if prec1 is not None else ring_prec
+        prec2 = prec2 - val2 if prec2 is not None else ring_prec
 
         shifted_s1 = _useries(shifted_coeffs1, prec1, dom, cap)
         shifted_s2 = _useries(shifted_coeffs2, prec2, dom, cap)
@@ -406,6 +414,7 @@ class PythonPowerSeriesRingZZ:
     See Also
     ========
 
+    PythonPowerSeriesRingQQ
     FlintPowerSeriesRingZZ
     power_series_ring
     """
@@ -616,6 +625,7 @@ class PythonPowerSeriesRingQQ:
     See Also
     ========
 
+    PythonPowerSeriesRingZZ
     FlintPowerSeriesRingQQ
     power_series_ring
     """

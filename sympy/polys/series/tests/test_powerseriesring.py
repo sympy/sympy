@@ -170,10 +170,14 @@ def test_int_divide(rd_int):
     R = SeriesRing()
     R3 = SeriesRing(3)
     R10 = SeriesRing(10)
-    assert R.equal_repr(R.divide(R.add(R.gen, R.one), R.one), R([1, 1], 6))
+    assert R.equal_repr(R.divide(R.add(R.gen, R.one), R.one), R([1, 1], None))
     assert R.equal_repr(
         R.divide(R.add(R.gen, R.one), R.subtract(R.one, R.gen)),
         R([1, 2, 2, 2, 2, 2], 6),
+    )
+    assert R.equal_repr(
+        R.divide(R.pow_int(R.add(R.gen, R.one), 3), R.add(R.one, R.gen)),
+        R([1, 2, 1], None),
     )
     assert R.equal_repr(
         R.divide(R.pow_int(R.gen, 3), R.add(R.add(R.one, R.gen), R.square(R.gen))),
@@ -184,7 +188,7 @@ def test_int_divide(rd_int):
     )
     assert R10.equal_repr(
         R10.divide(R10([0, 0, 2, 4, 6, 8, 2, 14]), R10([0, 0, 1, 3, 4, 5, 1])),
-        R10([2, -2, 4, -6, 12, -16, 26, -68], 8),
+        R10([2, -2, 4, -6, 12, -16, 26, -68, 168, -346], 10),
     )
 
     raises(ZeroDivisionError, lambda: R.divide(R.gen, R.zero))
