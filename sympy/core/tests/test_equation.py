@@ -104,11 +104,11 @@ def test_functions_extensions_eqn_not_arg1():
     pass
 
 
-    def test_two_eqn():
-        a, b, c = symbols('a b c')
-        eq = Equation(a, b / c)
-        obj = globals()['besselj']
-        raises(NotImplementedError, lambda: obj(eq, eq))
+def test_two_eqn():
+    a, b, c = symbols('a b c')
+    eq = Equation(a, b / c)
+    obj = globals()['besselj']
+    raises(NotImplementedError, lambda: obj(eq, eq))
 
 #####
 # Testing of Equation class
