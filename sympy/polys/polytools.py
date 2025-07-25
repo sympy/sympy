@@ -57,6 +57,7 @@ from sympy.polys.polyutils import (
 )
 from sympy.polys.rationaltools import together
 from sympy.polys.rootisolation import dup_isolate_real_roots_list
+from sympy.polys.rootconditions import routh_hurwitz
 from sympy.utilities import group, public, filldedent
 from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.iterables import iterable, sift
@@ -4151,6 +4152,14 @@ class Poly(Basic):
             name, alt = gg[n](g, max_tries=max_tries, randomize=randomize)
         G = name if by_name else name.get_perm_group()
         return G, alt
+
+    def routh_hurwitz(f):
+        """
+        Returns a list of conditions to ensure that all roots of the polynomial
+        have negative real parts.
+
+        """
+        return routh_hurwitz(f)
 
     @property
     def is_zero(f):
