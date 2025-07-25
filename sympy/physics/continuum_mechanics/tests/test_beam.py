@@ -692,8 +692,8 @@ def test_apply_support():
                 + 10*SingularityFunction(x, 4, 3)/3)/(E*I))
 
     b = Beam(30, E, I)
-    p0 = b.apply_support(10, "pin")
-    p1 = b.apply_support(30, "roller")
+    b.apply_support(10, "pin")
+    b.apply_support(30, "roller")
     b.apply_load(-8, 0, -1)
     b.apply_load(120, 30, -2)
     b.solve_for_reaction_loads()
