@@ -194,6 +194,7 @@ class Beam:
         self._load = 0
         self.area = area
         self._applied_supports = []
+        self._applied_support_symbols = []
         self._applied_rotation_hinges = []
         self._applied_sliding_hinges = []
         self._rotation_hinge_symbols = []
@@ -552,11 +553,14 @@ class Beam:
         self._applied_supports.append((loc, type))
         if type in ("pin", "roller"):
             reaction_load = Symbol('R_'+str(loc))
+            self._applied_support_symbols.append(reaction_load)
             self.apply_load(reaction_load, loc, -1)
             self.bc_deflection.append((loc, 0))
         else:
             reaction_load = Symbol('R_'+str(loc))
+            self._applied_support_symbols.append(reaction_load)
             reaction_moment = Symbol('M_'+str(loc))
+            self._applied_support_symbols.append(reaction_moment)
             self.apply_load(reaction_load, loc, -1)
             self.apply_load(reaction_moment, loc, -2)
             self.bc_deflection.append((loc, 0))
@@ -565,10 +569,6 @@ class Beam:
 
         self._support_as_loads.append((reaction_load, loc, -1, None))
 
-        if type in ("pin", "roller"):
-            return reaction_load
-        else:
-            return reaction_load, reaction_moment
 
     def _get_I(self, loc):
         """
@@ -959,6 +959,7 @@ class Beam:
         C4 = Symbol('C4')
         rotation_jumps = tuple(self._rotation_hinge_symbols)
         deflection_jumps = tuple(self._sliding_hinge_symbols)
+        applied_supports = tuple(self._applied_support_symbols)
 
         shear_curve = limit(self.shear_force(), x, l)
         moment_curve = limit(self.bending_moment(), x, l)
@@ -989,14 +990,15 @@ class Beam:
             deflection_eqs.append(eqs)
 
         solution = list((linsolve([shear_curve, moment_curve] + shear_force_eqs + bending_moment_eqs + slope_eqs
-                            + deflection_eqs, (C3, C4) + reactions + rotation_jumps + deflection_jumps).args)[0])
-        reaction_index = 2+len(reactions)
+                            + deflection_eqs, (C3, C4) + reactions + applied_supports + rotation_jumps + deflection_jumps).args)[0])
+        reaction_index = 2+len(reactions) + len(applied_supports)
         rotation_index = reaction_index + len(rotation_jumps)
         reaction_solution = solution[2:reaction_index]
         rotation_solution = solution[reaction_index:rotation_index]
         deflection_solution = solution[rotation_index:]
 
-        self._reaction_loads = dict(zip(reactions, reaction_solution))
+        total_reactions = reactions + applied_supports
+        self._reaction_loads = dict(zip(total_reactions, reaction_solution))
         self._rotation_jumps = dict(zip(rotation_jumps, rotation_solution))
         self._deflection_jumps = dict(zip(deflection_jumps, deflection_solution))
         self._load = self._load.subs(self._reaction_loads)
@@ -1970,6 +1972,7 @@ class Beam:
 
         rotation_jumps = tuple(self._rotation_hinge_symbols)
         deflection_jumps = tuple(self._sliding_hinge_symbols)
+        applied_supports = tuple(self._applied_support_symbols)
 
         C3 = Symbol('C3')
         C4 = Symbol('C4')
@@ -2010,15 +2013,16 @@ class Beam:
             deflection_eqs.append(eqs)
 
         solution = list((linsolve([shear_curve, moment_curve] + shear_force_eqs + bending_moment_eqs + slope_eqs
-                                  + deflection_eqs, (C3, C4) + reactions + rotation_jumps + deflection_jumps).args)[0])
+                                  + deflection_eqs, (C3, C4) + reactions + applied_supports + rotation_jumps + deflection_jumps).args)[0])
 
-        reaction_index = 2 + len(reactions)
+        reaction_index = 2 + len(reactions) + len(applied_supports)
         rotation_index = reaction_index + len(rotation_jumps)
         reaction_solution = solution[2:reaction_index]
         rotation_solution = solution[reaction_index:rotation_index]
         deflection_solution = solution[rotation_index:]
 
-        self._ild_reactions = dict(zip(reactions, reaction_solution))
+        total_reactions = reactions + applied_supports
+        self._ild_reactions = dict(zip(total_reactions, reaction_solution))
         self._ild_rotations_jumps = dict(zip(rotation_jumps, rotation_solution))
         self._ild_deflection_jumps = dict(zip(deflection_jumps, deflection_solution))
 
@@ -2168,7 +2172,7 @@ class Beam:
         shear_curve1 = value - limit(shear_force, x, distance)
         shear_curve2 = (limit(shear_force, x, l) - limit(shear_force, x, distance)) - value
 
-        for reaction in reactions:
+        for reaction in reactions + tuple(self._applied_support_symbols):
             shear_curve1 = shear_curve1.subs(reaction,self._ild_reactions[reaction])
             shear_curve2 = shear_curve2.subs(reaction,self._ild_reactions[reaction])
 
@@ -2316,7 +2320,7 @@ class Beam:
                          - value * (l * SingularityFunction(a, 0, 0) - SingularityFunction(a, 0, 1)
                                     + SingularityFunction(a, l, 1)))
 
-        for reaction in reactions:
+        for reaction in reactions + tuple(self._applied_support_symbols):
             moment_curve1 = moment_curve1.subs(reaction, self._ild_reactions[reaction])
             moment_curve2 = moment_curve2.subs(reaction, self._ild_reactions[reaction])
 
