@@ -1,7 +1,10 @@
 from sympy.matrices.dense import MutableDenseMatrix
 from sympy.polys import Poly
+from sympy.core.mul import Mul
+from sympy.core.exprtools import factor_terms
 from sympy import Symbol
 from sympy.logic.boolalg import true, false
+from sympy.simplify.simplify import signsimp
 
 __all__ = ['RouthHurwitz', 'negative_real_part_conditions']
 
@@ -51,43 +54,35 @@ def negative_real_part_conditions(polynomial, var, /, *, domain=None):
     """
     p: Poly = Poly(polynomial, var, domain = domain)
 
-    _, p = p.clear_denoms(convert=True)
+    try:
+        return p.routh_hurwitz()
 
-    coeffs = p.all_coeffs()
+    except NotImplementedError:
+        # If the algorithm is non implemented for a specific domain,
+        # we calculate it with expressions
+        coeffs = p.all_coeffs()
 
-    if all(c.is_number for c in coeffs):
-        return _calc_conditions_div(coeffs)
+        if all(c.is_number for c in coeffs):
+            return _calc_conditions_div(coeffs)
 
-    return _calc_conditions_no_div(coeffs)
+        return _calc_conditions_no_div(coeffs)
 
-def _run_checks(func):
-    """
-    Decorator to provide the basic checks for the recursive
-    stability functions.
-
-    """
-    def wrapper(p: list):
-        if len(p) < 2:
-            return [true]
-
-        if (p[0]*p[1]).is_nonpositive:
-            return [false]
-
-        if len(p) == 2:
-            return [p[0] * p[1] > 0]
-
-        return func(p)
-
-    return wrapper
-
-@_run_checks
 def _calc_conditions_div(p: list):
     """
-    Stability check with divisions, used for numeric polynomials.
+    Stability check with divisions, used for numeric cases.
     Algorithm from:
     https://courses.washington.edu/mengr471/resources/Routh_Hurwitz_Proof.pdf
 
     """
+    if len(p) < 2:
+        return [true]
+
+    if (p[0]*p[1]).is_nonpositive:
+        return [false]
+
+    if len(p) == 2:
+        return [p[0]*p[1] > 0]
+
     qs = p.copy()
     for i in range(1, len(p), 2):
         qs[i - 1] -= p[i] * p[0] / p[1]
@@ -95,7 +90,6 @@ def _calc_conditions_div(p: list):
 
     return [p[0] * p[1] > 0] + _calc_conditions_div(qs)
 
-@_run_checks
 def _calc_conditions_no_div(p: list):
     """
     Stability check without divisions, used for symbolic polynomials.
@@ -103,12 +97,63 @@ def _calc_conditions_no_div(p: list):
     https://courses.washington.edu/mengr471/resources/Routh_Hurwitz_Proof.pdf
 
     """
+    return _rec_calc_conditions_no_div(p, [])
+
+def _rec_calc_conditions_no_div(p: list, previous_cond: list[set]):
+    if len(p) < 2:
+        return [true]
+
+    if len(p) == 2:
+        return [_clear_cond(p[0]*p[1], previous_cond)[0] > 0]
+
     qs = [p[1] * qi for qi in p]
     for i in range(1, len(p), 2):
         qs[i - 1] -= p[i] * p[0]
     qs = qs[1:]
 
-    return [p[0] * p[1] > 0] + _calc_conditions_no_div(qs)
+    cond, previous_cond = _clear_cond(p[0] * p[1], previous_cond)
+    return [cond > 0] + _rec_calc_conditions_no_div(qs, previous_cond)
+
+def _clear_cond(cond, previous_cond) -> tuple[Mul, list]:
+    """
+    Clear the condition by removing even powers and simplifying odd powers.
+    Also, remove factors that are already present in previous conditions.
+
+    Returns a tuple of the simplified condition and the updated previous
+    conditions.
+
+    """
+
+    factors: set = _build_simplified_factors(cond)
+    _remove_previous_conditions(factors, previous_cond)
+    previous_cond.append(factors)
+
+    factors = _build_simplified_factors(factor_terms(Mul(*factors)))
+    return Mul(*factors), previous_cond
+
+def _build_simplified_factors(cond) -> set:
+    """
+    Build a set of factors from the condition.
+    Even powers are ignored, as they do not contribute to the condition.
+    Odd powers are simplified to the exponent of 1.
+
+    """
+    powers_dict = dict(cond.as_powers_dict()) # Dict of factors with their powers
+    factors = set()
+    for factor in powers_dict:
+        if powers_dict[factor] % 2 != 0:
+            factors.add(signsimp(factor))
+
+    return factors
+
+def _remove_previous_conditions(factors: set, previous_cond: list[set]):
+    """
+    Remove factors that are already present in previous conditions.
+
+    """
+    for prev_factors in previous_cond:
+        if prev_factors.issubset(factors):
+            factors -= prev_factors
 
 class RouthHurwitz(MutableDenseMatrix):
     r"""
