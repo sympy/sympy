@@ -35,7 +35,7 @@ def run_stage(cmd):
     print_header(green, 'running:', cmdline)
     try:
         check_call(cmd)
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         print_header(red, 'failed:', cmdline)
         raise e from None
     else:

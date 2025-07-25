@@ -8,6 +8,9 @@ from .common import (AskHandler, CommonHandler,
     test_closed_group)
 
 __all__ = [
-    'AskHandler', 'CommonHandler',
-    'test_closed_group'
+    'AskHandler',
+    'CommonHandler',
+    'test_closed_group',
+    'custom_real_pow',
 ]
+from sympy.assumptions.handlers import custom_real_pow

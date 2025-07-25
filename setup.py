@@ -213,7 +213,7 @@ class sdist_sympy(sdist):
             commit_hash = commit_hash.rstrip()
             print('Commit hash found : {}.'.format(commit_hash))
             print('Writing it to {}.'.format(commit_hash_filepath))
-        except Exception:
+        except Exception: # noqa: BLE001
             pass
 
         if commit_hash:

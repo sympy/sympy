@@ -423,9 +423,9 @@ def coverage(module_path, verbose=False, no_color=False, sphinx=True):
     try:
         __import__(module_path)
         m = sys.modules[module_path]
-    except Exception as a:
+    except Exception as e:  # noqa: BLE001
         # Most likely cause, absence of __init__
-        print("%s could not be loaded due to %s." % (module_path, repr(a)))
+        print("%s could not be loaded due to %s." % (module_path, repr(e)))
         return 0, 0, 0
 
     c_skipped = []

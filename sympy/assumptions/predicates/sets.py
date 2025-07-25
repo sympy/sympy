@@ -1,7 +1,5 @@
 from sympy.assumptions import Predicate
 from sympy.multipledispatch import Dispatcher
-
-
 class IntegerPredicate(Predicate):
     """
     Integer predicate.
@@ -407,7 +405,6 @@ class TranscendentalPredicate(Predicate):
     .. [1] https://en.wikipedia.org/wiki/Transcendental_number
 
     """
-
     name = 'transcendental'
     handler = Dispatcher(
         "Transcendental",

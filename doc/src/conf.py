@@ -479,7 +479,8 @@ if not commit_hash:
         commit_hash = subprocess.check_output(['git', 'rev-parse', 'HEAD'])
         commit_hash = commit_hash.decode('ascii')
         commit_hash = commit_hash.rstrip()
-    except Exception:
+    except Exception:   # noqa: BLE001
+
         import warnings
         warnings.warn(
             "Failed to get the git commit hash as the command " \
@@ -511,19 +512,19 @@ def linkcode_resolve(domain, info):
     for part in fullname.split('.'):
         try:
             obj = getattr(obj, part)
-        except Exception:
+        except Exception:  # noqa: BLE001
             return
 
     try:
         fn = inspect.getsourcefile(obj)
-    except Exception:
+    except Exception:  # noqa: BLE001
         fn = None
     if not fn:
         return
 
     try:
         source, lineno = inspect.getsourcelines(obj)
-    except Exception:
+    except Exception:  # noqa: BLE001
         lineno = None
 
     if lineno:

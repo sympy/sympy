@@ -98,7 +98,7 @@ def git_rollback_on_error(gitroot_path, branch='master'):
 
     try:
         yield run
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         run('git', 'reset', '--hard', sha_start)
         raise e from None
 
