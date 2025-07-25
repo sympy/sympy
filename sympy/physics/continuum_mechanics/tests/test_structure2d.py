@@ -66,8 +66,8 @@ def test_structure2d_symbolic(test_beam_fixture, test_data):
     assert member.angle == 0
 
     # Apply supports
-    Rv_1, Rh_1 = s.apply_support(x=0, y=0, type='pin')
-    Rv_2 = s.apply_support(x=4, y=0, type='roller')
+    s.apply_support(x=0, y=0, type='pin')
+    s.apply_support(x=4, y=0, type='roller')
 
     # Check support properties
     supports = [(0, 0, 'pin'), (4, 0, 'roller')]
@@ -79,7 +79,7 @@ def test_structure2d_symbolic(test_beam_fixture, test_data):
 
     # Apply load and solve for reactions
     s.apply_load(2, 0, value, global_angle=angle, order=-1)
-    s.solve_for_reaction_loads(Rv_1, Rh_1, Rv_2)
+    s.solve_for_reaction_loads()
 
     # Check reaction loads
     for load_symbol, expected_value in reaction_loads.items():
@@ -211,8 +211,8 @@ def test_numerical_pointload(test_beam_fixture, test_data):
     assert member.angle == 0
 
     # Apply supports
-    Rv_1, Rh_1 = s.apply_support(x=0, y=0, type='pin')
-    Rv_2 = s.apply_support(x=4, y=0, type='roller')
+    s.apply_support(x=0, y=0, type='pin')
+    s.apply_support(x=4, y=0, type='roller')
 
     # Check support properties
     supports = [(0, 0, 'pin'), (4, 0, 'roller')]
@@ -224,7 +224,7 @@ def test_numerical_pointload(test_beam_fixture, test_data):
 
     # Apply load and solve for reactions
     s.apply_load(2, 0, value, global_angle=angle, order=-1)
-    s.solve_for_reaction_loads(Rv_1, Rh_1, Rv_2)
+    s.solve_for_reaction_loads()
 
     # Check reaction loads SSSADASDAS
     for load_symbol, expected_value in reaction_loads.items():
@@ -360,8 +360,8 @@ def test_numerical_distload(test_beam_fixture, test_data):
     assert member.angle == 0
 
     # Apply supports
-    Rv_1, Rh_1 = s.apply_support(x=0, y=0, type='pin')
-    Rv_2 = s.apply_support(x=4, y=0, type='roller')
+    s.apply_support(x=0, y=0, type='pin')
+    s.apply_support(x=4, y=0, type='roller')
 
     # Check support properties
     supports = [(0, 0, 'pin'), (4, 0, 'roller')]
@@ -373,7 +373,7 @@ def test_numerical_distload(test_beam_fixture, test_data):
 
     # Apply load and solve for reactions
     s.apply_load(2,0,value,global_angle=angle,order=0,end_x=3,end_y=0)
-    s.solve_for_reaction_loads(Rv_1, Rh_1, Rv_2)
+    s.solve_for_reaction_loads()
 
     # Check reaction loads SSSADASDAS
     for load_symbol, expected_value in reaction_loads.items():
@@ -438,11 +438,11 @@ def test_structure2d_symbolic_onebend(test_beam_fixture_one_bend, test_data):
 
 
     s.apply_load(start_x=1.5,start_y=2,value=value,global_angle=0,order=-1)
-    Rh1, Rv1, T1 = s.apply_support(x=7, y=-1, type='fixed')
+    s.apply_support(x=7, y=-1, type='fixed')
 
     s.apply_load(5,1.5,value/2,global_angle=s.members[1].angle_deg + 270,order=0,end_x=7,end_y=-1)
     s.apply_load(0,0,value*0.8,global_angle=270,order=0,end_x=3,end_y=4)
-    s.solve_for_reaction_loads(Rh1,Rv1,T1)
+    s.solve_for_reaction_loads()
     # s.draw()
     # Check reaction loads
     for load_symbol, expected_value in reaction_loads.items():
@@ -525,8 +525,8 @@ def test_structure2d():
     s.apply_load(2,0,16,270,-1)
     s.apply_load(0,0,6,270,0,4,0)
     s.apply_load(4,0,6,270,0,6,1.5)
-    Rv,Rh,T=s.apply_support(11,-1,"fixed")
-    result=s.solve_for_reaction_loads(Rv, Rh, T)
+    s.apply_support(11,-1,"fixed")
+    result=s.solve_for_reaction_loads()
     # assert s.column._reaction_loads=={}
     computed = sorted([float(v) for v in result.values()])
     expected = sorted([-55.0, -15.0, -435.0])
