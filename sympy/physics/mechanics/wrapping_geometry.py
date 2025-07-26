@@ -14,6 +14,7 @@ __all__ = [
     'WrappingGeometryBase',
     'WrappingCylinder',
     'WrappingSphere',
+    'WrappingCone'
 ]
 
 
@@ -691,7 +692,7 @@ class WrappingCone(WrappingGeometryBase):
         >>> p2 = Point('B')
         >>> p2.set_pos(apex, N.y / sqrt(3) + N.z)
         >>> cone.geodesic_length(p1, p2)
-        sqrt(8/3 - 8*cos(sqrt(3)*pi/6)/3)
+        sqrt(8/3 - 4*sqrt(2)/3)
 
         Parameters
         ==========
