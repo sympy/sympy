@@ -417,10 +417,6 @@ class TestWrappingCone:
         ]
     )
     def test_geodesic_end_vectors(axis, alpha, position_1, position_2):
-        """
-        Tests the symbolic correctness by comparing the method's output to
-        a vector constructed from the theoretical formulas.
-        """
         apex = Point('p0')
         cone = WrappingCone(alpha, apex, axis)
         p1 = Point('p1'); p1.set_pos(apex, position_1)
