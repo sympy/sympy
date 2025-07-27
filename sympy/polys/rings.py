@@ -50,24 +50,18 @@ from sympy.utilities.magic import pollute
 
 if GROUND_TYPES == 'flint':
     import flint
-
-    def _supported_flint_domain(domain):
-        return domain.is_ZZ or domain.is_QQ
-
-    def _supported_flint_order(order):
+    def _supports_flint(domain, order):
+        supported_domains = domain.is_ZZ or domain.is_QQ
         supported_orders = (LexOrder, GradedLexOrder, ReversedGradedLexOrder)
-        return isinstance(order, supported_orders)
+        supported_order = isinstance(order, supported_orders)
+        return supported_domains and supported_order
 
 else:
     flint = None
-    def _supported_flint_domain(domain):
+    def _supports_flint(domain, order):
         return False
 
-    def _supported_flint_order(order):
-        return False
-
-
-flint = None
+#flint = None
 
 if TYPE_CHECKING:
     from typing import TypeIs
@@ -284,7 +278,7 @@ class PolyRing(DefaultPrinting, IPolys, Generic[Er]):
             raise GeneratorsError("polynomial ring and it's ground domain share generators")
 
         # delegation to appropriate subclass
-        if flint is not None and _supported_flint_domain(preprocessed_domain):
+        if flint is not None and _supports_flint(preprocessed_domain, morder):
             return FPolyRing._new(symbols, preprocessed_domain, morder)
         else:
             return PyPolyRing._new(symbols, preprocessed_domain, morder)
@@ -382,6 +376,10 @@ class PolyRing(DefaultPrinting, IPolys, Generic[Er]):
             return self.domain
         else:
             return self.clone(symbols=symbols)
+
+    def from_python(self, py_poly): # to satisfy mypy
+        # makes sense in FPolyRing
+        raise NotImplementedError
 
     # Properties
     @property
@@ -570,7 +568,7 @@ class PolyRing(DefaultPrinting, IPolys, Generic[Er]):
         result = self.zero
 
         for obj in objs:
-            if is_sequence(obj, include=GeneratorType):
+            if is_sequence(obj, include=GeneratorType) and not isinstance(obj, PolyElement):
                 result += self.add(*obj)
             else:
                 result += obj
@@ -582,7 +580,7 @@ class PolyRing(DefaultPrinting, IPolys, Generic[Er]):
         result = self.one
 
         for obj in objs:
-            if is_sequence(obj, include=GeneratorType):
+            if is_sequence(obj, include=GeneratorType)and not isinstance(obj, PolyElement):
                 result *= self.mul(*obj)
             else:
                 result *= obj
@@ -711,6 +709,18 @@ class PyPolyRing(PolyRing):
             poly[monom] = coeff
         return poly
 
+    def from_flint(self, flint_element):
+        """Convert a FLINT polynomial(FPolyElement) to a PyPolyElement."""
+        if not isinstance(flint_element, FPolyElement):
+            raise TypeError("Expected FPolyElement, got %s" % type(flint_element))
+
+        if (flint_element.ring.symbols != self.symbols or
+            flint_element.ring.domain != self.domain or
+            flint_element.ring.order != self.order):
+            raise TypeError("Ring mismatch - cannot convert between incompatible rings")
+
+        return self.from_dict(dict(flint_element.items()))
+
 
 class FPolyRing(PolyRing):
     """Multivariate distributed polynomial rings backed by FLINT."""
@@ -721,19 +731,20 @@ class FPolyRing(PolyRing):
     @classmethod
     def _new(cls, symbols, domain, order):
         obj = object.__new__(cls)
-        obj._init_instance(symbols, domain, order)
-        obj._python_ring = PyPolyRing._new(symbols, domain, order)
+
         obj.flint_ctx = None
         flint_names = cls._flint_mapping(symbols)
         str_order = cls._get_flint_order(order)
 
-        # Initialize FLINT context based on domain
         if domain.is_ZZ:
             obj.flint_ctx = flint.fmpz_mpoly_ctx.get(flint_names, str_order)
         elif domain.is_QQ:
             obj.flint_ctx = flint.fmpq_mpoly_ctx.get(flint_names, str_order)
         else:
             raise NotImplementedError(f"Unsupported domain for FPolyRing: {domain}")
+
+        obj._init_instance(symbols, domain, order)
+        obj._python_ring = PyPolyRing._new(symbols, domain, order)
 
         return obj
 
@@ -779,6 +790,19 @@ class FPolyRing(PolyRing):
     def term_new(self, monom, coeff) -> PolyElement[Er]:
         # TODO: Implement direct polynomial creation from term once FPolyElement is ready
         return self._python_ring.term_new(monom, coeff)
+
+    def from_python(self, python_element):
+        if not isinstance(python_element, PyPolyElement):
+            raise TypeError("Expected PyPolyElement, got %s" % type(python_element))
+        elif not _supports_flint(self.domain, self.order):
+            raise NotImplementedError("Expected supported domain and order for FLINT conversion, got %s and %s" % self.domain, self.order)
+
+        if (python_element.ring.symbols != self.symbols or
+            python_element.ring.domain != self.domain or
+            python_element.ring.order != self.order):
+            raise TypeError("Ring mismatch, cannot convert between incompatible rings")
+
+        return FPolyElement._new(self, python_element)
 
 
 class PolyElement(DomainElement, DefaultPrinting, CantSympify, Generic[Er]):
@@ -844,6 +868,10 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, Generic[Er]):
 
     def __ge__(self, other):
         return self._cmp(other, ge)
+
+    def _get_python_ring(self) -> PyPolyRing: # to satisfy mypy
+        # makes sense in FPolyElement
+        raise NotImplementedError
 
     def as_expr(self, *symbols):
         if not symbols:
@@ -1046,7 +1074,12 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, Generic[Er]):
         x**3 + 3*x**2*y**2 + 3*x*y**4 + y**6
 
         """
-        if not isinstance(n, int):
+        acceptable_exps: tuple[type, ...]  # to satisfy mypy
+        if GROUND_TYPES == "flint":
+            acceptable_exps = (int, flint.fmpz)
+        else:
+            acceptable_exps = (int,)
+        if not isinstance(n, acceptable_exps):
             raise TypeError("exponent must be an integer, got %s" % n)
         elif n < 0:
             raise ValueError("exponent must be a non-negative integer, got %s" % n)
@@ -3128,7 +3161,7 @@ class PyPolyElement(PolyElement, dict): # type: ignore
         return "".join(sexpvs)
 
     def _degree(self, i):
-        return max(monom[i] for monom in self.itermonoms())
+        return int(max(monom[i] for monom in self.itermonoms()))
 
     def _degrees(self):
         return tuple(map(max, list(zip(*self.itermonoms()))))
@@ -3788,8 +3821,1489 @@ class PyPolyElement(PolyElement, dict): # type: ignore
         return self.ring.dmp_factor_list(self)
 
 
-
 class FPolyElement(PolyElement):
     """FLINT-backed sparse multivariate polynomial element."""
 
-    pass
+    @classmethod
+    def _new(cls, ring, init):
+        """Create a new FPolyElement efficiently."""
+        obj = object.__new__(cls)
+        obj.__init__(ring, init)
+        return obj
+
+    def __init__(self, ring, init):
+        """Initialize FPolyElement with FLINT polynomial."""
+        self.ring = ring
+        self._hash = None
+
+        # Determine FLINT polynomial class based on domain
+        if ring.domain.is_ZZ:
+            flint_poly_cls = flint.fmpz_mpoly
+        elif ring.domain.is_QQ:
+            flint_poly_cls = flint.fmpq_mpoly
+        else:
+            raise NotImplementedError(f"Unsupported domain for FPolyElement: {ring.domain}")
+
+        # Create FLINT polynomial directly from init
+        if isinstance(init, FPolyElement):
+            init_dict = dict(init.items())  # Convert FPolyElement to monomial:coefficient dict
+            self._flint_poly = flint_poly_cls(init_dict, ring.flint_ctx)
+        elif isinstance(init, (PyPolyElement, dict)):
+            self._flint_poly = flint_poly_cls(init, ring.flint_ctx)
+        else:
+            try:
+                init_dict = dict(init)
+                self._flint_poly = flint_poly_cls(init_dict, ring.flint_ctx)
+            except (ValueError, TypeError) as e:
+                raise TypeError(f"Cannot initialize FPolyElement from {type(init)}: {e}")
+
+    @classmethod
+    def from_flint_poly(cls, ring, flint_poly):
+        """Create FPolyElement directly from an existing FLINT polynomial."""
+        obj = object.__new__(cls)
+        obj.ring = ring
+        obj._hash = None
+        obj._flint_poly = flint_poly
+        return obj
+
+    def __len__(self):
+        return len(self._flint_poly)
+
+    def __contains__(self, monom):
+        return monom in self._flint_poly
+
+    def __getitem__(self, monom):
+        return self._flint_poly[monom]
+
+    def __setitem__(self, monom, coeff):
+        self._flint_poly[monom] = coeff
+        self._hash = None
+
+    def __delitem__(self, key):
+        del self._flint_poly.to_dict()[key]
+        self._hash = None
+
+    def __iter__(self):
+        return iter(self._flint_poly)
+
+    def keys(self):
+        return self._flint_poly.to_dict().keys()
+
+    def items(self):
+        return self._flint_poly.to_dict().items()
+
+    def values(self):
+        return self._flint_poly.to_dict().values()
+
+    def get(self, key, default=None):
+        try:
+            return self._flint_poly[key]
+        except KeyError:
+            return default if default is not None else self.ring.domain.zero
+
+    def __repr__(self):
+        return str(self._flint_poly).replace("^", "**")
+
+    def __str__(self):
+        return str(self._flint_poly).replace("^", "**")
+
+    def _get_python_ring(self):
+        return PyPolyRing._new(self.ring.symbols, self.ring.domain, self.ring.order)
+
+    def _equality(self, other):
+        py_ring = self._get_python_ring()
+
+        self_py = py_ring.from_flint(self)
+        if isinstance(other, FPolyElement):
+            other_python = py_ring.from_flint(other)
+        else:
+            other_python = other
+
+        return self_py._equality(other_python)
+
+    def _negate(self):
+        py_ring = self._get_python_ring()
+        self_py = py_ring.from_flint(self)
+
+        result = self_py._negate()
+        return self.ring.from_python(result)
+
+    def _add(self, p2):
+        python_ring = self._get_python_ring()
+
+        self_python = python_ring.from_flint(self)
+
+        if isinstance(p2, FPolyElement):
+            p2_python = python_ring.from_flint(p2)
+        else:
+            p2_python = p2
+
+        result_python = self_python._add(p2_python)
+
+        return self.ring.from_python(result_python)
+
+    def _add_ground(self, cp2):
+        python_ring = self._get_python_ring()
+        self_py = python_ring.from_flint(self)
+
+        result_py = self_py._add_ground(cp2)
+
+        return self.ring.from_python(result_py)
+
+    def _sub(self, other):
+        python_ring = self._get_python_ring()
+
+        self_python = python_ring.from_flint(self)
+
+        if isinstance(other, FPolyElement):
+            other_python = python_ring.from_flint(other)
+        else:
+            other_python = other
+
+        result_py = self_python._sub(other_python)
+
+        return self.ring.from_python(result_py)
+
+    def _sub_ground(self, cp2):
+        python_ring = self._get_python_ring()
+        self_py = python_ring.from_flint(self)
+
+        result_py = self_py._sub_ground(cp2)
+
+        return self.ring.from_python(result_py)
+
+    def _mul(self, other):
+        python_ring = self._get_python_ring()
+
+        self_python = python_ring.from_flint(self)
+        if isinstance(other, FPolyElement):
+            other_python = python_ring.from_flint(other)
+        else:
+            other_python = other
+
+        result_py = self_python._mul(other_python)
+        return self.ring.from_python(result_py)
+
+    def mul_ground(self, cp2):
+        python_ring = self._get_python_ring()
+        self_py = python_ring.from_flint(self)
+
+        result = self_py.mul_ground(cp2)
+
+        return self.ring.from_python(result)
+
+    def _pow_int(self, n):
+        python_ring = self._get_python_ring()
+        self_py = python_ring.from_flint(self)
+
+        result_py = self_py._pow_int(n)
+
+        return self.ring.from_python(result_py)
+
+    # not sure if the following exponentiation methods are needed
+    # for the flint version or not
+
+    def _pow_generic(self, n):
+        python_ring = self._get_python_ring()
+        self_py = python_ring.from_flint(self)
+
+        result_py = self_py._pow_generic(n)
+
+        return self.ring.from_python(result_py)
+
+    def _pow_multinomial(self, n):
+        python_ring = self._get_python_ring()
+        self_py = python_ring.from_flint(self)
+
+        result_py = self_py._pow_multinomial(n)
+
+        return self.ring.from_python(result_py)
+
+    def _square(self):
+        python_ring = self._get_python_ring()
+        self_py = python_ring.from_flint(self)
+
+        result_py = self_py._square()
+
+        return self.ring.from_python(result_py)
+
+    def _divmod(self, other):
+        """
+        Bootstrapped implementation of polynomial division with remainder.
+        Returns (quotient, remainder) tuple.
+        """
+        # Create corresponding Python ring for conversion
+        python_ring = PyPolyRing._new(self.ring.symbols, self.ring.domain, self.ring.order)
+
+        # Convert self to PyPolyElement
+        self_python = python_ring.from_flint(self)
+
+        # Convert other to PyPolyElement if it's also FPolyElement
+        if isinstance(other, FPolyElement):
+            other_python = python_ring.from_flint(other)
+        else:
+            # If other is already PyPolyElement, use it directly
+            other_python = other
+
+        # Perform the division using PyPolyElement's _divmod method
+        quotient_python, remainder_python = self_python._divmod(other_python)
+
+        # Convert results back to FPolyElement
+        quotient_flint = self.ring.from_python(quotient_python)
+        remainder_flint = self.ring.from_python(remainder_python)
+
+        return quotient_flint, remainder_flint
+
+    def _divmod_ground(self, x):
+        """
+        Bootstrapped implementation of division by ground domain element.
+        Returns (quotient, remainder) tuple where coefficients are divided by x.
+        """
+        # Create corresponding Python ring for conversion
+        python_ring = PyPolyRing._new(self.ring.symbols, self.ring.domain, self.ring.order)
+
+        # Convert self to PyPolyElement
+        self_python = python_ring.from_flint(self)
+
+        # Perform the ground division using PyPolyElement's _divmod_ground method
+        quotient_python, remainder_python = self_python._divmod_ground(x)
+
+        # Convert results back to FPolyElement
+        quotient_flint = self.ring.from_python(quotient_python)
+        remainder_flint = self.ring.from_python(remainder_python)
+
+        return quotient_flint, remainder_flint
+
+    def _floordiv(self, p2):
+        python_ring = self._get_python_ring()
+
+        self_py = python_ring.from_flint(self)
+        if isinstance(p2, FPolyElement):
+            p2_py = python_ring.from_flint(p2)
+        else:
+            p2_py = p2
+
+        result_py = self_py._floordiv(p2_py)
+
+        return self.ring.from_python(result_py)
+
+    def _floordiv_ground(self, cp2):
+        python_ring = self._get_python_ring()
+        self_py = python_ring.from_flint(self)
+
+        result_py = self_py._floordiv_ground(cp2)
+
+        return self.ring.from_python(result_py)
+
+    def _truediv(self, p2):
+        python_ring = self._get_python_ring()
+
+        self_py = python_ring.from_flint(self)
+        if isinstance(p2, FPolyElement):
+            p2_py = python_ring.from_flint(p2)
+        else:
+            p2_py = p2
+
+        result_py = self_py._truediv(p2_py)
+
+        return self.ring.from_python(result_py)
+
+    def rem(self, G):
+        python_ring = self._get_python_ring()
+        self_py = python_ring.from_flint(self)
+        #print(type(G), " hahahaha")
+        G_py = []
+
+        if isinstance(G, FPolyElement):
+            G_py = python_ring.from_flint(G)
+        elif isinstance(G, PyPolyElement):
+            G_py = G
+        else:
+            for poly in G:
+                if isinstance(poly, FPolyElement):
+                    G_py.append(python_ring.from_flint(poly))
+                elif isinstance(poly, PyPolyElement):
+                    G_py.append(poly)
+                else:
+                    raise TypeError(f"Expected PolyElement, got {type(poly)}")
+
+        # Perform remainder computation using PyPolyElement's _rem method
+        rem_py = self_py.rem(G_py)
+
+        # Convert result back to FPolyElement
+        if isinstance(rem_py, list):
+            rem_flint = [self.ring.from_python(q) for q in rem_py]
+        else:
+            rem_flint = self.ring.from_python(rem_py)
+
+        return rem_flint
+
+    def quo(self, G):
+        python_ring = self._get_python_ring()
+        self_py = python_ring.from_flint(self)
+        G_py = []
+
+        if isinstance(G, FPolyElement):
+            G_py = python_ring.from_flint(G)
+        elif isinstance(G, PyPolyElement):
+            G_py = G
+        else:
+            for poly in G:
+                if isinstance(poly, FPolyElement):
+                    G_py.append(python_ring.from_flint(poly))
+                elif isinstance(poly, PyPolyElement):
+                    G_py.append(poly)
+                else:
+                    raise TypeError(f"Expected PolyElement, got {type(poly)}")
+
+        # Perform remainder computation using PyPolyElement's _rem method
+        quo_py = self_py.quo(G_py)
+        #print("QUO PYTHON", quo_py)
+        # Convert result back to FPolyElement
+        if isinstance(quo_py, list):
+            quo_flint = [self.ring.from_python(q) for q in quo_py]
+        else:
+            quo_flint = self.ring.from_python(quo_py)
+
+        return quo_flint
+
+    def exquo(self, G):
+        python_ring = self._get_python_ring()
+        self_py = python_ring.from_flint(self)
+        # print(type(G), " hahahaha")
+        G_py = []
+
+        if isinstance(G, FPolyElement):
+            G_py = python_ring.from_flint(G)
+        elif isinstance(G, PyPolyElement):
+            G_py = G
+        else:
+            for poly in G:
+                if isinstance(poly, FPolyElement):
+                    G_py.append(python_ring.from_flint(poly))
+                elif isinstance(poly, PyPolyElement):
+                    G_py.append(poly)
+                else:
+                    raise TypeError(f"Expected PolyElement, got {type(poly)}")
+
+        # Perform remainder computation using PyPolyElement's _rem method
+        exquo_py = self_py.exquo(G_py)
+
+        # Convert result back to FPolyElement
+        if isinstance(exquo_py, list):
+            exquo_flint = [self.ring.from_python(q) for q in exquo_py]
+        else:
+            exquo_flint = self.ring.from_python(exquo_py)
+
+        return exquo_flint
+
+    def _iadd_monom(self, mc):
+        python_ring = self._get_python_ring()
+
+        if self in self.ring._gens_set:
+            cpself = self.copy()
+        else:
+            cpself = self
+
+        cpself_py = python_ring.from_flint(cpself)
+
+        expv, coeff = mc
+        c = cpself_py.get(expv)
+        if c is None:
+            cpself_py[expv] = coeff
+        else:
+            c += coeff
+            if c:
+                cpself_py[expv] = c
+            else:
+                del cpself_py[expv]
+
+        cpself._flint_poly = self.ring.from_python(cpself_py)._flint_poly
+        return cpself
+
+    def imul_num(self, c):
+        if self in self.ring._gens_set:
+            return self * c
+
+        c = self.ring.domain.convert(c)
+
+        if not c:
+            python_ring = self._get_python_ring()
+            self_python = python_ring.from_flint(self)
+            self_python.clear()
+            result = self.ring.from_python(self_python)
+            self._flint_poly = result._flint_poly
+            self._hash = None
+            return
+
+        python_ring = PyPolyRing._new(self.ring.symbols, self.ring.domain, self.ring.order)
+        self_python = python_ring.from_flint(self)
+
+        for exp in list(self_python.keys()):
+            self_python[exp] *= c
+
+        result = self.ring.from_python(self_python)
+
+        self._flint_poly = result._flint_poly
+        self._hash = None
+
+        return self
+
+    def _mod(self, other):
+        python_ring = self._get_python_ring()
+
+        self_py = python_ring.from_flint(self)
+
+        if isinstance(other, FPolyElement):
+            other = python_ring.from_flint(other)
+        else:
+            other = other
+
+        result_py = self_py._mod(other)
+
+        return self.ring.from_python(result_py)
+
+    def _mod_ground(self, x):
+        python_ring = self._get_python_ring()
+        self_py = python_ring.from_flint(self)
+
+        result_py = self_py._mod_ground(x)
+
+        return self.ring.from_python(result_py)
+
+    @property
+    def is_ground(self):
+        python_ring = self._get_python_ring()
+        self_py = python_ring.from_flint(self)
+        return self_py.is_ground
+
+    @property
+    def is_zero(self):
+        python_ring = self._get_python_ring()
+        self_py = python_ring.from_flint(self)
+        return self_py.is_zero
+
+    @property
+    def is_one(self):
+        python_ring = self._get_python_ring()
+        self_py = python_ring.from_flint(self)
+        return self_py.is_one
+
+    @property
+    def is_squarefree(self):
+        python_ring = self._get_python_ring()
+        self_py = python_ring.from_flint(self)
+        return self_py.is_squarefree
+
+    @property
+    def is_irreducible(self):
+        python_ring = self._get_python_ring()
+        self_py = python_ring.from_flint(self)
+        return self_py.is_irreducible
+
+    @property
+    def is_cyclotomic(self):
+        python_ring = self._get_python_ring()
+        self_py = python_ring.from_flint(self)
+        return self_py.is_cyclotomic
+
+    @property
+    def LC(self):
+        python_ring = self._get_python_ring()
+        self_py = python_ring.from_flint(self)
+        return self_py.LC
+
+    @property
+    def LM(self):
+        python_ring = self._get_python_ring()
+        self_py = python_ring.from_flint(self)
+        return self_py.LM
+
+    @property
+    def LT(self):
+        python_ring = self._get_python_ring()
+        self_py = python_ring.from_flint(self)
+        return self_py.LT
+
+    def clear_denoms(self):
+        # XXXXXXX
+        python_ring = self._get_python_ring()
+
+        self_py = python_ring.from_flint(self)
+
+        content, poly_py = self_py.clear_denoms()
+
+        if isinstance(poly_py, PyPolyElement):
+            if _supports_flint(poly_py.ring.domain, poly_py.ring.order):
+                poly_flint = self.ring.from_python(poly_py)
+                return content, poly_flint
+            else:
+                raise NotImplementedError("Unsupported domain or order by flint got %s, %s" % poly_py.ring.domain, poly_py.ring.order)
+        elif isinstance(poly_py, FPolyElement):
+            return content, poly_py
+
+    def _change_ring(self, new_ring):
+        if self.ring.symbols != new_ring.symbols:
+            terms = list(zip(*_dict_reorder(self._flint_poly.to_dict(), self.ring.symbols, new_ring.symbols)))
+            return new_ring.from_terms(terms, self.ring.domain)
+        else:
+            return new_ring.from_dict(self._flint_poly.to_dict(), self.ring.domain)
+
+    def as_expr_dict(self):
+        python_ring = self._get_python_ring()
+        self_py = python_ring.from_flint(self)
+        return self_py.as_expr_dict()
+
+    def _cmp(self, other, op):
+        python_ring = self._get_python_ring()
+        self_py = python_ring.from_flint(self)
+
+        if isinstance(other, FPolyElement):
+            other = python_ring.from_flint(other)
+        else:
+            other = other
+
+        return self_py._cmp(other, op)
+
+    def to_dense(self):
+        return dmp_from_dict(self._flint_poly.to_dict(), self.ring.ngens - 1, self.ring.domain)
+
+    def to_dict(self):
+        return self._flint_poly.to_dict()
+
+    def str(self, printer, precedence, exp_pattern, mul_symbol):
+        python_ring = self._get_python_ring()
+        self_py = python_ring.from_flint(self)
+        return self_py.str(printer, precedence, exp_pattern, mul_symbol)
+
+    def _degree(self, i):
+        python_ring = self._get_python_ring()
+        self_py = python_ring.from_flint(self)
+        return int(self_py._degree(i))
+
+    def _degrees(self):
+        python_ring = self._get_python_ring()
+        self_py = python_ring.from_flint(self)
+        degrees = self_py._degrees()
+        for deg in degrees:
+            deg = int(deg)
+
+        return degrees
+
+    def leading_expv(self):
+        python_ring = self._get_python_ring()
+        self_py = python_ring.from_flint(self)
+        return self_py.leading_expv()
+
+    def _get_coeff(self, expv):
+        return self.get(expv, self.ring.domain.zero)
+
+    def const(self):
+        return self._get_coeff(self.ring.zero_monom)
+
+    def coeff(self, element):
+        python_ring = self._get_python_ring()
+
+        self_py = python_ring.from_flint(self)
+
+        if isinstance(element, FPolyElement):
+            element_py = python_ring.from_flint(element)
+        else:
+            element_py = element
+
+        return self_py.coeff(element_py)
+
+    def leading_monom(self):
+        python_ring = self._get_python_ring()
+        self_py = python_ring.from_flint(self)
+        monom_py = self_py.leading_monom()
+
+        if isinstance(monom_py, FPolyElement):
+            return monom_py
+        else:
+            return self.ring.from_python(monom_py)
+
+    def leading_term(self):
+        python_ring = self._get_python_ring()
+        self_py = python_ring.from_flint(self)
+
+        term_py = self_py.leading_term()
+
+        if isinstance(term_py, FPolyElement):
+            return term_py
+        else:
+            return self.ring.from_python(term_py)
+
+    def coeffs(self, order=None):
+        python_ring = self._get_python_ring()
+        self_py = python_ring.from_flint(self)
+        if order:
+            assert _supports_flint(self_py.ring.domain, self_py.ring.order)
+        return self_py.coeffs(order)
+
+    def monoms(self, order=None):
+        python_ring = self._get_python_ring()
+        self_py = python_ring.from_flint(self)
+        if order:
+            assert _supports_flint(self_py.ring.domain, self_py.ring.order)
+        return self_py.monoms(order)
+
+    def terms(self, order=None):
+        python_ring = self._get_python_ring()
+        self_py = python_ring.from_flint(self)
+        if order:
+            assert _supports_flint(self_py.ring.domain, self_py.ring.order)
+        return self_py.terms(order)
+
+    def itercoeffs(self):
+        return iter(self.values())
+
+    def itermonoms(self):
+        return iter(self.keys())
+
+    def iterterms(self):
+        return iter(self.items())
+
+    def listcoeffs(self):
+        return list(self.values())
+
+    def listmonoms(self):
+        return list(self.keys())
+
+    def listterms(self):
+        return list(self.items())
+
+    def content(self):
+        python_ring = self._get_python_ring()
+        self_py = python_ring.from_flint(self)
+
+        return self_py.content()
+
+    def primitive(self):
+        python_ring = self._get_python_ring()
+        self_py = python_ring.from_flint(self)
+
+        content, primitive_poly = self_py.primitive()
+
+        if isinstance(primitive_poly, PyPolyElement):
+            if _supports_flint(primitive_poly.ring.domain, primitive_poly.ring.order):
+                primitive_flint = self.ring.from_python(primitive_poly)
+                return content, primitive_flint
+            else:
+                raise NotImplementedError("Unsupported domain or order by flint got %s, %s" % primitive_poly.ring.domain, primitive_poly.ring.order)
+        elif isinstance(primitive_poly, FPolyElement):
+            return content, primitive_poly
+
+    def mul_monom(self, monom):
+        python_ring = self._get_python_ring()
+        self_py = python_ring.from_flint(self)
+
+        result_py = self_py.mul_monom(monom)
+
+        if isinstance(result_py, PyPolyElement):
+            if _supports_flint(result_py.ring.domain, result_py.ring.order):
+                result_flint = self.ring.from_python(result_py)
+                return result_flint
+            else:
+                raise NotImplementedError("Unsupported domain or order by flint got %s, %s" % result_py.ring.domain, result_py.ring.order)
+        else:
+            return result_py
+
+
+    def mul_term(self, term):
+        python_ring = self._get_python_ring()
+        self_py = python_ring.from_flint(self)
+
+        result_py = self_py.mul_term(term)
+
+        if isinstance(result_py, PyPolyElement):
+            if _supports_flint(result_py.ring.domain, result_py.ring.order):
+                result_flint = self.ring.from_python(result_py)
+                return result_flint
+            else:
+                raise NotImplementedError("Unsupported domain or order by flint got %s, %s" % result_py.ring.domain,
+                                          result_py.ring.order)
+        else:
+            return result_py
+
+    def _quo_ground(self, x):
+        python_ring = self._get_python_ring()
+        self_py = python_ring.from_flint(self)
+
+        result_py = self_py._quo_ground(x)
+
+        if isinstance(result_py, PyPolyElement):
+            if _supports_flint(result_py.ring.domain, result_py.ring.order):
+                result_flint = self.ring.from_python(result_py)
+                return result_flint
+            else:
+                raise NotImplementedError("Unsupported domain or order by flint got %s, %s" % result_py.ring.domain, result_py.ring.order)
+        else:
+            return result_py
+
+    def _quo_term(self, term):
+        python_ring = self._get_python_ring()
+        self_py = python_ring.from_flint(self)
+
+        result_py = self_py._quo_term(term)
+
+        if isinstance(result_py, PyPolyElement):
+            if _supports_flint(result_py.ring.domain, result_py.ring.order):
+                result_flint = self.ring.from_python(result_py)
+                return result_flint
+            else:
+                raise NotImplementedError("Unsupported domain or order by flint got %s, %s" % result_py.ring.domain, result_py.ring.order)
+        else:
+            return result_py
+
+    def _deflate(self, J, polys):
+        """Deflate polynomials by dividing exponents by J, using PyPolyElement implementation."""
+        # Get the Python ring for conversions
+        python_ring = self._get_python_ring()
+
+        # Convert self and all polynomials in polys to PyPolyElement
+        self_py = python_ring.from_flint(self)
+        polys_py = []
+        for poly in polys:
+            if isinstance(poly, FPolyElement):
+                polys_py.append(python_ring.from_flint(poly))
+            elif isinstance(poly, PyPolyElement):
+                polys_py.append(poly)
+            else:
+                raise TypeError(f"Expected PolyElement, got {type(poly)}")
+
+        # Call PyPolyElement's _deflate method
+        result_py = self_py._deflate(J, polys_py)
+
+        # Convert the resulting deflated polynomials back to FPolyElement
+        result_flint = []
+
+        for poly in result_py:
+            if isinstance(poly, PyPolyElement):
+                assert _supports_flint(poly.ring.domain, poly.ring.order)
+                result_flint.append(self.ring.from_python(poly))
+
+            elif isinstance(poly, FPolyElement):
+                result_flint.append(poly)
+            else:
+                raise TypeError(f"Expected PolyElement, got {type(poly)}")
+
+        return result_flint
+
+    def inflate(self, J):
+        python_ring = self._get_python_ring()
+        self_py = python_ring.from_flint(self)
+
+        result_py = self_py.inflate(J)
+
+        return self.ring.from_python(result_py)
+
+    def gcd(self, other):
+        python_ring = self._get_python_ring()
+        self_py = python_ring.from_flint(self)
+
+        if isinstance(other, FPolyElement):
+            other_py = python_ring.from_flint(other)
+        else:
+            other_py = other
+
+        result_py = self_py.gcd(other_py)
+
+        return self.ring.from_python(result_py)
+
+    def _diff(self, i):
+        python_ring = self._get_python_ring()
+        self_py = python_ring.from_flint(self)
+
+        result_py = self_py._diff(i)
+
+        if isinstance(result_py, PyPolyElement):
+            if _supports_flint(result_py.ring.domain, result_py.ring.order):
+                result_flint = self.ring.from_python(result_py)
+                return result_flint
+            else:
+                raise NotImplementedError("Unsupported domain or order by flint got %s, %s" % result_py.ring.domain, result_py.ring.order)
+        else:
+            return result_py
+
+
+    def cofactors(self: PolyElement[Er], other: PolyElement[Er]) -> tuple[PolyElement[Er], PolyElement[Er], PolyElement[Er]]:
+
+        python_ring = self._get_python_ring()
+        self_py = python_ring.from_flint(self)
+
+        if isinstance(other, FPolyElement):
+            other_py = python_ring.from_flint(other)
+        elif isinstance(other, PyPolyElement):
+            assert _supports_flint(other.ring.domain, other.ring.order)
+            other_py = other
+
+        result = self_py.cofactors(other_py)
+
+        for poly in result:
+            if isinstance(poly, PyPolyElement):
+                if _supports_flint(poly.ring.domain, poly.ring.order):
+                    poly = self.ring.from_python(poly)
+                else:
+                    raise NotImplementedError(f"Unsupported domain or order by flint got {poly.ring.domain}, {poly.ring.order}")
+            elif isinstance(poly, FPolyElement):
+                pass
+            else:
+                raise TypeError(f"Expected PolyElement, got {type(poly)}")
+
+        return result
+
+    def _gcd_monom(self, other: PolyElement[Er]) -> tuple[PolyElement[Er], PolyElement[Er], PolyElement[Er]]:
+
+        python_ring = self._get_python_ring()
+        self_py = python_ring.from_flint(self)
+
+        # Convert other to python representation
+        other_py = python_ring.from_flint(other) if isinstance(other, FPolyElement) else other
+
+        h_py, cff_py, cfg_py = self_py._gcd_monom(other_py)
+
+        # Convert results back to flint with _supports_flint check
+        if isinstance(h_py, PyPolyElement):
+            if _supports_flint(h_py.ring.domain, h_py.ring.order):
+                h_flint = self.ring.from_python(h_py)
+            else:
+                raise NotImplementedError(
+                    f"Unsupported domain or order by flint: {h_py.ring.domain}, {h_py.ring.order}")
+        else:
+            h_flint = h_py
+
+        if isinstance(cff_py, PyPolyElement):
+            if _supports_flint(cff_py.ring.domain, cff_py.ring.order):
+                cff_flint = self.ring.from_python(cff_py)
+            else:
+                raise NotImplementedError(
+                    f"Unsupported domain or order by flint: {cff_py.ring.domain}, {cff_py.ring.order}")
+        else:
+            cff_flint = cff_py
+
+        if isinstance(cfg_py, PyPolyElement):
+            if _supports_flint(cfg_py.ring.domain, cfg_py.ring.order):
+                cfg_flint = self.ring.from_python(cfg_py)
+            else:
+                raise NotImplementedError(
+                    f"Unsupported domain or order by flint: {cfg_py.ring.domain}, {cfg_py.ring.order}")
+        else:
+            cfg_flint = cfg_py
+
+        return (h_flint, cff_flint, cfg_flint)
+
+    def cancel(self, g):
+        # Bootstrap remaining
+        f = self
+        ring = f.ring
+
+        if not f:
+            return f, ring.one
+
+        domain = ring.domain
+
+        if not (domain.is_Field and domain.has_assoc_Ring):
+            _, p, q = f.cofactors(g)
+        else:
+            new_ring = ring.clone(domain=domain.get_ring())
+
+            cq, f = f.clear_denoms()
+            cp, g = g.clear_denoms()
+
+            f = f.set_ring(new_ring)
+            g = g.set_ring(new_ring)
+
+            _, p, q = f.cofactors(g)
+            _, cp, cq = new_ring.domain.cofactors(cp, cq)
+
+            p = p.set_ring(ring)
+            q = q.set_ring(ring)
+
+            p = p.mul_ground(cp)
+            q = q.mul_ground(cq)
+
+        # Make canonical with respect to sign or quadrant in the case of ZZ_I
+        # or QQ_I. This ensures that the LC of the denominator is canonical by
+        # multiplying top and bottom by a unit of the ring.
+        u = q.canonical_unit()
+        if u == domain.one:
+            pass
+        elif u == -domain.one:
+            p, q = -p, -q
+        else:
+            p = p.mul_ground(u)
+            q = q.mul_ground(u)
+
+        return p, q
+
+    def _compose(self, replacements, initial_poly):
+        """Compose polynomial by substituting generators with given polynomials."""
+        python_ring = self._get_python_ring()
+
+        # Convert self to PyPolyElement
+        self_py = python_ring.from_flint(self)
+
+        # Convert initial_poly to PyPolyElement
+        if isinstance(initial_poly, FPolyElement):
+            initial_poly_py = python_ring.from_flint(initial_poly)
+        elif isinstance(initial_poly, PyPolyElement):
+            initial_poly_py = initial_poly
+        else:
+            raise TypeError(f"Expected PolyElement for initial_poly, got {type(initial_poly)}")
+
+        # Convert replacement polynomials to PyPolyElement
+        replacements_py = []
+        for idx, poly in replacements:
+            if isinstance(poly, FPolyElement):
+                poly_py = python_ring.from_flint(poly)
+            elif isinstance(poly, PyPolyElement):
+                poly_py = poly
+            else:
+                raise TypeError(f"Expected PolyElement for replacement, got {type(poly)}")
+            replacements_py.append((idx, poly_py))
+
+        # Perform composition using PyPolyElement's _compose method
+        result_py = self_py._compose(replacements_py, initial_poly_py)
+
+        # Convert result back to FPolyElement
+        return self.ring.from_python(result_py)
+
+    def canonical_unit(self):
+        domain = self.ring.domain
+        return domain.canonical_unit(self.LC)
+
+    def _div(self, fv):
+        # Bootstrap remaining
+        ring = self.ring
+        ret_single = False
+        if isinstance(fv, PolyElement):
+            ret_single = True
+            fv = [fv]
+        if not all(fv):
+            raise ZeroDivisionError("polynomial division")
+        if not self:
+            if ret_single:
+                return ring.zero, ring.zero
+            else:
+                return [], ring.zero
+        for f in fv:
+            if f.ring != ring:
+                raise ValueError("self and f must have the same ring")
+        s = len(fv)
+        qv = [ring.zero for i in range(s)]
+        p = self.copy()
+        r = ring.zero
+        term_div = self._term_div()
+        expvs = [fx.leading_expv() for fx in fv]
+        while p:
+            i = 0
+            divoccurred = 0
+            while i < s and divoccurred == 0:
+                expv = p.leading_expv()
+                term = term_div((expv, p[expv]), (expvs[i], fv[i][expvs[i]]))
+                if term is not None:
+                    expv1, c = term
+                    qv[i] = qv[i]._iadd_monom((expv1, c))
+                    p = p._iadd_poly_monom(fv[i], (expv1, -c))
+                    divoccurred = 1
+                else:
+                    i += 1
+            if not divoccurred:
+                expv = p.leading_expv()
+                r = r._iadd_monom((expv, p[expv]))
+                del p[expv]
+        if expv == ring.zero_monom:
+            r += p
+        if ret_single:
+            return qv[0], r
+        else:
+            return qv, r
+
+    def _prem(self, g, x):
+        # Bootstrap remaining
+        f = self
+        x = f.ring.index(x)
+        df = f.degree(x)
+        dg = g.degree(x)
+
+        if dg < 0:
+            raise ZeroDivisionError("polynomial division")
+
+        r, dr = f, df
+
+        if df < dg:
+            return r
+
+        N = df - dg + 1
+
+        lc_g = g.coeff_wrt(x, dg)
+
+        xp = f.ring.gens[x]
+
+        while True:
+            lc_r = r.coeff_wrt(x, dr)
+            j, N = dr - dg, N - 1
+
+            R = r * lc_g
+            G = g * lc_r * xp**j
+            r = R - G
+
+            dr = r.degree(x)
+
+            if dr < dg:
+                break
+
+        c = lc_g**N
+
+        return r * c
+
+    def _pdiv(self, g, x):
+        # Bootstrap remaining
+        f = self
+        x = f.ring.index(x)
+
+        df = f.degree(x)
+        dg = g.degree(x)
+
+        if dg < 0:
+            raise ZeroDivisionError("polynomial division")
+
+        q, r, dr = x, f, df
+
+        if df < dg:
+            return q, r
+
+        N = df - dg + 1
+        lc_g = g.coeff_wrt(x, dg)
+
+        xp = f.ring.gens[x]
+
+        while True:
+            lc_r = r.coeff_wrt(x, dr)
+            j, N = dr - dg, N - 1
+
+            Q = q * lc_g
+
+            q = Q + (lc_r) * xp**j
+
+            R = r * lc_g
+
+            G = g * lc_r * xp**j
+
+            r = R - G
+
+            dr = r.degree(x)
+
+            if dr < dg:
+                break
+
+        c = lc_g**N
+
+        q = q * c
+        r = r * c
+
+        return q, r
+
+    def _pquo(self, g, x):
+        # Bootstrap remaining
+        f = self
+        return f.pdiv(g, x)[0]
+
+    def _pexquo(self, g, x):
+        # Bootstrap remaining
+        f = self
+        q, r = f.pdiv(g, x)
+
+        if r.is_zero:
+            return q
+        else:
+            raise ExactQuotientFailed(f, g)
+
+    def _subresultants(self, g, x):
+        # Bootstrap remaining
+        f = self
+        x = f.ring.index(x)
+        n = f.degree(x)
+        m = g.degree(x)
+
+        if n < m:
+            f, g = g, f
+            n, m = m, n
+
+        if f == 0:
+            return [0, 0]
+
+        if g == 0:
+            return [f, 1]
+
+        R = [f, g]
+
+        d = n - m
+        b = (-1) ** (d + 1)
+
+        # Compute the pseudo-remainder for f and g
+        h = f.prem(g, x)
+        h = h * b
+
+        # Compute the coefficient of g with respect to x**m
+        lc = g.coeff_wrt(x, m)
+
+        c = lc**d
+
+        S = [1, c]
+
+        c = -c
+
+        while h:
+            k = h.degree(x)
+
+            R.append(h)
+            f, g, m, d = g, h, k, m - k
+
+            b = -lc * c**d
+            h = f.prem(g, x)
+            h = h.exquo(b)
+
+            lc = g.coeff_wrt(x, k)
+
+            if d > 1:
+                p = (-lc) ** d
+                q = c ** (d - 1)
+                c = p.exquo(q)
+            else:
+                c = -lc
+
+            S.append(-c)
+
+        return R
+
+    def _subs(self, subs_dict):
+        """Substitute variables with polynomials from subs_dict, using PyPolyElement implementation."""
+        # Get the Python ring for conversions
+        python_ring = self._get_python_ring()
+
+        # Convert self to PyPolyElement
+        self_py = python_ring.from_flint(self)
+
+        # Convert subs_dict values to PyPolyElement if they are PolyElement
+
+        # Call PyPolyElement's _subs method
+        result_py = self_py._subs(subs_dict)
+
+        # Convert the result back to FPolyElement
+        return self.ring.from_python(result_py)
+
+    def _evaluate(self, eval_dict):
+        """Evaluate polynomial at scalar values from eval_dict, using PyPolyElement implementation."""
+        # Get the Python ring for conversions
+        python_ring = self._get_python_ring()
+
+        # Convert self to PyPolyElement
+        self_py = python_ring.from_flint(self)
+
+        # Call PyPolyElement's _evaluate method
+        result = self_py._evaluate(eval_dict)
+
+        return result
+
+    def _symmetrize(self):
+        # Bootstrap remaining
+        # For the python-flint override this can just be converted back to
+        # the pure python version until python-flint provides some
+        # equivalent functionality.
+        f = self.copy()
+        ring = f.ring
+        n = ring.ngens
+
+        if not n:
+            return f, ring.zero, []
+
+        polys = [ring.symmetric_poly(i + 1) for i in range(n)]
+
+        poly_powers = {}
+
+        def get_poly_power(i, n):
+            if (i, n) not in poly_powers:
+                poly_powers[(i, n)] = polys[i] ** n
+            return poly_powers[(i, n)]
+
+        indices = list(range(n - 1))
+        weights = list(range(n, 0, -1))
+
+        symmetric = ring.zero
+
+        while f:
+            _height, _monom, _coeff = -1, None, None
+
+            for i, (monom, coeff) in enumerate(f.terms()):
+                if all(monom[i] >= monom[i + 1] for i in indices):
+                    height = max(n * m for n, m in zip(weights, monom))
+
+                    if height > _height:
+                        _height, _monom, _coeff = height, monom, coeff
+
+            if _height != -1:
+                monom, coeff = _monom, _coeff
+            else:
+                break
+
+            exponents = []
+            for m1, m2 in zip(monom, monom[1:] + (0,)):
+                exponents.append(m1 - m2)
+
+            symmetric += ring.term_new(tuple(exponents), coeff)
+
+            product = coeff
+            for i, n in enumerate(exponents):
+                product *= get_poly_power(i, n)
+            f -= product
+
+        mapping = list(zip(ring.gens, polys))
+
+        return symmetric, f, mapping
+
+    def half_gcdex(self, other):
+        """Compute the half extended GCD using PyPolyElement implementation."""
+        python_ring = self._get_python_ring()
+        self_py = python_ring.from_flint(self)
+
+        # Convert or validate the other polynomial
+        if isinstance(other, FPolyElement):
+            other_py = python_ring.from_flint(other)
+        elif isinstance(other, PyPolyElement):
+            if not _supports_flint(other.ring.domain, other.ring.order):
+                raise ValueError(f"Unsupported domain or order for FLINT: {other.ring.domain}, {other.ring.order}")
+            other_py = other
+        else:
+            raise TypeError(f"Expected PolyElement, got {type(other)}")
+
+        # Call the ring's dmp_half_gcdex method
+        s_py, h_py = python_ring.dmp_half_gcdex(self_py, other_py)
+
+        # Convert results back to FPolyElement
+        if not _supports_flint(s_py.ring.domain, s_py.ring.order):
+            raise ValueError(
+                f"Resulting polynomial domain or order not supported by FLINT: {s_py.ring.domain}, {s_py.ring.order}")
+        if not _supports_flint(h_py.ring.domain, h_py.ring.order):
+            raise ValueError(
+                f"Resulting polynomial domain or order not supported by FLINT: {h_py.ring.domain}, {h_py.ring.order}")
+
+        s_flint = self.ring.from_python(s_py)
+        h_flint = self.ring.from_python(h_py)
+
+        return s_flint, h_flint
+
+    def gcdex(self, other):
+        """Compute the extended GCD using PyPolyElement implementation."""
+        python_ring = self._get_python_ring()
+        self_py = python_ring.from_flint(self)
+
+        # Convert or validate the other polynomial
+        if isinstance(other, FPolyElement):
+            other_py = python_ring.from_flint(other)
+        elif isinstance(other, PyPolyElement):
+            if not _supports_flint(other.ring.domain, other.ring.order):
+                raise ValueError(f"Unsupported domain or order for FLINT: {other.ring.domain}, {other.ring.order}")
+            other_py = other
+        else:
+            raise TypeError(f"Expected PolyElement, got {type(other)}")
+
+        # Call the ring's dmp_gcdex method
+        s_py, t_py, h_py = python_ring.dmp_gcdex(self_py, other_py)
+
+        # Convert results back to FPolyElement
+        if not _supports_flint(s_py.ring.domain, s_py.ring.order):
+            raise ValueError(
+                f"Resulting polynomial domain or order not supported by FLINT: {s_py.ring.domain}, {s_py.ring.order}")
+        if not _supports_flint(t_py.ring.domain, t_py.ring.order):
+            raise ValueError(
+                f"Resulting polynomial domain or order not supported by FLINT: {t_py.ring.domain}, {t_py.ring.order}")
+        if not _supports_flint(h_py.ring.domain, h_py.ring.order):
+            raise ValueError(
+                f"Resulting polynomial domain or order not supported by FLINT: {h_py.ring.domain}, {h_py.ring.order}")
+
+        s_flint = self.ring.from_python(s_py)
+        t_flint = self.ring.from_python(t_py)
+        h_flint = self.ring.from_python(h_py)
+
+        return s_flint, t_flint, h_flint
+
+    def resultant(self, other):
+        python_ring = self._get_python_ring()
+        self_py = python_ring.from_flint(self)
+
+        if isinstance(other, FPolyElement):
+            other_py = python_ring.from_flint(other)
+        elif isinstance(other, PyPolyElement):
+            assert _supports_flint(other.ring.domain, other.ring.order)
+            other_py = other
+
+        result = self_py.resultant(other_py)
+
+        return result
+
+    def discriminant(self):
+        python_ring = self._get_python_ring()
+        self_py = python_ring.from_flint(self)
+
+        result = self_py.discriminant()
+
+        if isinstance(result, PyPolyElement):
+            if _supports_flint(result.ring.domain, result.ring.order):
+                return self.ring.from_python(result)
+            else:
+                raise NotImplementedError("Unsupported domain or order by flint got %s, %s" % result.ring.domain, result.ring.order)
+        elif isinstance(result, FPolyElement):
+            return result
+
+        return result
+
+    def decompose(self):
+        python_ring = self._get_python_ring()
+        self_py = python_ring.from_flint(self)
+
+        result = self_py.decompose()
+        result_flint = []
+
+        for poly in result:
+            if isinstance(poly, FPolyElement):
+                result_flint.append(poly)
+            elif isinstance(poly, PyPolyElement):
+                assert _supports_flint(poly.ring.domain, poly.ring.order)
+                poly_flint = self.ring.from_python(poly)
+                result_flint.append(poly_flint)
+            else:
+                raise TypeError(f"Expected PolyElement, got {type(poly)}")
+
+        return result_flint
+
+    def shift(self, a):
+        python_ring = self._get_python_ring()
+        self_py = python_ring.from_flint(self)
+
+        result_py = self_py.shift(a)
+
+        if isinstance(result_py, FPolyElement):
+            return result_py
+        elif isinstance(result_py, PyPolyElement):
+            assert _supports_flint(result_py.ring.domain, result_py.ring.order)
+            result_flint = self.ring.from_python(result_py)
+            return result_flint
+        else:
+            raise TypeError(f"Expected PolyElement, got {type(result_py)}")
+
+    def shift_list(self, a):
+        python_ring = self._get_python_ring()
+        self_py = python_ring.from_flint(self)
+
+        result_py = self_py.shift_list(a)
+
+        if isinstance(result_py, FPolyElement):
+            return result_py
+        elif isinstance(result_py, PyPolyElement):
+            assert _supports_flint(result_py.ring.domain, result_py.ring.order)
+            result_flint = self.ring.from_python(result_py)
+            return result_flint
+        else:
+            raise TypeError(f"Expected PolyElement, got {type(result_py)}")
+
+    def sturm(self):
+        python_ring = self._get_python_ring()
+        self_py = python_ring.from_flint(self)
+
+        result = self_py.sturm()
+        result_flint = []
+
+        for poly in result:
+            if isinstance(poly, PyPolyElement):
+                if _supports_flint(poly.ring.domain, poly.ring.order):
+                    result_flint.append(self.ring.from_python(poly))
+            else:
+                result_flint.append(poly)
+
+        return result_flint
+
+    def gff_list(self):
+        python_ring = self._get_python_ring()
+        self_py = python_ring.from_flint(self)
+
+        result = self_py.gff_list()
+        result_flint = []
+
+        for poly in result:
+            if isinstance(poly, PyPolyElement):
+                if _supports_flint(poly.ring.domain, poly.ring.order):
+                    result_flint.append(self.ring.from_python(poly))
+            else:
+                result_flint.append(poly)
+
+        return result_flint
+
+    def norm(self):
+        python_ring = self._get_python_ring()
+        self_py = python_ring.from_flint(self)
+
+        result = self_py.norm()
+
+        if isinstance(result, PyPolyElement):
+            if _supports_flint(result.ring.domain, result.ring.order):
+                result_flint = self.ring.from_python(result)
+                return result_flint
+        else:
+            return result
+
+    def sqf_part(self):
+        python_ring = self._get_python_ring()
+        self_py = python_ring.from_flint(self)
+
+        result_py = self_py.sqf_part()
+
+        if isinstance(result_py, PyPolyElement):
+            if _supports_flint(result_py.ring.domain, result_py.ring.order):
+                result_flint = self.ring.from_python(result_py)
+                return result_flint
+            else:
+                raise NotImplementedError("Unsupported domain or order by flint got %s, %s" % result_py.ring.domain, result_py.ring.order)
+        elif isinstance(result_py, FPolyElement):
+            return result_py
+        else:
+            return result_py
+
+    def sqf_list(self):
+        python_ring = self._get_python_ring()
+        self_py = python_ring.from_flint(self)
+
+        cont, pypoly_list = self_py.sqf_list()
+        fpoly_list = []
+
+        for poly_tuple in pypoly_list:
+            if isinstance(poly_tuple[0], PyPolyElement):
+                if _supports_flint(poly_tuple[0].ring.domain, poly_tuple[0].ring.order):
+                    fpoly_tuple = self.ring.from_python(poly_tuple[0]), poly_tuple[1]
+                    fpoly_list.append(fpoly_tuple)
+            elif isinstance(poly_tuple[1], FPolyElement):
+                fpoly_list.append(poly_tuple)
+            else:
+                raise TypeError(f"Expected PolyElement, got {type(poly_tuple[0])}")
+
+        return cont, fpoly_list
+
+    def factor_list(self):
+        python_ring = self._get_python_ring()
+        self_py = python_ring.from_flint(self)
+
+        cont, pypoly_list = self_py.factor_list()
+        fpoly_list = []
+
+        for poly_tuple in pypoly_list:
+            if isinstance(poly_tuple[0], PyPolyElement):
+                if _supports_flint(poly_tuple[0].ring.domain, poly_tuple[0].ring.order):
+                    fpoly_tuple = self.ring.from_python(poly_tuple[0]), poly_tuple[1]
+                    fpoly_list.append(fpoly_tuple)
+            elif isinstance(poly_tuple[1], FPolyElement):
+                fpoly_list.append(poly_tuple)
+            else:
+                raise TypeError(f"Expected PolyElement, got {type(poly_tuple[0])}")
+
+        return cont, fpoly_list
