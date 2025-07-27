@@ -8,7 +8,7 @@ from sympy.utilities import public
 class SimpleDomain(Domain[Er]):
     """Base class for simple domains, e.g. ZZ, QQ. """
 
-    is_Simple = True
+    is_Simple: bool = True
 
     def inject(self, *gens):
         """Inject generators into this domain. """

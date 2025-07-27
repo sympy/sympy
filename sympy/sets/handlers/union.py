@@ -8,7 +8,7 @@ from sympy.sets.fancysets import (ComplexRegion, Naturals, Naturals0,
 from sympy.multipledispatch import Dispatcher
 
 
-union_sets = Dispatcher('union_sets')
+union_sets: Dispatcher = Dispatcher('union_sets')
 
 
 @union_sets.register(Naturals0, Naturals)

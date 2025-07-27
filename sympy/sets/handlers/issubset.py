@@ -9,7 +9,7 @@ from sympy.multipledispatch import Dispatcher
 _inf_sets = [S.Naturals, S.Naturals0, S.Integers, S.Rationals, S.Reals, S.Complexes]
 
 
-is_subset_sets = Dispatcher('is_subset_sets')
+is_subset_sets: Dispatcher = Dispatcher('is_subset_sets')
 
 
 @is_subset_sets.register(Set, Set)

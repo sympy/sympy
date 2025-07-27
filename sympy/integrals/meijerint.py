@@ -71,6 +71,7 @@ from sympy.polys import cancel, factor
 from sympy.utilities.iterables import multiset_partitions
 from sympy.utilities.misc import debug as _debug
 from sympy.utilities.misc import debugf as _debugf
+from typing import TypeVar
 
 # keep this at top for easy reference
 z = Dummy('z')
@@ -295,6 +296,9 @@ def _create_lookup_table(table):
 ####################################################################
 
 from sympy.utilities.timeutils import timethis
+
+_CallableT = TypeVar("_CallableT", bound=Callable)
+
 timeit = timethis('meijerg')
 
 

@@ -20,7 +20,7 @@ _x, _y = symbols("x y")
 
 FunctionUnion = (FunctionClass, Lambda)
 
-_set_function = Dispatcher('_set_function')
+_set_function: Dispatcher = Dispatcher('_set_function')
 
 
 @_set_function.register(FunctionClass, Set)

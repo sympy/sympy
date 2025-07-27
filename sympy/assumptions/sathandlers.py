@@ -189,7 +189,7 @@ class ClassFactRegistry:
             ret.update(h(expr))
         return ret
 
-class_fact_registry = ClassFactRegistry()
+class_fact_registry: ClassFactRegistry = ClassFactRegistry()
 
 
 

@@ -24,6 +24,31 @@ from sympy.utilities.decorator import deprecated
 from sympy.utilities.iterables import flatten
 from sympy.utilities.misc import as_int, filldedent
 from .ecm import _ecm_one_factor
+from sympy import Function
+
+class totient(Function):
+    @classmethod
+    def eval(cls, n): ...
+
+class reduced_totient(Function):
+    @classmethod
+    def eval(cls, n): ...
+
+class divisor_sigma(Function):
+    @classmethod
+    def eval(cls, n, k=...): ...
+
+class udivisor_sigma(Function):
+    @classmethod
+    def eval(cls, n, k=...): ...
+
+class primenu(Function):
+    @classmethod
+    def eval(cls, n): ...
+
+class primeomega(Function):
+    @classmethod
+    def eval(cls, n): ...
 
 
 def smoothness(n):

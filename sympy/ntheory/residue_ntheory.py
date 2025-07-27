@@ -16,6 +16,11 @@ from sympy.utilities.iterables import iproduct
 from sympy.core.random import _randint, randint
 
 from itertools import product
+from sympy import Function
+
+class mobius(Function):
+    @classmethod
+    def eval(cls, n): ...
 
 
 def n_order(a, n):

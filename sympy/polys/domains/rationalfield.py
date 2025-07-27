@@ -40,7 +40,7 @@ class RationalField(Field[MPQ], CharacteristicZero, SimpleDomain):
     dtype = MPQ
     zero = dtype(0)
     one = dtype(1)
-    tp = type(one)
+    tp: type = type(one)
 
     def __init__(self):
         pass

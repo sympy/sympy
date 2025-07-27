@@ -13,7 +13,7 @@ from sympy.multipledispatch import Dispatcher
 _x, _y = symbols("x y")
 
 
-_set_pow = Dispatcher('_set_pow')
+_set_pow: Dispatcher = Dispatcher('_set_pow')
 
 
 @_set_pow.register(Basic, Basic)

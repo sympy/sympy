@@ -24,7 +24,7 @@ import time
 from fnmatch import fnmatch
 from timeit import default_timer as clock
 import doctest as pdoctest  # avoid clashing with our doctest() function
-from doctest import DocTestFinder, DocTestRunner
+from doctest import OutputChecker, DocTestFinder, DocTestRunner
 import random
 import subprocess
 import shutil
@@ -39,6 +39,7 @@ from pathlib import Path
 from sympy.core.cache import clear_cache
 from sympy.external import import_module
 from sympy.external.gmpy import GROUND_TYPES
+from typing import NamedTuple
 
 IS_WINDOWS = (os.name == 'nt')
 ON_CI = os.getenv('CI', None)
@@ -993,6 +994,10 @@ def split_list(l, split, density=None):
     return l[int(lower_frac*len(l)) : int(higher_frac*len(l))]
 
 from collections import namedtuple
+
+class SymPyTestResults(NamedTuple):
+    pass
+
 SymPyTestResults = namedtuple('SymPyTestResults', 'failed attempted')
 
 def sympytestfile(filename, module_relative=True, name=None, package=None,
