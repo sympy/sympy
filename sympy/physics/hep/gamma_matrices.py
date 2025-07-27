@@ -694,7 +694,7 @@ def kahane_simplify(expression):
 
     # If `first_dum_pos` is not zero, it means that there are trailing free gamma
     # matrices in front of `expression`, so multiply by them:
-    for i in range(0, first_dum_pos):
+    for i in range(first_dum_pos - 1, -1, -1):
         [ri.insert(0, free_pos[i]) for ri in resulting_indices]
 
     resulting_expr = S.Zero
