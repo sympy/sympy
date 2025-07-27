@@ -1409,6 +1409,10 @@ def test_latex_log():
     assert latex(pow(log(x), x)) == r"\log{\left(x \right)}^{x}"
     assert latex(pow(log(x), x), ln_notation=True) == \
         r"\ln{\left(x \right)}^{x}"
+    assert latex(log(x, y, evaluate=False)) == r"\log_y{\left(x \right)}"
+    assert latex(log(x, 10, evaluate=False)) == r"\log_{10}{\left(x \right)}"
+    assert latex(log(x, y, evaluate=False), ln_notation=True) == r"\log_y{\left(x \right)}"
+    assert latex(log(x, 10, evaluate=False), ln_notation=True) == r"\log_{10}{\left(x \right)}"
 
 
 def test_issue_3568():
@@ -3156,3 +3160,9 @@ def test_Array():
 def test_latex_with_unevaluated():
     with evaluate(False):
         assert latex(a * a) == r"a a"
+
+
+def test_latex_disable_split_super_sub():
+    assert latex(Symbol('u^a_b')) == 'u^{a}_{b}'
+    assert latex(Symbol('u^a_b'), disable_split_super_sub=False) == 'u^{a}_{b}'
+    assert latex(Symbol('u^a_b'), disable_split_super_sub=True) == 'u\\^a\\_b'

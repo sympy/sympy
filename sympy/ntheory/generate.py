@@ -322,7 +322,7 @@ class Sieve:
         test = _as_int_ceiling(n)
         n = as_int(n)
         if n < 2:
-            raise ValueError("n should be >= 2 but got: %s" % n)
+            raise ValueError(f"n should be >= 2 but got: {n}")
         if n > self._list[-1]:
             self.extend(n)
         b = bisect(self._list, n)
@@ -597,7 +597,7 @@ def _primepi(n:int) -> int:
         return 0
     if n <= sieve._list[-1]:
         return sieve.search(n)[0]
-    lim = sqrt(n)
+    lim = int(sqrt(n))
     arr1 = [(i + 1) >> 1 for i in range(lim + 1)]
     arr2 = [0] + [(n//i + 1) >> 1 for i in range(1, lim + 1)]
     skip = [False] * (lim + 1)

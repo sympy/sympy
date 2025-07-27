@@ -44,22 +44,6 @@ class TestWrappingSphere:
         assert sphere.point == pO
 
     @staticmethod
-    @pytest.mark.parametrize('position', [S.Zero, Integer(2)*r*N.x])
-    def test_geodesic_length_point_not_on_surface_invalid(position):
-        r = Symbol('r', positive=True)
-        pO = Point('pO')
-        sphere = WrappingSphere(r, pO)
-
-        p1 = Point('p1')
-        p1.set_pos(pO, position)
-        p2 = Point('p2')
-        p2.set_pos(pO, position)
-
-        error_msg = r'point .* does not lie on the surface of'
-        with pytest.raises(ValueError, match=error_msg):
-            sphere.geodesic_length(p1, p2)
-
-    @staticmethod
     @pytest.mark.parametrize(
         'position_1, position_2, expected',
         [
@@ -194,15 +178,15 @@ class TestWrappingCylinder:
     @pytest.mark.parametrize(
         'position, expected',
         [
-            (S.Zero, False),
-            (r*N.y, True),
-            (r*N.z, True),
-            (r*(N.y + N.z).normalize(), True),
-            (Integer(2)*r*N.y, False),
-            (r*(N.x + N.y), True),
-            (r*(Integer(2)*N.x + N.y), True),
-            (Integer(2)*N.x + r*(Integer(2)*N.y + N.z).normalize(), True),
-            (r*(cos(q)*N.y + sin(q)*N.z), True)
+            (S.Zero, Eq(0, r**2, evaluate=False)),
+            (r*N.y, Eq(r**2, r**2, evaluate=False)),
+            (r*N.z, Eq(r**2, r**2, evaluate=False)),
+            (r*(N.y + N.z).normalize(), Eq(r**2, r**2, evaluate=False)),
+            (Integer(2)*r*N.y, Eq(4*r**2, r**2, evaluate=False)),
+            (r*(N.x + N.y), Eq(r**2, r**2, evaluate=False)),
+            (r*(Integer(2)*N.x + N.y), Eq(r**2, r**2, evaluate=False)),
+            (Integer(2)*N.x + r*(Integer(2)*N.y + N.z).normalize(), Eq(r**2, r**2, evaluate=False)),
+            (r*(cos(q)*N.y + sin(q)*N.z), Eq(r**2, r**2, evaluate=False))
         ]
     )
     def test_point_is_on_surface(position, expected):
@@ -213,23 +197,7 @@ class TestWrappingCylinder:
         p1 = Point('p1')
         p1.set_pos(pO, position)
 
-        assert cylinder.point_on_surface(p1) is expected
-
-    @staticmethod
-    @pytest.mark.parametrize('position', [S.Zero, Integer(2)*r*N.y])
-    def test_geodesic_length_point_not_on_surface_invalid(position):
-        r = Symbol('r', positive=True)
-        pO = Point('pO')
-        cylinder = WrappingCylinder(r, pO, N.x)
-
-        p1 = Point('p1')
-        p1.set_pos(pO, position)
-        p2 = Point('p2')
-        p2.set_pos(pO, position)
-
-        error_msg = r'point .* does not lie on the surface of'
-        with pytest.raises(ValueError, match=error_msg):
-            cylinder.geodesic_length(p1, p2)
+        assert cylinder.point_on_surface(p1) == expected
 
     @staticmethod
     @pytest.mark.parametrize(

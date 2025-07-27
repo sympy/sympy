@@ -1,14 +1,26 @@
 """Implementation of :class:`PolynomialRing` class. """
 
+from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
+from sympy.core.expr import Expr
+from sympy.polys.orderings import MonomialOrder
+from sympy.polys.domains.domain import Er, Domain
 from sympy.polys.domains.ring import Ring
 from sympy.polys.domains.compositedomain import CompositeDomain
 
 from sympy.polys.polyerrors import CoercionFailed, GeneratorsError
 from sympy.utilities import public
 
+
+if TYPE_CHECKING:
+    from typing import TypeIs
+    from sympy.polys.rings import PolyRing, PolyElement
+
+
 @public
-class PolynomialRing(Ring, CompositeDomain):
+class PolynomialRing(Ring['PolyElement[Er]'], CompositeDomain):
     """A class for representing multivariate polynomial rings. """
 
     is_PolynomialRing = is_Poly = True
@@ -16,22 +28,21 @@ class PolynomialRing(Ring, CompositeDomain):
     has_assoc_Ring  = True
     has_assoc_Field = True
 
-    def __init__(self, domain_or_ring, symbols=None, order=None):
+    def __init__(self, domain_or_ring: Domain[Er] | PolyRing[Er], symbols=None, order=None):
         from sympy.polys.rings import PolyRing
 
         if isinstance(domain_or_ring, PolyRing) and symbols is None and order is None:
             ring = domain_or_ring
         else:
-            ring = PolyRing(symbols, domain_or_ring, order)
+            ring = PolyRing(symbols, domain_or_ring, order) # type: ignore
 
         self.ring = ring
         self.dtype = ring.dtype
 
-        self.gens = ring.gens
-        self.ngens = ring.ngens
-        self.symbols = ring.symbols
-        self.domain = ring.domain
-
+        self.gens: tuple[PolyElement[Er], ...] = ring.gens
+        self.ngens: int = ring.ngens
+        self.symbols: tuple[Expr, ...] = ring.symbols
+        self.domain: Domain[Er] = ring.domain
 
         if symbols:
             if ring.domain.is_Field and ring.domain.is_Exact and len(symbols)==1:
@@ -40,49 +51,53 @@ class PolynomialRing(Ring, CompositeDomain):
         # TODO: remove this
         self.dom = self.domain
 
-    def new(self, element):
+    def new(self, element) -> PolyElement[Er]:
         return self.ring.ring_new(element)
 
+    def of_type(self, element) -> TypeIs[PolyElement[Er]]:
+        """Check if ``a`` is of type ``dtype``. """
+        return self.ring.is_element(element)
+
     @property
-    def zero(self):
+    def zero(self) -> PolyElement[Er]: # type: ignore
         return self.ring.zero
 
     @property
-    def one(self):
+    def one(self) -> PolyElement[Er]: # type: ignore
         return self.ring.one
 
     @property
-    def order(self):
+    def order(self) -> MonomialOrder:
         return self.ring.order
 
     def __str__(self):
         return str(self.domain) + '[' + ','.join(map(str, self.symbols)) + ']'
 
     def __hash__(self):
-        return hash((self.__class__.__name__, self.dtype.ring, self.domain, self.symbols))
+        return hash((self.__class__.__name__, self.ring, self.domain, self.symbols))
 
     def __eq__(self, other):
         """Returns `True` if two domains are equivalent. """
-        return isinstance(other, PolynomialRing) and \
-            (self.dtype.ring, self.domain, self.symbols) == \
-            (other.dtype.ring, other.domain, other.symbols)
+        if not isinstance(other, PolynomialRing):
+            return NotImplemented
+        return self.ring == other.ring
 
-    def is_unit(self, a):
+    def is_unit(self, a) -> bool:
         """Returns ``True`` if ``a`` is a unit of ``self``"""
         if not a.is_ground:
             return False
         K = self.domain
         return K.is_unit(K.convert_from(a, self))
 
-    def canonical_unit(self, a):
+    def canonical_unit(self, a) -> PolyElement[Er]:
         u = self.domain.canonical_unit(a.LC)
         return self.ring.ground_new(u)
 
-    def to_sympy(self, a):
+    def to_sympy(self, a: PolyElement[Er]) -> Expr:
         """Convert `a` to a SymPy object. """
         return a.as_expr()
 
-    def from_sympy(self, a):
+    def from_sympy(self, a: Expr) -> PolyElement[Er]:
         """Convert SymPy's expression to `dtype`. """
         return self.ring.from_expr(a)
 

@@ -1,21 +1,24 @@
 """Advanced tools for dense recursive polynomials in ``K[x]`` or ``K[X]``. """
 
+from __future__ import annotations
 
+from sympy.polys.domains.domain import Domain, Er
 from sympy.polys.densearith import (
     dup_add_term, dmp_add_term,
-    dup_lshift,
+    dup_lshift, dup_rshift,
     dup_add, dmp_add,
     dup_sub, dmp_sub,
-    dup_mul, dmp_mul,
+    dup_mul, dmp_mul, dup_series_mul,
     dup_sqr,
     dup_div,
+    dup_series_pow,
     dup_rem, dmp_rem,
     dup_mul_ground, dmp_mul_ground,
     dup_quo_ground, dmp_quo_ground,
     dup_exquo_ground, dmp_exquo_ground,
 )
 from sympy.polys.densebasic import (
-    dup_strip, dmp_strip,
+    dup, dup_strip, dmp_strip, dup_truncate,
     dup_convert, dmp_convert,
     dup_degree, dmp_degree,
     dmp_to_dict,
@@ -27,13 +30,15 @@ from sympy.polys.densebasic import (
     dup_to_raw_dict, dup_from_raw_dict,
     dmp_zeros,
     dmp_include,
+    dup_nth,
+    dup_normal,
 )
 from sympy.polys.polyerrors import (
     MultivariatePolynomialError,
     DomainError
 )
 
-from math import ceil as _ceil, log2 as _log2
+from math import ceil as _ceil, log2 as _log2, sqrt
 
 
 def dup_integrate(f, m, K):
@@ -926,18 +931,23 @@ def dmp_shift(f, a, u, K):
 
     a0, a1 = a[0], a[1:]
 
-    f = [ dmp_shift(c, a1, u-1, K) for c in f ]
-    n = len(f) - 1
+    if any(a1):
+        f = [ dmp_shift(c, a1, u-1, K) for c in f ]
+    else:
+        f = list(f)
 
-    for i in range(n, 0, -1):
-        for j in range(0, i):
-            afj = dmp_mul_ground(f[j], a0, u-1, K)
-            f[j + 1] = dmp_add(f[j + 1], afj, u-1, K)
+    if a0:
+        n = len(f) - 1
 
-    return f
+        for i in range(n, 0, -1):
+            for j in range(0, i):
+                afj = dmp_mul_ground(f[j], a0, u-1, K)
+                f[j + 1] = dmp_add(f[j + 1], afj, u-1, K)
+
+    return dmp_strip(f, u)
 
 
-def dup_transform(f, p, q, K):
+def dup_transform(f: dup[Er], p: dup[Er], q: dup[Er], K: Domain[Er]) -> dup[Er]:
     """
     Evaluate functional transformation ``q**n * f(p/q)`` in ``K[x]``.
 
@@ -1024,6 +1034,55 @@ def dmp_compose(f, g, u, K):
         h = dmp_add_term(h, c, 0, u, K)
 
     return h
+
+
+def _dup_series_compose(f, g, n, K):
+    """
+    Helper function for dup_series_compose using divide and conquer.
+    """
+    if len(f) == 1:
+        return [f[0]]
+
+    m = len(f) // 2
+    f_high = f[:-m]
+    f_low = f[-m:]
+
+    comp0 = _dup_series_compose(f_low, g, n, K)
+    comp1 = _dup_series_compose(f_high, g, n, K)
+
+    g_power = dup_series_pow(g, m, n, K)
+    high_term = dup_series_mul(comp1, g_power, n, K)
+
+    result = dup_add(high_term, comp0, K)
+    return dup_truncate(result, n, K)
+
+
+def dup_series_compose(f, g, n, K):
+    """
+    Compute ``f(g(x))`` mod ``x**n`` using divide and conquer composition.
+
+    Examples
+    ========
+    >>> from sympy import ZZ
+    >>> from sympy.polys.densetools import dup_series_compose
+    >>> from sympy.polys.densebasic import dup_from_list, dup_print
+    >>> f = dup_from_list([1, 1, 1], ZZ)
+    >>> g = dup_from_list([1, 1], ZZ)
+    >>> comp = dup_series_compose(f, g, 3, ZZ)
+    >>> dup_print(comp, 'x')
+    x**2 + 3*x + 3
+
+    """
+    f = dup_truncate(f, n, K)
+    g = dup_truncate(g, n, K)
+
+    if len(g) <= 1:
+        return dup_strip([dup_eval(f, dup_LC(g, K), K)])
+
+    if not f:
+        return []
+
+    return _dup_series_compose(f, g, n, K)
 
 
 def _dup_right_decompose(f, s, K):
@@ -1431,3 +1490,111 @@ def dmp_revert(f, g, u, K):
         return dup_revert(f, g, K)
     else:
         raise MultivariatePolynomialError(f, g)
+
+
+def _dup_series_reversion_small(f, n, K):
+    """
+    Helper function for :func:`dup_series_reversion`.
+    ``n`` should be less than or equal to 4.
+    """
+    if n < 1 or n > 4:
+        raise ValueError("Only n <= 4 supported")
+
+    f = dup_truncate(f, n, K)
+    f = [K.zero] * (4 - len(f)) + f
+    a, b, c, d = f
+
+    cinv = K.revert(c)
+    g = [K.zero] * n
+
+    if n >= 2:
+        g[-2] = cinv
+
+    if n >= 3:
+        g[-3] = -b * cinv ** 3
+
+    if n >= 4:
+        g[-4] = (2 * b ** 2 - a * c) * cinv ** 5
+
+    return dup_normal(g, K)
+
+
+def dup_series_reversion(f, n, K):
+    r"""
+    Computes the compositional inverse of f using fast lagrange inversion.
+    The result is computed modulo x**n.
+
+    Examples
+    ========
+    >>> from sympy.polys import QQ
+    >>> from sympy.polys.densetools import dup_series_reversion
+    >>> from sympy.polys.densebasic import dup_from_list, dup_print
+    >>> f = dup_from_list([QQ(1, 3), QQ(1, 4), QQ(1, 5), QQ(1, 6), QQ(1, 7), 0], QQ)
+    >>> rev = dup_series_reversion(f, 7, QQ)
+    >>> dup_print(rev, 'x')
+    5528444159/32400*x**6 + 467419477/16200*x**5 - 789929/216*x**4 + 40817/90*x**3 - 343/6*x**2 + 7*x
+
+    References
+    ==========
+
+    .. [1] Johansson, F. A fast algorithm for reversion of power series.
+        https://arxiv.org/abs/1403.4676
+
+    """
+    if not f:
+        return []
+
+    if f[-1] != K.zero:
+        raise ValueError("f must have zero constant term")
+    if n<=4:
+        return _dup_series_reversion_small(f, n, K)
+
+    # Step 0: h = x / f mod x**(n-1)
+    f1 = dup_rshift(f, 1, K)
+    f1_inv = dup_revert(f1, n, K)
+    h = dup_truncate(f1_inv, n, K)
+
+    m = _ceil(sqrt(n - 1))
+
+    # Precompute powers of h: h, h^2, ..., h^m mod x**(n-1)
+    H = [h]
+    for _ in range(1, m):
+        h_prev = H[-1]
+        h_next = dup_series_mul(h_prev, h, n, K)
+        H.append(h_next)
+
+    # Initialize g with n zeros
+    g = [K.zero] * n
+
+    # First block: compute g[i] for i = 1 to m - 1
+    for i in range(1, m):
+        coeff = dup_nth(H[i-1], i - 1, K)  # coeff = [x**(i-1)](h^i)
+        # (1/i) * [x**(i-1)](h^i)
+        g[-(i + 1)] = K.quo(coeff, K(i))
+
+    # t = h^m
+    t = H[m - 1]
+
+    # Loop over blocks of size m
+    for i in range(m, n, m):
+        # g[i] = (1 / i) * [x**(i-1)](t)
+        coeff = dup_nth(t, i - 1, K)
+        g[-(i + 1)] = K.quo(coeff, K(i))
+
+        # Now fill g[i + j] for 1 <= j < m
+        for j in range(1, m):
+            if i + j >= n:
+                break
+
+            s = K.zero
+            for k in range(0, i + j):
+                c1 = dup_nth(t, k, K)
+                c2 = dup_nth(H[j-1], i + j - k - 1, K)
+                s += c1 * c2
+
+            g[-(i + j + 1)] = K.quo(s, K(i + j))
+
+        # t = t * h^m mod x**(n-1)
+        t = dup_series_mul(t, H[m - 1], n, K)
+
+    return dup_strip(g)

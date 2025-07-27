@@ -2,8 +2,8 @@
 This module can be used to solve probelsm related to 2D parabolic arches
 """
 from sympy.core.sympify import sympify
-from sympy.core.symbol import Symbol,symbols
-from sympy import diff, sqrt, cos , sin, atan, rad, Min
+from sympy.core.symbol import Symbol, symbols
+from sympy import diff, sqrt, cos, sin, atan, rad, Min
 from sympy.core.relational import Eq
 from sympy.solvers.solvers import solve
 from sympy.functions import Piecewise
@@ -99,7 +99,7 @@ class Arch:
             self._crown_y = solution[c]
 
         else:
-            raise KeyError("please provide crown_x to contruct arch")
+            raise KeyError("please provide crown_x to construct arch")
 
         return parabola_eqn
 
@@ -337,7 +337,7 @@ class Arch:
                 The x coordinate of the position of the hinge
                 - if not provided, defaults to old value
 
-            crown_y: Flaot
+            crown_y: Float
                 The y coordinate of the position of the hinge
                 - if not provided defaults to None
         """

@@ -1,5 +1,14 @@
 """Compatibility interface between dense and sparse polys. """
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from sympy.core.expr import Expr
+    from sympy.polys.domains.domain import Domain
+    from sympy.polys.orderings import MonomialOrder
+    from sympy.polys.rings import PolyElement
 
 from sympy.polys.densearith import dup_add_term
 from sympy.polys.densearith import dmp_add_term
@@ -230,11 +239,12 @@ from sympy.utilities import public
 
 @public
 class IPolys:
-    symbols = None
-    ngens = None
-    domain = None
-    order = None
-    gens = None
+
+    gens: tuple[PolyElement, ...]
+    symbols: tuple[Expr, ...]
+    ngens: int
+    domain: Domain
+    order: MonomialOrder
 
     def drop(self, gen):
         pass

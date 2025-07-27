@@ -1,5 +1,5 @@
+from __future__ import annotations
 from itertools import product
-from typing import Tuple as tTuple
 
 from sympy.core.add import Add
 from sympy.core.cache import cacheit
@@ -638,7 +638,7 @@ class log(DefinedFunction):
 
     """
 
-    args: tTuple[Expr]
+    args: tuple[Expr]
 
     _singularities = (S.Zero, S.ComplexInfinity)
 
@@ -691,9 +691,7 @@ class log(DefinedFunction):
                 return S.ComplexInfinity
             elif arg is S.One:
                 return S.Zero
-            elif arg is S.Infinity:
-                return S.Infinity
-            elif arg is S.NegativeInfinity:
+            elif arg is S.Infinity or arg is S.NegativeInfinity:
                 return S.Infinity
             elif arg is S.NaN:
                 return S.NaN
@@ -739,9 +737,7 @@ class log(DefinedFunction):
             coeff = arg.as_coefficient(I)
 
             if coeff is not None:
-                if coeff is S.Infinity:
-                    return S.Infinity
-                elif coeff is S.NegativeInfinity:
+                if coeff is S.Infinity or coeff is S.NegativeInfinity:
                     return S.Infinity
                 elif coeff.is_Rational:
                     if coeff.is_nonnegative:

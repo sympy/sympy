@@ -2688,7 +2688,7 @@ class Triangle(Polygon):
         >>> p1, p2, p3 = Point(0, 0), Point(6, 0), Point(0, 2)
         >>> t = Triangle(p1, p2, p3)
         >>> t.excenters[t.sides[0]]
-        Point2D(12*sqrt(10), 2/3 + sqrt(10)/3)
+        Point2D(sqrt(10) + 4, sqrt(10) + 4)
 
         See Also
         ========
@@ -2699,24 +2699,25 @@ class Triangle(Polygon):
         ==========
 
         .. [1] https://mathworld.wolfram.com/Excircles.html
+        .. [2] https://www.geeksforgeeks.org/maths/excenter-of-a-triangle/
 
         """
 
         s = self.sides
         v = self.vertices
-        a = s[0].length
-        b = s[1].length
-        c = s[2].length
+        a = s[1].length
+        b = s[2].length
+        c = s[0].length
         x = [v[0].x, v[1].x, v[2].x]
         y = [v[0].y, v[1].y, v[2].y]
 
         exc_coords = {
-            "x1": simplify(-a*x[0]+b*x[1]+c*x[2]/(-a+b+c)),
-            "x2": simplify(a*x[0]-b*x[1]+c*x[2]/(a-b+c)),
-            "x3": simplify(a*x[0]+b*x[1]-c*x[2]/(a+b-c)),
-            "y1": simplify(-a*y[0]+b*y[1]+c*y[2]/(-a+b+c)),
-            "y2": simplify(a*y[0]-b*y[1]+c*y[2]/(a-b+c)),
-            "y3": simplify(a*y[0]+b*y[1]-c*y[2]/(a+b-c))
+            "x1": simplify((-a*x[0]+b*x[1]+c*x[2])/(-a+b+c)),
+            "x2": simplify((a*x[0]-b*x[1]+c*x[2])/(a-b+c)),
+            "x3": simplify((a*x[0]+b*x[1]-c*x[2])/(a+b-c)),
+            "y1": simplify((-a*y[0]+b*y[1]+c*y[2])/(-a+b+c)),
+            "y2": simplify((a*y[0]-b*y[1]+c*y[2])/(a-b+c)),
+            "y3": simplify((a*y[0]+b*y[1]-c*y[2])/(a+b-c))
         }
 
         excenters = {

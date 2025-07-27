@@ -91,11 +91,11 @@ def shanks(A, k, n, m=1):
     The correct value is 0.6931471805599453094172321215.
     """
     table = [A.subs(k, Integer(j)).doit() for j in range(n + m + 2)]
-    table2 = table[:]
+    table2 = table.copy()
 
     for i in range(1, m + 1):
         for j in range(i, n + m + 1):
             x, y, z = table[j - 1], table[j], table[j + 1]
             table2[j] = (z*x - y**2) / (z + x - 2*y)
-        table = table2[:]
+        table = table2.copy()
     return table[n]

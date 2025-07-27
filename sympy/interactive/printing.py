@@ -80,7 +80,7 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
     def _print_plain(arg, p, cycle):
         """caller for pretty, for use in IPython 0.11"""
         if _can_print(arg):
-            p.text(stringify_func(arg, **settings))
+            p.text(stringify_func(arg))
         else:
             p.text(IPython.lib.pretty.pretty(arg))
 

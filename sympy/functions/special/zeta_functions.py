@@ -3,6 +3,7 @@
 from sympy.core.add import Add
 from sympy.core.cache import cacheit
 from sympy.core.function import ArgumentIndexError, expand_mul, DefinedFunction
+from sympy.core.logic import fuzzy_not
 from sympy.core.numbers import pi, I, Integer
 from sympy.core.relational import Eq
 from sympy.core.singleton import S
@@ -540,9 +541,7 @@ class zeta(DefinedFunction):
         return lerchphi(1, s, a)
 
     def _eval_is_finite(self):
-        arg_is_one = (self.args[0] - 1).is_zero
-        if arg_is_one is not None:
-            return not arg_is_one
+        return fuzzy_not((self.args[0] - 1).is_zero)
 
     def _eval_expand_func(self, **hints):
         s = self.args[0]
@@ -753,9 +752,7 @@ class stieltjes(DefinedFunction):
         if n.is_Number:
             if n is S.NaN:
                 return S.NaN
-            elif n < 0:
-                return S.ComplexInfinity
-            elif not n.is_Integer:
+            elif n < 0 or not n.is_Integer:
                 return S.ComplexInfinity
             elif n is S.Zero and a in [None, 1]:
                 return S.EulerGamma

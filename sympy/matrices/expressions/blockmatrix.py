@@ -1,7 +1,6 @@
 from sympy.assumptions.ask import (Q, ask)
 from sympy.core import Basic, Add, Mul, S
 from sympy.core.sympify import _sympify
-from sympy.functions import adjoint
 from sympy.functions.elementary.complexes import re, im
 from sympy.strategies import typed, exhaust, condition, do_one, unpack
 from sympy.strategies.traverse import bottom_up
@@ -187,13 +186,9 @@ class BlockMatrix(MatrixExpr):
         return BlockMatrix(M)
 
     def _eval_adjoint(self):
-        # Adjoint all the individual matrices
-        matrices = [adjoint(matrix) for matrix in self.blocks]
-        # Make a copy
-        M = Matrix(self.blockshape[0], self.blockshape[1], matrices)
-        # Transpose the block structure
-        M = M.transpose()
-        return BlockMatrix(M)
+        return BlockMatrix(
+            Matrix(self.blockshape[0], self.blockshape[1], self.blocks).adjoint()
+        )
 
     def _eval_trace(self):
         if self.rowblocksizes == self.colblocksizes:
@@ -589,7 +584,13 @@ class BlockDiagMatrix(BlockMatrix):
     sympy.matrices.dense.diag
     """
     def __new__(cls, *mats):
-        return Basic.__new__(BlockDiagMatrix, *[_sympify(m) for m in mats])
+        mats = [_sympify(m) for m in mats]
+        for mat in mats:
+            if not isinstance(mat, MatrixExpr):
+                raise ValueError(
+                    f"BlockDiagMatrix requires matrix-like objects. "
+                    f"Got {type(mat).__name__} with value {mat}")
+        return Basic.__new__(BlockDiagMatrix, *mats)
 
     @property
     def diag(self):

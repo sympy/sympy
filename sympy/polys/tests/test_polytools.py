@@ -29,7 +29,8 @@ from sympy.polys.polytools import (
     cancel, reduced, groebner,
     GroebnerBasis, is_zero_dimensional,
     _torational_factor_list,
-    to_rational_coeffs)
+    to_rational_coeffs,
+    gcdex_steps)
 
 from sympy.polys.polyerrors import (
     MultivariatePolynomialError,
@@ -1928,6 +1929,99 @@ def test_issue_7864():
     assert r == 0
 
 
+def test_gcdex_steps():
+    # on polynomials
+    f = Poly(x**5 + 2*x**4 - x**2 + 1, x)
+    g = Poly(x**4 - 1, x)
+
+    eea_result = list(gcdex_steps(f, g))
+    assert(len(eea_result) == 4)
+
+    r_degree = 5
+    s, t, r = Poly(0, x), Poly(0, x), Poly(0, x)
+    for si, ti, ri in eea_result:
+        assert type(si)==type(ti)==type(ri)==Poly
+        assert si*f + ti*g == ri
+        assert ri.degree() < r_degree
+        r_degree = ri.degree()
+
+        s, t, r = si, ti, ri
+
+    leading_coef = r.LC()
+    s, t, r = s.mul(1/leading_coef), t.mul(1/leading_coef), r.mul(1/leading_coef)
+
+    assert gcdex(f, g) == (s, t, r)
+
+    # on polynomials in Expr form
+    f = x*(x-1)*(x-2)
+    g = (I*x-1)*(x+1)
+
+    eea_result = list(gcdex_steps(f, g))
+    assert(len(eea_result)==3)
+
+    r_degree = 4
+    s, t, r = 0, 0, 0
+    for si, ti, ri in eea_result:
+        assert (si*f + ti*g).equals(ri)
+        ri_poly = Poly(ri, gens=x)
+        assert ri_poly.degree() < r_degree
+        r_degree = ri_poly.degree()
+
+        s, t, r = si, ti, ri
+
+    s, t, r = Poly(s, x), Poly(t, x), Poly(r, x)
+    leading_coef = r.LC()
+
+    s2, t2, r2 = gcdex(f, g)
+    s2, t2, r2 = Poly(s2 * leading_coef, x), Poly(t2* leading_coef, x), Poly(r2 * leading_coef, x)
+
+    assert (s2, t2, r2) == (s, t, r)
+
+    # on polynomials with variable coefficients
+    f = x**4 - y
+    g = x*(x**2 - y)
+
+    # must specifiy the generator for mutivariate polynomials
+    raises(ValueError, lambda: next(gcdex_steps(f, g)))
+
+    eea_result = list(gcdex_steps(f, g, gens=x))
+    assert(len(eea_result)==4)
+
+    r_degree = 4
+    s, t, r = 0, 0, 0
+    for si, ti, ri in eea_result:
+        assert (si*f + ti*g).equals(ri)
+        ri_poly = Poly(ri, gens=x)
+        assert ri_poly.degree() < r_degree
+        r_degree = ri_poly.degree()
+
+        s, t, r = si, ti, ri
+
+    s, t, r = Poly(s, x), Poly(t, x), Poly(r, x)
+    leading_coef = r.LC()
+
+    s2, t2, r2 = gcdex(f, g, gens=x)
+    s2, t2, r2 = Poly(s2 * leading_coef, x), Poly(t2* leading_coef, x), Poly(r2 * leading_coef, x)
+
+    assert (s2, t2, r2) == (s, t, r)
+
+    # on elements which are not convertible to polynomials
+    a = 101
+    b = 62
+
+    eea_result = list(gcdex_steps(a, b))
+    assert(len(eea_result)==7)
+
+    s, t, r = 0, 0, 101
+    for si, ti, ri in eea_result:
+        assert si*a + ti*b == ri
+        assert ri < r
+
+        s, t, r = si, ti, ri
+
+    assert gcdex(a, b) == (s, t, r)
+
+
 def test_gcdex():
     f, g = 2*x, x**2 - 16
     s, t, h = x/32, Rational(-1, 16), 1
@@ -2792,6 +2886,14 @@ def test_factor():
     )
     assert factor(e) == -(y - I)**3*(y + I)*(x**2 + 2*x + y**2 + 2)/(y**2 + 1)
 
+    # issue 27506
+    e = (I*t*x*y - 3*I*t - I*x*y*z - 6*x*y + 3*I*z + 18)
+    assert factor(e) == -I*(x*y - 3)*(-t + z - 6*I)
+
+    e = (8*x**2*z**2 - 32*x**2*z*t + 24*x**2*t**2 - 4*I*x*y*z**2 + 16*I*x*y*z*t -
+         12*I*x*y*t**2 + z**4 - 8*z**3*t + 22*z**2*t**2 - 24*z*t**3 + 9*t**4)
+    assert factor(e) == (-3*t + z)*(-t + z)*(3*t**2 - 4*t*z + 8*x**2 - 4*I*x*y + z**2)
+
 
 def test_factor_large():
     f = (x**2 + 4*x + 4)**10000000*(x**2 + 1)*(x**2 + 2*x + 1)**1234567
@@ -3194,6 +3296,12 @@ def test_nroots():
         '1.7 + 2.5*I]')
     assert str(Poly(1e-15*x**2 -1).nroots()) == ('[-31622776.6016838, 31622776.6016838]')
 
+    # https://github.com/sympy/sympy/issues/23861
+
+    i = Float('3.000000000000000000000000000000000000000000000000001')
+    [r] = nroots(x + I*i, n=300)
+    assert abs(r + I*i) < 1e-300
+
 
 def test_ground_roots():
     f = x**6 - 4*x**4 + 4*x**3 - x**2
@@ -3559,6 +3667,33 @@ def test_reduced():
 
     assert reduced(1, [1], x) == ([1], 0)
     raises(ComputationFailed, lambda: reduced(1, [1]))
+
+    f_poly = Poly(2*x**3 + y**3 + 3*y)
+    G_poly = groebner([Poly(x**2 + y**2 - 1), Poly(x*y - 2)])
+
+    Q_poly = [Poly(x**2 - 1/2*x*y**3 + 1/2*x*y + 1/4*y**6 - 1/2*y**4 + 1/4*y**2, x, y, domain='QQ'),
+              Poly(-1/4*y**5 + 1/2*y**3 + 3/4*y, x, y, domain='QQ')]
+    r_poly = Poly(0, x, y, domain='QQ')
+
+    assert G_poly.reduce(f_poly) == (Q_poly, r_poly)
+
+    Q, r = G_poly.reduce(f)
+    assert all(isinstance(q, Poly) for q in Q)
+    assert isinstance(r, Poly)
+
+    f_wrong_gens = Poly(2*x**3 + y**3 + 3*y, x, y, z)
+    raises(ValueError, lambda: G_poly.reduce(f_wrong_gens))
+
+    zero_poly = Poly(0, x, y)
+    Q, r = G_poly.reduce(zero_poly)
+    assert all(q.is_zero for q in Q)
+    assert r.is_zero
+
+    const_poly = Poly(1, x, y)
+    Q, r = G_poly.reduce(const_poly)
+    assert isinstance(r, Poly)
+    assert r.as_expr() == 1
+    assert all(q.is_zero for q in Q)
 
 
 def test_groebner():
@@ -3933,3 +4068,17 @@ def test_issue_20985():
     w, R = symbols('w R')
     poly = Poly(1.0 + I*w/R, w, 1/R)
     assert poly.degree() == S(1)
+
+
+def test_issue_28156():
+    from sympy.core.symbol import symbols
+
+    ax = symbols("a")
+    field = FF(340282366762482138434845932244680310783)
+    rhs = Poly(
+        ax**3 + field(3) * ax + field(5),
+        ax,
+        domain=field,
+    )
+    roots = rhs.ground_roots()
+    assert roots

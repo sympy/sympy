@@ -418,7 +418,6 @@ class CodePrinter(StrPrinter):
         return self._print(expr.symbol)
 
     def _print_Symbol(self, expr):
-
         name = super()._print_Symbol(expr)
 
         if name in self.reserved_words:
@@ -469,7 +468,7 @@ class CodePrinter(StrPrinter):
         obj, *wrt_order_pairs = expr.args
         for func_arg in obj.args:
             if not func_arg.is_Symbol:
-                raise ValueError("%s._print_Derivative(...) only supports functions with symobls as arguments." %
+                raise ValueError("%s._print_Derivative(...) only supports functions with symbols as arguments." %
                                  self.__class__.__name__)
         meth_name = '_print_Derivative_%s' % obj.func.__name__
         pmeth = getattr(self, meth_name, None)
@@ -486,7 +485,7 @@ class CodePrinter(StrPrinter):
         return pmeth(obj.args, seq_orders)
 
     # Don't inherit the str-printer method for Heaviside to the code printers
-    _print_Heaviside = None
+    _print_Heaviside = None # type: ignore
 
     def _print_NumberSymbol(self, expr):
         if self._settings.get("inline", False):

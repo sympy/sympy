@@ -61,7 +61,7 @@ def test_issue_5223():
     assert D(x**2 + x**3*y**2, x, 2, y, 1).series(x).doit() == 12*x*y
     assert next(D(cos(x), x).lseries()) == D(1, x)
     assert D(
-        exp(x), x).series(n=3) == D(1, x) + D(x, x) + D(x**2/2, x) + D(x**3/6, x) + O(x**3)
+        exp(x), x).series(n=3) == D(x, x) + D(x**2/2, x) + D(x**3/6, x) + O(x**3)
 
     assert Integral(x, (x, 1, 3), (y, 1, x)).series(x) == -4 + 4*x
 
@@ -210,6 +210,19 @@ def test_exp_product_positive_factors():
 
 def test_issue_8805():
     assert series(1, n=8) == 1
+
+
+def test_issue_9173():
+    p0,p1,p2,p3,b0,b1,b2=symbols('p0 p1 p2 p3 b0 b1 b2')
+    Q=(p0+(p1+(p2+p3/y)/y)/y)/(1+((p3/(b0*y)+(b0*p2-b1*p3)/b0**2)/y+\
+       (b0**2*p1-b0*b1*p2-p3*(b0*b2-b1**2))/b0**3)/y)
+
+    series = Q.series(y,n=3)
+
+    assert series == y*(b0*p2/p3+b0*(-p2/p3+b1/b0))+y**2*(b0*p1/p3+b0*p2*\
+            (-p2/p3+b1/b0)/p3+b0*(-p1/p3+(p2/p3-b1/b0)**2+b1*p2/(b0*p3)+\
+            b2/b0-b1**2/b0**2))+b0+O(y**3)
+    assert series.simplify() == b2*y**2 + b1*y + b0 + O(y**3)
 
 
 def test_issue_9549():

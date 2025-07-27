@@ -92,7 +92,7 @@ this representation using the :py:func:`~.srepr` function::
   >>> e
   1 + 1/(x**2 + 2)
   >>> print(srepr(e))
-  Add(Integer(1), Pow(Add(Pow(Symbol('x'), Integer(2)), Integer(2)), Integer(-1)))
+  Add(Integer(1), Pow(Add(Integer(2), Pow(Symbol('x'), Integer(2))), Integer(-1)))
 
 Here the expression ``e`` is represented as an :py:class:`~.Add` node which
 has two children ``1`` and ``1/(x**2 + 2)``. The child ``1`` is represented as
@@ -116,12 +116,12 @@ different ways e.g.::
   >>> e.expand()
   x**2 + x
 
-These two expression although equivalent have different tree representations::
+These two expressions, although equivalent, have different tree representations::
 
   >>> print(srepr(e))
-  Mul(Symbol('x'), Add(Symbol('x'), Integer(1)))
+  Mul(Symbol('x'), Add(Integer(1), Symbol('x')))
   >>> print(srepr(e.expand()))
-  Add(Pow(Symbol('x'), Integer(2)), Symbol('x'))
+  Add(Symbol('x'), Pow(Symbol('x'), Integer(2)))
 
 Being able to represent the same expression in different ways is both a
 strength and a weakness. It is useful to be able to convert an
@@ -796,7 +796,7 @@ that ordinary sympy (:py:class:`~.Expr`) expressions are represented. The
   >>> p_expr
   x**2 + 2*x + 1
   >>> srepr(p_expr)
-  "Add(Pow(Symbol('x'), Integer(2)), Mul(Integer(2), Symbol('x')), Integer(1))"
+  "Add(Integer(1), Pow(Symbol('x'), Integer(2)), Mul(Integer(2), Symbol('x')))"
 
 Here the expression is a tree where the top node is an :py:class:`~.Add` and
 its children nodes are :py:class:`~.Pow` etc. This tree representation makes

@@ -123,7 +123,6 @@ if __name__ == "__main__":
     sorted_messages = []
 
     def msg(msg, *args):
-        global options, sorted_messages
         if options.by_process:
             print(msg % args)
         else:
@@ -143,7 +142,6 @@ if __name__ == "__main__":
         question was already imported.
 
         Keeps the semantics of __import__ unchanged."""
-        global options, symbol_definers
         caller_frame = inspect.getframeinfo(sys._getframe(1))
         importer_filename = caller_frame.filename
         importer_module = globals['__name__']

@@ -477,6 +477,8 @@ def test_DomainMatrix_add():
 
 
 def test_DomainMatrix_sub():
+    from sympy import Abs, EX, I
+
     A = DomainMatrix([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
     B = DomainMatrix([[ZZ(0), ZZ(0)], [ZZ(0), ZZ(0)]], (2, 2), ZZ)
     assert A - A == A.sub(A) == B
@@ -511,6 +513,22 @@ def test_DomainMatrix_sub():
     assert Asd == -Ads
     assert Asd.rep == -Ads.rep
 
+    # https://github.com/sympy/sympy/issues/28097
+    X = DomainMatrix({0: {0: EX(-3), 1: EX(1), 2: EX(2)}, 1: {0: EX(1), 1: EX(-1)},
+                      2: {0: EX(1), 2: EX(-2)}}, (3, 3), EX)
+    Y = DomainMatrix({0: {0: EX(-2 - (27 + 3*sqrt(111)*I)**(1/3)/3 - 4/(27 + 3*sqrt(111)*I)**(1/3))},
+                      1: {1: EX(-2 - (27 + 3*sqrt(111)*I)**(1/3)/3 - 4/(27 + 3*sqrt(111)*I)**(1/3))},
+                      2: {2: EX(-2 - (27 + 3*sqrt(111)*I)**(1/3)/3 - 4/(27 + 3*sqrt(111)*I)**(1/3))}}, (3, 3), EX)
+    P = (9 + sqrt(111)*I)**0.333333333333333
+    Q = 2.77344509740254 / P
+    R = 0.480749856769136 * P
+    expected = DomainMatrix({
+        0: {0: EX(-1.0 + Q + R), 1: EX(1), 2: EX(2)},
+        1: {0: EX(1), 1: EX(1.0 + Q + R)},
+        2: {0: EX(1), 2: EX(Q + R)},
+    }, (3, 3), EX)
+    diff = X.sub(Y).to_Matrix() - expected.to_Matrix()
+    assert all(Abs(e.evalf()) < 1e-12 for e in diff)
 
 def test_DomainMatrix_neg():
     A = DomainMatrix([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
@@ -789,6 +807,12 @@ def test_DomainMatrix_inv():
 
     Aninv = DomainMatrix([[QQ(1), QQ(2)], [QQ(3), QQ(6)]], (2, 2), QQ)
     raises(DMNonInvertibleMatrixError, lambda: Aninv.inv())
+
+    Z3 = FF(3)
+    assert DM([[1, 2], [3, 4]], Z3).inv() == DM([[1, 1], [0, 1]], Z3)
+
+    Z6 = FF(6)
+    raises(DMNotAField, lambda: DM([[1, 2], [3, 4]], Z6).inv())
 
 
 def test_DomainMatrix_det():
@@ -1360,3 +1384,18 @@ def test_DomainMatrix_pickling():
     assert pickle.loads(pickle.dumps(dM)) == dM
     dM = DomainMatrix([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
     assert pickle.loads(pickle.dumps(dM)) == dM
+
+
+def test_DomainMatrix_fflu():
+    A = DM([[1, 2], [3, 4]], ZZ)
+    P, L, D, U = A.fflu()
+    assert P.shape == A.shape
+    assert L.shape == A.shape
+    assert D.shape == A.shape
+    assert U.shape == A.shape
+    assert P == DM([[1, 0], [0, 1]], ZZ)
+    assert L == DM([[1, 0], [3, -2]], ZZ)
+    assert D == DM([[1, 0], [0, -2]], ZZ)
+    assert U == DM([[1, 2], [0, -2]], ZZ)
+    di, d = D.inv_den()
+    assert P.matmul(A).rmul(d) == L.matmul(di).matmul(U)

@@ -16,7 +16,7 @@ on:
 
 jobs:
   nightly-wheel:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -26,7 +26,7 @@ jobs:
       - run: python -m build --wheel
 
       - name: Upload wheel
-        uses: scientific-python/upload-nightly-action@82396a2ed4269ba06c6b2988bb4fd568ef3c3d6b # 0.6.1
+        uses: scientific-python/upload-nightly-action@b36e8c0c10dbcfd2e05bf95f17ef8c14fd708dbf # 0.6.2
         with:
           artifacts_path: dist
           # This token is generated from anaconda.org

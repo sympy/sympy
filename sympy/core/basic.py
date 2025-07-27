@@ -1,11 +1,11 @@
 """Base class for all the objects in SymPy"""
 from __future__ import annotations
 
-from collections import defaultdict
-from collections.abc import Mapping
-from itertools import chain, zip_longest
+from collections import Counter
+from collections.abc import Mapping, Iterable
+from itertools import zip_longest
 from functools import cmp_to_key
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, overload
 
 from .assumptions import _prepare_class_assumptions
 from .cache import cacheit
@@ -19,12 +19,14 @@ from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.iterables import iterable, numbered_symbols
 from sympy.utilities.misc import filldedent, func_name
 
-from inspect import getmro
-
 
 if TYPE_CHECKING:
-    from typing import ClassVar
+    from typing import ClassVar, TypeVar, Any, Hashable
+    from typing_extensions import Self
     from .assumptions import StdFactKB
+    from .symbol import Symbol
+
+    Tbasic = TypeVar("Tbasic", bound='Basic')
 
 
 def as_Basic(expr):
@@ -106,14 +108,14 @@ def _cmp_name(x: type, y: type) -> int:
     >>> basic.ordering_of_classes = save
 
     """
-    # If the other object is not a Basic subclass, then we are not equal to it.
-    if not issubclass(y, Basic):
-        return -1
-
     n1 = x.__name__
     n2 = y.__name__
     if n1 == n2:
         return 0
+
+    # If the other object is not a Basic subclass, then we are not equal to it.
+    if not issubclass(y, Basic):
+        return -1
 
     UNKNOWN = len(ordering_of_classes) + 1
     try:
@@ -127,6 +129,28 @@ def _cmp_name(x: type, y: type) -> int:
     if i1 == UNKNOWN and i2 == UNKNOWN:
         return (n1 > n2) - (n1 < n2)
     return (i1 > i2) - (i1 < i2)
+
+
+
+@cacheit
+def _get_postprocessors(clsname, arg_type):
+    # Since only Add, Mul, Pow can be clsname, this cache
+    # is not quadratic.
+    postprocessors = set()
+    mappings = _get_postprocessors_for_type(arg_type)
+    for mapping in mappings:
+        f = mapping.get(clsname, None)
+        if f is not None:
+            postprocessors.update(f)
+    return postprocessors
+
+@cacheit
+def _get_postprocessors_for_type(arg_type):
+    return tuple(
+        Basic._constructor_postprocessor_mapping[cls]
+        for cls in arg_type.mro()
+        if cls in Basic._constructor_postprocessor_mapping
+    )
 
 
 class Basic(Printable):
@@ -238,7 +262,6 @@ class Basic(Printable):
     is_rational: bool | None
     is_extended_nonnegative: bool | None
     is_infinite: bool | None
-    is_antihermitian: bool | None
     is_extended_negative: bool | None
     is_extended_real: bool | None
     is_finite: bool | None
@@ -253,7 +276,6 @@ class Basic(Printable):
     is_commutative: bool | None
     is_nonnegative: bool | None
     is_nonpositive: bool | None
-    is_hermitian: bool | None
     is_irrational: bool | None
     is_real: bool | None
     is_zero: bool | None
@@ -272,7 +294,7 @@ class Basic(Printable):
     def copy(self):
         return self.func(*self.args)
 
-    def __getnewargs__(self):
+    def __getnewargs__(self) -> tuple[Basic, ...] | tuple[Hashable, ...]:
         return self.args
 
     def __getstate__(self):
@@ -297,7 +319,7 @@ class Basic(Printable):
             self._mhash = h
         return h
 
-    def _hashable_content(self):
+    def _hashable_content(self) -> tuple[Hashable, ...]:
         """Return a tuple of information about self that can be used to
         compute the hash. If a class defines additional attributes,
         like ``name`` in Symbol, then this method should be updated
@@ -332,7 +354,7 @@ class Basic(Printable):
         {'commutative': True, 'complex': True, 'extended_negative': False,
          'extended_nonnegative': True, 'extended_nonpositive': False,
          'extended_nonzero': True, 'extended_positive': True, 'extended_real':
-         True, 'finite': True, 'hermitian': True, 'imaginary': False,
+         True, 'finite': True, 'imaginary': False,
          'infinite': False, 'negative': False, 'nonnegative': True,
          'nonpositive': False, 'nonzero': True, 'positive': True, 'real':
          True, 'zero': False}
@@ -379,54 +401,23 @@ class Basic(Printable):
         #
         st = self._hashable_content()
         ot = other._hashable_content()
-        c = (len(st) > len(ot)) - (len(st) < len(ot))
+        len_st = len(st)
+        len_ot = len(ot)
+        c = (len_st > len_ot) - (len_st < len_ot)
         if c:
             return c
         for l, r in zip(st, ot):
-            l = Basic(*l) if isinstance(l, frozenset) else l
-            r = Basic(*r) if isinstance(r, frozenset) else r
             if isinstance(l, Basic):
+                c = l.compare(r)
+            elif isinstance(l, frozenset):
+                l = Basic(*l) if isinstance(l, frozenset) else l
+                r = Basic(*r) if isinstance(r, frozenset) else r
                 c = l.compare(r)
             else:
                 c = (l > r) - (l < r)
             if c:
                 return c
         return 0
-
-    @staticmethod
-    def _compare_pretty(a, b):
-        """return -1, 0, 1 if a is canonically less, equal or
-        greater than b. This is used when 'order=old' is selected
-        for printing. This puts Order last, orders Rationals
-        according to value, puts terms in order wrt the power of
-        the last power appearing in a term. Ties are broken using
-        Basic.compare.
-        """
-        from sympy.series.order import Order
-        if isinstance(a, Order) and not isinstance(b, Order):
-            return 1
-        if not isinstance(a, Order) and isinstance(b, Order):
-            return -1
-
-        if a.is_Rational and b.is_Rational:
-            l = a.p * b.q
-            r = b.p * a.q
-            return (l > r) - (l < r)
-        else:
-            from .symbol import Wild
-            p1, p2, p3 = Wild("p1"), Wild("p2"), Wild("p3")
-            r_a = a.match(p1 * p2**p3)
-            if r_a and p3 in r_a:
-                a3 = r_a[p3]
-                r_b = b.match(p1 * p2**p3)
-                if r_b and p3 in r_b:
-                    b3 = r_b[p3]
-                    c = Basic.compare(a3, b3)
-                    if c != 0:
-                        return c
-
-        # break ties
-        return Basic.compare(a, b)
 
     @classmethod
     def fromiter(cls, args, **assumptions):
@@ -447,7 +438,7 @@ class Basic(Printable):
         return cls(*tuple(args), **assumptions)
 
     @classmethod
-    def class_key(cls):
+    def class_key(cls) -> tuple[int, int, str]:
         """Nice order of classes."""
         return 5, 0, cls.__name__
 
@@ -600,7 +591,12 @@ class Basic(Printable):
 
         return s.xreplace({dummy: tmp}) == o.xreplace({symbol: tmp})
 
-    def atoms(self, *types):
+    @overload
+    def atoms(self) -> set[Basic]: ...
+    @overload
+    def atoms(self, *types: Tbasic | type[Tbasic]) -> set[Tbasic]: ...
+
+    def atoms(self, *types: Tbasic | type[Tbasic]) -> set[Basic] | set[Tbasic]:
         """Returns the atoms that form the current object.
 
         By default, only objects that are truly atomic and cannot
@@ -669,15 +665,12 @@ class Basic(Printable):
         {I*pi, 2*sin(y + I*pi)}
 
         """
-        if types:
-            types = tuple(
-                [t if isinstance(t, type) else type(t) for t in types])
         nodes = _preorder_traversal(self)
         if types:
-            result = {node for node in nodes if isinstance(node, types)}
+            types2 = tuple([t if isinstance(t, type) else type(t) for t in types])
+            return {node for node in nodes if isinstance(node, types2)}
         else:
-            result = {node for node in nodes if not node.args}
-        return result
+            return {node for node in nodes if not node.args}
 
     @property
     def free_symbols(self) -> set[Basic]:
@@ -739,7 +732,7 @@ class Basic(Printable):
             active_deprecations_target="deprecated-expr-free-symbols")
         return set()
 
-    def as_dummy(self):
+    def as_dummy(self) -> "Self":
         """Return the expression with any objects having structurally
         bound symbols replaced with unique, canonical symbols within
         the object in which they appear and having only the default
@@ -764,7 +757,7 @@ class Basic(Printable):
         =====
 
         Any object that has structurally bound variables should have
-        a property, `bound_symbols` that returns those symbols
+        a property, ``bound_symbols`` that returns those symbols
         appearing in the object.
         """
         from .symbol import Dummy, Symbol
@@ -783,10 +776,10 @@ class Basic(Printable):
         return self.replace(
             lambda x: hasattr(x, 'bound_symbols'),
             can,
-            simultaneous=False)
+            simultaneous=False) # type:ignore
 
     @property
-    def canonical_variables(self):
+    def canonical_variables(self) -> dict[Basic, Symbol]:
         """Return a dictionary mapping any variable defined in
         ``self.bound_symbols`` to Symbols that do not clash
         with any free symbols in the expression.
@@ -799,14 +792,18 @@ class Basic(Printable):
         >>> Lambda(x, 2*x).canonical_variables
         {x: _0}
         """
-        if not hasattr(self, 'bound_symbols'):
+        bound: list[Basic] | None = getattr(self, 'bound_symbols', None)
+        if bound is None:
             return {}
         dums = numbered_symbols('_')
         reps = {}
         # watch out for free symbol that are not in bound symbols;
         # those that are in bound symbols are about to get changed
-        bound = self.bound_symbols
-        names = {i.name for i in self.free_symbols - set(bound)}
+
+        # XXX: free_symbols only returns particular kinds of expressions that
+        # generally have a .name attribute. There is not a proper class/type
+        # that represents this.
+        names = {i.name for i in self.free_symbols - set(bound)} # type: ignore
         for b in bound:
             d = next(dums)
             if b.is_Symbol:
@@ -830,28 +827,13 @@ class Basic(Printable):
         >>> (x + Lambda(y, 2*y)).rcall(z)
         x + 2*z
         """
-        return Basic._recursive_call(self, args)
-
-    @staticmethod
-    def _recursive_call(expr_to_call, on_args):
-        """Helper for rcall method."""
-        from .symbol import Symbol
-        def the_call_method_is_overridden(expr):
-            for cls in getmro(type(expr)):
-                if '__call__' in cls.__dict__:
-                    return cls != Basic
-
-        if callable(expr_to_call) and the_call_method_is_overridden(expr_to_call):
-            if isinstance(expr_to_call, Symbol):  # XXX When you call a Symbol it is
-                return expr_to_call               # transformed into an UndefFunction
-            else:
-                return expr_to_call(*on_args)
-        elif expr_to_call.args:
-            args = [Basic._recursive_call(
-                sub, on_args) for sub in expr_to_call.args]
-            return type(expr_to_call)(*args)
+        if callable(self):
+            return self(*args)
+        elif self.args:
+            newargs = [sub.rcall(*args) for sub in self.args]
+            return self.func(*newargs)
         else:
-            return expr_to_call
+            return self
 
     def is_hypergeometric(self, k):
         from sympy.simplify.simplify import hypersimp
@@ -887,25 +869,11 @@ class Basic(Printable):
         1
 
         """
-        is_extended_real = self.is_extended_real
-        if is_extended_real is False:
-            return False
-        if not self.is_number:
-            return False
-        # don't re-eval numbers that are already evaluated since
-        # this will create spurious precision
-        n, i = [p.evalf(2) if not p.is_Number else p
-            for p in self.as_real_imag()]
-        if not (i.is_Number and n.is_Number):
-            return False
-        if i:
-            # if _prec = 1 we can't decide and if not,
-            # the answer is False because numbers with
-            # imaginary parts can't be compared
-            # so return False
-            return False
-        else:
-            return n._prec != 1
+        return self._eval_is_comparable()
+
+    def _eval_is_comparable(self) -> bool:
+        # Expr.is_comparable overrides this
+        return False
 
     @property
     def func(self):
@@ -985,7 +953,16 @@ class Basic(Printable):
         """
         return S.One, self
 
-    def subs(self, *args, **kwargs):
+    @overload
+    def subs(self, arg1: Mapping[Basic | complex, Basic | complex], arg2: None=None, **kwargs: Any) -> Basic: ...
+    @overload
+    def subs(self, arg1: Iterable[tuple[Basic | complex, Basic | complex]], arg2: None=None, **kwargs: Any) -> Basic: ...
+    @overload
+    def subs(self, arg1: Basic | complex, arg2: Basic | complex, **kwargs: Any) -> Basic: ...
+
+    def subs(self, arg1: Mapping[Basic | complex, Basic | complex]
+            | Iterable[tuple[Basic | complex, Basic | complex]] | Basic | complex,
+             arg2: Basic | complex | None = None, **kwargs: Any) -> Basic:
         """
         Substitutes old for new in an expression after sympifying args.
 
@@ -1102,26 +1079,28 @@ class Basic(Printable):
         from .symbol import Dummy, Symbol
         from .numbers import _illegal
 
-        unordered = False
-        if len(args) == 1:
+        items: Iterable[tuple[Basic | complex, Basic | complex]]
 
-            sequence = args[0]
-            if isinstance(sequence, set):
+        unordered = False
+        if arg2 is None:
+
+            if isinstance(arg1, set):
+                items = arg1
                 unordered = True
-            elif isinstance(sequence, (Dict, Mapping)):
+            elif isinstance(arg1, (Dict, Mapping)):
                 unordered = True
-                sequence = sequence.items()
-            elif not iterable(sequence):
+                items = arg1.items() # type: ignore
+            elif not iterable(arg1):
                 raise ValueError(filldedent("""
                    When a single argument is passed to subs
                    it should be a dictionary of old: new pairs or an iterable
                    of (old, new) tuples."""))
-        elif len(args) == 2:
-            sequence = [args]
+            else:
+                items = arg1 # type: ignore
         else:
-            raise ValueError("subs accepts either 1 or 2 arguments")
+            items = [(arg1, arg2)] # type: ignore
 
-        def sympify_old(old):
+        def sympify_old(old) -> Basic:
             if isinstance(old, str):
                 # Use Symbol rather than parse_expr for old
                 return Symbol(old)
@@ -1131,14 +1110,14 @@ class Basic(Printable):
             else:
                 return sympify(old, strict=True)
 
-        def sympify_new(new):
+        def sympify_new(new) -> Basic:
             if isinstance(new, (str, type)):
                 # Allow a type or parse a string input
                 return sympify(new, strict=False)
             else:
                 return sympify(new, strict=True)
 
-        sequence = [(sympify_old(s1), sympify_new(s2)) for s1, s2 in sequence]
+        sequence = [(sympify_old(s1), sympify_new(s2)) for s1, s2 in items]
 
         # skip if there is no change
         sequence = [(s1, s2) for s1, s2 in sequence if not _aresame(s1, s2)]
@@ -1147,18 +1126,18 @@ class Basic(Printable):
 
         if unordered:
             from .sorting import _nodes, default_sort_key
-            sequence = dict(sequence)
+            sequence_dict = dict(sequence)
             # order so more complex items are first and items
             # of identical complexity are ordered so
             # f(x) < f(y) < x < y
             # \___ 2 __/    \_1_/  <- number of nodes
             #
             # For more complex ordering use an unordered sequence.
-            k = list(ordered(sequence, default=False, keys=(
+            k = list(ordered(sequence_dict, default=False, keys=(
                 lambda x: -_nodes(x),
                 default_sort_key,
                 )))
-            sequence = [(k, sequence[k]) for k in k]
+            sequence = [(k, sequence_dict[k]) for k in k]
             # do infinities first
             if not simultaneous:
                 redo = [i for i, seq in enumerate(sequence) if seq[1] in _illegal]
@@ -1304,7 +1283,7 @@ class Basic(Printable):
             rv = fallback(self, old, new)
         return rv
 
-    def _eval_subs(self, old, new):
+    def _eval_subs(self, old: Basic, new: Basic) -> Basic | None:
         """Override this stub if you want to do anything more than
         attempt a replacement of old with new in the arguments of self.
 
@@ -1558,7 +1537,7 @@ class Basic(Printable):
         # no success
         return False
 
-    def replace(self, query, value, map=False, simultaneous=True, exact=None):
+    def replace(self, query, value, map=False, simultaneous=True, exact=None) -> Basic:
         """
         Replace matching subexpressions of ``self`` with ``value``.
 
@@ -1732,9 +1711,7 @@ class Basic(Printable):
         if isinstance(query, type):
             _query = lambda expr: isinstance(expr, query)
 
-            if isinstance(value, type):
-                _value = lambda expr, result: value(*expr.args)
-            elif callable(value):
+            if isinstance(value, type) or callable(value):
                 _value = lambda expr, result: value(*expr.args)
             else:
                 raise TypeError(
@@ -1814,7 +1791,7 @@ class Basic(Printable):
             return expr
 
         rv = walk(self, rec_replace)
-        return (rv, mapping) if map else rv
+        return (rv, mapping) if map else rv # type: ignore
 
     def find(self, query, group=False):
         """Find all subexpressions matching a query."""
@@ -1823,16 +1800,7 @@ class Basic(Printable):
 
         if not group:
             return set(results)
-        else:
-            groups = {}
-
-            for result in results:
-                if result in groups:
-                    groups[result] += 1
-                else:
-                    groups[result] = 1
-
-            return groups
+        return dict(Counter(results))
 
     def count(self, query):
         """Count the number of matching subexpressions."""
@@ -1947,7 +1915,7 @@ class Basic(Printable):
         pattern = sympify(pattern)
         return pattern.matches(self, old=old)
 
-    def count_ops(self, visual=None):
+    def count_ops(self, visual=False):
         """Wrapper for count_ops that returns the operation count."""
         from .function import count_ops
         return count_ops(self, visual)
@@ -1978,7 +1946,7 @@ class Basic(Printable):
         else:
             return self
 
-    def simplify(self, **kwargs):
+    def simplify(self, **kwargs) -> Basic:
         """See the simplify function in sympy.simplify"""
         from sympy.simplify.simplify import simplify
         return simplify(self, **kwargs)
@@ -1999,11 +1967,13 @@ class Basic(Printable):
         if isinstance(n, (int, Integer)):
             obj = self
             for i in range(n):
-                obj2 = obj._eval_derivative(s)
-                if obj == obj2 or obj2 is None:
+                prev = obj
+                obj = obj._eval_derivative(s)
+                if obj is None:
+                    return None
+                elif obj == prev:
                     break
-                obj = obj2
-            return obj2
+            return obj
         else:
             return None
 
@@ -2089,6 +2059,11 @@ class Basic(Printable):
         pattern = args[:-1]
         rule = args[-1]
 
+        # Special case: map `abs` to `Abs`
+        if rule is abs:
+            from sympy.functions.elementary.complexes import Abs
+            rule = Abs
+
         # support old design by _eval_rewrite_as_[...] method
         if isinstance(rule, str):
             method = "_eval_rewrite_as_%s" % rule
@@ -2146,20 +2121,9 @@ class Basic(Printable):
         # functions for matching expression node names.
 
         clsname = obj.__class__.__name__
-        postprocessors = defaultdict(list)
-        for i in obj.args:
-            try:
-                postprocessor_mappings = (
-                    Basic._constructor_postprocessor_mapping[cls].items()
-                    for cls in type(i).mro()
-                    if cls in Basic._constructor_postprocessor_mapping
-                )
-                for k, v in chain.from_iterable(postprocessor_mappings):
-                    postprocessors[k].extend([j for j in v if j not in postprocessors[k]])
-            except TypeError:
-                pass
-
-        for f in postprocessors.get(clsname, []):
+        postprocessors = {f for i in obj.args
+                            for f in _get_postprocessors(clsname, type(i))}
+        for f in postprocessors:
             obj = f(obj)
 
         return obj
@@ -2171,7 +2135,7 @@ class Basic(Printable):
         This version of the method is merely a placeholder.
         """
         old_method = self._sage_
-        from sage.interfaces.sympy import sympy_init
+        from sage.interfaces.sympy import sympy_init # type: ignore
         sympy_init()  # may monkey-patch _sage_ method into self's class or superclasses
         if old_method == self._sage_:
             raise NotImplementedError('conversion to SageMath is not implemented')
@@ -2179,7 +2143,7 @@ class Basic(Printable):
             # call the freshly monkey-patched method
             return self._sage_()
 
-    def could_extract_minus_sign(self):
+    def could_extract_minus_sign(self) -> bool:
         return False  # see Expr.could_extract_minus_sign
 
     def is_same(a, b, approx=None):

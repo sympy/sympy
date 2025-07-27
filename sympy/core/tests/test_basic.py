@@ -17,6 +17,9 @@ from sympy.functions.special.gamma_functions import gamma
 from sympy.integrals.integrals import Integral
 from sympy.functions.elementary.exponential import exp
 from sympy.testing.pytest import raises, warns_deprecated_sympy
+from sympy.functions.elementary.complexes import Abs, sign
+from sympy.functions.elementary.piecewise import Piecewise
+from sympy.core.relational import Eq
 
 b1 = Basic()
 b2 = Basic(b1)
@@ -130,11 +133,11 @@ def test_subs():
     assert b21.subs(collections.OrderedDict([(b2, b1), (b1, b2)])) == Basic(b2, b2)
 
     raises(ValueError, lambda: b21.subs('bad arg'))
-    raises(ValueError, lambda: b21.subs(b1, b2, b3))
+    raises(TypeError, lambda: b21.subs(b1, b2, b3))
     # dict(b1=foo) creates a string 'b1' but leaves foo unchanged; subs
     # will convert the first to a symbol but will raise an error if foo
     # cannot be sympified; sympification is strict if foo is not string
-    raises(ValueError, lambda: b21.subs(b1='bad arg'))
+    raises(TypeError, lambda: b21.subs(b1='bad arg'))
 
     assert Symbol("text").subs({"text": b1}) == b1
     assert Symbol("s").subs({"s": 1}) == 1
@@ -198,7 +201,7 @@ def test_call():
     assert sin(x).rcall(1) == sin(x)
     assert (1 + sin(x)).rcall(1) == 1 + sin(x)
 
-    # Effect in the pressence of callables
+    # Effect in the presence of callables
     l = Lambda(x, 2*x)
     assert (l + x).rcall(y) == 2*y + x
     assert (x**l).rcall(2) == x**4
@@ -331,3 +334,10 @@ def test_generic():
 
     class B(A[T]):
         pass
+
+
+def test_rewrite_abs():
+    # https://github.com/sympy/sympy/issues/27323
+    x = Symbol('x')
+    assert sign(x).rewrite(abs) == sign(x).rewrite(Abs)
+    assert sign(x).rewrite(abs) == Piecewise((0, Eq(x, 0)), (x / Abs(x), True))

@@ -84,22 +84,25 @@ redirects = {
     "tutorial/matrices": "../tutorials/intro-tutorial/matrices.html",
     "tutorial/manipulation": "../tutorials/intro-tutorial/manipulation.html",
 
-    "modules/physics/vector/vectors": "../explanation/modules/physics/vector/vectors/vectors.html",
-    "modules/physics/vector/kinematics": "../explanation/modules/physics/vector/kinematics/kinematics.html",
-    "modules/physics/vector/advanced": "../explanation/modules/physics/vector/advanced.html",
-    "modules/physics/vector/fields": "../explanation/modules/physics/vector/fields.html",
-    "modules/physics/mechanics/advanced": "../explanation/modules/physics/mechanics/advanced.html",
-    "modules/physics/mechanics/autolev_parser": "../explanation/modules/physics/mechanics/autolev_parser.html",
-    "modules/physics/mechanics/examples": "../tutorials/physics/mechanics/index.html",
-    "modules/physics/mechanics/joints": "../explanation/modules/physics/mechanics/joints.html",
-    "modules/physics/mechanics/kane": "../explanation/modules/physics/mechanics/kane.html",
-    "modules/physics/mechanics/lagrange": "../explanation/modules/physics/mechanics/lagrange.html",
-    "modules/physics/mechanics/masses": "../explanation/modules/physics/mechanics/masses.html",
-    "modules/physics/mechanics/reference": "../explanation/modules/physics/mechanics/reference.html",
-    "modules/physics/mechanics/symsystem": "../explanation/modules/physics/mechanics/symsystem.html",
-    "modules/physics/mechanics/linearize": "../explanation/modules/physics/mechanics/linearize.html",
-    "modules/physics/mechanics/sympy_mechanics_for_autolev_uses": "../explanation/modules/physics/mechanics/sympy_mechanics_for_autolev_uses.html",
-    "tutorials/physics/biomechanics/biomechanics": "../explanation/modules/physics/biomechanics/biomechanics.html",
+    "modules/physics/continuum_mechanics/beam_problems": "../../../tutorials/physics/continuum_mechanics/beam_problems.html",
+    "modules/physics/vector/index": "../../../explanation/modules/physics/vector/index.html",
+    "modules/physics/vector/vectors": "../../../explanation/modules/physics/vector/vectors/vectors.html",
+    "modules/physics/vector/kinematics": "../../../explanation/modules/physics/vector/kinematics/kinematics.html",
+    "modules/physics/vector/advanced": "../../../explanation/modules/physics/vector/advanced.html",
+    "modules/physics/vector/fields": "../../../explanation/modules/physics/vector/fields.html",
+    "modules/physics/mechanics/index": "../../../explanation/modules/physics/mechanics/index.html",
+    "modules/physics/mechanics/advanced": "../../../explanation/modules/physics/mechanics/advanced.html",
+    "modules/physics/mechanics/autolev_parser": "../../../explanation/modules/physics/mechanics/autolev_parser.html",
+    "modules/physics/mechanics/examples": "../../../tutorials/physics/mechanics/index.html",
+    "modules/physics/mechanics/joints": "../../../explanation/modules/physics/mechanics/joints.html",
+    "modules/physics/mechanics/kane": "../../../explanation/modules/physics/mechanics/kane.html",
+    "modules/physics/mechanics/lagrange": "../../../explanation/modules/physics/mechanics/lagrange.html",
+    "modules/physics/mechanics/masses": "../../../explanation/modules/physics/mechanics/masses.html",
+    "modules/physics/mechanics/reference": "../../../explanation/modules/physics/mechanics/reference.html",
+    "modules/physics/mechanics/symsystem": "../../../explanation/modules/physics/mechanics/symsystem.html",
+    "modules/physics/mechanics/linearize": "../../../explanation/modules/physics/mechanics/linearize.html",
+    "modules/physics/mechanics/sympy_mechanics_for_autolev_uses": "../../../explanation/modules/physics/mechanics/sympy_mechanics_for_autolev_users.html",
+    "tutorials/physics/biomechanics/biomechanics": "../../../explanation/modules/physics/biomechanics/biomechanics.html",
 
 }
 
@@ -134,11 +137,11 @@ myst_enable_extensions = ["dollarmath", "linkify", "tasklist"]
 myst_heading_anchors = 6
 # Make - [ ] checkboxes from the tasklist extension checkable
 # Requires https://github.com/executablebooks/MyST-Parser/pull/686
-# myst_enable_checkboxes = True
+myst_enable_checkboxes = True
 # myst_update_mathjax = False
 
 # Don't linkify links unless they start with "https://". This is needed
-# because the linkify library treates .py as a TLD.
+# because the linkify library treats .py as a TLD.
 myst_linkify_fuzzy_links = False
 
 # Add any paths that contain templates here, relative to this directory.
@@ -530,3 +533,21 @@ def linkcode_resolve(domain, info):
 
     fn = os.path.relpath(fn, start=os.path.dirname(sympy.__file__))
     return blobpath + fn + linespec
+
+
+def resolve_type_aliases(app, env, node, contnode):
+    """Resolve :class: references to our type aliases as :attr: instead."""
+    # A sphinx bug means that TypeVar doesn't work:
+    # https://github.com/sphinx-doc/sphinx/issues/10785
+    if (
+        node["refdomain"] == "py"
+        and node["reftype"] == "class"
+        and node["reftarget"] in ["sympy.utilities.decorator.T"]
+    ):
+        return app.env.get_domain("py").resolve_xref(
+            env, node["refdoc"], app.builder, "attr", node["reftarget"], node, contnode
+        )
+
+
+def setup(app):
+    app.connect("missing-reference", resolve_type_aliases)

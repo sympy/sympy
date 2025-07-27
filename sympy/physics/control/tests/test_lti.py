@@ -21,11 +21,12 @@ from sympy.physics.control import (TransferFunction, PIDController, Series, Para
     Feedback, TransferFunctionMatrix, MIMOSeries, MIMOParallel, MIMOFeedback,
     StateSpace, gbt, bilinear, forward_diff, backward_diff, phase_margin, gain_margin)
 from sympy.testing.pytest import raises
+from sympy.logic.boolalg import true, false
 
 a, x, b, c, s, g, d, p, k, tau, zeta, wn, T = symbols('a, x, b, c, s, g, d, p, k,\
     tau, zeta, wn, T')
-a0, a1, a2, a3, b0, b1, b2, b3, c0, c1, c2, c3, d0, d1, d2, d3 = symbols('a0:4,\
-    b0:4, c0:4, d0:4')
+a0, a1, a2, a3, b0, b1, b2, b3, b4, c0, c1, c2, c3, d0, d1, d2, d3 = symbols('a0:4,\
+    b0:5, c0:4, d0:4')
 TF1 = TransferFunction(1, s**2 + 2*zeta*wn*s + wn**2, s)
 TF2 = TransferFunction(k, 1, s)
 TF3 = TransferFunction(a2*p - s, a2*s + p, s)
@@ -279,7 +280,8 @@ def test_TransferFunction_functions():
 
     assert G1.is_stable() is False
     assert G2.is_stable() is True
-    assert tf1.is_stable() is False   # as one pole is +ve, and the other is -ve.
+    assert tf1.is_stable() is False
+    assert tf1.is_stable(True) is True
     assert expect2.is_stable() is False
     assert expect1.is_stable() is True
     assert stable_tf.is_stable() is True
@@ -288,14 +290,31 @@ def test_TransferFunction_functions():
     assert expect4_.is_stable() is None   # no assumption provided for the only pole 's'.
     assert SP4.is_stable() is None
 
+    generic_den = b4 * s**4 + b3 * s**3 + b2 * s**2 + b1 * s + b0
+
+    stab_cond = TransferFunction(1, generic_den, s).get_asymptotic_stability_conditions()
+    assert stab_cond == [
+        b3*b4 > 0, b3**2*(-b1*b4 + b2*b3) > 0,
+        (-b0*b3**3 + b1*b3*(-b1*b4 + b2*b3))*(-b1*b4 + b2*b3)**2 > 0,
+        b0*b3*(-b0*b3**3 + b1*b3*(-b1*b4 + b2*b3))**3*(-b1*b4 + b2*b3) > 0]
+    assert TransferFunction(1, (s+1)*(s+2*I)*(s-2*I), s).get_asymptotic_stability_conditions() == [true, false]
+    assert TransferFunction(1, (s+1)*(s+2)*(s+1/2), s).get_asymptotic_stability_conditions() == [true, true, true]
+    assert stable_tf.get_asymptotic_stability_conditions() == [true]
+
     # Zeros of a transfer function.
     assert G1.zeros() == [1, 1]
     assert G2.zeros() == []
     assert tf1.zeros() == [-3, 1]
-    assert expect4_.zeros() == [7**(Rational(2, 3))*(-s)**(Rational(1, 3))/7, -7**(Rational(2, 3))*(-s)**(Rational(1, 3))/14 -
-        sqrt(3)*7**(Rational(2, 3))*I*(-s)**(Rational(1, 3))/14, -7**(Rational(2, 3))*(-s)**(Rational(1, 3))/14 + sqrt(3)*7**(Rational(2, 3))*I*(-s)**(Rational(1, 3))/14]
-    assert SP4.zeros() == [(s/a1)**(Rational(1, 3)), -(s/a1)**(Rational(1, 3))/2 - sqrt(3)*I*(s/a1)**(Rational(1, 3))/2,
-        -(s/a1)**(Rational(1, 3))/2 + sqrt(3)*I*(s/a1)**(Rational(1, 3))/2]
+    assert expect4_.zeros() == [
+        -7**(S(2)/3)*s**(S(1)/3)/7,
+        7**(S(2)/3)*s**(S(1)/3)/14 - sqrt(3)*7**(S(2)/3)*I*s**(S(1)/3)/14,
+        7**(S(2)/3)*s**(S(1)/3)/14 + sqrt(3)*7**(S(2)/3)*I*s**(S(1)/3)/14
+    ]
+    assert SP4.zeros() == [
+        s**(S(1)/3)/a1**(S(1)/3),
+        -s**(S(1)/3)/(2*a1**(S(1)/3)) - sqrt(3)*I*s**(S(1)/3)/(2*a1**(S(1)/3)),
+        -s**(S(1)/3)/(2*a1**(S(1)/3)) + sqrt(3)*I*s**(S(1)/3)/(2*a1**(S(1)/3))
+    ]
     assert str(expect3.zeros()) == str([0.125 - 1.11102430216445*sqrt(-0.405063291139241*p**3 - 1.0),
         1.11102430216445*sqrt(-0.405063291139241*p**3 - 1.0) + 0.125])
     assert tf_.zeros() == [k**(Rational(1, 3)), -k**(Rational(1, 3))/2 - sqrt(3)*I*k**(Rational(1, 3))/2,
@@ -2256,18 +2275,42 @@ def test_StateSpace_feedback():
 
     # Positive Feedback
     fd5 = MIMOFeedback(ss3, ss4, 1)
-    assert fd5.doit() == StateSpace(Matrix([
-                            [Rational(4, 7), Rational(62, 7), Rational(1), Rational(-8), Rational(-69, 7)],
-                            [Rational(32, 7), Rational(-135, 14), Rational(-3, 2), Rational(3), Rational(36, 7)],
-                            [Rational(-10, 7), Rational(41, 7), Rational(-4), Rational(-12), Rational(-97, 7)],
-                            [Rational(12, 7), Rational(-111, 14), Rational(-5, 2), Rational(18), Rational(171, 7)],
-                            [Rational(2, 7), Rational(-29, 14), Rational(-1, 2), Rational(10), Rational(81, 7)]]), Matrix([
-                            [Rational(6, 7), Rational(-17, 7)],
-                            [Rational(-9, 14), Rational(15, 14)],
-                            [Rational(6, 7), Rational(-31, 7)],
-                            [Rational(-27, 14), Rational(87, 14)],
-                            [Rational(-15, 14), Rational(25, 14)]]), Matrix([
-                            [Rational(-2, 7), Rational(11, 7), Rational(1), Rational(-4), Rational(-39, 7)],
-                            [Rational(-2, 7), Rational(15, 14), Rational(-1, 2), Rational(-3), Rational(-18, 7)]]), Matrix([
-                            [Rational(4, 7), Rational(-9, 7)],
-                            [Rational(1, 14), Rational(-11, 14)]]))
+    assert fd5.doit() == StateSpace(
+        Matrix([
+            [Rational(4, 7), Rational(62, 7), Rational(1), Rational(-8),
+             Rational(-69, 7)],
+            [Rational(32, 7), Rational(-135, 14),Rational(-3, 2), Rational(3),
+             Rational(36, 7)],
+            [Rational(-10, 7), Rational(41, 7), Rational(-4), Rational(-12),
+             Rational(-97, 7)],
+            [Rational(12, 7), Rational(-111, 14), Rational(-5, 2), Rational(18),
+             Rational(171, 7)],
+            [Rational(2, 7), Rational(-29, 14), Rational(-1, 2), Rational(10),
+             Rational(81, 7)]]),
+        Matrix([[Rational(6, 7), Rational(-17, 7)],
+                [Rational(-9, 14), Rational(15, 14)],
+                [Rational(6, 7), Rational(-31, 7)],
+                [Rational(-27, 14), Rational(87, 14)],
+                [Rational(-15, 14), Rational(25, 14)]]),
+        Matrix([[Rational(-2, 7), Rational(11, 7),Rational(1), Rational(-4),
+                 Rational(-39, 7)],
+                [Rational(-2, 7), Rational(15, 14), Rational(-1, 2),
+                 Rational(-3), Rational(-18, 7)]]),
+        Matrix([[Rational(4, 7), Rational(-9, 7)],
+                [Rational(1, 14), Rational(-11, 14)]]))
+
+def test_StateSpace_stability():
+    k = symbols('k')
+    B = Matrix([1, 0, 0])
+    C = Matrix([[0, 1, 0]])
+    D = Matrix([0])
+
+    A1 = Matrix([[0,1,0],[0,0,1], [k-1, -2*k, -1]])
+    ss1 = StateSpace(A1, B, C, D)
+    ineq = ss1.get_asymptotic_stability_conditions()
+    assert ineq == [True, 3 * k - 1 > 0, (1 - k)*(3 * k - 1)**3 > 0]
+
+    A2 = Matrix([[1,0,0], [0,-1,k], [0,0,-1]])
+    ss2 = StateSpace(A2, B, C, D)
+    ineq = ss2.get_asymptotic_stability_conditions()
+    assert ineq == [True, False]

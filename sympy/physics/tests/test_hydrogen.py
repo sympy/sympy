@@ -6,7 +6,7 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import (cos, sin)
 from sympy.integrals.integrals import integrate
 from sympy.simplify.simplify import simplify
-from sympy.physics.hydrogen import R_nl, E_nl, E_nl_dirac, Psi_nlm
+from sympy.physics.hydrogen import R_nl, E_nl, E_nl_dirac, Psi_nlm, Y_lm, Z_lm
 from sympy.testing.pytest import raises
 
 n, r, Z = symbols('n r Z')
@@ -124,3 +124,25 @@ def test_hydrogen_energies_relat():
     raises(ValueError, lambda: E_nl_dirac(0, 0))
     raises(ValueError, lambda: E_nl_dirac(1, -1))
     raises(ValueError, lambda: E_nl_dirac(1, 0, False))
+
+
+def test_y_lm():
+    # https://en.wikipedia.org/wiki/Table_of_spherical_harmonics#
+    l, m, phi, theta = symbols('l, m, phi, theta', real=True)
+    assert Y_lm(1, 0, 0, pi) == -sqrt(3)/(2*sqrt(pi))
+    assert Y_lm(0, 0, 0, 0) == 1/(2*sqrt(pi))
+    assert Y_lm(0, 0, phi, theta) == 1/(2*sqrt(pi))
+    assert Y_lm(1, 0, phi, theta) == sqrt(3)*cos(theta)/(2*sqrt(pi))
+    assert Y_lm(1, 1, phi, theta) == -sqrt(6)*exp(I*phi)*sin(theta)/(4*sqrt(pi))
+    assert Y_lm(1, -1, phi, theta) == sqrt(6)*exp(-I*phi)*sin(theta)/(4*sqrt(pi))
+
+
+def test_z_lm():
+    # https://en.wikipedia.org/wiki/Table_of_spherical_harmonics#
+    l, m, phi, theta = symbols('l, m, phi, theta', real=True)
+    assert Z_lm(2, 0, 0, 0) == sqrt(5)/(2*sqrt(pi))
+    assert Z_lm(1, -1, pi/2, pi/2) == -sqrt(3)/(2*sqrt(pi))
+    assert Z_lm(2, 2, phi, theta).simplify() == (
+        sqrt(15)*sin(theta)**2*cos(2*phi)/(4*sqrt(pi)))
+    assert Z_lm(2, -2, phi, theta).simplify() == (
+        -sqrt(15)*sin(2*phi)*sin(theta)**2/(4*sqrt(pi)))
