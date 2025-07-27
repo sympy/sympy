@@ -428,9 +428,9 @@ class GaussianIntegerRing(GaussianDomain, Ring):
     dom = ZZ
     mod = DMP([ZZ.one, ZZ.zero, ZZ.one], ZZ)
     dtype = GaussianInteger
-    zero: GaussianInteger = dtype(ZZ(0), ZZ(0))
-    one: GaussianInteger = dtype(ZZ(1), ZZ(0))
-    imag_unit: GaussianInteger = dtype(ZZ(0), ZZ(1))
+    zero = dtype(ZZ(0), ZZ(0))
+    one = dtype(ZZ(1), ZZ(0))
+    imag_unit = dtype(ZZ(0), ZZ(1))
     units = (one, imag_unit, -one, -imag_unit)  # powers of i
 
     rep = 'ZZ_I'
@@ -634,9 +634,9 @@ class GaussianRationalField(GaussianDomain, Field):
     dom = QQ
     mod = DMP([QQ.one, QQ.zero, QQ.one], QQ)
     dtype = GaussianRational
-    zero: GaussianInteger = dtype(QQ(0), QQ(0))
-    one: GaussianInteger = dtype(QQ(1), QQ(0))
-    imag_unit: GaussianInteger = dtype(QQ(0), QQ(1))
+    zero = dtype(QQ(0), QQ(0))
+    one = dtype(QQ(1), QQ(0))
+    imag_unit = dtype(QQ(0), QQ(1))
     units = (one, imag_unit, -one, -imag_unit)  # powers of i
 
     rep = 'QQ_I'

@@ -18,7 +18,7 @@ from sympy.sets.sets import EmptySet, UniversalSet, imageset, ProductSet
 from sympy.simplify.radsimp import numer
 
 
-intersection_sets: Dispatcher = Dispatcher('intersection_sets')
+intersection_sets = Dispatcher('intersection_sets')
 
 
 @intersection_sets.register(ConditionSet, ConditionSet)

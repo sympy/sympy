@@ -2,7 +2,7 @@
 
 
 from sympy.polys.domains.groundtypes import (
-    _GMPYRational, GMPYRational, SymPyRational,
+    GMPYRational, SymPyRational,
     gmpy_numer, gmpy_denom, factorial as gmpy_factorial,
 )
 from sympy.polys.domains.rationalfield import RationalField
@@ -18,9 +18,9 @@ class GMPYRationalField(RationalField):
     """
 
     dtype = GMPYRational
-    zero: _GMPYRational = dtype(0)
-    one: _GMPYRational = dtype(1)
-    tp: type[_GMPYRational] = type(one)
+    zero = dtype(0)
+    one = dtype(1)
+    tp = type(one)
     alias = 'QQ_gmpy'
 
     def __init__(self):

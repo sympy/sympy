@@ -14,11 +14,6 @@ from sympy.external.gmpy import sqrt
 from .primetest import isprime
 from sympy.utilities.decorator import deprecated
 from sympy.utilities.misc import as_int
-from sympy import Function
-
-class primepi(Function):
-    @classmethod
-    def eval(cls, n): ...
 
 
 def _as_int_ceiling(a):

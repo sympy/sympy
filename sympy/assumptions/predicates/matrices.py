@@ -1,6 +1,5 @@
 from sympy.assumptions import Predicate
 from sympy.multipledispatch import Dispatcher
-from typing_extensions import LiteralString
 
 class SquarePredicate(Predicate):
     """
@@ -33,8 +32,8 @@ class SquarePredicate(Predicate):
     .. [1] https://en.wikipedia.org/wiki/Square_matrix
 
     """
-    name: LiteralString = 'square'
-    handler: Dispatcher = Dispatcher("SquareHandler", doc="Handler for Q.square.")
+    name = 'square'
+    handler = Dispatcher("SquareHandler", doc="Handler for Q.square.")
 
 
 class SymmetricPredicate(Predicate):
@@ -70,8 +69,8 @@ class SymmetricPredicate(Predicate):
     """
     # TODO: Add handlers to make these keys work with
     # actual matrices and add more examples in the docstring.
-    name: LiteralString = 'symmetric'
-    handler: Dispatcher = Dispatcher("SymmetricHandler", doc="Handler for Q.symmetric.")
+    name = 'symmetric'
+    handler = Dispatcher("SymmetricHandler", doc="Handler for Q.symmetric.")
 
 
 class InvertiblePredicate(Predicate):
@@ -104,8 +103,8 @@ class InvertiblePredicate(Predicate):
     .. [1] https://en.wikipedia.org/wiki/Invertible_matrix
 
     """
-    name: LiteralString = 'invertible'
-    handler: Dispatcher = Dispatcher("InvertibleHandler", doc="Handler for Q.invertible.")
+    name = 'invertible'
+    handler = Dispatcher("InvertibleHandler", doc="Handler for Q.invertible.")
 
 
 class OrthogonalPredicate(Predicate):
@@ -143,8 +142,8 @@ class OrthogonalPredicate(Predicate):
     .. [1] https://en.wikipedia.org/wiki/Orthogonal_matrix
 
     """
-    name: LiteralString = 'orthogonal'
-    handler: Dispatcher = Dispatcher("OrthogonalHandler", doc="Handler for key 'orthogonal'.")
+    name = 'orthogonal'
+    handler = Dispatcher("OrthogonalHandler", doc="Handler for key 'orthogonal'.")
 
 
 class UnitaryPredicate(Predicate):
@@ -179,8 +178,8 @@ class UnitaryPredicate(Predicate):
     .. [1] https://en.wikipedia.org/wiki/Unitary_matrix
 
     """
-    name: LiteralString = 'unitary'
-    handler: Dispatcher = Dispatcher("UnitaryHandler", doc="Handler for key 'unitary'.")
+    name = 'unitary'
+    handler = Dispatcher("UnitaryHandler", doc="Handler for key 'unitary'.")
 
 
 class FullRankPredicate(Predicate):
@@ -208,8 +207,8 @@ class FullRankPredicate(Predicate):
     True
 
     """
-    name: LiteralString = 'fullrank'
-    handler: Dispatcher = Dispatcher("FullRankHandler", doc="Handler for key 'fullrank'.")
+    name = 'fullrank'
+    handler = Dispatcher("FullRankHandler", doc="Handler for key 'fullrank'.")
 
 
 class PositiveDefinitePredicate(Predicate):
@@ -244,8 +243,8 @@ class PositiveDefinitePredicate(Predicate):
     .. [1] https://en.wikipedia.org/wiki/Positive-definite_matrix
 
     """
-    name: LiteralString = "positive_definite"
-    handler: Dispatcher = Dispatcher("PositiveDefiniteHandler", doc="Handler for key 'positive_definite'.")
+    name = "positive_definite"
+    handler = Dispatcher("PositiveDefiniteHandler", doc="Handler for key 'positive_definite'.")
 
 
 class UpperTriangularPredicate(Predicate):
@@ -273,8 +272,8 @@ class UpperTriangularPredicate(Predicate):
     .. [1] https://mathworld.wolfram.com/UpperTriangularMatrix.html
 
     """
-    name: LiteralString = "upper_triangular"
-    handler: Dispatcher = Dispatcher("UpperTriangularHandler", doc="Handler for key 'upper_triangular'.")
+    name = "upper_triangular"
+    handler = Dispatcher("UpperTriangularHandler", doc="Handler for key 'upper_triangular'.")
 
 
 class LowerTriangularPredicate(Predicate):
@@ -302,8 +301,8 @@ class LowerTriangularPredicate(Predicate):
     .. [1] https://mathworld.wolfram.com/LowerTriangularMatrix.html
 
     """
-    name: LiteralString = "lower_triangular"
-    handler: Dispatcher = Dispatcher("LowerTriangularHandler", doc="Handler for key 'lower_triangular'.")
+    name = "lower_triangular"
+    handler = Dispatcher("LowerTriangularHandler", doc="Handler for key 'lower_triangular'.")
 
 
 class DiagonalPredicate(Predicate):
@@ -334,8 +333,8 @@ class DiagonalPredicate(Predicate):
     .. [1] https://en.wikipedia.org/wiki/Diagonal_matrix
 
     """
-    name: LiteralString = "diagonal"
-    handler: Dispatcher = Dispatcher("DiagonalHandler", doc="Handler for key 'diagonal'.")
+    name = "diagonal"
+    handler = Dispatcher("DiagonalHandler", doc="Handler for key 'diagonal'.")
 
 
 class IntegerElementsPredicate(Predicate):
@@ -357,8 +356,8 @@ class IntegerElementsPredicate(Predicate):
     True
 
     """
-    name: LiteralString = "integer_elements"
-    handler: Dispatcher = Dispatcher("IntegerElementsHandler", doc="Handler for key 'integer_elements'.")
+    name = "integer_elements"
+    handler = Dispatcher("IntegerElementsHandler", doc="Handler for key 'integer_elements'.")
 
 
 class RealElementsPredicate(Predicate):
@@ -380,8 +379,8 @@ class RealElementsPredicate(Predicate):
     True
 
     """
-    name: LiteralString = "real_elements"
-    handler: Dispatcher = Dispatcher("RealElementsHandler", doc="Handler for key 'real_elements'.")
+    name = "real_elements"
+    handler = Dispatcher("RealElementsHandler", doc="Handler for key 'real_elements'.")
 
 
 class ComplexElementsPredicate(Predicate):
@@ -405,8 +404,8 @@ class ComplexElementsPredicate(Predicate):
     True
 
     """
-    name: LiteralString = "complex_elements"
-    handler: Dispatcher = Dispatcher("ComplexElementsHandler", doc="Handler for key 'complex_elements'.")
+    name = "complex_elements"
+    handler = Dispatcher("ComplexElementsHandler", doc="Handler for key 'complex_elements'.")
 
 
 class SingularPredicate(Predicate):
@@ -431,8 +430,8 @@ class SingularPredicate(Predicate):
     .. [1] https://mathworld.wolfram.com/SingularMatrix.html
 
     """
-    name: LiteralString = "singular"
-    handler: Dispatcher = Dispatcher("SingularHandler", doc="Predicate fore key 'singular'.")
+    name = "singular"
+    handler = Dispatcher("SingularHandler", doc="Predicate fore key 'singular'.")
 
 
 class NormalPredicate(Predicate):
@@ -455,8 +454,8 @@ class NormalPredicate(Predicate):
     .. [1] https://en.wikipedia.org/wiki/Normal_matrix
 
     """
-    name: LiteralString = "normal"
-    handler: Dispatcher = Dispatcher("NormalHandler", doc="Predicate fore key 'normal'.")
+    name = "normal"
+    handler = Dispatcher("NormalHandler", doc="Predicate fore key 'normal'.")
 
 
 class TriangularPredicate(Predicate):
@@ -485,8 +484,8 @@ class TriangularPredicate(Predicate):
     .. [1] https://en.wikipedia.org/wiki/Triangular_matrix
 
     """
-    name: LiteralString = "triangular"
-    handler: Dispatcher = Dispatcher("TriangularHandler", doc="Predicate fore key 'triangular'.")
+    name = "triangular"
+    handler = Dispatcher("TriangularHandler", doc="Predicate fore key 'triangular'.")
 
 
 class UnitTriangularPredicate(Predicate):
@@ -508,5 +507,5 @@ class UnitTriangularPredicate(Predicate):
     True
 
     """
-    name: LiteralString = "unit_triangular"
-    handler: Dispatcher = Dispatcher("UnitTriangularHandler", doc="Predicate fore key 'unit_triangular'.")
+    name = "unit_triangular"
+    handler = Dispatcher("UnitTriangularHandler", doc="Predicate fore key 'unit_triangular'.")

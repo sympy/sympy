@@ -26,19 +26,6 @@ from sympy.external.gmpy import SYMPY_INTS
 from sympy.utilities.iterables import is_sequence
 from sympy.utilities.lambdify import lambdify
 from sympy.utilities.misc import as_int
-from sympy.concrete.products import Product
-from sympy.concrete.summations import Sum
-from sympy.core.add import Add
-from sympy.core.expr import Expr
-from sympy.core.mul import Mul
-from sympy.core.numbers import AlgebraicNumber, Float, Integer, Rational
-from sympy.core.power import Pow
-from sympy.core.symbol import Symbol
-from sympy.functions.elementary.complexes import Abs, im, re
-from sympy.functions.elementary.exponential import exp, log
-from sympy.functions.elementary.integers import ceiling, floor
-from sympy.functions.elementary.trigonometric import atan
-from sympy.integrals.integrals import Integral
 from typing_extensions import TypeAlias
 
 if TYPE_CHECKING:

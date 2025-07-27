@@ -38,7 +38,7 @@ class IntegerRing(Ring[MPZ], CharacteristicZero, SimpleDomain):
     dtype = MPZ
     zero = dtype(0)
     one = dtype(1)
-    tp: type = type(one)
+    tp = type(one)
 
     is_IntegerRing = is_ZZ = True
     is_Numerical = True

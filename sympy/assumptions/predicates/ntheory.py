@@ -1,6 +1,5 @@
 from sympy.assumptions import Predicate
 from sympy.multipledispatch import Dispatcher
-from typing_extensions import LiteralString
 
 
 class PrimePredicate(Predicate):
@@ -30,8 +29,8 @@ class PrimePredicate(Predicate):
     False
 
     """
-    name: LiteralString = 'prime'
-    handler: Dispatcher = Dispatcher(
+    name = 'prime'
+    handler = Dispatcher(
         "PrimeHandler",
         doc=("Handler for key 'prime'. Test that an expression represents a prime"
         " number. When the expression is an exact number, the result (when True)"
@@ -64,8 +63,8 @@ class CompositePredicate(Predicate):
     True
 
     """
-    name: LiteralString = 'composite'
-    handler: Dispatcher = Dispatcher("CompositeHandler", doc="Handler for key 'composite'.")
+    name = 'composite'
+    handler = Dispatcher("CompositeHandler", doc="Handler for key 'composite'.")
 
 
 class EvenPredicate(Predicate):
@@ -92,8 +91,8 @@ class EvenPredicate(Predicate):
     False
 
     """
-    name: LiteralString = 'even'
-    handler: Dispatcher = Dispatcher("EvenHandler", doc="Handler for key 'even'.")
+    name = 'even'
+    handler = Dispatcher("EvenHandler", doc="Handler for key 'even'.")
 
 
 class OddPredicate(Predicate):
@@ -119,8 +118,8 @@ class OddPredicate(Predicate):
     False
 
     """
-    name: LiteralString = 'odd'
-    handler: Dispatcher = Dispatcher(
+    name = 'odd'
+    handler = Dispatcher(
         "OddHandler",
         doc=("Handler for key 'odd'. Test that an expression represents an odd"
         " number.")

@@ -11,8 +11,6 @@ from typing import (
     Callable,
     TypeVar,
 )
-from sympy.core.sympify import CantSympify
-from sympy.polys.polyutils import PicklableWithSlots
 
 if TYPE_CHECKING:
     from typing import Self, TypeAlias
@@ -148,11 +146,6 @@ from sympy.polys.rootisolation import (
 from sympy.polys.polyerrors import (
     UnificationFailed,
     PolynomialError)
-
-class GenericPoly(PicklableWithSlots):
-    def ground_to_ring(f): ...
-    def ground_to_field(f): ...
-    def ground_to_exact(f): ...
 
 
 def _supported_flint_domain_flint(D: Domain) -> bool:

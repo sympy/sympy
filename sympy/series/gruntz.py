@@ -130,9 +130,6 @@ from sympy.functions import log, exp, sign as _sign
 from sympy.series.order import Order
 from sympy.utilities.misc import debug_decorator as debug
 from sympy.utilities.timeutils import timethis
-from typing import TypeVar
-
-_CallableT = TypeVar("_CallableT", bound=Callable)
 
 timeit = timethis('gruntz')
 

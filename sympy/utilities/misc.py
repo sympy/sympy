@@ -8,7 +8,7 @@ import os
 import re as _re
 import struct
 from textwrap import fill, dedent
-from typing import TypeVar
+from typing import TypeVar, Callable
 
 _CallableT = TypeVar("_CallableT", bound=Callable)
 

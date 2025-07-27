@@ -2,7 +2,7 @@
 
 
 from sympy.polys.domains.groundtypes import (
-    _GMPYInteger, GMPYInteger, SymPyInteger,
+    GMPYInteger, SymPyInteger,
     factorial as gmpy_factorial,
     gmpy_gcdex, gmpy_gcd, gmpy_lcm, sqrt as gmpy_sqrt,
 )
@@ -20,9 +20,9 @@ class GMPYIntegerRing(IntegerRing):
     """
 
     dtype = GMPYInteger
-    zero: _GMPYInteger = dtype(0)
-    one: _GMPYInteger = dtype(1)
-    tp: type[_GMPYInteger] = type(one)
+    zero = dtype(0)
+    one = dtype(1)
+    tp = type(one)
     alias = 'ZZ_gmpy'
 
     def __init__(self):

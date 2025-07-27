@@ -42,7 +42,6 @@ from .exceptions import ( # noqa: F401
     MatrixError, ShapeError, NonSquareMatrixError, NonInvertibleMatrixError,
     NonPositiveDefiniteMatrixError
 )
-from typing import Any
 
 
 _DEPRECATED_MIXINS = (
@@ -934,7 +933,7 @@ class MatrixSpecial(MatrixRequired):
         return wminus, wplus
 
     @classmethod
-    def diag(kls, *args, strict: bool=False, unpack: bool=True, rows: Any | None=None, cols: Any | None=None, **kwargs):
+    def diag(kls, *args, strict: bool=False, unpack: bool=True, rows=None, cols=None, **kwargs):
         """Returns a matrix with the specified diagonal.
         If matrices are passed, a block-diagonal matrix
         is created (i.e. the "direct sum" of the matrices).
@@ -1076,7 +1075,7 @@ class MatrixSpecial(MatrixRequired):
         return klass._eval_diag(rows, cols, diag_entries)
 
     @classmethod
-    def eye(kls, rows, cols: Any | None=None, **kwargs):
+    def eye(kls, rows, cols=None, **kwargs):
         """Returns an identity matrix.
 
         Parameters
@@ -1100,7 +1099,7 @@ class MatrixSpecial(MatrixRequired):
         return klass._eval_eye(rows, cols)
 
     @classmethod
-    def jordan_block(kls, size: Any | None=None, eigenvalue: Any | None=None, *, band: str='upper', **kwargs):
+    def jordan_block(kls, size=None, eigenvalue=None, *, band: str='upper', **kwargs):
         """Returns a Jordan block
 
         Parameters
@@ -1198,7 +1197,7 @@ class MatrixSpecial(MatrixRequired):
         return klass._eval_jordan_block(size, eigenvalue, band)
 
     @classmethod
-    def ones(kls, rows, cols: Any | None=None, **kwargs):
+    def ones(kls, rows, cols=None, **kwargs):
         """Returns a matrix of ones.
 
         Parameters
@@ -1219,7 +1218,7 @@ class MatrixSpecial(MatrixRequired):
         return klass._eval_ones(rows, cols)
 
     @classmethod
-    def zeros(kls, rows, cols: Any | None=None, **kwargs):
+    def zeros(kls, rows, cols=None, **kwargs):
         """Returns a matrix of zeros.
 
         Parameters
@@ -2119,13 +2118,13 @@ class MatrixOperations(MatrixRequired):
     def doit(self, **hints):
         return self.applyfunc(lambda x: x.doit(**hints))
 
-    def evalf(self, n: int=15, subs: Any | None=None, maxn: int=100, chop: bool=False, strict: bool=False, quad: Any | None=None, verbose: bool=False):
+    def evalf(self, n: int=15, subs=None, maxn: int=100, chop: bool=False, strict: bool=False, quad=None, verbose: bool=False):
         """Apply evalf() to each element of self."""
         options = {'subs':subs, 'maxn':maxn, 'chop':chop, 'strict':strict,
                 'quad':quad, 'verbose':verbose}
         return self.applyfunc(lambda i: i.evalf(n, **options))
 
-    def expand(self, deep: bool=True, modulus: Any | None=None, power_base: bool=True, power_exp: bool=True,
+    def expand(self, deep: bool=True, modulus=None, power_base: bool=True, power_exp: bool=True,
                mul: bool=True, log: bool=True, multinomial: bool=True, basic: bool=True, **hints):
         """Apply core.function.expand to each entry of the matrix.
 
@@ -2349,7 +2348,7 @@ class MatrixOperations(MatrixRequired):
         """
         return self.applyfunc(lambda x: refine(x, assumptions))
 
-    def replace(self, F, G, map: bool=False, simultaneous: bool=True, exact: Any | None=None):
+    def replace(self, F, G, map: bool=False, simultaneous: bool=True, exact=None):
         """Replaces Function F in Matrix entries with Function G.
 
         Examples
@@ -2796,7 +2795,7 @@ class MatrixArithmetic(MatrixRequired):
 
         return self.multiply(other)
 
-    def multiply(self, other, dotprodsimp: Any | None=None):
+    def multiply(self, other, dotprodsimp=None):
         """Same as __mul__() but with optional simplification.
 
         Parameters
@@ -2875,7 +2874,7 @@ class MatrixArithmetic(MatrixRequired):
         return self.pow(exp)
 
 
-    def pow(self, exp, method: Any | None=None):
+    def pow(self, exp, method=None):
         r"""Return self**exp a scalar or symbol.
 
         Parameters
@@ -2985,7 +2984,7 @@ class MatrixArithmetic(MatrixRequired):
     def __rmul__(self, other):
         return self.rmultiply(other)
 
-    def rmultiply(self, other, dotprodsimp: Any | None=None):
+    def rmultiply(self, other, dotprodsimp=None):
         """Same as __rmul__() but with optional simplification.
 
         Parameters
@@ -3054,8 +3053,8 @@ class _MinimalMatrix:
     is_MatrixLike = True
     _sympify = staticmethod(sympify)
     _class_priority = 3
-    zero: Any = S.Zero
-    one: Any = S.One
+    zero = S.Zero
+    one = S.One
 
     is_Matrix = True
     is_MatrixExpr = False
@@ -3064,7 +3063,7 @@ class _MinimalMatrix:
     def _new(cls, *args, **kwargs):
         return cls(*args, **kwargs)
 
-    def __init__(self, rows, cols: Any | None=None, mat: Any | None=None, copy: bool=False):
+    def __init__(self, rows, cols=None, mat=None, copy: bool=False):
         if isfunction(mat):
             # if we passed in a function, use that to populate the indices
             mat = [mat(i, j) for i in range(rows) for j in range(cols)]
@@ -3206,7 +3205,7 @@ def _matrixify(mat):
     return mat
 
 
-def a2idx(j, n: Any | None=None):
+def a2idx(j, n=None):
     """Return integer after making positive and validating against n."""
     if not isinstance(j, int):
         jindex = getattr(j, '__index__', None)
