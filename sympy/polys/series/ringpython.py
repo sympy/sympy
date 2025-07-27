@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Sequence, TYPE_CHECKING
+from typing import Sequence, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from typing import TypeAlias, Union
@@ -182,7 +182,7 @@ def _useries_mul(
 
 
 def _useries_mul_ground(
-    s: USeries[Er], n: Any, dom: Domain[Er], ring_prec: int
+    s: USeries[Er], n: Er, dom: Domain[Er], ring_prec: int
 ) -> USeries[Er]:
     coeffs, prec = s
 
@@ -653,7 +653,7 @@ class PythonPowerSeriesRingQQ:
         return hash((self._domain, self._prec))
 
     def __call__(
-        self, coeffs: Sequence[MPQ | int | Sequence], prec: int | None = None
+        self, coeffs: Sequence[MPQ | int | tuple[int, int]], prec: int | None = None
     ) -> USeries[MPQ]:
         """
         Create a power series from a list of coefficients.

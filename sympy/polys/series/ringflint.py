@@ -25,7 +25,7 @@ ZZSeries = Union[fmpz_series, fmpz_poly]
 QQSeries = Union[fmpq_series, fmpq_poly]
 
 
-def _get_series_precision(s: ZZSeries | QQSeries) -> int:
+def _get_series_precision(s: fmpz_series | fmpq_series) -> int:
     """Helper function to get the precision of a series. By using the
     representation of the ring"""
 
@@ -508,7 +508,7 @@ class FlintPowerSeriesRingQQ:
         return hash((self._domain, self._prec))
 
     def __call__(
-        self, coeffs: Sequence[MPQ | int | Sequence], prec: int | None = None
+        self, coeffs: Sequence[MPQ | int | tuple[int, int]], prec: int | None = None
     ) -> QQSeries:
         """
         Create a power series from a list of coefficients.

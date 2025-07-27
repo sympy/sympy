@@ -98,6 +98,7 @@ def power_series_ring(K: Domain[Er], prec: int = 6) -> PowerSeriesRing[Er]:
     >>> R_QQ = power_series_ring(QQ, 5)
     >>> inv = R_QQ.inverse(R_QQ([1, 2, (3, 4), (5, 6)]))
     >>> R_QQ.print(inv)
+    1 - 2*x + 13/4*x**2 - 35/6*x**3 + 523/48*x**4 + O(x**5)
     """
 
     if K.is_ZZ:
