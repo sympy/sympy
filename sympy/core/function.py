@@ -32,7 +32,7 @@ There are three types of functions implemented in SymPy:
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from collections.abc import Iterable
 import copyreg
 
@@ -440,6 +440,12 @@ class Function(Application, Expr):
     @property
     def _diff_wrt(self):
         return False
+
+    if TYPE_CHECKING:
+        # __new__ is typed to return __new__ because of default base classes.
+        # But the actual type is more precise and should be callable
+        # Python doesn't have generic base classes
+        def __call__(self, *args, **options): ...
 
     @cacheit
     def __new__(cls, *args, **options) -> type[AppliedUndef]:  # type: ignore
