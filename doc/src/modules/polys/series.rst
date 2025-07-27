@@ -70,7 +70,7 @@ it is automatically truncated.
 Protocols for Power Series Rings
 ================================
 
-.. autoclass:: sympy.polys.series.base.PowerSeriesRing
+.. autoclass:: sympy.polys.series.base.PowerSeriesRingProto
 
 .. py:class:: TSeries
 

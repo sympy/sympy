@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Protocol, TypeVar
+from typing import Protocol, TypeVar, Any
 from sympy.core.symbol import Symbol
 from sympy.polys.domains import Domain
 from sympy.polys.domains.domain import Er
@@ -45,7 +45,7 @@ def series_pprint(series: list[Er], prec: int | None) -> str:
     return poly
 
 
-class PowerSeriesRing(Protocol[TSeries, Er]):
+class PowerSeriesRingProto(Protocol[TSeries, Er]):
     """A protocol for a power series ring."""
 
     def __init__(self, prec: int = 6, /) -> None:
@@ -140,3 +140,6 @@ class PowerSeriesRing(Protocol[TSeries, Er]):
     def truncate(self, s: TSeries, n: int, /) -> TSeries:
         """Truncate a power series to the first n terms."""
         ...
+
+
+PowerSeriesRing = PowerSeriesRingProto[Any, Er]
