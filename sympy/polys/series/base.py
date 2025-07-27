@@ -56,9 +56,7 @@ class PowerSeriesRingProto(Protocol[TSeries, Er]):
         """Return string representation of the ring."""
         ...
 
-    def __call__(
-        self, coeffs: Sequence, prec: int | None = None
-    ) -> TSeries:
+    def __call__(self, coeffs: Sequence, prec: int | None = None) -> TSeries:
         """Return a power series element."""
         ...
 

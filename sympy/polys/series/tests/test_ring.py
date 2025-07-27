@@ -151,6 +151,10 @@ def test_int_multiply_ground(rd_int):
     assert R.equal_repr(R.multiply_ground(R.gen, ZZ(0)), R([], None))
     assert R.equal_repr(R.multiply_ground(R.square(R.gen), 1), R([0, 0, 1], None))
     assert R.equal_repr(R.multiply_ground(R.add(R.gen, R.one), ZZ(3)), R([3, 3], None))
+    assert R.equal_repr(
+        R.multiply_ground(R.inverse(R.add(R.one, R.gen)), ZZ(7)),
+        R([7, -7, 7, -7, 7, -7], 6),
+    )
 
 
 def test_rational_multiply_ground(rd_rational):
@@ -252,6 +256,9 @@ def test_int_pow(rd_int):
     assert R.equal_repr(R.pow_int(R.add(R.gen, R.one), 6), R([1, 6, 15, 20, 15, 6], 6))
     assert R.equal_repr(R.pow_int(R.gen, 10), R([], 6))
     assert R3.equal_repr(R3.pow_int(R3.add(R3.gen, R3.one), 5), R3([1, 5, 10], 3))
+    assert R3.equal_repr(
+        R3.pow_int(R3.pow_int(R3.add(R3.one, R3.gen), 2), 2), R3([1, 4, 6], 3)
+    )
     assert R10.equal_repr(R10.pow_int(R10.gen, 7), R10([0, 0, 0, 0, 0, 0, 0, 1], None))
     assert R10.equal_repr(
         R10.pow_int(R10.add(R10.gen, R10.one), 12),
