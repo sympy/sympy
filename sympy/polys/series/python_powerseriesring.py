@@ -323,6 +323,8 @@ def _useries_inverse(s: USeries[Er], dom: Domain[Er], ring_prec: int) -> USeries
         raise NotReversible("Series inverse requires the constant term to be a unit")
 
     if prec is None:
+        if len(coeffs) == 1:
+            return [dom.revert(coeffs[0])], None
         prec = ring_prec
 
     inv = dup_revert(coeffs, prec, dom)

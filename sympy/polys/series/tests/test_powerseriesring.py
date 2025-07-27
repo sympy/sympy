@@ -446,6 +446,7 @@ def test_int_inverse(rd_int):
     R3 = SeriesRing(3)
     R10 = SeriesRing(10)
 
+    assert R.equal_repr(R.inverse(R.one), R([1], None))
     assert R.equal_repr(R.inverse(R.add(R.one, R.gen)), R([1, -1, 1, -1, 1, -1], 6))
     assert R.equal_repr(
         R.inverse(R.add(R.pow_int(R.multiply(R.add(R.one, R.gen), R.gen), 3), R.one)),
@@ -466,6 +467,8 @@ def test_rational_inverse(rd_rational):
     R = SeriesRing()
     R3 = SeriesRing(3)
     R10 = SeriesRing(10)
+
+    assert R.equal_repr(R.inverse(R([(-2, 3)])), R([(-3, 2)], None))
 
     f_r = R([(2, 3), (-1, 4), (3, 5)])
     assert R.equal_repr(

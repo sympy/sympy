@@ -380,6 +380,8 @@ class FlintPowerSeriesRingZZ:
             )
 
         if isinstance(s, fmpz_poly):
+            if len(s) == 1:
+                return 1 / s
             s = fmpz_series(s, prec=ring_prec)
 
         with _global_cap(ring_prec):
@@ -769,6 +771,8 @@ class FlintPowerSeriesRingQQ:
             )
 
         if isinstance(s, fmpq_poly):
+            if len(s) == 1:
+                return 1 / s
             s = fmpq_series(s, prec=ring_prec)
 
         with _global_cap(ring_prec):
