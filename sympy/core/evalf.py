@@ -26,7 +26,6 @@ from sympy.external.gmpy import SYMPY_INTS
 from sympy.utilities.iterables import is_sequence
 from sympy.utilities.lambdify import lambdify
 from sympy.utilities.misc import as_int
-from typing_extensions import TypeAlias
 
 if TYPE_CHECKING:
     from sympy.core.expr import Expr
@@ -42,6 +41,7 @@ if TYPE_CHECKING:
     from sympy.functions.elementary.integers import ceiling, floor
     from sympy.functions.elementary.trigonometric import atan
     from .numbers import Float, Rational, Integer, AlgebraicNumber, Number
+    from typing_extensions import TypeAlias
 
 LG10 = math.log2(10)
 rnd = round_nearest

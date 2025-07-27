@@ -10,7 +10,7 @@ import unicodedata
 from io import StringIO
 import builtins
 import types
-from typing import Any, Callable
+from typing import Any, Callable, TYPE_CHECKING
 from functools import reduce
 from sympy.assumptions.ask import AssumptionKeys
 from sympy.core.basic import Basic
@@ -18,7 +18,9 @@ from sympy.core import Symbol
 from sympy.core.function import Function
 from sympy.utilities.misc import func_name
 from sympy.functions.elementary.miscellaneous import Max, Min
-from typing_extensions import TypeAlias
+
+if TYPE_CHECKING:
+    from typing_extensions import TypeAlias
 
 
 null = ''
