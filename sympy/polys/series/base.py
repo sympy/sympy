@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Protocol, TypeVar, Any
+from typing import Protocol, TypeVar
 from sympy.core.symbol import Symbol
 from sympy.polys.domains import Domain
 from sympy.polys.domains.domain import Er
@@ -140,6 +140,3 @@ class PowerSeriesRingProto(Protocol[TSeries, Er]):
     def truncate(self, s: TSeries, n: int, /) -> TSeries:
         """Truncate a power series to the first n terms."""
         ...
-
-
-PowerSeriesRing = PowerSeriesRingProto[Any, Er]

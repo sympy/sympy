@@ -1,5 +1,5 @@
 from sympy.polys.domains import ZZ, QQ
-from sympy.polys.series.base import PowerSeriesRing
+from sympy.polys.series.base import PowerSeriesRingProto
 from sympy.polys.series.ringpython import (
     PythonPowerSeriesRingZZ,
     PythonPowerSeriesRingQQ,
@@ -10,8 +10,8 @@ from sympy.testing.pytest import raises
 from sympy.polys.polyerrors import NotReversible
 
 # Rings
-Ring_ZZ: list[type[PowerSeriesRing]] = [PythonPowerSeriesRingZZ]
-Ring_QQ: list[type[PowerSeriesRing]] = [PythonPowerSeriesRingQQ]
+Ring_ZZ: list[type[PowerSeriesRingProto]] = [PythonPowerSeriesRingZZ]
+Ring_QQ: list[type[PowerSeriesRingProto]] = [PythonPowerSeriesRingQQ]
 
 if GROUND_TYPES == "flint":
     from sympy.polys.series.ringflint import (

@@ -66,6 +66,8 @@ it is automatically truncated.
 
 .. autofunction:: sympy.polys.series.power_series_ring
 
+.. py:class:: sympy.polys.series.ring.TSeries
+
 
 Protocols for Power Series Rings
 ================================
