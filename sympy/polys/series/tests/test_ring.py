@@ -44,6 +44,7 @@ def test_equal(rd_int):
     assert R.equal(R([1, 21, 3], 3), R([1, 2, 3], 10)) is False
     assert R.equal(R([1, 2, 3], 3), R([1, 2, 3, 4, 5], 10)) is None
     assert R.equal(R([1, 2, 3, 4], None), R([1, 2, 3], 2)) is None
+    assert R.equal(R([1, 2, 3], 2), R([1, 2, 3, 4], None)) is None
     assert R.equal(R([1, 2, 3, 4], None), R([1, 1, 3], 2)) is False
     assert R.equal(R([1, 2], None), R([1, 2, 3], 3)) is False
 
@@ -145,9 +146,9 @@ def test_rational_multiply(rd_rational):
 def test_int_multiply_ground(rd_int):
     SeriesRing = rd_int
     R = SeriesRing()
-    assert R.equal_repr(R.multiply_ground(R.one, 1), R([1], None))
-    assert R.equal_repr(R.multiply_ground(R.gen, -1), R([0, -1], None))
-    assert R.equal_repr(R.multiply_ground(R.gen, 0), R([], None))
+    assert R.equal_repr(R.multiply_ground(R.one, ZZ(1)), R([1], None))
+    assert R.equal_repr(R.multiply_ground(R.gen, ZZ(-1)), R([0, -1], None))
+    assert R.equal_repr(R.multiply_ground(R.gen, ZZ(0)), R([], None))
     assert R.equal_repr(R.multiply_ground(R.square(R.gen), 1), R([0, 0, 1], None))
     assert R.equal_repr(R.multiply_ground(R.add(R.gen, R.one), ZZ(3)), R([3, 3], None))
 

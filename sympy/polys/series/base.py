@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Protocol, TypeVar
+from typing import Protocol, Sequence, TypeVar
 from sympy.core.symbol import Symbol
 from sympy.polys.domains import Domain
 from sympy.polys.domains.domain import Er
@@ -54,6 +54,12 @@ class PowerSeriesRingProto(Protocol[TSeries, Er]):
 
     def __repr__(self, /) -> str:
         """Return string representation of the ring."""
+        ...
+
+    def __call__(
+        self, coeffs: Sequence, prec: int | None = None
+    ) -> TSeries:
+        """Return a power series element."""
         ...
 
     @property
