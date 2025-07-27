@@ -14,7 +14,7 @@ from sympy.physics.continuum_mechanics.beam import Beam
 from sympy.physics.continuum_mechanics.column import Column
 from sympy.simplify import nsimplify, simplify
 from sympy.solvers import solve
-from sympy import Basic, Eq
+from sympy import Eq
 
 plt = import_module(
     "matplotlib.pyplot",
@@ -978,6 +978,7 @@ class Structure2d:
         else:
             unwarap_x = self._find_unwrapped_position(x, y)
             return self.beam.bending_moment().subs(Symbol("x"), unwarap_x)
+
 
     def plot_bending_moment(self):
         """
