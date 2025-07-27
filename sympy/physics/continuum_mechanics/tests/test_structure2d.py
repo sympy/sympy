@@ -536,5 +536,3 @@ def test_structure2d():
     assert s.beam.length==14
     assert s.column.length==14
     assert computed == expected
-
-
