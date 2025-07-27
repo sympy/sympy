@@ -1625,6 +1625,13 @@ class Rational(Number):
             q = 1
             gcd = 1
 
+        # if both numerator and denominator are string inputs, parse them as Fractions
+        if isinstance(p, str) and isinstance(q, str):
+            fp = fractions.Fraction(p)
+            fq = fractions.Fraction(q)
+            frac = fp / fq
+            return Rational(frac.numerator, frac.denominator, 1)
+
         if not isinstance(p, SYMPY_INTS):
             p = Rational(p)
             q *= p.q

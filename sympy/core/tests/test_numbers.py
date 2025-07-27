@@ -350,6 +350,8 @@ def test_Rational_new():
     assert Rational(pi.evalf(100)).evalf(100) == pi.evalf(100)
     raises(TypeError, lambda: Rational('3**3'))
     raises(TypeError, lambda: Rational('1/2 + 2/3'))
+    # ensure parsing of numerator and denominator when both are strings
+    assert Rational('0.5', '100') == Rational(1, 200)
 
     # handle fractions.Fraction instances
     try:
