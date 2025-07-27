@@ -1,6 +1,6 @@
 from sympy.polys.domains import ZZ, QQ
-from sympy.polys.series.powerseriesring import PowerSeriesRing
-from sympy.polys.series.python_powerseriesring import (
+from sympy.polys.series.base import PowerSeriesRing
+from sympy.polys.series.ringpython import (
     PythonPowerSeriesRingZZ,
     PythonPowerSeriesRingQQ,
 )
@@ -14,7 +14,7 @@ Ring_ZZ: list[type[PowerSeriesRing]] = [PythonPowerSeriesRingZZ]
 Ring_QQ: list[type[PowerSeriesRing]] = [PythonPowerSeriesRingQQ]
 
 if GROUND_TYPES == "flint":
-    from sympy.polys.series.flint_powerseriesring import (
+    from sympy.polys.series.ringflint import (
         FlintPowerSeriesRingZZ,
         FlintPowerSeriesRingQQ,
     )

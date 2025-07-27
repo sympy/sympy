@@ -1,24 +1,28 @@
-from typing import Optional, Type
-from sympy.external.gmpy import GROUND_TYPES
+from __future__ import annotations
+
+from typing import Any, TYPE_CHECKING
+from sympy.external.gmpy import GROUND_TYPES, MPQ, MPZ
 from sympy.polys.domains.domain import Domain, Er
-from sympy.polys.series.powerseriesring import PowerSeriesRing
-from sympy.polys.series.python_powerseriesring import (
+from sympy.polys.series.ringpython import (
     PythonPowerSeriesRingZZ,
     PythonPowerSeriesRingQQ,
 )
 
+if TYPE_CHECKING:
+    from sympy.polys.series import PowerSeriesRing
+
 # Make use of flint implementation if flint available.
-FlintPowerSeriesRingZZ: Optional[Type[PowerSeriesRing]] = None
-FlintPowerSeriesRingQQ: Optional[Type[PowerSeriesRing]] = None
+FlintPowerSeriesRingZZ: type[Any] | None = None
+FlintPowerSeriesRingQQ: type[Any] | None = None
 
 if GROUND_TYPES == "flint":
-    from sympy.polys.series.flint_powerseriesring import (
+    from sympy.polys.series.ringflint import (
         FlintPowerSeriesRingZZ,
         FlintPowerSeriesRingQQ,
     )
 
 
-def power_series_ring(domain: Domain[Er], prec: int = 6) -> PowerSeriesRing:
+def power_series_ring(domain: Domain[Er], prec: int = 6) -> PowerSeriesRing[Any, Er]:
     """
     Create a power series ring over the given domain.
 
@@ -48,9 +52,13 @@ def power_series_ring(domain: Domain[Er], prec: int = 6) -> PowerSeriesRing:
     if domain.is_ZZ:
         if FlintPowerSeriesRingZZ is not None:
             return FlintPowerSeriesRingZZ(prec)
-        return PythonPowerSeriesRingZZ(prec)
+        R_ZZ: PowerSeriesRing[Any, MPZ] = PythonPowerSeriesRingZZ(prec)
+        return R_ZZ  # type: ignore
+
     if domain.is_QQ:
         if FlintPowerSeriesRingQQ is not None:
             return FlintPowerSeriesRingQQ(prec)
-        return PythonPowerSeriesRingQQ(prec)
+        R_QQ: PowerSeriesRing[Any, MPQ] = PythonPowerSeriesRingQQ(prec)
+        return R_QQ  # type: ignore
+
     raise TypeError("Ground domain must be an instance of QQ or ZZ")

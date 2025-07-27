@@ -29,7 +29,7 @@ from sympy.polys.polyerrors import NotReversible, ExactQuotientFailed
 from sympy.polys.domains import Domain, QQ, ZZ
 from sympy.polys.domains.domain import Er, Ef
 from sympy.polys.domains.field import Field
-from sympy.polys.series.powerseriesring import series_pprint
+from sympy.polys.series.base import series_pprint
 from sympy.external.gmpy import MPZ, MPQ
 
 
@@ -387,7 +387,7 @@ class PythonPowerSeriesRingZZ:
     Examples
     ========
 
-    >>> from sympy.polys.series.python_powerseriesring import PythonPowerSeriesRingZZ
+    >>> from sympy.polys.series.ringpython import PythonPowerSeriesRingZZ
     >>> R = PythonPowerSeriesRingZZ()
     >>> s = R([1, 2, 3])  # 1 + 2*x + 3*x^2
     >>> R.print(s)
@@ -598,7 +598,7 @@ class PythonPowerSeriesRingQQ:
     Examples
     ========
 
-    >>> from sympy.polys.series.python_powerseriesring import PythonPowerSeriesRingQQ
+    >>> from sympy.polys.series.ringpython import PythonPowerSeriesRingQQ
     >>> R = PythonPowerSeriesRingQQ()
     >>> s = R([1, (1, 2), (1, 3)])  # 1 + x/2 + x^2/3
     >>> R.print(s)

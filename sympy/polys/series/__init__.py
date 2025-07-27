@@ -1,3 +1,4 @@
-__all__ = ["power_series_ring"]
+__all__ = ["power_series_ring", "PowerSeriesRing"]
 
-from sympy.polys.series.seriesring import power_series_ring
+from sympy.polys.series.ring import power_series_ring
+from sympy.polys.series.base import PowerSeriesRing

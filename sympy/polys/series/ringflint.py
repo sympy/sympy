@@ -4,8 +4,8 @@ from contextlib import contextmanager
 from typing import Sequence, Union, TYPE_CHECKING
 
 from sympy.polys.domains import Domain, QQ, ZZ
-from sympy.polys.series.python_powerseriesring import _useries_valuation
-from sympy.polys.series.powerseriesring import series_pprint
+from sympy.polys.series.ringpython import _useries_valuation
+from sympy.polys.series.base import series_pprint
 from sympy.external.gmpy import GROUND_TYPES, MPZ, MPQ
 from sympy.utilities.decorator import doctest_depends_on
 from sympy.polys.polyerrors import NotReversible
@@ -64,7 +64,7 @@ class FlintPowerSeriesRingZZ:
     Examples
     ========
 
-    >>> from sympy.polys.series.flint_powerseriesring import FlintPowerSeriesRingZZ
+    >>> from sympy.polys.series.ringflint import FlintPowerSeriesRingZZ
     >>> R = FlintPowerSeriesRingZZ()
     >>> s = R([1, 2, 3])  # 1 + 2*x + 3*x^2
     >>> R.print(s)
@@ -453,7 +453,7 @@ class FlintPowerSeriesRingQQ:
     Examples
     ========
 
-    >>> from sympy.polys.series.flint_powerseriesring import FlintPowerSeriesRingQQ
+    >>> from sympy.polys.series.ringflint import FlintPowerSeriesRingQQ
     >>> R = FlintPowerSeriesRingQQ()
     >>> s = R([1, (1, 2), (1, 3)])  # 1 + x/2 + x^2/3
     >>> R.print(s)

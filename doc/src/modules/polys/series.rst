@@ -70,7 +70,7 @@ it is automatically truncated.
 Protocols for Power Series Rings
 ================================
 
-.. autoclass:: sympy.polys.series.powerseriesring.PowerSeriesRing
+.. autoclass:: sympy.polys.series.base.PowerSeriesRing
 
 .. py:class:: TSeries
 
@@ -78,7 +78,7 @@ Protocols for Power Series Rings
 Python Implementation
 =====================
 
-.. currentmodule:: sympy.polys.series.python_powerseriesring
+.. currentmodule:: sympy.polys.series.ringpython
 
 .. autoclass:: PythonPowerSeriesRingZZ
     :members:
@@ -93,7 +93,7 @@ Python Implementation
 Flint Implementation
 ====================
 
-.. currentmodule:: sympy.polys.series.flint_powerseriesring
+.. currentmodule:: sympy.polys.series.ringflint
 
 .. autoclass:: FlintPowerSeriesRingZZ
     :members:

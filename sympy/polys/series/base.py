@@ -31,7 +31,7 @@ def series_pprint(series: list[Er], prec: int | None) -> str:
                 term = f"{coeff}*{_x}"
             else:
                 term = f"{coeff}*{_x}**{i}"
-        terms.append((i, term))
+        terms.append(term)
 
     if not terms:
         if prec is not None:
@@ -39,7 +39,7 @@ def series_pprint(series: list[Er], prec: int | None) -> str:
         else:
             return "0"
 
-    poly = " + ".join(term for _, term in terms).replace("+ -", "- ")
+    poly = " + ".join(term for term in terms).replace("+ -", "- ")
     if prec is not None:
         return f"{poly} + O({_x}**{prec})"
     return poly
