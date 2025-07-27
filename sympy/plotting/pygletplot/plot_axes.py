@@ -16,7 +16,7 @@ class PlotAxes(PlotObject):
             visible='', overlay='', colored='', label_axes='', label_ticks='',
             tick_length=0.1,
             font_face='Arial', font_size=28,
-            **kwargs):
+            **kwargs) -> None:
         # initialize style parameter
         style = style.lower()
 
@@ -80,14 +80,14 @@ class PlotAxes(PlotObject):
         # font on window close/reopen
         self.reset_resources()
 
-    def reset_resources(self):
+    def reset_resources(self) -> None:
         self.label_font = None
 
-    def reset_bounding_box(self):
+    def reset_bounding_box(self) -> None:
         self._bounding_box = [[None, None], [None, None], [None, None]]
         self._axis_ticks = [[], [], []]
 
-    def draw(self):
+    def draw(self) -> None:
         if self._render_object:
             pgl.glPushAttrib(pgl.GL_ENABLE_BIT | pgl.GL_POLYGON_BIT | pgl.GL_DEPTH_BUFFER_BIT)
             if self._overlay:
@@ -95,7 +95,7 @@ class PlotAxes(PlotObject):
             self._render_object.draw()
             pgl.glPopAttrib()
 
-    def adjust_bounds(self, child_bounds):
+    def adjust_bounds(self, child_bounds) -> None:
         b = self._bounding_box
         c = child_bounds
         for i in range(3):
@@ -114,19 +114,19 @@ class PlotAxes(PlotObject):
             self._axis_ticks[axis] = strided_range(b[axis][0], b[axis][1],
                                                    self._stride[axis])
 
-    def toggle_visible(self):
+    def toggle_visible(self) -> None:
         self.visible = not self.visible
 
-    def toggle_colors(self):
+    def toggle_colors(self) -> None:
         self._colored = not self._colored
 
 
 class PlotAxesBase(PlotObject):
 
-    def __init__(self, parent_axes):
+    def __init__(self, parent_axes) -> None:
         self._p = parent_axes
 
-    def draw(self):
+    def draw(self) -> None:
         color = [([0.2, 0.1, 0.3], [0.2, 0.1, 0.3], [0.2, 0.1, 0.3]),
                  ([0.9, 0.3, 0.5], [0.5, 1.0, 0.5], [0.3, 0.3, 0.9])][self._p._colored]
         self.draw_background(color)
@@ -134,13 +134,13 @@ class PlotAxesBase(PlotObject):
         self.draw_axis(1, color[1])
         self.draw_axis(0, color[0])
 
-    def draw_background(self, color):
+    def draw_background(self, color) -> None:
         pass  # optional
 
     def draw_axis(self, axis, color):
         raise NotImplementedError()
 
-    def draw_text(self, text, position, color, scale=1.0):
+    def draw_text(self, text, position, color, scale=1.0) -> None:
         if len(color) == 3:
             color = (color[0], color[1], color[2], 1.0)
 
@@ -163,7 +163,7 @@ class PlotAxesBase(PlotObject):
         label.draw()
         pgl.glPopMatrix()
 
-    def draw_line(self, v, color):
+    def draw_line(self, v, color) -> None:
         o = self._p._origin
         pgl.glBegin(pgl.GL_LINES)
         pgl.glColor3f(*color)
@@ -174,10 +174,10 @@ class PlotAxesBase(PlotObject):
 
 class PlotAxesOrdinate(PlotAxesBase):
 
-    def __init__(self, parent_axes):
+    def __init__(self, parent_axes) -> None:
         super().__init__(parent_axes)
 
-    def draw_axis(self, axis, color):
+    def draw_axis(self, axis, color) -> None:
         ticks = self._p._axis_ticks[axis]
         radius = self._p._tick_length / 2.0
         if len(ticks) < 2:
@@ -203,14 +203,14 @@ class PlotAxesOrdinate(PlotAxesBase):
         # draw the axis line and labels
         self.draw_axis_line(axis, color, ticks[0], ticks[-1], labels_visible)
 
-    def draw_axis_line(self, axis, color, a_min, a_max, labels_visible):
+    def draw_axis_line(self, axis, color, a_min, a_max, labels_visible) -> None:
         axis_line = [[0, 0, 0], [0, 0, 0]]
         axis_line[0][axis], axis_line[1][axis] = a_min, a_max
         self.draw_line(axis_line, color)
         if labels_visible:
             self.draw_axis_line_labels(axis, color, axis_line)
 
-    def draw_axis_line_labels(self, axis, color, axis_line):
+    def draw_axis_line_labels(self, axis, color, axis_line) -> None:
         if not self._p._label_axes:
             return
         axis_labels = [axis_line[0][::], axis_line[1][::]]
@@ -220,7 +220,7 @@ class PlotAxesOrdinate(PlotAxesBase):
         self.draw_text("-" + a_str, axis_labels[0], color)
         self.draw_text("+" + a_str, axis_labels[1], color)
 
-    def draw_tick_line(self, axis, color, radius, tick, labels_visible):
+    def draw_tick_line(self, axis, color, radius, tick, labels_visible) -> None:
         tick_axis = {0: 1, 1: 0, 2: 1}[axis]
         tick_line = [[0, 0, 0], [0, 0, 0]]
         tick_line[0][axis] = tick_line[1][axis] = tick
@@ -229,7 +229,7 @@ class PlotAxesOrdinate(PlotAxesBase):
         if labels_visible:
             self.draw_tick_line_label(axis, color, radius, tick)
 
-    def draw_tick_line_label(self, axis, color, radius, tick):
+    def draw_tick_line_label(self, axis, color, radius, tick) -> None:
         if not self._p._label_axes:
             return
         tick_label_vector = [0, 0, 0]
@@ -241,10 +241,10 @@ class PlotAxesOrdinate(PlotAxesBase):
 
 class PlotAxesFrame(PlotAxesBase):
 
-    def __init__(self, parent_axes):
+    def __init__(self, parent_axes) -> None:
         super().__init__(parent_axes)
 
-    def draw_background(self, color):
+    def draw_background(self, color) -> None:
         pass
 
     def draw_axis(self, axis, color):

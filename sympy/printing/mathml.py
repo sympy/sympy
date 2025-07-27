@@ -16,6 +16,7 @@ from sympy.printing.pretty.pretty_symbology import greek_unicode
 from sympy.printing.printer import Printer, print_function
 
 from mpmath.libmp import prec_to_dps, repr_dps, to_str as mlib_to_str
+from sympy.codegen.ast import Element
 
 
 class MathMLPrinterBase(Printer):
@@ -41,7 +42,7 @@ class MathMLPrinterBase(Printer):
         "disable_split_super_sub": False,
     }
 
-    def __init__(self, settings=None):
+    def __init__(self, settings=None) -> None:
         Printer.__init__(self, settings)
         from xml.dom.minidom import Document, Text
 
@@ -88,7 +89,7 @@ class MathMLContentPrinter(MathMLPrinterBase):
     """
     printmethod = "_mathml_content"
 
-    def mathml_tag(self, e):
+    def mathml_tag(self, e) -> str:
         """Returns the MathML tag for an expression."""
         translate = {
             'Add': 'plus',
@@ -551,7 +552,7 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
     """
     printmethod = "_mathml_presentation"
 
-    def mathml_tag(self, e):
+    def mathml_tag(self, e) -> str:
         """Returns the MathML tag for an expression."""
         translate = {
             'Number': 'mn',
@@ -683,7 +684,7 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         mrow.appendChild(self._r_paren())
         return mrow
 
-    def parenthesize(self, item, level, strict=False):
+    def parenthesize(self, item, level, strict=False) -> Element | str:
         prec_val = precedence_traditional(item)
         if (prec_val < level) or ((not strict) and prec_val <= level):
             mrow = self.dom.createElement('mrow')
@@ -2118,7 +2119,7 @@ def mathml(expr, printer='content', **settings):
         return MathMLContentPrinter(settings).doprint(expr)
 
 
-def print_mathml(expr, printer='content', **settings):
+def print_mathml(expr, printer='content', **settings) -> None:
     """
     Prints a pretty representation of the MathML code for expr. If printer is
     presentation then prints Presentation MathML else prints content MathML.

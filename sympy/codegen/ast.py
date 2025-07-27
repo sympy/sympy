@@ -127,7 +127,7 @@ There is a function constructing a loop (or a complete function) like this in
 """
 
 from __future__ import annotations
-from typing import Any
+from typing import Callable, Literal, Any
 
 from collections import defaultdict
 
@@ -139,6 +139,9 @@ from sympy.core.numbers import Float, Integer, oo
 from sympy.core.sympify import _sympify, sympify, SympifyError
 from sympy.utilities.iterables import (iterable, topological_sort,
                                        numbered_symbols, filter_symbols)
+from collections.abc import Iterator
+from sympy.core.function import UndefinedFunction
+from typing_extensions import Self
 
 
 def _mk_Tuple(args):
@@ -190,7 +193,7 @@ class Token(CodegenAST):
     indented_args = ['body']
 
     @property
-    def is_Atom(self):
+    def is_Atom(self) -> bool:
         return len(self._fields) == 0
 
     @classmethod
@@ -210,7 +213,7 @@ class Token(CodegenAST):
             else:
                 return cls._get_constructor(attr)(arg)
 
-    def __new__(cls, *args, **kwargs):
+    def __new__(cls, *args, **kwargs) -> Self:
         # Pass through existing instances when given as sole argument
         if len(args) == 1 and not kwargs and isinstance(args[0], cls):
             return args[0]
@@ -256,7 +259,7 @@ class Token(CodegenAST):
 
         return obj
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
         if not isinstance(other, self.__class__):
             return False
         for attr in self._fields:
@@ -267,7 +270,7 @@ class Token(CodegenAST):
     def _hashable_content(self):
         return tuple([getattr(self, attr) for attr in self._fields])
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return super().__hash__()
 
     def _joiner(self, k, indent_level):
@@ -319,7 +322,7 @@ class Token(CodegenAST):
         from sympy.printing import srepr
         return srepr(self)
 
-    def kwargs(self, exclude=(), apply=None):
+    def kwargs(self, exclude=(), apply=None) -> dict[Any, Any]:
         """ Get instance's attributes as dict of keyword arguments.
 
         Parameters
@@ -388,13 +391,13 @@ class NoneToken(Token):
     x = None
 
     """
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
         return other is None or isinstance(other, NoneToken)
 
     def _hashable_content(self):
         return ()
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return super().__hash__()
 
 
@@ -411,7 +414,7 @@ class AssignmentBase(CodegenAST):
         Symbol for assignment operator, e.g. "=", "+=", etc.
     """
 
-    def __new__(cls, lhs, rhs):
+    def __new__(cls, lhs, rhs) -> Self:
         lhs = _sympify(lhs)
         rhs = _sympify(rhs)
 
@@ -420,11 +423,11 @@ class AssignmentBase(CodegenAST):
         return super().__new__(cls, lhs, rhs)
 
     @property
-    def lhs(self):
+    def lhs(self) -> Basic:
         return self.args[0]
 
     @property
-    def rhs(self):
+    def rhs(self) -> Basic:
         return self.args[1]
 
     @classmethod
@@ -514,7 +517,7 @@ class AugmentedAssignment(AssignmentBase):
     binop: str | None
 
     @property
-    def op(self):
+    def op(self) -> str:
         return self.binop + '='
 
 
@@ -631,7 +634,7 @@ class CodeBlock(CodegenAST):
     y = x + 1;
 
     """
-    def __new__(cls, *args):
+    def __new__(cls, *args) -> Self:
         left_hand_sides = []
         right_hand_sides = []
         for i in args:
@@ -646,7 +649,7 @@ class CodeBlock(CodegenAST):
         obj.right_hand_sides = Tuple(*right_hand_sides)
         return obj
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[Basic]:
         return iter(self.args)
 
     def _sympyrepr(self, printer, *args, **kwargs):
@@ -659,11 +662,11 @@ class CodeBlock(CodegenAST):
     _sympystr = _sympyrepr
 
     @property
-    def free_symbols(self):
+    def free_symbols(self) -> set[Basic]:
         return super().free_symbols - set(self.left_hand_sides)
 
     @classmethod
-    def topological_sort(cls, assignments):
+    def topological_sort(cls, assignments) -> Self:
         """
         Return a CodeBlock with topologically sorted assignments so that
         variables are assigned before they are used.
@@ -744,7 +747,7 @@ class CodeBlock(CodegenAST):
         return cls(*[a for i, a in ordered_assignments])
 
     def cse(self, symbols=None, optimizations=None, postprocess=None,
-        order='canonical'):
+        order='canonical') -> Self:
         """
         Return a new code block with common subexpressions eliminated.
 
@@ -907,12 +910,12 @@ class String(Atom, Token):
     def _sympystr(self, printer, *args, **kwargs):
         return self.text
 
-    def kwargs(self, exclude = (), apply = None):
+    def kwargs(self, exclude = (), apply = None) -> dict[Any, Any]:
         return {}
 
     #to be removed when Atom is given a suitable func
     @property
-    def func(self):
+    def func(self) -> Callable[[], Self]:
         return lambda: self
 
     def _latex(self, printer):
@@ -953,7 +956,7 @@ class Node(Token):
 
     _construct_attrs = staticmethod(_mk_Tuple)
 
-    def attr_params(self, looking_for):
+    def attr_params(self, looking_for) -> None:
         """ Returns the parameters of the Attribute with name ``looking_for`` in self.attrs """
         for attr in self.attrs:
             if str(attr.name) == str(looking_for):
@@ -1024,7 +1027,7 @@ class Type(Token):
         return str(self.name)
 
     @classmethod
-    def from_expr(cls, expr):
+    def from_expr(cls, expr) -> FloatBaseType | IntBaseType | ComplexBaseType | Type:
         """ Deduces type from an expression or a ``Symbol``.
 
         Parameters
@@ -1178,11 +1181,11 @@ class UnsignedIntType(_SizedIntType):
     """ Represents an unsigned integer type. """
     __slots__ = ()
     @property
-    def min(self):
+    def min(self) -> Literal[0]:
         return 0
 
     @property
-    def max(self):
+    def max(self) -> Literal[0]:
         return 2**self.nbits - 1
 
 two = Integer(2)
@@ -1240,7 +1243,7 @@ class FloatType(FloatBaseType):
 
 
     @property
-    def max_exponent(self):
+    def max_exponent(self) -> Expr:
         """ The largest positive number n, such that 2**(n - 1) is a representable finite value. """
         # cf. C++'s ``std::numeric_limits::max_exponent``
         return two**(self.nexp - 1)
@@ -1271,7 +1274,7 @@ class FloatType(FloatBaseType):
         return two**(-self.nmant)
 
     @property
-    def dig(self):
+    def dig(self) -> type[UndefinedFunction]:
         """ Number of decimal digits that are guaranteed to be preserved in text.
 
         When converting text -> float -> text, you are guaranteed that at least ``dig``
@@ -1281,7 +1284,7 @@ class FloatType(FloatBaseType):
         return floor(self.nmant * log(2)/log(10))
 
     @property
-    def decimal_dig(self):
+    def decimal_dig(self) -> type[UndefinedFunction]:
         """ Number of digits needed to store & load without loss.
 
         Explanation
@@ -1295,7 +1298,7 @@ class FloatType(FloatBaseType):
         from sympy.functions import ceiling, log
         return ceiling((self.nmant + 1) * log(2)/log(10) + 1)
 
-    def cast_nocheck(self, value):
+    def cast_nocheck(self, value) -> float | Float:
         """ Casts without checking if out of bounds or subnormal. """
         if value == oo:  # float(oo) or oo
             return float(oo)
@@ -1315,7 +1318,7 @@ class ComplexBaseType(FloatBaseType):
 
     __slots__ = ()
 
-    def cast_nocheck(self, value):
+    def cast_nocheck(self, value) -> Float:
         """ Casts without checking if out of bounds or subnormal. """
         from sympy.functions import re, im
         return (
@@ -1467,7 +1470,7 @@ class Variable(Node):
     _construct_value = staticmethod(sympify)
 
     @classmethod
-    def deduced(cls, symbol, value=None, attrs=Tuple(), cast_check=True):
+    def deduced(cls, symbol, value=None, attrs=Tuple(), cast_check=True) -> Variable | Self:
         """ Alt. constructor with type deduction from ``Type.from_expr``.
 
         Deduces type primarily from ``symbol``, secondarily from ``value``.
@@ -1511,7 +1514,7 @@ class Variable(Node):
             value = type_.cast_check(value)
         return cls(symbol, type=type_, value=value, attrs=attrs)
 
-    def as_Declaration(self, **kwargs):
+    def as_Declaration(self, **kwargs) -> "Declaration":
         """ Convenience method for creating a Declaration instance.
 
         Explanation
@@ -1573,7 +1576,7 @@ class Pointer(Variable):
     """
     __slots__ = ()
 
-    def __getitem__(self, key):
+    def __getitem__(self, key) -> "Element":
         try:
             return Element(self.symbol, key)
         except TypeError:
@@ -1791,7 +1794,7 @@ class FunctionPrototype(Node):
         return Tuple(*map(_var, args))
 
     @classmethod
-    def from_FunctionDefinition(cls, func_def):
+    def from_FunctionDefinition(cls, func_def) -> Self:
         if not isinstance(func_def, FunctionDefinition):
             raise TypeError("func_def is not an instance of FunctionDefinition")
         return cls(**func_def.kwargs(exclude=('body',)))
@@ -1838,7 +1841,7 @@ class FunctionDefinition(FunctionPrototype):
             return CodeBlock(*itr)
 
     @classmethod
-    def from_FunctionPrototype(cls, func_proto, body):
+    def from_FunctionPrototype(cls, func_proto, body) -> Self:
         if not isinstance(func_proto, FunctionPrototype):
             raise TypeError("func_proto is not an instance of FunctionPrototype")
         return cls(body=body, **func_proto.kwargs())

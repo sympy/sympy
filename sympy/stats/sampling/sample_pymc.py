@@ -13,7 +13,7 @@ except ImportError:
     pymc = import_module('pymc3')
 
 @singledispatch
-def do_sample_pymc(dist):
+def do_sample_pymc(dist) -> None:
     return None
 
 

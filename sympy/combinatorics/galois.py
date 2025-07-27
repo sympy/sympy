@@ -33,6 +33,7 @@ from sympy.combinatorics.named_groups import (
 )
 from sympy.combinatorics.perm_groups import PermutationGroup
 from sympy.combinatorics.permutations import Permutation
+from typing import Any
 
 
 class S1TransitiveSubgroups(Enum):
@@ -41,7 +42,7 @@ class S1TransitiveSubgroups(Enum):
     """
     S1 = "S1"
 
-    def get_perm_group(self):
+    def get_perm_group(self) -> PermutationGroup:
         return SymmetricGroup(1)
 
 
@@ -51,7 +52,7 @@ class S2TransitiveSubgroups(Enum):
     """
     S2 = "S2"
 
-    def get_perm_group(self):
+    def get_perm_group(self) -> PermutationGroup:
         return SymmetricGroup(2)
 
 
@@ -62,7 +63,7 @@ class S3TransitiveSubgroups(Enum):
     A3 = "A3"
     S3 = "S3"
 
-    def get_perm_group(self):
+    def get_perm_group(self) -> PermutationGroup | None:
         if self == S3TransitiveSubgroups.A3:
             return AlternatingGroup(3)
         elif self == S3TransitiveSubgroups.S3:
@@ -79,7 +80,7 @@ class S4TransitiveSubgroups(Enum):
     A4 = "A4"
     S4 = "S4"
 
-    def get_perm_group(self):
+    def get_perm_group(self) -> PermutationGroup | None:
         if self == S4TransitiveSubgroups.C4:
             return CyclicGroup(4)
         elif self == S4TransitiveSubgroups.V:
@@ -102,7 +103,7 @@ class S5TransitiveSubgroups(Enum):
     A5 = "A5"
     S5 = "S5"
 
-    def get_perm_group(self):
+    def get_perm_group(self) -> PermutationGroup | None:
         if self == S5TransitiveSubgroups.C5:
             return CyclicGroup(5)
         elif self == S5TransitiveSubgroups.D5:
@@ -136,7 +137,7 @@ class S6TransitiveSubgroups(Enum):
     A6 = "A6"
     S6 = "S6"
 
-    def get_perm_group(self):
+    def get_perm_group(self) -> PermutationGroup | None:
         if self == S6TransitiveSubgroups.C6:
             return CyclicGroup(6)
         elif self == S6TransitiveSubgroups.S3:
@@ -171,7 +172,7 @@ class S6TransitiveSubgroups(Enum):
             return SymmetricGroup(6)
 
 
-def four_group():
+def four_group() -> PermutationGroup:
     """
     Return a representation of the Klein four-group as a transitive subgroup
     of S4.
@@ -182,7 +183,7 @@ def four_group():
     )
 
 
-def M20():
+def M20() -> PermutationGroup:
     """
     Return a representation of the metacyclic group M20, a transitive subgroup
     of S5 that is one of the possible Galois groups for polys of degree 5.
@@ -204,7 +205,7 @@ def M20():
     return G
 
 
-def S3_in_S6():
+def S3_in_S6() -> PermutationGroup:
     """
     Return a representation of S3 as a transitive subgroup of S6.
 
@@ -220,7 +221,7 @@ def S3_in_S6():
     return G
 
 
-def A4_in_S6():
+def A4_in_S6() -> PermutationGroup:
     """
     Return a representation of A4 as a transitive subgroup of S6.
 
@@ -235,7 +236,7 @@ def A4_in_S6():
     return G
 
 
-def S4m():
+def S4m() -> PermutationGroup:
     """
     Return a representation of the S4- transitive subgroup of S6.
 
@@ -250,7 +251,7 @@ def S4m():
     return G
 
 
-def S4p():
+def S4p() -> PermutationGroup:
     """
     Return a representation of the S4+ transitive subgroup of S6.
 
@@ -265,7 +266,7 @@ def S4p():
     return G
 
 
-def A4xC2():
+def A4xC2() -> PermutationGroup:
     """
     Return a representation of the (A4 x C2) transitive subgroup of S6.
 
@@ -280,7 +281,7 @@ def A4xC2():
         Permutation(5)(2, 4))
 
 
-def S4xC2():
+def S4xC2() -> PermutationGroup:
     """
     Return a representation of the (S4 x C2) transitive subgroup of S6.
 
@@ -295,7 +296,7 @@ def S4xC2():
         Permutation(1, 4)(3, 5))
 
 
-def G18():
+def G18() -> PermutationGroup:
     """
     Return a representation of the group G18, a transitive subgroup of S6
     isomorphic to the semidirect product of C3^2 with C2.
@@ -311,7 +312,7 @@ def G18():
         Permutation(0, 4)(1, 5)(2, 3))
 
 
-def G36m():
+def G36m() -> PermutationGroup:
     """
     Return a representation of the group G36-, a transitive subgroup of S6
     isomorphic to the semidirect product of C3^2 with C2^2.
@@ -327,7 +328,7 @@ def G36m():
         Permutation(1, 2)(3, 5), Permutation(0, 4)(1, 5)(2, 3))
 
 
-def G36p():
+def G36p() -> PermutationGroup:
     """
     Return a representation of the group G36+, a transitive subgroup of S6
     isomorphic to the semidirect product of C3^2 with C4.
@@ -343,7 +344,7 @@ def G36p():
         Permutation(0, 5, 2, 3)(1, 4))
 
 
-def G72():
+def G72() -> PermutationGroup:
     """
     Return a representation of the group G72, a transitive subgroup of S6
     isomorphic to the semidirect product of C3^2 with D4.
@@ -359,7 +360,7 @@ def G72():
         Permutation(0, 4, 1, 3)(2, 5), Permutation(0, 3)(1, 4)(2, 5))
 
 
-def PSL2F5():
+def PSL2F5() -> PermutationGroup:
     r"""
     Return a representation of the group $PSL_2(\mathbb{F}_5)$, as a transitive
     subgroup of S6, isomorphic to $A_5$.
@@ -376,7 +377,7 @@ def PSL2F5():
     return G
 
 
-def PGL2F5():
+def PGL2F5() -> PermutationGroup:
     r"""
     Return a representation of the group $PGL_2(\mathbb{F}_5)$, as a transitive
     subgroup of S6, isomorphic to $S_5$.
@@ -393,7 +394,7 @@ def PGL2F5():
     return G
 
 
-def find_transitive_subgroups_of_S6(*targets, print_report=False):
+def find_transitive_subgroups_of_S6(*targets, print_report=False) -> dict[Any, Any]:
     r"""
     Search for certain transitive subgroups of $S_6$.
 

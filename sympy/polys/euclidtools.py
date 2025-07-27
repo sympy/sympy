@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import overload, Literal
+from typing import Any, overload, Literal
 
 from sympy.polys.domains.domain import Domain, Er
 from sympy.polys.densearith import (
@@ -52,7 +52,7 @@ from sympy.polys.polyerrors import (
 
 
 
-def dup_half_gcdex(f, g, K):
+def dup_half_gcdex(f, g, K) -> tuple[Any | list[Any], Any | list[Any]]:
     """
     Half extended Euclidean algorithm in `F[x]`.
 
@@ -87,7 +87,7 @@ def dup_half_gcdex(f, g, K):
     return a, f
 
 
-def dmp_half_gcdex(f, g, u, K):
+def dmp_half_gcdex(f, g, u, K) -> tuple[Any | list[Any], Any | list[Any]]:
     """
     Half extended Euclidean algorithm in `F[X]`.
 
@@ -104,7 +104,7 @@ def dmp_half_gcdex(f, g, u, K):
         raise MultivariatePolynomialError(f, g)
 
 
-def dup_gcdex(f, g, K):
+def dup_gcdex(f, g, K) -> tuple[Any | list[Any], Any | list[Any], Any | list[Any]]:
     """
     Extended Euclidean algorithm in `F[x]`.
 
@@ -131,7 +131,7 @@ def dup_gcdex(f, g, K):
     return s, t, h
 
 
-def dmp_gcdex(f, g, u, K):
+def dmp_gcdex(f, g, u, K) -> tuple[Any | list[Any], Any | list[Any], Any | list[Any]]:
     """
     Extended Euclidean algorithm in `F[X]`.
 
@@ -148,7 +148,7 @@ def dmp_gcdex(f, g, u, K):
         raise MultivariatePolynomialError(f, g)
 
 
-def dup_invert(f, g, K):
+def dup_invert(f, g, K) -> list[Any]:
     """
     Compute multiplicative inverse of `f` modulo `g` in `F[x]`.
 
@@ -179,7 +179,7 @@ def dup_invert(f, g, K):
         raise NotInvertible("zero divisor")
 
 
-def dmp_invert(f, g, u, K):
+def dmp_invert(f, g, u, K) -> list[Any]:
     """
     Compute multiplicative inverse of `f` modulo `g` in `F[X]`.
 
@@ -196,7 +196,7 @@ def dmp_invert(f, g, u, K):
         raise MultivariatePolynomialError(f, g)
 
 
-def dup_euclidean_prs(f, g, K):
+def dup_euclidean_prs(f, g, K) -> list[Any]:
     """
     Euclidean polynomial remainder sequence (PRS) in `K[x]`.
 
@@ -236,7 +236,7 @@ def dup_euclidean_prs(f, g, K):
     return prs
 
 
-def dmp_euclidean_prs(f, g, u, K):
+def dmp_euclidean_prs(f, g, u, K) -> list[Any]:
     """
     Euclidean polynomial remainder sequence (PRS) in `K[X]`.
 
@@ -253,7 +253,7 @@ def dmp_euclidean_prs(f, g, u, K):
         raise MultivariatePolynomialError(f, g)
 
 
-def dup_primitive_prs(f, g, K):
+def dup_primitive_prs(f, g, K) -> list[Any]:
     """
     Primitive polynomial remainder sequence (PRS) in `K[x]`.
 
@@ -293,7 +293,7 @@ def dup_primitive_prs(f, g, K):
     return prs
 
 
-def dmp_primitive_prs(f, g, u, K):
+def dmp_primitive_prs(f, g, u, K) -> list[Any]:
     """
     Primitive polynomial remainder sequence (PRS) in `K[X]`.
 
@@ -310,7 +310,7 @@ def dmp_primitive_prs(f, g, u, K):
         raise MultivariatePolynomialError(f, g)
 
 
-def dup_inner_subresultants(f, g, K):
+def dup_inner_subresultants(f, g, K) -> tuple[list[Any], list[Any]]:
     """
     Subresultant PRS algorithm in `K[x]`.
 
@@ -390,7 +390,7 @@ def dup_inner_subresultants(f, g, K):
     return R, S
 
 
-def dup_subresultants(f, g, K):
+def dup_subresultants(f, g, K) -> list[Any]:
     """
     Computes subresultant PRS of two polynomials in `K[x]`.
 
@@ -407,7 +407,7 @@ def dup_subresultants(f, g, K):
     return dup_inner_subresultants(f, g, K)[0]
 
 
-def dup_prs_resultant(f, g, K):
+def dup_prs_resultant(f, g, K) -> tuple[Any, list[Any]]:
     """
     Resultant algorithm in `K[x]` using subresultant PRS.
 
@@ -432,7 +432,7 @@ def dup_prs_resultant(f, g, K):
     return S[-1], R
 
 
-def dup_resultant(f, g, K, includePRS=False):
+def dup_resultant(f, g, K, includePRS=False) -> tuple[Any, list[Any]]:
     """
     Computes resultant of two polynomials in `K[x]`.
 
@@ -451,7 +451,7 @@ def dup_resultant(f, g, K, includePRS=False):
     return dup_prs_resultant(f, g, K)[0]
 
 
-def dmp_inner_subresultants(f, g, u, K):
+def dmp_inner_subresultants(f, g, u, K) -> tuple[list[Any], list[Any]] | tuple[list[Any], list[list[list[Any]] | Any | list[Any]]]:
     """
     Subresultant PRS algorithm in `K[X]`.
 
@@ -531,7 +531,7 @@ def dmp_inner_subresultants(f, g, u, K):
     return R, S
 
 
-def dmp_subresultants(f, g, u, K):
+def dmp_subresultants(f, g, u, K) -> list[Any]:
     """
     Computes subresultant PRS of two polynomials in `K[X]`.
 
@@ -554,7 +554,7 @@ def dmp_subresultants(f, g, u, K):
     return dmp_inner_subresultants(f, g, u, K)[0]
 
 
-def dmp_prs_resultant(f, g, u, K):
+def dmp_prs_resultant(f, g, u, K) -> tuple[Any, list[Any]] | tuple[list[list[Any]], list[Any]] | tuple[list[list[Any]] | Any | list[Any], list[Any]]:
     """
     Resultant algorithm in `K[X]` using subresultant PRS.
 
@@ -594,7 +594,7 @@ def dmp_prs_resultant(f, g, u, K):
     return S[-1], R
 
 
-def dmp_zz_modular_resultant(f, g, p, u, K):
+def dmp_zz_modular_resultant(f, g, p, u, K) -> list[list[Any]]:
     """
     Compute resultant of `f` and `g` modulo a prime `p`.
 
@@ -672,7 +672,7 @@ def _collins_crt(r, R, P, p, K):
     return gf_int(gf_crt([r, R], [P, p], K), P*p)
 
 
-def dmp_zz_collins_resultant(f, g, u, K):
+def dmp_zz_collins_resultant(f, g, u, K) -> list[list[Any]]:
     """
     Collins's modular resultant algorithm in `Z[X]`.
 
@@ -733,7 +733,7 @@ def dmp_zz_collins_resultant(f, g, u, K):
     return r
 
 
-def dmp_qq_collins_resultant(f, g, u, K0):
+def dmp_qq_collins_resultant(f, g, u, K0) -> list[list[Any]] | list[Any]:
     """
     Collins's modular resultant algorithm in `Q[X]`.
 
@@ -850,7 +850,7 @@ def dup_discriminant(f, K):
         return K.quo(r, c*K(s))
 
 
-def dmp_discriminant(f, u, K):
+def dmp_discriminant(f, u, K) -> list[list[Any]]:
     """
     Computes discriminant of a polynomial in `K[X]`.
 
@@ -986,7 +986,9 @@ def _dmp_simplify_gcd(f, g, u, K):
     return [h], cff, cfg
 
 
-def dup_rr_prs_gcd(f, g, K):
+def dup_rr_prs_gcd(f, g, K) -> (
+    tuple[list[Any], list[Any], list[Any]] | tuple[Any, list[Any], list[Any]] | tuple[list[Any], Any | list[Any], Any | list[Any]]
+):
     """
     Computes polynomial GCD using subresultants over a ring.
 
@@ -1026,7 +1028,11 @@ def dup_rr_prs_gcd(f, g, K):
     return h, cff, cfg
 
 
-def dup_ff_prs_gcd(f, g, K):
+def dup_ff_prs_gcd(f, g, K) -> (
+    tuple[list[Any], list[Any], list[Any]]
+    | tuple[Any | list[Any], list[Any], list[Any]]
+    | tuple[Any | list[Any], Any | list[Any], Any | list[Any]]
+):
     """
     Computes polynomial GCD using subresultants over a field.
 
@@ -1057,7 +1063,21 @@ def dup_ff_prs_gcd(f, g, K):
     return h, cff, cfg
 
 
-def dmp_rr_prs_gcd(f, g, u, K):
+def dmp_rr_prs_gcd(f, g, u, K) -> (
+    tuple[list[Any], list[Any], list[Any]]
+    | tuple[Any, list[Any], list[Any]]
+    | tuple[list[Any], Any | list[Any], Any | list[Any]]
+    | tuple[list[list[Any]], ...]
+    | tuple[Any, list[list[Any]], list[list[Any]] | Any | list[Any]]
+    | tuple[list[Any], list[list[Any]], list[list[Any]] | Any | list[Any]]
+    | tuple[Any, list[list[Any]] | Any | list[Any], list[list[Any]]]
+    | tuple[list[Any], list[list[Any]] | Any | list[Any], list[list[Any]]]
+    | tuple[list[list[Any]] | Any | list[Any], Any, Any]
+    | tuple[list[Any], list[Any | list[list[Any]]], list[Any | list[list[Any]]]]
+    | tuple[
+        list[Any] | Any | list[list[Any]] | list[Any | list[Any] | list[list[Any]]], Any | list[list[Any]], Any | list[list[Any]]
+    ]
+):
     """
     Computes polynomial GCD using subresultants over a ring.
 
@@ -1105,7 +1125,16 @@ def dmp_rr_prs_gcd(f, g, u, K):
     return h, cff, cfg
 
 
-def dmp_ff_prs_gcd(f, g, u, K):
+def dmp_ff_prs_gcd(f, g, u, K) -> (
+    tuple[list[Any], list[Any], list[Any]]
+    | tuple[Any | list[Any], list[Any], list[Any]]
+    | tuple[Any | list[Any], Any | list[Any], Any | list[Any]]
+    | tuple[list[list[Any]], ...]
+    | tuple[Any | list[Any], list[list[Any]], list[list[Any]] | Any | list[Any]]
+    | tuple[Any | list[Any], list[list[Any]] | Any | list[Any], list[list[Any]]]
+    | tuple[list[Any], list[Any | list[list[Any]]], list[Any | list[list[Any]]]]
+    | tuple[Any | list[Any], Any | list[list[Any]], Any | list[list[Any]]]
+):
     """
     Computes polynomial GCD using subresultants over a field.
 
@@ -1167,7 +1196,13 @@ def _dup_zz_gcd_interpolate(h, x, K):
     return f
 
 
-def dup_zz_heu_gcd(f, g, K):
+def dup_zz_heu_gcd(f, g, K) -> (
+    tuple[list[Any], list[Any], list[Any]]
+    | tuple[Any, list[Any], list[Any]]
+    | tuple[list[Any], Any | list[Any], Any | list[Any]]
+    | tuple[list[Any], list[Any], Any | list[Any]]
+    | tuple[list[Any], Any | list[Any], list[Any]]
+):
     """
     Heuristic polynomial GCD in `Z[x]`.
 
@@ -1290,7 +1325,23 @@ def _dmp_zz_gcd_interpolate(h, x, v, K):
         return f
 
 
-def dmp_zz_heu_gcd(f, g, u, K):
+def dmp_zz_heu_gcd(f, g, u, K) -> (
+    tuple[list[Any], list[Any], list[Any]]
+    | tuple[Any, list[Any], list[Any]]
+    | tuple[list[Any], Any | list[Any], Any | list[Any]]
+    | tuple[list[Any], list[Any], Any | list[Any]]
+    | tuple[list[Any], Any | list[Any], list[Any]]
+    | tuple[list[list[Any]], ...]
+    | tuple[Any, list[list[Any]], list[list[Any]] | Any | list[Any]]
+    | tuple[list[Any], list[list[Any]], list[list[Any]] | Any | list[Any]]
+    | tuple[Any, list[list[Any]] | Any | list[Any], list[list[Any]]]
+    | tuple[list[Any], list[list[Any]] | Any | list[Any], list[list[Any]]]
+    | tuple[list[list[Any]] | Any | list[Any], Any, Any]
+    | tuple[list[Any], list[Any | list[list[Any]]], list[Any | list[list[Any]]]]
+    | tuple[list[Any], Any | list[list[Any]], Any | list[list[Any]]]
+    | tuple[list[Any], list[Any], Any | list[list[Any]]]
+    | tuple[list[Any], Any | list[list[Any]], list[Any]]
+):
     """
     Heuristic polynomial GCD in `Z[X]`.
 
@@ -1397,7 +1448,7 @@ def dmp_zz_heu_gcd(f, g, u, K):
     raise HeuristicGCDFailed('no luck')
 
 
-def dup_qq_heu_gcd(f, g, K0):
+def dup_qq_heu_gcd(f, g, K0) -> tuple[list[Any], list[Any], list[Any]] | tuple[Any | list[Any], list[Any], list[Any]]:
     """
     Heuristic polynomial GCD in `Q[x]`.
 
@@ -1446,7 +1497,13 @@ def dup_qq_heu_gcd(f, g, K0):
     return h, cff, cfg
 
 
-def dmp_qq_heu_gcd(f, g, u, K0):
+def dmp_qq_heu_gcd(f, g, u, K0) -> (
+    tuple[list[list[Any]], ...]
+    | tuple[Any | list[Any], list[list[Any]], list[list[Any]] | Any | list[Any]]
+    | tuple[Any | list[Any], list[list[Any]] | Any | list[Any], list[list[Any]]]
+    | tuple[list[Any], list[Any | list[list[Any]]], list[Any | list[list[Any]]]]
+    | tuple[Any | list[Any], list[Any], list[Any]]
+):
     """
     Heuristic polynomial GCD in `Q[X]`.
 
@@ -1495,7 +1552,17 @@ def dmp_qq_heu_gcd(f, g, u, K0):
     return h, cff, cfg
 
 
-def dup_inner_gcd(f, g, K):
+def dup_inner_gcd(f, g, K) -> (
+    tuple[list[Any], Any, Any]
+    | tuple[Any, Any, Any]
+    | tuple[list[Any], list[Any], list[Any]]
+    | tuple[Any | list[Any], list[Any], list[Any]]
+    | tuple[Any | list[Any], Any | list[Any], Any | list[Any]]
+    | tuple[Any, list[Any], list[Any]]
+    | tuple[list[Any], Any | list[Any], Any | list[Any]]
+    | tuple[list[Any], list[Any], Any | list[Any]]
+    | tuple[list[Any], Any | list[Any], list[Any]]
+):
     """
     Computes polynomial GCD and cofactors of `f` and `g` in `K[x]`.
 
@@ -1594,7 +1661,17 @@ def _dmp_inner_gcd(f, g, u, K):
         return dmp_rr_prs_gcd(f, g, u, K)
 
 
-def dmp_inner_gcd(f, g, u, K):
+def dmp_inner_gcd(f, g, u, K) -> (
+    tuple[list[Any], Any, Any]
+    | tuple[Any, Any, Any]
+    | tuple[list[Any], list[Any], list[Any]]
+    | tuple[Any | list[Any], list[Any], list[Any]]
+    | tuple[Any | list[Any], Any | list[Any], Any | list[Any]]
+    | tuple[Any, list[Any], list[Any]]
+    | tuple[list[Any], Any | list[Any], Any | list[Any]]
+    | tuple[list[Any], list[Any], Any | list[Any]]
+    | tuple[list[Any], Any | list[Any], list[Any]]
+):
     """
     Computes polynomial GCD and cofactors of `f` and `g` in `K[X]`.
 
@@ -1625,7 +1702,7 @@ def dmp_inner_gcd(f, g, u, K):
             dmp_inflate(cfg, J, u, K))
 
 
-def dup_gcd(f, g, K):
+def dup_gcd(f, g, K) -> list[Any]:
     """
     Computes polynomial GCD of `f` and `g` in `K[x]`.
 
@@ -1662,7 +1739,7 @@ def dmp_gcd(f, g, u, K):
     return dmp_inner_gcd(f, g, u, K)[0]
 
 
-def dup_rr_lcm(f, g, K):
+def dup_rr_lcm(f, g, K) -> list[Any]:
     """
     Computes polynomial LCM over a ring in `K[x]`.
 
@@ -1692,7 +1769,7 @@ def dup_rr_lcm(f, g, K):
     return dup_mul_ground(h, c*u, K)
 
 
-def dup_ff_lcm(f, g, K):
+def dup_ff_lcm(f, g, K) -> list[Any]:
     """
     Computes polynomial LCM over a field in `K[x]`.
 
@@ -1715,7 +1792,7 @@ def dup_ff_lcm(f, g, K):
     return dup_monic(h, K)
 
 
-def dup_lcm(f, g, K):
+def dup_lcm(f, g, K) -> list[Any]:
     """
     Computes polynomial LCM of `f` and `g` in `K[x]`.
 
@@ -1735,7 +1812,7 @@ def dup_lcm(f, g, K):
         return dup_rr_lcm(f, g, K)
 
 
-def dmp_rr_lcm(f, g, u, K):
+def dmp_rr_lcm(f, g, u, K) -> list[Any]:
     """
     Computes polynomial LCM over a ring in `K[X]`.
 
@@ -1763,7 +1840,7 @@ def dmp_rr_lcm(f, g, u, K):
     return dmp_mul_ground(h, c, u, K)
 
 
-def dmp_ff_lcm(f, g, u, K):
+def dmp_ff_lcm(f, g, u, K) -> list[Any]:
     """
     Computes polynomial LCM over a field in `K[X]`.
 
@@ -1786,7 +1863,7 @@ def dmp_ff_lcm(f, g, u, K):
     return dmp_ground_monic(h, u, K)
 
 
-def dmp_lcm(f, g, u, K):
+def dmp_lcm(f, g, u, K) -> list[Any]:
     """
     Computes polynomial LCM of `f` and `g` in `K[X]`.
 
@@ -1812,7 +1889,7 @@ def dmp_lcm(f, g, u, K):
         return dmp_rr_lcm(f, g, u, K)
 
 
-def dmp_content(f, u, K):
+def dmp_content(f, u, K) -> list[Any]:
     """
     Returns GCD of multivariate coefficients.
 
@@ -1843,7 +1920,7 @@ def dmp_content(f, u, K):
         return cont
 
 
-def dmp_primitive(f, u, K):
+def dmp_primitive(f, u, K) -> tuple[Any | list[Any], Any] | tuple[Any | list[Any], list[Any | list[list[Any]]]]:
     """
     Returns multivariate content and a primitive polynomial.
 

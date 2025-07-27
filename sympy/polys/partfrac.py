@@ -8,6 +8,7 @@ from sympy.polys.polyerrors import PolynomialError
 from sympy.polys.polyoptions import allowed_flags, set_defaults
 from sympy.polys.polytools import parallel_poly_from_expr
 from sympy.utilities import numbered_symbols, take, xthreaded, public
+from typing import Any
 
 
 @xthreaded
@@ -209,7 +210,7 @@ def apart_full_decomposition(P, Q):
 
 
 @public
-def apart_list(f, x=None, dummies=None, **options):
+def apart_list(f, x=None, dummies=None, **options) -> tuple[Any, Any, list[Any]]:
     """
     Compute partial fraction decomposition of a rational function
     and return the result in structured form.
@@ -349,7 +350,7 @@ def apart_list(f, x=None, dummies=None, **options):
     return (common, polypart, rationalpart)
 
 
-def apart_list_full_decomposition(P, Q, dummygen):
+def apart_list_full_decomposition(P, Q, dummygen) -> list[Any]:
     """
     Bronstein's full partial fraction decomposition algorithm.
 

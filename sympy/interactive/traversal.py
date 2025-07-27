@@ -3,7 +3,7 @@ from sympy.printing import pprint
 
 import random
 
-def interactive_traversal(expr):
+def interactive_traversal(expr) -> Basic:
     """Traverse a tree asking a user which branch to choose. """
 
     RED, BRED = '\033[0;31m', '\033[1;31m'

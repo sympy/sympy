@@ -15,6 +15,8 @@ from sympy.functions.elementary.complexes import Abs
 from sympy.polys import gcd
 from sympy.simplify.sqrtdenest import sqrtdenest
 from sympy.utilities.iterables import iterable, sift
+from sympy.series.order import Order
+from typing import Any
 
 
 
@@ -499,7 +501,7 @@ def rcollect(expr, *vars):
             return expr
 
 
-def collect_sqrt(expr, evaluate=None):
+def collect_sqrt(expr, evaluate=None) -> tuple[tuple[Any | Order, ...], int]:
     """Return expr with terms having common square roots collected together.
     If ``evaluate`` is False a count indicating the number of sqrt-containing
     terms will be returned and, if non-zero, the terms of the Add will be
@@ -627,7 +629,7 @@ def collect_abs(expr):
             lambda x: _abs(x))
 
 
-def collect_const(expr, *vars, Numbers=True):
+def collect_const(expr, *vars, Numbers=True) -> Add | Order:
     """A non-greedy collection of terms with similar number coefficients in
     an Add expr. If ``vars`` is given then only those constants will be
     targeted. Although any Number can also be targeted, if this is not
@@ -1025,7 +1027,7 @@ def radsimp(expr, symbolic=True, max_terms=4):
     return coeff + _unevaluated_Mul(n, 1/d)
 
 
-def rad_rationalize(num, den):
+def rad_rationalize(num, den) -> tuple[Any, Any]:
     """
     Rationalize ``num/den`` by removing square roots in the denominator;
     num and den are sum of terms whose squares are positive rationals.
@@ -1047,7 +1049,7 @@ def rad_rationalize(num, den):
     return rad_rationalize(num, den)
 
 
-def fraction(expr, exact=False):
+def fraction(expr, exact=False) -> tuple[Any | Order, Any | Order]:
     """Returns a pair with expression's numerator and denominator.
        If the given expression is not a fraction then this function
        will return the tuple (expr, 1).
@@ -1167,7 +1169,7 @@ expand_denom = denom_expand
 expand_fraction = fraction_expand
 
 
-def split_surds(expr):
+def split_surds(expr) -> tuple[Any, Any | Order, Any | Order]:
     """
     Split an expression with terms whose squares are positive rationals
     into a sum of terms whose surds squared have gcd equal to g

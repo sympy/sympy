@@ -1,7 +1,7 @@
 """ Elliptic Integrals. """
 
 from sympy.core import S, pi, I, Rational
-from sympy.core.function import DefinedFunction, ArgumentIndexError
+from sympy.core.function import Function, DefinedFunction, ArgumentIndexError
 from sympy.core.symbol import Dummy,uniquely_named_symbol
 from sympy.functions.elementary.complexes import sign
 from sympy.functions.elementary.hyperbolic import atanh
@@ -9,6 +9,7 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import sin, tan
 from sympy.functions.special.gamma_functions import gamma
 from sympy.functions.special.hyper import hyper, meijerg
+from sympy.core.power import Pow
 
 class elliptic_k(DefinedFunction):
     r"""
@@ -56,7 +57,7 @@ class elliptic_k(DefinedFunction):
     """
 
     @classmethod
-    def eval(cls, m):
+    def eval(cls, m) -> None:
         if m.is_zero:
             return pi*S.Half
         elif m is S.Half:
@@ -143,7 +144,7 @@ class elliptic_f(DefinedFunction):
     """
 
     @classmethod
-    def eval(cls, z, m):
+    def eval(cls, z, m) -> None:
         if z.is_zero:
             return S.Zero
         if m.is_zero:
@@ -234,7 +235,7 @@ class elliptic_e(DefinedFunction):
     """
 
     @classmethod
-    def eval(cls, m, z=None):
+    def eval(cls, m, z=None) -> None:
         if z is not None:
             z, m = m, z
             k = 2*z/pi
@@ -260,7 +261,7 @@ class elliptic_e(DefinedFunction):
             elif m is S.ComplexInfinity:
                 return S.ComplexInfinity
 
-    def fdiff(self, argindex=1):
+    def fdiff(self, argindex=1) -> Pow:
         if len(self.args) == 2:
             z, m = self.args
             if argindex == 1:

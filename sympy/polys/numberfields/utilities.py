@@ -11,9 +11,11 @@ from sympy.utilities.decorator import public
 from sympy.utilities.lambdify import lambdify
 
 from mpmath import mp
+from collections.abc import Generator
+from typing import Any, Literal, NoReturn
 
 
-def is_rat(c):
+def is_rat(c) -> Any | Literal[True]:
     r"""
     Test whether an argument is of an acceptable type to be used as a rational
     number.
@@ -38,7 +40,7 @@ def is_rat(c):
     return isinstance(c, int) or ZZ.of_type(c) or QQ.of_type(c)
 
 
-def is_int(c):
+def is_int(c) -> Any | Literal[True]:
     r"""
     Test whether an argument is of an acceptable type to be used as an integer.
 
@@ -59,7 +61,7 @@ def is_int(c):
     return isinstance(c, int) or ZZ.of_type(c)
 
 
-def get_num_denom(c):
+def get_num_denom(c) -> tuple[Any, Any]:
     r"""
     Given any argument on which :py:func:`~.is_rat` is ``True``, return the
     numerator and denominator of this number.
@@ -75,7 +77,7 @@ def get_num_denom(c):
 
 
 @public
-def extract_fundamental_discriminant(a):
+def extract_fundamental_discriminant(a) -> tuple[dict[Any, Any], dict[int, int]] | tuple[dict[Any, Any], dict[Any, Any]]:
     r"""
     Extract a fundamental discriminant from an integer *a*.
 
@@ -204,7 +206,7 @@ class AlgIntPowers:
 
     """
 
-    def __init__(self, T, modulus=None):
+    def __init__(self, T, modulus=None) -> None:
         """
         Parameters
         ==========
@@ -229,7 +231,7 @@ class AlgIntPowers:
     def __rmod__(self, other):
         return self.red(other)
 
-    def compute_up_through(self, e):
+    def compute_up_through(self, e) -> None:
         m = self.max_so_far
         if e <= m: return
         n = self.n
@@ -244,7 +246,7 @@ class AlgIntPowers:
             )
         self.max_so_far = e
 
-    def get(self, e):
+    def get(self, e) -> list[int] | list[Any]:
         n = self.n
         if e < 0:
             raise ValueError('Exponent must be non-negative.')
@@ -254,12 +256,12 @@ class AlgIntPowers:
             self.compute_up_through(e)
             return self.powers_n_and_up[e - n]
 
-    def __getitem__(self, item):
+    def __getitem__(self, item) -> list[int] | list[Any]:
         return self.get(item)
 
 
 @public
-def coeff_search(m, R):
+def coeff_search(m, R) -> Generator[Any, Any, NoReturn]:
     r"""
     Generate coefficients for searching through polynomials.
 
@@ -402,7 +404,7 @@ def supplement_a_subspace(M):
 
 
 @public
-def isolate(alg, eps=None, fast=False):
+def isolate(alg, eps=None, fast=False) -> tuple[Any, Any]:
     """
     Find a rational isolating interval for a real algebraic number.
 

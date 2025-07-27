@@ -2,10 +2,11 @@ import collections
 from sympy.core.expr import Expr
 from sympy.core import sympify, S, preorder_traversal
 from sympy.vector.coordsysrect import CoordSys3D
-from sympy.vector.vector import Vector, VectorMul, VectorAdd, Cross, Dot
+from sympy.vector.vector import VectorZero, Vector, VectorMul, VectorAdd, Cross, Dot
 from sympy.core.function import Derivative
 from sympy.core.add import Add
 from sympy.core.mul import Mul
+from typing_extensions import Self
 
 
 def _get_coord_systems(expr):
@@ -40,13 +41,13 @@ class Gradient(Expr):
 
     """
 
-    def __new__(cls, expr):
+    def __new__(cls, expr) -> Self:
         expr = sympify(expr)
         obj = Expr.__new__(cls, expr)
         obj._expr = expr
         return obj
 
-    def doit(self, **hints):
+    def doit(self, **hints) -> VectorZero | VectorAdd | Gradient:
         return gradient(self._expr, doit=True)
 
 
@@ -65,13 +66,13 @@ class Divergence(Expr):
 
     """
 
-    def __new__(cls, expr):
+    def __new__(cls, expr) -> Self:
         expr = sympify(expr)
         obj = Expr.__new__(cls, expr)
         obj._expr = expr
         return obj
 
-    def doit(self, **hints):
+    def doit(self, **hints) -> Divergence | Add:
         return divergence(self._expr, doit=True)
 
 
@@ -90,17 +91,17 @@ class Curl(Expr):
 
     """
 
-    def __new__(cls, expr):
+    def __new__(cls, expr) -> Self:
         expr = sympify(expr)
         obj = Expr.__new__(cls, expr)
         obj._expr = expr
         return obj
 
-    def doit(self, **hints):
+    def doit(self, **hints) -> VectorZero | VectorAdd | Curl:
         return curl(self._expr, doit=True)
 
 
-def curl(vect, doit=True):
+def curl(vect, doit=True) -> VectorZero | VectorAdd | Curl:
     """
     Returns the curl of a vector field computed wrt the base scalars
     of the given coordinate system.
@@ -175,7 +176,7 @@ def curl(vect, doit=True):
             raise ValueError("Invalid argument for curl")
 
 
-def divergence(vect, doit=True):
+def divergence(vect, doit=True) -> Divergence | Add:
     """
     Returns the divergence of a vector field computed wrt the base
     scalars of the given coordinate system.
@@ -242,7 +243,7 @@ def divergence(vect, doit=True):
             raise ValueError("Invalid argument for divergence")
 
 
-def gradient(scalar_field, doit=True):
+def gradient(scalar_field, doit=True) -> VectorZero | VectorAdd | Gradient:
     """
     Returns the vector gradient of a scalar field computed wrt the
     base scalars of the given coordinate system.
@@ -311,13 +312,13 @@ class Laplacian(Expr):
 
     """
 
-    def __new__(cls, expr):
+    def __new__(cls, expr) -> Self:
         expr = sympify(expr)
         obj = Expr.__new__(cls, expr)
         obj._expr = expr
         return obj
 
-    def doit(self, **hints):
+    def doit(self, **hints) -> Divergence | Add:
         from sympy.vector.functions import laplacian
         return laplacian(self._expr)
 

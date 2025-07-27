@@ -4,6 +4,9 @@ from sympy.core import Basic, Tuple, default_sort_key
 from sympy.sets import FiniteSet
 from sympy.utilities.iterables import (minlex, unflatten, flatten)
 from sympy.utilities.misc import as_int
+import sympy.sets.sets
+from typing import Any
+from typing_extensions import Self
 
 rmul = Perm.rmul
 
@@ -31,7 +34,7 @@ class Polyhedron(Basic):
     """
     _edges = None
 
-    def __new__(cls, corners, faces=(), pgroup=()):
+    def __new__(cls, corners, faces=(), pgroup=()) -> Self:
         """
         The constructor of the Polyhedron group object.
 
@@ -399,7 +402,7 @@ class Polyhedron(Basic):
         return obj
 
     @property
-    def corners(self):
+    def corners(self) -> tuple[Any, ...] | Basic:
         """
         Get the corners of the Polyhedron.
 
@@ -423,7 +426,7 @@ class Polyhedron(Basic):
     vertices = corners
 
     @property
-    def array_form(self):
+    def array_form(self) -> list[int]:
         """Return the indices of the corners.
 
         The indices are given relative to the original position of corners.
@@ -451,7 +454,7 @@ class Polyhedron(Basic):
         return [corners.index(c) for c in self.corners]
 
     @property
-    def cyclic_form(self):
+    def cyclic_form(self) -> list[Any]:
         """Return the indices of the corners in cyclic notation.
 
         The indices are given relative to the original position of corners.
@@ -464,7 +467,7 @@ class Polyhedron(Basic):
         return Perm._af_new(self.array_form).cyclic_form
 
     @property
-    def size(self):
+    def size(self) -> int:
         """
         Get the number of corners of the Polyhedron.
         """
@@ -485,7 +488,7 @@ class Polyhedron(Basic):
         return self._pgroup
 
     @property
-    def edges(self):
+    def edges(self) ->     sympy.sets.sets.FiniteSet:
         """
         Given the faces of the polyhedra we can get the edges.
 
@@ -509,7 +512,7 @@ class Polyhedron(Basic):
             self._edges = FiniteSet(*output)
         return self._edges
 
-    def rotate(self, perm):
+    def rotate(self, perm) -> None:
         """
         Apply a permutation to the polyhedron *in place*. The permutation
         may be given as a Permutation instance or an integer indicating
@@ -577,7 +580,7 @@ class Polyhedron(Basic):
         corners = [self.corners[a[i]] for i in range(len(self.corners))]
         self._corners = tuple(corners)
 
-    def reset(self):
+    def reset(self) -> None:
         """Return corners to their original positions.
 
         Examples

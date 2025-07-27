@@ -16,9 +16,14 @@ from sympy.matrices.expressions.matexpr import MatrixExpr, MatrixElement
 from sympy.matrices.expressions.matmul import MatMul
 from sympy.matrices.expressions.matpow import MatPow
 from sympy.matrices.expressions.slice import MatrixSlice
-from sympy.matrices.expressions.special import ZeroMatrix, Identity
+from sympy.matrices.expressions.special import GenericIdentity, GenericZeroMatrix, ZeroMatrix, Identity
 from sympy.matrices.expressions.trace import trace
 from sympy.matrices.expressions.transpose import Transpose, transpose
+import sympy.core.basic
+from sympy.matrices.immutable import ImmutableDenseMatrix
+from sympy.series.order import Order
+from typing import Any, Literal
+from typing_extensions import Self
 
 
 class BlockMatrix(MatrixExpr):
@@ -77,7 +82,7 @@ class BlockMatrix(MatrixExpr):
     ========
     sympy.matrices.matrixbase.MatrixBase.irregular
     """
-    def __new__(cls, *args, **kwargs):
+    def __new__(cls, *args, **kwargs) -> Self:
         from sympy.matrices.immutable import ImmutableDenseMatrix
         isMat = lambda i: getattr(i, 'is_Matrix', False)
         if len(args) != 1 or \
@@ -130,7 +135,7 @@ class BlockMatrix(MatrixExpr):
         return obj
 
     @property
-    def shape(self):
+    def shape(self) -> tuple[Any | Literal[0], Any | Literal[0]]:
         numrows = numcols = 0
         M = self.blocks
         for i in range(M.shape[0]):
@@ -144,18 +149,18 @@ class BlockMatrix(MatrixExpr):
         return self.blocks.shape
 
     @property
-    def blocks(self):
+    def blocks(self) ->     sympy.core.basic.Basic:
         return self.args[0]
 
     @property
-    def rowblocksizes(self):
+    def rowblocksizes(self) -> list[Any]:
         return [self.blocks[i, 0].rows for i in range(self.blockshape[0])]
 
     @property
-    def colblocksizes(self):
+    def colblocksizes(self) -> list[Any]:
         return [self.blocks[0, i].cols for i in range(self.blockshape[1])]
 
-    def structurally_equal(self, other):
+    def structurally_equal(self, other) -> bool:
         return (isinstance(other, BlockMatrix)
             and self.shape == other.shape
             and self.blockshape == other.blockshape
@@ -219,7 +224,7 @@ class BlockMatrix(MatrixExpr):
     def _eval_derivative(self, x):
         return BlockMatrix(self.blocks.diff(x))
 
-    def transpose(self):
+    def transpose(self) -> "BlockMatrix":
         """Return transpose of matrix.
 
         Examples
@@ -242,7 +247,7 @@ class BlockMatrix(MatrixExpr):
         """
         return self._eval_transpose()
 
-    def schur(self, mat = 'A', generalized = False):
+    def schur(self, mat = 'A', generalized = False) -> Self:
         """Return the Schur Complement of the 2x2 BlockMatrix
 
         Parameters
@@ -333,7 +338,7 @@ class BlockMatrix(MatrixExpr):
         else:
             raise ShapeError('Schur Complement can only be calculated for 2x2 block matrices')
 
-    def LDUdecomposition(self):
+    def LDUdecomposition(self) -> tuple[BlockMatrix, BlockDiagMatrix, BlockMatrix]:
         """Returns the Block LDU decomposition of
         a 2x2 Block Matrix
 
@@ -393,7 +398,7 @@ class BlockMatrix(MatrixExpr):
         else:
             raise ShapeError("Block LDU decomposition is supported only for 2x2 block matrices")
 
-    def UDLdecomposition(self):
+    def UDLdecomposition(self) -> tuple[BlockMatrix, BlockDiagMatrix, BlockMatrix]:
         """Returns the Block UDL decomposition of
         a 2x2 Block Matrix
 
@@ -453,7 +458,7 @@ class BlockMatrix(MatrixExpr):
         else:
             raise ShapeError("Block UDL decomposition is supported only for 2x2 block matrices")
 
-    def LUdecomposition(self):
+    def LUdecomposition(self) -> tuple[BlockMatrix, BlockMatrix]:
         """Returns the Block LU decomposition of
         a 2x2 Block Matrix
 
@@ -534,7 +539,7 @@ class BlockMatrix(MatrixExpr):
         return self.blocks[row_block, col_block][i, j]
 
     @property
-    def is_Identity(self):
+    def is_Identity(self) -> bool:
         if self.blockshape[0] != self.blockshape[1]:
             return False
         for i in range(self.blockshape[0]):
@@ -546,10 +551,10 @@ class BlockMatrix(MatrixExpr):
         return True
 
     @property
-    def is_structurally_symmetric(self):
+    def is_structurally_symmetric(self) -> bool:
         return self.rowblocksizes == self.colblocksizes
 
-    def equals(self, other):
+    def equals(self, other) -> bool:
         if self == other:
             return True
         if (isinstance(other, BlockMatrix) and self.blocks == other.blocks):
@@ -583,7 +588,7 @@ class BlockDiagMatrix(BlockMatrix):
 
     sympy.matrices.dense.diag
     """
-    def __new__(cls, *mats):
+    def __new__(cls, *mats) -> Self:
         mats = [_sympify(m) for m in mats]
         for mat in mats:
             if not isinstance(mat, MatrixExpr):
@@ -593,11 +598,11 @@ class BlockDiagMatrix(BlockMatrix):
         return Basic.__new__(BlockDiagMatrix, *mats)
 
     @property
-    def diag(self):
+    def diag(self) -> tuple[    sympy.core.basic.Basic, ...]:
         return self.args
 
     @property
-    def blocks(self):
+    def blocks(self) -> ImmutableDenseMatrix:
         from sympy.matrices.immutable import ImmutableDenseMatrix
         mats = self.args
         data = [[mats[i] if i == j else ZeroMatrix(mats[i].rows, mats[j].cols)
@@ -606,21 +611,21 @@ class BlockDiagMatrix(BlockMatrix):
         return ImmutableDenseMatrix(data, evaluate=False)
 
     @property
-    def shape(self):
+    def shape(self) -> tuple[int, int]:
         return (sum(block.rows for block in self.args),
                 sum(block.cols for block in self.args))
 
     @property
-    def blockshape(self):
+    def blockshape(self) -> tuple[int, int]:
         n = len(self.args)
         return (n, n)
 
     @property
-    def rowblocksizes(self):
+    def rowblocksizes(self) -> list[Any]:
         return [block.rows for block in self.args]
 
     @property
-    def colblocksizes(self):
+    def colblocksizes(self) -> list[Any]:
         return [block.cols for block in self.args]
 
     def _all_square_blocks(self):
@@ -659,7 +664,7 @@ class BlockDiagMatrix(BlockMatrix):
         else:
             return BlockMatrix._blockadd(self, other)
 
-    def get_diag_blocks(self):
+    def get_diag_blocks(self) -> tuple[    sympy.core.basic.Basic, ...]:
         """Return the list of diagonal blocks of the matrix.
 
         Examples
@@ -757,7 +762,7 @@ def bc_matadd(expr):
     else:
         return block
 
-def bc_block_plus_ident(expr):
+def bc_block_plus_ident(expr) -> MatAdd | GenericZeroMatrix:
     idents = [arg for arg in expr.args if arg.is_Identity]
     if not idents:
         return expr
@@ -772,7 +777,7 @@ def bc_block_plus_ident(expr):
 
     return expr
 
-def bc_dist(expr):
+def bc_dist(expr) -> BlockDiagMatrix | BlockMatrix:
     """ Turn  a*[X, Y] into [a*X, a*Y] """
     factor, mat = expr.as_coeff_mmul()
     if factor == 1:
@@ -792,7 +797,7 @@ def bc_dist(expr):
     return expr
 
 
-def bc_matmul(expr):
+def bc_matmul(expr) -> MatPow | GenericIdentity | Order | object:
     if isinstance(expr, MatPow):
         if expr.args[1].is_Integer and expr.args[1] > 0:
             factor, matrices = 1, [expr.args[0]]*expr.args[1]
@@ -822,7 +827,7 @@ def bc_transpose(expr):
     return collapse._eval_transpose()
 
 
-def bc_inverse(expr):
+def bc_inverse(expr) -> BlockMatrix:
     if isinstance(expr.arg, BlockDiagMatrix):
         return expr.inverse()
 
@@ -831,14 +836,14 @@ def bc_inverse(expr):
         return expr2
     return blockinverse_2x2(Inverse(reblock_2x2(expr.arg)))
 
-def blockinverse_1x1(expr):
+def blockinverse_1x1(expr) -> BlockMatrix:
     if isinstance(expr.arg, BlockMatrix) and expr.arg.blockshape == (1, 1):
         mat = Matrix([[expr.arg.blocks[0].inverse()]])
         return BlockMatrix(mat)
     return expr
 
 
-def blockinverse_2x2(expr):
+def blockinverse_2x2(expr) -> BlockMatrix:
     if isinstance(expr.arg, BlockMatrix) and expr.arg.blockshape == (2, 2):
         # See: Inverses of 2x2 Block Matrices, Tzon-Tzer Lu and Sheng-Hua Shiou
         [[A, B],
@@ -899,7 +904,7 @@ def _choose_2x2_inversion_formula(A, B, C, D):
     return None
 
 
-def deblock(B):
+def deblock(B) -> BlockMatrix:
     """ Flatten a BlockMatrix of BlockMatrices """
     if not isinstance(B, BlockMatrix) or not B.blocks.has(BlockMatrix):
         return B
@@ -919,7 +924,7 @@ def deblock(B):
         return B
 
 
-def reblock_2x2(expr):
+def reblock_2x2(expr) -> BlockMatrix:
     """
     Reblock a BlockMatrix so that it has 2x2 blocks of block matrices.  If
     possible in such a way that the matrix continues to be invertible using the
@@ -948,7 +953,7 @@ def reblock_2x2(expr):
                [BM(blocks[1:, 0]), BM(blocks[1:, 1:])]])
 
 
-def bounds(sizes):
+def bounds(sizes) -> list[Any]:
     """ Convert sequence of numbers into pairs of low-high pairs
 
     >>> from sympy.matrices.expressions.blockmatrix import bounds
@@ -962,7 +967,7 @@ def bounds(sizes):
         low += size
     return rv
 
-def blockcut(expr, rowsizes, colsizes):
+def blockcut(expr, rowsizes, colsizes) -> BlockMatrix:
     """ Cut a matrix expression into Blocks
 
     >>> from sympy import ImmutableMatrix, blockcut

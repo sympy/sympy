@@ -55,7 +55,7 @@ class JavascriptCodePrinter(CodePrinter):
         'contract': True,
     })
 
-    def __init__(self, settings={}):
+    def __init__(self, settings={}) -> None:
         CodePrinter.__init__(self, settings)
         self.known_functions = dict(known_functions)
         userfuncs = settings.get('user_functions', {})
@@ -187,7 +187,7 @@ class JavascriptCodePrinter(CodePrinter):
             PRECEDENCE["Atom"], strict=True),
             expr.j + expr.i*expr.parent.shape[1])
 
-    def indent_code(self, code):
+    def indent_code(self, code) -> str | list[Any]:
         """Accepts a string of code or a list of code lines"""
 
         if isinstance(code, str):
@@ -216,7 +216,7 @@ class JavascriptCodePrinter(CodePrinter):
         return pretty
 
 
-def jscode(expr, assign_to=None, **settings):
+def jscode(expr, assign_to=None, **settings) -> str | tuple[set[tuple[Any, str]], set[Any], str]:
     """Converts an expr to a string of javascript code
 
     Parameters
@@ -324,7 +324,7 @@ def jscode(expr, assign_to=None, **settings):
     return JavascriptCodePrinter(settings).doprint(expr, assign_to)
 
 
-def print_jscode(expr, **settings):
+def print_jscode(expr, **settings) -> None:
     """Prints the Javascript representation of the given expression.
 
        See jscode for the meaning of the optional arguments.

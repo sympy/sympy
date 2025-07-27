@@ -1,6 +1,6 @@
 from sympy.core import S, sympify, cacheit
 from sympy.core.add import Add
-from sympy.core.function import DefinedFunction, ArgumentIndexError
+from sympy.core.function import Function, UndefinedFunction, DefinedFunction, ArgumentIndexError
 from sympy.core.logic import fuzzy_or, fuzzy_and, fuzzy_not, FuzzyBool
 from sympy.core.numbers import I, pi, Rational
 from sympy.core.symbol import Dummy
@@ -15,6 +15,12 @@ from sympy.functions.elementary.trigonometric import (
     acos, acot, asin, atan, cos, cot, csc, sec, sin, tan,
     _imaginary_unit_as_coefficient)
 from sympy.polys.specialpolys import symmetric_poly
+from sympy.core.basic import Basic
+from sympy.core.mul import Mul
+from sympy.core.power import Pow
+from sympy.series.order import Order
+from typing import Any
+from typing_extensions import Self
 
 
 def _rewrite_hyperbolics_as_exp(expr):
@@ -170,7 +176,7 @@ class sinh(HyperbolicFunction):
     cosh, tanh, asinh
     """
 
-    def fdiff(self, argindex=1):
+    def fdiff(self, argindex=1) -> type[UndefinedFunction]:
         """
         Returns the first derivative of this function.
         """
@@ -179,14 +185,14 @@ class sinh(HyperbolicFunction):
         else:
             raise ArgumentIndexError(self, argindex)
 
-    def inverse(self, argindex=1):
+    def inverse(self, argindex=1) -> type[asinh]:
         """
         Returns the inverse of this function.
         """
         return asinh
 
     @classmethod
-    def eval(cls, arg):
+    def eval(cls, arg) -> Mul | None:
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
@@ -254,7 +260,7 @@ class sinh(HyperbolicFunction):
     def _eval_conjugate(self):
         return self.func(self.args[0].conjugate())
 
-    def as_real_imag(self, deep=True, **hints):
+    def as_real_imag(self, deep=True, **hints) -> tuple[Any | Order | Self, Any] | tuple[Self, Any] | tuple[Any, Any]:
         """
         Returns this function as a complex coordinate.
         """
@@ -382,14 +388,14 @@ class cosh(HyperbolicFunction):
     sinh, tanh, acosh
     """
 
-    def fdiff(self, argindex=1):
+    def fdiff(self, argindex=1) -> type[UndefinedFunction]:
         if argindex == 1:
             return sinh(self.args[0])
         else:
             raise ArgumentIndexError(self, argindex)
 
     @classmethod
-    def eval(cls, arg):
+    def eval(cls, arg) -> Self | type[UndefinedFunction] | Pow | None:
         from sympy.functions.elementary.trigonometric import cos
         if arg.is_Number:
             if arg is S.NaN:
@@ -451,7 +457,7 @@ class cosh(HyperbolicFunction):
     def _eval_conjugate(self):
         return self.func(self.args[0].conjugate())
 
-    def as_real_imag(self, deep=True, **hints):
+    def as_real_imag(self, deep=True, **hints) -> tuple[Any | Order | Self, Any] | tuple[Self, Any] | tuple[Any, Any]:
         if self.args[0].is_extended_real:
             if deep:
                 hints['complex'] = False
@@ -632,14 +638,14 @@ class tanh(HyperbolicFunction):
         else:
             raise ArgumentIndexError(self, argindex)
 
-    def inverse(self, argindex=1):
+    def inverse(self, argindex=1) -> type[atanh]:
         """
         Returns the inverse of this function.
         """
         return atanh
 
     @classmethod
-    def eval(cls, arg):
+    def eval(cls, arg) -> Mul | type[UndefinedFunction] | None:
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
@@ -709,7 +715,7 @@ class tanh(HyperbolicFunction):
     def _eval_conjugate(self):
         return self.func(self.args[0].conjugate())
 
-    def as_real_imag(self, deep=True, **hints):
+    def as_real_imag(self, deep=True, **hints) -> tuple[Any | Order | Self, Any] | tuple[Self, Any] | tuple[Any, Any]:
         if self.args[0].is_extended_real:
             if deep:
                 hints['complex'] = False
@@ -845,14 +851,14 @@ class coth(HyperbolicFunction):
         else:
             raise ArgumentIndexError(self, argindex)
 
-    def inverse(self, argindex=1):
+    def inverse(self, argindex=1) -> type[acoth]:
         """
         Returns the inverse of this function.
         """
         return acoth
 
     @classmethod
-    def eval(cls, arg):
+    def eval(cls, arg) -> Mul | type[UndefinedFunction] | None:
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
@@ -922,7 +928,7 @@ class coth(HyperbolicFunction):
     def _eval_conjugate(self):
         return self.func(self.args[0].conjugate())
 
-    def as_real_imag(self, deep=True, **hints):
+    def as_real_imag(self, deep=True, **hints) -> tuple[Any | Order | Self, Any] | tuple[Self, Any] | tuple[Any, Any]:
         from sympy.functions.elementary.trigonometric import (cos, sin)
         if self.args[0].is_extended_real:
             if deep:
@@ -1000,7 +1006,7 @@ class ReciprocalHyperbolicFunction(HyperbolicFunction):
     _is_odd: FuzzyBool = None
 
     @classmethod
-    def eval(cls, arg):
+    def eval(cls, arg) -> Self | Mul:
         if arg.could_extract_minus_sign():
             if cls._is_even:
                 return cls(-arg)
@@ -1230,7 +1236,7 @@ class asinh(InverseHyperbolicFunction):
             raise ArgumentIndexError(self, argindex)
 
     @classmethod
-    def eval(cls, arg):
+    def eval(cls, arg) -> log | Mul | Basic | None:
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
@@ -1363,7 +1369,7 @@ class asinh(InverseHyperbolicFunction):
     def _eval_rewrite_as_acos(self, x, **kwargs):
         return I * acos(I * x, evaluate=False) - I*pi/2
 
-    def inverse(self, argindex=1):
+    def inverse(self, argindex=1) -> type[sinh]:
         """
         Returns the inverse of this function.
         """
@@ -1548,7 +1554,7 @@ class acosh(InverseHyperbolicFunction):
         return (pi/2*sxm1/s1mx*(1 - x * sqrt(1/x**2)) +
                 sxm1*sqrt(x + 1)/sx2m1 * atanh(sx2m1/x))
 
-    def inverse(self, argindex=1):
+    def inverse(self, argindex=1) -> type[cosh]:
         """
         Returns the inverse of this function.
         """
@@ -1592,7 +1598,7 @@ class atanh(InverseHyperbolicFunction):
             raise ArgumentIndexError(self, argindex)
 
     @classmethod
-    def eval(cls, arg):
+    def eval(cls, arg) -> Mul | Basic | None:
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
@@ -1723,7 +1729,7 @@ class atanh(InverseHyperbolicFunction):
     def _eval_is_imaginary(self):
         return self.args[0].is_imaginary
 
-    def inverse(self, argindex=1):
+    def inverse(self, argindex=1) -> type[tanh]:
         """
         Returns the inverse of this function.
         """
@@ -1757,7 +1763,7 @@ class acoth(InverseHyperbolicFunction):
             raise ArgumentIndexError(self, argindex)
 
     @classmethod
-    def eval(cls, arg):
+    def eval(cls, arg) -> Mul | None:
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
@@ -1862,7 +1868,7 @@ class acoth(InverseHyperbolicFunction):
         return (pi*I/2*(sqrt((x - 1)/x)*sqrt(x/(x - 1)) - sqrt(1 + 1/x)*sqrt(x/(x + 1))) +
                 x*sqrt(1/x**2)*asinh(sqrt(1/(x**2 - 1))))
 
-    def inverse(self, argindex=1):
+    def inverse(self, argindex=1) -> type[coth]:
         """
         Returns the inverse of this function.
         """
@@ -1921,7 +1927,7 @@ class asech(InverseHyperbolicFunction):
             raise ArgumentIndexError(self, argindex)
 
     @classmethod
-    def eval(cls, arg):
+    def eval(cls, arg) -> None:
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
@@ -1951,7 +1957,7 @@ class asech(InverseHyperbolicFunction):
 
     @staticmethod
     @cacheit
-    def taylor_term(n, x, *previous_terms):
+    def taylor_term(n, x, *previous_terms) -> type[UndefinedFunction]:
         if n == 0:
             return log(2 / x)
         elif n < 0 or n % 2 == 1:
@@ -2037,7 +2043,7 @@ class asech(InverseHyperbolicFunction):
                 return self.rewrite(log)._eval_nseries(x, n, logx=logx, cdir=cdir)
         return res
 
-    def inverse(self, argindex=1):
+    def inverse(self, argindex=1) -> type[sech]:
         """
         Returns the inverse of this function.
         """
@@ -2115,7 +2121,7 @@ class acsch(InverseHyperbolicFunction):
             raise ArgumentIndexError(self, argindex)
 
     @classmethod
-    def eval(cls, arg):
+    def eval(cls, arg) -> log | Mul | None:
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
@@ -2148,7 +2154,7 @@ class acsch(InverseHyperbolicFunction):
 
     @staticmethod
     @cacheit
-    def taylor_term(n, x, *previous_terms):
+    def taylor_term(n, x, *previous_terms) -> type[UndefinedFunction]:
         if n == 0:
             return log(2 / x)
         elif n < 0 or n % 2 == 1:
@@ -2241,7 +2247,7 @@ class acsch(InverseHyperbolicFunction):
                 return self.rewrite(log)._eval_nseries(x, n, logx=logx, cdir=cdir)
         return res
 
-    def inverse(self, argindex=1):
+    def inverse(self, argindex=1) -> type[csch]:
         """
         Returns the inverse of this function.
         """

@@ -63,6 +63,10 @@ from sympy.calculus.util import periodicity, continuous_domain, function_range
 
 
 from types import GeneratorType
+import sympy.core.basic
+import sympy.sets.conditionset
+import sympy.sets.sets
+from typing import Any
 
 
 class NonlinearError(ValueError):
@@ -206,7 +210,7 @@ def _invert(f_x, y, x, domain=S.Complexes):
 invert_complex = _invert
 
 
-def invert_real(f_x, y, x):
+def invert_real(f_x, y, x) -> tuple[Any, Any | sympy.sets.sets.FiniteSet] | tuple[Any, sympy.sets.sets.FiniteSet] | tuple[Any, Any | sympy.sets.sets.FiniteSet | sympy.sets.sets.Intersection | sympy.sets.sets.Union | sympy.sets.sets.Complement]:
     """
     Inverts a real-valued function. Same as :func:`invert_complex`, but sets
     the domain to ``S.Reals`` before inverting.
@@ -629,7 +633,7 @@ def _invert_abs(f, g_ys, symbol):
     return g_x, ConditionSet(g_x, conditions, values)
 
 
-def domain_check(f, symbol, p):
+def domain_check(f, symbol, p) -> bool | None:
     """Returns False if point p is infinite or any subexpression of f
     is infinite or becomes so after replacing symbol with p. If none of
     these conditions is met then True will be returned.
@@ -1165,7 +1169,7 @@ def _solve_abs(f, symbol, domain):
         return ConditionSet(symbol, Eq(f, 0), domain)
 
 
-def solve_decomposition(f, symbol, domain):
+def solve_decomposition(f, symbol, domain) -> sympy.sets.sets.Set | sympy.sets.sets.FiniteSet | sympy.sets.sets.Intersection | sympy.sets.sets.Union | sympy.sets.sets.Complement | sympy.sets.conditionset.ConditionSet:
     """
     Function to solve equations via the principle of "Decomposition
     and Rewriting".
@@ -2334,7 +2338,7 @@ def _transolve(f, symbol, domain):
     return result
 
 
-def solveset(f, symbol=None, domain=S.Complexes):
+def solveset(f, symbol=None, domain=S.Complexes) -> sympy.sets.sets.Set:
     r"""Solves a given inequality or equation with set as output
 
     Parameters
@@ -2517,11 +2521,11 @@ def solveset(f, symbol=None, domain=S.Complexes):
     return _solveset(f, symbol, domain, _check=True)
 
 
-def solveset_real(f, symbol):
+def solveset_real(f, symbol) -> sympy.sets.sets.Set:
     return solveset(f, symbol, S.Reals)
 
 
-def solveset_complex(f, symbol):
+def solveset_complex(f, symbol) -> sympy.sets.sets.Set:
     return solveset(f, symbol, S.Complexes)
 
 
@@ -2575,7 +2579,7 @@ def _solveset_multi(eqs, syms, domains):
             return Union(*sols)
 
 
-def solvify(f, symbol, domain):
+def solvify(f, symbol, domain) -> list[sympy.core.basic.Basic] | None:
     """Solves an equation using solveset and returns the solution in accordance
     with the `solve` output API.
 
@@ -2672,7 +2676,7 @@ def solvify(f, symbol, domain):
 ###############################################################################
 
 
-def linear_coeffs(eq, *syms, dict=False):
+def linear_coeffs(eq, *syms, dict=False) -> list[Any]:
     """Return a list whose elements are the coefficients of the
     corresponding symbols in the sum of terms in  ``eq``.
     The additive constant is returned as the last element of the
@@ -2763,7 +2767,7 @@ def linear_coeffs(eq, *syms, dict=False):
     return rv
 
 
-def linear_eq_to_matrix(equations, *symbols):
+def linear_eq_to_matrix(equations, *symbols) -> tuple[Any, Matrix]:
     r"""
     Converts a given System of Equations into Matrix form. Here ``equations``
     must be a linear system of equations in ``symbols``. Element ``M[i, j]``
@@ -2893,7 +2897,7 @@ def linear_eq_to_matrix(equations, *symbols):
     return A, b
 
 
-def linsolve(system, *symbols):
+def linsolve(system, *symbols) -> sympy.sets.sets.FiniteSet | sympy.core.basic.Basic:
     r"""
     Solve system of $N$ linear equations with $M$ variables; both
     underdetermined and overdetermined systems are supported.
@@ -3182,7 +3186,7 @@ def _return_conditionset(eqs, symbols):
 
 
 def substitution(system, symbols, result=[{}], known_symbols=[],
-                 exclude=[], all_symbols=None):
+                 exclude=[], all_symbols=None) -> sympy.sets.sets.Set | sympy.sets.sets.FiniteSet | sympy.sets.sets.Intersection | sympy.sets.sets.Union | sympy.sets.sets.Complement | sympy.sets.conditionset.ConditionSet:
     r"""
     Solves the `system` using substitution method. It is used in
     :func:`~.nonlinsolve`. This will be called from :func:`~.nonlinsolve` when any
@@ -3896,7 +3900,7 @@ def _handle_poly(polys, symbols):
     return poly_sol, poly_eqs
 
 
-def nonlinsolve(system, *symbols):
+def nonlinsolve(system, *symbols) -> sympy.sets.sets.FiniteSet | sympy.sets.sets.Set | sympy.sets.sets.Intersection | sympy.sets.sets.Union | sympy.sets.sets.Complement | sympy.sets.conditionset.ConditionSet:
     r"""
     Solve system of $N$ nonlinear equations with $M$ variables, which means both
     under and overdetermined systems are supported. Positive dimensional

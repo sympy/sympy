@@ -5,9 +5,10 @@ from sympy.core import Add, Basic, Mul
 from sympy.core.singleton import S
 from sympy.core.sorting import default_sort_key
 from sympy.core.traversal import preorder_traversal
+import sympy.core.basic
 
 
-def sub_pre(e):
+def sub_pre(e) -> sympy.core.basic.Basic:
     """ Replace y - x with -(x - y) if -1 can be extracted from y - x.
     """
     # replacing Add, A, from which -1 can be extracted with -1*-A

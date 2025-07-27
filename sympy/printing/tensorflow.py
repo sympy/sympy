@@ -10,6 +10,7 @@ from sympy.external import import_module
 from sympy.printing.precedence import PRECEDENCE
 from sympy.printing.pycode import AbstractPythonCodePrinter, ArrayPrinter
 import sympy
+from typing import Any
 
 tensorflow = import_module('tensorflow')
 
@@ -80,7 +81,7 @@ class TensorflowPrinter(ArrayPrinter, AbstractPythonCodePrinter):
         tensorflow_version=None
     )
 
-    def __init__(self, settings=None):
+    def __init__(self, settings=None) -> None:
         super().__init__(settings)
 
         version = self._settings['tensorflow_version']
@@ -219,6 +220,6 @@ class TensorflowPrinter(ArrayPrinter, AbstractPythonCodePrinter):
     _zeros = "zeros"
 
 
-def tensorflow_code(expr, **settings):
+def tensorflow_code(expr, **settings) -> str | tuple[set[tuple[Any, str]], set[Any], str]:
     printer = TensorflowPrinter(settings)
     return printer.doprint(expr)

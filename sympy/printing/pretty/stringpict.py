@@ -16,6 +16,8 @@ import shutil
 
 from .pretty_symbology import hobj, vobj, xsym, xobj, pretty_use_unicode, line_width, center
 from sympy.utilities.exceptions import sympy_deprecation_warning
+from typing import Any, Literal
+from typing_extensions import LiteralString, Self
 
 _GLOBAL_WRAP_LINE = None
 
@@ -26,7 +28,7 @@ class stringPict:
     #special value for stringPict.below
     LINE = 'line'
 
-    def __init__(self, s, baseline=0):
+    def __init__(self, s, baseline=0) -> None:
         """Initialize from string.
         Multiline strings are centered.
         """
@@ -38,7 +40,7 @@ class stringPict:
         self.binding = None
 
     @staticmethod
-    def equalLengths(lines):
+    def equalLengths(lines) -> list[str] | list[Any]:
         # empty lines
         if not lines:
             return ['']
@@ -46,16 +48,16 @@ class stringPict:
         width = max(line_width(line) for line in lines)
         return [center(line, width) for line in lines]
 
-    def height(self):
+    def height(self) -> int:
         """The height of the picture in characters."""
         return len(self.picture)
 
-    def width(self):
+    def width(self) -> int:
         """The width of the picture in characters."""
         return line_width(self.picture[0])
 
     @staticmethod
-    def next(*args):
+    def next(*args) -> tuple[str, Any]:
         """Put a string of stringPicts next to each other.
         Returns string, baseline arguments for stringPict.
         """
@@ -86,7 +88,7 @@ class stringPict:
         result = [''.join(lines) for lines in zip(*pictures)]
         return '\n'.join(result), newBaseline
 
-    def right(self, *args):
+    def right(self, *args) -> tuple[str, Any]:
         r"""Put pictures next to this one.
         Returns string, baseline arguments for stringPict.
         (Multiline) strings are allowed, and are given a baseline of 0.
@@ -103,14 +105,14 @@ class stringPict:
         """
         return stringPict.next(self, *args)
 
-    def left(self, *args):
+    def left(self, *args) -> tuple[str, Any]:
         """Put pictures (left to right) at left.
         Returns string, baseline arguments for stringPict.
         """
         return stringPict.next(*(args + (self,)))
 
     @staticmethod
-    def stack(*args):
+    def stack(*args) -> tuple[LiteralString, Any]:
         """Put pictures on top of each other,
         from top to bottom.
         Returns string, baseline arguments for stringPict.
@@ -145,7 +147,7 @@ class stringPict:
         newBaseline = objects[0].height() + objects[1].baseline
         return '\n'.join(newPicture), newBaseline
 
-    def below(self, *args):
+    def below(self, *args) -> tuple[LiteralString, int]:
         """Put pictures under this picture.
         Returns string, baseline arguments for stringPict.
         Baseline is baseline of top picture
@@ -164,7 +166,7 @@ class stringPict:
         s, baseline = stringPict.stack(self, *args)
         return s, self.baseline
 
-    def above(self, *args):
+    def above(self, *args) -> tuple[LiteralString, int]:
         """Put pictures above this picture.
         Returns string, baseline arguments for stringPict.
         Baseline is baseline of bottom picture.
@@ -173,7 +175,7 @@ class stringPict:
         baseline = len(string.splitlines()) - self.height() + self.baseline
         return string, baseline
 
-    def parens(self, left='(', right=')', ifascii_nougly=False):
+    def parens(self, left='(', right=')', ifascii_nougly=False) -> tuple[str, int]:
         """Put parentheses around self.
         Returns string, baseline arguments for stringPict.
 
@@ -199,7 +201,7 @@ class stringPict:
 
         return ('\n'.join(res.picture), res.baseline)
 
-    def leftslash(self):
+    def leftslash(self) -> tuple[str, Any]:
         """Precede object by a slash of the proper size.
         """
         # XXX not used anywhere ?
@@ -246,7 +248,7 @@ class stringPict:
         root.baseline = result.baseline - result.height() + root.height()
         return result.left(root)
 
-    def render(self, * args, **kwargs):
+    def render(self, * args, **kwargs) -> str | Any | LiteralString:
         """Return the string form of self.
 
            Unless the argument line_break is set to False, it will
@@ -322,20 +324,20 @@ class stringPict:
         # Add spacers between sub-pictures
         return "\n\n".join(pictures)
 
-    def terminal_width(self):
+    def terminal_width(self) -> Any | Literal[0]:
         """Return the terminal width if possible, otherwise return 0.
         """
         size = shutil.get_terminal_size(fallback=(0, 0))
         return size.columns
 
-    def __eq__(self, o):
+    def __eq__(self, o) -> bool:
         if isinstance(o, str):
             return '\n'.join(self.picture) == o
         elif isinstance(o, stringPict):
             return o.picture == self.picture
         return False
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return super().__hash__()
 
     def __str__(self):
@@ -347,7 +349,7 @@ class stringPict:
     def __getitem__(self, index):
         return self.picture[index]
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.s)
 
 
@@ -371,7 +373,7 @@ class prettyForm(stringPict):
     """
     ATOM, FUNC, DIV, POW, MUL, ADD, NEG, OPEN = range(8)
 
-    def __init__(self, s, baseline=0, binding=0, unicode=None):
+    def __init__(self, s, baseline=0, binding=0, unicode=None) -> None:
         """Initialize from stringPict and binding power."""
         stringPict.__init__(self, s, baseline)
         self.binding = binding
@@ -398,7 +400,7 @@ class prettyForm(stringPict):
 
     # Note: code to handle subtraction is in _print_Add
 
-    def __add__(self, *others):
+    def __add__(self, *others) -> "prettyForm":
         """Make a pretty addition.
         Addition of negative numbers is simplified.
         """
@@ -416,7 +418,7 @@ class prettyForm(stringPict):
             result.append(arg)
         return prettyForm(binding=prettyForm.ADD, *stringPict.next(*result))
 
-    def __truediv__(self, den, slashed=False):
+    def __truediv__(self, den, slashed=False) -> "prettyForm":
         """Make a pretty division; stacked or slashed.
         """
         if slashed:
@@ -435,7 +437,7 @@ class prettyForm(stringPict):
             stringPict.LINE,
             den))
 
-    def __mul__(self, *others):
+    def __mul__(self, *others) -> Self | prettyForm:
         """Make a pretty multiplication.
         Parentheses are needed around +, - and neg.
         """
@@ -484,7 +486,7 @@ class prettyForm(stringPict):
             self.baseline,
             self.binding)
 
-    def __pow__(self, b):
+    def __pow__(self, b) -> "prettyForm":
         """Make a pretty power.
         """
         a = self
@@ -517,7 +519,7 @@ class prettyForm(stringPict):
     simpleFunctions = ["sin", "cos", "tan"]
 
     @staticmethod
-    def apply(function, *args):
+    def apply(function, *args) -> "prettyForm":
         """Functions of one or more variables.
         """
         if function in prettyForm.simpleFunctions:

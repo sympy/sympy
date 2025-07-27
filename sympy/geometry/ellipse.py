@@ -34,6 +34,14 @@ from sympy.utilities.misc import filldedent, func_name
 from mpmath.libmp.libmpf import prec_to_dps
 
 import random
+from sympy.core.basic import Basic
+from sympy.core.power import Pow
+from sympy.geometry.entity import GeometrySet
+from sympy.geometry.line import Line, Line2D, Line3D, Segment, Segment2D, Segment3D
+from sympy.geometry.point import Point, Point2D, Point3D
+from types import NotImplementedType
+from typing import Any, Literal
+from typing_extensions import Self
 
 x, y = [Dummy('ellipse_dummy', real=True) for i in range(2)]
 
@@ -104,7 +112,7 @@ class Ellipse(GeometrySet):
 
     """
 
-    def __contains__(self, o):
+    def __contains__(self, o) -> bool | NotImplementedType:
         if isinstance(o, Point):
             res = self.equation(x, y).subs({x: o.x, y: o.y})
             return trigsimp(simplify(res)) is S.Zero
@@ -112,17 +120,17 @@ class Ellipse(GeometrySet):
             return self == o
         return False
 
-    def __eq__(self, o):
+    def __eq__(self, o) -> bool:
         """Is the other GeometryEntity the same as this ellipse?"""
         return isinstance(o, Ellipse) and (self.center == o.center and
                                            self.hradius == o.hradius and
                                            self.vradius == o.vradius)
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return super().__hash__()
 
     def __new__(
-        cls, center=None, hradius=None, vradius=None, eccentricity=None, **kwargs):
+        cls, center=None, hradius=None, vradius=None, eccentricity=None, **kwargs) -> Circle | Point | Point2D | Point3D | Segment2D | Segment3D | Segment | Self | None:
 
         hradius = sympify(hradius)
         vradius = sympify(vradius)
@@ -179,7 +187,7 @@ class Ellipse(GeometrySet):
         ).format(2. * scale_factor, fill_color, c.x, c.y, h, v)
 
     @property
-    def ambient_dimension(self):
+    def ambient_dimension(self) -> Literal[2]:
         return 2
 
     @property
@@ -210,7 +218,7 @@ class Ellipse(GeometrySet):
         """
         return self.major * (1 + self.eccentricity)
 
-    def arbitrary_point(self, parameter='t'):
+    def arbitrary_point(self, parameter='t') -> Point | Point2D | Point3D:
         """A parameterized point on the ellipse.
 
         Parameters
@@ -273,7 +281,7 @@ class Ellipse(GeometrySet):
         return simplify(S.Pi * self.hradius * self.vradius)
 
     @property
-    def bounds(self):
+    def bounds(self) -> tuple[Any, Any, Any, Any]:
         """Return a tuple (xmin, ymin, xmax, ymax) representing the bounding
         rectangle for the geometric figure.
 
@@ -283,7 +291,7 @@ class Ellipse(GeometrySet):
         return (self.center.x - h, self.center.y - v, self.center.x + h, self.center.y + v)
 
     @property
-    def center(self):
+    def center(self) -> Basic:
         """The center of the ellipse.
 
         Returns
@@ -352,7 +360,7 @@ class Ellipse(GeometrySet):
         """
         return self.focus_distance / self.major
 
-    def encloses_point(self, p):
+    def encloses_point(self, p) -> bool | None:
         """
         Return True if p is enclosed by (is inside of) self.
 
@@ -514,7 +522,7 @@ class Ellipse(GeometrySet):
         return t1 + t2 - (self.hradius**2 - self.vradius**2)**Rational(2, 3)
 
     @property
-    def foci(self):
+    def foci(self) -> tuple[Basic, Basic] | tuple[Any, Any] | None:
         """The foci of the ellipse.
 
         Notes
@@ -559,7 +567,7 @@ class Ellipse(GeometrySet):
             return (c + Point(-fd, 0), c + Point(fd, 0))
 
     @property
-    def focus_distance(self):
+    def focus_distance(self) -> Pow | Any:
         """The focal distance of the ellipse.
 
         The distance between the center and one focus.
@@ -587,7 +595,7 @@ class Ellipse(GeometrySet):
         return Point.distance(self.center, self.foci[0])
 
     @property
-    def hradius(self):
+    def hradius(self) -> Basic:
         """The horizontal radius of the ellipse.
 
         Returns
@@ -612,7 +620,7 @@ class Ellipse(GeometrySet):
         """
         return self.args[1]
 
-    def intersection(self, o):
+    def intersection(self, o) -> list[Point] | list[Any] | Self:
         """The intersection of this ellipse and another geometrical entity
         `o`.
 
@@ -694,7 +702,7 @@ class Ellipse(GeometrySet):
         else:
             raise TypeError('Intersection not handled for %s' % func_name(o))
 
-    def is_tangent(self, o):
+    def is_tangent(self, o) -> bool:
         """Is `o` tangent to the ellipse?
 
         Parameters
@@ -763,7 +771,7 @@ class Ellipse(GeometrySet):
             raise TypeError('Is_tangent not handled for %s' % func_name(o))
 
     @property
-    def major(self):
+    def major(self) -> Basic:
         """Longer axis of the ellipse (if it can be determined) else hradius.
 
         Returns
@@ -810,7 +818,7 @@ class Ellipse(GeometrySet):
         return self.hradius
 
     @property
-    def minor(self):
+    def minor(self) -> Basic:
         """Shorter axis of the ellipse (if it can be determined) else vradius.
 
         Returns
@@ -856,7 +864,7 @@ class Ellipse(GeometrySet):
             return b
         return self.vradius
 
-    def normal_lines(self, p, prec=None):
+    def normal_lines(self, p, prec=None) -> list[Any] | list[Line | Line2D | Line3D | None]:
         """Normal lines between `p` and the ellipse.
 
         Parameters
@@ -1002,7 +1010,7 @@ class Ellipse(GeometrySet):
         """
         return self.major * (1 - self.eccentricity ** 2)
 
-    def auxiliary_circle(self):
+    def auxiliary_circle(self) -> Circle | Point | Point2D | Point3D | Segment2D | Segment3D | Segment | None:
         """Returns a Circle whose diameter is the major axis of the ellipse.
 
         Examples
@@ -1018,7 +1026,7 @@ class Ellipse(GeometrySet):
         """
         return Circle(self.center, Max(self.hradius, self.vradius))
 
-    def director_circle(self):
+    def director_circle(self) -> Circle | Point | Point2D | Point3D | Segment2D | Segment3D | Segment | None:
         """
         Returns a Circle consisting of all points where two perpendicular
         tangent lines to the ellipse cross each other.
@@ -1048,7 +1056,7 @@ class Ellipse(GeometrySet):
         """
         return Circle(self.center, sqrt(self.hradius**2 + self.vradius**2))
 
-    def plot_interval(self, parameter='t'):
+    def plot_interval(self, parameter='t') -> list[Any]:
         """The plot interval for the default geometric plot of the Ellipse.
 
         Parameters
@@ -1075,7 +1083,7 @@ class Ellipse(GeometrySet):
         t = _symbol(parameter, real=True)
         return [t, -S.Pi, S.Pi]
 
-    def random_point(self, seed=None):
+    def random_point(self, seed=None) -> Point | Point2D | Point3D:
         """A random point on the ellipse.
 
         Returns
@@ -1131,7 +1139,7 @@ class Ellipse(GeometrySet):
         s = sqrt(1 - c**2)
         return Point(x.subs(cos(t), c), y.subs(sin(t), s))
 
-    def reflect(self, line):
+    def reflect(self, line) -> Self:
         """Override GeometryEntity.reflect since the radius
         is not a GeometryEntity.
 
@@ -1176,7 +1184,7 @@ class Ellipse(GeometrySet):
                 'of the reflected Ellipse is given by the zeros of: ' +
                 "f(%s, %s) = %s" % (str(x), str(y), str(result))))
 
-    def rotate(self, angle=0, pt=None):
+    def rotate(self, angle=0, pt=None) -> Self:
         """Rotate ``angle`` radians counterclockwise about Point ``pt``.
 
         Note: since the general ellipse is not supported, only rotations that
@@ -1200,7 +1208,7 @@ class Ellipse(GeometrySet):
         # XXX see https://github.com/sympy/sympy/issues/2815 for general ellipes
         raise NotImplementedError('Only rotations of pi/2 are currently supported for Ellipse.')
 
-    def scale(self, x=1, y=1, pt=None):
+    def scale(self, x=1, y=1, pt=None) -> Self:
         """Override GeometryEntity.scale since it is the major and minor
         axes which must be scaled and they are not GeometryEntities.
 
@@ -1221,7 +1229,7 @@ class Ellipse(GeometrySet):
         v = self.vradius
         return self.func(c.scale(x, y), hradius=h*x, vradius=v*y)
 
-    def tangent_lines(self, p):
+    def tangent_lines(self, p) -> list[Any] | list[Line | Line2D | Line3D | None]:
         """Tangent lines between `p` and the ellipse.
 
         If `p` is on the ellipse, returns the tangent line through point `p`.
@@ -1302,7 +1310,7 @@ class Ellipse(GeometrySet):
             return [Line(p, tangent_points[0]), Line(p, tangent_points[1])]
 
     @property
-    def vradius(self):
+    def vradius(self) -> Basic:
         """The vertical radius of the ellipse.
 
         Returns
@@ -1328,7 +1336,7 @@ class Ellipse(GeometrySet):
         return self.args[2]
 
 
-    def second_moment_of_area(self, point=None):
+    def second_moment_of_area(self, point=None) -> tuple[Any, Any, Literal[0]] | tuple[Any, Any, Any]:
         """Returns the second moment and product moment area of an ellipse.
 
         Parameters
@@ -1411,7 +1419,7 @@ class Ellipse(GeometrySet):
         return second_moment[0] + second_moment[1]
 
 
-    def section_modulus(self, point=None):
+    def section_modulus(self, point=None) -> tuple[Any, Any]:
         """Returns a tuple with the section modulus of an ellipse
 
         Section modulus is a geometric property of an ellipse defined as the
@@ -1538,7 +1546,7 @@ class Circle(Ellipse):
     Circle(Point2D(0, 0), 5)
     """
 
-    def __new__(cls, *args, **kwargs):
+    def __new__(cls, *args, **kwargs) -> Circle | Point | Point2D | Point3D | Segment2D | Segment3D | Segment | Self | None:
         evaluate = kwargs.get('evaluate', global_parameters.evaluate)
         if len(args) == 1 and isinstance(args[0], (Expr, Eq)):
             x = kwargs.get('x', 'x')
@@ -1647,7 +1655,7 @@ class Circle(Ellipse):
         t2 = (y - self.center.y)**2
         return t1 + t2 - self.major**2
 
-    def intersection(self, o):
+    def intersection(self, o) -> list[Point] | list[Any] | Ellipse:
         """The intersection of this circle with another geometrical entity.
 
         Parameters
@@ -1680,7 +1688,7 @@ class Circle(Ellipse):
         return Ellipse.intersection(self, o)
 
     @property
-    def radius(self):
+    def radius(self) -> Basic:
         """The radius of the circle.
 
         Returns
@@ -1704,7 +1712,7 @@ class Circle(Ellipse):
         """
         return self.args[1]
 
-    def reflect(self, line):
+    def reflect(self, line) -> Self:
         """Override GeometryEntity.reflect since the radius
         is not a GeometryEntity.
 
@@ -1719,7 +1727,7 @@ class Circle(Ellipse):
         c = c.reflect(line)
         return self.func(c, -self.radius)
 
-    def scale(self, x=1, y=1, pt=None):
+    def scale(self, x=1, y=1, pt=None) -> Self | Ellipse:
         """Override GeometryEntity.scale since the radius
         is not a GeometryEntity.
 

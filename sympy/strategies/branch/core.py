@@ -1,11 +1,13 @@
 """ Generic SymPy-Independent Strategies """
+from collections.abc import Generator
+from typing import Any, Callable
 
 
-def identity(x):
+def identity(x) -> Generator[Any, Any, None]:
     yield x
 
 
-def exhaust(brule):
+def exhaust(brule) -> Callable[..., Generator[Any, Any, None]]:
     """ Apply a branching rule repeatedly until it has no effect """
     def exhaust_brl(expr):
         seen = {expr}
@@ -18,7 +20,7 @@ def exhaust(brule):
     return exhaust_brl
 
 
-def onaction(brule, fn):
+def onaction(brule, fn) -> Callable[..., Generator[Any, Any, None]]:
     def onaction_brl(expr):
         for result in brule(expr):
             if result != expr:
@@ -27,7 +29,7 @@ def onaction(brule, fn):
     return onaction_brl
 
 
-def debug(brule, file=None):
+def debug(brule, file=None) -> Callable[..., Generator[Any, Any, None]]:
     """ Print the input and output expressions at each rule application """
     if not file:
         from sys import stdout
@@ -40,7 +42,7 @@ def debug(brule, file=None):
     return onaction(brule, write)
 
 
-def multiplex(*brules):
+def multiplex(*brules) -> Callable[..., Generator[Any, Any, None]]:
     """ Multiplex many branching rules into one """
     def multiplex_brl(expr):
         seen = set()
@@ -52,7 +54,7 @@ def multiplex(*brules):
     return multiplex_brl
 
 
-def condition(cond, brule):
+def condition(cond, brule) -> Callable[..., Generator[Any, Any, None]]:
     """ Only apply branching rule if condition is true """
     def conditioned_brl(expr):
         if cond(expr):
@@ -62,14 +64,14 @@ def condition(cond, brule):
     return conditioned_brl
 
 
-def sfilter(pred, brule):
+def sfilter(pred, brule) -> Callable[..., Generator[Any, Any, None]]:
     """ Yield only those results which satisfy the predicate """
     def filtered_brl(expr):
         yield from filter(pred, brule(expr))
     return filtered_brl
 
 
-def notempty(brule):
+def notempty(brule) -> Callable[..., Generator[Any, Any, None]]:
     def notempty_brl(expr):
         yielded = False
         for nexpr in brule(expr):
@@ -80,7 +82,7 @@ def notempty(brule):
     return notempty_brl
 
 
-def do_one(*brules):
+def do_one(*brules) -> Callable[..., Generator[Any, Any, None]]:
     """ Execute one of the branching rules """
     def do_one_brl(expr):
         yielded = False
@@ -93,7 +95,7 @@ def do_one(*brules):
     return do_one_brl
 
 
-def chain(*brules):
+def chain(*brules) -> Callable[..., Generator[Any, Any, None]]:
     """
     Compose a sequence of brules so that they apply to the expr sequentially
     """
@@ -109,7 +111,7 @@ def chain(*brules):
     return chain_brl
 
 
-def yieldify(rl):
+def yieldify(rl) -> Callable[..., Generator[Any, Any, None]]:
     """ Turn a rule into a branching rule """
     def brl(expr):
         yield rl(expr)

@@ -42,6 +42,21 @@ from sympy.external import import_module
 from sympy.utilities.decorator import doctest_depends_on
 from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.iterables import iterable
+import sympy
+import sympy.core.logic
+from collections.abc import Generator
+from sympy.series.order import Order
+from sympy.stats.compound_rv import CompoundPSpace
+from sympy.stats.crv import ContinuousPSpace, ProductContinuousDomain
+from sympy.stats.drv import DiscretePSpace, ProductDiscreteDomain
+from sympy.stats.frv import ConditionalFiniteDomain, FiniteDensity, FinitePSpace, ProductFiniteDomain, ProductFinitePSpace
+from sympy.stats.frv_types import BernoulliDistribution
+from sympy.stats.joint_rv import JointRandomSymbol
+from sympy.stats.stochastic_process import StochasticPSpace
+from sympy.stats.symbolic_multivariate_probability import ExpectationMatrix
+from sympy.stats.symbolic_probability import Expectation, Probability
+from typing import Any
+from typing_extensions import Self
 
 
 __doctest_requires__ = {('sample',): ['scipy']}
@@ -51,12 +66,12 @@ x = Symbol('x')
 
 
 @singledispatch
-def is_random(x):
+def is_random(x) -> bool:
     return False
 
 
 @is_random.register(Basic)
-def _(x):
+def _(x) -> bool:
     atoms = x.free_symbols
     return any(is_random(i) for i in atoms)
 
@@ -77,16 +92,16 @@ class RandomDomain(Basic):
     is_Continuous = False
     is_Discrete = False
 
-    def __new__(cls, symbols, *args):
+    def __new__(cls, symbols, *args) -> Self:
         symbols = FiniteSet(*symbols)
         return Basic.__new__(cls, symbols, *args)
 
     @property
-    def symbols(self):
+    def symbols(self) -> Basic:
         return self.args[0]
 
     @property
-    def set(self):
+    def set(self) -> Basic:
         return self.args[1]
 
     def __contains__(self, other):
@@ -106,19 +121,19 @@ class SingleDomain(RandomDomain):
     sympy.stats.crv.SingleContinuousDomain
     sympy.stats.frv.SingleFiniteDomain
     """
-    def __new__(cls, symbol, set):
+    def __new__(cls, symbol, set) -> Self:
         assert symbol.is_Symbol
         return Basic.__new__(cls, symbol, set)
 
     @property
-    def symbol(self):
+    def symbol(self) -> Basic:
         return self.args[0]
 
     @property
-    def symbols(self):
+    def symbols(self) ->     sympy.FiniteSet:
         return FiniteSet(self.symbol)
 
-    def __contains__(self, other):
+    def __contains__(self, other) -> bool:
         if len(other) != 1:
             return False
         sym, val = tuple(other)[0]
@@ -130,16 +145,16 @@ class MatrixDomain(RandomDomain):
     A Random Matrix variable and its domain.
 
     """
-    def __new__(cls, symbol, set):
+    def __new__(cls, symbol, set) -> Self:
         symbol, set = _symbol_converter(symbol), _sympify(set)
         return Basic.__new__(cls, symbol, set)
 
     @property
-    def symbol(self):
+    def symbol(self) -> Basic:
         return self.args[0]
 
     @property
-    def symbols(self):
+    def symbols(self) ->     sympy.FiniteSet:
         return FiniteSet(self.symbol)
 
 
@@ -153,7 +168,7 @@ class ConditionalDomain(RandomDomain):
     sympy.stats.crv.ConditionalContinuousDomain
     sympy.stats.frv.ConditionalFiniteDomain
     """
-    def __new__(cls, fulldomain, condition):
+    def __new__(cls, fulldomain, condition) -> Self:
         condition = condition.xreplace({rs: rs.symbol
             for rs in random_symbols(condition)})
         return Basic.__new__(cls, fulldomain, condition)
@@ -163,18 +178,18 @@ class ConditionalDomain(RandomDomain):
         return self.fulldomain.symbols
 
     @property
-    def fulldomain(self):
+    def fulldomain(self) -> Basic:
         return self.args[0]
 
     @property
-    def condition(self):
+    def condition(self) -> Basic:
         return self.args[1]
 
     @property
     def set(self):
         raise NotImplementedError("Set of Conditional Domain not Implemented")
 
-    def as_boolean(self):
+    def as_boolean(self) ->     sympy.core.logic.And:
         return And(self.fulldomain.as_boolean(), self.condition)
 
 
@@ -202,15 +217,15 @@ class PSpace(Basic):
     is_real: bool | None
 
     @property
-    def domain(self):
+    def domain(self) -> Basic:
         return self.args[0]
 
     @property
-    def density(self):
+    def density(self) -> Basic:
         return self.args[1]
 
     @property
-    def values(self):
+    def values(self) -> frozenset[RandomSymbol]:
         return frozenset(RandomSymbol(sym, self) for sym in self.symbols)
 
     @property
@@ -238,20 +253,20 @@ class SinglePSpace(PSpace):
     Represents the probabilities of a set of random events that can be
     attributed to a single variable/symbol.
     """
-    def __new__(cls, s, distribution):
+    def __new__(cls, s, distribution) -> Self:
         s = _symbol_converter(s)
         return Basic.__new__(cls, s, distribution)
 
     @property
-    def value(self):
+    def value(self) -> "RandomSymbol":
         return RandomSymbol(self.symbol, self)
 
     @property
-    def symbol(self):
+    def symbol(self) -> Basic:
         return self.args[0]
 
     @property
-    def distribution(self):
+    def distribution(self) -> Basic:
         return self.args[1]
 
     @property
@@ -288,7 +303,7 @@ class RandomSymbol(Expr):
     convenience functions Normal, Exponential, Coin, Die, FiniteRV, etc....
     """
 
-    def __new__(cls, symbol, pspace=None):
+    def __new__(cls, symbol, pspace=None) -> RandomSymbol | Self:
         from sympy.stats.joint_rv import JointRandomSymbol
         if pspace is None:
             # Allow single arg, representing pspace == PSpace()
@@ -324,12 +339,12 @@ class RandomSymbol(Expr):
         return self.symbol.is_commutative
 
     @property
-    def free_symbols(self):
+    def free_symbols(self) -> set[Self]:
         return {self}
 
 class RandomIndexedSymbol(RandomSymbol):
 
-    def __new__(cls, idx_obj, pspace=None):
+    def __new__(cls, idx_obj, pspace=None) -> Self:
         if pspace is None:
             # Allow single arg, representing pspace == PSpace()
             pspace = PSpace()
@@ -341,14 +356,14 @@ class RandomIndexedSymbol(RandomSymbol):
     name = property(lambda self: str(self.args[0]))
 
     @property
-    def key(self):
+    def key(self) -> Basic | None:
         if isinstance(self.symbol, Indexed):
             return self.symbol.args[1]
         elif isinstance(self.symbol, Function):
             return self.symbol.args[0]
 
     @property
-    def free_symbols(self):
+    def free_symbols(self) -> set[Basic] | set[Self]:
         if self.key.free_symbols:
             free_syms = self.key.free_symbols
             free_syms.add(self)
@@ -356,11 +371,11 @@ class RandomIndexedSymbol(RandomSymbol):
         return {self}
 
     @property
-    def pspace(self):
+    def pspace(self) -> Basic:
         return self.args[1]
 
 class RandomMatrixSymbol(RandomSymbol, MatrixSymbol): # type: ignore
-    def __new__(cls, symbol, n, m, pspace=None):
+    def __new__(cls, symbol, n, m, pspace=None) -> Self:
         n, m = _sympify(n), _sympify(m)
         symbol = _symbol_converter(symbol)
         if pspace is None:
@@ -393,7 +408,7 @@ class IndependentProductPSpace(ProductPSpace):
     Often created using the function, pspace.
     """
 
-    def __new__(cls, *spaces):
+    def __new__(cls, *spaces) -> ProductFinitePSpace | Self:
         rs_space_dict = {}
         for space in spaces:
             for value in space.values:
@@ -418,12 +433,12 @@ class IndependentProductPSpace(ProductPSpace):
         return obj
 
     @property
-    def pdf(self):
+    def pdf(self) -> Order | Basic:
         p = Mul(*[space.pdf for space in self.spaces])
         return p.subs({rv: rv.symbol for rv in self.values})
 
     @property
-    def rs_space_dict(self):
+    def rs_space_dict(self) -> dict[Any, Any]:
         d = {}
         for space in self.spaces:
             for value in space.values:
@@ -431,15 +446,15 @@ class IndependentProductPSpace(ProductPSpace):
         return d
 
     @property
-    def symbols(self):
+    def symbols(self) ->     sympy.FiniteSet:
         return FiniteSet(*[val.symbol for val in self.rs_space_dict.keys()])
 
     @property
-    def spaces(self):
+    def spaces(self) ->     sympy.FiniteSet:
         return FiniteSet(*self.args)
 
     @property
-    def values(self):
+    def values(self) -> frozenset[Any]:
         return sumsets(space.values for space in self.spaces)
 
     def compute_expectation(self, expr, rvs=None, evaluate=False, **kwargs):
@@ -452,19 +467,19 @@ class IndependentProductPSpace(ProductPSpace):
         return expr
 
     @property
-    def domain(self):
+    def domain(self) -> ProductDiscreteDomain | ProductContinuousDomain | ProductFiniteDomain | ProductDomain:
         return ProductDomain(*[space.domain for space in self.spaces])
 
     @property
     def density(self):
         raise NotImplementedError("Density not available for ProductSpaces")
 
-    def sample(self, size=(), library='scipy', seed=None):
+    def sample(self, size=(), library='scipy', seed=None) -> dict[Any, Any]:
         return {k: v for space in self.spaces
             for k, v in space.sample(size=size, library=library, seed=seed).items()}
 
 
-    def probability(self, condition, **kwargs):
+    def probability(self, condition, **kwargs) -> Order | Lambda | Probability |     sympy.Equality | Relational |     sympy.Ne | int:
         cond_inv = False
         if isinstance(condition, Ne):
             condition = Eq(condition.args[0], condition.args[1])
@@ -498,7 +513,7 @@ class IndependentProductPSpace(ProductPSpace):
             result = space.probability(condition.__class__(space.value, 0))
         return result if not cond_inv else S.One - result
 
-    def compute_density(self, expr, **kwargs):
+    def compute_density(self, expr, **kwargs) -> Lambda:
         rvs = random_symbols(expr)
         if any(pspace(rv).is_Continuous for rv in rvs):
             z = Dummy('z', real=True)
@@ -513,7 +528,7 @@ class IndependentProductPSpace(ProductPSpace):
     def compute_cdf(self, expr, **kwargs):
         raise ValueError("CDF not well defined on multivariate expressions")
 
-    def conditional_space(self, condition, normalize=True, **kwargs):
+    def conditional_space(self, condition, normalize=True, **kwargs) -> FinitePSpace | ContinuousPSpace | DiscretePSpace:
         rvs = random_symbols(condition)
         condition = condition.xreplace({rv: rv.symbol for rv in self.values})
         pspaces = [pspace(rv) for rv in rvs]
@@ -551,7 +566,7 @@ class ProductDomain(RandomDomain):
     """
     is_ProductDomain = True
 
-    def __new__(cls, *domains):
+    def __new__(cls, *domains) -> ProductDiscreteDomain | ProductContinuousDomain | ProductFiniteDomain | Self:
         # Flatten any product of products
         domains2 = []
         for domain in domains:
@@ -574,24 +589,24 @@ class ProductDomain(RandomDomain):
         return Basic.__new__(cls, *domains2)
 
     @property
-    def sym_domain_dict(self):
+    def sym_domain_dict(self) -> dict[Any, Basic]:
         return {symbol: domain for domain in self.domains
                                      for symbol in domain.symbols}
 
     @property
-    def symbols(self):
+    def symbols(self) ->     sympy.FiniteSet:
         return FiniteSet(*[sym for domain in self.domains
                                for sym    in domain.symbols])
 
     @property
-    def domains(self):
+    def domains(self) -> tuple[Basic, ...]:
         return self.args
 
     @property
-    def set(self):
+    def set(self) ->     sympy.FiniteSet |     sympy.ProductSet:
         return ProductSet(*(domain.set for domain in self.domains))
 
-    def __contains__(self, other):
+    def __contains__(self, other) -> bool:
         # Split event into each subdomain
         for domain in self.domains:
             # Collect the parts of this event which associate to this domain
@@ -604,11 +619,11 @@ class ProductDomain(RandomDomain):
         # All subevents passed
         return True
 
-    def as_boolean(self):
+    def as_boolean(self) ->     sympy.core.logic.And:
         return And(*[domain.as_boolean() for domain in self.domains])
 
 
-def random_symbols(expr):
+def random_symbols(expr) -> list[Any]:
     """
     Returns all RandomSymbols within a SymPy Expression.
     """
@@ -621,7 +636,7 @@ def random_symbols(expr):
         return []
 
 
-def pspace(expr):
+def pspace(expr) -> Any | CompoundPSpace | StochasticPSpace | ProductFinitePSpace | IndependentProductPSpace:
     """
     Returns the underlying Probability Space of a random expression.
 
@@ -657,14 +672,14 @@ def pspace(expr):
     return IndependentProductPSpace(*[rv.pspace for rv in rvs])
 
 
-def sumsets(sets):
+def sumsets(sets) -> frozenset[Any]:
     """
     Union of sets
     """
     return frozenset().union(*sets)
 
 
-def rs_swap(a, b):
+def rs_swap(a, b) -> dict[Any, Any]:
     """
     Build a dictionary to swap RandomSymbols based on their underlying symbol.
 
@@ -683,7 +698,7 @@ def rs_swap(a, b):
     return d
 
 
-def given(expr, condition=None, **kwargs):
+def given(expr, condition=None, **kwargs) -> Relational | Basic | bool:
     r""" Conditional Random Expression.
 
     Explanation
@@ -768,7 +783,21 @@ def given(expr, condition=None, **kwargs):
     return expr
 
 
-def expectation(expr, condition=None, numsamples=None, evaluate=True, **kwargs):
+def expectation(expr, condition=None, numsamples=None, evaluate=True, **kwargs) -> (
+    Basic
+    | Expectation
+    | tuple[Any, ...]
+    | sympy.Sum
+    | Order
+    | Any
+    | sympy.Piecewise
+    | sympy.Equality
+    | Relational
+    | sympy.Ne
+    | sympy.Integral
+    | ExpectationMatrix
+    | None
+):
     """
     Returns the expected value of a random expression.
 
@@ -810,7 +839,7 @@ def expectation(expr, condition=None, numsamples=None, evaluate=True, **kwargs):
 
 
 def probability(condition, given_condition=None, numsamples=None,
-                evaluate=True, **kwargs):
+                evaluate=True, **kwargs) -> Any | BernoulliDistribution | Probability | sympy.Equality | Lambda | Order | Relational | sympy.Ne | int:
     """
     Probability that a condition is true, optionally given a second condition.
 
@@ -851,7 +880,7 @@ def probability(condition, given_condition=None, numsamples=None,
 class Density(Basic):
     expr = property(lambda self: self.args[0])
 
-    def __new__(cls, expr, condition = None):
+    def __new__(cls, expr, condition = None) -> Self:
         expr = _sympify(expr)
         if condition is None:
             obj = Basic.__new__(cls, expr)
@@ -861,13 +890,13 @@ class Density(Basic):
         return obj
 
     @property
-    def condition(self):
+    def condition(self) -> Basic | None:
         if len(self.args) > 1:
             return self.args[1]
         else:
             return None
 
-    def doit(self, evaluate=True, **kwargs):
+    def doit(self, evaluate=True, **kwargs) -> Density | dict[Any, Any] | Lambda | Basic | Any | FiniteDensity | None:
         from sympy.stats.random_matrix import RandomMatrixPSpace
         from sympy.stats.joint_rv import JointPSpace
         from sympy.stats.matrix_distributions import MatrixPSpace
@@ -898,7 +927,7 @@ class Density(Basic):
             return result
 
 
-def density(expr, condition=None, evaluate=True, numsamples=None, **kwargs):
+def density(expr, condition=None, evaluate=True, numsamples=None, **kwargs) -> dict[Any, Any] | Density | Lambda | Basic | Any | FiniteDensity | None:
     """
     Probability density of a random expression, optionally given a second
     condition.
@@ -946,7 +975,7 @@ def density(expr, condition=None, evaluate=True, numsamples=None, **kwargs):
     return Density(expr, condition).doit(evaluate=evaluate, **kwargs)
 
 
-def cdf(expr, condition=None, evaluate=True, **kwargs):
+def cdf(expr, condition=None, evaluate=True, **kwargs) -> Lambda | Any | dict[Any, Any]:
     """
     Cumulative Distribution Function of a random expression.
 
@@ -991,7 +1020,7 @@ def cdf(expr, condition=None, evaluate=True, **kwargs):
         return result
 
 
-def characteristic_function(expr, condition=None, evaluate=True, **kwargs):
+def characteristic_function(expr, condition=None, evaluate=True, **kwargs) -> Lambda | Any:
     """
     Characteristic function of a random expression, optionally given a second condition.
 
@@ -1024,7 +1053,7 @@ def characteristic_function(expr, condition=None, evaluate=True, **kwargs):
     else:
         return result
 
-def moment_generating_function(expr, condition=None, evaluate=True, **kwargs):
+def moment_generating_function(expr, condition=None, evaluate=True, **kwargs) -> Lambda | Any:
     if condition is not None:
         return moment_generating_function(given(expr, condition, **kwargs), **kwargs)
 
@@ -1035,7 +1064,7 @@ def moment_generating_function(expr, condition=None, evaluate=True, **kwargs):
     else:
         return result
 
-def where(condition, given_condition=None, **kwargs):
+def where(condition, given_condition=None, **kwargs) -> ConditionalFiniteDomain | Any:
     """
     Returns the domain where a condition is True.
 
@@ -1068,7 +1097,7 @@ def where(condition, given_condition=None, **kwargs):
 
 @doctest_depends_on(modules=('scipy',))
 def sample(expr, condition=None, size=(), library='scipy',
-           numsamples=1, seed=None, **kwargs):
+           numsamples=1, seed=None, **kwargs) -> list[Any | JointRandomSymbol | Basic] | JointRandomSymbol | Basic:
     """
     A realization of the random expression.
 
@@ -1188,7 +1217,7 @@ def sample(expr, condition=None, size=(), library='scipy',
     return next(iterator)
 
 
-def quantile(expr, evaluate=True, **kwargs):
+def quantile(expr, evaluate=True, **kwargs) -> Lambda | Any:
     r"""
     Return the :math:`p^{th}` order quantile of a probability distribution.
 
@@ -1238,7 +1267,7 @@ def quantile(expr, evaluate=True, **kwargs):
         return result
 
 def sample_iter(expr, condition=None, size=(), library='scipy',
-                    numsamples=S.Infinity, seed=None, **kwargs):
+                    numsamples=S.Infinity, seed=None, **kwargs) -> Generator[Any, Any, None] | Generator[Any | JointRandomSymbol | Basic, Any, None]:
 
     """
     Returns an iterator of realizations from the expression given a condition.
@@ -1394,13 +1423,13 @@ def sample_iter(expr, condition=None, size=(), library='scipy',
     return return_generator_finite()
 
 def sample_iter_lambdify(expr, condition=None, size=(),
-                         numsamples=S.Infinity, seed=None, **kwargs):
+                         numsamples=S.Infinity, seed=None, **kwargs) -> Generator[Any, Any, None] | Generator[Any | JointRandomSymbol | Basic, Any, None]:
 
     return sample_iter(expr, condition=condition, size=size,
                        numsamples=numsamples, seed=seed, **kwargs)
 
 def sample_iter_subs(expr, condition=None, size=(),
-                     numsamples=S.Infinity, seed=None, **kwargs):
+                     numsamples=S.Infinity, seed=None, **kwargs) -> Generator[Any, Any, None] | Generator[Any | JointRandomSymbol | Basic, Any, None]:
 
     return sample_iter(expr, condition=condition, size=size,
                        numsamples=numsamples, seed=seed, **kwargs)
@@ -1460,7 +1489,7 @@ def sampling_E(expr, given_condition=None, library='scipy', numsamples=1,
         return result
 
 def sampling_density(expr, given_condition=None, library='scipy',
-                    numsamples=1, seed=None, **kwargs):
+                    numsamples=1, seed=None, **kwargs) -> dict[Any, Any]:
     """
     Sampling version of density.
 
@@ -1479,7 +1508,7 @@ def sampling_density(expr, given_condition=None, library='scipy',
     return results
 
 
-def dependent(a, b):
+def dependent(a, b) -> Any | bool:
     """
     Dependence of two random expressions.
 
@@ -1516,7 +1545,7 @@ def dependent(a, b):
             density(b, Eq(a, z)) != density(b))
 
 
-def independent(a, b):
+def independent(a, b) -> bool:
     """
     Independence of two random expressions.
 
@@ -1546,7 +1575,7 @@ def independent(a, b):
     return not dependent(a, b)
 
 
-def pspace_independent(a, b):
+def pspace_independent(a, b) -> bool | None:
     """
     Tests for independence between a and b by checking if their PSpaces have
     overlapping symbols. This is a sufficient but not necessary condition for

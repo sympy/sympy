@@ -8,8 +8,8 @@ from sympy.core.symbol import (Dummy, symbols)
 from sympy.core.sorting import ordered
 from sympy.functions.elementary.complexes import sign
 from sympy.functions.elementary.integers import floor, ceiling
-from sympy.sets.fancysets import ComplexRegion
-from sympy.sets.sets import (FiniteSet, Intersection, Interval, Set, Union)
+from sympy.sets.fancysets import CartesianComplexRegion, PolarComplexRegion, ComplexRegion
+from sympy.sets.sets import (Complement, FiniteSet, Intersection, Interval, Set, Union)
 from sympy.multipledispatch import Dispatcher
 from sympy.sets.conditionset import ConditionSet
 from sympy.sets.fancysets import (Integers, Naturals, Reals, Range,
@@ -18,31 +18,31 @@ from sympy.sets.sets import EmptySet, UniversalSet, imageset, ProductSet
 from sympy.simplify.radsimp import numer
 
 
-intersection_sets = Dispatcher('intersection_sets')
+intersection_sets: Dispatcher = Dispatcher('intersection_sets')
 
 
 @intersection_sets.register(ConditionSet, ConditionSet)
-def _(a, b):
+def _(a, b) -> None:
     return None
 
 @intersection_sets.register(ConditionSet, Set)
-def _(a, b):
+def _(a, b) -> None:
     return ConditionSet(a.sym, a.condition, Intersection(a.base_set, b))
 
 @intersection_sets.register(Naturals, Integers)
-def _(a, b):
+def _(a, b) -> None:
     return a
 
 @intersection_sets.register(Naturals, Naturals)
-def _(a, b):
+def _(a, b) -> None:
     return a if a is S.Naturals else b
 
 @intersection_sets.register(Interval, Naturals)
-def _(a, b):
+def _(a, b) -> None:
     return intersection_sets(b, a)
 
 @intersection_sets.register(ComplexRegion, Set)
-def _(self, other):
+def _(self, other) -> None:
     if other.is_ComplexRegion:
         # self in rectangular form
         if (not self.polar) and (not other.polar):
@@ -89,11 +89,11 @@ def _(self, other):
             return Intersection(new_interval, other)
 
 @intersection_sets.register(Integers, Reals)
-def _(a, b):
+def _(a, b) -> None:
     return a
 
 @intersection_sets.register(Range, Interval)
-def _(a, b):
+def _(a, b) -> None:
     # Check that there are no symbolic arguments
     if not all(i.is_number for i in a.args + b.args[:2]):
         return
@@ -113,11 +113,11 @@ def _(a, b):
     return intersection_sets(a, Range(start, end + 1))
 
 @intersection_sets.register(Range, Naturals)
-def _(a, b):
+def _(a, b) -> None:
     return intersection_sets(a, Interval(b.inf, S.Infinity))
 
 @intersection_sets.register(Range, Range)
-def _(a, b):
+def _(a, b) -> None:
     # Check that there are no symbolic range arguments
     if not all(all(v.is_number for v in r.args) for r in [a, b]):
         return None
@@ -232,17 +232,17 @@ def _(a, b):
 
 
 @intersection_sets.register(Range, Integers)
-def _(a, b):
+def _(a, b) -> None:
     return a
 
 
 @intersection_sets.register(Range, Rationals)
-def _(a, b):
+def _(a, b) -> None:
     return a
 
 
 @intersection_sets.register(ImageSet, Set)
-def _(self, other):
+def _(self, other) -> None:
     from sympy.solvers.diophantine import diophantine
 
     # Only handle the straight-forward univariate case
@@ -300,7 +300,7 @@ def _(self, other):
 
 
 @intersection_sets.register(ImageSet, Reals)
-def _(self, other):
+def _(self, other) -> None:
     # Only handle the straight-forward univariate case
     if (len(self.lamda.variables) > 1
             or self.lamda.signature != self.lamda.variables):
@@ -357,7 +357,7 @@ def _(self, other):
 
 
 @intersection_sets.register(ImageSet, Interval)
-def _(self, other):
+def _(self, other) -> None:
     # Handle the straight-forward univariate linear
     # case by transforming the interval:
     # {a*n + b: n in S} n [c, d]  -->  {n: n in S} n [(c-b)/a, (d-b)/a]
@@ -396,14 +396,14 @@ def _(self, other):
 
 
 @intersection_sets.register(ProductSet, ProductSet)
-def _(a, b):
+def _(a, b) -> None:
     if len(b.args) != len(a.args):
         return S.EmptySet
     return ProductSet(*(i.intersect(j) for i, j in zip(a.sets, b.sets)))
 
 
 @intersection_sets.register(Interval, Interval)
-def _(a, b):
+def _(a, b) -> None:
     # handle (-oo, oo)
     infty = S.NegativeInfinity, S.Infinity
     if a == Interval(*infty):
@@ -471,38 +471,38 @@ def _(a, b):
     return Interval(start, end, left_open, right_open)
 
 @intersection_sets.register(EmptySet, Set)
-def _(a, b):
+def _(a, b) -> None:
     return S.EmptySet
 
 @intersection_sets.register(UniversalSet, Set)
-def _(a, b):
+def _(a, b) -> None:
     return b
 
 @intersection_sets.register(FiniteSet, FiniteSet)
-def _(a, b):
+def _(a, b) -> None:
     return FiniteSet(*(a._elements & b._elements))
 
 @intersection_sets.register(FiniteSet, Set)
-def _(a, b):
+def _(a, b) -> None:
     try:
         return FiniteSet(*[el for el in a if el in b])
     except TypeError:
         return None  # could not evaluate `el in b` due to symbolic ranges.
 
 @intersection_sets.register(Set, Set)
-def _(a, b):
+def _(a, b) -> None:
     return None
 
 @intersection_sets.register(Integers, Rationals)
-def _(a, b):
+def _(a, b) -> None:
     return a
 
 @intersection_sets.register(Naturals, Rationals)
-def _(a, b):
+def _(a, b) -> None:
     return a
 
 @intersection_sets.register(Rationals, Reals)
-def _(a, b):
+def _(a, b) -> None:
     return a
 
 def _intlike_interval(a, b):
@@ -515,9 +515,9 @@ def _intlike_interval(a, b):
         return None
 
 @intersection_sets.register(Integers, Interval)
-def _(a, b):
+def _(a, b) -> None:
     return _intlike_interval(a, b)
 
 @intersection_sets.register(Naturals, Interval)
-def _(a, b):
+def _(a, b) -> None:
     return _intlike_interval(a, b)

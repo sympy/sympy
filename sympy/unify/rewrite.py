@@ -4,8 +4,11 @@ from sympy.core.expr import Expr
 from sympy.assumptions import ask
 from sympy.strategies.tools import subs
 from sympy.unify.usympy import rebuild, unify
+from collections.abc import Generator
+from sympy import Basic
+from typing import Any, Callable
 
-def rewriterule(source, target, variables=(), condition=None, assume=None):
+def rewriterule(source, target, variables=(), condition=None, assume=None) -> Callable[..., Generator[Any | Basic, Any, None]]:
     """ Rewrite rule.
 
     Transform expressions that match source into expressions that match target

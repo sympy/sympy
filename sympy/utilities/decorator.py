@@ -1,10 +1,10 @@
 """Useful utility decorators. """
 
-from typing import TypeVar
+from typing import Any, Callable, TypeVar
 import sys
 import types
 import inspect
-from functools import wraps, update_wrapper
+from functools import _Wrapped, wraps, update_wrapper
 
 from sympy.utilities.exceptions import sympy_deprecation_warning
 
@@ -13,7 +13,7 @@ T = TypeVar('T')
 """A generic type"""
 
 
-def threaded_factory(func, use_add):
+def threaded_factory(func, use_add) -> _Wrapped[..., Any, ..., Any]:
     """A factory for ``threaded`` decorators. """
     from sympy.core import sympify
     from sympy.matrices import MatrixBase
@@ -42,7 +42,7 @@ def threaded_factory(func, use_add):
     return threaded_func
 
 
-def threaded(func):
+def threaded(func) -> _Wrapped[..., Any, ..., Any]:
     """Apply ``func`` to sub--elements of an object, including :class:`~.Add`.
 
     This decorator is intended to make it uniformly possible to apply a
@@ -62,7 +62,7 @@ def threaded(func):
     return threaded_factory(func, True)
 
 
-def xthreaded(func):
+def xthreaded(func) -> _Wrapped[..., Any, ..., Any]:
     """Apply ``func`` to sub--elements of an object, excluding :class:`~.Add`.
 
     This decorator is intended to make it uniformly possible to apply a
@@ -82,7 +82,7 @@ def xthreaded(func):
     return threaded_factory(func, False)
 
 
-def conserve_mpmath_dps(func):
+def conserve_mpmath_dps(func) -> Callable[..., Any]:
     """After the function finishes, resets the value of ``mpmath.mp.dps`` to
     the value it had before the function was run."""
     import mpmath
@@ -117,7 +117,7 @@ class no_attrs_in_subclass:
     False
 
     """
-    def __init__(self, cls, f):
+    def __init__(self, cls, f) -> None:
         self.cls = cls
         self.f = f
 
@@ -230,7 +230,7 @@ def public(obj: T) -> T:
     return obj
 
 
-def memoize_property(propfunc):
+def memoize_property(propfunc) -> property:
     """Property decorator that caches the value of potentially expensive
     ``propfunc`` after the first evaluation. The cached value is stored in
     the corresponding property name with an attached underscore."""
@@ -249,7 +249,7 @@ def memoize_property(propfunc):
 
 
 def deprecated(message, *, deprecated_since_version,
-               active_deprecations_target, stacklevel=3):
+               active_deprecations_target, stacklevel=3) -> Callable[..., Any | _Wrapped[..., Any, ..., Any]]:
     '''
     Mark a function as deprecated.
 

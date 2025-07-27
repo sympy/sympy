@@ -7,7 +7,7 @@ import unicodedata
 
 unicode_warnings = ''
 
-def U(name):
+def U(name) -> str | None:
     """
     Get a unicode character by name or, None if not found.
 
@@ -38,7 +38,7 @@ __all__ = ['greek_unicode', 'sub', 'sup', 'xsym', 'vobj', 'hobj', 'pretty_symbol
 _use_unicode = False
 
 
-def pretty_use_unicode(flag=None):
+def pretty_use_unicode(flag=None) -> bool:
     """Set whether pretty-printer should use unicode by default"""
     global _use_unicode, unicode_warnings
     if flag is None:
@@ -54,7 +54,7 @@ def pretty_use_unicode(flag=None):
     return use_unicode_prev
 
 
-def pretty_try_use_unicode():
+def pretty_try_use_unicode() -> None:
     """See if unicode output is available and leverage it if possible"""
 
     encoding = getattr(sys.stdout, 'encoding', None)
@@ -85,7 +85,7 @@ def pretty_try_use_unicode():
     pretty_use_unicode(True)
 
 
-def xstr(*args):
+def xstr(*args) -> str:
     sympy_deprecation_warning(
         """
         The sympy.printing.pretty.pretty_symbology.xstr() function is
@@ -389,7 +389,7 @@ def xobj(symb, length):
     return res
 
 
-def vobj(symb, height):
+def vobj(symb, height) -> str:
     """Construct vertical object of a given height
 
        see: xobj
@@ -397,7 +397,7 @@ def vobj(symb, height):
     return '\n'.join( xobj(symb, height) )
 
 
-def hobj(symb, width):
+def hobj(symb, width) -> str:
     """Construct horizontal object of a given width
 
        see: xobj
@@ -533,7 +533,7 @@ atoms_table = {
 }
 
 
-def pretty_atom(atom_name, default=None, printer=None):
+def pretty_atom(atom_name, default=None, printer=None) -> str | None:
     """return pretty representation of an atom"""
     if _use_unicode:
         if printer is not None and atom_name == 'ImaginaryUnit' and printer._settings['imaginary_unit'] == 'j':
@@ -547,7 +547,7 @@ def pretty_atom(atom_name, default=None, printer=None):
         raise KeyError('only unicode')  # send it default printer
 
 
-def pretty_symbol(symb_name, bold_name=False):
+def pretty_symbol(symb_name, bold_name=False) -> str:
     """return pretty representation of a symbol"""
     # let's split symb_name into symbol + index
     # UC: beta1
@@ -638,7 +638,7 @@ def annotated(letter):
 _remove_combining = dict.fromkeys(list(range(ord('\N{COMBINING GRAVE ACCENT}'), ord('\N{COMBINING LATIN SMALL LETTER X}')))
                             + list(range(ord('\N{COMBINING LEFT HARPOON ABOVE}'), ord('\N{COMBINING ASTERISK ABOVE}'))))
 
-def is_combining(sym):
+def is_combining(sym) -> bool:
     """Check whether symbol is a unicode modifier. """
 
     return ord(sym) in _remove_combining
@@ -673,7 +673,7 @@ def center_accent(string, accent):
     return firstpart + accent + secondpart
 
 
-def line_width(line):
+def line_width(line) -> int:
     """Unicode combining symbols (modifiers) are not ever displayed as
     separate symbols and thus should not be counted
     """

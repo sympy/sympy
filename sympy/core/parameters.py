@@ -3,6 +3,8 @@
 from .cache import clear_cache
 from contextlib import contextmanager
 from threading import local
+from collections.abc import Generator
+from typing import Any
 
 class _global_parameters(local):
     """
@@ -57,10 +59,10 @@ class _global_parameters(local):
     .. [1] https://docs.python.org/3/library/threading.html
 
     """
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs) -> None:
         self.__dict__.update(kwargs)
 
-    def __setattr__(self, name, value):
+    def __setattr__(self, name, value) -> None:
         if getattr(self, name) != value:
             clear_cache()
         return super().__setattr__(name, value)
@@ -103,7 +105,7 @@ class evaluate:
         global_parameters.evaluate = self.old.pop()
 
 @contextmanager
-def distribute(x):
+def distribute(x) -> Generator[None, Any, None]:
     """ Control automatic distribution of Number over Add
 
     Explanation

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import Literal, TYPE_CHECKING
 
 from sympy.core.expr import Expr
 from sympy.polys.orderings import MonomialOrder
@@ -12,6 +12,7 @@ from sympy.polys.domains.compositedomain import CompositeDomain
 
 from sympy.polys.polyerrors import CoercionFailed, GeneratorsError
 from sympy.utilities import public
+from sympy.polys.rings import PolyElement
 
 
 if TYPE_CHECKING:
@@ -28,7 +29,7 @@ class PolynomialRing(Ring['PolyElement[Er]'], CompositeDomain):
     has_assoc_Ring  = True
     has_assoc_Field = True
 
-    def __init__(self, domain_or_ring: Domain[Er] | PolyRing[Er], symbols=None, order=None):
+    def __init__(self, domain_or_ring: Domain[Er] | PolyRing[Er], symbols=None, order=None) -> None:
         from sympy.polys.rings import PolyRing
 
         if isinstance(domain_or_ring, PolyRing) and symbols is None and order is None:
@@ -73,10 +74,10 @@ class PolynomialRing(Ring['PolyElement[Er]'], CompositeDomain):
     def __str__(self):
         return str(self.domain) + '[' + ','.join(map(str, self.symbols)) + ']'
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash((self.__class__.__name__, self.ring, self.domain, self.symbols))
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
         """Returns `True` if two domains are equivalent. """
         if not isinstance(other, PolynomialRing):
             return NotImplemented
@@ -141,21 +142,21 @@ class PolynomialRing(Ring['PolyElement[Er]'], CompositeDomain):
         """Convert a mpmath `mpf` object to `dtype`. """
         return K1(K1.domain.convert(a, K0))
 
-    def from_AlgebraicField(K1, a, K0):
+    def from_AlgebraicField(K1, a, K0) -> PolyElement | None:
         """Convert an algebraic number to ``dtype``. """
         if K1.domain != K0:
             a = K1.domain.convert_from(a, K0)
         if a is not None:
             return K1.new(a)
 
-    def from_PolynomialRing(K1, a, K0):
+    def from_PolynomialRing(K1, a, K0) -> None:
         """Convert a polynomial to ``dtype``. """
         try:
             return a.set_ring(K1.ring)
         except (CoercionFailed, GeneratorsError):
             return None
 
-    def from_FractionField(K1, a, K0):
+    def from_FractionField(K1, a, K0) -> None:
         """Convert a rational function to ``dtype``. """
         if K1.domain == K0:
             return K1.ring.from_list([a])
@@ -167,7 +168,7 @@ class PolynomialRing(Ring['PolyElement[Er]'], CompositeDomain):
         else:
             return None
 
-    def from_GlobalPolynomialRing(K1, a, K0):
+    def from_GlobalPolynomialRing(K1, a, K0) -> None:
         """Convert from old poly ring to ``dtype``. """
         if K1.symbols == K0.gens:
             ad = a.to_dict()

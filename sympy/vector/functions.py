@@ -1,16 +1,20 @@
 from sympy.vector.coordsysrect import CoordSys3D
 from sympy.vector.deloperator import Del
 from sympy.vector.scalar import BaseScalar
-from sympy.vector.vector import Vector, BaseVector
-from sympy.vector.operators import gradient, curl, divergence
+from sympy.vector.vector import VectorZero, Vector, BaseVector
+from sympy.vector.operators import Divergence, gradient, curl, divergence
 from sympy.core.function import diff
 from sympy.core.singleton import S
 from sympy.integrals.integrals import integrate
 from sympy.core import sympify
-from sympy.vector.dyadic import Dyadic
+from sympy.vector.dyadic import DyadicZero, Dyadic
+from sympy import Equality, Ne
+from sympy.core.add import Add
+from sympy.core.relational import Relational
+from typing import Any, Literal
 
 
-def express(expr, system, system2=None, variables=False):
+def express(expr, system, system2=None, variables=False) -> VectorZero | DyadicZero:
     """
     Global function for 'express' functionality.
 
@@ -123,7 +127,7 @@ def express(expr, system, system2=None, variables=False):
         return expr
 
 
-def directional_derivative(field, direction_vector):
+def directional_derivative(field, direction_vector) -> VectorZero | Literal[0]:
     """
     Returns the directional derivative of a scalar or vector field computed
     along a given vector in coordinate system which parameters are expressed.
@@ -172,7 +176,7 @@ def directional_derivative(field, direction_vector):
         return S.Zero
 
 
-def laplacian(expr):
+def laplacian(expr) -> Divergence | Add:
     """
     Return the laplacian of the given field computed in terms of
     the base scalars of the given coordinate system.
@@ -203,7 +207,7 @@ def laplacian(expr):
     return delop.dot(delop(expr)).doit()
 
 
-def is_conservative(field):
+def is_conservative(field) -> Literal[True]:
     """
     Checks if a field is conservative.
 
@@ -236,7 +240,7 @@ def is_conservative(field):
     return curl(field).simplify() == Vector.zero
 
 
-def is_solenoidal(field):
+def is_solenoidal(field) -> bool:
     """
     Checks if a field is solenoidal.
 
@@ -269,7 +273,7 @@ def is_solenoidal(field):
     return divergence(field).simplify() is S.Zero
 
 
-def scalar_potential(field, coord_sys):
+def scalar_potential(field, coord_sys) -> Equality | Relational | Ne:
     """
     Returns the scalar potential function of a field in a given
     coordinate system (without the added integration constant).
@@ -389,7 +393,7 @@ def scalar_potential_difference(field, coord_sys, point1, point2):
     return scalar_fn.subs(subs_dict2) - scalar_fn.subs(subs_dict1)
 
 
-def matrix_to_vector(matrix, system):
+def matrix_to_vector(matrix, system) -> VectorZero:
     """
     Converts a vector in matrix form to a Vector instance.
 
@@ -458,7 +462,7 @@ def _path(from_object, to_object):
     return index, from_path
 
 
-def orthogonalize(*vlist, orthonormal=False):
+def orthogonalize(*vlist, orthonormal=False) -> list[Any]:
     """
     Takes a sequence of independent vectors and orthogonalizes them
     using the Gram - Schmidt process. Returns a list of

@@ -14,6 +14,8 @@ from sympy.simplify.radsimp import collect
 from sympy.simplify.simplify import powsimp
 from sympy.solvers.solvers import solve, _invert
 from sympy.utilities.iterables import uniq
+from sympy.series.order import Order
+from typing import Any
 
 
 def _filtered_gens(poly, symbol):
@@ -414,7 +416,7 @@ def _solve_lambert(f, symbol, gens):
     return list(ordered(soln))
 
 
-def bivariate_type(f, x, y, *, first=True):
+def bivariate_type(f, x, y, *, first=True) -> tuple[Any, Any, Any] | tuple[Any, Any | Order, Dummy] | tuple[Any, Any, Dummy] | None:
     """Given an expression, f, 3 tests will be done to see what type
     of composite bivariate it might be, options for u(x, y) are::
 

@@ -12,6 +12,9 @@ from sympy.polys.polyerrors import (GeneratorsNeeded, PolynomialError,
 from sympy.polys.polyutils import dict_from_basic, basic_from_dict, _dict_reorder
 from sympy.utilities import public
 from sympy.utilities.iterables import iterable
+from sympy.polys.domains.characteristiczero import CharacteristicZero
+from sympy.series.order import Order
+from typing import Any, Literal
 
 
 @public
@@ -30,7 +33,7 @@ class PolynomialRingBase(Ring, CompositeDomain):
 
     default_order = "grevlex"
 
-    def __init__(self, dom, *gens, **opts):
+    def __init__(self, dom, *gens, **opts) -> None:
         if not gens:
             raise GeneratorsNeeded("generators not specified")
 
@@ -64,11 +67,11 @@ class PolynomialRingBase(Ring, CompositeDomain):
             " order=" + s_order) if s_order != self.default_order else ""
         return str(self.dom) + '[' + ','.join(map(str, self.gens)) + orderstr + ']'
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash((self.__class__.__name__, self.dtype, self.dom,
                      self.gens, self.order))
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
         """Returns ``True`` if two domains are equivalent. """
         return isinstance(other, PolynomialRingBase) and \
             self.dtype == other.dtype and self.dom == other.dom and \
@@ -102,7 +105,7 @@ class PolynomialRingBase(Ring, CompositeDomain):
         """Convert a mpmath ``mpf`` object to ``dtype``. """
         return K1._ground_new(K1.dom.convert(a, K0))
 
-    def from_AlgebraicField(K1, a, K0):
+    def from_AlgebraicField(K1, a, K0) -> None:
         """Convert a ``ANP`` object to ``dtype``. """
         if K1.dom == K0:
             return K1._ground_new(a)
@@ -209,7 +212,7 @@ class PolynomialRingBase(Ring, CompositeDomain):
         # NOTE this works for global and local rings!
         return [self(x) for x in dics]
 
-    def free_module(self, rank):
+    def free_module(self, rank) -> FreeModulePolyRing:
         """
         Generate a free module of rank ``rank`` over ``self``.
 
@@ -249,7 +252,7 @@ class GlobalPolynomialRing(PolynomialRingBase):
         else:
             return self.dtype(element, self.dom, len(self.gens) - 1)
 
-    def from_FractionField(K1, a, K0):
+    def from_FractionField(K1, a, K0) -> None:
         """
         Convert a ``DMF`` object to ``DMP``.
 
@@ -274,7 +277,7 @@ class GlobalPolynomialRing(PolynomialRingBase):
         if a.denom().is_one:
             return K1.from_GlobalPolynomialRing(a.numer(), K0)
 
-    def to_sympy(self, a):
+    def to_sympy(self, a) -> Order:
         """Convert ``a`` to a SymPy object. """
         return basic_from_dict(a.to_sympy_dict(), *self.gens)
 
@@ -327,7 +330,7 @@ class GeneralizedPolynomialRing(PolynomialRingBase):
 
     dtype = DMF
 
-    def new(self, a):
+    def new(self, a) -> DMF:
         """Construct an element of ``self`` domain from ``a``. """
         res = self.dtype(a, self.dom, len(self.gens) - 1)
 
@@ -338,7 +341,7 @@ class GeneralizedPolynomialRing(PolynomialRingBase):
                                  % (sstr(res), self))
         return res
 
-    def __contains__(self, a):
+    def __contains__(self, a) -> Literal[False]:
         try:
             a = self.convert(a)
         except CoercionFailed:
@@ -409,7 +412,7 @@ class GeneralizedPolynomialRing(PolynomialRingBase):
 
 
 @public
-def PolynomialRing(dom, *gens, **opts):
+def PolynomialRing(dom, *gens, **opts) -> Any | GeneralizedPolynomialRing:
     r"""
     Create a generalized multivariate polynomial ring.
 

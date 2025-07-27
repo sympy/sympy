@@ -16,6 +16,10 @@ from .exceptions import DMBadInputError, DMDomainError, DMShapeError
 from sympy.polys.domains import QQ
 
 from .ddm import DDM
+from sympy.polys.matrices.ddm import DDM
+from types import NotImplementedType
+from typing import Any
+from typing_extensions import Self
 
 
 if GROUND_TYPES != 'flint':
@@ -75,7 +79,7 @@ class SDM(dict):
     is_DFM = False
     is_DDM = False
 
-    def __init__(self, elemsdict, shape, domain):
+    def __init__(self, elemsdict, shape, domain) -> None:
         super().__init__(elemsdict)
         self.shape = self.rows, self.cols = m, n = shape
         self.domain = domain
@@ -98,7 +102,7 @@ class SDM(dict):
             else:
                 raise IndexError("index out of range")
 
-    def setitem(self, i, j, value):
+    def setitem(self, i, j, value) -> None:
         m, n = self.shape
         if not (-m <= i < m and -n <= j < n):
             raise IndexError("index out of range")
@@ -119,7 +123,7 @@ class SDM(dict):
                     if not rowi:
                         del self[i]
 
-    def extract_slice(self, slice1, slice2):
+    def extract_slice(self, slice1, slice2) -> Self:
         m, n = self.shape
         ri = range(m)[slice1]
         ci = range(n)[slice2]
@@ -133,7 +137,7 @@ class SDM(dict):
 
         return self.new(sdm, (len(ri), len(ci)), self.domain)
 
-    def extract(self, rows, cols):
+    def extract(self, rows, cols) -> Self:
         if not (self and rows and cols):
             return self.zeros((len(rows), len(cols)), self.domain)
 
@@ -184,7 +188,7 @@ class SDM(dict):
         return '%s(%s, %s, %s)' % (cls, rows, self.shape, self.domain)
 
     @classmethod
-    def new(cls, sdm, shape, domain):
+    def new(cls, sdm, shape, domain) -> Self:
         """
 
         Parameters
@@ -212,7 +216,7 @@ class SDM(dict):
         """
         return cls(sdm, shape, domain)
 
-    def copy(A):
+    def copy(A) -> Self:
         """
         Returns the copy of a :py:class:`~.SDM` object
 
@@ -232,7 +236,7 @@ class SDM(dict):
         return A.new(Ac, A.shape, A.domain)
 
     @classmethod
-    def from_list(cls, ddm, shape, domain):
+    def from_list(cls, ddm, shape, domain) -> Self:
         """
         Create :py:class:`~.SDM` object from a list of lists.
 
@@ -279,7 +283,7 @@ class SDM(dict):
         return cls(sdm, shape, domain)
 
     @classmethod
-    def from_ddm(cls, ddm):
+    def from_ddm(cls, ddm) -> Self:
         """
         Create :py:class:`~.SDM` from a :py:class:`~.DDM`.
 
@@ -306,7 +310,7 @@ class SDM(dict):
         """
         return cls.from_list(ddm, ddm.shape, ddm.domain)
 
-    def to_list(M):
+    def to_list(M) -> list[Any]:
         """
         Convert a :py:class:`~.SDM` object to a list of lists.
 
@@ -502,7 +506,7 @@ class SDM(dict):
                     sdm[i][j] = e
         return cls(sdm, shape, domain)
 
-    def to_dok(M):
+    def to_dok(M) -> dict[tuple[Any, Any], Any]:
         """
         Convert to dictionary of keys (dok) format.
 
@@ -595,7 +599,7 @@ class SDM(dict):
             for j, e in row.items():
                 yield (i, j), e
 
-    def to_ddm(M):
+    def to_ddm(M) -> DDM:
         """
         Convert a :py:class:`~.SDM` object to a :py:class:`~.DDM` object
 
@@ -611,7 +615,7 @@ class SDM(dict):
         """
         return DDM(M.to_list(), M.shape, M.domain)
 
-    def to_sdm(M):
+    def to_sdm(M) -> Self:
         """
         Convert to :py:class:`~.SDM` format (returns self).
         """
@@ -666,7 +670,7 @@ class SDM(dict):
         return M.to_ddm().to_dfm_or_ddm()
 
     @classmethod
-    def zeros(cls, shape, domain):
+    def zeros(cls, shape, domain) -> Self:
         r"""
 
         Returns a :py:class:`~.SDM` of size shape,
@@ -689,7 +693,7 @@ class SDM(dict):
         return cls({}, shape, domain)
 
     @classmethod
-    def ones(cls, shape, domain):
+    def ones(cls, shape, domain) -> Self:
         one = domain.one
         m, n = shape
         row = dict(zip(range(n), [one]*n))
@@ -697,7 +701,7 @@ class SDM(dict):
         return cls(sdm, shape, domain)
 
     @classmethod
-    def eye(cls, shape, domain):
+    def eye(cls, shape, domain) -> Self:
         """
 
         Returns a identity :py:class:`~.SDM` matrix of dimensions
@@ -722,13 +726,13 @@ class SDM(dict):
         return cls(sdm, (rows, cols), domain)
 
     @classmethod
-    def diag(cls, diagonal, domain, shape=None):
+    def diag(cls, diagonal, domain, shape=None) -> Self:
         if shape is None:
             shape = (len(diagonal), len(diagonal))
         sdm = {i: {i: v} for i, v in enumerate(diagonal) if v}
         return cls(sdm, shape, domain)
 
-    def transpose(M):
+    def transpose(M) -> Self:
         """
 
         Returns the transpose of a :py:class:`~.SDM` matrix
@@ -746,24 +750,24 @@ class SDM(dict):
         MT = sdm_transpose(M)
         return M.new(MT, M.shape[::-1], M.domain)
 
-    def __add__(A, B):
+    def __add__(A, B) -> NotImplementedType | Self:
         if not isinstance(B, SDM):
             return NotImplemented
         elif A.shape != B.shape:
             raise DMShapeError("Matrix size mismatch: %s + %s" % (A.shape, B.shape))
         return A.add(B)
 
-    def __sub__(A, B):
+    def __sub__(A, B) -> NotImplementedType | Self:
         if not isinstance(B, SDM):
             return NotImplemented
         elif A.shape != B.shape:
             raise DMShapeError("Matrix size mismatch: %s - %s" % (A.shape, B.shape))
         return A.sub(B)
 
-    def __neg__(A):
+    def __neg__(A) -> Self:
         return A.neg()
 
-    def __mul__(A, B):
+    def __mul__(A, B) -> Self | NotImplementedType:
         """A * B"""
         if isinstance(B, SDM):
             return A.matmul(B)
@@ -772,13 +776,13 @@ class SDM(dict):
         else:
             return NotImplemented
 
-    def __rmul__(a, b):
+    def __rmul__(a, b) -> Self | NotImplementedType:
         if b in a.domain:
             return a.rmul(b)
         else:
             return NotImplemented
 
-    def matmul(A, B):
+    def matmul(A, B) -> Self:
         """
         Performs matrix multiplication of two SDM matrices
 
@@ -820,7 +824,7 @@ class SDM(dict):
         C = sdm_matmul(A, B, A.domain, m, o)
         return A.new(C, (m, o), A.domain)
 
-    def mul(A, b):
+    def mul(A, b) -> Self:
         """
         Multiplies each element of A with a scalar b
 
@@ -837,11 +841,11 @@ class SDM(dict):
         Csdm = unop_dict(A, lambda aij: aij*b)
         return A.new(Csdm, A.shape, A.domain)
 
-    def rmul(A, b):
+    def rmul(A, b) -> Self:
         Csdm = unop_dict(A, lambda aij: b*aij)
         return A.new(Csdm, A.shape, A.domain)
 
-    def mul_elementwise(A, B):
+    def mul_elementwise(A, B) -> Self:
         if A.domain != B.domain:
             raise DMDomainError
         if A.shape != B.shape:
@@ -851,7 +855,7 @@ class SDM(dict):
         Csdm = binop_dict(A, B, mul, fzero, fzero)
         return A.new(Csdm, A.shape, A.domain)
 
-    def add(A, B):
+    def add(A, B) -> Self:
         """
 
         Adds two :py:class:`~.SDM` matrices
@@ -870,7 +874,7 @@ class SDM(dict):
         Csdm = binop_dict(A, B, add, pos, pos)
         return A.new(Csdm, A.shape, A.domain)
 
-    def sub(A, B):
+    def sub(A, B) -> Self:
         """
 
         Subtracts two :py:class:`~.SDM` matrices
@@ -889,7 +893,7 @@ class SDM(dict):
         Csdm = binop_dict(A, B, sub, pos, neg)
         return A.new(Csdm, A.shape, A.domain)
 
-    def neg(A):
+    def neg(A) -> Self:
         """
 
         Returns the negative of a :py:class:`~.SDM` matrix
@@ -907,7 +911,7 @@ class SDM(dict):
         Csdm = unop_dict(A, neg)
         return A.new(Csdm, A.shape, A.domain)
 
-    def convert_to(A, K):
+    def convert_to(A, K) -> Self:
         """
         Converts the :py:class:`~.Domain` of a :py:class:`~.SDM` matrix to K
 
@@ -946,7 +950,7 @@ class SDM(dict):
         """
         return sum(map(len, A.values()))
 
-    def scc(A):
+    def scc(A) -> list[Any]:
         """Strongly connected components of a square matrix *A*.
 
         Examples
@@ -969,7 +973,7 @@ class SDM(dict):
         Emap = {v: list(A.get(v, [])) for v in V}
         return _strongly_connected_components(V, Emap)
 
-    def rref(A):
+    def rref(A) -> tuple[Self, list[Any]]:
         """
 
         Returns reduced-row echelon form and list of pivots for the :py:class:`~.SDM`
@@ -1007,7 +1011,7 @@ class SDM(dict):
         A_rref = A.new(A_rref_sdm, A.shape, A.domain)
         return A_rref, denom, pivots
 
-    def inv(A):
+    def inv(A) -> Self:
         """
 
         Returns inverse of a matrix A
@@ -1047,7 +1051,7 @@ class SDM(dict):
         # if possible (dfm).
         return A.to_dfm_or_ddm().det()
 
-    def lu(A):
+    def lu(A) -> tuple[Self, Self, list[Any]]:
         """
 
         Returns LU decomposition for a matrix A
@@ -1078,7 +1082,7 @@ class SDM(dict):
         R = ddm_r.to_sdm()
         return Q, R
 
-    def lu_solve(A, b):
+    def lu_solve(A, b) -> Self:
         """
 
         Uses LU decomposition to solve Ax = b,
@@ -1114,7 +1118,7 @@ class SDM(dict):
         U = ddm_u.to_sdm()
         return P, L, D, U
 
-    def nullspace(A):
+    def nullspace(A) -> tuple[Self, list[int]]:
         """
         Nullspace of a :py:class:`~.SDM` matrix A.
 
@@ -1235,14 +1239,14 @@ class SDM(dict):
 
         return (A_null, nonpivots)
 
-    def particular(A):
+    def particular(A) -> Self:
         ncols = A.shape[1]
         B, pivots, nzcols = sdm_irref(A)
         P = sdm_particular_from_rref(B, ncols, pivots)
         rep = {0:P} if P else {}
         return A.new(rep, (1, ncols-1), A.domain)
 
-    def hstack(A, *B):
+    def hstack(A, *B) -> Self:
         """Horizontally stacks :py:class:`~.SDM` matrices.
 
         Examples
@@ -1279,7 +1283,7 @@ class SDM(dict):
 
         return A.new(Anew, (rows, cols), A.domain)
 
-    def vstack(A, *B):
+    def vstack(A, *B) -> Self:
         """Vertically stacks :py:class:`~.SDM` matrices.
 
         Examples
@@ -1312,11 +1316,11 @@ class SDM(dict):
 
         return A.new(Anew, (rows, cols), A.domain)
 
-    def applyfunc(self, func, domain):
+    def applyfunc(self, func, domain) -> Self:
         sdm = {i: {j: func(e) for j, e in row.items()} for i, row in self.items()}
         return self.new(sdm, self.shape, domain)
 
-    def charpoly(A):
+    def charpoly(A) -> list[Any]:
         """
         Returns the coefficients of the characteristic polynomial
         of the :py:class:`~.SDM` matrix. These elements will be domain elements.
@@ -1349,20 +1353,20 @@ class SDM(dict):
             plist[i] = pi
         return plist
 
-    def is_zero_matrix(self):
+    def is_zero_matrix(self) -> bool:
         """
         Says whether this matrix has all zero entries.
         """
         return not self
 
-    def is_upper(self):
+    def is_upper(self) -> bool:
         """
         Says whether this matrix is upper-triangular. True can be returned
         even if the matrix is not square.
         """
         return all(i <= j for i, row in self.items() for j in row)
 
-    def is_lower(self):
+    def is_lower(self) -> bool:
         """
         Says whether this matrix is lower-triangular. True can be returned
         even if the matrix is not square.
@@ -1384,13 +1388,13 @@ class SDM(dict):
         zero = self.domain.zero
         return [row.get(i, zero) for i, row in self.items() if i < n]
 
-    def lll(A, delta=QQ(3, 4)):
+    def lll(A, delta=QQ(3, 4)) -> Self:
         """
         Returns the LLL-reduced basis for the :py:class:`~.SDM` matrix.
         """
         return A.to_dfm_or_ddm().lll(delta=delta).to_sdm()
 
-    def lll_transform(A, delta=QQ(3, 4)):
+    def lll_transform(A, delta=QQ(3, 4)) -> tuple[Self, Self]:
         """
         Returns the LLL-reduced basis and transformation matrix.
         """
@@ -1398,7 +1402,7 @@ class SDM(dict):
         return reduced.to_sdm(), transform.to_sdm()
 
 
-def binop_dict(A, B, fab, fa, fb):
+def binop_dict(A, B, fab, fa, fb) -> dict[Any, Any]:
     Anz, Bnz = set(A), set(B)
     C = {}
 
@@ -1444,7 +1448,7 @@ def binop_dict(A, B, fab, fa, fb):
     return C
 
 
-def unop_dict(A, f):
+def unop_dict(A, f) -> dict[Any, Any]:
     B = {}
     for i, Ai in A.items():
         Bi = {}
@@ -1457,7 +1461,7 @@ def unop_dict(A, f):
     return B
 
 
-def sdm_transpose(M):
+def sdm_transpose(M) -> dict[Any, Any]:
     MT = {}
     for i, Mi in M.items():
         for j, Mij in Mi.items():
@@ -1481,7 +1485,7 @@ def sdm_matvecmul(A, B, K):
     return C
 
 
-def sdm_matmul(A, B, K, m, o):
+def sdm_matmul(A, B, K, m, o) -> dict[Any, Any]:
     #
     # Should be fast if A and B are very sparse.
     # Consider e.g. A = B = eye(1000).
@@ -1525,7 +1529,7 @@ def sdm_matmul(A, B, K, m, o):
     return C
 
 
-def sdm_matmul_exraw(A, B, K, m, o):
+def sdm_matmul_exraw(A, B, K, m, o) -> dict[Any, Any]:
     #
     # Like sdm_matmul above except that:
     #
@@ -1589,7 +1593,7 @@ def sdm_matmul_exraw(A, B, K, m, o):
     return C
 
 
-def sdm_irref(A):
+def sdm_irref(A) -> tuple[dict[int, Any], list[Any], dict[Any, set[int]]]:
     """RREF and pivots of a sparse matrix *A*.
 
     Compute the reduced row echelon form (RREF) of the matrix *A* and return a
@@ -2056,7 +2060,7 @@ def sdm_rref_den(A, K):
     return A_rref_sdm, denom, pivots
 
 
-def sdm_nullspace_from_rref(A, one, ncols, pivots, nonzero_cols):
+def sdm_nullspace_from_rref(A, one, ncols, pivots, nonzero_cols) -> tuple[list[Any], list[int]]:
     """Get nullspace from A which is in RREF"""
     nonpivots = sorted(set(range(ncols)) - set(pivots))
 
@@ -2070,7 +2074,7 @@ def sdm_nullspace_from_rref(A, one, ncols, pivots, nonzero_cols):
     return K, nonpivots
 
 
-def sdm_particular_from_rref(A, ncols, pivots):
+def sdm_particular_from_rref(A, ncols, pivots) -> dict[Any, Any]:
     """Get a particular solution from A which is in RREF"""
     P = {}
     for i, j in enumerate(pivots):

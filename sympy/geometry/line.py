@@ -34,7 +34,7 @@ from .point import Point, Point3D
 from .util import find, intersection
 from sympy.logic.boolalg import And
 from sympy.matrices import Matrix
-from sympy.sets.sets import Intersection
+from sympy.sets.sets import Complement, FiniteSet, Union, Intersection
 from sympy.simplify.simplify import simplify
 from sympy.solvers.solvers import solve
 from sympy.solvers.solveset import linear_coeffs
@@ -42,6 +42,14 @@ from sympy.utilities.misc import Undecidable, filldedent
 
 
 import random
+from sympy.core.basic import Basic
+from sympy.core.function import UndefinedFunction
+from sympy.core.power import Pow
+from sympy.geometry.entity import GeometrySet
+from sympy.geometry.point import Point, Point2D, Point3D
+from types import NotImplementedType
+from typing import Any
+from typing_extensions import Self
 
 
 t, u = [Dummy('line_dummy') for i in range(2)]
@@ -72,7 +80,7 @@ class LinearEntity(GeometrySet):
     sympy.geometry.entity.GeometryEntity
 
     """
-    def __new__(cls, p1, p2=None, **kwargs):
+    def __new__(cls, p1, p2=None, **kwargs) -> Self:
         p1, p2 = Point._normalize_dimension(p1, p2)
         if p1 == p2:
             # sometimes we return a single point if we are not given two unique
@@ -111,7 +119,7 @@ class LinearEntity(GeometrySet):
         return -1
 
     @property
-    def ambient_dimension(self):
+    def ambient_dimension(self) -> int:
         """A property method that returns the dimension of LinearEntity
         object.
 
@@ -143,7 +151,7 @@ class LinearEntity(GeometrySet):
         """
         return len(self.p1)
 
-    def angle_between(l1, l2):
+    def angle_between(l1, l2) -> type[UndefinedFunction]:
         """Return the non-reflex angle formed by rays emanating from
         the origin with directions the same as the direction vectors
         of the linear entities.
@@ -207,7 +215,7 @@ class LinearEntity(GeometrySet):
         v1, v2 = l1.direction, l2.direction
         return acos(v1.dot(v2)/(abs(v1)*abs(v2)))
 
-    def smallest_angle_between(l1, l2):
+    def smallest_angle_between(l1, l2) -> type[UndefinedFunction]:
         """Return the smallest angle formed at the intersection of the
         lines containing the linear entities.
 
@@ -296,7 +304,7 @@ class LinearEntity(GeometrySet):
         return self.p1 + (self.p2 - self.p1)*t
 
     @staticmethod
-    def are_concurrent(*lines):
+    def are_concurrent(*lines) -> bool:
         """Is a sequence of linear entities concurrent?
 
         Two or more linear entities are concurrent if they all
@@ -666,7 +674,7 @@ class LinearEntity(GeometrySet):
 
         return S.Zero.equals(l1.direction.dot(l2.direction))
 
-    def is_similar(self, other):
+    def is_similar(self, other) -> bool:
         """
         Return True if self and other are contained in the same line.
 
@@ -700,7 +708,7 @@ class LinearEntity(GeometrySet):
         return S.Infinity
 
     @property
-    def p1(self):
+    def p1(self) -> Basic:
         """The first defining point of a linear entity.
 
         See Also
@@ -721,7 +729,7 @@ class LinearEntity(GeometrySet):
         return self.args[0]
 
     @property
-    def p2(self):
+    def p2(self) -> Basic:
         """The second defining point of a linear entity.
 
         See Also
@@ -741,7 +749,7 @@ class LinearEntity(GeometrySet):
         """
         return self.args[1]
 
-    def parallel_line(self, p):
+    def parallel_line(self, p) -> Line | Line2D | Line3D | None:
         """Create a new Line parallel to this linear entity which passes
         through the point `p`.
 
@@ -784,7 +792,7 @@ class LinearEntity(GeometrySet):
         p = Point(p, dim=self.ambient_dimension)
         return Line(p, p + self.direction)
 
-    def perpendicular_line(self, p):
+    def perpendicular_line(self, p) -> Line | Line2D | Line3D | None:
         """Create a new Line perpendicular to this linear entity which passes
         through the point `p`.
 
@@ -826,7 +834,7 @@ class LinearEntity(GeometrySet):
             p = p + self.direction.orthogonal_direction
         return Line(p, self.projection(p))
 
-    def perpendicular_segment(self, p):
+    def perpendicular_segment(self, p) -> Point | Point2D | Point3D | Segment2D | Segment3D | Segment:
         """Create a perpendicular line segment from `p` to this line.
 
         The endpoints of the segment are ``p`` and the closest point in
@@ -888,7 +896,7 @@ class LinearEntity(GeometrySet):
         return Segment(p, p2)
 
     @property
-    def points(self):
+    def points(self) -> tuple[Basic, Basic]:
         """The two points used to define this linear entity.
 
         Returns
@@ -913,7 +921,7 @@ class LinearEntity(GeometrySet):
         """
         return (self.p1, self.p2)
 
-    def projection(self, other):
+    def projection(self, other) -> FiniteSet | Intersection | Union | Complement | Basic:
         """Project a point, line, ray, or segment onto this linear entity.
 
         Parameters
@@ -1047,7 +1055,7 @@ class LinearEntity(GeometrySet):
             raise NotImplementedError('unhandled line type')
         return pt.subs(t, Rational(v))
 
-    def bisectors(self, other):
+    def bisectors(self, other) -> list[Self] | list[Line | Line2D | Line3D | None]:
         """Returns the perpendicular lines which pass through the intersections
         of self and other that are in the same plane.
 
@@ -1178,7 +1186,7 @@ class Line(LinearEntity):
     >>> Line(Eq(3*a + b, -18), x='a', y=b)
     Line2D(Point2D(0, -18), Point2D(1, -21))
     """
-    def __new__(cls, *args, **kwargs):
+    def __new__(cls, *args, **kwargs) -> Line | Line2D | Line3D | Self | None:
         if len(args) == 1 and isinstance(args[0], (Expr, Eq)):
             missing = uniquely_named_symbol('?', args)
             if not kwargs:
@@ -1235,7 +1243,7 @@ class Line(LinearEntity):
                     return Line3D(p1, p2, **kwargs)
                 return LinearEntity.__new__(cls, p1, p2, **kwargs)
 
-    def contains(self, other):
+    def contains(self, other) -> bool:
         """
         Return True if `other` is on this Line, or False otherwise.
 
@@ -1270,7 +1278,7 @@ class Line(LinearEntity):
             return Point.is_collinear(self.p1, self.p2, other.p1, other.p2)
         return False
 
-    def distance(self, other):
+    def distance(self, other) -> Pow | Any:
         """
         Finds the shortest distance between a line and a point.
 
@@ -1303,13 +1311,13 @@ class Line(LinearEntity):
             return S.Zero
         return self.perpendicular_segment(other).length
 
-    def equals(self, other):
+    def equals(self, other) -> bool:
         """Returns True if self and other are the same mathematical entities"""
         if not isinstance(other, Line):
             return False
         return Point.is_collinear(self.p1, other.p1, self.p2, other.p2)
 
-    def plot_interval(self, parameter='t'):
+    def plot_interval(self, parameter='t') -> list[Any]:
         """The plot interval for the default geometric plot of line. Gives
         values that will produce a line that is +/- 5 units long (where a
         unit is the distance between the two points that define the line).
@@ -1393,7 +1401,7 @@ class Ray(LinearEntity):
     1
 
     """
-    def __new__(cls, p1, p2=None, **kwargs):
+    def __new__(cls, p1, p2=None, **kwargs) -> Ray2D | Ray3D | Self:
         p1 = Point(p1)
         if p2 is not None:
             p1, p2 = Point._normalize_dimension(p1, Point(p2))
@@ -1426,7 +1434,7 @@ class Ray(LinearEntity):
             'marker-start="url(#markerCircle)" marker-end="url(#markerArrow)"/>'
         ).format(2.*scale_factor, path, fill_color)
 
-    def contains(self, other):
+    def contains(self, other) -> bool:
         """
         Is other GeometryEntity contained in this Ray?
 
@@ -1514,13 +1522,13 @@ class Ray(LinearEntity):
         else:
             return abs(other - self.source)
 
-    def equals(self, other):
+    def equals(self, other) -> bool | NotImplementedType:
         """Returns True if self and other are the same mathematical entities"""
         if not isinstance(other, Ray):
             return False
         return self.source == other.source and other.p2 in self
 
-    def plot_interval(self, parameter='t'):
+    def plot_interval(self, parameter='t') -> list[Any]:
         """The plot interval for the default geometric plot of the Ray. Gives
         values that will produce a ray that is 10 units long (where a unit is
         the distance between the two points that define the ray).
@@ -1550,7 +1558,7 @@ class Ray(LinearEntity):
         return [t, 0, 10]
 
     @property
-    def source(self):
+    def source(self) -> Basic:
         """The point from which the ray emanates.
 
         See Also
@@ -1631,7 +1639,7 @@ class Segment(LinearEntity):
     Point3D(5/2, 2, 8)
 
     """
-    def __new__(cls, p1, p2, **kwargs):
+    def __new__(cls, p1, p2, **kwargs) -> Point | Point2D | Point3D | Segment2D | Segment3D | Self:
         p1, p2 = Point._normalize_dimension(Point(p1), Point(p2))
         dim = len(p1)
 
@@ -1641,7 +1649,7 @@ class Segment(LinearEntity):
             return Segment3D(p1, p2, **kwargs)
         return LinearEntity.__new__(cls, p1, p2, **kwargs)
 
-    def contains(self, other):
+    def contains(self, other) -> bool:
         """
         Is the other GeometryEntity contained within this Segment?
 
@@ -1696,12 +1704,12 @@ class Segment(LinearEntity):
 
         return False
 
-    def equals(self, other):
+    def equals(self, other) -> bool:
         """Returns True if self and other are the same mathematical entities"""
         return isinstance(other, self.func) and list(
             ordered(self.args)) == list(ordered(other.args))
 
-    def distance(self, other):
+    def distance(self, other) -> Pow | Any:
         """
         Finds the shortest distance between a line segment and a point.
 
@@ -1745,7 +1753,7 @@ class Segment(LinearEntity):
         raise NotImplementedError()
 
     @property
-    def length(self):
+    def length(self) -> Pow | Any:
         """The length of the line segment.
 
         See Also
@@ -1771,7 +1779,7 @@ class Segment(LinearEntity):
         return Point.distance(self.p1, self.p2)
 
     @property
-    def midpoint(self):
+    def midpoint(self) -> Point | Point2D | Point3D:
         """The midpoint of the line segment.
 
         See Also
@@ -1796,7 +1804,7 @@ class Segment(LinearEntity):
         """
         return Point.midpoint(self.p1, self.p2)
 
-    def perpendicular_bisector(self, p=None):
+    def perpendicular_bisector(self, p=None) -> Point | Point2D | Point3D | Segment2D | Segment3D | Segment | Line | Line2D | Line3D | None:
         """The perpendicular bisector of this segment.
 
         If no point is specified or the point specified is not on the
@@ -1839,7 +1847,7 @@ class Segment(LinearEntity):
                 return Segment(p2, self.midpoint)
         return l
 
-    def plot_interval(self, parameter='t'):
+    def plot_interval(self, parameter='t') -> list[Any]:
         """The plot interval for the default geometric plot of the Segment gives
         values that will produce the full segment in a plot.
 
@@ -1894,7 +1902,7 @@ class LinearEntity2D(LinearEntity):
 
     """
     @property
-    def bounds(self):
+    def bounds(self) -> tuple[Any, Any, Any, Any]:
         """Return a tuple (xmin, ymin, xmax, ymax) representing the bounding
         rectangle for the geometric figure.
 
@@ -1904,7 +1912,7 @@ class LinearEntity2D(LinearEntity):
         ys = [p.y for p in verts]
         return (min(xs), min(ys), max(xs), max(ys))
 
-    def perpendicular_line(self, p):
+    def perpendicular_line(self, p) -> Line | Line2D | Line3D | None:
         """Create a new Line perpendicular to this linear entity which passes
         through the point `p`.
 
@@ -2027,7 +2035,7 @@ class Line2D(LinearEntity2D, Line):
     >>> Line(s).equation()
     x
     """
-    def __new__(cls, p1, pt=None, slope=None, **kwargs):
+    def __new__(cls, p1, pt=None, slope=None, **kwargs) -> Self:
         if isinstance(p1, LinearEntity):
             if pt is not None:
                 raise ValueError('When p1 is a LinearEntity, pt should be None')
@@ -2080,7 +2088,7 @@ class Line2D(LinearEntity2D, Line):
         ).format(2.*scale_factor, path, fill_color)
 
     @property
-    def coefficients(self):
+    def coefficients(self) -> tuple[Any, Any, Any] | tuple[Any, ...]:
         """The coefficients (`a`, `b`, `c`) for `ax + by + c = 0`.
 
         See Also
@@ -2204,7 +2212,7 @@ class Ray2D(LinearEntity2D, Ray):
     1
 
     """
-    def __new__(cls, p1, pt=None, angle=None, **kwargs):
+    def __new__(cls, p1, pt=None, angle=None, **kwargs) -> Self:
         p1 = Point(p1, dim=2)
         if pt is not None and angle is None:
             try:
@@ -2397,7 +2405,7 @@ class Segment2D(LinearEntity2D, Segment):
     Point2D(5/2, 2)
 
     """
-    def __new__(cls, p1, p2, **kwargs):
+    def __new__(cls, p1, p2, **kwargs) -> Point | Point2D | Point3D | Self:
         p1 = Point(p1, dim=2)
         p2 = Point(p2, dim=2)
 
@@ -2444,7 +2452,7 @@ class LinearEntity3D(LinearEntity):
 
     This is a base class and is not meant to be instantiated.
     """
-    def __new__(cls, p1, p2, **kwargs):
+    def __new__(cls, p1, p2, **kwargs) -> Self:
         p1 = Point3D(p1, dim=3)
         p2 = Point3D(p2, dim=3)
         if p1 == p2:
@@ -2531,7 +2539,7 @@ class Line3D(LinearEntity3D, Line):
     >>> L.points
     (Point3D(2, 3, 4), Point3D(3, 5, 1))
     """
-    def __new__(cls, p1, pt=None, direction_ratio=(), **kwargs):
+    def __new__(cls, p1, pt=None, direction_ratio=(), **kwargs) -> Self:
         if isinstance(p1, LinearEntity3D):
             if pt is not None:
                 raise ValueError('if p1 is a LinearEntity, pt must be None.')
@@ -2549,7 +2557,7 @@ class Line3D(LinearEntity3D, Line):
 
         return LinearEntity3D.__new__(cls, p1, pt, **kwargs)
 
-    def equation(self, x='x', y='y', z='z'):
+    def equation(self, x='x', y='y', z='z') -> Tuple:
         """Return the equations that define the line in 3D.
 
         Parameters
@@ -2713,7 +2721,7 @@ class Ray3D(LinearEntity3D, Ray):
     [1, 2, -4]
 
     """
-    def __new__(cls, p1, pt=None, direction_ratio=(), **kwargs):
+    def __new__(cls, p1, pt=None, direction_ratio=(), **kwargs) -> Self:
         if isinstance(p1, LinearEntity3D):
             if pt is not None:
                 raise ValueError('If p1 is a LinearEntity, pt must be None')
@@ -2867,7 +2875,7 @@ class Segment3D(LinearEntity3D, Segment):
     Point3D(5/2, 2, 8)
 
     """
-    def __new__(cls, p1, p2, **kwargs):
+    def __new__(cls, p1, p2, **kwargs) -> Point | Point2D | Point3D | Self:
         p1 = Point(p1, dim=3)
         p2 = Point(p2, dim=3)
 

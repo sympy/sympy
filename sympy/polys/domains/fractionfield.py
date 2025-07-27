@@ -9,6 +9,7 @@ from sympy.polys.domains.compositedomain import CompositeDomain
 from sympy.polys.domains.field import Field
 from sympy.polys.polyerrors import CoercionFailed, GeneratorsError
 from sympy.utilities import public
+from sympy.polys.fields import FracElement
 
 
 if TYPE_CHECKING:
@@ -26,7 +27,7 @@ class FractionField(Field, CompositeDomain, Generic[Er]):
     has_assoc_Ring = True
     has_assoc_Field = True
 
-    def __init__(self, domain_or_field: FracField[Er] | Domain[Er], symbols=None, order=None):
+    def __init__(self, domain_or_field: FracField[Er] | Domain[Er], symbols=None, order=None) -> None:
         from sympy.polys.fields import FracField
 
         if isinstance(domain_or_field, FracField) and symbols is None and order is None:
@@ -45,7 +46,7 @@ class FractionField(Field, CompositeDomain, Generic[Er]):
         # TODO: remove this
         self.dom = self.domain
 
-    def new(self, element):
+    def new(self, element) -> FracElement:
         return self.field.field_new(element)
 
     def of_type(self, element) -> TypeIs[FracElement[Er]]:
@@ -67,10 +68,10 @@ class FractionField(Field, CompositeDomain, Generic[Er]):
     def __str__(self):
         return str(self.domain) + '(' + ','.join(map(str, self.symbols)) + ')'
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash((self.__class__.__name__, self.field, self.domain, self.symbols))
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
         """Returns ``True`` if two domains are equivalent. """
         if not isinstance(other, FractionField):
             return NotImplemented
@@ -129,14 +130,14 @@ class FractionField(Field, CompositeDomain, Generic[Er]):
         """Convert a mpmath ``mpf`` object to ``dtype``. """
         return K1(K1.domain.convert(a, K0))
 
-    def from_AlgebraicField(K1, a, K0):
+    def from_AlgebraicField(K1, a, K0) -> FracElement | None:
         """Convert an algebraic number to ``dtype``. """
         if K1.domain != K0:
             a = K1.domain.convert_from(a, K0)
         if a is not None:
             return K1.new(a)
 
-    def from_PolynomialRing(K1, a, K0):
+    def from_PolynomialRing(K1, a, K0) -> FracElement | None:
         """Convert a polynomial to ``dtype``. """
         if a.is_ground:
             return K1.convert_from(a.coeff(1), K0.domain)
@@ -152,7 +153,7 @@ class FractionField(Field, CompositeDomain, Generic[Er]):
             except (CoercionFailed, GeneratorsError):
                 return None
 
-    def from_FractionField(K1, a, K0):
+    def from_FractionField(K1, a, K0) -> None:
         """Convert a rational function to ``dtype``. """
         try:
             return a.set_field(K1.field)

@@ -1,6 +1,8 @@
 from sympy.core import Basic
 from sympy.functions import adjoint, conjugate
 from sympy.matrices.expressions.matexpr import MatrixExpr
+import sympy.core.basic
+from sympy.core.function import UndefinedFunction
 
 
 class Adjoint(MatrixExpr):
@@ -28,7 +30,7 @@ class Adjoint(MatrixExpr):
     """
     is_Adjoint = True
 
-    def doit(self, **hints):
+    def doit(self, **hints) -> type[UndefinedFunction]:
         arg = self.arg
         if hints.get('deep', True) and isinstance(arg, Basic):
             return adjoint(arg.doit(**hints))
@@ -36,7 +38,7 @@ class Adjoint(MatrixExpr):
             return adjoint(self.arg)
 
     @property
-    def arg(self):
+    def arg(self) ->     sympy.core.basic.Basic:
         return self.args[0]
 
     @property

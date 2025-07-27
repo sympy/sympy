@@ -12,6 +12,12 @@ from sympy.functions.combinatorial.factorials import RisingFactorial
 from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.polys import quo, roots
+from sympy.concrete.expr_with_intlimits import ExprWithIntLimits
+from sympy.core.basic import Basic
+from sympy.core.relational import Equality, Ne, Relational
+from sympy.series.order import Order
+from typing import Any
+from typing_extensions import Self
 
 
 class Product(ExprWithIntLimits):
@@ -193,7 +199,7 @@ class Product(ExprWithIntLimits):
 
     limits: tuple[tuple[Symbol, Expr, Expr]]
 
-    def __new__(cls, function, *symbols, **assumptions):
+    def __new__(cls, function, *symbols, **assumptions) -> Equality | Relational | Ne | Self:
         obj = ExprWithIntLimits.__new__(cls, function, *symbols, **assumptions)
         return obj
 
@@ -201,7 +207,7 @@ class Product(ExprWithIntLimits):
         return exp(Sum(log(self.function), *self.limits))
 
     @property
-    def term(self):
+    def term(self) -> Basic:
         return self._args[0]
     function = term
 
@@ -248,7 +254,7 @@ class Product(ExprWithIntLimits):
         if self.has_finite_limits and self.function.is_finite:
             return True
 
-    def doit(self, **hints):
+    def doit(self, **hints) -> tuple[Any, ...] | Self | Basic | Equality | Order | Relational | Ne | Any:
         # first make sure any definite limits have product
         # variables with matching assumptions
         reps = {}
@@ -473,7 +479,7 @@ class Product(ExprWithIntLimits):
                                         "is not yet implemented" % (sequence_term))
         return is_conv
 
-    def reverse_order(expr, *indices):
+    def reverse_order(expr, *indices) -> "Product":
         """
         Reverse the order of a limit in a Product.
 
@@ -560,7 +566,7 @@ class Product(ExprWithIntLimits):
         return Product(expr.function ** e, *limits)
 
 
-def product(*args, **kwargs):
+def product(*args, **kwargs) -> Equality | Relational | Ne:
     r"""
     Compute the product.
 

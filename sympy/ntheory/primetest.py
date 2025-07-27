@@ -70,7 +70,7 @@ def is_fermat_pseudoprime(n, a):
     return is_fermat_prp(n, a)
 
 
-def is_euler_pseudoprime(n, a):
+def is_euler_pseudoprime(n, a) -> bool:
     r"""Returns True if ``n`` is prime or is an odd composite integer that
     is coprime to ``a`` and satisfy the modular arithmetic congruence relation:
 
@@ -171,7 +171,7 @@ def is_euler_jacobi_pseudoprime(n, a):
     return is_euler_prp(n, a)
 
 
-def is_square(n, prep=True):
+def is_square(n, prep=True) -> bool:
     """Return True if n == a * a for some integer a, else False.
     If n is suspected of *not* being a square then this is a
     quick method of confirming that it is not.
@@ -223,7 +223,7 @@ def _test(n, base, s, t):
     return False
 
 
-def mr(n, bases):
+def mr(n, bases) -> bool:
     """Perform a Miller-Rabin strong pseudoprime test on n using a
     given list of bases/witnesses.
 
@@ -305,7 +305,7 @@ def _lucas_extrastrong_params(n):
             return (0, 0, 0)
 
 
-def is_lucas_prp(n):
+def is_lucas_prp(n) -> bool:
     """Standard Lucas compositeness test with Selfridge parameters.  Returns
     False if n is definitely composite, and True if n is a Lucas probable
     prime.
@@ -345,7 +345,7 @@ def is_lucas_prp(n):
     return is_selfridge_prp(n)
 
 
-def is_strong_lucas_prp(n):
+def is_strong_lucas_prp(n) -> bool:
     """Strong Lucas compositeness test with Selfridge parameters.  Returns
     False if n is definitely composite, and True if n is a strong Lucas
     probable prime.
@@ -383,7 +383,7 @@ def is_strong_lucas_prp(n):
     return is_strong_selfridge_prp(n)
 
 
-def is_extra_strong_lucas_prp(n):
+def is_extra_strong_lucas_prp(n) -> bool:
     """Extra Strong Lucas compositeness test.  Returns False if n is
     definitely composite, and True if n is an "extra strong" Lucas probable
     prime.
@@ -555,7 +555,7 @@ def _lucas_lehmer_primality_test(p):
     return v == 0
 
 
-def is_mersenne_prime(n):
+def is_mersenne_prime(n) -> bool:
     """Returns True if  ``n`` is a Mersenne prime, else False.
 
     A Mersenne prime is a prime number having the form `2^i - 1`.
@@ -624,7 +624,7 @@ _MR_BASES_32 = [15591, 2018, 166, 7429, 8064, 16045, 10503, 4399, 1949, 1295,
                 2663, 4708, 418, 1621, 1171, 3471, 88, 11345, 412, 1559, 194]
 
 
-def isprime(n):
+def isprime(n) -> bool:
     """
     Test if n is a prime number (True) or not (False). For n < 2^64 the
     answer is definitive; larger n values have a small probability of actually
@@ -808,7 +808,7 @@ def isprime(n):
     #return mr(n, [2, random.randint(3, n-1)]) and is_strong_lucas_prp(n)
 
 
-def is_gaussian_prime(num):
+def is_gaussian_prime(num) -> bool:
     r"""Test if num is a Gaussian prime number.
 
     References

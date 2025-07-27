@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, overload
+from typing import Literal, TYPE_CHECKING, overload
 
 from .core import Registry
 from .sympify import sympify
+from sympy.core.core import Registry
 
 
 if TYPE_CHECKING:
@@ -153,7 +154,7 @@ class SingletonRegistry(Registry):
         return sympify(a, locals=locals, convert_xor=convert_xor, strict=strict,
                        rational=rational, evaluate=evaluate) # type: ignore
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._classes_to_install = {}
         # Dict of classes that have been registered, but that have not have been
         # installed as an attribute of this SingletonRegistry.
@@ -164,7 +165,7 @@ class SingletonRegistry(Registry):
         # actual use (which should not happen until after all imports are
         # finished).
 
-    def register(self, cls):
+    def register(self, cls) -> None:
         # Make sure a duplicate class overwrites the old one
         if hasattr(self, cls.__name__):
             delattr(self, cls.__name__)
@@ -191,7 +192,7 @@ class SingletonRegistry(Registry):
         del self._classes_to_install[name]
         return value_to_install
 
-    def __repr__(self):
+    def __repr__(self) -> Literal["S"]:
         return "S"
 
 S = SingletonRegistry()
@@ -229,7 +230,7 @@ class Singleton(type):
     (SymPy versions before 1.0 would create the instance during class
     creation time, which would be prone to import cycles.)
     """
-    def __init__(cls, *args, **kwargs):
+    def __init__(cls, *args, **kwargs) -> None:
         cls._instance = obj = Basic.__new__(cls)
         cls.__new__ = lambda cls: obj
         cls.__getnewargs__ = lambda obj: ()

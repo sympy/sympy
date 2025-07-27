@@ -11,9 +11,10 @@ from sympy.discrete.transforms import (
 from sympy.external.gmpy import MPZ, lcm
 from sympy.utilities.iterables import iterable
 from sympy.utilities.misc import as_int
+from typing import Any
 
 
-def convolution(a, b, cycle=0, dps=None, prime=None, dyadic=None, subset=None):
+def convolution(a, b, cycle=0, dps=None, prime=None, dyadic=None, subset=None) -> list[int] | list[Any | int] | Any | list[Any]:
     """
     Performs convolution by determining the type of desired
     convolution using hints.
@@ -124,7 +125,7 @@ def convolution(a, b, cycle=0, dps=None, prime=None, dyadic=None, subset=None):
 #                                                                            #
 #----------------------------------------------------------------------------#
 
-def convolution_fft(a, b, dps=None):
+def convolution_fft(a, b, dps=None) -> list[Any] | Any:
     """
     Performs linear convolution using Fast Fourier Transform.
 
@@ -180,7 +181,7 @@ def convolution_fft(a, b, dps=None):
 #                                                                            #
 #----------------------------------------------------------------------------#
 
-def convolution_ntt(a, b, prime):
+def convolution_ntt(a, b, prime) -> list[int] | list[Any | int] | Any:
     """
     Performs linear convolution using Number Theoretic Transform.
 
@@ -235,7 +236,7 @@ def convolution_ntt(a, b, prime):
 #                                                                            #
 #----------------------------------------------------------------------------#
 
-def convolution_fwht(a, b):
+def convolution_fwht(a, b) -> list[Any] | Any:
     """
     Performs dyadic (*bitwise-XOR*) convolution using Fast Walsh Hadamard
     Transform.
@@ -301,7 +302,7 @@ def convolution_fwht(a, b):
 #                                                                            #
 #----------------------------------------------------------------------------#
 
-def convolution_subset(a, b):
+def convolution_subset(a, b) -> list[Any] | Any:
     """
     Performs Subset Convolution of given sequences.
 
@@ -378,7 +379,7 @@ def convolution_subset(a, b):
 #                                                                            #
 #----------------------------------------------------------------------------#
 
-def covering_product(a, b):
+def covering_product(a, b) -> list[Any] | Any:
     """
     Returns the covering product of given sequences.
 
@@ -448,7 +449,7 @@ def covering_product(a, b):
 #                                                                            #
 #----------------------------------------------------------------------------#
 
-def intersecting_product(a, b):
+def intersecting_product(a, b) -> list[Any] | Any:
     """
     Returns the intersecting product of given sequences.
 

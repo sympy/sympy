@@ -6,13 +6,15 @@ from sympy.core.numbers import ImaginaryUnit
 from sympy.functions.elementary.complexes import Abs
 from sympy.logic.boolalg import (Equivalent, And, Or, Implies)
 from sympy.matrices.expressions import MatMul
+import sympy.core.logic
+from typing import Any, Callable
 
 # APIs here may be subject to change
 
 
 ### Helper functions ###
 
-def allargs(symbol, fact, expr):
+def allargs(symbol, fact, expr) -> sympy.core.logic.And:
     """
     Apply all arguments of the expression to the fact structure.
 
@@ -40,7 +42,7 @@ def allargs(symbol, fact, expr):
     return And(*[fact.subs(symbol, arg) for arg in expr.args])
 
 
-def anyarg(symbol, fact, expr):
+def anyarg(symbol, fact, expr) -> sympy.core.logic.Or:
     """
     Apply any argument of the expression to the fact structure.
 
@@ -68,7 +70,7 @@ def anyarg(symbol, fact, expr):
     return Or(*[fact.subs(symbol, arg) for arg in expr.args])
 
 
-def exactlyonearg(symbol, fact, expr):
+def exactlyonearg(symbol, fact, expr) -> sympy.core.logic.Or:
     """
     Apply exactly one argument of the expression to the fact structure.
 
@@ -149,24 +151,24 @@ class ClassFactRegistry:
     {Implies(Q.even(x), Q.even(Abs(x))), Implies(Q.odd(x), Q.odd(Abs(x)))}
 
     """
-    def __init__(self):
+    def __init__(self) -> None:
         self.singlefacts = defaultdict(frozenset)
         self.multifacts = defaultdict(frozenset)
 
-    def register(self, cls):
+    def register(self, cls) -> Callable[..., Any]:
         def _(func):
             self.singlefacts[cls] |= {func}
             return func
         return _
 
-    def multiregister(self, *classes):
+    def multiregister(self, *classes) -> Callable[..., Any]:
         def _(func):
             for cls in classes:
                 self.multifacts[cls] |= {func}
             return func
         return _
 
-    def __getitem__(self, key):
+    def __getitem__(self, key) -> tuple[frozenset[Any], frozenset[Any]]:
         ret1 = self.singlefacts[key]
         for k in self.singlefacts:
             if issubclass(key, k):
@@ -179,7 +181,7 @@ class ClassFactRegistry:
 
         return ret1, ret2
 
-    def __call__(self, expr):
+    def __call__(self, expr) -> set[Any]:
         ret = set()
 
         handlers1, handlers2 = self[type(expr)]
@@ -189,7 +191,7 @@ class ClassFactRegistry:
             ret.update(h(expr))
         return ret
 
-class_fact_registry = ClassFactRegistry()
+class_fact_registry: ClassFactRegistry = ClassFactRegistry()
 
 
 
@@ -200,7 +202,7 @@ x = Symbol('x')
 ## Abs ##
 
 @class_fact_registry.multiregister(Abs)
-def _(expr):
+def _(expr) -> list[Any]:
     arg = expr.args[0]
     return [Q.nonnegative(expr),
             Equivalent(~Q.zero(arg), ~Q.zero(expr)),
@@ -213,7 +215,7 @@ def _(expr):
 ### Add ##
 
 @class_fact_registry.multiregister(Add)
-def _(expr):
+def _(expr) -> list[Any]:
     return [allargs(x, Q.positive(x), expr) >> Q.positive(expr),
             allargs(x, Q.negative(x), expr) >> Q.negative(expr),
             allargs(x, Q.real(x), expr) >> Q.real(expr),
@@ -223,7 +225,7 @@ def _(expr):
             ]
 
 @class_fact_registry.register(Add)
-def _(expr):
+def _(expr) -> list[Any]:
     allargs_real = allargs(x, Q.real(x), expr)
     onearg_irrational = exactlyonearg(x, Q.irrational(x), expr)
     return Implies(allargs_real, Implies(onearg_irrational, Q.irrational(expr)))
@@ -232,7 +234,7 @@ def _(expr):
 ### Mul ###
 
 @class_fact_registry.multiregister(Mul)
-def _(expr):
+def _(expr) -> list[Any]:
     return [Equivalent(Q.zero(expr), anyarg(x, Q.zero(x), expr)),
             allargs(x, Q.positive(x), expr) >> Q.positive(expr),
             allargs(x, Q.real(x), expr) >> Q.real(expr),
@@ -243,7 +245,7 @@ def _(expr):
             ]
 
 @class_fact_registry.register(Mul)
-def _(expr):
+def _(expr) -> list[Any]:
     # Implicitly assumes Mul has more than one arg
     # Would be allargs(x, Q.prime(x) | Q.composite(x)) except 1 is composite
     # More advanced prime assumptions will require inequalities, as 1 provides
@@ -252,20 +254,20 @@ def _(expr):
     return Implies(allargs_prime, ~Q.prime(expr))
 
 @class_fact_registry.register(Mul)
-def _(expr):
+def _(expr) -> list[Any]:
     # General Case: Odd number of imaginary args implies mul is imaginary(To be implemented)
     allargs_imag_or_real = allargs(x, Q.imaginary(x) | Q.real(x), expr)
     onearg_imaginary = exactlyonearg(x, Q.imaginary(x), expr)
     return Implies(allargs_imag_or_real, Implies(onearg_imaginary, Q.imaginary(expr)))
 
 @class_fact_registry.register(Mul)
-def _(expr):
+def _(expr) -> list[Any]:
     allargs_real = allargs(x, Q.real(x), expr)
     onearg_irrational = exactlyonearg(x, Q.irrational(x), expr)
     return Implies(allargs_real, Implies(onearg_irrational, Q.irrational(expr)))
 
 @class_fact_registry.register(Mul)
-def _(expr):
+def _(expr) -> list[Any]:
     # Including the integer qualification means we don't need to add any facts
     # for odd, since the assumptions already know that every integer is
     # exactly one of even or odd.
@@ -277,7 +279,7 @@ def _(expr):
 ### MatMul ###
 
 @class_fact_registry.register(MatMul)
-def _(expr):
+def _(expr) -> list[Any]:
     allargs_square = allargs(x, Q.square(x), expr)
     allargs_invertible = allargs(x, Q.invertible(x), expr)
     return Implies(allargs_square, Equivalent(Q.invertible(expr), allargs_invertible))
@@ -286,7 +288,7 @@ def _(expr):
 ### Pow ###
 
 @class_fact_registry.multiregister(Pow)
-def _(expr):
+def _(expr) -> list[Any]:
     base, exp = expr.base, expr.exp
     return [
         (Q.real(base) & Q.even(exp) & Q.nonnegative(exp)) >> Q.nonnegative(expr),
@@ -312,7 +314,7 @@ _old_assump_getters = {
 }
 
 @class_fact_registry.multiregister(Number, NumberSymbol, ImaginaryUnit)
-def _(expr):
+def _(expr) -> list[Any]:
     ret = []
     for p, getter in _old_assump_getters.items():
         pred = p(expr)

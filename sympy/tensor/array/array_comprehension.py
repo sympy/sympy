@@ -5,6 +5,10 @@ from sympy.core import Basic, Tuple
 from sympy.tensor.array import ImmutableDenseNDimArray
 from sympy.core.symbol import Symbol
 from sympy.core.numbers import Integer
+import sympy
+from sympy.matrices import Matrix
+from typing import Any, Literal
+from typing_extensions import Self
 
 
 class ArrayComprehension(Basic):
@@ -33,7 +37,7 @@ class ArrayComprehension(Basic):
     >>> b.doit()
     ArrayComprehension(10*i + j, (i, 1, 4), (j, 1, k))
     """
-    def __new__(cls, function, *symbols, **assumptions):
+    def __new__(cls, function, *symbols, **assumptions) -> Self:
         if any(len(l) != 3 or None for l in symbols):
             raise ValueError('ArrayComprehension requires values lower and upper bound'
                               ' for the expression')
@@ -47,7 +51,7 @@ class ArrayComprehension(Basic):
         return obj
 
     @property
-    def function(self):
+    def function(self) -> Basic:
         """The function applied across limits.
 
         Examples
@@ -80,7 +84,7 @@ class ArrayComprehension(Basic):
         return self._limits
 
     @property
-    def free_symbols(self):
+    def free_symbols(self) -> set[Basic] | set[Basic | Any]:
         """
         The set of the free_symbols in the array.
         Variables appeared in the bounds are supposed to be excluded
@@ -107,7 +111,7 @@ class ArrayComprehension(Basic):
         return expr_free_sym
 
     @property
-    def variables(self):
+    def variables(self) -> list[Any]:
         """The tuples of the variables in the limits.
 
         Examples
@@ -123,7 +127,7 @@ class ArrayComprehension(Basic):
         return [l[0] for l in self._limits]
 
     @property
-    def bound_symbols(self):
+    def bound_symbols(self) -> list[Any]:
         """The list of dummy variables.
 
         Note
@@ -161,7 +165,7 @@ class ArrayComprehension(Basic):
         return self._shape
 
     @property
-    def is_shape_numeric(self):
+    def is_shape_numeric(self) -> bool:
         """
         Test if the array is shape-numeric which means there is no symbolic
         dimension.
@@ -260,7 +264,7 @@ class ArrayComprehension(Basic):
 
         return loop_size
 
-    def doit(self, **hints):
+    def doit(self, **hints) -> Self |     sympy.ImmutableDenseNDimArray:
         if not self.is_shape_numeric:
             return self
 
@@ -281,7 +285,7 @@ class ArrayComprehension(Basic):
             temp = temp.subs(var, val)
         return temp
 
-    def tolist(self):
+    def tolist(self) -> list[Any]:
         """Transform the expanded array to a list.
 
         Raises
@@ -304,7 +308,7 @@ class ArrayComprehension(Basic):
 
         raise ValueError("A symbolic array cannot be expanded to a list")
 
-    def tomatrix(self):
+    def tomatrix(self) -> Matrix:
         """Transform the expanded array to a matrix.
 
         Raises
@@ -337,7 +341,7 @@ class ArrayComprehension(Basic):
         return Matrix(self._expand_array().tomatrix())
 
 
-def isLambda(v):
+def isLambda(v) -> Literal[False]:
     LAMBDA = lambda: 0
     return isinstance(v, type(LAMBDA)) and v.__name__ == LAMBDA.__name__
 
@@ -366,7 +370,7 @@ class ArrayComprehensionMap(ArrayComprehension):
     [2, 3, 4, 5]
 
     '''
-    def __new__(cls, function, *symbols, **assumptions):
+    def __new__(cls, function, *symbols, **assumptions) -> Self:
         if any(len(l) != 3 or None for l in symbols):
             raise ValueError('ArrayComprehension requires values lower and upper bound'
                               ' for the expression')
@@ -384,7 +388,7 @@ class ArrayComprehensionMap(ArrayComprehension):
         return obj
 
     @property
-    def func(self):
+    def func(self) -> type[Any]:
         class _(ArrayComprehensionMap):
             def __new__(cls, *args, **kwargs):
                 return ArrayComprehensionMap(self._lambda, *args, **kwargs)

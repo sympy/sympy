@@ -4,20 +4,21 @@ from sympy.core.logic import fuzzy_and, fuzzy_bool, fuzzy_not, fuzzy_or
 from sympy.sets.sets import FiniteSet, Interval, Set, Union, ProductSet
 from sympy.sets.fancysets import Complexes, Reals, Range, Rationals, Integers, ImageSet
 from sympy.multipledispatch import Dispatcher
+from typing import Literal
 
 
 _inf_sets = [S.Naturals, S.Naturals0, S.Integers, S.Rationals, S.Reals, S.Complexes]
 
 
-is_subset_sets = Dispatcher('is_subset_sets')
+is_subset_sets: Dispatcher = Dispatcher('is_subset_sets')
 
 
 @is_subset_sets.register(Set, Set)
-def _(a, b):
+def _(a, b) -> bool | None:
     return None
 
 @is_subset_sets.register(Interval, Interval)
-def _(a, b):
+def _(a, b) -> bool | None:
 
     if b.left_open and not a.left_open:
         # [a1, a2] <= (b1, b2]
@@ -43,14 +44,14 @@ def _(a, b):
     return fuzzy_and([left_in, right_in])
 
 @is_subset_sets.register(Interval, FiniteSet)
-def _(a_interval, b_fs):
+def _(a_interval, b_fs) -> bool | None:
     # An Interval can only be a subset of a finite set if it is finite
     # which can only happen if it has zero measure.
     if fuzzy_not(a_interval.measure.is_zero):
         return False
 
 @is_subset_sets.register(Interval, Union)
-def _(a_interval, b_u):
+def _(a_interval, b_u) -> bool | None:
     if fuzzy_or(a_interval.is_subset(s) for s in b_u.args):
         return True
     if all(isinstance(s, (Interval, FiniteSet)) for s in b_u.args):
@@ -68,13 +69,13 @@ def _(a_interval, b_u):
                 return False
 
 @is_subset_sets.register(Range, Range)
-def _(a, b):
+def _(a, b) -> bool | None:
     if a.step == b.step == 1:
         return fuzzy_and([fuzzy_bool(a.start >= b.start),
                           fuzzy_bool(a.stop <= b.stop)])
 
 @is_subset_sets.register(Range, Interval)
-def _(a_range, b_interval):
+def _(a_range, b_interval) -> bool | None:
     if a_range.step.is_positive:
         if b_interval.left_open and a_range.inf.is_finite:
             cond_left = a_range.inf > b_interval.left
@@ -87,7 +88,7 @@ def _(a_range, b_interval):
         return fuzzy_and([cond_left, cond_right])
 
 @is_subset_sets.register(Range, FiniteSet)
-def _(a_range, b_finiteset):
+def _(a_range, b_finiteset) -> bool | None:
     try:
         a_size = a_range.size
     except ValueError:
@@ -121,7 +122,7 @@ def _(a_range, b_finiteset):
         return None
 
 @is_subset_sets.register(ImageSet, Reals)
-def _(a_imageset, b_reals):
+def _(a_imageset, b_reals) -> bool | None:
     f = a_imageset.lamda
     base = a_imageset.base_set
     var = f.variables
@@ -130,65 +131,65 @@ def _(a_imageset, b_reals):
             return True
 
 @is_subset_sets.register(Interval, Range)
-def _(a_interval, b_range):
+def _(a_interval, b_range) -> bool | None:
     if a_interval.measure.is_extended_nonzero:
         return False
 
 @is_subset_sets.register(Interval, Rationals)
-def _(a_interval, b_rationals):
+def _(a_interval, b_rationals) -> bool | None:
     if a_interval.measure.is_extended_nonzero:
         return False
 
 @is_subset_sets.register(Range, Complexes)
-def _(a, b):
+def _(a, b) -> bool | None:
     return True
 
 @is_subset_sets.register(Complexes, Interval)
-def _(a, b):
+def _(a, b) -> bool | None:
     return False
 
 @is_subset_sets.register(Complexes, Range)
-def _(a, b):
+def _(a, b) -> bool | None:
     return False
 
 @is_subset_sets.register(Complexes, Rationals)
-def _(a, b):
+def _(a, b) -> bool | None:
     return False
 
 @is_subset_sets.register(Rationals, Complexes)
-def _(a, b):
+def _(a, b) -> bool | None:
     return True
 
 @is_subset_sets.register(Reals, Complexes)
-def _(a, b):
+def _(a, b) -> bool | None:
     return True
 
 @is_subset_sets.register(Interval, Reals)
-def _(a, b):
+def _(a, b) -> bool | None:
     return True
 
 @is_subset_sets.register(Integers, Rationals)
-def _(a, b):
+def _(a, b) -> bool | None:
     return True
 
 @is_subset_sets.register(Rationals, Reals)
-def _(a, b):
+def _(a, b) -> bool | None:
     return True
 
 @is_subset_sets.register(Rationals, Range)
-def _(a, b):
+def _(a, b) -> bool | None:
     return False
 
 @is_subset_sets.register(Range, Rationals)
-def _(a, b):
+def _(a, b) -> bool | None:
     return True
 
 @is_subset_sets.register(ProductSet, ProductSet)
-def _(a, b):
+def _(a, b) -> bool | None:
     if len(a.sets) != len(b.sets):
         return False
     return fuzzy_and(a_i.is_subset(b_i) for a_i, b_i in zip(a.sets, b.sets))
 
 @is_subset_sets.register(ProductSet, FiniteSet)
-def _(a_ps, b_fs):
+def _(a_ps, b_fs) -> bool | None:
     return fuzzy_and(b_fs.contains(x) for x in a_ps)

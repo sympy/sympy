@@ -6,6 +6,7 @@ from sympy.core.numbers import equal_valued
 from sympy.printing.codeprinter import CodePrinter
 from sympy.printing.precedence import precedence
 from functools import reduce
+from typing import Any
 
 known_functions = {
     'Abs': 'abs',
@@ -52,7 +53,7 @@ class GLSLPrinter(CodePrinter):
         'contract': True,
     })
 
-    def __init__(self, settings={}):
+    def __init__(self, settings={}) -> None:
         CodePrinter.__init__(self, settings)
         self.known_functions = dict(known_functions)
         userfuncs = settings.get('user_functions', {})
@@ -73,7 +74,7 @@ class GLSLPrinter(CodePrinter):
     def _format_code(self, lines):
         return self.indent_code(lines)
 
-    def indent_code(self, code):
+    def indent_code(self, code) -> str | list[Any]:
         """Accepts a string of code or a list of code lines"""
 
         if isinstance(code, str):
@@ -335,7 +336,7 @@ class GLSLPrinter(CodePrinter):
         s = reduce(lambda a,b: mul(a,b), (self._print(t) for t in terms))
         return s
 
-def glsl_code(expr,assign_to=None,**settings):
+def glsl_code(expr,assign_to=None,**settings) -> str | tuple[set[tuple[Any, str]], set[Any], str]:
     """Converts an expr to a string of GLSL code
 
     Parameters
@@ -540,7 +541,7 @@ def glsl_code(expr,assign_to=None,**settings):
     """
     return GLSLPrinter(settings).doprint(expr,assign_to)
 
-def print_glsl(expr, **settings):
+def print_glsl(expr, **settings) -> None:
     """Prints the GLSL representation of the given expression.
 
        See GLSLPrinter init function for settings.

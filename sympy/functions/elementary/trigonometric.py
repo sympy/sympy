@@ -2,7 +2,7 @@ from __future__ import annotations
 from sympy.core.add import Add
 from sympy.core.cache import cacheit
 from sympy.core.expr import Expr
-from sympy.core.function import DefinedFunction, ArgumentIndexError, PoleError, expand_mul
+from sympy.core.function import Function, UndefinedFunction, DefinedFunction, ArgumentIndexError, PoleError, expand_mul
 from sympy.core.logic import fuzzy_not, fuzzy_or, FuzzyBool, fuzzy_and
 from sympy.core.mod import Mod
 from sympy.core.numbers import Rational, pi, Integer, Float, equal_valued
@@ -23,6 +23,10 @@ from sympy.logic.boolalg import And
 from sympy.ntheory import factorint
 from sympy.polys.specialpolys import symmetric_poly
 from sympy.utilities.iterables import numbered_symbols
+from sympy.calculus.accumulationbounds import AccumBounds
+from sympy.core.mul import Mul
+from typing import Any
+from typing_extensions import Self
 
 
 ###############################################################################
@@ -291,7 +295,7 @@ class sin(TrigonometricFunction):
     def period(self, symbol=None):
         return self._period(2*pi, symbol)
 
-    def fdiff(self, argindex=1):
+    def fdiff(self, argindex=1) -> type[UndefinedFunction]:
         if argindex == 1:
             return cos(self.args[0])
         else:
@@ -486,7 +490,7 @@ class sin(TrigonometricFunction):
     def _eval_conjugate(self):
         return self.func(self.args[0].conjugate())
 
-    def as_real_imag(self, deep=True, **hints):
+    def as_real_imag(self, deep=True, **hints) -> tuple[Any, Any]:
         from sympy.functions.elementary.hyperbolic import cosh, sinh
         re, im = self._as_real_imag(deep=deep, **hints)
         return (sin(re)*cosh(im), cos(re)*sinh(im))
@@ -855,7 +859,7 @@ class cos(TrigonometricFunction):
     def _eval_conjugate(self):
         return self.func(self.args[0].conjugate())
 
-    def as_real_imag(self, deep=True, **hints):
+    def as_real_imag(self, deep=True, **hints) -> tuple[Any, Any]:
         from sympy.functions.elementary.hyperbolic import cosh, sinh
         re, im = self._as_real_imag(deep=deep, **hints)
         return (cos(re)*cosh(im), -sin(re)*sinh(im))
@@ -959,7 +963,7 @@ class tan(TrigonometricFunction):
         else:
             raise ArgumentIndexError(self, argindex)
 
-    def inverse(self, argindex=1):
+    def inverse(self, argindex=1) -> type[atan]:
         """
         Returns the inverse of this function.
         """
@@ -1125,7 +1129,7 @@ class tan(TrigonometricFunction):
     def _eval_conjugate(self):
         return self.func(self.args[0].conjugate())
 
-    def as_real_imag(self, deep=True, **hints):
+    def as_real_imag(self, deep=True, **hints) -> tuple[Any, Any] | tuple[Self, Any]:
         re, im = self._as_real_imag(deep=deep, **hints)
         if im:
             from sympy.functions.elementary.hyperbolic import cosh, sinh
@@ -1299,7 +1303,7 @@ class cot(TrigonometricFunction):
         else:
             raise ArgumentIndexError(self, argindex)
 
-    def inverse(self, argindex=1):
+    def inverse(self, argindex=1) -> type[acot]:
         """
         Returns the inverse of this function.
         """
@@ -1434,7 +1438,7 @@ class cot(TrigonometricFunction):
     def _eval_conjugate(self):
         return self.func(self.args[0].conjugate())
 
-    def as_real_imag(self, deep=True, **hints):
+    def as_real_imag(self, deep=True, **hints) -> tuple[Any, Any] | tuple[Self, Any]:
         re, im = self._as_real_imag(deep=deep, **hints)
         if im:
             from sympy.functions.elementary.hyperbolic import cosh, sinh
@@ -1584,7 +1588,7 @@ class ReciprocalTrigonometricFunction(TrigonometricFunction):
     _is_odd: FuzzyBool = None
 
     @classmethod
-    def eval(cls, arg):
+    def eval(cls, arg) -> Self | Mul:
         if arg.could_extract_minus_sign():
             if cls._is_even:
                 return cls(-arg)
@@ -1971,7 +1975,7 @@ class sinc(DefinedFunction):
             raise ArgumentIndexError(self, argindex)
 
     @classmethod
-    def eval(cls, arg):
+    def eval(cls, arg) -> Self | None:
         if arg.is_zero:
             return S.One
         if arg.is_Number:
@@ -2171,7 +2175,7 @@ class asin(InverseTrigonometricFunction):
         return self._eval_is_extended_real() and self.args[0].is_negative
 
     @classmethod
-    def eval(cls, arg):
+    def eval(cls, arg) -> Mul | None:
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
@@ -2333,7 +2337,7 @@ class asin(InverseTrigonometricFunction):
         x = self.args[0]
         return x.is_extended_real and (1 - abs(x)).is_nonnegative
 
-    def inverse(self, argindex=1):
+    def inverse(self, argindex=1) -> type[sin]:
         """
         Returns the inverse of this function.
         """
@@ -2399,7 +2403,7 @@ class acos(InverseTrigonometricFunction):
             return s.is_rational
 
     @classmethod
-    def eval(cls, arg):
+    def eval(cls, arg) -> None:
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
@@ -2557,7 +2561,7 @@ class acos(InverseTrigonometricFunction):
     def _eval_rewrite_as_atan(self, x, **kwargs):
         return atan(sqrt(1 - x**2)/x) + (pi/2)*(1 - x*sqrt(1/x**2))
 
-    def inverse(self, argindex=1):
+    def inverse(self, argindex=1) -> type[cos]:
         """
         Returns the inverse of this function.
         """
@@ -2651,7 +2655,7 @@ class atan(InverseTrigonometricFunction):
         return self.args[0].is_extended_real
 
     @classmethod
-    def eval(cls, arg):
+    def eval(cls, arg) -> AccumBounds | Mul | None:
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
@@ -2772,7 +2776,7 @@ class atan(InverseTrigonometricFunction):
         else:
             return super()._eval_aseries(n, args0, x, logx)
 
-    def inverse(self, argindex=1):
+    def inverse(self, argindex=1) -> type[tan]:
         """
         Returns the inverse of this function.
         """
@@ -2863,7 +2867,7 @@ class acot(InverseTrigonometricFunction):
         return self.args[0].is_extended_real
 
     @classmethod
-    def eval(cls, arg):
+    def eval(cls, arg) -> Mul | None:
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
@@ -2987,7 +2991,7 @@ class acot(InverseTrigonometricFunction):
 
     _eval_rewrite_as_tractable = _eval_rewrite_as_log
 
-    def inverse(self, argindex=1):
+    def inverse(self, argindex=1) -> type[cot]:
         """
         Returns the inverse of this function.
         """
@@ -3071,7 +3075,7 @@ class asec(InverseTrigonometricFunction):
     """
 
     @classmethod
-    def eval(cls, arg):
+    def eval(cls, arg) -> None:
         if arg.is_zero:
             return S.ComplexInfinity
         if arg.is_Number:
@@ -3125,7 +3129,7 @@ class asec(InverseTrigonometricFunction):
         else:
             raise ArgumentIndexError(self, argindex)
 
-    def inverse(self, argindex=1):
+    def inverse(self, argindex=1) -> type[sec]:
         """
         Returns the inverse of this function.
         """
@@ -3285,7 +3289,7 @@ class acsc(InverseTrigonometricFunction):
     """
 
     @classmethod
-    def eval(cls, arg):
+    def eval(cls, arg) -> Mul | None:
         if arg.is_zero:
             return S.ComplexInfinity
         if arg.is_Number:
@@ -3335,7 +3339,7 @@ class acsc(InverseTrigonometricFunction):
         else:
             raise ArgumentIndexError(self, argindex)
 
-    def inverse(self, argindex=1):
+    def inverse(self, argindex=1) -> type[csc]:
         """
         Returns the inverse of this function.
         """
@@ -3547,7 +3551,7 @@ class atan2(InverseTrigonometricFunction):
     """
 
     @classmethod
-    def eval(cls, y, x):
+    def eval(cls, y, x) -> atan | Piecewise | None:
         from sympy.functions.special.delta_functions import Heaviside
         if x is S.NegativeInfinity:
             if y.is_zero:

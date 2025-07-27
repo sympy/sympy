@@ -9,13 +9,14 @@ from .arrayop import derive_by_array
 from sympy.matrices.expressions.matexpr import MatrixExpr
 from sympy.matrices.expressions.special import ZeroMatrix
 from sympy.matrices.expressions.matexpr import _matrix_derivative
+from typing_extensions import Self
 
 
 class ArrayDerivative(Derivative):
 
     is_scalar = False
 
-    def __new__(cls, expr, *variables, **kwargs):
+    def __new__(cls, expr, *variables, **kwargs) -> Self:
         obj = super().__new__(cls, expr, *variables, **kwargs)
         if isinstance(obj, ArrayDerivative):
             obj._shape = obj._get_shape()

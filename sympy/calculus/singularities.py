@@ -342,7 +342,7 @@ def is_strictly_decreasing(expression, interval=S.Reals, symbol=None):
     return monotonicity_helper(expression, lambda x: x < 0, interval, symbol)
 
 
-def is_monotonic(expression, interval=S.Reals, symbol=None):
+def is_monotonic(expression, interval=S.Reals, symbol=None) -> bool:
     """
     Return whether the function is monotonic in the given interval.
 

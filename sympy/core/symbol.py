@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, overload
+from typing import Any, Literal, TYPE_CHECKING, overload
 
 from .assumptions import StdFactKB, _assume_defined
 from .basic import Basic, Atom
@@ -21,6 +21,11 @@ import string
 import re as _re
 import random
 from itertools import product
+from sympy.core.basic import Atom, Basic
+from sympy.core.expr import AtomicExpr
+from sympy.core.function import FunctionClass, UndefinedFunction
+from sympy.core.kind import _NumberKind, _UndefinedKind
+from typing_extensions import Self
 
 
 if TYPE_CHECKING:
@@ -44,14 +49,14 @@ class Str(Atom):
 
     name: str
 
-    def __new__(cls, name, **kwargs):
+    def __new__(cls, name, **kwargs) -> Self:
         if not isinstance(name, str):
             raise TypeError("name should be a string, not %s" % repr(type(name)))
         obj = super().__new__(cls, **kwargs)
         obj.name = name
         return obj
 
-    def __getnewargs__(self):
+    def __getnewargs__(self) -> tuple[Any]:
         return (self.name,)
 
     def _hashable_content(self):
@@ -289,7 +294,7 @@ class Symbol(AtomicExpr, Boolean): # type: ignore
     is_symbol = True
 
     @property
-    def kind(self):
+    def kind(self) -> _NumberKind | _UndefinedKind:
         if self.is_commutative:
             return NumberKind
         return UndefinedKind
@@ -412,7 +417,7 @@ class Symbol(AtomicExpr, Boolean): # type: ignore
     def __xnew_cached_(cls, name, **assumptions):  # symbols are always cached
         return Symbol.__xnew__(cls, name, **assumptions)
 
-    def __getnewargs_ex__(self):
+    def __getnewargs_ex__(self) -> tuple[tuple[str], Any]:
         return ((self.name,), self._assumptions_orig)
 
     # NOTE: __setstate__ is not needed for pickles created by __getnewargs_ex__
@@ -420,7 +425,7 @@ class Symbol(AtomicExpr, Boolean): # type: ignore
     # Pickles created in previous SymPy versions will still need __setstate__
     # so that they can be unpickled in SymPy > v1.9.
 
-    def __setstate__(self, state):
+    def __setstate__(self, state) -> None:
         for name, value in state.items():
             setattr(self, name, value)
 
@@ -440,10 +445,10 @@ class Symbol(AtomicExpr, Boolean): # type: ignore
         return dict(self._assumptions0)
 
     @cacheit
-    def sort_key(self, order=None):
+    def sort_key(self, order=None) -> tuple[tuple[Literal[2], Literal[0], str], tuple[Literal[1], tuple[str]], Any, Any]:
         return self.class_key(), (1, (self.name,)), S.One.sort_key(), S.One
 
-    def as_dummy(self):
+    def as_dummy(self) -> "Dummy":
         # only put commutativity in explicitly if it is False
         return Dummy(self.name) if self.is_commutative is not False \
             else Dummy(self.name, commutative=self.is_commutative)
@@ -456,7 +461,7 @@ class Symbol(AtomicExpr, Boolean): # type: ignore
             from sympy.functions.elementary.complexes import im, re
             return (re(self), im(self))
 
-    def is_constant(self, *wrt, **flags):
+    def is_constant(self, *wrt, **flags) -> bool:
         if not wrt:
             return False
         return self not in wrt
@@ -529,11 +534,11 @@ class Dummy(Symbol):
 
         return obj
 
-    def __getnewargs_ex__(self):
+    def __getnewargs_ex__(self) -> tuple[tuple[str, Any], Any]:
         return ((self.name, self.dummy_index), self._assumptions_orig)
 
     @cacheit
-    def sort_key(self, order=None):
+    def sort_key(self, order=None) -> tuple[tuple[Literal[2], Literal[0], str], tuple[Literal[2], tuple[str, Any]], Any, Any]:
         return self.class_key(), (
             2, (self.name, self.dummy_index)), S.One.sort_key(), S.One
 
@@ -644,7 +649,7 @@ class Wild(Symbol):
         cls._sanitize(assumptions, cls)
         return Wild.__xnew__(cls, name, exclude, properties, **assumptions)
 
-    def __getnewargs__(self):
+    def __getnewargs__(self) -> tuple[str, Any, Any]:
         return (self.name, self.exclude, self.properties)
 
     @staticmethod
@@ -659,7 +664,7 @@ class Wild(Symbol):
         return super()._hashable_content() + (self.exclude, self.properties)
 
     # TODO add check against another Wild
-    def matches(self, expr, repl_dict=None, old=False):
+    def matches(self, expr, repl_dict=None, old=False) -> dict[Any, Any] | None:
         if any(expr.has(x) for x in self.exclude):
             return None
         if not all(f(expr) for f in self.properties):
@@ -898,7 +903,7 @@ def symbols(names, *, cls: Any = Symbol, **args) -> Any:
         return type(names)(result)
 
 
-def var(names, **args):
+def var(names, **args) -> Basic | FunctionClass | Any:
     """
     Create symbols and inject them into the global namespace.
 
@@ -961,7 +966,7 @@ def var(names, **args):
 
     return syms
 
-def disambiguate(*iter):
+def disambiguate(*iter) -> tuple:
     """
     Return a Tuple containing the passed expressions with symbols
     that appear the same when printed replaced with numerically

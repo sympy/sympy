@@ -11,6 +11,7 @@ from sympy.polys.polyerrors import DomainError, CoercionFailed
 from sympy.utilities import public
 
 from mpmath import MPContext
+from typing import Literal
 
 
 @public
@@ -45,7 +46,7 @@ class ComplexField(Field, CharacteristicZero, SimpleDomain):
     def tolerance(self):
         return self._tolerance
 
-    def __init__(self, prec=None, dps=None, tol=None):
+    def __init__(self, prec=None, dps=None, tol=None) -> None:
         # XXX: The tolerance parameter is ignored but is kept for backward
         # compatibility for now.
 
@@ -88,10 +89,10 @@ class ComplexField(Field, CharacteristicZero, SimpleDomain):
             y = int(y)
         return self._dtype(x, y)
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
         return isinstance(other, ComplexField) and self.precision == other.precision
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash((self.__class__.__name__, self._dtype, self.precision))
 
     def to_sympy(self, element):
@@ -152,19 +153,19 @@ class ComplexField(Field, CharacteristicZero, SimpleDomain):
         """Returns an exact domain associated with ``self``. """
         return QQ_I
 
-    def is_negative(self, element):
+    def is_negative(self, element) -> Literal[False]:
         """Returns ``False`` for any ``ComplexElement``. """
         return False
 
-    def is_positive(self, element):
+    def is_positive(self, element) -> Literal[False]:
         """Returns ``False`` for any ``ComplexElement``. """
         return False
 
-    def is_nonnegative(self, element):
+    def is_nonnegative(self, element) -> Literal[False]:
         """Returns ``False`` for any ``ComplexElement``. """
         return False
 
-    def is_nonpositive(self, element):
+    def is_nonpositive(self, element) -> Literal[False]:
         """Returns ``False`` for any ``ComplexElement``. """
         return False
 

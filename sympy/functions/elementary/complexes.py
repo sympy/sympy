@@ -1,18 +1,23 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, overload
+from typing import Any, Literal, TYPE_CHECKING, overload
 
 from sympy.core import S, Add, Mul, sympify, Symbol, Dummy, Basic
 from sympy.core.expr import Expr
 from sympy.core.exprtools import factor_terms
-from sympy.core.function import (DefinedFunction, Derivative, ArgumentIndexError,
+from sympy.core.function import (Function, UndefinedFunction, DefinedFunction, Derivative, ArgumentIndexError,
     AppliedUndef, expand_mul, PoleError)
 from sympy.core.logic import fuzzy_not, fuzzy_or
 from sympy.core.numbers import pi, I, oo
 from sympy.core.power import Pow
-from sympy.core.relational import Eq
+from sympy.core.relational import Equality, Ne, Relational, Eq
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
+import sympy.core.basic
+import sympy.core.symbol
+from sympy.integrals.integrals import Integral
+from sympy.series.order import Order
+from typing_extensions import Self
 
 if TYPE_CHECKING:
     from typing import TypeVar
@@ -85,7 +90,7 @@ class re(DefinedFunction):
             ...
 
     @classmethod
-    def eval(cls, arg):
+    def eval(cls, arg) -> type[UndefinedFunction] | None:
         if arg is S.NaN or arg is S.ComplexInfinity:
             return S.NaN
         elif arg.is_extended_real:
@@ -123,7 +128,7 @@ class re(DefinedFunction):
 
                 return cls(a) - im(b) + c
 
-    def as_real_imag(self, deep=True, **hints):
+    def as_real_imag(self, deep=True, **hints) -> tuple[Self, Any]:
         """
         Returns the real number with a zero imaginary part.
 
@@ -205,7 +210,7 @@ class im(DefinedFunction):
     _singularities = True  # non-holomorphic
 
     @classmethod
-    def eval(cls, arg):
+    def eval(cls, arg) -> None:
         if arg is S.NaN or arg is S.ComplexInfinity:
             return S.NaN
         elif arg.is_extended_real:
@@ -242,7 +247,7 @@ class im(DefinedFunction):
 
                 return cls(a) + re(b) + c
 
-    def as_real_imag(self, deep=True, **hints):
+    def as_real_imag(self, deep=True, **hints) -> tuple[Self, Any]:
         """
         Return the imaginary part with a zero real part.
 
@@ -335,14 +340,14 @@ class sign(DefinedFunction):
     is_complex = True
     _singularities = True
 
-    def doit(self, **hints):
+    def doit(self, **hints) -> Self:
         s = super().doit()
         if s == self and self.args[0].is_zero is False:
             return self.args[0] / Abs(self.args[0])
         return s
 
     @classmethod
-    def eval(cls, arg):
+    def eval(cls, arg) -> sign | None:
         # handle what we can
         if arg.is_Mul:
             c, args = arg.as_coeff_mul()
@@ -524,7 +529,7 @@ class Abs(DefinedFunction):
     unbranched = True
     _singularities = True  # non-holomorphic
 
-    def fdiff(self, argindex=1):
+    def fdiff(self, argindex=1) -> type[UndefinedFunction]:
         """
         Get the first derivative of the argument to Abs().
 
@@ -762,7 +767,7 @@ class arg(DefinedFunction):
     _singularities = True  # non-holomorphic
 
     @classmethod
-    def eval(cls, arg):
+    def eval(cls, arg) -> type[UndefinedFunction] | Self | None:
         a = arg
         for i in range(3):
             if isinstance(a, cls):
@@ -888,12 +893,12 @@ class conjugate(DefinedFunction):
         def __new__(cls, arg: Basic) -> Basic: ... # type: ignore
 
     @classmethod
-    def eval(cls, arg):
+    def eval(cls, arg) -> None:
         obj = arg._eval_conjugate()
         if obj is not None:
             return obj
 
-    def inverse(self):
+    def inverse(self) -> type[conjugate]:
         return conjugate
 
     def _eval_Abs(self):
@@ -960,7 +965,7 @@ class transpose(DefinedFunction):
     """
 
     @classmethod
-    def eval(cls, arg):
+    def eval(cls, arg) -> None:
         obj = arg._eval_transpose()
         if obj is not None:
             return obj
@@ -1003,7 +1008,7 @@ class adjoint(DefinedFunction):
     """
 
     @classmethod
-    def eval(cls, arg):
+    def eval(cls, arg) -> type[UndefinedFunction] | None:
         obj = arg._eval_adjoint()
         if obj is not None:
             return obj
@@ -1083,7 +1088,7 @@ class polar_lift(DefinedFunction):
     is_comparable = False  # Cannot be evalf'd.
 
     @classmethod
-    def eval(cls, arg):
+    def eval(cls, arg) -> Order | None:
         from sympy.functions.elementary.complexes import arg as argument
         if arg.is_number:
             ar = argument(arg)
@@ -1191,7 +1196,7 @@ class periodic_argument(DefinedFunction):
         return unbranched
 
     @classmethod
-    def eval(cls, ar, period):
+    def eval(cls, ar, period) -> type[UndefinedFunction] | Literal[0] | None:
         # Our strategy is to evaluate the argument on the Riemann surface of the
         # logarithm, and then reduce.
         # NOTE evidently this means it is a rather bad idea to use this with
@@ -1232,7 +1237,7 @@ class periodic_argument(DefinedFunction):
         return (ub - ceiling(ub/period - S.Half)*period)._eval_evalf(prec)
 
 
-def unbranched_argument(arg):
+def unbranched_argument(arg) -> type[UndefinedFunction]:
     '''
     Returns periodic argument of arg with period as infinity.
 
@@ -1299,7 +1304,7 @@ class principal_branch(DefinedFunction):
     is_comparable = False  # cannot always be evalf'd
 
     @classmethod
-    def eval(self, x, period):
+    def eval(self, x, period) -> type[UndefinedFunction] | None:
         from sympy.functions.elementary.exponential import exp_polar
         if isinstance(x, polar_lift):
             return principal_branch(x.args[0], period)
@@ -1392,7 +1397,15 @@ def _polarify(eq, lift, pause=False):
                          if isinstance(arg, Expr) else arg for arg in eq.args])
 
 
-def polarify(eq, subs=True, lift=False):
+def polarify(eq, subs=True, lift=False) -> (
+    type[UndefinedFunction]
+    | sympy.core.symbol.Symbol
+    | Equality
+    | Relational
+    | Ne
+    | Integral
+    | tuple[Any | sympy.core.symbol.Symbol | sympy.core.basic.Basic | Equality | Relational | Ne | Integral, dict[sympy.core.symbol.Dummy, Any | sympy.core.symbol.Symbol | sympy.core.basic.Basic]]
+):
     """
     Turn all numbers in eq into their polar equivalents (under the standard
     choice of argument).
@@ -1475,7 +1488,7 @@ def _unpolarify(eq, exponents_only, pause=False):
     return eq.func(*[_unpolarify(x, exponents_only, True) for x in eq.args])
 
 
-def unpolarify(eq, subs=None, exponents_only=False):
+def unpolarify(eq, subs=None, exponents_only=False) -> bool | sympy.core.basic.Basic:
     """
     If `p` denotes the projection from the Riemann surface of the logarithm to
     the complex line, return a simplified version `eq'` of `eq` such that

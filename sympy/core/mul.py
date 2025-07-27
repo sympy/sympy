@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, ClassVar
+from typing import Any, Literal, TYPE_CHECKING, ClassVar
 
 from collections import defaultdict
 from functools import reduce
@@ -18,6 +18,10 @@ from .parameters import global_parameters
 from .kind import KindDispatcher
 from .traversal import bottom_up
 from sympy.utilities.iterables import sift
+from sympy.core.expr import Expr
+from sympy.core.kind import Kind, _UndefinedKind
+from sympy.core.operations import AssocOp
+from typing_extensions import Self
 
 
 # internal marker to indicate:
@@ -168,7 +172,7 @@ class Mul(Expr, AssocOp):
     identity: ClassVar[Expr]
 
     @property
-    def kind(self):
+    def kind(self) -> Kind | _UndefinedKind:
         arg_kinds = (a.kind for a in self.args)
         return self._kind_dispatcher(*arg_kinds)
 
@@ -181,13 +185,13 @@ class Mul(Expr, AssocOp):
         def args(self) -> tuple[Expr, ...]:
             ...
 
-    def could_extract_minus_sign(self):
+    def could_extract_minus_sign(self) -> Literal[False]:
         if self == (-self):
             return False  # e.g. zoo*x == -zoo*x
         c = self.args[0]
         return c.is_Number and c.is_extended_negative
 
-    def __neg__(self):
+    def __neg__(self) -> Self:
         c, args = self.as_coeff_mul()
         if args[0] is not S.ComplexInfinity:
             c = -c
@@ -763,7 +767,7 @@ class Mul(Expr, AssocOp):
         return p
 
     @classmethod
-    def class_key(cls):
+    def class_key(cls) -> tuple[Literal[3], Literal[0], str]:
         return 3, 0, cls.__name__
 
     def _eval_evalf(self, prec):
@@ -798,7 +802,7 @@ class Mul(Expr, AssocOp):
         return (Float(0)._mpf_, Float(im_part)._mpf_)
 
     @cacheit
-    def as_two_terms(self):
+    def as_two_terms(self) -> tuple[Any, Self] | tuple[Any, Any | Self]:
         """Return head and tail of self.
 
         This is the most efficient way to get the head and tail of an
@@ -829,7 +833,7 @@ class Mul(Expr, AssocOp):
             return args[0], self._new_rawargs(*args[1:])
 
     @cacheit
-    def as_coeff_mul(self, *deps, rational=True, **kwargs):
+    def as_coeff_mul(self, *deps, rational=True, **kwargs) -> tuple[Any | Self, tuple[Any, ...]] | tuple[Expr, tuple[()]] | tuple[Any, tuple[Any | Mul]] | tuple[Any, tuple[Expr]]:
         if deps:
             l1, l2 = sift(self.args, lambda x: x.has(*deps), binary=True)
             return self._new_rawargs(*l2), tuple(l1)
@@ -841,7 +845,7 @@ class Mul(Expr, AssocOp):
                 return S.NegativeOne, (-args[0],) + args[1:]
         return S.One, args
 
-    def as_coeff_Mul(self, rational=False):
+    def as_coeff_Mul(self, rational=False) -> tuple[Expr, Any] | tuple[Expr, Any | Self] | tuple[Any, Any | Self] | tuple[Any, Self]:
         """
         Efficiently extract the coefficient of a product.
         """
@@ -857,7 +861,7 @@ class Mul(Expr, AssocOp):
                 return S.NegativeOne, self._new_rawargs(*((-coeff,) + args))
         return S.One, self
 
-    def as_real_imag(self, deep=True, **hints):
+    def as_real_imag(self, deep=True, **hints) -> tuple[Self, Any] | tuple[Any, Any] | None:
         from sympy.functions.elementary.complexes import Abs, im, re
         other = []
         coeffr = []
@@ -1034,7 +1038,7 @@ class Mul(Expr, AssocOp):
             return terms[0].matches(newexpr, repl_dict)
         return
 
-    def matches(self, expr, repl_dict=None, old=False):
+    def matches(self, expr, repl_dict=None, old=False) -> dict[Any, Any] | None:
         expr = sympify(expr)
         if self.is_commutative and expr.is_commutative:
             return self._matches_commutative(expr, repl_dict, old)
@@ -1239,21 +1243,21 @@ class Mul(Expr, AssocOp):
         srv = signsimp(rv)
         return srv if srv.is_Number else rv
 
-    def as_powers_dict(self):
+    def as_powers_dict(self) -> defaultdict[Any, int]:
         d = defaultdict(int)
         for term in self.args:
             for b, e in term.as_powers_dict().items():
                 d[b] += e
         return d
 
-    def as_numer_denom(self):
+    def as_numer_denom(self) -> tuple[Self, Self]:
         # don't use _from_args to rebuild the numerators and denominators
         # as the order is not guaranteed to be the same once they have
         # been separated from each other
         numers, denoms = list(zip(*[f.as_numer_denom() for f in self.args]))
         return self.func(*numers), self.func(*denoms)
 
-    def as_base_exp(self):
+    def as_base_exp(self) -> tuple[Self, Any] | tuple[Self, Expr | None]:
         e1 = None
         bases = []
         nc = 0
@@ -2059,7 +2063,7 @@ class Mul(Expr, AssocOp):
     def _eval_adjoint(self):
         return self.func(*[t.adjoint() for t in self.args[::-1]])
 
-    def as_content_primitive(self, radical=False, clear=True):
+    def as_content_primitive(self, radical=False, clear=True) -> tuple[Any, Self]:
         """Return the tuple (R, self/R) where R is the positive Rational
         extracted from self.
 

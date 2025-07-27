@@ -2,6 +2,7 @@
 
 import sys
 import re
+from typing import Any
 
 # Override these in the module to change the default warning behavior.
 # For example, you might set both to False before running the tests so that
@@ -30,7 +31,7 @@ if __sympy_debug():
 
 _component_re = re.compile(r'(\d+ | [a-z]+ | \.)', re.VERBOSE)
 
-def version_tuple(vstring):
+def version_tuple(vstring) -> tuple[Any, ...]:
     # Parse a version string to a tuple e.g. '1.2' -> (1, 2)
     # Simplified from distutils.version.LooseVersion which was deprecated in
     # Python 3.10.

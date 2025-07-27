@@ -21,7 +21,7 @@ from itertools import islice
 
 from sympy.core import Add, S, Mul, Pow
 from sympy.core.exprtools import factor_terms
-from sympy.core.function import Function, AppliedUndef, expand
+from sympy.core.function import UndefinedFunction, Function, AppliedUndef, expand
 from sympy.core.relational import Equality, Eq
 from sympy.core.symbol import Symbol, Wild, Dummy, symbols
 from sympy.functions import exp, log
@@ -36,6 +36,8 @@ from sympy.solvers.pde import pdsolve
 from sympy.utilities import numbered_symbols
 from sympy.solvers.deutils import _preprocess, ode_order
 from .ode import checkinfsol
+from sympy.core.basic import Basic
+from typing import Any
 
 
 lie_heuristics = (
@@ -159,7 +161,7 @@ def _ode_lie_group( s, func, order, match):
     return sol
 
 
-def infinitesimals(eq, func=None, order=None, hint='default', match=None):
+def infinitesimals(eq, func=None, order=None, hint='default', match=None) -> list[Any] | Any:
     r"""
     The infinitesimal functions of an ordinary differential equation, `\xi(x,y)`
     and `\eta(x,y)`, are the infinitesimals of the Lie group of point transformations
@@ -402,7 +404,7 @@ def lie_heuristic_abaco1_simple(match, comp=False):
     if xieta:
         return xieta
 
-def lie_heuristic_abaco1_product(match, comp=False):
+def lie_heuristic_abaco1_product(match, comp=False) -> list[dict[UndefinedFunction | Any, Any]] | list[Any] | None:
     r"""
     The second heuristic uses the following two assumptions on `\xi` and `\eta`
 
@@ -475,7 +477,7 @@ def lie_heuristic_abaco1_product(match, comp=False):
     if xieta:
         return xieta
 
-def lie_heuristic_bivariate(match, comp=False):
+def lie_heuristic_bivariate(match, comp=False) -> list[dict[UndefinedFunction | Any, Any | Symbol | Basic]] | None:
     r"""
     The third heuristic assumes the infinitesimals `\xi` and `\eta`
     to be bi-variate polynomials in `x` and `y`. The assumption made here
@@ -547,7 +549,7 @@ def lie_heuristic_bivariate(match, comp=False):
                         xi: xired.subs(dict_).subs(y, func)}
                     return [inf]
 
-def lie_heuristic_chi(match, comp=False):
+def lie_heuristic_chi(match, comp=False) -> list[dict[UndefinedFunction | Any, Any]] | None:
     r"""
     The aim of the fourth heuristic is to find the function `\chi(x, y)`
     that satisfies the PDE `\frac{d\chi}{dx} + h\frac{d\chi}{dx}
@@ -618,7 +620,7 @@ def lie_heuristic_chi(match, comp=False):
                         inf = {eta: etac.subs(y, func), xi: -xic.subs(y, func)}
                         return [inf]
 
-def lie_heuristic_function_sum(match, comp=False):
+def lie_heuristic_function_sum(match, comp=False) -> list[dict[UndefinedFunction | Any, Any]] | list[Any] | None:
     r"""
     This heuristic uses the following two assumptions on `\xi` and `\eta`
 
@@ -708,7 +710,7 @@ def lie_heuristic_function_sum(match, comp=False):
         if xieta:
             return xieta
 
-def lie_heuristic_abaco2_similar(match, comp=False):
+def lie_heuristic_abaco2_similar(match, comp=False) -> list[dict[UndefinedFunction | Any, Any]] | None:
     r"""
     This heuristic uses the following two assumptions on `\xi` and `\eta`
 
@@ -816,7 +818,7 @@ def lie_heuristic_abaco2_similar(match, comp=False):
                     return [{eta: tau.subs(x, func), xi: gx.subs(x, func)}]
 
 
-def lie_heuristic_abaco2_unique_unknown(match, comp=False):
+def lie_heuristic_abaco2_unique_unknown(match, comp=False) -> list[dict[UndefinedFunction | Any, Any]] | None:
     r"""
     This heuristic assumes the presence of unknown functions or known functions
     with non-integer powers.
@@ -894,7 +896,7 @@ def lie_heuristic_abaco2_unique_unknown(match, comp=False):
                 return [{xi: xitry.subs(y, func), eta: S.One}]
 
 
-def lie_heuristic_abaco2_unique_general(match, comp=False):
+def lie_heuristic_abaco2_unique_general(match, comp=False) -> list[dict[UndefinedFunction | Any, Any]] | None:
     r"""
     This heuristic finds if infinitesimals of the form `\eta = f(x)`, `\xi = g(y)`
     without making any assumptions on `h`.
@@ -969,7 +971,7 @@ def lie_heuristic_abaco2_unique_general(match, comp=False):
                                 return [{xi: xival, eta: etaval.subs(y, func)}]
 
 
-def lie_heuristic_linear(match, comp=False):
+def lie_heuristic_linear(match, comp=False) -> list[dict[UndefinedFunction | Any, Any]] | None:
     r"""
     This heuristic assumes
 

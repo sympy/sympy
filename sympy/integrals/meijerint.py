@@ -71,6 +71,7 @@ from sympy.polys import cancel, factor
 from sympy.utilities.iterables import multiset_partitions
 from sympy.utilities.misc import debug as _debug
 from sympy.utilities.misc import debugf as _debugf
+from typing import TypeVar
 
 # keep this at top for easy reference
 z = Dummy('z')
@@ -295,6 +296,9 @@ def _create_lookup_table(table):
 ####################################################################
 
 from sympy.utilities.timeutils import timethis
+
+_CallableT = TypeVar("_CallableT", bound=Callable)
+
 timeit = timethis('meijerg')
 
 
@@ -1650,7 +1654,7 @@ def _rewrite2(f, x):
                 return fac, po, g1[0], g2[0], cond
 
 
-def meijerint_indefinite(f, x):
+def meijerint_indefinite(f, x) -> Piecewise | Basic | None:
     """
     Compute an indefinite integral of ``f`` by rewriting it as a G function.
 
@@ -2078,7 +2082,7 @@ def _meijerint_definite_4(f, x, only_double=False):
                 return _my_unpolarify(hyperexpand(res)), cond
 
 
-def meijerint_inversion(f, x, t):
+def meijerint_inversion(f, x, t) -> Piecewise | None:
     r"""
     Compute the inverse laplace transform
     $\int_{c+i\infty}^{c-i\infty} f(x) e^{tx}\, dx$,

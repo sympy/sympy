@@ -10,6 +10,9 @@ from sympy.utilities.misc import as_int
 
 
 from collections import defaultdict
+from sympy.core.function import UndefinedFunction
+from typing import Any, Literal
+from typing_extensions import LiteralString, Self
 
 
 class Partition(FiniteSet):
@@ -28,7 +31,7 @@ class Partition(FiniteSet):
     _rank = None
     _partition = None
 
-    def __new__(cls, *partition):
+    def __new__(cls, *partition) -> Self:
         """
         Generates a new partition object.
 
@@ -90,7 +93,14 @@ class Partition(FiniteSet):
         obj.size = len(U)
         return obj
 
-    def sort_key(self, order=None):
+    def sort_key(self, order=None) -> tuple[
+        tuple[tuple[Literal[5], Literal[0], str], tuple[int, tuple[Any, ...]], Any, Any]
+        | Any
+        | tuple[
+            tuple[Literal[10, 0], Literal[0], str | Any], tuple[int, tuple[Any, ...]] | tuple[Literal[1], tuple[str]], Any, Any
+        ],
+        ...,
+    ]:
         """Return a canonical key that can be used for sorting.
 
         Ordering is based on the size and sorted elements of the partition
@@ -118,7 +128,7 @@ class Partition(FiniteSet):
         return tuple(map(default_sort_key, (self.size, members, self.rank)))
 
     @property
-    def partition(self):
+    def partition(self) -> list[Any]:
         """Return partition as a sorted list of lists.
 
         Examples
@@ -133,7 +143,7 @@ class Partition(FiniteSet):
                                       for p in self.args])
         return self._partition
 
-    def __add__(self, other):
+    def __add__(self, other) -> "Partition":
         """
         Return permutation whose rank is ``other`` greater than current rank,
         (mod the maximum rank for the set).
@@ -157,7 +167,7 @@ class Partition(FiniteSet):
                             self.size)
         return Partition.from_rgs(result, self.members)
 
-    def __sub__(self, other):
+    def __sub__(self, other) -> "Partition":
         """
         Return permutation whose rank is ``other`` less than current rank,
         (mod the maximum rank for the set).
@@ -176,7 +186,7 @@ class Partition(FiniteSet):
         """
         return self.__add__(-other)
 
-    def __le__(self, other):
+    def __le__(self, other) -> bool:
         """
         Checks if a partition is less than or equal to
         the other based on rank.
@@ -196,7 +206,7 @@ class Partition(FiniteSet):
         """
         return self.sort_key() <= sympify(other).sort_key()
 
-    def __lt__(self, other):
+    def __lt__(self, other) -> bool:
         """
         Checks if a partition is less than the other.
 
@@ -214,7 +224,7 @@ class Partition(FiniteSet):
         return self.sort_key() < sympify(other).sort_key()
 
     @property
-    def rank(self):
+    def rank(self) -> int:
         """
         Gets the rank of a partition.
 
@@ -232,7 +242,7 @@ class Partition(FiniteSet):
         return self._rank
 
     @property
-    def RGS(self):
+    def RGS(self) -> tuple[Any, ...]:
         """
         Returns the "restricted growth string" of the partition.
 
@@ -267,7 +277,7 @@ class Partition(FiniteSet):
             [i for p in partition for i in p], key=default_sort_key)])
 
     @classmethod
-    def from_rgs(self, rgs, elements):
+    def from_rgs(self, rgs, elements) -> "Partition":
         """
         Creates a set partition from a restricted growth string.
 
@@ -334,7 +344,7 @@ class IntegerPartition(Basic):
     _dict = None
     _keys = None
 
-    def __new__(cls, partition, integer=None):
+    def __new__(cls, partition, integer=None) -> Self:
         """
         Generates a new IntegerPartition object from a list or dictionary.
 
@@ -396,7 +406,7 @@ class IntegerPartition(Basic):
         obj.integer = integer
         return obj
 
-    def prev_lex(self):
+    def prev_lex(self) -> "IntegerPartition":
         """Return the previous partition of the integer, n, in lexical order,
         wrapping around to [1, ..., 1] if the partition is [n].
 
@@ -433,7 +443,7 @@ class IntegerPartition(Basic):
                     left -= d[new]*new
         return IntegerPartition(self.integer, d)
 
-    def next_lex(self):
+    def next_lex(self) -> "IntegerPartition":
         """Return the next partition of the integer, n, in lexical order,
         wrapping around to [n] if the partition is [1, ..., 1].
 
@@ -483,7 +493,7 @@ class IntegerPartition(Basic):
                 d[1] = need
         return IntegerPartition(self.integer, d)
 
-    def as_dict(self):
+    def as_dict(self) -> dict[str, str]:
         """Return the partition as a dictionary whose keys are the
         partition integers and the values are the multiplicity of that
         integer.
@@ -525,7 +535,7 @@ class IntegerPartition(Basic):
             j += 1
         return b
 
-    def __lt__(self, other):
+    def __lt__(self, other) -> bool:
         """Return True if self is less than other when the partition
         is listed from smallest to biggest.
 
@@ -544,7 +554,7 @@ class IntegerPartition(Basic):
         """
         return list(reversed(self.partition)) < list(reversed(other.partition))
 
-    def __le__(self, other):
+    def __le__(self, other) -> bool:
         """Return True if self is less than other when the partition
         is listed from smallest to biggest.
 
@@ -558,7 +568,7 @@ class IntegerPartition(Basic):
         """
         return list(reversed(self.partition)) <= list(reversed(other.partition))
 
-    def as_ferrers(self, char='#'):
+    def as_ferrers(self, char='#') -> LiteralString:
         """
         Prints the ferrer diagram of a partition.
 
@@ -577,7 +587,7 @@ class IntegerPartition(Basic):
         return str(list(self.partition))
 
 
-def random_integer_partition(n, seed=None):
+def random_integer_partition(n, seed=None) -> list[Any]:
     """
     Generates a random integer partition summing to ``n`` as a list
     of reverse-sorted integers.
@@ -648,7 +658,7 @@ def RGS_generalized(m):
     return d
 
 
-def RGS_enum(m):
+def RGS_enum(m) -> type[UndefinedFunction] | Literal[0, 1]:
     """
     RGS_enum computes the total number of restricted growth strings
     possible for a superset of size m.
@@ -685,7 +695,7 @@ def RGS_enum(m):
         return bell(m)
 
 
-def RGS_unrank(rank, m):
+def RGS_unrank(rank, m) -> list[Any]:
     """
     Gives the unranked restricted growth string for a given
     superset size.
@@ -720,7 +730,7 @@ def RGS_unrank(rank, m):
     return [x - 1 for x in L[1:]]
 
 
-def RGS_rank(rgs):
+def RGS_rank(rgs) -> Literal[0]:
     """
     Computes the rank of a restricted growth string.
 

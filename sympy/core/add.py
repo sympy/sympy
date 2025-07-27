@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, ClassVar
+from typing import Any, Literal, TYPE_CHECKING, ClassVar
 from collections import defaultdict
 from functools import reduce
 from operator import attrgetter
@@ -14,6 +14,13 @@ from .intfunc import ilcm, igcd
 from .expr import Expr
 from .kind import UndefinedKind
 from sympy.utilities.iterables import is_sequence, sift
+from sympy.core.expr import Expr
+from sympy.core.kind import _UndefinedKind
+from sympy.core.mul import Mul
+from sympy.core.numbers import Integer, Rational
+from sympy.core.operations import AssocOp
+from sympy.series.order import Order
+from typing_extensions import Self
 
 
 if TYPE_CHECKING:
@@ -406,11 +413,11 @@ class Add(Expr, AssocOp):
             return newseq, [], None
 
     @classmethod
-    def class_key(cls):
+    def class_key(cls) -> tuple[Literal[3], Literal[1], str]:
         return 3, 1, cls.__name__
 
     @property
-    def kind(self):
+    def kind(self) -> _UndefinedKind | Any:
         k = attrgetter('kind')
         kinds = map(k, self.args)
         kinds = frozenset(kinds)
@@ -422,11 +429,11 @@ class Add(Expr, AssocOp):
             result, = kinds
         return result
 
-    def could_extract_minus_sign(self):
+    def could_extract_minus_sign(self) -> bool:
         return _could_extract_minus_sign(self)
 
     @cacheit
-    def as_coeff_add(self, *deps):
+    def as_coeff_add(self, *deps) -> tuple[Any | Self, tuple[Any, ...]] | tuple[Expr, tuple[Expr, ...]] | tuple[Any, tuple[Expr, ...]]:
         """
         Returns a tuple (coeff, args) where self is treated as an Add and coeff
         is the Number term and args is a tuple of all other terms.
@@ -544,7 +551,7 @@ class Add(Expr, AssocOp):
         return srv if srv.is_Number else rv
 
     @cacheit
-    def as_two_terms(self):
+    def as_two_terms(self) -> tuple[Expr, Any | Self]:
         """Return head and tail of self.
 
         This is the most efficient way to get the head and tail of an
@@ -934,17 +941,17 @@ class Add(Expr, AssocOp):
                     return self.func(-new, coeff_self, coeff_old,
                                *[s._subs(old, new) for s in ret_set])
 
-    def removeO(self):
+    def removeO(self) -> Self:
         args = [a for a in self.args if not a.is_Order]
         return self._new_rawargs(*args)
 
-    def getO(self):
+    def getO(self) -> Self | None:
         args = [a for a in self.args if a.is_Order]
         if args:
             return self._new_rawargs(*args)
 
     @cacheit
-    def extract_leading_order(self, symbols, point=None):
+    def extract_leading_order(self, symbols, point=None) -> tuple[tuple[Expr, Order], ...]:
         """
         Returns the leading term and its order.
 
@@ -981,7 +988,7 @@ class Add(Expr, AssocOp):
             lst = new_lst
         return tuple(lst)
 
-    def as_real_imag(self, deep=True, **hints):
+    def as_real_imag(self, deep=True, **hints) -> tuple[Self, Self]:
         """
         Return a tuple representing a complex number.
 
@@ -1088,7 +1095,7 @@ class Add(Expr, AssocOp):
     def _eval_transpose(self):
         return self.func(*[t.transpose() for t in self.args])
 
-    def primitive(self):
+    def primitive(self) -> tuple[Any, Self] | tuple[Rational | Any | Integer, Any | Self]:
         """
         Return ``(R, self/R)`` where ``R``` is the Rational GCD of ``self```.
 
@@ -1168,7 +1175,7 @@ class Add(Expr, AssocOp):
             terms.insert(0, c)
         return Rational(ngcd, dlcm), self._new_rawargs(*terms)
 
-    def as_content_primitive(self, radical=False, clear=True):
+    def as_content_primitive(self, radical=False, clear=True) -> tuple[Any | Integer | Rational, Any | Rational | Integer | Self]:
         """Return the tuple (R, self/R) where R is the positive Rational
         extracted from self. If radical is True (default is False) then
         common radicals will be removed and included as a factor of the
@@ -1265,7 +1272,7 @@ class Add(Expr, AssocOp):
 
         return (Float(re_part)._mpf_, Float(im_part)._mpf_)
 
-    def __neg__(self):
+    def __neg__(self) -> Mul | Order:
         if not global_parameters.distribute:
             return super().__neg__()
         return Mul(S.NegativeOne, self)

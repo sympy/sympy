@@ -1,5 +1,5 @@
 from sympy.core import S, diff
-from sympy.core.function import DefinedFunction, ArgumentIndexError
+from sympy.core.function import Function, UndefinedFunction, DefinedFunction, ArgumentIndexError
 from sympy.core.logic import fuzzy_not
 from sympy.core.relational import Eq, Ne
 from sympy.functions.elementary.complexes import im, sign
@@ -7,6 +7,10 @@ from sympy.functions.elementary.piecewise import Piecewise
 from sympy.polys.polyerrors import PolynomialError
 from sympy.polys.polyroots import roots
 from sympy.utilities.misc import filldedent
+from sympy.core.basic import Basic
+from sympy.core.mul import Mul
+from typing import Literal
+from typing_extensions import Self
 
 
 ###############################################################################
@@ -100,7 +104,7 @@ class DiracDelta(DefinedFunction):
 
     is_real = True
 
-    def fdiff(self, argindex=1):
+    def fdiff(self, argindex=1) -> Self:
         """
         Returns the first derivative of a DiracDelta Function.
 
@@ -149,7 +153,7 @@ class DiracDelta(DefinedFunction):
             raise ArgumentIndexError(self, argindex)
 
     @classmethod
-    def eval(cls, arg, k=S.Zero):
+    def eval(cls, arg, k=S.Zero) -> Mul | Self | None:
         """
         Returns a simplified form or a value of DiracDelta depending on the
         argument passed by the DiracDelta object.
@@ -295,7 +299,7 @@ class DiracDelta(DefinedFunction):
             pass
         return self
 
-    def is_simple(self, x):
+    def is_simple(self, x) -> Literal[False]:
         """
         Tells whether the argument(args[0]) of DiracDelta is a linear
         expression in *x*.
@@ -448,7 +452,7 @@ class Heaviside(DefinedFunction):
 
     is_real = True
 
-    def fdiff(self, argindex=1):
+    def fdiff(self, argindex=1) -> type[UndefinedFunction]:
         """
         Returns the first derivative of a Heaviside Function.
 
@@ -485,7 +489,7 @@ class Heaviside(DefinedFunction):
         return super(cls, cls).__new__(cls, arg, H0, **options)
 
     @property
-    def pargs(self):
+    def pargs(self) -> tuple[Basic, ...]:
         """Args without default S.Half"""
         args = self.args
         if args[1] is S.Half:
@@ -493,7 +497,7 @@ class Heaviside(DefinedFunction):
         return args
 
     @classmethod
-    def eval(cls, arg, H0=S.Half):
+    def eval(cls, arg, H0=S.Half) -> None:
         """
         Returns a simplified form or a value of Heaviside depending on the
         argument passed by the Heaviside object.

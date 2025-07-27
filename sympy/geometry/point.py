@@ -37,6 +37,13 @@ from sympy.utilities.misc import filldedent, func_name, Undecidable
 from .entity import GeometryEntity
 
 from mpmath.libmp.libmpf import prec_to_dps
+from collections.abc import Iterator
+from sympy.core.basic import Basic
+from sympy.core.power import Pow
+from sympy.geometry.entity import GeometryEntity
+from sympy.series.order import Order
+from typing import Any
+from typing_extensions import Self
 
 
 class Point(GeometryEntity):
@@ -106,7 +113,7 @@ class Point(GeometryEntity):
 
     is_Point = True
 
-    def __new__(cls, *args, **kwargs):
+    def __new__(cls, *args, **kwargs) -> Point | Point2D | Point3D | Self:
         evaluate = kwargs.get('evaluate', global_parameters.evaluate)
         on_morph = kwargs.get('on_morph', 'ignore')
 
@@ -178,12 +185,12 @@ class Point(GeometryEntity):
         # the general Point
         return GeometryEntity.__new__(cls, *coords)
 
-    def __abs__(self):
+    def __abs__(self) -> Pow | Any:
         """Returns the distance between this point and the origin."""
         origin = Point([0]*len(self))
         return Point.distance(origin, self)
 
-    def __add__(self, other):
+    def __add__(self, other) -> Point | Point2D | Point3D:
         """Add other to self by incrementing self's coordinates by
         those of other.
 
@@ -222,16 +229,16 @@ class Point(GeometryEntity):
         coords = [simplify(a + b) for a, b in zip(s, o)]
         return Point(coords, evaluate=False)
 
-    def __contains__(self, item):
+    def __contains__(self, item) -> bool:
         return item in self.args
 
-    def __truediv__(self, divisor):
+    def __truediv__(self, divisor) -> Point | Point2D | Point3D:
         """Divide point's coordinates by a factor."""
         divisor = sympify(divisor)
         coords = [simplify(x/divisor) for x in self.args]
         return Point(coords, evaluate=False)
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
         if not isinstance(other, Point) or len(self.args) != len(other.args):
             return False
         return self.args == other.args
@@ -239,16 +246,16 @@ class Point(GeometryEntity):
     def __getitem__(self, key):
         return self.args[key]
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash(self.args)
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[Basic]:
         return self.args.__iter__()
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.args)
 
-    def __mul__(self, factor):
+    def __mul__(self, factor) -> Point | Point2D | Point3D:
         """Multiply point's coordinates by a factor.
 
         Notes
@@ -279,16 +286,16 @@ class Point(GeometryEntity):
         coords = [simplify(x*factor) for x in self.args]
         return Point(coords, evaluate=False)
 
-    def __rmul__(self, factor):
+    def __rmul__(self, factor) -> Point | Point2D | Point3D:
         """Multiply a factor by point's coordinates."""
         return self.__mul__(factor)
 
-    def __neg__(self):
+    def __neg__(self) -> Point | Point2D | Point3D:
         """Negate the point."""
         coords = [-x for x in self.args]
         return Point(coords, evaluate=False)
 
-    def __sub__(self, other):
+    def __sub__(self, other) -> Point | Point2D | Point3D:
         """Subtract two points, or subtract a factor from this point's
         coordinates."""
         return self + [-x for x in other]
@@ -312,7 +319,7 @@ class Point(GeometryEntity):
         return [Point(i, **kwargs) for i in points]
 
     @staticmethod
-    def affine_rank(*args):
+    def affine_rank(*args) -> int:
         """The affine rank of a set of points is the dimension
         of the smallest affine space containing all the points.
         For example, if the points lie on a line (and are not all
@@ -334,12 +341,12 @@ class Point(GeometryEntity):
             abs(x.n(2)) < 1e-12 if x.is_number else x.is_zero)
 
     @property
-    def ambient_dimension(self):
+    def ambient_dimension(self) -> Any | int:
         """Number of components this point has."""
         return getattr(self, '_ambient_dimension', len(self))
 
     @classmethod
-    def are_coplanar(cls, *points):
+    def are_coplanar(cls, *points) -> bool:
         """Return True if there exists a plane in which all the points
         lie.  A trivial True value is returned if `len(points) < 3` or
         all Points are 2-dimensional.
@@ -384,7 +391,7 @@ class Point(GeometryEntity):
         points = list(uniq(points))
         return Point.affine_rank(*points) <= 2
 
-    def distance(self, other):
+    def distance(self, other) -> Pow | Any:
         """The Euclidean distance between self and another GeometricEntity.
 
         Returns
@@ -436,13 +443,13 @@ class Point(GeometryEntity):
             raise TypeError("distance between Point and %s is not defined" % type(other))
         return distance(self)
 
-    def dot(self, p):
+    def dot(self, p) -> Order:
         """Return dot product of self with another Point."""
         if not is_sequence(p):
             p = Point(p)  # raise the error via Point
         return Add(*(a*b for a, b in zip(self, p)))
 
-    def equals(self, other):
+    def equals(self, other) -> bool:
         """Returns whether the coordinates of self and other agree."""
         # a point is equal to another point if all its components are equal
         if not isinstance(other, Point) or len(self) != len(other):
@@ -481,7 +488,7 @@ class Point(GeometryEntity):
         coords = [x.evalf(n=dps, **options) for x in self.args]
         return Point(*coords, evaluate=False)
 
-    def intersection(self, other):
+    def intersection(self, other) -> list[Self] | list[Any]:
         """The intersection between this point and another GeometryEntity.
 
         Parameters
@@ -522,7 +529,7 @@ class Point(GeometryEntity):
             return []
         return other.intersection(self)
 
-    def is_collinear(self, *args):
+    def is_collinear(self, *args) -> bool:
         """Returns `True` if there exists a line
         that contains `self` and `points`.  Returns `False` otherwise.
         A trivially True value is returned if no points are given.
@@ -560,7 +567,7 @@ class Point(GeometryEntity):
         points = list(uniq(points))
         return Point.affine_rank(*points) <= 1
 
-    def is_concyclic(self, *args):
+    def is_concyclic(self, *args) -> bool:
         """Do `self` and the given sequence of points lie in a circle?
 
         Returns True if the set of points are concyclic and
@@ -617,7 +624,7 @@ class Point(GeometryEntity):
         return False
 
     @property
-    def is_nonzero(self):
+    def is_nonzero(self) -> bool | None:
         """True if any coordinate is nonzero, False if every coordinate is zero,
         and None if it cannot be determined."""
         is_zero = self.is_zero
@@ -625,7 +632,7 @@ class Point(GeometryEntity):
             return None
         return not is_zero
 
-    def is_scalar_multiple(self, p):
+    def is_scalar_multiple(self, p) -> bool:
         """Returns whether each coordinate of `self` is a scalar
         multiple of the corresponding coordinate in point p.
         """
@@ -645,7 +652,7 @@ class Point(GeometryEntity):
         return m.rank() < 2
 
     @property
-    def is_zero(self):
+    def is_zero(self) -> bool | None:
         """True if every coordinate is zero, False if any coordinate is not zero,
         and None if it cannot be determined."""
         nonzero = [x.is_nonzero for x in self.args]
@@ -670,7 +677,7 @@ class Point(GeometryEntity):
         """
         return S.Zero
 
-    def midpoint(self, p):
+    def midpoint(self, p) -> Point | Point2D | Point3D:
         """The midpoint between self and point p.
 
         Parameters
@@ -701,13 +708,13 @@ class Point(GeometryEntity):
         return Point([simplify((a + b)*S.Half) for a, b in zip(s, p)])
 
     @property
-    def origin(self):
+    def origin(self) -> Point | Point2D | Point3D:
         """A point of all zeros of the same ambient dimension
         as the current point"""
         return Point([0]*len(self), evaluate=False)
 
     @property
-    def orthogonal_direction(self):
+    def orthogonal_direction(self) -> Point | Point2D | Point3D:
         """Returns a non-zero point that is orthogonal to the
         line containing `self` and the origin.
 
@@ -771,7 +778,7 @@ class Point(GeometryEntity):
             raise ValueError("Cannot project to the zero vector.")
         return b*(a.dot(b) / b.dot(b))
 
-    def taxicab_distance(self, p):
+    def taxicab_distance(self, p) -> Order:
         """The Taxicab Distance from self to point p.
 
         Returns the sum of the horizontal and vertical distances to point p.
@@ -804,7 +811,7 @@ class Point(GeometryEntity):
         s, p = Point._normalize_dimension(self, Point(p))
         return Add(*(abs(a - b) for a, b in zip(s, p)))
 
-    def canberra_distance(self, p):
+    def canberra_distance(self, p) -> Order:
         """The Canberra Distance from self to point p.
 
         Returns the weighted sum of horizontal and vertical distances to
@@ -851,7 +858,7 @@ class Point(GeometryEntity):
         return Add(*((abs(a - b)/(abs(a) + abs(b))) for a, b in zip(s, p)))
 
     @property
-    def unit(self):
+    def unit(self) -> Point | Point2D | Point3D | Any:
         """Return the Point that is in the same direction as `self`
         and a distance of 1 from the origin"""
         return self / abs(self)
@@ -910,7 +917,7 @@ class Point2D(Point):
 
     _ambient_dimension = 2
 
-    def __new__(cls, *args, _nocheck=False, **kwargs):
+    def __new__(cls, *args, _nocheck=False, **kwargs) -> Self:
         if not _nocheck:
             kwargs['dim'] = 2
             args = Point(*args, **kwargs)
@@ -920,7 +927,7 @@ class Point2D(Point):
         return item == self
 
     @property
-    def bounds(self):
+    def bounds(self) -> tuple[Basic, Basic, Basic, Basic]:
         """Return a tuple (xmin, ymin, xmax, ymax) representing the bounding
         rectangle for the geometric figure.
 
@@ -928,7 +935,7 @@ class Point2D(Point):
 
         return (self.x, self.y, self.x, self.y)
 
-    def rotate(self, angle, pt=None):
+    def rotate(self, angle, pt=None) -> Point | Point2D | Point3D:
         """Rotate ``angle`` radians counterclockwise about Point ``pt``.
 
         See Also
@@ -960,7 +967,7 @@ class Point2D(Point):
             rv += pt
         return rv
 
-    def scale(self, x=1, y=1, pt=None):
+    def scale(self, x=1, y=1, pt=None) -> Point:
         """Scale the coordinates of the Point by multiplying by
         ``x`` and ``y`` after subtracting ``pt`` -- default is (0, 0) --
         and then adding ``pt`` back again (i.e. ``pt`` is the point of
@@ -987,7 +994,7 @@ class Point2D(Point):
             return self.translate(*(-pt).args).scale(x, y).translate(*pt.args)
         return Point(self.x*x, self.y*y)
 
-    def transform(self, matrix):
+    def transform(self, matrix) -> Point | Point2D | Point3D:
         """Return the point after applying the transformation described
         by the 3x3 Matrix, ``matrix``.
 
@@ -1002,7 +1009,7 @@ class Point2D(Point):
         x, y = self.args
         return Point(*(Matrix(1, 3, [x, y, 1])*matrix).tolist()[0][:2])
 
-    def translate(self, x=0, y=0):
+    def translate(self, x=0, y=0) -> Point:
         """Shift the Point by adding x and y to the coordinates of the Point.
 
         See Also
@@ -1026,7 +1033,7 @@ class Point2D(Point):
         return Point(self.x + x, self.y + y)
 
     @property
-    def coordinates(self):
+    def coordinates(self) -> tuple[Basic, ...]:
         """
         Returns the two coordinates of the Point.
 
@@ -1041,7 +1048,7 @@ class Point2D(Point):
         return self.args
 
     @property
-    def x(self):
+    def x(self) -> Basic:
         """
         Returns the X coordinate of the Point.
 
@@ -1056,7 +1063,7 @@ class Point2D(Point):
         return self.args[0]
 
     @property
-    def y(self):
+    def y(self) -> Basic:
         """
         Returns the Y coordinate of the Point.
 
@@ -1118,7 +1125,7 @@ class Point3D(Point):
 
     _ambient_dimension = 3
 
-    def __new__(cls, *args, _nocheck=False, **kwargs):
+    def __new__(cls, *args, _nocheck=False, **kwargs) -> Self:
         if not _nocheck:
             kwargs['dim'] = 3
             args = Point(*args, **kwargs)
@@ -1128,7 +1135,7 @@ class Point3D(Point):
         return item == self
 
     @staticmethod
-    def are_collinear(*points):
+    def are_collinear(*points) -> bool:
         """Is a sequence of points collinear?
 
         Test whether or not a set of points are collinear. Returns True if
@@ -1163,7 +1170,7 @@ class Point3D(Point):
         """
         return Point.is_collinear(*points)
 
-    def direction_cosine(self, point):
+    def direction_cosine(self, point) -> list[Any]:
         """
         Gives the direction cosine between 2 points
 
@@ -1190,7 +1197,7 @@ class Point3D(Point):
         return [(point.x - self.x) / b,(point.y - self.y) / b,
                 (point.z - self.z) / b]
 
-    def direction_ratio(self, point):
+    def direction_ratio(self, point) -> list[Any]:
         """
         Gives the direction ratio between 2 points
 
@@ -1214,7 +1221,7 @@ class Point3D(Point):
         """
         return [(point.x - self.x),(point.y - self.y),(point.z - self.z)]
 
-    def intersection(self, other):
+    def intersection(self, other) -> list[Self] | list[Any] | list[Point] | list[Point2D]:
         """The intersection between this point and another GeometryEntity.
 
         Parameters
@@ -1252,7 +1259,7 @@ class Point3D(Point):
             return []
         return other.intersection(self)
 
-    def scale(self, x=1, y=1, z=1, pt=None):
+    def scale(self, x=1, y=1, z=1, pt=None) -> "Point3D":
         """Scale the coordinates of the Point by multiplying by
         ``x`` and ``y`` after subtracting ``pt`` -- default is (0, 0) --
         and then adding ``pt`` back again (i.e. ``pt`` is the point of
@@ -1279,7 +1286,7 @@ class Point3D(Point):
             return self.translate(*(-pt).args).scale(x, y, z).translate(*pt.args)
         return Point3D(self.x*x, self.y*y, self.z*z)
 
-    def transform(self, matrix):
+    def transform(self, matrix) -> "Point3D":
         """Return the point after applying the transformation described
         by the 4x4 Matrix, ``matrix``.
 
@@ -1294,7 +1301,7 @@ class Point3D(Point):
         m = Transpose(matrix)
         return Point3D(*(Matrix(1, 4, [x, y, z, 1])*m).tolist()[0][:3])
 
-    def translate(self, x=0, y=0, z=0):
+    def translate(self, x=0, y=0, z=0) -> "Point3D":
         """Shift the Point by adding x and y to the coordinates of the Point.
 
         See Also
@@ -1318,7 +1325,7 @@ class Point3D(Point):
         return Point3D(self.x + x, self.y + y, self.z + z)
 
     @property
-    def coordinates(self):
+    def coordinates(self) -> tuple[Basic, ...]:
         """
         Returns the three coordinates of the Point.
 
@@ -1333,7 +1340,7 @@ class Point3D(Point):
         return self.args
 
     @property
-    def x(self):
+    def x(self) -> Basic:
         """
         Returns the X coordinate of the Point.
 
@@ -1348,7 +1355,7 @@ class Point3D(Point):
         return self.args[0]
 
     @property
-    def y(self):
+    def y(self) -> Basic:
         """
         Returns the Y coordinate of the Point.
 
@@ -1363,7 +1370,7 @@ class Point3D(Point):
         return self.args[1]
 
     @property
-    def z(self):
+    def z(self) -> Basic:
         """
         Returns the Z coordinate of the Point.
 

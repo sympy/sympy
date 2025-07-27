@@ -1,12 +1,15 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, overload
+from typing import Callable, TYPE_CHECKING, overload
 
 from sympy.core import S, Add, Expr, Basic, Mul, Pow, Rational
 from sympy.core.logic import fuzzy_not
 from sympy.logic.boolalg import Boolean
 
 from sympy.assumptions import ask, Q  # type: ignore
+import sympy.core.basic
+from sympy.core.function import UndefinedFunction
+from sympy.matrices.expressions.matexpr import MatrixElement
 
 
 if TYPE_CHECKING:
@@ -78,7 +81,7 @@ def refine(expr: Basic, assumptions: Boolean | bool = True) -> Basic:
     return refine(new_expr, assumptions)
 
 
-def refine_abs(expr, assumptions):
+def refine_abs(expr, assumptions) -> None:
     """
     Handler for the absolute value.
 
@@ -216,7 +219,7 @@ def refine_Pow(expr, assumptions):
                     return expr
 
 
-def refine_atan2(expr, assumptions):
+def refine_atan2(expr, assumptions) -> type[UndefinedFunction]:
     """
     Handler for the atan2 function.
 
@@ -261,7 +264,7 @@ def refine_atan2(expr, assumptions):
         return expr
 
 
-def refine_re(expr, assumptions):
+def refine_re(expr, assumptions) -> sympy.core.basic.Basic | None:
     """
     Handler for real part.
 
@@ -284,7 +287,7 @@ def refine_re(expr, assumptions):
     return _refine_reim(expr, assumptions)
 
 
-def refine_im(expr, assumptions):
+def refine_im(expr, assumptions) -> sympy.core.basic.Basic | None:
     """
     Handler for imaginary part.
 
@@ -306,7 +309,7 @@ def refine_im(expr, assumptions):
         return - S.ImaginaryUnit * arg
     return _refine_reim(expr, assumptions)
 
-def refine_arg(expr, assumptions):
+def refine_arg(expr, assumptions) -> None:
     """
     Handler for complex argument
 
@@ -381,7 +384,7 @@ def refine_sign(expr, assumptions):
     return expr
 
 
-def refine_matrixelement(expr, assumptions):
+def refine_matrixelement(expr, assumptions) -> MatrixElement | None:
     """
     Handler for symmetric part.
 

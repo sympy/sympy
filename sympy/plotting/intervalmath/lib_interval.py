@@ -3,9 +3,11 @@ from functools import reduce
 
 from sympy.plotting.intervalmath import interval
 from sympy.external import import_module
+import sympy.plotting.intervalmath.interval_arithmetic
+from types import NotImplementedType
 
 
-def Abs(x):
+def Abs(x) -> sympy.plotting.intervalmath.interval_arithmetic.interval:
     if isinstance(x, (int, float)):
         return interval(abs(x))
     elif isinstance(x, interval):
@@ -19,7 +21,7 @@ def Abs(x):
 #Monotonic
 
 
-def exp(x):
+def exp(x) -> sympy.plotting.intervalmath.interval_arithmetic.interval:
     """evaluates the exponential of an interval"""
     np = import_module('numpy')
     if isinstance(x, (int, float)):
@@ -31,7 +33,7 @@ def exp(x):
 
 
 #Monotonic
-def log(x):
+def log(x) -> sympy.plotting.intervalmath.interval_arithmetic.interval:
     """evaluates the natural logarithm of an interval"""
     np = import_module('numpy')
     if isinstance(x, (int, float)):
@@ -53,7 +55,7 @@ def log(x):
 
 
 #Monotonic
-def log10(x):
+def log10(x) -> sympy.plotting.intervalmath.interval_arithmetic.interval:
     """evaluates the logarithm to the base 10 of an interval"""
     np = import_module('numpy')
     if isinstance(x, (int, float)):
@@ -74,7 +76,7 @@ def log10(x):
 
 
 #Monotonic
-def atan(x):
+def atan(x) -> sympy.plotting.intervalmath.interval_arithmetic.interval:
     """evaluates the tan inverse of an interval"""
     np = import_module('numpy')
     if isinstance(x, (int, float)):
@@ -88,7 +90,7 @@ def atan(x):
 
 
 #periodic
-def sin(x):
+def sin(x) -> sympy.plotting.intervalmath.interval_arithmetic.interval:
     """evaluates the sine of an interval"""
     np = import_module('numpy')
     if isinstance(x, (int, float)):
@@ -117,7 +119,7 @@ def sin(x):
 
 
 #periodic
-def cos(x):
+def cos(x) -> sympy.plotting.intervalmath.interval_arithmetic.interval:
     """Evaluates the cos of an interval"""
     np = import_module('numpy')
     if isinstance(x, (int, float)):
@@ -147,13 +149,13 @@ def cos(x):
         raise NotImplementedError
 
 
-def tan(x):
+def tan(x) -> sympy.plotting.intervalmath.interval_arithmetic.interval | NotImplementedType:
     """Evaluates the tan of an interval"""
     return sin(x) / cos(x)
 
 
 #Monotonic
-def sqrt(x):
+def sqrt(x) -> sympy.plotting.intervalmath.interval_arithmetic.interval:
     """Evaluates the square root of an interval"""
     np = import_module('numpy')
     if isinstance(x, (int, float)):
@@ -175,7 +177,7 @@ def sqrt(x):
         raise NotImplementedError
 
 
-def imin(*args):
+def imin(*args) -> type[NotImplementedError] | sympy.plotting.intervalmath.interval_arithmetic.interval:
     """Evaluates the minimum of a list of intervals"""
     np = import_module('numpy')
     if not all(isinstance(arg, (int, float, interval)) for arg in args):
@@ -196,7 +198,7 @@ def imin(*args):
         return interval(min(start_array), min(end_array))
 
 
-def imax(*args):
+def imax(*args) -> type[NotImplementedError] | sympy.plotting.intervalmath.interval_arithmetic.interval:
     """Evaluates the maximum of a list of intervals"""
     np = import_module('numpy')
     if not all(isinstance(arg, (int, float, interval)) for arg in args):
@@ -219,7 +221,7 @@ def imax(*args):
 
 
 #Monotonic
-def sinh(x):
+def sinh(x) -> sympy.plotting.intervalmath.interval_arithmetic.interval:
     """Evaluates the hyperbolic sine of an interval"""
     np = import_module('numpy')
     if isinstance(x, (int, float)):
@@ -230,7 +232,7 @@ def sinh(x):
         raise NotImplementedError
 
 
-def cosh(x):
+def cosh(x) -> sympy.plotting.intervalmath.interval_arithmetic.interval:
     """Evaluates the hyperbolic cos of an interval"""
     np = import_module('numpy')
     if isinstance(x, (int, float)):
@@ -250,7 +252,7 @@ def cosh(x):
 
 
 #Monotonic
-def tanh(x):
+def tanh(x) -> sympy.plotting.intervalmath.interval_arithmetic.interval:
     """Evaluates the hyperbolic tan of an interval"""
     np = import_module('numpy')
     if isinstance(x, (int, float)):
@@ -261,7 +263,7 @@ def tanh(x):
         raise NotImplementedError
 
 
-def asin(x):
+def asin(x) -> sympy.plotting.intervalmath.interval_arithmetic.interval | None:
     """Evaluates the inverse sine of an interval"""
     np = import_module('numpy')
     if isinstance(x, (int, float)):
@@ -283,7 +285,7 @@ def asin(x):
             return interval(start, end, is_valid=x.is_valid)
 
 
-def acos(x):
+def acos(x) -> sympy.plotting.intervalmath.interval_arithmetic.interval | None:
     """Evaluates the inverse cos of an interval"""
     np = import_module('numpy')
     if isinstance(x, (int, float)):
@@ -305,7 +307,7 @@ def acos(x):
             return interval(start, end, is_valid=x.is_valid)
 
 
-def ceil(x):
+def ceil(x) -> sympy.plotting.intervalmath.interval_arithmetic.interval | type[NotImplementedError]:
     """Evaluates the ceiling of an interval"""
     np = import_module('numpy')
     if isinstance(x, (int, float)):
@@ -326,7 +328,7 @@ def ceil(x):
         return NotImplementedError
 
 
-def floor(x):
+def floor(x) -> sympy.plotting.intervalmath.interval_arithmetic.interval | type[NotImplementedError]:
     """Evaluates the floor of an interval"""
     np = import_module('numpy')
     if isinstance(x, (int, float)):
@@ -347,7 +349,7 @@ def floor(x):
         return NotImplementedError
 
 
-def acosh(x):
+def acosh(x) -> sympy.plotting.intervalmath.interval_arithmetic.interval | type[NotImplementedError]:
     """Evaluates the inverse hyperbolic cosine of an interval"""
     np = import_module('numpy')
     if isinstance(x, (int, float)):
@@ -372,7 +374,7 @@ def acosh(x):
 
 
 #Monotonic
-def asinh(x):
+def asinh(x) -> sympy.plotting.intervalmath.interval_arithmetic.interval | type[NotImplementedError]:
     """Evaluates the inverse hyperbolic sine of an interval"""
     np = import_module('numpy')
     if isinstance(x, (int, float)):
@@ -385,7 +387,7 @@ def asinh(x):
         return NotImplementedError
 
 
-def atanh(x):
+def atanh(x) -> sympy.plotting.intervalmath.interval_arithmetic.interval | type[NotImplementedError]:
     """Evaluates the inverse hyperbolic tangent of an interval"""
     np = import_module('numpy')
     if isinstance(x, (int, float)):
@@ -411,7 +413,7 @@ def atanh(x):
 
 #Three valued logic for interval plotting.
 
-def And(*args):
+def And(*args) -> tuple[bool | None, bool | None]:
     """Defines the three valued ``And`` behaviour for a 2-tuple of
      three valued logic values"""
     def reduce_and(cmp_intervala, cmp_intervalb):
@@ -431,7 +433,7 @@ def And(*args):
     return reduce(reduce_and, args)
 
 
-def Or(*args):
+def Or(*args) -> tuple[bool | None, bool | None]:
     """Defines the three valued ``Or`` behaviour for a 2-tuple of
      three valued logic values"""
     def reduce_or(cmp_intervala, cmp_intervalb):

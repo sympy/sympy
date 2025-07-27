@@ -7,6 +7,8 @@ from sympy.polys.domains.field import Field
 from sympy.polys.domains.simpledomain import SimpleDomain
 from sympy.polys.polyerrors import CoercionFailed
 from sympy.utilities import public
+from sympy.series import Order
+from typing_extensions import Self
 
 
 @public
@@ -25,7 +27,7 @@ class ExpressionRawDomain(Field, CharacteristicZero, SimpleDomain):
     has_assoc_Ring = False
     has_assoc_Field = True
 
-    def __init__(self):
+    def __init__(self) -> None:
         pass
 
     @classmethod
@@ -36,7 +38,7 @@ class ExpressionRawDomain(Field, CharacteristicZero, SimpleDomain):
         """Convert ``a`` to a SymPy object. """
         return a
 
-    def from_sympy(self, a):
+    def from_sympy(self, a) -> Expr:
         """Convert SymPy's expression to ``dtype``. """
         if not isinstance(a, Expr):
             raise CoercionFailed(f"Expecting an Expr instance but found: {type(a).__name__}")
@@ -46,11 +48,11 @@ class ExpressionRawDomain(Field, CharacteristicZero, SimpleDomain):
         """Convert a domain element from another domain to EXRAW"""
         return K.to_sympy(a)
 
-    def get_field(self):
+    def get_field(self) -> Self:
         """Returns a field associated with ``self``. """
         return self
 
-    def sum(self, items):
+    def sum(self, items) -> Order:
         return Add(*items)
 
 

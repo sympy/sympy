@@ -10,6 +10,9 @@ from sympy.core.relational import Eq, Ne, Gt, Lt, Ge, Le
 from sympy.core.singleton import S
 from sympy.logic.boolalg import Or, And, Not, Xnor
 from sympy.logic.boolalg import (Equivalent, ITE, Implies, Nand, Nor, Xor)
+import sympy.core.logic
+from typing import Any
+from typing_extensions import Self
 
 
 class Literal:
@@ -35,7 +38,7 @@ class Literal:
     Literal(Q.even(x), True)
     """
 
-    def __new__(cls, lit, is_Not=False):
+    def __new__(cls, lit, is_Not=False) -> OR | AND | Literal | Self:
         if isinstance(lit, Not):
             lit = lit.args[0]
             is_Not = True
@@ -50,14 +53,14 @@ class Literal:
     def arg(self):
         return self.lit
 
-    def rcall(self, expr):
+    def rcall(self, expr) -> Self:
         if callable(self.lit):
             lit = self.lit(expr)
         else:
             lit = self.lit.apply(expr)
         return type(self)(lit, self.is_Not)
 
-    def __invert__(self):
+    def __invert__(self) -> "Literal":
         is_Not = not self.is_Not
         return Literal(self.lit, is_Not)
 
@@ -66,10 +69,10 @@ class Literal:
 
     __repr__ = __str__
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
         return self.arg == other.arg and self.is_Not == other.is_Not
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         h = hash((type(self).__name__, self.arg, self.is_Not))
         return h
 
@@ -78,25 +81,25 @@ class OR:
     """
     A low-level implementation for Or
     """
-    def __init__(self, *args):
+    def __init__(self, *args) -> None:
         self._args = args
 
     @property
-    def args(self):
+    def args(self) -> list[Any]:
         return sorted(self._args, key=str)
 
-    def rcall(self, expr):
+    def rcall(self, expr) -> Self:
         return type(self)(*[arg.rcall(expr)
                             for arg in self._args
                             ])
 
-    def __invert__(self):
+    def __invert__(self) -> "AND":
         return AND(*[~arg for arg in self._args])
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash((type(self).__name__,) + tuple(self.args))
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
         return self.args == other.args
 
     def __str__(self):
@@ -110,25 +113,25 @@ class AND:
     """
     A low-level implementation for And
     """
-    def __init__(self, *args):
+    def __init__(self, *args) -> None:
         self._args = args
 
-    def __invert__(self):
+    def __invert__(self) -> OR:
         return OR(*[~arg for arg in self._args])
 
     @property
-    def args(self):
+    def args(self) -> list[Any]:
         return sorted(self._args, key=str)
 
-    def rcall(self, expr):
+    def rcall(self, expr) -> Self:
         return type(self)(*[arg.rcall(expr)
                             for arg in self._args
                             ])
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash((type(self).__name__,) + tuple(self.args))
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
         return self.args == other.args
 
     def __str__(self):
@@ -138,7 +141,7 @@ class AND:
     __repr__ = __str__
 
 
-def to_NNF(expr, composite_map=None):
+def to_NNF(expr, composite_map=None) -> OR | AND | Literal:
     """
     Generates the Negation Normal Form of any boolean expression in terms
     of AND, OR, and Literal objects.
@@ -247,7 +250,7 @@ def to_NNF(expr, composite_map=None):
     return Literal(expr)
 
 
-def distribute_AND_over_OR(expr):
+def distribute_AND_over_OR(expr) -> CNF | None:
     """
     Distributes AND over OR in the NNF expression.
     Returns the result( Conjunctive Normal Form of expression)
@@ -285,12 +288,12 @@ class CNF:
     frozenset({Literal(Q.negative(x), False),
     Literal(Q.positive(x), False), Literal(Q.zero(x), False)})}
     """
-    def __init__(self, clauses=None):
+    def __init__(self, clauses=None) -> None:
         if not clauses:
             clauses = set()
         self.clauses = clauses
 
-    def add(self, prop):
+    def add(self, prop) -> None:
         clauses = CNF.to_CNF(prop).clauses
         self.add_clauses(clauses)
 
@@ -301,28 +304,28 @@ class CNF:
         )
         return s
 
-    def extend(self, props):
+    def extend(self, props) -> Self:
         for p in props:
             self.add(p)
         return self
 
-    def copy(self):
+    def copy(self) -> "CNF":
         return CNF(set(self.clauses))
 
-    def add_clauses(self, clauses):
+    def add_clauses(self, clauses) -> None:
         self.clauses |= clauses
 
     @classmethod
-    def from_prop(cls, prop):
+    def from_prop(cls, prop) -> Self:
         res = cls()
         res.add(prop)
         return res
 
-    def __iand__(self, other):
+    def __iand__(self, other) -> Self:
         self.add_clauses(other.clauses)
         return self
 
-    def all_predicates(self):
+    def all_predicates(self) -> set[Any]:
         predicates = set()
         for c in self.clauses:
             predicates |= {arg.lit for arg in c}
@@ -350,7 +353,7 @@ class CNF:
             ll = ll._or(CNF(p))
         return ll
 
-    def rcall(self, expr):
+    def rcall(self, expr) -> CNF | None:
         clause_list = []
         for clause in self.clauses:
             lits = [arg.rcall(expr) for arg in clause]
@@ -373,14 +376,14 @@ class CNF:
         return b
 
     @classmethod
-    def to_CNF(cls, expr):
+    def to_CNF(cls, expr) -> CNF | None:
         from sympy.assumptions.facts import get_composite_predicates
         expr = to_NNF(expr, get_composite_predicates())
         expr = distribute_AND_over_OR(expr)
         return expr
 
     @classmethod
-    def CNF_to_cnf(cls, cnf):
+    def CNF_to_cnf(cls, cnf) ->     sympy.core.logic.And:
         """
         Converts CNF object to SymPy's boolean expression
         retaining the form of expression.
@@ -395,7 +398,7 @@ class EncodedCNF:
     """
     Class for encoding the CNF expression.
     """
-    def __init__(self, data=None, encoding=None):
+    def __init__(self, data=None, encoding=None) -> None:
         if not data and not encoding:
             data = []
             encoding = {}
@@ -403,33 +406,33 @@ class EncodedCNF:
         self.encoding = encoding
         self._symbols = list(encoding.keys())
 
-    def from_cnf(self, cnf):
+    def from_cnf(self, cnf) -> None:
         self._symbols = list(cnf.all_predicates())
         n = len(self._symbols)
         self.encoding = dict(zip(self._symbols, range(1, n + 1)))
         self.data = [self.encode(clause) for clause in cnf.clauses]
 
     @property
-    def symbols(self):
+    def symbols(self) -> list[Any]:
         return self._symbols
 
     @property
-    def variables(self):
+    def variables(self) -> range:
         return range(1, len(self._symbols) + 1)
 
-    def copy(self):
+    def copy(self) -> "EncodedCNF":
         new_data = [set(clause) for clause in self.data]
         return EncodedCNF(new_data, dict(self.encoding))
 
-    def add_prop(self, prop):
+    def add_prop(self, prop) -> None:
         cnf = CNF.from_prop(prop)
         self.add_from_cnf(cnf)
 
-    def add_from_cnf(self, cnf):
+    def add_from_cnf(self, cnf) -> None:
         clauses = [self.encode(clause) for clause in cnf.clauses]
         self.data += clauses
 
-    def encode_arg(self, arg):
+    def encode_arg(self, arg) -> int:
         literal = arg.lit
         value = self.encoding.get(literal, None)
         if value is None:
@@ -441,5 +444,5 @@ class EncodedCNF:
         else:
             return value
 
-    def encode(self, clause):
+    def encode(self, clause) -> set[int | Any]:
         return {self.encode_arg(arg) if not arg.lit == S.false else 0 for arg in clause}

@@ -6,16 +6,20 @@ from sympy.core.parameters import global_parameters
 from sympy.core.function import AppliedUndef, expand
 from sympy.core.mul import Mul
 from sympy.core.numbers import Integer
-from sympy.core.relational import Eq
+from sympy.core.relational import Ne, Relational, Eq
 from sympy.core.singleton import S, Singleton
 from sympy.core.sorting import ordered
 from sympy.core.symbol import Dummy, Symbol, Wild
 from sympy.core.sympify import sympify
 from sympy.matrices import Matrix
 from sympy.polys import lcm, factor
-from sympy.sets.sets import Interval, Intersection
+from sympy.sets.sets import Complement, FiniteSet, Union, Interval, Intersection
 from sympy.tensor.indexed import Idx
 from sympy.utilities.iterables import flatten, is_sequence, iterable
+from collections.abc import Generator, Iterator
+from sympy.series.order import Order
+from typing import Any, NoReturn
+from typing_extensions import Self
 
 
 ###############################################################################
@@ -75,12 +79,12 @@ class SeqBase(Basic):
         raise NotImplementedError("(%s).length" % self)
 
     @property
-    def variables(self):
+    def variables(self) -> tuple[()]:
         """Returns a tuple of variables that are bounded"""
         return ()
 
     @property
-    def free_symbols(self):
+    def free_symbols(self) -> set[Basic]:
         """
         This method returns the symbols in the object, excluding those
         that take on a specific value (i.e. the dummy symbols).
@@ -185,7 +189,7 @@ class SeqBase(Basic):
         """
         return None
 
-    def coeff_mul(self, other):
+    def coeff_mul(self, other) -> Order:
         """
         Should be used when ``other`` is not a sequence. Should be
         defined to define custom behaviour.
@@ -205,7 +209,7 @@ class SeqBase(Basic):
         """
         return Mul(self, other)
 
-    def __add__(self, other):
+    def __add__(self, other) -> "SeqAdd":
         """Returns the term-wise addition of 'self' and 'other'.
 
         ``other`` should be a sequence.
@@ -226,7 +230,7 @@ class SeqBase(Basic):
     def __radd__(self, other):
         return self + other
 
-    def __sub__(self, other):
+    def __sub__(self, other) -> "SeqAdd":
         """Returns the term-wise subtraction of ``self`` and ``other``.
 
         ``other`` should be a sequence.
@@ -247,7 +251,7 @@ class SeqBase(Basic):
     def __rsub__(self, other):
         return (-self) + other
 
-    def __neg__(self):
+    def __neg__(self) -> Order:
         """Negates the sequence.
 
         Examples
@@ -260,7 +264,7 @@ class SeqBase(Basic):
         """
         return self.coeff_mul(-1)
 
-    def __mul__(self, other):
+    def __mul__(self, other) -> "SeqMul":
         """Returns the term-wise multiplication of 'self' and 'other'.
 
         ``other`` should be a sequence. For ``other`` not being a
@@ -282,12 +286,12 @@ class SeqBase(Basic):
     def __rmul__(self, other):
         return self * other
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[Any]:
         for i in range(self.length):
             pt = self._ith_point(i)
             yield self.coeff(pt)
 
-    def __getitem__(self, index):
+    def __getitem__(self, index) -> list[Any] | None:
         if isinstance(index, int):
             index = self._ith_point(index)
             return self.coeff(index)
@@ -300,7 +304,7 @@ class SeqBase(Basic):
             return [self.coeff(self._ith_point(i)) for i in
                     range(start, stop, index.step or 1)]
 
-    def find_linear_recurrence(self,n,d=None,gfvar=None):
+    def find_linear_recurrence(self,n,d=None,gfvar=None) -> list[Any] | tuple[list[Any], None] | tuple[Any | list[Any], Any]:
         r"""
         Finds the shortest linear recurrence that satisfies the first n
         terms of sequence of order `\leq` ``n/2`` if possible.
@@ -404,11 +408,11 @@ class EmptySequence(SeqBase, metaclass=Singleton):
     def length(self):
         return S.Zero
 
-    def coeff_mul(self, coeff):
+    def coeff_mul(self, coeff) -> Self:
         """See docstring of SeqBase.coeff_mul"""
         return self
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[Any]:
         return iter([])
 
 
@@ -439,11 +443,11 @@ class SeqExpr(SeqBase):
     """
 
     @property
-    def gen(self):
+    def gen(self) -> Basic:
         return self.args[0]
 
     @property
-    def interval(self):
+    def interval(self) -> FiniteSet | Interval:
         return Interval(self.args[1][1], self.args[1][2])
 
     @property
@@ -459,7 +463,7 @@ class SeqExpr(SeqBase):
         return self.stop - self.start + 1
 
     @property
-    def variables(self):
+    def variables(self) -> tuple[Any]:
         return (self.args[1][0],)
 
 
@@ -512,7 +516,7 @@ class SeqPer(SeqExpr):
     sympy.series.sequences.SeqFormula
     """
 
-    def __new__(cls, periodical, limits=None):
+    def __new__(cls, periodical, limits=None) -> Self:
         periodical = sympify(periodical)
 
         def _find_x(periodical):
@@ -553,11 +557,11 @@ class SeqPer(SeqExpr):
         return Basic.__new__(cls, periodical, limits)
 
     @property
-    def period(self):
+    def period(self) -> int:
         return len(self.gen)
 
     @property
-    def periodical(self):
+    def periodical(self) -> Basic:
         return self.gen
 
     def _eval_coeff(self, pt):
@@ -601,7 +605,7 @@ class SeqPer(SeqExpr):
             start, stop = self._intersect_interval(other)
             return SeqPer(new_per, (self.variables[0], start, stop))
 
-    def coeff_mul(self, coeff):
+    def coeff_mul(self, coeff) -> "SeqPer":
         """See docstring of SeqBase.coeff_mul"""
         coeff = sympify(coeff)
         per = [x * coeff for x in self.periodical]
@@ -649,7 +653,7 @@ class SeqFormula(SeqExpr):
     sympy.series.sequences.SeqPer
     """
 
-    def __new__(cls, formula, limits=None):
+    def __new__(cls, formula, limits=None) -> Self:
         formula = sympify(formula)
 
         def _find_x(formula):
@@ -689,7 +693,7 @@ class SeqFormula(SeqExpr):
         return Basic.__new__(cls, formula, limits)
 
     @property
-    def formula(self):
+    def formula(self) -> Basic:
         return self.gen
 
     def _eval_coeff(self, pt):
@@ -714,13 +718,13 @@ class SeqFormula(SeqExpr):
             start, stop = self._intersect_interval(other)
             return SeqFormula(formula, (v1, start, stop))
 
-    def coeff_mul(self, coeff):
+    def coeff_mul(self, coeff) -> "SeqFormula":
         """See docstring of SeqBase.coeff_mul"""
         coeff = sympify(coeff)
         formula = self.formula * coeff
         return SeqFormula(formula, self.args[1])
 
-    def expand(self, *args, **kwargs):
+    def expand(self, *args, **kwargs) -> "SeqFormula":
         return SeqFormula(expand(self.formula, *args, **kwargs), self.args[1])
 
 class RecursiveSeq(SeqBase):
@@ -800,7 +804,7 @@ class RecursiveSeq(SeqBase):
 
     """
 
-    def __new__(cls, recurrence, yn, n, initial=None, start=0):
+    def __new__(cls, recurrence, yn, n, initial=None, start=0) -> Self:
         if not isinstance(yn, AppliedUndef):
             raise TypeError("recurrence sequence must be an applied undefined function"
                             ", found `{}`".format(yn))
@@ -859,32 +863,32 @@ class RecursiveSeq(SeqBase):
         return self.args[0]
 
     @property
-    def recurrence(self):
+    def recurrence(self) -> Eq | Relational | Ne:
         """Equation defining recurrence."""
         return Eq(self.yn, self.args[0])
 
     @property
-    def yn(self):
+    def yn(self) -> Basic:
         """Applied function representing the nth term"""
         return self.args[1]
 
     @property
-    def y(self):
+    def y(self) -> type[Basic]:
         """Undefined function for the nth term of the sequence"""
         return self.yn.func
 
     @property
-    def n(self):
+    def n(self) -> Basic:
         """Sequence index symbol"""
         return self.args[2]
 
     @property
-    def initial(self):
+    def initial(self) -> Basic:
         """The initial values of the sequence"""
         return self.args[3]
 
     @property
-    def start(self):
+    def start(self) -> Basic:
         """The starting point of the sequence. This point is included"""
         return self.args[4]
 
@@ -894,7 +898,7 @@ class RecursiveSeq(SeqBase):
         return S.Infinity
 
     @property
-    def interval(self):
+    def interval(self) -> tuple[Basic, Any]:
         """Interval on which sequence is defined."""
         return (self.start, S.Infinity)
 
@@ -913,14 +917,14 @@ class RecursiveSeq(SeqBase):
 
         return self.cache[self.y(self.start + current)]
 
-    def __iter__(self):
+    def __iter__(self) -> Generator[Any, Any, NoReturn]:
         index = self.start
         while True:
             yield self._eval_coeff(index)
             index += 1
 
 
-def sequence(seq, limits=None):
+def sequence(seq, limits=None) -> SeqPer | SeqFormula:
     """
     Returns appropriate sequence object.
 
@@ -985,7 +989,7 @@ class SeqExprOp(SeqBase):
     sympy.series.sequences.SeqMul
     """
     @property
-    def gen(self):
+    def gen(self) -> tuple[Any, ...]:
         """Generator for the sequence.
 
         returns a tuple of generators of all the argument sequences.
@@ -993,7 +997,7 @@ class SeqExprOp(SeqBase):
         return tuple(a.gen for a in self.args)
 
     @property
-    def interval(self):
+    def interval(self) -> FiniteSet | Intersection | Union | Complement:
         """Sequence is defined on the intersection
         of all the intervals of respective sequences
         """
@@ -1008,7 +1012,7 @@ class SeqExprOp(SeqBase):
         return self.interval.sup
 
     @property
-    def variables(self):
+    def variables(self) -> tuple[Any, ...]:
         """Cumulative of all the bound variables"""
         return tuple(flatten([a.variables for a in self.args]))
 
@@ -1046,7 +1050,7 @@ class SeqAdd(SeqExprOp):
     sympy.series.sequences.SeqMul
     """
 
-    def __new__(cls, *args, **kwargs):
+    def __new__(cls, *args, **kwargs) -> SeqAdd | Self:
         evaluate = kwargs.get('evaluate', global_parameters.evaluate)
 
         # flatten inputs
@@ -1083,7 +1087,7 @@ class SeqAdd(SeqExprOp):
         return Basic.__new__(cls, *args)
 
     @staticmethod
-    def reduce(args):
+    def reduce(args) -> "SeqAdd":
         """Simplify :class:`SeqAdd` using known rules.
 
         Iterates through all pairs and ask the constituent
@@ -1158,7 +1162,7 @@ class SeqMul(SeqExprOp):
     sympy.series.sequences.SeqAdd
     """
 
-    def __new__(cls, *args, **kwargs):
+    def __new__(cls, *args, **kwargs) -> SeqMul | Self:
         evaluate = kwargs.get('evaluate', global_parameters.evaluate)
 
         # flatten inputs
@@ -1193,7 +1197,7 @@ class SeqMul(SeqExprOp):
         return Basic.__new__(cls, *args)
 
     @staticmethod
-    def reduce(args):
+    def reduce(args) -> "SeqMul":
         """Simplify a :class:`SeqMul` using known rules.
 
         Explanation

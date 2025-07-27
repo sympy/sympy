@@ -3,9 +3,11 @@ from sympy.core.symbol import Dummy
 from sympy.utilities.lambdify import lambdify
 
 import math
+from collections.abc import Generator
+from typing import Any
 
 
-def is_valid(x):
+def is_valid(x) -> bool:
     """Check if a floating point number is valid"""
     if x is None:
         return False
@@ -14,7 +16,7 @@ def is_valid(x):
     return not math.isinf(x) and not math.isnan(x)
 
 
-def rescale(y, W, H, mi, ma):
+def rescale(y, W, H, mi, ma) -> list[Any]:
     """Rescale the given array `y` to fit into the integer values
     between `0` and `H-1` for the values between ``mi`` and ``ma``.
     """
@@ -37,11 +39,11 @@ def rescale(y, W, H, mi, ma):
     return y_new
 
 
-def linspace(start, stop, num):
+def linspace(start, stop, num) -> list[Any]:
     return [start + (stop - start) * x / (num-1) for x in range(num)]
 
 
-def textplot_str(expr, a, b, W=55, H=21):
+def textplot_str(expr, a, b, W=55, H=21) -> Generator[str, Any, None]:
     """Generator for the lines of the plot"""
     free = expr.free_symbols
     if len(free) > 1:
@@ -128,7 +130,7 @@ def textplot_str(expr, a, b, W=55, H=21):
     yield bottom
 
 
-def textplot(expr, a, b, W=55, H=21):
+def textplot(expr, a, b, W=55, H=21) -> None:
     r"""
     Print a crude ASCII art plot of the SymPy expression 'expr' (which
     should contain a single symbol, e.g. x or something else) over the

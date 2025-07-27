@@ -38,7 +38,7 @@ from itertools import combinations_with_replacement
 from sympy.simplify import simplify  # type: ignore
 from sympy.core import Add, S
 from sympy.core.function import Function, expand, AppliedUndef, Subs
-from sympy.core.relational import Equality, Eq
+from sympy.core.relational import Ne, Relational, Equality, Eq
 from sympy.core.symbol import Symbol, Wild, symbols
 from sympy.functions import exp
 from sympy.integrals.integrals import Integral, integrate
@@ -50,6 +50,7 @@ from sympy.solvers.solvers import solve
 from sympy.simplify.radsimp import collect
 
 import operator
+from typing import Any
 
 
 allhints = (
@@ -60,7 +61,7 @@ allhints = (
     )
 
 
-def pdsolve(eq, func=None, hint='default', dict=False, solvefun=None, **kwargs):
+def pdsolve(eq, func=None, hint='default', dict=False, solvefun=None, **kwargs) -> dict[Any, Any] | Any:
     """
     Solves any (supported) kind of partial differential equation.
 
@@ -363,7 +364,7 @@ def classify_pde(eq, func=None, dict=False, *, prep=True, **kwargs):
     return rettuple
 
 
-def checkpdesol(pde, sol, func=None, solve_for_func=True):
+def checkpdesol(pde, sol, func=None, solve_for_func=True) -> Any | tuple[bool, Any]:
     """
     Checks if the given solution satisfies the partial differential
     equation.
@@ -457,7 +458,7 @@ def checkpdesol(pde, sol, func=None, solve_for_func=True):
 
 
 
-def pde_1st_linear_constant_coeff_homogeneous(eq, func, order, match, solvefun):
+def pde_1st_linear_constant_coeff_homogeneous(eq, func, order, match, solvefun) -> Eq | Relational | Ne:
     r"""
     Solves a first order linear homogeneous
     partial differential equation with constant coefficients.
@@ -531,7 +532,7 @@ def pde_1st_linear_constant_coeff_homogeneous(eq, func, order, match, solvefun):
     return Eq(f(x,y), exp(-S(d)/(b**2 + c**2)*(b*x + c*y))*solvefun(c*x - b*y))
 
 
-def pde_1st_linear_constant_coeff(eq, func, order, match, solvefun):
+def pde_1st_linear_constant_coeff(eq, func, order, match, solvefun) -> Eq | Relational | Ne:
     r"""
     Solves a first order linear partial differential equation
     with constant coefficients.
@@ -630,7 +631,7 @@ def pde_1st_linear_constant_coeff(eq, func, order, match, solvefun):
         (eta, xi), (c*x - b*y, b*x + c*y)))
 
 
-def pde_1st_linear_variable_coeff(eq, func, order, match, solvefun):
+def pde_1st_linear_variable_coeff(eq, func, order, match, solvefun) -> Eq | Relational | Ne:
     r"""
     Solves a first order linear partial differential equation
     with variable coefficients. The general form of this partial
@@ -775,7 +776,7 @@ def _simplify_variable_coeff(sol, syms, func, funcarg):
     return simplify(final.subs(eta, funcarg))
 
 
-def pde_separate(eq, fun, sep, strategy='mul'):
+def pde_separate(eq, fun, sep, strategy='mul') -> list[Any] | None:
     """Separate variables in partial differential equation either by additive
     or multiplicative separation approach. It tries to rewrite an equation so
     that one of the specified variables occurs on a different side of the
@@ -862,7 +863,7 @@ def pde_separate(eq, fun, sep, strategy='mul'):
     return _separate(result, svar, dvar)
 
 
-def pde_separate_add(eq, fun, sep):
+def pde_separate_add(eq, fun, sep) -> list[Any] | None:
     """
     Helper function for searching additive separable solutions.
 
@@ -887,7 +888,7 @@ def pde_separate_add(eq, fun, sep):
     return pde_separate(eq, fun, sep, strategy='add')
 
 
-def pde_separate_mul(eq, fun, sep):
+def pde_separate_mul(eq, fun, sep) -> list[Any] | None:
     """
     Helper function for searching multiplicative separable solutions.
 

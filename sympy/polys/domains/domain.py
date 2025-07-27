@@ -13,6 +13,7 @@ from sympy.polys.polyerrors import UnificationFailed, CoercionFailed, DomainErro
 from sympy.polys.polyutils import _unify_gens, _not_a_coeff
 from sympy.utilities import public
 from sympy.utilities.iterables import is_sequence
+from typing_extensions import Self
 
 
 if TYPE_CHECKING:
@@ -475,7 +476,7 @@ class Domain(Generic[Er]):
     rep: str
     alias: str | None = None
 
-    def __init__(self):
+    def __init__(self) -> None:
         raise NotImplementedError
 
     def __str__(self) -> str:
@@ -967,12 +968,12 @@ class Domain(Generic[Er]):
         from sympy.polys.domains import EX
         return EX
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
         """Returns ``True`` if two domains are equivalent. """
         # XXX: Remove this.
         return isinstance(other, Domain) and self.dtype == other.dtype
 
-    def __ne__(self, other):
+    def __ne__(self, other) -> bool:
         """Returns ``False`` if two domains are equivalent. """
         return not self == other
 

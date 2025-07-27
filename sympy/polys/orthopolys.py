@@ -5,8 +5,9 @@ from sympy.polys.densearith import (dup_mul, dup_mul_ground,
 from sympy.polys.domains import ZZ, QQ
 from sympy.polys.polytools import named_poly
 from sympy.utilities import public
+from typing import Any
 
-def dup_jacobi(n, a, b, K):
+def dup_jacobi(n, a, b, K) -> list[Any]:
     """Low-level implementation of Jacobi polynomials."""
     if n < 1:
         return [K.one]
@@ -41,7 +42,7 @@ def jacobi_poly(n, a, b, x=None, polys=False):
     """
     return named_poly(n, dup_jacobi, None, "Jacobi polynomial", (x, a, b), polys)
 
-def dup_gegenbauer(n, a, K):
+def dup_gegenbauer(n, a, K) -> list[Any]:
     """Low-level implementation of Gegenbauer polynomials."""
     if n < 1:
         return [K.one]
@@ -68,7 +69,7 @@ def gegenbauer_poly(n, a, x=None, polys=False):
     """
     return named_poly(n, dup_gegenbauer, None, "Gegenbauer polynomial", (x, a), polys)
 
-def dup_chebyshevt(n, K):
+def dup_chebyshevt(n, K) -> list[Any]:
     """Low-level implementation of Chebyshev polynomials of the first kind."""
     if n < 1:
         return [K.one]
@@ -138,7 +139,7 @@ def _dup_chebyshevt_prod(n, K):
             m2, m1 = dup_sub_ground(dup_mul_ground(dup_sqr(m2, K), K(2), K), K.one, K), c
     return m2
 
-def dup_chebyshevu(n, K):
+def dup_chebyshevu(n, K) -> list[Any]:
     """Low-level implementation of Chebyshev polynomials of the second kind."""
     if n < 1:
         return [K.one]
@@ -179,7 +180,7 @@ def chebyshevu_poly(n, x=None, polys=False):
     return named_poly(n, dup_chebyshevu, ZZ,
             "Chebyshev polynomial of the second kind", (x,), polys)
 
-def dup_hermite(n, K):
+def dup_hermite(n, K) -> list[Any]:
     """Low-level implementation of Hermite polynomials."""
     if n < 1:
         return [K.one]
@@ -190,7 +191,7 @@ def dup_hermite(n, K):
         m2, m1 = m1, dup_mul_ground(dup_sub(a, b, K), K(2), K)
     return m1
 
-def dup_hermite_prob(n, K):
+def dup_hermite_prob(n, K) -> list[Any]:
     """Low-level implementation of probabilist's Hermite polynomials."""
     if n < 1:
         return [K.one]
@@ -232,7 +233,7 @@ def hermite_prob_poly(n, x=None, polys=False):
     return named_poly(n, dup_hermite_prob, ZZ,
             "probabilist's Hermite polynomial", (x,), polys)
 
-def dup_legendre(n, K):
+def dup_legendre(n, K) -> list[Any]:
     """Low-level implementation of Legendre polynomials."""
     if n < 1:
         return [K.one]
@@ -258,7 +259,7 @@ def legendre_poly(n, x=None, polys=False):
     """
     return named_poly(n, dup_legendre, QQ, "Legendre polynomial", (x,), polys)
 
-def dup_laguerre(n, alpha, K):
+def dup_laguerre(n, alpha, K) -> list[Any]:
     """Low-level implementation of Laguerre polynomials."""
     m2, m1 = [K.zero], [K.one]
     for i in range(1, n+1):
@@ -284,7 +285,7 @@ def laguerre_poly(n, x=None, alpha=0, polys=False):
     """
     return named_poly(n, dup_laguerre, None, "Laguerre polynomial", (x, alpha), polys)
 
-def dup_spherical_bessel_fn(n, K):
+def dup_spherical_bessel_fn(n, K) -> list[Any]:
     """Low-level implementation of fn(n, x)."""
     if n < 1:
         return [K.one, K.zero]
@@ -293,7 +294,7 @@ def dup_spherical_bessel_fn(n, K):
         m2, m1 = m1, dup_sub(dup_mul_ground(dup_lshift(m1, 1, K), K(2*i-1), K), m2, K)
     return dup_lshift(m1, 1, K)
 
-def dup_spherical_bessel_fn_minus(n, K):
+def dup_spherical_bessel_fn_minus(n, K) -> list[Any]:
     """Low-level implementation of fn(-n, x)."""
     m2, m1 = [K.one, K.zero], [K.zero]
     for i in range(2, n+1):

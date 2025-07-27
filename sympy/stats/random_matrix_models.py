@@ -17,6 +17,10 @@ from sympy.stats.rv import _symbol_converter, Density, RandomMatrixSymbol, is_ra
 from sympy.stats.joint_rv_types import JointDistributionHandmade
 from sympy.stats.random_matrix import RandomMatrixPSpace
 from sympy.tensor.array import ArrayComprehension
+import sympy
+from sympy.core.relational import Relational
+from typing import Literal
+from typing_extensions import Self
 
 __all__ = [
     'CircularEnsemble',
@@ -33,7 +37,7 @@ __all__ = [
 ]
 
 @is_random.register(RandomMatrixSymbol)
-def _(x):
+def _(x) -> Literal[True]:
     return True
 
 
@@ -44,7 +48,7 @@ class RandomMatrixEnsembleModel(Basic):
     the methods common to all the ensembles
     defined in sympy.stats.random_matrix_models.
     """
-    def __new__(cls, sym, dim=None):
+    def __new__(cls, sym, dim=None) -> Self:
         sym, dim = _symbol_converter(sym), _sympify(dim)
         if dim.is_integer == False:
             raise ValueError("Dimension of the random matrices must be "
@@ -54,10 +58,10 @@ class RandomMatrixEnsembleModel(Basic):
     symbol = property(lambda self: self.args[0])
     dimension = property(lambda self: self.args[1])
 
-    def density(self, expr):
+    def density(self, expr) -> Density:
         return Density(expr)
 
-    def __call__(self, expr):
+    def __call__(self, expr) -> Density:
         return self.density(expr)
 
 class GaussianEnsembleModel(RandomMatrixEnsembleModel):
@@ -115,69 +119,69 @@ class GaussianUnitaryEnsembleModel(GaussianEnsembleModel):
         n = self.dimension
         return 2**(S(n)/2) * pi**(S(n**2)/2)
 
-    def density(self, expr):
+    def density(self, expr) -> Basic:
         n, ZGUE = self.dimension, self.normalization_constant
         h_pspace = RandomMatrixPSpace('P', model=self)
         H = RandomMatrixSymbol('H', n, n, pspace=h_pspace)
         return Lambda(H, exp(-S(n)/2 * Trace(H**2))/ZGUE)(expr)
 
-    def joint_eigen_distribution(self):
+    def joint_eigen_distribution(self) -> Lambda:
         return self._compute_joint_eigen_distribution(S(2))
 
-    def level_spacing_distribution(self):
+    def level_spacing_distribution(self) -> Lambda:
         s = Dummy('s')
         f = (32/pi**2)*(s**2)*exp((-4/pi)*s**2)
         return Lambda(s, f)
 
 class GaussianOrthogonalEnsembleModel(GaussianEnsembleModel):
     @property
-    def normalization_constant(self):
+    def normalization_constant(self) ->     sympy.Equality | Relational |     sympy.Ne |     sympy.Integral:
         n = self.dimension
         _H = MatrixSymbol('_H', n, n)
         return Integral(exp(-S(n)/4 * Trace(_H**2)))
 
-    def density(self, expr):
+    def density(self, expr) -> Basic:
         n, ZGOE = self.dimension, self.normalization_constant
         h_pspace = RandomMatrixPSpace('P', model=self)
         H = RandomMatrixSymbol('H', n, n, pspace=h_pspace)
         return Lambda(H, exp(-S(n)/4 * Trace(H**2))/ZGOE)(expr)
 
-    def joint_eigen_distribution(self):
+    def joint_eigen_distribution(self) -> Lambda:
         return self._compute_joint_eigen_distribution(S.One)
 
-    def level_spacing_distribution(self):
+    def level_spacing_distribution(self) -> Lambda:
         s = Dummy('s')
         f = (pi/2)*s*exp((-pi/4)*s**2)
         return Lambda(s, f)
 
 class GaussianSymplecticEnsembleModel(GaussianEnsembleModel):
     @property
-    def normalization_constant(self):
+    def normalization_constant(self) ->     sympy.Equality | Relational |     sympy.Ne |     sympy.Integral:
         n = self.dimension
         _H = MatrixSymbol('_H', n, n)
         return Integral(exp(-S(n) * Trace(_H**2)))
 
-    def density(self, expr):
+    def density(self, expr) -> Basic:
         n, ZGSE = self.dimension, self.normalization_constant
         h_pspace = RandomMatrixPSpace('P', model=self)
         H = RandomMatrixSymbol('H', n, n, pspace=h_pspace)
         return Lambda(H, exp(-S(n) * Trace(H**2))/ZGSE)(expr)
 
-    def joint_eigen_distribution(self):
+    def joint_eigen_distribution(self) -> Lambda:
         return self._compute_joint_eigen_distribution(S(4))
 
-    def level_spacing_distribution(self):
+    def level_spacing_distribution(self) -> Lambda:
         s = Dummy('s')
         f = ((S(2)**18)/((S(3)**6)*(pi**3)))*(s**4)*exp((-64/(9*pi))*s**2)
         return Lambda(s, f)
 
-def GaussianEnsemble(sym, dim):
+def GaussianEnsemble(sym, dim) -> RandomMatrixSymbol:
     sym, dim = _symbol_converter(sym), _sympify(dim)
     model = GaussianEnsembleModel(sym, dim)
     rmp = RandomMatrixPSpace(sym, model=model)
     return RandomMatrixSymbol(sym, dim, dim, pspace=rmp)
 
-def GaussianUnitaryEnsemble(sym, dim):
+def GaussianUnitaryEnsemble(sym, dim) -> RandomMatrixSymbol:
     """
     Represents Gaussian Unitary Ensembles.
 
@@ -196,7 +200,7 @@ def GaussianUnitaryEnsemble(sym, dim):
     rmp = RandomMatrixPSpace(sym, model=model)
     return RandomMatrixSymbol(sym, dim, dim, pspace=rmp)
 
-def GaussianOrthogonalEnsemble(sym, dim):
+def GaussianOrthogonalEnsemble(sym, dim) -> RandomMatrixSymbol:
     """
     Represents Gaussian Orthogonal Ensembles.
 
@@ -215,7 +219,7 @@ def GaussianOrthogonalEnsemble(sym, dim):
     rmp = RandomMatrixPSpace(sym, model=model)
     return RandomMatrixSymbol(sym, dim, dim, pspace=rmp)
 
-def GaussianSymplecticEnsemble(sym, dim):
+def GaussianSymplecticEnsemble(sym, dim) -> RandomMatrixSymbol:
     """
     Represents Gaussian Symplectic Ensembles.
 
@@ -269,24 +273,24 @@ class CircularEnsembleModel(RandomMatrixEnsembleModel):
         return Lambda(tuple(syms), f/Zbn)
 
 class CircularUnitaryEnsembleModel(CircularEnsembleModel):
-    def joint_eigen_distribution(self):
+    def joint_eigen_distribution(self) -> Lambda:
         return self._compute_joint_eigen_distribution(S(2))
 
 class CircularOrthogonalEnsembleModel(CircularEnsembleModel):
-    def joint_eigen_distribution(self):
+    def joint_eigen_distribution(self) -> Lambda:
         return self._compute_joint_eigen_distribution(S.One)
 
 class CircularSymplecticEnsembleModel(CircularEnsembleModel):
-    def joint_eigen_distribution(self):
+    def joint_eigen_distribution(self) -> Lambda:
         return self._compute_joint_eigen_distribution(S(4))
 
-def CircularEnsemble(sym, dim):
+def CircularEnsemble(sym, dim) -> RandomMatrixSymbol:
     sym, dim = _symbol_converter(sym), _sympify(dim)
     model = CircularEnsembleModel(sym, dim)
     rmp = RandomMatrixPSpace(sym, model=model)
     return RandomMatrixSymbol(sym, dim, dim, pspace=rmp)
 
-def CircularUnitaryEnsemble(sym, dim):
+def CircularUnitaryEnsemble(sym, dim) -> RandomMatrixSymbol:
     """
     Represents Circular Unitary Ensembles.
 
@@ -311,7 +315,7 @@ def CircularUnitaryEnsemble(sym, dim):
     rmp = RandomMatrixPSpace(sym, model=model)
     return RandomMatrixSymbol(sym, dim, dim, pspace=rmp)
 
-def CircularOrthogonalEnsemble(sym, dim):
+def CircularOrthogonalEnsemble(sym, dim) -> RandomMatrixSymbol:
     """
     Represents Circular Orthogonal Ensembles.
 
@@ -336,7 +340,7 @@ def CircularOrthogonalEnsemble(sym, dim):
     rmp = RandomMatrixPSpace(sym, model=model)
     return RandomMatrixSymbol(sym, dim, dim, pspace=rmp)
 
-def CircularSymplecticEnsemble(sym, dim):
+def CircularSymplecticEnsemble(sym, dim) -> RandomMatrixSymbol:
     """
     Represents Circular Symplectic Ensembles.
 
@@ -390,7 +394,7 @@ def joint_eigen_distribution(mat):
         raise ValueError("%s is not of type, RandomMatrixSymbol."%(mat))
     return mat.pspace.model.joint_eigen_distribution()
 
-def JointEigenDistribution(mat):
+def JointEigenDistribution(mat) -> JointDistributionHandmade:
     """
     Creates joint distribution of eigen values of matrices with random
     expressions.

@@ -58,7 +58,7 @@ PRECEDENCE_VALUES = {
 # Precedence functions
 
 
-def precedence_Mul(item):
+def precedence_Mul(item) -> int:
     from sympy.core.function import Function
     if any(hasattr(arg, 'precedence') and isinstance(arg, Function) and
            arg.precedence < PRECEDENCE["Mul"] for arg in item.args):
@@ -69,25 +69,25 @@ def precedence_Mul(item):
     return PRECEDENCE["Mul"]
 
 
-def precedence_Rational(item):
+def precedence_Rational(item) -> int:
     if item.p < 0:
         return PRECEDENCE["Add"]
     return PRECEDENCE["Mul"]
 
 
-def precedence_Integer(item):
+def precedence_Integer(item) -> int:
     if item.p < 0:
         return PRECEDENCE["Add"]
     return PRECEDENCE["Atom"]
 
 
-def precedence_Float(item):
+def precedence_Float(item) -> int:
     if item < 0:
         return PRECEDENCE["Add"]
     return PRECEDENCE["Atom"]
 
 
-def precedence_PolyElement(item):
+def precedence_PolyElement(item) -> int:
     if item.is_generator:
         return PRECEDENCE["Atom"]
     elif item.is_ground:
@@ -98,14 +98,14 @@ def precedence_PolyElement(item):
         return PRECEDENCE["Add"]
 
 
-def precedence_FracElement(item):
+def precedence_FracElement(item) -> int:
     if item.denom == 1:
         return precedence_PolyElement(item.numer)
     else:
         return PRECEDENCE["Mul"]
 
 
-def precedence_UnevaluatedExpr(item):
+def precedence_UnevaluatedExpr(item) -> float:
     return precedence(item.args[0]) - 0.5
 
 
@@ -120,7 +120,7 @@ PRECEDENCE_FUNCTIONS = {
 }
 
 
-def precedence(item):
+def precedence(item) -> int:
     """Returns the precedence of a given object.
 
     This is the precedence for StrPrinter.
@@ -160,7 +160,7 @@ PRECEDENCE_TRADITIONAL['ProductSet'] = PRECEDENCE['Xor']
 PRECEDENCE_TRADITIONAL['DotProduct'] = PRECEDENCE_TRADITIONAL['Dot']
 
 
-def precedence_traditional(item):
+def precedence_traditional(item) -> int:
     """Returns the precedence of a given object according to the
     traditional rules of mathematics.
 

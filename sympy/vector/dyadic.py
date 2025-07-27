@@ -6,6 +6,9 @@ from sympy.core import S, Pow
 from sympy.core.expr import AtomicExpr
 from sympy.matrices.immutable import ImmutableDenseMatrix as Matrix
 import sympy.vector
+from sympy.series.order import Order
+from sympy.vector.vector import VectorZero
+from typing_extensions import Self
 
 
 class Dyadic(BasisDependent):
@@ -42,7 +45,7 @@ class Dyadic(BasisDependent):
         # subclass of Dyadic the instance belongs to.
         return self._components
 
-    def dot(self, other):
+    def dot(self, other) -> VectorZero | DyadicZero:
         """
         Returns the dot product(also called inner product) of this
         Dyadic, with another Dyadic or Vector.
@@ -90,12 +93,12 @@ class Dyadic(BasisDependent):
             raise TypeError("Inner product is not defined for " +
                             str(type(other)) + " and Dyadics.")
 
-    def __and__(self, other):
+    def __and__(self, other) -> VectorZero | DyadicZero:
         return self.dot(other)
 
     __and__.__doc__ = dot.__doc__
 
-    def cross(self, other):
+    def cross(self, other) -> "DyadicZero":
         """
         Returns the cross product between this Dyadic, and a Vector, as a
         Vector instance.
@@ -131,7 +134,7 @@ class Dyadic(BasisDependent):
             raise TypeError(str(type(other)) + " not supported for " +
                             "cross with dyadics")
 
-    def __xor__(self, other):
+    def __xor__(self, other) -> "DyadicZero":
         return self.cross(other)
 
     __xor__.__doc__ = cross.__doc__
@@ -196,7 +199,7 @@ class BaseDyadic(Dyadic, AtomicExpr):
     Class to denote a base dyadic tensor component.
     """
 
-    def __new__(cls, vector1, vector2):
+    def __new__(cls, vector1, vector2) -> DyadicZero | Self:
         Vector = sympy.vector.Vector
         BaseVector = sympy.vector.BaseVector
         VectorZero = sympy.vector.VectorZero
@@ -233,7 +236,7 @@ class BaseDyadic(Dyadic, AtomicExpr):
 class DyadicMul(BasisDependentMul, Dyadic):
     """ Products of scalars and BaseDyadics """
 
-    def __new__(cls, *args, **options):
+    def __new__(cls, *args, **options) -> Order | BasisDependentZero:
         obj = BasisDependentMul.__new__(cls, *args, **options)
         return obj
 
@@ -253,7 +256,7 @@ class DyadicMul(BasisDependentMul, Dyadic):
 class DyadicAdd(BasisDependentAdd, Dyadic):
     """ Class to hold dyadic sums """
 
-    def __new__(cls, *args, **options):
+    def __new__(cls, *args, **options) -> BasisDependentZero | Order:
         obj = BasisDependentAdd.__new__(cls, *args, **options)
         return obj
 
@@ -272,7 +275,7 @@ class DyadicZero(BasisDependentZero, Dyadic):
     _pretty_form = '(0|0)'
     _latex_form = r'(\mathbf{\hat{0}}|\mathbf{\hat{0}})'
 
-    def __new__(cls):
+    def __new__(cls) -> Self:
         obj = BasisDependentZero.__new__(cls)
         return obj
 

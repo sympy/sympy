@@ -50,7 +50,7 @@ def _read_xsl(xsl):
 
 
 @doctest_depends_on(modules=('lxml',))
-def apply_xsl(mml, xsl):
+def apply_xsl(mml, xsl) -> str:
     """Apply a xsl to a MathML string.
 
     Parameters
@@ -98,7 +98,7 @@ def apply_xsl(mml, xsl):
 
 
 @doctest_depends_on(modules=('lxml',))
-def c2p(mml, simple=False):
+def c2p(mml, simple=False) -> str:
     """Transforms a document in MathML content (like the one that sympy produces)
     in one document in MathML presentation, more suitable for printing, and more
     widely accepted

@@ -6,8 +6,9 @@ from sympy.polys.monomials import monomial_mul, monomial_lcm, monomial_divides, 
 from sympy.polys.orderings import lex
 from sympy.polys.polyerrors import DomainError
 from sympy.polys.polyconfig import query
+from typing import Any, Literal
 
-def groebner(seq, ring, method=None):
+def groebner(seq, ring, method=None) -> list[Any]:
     """
     Computes Groebner basis for a set of polynomials in `K[X]`.
 
@@ -286,17 +287,17 @@ def Num(f):
     return f[2]
 
 
-def sig(monomial, index):
+def sig(monomial, index) -> tuple[Any, Any]:
     return (monomial, index)
 
 
-def lbp(signature, polynomial, number):
+def lbp(signature, polynomial, number) -> tuple[Any, Any, Any]:
     return (signature, polynomial, number)
 
 # signature functions
 
 
-def sig_cmp(u, v, order):
+def sig_cmp(u, v, order) -> Literal[-1, 1]:
     """
     Compare two signatures by extending the term order to K[X]^n.
 
@@ -317,7 +318,7 @@ def sig_cmp(u, v, order):
     return 1
 
 
-def sig_key(s, order):
+def sig_key(s, order) -> tuple[Any, Any]:
     """
     Key for comparing two signatures.
 
@@ -329,7 +330,7 @@ def sig_key(s, order):
     return (-s[1], order(s[0]))
 
 
-def sig_mult(s, m):
+def sig_mult(s, m) -> tuple[Any, Any]:
     """
     Multiply a signature by a monomial.
 
@@ -341,7 +342,7 @@ def sig_mult(s, m):
 # labeled polynomial functions
 
 
-def lbp_sub(f, g):
+def lbp_sub(f, g) -> tuple[Any, Any, Any]:
     """
     Subtract labeled polynomial g from f.
 
@@ -358,7 +359,7 @@ def lbp_sub(f, g):
     return lbp(Sign(max_poly), ret, Num(max_poly))
 
 
-def lbp_mul_term(f, cx):
+def lbp_mul_term(f, cx) -> tuple[Any, Any, Any]:
     """
     Multiply a labeled polynomial with a term.
 
@@ -368,7 +369,7 @@ def lbp_mul_term(f, cx):
     return lbp(sig_mult(Sign(f), cx[0]), Polyn(f).mul_term(cx), Num(f))
 
 
-def lbp_cmp(f, g):
+def lbp_cmp(f, g) -> Literal[-1, 1]:
     """
     Compare two labeled polynomials.
 
@@ -389,7 +390,7 @@ def lbp_cmp(f, g):
     return 1
 
 
-def lbp_key(f):
+def lbp_key(f) -> tuple[tuple[Any, Any], Any]:
     """
     Key for comparing two labeled polynomials.
     """
@@ -398,7 +399,7 @@ def lbp_key(f):
 # algorithm and helper functions
 
 
-def critical_pair(f, g, ring):
+def critical_pair(f, g, ring) -> tuple[Any, tuple[tuple[Any, ...], Any] | None, Any, Any, tuple[tuple[Any, ...], Any] | None, Any]:
     """
     Compute the critical pair corresponding to two labeled polynomials.
 
@@ -433,7 +434,7 @@ def critical_pair(f, g, ring):
         return (Sign(fr), um, f, Sign(gr), vm, g)
 
 
-def cp_cmp(c, d):
+def cp_cmp(c, d) -> Literal[-1, 1]:
     """
     Compare two critical pairs c and d.
 
@@ -469,14 +470,14 @@ def cp_cmp(c, d):
     return 1
 
 
-def cp_key(c, ring):
+def cp_key(c, ring) -> tuple[tuple[tuple[Any, Any], Any], tuple[tuple[Any, Any], Any]]:
     """
     Key for comparing critical pairs.
     """
     return (lbp_key(lbp(c[0], ring.zero, Num(c[2]))), lbp_key(lbp(c[3], ring.zero, Num(c[5]))))
 
 
-def s_poly(cp):
+def s_poly(cp) -> tuple[Any, Any, Any]:
     """
     Compute the S-polynomial of a critical pair.
 
@@ -485,7 +486,7 @@ def s_poly(cp):
     return lbp_sub(lbp_mul_term(cp[2], cp[1]), lbp_mul_term(cp[5], cp[4]))
 
 
-def is_rewritable_or_comparable(sign, num, B):
+def is_rewritable_or_comparable(sign, num, B) -> bool:
     """
     Check if a labeled polynomial is redundant by checking if its
     signature and number imply rewritability or comparability.
@@ -512,7 +513,7 @@ def is_rewritable_or_comparable(sign, num, B):
     return False
 
 
-def f5_reduce(f, B):
+def f5_reduce(f, B) -> tuple[Any, Any, Any]:
     """
     F5-reduce a labeled polynomial f by B.
 
@@ -687,7 +688,7 @@ def _f5b(F, ring):
     return sorted(H, key=lambda f: order(f.LM), reverse=True)
 
 
-def red_groebner(G, ring):
+def red_groebner(G, ring) -> list[Any]:
     """
     Compute reduced Groebner basis, from BeckerWeispfenning93, p. 216
 
@@ -719,7 +720,7 @@ def red_groebner(G, ring):
     return reduction(H)
 
 
-def is_groebner(G, ring):
+def is_groebner(G, ring) -> bool:
     """
     Check if G is a Groebner basis.
     """
@@ -733,7 +734,7 @@ def is_groebner(G, ring):
     return True
 
 
-def is_minimal(G, ring):
+def is_minimal(G, ring) -> bool:
     """
     Checks if G is a minimal Groebner basis.
     """
@@ -753,7 +754,7 @@ def is_minimal(G, ring):
     return True
 
 
-def is_reduced(G, ring):
+def is_reduced(G, ring) -> bool:
     """
     Checks if G is a reduced Groebner basis.
     """

@@ -11,6 +11,10 @@ from sympy.utilities.iterables import sift, flatten, has_dups
 from sympy.utilities.exceptions import sympy_deprecation_warning
 from .contains import Contains
 from .sets import Set, Union, FiniteSet, SetKind
+import sympy.core.logic
+from sympy.sets.sets import Complement, FiniteSet, Intersection, Set, Union
+from typing import Any
+from typing_extensions import Self
 
 
 adummy = Dummy('conditionset')
@@ -85,7 +89,7 @@ class ConditionSet(Set):
     ConditionSet(x, (x < y) & (x + y < 2), Integers)
 
     """
-    def __new__(cls, sym, condition, base_set=S.UniversalSet):
+    def __new__(cls, sym, condition, base_set=S.UniversalSet) -> Set | FiniteSet | Intersection | Union | Complement | Self:
         sym = _sympify(sym)
         flat = flatten([sym])
         if has_dups(flat):
@@ -184,7 +188,7 @@ with
         return cond_syms | self.base_set.free_symbols
 
     @property
-    def bound_symbols(self):
+    def bound_symbols(self) -> list[Any]:
         return flatten([self.sym])
 
     def _contains(self, other):
@@ -216,7 +220,7 @@ with
         else:
             return And(base_cond, lambda_cond)
 
-    def as_relational(self, other):
+    def as_relational(self, other) ->     sympy.core.logic.And:
         f = Lambda(self.sym, self.condition)
         if isinstance(self.sym, Tuple):
             f = f(*other)

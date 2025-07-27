@@ -5,7 +5,7 @@ from sympy.core.function import Lambda
 from sympy.core.mul import Mul
 from sympy.core.numbers import (Integer, Rational, pi)
 from sympy.core.power import Pow
-from sympy.core.relational import Eq
+from sympy.core.relational import Relational, Eq
 from sympy.core.singleton import S
 from sympy.core.symbol import (Symbol, symbols)
 from sympy.core.sympify import sympify
@@ -22,8 +22,9 @@ from sympy.tensor.indexed import (Indexed, IndexedBase)
 from sympy.matrices import ImmutableMatrix, MatrixSymbol
 from sympy.matrices.expressions.determinant import det
 from sympy.matrices.expressions.matexpr import MatrixElement
-from sympy.stats.joint_rv import JointDistribution, JointPSpace, MarginalDistribution
-from sympy.stats.rv import _value_check, random_symbols
+from sympy.stats.joint_rv import JointRandomSymbol, JointDistribution, JointPSpace, MarginalDistribution
+from sympy.stats.rv import RandomSymbol, _value_check, random_symbols
+import sympy
 
 __all__ = ['JointRV',
 'MultivariateNormal',
@@ -39,7 +40,7 @@ __all__ = ['JointRV',
 'NormalGamma'
 ]
 
-def multivariate_rv(cls, sym, *args):
+def multivariate_rv(cls, sym, *args) -> RandomSymbol | JointRandomSymbol:
     args = list(map(sympify, args))
     dist = cls(*args)
     args = dist.args
@@ -91,11 +92,11 @@ class JointDistributionHandmade(JointDistribution):
     is_Continuous = True
 
     @property
-    def set(self):
+    def set(self) ->     sympy.Basic:
         return self.args[1]
 
 
-def JointRV(symbol, pdf, _set=None):
+def JointRV(symbol, pdf, _set=None) -> RandomSymbol | JointRandomSymbol:
     """
     Create a Joint Random Variable where each of its component is continuous,
     given the following:
@@ -160,7 +161,7 @@ class MultivariateNormalDistribution(JointDistribution):
         return S.Reals**k
 
     @staticmethod
-    def check(mu, sigma):
+    def check(mu, sigma) -> None:
         _value_check(mu.shape[0] == sigma.shape[0],
             "Size of the mean vector and covariance matrix are incorrect.")
         #check if covariance matrix is positive semi definite or not.
@@ -168,7 +169,7 @@ class MultivariateNormalDistribution(JointDistribution):
             _value_check(sigma.is_positive_semidefinite,
             "The covariance matrix must be positive semi definite. ")
 
-    def pdf(self, *args):
+    def pdf(self, *args) -> MatrixElement:
         mu, sigma = self.mu, self.sigma
         k = mu.shape[0]
         if len(args) == 1 and args[0].is_Matrix:
@@ -193,7 +194,7 @@ class MultivariateNormalDistribution(JointDistribution):
             Rational(-1, 2)*(_mu - sym).transpose()*(_sigma.inv()*\
                 (_mu - sym)))[0])
 
-def MultivariateNormal(name, mu, sigma):
+def MultivariateNormal(name, mu, sigma) -> RandomSymbol | JointRandomSymbol:
     r"""
     Creates a continuous random variable with Multivariate Normal
     Distribution.
@@ -265,7 +266,7 @@ class MultivariateLaplaceDistribution(JointDistribution):
         return S.Reals**k
 
     @staticmethod
-    def check(mu, sigma):
+    def check(mu, sigma) -> None:
         _value_check(mu.shape[0] == sigma.shape[0],
                      "Size of the mean vector and covariance matrix are incorrect.")
         # check if covariance matrix is positive definite or not.
@@ -288,7 +289,7 @@ class MultivariateLaplaceDistribution(JointDistribution):
                 ((2 * pi)**(k/2) * sqrt(det(sigma))))
 
 
-def MultivariateLaplace(name, mu, sigma):
+def MultivariateLaplace(name, mu, sigma) -> RandomSymbol | JointRandomSymbol:
     """
     Creates a continuous random variable with Multivariate Laplace
     Distribution.
@@ -340,7 +341,7 @@ class MultivariateTDistribution(JointDistribution):
         return S.Reals**k
 
     @staticmethod
-    def check(mu, sigma, v):
+    def check(mu, sigma, v) -> None:
         _value_check(mu.shape[0] == sigma.shape[0],
                      "Size of the location vector and shape matrix are incorrect.")
         # check if covariance matrix is positive definite or not.
@@ -358,7 +359,7 @@ class MultivariateTDistribution(JointDistribution):
         return gamma((k + v)/2)/(gamma(v/2)*(v*pi)**(k/2)*sqrt(det(sigma)))\
         *(1 + 1/v*(x.transpose()*sigma_inv*x)[0])**((-v - k)/2)
 
-def MultivariateT(syms, mu, sigma, v):
+def MultivariateT(syms, mu, sigma, v) -> RandomSymbol | JointRandomSymbol:
     """
     Creates a joint random variable with multivariate T-distribution.
 
@@ -401,7 +402,7 @@ class NormalGammaDistribution(JointDistribution):
     is_Continuous=True
 
     @staticmethod
-    def check(mu, lamda, alpha, beta):
+    def check(mu, lamda, alpha, beta) -> None:
         _value_check(mu.is_real, "Location must be real.")
         _value_check(lamda > 0, "Lambda must be positive")
         _value_check(alpha > 0, "alpha must be positive")
@@ -434,7 +435,7 @@ class NormalGammaDistribution(JointDistribution):
         from sympy.stats.crv_types import GammaDistribution
         return Lambda(sym, GammaDistribution(self.alpha, self.beta)(sym[0]))
 
-def NormalGamma(sym, mu, lamda, alpha, beta):
+def NormalGamma(sym, mu, lamda, alpha, beta) -> RandomSymbol | JointRandomSymbol:
     """
     Creates a bivariate joint random variable with multivariate Normal gamma
     distribution.
@@ -487,7 +488,7 @@ class MultivariateBetaDistribution(JointDistribution):
     is_Continuous = True
 
     @staticmethod
-    def check(alpha):
+    def check(alpha) -> None:
         _value_check(len(alpha) >= 2, "At least two categories should be passed.")
         for a_k in alpha:
             _value_check((a_k > 0) != False, "Each concentration parameter"
@@ -503,7 +504,7 @@ class MultivariateBetaDistribution(JointDistribution):
         B = Mul.fromiter(map(gamma, alpha))/gamma(Add(*alpha))
         return Mul.fromiter(sym**(a_k - 1) for a_k, sym in zip(alpha, syms))/B
 
-def MultivariateBeta(syms, *alpha):
+def MultivariateBeta(syms, *alpha) -> RandomSymbol | JointRandomSymbol:
     """
     Creates a continuous random variable with Dirichlet/Multivariate Beta
     Distribution.
@@ -560,13 +561,13 @@ class MultivariateEwensDistribution(JointDistribution):
     is_Continuous = False
 
     @staticmethod
-    def check(n, theta):
+    def check(n, theta) -> None:
         _value_check((n > 0),
                         "sample size should be positive integer.")
         _value_check(theta.is_positive, "mutation rate should be positive.")
 
     @property
-    def set(self):
+    def set(self) ->     sympy.Equality | Relational |     sympy.Ne |     sympy.Product:
         if not isinstance(self.n, Integer):
             i = Symbol('i', integer=True, positive=True)
             return Product(Intersection(S.Naturals0, Interval(0, self.n//i)),
@@ -576,7 +577,7 @@ class MultivariateEwensDistribution(JointDistribution):
             prod_set *= Range(0, self.n//i + 1)
         return prod_set.flatten()
 
-    def pdf(self, *syms):
+    def pdf(self, *syms) ->     sympy.Piecewise:
         n, theta = self.n, self.theta
         condi = isinstance(self.n, Integer)
         if not (isinstance(syms[0], IndexedBase) or condi):
@@ -596,7 +597,7 @@ class MultivariateEwensDistribution(JointDistribution):
         return Piecewise((term_1 * term_2, cond), (0, True))
 
 
-def MultivariateEwens(syms, n, theta):
+def MultivariateEwens(syms, n, theta) -> RandomSymbol | JointRandomSymbol:
     """
     Creates a discrete random variable with Multivariate Ewens
     Distribution.
@@ -645,7 +646,7 @@ class GeneralizedMultivariateLogGammaDistribution(JointDistribution):
     _argnames = ('delta', 'v', 'lamda', 'mu')
     is_Continuous=True
 
-    def check(self, delta, v, l, mu):
+    def check(self, delta, v, l, mu) -> None:
         _value_check((delta >= 0, delta <= 1), "delta must be in range [0, 1].")
         _value_check((v > 0), "v must be positive")
         for lk in l:
@@ -672,7 +673,7 @@ class GeneralizedMultivariateLogGammaDistribution(JointDistribution):
         term2 = exp(sterm3 - sterm4)
         return Pow(d, v) * Sum(term1 * term2, (n, 0, S.Infinity))
 
-def GeneralizedMultivariateLogGamma(syms, delta, v, lamda, mu):
+def GeneralizedMultivariateLogGamma(syms, delta, v, lamda, mu) -> RandomSymbol | JointRandomSymbol:
     """
     Creates a joint random variable with generalized multivariate log gamma
     distribution.
@@ -729,7 +730,7 @@ def GeneralizedMultivariateLogGamma(syms, delta, v, lamda, mu):
     return multivariate_rv(GeneralizedMultivariateLogGammaDistribution,
                             syms, delta, v, lamda, mu)
 
-def GeneralizedMultivariateLogGammaOmega(syms, omega, v, lamda, mu):
+def GeneralizedMultivariateLogGammaOmega(syms, omega, v, lamda, mu) -> RandomSymbol | JointRandomSymbol:
     """
     Extends GeneralizedMultivariateLogGamma.
 
@@ -806,7 +807,7 @@ class MultinomialDistribution(JointDistribution):
     is_Discrete = True
 
     @staticmethod
-    def check(n, p):
+    def check(n, p) -> None:
         _value_check(n > 0,
                         "number of trials must be a positive integer")
         for p_k in p:
@@ -819,13 +820,13 @@ class MultinomialDistribution(JointDistribution):
     def set(self):
         return Intersection(S.Naturals0, Interval(0, self.n))**len(self.p)
 
-    def pdf(self, *x):
+    def pdf(self, *x) ->     sympy.Piecewise:
         n, p = self.n, self.p
         term_1 = factorial(n)/Mul.fromiter(factorial(x_k) for x_k in x)
         term_2 = Mul.fromiter(p_k**x_k for p_k, x_k in zip(p, x))
         return Piecewise((term_1 * term_2, Eq(sum(x), n)), (0, True))
 
-def Multinomial(syms, n, *p):
+def Multinomial(syms, n, *p) -> RandomSymbol | JointRandomSymbol:
     """
     Creates a discrete random variable with Multinomial Distribution.
 
@@ -879,7 +880,7 @@ class NegativeMultinomialDistribution(JointDistribution):
     is_Discrete = True
 
     @staticmethod
-    def check(k0, p):
+    def check(k0, p) -> None:
         _value_check(k0 > 0,
                         "number of failures must be a positive integer")
         for p_k in p:
@@ -898,7 +899,7 @@ class NegativeMultinomialDistribution(JointDistribution):
         term_2 = Mul.fromiter(pi**ki/factorial(ki) for pi, ki in zip(p, k))
         return term_1 * term_2
 
-def NegativeMultinomial(syms, k0, *p):
+def NegativeMultinomial(syms, k0, *p) -> RandomSymbol | JointRandomSymbol:
     """
     Creates a discrete random variable with Negative Multinomial Distribution.
 

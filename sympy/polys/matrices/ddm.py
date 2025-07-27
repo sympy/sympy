@@ -93,6 +93,10 @@ from .dense import (
         )
 
 from .lll import ddm_lll, ddm_lll_transform
+from sympy.polys.matrices.sdm import SDM
+from types import NotImplementedType
+from typing import Any
+from typing_extensions import Self
 
 
 if GROUND_TYPES != 'flint':
@@ -110,7 +114,7 @@ class DDM(list):
     is_DFM = False
     is_DDM = True
 
-    def __init__(self, rowslist, shape, domain):
+    def __init__(self, rowslist, shape, domain) -> None:
         if not (isinstance(rowslist, list) and all(type(row) is list for row in rowslist)):
             raise DMBadInputError("rowslist must be a list of lists")
         m, n = shape
@@ -126,16 +130,16 @@ class DDM(list):
     def getitem(self, i, j):
         return self[i][j]
 
-    def setitem(self, i, j, value):
+    def setitem(self, i, j, value) -> None:
         self[i][j] = value
 
-    def extract_slice(self, slice1, slice2):
+    def extract_slice(self, slice1, slice2) -> "DDM":
         ddm = [row[slice2] for row in self[slice1]]
         rows = len(ddm)
         cols = len(ddm[0]) if ddm else len(range(self.shape[1])[slice2])
         return DDM(ddm, (rows, cols), self.domain)
 
-    def extract(self, rows, cols):
+    def extract(self, rows, cols) -> "DDM":
         ddm = []
         for i in rows:
             rowi = self[i]
@@ -169,7 +173,7 @@ class DDM(list):
     def from_ddm(cls, other):
         return other.copy()
 
-    def to_list(self):
+    def to_list(self) -> list[Any]:
         """
         Convert to a list of lists.
 
@@ -190,7 +194,7 @@ class DDM(list):
         """
         return [row[:] for row in self]
 
-    def to_list_flat(self):
+    def to_list_flat(self) -> list[Any]:
         """
         Convert to a flat list of elements.
 
@@ -244,10 +248,10 @@ class DDM(list):
         lol = [flat[i*cols:(i+1)*cols] for i in range(rows)]
         return cls(lol, shape, domain)
 
-    def flatiter(self):
+    def flatiter(self) -> chain[Any]:
         return chain.from_iterable(self)
 
-    def flat(self):
+    def flat(self) -> list[Any]:
         items = []
         for row in self:
             items.extend(row)
@@ -367,7 +371,7 @@ class DDM(list):
                 lol[i][j] = element
         return DDM(lol, shape, domain)
 
-    def to_dok(self):
+    def to_dok(self) -> dict[tuple[int, int], Any]:
         """
         Convert :class:`DDM` to dictionary of keys (dok) format.
 
@@ -470,7 +474,7 @@ class DDM(list):
                 if element:
                     yield (i, j), element
 
-    def to_ddm(self):
+    def to_ddm(self) -> Self:
         """
         Convert to a :class:`DDM`.
 
@@ -488,7 +492,7 @@ class DDM(list):
         """
         return self
 
-    def to_sdm(self):
+    def to_sdm(self) -> SDM:
         """
         Convert to a :class:`~.SDM`.
 
@@ -562,7 +566,7 @@ class DDM(list):
             return self.to_dfm()
         return self
 
-    def convert_to(self, K):
+    def convert_to(self, K) -> "DDM":
         Kold = self.domain
         if K == Kold:
             return self.copy()
@@ -578,30 +582,30 @@ class DDM(list):
         rows = list.__repr__(self)
         return '%s(%s, %s, %s)' % (cls, rows, self.shape, self.domain)
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
         if not isinstance(other, DDM):
             return False
         return (super().__eq__(other) and self.domain == other.domain)
 
-    def __ne__(self, other):
+    def __ne__(self, other) -> bool:
         return not self.__eq__(other)
 
     @classmethod
-    def zeros(cls, shape, domain):
+    def zeros(cls, shape, domain) -> "DDM":
         z = domain.zero
         m, n = shape
         rowslist = [[z] * n for _ in range(m)]
         return DDM(rowslist, shape, domain)
 
     @classmethod
-    def ones(cls, shape, domain):
+    def ones(cls, shape, domain) -> "DDM":
         one = domain.one
         m, n = shape
         rowlist = [[one] * n for _ in range(m)]
         return DDM(rowlist, shape, domain)
 
     @classmethod
-    def eye(cls, size, domain):
+    def eye(cls, size, domain) -> "DDM":
         if isinstance(size, tuple):
             m, n = size
         elif isinstance(size, int):
@@ -612,11 +616,11 @@ class DDM(list):
             ddm[i][i] = one
         return ddm
 
-    def copy(self):
+    def copy(self) -> "DDM":
         copyrows = [row[:] for row in self]
         return DDM(copyrows, self.shape, self.domain)
 
-    def transpose(self):
+    def transpose(self) -> "DDM":
         rows, cols = self.shape
         if rows:
             ddmT = ddm_transpose(self)
@@ -624,32 +628,32 @@ class DDM(list):
             ddmT = [[]] * cols
         return DDM(ddmT, (cols, rows), self.domain)
 
-    def __add__(a, b):
+    def __add__(a, b) -> NotImplementedType | DDM:
         if not isinstance(b, DDM):
             return NotImplemented
         return a.add(b)
 
-    def __sub__(a, b):
+    def __sub__(a, b) -> NotImplementedType | DDM:
         if not isinstance(b, DDM):
             return NotImplemented
         return a.sub(b)
 
-    def __neg__(a):
+    def __neg__(a) -> "DDM":
         return a.neg()
 
-    def __mul__(a, b):
+    def __mul__(a, b) -> DDM | NotImplementedType:
         if b in a.domain:
             return a.mul(b)
         else:
             return NotImplemented
 
-    def __rmul__(a, b):
+    def __rmul__(a, b) -> DDM | NotImplementedType:
         if b in a.domain:
             return a.mul(b)
         else:
             return NotImplemented
 
-    def __matmul__(a, b):
+    def __matmul__(a, b) -> DDM | NotImplementedType:
         if isinstance(b, DDM):
             return a.matmul(b)
         else:
@@ -664,37 +668,37 @@ class DDM(list):
             msg = "Shape mismatch: %s %s %s" % (a.shape, op, b.shape)
             raise DMShapeError(msg)
 
-    def add(a, b):
+    def add(a, b) -> "DDM":
         """a + b"""
         a._check(a, '+', b, a.shape, b.shape)
         c = a.copy()
         ddm_iadd(c, b)
         return c
 
-    def sub(a, b):
+    def sub(a, b) -> "DDM":
         """a - b"""
         a._check(a, '-', b, a.shape, b.shape)
         c = a.copy()
         ddm_isub(c, b)
         return c
 
-    def neg(a):
+    def neg(a) -> "DDM":
         """-a"""
         b = a.copy()
         ddm_ineg(b)
         return b
 
-    def mul(a, b):
+    def mul(a, b) -> "DDM":
         c = a.copy()
         ddm_imul(c, b)
         return c
 
-    def rmul(a, b):
+    def rmul(a, b) -> "DDM":
         c = a.copy()
         ddm_irmul(c, b)
         return c
 
-    def matmul(a, b):
+    def matmul(a, b) -> "DDM":
         """a @ b (matrix product)"""
         m, o = a.shape
         o2, n = b.shape
@@ -703,13 +707,13 @@ class DDM(list):
         ddm_imatmul(c, a, b)
         return c
 
-    def mul_elementwise(a, b):
+    def mul_elementwise(a, b) -> "DDM":
         assert a.shape == b.shape
         assert a.domain == b.domain
         c = [[aij * bij for aij, bij in zip(ai, bi)] for ai, bi in zip(a, b)]
         return DDM(c, a.shape, a.domain)
 
-    def hstack(A, *B):
+    def hstack(A, *B) -> "DDM":
         """Horizontally stacks :py:class:`~.DDM` matrices.
 
         Examples
@@ -743,7 +747,7 @@ class DDM(list):
 
         return DDM(Anew, (rows, cols), A.domain)
 
-    def vstack(A, *B):
+    def vstack(A, *B) -> "DDM":
         """Vertically stacks :py:class:`~.DDM` matrices.
 
         Examples
@@ -776,7 +780,7 @@ class DDM(list):
 
         return DDM(Anew, (rows, cols), A.domain)
 
-    def applyfunc(self, func, domain):
+    def applyfunc(self, func, domain) -> "DDM":
         elements = [list(map(func, row)) for row in self]
         return DDM(elements, self.shape, domain)
 
@@ -790,7 +794,7 @@ class DDM(list):
         """
         return sum(sum(map(bool, row)) for row in a)
 
-    def scc(a):
+    def scc(a) -> list[Any]:
         """Strongly connected components of a square matrix *a*.
 
         Examples
@@ -829,7 +833,7 @@ class DDM(list):
         """
         return SDM.diag(values, domain).to_ddm()
 
-    def rref(a):
+    def rref(a) -> tuple[DDM, list[Any]]:
         """Reduced-row echelon form of a and list of pivots.
 
         See Also
@@ -862,7 +866,7 @@ class DDM(list):
         denom, pivots = ddm_irref_den(b, K)
         return b, denom, pivots
 
-    def nullspace(a):
+    def nullspace(a) -> tuple[DDM, list[Any]]:
         """Returns a basis for the nullspace of a.
 
         The domain of the matrix must be a field.
@@ -924,7 +928,7 @@ class DDM(list):
 
         return (basis_ddm, nonpivots)
 
-    def particular(a):
+    def particular(a) -> "DDM":
         return a.to_sdm().particular().to_ddm()
 
     def det(a):
@@ -937,7 +941,7 @@ class DDM(list):
         deta = ddm_idet(b, K)
         return deta
 
-    def inv(a):
+    def inv(a) -> "DDM":
         """Inverse of a"""
         m, n = a.shape
         if m != n:
@@ -947,7 +951,7 @@ class DDM(list):
         ddm_iinv(ainv, a, K)
         return ainv
 
-    def lu(a):
+    def lu(a) -> tuple[DDM, DDM, list[Any]]:
         """L, U decomposition of a"""
         m, n = a.shape
         K = a.domain
@@ -1105,7 +1109,7 @@ class DDM(list):
 
         return Q, R
 
-    def lu_solve(a, b):
+    def lu_solve(a, b) -> "DDM":
         """x where a*x = b"""
         m, n = a.shape
         m2, o = b.shape
@@ -1118,7 +1122,7 @@ class DDM(list):
         ddm_ilu_solve(x, L, U, swaps, b)
         return x
 
-    def charpoly(a):
+    def charpoly(a) -> list[Any]:
         """Coefficients of characteristic polynomial of a"""
         K = a.domain
         m, n = a.shape
@@ -1128,14 +1132,14 @@ class DDM(list):
         coeffs = [vec[i][0] for i in range(n+1)]
         return coeffs
 
-    def is_zero_matrix(self):
+    def is_zero_matrix(self) -> bool:
         """
         Says whether this matrix has all zero entries.
         """
         zero = self.domain.zero
         return all(Mij == zero for Mij in self.flatiter())
 
-    def is_upper(self):
+    def is_upper(self) -> bool:
         """
         Says whether this matrix is upper-triangular. True can be returned
         even if the matrix is not square.
@@ -1143,7 +1147,7 @@ class DDM(list):
         zero = self.domain.zero
         return all(Mij == zero for i, Mi in enumerate(self) for Mij in Mi[:i])
 
-    def is_lower(self):
+    def is_lower(self) -> bool:
         """
         Says whether this matrix is lower-triangular. True can be returned
         even if the matrix is not square.
@@ -1168,7 +1172,7 @@ class DDM(list):
     def lll(A, delta=QQ(3, 4)):
         return ddm_lll(A, delta=delta)
 
-    def lll_transform(A, delta=QQ(3, 4)):
+    def lll_transform(A, delta=QQ(3, 4)) -> tuple[Any, Any | None]:
         return ddm_lll_transform(A, delta=delta)
 
 

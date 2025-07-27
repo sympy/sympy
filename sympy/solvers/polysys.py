@@ -36,7 +36,7 @@ class SolveFailed(Exception):
     """Raised when solver's conditions were not met. """
 
 
-def solve_poly_system(seq, *gens, strict=False, **args):
+def solve_poly_system(seq, *gens, strict=False, **args) -> list[tuple[Any, Any]] | list[tuple[Any]] | None:
     """
     Return a list of solutions for the system of polynomial equations
     or else None.
@@ -98,7 +98,7 @@ def solve_poly_system(seq, *gens, strict=False, **args):
     return solve_generic(polys, opt, strict=strict)
 
 
-def solve_biquadratic(f, g, opt):
+def solve_biquadratic(f, g, opt) -> list[tuple[Any, Any]] | None:
     """Solve a system of two bivariate quadratic polynomial equations.
 
     Parameters
@@ -165,7 +165,7 @@ def solve_biquadratic(f, g, opt):
     return sorted(solutions, key=default_sort_key)
 
 
-def solve_generic(polys, opt, strict=False):
+def solve_generic(polys, opt, strict=False) -> list[tuple[Any]] | None:
     """
     Solve a generic system of polynomial equations.
 
@@ -358,7 +358,7 @@ def solve_generic(polys, opt, strict=False):
         return sorted(result, key=default_sort_key)
 
 
-def solve_triangulated(polys, *gens, **args):
+def solve_triangulated(polys, *gens, **args) -> list[Any]:
     """
     Solve a polynomial system using Gianni-Kalkbrenner algorithm.
 

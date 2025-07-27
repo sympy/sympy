@@ -25,7 +25,7 @@ References
 
 from sympy.core import S, Pow
 from sympy.core.function import expand
-from sympy.core.relational import Eq
+from sympy.core.relational import Ne, Relational, Eq
 from sympy.core.symbol import Symbol, Wild
 from sympy.functions import exp, sqrt, hyper
 from sympy.integrals import Integral
@@ -34,9 +34,10 @@ from sympy.polys.polytools import cancel, factor
 from sympy.simplify import collect, simplify, logcombine # type: ignore
 from sympy.simplify.powsimp import powdenest
 from sympy.solvers.ode.ode import get_numbered_constants
+from typing import Any, Literal
 
 
-def match_2nd_hypergeometric(eq, func):
+def match_2nd_hypergeometric(eq, func) -> list[Any]:
     x = func.args[0]
     df = func.diff(x)
     a3 = Wild('a3', exclude=[func, func.diff(x), func.diff(x, 2)])
@@ -59,7 +60,7 @@ def match_2nd_hypergeometric(eq, func):
         return []
 
 
-def equivalence_hypergeometric(A, B, func):
+def equivalence_hypergeometric(A, B, func) -> dict[str, Any] | None:
     # This method for finding the equivalence is only for 2F1 type.
     # We can extend it for 1F1 and 0F1 type also.
     x = func.args[0]
@@ -132,7 +133,7 @@ def equivalence_hypergeometric(A, B, func):
         return None
 
 
-def match_2nd_2F1_hypergeometric(I, k, sing_point, func):
+def match_2nd_2F1_hypergeometric(I, k, sing_point, func) -> dict[str, Any]:
     x = func.args[0]
     a = Wild("a")
     b = Wild("b")
@@ -207,7 +208,7 @@ def match_2nd_2F1_hypergeometric(I, k, sing_point, func):
     return rn
 
 
-def equivalence(max_num_pow, dem_pow):
+def equivalence(max_num_pow, dem_pow) -> Literal["2F1"] | None:
     # this function is made for checking the equivalence with 2F1 type of equation.
     # max_num_pow is the value of maximum power of x in numerator
     # and dem_pow is list of powers of different factor of form (a*x b).
@@ -228,7 +229,7 @@ def equivalence(max_num_pow, dem_pow):
     return None
 
 
-def get_sol_2F1_hypergeometric(eq, func, match_object):
+def get_sol_2F1_hypergeometric(eq, func, match_object) -> Eq | Relational | Ne | None:
     x = func.args[0]
     from sympy.simplify.hyperexpand import hyperexpand
     from sympy.polys.polytools import factor

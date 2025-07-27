@@ -1,5 +1,5 @@
 from sympy.core.expr import Expr
-from sympy.core.function import DefinedFunction, ArgumentIndexError
+from sympy.core.function import Function, UndefinedFunction, DefinedFunction, ArgumentIndexError
 from sympy.core.numbers import I, pi
 from sympy.core.singleton import S
 from sympy.core.symbol import Dummy
@@ -9,6 +9,7 @@ from sympy.functions.elementary.complexes import Abs, conjugate
 from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import sin, cos, cot
+from typing import Any
 
 _x = Dummy("x")
 
@@ -135,7 +136,7 @@ class Ynm(DefinedFunction):
     """
 
     @classmethod
-    def eval(cls, n, m, theta, phi):
+    def eval(cls, n, m, theta, phi) -> type[UndefinedFunction] | None:
         # Handle negative index m and arguments theta, phi
         if m.could_extract_minus_sign():
             m = -m
@@ -198,7 +199,7 @@ class Ynm(DefinedFunction):
         n, m, theta, phi = self.args
         return S.NegativeOne**m * self.func(n, -m, theta, phi)
 
-    def as_real_imag(self, deep=True, **hints):
+    def as_real_imag(self, deep=True, **hints) -> tuple[Any, Any]:
         # TODO: Handle deep and hints
         n, m, theta, phi = self.args
         re = (sqrt((2*n + 1)/(4*pi) * factorial(n - m)/factorial(n + m)) *
@@ -221,7 +222,7 @@ class Ynm(DefinedFunction):
         return Expr._from_mpmath(res, prec)
 
 
-def Ynm_c(n, m, theta, phi):
+def Ynm_c(n, m, theta, phi) -> type[UndefinedFunction]:
     r"""
     Conjugate spherical harmonics defined as
 
@@ -323,7 +324,7 @@ class Znm(DefinedFunction):
     """
 
     @classmethod
-    def eval(cls, n, m, theta, phi):
+    def eval(cls, n, m, theta, phi) -> type[UndefinedFunction] | None:
         if m.is_positive:
             zz = (Ynm(n, m, theta, phi) + Ynm_c(n, m, theta, phi)) / sqrt(2)
             return zz

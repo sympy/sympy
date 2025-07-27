@@ -1,6 +1,7 @@
 """Definitions of monomial orderings. """
 
 from __future__ import annotations
+from typing import Any, Callable
 
 __all__ = ["lex", "grlex", "grevlex", "ilex", "igrlex", "igrevlex"]
 
@@ -23,13 +24,13 @@ class MonomialOrder:
     def __call__(self, monomial):
         raise NotImplementedError
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
         return self.__class__ == other.__class__
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash(self.__class__)
 
-    def __ne__(self, other):
+    def __ne__(self, other) -> bool:
         return not (self == other)
 
 class LexOrder(MonomialOrder):
@@ -48,7 +49,7 @@ class GradedLexOrder(MonomialOrder):
     alias = 'grlex'
     is_global = True
 
-    def __call__(self, monomial):
+    def __call__(self, monomial) -> tuple[int, Any]:
         return (sum(monomial), monomial)
 
 class ReversedGradedLexOrder(MonomialOrder):
@@ -57,7 +58,7 @@ class ReversedGradedLexOrder(MonomialOrder):
     alias = 'grevlex'
     is_global = True
 
-    def __call__(self, monomial):
+    def __call__(self, monomial) -> tuple[int, tuple[Any, ...]]:
         return (sum(monomial), tuple(reversed([-m for m in monomial])))
 
 class ProductOrder(MonomialOrder):
@@ -104,10 +105,10 @@ class ProductOrder(MonomialOrder):
     of the monomial is most important.
     """
 
-    def __init__(self, *args):
+    def __init__(self, *args) -> None:
         self.args = args
 
-    def __call__(self, monomial):
+    def __call__(self, monomial) -> tuple[Any, ...]:
         return tuple(O(lamda(monomial)) for (O, lamda) in self.args)
 
     def __repr__(self):
@@ -118,16 +119,16 @@ class ProductOrder(MonomialOrder):
         contents = [str(x[0]) for x in self.args]
         return self.__class__.__name__ + '(' + ", ".join(contents) + ')'
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
         if not isinstance(other, ProductOrder):
             return False
         return self.args == other.args
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash((self.__class__, self.args))
 
     @property
-    def is_global(self):
+    def is_global(self) -> bool | None:
         if all(o.is_global is True for o, _ in self.args):
             return True
         if all(o.is_global is False for o, _ in self.args):
@@ -153,13 +154,13 @@ class InverseOrder(MonomialOrder):
     True
     """
 
-    def __init__(self, O):
+    def __init__(self, O) -> None:
         self.O = O
 
     def __str__(self):
         return "i" + str(self.O)
 
-    def __call__(self, monomial):
+    def __call__(self, monomial) -> tuple[Any, ...]:
         def inv(l):
             if iterable(l):
                 return tuple(inv(x) for x in l)
@@ -167,17 +168,17 @@ class InverseOrder(MonomialOrder):
         return inv(self.O(monomial))
 
     @property
-    def is_global(self):
+    def is_global(self) -> bool | None:
         if self.O.is_global is True:
             return False
         if self.O.is_global is False:
             return True
         return None
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
         return isinstance(other, InverseOrder) and other.O == self.O
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash((self.__class__, self.O))
 
 lex = LexOrder()
@@ -242,18 +243,18 @@ def monomial_key(order=None, gens=None) -> MonomialOrder:
 class _ItemGetter:
     """Helper class to return a subsequence of values."""
 
-    def __init__(self, seq):
+    def __init__(self, seq) -> None:
         self.seq = tuple(seq)
 
-    def __call__(self, m):
+    def __call__(self, m) -> tuple[Any, ...]:
         return tuple(m[idx] for idx in self.seq)
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
         if not isinstance(other, _ItemGetter):
             return False
         return self.seq == other.seq
 
-def build_product_order(arg, gens):
+def build_product_order(arg, gens) -> ProductOrder:
     """
     Build a monomial order on ``gens``.
 

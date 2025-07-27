@@ -8,20 +8,23 @@ from sympy.core.sympify import _sympify
 from sympy.tensor.array.mutable_ndim_array import MutableNDimArray
 from sympy.tensor.array.ndim_array import NDimArray, ImmutableNDimArray, ArrayKind
 from sympy.utilities.iterables import flatten
+from sympy import Indexed
+from sympy.matrices import Matrix
+from typing_extensions import Self
 
 
 class DenseNDimArray(NDimArray):
 
     _array: List[Basic]
 
-    def __new__(self, *args, **kwargs):
+    def __new__(self, *args, **kwargs) -> "ImmutableDenseNDimArray":
         return ImmutableDenseNDimArray(*args, **kwargs)
 
     @property
     def kind(self) -> ArrayKind:
         return ArrayKind._union(self._array)
 
-    def __getitem__(self, index):
+    def __getitem__(self, index) -> Indexed | Self | Basic:
         """
         Allows to get items from N-dim array.
 
@@ -74,7 +77,7 @@ class DenseNDimArray(NDimArray):
         list_length = functools.reduce(lambda x, y: x*y, shape, S.One)
         return cls._new(([0]*list_length,), shape)
 
-    def tomatrix(self):
+    def tomatrix(self) -> Matrix:
         """
         Converts MutableDenseNDimArray to Matrix. Can convert only 2-dim array, else will raise error.
 
@@ -98,7 +101,7 @@ class DenseNDimArray(NDimArray):
 
         return Matrix(self.shape[0], self.shape[1], self._array)
 
-    def reshape(self, *newshape):
+    def reshape(self, *newshape) -> Self:
         """
         Returns MutableDenseNDimArray instance with new shape. Elements number
         must be        suitable to new shape. The only argument of method sets
@@ -130,7 +133,7 @@ class DenseNDimArray(NDimArray):
 
 
 class ImmutableDenseNDimArray(DenseNDimArray, ImmutableNDimArray): # type: ignore
-    def __new__(cls, iterable, shape=None, **kwargs):
+    def __new__(cls, iterable, shape=None, **kwargs) -> Self:
         return cls._new(iterable, shape, **kwargs)
 
     @classmethod
@@ -150,7 +153,7 @@ class ImmutableDenseNDimArray(DenseNDimArray, ImmutableNDimArray): # type: ignor
     def __setitem__(self, index, value):
         raise TypeError('immutable N-dim array')
 
-    def as_mutable(self):
+    def as_mutable(self) -> "MutableDenseNDimArray":
         return MutableDenseNDimArray(self)
 
     def _eval_simplify(self, **kwargs):
@@ -159,7 +162,7 @@ class ImmutableDenseNDimArray(DenseNDimArray, ImmutableNDimArray): # type: ignor
 
 class MutableDenseNDimArray(DenseNDimArray, MutableNDimArray):
 
-    def __new__(cls, iterable=None, shape=None, **kwargs):
+    def __new__(cls, iterable=None, shape=None, **kwargs) -> Self:
         return cls._new(iterable, shape, **kwargs)
 
     @classmethod
@@ -173,7 +176,7 @@ class MutableDenseNDimArray(DenseNDimArray, MutableNDimArray):
         self._loop_size = functools.reduce(lambda x,y: x*y, shape) if shape else len(flat_list)
         return self
 
-    def __setitem__(self, index, value):
+    def __setitem__(self, index, value) -> None:
         """Allows to set items to MutableDenseNDimArray.
 
         Examples
@@ -198,9 +201,9 @@ class MutableDenseNDimArray(DenseNDimArray, MutableNDimArray):
             value = _sympify(value)
             self._array[index] = value
 
-    def as_immutable(self):
+    def as_immutable(self) -> ImmutableDenseNDimArray:
         return ImmutableDenseNDimArray(self)
 
     @property
-    def free_symbols(self):
+    def free_symbols(self) -> set[Basic]:
         return {i for j in self._array for i in j.free_symbols}

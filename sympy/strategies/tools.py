@@ -1,9 +1,10 @@
 from . import rl
 from .core import do_one, exhaust, switch
 from .traverse import top_down
+from typing import Any, Callable
 
 
-def subs(d, **kwargs):
+def subs(d, **kwargs) -> Callable[[Any], Any] | Callable[..., Any]:
     """ Full simultaneous exact substitution.
 
     Examples
@@ -22,7 +23,7 @@ def subs(d, **kwargs):
         return lambda x: x
 
 
-def canon(*rules, **kwargs):
+def canon(*rules, **kwargs) -> Callable[[Any], Any]:
     """ Strategy for canonicalization.
 
     Explanation
@@ -35,7 +36,7 @@ def canon(*rules, **kwargs):
     return exhaust(top_down(exhaust(do_one(*rules)), **kwargs))
 
 
-def typed(ruletypes):
+def typed(ruletypes) -> Callable[[object], object]:
     """ Apply rules based on the expression type
 
     inputs:

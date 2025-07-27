@@ -31,7 +31,7 @@ from sympy.release import __version__
 from sympy.core.cache import lazy_function
 
 if 'dev' in __version__:
-    def enable_warnings():
+    def enable_warnings() -> None:
         import warnings
         warnings.filterwarnings('default',   '.*',   DeprecationWarning, module='sympy.*')
         del warnings
@@ -49,7 +49,7 @@ def __sympy_debug():
         raise RuntimeError("unrecognized value for SYMPY_DEBUG: %s" %
                            debug_str)
 # Fails py2 test if using type hinting
-SYMPY_DEBUG = __sympy_debug()  # type: bool
+SYMPY_DEBUG: bool = __sympy_debug()  # type: bool
 
 
 from .core import (sympify, SympifyError, cacheit, Basic, Atom,

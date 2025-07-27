@@ -1,4 +1,4 @@
-from sympy.core import S, diff, Tuple, Dummy, Mul
+from sympy.core import Function, S, diff, Tuple, Dummy, Mul
 from sympy.core.basic import Basic, as_Basic
 from sympy.core.function import DefinedFunction
 from sympy.core.numbers import Rational, NumberSymbol, _illegal
@@ -13,13 +13,16 @@ from sympy.utilities.iterables import uniq, sift, common_prefix
 from sympy.utilities.misc import filldedent, func_name
 
 from itertools import product
+from collections.abc import Iterator
+from typing import Any
+from typing_extensions import Self
 
 Undefined = S.NaN  # Piecewise()
 
 class ExprCondPair(Tuple):
     """Represents an expression, condition pair."""
 
-    def __new__(cls, expr, cond):
+    def __new__(cls, expr, cond) -> Self:
         expr = as_Basic(expr)
         if cond == True:
             return Tuple.__new__(cls, expr, true)
@@ -37,24 +40,24 @@ class ExprCondPair(Tuple):
         return Tuple.__new__(cls, expr, cond)
 
     @property
-    def expr(self):
+    def expr(self) -> Basic:
         """
         Returns the expression of this pair.
         """
         return self.args[0]
 
     @property
-    def cond(self):
+    def cond(self) -> Basic:
         """
         Returns the condition of this pair.
         """
         return self.args[1]
 
     @property
-    def is_commutative(self):
+    def is_commutative(self) -> bool | None:
         return self.expr.is_commutative
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[Basic]:
         yield self.expr
         yield self.cond
 
@@ -128,7 +131,7 @@ class Piecewise(DefinedFunction):
     nargs = None
     is_Piecewise = True
 
-    def __new__(cls, *args, **options):
+    def __new__(cls, *args, **options) -> Self:
         if len(args) == 0:
             raise TypeError("At least one (expr, cond) pair expected.")
         # (Try to) sympify args first
@@ -154,7 +157,7 @@ class Piecewise(DefinedFunction):
         return Basic.__new__(cls, *newargs, **options)
 
     @classmethod
-    def eval(cls, *_args):
+    def eval(cls, *_args) -> Self | None:
         """Either return a modified version of the args or, if no
         modifications were made, return None.
 
@@ -203,7 +206,7 @@ class Piecewise(DefinedFunction):
         if missing or not same:
             return cls(*newargs)
 
-    def doit(self, **hints):
+    def doit(self, **hints) -> Self:
         """
         Evaluate this piecewise function.
         """
@@ -258,7 +261,7 @@ class Piecewise(DefinedFunction):
             if cond:
                 return e._eval_is_meromorphic(x, a)
 
-    def piecewise_integrate(self, x, **kwargs):
+    def piecewise_integrate(self, x, **kwargs) -> Self:
         """Return the Piecewise with each expression being
         replaced with its antiderivative. To obtain a continuous
         antiderivative, use the :func:`~.integrate` function or method.
@@ -837,7 +840,7 @@ class Piecewise(DefinedFunction):
             except TypeError:
                 pass
 
-    def as_expr_set_pairs(self, domain=None):
+    def as_expr_set_pairs(self, domain=None) -> list[Any]:
         """Return tuples for each argument of self that give
         the expression and the interval in which it is valid
         which is contained within the given domain.
@@ -986,7 +989,7 @@ class Piecewise(DefinedFunction):
             return result
 
 
-def piecewise_fold(expr, evaluate=True):
+def piecewise_fold(expr, evaluate=True) -> Basic | Piecewise:
     """
     Takes an expression containing a piecewise function and returns the
     expression in piecewise form. In addition, any ITE conditions are
@@ -1341,7 +1344,7 @@ _blessed = lambda e: getattr(e.lhs, '_diff_wrt', False) and (
     isinstance(e.rhs, (Rational, NumberSymbol)))
 
 
-def piecewise_simplify(expr, **kwargs):
+def piecewise_simplify(expr, **kwargs) -> Piecewise:
     expr = piecewise_simplify_arguments(expr, **kwargs)
     if not isinstance(expr, Piecewise):
         return expr
@@ -1422,7 +1425,7 @@ def _piecewise_simplify_eq_and(args):
     return args
 
 
-def piecewise_exclusive(expr, *, skip_nan=False, deep=True):
+def piecewise_exclusive(expr, *, skip_nan=False, deep=True) -> Piecewise:
     """
     Rewrite :class:`Piecewise` with mutually exclusive conditions.
 

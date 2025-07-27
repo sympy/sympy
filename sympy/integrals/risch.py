@@ -31,7 +31,7 @@ from sympy.core.mul import Mul
 from sympy.core.intfunc import ilcm
 from sympy.core.numbers import I
 from sympy.core.power import Pow
-from sympy.core.relational import Ne
+from sympy.core.relational import Equality, Relational, Ne
 from sympy.core.singleton import S
 from sympy.core.sorting import ordered, default_sort_key
 from sympy.core.symbol import Dummy, Symbol
@@ -48,9 +48,11 @@ from sympy.polys.polytools import (real_roots, cancel, Poly, gcd,
     reduced)
 from sympy.polys.rootoftools import RootSum
 from sympy.utilities.iterables import numbered_symbols
+from sympy.integrals.integrals import Integral
+from typing import Any, Literal
 
 
-def integer_powers(exprs):
+def integer_powers(exprs) -> list[tuple[Any, Any]]:
     """
     Rewrites a list of expressions as integer multiples of each other.
 
@@ -167,7 +169,7 @@ class DifferentialExtension:
         'exts', 'extargs', 'cases', 'case', 't', 'd', 'newf', 'level',
         'ts', 'dummy')
 
-    def __init__(self, f=None, x=None, handle_first='log', dummy=False, extension=None, rewrite_complex=None):
+    def __init__(self, f=None, x=None, handle_first='log', dummy=False, extension=None, rewrite_complex=None) -> None:
         """
         Tries to build a transcendental extension tower from ``f`` with respect to ``x``.
 
@@ -286,7 +288,7 @@ class DifferentialExtension:
 
         return
 
-    def __getattr__(self, attr):
+    def __getattr__(self, attr) -> None:
         # Avoid AttributeErrors when debugging
         if attr not in self.__slots__:
             raise AttributeError("%s has no attribute %s" % (repr(self), repr(attr)))
@@ -645,14 +647,14 @@ class DifferentialExtension:
     # f1 = f2 = log(x) at different places in code execution
     # may return D1 != D2 as True, since 'level' or other attribute
     # may differ
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
         for attr in self.__class__.__slots__:
             d1, d2 = getattr(self, attr), getattr(other, attr)
             if not (isinstance(d1, GeneratorType) or d1 == d2):
                 return False
         return True
 
-    def reset(self):
+    def reset(self) -> None:
         """
         Reset self to an initial state.  Used by __init__.
         """
@@ -673,7 +675,7 @@ class DifferentialExtension:
         self.Tfuncs = []
         self.newf = self.f
 
-    def indices(self, extension):
+    def indices(self, extension) -> list[int]:
         """
         Parameters
         ==========
@@ -702,7 +704,7 @@ class DifferentialExtension:
         """
         return [i for i, ext in enumerate(self.exts) if ext == extension]
 
-    def increment_level(self):
+    def increment_level(self) -> None:
         """
         Increment the level of self.
 
@@ -723,7 +725,7 @@ class DifferentialExtension:
         self.case = self.cases[self.level]
         return None
 
-    def decrement_level(self):
+    def decrement_level(self) -> None:
         """
         Decrease the level of self.
 
@@ -745,7 +747,7 @@ class DifferentialExtension:
         return None
 
 
-def update_sets(seq, atoms, func):
+def update_sets(seq, atoms, func) -> list[Any]:
     s = set(seq)
     s = atoms.intersection(s)
     new = atoms - s
@@ -759,14 +761,14 @@ class DecrementLevel:
     """
     __slots__ = ('DE',)
 
-    def __init__(self, DE):
+    def __init__(self, DE) -> None:
         self.DE = DE
         return
 
-    def __enter__(self):
+    def __enter__(self) -> None:
         self.DE.decrement_level()
 
-    def __exit__(self, exc_type, exc_value, traceback):
+    def __exit__(self, exc_type, exc_value, traceback) -> None:
         self.DE.increment_level()
 
 
@@ -783,7 +785,7 @@ class NonElementaryIntegralException(Exception):
     pass
 
 
-def gcdex_diophantine(a, b, c):
+def gcdex_diophantine(a, b, c) -> tuple[Any, Any]:
     """
     Extended Euclidean Algorithm, Diophantine version.
 
@@ -806,7 +808,7 @@ def gcdex_diophantine(a, b, c):
     return (s, t)
 
 
-def frac_in(f, t, *, cancel=False, **kwargs):
+def frac_in(f, t, *, cancel=False, **kwargs) -> tuple[Any, Any]:
     """
     Returns the tuple (fa, fd), where fa and fd are Polys in t.
 
@@ -876,7 +878,7 @@ def as_poly_1t(p, t, z):
     return ans
 
 
-def derivation(p, DE, coefficientD=False, basic=False):
+def derivation(p, DE, coefficientD=False, basic=False) -> Any | Literal[0]:
     """
     Computes Dp.
 
@@ -928,7 +930,7 @@ def derivation(p, DE, coefficientD=False, basic=False):
     return r
 
 
-def get_case(d, t):
+def get_case(d, t) -> Literal["base", "primitive", "exp", "tan", "other_nonlinear", "other_linear"]:
     """
     Returns the type of the derivation d.
 
@@ -948,7 +950,7 @@ def get_case(d, t):
     return 'other_linear'
 
 
-def splitfactor(p, DE, coefficientD=False, z=None):
+def splitfactor(p, DE, coefficientD=False, z=None) -> tuple[Any, Any]:
     """
     Splitting factorization.
 
@@ -991,7 +993,7 @@ def splitfactor(p, DE, coefficientD=False, z=None):
         return (p, One)
 
 
-def splitfactor_sqf(p, DE, coefficientD=False, z=None, basic=False):
+def splitfactor_sqf(p, DE, coefficientD=False, z=None, basic=False) -> tuple[tuple[tuple[Any, Literal[1]]], tuple[()]] | tuple[tuple[Any, ...], tuple[Any, ...]]:
     """
     Splitting Square-free Factorization.
 
@@ -1029,7 +1031,7 @@ def splitfactor_sqf(p, DE, coefficientD=False, z=None, basic=False):
     return (tuple(N), tuple(S))
 
 
-def canonical_representation(a, d, DE):
+def canonical_representation(a, d, DE) -> tuple[Any, tuple[Any, Any], tuple[Any, Any]]:
     """
     Canonical Representation.
 
@@ -1055,7 +1057,7 @@ def canonical_representation(a, d, DE):
     return (q, (b, ds), (c, dn))
 
 
-def hermite_reduce(a, d, DE):
+def hermite_reduce(a, d, DE) -> tuple[tuple[Any, Any], tuple[Any, Any], tuple[Any, Any]]:
     """
     Hermite Reduction - Mack's Linear Version.
 
@@ -1111,7 +1113,7 @@ def hermite_reduce(a, d, DE):
     return ((ga, gd), (r, d), (rra, rrd))
 
 
-def polynomial_reduce(p, DE):
+def polynomial_reduce(p, DE) -> tuple[Any, Any]:
     """
     Polynomial Reduction.
 
@@ -1133,7 +1135,7 @@ def polynomial_reduce(p, DE):
     return (q, p)
 
 
-def laurent_series(a, d, F, n, DE):
+def laurent_series(a, d, F, n, DE) -> tuple[Any, Any, list[Any]] | Literal[0]:
     """
     Contribution of ``F`` to the full partial fraction decomposition of A/D.
 
@@ -1199,7 +1201,7 @@ def laurent_series(a, d, F, n, DE):
     return (delta_a, delta_d, H_list)
 
 
-def recognize_derivative(a, d, DE, z=None):
+def recognize_derivative(a, d, DE, z=None) -> bool:
     """
     Compute the squarefree factorization of the denominator of f
     and for each Di the polynomial H in K[x] (see Theorem 2.7.1), using the
@@ -1225,7 +1227,7 @@ def recognize_derivative(a, d, DE, z=None):
     return flag
 
 
-def recognize_log_derivative(a, d, DE, z=None):
+def recognize_log_derivative(a, d, DE, z=None) -> bool:
     """
     There exists a v in K(x)* such that f = dv/v
     where f a rational function if and only if f can be written as f = A/D
@@ -1255,7 +1257,7 @@ def recognize_log_derivative(a, d, DE, z=None):
             return False
     return True
 
-def residue_reduce(a, d, DE, z=None, invert=True):
+def residue_reduce(a, d, DE, z=None, invert=True) -> tuple[list[Any], Literal[True]] | tuple[list[Any], bool]:
     """
     Lazard-Rioboo-Rothstein-Trager resultant reduction.
 
@@ -1343,7 +1345,7 @@ def residue_reduce(a, d, DE, z=None, invert=True):
     return (H, b)
 
 
-def residue_reduce_to_basic(H, DE, z):
+def residue_reduce_to_basic(H, DE, z) -> int:
     """
     Converts the tuple returned by residue_reduce() into a Basic expression.
     """
@@ -1368,7 +1370,7 @@ def residue_reduce_derivation(H, DE, z):
         DE).as_expr().subs(z, i)/a[1].as_expr().subs(z, i))) for a in H))
 
 
-def integrate_primitive_polynomial(p, DE):
+def integrate_primitive_polynomial(p, DE) -> tuple[Any, Any, Literal[True]] | tuple[Any, Any, Literal[False]]:
     """
     Integration of primitive polynomials.
 
@@ -1414,7 +1416,10 @@ def integrate_primitive_polynomial(p, DE):
         q = q + q0
 
 
-def integrate_primitive(a, d, DE, z=None):
+def integrate_primitive(a, d, DE, z=None) -> (
+    tuple[Any, Any | Equality | Relational | Ne | NonElementaryIntegral, Literal[False]]
+    | tuple[Any, Any | Equality | Relational | Ne | NonElementaryIntegral, bool]
+):
     """
     Integration of primitive functions.
 
@@ -1463,7 +1468,7 @@ def integrate_primitive(a, d, DE, z=None):
     return (ret, i, b)
 
 
-def integrate_hyperexponential_polynomial(p, DE, z):
+def integrate_hyperexponential_polynomial(p, DE, z) -> tuple[Any, Any, Literal[True]] | tuple[Any, Any, bool]:
     """
     Integration of hyperexponential polynomials.
 
@@ -1515,7 +1520,10 @@ def integrate_hyperexponential_polynomial(p, DE, z):
     return (qa, qd, b)
 
 
-def integrate_hyperexponential(a, d, DE, z=None, conds='piecewise'):
+def integrate_hyperexponential(a, d, DE, z=None, conds='piecewise') -> (
+    tuple[Any, Any | Equality | Relational | Ne | NonElementaryIntegral, Literal[False]]
+    | tuple[Any, Any | Equality | Relational | Ne | NonElementaryIntegral, bool]
+):
     """
     Integration of hyperexponential functions.
 
@@ -1580,7 +1588,7 @@ def integrate_hyperexponential(a, d, DE, z=None, conds='piecewise'):
     return (ret, i, b)
 
 
-def integrate_hypertangent_polynomial(p, DE):
+def integrate_hypertangent_polynomial(p, DE) -> tuple[Any, Any]:
     """
     Integration of hypertangent polynomials.
 
@@ -1599,7 +1607,7 @@ def integrate_hypertangent_polynomial(p, DE):
     return (q, c)
 
 
-def integrate_nonlinear_no_specials(a, d, DE, z=None):
+def integrate_nonlinear_no_specials(a, d, DE, z=None) -> tuple[Any, Literal[False]] | tuple[Any, bool]:
     """
     Integration of nonlinear monomials with no specials.
 
@@ -1698,7 +1706,7 @@ class NonElementaryIntegral(Integral):
 
 def risch_integrate(f, x, extension=None, handle_first='log',
                     separate_integral=False, rewrite_complex=None,
-                    conds='piecewise'):
+                    conds='piecewise') -> tuple[Any, NonElementaryIntegral] | tuple[Any, Literal[0]] | None:
     r"""
     The Risch Integration Algorithm.
 

@@ -6,6 +6,9 @@ from sympy.polys.polyerrors import (CoercionFailed, NotInvertible,
         GeneratorsError)
 from sympy.polys.polytools import Poly
 from sympy.printing.defaults import DefaultPrinting
+from types import NotImplementedType
+from typing import Literal
+from typing_extensions import Self
 
 
 class ExtensionElement(DomainElement, DefaultPrinting):
@@ -21,7 +24,7 @@ class ExtensionElement(DomainElement, DefaultPrinting):
     """
     __slots__ = ('rep', 'ext')
 
-    def __init__(self, rep, ext):
+    def __init__(self, rep, ext) -> None:
         self.rep = rep
         self.ext = ext
 
@@ -31,13 +34,13 @@ class ExtensionElement(DomainElement, DefaultPrinting):
     def as_expr(f):
         return f.ext.to_sympy(f)
 
-    def __bool__(f):
+    def __bool__(f) -> bool:
         return bool(f.rep)
 
-    def __pos__(f):
+    def __pos__(f) -> Self:
         return f
 
-    def __neg__(f):
+    def __neg__(f) -> "ExtElem":
         return ExtElem(-f.rep, f.ext)
 
     def _get_rep(f, g):
@@ -53,7 +56,7 @@ class ExtensionElement(DomainElement, DefaultPrinting):
             except CoercionFailed:
                 return None
 
-    def __add__(f, g):
+    def __add__(f, g) -> ExtElem | NotImplementedType:
         rep = f._get_rep(g)
         if rep is not None:
             return ExtElem(f.rep + rep, f.ext)
@@ -62,21 +65,21 @@ class ExtensionElement(DomainElement, DefaultPrinting):
 
     __radd__ = __add__
 
-    def __sub__(f, g):
+    def __sub__(f, g) -> ExtElem | NotImplementedType:
         rep = f._get_rep(g)
         if rep is not None:
             return ExtElem(f.rep - rep, f.ext)
         else:
             return NotImplemented
 
-    def __rsub__(f, g):
+    def __rsub__(f, g) -> ExtElem | NotImplementedType:
         rep = f._get_rep(g)
         if rep is not None:
             return ExtElem(rep - f.rep, f.ext)
         else:
             return NotImplemented
 
-    def __mul__(f, g):
+    def __mul__(f, g) -> ExtElem | NotImplementedType:
         rep = f._get_rep(g)
         if rep is not None:
             return ExtElem((f.rep * rep) % f.ext.mod, f.ext)
@@ -102,7 +105,7 @@ class ExtensionElement(DomainElement, DefaultPrinting):
                     "Only division by invertible constants is implemented.")
             raise NotImplementedError(msg)
 
-    def inverse(f):
+    def inverse(f) -> "ExtElem":
         """Multiplicative inverse.
 
         Raises
@@ -122,7 +125,7 @@ class ExtensionElement(DomainElement, DefaultPrinting):
 
         return ExtElem(invrep, f.ext)
 
-    def __truediv__(f, g):
+    def __truediv__(f, g) -> NotImplementedType | ExtElem:
         rep = f._get_rep(g)
         if rep is None:
             return NotImplemented
@@ -137,7 +140,7 @@ class ExtensionElement(DomainElement, DefaultPrinting):
 
     __floordiv__ = __truediv__
 
-    def __rtruediv__(f, g):
+    def __rtruediv__(f, g) -> NotImplementedType:
         try:
             g = f.ext.convert(g)
         except CoercionFailed:
@@ -146,7 +149,7 @@ class ExtensionElement(DomainElement, DefaultPrinting):
 
     __rfloordiv__ = __rtruediv__
 
-    def __mod__(f, g):
+    def __mod__(f, g) -> NotImplementedType:
         rep = f._get_rep(g)
         if rep is None:
             return NotImplemented
@@ -160,14 +163,14 @@ class ExtensionElement(DomainElement, DefaultPrinting):
         # Division where defined is always exact so there is no remainder
         return f.ext.zero
 
-    def __rmod__(f, g):
+    def __rmod__(f, g) -> NotImplementedType:
         try:
             g = f.ext.convert(g)
         except CoercionFailed:
             return NotImplemented
         return g % f
 
-    def __pow__(f, n):
+    def __pow__(f, n) -> "ExtElem":
         if not isinstance(n, int):
             raise TypeError("exponent of type 'int' expected")
         if n < 0:
@@ -187,16 +190,16 @@ class ExtensionElement(DomainElement, DefaultPrinting):
 
         return ExtElem(r, f.ext)
 
-    def __eq__(f, g):
+    def __eq__(f, g) -> bool:
         if isinstance(g, ExtElem):
             return f.rep == g.rep and f.ext == g.ext
         else:
             return NotImplemented
 
-    def __ne__(f, g):
+    def __ne__(f, g) -> bool:
         return not f == g
 
-    def __hash__(f):
+    def __hash__(f) -> int:
         return hash((f.rep, f.ext))
 
     def __str__(f):
@@ -261,7 +264,7 @@ class MonogenicFiniteExtension(Domain):
 
     dtype = ExtensionElement
 
-    def __init__(self, mod):
+    def __init__(self, mod) -> None:
         if not (isinstance(mod, Poly) and mod.is_univariate):
             raise TypeError("modulus must be a univariate Poly")
 
@@ -289,16 +292,16 @@ class MonogenicFiniteExtension(Domain):
         # XXX: It might be necessary to check mod.is_irreducible here
         self.is_Field = self.domain.is_Field
 
-    def new(self, arg):
+    def new(self, arg) -> "ExtElem":
         rep = self.ring.convert(arg)
         return ExtElem(rep % self.mod, self)
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
         if not isinstance(other, FiniteExtension):
             return False
         return self.modulus == other.modulus
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash((self.__class__.__name__, self.modulus))
 
     def __str__(self):
@@ -313,41 +316,41 @@ class MonogenicFiniteExtension(Domain):
     def characteristic(self):
         return self.domain.characteristic()
 
-    def convert(self, f, base=None):
+    def convert(self, f, base=None) -> "ExtElem":
         rep = self.ring.convert(f, base)
         return ExtElem(rep % self.mod, self)
 
-    def convert_from(self, f, base):
+    def convert_from(self, f, base) -> "ExtElem":
         rep = self.ring.convert(f, base)
         return ExtElem(rep % self.mod, self)
 
     def to_sympy(self, f):
         return self.ring.to_sympy(f.rep)
 
-    def from_sympy(self, f):
+    def from_sympy(self, f) -> "ExtElem":
         return self.convert(f)
 
-    def set_domain(self, K):
+    def set_domain(self, K) -> Self:
         mod = self.modulus.set_domain(K)
         return self.__class__(mod)
 
-    def drop(self, *symbols):
+    def drop(self, *symbols) -> Self:
         if self.symbol in symbols:
             raise GeneratorsError('Can not drop generator from FiniteExtension')
         K = self.domain.drop(*symbols)
         return self.set_domain(K)
 
-    def quo(self, f, g):
+    def quo(self, f, g) -> "ExtElem":
         return self.exquo(f, g)
 
-    def exquo(self, f, g):
+    def exquo(self, f, g) -> "ExtElem":
         rep = self.ring.exquo(f.rep, g.rep)
         return ExtElem(rep % self.mod, self)
 
-    def is_negative(self, a):
+    def is_negative(self, a) -> Literal[False]:
         return False
 
-    def is_unit(self, a):
+    def is_unit(self, a) -> bool | None:
         if self.is_Field:
             return bool(a)
         elif a.is_ground:

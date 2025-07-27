@@ -18,7 +18,7 @@ class ManagedWindow(Window):
                             "vsync": False,
                             "resizable": True}
 
-    def __init__(self, **win_args):
+    def __init__(self, **win_args) -> None:
         """
         It is best not to override this function in the child
         class, unless you need to take additional arguments.
@@ -33,7 +33,7 @@ class ManagedWindow(Window):
         self.Thread = Thread(target=self.__event_loop__)
         self.Thread.start()
 
-    def __event_loop__(self, **win_args):
+    def __event_loop__(self, **win_args) -> None:
         """
         The event loop thread function. Do not override or call
         directly (it is called by __init__).
@@ -70,13 +70,13 @@ class ManagedWindow(Window):
                 gl_lock.release()
         super().close()
 
-    def close(self):
+    def close(self) -> None:
         """
         Closes the window.
         """
         self.has_exit = True
 
-    def setup(self):
+    def setup(self) -> None:
         """
         Called once before the event loop begins.
         Override this method in a child class. This
@@ -85,7 +85,7 @@ class ManagedWindow(Window):
         """
         pass
 
-    def update(self, dt):
+    def update(self, dt) -> None:
         """
         Called before draw during each iteration of
         the event loop. dt is the elapsed time in
@@ -94,7 +94,7 @@ class ManagedWindow(Window):
         """
         pass
 
-    def draw(self):
+    def draw(self) -> None:
         """
         Called after update during each iteration of
         the event loop. Put OpenGL rendering calls

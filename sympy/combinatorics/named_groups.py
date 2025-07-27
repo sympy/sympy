@@ -5,7 +5,7 @@ from sympy.combinatorics.permutations import Permutation
 _af_new = Permutation._af_new
 
 
-def AbelianGroup(*cyclic_orders):
+def AbelianGroup(*cyclic_orders) -> PermutationGroup:
     """
     Returns the direct product of cyclic groups with the given orders.
 
@@ -53,7 +53,7 @@ def AbelianGroup(*cyclic_orders):
     return G
 
 
-def AlternatingGroup(n):
+def AlternatingGroup(n) -> PermutationGroup:
     """
     Generates the alternating group on ``n`` elements as a permutation group.
 
@@ -116,7 +116,7 @@ def AlternatingGroup(n):
     return G
 
 
-def set_alternating_group_properties(G, n, degree):
+def set_alternating_group_properties(G, n, degree) -> None:
     """Set known properties of an alternating group. """
     if n < 4:
         G._is_abelian = True
@@ -133,7 +133,7 @@ def set_alternating_group_properties(G, n, degree):
     G._is_dihedral = False
 
 
-def CyclicGroup(n):
+def CyclicGroup(n) -> PermutationGroup:
     """
     Generates the cyclic group of order ``n`` as a permutation group.
 
@@ -178,7 +178,7 @@ def CyclicGroup(n):
     return G
 
 
-def DihedralGroup(n):
+def DihedralGroup(n) -> PermutationGroup:
     r"""
     Generates the dihedral group `D_n` as a permutation group.
 
@@ -246,7 +246,7 @@ def DihedralGroup(n):
     return G
 
 
-def SymmetricGroup(n):
+def SymmetricGroup(n) -> PermutationGroup:
     """
     Generates the symmetric group on ``n`` elements as a permutation group.
 
@@ -302,7 +302,7 @@ def SymmetricGroup(n):
     return G
 
 
-def set_symmetric_group_properties(G, n, degree):
+def set_symmetric_group_properties(G, n, degree) -> None:
     """Set known properties of a symmetric group. """
     if n < 3:
         G._is_abelian = True
@@ -319,7 +319,7 @@ def set_symmetric_group_properties(G, n, degree):
     G._is_dihedral = (n in [2, 3])  # cf Landau's func and Stirling's approx
 
 
-def RubikGroup(n):
+def RubikGroup(n) -> PermutationGroup:
     """Return a group of Rubik's cube generators
 
     >>> from sympy.combinatorics.named_groups import RubikGroup

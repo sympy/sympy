@@ -3,7 +3,7 @@
 #
 
 from __future__ import annotations
-from typing import ClassVar, Iterator
+from typing import Any, ClassVar, Iterator
 
 from .riccati import match_riccati, solve_riccati
 from sympy.core import Add, S, Pow, Rational
@@ -31,6 +31,8 @@ from .nonhomogeneous import _get_euler_characteristic_eq_sols, _get_const_charac
     _solve_undetermined_coefficients, _solve_variation_of_parameters, _test_term, _undetermined_coefficients_match, \
         _get_simplified_sol
 from .lie_group import _ode_lie_group
+import collections.abc
+from sympy.series.order import Order
 
 
 class ODEMatchError(NotImplementedError):
@@ -77,7 +79,7 @@ class SingleODEProblem:
     _eq_preprocessed: Expr
     _eq_high_order_free = None
 
-    def __init__(self, eq: Expr, func: AppliedUndef, sym: Symbol, prep: bool = True, **kwargs):
+    def __init__(self, eq: Expr, func: AppliedUndef, sym: Symbol, prep: bool = True, **kwargs) -> None:
         self.eq = eq
         self.func = func
         self.sym = sym
@@ -143,13 +145,13 @@ class SingleODEProblem:
         return numbered_symbols(start=start, prefix=prefix, exclude=atom_set)
 
     @cached_property
-    def is_autonomous(self):
+    def is_autonomous(self) -> bool:
         u = Dummy('u')
         x = self.sym
         syms = self.eq.subs(self.func, u).free_symbols
         return x not in syms
 
-    def get_linear_coefficients(self, eq, func, order):
+    def get_linear_coefficients(self, eq, func, order) -> dict[int, Any | Order] | None:
         r"""
         Matches a differential equation to the linear form:
 
@@ -259,7 +261,7 @@ class SingleODESolver:
     # that subclass can solve or leave it to None if not specific to any order
     order: list | None = None
 
-    def __init__(self, ode_problem):
+    def __init__(self, ode_problem) -> None:
         self.ode_problem = ode_problem
 
     def matches(self) -> bool:
@@ -296,7 +298,7 @@ class SinglePatternODESolver(SingleODESolver):
         order = prob.order
         return self._wilds(f, x, order)
 
-    def wilds_match(self):
+    def wilds_match(self) -> list[Any]:
         match = self._wilds_match
         return [match.get(w, S.Zero) for w in self.wilds()]
 

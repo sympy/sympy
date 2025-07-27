@@ -14,6 +14,7 @@ from sympy.matrices.expressions.special import ZeroMatrix, GenericZeroMatrix
 from sympy.matrices.expressions._shape import validate_matadd_integer as validate
 from sympy.utilities.iterables import sift
 from sympy.utilities.exceptions import sympy_deprecation_warning
+from typing_extensions import Self
 
 # XXX: MatAdd should perhaps not subclass directly from Add
 class MatAdd(MatrixExpr, Add):
@@ -35,7 +36,7 @@ class MatAdd(MatrixExpr, Add):
 
     identity = GenericZeroMatrix()
 
-    def __new__(cls, *args, evaluate=False, check=None, _sympify=True):
+    def __new__(cls, *args, evaluate=False, check=None, _sympify=True) -> GenericZeroMatrix | MatAdd | Self:
         if not args:
             return cls.identity
 
@@ -72,10 +73,10 @@ class MatAdd(MatrixExpr, Add):
     def shape(self):
         return self.args[0].shape
 
-    def could_extract_minus_sign(self):
+    def could_extract_minus_sign(self) -> bool:
         return _could_extract_minus_sign(self)
 
-    def expand(self, **kwargs):
+    def expand(self, **kwargs) -> "MatAdd":
         expanded = super(MatAdd, self).expand(**kwargs)
         return self._evaluate(expanded)
 
@@ -92,7 +93,7 @@ class MatAdd(MatrixExpr, Add):
         from .trace import trace
         return Add(*[trace(arg) for arg in self.args]).doit()
 
-    def doit(self, **hints):
+    def doit(self, **hints) -> "MatAdd":
         deep = hints.get('deep', True)
         if deep:
             args = [arg.doit(**hints) for arg in self.args]
@@ -116,7 +117,7 @@ def combine(cnt, mat):
         return cnt * mat
 
 
-def merge_explicit(matadd):
+def merge_explicit(matadd) -> MatAdd:
     """ Merge explicit MatrixBase arguments
 
     Examples

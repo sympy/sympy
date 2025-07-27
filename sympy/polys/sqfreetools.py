@@ -3,7 +3,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import Any, Literal, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from sympy.polys.domains.algebraicfield import AlgebraicField
@@ -56,7 +56,7 @@ def _dmp_check_degrees(f, u, result):
     assert tuple(degs) == dmp_degree_list(f, u)
 
 
-def dup_sqf_p(f, K):
+def dup_sqf_p(f, K) -> bool:
     """
     Return ``True`` if ``f`` is a square-free polynomial in ``K[x]``.
 
@@ -78,7 +78,7 @@ def dup_sqf_p(f, K):
         return not dup_degree(dup_gcd(f, dup_diff(f, 1, K), K))
 
 
-def dmp_sqf_p(f, u, K):
+def dmp_sqf_p(f, u, K) -> bool:
     """
     Return ``True`` if ``f`` is a square-free polynomial in ``K[X]``.
 
@@ -328,7 +328,13 @@ def dmp_sqf_norm(
     return s, f, r2
 
 
-def dmp_norm(f, u, K):
+def dmp_norm(f, u, K) -> (
+    tuple[Any, list[Any]]
+    | tuple[list[list[Any]], list[Any]]
+    | tuple[list[list[Any]] | Any | list[Any], list[Any]]
+    | list[list[Any]]
+    | list[Any]
+):
     r"""
     Norm of ``f`` in ``K[X]``, often not square-free.
 
@@ -421,7 +427,7 @@ def dmp_gf_sqf_part(f, u, K):
     raise NotImplementedError('multivariate polynomials over finite fields')
 
 
-def dup_sqf_part(f, K):
+def dup_sqf_part(f, K) -> list[Any]:
     """
     Returns square-free part of a polynomial in ``K[x]``.
 
@@ -457,7 +463,7 @@ def dup_sqf_part(f, K):
         return dup_primitive(sqf, K)[1]
 
 
-def dmp_sqf_part(f, u, K):
+def dmp_sqf_part(f, u, K) -> list[Any]:
     """
     Returns square-free part of a polynomial in ``K[X]``.
 
@@ -494,7 +500,7 @@ def dmp_sqf_part(f, u, K):
         return dmp_ground_primitive(sqf, u, K)[1]
 
 
-def dup_gf_sqf_list(f, K, all=False):
+def dup_gf_sqf_list(f, K, all=False) -> tuple[Any, list[Any]]:
     """Compute square-free decomposition of ``f`` in ``GF(p)[x]``. """
     f_orig = f
 
@@ -515,7 +521,7 @@ def dmp_gf_sqf_list(f, u, K, all=False):
     raise NotImplementedError('multivariate polynomials over finite fields')
 
 
-def dup_sqf_list(f, K, all=False):
+def dup_sqf_list(f, K, all=False) -> tuple[Any, list[Any]]:
     """
     Return square-free decomposition of a polynomial in ``K[x]``.
 
@@ -592,7 +598,7 @@ def dup_sqf_list(f, K, all=False):
     return coeff, result
 
 
-def dup_sqf_list_include(f, K, all=False):
+def dup_sqf_list_include(f, K, all=False) -> list[tuple[list[Any], Literal[1]]] | list[tuple[Any, Literal[1]]]:
     """
     Return square-free decomposition of a polynomial in ``K[x]``.
 
@@ -620,7 +626,7 @@ def dup_sqf_list_include(f, K, all=False):
         return [(g, 1)] + factors
 
 
-def dmp_sqf_list(f, u, K, all=False):
+def dmp_sqf_list(f, u, K, all=False) -> tuple[Any, list[Any]]:
     """
     Return square-free decomposition of a polynomial in `K[X]`.
 
@@ -728,7 +734,9 @@ def dmp_sqf_list(f, u, K, all=False):
     return coeff, result
 
 
-def dmp_sqf_list_include(f, u, K, all=False):
+def dmp_sqf_list_include(f, u, K, all=False) -> (
+    list[tuple[list[Any], Literal[1]]] | list[tuple[Any, Literal[1]]] | list[tuple[list[list[Any]] | Any | list[Any], Literal[1]]]
+):
     """
     Return square-free decomposition of a polynomial in ``K[x]``.
 
@@ -759,7 +767,7 @@ def dmp_sqf_list_include(f, u, K, all=False):
         return [(g, 1)] + factors
 
 
-def dup_gff_list(f, K):
+def dup_gff_list(f, K) -> list[Any]:
     """
     Compute greatest factorial factorization of ``f`` in ``K[x]``.
 
@@ -796,7 +804,7 @@ def dup_gff_list(f, K):
             return [(f, 1)] + H
 
 
-def dmp_gff_list(f, u, K):
+def dmp_gff_list(f, u, K) -> list[Any]:
     """
     Compute greatest factorial factorization of ``f`` in ``K[X]``.
 

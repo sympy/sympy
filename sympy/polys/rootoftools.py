@@ -29,6 +29,10 @@ from mpmath import mpf, mpc, findroot, workprec
 from mpmath.libmp.libmpf import dps_to_prec, prec_to_dps
 from sympy.multipledispatch import dispatch
 from itertools import chain
+import sympy.core.numbers
+from sympy.series.order import Order
+from typing import Any, Literal
+from typing_extensions import Self
 
 
 __all__ = ['CRootOf']
@@ -80,7 +84,7 @@ class _pure_key_dict:
     via PurePoly instances. It does not, for example, implement
     ``get`` or ``setdefault``.
     """
-    def __init__(self):
+    def __init__(self) -> None:
         self._dict = {}
 
     def __getitem__(self, k):
@@ -90,14 +94,14 @@ class _pure_key_dict:
             k = PurePoly(k, expand=False)
         return self._dict[k]
 
-    def __setitem__(self, k, v):
+    def __setitem__(self, k, v) -> None:
         if not isinstance(k, PurePoly):
             if not (isinstance(k, Expr) and len(k.free_symbols) == 1):
                 raise ValueError('expecting univariate expression')
             k = PurePoly(k, expand=False)
         self._dict[k] = v
 
-    def __contains__(self, k):
+    def __contains__(self, k) -> bool:
         try:
             self[k]
             return True
@@ -385,11 +389,11 @@ class ComplexRootOf(RootOf):
         return self.poly.as_expr()
 
     @property
-    def args(self):
+    def args(self) -> tuple[Any, Any |     sympy.core.numbers.Integer]:
         return (self.expr, Integer(self.index))
 
     @property
-    def free_symbols(self):
+    def free_symbols(self) -> set[Any]:
         # CRootOf currently only works with univariate expressions
         # whose poly attribute should be a PurePoly with no free
         # symbols
@@ -409,12 +413,12 @@ class ComplexRootOf(RootOf):
         return False  # XXX is this necessary?
 
     @classmethod
-    def real_roots(cls, poly, radicals=True):
+    def real_roots(cls, poly, radicals=True) -> list[Any]:
         """Get real roots of a polynomial. """
         return cls._get_roots("_real_roots", poly, radicals)
 
     @classmethod
-    def all_roots(cls, poly, radicals=True):
+    def all_roots(cls, poly, radicals=True) -> list[Any]:
         """Get real and complex roots of a polynomial. """
         return cls._get_roots("_all_roots", poly, radicals)
 
@@ -834,7 +838,7 @@ class ComplexRootOf(RootOf):
         return roots_flat
 
     @classmethod
-    def clear_cache(cls):
+    def clear_cache(cls) -> None:
         """Reset cache for reals and complexes.
 
         The intervals used to approximate a root instance are updated
@@ -1176,7 +1180,7 @@ class RootSum(Expr):
         return obj
 
     @classmethod
-    def new(cls, poly, func, auto=True):
+    def new(cls, poly, func, auto=True) -> Self | Any:
         """Construct new ``RootSum`` instance. """
         if not func.expr.has(*func.variables):
             return func.expr
@@ -1262,7 +1266,7 @@ class RootSum(Expr):
         return self.poly.as_expr()
 
     @property
-    def args(self):
+    def args(self) -> tuple[Any, Any, Any]:
         return (self.expr, self.fun, self.poly.gen)
 
     @property
@@ -1270,10 +1274,10 @@ class RootSum(Expr):
         return self.poly.free_symbols | self.fun.free_symbols
 
     @property
-    def is_commutative(self):
+    def is_commutative(self) -> Literal[True]:
         return True
 
-    def doit(self, **hints):
+    def doit(self, **hints) -> Self | Order:
         if not hints.get('roots', True):
             return self
 

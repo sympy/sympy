@@ -64,7 +64,7 @@ class PlotController:
         key.F8: 'save_image'
     }
 
-    def __init__(self, window, *, invert_mouse_zoom=False, **kwargs):
+    def __init__(self, window, *, invert_mouse_zoom=False, **kwargs) -> None:
         self.invert_mouse_zoom = invert_mouse_zoom
         self.window = window
         self.camera = window.camera
@@ -173,27 +173,27 @@ class PlotController:
 
         return True
 
-    def get_mouse_sensitivity(self):
+    def get_mouse_sensitivity(self) -> float:
         if self.action['modify_sensitivity']:
             return self.modified_mouse_sensitivity
         else:
             return self.normal_mouse_sensitivity
 
-    def get_key_sensitivity(self):
+    def get_key_sensitivity(self) -> float:
         if self.action['modify_sensitivity']:
             return self.modified_key_sensitivity
         else:
             return self.normal_key_sensitivity
 
-    def on_key_press(self, symbol, modifiers):
+    def on_key_press(self, symbol, modifiers) -> None:
         if symbol in self.keymap:
             self.action[self.keymap[symbol]] = True
 
-    def on_key_release(self, symbol, modifiers):
+    def on_key_release(self, symbol, modifiers) -> None:
         if symbol in self.keymap:
             self.action[self.keymap[symbol]] = False
 
-    def on_mouse_drag(self, x, y, dx, dy, buttons, modifiers):
+    def on_mouse_drag(self, x, y, dx, dy, buttons, modifiers) -> None:
         if buttons & LEFT:
             if self.is_2D():
                 self.camera.mouse_translate(x, y, dx, dy)
@@ -206,11 +206,11 @@ class PlotController:
         if buttons & RIGHT:
             self.camera.mouse_translate(x, y, dx, dy)
 
-    def on_mouse_scroll(self, x, y, dx, dy):
+    def on_mouse_scroll(self, x, y, dx, dy) -> None:
         self.camera.zoom_relative([1, -1][self.invert_mouse_zoom]*dy,
                                   self.get_mouse_sensitivity())
 
-    def is_2D(self):
+    def is_2D(self) -> bool:
         functions = self.window.plot._functions
         for i in functions:
             if len(functions[i].i_vars) > 1 or len(functions[i].d_vars) > 2:

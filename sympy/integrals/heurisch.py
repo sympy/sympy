@@ -40,9 +40,10 @@ from sympy.polys.solvers import solve_lin_sys
 from sympy.polys.constructor import construct_domain
 
 from sympy.integrals.integrals import integrate
+from typing import Any
 
 
-def components(f, x):
+def components(f, x) -> set[Any]:
     """
     Returns a set of all functional components of the given expression
     which includes symbols, function applications and compositions and
@@ -109,7 +110,7 @@ def _symbols(name, n):
 
 def heurisch_wrapper(f, x, rewrite=False, hints=None, mappings=None, retries=3,
                      degree_offset=0, unnecessary_permutations=None,
-                     _try_heurisch=None):
+                     _try_heurisch=None) -> Basic | Piecewise:
     """
     A wrapper around the heurisch integration algorithm.
 
@@ -211,7 +212,7 @@ class BesselTable:
     See the docstring of DiffCache.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.table = {}
         self.n = Dummy('n')
         self.z = Dummy('z')
@@ -234,13 +235,13 @@ class BesselTable:
             table[f] = (f(n-1, z) - (n+1)*f(n, z)/z,
                         (n-1)*f(n-1, z)/z - f(n, z))
 
-    def diffs(t, f, n, z):
+    def diffs(t, f, n, z) -> tuple[Any, Any] | None:
         if f in t.table:
             diff0, diff1 = t.table[f]
             repl = [(t.n, n), (t.z, z)]
             return (diff0.subs(repl), diff1.subs(repl))
 
-    def has(t, f):
+    def has(t, f) -> bool:
         return f in t.table
 
 _bessel_table = None
@@ -268,7 +269,7 @@ class DiffCache:
     All derivatives are with respect to the same variable `x`.
     """
 
-    def __init__(self, x):
+    def __init__(self, x) -> None:
         self.cache = {}
         self.x = x
 

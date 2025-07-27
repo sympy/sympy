@@ -20,6 +20,15 @@ from sympy.utilities.misc import as_int, func_name
 from mpmath.libmp.libmpf import prec_to_dps
 
 import warnings
+from sympy.core.basic import Basic
+from sympy.core.power import Pow
+from sympy.geometry.ellipse import Circle
+from sympy.geometry.entity import GeometryEntity, GeometrySet
+from sympy.geometry.line import Line, Line2D, Line3D, Segment, Segment2D, Segment3D
+from sympy.geometry.point import Point, Point2D, Point3D
+from types import NotImplementedType
+from typing import Any
+from typing_extensions import LiteralString, Self
 
 
 x, y, T = [Dummy('polygon_dummy', real=True) for i in range(3)]
@@ -119,7 +128,7 @@ class Polygon(GeometrySet):
 
     __slots__ = ()
 
-    def __new__(cls, *args, n = 0, **kwargs):
+    def __new__(cls, *args, n = 0, **kwargs) -> RegularPolygon | Self | Triangle | Point | Point2D | Point3D | Segment2D | Segment3D | Segment | None:
         if n:
             args = list(args)
             # return a virtual polygon with n sides
@@ -234,7 +243,7 @@ class Polygon(GeometrySet):
         return res
 
     @property
-    def angles(self):
+    def angles(self) -> dict[Any, Any]:
         """The internal angle at each vertex.
 
         Returns
@@ -319,7 +328,7 @@ class Polygon(GeometrySet):
         return simplify(p)
 
     @property
-    def vertices(self):
+    def vertices(self) -> list[Basic]:
         """The vertices of the polygon.
 
         Returns
@@ -355,7 +364,7 @@ class Polygon(GeometrySet):
         return list(self.args)
 
     @property
-    def centroid(self):
+    def centroid(self) -> Point | Point2D | Point3D:
         """The centroid of the polygon.
 
         Returns
@@ -390,7 +399,7 @@ class Polygon(GeometrySet):
         return Point(simplify(A*cx), simplify(A*cy))
 
 
-    def second_moment_of_area(self, point=None):
+    def second_moment_of_area(self, point=None) -> tuple[Any, Any, Any]:
         """Returns the second moment and product moment of area of a two dimensional polygon.
 
         Parameters
@@ -453,7 +462,7 @@ class Polygon(GeometrySet):
         return I_xx, I_yy, I_xy
 
 
-    def first_moment_of_area(self, point=None):
+    def first_moment_of_area(self, point=None) -> tuple[Any, Any]:
         """
         Returns the first moment of area of a two-dimensional polygon with
         respect to a certain point of interest.
@@ -553,7 +562,7 @@ class Polygon(GeometrySet):
         return second_moment[0] + second_moment[1]
 
 
-    def section_modulus(self, point=None):
+    def section_modulus(self, point=None) -> tuple[Any, Any]:
         """Returns a tuple with the section modulus of a two-dimensional
         polygon.
 
@@ -614,7 +623,7 @@ class Polygon(GeometrySet):
 
 
     @property
-    def sides(self):
+    def sides(self) -> list[Any]:
         """The directed line segments that form the sides of the polygon.
 
         Returns
@@ -647,7 +656,7 @@ class Polygon(GeometrySet):
         return res
 
     @property
-    def bounds(self):
+    def bounds(self) -> tuple[Any, Any, Any, Any]:
         """Return a tuple (xmin, ymin, xmax, ymax) representing the bounding
         rectangle for the geometric figure.
 
@@ -658,7 +667,7 @@ class Polygon(GeometrySet):
         ys = [p.y for p in verts]
         return (min(xs), min(ys), max(xs), max(ys))
 
-    def is_convex(self):
+    def is_convex(self) -> bool:
         """Is the polygon convex?
 
         A polygon is convex if all its interior angles are less than 180
@@ -704,7 +713,7 @@ class Polygon(GeometrySet):
                         return False
         return True
 
-    def encloses_point(self, p):
+    def encloses_point(self, p) -> bool | None:
         """
         Return True if p is enclosed by (is inside of) self.
 
@@ -791,7 +800,7 @@ class Polygon(GeometrySet):
             p1x, p1y = p2x, p2y
         return hit_odd
 
-    def arbitrary_point(self, parameter='t'):
+    def arbitrary_point(self, parameter='t') -> Piecewise:
         """A parameterized point on the polygon.
 
         The parameter, varying from 0 to 1, assigns points to the position on
@@ -850,7 +859,7 @@ class Polygon(GeometrySet):
             perim_fraction_start = perim_fraction_end
         return Piecewise(*sides)
 
-    def parameter_value(self, other, t):
+    def parameter_value(self, other, t) -> dict[Any, Any]:
         if not isinstance(other,GeometryEntity):
             other = Point(other, dim=self.ambient_dimension)
         if not isinstance(other,Point):
@@ -871,7 +880,7 @@ class Polygon(GeometrySet):
             raise ValueError("Given point may not be on %s" % func_name(self))
         raise ValueError("Given point is not on %s" % func_name(self))
 
-    def plot_interval(self, parameter='t'):
+    def plot_interval(self, parameter='t') -> list[Any]:
         """The plot interval for the default geometric plot of the polygon.
 
         Parameters
@@ -898,7 +907,7 @@ class Polygon(GeometrySet):
         t = Symbol(parameter, real=True)
         return [t, 0, 1]
 
-    def intersection(self, o):
+    def intersection(self, o) -> list[Any]:
         """The intersection of polygon and geometry entity.
 
         The intersection may be empty and can contain individual Points and
@@ -955,7 +964,10 @@ class Polygon(GeometrySet):
             return list(ordered(intersection_result))
 
 
-    def cut_section(self, line):
+    def cut_section(self, line) -> tuple[
+        RegularPolygon | Polygon | Triangle | Point | Point2D | Point3D | Segment2D | Segment3D | Segment | None,
+        RegularPolygon | Polygon | Triangle | Point | Point2D | Point3D | Segment2D | Segment3D | Segment | None,
+    ]:
         """
         Returns a tuple of two polygon segments that lie above and below
         the intersecting line respectively.
@@ -1330,7 +1342,7 @@ class Polygon(GeometrySet):
         canonical_args = [ D[order] for order in r ]
         return tuple(canonical_args)
 
-    def __contains__(self, o):
+    def __contains__(self, o) -> NotImplementedType | bool:
         """
         Return True if o is contained within the boundary lines of self.altitudes
 
@@ -1382,7 +1394,7 @@ class Polygon(GeometrySet):
 
         return False
 
-    def bisectors(p, prec=None):
+    def bisectors(p, prec=None) -> dict[Any, Any]:
         """Returns angle bisectors of a polygon. If prec is given
         then approximate the point defining the ray to that precision.
 
@@ -1481,7 +1493,7 @@ class RegularPolygon(Polygon):
 
     __slots__ = ('_n', '_center', '_radius', '_rot')
 
-    def __new__(self, c, r, n, rot=0, **kwargs):
+    def __new__(self, c, r, n, rot=0, **kwargs) -> Self:
         r, n, rot = map(sympify, (r, n, rot))
         c = Point(c, dim=2, **kwargs)
         if not isinstance(r, Expr):
@@ -1505,7 +1517,7 @@ class RegularPolygon(Polygon):
         return self.func(c, r, n, a)
 
     @property
-    def args(self):
+    def args(self) -> tuple[Any, Any, Any, Any]:
         """
         Returns the center point, the radius,
         the number of sides, and the orientation angle.
@@ -1523,7 +1535,7 @@ class RegularPolygon(Polygon):
     def __str__(self):
         return 'RegularPolygon(%s, %s, %s, %s)' % tuple(self.args)
 
-    def __repr__(self):
+    def __repr__(self) -> LiteralString:
         return 'RegularPolygon(%s, %s, %s, %s)' % tuple(self.args)
 
     @property
@@ -1779,7 +1791,7 @@ class RegularPolygon(Polygon):
         return 2*S.Pi/self._n
 
     @property
-    def circumcircle(self):
+    def circumcircle(self) -> Circle | Point | Point2D | Point3D | Segment2D | Segment3D | Segment | None:
         """The circumcircle of the RegularPolygon.
 
         Returns
@@ -1804,7 +1816,7 @@ class RegularPolygon(Polygon):
         return Circle(self.center, self.radius)
 
     @property
-    def incircle(self):
+    def incircle(self) -> Circle | Point | Point2D | Point3D | Segment2D | Segment3D | Segment | None:
         """The incircle of the RegularPolygon.
 
         Returns
@@ -1829,7 +1841,7 @@ class RegularPolygon(Polygon):
         return Circle(self.center, self.apothem)
 
     @property
-    def angles(self):
+    def angles(self) -> dict[Any, Any]:
         """
         Returns a dictionary with keys, the vertices of the Polygon,
         and values, the interior angle at each vertex.
@@ -1850,7 +1862,7 @@ class RegularPolygon(Polygon):
             ret[v] = ang
         return ret
 
-    def encloses_point(self, p):
+    def encloses_point(self, p) -> bool | None:
         """
         Return True if p is enclosed by (is inside of) self.
 
@@ -1908,7 +1920,7 @@ class RegularPolygon(Polygon):
             # now enumerate the RegularPolygon like a general polygon.
             return Polygon.encloses_point(self, p)
 
-    def spin(self, angle):
+    def spin(self, angle) -> None:
         """Increment *in place* the virtual Polygon's rotation by ccw angle.
 
         See also: rotate method which moves the center.
@@ -1930,7 +1942,7 @@ class RegularPolygon(Polygon):
         """
         self._rot += angle
 
-    def rotate(self, angle, pt=None):
+    def rotate(self, angle, pt=None) -> GeometryEntity:
         """Override GeometryEntity.rotate to first rotate the RegularPolygon
         about its center.
 
@@ -1953,7 +1965,7 @@ class RegularPolygon(Polygon):
         r._rot += angle
         return GeometryEntity.rotate(r, angle, pt)
 
-    def scale(self, x=1, y=1, pt=None):
+    def scale(self, x=1, y=1, pt=None) -> Point3D | Polygon | Triangle | Point | Segment2D | Segment3D | Segment | Self:
         """Override GeometryEntity.scale since it is the radius that must be
         scaled (if x == y) or else a new Polygon must be returned.
 
@@ -1979,7 +1991,7 @@ class RegularPolygon(Polygon):
         r *= x
         return self.func(c, r, n, rot)
 
-    def reflect(self, line):
+    def reflect(self, line) -> Self:
         """Override GeometryEntity.reflect since this is not made of only
         points.
 
@@ -2008,7 +2020,7 @@ class RegularPolygon(Polygon):
         return self.func(cc, -r, n, rot)
 
     @property
-    def vertices(self):
+    def vertices(self) -> list[Point | Point2D | Point3D]:
         """The vertices of the RegularPolygon.
 
         Returns
@@ -2039,14 +2051,14 @@ class RegularPolygon(Polygon):
         return [Point(c.x + r*cos(k*v + rot), c.y + r*sin(k*v + rot))
                 for k in range(self._n)]
 
-    def __eq__(self, o):
+    def __eq__(self, o) -> bool:
         if not isinstance(o, Polygon):
             return False
         elif not isinstance(o, RegularPolygon):
             return Polygon.__eq__(o, self)
         return self.args == o.args
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return super().__hash__()
 
 
@@ -2108,7 +2120,7 @@ class Triangle(Polygon):
 
     """
 
-    def __new__(cls, *args, **kwargs):
+    def __new__(cls, *args, **kwargs) -> Triangle | Self | Point | Point2D | Point3D | Segment2D | Segment3D | Segment | None:
         if len(args) != 3:
             if 'sss' in kwargs:
                 return _sss(*[simplify(a) for a in kwargs['sss']])
@@ -2151,7 +2163,7 @@ class Triangle(Polygon):
             return Point(*vertices, **kwargs)
 
     @property
-    def vertices(self):
+    def vertices(self) -> tuple[Basic, ...]:
         """The triangle's vertices
 
         Returns
@@ -2176,7 +2188,7 @@ class Triangle(Polygon):
         """
         return self.args
 
-    def is_similar(t1, t2):
+    def is_similar(t1, t2) -> bool:
         """Is another triangle similar to this one.
 
         Two triangles are similar if one can be uniformly scaled to the other.
@@ -2230,7 +2242,7 @@ class Triangle(Polygon):
             _are_similar(s1_3, s1_1, s1_2, *s2) or \
             _are_similar(s1_3, s1_2, s1_1, *s2)
 
-    def is_equilateral(self):
+    def is_equilateral(self) -> bool:
         """Are all the sides the same length?
 
         Returns
@@ -2260,7 +2272,7 @@ class Triangle(Polygon):
         """
         return not has_variety(s.length for s in self.sides)
 
-    def is_isosceles(self):
+    def is_isosceles(self) -> bool:
         """Are two or more of the sides the same length?
 
         Returns
@@ -2284,7 +2296,7 @@ class Triangle(Polygon):
         """
         return has_dups(s.length for s in self.sides)
 
-    def is_scalene(self):
+    def is_scalene(self) -> bool:
         """Are all the sides of the triangle of different lengths?
 
         Returns
@@ -2337,7 +2349,7 @@ class Triangle(Polygon):
             Segment.is_perpendicular(s[0], s[2])
 
     @property
-    def altitudes(self):
+    def altitudes(self) -> dict[Basic, Any]:
         """The altitudes of the triangle.
 
         An altitude of a triangle is a segment through a vertex,
@@ -2432,7 +2444,7 @@ class Triangle(Polygon):
         return a.intersection(b)[0]
 
     @property
-    def circumradius(self):
+    def circumradius(self) -> Pow | Any:
         """The radius of the circumcircle of the triangle.
 
         Returns
@@ -2459,7 +2471,7 @@ class Triangle(Polygon):
         return Point.distance(self.circumcenter, self.vertices[0])
 
     @property
-    def circumcircle(self):
+    def circumcircle(self) -> Circle | Point | Point2D | Point3D | Segment2D | Segment3D | Segment | None:
         """The circle which passes through the three vertices of the triangle.
 
         Returns
@@ -2484,7 +2496,7 @@ class Triangle(Polygon):
         """
         return Circle(self.circumcenter, self.circumradius)
 
-    def bisectors(self):
+    def bisectors(self) -> dict[Basic, Point | Point2D | Point3D | Segment2D | Segment3D | Segment]:
         """The angle bisectors of the triangle.
 
         An angle bisector of a triangle is a straight line through a vertex
@@ -2525,7 +2537,7 @@ class Triangle(Polygon):
         return {v[0]: l1, v[1]: l2, v[2]: l3}
 
     @property
-    def incenter(self):
+    def incenter(self) -> Point | Point2D | Point3D:
         """The center of the incircle.
 
         The incircle is the circle which lies inside the triangle and touches
@@ -2586,7 +2598,7 @@ class Triangle(Polygon):
         return simplify(2 * self.area / self.perimeter)
 
     @property
-    def incircle(self):
+    def incircle(self) -> Circle | Point | Point2D | Point3D | Segment2D | Segment3D | Segment | None:
         """The incircle of the triangle.
 
         The incircle is the circle which lies inside the triangle and touches
@@ -2615,7 +2627,7 @@ class Triangle(Polygon):
         return Circle(self.incenter, self.inradius)
 
     @property
-    def exradii(self):
+    def exradii(self) -> dict[Any, Any]:
         """The radius of excircles of a triangle.
 
         An excircle of the triangle is a circle lying outside the triangle,
@@ -2665,7 +2677,7 @@ class Triangle(Polygon):
         return exradii
 
     @property
-    def excenters(self):
+    def excenters(self) -> dict[Any, Point | Point2D | Point3D]:
         """Excenters of the triangle.
 
         An excenter is the center of a circle that is tangent to a side of the
@@ -2729,7 +2741,7 @@ class Triangle(Polygon):
         return excenters
 
     @property
-    def medians(self):
+    def medians(self) -> dict[Basic, Point | Point2D | Point3D | Segment2D | Segment3D | Segment]:
         """The medians of the triangle.
 
         A median of a triangle is a straight line through a vertex and the
@@ -2765,7 +2777,7 @@ class Triangle(Polygon):
                 v[2]: Segment(v[2], s[0].midpoint)}
 
     @property
-    def medial(self):
+    def medial(self) -> Triangle | Point | Point2D | Point3D | Segment2D | Segment3D | Segment | None:
         """The medial triangle of the triangle.
 
         The triangle which is formed from the midpoints of the three sides.
@@ -2794,7 +2806,7 @@ class Triangle(Polygon):
         return Triangle(s[0].midpoint, s[1].midpoint, s[2].midpoint)
 
     @property
-    def nine_point_circle(self):
+    def nine_point_circle(self) -> Circle | Point | Point2D | Point3D | Segment2D | Segment3D | Segment | None:
         """The nine-point circle of the triangle.
 
         Nine-point circle is the circumcircle of the medial triangle, which
@@ -2826,7 +2838,7 @@ class Triangle(Polygon):
         return Circle(*self.medial.vertices)
 
     @property
-    def eulerline(self):
+    def eulerline(self) -> Line | Line2D | Line3D | None:
         """The Euler line of the triangle.
 
         The line which passes through circumcenter, centroid and orthocenter.

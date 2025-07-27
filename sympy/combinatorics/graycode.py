@@ -1,6 +1,9 @@
 from sympy.core import Basic, Integer
 
 import random
+from collections.abc import Generator
+from typing import Any
+from typing_extensions import LiteralString, Self
 
 
 class GrayCode(Basic):
@@ -51,7 +54,7 @@ class GrayCode(Basic):
     _current = 0
     _rank = None
 
-    def __new__(cls, n, *args, **kw_args):
+    def __new__(cls, n, *args, **kw_args) -> Self:
         """
         Default constructor.
 
@@ -99,7 +102,7 @@ class GrayCode(Basic):
             obj._current = obj.unrank(n, obj._rank)
         return obj
 
-    def next(self, delta=1):
+    def next(self, delta=1) -> "GrayCode":
         """
         Returns the Gray code a distance ``delta`` (default = 1) from the
         current value in canonical order.
@@ -133,7 +136,7 @@ class GrayCode(Basic):
         return 2**self.n
 
     @property
-    def n(self):
+    def n(self) -> Basic:
         """
         Returns the dimension of the Gray code.
 
@@ -147,7 +150,7 @@ class GrayCode(Basic):
         """
         return self.args[0]
 
-    def generate_gray(self, **hints):
+    def generate_gray(self, **hints) -> Generator[str, Any, None]:
         """
         Generates the sequence of bit vectors of a Gray Code.
 
@@ -200,7 +203,7 @@ class GrayCode(Basic):
             self._current = (self._current ^ gbtc)
         self._current = 0
 
-    def skip(self):
+    def skip(self) -> None:
         """
         Skips the bit generation.
 
@@ -230,7 +233,7 @@ class GrayCode(Basic):
         self._skip = True
 
     @property
-    def rank(self):
+    def rank(self) -> int:
         """
         Ranks the Gray code.
 
@@ -269,7 +272,7 @@ class GrayCode(Basic):
         return self._rank
 
     @property
-    def current(self):
+    def current(self) -> str:
         """
         Returns the currently referenced Gray code as a bit string.
 
@@ -286,7 +289,7 @@ class GrayCode(Basic):
         return rv.rjust(self.n, '0')
 
     @classmethod
-    def unrank(self, n, rank):
+    def unrank(self, n, rank) -> str:
         """
         Unranks an n-bit sized Gray code of rank k. This method exists
         so that a derivative GrayCode class can define its own code of
@@ -319,7 +322,7 @@ class GrayCode(Basic):
         return _unrank(rank, n)
 
 
-def random_bitstring(n):
+def random_bitstring(n) -> str:
     """
     Generates a random bitlist of length n.
 
@@ -333,7 +336,7 @@ def random_bitstring(n):
     return ''.join([random.choice('01') for i in range(n)])
 
 
-def gray_to_bin(bin_list):
+def gray_to_bin(bin_list) -> LiteralString:
     """
     Convert from Gray coding to binary coding.
 
@@ -357,7 +360,7 @@ def gray_to_bin(bin_list):
     return ''.join(b)
 
 
-def bin_to_gray(bin_list):
+def bin_to_gray(bin_list) -> LiteralString:
     """
     Convert from binary coding to gray coding.
 
@@ -381,7 +384,7 @@ def bin_to_gray(bin_list):
     return ''.join(b)
 
 
-def get_subset_from_bitstring(super_set, bitstring):
+def get_subset_from_bitstring(super_set, bitstring) -> list[Any]:
     """
     Gets the subset defined by the bitstring.
 
@@ -405,7 +408,7 @@ def get_subset_from_bitstring(super_set, bitstring):
             if bitstring[i] == '1']
 
 
-def graycode_subsets(gray_code_set):
+def graycode_subsets(gray_code_set) -> Generator[list[Any], Any, None]:
     """
     Generates the subsets as enumerated by a Gray code.
 

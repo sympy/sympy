@@ -15,6 +15,7 @@ from .precedence import precedence, PRECEDENCE
 from .printer import Printer, print_function
 
 from mpmath.libmp import prec_to_dps, to_str as mlib_to_str
+from sympy.printing.printer import Printer
 
 
 class StrPrinter(Printer):
@@ -32,7 +33,7 @@ class StrPrinter(Printer):
 
     _relationals: dict[str, str] = {}
 
-    def parenthesize(self, item, level, strict=False):
+    def parenthesize(self, item, level, strict=False) -> str:
         if (precedence(item) < level) or ((not strict) and precedence(item) <= level):
             return "(%s)" % self._print(item)
         else:
@@ -41,7 +42,7 @@ class StrPrinter(Printer):
     def stringify(self, args, sep, level=0):
         return sep.join([self.parenthesize(item, level) for item in args])
 
-    def emptyPrinter(self, expr):
+    def emptyPrinter(self, expr) -> str:
         if isinstance(expr, str):
             return expr
         elif isinstance(expr, Basic):
@@ -973,7 +974,7 @@ class StrPrinter(Printer):
 
 
 @print_function(StrPrinter)
-def sstr(expr, **settings):
+def sstr(expr, **settings) -> str:
     """Returns the expression as a string.
 
     For large expressions where speed is a concern, use the setting
@@ -1006,7 +1007,7 @@ class StrReprPrinter(StrPrinter):
         return "%s(%s)" % (s.__class__.__name__, self._print(s.name))
 
 @print_function(StrReprPrinter)
-def sstrrepr(expr, **settings):
+def sstrrepr(expr, **settings) -> str:
     """return expr in mixed str/repr form
 
        i.e. strings are returned in repr form with quotes, and everything else

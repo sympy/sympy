@@ -22,7 +22,7 @@ To enable simple substitutions, add the match to find_substitutions.
 """
 
 from __future__ import annotations
-from typing import NamedTuple, Type, Callable, Sequence
+from typing import Any, NamedTuple, Type, Callable, Sequence
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from collections import defaultdict
@@ -32,7 +32,7 @@ from sympy.core.add import Add
 from sympy.core.cache import cacheit
 from sympy.core.containers import Dict
 from sympy.core.expr import Expr
-from sympy.core.function import Derivative
+from sympy.core.function import UndefinedFunction, Derivative
 from sympy.core.logic import fuzzy_not
 from sympy.core.mul import Mul
 from sympy.core.numbers import Integer, Number, E
@@ -67,6 +67,9 @@ from sympy.solvers.solvers import solve
 from sympy.strategies.core import switch, do_one, null_safe, condition
 from sympy.utilities.iterables import iterable
 from sympy.utilities.misc import debug
+import collections.abc
+import sympy.core.relational
+from sympy.tensor.array.array_derivatives import ArrayDerivative
 
 
 @dataclass
@@ -266,7 +269,7 @@ class SinhRule(HyperbolicRule):
 @dataclass
 class CoshRule(HyperbolicRule):
     """integrate(cosh(x), x) -> sinh(x)"""
-    def eval(self):
+    def eval(self) -> type[UndefinedFunction]:
         return sinh(self.variable)
 
 
@@ -735,7 +738,7 @@ class IntegralInfo(NamedTuple):
     symbol: Symbol
 
 
-def manual_diff(f, symbol):
+def manual_diff(f, symbol) -> int | ArrayDerivative | Derivative:
     """Derivative of f in form expected by find_substitutions
 
     SymPy's derivatives for some trig functions (like cot) are not in a form
@@ -796,7 +799,7 @@ def manual_subs(expr, *args):
 inverse_trig_functions = (atan, asin, acos, acot, acsc, asec)
 
 
-def find_substitutions(integrand, symbol, u_var):
+def find_substitutions(integrand, symbol, u_var) -> list[Any]:
     results = []
 
     def test_subterm(u, u_diff):
@@ -883,7 +886,7 @@ def find_substitutions(integrand, symbol, u_var):
 
     return results
 
-def rewriter(condition, rewrite):
+def rewriter(condition, rewrite) -> Callable[..., RewriteRule | None]:
     """Strategy that rewrites an integrand."""
     def _rewriter(integral):
         integrand, symbol = integral
@@ -896,7 +899,7 @@ def rewriter(condition, rewrite):
                     return RewriteRule(integrand, symbol, rewritten, substep)
     return _rewriter
 
-def proxy_rewriter(condition, rewrite):
+def proxy_rewriter(condition, rewrite) -> Callable[..., RewriteRule | None]:
     """Strategy that rewrites an integrand based on some other criteria."""
     def _proxy_rewriter(criteria):
         criteria, integral = criteria
@@ -909,7 +912,7 @@ def proxy_rewriter(condition, rewrite):
                 return RewriteRule(integrand, symbol, rewritten, integral_steps(rewritten, symbol))
     return _proxy_rewriter
 
-def multiplexer(conditions):
+def multiplexer(conditions) -> Callable[..., Any | None]:
     """Apply the rule that matches the condition, else None"""
     def multiplexer_rl(expr):
         for key, rule in conditions.items():
@@ -917,7 +920,7 @@ def multiplexer(conditions):
                 return rule(expr)
     return multiplexer_rl
 
-def alternatives(*rules):
+def alternatives(*rules) -> Callable[..., Any | AlternativeRule | None]:
     """Strategy that makes an AlternativeRule out of multiple possible results."""
     def _alternatives(integral):
         alts = []
@@ -941,10 +944,10 @@ def alternatives(*rules):
                 return AlternativeRule(*integral, alts)
     return _alternatives
 
-def constant_rule(integral):
+def constant_rule(integral) -> ConstantRule:
     return ConstantRule(*integral)
 
-def power_rule(integral):
+def power_rule(integral) -> ReciprocalRule | PowerRule | ExpRule | ConstantRule | PiecewiseRule | None:
     integrand, symbol = integral
     base, expt = integrand.as_base_exp()
 
@@ -965,13 +968,13 @@ def power_rule(integral):
             (ConstantRule(1, symbol), True)
         ])
 
-def exp_rule(integral):
+def exp_rule(integral) -> ExpRule | None:
     integrand, symbol = integral
     if isinstance(integrand.args[0], Symbol):
         return ExpRule(integrand, symbol, E, integrand.args[0])
 
 
-def orthogonal_poly_rule(integral):
+def orthogonal_poly_rule(integral) -> None:
     orthogonal_poly_classes = {
         jacobi: JacobiRule,
         gegenbauer: GegenbauerRule,
@@ -1001,7 +1004,7 @@ _wilds = []
 _symbol = Dummy('x')
 
 
-def special_function_rule(integral):
+def special_function_rule(integral) -> None:
     integrand, symbol = integral
     if not _special_function_patterns:
         a = Wild('a', exclude=[_symbol], properties=[lambda x: not x.is_zero])
@@ -1059,7 +1062,7 @@ def _add_degenerate_step(generic_cond, generic_step: Rule, degenerate_step: Rule
     return PiecewiseRule(generic_step.integrand, generic_step.variable, subfunctions)
 
 
-def nested_pow_rule(integral: IntegralInfo):
+def nested_pow_rule(integral: IntegralInfo) -> Rule | None:
     # nested (c*(a+b*x)**d)**e
     integrand, x = integral
 
@@ -1112,7 +1115,7 @@ def nested_pow_rule(integral: IntegralInfo):
     return _add_degenerate_step(generic_cond, generic_step, degenerate_step)
 
 
-def inverse_trig_rule(integral: IntegralInfo, degenerate=True):
+def inverse_trig_rule(integral: IntegralInfo, degenerate=True) -> NestedPowRule | Rule | None:
     """
     Set degenerate=False on recursive call where coefficient of quadratic term
     is assumed non-zero.
@@ -1188,14 +1191,14 @@ def inverse_trig_rule(integral: IntegralInfo, degenerate=True):
         return _add_degenerate_step(generic_cond, step, degenerate_step)
 
 
-def add_rule(integral):
+def add_rule(integral) -> AddRule | None:
     integrand, symbol = integral
     results = [integral_steps(g, symbol)
               for g in integrand.as_ordered_terms()]
     return None if None in results else AddRule(integrand, symbol, results)
 
 
-def mul_rule(integral: IntegralInfo):
+def mul_rule(integral: IntegralInfo) -> ConstantTimesRule | None:
     integrand, symbol = integral
 
     # Constant times function case
@@ -1301,7 +1304,7 @@ def _parts_rule(integrand, symbol) -> tuple[Expr, Expr, Expr, Expr, Rule] | None
     return None
 
 
-def parts_rule(integral):
+def parts_rule(integral) -> ConstantTimesRule | CyclicPartsRule | PartsRule | None:
     integrand, symbol = integral
     constant, integrand = integrand.as_coeff_Mul()
 
@@ -1364,7 +1367,7 @@ def parts_rule(integral):
         return rule
 
 
-def trig_rule(integral):
+def trig_rule(integral) -> SinRule | CosRule | Sec2Rule | Csc2Rule | RewriteRule | None:
     integrand, symbol = integral
     if integrand == sin(symbol):
         return SinRule(integrand, symbol)
@@ -1392,7 +1395,7 @@ def trig_rule(integral):
 
     return RewriteRule(integrand, symbol, rewritten, integral_steps(rewritten, symbol))
 
-def trig_product_rule(integral: IntegralInfo):
+def trig_product_rule(integral: IntegralInfo) -> SecTanRule | CscCotRule | None:
     integrand, symbol = integral
     if integrand == sec(symbol) * tan(symbol):
         return SecTanRule(integrand, symbol)
@@ -1400,7 +1403,7 @@ def trig_product_rule(integral: IntegralInfo):
         return CscCotRule(integrand, symbol)
 
 
-def quadratic_denom_rule(integral):
+def quadratic_denom_rule(integral) -> ArctanRule | RewriteRule | PiecewiseRule | URule | ConstantTimesRule | None:
     integrand, symbol = integral
     a = Wild('a', exclude=[symbol])
     b = Wild('b', exclude=[symbol])
@@ -1477,7 +1480,7 @@ def quadratic_denom_rule(integral):
     return
 
 
-def sqrt_linear_rule(integral: IntegralInfo):
+def sqrt_linear_rule(integral: IntegralInfo) -> PiecewiseRule | URule | None:
     """
     Substitute common (a+b*x)**(1/n)
     """
@@ -1521,7 +1524,7 @@ def sqrt_linear_rule(integral: IntegralInfo):
         return step
 
 
-def sqrt_quadratic_rule(integral: IntegralInfo, degenerate=True):
+def sqrt_quadratic_rule(integral: IntegralInfo, degenerate=True) -> Rule | None:
     integrand, x = integral
     a = Wild('a', exclude=[x])
     b = Wild('b', exclude=[x])
@@ -1588,7 +1591,7 @@ def sqrt_quadratic_rule(integral: IntegralInfo, degenerate=True):
     return _add_degenerate_step(generic_cond, generic_step, degenerate_step)
 
 
-def hyperbolic_rule(integral: tuple[Expr, Symbol]):
+def hyperbolic_rule(integral: tuple[Expr, Symbol]) -> SinhRule | CoshRule | RewriteRule | None:
     integrand, symbol = integral
     if isinstance(integrand, HyperbolicFunction) and integrand.args[0] == symbol:
         if integrand.func == sinh:
@@ -1616,7 +1619,7 @@ def hyperbolic_rule(integral: tuple[Expr, Symbol]):
                        ReciprocalRule(1/u, u, u)))
 
 @cacheit
-def make_wilds(symbol):
+def make_wilds(symbol) -> tuple[Wild, Wild, Wild, Wild]:
     a = Wild('a', exclude=[symbol])
     b = Wild('b', exclude=[symbol])
     m = Wild('m', exclude=[symbol], properties=[lambda n: isinstance(n, Integer)])
@@ -1625,28 +1628,28 @@ def make_wilds(symbol):
     return a, b, m, n
 
 @cacheit
-def sincos_pattern(symbol):
+def sincos_pattern(symbol) -> tuple[Any, Wild, Wild, Wild, Wild]:
     a, b, m, n = make_wilds(symbol)
     pattern = sin(a*symbol)**m * cos(b*symbol)**n
 
     return pattern, a, b, m, n
 
 @cacheit
-def tansec_pattern(symbol):
+def tansec_pattern(symbol) -> tuple[Any, Wild, Wild, Wild, Wild]:
     a, b, m, n = make_wilds(symbol)
     pattern = tan(a*symbol)**m * sec(b*symbol)**n
 
     return pattern, a, b, m, n
 
 @cacheit
-def cotcsc_pattern(symbol):
+def cotcsc_pattern(symbol) -> tuple[Any, Wild, Wild, Wild, Wild]:
     a, b, m, n = make_wilds(symbol)
     pattern = cot(a*symbol)**m * csc(b*symbol)**n
 
     return pattern, a, b, m, n
 
 @cacheit
-def heaviside_pattern(symbol):
+def heaviside_pattern(symbol) -> tuple[Any, Wild, Wild, Wild]:
     m = Wild('m', exclude=[symbol])
     b = Wild('b', exclude=[symbol])
     g = Wild('g')
@@ -1654,12 +1657,12 @@ def heaviside_pattern(symbol):
 
     return pattern, m, b, g
 
-def uncurry(func):
+def uncurry(func) -> Callable[..., Any]:
     def uncurry_rl(args):
         return func(*args)
     return uncurry_rl
 
-def trig_rewriter(rewrite):
+def trig_rewriter(rewrite) -> Callable[..., RewriteRule | None]:
     def trig_rewriter_rl(args):
         a, b, m, n, integrand, symbol = args
         rewritten = rewrite(a, b, m, n, integrand, symbol)
@@ -1717,7 +1720,7 @@ cotcsc_cotodd = trig_rewriter(
                                     cot(a*symbol) *
                                     csc(b*symbol) ** n ))
 
-def trig_sincos_rule(integral):
+def trig_sincos_rule(integral) -> None:
     integrand, symbol = integral
 
     if any(integrand.has(f) for f in (sin, cos)):
@@ -1734,7 +1737,7 @@ def trig_sincos_rule(integral):
             [match.get(i, S.Zero) for i in (a, b, m, n)] +
             [integrand, symbol]))
 
-def trig_tansec_rule(integral):
+def trig_tansec_rule(integral) -> None:
     integrand, symbol = integral
 
     integrand = integrand.subs({
@@ -1755,7 +1758,7 @@ def trig_tansec_rule(integral):
             [match.get(i, S.Zero) for i in (a, b, m, n)] +
             [integrand, symbol]))
 
-def trig_cotcsc_rule(integral):
+def trig_cotcsc_rule(integral) -> None:
     integrand, symbol = integral
     integrand = integrand.subs({
         1 / sin(symbol): csc(symbol),
@@ -1776,7 +1779,7 @@ def trig_cotcsc_rule(integral):
             [match.get(i, S.Zero) for i in (a, b, m, n)] +
             [integrand, symbol]))
 
-def trig_sindouble_rule(integral):
+def trig_sindouble_rule(integral) -> DontKnowRule | tuple[Any, Any] | Rule | None:
     integrand, symbol = integral
     a = Wild('a', exclude=[sin(2*symbol)])
     match = integrand.match(sin(2*symbol)*a)
@@ -1784,13 +1787,13 @@ def trig_sindouble_rule(integral):
         sin_double = 2*sin(symbol)*cos(symbol)/sin(2*symbol)
         return integral_steps(integrand * sin_double, symbol)
 
-def trig_powers_products_rule(integral):
+def trig_powers_products_rule(integral) -> DontKnowRule | Rule | tuple[Any, Any]:
     return do_one(null_safe(trig_sincos_rule),
                   null_safe(trig_tansec_rule),
                   null_safe(trig_cotcsc_rule),
                   null_safe(trig_sindouble_rule))(integral)
 
-def trig_substitution_rule(integral):
+def trig_substitution_rule(integral) -> TrigSubstitutionRule | None:
     integrand, symbol = integral
     A = Wild('a', exclude=[0, symbol])
     B = Wild('b', exclude=[0, symbol])
@@ -1850,7 +1853,7 @@ def trig_substitution_rule(integral):
                     return TrigSubstitutionRule(integrand, symbol,
                         theta, x_func, replaced, substep, restriction)
 
-def heaviside_rule(integral):
+def heaviside_rule(integral) -> HeavisideRule | None:
     integrand, symbol = integral
     pattern, m, b, g = heaviside_pattern(symbol)
     match = integrand.match(pattern)
@@ -1861,7 +1864,7 @@ def heaviside_rule(integral):
         return HeavisideRule(integrand, symbol, m*symbol + b, -b/m, substep)
 
 
-def dirac_delta_rule(integral: IntegralInfo):
+def dirac_delta_rule(integral: IntegralInfo) -> Rule | None:
     integrand, x = integral
     if len(integrand.args) == 1:
         n = S.Zero
@@ -1883,7 +1886,7 @@ def dirac_delta_rule(integral: IntegralInfo):
     return _add_degenerate_step(generic_cond, generic_step, degenerate_step)
 
 
-def substitution_rule(integral):
+def substitution_rule(integral) -> AlternativeRule | None:
     integrand, symbol = integral
 
     u_var = Dummy("u")
@@ -1955,7 +1958,7 @@ trig_expand_rule = rewriter(
         len({a.args[0] for a in integrand.atoms(TrigonometricFunction)}) > 1),
     lambda integrand, symbol: integrand.expand(trig=True))
 
-def derivative_rule(integral):
+def derivative_rule(integral) -> DerivativeRule | DontKnowRule | ConstantRule:
     integrand = integral[0]
     diff_variables = integrand.variables
     undifferentiated_function = integrand.expr
@@ -1969,14 +1972,14 @@ def derivative_rule(integral):
     else:
         return ConstantRule(*integral)
 
-def rewrites_rule(integral):
+def rewrites_rule(integral) -> RewriteRule | None:
     integrand, symbol = integral
 
     if integrand.match(1/cos(symbol)):
         rewritten = integrand.subs(1/cos(symbol), sec(symbol))
         return RewriteRule(integrand, symbol, rewritten, integral_steps(rewritten, symbol))
 
-def fallback_rule(integral):
+def fallback_rule(integral) -> DontKnowRule:
     return DontKnowRule(*integral)
 
 # Cache is used to break cyclic integrals.
@@ -1986,7 +1989,7 @@ _integral_cache: dict[Expr, Expr | None] = {}
 _parts_u_cache: dict[Expr, int] = defaultdict(int)
 _cache_dummy = Dummy("z")
 
-def integral_steps(integrand, symbol, **options):
+def integral_steps(integrand, symbol, **options) -> DontKnowRule | tuple[Any, Any] | Rule:
     """Returns the steps needed to compute an integral.
 
     Explanation
@@ -2112,7 +2115,7 @@ def integral_steps(integrand, symbol, **options):
     return result
 
 
-def manualintegrate(f, var):
+def manualintegrate(f, var) -> Piecewise | Expr:
     """manualintegrate(f, var)
 
     Explanation

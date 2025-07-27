@@ -6,6 +6,9 @@ import warnings
 import contextlib
 
 from textwrap import dedent
+from collections.abc import Generator
+from typing import Any, Callable
+from typing_extensions import Self
 
 
 class SymPyDeprecationWarning(DeprecationWarning):
@@ -50,7 +53,7 @@ class SymPyDeprecationWarning(DeprecationWarning):
     sympy.testing.pytest.warns_deprecated_sympy
 
     """
-    def __init__(self, message, *, deprecated_since_version, active_deprecations_target):
+    def __init__(self, message, *, deprecated_since_version, active_deprecations_target) -> None:
 
         super().__init__(message, deprecated_since_version,
                      active_deprecations_target)
@@ -79,7 +82,7 @@ will be removed in a future version of SymPy.
     def __repr__(self):
         return f"{self.__class__.__name__}({self.message!r}, deprecated_since_version={self.deprecated_since_version!r}, active_deprecations_target={self.active_deprecations_target!r})"
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
         return isinstance(other, SymPyDeprecationWarning) and self.args == other.args
 
     # Make pickling work. The by default, it tries to recreate the expression
@@ -90,14 +93,14 @@ will be removed in a future version of SymPy.
               active_deprecations_target):
         return cls(message, deprecated_since_version=deprecated_since_version, active_deprecations_target=active_deprecations_target)
 
-    def __reduce__(self):
+    def __reduce__(self) -> tuple[Callable[..., Self], tuple[Any, str, Any]]:
         return (self._new, (self.message, self.deprecated_since_version, self.active_deprecations_target))
 
 # Python by default hides DeprecationWarnings, which we do not want.
 warnings.simplefilter("once", SymPyDeprecationWarning)
 
 def sympy_deprecation_warning(message, *, deprecated_since_version,
-                              active_deprecations_target, stacklevel=3):
+                              active_deprecations_target, stacklevel=3) -> None:
     r'''
     Warn that a feature is deprecated in SymPy.
 
@@ -208,7 +211,7 @@ def sympy_deprecation_warning(message, *, deprecated_since_version,
 
 
 @contextlib.contextmanager
-def ignore_warnings(warningcls):
+def ignore_warnings(warningcls) -> Generator[None, Any, None]:
     '''
     Context manager to suppress warnings during tests.
 

@@ -12,6 +12,7 @@ from sympy.functions import exp_polar, exp, log, root, polarify, unpolarify
 from sympy.matrices.expressions.matexpr import MatrixSymbol
 from sympy.polys import lcm, gcd
 from sympy.ntheory.factor_ import multiplicity
+import sympy.core.basic
 
 
 
@@ -494,7 +495,7 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
         raise ValueError("combine must be one of ('all', 'exp', 'base').")
 
 
-def powdenest(eq, force=False, polar=False):
+def powdenest(eq, force=False, polar=False) -> bool | sympy.core.basic.Basic:
     r"""
     Collect exponents on powers as assumptions allow.
 

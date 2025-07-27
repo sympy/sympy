@@ -1,15 +1,20 @@
 from .cartan_type import Standard_Cartan
 from sympy.core.backend import Matrix, Rational
+import sympy.core.numbers
+import sympy.matrices
+from sympy.liealgebras.cartan_type import Standard_Cartan
+from typing import Any, Literal
+from typing_extensions import Self
 
 
 class TypeF(Standard_Cartan):
 
-    def __new__(cls, n):
+    def __new__(cls, n) -> Self:
         if n != 4:
             raise ValueError("n should be 4")
         return Standard_Cartan.__new__(cls, "F", 4)
 
-    def dimension(self):
+    def dimension(self) -> Literal[4]:
         """Dimension of the vector space V underlying the Lie algebra
 
         Examples
@@ -35,7 +40,7 @@ class TypeF(Standard_Cartan):
         root[j] = -1
         return root
 
-    def simple_root(self, i):
+    def simple_root(self, i) -> list[int] | list[    sympy.core.numbers.Rational | Any |     sympy.core.numbers.Integer] | None:
         """The ith simple root of F_4
 
         Every lie algebra has a unique root system.
@@ -67,7 +72,7 @@ class TypeF(Standard_Cartan):
             root = [Rational(-1, 2)]*4
             return root
 
-    def positive_roots(self):
+    def positive_roots(self) -> dict[Any, Any]:
         """Generate all the positive roots of A_n
 
         This is half of all of the roots of F_4; by multiplying all the
@@ -119,13 +124,13 @@ class TypeF(Standard_Cartan):
         return posroots
 
 
-    def roots(self):
+    def roots(self) -> Literal[48]:
         """
         Returns the total number of roots for F_4
         """
         return 48
 
-    def cartan_matrix(self):
+    def cartan_matrix(self) ->     sympy.matrices.Matrix:
         """The Cartan matrix for F_4
 
         The Cartan matrix matrix for a Lie algebra is
@@ -150,13 +155,13 @@ class TypeF(Standard_Cartan):
             -1, 2, -1, 0, 0, -1, 2])
         return m
 
-    def basis(self):
+    def basis(self) -> Literal[52]:
         """
         Returns the number of independent generators of F_4
         """
         return 52
 
-    def dynkin_diagram(self):
+    def dynkin_diagram(self) -> str:
         diag = "0---0=>=0---0\n"
         diag += "   ".join(str(i) for i in range(1, 5))
         return diag

@@ -13,13 +13,14 @@ from sympy.logic.boolalg import conjuncts
 
 from ..predicates.calculus import (FinitePredicate, InfinitePredicate,
     PositiveInfinitePredicate, NegativeInfinitePredicate)
+from typing import Literal
 
 
 # FinitePredicate
 
 
 @FinitePredicate.register(Symbol)
-def _(expr, assumptions):
+def _(expr, assumptions) -> Literal[False]:
     """
     Handles Symbol.
     """
@@ -30,7 +31,7 @@ def _(expr, assumptions):
     return None
 
 @FinitePredicate.register(Add)
-def _(expr, assumptions):
+def _(expr, assumptions) -> Literal[False]:
     """
     Return True if expr is bounded, False if not and None if unknown.
 
@@ -112,7 +113,7 @@ def _(expr, assumptions):
     return result
 
 @FinitePredicate.register(Mul)
-def _(expr, assumptions):
+def _(expr, assumptions) -> Literal[False]:
     """
     Return True if expr is bounded, False if not and None if unknown.
 
@@ -173,7 +174,7 @@ def _(expr, assumptions):
     return result
 
 @FinitePredicate.register(Pow)
-def _(expr, assumptions):
+def _(expr, assumptions) -> Literal[False]:
     """
     * Unbounded ** NonZero -> Unbounded
 
@@ -211,11 +212,11 @@ def _(expr, assumptions):
     return None
 
 @FinitePredicate.register(exp)
-def _(expr, assumptions):
+def _(expr, assumptions) -> Literal[False]:
     return ask(Q.finite(expr.exp), assumptions)
 
 @FinitePredicate.register(log)
-def _(expr, assumptions):
+def _(expr, assumptions) -> Literal[False]:
     # After complex -> finite fact is registered to new assumption system,
     # querying Q.infinite may be removed.
     if ask(Q.infinite(expr.args[0]), assumptions):
@@ -224,15 +225,15 @@ def _(expr, assumptions):
 
 @FinitePredicate.register_many(cos, sin, Number, Pi, Exp1, GoldenRatio,
     TribonacciConstant, ImaginaryUnit, sign)
-def _(expr, assumptions):
+def _(expr, assumptions) -> Literal[False]:
     return True
 
 @FinitePredicate.register_many(ComplexInfinity, Infinity, NegativeInfinity)
-def _(expr, assumptions):
+def _(expr, assumptions) -> Literal[False]:
     return False
 
 @FinitePredicate.register(NaN)
-def _(expr, assumptions):
+def _(expr, assumptions) -> Literal[False]:
     return None
 
 
@@ -240,7 +241,7 @@ def _(expr, assumptions):
 
 
 @InfinitePredicate.register(Expr)
-def _(expr, assumptions):
+def _(expr, assumptions) -> Literal[False]:
     is_finite = Q.finite(expr)._eval_ask(assumptions)
     if is_finite is None:
         return None
@@ -251,12 +252,12 @@ def _(expr, assumptions):
 
 
 @PositiveInfinitePredicate.register(Infinity)
-def _(expr, assumptions):
+def _(expr, assumptions) -> Literal[False]:
     return True
 
 
 @PositiveInfinitePredicate.register_many(NegativeInfinity, ComplexInfinity)
-def _(expr, assumptions):
+def _(expr, assumptions) -> Literal[False]:
     return False
 
 
@@ -264,10 +265,10 @@ def _(expr, assumptions):
 
 
 @NegativeInfinitePredicate.register(NegativeInfinity)
-def _(expr, assumptions):
+def _(expr, assumptions) -> Literal[False]:
     return True
 
 
 @NegativeInfinitePredicate.register_many(Infinity, ComplexInfinity)
-def _(expr, assumptions):
+def _(expr, assumptions) -> Literal[False]:
     return False

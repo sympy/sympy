@@ -13,7 +13,7 @@ from sympy.core.basic import Basic
 from sympy.core.cache import cacheit
 from sympy.core.function import Lambda, PoleError
 from sympy.core.numbers import (I, nan, oo)
-from sympy.core.relational import (Eq, Ne)
+from sympy.core.relational import (Relational, Eq, Ne)
 from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, symbols)
 from sympy.core.sympify import _sympify, sympify
@@ -29,8 +29,12 @@ from sympy.series.series import series
 from sympy.sets.sets import (FiniteSet, Intersection, Interval, Union)
 from sympy.solvers.solveset import solveset
 from sympy.solvers.inequalities import reduce_rational_inequalities
-from sympy.stats.rv import (RandomDomain, SingleDomain, ConditionalDomain, is_random,
+from sympy.stats.rv import (RandomSymbol, RandomDomain, SingleDomain, ConditionalDomain, is_random,
         ProductDomain, PSpace, SinglePSpace, random_symbols, NamedArgsMixin, Distribution)
+import sympy
+import sympy.core.logic
+from typing import Any, Literal
+from typing_extensions import Self
 
 
 class ContinuousDomain(RandomDomain):
@@ -51,7 +55,7 @@ class SingleContinuousDomain(ContinuousDomain, SingleDomain):
 
     Represented using a single symbol and interval.
     """
-    def compute_expectation(self, expr, variables=None, **kwargs):
+    def compute_expectation(self, expr, variables=None, **kwargs) ->     sympy.Equality | Relational |     sympy.Ne |     sympy.Integral:
         if variables is None:
             variables = self.symbols
         if not variables:
@@ -79,7 +83,7 @@ class ProductContinuousDomain(ProductDomain, ContinuousDomain):
                 expr = domain.compute_expectation(expr, domain_vars, **kwargs)
         return expr
 
-    def as_boolean(self):
+    def as_boolean(self) ->     sympy.core.logic.And:
         return And(*[domain.as_boolean() for domain in self.domains])
 
 
@@ -89,7 +93,7 @@ class ConditionalContinuousDomain(ContinuousDomain, ConditionalDomain):
     condition such as $x > 3$.
     """
 
-    def compute_expectation(self, expr, variables=None, **kwargs):
+    def compute_expectation(self, expr, variables=None, **kwargs) ->     sympy.Equality | Relational |     sympy.Ne |     sympy.Integral:
         if variables is None:
             variables = self.symbols
         if not variables:
@@ -136,7 +140,7 @@ class ConditionalContinuousDomain(ContinuousDomain, ConditionalDomain):
 
         return Integral(integrand, *limits, **kwargs)
 
-    def as_boolean(self):
+    def as_boolean(self) ->     sympy.core.logic.And:
         return And(self.fulldomain.as_boolean(), self.condition)
 
     @property
@@ -175,16 +179,16 @@ class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
 
     set = Interval(-oo, oo)
 
-    def __new__(cls, *args):
+    def __new__(cls, *args) -> Self:
         args = list(map(sympify, args))
         return Basic.__new__(cls, *args)
 
     @staticmethod
-    def check(*args):
+    def check(*args) -> None:
         pass
 
     @cacheit
-    def compute_cdf(self, **kwargs):
+    def compute_cdf(self, **kwargs) -> Lambda:
         """ Compute the CDF from the PDF.
 
         Returns a Lambda.
@@ -202,7 +206,7 @@ class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
     def _cdf(self, x):
         return None
 
-    def cdf(self, x, **kwargs):
+    def cdf(self, x, **kwargs) ->     sympy.Basic:
         """ Cumulative density function """
         if len(kwargs) == 0:
             cdf = self._cdf(x)
@@ -211,7 +215,7 @@ class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
         return self.compute_cdf(**kwargs)(x)
 
     @cacheit
-    def compute_characteristic_function(self, **kwargs):
+    def compute_characteristic_function(self, **kwargs) -> Lambda:
         """ Compute the characteristic function from the PDF.
 
         Returns a Lambda.
@@ -224,7 +228,7 @@ class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
     def _characteristic_function(self, t):
         return None
 
-    def characteristic_function(self, t, **kwargs):
+    def characteristic_function(self, t, **kwargs) ->     sympy.Basic:
         """ Characteristic function """
         if len(kwargs) == 0:
             cf = self._characteristic_function(t)
@@ -233,7 +237,7 @@ class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
         return self.compute_characteristic_function(**kwargs)(t)
 
     @cacheit
-    def compute_moment_generating_function(self, **kwargs):
+    def compute_moment_generating_function(self, **kwargs) -> Lambda:
         """ Compute the moment generating function from the PDF.
 
         Returns a Lambda.
@@ -246,7 +250,7 @@ class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
     def _moment_generating_function(self, t):
         return None
 
-    def moment_generating_function(self, t, **kwargs):
+    def moment_generating_function(self, t, **kwargs) ->     sympy.Basic:
         """ Moment generating function """
         if not kwargs:
                 mgf = self._moment_generating_function(t)
@@ -254,7 +258,7 @@ class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
                     return mgf
         return self.compute_moment_generating_function(**kwargs)(t)
 
-    def expectation(self, expr, var, evaluate=True, **kwargs):
+    def expectation(self, expr, var, evaluate=True, **kwargs) ->     sympy.Equality | Relational |     sympy.Ne | Any |     sympy.Integral | Literal[0]:
         """ Expectation of expression over distribution """
         if evaluate:
             try:
@@ -277,7 +281,7 @@ class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
             return Integral(expr * self.pdf(var), (var, self.set), **kwargs)
 
     @cacheit
-    def compute_quantile(self, **kwargs):
+    def compute_quantile(self, **kwargs) -> Lambda:
         """ Compute the Quantile from the PDF.
 
         Returns a Lambda.
@@ -293,7 +297,7 @@ class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
     def _quantile(self, x):
         return None
 
-    def quantile(self, x, **kwargs):
+    def quantile(self, x, **kwargs) ->     sympy.Basic:
         """ Cumulative density function """
         if len(kwargs) == 0:
             quantile = self._quantile(x)
@@ -330,7 +334,7 @@ class ContinuousPSpace(PSpace):
         return self.domain.compute_expectation(self.pdf * expr,
                 domain_symbols, **kwargs)
 
-    def compute_density(self, expr, **kwargs):
+    def compute_density(self, expr, **kwargs) -> Lambda:
         # Common case Density(X) where X in self.values
         if expr in self.values:
             # Marginalize all other random symbols out of the density
@@ -343,7 +347,7 @@ class ContinuousPSpace(PSpace):
         return Lambda(z, self.compute_expectation(DiracDelta(expr - z), **kwargs))
 
     @cacheit
-    def compute_cdf(self, expr, **kwargs):
+    def compute_cdf(self, expr, **kwargs) -> Lambda:
         if not self.domain.set.is_Interval:
             raise ValueError(
                 "CDF not well defined on multivariate expressions")
@@ -359,7 +363,7 @@ class ContinuousPSpace(PSpace):
         return Lambda(z, cdf)
 
     @cacheit
-    def compute_characteristic_function(self, expr, **kwargs):
+    def compute_characteristic_function(self, expr, **kwargs) -> Lambda:
         if not self.domain.set.is_Interval:
             raise NotImplementedError("Characteristic function of multivariate expressions not implemented")
 
@@ -369,7 +373,7 @@ class ContinuousPSpace(PSpace):
         return Lambda(t, cf)
 
     @cacheit
-    def compute_moment_generating_function(self, expr, **kwargs):
+    def compute_moment_generating_function(self, expr, **kwargs) -> Lambda:
         if not self.domain.set.is_Interval:
             raise NotImplementedError("Moment generating function of multivariate expressions not implemented")
 
@@ -379,7 +383,7 @@ class ContinuousPSpace(PSpace):
         return Lambda(t, mgf)
 
     @cacheit
-    def compute_quantile(self, expr, **kwargs):
+    def compute_quantile(self, expr, **kwargs) -> Lambda:
         if not self.domain.set.is_Interval:
             raise ValueError(
                 "Quantile not well defined on multivariate expressions")
@@ -433,7 +437,7 @@ class ContinuousPSpace(PSpace):
             result = space.probability(condition.__class__(space.value, comp))
             return result if not cond_inv else S.One - result
 
-    def where(self, condition):
+    def where(self, condition) -> SingleContinuousDomain:
         rvs = frozenset(random_symbols(condition))
         if not (len(rvs) == 1 and rvs.issubset(self.values)):
             raise NotImplementedError(
@@ -443,7 +447,7 @@ class ContinuousPSpace(PSpace):
         interval = interval.intersect(self.domain.set)
         return SingleContinuousDomain(rv.symbol, interval)
 
-    def conditional_space(self, condition, normalize=True, **kwargs):
+    def conditional_space(self, condition, normalize=True, **kwargs) -> "ContinuousPSpace":
         condition = condition.xreplace({rv: rv.symbol for rv in self.values})
         domain = ConditionalContinuousDomain(self.domain, condition)
         if normalize:
@@ -477,10 +481,10 @@ class SingleContinuousPSpace(ContinuousPSpace, SinglePSpace):
         return self.distribution.set
 
     @property
-    def domain(self):
+    def domain(self) -> SingleContinuousDomain:
         return SingleContinuousDomain(sympify(self.symbol), self.set)
 
-    def sample(self, size=(), library='scipy', seed=None):
+    def sample(self, size=(), library='scipy', seed=None) -> dict[RandomSymbol, Any]:
         """
         Internal sample method.
 
@@ -488,7 +492,7 @@ class SingleContinuousPSpace(ContinuousPSpace, SinglePSpace):
         """
         return {self.value: self.distribution.sample(size, library=library, seed=seed)}
 
-    def compute_expectation(self, expr, rvs=None, evaluate=False, **kwargs):
+    def compute_expectation(self, expr, rvs=None, evaluate=False, **kwargs) ->     sympy.Equality | Relational |     sympy.Ne |     sympy.Integral:
         rvs = rvs or (self.value,)
         if self.value not in rvs:
             return expr
@@ -502,28 +506,28 @@ class SingleContinuousPSpace(ContinuousPSpace, SinglePSpace):
         except PoleError:
             return Integral(expr * self.pdf, (x, self.set), **kwargs)
 
-    def compute_cdf(self, expr, **kwargs):
+    def compute_cdf(self, expr, **kwargs) -> Lambda:
         if expr == self.value:
             z = Dummy("z", real=True)
             return Lambda(z, self.distribution.cdf(z, **kwargs))
         else:
             return ContinuousPSpace.compute_cdf(self, expr, **kwargs)
 
-    def compute_characteristic_function(self, expr, **kwargs):
+    def compute_characteristic_function(self, expr, **kwargs) -> Lambda:
         if expr == self.value:
             t = Dummy("t", real=True)
             return Lambda(t, self.distribution.characteristic_function(t, **kwargs))
         else:
             return ContinuousPSpace.compute_characteristic_function(self, expr, **kwargs)
 
-    def compute_moment_generating_function(self, expr, **kwargs):
+    def compute_moment_generating_function(self, expr, **kwargs) -> Lambda:
         if expr == self.value:
             t = Dummy("t", real=True)
             return Lambda(t, self.distribution.moment_generating_function(t, **kwargs))
         else:
             return ContinuousPSpace.compute_moment_generating_function(self, expr, **kwargs)
 
-    def compute_density(self, expr, **kwargs):
+    def compute_density(self, expr, **kwargs) ->     sympy.Basic | Lambda:
         # https://en.wikipedia.org/wiki/Random_variable#Functions_of_random_variables
         if expr == self.value:
             return self.density
@@ -540,7 +544,7 @@ class SingleContinuousPSpace(ContinuousPSpace, SinglePSpace):
         fy = sum(fx(g) * abs(g.diff(y)) for g in gs)
         return Lambda(y, fy)
 
-    def compute_quantile(self, expr, **kwargs):
+    def compute_quantile(self, expr, **kwargs) -> Lambda:
 
         if expr == self.value:
             p = Dummy("p", real=True)
@@ -555,7 +559,7 @@ def _reduce_inequalities(conditions, var, **kwargs):
         raise ValueError("Reduction of condition failed %s\n" % conditions[0])
 
 
-def reduce_rational_inequalities_wrap(condition, var):
+def reduce_rational_inequalities_wrap(condition, var) -> sympy.FiniteSet | Union | None:
     if condition.is_Relational:
         return _reduce_inequalities([[condition]], var, relational=False)
     if isinstance(condition, Or):

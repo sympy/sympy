@@ -9,6 +9,7 @@ from sympy.codegen.ast import (
 from sympy.core.basic import Basic
 from sympy.core.containers import Tuple
 from sympy.core.sympify import sympify
+from typing_extensions import Self
 
 void = Type('void')
 
@@ -17,12 +18,12 @@ volatile = Attribute('volatile')
 static = Attribute('static')
 
 
-def alignof(arg):
+def alignof(arg) -> FunctionCall:
     """ Generate of FunctionCall instance for calling 'alignof' """
     return FunctionCall('alignof', [String(arg) if isinstance(arg, str) else arg])
 
 
-def sizeof(arg):
+def sizeof(arg) -> FunctionCall:
     """ Generate of FunctionCall instance for calling 'sizeof'
 
     Examples
@@ -39,7 +40,7 @@ def sizeof(arg):
 
 class CommaOperator(Basic):
     """ Represents the comma operator in C """
-    def __new__(cls, *args):
+    def __new__(cls, *args) -> Self:
         return Basic.__new__(cls, *[sympify(arg) for arg in args])
 
 

@@ -23,6 +23,7 @@ from ..predicates.sets import (IntegerPredicate, RationalPredicate,
     IrrationalPredicate, RealPredicate, ExtendedRealPredicate,
     HermitianPredicate, ComplexPredicate, ImaginaryPredicate,
     AntihermitianPredicate, AlgebraicPredicate, TranscendentalPredicate)
+from typing import Literal
 
 
 # IntegerPredicate
@@ -38,23 +39,23 @@ def _IntegerPredicate_number(expr, assumptions):
             return False
 
 @IntegerPredicate.register_many(int, Integer) # type:ignore
-def _(expr, assumptions):
+def _(expr, assumptions) -> bool | None:
     return True
 
 @IntegerPredicate.register_many(Exp1, GoldenRatio, ImaginaryUnit, Infinity,
         NegativeInfinity, Pi, Rational, TribonacciConstant)
-def _(expr, assumptions):
+def _(expr, assumptions) -> bool | None:
     return False
 
 @IntegerPredicate.register(Expr)
-def _(expr, assumptions):
+def _(expr, assumptions) -> bool | None:
     ret = expr.is_integer
     if ret is None:
         raise MDNotImplementedError
     return ret
 
 @IntegerPredicate.register(Add)
-def _(expr, assumptions):
+def _(expr, assumptions) -> bool | None:
     """
     * Integer + Integer       -> Integer
     * Integer + !Integer      -> !Integer
@@ -65,7 +66,7 @@ def _(expr, assumptions):
     return test_closed_group(expr, assumptions, Q.integer)
 
 @IntegerPredicate.register(Pow)
-def _(expr, assumptions):
+def _(expr, assumptions) -> bool | None:
     if expr.is_number:
         return _IntegerPredicate_number(expr, assumptions)
     if ask_all(~Q.zero(expr.base), Q.finite(expr.base), Q.zero(expr.exp), assumptions=assumptions):
@@ -75,7 +76,7 @@ def _(expr, assumptions):
             return True
 
 @IntegerPredicate.register(Mul)
-def _(expr, assumptions):
+def _(expr, assumptions) -> bool | None:
     """
     * Integer*Integer      -> Integer
     * Integer*Irrational   -> !Integer
@@ -103,39 +104,39 @@ def _(expr, assumptions):
     return _output
 
 @IntegerPredicate.register(Abs)
-def _(expr, assumptions):
+def _(expr, assumptions) -> bool | None:
     if ask(Q.integer(expr.args[0]), assumptions):
         return True
 
 @IntegerPredicate.register_many(Determinant, MatrixElement, Trace)
-def _(expr, assumptions):
+def _(expr, assumptions) -> bool | None:
     return ask(Q.integer_elements(expr.args[0]), assumptions)
 
 
 # RationalPredicate
 
 @RationalPredicate.register(Rational)
-def _(expr, assumptions):
+def _(expr, assumptions) -> bool | None:
     return True
 
 @RationalPredicate.register(Float)
-def _(expr, assumptions):
+def _(expr, assumptions) -> bool | None:
     return None
 
 @RationalPredicate.register_many(Exp1, GoldenRatio, ImaginaryUnit, Infinity,
     NegativeInfinity, Pi, TribonacciConstant)
-def _(expr, assumptions):
+def _(expr, assumptions) -> bool | None:
     return False
 
 @RationalPredicate.register(Expr)
-def _(expr, assumptions):
+def _(expr, assumptions) -> bool | None:
     ret = expr.is_rational
     if ret is None:
         raise MDNotImplementedError
     return ret
 
 @RationalPredicate.register_many(Add, Mul)
-def _(expr, assumptions):
+def _(expr, assumptions) -> bool | None:
     """
     * Rational + Rational     -> Rational
     * Rational + !Rational    -> !Rational
@@ -147,7 +148,7 @@ def _(expr, assumptions):
     return test_closed_group(expr, assumptions, Q.rational)
 
 @RationalPredicate.register(Pow)
-def _(expr, assumptions):
+def _(expr, assumptions) -> bool | None:
     """
     * Rational ** Integer      -> Rational
     * Irrational ** Rational   -> Irrational
@@ -182,25 +183,25 @@ def _(expr, assumptions):
             return True
 
 @RationalPredicate.register_many(asin, atan, cos, sin, tan)
-def _(expr, assumptions):
+def _(expr, assumptions) -> bool | None:
     x = expr.args[0]
     if ask(Q.rational(x), assumptions):
         return ask(~Q.nonzero(x), assumptions)
 
 @RationalPredicate.register(exp)
-def _(expr, assumptions):
+def _(expr, assumptions) -> bool | None:
     x = expr.exp
     if ask(Q.rational(x), assumptions):
         return ask(~Q.nonzero(x), assumptions)
 
 @RationalPredicate.register_many(acot, cot)
-def _(expr, assumptions):
+def _(expr, assumptions) -> bool | None:
     x = expr.args[0]
     if ask(Q.rational(x), assumptions):
         return False
 
 @RationalPredicate.register_many(acos, log)
-def _(expr, assumptions):
+def _(expr, assumptions) -> bool | None:
     x = expr.args[0]
     if ask(Q.rational(x), assumptions):
         return ask(~Q.nonzero(x - 1), assumptions)
@@ -209,14 +210,14 @@ def _(expr, assumptions):
 # IrrationalPredicate
 
 @IrrationalPredicate.register(Expr)
-def _(expr, assumptions):
+def _(expr, assumptions) -> bool | None:
     ret = expr.is_irrational
     if ret is None:
         raise MDNotImplementedError
     return ret
 
 @IrrationalPredicate.register(Basic)
-def _(expr, assumptions):
+def _(expr, assumptions) -> bool | None:
     _real = ask(Q.real(expr), assumptions)
     if _real:
         _rational = ask(Q.rational(expr), assumptions)
@@ -240,22 +241,22 @@ def _RealPredicate_number(expr, assumptions):
 
 @RealPredicate.register_many(Abs, Exp1, Float, GoldenRatio, im, Pi, Rational,
     re, TribonacciConstant)
-def _(expr, assumptions):
+def _(expr, assumptions) -> bool | None:
     return True
 
 @RealPredicate.register_many(ImaginaryUnit, Infinity, NegativeInfinity)
-def _(expr, assumptions):
+def _(expr, assumptions) -> bool | None:
     return False
 
 @RealPredicate.register(Expr)
-def _(expr, assumptions):
+def _(expr, assumptions) -> bool | None:
     ret = expr.is_real
     if ret is None:
         raise MDNotImplementedError
     return ret
 
 @RealPredicate.register(Add)
-def _(expr, assumptions):
+def _(expr, assumptions) -> bool | None:
     """
     * Real + Real              -> Real
     * Real + (Complex & !Real) -> !Real
@@ -265,7 +266,7 @@ def _(expr, assumptions):
     return test_closed_group(expr, assumptions, Q.real)
 
 @RealPredicate.register(Mul)
-def _(expr, assumptions):
+def _(expr, assumptions) -> bool | None:
     """
     * Real*Real               -> Real
     * Real*Imaginary          -> !Real
@@ -285,7 +286,7 @@ def _(expr, assumptions):
         return result
 
 @RealPredicate.register(Pow)
-def _(expr, assumptions):
+def _(expr, assumptions) -> bool | None:
     """
     * Real**Integer              -> Real
     * Positive**Real             -> Real
@@ -352,29 +353,29 @@ def _(expr, assumptions):
                 return True
 
 @RealPredicate.register_many(cos, sin)
-def _(expr, assumptions):
+def _(expr, assumptions) -> bool | None:
     if ask(Q.real(expr.args[0]), assumptions):
             return True
 
 @RealPredicate.register(exp)
-def _(expr, assumptions):
+def _(expr, assumptions) -> bool | None:
     return ask(
         Q.integer(expr.exp/I/pi) | Q.real(expr.exp), assumptions
     )
 
 @RealPredicate.register(log)
-def _(expr, assumptions):
+def _(expr, assumptions) -> bool | None:
     return ask(Q.positive(expr.args[0]), assumptions)
 
 @RealPredicate.register_many(Determinant, MatrixElement, Trace)
-def _(expr, assumptions):
+def _(expr, assumptions) -> bool | None:
     return ask(Q.real_elements(expr.args[0]), assumptions)
 
 
 # ExtendedRealPredicate
 
 @ExtendedRealPredicate.register(object)
-def _(expr, assumptions):
+def _(expr, assumptions) -> bool | None:
     return ask(Q.negative_infinite(expr)
                | Q.negative(expr)
                | Q.zero(expr)
@@ -383,24 +384,24 @@ def _(expr, assumptions):
             assumptions)
 
 @ExtendedRealPredicate.register_many(Infinity, NegativeInfinity)
-def _(expr, assumptions):
+def _(expr, assumptions) -> bool | None:
     return True
 
 @ExtendedRealPredicate.register_many(Add, Mul, Pow) # type:ignore
-def _(expr, assumptions):
+def _(expr, assumptions) -> bool | None:
     return test_closed_group(expr, assumptions, Q.extended_real)
 
 
 # HermitianPredicate
 
 @HermitianPredicate.register(object) # type:ignore
-def _(expr, assumptions):
+def _(expr, assumptions) -> bool | None:
     if isinstance(expr, MatrixBase):
         return None
     return ask(Q.real(expr), assumptions)
 
 @HermitianPredicate.register(Add) # type:ignore
-def _(expr, assumptions):
+def _(expr, assumptions) -> bool | None:
     """
     * Hermitian + Hermitian  -> Hermitian
     * Hermitian + !Hermitian -> !Hermitian
@@ -410,7 +411,7 @@ def _(expr, assumptions):
     return test_closed_group(expr, assumptions, Q.hermitian)
 
 @HermitianPredicate.register(Mul) # type:ignore
-def _(expr, assumptions):
+def _(expr, assumptions) -> bool | None:
     """
     As long as there is at most only one noncommutative term:
 
@@ -435,7 +436,7 @@ def _(expr, assumptions):
         return result
 
 @HermitianPredicate.register(Pow) # type:ignore
-def _(expr, assumptions):
+def _(expr, assumptions) -> bool | None:
     """
     * Hermitian**Integer -> Hermitian
     """
@@ -451,19 +452,19 @@ def _(expr, assumptions):
     raise MDNotImplementedError
 
 @HermitianPredicate.register_many(cos, sin) # type:ignore
-def _(expr, assumptions):
+def _(expr, assumptions) -> bool | None:
     if ask(Q.hermitian(expr.args[0]), assumptions):
         return True
     raise MDNotImplementedError
 
 @HermitianPredicate.register(exp) # type:ignore
-def _(expr, assumptions):
+def _(expr, assumptions) -> bool | None:
     if ask(Q.hermitian(expr.exp), assumptions):
         return True
     raise MDNotImplementedError
 
 @HermitianPredicate.register(MatrixBase) # type:ignore
-def _(mat, assumptions):
+def _(mat, assumptions) -> bool | None:
     rows, cols = mat.shape
     ret_val = True
     for i in range(rows):
@@ -482,36 +483,36 @@ def _(mat, assumptions):
 
 @ComplexPredicate.register_many(Abs, cos, exp, im, ImaginaryUnit, log, Number, # type:ignore
     NumberSymbol, re, sin)
-def _(expr, assumptions):
+def _(expr, assumptions) -> bool | None:
     return True
 
 @ComplexPredicate.register_many(Infinity, NegativeInfinity) # type:ignore
-def _(expr, assumptions):
+def _(expr, assumptions) -> bool | None:
     return False
 
 @ComplexPredicate.register(Expr) # type:ignore
-def _(expr, assumptions):
+def _(expr, assumptions) -> bool | None:
     ret = expr.is_complex
     if ret is None:
         raise MDNotImplementedError
     return ret
 
 @ComplexPredicate.register_many(Add, Mul) # type:ignore
-def _(expr, assumptions):
+def _(expr, assumptions) -> bool | None:
     return test_closed_group(expr, assumptions, Q.complex)
 
 @ComplexPredicate.register(Pow) # type:ignore
-def _(expr, assumptions):
+def _(expr, assumptions) -> bool | None:
     if expr.base == E:
         return True
     return test_closed_group(expr, assumptions, Q.complex)
 
 @ComplexPredicate.register_many(Determinant, MatrixElement, Trace) # type:ignore
-def _(expr, assumptions):
+def _(expr, assumptions) -> bool | None:
     return ask(Q.complex_elements(expr.args[0]), assumptions)
 
 @ComplexPredicate.register(NaN) # type:ignore
-def _(expr, assumptions):
+def _(expr, assumptions) -> bool | None:
     return None
 
 
@@ -527,18 +528,18 @@ def _Imaginary_number(expr, assumptions):
     # that r was 0
 
 @ImaginaryPredicate.register(ImaginaryUnit) # type:ignore
-def _(expr, assumptions):
+def _(expr, assumptions) -> bool | None:
     return True
 
 @ImaginaryPredicate.register(Expr) # type:ignore
-def _(expr, assumptions):
+def _(expr, assumptions) -> bool | None:
     ret = expr.is_imaginary
     if ret is None:
         raise MDNotImplementedError
     return ret
 
 @ImaginaryPredicate.register(Add) # type:ignore
-def _(expr, assumptions):
+def _(expr, assumptions) -> bool | None:
     """
     * Imaginary + Imaginary -> Imaginary
     * Imaginary + Complex   -> ?
@@ -563,7 +564,7 @@ def _(expr, assumptions):
             return False
 
 @ImaginaryPredicate.register(Mul) # type:ignore
-def _(expr, assumptions):
+def _(expr, assumptions) -> bool | None:
     """
     * Real*Imaginary      -> Imaginary
     * Imaginary*Imaginary -> Real
@@ -583,7 +584,7 @@ def _(expr, assumptions):
         return result
 
 @ImaginaryPredicate.register(Pow) # type:ignore
-def _(expr, assumptions):
+def _(expr, assumptions) -> bool | None:
     """
     * Imaginary**Odd        -> Imaginary
     * Imaginary**Even       -> Real
@@ -639,7 +640,7 @@ def _(expr, assumptions):
                 return half
 
 @ImaginaryPredicate.register(log) # type:ignore
-def _(expr, assumptions):
+def _(expr, assumptions) -> bool | None:
     if ask(Q.real(expr.args[0]), assumptions):
         if ask(Q.positive(expr.args[0]), assumptions):
             return False
@@ -656,23 +657,23 @@ def _(expr, assumptions):
         return False
 
 @ImaginaryPredicate.register(exp) # type:ignore
-def _(expr, assumptions):
+def _(expr, assumptions) -> bool | None:
     a = expr.exp/I/pi
     return ask(Q.integer(2*a) & ~Q.integer(a), assumptions)
 
 @ImaginaryPredicate.register_many(Number, NumberSymbol) # type:ignore
-def _(expr, assumptions):
+def _(expr, assumptions) -> bool | None:
     return not (expr.as_real_imag()[1] == 0)
 
 @ImaginaryPredicate.register(NaN) # type:ignore
-def _(expr, assumptions):
+def _(expr, assumptions) -> bool | None:
     return None
 
 
 # AntihermitianPredicate
 
 @AntihermitianPredicate.register(object) # type:ignore
-def _(expr, assumptions):
+def _(expr, assumptions) -> bool | None:
     if isinstance(expr, MatrixBase):
         return None
     if ask(Q.zero(expr), assumptions):
@@ -680,7 +681,7 @@ def _(expr, assumptions):
     return ask(Q.imaginary(expr), assumptions)
 
 @AntihermitianPredicate.register(Add) # type:ignore
-def _(expr, assumptions):
+def _(expr, assumptions) -> bool | None:
     """
     * Antihermitian + Antihermitian  -> Antihermitian
     * Antihermitian + !Antihermitian -> !Antihermitian
@@ -690,7 +691,7 @@ def _(expr, assumptions):
     return test_closed_group(expr, assumptions, Q.antihermitian)
 
 @AntihermitianPredicate.register(Mul) # type:ignore
-def _(expr, assumptions):
+def _(expr, assumptions) -> bool | None:
     """
     As long as there is at most only one noncommutative term:
 
@@ -715,7 +716,7 @@ def _(expr, assumptions):
         return result
 
 @AntihermitianPredicate.register(Pow) # type:ignore
-def _(expr, assumptions):
+def _(expr, assumptions) -> bool | None:
     """
     * Hermitian**Integer  -> !Antihermitian
     * Antihermitian**Even -> !Antihermitian
@@ -734,7 +735,7 @@ def _(expr, assumptions):
     raise MDNotImplementedError
 
 @AntihermitianPredicate.register(MatrixBase) # type:ignore
-def _(mat, assumptions):
+def _(mat, assumptions) -> bool | None:
     rows, cols = mat.shape
     ret_val = True
     for i in range(rows):
@@ -753,24 +754,24 @@ def _(mat, assumptions):
 
 @AlgebraicPredicate.register_many(AlgebraicNumber, GoldenRatio, # type:ignore
     ImaginaryUnit, TribonacciConstant)
-def _(expr, assumptions):
+def _(expr, assumptions) -> bool | None:
     return True
 
 @AlgebraicPredicate.register(Float)
-def _(expr, assumptions):
+def _(expr, assumptions) -> bool | None:
     return None
 
 @AlgebraicPredicate.register_many(ComplexInfinity, Exp1, Infinity, # type:ignore
     NegativeInfinity, Pi)
-def _(expr, assumptions):
+def _(expr, assumptions) -> bool | None:
     return False
 
 @AlgebraicPredicate.register_many(Add, Mul) # type:ignore
-def _(expr, assumptions):
+def _(expr, assumptions) -> bool | None:
     return test_closed_group(expr, assumptions, Q.algebraic)
 
 @AlgebraicPredicate.register(Pow) # type:ignore
-def _(expr, assumptions):
+def _(expr, assumptions) -> bool | None:
     if expr.base == E:
         if ask(Q.algebraic(expr.exp), assumptions):
             return ask(~Q.nonzero(expr.exp), assumptions)
@@ -797,29 +798,29 @@ def _(expr, assumptions):
             return False
 
 @AlgebraicPredicate.register(Rational) # type:ignore
-def _(expr, assumptions):
+def _(expr, assumptions) -> bool | None:
     return expr.q != 0
 
 @AlgebraicPredicate.register_many(asin, atan, cos, sin, tan) # type:ignore
-def _(expr, assumptions):
+def _(expr, assumptions) -> bool | None:
     x = expr.args[0]
     if ask(Q.algebraic(x), assumptions):
         return ask(~Q.nonzero(x), assumptions)
 
 @AlgebraicPredicate.register(exp) # type:ignore
-def _(expr, assumptions):
+def _(expr, assumptions) -> bool | None:
     x = expr.exp
     if ask(Q.algebraic(x), assumptions):
         return ask(~Q.nonzero(x), assumptions)
 
 @AlgebraicPredicate.register_many(acot, cot) # type:ignore
-def _(expr, assumptions):
+def _(expr, assumptions) -> bool | None:
     x = expr.args[0]
     if ask(Q.algebraic(x), assumptions):
         return False
 
 @AlgebraicPredicate.register_many(acos, log) # type:ignore
-def _(expr, assumptions):
+def _(expr, assumptions) -> bool | None:
     x = expr.args[0]
     if ask(Q.algebraic(x), assumptions):
         return ask(~Q.nonzero(x - 1), assumptions)
@@ -828,7 +829,7 @@ def _(expr, assumptions):
 # TranscendentalPredicate
 
 @TranscendentalPredicate.register(Expr)
-def _(expr, assumptions):
+def _(expr, assumptions) -> bool | None:
     ret = expr.is_transcendental
     if ret is not None:
         return ret

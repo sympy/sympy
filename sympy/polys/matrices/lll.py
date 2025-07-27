@@ -4,6 +4,7 @@ from math import floor as mfloor
 
 from sympy.polys.domains import ZZ, QQ
 from sympy.polys.matrices.exceptions import DMRankError, DMShapeError, DMValueError, DMDomainError
+from typing import Any
 
 
 def _ddm_lll(x, delta=QQ(3, 4), return_transform=False):
@@ -90,5 +91,5 @@ def ddm_lll(x, delta=QQ(3, 4)):
     return _ddm_lll(x, delta=delta, return_transform=False)[0]
 
 
-def ddm_lll_transform(x, delta=QQ(3, 4)):
+def ddm_lll_transform(x, delta=QQ(3, 4)) -> tuple[Any, Any | None]:
     return _ddm_lll(x, delta=delta, return_transform=True)

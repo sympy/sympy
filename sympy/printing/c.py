@@ -33,6 +33,8 @@ from sympy.sets.fancysets import Range
 # These are defined in the other file so we can avoid importing sympy.codegen
 # from the top-level 'import sympy'. Export them here as well.
 from sympy.printing.codeprinter import ccode, print_ccode # noqa:F401
+from sympy.core.function import UndefinedFunction
+from sympy.core.power import Pow
 
 # dictionary mapping SymPy function to (argument_conditions, C_function).
 # Used in C89CodePrinter._print_Function(self)
@@ -88,7 +90,7 @@ reserved_words = [
 
 reserved_words_c99 = ['inline', 'restrict']
 
-def get_math_macros():
+def get_math_macros() -> dict[Any | type[UndefinedFunction] | Pow, str]:
     """ Returns a dictionary with math-related macros from math.h/cmath
 
     Note that these macros are not strictly required by the C/C++-standard.
@@ -219,7 +221,7 @@ class C89CodePrinter(CodePrinter):
     # known_functions-dict to copy
     _kf: dict[str, Any] = known_functions_C89
 
-    def __init__(self, settings=None):
+    def __init__(self, settings=None) -> None:
         settings = settings or {}
         if self.math_macros is None:
             self.math_macros = settings.pop('math_macros', get_math_macros())
@@ -435,7 +437,7 @@ class C89CodePrinter(CodePrinter):
             }
         return inner_print_min(expr.args)
 
-    def indent_code(self, code):
+    def indent_code(self, code) -> str | list[Any]:
         """Accepts a string of code or a list of code lines"""
 
         if isinstance(code, str):

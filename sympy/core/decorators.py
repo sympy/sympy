@@ -7,9 +7,9 @@ dependencies, so that they can be easily imported anywhere in sympy/core.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import Any, Callable, TYPE_CHECKING
 
-from functools import wraps
+from functools import _Wrapped, wraps
 from .sympify import SympifyError, sympify
 
 
@@ -49,7 +49,7 @@ def _sympifyit(arg, retval=None) -> Callable[[Callable[[T1, T2], T3]], Callable[
     return deco
 
 
-def __sympifyit(func, arg, retval=None):
+def __sympifyit(func, arg, retval=None) -> Callable[..., _SympifyWrapper]:
     """Decorator to _sympify `arg` argument for function `func`.
 
        Do not use directly -- use _sympifyit instead.
@@ -193,7 +193,7 @@ def sympify_method_args(cls: type[T1]) -> type[T1]:
     return cls
 
 
-def sympify_return(*args):
+def sympify_return(*args) -> Callable[..., _SympifyWrapper]:
     '''Function/method decorator to sympify arguments automatically
 
     See the docstring of sympify_method_args for explanation.
@@ -207,11 +207,11 @@ def sympify_return(*args):
 class _SympifyWrapper:
     '''Internal class used by sympify_return and sympify_method_args'''
 
-    def __init__(self, func, args):
+    def __init__(self, func, args) -> None:
         self.func = func
         self.args = args
 
-    def make_wrapped(self, cls):
+    def make_wrapped(self, cls) -> _Wrapped[..., Any, ..., Any]:
         func = self.func
         parameters, retval = self.args
 

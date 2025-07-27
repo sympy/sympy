@@ -14,25 +14,28 @@ from sympy.sets import (imageset, Interval, FiniteSet, Union, ImageSet,
 from sympy.sets.sets import EmptySet, is_function_invertible_in_set
 from sympy.sets.fancysets import Integers, Naturals, Reals
 from sympy.functions.elementary.exponential import match_real_imag
+import sympy.sets.fancysets
+import sympy.sets.sets
+from sympy.core.basic import Basic
 
 
 _x, _y = symbols("x y")
 
 FunctionUnion = (FunctionClass, Lambda)
 
-_set_function = Dispatcher('_set_function')
+_set_function: Dispatcher = Dispatcher('_set_function')
 
 
 @_set_function.register(FunctionClass, Set)
-def _(f, x):
+def _(f, x) -> None:
     return None
 
 @_set_function.register(FunctionUnion, FiniteSet)
-def _(f, x):
+def _(f, x) -> None:
     return FiniteSet(*map(f, x))
 
 @_set_function.register(Lambda, Interval)
-def _(f, x):
+def _(f, x) -> None:
     from sympy.solvers.solveset import solveset
     from sympy.series import limit
     # TODO: handle functions with infinitely many solutions (eg, sin, tan)
@@ -123,7 +126,7 @@ def _(f, x):
             imageset(f, Interval(sing[-1], x.end, True, x.right_open))
 
 @_set_function.register(FunctionClass, Interval)
-def _(f, x):
+def _(f, x) -> None:
     if f == exp:
         return Interval(exp(x.start), exp(x.end), x.left_open, x.right_open)
     elif f == log:
@@ -131,11 +134,11 @@ def _(f, x):
     return ImageSet(Lambda(_x, f(_x)), x)
 
 @_set_function.register(FunctionUnion, Union)
-def _(f, x):
+def _(f, x) -> None:
     return Union(*(imageset(f, arg) for arg in x.args))
 
 @_set_function.register(FunctionUnion, Intersection)
-def _(f, x):
+def _(f, x) -> None:
     # If the function is invertible, intersect the maps of the sets.
     if is_function_invertible_in_set(f, x):
         return Intersection(*(imageset(f, arg) for arg in x.args))
@@ -143,15 +146,15 @@ def _(f, x):
         return ImageSet(Lambda(_x, f(_x)), x)
 
 @_set_function.register(FunctionUnion, EmptySet)
-def _(f, x):
+def _(f, x) -> None:
     return x
 
 @_set_function.register(FunctionUnion, Set)
-def _(f, x):
+def _(f, x) -> None:
     return ImageSet(Lambda(_x, f(_x)), x)
 
 @_set_function.register(FunctionUnion, Range)
-def _(f, self):
+def _(f, self) -> None:
     if not self:
         return S.EmptySet
     if not isinstance(f.expr, Expr):
@@ -175,7 +178,7 @@ def _(f, self):
         return imageset(x, F, Range(self.size))
 
 @_set_function.register(FunctionUnion, Integers)
-def _(f, self):
+def _(f, self) -> None:
     expr = f.expr
     if not isinstance(expr, Expr):
         return
@@ -228,7 +231,7 @@ def _(f, self):
 
 
 @_set_function.register(FunctionUnion, Naturals)
-def _(f, self):
+def _(f, self) -> None:
     expr = f.expr
     if not isinstance(expr, Expr):
         return
@@ -255,7 +258,7 @@ def _(f, self):
 
 
 @_set_function.register(FunctionUnion, Reals)
-def _(f, self):
+def _(f, self) -> None:
     expr = f.expr
     if not isinstance(expr, Expr):
         return

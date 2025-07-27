@@ -9,7 +9,7 @@ class PlotObject:
         if self.visible:
             self.draw()
 
-    def draw(self):
+    def draw(self) -> None:
         """
         OpenGL rendering code for the plot object.
         Override in base class.

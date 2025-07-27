@@ -6,13 +6,14 @@ The functions defined in this module allows the user to express functions such a
 as a SymPy function for symbolic manipulation.
 
 """
-from sympy.core.function import ArgumentIndexError, Function
+from sympy.core.function import UndefinedFunction, ArgumentIndexError, Function
 from sympy.core.numbers import Rational
 from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.logic.boolalg import BooleanFunction, true, false
+from sympy.core.basic import Basic
 
 def _expm1(x):
     return exp(x) - S.One
@@ -49,7 +50,7 @@ class expm1(Function):
     """
     nargs = 1
 
-    def fdiff(self, argindex=1):
+    def fdiff(self, argindex=1) -> type[UndefinedFunction]:
         """
         Returns the first derivative of this function.
         """
@@ -67,7 +68,7 @@ class expm1(Function):
     _eval_rewrite_as_tractable = _eval_rewrite_as_exp
 
     @classmethod
-    def eval(cls, arg):
+    def eval(cls, arg) -> None:
         exp_arg = exp.eval(arg)
         if exp_arg is not None:
             return exp_arg - S.One
@@ -135,7 +136,7 @@ class log1p(Function):
     _eval_rewrite_as_tractable = _eval_rewrite_as_log
 
     @classmethod
-    def eval(cls, arg):
+    def eval(cls, arg) -> type[UndefinedFunction] | None:
         if arg.is_Rational:
             return log(arg + S.One)
         elif not arg.is_Float:  # not safe to add 1 to Float
@@ -212,7 +213,7 @@ class exp2(Function):
         return _exp2(*self.args)
 
     @classmethod
-    def eval(cls, arg):
+    def eval(cls, arg) -> Pow | None:
         if arg.is_number:
             return _exp2(arg)
 
@@ -261,7 +262,7 @@ class log2(Function):
 
 
     @classmethod
-    def eval(cls, arg):
+    def eval(cls, arg) -> None:
         if arg.is_number:
             result = log.eval(arg, base=_Two)
             if result.is_Atom:
@@ -307,7 +308,7 @@ class fma(Function):
     """
     nargs = 3
 
-    def fdiff(self, argindex=1):
+    def fdiff(self, argindex=1) -> Basic:
         """
         Returns the first derivative of this function.
         """
@@ -365,7 +366,7 @@ class log10(Function):
 
 
     @classmethod
-    def eval(cls, arg):
+    def eval(cls, arg) -> None:
         if arg.is_number:
             result = log.eval(arg, base=_Ten)
             if result.is_Atom:

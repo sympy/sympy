@@ -4,6 +4,11 @@ from sympy.functions import KroneckerDelta
 
 from .matexpr import MatrixExpr
 from .special import ZeroMatrix, Identity, OneMatrix
+from sympy.core.basic import Basic
+from sympy.matrices.expressions.matexpr import MatrixExpr
+from sympy.matrices.expressions.special import Identity, OneMatrix, ZeroMatrix
+from typing import Any
+from typing_extensions import Self
 
 
 class PermutationMatrix(MatrixExpr):
@@ -56,7 +61,7 @@ class PermutationMatrix(MatrixExpr):
     sympy.combinatorics.permutations.Permutation
     """
 
-    def __new__(cls, perm):
+    def __new__(cls, perm) -> Self:
         from sympy.combinatorics.permutations import Permutation
 
         perm = _sympify(perm)
@@ -67,7 +72,7 @@ class PermutationMatrix(MatrixExpr):
         return super().__new__(cls, perm)
 
     @property
-    def shape(self):
+    def shape(self) -> tuple[Any, Any]:
         size = self.args[0].size
         return (size, size)
 
@@ -75,7 +80,7 @@ class PermutationMatrix(MatrixExpr):
     def is_Identity(self):
         return self.args[0].is_Identity
 
-    def doit(self, **hints):
+    def doit(self, **hints) -> Identity | Self:
         if self.is_Identity:
             return Identity(self.rows)
         return self
@@ -217,7 +222,7 @@ class MatrixPermute(MatrixExpr):
 
     sympy.matrices.matrixbase.MatrixBase.permute
     """
-    def __new__(cls, mat, perm, axis=S.Zero):
+    def __new__(cls, mat, perm, axis=S.Zero) -> Self:
         from sympy.combinatorics.permutations import Permutation
 
         mat = _sympify(mat)
@@ -251,7 +256,7 @@ class MatrixPermute(MatrixExpr):
 
         return super().__new__(cls, mat, perm, axis)
 
-    def doit(self, deep=True, **hints):
+    def doit(self, deep=True, **hints) -> Basic | PermutationMatrix | ZeroMatrix | OneMatrix | MatrixPermute | Self:
         mat, perm, axis = self.args
 
         if deep:

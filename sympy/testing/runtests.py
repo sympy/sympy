@@ -24,7 +24,7 @@ import time
 from fnmatch import fnmatch
 from timeit import default_timer as clock
 import doctest as pdoctest  # avoid clashing with our doctest() function
-from doctest import DocTestFinder, DocTestRunner
+from doctest import OutputChecker, DocTestFinder, DocTestRunner
 import random
 import subprocess
 import shutil
@@ -39,6 +39,8 @@ from pathlib import Path
 from sympy.core.cache import clear_cache
 from sympy.external import import_module
 from sympy.external.gmpy import GROUND_TYPES
+from collections.abc import Generator
+from typing import Any, Literal, NamedTuple
 
 IS_WINDOWS = (os.name == 'nt')
 ON_CI = os.getenv('CI', None)
@@ -124,7 +126,7 @@ if IS_WINDOWS:
     DocTestRunner.report_failure = _report_failure  # type: ignore
 
 
-def convert_to_native_paths(lst):
+def convert_to_native_paths(lst) -> list[Any]:
     """
     Converts a list of '/' separated paths into a list of
     native (os.sep separated) paths and converts to lowercase
@@ -143,7 +145,7 @@ def convert_to_native_paths(lst):
     return newlst
 
 
-def get_sympy_dir():
+def get_sympy_dir() -> str:
     """
     Returns the root SymPy directory and set the global value
     indicating whether the system is case sensitive or not.
@@ -178,7 +180,7 @@ def setup_pprint(disable_line_wrap=True):
 
 
 @contextmanager
-def raise_on_deprecated():
+def raise_on_deprecated() -> Generator[None, Any, None]:
     """Context manager to make DeprecationWarning raise an error
 
     This is to catch SymPyDeprecationWarning from library code while running
@@ -194,7 +196,7 @@ def raise_on_deprecated():
 def run_in_subprocess_with_hash_randomization(
         function, function_args=(),
         function_kwargs=None, command=sys.executable,
-        module='sympy.testing.runtests', force=False):
+        module='sympy.testing.runtests', force=False) -> int | Any | Literal[False]:
     """
     Run a function in a Python subprocess with hash randomization enabled.
 
@@ -273,7 +275,7 @@ def run_in_subprocess_with_hash_randomization(
 
 def run_all_tests(test_args=(), test_kwargs=None,
                   doctest_args=(), doctest_kwargs=None,
-                  examples_args=(), examples_kwargs=None):
+                  examples_args=(), examples_kwargs=None) -> None:
     """
     Run all tests.
 
@@ -329,7 +331,7 @@ def run_all_tests(test_args=(), test_kwargs=None,
         sys.exit(1)
 
 
-def test(*paths, subprocess=True, rerun=0, **kwargs):
+def test(*paths, subprocess=True, rerun=0, **kwargs) -> bool | None:
     """
     Run tests in the specified test_*.py files.
 
@@ -573,7 +575,7 @@ def _test(*paths,
         enhance_asserts=enhance_asserts, fail_on_timeout=fail_on_timeout))
 
 
-def doctest(*paths, subprocess=True, rerun=0, **kwargs):
+def doctest(*paths, subprocess=True, rerun=0, **kwargs) -> bool | None:
     r"""
     Runs doctests in all \*.py files in the SymPy directory which match
     any of the given strings in ``paths`` or all tests if paths=[].
@@ -993,12 +995,16 @@ def split_list(l, split, density=None):
     return l[int(lower_frac*len(l)) : int(higher_frac*len(l))]
 
 from collections import namedtuple
+
+class SymPyTestResults(NamedTuple):
+    pass
+
 SymPyTestResults = namedtuple('SymPyTestResults', 'failed attempted')
 
 def sympytestfile(filename, module_relative=True, name=None, package=None,
              globs=None, verbose=None, report=True, optionflags=0,
              extraglobs=None, raise_on_error=False,
-             parser=pdoctest.DocTestParser(), encoding=None):
+             parser=pdoctest.DocTestParser(), encoding=None) -> "SymPyTestResults":
 
     """
     Test examples in the given file.  Return (#failures, #tests).
@@ -1122,7 +1128,7 @@ def sympytestfile(filename, module_relative=True, name=None, package=None,
 class SymPyTests:
 
     def __init__(self, reporter, kw="", post_mortem=False,
-                 seed=None, fast_threshold=None, slow_threshold=None):
+                 seed=None, fast_threshold=None, slow_threshold=None) -> None:
         self._post_mortem = post_mortem
         self._kw = kw
         self._count = 0
@@ -1348,7 +1354,7 @@ class SymPyTests:
         function()
         signal.alarm(0)  # Disable the alarm
 
-    def matches(self, x):
+    def matches(self, x) -> bool:
         """
         Does the keyword expression self._kw match "x"? Returns True/False.
 
@@ -1361,7 +1367,7 @@ class SymPyTests:
                 return True
         return False
 
-    def get_test_files(self, dir, pat='test_*.py'):
+    def get_test_files(self, dir, pat='test_*.py') -> list[Any]:
         """
         Returns the list of test_*.py (default) files at or below directory
         ``dir`` relative to the SymPy home directory.
@@ -1377,7 +1383,7 @@ class SymPyTests:
 
 class SymPyDocTests:
 
-    def __init__(self, reporter, normal):
+    def __init__(self, reporter, normal) -> None:
         self._count = 0
         self._root_dir = get_sympy_dir()
         self._reporter = reporter
@@ -1400,7 +1406,7 @@ class SymPyDocTests:
                 raise
         return self._reporter.finish()
 
-    def test_file(self, filename):
+    def test_file(self, filename) -> None:
         clear_cache()
 
         from io import StringIO
@@ -1494,7 +1500,7 @@ class SymPyDocTests:
 
         self._reporter.leaving_filename()
 
-    def get_test_files(self, dir, pat='*.py', init_only=True):
+    def get_test_files(self, dir, pat='*.py', init_only=True) -> list[Any]:
         r"""
         Returns the list of \*.py files (default) from which docstrings
         will be tested which are at or below directory ``dir``. By default,
@@ -1886,7 +1892,7 @@ class SymPyOutputChecker(pdoctest.OutputChecker):
     doctest examples
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         # NOTE OutputChecker is an old-style class with no __init__ method,
         # so we can't call the base class version of __init__ here
 
@@ -1906,7 +1912,7 @@ class SymPyOutputChecker(pdoctest.OutputChecker):
         fmidend = r'(?<=%s)%s(?=%s|$)' % (front_sep, want_floats, back_sep)
         self.num_want_rgx = re.compile(r'(%s|%s)' %(fbeg, fmidend))
 
-    def check_output(self, want, got, optionflags):
+    def check_output(self, want, got, optionflags) -> bool:
         """
         Return True iff the actual output from an example (`got`)
         matches the expected output (`want`).  These strings are
@@ -1990,7 +1996,7 @@ class PyTestReporter(Reporter):
     """
 
     def __init__(self, verbose=False, tb="short", colors=True,
-                 force_colors=False, split=None):
+                 force_colors=False, split=None) -> None:
         self._verbose = verbose
         self._tb_style = tb
         self._colors = colors
@@ -2017,11 +2023,11 @@ class PyTestReporter(Reporter):
         self._write_pos = 0
         self._line_wrap = False
 
-    def root_dir(self, dir):
+    def root_dir(self, dir) -> None:
         self._root_dir = dir
 
     @property
-    def terminal_width(self):
+    def terminal_width(self) -> Any | int:
         if self._terminal_width is not None:
             return self._terminal_width
 
@@ -2089,7 +2095,7 @@ class PyTestReporter(Reporter):
         return width
 
     def write(self, text, color="", align="left", width=None,
-              force_colors=False):
+              force_colors=False) -> None:
         """
         Prints a text on the screen.
 
@@ -2178,7 +2184,7 @@ class PyTestReporter(Reporter):
         self._line_wrap = self._write_pos >= width
         self._write_pos %= width
 
-    def write_center(self, text, delim="="):
+    def write_center(self, text, delim="=") -> None:
         width = self.terminal_width
         if text != "":
             text = " %s " % text
@@ -2186,13 +2192,13 @@ class PyTestReporter(Reporter):
         t = delim*idx + text + delim*(width - idx - len(text))
         self.write(t + "\n")
 
-    def write_exception(self, e, val, tb):
+    def write_exception(self, e, val, tb) -> None:
         # remove the first item, as that is always runtests.py
         tb = tb.tb_next
         t = traceback.format_exception(e, val, tb)
         self.write("".join(t))
 
-    def start(self, seed=None, msg="test process starts"):
+    def start(self, seed=None, msg="test process starts") -> None:
         self.write_center(msg)
         executable = sys.executable
         v = tuple(sys.version_info)
@@ -2227,7 +2233,7 @@ class PyTestReporter(Reporter):
         self.write('\n')
         self._t_start = clock()
 
-    def finish(self):
+    def finish(self) -> bool:
         self._t_end = clock()
         self.write("\n")
         global text, linelen
@@ -2311,14 +2317,14 @@ class PyTestReporter(Reporter):
             self.write("DO *NOT* COMMIT!\n")
         return ok
 
-    def entering_filename(self, filename, n):
+    def entering_filename(self, filename, n) -> None:
         rel_name = filename[len(self._root_dir) + 1:]
         self._active_file = rel_name
         self._active_file_error = False
         self.write(rel_name)
         self.write("[%d] " % n)
 
-    def leaving_filename(self):
+    def leaving_filename(self) -> None:
         self.write(" ")
         if self._active_file_error:
             self.write("[FAIL]", "Red", align="right")
@@ -2328,40 +2334,40 @@ class PyTestReporter(Reporter):
         if self._verbose:
             self.write("\n")
 
-    def entering_test(self, f):
+    def entering_test(self, f) -> None:
         self._active_f = f
         if self._verbose:
             self.write("\n" + f.__name__ + " ")
 
-    def test_xfail(self):
+    def test_xfail(self) -> None:
         self._xfailed += 1
         self.write("f", "Green")
 
-    def test_xpass(self, v):
+    def test_xpass(self, v) -> None:
         message = str(v)
         self._xpassed.append((self._active_file, message))
         self.write("X", "Green")
 
-    def test_fail(self, exc_info):
+    def test_fail(self, exc_info) -> None:
         self._failed.append((self._active_file, self._active_f, exc_info))
         self.write("F", "Red")
         self._active_file_error = True
 
-    def doctest_fail(self, name, error_msg):
+    def doctest_fail(self, name, error_msg) -> None:
         # the first line contains "******", remove it:
         error_msg = "\n".join(error_msg.split("\n")[1:])
         self._failed_doctest.append((name, error_msg))
         self.write("F", "Red")
         self._active_file_error = True
 
-    def test_pass(self, char="."):
+    def test_pass(self, char=".") -> None:
         self._passed += 1
         if self._verbose:
             self.write("ok", "Green")
         else:
             self.write(char, "Green")
 
-    def test_skip(self, v=None):
+    def test_skip(self, v=None) -> None:
         char = "s"
         self._skipped += 1
         if v is not None:
@@ -2379,7 +2385,7 @@ class PyTestReporter(Reporter):
                 self.write(" - ", "Blue")
         self.write(char, "Blue")
 
-    def test_exception(self, exc_info):
+    def test_exception(self, exc_info) -> None:
         self._exceptions.append((self._active_file, self._active_f, exc_info))
         if exc_info[0] is TimeOutError:
             self.write("T", "Red")
@@ -2387,7 +2393,7 @@ class PyTestReporter(Reporter):
             self.write("E", "Red")
         self._active_file_error = True
 
-    def import_error(self, filename, exc_info):
+    def import_error(self, filename, exc_info) -> None:
         self._exceptions.append((filename, None, exc_info))
         rel_name = filename[len(self._root_dir) + 1:]
         self.write(rel_name)

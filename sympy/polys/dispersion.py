@@ -1,8 +1,9 @@
 from sympy.core import S
 from sympy.polys import Poly
+from typing import Any
 
 
-def dispersionset(p, q=None, *gens, **args):
+def dispersionset(p, q=None, *gens, **args) -> set[int] | set[Any]:
     r"""Compute the *dispersion set* of two polynomials.
 
     For two polynomials `f(x)` and `g(x)` with `\deg f > 0`
@@ -127,7 +128,7 @@ def dispersionset(p, q=None, *gens, **args):
     return J
 
 
-def dispersion(p, q=None, *gens, **args):
+def dispersion(p, q=None, *gens, **args) -> int:
     r"""Compute the *dispersion* of polynomials.
 
     For two polynomials `f(x)` and `g(x)` with `\deg f > 0`

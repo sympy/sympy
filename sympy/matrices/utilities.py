@@ -1,6 +1,8 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, overload
+from typing import Any, TYPE_CHECKING, overload
+from collections.abc import Generator
+from threading import local
 
 if TYPE_CHECKING:
     from typing import Literal
@@ -13,13 +15,13 @@ from sympy.core.function import expand_mul
 
 
 class DotProdSimpState(local):
-    def __init__(self):
+    def __init__(self) -> None:
         self.state = None
 
 _dotprodsimp_state = DotProdSimpState()
 
 @contextmanager
-def dotprodsimp(x):
+def dotprodsimp(x) -> Generator[None, Any, None]:
     old = _dotprodsimp_state.state
 
     try:

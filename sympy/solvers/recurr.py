@@ -64,6 +64,7 @@ from sympy.polys import Poly, quo, gcd, lcm, roots, resultant
 from sympy.functions import binomial, factorial, FallingFactorial, RisingFactorial
 from sympy.matrices import Matrix, casoratian
 from sympy.utilities.iterables import numbered_symbols
+from typing import Any
 
 
 def rsolve_poly(coeffs, f, n, shift=0, **hints):
@@ -351,7 +352,7 @@ def rsolve_poly(coeffs, f, n, shift=0, **hints):
         return result
 
 
-def rsolve_ratio(coeffs, f, n, **hints):
+def rsolve_ratio(coeffs, f, n, **hints) -> tuple[Any, Any] | None:
     r"""
     Given linear recurrence operator `\operatorname{L}` of order `k`
     with polynomial coefficients and inhomogeneous equation

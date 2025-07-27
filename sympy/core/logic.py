@@ -8,10 +8,11 @@ this stuff for general purpose.
 """
 
 from __future__ import annotations
-from typing import Optional
+from typing import Any, Optional
+from typing_extensions import Self, TypeAlias
 
 # Type of a fuzzy bool
-FuzzyBool = Optional[bool]
+FuzzyBool: TypeAlias = Optional[bool]
 
 
 def _torf(args):
@@ -89,7 +90,7 @@ def _fuzzy_group(args, quick_exit=False):
     return not saw_other
 
 
-def fuzzy_bool(x):
+def fuzzy_bool(x) -> bool | None:
     """Return True, False or None according to x.
 
     Whereas bool(x) returns True or False, fuzzy_bool allows
@@ -112,7 +113,7 @@ def fuzzy_bool(x):
         return bool(x)
 
 
-def fuzzy_and(args):
+def fuzzy_and(args) -> bool | None:
     """Return True (all True), False (any False) or None.
 
     Examples
@@ -148,7 +149,7 @@ def fuzzy_and(args):
     return rv
 
 
-def fuzzy_not(v):
+def fuzzy_not(v) -> bool:
     """
     Not in fuzzy logic
 
@@ -171,7 +172,7 @@ def fuzzy_not(v):
         return not v
 
 
-def fuzzy_or(args):
+def fuzzy_or(args) -> bool | None:
     """
     Or in fuzzy logic. Returns True (any True), False (all False), or None
 
@@ -199,7 +200,7 @@ def fuzzy_or(args):
     return rv
 
 
-def fuzzy_xor(args):
+def fuzzy_xor(args) -> bool | None:
     """Return None if any element of args is not True or False, else
     True (if there are an odd number of True elements), else False."""
     t = 0
@@ -212,7 +213,7 @@ def fuzzy_xor(args):
     return t % 2 == 1
 
 
-def fuzzy_nand(args):
+def fuzzy_nand(args) -> bool | None:
     """Return False if all args are True, True if they are all False,
     else None."""
     return fuzzy_not(fuzzy_and(args))
@@ -223,7 +224,7 @@ class Logic:
     # {} 'op' -> LogicClass
     op_2class: dict[str, type[Logic]] = {}
 
-    def __new__(cls, *args):
+    def __new__(cls, *args) -> Self:
         obj = object.__new__(cls)
         obj.args = args
         return obj
@@ -231,27 +232,27 @@ class Logic:
     def __getnewargs__(self):
         return self.args
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash((type(self).__name__,) + tuple(self.args))
 
-    def __eq__(a, b):
+    def __eq__(a, b) -> bool:
         if not isinstance(b, type(a)):
             return False
         else:
             return a.args == b.args
 
-    def __ne__(a, b):
+    def __ne__(a, b) -> bool:
         if not isinstance(b, type(a)):
             return True
         else:
             return a.args != b.args
 
-    def __lt__(self, other):
+    def __lt__(self, other) -> bool:
         if self.__cmp__(other) == -1:
             return True
         return False
 
-    def __cmp__(self, other):
+    def __cmp__(self, other) -> int:
         if type(self) is not type(other):
             a = str(type(self))
             b = str(type(other))
@@ -267,7 +268,7 @@ class Logic:
     __repr__ = __str__
 
     @staticmethod
-    def fromstring(text):
+    def fromstring(text) -> Not | bool | Logic:
         """Logic from string with space around & and | but none after !.
 
            e.g.
@@ -319,7 +320,7 @@ class Logic:
 
 class AndOr_Base(Logic):
 
-    def __new__(cls, *args):
+    def __new__(cls, *args) -> bool | Self:
         bargs = []
         for a in args:
             if a == cls.op_x_notx:
@@ -342,7 +343,7 @@ class AndOr_Base(Logic):
         return Logic.__new__(cls, *args)
 
     @classmethod
-    def flatten(cls, args):
+    def flatten(cls, args) -> tuple[Any, ...]:
         # quick-n-dirty flattening for And and Or
         args_queue = list(args)
         res = []
@@ -370,7 +371,7 @@ class And(AndOr_Base):
         return Or(*[Not(a) for a in self.args])
 
     # (a|b|...) & c == (a&c) | (b&c) | ...
-    def expand(self):
+    def expand(self) -> bool | Or | Self:
 
         # first locate Or
         for i, arg in enumerate(self.args):
@@ -398,7 +399,7 @@ class Or(AndOr_Base):
 
 class Not(Logic):
 
-    def __new__(cls, arg):
+    def __new__(cls, arg) -> Self | bool:
         if isinstance(arg, str):
             return Logic.__new__(cls, arg)
 

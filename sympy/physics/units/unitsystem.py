@@ -4,14 +4,17 @@ Unit system for physical quantities; include definition of constants.
 from __future__ import annotations
 
 from sympy.core.add import Add
-from sympy.core.function import (Derivative, Function)
+from sympy.core.function import (UndefinedFunction, Derivative, Function)
 from sympy.core.mul import Mul
 from sympy.core.power import Pow
 from sympy.core.singleton import S
-from sympy.physics.units.dimensions import _QuantityMapper
+from sympy.physics.units.dimensions import Dimension, _QuantityMapper
 from sympy.physics.units.quantities import Quantity
 
 from .dimensions import Dimension
+import sympy.physics.units.quantities
+from sympy.core.expr import Expr
+from sympy.series.order import Order
 
 
 class UnitSystem(_QuantityMapper):
@@ -71,10 +74,10 @@ class UnitSystem(_QuantityMapper):
 
         return UnitSystem(base, units, name, description, dimension_system, {**self._derived_units, **derived_units})
 
-    def get_dimension_system(self):
+    def get_dimension_system(self) -> None:
         return self._dimension_system
 
-    def get_quantity_dimension(self, unit):
+    def get_quantity_dimension(self, unit) -> Expr | Dimension:
         qdm = self.get_dimension_system()._quantity_dimension_map
         if unit in qdm:
             return qdm[unit]
@@ -87,7 +90,7 @@ class UnitSystem(_QuantityMapper):
         return super().get_quantity_scale_factor(unit)
 
     @staticmethod
-    def get_unit_system(unit_system):
+    def get_unit_system(unit_system) -> "UnitSystem":
         if isinstance(unit_system, UnitSystem):
             return unit_system
 
@@ -102,11 +105,11 @@ class UnitSystem(_QuantityMapper):
         return UnitSystem._unit_systems[unit_system]
 
     @staticmethod
-    def get_default_unit_system():
+    def get_default_unit_system() -> "UnitSystem":
         return UnitSystem._unit_systems["SI"]
 
     @property
-    def dim(self):
+    def dim(self) -> int:
         """
         Give the dimension of the system.
 
@@ -126,7 +129,7 @@ class UnitSystem(_QuantityMapper):
     def derived_units(self) -> dict[Dimension, Quantity]:
         return self._derived_units
 
-    def get_dimensional_expr(self, expr):
+    def get_dimensional_expr(self, expr) -> Order | type[UndefinedFunction]:
         from sympy.physics.units import Quantity
         if isinstance(expr, Mul):
             return Mul(*[self.get_dimensional_expr(i) for i in expr.args])

@@ -5,6 +5,7 @@ from sympy.polys.agca.modules import FreeModuleQuotientRing
 from sympy.polys.domains.ring import Ring
 from sympy.polys.polyerrors import NotReversible, CoercionFailed
 from sympy.utilities import public
+from types import NotImplementedType
 
 # TODO
 # - successive quotients (when quotient ideals are implemented)
@@ -22,7 +23,7 @@ class QuotientRingElement:
     - data - element of ring.ring (i.e. base ring) representing self
     """
 
-    def __init__(self, ring, data):
+    def __init__(self, ring, data) -> None:
         self.ring = ring
         self.data = data
 
@@ -33,10 +34,10 @@ class QuotientRingElement:
 
     __repr__ = __str__
 
-    def __bool__(self):
+    def __bool__(self) -> bool:
         return not self.ring.is_zero(self)
 
-    def __add__(self, om):
+    def __add__(self, om) -> NotImplementedType:
         if not isinstance(om, self.__class__) or om.ring != self.ring:
             try:
                 om = self.ring.convert(om)
@@ -49,13 +50,13 @@ class QuotientRingElement:
     def __neg__(self):
         return self.ring(self.data*self.ring.ring.convert(-1))
 
-    def __sub__(self, om):
+    def __sub__(self, om) -> NotImplementedType:
         return self.__add__(-om)
 
     def __rsub__(self, om):
         return (-self).__add__(om)
 
-    def __mul__(self, o):
+    def __mul__(self, o) -> NotImplementedType:
         if not isinstance(o, self.__class__):
             try:
                 o = self.ring.convert(o)
@@ -68,7 +69,7 @@ class QuotientRingElement:
     def __rtruediv__(self, o):
         return self.ring.revert(self)*o
 
-    def __truediv__(self, o):
+    def __truediv__(self, o) -> NotImplementedType:
         if not isinstance(o, self.__class__):
             try:
                 o = self.ring.convert(o)
@@ -81,12 +82,12 @@ class QuotientRingElement:
             return self.ring.revert(self) ** -oth
         return self.ring(self.data ** oth)
 
-    def __eq__(self, om):
+    def __eq__(self, om) -> bool:
         if not isinstance(om, self.__class__) or om.ring != self.ring:
             return False
         return self.ring.is_zero(self - om)
 
-    def __ne__(self, om):
+    def __ne__(self, om) -> bool:
         return not self == om
 
 
@@ -121,7 +122,7 @@ class QuotientRing(Ring):
     has_assoc_Field = False
     dtype = QuotientRingElement
 
-    def __init__(self, ring, ideal):
+    def __init__(self, ring, ideal) -> None:
         if not ideal.ring == ring:
             raise ValueError('Ideal must belong to %s, got %s' % (ring, ideal))
         self.ring = ring
@@ -132,7 +133,7 @@ class QuotientRing(Ring):
     def __str__(self):
         return str(self.ring) + "/" + str(self.base_ideal)
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash((self.__class__.__name__, self.dtype, self.ring, self.base_ideal))
 
     def new(self, a):
@@ -142,7 +143,7 @@ class QuotientRing(Ring):
         # TODO optionally disable reduction?
         return self.dtype(self, self.base_ideal.reduce_element(a))
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
         """Returns ``True`` if two domains are equivalent. """
         return isinstance(other, QuotientRing) and \
             self.ring == other.ring and self.base_ideal == other.base_ideal
@@ -165,7 +166,7 @@ class QuotientRing(Ring):
     def to_sympy(self, a):
         return self.ring.to_sympy(a.data)
 
-    def from_QuotientRing(self, a, K0):
+    def from_QuotientRing(self, a, K0) -> None:
         if K0 == self:
             return a
 
@@ -190,7 +191,7 @@ class QuotientRing(Ring):
     def is_zero(self, a):
         return self.base_ideal.contains(a.data)
 
-    def free_module(self, rank):
+    def free_module(self, rank) -> FreeModuleQuotientRing:
         """
         Generate a free module of rank ``rank`` over ``self``.
 

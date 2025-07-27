@@ -23,6 +23,7 @@ from ..predicates.matrices import (SquarePredicate, SymmetricPredicate,
     FullRankPredicate, PositiveDefinitePredicate, UpperTriangularPredicate,
     LowerTriangularPredicate, DiagonalPredicate, IntegerElementsPredicate,
     RealElementsPredicate, ComplexElementsPredicate)
+from typing import Literal
 
 
 def _Factorization(predicate, expr, assumptions):
@@ -33,14 +34,14 @@ def _Factorization(predicate, expr, assumptions):
 # SquarePredicate
 
 @SquarePredicate.register(MatrixExpr)
-def _(expr, assumptions):
+def _(expr, assumptions) -> Literal[True]:
     return expr.shape[0] == expr.shape[1]
 
 
 # SymmetricPredicate
 
 @SymmetricPredicate.register(MatMul)
-def _(expr, assumptions):
+def _(expr, assumptions) -> Literal[True]:
     factor, mmul = expr.as_coeff_mmul()
     if all(ask(Q.symmetric(arg), assumptions) for arg in mmul.args):
         return True
@@ -54,7 +55,7 @@ def _(expr, assumptions):
         return ask(Q.symmetric(MatMul(*mmul.args[1:-1])), assumptions)
 
 @SymmetricPredicate.register(MatPow)
-def _(expr, assumptions):
+def _(expr, assumptions) -> Literal[True]:
     # only for integer powers
     base, exp = expr.args
     int_exp = ask(Q.integer(exp), assumptions)
@@ -67,11 +68,11 @@ def _(expr, assumptions):
     return None
 
 @SymmetricPredicate.register(MatAdd)
-def _(expr, assumptions):
+def _(expr, assumptions) -> Literal[True]:
     return all(ask(Q.symmetric(arg), assumptions) for arg in expr.args)
 
 @SymmetricPredicate.register(MatrixSymbol)
-def _(expr, assumptions):
+def _(expr, assumptions) -> Literal[True]:
     if not expr.is_square:
         return False
     # TODO: implement sathandlers system for the matrices.
@@ -82,15 +83,15 @@ def _(expr, assumptions):
         return True
 
 @SymmetricPredicate.register_many(OneMatrix, ZeroMatrix)
-def _(expr, assumptions):
+def _(expr, assumptions) -> Literal[True]:
     return ask(Q.square(expr), assumptions)
 
 @SymmetricPredicate.register_many(Inverse, Transpose)
-def _(expr, assumptions):
+def _(expr, assumptions) -> Literal[True]:
     return ask(Q.symmetric(expr.arg), assumptions)
 
 @SymmetricPredicate.register(MatrixSlice)
-def _(expr, assumptions):
+def _(expr, assumptions) -> Literal[True]:
     # TODO: implement sathandlers system for the matrices.
     # Now it duplicates the general fact: Implies(Q.diagonal, Q.symmetric).
     if ask(Q.diagonal(expr), assumptions):
@@ -101,14 +102,14 @@ def _(expr, assumptions):
         return ask(Q.symmetric(expr.parent), assumptions)
 
 @SymmetricPredicate.register(Identity)
-def _(expr, assumptions):
+def _(expr, assumptions) -> Literal[True]:
     return True
 
 
 # InvertiblePredicate
 
 @InvertiblePredicate.register(MatMul)
-def _(expr, assumptions):
+def _(expr, assumptions) -> Literal[True]:
     factor, mmul = expr.as_coeff_mmul()
     if all(ask(Q.invertible(arg), assumptions) for arg in mmul.args):
         return True
@@ -117,7 +118,7 @@ def _(expr, assumptions):
         return False
 
 @InvertiblePredicate.register(MatPow)
-def _(expr, assumptions):
+def _(expr, assumptions) -> Literal[True]:
     # only for integer powers
     base, exp = expr.args
     int_exp = ask(Q.integer(exp), assumptions)
@@ -128,53 +129,53 @@ def _(expr, assumptions):
     return None
 
 @InvertiblePredicate.register(MatAdd)
-def _(expr, assumptions):
+def _(expr, assumptions) -> Literal[True]:
     return None
 
 @InvertiblePredicate.register(MatrixSymbol)
-def _(expr, assumptions):
+def _(expr, assumptions) -> Literal[True]:
     if not expr.is_square:
         return False
     if Q.invertible(expr) in conjuncts(assumptions):
         return True
 
 @InvertiblePredicate.register_many(Identity, Inverse)
-def _(expr, assumptions):
+def _(expr, assumptions) -> Literal[True]:
     return True
 
 @InvertiblePredicate.register(ZeroMatrix)
-def _(expr, assumptions):
+def _(expr, assumptions) -> Literal[True]:
     return False
 
 @InvertiblePredicate.register(OneMatrix)
-def _(expr, assumptions):
+def _(expr, assumptions) -> Literal[True]:
     return expr.shape[0] == 1 and expr.shape[1] == 1
 
 @InvertiblePredicate.register(Transpose)
-def _(expr, assumptions):
+def _(expr, assumptions) -> Literal[True]:
     return ask(Q.invertible(expr.arg), assumptions)
 
 @InvertiblePredicate.register(MatrixSlice)
-def _(expr, assumptions):
+def _(expr, assumptions) -> Literal[True]:
     if not expr.on_diag:
         return None
     else:
         return ask(Q.invertible(expr.parent), assumptions)
 
 @InvertiblePredicate.register(MatrixBase)
-def _(expr, assumptions):
+def _(expr, assumptions) -> Literal[True]:
     if not expr.is_square:
         return False
     return expr.rank() == expr.rows
 
 @InvertiblePredicate.register(MatrixExpr)
-def _(expr, assumptions):
+def _(expr, assumptions) -> Literal[True]:
     if not expr.is_square:
         return False
     return None
 
 @InvertiblePredicate.register(BlockMatrix)
-def _(expr, assumptions):
+def _(expr, assumptions) -> Literal[True]:
     if not expr.is_square:
         return False
     if expr.blockshape == (1, 1):
@@ -201,7 +202,7 @@ def _(expr, assumptions):
     return None
 
 @InvertiblePredicate.register(BlockDiagMatrix)
-def _(expr, assumptions):
+def _(expr, assumptions) -> Literal[True]:
     if expr.rowblocksizes != expr.colblocksizes:
         return None
     return fuzzy_and([ask(Q.invertible(a), assumptions) for a in expr.diag])
@@ -210,7 +211,7 @@ def _(expr, assumptions):
 # OrthogonalPredicate
 
 @OrthogonalPredicate.register(MatMul)
-def _(expr, assumptions):
+def _(expr, assumptions) -> Literal[True]:
     factor, mmul = expr.as_coeff_mmul()
     if (all(ask(Q.orthogonal(arg), assumptions) for arg in mmul.args) and
             factor == 1):
@@ -220,7 +221,7 @@ def _(expr, assumptions):
         return False
 
 @OrthogonalPredicate.register(MatPow)
-def _(expr, assumptions):
+def _(expr, assumptions) -> Literal[True]:
     # only for integer powers
     base, exp = expr.args
     int_exp = ask(Q.integer(exp), assumptions)
@@ -229,13 +230,13 @@ def _(expr, assumptions):
     return None
 
 @OrthogonalPredicate.register(MatAdd)
-def _(expr, assumptions):
+def _(expr, assumptions) -> Literal[True]:
     if (len(expr.args) == 1 and
             ask(Q.orthogonal(expr.args[0]), assumptions)):
         return True
 
 @OrthogonalPredicate.register(MatrixSymbol)
-def _(expr, assumptions):
+def _(expr, assumptions) -> Literal[True]:
     if (not expr.is_square or
                     ask(Q.invertible(expr), assumptions) is False):
         return False
@@ -243,33 +244,33 @@ def _(expr, assumptions):
         return True
 
 @OrthogonalPredicate.register(Identity)
-def _(expr, assumptions):
+def _(expr, assumptions) -> Literal[True]:
     return True
 
 @OrthogonalPredicate.register(ZeroMatrix)
-def _(expr, assumptions):
+def _(expr, assumptions) -> Literal[True]:
     return False
 
 @OrthogonalPredicate.register_many(Inverse, Transpose)
-def _(expr, assumptions):
+def _(expr, assumptions) -> Literal[True]:
     return ask(Q.orthogonal(expr.arg), assumptions)
 
 @OrthogonalPredicate.register(MatrixSlice)
-def _(expr, assumptions):
+def _(expr, assumptions) -> Literal[True]:
     if not expr.on_diag:
         return None
     else:
         return ask(Q.orthogonal(expr.parent), assumptions)
 
 @OrthogonalPredicate.register(Factorization)
-def _(expr, assumptions):
+def _(expr, assumptions) -> Literal[True]:
     return _Factorization(Q.orthogonal, expr, assumptions)
 
 
 # UnitaryPredicate
 
 @UnitaryPredicate.register(MatMul)
-def _(expr, assumptions):
+def _(expr, assumptions) -> Literal[True]:
     factor, mmul = expr.as_coeff_mmul()
     if (all(ask(Q.unitary(arg), assumptions) for arg in mmul.args) and
             abs(factor) == 1):
@@ -279,7 +280,7 @@ def _(expr, assumptions):
         return False
 
 @UnitaryPredicate.register(MatPow)
-def _(expr, assumptions):
+def _(expr, assumptions) -> Literal[True]:
     # only for integer powers
     base, exp = expr.args
     int_exp = ask(Q.integer(exp), assumptions)
@@ -288,7 +289,7 @@ def _(expr, assumptions):
     return None
 
 @UnitaryPredicate.register(MatrixSymbol)
-def _(expr, assumptions):
+def _(expr, assumptions) -> Literal[True]:
     if (not expr.is_square or
                     ask(Q.invertible(expr), assumptions) is False):
         return False
@@ -296,38 +297,38 @@ def _(expr, assumptions):
         return True
 
 @UnitaryPredicate.register_many(Inverse, Transpose)
-def _(expr, assumptions):
+def _(expr, assumptions) -> Literal[True]:
     return ask(Q.unitary(expr.arg), assumptions)
 
 @UnitaryPredicate.register(MatrixSlice)
-def _(expr, assumptions):
+def _(expr, assumptions) -> Literal[True]:
     if not expr.on_diag:
         return None
     else:
         return ask(Q.unitary(expr.parent), assumptions)
 
 @UnitaryPredicate.register_many(DFT, Identity)
-def _(expr, assumptions):
+def _(expr, assumptions) -> Literal[True]:
     return True
 
 @UnitaryPredicate.register(ZeroMatrix)
-def _(expr, assumptions):
+def _(expr, assumptions) -> Literal[True]:
     return False
 
 @UnitaryPredicate.register(Factorization)
-def _(expr, assumptions):
+def _(expr, assumptions) -> Literal[True]:
     return _Factorization(Q.unitary, expr, assumptions)
 
 
 # FullRankPredicate
 
 @FullRankPredicate.register(MatMul)
-def _(expr, assumptions):
+def _(expr, assumptions) -> Literal[True]:
     if all(ask(Q.fullrank(arg), assumptions) for arg in expr.args):
         return True
 
 @FullRankPredicate.register(MatPow)
-def _(expr, assumptions):
+def _(expr, assumptions) -> Literal[True]:
     # only for integer powers
     base, exp = expr.args
     int_exp = ask(Q.integer(exp), assumptions)
@@ -336,23 +337,23 @@ def _(expr, assumptions):
     return None
 
 @FullRankPredicate.register(Identity)
-def _(expr, assumptions):
+def _(expr, assumptions) -> Literal[True]:
     return True
 
 @FullRankPredicate.register(ZeroMatrix)
-def _(expr, assumptions):
+def _(expr, assumptions) -> Literal[True]:
     return False
 
 @FullRankPredicate.register(OneMatrix)
-def _(expr, assumptions):
+def _(expr, assumptions) -> Literal[True]:
     return expr.shape[0] == 1 and expr.shape[1] == 1
 
 @FullRankPredicate.register_many(Inverse, Transpose)
-def _(expr, assumptions):
+def _(expr, assumptions) -> Literal[True]:
     return ask(Q.fullrank(expr.arg), assumptions)
 
 @FullRankPredicate.register(MatrixSlice)
-def _(expr, assumptions):
+def _(expr, assumptions) -> Literal[True]:
     if ask(Q.orthogonal(expr.parent), assumptions):
         return True
 
@@ -360,7 +361,7 @@ def _(expr, assumptions):
 # PositiveDefinitePredicate
 
 @PositiveDefinitePredicate.register(MatMul)
-def _(expr, assumptions):
+def _(expr, assumptions) -> Literal[True]:
     factor, mmul = expr.as_coeff_mmul()
     if (all(ask(Q.positive_definite(arg), assumptions)
             for arg in mmul.args) and factor > 0):
@@ -372,42 +373,42 @@ def _(expr, assumptions):
             MatMul(*mmul.args[1:-1])), assumptions)
 
 @PositiveDefinitePredicate.register(MatPow)
-def _(expr, assumptions):
+def _(expr, assumptions) -> Literal[True]:
     # a power of a positive definite matrix is positive definite
     if ask(Q.positive_definite(expr.args[0]), assumptions):
         return True
 
 @PositiveDefinitePredicate.register(MatAdd)
-def _(expr, assumptions):
+def _(expr, assumptions) -> Literal[True]:
     if all(ask(Q.positive_definite(arg), assumptions)
             for arg in expr.args):
         return True
 
 @PositiveDefinitePredicate.register(MatrixSymbol)
-def _(expr, assumptions):
+def _(expr, assumptions) -> Literal[True]:
     if not expr.is_square:
         return False
     if Q.positive_definite(expr) in conjuncts(assumptions):
         return True
 
 @PositiveDefinitePredicate.register(Identity)
-def _(expr, assumptions):
+def _(expr, assumptions) -> Literal[True]:
     return True
 
 @PositiveDefinitePredicate.register(ZeroMatrix)
-def _(expr, assumptions):
+def _(expr, assumptions) -> Literal[True]:
     return False
 
 @PositiveDefinitePredicate.register(OneMatrix)
-def _(expr, assumptions):
+def _(expr, assumptions) -> Literal[True]:
     return expr.shape[0] == 1 and expr.shape[1] == 1
 
 @PositiveDefinitePredicate.register_many(Inverse, Transpose)
-def _(expr, assumptions):
+def _(expr, assumptions) -> Literal[True]:
     return ask(Q.positive_definite(expr.arg), assumptions)
 
 @PositiveDefinitePredicate.register(MatrixSlice)
-def _(expr, assumptions):
+def _(expr, assumptions) -> Literal[True]:
     if not expr.on_diag:
         return None
     else:
@@ -417,18 +418,18 @@ def _(expr, assumptions):
 # UpperTriangularPredicate
 
 @UpperTriangularPredicate.register(MatMul)
-def _(expr, assumptions):
+def _(expr, assumptions) -> Literal[True]:
     factor, matrices = expr.as_coeff_matrices()
     if all(ask(Q.upper_triangular(m), assumptions) for m in matrices):
         return True
 
 @UpperTriangularPredicate.register(MatAdd)
-def _(expr, assumptions):
+def _(expr, assumptions) -> Literal[True]:
     if all(ask(Q.upper_triangular(arg), assumptions) for arg in expr.args):
         return True
 
 @UpperTriangularPredicate.register(MatPow)
-def _(expr, assumptions):
+def _(expr, assumptions) -> Literal[True]:
     # only for integer powers
     base, exp = expr.args
     int_exp = ask(Q.integer(exp), assumptions)
@@ -441,52 +442,52 @@ def _(expr, assumptions):
     return None
 
 @UpperTriangularPredicate.register(MatrixSymbol)
-def _(expr, assumptions):
+def _(expr, assumptions) -> Literal[True]:
     if Q.upper_triangular(expr) in conjuncts(assumptions):
         return True
 
 @UpperTriangularPredicate.register_many(Identity, ZeroMatrix)
-def _(expr, assumptions):
+def _(expr, assumptions) -> Literal[True]:
     return True
 
 @UpperTriangularPredicate.register(OneMatrix)
-def _(expr, assumptions):
+def _(expr, assumptions) -> Literal[True]:
     return expr.shape[0] == 1 and expr.shape[1] == 1
 
 @UpperTriangularPredicate.register(Transpose)
-def _(expr, assumptions):
+def _(expr, assumptions) -> Literal[True]:
     return ask(Q.lower_triangular(expr.arg), assumptions)
 
 @UpperTriangularPredicate.register(Inverse)
-def _(expr, assumptions):
+def _(expr, assumptions) -> Literal[True]:
     return ask(Q.upper_triangular(expr.arg), assumptions)
 
 @UpperTriangularPredicate.register(MatrixSlice)
-def _(expr, assumptions):
+def _(expr, assumptions) -> Literal[True]:
     if not expr.on_diag:
         return None
     else:
         return ask(Q.upper_triangular(expr.parent), assumptions)
 
 @UpperTriangularPredicate.register(Factorization)
-def _(expr, assumptions):
+def _(expr, assumptions) -> Literal[True]:
     return _Factorization(Q.upper_triangular, expr, assumptions)
 
 # LowerTriangularPredicate
 
 @LowerTriangularPredicate.register(MatMul)
-def _(expr, assumptions):
+def _(expr, assumptions) -> Literal[True]:
     factor, matrices = expr.as_coeff_matrices()
     if all(ask(Q.lower_triangular(m), assumptions) for m in matrices):
         return True
 
 @LowerTriangularPredicate.register(MatAdd)
-def _(expr, assumptions):
+def _(expr, assumptions) -> Literal[True]:
     if all(ask(Q.lower_triangular(arg), assumptions) for arg in expr.args):
         return True
 
 @LowerTriangularPredicate.register(MatPow)
-def _(expr, assumptions):
+def _(expr, assumptions) -> Literal[True]:
     # only for integer powers
     base, exp = expr.args
     int_exp = ask(Q.integer(exp), assumptions)
@@ -499,35 +500,35 @@ def _(expr, assumptions):
     return None
 
 @LowerTriangularPredicate.register(MatrixSymbol)
-def _(expr, assumptions):
+def _(expr, assumptions) -> Literal[True]:
     if Q.lower_triangular(expr) in conjuncts(assumptions):
         return True
 
 @LowerTriangularPredicate.register_many(Identity, ZeroMatrix)
-def _(expr, assumptions):
+def _(expr, assumptions) -> Literal[True]:
     return True
 
 @LowerTriangularPredicate.register(OneMatrix)
-def _(expr, assumptions):
+def _(expr, assumptions) -> Literal[True]:
     return expr.shape[0] == 1 and expr.shape[1] == 1
 
 @LowerTriangularPredicate.register(Transpose)
-def _(expr, assumptions):
+def _(expr, assumptions) -> Literal[True]:
     return ask(Q.upper_triangular(expr.arg), assumptions)
 
 @LowerTriangularPredicate.register(Inverse)
-def _(expr, assumptions):
+def _(expr, assumptions) -> Literal[True]:
     return ask(Q.lower_triangular(expr.arg), assumptions)
 
 @LowerTriangularPredicate.register(MatrixSlice)
-def _(expr, assumptions):
+def _(expr, assumptions) -> Literal[True]:
     if not expr.on_diag:
         return None
     else:
         return ask(Q.lower_triangular(expr.parent), assumptions)
 
 @LowerTriangularPredicate.register(Factorization)
-def _(expr, assumptions):
+def _(expr, assumptions) -> Literal[True]:
     return _Factorization(Q.lower_triangular, expr, assumptions)
 
 
@@ -537,7 +538,7 @@ def _is_empty_or_1x1(expr):
     return expr.shape in ((0, 0), (1, 1))
 
 @DiagonalPredicate.register(MatMul)
-def _(expr, assumptions):
+def _(expr, assumptions) -> Literal[True]:
     if _is_empty_or_1x1(expr):
         return True
     factor, matrices = expr.as_coeff_matrices()
@@ -545,7 +546,7 @@ def _(expr, assumptions):
         return True
 
 @DiagonalPredicate.register(MatPow)
-def _(expr, assumptions):
+def _(expr, assumptions) -> Literal[True]:
     # only for integer powers
     base, exp = expr.args
     int_exp = ask(Q.integer(exp), assumptions)
@@ -558,27 +559,27 @@ def _(expr, assumptions):
     return None
 
 @DiagonalPredicate.register(MatAdd)
-def _(expr, assumptions):
+def _(expr, assumptions) -> Literal[True]:
     if all(ask(Q.diagonal(arg), assumptions) for arg in expr.args):
         return True
 
 @DiagonalPredicate.register(MatrixSymbol)
-def _(expr, assumptions):
+def _(expr, assumptions) -> Literal[True]:
     if _is_empty_or_1x1(expr):
         return True
     if Q.diagonal(expr) in conjuncts(assumptions):
         return True
 
 @DiagonalPredicate.register(OneMatrix)
-def _(expr, assumptions):
+def _(expr, assumptions) -> Literal[True]:
     return expr.shape[0] == 1 and expr.shape[1] == 1
 
 @DiagonalPredicate.register_many(Inverse, Transpose)
-def _(expr, assumptions):
+def _(expr, assumptions) -> Literal[True]:
     return ask(Q.diagonal(expr.arg), assumptions)
 
 @DiagonalPredicate.register(MatrixSlice)
-def _(expr, assumptions):
+def _(expr, assumptions) -> Literal[True]:
     if _is_empty_or_1x1(expr):
         return True
     if not expr.on_diag:
@@ -587,25 +588,25 @@ def _(expr, assumptions):
         return ask(Q.diagonal(expr.parent), assumptions)
 
 @DiagonalPredicate.register_many(DiagonalMatrix, DiagMatrix, Identity, ZeroMatrix)
-def _(expr, assumptions):
+def _(expr, assumptions) -> Literal[True]:
     return True
 
 @DiagonalPredicate.register(Factorization)
-def _(expr, assumptions):
+def _(expr, assumptions) -> Literal[True]:
     return _Factorization(Q.diagonal, expr, assumptions)
 
 
 # IntegerElementsPredicate
 
-def BM_elements(predicate, expr, assumptions):
+def BM_elements(predicate, expr, assumptions) -> bool:
     """ Block Matrix elements. """
     return all(ask(predicate(b), assumptions) for b in expr.blocks)
 
-def MS_elements(predicate, expr, assumptions):
+def MS_elements(predicate, expr, assumptions) -> bool | None:
     """ Matrix Slice elements. """
     return ask(predicate(expr.parent), assumptions)
 
-def MatMul_elements(matrix_predicate, scalar_predicate, expr, assumptions):
+def MatMul_elements(matrix_predicate, scalar_predicate, expr, assumptions) -> bool | None:
     d = sift(expr.args, lambda x: isinstance(x, MatrixExpr))
     factors, matrices = d[False], d[True]
     return fuzzy_and([
@@ -615,11 +616,11 @@ def MatMul_elements(matrix_predicate, scalar_predicate, expr, assumptions):
 
 @IntegerElementsPredicate.register_many(Determinant, HadamardProduct, MatAdd,
     Trace, Transpose)
-def _(expr, assumptions):
+def _(expr, assumptions) -> Literal[True]:
     return test_closed_group(expr, assumptions, Q.integer_elements)
 
 @IntegerElementsPredicate.register(MatPow)
-def _(expr, assumptions):
+def _(expr, assumptions) -> Literal[True]:
     # only for integer powers
     base, exp = expr.args
     int_exp = ask(Q.integer(exp), assumptions)
@@ -630,19 +631,19 @@ def _(expr, assumptions):
     return None
 
 @IntegerElementsPredicate.register_many(Identity, OneMatrix, ZeroMatrix)
-def _(expr, assumptions):
+def _(expr, assumptions) -> Literal[True]:
     return True
 
 @IntegerElementsPredicate.register(MatMul)
-def _(expr, assumptions):
+def _(expr, assumptions) -> Literal[True]:
     return MatMul_elements(Q.integer_elements, Q.integer, expr, assumptions)
 
 @IntegerElementsPredicate.register(MatrixSlice)
-def _(expr, assumptions):
+def _(expr, assumptions) -> Literal[True]:
     return MS_elements(Q.integer_elements, expr, assumptions)
 
 @IntegerElementsPredicate.register(BlockMatrix)
-def _(expr, assumptions):
+def _(expr, assumptions) -> Literal[True]:
     return BM_elements(Q.integer_elements, expr, assumptions)
 
 
@@ -650,11 +651,11 @@ def _(expr, assumptions):
 
 @RealElementsPredicate.register_many(Determinant, Factorization, HadamardProduct,
     MatAdd, Trace, Transpose)
-def _(expr, assumptions):
+def _(expr, assumptions) -> Literal[True]:
     return test_closed_group(expr, assumptions, Q.real_elements)
 
 @RealElementsPredicate.register(MatPow)
-def _(expr, assumptions):
+def _(expr, assumptions) -> Literal[True]:
     # only for integer powers
     base, exp = expr.args
     int_exp = ask(Q.integer(exp), assumptions)
@@ -667,15 +668,15 @@ def _(expr, assumptions):
     return None
 
 @RealElementsPredicate.register(MatMul)
-def _(expr, assumptions):
+def _(expr, assumptions) -> Literal[True]:
     return MatMul_elements(Q.real_elements, Q.real, expr, assumptions)
 
 @RealElementsPredicate.register(MatrixSlice)
-def _(expr, assumptions):
+def _(expr, assumptions) -> Literal[True]:
     return MS_elements(Q.real_elements, expr, assumptions)
 
 @RealElementsPredicate.register(BlockMatrix)
-def _(expr, assumptions):
+def _(expr, assumptions) -> Literal[True]:
     return BM_elements(Q.real_elements, expr, assumptions)
 
 
@@ -683,11 +684,11 @@ def _(expr, assumptions):
 
 @ComplexElementsPredicate.register_many(Determinant, Factorization, HadamardProduct,
     Inverse, MatAdd, Trace, Transpose)
-def _(expr, assumptions):
+def _(expr, assumptions) -> Literal[True]:
     return test_closed_group(expr, assumptions, Q.complex_elements)
 
 @ComplexElementsPredicate.register(MatPow)
-def _(expr, assumptions):
+def _(expr, assumptions) -> Literal[True]:
     # only for integer powers
     base, exp = expr.args
     int_exp = ask(Q.integer(exp), assumptions)
@@ -700,17 +701,17 @@ def _(expr, assumptions):
     return None
 
 @ComplexElementsPredicate.register(MatMul)
-def _(expr, assumptions):
+def _(expr, assumptions) -> Literal[True]:
     return MatMul_elements(Q.complex_elements, Q.complex, expr, assumptions)
 
 @ComplexElementsPredicate.register(MatrixSlice)
-def _(expr, assumptions):
+def _(expr, assumptions) -> Literal[True]:
     return MS_elements(Q.complex_elements, expr, assumptions)
 
 @ComplexElementsPredicate.register(BlockMatrix)
-def _(expr, assumptions):
+def _(expr, assumptions) -> Literal[True]:
     return BM_elements(Q.complex_elements, expr, assumptions)
 
 @ComplexElementsPredicate.register(DFT)
-def _(expr, assumptions):
+def _(expr, assumptions) -> Literal[True]:
     return True

@@ -4,10 +4,11 @@ This file assumes knowledge of Basic and little else.
 """
 from sympy.utilities.iterables import sift
 from .util import new
+from typing import Any, Callable
 
 
 # Functions that create rules
-def rm_id(isid, new=new):
+def rm_id(isid, new=new) -> Callable[..., Any]:
     """ Create a rule to remove identities.
 
     isid - fn :: x -> Bool  --- whether or not this element is an identity.
@@ -40,7 +41,7 @@ def rm_id(isid, new=new):
     return ident_remove
 
 
-def glom(key, count, combine):
+def glom(key, count, combine) -> Callable[..., Any]:
     """ Create a rule to conglomerate identical args.
 
     Examples
@@ -80,7 +81,7 @@ def glom(key, count, combine):
     return conglomerate
 
 
-def sort(key, new=new):
+def sort(key, new=new) -> Callable[..., Any]:
     """ Create a rule to sort by a key function.
 
     Examples
@@ -98,7 +99,7 @@ def sort(key, new=new):
     return sort_rl
 
 
-def distribute(A, B):
+def distribute(A, B) -> Callable[..., Any]:
     """ Turns an A containing Bs into a B of As
 
     where A, B are container types
@@ -123,7 +124,7 @@ def distribute(A, B):
     return distribute_rl
 
 
-def subs(a, b):
+def subs(a, b) -> Callable[..., Any]:
     """ Replace expressions exactly """
     def subs_rl(expr):
         if expr == a:

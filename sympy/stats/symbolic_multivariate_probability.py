@@ -12,6 +12,8 @@ from sympy.matrices.expressions.special import ZeroMatrix
 from sympy.stats.rv import RandomSymbol, is_random
 from sympy.core.sympify import _sympify
 from sympy.stats.symbolic_probability import Variance, Covariance, Expectation
+from sympy import Basic
+from typing_extensions import Self
 
 
 class ExpectationMatrix(Expectation, MatrixExpr):
@@ -53,7 +55,7 @@ class ExpectationMatrix(Expectation, MatrixExpr):
     [24, 26]])
 
     """
-    def __new__(cls, expr, condition=None):
+    def __new__(cls, expr, condition=None) -> Self:
         expr = _sympify(expr)
         if condition is None:
             if not is_random(expr):
@@ -71,7 +73,7 @@ class ExpectationMatrix(Expectation, MatrixExpr):
     def shape(self):
         return self._shape
 
-    def expand(self, **hints):
+    def expand(self, **hints) -> Basic | Add | Self:
         expr = self.args[0]
         condition = self._condition
         if not is_random(expr):
@@ -140,7 +142,7 @@ class VarianceMatrix(Variance, MatrixExpr):
     >>> VarianceMatrix(A*X + B*Y).expand()
     2*A*CrossCovarianceMatrix(X, Y)*B.T + A*VarianceMatrix(X)*A.T + B*VarianceMatrix(Y)*B.T
     """
-    def __new__(cls, arg, condition=None):
+    def __new__(cls, arg, condition=None) -> Self:
         arg = _sympify(arg)
 
         if 1 not in arg.shape:
@@ -161,7 +163,7 @@ class VarianceMatrix(Variance, MatrixExpr):
     def shape(self):
         return self._shape
 
-    def expand(self, **hints):
+    def expand(self, **hints) -> ZeroMatrix | Self:
         arg = self.args[0]
         condition = self._condition
 
@@ -233,7 +235,7 @@ class CrossCovarianceMatrix(Covariance, MatrixExpr):
     A*CrossCovarianceMatrix(X, W)*D + A*CrossCovarianceMatrix(X, Z)*C + B*CrossCovarianceMatrix(Y, W)*D + B*CrossCovarianceMatrix(Y, Z)*C
 
     """
-    def __new__(cls, arg1, arg2, condition=None):
+    def __new__(cls, arg1, arg2, condition=None) -> Self:
         arg1 = _sympify(arg1)
         arg2 = _sympify(arg2)
 
@@ -256,7 +258,7 @@ class CrossCovarianceMatrix(Covariance, MatrixExpr):
     def shape(self):
         return self._shape
 
-    def expand(self, **hints):
+    def expand(self, **hints) -> ZeroMatrix | CrossCovarianceMatrix | Add:
         arg1 = self.args[0]
         arg2 = self.args[1]
         condition = self._condition

@@ -14,6 +14,8 @@ from sympy.core.add import Add
 from mpmath.libmp import repr_dps, to_str as mlib_to_str
 
 from .printer import Printer, print_function
+from sympy.printing.printer import Printer
+from typing_extensions import LiteralString
 
 
 class ReprPrinter(Printer):
@@ -30,7 +32,7 @@ class ReprPrinter(Printer):
         """
         return sep.join([self.doprint(item) for item in args])
 
-    def emptyPrinter(self, expr):
+    def emptyPrinter(self, expr) -> str | LiteralString:
         """
         The fallback printer.
         """
@@ -330,6 +332,6 @@ class ReprPrinter(Printer):
         return "ExtElem(%s, %s)" % (rep, ext)
 
 @print_function(ReprPrinter)
-def srepr(expr, **settings):
+def srepr(expr, **settings) -> str:
     """return expr in repr form"""
     return ReprPrinter(settings).doprint(expr)

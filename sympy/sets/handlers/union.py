@@ -3,40 +3,41 @@ from sympy.core.sympify import sympify
 from sympy.functions.elementary.miscellaneous import Min, Max
 from sympy.sets.sets import (EmptySet, FiniteSet, Intersection,
     Interval, ProductSet, Set, Union, UniversalSet)
-from sympy.sets.fancysets import (ComplexRegion, Naturals, Naturals0,
+from sympy.sets.fancysets import (CartesianComplexRegion, PolarComplexRegion, ComplexRegion, Naturals, Naturals0,
     Integers, Rationals, Reals)
 from sympy.multipledispatch import Dispatcher
+from typing import Any
 
 
-union_sets = Dispatcher('union_sets')
+union_sets: Dispatcher = Dispatcher('union_sets')
 
 
 @union_sets.register(Naturals0, Naturals)
-def _(a, b):
+def _(a, b) -> None:
     return a
 
 @union_sets.register(Rationals, Naturals)
-def _(a, b):
+def _(a, b) -> None:
     return a
 
 @union_sets.register(Rationals, Naturals0)
-def _(a, b):
+def _(a, b) -> None:
     return a
 
 @union_sets.register(Reals, Naturals)
-def _(a, b):
+def _(a, b) -> None:
     return a
 
 @union_sets.register(Reals, Naturals0)
-def _(a, b):
+def _(a, b) -> None:
     return a
 
 @union_sets.register(Reals, Rationals)
-def _(a, b):
+def _(a, b) -> None:
     return a
 
 @union_sets.register(Integers, Set)
-def _(a, b):
+def _(a, b) -> None:
     intersect = Intersection(a, b)
     if intersect == a:
         return b
@@ -44,7 +45,7 @@ def _(a, b):
         return a
 
 @union_sets.register(ComplexRegion, Set)
-def _(a, b):
+def _(a, b) -> None:
     if b.is_subset(S.Reals):
         # treat a subset of reals as a complex region
         b = ComplexRegion.from_real(b)
@@ -59,16 +60,16 @@ def _(a, b):
     return None
 
 @union_sets.register(EmptySet, Set)
-def _(a, b):
+def _(a, b) -> None:
     return b
 
 
 @union_sets.register(UniversalSet, Set)
-def _(a, b):
+def _(a, b) -> None:
     return a
 
 @union_sets.register(ProductSet, ProductSet)
-def _(a, b):
+def _(a, b) -> None:
     if b.is_subset(a):
         return a
     if len(b.sets) != len(a.sets):
@@ -83,13 +84,13 @@ def _(a, b):
     return None
 
 @union_sets.register(ProductSet, Set)
-def _(a, b):
+def _(a, b) -> None:
     if b.is_subset(a):
         return a
     return None
 
 @union_sets.register(Interval, Interval)
-def _(a, b):
+def _(a, b) -> None:
     if a._is_comparable(b):
         # Non-overlapping intervals
         end = Min(a.end, b.end)
@@ -108,11 +109,11 @@ def _(a, b):
             return Interval(start, end, left_open, right_open)
 
 @union_sets.register(Interval, UniversalSet)
-def _(a, b):
+def _(a, b) -> None:
     return S.UniversalSet
 
 @union_sets.register(Interval, Set)
-def _(a, b):
+def _(a, b) -> None:
     # If I have open end points and these endpoints are contained in b
     # But only in case, when endpoints are finite. Because
     # interval does not contain oo or -oo.
@@ -131,11 +132,11 @@ def _(a, b):
     return None
 
 @union_sets.register(FiniteSet, FiniteSet)
-def _(a, b):
+def _(a, b) -> None:
     return FiniteSet(*(a._elements | b._elements))
 
 @union_sets.register(FiniteSet, Set)
-def _(a, b):
+def _(a, b) -> None:
     # If `b` set contains one of my elements, remove it from `a`
     if any(b.contains(x) == True for x in a):
         return {
@@ -143,5 +144,5 @@ def _(a, b):
     return None
 
 @union_sets.register(Set, Set)
-def _(a, b):
+def _(a, b) -> None:
     return None

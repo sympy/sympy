@@ -4,7 +4,7 @@ from sympy.core.symbol import symbols
 from sympy.functions.elementary.complexes import sign
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.polys.polytools import gcd
-from sympy.sets.sets import Complement
+from sympy.sets.sets import Set, Union, Complement
 from sympy.core import Basic, Tuple, diff, expand, Eq, Integer
 from sympy.core.sorting import ordered
 from sympy.core.symbol import _symbol
@@ -12,6 +12,9 @@ from sympy.solvers import solveset, nonlinsolve, diophantine
 from sympy.polys import total_degree
 from sympy.geometry import Point
 from sympy.ntheory.factor_ import core
+import sympy
+from typing import Any
+from typing_extensions import Self
 
 
 class ImplicitRegion(Basic):
@@ -54,7 +57,7 @@ class ImplicitRegion(Basic):
     equation : An expression or Eq denoting the implicit equation of the region.
 
     """
-    def __new__(cls, variables, equation):
+    def __new__(cls, variables, equation) -> Self:
         if not isinstance(variables, Tuple):
             variables = Tuple(*variables)
 
@@ -64,18 +67,18 @@ class ImplicitRegion(Basic):
         return super().__new__(cls, variables, equation)
 
     @property
-    def variables(self):
+    def variables(self) -> Basic:
         return self.args[0]
 
     @property
-    def equation(self):
+    def equation(self) -> Basic:
         return self.args[1]
 
     @property
     def degree(self):
         return total_degree(self.equation)
 
-    def regular_point(self):
+    def regular_point(self) -> tuple[Any] | tuple[Any, Any] | tuple[int, int, Any] | type[list[Any]]:
         """
         Returns a point on the implicit region.
 
@@ -280,7 +283,7 @@ class ImplicitRegion(Basic):
 
             return x_reg, y_reg
 
-    def singular_points(self):
+    def singular_points(self) ->     sympy.FiniteSet | Set |     sympy.Intersection | Union |     sympy.Complement |     sympy.ConditionSet:
         """
         Returns a set of singular points of the region.
 
@@ -340,7 +343,7 @@ class ImplicitRegion(Basic):
 
         return m
 
-    def rational_parametrization(self, parameters=('t', 's'), reg_point=None):
+    def rational_parametrization(self, parameters=('t', 's'), reg_point=None) -> tuple[Basic] | tuple[Any, Any] | tuple[Any, Any, Any]:
         """
         Returns the rational parametrization of implicit region.
 
@@ -490,7 +493,7 @@ class ImplicitRegion(Basic):
 
         raise NotImplementedError()
 
-def conic_coeff(variables, equation):
+def conic_coeff(variables, equation) -> tuple[Any, Any, Any, Any, Any, Any]:
     if total_degree(equation) != 2:
         raise ValueError()
     x = variables[0]

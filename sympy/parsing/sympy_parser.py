@@ -18,13 +18,14 @@ from sympy.core import Symbol
 from sympy.core.function import Function
 from sympy.utilities.misc import func_name
 from sympy.functions.elementary.miscellaneous import Max, Min
+from typing_extensions import TypeAlias
 
 
 null = ''
 
-TOKEN = tuple[int, str]
-DICT = dict[str, Any]
-TRANS = Callable[[list[TOKEN], DICT, DICT], list[TOKEN]]
+TOKEN: TypeAlias = tuple[int, str]
+DICT: TypeAlias = dict[str, Any]
+TRANS: TypeAlias = Callable[[list[TOKEN], DICT, DICT], list[TOKEN]]
 
 def _token_splittable(token_name: str) -> bool:
     """
@@ -94,7 +95,7 @@ class AppliedFunction:
 
     `exponent` is for handling the shorthand sin^2, ln^2, etc.
     """
-    def __init__(self, function: TOKEN, args: ParenthesisGroup, exponent=None):
+    def __init__(self, function: TOKEN, args: ParenthesisGroup, exponent=None) -> None:
         if exponent is None:
             exponent = []
         self.function = function
@@ -309,7 +310,7 @@ def _implicit_application(tokens: list[TOKEN | AppliedFunction], local_dict: DIC
     return result
 
 
-def function_exponentiation(tokens: list[TOKEN], local_dict: DICT, global_dict: DICT):
+def function_exponentiation(tokens: list[TOKEN], local_dict: DICT, global_dict: DICT) -> list[TOKEN]:
     """Allows functions to be exponentiated, e.g. ``cos**2(x)``.
 
     Examples
@@ -361,7 +362,7 @@ def function_exponentiation(tokens: list[TOKEN], local_dict: DICT, global_dict: 
     return result
 
 
-def split_symbols_custom(predicate: Callable[[str], bool]):
+def split_symbols_custom(predicate: Callable[[str], bool]) -> Callable[..., list[TOKEN]]:
     """Creates a transformation that splits symbol names.
 
     ``predicate`` should return True if the symbol name is to be split.
@@ -530,7 +531,7 @@ def implicit_multiplication_application(result: list[TOKEN], local_dict: DICT,
     return result
 
 
-def auto_symbol(tokens: list[TOKEN], local_dict: DICT, global_dict: DICT):
+def auto_symbol(tokens: list[TOKEN], local_dict: DICT, global_dict: DICT) -> list[TOKEN]:
     """Inserts calls to ``Symbol``/``Function`` for undefined variables."""
     result: list[TOKEN] = []
     prevTok = (-1, '')
@@ -581,7 +582,7 @@ def auto_symbol(tokens: list[TOKEN], local_dict: DICT, global_dict: DICT):
     return result
 
 
-def lambda_notation(tokens: list[TOKEN], local_dict: DICT, global_dict: DICT):
+def lambda_notation(tokens: list[TOKEN], local_dict: DICT, global_dict: DICT) -> list[TOKEN]:
     """Substitutes "lambda" with its SymPy equivalent Lambda().
     However, the conversion does not take place if only "lambda"
     is passed because that is a syntax error.
@@ -621,7 +622,7 @@ def lambda_notation(tokens: list[TOKEN], local_dict: DICT, global_dict: DICT):
     return result
 
 
-def factorial_notation(tokens: list[TOKEN], local_dict: DICT, global_dict: DICT):
+def factorial_notation(tokens: list[TOKEN], local_dict: DICT, global_dict: DICT) -> list[TOKEN]:
     """Allows standard notation for factorial."""
     result: list[TOKEN] = []
     nfactorial = 0
@@ -648,7 +649,7 @@ def factorial_notation(tokens: list[TOKEN], local_dict: DICT, global_dict: DICT)
     return result
 
 
-def convert_xor(tokens: list[TOKEN], local_dict: DICT, global_dict: DICT):
+def convert_xor(tokens: list[TOKEN], local_dict: DICT, global_dict: DICT) -> list[TOKEN]:
     """Treats XOR, ``^``, as exponentiation, ``**``."""
     result: list[TOKEN] = []
     for toknum, tokval in tokens:
@@ -663,7 +664,7 @@ def convert_xor(tokens: list[TOKEN], local_dict: DICT, global_dict: DICT):
     return result
 
 
-def repeated_decimals(tokens: list[TOKEN], local_dict: DICT, global_dict: DICT):
+def repeated_decimals(tokens: list[TOKEN], local_dict: DICT, global_dict: DICT) -> list[TOKEN]:
     """
     Allows 0.2[1] notation to represent the repeated decimal 0.2111... (19/90)
 
@@ -751,7 +752,7 @@ def repeated_decimals(tokens: list[TOKEN], local_dict: DICT, global_dict: DICT):
     return result
 
 
-def auto_number(tokens: list[TOKEN], local_dict: DICT, global_dict: DICT):
+def auto_number(tokens: list[TOKEN], local_dict: DICT, global_dict: DICT) -> list[TOKEN]:
     """
     Converts numeric literals to use SymPy equivalents.
 
@@ -785,7 +786,7 @@ def auto_number(tokens: list[TOKEN], local_dict: DICT, global_dict: DICT):
     return result
 
 
-def rationalize(tokens: list[TOKEN], local_dict: DICT, global_dict: DICT):
+def rationalize(tokens: list[TOKEN], local_dict: DICT, global_dict: DICT) -> list[TOKEN]:
     """Converts floats into ``Rational``. Run AFTER ``auto_number``."""
     result: list[TOKEN] = []
     passed_float = False
@@ -1090,7 +1091,7 @@ def parse_expr(s: str, local_dict: DICT | None = None,
         raise e from ValueError(f"Error from parse_expr with transformed code: {code!r}")
 
 
-def evaluateFalse(s: str):
+def evaluateFalse(s: str) -> ast.Expression:
     """
     Replaces operators with the SymPy equivalent and sets evaluate=False.
     """
@@ -1130,7 +1131,7 @@ class EvaluateFalseTransformer(ast.NodeTransformer):
         ast.GtE: 'Ge',
         ast.Eq: 'Eq'
     }
-    def visit_Compare(self, node):
+    def visit_Compare(self, node) -> ast.Call | ast.Compare:
         def reducer(acc, op_right):
             result, left = acc
             op, right = op_right
@@ -1156,7 +1157,7 @@ class EvaluateFalseTransformer(ast.NodeTransformer):
             keywords=[ast.keyword(arg="evaluate", value=ast.Constant(value=False))],
         )
 
-    def flatten(self, args, func):
+    def flatten(self, args, func) -> list[Any]:
         result = []
         for arg in args:
             if isinstance(arg, ast.Call):
@@ -1171,7 +1172,7 @@ class EvaluateFalseTransformer(ast.NodeTransformer):
                 result.append(arg)
         return result
 
-    def visit_BinOp(self, node):
+    def visit_BinOp(self, node) -> ast.Call | ast.BinOp:
         if node.op.__class__ in self.operators:
             sympy_class = self.operators[node.op.__class__]
             right = self.visit(node.right)
@@ -1215,7 +1216,7 @@ class EvaluateFalseTransformer(ast.NodeTransformer):
             return new_node
         return node
 
-    def visit_Call(self, node):
+    def visit_Call(self, node) -> ast.AST:
         if isinstance(node.func, ast.Name) and node.func.id in self.functions:
             func = self.visit(node.func)
             args = [self.visit(arg) for arg in node.args]
@@ -1251,13 +1252,13 @@ class _T():
     >>> from sympy.parsing.sympy_parser import T, standard_transformations
     >>> assert T[:5] == standard_transformations
     """
-    def __init__(self):
+    def __init__(self) -> None:
         self.N = len(_transformation)
 
     def __str__(self):
         return transformations
 
-    def __getitem__(self, t):
+    def __getitem__(self, t) -> tuple[Any, ...]:
         if not type(t) is tuple:
             t = (t,)
         i = []

@@ -1,12 +1,12 @@
-from functools import wraps
+from functools import _Wrapped, wraps
 
 from sympy.core import S
 from sympy.core.add import Add
 from sympy.core.cache import cacheit
 from sympy.core.expr import Expr
-from sympy.core.function import DefinedFunction, ArgumentIndexError, _mexpand
+from sympy.core.function import Function, UndefinedFunction, DefinedFunction, ArgumentIndexError, _mexpand
 from sympy.core.logic import fuzzy_or, fuzzy_not
-from sympy.core.numbers import Rational, pi, I
+from sympy.core.numbers import Float, Rational, pi, I
 from sympy.core.power import Pow
 from sympy.core.symbol import Dummy, uniquely_named_symbol, Wild
 from sympy.core.sympify import sympify
@@ -21,6 +21,9 @@ from sympy.functions.special.hyper import hyper
 from sympy.polys.orthopolys import spherical_bessel_fn
 
 from mpmath import mp, workprec
+from numpy import ndarray as NDArray
+from sympy.core.basic import Basic
+from typing import Any
 
 # TODO
 # o Scorer functions G1 and G2
@@ -50,17 +53,17 @@ class BesselBase(DefinedFunction):
     """
 
     @property
-    def order(self):
+    def order(self) -> Basic:
         """ The order of the Bessel-type function. """
         return self.args[0]
 
     @property
-    def argument(self):
+    def argument(self) -> Basic:
         """ The argument of the Bessel-type function. """
         return self.args[1]
 
     @classmethod
-    def eval(cls, nu, z):
+    def eval(cls, nu, z) -> None:
         return
 
     def fdiff(self, argindex=2):
@@ -176,7 +179,7 @@ class besselj(BesselBase):
     _b = S.One
 
     @classmethod
-    def eval(cls, nu, z):
+    def eval(cls, nu, z) -> type[UndefinedFunction] | None:
         if z.is_zero:
             if nu.is_zero:
                 return S.One
@@ -324,7 +327,7 @@ class bessely(BesselBase):
     _b = S.One
 
     @classmethod
-    def eval(cls, nu, z):
+    def eval(cls, nu, z) -> None:
         if z.is_zero:
             if nu.is_zero:
                 return S.NegativeInfinity
@@ -479,7 +482,7 @@ class besseli(BesselBase):
     _b = S.One
 
     @classmethod
-    def eval(cls, nu, z):
+    def eval(cls, nu, z) -> type[UndefinedFunction] | None:
         if z.is_zero:
             if nu.is_zero:
                 return S.One
@@ -646,7 +649,7 @@ class besselk(BesselBase):
     _b = -S.One
 
     @classmethod
-    def eval(cls, nu, z):
+    def eval(cls, nu, z) -> type[UndefinedFunction] | None:
         if z.is_zero:
             if nu.is_zero:
                 return S.Infinity
@@ -890,7 +893,7 @@ class hankel2(BesselBase):
             return hankel1(self.order.conjugate(), z.conjugate())
 
 
-def assume_integer_order(fn):
+def assume_integer_order(fn) -> _Wrapped[..., Any, ..., Any | None]:
     @wraps(fn)
     def g(self, nu, z):
         if nu.is_integer:
@@ -996,7 +999,7 @@ class jn(SphericalBesselBase):
 
     """
     @classmethod
-    def eval(cls, nu, z):
+    def eval(cls, nu, z) -> None:
         if z.is_zero:
             if nu.is_zero:
                 return S.One
@@ -1260,7 +1263,7 @@ class hn2(SphericalHankelBase):
         return sqrt(pi/(2*z))*hankel2(nu, z)
 
 
-def jn_zeros(n, k, method="sympy", dps=15):
+def jn_zeros(n, k, method="sympy", dps=15) -> list[Any | Float] | list[Any | NDArray[Any, Any] | tuple[Any, Any]]:
     """
     Zeros of the spherical Bessel function of the first kind.
 
@@ -1358,7 +1361,7 @@ class AiryBase(DefinedFunction):
     def _eval_is_extended_real(self):
         return self.args[0].is_extended_real
 
-    def as_real_imag(self, deep=True, **hints):
+    def as_real_imag(self, deep=True, **hints) -> tuple[Any, Any]:
         z = self.args[0]
         zc = z.conjugate()
         f = self.func
@@ -1464,7 +1467,7 @@ class airyai(AiryBase):
     unbranched = True
 
     @classmethod
-    def eval(cls, arg):
+    def eval(cls, arg) -> None:
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
@@ -1475,7 +1478,7 @@ class airyai(AiryBase):
         if arg.is_zero:
             return S.One / (3**Rational(2, 3) * gamma(Rational(2, 3)))
 
-    def fdiff(self, argindex=1):
+    def fdiff(self, argindex=1) -> type[UndefinedFunction]:
         if argindex == 1:
             return airyaiprime(self.args[0])
         else:
@@ -1636,7 +1639,7 @@ class airybi(AiryBase):
     unbranched = True
 
     @classmethod
-    def eval(cls, arg):
+    def eval(cls, arg) -> None:
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
@@ -1650,7 +1653,7 @@ class airybi(AiryBase):
         if arg.is_zero:
             return S.One / (3**Rational(1, 6) * gamma(Rational(2, 3)))
 
-    def fdiff(self, argindex=1):
+    def fdiff(self, argindex=1) -> type[UndefinedFunction]:
         if argindex == 1:
             return airybiprime(self.args[0])
         else:
@@ -1804,7 +1807,7 @@ class airyaiprime(AiryBase):
     unbranched = True
 
     @classmethod
-    def eval(cls, arg):
+    def eval(cls, arg) -> None:
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
@@ -1963,7 +1966,7 @@ class airybiprime(AiryBase):
     unbranched = True
 
     @classmethod
-    def eval(cls, arg):
+    def eval(cls, arg) -> None:
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
@@ -2089,7 +2092,7 @@ class marcumq(DefinedFunction):
     """
 
     @classmethod
-    def eval(cls, m, a, b):
+    def eval(cls, m, a, b) -> None:
         if a is S.Zero:
             if m is S.Zero and b is S.Zero:
                 return S.Zero

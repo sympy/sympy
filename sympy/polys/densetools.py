@@ -39,6 +39,7 @@ from sympy.polys.polyerrors import (
 )
 
 from math import ceil as _ceil, log2 as _log2, sqrt
+from typing import Any
 
 
 def dup_integrate(f, m, K):
@@ -73,7 +74,7 @@ def dup_integrate(f, m, K):
     return g
 
 
-def dmp_integrate(f, m, u, K):
+def dmp_integrate(f, m, u, K) -> list[Any] | list[list[list[Any]]]:
     """
     Computes the indefinite integral of ``f`` in ``x_0`` in ``K[X]``.
 
@@ -118,7 +119,7 @@ def _rec_integrate_in(g, m, v, i, j, K):
     return dmp_strip([ _rec_integrate_in(c, m, w, i, j, K) for c in g ], v)
 
 
-def dmp_integrate_in(f, m, j, u, K):
+def dmp_integrate_in(f, m, j, u, K) -> list[Any] | list[list[list[Any]]] | list[list[Any]]:
     """
     Computes the indefinite integral of ``f`` in ``x_j`` in ``K[X]``.
 
@@ -140,7 +141,7 @@ def dmp_integrate_in(f, m, j, u, K):
     return _rec_integrate_in(f, m, u, 0, j, K)
 
 
-def dup_diff(f, m, K):
+def dup_diff(f, m, K) -> list[Any]:
     """
     ``m``-th order derivative of a polynomial in ``K[x]``.
 
@@ -183,7 +184,7 @@ def dup_diff(f, m, K):
     return dup_strip(deriv)
 
 
-def dmp_diff(f, m, u, K):
+def dmp_diff(f, m, u, K) -> list[Any] | list[list[Any]]:
     """
     ``m``-th order derivative in ``x_0`` of a polynomial in ``K[X]``.
 
@@ -240,7 +241,7 @@ def _rec_diff_in(g, m, v, i, j, K):
     return dmp_strip([ _rec_diff_in(c, m, w, i, j, K) for c in g ], v)
 
 
-def dmp_diff_in(f, m, j, u, K):
+def dmp_diff_in(f, m, j, u, K) -> list[Any] | list[list[Any]]:
     """
     ``m``-th order derivative in ``x_j`` of a polynomial in ``K[X]``.
 
@@ -290,7 +291,7 @@ def dup_eval(f, a, K):
     return result
 
 
-def dmp_eval(f, a, u, K):
+def dmp_eval(f, a, u, K) -> list[list[Any]]:
     """
     Evaluate a polynomial at ``x_0 = a`` in ``K[X]`` using the Horner scheme.
 
@@ -329,7 +330,7 @@ def _rec_eval_in(g, a, v, i, j, K):
     return dmp_strip([ _rec_eval_in(c, a, v, i, j, K) for c in g ], v)
 
 
-def dmp_eval_in(f, a, j, u, K):
+def dmp_eval_in(f, a, j, u, K) -> list[list[Any]]:
     """
     Evaluate a polynomial at ``x_j = a`` in ``K[X]`` using the Horner scheme.
 
@@ -366,7 +367,7 @@ def _rec_eval_tail(g, i, A, u, K):
             return dup_eval(h, A[-u + i - 1], K)
 
 
-def dmp_eval_tail(f, A, u, K):
+def dmp_eval_tail(f, A, u, K) -> list[list[Any]] | list[Any]:
     """
     Evaluate a polynomial at ``x_j = a_j, ...`` in ``K[X]``.
 
@@ -408,7 +409,7 @@ def _rec_diff_eval(g, m, a, v, i, j, K):
     return dmp_strip([ _rec_diff_eval(c, m, a, v, i, j, K) for c in g ], v)
 
 
-def dmp_diff_eval_in(f, m, a, j, u, K):
+def dmp_diff_eval_in(f, m, a, j, u, K) -> list[list[Any]]:
     """
     Differentiate and evaluate a polynomial in ``x_j`` at ``a`` in ``K[X]``.
 
@@ -468,7 +469,7 @@ def dup_trunc(f, p, K):
     return dup_strip(g)
 
 
-def dmp_trunc(f, p, u, K):
+def dmp_trunc(f, p, u, K) -> list[list[Any]]:
     """
     Reduce a ``K[X]`` polynomial modulo a polynomial ``p`` in ``K[Y]``.
 
@@ -488,7 +489,7 @@ def dmp_trunc(f, p, u, K):
     return dmp_strip([ dmp_rem(c, p, u - 1, K) for c in f ], u)
 
 
-def dmp_ground_trunc(f, p, u, K):
+def dmp_ground_trunc(f, p, u, K) -> list[list[Any]]:
     """
     Reduce a ``K[X]`` polynomial modulo a constant ``p`` in ``K``.
 
@@ -512,7 +513,7 @@ def dmp_ground_trunc(f, p, u, K):
     return dmp_strip([ dmp_ground_trunc(c, p, v, K) for c in f ], u)
 
 
-def dup_monic(f, K):
+def dup_monic(f, K) -> list[Any]:
     """
     Divide all coefficients by ``LC(f)`` in ``K[x]``.
 
@@ -541,7 +542,7 @@ def dup_monic(f, K):
         return dup_exquo_ground(f, lc, K)
 
 
-def dmp_ground_monic(f, u, K):
+def dmp_ground_monic(f, u, K) -> list[Any]:
     """
     Divide all coefficients by ``LC(f)`` in ``K[X]``.
 
@@ -664,7 +665,7 @@ def dmp_ground_content(f, u, K):
     return cont
 
 
-def dup_primitive(f, K):
+def dup_primitive(f, K) -> tuple[Any, Any] | tuple[Any, Any | list[Any]]:
     """
     Compute content and the primitive form of ``f`` in ``K[x]``.
 
@@ -697,7 +698,7 @@ def dup_primitive(f, K):
         return cont, dup_quo_ground(f, cont, K)
 
 
-def dmp_ground_primitive(f, u, K):
+def dmp_ground_primitive(f, u, K) -> tuple[Any, Any] | tuple[Any, Any | list[Any]]:
     """
     Compute content and the primitive form of ``f`` in ``K[X]``.
 
@@ -733,7 +734,7 @@ def dmp_ground_primitive(f, u, K):
         return cont, dmp_quo_ground(f, cont, u, K)
 
 
-def dup_extract(f, g, K):
+def dup_extract(f, g, K) -> tuple[Any, Any | list[Any], Any | list[Any]]:
     """
     Extract common content from a pair of polynomials in ``K[x]``.
 
@@ -759,7 +760,7 @@ def dup_extract(f, g, K):
     return gcd, f, g
 
 
-def dmp_ground_extract(f, g, u, K):
+def dmp_ground_extract(f, g, u, K) -> tuple[Any, Any | list[Any], Any | list[Any]]:
     """
     Extract common content from a pair of polynomials in ``K[X]``.
 
@@ -785,7 +786,7 @@ def dmp_ground_extract(f, g, u, K):
     return gcd, f, g
 
 
-def dup_real_imag(f, K):
+def dup_real_imag(f, K) -> tuple[list[list[Any]], list[list[Any]]] | tuple[list[list[Any]] | Any | list[Any], list[list[Any]] | Any | list[Any]]:
     """
     Find ``f1`` and ``f2``, such that ``f(x+I*y) = f1(x,y) + f2(x,y)*I``.
 
@@ -837,7 +838,7 @@ def dup_real_imag(f, K):
     return f1, f2
 
 
-def dup_mirror(f, K):
+def dup_mirror(f, K) -> list[Any]:
     """
     Evaluate efficiently the composition ``f(-x)`` in ``K[x]``.
 
@@ -859,7 +860,7 @@ def dup_mirror(f, K):
     return f
 
 
-def dup_scale(f, a, K):
+def dup_scale(f, a, K) -> list[Any]:
     """
     Evaluate efficiently composition ``f(a*x)`` in ``K[x]``.
 
@@ -881,7 +882,7 @@ def dup_scale(f, a, K):
     return f
 
 
-def dup_shift(f, a, K):
+def dup_shift(f, a, K) -> list[Any]:
     """
     Evaluate efficiently Taylor shift ``f(x + a)`` in ``K[x]``.
 
@@ -978,7 +979,7 @@ def dup_transform(f: dup[Er], p: dup[Er], q: dup[Er], K: Domain[Er]) -> dup[Er]:
     return h
 
 
-def dup_compose(f, g, K):
+def dup_compose(f, g, K) -> list[Any]:
     """
     Evaluate functional composition ``f(g)`` in ``K[x]``.
 
@@ -1007,7 +1008,7 @@ def dup_compose(f, g, K):
     return h
 
 
-def dmp_compose(f, g, u, K):
+def dmp_compose(f, g, u, K) -> list[Any] | list[list[Any]]:
     """
     Evaluate functional composition ``f(g)`` in ``K[X]``.
 
@@ -1148,7 +1149,7 @@ def _dup_decompose(f, K):
     return None
 
 
-def dup_decompose(f, K):
+def dup_decompose(f, K) -> list[Any | list[Any]]:
     """
     Computes functional decomposition of ``f`` in ``K[x]``.
 
@@ -1257,7 +1258,7 @@ def _dmp_alg_inject_alg(f, u, K):
     return F, u + 1, K.dom
 
 
-def dmp_lift(f, u, K):
+def dmp_lift(f, u, K) -> list[list[Any]]:
     """
     Convert algebraic coefficients to integers in ``K[X]``.
 
@@ -1287,7 +1288,7 @@ def dmp_lift(f, u, K):
     return dmp_resultant(F, P_A, v, K2)
 
 
-def dup_sign_variations(f, K):
+def dup_sign_variations(f, K) -> int:
     """
     Compute the number of sign variations of ``f`` in ``K[x]``.
 
@@ -1342,7 +1343,7 @@ def dup_sign_variations(f, K):
     return k
 
 
-def dup_clear_denoms(f, K0, K1=None, convert=False):
+def dup_clear_denoms(f, K0, K1=None, convert=False) -> tuple[Any, list[Any] | Any] | tuple[Any, Any]:
     """
     Clear denominators, i.e. transform ``K_0`` to ``K_1``.
 
@@ -1403,7 +1404,7 @@ def _rec_clear_denoms(g, v, K0, K1):
     return common
 
 
-def dmp_clear_denoms(f, u, K0, K1=None, convert=False):
+def dmp_clear_denoms(f, u, K0, K1=None, convert=False) -> tuple[Any, list[Any] | Any] | tuple[Any, Any] | tuple[Any, Any | list[list[Any]]]:
     """
     Clear denominators, i.e. transform ``K_0`` to ``K_1``.
 
@@ -1441,7 +1442,7 @@ def dmp_clear_denoms(f, u, K0, K1=None, convert=False):
         return common, dmp_convert(f, u, K0, K1)
 
 
-def dup_revert(f, n, K):
+def dup_revert(f, n, K) -> list[Any]:
     """
     Compute ``f**(-1)`` mod ``x**n`` using Newton iteration.
 
@@ -1475,7 +1476,7 @@ def dup_revert(f, n, K):
     return g
 
 
-def dmp_revert(f, g, u, K):
+def dmp_revert(f, g, u, K) -> list[Any]:
     """
     Compute ``f**(-1)`` mod ``x**n`` using Newton iteration.
 

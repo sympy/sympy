@@ -7,13 +7,17 @@ from sympy.tensor.array.ndim_array import NDimArray, ImmutableNDimArray
 from sympy.utilities.iterables import flatten
 
 import functools
+from sympy import Indexed
+from sympy.matrices import SparseMatrix
+from typing import Any
+from typing_extensions import Self
 
 class SparseNDimArray(NDimArray):
 
-    def __new__(self, *args, **kwargs):
+    def __new__(self, *args, **kwargs) -> "ImmutableSparseNDimArray":
         return ImmutableSparseNDimArray(*args, **kwargs)
 
-    def __getitem__(self, index):
+    def __getitem__(self, index) -> Indexed | Self:
         """
         Get an element from a sparse N-dim array.
 
@@ -62,13 +66,13 @@ class SparseNDimArray(NDimArray):
             return self._sparse_array.get(index, S.Zero)
 
     @classmethod
-    def zeros(cls, *shape):
+    def zeros(cls, *shape) -> Self:
         """
         Return a sparse N-dim array of zeros.
         """
         return cls({}, shape)
 
-    def tomatrix(self):
+    def tomatrix(self) -> SparseMatrix:
         """
         Converts MutableDenseNDimArray to Matrix. Can convert only 2-dim array, else will raise error.
 
@@ -94,7 +98,7 @@ class SparseNDimArray(NDimArray):
 
         return SparseMatrix(self.shape[0], self.shape[1], mat_sparse)
 
-    def reshape(self, *newshape):
+    def reshape(self, *newshape) -> Self:
         new_total_size = functools.reduce(lambda x,y: x*y, newshape)
         if new_total_size != self._loop_size:
             raise ValueError("Invalid reshape parameters " + newshape)
@@ -103,7 +107,7 @@ class SparseNDimArray(NDimArray):
 
 class ImmutableSparseNDimArray(SparseNDimArray, ImmutableNDimArray): # type: ignore
 
-    def __new__(cls, iterable=None, shape=None, **kwargs):
+    def __new__(cls, iterable=None, shape=None, **kwargs) -> Self:
         shape, flat_list = cls._handle_ndarray_creation_inputs(iterable, shape, **kwargs)
         shape = Tuple(*map(_sympify, shape))
         cls._check_special_bounds(flat_list, shape)
@@ -131,13 +135,13 @@ class ImmutableSparseNDimArray(SparseNDimArray, ImmutableNDimArray): # type: ign
     def __setitem__(self, index, value):
         raise TypeError("immutable N-dim array")
 
-    def as_mutable(self):
+    def as_mutable(self) -> "MutableSparseNDimArray":
         return MutableSparseNDimArray(self)
 
 
 class MutableSparseNDimArray(MutableNDimArray, SparseNDimArray):
 
-    def __new__(cls, iterable=None, shape=None, **kwargs):
+    def __new__(cls, iterable=None, shape=None, **kwargs) -> Self:
         shape, flat_list = cls._handle_ndarray_creation_inputs(iterable, shape, **kwargs)
         self = object.__new__(cls)
         self._shape = shape
@@ -157,7 +161,7 @@ class MutableSparseNDimArray(MutableNDimArray, SparseNDimArray):
 
         return self
 
-    def __setitem__(self, index, value):
+    def __setitem__(self, index, value) -> None:
         """Allows to set items to MutableDenseNDimArray.
 
         Examples
@@ -188,9 +192,9 @@ class MutableSparseNDimArray(MutableNDimArray, SparseNDimArray):
             else:
                 self._sparse_array[index] = value
 
-    def as_immutable(self):
+    def as_immutable(self) -> ImmutableSparseNDimArray:
         return ImmutableSparseNDimArray(self)
 
     @property
-    def free_symbols(self):
+    def free_symbols(self) -> set[Any]:
         return {i for j in self._sparse_array.values() for i in j.free_symbols}

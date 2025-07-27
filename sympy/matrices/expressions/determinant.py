@@ -4,6 +4,7 @@ from sympy.core.singleton import S
 from sympy.core.sympify import sympify
 from sympy.matrices.exceptions import NonSquareMatrixError
 from sympy.matrices.matrixbase import MatrixBase
+from typing_extensions import Self
 
 
 class Determinant(Expr):
@@ -23,7 +24,7 @@ class Determinant(Expr):
     """
     is_commutative = True
 
-    def __new__(cls, mat):
+    def __new__(cls, mat) -> Self:
         mat = sympify(mat)
         if not mat.is_Matrix:
             raise TypeError("Input to Determinant, %s, not a matrix" % str(mat))
@@ -34,7 +35,7 @@ class Determinant(Expr):
         return Basic.__new__(cls, mat)
 
     @property
-    def arg(self):
+    def arg(self) -> Basic:
         return self.args[0]
 
     @property
@@ -53,7 +54,7 @@ class Determinant(Expr):
         return self
 
 
-def det(matexpr):
+def det(matexpr) -> Determinant:
     """ Matrix Determinant
 
     Examples
@@ -85,7 +86,7 @@ class Permanent(Expr):
     6
     """
 
-    def __new__(cls, mat):
+    def __new__(cls, mat) -> Self:
         mat = sympify(mat)
         if not mat.is_Matrix:
             raise TypeError("Input to Permanent, %s, not a matrix" % str(mat))
@@ -93,16 +94,16 @@ class Permanent(Expr):
         return Basic.__new__(cls, mat)
 
     @property
-    def arg(self):
+    def arg(self) -> Basic:
         return self.args[0]
 
-    def doit(self, expand=False, **hints):
+    def doit(self, expand=False, **hints) -> Self:
         if isinstance(self.arg, MatrixBase):
             return self.arg.per()
         else:
             return self
 
-def per(matexpr):
+def per(matexpr) -> Permanent:
     """ Matrix Permanent
 
     Examples

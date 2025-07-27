@@ -4,9 +4,13 @@ from sympy.core.singleton import S
 from sympy.polys import Poly, decompose
 from sympy.utilities.misc import func_name
 from sympy.functions.elementary.miscellaneous import Min, Max
+import sympy.core.expr
+import sympy.core.function
+import sympy.core.power
+from typing import Any
 
 
-def decompogen(f, symbol):
+def decompogen(f, symbol) -> list[sympy.core.expr.Expr] | list[sympy.core.function.Function | sympy.core.power.Pow] | list[Min | Max] | Any:
     """
     Computes General functional decomposition of ``f``.
     Given an expression ``f``, returns a list ``[f_1, f_2, ..., f_n]``,

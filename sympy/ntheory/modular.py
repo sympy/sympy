@@ -5,6 +5,7 @@ from sympy.ntheory.primetest import isprime
 from sympy.polys.domains import ZZ
 from sympy.polys.galoistools import gf_crt, gf_crt1, gf_crt2
 from sympy.utilities.misc import as_int
+from typing import Any
 
 
 def symmetric_residue(a, m):
@@ -21,7 +22,7 @@ def symmetric_residue(a, m):
     return a - m
 
 
-def crt(m, v, symmetric=False, check=True):
+def crt(m, v, symmetric=False, check=True) -> tuple[Any, Any | int] | None:
     r"""Chinese Remainder Theorem.
 
     The moduli in m are assumed to be pairwise coprime.  The output
@@ -99,7 +100,7 @@ def crt(m, v, symmetric=False, check=True):
     return int(result), int(mm)
 
 
-def crt1(m):
+def crt1(m) -> tuple[float, list[Any], list[Any]]:
     """First part of Chinese Remainder Theorem, for multiple application.
 
     Examples
@@ -140,7 +141,7 @@ def crt1(m):
     return gf_crt1(m, ZZ)
 
 
-def crt2(m, v, mm, e, s, symmetric=False):
+def crt2(m, v, mm, e, s, symmetric=False) -> tuple[Any, Any]:
     """Second part of Chinese Remainder Theorem, for multiple application.
 
     See ``crt1`` for usage.
@@ -169,7 +170,7 @@ def crt2(m, v, mm, e, s, symmetric=False):
     return int(result), int(mm)
 
 
-def solve_congruence(*remainder_modulus_pairs, **hint):
+def solve_congruence(*remainder_modulus_pairs, **hint) -> tuple[Any, Any | int] | None:
     """Compute the integer ``n`` that has the residual ``ai`` when it is
     divided by ``mi`` where the ``ai`` and ``mi`` are given as pairs to
     this function: ((a1, m1), (a2, m2), ...). If there is no solution,

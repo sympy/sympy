@@ -33,7 +33,9 @@ from sympy.functions.special.beta_functions import beta
 from sympy.functions.special.hyper import hyper
 from sympy.functions.special.zeta_functions import (polylog, zeta)
 from sympy.stats.drv import SingleDiscreteDistribution, SingleDiscretePSpace
-from sympy.stats.rv import _value_check, is_random
+from sympy.stats.rv import RandomSymbol, _value_check, is_random
+import sympy
+from typing_extensions import Self
 
 
 __all__ = ['FlorySchulz',
@@ -48,7 +50,7 @@ __all__ = ['FlorySchulz',
 ]
 
 
-def rv(symbol, cls, *args, **kwargs):
+def rv(symbol, cls, *args, **kwargs) -> RandomSymbol:
     args = list(map(sympify, args))
     dist = cls(*args)
     if kwargs.pop('check', True):
@@ -63,22 +65,22 @@ def rv(symbol, cls, *args, **kwargs):
 class DiscreteDistributionHandmade(SingleDiscreteDistribution):
     _argnames = ('pdf',)
 
-    def __new__(cls, pdf, set=S.Integers):
+    def __new__(cls, pdf, set=S.Integers) -> Self:
         return Basic.__new__(cls, pdf, set)
 
     @property
-    def set(self):
+    def set(self) ->     sympy.Basic:
         return self.args[1]
 
     @staticmethod
-    def check(pdf, set):
+    def check(pdf, set) -> None:
         x = Dummy('x')
         val = Sum(pdf(x), (x, set._inf, set._sup)).doit()
         _value_check(Eq(val, 1) != S.false, "The pdf is incorrect on the given set.")
 
 
 
-def DiscreteRV(symbol, density, set=S.Integers, **kwargs):
+def DiscreteRV(symbol, density, set=S.Integers, **kwargs) -> RandomSymbol:
     """
     Create a Discrete Random Variable given the following:
 
@@ -132,7 +134,7 @@ class FlorySchulzDistribution(SingleDiscreteDistribution):
     set = S.Naturals
 
     @staticmethod
-    def check(a):
+    def check(a) -> None:
         _value_check((0 < a, a < 1), "a must be between 0 and 1")
 
     def pdf(self, k):
@@ -148,7 +150,7 @@ class FlorySchulzDistribution(SingleDiscreteDistribution):
         return a**2*exp(t)/((1 + (a - 1)*exp(t))**2)
 
 
-def FlorySchulz(name, a):
+def FlorySchulz(name, a) -> RandomSymbol:
     r"""
     Create a discrete random variable with a FlorySchulz distribution.
 
@@ -203,7 +205,7 @@ class GeometricDistribution(SingleDiscreteDistribution):
     set = S.Naturals
 
     @staticmethod
-    def check(p):
+    def check(p) -> None:
         _value_check((0 < p, p <= 1), "p must be between 0 and 1")
 
     def pdf(self, k):
@@ -218,7 +220,7 @@ class GeometricDistribution(SingleDiscreteDistribution):
         return p * exp(t) / (1 - (1 - p) * exp(t))
 
 
-def Geometric(name, p):
+def Geometric(name, p) -> RandomSymbol:
     r"""
     Create a discrete random variable with a Geometric distribution.
 
@@ -279,7 +281,7 @@ class HermiteDistribution(SingleDiscreteDistribution):
     set = S.Naturals0
 
     @staticmethod
-    def check(a1, a2):
+    def check(a1, a2) -> None:
         _value_check(a1.is_nonnegative, 'Parameter a1 must be >= 0.')
         _value_check(a2.is_nonnegative, 'Parameter a2 must be >= 0.')
 
@@ -303,7 +305,7 @@ class HermiteDistribution(SingleDiscreteDistribution):
         term2 = a2 * (exp(2*I*t) - 1)
         return exp(term1 + term2)
 
-def Hermite(name, a1, a2):
+def Hermite(name, a1, a2) -> RandomSymbol:
     r"""
     Create a discrete random variable with a Hermite distribution.
 
@@ -367,7 +369,7 @@ class LogarithmicDistribution(SingleDiscreteDistribution):
     set = S.Naturals
 
     @staticmethod
-    def check(p):
+    def check(p) -> None:
         _value_check((p > 0, p < 1), "p should be between 0 and 1")
 
     def pdf(self, k):
@@ -383,7 +385,7 @@ class LogarithmicDistribution(SingleDiscreteDistribution):
         return log(1 - p * exp(t)) / log(1 - p)
 
 
-def Logarithmic(name, p):
+def Logarithmic(name, p) -> RandomSymbol:
     r"""
     Create a discrete random variable with a Logarithmic distribution.
 
@@ -443,7 +445,7 @@ class NegativeBinomialDistribution(SingleDiscreteDistribution):
     set = S.Naturals0
 
     @staticmethod
-    def check(r, p):
+    def check(r, p) -> None:
         _value_check(r > 0, 'r should be positive')
         _value_check((p > 0, p < 1), 'p should be between 0 and 1')
 
@@ -465,7 +467,7 @@ class NegativeBinomialDistribution(SingleDiscreteDistribution):
 
         return (p / (1 - (1 - p) * exp(t)))**r
 
-def NegativeBinomial(name, r, p):
+def NegativeBinomial(name, r, p) -> RandomSymbol:
     r"""
     Create a discrete random variable with a Negative Binomial distribution.
 
@@ -530,7 +532,7 @@ class PoissonDistribution(SingleDiscreteDistribution):
     set = S.Naturals0
 
     @staticmethod
-    def check(lamda):
+    def check(lamda) -> None:
         _value_check(lamda > 0, "Lambda must be positive")
 
     def pdf(self, k):
@@ -555,7 +557,7 @@ class PoissonDistribution(SingleDiscreteDistribution):
                 return self.lamda ** expr.args[1]
         return super().expectation(expr, var, evaluate, **kwargs)
 
-def Poisson(name, lamda):
+def Poisson(name, lamda) -> RandomSymbol:
     r"""
     Create a discrete random variable with a Poisson distribution.
 
@@ -616,7 +618,7 @@ class SkellamDistribution(SingleDiscreteDistribution):
     set = S.Integers
 
     @staticmethod
-    def check(mu1, mu2):
+    def check(mu1, mu2) -> None:
         _value_check(mu1 >= 0, 'Parameter mu1 must be >= 0')
         _value_check(mu2 >= 0, 'Parameter mu2 must be >= 0')
 
@@ -639,7 +641,7 @@ class SkellamDistribution(SingleDiscreteDistribution):
         return exp(-(mu1 + mu2) + mu1 * exp(t) + mu2 * exp(-t))
 
 
-def Skellam(name, mu1, mu2):
+def Skellam(name, mu1, mu2) -> RandomSymbol:
     r"""
     Create a discrete random variable with a Skellam distribution.
 
@@ -706,7 +708,7 @@ class YuleSimonDistribution(SingleDiscreteDistribution):
     set = S.Naturals
 
     @staticmethod
-    def check(rho):
+    def check(rho) -> None:
         _value_check(rho > 0, 'rho should be positive')
 
     def pdf(self, k):
@@ -725,7 +727,7 @@ class YuleSimonDistribution(SingleDiscreteDistribution):
         return rho * hyper((1, 1), (rho + 2,), exp(t)) * exp(t) / (rho + 1)
 
 
-def YuleSimon(name, rho):
+def YuleSimon(name, rho) -> RandomSymbol:
     r"""
     Create a discrete random variable with a Yule-Simon distribution.
 
@@ -784,7 +786,7 @@ class ZetaDistribution(SingleDiscreteDistribution):
     set = S.Naturals
 
     @staticmethod
-    def check(s):
+    def check(s) -> None:
         _value_check(s > 1, 's should be greater than 1')
 
     def pdf(self, k):
@@ -798,7 +800,7 @@ class ZetaDistribution(SingleDiscreteDistribution):
         return polylog(self.s, exp(t)) / zeta(self.s)
 
 
-def Zeta(name, s):
+def Zeta(name, s) -> RandomSymbol:
     r"""
     Create a discrete random variable with a Zeta distribution.
 

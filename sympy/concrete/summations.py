@@ -11,7 +11,7 @@ from sympy.core.containers import Tuple
 from sympy.core.function import Derivative, expand
 from sympy.core.mul import Mul
 from sympy.core.numbers import Float, _illegal
-from sympy.core.relational import Eq
+from sympy.core.relational import Equality, Ne, Relational, Eq
 from sympy.core.singleton import S
 from sympy.core.sorting import ordered
 from sympy.core.symbol import Dummy, Wild, Symbol, symbols
@@ -31,12 +31,17 @@ from sympy.polys.polyerrors import PolynomialError, PolificationFailed
 from sympy.polys.polytools import parallel_poly_from_expr, Poly, factor
 from sympy.polys.rationaltools import together
 from sympy.series.limitseq import limit_seq
-from sympy.series.order import O
+from sympy.series.order import Order, O
 from sympy.series.residues import residue
 from sympy.sets.contains import Contains
 from sympy.sets.sets import FiniteSet, Interval
 from sympy.utilities.iterables import sift
 import itertools
+from sympy.concrete.expr_with_intlimits import ExprWithIntLimits
+from sympy.concrete.expr_with_limits import AddWithLimits
+from sympy.core.basic import Basic
+from typing import Any
+from typing_extensions import Self
 
 
 class Sum(AddWithLimits, ExprWithIntLimits):
@@ -210,7 +215,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         if self.has_finite_limits and self.function.is_finite:
             return True
 
-    def doit(self, **hints):
+    def doit(self, **hints) -> tuple[Any, ...] | Self | Order | Any | Piecewise | Basic | Equality | Relational | Ne | Sum | None:
         if hints.get('deep', True):
             f = self.function.doit(**hints)
         else:
@@ -271,7 +276,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
 
         return f
 
-    def eval_zeta_function(self, f, limits):
+    def eval_zeta_function(self, f, limits) -> Piecewise | None:
         """
         Check whether the function matches with the zeta function.
 
@@ -698,7 +703,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         """
         return Sum(abs(self.function), self.limits).is_convergent()
 
-    def euler_maclaurin(self, m=0, n=0, eps=0, eval_integral=True):
+    def euler_maclaurin(self, m=0, n=0, eps=0, eval_integral=True) -> tuple[Any, Any] | tuple[Any | Basic, Any] | tuple[Any | Order | Basic, Any] | tuple[Any, int]:
         """
         Return an Euler-Maclaurin approximation of self, where m is the
         number of leading terms to sum directly and n is the number of
@@ -805,7 +810,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         return s + iterm, abs(term)
 
 
-    def reverse_order(self, *indices):
+    def reverse_order(self, *indices) -> "Sum":
         """
         Reverse the order of a limit in a Sum.
 
@@ -890,7 +895,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
             return log(Product(exp(self.function), *self.limits))
 
 
-def summation(f, *symbols, **kwargs):
+def summation(f, *symbols, **kwargs) -> Equality | Relational | Ne:
     r"""
     Compute the summation of f with respect to symbols.
 
@@ -943,7 +948,7 @@ def summation(f, *symbols, **kwargs):
     return Sum(f, *symbols, **kwargs).doit(deep=False)
 
 
-def telescopic_direct(L, R, n, limits):
+def telescopic_direct(L, R, n, limits) -> Order:
     """
     Returns the direct summation of the terms of a telescopic sum
 
@@ -967,7 +972,7 @@ def telescopic_direct(L, R, n, limits):
     return Add(*[L.subs(i, a + m) + R.subs(i, b - m) for m in range(n)])
 
 
-def telescopic(L, R, limits):
+def telescopic(L, R, limits) -> Order | None:
     '''
     Tries to perform the summation using the telescopic property.
 
@@ -1013,7 +1018,7 @@ def telescopic(L, R, limits):
         return telescopic_direct(L, R, s, (i, a, b))
 
 
-def eval_sum(f, limits):
+def eval_sum(f, limits) -> Piecewise | Equality | Relational | Ne | Basic | Sum | Order | None:
     (i, a, b) = limits
     if f.is_zero:
         return S.Zero
@@ -1062,7 +1067,7 @@ def eval_sum(f, limits):
         return eval_sum_direct(f, (i, a, b))
 
 
-def eval_sum_direct(expr, limits):
+def eval_sum_direct(expr, limits) -> Order:
     """
     Evaluate expression directly, but perform some simple checks first
     to possibly result in a smaller expression and faster execution.
@@ -1325,7 +1330,7 @@ def _eval_sum_hyper(f, i, a):
     return f.subs(i, 0)*hyperexpand(h), h.convergence_statement
 
 
-def eval_sum_hyper(f, i_a_b):
+def eval_sum_hyper(f, i_a_b) -> Piecewise | None:
     i, a, b = i_a_b
 
     if f.is_hypergeometric(i) is False:

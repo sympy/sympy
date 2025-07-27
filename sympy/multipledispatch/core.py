@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Any
+from typing import Callable, Any
 
 import inspect
 
@@ -10,7 +10,7 @@ from .dispatcher import Dispatcher, MethodDispatcher, ambiguity_warn
 global_namespace: dict[str, Any] = {}
 
 
-def dispatch(*types, namespace=global_namespace, on_ambiguity=ambiguity_warn):
+def dispatch(*types, namespace=global_namespace, on_ambiguity=ambiguity_warn) -> Callable[..., Any]:
     """ Dispatch function on the types of the inputs
 
     Supports dispatch on all non-keyword arguments.
@@ -73,7 +73,7 @@ def dispatch(*types, namespace=global_namespace, on_ambiguity=ambiguity_warn):
     return _
 
 
-def ismethod(func):
+def ismethod(func) -> bool:
     """ Is func a method?
 
     Note that this has to work as the method is defined but before the class is

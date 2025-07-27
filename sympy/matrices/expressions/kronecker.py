@@ -7,7 +7,7 @@ from sympy.functions import adjoint
 from sympy.matrices.exceptions import ShapeError
 from sympy.matrices.expressions.matexpr import MatrixExpr
 from sympy.matrices.expressions.transpose import transpose
-from sympy.matrices.expressions.special import Identity
+from sympy.matrices.expressions.special import GenericIdentity, GenericZeroMatrix, Identity
 from sympy.matrices.matrixbase import MatrixBase
 from sympy.strategies import (
     canon, condition, distribute, do_one, exhaust, flatten, typed, unpack)
@@ -17,9 +17,15 @@ from sympy.utilities import sift
 from .matadd import MatAdd
 from .matmul import MatMul
 from .matpow import MatPow
+from sympy.matrices.expressions.matadd import MatAdd
+from sympy.matrices.immutable import ImmutableDenseMatrix
+from sympy.series.order import Order
+from types import NotImplementedType
+from typing import Any
+from typing_extensions import Self
 
 
-def kronecker_product(*matrices):
+def kronecker_product(*matrices) -> NotImplementedType | GenericIdentity | Order | object | Identity:
     """
     The Kronecker product of two or more arguments.
 
@@ -104,7 +110,7 @@ class KroneckerProduct(MatrixExpr):
     """
     is_KroneckerProduct = True
 
-    def __new__(cls, *args, check=True):
+    def __new__(cls, *args, check=True) -> ImmutableDenseMatrix | Identity | Self:
         args = list(map(sympify, args))
         if all(a.is_Identity for a in args):
             ret = Identity(prod(a.rows for a in args))
@@ -118,7 +124,7 @@ class KroneckerProduct(MatrixExpr):
         return super().__new__(cls, *args)
 
     @property
-    def shape(self):
+    def shape(self) -> tuple[Any, Any]:
         rows, cols = self.args[0].shape
         for mat in self.args[1:]:
             rows *= mat.rows
@@ -161,7 +167,7 @@ class KroneckerProduct(MatrixExpr):
             from sympy.matrices.expressions.inverse import Inverse
             return Inverse(self)
 
-    def structurally_equal(self, other):
+    def structurally_equal(self, other) -> bool:
         '''Determine whether two matrices have the same Kronecker product structure
 
         Examples
@@ -186,7 +192,7 @@ class KroneckerProduct(MatrixExpr):
                 and len(self.args) == len(other.args)
                 and all(a.shape == b.shape for (a, b) in zip(self.args, other.args)))
 
-    def has_matching_shape(self, other):
+    def has_matching_shape(self, other) -> bool | NotImplementedType:
         '''Determine whether two matrices have the appropriate structure to bring matrix
         multiplication inside the KroneckerProdut
 
@@ -223,7 +229,7 @@ class KroneckerProduct(MatrixExpr):
         else:
             return self * other
 
-    def doit(self, **hints):
+    def doit(self, **hints) -> NotImplementedType | GenericIdentity | Order | object:
         deep = hints.get('deep', True)
         if deep:
             args = [arg.doit(**hints) for arg in self.args]
@@ -232,14 +238,14 @@ class KroneckerProduct(MatrixExpr):
         return canonicalize(KroneckerProduct(*args))
 
 
-def validate(*args):
+def validate(*args) -> None:
     if not all(arg.is_Matrix for arg in args):
         raise TypeError("Mix of Matrix and Scalar symbols")
 
 
 # rules
 
-def extract_commutative(kron):
+def extract_commutative(kron) -> NotImplementedType | GenericIdentity | Order | object:
     c_part = []
     nc_part = []
     for arg in kron.args:
@@ -357,7 +363,7 @@ def _kronecker_dims_key(expr):
         return (0,)
 
 
-def kronecker_mat_add(expr):
+def kronecker_mat_add(expr) -> GenericZeroMatrix | MatAdd:
     args = sift(expr.args, _kronecker_dims_key)
     nonkrons = args.pop((0,), None)
     if not args:
@@ -388,7 +394,7 @@ def kronecker_mat_mul(expr):
     return factor*MatMul(*matrices)
 
 
-def kronecker_mat_pow(expr):
+def kronecker_mat_pow(expr) -> ImmutableDenseMatrix | Identity | KroneckerProduct:
     if isinstance(expr.base, KroneckerProduct) and all(a.is_square for a in expr.base.args):
         return KroneckerProduct(*[MatPow(a, expr.exp) for a in expr.base.args])
     else:

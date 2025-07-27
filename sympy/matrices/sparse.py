@@ -16,6 +16,10 @@ from .decompositions import (
 
 from .solvers import (
     _lower_triangular_solve_sparse, _upper_triangular_solve_sparse)
+from sympy.matrices.immutable import ImmutableSparseMatrix
+from sympy.matrices.repmatrix import MutableRepMatrix, RepMatrix
+from types import NotImplementedType
+from typing import Any
 
 
 class SparseRepMatrix(RepMatrix):
@@ -284,12 +288,12 @@ class SparseRepMatrix(RepMatrix):
 
         return self.from_dok(self.rows, self.cols, dok)
 
-    def as_immutable(self):
+    def as_immutable(self) -> ImmutableSparseMatrix:
         """Returns an Immutable version of this Matrix."""
         from .immutable import ImmutableSparseMatrix
         return ImmutableSparseMatrix(self)
 
-    def as_mutable(self):
+    def as_mutable(self) -> "MutableSparseMatrix":
         """Returns a mutable version of this matrix.
 
         Examples
@@ -306,7 +310,7 @@ class SparseRepMatrix(RepMatrix):
         """
         return MutableSparseMatrix(self)
 
-    def col_list(self):
+    def col_list(self) -> list[tuple[Any, ...]]:
         """Returns a column-sorted list of non-zero elements of the matrix.
 
         Examples
@@ -328,11 +332,11 @@ class SparseRepMatrix(RepMatrix):
         """
         return [tuple(k + (self[k],)) for k in sorted(self.todok().keys(), key=lambda k: list(reversed(k)))]
 
-    def nnz(self):
+    def nnz(self) -> int:
         """Returns the number of non-zero elements in Matrix."""
         return len(self.todok())
 
-    def row_list(self):
+    def row_list(self) -> list[tuple[Any, ...]]:
         """Returns a row-sorted list of non-zero elements of the matrix.
 
         Examples
@@ -416,7 +420,7 @@ class SparseRepMatrix(RepMatrix):
         t = self.T
         return (t*self).inv(method=method)*t*rhs
 
-    def solve(self, rhs, method='LDL'):
+    def solve(self, rhs, method='LDL') -> NotImplementedType | None:
         """Return solution to self*soln = rhs using given inversion method.
 
         For a list of possible inversion methods, see the .inv() docstring.
@@ -432,7 +436,7 @@ class SparseRepMatrix(RepMatrix):
     RL = property(row_list, None, None, "Alternate faster representation")
     CL = property(col_list, None, None, "Alternate faster representation")
 
-    def liupc(self):
+    def liupc(self) -> tuple[list[list[Any]], Any]:
         return _liupc(self)
 
     def row_structure_symbolic_cholesky(self):
@@ -441,7 +445,7 @@ class SparseRepMatrix(RepMatrix):
     def cholesky(self, hermitian=True):
         return _cholesky_sparse(self, hermitian=hermitian)
 
-    def LDLdecomposition(self, hermitian=True):
+    def LDLdecomposition(self, hermitian=True) -> tuple[Any, Any]:
         return _LDLdecomposition_sparse(self, hermitian=hermitian)
 
     def lower_triangular_solve(self, rhs):

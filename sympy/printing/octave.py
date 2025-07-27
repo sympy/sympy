@@ -86,7 +86,7 @@ class OctaveCodePrinter(CodePrinter):
     # for Octave.
 
 
-    def __init__(self, settings={}):
+    def __init__(self, settings={}) -> None:
         super().__init__(settings)
         self.known_functions = dict(zip(known_fcns_src1, known_fcns_src1))
         self.known_functions.update(dict(known_fcns_src2))
@@ -532,7 +532,7 @@ class OctaveCodePrinter(CodePrinter):
             return self._print_not_supported(expr)
 
 
-    def indent_code(self, code):
+    def indent_code(self, code) -> str | list[Any]:
         """Accepts a string of code or a list of code lines"""
 
         # code mostly copied from ccode
@@ -564,7 +564,7 @@ class OctaveCodePrinter(CodePrinter):
         return pretty
 
 
-def octave_code(expr, assign_to=None, **settings):
+def octave_code(expr, assign_to=None, **settings) -> str | tuple[set[tuple[Any, str]], set[Any], str]:
     r"""Converts `expr` to a string of Octave (or Matlab) code.
 
     The string uses a subset of the Octave language for Matlab compatibility.
@@ -703,7 +703,7 @@ def octave_code(expr, assign_to=None, **settings):
     return OctaveCodePrinter(settings).doprint(expr, assign_to)
 
 
-def print_octave_code(expr, **settings):
+def print_octave_code(expr, **settings) -> None:
     """Prints the Octave (or Matlab) representation of the given expression.
 
     See `octave_code` for the meaning of the optional arguments.

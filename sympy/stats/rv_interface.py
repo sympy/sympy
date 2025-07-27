@@ -1,6 +1,6 @@
 from sympy.sets import FiniteSet
 from sympy.core.numbers import Rational
-from sympy.core.relational import Eq
+from sympy.core.relational import Ne, Relational, Eq
 from sympy.core.symbol import Dummy
 from sympy.functions.combinatorial.factorials import FallingFactorial
 from sympy.functions.elementary.exponential import (exp, log)
@@ -12,6 +12,17 @@ from .rv import (probability, expectation, density, where, given, pspace, cdf, P
                  characteristic_function, sample, sample_iter, random_symbols, independent, dependent,
                  sampling_density, moment_generating_function, quantile, is_random,
                  sample_stochastic_process)
+import sympy
+import sympy.sets.sets
+from sympy.concrete.summations import Sum
+from sympy.core.basic import Basic
+from sympy.core.function import UndefinedFunction
+from sympy.core.mul import Mul
+from sympy.core.power import Pow
+from sympy.series.order import Order
+from sympy.stats.symbolic_multivariate_probability import CrossCovarianceMatrix, ExpectationMatrix, VarianceMatrix
+from sympy.stats.symbolic_probability import CentralMoment, Covariance, Expectation, Moment, Variance
+from typing import Any
 
 
 __all__ = ['P', 'E', 'H', 'density', 'where', 'given', 'sample', 'cdf',
@@ -23,7 +34,7 @@ __all__ = ['P', 'E', 'H', 'density', 'where', 'given', 'sample', 'cdf',
 
 
 
-def moment(X, n, c=0, condition=None, *, evaluate=True, **kwargs):
+def moment(X, n, c=0, condition=None, *, evaluate=True, **kwargs) -> Any | Moment:
     """
     Return the nth moment of a random expression about c.
 
@@ -50,7 +61,7 @@ def moment(X, n, c=0, condition=None, *, evaluate=True, **kwargs):
     return Moment(X, n, c, condition).rewrite(Integral)
 
 
-def variance(X, condition=None, **kwargs):
+def variance(X, condition=None, **kwargs) -> VarianceMatrix | Variance | Any | CentralMoment:
     """
     Variance of a random expression.
 
@@ -80,7 +91,7 @@ def variance(X, condition=None, **kwargs):
     return cmoment(X, 2, condition, **kwargs)
 
 
-def standard_deviation(X, condition=None, **kwargs):
+def standard_deviation(X, condition=None, **kwargs) -> Pow:
     r"""
     Standard Deviation of a random expression
 
@@ -102,7 +113,23 @@ def standard_deviation(X, condition=None, **kwargs):
     return sqrt(variance(X, condition, **kwargs))
 std = standard_deviation
 
-def entropy(expr, condition=None, **kwargs):
+def entropy(expr, condition=None, **kwargs) -> (
+    int
+    | Mul
+    | Basic
+    | Expectation
+    | tuple[Any, ...]
+    | Sum
+    | Order
+    | Any
+    | sympy.Piecewise
+    | sympy.Equality
+    | Relational
+    | Ne
+    | sympy.Integral
+    | ExpectationMatrix
+    | None
+):
     """
     Calculates entropy of a probability distribution.
 
@@ -144,7 +171,23 @@ def entropy(expr, condition=None, **kwargs):
             return sum(-prob*log(prob, base) for prob in pdf.values())
     return expectation(-log(pdf(expr), base))
 
-def covariance(X, Y, condition=None, **kwargs):
+def covariance(X, Y, condition=None, **kwargs) -> (
+    CrossCovarianceMatrix
+    | Covariance
+    | Basic
+    | Expectation
+    | tuple[Any, ...]
+    | Sum
+    | Order
+    | Any
+    | sympy.Piecewise
+    | sympy.Equality
+    | Relational
+    | Ne
+    | sympy.Integral
+    | ExpectationMatrix
+    | None
+):
     """
     Covariance of two random expressions.
 
@@ -218,7 +261,7 @@ def correlation(X, Y, condition=None, **kwargs):
      * std(Y, condition, **kwargs))
 
 
-def cmoment(X, n, condition=None, *, evaluate=True, **kwargs):
+def cmoment(X, n, condition=None, *, evaluate=True, **kwargs) -> Any | CentralMoment:
     """
     Return the nth central moment of a random expression about its mean.
 
@@ -349,7 +392,22 @@ def kurtosis(X, condition=None, **kwargs):
     return smoment(X, 4, condition=condition, **kwargs)
 
 
-def factorial_moment(X, n, condition=None, **kwargs):
+def factorial_moment(X, n, condition=None, **kwargs) -> (
+    type[UndefinedFunction]
+    | Basic
+    | Expectation
+    | tuple[Any, ...]
+    | Sum
+    | Order
+    | Any
+    | sympy.Piecewise
+    | sympy.Equality
+    | Relational
+    | Ne
+    | sympy.Integral
+    | ExpectationMatrix
+    | None
+):
     """
     The factorial moment is a mathematical quantity defined as the expectation
     or average of the falling factorial of a random variable.
@@ -388,7 +446,7 @@ def factorial_moment(X, n, condition=None, **kwargs):
     """
     return expectation(FallingFactorial(X, n), condition=condition, **kwargs)
 
-def median(X, evaluate=True, **kwargs):
+def median(X, evaluate=True, **kwargs) -> sympy.sets.sets.FiniteSet | sympy.sets.sets.Set:
     r"""
     Calculates the median of the probability distribution.
 

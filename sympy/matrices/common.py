@@ -42,6 +42,7 @@ from .exceptions import ( # noqa: F401
     MatrixError, ShapeError, NonSquareMatrixError, NonInvertibleMatrixError,
     NonPositiveDefiniteMatrixError
 )
+from typing import Any
 
 
 _DEPRECATED_MIXINS = (
@@ -131,7 +132,7 @@ class MatrixRequired(metaclass=_MatrixDeprecatedMeta):
     cols: int
     _simplify = None
 
-    def __init_subclass__(cls, **kwargs):
+    def __init_subclass__(cls, **kwargs) -> None:
 
         # Warn if any downstream code is subclassing this class or any of the
         # deprecated mixin classes that are all ultimately subclasses of this
@@ -168,19 +169,19 @@ class MatrixRequired(metaclass=_MatrixDeprecatedMeta):
     def __eq__(self, other):
         raise NotImplementedError("Subclasses must implement this.")
 
-    def __getitem__(self, key):
+    def __getitem__(self, key) -> None:
         """Implementations of __getitem__ should accept ints, in which
         case the matrix is indexed as a flat list, tuples (i,j) in which
         case the (i,j) entry is returned, slices, or mixed tuples (a,b)
         where a and b are any combination of slices and integers."""
         raise NotImplementedError("Subclasses must implement this.")
 
-    def __len__(self):
+    def __len__(self) -> int:
         """The total number of entries in the matrix."""
         raise NotImplementedError("Subclasses must implement this.")
 
     @property
-    def shape(self):
+    def shape(self) -> None:
         raise NotImplementedError("Subclasses must implement this.")
 
 
@@ -619,7 +620,7 @@ class MatrixShaping(MatrixRequired):
                 .format(self.rows, other.rows))
         return self._eval_row_join(other)
 
-    def diagonal(self, k=0):
+    def diagonal(self, k: int=0):
         """Returns the kth diagonal of self. The main diagonal
         corresponds to `k=0`; diagonals above and below correspond to
         `k > 0` and `k < 0`, respectively. The values of `self[i, j]`
@@ -802,7 +803,7 @@ class MatrixShaping(MatrixRequired):
         """
         return self._eval_vec()
 
-    def vech(self, diagonal=True, check_symmetry=True):
+    def vech(self, diagonal: bool=True, check_symmetry: bool=True):
         """Reshapes the matrix into a column vector by stacking the
         elements in the lower triangle.
 
@@ -933,7 +934,7 @@ class MatrixSpecial(MatrixRequired):
         return wminus, wplus
 
     @classmethod
-    def diag(kls, *args, strict=False, unpack=True, rows=None, cols=None, **kwargs):
+    def diag(kls, *args, strict: bool=False, unpack: bool=True, rows: Any | None=None, cols: Any | None=None, **kwargs):
         """Returns a matrix with the specified diagonal.
         If matrices are passed, a block-diagonal matrix
         is created (i.e. the "direct sum" of the matrices).
@@ -1075,7 +1076,7 @@ class MatrixSpecial(MatrixRequired):
         return klass._eval_diag(rows, cols, diag_entries)
 
     @classmethod
-    def eye(kls, rows, cols=None, **kwargs):
+    def eye(kls, rows, cols: Any | None=None, **kwargs):
         """Returns an identity matrix.
 
         Parameters
@@ -1099,7 +1100,7 @@ class MatrixSpecial(MatrixRequired):
         return klass._eval_eye(rows, cols)
 
     @classmethod
-    def jordan_block(kls, size=None, eigenvalue=None, *, band='upper', **kwargs):
+    def jordan_block(kls, size: Any | None=None, eigenvalue: Any | None=None, *, band: str='upper', **kwargs):
         """Returns a Jordan block
 
         Parameters
@@ -1197,7 +1198,7 @@ class MatrixSpecial(MatrixRequired):
         return klass._eval_jordan_block(size, eigenvalue, band)
 
     @classmethod
-    def ones(kls, rows, cols=None, **kwargs):
+    def ones(kls, rows, cols: Any | None=None, **kwargs):
         """Returns a matrix of ones.
 
         Parameters
@@ -1218,7 +1219,7 @@ class MatrixSpecial(MatrixRequired):
         return klass._eval_ones(rows, cols)
 
     @classmethod
-    def zeros(kls, rows, cols=None, **kwargs):
+    def zeros(kls, rows, cols: Any | None=None, **kwargs):
         """Returns a matrix of zeros.
 
         Parameters
@@ -1472,7 +1473,7 @@ class MatrixProperties(MatrixRequired):
         """
         return self._eval_has(*patterns)
 
-    def is_anti_symmetric(self, simplify=True):
+    def is_anti_symmetric(self, simplify: bool=True):
         """Check if matrix M is an antisymmetric matrix,
         that is, M is a square matrix with all M[i, j] == -M[j, i].
 
@@ -1839,7 +1840,7 @@ class MatrixProperties(MatrixRequired):
         """
         return self._eval_is_symbolic()
 
-    def is_symmetric(self, simplify=True):
+    def is_symmetric(self, simplify: bool=True):
         """Check if matrix is symmetric matrix,
         that is square matrix and is equal to its transpose.
 
@@ -2082,7 +2083,7 @@ class MatrixOperations(MatrixRequired):
 
         return self._eval_applyfunc(f)
 
-    def as_real_imag(self, deep=True, **hints):
+    def as_real_imag(self, deep: bool=True, **hints):
         """Returns a tuple containing the (real, imaginary) part of matrix."""
         # XXX: Ignoring deep and hints...
         return self._eval_as_real_imag()
@@ -2118,14 +2119,14 @@ class MatrixOperations(MatrixRequired):
     def doit(self, **hints):
         return self.applyfunc(lambda x: x.doit(**hints))
 
-    def evalf(self, n=15, subs=None, maxn=100, chop=False, strict=False, quad=None, verbose=False):
+    def evalf(self, n: int=15, subs: Any | None=None, maxn: int=100, chop: bool=False, strict: bool=False, quad: Any | None=None, verbose: bool=False):
         """Apply evalf() to each element of self."""
         options = {'subs':subs, 'maxn':maxn, 'chop':chop, 'strict':strict,
                 'quad':quad, 'verbose':verbose}
         return self.applyfunc(lambda i: i.evalf(n, **options))
 
-    def expand(self, deep=True, modulus=None, power_base=True, power_exp=True,
-               mul=True, log=True, multinomial=True, basic=True, **hints):
+    def expand(self, deep: bool=True, modulus: Any | None=None, power_base: bool=True, power_exp: bool=True,
+               mul: bool=True, log: bool=True, multinomial: bool=True, basic: bool=True, **hints):
         """Apply core.function.expand to each entry of the matrix.
 
         Examples
@@ -2169,7 +2170,7 @@ class MatrixOperations(MatrixRequired):
         """
         return self.T.C
 
-    def permute(self, perm, orientation='rows', direction='forward'):
+    def permute(self, perm, orientation: str='rows', direction: str='forward'):
         r"""Permute the rows or columns of a matrix by the given list of
         swaps.
 
@@ -2306,7 +2307,7 @@ class MatrixOperations(MatrixRequired):
         if orientation == 'cols':
             return self._eval_permute_cols(perm)
 
-    def permute_cols(self, swaps, direction='forward'):
+    def permute_cols(self, swaps, direction: str='forward'):
         """Alias for
         ``self.permute(swaps, orientation='cols', direction=direction)``
 
@@ -2317,7 +2318,7 @@ class MatrixOperations(MatrixRequired):
         """
         return self.permute(swaps, orientation='cols', direction=direction)
 
-    def permute_rows(self, swaps, direction='forward'):
+    def permute_rows(self, swaps, direction: str='forward'):
         """Alias for
         ``self.permute(swaps, orientation='rows', direction=direction)``
 
@@ -2328,7 +2329,7 @@ class MatrixOperations(MatrixRequired):
         """
         return self.permute(swaps, orientation='rows', direction=direction)
 
-    def refine(self, assumptions=True):
+    def refine(self, assumptions: bool=True):
         """Apply refine to each element of the matrix.
 
         Examples
@@ -2348,7 +2349,7 @@ class MatrixOperations(MatrixRequired):
         """
         return self.applyfunc(lambda x: refine(x, assumptions))
 
-    def replace(self, F, G, map=False, simultaneous=True, exact=None):
+    def replace(self, F, G, map: bool=False, simultaneous: bool=True, exact: Any | None=None):
         """Replaces Function F in Matrix entries with Function G.
 
         Examples
@@ -2369,7 +2370,7 @@ class MatrixOperations(MatrixRequired):
         return self.applyfunc(
             lambda x: x.replace(F, G, map=map, simultaneous=simultaneous, exact=exact))
 
-    def rot90(self, k=1):
+    def rot90(self, k: int=1):
         """Rotates Matrix by 90 degrees
 
         Parameters
@@ -2543,7 +2544,7 @@ class MatrixOperations(MatrixRequired):
         from sympy.simplify.trigsimp import trigsimp
         return self.applyfunc(lambda x: trigsimp(x, **opts))
 
-    def upper_triangular(self, k=0):
+    def upper_triangular(self, k: int=0):
         """Return the elements on and above the kth diagonal of a matrix.
         If k is not specified then simply returns upper-triangular portion
         of a matrix
@@ -2582,7 +2583,7 @@ class MatrixOperations(MatrixRequired):
         return self._new(self.rows, self.cols, entry)
 
 
-    def lower_triangular(self, k=0):
+    def lower_triangular(self, k: int=0):
         """Return the elements on and below the kth diagonal of a matrix.
         If k is not specified then simply returns lower-triangular portion
         of a matrix
@@ -2795,7 +2796,7 @@ class MatrixArithmetic(MatrixRequired):
 
         return self.multiply(other)
 
-    def multiply(self, other, dotprodsimp=None):
+    def multiply(self, other, dotprodsimp: Any | None=None):
         """Same as __mul__() but with optional simplification.
 
         Parameters
@@ -2874,7 +2875,7 @@ class MatrixArithmetic(MatrixRequired):
         return self.pow(exp)
 
 
-    def pow(self, exp, method=None):
+    def pow(self, exp, method: Any | None=None):
         r"""Return self**exp a scalar or symbol.
 
         Parameters
@@ -2984,7 +2985,7 @@ class MatrixArithmetic(MatrixRequired):
     def __rmul__(self, other):
         return self.rmultiply(other)
 
-    def rmultiply(self, other, dotprodsimp=None):
+    def rmultiply(self, other, dotprodsimp: Any | None=None):
         """Same as __rmul__() but with optional simplification.
 
         Parameters
@@ -3053,8 +3054,8 @@ class _MinimalMatrix:
     is_MatrixLike = True
     _sympify = staticmethod(sympify)
     _class_priority = 3
-    zero = S.Zero
-    one = S.One
+    zero: Any = S.Zero
+    one: Any = S.One
 
     is_Matrix = True
     is_MatrixExpr = False
@@ -3063,7 +3064,7 @@ class _MinimalMatrix:
     def _new(cls, *args, **kwargs):
         return cls(*args, **kwargs)
 
-    def __init__(self, rows, cols=None, mat=None, copy=False):
+    def __init__(self, rows, cols: Any | None=None, mat: Any | None=None, copy: bool=False) -> None:
         if isfunction(mat):
             # if we passed in a function, use that to populate the indices
             mat = [mat(i, j) for i in range(rows) for j in range(cols)]
@@ -3131,7 +3132,7 @@ class _MinimalMatrix:
         return (
             self.shape == other.shape and list(self) == list(other))
 
-    def __len__(self):
+    def __len__(self) -> int:
         return self.rows*self.cols
 
     def __repr__(self):
@@ -3162,7 +3163,7 @@ class _MatrixWrapper:
     is_Matrix     = False # needs to be here because of __getattr__
     is_MatrixLike = True
 
-    def __init__(self, mat, shape):
+    def __init__(self, mat, shape) -> None:
         self.mat = mat
         self.shape = shape
         self.rows, self.cols = shape
@@ -3205,7 +3206,7 @@ def _matrixify(mat):
     return mat
 
 
-def a2idx(j, n=None):
+def a2idx(j, n: Any | None=None):
     """Return integer after making positive and validating against n."""
     if not isinstance(j, int):
         jindex = getattr(j, '__index__', None)

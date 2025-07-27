@@ -18,6 +18,8 @@ from sympy.polys.polyclasses import DMP
 from sympy.polys.polytools import Poly, PurePoly
 from sympy.polys.polyutils import _analyze_gens
 from sympy.utilities import subsets, public, filldedent
+from sympy.series.order import Order
+from typing import Any
 
 
 @public
@@ -90,7 +92,7 @@ def cyclotomic_poly(n, x=None, polys=False):
 
 
 @public
-def symmetric_poly(n, *gens, polys=False):
+def symmetric_poly(n, *gens, polys=False) -> Any | Order:
     """
     Generates symmetric polynomial of order `n`.
 
@@ -141,7 +143,7 @@ def random_poly(x, n, inf, sup, domain=ZZ, polys=False):
 
 
 @public
-def interpolating_poly(n, x, X='x', Y='y'):
+def interpolating_poly(n, x, X='x', Y='y') -> Order:
     """Construct Lagrange interpolating polynomial for ``n``
     data points. If a sequence of values are given for ``X`` and ``Y``
     then the first ``n`` values will be used.
@@ -174,7 +176,7 @@ def interpolating_poly(n, x, X='x', Y='y'):
     return Add(*[coeff*y for coeff, y in zip(coeffs, Y)])
 
 
-def fateman_poly_F_1(n):
+def fateman_poly_F_1(n) -> tuple[Any, Any, Any]:
     """Fateman's GCD benchmark: trivial GCD """
     Y = [Symbol('y_' + str(i)) for i in range(n + 1)]
 
@@ -191,7 +193,7 @@ def fateman_poly_F_1(n):
     return F, G, H
 
 
-def dmp_fateman_poly_F_1(n, K):
+def dmp_fateman_poly_F_1(n, K) -> tuple[Any | list[Any] | list[list[Any]], Any | list[Any] | list[list[Any]], list[list[Any]] | Any | list[Any]]:
     """Fateman's GCD benchmark: trivial GCD """
     u = [K(1), K(0)]
 
@@ -221,7 +223,7 @@ def dmp_fateman_poly_F_1(n, K):
     return F, G, H
 
 
-def fateman_poly_F_2(n):
+def fateman_poly_F_2(n) -> tuple[Any, Any, Any]:
     """Fateman's GCD benchmark: linearly dense quartic inputs """
     Y = [Symbol('y_' + str(i)) for i in range(n + 1)]
 
@@ -237,7 +239,7 @@ def fateman_poly_F_2(n):
     return H*F, H*G, H
 
 
-def dmp_fateman_poly_F_2(n, K):
+def dmp_fateman_poly_F_2(n, K) -> tuple[Any | list[Any] | list[list[Any]], Any | list[Any] | list[list[Any]], Any | list[list[Any]]]:
     """Fateman's GCD benchmark: linearly dense quartic inputs """
     u = [K(1), K(0)]
 
@@ -258,7 +260,7 @@ def dmp_fateman_poly_F_2(n, K):
     return dmp_mul(f, h, n, K), dmp_mul(g, h, n, K), h
 
 
-def fateman_poly_F_3(n):
+def fateman_poly_F_3(n) -> tuple[Any, Any, Any]:
     """Fateman's GCD benchmark: sparse inputs (deg f ~ vars f) """
     Y = [Symbol('y_' + str(i)) for i in range(n + 1)]
 
@@ -274,7 +276,7 @@ def fateman_poly_F_3(n):
     return H*F, H*G, H
 
 
-def dmp_fateman_poly_F_3(n, K):
+def dmp_fateman_poly_F_3(n, K) -> tuple[Any | list[Any] | list[list[Any]], Any | list[Any] | list[list[Any]], Any | list[list[Any]]]:
     """Fateman's GCD benchmark: sparse inputs (deg f ~ vars f) """
     u = dup_from_raw_dict({n + 1: K.one}, K)
 
@@ -333,8 +335,8 @@ def _w_2():
     R, x, y = ring("x,y", ZZ)
     return 24*x**8*y**3 + 48*x**8*y**2 + 24*x**7*y**5 - 72*x**7*y**2 + 25*x**6*y**4 + 2*x**6*y**3 + 4*x**6*y + 8*x**6 + x**5*y**6 + x**5*y**3 - 12*x**5 + x**4*y**5 - x**4*y**4 - 2*x**4*y**3 + 292*x**4*y**2 - x**3*y**6 + 3*x**3*y**3 - x**2*y**5 + 12*x**2*y**3 + 48*x**2 - 12*y**3
 
-def f_polys():
+def f_polys() -> tuple[Any, Any, Any, Any, Any, Any, Any]:
     return _f_0(), _f_1(), _f_2(), _f_3(), _f_4(), _f_5(), _f_6()
 
-def w_polys():
+def w_polys() -> tuple[Any, Any]:
     return _w_1(), _w_2()

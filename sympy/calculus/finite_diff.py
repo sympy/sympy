@@ -23,10 +23,11 @@ from sympy.core.function import Subs
 from sympy.core.traversal import preorder_traversal
 from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.iterables import iterable
+from typing import Literal
 
 
 
-def finite_diff_weights(order, x_list, x0=S.One):
+def finite_diff_weights(order, x_list, x0=S.One) -> list[list[list[int]]]:
     """
     Calculates the finite difference weights for an arbitrarily spaced
     one-dimensional grid (``x_list``) for derivatives at ``x0`` of order
@@ -193,7 +194,7 @@ def finite_diff_weights(order, x_list, x0=S.One):
     return delta
 
 
-def apply_finite_diff(order, x_list, y_list, x0=S.Zero):
+def apply_finite_diff(order, x_list, y_list, x0=S.Zero) -> Literal[0]:
     """
     Calculates the finite difference approximation of
     the derivative of requested order at ``x0`` from points

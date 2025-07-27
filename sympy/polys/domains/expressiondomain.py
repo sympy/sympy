@@ -8,6 +8,9 @@ from sympy.polys.domains.field import Field
 from sympy.polys.domains.simpledomain import SimpleDomain
 from sympy.polys.polyutils import PicklableWithSlots
 from sympy.utilities import public
+from ExpressionDomain import Expression
+from types import NotImplementedType
+from typing_extensions import Self
 
 eflags = {"deep": False, "mul": True, "power_exp": False, "power_base": False,
               "basic": False, "multinomial": False, "log": False}
@@ -23,7 +26,7 @@ class ExpressionDomain(Field, CharacteristicZero, SimpleDomain):
 
         __slots__ = ('ex',)
 
-        def __init__(self, ex):
+        def __init__(self, ex) -> None:
             if not isinstance(ex, self.__class__):
                 self.ex = sympify(ex)
             else:
@@ -35,7 +38,7 @@ class ExpressionDomain(Field, CharacteristicZero, SimpleDomain):
         def __str__(f):
             return 'EX(%s)' % str(f.ex)
 
-        def __hash__(self):
+        def __hash__(self) -> int:
             return hash((self.__class__.__name__, self.ex))
 
         def parent(self):
@@ -44,22 +47,22 @@ class ExpressionDomain(Field, CharacteristicZero, SimpleDomain):
         def as_expr(f):
             return f.ex
 
-        def numer(f):
+        def numer(f) -> Self:
             return f.__class__(f.ex.as_numer_denom()[0])
 
-        def denom(f):
+        def denom(f) -> Self:
             return f.__class__(f.ex.as_numer_denom()[1])
 
-        def simplify(f, ex):
+        def simplify(f, ex) -> Self:
             return f.__class__(ex.cancel().expand(**eflags))
 
-        def __abs__(f):
+        def __abs__(f) -> Self:
             return f.__class__(abs(f.ex))
 
         def __pos__(f):
             return f
 
-        def __neg__(f):
+        def __neg__(f) -> Self:
             return f.__class__(-f.ex)
 
         def _to_ex(f, g):
@@ -71,7 +74,7 @@ class ExpressionDomain(Field, CharacteristicZero, SimpleDomain):
         def __lt__(f, g):
             return f.ex.sort_key() < g.ex.sort_key()
 
-        def __add__(f, g):
+        def __add__(f, g) -> NotImplementedType | Self:
             g = f._to_ex(g)
 
             if g is None:
@@ -83,10 +86,10 @@ class ExpressionDomain(Field, CharacteristicZero, SimpleDomain):
             else:
                 return f.simplify(f.ex + g.ex)
 
-        def __radd__(f, g):
+        def __radd__(f, g) -> Self:
             return f.simplify(f.__class__(g).ex + f.ex)
 
-        def __sub__(f, g):
+        def __sub__(f, g) -> NotImplementedType | Self:
             g = f._to_ex(g)
 
             if g is None:
@@ -98,10 +101,10 @@ class ExpressionDomain(Field, CharacteristicZero, SimpleDomain):
             else:
                 return f.simplify(f.ex - g.ex)
 
-        def __rsub__(f, g):
+        def __rsub__(f, g) -> Self:
             return f.simplify(f.__class__(g).ex - f.ex)
 
-        def __mul__(f, g):
+        def __mul__(f, g) -> NotImplementedType | Self:
             g = f._to_ex(g)
 
             if g is None:
@@ -114,10 +117,10 @@ class ExpressionDomain(Field, CharacteristicZero, SimpleDomain):
 
             return f.simplify(f.ex*g.ex)
 
-        def __rmul__(f, g):
+        def __rmul__(f, g) -> Self:
             return f.simplify(f.__class__(g).ex*f.ex)
 
-        def __pow__(f, n):
+        def __pow__(f, n) -> Self | NotImplementedType:
             n = f._to_ex(n)
 
             if n is not None:
@@ -125,7 +128,7 @@ class ExpressionDomain(Field, CharacteristicZero, SimpleDomain):
             else:
                 return NotImplemented
 
-        def __truediv__(f, g):
+        def __truediv__(f, g) -> Self | NotImplementedType:
             g = f._to_ex(g)
 
             if g is not None:
@@ -133,23 +136,23 @@ class ExpressionDomain(Field, CharacteristicZero, SimpleDomain):
             else:
                 return NotImplemented
 
-        def __rtruediv__(f, g):
+        def __rtruediv__(f, g) -> Self:
             return f.simplify(f.__class__(g).ex/f.ex)
 
-        def __eq__(f, g):
+        def __eq__(f, g) -> bool:
             return f.ex == f.__class__(g).ex
 
-        def __ne__(f, g):
+        def __ne__(f, g) -> bool:
             return not f == g
 
-        def __bool__(f):
+        def __bool__(f) -> bool:
             return not f.ex.is_zero
 
-        def gcd(f, g):
+        def gcd(f, g) -> Self:
             from sympy.polys import gcd
             return f.__class__(gcd(f.ex, f.__class__(g).ex))
 
-        def lcm(f, g):
+        def lcm(f, g) -> Self:
             from sympy.polys import lcm
             return f.__class__(lcm(f.ex, f.__class__(g).ex))
 
@@ -163,7 +166,7 @@ class ExpressionDomain(Field, CharacteristicZero, SimpleDomain):
     has_assoc_Ring = False
     has_assoc_Field = True
 
-    def __init__(self):
+    def __init__(self) -> None:
         pass
 
     def __eq__(self, other):
@@ -179,7 +182,7 @@ class ExpressionDomain(Field, CharacteristicZero, SimpleDomain):
         """Convert ``a`` to a SymPy object. """
         return a.as_expr()
 
-    def from_sympy(self, a):
+    def from_sympy(self, a) -> Expression:
         """Convert SymPy's expression to ``dtype``. """
         return self.dtype(a)
 
@@ -239,11 +242,11 @@ class ExpressionDomain(Field, CharacteristicZero, SimpleDomain):
         """Convert a ``EX`` object to ``dtype``. """
         return a
 
-    def get_ring(self):
+    def get_ring(self) -> Self:
         """Returns a ring associated with ``self``. """
         return self  # XXX: EX is not a ring but we don't have much choice here.
 
-    def get_field(self):
+    def get_field(self) -> Self:
         """Returns a field associated with ``self``. """
         return self
 

@@ -5,12 +5,18 @@ from sympy.core.symbol import Dummy
 from sympy.integrals.integrals import Integral
 from sympy.stats.rv import (NamedArgsMixin, random_symbols, _symbol_converter,
                         PSpace, RandomSymbol, is_random, Distribution)
-from sympy.stats.crv import ContinuousDistribution, SingleContinuousPSpace
-from sympy.stats.drv import DiscreteDistribution, SingleDiscretePSpace
-from sympy.stats.frv import SingleFiniteDistribution, SingleFinitePSpace
+from sympy.stats.crv import ContinuousPSpace, SingleContinuousDomain, ContinuousDistribution, SingleContinuousPSpace
+from sympy.stats.drv import DiscretePSpace, SingleDiscreteDomain, DiscreteDistribution, SingleDiscretePSpace
+from sympy.stats.frv import FiniteDensity, FinitePSpace, SingleFiniteDomain, SingleFiniteDistribution, SingleFinitePSpace
 from sympy.stats.crv_types import ContinuousDistributionHandmade
 from sympy.stats.drv_types import DiscreteDistributionHandmade
 from sympy.stats.frv_types import FiniteDistributionHandmade
+import sympy
+from sympy.core.relational import Relational
+from sympy.series.order import Order
+from sympy.stats.symbolic_probability import Probability
+from typing import Any
+from typing_extensions import Self
 
 
 class CompoundPSpace(PSpace):
@@ -20,7 +26,7 @@ class CompoundPSpace(PSpace):
     parent distribution.
     """
 
-    def __new__(cls, s, distribution):
+    def __new__(cls, s, distribution) -> SingleContinuousPSpace | SingleDiscretePSpace | SingleFinitePSpace | Self:
         s = _symbol_converter(s)
         if isinstance(distribution, ContinuousDistribution):
             return SingleContinuousPSpace(s, distribution)
@@ -34,11 +40,11 @@ class CompoundPSpace(PSpace):
         return Basic.__new__(cls, s, distribution)
 
     @property
-    def value(self):
+    def value(self) -> RandomSymbol:
         return RandomSymbol(self.symbol, self)
 
     @property
-    def symbol(self):
+    def symbol(self) ->     sympy.Basic:
         return self.args[0]
 
     @property
@@ -54,7 +60,7 @@ class CompoundPSpace(PSpace):
         return self.distribution.is_Discrete
 
     @property
-    def distribution(self):
+    def distribution(self) ->     sympy.Basic:
         return self.args[1]
 
     @property
@@ -66,7 +72,7 @@ class CompoundPSpace(PSpace):
         return self.distribution.set
 
     @property
-    def domain(self):
+    def domain(self) -> SingleContinuousDomain | SingleDiscreteDomain | SingleFiniteDomain:
         return self._get_newpspace().domain
 
     def _get_newpspace(self, evaluate=False):
@@ -94,17 +100,17 @@ class CompoundPSpace(PSpace):
             dens = {k: pdf(k) for k in _set}
             return SingleFinitePSpace(sym, FiniteDistributionHandmade(dens))
 
-    def compute_density(self, expr, *, compound_evaluate=True, **kwargs):
+    def compute_density(self, expr, *, compound_evaluate=True, **kwargs) ->     sympy.Basic | Lambda | FiniteDensity:
         new_pspace = self._get_newpspace(compound_evaluate)
         expr = expr.subs({self.value: new_pspace.value})
         return new_pspace.compute_density(expr, **kwargs)
 
-    def compute_cdf(self, expr, *, compound_evaluate=True, **kwargs):
+    def compute_cdf(self, expr, *, compound_evaluate=True, **kwargs) -> Lambda | dict[Any, Any]:
         new_pspace = self._get_newpspace(compound_evaluate)
         expr = expr.subs({self.value: new_pspace.value})
         return new_pspace.compute_cdf(expr, **kwargs)
 
-    def compute_expectation(self, expr, rvs=None, evaluate=False, **kwargs):
+    def compute_expectation(self, expr, rvs=None, evaluate=False, **kwargs) -> tuple[Any, ...] |     sympy.Sum | Order | Any |     sympy.Piecewise |     sympy.Basic |     sympy.Equality | Relational |     sympy.Ne |     sympy.Integral | None:
         new_pspace = self._get_newpspace(evaluate)
         expr = expr.subs({self.value: new_pspace.value})
         if rvs:
@@ -113,12 +119,12 @@ class CompoundPSpace(PSpace):
             return new_pspace.compute_expectation(expr, rvs, **kwargs)
         return new_pspace.compute_expectation(expr, rvs, evaluate, **kwargs)
 
-    def probability(self, condition, *, compound_evaluate=True, **kwargs):
+    def probability(self, condition, *, compound_evaluate=True, **kwargs) -> Probability |     sympy.Equality | Relational |     sympy.Ne | int:
         new_pspace = self._get_newpspace(compound_evaluate)
         condition = condition.subs({self.value: new_pspace.value})
         return new_pspace.probability(condition)
 
-    def conditional_space(self, condition, *, compound_evaluate=True, **kwargs):
+    def conditional_space(self, condition, *, compound_evaluate=True, **kwargs) -> ContinuousPSpace | DiscretePSpace | FinitePSpace:
         new_pspace = self._get_newpspace(compound_evaluate)
         condition = condition.subs({self.value: new_pspace.value})
         return new_pspace.conditional_space(condition)
@@ -156,7 +162,7 @@ class CompoundDistribution(Distribution, NamedArgsMixin):
 
     """
 
-    def __new__(cls, dist):
+    def __new__(cls, dist) -> ContinuousDistribution | SingleFiniteDistribution | DiscreteDistribution | Self:
         if not isinstance(dist, (ContinuousDistribution,
                 SingleFiniteDistribution, DiscreteDistribution)):
             message = "Compound Distribution for %s is not implemented yet" % str(dist)
@@ -170,18 +176,18 @@ class CompoundDistribution(Distribution, NamedArgsMixin):
         return self.args[0].set
 
     @property
-    def is_Continuous(self):
+    def is_Continuous(self) -> bool:
         return isinstance(self.args[0], ContinuousDistribution)
 
     @property
-    def is_Finite(self):
+    def is_Finite(self) -> bool:
         return isinstance(self.args[0], SingleFiniteDistribution)
 
     @property
-    def is_Discrete(self):
+    def is_Discrete(self) -> bool:
         return isinstance(self.args[0], DiscreteDistribution)
 
-    def pdf(self, x, evaluate=False):
+    def pdf(self, x, evaluate=False) ->     sympy.Basic:
         dist = self.args[0]
         randoms = [rv for rv in dist.args if is_random(rv)]
         if isinstance(dist, SingleFiniteDistribution):

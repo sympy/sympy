@@ -91,6 +91,7 @@ from sympy.utilities.iterables import iterable
 from sympy.utilities.decorator import doctest_depends_on
 
 from itertools import chain
+from typing import Any
 
 
 __doctest_requires__ = {('preview_diagram',): 'pyglet'}
@@ -111,7 +112,7 @@ class _GrowableGrid:
     This class currently represents a naive implementation of the
     functionality with little attempt at optimisation.
     """
-    def __init__(self, width, height):
+    def __init__(self, width, height) -> None:
         self._width = width
         self._height = height
 
@@ -133,7 +134,7 @@ class _GrowableGrid:
         i, j = i_j
         return self._array[i][j]
 
-    def __setitem__(self, i_j, newvalue):
+    def __setitem__(self, i_j, newvalue) -> None:
         """
         Sets the element located at in the i-th line and j-th
         column.
@@ -141,14 +142,14 @@ class _GrowableGrid:
         i, j = i_j
         self._array[i][j] = newvalue
 
-    def append_row(self):
+    def append_row(self) -> None:
         """
         Appends an empty row to the grid.
         """
         self._height += 1
         self._array.append([None for j in range(self._width)])
 
-    def append_column(self):
+    def append_column(self) -> None:
         """
         Appends an empty column to the grid.
         """
@@ -156,14 +157,14 @@ class _GrowableGrid:
         for i in range(self._height):
             self._array[i].append(None)
 
-    def prepend_row(self):
+    def prepend_row(self) -> None:
         """
         Prepends the grid with an empty row.
         """
         self._height += 1
         self._array.insert(0, [None for j in range(self._width)])
 
-    def prepend_column(self):
+    def prepend_column(self) -> None:
         """
         Prepends the grid with an empty column.
         """
@@ -1161,7 +1162,7 @@ class DiagramGrid:
 
         return component_morphisms
 
-    def __init__(self, diagram, groups=None, **hints):
+    def __init__(self, diagram, groups=None, **hints) -> None:
         premises = DiagramGrid._simplify_morphisms(diagram.premises)
         conclusions = DiagramGrid._simplify_morphisms(diagram.conclusions)
         all_merged_morphisms = DiagramGrid._merge_premises_conclusions(
@@ -1298,7 +1299,7 @@ class DiagramGrid:
         return self._grid[i, j]
 
     @property
-    def morphisms(self):
+    def morphisms(self) -> dict[Any, Any]:
         """
         Returns those morphisms (and their properties) which are
         sufficiently meaningful to be drawn.
@@ -1449,7 +1450,7 @@ class ArrowStringDescription:
     """
     def __init__(self, unit, curving, curving_amount, looping_start,
                  looping_end, horizontal_direction, vertical_direction,
-                 label_position, label):
+                 label_position, label) -> None:
         self.unit = unit
         self.curving = curving
         self.curving_amount = curving_amount
@@ -1608,7 +1609,7 @@ class XypicDiagramDrawer:
 
     draw, ArrowStringDescription
     """
-    def __init__(self):
+    def __init__(self) -> None:
         self.unit = "mm"
         self.default_curving_amount = 3
         self.default_curving_step = 4
@@ -2548,7 +2549,7 @@ def xypic_draw_diagram(diagram, masked=None, diagram_format="",
 
 @doctest_depends_on(exe=('latex', 'dvipng'), modules=('pyglet',))
 def preview_diagram(diagram, masked=None, diagram_format="", groups=None,
-                    output='png', viewer=None, euler=True, **hints):
+                    output='png', viewer=None, euler=True, **hints) -> None:
     """
     Combines the functionality of ``xypic_draw_diagram`` and
     ``sympy.printing.preview``.  The arguments ``masked``,

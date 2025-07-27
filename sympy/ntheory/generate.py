@@ -7,13 +7,20 @@ from bisect import bisect, bisect_left
 from itertools import count
 # Using arrays for sieving instead of lists greatly reduces
 # memory consumption
-from array import array as _array
+from array import array, array as _array
 
 from sympy.core.random import randint
 from sympy.external.gmpy import sqrt
 from .primetest import isprime
 from sympy.utilities.decorator import deprecated
 from sympy.utilities.misc import as_int
+from collections.abc import Generator, Iterator
+from sympy import Function
+from typing import Any, Literal
+
+class primepi(Function):
+    @classmethod
+    def eval(cls, n) -> None: ...
 
 
 def _as_int_ceiling(a):
@@ -92,7 +99,7 @@ class Sieve:
         if mobius:
             self._mlist = self._mlist[:self._n]
 
-    def extend(self, n):
+    def extend(self, n) -> None:
         """Grow the sieve to cover all primes <= n.
 
         Examples
@@ -158,7 +165,7 @@ class Sieve:
                     yield a + 2 * idx + 1
             a += 2 * block_size
 
-    def extend_to_no(self, i):
+    def extend_to_no(self, i) -> None:
         """Extend to include the ith prime number.
 
         Parameters
@@ -185,7 +192,7 @@ class Sieve:
         while len(self._list) < i:
             self.extend(int(self._list[-1] * 1.5))
 
-    def primerange(self, a, b=None):
+    def primerange(self, a, b=None) -> Generator[Any, Any, None]:
         """Generate all prime numbers in the range [2, a) or [a, b).
 
         Examples
@@ -221,7 +228,7 @@ class Sieve:
         yield from self._list[bisect_left(self._list, a):
                               bisect_left(self._list, b)]
 
-    def totientrange(self, a, b):
+    def totientrange(self, a, b) -> Generator[int, Any, None]:
         """Generate all totient numbers for the range [a, b).
 
         Examples
@@ -258,7 +265,7 @@ class Sieve:
                 if i >= a:
                     yield self._tlist[i]
 
-    def mobiusrange(self, a, b):
+    def mobiusrange(self, a, b) -> Generator[int, Any, None]:
         """Generate all mobius numbers for the range [a, b).
 
         Parameters
@@ -302,7 +309,7 @@ class Sieve:
                 if i >= a:
                     yield mi
 
-    def search(self, n):
+    def search(self, n) -> tuple[int, int]:
         """Return the indices i, j of the primes that bound n.
 
         If n is prime then i == j.
@@ -331,7 +338,7 @@ class Sieve:
         else:
             return b, b + 1
 
-    def __contains__(self, n):
+    def __contains__(self, n) -> bool:
         try:
             n = as_int(n)
             assert n >= 2
@@ -342,11 +349,11 @@ class Sieve:
         a, b = self.search(n)
         return a == b
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[array[int] | int]:
         for n in count(1):
             yield self[n]
 
-    def __getitem__(self, n):
+    def __getitem__(self, n) -> array[int] | int:
         """Return the nth prime number"""
         if isinstance(n, slice):
             self.extend_to_no(n.stop)
@@ -368,7 +375,7 @@ class Sieve:
 # Generate a global object for repeated use in trial division etc
 sieve = Sieve()
 
-def prime(nth):
+def prime(nth) -> array[int] | int:
     r"""
     Return the nth prime number, where primes are indexed starting from 1:
     prime(1) = 2, prime(2) = 3, etc.
@@ -631,7 +638,7 @@ def _primepi(n:int) -> int:
     return arr2[1]
 
 
-def nextprime(n, ith=1):
+def nextprime(n, ith=1) -> int | array[int] | None:
     """ Return the ith prime greater than n.
 
         Parameters
@@ -714,7 +721,7 @@ def nextprime(n, ith=1):
         n += 4
 
 
-def prevprime(n):
+def prevprime(n) -> int | array[int] | None:
     """ Return the largest prime smaller than n.
 
         Notes
@@ -761,7 +768,7 @@ def prevprime(n):
         n -= 4
 
 
-def primerange(a, b=None):
+def primerange(a, b=None) -> Generator[Any | int | array[int] | None, Any, None]:
     """ Generate a list of all prime numbers in the range [2, a),
         or [a, b).
 
@@ -866,7 +873,7 @@ def primerange(a, b=None):
             return
 
 
-def randprime(a, b):
+def randprime(a, b) -> int | array[int] | None:
     """ Return a random prime number in the range [a, b).
 
         Bertrand's postulate assures that
@@ -910,7 +917,7 @@ def randprime(a, b):
     return p
 
 
-def primorial(n, nth=True):
+def primorial(n, nth=True) -> array[int] | int:
     """
     Returns the product of the first n primes (default) or
     the primes less than or equal to n (when ``nth=False``).
@@ -976,7 +983,7 @@ def primorial(n, nth=True):
     return p
 
 
-def cycle_length(f, x0, nmax=None, values=False):
+def cycle_length(f, x0, nmax=None, values=False) -> Generator[Any | tuple[int, None] | tuple[int, int], Any, None]:
     """For a given iterated sequence, return a generator that gives
     the length of the iterated cycle (lambda) and the length of terms
     before the cycle begins (mu); if ``values`` is True then the
@@ -1064,7 +1071,7 @@ def cycle_length(f, x0, nmax=None, values=False):
         yield lam, mu
 
 
-def composite(nth):
+def composite(nth) -> int:
     """ Return the nth composite number, with the composite numbers indexed as
         composite(1) = 4, composite(2) = 6, etc....
 
@@ -1129,7 +1136,7 @@ def composite(nth):
     return a
 
 
-def compositepi(n):
+def compositepi(n) -> Literal[0]:
     """ Return the number of positive composite numbers less than or equal to n.
         The first positive composite is 4, i.e. compositepi(4) = 1.
 

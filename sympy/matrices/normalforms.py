@@ -10,6 +10,8 @@ from sympy.polys.matrices.normalforms import (
         invariant_factors as _invf,
         hermite_normal_form as _hnf,
     )
+from sympy.matrices.dense import MutableDenseMatrix
+from typing import Any
 
 
 def _to_domain(m, domain=None):
@@ -26,7 +28,7 @@ def _to_domain(m, domain=None):
     return dM
 
 
-def smith_normal_form(m, domain=None):
+def smith_normal_form(m, domain=None) -> MutableDenseMatrix:
     '''
     Return the Smith Normal Form of a matrix `m` over the ring `domain`.
     This will only work if the ring is a principal ideal domain.
@@ -72,7 +74,7 @@ def smith_normal_decomp(m, domain=None):
     return a.to_Matrix(), s.to_Matrix(), t.to_Matrix()
 
 
-def invariant_factors(m, domain=None):
+def invariant_factors(m, domain=None) -> tuple[Any, ...]:
     '''
     Return the tuple of abelian invariants for a matrix `m`
     (as in the Smith-Normal form)
@@ -96,7 +98,7 @@ def invariant_factors(m, domain=None):
     return factors
 
 
-def hermite_normal_form(A, *, D=None, check_rank=False):
+def hermite_normal_form(A, *, D=None, check_rank=False) -> MutableDenseMatrix:
     r"""
     Compute the Hermite Normal Form of a Matrix *A* of integers.
 

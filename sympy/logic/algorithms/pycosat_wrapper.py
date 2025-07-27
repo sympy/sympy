@@ -1,7 +1,9 @@
 from sympy.assumptions.cnf import EncodedCNF
+from collections.abc import Generator
+from typing import Any, Literal
 
 
-def pycosat_satisfiable(expr, all_models=False):
+def pycosat_satisfiable(expr, all_models=False) -> Generator[bool, None, None] | dict[Any, Any] | Generator[dict[Any, Any] | Literal[False], Any, None] | Literal[False]:
     import pycosat
     if not isinstance(expr, EncodedCNF):
         exprs = EncodedCNF()

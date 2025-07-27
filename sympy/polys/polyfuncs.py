@@ -11,9 +11,10 @@ from sympy.polys.specialpolys import (
     symmetric_poly, interpolating_poly)
 from sympy.polys.rings import sring
 from sympy.utilities import numbered_symbols, take, public
+from typing import Any
 
 @public
-def symmetrize(F, *gens, **args):
+def symmetrize(F, *gens, **args) -> list[Any] | tuple[Any | list[Any], list[tuple[Any, Any]]]:
     r"""
     Rewrite a polynomial in terms of elementary symmetric polynomials.
 
@@ -205,7 +206,7 @@ def interpolate(data, x):
 
 
 @public
-def rational_interpolate(data, degnum, X=symbols('x')):
+def rational_interpolate(data, degnum, X=symbols('x')) -> float:
     """
     Returns a rational interpolation, where the data points are element of
     any integral domain.
@@ -265,7 +266,7 @@ def rational_interpolate(data, degnum, X=symbols('x')):
 
 
 @public
-def viete(f, roots=None, *gens, **args):
+def viete(f, roots=None, *gens, **args) -> list[Any]:
     """
     Generate Viete's formulas for ``f``.
 

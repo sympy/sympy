@@ -9,6 +9,10 @@ from sympy.utilities.iterables import topological_sort
 from sympy.vector import (CoordSys3D, Vector, ParametricRegion,
                         parametric_region_list, ImplicitRegion)
 from sympy.vector.operators import _get_coord_systems
+from sympy import Equality, Ne
+from sympy.core.relational import Relational
+from typing import Literal
+from typing_extensions import Self
 
 
 class ParametricIntegral(Basic):
@@ -40,7 +44,7 @@ class ParametricIntegral(Basic):
 
     """
 
-    def __new__(cls, field, parametricregion):
+    def __new__(cls, field, parametricregion) -> Equality | Relational | Ne | Self:
 
         coord_set = _get_coord_systems(field)
 
@@ -133,15 +137,15 @@ class ParametricIntegral(Basic):
             return topological_sort((V, E), key=default_sort_key)
 
     @property
-    def field(self):
+    def field(self) -> Basic:
         return self.args[0]
 
     @property
-    def parametricregion(self):
+    def parametricregion(self) -> Basic:
         return self.args[1]
 
 
-def vector_integrate(field, *region):
+def vector_integrate(field, *region) -> Equality | Relational | Ne | ParametricIntegral | Literal[0]:
     """
     Compute the integral of a vector/scalar field
     over a a region or a set of parameters.

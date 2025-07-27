@@ -4,6 +4,7 @@ from sympy.core.numbers import I
 from sympy.core.singleton import S
 from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.miscellaneous import sqrt
+from typing_extensions import Self
 
 
 class DFT(MatrixExpr):
@@ -39,7 +40,7 @@ class DFT(MatrixExpr):
 
     """
 
-    def __new__(cls, n):
+    def __new__(cls, n) -> Self:
         n = _sympify(n)
         cls._check_dim(n)
 

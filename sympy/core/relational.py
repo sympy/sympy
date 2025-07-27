@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import Any, TYPE_CHECKING
 
 from .basic import Atom, Basic
 from .coreerrors import LazyExceptionMessage
@@ -16,6 +16,10 @@ from sympy.logic.boolalg import Boolean, BooleanAtom
 from sympy.utilities.iterables import sift
 from sympy.utilities.misc import filldedent
 from sympy.utilities.exceptions import sympy_deprecation_warning
+from sympy.core.basic import Basic
+from sympy.core.evalf import EvalfMixin
+from types import NotImplementedType
+from typing_extensions import Self
 
 
 if TYPE_CHECKING:
@@ -202,7 +206,7 @@ class Relational(Boolean, EvalfMixin):
         return self._args[1]
 
     @property
-    def reversed(self):
+    def reversed(self) -> Eq | Relational | Ne:
         """Return the relationship with sides reversed.
 
         Examples
@@ -224,7 +228,7 @@ class Relational(Boolean, EvalfMixin):
         return Relational.__new__(ops.get(self.func, self.func), b, a)
 
     @property
-    def reversedsign(self):
+    def reversedsign(self) -> Eq | Relational | Ne | Self:
         """Return the relationship with signs reversed.
 
         Examples
@@ -249,7 +253,7 @@ class Relational(Boolean, EvalfMixin):
             return self
 
     @property
-    def negated(self):
+    def negated(self) -> Self | Eq | Relational | Ne:
         """Return the negated relationship.
 
         Examples
@@ -283,7 +287,7 @@ class Relational(Boolean, EvalfMixin):
         return Relational.__new__(ops.get(self.func), *self.args)
 
     @property
-    def weak(self):
+    def weak(self) -> Self:
         """return the non-strict version of the inequality or self
 
         EXAMPLES
@@ -298,7 +302,7 @@ class Relational(Boolean, EvalfMixin):
         return self
 
     @property
-    def strict(self):
+    def strict(self) -> Self:
         """return the strict version of the inequality or self
 
         EXAMPLES
@@ -316,7 +320,7 @@ class Relational(Boolean, EvalfMixin):
         return self.func(*[s._evalf(prec) for s in self.args])
 
     @property
-    def canonical(self):
+    def canonical(self) -> Eq | Relational | Ne | Self:
         """Return a canonical form of the relational by putting a
         number on the rhs, canonically removing a sign or else
         ordering the args canonically. No other simplification is
@@ -377,7 +381,7 @@ class Relational(Boolean, EvalfMixin):
 
         return r
 
-    def equals(self, other, failing_expression=False):
+    def equals(self, other, failing_expression=False) -> bool | None:
         """Return True if the sides of the relationship are mathematically
         identical and the type of relationship is the same.
         If failing_expression is True, return the expression whose truth value
@@ -519,7 +523,7 @@ class Relational(Boolean, EvalfMixin):
         from sympy.simplify.trigsimp import trigsimp
         return self.func(trigsimp(self.lhs, **opts), trigsimp(self.rhs, **opts))
 
-    def expand(self, **kwargs):
+    def expand(self, **kwargs) -> Self:
         args = (arg.expand(**kwargs) for arg in self.args)
         return self.func(*args)
 
@@ -546,7 +550,7 @@ class Relational(Boolean, EvalfMixin):
         return xset
 
     @property
-    def binary_symbols(self):
+    def binary_symbols(self) -> set[Any]:
         # override where necessary
         return set()
 
@@ -700,7 +704,7 @@ class Equality(Relational):
         return Add._from_args(args)
 
     @property
-    def binary_symbols(self):
+    def binary_symbols(self) -> set[Basic] | set[Any]:
         if S.true in self.args or S.false in self.args:
             if self.lhs.is_Symbol:
                 return {self.lhs}
@@ -735,7 +739,7 @@ class Equality(Relational):
                 pass
         return e.canonical
 
-    def integrate(self, *args, **kwargs):
+    def integrate(self, *args, **kwargs) -> Equality | Relational | Ne:
         """See the integrate function in sympy.integrals"""
         from sympy.integrals.integrals import integrate
         return integrate(self, *args, **kwargs)
@@ -812,7 +816,7 @@ class Unequality(Relational):
         return _sympify(lhs != rhs)
 
     @property
-    def binary_symbols(self):
+    def binary_symbols(self) -> set[Basic] | set[Any]:
         if S.true in self.args or S.false in self.args:
             if self.lhs.is_Symbol:
                 return {self.lhs}
@@ -902,11 +906,11 @@ class _Greater(_Inequality):
     __slots__ = ()
 
     @property
-    def gts(self):
+    def gts(self) -> Basic:
         return self._args[0]
 
     @property
-    def lts(self):
+    def lts(self) -> Basic:
         return self._args[1]
 
 
@@ -920,11 +924,11 @@ class _Less(_Inequality):
     __slots__ = ()
 
     @property
-    def gts(self):
+    def gts(self) -> Basic:
         return self._args[1]
 
     @property
-    def lts(self):
+    def lts(self) -> Basic:
         return self._args[0]
 
 
@@ -1163,7 +1167,7 @@ class GreaterThan(_Greater):
         return is_ge(lhs, rhs)
 
     @property
-    def strict(self):
+    def strict(self) -> NotImplementedType | Gt | Eq | Relational | Ne:
         return Gt(*self.args)
 
 Ge = GreaterThan
@@ -1180,7 +1184,7 @@ class LessThan(_Less):
         return is_le(lhs, rhs)
 
     @property
-    def strict(self):
+    def strict(self) -> NotImplementedType | Lt | Eq | Relational | Ne:
         return Lt(*self.args)
 
 Le = LessThan
@@ -1197,7 +1201,7 @@ class StrictGreaterThan(_Greater):
         return is_gt(lhs, rhs)
 
     @property
-    def weak(self):
+    def weak(self) -> NotImplementedType | Ge | Eq | Relational | Ne:
         return Ge(*self.args)
 
 
@@ -1215,7 +1219,7 @@ class StrictLessThan(_Less):
         return is_lt(lhs, rhs)
 
     @property
-    def weak(self):
+    def weak(self) -> NotImplementedType | Le | Eq | Relational | Ne:
         return Le(*self.args)
 
 Lt = StrictLessThan
@@ -1286,7 +1290,7 @@ def _eval_is_eq(lhs, rhs):  # noqa:F811
     return fuzzy_and(fuzzy_bool(is_eq(s, o)) for s, o in zip(lhs, rhs))
 
 
-def is_lt(lhs, rhs, assumptions=None):
+def is_lt(lhs, rhs, assumptions=None) -> bool | None:
     """Fuzzy bool for lhs is strictly less than rhs.
 
     See the docstring for :func:`~.is_ge` for more.
@@ -1294,7 +1298,7 @@ def is_lt(lhs, rhs, assumptions=None):
     return fuzzy_not(is_ge(lhs, rhs, assumptions))
 
 
-def is_gt(lhs, rhs, assumptions=None):
+def is_gt(lhs, rhs, assumptions=None) -> bool | None:
     """Fuzzy bool for lhs is strictly greater than rhs.
 
     See the docstring for :func:`~.is_ge` for more.
@@ -1302,7 +1306,7 @@ def is_gt(lhs, rhs, assumptions=None):
     return fuzzy_not(is_le(lhs, rhs, assumptions))
 
 
-def is_le(lhs, rhs, assumptions=None):
+def is_le(lhs, rhs, assumptions=None) -> bool | None:
     """Fuzzy bool for lhs is less than or equal to rhs.
 
     See the docstring for :func:`~.is_ge` for more.
@@ -1310,7 +1314,7 @@ def is_le(lhs, rhs, assumptions=None):
     return is_ge(rhs, lhs, assumptions)
 
 
-def is_ge(lhs, rhs, assumptions=None):
+def is_ge(lhs, rhs, assumptions=None) -> bool | None:
     """
     Fuzzy bool for *lhs* is greater than or equal to *rhs*.
 
@@ -1433,7 +1437,7 @@ def is_ge(lhs, rhs, assumptions=None):
                     return rv
 
 
-def is_neq(lhs, rhs, assumptions=None):
+def is_neq(lhs, rhs, assumptions=None) -> bool:
     """Fuzzy bool for lhs does not equal rhs.
 
     See the docstring for :func:`~.is_eq` for more.

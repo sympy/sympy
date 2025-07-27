@@ -2,7 +2,7 @@ import itertools
 from sympy.concrete.summations import Sum
 from sympy.core.add import Add
 from sympy.core.expr import Expr
-from sympy.core.function import expand as _expand
+from sympy.core.function import Lambda, expand as _expand
 from sympy.core.mul import Mul
 from sympy.core.relational import Eq
 from sympy.core.singleton import S
@@ -18,19 +18,25 @@ from sympy.stats import variance, covariance
 from sympy.stats.rv import (RandomSymbol, pspace, dependent,
                             given, sampling_E, RandomIndexedSymbol, is_random,
                             PSpace, sampling_P, random_symbols)
+import sympy
+from sympy.series.order import Order
+from sympy.stats.frv_types import BernoulliDistribution
+from sympy.stats.symbolic_multivariate_probability import CrossCovarianceMatrix, ExpectationMatrix, VarianceMatrix
+from typing import Any, Literal
+from typing_extensions import Self
 
 __all__ = ['Probability', 'Expectation', 'Variance', 'Covariance']
 
 
 @is_random.register(Expr)
-def _(x):
+def _(x) -> Literal[True]:
     atoms = x.free_symbols
     if len(atoms) == 1 and next(iter(atoms)) == x:
         return False
     return any(is_random(i) for i in atoms)
 
 @is_random.register(RandomSymbol)  # type: ignore
-def _(x):
+def _(x) -> Literal[True]:
     return True
 
 
@@ -61,7 +67,7 @@ class Probability(Expr):
 
     is_commutative = True
 
-    def __new__(cls, prob, condition=None, **kwargs):
+    def __new__(cls, prob, condition=None, **kwargs) -> Self:
         prob = _sympify(prob)
         if condition is None:
             obj = Expr.__new__(cls, prob)
@@ -71,7 +77,7 @@ class Probability(Expr):
         obj._condition = condition
         return obj
 
-    def doit(self, **hints):
+    def doit(self, **hints) -> Any | BernoulliDistribution | Probability |     sympy.Equality | Lambda | Order | Relational |     sympy.Ne | int:
         condition = self.args[0]
         given_condition = self._condition
         numsamples = hints.get('numsamples', False)
@@ -129,7 +135,7 @@ class Probability(Expr):
 
     _eval_rewrite_as_Sum = _eval_rewrite_as_Integral
 
-    def evaluate_integral(self):
+    def evaluate_integral(self) -> Any | BernoulliDistribution | Probability |     sympy.Equality | Lambda | Order | Relational |     sympy.Ne | int:
         return self.rewrite(Integral).doit()
 
 
@@ -203,7 +209,7 @@ class Expectation(Expr):
 
     """
 
-    def __new__(cls, expr, condition=None, **kwargs):
+    def __new__(cls, expr, condition=None, **kwargs) -> ExpectationMatrix | Self:
         expr = _sympify(expr)
         if expr.is_Matrix:
             from sympy.stats.symbolic_multivariate_probability import ExpectationMatrix
@@ -221,7 +227,7 @@ class Expectation(Expr):
     def _eval_is_commutative(self):
         return(self.args[0].is_commutative)
 
-    def expand(self, **hints):
+    def expand(self, **hints) ->     sympy.Basic | Add | Self:
         expr = self.args[0]
         condition = self._condition
 
@@ -249,7 +255,21 @@ class Expectation(Expr):
 
         return self
 
-    def doit(self, **hints):
+    def doit(self, **hints) -> (
+            sympy.Basic
+        | Expectation
+        | tuple[Any, ...]
+        |     sympy.Sum
+        | Order
+        | Any
+        |     sympy.Piecewise
+        |     sympy.Equality
+        | Relational
+        |     sympy.Ne
+        |     sympy.Integral
+        | Self
+        | None
+    ):
         deep = hints.get('deep', True)
         condition = self._condition
         expr = self.args[0]
@@ -322,7 +342,21 @@ class Expectation(Expr):
 
     _eval_rewrite_as_Sum = _eval_rewrite_as_Integral # For discrete this will be Sum
 
-    def evaluate_integral(self):
+    def evaluate_integral(self) -> (
+            sympy.Basic
+        | Expectation
+        | tuple[Any, ...]
+        |     sympy.Sum
+        | Order
+        | Any
+        |     sympy.Piecewise
+        |     sympy.Equality
+        | Relational
+        |     sympy.Ne
+        |     sympy.Integral
+        | Self
+        | None
+    ):
         return self.rewrite(Integral).doit()
 
     evaluate_sum = evaluate_integral
@@ -376,7 +410,7 @@ class Variance(Expr):
     2*Covariance(X, Y) + Variance(X) + Variance(Y)
 
     """
-    def __new__(cls, arg, condition=None, **kwargs):
+    def __new__(cls, arg, condition=None, **kwargs) -> VarianceMatrix | Self:
         arg = _sympify(arg)
 
         if arg.is_Matrix:
@@ -393,7 +427,7 @@ class Variance(Expr):
     def _eval_is_commutative(self):
         return self.args[0].is_commutative
 
-    def expand(self, **hints):
+    def expand(self, **hints) -> Self:
         arg = self.args[0]
         condition = self._condition
 
@@ -439,7 +473,7 @@ class Variance(Expr):
 
     _eval_rewrite_as_Sum = _eval_rewrite_as_Integral
 
-    def evaluate_integral(self):
+    def evaluate_integral(self) -> Self | Any:
         return self.rewrite(Integral).doit()
 
 
@@ -488,7 +522,7 @@ class Covariance(Expr):
     a*b*Covariance(X, Y)
     """
 
-    def __new__(cls, arg1, arg2, condition=None, **kwargs):
+    def __new__(cls, arg1, arg2, condition=None, **kwargs) -> CrossCovarianceMatrix | Self:
         arg1 = _sympify(arg1)
         arg2 = _sympify(arg2)
 
@@ -510,7 +544,7 @@ class Covariance(Expr):
     def _eval_is_commutative(self):
         return self.args[0].is_commutative
 
-    def expand(self, **hints):
+    def expand(self, **hints) -> CrossCovarianceMatrix | Covariance | Add:
         arg1 = self.args[0]
         arg2 = self.args[1]
         condition = self._condition
@@ -578,7 +612,7 @@ class Covariance(Expr):
 
     _eval_rewrite_as_Sum = _eval_rewrite_as_Integral
 
-    def evaluate_integral(self):
+    def evaluate_integral(self) -> Self | Any:
         return self.rewrite(Integral).doit()
 
 
@@ -617,7 +651,7 @@ class Moment(Expr):
     Integral(sqrt(2)*(X - 1)**3*exp(-(X - mu)**2/(2*sigma**2))/(2*sqrt(pi)*sigma), (X, -oo, oo))
 
     """
-    def __new__(cls, X, n, c=0, condition=None, **kwargs):
+    def __new__(cls, X, n, c=0, condition=None, **kwargs) -> Self:
         X = _sympify(X)
         n = _sympify(n)
         c = _sympify(c)
@@ -675,7 +709,7 @@ class CentralMoment(Expr):
     Integral(sqrt(2)*(X - Integral(sqrt(2)*X*exp(-(X - mu)**2/(2*sigma**2))/(2*sqrt(pi)*sigma), (X, -oo, oo)))**4*exp(-(X - mu)**2/(2*sigma**2))/(2*sqrt(pi)*sigma), (X, -oo, oo))
 
     """
-    def __new__(cls, X, n, condition=None, **kwargs):
+    def __new__(cls, X, n, condition=None, **kwargs) -> Self:
         X = _sympify(X)
         n = _sympify(n)
         if condition is not None:

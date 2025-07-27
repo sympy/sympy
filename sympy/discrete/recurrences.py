@@ -7,7 +7,7 @@ from sympy.utilities.iterables import iterable
 from sympy.utilities.misc import as_int
 
 
-def linrec(coeffs, init, n):
+def linrec(coeffs, init, n) -> int:
     r"""
     Evaluation of univariate linear recurrences of homogeneous type
     having coefficients independent of the recurrence variable.

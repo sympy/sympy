@@ -5,6 +5,10 @@ import inspect
 from .conflict import ordering, ambiguities, super_signature, AmbiguityWarning
 from .utils import expand_tuples
 import itertools as itl
+from collections.abc import Generator, ValuesView
+from itertools import islice
+from typing import Any, Callable
+from typing_extensions import LiteralString, Self
 
 
 class MDNotImplementedError(NotImplementedError):
@@ -13,7 +17,7 @@ class MDNotImplementedError(NotImplementedError):
 
 ### Functions for on_ambiguity
 
-def ambiguity_warn(dispatcher, ambiguities):
+def ambiguity_warn(dispatcher, ambiguities) -> None:
     """ Raise warning when ambiguity is detected
 
     Parameters
@@ -33,7 +37,7 @@ def ambiguity_warn(dispatcher, ambiguities):
 class RaiseNotImplementedError:
     """Raise ``NotImplementedError`` when called."""
 
-    def __init__(self, dispatcher):
+    def __init__(self, dispatcher) -> None:
         self.dispatcher = dispatcher
 
     def __call__(self, *args, **kwargs):
@@ -43,7 +47,7 @@ class RaiseNotImplementedError:
             self.dispatcher.name, str_signature(types)
         ))
 
-def ambiguity_register_error_ignore_dup(dispatcher, ambiguities):
+def ambiguity_register_error_ignore_dup(dispatcher, ambiguities) -> None:
     """
     If super signature for ambiguous types is duplicate types, ignore it.
     Else, register instance of ``RaiseNotImplementedError`` for ambiguous types.
@@ -75,11 +79,11 @@ _unresolved_dispatchers: set[Dispatcher] = set()
 _resolve = [True]
 
 
-def halt_ordering():
+def halt_ordering() -> None:
     _resolve[0] = False
 
 
-def restart_ordering(on_ambiguity=ambiguity_warn):
+def restart_ordering(on_ambiguity=ambiguity_warn) -> None:
     _resolve[0] = True
     while _unresolved_dispatchers:
         dispatcher = _unresolved_dispatchers.pop()
@@ -110,14 +114,14 @@ class Dispatcher:
     """
     __slots__ = '__name__', 'name', 'funcs', 'ordering', '_cache', 'doc'
 
-    def __init__(self, name, doc=None):
+    def __init__(self, name, doc=None) -> None:
         self.name = self.__name__ = name
         self.funcs = {}
         self._cache = {}
         self.ordering = []
         self.doc = doc
 
-    def register(self, *types, **kwargs):
+    def register(self, *types, **kwargs) -> Callable[..., Any]:
         """ Register dispatcher with new implementation
 
         >>> from sympy.multipledispatch.dispatcher import Dispatcher
@@ -150,13 +154,13 @@ class Dispatcher:
         return _
 
     @classmethod
-    def get_func_params(cls, func):
+    def get_func_params(cls, func) -> ValuesView[    inspect.Parameter] | None:
         if hasattr(inspect, "signature"):
             sig = inspect.signature(func)
             return sig.parameters.values()
 
     @classmethod
-    def get_func_annotations(cls, func):
+    def get_func_annotations(cls, func) -> tuple[Any, ...] | None:
         """ Get annotations of function positional parameters
         """
         params = cls.get_func_params(func)
@@ -175,7 +179,7 @@ class Dispatcher:
             if not any(ann is Parameter.empty for ann in annotations):
                 return annotations
 
-    def add(self, signature, func, on_ambiguity=ambiguity_warn):
+    def add(self, signature, func, on_ambiguity=ambiguity_warn) -> None:
         """ Add new types/method pair to dispatcher
 
         >>> from sympy.multipledispatch import Dispatcher
@@ -219,7 +223,7 @@ class Dispatcher:
         self.reorder(on_ambiguity=on_ambiguity)
         self._cache.clear()
 
-    def reorder(self, on_ambiguity=ambiguity_warn):
+    def reorder(self, on_ambiguity=ambiguity_warn) -> None:
         if _resolve[0]:
             self.ordering = ordering(self.funcs)
             amb = ambiguities(self.funcs)
@@ -258,7 +262,7 @@ class Dispatcher:
         return "<dispatched %s>" % self.name
     __repr__ = __str__
 
-    def dispatch(self, *types):
+    def dispatch(self, *types) -> None:
         """ Deterimine appropriate implementation for this type signature
 
         This method is internal.  Users should call this object as a function.
@@ -288,14 +292,14 @@ class Dispatcher:
         except StopIteration:
             return None
 
-    def dispatch_iter(self, *types):
+    def dispatch_iter(self, *types) -> Generator[Any, Any, None]:
         n = len(types)
         for signature in self.ordering:
             if len(signature) == n and all(map(issubclass, types, signature)):
                 result = self.funcs[signature]
                 yield result
 
-    def resolve(self, types):
+    def resolve(self, types) -> None:
         """ Deterimine appropriate implementation for this type signature
 
         .. deprecated:: 0.4.4
@@ -306,18 +310,18 @@ class Dispatcher:
 
         return self.dispatch(*types)
 
-    def __getstate__(self):
+    def __getstate__(self) -> dict[str, Any]:
         return {'name': self.name,
                 'funcs': self.funcs}
 
-    def __setstate__(self, d):
+    def __setstate__(self, d) -> None:
         self.name = d['name']
         self.funcs = d['funcs']
         self.ordering = ordering(self.funcs)
         self._cache = {}
 
     @property
-    def __doc__(self):
+    def __doc__(self) -> str:
         docs = ["Multiply dispatched method: %s" % self.name]
 
         if self.doc:
@@ -342,7 +346,7 @@ class Dispatcher:
     def _help(self, *args):
         return self.dispatch(*map(type, args)).__doc__
 
-    def help(self, *args, **kwargs):
+    def help(self, *args, **kwargs) -> None:
         """ Print docstring for the function corresponding to inputs """
         print(self._help(*args))
 
@@ -352,12 +356,12 @@ class Dispatcher:
             raise TypeError("No function found")
         return source(func)
 
-    def source(self, *args, **kwargs):
+    def source(self, *args, **kwargs) -> None:
         """ Print source code for the function corresponding to inputs """
         print(self._source(*args))
 
 
-def source(func):
+def source(func) -> str:
     s = 'File: %s\n\n' % inspect.getsourcefile(func)
     s = s + inspect.getsource(func)
     return s
@@ -371,12 +375,12 @@ class MethodDispatcher(Dispatcher):
     """
 
     @classmethod
-    def get_func_params(cls, func):
+    def get_func_params(cls, func) -> islice[    inspect.Parameter] | None:
         if hasattr(inspect, "signature"):
             sig = inspect.signature(func)
             return itl.islice(sig.parameters.values(), 1, None)
 
-    def __get__(self, instance, owner):
+    def __get__(self, instance, owner) -> Self:
         self.obj = instance
         self.cls = owner
         return self
@@ -390,7 +394,7 @@ class MethodDispatcher(Dispatcher):
         return func(self.obj, *args, **kwargs)
 
 
-def str_signature(sig):
+def str_signature(sig) -> LiteralString:
     """ String representation of type signature
 
     >>> from sympy.multipledispatch.dispatcher import str_signature

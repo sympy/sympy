@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, overload
+from typing import Any, TYPE_CHECKING, overload
 
 from collections import defaultdict
 from abc import abstractmethod
@@ -24,6 +24,10 @@ from sympy.utilities.misc import filldedent, as_int
 from .exceptions import ShapeError, NonSquareMatrixError, NonInvertibleMatrixError
 from .matrixbase import classof, MatrixBase
 from .kind import MatrixKind
+from sympy import MatrixBase
+from sympy.matrices.expressions.matexpr import MatrixElement
+from sympy.matrices.kind import MatrixKind
+from typing_extensions import Self
 
 
 if TYPE_CHECKING:
@@ -67,7 +71,7 @@ class RepMatrix(MatrixBase):
     def _fromrep(cls, rep):
         raise NotImplementedError("Subclasses must implement this method")
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
         # Skip sympify for mutable matrices...
         if not isinstance(other, RepMatrix):
             try:
@@ -250,7 +254,7 @@ class RepMatrix(MatrixBase):
         rep = cls._dod_to_DomainMatrix(rows, cols, elements_dod, types)
         return rep
 
-    def flat(self):
+    def flat(self) -> list[Any]:
         return self._rep.to_sympy().to_list_flat()
 
     def _eval_tolist(self):
@@ -406,7 +410,7 @@ class RepMatrix(MatrixBase):
         else:
             return self._fromrep(rep.applyfunc(lambda e: e.conjugate()))
 
-    def equals(self, other, failing_expression=False):
+    def equals(self, other, failing_expression=False) -> bool:
         """Applies ``equals`` to corresponding elements of the matrices,
         trying to prove that the elements are equivalent, returning True
         if they are, False if any pair is not, and None (or the first
@@ -594,7 +598,7 @@ class MutableRepMatrix(RepMatrix):
 
     is_zero = False
 
-    def __new__(cls, *args, **kwargs):
+    def __new__(cls, *args, **kwargs) -> Self:
         return cls._new(*args, **kwargs)
 
     @classmethod
@@ -620,13 +624,13 @@ class MutableRepMatrix(RepMatrix):
         obj._rep = rep
         return obj
 
-    def copy(self):
+    def copy(self) -> Self:
         return self._fromrep(self._rep.copy())
 
-    def as_mutable(self):
+    def as_mutable(self) -> Self:
         return self.copy()
 
-    def __setitem__(self, key, value):
+    def __setitem__(self, key, value) -> None:
         """
 
         Examples
@@ -756,7 +760,7 @@ class MutableRepMatrix(RepMatrix):
         other = self._new(other)
         return self.vstack(self[:row,:], other, self[row:,:])
 
-    def col_op(self, j, f):
+    def col_op(self, j, f) -> None:
         """In-place operation on col j using two-arg functor whose args are
         interpreted as (self[i, j], i).
 
@@ -779,7 +783,7 @@ class MutableRepMatrix(RepMatrix):
         for i in range(self.rows):
             self[i, j] = f(self[i, j], i)
 
-    def col_swap(self, i, j):
+    def col_swap(self, i, j) -> None:
         """Swap the two given columns of the matrix in-place.
 
         Examples
@@ -806,7 +810,7 @@ class MutableRepMatrix(RepMatrix):
         for k in range(0, self.rows):
             self[k, i], self[k, j] = self[k, j], self[k, i]
 
-    def row_op(self, i, f):
+    def row_op(self, i, f) -> None:
         """In-place operation on row ``i`` using two-arg functor whose args are
         interpreted as ``(self[i, j], j)``.
 
@@ -868,7 +872,7 @@ class MutableRepMatrix(RepMatrix):
         for j in range(self.cols):
             self[t,j] += k*self[s,j]
 
-    def row_swap(self, i, j):
+    def row_swap(self, i, j) -> None:
         """Swap the two given rows of the matrix in-place.
 
         Examples
@@ -895,7 +899,7 @@ class MutableRepMatrix(RepMatrix):
         for k in range(0, self.cols):
             self[i, k], self[j, k] = self[j, k], self[i, k]
 
-    def zip_row_op(self, i, k, f):
+    def zip_row_op(self, i, k, f) -> None:
         """In-place operation on row ``i`` using two-arg functor whose args are
         interpreted as ``(self[i, j], self[k, j])``.
 
@@ -920,7 +924,7 @@ class MutableRepMatrix(RepMatrix):
         for j in range(self.cols):
             self[i, j] = f(self[i, j], self[k, j])
 
-    def copyin_list(self, key, value):
+    def copyin_list(self, key, value) -> None:
         """Copy in elements from a list.
 
         Parameters
@@ -958,7 +962,7 @@ class MutableRepMatrix(RepMatrix):
             raise TypeError("`value` must be an ordered iterable, not %s." % type(value))
         return self.copyin_matrix(key, type(self)(value))
 
-    def copyin_matrix(self, key, value):
+    def copyin_matrix(self, key, value) -> None:
         """Copy in values from a matrix into the given bounds.
 
         Parameters
@@ -1005,7 +1009,7 @@ class MutableRepMatrix(RepMatrix):
             for j in range(value.cols):
                 self[i + rlo, j + clo] = value[i, j]
 
-    def fill(self, value):
+    def fill(self, value) -> None:
         """Fill self with the given value.
 
         Notes

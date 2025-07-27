@@ -13,6 +13,7 @@ from sympy.simplify.sqrtdenest import sqrtdenest
 from sympy.solvers import solve
 from sympy.solvers.deutils import _preprocess, ode_order
 from sympy.utilities.iterables import iterable, is_sequence
+from typing import Any, Literal
 
 
 def sub_func_doit(eq, func, new):
@@ -288,7 +289,7 @@ def checkodesol(ode, sol, func=None, order='auto', solve_for_func=True):
         return (False, s)
 
 
-def checksysodesol(eqs, sols, func=None):
+def checksysodesol(eqs, sols, func=None) -> tuple[Literal[True], list[Any]] | tuple[Literal[False], list[Any]]:
     r"""
     Substitutes corresponding ``sols`` for each functions into each ``eqs`` and
     checks that the result of substitutions for each equation is ``0``. The

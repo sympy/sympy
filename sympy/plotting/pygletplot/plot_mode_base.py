@@ -6,6 +6,7 @@ from sympy.utilities.iterables import is_sequence
 from time import sleep
 from threading import Thread, Event, RLock
 import warnings
+from typing import Any, Callable
 
 
 class PlotModeBase(PlotMode):
@@ -129,7 +130,7 @@ class PlotModeBase(PlotMode):
         raise NotImplementedError()
 
     ## Base member functions
-    def __init__(self, *args, bounds_callback=None, **kwargs):
+    def __init__(self, *args, bounds_callback=None, **kwargs) -> None:
         self.verts = []
         self.cverts = []
         self.bounds = [[S.Infinity, S.NegativeInfinity, 0],
@@ -165,7 +166,7 @@ class PlotModeBase(PlotMode):
 
         self._on_calculate()
 
-    def synchronized(f):
+    def synchronized(f) -> Callable[..., Any]:
         def w(self, *args, **kwargs):
             self._draw_lock.acquire()
             try:
@@ -176,7 +177,7 @@ class PlotModeBase(PlotMode):
         return w
 
     @synchronized
-    def push_wireframe(self, function):
+    def push_wireframe(self, function) -> None:
         """
         Push a function which performs gl commands
         used to build a display list. (The list is
@@ -188,7 +189,7 @@ class PlotModeBase(PlotMode):
             del self._draw_wireframe[1]  # leave marker element
 
     @synchronized
-    def push_solid(self, function):
+    def push_solid(self, function) -> None:
         """
         Push a function which performs gl commands
         used to build a display list. (The list is
@@ -236,7 +237,7 @@ class PlotModeBase(PlotMode):
         pgl.glPopAttrib()
 
     @synchronized
-    def draw(self):
+    def draw(self) -> None:
         for f in self.predraw:
             if callable(f):
                 f()

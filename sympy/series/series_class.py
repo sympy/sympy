@@ -6,6 +6,9 @@ Made using sequences in mind
 from sympy.core.expr import Expr
 from sympy.core.singleton import S
 from sympy.core.cache import cacheit
+from collections.abc import Iterator
+from sympy.core.basic import Basic
+from typing import Any
 
 
 class SeriesBase(Expr):
@@ -32,12 +35,12 @@ class SeriesBase(Expr):
         raise NotImplementedError("(%s).length" % self)
 
     @property
-    def variables(self):
+    def variables(self) -> tuple[()]:
         """Returns a tuple of variables that are bounded"""
         return ()
 
     @property
-    def free_symbols(self):
+    def free_symbols(self) -> set[Basic]:
         """
         This method returns the symbols in the object, excluding those
         that take on a specific value (i.e. the dummy symbols).
@@ -78,14 +81,14 @@ class SeriesBase(Expr):
 
         return initial + i*step
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[Any]:
         i = 0
         while i < self.length:
             pt = self._ith_point(i)
             yield self.term(pt)
             i += 1
 
-    def __getitem__(self, index):
+    def __getitem__(self, index) -> list[Any] | None:
         if isinstance(index, int):
             index = self._ith_point(index)
             return self.term(index)

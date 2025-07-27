@@ -10,6 +10,7 @@ from sympy.polys.polyroots import roots
 from sympy.polys.polytools import cancel
 from sympy.polys.rootoftools import RootSum
 from sympy.polys import Poly, resultant, ZZ
+from typing import Any
 
 
 def ratint(f, x, **flags):
@@ -121,7 +122,7 @@ def ratint(f, x, **flags):
     return coeff*result
 
 
-def ratint_ratpart(f, g, x):
+def ratint_ratpart(f, g, x) -> tuple[Any, Any]:
     """
     Horowitz-Ostrogradsky algorithm.
 
@@ -184,7 +185,7 @@ def ratint_ratpart(f, g, x):
     return rat_part, log_part
 
 
-def ratint_logpart(f, g, x, t=None):
+def ratint_logpart(f, g, x, t=None) -> list[Any]:
     r"""
     Lazard-Rioboo-Trager algorithm.
 
@@ -354,7 +355,7 @@ def _roots_real_complex(poly):
     return reals, complexes
 
 
-def log_to_real(h, q, x, t):
+def log_to_real(h, q, x, t) -> None:
     r"""
     Convert complex logarithms to real functions.
 

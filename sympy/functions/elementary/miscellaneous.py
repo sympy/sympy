@@ -1,4 +1,4 @@
-from sympy.core import S, sympify, NumberKind
+from sympy.core import Function, S, sympify, NumberKind
 from sympy.utilities.iterables import sift
 from sympy.core.add import Add
 from sympy.core.containers import Tuple
@@ -20,6 +20,10 @@ from sympy.core.logic import fuzzy_and, fuzzy_or, _torf
 from sympy.core.traversal import walk
 from sympy.core.numbers import Integer
 from sympy.logic.boolalg import And, Or
+from sympy.functions.elementary.piecewise import Piecewise
+from sympy.functions.special.delta_functions import Heaviside
+from sympy.series.order import Order
+from typing_extensions import Self
 
 
 def _minmax_as_Piecewise(op, *args):
@@ -49,11 +53,11 @@ class IdentityFunction(Lambda, metaclass=Singleton):
     _symbol = Dummy('x')
 
     @property
-    def signature(self):
+    def signature(self) -> tuple:
         return Tuple(self._symbol)
 
     @property
-    def expr(self):
+    def expr(self) -> Dummy:
         return self._symbol
 
 
@@ -64,7 +68,7 @@ Id = S.IdentityFunction
 ###############################################################################
 
 
-def sqrt(arg, evaluate=None):
+def sqrt(arg, evaluate=None) -> Pow:
     """Returns the principal square root.
 
     Parameters
@@ -152,7 +156,7 @@ def sqrt(arg, evaluate=None):
     return Pow(arg, S.Half, evaluate=evaluate)
 
 
-def cbrt(arg, evaluate=None):
+def cbrt(arg, evaluate=None) -> Pow:
     """Returns the principal cube root.
 
     Parameters
@@ -209,7 +213,7 @@ def cbrt(arg, evaluate=None):
     return Pow(arg, Rational(1, 3), evaluate=evaluate)
 
 
-def root(arg, n, k=0, evaluate=None):
+def root(arg, n, k=0, evaluate=None) -> Order | Pow:
     r"""Returns the *k*-th *n*-th root of ``arg``.
 
     Parameters
@@ -309,7 +313,7 @@ def root(arg, n, k=0, evaluate=None):
     return Pow(arg, 1/n, evaluate=evaluate)
 
 
-def real_root(arg, n=None, evaluate=None):
+def real_root(arg, n=None, evaluate=None) -> Piecewise:
     r"""Return the real *n*'th-root of *arg* if possible.
 
     Parameters
@@ -377,7 +381,7 @@ def real_root(arg, n=None, evaluate=None):
 
 
 class MinMaxBase(Expr, LatticeOp):
-    def __new__(cls, *args, **assumptions):
+    def __new__(cls, *args, **assumptions) -> Self:
         from sympy.core.parameters import global_parameters
         evaluate = assumptions.pop('evaluate', global_parameters.evaluate)
         args = (sympify(arg) for arg in args)
@@ -646,10 +650,10 @@ class MinMaxBase(Expr, LatticeOp):
         d = abs(args[0] - self.func(*args[1:]))/2
         return (s + d if isinstance(self, Max) else s - d).rewrite(Abs)
 
-    def evalf(self, n=15, **options):
+    def evalf(self, n=15, **options) -> Self:
         return self.func(*[a.evalf(n, **options) for a in self.args])
 
-    def n(self, *args, **kwargs):
+    def n(self, *args, **kwargs) -> Self:
         return self.evalf(*args, **kwargs)
 
     _eval_is_algebraic = lambda s: _torf(i.is_algebraic for i in s.args)
@@ -768,7 +772,7 @@ class Max(MinMaxBase, Application):
     zero = S.Infinity
     identity = S.NegativeInfinity
 
-    def fdiff( self, argindex ):
+    def fdiff( self, argindex ) -> Heaviside:
         from sympy.functions.special.delta_functions import Heaviside
         n = len(self.args)
         if 0 < argindex and argindex <= n:
@@ -831,7 +835,7 @@ class Min(MinMaxBase, Application):
     zero = S.NegativeInfinity
     identity = S.Infinity
 
-    def fdiff( self, argindex ):
+    def fdiff( self, argindex ) -> Heaviside:
         from sympy.functions.special.delta_functions import Heaviside
         n = len(self.args)
         if 0 < argindex and argindex <= n:
@@ -898,7 +902,7 @@ class Rem(DefinedFunction):
     kind = NumberKind
 
     @classmethod
-    def eval(cls, p, q):
+    def eval(cls, p, q) -> None:
         """Return the function remainder if both p, q are numbers and q is not
         zero.
         """

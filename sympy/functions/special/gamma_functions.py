@@ -2,7 +2,7 @@ from math import prod
 
 from sympy.core import Add, S, Dummy, expand_func
 from sympy.core.expr import Expr
-from sympy.core.function import DefinedFunction, ArgumentIndexError, PoleError
+from sympy.core.function import Function, UndefinedFunction, DefinedFunction, ArgumentIndexError, PoleError
 from sympy.core.logic import fuzzy_and, fuzzy_not
 from sympy.core.numbers import Rational, pi, oo, I
 from sympy.core.power import Pow
@@ -20,7 +20,7 @@ from sympy.utilities.misc import as_int
 from mpmath import mp, workprec
 from mpmath.libmp.libmpf import prec_to_dps
 
-def intlike(n):
+def intlike(n) -> bool:
     try:
         as_int(n, strict=False)
         return True
@@ -118,7 +118,7 @@ class gamma(DefinedFunction):
             raise ArgumentIndexError(self, argindex)
 
     @classmethod
-    def eval(cls, arg):
+    def eval(cls, arg) -> type[UndefinedFunction] | None:
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
@@ -289,7 +289,7 @@ class lowergamma(DefinedFunction):
             raise ArgumentIndexError(self, argindex)
 
     @classmethod
-    def eval(cls, a, x):
+    def eval(cls, a, x) -> type[UndefinedFunction] | None:
         # For lack of a better place, we use this one to extract branching
         # information. The following can be
         # found in the literature (c/f references given above), albeit scattered:
@@ -669,7 +669,7 @@ class polygamma(DefinedFunction):
     """
 
     @classmethod
-    def eval(cls, n, z):
+    def eval(cls, n, z) -> type[UndefinedFunction] | None:
         if n is S.NaN or z is S.NaN:
             return S.NaN
         elif z is oo:
@@ -797,7 +797,7 @@ class polygamma(DefinedFunction):
         else:
             return self.func(n, z)
 
-    def fdiff(self, argindex=2):
+    def fdiff(self, argindex=2) -> "polygamma":
         if argindex == 2:
             n, z = self.args[:2]
             return polygamma(n + 1, z)
@@ -973,7 +973,7 @@ class loggamma(DefinedFunction):
 
     """
     @classmethod
-    def eval(cls, z):
+    def eval(cls, z) -> type[UndefinedFunction] | None:
         if z.is_integer:
             if z.is_nonpositive:
                 return oo
@@ -1050,7 +1050,7 @@ class loggamma(DefinedFunction):
         if z not in (S.Zero, S.NegativeInfinity):
             return self.func(z.conjugate())
 
-    def fdiff(self, argindex=1):
+    def fdiff(self, argindex=1) -> type[UndefinedFunction]:
         if argindex == 1:
             return polygamma(0, self.args[0])
         else:
@@ -1132,7 +1132,7 @@ class digamma(DefinedFunction):
         return as_polygamma._eval_aseries(n, args0, x, logx)
 
     @classmethod
-    def eval(cls, z):
+    def eval(cls, z) -> type[UndefinedFunction]:
         return polygamma(0, z)
 
     def _eval_expand_func(self, **hints):
@@ -1226,7 +1226,7 @@ class trigamma(DefinedFunction):
         return as_polygamma._eval_aseries(n, args0, x, logx)
 
     @classmethod
-    def eval(cls, z):
+    def eval(cls, z) -> type[UndefinedFunction]:
         return polygamma(1, z)
 
     def _eval_expand_func(self, **hints):

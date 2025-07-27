@@ -5,6 +5,9 @@ from sympy.polys.domains.domain import Domain, Er
 from sympy.polys.polyerrors import ExactQuotientFailed, NotInvertible, NotReversible
 
 from sympy.utilities import public
+from sympy.polys.agca.ideals import ModuleImplementedIdeal
+from sympy.polys.domains.quotientring import QuotientRing
+from typing_extensions import Self
 
 
 @public
@@ -13,7 +16,7 @@ class Ring(Domain[Er]):
 
     is_Ring = True
 
-    def get_ring(self):
+    def get_ring(self) -> Self:
         """Returns a ring associated with ``self``. """
         return self
 
@@ -52,7 +55,7 @@ class Ring(Domain[Er]):
         else:
             raise NotReversible('only units are reversible in a ring')
 
-    def is_unit(self, a):
+    def is_unit(self, a) -> bool:
         try:
             self.revert(a)
             return True
@@ -78,7 +81,7 @@ class Ring(Domain[Er]):
         """
         raise NotImplementedError
 
-    def ideal(self, *gens):
+    def ideal(self, *gens) -> ModuleImplementedIdeal:
         """
         Generate an ideal of ``self``.
 
@@ -91,7 +94,7 @@ class Ring(Domain[Er]):
         return ModuleImplementedIdeal(self, self.free_module(1).submodule(
             *[[x] for x in gens]))
 
-    def quotient_ring(self, e):
+    def quotient_ring(self, e) -> QuotientRing:
         """
         Form a quotient ring of ``self``.
 
@@ -115,5 +118,5 @@ class Ring(Domain[Er]):
             e = self.ideal(*e)
         return QuotientRing(self, e)
 
-    def __truediv__(self, e):
+    def __truediv__(self, e) -> QuotientRing:
         return self.quotient_ring(e)

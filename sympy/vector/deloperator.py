@@ -1,5 +1,8 @@
 from sympy.core import Basic
-from sympy.vector.operators import gradient, divergence, curl
+from sympy.vector.operators import Curl, Divergence, Gradient, gradient, divergence, curl
+from sympy.core.add import Add
+from sympy.vector.vector import VectorAdd, VectorZero
+from typing_extensions import Self
 
 
 class Del(Basic):
@@ -8,12 +11,12 @@ class Del(Basic):
     mathematical expressions as the 'nabla' symbol.
     """
 
-    def __new__(cls):
+    def __new__(cls) -> Self:
         obj = super().__new__(cls)
         obj._name = "delop"
         return obj
 
-    def gradient(self, scalar_field, doit=False):
+    def gradient(self, scalar_field, doit=False) -> VectorZero | VectorAdd | Gradient:
         """
         Returns the gradient of the given scalar field, as a
         Vector instance.
@@ -47,7 +50,7 @@ class Del(Basic):
     __call__ = gradient
     __call__.__doc__ = gradient.__doc__
 
-    def dot(self, vect, doit=False):
+    def dot(self, vect, doit=False) -> Divergence | Add:
         """
         Represents the dot product between this operator and a given
         vector - equal to the divergence of the vector field.
@@ -81,7 +84,7 @@ class Del(Basic):
     __and__ = dot
     __and__.__doc__ = dot.__doc__
 
-    def cross(self, vect, doit=False):
+    def cross(self, vect, doit=False) -> VectorZero | VectorAdd | Curl:
         """
         Represents the cross product between this operator and a given
         vector - equal to the curl of the vector field.

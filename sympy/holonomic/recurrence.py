@@ -4,9 +4,10 @@ from sympy.core.singleton import S
 from sympy.core.symbol import (Symbol, symbols)
 from sympy.printing import sstr
 from sympy.core.sympify import sympify
+from typing_extensions import LiteralString, Self
 
 
-def RecurrenceOperators(base, generator):
+def RecurrenceOperators(base, generator) -> tuple[RecurrenceOperatorAlgebra, RecurrenceOperator]:
     """
     Returns an Algebra of Recurrence Operators and the operator for
     shifting i.e. the `Sn` operator.
@@ -56,7 +57,7 @@ class RecurrenceOperatorAlgebra:
     RecurrenceOperator
     """
 
-    def __init__(self, base, generator):
+    def __init__(self, base, generator) -> None:
         # the base ring for the algebra
         self.base = base
         # the operator representing shift i.e. `Sn`
@@ -80,7 +81,7 @@ class RecurrenceOperatorAlgebra:
 
     __repr__ = __str__
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
         if self.base == other.base and self.gen_symbol == other.gen_symbol:
             return True
         else:
@@ -135,7 +136,7 @@ class RecurrenceOperator:
 
     _op_priority = 20
 
-    def __init__(self, list_of_poly, parent):
+    def __init__(self, list_of_poly, parent) -> None:
         # the parent ring for this operator
         # must be an RecurrenceOperatorAlgebra object
         self.parent = parent
@@ -152,7 +153,7 @@ class RecurrenceOperator:
             self.listofpoly = list_of_poly
         self.order = len(self.listofpoly) - 1
 
-    def __mul__(self, other):
+    def __mul__(self, other) -> "RecurrenceOperator":
         """
         Multiplies two Operators and returns another
         RecurrenceOperator instance using the commutation rule
@@ -202,7 +203,7 @@ class RecurrenceOperator:
 
         return RecurrenceOperator(sol, self.parent)
 
-    def __rmul__(self, other):
+    def __rmul__(self, other) -> RecurrenceOperator | None:
         if not isinstance(other, RecurrenceOperator):
 
             if isinstance(other, int):
@@ -214,7 +215,7 @@ class RecurrenceOperator:
             sol = [other * j for j in self.listofpoly]
             return RecurrenceOperator(sol, self.parent)
 
-    def __add__(self, other):
+    def __add__(self, other) -> "RecurrenceOperator":
         if isinstance(other, RecurrenceOperator):
 
             sol = _add_lists(self.listofpoly, other.listofpoly)
@@ -241,7 +242,7 @@ class RecurrenceOperator:
     def __rsub__(self, other):
         return (-1) * self + other
 
-    def __pow__(self, n):
+    def __pow__(self, n) -> Self | RecurrenceOperator | None:
         if n == 1:
             return self
         result = RecurrenceOperator([self.parent.base.one], self.parent)
@@ -288,7 +289,7 @@ class RecurrenceOperator:
 
     __repr__ = __str__
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
         if isinstance(other, RecurrenceOperator):
             if self.listofpoly == other.listofpoly and self.parent == other.parent:
                 return True
@@ -305,7 +306,7 @@ class HolonomicSequence:
     is Holonomic if and only if its generating function is a Holonomic Function.
     """
 
-    def __init__(self, recurrence, u0=[]):
+    def __init__(self, recurrence, u0=[]) -> None:
         self.recurrence = recurrence
         if not isinstance(u0, list):
             self.u0 = [u0]
@@ -318,7 +319,7 @@ class HolonomicSequence:
             self._have_init_cond = True
         self.n = recurrence.parent.base.gens[0]
 
-    def __repr__(self):
+    def __repr__(self) -> LiteralString:
         str_sol = 'HolonomicSequence(%s, %s)' % ((self.recurrence).__repr__(), sstr(self.n))
         if not self._have_init_cond:
             return str_sol
@@ -332,7 +333,7 @@ class HolonomicSequence:
 
     __str__ = __repr__
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
         if self.recurrence != other.recurrence or self.n != other.n:
             return False
         if self._have_init_cond and other._have_init_cond:

@@ -2,8 +2,11 @@ from sympy.matrices.expressions.matexpr import MatrixExpr
 from sympy.core.basic import Basic
 from sympy.core.containers import Tuple
 from sympy.functions.elementary.integers import floor
+from sympy.core.function import UndefinedFunction
+from typing import Any, Literal
+from typing_extensions import Self
 
-def normalize(i, parentsize):
+def normalize(i, parentsize) -> tuple[Any | Literal[0], Any, Any | Literal[1]]:
     if isinstance(i, slice):
         i = (i.start, i.stop, i.step)
     if not isinstance(i, (tuple, list, Tuple)):
@@ -53,7 +56,7 @@ class MatrixSlice(MatrixExpr):
     rowslice = property(lambda self: self.args[1])
     colslice = property(lambda self: self.args[2])
 
-    def __new__(cls, parent, rowslice, colslice):
+    def __new__(cls, parent, rowslice, colslice) -> MatrixSlice | Self:
         rowslice = normalize(rowslice, parent.shape[0])
         colslice = normalize(colslice, parent.shape[1])
         if not (len(rowslice) == len(colslice) == 3):
@@ -68,7 +71,7 @@ class MatrixSlice(MatrixExpr):
         return Basic.__new__(cls, parent, Tuple(*rowslice), Tuple(*colslice))
 
     @property
-    def shape(self):
+    def shape(self) -> tuple[Any | type[UndefinedFunction], Any | type[UndefinedFunction]]:
         rows = self.rowslice[1] - self.rowslice[0]
         rows = rows if self.rowslice[2] == 1 else floor(rows/self.rowslice[2])
         cols = self.colslice[1] - self.colslice[0]
@@ -85,7 +88,7 @@ class MatrixSlice(MatrixExpr):
         return self.rowslice == self.colslice
 
 
-def slice_of_slice(s, t):
+def slice_of_slice(s, t) -> tuple[Any, Any, Any]:
     start1, stop1, step1 = s
     start2, stop2, step2 = t
 
@@ -99,7 +102,7 @@ def slice_of_slice(s, t):
     return start, stop, step
 
 
-def mat_slice_of_slice(parent, rowslice, colslice):
+def mat_slice_of_slice(parent, rowslice, colslice) -> MatrixSlice:
     """ Collapse nested matrix slices
 
     >>> from sympy import MatrixSymbol

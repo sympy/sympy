@@ -13,6 +13,7 @@ from sympy.core.random import choice
 from .parameters import global_parameters
 
 from sympy.utilities.iterables import iterable
+from sympy.core.basic import Basic
 
 
 if TYPE_CHECKING:
@@ -25,7 +26,7 @@ if TYPE_CHECKING:
 
 
 class SympifyError(ValueError):
-    def __init__(self, expr, base_exc=None):
+    def __init__(self, expr, base_exc=None) -> None:
         self.expr = expr
         self.base_exc = base_exc
 
@@ -540,7 +541,7 @@ def _sympify(a):
     return sympify(a, strict=True)
 
 
-def kernS(s):
+def kernS(s) -> list[Any] | set[Any] | tuple[Any, ...]:
     """Use a hack to try keep autosimplification from distributing a
     a number into an Add; this modification does not
     prevent the 2-arg Mul from becoming an Add, however.

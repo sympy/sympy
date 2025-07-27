@@ -33,9 +33,21 @@ from sympy.core.containers import Tuple
 from sympy.core.symbol import (Dummy, Symbol)
 from sympy.polys.polyutils import _sort_gens
 from sympy.plotting.series import ImplicitSeries, _set_discretization_points
-from sympy.plotting.plot import plot_factory
+from sympy.plotting.plot import BaseSeries, Plot, plot_factory
 from sympy.utilities.decorator import doctest_depends_on
 from sympy.utilities.iterables import flatten
+from typing import Any, Literal
+
+class ImplicitSeries(BaseSeries):
+    is_implicit = ...
+    def __init__(
+        self, expr, var_start_end_x, var_start_end_y, has_equality, use_interval_math, depth, nb_of_points, line_color
+    ) -> None: ...
+    def get_raster(
+        self,
+    ) -> (
+        tuple[list[Any], Literal["fill"]] | tuple[Any, Any, Any, Literal["contour"]] | tuple[Any, Any, Any, Literal["contourf"]]
+    ): ...
 
 
 __doctest_requires__ = {'plot_implicit': ['matplotlib']}
@@ -43,7 +55,7 @@ __doctest_requires__ = {'plot_implicit': ['matplotlib']}
 
 @doctest_depends_on(modules=('matplotlib',))
 def plot_implicit(expr, x_var=None, y_var=None, adaptive=True, depth=0,
-                  n=300, line_color="blue", show=True, **kwargs):
+                  n=300, line_color="blue", show=True, **kwargs) -> Plot:
     """A plot function to plot implicit equations / inequalities.
 
     Arguments

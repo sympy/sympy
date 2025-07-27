@@ -134,7 +134,7 @@ class MCodePrinter(CodePrinter):
     _number_symbols: set[tuple[Expr, Float]] = set()
     _not_supported: set[Basic] = set()
 
-    def __init__(self, settings={}):
+    def __init__(self, settings={}) -> None:
         """Register function mappings supplied by user"""
         CodePrinter.__init__(self, settings)
         self.known_functions = dict(known_functions)
@@ -339,7 +339,7 @@ class MCodePrinter(CodePrinter):
         return "(* {} *)".format(text)
 
 
-def mathematica_code(expr, **settings):
+def mathematica_code(expr, **settings) -> str | tuple[set[tuple[Any, str]], set[Any], str]:
     r"""Converts an expr to a string of the Wolfram Mathematica code
 
     Examples

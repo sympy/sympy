@@ -26,6 +26,20 @@ from sympy.external.gmpy import SYMPY_INTS
 from sympy.utilities.iterables import is_sequence
 from sympy.utilities.lambdify import lambdify
 from sympy.utilities.misc import as_int
+from sympy.concrete.products import Product
+from sympy.concrete.summations import Sum
+from sympy.core.add import Add
+from sympy.core.expr import Expr
+from sympy.core.mul import Mul
+from sympy.core.numbers import AlgebraicNumber, Float, Integer, Number, Rational
+from sympy.core.power import Pow
+from sympy.core.symbol import Symbol
+from sympy.functions.elementary.complexes import Abs, im, re
+from sympy.functions.elementary.exponential import exp, log
+from sympy.functions.elementary.integers import ceiling, floor
+from sympy.functions.elementary.trigonometric import atan
+from sympy.integrals.integrals import Integral
+from typing_extensions import Self, TypeAlias
 
 if TYPE_CHECKING:
     from sympy.core.expr import Expr
@@ -77,7 +91,7 @@ sign is 0 or 1 and bc should correspond to the number of bits used to
 represent the mantissa (man) in binary notation, e.g.
 """
 
-MPF_TUP = tuple[int, int, int, int]  # mpf value tuple
+MPF_TUP: TypeAlias = tuple[int, int, int, int]  # mpf value tuple
 
 """
 Explanation
@@ -97,7 +111,7 @@ relative accuracy of the respective complex part, but may be anything
 if the corresponding complex part is None.
 
 """
-TMP_RES = Any  # temporary result, should be some variant of
+TMP_RES: TypeAlias = Any  # temporary result, should be some variant of
 # tUnion[tTuple[Optional[MPF_TUP], Optional[MPF_TUP],
 #               Optional[int], Optional[int]],
 #        'ComplexInfinity']
@@ -106,7 +120,7 @@ TMP_RES = Any  # temporary result, should be some variant of
 # 2. sometimes the result can't be zoo
 
 # type of the "options" parameter in internal evalf functions
-OPT_DICT = dict[str, Any]
+OPT_DICT: TypeAlias = dict[str, Any]
 
 
 def fastlog(x: MPF_TUP | None) -> int | Any:
@@ -176,7 +190,7 @@ def pure_complex(v: Expr, or_real=False) -> tuple[Number, Number] | None:
 
 
 # I don't know what this is, see function scaled_zero below
-SCALED_ZERO_TUP = tuple[list[int], int, int, int]
+SCALED_ZERO_TUP: TypeAlias = tuple[list[int], int, int, int]
 
 
 
@@ -351,7 +365,7 @@ def chop_parts(value: TMP_RES, prec: int) -> TMP_RES:
     return re, im, re_acc, im_acc
 
 
-def check_target(expr: Expr, result: TMP_RES, prec: int):
+def check_target(expr: Expr, result: TMP_RES, prec: int) -> None:
     a = complex_accuracy(result)
     if a < prec:
         raise PrecisionExhausted("Failed to distinguish the expression: \n\n%s\n\n"
@@ -1558,7 +1572,7 @@ class EvalfMixin:
 
     __slots__: tuple[str, ...] = ()
 
-    def evalf(self, n=15, subs=None, maxn=100, chop=False, strict=False, quad=None, verbose=False):
+    def evalf(self, n=15, subs=None, maxn=100, chop=False, strict=False, quad=None, verbose=False) -> Self | EvalfMixin | TMP_RES | Float:
         """
         Evaluate the given formula to an accuracy of *n* digits.
 

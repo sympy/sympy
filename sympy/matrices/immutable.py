@@ -10,6 +10,8 @@ from sympy.matrices.matrixbase import MatrixBase
 from sympy.matrices.repmatrix import RepMatrix
 from sympy.matrices.sparse import SparseRepMatrix
 from sympy.multipledispatch import dispatch
+from typing import Any
+from typing_extensions import Self
 
 
 def sympify_matrix(arg):
@@ -19,7 +21,7 @@ def sympify_matrix(arg):
 sympify_converter[MatrixBase] = sympify_matrix
 
 
-def sympify_mpmath_matrix(arg):
+def sympify_mpmath_matrix(arg) -> "ImmutableDenseMatrix":
     mat = [_sympify(x) for x in arg]
     return ImmutableDenseMatrix(arg.rows, arg.cols, mat)
 
@@ -48,7 +50,7 @@ class ImmutableRepMatrix(RepMatrix, MatrixExpr): # type: ignore
     def __hash__(self):
         return MatrixExpr.__hash__(self)
 
-    def copy(self):
+    def copy(self) -> Self:
         return self
 
     @property
@@ -60,10 +62,10 @@ class ImmutableRepMatrix(RepMatrix, MatrixExpr): # type: ignore
         return self._rows
 
     @property
-    def shape(self):
+    def shape(self) -> tuple[Any, Any]:
         return self._rows, self._cols
 
-    def as_immutable(self):
+    def as_immutable(self) -> Self:
         return self
 
     def _entry(self, i, j, **kwargs):
@@ -72,7 +74,7 @@ class ImmutableRepMatrix(RepMatrix, MatrixExpr): # type: ignore
     def __setitem__(self, *args):
         raise TypeError("Cannot set values of {}".format(self.__class__))
 
-    def is_diagonalizable(self, reals_only=False, **kwargs):
+    def is_diagonalizable(self, reals_only=False, **kwargs) -> bool:
         return super().is_diagonalizable(
             reals_only=reals_only, **kwargs)
 

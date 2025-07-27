@@ -1,5 +1,6 @@
 from collections import deque
 from sympy.combinatorics.rewritingsystem_fsm import StateMachine
+from typing import Any
 
 class RewritingSystem:
     '''
@@ -15,7 +16,7 @@ class RewritingSystem:
            https://www.gap-system.org/Manuals/pkg/kbmag-1.5.3/doc/manual.pdf
 
     '''
-    def __init__(self, group):
+    def __init__(self, group) -> None:
         self.group = group
         self.alphabet = group.generators
         self._is_confluent = None
@@ -45,7 +46,7 @@ class RewritingSystem:
         self.reduction_automaton = StateMachine('Reduction automaton for '+ repr(self.group), generators)
         self.construct_automaton()
 
-    def set_max(self, n):
+    def set_max(self, n) -> None:
         '''
         Set the maximum number of rules that can be defined
 
@@ -56,7 +57,7 @@ class RewritingSystem:
         return
 
     @property
-    def is_confluent(self):
+    def is_confluent(self) -> bool:
         '''
         Return `True` if the system is confluent
 
@@ -87,7 +88,7 @@ class RewritingSystem:
         if self.reduction_automaton:
             self._new_rules[r1] = r2
 
-    def add_rule(self, w1, w2, check=False):
+    def add_rule(self, w1, w2, check=False) -> set[Any]:
         new_keys = set()
 
         if w1 == w2:
@@ -179,7 +180,7 @@ class RewritingSystem:
             return removed, added
         return
 
-    def make_confluent(self, check=False):
+    def make_confluent(self, check=False) -> bool | None:
         '''
         Try to make the system confluent using the Knuth-Bendix
         completion algorithm
@@ -320,7 +321,7 @@ class RewritingSystem:
                 inverse_rules[rule_value_inverse] = rule_key_inverse
         return inverse_rules
 
-    def construct_automaton(self):
+    def construct_automaton(self) -> None:
         '''
         Construct the automaton based on the set of reduction rules of the system.
 

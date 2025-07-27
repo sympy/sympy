@@ -29,13 +29,15 @@ from sympy.polys.rationaltools import together
 from sympy.polys.specialpolys import cyclotomic_poly
 from sympy.utilities import public
 from sympy.utilities.misc import filldedent
+import sympy.functions.elementary.piecewise
+from typing import Any
 
 
 
 z = Symbol('z')  # importing from abc cause O to be lost as clashing symbol
 
 
-def roots_linear(f):
+def roots_linear(f) -> list[Any]:
     """Returns a list of roots of a linear polynomial."""
     r = -f.nth(0)/f.nth(1)
     dom = f.get_domain()
@@ -50,7 +52,7 @@ def roots_linear(f):
     return [r]
 
 
-def roots_quadratic(f):
+def roots_quadratic(f) -> list[Any]:
     """Returns a list of roots of a quadratic polynomial. If the domain is ZZ
     then the roots will be sorted with negatives coming before positives.
     The ordering will be the same for any numerical coefficients as long as
@@ -120,7 +122,7 @@ def roots_quadratic(f):
     return [r0, r1]
 
 
-def roots_cubic(f, trig=False):
+def roots_cubic(f, trig=False) -> list[Any]:
     """Returns a list of roots of a cubic polynomial.
 
     References
@@ -245,7 +247,7 @@ def _roots_quartic_euler(p, q, r, a):
     return [c1 - c2 - a, -c1 - c3 - a, -c1 + c3 - a, c1 + c2 - a]
 
 
-def roots_quartic(f):
+def roots_quartic(f) -> Any | list[Any] | list[Any | sympy.functions.elementary.piecewise.Piecewise]:
     r"""
     Returns a list of roots of a quartic polynomial.
 
@@ -495,7 +497,7 @@ def _inv_totient_estimate(m):
     return L, U
 
 
-def roots_cyclotomic(f, factor=False):
+def roots_cyclotomic(f, factor=False) -> list[Any]:
     """Compute roots of cyclotomic polynomials. """
     L, U = _inv_totient_estimate(f.degree())
 
@@ -527,7 +529,7 @@ def roots_cyclotomic(f, factor=False):
     return roots
 
 
-def roots_quintic(f):
+def roots_quintic(f) -> list[Any]:
     """
     Calculate exact roots of a solvable irreducible quintic with rational coefficients.
     Return an empty list if the quintic is reducible or not solvable.
@@ -769,7 +771,7 @@ def _integer_basis(poly):
             return div
 
 
-def preprocess_roots(poly):
+def preprocess_roots(poly) -> tuple[Any, Any]:
     """Try to get rid of symbolic coefficients from ``poly``. """
     coeff = S.One
 
@@ -1202,7 +1204,7 @@ def roots(f, *gens,
         return zeros
 
 
-def root_factors(f, *gens, filter=None, **args):
+def root_factors(f, *gens, filter=None, **args) -> list[Any]:
     """
     Returns all factors of a univariate polynomial.
 

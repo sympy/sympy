@@ -1,4 +1,4 @@
-from typing import Type
+from typing import Any, Callable, Type
 from sympy import Interval, numer, Rational, solveset
 from sympy.core.add import Add
 from sympy.core.basic import Basic
@@ -28,6 +28,9 @@ from sympy.solvers.inequalities import reduce_inequalities
 from sympy.physics.control.routh_table import negative_real_part_conditions
 
 from mpmath.libmp.libmpf import prec_to_dps
+from sympy.series.order import Order
+from types import NotImplementedType
+from typing_extensions import Self
 
 __all__ = ['TransferFunction', 'PIDController', 'Series', 'MIMOSeries', 'Parallel', 'MIMOParallel',
     'Feedback', 'MIMOFeedback', 'TransferFunctionMatrix', 'StateSpace', 'gbt', 'bilinear', 'forward_diff', 'backward_diff',
@@ -117,7 +120,7 @@ def gbt(tf, sample_per, alpha):
 
     return num_coefs, den_coefs
 
-def bilinear(tf, sample_per):
+def bilinear(tf, sample_per) -> tuple[Any, Any]:
     r"""
     Returns falling coefficients of H(z) from numerator and denominator.
 
@@ -177,7 +180,7 @@ def forward_diff(tf, sample_per):
     """
     return gbt(tf, sample_per, S.Zero)
 
-def backward_diff(tf, sample_per):
+def backward_diff(tf, sample_per) -> tuple[Any, Any]:
     r"""
     Returns falling coefficients of H(z) from numerator and denominator.
 
@@ -369,7 +372,7 @@ class LinearTimeInvariant(Basic, EvalfMixin):
     _clstype: Type
 
     # Users should not directly interact with this class.
-    def __new__(cls, *system, **kwargs):
+    def __new__(cls, *system, **kwargs) -> Self:
         if cls is LinearTimeInvariant:
             raise NotImplementedError('The LTICommon class is not meant to be used directly.')
         return super(LinearTimeInvariant, cls).__new__(cls, *system, **kwargs)
@@ -420,7 +423,7 @@ SISOLinearTimeInvariant._clstype = SISOLinearTimeInvariant
 MIMOLinearTimeInvariant._clstype = MIMOLinearTimeInvariant
 
 
-def _check_other_SISO(func):
+def _check_other_SISO(func) -> Callable[..., NotImplementedType | Any]:
     def wrapper(*args, **kwargs):
         if not isinstance(args[-1], SISOLinearTimeInvariant):
             return NotImplemented
@@ -429,7 +432,7 @@ def _check_other_SISO(func):
     return wrapper
 
 
-def _check_other_MIMO(func):
+def _check_other_MIMO(func) -> Callable[..., NotImplementedType | Any]:
     def wrapper(*args, **kwargs):
         if not isinstance(args[-1], MIMOLinearTimeInvariant):
             return NotImplemented
@@ -624,7 +627,7 @@ class TransferFunction(SISOLinearTimeInvariant):
     .. [2] https://en.wikipedia.org/wiki/Laplace_transform
 
     """
-    def __new__(cls, num, den, var):
+    def __new__(cls, num, den, var) -> Self:
         num, den = _sympify(num), _sympify(den)
 
         if not isinstance(var, Symbol):
@@ -642,7 +645,7 @@ class TransferFunction(SISOLinearTimeInvariant):
             raise TypeError("Unsupported type for numerator or denominator of TransferFunction.")
 
     @classmethod
-    def from_rational_expression(cls, expr, var=None):
+    def from_rational_expression(cls, expr, var=None) -> Self:
         r"""
         Creates a new ``TransferFunction`` efficiently from a rational expression.
 
@@ -958,7 +961,7 @@ class TransferFunction(SISOLinearTimeInvariant):
 
         return StateSpace(A, B, C, D)
 
-    def expand(self):
+    def expand(self) -> "TransferFunction":
         """
         Returns the transfer function with numerator and denominator
         in expanded form.
@@ -1006,7 +1009,7 @@ class TransferFunction(SISOLinearTimeInvariant):
         m = Mul(self.num, Pow(self.den, -1, evaluate=False), evaluate=False)
         return limit(m, self.var, 0)
 
-    def poles(self):
+    def poles(self) -> list[Any] | Any:
         """
         Returns the poles of a transfer function.
 
@@ -1028,7 +1031,7 @@ class TransferFunction(SISOLinearTimeInvariant):
         """
         return _roots(Poly(self.den, self.var), self.var)
 
-    def zeros(self):
+    def zeros(self) -> list[Any] | Any:
         """
         Returns the zeros of a transfer function.
 
@@ -1234,7 +1237,7 @@ class TransferFunction(SISOLinearTimeInvariant):
 
         return negative_real_part_conditions(standard_form.den, self.var)
 
-    def __add__(self, other):
+    def __add__(self, other) -> TransferFunction | Parallel:
         if hasattr(other, "is_StateSpace_object") and other.is_StateSpace_object:
             return Parallel(self, other)
         elif isinstance(other, (TransferFunction, Series, Feedback)):
@@ -1257,7 +1260,7 @@ class TransferFunction(SISOLinearTimeInvariant):
     def __radd__(self, other):
         return self + other
 
-    def __sub__(self, other):
+    def __sub__(self, other) -> TransferFunction | Parallel:
         if hasattr(other, "is_StateSpace_object") and other.is_StateSpace_object:
             return Parallel(self, -other)
         elif isinstance(other, (TransferFunction, Series)):
@@ -1280,7 +1283,7 @@ class TransferFunction(SISOLinearTimeInvariant):
     def __rsub__(self, other):
         return -self + other
 
-    def __mul__(self, other):
+    def __mul__(self, other) -> TransferFunction | Series:
         if hasattr(other, "is_StateSpace_object") and other.is_StateSpace_object:
             return Series(self, other)
         elif isinstance(other, (TransferFunction, Parallel, Feedback)):
@@ -1302,7 +1305,7 @@ class TransferFunction(SISOLinearTimeInvariant):
 
     __rmul__ = __mul__
 
-    def __truediv__(self, other):
+    def __truediv__(self, other) -> "Feedback":
         if isinstance(other, TransferFunction):
             if not self.var == other.var:
                 raise ValueError(filldedent("""
@@ -1339,7 +1342,7 @@ class TransferFunction(SISOLinearTimeInvariant):
 
     __rtruediv__ = __truediv__
 
-    def __pow__(self, p):
+    def __pow__(self, p) -> "TransferFunction":
         p = sympify(p)
         if not p.is_Integer:
             raise ValueError("Exponent must be an integer.")
@@ -1353,7 +1356,7 @@ class TransferFunction(SISOLinearTimeInvariant):
 
         return TransferFunction(num_, den_, self.var)
 
-    def __neg__(self):
+    def __neg__(self) -> "TransferFunction":
         return TransferFunction(-self.num, self.den, self.var)
 
     @property
@@ -1419,7 +1422,7 @@ class TransferFunction(SISOLinearTimeInvariant):
         """
         return degree(self.num, self.var) == degree(self.den, self.var)
 
-    def to_expr(self):
+    def to_expr(self) -> Order | Pow:
         """
         Converts a ``TransferFunction`` object to SymPy Expr.
 
@@ -1677,7 +1680,7 @@ class Series(SISOLinearTimeInvariant):
     MIMOSeries, Parallel, TransferFunction, Feedback
 
     """
-    def __new__(cls, *args, evaluate=False):
+    def __new__(cls, *args, evaluate=False) -> TransferFunction | Self:
 
         args = _flatten_args(args, Series)
         # For StateSpace series connection
@@ -1728,7 +1731,7 @@ class Series(SISOLinearTimeInvariant):
         """
         return self.args[0].var
 
-    def doit(self, **hints):
+    def doit(self, **hints) -> TransferFunction:
         """
         Returns the resultant transfer function or StateSpace obtained after evaluating
         the series interconnection.
@@ -1780,7 +1783,7 @@ class Series(SISOLinearTimeInvariant):
         return self.doit()
 
     @_check_other_SISO
-    def __add__(self, other):
+    def __add__(self, other) -> TransferFunction | Parallel:
 
         if isinstance(other, Parallel):
             arg_list = list(other.args)
@@ -1798,12 +1801,12 @@ class Series(SISOLinearTimeInvariant):
         return -self + other
 
     @_check_other_SISO
-    def __mul__(self, other):
+    def __mul__(self, other) -> TransferFunction | Series:
 
         arg_list = list(self.args)
         return Series(*arg_list, other)
 
-    def __truediv__(self, other):
+    def __truediv__(self, other) -> "Feedback":
         if isinstance(other, TransferFunction):
             return Series(*self.args, TransferFunction(other.den, other.num, other.var))
         elif isinstance(other, Series):
@@ -1829,10 +1832,10 @@ class Series(SISOLinearTimeInvariant):
         else:
             raise ValueError("This transfer function expression is invalid.")
 
-    def __neg__(self):
+    def __neg__(self) -> TransferFunction | Series:
         return Series(TransferFunction(-1, 1, self.var), self)
 
-    def to_expr(self):
+    def to_expr(self) -> Order:
         """Returns the equivalent ``Expr`` object."""
         return Mul(*(arg.to_expr() for arg in self.args), evaluate=False)
 
@@ -2048,7 +2051,7 @@ class MIMOSeries(MIMOLinearTimeInvariant):
     Series, MIMOParallel
 
     """
-    def __new__(cls, *args, evaluate=False):
+    def __new__(cls, *args, evaluate=False) -> TransferFunctionMatrix | Basic | Self:
 
         if args and any(isinstance(arg, StateSpace) or (hasattr(arg, 'is_StateSpace_object')
                                             and arg.is_StateSpace_object) for arg in args):
@@ -2105,7 +2108,7 @@ class MIMOSeries(MIMOLinearTimeInvariant):
         return self.args[-1].num_outputs
 
     @property
-    def shape(self):
+    def shape(self) -> tuple[Any, Any]:
         """Returns the shape of the equivalent MIMO system."""
         return self.num_outputs, self.num_inputs
 
@@ -2113,7 +2116,7 @@ class MIMOSeries(MIMOLinearTimeInvariant):
     def is_StateSpace_object(self):
         return self._is_series_StateSpace
 
-    def doit(self, cancel=False, **kwargs):
+    def doit(self, cancel=False, **kwargs) -> TransferFunctionMatrix | Basic:
         """
         Returns the resultant obtained after evaluating the MIMO systems arranged
         in a series configuration. For TransferFunction systems it returns a TransferFunctionMatrix
@@ -2162,7 +2165,7 @@ class MIMOSeries(MIMOLinearTimeInvariant):
         return self.doit()
 
     @_check_other_MIMO
-    def __add__(self, other):
+    def __add__(self, other) -> TransferFunctionMatrix | MIMOParallel:
 
         if isinstance(other, MIMOParallel):
             arg_list = list(other.args)
@@ -2180,7 +2183,7 @@ class MIMOSeries(MIMOLinearTimeInvariant):
         return -self + other
 
     @_check_other_MIMO
-    def __mul__(self, other):
+    def __mul__(self, other) -> TransferFunctionMatrix | Basic | MIMOSeries:
 
         if isinstance(other, MIMOSeries):
             self_arg_list = list(self.args)
@@ -2190,7 +2193,7 @@ class MIMOSeries(MIMOLinearTimeInvariant):
         arg_list = list(self.args)
         return MIMOSeries(other, *arg_list)
 
-    def __neg__(self):
+    def __neg__(self) -> TransferFunctionMatrix | Basic | MIMOSeries:
         arg_list = list(self.args)
         arg_list[0] = -arg_list[0]
         return MIMOSeries(*arg_list)
@@ -2295,7 +2298,7 @@ class Parallel(SISOLinearTimeInvariant):
 
     """
 
-    def __new__(cls, *args, evaluate=False):
+    def __new__(cls, *args, evaluate=False) -> TransferFunction | Self:
 
         args = _flatten_args(args, Parallel)
         # For StateSpace parallel connection
@@ -2340,7 +2343,7 @@ class Parallel(SISOLinearTimeInvariant):
         """
         return self.args[0].var
 
-    def doit(self, **hints):
+    def doit(self, **hints) -> TransferFunction:
         """
         Returns the resultant transfer function or state space obtained by
         parallel connection of transfer functions or state space objects.
@@ -2379,7 +2382,7 @@ class Parallel(SISOLinearTimeInvariant):
         return self.doit()
 
     @_check_other_SISO
-    def __add__(self, other):
+    def __add__(self, other) -> TransferFunction | Parallel:
 
         self_arg_list = list(self.args)
         return Parallel(*self_arg_list, other)
@@ -2394,7 +2397,7 @@ class Parallel(SISOLinearTimeInvariant):
         return -self + other
 
     @_check_other_SISO
-    def __mul__(self, other):
+    def __mul__(self, other) -> TransferFunction | Series:
 
         if isinstance(other, Series):
             arg_list = list(other.args)
@@ -2402,10 +2405,10 @@ class Parallel(SISOLinearTimeInvariant):
 
         return Series(self, other)
 
-    def __neg__(self):
+    def __neg__(self) -> TransferFunction | Series:
         return Series(TransferFunction(-1, 1, self.var), self)
 
-    def to_expr(self):
+    def to_expr(self) -> Order:
         """Returns the equivalent ``Expr`` object."""
         return Add(*(arg.to_expr() for arg in self.args), evaluate=False)
 
@@ -2624,7 +2627,7 @@ class MIMOParallel(MIMOLinearTimeInvariant):
 
     """
 
-    def __new__(cls, *args, evaluate=False):
+    def __new__(cls, *args, evaluate=False) -> TransferFunctionMatrix | Self:
 
         args = _flatten_args(args, MIMOParallel)
 
@@ -2678,7 +2681,7 @@ class MIMOParallel(MIMOLinearTimeInvariant):
         return self.args[0].num_outputs
 
     @property
-    def shape(self):
+    def shape(self) -> tuple[Any, Any]:
         """Returns the shape of the equivalent MIMO system."""
         return self.num_outputs, self.num_inputs
 
@@ -2686,7 +2689,7 @@ class MIMOParallel(MIMOLinearTimeInvariant):
     def is_StateSpace_object(self):
         return self._is_parallel_StateSpace
 
-    def doit(self, **hints):
+    def doit(self, **hints) -> "TransferFunctionMatrix":
         """
         Returns the resultant transfer function matrix or StateSpace obtained after evaluating
         the MIMO systems arranged in a parallel configuration.
@@ -2726,7 +2729,7 @@ class MIMOParallel(MIMOLinearTimeInvariant):
         return self.doit()
 
     @_check_other_MIMO
-    def __add__(self, other):
+    def __add__(self, other) -> TransferFunctionMatrix | MIMOParallel:
 
         self_arg_list = list(self.args)
         return MIMOParallel(*self_arg_list, other)
@@ -2741,7 +2744,7 @@ class MIMOParallel(MIMOLinearTimeInvariant):
         return -self + other
 
     @_check_other_MIMO
-    def __mul__(self, other):
+    def __mul__(self, other) -> TransferFunctionMatrix | Basic | MIMOSeries:
 
         if isinstance(other, MIMOSeries):
             arg_list = list(other.args)
@@ -2749,7 +2752,7 @@ class MIMOParallel(MIMOLinearTimeInvariant):
 
         return MIMOSeries(other, self)
 
-    def __neg__(self):
+    def __neg__(self) -> TransferFunctionMatrix | MIMOParallel:
         arg_list = [-arg for arg in list(self.args)]
         return MIMOParallel(*arg_list)
 
@@ -2872,7 +2875,7 @@ class Feedback(SISOLinearTimeInvariant):
     MIMOFeedback, Series, Parallel
 
     """
-    def __new__(cls, sys1, sys2=None, sign=-1):
+    def __new__(cls, sys1, sys2=None, sign=-1) -> Self:
         if not sys2:
             sys2 = TransferFunction(1, 1, sys1.var)
 
@@ -2911,7 +2914,7 @@ class Feedback(SISOLinearTimeInvariant):
     __str__ = __repr__
 
     @property
-    def sys1(self):
+    def sys1(self) -> Basic:
         """
         Returns the feedforward system of the feedback interconnection.
 
@@ -2936,7 +2939,7 @@ class Feedback(SISOLinearTimeInvariant):
         return self.args[0]
 
     @property
-    def sys2(self):
+    def sys2(self) -> Basic:
         """
         Returns the feedback controller of the feedback interconnection.
 
@@ -2987,7 +2990,7 @@ class Feedback(SISOLinearTimeInvariant):
         return self.sys1.var
 
     @property
-    def sign(self):
+    def sign(self) -> Basic:
         """
         Returns the type of MIMO Feedback model. ``1``
         for Positive and ``-1`` for Negative.
@@ -3040,7 +3043,7 @@ class Feedback(SISOLinearTimeInvariant):
 
         return 1/(1 - self.sign*self.sys1.to_expr()*self.sys2.to_expr())
 
-    def doit(self, cancel=False, expand=False, **hints):
+    def doit(self, cancel=False, expand=False, **hints) -> TransferFunction:
         """
         Returns the resultant transfer function or state space obtained by
         feedback connection of transfer functions or state space objects.
@@ -3166,7 +3169,7 @@ class Feedback(SISOLinearTimeInvariant):
 
         return self.doit().to_expr()
 
-    def __neg__(self):
+    def __neg__(self) -> "Feedback":
         return Feedback(-self.sys1, -self.sys2, self.sign)
 
 
@@ -3319,7 +3322,7 @@ class MIMOFeedback(MIMOLinearTimeInvariant):
     Feedback, MIMOSeries, MIMOParallel
 
     """
-    def __new__(cls, sys1, sys2, sign=-1):
+    def __new__(cls, sys1, sys2, sign=-1) -> Self:
         if not isinstance(sys1, (TransferFunctionMatrix, MIMOSeries, StateSpace)):
             raise TypeError("Unsupported type for `sys1` in MIMO Feedback.")
 
@@ -3353,7 +3356,7 @@ class MIMOFeedback(MIMOLinearTimeInvariant):
         return super().__new__(cls, sys1, sys2, _sympify(sign))
 
     @property
-    def sys1(self):
+    def sys1(self) -> Basic:
         r"""
         Returns the system placed on the feedforward path of the MIMO feedback interconnection.
 
@@ -3388,7 +3391,7 @@ class MIMOFeedback(MIMOLinearTimeInvariant):
         return self.args[0]
 
     @property
-    def sys2(self):
+    def sys2(self) -> Basic:
         r"""
         Returns the feedback controller of the MIMO feedback interconnection.
 
@@ -3444,7 +3447,7 @@ class MIMOFeedback(MIMOLinearTimeInvariant):
         return self.sys1.var
 
     @property
-    def sign(self):
+    def sign(self) -> Basic:
         r"""
         Returns the type of feedback interconnection of two models. ``1``
         for Positive and ``-1`` for Negative.
@@ -3518,7 +3521,7 @@ class MIMOFeedback(MIMOLinearTimeInvariant):
         """Returns the number of outputs of the system."""
         return self.sys1.num_outputs
 
-    def doit(self, cancel=True, expand=False, **hints):
+    def doit(self, cancel=True, expand=False, **hints) -> "TransferFunctionMatrix":
         r"""
         Returns the resultant transfer function matrix obtained by the
         feedback interconnection.
@@ -3626,7 +3629,7 @@ class MIMOFeedback(MIMOLinearTimeInvariant):
     def _eval_rewrite_as_TransferFunctionMatrix(self, sys1, sys2, sign, **kwargs):
         return self.doit()
 
-    def __neg__(self):
+    def __neg__(self) -> "MIMOFeedback":
         return MIMOFeedback(-self.sys1, -self.sys2, self.sign)
 
 
@@ -3992,7 +3995,7 @@ class TransferFunctionMatrix(MIMOLinearTimeInvariant):
     TransferFunction, MIMOSeries, MIMOParallel, Feedback
 
     """
-    def __new__(cls, arg):
+    def __new__(cls, arg) -> Self:
 
         expr_mat_arg = []
         try:
@@ -4029,7 +4032,7 @@ class TransferFunctionMatrix(MIMOLinearTimeInvariant):
         return obj
 
     @classmethod
-    def from_Matrix(cls, matrix, var):
+    def from_Matrix(cls, matrix, var) -> "TransferFunctionMatrix":
         """
         Creates a new ``TransferFunctionMatrix`` efficiently from a SymPy Matrix of ``Expr`` objects.
 
@@ -4169,12 +4172,12 @@ class TransferFunctionMatrix(MIMOLinearTimeInvariant):
         """
         return self._expr_mat.shape
 
-    def __neg__(self):
+    def __neg__(self) -> "TransferFunctionMatrix":
         neg = -self._expr_mat
         return _to_TFM(neg, self.var)
 
     @_check_other_MIMO
-    def __add__(self, other):
+    def __add__(self, other) -> TransferFunctionMatrix | MIMOParallel:
 
         if not isinstance(other, MIMOParallel):
             return MIMOParallel(self, other)
@@ -4186,25 +4189,25 @@ class TransferFunctionMatrix(MIMOLinearTimeInvariant):
         return self + (-other)
 
     @_check_other_MIMO
-    def __mul__(self, other):
+    def __mul__(self, other) -> TransferFunctionMatrix | Basic | MIMOSeries:
 
         if not isinstance(other, MIMOSeries):
             return MIMOSeries(other, self)
         other_arg_list = list(other.args)
         return MIMOSeries(*other_arg_list, self)
 
-    def __getitem__(self, key):
+    def __getitem__(self, key) -> TransferFunctionMatrix | TransferFunction:
         trunc = self._expr_mat.__getitem__(key)
         if isinstance(trunc, ImmutableMatrix):
             return _to_TFM(trunc, self.var)
         return TransferFunction.from_rational_expression(trunc, self.var)
 
-    def transpose(self):
+    def transpose(self) -> "TransferFunctionMatrix":
         """Returns the transpose of the ``TransferFunctionMatrix`` (switched input and output layers)."""
         transposed_mat = self._expr_mat.transpose()
         return _to_TFM(transposed_mat, self.var)
 
-    def elem_poles(self):
+    def elem_poles(self) -> list[list[Any]]:
         """
         Returns the poles of each element of the ``TransferFunctionMatrix``.
 
@@ -4234,7 +4237,7 @@ class TransferFunctionMatrix(MIMOLinearTimeInvariant):
         """
         return [[element.poles() for element in row] for row in self.doit().args[0]]
 
-    def elem_zeros(self):
+    def elem_zeros(self) -> list[list[Any]]:
         """
         Returns the zeros of each element of the ``TransferFunctionMatrix``.
 
@@ -4308,7 +4311,7 @@ class TransferFunctionMatrix(MIMOLinearTimeInvariant):
         simp_mat = self._expr_mat.applyfunc(lambda a: cancel(a, expand=False))
         return _to_TFM(simp_mat, self.var)
 
-    def expand(self, **hints):
+    def expand(self, **hints) -> "TransferFunctionMatrix":
         """Expands the transfer function matrix"""
         expand_mat = self._expr_mat.expand(**hints)
         return _to_TFM(expand_mat, self.var)

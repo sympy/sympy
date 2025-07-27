@@ -1,12 +1,13 @@
 from sympy.concrete.expr_with_limits import ExprWithLimits
 from sympy.core.singleton import S
 from sympy.core.relational import Eq
+from typing_extensions import Self
 
 class ReorderError(NotImplementedError):
     """
     Exception raised when trying to reorder dependent limits.
     """
-    def __init__(self, expr, msg):
+    def __init__(self, expr, msg) -> None:
         super().__init__(
             "%s could not be reordered: %s." % (expr, msg))
 
@@ -23,7 +24,7 @@ class ExprWithIntLimits(ExprWithLimits):
     """
     __slots__ = ()
 
-    def change_index(self, var, trafo, newvar=None):
+    def change_index(self, var, trafo, newvar=None) -> Self:
         r"""
         Change index of a Sum or Product.
 
@@ -142,7 +143,7 @@ class ExprWithIntLimits(ExprWithLimits):
         return self.func(function, *limits)
 
 
-    def index(expr, x):
+    def index(expr, x) -> int:
         """
         Return the index of a dummy variable in the list of limits.
 
@@ -180,7 +181,7 @@ class ExprWithIntLimits(ExprWithLimits):
         else:
             return variables.index(x)
 
-    def reorder(expr, *arg):
+    def reorder(expr, *arg) -> Self:
         """
         Reorder limits in a expression containing a Sum or a Product.
 
@@ -245,7 +246,7 @@ class ExprWithIntLimits(ExprWithLimits):
         return new_expr
 
 
-    def reorder_limit(expr, x, y):
+    def reorder_limit(expr, x, y) -> Self:
         """
         Interchange two limit tuples of a Sum or Product expression.
 
@@ -300,7 +301,7 @@ class ExprWithIntLimits(ExprWithLimits):
             raise ReorderError(expr, "could not interchange the two limits specified")
 
     @property
-    def has_empty_sequence(self):
+    def has_empty_sequence(self) -> bool | None:
         """
         Returns True if the Sum or Product is computed for an empty sequence.
 

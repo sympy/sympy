@@ -22,14 +22,20 @@ from sympy.concrete.summations import Sum, summation
 from sympy.core.containers import Tuple
 from sympy.integrals.integrals import Integral, integrate
 from sympy.matrices import ImmutableMatrix, matrix2numpy, list2numpy
-from sympy.stats.crv import SingleContinuousDistribution, SingleContinuousPSpace
-from sympy.stats.drv import SingleDiscreteDistribution, SingleDiscretePSpace
+from sympy.stats.crv import ProductContinuousDomain, SingleContinuousDistribution, SingleContinuousPSpace
+from sympy.stats.drv import ProductDiscreteDomain, SingleDiscreteDistribution, SingleDiscretePSpace
 from sympy.stats.rv import (ProductPSpace, NamedArgsMixin, Distribution,
                             ProductDomain, RandomSymbol, random_symbols,
                             SingleDomain, _symbol_converter)
 from sympy.utilities.iterables import iterable
 from sympy.utilities.misc import filldedent
 from sympy.external import import_module
+import sympy
+from sympy.core.expr import Expr
+from sympy.core.relational import Relational
+from sympy.stats.frv import ProductFiniteDomain
+from typing import Any
+from typing_extensions import Self
 
 # __all__ = ['marginal_distribution']
 
@@ -38,7 +44,7 @@ class JointPSpace(ProductPSpace):
     Represents a joint probability space. Represented using symbols for
     each component and a distribution.
     """
-    def __new__(cls, sym, dist):
+    def __new__(cls, sym, dist) -> SingleContinuousPSpace | SingleDiscretePSpace | Self:
         if isinstance(dist, SingleContinuousDistribution):
             return SingleContinuousPSpace(sym, dist)
         if isinstance(dist, SingleDiscreteDistribution):
@@ -47,23 +53,23 @@ class JointPSpace(ProductPSpace):
         return Basic.__new__(cls, sym, dist)
 
     @property
-    def set(self):
+    def set(self) ->     sympy.Basic |     sympy.FiniteSet |     sympy.ProductSet:
         return self.domain.set
 
     @property
-    def symbol(self):
+    def symbol(self) ->     sympy.Basic:
         return self.args[0]
 
     @property
-    def distribution(self):
+    def distribution(self) ->     sympy.Basic:
         return self.args[1]
 
     @property
-    def value(self):
+    def value(self) -> RandomSymbol | JointRandomSymbol:
         return JointRandomSymbol(self.symbol, self)
 
     @property
-    def component_count(self):
+    def component_count(self) -> Expr:
         _set = self.distribution.set
         if isinstance(_set, ProductSet):
             return S(len(_set.args))
@@ -77,7 +83,7 @@ class JointPSpace(ProductPSpace):
         return self.distribution(*sym)
 
     @property
-    def domain(self):
+    def domain(self) -> SingleDomain | ProductDiscreteDomain | ProductContinuousDomain | ProductFiniteDomain | ProductDomain:
         rvs = random_symbols(self.distribution)
         if not rvs:
             return SingleDomain(self.symbol, self.distribution.set)
@@ -86,7 +92,7 @@ class JointPSpace(ProductPSpace):
     def component_domain(self, index):
         return self.set.args[index]
 
-    def marginal_distribution(self, *indices):
+    def marginal_distribution(self, *indices) -> Lambda:
         count = self.component_count
         if count.atoms(Symbol):
             raise ValueError("Marginal distributions cannot be computed "
@@ -108,7 +114,7 @@ class JointPSpace(ProductPSpace):
             f = Lambda(sym, summation(self.distribution(*all_syms), *limits))
         return f.xreplace(replace_dict)
 
-    def compute_expectation(self, expr, rvs=None, evaluate=False, **kwargs):
+    def compute_expectation(self, expr, rvs=None, evaluate=False, **kwargs) ->     sympy.Equality | Relational |     sympy.Ne |     sympy.Integral:
         syms = tuple(self.value[i] for i in range(self.component_count))
         rvs = rvs or syms
         if not any(i in rvs for i in syms):
@@ -133,7 +139,7 @@ class JointPSpace(ProductPSpace):
     def compute_density(self, expr):
         raise NotImplementedError()
 
-    def sample(self, size=(), library='scipy', seed=None):
+    def sample(self, size=(), library='scipy', seed=None) -> dict[RandomSymbol, Any]:
         """
         Internal sample method
 
@@ -148,7 +154,7 @@ class JointPSpace(ProductPSpace):
 
 class SampleJointScipy:
     """Returns the sample from scipy of the given distribution"""
-    def __new__(cls, dist, size, seed=None):
+    def __new__(cls, dist, size, seed=None) -> None:
         return cls._sample_scipy(dist, size, seed)
 
     @classmethod
@@ -188,7 +194,7 @@ class SampleJointScipy:
 class SampleJointNumpy:
     """Returns the sample from numpy of the given distribution"""
 
-    def __new__(cls, dist, size, seed=None):
+    def __new__(cls, dist, size, seed=None) -> None:
         return cls._sample_numpy(dist, size, seed)
 
     @classmethod
@@ -227,7 +233,7 @@ class SampleJointNumpy:
 class SampleJointPymc:
     """Returns the sample from pymc of the given distribution"""
 
-    def __new__(cls, dist, size, seed=None):
+    def __new__(cls, dist, size, seed=None) -> None:
         return cls._sample_pymc(dist, size, seed)
 
     @classmethod
@@ -283,7 +289,7 @@ class JointDistribution(Distribution, NamedArgsMixin):
 
     _argnames = ('pdf', )
 
-    def __new__(cls, *args):
+    def __new__(cls, *args) -> Self:
         args = list(map(sympify, args))
         for i in range(len(args)):
             if isinstance(args[i], list):
@@ -291,14 +297,14 @@ class JointDistribution(Distribution, NamedArgsMixin):
         return Basic.__new__(cls, *args)
 
     @property
-    def domain(self):
+    def domain(self) -> ProductDiscreteDomain | ProductContinuousDomain | ProductFiniteDomain | ProductDomain:
         return ProductDomain(self.symbols)
 
     @property
     def pdf(self):
         return self.density.args[1]
 
-    def cdf(self, other):
+    def cdf(self, other) ->     sympy.Equality | Relational |     sympy.Ne |     sympy.Integral |     sympy.Sum:
         if not isinstance(other, dict):
             raise ValueError("%s should be of type dict, got %s"%(other, type(other)))
         rvs = other.keys()
@@ -340,7 +346,7 @@ class JointRandomSymbol(RandomSymbol):
     Representation of random symbols with joint probability distributions
     to allow indexing."
     """
-    def __getitem__(self, key):
+    def __getitem__(self, key) ->     sympy.Indexed | None:
         if isinstance(self.pspace, JointPSpace):
             if (self.pspace.component_count <= key) == True:
                 raise ValueError("Index keys for %s can only up to %s." %
@@ -358,7 +364,7 @@ class MarginalDistribution(Distribution):
     distribution.
     """
 
-    def __new__(cls, dist, *rvs):
+    def __new__(cls, dist, *rvs) -> Self:
         if len(rvs) == 1 and iterable(rvs[0]):
             rvs = tuple(rvs[0])
         if not all(isinstance(rv, (Indexed, RandomSymbol)) for rv in rvs):
@@ -370,20 +376,20 @@ class MarginalDistribution(Distribution):
             return dist
         return Basic.__new__(cls, dist, rvs)
 
-    def check(self):
+    def check(self) -> None:
         pass
 
     @property
-    def set(self):
+    def set(self) ->     sympy.FiniteSet |     sympy.ProductSet:
         rvs = [i for i in self.args[1] if isinstance(i, RandomSymbol)]
         return ProductSet(*[rv.pspace.set for rv in rvs])
 
     @property
-    def symbols(self):
+    def symbols(self) -> _Set[Any]:
         rvs = self.args[1]
         return {rv.pspace.symbol for rv in rvs}
 
-    def pdf(self, *x):
+    def pdf(self, *x) ->     sympy.Basic:
         expr, rvs = self.args[0], self.args[1]
         marginalise_out = [i for i in random_symbols(expr) if i not in rvs]
         if isinstance(expr, JointDistribution):
@@ -395,7 +401,7 @@ class MarginalDistribution(Distribution):
             syms = tuple(rv.pspace.symbol if isinstance(rv, RandomSymbol) else rv.args[0] for rv in rvs)
         return Lambda(syms, self.compute_pdf(expr, marginalise_out))(*x)
 
-    def compute_pdf(self, expr, rvs):
+    def compute_pdf(self, expr, rvs) ->     sympy.Equality | Relational |     sympy.Ne |     sympy.Integral |     sympy.Sum:
         for rv in rvs:
             lpdf = 1
             if isinstance(rv, RandomSymbol):
@@ -403,7 +409,7 @@ class MarginalDistribution(Distribution):
             expr = self.marginalise_out(expr*lpdf, rv)
         return expr
 
-    def marginalise_out(self, expr, rv):
+    def marginalise_out(self, expr, rv) ->     sympy.Equality | Relational |     sympy.Ne |     sympy.Integral |     sympy.Sum:
         from sympy.concrete.summations import Sum
         if isinstance(rv, RandomSymbol):
             dom = rv.pspace.set
@@ -422,5 +428,5 @@ class MarginalDistribution(Distribution):
             expr = Sum(expr, (rv.pspace.symbol, dom))
         return expr
 
-    def __call__(self, *args):
+    def __call__(self, *args) ->     sympy.Basic:
         return self.pdf(*args)

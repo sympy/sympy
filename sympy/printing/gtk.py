@@ -4,7 +4,7 @@ import tempfile
 import subprocess
 
 
-def print_gtk(x, start_viewer=True):
+def print_gtk(x, start_viewer=True) -> None:
     """Print to Gtkmathview, a gtk widget capable of rendering MathML.
 
     Needs libgtkmathview-bin"""

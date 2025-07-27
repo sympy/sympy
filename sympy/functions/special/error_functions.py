@@ -4,7 +4,7 @@
 from sympy.core import EulerGamma # Must be imported from core, not core.numbers
 from sympy.core.add import Add
 from sympy.core.cache import cacheit
-from sympy.core.function import DefinedFunction, ArgumentIndexError, expand_mul
+from sympy.core.function import Function, UndefinedFunction, DefinedFunction, ArgumentIndexError, expand_mul
 from sympy.core.logic import fuzzy_or
 from sympy.core.numbers import I, pi, Rational, Integer
 from sympy.core.relational import is_eq
@@ -20,12 +20,15 @@ from sympy.functions.elementary.exponential import exp, log, exp_polar
 from sympy.functions.elementary.hyperbolic import cosh, sinh
 from sympy.functions.elementary.trigonometric import cos, sin, sinc
 from sympy.functions.special.hyper import hyper, meijerg
+from sympy.core.basic import Basic
+from sympy.core.mul import Mul
+from typing import Any
 
 # TODO series expansions
 # TODO see the "Note:" in Ei
 
 # Helper function
-def real_to_real_as_real_imag(self, deep=True, **hints):
+def real_to_real_as_real_imag(self, deep=True, **hints) -> tuple[Any, Any]:
     if self.args[0].is_extended_real:
         if deep:
             hints['complex'] = False
@@ -132,7 +135,7 @@ class erf(DefinedFunction):
             raise ArgumentIndexError(self, argindex)
 
 
-    def inverse(self, argindex=1):
+    def inverse(self, argindex=1) -> type[erfinv]:
         """
         Returns the inverse of this function.
 
@@ -140,7 +143,7 @@ class erf(DefinedFunction):
         return erfinv
 
     @classmethod
-    def eval(cls, arg):
+    def eval(cls, arg) -> Basic | erf2inv | Mul | None:
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
@@ -370,7 +373,7 @@ class erfc(DefinedFunction):
         else:
             raise ArgumentIndexError(self, argindex)
 
-    def inverse(self, argindex=1):
+    def inverse(self, argindex=1) -> type[erfcinv]:
         """
         Returns the inverse of this function.
 
@@ -378,7 +381,7 @@ class erfc(DefinedFunction):
         return erfcinv
 
     @classmethod
-    def eval(cls, arg):
+    def eval(cls, arg) -> Basic | None:
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
@@ -562,7 +565,7 @@ class erfi(DefinedFunction):
             raise ArgumentIndexError(self, argindex)
 
     @classmethod
-    def eval(cls, z):
+    def eval(cls, z) -> Mul | None:
         if z.is_Number:
             if z is S.NaN:
                 return S.NaN
@@ -751,7 +754,7 @@ class erf2(DefinedFunction):
             raise ArgumentIndexError(self, argindex)
 
     @classmethod
-    def eval(cls, x, y):
+    def eval(cls, x, y) -> Basic | Mul | None:
         chk = (S.Infinity, S.NegativeInfinity, S.Zero)
         if x is S.NaN or y is S.NaN:
             return S.NaN
@@ -873,7 +876,7 @@ class erfinv(DefinedFunction):
         else :
             raise ArgumentIndexError(self, argindex)
 
-    def inverse(self, argindex=1):
+    def inverse(self, argindex=1) -> type[erf]:
         """
         Returns the inverse of this function.
 
@@ -881,7 +884,7 @@ class erfinv(DefinedFunction):
         return erf
 
     @classmethod
-    def eval(cls, z):
+    def eval(cls, z) -> Basic | None:
         if z is S.NaN:
             return S.NaN
         elif z is S.NegativeOne:
@@ -960,7 +963,7 @@ class erfcinv (DefinedFunction):
         else:
             raise ArgumentIndexError(self, argindex)
 
-    def inverse(self, argindex=1):
+    def inverse(self, argindex=1) -> type[erfc]:
         """
         Returns the inverse of this function.
 
@@ -968,7 +971,7 @@ class erfcinv (DefinedFunction):
         return erfc
 
     @classmethod
-    def eval(cls, z):
+    def eval(cls, z) -> None:
         if z is S.NaN:
             return S.NaN
         elif z.is_zero:
@@ -1047,7 +1050,7 @@ class erf2inv(DefinedFunction):
     """
 
 
-    def fdiff(self, argindex):
+    def fdiff(self, argindex) -> type[UndefinedFunction]:
         x, y = self.args
         if argindex == 1:
             return exp(self.func(x,y)**2-x**2)
@@ -1057,7 +1060,7 @@ class erf2inv(DefinedFunction):
             raise ArgumentIndexError(self, argindex)
 
     @classmethod
-    def eval(cls, x, y):
+    def eval(cls, x, y) -> type[UndefinedFunction] | None:
         if x is S.NaN or y is S.NaN:
             return S.NaN
         elif x.is_zero and y.is_zero:
@@ -1181,7 +1184,7 @@ class Ei(DefinedFunction):
 
 
     @classmethod
-    def eval(cls, z):
+    def eval(cls, z) -> None:
         if z.is_zero:
             return S.NegativeInfinity
         elif z is S.Infinity:
@@ -1380,7 +1383,7 @@ class expint(DefinedFunction):
 
 
     @classmethod
-    def eval(cls, nu, z):
+    def eval(cls, nu, z) -> type[UndefinedFunction] | bool | Basic | None:
         from sympy.functions.special.gamma_functions import (gamma, uppergamma)
         nu2 = unpolarify(nu)
         if nu != nu2:
@@ -1401,7 +1404,7 @@ class expint(DefinedFunction):
         else:
             return (exp(2*I*pi*nu*n) - 1)*z**(nu - 1)*gamma(1 - nu) + expint(nu, z)
 
-    def fdiff(self, argindex):
+    def fdiff(self, argindex) -> Mul:
         nu, z = self.args
         if argindex == 1:
             return -z**(nu - 1)*meijerg([], [1, 1], [0, 0, 1 - nu], [], z)
@@ -1467,7 +1470,7 @@ class expint(DefinedFunction):
         return Integral(t**-n * exp(-t*x), (t, 1, S.Infinity))
 
 
-def E1(z):
+def E1(z) -> type[UndefinedFunction]:
     """
     Classical case of the generalized exponential integral.
 
@@ -1603,7 +1606,7 @@ class li(DefinedFunction):
 
 
     @classmethod
-    def eval(cls, z):
+    def eval(cls, z) -> None:
         if z.is_zero:
             return S.Zero
         elif z is S.One:
@@ -1735,7 +1738,7 @@ class Li(DefinedFunction):
 
 
     @classmethod
-    def eval(cls, z):
+    def eval(cls, z) -> None:
         if z is S.Infinity:
             return S.Infinity
         elif z == S(2):
@@ -1770,7 +1773,7 @@ class TrigonometricIntegral(DefinedFunction):
 
 
     @classmethod
-    def eval(cls, z):
+    def eval(cls, z) -> None:
         if z is S.Zero:
             return cls._atzero
         elif z is S.Infinity:
@@ -2333,7 +2336,7 @@ class FresnelIntegral(DefinedFunction):
     unbranched = True
 
     @classmethod
-    def eval(cls, z):
+    def eval(cls, z) -> None:
         # Values at positive infinities signs
         # if any were extracted automatically
         if z is S.Infinity:
@@ -2717,7 +2720,7 @@ class _erfs(DefinedFunction):
 
     """
     @classmethod
-    def eval(cls, arg):
+    def eval(cls, arg) -> None:
         if arg.is_zero:
             return S.One
 

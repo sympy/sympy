@@ -4,6 +4,7 @@ from sympy.core.symbol import Symbol
 from sympy.core.sympify import SympifyError
 
 from types import FunctionType
+import sympy.matrices
 
 
 class TableForm:
@@ -32,7 +33,7 @@ class TableForm:
 
     """
 
-    def __init__(self, data, **kwarg):
+    def __init__(self, data, **kwarg) -> None:
         """
         Creates a TableForm.
 
@@ -208,7 +209,7 @@ class TableForm:
         from .str import sstr
         return sstr(self, order=None)
 
-    def as_matrix(self):
+    def as_matrix(self) ->     sympy.matrices.Matrix:
         """Returns the data of the table in Matrix form.
 
         Examples
@@ -231,7 +232,7 @@ class TableForm:
         from sympy.matrices.dense import Matrix
         return Matrix(self._lines)
 
-    def as_str(self):
+    def as_str(self) -> str:
         # XXX obsolete ?
         return str(self)
 

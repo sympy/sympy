@@ -6,6 +6,9 @@ from .domainmatrix import DomainMatrix
 from .exceptions import DMDomainError, DMShapeError
 from sympy.ntheory.modular import symmetric_residue
 from sympy.polys.domains import QQ, ZZ
+from sympy.polys.matrices.domainmatrix import DomainMatrix
+from sympy.polys.matrices.domainscalar import DomainScalar
+from typing import Any
 
 
 # TODO (future work):
@@ -14,7 +17,7 @@ from sympy.polys.domains import QQ, ZZ
 #  <https://www.researchgate.net/publication/220617516_Polynomial_Algorithms_for_Computing_the_Smith_and_Hermite_Normal_Forms_of_an_Integer_Matrix>
 
 
-def smith_normal_form(m):
+def smith_normal_form(m) -> DomainMatrix:
     '''
     Return the Smith Normal Form of a matrix `m` over the ring `domain`.
     This will only work if the ring is a principal ideal domain.
@@ -66,7 +69,7 @@ def is_smith_normal_form(m):
     return True
 
 
-def add_columns(m, i, j, a, b, c, d):
+def add_columns(m, i, j, a, b, c, d) -> None:
     # replace m[:, i] by a*m[:, i] + b*m[:, j]
     # and m[:, j] by c*m[:, i] + d*m[:, j]
     for k in range(len(m)):
@@ -75,7 +78,7 @@ def add_columns(m, i, j, a, b, c, d):
         m[k][j] = c*e + d*m[k][j]
 
 
-def invariant_factors(m):
+def invariant_factors(m) -> tuple[()] | tuple[Any, ...]:
     '''
     Return the tuple of abelian invariants for a matrix `m`
     (as in the Smith-Normal form)
@@ -473,7 +476,7 @@ def _hermite_normal_form_modulo_D(A, D):
     return DomainMatrix(W, (m, m), ZZ).to_dense()
 
 
-def hermite_normal_form(A, *, D=None, check_rank=False):
+def hermite_normal_form(A, *, D=None, check_rank=False) -> DomainMatrix | DomainScalar:
     r"""
     Compute the Hermite Normal Form of :py:class:`~.DomainMatrix` *A* over
     :ref:`ZZ`.

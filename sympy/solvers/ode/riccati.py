@@ -202,7 +202,7 @@ from sympy.core import S
 from sympy.core.add import Add
 from sympy.core.numbers import oo, Float
 from sympy.core.function import count_ops
-from sympy.core.relational import Eq
+from sympy.core.relational import Ne, Relational, Eq
 from sympy.core.symbol import symbols, Symbol, Dummy
 from sympy.functions import sqrt, exp
 from sympy.functions.elementary.complexes import sign
@@ -211,6 +211,7 @@ from sympy.polys.domains import ZZ
 from sympy.polys.polytools import Poly
 from sympy.polys.polyroots import roots
 from sympy.solvers.solveset import linsolve
+from typing import Any, Literal
 
 
 def riccati_normal(w, x, b1, b2):
@@ -246,7 +247,7 @@ def riccati_inverse_normal(y, x, b1, b2, bp=None):
     return -y/b2 + bp
 
 
-def riccati_reduced(eq, f, x):
+def riccati_reduced(eq, f, x) -> Literal[False]:
     """
     Convert a Riccati ODE into its corresponding
     normal Riccati ODE.
@@ -262,7 +263,7 @@ def riccati_reduced(eq, f, x):
     # Normal form of Riccati ODE is f'(x) + f(x)^2 = a(x)
     return f(x).diff(x) + f(x)**2 - a
 
-def linsolve_dict(eq, syms):
+def linsolve_dict(eq, syms) -> dict[Any, Any]:
     """
     Get the output of linsolve as a dict
     """
@@ -274,7 +275,7 @@ def linsolve_dict(eq, syms):
     return dict(zip(syms, list(sol)[0]))
 
 
-def match_riccati(eq, f, x):
+def match_riccati(eq, f, x) -> tuple[Literal[False], list[Any]] | tuple[Literal[True], list[Any]]:
     """
     A function that matches and returns the coefficients
     if an equation is a Riccati ODE
@@ -331,7 +332,7 @@ def val_at_inf(num, den, x):
     return den.degree(x) - num.degree(x)
 
 
-def check_necessary_conds(val_inf, muls):
+def check_necessary_conds(val_inf, muls) -> bool:
     """
     The necessary conditions for a rational solution
     to exist are as follows -
@@ -377,7 +378,7 @@ def inverse_transform_poly(num, den, x):
     return num.cancel(den, include=True)
 
 
-def limit_at_inf(num, den, x):
+def limit_at_inf(num, den, x) -> Literal[0]:
     """
     Find the limit of a rational function
     at oo
@@ -399,7 +400,7 @@ def limit_at_inf(num, den, x):
         return 0
 
 
-def construct_c_case_1(num, den, x, pole):
+def construct_c_case_1(num, den, x, pole) -> list[list[Any]]:
     # Find the coefficient of 1/(x - pole)**2 in the
     # Laurent series expansion of a(x) about pole.
     num1, den1 = (num*Poly((x - pole)**2, x, extension=True)).cancel(den, include=True)
@@ -412,7 +413,7 @@ def construct_c_case_1(num, den, x, pole):
     return [[S.Half]]
 
 
-def construct_c_case_2(num, den, x, pole, mul):
+def construct_c_case_2(num, den, x, pole, mul) -> list[list[int]] | list[int]:
     # Generate the coefficients using the recurrence
     # relation mentioned in (5.14) in the thesis (Pg 80)
 
@@ -452,13 +453,13 @@ def construct_c_case_2(num, den, x, pole, mul):
     return cplus
 
 
-def construct_c_case_3():
+def construct_c_case_3() -> list[list[int]]:
     # If multiplicity is 1, the coefficient to be added
     # in the c-vector is 1 (no choice)
     return [[1]]
 
 
-def construct_c(num, den, x, poles, muls):
+def construct_c(num, den, x, poles, muls) -> list[Any]:
     """
     Helper function to calculate the coefficients
     in the c-vector for each pole.
@@ -485,7 +486,7 @@ def construct_c(num, den, x, poles, muls):
     return c
 
 
-def construct_d_case_4(ser, N):
+def construct_d_case_4(ser, N) -> list[list[int]] | list[int]:
     # Initialize an empty vector
     dplus = [0 for i in range(N+2)]
     # d_N = sqrt(a_{2*N})
@@ -513,7 +514,7 @@ def construct_d_case_4(ser, N):
     return dplus
 
 
-def construct_d_case_5(ser):
+def construct_d_case_5(ser) -> list[list[int]] | list[int]:
     # List to store coefficients for plus case
     dplus = [0, 0]
 
@@ -532,7 +533,7 @@ def construct_d_case_5(ser):
     return dplus
 
 
-def construct_d_case_6(num, den, x):
+def construct_d_case_6(num, den, x) -> list[list[Any]]:
     # s_oo = lim x->0 1/x**2 * a(1/x) which is equivalent to
     # s_oo = lim x->oo x**2 * a(x)
     s_inf = limit_at_inf(Poly(x**2, x)*num, den, x)
@@ -543,7 +544,7 @@ def construct_d_case_6(num, den, x):
     return [[S.Half]]
 
 
-def construct_d(num, den, x, val_inf):
+def construct_d(num, den, x, val_inf) -> list[list[int]] | list[int] | list[list[Any]]:
     """
     Helper function to calculate the coefficients
     in the d-vector based on the valuation of the
@@ -569,7 +570,7 @@ def construct_d(num, den, x, val_inf):
     return d
 
 
-def rational_laurent_series(num, den, x, r, m, n):
+def rational_laurent_series(num, den, x, r, m, n) -> dict[Any, Any]:
     r"""
     The function computes the Laurent series coefficients
     of a rational function.
@@ -647,7 +648,7 @@ def rational_laurent_series(num, den, x, r, m, n):
     series = {m - i: val for i, val in enumerate(series)}
     return series
 
-def compute_m_ybar(x, poles, choice, N):
+def compute_m_ybar(x, poles, choice, N) -> tuple[Any, Any]:
     """
     Helper function to calculate -
 
@@ -676,7 +677,7 @@ def compute_m_ybar(x, poles, choice, N):
     return (m.expr, ybar)
 
 
-def solve_aux_eq(numa, dena, numy, deny, x, m):
+def solve_aux_eq(numa, dena, numy, deny, x, m) -> tuple[Any, dict[Any, Any], Literal[True]] | tuple[Any, Any, Any]:
     """
     Helper function to find a polynomial solution
     of degree m for the auxiliary differential
@@ -703,7 +704,7 @@ def solve_aux_eq(numa, dena, numy, deny, x, m):
         return S.One, auxeq, auxeq == 0
 
 
-def remove_redundant_sols(sol1, sol2, x):
+def remove_redundant_sols(sol1, sol2, x) -> None:
     """
     Helper function to remove redundant
     solutions to the differential equation.
@@ -734,7 +735,7 @@ def remove_redundant_sols(sol1, sol2, x):
                 return sol1
 
 
-def get_gen_sol_from_part_sol(part_sols, a, x):
+def get_gen_sol_from_part_sol(part_sols, a, x) -> list[Any]:
     """"
     Helper function which computes the general
     solution for a Riccati ODE from its particular
@@ -792,7 +793,7 @@ def get_gen_sol_from_part_sol(part_sols, a, x):
         return (C1 + 1)*y2*(y1 - y3)/(C1*y1 + y2 - (C1 + 1)*y3)
 
 
-def solve_riccati(fx, x, b0, b1, b2, gensol=False):
+def solve_riccati(fx, x, b0, b1, b2, gensol=False) -> list[Eq | Any | Relational | Ne]:
     """
     The main function that gives particular/general
     solutions to Riccati ODEs that have atleast 1

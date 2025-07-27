@@ -4,6 +4,8 @@ from .pycode import (
 )
 from .numpy import NumPyPrinter  # NumPyPrinter is imported for backward compatibility
 from sympy.core.sorting import default_sort_key
+from sympy.printing.pycode import MpmathPrinter, PythonCodePrinter
+from typing import Any
 
 
 __all__ = [
@@ -197,7 +199,7 @@ class NumExprPrinter(LambdaPrinter):
         evaluate = self._module_format(self.module +".evaluate")
         return "%s('%s', truediv=True)" % (evaluate, self._print(expr.expr))
 
-    def doprint(self, expr):
+    def doprint(self, expr) -> str | tuple[set[tuple[Any, str]], set[Any], str]:
         from sympy.codegen.ast import CodegenAST
         from sympy.codegen.pynodes import NumExprEvaluate
         if not isinstance(expr, CodegenAST):
@@ -244,7 +246,7 @@ class IntervalPrinter(MpmathPrinter, LambdaPrinter):
 for k in NumExprPrinter._numexpr_functions:
     setattr(NumExprPrinter, '_print_%s' % k, NumExprPrinter._print_Function)
 
-def lambdarepr(expr, **settings):
+def lambdarepr(expr, **settings) -> str | tuple[set[tuple[Any, str]], set[Any], str]:
     """
     Returns a string usable for lambdifying.
     """

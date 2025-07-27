@@ -2,7 +2,7 @@
 
 from sympy.external.gmpy import MPZ, GROUND_TYPES
 
-from sympy.core.numbers import int_valued
+from sympy.core.numbers import Integer, int_valued
 from sympy.polys.domains.groundtypes import (
     SymPyInteger,
     factorial,
@@ -16,6 +16,7 @@ from sympy.polys.polyerrors import CoercionFailed
 from sympy.utilities import public
 
 import math
+from typing import Any, Literal
 
 @public
 class IntegerRing(Ring[MPZ], CharacteristicZero, SimpleDomain):
@@ -38,7 +39,7 @@ class IntegerRing(Ring[MPZ], CharacteristicZero, SimpleDomain):
     dtype = MPZ
     zero = dtype(0)
     one = dtype(1)
-    tp = type(one)
+    tp: type = type(one)
 
     is_IntegerRing = is_ZZ = True
     is_Numerical = True
@@ -47,7 +48,7 @@ class IntegerRing(Ring[MPZ], CharacteristicZero, SimpleDomain):
     has_assoc_Ring = True
     has_assoc_Field = True
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Allow instantiation of this domain. """
 
     def __eq__(self, other):
@@ -61,11 +62,11 @@ class IntegerRing(Ring[MPZ], CharacteristicZero, SimpleDomain):
         """Compute a hash value for this domain. """
         return hash('ZZ')
 
-    def to_sympy(self, a):
+    def to_sympy(self, a) -> Integer:
         """Convert ``a`` to a SymPy object. """
         return SymPyInteger(int(a))
 
-    def from_sympy(self, a):
+    def from_sympy(self, a) -> int:
         """Convert SymPy's Integer to ``dtype``. """
         if a.is_Integer:
             return MPZ(a.p)
@@ -124,7 +125,7 @@ class IntegerRing(Ring[MPZ], CharacteristicZero, SimpleDomain):
         """
         return self.get_field().algebraic_field(*extension, alias=alias)
 
-    def from_AlgebraicField(K1, a, K0):
+    def from_AlgebraicField(K1, a, K0) -> None:
         """Convert a :py:class:`~.ANP` object to :ref:`ZZ`.
 
         See :py:meth:`~.Domain.convert`.
@@ -164,28 +165,28 @@ class IntegerRing(Ring[MPZ], CharacteristicZero, SimpleDomain):
         """
         return self.dtype(int(math.log(int(a), b)))
 
-    def from_FF(K1, a, K0):
+    def from_FF(K1, a, K0) -> int:
         """Convert ``ModularInteger(int)`` to GMPY's ``mpz``. """
         return MPZ(K0.to_int(a))
 
-    def from_FF_python(K1, a, K0):
+    def from_FF_python(K1, a, K0) -> int:
         """Convert ``ModularInteger(int)`` to GMPY's ``mpz``. """
         return MPZ(K0.to_int(a))
 
-    def from_ZZ(K1, a, K0):
+    def from_ZZ(K1, a, K0) -> int:
         """Convert Python's ``int`` to GMPY's ``mpz``. """
         return MPZ(a)
 
-    def from_ZZ_python(K1, a, K0):
+    def from_ZZ_python(K1, a, K0) -> int:
         """Convert Python's ``int`` to GMPY's ``mpz``. """
         return MPZ(a)
 
-    def from_QQ(K1, a, K0):
+    def from_QQ(K1, a, K0) -> int | None:
         """Convert Python's ``Fraction`` to GMPY's ``mpz``. """
         if a.denominator == 1:
             return MPZ(a.numerator)
 
-    def from_QQ_python(K1, a, K0):
+    def from_QQ_python(K1, a, K0) -> int | None:
         """Convert Python's ``Fraction`` to GMPY's ``mpz``. """
         if a.denominator == 1:
             return MPZ(a.numerator)
@@ -198,12 +199,12 @@ class IntegerRing(Ring[MPZ], CharacteristicZero, SimpleDomain):
         """Convert GMPY's ``mpz`` to GMPY's ``mpz``. """
         return a
 
-    def from_QQ_gmpy(K1, a, K0):
+    def from_QQ_gmpy(K1, a, K0) -> None:
         """Convert GMPY ``mpq`` to GMPY's ``mpz``. """
         if a.denominator == 1:
             return a.numerator
 
-    def from_RealField(K1, a, K0):
+    def from_RealField(K1, a, K0) -> int | None:
         """Convert mpmath's ``mpf`` to GMPY's ``mpz``. """
         p, q = K0.to_rational(a)
 
@@ -213,7 +214,7 @@ class IntegerRing(Ring[MPZ], CharacteristicZero, SimpleDomain):
             # other.
             return MPZ(int(p))
 
-    def from_GaussianIntegerRing(K1, a, K0):
+    def from_GaussianIntegerRing(K1, a, K0) -> None:
         if a.y == 0:
             return a.x
 
@@ -222,7 +223,10 @@ class IntegerRing(Ring[MPZ], CharacteristicZero, SimpleDomain):
         if a.is_Integer:
             return K1.from_sympy(a)
 
-    def gcdex(self, a, b):
+    def gcdex(self, a, b) -> (
+        tuple[Any | Literal[1, 0, -1], Any | Literal[0], Any | Literal[0, -1, 1]]
+        | tuple[Any | Literal[0, -1, 1], Any | Literal[1, 0, -1], Any | Literal[0]]
+    ):
         """Compute extended GCD of ``a`` and ``b``. """
         h, s, t = gcdex(a, b)
         # XXX: This conditional logic should be handled somewhere else.
@@ -231,15 +235,15 @@ class IntegerRing(Ring[MPZ], CharacteristicZero, SimpleDomain):
         else:
             return h, s, t
 
-    def gcd(self, a, b):
+    def gcd(self, a, b) -> int:
         """Compute GCD of ``a`` and ``b``. """
         return gcd(a, b)
 
-    def lcm(self, a, b):
+    def lcm(self, a, b) -> Literal[0]:
         """Compute LCM of ``a`` and ``b``. """
         return lcm(a, b)
 
-    def sqrt(self, a):
+    def sqrt(self, a) -> int:
         """Compute square root of ``a``. """
         return sqrt(a)
 
@@ -267,7 +271,7 @@ class IntegerRing(Ring[MPZ], CharacteristicZero, SimpleDomain):
             return None
         return root
 
-    def factorial(self, a):
+    def factorial(self, a) -> int:
         """Compute factorial of ``a``. """
         return factorial(a)
 

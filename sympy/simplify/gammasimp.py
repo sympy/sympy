@@ -5,6 +5,7 @@ from sympy.core.symbol import Dummy
 from sympy.functions import gamma, sqrt, sin
 from sympy.polys import factor, cancel
 from sympy.utilities.iterables import sift, uniq
+from sympy.series.order import Order
 
 
 def gammasimp(expr):
@@ -462,7 +463,7 @@ def _gammasimp(expr, as_comb):
 
 class _rf(Function):
     @classmethod
-    def eval(cls, a, b):
+    def eval(cls, a, b) -> Order | None:
         if b.is_Integer:
             if not b:
                 return S.One

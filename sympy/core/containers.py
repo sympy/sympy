@@ -9,7 +9,7 @@
 from __future__ import annotations
 
 from collections import OrderedDict
-from collections.abc import MutableSet
+from collections.abc import Iterator, MutableSet
 
 from .basic import Basic
 from .sorting import default_sort_key, ordered
@@ -17,6 +17,10 @@ from .sympify import _sympify, sympify, _sympy_converter, SympifyError
 from sympy.core.kind import Kind
 from sympy.utilities.iterables import iterable
 from sympy.utilities.misc import as_int
+from sympy.core.basic import Basic
+from types import NotImplementedType
+from typing import Any, Callable
+from typing_extensions import Self
 
 
 class Tuple(Basic):
@@ -50,28 +54,28 @@ class Tuple(Basic):
 
     """
 
-    def __new__(cls, *args, **kwargs):
+    def __new__(cls, *args, **kwargs) -> Self:
         if kwargs.get('sympify', True):
             args = (sympify(arg) for arg in args)
         obj = Basic.__new__(cls, *args)
         return obj
 
-    def __getitem__(self, i):
+    def __getitem__(self, i) -> "Tuple":
         if isinstance(i, slice):
             indices = i.indices(len(self))
             return Tuple(*(self.args[j] for j in range(*indices)))
         return self.args[i]
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.args)
 
-    def __contains__(self, item):
+    def __contains__(self, item) -> bool:
         return item in self.args
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[Basic]:
         return iter(self.args)
 
-    def __add__(self, other):
+    def __add__(self, other) -> Tuple | NotImplementedType:
         if isinstance(other, Tuple):
             return Tuple(*(self.args + other.args))
         elif isinstance(other, tuple):
@@ -79,7 +83,7 @@ class Tuple(Basic):
         else:
             return NotImplemented
 
-    def __radd__(self, other):
+    def __radd__(self, other) -> Tuple | NotImplementedType:
         if isinstance(other, Tuple):
             return Tuple(*(other.args + self.args))
         elif isinstance(other, tuple):
@@ -87,7 +91,7 @@ class Tuple(Basic):
         else:
             return NotImplemented
 
-    def __mul__(self, other):
+    def __mul__(self, other) -> Self:
         try:
             n = as_int(other)
         except ValueError:
@@ -96,26 +100,26 @@ class Tuple(Basic):
 
     __rmul__ = __mul__
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
         if isinstance(other, Basic):
             return super().__eq__(other)
         return self.args == other
 
-    def __ne__(self, other):
+    def __ne__(self, other) -> bool:
         if isinstance(other, Basic):
             return super().__ne__(other)
         return self.args != other
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash(self.args)
 
     def _to_mpmath(self, prec):
         return tuple(a._to_mpmath(prec) for a in self.args)
 
-    def __lt__(self, other):
+    def __lt__(self, other) -> bool:
         return _sympify(self.args < other.args)
 
-    def __le__(self, other):
+    def __le__(self, other) -> bool:
         return _sympify(self.args <= other.args)
 
     # XXX: Basic defines count() as something different, so we can't
@@ -124,7 +128,7 @@ class Tuple(Basic):
         """Return number of occurrences of value."""
         return self.args.count(value)
 
-    def index(self, value, start=None, stop=None):
+    def index(self, value, start=None, stop=None) -> int:
         """Searches and returns the first index of the value."""
         # XXX: One would expect:
         #
@@ -147,7 +151,7 @@ class Tuple(Basic):
             return self.args.index(value, start, stop)
 
     @property
-    def kind(self):
+    def kind(self) -> "TupleKind":
         """
         The kind of a Tuple instance.
 
@@ -179,7 +183,7 @@ _sympy_converter[tuple] = lambda tup: Tuple(*tup)
 
 
 
-def tuple_wrapper(method):
+def tuple_wrapper(method) -> Callable[..., Any]:
     """
     Decorator that converts any tuple in the function arguments into a Tuple.
 
@@ -256,7 +260,7 @@ class Dict(Basic):
     elements: frozenset[Tuple]
     _dict: dict[Basic, Basic]
 
-    def __new__(cls, *args):
+    def __new__(cls, *args) -> Self:
         if len(args) == 1 and isinstance(args[0], (dict, Dict)):
             items = [Tuple(k, v) for k, v in args[0].items()]
         elif iterable(args) and all(len(arg) == 2 for arg in args):
@@ -302,7 +306,7 @@ class Dict(Basic):
         '''x.__len__() <==> len(x)'''
         return self._dict.__len__()
 
-    def get(self, key, default=None):
+    def get(self, key, default=None) -> None:
         '''Returns the value for key if the key is in the dictionary.'''
         try:
             key = _sympify(key)
@@ -310,7 +314,7 @@ class Dict(Basic):
             return default
         return self._dict.get(key, default)
 
-    def __contains__(self, key):
+    def __contains__(self, key) -> bool:
         '''D.__contains__(k) -> True if D has a key k, else False'''
         try:
             key = _sympify(key)
@@ -318,14 +322,14 @@ class Dict(Basic):
             return False
         return key in self._dict
 
-    def __lt__(self, other):
+    def __lt__(self, other) -> bool:
         return _sympify(self.args < other.args)
 
     @property
     def _sorted_args(self):
         return tuple(sorted(self.args, key=default_sort_key))
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
         if isinstance(other, dict):
             return self == Dict(other)
         return super().__eq__(other)
@@ -337,28 +341,28 @@ class Dict(Basic):
 _sympy_converter[dict] = lambda d: Dict(*d.items())
 
 class OrderedSet(MutableSet):
-    def __init__(self, iterable=None):
+    def __init__(self, iterable=None) -> None:
         if iterable:
             self.map = OrderedDict((item, None) for item in iterable)
         else:
             self.map = OrderedDict()
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.map)
 
-    def __contains__(self, key):
+    def __contains__(self, key) -> bool:
         return key in self.map
 
-    def add(self, key):
+    def add(self, key) -> None:
         self.map[key] = None
 
-    def discard(self, key):
+    def discard(self, key) -> None:
         self.map.pop(key)
 
     def pop(self, last=True):
         return self.map.popitem(last=last)[0]
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[Any]:
         yield from self.map.keys()
 
     def __repr__(self):
@@ -366,13 +370,13 @@ class OrderedSet(MutableSet):
             return '%s()' % (self.__class__.__name__,)
         return '%s(%r)' % (self.__class__.__name__, list(self.map.keys()))
 
-    def intersection(self, other):
+    def intersection(self, other) -> Self:
         return self.__class__([val for val in self if val in other])
 
-    def difference(self, other):
+    def difference(self, other) -> Self:
         return self.__class__([val for val in self if val not in other])
 
-    def update(self, iterable):
+    def update(self, iterable) -> None:
         for val in iterable:
             self.add(val)
 
@@ -406,7 +410,7 @@ class TupleKind(Kind):
     MatrixKind
     sympy.sets.sets.SetKind
     """
-    def __new__(cls, *args):
+    def __new__(cls, *args) -> Self:
         obj = super().__new__(cls, *args)
         obj.element_kind = args
         return obj

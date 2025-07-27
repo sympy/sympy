@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import Any, TYPE_CHECKING
 
 from sympy.concrete.expr_with_limits import AddWithLimits
 from sympy.core.add import Add
@@ -12,7 +12,7 @@ from sympy.core.function import diff
 from sympy.core.logic import fuzzy_bool
 from sympy.core.mul import Mul
 from sympy.core.numbers import oo, pi
-from sympy.core.relational import Ne
+from sympy.core.relational import Equality, Relational, Ne
 from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, Symbol, Wild)
 from sympy.core.sympify import sympify
@@ -32,6 +32,7 @@ from sympy.tensor.functions import shape
 from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.iterables import is_sequence
 from sympy.utilities.misc import filldedent
+from typing_extensions import Self, Unpack
 
 
 if TYPE_CHECKING:
@@ -103,11 +104,11 @@ class Integral(AddWithLimits):
         obj = AddWithLimits.__new__(cls, function, *symbols, **assumptions)
         return obj
 
-    def __getnewargs__(self):
+    def __getnewargs__(self) -> tuple[Basic, Unpack[tuple[tuple[Any], ...]]]:
         return (self.function,) + tuple([tuple(xab) for xab in self.limits])
 
     @property
-    def free_symbols(self):
+    def free_symbols(self) -> set[Any]:
         """
         This method returns the symbols that will exist when the
         integral is evaluated. This is useful if one is trying to
@@ -166,7 +167,7 @@ class Integral(AddWithLimits):
         if self.function.is_zero is False and got_none is False:
             return False
 
-    def transform(self, x, u):
+    def transform(self, x, u) -> Self:
         r"""
         Performs a change of variables from `x` to `u` using the relationship
         given by `x` and `u` which will define the transformations `f` and `F`
@@ -1345,7 +1346,7 @@ class Integral(AddWithLimits):
             raise ValueError("Unknown method %s" % method)
         return result.doit() if evaluate else result
 
-    def principal_value(self, **kwargs):
+    def principal_value(self, **kwargs) -> Self:
         """
         Compute the Cauchy Principal Value of the definite integral of a real function in the given interval
         on the real axis.
@@ -1585,7 +1586,7 @@ def integrate(function, *symbols: SymbolLimits, meijerg=None, conds='piecewise',
             for a in integral.args]
         return integral.func(*new_args)
 
-def line_integrate(field, curve, vars):
+def line_integrate(field, curve, vars) -> Equality | Relational | Ne:
     """line_integrate(field, Curve, variables)
 
     Compute the line integral.

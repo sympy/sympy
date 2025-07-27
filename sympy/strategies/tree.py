@@ -3,6 +3,7 @@ from sympy.strategies import chain, minimize
 from sympy.strategies.core import identity
 import sympy.strategies.branch as branch
 from sympy.strategies.branch import yieldify
+from typing import Any, Callable
 
 
 def treeapply(tree, join, leaf=identity):
@@ -134,6 +135,6 @@ def allresults(tree, leaf=yieldify):
                      leaf=leaf)
 
 
-def brute(tree, objective=identity, **kwargs):
+def brute(tree, objective=identity, **kwargs) -> Callable[..., Any]:
     return lambda expr: min(tuple(allresults(tree, **kwargs)(expr)),
                             key=objective)

@@ -2,16 +2,20 @@
 
 from .cartan_type import Standard_Cartan
 from sympy.core.backend import Matrix
+import sympy.matrices
+from sympy.liealgebras.cartan_type import Standard_Cartan
+from typing import Literal
+from typing_extensions import Self
 
 class TypeG(Standard_Cartan):
 
-    def __new__(cls, n):
+    def __new__(cls, n) -> Self:
         if n != 2:
             raise ValueError("n should be 2")
         return Standard_Cartan.__new__(cls, "G", 2)
 
 
-    def dimension(self):
+    def dimension(self) -> Literal[3]:
         """Dimension of the vector space V underlying the Lie algebra
 
         Examples
@@ -24,7 +28,7 @@ class TypeG(Standard_Cartan):
         """
         return 3
 
-    def simple_root(self, i):
+    def simple_root(self, i) -> list[int]:
         """The ith simple root of G_2
 
         Every lie algebra has a unique root system.
@@ -50,7 +54,7 @@ class TypeG(Standard_Cartan):
         else:
             return [1, -2, 1]
 
-    def positive_roots(self):
+    def positive_roots(self) -> dict[int, list[int]]:
         """Generate all the positive roots of A_n
 
         This is half of all of the roots of A_n; by multiplying all the
@@ -71,13 +75,13 @@ class TypeG(Standard_Cartan):
                 5: [1, 1, -2], 6: [2, -1, -1]}
         return roots
 
-    def roots(self):
+    def roots(self) -> Literal[12]:
         """
         Returns the total number of roots of G_2"
         """
         return 12
 
-    def cartan_matrix(self):
+    def cartan_matrix(self) ->     sympy.matrices.Matrix:
         """The Cartan matrix for G_2
 
         The Cartan matrix matrix for a Lie algebra is
@@ -100,12 +104,12 @@ class TypeG(Standard_Cartan):
         m = Matrix( 2, 2, [2, -1, -3, 2])
         return m
 
-    def basis(self):
+    def basis(self) -> Literal[14]:
         """
         Returns the number of independent generators of G_2
         """
         return 14
 
-    def dynkin_diagram(self):
+    def dynkin_diagram(self) -> Literal["0≡<≡0\n1   2"]:
         diag = "0≡<≡0\n1   2"
         return diag

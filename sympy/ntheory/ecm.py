@@ -5,6 +5,8 @@ from sympy.external.gmpy import gcd, invert, sqrt
 from sympy.utilities.misc import as_int
 from .generate import sieve, primerange
 from .primetest import isprime
+from typing import Any
+from typing_extensions import Self
 
 
 #----------------------------------------------------------------------------#
@@ -37,7 +39,7 @@ class Point:
 
     """
 
-    def __init__(self, x_cord, z_cord, a_24, mod):
+    def __init__(self, x_cord, z_cord, a_24, mod) -> None:
         """
         Initial parameters for the Point class.
 
@@ -54,7 +56,7 @@ class Point:
         self.a_24 = a_24
         self.mod = mod
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
         """Two points are equal if X/Z of both points are equal
         """
         if self.a_24 != other.a_24 or self.mod != other.mod:
@@ -62,7 +64,7 @@ class Point:
         return self.x_cord * other.z_cord % self.mod ==\
             other.x_cord * self.z_cord % self.mod
 
-    def add(self, Q, diff):
+    def add(self, Q, diff) -> "Point":
         """
         Add two points self and Q where diff = self - Q. Moreover the assumption
         is self.x_cord*Q.x_cord*(self.x_cord - Q.x_cord) != 0. This algorithm
@@ -99,7 +101,7 @@ class Point:
         z_cord = diff.x_cord * subt * subt % self.mod
         return Point(x_cord, z_cord, self.a_24, self.mod)
 
-    def double(self):
+    def double(self) -> "Point":
         """
         Doubles a point in an elliptic curve in Montgomery form.
         This algorithm requires 5 multiplications.
@@ -122,7 +124,7 @@ class Point:
         z_cord = diff*(v + self.a_24*diff) % self.mod
         return Point(x_cord, z_cord, self.a_24, self.mod)
 
-    def mont_ladder(self, k):
+    def mont_ladder(self, k) -> Self | Point:
         """
         Scalar multiplication of a point in Montgomery form
         using Montgomery Ladder Algorithm.
@@ -292,7 +294,7 @@ def _ecm_one_factor(n, B1=10000, B2=100000, max_curve=200, seed=None):
             return g
 
 
-def ecm(n, B1=10000, B2=100000, max_curve=200, seed=1234):
+def ecm(n, B1=10000, B2=100000, max_curve=200, seed=1234) -> set[Any]:
     """Performs factorization using Lenstra's Elliptic curve method.
 
     This function repeatedly calls ``_ecm_one_factor`` to compute the factors

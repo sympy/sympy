@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Any
+from typing import Literal, Any
 
 from functools import reduce
 from itertools import permutations
@@ -28,6 +28,11 @@ from sympy.utilities.exceptions import (sympy_deprecation_warning,
 # TODO too often one needs to call doit or simplify on the output, check the
 # tests and find out why
 from sympy.tensor.array import ImmutableDenseNDimArray
+import sympy.core.function
+import sympy.tensor.array.dense_ndim_array
+from sympy.matrices.immutable import ImmutableDenseMatrix
+from sympy.series.order import Order
+from typing_extensions import Self
 
 
 class Manifold(Basic):
@@ -67,7 +72,7 @@ class Manifold(Basic):
     .. [1] https://en.wikipedia.org/wiki/Manifold
     """
 
-    def __new__(cls, name, dim, **kwargs):
+    def __new__(cls, name, dim, **kwargs) -> Self:
         if not isinstance(name, Str):
             name = Str(name)
         dim = _sympify(dim)
@@ -82,11 +87,11 @@ class Manifold(Basic):
         return obj
 
     @property
-    def name(self):
+    def name(self) -> Basic:
         return self.args[0]
 
     @property
-    def dim(self):
+    def dim(self) -> Basic:
         return self.args[1]
 
 
@@ -133,7 +138,7 @@ class Patch(Basic):
            (2013)
 
     """
-    def __new__(cls, name, manifold, **kwargs):
+    def __new__(cls, name, manifold, **kwargs) -> Self:
         if not isinstance(name, Str):
             name = Str(name)
         obj = super().__new__(cls, name, manifold)
@@ -148,11 +153,11 @@ class Patch(Basic):
         return obj
 
     @property
-    def name(self):
+    def name(self) -> Basic:
         return self.args[0]
 
     @property
-    def manifold(self):
+    def manifold(self) -> Basic:
         return self.args[1]
 
     @property
@@ -270,7 +275,7 @@ class CoordSystem(Basic):
     .. [1] https://en.wikipedia.org/wiki/Coordinate_system
 
     """
-    def __new__(cls, name, patch, symbols=None, relations={}, **kwargs):
+    def __new__(cls, name, patch, symbols=None, relations={}, **kwargs) -> Self:
         if not isinstance(name, Str):
             name = Str(name)
 
@@ -357,11 +362,11 @@ That is, replace {s} with Symbol({s!r}, real=True).
         return obj
 
     @property
-    def name(self):
+    def name(self) -> Basic:
         return self.args[0]
 
     @property
-    def patch(self):
+    def patch(self) -> Basic:
         return self.args[1]
 
     @property
@@ -369,12 +374,12 @@ That is, replace {s} with Symbol({s!r}, real=True).
         return self.patch.manifold
 
     @property
-    def symbols(self):
+    def symbols(self) -> tuple[CoordinateSymbol, ...]:
         return tuple(CoordinateSymbol(self, i, **s._assumptions.generator)
             for i,s in enumerate(self.args[2]))
 
     @property
-    def relations(self):
+    def relations(self) -> Basic:
         return self.args[3]
 
     @property
@@ -385,7 +390,7 @@ That is, replace {s} with Symbol({s!r}, real=True).
     # Finding transformation relation
     ##########################################################################
 
-    def transformation(self, sys):
+    def transformation(self, sys) ->     sympy.core.function.Lambda:
         """
         Return coordinate transformation function from *self* to *sys*.
 
@@ -518,7 +523,7 @@ That is, replace {s} with Symbol({s!r}, real=True).
             raise KeyError("Two coordinate systems are not connected.")
         return result
 
-    def connect_to(self, to_sys, from_coords, to_exprs, inverse=True, fill_in_gaps=False):
+    def connect_to(self, to_sys, from_coords, to_exprs, inverse=True, fill_in_gaps=False) -> None:
         sympy_deprecation_warning(
             """
             The CoordSystem.connect_to() method is deprecated. Instead,
@@ -557,7 +562,7 @@ That is, replace {s} with Symbol({s!r}, real=True).
     # Coordinate transformations
     ##########################################################################
 
-    def transform(self, sys, coordinates=None):
+    def transform(self, sys, coordinates=None) -> Basic | ImmutableDenseMatrix:
         """
         Return the result of coordinate transformation from *self* to *sys*.
         If coordinates are not given, coordinate symbols of *self* are used.
@@ -597,7 +602,7 @@ That is, replace {s} with Symbol({s!r}, real=True).
             coordinates = Matrix(coordinates)
         return coordinates
 
-    def coord_tuple_transform_to(self, to_sys, coords):
+    def coord_tuple_transform_to(self, to_sys, coords) -> ImmutableDenseMatrix:
         """Transform ``coords`` to coord system ``to_sys``."""
         sympy_deprecation_warning(
             """
@@ -687,7 +692,7 @@ That is, replace {s} with Symbol({s!r}, real=True).
     # Points
     ##########################################################################
 
-    def point(self, coords):
+    def point(self, coords) -> "Point":
         """Create a ``Point`` with coordinates given in this coord system."""
         return Point(self, coords)
 
@@ -699,35 +704,35 @@ That is, replace {s} with Symbol({s!r}, real=True).
     # Base fields.
     ##########################################################################
 
-    def base_scalar(self, coord_index):
+    def base_scalar(self, coord_index) -> "BaseScalarField":
         """Return ``BaseScalarField`` that takes a point and returns one of the coordinates."""
         return BaseScalarField(self, coord_index)
     coord_function = base_scalar
 
-    def base_scalars(self):
+    def base_scalars(self) -> list[BaseScalarField]:
         """Returns a list of all coordinate functions.
         For more details see the ``base_scalar`` method of this class."""
         return [self.base_scalar(i) for i in range(self.dim)]
     coord_functions = base_scalars
 
-    def base_vector(self, coord_index):
+    def base_vector(self, coord_index) -> "BaseVectorField":
         """Return a basis vector field.
         The basis vector field for this coordinate system. It is also an
         operator on scalar fields."""
         return BaseVectorField(self, coord_index)
 
-    def base_vectors(self):
+    def base_vectors(self) -> list[BaseVectorField]:
         """Returns a list of all base vectors.
         For more details see the ``base_vector`` method of this class."""
         return [self.base_vector(i) for i in range(self.dim)]
 
-    def base_oneform(self, coord_index):
+    def base_oneform(self, coord_index) -> "Differential":
         """Return a basis 1-form field.
         The basis one-form field for this coordinate system. It is also an
         operator on vector fields."""
         return Differential(self.coord_function(coord_index))
 
-    def base_oneforms(self):
+    def base_oneforms(self) -> list[Any | Differential]:
         """Returns a list of all base oneforms.
         For more details see the ``base_oneform`` method of this class."""
         return [self.base_oneform(i) for i in range(self.dim)]
@@ -797,7 +802,7 @@ class CoordinateSymbol(Symbol):
         obj.index = index
         return obj
 
-    def __getnewargs__(self):
+    def __getnewargs__(self) -> tuple[Any, Any]:
         return (self.coord_sys, self.index)
 
     def _hashable_content(self):
@@ -859,7 +864,7 @@ class Point(Basic):
 
     """
 
-    def __new__(cls, coord_sys, coords, **kwargs):
+    def __new__(cls, coord_sys, coords, **kwargs) -> Self:
         coords = Matrix(coords)
         obj = super().__new__(cls, coord_sys, coords)
         obj._coord_sys = coord_sys
@@ -949,7 +954,7 @@ class BaseScalarField(Expr):
 
     is_commutative = True
 
-    def __new__(cls, coord_sys, index, **kwargs):
+    def __new__(cls, coord_sys, index, **kwargs) -> Self:
         index = _sympify(index)
         obj = super().__new__(cls, coord_sys, index)
         obj._coord_sys = coord_sys
@@ -957,11 +962,11 @@ class BaseScalarField(Expr):
         return obj
 
     @property
-    def coord_sys(self):
+    def coord_sys(self) -> Basic:
         return self.args[0]
 
     @property
-    def index(self):
+    def index(self) -> Basic:
         return self.args[1]
 
     @property
@@ -976,7 +981,7 @@ class BaseScalarField(Expr):
     def dim(self):
         return self.manifold.dim
 
-    def __call__(self, *args):
+    def __call__(self, *args) -> Self:
         """Evaluating the field at a point or doing nothing.
         If the argument is a ``Point`` instance, the field is evaluated at that
         point. The field is returned itself if the argument is any other
@@ -1055,7 +1060,7 @@ class BaseVectorField(Expr):
 
     is_commutative = False
 
-    def __new__(cls, coord_sys, index, **kwargs):
+    def __new__(cls, coord_sys, index, **kwargs) -> Self:
         index = _sympify(index)
         obj = super().__new__(cls, coord_sys, index)
         obj._coord_sys = coord_sys
@@ -1063,11 +1068,11 @@ class BaseVectorField(Expr):
         return obj
 
     @property
-    def coord_sys(self):
+    def coord_sys(self) -> Basic:
         return self.args[0]
 
     @property
-    def index(self):
+    def index(self) -> Basic:
         return self.args[1]
 
     @property
@@ -1082,7 +1087,7 @@ class BaseVectorField(Expr):
     def dim(self):
         return self.manifold.dim
 
-    def __call__(self, scalar_field):
+    def __call__(self, scalar_field) -> Self:
         """Apply on a scalar field.
         The action of a vector field on a scalar field is a directional
         differentiation.
@@ -1160,7 +1165,7 @@ class Commutator(Expr):
     -2*cos(theta)*y**2/(x**2 + y**2)
 
     """
-    def __new__(cls, v1, v2):
+    def __new__(cls, v1, v2) -> Self | Literal[0]:
         if (covariant_order(v1) or contravariant_order(v1) != 1
                 or covariant_order(v2) or contravariant_order(v2) != 1):
             raise ValueError(
@@ -1189,11 +1194,11 @@ class Commutator(Expr):
             return obj
 
     @property
-    def v1(self):
+    def v1(self) -> Basic:
         return self.args[0]
 
     @property
-    def v2(self):
+    def v2(self) -> Basic:
         return self.args[1]
 
     def __call__(self, scalar_field):
@@ -1247,7 +1252,7 @@ class Differential(Expr):
 
     is_commutative = False
 
-    def __new__(cls, form_field):
+    def __new__(cls, form_field) -> Self:
         if contravariant_order(form_field):
             raise ValueError(
                 'A vector field was supplied as an argument to Differential.')
@@ -1259,10 +1264,10 @@ class Differential(Expr):
             return obj
 
     @property
-    def form_field(self):
+    def form_field(self) -> Basic:
         return self.args[0]
 
-    def __call__(self, *vector_fields):
+    def __call__(self, *vector_fields) -> Self | Literal[0]:
         """Apply on a list of vector_fields.
 
         Explanation
@@ -1367,7 +1372,7 @@ class TensorProduct(Expr):
     3*dy
 
     """
-    def __new__(cls, *args):
+    def __new__(cls, *args) -> Order:
         scalar = Mul(*[m for m in args if covariant_order(m) + contravariant_order(m) == 0])
         multifields = [m for m in args if covariant_order(m) + contravariant_order(m)]
         if multifields:
@@ -1377,7 +1382,7 @@ class TensorProduct(Expr):
         else:
             return scalar
 
-    def __call__(self, *fields):
+    def __call__(self, *fields) -> Order:
         """Apply on a list of fields.
 
         If the number of input fields supplied is not equal to the order of
@@ -1492,7 +1497,7 @@ class LieDerivative(Expr):
     LieDerivative(e_x, TensorProduct(dx, dy))
 
     """
-    def __new__(cls, v_field, expr):
+    def __new__(cls, v_field, expr) -> Self | Commutator | Literal[0]:
         expr_form_ord = covariant_order(expr)
         if contravariant_order(v_field) != 1 or covariant_order(v_field):
             raise ValueError('Lie derivatives are defined only with respect to'
@@ -1510,11 +1515,11 @@ class LieDerivative(Expr):
             return v_field.rcall(expr)
 
     @property
-    def v_field(self):
+    def v_field(self) -> Basic:
         return self.args[0]
 
     @property
-    def expr(self):
+    def expr(self) -> Basic:
         return self.args[1]
 
     def __call__(self, *args):
@@ -1551,7 +1556,7 @@ class BaseCovarDerivativeOp(Expr):
     e_x
     """
 
-    def __new__(cls, coord_sys, index, christoffel):
+    def __new__(cls, coord_sys, index, christoffel) -> Self:
         index = _sympify(index)
         christoffel = ImmutableDenseNDimArray(christoffel)
         obj = super().__new__(cls, coord_sys, index, christoffel)
@@ -1562,15 +1567,15 @@ class BaseCovarDerivativeOp(Expr):
         return obj
 
     @property
-    def coord_sys(self):
+    def coord_sys(self) -> Basic:
         return self.args[0]
 
     @property
-    def index(self):
+    def index(self) -> Basic:
         return self.args[1]
 
     @property
-    def christoffel(self):
+    def christoffel(self) -> Basic:
         return self.args[2]
 
     def __call__(self, field):
@@ -1642,7 +1647,7 @@ class CovarDerivativeOp(Expr):
 
     """
 
-    def __new__(cls, wrt, christoffel):
+    def __new__(cls, wrt, christoffel) -> Self:
         if len({v._coord_sys for v in wrt.atoms(BaseVectorField)}) > 1:
             raise NotImplementedError()
         if contravariant_order(wrt) != 1 or covariant_order(wrt):
@@ -1657,11 +1662,11 @@ class CovarDerivativeOp(Expr):
         return obj
 
     @property
-    def wrt(self):
+    def wrt(self) -> Basic:
         return self.args[0]
 
     @property
-    def christoffel(self):
+    def christoffel(self) -> Basic:
         return self.args[1]
 
     def __call__(self, field):
@@ -1674,7 +1679,7 @@ class CovarDerivativeOp(Expr):
 ###############################################################################
 # Integral curves on vector fields
 ###############################################################################
-def intcurve_series(vector_field, param, start_point, n=6, coord_sys=None, coeffs=False):
+def intcurve_series(vector_field, param, start_point, n=6, coord_sys=None, coeffs=False) -> list[ImmutableDenseMatrix] | ImmutableDenseMatrix:
     r"""Return the series expansion for an integral curve of the field.
 
     Explanation
@@ -1795,7 +1800,7 @@ def intcurve_series(vector_field, param, start_point, n=6, coord_sys=None, coeff
         return Matrix([sum(c) for c in taylor_terms])
 
 
-def intcurve_diffequ(vector_field, param, start_point, coord_sys=None):
+def intcurve_diffequ(vector_field, param, start_point, coord_sys=None) -> tuple[list[Any], list[Any]]:
     r"""Return the differential equation for an integral curve of the field.
 
     Explanation
@@ -1888,7 +1893,7 @@ def intcurve_diffequ(vector_field, param, start_point, coord_sys=None):
 ###############################################################################
 # Helpers
 ###############################################################################
-def dummyfy(args, exprs):
+def dummyfy(args, exprs) -> tuple[ImmutableDenseMatrix, ImmutableDenseMatrix]:
     # TODO Is this a good idea?
     d_args = Matrix([s.as_dummy() for s in args])
     reps = dict(zip(args, d_args))
@@ -1898,7 +1903,7 @@ def dummyfy(args, exprs):
 ###############################################################################
 # Helpers
 ###############################################################################
-def contravariant_order(expr, _strict=False):
+def contravariant_order(expr, _strict=False) -> int:
     """Return the contravariant order of an expression.
 
     Examples
@@ -1944,7 +1949,7 @@ def contravariant_order(expr, _strict=False):
         return -1
 
 
-def covariant_order(expr, _strict=False):
+def covariant_order(expr, _strict=False) -> int:
     """Return the covariant order of an expression.
 
     Examples
@@ -2023,7 +2028,7 @@ def vectors_in_basis(expr, to_sys):
 ###############################################################################
 # Coordinate-dependent functions
 ###############################################################################
-def twoform_to_matrix(expr):
+def twoform_to_matrix(expr) -> ImmutableDenseMatrix:
     """Return the matrix representing the twoform.
 
     For the twoform `w` return the matrix `M` such that `M[i,j]=w(e_i, e_j)`,
@@ -2066,7 +2071,7 @@ def twoform_to_matrix(expr):
     return Matrix(matrix_content)
 
 
-def metric_to_Christoffel_1st(expr):
+def metric_to_Christoffel_1st(expr) -> sympy.tensor.array.dense_ndim_array.ImmutableDenseNDimArray:
     """Return the nested list of Christoffel symbols for the given metric.
     This returns the Christoffel symbol of first kind that represents the
     Levi-Civita connection for the given metric.
@@ -2098,7 +2103,7 @@ def metric_to_Christoffel_1st(expr):
     return ImmutableDenseNDimArray(christoffel)
 
 
-def metric_to_Christoffel_2nd(expr):
+def metric_to_Christoffel_2nd(expr) -> sympy.tensor.array.dense_ndim_array.ImmutableDenseNDimArray:
     """Return the nested list of Christoffel symbols for the given metric.
     This returns the Christoffel symbol of second kind that represents the
     Levi-Civita connection for the given metric.
@@ -2137,7 +2142,7 @@ def metric_to_Christoffel_2nd(expr):
     return ImmutableDenseNDimArray(christoffel)
 
 
-def metric_to_Riemann_components(expr):
+def metric_to_Riemann_components(expr) -> sympy.tensor.array.dense_ndim_array.ImmutableDenseNDimArray:
     """Return the components of the Riemann tensor expressed in a given basis.
 
     Given a metric it calculates the components of the Riemann tensor in the
@@ -2191,7 +2196,7 @@ def metric_to_Riemann_components(expr):
     return ImmutableDenseNDimArray(riemann)
 
 
-def metric_to_Ricci_components(expr):
+def metric_to_Ricci_components(expr) -> sympy.tensor.array.dense_ndim_array.ImmutableDenseNDimArray:
 
     """Return the components of the Ricci tensor expressed in a given basis.
 
@@ -2233,11 +2238,11 @@ class _deprecated_container:
     # This class gives deprecation warning.
     # When deprecated features are completely deleted, this should be removed as well.
     # See https://github.com/sympy/sympy/pull/19368
-    def __init__(self, message, data):
+    def __init__(self, message, data) -> None:
         super().__init__(data)
         self.message = message
 
-    def warn(self):
+    def warn(self) -> None:
         sympy_deprecation_warning(
             self.message,
             deprecated_since_version="1.7",

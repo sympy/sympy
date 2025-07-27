@@ -41,7 +41,7 @@ _assumptions_rng = _random.Random()
 _assumptions_shuffle = _assumptions_rng.shuffle
 
 
-def seed(a=None, version=2):
+def seed(a=None, version=2) -> None:
     rng.seed(a=a, version=version)
     _assumptions_rng.seed(a=a, version=version)
 
@@ -65,7 +65,7 @@ def random_complex_number(a=2, b=-1, c=3, d=1, rational=False, tolerance=None):
         I*nsimplify(B, rational=True, tolerance=tolerance))
 
 
-def verify_numerically(f, g, z=None, tol=1.0e-6, a=2, b=-1, c=3, d=1):
+def verify_numerically(f, g, z=None, tol=1.0e-6, a=2, b=-1, c=3, d=1) -> bool:
     """
     Test numerically that f and g agree when evaluated in the argument z.
 
@@ -97,7 +97,7 @@ def verify_numerically(f, g, z=None, tol=1.0e-6, a=2, b=-1, c=3, d=1):
     return comp(z1, z2, tol)
 
 
-def test_derivative_numerically(f, z, tol=1.0e-6, a=2, b=-1, c=3, d=1):
+def test_derivative_numerically(f, z, tol=1.0e-6, a=2, b=-1, c=3, d=1) -> bool:
     """
     Test numerically that the symbolically computed derivative of f
     with respect to z is correct.

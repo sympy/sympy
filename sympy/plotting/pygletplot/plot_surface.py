@@ -2,6 +2,7 @@ import pyglet.gl as pgl
 
 from sympy.core import S
 from sympy.plotting.pygletplot.plot_mode_base import PlotModeBase
+from typing import Callable
 
 
 class PlotSurface(PlotModeBase):
@@ -71,7 +72,7 @@ class PlotSurface(PlotModeBase):
         return self.color(vert[0], vert[1], vert[2],
                           self.u_set[u], self.v_set[v])
 
-    def draw_verts(self, use_cverts, use_solid_color):
+    def draw_verts(self, use_cverts, use_solid_color) -> Callable[[], None]:
         def f():
             for u in range(1, len(self.u_set)):
                 pgl.glBegin(pgl.GL_QUAD_STRIP)

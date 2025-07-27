@@ -12,11 +12,13 @@ from sympy.logic.boolalg import (And, BooleanTrue, BooleanFalse, conjuncts,
 from sympy.utilities.exceptions import sympy_deprecation_warning
 
 from ..predicates.common import CommutativePredicate, IsTruePredicate
+from typing import Literal
+from typing_extensions import Self
 
 
 class AskHandler:
     """Base class that all Ask Handlers must inherit."""
-    def __new__(cls, *args, **kwargs):
+    def __new__(cls, *args, **kwargs) -> Self:
         sympy_deprecation_warning(
             """
             The AskHandler system is deprecated. The AskHandler class should
@@ -33,15 +35,15 @@ class CommonHandler(AskHandler):
     """Defines some useful methods common to most Handlers. """
 
     @staticmethod
-    def AlwaysTrue(expr, assumptions):
+    def AlwaysTrue(expr, assumptions) -> Literal[True]:
         return True
 
     @staticmethod
-    def AlwaysFalse(expr, assumptions):
+    def AlwaysFalse(expr, assumptions) -> Literal[False]:
         return False
 
     @staticmethod
-    def AlwaysNone(expr, assumptions):
+    def AlwaysNone(expr, assumptions) -> None:
         return None
 
     NaN = AlwaysFalse
@@ -50,7 +52,7 @@ class CommonHandler(AskHandler):
 # CommutativePredicate
 
 @CommutativePredicate.register(Symbol)
-def _(expr, assumptions):
+def _(expr, assumptions) -> bool | None:
     """Objects are expected to be commutative unless otherwise stated"""
     assumps = conjuncts(assumptions)
     if expr.is_commutative is not None:
@@ -62,41 +64,41 @@ def _(expr, assumptions):
     return True
 
 @CommutativePredicate.register(Basic)
-def _(expr, assumptions):
+def _(expr, assumptions) -> bool | None:
     for arg in expr.args:
         if not ask(Q.commutative(arg), assumptions):
             return False
     return True
 
 @CommutativePredicate.register(Number)
-def _(expr, assumptions):
+def _(expr, assumptions) -> bool | None:
     return True
 
 @CommutativePredicate.register(NaN)
-def _(expr, assumptions):
+def _(expr, assumptions) -> bool | None:
     return True
 
 
 # IsTruePredicate
 
 @IsTruePredicate.register(bool)
-def _(expr, assumptions):
+def _(expr, assumptions) -> bool | None:
     return expr
 
 @IsTruePredicate.register(BooleanTrue)
-def _(expr, assumptions):
+def _(expr, assumptions) -> bool | None:
     return True
 
 @IsTruePredicate.register(BooleanFalse)
-def _(expr, assumptions):
+def _(expr, assumptions) -> bool | None:
     return False
 
 @IsTruePredicate.register(AppliedPredicate)
-def _(expr, assumptions):
+def _(expr, assumptions) -> bool | None:
     return ask(expr, assumptions)
 
 @IsTruePredicate.register(Not)
-def _(expr, assumptions):
+def _(expr, assumptions) -> bool | None:
     arg = expr.args[0]
     if arg.is_Symbol:
         # symbol used as abstract boolean object
@@ -108,7 +110,7 @@ def _(expr, assumptions):
         return None
 
 @IsTruePredicate.register(Or)
-def _(expr, assumptions):
+def _(expr, assumptions) -> bool | None:
     result = False
     for arg in expr.args:
         p = ask(arg, assumptions=assumptions)
@@ -119,7 +121,7 @@ def _(expr, assumptions):
     return result
 
 @IsTruePredicate.register(And)
-def _(expr, assumptions):
+def _(expr, assumptions) -> bool | None:
     result = True
     for arg in expr.args:
         p = ask(arg, assumptions=assumptions)
@@ -130,12 +132,12 @@ def _(expr, assumptions):
     return result
 
 @IsTruePredicate.register(Implies)
-def _(expr, assumptions):
+def _(expr, assumptions) -> bool | None:
     p, q = expr.args
     return ask(~p | q, assumptions=assumptions)
 
 @IsTruePredicate.register(Equivalent)
-def _(expr, assumptions):
+def _(expr, assumptions) -> bool | None:
     p, q = expr.args
     pt = ask(p, assumptions=assumptions)
     if pt is None:
@@ -147,7 +149,7 @@ def _(expr, assumptions):
 
 
 #### Helper methods
-def test_closed_group(expr, assumptions, key):
+def test_closed_group(expr, assumptions, key) -> bool | None:
     """
     Test for membership in a group with respect
     to the current operation.

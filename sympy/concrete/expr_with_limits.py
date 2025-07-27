@@ -3,7 +3,7 @@ from sympy.core.containers import Tuple
 from sympy.core.expr import Expr
 from sympy.core.function import AppliedUndef, UndefinedFunction
 from sympy.core.mul import Mul
-from sympy.core.relational import Equality, Relational
+from sympy.core.relational import Ne, Equality, Relational
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol, Dummy
 from sympy.core.sympify import sympify
@@ -17,6 +17,10 @@ from sympy.tensor.indexed import Idx
 from sympy.utilities import flatten
 from sympy.utilities.iterables import sift, is_sequence
 from sympy.utilities.exceptions import sympy_deprecation_warning
+from sympy.core.basic import Basic
+from sympy.core.kind import Kind
+from typing import Any
+from typing_extensions import Self
 
 
 def _common_new(cls, function, *symbols, discrete, **assumptions):
@@ -199,7 +203,7 @@ def _process_limits(*symbols, discrete=None):
 class ExprWithLimits(Expr):
     __slots__ = ('is_commutative',)
 
-    def __new__(cls, function, *symbols, **assumptions):
+    def __new__(cls, function, *symbols, **assumptions) -> Equality | Relational | Ne | Self:
         from sympy.concrete.products import Product
         pre = _common_new(cls, function, *symbols,
             discrete=issubclass(cls, Product), **assumptions)
@@ -222,7 +226,7 @@ class ExprWithLimits(Expr):
         return obj
 
     @property
-    def function(self):
+    def function(self) -> Basic:
         """Return the function applied across limits.
 
         Examples
@@ -241,11 +245,11 @@ class ExprWithLimits(Expr):
         return self._args[0]
 
     @property
-    def kind(self):
+    def kind(self) -> Kind:
         return self.function.kind
 
     @property
-    def limits(self):
+    def limits(self) -> tuple[Basic, ...]:
         """Return the limits of expression.
 
         Examples
@@ -264,7 +268,7 @@ class ExprWithLimits(Expr):
         return self._args[1:]
 
     @property
-    def variables(self):
+    def variables(self) -> list[Any]:
         """Return a list of the limit variables.
 
         >>> from sympy import Sum
@@ -282,7 +286,7 @@ class ExprWithLimits(Expr):
         return [l[0] for l in self.limits]
 
     @property
-    def bound_symbols(self):
+    def bound_symbols(self) -> list[Any]:
         """Return only variables that are dummy variables.
 
         Examples
@@ -303,7 +307,7 @@ class ExprWithLimits(Expr):
         return [l[0] for l in self.limits if len(l) != 1]
 
     @property
-    def free_symbols(self):
+    def free_symbols(self) -> set[Any]:
         """
         This method returns the symbols in the object, excluding those
         that take on a specific value (i.e. the dummy symbols).
@@ -341,7 +345,7 @@ class ExprWithLimits(Expr):
         return {reps.get(_, _) for _ in isyms}
 
     @property
-    def is_number(self):
+    def is_number(self) -> bool:
         """Return True if the Sum has no free symbols, else False."""
         return not self.free_symbols
 
@@ -430,7 +434,7 @@ class ExprWithLimits(Expr):
         return self.func(func, *limits)
 
     @property
-    def has_finite_limits(self):
+    def has_finite_limits(self) -> bool | None:
         """
         Returns True if the limits are known to be finite, either by the
         explicit bounds, assumptions on the bounds, or assumptions on the
@@ -481,7 +485,7 @@ class ExprWithLimits(Expr):
         return True
 
     @property
-    def has_reversed_limits(self):
+    def has_reversed_limits(self) -> bool | None:
         """
         Returns True if the limits are known to be in reversed order, either
         by the explicit bounds, assumptions on the bounds, or assumptions on the
@@ -542,7 +546,7 @@ class AddWithLimits(ExprWithLimits):
 
     __slots__ = ()
 
-    def __new__(cls, function, *symbols, **assumptions):
+    def __new__(cls, function, *symbols, **assumptions) -> Equality | Relational | Ne | Self:
         from sympy.concrete.summations import Sum
         pre = _common_new(cls, function, *symbols,
             discrete=issubclass(cls, Sum), **assumptions)

@@ -31,6 +31,8 @@ from .cache import cacheit
 from sympy.multipledispatch.dispatcher import (Dispatcher,
     ambiguity_warn, ambiguity_register_error_ignore_dup,
     str_signature, RaiseNotImplementedError)
+from typing import Callable, Literal
+from typing_extensions import LiteralString, Self
 
 
 class KindMeta(type):
@@ -40,7 +42,7 @@ class KindMeta(type):
     Assigns empty ``dict`` as class attribute ``_inst`` for every class,
     in order to endow singleton-like behavior.
     """
-    def __new__(cls, clsname, bases, dct):
+    def __new__(cls, clsname, bases, dct) -> Self:
         dct['_inst'] = {}
         return super().__new__(cls, clsname, bases, dct)
 
@@ -72,7 +74,7 @@ class Kind(object, metaclass=KindMeta):
     return the same object.
 
     """
-    def __new__(cls, *args):
+    def __new__(cls, *args) -> Self:
         if args in cls._inst:
             inst = cls._inst[args]
         else:
@@ -94,10 +96,10 @@ class _UndefinedKind(Kind):
     >>> Expr().kind
     UndefinedKind
     """
-    def __new__(cls):
+    def __new__(cls) -> Self:
         return super().__new__(cls)
 
-    def __repr__(self):
+    def __repr__(self) -> Literal["UndefinedKind"]:
         return "UndefinedKind"
 
 UndefinedKind = _UndefinedKind()
@@ -153,10 +155,10 @@ class _NumberKind(Kind):
     without any free symbol.
 
     """
-    def __new__(cls):
+    def __new__(cls) -> Self:
         return super().__new__(cls)
 
-    def __repr__(self):
+    def __repr__(self) -> Literal["NumberKind"]:
         return "NumberKind"
 
 NumberKind = _NumberKind()
@@ -178,10 +180,10 @@ class _BooleanKind(Kind):
     >>> Q.even(3).kind
     BooleanKind
     """
-    def __new__(cls):
+    def __new__(cls) -> Self:
         return super().__new__(cls)
 
-    def __repr__(self):
+    def __repr__(self) -> Literal["BooleanKind"]:
         return "BooleanKind"
 
 BooleanKind = _BooleanKind()
@@ -254,16 +256,16 @@ class KindDispatcher:
     doc : str, optional
 
     """
-    def __init__(self, name, commutative=False, doc=None):
+    def __init__(self, name, commutative=False, doc=None) -> None:
         self.name = name
         self.doc = doc
         self.commutative = commutative
         self._dispatcher = Dispatcher(name)
 
-    def __repr__(self):
+    def __repr__(self) -> LiteralString:
         return "<dispatched %s>" % self.name
 
-    def register(self, *types, **kwargs):
+    def register(self, *types, **kwargs) -> Callable[..., None]:
         """
         Register the binary dispatcher for two kind classes.
 
@@ -290,7 +292,7 @@ class KindDispatcher:
                 self._dispatcher.add(tuple(reversed(types)), func, **kwargs)
         return _
 
-    def __call__(self, *args, **kwargs):
+    def __call__(self, *args, **kwargs) -> Kind | _UndefinedKind:
         if self.commutative:
             kinds = frozenset(args)
         else:
@@ -303,7 +305,7 @@ class KindDispatcher:
         return self.dispatch_kinds(kinds, **kwargs)
 
     @cacheit
-    def dispatch_kinds(self, kinds, **kwargs):
+    def dispatch_kinds(self, kinds, **kwargs) -> Kind | _UndefinedKind:
         # Quick exit for the case where all kinds are same
         if len(kinds) == 1:
             result, = kinds
@@ -341,7 +343,7 @@ class KindDispatcher:
         return result
 
     @property
-    def __doc__(self):
+    def __doc__(self) -> str:
         docs = [
             "Kind dispatcher : %s" % self.name,
             "Note that support for this is experimental. See the docs for :class:`KindDispatcher` for details"

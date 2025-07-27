@@ -37,6 +37,9 @@ from sympy.solvers.solvers import solve
 from .recurrence import HolonomicSequence, RecurrenceOperator, RecurrenceOperators
 from .holonomicerrors import (NotPowerSeriesError, NotHyperSeriesError,
     SingularityError, NotHolonomicError)
+from sympy.holonomic.recurrence import HolonomicSequence
+from typing import Any
+from typing_extensions import Self
 
 
 def _find_nonzero_solution(r, homosys):
@@ -49,7 +52,7 @@ def _find_nonzero_solution(r, homosys):
 
 
 
-def DifferentialOperators(base, generator):
+def DifferentialOperators(base, generator) -> tuple[DifferentialOperatorAlgebra, DifferentialOperator]:
     r"""
     This function is used to create annihilators using ``Dx``.
 
@@ -126,7 +129,7 @@ class DifferentialOperatorAlgebra:
     DifferentialOperator
     """
 
-    def __init__(self, base, generator):
+    def __init__(self, base, generator) -> None:
         # the base polynomial ring for the algebra
         self.base = base
         # the operator representing differentiation i.e. `Dx`
@@ -150,7 +153,7 @@ class DifferentialOperatorAlgebra:
 
     __repr__ = __str__
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
         return self.base == other.base and \
                self.gen_symbol == other.gen_symbol
 
@@ -193,7 +196,7 @@ class DifferentialOperator:
 
     _op_priority = 20
 
-    def __init__(self, list_of_poly, parent):
+    def __init__(self, list_of_poly, parent) -> None:
         """
         Parameters
         ==========
@@ -223,7 +226,7 @@ class DifferentialOperator:
         # highest power of `Dx`
         self.order = len(self.listofpoly) - 1
 
-    def __mul__(self, other):
+    def __mul__(self, other) -> "DifferentialOperator":
         """
         Multiplies two DifferentialOperator and returns another
         DifferentialOperator instance using the commutation rule
@@ -269,7 +272,7 @@ class DifferentialOperator:
 
         return DifferentialOperator(sol, self.parent)
 
-    def __rmul__(self, other):
+    def __rmul__(self, other) -> DifferentialOperator | None:
         if not isinstance(other, DifferentialOperator):
 
             if not isinstance(other, self.parent.base.dtype):
@@ -278,7 +281,7 @@ class DifferentialOperator:
             sol = [other * j for j in self.listofpoly]
             return DifferentialOperator(sol, self.parent)
 
-    def __add__(self, other):
+    def __add__(self, other) -> "DifferentialOperator":
         if isinstance(other, DifferentialOperator):
 
             sol = _add_lists(self.listofpoly, other.listofpoly)
@@ -300,13 +303,13 @@ class DifferentialOperator:
     def __rsub__(self, other):
         return (-1) * self + other
 
-    def __neg__(self):
+    def __neg__(self) -> DifferentialOperator | None:
         return -1 * self
 
     def __truediv__(self, other):
         return self * (S.One / other)
 
-    def __pow__(self, n):
+    def __pow__(self, n) -> Self | DifferentialOperator | None:
         if n == 1:
             return self
         result = DifferentialOperator([self.parent.base.one], self.parent)
@@ -353,14 +356,14 @@ class DifferentialOperator:
 
     __repr__ = __str__
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
         if isinstance(other, DifferentialOperator):
             return self.listofpoly == other.listofpoly and \
                    self.parent == other.parent
         return self.listofpoly[0] == other and \
             all(i is self.parent.base.zero for i in self.listofpoly[1:])
 
-    def is_singular(self, x0):
+    def is_singular(self, x0) -> bool:
         """
         Checks if the differential equation is singular at x0.
         """
@@ -438,7 +441,7 @@ class HolonomicFunction:
 
     _op_priority = 20
 
-    def __init__(self, annihilator, x, x0=0, y0=None):
+    def __init__(self, annihilator, x, x0=0, y0=None) -> None:
         """
 
         Parameters
@@ -479,7 +482,7 @@ class HolonomicFunction:
 
     __repr__ = __str__
 
-    def unify(self, other):
+    def unify(self, other) -> tuple[Self, Any] | tuple[HolonomicFunction, HolonomicFunction]:
         """
         Unifies the base polynomial ring of a given two Holonomic
         Functions.
@@ -509,7 +512,7 @@ class HolonomicFunction:
 
         return (sol1, sol2)
 
-    def is_singularics(self):
+    def is_singularics(self) -> bool | None:
         """
         Returns True if the function have singular initial condition
         in the dictionary format.
@@ -817,7 +820,7 @@ class HolonomicFunction:
 
         return HolonomicFunction(self.annihilator * D, self.x)
 
-    def diff(self, *args, **kwargs):
+    def diff(self, *args, **kwargs) -> Self | HolonomicFunction:
         r"""
         Differentiation of the given Holonomic function.
 
@@ -894,7 +897,7 @@ class HolonomicFunction:
         y0 = _extend_y0(self, sol.order + 1)[1:]
         return HolonomicFunction(sol, self.x, self.x0, y0)
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
         if self.annihilator != other.annihilator or self.x != other.x:
             return False
         if self._have_init_cond() and other._have_init_cond():
@@ -1076,7 +1079,7 @@ class HolonomicFunction:
     def __truediv__(self, other):
         return self * (S.One / other)
 
-    def __pow__(self, n):
+    def __pow__(self, n) -> HolonomicFunction | Self | None:
         if self.annihilator.order <= 1:
             ann = self.annihilator
             parent = ann.parent
@@ -1116,7 +1119,7 @@ class HolonomicFunction:
         """
         return max(i.degree() for i in self.annihilator.listofpoly)
 
-    def composition(self, expr, *args, **kwargs):
+    def composition(self, expr, *args, **kwargs) -> "HolonomicFunction":
         """
         Returns function after composition of a holonomic
         function with an algebraic function. The method cannot compute
@@ -1180,7 +1183,7 @@ class HolonomicFunction:
             return HolonomicFunction(sol, self.x, args[0], args[1])
         return HolonomicFunction(sol, self.x)
 
-    def to_sequence(self, lb=True):
+    def to_sequence(self, lb=True) -> list[tuple[HolonomicSequence, Any]] | list[HolonomicSequence]:
         r"""
         Finds recurrence relation for the coefficients in the series expansion
         of the function about :math:`x_0`, where :math:`x_0` is the point at
@@ -1573,7 +1576,7 @@ class HolonomicFunction:
             char += 1
         return finalsol
 
-    def series(self, n=6, coefficient=False, order=True, _recur=None):
+    def series(self, n=6, coefficient=False, order=True, _recur=None) -> list[Any]:
         r"""
         Finds the power series expansion of given holonomic function about :math:`x_0`.
 
@@ -1689,7 +1692,7 @@ class HolonomicFunction:
 
         return roots(R.to_sympy(s), x)
 
-    def evalf(self, points, method='RK4', h=0.05, derivatives=False):
+    def evalf(self, points, method='RK4', h=0.05, derivatives=False) -> list[Any]:
         r"""
         Finds numerical value of a holonomic function using numerical methods.
         (RK4 by default). A set of points (real or complex) must be provided
@@ -1764,7 +1767,7 @@ class HolonomicFunction:
             return _evalf(self, points, method=method, derivatives=derivatives)[-1]
         return _evalf(self, points, method=method, derivatives=derivatives)
 
-    def change_x(self, z):
+    def change_x(self, z) -> "HolonomicFunction":
         """
         Changes only the variable of Holonomic Function, for internal
         purposes. For composition use HolonomicFunction.composition()
@@ -1777,7 +1780,7 @@ class HolonomicFunction:
         sol =  DifferentialOperator(sol, parent)
         return HolonomicFunction(sol, z, self.x0, self.y0)
 
-    def shift_x(self, a):
+    def shift_x(self, a) -> "HolonomicFunction":
         """
         Substitute `x + a` for `x`.
         """
@@ -1990,7 +1993,7 @@ class HolonomicFunction:
 
         return hyperexpand(self.to_hyper()).simplify()
 
-    def change_ics(self, b, lenics=None):
+    def change_ics(self, b, lenics=None) -> "HolonomicFunction":
         """
         Changes the point `x0` to ``b`` for initial conditions.
 
@@ -2060,7 +2063,7 @@ class HolonomicFunction:
         return sol
 
 
-def from_hyper(func, x0=0, evalf=False):
+def from_hyper(func, x0=0, evalf=False) -> HolonomicFunction:
     r"""
     Converts a hypergeometric function to holonomic.
     ``func`` is the Hypergeometric Function and ``x0`` is the point at
@@ -2123,7 +2126,7 @@ def from_hyper(func, x0=0, evalf=False):
     return HolonomicFunction(sol, x).composition(z)
 
 
-def from_meijerg(func, x0=0, evalf=False, initcond=True, domain=QQ):
+def from_meijerg(func, x0=0, evalf=False, initcond=True, domain=QQ) -> HolonomicFunction:
     """
     Converts a Meijer G-function to Holonomic.
     ``func`` is the G-Function and ``x0`` is the point at

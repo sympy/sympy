@@ -1,5 +1,8 @@
 from sympy.core import Basic, Integer
 import operator
+from types import NotImplementedType
+from typing import Literal
+from typing_extensions import Self
 
 
 class OmegaPower(Basic):
@@ -8,7 +11,7 @@ class OmegaPower(Basic):
     building blocks of the :class:`Ordinal` class.
     In ``OmegaPower(a, b)``, ``a`` represents exponent and ``b`` represents multiplicity.
     """
-    def __new__(cls, a, b):
+    def __new__(cls, a, b) -> Self:
         if isinstance(b, int):
             b = Integer(b)
         if not isinstance(b, Integer) or b <= 0:
@@ -20,11 +23,11 @@ class OmegaPower(Basic):
         return Basic.__new__(cls, a, b)
 
     @property
-    def exp(self):
+    def exp(self) -> Basic:
         return self.args[0]
 
     @property
-    def mult(self):
+    def mult(self) -> Basic:
         return self.args[1]
 
     def _compare_term(self, other, op):
@@ -33,7 +36,7 @@ class OmegaPower(Basic):
         else:
             return op(self.exp, other.exp)
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
         if not isinstance(other, OmegaPower):
             try:
                 other = OmegaPower(0, other)
@@ -41,10 +44,10 @@ class OmegaPower(Basic):
                 return NotImplemented
         return self.args == other.args
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return Basic.__hash__(self)
 
-    def __lt__(self, other):
+    def __lt__(self, other) -> bool:
         if not isinstance(other, OmegaPower):
             try:
                 other = OmegaPower(0, other)
@@ -78,7 +81,7 @@ class Ordinal(Basic):
 
     .. [1] https://en.wikipedia.org/wiki/Ordinal_arithmetic
     """
-    def __new__(cls, *terms):
+    def __new__(cls, *terms) -> Self:
         obj = super().__new__(cls, *terms)
         powers = [i.exp for i in obj.args]
         if not all(powers[i] >= powers[i+1] for i in range(len(powers) - 1)):
@@ -86,30 +89,30 @@ class Ordinal(Basic):
         return obj
 
     @property
-    def terms(self):
+    def terms(self) -> tuple[Basic, ...]:
         return self.args
 
     @property
-    def leading_term(self):
+    def leading_term(self) -> Basic:
         if self == ord0:
             raise ValueError("ordinal zero has no leading term")
         return self.terms[0]
 
     @property
-    def trailing_term(self):
+    def trailing_term(self) -> Basic:
         if self == ord0:
             raise ValueError("ordinal zero has no trailing term")
         return self.terms[-1]
 
     @property
-    def is_successor_ordinal(self):
+    def is_successor_ordinal(self) -> Literal[False]:
         try:
             return self.trailing_term.exp == ord0
         except ValueError:
             return False
 
     @property
-    def is_limit_ordinal(self):
+    def is_limit_ordinal(self) -> bool:
         try:
             return not self.trailing_term.exp == ord0
         except ValueError:
@@ -120,12 +123,12 @@ class Ordinal(Basic):
         return self.leading_term.exp
 
     @classmethod
-    def convert(cls, integer_value):
+    def convert(cls, integer_value) -> OrdinalZero | Ordinal:
         if integer_value == 0:
             return ord0
         return Ordinal(OmegaPower(0, integer_value))
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
         if not isinstance(other, Ordinal):
             try:
                 other = Ordinal.convert(other)
@@ -133,10 +136,10 @@ class Ordinal(Basic):
                 return NotImplemented
         return self.terms == other.terms
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash(self.args)
 
-    def __lt__(self, other):
+    def __lt__(self, other) -> bool:
         if not isinstance(other, Ordinal):
             try:
                 other = Ordinal.convert(other)
@@ -147,13 +150,13 @@ class Ordinal(Basic):
                 return term_self < term_other
         return len(self.terms) < len(other.terms)
 
-    def __le__(self, other):
+    def __le__(self, other) -> bool:
         return (self == other or self < other)
 
-    def __gt__(self, other):
+    def __gt__(self, other) -> bool:
         return not self <= other
 
-    def __ge__(self, other):
+    def __ge__(self, other) -> bool:
         return not self < other
 
     def __str__(self):
@@ -179,7 +182,7 @@ class Ordinal(Basic):
 
     __repr__ = __str__
 
-    def __add__(self, other):
+    def __add__(self, other) -> NotImplementedType | Self | Ordinal:
         if not isinstance(other, Ordinal):
             try:
                 other = Ordinal.convert(other)
@@ -202,7 +205,7 @@ class Ordinal(Basic):
             terms = a_terms[:r+1] + b_terms
         return Ordinal(*terms)
 
-    def __radd__(self, other):
+    def __radd__(self, other) -> NotImplementedType | OrdinalZero | Ordinal:
         if not isinstance(other, Ordinal):
             try:
                 other = Ordinal.convert(other)
@@ -210,7 +213,7 @@ class Ordinal(Basic):
                 return NotImplemented
         return other + self
 
-    def __mul__(self, other):
+    def __mul__(self, other) -> NotImplementedType | OrdinalZero | Ordinal:
         if not isinstance(other, Ordinal):
             try:
                 other = Ordinal.convert(other)
@@ -233,7 +236,7 @@ class Ordinal(Basic):
             summation += list(self.terms[1:])
         return Ordinal(*summation)
 
-    def __rmul__(self, other):
+    def __rmul__(self, other) -> NotImplementedType | OrdinalZero | Ordinal:
         if not isinstance(other, Ordinal):
             try:
                 other = Ordinal.convert(other)
@@ -241,7 +244,7 @@ class Ordinal(Basic):
                 return NotImplemented
         return other * self
 
-    def __pow__(self, other):
+    def __pow__(self, other) -> NotImplementedType | Ordinal:
         if not self == omega:
             return NotImplemented
         return Ordinal(OmegaPower(other, 1))
@@ -267,11 +270,11 @@ class OrdinalOmega(Ordinal):
     >>> omega + omega
     w*2
     """
-    def __new__(cls):
+    def __new__(cls) -> Self:
         return Ordinal.__new__(cls)
 
     @property
-    def terms(self):
+    def terms(self) -> tuple[OmegaPower]:
         return (OmegaPower(1, 1),)
 
 

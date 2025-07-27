@@ -1,9 +1,10 @@
 from sympy.core import S
-from sympy.core.function import DefinedFunction, ArgumentIndexError
+from sympy.core.function import Function, UndefinedFunction, DefinedFunction, ArgumentIndexError
 from sympy.core.symbol import Dummy, uniquely_named_symbol
 from sympy.functions.special.gamma_functions import gamma, digamma
 from sympy.functions.combinatorial.numbers import catalan
 from sympy.functions.elementary.complexes import conjugate
+from typing_extensions import Self
 
 # See mpmath #569 and SymPy #20569
 def betainc_mpmath_fix(a, b, x1, x2, reg=0):
@@ -118,13 +119,13 @@ class beta(DefinedFunction):
             raise ArgumentIndexError(self, argindex)
 
     @classmethod
-    def eval(cls, x, y=None):
+    def eval(cls, x, y=None) -> type[UndefinedFunction] | None:
         if y is None:
             return beta(x, x)
         if x.is_Number and y.is_Number:
             return beta(x, y, evaluate=False).doit()
 
-    def doit(self, **hints):
+    def doit(self, **hints) -> Self | type[UndefinedFunction]:
         x = xold = self.args[0]
         # Deal with unevaluated single argument beta
         single_argument = len(self.args) == 1
@@ -352,7 +353,7 @@ class betainc_regularized(DefinedFunction):
     nargs = 4
     unbranched = True
 
-    def __new__(cls, a, b, x1, x2):
+    def __new__(cls, a, b, x1, x2) -> type[UndefinedFunction]:
         return super().__new__(cls, a, b, x1, x2)
 
     def _eval_mpmath(self):

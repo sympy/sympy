@@ -2,23 +2,25 @@ import collections.abc
 import operator
 from itertools import accumulate
 
-from sympy import Mul, Sum, Dummy, Add
+from sympy import Equality, Ne, Mul, Sum, Dummy, Add
 from sympy.tensor.array.expressions import PermuteDims, ArrayAdd, ArrayElementwiseApplyFunc, Reshape
-from sympy.tensor.array.expressions.array_expressions import ArrayTensorProduct, get_rank, ArrayContraction, \
+from sympy.tensor.array.expressions.array_expressions import ArrayElement, ArrayTensorProduct, get_rank, ArrayContraction, \
     ArrayDiagonal, get_shape, _get_array_element_or_slice, _ArrayExpr
 from sympy.tensor.array.expressions.utils import _apply_permutation_to_list
+import sympy.core.add
+from sympy.core.relational import Relational
 
 
-def convert_array_to_indexed(expr, indices):
+def convert_array_to_indexed(expr, indices) -> Mul | Equality | Relational | Ne | Sum | sympy.core.add.Add | ArrayElement:
     return _ConvertArrayToIndexed().do_convert(expr, indices)
 
 
 class _ConvertArrayToIndexed:
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.count_dummies = 0
 
-    def do_convert(self, expr, indices):
+    def do_convert(self, expr, indices) -> Mul | Equality | Relational | Ne | Sum |     sympy.core.add.Add | ArrayElement:
         if isinstance(expr, ArrayTensorProduct):
             cumul = list(accumulate([0] + [get_rank(arg) for arg in expr.args]))
             indices_grp = [indices[cumul[i]:cumul[i+1]] for i in range(len(expr.args))]

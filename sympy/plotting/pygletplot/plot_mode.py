@@ -5,6 +5,8 @@ from sympy.core.symbol import Symbol
 from sympy.core.sympify import sympify
 from sympy.geometry.entity import GeometryEntity
 from sympy.utilities.iterables import is_sequence
+from sympy.plotting.pygletplot.plot_object import PlotObject
+from typing_extensions import Self
 
 
 class PlotMode(PlotObject):
@@ -57,7 +59,7 @@ class PlotMode(PlotObject):
     }  # [d][i]: class
     _i_var_max, _d_var_max = 2, 3
 
-    def __new__(cls, *args, **kwargs):
+    def __new__(cls, *args, **kwargs) -> Self:
         """
         This is the function which interprets
         arguments given to Plot.__init__ and
@@ -383,7 +385,7 @@ class PlotMode(PlotObject):
         return newargs, newkwargs
 
 
-def var_count_error(is_independent, is_plotting):
+def var_count_error(is_independent, is_plotting) -> str:
     """
     Used to format an error message which differs
     slightly in 4 places.

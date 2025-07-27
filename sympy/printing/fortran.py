@@ -117,7 +117,7 @@ class FCodePrinter(CodePrinter):
         '!=': '/=',
     }
 
-    def __init__(self, settings=None):
+    def __init__(self, settings=None) -> None:
         if not settings:
             settings = {}
         self.mangled_symbols = {}         # Dict showing mapping of all words
@@ -572,7 +572,7 @@ class FCodePrinter(CodePrinter):
                 result.append(line)
         return result
 
-    def indent_code(self, code):
+    def indent_code(self, code) -> str | list[Any]:
         """Accepts a string of code or a list of code lines"""
         if isinstance(code, str):
             code_lines = self.indent_code(code.splitlines(True))

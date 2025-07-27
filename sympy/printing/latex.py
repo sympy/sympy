@@ -171,7 +171,7 @@ class LatexPrinter(Printer):
         "disable_split_super_sub": False,
     }
 
-    def __init__(self, settings=None):
+    def __init__(self, settings=None) -> None:
         Printer.__init__(self, settings)
 
         if 'mode' in self._settings:
@@ -249,7 +249,7 @@ class LatexPrinter(Printer):
         else:
             return self._print(item)
 
-    def parenthesize_super(self, s):
+    def parenthesize_super(self, s) -> str:
         """
         Protect superscripts in s
 
@@ -2933,7 +2933,7 @@ class LatexPrinter(Printer):
         args_latex = ', '.join([self._print(a) for a in args])
         return '%s(%s)' % (pred_latex, args_latex)
 
-    def emptyPrinter(self, expr):
+    def emptyPrinter(self, expr) -> str:
         # default to just printing as monospace, like would normally be shown
         s = super().emptyPrinter(expr)
 
@@ -2972,7 +2972,7 @@ def translate(s: str) -> str:
 
 
 @print_function(LatexPrinter)
-def latex(expr, **settings):
+def latex(expr, **settings) -> str:
     r"""Convert the given expression to LaTeX string representation.
 
     Parameters
@@ -3189,14 +3189,14 @@ def latex(expr, **settings):
     return LatexPrinter(settings).doprint(expr)
 
 
-def print_latex(expr, **settings):
+def print_latex(expr, **settings) -> None:
     """Prints LaTeX representation of the given expression. Takes the same
     settings as ``latex()``."""
 
     print(latex(expr, **settings))
 
 
-def multiline_latex(lhs, rhs, terms_per_line=1, environment="align*", use_dots=False, **settings):
+def multiline_latex(lhs, rhs, terms_per_line=1, environment="align*", use_dots=False, **settings) -> str:
     r"""
     This function generates a LaTeX equation with a multiline right-hand side
     in an ``align*``, ``eqnarray`` or ``IEEEeqnarray`` environment.

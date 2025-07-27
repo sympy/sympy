@@ -13,8 +13,13 @@ from sympy.matrices.immutable import ImmutableDenseMatrix as Matrix
 from sympy.vector.basisdependent import (BasisDependentZero,
     BasisDependent, BasisDependentMul, BasisDependentAdd)
 from sympy.vector.coordsysrect import CoordSys3D
-from sympy.vector.dyadic import Dyadic, BaseDyadic, DyadicAdd
+from sympy.vector.dyadic import DyadicZero, Dyadic, BaseDyadic, DyadicAdd
 from sympy.vector.kind import VectorKind
+import sympy
+import sympy.core.add
+from sympy.series.order import Order
+from typing import Any, Callable, Literal
+from typing_extensions import Self
 
 
 class Vector(BasisDependent):
@@ -58,7 +63,7 @@ class Vector(BasisDependent):
         # subclass of Vector the instance belongs to.
         return self._components
 
-    def magnitude(self):
+    def magnitude(self) ->     sympy.Pow:
         """
         Returns the magnitude of this vector.
         """
@@ -137,7 +142,7 @@ class Vector(BasisDependent):
         diff_mag2 = diff.dot(diff)
         return diff_mag2.equals(0)
 
-    def dot(self, other):
+    def dot(self, other) -> VectorZero | Callable[..., VectorZero | Any | Literal[0]] |     sympy.core.add.Add | Dot:
         """
         Returns the dot product of this Vector, either with another
         Vector, or a Dyadic, or a Del operator.
@@ -199,12 +204,12 @@ class Vector(BasisDependent):
 
         return dot(self, other)
 
-    def __and__(self, other):
+    def __and__(self, other) -> VectorZero | Callable[..., VectorZero | Any | Literal[0]] |     sympy.core.add.Add | Dot:
         return self.dot(other)
 
     __and__.__doc__ = dot.__doc__
 
-    def cross(self, other):
+    def cross(self, other) -> DyadicZero | VectorAdd | VectorZero | Cross:
         """
         Returns the cross product of this Vector with another Vector or
         Dyadic instance.
@@ -248,12 +253,12 @@ class Vector(BasisDependent):
 
         return cross(self, other)
 
-    def __xor__(self, other):
+    def __xor__(self, other) -> DyadicZero | VectorAdd | VectorZero | Cross:
         return self.cross(other)
 
     __xor__.__doc__ = cross.__doc__
 
-    def outer(self, other):
+    def outer(self, other) -> DyadicZero | BasisDependentZero | Order:
         """
         Returns the outer product of this vector with another, in the
         form of a Dyadic instance.
@@ -289,7 +294,7 @@ class Vector(BasisDependent):
 
         return DyadicAdd(*args)
 
-    def projection(self, other, scalar=False):
+    def projection(self, other, scalar=False) -> "VectorZero":
         """
         Returns the vector or scalar projection of the 'other' on 'self'.
 
@@ -343,12 +348,12 @@ class Vector(BasisDependent):
         base_vec = next(iter(_get_coord_systems(self))).base_vectors()
         return tuple([self.dot(i) for i in base_vec])
 
-    def __or__(self, other):
+    def __or__(self, other) -> DyadicZero | BasisDependentZero | Order:
         return self.outer(other)
 
     __or__.__doc__ = outer.__doc__
 
-    def to_matrix(self, system):
+    def to_matrix(self, system) ->     sympy.ImmutableDenseMatrix:
         """
         Returns the matrix form of this vector with respect to the
         specified coordinate system.
@@ -377,7 +382,7 @@ class Vector(BasisDependent):
         return Matrix([self.dot(unit_vec) for unit_vec in
                        system.base_vectors()])
 
-    def separate(self):
+    def separate(self) -> dict[Any, Any]:
         """
         The constituents of this vector in different coordinate systems,
         as per its definition.
@@ -439,7 +444,7 @@ class BaseVector(Vector, AtomicExpr):
 
     """
 
-    def __new__(cls, index, system, pretty_str=None, latex_str=None):
+    def __new__(cls, index, system, pretty_str=None, latex_str=None) -> Self:
         if pretty_str is None:
             pretty_str = "x{}".format(index)
         if latex_str is None:
@@ -486,7 +491,7 @@ class BaseVector(Vector, AtomicExpr):
         return printer._print(system) + '.' + system._vector_names[index]
 
     @property
-    def free_symbols(self):
+    def free_symbols(self) -> set[Self]:
         return {self}
 
     def _eval_conjugate(self):
@@ -498,7 +503,7 @@ class VectorAdd(BasisDependentAdd, Vector):
     Class to denote sum of Vector instances.
     """
 
-    def __new__(cls, *args, **options):
+    def __new__(cls, *args, **options) -> BasisDependentZero | Order:
         obj = BasisDependentAdd.__new__(cls, *args, **options)
         return obj
 
@@ -520,7 +525,7 @@ class VectorMul(BasisDependentMul, Vector):
     Class to denote products of scalars and BaseVectors.
     """
 
-    def __new__(cls, *args, **options):
+    def __new__(cls, *args, **options) -> Order | BasisDependentZero:
         obj = BasisDependentMul.__new__(cls, *args, **options)
         return obj
 
@@ -546,7 +551,7 @@ class VectorZero(BasisDependentZero, Vector):
     _pretty_form = '0'
     _latex_form = r'\mathbf{\hat{0}}'
 
-    def __new__(cls):
+    def __new__(cls) -> Self:
         obj = BasisDependentZero.__new__(cls)
         return obj
 
@@ -569,7 +574,7 @@ class Cross(Vector):
 
     """
 
-    def __new__(cls, expr1, expr2):
+    def __new__(cls, expr1, expr2) -> Self:
         expr1 = sympify(expr1)
         expr2 = sympify(expr2)
         if default_sort_key(expr1) > default_sort_key(expr2):
@@ -579,7 +584,7 @@ class Cross(Vector):
         obj._expr2 = expr2
         return obj
 
-    def doit(self, **hints):
+    def doit(self, **hints) -> VectorAdd | VectorZero | Cross:
         return cross(self._expr1, self._expr2)
 
 
@@ -603,7 +608,7 @@ class Dot(Expr):
 
     """
 
-    def __new__(cls, expr1, expr2):
+    def __new__(cls, expr1, expr2) -> Self:
         expr1 = sympify(expr1)
         expr2 = sympify(expr2)
         expr1, expr2 = sorted([expr1, expr2], key=default_sort_key)
@@ -612,11 +617,11 @@ class Dot(Expr):
         obj._expr2 = expr2
         return obj
 
-    def doit(self, **hints):
+    def doit(self, **hints) ->     sympy.core.add.Add | Dot:
         return dot(self._expr1, self._expr2)
 
 
-def cross(vect1, vect2):
+def cross(vect1, vect2) -> VectorAdd | VectorZero | Cross:
     """
     Returns cross product of two vectors.
 
@@ -664,7 +669,7 @@ def cross(vect1, vect2):
     return Cross(vect1, vect2)
 
 
-def dot(vect1, vect2):
+def dot(vect1, vect2) -> sympy.core.add.Add | Dot:
     """
     Returns dot product of two vectors.
 

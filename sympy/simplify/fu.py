@@ -24,6 +24,8 @@ from sympy.strategies.tree import greedy
 from sympy.strategies.core import identity, debug
 
 from sympy import SYMPY_DEBUG
+from sympy.series.order import Order
+from typing import Any, Callable, Literal
 
 
 # ================== Fu-like tools ===========================
@@ -1666,7 +1668,7 @@ def fu(rv, measure=lambda x: (L(x), x.count_ops())):
     return min(TR2i(rv), rv, key=measure)
 
 
-def process_common_addends(rv, do, key2=None, key1=True):
+def process_common_addends(rv, do, key2=None, key1=True) -> Order:
     """Apply ``do`` to addends of ``rv`` that (if ``key1=True``) share at least
     a common absolute value of their coefficient and the value of ``key2`` when
     applied to the argument. If ``key1`` is False ``key2`` must be supplied and
@@ -1908,7 +1910,7 @@ def trig_split(a, b, two=False):
             return gcd, n1, n2, c.args[0], pi/6, False
 
 
-def as_f_sign_1(e):
+def as_f_sign_1(e) -> tuple[Any, Any, Any] | tuple[Any | Order, Any | Order, Literal[1, -1]] | None:
     """If ``e`` is a sum that can be written as ``g*(a + s)`` where
     ``s`` is ``+/-1``, return ``g``, ``a``, and ``s`` where ``a`` does
     not have a leading negative coefficient.
@@ -2044,7 +2046,7 @@ def _osbornei(e, d):
     return bottom_up(e, f)
 
 
-def hyper_as_trig(rv):
+def hyper_as_trig(rv) -> tuple[Any, Callable[..., Any]]:
     """Return an expression containing hyperbolic functions in terms
     of trigonometric functions. Any trigonometric functions initially
     present are replaced with Dummy symbols and the function to undo

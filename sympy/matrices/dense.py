@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import Any, TYPE_CHECKING
 
 import random
 
@@ -18,6 +18,10 @@ from .decompositions import _cholesky, _LDLdecomposition
 from .matrixbase import MatrixBase
 from .repmatrix import MutableRepMatrix, RepMatrix
 from .solvers import _lower_triangular_solve, _upper_triangular_solve
+from numpy import ndarray as NDArray, ndarray as NDArray, ndarray as NDArray
+from sympy.matrices.immutable import ImmutableDenseMatrix
+from sympy.matrices.repmatrix import MutableRepMatrix, RepMatrix
+from sympy.series.order import Order
 
 
 if TYPE_CHECKING:
@@ -64,13 +68,13 @@ class DenseMatrix(RepMatrix):
                         iszerofunc=kwargs.get('iszerofunc', _iszero),
                         try_block_diag=kwargs.get('try_block_diag', False))
 
-    def as_immutable(self):
+    def as_immutable(self) -> ImmutableDenseMatrix:
         """Returns an Immutable version of this Matrix
         """
         from .immutable import ImmutableDenseMatrix as cls
         return cls._fromrep(self._rep.copy())
 
-    def as_mutable(self):
+    def as_mutable(self) -> "Matrix":
         """Returns a mutable version of this matrix
 
         Examples
@@ -150,7 +154,7 @@ Matrix = MutableDenseMatrix
 ###########
 
 
-def list2numpy(l, dtype=object):  # pragma: no cover
+def list2numpy(l, dtype=object) -> NDArray[Any, Any]:  # pragma: no cover
     """Converts Python list of SymPy expressions to a NumPy array.
 
     See Also
@@ -165,7 +169,7 @@ def list2numpy(l, dtype=object):  # pragma: no cover
     return a
 
 
-def matrix2numpy(m, dtype=object):  # pragma: no cover
+def matrix2numpy(m, dtype=object) -> NDArray[Any, Any]:  # pragma: no cover
     """Converts SymPy's matrix to a NumPy array.
 
     See Also
@@ -637,7 +641,7 @@ def rot_ccw_axis1(theta):
 
 
 @doctest_depends_on(modules=('numpy',))
-def symarray(prefix, shape, **kwargs):  # pragma: no cover
+def symarray(prefix, shape, **kwargs) -> NDArray[Any, Any]:  # pragma: no cover
     r"""Create a numpy ndarray of symbols (as an object array).
 
     The created symbols are named ``prefix_i1_i2_``...  You should thus provide a
@@ -713,7 +717,7 @@ def symarray(prefix, shape, **kwargs):  # pragma: no cover
 # Functions
 ###############
 
-def casoratian(seqs, n, zero=True):
+def casoratian(seqs, n, zero=True) -> tuple[Any | Basic, bool] | Any | Basic | Order:
     """Given linear difference operator L of order 'k' and homogeneous
        equation Ly = 0 we want to compute kernel of L, which is a set
        of 'k' sequences: a(n), b(n), ... z(n).
@@ -807,7 +811,7 @@ def diag(*values, strict=True, unpack=False, **kwargs):
     return Matrix.diag(*values, strict=strict, unpack=unpack, **kwargs)
 
 
-def GramSchmidt(vlist, orthonormal=False):
+def GramSchmidt(vlist, orthonormal=False) -> list[Any]:
     """Apply the Gram-Schmidt process to a set of vectors.
 
     Parameters
@@ -1058,7 +1062,7 @@ def randMatrix(r, c=None, min=0, max=99, seed=None, symmetric=False,
     return m
 
 
-def wronskian(functions, var, method='bareiss'):
+def wronskian(functions, var, method='bareiss') -> tuple[Any | Basic, bool] | Any | Basic | Order:
     """
     Compute Wronskian for [] of functions
 

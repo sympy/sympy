@@ -16,6 +16,11 @@ from sympy.functions import KroneckerDelta, Piecewise, piecewise_fold
 from sympy.polys.polytools import factor
 from sympy.sets.sets import Interval
 from sympy.solvers.solvers import solve
+import sympy.functions.elementary.piecewise
+from sympy.concrete.summations import Sum
+from sympy.core.basic import Basic
+from sympy.core.relational import Equality, Ne, Relational
+from typing import Any
 
 
 @cacheit
@@ -163,7 +168,7 @@ def _simplify_delta(expr):
 
 
 @cacheit
-def deltaproduct(f, limit):
+def deltaproduct(f, limit) -> Equality | Relational | Ne | Any:
     """
     Handle products containing a KroneckerDelta.
 
@@ -222,7 +227,7 @@ def deltaproduct(f, limit):
 
 
 @cacheit
-def deltasummation(f, limit, no_piecewise=False):
+def deltasummation(f, limit, no_piecewise=False) -> Equality | Relational | Ne | Basic | sympy.functions.elementary.piecewise.Piecewise | Sum:
     """
     Handle summations containing a KroneckerDelta.
 

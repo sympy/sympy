@@ -1,11 +1,20 @@
 from sympy.core import Atom, Basic
+from sympy.liealgebras.type_a import TypeA
+from sympy.liealgebras.type_b import TypeB
+from sympy.liealgebras.type_c import TypeC
+from sympy.liealgebras.type_d import TypeD
+from sympy.liealgebras.type_e import TypeE
+from sympy.liealgebras.type_f import TypeF
+from sympy.liealgebras.type_g import TypeG
+from typing import Any, Callable
+from typing_extensions import Self
 
 
 class CartanType_generator():
     """
     Constructor for actually creating things
     """
-    def __call__(self, *args):
+    def __call__(self, *args) -> TypeA | TypeB | TypeC | TypeD | TypeE | TypeF | TypeG | None:
         c = args[0]
         if isinstance(c, list):
             letter, n = c[0], int(c[1])
@@ -54,7 +63,7 @@ class Standard_Cartan(Atom):
     Concrete base class for Cartan types such as A4, etc
     """
 
-    def __new__(cls, series, n):
+    def __new__(cls, series, n) -> Self:
         obj = Basic.__new__(cls)
         obj.n = n
         obj.series = series
@@ -66,7 +75,7 @@ class Standard_Cartan(Atom):
         """
         return self.n
 
-    def series(self):
+    def series(self) -> Callable[[], Any]:
         """
         Returns the type of the Lie algebra
         """

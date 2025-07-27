@@ -4,7 +4,7 @@ from itertools import repeat
 from sympy.core import S, pi
 from sympy.core.add import Add
 from sympy.core.function import (
-    AppliedUndef, count_ops, expand, expand_mul, Function)
+    UndefinedFunction, AppliedUndef, count_ops, expand, expand_mul, Function)
 from sympy.core.mul import Mul
 from sympy.core.intfunc import igcd, ilcm
 from sympy.core.sorting import default_sort_key
@@ -30,6 +30,13 @@ from sympy.polys.polytools import factor, Poly
 from sympy.polys.rootoftools import CRootOf
 from sympy.utilities.iterables import iterable
 from sympy.utilities.misc import debug
+import sympy.core.logic
+import sympy.integrals.integrals
+from sympy.core.basic import Basic
+from sympy.core.relational import Equality, Ne, Relational
+from sympy.series.order import Order
+from typing import Any, Literal
+from typing_extensions import Unpack
 
 
 ##########################################################################
@@ -51,7 +58,7 @@ class IntegralTransformError(NotImplementedError):
     objects, and instead raise this exception if an integral cannot be
     computed.
     """
-    def __init__(self, transform, function, msg):
+    def __init__(self, transform, function, msg) -> None:
         super().__init__(
             "%s Transform could not be computed: %s." % (transform, msg))
         self.function = function
@@ -81,22 +88,22 @@ class IntegralTransform(Function):
     """
 
     @property
-    def function(self):
+    def function(self) -> Basic:
         """ The function to be transformed. """
         return self.args[0]
 
     @property
-    def function_variable(self):
+    def function_variable(self) -> Basic:
         """ The dependent variable of the function to be transformed. """
         return self.args[1]
 
     @property
-    def transform_variable(self):
+    def transform_variable(self) -> Basic:
         """ The independent transform variable. """
         return self.args[2]
 
     @property
-    def free_symbols(self):
+    def free_symbols(self) -> set[Basic]:
         """
         This method returns the symbols that will exist when the transform
         is evaluated.
@@ -133,7 +140,7 @@ class IntegralTransform(Function):
             fn = expand_mul(fn)
         return fn, T
 
-    def doit(self, **hints):
+    def doit(self, **hints) -> Order | tuple[Any | Order, Unpack[tuple[Any, ...]]] | tuple[Any | Order, Any |     sympy.core.logic.And]:
         """
         Try to evaluate the transform in closed form.
 
@@ -832,7 +839,7 @@ class InverseMellinTransform(IntegralTransform):
     _none_sentinel = Dummy('None')
     _c = Dummy('c')
 
-    def __new__(cls, F, s, x, a, b, **opts):
+    def __new__(cls, F, s, x, a, b, **opts) -> type[UndefinedFunction]:
         if a is None:
             a = InverseMellinTransform._none_sentinel
         if b is None:
@@ -840,7 +847,7 @@ class InverseMellinTransform(IntegralTransform):
         return IntegralTransform.__new__(cls, F, s, x, a, b, **opts)
 
     @property
-    def fundamental_strip(self):
+    def fundamental_strip(self) -> tuple[Basic | None, Basic | None]:
         a, b = self.args[3], self.args[4]
         if a is InverseMellinTransform._none_sentinel:
             a = None
@@ -995,7 +1002,7 @@ class FourierTransform(FourierTypeTransform):
 
     _name = 'Fourier'
 
-    def a(self):
+    def a(self) -> Literal[1]:
         return 1
 
     def b(self):
@@ -1056,7 +1063,7 @@ class InverseFourierTransform(FourierTypeTransform):
 
     _name = 'Inverse Fourier'
 
-    def a(self):
+    def a(self) -> Literal[1]:
         return 1
 
     def b(self):
@@ -1430,7 +1437,7 @@ class HankelTypeTransform(IntegralTransform):
     Base class for Hankel transforms.
     """
 
-    def doit(self, **hints):
+    def doit(self, **hints) -> tuple[Any | Equality | Relational | Ne, Any] | tuple[Any, Any]:
         return self._compute_transform(self.function,
                                        self.function_variable,
                                        self.transform_variable,
@@ -1444,7 +1451,7 @@ class HankelTypeTransform(IntegralTransform):
         return Integral(f*besselj(nu, k*r)*r, (r, S.Zero, S.Infinity))
 
     @property
-    def as_integral(self):
+    def as_integral(self) -> Equality | Relational | Ne |     sympy.integrals.integrals.Integral:
         return self._as_integral(self.function,
                                  self.function_variable,
                                  self.transform_variable,

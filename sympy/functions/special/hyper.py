@@ -4,7 +4,7 @@ from collections import Counter
 from sympy.core import S, Mod
 from sympy.core.add import Add
 from sympy.core.expr import Expr
-from sympy.core.function import DefinedFunction, Derivative, ArgumentIndexError
+from sympy.core.function import Function, UndefinedFunction, DefinedFunction, Derivative, ArgumentIndexError
 
 from sympy.core.containers import Tuple
 from sympy.core.mul import Mul
@@ -24,6 +24,9 @@ from sympy.functions.elementary.integers import ceiling
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.logic.boolalg import (And, Or)
 from sympy import ordered
+import sympy.core.logic
+from sympy.core.basic import Basic
+from typing_extensions import Self
 
 
 class TupleArg(Tuple):
@@ -37,7 +40,7 @@ class TupleArg(Tuple):
     def as_leading_term(self, *x, logx=None, cdir=0):
         return TupleArg(*[f.as_leading_term(*x, logx=logx, cdir=cdir) for f in self.args])
 
-    def limit(self, x, xlim, dir='+'):
+    def limit(self, x, xlim, dir='+') -> "TupleArg":
         """ Compute limit x->xlim.
         """
         from sympy.series.limits import limit
@@ -206,7 +209,7 @@ class hyper(TupleParametersBase):
     """
 
 
-    def __new__(cls, ap, bq, z, **kwargs):
+    def __new__(cls, ap, bq, z, **kwargs) -> type[UndefinedFunction]:
         # TODO should we check convergence conditions?
         if kwargs.pop('evaluate', global_parameters.evaluate):
             ca = Counter(Tuple(*ap))
@@ -223,7 +226,7 @@ class hyper(TupleParametersBase):
         return super().__new__(cls, _prep_tuple(ap), _prep_tuple(bq), z, **kwargs)
 
     @classmethod
-    def eval(cls, ap, bq, z):
+    def eval(cls, ap, bq, z) -> type[UndefinedFunction] | None:
         if len(ap) <= len(bq) or (len(ap) == len(bq) + 1 and (Abs(z) <= 1) == True):
             nz = unpolarify(z)
             if z != nz:
@@ -291,17 +294,17 @@ class hyper(TupleParametersBase):
         return (Add(*terms) + Order(x**n,x))
 
     @property
-    def argument(self):
+    def argument(self) -> Basic:
         """ Argument of the hypergeometric function. """
         return self.args[2]
 
     @property
-    def ap(self):
+    def ap(self) -> Tuple:
         """ Numerator parameters of the hypergeometric function. """
         return Tuple(*self.args[0])
 
     @property
-    def bq(self):
+    def bq(self) -> Tuple:
         """ Denominator parameters of the hypergeometric function. """
         return Tuple(*self.args[1])
 
@@ -368,7 +371,7 @@ class hyper(TupleParametersBase):
             return S.Zero
 
     @property
-    def convergence_statement(self):
+    def convergence_statement(self) ->     sympy.core.logic.Or | bool:
         """ Return a condition on z under which the series converges. """
         R = self.radius_of_convergence
         if R == 0:
@@ -519,7 +522,7 @@ class meijerg(TupleParametersBase):
     """
 
 
-    def __new__(cls, *args, **kwargs):
+    def __new__(cls, *args, **kwargs) -> type[UndefinedFunction]:
         if len(args) == 5:
             args = [(args[0], args[1]), (args[2], args[3]), args[4]]
         if len(args) != 3:
@@ -737,37 +740,37 @@ class meijerg(TupleParametersBase):
             / Mul(*(gamma(a - s) for a in self.aother))
 
     @property
-    def argument(self):
+    def argument(self) -> Basic:
         """ Argument of the Meijer G-function. """
         return self.args[2]
 
     @property
-    def an(self):
+    def an(self) -> Tuple:
         """ First set of numerator parameters. """
         return Tuple(*self.args[0][0])
 
     @property
-    def ap(self):
+    def ap(self) -> Tuple:
         """ Combined numerator parameters. """
         return Tuple(*(self.args[0][0] + self.args[0][1]))
 
     @property
-    def aother(self):
+    def aother(self) -> Tuple:
         """ Second set of numerator parameters. """
         return Tuple(*self.args[0][1])
 
     @property
-    def bm(self):
+    def bm(self) -> Tuple:
         """ First set of denominator parameters. """
         return Tuple(*self.args[1][0])
 
     @property
-    def bq(self):
+    def bq(self) -> Tuple:
         """ Combined denominator parameters. """
         return Tuple(*(self.args[1][0] + self.args[1][1]))
 
     @property
-    def bother(self):
+    def bother(self) -> Tuple:
         """ Second set of denominator parameters. """
         return Tuple(*self.args[1][1])
 
@@ -788,7 +791,7 @@ class meijerg(TupleParametersBase):
         return len(self.bm) + len(self.an) - S(len(self.ap) + len(self.bq))/2
 
     @property
-    def is_number(self):
+    def is_number(self) -> bool:
         """ Returns true if expression has numeric data only. """
         return not self.free_symbols
 
@@ -811,7 +814,7 @@ class HyperRep(DefinedFunction):
 
 
     @classmethod
-    def eval(cls, *args):
+    def eval(cls, *args) -> Self | None:
         newargs = tuple(map(unpolarify, args[:-1])) + args[-1:]
         if args != newargs:
             return cls(*newargs)
@@ -1162,7 +1165,7 @@ class appellf1(DefinedFunction):
     """
 
     @classmethod
-    def eval(cls, a, b1, b2, c, x, y):
+    def eval(cls, a, b1, b2, c, x, y) -> Self | None:
         if default_sort_key(b1) > default_sort_key(b2):
             b1, b2 = b2, b1
             x, y = y, x
@@ -1173,7 +1176,7 @@ class appellf1(DefinedFunction):
         if x == 0 and y == 0:
             return S.One
 
-    def fdiff(self, argindex=5):
+    def fdiff(self, argindex=5) -> Derivative:
         a, b1, b2, c, x, y = self.args
         if argindex == 5:
             return (a*b1/c)*appellf1(a + 1, b1 + 1, b2, c + 1, x, y)

@@ -12,6 +12,10 @@ from sympy.polys.polyerrors import PolynomialError, GeneratorsError
 from sympy.polys.polyoptions import build_options
 
 import re
+from sympy.series.order import Order
+from types import NotImplementedType
+from typing import Any
+from typing_extensions import Self
 
 
 _gens_order = {
@@ -334,7 +338,7 @@ def _dict_from_expr_no_gens(expr, opt):
     return poly, gens
 
 
-def parallel_dict_from_expr(exprs, **args):
+def parallel_dict_from_expr(exprs, **args) -> tuple[list[Any], Any]:
     """Transform expressions into a multinomial form. """
     reps, opt = _parallel_dict_from_expr(exprs, build_options(args))
     return reps, opt.gens
@@ -356,7 +360,7 @@ def _parallel_dict_from_expr(exprs, opt):
     return reps, opt.clone({'gens': gens})
 
 
-def dict_from_expr(expr, **args):
+def dict_from_expr(expr, **args) -> tuple[Any, Any]:
     """Transform an expression into a multinomial form. """
     rep, opt = _dict_from_expr(expr, build_options(args))
     return rep, opt.gens
@@ -392,7 +396,7 @@ def _dict_from_expr(expr, opt):
     return rep, opt.clone({'gens': gens})
 
 
-def expr_from_dict(rep, *gens):
+def expr_from_dict(rep, *gens) -> Order:
     """Convert a multinomial form into an expression. """
     result = []
 
@@ -481,7 +485,7 @@ class PicklableWithSlots:
 
     __slots__ = ()
 
-    def __getstate__(self, cls=None):
+    def __getstate__(self, cls=None) -> dict[Any, Any]:
         if cls is None:
             # This is the case for the instance that gets pickled
             cls = self.__class__
@@ -507,7 +511,7 @@ class PicklableWithSlots:
 
         return d
 
-    def __setstate__(self, d):
+    def __setstate__(self, d) -> None:
         # All values that were pickled are now assigned to a fresh instance
         for name, value in d.items():
             setattr(self, name, value)
@@ -524,7 +528,7 @@ class IntegerPowerable:
     `_first_power`, `_zeroth_power`, `_negative_power`, below.
     """
 
-    def __pow__(self, e, modulo=None):
+    def __pow__(self, e, modulo=None) -> NotImplementedType | Self:
         if e < 2:
             try:
                 if e == 1:

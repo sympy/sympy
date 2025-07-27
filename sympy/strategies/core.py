@@ -1,7 +1,7 @@
 """ Generic SymPy-Independent Strategies """
 from __future__ import annotations
 from collections.abc import Callable, Mapping
-from typing import TypeVar
+from typing import Any, TypeVar
 from sys import stdout
 
 
@@ -66,7 +66,7 @@ def chain(*rules: Callable[[_T], _T]) -> Callable[[_T], _T]:
     return chain_rl
 
 
-def debug(rule, file=None):
+def debug(rule, file=None) -> Callable[..., Any]:
     """ Print out before and after expressions each time rule is used """
     if file is None:
         file = stdout

@@ -2,6 +2,8 @@ from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.core.sympify import sympify
 from sympy.core.numbers import Integer
+from collections.abc import Generator
+from typing import Any, Callable
 
 
 class PlotInterval:
@@ -9,7 +11,7 @@ class PlotInterval:
     """
     _v, _v_min, _v_max, _v_steps = None, None, None, None
 
-    def require_all_args(f):
+    def require_all_args(f) -> Callable[..., Any]:
         def check(self, *args, **kwargs):
             for g in [self._v, self._v_min, self._v_max, self._v_steps]:
                 if g is None:
@@ -17,7 +19,7 @@ class PlotInterval:
             return f(self, *args, **kwargs)
         return check
 
-    def __init__(self, *args):
+    def __init__(self, *args) -> None:
         if len(args) == 1:
             if isinstance(args[0], PlotInterval):
                 self.fill_from(args[0])
@@ -47,10 +49,10 @@ class PlotInterval:
         elif len(args) == 1:
             self.v_steps = args.pop(0)
 
-    def get_v(self):
+    def get_v(self) -> Symbol | None:
         return self._v
 
-    def set_v(self, v):
+    def set_v(self, v) -> None:
         if v is None:
             self._v = None
             return
@@ -58,10 +60,10 @@ class PlotInterval:
             raise ValueError("v must be a SymPy Symbol.")
         self._v = v
 
-    def get_v_min(self):
+    def get_v_min(self) -> None:
         return self._v_min
 
-    def set_v_min(self, v_min):
+    def set_v_min(self, v_min) -> None:
         if v_min is None:
             self._v_min = None
             return
@@ -71,10 +73,10 @@ class PlotInterval:
         except TypeError:
             raise ValueError("v_min could not be interpreted as a number.")
 
-    def get_v_max(self):
+    def get_v_max(self) -> None:
         return self._v_max
 
-    def set_v_max(self, v_max):
+    def set_v_max(self, v_max) -> None:
         if v_max is None:
             self._v_max = None
             return
@@ -84,10 +86,10 @@ class PlotInterval:
         except TypeError:
             raise ValueError("v_max could not be interpreted as a number.")
 
-    def get_v_steps(self):
+    def get_v_steps(self) -> Integer | None:
         return self._v_steps
 
-    def set_v_steps(self, v_steps):
+    def set_v_steps(self, v_steps) -> None:
         if v_steps is None:
             self._v_steps = None
             return
@@ -109,7 +111,7 @@ class PlotInterval:
     v_steps = property(get_v_steps, set_v_steps)
     v_len = property(get_v_len)
 
-    def fill_from(self, b):
+    def fill_from(self, b) -> None:
         if b.v is not None:
             self.v = b.v
         if b.v_min is not None:
@@ -120,7 +122,7 @@ class PlotInterval:
             self.v_steps = b.v_steps
 
     @staticmethod
-    def try_parse(*args):
+    def try_parse(*args) -> PlotInterval | None:
         """
         Returns a PlotInterval if args can be interpreted
         as such, otherwise None.
@@ -149,11 +151,11 @@ class PlotInterval:
         return "[%s]" % (self._str_base())
 
     @require_all_args
-    def assert_complete(self):
+    def assert_complete(self) -> None:
         pass
 
     @require_all_args
-    def vrange(self):
+    def vrange(self) -> Generator[Any, Any, None]:
         """
         Yields v_steps+1 SymPy numbers ranging from
         v_min to v_max.
@@ -164,7 +166,7 @@ class PlotInterval:
             yield a
 
     @require_all_args
-    def vrange2(self):
+    def vrange2(self) -> Generator[tuple[Any, Any], Any, None]:
         """
         Yields v_steps pairs of SymPy numbers ranging from
         (v_min, v_min + step) to (v_max - step, v_max).
@@ -176,6 +178,6 @@ class PlotInterval:
             yield a, b
             a = b
 
-    def frange(self):
+    def frange(self) -> Generator[float, Any, None]:
         for i in self.vrange():
             yield float(i.evalf())

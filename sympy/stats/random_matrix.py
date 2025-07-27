@@ -1,5 +1,7 @@
 from sympy.core.basic import Basic
 from sympy.stats.rv import PSpace, _symbol_converter, RandomMatrixSymbol
+import sympy
+from typing_extensions import Self
 
 class RandomMatrixPSpace(PSpace):
     """
@@ -7,7 +9,7 @@ class RandomMatrixPSpace(PSpace):
     random matrices. It contains the mechanics
     for handling the API calls for random matrices.
     """
-    def __new__(cls, sym, model=None):
+    def __new__(cls, sym, model=None) -> Self:
         sym = _symbol_converter(sym)
         if model:
             return Basic.__new__(cls, sym, model)
@@ -15,7 +17,7 @@ class RandomMatrixPSpace(PSpace):
             return Basic.__new__(cls, sym)
 
     @property
-    def model(self):
+    def model(self) ->     sympy.Basic | None:
         try:
             return self.args[1]
         except IndexError:

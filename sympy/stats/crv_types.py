@@ -67,7 +67,7 @@ from sympy.concrete.summations import Sum
 from sympy.core.basic import Basic
 from sympy.core.function import Lambda
 from sympy.core.numbers import (I, Rational, pi)
-from sympy.core.relational import (Eq, Ne)
+from sympy.core.relational import (Relational, Eq, Ne)
 from sympy.core.singleton import S
 from sympy.core.symbol import Dummy
 from sympy.core.sympify import sympify
@@ -88,7 +88,11 @@ from sympy.logic.boolalg import And
 from sympy.sets.sets import Interval
 from sympy.matrices import MatrixBase
 from sympy.stats.crv import SingleContinuousPSpace, SingleContinuousDistribution
-from sympy.stats.rv import _value_check, is_random
+from sympy.stats.rv import RandomSymbol, _value_check, is_random
+import sympy
+from sympy.stats.joint_rv import JointRandomSymbol
+from typing import Any
+from typing_extensions import Self
 
 oo = S.Infinity
 
@@ -150,10 +154,10 @@ __all__ = ['ContinuousRV',
 
 
 @is_random.register(MatrixBase)
-def _(x):
+def _(x) -> bool:
     return any(is_random(i) for i in x)
 
-def rv(symbol, cls, args, **kwargs):
+def rv(symbol, cls, args, **kwargs) -> RandomSymbol:
     args = list(map(sympify, args))
     dist = cls(*args)
     if kwargs.pop('check', True):
@@ -168,21 +172,21 @@ def rv(symbol, cls, args, **kwargs):
 class ContinuousDistributionHandmade(SingleContinuousDistribution):
     _argnames = ('pdf',)
 
-    def __new__(cls, pdf, set=Interval(-oo, oo)):
+    def __new__(cls, pdf, set=Interval(-oo, oo)) -> Self:
         return Basic.__new__(cls, pdf, set)
 
     @property
-    def set(self):
+    def set(self) -> Basic:
         return self.args[1]
 
     @staticmethod
-    def check(pdf, set):
+    def check(pdf, set) -> None:
         x = Dummy('x')
         val = integrate(pdf(x), (x, set))
         _value_check(Eq(val, 1) != S.false, "The pdf on the given set is incorrect.")
 
 
-def ContinuousRV(symbol, density, set=Interval(-oo, oo), **kwargs):
+def ContinuousRV(symbol, density, set=Interval(-oo, oo), **kwargs) -> RandomSymbol:
     """
     Create a Continuous Random Variable given the following:
 
@@ -244,7 +248,7 @@ class ArcsinDistribution(SingleContinuousDistribution):
     _argnames = ('a', 'b')
 
     @property
-    def set(self):
+    def set(self) ->     sympy.FiniteSet |     sympy.Interval:
         return Interval(self.a, self.b)
 
     def pdf(self, x):
@@ -259,7 +263,7 @@ class ArcsinDistribution(SingleContinuousDistribution):
             (S.One, True))
 
 
-def Arcsin(name, a=0, b=1):
+def Arcsin(name, a=0, b=1) -> RandomSymbol:
     r"""
     Create a Continuous Random Variable with an arcsin distribution.
 
@@ -319,13 +323,13 @@ class BeniniDistribution(SingleContinuousDistribution):
     _argnames = ('alpha', 'beta', 'sigma')
 
     @staticmethod
-    def check(alpha, beta, sigma):
+    def check(alpha, beta, sigma) -> None:
         _value_check(alpha > 0, "Shape parameter Alpha must be positive.")
         _value_check(beta > 0, "Shape parameter Beta must be positive.")
         _value_check(sigma > 0, "Scale parameter Sigma must be positive.")
 
     @property
-    def set(self):
+    def set(self) ->     sympy.FiniteSet |     sympy.Interval:
         return Interval(self.sigma, oo)
 
     def pdf(self, x):
@@ -337,7 +341,7 @@ class BeniniDistribution(SingleContinuousDistribution):
         raise NotImplementedError('The moment generating function of the '
                                   'Benini distribution does not exist.')
 
-def Benini(name, alpha, beta, sigma):
+def Benini(name, alpha, beta, sigma) -> RandomSymbol:
     r"""
     Create a Continuous Random Variable with a Benini distribution.
 
@@ -409,7 +413,7 @@ class BetaDistribution(SingleContinuousDistribution):
     set = Interval(0, 1)
 
     @staticmethod
-    def check(alpha, beta):
+    def check(alpha, beta) -> None:
         _value_check(alpha > 0, "Shape parameter Alpha must be positive.")
         _value_check(beta > 0, "Shape parameter Beta must be positive.")
 
@@ -424,7 +428,7 @@ class BetaDistribution(SingleContinuousDistribution):
         return hyper((self.alpha,), (self.alpha + self.beta,), t)
 
 
-def Beta(name, alpha, beta):
+def Beta(name, alpha, beta) -> RandomSymbol:
     r"""
     Create a Continuous Random Variable with a Beta distribution.
 
@@ -491,18 +495,18 @@ class BetaNoncentralDistribution(SingleContinuousDistribution):
     set = Interval(0, 1)
 
     @staticmethod
-    def check(alpha, beta, lamda):
+    def check(alpha, beta, lamda) -> None:
         _value_check(alpha > 0, "Shape parameter Alpha must be positive.")
         _value_check(beta > 0, "Shape parameter Beta must be positive.")
         _value_check(lamda >= 0, "Noncentrality parameter Lambda must be positive")
 
-    def pdf(self, x):
+    def pdf(self, x) ->     sympy.Equality | Relational |     sympy.Ne |     sympy.Sum:
         alpha, beta, lamda = self.alpha, self.beta, self.lamda
         k = Dummy("k")
         return Sum(exp(-lamda / 2) * (lamda / 2)**k * x**(alpha + k - 1) *(
             1 - x)**(beta - 1) / (factorial(k) * beta_fn(alpha + k, beta)), (k, 0, oo))
 
-def BetaNoncentral(name, alpha, beta, lamda):
+def BetaNoncentral(name, alpha, beta, lamda) -> RandomSymbol:
     r"""
     Create a Continuous Random Variable with a Type I Noncentral Beta distribution.
 
@@ -581,7 +585,7 @@ class BetaPrimeDistribution(SingleContinuousDistribution):
     _argnames = ('alpha', 'beta')
 
     @staticmethod
-    def check(alpha, beta):
+    def check(alpha, beta) -> None:
         _value_check(alpha > 0, "Shape parameter Alpha must be positive.")
         _value_check(beta > 0, "Shape parameter Beta must be positive.")
 
@@ -591,7 +595,7 @@ class BetaPrimeDistribution(SingleContinuousDistribution):
         alpha, beta = self.alpha, self.beta
         return x**(alpha - 1)*(1 + x)**(-alpha - beta)/beta_fn(alpha, beta)
 
-def BetaPrime(name, alpha, beta):
+def BetaPrime(name, alpha, beta) -> RandomSymbol:
     r"""
     Create a continuous random variable with a Beta prime distribution.
 
@@ -648,11 +652,11 @@ class BoundedParetoDistribution(SingleContinuousDistribution):
     _argnames = ('alpha', 'left', 'right')
 
     @property
-    def set(self):
+    def set(self) ->     sympy.FiniteSet |     sympy.Interval:
         return Interval(self.left, self.right)
 
     @staticmethod
-    def check(alpha, left, right):
+    def check(alpha, left, right) -> None:
         _value_check (alpha.is_positive, "Shape must be positive.")
         _value_check (left.is_positive, "Left value should be positive.")
         _value_check (right > left, "Right should be greater than left.")
@@ -663,7 +667,7 @@ class BoundedParetoDistribution(SingleContinuousDistribution):
         den = 1 - (left/right)**alpha
         return num/den
 
-def BoundedPareto(name, alpha, left, right):
+def BoundedPareto(name, alpha, left, right) -> RandomSymbol:
     r"""
     Create a continuous random variable with a Bounded Pareto distribution.
 
@@ -718,7 +722,7 @@ class CauchyDistribution(SingleContinuousDistribution):
     _argnames = ('x0', 'gamma')
 
     @staticmethod
-    def check(x0, gamma):
+    def check(x0, gamma) -> None:
         _value_check(gamma > 0, "Scale parameter Gamma must be positive.")
         _value_check(x0.is_real, "Location parameter must be real.")
 
@@ -740,7 +744,7 @@ class CauchyDistribution(SingleContinuousDistribution):
         return self.x0 + self.gamma*tan(pi*(p - S.Half))
 
 
-def Cauchy(name, x0, gamma):
+def Cauchy(name, x0, gamma) -> RandomSymbol:
     r"""
     Create a continuous random variable with a Cauchy distribution.
 
@@ -793,7 +797,7 @@ class ChiDistribution(SingleContinuousDistribution):
     _argnames = ('k',)
 
     @staticmethod
-    def check(k):
+    def check(k) -> None:
         _value_check(k > 0, "Number of degrees of freedom (k) must be positive.")
         _value_check(k.is_integer, "Number of degrees of freedom (k) must be an integer.")
 
@@ -818,7 +822,7 @@ class ChiDistribution(SingleContinuousDistribution):
         part_3 = hyper(((k + 1) / 2,), (S(3) / 2,), t ** 2 / 2)
         return part_1 + part_2 * part_3
 
-def Chi(name, k):
+def Chi(name, k) -> RandomSymbol:
     r"""
     Create a continuous random variable with a Chi distribution.
 
@@ -874,7 +878,7 @@ class ChiNoncentralDistribution(SingleContinuousDistribution):
     _argnames = ('k', 'l')
 
     @staticmethod
-    def check(k, l):
+    def check(k, l) -> None:
         _value_check(k > 0, "Number of degrees of freedom (k) must be positive.")
         _value_check(k.is_integer, "Number of degrees of freedom (k) must be an integer.")
         _value_check(l > 0, "Shift parameter Lambda must be positive.")
@@ -885,7 +889,7 @@ class ChiNoncentralDistribution(SingleContinuousDistribution):
         k, l = self.k, self.l
         return exp(-(x**2+l**2)/2)*x**k*l / (l*x)**(k/2) * besseli(k/2-1, l*x)
 
-def ChiNoncentral(name, k, l):
+def ChiNoncentral(name, k, l) -> RandomSymbol:
     r"""
     Create a continuous random variable with a non-central Chi distribution.
 
@@ -945,7 +949,7 @@ class ChiSquaredDistribution(SingleContinuousDistribution):
     _argnames = ('k',)
 
     @staticmethod
-    def check(k):
+    def check(k) -> None:
         _value_check(k > 0, "Number of degrees of freedom (k) must be positive.")
         _value_check(k.is_integer, "Number of degrees of freedom (k) must be an integer.")
 
@@ -969,7 +973,7 @@ class ChiSquaredDistribution(SingleContinuousDistribution):
         return (1 - 2*t)**(-self.k/2)
 
 
-def ChiSquared(name, k):
+def ChiSquared(name, k) -> RandomSymbol:
     r"""
     Create a continuous random variable with a Chi-squared distribution.
 
@@ -1037,7 +1041,7 @@ class DagumDistribution(SingleContinuousDistribution):
     set = Interval(0, oo)
 
     @staticmethod
-    def check(p, a, b):
+    def check(p, a, b) -> None:
         _value_check(p > 0, "Shape parameter p must be positive.")
         _value_check(a > 0, "Shape parameter a must be positive.")
         _value_check(b > 0, "Scale parameter b must be positive.")
@@ -1051,7 +1055,7 @@ class DagumDistribution(SingleContinuousDistribution):
         return Piecewise(((S.One + (S(x)/b)**-a)**-p, x>=0),
                     (S.Zero, True))
 
-def Dagum(name, p, a, b):
+def Dagum(name, p, a, b) -> RandomSymbol:
     r"""
     Create a continuous random variable with a Dagum distribution.
 
@@ -1186,7 +1190,7 @@ def Davis(name, b, n, mu):
 # Erlang distribution ----------------------------------------------------------
 
 
-def Erlang(name, k, l):
+def Erlang(name, k, l) -> RandomSymbol:
     r"""
     Create a continuous random variable with an Erlang distribution.
 
@@ -1265,7 +1269,7 @@ class ExGaussianDistribution(SingleContinuousDistribution):
     set = Interval(-oo, oo)
 
     @staticmethod
-    def check(mean, std, rate):
+    def check(mean, std, rate) -> None:
         _value_check(
             std > 0, "Standard deviation of ExGaussian must be positive.")
         _value_check(rate > 0, "Rate of ExGaussian must be positive.")
@@ -1300,7 +1304,7 @@ class ExGaussianDistribution(SingleContinuousDistribution):
         return term1*term2
 
 
-def ExGaussian(name, mean, std, rate):
+def ExGaussian(name, mean, std, rate) -> RandomSymbol:
     r"""
     Create a continuous random variable with an Exponentially modified
     Gaussian (EMG) distribution.
@@ -1383,7 +1387,7 @@ class ExponentialDistribution(SingleContinuousDistribution):
     set  = Interval(0, oo)
 
     @staticmethod
-    def check(rate):
+    def check(rate) -> None:
         _value_check(rate > 0, "Rate must be positive.")
 
     def pdf(self, x):
@@ -1407,7 +1411,7 @@ class ExponentialDistribution(SingleContinuousDistribution):
         return -log(1-p)/self.rate
 
 
-def Exponential(name, rate):
+def Exponential(name, rate) -> RandomSymbol:
     r"""
     Create a continuous random variable with an Exponential distribution.
 
@@ -1492,7 +1496,7 @@ class ExponentialPowerDistribution(SingleContinuousDistribution):
     set = Interval(-oo, oo)
 
     @staticmethod
-    def check(mu, alpha, beta):
+    def check(mu, alpha, beta) -> None:
         _value_check(alpha > 0, "Scale parameter alpha must be positive.")
         _value_check(beta > 0, "Shape parameter beta must be positive.")
 
@@ -1509,7 +1513,7 @@ class ExponentialPowerDistribution(SingleContinuousDistribution):
         return sign(x - mu)*num/den + S.Half
 
 
-def ExponentialPower(name, mu, alpha, beta):
+def ExponentialPower(name, mu, alpha, beta) -> RandomSymbol:
     r"""
     Create a Continuous Random Variable with Exponential Power distribution.
     This distribution is known also as Generalized Normal
@@ -1584,7 +1588,7 @@ class FDistributionDistribution(SingleContinuousDistribution):
     set = Interval(0, oo)
 
     @staticmethod
-    def check(d1, d2):
+    def check(d1, d2) -> None:
         _value_check((d1 > 0, d1.is_integer),
             "Degrees of freedom d1 must be positive integer.")
         _value_check((d2 > 0, d2.is_integer),
@@ -1599,7 +1603,7 @@ class FDistributionDistribution(SingleContinuousDistribution):
         raise NotImplementedError('The moment generating function for the '
                                   'F-distribution does not exist.')
 
-def FDistribution(name, d1, d2):
+def FDistribution(name, d1, d2) -> RandomSymbol:
     r"""
     Create a continuous random variable with a F distribution.
 
@@ -1668,7 +1672,7 @@ class FisherZDistribution(SingleContinuousDistribution):
     set = Interval(-oo, oo)
 
     @staticmethod
-    def check(d1, d2):
+    def check(d1, d2) -> None:
         _value_check(d1 > 0, "Degree of freedom d1 must be positive.")
         _value_check(d2 > 0, "Degree of freedom d2 must be positive.")
 
@@ -1677,7 +1681,7 @@ class FisherZDistribution(SingleContinuousDistribution):
         return (2*d1**(d1/2)*d2**(d2/2) / beta_fn(d1/2, d2/2) *
                exp(d1*x) / (d1*exp(2*x)+d2)**((d1+d2)/2))
 
-def FisherZ(name, d1, d2):
+def FisherZ(name, d1, d2) -> RandomSymbol:
     r"""
     Create a Continuous Random Variable with an Fisher's Z distribution.
 
@@ -1749,11 +1753,11 @@ class FrechetDistribution(SingleContinuousDistribution):
     set = Interval(0, oo)
 
     @staticmethod
-    def check(a, s, m):
+    def check(a, s, m) -> None:
         _value_check(a > 0, "Shape parameter alpha must be positive.")
         _value_check(s > 0, "Scale parameter s must be positive.")
 
-    def __new__(cls, a, s=1, m=0):
+    def __new__(cls, a, s=1, m=0) -> Self:
         a, s, m = list(map(sympify, (a, s, m)))
         return Basic.__new__(cls, a, s, m)
 
@@ -1766,7 +1770,7 @@ class FrechetDistribution(SingleContinuousDistribution):
         return Piecewise((exp(-((x-m)/s)**(-a)), x >= m),
                         (S.Zero, True))
 
-def Frechet(name, a, s=1, m=0):
+def Frechet(name, a, s=1, m=0) -> RandomSymbol:
     r"""
     Create a continuous random variable with a Frechet distribution.
 
@@ -1831,7 +1835,7 @@ class GammaDistribution(SingleContinuousDistribution):
     set = Interval(0, oo)
 
     @staticmethod
-    def check(k, theta):
+    def check(k, theta) -> None:
         _value_check(k > 0, "k must be positive")
         _value_check(theta > 0, "Theta must be positive")
 
@@ -1852,7 +1856,7 @@ class GammaDistribution(SingleContinuousDistribution):
         return (1- self.theta*t)**(-self.k)
 
 
-def Gamma(name, k, theta):
+def Gamma(name, k, theta) -> RandomSymbol:
     r"""
     Create a continuous random variable with a Gamma distribution.
 
@@ -1937,7 +1941,7 @@ class GammaInverseDistribution(SingleContinuousDistribution):
     set = Interval(0, oo)
 
     @staticmethod
-    def check(a, b):
+    def check(a, b) -> None:
         _value_check(a > 0, "alpha must be positive")
         _value_check(b > 0, "beta must be positive")
 
@@ -1958,7 +1962,7 @@ class GammaInverseDistribution(SingleContinuousDistribution):
         raise NotImplementedError('The moment generating function for the '
                                   'gamma inverse distribution does not exist.')
 
-def GammaInverse(name, a, b):
+def GammaInverse(name, a, b) -> RandomSymbol:
     r"""
     Create a continuous random variable with an inverse Gamma distribution.
 
@@ -2029,10 +2033,10 @@ class GumbelDistribution(SingleContinuousDistribution):
     set = Interval(-oo, oo)
 
     @staticmethod
-    def check(beta, mu, minimum):
+    def check(beta, mu, minimum) -> None:
         _value_check(beta > 0, "Scale parameter beta must be positive.")
 
-    def pdf(self, x):
+    def pdf(self, x) ->     sympy.Piecewise:
         beta, mu = self.beta, self.mu
         z = (x - mu)/beta
         f_max = (1/beta)*exp(-z - exp(-z))
@@ -2056,7 +2060,7 @@ class GumbelDistribution(SingleContinuousDistribution):
         mgf_min = gamma(1 + self.beta*t) * exp(self.mu*t)
         return Piecewise((mgf_min, self.minimum), (mgf_max, not self.minimum))
 
-def Gumbel(name, beta, mu, minimum=False):
+def Gumbel(name, beta, mu, minimum=False) -> RandomSymbol:
     r"""
     Create a Continuous Random Variable with Gumbel distribution.
 
@@ -2126,7 +2130,7 @@ class GompertzDistribution(SingleContinuousDistribution):
     set = Interval(0, oo)
 
     @staticmethod
-    def check(b, eta):
+    def check(b, eta) -> None:
         _value_check(b > 0, "b must be positive")
         _value_check(eta > 0, "eta must be positive")
 
@@ -2142,7 +2146,7 @@ class GompertzDistribution(SingleContinuousDistribution):
         eta, b = self.eta, self.b
         return eta * exp(eta) * expint(t/b, eta)
 
-def Gompertz(name, b, eta):
+def Gompertz(name, b, eta) -> RandomSymbol:
     r"""
     Create a Continuous Random Variable with Gompertz distribution.
 
@@ -2200,7 +2204,7 @@ class KumaraswamyDistribution(SingleContinuousDistribution):
     set = Interval(0, oo)
 
     @staticmethod
-    def check(a, b):
+    def check(a, b) -> None:
         _value_check(a > 0, "a must be positive")
         _value_check(b > 0, "b must be positive")
 
@@ -2215,7 +2219,7 @@ class KumaraswamyDistribution(SingleContinuousDistribution):
             (1 - (1 - x**a)**b, x <= S.One),
             (S.One, True))
 
-def Kumaraswamy(name, a, b):
+def Kumaraswamy(name, a, b) -> RandomSymbol:
     r"""
     Create a Continuous Random Variable with a Kumaraswamy distribution.
 
@@ -2280,7 +2284,7 @@ class LaplaceDistribution(SingleContinuousDistribution):
     set = Interval(-oo, oo)
 
     @staticmethod
-    def check(mu, b):
+    def check(mu, b) -> None:
         _value_check(b > 0, "Scale parameter b must be positive.")
         _value_check(mu.is_real, "Location parameter mu should be real")
 
@@ -2301,7 +2305,7 @@ class LaplaceDistribution(SingleContinuousDistribution):
     def _moment_generating_function(self, t):
         return exp(self.mu*t) / (1 - self.b**2*t**2)
 
-def Laplace(name, mu, b):
+def Laplace(name, mu, b) -> RandomSymbol | JointRandomSymbol:
     r"""
     Create a continuous random variable with a Laplace distribution.
 
@@ -2374,11 +2378,11 @@ class LevyDistribution(SingleContinuousDistribution):
     _argnames = ('mu', 'c')
 
     @property
-    def set(self):
+    def set(self) ->     sympy.FiniteSet |     sympy.Interval:
         return Interval(self.mu, oo)
 
     @staticmethod
-    def check(mu, c):
+    def check(mu, c) -> None:
         _value_check(c > 0, "c (scale parameter) must be positive")
         _value_check(mu.is_real, "mu (location parameter) must be real")
 
@@ -2397,7 +2401,7 @@ class LevyDistribution(SingleContinuousDistribution):
     def _moment_generating_function(self, t):
         raise NotImplementedError('The moment generating function of Levy distribution does not exist.')
 
-def Levy(name, mu, c):
+def Levy(name, mu, c) -> RandomSymbol:
     r"""
     Create a continuous random variable with a Levy distribution.
 
@@ -2455,7 +2459,7 @@ class LogCauchyDistribution(SingleContinuousDistribution):
     set = Interval.open(0, oo)
 
     @staticmethod
-    def check(mu, sigma):
+    def check(mu, sigma) -> None:
         _value_check((sigma > 0) != False, "Scale parameter Gamma must be positive.")
         _value_check(mu.is_real != False, "Location parameter must be real.")
 
@@ -2475,7 +2479,7 @@ class LogCauchyDistribution(SingleContinuousDistribution):
         raise NotImplementedError("The moment generating function for the "
                                   "Log-Cauchy distribution does not exist.")
 
-def LogCauchy(name, mu, sigma):
+def LogCauchy(name, mu, sigma) -> RandomSymbol:
     r"""
     Create a continuous random variable with a Log-Cauchy distribution.
     The density of the Log-Cauchy distribution is given by
@@ -2532,7 +2536,7 @@ class LogisticDistribution(SingleContinuousDistribution):
     set = Interval(-oo, oo)
 
     @staticmethod
-    def check(mu, s):
+    def check(mu, s) -> None:
         _value_check(s > 0, "Scale parameter s must be positive.")
 
     def pdf(self, x):
@@ -2552,7 +2556,7 @@ class LogisticDistribution(SingleContinuousDistribution):
     def _quantile(self, p):
         return self.mu - self.s*log(-S.One + S.One/p)
 
-def Logistic(name, mu, s):
+def Logistic(name, mu, s) -> RandomSymbol:
     r"""
     Create a continuous random variable with a logistic distribution.
 
@@ -2613,7 +2617,7 @@ class LogLogisticDistribution(SingleContinuousDistribution):
     set = Interval(0, oo)
 
     @staticmethod
-    def check(alpha, beta):
+    def check(alpha, beta) -> None:
         _value_check(alpha > 0, "Scale parameter Alpha must be positive.")
         _value_check(beta > 0, "Shape parameter Beta must be positive.")
 
@@ -2629,11 +2633,11 @@ class LogLogisticDistribution(SingleContinuousDistribution):
         a, b = self.alpha, self.beta
         return a*((p/(1 - p))**(1/b))
 
-    def expectation(self, expr, var, **kwargs):
+    def expectation(self, expr, var, **kwargs) ->     sympy.Piecewise:
         a, b = self.args
         return Piecewise((S.NaN, b <= 1), (pi*a/(b*sin(pi/b)), True))
 
-def LogLogistic(name, alpha, beta):
+def LogLogistic(name, alpha, beta) -> RandomSymbol:
     r"""
     Create a continuous random variable with a log-logistic distribution.
     The distribution is unimodal when ``beta > 1``.
@@ -2707,7 +2711,7 @@ class LogitNormalDistribution(SingleContinuousDistribution):
     set = Interval.open(0, 1)
 
     @staticmethod
-    def check(mu, s):
+    def check(mu, s) -> None:
         _value_check((s ** 2).is_real is not False and s ** 2 > 0, "Squared scale parameter s must be positive.")
         _value_check(mu.is_real is not False, "Location parameter must be real")
 
@@ -2723,7 +2727,7 @@ class LogitNormalDistribution(SingleContinuousDistribution):
         return (S.One/2)*(1 + erf((self._logit(x) - mu)/(sqrt(2*s**2))))
 
 
-def LogitNormal(name, mu, s):
+def LogitNormal(name, mu, s) -> RandomSymbol:
     r"""
     Create a continuous random variable with a Logit-Normal distribution.
 
@@ -2794,7 +2798,7 @@ class LogNormalDistribution(SingleContinuousDistribution):
     set = Interval(0, oo)
 
     @staticmethod
-    def check(mean, std):
+    def check(mean, std) -> None:
         _value_check(std > 0, "Parameter std must be positive.")
 
     def pdf(self, x):
@@ -2812,7 +2816,7 @@ class LogNormalDistribution(SingleContinuousDistribution):
         raise NotImplementedError('Moment generating function of the log-normal distribution is not defined.')
 
 
-def LogNormal(name, mean, std):
+def LogNormal(name, mean, std) -> RandomSymbol:
     r"""
     Create a continuous random variable with a log-normal distribution.
 
@@ -2888,7 +2892,7 @@ class LomaxDistribution(SingleContinuousDistribution):
     set = Interval(0, oo)
 
     @staticmethod
-    def check(alpha, lamda):
+    def check(alpha, lamda) -> None:
         _value_check(alpha.is_real, "Shape parameter should be real.")
         _value_check(lamda.is_real, "Scale parameter should be real.")
         _value_check(alpha.is_positive, "Shape parameter should be positive.")
@@ -2898,7 +2902,7 @@ class LomaxDistribution(SingleContinuousDistribution):
         lamba, alpha = self.lamda, self.alpha
         return (alpha/lamba) * (S.One + x/lamba)**(-alpha-1)
 
-def Lomax(name, alpha, lamda):
+def Lomax(name, alpha, lamda) -> RandomSymbol:
     r"""
     Create a continuous random variable with a Lomax distribution.
 
@@ -2958,7 +2962,7 @@ class MaxwellDistribution(SingleContinuousDistribution):
     set = Interval(0, oo)
 
     @staticmethod
-    def check(a):
+    def check(a) -> None:
         _value_check(a > 0, "Parameter a must be positive.")
 
     def pdf(self, x):
@@ -2969,7 +2973,7 @@ class MaxwellDistribution(SingleContinuousDistribution):
         a = self.a
         return erf(sqrt(2)*x/(2*a)) - sqrt(2)*x*exp(-x**2/(2*a**2))/(sqrt(pi)*a)
 
-def Maxwell(name, a):
+def Maxwell(name, a) -> RandomSymbol:
     r"""
     Create a continuous random variable with a Maxwell distribution.
 
@@ -3031,7 +3035,7 @@ class MoyalDistribution(SingleContinuousDistribution):
     _argnames = ('mu', 'sigma')
 
     @staticmethod
-    def check(mu, sigma):
+    def check(mu, sigma) -> None:
         _value_check(mu.is_real, "Location parameter must be real.")
         _value_check(sigma.is_real and sigma > 0, "Scale parameter must be real\
         and positive.")
@@ -3054,7 +3058,7 @@ class MoyalDistribution(SingleContinuousDistribution):
         term2 = (2**(-1*sigma*t) * gamma(Rational(1, 2) - t*sigma))
         return (term1 * term2)/sqrt(pi)
 
-def Moyal(name, mu, sigma):
+def Moyal(name, mu, sigma) -> RandomSymbol:
     r"""
     Create a continuous random variable with a Moyal distribution.
 
@@ -3115,7 +3119,7 @@ class NakagamiDistribution(SingleContinuousDistribution):
     set = Interval(0, oo)
 
     @staticmethod
-    def check(mu, omega):
+    def check(mu, omega) -> None:
         _value_check(mu >= S.Half, "Shape parameter mu must be greater than equal to 1/2.")
         _value_check(omega > 0, "Spread parameter omega must be positive.")
 
@@ -3129,7 +3133,7 @@ class NakagamiDistribution(SingleContinuousDistribution):
                     (lowergamma(mu, (mu/omega)*x**2)/gamma(mu), x > 0),
                     (S.Zero, True))
 
-def Nakagami(name, mu, omega):
+def Nakagami(name, mu, omega) -> RandomSymbol:
     r"""
     Create a continuous random variable with a Nakagami distribution.
 
@@ -3209,7 +3213,7 @@ class NormalDistribution(SingleContinuousDistribution):
     _argnames = ('mean', 'std')
 
     @staticmethod
-    def check(mean, std):
+    def check(mean, std) -> None:
         _value_check(std > 0, "Standard deviation must be positive")
 
     def pdf(self, x):
@@ -3232,7 +3236,7 @@ class NormalDistribution(SingleContinuousDistribution):
         return mean + std*sqrt(2)*erfinv(2*p - 1)
 
 
-def Normal(name, mean, std):
+def Normal(name, mean, std) -> RandomSymbol | JointRandomSymbol:
     r"""
     Create a continuous random variable with a Normal distribution.
 
@@ -3334,11 +3338,11 @@ class GaussianInverseDistribution(SingleContinuousDistribution):
     _argnames = ('mean', 'shape')
 
     @property
-    def set(self):
+    def set(self) ->     sympy.FiniteSet |     sympy.Interval:
         return Interval(0, oo)
 
     @staticmethod
-    def check(mean, shape):
+    def check(mean, shape) -> None:
         _value_check(shape > 0, "Shape parameter must be positive")
         _value_check(mean > 0, "Mean must be positive")
 
@@ -3365,7 +3369,7 @@ class GaussianInverseDistribution(SingleContinuousDistribution):
         return exp((s/mu)*(1 - sqrt(1 - (2*mu**2*t)/s)))
 
 
-def GaussianInverse(name, mean, shape):
+def GaussianInverse(name, mean, shape) -> RandomSymbol:
     r"""
     Create a continuous random variable with an Inverse Gaussian distribution.
     Inverse Gaussian distribution is also known as Wald distribution.
@@ -3443,11 +3447,11 @@ class ParetoDistribution(SingleContinuousDistribution):
     _argnames = ('xm', 'alpha')
 
     @property
-    def set(self):
+    def set(self) ->     sympy.FiniteSet |     sympy.Interval:
         return Interval(self.xm, oo)
 
     @staticmethod
-    def check(xm, alpha):
+    def check(xm, alpha) -> None:
         _value_check(xm > 0, "Xm must be positive")
         _value_check(alpha > 0, "Alpha must be positive")
 
@@ -3471,7 +3475,7 @@ class ParetoDistribution(SingleContinuousDistribution):
         return alpha * (-I * xm * t) ** alpha * uppergamma(-alpha, -I * xm * t)
 
 
-def Pareto(name, xm, alpha):
+def Pareto(name, xm, alpha) -> RandomSymbol:
     r"""
     Create a continuous random variable with the Pareto distribution.
 
@@ -3529,11 +3533,11 @@ class PowerFunctionDistribution(SingleContinuousDistribution):
     _argnames=('alpha','a','b')
 
     @property
-    def set(self):
+    def set(self) ->     sympy.FiniteSet |     sympy.Interval:
         return Interval(self.a, self.b)
 
     @staticmethod
-    def check(alpha, a, b):
+    def check(alpha, a, b) -> None:
         _value_check(a.is_real, "Continuous Boundary parameter should be real.")
         _value_check(b.is_real, "Continuous Boundary parameter should be real.")
         _value_check(a < b, " 'a' the left Boundary must be smaller than 'b' the right Boundary." )
@@ -3545,7 +3549,7 @@ class PowerFunctionDistribution(SingleContinuousDistribution):
         den = (b - a)**alpha
         return num/den
 
-def PowerFunction(name, alpha, a, b):
+def PowerFunction(name, alpha, a, b) -> RandomSymbol:
     r"""
     Creates a continuous random variable with a Power Function Distribution.
 
@@ -3617,14 +3621,14 @@ class QuadraticUDistribution(SingleContinuousDistribution):
     _argnames = ('a', 'b')
 
     @property
-    def set(self):
+    def set(self) ->     sympy.FiniteSet |     sympy.Interval:
         return Interval(self.a, self.b)
 
     @staticmethod
-    def check(a, b):
+    def check(a, b) -> None:
         _value_check(b > a, "Parameter b must be in range (%s, oo)."%(a))
 
-    def pdf(self, x):
+    def pdf(self, x) ->     sympy.Piecewise:
         a, b = self.a, self.b
         alpha = 12 / (b-a)**3
         beta = (a+b) / 2
@@ -3643,7 +3647,7 @@ class QuadraticUDistribution(SingleContinuousDistribution):
                 / ((a-b)**3 * t**2)
 
 
-def QuadraticU(name, a, b):
+def QuadraticU(name, a, b) -> RandomSymbol:
     r"""
     Create a Continuous Random Variable with a U-quadratic distribution.
 
@@ -3709,14 +3713,14 @@ class RaisedCosineDistribution(SingleContinuousDistribution):
     _argnames = ('mu', 's')
 
     @property
-    def set(self):
+    def set(self) ->     sympy.FiniteSet |     sympy.Interval:
         return Interval(self.mu - self.s, self.mu + self.s)
 
     @staticmethod
-    def check(mu, s):
+    def check(mu, s) -> None:
         _value_check(s > 0, "s must be positive")
 
-    def pdf(self, x):
+    def pdf(self, x) ->     sympy.Piecewise:
         mu, s = self.mu, self.s
         return Piecewise(
                 ((1+cos(pi*(x-mu)/s)) / (2*s), And(mu-s<=x, x<=mu+s)),
@@ -3732,7 +3736,7 @@ class RaisedCosineDistribution(SingleContinuousDistribution):
         mu, s = self.mu, self.s
         return pi**2 * sinh(s*t) * exp(mu*t) /  (s*t*(pi**2 + s**2*t**2))
 
-def RaisedCosine(name, mu, s):
+def RaisedCosine(name, mu, s) -> RandomSymbol:
     r"""
     Create a Continuous Random Variable with a raised cosine distribution.
 
@@ -3798,7 +3802,7 @@ class RayleighDistribution(SingleContinuousDistribution):
     set = Interval(0, oo)
 
     @staticmethod
-    def check(sigma):
+    def check(sigma) -> None:
         _value_check(sigma > 0, "Scale parameter sigma must be positive.")
 
     def pdf(self, x):
@@ -3818,7 +3822,7 @@ class RayleighDistribution(SingleContinuousDistribution):
         return 1 + sigma*t*exp(sigma**2*t**2/2) * sqrt(pi/2) * (erf(sigma*t/sqrt(2)) + 1)
 
 
-def Rayleigh(name, sigma):
+def Rayleigh(name, sigma) -> RandomSymbol:
     r"""
     Create a continuous random variable with a Rayleigh distribution.
 
@@ -3879,11 +3883,11 @@ class ReciprocalDistribution(SingleContinuousDistribution):
     _argnames = ('a', 'b')
 
     @property
-    def set(self):
+    def set(self) ->     sympy.FiniteSet |     sympy.Interval:
         return Interval(self.a, self.b)
 
     @staticmethod
-    def check(a, b):
+    def check(a, b) -> None:
         _value_check(a > 0, "Parameter > 0. a = %s"%a)
         _value_check((a < b),
         "Parameter b must be in range (%s, +oo]. b = %s"%(a, b))
@@ -3893,7 +3897,7 @@ class ReciprocalDistribution(SingleContinuousDistribution):
         return 1/(x*(log(b) - log(a)))
 
 
-def Reciprocal(name, a, b):
+def Reciprocal(name, a, b) -> RandomSymbol:
     r"""Creates a continuous random variable with a reciprocal distribution.
 
 
@@ -3940,7 +3944,7 @@ class ShiftedGompertzDistribution(SingleContinuousDistribution):
     set = Interval(0, oo)
 
     @staticmethod
-    def check(b, eta):
+    def check(b, eta) -> None:
         _value_check(b > 0, "b must be positive")
         _value_check(eta > 0, "eta must be positive")
 
@@ -3948,7 +3952,7 @@ class ShiftedGompertzDistribution(SingleContinuousDistribution):
         b, eta = self.b, self.eta
         return b*exp(-b*x)*exp(-eta*exp(-b*x))*(1+eta*(1-exp(-b*x)))
 
-def ShiftedGompertz(name, b, eta):
+def ShiftedGompertz(name, b, eta) -> RandomSymbol:
     r"""
     Create a continuous random variable with a Shifted Gompertz distribution.
 
@@ -4005,7 +4009,7 @@ class StudentTDistribution(SingleContinuousDistribution):
     set = Interval(-oo, oo)
 
     @staticmethod
-    def check(nu):
+    def check(nu) -> None:
         _value_check(nu > 0, "Degrees of freedom nu must be positive.")
 
     def pdf(self, x):
@@ -4021,7 +4025,7 @@ class StudentTDistribution(SingleContinuousDistribution):
         raise NotImplementedError('The moment generating function for the Student-T distribution is undefined.')
 
 
-def StudentT(name, nu):
+def StudentT(name, nu) -> RandomSymbol:
     r"""
     Create a continuous random variable with a student's t distribution.
 
@@ -4093,11 +4097,11 @@ class TrapezoidalDistribution(SingleContinuousDistribution):
     _argnames = ('a', 'b', 'c', 'd')
 
     @property
-    def set(self):
+    def set(self) ->     sympy.FiniteSet |     sympy.Interval:
         return Interval(self.a, self.d)
 
     @staticmethod
-    def check(a, b, c, d):
+    def check(a, b, c, d) -> None:
         _value_check(a < d, "Lower bound parameter a < %s. a = %s"%(d, a))
         _value_check((a <= b, b < c),
         "Level start parameter b must be in range [%s, %s). b = %s"%(a, c, b))
@@ -4105,7 +4109,7 @@ class TrapezoidalDistribution(SingleContinuousDistribution):
         "Level end parameter c must be in range (%s, %s]. c = %s"%(b, d, c))
         _value_check(d >= c, "Upper bound parameter d > %s. d = %s"%(c, d))
 
-    def pdf(self, x):
+    def pdf(self, x) ->     sympy.Piecewise:
         a, b, c, d = self.a, self.b, self.c, self.d
         return Piecewise(
             (2*(x-a) / ((b-a)*(d+c-a-b)), And(a <= x, x < b)),
@@ -4113,7 +4117,7 @@ class TrapezoidalDistribution(SingleContinuousDistribution):
             (2*(d-x) / ((d-c)*(d+c-a-b)), And(c <= x, x <= d)),
             (S.Zero, True))
 
-def Trapezoidal(name, a, b, c, d):
+def Trapezoidal(name, a, b, c, d) -> RandomSymbol:
     r"""
     Create a continuous random variable with a trapezoidal distribution.
 
@@ -4189,16 +4193,16 @@ class TriangularDistribution(SingleContinuousDistribution):
     _argnames = ('a', 'b', 'c')
 
     @property
-    def set(self):
+    def set(self) ->     sympy.FiniteSet |     sympy.Interval:
         return Interval(self.a, self.b)
 
     @staticmethod
-    def check(a, b, c):
+    def check(a, b, c) -> None:
         _value_check(b > a, "Parameter b > %s. b = %s"%(a, b))
         _value_check((a <= c, c <= b),
         "Parameter c must be in range [%s, %s]. c = %s"%(a, b, c))
 
-    def pdf(self, x):
+    def pdf(self, x) ->     sympy.Piecewise:
         a, b, c = self.a, self.b, self.c
         return Piecewise(
             (2*(x - a)/((b - a)*(c - a)), And(a <= x, x < c)),
@@ -4216,7 +4220,7 @@ class TriangularDistribution(SingleContinuousDistribution):
         (b - a) * (c - a) * (b - c) * t ** 2)
 
 
-def Triangular(name, a, b, c):
+def Triangular(name, a, b, c) -> RandomSymbol:
     r"""
     Create a continuous random variable with a triangular distribution.
 
@@ -4292,14 +4296,14 @@ class UniformDistribution(SingleContinuousDistribution):
     _argnames = ('left', 'right')
 
     @property
-    def set(self):
+    def set(self) ->     sympy.FiniteSet |     sympy.Interval:
         return Interval(self.left, self.right)
 
     @staticmethod
-    def check(left, right):
+    def check(left, right) -> None:
         _value_check(left < right, "Lower limit should be less than Upper limit.")
 
-    def pdf(self, x):
+    def pdf(self, x) ->     sympy.Piecewise:
         left, right = self.left, self.right
         return Piecewise(
             (S.One/(right - left), And(left <= x, x <= right)),
@@ -4324,7 +4328,7 @@ class UniformDistribution(SingleContinuousDistribution):
         return Piecewise(((exp(t*right) - exp(t*left)) / (t * (right - left)), Ne(t, 0)),
                          (S.One, True))
 
-    def expectation(self, expr, var, **kwargs):
+    def expectation(self, expr, var, **kwargs) ->     sympy.Equality | Basic | Relational |     sympy.Ne |     sympy.Integral | Any:
         kwargs['evaluate'] = True
         result = SingleContinuousDistribution.expectation(self, expr, var, **kwargs)
         result = result.subs({Max(self.left, self.right): self.right,
@@ -4332,7 +4336,7 @@ class UniformDistribution(SingleContinuousDistribution):
         return result
 
 
-def Uniform(name, left, right):
+def Uniform(name, left, right) -> RandomSymbol:
     r"""
     Create a continuous random variable with a uniform distribution.
 
@@ -4402,11 +4406,11 @@ class UniformSumDistribution(SingleContinuousDistribution):
     _argnames = ('n',)
 
     @property
-    def set(self):
+    def set(self) ->     sympy.FiniteSet |     sympy.Interval:
         return Interval(0, self.n)
 
     @staticmethod
-    def check(n):
+    def check(n) -> None:
         _value_check((n > 0, n.is_integer),
         "Parameter n must be positive integer.")
 
@@ -4430,7 +4434,7 @@ class UniformSumDistribution(SingleContinuousDistribution):
     def _moment_generating_function(self, t):
         return ((exp(t) - 1) / t)**self.n
 
-def UniformSum(name, n):
+def UniformSum(name, n) -> RandomSymbol:
     r"""
     Create a continuous random variable with an Irwin-Hall distribution.
 
@@ -4512,14 +4516,14 @@ class VonMisesDistribution(SingleContinuousDistribution):
     set = Interval(0, 2*pi)
 
     @staticmethod
-    def check(mu, k):
+    def check(mu, k) -> None:
         _value_check(k > 0, "k must be positive")
 
     def pdf(self, x):
         mu, k = self.mu, self.k
         return exp(k*cos(x-mu)) / (2*pi*besseli(0, k))
 
-def VonMises(name, mu, k):
+def VonMises(name, mu, k) -> RandomSymbol:
     r"""
     Create a Continuous Random Variable with a von Mises distribution.
 
@@ -4586,7 +4590,7 @@ class WeibullDistribution(SingleContinuousDistribution):
     set = Interval(0, oo)
 
     @staticmethod
-    def check(alpha, beta):
+    def check(alpha, beta) -> None:
         _value_check(alpha > 0, "Alpha must be positive")
         _value_check(beta > 0, "Beta must be positive")
 
@@ -4595,7 +4599,7 @@ class WeibullDistribution(SingleContinuousDistribution):
         return beta * (x/alpha)**(beta - 1) * exp(-(x/alpha)**beta) / alpha
 
 
-def Weibull(name, alpha, beta):
+def Weibull(name, alpha, beta) -> RandomSymbol:
     r"""
     Create a continuous random variable with a Weibull distribution.
 
@@ -4661,11 +4665,11 @@ class WignerSemicircleDistribution(SingleContinuousDistribution):
     _argnames = ('R',)
 
     @property
-    def set(self):
+    def set(self) ->     sympy.FiniteSet |     sympy.Interval:
         return Interval(-self.R, self.R)
 
     @staticmethod
-    def check(R):
+    def check(R) -> None:
         _value_check(R > 0, "Radius R must be positive.")
 
     def pdf(self, x):
@@ -4680,7 +4684,7 @@ class WignerSemicircleDistribution(SingleContinuousDistribution):
         return Piecewise((2 * besseli(1, self.R*t) / (self.R*t), Ne(t, 0)),
                          (S.One, True))
 
-def WignerSemicircle(name, R):
+def WignerSemicircle(name, R) -> RandomSymbol:
     r"""
     Create a continuous random variable with a Wigner semicircle distribution.
 

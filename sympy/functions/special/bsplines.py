@@ -5,6 +5,9 @@ from sympy.logic.boolalg import And
 from sympy.sets.sets import Interval
 
 from functools import lru_cache
+import sympy.functions.elementary.piecewise
+from sympy.series.order import Order
+from typing import Any
 
 
 def _ivl(cond, x):
@@ -82,7 +85,7 @@ def _add_splines(c, b1, d, b2, x):
 
 
 @lru_cache(maxsize=128)
-def bspline_basis(d, knots, n, x):
+def bspline_basis(d, knots, n, x) -> sympy.functions.elementary.piecewise.Piecewise | Order | Any:
     """
     The $n$-th B-spline at $x$ of degree $d$ with knots.
 
@@ -201,7 +204,7 @@ def bspline_basis(d, knots, n, x):
     return result.xreplace({x: xvar})
 
 
-def bspline_basis_set(d, knots, x):
+def bspline_basis_set(d, knots, x) -> list[Any | sympy.functions.elementary.piecewise.Piecewise | Order]:
     """
     Return the ``len(knots)-d-1`` B-splines at *x* of degree *d*
     with *knots*.
@@ -253,7 +256,7 @@ def bspline_basis_set(d, knots, x):
     return [bspline_basis(d, tuple(knots), i, x) for i in range(n_splines)]
 
 
-def interpolating_spline(d, x, X, Y):
+def interpolating_spline(d, x, X, Y) -> sympy.functions.elementary.piecewise.Piecewise:
     """
     Return spline of degree *d*, passing through the given *X*
     and *Y* values.

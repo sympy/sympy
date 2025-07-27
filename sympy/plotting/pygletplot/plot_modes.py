@@ -6,9 +6,10 @@ from sympy.plotting.pygletplot.plot_surface import PlotSurface
 
 from math import sin as p_sin
 from math import cos as p_cos
+from typing import Callable
 
 
-def float_vec3(f):
+def float_vec3(f) -> Callable[..., tuple[float, float, float]]:
     def inner(*args):
         v = f(*args)
         return float(v[0]), float(v[1]), float(v[2])

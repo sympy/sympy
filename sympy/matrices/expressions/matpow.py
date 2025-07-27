@@ -7,6 +7,12 @@ from sympy.core.power import Pow
 from sympy.core.sympify import _sympify
 from sympy.matrices import MatrixBase
 from sympy.matrices.exceptions import NonSquareMatrixError
+import sympy.matrices.expressions.inverse
+from sympy.core.basic import Basic
+from sympy.matrices.expressions.matexpr import MatrixExpr
+from sympy.matrices.expressions.special import Identity
+from typing import Any
+from typing_extensions import Self
 
 
 class MatPow(MatrixExpr):
@@ -27,11 +33,11 @@ class MatPow(MatrixExpr):
         return obj
 
     @property
-    def base(self):
+    def base(self) -> Basic:
         return self.args[0]
 
     @property
-    def exp(self):
+    def exp(self) -> Basic:
         return self.args[1]
 
     @property
@@ -57,7 +63,7 @@ class MatPow(MatrixExpr):
                 return MatrixElement(self, i, j)
         return A[i, j]
 
-    def doit(self, **hints):
+    def doit(self, **hints) -> Basic | Identity |     sympy.matrices.expressions.inverse.Inverse | Any | MatPow:
         if hints.get('deep', True):
             base, exp = (arg.doit(**hints) for arg in self.args)
         else:

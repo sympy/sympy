@@ -2,14 +2,15 @@
 
 
 from sympy.polys.domains.groundtypes import (
-    GMPYInteger, SymPyInteger,
+    _GMPYInteger, GMPYInteger, SymPyInteger,
     factorial as gmpy_factorial,
     gmpy_gcdex, gmpy_gcd, gmpy_lcm, sqrt as gmpy_sqrt,
 )
-from sympy.core.numbers import int_valued
+from sympy.core.numbers import Integer, int_valued
 from sympy.polys.domains.integerring import IntegerRing
 from sympy.polys.polyerrors import CoercionFailed
 from sympy.utilities import public
+from typing import Any
 
 @public
 class GMPYIntegerRing(IntegerRing):
@@ -20,19 +21,19 @@ class GMPYIntegerRing(IntegerRing):
     """
 
     dtype = GMPYInteger
-    zero = dtype(0)
-    one = dtype(1)
-    tp = type(one)
+    zero: _GMPYInteger = dtype(0)
+    one: _GMPYInteger = dtype(1)
+    tp: type[_GMPYInteger] = type(one)
     alias = 'ZZ_gmpy'
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Allow instantiation of this domain. """
 
-    def to_sympy(self, a):
+    def to_sympy(self, a) -> Integer:
         """Convert ``a`` to a SymPy object. """
         return SymPyInteger(int(a))
 
-    def from_sympy(self, a):
+    def from_sympy(self, a) -> _GMPYInteger:
         """Convert SymPy's Integer to ``dtype``. """
         if a.is_Integer:
             return GMPYInteger(a.p)
@@ -41,20 +42,20 @@ class GMPYIntegerRing(IntegerRing):
         else:
             raise CoercionFailed("expected an integer, got %s" % a)
 
-    def from_FF_python(K1, a, K0):
+    def from_FF_python(K1, a, K0) -> _GMPYInteger:
         """Convert ``ModularInteger(int)`` to GMPY's ``mpz``. """
         return K0.to_int(a)
 
-    def from_ZZ_python(K1, a, K0):
+    def from_ZZ_python(K1, a, K0) -> _GMPYInteger:
         """Convert Python's ``int`` to GMPY's ``mpz``. """
         return GMPYInteger(a)
 
-    def from_QQ(K1, a, K0):
+    def from_QQ(K1, a, K0) -> _GMPYInteger | None:
         """Convert Python's ``Fraction`` to GMPY's ``mpz``. """
         if a.denominator == 1:
             return GMPYInteger(a.numerator)
 
-    def from_QQ_python(K1, a, K0):
+    def from_QQ_python(K1, a, K0) -> _GMPYInteger | None:
         """Convert Python's ``Fraction`` to GMPY's ``mpz``. """
         if a.denominator == 1:
             return GMPYInteger(a.numerator)
@@ -67,23 +68,23 @@ class GMPYIntegerRing(IntegerRing):
         """Convert GMPY's ``mpz`` to GMPY's ``mpz``. """
         return a
 
-    def from_QQ_gmpy(K1, a, K0):
+    def from_QQ_gmpy(K1, a, K0) -> None:
         """Convert GMPY ``mpq`` to GMPY's ``mpz``. """
         if a.denominator == 1:
             return a.numerator
 
-    def from_RealField(K1, a, K0):
+    def from_RealField(K1, a, K0) -> _GMPYInteger | None:
         """Convert mpmath's ``mpf`` to GMPY's ``mpz``. """
         p, q = K0.to_rational(a)
 
         if q == 1:
             return GMPYInteger(p)
 
-    def from_GaussianIntegerRing(K1, a, K0):
+    def from_GaussianIntegerRing(K1, a, K0) -> None:
         if a.y == 0:
             return a.x
 
-    def gcdex(self, a, b):
+    def gcdex(self, a, b) -> tuple[Any, Any, Any]:
         """Compute extended GCD of ``a`` and ``b``. """
         h, s, t = gmpy_gcdex(a, b)
         return s, t, h
@@ -96,10 +97,10 @@ class GMPYIntegerRing(IntegerRing):
         """Compute LCM of ``a`` and ``b``. """
         return gmpy_lcm(a, b)
 
-    def sqrt(self, a):
+    def sqrt(self, a) -> int:
         """Compute square root of ``a``. """
         return gmpy_sqrt(a)
 
-    def factorial(self, a):
+    def factorial(self, a) -> int:
         """Compute factorial of ``a``. """
         return gmpy_factorial(a)

@@ -9,6 +9,10 @@ from sympy.multipledispatch.dispatcher import Dispatcher, str_signature
 from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.iterables import is_sequence
 from sympy.utilities.source import get_class
+from collections.abc import Generator
+from sympy.core.basic import Basic
+from typing import Any, Callable
+from typing_extensions import Self
 
 
 class AssumptionsContext(set):
@@ -64,7 +68,7 @@ class AssumptionsContext(set):
 
     """
 
-    def add(self, *assumptions):
+    def add(self, *assumptions) -> None:
         """Add assumptions."""
         for a in assumptions:
             super().add(a)
@@ -108,14 +112,14 @@ class AppliedPredicate(Boolean):
     """
     __slots__ = ()
 
-    def __new__(cls, predicate, *args):
+    def __new__(cls, predicate, *args) -> Self:
         if not isinstance(predicate, Predicate):
             raise TypeError(f"{predicate} is not a Predicate.")
         args = map(_sympify, args)
         return super().__new__(cls, predicate, *args)
 
     @property
-    def arg(self):
+    def arg(self) -> Basic:
         """
         Return the expression used by this assumption.
 
@@ -137,7 +141,7 @@ class AppliedPredicate(Boolean):
         raise TypeError("'arg' property is allowed only for unary predicates.")
 
     @property
-    def function(self):
+    def function(self) -> Basic:
         """
         Return the predicate.
         """
@@ -145,7 +149,7 @@ class AppliedPredicate(Boolean):
         return self._args[0]
 
     @property
-    def arguments(self):
+    def arguments(self) -> tuple[Basic, ...]:
         """
         Return the arguments which are applied to the predicate.
         """
@@ -156,7 +160,7 @@ class AppliedPredicate(Boolean):
         return self.function.eval(self.arguments, assumptions)
 
     @property
-    def binary_symbols(self):
+    def binary_symbols(self) -> set[Basic] | set[Any]:
         from .ask import Q
         if self.function == Q.is_true:
             i = self.arguments[0]
@@ -172,7 +176,7 @@ class AppliedPredicate(Boolean):
 
 
 class PredicateMeta(type):
-    def __new__(cls, clsname, bases, dct):
+    def __new__(cls, clsname, bases, dct) -> Self:
         # If handler is not defined, assign empty dispatcher.
         if "handler" not in dct:
             name = f"Ask{clsname.capitalize()}Handler"
@@ -302,19 +306,19 @@ class Predicate(Boolean, metaclass=PredicateMeta):
 
     is_Atom = True
 
-    def __new__(cls, *args, **kwargs):
+    def __new__(cls, *args, **kwargs) -> UndefinedPredicate | Self:
         if cls is Predicate:
             return UndefinedPredicate(*args, **kwargs)
         obj = super().__new__(cls, *args)
         return obj
 
     @property
-    def name(self):
+    def name(self) -> str:
         # May be overridden
         return type(self).__name__
 
     @classmethod
-    def register(cls, *types, **kwargs):
+    def register(cls, *types, **kwargs) -> Callable[..., None]:
         """
         Register the signature to the handler.
         """
@@ -323,7 +327,7 @@ class Predicate(Boolean, metaclass=PredicateMeta):
         return cls.handler.register(*types, **kwargs)
 
     @classmethod
-    def register_many(cls, *types, **kwargs):
+    def register_many(cls, *types, **kwargs) -> Callable[..., None]:
         """
         Register multiple signatures to same handler.
         """
@@ -334,10 +338,10 @@ class Predicate(Boolean, metaclass=PredicateMeta):
                 cls.register(*t, **kwargs)(func)
         return _
 
-    def __call__(self, *args):
+    def __call__(self, *args) -> AppliedPredicate:
         return AppliedPredicate(self, *args)
 
-    def eval(self, args, assumptions=True):
+    def eval(self, args, assumptions=True) -> None:
         """
         Evaluate ``self(*args)`` under the given assumptions.
 
@@ -380,7 +384,7 @@ class UndefinedPredicate(Predicate):
 
     handler = None
 
-    def __new__(cls, name, handlers=None):
+    def __new__(cls, name, handlers=None) -> Self:
         # "handlers" parameter supports old design
         if not isinstance(name, Str):
             name = Str(name)
@@ -389,19 +393,19 @@ class UndefinedPredicate(Predicate):
         return obj
 
     @property
-    def name(self):
+    def name(self) -> Basic:
         return self.args[0]
 
     def _hashable_content(self):
         return (self.name,)
 
-    def __getnewargs__(self):
+    def __getnewargs__(self) -> tuple[Basic]:
         return (self.name,)
 
-    def __call__(self, expr):
+    def __call__(self, expr) -> AppliedPredicate:
         return AppliedPredicate(self, expr)
 
-    def add_handler(self, handler):
+    def add_handler(self, handler) -> None:
         sympy_deprecation_warning(
             """
             The AskHandler system is deprecated. Predicate.add_handler()
@@ -412,7 +416,7 @@ class UndefinedPredicate(Predicate):
         )
         self.handlers.append(handler)
 
-    def remove_handler(self, handler):
+    def remove_handler(self, handler) -> None:
         sympy_deprecation_warning(
             """
             The AskHandler system is deprecated. Predicate.remove_handler()
@@ -423,7 +427,7 @@ class UndefinedPredicate(Predicate):
         )
         self.handlers.remove(handler)
 
-    def eval(self, args, assumptions=True):
+    def eval(self, args, assumptions=True) -> Any | None:
         # Support for deprecated design
         # When old design is removed, this will always return None
         sympy_deprecation_warning(
@@ -461,7 +465,7 @@ class UndefinedPredicate(Predicate):
 
 
 @contextmanager
-def assuming(*assumptions):
+def assuming(*assumptions) -> Generator[None, Any, None]:
     """
     Context manager for assumptions.
 

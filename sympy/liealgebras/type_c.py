@@ -1,9 +1,12 @@
 from .cartan_type import Standard_Cartan
 from sympy.core.backend import eye
+from sympy.liealgebras.cartan_type import Standard_Cartan
+from typing import Any
+from typing_extensions import Self
 
 class TypeC(Standard_Cartan):
 
-    def __new__(cls, n):
+    def __new__(cls, n) -> Self:
         if n < 3:
             raise ValueError("n cannot be less than 3")
         return Standard_Cartan.__new__(cls, "C", n)
@@ -69,7 +72,7 @@ class TypeC(Standard_Cartan):
             return root
 
 
-    def positive_roots(self):
+    def positive_roots(self) -> dict[Any, Any]:
         """Generates all the positive roots of A_n
 
         This is half of all of the roots of C_n; by multiplying all the
@@ -154,7 +157,7 @@ class TypeC(Standard_Cartan):
         n = self.n
         return n*(2*n + 1)
 
-    def lie_algebra(self):
+    def lie_algebra(self) -> str:
         """
         Returns the Lie algebra associated with C_n"
         """
@@ -162,7 +165,7 @@ class TypeC(Standard_Cartan):
         n = self.n
         return "sp(" + str(2*n) + ")"
 
-    def dynkin_diagram(self):
+    def dynkin_diagram(self) -> str:
         n = self.n
         diag = "---".join("0" for i in range(1, n)) + "=<=0\n"
         diag += "   ".join(str(i) for i in range(1, n+1))

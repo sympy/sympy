@@ -3,6 +3,7 @@ from sympy.core.expr import Expr
 from sympy.core.symbol import Symbol
 from sympy.core.numbers import Integer, Rational, Float
 from sympy.printing.repr import srepr
+from typing import Any
 
 __all__ = ['dotprint']
 
@@ -12,7 +13,7 @@ default_styles = (
 )
 
 slotClasses = (Symbol, Integer, Rational, Float)
-def purestr(x, with_args=False):
+def purestr(x, with_args=False) -> tuple[str | Any, tuple[()] | tuple[Any, ...]] | str:
     """A string that follows ```obj = type(obj)(*obj.args)``` exactly.
 
     Parameters
@@ -75,7 +76,7 @@ def purestr(x, with_args=False):
     return rv
 
 
-def styleof(expr, styles=default_styles):
+def styleof(expr, styles=default_styles) -> dict[Any, Any]:
     """ Merge style dictionaries in order
 
     Examples
@@ -100,7 +101,7 @@ def styleof(expr, styles=default_styles):
     return style
 
 
-def attrprint(d, delimiter=', '):
+def attrprint(d, delimiter=', ') -> str:
     """ Print a dictionary of attributes
 
     Examples
@@ -113,7 +114,7 @@ def attrprint(d, delimiter=', '):
     return delimiter.join('"%s"="%s"'%item for item in sorted(d.items()))
 
 
-def dotnode(expr, styles=default_styles, labelfunc=str, pos=(), repeat=True):
+def dotnode(expr, styles=default_styles, labelfunc=str, pos=(), repeat=True) -> str:
     """ String defining a node
 
     Examples
@@ -137,7 +138,7 @@ def dotnode(expr, styles=default_styles, labelfunc=str, pos=(), repeat=True):
     return '"%s" [%s];' % (expr_str, attrprint(style))
 
 
-def dotedges(expr, atom=lambda x: not isinstance(x, Basic), pos=(), repeat=True):
+def dotedges(expr, atom=lambda x: not isinstance(x, Basic), pos=(), repeat=True) -> list[Any] | list[str]:
     """ List of strings for all expr->expr.arg pairs
 
     See the docstring of dotprint for explanations of the options.
@@ -185,7 +186,7 @@ _graphstyle = {'rankdir': 'TD', 'ordering': 'out'}
 
 def dotprint(expr,
     styles=default_styles, atom=lambda x: not isinstance(x, Basic),
-    maxdepth=None, repeat=True, labelfunc=str, **kwargs):
+    maxdepth=None, repeat=True, labelfunc=str, **kwargs) -> str:
     """DOT description of a SymPy expression tree
 
     Parameters

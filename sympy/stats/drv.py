@@ -3,7 +3,7 @@ from sympy.core.basic import Basic
 from sympy.core.cache import cacheit
 from sympy.core.function import Lambda
 from sympy.core.numbers import I
-from sympy.core.relational import (Eq, Ne)
+from sympy.core.relational import (Relational, Eq, Ne)
 from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, symbols)
 from sympy.core.sympify import sympify
@@ -17,15 +17,19 @@ from sympy.series.series import series
 
 from sympy.polys.polyerrors import PolynomialError
 from sympy.stats.crv import reduce_rational_inequalities_wrap
-from sympy.stats.rv import (NamedArgsMixin, SinglePSpace, SingleDomain,
+from sympy.stats.rv import (RandomSymbol, NamedArgsMixin, SinglePSpace, SingleDomain,
                             random_symbols, PSpace, ConditionalDomain, RandomDomain,
                             ProductDomain, Distribution)
 from sympy.stats.symbolic_probability import Probability
 from sympy.sets.fancysets import Range, FiniteSet
-from sympy.sets.sets import Union
+from sympy.sets.sets import Complement, Union
 from sympy.sets.contains import Contains
 from sympy.utilities import filldedent
 from sympy.core.sympify import _sympify
+import sympy
+import sympy.core.logic
+from typing import Any, Literal
+from typing_extensions import Self
 
 
 class DiscreteDistribution(Distribution):
@@ -46,16 +50,16 @@ class SingleDiscreteDistribution(DiscreteDistribution, NamedArgsMixin):
 
     set = S.Integers
 
-    def __new__(cls, *args):
+    def __new__(cls, *args) -> Self:
         args = list(map(sympify, args))
         return Basic.__new__(cls, *args)
 
     @staticmethod
-    def check(*args):
+    def check(*args) -> None:
         pass
 
     @cacheit
-    def compute_cdf(self, **kwargs):
+    def compute_cdf(self, **kwargs) -> Lambda:
         """ Compute the CDF from the PDF.
 
         Returns a Lambda.
@@ -74,7 +78,7 @@ class SingleDiscreteDistribution(DiscreteDistribution, NamedArgsMixin):
     def _cdf(self, x):
         return None
 
-    def cdf(self, x, **kwargs):
+    def cdf(self, x, **kwargs) ->     sympy.Basic:
         """ Cumulative density function """
         if not kwargs:
             cdf = self._cdf(x)
@@ -83,7 +87,7 @@ class SingleDiscreteDistribution(DiscreteDistribution, NamedArgsMixin):
         return self.compute_cdf(**kwargs)(x)
 
     @cacheit
-    def compute_characteristic_function(self, **kwargs):
+    def compute_characteristic_function(self, **kwargs) -> Lambda:
         """ Compute the characteristic function from the PDF.
 
         Returns a Lambda.
@@ -96,7 +100,7 @@ class SingleDiscreteDistribution(DiscreteDistribution, NamedArgsMixin):
     def _characteristic_function(self, t):
         return None
 
-    def characteristic_function(self, t, **kwargs):
+    def characteristic_function(self, t, **kwargs) ->     sympy.Basic:
         """ Characteristic function """
         if not kwargs:
             cf = self._characteristic_function(t)
@@ -105,7 +109,7 @@ class SingleDiscreteDistribution(DiscreteDistribution, NamedArgsMixin):
         return self.compute_characteristic_function(**kwargs)(t)
 
     @cacheit
-    def compute_moment_generating_function(self, **kwargs):
+    def compute_moment_generating_function(self, **kwargs) -> Lambda:
         t = Dummy('t', real=True)
         x = Dummy('x', integer=True)
         pdf = self.pdf(x)
@@ -115,7 +119,7 @@ class SingleDiscreteDistribution(DiscreteDistribution, NamedArgsMixin):
     def _moment_generating_function(self, t):
         return None
 
-    def moment_generating_function(self, t, **kwargs):
+    def moment_generating_function(self, t, **kwargs) ->     sympy.Basic:
         if not kwargs:
             mgf = self._moment_generating_function(t)
             if mgf is not None:
@@ -123,7 +127,7 @@ class SingleDiscreteDistribution(DiscreteDistribution, NamedArgsMixin):
         return self.compute_moment_generating_function(**kwargs)(t)
 
     @cacheit
-    def compute_quantile(self, **kwargs):
+    def compute_quantile(self, **kwargs) -> Lambda:
         """ Compute the Quantile from the PDF.
 
         Returns a Lambda.
@@ -139,7 +143,7 @@ class SingleDiscreteDistribution(DiscreteDistribution, NamedArgsMixin):
     def _quantile(self, x):
         return None
 
-    def quantile(self, x, **kwargs):
+    def quantile(self, x, **kwargs) ->     sympy.Basic:
         """ Cumulative density function """
         if not kwargs:
             quantile = self._quantile(x)
@@ -147,7 +151,7 @@ class SingleDiscreteDistribution(DiscreteDistribution, NamedArgsMixin):
                 return quantile
         return self.compute_quantile(**kwargs)(x)
 
-    def expectation(self, expr, var, evaluate=True, **kwargs):
+    def expectation(self, expr, var, evaluate=True, **kwargs) -> Any |     sympy.Equality | Relational |     sympy.Ne |     sympy.Sum | Literal[0]:
         """ Expectation of expression over distribution """
         # TODO: support discrete sets with non integer stepsizes
 
@@ -186,7 +190,7 @@ class DiscreteDomain(RandomDomain):
     is_Discrete = True
 
 class SingleDiscreteDomain(DiscreteDomain, SingleDomain):
-    def as_boolean(self):
+    def as_boolean(self) ->     sympy.Contains:
         return Contains(self.symbol, self.set)
 
 
@@ -196,7 +200,7 @@ class ConditionalDiscreteDomain(DiscreteDomain, ConditionalDomain):
     some condition.
     """
     @property
-    def set(self):
+    def set(self) ->     sympy.FiniteSet |     sympy.Intersection | Union | Complement:
         rv = self.symbols
         if len(self.symbols) > 1:
             raise NotImplementedError(filldedent('''
@@ -214,7 +218,7 @@ class DiscretePSpace(PSpace):
     def pdf(self):
         return self.density(*self.symbols)
 
-    def where(self, condition):
+    def where(self, condition) -> SingleDiscreteDomain:
         rvs = random_symbols(condition)
         assert all(r.symbol in self.symbols for r in rvs)
         if len(rvs) > 1:
@@ -225,7 +229,7 @@ class DiscretePSpace(PSpace):
         conditional_domain = conditional_domain.intersect(self.domain.set)
         return SingleDiscreteDomain(rvs[0].symbol, conditional_domain)
 
-    def probability(self, condition):
+    def probability(self, condition) -> Probability |     sympy.Equality | Relational |     sympy.Ne | int:
         complement = isinstance(condition, Ne)
         if complement:
             condition = Eq(condition.args[0], condition.args[1])
@@ -250,7 +254,7 @@ class DiscretePSpace(PSpace):
             prob = Probability(condition)
         return prob if not complement else S.One - prob
 
-    def eval_prob(self, _domain):
+    def eval_prob(self, _domain) ->     sympy.Equality | Relational |     sympy.Ne | int | None:
         sym = list(self.symbols)[0]
         if isinstance(_domain, Range):
             n = symbols('n', integer=True)
@@ -268,7 +272,7 @@ class DiscretePSpace(PSpace):
             rv = sum(self.eval_prob(x) for x in _domain.args)
             return rv
 
-    def conditional_space(self, condition):
+    def conditional_space(self, condition) -> "DiscretePSpace":
         # XXX: Converting from set to tuple. The order matters to Lambda
         # though so we should be starting with a set...
         density = Lambda(tuple(self.symbols), self.pdf/self.probability(condition))
@@ -277,7 +281,7 @@ class DiscretePSpace(PSpace):
         return DiscretePSpace(domain, density)
 
 class ProductDiscreteDomain(ProductDomain, DiscreteDomain):
-    def as_boolean(self):
+    def as_boolean(self) ->     sympy.core.logic.And:
         return And(*[domain.as_boolean for domain in self.domains])
 
 class SingleDiscretePSpace(DiscretePSpace, SinglePSpace):
@@ -289,10 +293,10 @@ class SingleDiscretePSpace(DiscretePSpace, SinglePSpace):
         return self.distribution.set
 
     @property
-    def domain(self):
+    def domain(self) -> SingleDiscreteDomain:
         return SingleDiscreteDomain(self.symbol, self.set)
 
-    def sample(self, size=(), library='scipy', seed=None):
+    def sample(self, size=(), library='scipy', seed=None) -> dict[RandomSymbol, Any]:
         """
         Internal sample method.
 
@@ -300,7 +304,7 @@ class SingleDiscretePSpace(DiscretePSpace, SinglePSpace):
         """
         return {self.value: self.distribution.sample(size, library=library, seed=seed)}
 
-    def compute_expectation(self, expr, rvs=None, evaluate=True, **kwargs):
+    def compute_expectation(self, expr, rvs=None, evaluate=True, **kwargs) ->     sympy.Equality | Relational |     sympy.Ne |     sympy.Sum:
         rvs = rvs or (self.value,)
         if self.value not in rvs:
             return expr
@@ -316,33 +320,33 @@ class SingleDiscretePSpace(DiscretePSpace, SinglePSpace):
             return Sum(expr * self.pdf, (x, self.set.inf, self.set.sup),
                     **kwargs)
 
-    def compute_cdf(self, expr, **kwargs):
+    def compute_cdf(self, expr, **kwargs) -> Lambda:
         if expr == self.value:
             x = Dummy("x", real=True)
             return Lambda(x, self.distribution.cdf(x, **kwargs))
         else:
             raise NotImplementedError()
 
-    def compute_density(self, expr, **kwargs):
+    def compute_density(self, expr, **kwargs) ->     sympy.Basic:
         if expr == self.value:
             return self.distribution
         raise NotImplementedError()
 
-    def compute_characteristic_function(self, expr, **kwargs):
+    def compute_characteristic_function(self, expr, **kwargs) -> Lambda:
         if expr == self.value:
             t = Dummy("t", real=True)
             return Lambda(t, self.distribution.characteristic_function(t, **kwargs))
         else:
             raise NotImplementedError()
 
-    def compute_moment_generating_function(self, expr, **kwargs):
+    def compute_moment_generating_function(self, expr, **kwargs) -> Lambda:
         if expr == self.value:
             t = Dummy("t", real=True)
             return Lambda(t, self.distribution.moment_generating_function(t, **kwargs))
         else:
             raise NotImplementedError()
 
-    def compute_quantile(self, expr, **kwargs):
+    def compute_quantile(self, expr, **kwargs) -> Lambda:
         if expr == self.value:
             p = Dummy("p", real=True)
             return Lambda(p, self.distribution.quantile(p, **kwargs))

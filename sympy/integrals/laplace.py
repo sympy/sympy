@@ -6,7 +6,7 @@ from sympy.core.add import Add
 from sympy.core.cache import cacheit
 from sympy.core.expr import Expr
 from sympy.core.function import (
-    AppliedUndef, Derivative, expand, expand_complex, expand_mul, expand_trig,
+    UndefinedFunction, AppliedUndef, Derivative, expand, expand_complex, expand_mul, expand_trig,
     Lambda, WildFunction, diff, Subs)
 from sympy.core.mul import Mul, prod
 from sympy.core.relational import (
@@ -41,6 +41,10 @@ from sympy.polys.rootoftools import RootSum
 from sympy.utilities.exceptions import (
     sympy_deprecation_warning, SymPyDeprecationWarning, ignore_warnings)
 from sympy.utilities.misc import debugf
+import sympy.core.logic
+from sympy.core.basic import Basic
+from sympy.series.order import Order
+from typing import Any
 
 _LT_level = 0
 
@@ -174,7 +178,7 @@ def _simplifyconds(expr, s, a):
 
 
 @DEBUG_WRAP
-def expand_dirac_delta(expr):
+def expand_dirac_delta(expr) -> tuple[Any, dict[Any, Any]] | tuple[Any | Order, dict[Any, Any | Order]] | tuple[Any | Mul, dict[Any, Any]]:
     """
     Expand an expression involving DiractDelta to get it as a linear
     combination of DiracDelta functions.
@@ -1288,7 +1292,7 @@ class LaplaceTransform(IntegralTransform):
     def _as_integral(self, f, t, s):
         return Integral(f*exp(-s*t), (t, S.Zero, S.Infinity))
 
-    def doit(self, **hints):
+    def doit(self, **hints) -> Order | tuple[Any | Order, Any | Max, Any |     sympy.core.logic.And]:
         """
         Try to evaluate the transform in closed form.
 
@@ -1320,7 +1324,7 @@ class LaplaceTransform(IntegralTransform):
             return r
 
 
-def laplace_transform(f, t, s, legacy_matrix=True, **hints):
+def laplace_transform(f, t, s, legacy_matrix=True, **hints) -> tuple[sympy.MatrixBase, Any | Max, Any | sympy.core.logic.And] | sympy.MatrixBase:
     r"""
     Compute the Laplace Transform `F(s)` of `f(t)`,
 
@@ -2214,13 +2218,13 @@ class InverseLaplaceTransform(IntegralTransform):
     _none_sentinel = Dummy('None')
     _c = Dummy('c')
 
-    def __new__(cls, F, s, x, plane, **opts):
+    def __new__(cls, F, s, x, plane, **opts) -> type[UndefinedFunction]:
         if plane is None:
             plane = InverseLaplaceTransform._none_sentinel
         return IntegralTransform.__new__(cls, F, s, x, plane, **opts)
 
     @property
-    def fundamental_plane(self):
+    def fundamental_plane(self) -> Basic | None:
         plane = self.args[3]
         if plane is InverseLaplaceTransform._none_sentinel:
             plane = None
@@ -2237,7 +2241,7 @@ class InverseLaplaceTransform(IntegralTransform):
                                   c + S.ImaginaryUnit*S.Infinity)) /
             (2*S.Pi*S.ImaginaryUnit))
 
-    def doit(self, **hints):
+    def doit(self, **hints) -> Order | tuple[Any | Order, Any |     sympy.core.logic.And]:
         """
         Try to evaluate the transform in closed form.
 

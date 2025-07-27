@@ -34,6 +34,8 @@ from sympy.utilities.lambdify import lambdify
 
 from mpmath import MPContext
 from mpmath.libmp.libmpf import prec_to_dps
+from typing import Any, Literal
+from typing_extensions import LiteralString
 
 
 class GaloisGroupException(Exception):
@@ -177,7 +179,7 @@ class Resolvent:
 
     """
 
-    def __init__(self, F, X, s):
+    def __init__(self, F, X, s) -> None:
         r"""
         Parameters
         ==========
@@ -239,7 +241,7 @@ class Resolvent:
         C = Poly(f, Y).coeffs()
         self.esf_lambdas = [lambdify(R, c) for c in C]
 
-    def get_prec(self, M, target='coeffs'):
+    def get_prec(self, M, target='coeffs') -> int | Any:
         r"""
         For a given upper bound *M* on the magnitude of the complex numbers to
         be plugged in for this resolvent's symbols, compute a sufficient
@@ -273,7 +275,7 @@ class Resolvent:
         r, _, _, _ = evalf(2*f(M), 1, {})
         return fastlog(r) + 1
 
-    def approximate_roots_of_poly(self, T, target='coeffs'):
+    def approximate_roots_of_poly(self, T, target='coeffs') -> list[Any]:
         """
         Approximate the roots of a given polynomial *T* to sufficient precision
         in order to evaluate this resolvent's coefficients, or determine
@@ -324,7 +326,7 @@ class Resolvent:
         return approx1
 
     @staticmethod
-    def round_mpf(a):
+    def round_mpf(a) -> int | Any:
         if isinstance(a, int):
             return a
         # If we use python's built-in `round()`, we lose precision.
@@ -334,7 +336,7 @@ class Resolvent:
         # flint.fmpz cannot convert a mpmath mpf.
         return ZZ(int(a.context.nint(a)))
 
-    def round_roots_to_integers_for_poly(self, T):
+    def round_roots_to_integers_for_poly(self, T) -> dict[int, int | Any]:
         """
         For a given polynomial *T*, round the roots of this resolvent to the
         nearest integers.
@@ -374,7 +376,7 @@ class Resolvent:
             if self.round_mpf(r.imag) == 0
         }
 
-    def eval_for_poly(self, T, find_integer_root=False):
+    def eval_for_poly(self, T, find_integer_root=False) -> tuple[list[Any], int | Any | None, int | None]:
         r"""
         Compute the integer values of the coefficients of this resolvent, when
         plugging in the roots of a given polynomial.
@@ -427,7 +429,7 @@ class Resolvent:
         return R, a0, i0
 
 
-def wrap(text, width=80):
+def wrap(text, width=80) -> LiteralString | Literal[""]:
     """Line wrap a polynomial expression. """
     out = ''
     col = 0
@@ -445,7 +447,7 @@ def s_vars(n):
     return symbols([f's{i + 1}' for i in range(n)])
 
 
-def sparse_symmetrize_resolvent_coeffs(F, X, s, verbose=False):
+def sparse_symmetrize_resolvent_coeffs(F, X, s, verbose=False) -> tuple[list[Any], list[Any]]:
     """
     Compute the coefficients of a resolvent as functions of the coefficients of
     the associated polynomial.
@@ -523,7 +525,14 @@ def sparse_symmetrize_resolvent_coeffs(F, X, s, verbose=False):
     return symmetrized, symmetrization_times
 
 
-def define_resolvents():
+def define_resolvents() -> dict[
+    tuple[Literal[4], Literal[0]]
+    | tuple[Literal[4], Literal[1]]
+    | tuple[Literal[5], Literal[1]]
+    | tuple[Literal[6], Literal[1]]
+    | tuple[Literal[6], Literal[2]],
+    Any,
+]:
     """Define all the resolvents for polys T of degree 4 through 6. """
     from sympy.combinatorics.galois import PGL2F5
     from sympy.combinatorics.permutations import Permutation
@@ -594,7 +603,7 @@ def define_resolvents():
     }
 
 
-def generate_lambda_lookup(verbose=False, trial_run=False):
+def generate_lambda_lookup(verbose=False, trial_run=False) -> str:
     """
     Generate the whole lookup table of coeff lambdas, for all resolvents.
     """
@@ -637,7 +646,7 @@ def generate_lambda_lookup(verbose=False, trial_run=False):
     return table
 
 
-def get_resolvent_by_lookup(T, number):
+def get_resolvent_by_lookup(T, number) -> list[Any]:
     """
     Use the lookup table, to return a resolvent (as dup) for a given
     polynomial *T*.

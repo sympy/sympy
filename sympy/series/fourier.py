@@ -11,14 +11,19 @@ from sympy.core.sympify import sympify
 from sympy.functions.elementary.trigonometric import sin, cos, sinc
 from sympy.series.series_class import SeriesBase
 from sympy.series.sequences import SeqFormula
-from sympy.sets.sets import Interval
+from sympy.sets.sets import FiniteSet, Interval
 from sympy.utilities.iterables import is_sequence
+from collections.abc import Generator
+from sympy.core.basic import Basic
+from sympy.series.order import Order
+from typing import Any, Literal
+from typing_extensions import Self
 
 
 __doctest_requires__ = {('fourier_series',): ['matplotlib']}
 
 
-def fourier_cos_seq(func, limits, n):
+def fourier_cos_seq(func, limits, n) -> tuple[Any, Any | SeqFormula]:
     """Returns the cos sequence in a Fourier series"""
     from sympy.integrals import integrate
     x, L = limits[0], limits[2] - limits[1]
@@ -29,7 +34,7 @@ def fourier_cos_seq(func, limits, n):
                           / L, (n, 1, oo))
 
 
-def fourier_sin_seq(func, limits, n):
+def fourier_sin_seq(func, limits, n) -> SeqFormula:
     """Returns the sin sequence in a Fourier series"""
     from sympy.integrals import integrate
     x, L = limits[0], limits[2] - limits[1]
@@ -94,7 +99,7 @@ def _process_limits(func, limits):
     return sympify((x, start, stop))
 
 
-def finite_check(f, x, L):
+def finite_check(f, x, L) -> tuple[Literal[False], Any] | tuple[Literal[True], Any]:
 
     def check_fx(exprs, x):
         return x not in exprs.free_symbols
@@ -141,12 +146,12 @@ class FourierSeries(SeriesBase):
 
     sympy.series.fourier.fourier_series
     """
-    def __new__(cls, *args):
+    def __new__(cls, *args) -> Self:
         args = map(sympify, args)
         return Expr.__new__(cls, *args)
 
     @property
-    def function(self):
+    def function(self) -> Basic:
         return self.args[0]
 
     @property
@@ -154,7 +159,7 @@ class FourierSeries(SeriesBase):
         return self.args[1][0]
 
     @property
-    def period(self):
+    def period(self) -> tuple[Any, Any]:
         return (self.args[1][1], self.args[1][2])
 
     @property
@@ -170,7 +175,7 @@ class FourierSeries(SeriesBase):
         return self.args[2][2]
 
     @property
-    def interval(self):
+    def interval(self) -> FiniteSet | Interval:
         return Interval(0, oo)
 
     @property
@@ -194,7 +199,7 @@ class FourierSeries(SeriesBase):
         if old.has(x):
             return self
 
-    def truncate(self, n=3):
+    def truncate(self, n=3) -> Generator[Any, Any, None] | Order:
         """
         Return the first n nonzero terms of the series.
 
@@ -238,7 +243,7 @@ class FourierSeries(SeriesBase):
 
         return Add(*terms)
 
-    def sigma_approximation(self, n=3):
+    def sigma_approximation(self, n=3) -> Order:
         r"""
         Return :math:`\sigma`-approximation of Fourier series with respect
         to order n.
@@ -308,7 +313,7 @@ class FourierSeries(SeriesBase):
                  if t is not S.Zero]
         return Add(*terms)
 
-    def shift(self, s):
+    def shift(self, s) -> Self:
         """
         Shift the function by a term independent of x.
 
@@ -339,7 +344,7 @@ class FourierSeries(SeriesBase):
 
         return self.func(sfunc, self.args[1], (a0, self.an, self.bn))
 
-    def shiftx(self, s):
+    def shiftx(self, s) -> Self:
         """
         Shift x by a term independent of x.
 
@@ -371,7 +376,7 @@ class FourierSeries(SeriesBase):
 
         return self.func(sfunc, self.args[1], (self.a0, an, bn))
 
-    def scale(self, s):
+    def scale(self, s) -> Self:
         """
         Scale the function by a term independent of x.
 
@@ -404,7 +409,7 @@ class FourierSeries(SeriesBase):
 
         return self.func(sfunc, self.args[1], (a0, an, bn))
 
-    def scalex(self, s):
+    def scalex(self, s) -> Self:
         """
         Scale x by a term independent of x.
 
@@ -446,10 +451,10 @@ class FourierSeries(SeriesBase):
             return self.a0
         return self.an.coeff(pt) + self.bn.coeff(pt)
 
-    def __neg__(self):
+    def __neg__(self) -> Self:
         return self.scale(-1)
 
-    def __add__(self, other):
+    def __add__(self, other) -> Self | Order:
         if isinstance(other, FourierSeries):
             if self.period != other.period:
                 raise ValueError("Both the series should have same periods")
@@ -468,7 +473,7 @@ class FourierSeries(SeriesBase):
 
         return Add(self, other)
 
-    def __sub__(self, other):
+    def __sub__(self, other) -> Self | Order:
         return self.__add__(-other)
 
 
@@ -511,7 +516,7 @@ class FiniteFourierSeries(FourierSeries):
     sympy.series.fourier.fourier_series
     """
 
-    def __new__(cls, f, limits, exprs):
+    def __new__(cls, f, limits, exprs) -> Self:
         f = sympify(f)
         limits = sympify(limits)
         exprs = sympify(exprs)
@@ -548,7 +553,7 @@ class FiniteFourierSeries(FourierSeries):
         return Expr.__new__(cls, f, limits, exprs)
 
     @property
-    def interval(self):
+    def interval(self) -> FiniteSet | Interval:
         _length = 1 if self.a0 else 0
         _length += max(set(self.an.keys()).union(set(self.bn.keys()))) + 1
         return Interval(0, _length)
@@ -557,7 +562,7 @@ class FiniteFourierSeries(FourierSeries):
     def length(self):
         return self.stop - self.start
 
-    def shiftx(self, s):
+    def shiftx(self, s) -> Self:
         s, x = sympify(s), self.x
 
         if x in s.free_symbols:
@@ -568,7 +573,7 @@ class FiniteFourierSeries(FourierSeries):
 
         return self.func(sfunc, self.args[1], _expr)
 
-    def scale(self, s):
+    def scale(self, s) -> Self:
         s, x = sympify(s), self.x
 
         if x in s.free_symbols:
@@ -579,7 +584,7 @@ class FiniteFourierSeries(FourierSeries):
 
         return self.func(sfunc, self.args[1], _expr)
 
-    def scalex(self, s):
+    def scalex(self, s) -> Self:
         s, x = sympify(s), self.x
 
         if x in s.free_symbols:
@@ -598,7 +603,7 @@ class FiniteFourierSeries(FourierSeries):
                 + self.bn.get(pt, S.Zero) * sin(pt * (pi / self.L) * self.x)
         return _term
 
-    def __add__(self, other):
+    def __add__(self, other) -> FourierSeries | Order | FiniteFourierSeries | None:
         if isinstance(other, FourierSeries):
             return other.__add__(fourier_series(self.function, self.args[1],\
                                                 finite=False))
@@ -615,7 +620,7 @@ class FiniteFourierSeries(FourierSeries):
             return fourier_series(function, limits=self.args[1])
 
 
-def fourier_series(f, limits=None, finite=True):
+def fourier_series(f, limits=None, finite=True) -> FiniteFourierSeries | FourierSeries:
     r"""Computes the Fourier trigonometric series expansion.
 
     Explanation

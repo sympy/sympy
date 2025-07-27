@@ -5,7 +5,7 @@ from __future__ import annotations
 
 from bisect import bisect_left
 from collections import defaultdict, OrderedDict
-from collections.abc import MutableMapping
+from collections.abc import Generator, MutableMapping
 import math
 
 from sympy.core.containers import Dict
@@ -24,9 +24,37 @@ from sympy.utilities.decorator import deprecated
 from sympy.utilities.iterables import flatten
 from sympy.utilities.misc import as_int, filldedent
 from .ecm import _ecm_one_factor
+from sympy import Function
+from sympy.series.order import Order
+from typing import Any, Literal
+from typing_extensions import LiteralString
+
+class totient(Function):
+    @classmethod
+    def eval(cls, n) -> Literal[1] | None: ...
+
+class reduced_totient(Function):
+    @classmethod
+    def eval(cls, n) -> Literal[1, 0] | None: ...
+
+class divisor_sigma(Function):
+    @classmethod
+    def eval(cls, n, k=...) -> Integer | Order | None: ...
+
+class udivisor_sigma(Function):
+    @classmethod
+    def eval(cls, n, k=...) -> Order | None: ...
+
+class primenu(Function):
+    @classmethod
+    def eval(cls, n) -> int | None: ...
+
+class primeomega(Function):
+    @classmethod
+    def eval(cls, n) -> int | None: ...
 
 
-def smoothness(n):
+def smoothness(n) -> tuple[Literal[1], Literal[1]] | tuple[Any, Any]:
     """
     Return the B-smooth and B-power smooth values of n.
 
@@ -56,7 +84,7 @@ def smoothness(n):
     return max(facs), max(m**facs[m] for m in facs)
 
 
-def smoothness_p(n, m=-1, power=0, visual=None):
+def smoothness_p(n, m=-1, power=0, visual=None) -> str | dict[Any, Any] | tuple[Any, ...] | tuple[int, list[tuple[Any, tuple[Any, ...]]]] | LiteralString:
     """
     Return a list of [m, (p, (M, sm(p + m), psm(p + m)))...]
     where:
@@ -158,7 +186,7 @@ def smoothness_p(n, m=-1, power=0, visual=None):
     return '\n'.join(lines)
 
 
-def multiplicity(p, n):
+def multiplicity(p, n) -> int:
     """
     Find the greatest integer m such that p**m divides n.
 
@@ -774,7 +802,7 @@ class FactorCache(MutableMapping):
 factor_cache = FactorCache(maxsize=1000)
 
 
-def pollard_rho(n, s=2, a=1, retries=5, seed=1234, max_steps=None, F=None):
+def pollard_rho(n, s=2, a=1, retries=5, seed=1234, max_steps=None, F=None) -> int | None:
     r"""
     Use Pollard's rho method to try to extract a nontrivial factor
     of ``n``. The returned factor may be a composite number. If no
@@ -889,7 +917,7 @@ def pollard_rho(n, s=2, a=1, retries=5, seed=1234, max_steps=None, F=None):
     return None
 
 
-def pollard_pm1(n, B=10, a=2, retries=0, seed=1234):
+def pollard_pm1(n, B=10, a=2, retries=0, seed=1234) -> int | None:
     """
     Use Pollard's p-1 method to try to extract a nontrivial factor
     of ``n``. Either a divisor (perhaps composite) or ``None`` is returned.
@@ -1651,7 +1679,7 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
 
 
 def factorrat(rat, limit=None, use_trial=True, use_rho=True, use_pm1=True,
-              verbose=False, visual=None, multiple=False):
+              verbose=False, visual=None, multiple=False) -> list[Any] | dict[Any, int] | Order:
     r"""
     Given a Rational ``r``, ``factorrat(r)`` returns a dict containing
     the prime factors of ``r`` as keys and their respective multiplicities
@@ -1805,7 +1833,7 @@ def _divisors(n, proper=False):
         yield from rec_gen()
 
 
-def divisors(n, generator=False, proper=False):
+def divisors(n, generator=False, proper=False) -> list[int] | list[Any] | list[Any | Literal[1]] | Generator[Any | Literal[1], Any, None]:
     r"""
     Return all divisors of n sorted from 1..n by default.
     If generator is ``True`` an unordered generator is returned.
@@ -1841,7 +1869,7 @@ def divisors(n, generator=False, proper=False):
     return rv if generator else sorted(rv)
 
 
-def divisor_count(n, modulus=1, proper=False):
+def divisor_count(n, modulus=1, proper=False) -> Order | Literal[0]:
     """
     Return the number of divisors of ``n``. If ``modulus`` is not 1 then only
     those that are divisible by ``modulus`` are counted. If ``proper`` is True
@@ -1879,7 +1907,7 @@ def divisor_count(n, modulus=1, proper=False):
     return n
 
 
-def proper_divisors(n, generator=False):
+def proper_divisors(n, generator=False) -> list[int] | list[Any] | list[Any | Literal[1]] | Generator[Any | Literal[1], Any, None]:
     """
     Return all divisors of n except n, sorted by default.
     If generator is ``True`` an unordered generator is returned.
@@ -1904,7 +1932,7 @@ def proper_divisors(n, generator=False):
     return divisors(n, generator=generator, proper=True)
 
 
-def proper_divisor_count(n, modulus=1):
+def proper_divisor_count(n, modulus=1) -> Order | Literal[0]:
     """
     Return the number of proper divisors of ``n``.
 
@@ -1953,7 +1981,7 @@ def _udivisors(n):
         yield d
 
 
-def udivisors(n, generator=False):
+def udivisors(n, generator=False) -> list[int] | list[Any] | list[Any | Literal[1]] | Generator[Any | Literal[1], Any, None]:
     r"""
     Return all unitary divisors of n sorted from 1..n by default.
     If generator is ``True`` an unordered generator is returned.
@@ -1990,7 +2018,7 @@ def udivisors(n, generator=False):
     return rv if generator else sorted(rv)
 
 
-def udivisor_count(n):
+def udivisor_count(n) -> Any | Literal[0]:
     """
     Return the number of unitary divisors of ``n``.
 
@@ -2047,7 +2075,7 @@ def _antidivisors(n):
             yield d
 
 
-def antidivisors(n, generator=False):
+def antidivisors(n, generator=False) -> list[Any] | list[Any | int] | Generator[Any | int, Any, None]:
     r"""
     Return all antidivisors of n sorted from 1..n by default.
 
@@ -2079,7 +2107,7 @@ def antidivisors(n, generator=False):
     return rv if generator else sorted(rv)
 
 
-def antidivisor_count(n):
+def antidivisor_count(n) -> Literal[0]:
     """
     Return the number of antidivisors [1]_ of ``n``.
 
@@ -2299,7 +2327,7 @@ def _divisor_sigma(n:int, k:int=1) -> int:
     return math.prod((p**(k*(e + 1)) - 1)//(p**k - 1) for p, e in factorint(n).items())
 
 
-def core(n, t=2):
+def core(n, t=2) -> Literal[1]:
     r"""
     Calculate core(n, t) = `core_t(n)` of a positive integer n
 
@@ -2529,7 +2557,59 @@ def primeomega(n):
     return _primeomega(n)
 
 
-def mersenne_prime_exponent(nth):
+def mersenne_prime_exponent(nth) -> Literal[
+    2,
+    3,
+    5,
+    7,
+    13,
+    17,
+    19,
+    31,
+    61,
+    89,
+    107,
+    127,
+    521,
+    607,
+    1279,
+    2203,
+    2281,
+    3217,
+    4253,
+    4423,
+    9689,
+    9941,
+    11213,
+    19937,
+    21701,
+    23209,
+    44497,
+    86243,
+    110503,
+    132049,
+    216091,
+    756839,
+    859433,
+    1257787,
+    1398269,
+    2976221,
+    3021377,
+    6972593,
+    13466917,
+    20996011,
+    24036583,
+    25964951,
+    30402457,
+    32582657,
+    37156667,
+    42643801,
+    43112609,
+    57885161,
+    74207281,
+    77232917,
+    82589933,
+]:
     """Returns the exponent ``i`` for the nth Mersenne prime (which
     has the form `2^i - 1`).
 
@@ -2550,7 +2630,7 @@ def mersenne_prime_exponent(nth):
     return MERSENNE_PRIME_EXPONENTS[n - 1]
 
 
-def is_perfect(n):
+def is_perfect(n) -> bool | None:
     """Returns True if ``n`` is a perfect number, else False.
 
     A perfect number is equal to the sum of its positive, proper divisors.
@@ -2629,7 +2709,7 @@ def abundance(n):
     return _divisor_sigma(n) - 2 * n
 
 
-def is_abundant(n):
+def is_abundant(n) -> bool:
     """Returns True if ``n`` is an abundant number, else False.
 
     A abundant number is smaller than the sum of its positive proper divisors.
@@ -2655,7 +2735,7 @@ def is_abundant(n):
     return n % 6 == 0 or bool(abundance(n) > 0)
 
 
-def is_deficient(n):
+def is_deficient(n) -> bool:
     """Returns True if ``n`` is a deficient number, else False.
 
     A deficient number is greater than the sum of its positive proper divisors.
@@ -2681,7 +2761,7 @@ def is_deficient(n):
     return bool(abundance(n) < 0)
 
 
-def is_amicable(m, n):
+def is_amicable(m, n) -> bool:
     """Returns True if the numbers `m` and `n` are "amicable", else False.
 
     Amicable numbers are two different numbers so related that the sum
@@ -2770,7 +2850,7 @@ def find_first_n_carmichaels(n):
     return carmichaels
 
 
-def dra(n, b):
+def dra(n, b) -> int:
     """
     Returns the additive digital root of a natural number ``n`` in base ``b``
     which is a single digit value obtained by an iterative process of summing
@@ -2802,7 +2882,7 @@ def dra(n, b):
     return (1 + (num - 1) % (b - 1))
 
 
-def drm(n, b):
+def drm(n, b) -> int:
     """
     Returns the multiplicative digital root of a natural number ``n`` in a given
     base ``b`` which is a single digit value obtained by an iterative process of

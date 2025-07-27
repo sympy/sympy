@@ -12,10 +12,11 @@ from sympy.core import oo
 from sympy.logic.inference import satisfiable
 from sympy.assumptions.cnf import CNF, EncodedCNF
 from sympy.matrices.kind import MatrixKind
+from typing import Any
 
 
 def satask(proposition, assumptions=True, context=global_assumptions,
-        use_known_facts=True, iterations=oo):
+        use_known_facts=True, iterations=oo) -> bool | None:
     """
     Function to evaluate the proposition with assumptions using SAT algorithm.
 
@@ -82,7 +83,7 @@ def satask(proposition, assumptions=True, context=global_assumptions,
     return check_satisfiability(props, _props, sat)
 
 
-def check_satisfiability(prop, _prop, factbase):
+def check_satisfiability(prop, _prop, factbase) -> bool | None:
     sat_true = factbase.copy()
     sat_false = factbase.copy()
     sat_true.add_from_cnf(prop)
@@ -106,7 +107,7 @@ def check_satisfiability(prop, _prop, factbase):
         raise ValueError("Inconsistent assumptions")
 
 
-def extract_predargs(proposition, assumptions=None, context=None):
+def extract_predargs(proposition, assumptions=None, context=None) -> set[Any]:
     """
     Extract every expression in the argument of predicates from *proposition*,
     *assumptions* and *context*.
@@ -163,7 +164,7 @@ def extract_predargs(proposition, assumptions=None, context=None):
             exprs.add(key)
     return exprs
 
-def find_symbols(pred):
+def find_symbols(pred) -> set[Any]:
     """
     Find every :obj:`~.Symbol` in *pred*.
 
@@ -181,7 +182,7 @@ def find_symbols(pred):
     return pred.atoms(Symbol)
 
 
-def get_relevant_clsfacts(exprs, relevant_facts=None):
+def get_relevant_clsfacts(exprs, relevant_facts=None) -> tuple[Any, CNF | Any]:
     """
     Extract relevant facts from the items in *exprs*. Facts are defined in
     ``assumptions.sathandlers`` module.
@@ -267,7 +268,7 @@ def get_relevant_clsfacts(exprs, relevant_facts=None):
 
 
 def get_all_relevant_facts(proposition, assumptions, context,
-        use_known_facts=True, iterations=oo):
+        use_known_facts=True, iterations=oo) -> EncodedCNF:
     """
     Extract all relevant facts from *proposition* and *assumptions*.
 

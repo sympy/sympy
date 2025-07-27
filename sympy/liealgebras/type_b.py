@@ -1,9 +1,12 @@
 from .cartan_type import Standard_Cartan
 from sympy.core.backend import eye
+from sympy.liealgebras.cartan_type import Standard_Cartan
+from typing import Any
+from typing_extensions import Self
 
 class TypeB(Standard_Cartan):
 
-    def __new__(cls, n):
+    def __new__(cls, n) -> Self:
         if n < 2:
             raise ValueError("n cannot be less than 2")
         return Standard_Cartan.__new__(cls, "B", n)
@@ -70,7 +73,7 @@ class TypeB(Standard_Cartan):
             root[n-1] = 1
             return root
 
-    def positive_roots(self):
+    def positive_roots(self) -> dict[Any, Any]:
         """
         This method generates all the positive roots of
         A_n.  This is half of all of the roots of B_n;
@@ -155,7 +158,7 @@ class TypeB(Standard_Cartan):
         n = self.n
         return (n**2 - n)/2
 
-    def lie_algebra(self):
+    def lie_algebra(self) -> str:
         """
         Returns the Lie algebra associated with B_n
         """
@@ -163,7 +166,7 @@ class TypeB(Standard_Cartan):
         n = self.n
         return "so(" + str(2*n) + ")"
 
-    def dynkin_diagram(self):
+    def dynkin_diagram(self) -> str:
         n = self.n
         diag = "---".join("0" for i in range(1, n)) + "=>=0\n"
         diag += "   ".join(str(i) for i in range(1, n+1))

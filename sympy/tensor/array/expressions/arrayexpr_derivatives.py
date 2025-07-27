@@ -16,6 +16,7 @@ from sympy.tensor.array.expressions.array_expressions import (
     get_shape, ArrayContraction, _array_tensor_product, _array_contraction,
     _array_diagonal, _array_add, _permute_dims, Reshape)
 from sympy.tensor.array.expressions.from_matrix_to_array import convert_matrix_to_array
+from sympy import Basic
 
 
 @singledispatch
@@ -182,7 +183,7 @@ def _(expr: PermuteDims, x: Expr):
 
 
 @array_derive.register(Reshape)
-def _(expr: Reshape, x: Expr):
+def _(expr: Reshape, x: Expr) -> Reshape:
     de = array_derive(expr.expr, x)
     return Reshape(de, get_shape(x) + expr.shape)
 

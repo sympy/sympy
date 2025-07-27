@@ -18,7 +18,7 @@ scipy = import_module("scipy", import_kwargs={'fromlist':['stats']})
 
 
 @singledispatch
-def do_sample_scipy(dist, size, seed):
+def do_sample_scipy(dist, size, seed) -> None | int:
     return None
 
 
@@ -154,7 +154,7 @@ def _(dist: ZetaDistribution, size, seed):
 # FRV:
 
 @do_sample_scipy.register(SingleFiniteDistribution)
-def _(dist: SingleFiniteDistribution, size, seed):
+def _(dist: SingleFiniteDistribution, size, seed) -> int:
     # scipy can handle with custom distributions
 
     from scipy.stats import rv_discrete

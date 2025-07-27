@@ -1,7 +1,7 @@
 """Implementation of :class:`PythonIntegerRing` class. """
 
 
-from sympy.core.numbers import int_valued
+from sympy.core.numbers import Integer, int_valued
 from sympy.polys.domains.groundtypes import (
     PythonInteger, SymPyInteger, sqrt as python_sqrt,
     factorial as python_factorial, python_gcdex, python_gcd, python_lcm,
@@ -9,6 +9,7 @@ from sympy.polys.domains.groundtypes import (
 from sympy.polys.domains.integerring import IntegerRing
 from sympy.polys.polyerrors import CoercionFailed
 from sympy.utilities import public
+from typing import Any, Literal
 
 @public
 class PythonIntegerRing(IntegerRing):
@@ -23,14 +24,14 @@ class PythonIntegerRing(IntegerRing):
     one = dtype(1) # type: ignore
     alias = 'ZZ_python'
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Allow instantiation of this domain. """
 
-    def to_sympy(self, a):
+    def to_sympy(self, a) -> Integer:
         """Convert ``a`` to a SymPy object. """
         return SymPyInteger(a)
 
-    def from_sympy(self, a):
+    def from_sympy(self, a) -> PythonInteger:
         """Convert SymPy's Integer to ``dtype``. """
         if a.is_Integer:
             return PythonInteger(a.p)
@@ -47,52 +48,57 @@ class PythonIntegerRing(IntegerRing):
         """Convert Python's ``int`` to Python's ``int``. """
         return a
 
-    def from_QQ(K1, a, K0):
+    def from_QQ(K1, a, K0) -> None:
         """Convert Python's ``Fraction`` to Python's ``int``. """
         if a.denominator == 1:
             return a.numerator
 
-    def from_QQ_python(K1, a, K0):
+    def from_QQ_python(K1, a, K0) -> None:
         """Convert Python's ``Fraction`` to Python's ``int``. """
         if a.denominator == 1:
             return a.numerator
 
-    def from_FF_gmpy(K1, a, K0):
+    def from_FF_gmpy(K1, a, K0) -> PythonInteger:
         """Convert ``ModularInteger(mpz)`` to Python's ``int``. """
         return PythonInteger(K0.to_int(a))
 
-    def from_ZZ_gmpy(K1, a, K0):
+    def from_ZZ_gmpy(K1, a, K0) -> PythonInteger:
         """Convert GMPY's ``mpz`` to Python's ``int``. """
         return PythonInteger(a)
 
-    def from_QQ_gmpy(K1, a, K0):
+    def from_QQ_gmpy(K1, a, K0) -> PythonInteger | None:
         """Convert GMPY's ``mpq`` to Python's ``int``. """
         if a.denom() == 1:
             return PythonInteger(a.numer())
 
-    def from_RealField(K1, a, K0):
+    def from_RealField(K1, a, K0) -> PythonInteger | None:
         """Convert mpmath's ``mpf`` to Python's ``int``. """
         p, q = K0.to_rational(a)
 
         if q == 1:
             return PythonInteger(p)
 
-    def gcdex(self, a, b):
+    def gcdex(self, a, b) -> (
+        tuple[Literal[0], Literal[1], Literal[0]]
+        | tuple[Literal[0], Any, Any]
+        | tuple[Any, Literal[0], Any]
+        | tuple[Literal[-1, 1, 0], Literal[0, -1, 1], Any]
+    ):
         """Compute extended GCD of ``a`` and ``b``. """
         return python_gcdex(a, b)
 
-    def gcd(self, a, b):
+    def gcd(self, a, b) -> int:
         """Compute GCD of ``a`` and ``b``. """
         return python_gcd(a, b)
 
-    def lcm(self, a, b):
+    def lcm(self, a, b) -> Literal[0]:
         """Compute LCM of ``a`` and ``b``. """
         return python_lcm(a, b)
 
-    def sqrt(self, a):
+    def sqrt(self, a) -> int:
         """Compute square root of ``a``. """
         return python_sqrt(a)
 
-    def factorial(self, a):
+    def factorial(self, a) -> int:
         """Compute factorial of ``a``. """
         return python_factorial(a)

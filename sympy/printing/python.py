@@ -2,6 +2,8 @@ import keyword as kw
 import sympy
 from .repr import ReprPrinter
 from .str import StrPrinter
+from sympy.printing.repr import ReprPrinter
+from sympy.printing.str import StrPrinter
 
 # A list of classes that should be printed using StrPrinter
 STRPRINT = ("Add", "Infinity", "Integer", "Mul", "NegativeInfinity", "Pow")
@@ -10,7 +12,7 @@ STRPRINT = ("Add", "Infinity", "Integer", "Mul", "NegativeInfinity", "Pow")
 class PythonPrinter(ReprPrinter, StrPrinter):
     """A printer which converts an expression into its Python interpretation."""
 
-    def __init__(self, settings=None):
+    def __init__(self, settings=None) -> None:
         super().__init__(settings)
         self.symbols = []
         self.functions = []
@@ -39,7 +41,7 @@ class PythonPrinter(ReprPrinter, StrPrinter):
         raise ValueError('Modules in the expression are unacceptable')
 
 
-def python(expr, **settings):
+def python(expr, **settings) -> str:
     """Return Python interpretation of passed expression
     (can be passed to the exec() function without any modifications)"""
 
@@ -87,6 +89,6 @@ def python(expr, **settings):
     return result
 
 
-def print_python(expr, **settings):
+def print_python(expr, **settings) -> None:
     """Print output of python() function"""
     print(python(expr, **settings))

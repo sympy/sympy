@@ -22,19 +22,19 @@ class PlotCamera:
         'perspective': (-45, 0, -45)
     }
 
-    def __init__(self, window, ortho=False):
+    def __init__(self, window, ortho=False) -> None:
         self.window = window
         self.axes = self.window.plot.axes
         self.ortho = ortho
         self.reset()
 
-    def init_rot_matrix(self):
+    def init_rot_matrix(self) -> None:
         pgl.glPushMatrix()
         pgl.glLoadIdentity()
         self._rot = get_model_matrix()
         pgl.glPopMatrix()
 
-    def set_rot_preset(self, preset_name):
+    def set_rot_preset(self, preset_name) -> None:
         self.init_rot_matrix()
         if preset_name not in self.rot_presets:
             raise ValueError(
@@ -44,7 +44,7 @@ class PlotCamera:
         self.euler_rotate(r[1], 0, 1, 0)
         self.euler_rotate(r[2], 0, 0, 1)
 
-    def reset(self):
+    def reset(self) -> None:
         self._dist = 0.0
         self._x, self._y = 0.0, 0.0
         self._rot = None
@@ -54,14 +54,14 @@ class PlotCamera:
             self._dist = self._default_dist
         self.init_rot_matrix()
 
-    def mult_rot_matrix(self, rot):
+    def mult_rot_matrix(self, rot) -> None:
         pgl.glPushMatrix()
         pgl.glLoadMatrixf(rot)
         pgl.glMultMatrixf(self._rot)
         self._rot = get_model_matrix()
         pgl.glPopMatrix()
 
-    def setup_projection(self):
+    def setup_projection(self) -> None:
         pgl.glMatrixMode(pgl.GL_PROJECTION)
         pgl.glLoadIdentity()
         if self.ortho:
@@ -78,27 +78,27 @@ class PlotCamera:
     def _get_scale(self):
         return 1.0, 1.0, 1.0
 
-    def apply_transformation(self):
+    def apply_transformation(self) -> None:
         pgl.glLoadIdentity()
         pgl.glTranslatef(self._x, self._y, -self._dist)
         if self._rot is not None:
             pgl.glMultMatrixf(self._rot)
         pgl.glScalef(*self._get_scale())
 
-    def spherical_rotate(self, p1, p2, sensitivity=1.0):
+    def spherical_rotate(self, p1, p2, sensitivity=1.0) -> None:
         mat = get_spherical_rotatation(p1, p2, self.window.width,
                                        self.window.height, sensitivity)
         if mat is not None:
             self.mult_rot_matrix(mat)
 
-    def euler_rotate(self, angle, x, y, z):
+    def euler_rotate(self, angle, x, y, z) -> None:
         pgl.glPushMatrix()
         pgl.glLoadMatrixf(self._rot)
         pgl.glRotatef(angle, x, y, z)
         self._rot = get_model_matrix()
         pgl.glPopMatrix()
 
-    def zoom_relative(self, clicks, sensitivity):
+    def zoom_relative(self, clicks, sensitivity) -> None:
 
         if self.ortho:
             dist_d = clicks * sensitivity * 50.0
@@ -113,7 +113,7 @@ class PlotCamera:
         if (clicks < 0 and new_dist < max_dist) or new_dist > min_dist:
             self._dist = new_dist
 
-    def mouse_translate(self, x, y, dx, dy):
+    def mouse_translate(self, x, y, dx, dy) -> None:
         pgl.glPushMatrix()
         pgl.glLoadIdentity()
         pgl.glTranslatef(0, 0, -self._dist)

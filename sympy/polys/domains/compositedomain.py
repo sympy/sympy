@@ -8,6 +8,7 @@ from sympy.polys.domains.domain import Domain, Er
 from sympy.polys.polyerrors import GeneratorsError
 
 from sympy.utilities import public
+from typing_extensions import Self
 
 
 if TYPE_CHECKING:
@@ -25,14 +26,14 @@ class CompositeDomain(Domain[Er]):
     symbols: tuple[Expr, ...]
     domain: Domain[Er]
 
-    def inject(self, *symbols):
+    def inject(self, *symbols) -> Self:
         """Inject generators into this domain.  """
         if not (set(self.symbols) & set(symbols)):
             return self.__class__(self.domain, self.symbols + symbols, self.order)
         else:
             raise GeneratorsError("common generators in %s and %s" % (self.symbols, symbols))
 
-    def drop(self, *symbols):
+    def drop(self, *symbols) -> Self:
         """Drop generators from this domain. """
         symset = set(symbols)
         newsyms = tuple(s for s in self.symbols if s not in symset)

@@ -210,7 +210,7 @@ an expression when customizing a printer. Mistakes include:
 
 from __future__ import annotations
 import sys
-from typing import Any, Type
+from typing import Callable, Any, Type
 import inspect
 from contextlib import contextmanager
 from functools import cmp_to_key, update_wrapper
@@ -219,11 +219,12 @@ from sympy.core.add import Add
 from sympy.core.basic import Basic
 
 from sympy.core.function import AppliedUndef, UndefinedFunction, Function
+from collections.abc import Generator
 
 
 
 @contextmanager
-def printer_context(printer, **kwargs):
+def printer_context(printer, **kwargs) -> Generator[None, Any, None]:
     original = printer._context.copy()
     try:
         printer._context.update(kwargs)
@@ -246,7 +247,7 @@ class Printer:
     _default_settings: dict[str, Any] = {}
 
     # must be initialized to pass tests and cannot be set to '| None' to pass mypy
-    printmethod = None  # type: str
+    printmethod: str = None  # type: str
 
     @classmethod
     def _get_initial_settings(cls):
@@ -256,7 +257,7 @@ class Printer:
                 settings[key] = val
         return settings
 
-    def __init__(self, settings=None):
+    def __init__(self, settings=None) -> None:
         self._str = str
 
         self._settings = self._get_initial_settings()
@@ -275,7 +276,7 @@ class Printer:
         self._print_level = 0
 
     @classmethod
-    def set_global_settings(cls, **settings):
+    def set_global_settings(cls, **settings) -> None:
         """Set system-wide printing settings. """
         for key, val in settings.items():
             if val is not None:
@@ -288,7 +289,7 @@ class Printer:
         else:
             raise AttributeError("No order defined.")
 
-    def doprint(self, expr):
+    def doprint(self, expr) -> str:
         """Returns printer's representation for expr (as a string)"""
         return self._str(self._print(expr))
 
@@ -335,7 +336,7 @@ class Printer:
         finally:
             self._print_level -= 1
 
-    def emptyPrinter(self, expr):
+    def emptyPrinter(self, expr) -> str:
         return str(expr)
 
     def _as_ordered_terms(self, expr, order=None):
@@ -419,7 +420,7 @@ class _PrintFunction:
         )
 
 
-def print_function(print_cls):
+def print_function(print_cls) -> Callable[..., _PrintFunction]:
     """ A decorator to replace kwargs with the printer settings in __signature__ """
     def decorator(f):
         if sys.version_info < (3, 9):

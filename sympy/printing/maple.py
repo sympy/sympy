@@ -14,6 +14,7 @@ from sympy.printing.codeprinter import CodePrinter
 from sympy.printing.precedence import precedence, PRECEDENCE
 
 import sympy
+from typing import Any
 
 _known_func_same_name = (
     'sin', 'cos', 'tan', 'sec', 'csc', 'cot', 'sinh', 'cosh', 'tanh', 'sech',
@@ -99,7 +100,7 @@ class MapleCodePrinter(CodePrinter):
         'allow_unknown_functions': True,
     })
 
-    def __init__(self, settings=None):
+    def __init__(self, settings=None) -> None:
         if settings is None:
             settings = {}
         super().__init__(settings)
@@ -256,7 +257,7 @@ class MapleCodePrinter(CodePrinter):
         return 'diff({func_expr}, {sec_arg})'.format(func_expr=self._print(_f), sec_arg=_second_arg)
 
 
-def maple_code(expr, assign_to=None, **settings):
+def maple_code(expr, assign_to=None, **settings) -> str | tuple[set[tuple[Any, str]], set[Any], str]:
     r"""Converts ``expr`` to a string of Maple code.
 
     Parameters
@@ -295,7 +296,7 @@ def maple_code(expr, assign_to=None, **settings):
     return MapleCodePrinter(settings).doprint(expr, assign_to)
 
 
-def print_maple_code(expr, **settings):
+def print_maple_code(expr, **settings) -> None:
     """Prints the Maple representation of the given expression.
 
     See :func:`maple_code` for the meaning of the optional arguments.

@@ -8,6 +8,9 @@ from sympy.polys.domains import QQ
 
 from sympy.polys.matrices import DomainMatrix
 from sympy.polys.matrices.domainscalar import DomainScalar
+from types import NotImplementedType
+from typing import Any
+from typing_extensions import Self
 
 
 class MutablePolyDenseMatrix:
@@ -45,7 +48,7 @@ class MutablePolyDenseMatrix:
 
     """
 
-    def __new__(cls, *args, ring=None):
+    def __new__(cls, *args, ring=None) -> Self:
 
         if not args:
             # PolyMatrix(ring=QQ[x])
@@ -83,7 +86,7 @@ class MutablePolyDenseMatrix:
         return cls.from_list(rows, cols, items, gens, ring)
 
     @classmethod
-    def from_list(cls, rows, cols, items, gens, ring):
+    def from_list(cls, rows, cols, items, gens, ring) -> Self:
 
         # items can be Expr, Poly, or a mix of Expr and Poly
         items = [_sympify(item) for item in items]
@@ -123,7 +126,7 @@ class MutablePolyDenseMatrix:
         return cls.from_dm(dm)
 
     @classmethod
-    def from_dm(cls, dm):
+    def from_dm(cls, dm) -> Self:
         obj = super().__new__(cls)
         dm = dm.to_sparse()
         R = dm.domain
@@ -137,10 +140,10 @@ class MutablePolyDenseMatrix:
         return self._dm.to_Matrix()
 
     @classmethod
-    def from_Matrix(cls, other, *gens, ring=None):
+    def from_Matrix(cls, other, *gens, ring=None) -> Self:
         return cls(*other.shape, other.flat(), *gens, ring=ring)
 
-    def set_gens(self, gens):
+    def set_gens(self, gens) -> Self:
         return self.from_Matrix(self.to_Matrix(), gens)
 
     def __repr__(self):
@@ -164,7 +167,7 @@ class MutablePolyDenseMatrix:
     def __len__(self):
         return self.rows * self.cols
 
-    def __getitem__(self, key):
+    def __getitem__(self, key) -> list[Any] | Any | Self:
 
         def to_poly(v):
             ground = self._dm.domain.domain
@@ -187,22 +190,22 @@ class MutablePolyDenseMatrix:
         else:
             return self.from_dm(dm[i, j])
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
         if not isinstance(self, type(other)):
             return NotImplemented
         return self._dm == other._dm
 
-    def __add__(self, other):
+    def __add__(self, other) -> Self | NotImplementedType:
         if isinstance(other, type(self)):
             return self.from_dm(self._dm + other._dm)
         return NotImplemented
 
-    def __sub__(self, other):
+    def __sub__(self, other) -> Self | NotImplementedType:
         if isinstance(other, type(self)):
             return self.from_dm(self._dm - other._dm)
         return NotImplemented
 
-    def __mul__(self, other):
+    def __mul__(self, other) -> Self | NotImplementedType:
         if isinstance(other, type(self)):
             return self.from_dm(self._dm * other._dm)
         elif isinstance(other, int):
@@ -216,7 +219,7 @@ class MutablePolyDenseMatrix:
             return self.from_dm(self._dm * other_ds)
         return NotImplemented
 
-    def __rmul__(self, other):
+    def __rmul__(self, other) -> Self | NotImplementedType:
         if isinstance(other, int):
             other = _sympify(other)
         if isinstance(other, Expr):
@@ -224,7 +227,7 @@ class MutablePolyDenseMatrix:
             return self.from_dm(other_ds * self._dm)
         return NotImplemented
 
-    def __truediv__(self, other):
+    def __truediv__(self, other) -> NotImplementedType | Self:
 
         if isinstance(other, Poly):
             other = other.as_expr()
@@ -239,33 +242,33 @@ class MutablePolyDenseMatrix:
         dm = self._dm * inverse
         return self.from_dm(dm)
 
-    def __neg__(self):
+    def __neg__(self) -> Self:
         return self.from_dm(-self._dm)
 
-    def transpose(self):
+    def transpose(self) -> Self:
         return self.from_dm(self._dm.transpose())
 
-    def row_join(self, other):
+    def row_join(self, other) -> Self:
         dm = DomainMatrix.hstack(self._dm, other._dm)
         return self.from_dm(dm)
 
-    def col_join(self, other):
+    def col_join(self, other) -> Self:
         dm = DomainMatrix.vstack(self._dm, other._dm)
         return self.from_dm(dm)
 
-    def applyfunc(self, func):
+    def applyfunc(self, func) -> Self:
         M = self.to_Matrix().applyfunc(func)
         return self.from_Matrix(M, self.gens)
 
     @classmethod
-    def eye(cls, n, gens):
+    def eye(cls, n, gens) -> Self:
         return cls.from_dm(DomainMatrix.eye(n, QQ[gens]))
 
     @classmethod
-    def zeros(cls, m, n, gens):
+    def zeros(cls, m, n, gens) -> Self:
         return cls.from_dm(DomainMatrix.zeros((m, n), QQ[gens]))
 
-    def rref(self, simplify='ignore', normalize_last='ignore'):
+    def rref(self, simplify='ignore', normalize_last='ignore') -> tuple[Self, Any]:
         # If this is K[x] then computes RREF in ground field K.
         if not (self.domain.is_Field and all(p.is_ground for p in self)):
             raise ValueError("PolyMatrix rref is only for ground field elements")
@@ -275,7 +278,7 @@ class MutablePolyDenseMatrix:
         dm_rref = dm_rref.convert_to(dm.domain)
         return self.from_dm(dm_rref), pivots
 
-    def nullspace(self):
+    def nullspace(self) -> list[Self]:
         # If this is K[x] then computes nullspace in ground field K.
         if not (self.domain.is_Field and all(p.is_ground for p in self)):
             raise ValueError("PolyMatrix nullspace is only for ground field elements")

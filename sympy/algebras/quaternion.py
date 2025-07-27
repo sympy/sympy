@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, overload
+from typing import Any, Literal, TYPE_CHECKING, overload
 
 from sympy.core.numbers import Rational
 from sympy.core.singleton import S
@@ -12,13 +12,17 @@ from sympy.functions.elementary.trigonometric import (acos, asin, atan2)
 from sympy.functions.elementary.trigonometric import (cos, sin)
 from sympy.simplify.trigsimp import trigsimp
 from sympy.integrals.integrals import integrate
-from sympy.matrices.dense import MutableDenseMatrix as Matrix
+from sympy.matrices.dense import MutableDenseMatrix, MutableDenseMatrix as Matrix
 from sympy.core.expr import Expr
 from sympy.core.sympify import sympify, _sympify
 from sympy.core.logic import fuzzy_not, fuzzy_or
 from sympy.utilities.misc import as_int
 
 from mpmath.libmp.libmpf import prec_to_dps
+from sympy.core.function import UndefinedFunction
+from sympy.core.power import Pow
+from types import NotImplementedType
+from typing_extensions import Self
 
 if TYPE_CHECKING:
     from typing import Iterable, Sequence
@@ -654,7 +658,7 @@ class Quaternion(Expr):
         return cls(a, b, c, d)
 
     @classmethod
-    def from_rotation_matrix(cls, M):
+    def from_rotation_matrix(cls, M) -> "Quaternion":
         """Returns the equivalent quaternion of a matrix. The quaternion will be normalized
         only if the matrix is special orthogonal (orthogonal and det(M) = 1).
 
@@ -727,7 +731,7 @@ class Quaternion(Expr):
     def _eval_Integral(self, *args) -> Quaternion:
         return self.integrate(*args)
 
-    def diff(self, *symbols, **kwargs):
+    def diff(self, *symbols, **kwargs) -> Self:
         kwargs.setdefault('evaluate', True)
         a, b, c, d = [arg.diff(*symbols, **kwargs) for arg in self.args]
         return self.func(a, b, c, d)

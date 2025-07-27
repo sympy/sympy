@@ -4,6 +4,8 @@ from sympy.core.symbol import Dummy
 from sympy.core.sympify import sympify, _sympify
 from sympy.matrices.expressions import MatrixExpr
 from sympy.matrices.matrixbase import MatrixBase
+from sympy.core.basic import Basic
+from typing_extensions import Self
 
 
 class ElementwiseApplyFunction(MatrixExpr):
@@ -47,7 +49,7 @@ class ElementwiseApplyFunction(MatrixExpr):
     [0, 0, E]])
     """
 
-    def __new__(cls, function, expr):
+    def __new__(cls, function, expr) -> MatrixExpr | Self:
         expr = _sympify(expr)
         if not expr.is_Matrix:
             raise ValueError("{} must be a matrix instance.".format(expr))
@@ -81,18 +83,18 @@ class ElementwiseApplyFunction(MatrixExpr):
         return obj
 
     @property
-    def function(self):
+    def function(self) -> Basic:
         return self.args[0]
 
     @property
-    def expr(self):
+    def expr(self) -> Basic:
         return self.args[1]
 
     @property
     def shape(self):
         return self.expr.shape
 
-    def doit(self, **hints):
+    def doit(self, **hints) -> Basic | Self:
         deep = hints.get("deep", True)
         expr = self.expr
         if deep:

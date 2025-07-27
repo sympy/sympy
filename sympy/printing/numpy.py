@@ -3,6 +3,7 @@ from sympy.core.function import Lambda
 from sympy.core.power import Pow
 from .pycode import PythonCodePrinter, _known_functions_math, _print_known_const, _print_known_func, _unpack_integral_limits, ArrayPrinter
 from .codeprinter import CodePrinter
+from sympy.printing.pycode import ArrayPrinter, PythonCodePrinter
 
 
 _not_in_numpy = 'erf erfc factorial gamma loggamma'.split()
@@ -44,7 +45,7 @@ class NumPyPrinter(ArrayPrinter, PythonCodePrinter):
     _kf = _numpy_known_functions
     _kc = _numpy_known_constants
 
-    def __init__(self, settings=None):
+    def __init__(self, settings=None) -> None:
         """
         `settings` is passed to CodePrinter.__init__()
         `module` specifies the array module to use, currently 'NumPy', 'CuPy'
@@ -350,7 +351,7 @@ class SciPyPrinter(NumPyPrinter):
     _kf = {**NumPyPrinter._kf, **_scipy_known_functions}
     _kc = {**NumPyPrinter._kc, **_scipy_known_constants}
 
-    def __init__(self, settings=None):
+    def __init__(self, settings=None) -> None:
         super().__init__(settings=settings)
         self.language = "Python with SciPy and NumPy"
 
@@ -490,7 +491,7 @@ class CuPyPrinter(NumPyPrinter):
     _kf = _cupy_known_functions
     _kc = _cupy_known_constants
 
-    def __init__(self, settings=None):
+    def __init__(self, settings=None) -> None:
         super().__init__(settings=settings)
 
 for func in _cupy_known_functions:
@@ -513,7 +514,7 @@ class JaxPrinter(NumPyPrinter):
     _kf = _jax_known_functions
     _kc = _jax_known_constants
 
-    def __init__(self, settings=None):
+    def __init__(self, settings=None) -> None:
         super().__init__(settings=settings)
         self.printmethod = '_jaxcode'
 

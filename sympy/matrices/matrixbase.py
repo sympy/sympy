@@ -39,7 +39,7 @@ from sympy.polys.polytools import Poly
 from sympy.utilities.iterables import flatten, is_sequence
 from sympy.utilities.misc import as_int, filldedent
 from sympy.core.decorators import call_highest_priority
-from sympy.core.logic import fuzzy_and
+from sympy.core.logic import FuzzyBool, fuzzy_and
 from sympy.tensor.array import NDimArray
 from sympy.utilities.iterables import NotIterable
 
@@ -88,6 +88,8 @@ from .decompositions import (
 from .graph import (
     _connected_components, _connected_components_decomposition,
     _strongly_connected_components, _strongly_connected_components_decomposition)
+from _typeshed import Incomplete
+from sympy.matrices.kind import MatrixKind
 
 
 if TYPE_CHECKING:
@@ -115,7 +117,7 @@ if TYPE_CHECKING:
     Slice = slice | list[int]
 
 
-__doctest_requires__ = {
+__doctest_requires__: Incomplete = {
     ('MatrixBase.is_indefinite',
      'MatrixBase.is_positive_definite',
      'MatrixBase.is_positive_semidefinite',
@@ -135,8 +137,8 @@ class MatrixBase(Printable):
 
     is_Matrix = True
     _class_priority = 3
-    zero = S.Zero
-    one = S.One
+    zero: Incomplete = S.Zero
+    one: Incomplete = S.One
 
     _diff_wrt: bool = True
     _simplify = None
@@ -2612,7 +2614,7 @@ class MatrixBase(Printable):
         """
         return self.applyfunc(lambda x: refine(x, assumptions))
 
-    def replace(self, F, G, map=False, simultaneous=True, exact=None):
+    def replace(self, F, G, map: bool=False, simultaneous: bool=True, exact: Incomplete | None=None):
         """Replaces Function F in Matrix entries with Function G.
 
         Examples
@@ -3335,25 +3337,25 @@ class MatrixBase(Printable):
     def _eval_determinant(self) -> Expr:
         return _det(self)
 
-    def adjugate(self, method="berkowitz") -> Self:
+    def adjugate(self, method: str="berkowitz") -> Self:
         return _adjugate(self, method=method)
 
     def charpoly(self, x: str | Expr = 'lambda', simplify=_utilities_simplify) -> Poly:
         return _charpoly(self, x=x, simplify=simplify)
 
-    def cofactor(self, i, j, method="berkowitz") -> Expr:
+    def cofactor(self, i, j, method: str="berkowitz") -> Expr:
         return _cofactor(self, i, j, method=method)
 
-    def cofactor_matrix(self, method="berkowitz") -> Self:
+    def cofactor_matrix(self, method: str="berkowitz") -> Self:
         return _cofactor_matrix(self, method=method)
 
-    def det(self, method="bareiss", iszerofunc=None) -> Expr:
+    def det(self, method: str="bareiss", iszerofunc: Incomplete | None=None) -> Expr:
         return _det(self, method=method, iszerofunc=iszerofunc)
 
     def per(self) -> Expr:
         return _per(self)
 
-    def minor(self, i, j, method="berkowitz") -> Expr:
+    def minor(self, i, j, method: str="berkowitz") -> Expr:
         return _minor(self, i, j, method=method)
 
     def minor_submatrix(self, i, j) -> Self:
@@ -3640,13 +3642,13 @@ class MatrixBase(Printable):
         else:
             raise ValueError(f'invalid operation {op!r}')
 
-    def columnspace(self, simplify=False) -> list[Self]:
+    def columnspace(self, simplify: bool=False) -> list[Self]:
         return _columnspace(self, simplify=simplify)
 
-    def nullspace(self, simplify=False, iszerofunc=_iszero) -> list[Self]:
+    def nullspace(self, simplify: bool=False, iszerofunc=_iszero) -> list[Self]:
         return _nullspace(self, simplify=simplify, iszerofunc=iszerofunc)
 
-    def rowspace(self, simplify=False) -> list[Self]:
+    def rowspace(self, simplify: bool=False) -> list[Self]:
         return _rowspace(self, simplify=simplify)
 
     # XXX: Somehow replacing this with an ordinary use of classmethod breaks
@@ -3686,10 +3688,10 @@ class MatrixBase(Printable):
         return _diagonalize(self, reals_only=reals_only, sort=sort,
                 normalize=normalize)
 
-    def bidiagonalize(self, upper=True) -> Self:
+    def bidiagonalize(self, upper: bool=True) -> Self:
         return _bidiagonalize(self, upper=upper)
 
-    def bidiagonal_decomposition(self, upper=True) -> tuple[Self, Self, Self]:
+    def bidiagonal_decomposition(self, upper: bool=True) -> tuple[Self, Self, Self]:
         return _bidiagonal_decomposition(self, upper=upper)
 
     @property
@@ -4034,7 +4036,7 @@ class MatrixBase(Printable):
         """
         return [self[i, j] for i in range(self.rows) for j in range(self.cols)]
 
-    def __array__(self, dtype=object, copy=None):
+    def __array__(self, dtype=object, copy: Incomplete | None=None):
         if copy is not None and not copy:
             raise TypeError("Cannot implement copy=False when converting Matrix to ndarray")
         from .dense import matrix2numpy
@@ -5347,8 +5349,8 @@ class MatrixBase(Printable):
         """
         return v * (self.dot(v) / v.dot(v))
 
-    def table(self, printer, rowstart='[', rowend=']', rowsep='\n',
-              colsep=', ', align='right'):
+    def table(self, printer, rowstart: str='[', rowend: str=']', rowsep: str='\n',
+              colsep: str=', ', align: str='right'):
         r"""
         String form of Matrix as a table.
 
@@ -5495,20 +5497,20 @@ class MatrixBase(Printable):
     def gauss_jordan_solve(self, B: MatrixBase, freevar: Literal[True],
                            ) -> tuple[Self, Self, list[int]]: ...
 
-    def gauss_jordan_solve(self, B, freevar=False
+    def gauss_jordan_solve(self, B, freevar: bool=False
                            ) -> tuple[Self, Self] | tuple[Self, Self, list[int]]:
         return _gauss_jordan_solve(self, B, freevar=freevar)
 
-    def pinv_solve(self, B, arbitrary_matrix=None) -> Self:
+    def pinv_solve(self, B, arbitrary_matrix: Incomplete | None=None) -> Self:
         return _pinv_solve(self, B, arbitrary_matrix=arbitrary_matrix)
 
-    def cramer_solve(self, rhs: Self, det_method="laplace") -> Self:
+    def cramer_solve(self, rhs: Self, det_method: str="laplace") -> Self:
         return _cramer_solve(self, rhs, det_method=det_method)
 
-    def solve(self, rhs: Self, method='GJ') -> Self:
+    def solve(self, rhs: Self, method: str='GJ') -> Self:
         return _solve(self, rhs, method=method)
 
-    def solve_least_squares(self, rhs: Self, method='CH') -> Self:
+    def solve_least_squares(self, rhs: Self, method: str='CH') -> Self:
         return _solve_least_squares(self, rhs, method=method)
 
     def pinv(self, method: str = 'RD') -> Self:
@@ -5708,7 +5710,7 @@ def _unify_with_other(self: MatrixBase, other: Any
     return self, other, T
 
 
-def a2idx(j, n=None):
+def a2idx(j, n: Incomplete | None=None):
     """Return integer after making positive and validating against n."""
     if not isinstance(j, int):
         jindex = getattr(j, '__index__', None)

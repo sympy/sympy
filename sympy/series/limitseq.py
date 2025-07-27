@@ -14,6 +14,8 @@ from sympy.functions.elementary.complexes import Abs
 from sympy.functions.elementary.miscellaneous import Max, Min
 from sympy.functions.elementary.trigonometric import cos, sin
 from sympy.series.limits import Limit
+from sympy.core.basic import Basic
+from sympy.series.order import Order
 
 
 def difference_delta(expr, n=None, step=1):
@@ -64,7 +66,7 @@ def difference_delta(expr, n=None, step=1):
     return expr.subs(n, n + step) - expr
 
 
-def dominant(expr, n):
+def dominant(expr, n) -> Basic | None:
     """Finds the dominant term in a sum, that is a term that dominates
     every other term.
 
@@ -158,7 +160,7 @@ def _limit_seq(expr, n, trials):
         expr = (num / den).gammasimp()
 
 
-def limit_seq(expr, n=None, trials=5):
+def limit_seq(expr, n=None, trials=5) -> AccumulationBounds | Order | None:
     """Finds the limit of a sequence as index ``n`` tends to infinity.
 
     Parameters

@@ -4,6 +4,9 @@ from sympy.core.symbol import Dummy
 from sympy.core.sympify import _sympify, sympify
 from sympy.matrices import Matrix
 from sympy.functions.elementary.complexes import re, im
+from sympy.core.basic import Basic
+from sympy.matrices.expressions.matexpr import MatrixExpr
+from typing_extensions import Self
 
 
 class FunctionMatrix(MatrixExpr):
@@ -77,7 +80,7 @@ class FunctionMatrix(MatrixExpr):
     dense matrix with entries in some form of a sequence, in a most
     sparse way.
     """
-    def __new__(cls, rows, cols, lamda):
+    def __new__(cls, rows, cols, lamda) -> Self:
         rows, cols = _sympify(rows), _sympify(cols)
         cls._check_dim(rows)
         cls._check_dim(cols)
@@ -99,11 +102,11 @@ class FunctionMatrix(MatrixExpr):
         return super().__new__(cls, rows, cols, lamda)
 
     @property
-    def shape(self):
+    def shape(self) -> tuple[Basic, ...]:
         return self.args[0:2]
 
     @property
-    def lamda(self):
+    def lamda(self) -> Basic:
         return self.args[2]
 
     def _entry(self, i, j, **kwargs):

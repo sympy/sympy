@@ -1,6 +1,6 @@
 """Module for querying SymPy objects about assumptions."""
 
-from sympy.assumptions.assume import (global_assumptions, Predicate,
+from sympy.assumptions.assume import (UndefinedPredicate, global_assumptions, Predicate,
         AppliedPredicate)
 from sympy.assumptions.cnf import CNF, EncodedCNF, Literal
 from sympy.core import sympify
@@ -11,6 +11,15 @@ from sympy.utilities.decorator import memoize_property
 from sympy.utilities.exceptions import (sympy_deprecation_warning,
                                         SymPyDeprecationWarning,
                                         ignore_warnings)
+from .handlers.calculus import FinitePredicate, InfinitePredicate, NegativeInfinitePredicate, PositiveInfinitePredicate
+from .handlers.common import CommutativePredicate, IsTruePredicate
+from .handlers.matrices import ComplexElementsPredicate, DiagonalPredicate, FullRankPredicate, IntegerElementsPredicate, InvertiblePredicate, LowerTriangularPredicate, OrthogonalPredicate, PositiveDefinitePredicate, RealElementsPredicate, SquarePredicate, SymmetricPredicate, UnitaryPredicate, UpperTriangularPredicate
+from .handlers.ntheory import CompositePredicate, EvenPredicate, OddPredicate, PrimePredicate
+from .handlers.order import ExtendedNegativePredicate, ExtendedNonNegativePredicate, ExtendedNonPositivePredicate, ExtendedNonZeroPredicate, ExtendedPositivePredicate, NegativePredicate, NonNegativePredicate, NonPositivePredicate, NonZeroPredicate, PositivePredicate, ZeroPredicate
+from .handlers.sets import AlgebraicPredicate, AntihermitianPredicate, ComplexPredicate, ExtendedRealPredicate, HermitianPredicate, ImaginaryPredicate, IntegerPredicate, IrrationalPredicate, RationalPredicate, RealPredicate
+from .predicates.matrices import NormalPredicate, SingularPredicate, TriangularPredicate, UnitTriangularPredicate
+from .predicates.sets import NonIntegerPredicate, TranscendentalPredicate
+from .relation.equality import EqualityPredicate, GreaterThanPredicate, LessThanPredicate, StrictGreaterThanPredicate, StrictLessThanPredicate, UnequalityPredicate
 
 
 # Memoization is necessary for the properties of AssumptionKeys to
@@ -30,282 +39,282 @@ class AssumptionKeys:
     # fact system. Non-predicate attributes will break this.
 
     @memoize_property
-    def hermitian(self):
+    def hermitian(self) -> UndefinedPredicate | HermitianPredicate:
         from .handlers.sets import HermitianPredicate
         return HermitianPredicate()
 
     @memoize_property
-    def antihermitian(self):
+    def antihermitian(self) -> UndefinedPredicate | AntihermitianPredicate:
         from .handlers.sets import AntihermitianPredicate
         return AntihermitianPredicate()
 
     @memoize_property
-    def real(self):
+    def real(self) -> UndefinedPredicate | RealPredicate:
         from .handlers.sets import RealPredicate
         return RealPredicate()
 
     @memoize_property
-    def extended_real(self):
+    def extended_real(self) -> UndefinedPredicate | ExtendedRealPredicate:
         from .handlers.sets import ExtendedRealPredicate
         return ExtendedRealPredicate()
 
     @memoize_property
-    def imaginary(self):
+    def imaginary(self) -> UndefinedPredicate | ImaginaryPredicate:
         from .handlers.sets import ImaginaryPredicate
         return ImaginaryPredicate()
 
     @memoize_property
-    def complex(self):
+    def complex(self) -> UndefinedPredicate | ComplexPredicate:
         from .handlers.sets import ComplexPredicate
         return ComplexPredicate()
 
     @memoize_property
-    def algebraic(self):
+    def algebraic(self) -> UndefinedPredicate | AlgebraicPredicate:
         from .handlers.sets import AlgebraicPredicate
         return AlgebraicPredicate()
 
     @memoize_property
-    def transcendental(self):
+    def transcendental(self) -> UndefinedPredicate | TranscendentalPredicate:
         from .handlers.sets import TranscendentalPredicate
         return TranscendentalPredicate()
 
     @memoize_property
-    def integer(self):
+    def integer(self) -> UndefinedPredicate | IntegerPredicate:
         from .handlers.sets import IntegerPredicate
         return IntegerPredicate()
 
     @memoize_property
-    def noninteger(self):
+    def noninteger(self) -> UndefinedPredicate | NonIntegerPredicate:
         from .predicates.sets import NonIntegerPredicate
         return NonIntegerPredicate()
 
     @memoize_property
-    def rational(self):
+    def rational(self) -> UndefinedPredicate | RationalPredicate:
         from .handlers.sets import RationalPredicate
         return RationalPredicate()
 
     @memoize_property
-    def irrational(self):
+    def irrational(self) -> UndefinedPredicate | IrrationalPredicate:
         from .handlers.sets import IrrationalPredicate
         return IrrationalPredicate()
 
     @memoize_property
-    def finite(self):
+    def finite(self) -> UndefinedPredicate | FinitePredicate:
         from .handlers.calculus import FinitePredicate
         return FinitePredicate()
 
     @memoize_property
-    def infinite(self):
+    def infinite(self) -> UndefinedPredicate | InfinitePredicate:
         from .handlers.calculus import InfinitePredicate
         return InfinitePredicate()
 
     @memoize_property
-    def positive_infinite(self):
+    def positive_infinite(self) -> UndefinedPredicate | PositiveInfinitePredicate:
         from .handlers.calculus import PositiveInfinitePredicate
         return PositiveInfinitePredicate()
 
     @memoize_property
-    def negative_infinite(self):
+    def negative_infinite(self) -> UndefinedPredicate | NegativeInfinitePredicate:
         from .handlers.calculus import NegativeInfinitePredicate
         return NegativeInfinitePredicate()
 
     @memoize_property
-    def positive(self):
+    def positive(self) -> UndefinedPredicate | PositivePredicate:
         from .handlers.order import PositivePredicate
         return PositivePredicate()
 
     @memoize_property
-    def negative(self):
+    def negative(self) -> UndefinedPredicate | NegativePredicate:
         from .handlers.order import NegativePredicate
         return NegativePredicate()
 
     @memoize_property
-    def zero(self):
+    def zero(self) -> UndefinedPredicate | ZeroPredicate:
         from .handlers.order import ZeroPredicate
         return ZeroPredicate()
 
     @memoize_property
-    def extended_positive(self):
+    def extended_positive(self) -> UndefinedPredicate | ExtendedPositivePredicate:
         from .handlers.order import ExtendedPositivePredicate
         return ExtendedPositivePredicate()
 
     @memoize_property
-    def extended_negative(self):
+    def extended_negative(self) -> UndefinedPredicate | ExtendedNegativePredicate:
         from .handlers.order import ExtendedNegativePredicate
         return ExtendedNegativePredicate()
 
     @memoize_property
-    def nonzero(self):
+    def nonzero(self) -> UndefinedPredicate | NonZeroPredicate:
         from .handlers.order import NonZeroPredicate
         return NonZeroPredicate()
 
     @memoize_property
-    def nonpositive(self):
+    def nonpositive(self) -> UndefinedPredicate | NonPositivePredicate:
         from .handlers.order import NonPositivePredicate
         return NonPositivePredicate()
 
     @memoize_property
-    def nonnegative(self):
+    def nonnegative(self) -> UndefinedPredicate | NonNegativePredicate:
         from .handlers.order import NonNegativePredicate
         return NonNegativePredicate()
 
     @memoize_property
-    def extended_nonzero(self):
+    def extended_nonzero(self) -> UndefinedPredicate | ExtendedNonZeroPredicate:
         from .handlers.order import ExtendedNonZeroPredicate
         return ExtendedNonZeroPredicate()
 
     @memoize_property
-    def extended_nonpositive(self):
+    def extended_nonpositive(self) -> UndefinedPredicate | ExtendedNonPositivePredicate:
         from .handlers.order import ExtendedNonPositivePredicate
         return ExtendedNonPositivePredicate()
 
     @memoize_property
-    def extended_nonnegative(self):
+    def extended_nonnegative(self) -> UndefinedPredicate | ExtendedNonNegativePredicate:
         from .handlers.order import ExtendedNonNegativePredicate
         return ExtendedNonNegativePredicate()
 
     @memoize_property
-    def even(self):
+    def even(self) -> UndefinedPredicate | EvenPredicate:
         from .handlers.ntheory import EvenPredicate
         return EvenPredicate()
 
     @memoize_property
-    def odd(self):
+    def odd(self) -> UndefinedPredicate | OddPredicate:
         from .handlers.ntheory import OddPredicate
         return OddPredicate()
 
     @memoize_property
-    def prime(self):
+    def prime(self) -> UndefinedPredicate | PrimePredicate:
         from .handlers.ntheory import PrimePredicate
         return PrimePredicate()
 
     @memoize_property
-    def composite(self):
+    def composite(self) -> UndefinedPredicate | CompositePredicate:
         from .handlers.ntheory import CompositePredicate
         return CompositePredicate()
 
     @memoize_property
-    def commutative(self):
+    def commutative(self) -> UndefinedPredicate | CommutativePredicate:
         from .handlers.common import CommutativePredicate
         return CommutativePredicate()
 
     @memoize_property
-    def is_true(self):
+    def is_true(self) -> UndefinedPredicate | IsTruePredicate:
         from .handlers.common import IsTruePredicate
         return IsTruePredicate()
 
     @memoize_property
-    def symmetric(self):
+    def symmetric(self) -> UndefinedPredicate | SymmetricPredicate:
         from .handlers.matrices import SymmetricPredicate
         return SymmetricPredicate()
 
     @memoize_property
-    def invertible(self):
+    def invertible(self) -> UndefinedPredicate | InvertiblePredicate:
         from .handlers.matrices import InvertiblePredicate
         return InvertiblePredicate()
 
     @memoize_property
-    def orthogonal(self):
+    def orthogonal(self) -> UndefinedPredicate | OrthogonalPredicate:
         from .handlers.matrices import OrthogonalPredicate
         return OrthogonalPredicate()
 
     @memoize_property
-    def unitary(self):
+    def unitary(self) -> UndefinedPredicate | UnitaryPredicate:
         from .handlers.matrices import UnitaryPredicate
         return UnitaryPredicate()
 
     @memoize_property
-    def positive_definite(self):
+    def positive_definite(self) -> UndefinedPredicate | PositiveDefinitePredicate:
         from .handlers.matrices import PositiveDefinitePredicate
         return PositiveDefinitePredicate()
 
     @memoize_property
-    def upper_triangular(self):
+    def upper_triangular(self) -> UndefinedPredicate | UpperTriangularPredicate:
         from .handlers.matrices import UpperTriangularPredicate
         return UpperTriangularPredicate()
 
     @memoize_property
-    def lower_triangular(self):
+    def lower_triangular(self) -> UndefinedPredicate | LowerTriangularPredicate:
         from .handlers.matrices import LowerTriangularPredicate
         return LowerTriangularPredicate()
 
     @memoize_property
-    def diagonal(self):
+    def diagonal(self) -> UndefinedPredicate | DiagonalPredicate:
         from .handlers.matrices import DiagonalPredicate
         return DiagonalPredicate()
 
     @memoize_property
-    def fullrank(self):
+    def fullrank(self) -> UndefinedPredicate | FullRankPredicate:
         from .handlers.matrices import FullRankPredicate
         return FullRankPredicate()
 
     @memoize_property
-    def square(self):
+    def square(self) -> UndefinedPredicate | SquarePredicate:
         from .handlers.matrices import SquarePredicate
         return SquarePredicate()
 
     @memoize_property
-    def integer_elements(self):
+    def integer_elements(self) -> UndefinedPredicate | IntegerElementsPredicate:
         from .handlers.matrices import IntegerElementsPredicate
         return IntegerElementsPredicate()
 
     @memoize_property
-    def real_elements(self):
+    def real_elements(self) -> UndefinedPredicate | RealElementsPredicate:
         from .handlers.matrices import RealElementsPredicate
         return RealElementsPredicate()
 
     @memoize_property
-    def complex_elements(self):
+    def complex_elements(self) -> UndefinedPredicate | ComplexElementsPredicate:
         from .handlers.matrices import ComplexElementsPredicate
         return ComplexElementsPredicate()
 
     @memoize_property
-    def singular(self):
+    def singular(self) -> UndefinedPredicate | SingularPredicate:
         from .predicates.matrices import SingularPredicate
         return SingularPredicate()
 
     @memoize_property
-    def normal(self):
+    def normal(self) -> UndefinedPredicate | NormalPredicate:
         from .predicates.matrices import NormalPredicate
         return NormalPredicate()
 
     @memoize_property
-    def triangular(self):
+    def triangular(self) -> UndefinedPredicate | TriangularPredicate:
         from .predicates.matrices import TriangularPredicate
         return TriangularPredicate()
 
     @memoize_property
-    def unit_triangular(self):
+    def unit_triangular(self) -> UndefinedPredicate | UnitTriangularPredicate:
         from .predicates.matrices import UnitTriangularPredicate
         return UnitTriangularPredicate()
 
     @memoize_property
-    def eq(self):
+    def eq(self) -> UndefinedPredicate | EqualityPredicate:
         from .relation.equality import EqualityPredicate
         return EqualityPredicate()
 
     @memoize_property
-    def ne(self):
+    def ne(self) -> UndefinedPredicate | UnequalityPredicate:
         from .relation.equality import UnequalityPredicate
         return UnequalityPredicate()
 
     @memoize_property
-    def gt(self):
+    def gt(self) -> UndefinedPredicate | StrictGreaterThanPredicate:
         from .relation.equality import StrictGreaterThanPredicate
         return StrictGreaterThanPredicate()
 
     @memoize_property
-    def ge(self):
+    def ge(self) -> UndefinedPredicate | GreaterThanPredicate:
         from .relation.equality import GreaterThanPredicate
         return GreaterThanPredicate()
 
     @memoize_property
-    def lt(self):
+    def lt(self) -> UndefinedPredicate | StrictLessThanPredicate:
         from .relation.equality import StrictLessThanPredicate
         return StrictLessThanPredicate()
 
     @memoize_property
-    def le(self):
+    def le(self) -> UndefinedPredicate | LessThanPredicate:
         from .relation.equality import LessThanPredicate
         return LessThanPredicate()
 
@@ -364,7 +373,7 @@ def _extract_all_facts(assump, exprs):
     return CNF(facts)
 
 
-def ask(proposition, assumptions=True, context=global_assumptions):
+def ask(proposition, assumptions=True, context=global_assumptions) -> bool | None:
     """
     Function to evaluate the proposition with assumptions.
 
@@ -598,7 +607,7 @@ def _ask_single_fact(key, local_facts):
     return None
 
 
-def register_handler(key, handler):
+def register_handler(key, handler) -> None:
     """
     Register a handler in the ask system. key must be a string and handler a
     class inheriting from AskHandler.
@@ -624,7 +633,7 @@ def register_handler(key, handler):
         setattr(Q, key, Predicate(key, handlers=[handler]))
 
 
-def remove_handler(key, handler):
+def remove_handler(key, handler) -> None:
     """
     Removes a handler from the ask system.
 

@@ -1,4 +1,6 @@
-def pprint_nodes(subtrees):
+from typing import Literal
+
+def pprint_nodes(subtrees) -> Literal[""]:
     """
     Prettyprints systems of nodes.
 
@@ -33,7 +35,7 @@ def pprint_nodes(subtrees):
     return f
 
 
-def print_node(node, assumptions=True):
+def print_node(node, assumptions=True) -> str:
     """
     Returns information about the "node".
 
@@ -62,7 +64,7 @@ def print_node(node, assumptions=True):
     return s
 
 
-def tree(node, assumptions=True):
+def tree(node, assumptions=True) -> str:
     """
     Returns a tree representation of "node" as a string.
 
@@ -93,7 +95,7 @@ def tree(node, assumptions=True):
     return s
 
 
-def print_tree(node, assumptions=True):
+def print_tree(node, assumptions=True) -> None:
     """
     Prints a tree representation of "node".
 

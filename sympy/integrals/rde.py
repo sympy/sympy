@@ -34,11 +34,13 @@ from sympy.functions.elementary.miscellaneous import sqrt
 
 from sympy.integrals.risch import (gcdex_diophantine, frac_in, derivation,
     splitfactor, NonElementaryIntegralException, DecrementLevel, recognize_log_derivative)
+from sympy.polys.polymatrix import PolyMatrix
+from typing import Any, Literal
 
 # TODO: Add messages to NonElementaryIntegralException errors
 
 
-def order_at(a, p, t):
+def order_at(a, p, t) -> Literal[0]:
     """
     Computes the order of a at p, with respect to t.
 
@@ -93,7 +95,7 @@ def order_at_oo(a, d, t):
     return d.degree(t) - a.degree(t)
 
 
-def weak_normalizer(a, d, DE, z=None):
+def weak_normalizer(a, d, DE, z=None) -> tuple[Any, tuple[Any, Any]]:
     """
     Weak normalization.
 
@@ -144,7 +146,7 @@ def weak_normalizer(a, d, DE, z=None):
     return (q, (sn, sd))
 
 
-def normal_denom(fa, fd, ga, gd, DE):
+def normal_denom(fa, fd, ga, gd, DE) -> tuple[Any, tuple[Any, Any], tuple[Any, Any], Any]:
     """
     Normal part of the denominator.
 
@@ -181,7 +183,7 @@ def normal_denom(fa, fd, ga, gd, DE):
     return (a, (ba, bd), (ca, cd), h)
 
 
-def special_denom(a, ba, bd, ca, cd, DE, case='auto'):
+def special_denom(a, ba, bd, ca, cd, DE, case='auto') -> tuple[Any, Any, Any, Any]:
     """
     Special part of the denominator.
 
@@ -384,7 +386,7 @@ def bound_degree(a, b, cQ, DE, case='auto', parametric=False):
     return n
 
 
-def spde(a, b, c, n, DE):
+def spde(a, b, c, n, DE) -> tuple[Any, Any, Literal[0], Any, Any] | tuple[Any, Any, Any, Any, Any]:
     """
     Rothstein's Special Polynomial Differential Equation algorithm.
 
@@ -461,7 +463,7 @@ def no_cancel_b_large(b, c, n, DE):
     return q
 
 
-def no_cancel_b_small(b, c, n, DE):
+def no_cancel_b_small(b, c, n, DE) -> tuple[Any, Any, Any] | Any:
     """
     Poly Risch Differential Equation - No cancellation: deg(b) small enough.
 
@@ -508,7 +510,7 @@ def no_cancel_b_small(b, c, n, DE):
 
 
 # TODO: better name for this function
-def no_cancel_equal(b, c, n, DE):
+def no_cancel_equal(b, c, n, DE) -> tuple[Any, Any | int, Any] | Any:
     """
     Poly Risch Differential Equation - No cancellation: deg(b) == deg(D) - 1
 
@@ -665,7 +667,7 @@ def cancel_exp(b, c, n, DE):
     return q
 
 
-def solve_poly_rde(b, cQ, n, DE, parametric=False):
+def solve_poly_rde(b, cQ, n, DE, parametric=False) -> tuple[list[Any], Any] | Any | tuple[list[Any], PolyMatrix | Any] | tuple[Any, Any, Any] | tuple[Any, Any | int, Any]:
     """
     Solve a Polynomial Risch Differential Equation with degree bound ``n``.
 
@@ -758,7 +760,7 @@ def solve_poly_rde(b, cQ, n, DE, parametric=False):
             "implemented.")
 
 
-def rischDE(fa, fd, ga, gd, DE):
+def rischDE(fa, fd, ga, gd, DE) -> tuple[Any, Any]:
     """
     Solve a Risch Differential Equation: Dy + f*y == g.
 

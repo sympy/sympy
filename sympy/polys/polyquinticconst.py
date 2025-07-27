@@ -16,13 +16,14 @@ from sympy.core.numbers import I, Rational
 from sympy.functions import sqrt
 from sympy.polys.polytools import Poly
 from sympy.utilities import public
+from typing import Any
 
 x = Symbol('x')
 
 @public
 class PolyQuintic:
     """Special functions for solvable quintics"""
-    def __init__(self, poly):
+    def __init__(self, poly) -> None:
         _, _, self.p, self.q, self.r, self.s = poly.all_coeffs()
         self.zeta1 = Rational(-1, 4) + (sqrt(5)/4) + I*sqrt((sqrt(5)/8) + Rational(5, 8))
         self.zeta2 = (-sqrt(5)/4) - Rational(1, 4) + I*sqrt((-sqrt(5)/8) + Rational(5, 8))
@@ -36,7 +37,7 @@ class PolyQuintic:
         return Poly(f20, x)
 
     @property
-    def b(self):
+    def b(self) -> tuple[list[Any], list[int], list[int], list[int], list[int]]:
         p, q, r, s = self.p, self.q, self.r, self.s
         b = ( [], [0,0,0,0,0,0], [0,0,0,0,0,0], [0,0,0,0,0,0], [0,0,0,0,0,0],)
 
@@ -91,7 +92,7 @@ class PolyQuintic:
         return b
 
     @property
-    def o(self):
+    def o(self) -> list[int]:
         p, q, r, s = self.p, self.q, self.r, self.s
         o = [0]*6
 
@@ -110,7 +111,7 @@ class PolyQuintic:
         return o
 
     @property
-    def a(self):
+    def a(self) -> list[int]:
         p, q, r, s = self.p, self.q, self.r, self.s
         a = [0]*6
 
@@ -129,7 +130,7 @@ class PolyQuintic:
         return a
 
     @property
-    def c(self):
+    def c(self) -> list[int]:
         p, q, r, s = self.p, self.q, self.r, self.s
         c = [0]*6
 
@@ -159,7 +160,7 @@ class PolyQuintic:
         l0 = Poly(a, x).eval(theta)/F
         return l0
 
-    def T(self, theta, d):
+    def T(self, theta, d) -> list[int]:
         F = self.F
         T = [0]*5
         b = self.b
@@ -176,12 +177,12 @@ class PolyQuintic:
         order = Poly(o, x).eval(theta)/(d*F)
         return N(order)
 
-    def uv(self, theta, d):
+    def uv(self, theta, d) -> tuple[Any, Any]:
         c = self.c
         u = self.q*Rational(-25, 2)
         v = Poly(c, x).eval(theta)/(2*d*self.F)
         return N(u), N(v)
 
     @property
-    def zeta(self):
+    def zeta(self) -> list[Any]:
         return [self.zeta1, self.zeta2, self.zeta3, self.zeta4]

@@ -13,6 +13,7 @@ from mpmath.ctx_mp_python import PythonMPContext, _mpf, _mpc, _constant
 from mpmath.libmp import (MPZ_ONE, fzero, fone, finf, fninf, fnan,
     round_nearest, mpf_mul, repr_dps, int_types,
     from_int, from_float, from_str, to_rational)
+from typing import Any, Literal
 
 
 @public
@@ -48,7 +49,7 @@ new = object.__new__
 @public
 class MPContext(PythonMPContext):
 
-    def __init__(ctx, prec=53, dps=None, tol=None, real=False):
+    def __init__(ctx, prec=53, dps=None, tol=None, real=False) -> None:
         ctx._prec_rounding = [prec, round_nearest]
 
         if dps is None:
@@ -100,7 +101,7 @@ class MPContext(PythonMPContext):
         eps = (0, MPZ_ONE, 1-ctx.prec, 1)
         return mpf_mul(hundred, eps)
 
-    def make_tol(ctx):
+    def make_tol(ctx) -> _mpf:
         return ctx.make_mpf(ctx._make_tol())
 
     def _convert_tol(ctx, tol):
@@ -126,7 +127,7 @@ class MPContext(PythonMPContext):
     def _str_digits(ctx):
         return ctx._dps
 
-    def to_rational(ctx, s, limit=True):
+    def to_rational(ctx, s, limit=True) -> tuple[Any, Any | Literal[1]]:
         p, q = to_rational(s._mpf_)
 
         # Needed for GROUND_TYPES=flint if gmpy2 is installed because mpmath's
@@ -161,7 +162,7 @@ class MPContext(PythonMPContext):
         else:
             return bound1.numerator, bound1.denominator
 
-    def almosteq(ctx, s, t, rel_eps=None, abs_eps=None):
+    def almosteq(ctx, s, t, rel_eps=None, abs_eps=None) -> Literal[True]:
         t = ctx.convert(t)
         if abs_eps is None and rel_eps is None:
             rel_eps = abs_eps = ctx.tolerance or ctx.make_tol()

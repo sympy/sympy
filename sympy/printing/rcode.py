@@ -94,7 +94,7 @@ class RCodePrinter(CodePrinter):
 
     _relationals: dict[str, str] = {}
 
-    def __init__(self, settings={}):
+    def __init__(self, settings={}) -> None:
         CodePrinter.__init__(self, settings)
         self.known_functions = dict(known_functions)
         userfuncs = settings.get('user_functions', {})
@@ -258,7 +258,7 @@ class RCodePrinter(CodePrinter):
                 stop=stop-1, step=step, body=body)
 
 
-    def indent_code(self, code):
+    def indent_code(self, code) -> str | list[Any]:
         """Accepts a string of code or a list of code lines"""
 
         if isinstance(code, str):
@@ -287,7 +287,7 @@ class RCodePrinter(CodePrinter):
         return pretty
 
 
-def rcode(expr, assign_to=None, **settings):
+def rcode(expr, assign_to=None, **settings) -> str | tuple[set[tuple[Any, str]], set[Any], str]:
     """Converts an expr to a string of r code
 
     Parameters
@@ -397,6 +397,6 @@ def rcode(expr, assign_to=None, **settings):
     return RCodePrinter(settings).doprint(expr, assign_to)
 
 
-def print_rcode(expr, **settings):
+def print_rcode(expr, **settings) -> None:
     """Prints R representation of the given expression."""
     print(rcode(expr, **settings))

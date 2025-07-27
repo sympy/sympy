@@ -18,6 +18,13 @@ from .matpow import MatPow
 from .transpose import transpose
 from .permutation import PermutationMatrix
 from .special import ZeroMatrix, Identity, GenericIdentity, OneMatrix
+from sympy.core.expr import Expr
+from sympy.matrices.expressions.matadd import MatAdd
+from sympy.matrices.expressions.matexpr import MatrixExpr
+from sympy.matrices.expressions.special import GenericIdentity, GenericZeroMatrix, ZeroMatrix
+from sympy.series.order import Order
+from typing import Any
+from typing_extensions import Self
 
 
 # XXX: MatMul should perhaps not subclass directly from Mul
@@ -39,7 +46,7 @@ class MatMul(MatrixExpr, Mul):
 
     identity = GenericIdentity()
 
-    def __new__(cls, *args, evaluate=False, check=None, _sympify=True):
+    def __new__(cls, *args, evaluate=False, check=None, _sympify=True) -> GenericIdentity | Order | object | Self:
         if not args:
             return cls.identity
 
@@ -76,7 +83,7 @@ class MatMul(MatrixExpr, Mul):
         return canonicalize(expr)
 
     @property
-    def shape(self):
+    def shape(self) -> tuple[Any, Any]:
         matrices = [arg for arg in self.args if arg.is_Matrix]
         return (matrices[0].rows, matrices[-1].cols)
 
@@ -122,7 +129,7 @@ class MatMul(MatrixExpr, Mul):
             expand = False
         return result.doit() if expand else result
 
-    def as_coeff_matrices(self):
+    def as_coeff_matrices(self) -> tuple[Any | Order, list[Expr]]:
         scalars = [x for x in self.args if not x.is_Matrix]
         matrices = [x for x in self.args if x.is_Matrix]
         coeff = Mul(*scalars)
@@ -131,11 +138,11 @@ class MatMul(MatrixExpr, Mul):
 
         return coeff, matrices
 
-    def as_coeff_mmul(self):
+    def as_coeff_mmul(self) -> tuple[Any | Order, GenericIdentity | Any | Order | object | MatMul]:
         coeff, matrices = self.as_coeff_matrices()
         return coeff, MatMul(*matrices)
 
-    def expand(self, **kwargs):
+    def expand(self, **kwargs) -> object:
         expanded = super(MatMul, self).expand(**kwargs)
         return self._evaluate(expanded)
 
@@ -186,7 +193,7 @@ class MatMul(MatrixExpr, Mul):
             ).doit()
         return Inverse(self)
 
-    def doit(self, **hints):
+    def doit(self, **hints) -> object:
         deep = hints.get('deep', True)
         if deep:
             args = tuple(arg.doit(**hints) for arg in self.args)
@@ -198,7 +205,7 @@ class MatMul(MatrixExpr, Mul):
         return expr
 
     # Needed for partial compatibility with Mul
-    def args_cnc(self, cset=False, warn=True, **kwargs):
+    def args_cnc(self, cset=False, warn=True, **kwargs) -> list[Any]:
         coeff_c = [x for x in self.args if x.is_commutative]
         coeff_nc = [x for x in self.args if not x.is_commutative]
         if cset:
@@ -238,19 +245,19 @@ mul.register_handlerclass((Mul, MatMul), MatMul)
 
 
 # Rules
-def newmul(*args):
+def newmul(*args) -> MatMul:
     if args[0] == 1:
         args = args[1:]
     return new(MatMul, *args)
 
-def any_zeros(mul):
+def any_zeros(mul) -> ZeroMatrix:
     if any(arg.is_zero or (arg.is_Matrix and arg.is_ZeroMatrix)
                        for arg in mul.args):
         matrices = [arg for arg in mul.args if arg.is_Matrix]
         return ZeroMatrix(matrices[0].rows, matrices[-1].cols)
     return mul
 
-def merge_explicit(matmul):
+def merge_explicit(matmul) -> MatMul:
     """ Merge explicit MatrixBase arguments
 
     >>> from sympy import MatrixSymbol, Matrix, MatMul, pprint
@@ -292,7 +299,7 @@ def merge_explicit(matmul):
 
     return MatMul(*newargs)
 
-def remove_ids(mul):
+def remove_ids(mul) -> MatMul:
     """ Remove Identities from a MatMul
 
     This is a modified version of sympy.strategies.rm_id.
@@ -313,13 +320,13 @@ def remove_ids(mul):
     else:
         return mul
 
-def factor_in_front(mul):
+def factor_in_front(mul) -> MatMul:
     factor, matrices = mul.as_coeff_matrices()
     if factor != 1:
         return newmul(factor, *matrices)
     return mul
 
-def combine_powers(mul):
+def combine_powers(mul) -> MatMul:
     r"""Combine consecutive powers with the same base into one, e.g.
     $$A \times A^2 \Rightarrow A^3$$
 
@@ -382,7 +389,7 @@ def combine_powers(mul):
 
     return newmul(factor, *new_args)
 
-def combine_permutations(mul):
+def combine_permutations(mul) -> MatMul:
     """Refine products of permutation matrices as the products of cycles.
     """
     args = mul.args
@@ -404,7 +411,7 @@ def combine_permutations(mul):
 
     return MatMul(*result)
 
-def combine_one_matrices(mul):
+def combine_one_matrices(mul) -> MatMul:
     """
     Combine products of OneMatrix
 
@@ -424,7 +431,7 @@ def combine_one_matrices(mul):
 
     return newmul(factor, *new_args)
 
-def distribute_monom(mul):
+def distribute_monom(mul) -> GenericZeroMatrix | MatAdd:
     """
     Simplify MatMul expressions but distributing
     rational term to MatMul.
@@ -446,7 +453,7 @@ rules = (
 
 canonicalize = exhaust(typed({MatMul: do_one(*rules)}))
 
-def only_squares(*matrices):
+def only_squares(*matrices) -> list[Any]:
     """factor matrices only if they are square"""
     if matrices[0].rows != matrices[-1].cols:
         raise RuntimeError("Invalid matrices being multiplied")
@@ -459,7 +466,7 @@ def only_squares(*matrices):
     return out
 
 
-def refine_MatMul(expr, assumptions):
+def refine_MatMul(expr, assumptions) -> GenericIdentity | Order | object | MatMul:
     """
     >>> from sympy import MatrixSymbol, Q, assuming, refine
     >>> X = MatrixSymbol('X', 2, 2)

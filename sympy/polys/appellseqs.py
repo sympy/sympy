@@ -26,8 +26,9 @@ from sympy.polys.densetools import dup_eval, dup_integrate
 from sympy.polys.domains import ZZ, QQ
 from sympy.polys.polytools import named_poly
 from sympy.utilities import public
+from typing import Any
 
-def dup_bernoulli(n, K):
+def dup_bernoulli(n, K) -> list[Any]:
     """Low-level implementation of Bernoulli polynomials."""
     if n < 1:
         return [K.one]
@@ -99,7 +100,7 @@ def bernoulli_poly(n, x=None, polys=False):
     """
     return named_poly(n, dup_bernoulli, QQ, "Bernoulli polynomial", (x,), polys)
 
-def dup_bernoulli_c(n, K):
+def dup_bernoulli_c(n, K) -> list[Any]:
     """Low-level implementation of central Bernoulli polynomials."""
     p = [K.one]
     for i in range(1, n+1):
@@ -130,7 +131,7 @@ def bernoulli_c_poly(n, x=None, polys=False):
     """
     return named_poly(n, dup_bernoulli_c, QQ, "central Bernoulli polynomial", (x,), polys)
 
-def dup_genocchi(n, K):
+def dup_genocchi(n, K) -> list[Any]:
     """Low-level implementation of Genocchi polynomials."""
     if n < 1:
         return [K.zero]
@@ -170,7 +171,7 @@ def genocchi_poly(n, x=None, polys=False):
     """
     return named_poly(n, dup_genocchi, ZZ, "Genocchi polynomial", (x,), polys)
 
-def dup_euler(n, K):
+def dup_euler(n, K) -> list[Any]:
     """Low-level implementation of Euler polynomials."""
     return dup_quo_ground(dup_genocchi(n+1, ZZ), K(-n-1), K)
 
@@ -198,7 +199,7 @@ def euler_poly(n, x=None, polys=False):
     """
     return named_poly(n, dup_euler, QQ, "Euler polynomial", (x,), polys)
 
-def dup_andre(n, K):
+def dup_andre(n, K) -> list[Any]:
     """Low-level implementation of Andre polynomials."""
     p = [K.one]
     for i in range(1, n+1):

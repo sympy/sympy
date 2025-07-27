@@ -308,7 +308,7 @@ def init_printing(pretty_print=True, order=None, use_unicode=None,
                   backcolor='Transparent', fontsize='10pt',
                   latex_mode='plain', print_builtin=True,
                   str_printer=None, pretty_printer=None,
-                  latex_printer=None, scale=1.0, **settings):
+                  latex_printer=None, scale=1.0, **settings) -> None:
     r"""
     Initializes pretty-printer depending on the environment.
 

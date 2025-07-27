@@ -217,7 +217,7 @@ from .systems import (
 )
 
 
-def find_unit(quantity, unit_system="SI"):
+def find_unit(quantity, unit_system="SI") -> list[str]:
     """
     Return a list of matching units or dimension names.
 

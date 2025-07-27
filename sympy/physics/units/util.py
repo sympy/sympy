@@ -49,7 +49,7 @@ def _get_conversion_matrix_for_expr(expr, target_units, unit_system):
     return res_exponents
 
 
-def convert_to(expr, target_units, unit_system="SI"):
+def convert_to(expr, target_units, unit_system="SI") -> Add | Quantity:
     """
     Convert ``expr`` to the same expression with all of its units and quantities
     represented as factors of ``target_units``, whenever the dimension is compatible.
@@ -138,7 +138,7 @@ def convert_to(expr, target_units, unit_system="SI"):
         zip(target_units, depmat))
 
 
-def quantity_simplify(expr, across_dimensions: bool=False, unit_system=None):
+def quantity_simplify(expr, across_dimensions: bool=False, unit_system=None) -> Add | Quantity:
     """Return an equivalent expression in which prefixes are replaced
     with numerical values and all units of a given dimension are the
     unified in a canonical manner by default. `across_dimensions` allows

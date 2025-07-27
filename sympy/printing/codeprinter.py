@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import Any
 
-from functools import wraps
+from functools import _Wrapped, wraps
 
 from sympy.core import Add, Mul, Pow, S, sympify, Float
 from sympy.core.basic import Basic
@@ -17,10 +17,10 @@ from sympy.printing.precedence import precedence, PRECEDENCE
 
 class requires:
     """ Decorator for registering requirements on print methods. """
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs) -> None:
         self._req = kwargs
 
-    def __call__(self, method):
+    def __call__(self, method) -> _Wrapped[..., Any, ..., Any]:
         def _method_wrapper(self_, *args, **kwargs):
             for k, v in self._req.items():
                 getattr(self_, k).update(v)
@@ -113,7 +113,7 @@ class CodePrinter(StrPrinter):
             'SingularityFunction': ('Piecewise', []),
     }
 
-    def __init__(self, settings=None):
+    def __init__(self, settings=None) -> None:
         super().__init__(settings=settings)
         if self._settings.get('strict', True) == None:
             # for backwards compatibility, human=False need not to throw:
@@ -125,7 +125,7 @@ class CodePrinter(StrPrinter):
         return expr.replace(re, lambda arg: arg if isinstance(
             arg, UnevaluatedExpr) and arg.args[0].is_real else re(arg))
 
-    def doprint(self, expr, assign_to=None):
+    def doprint(self, expr, assign_to=None) -> str | tuple[set[tuple[Any, str]], set[Any], str]:
         """
         Print the expression as code.
 
@@ -780,11 +780,11 @@ def ccode(expr, assign_to=None, standard='c99', **settings):
     from sympy.printing.c import c_code_printers
     return c_code_printers[standard.lower()](settings).doprint(expr, assign_to)
 
-def print_ccode(expr, **settings):
+def print_ccode(expr, **settings) -> None:
     """Prints C representation of the given expression."""
     print(ccode(expr, **settings))
 
-def fcode(expr, assign_to=None, **settings):
+def fcode(expr, assign_to=None, **settings) -> str | tuple[set[tuple[Any, str]], set[Any], str]:
     """Converts an expr to a string of fortran code
 
     Parameters
@@ -904,7 +904,7 @@ def fcode(expr, assign_to=None, **settings):
     return FCodePrinter(settings).doprint(expr, assign_to)
 
 
-def print_fcode(expr, **settings):
+def print_fcode(expr, **settings) -> None:
     """Prints the Fortran representation of the given expression.
 
        See fcode for the meaning of the optional arguments.

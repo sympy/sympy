@@ -4,7 +4,7 @@ from itertools import product
 from sympy.core.add import Add
 from sympy.core.cache import cacheit
 from sympy.core.expr import Expr
-from sympy.core.function import (DefinedFunction, ArgumentIndexError, expand_log,
+from sympy.core.function import (Function, UndefinedFunction, DefinedFunction, ArgumentIndexError, expand_log,
     expand_mul, FunctionClass, PoleError, expand_multinomial, expand_complex)
 from sympy.core.logic import fuzzy_and, fuzzy_not, fuzzy_or
 from sympy.core.mul import Mul
@@ -19,6 +19,11 @@ from sympy.functions.elementary.complexes import arg, unpolarify, im, re, Abs
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.ntheory import multiplicity, perfect_power
 from sympy.ntheory.factor_ import factorint
+from sympy.core.basic import Basic
+from sympy.core.kind import Kind
+from sympy.series.order import Order
+from typing import Any, Literal
+from typing_extensions import Self
 
 # NOTE IMPORTANT
 # The series expansion code in this file is an important part of the gruntz
@@ -38,16 +43,16 @@ class ExpBase(DefinedFunction):
     _singularities = (S.ComplexInfinity,)
 
     @property
-    def kind(self):
+    def kind(self) -> Kind:
         return self.exp.kind
 
-    def inverse(self, argindex=1):
+    def inverse(self, argindex=1) -> type[log]:
         """
         Returns the inverse function of ``exp(x)``.
         """
         return log
 
-    def as_numer_denom(self):
+    def as_numer_denom(self) -> tuple[Any, Self] | tuple[Self, Any]:
         """
         Returns this with a positive exponent as a 2-tuple (a fraction).
 
@@ -74,13 +79,13 @@ class ExpBase(DefinedFunction):
         return self, S.One
 
     @property
-    def exp(self):
+    def exp(self) -> Basic:
         """
         Returns the exponent of the function.
         """
         return self.args[0]
 
-    def as_base_exp(self):
+    def as_base_exp(self) -> tuple[Self, Any | Order]:
         """
         Returns the 2-tuple (base, exponent).
         """
@@ -202,7 +207,7 @@ class exp_polar(ExpBase):
         if self.args[0].is_extended_real:
             return True
 
-    def as_base_exp(self):
+    def as_base_exp(self) -> tuple[Self, Any] | tuple[ExpBase, Any | Order]:
         # XXX exp_polar(0) is special!
         if self.args[0] == 0:
             return self, S.One
@@ -210,7 +215,7 @@ class exp_polar(ExpBase):
 
 
 class ExpMeta(FunctionClass):
-    def __instancecheck__(cls, instance):
+    def __instancecheck__(cls, instance) -> bool:
         if exp in instance.__class__.__mro__:
             return True
         return isinstance(instance, Pow) and instance.base is S.Exp1
@@ -243,7 +248,7 @@ class exp(ExpBase, metaclass=ExpMeta):
     log
     """
 
-    def fdiff(self, argindex=1):
+    def fdiff(self, argindex=1) -> Self:
         """
         Returns the first derivative of this function.
         """
@@ -402,7 +407,7 @@ class exp(ExpBase, metaclass=ExpMeta):
                 return p * x / n
         return x**n/factorial(n)
 
-    def as_real_imag(self, deep=True, **hints):
+    def as_real_imag(self, deep=True, **hints) -> tuple[Any, Any]:
         """
         Returns this function as a 2-tuple representing a complex number.
 
@@ -583,7 +588,7 @@ class exp(ExpBase, metaclass=ExpMeta):
                 return Pow(logs[0].args[0], arg.coeff(logs[0]))
 
 
-def match_real_imag(expr):
+def match_real_imag(expr) -> tuple[Any, Literal[0]] | tuple[Any, Any] | tuple[None, None]:
     r"""
     Try to match expr with $a + Ib$ for real $a$ and $b$.
 
@@ -651,7 +656,7 @@ class log(DefinedFunction):
         else:
             raise ArgumentIndexError(self, argindex)
 
-    def inverse(self, argindex=1):
+    def inverse(self, argindex=1) -> type[exp]:
         r"""
         Returns `e^x`, the inverse function of `\log(x)`.
         """
@@ -865,7 +870,11 @@ class log(DefinedFunction):
         expr = expand_log(expr, deep=True)
         return min([expr, self], key=kwargs['measure'])
 
-    def as_real_imag(self, deep=True, **hints):
+    def as_real_imag(self, deep=True, **hints) -> (
+        tuple[Self, Any]
+        | tuple[Any, type[UndefinedFunction] | Any]
+        | tuple[type[UndefinedFunction] | Any, type[UndefinedFunction] | Any]
+    ):
         """
         Returns this function as a complex coordinate.
 
@@ -1139,7 +1148,7 @@ class LambertW(DefinedFunction):
     _singularities = (-Pow(S.Exp1, -1, evaluate=False), S.ComplexInfinity)
 
     @classmethod
-    def eval(cls, x, k=None):
+    def eval(cls, x, k=None) -> Self | type[UndefinedFunction] | Integer | None:
         if k == S.Zero:
             return cls(x)
         elif k is None:

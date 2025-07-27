@@ -47,9 +47,10 @@ https://en.wikipedia.org/wiki/List_of_rules_of_inference
 """
 
 from collections import defaultdict
-from typing import Iterator
+from typing import Any, Iterator
 
 from .logic import Logic, And, Or, Not
+import collections.abc
 
 
 def _base_fact(atom):
@@ -72,7 +73,7 @@ def _as_pair(atom):
 # XXX this prepares forward-chaining rules for alpha-network
 
 
-def transitive_closure(implications):
+def transitive_closure(implications) -> set[Any]:
     """
     Computes the transitive closure of a list of implications
 
@@ -92,7 +93,7 @@ def transitive_closure(implications):
     return full_implications
 
 
-def deduce_alpha_implications(implications):
+def deduce_alpha_implications(implications) -> defaultdict[Any, set[Any]]:
     """deduce all implications
 
        Description by example
@@ -132,7 +133,7 @@ def deduce_alpha_implications(implications):
     return res
 
 
-def apply_beta_to_alpha_route(alpha_implications, beta_rules):
+def apply_beta_to_alpha_route(alpha_implications, beta_rules) -> dict[Any, Any]:
     """apply additional beta-rules (And conditions) to already-built
     alpha implication tables
 
@@ -211,7 +212,7 @@ def apply_beta_to_alpha_route(alpha_implications, beta_rules):
     return x_impl
 
 
-def rules_2prereq(rules):
+def rules_2prereq(rules) -> defaultdict[Any, set[Any]]:
     """build prerequisites table from rules
 
        Description by example
@@ -283,11 +284,11 @@ class Prover:
        *several* facts are true at the same time.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.proved_rules = []
         self._rules_seen = set()
 
-    def split_alpha_beta(self):
+    def split_alpha_beta(self) -> tuple[list[Any], list[Any]]:
         """split proved rules into alpha and beta chains"""
         rules_alpha = []    # a      -> b
         rules_beta = []     # &(...) -> b
@@ -299,14 +300,14 @@ class Prover:
         return rules_alpha, rules_beta
 
     @property
-    def rules_alpha(self):
+    def rules_alpha(self) -> list[Any]:
         return self.split_alpha_beta()[0]
 
     @property
-    def rules_beta(self):
+    def rules_beta(self) -> list[Any]:
         return self.split_alpha_beta()[1]
 
-    def process_rule(self, a, b):
+    def process_rule(self, a, b) -> None:
         """process a -> b rule"""   # TODO write more?
         if (not a) or isinstance(b, bool):
             return
@@ -408,7 +409,7 @@ class FactRules:
        .defined_facts -- set of defined fact names
     """
 
-    def __init__(self, rules):
+    def __init__(self, rules) -> None:
         """Compile rules into internal lookup tables"""
 
         if isinstance(rules, str):
@@ -576,7 +577,7 @@ class FactKB(dict):
         return '{\n%s}' % ',\n'.join(
             ["\t%s: %s" % i for i in sorted(self.items())])
 
-    def __init__(self, rules):
+    def __init__(self, rules) -> None:
         self.rules = rules
 
     def _tell(self, k, v):
@@ -596,7 +597,7 @@ class FactKB(dict):
     # *********************************************
     # * This is the workhorse, so keep it *fast*. *
     # *********************************************
-    def deduce_all_facts(self, facts):
+    def deduce_all_facts(self, facts) -> None:
         """
         Update the KB with all the implications of a list of facts.
 

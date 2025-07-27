@@ -1,7 +1,7 @@
 from __future__ import annotations
 import itertools
 from collections import defaultdict
-from typing import FrozenSet
+from typing import Any, FrozenSet
 from functools import singledispatch
 from itertools import accumulate
 
@@ -12,7 +12,7 @@ from sympy.core.singleton import S
 from sympy.matrices.expressions.diagonal import DiagMatrix
 from sympy.matrices.expressions.hadamard import hadamard_product, HadamardPower
 from sympy.matrices.expressions.matexpr import MatrixExpr
-from sympy.matrices.expressions.special import (Identity, ZeroMatrix, OneMatrix)
+from sympy.matrices.expressions.special import (GenericIdentity, GenericZeroMatrix, Identity, ZeroMatrix, OneMatrix)
 from sympy.matrices.expressions.trace import Trace
 from sympy.matrices.expressions.transpose import Transpose
 from sympy.combinatorics.permutations import _af_invert, Permutation
@@ -24,6 +24,9 @@ from sympy.tensor.array.expressions.array_expressions import PermuteDims, ArrayD
     ArrayAdd, _CodegenArrayAbstract, get_shape, ArrayElementwiseApplyFunc, _ArrayExpr, _EditArrayContraction, _ArgE, \
     ArrayElement, _array_tensor_product, _array_contraction, _array_diagonal, _array_add, _permute_dims
 from sympy.tensor.array.expressions.utils import _get_mapping_from_subranks
+import sympy
+import trace
+from sympy.series.order import Order
 
 
 def _get_candidate_for_matmul_from_contraction(scan_indices: list[int | None], remaining_args: list[_ArgE]) -> tuple[_ArgE | None, bool, int]:
@@ -319,7 +322,7 @@ def _(expr: ArrayAdd):
 
 
 @_array2matrix.register(ArrayElementwiseApplyFunc)
-def _(expr: ArrayElementwiseApplyFunc):
+def _(expr: ArrayElementwiseApplyFunc) -> tuple[ArrayElementwiseApplyFunc, list[Any]]:
     subexpr = _array2matrix(expr.expr)
     if isinstance(subexpr, MatrixExpr):
         if subexpr.shape != (1, 1):
@@ -545,7 +548,7 @@ def _(expr: ElementwiseApplyFunction):
 
 
 @_remove_trivial_dims.register(ArrayElementwiseApplyFunc)
-def _(expr: ArrayElementwiseApplyFunc):
+def _(expr: ArrayElementwiseApplyFunc) -> tuple[ArrayElementwiseApplyFunc, list[Any]]:
     subexpr, removed = _remove_trivial_dims(expr.expr)
     return ArrayElementwiseApplyFunc(expr.function, subexpr), removed
 
@@ -742,7 +745,7 @@ def _a2m_transpose(arg):
         return Transpose(arg).doit()
 
 
-def identify_hadamard_products(expr: ArrayContraction | ArrayDiagonal):
+def identify_hadamard_products(expr: ArrayContraction | ArrayDiagonal) -> ZeroArray | ArrayTensorProduct | ArrayContraction | sympy.Basic | PermuteDims:
 
     editor: _EditArrayContraction = _EditArrayContraction(expr)
 
@@ -806,7 +809,7 @@ def identify_hadamard_products(expr: ArrayContraction | ArrayDiagonal):
     return editor.to_array_contraction()
 
 
-def identify_removable_identity_matrices(expr):
+def identify_removable_identity_matrices(expr) -> ZeroArray | ArrayTensorProduct | ArrayContraction | sympy.Basic | PermuteDims:
     editor = _EditArrayContraction(expr)
 
     flag = True
@@ -865,7 +868,7 @@ def identify_removable_identity_matrices(expr):
     return editor.to_array_contraction()
 
 
-def remove_identity_matrices(expr: ArrayContraction):
+def remove_identity_matrices(expr: ArrayContraction) -> tuple[Any | ZeroArray | ArrayTensorProduct | ArrayContraction | sympy.Basic | PermuteDims, list[int]]:
     editor = _EditArrayContraction(expr)
     removed: list[int] = []
 

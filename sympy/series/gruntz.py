@@ -120,7 +120,7 @@ from functools import reduce
 
 from sympy.core import Basic, S, Mul, PoleError
 from sympy.core.cache import cacheit
-from sympy.core.function import AppliedUndef
+from sympy.core.function import UndefinedFunction, AppliedUndef
 from sympy.core.intfunc import ilcm
 from sympy.core.numbers import I, oo
 from sympy.core.symbol import Dummy, Wild
@@ -130,11 +130,15 @@ from sympy.functions import log, exp, sign as _sign
 from sympy.series.order import Order
 from sympy.utilities.misc import debug_decorator as debug
 from sympy.utilities.timeutils import timethis
+import sympy.core.basic
+from typing import Any, Literal, TypeVar
+
+_CallableT = TypeVar("_CallableT", bound=Callable)
 
 timeit = timethis('gruntz')
 
 
-def compare(a, b, x):
+def compare(a, b, x) -> Literal["<", ">", "="]:
     """Returns "<" if a<b, "=" for a == b, ">" for a>b"""
     # log(exp(...)) must always be simplified here for termination
     la, lb = log(a), log(b)
@@ -199,7 +203,7 @@ class SubsSet(dict):
 
         exp(-w)/w + 1/w + x.
     """
-    def __init__(self):
+    def __init__(self) -> None:
         self.rewrites = {}
 
     def __repr__(self):
@@ -216,11 +220,11 @@ class SubsSet(dict):
             e = e.xreplace({var: expr})
         return e
 
-    def meets(self, s2):
+    def meets(self, s2) -> bool:
         """Tell whether or not self and s2 have non-empty intersection"""
         return set(self.keys()).intersection(list(s2.keys())) != set()
 
-    def union(self, s2, exps=None):
+    def union(self, s2, exps=None) -> tuple[SubsSet, Any | None]:
         """Compute the union of self and s2, adjusting exps"""
         res = self.copy()
         tr = {}
@@ -235,7 +239,7 @@ class SubsSet(dict):
             res.rewrites[var] = rewr.xreplace(tr)
         return res, exps
 
-    def copy(self):
+    def copy(self) -> "SubsSet":
         """Create a shallow copy of SubsSet"""
         r = SubsSet()
         r.rewrites = self.rewrites.copy()
@@ -245,7 +249,14 @@ class SubsSet(dict):
 
 
 @debug
-def mrv(e, x):
+def mrv(e, x) -> (
+    tuple[SubsSet, sympy.core.basic.Basic]
+    | tuple[SubsSet, Any]
+    | tuple[Any, sympy.core.basic.Basic]
+    | tuple[Any, Any]
+    | tuple[SubsSet, Any | Literal[1]]
+    | tuple[Any, type[UndefinedFunction] | Any]
+):
     """Returns a SubsSet of most rapidly varying (mrv) subexpressions of 'e',
        and e rewritten in terms of these"""
     from sympy.simplify.powsimp import powsimp
@@ -320,7 +331,7 @@ def mrv(e, x):
         "Don't know how to calculate the mrv of '%s'" % e)
 
 
-def mrv_max3(f, expsf, g, expsg, union, expsboth, x):
+def mrv_max3(f, expsf, g, expsg, union, expsboth, x) -> tuple[SubsSet, Any] | tuple[Any, Any]:
     """
     Computes the maximum of two sets of expressions f and g, which
     are in the same comparability class, i.e. max() compares (two elements of)
@@ -349,7 +360,7 @@ def mrv_max3(f, expsf, g, expsg, union, expsboth, x):
         return union, expsboth
 
 
-def mrv_max1(f, g, exps, x):
+def mrv_max1(f, g, exps, x) -> tuple[SubsSet, Any] | tuple[Any, Any]:
     """Computes the maximum of two sets of expressions f and g, which
     are in the same comparability class, i.e. mrv_max1() compares (two elements of)
     f and g and returns the set, which is in the higher comparability class
@@ -364,7 +375,7 @@ def mrv_max1(f, g, exps, x):
 @debug
 @cacheit
 @timeit
-def sign(e, x):
+def sign(e, x) -> type[UndefinedFunction] | Literal[1, -1, 0]:
     """
     Returns a sign of an expression e(x) for x->oo.
 
@@ -469,7 +480,7 @@ def limitinf(e, x):
         raise ValueError("{} could not be evaluated".format(sig))
 
 
-def moveup2(s, x):
+def moveup2(s, x) -> SubsSet:
     r = SubsSet()
     for expr, var in s.items():
         r[expr.xreplace({x: exp(x)})] = var
@@ -478,14 +489,14 @@ def moveup2(s, x):
     return r
 
 
-def moveup(l, x):
+def moveup(l, x) -> list[Any]:
     return [e.xreplace({x: exp(x)}) for e in l]
 
 
 @debug
 @timeit
 @cacheit
-def mrv_leadterm(e, x):
+def mrv_leadterm(e, x) -> tuple[Any, Any] | tuple[sympy.core.basic.Basic | Any | type[UndefinedFunction] | Literal[1], Any]:
     """Returns (c0, e0) for e."""
     Omega = SubsSet()
     if not e.has(x):
@@ -537,7 +548,7 @@ def mrv_leadterm(e, x):
     return (lt[0].subs(log(w), logw), lt[1])
 
 
-def build_expression_tree(Omega, rewrites):
+def build_expression_tree(Omega, rewrites) -> dict[Any, Any]:
     r""" Helper function for rewrite.
 
     We need to sort Omega (mrv set) so that we replace an expression before
@@ -579,7 +590,7 @@ def build_expression_tree(Omega, rewrites):
 
 @debug
 @timeit
-def rewrite(e, Omega, x, wsym):
+def rewrite(e, Omega, x, wsym) -> tuple[Any, Any]:
     """e(x) ... the function
     Omega ... the mrv set
     wsym ... the symbol which is going to be used for w

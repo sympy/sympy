@@ -11,6 +11,8 @@ from sympy.utilities import public
 
 from mpmath import MPContext
 from mpmath.libmp import to_rational as _mpmath_to_rational
+from typing import Any
+from typing_extensions import Self
 
 
 def to_rational(s, max_denom, limit=True):
@@ -84,7 +86,7 @@ class RealField(Field, CharacteristicZero, SimpleDomain):
     def tolerance(self):
         return self._tolerance
 
-    def __init__(self, prec=None, dps=None, tol=None):
+    def __init__(self, prec=None, dps=None, tol=None) -> None:
         # XXX: The tol parameter is ignored but is kept for now for backwards
         # compatibility.
 
@@ -126,13 +128,13 @@ class RealField(Field, CharacteristicZero, SimpleDomain):
             arg = int(arg)
         return self._dtype(arg)
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
         return isinstance(other, RealField) and self.precision == other.precision
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash((self.__class__.__name__, self._dtype, self.precision))
 
-    def to_sympy(self, element):
+    def to_sympy(self, element) -> Float:
         """Convert ``element`` to SymPy number. """
         return Float(element, self.dps)
 
@@ -173,7 +175,7 @@ class RealField(Field, CharacteristicZero, SimpleDomain):
     def from_RealField(self, element, base):
         return self.dtype(element)
 
-    def from_ComplexField(self, element, base):
+    def from_ComplexField(self, element, base) -> Any | None:
         if not element.imag:
             return self.dtype(element.real)
 
@@ -181,7 +183,7 @@ class RealField(Field, CharacteristicZero, SimpleDomain):
         """Convert a real number to rational number. """
         return to_rational(element, self._max_denom, limit=limit)
 
-    def get_ring(self):
+    def get_ring(self) -> Self:
         """Returns a ring associated with ``self``. """
         return self
 

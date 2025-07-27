@@ -1,10 +1,11 @@
 """Heuristic polynomial GCD algorithm (HEUGCD). """
 
 from .polyerrors import HeuristicGCDFailed
+from typing import Any
 
 HEU_GCD_MAX = 6
 
-def heugcd(f, g):
+def heugcd(f, g) -> tuple[Any, Any, Any]:
     """
     Heuristic polynomial GCD in ``Z[X]``.
 

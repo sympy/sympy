@@ -2,9 +2,12 @@ from sympy.core import S
 from sympy.core.sympify import sympify
 from sympy.core.relational import Eq, Ne
 from sympy.core.parameters import global_parameters
-from sympy.logic.boolalg import Boolean
+from sympy.logic.boolalg import BooleanFunction, Boolean
 from sympy.utilities.misc import func_name
 from .sets import Set
+from sympy.core.basic import Basic
+from sympy.sets.sets import Set
+from typing import Any
 
 
 class Contains(Boolean):
@@ -53,11 +56,11 @@ class Contains(Boolean):
         return super().__new__(cls, x, s)
 
     @property
-    def binary_symbols(self):
+    def binary_symbols(self) -> set[Any | Basic]:
         return set().union(*[i.binary_symbols
             for i in self.args[1].args
             if i.is_Boolean or i.is_Symbol or
             isinstance(i, (Eq, Ne))])
 
-    def as_set(self):
+    def as_set(self) -> Basic:
         return self.args[1]

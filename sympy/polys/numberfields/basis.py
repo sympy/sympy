@@ -7,6 +7,8 @@ from sympy.polys.domains.rationalfield import QQ
 from sympy.utilities.decorator import public
 from .modules import ModuleEndomorphism, ModuleHomomorphism, PowerBasis
 from .utilities import extract_fundamental_discriminant
+from sympy.polys.numberfields.modules import Submodule
+from typing import Any
 
 
 def _apply_Dedekind_criterion(T, p):
@@ -92,7 +94,7 @@ def _second_enlargement(H, p, q):
 
 
 @public
-def round_two(T, radicals=None):
+def round_two(T, radicals=None) -> tuple[Submodule | Any, Any]:
     r"""
     Zassenhaus's "Round 2" algorithm.
 

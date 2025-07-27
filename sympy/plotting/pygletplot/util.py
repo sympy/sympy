@@ -1,3 +1,6 @@
+from ctypes import Array, c_float, c_int
+from typing import Any, Literal
+
 try:
     from ctypes import c_float, c_int, c_double
 except ImportError:
@@ -7,7 +10,7 @@ import pyglet.gl as pgl
 from sympy.core import S
 
 
-def get_model_matrix(array_type=c_float, glGetMethod=pgl.glGetFloatv):
+def get_model_matrix(array_type=c_float, glGetMethod=pgl.glGetFloatv) -> Array[c_float]:
     """
     Returns the current modelview matrix.
     """
@@ -16,7 +19,7 @@ def get_model_matrix(array_type=c_float, glGetMethod=pgl.glGetFloatv):
     return m
 
 
-def get_projection_matrix(array_type=c_float, glGetMethod=pgl.glGetFloatv):
+def get_projection_matrix(array_type=c_float, glGetMethod=pgl.glGetFloatv) -> Array[c_float]:
     """
     Returns the current modelview matrix.
     """
@@ -25,7 +28,7 @@ def get_projection_matrix(array_type=c_float, glGetMethod=pgl.glGetFloatv):
     return m
 
 
-def get_viewport():
+def get_viewport() -> Array[c_int]:
     """
     Returns the current viewport.
     """
@@ -34,25 +37,29 @@ def get_viewport():
     return m
 
 
-def get_direction_vectors():
+def get_direction_vectors() -> tuple[tuple[Any, Any, Any], tuple[Any, Any, Any], tuple[Any, Any, Any]]:
     m = get_model_matrix()
     return ((m[0], m[4], m[8]),
             (m[1], m[5], m[9]),
             (m[2], m[6], m[10]))
 
 
-def get_view_direction_vectors():
+def get_view_direction_vectors() -> tuple[tuple[Any, Any, Any], tuple[Any, Any, Any], tuple[Any, Any, Any]]:
     m = get_model_matrix()
     return ((m[0], m[1], m[2]),
             (m[4], m[5], m[6]),
             (m[8], m[9], m[10]))
 
 
-def get_basis_vectors():
+def get_basis_vectors() -> tuple[
+    tuple[Literal[1], Literal[0], Literal[0]],
+    tuple[Literal[0], Literal[1], Literal[0]],
+    tuple[Literal[0], Literal[0], Literal[1]],
+]:
     return ((1, 0, 0), (0, 1, 0), (0, 0, 1))
 
 
-def screen_to_model(x, y, z):
+def screen_to_model(x, y, z) -> tuple[float, float, float]:
     m = get_model_matrix(c_double, pgl.glGetDoublev)
     p = get_projection_matrix(c_double, pgl.glGetDoublev)
     w = get_viewport()
@@ -61,7 +68,7 @@ def screen_to_model(x, y, z):
     return float(mx.value), float(my.value), float(mz.value)
 
 
-def model_to_screen(x, y, z):
+def model_to_screen(x, y, z) -> tuple[float, float, float]:
     m = get_model_matrix(c_double, pgl.glGetDoublev)
     p = get_projection_matrix(c_double, pgl.glGetDoublev)
     w = get_viewport()
@@ -70,11 +77,11 @@ def model_to_screen(x, y, z):
     return float(mx.value), float(my.value), float(mz.value)
 
 
-def vec_subs(a, b):
+def vec_subs(a, b) -> tuple[Any, ...]:
     return tuple(a[i] - b[i] for i in range(len(a)))
 
 
-def billboard_matrix():
+def billboard_matrix() -> None:
     """
     Removes rotational components of
     current matrix so that primitives
@@ -99,13 +106,13 @@ def billboard_matrix():
     pgl.glLoadMatrixf(m)
 
 
-def create_bounds():
+def create_bounds() -> list[list[Any]]:
     return [[S.Infinity, S.NegativeInfinity, 0],
             [S.Infinity, S.NegativeInfinity, 0],
             [S.Infinity, S.NegativeInfinity, 0]]
 
 
-def update_bounds(b, v):
+def update_bounds(b, v) -> None:
     if v is None:
         return
     for axis in range(3):
@@ -124,7 +131,7 @@ def rinterpolate(a_min, a_max, a_value):
     return (a_value - a_min) / float(a_range)
 
 
-def interpolate_color(color1, color2, ratio):
+def interpolate_color(color1, color2, ratio) -> tuple[Any, ...]:
     return tuple(interpolate(color1[i], color2[i], ratio) for i in range(3))
 
 
@@ -132,13 +139,13 @@ def scale_value(v, v_min, v_len):
     return (v - v_min) / v_len
 
 
-def scale_value_list(flist):
+def scale_value_list(flist) -> list[Any]:
     v_min, v_max = min(flist), max(flist)
     v_len = v_max - v_min
     return [scale_value(f, v_min, v_len) for f in flist]
 
 
-def strided_range(r_min, r_max, stride, max_steps=50):
+def strided_range(r_min, r_max, stride, max_steps=50) -> list[Any]:
     o_min, o_max = r_min, r_max
     if abs(r_min - r_max) < 0.001:
         return []
@@ -160,7 +167,7 @@ def strided_range(r_min, r_max, stride, max_steps=50):
     return [r_min] + [r_min + e*stride for e in range(1, r_steps + 1)] + [r_max]
 
 
-def parse_option_string(s):
+def parse_option_string(s) -> dict[Any, Any] | None:
     if not isinstance(s, str):
         return None
     options = {}
@@ -176,11 +183,11 @@ def parse_option_string(s):
     return options
 
 
-def dot_product(v1, v2):
+def dot_product(v1, v2) -> int:
     return sum(v1[i]*v2[i] for i in range(3))
 
 
-def vec_sub(v1, v2):
+def vec_sub(v1, v2) -> tuple[Any, ...]:
     return tuple(v1[i] - v2[i] for i in range(3))
 
 

@@ -1,6 +1,9 @@
 from sympy.core import Basic, Expr
 from sympy.core.sympify import _sympify
 from sympy.matrices.expressions.transpose import transpose
+from sympy.matrices.expressions.slice import MatrixSlice
+from typing import Any
+from typing_extensions import Self
 
 
 class DotProduct(Expr):
@@ -23,7 +26,7 @@ class DotProduct(Expr):
     A[0, 0]*B[0, 0] + A[0, 1]*B[0, 1] + A[0, 2]*B[0, 2]
     """
 
-    def __new__(cls, arg1, arg2):
+    def __new__(cls, arg1, arg2) -> Self:
         arg1, arg2 = _sympify((arg1, arg2))
 
         if not arg1.is_Matrix:
@@ -40,7 +43,7 @@ class DotProduct(Expr):
 
         return Basic.__new__(cls, arg1, arg2)
 
-    def doit(self, expand=False, **hints):
+    def doit(self, expand=False, **hints) -> Any | MatrixSlice:
         if self.args[0].shape == self.args[1].shape:
             if self.args[0].shape[0] == 1:
                 mul = self.args[0]*transpose(self.args[1])

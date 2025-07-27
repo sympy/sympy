@@ -5,6 +5,11 @@ from sympy.core.singleton import S
 from sympy.core.sympify import _sympify
 
 from .sets import Set, FiniteSet, SetKind
+from collections.abc import Iterator
+from sympy.core.basic import Basic
+from sympy.sets.sets import Set, SetKind
+from typing import Any
+from typing_extensions import Self
 
 
 class PowerSet(Set):
@@ -66,7 +71,7 @@ class PowerSet(Set):
 
     .. [2] https://en.wikipedia.org/wiki/Axiom_of_power_set
     """
-    def __new__(cls, arg, evaluate=None):
+    def __new__(cls, arg, evaluate=None) -> Self:
         if evaluate is None:
             evaluate=global_parameters.evaluate
 
@@ -78,7 +83,7 @@ class PowerSet(Set):
         return super().__new__(cls, arg)
 
     @property
-    def arg(self):
+    def arg(self) -> Basic:
         return self.args[0]
 
     def _eval_rewrite_as_FiniteSet(self, *args, **kwargs):
@@ -101,7 +106,7 @@ class PowerSet(Set):
     def __len__(self):
         return 2 ** len(self.arg)
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[Any]:
         found = [S.EmptySet]
         yield S.EmptySet
 
@@ -115,5 +120,5 @@ class PowerSet(Set):
             found.extend(temp)
 
     @property
-    def kind(self):
+    def kind(self) -> SetKind:
         return SetKind(self.arg.kind)

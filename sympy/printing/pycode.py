@@ -9,6 +9,8 @@ from sympy.core import S
 from sympy.core.mod import Mod
 from .precedence import precedence
 from .codeprinter import CodePrinter
+from sympy.printing.codeprinter import CodePrinter
+from typing import Any
 
 _kw = {
     'and', 'as', 'assert', 'break', 'class', 'continue', 'def', 'del', 'elif',
@@ -98,7 +100,7 @@ class AbstractPythonCodePrinter(CodePrinter):
         standard='python3',
     )
 
-    def __init__(self, settings=None):
+    def __init__(self, settings=None) -> None:
         super().__init__(settings)
 
         # Python standard handler
@@ -605,7 +607,7 @@ for k in _known_constants_math:
     setattr(PythonCodePrinter, '_print_%s' % k, _print_known_const)
 
 
-def pycode(expr, **settings):
+def pycode(expr, **settings) -> str | tuple[set[tuple[Any, str]], set[Any], str]:
     """ Converts an expr to a string of Python code
 
     Parameters

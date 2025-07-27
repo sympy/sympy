@@ -3,9 +3,13 @@ from sympy.core.singleton import S
 from sympy.core.sorting import default_sort_key
 from sympy.functions import DiracDelta, Heaviside
 from .integrals import Integral, integrate
+import sympy.functions.special.delta_functions
+from sympy.core.relational import Equality, Ne, Relational
+from sympy.series.order import Order
+from typing import Any
 
 
-def change_mul(node, x):
+def change_mul(node, x) -> tuple[None, Any | Order | None] | tuple[sympy.functions.special.delta_functions.DiracDelta, Any | Order]:
     """change_mul(node, x)
 
        Rearranges the operands of a product, bringing to front any simple
@@ -78,7 +82,7 @@ def change_mul(node, x):
     return (dirac, Mul(*new_args))
 
 
-def deltaintegrate(f, x):
+def deltaintegrate(f, x) -> sympy.functions.special.delta_functions.Heaviside | Equality | Relational | Ne | None:
     """
     deltaintegrate(f, x)
 

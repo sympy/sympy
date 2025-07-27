@@ -5,6 +5,7 @@ from sympy.ntheory.factor_ import _perfect_power
 from sympy.ntheory.generate import primerange
 from sympy.ntheory.primetest import isprime
 from sympy.ntheory.residue_ntheory import _sqrt_mod_prime_power
+from typing import Any, Literal
 
 
 _SHIFT = 2**10
@@ -12,7 +13,7 @@ _LOG2_SHIFT = 710 # = round(log(2)*_SHIFT)
 
 
 class SievePolynomial:
-    def __init__(self, a, b, N):
+    def __init__(self, a, b, N) -> None:
         """This class denotes the sieve polynomial.
         Provide methods to compute `(a*x + b)**2 - N` and
         `a*x + b` when given `x`.
@@ -41,7 +42,7 @@ class SievePolynomial:
 class FactorBaseElem:
     """This class stores an element of the `factor_base`.
     """
-    def __init__(self, prime, tmem_p, log_p):
+    def __init__(self, prime, tmem_p, log_p) -> None:
         """
         Initialization of factor_base_elem.
 
@@ -317,7 +318,7 @@ def _find_factor(N, smooth_relations, col):
             yield g
 
 
-def qs(N, prime_bound, M, ERROR_TERM=25, seed=1234):
+def qs(N, prime_bound, M, ERROR_TERM=25, seed=1234) -> set[Any]:
     """Performs factorization using Self-Initializing Quadratic Sieve.
     In SIQS, let N be a number to be factored, and this N should not be a
     perfect power. If we find two integers such that ``X**2 = Y**2 modN`` and

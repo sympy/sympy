@@ -10,6 +10,11 @@ from sympy.polys.domains.field import Field
 from sympy.polys.domains.simpledomain import SimpleDomain
 from sympy.polys.polyerrors import CoercionFailed
 from sympy.utilities import public
+from _typeshed import Incomplete
+from sympy.core.numbers import Integer, Rational
+from sympy.external.pythonmpq import PythonMPQ
+from types import NotImplementedType
+from typing_extensions import Self
 
 @public
 class RationalField(Field[MPQ], CharacteristicZero, SimpleDomain):
@@ -40,9 +45,9 @@ class RationalField(Field[MPQ], CharacteristicZero, SimpleDomain):
     dtype = MPQ
     zero = dtype(0)
     one = dtype(1)
-    tp = type(one)
+    tp: type = type(one)
 
-    def __init__(self):
+    def __init__(self) -> None:
         pass
 
     def __eq__(self, other):
@@ -61,11 +66,11 @@ class RationalField(Field[MPQ], CharacteristicZero, SimpleDomain):
         from sympy.polys.domains import ZZ
         return ZZ
 
-    def to_sympy(self, a):
+    def to_sympy(self, a) -> Rational | Integer:
         """Convert ``a`` to a SymPy object. """
         return SymPyRational(int(a.numerator), int(a.denominator))
 
-    def from_sympy(self, a):
+    def from_sympy(self, a) -> PythonMPQ:
         """Convert SymPy's Integer to ``dtype``. """
         if a.is_Rational:
             return MPQ(a.p, a.q)
@@ -105,7 +110,7 @@ class RationalField(Field[MPQ], CharacteristicZero, SimpleDomain):
         from sympy.polys.domains import AlgebraicField
         return AlgebraicField(self, *extension, alias=alias)
 
-    def from_AlgebraicField(K1, a, K0):
+    def from_AlgebraicField(K1, a, K0) -> None:
         """Convert a :py:class:`~.ANP` object to :ref:`QQ`.
 
         See :py:meth:`~.Domain.convert`
@@ -113,23 +118,23 @@ class RationalField(Field[MPQ], CharacteristicZero, SimpleDomain):
         if a.is_ground:
             return K1.convert(a.LC(), K0.dom)
 
-    def from_ZZ(K1, a, K0):
+    def from_ZZ(K1, a, K0) -> PythonMPQ:
         """Convert a Python ``int`` object to ``dtype``. """
         return MPQ(a)
 
-    def from_ZZ_python(K1, a, K0):
+    def from_ZZ_python(K1, a, K0) -> PythonMPQ:
         """Convert a Python ``int`` object to ``dtype``. """
         return MPQ(a)
 
-    def from_QQ(K1, a, K0):
+    def from_QQ(K1, a, K0) -> PythonMPQ:
         """Convert a Python ``Fraction`` object to ``dtype``. """
         return MPQ(a.numerator, a.denominator)
 
-    def from_QQ_python(K1, a, K0):
+    def from_QQ_python(K1, a, K0) -> PythonMPQ:
         """Convert a Python ``Fraction`` object to ``dtype``. """
         return MPQ(a.numerator, a.denominator)
 
-    def from_ZZ_gmpy(K1, a, K0):
+    def from_ZZ_gmpy(K1, a, K0) -> PythonMPQ:
         """Convert a GMPY ``mpz`` object to ``dtype``. """
         return MPQ(a)
 
@@ -137,20 +142,20 @@ class RationalField(Field[MPQ], CharacteristicZero, SimpleDomain):
         """Convert a GMPY ``mpq`` object to ``dtype``. """
         return a
 
-    def from_GaussianRationalField(K1, a, K0):
+    def from_GaussianRationalField(K1, a, K0) -> PythonMPQ | None:
         """Convert a ``GaussianElement`` object to ``dtype``. """
         if a.y == 0:
             return MPQ(a.x)
 
-    def from_RealField(K1, a, K0):
+    def from_RealField(K1, a, K0) -> PythonMPQ:
         """Convert a mpmath ``mpf`` object to ``dtype``. """
         return MPQ(*map(int, K0.to_rational(a)))
 
-    def exquo(self, a, b):
+    def exquo(self, a, b) -> NotImplementedType | Self:
         """Exact quotient of ``a`` and ``b``, implies ``__truediv__``.  """
         return MPQ(a) / MPQ(b)
 
-    def quo(self, a, b):
+    def quo(self, a, b) -> NotImplementedType | Self:
         """Quotient of ``a`` and ``b``, implies ``__truediv__``. """
         return MPQ(a) / MPQ(b)
 
@@ -158,7 +163,7 @@ class RationalField(Field[MPQ], CharacteristicZero, SimpleDomain):
         """Remainder of ``a`` and ``b``, implies nothing.  """
         return self.zero
 
-    def div(self, a, b):
+    def div(self, a, b) -> tuple[NotImplementedType | Self, Incomplete]:
         """Division of ``a`` and ``b``, implies ``__truediv__``. """
         return MPQ(a) / MPQ(b), self.zero
 

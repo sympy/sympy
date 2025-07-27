@@ -4,6 +4,10 @@ from sympy.matrices.expressions import MatrixExpr
 from sympy.core import S, Eq, Ge
 from sympy.core.mul import Mul
 from sympy.functions.special.tensor_functions import KroneckerDelta
+import sympy
+from sympy.core.expr import Expr
+from typing import Any
+from typing_extensions import Self
 
 
 class DiagonalMatrix(MatrixExpr):
@@ -52,7 +56,7 @@ class DiagonalMatrix(MatrixExpr):
     shape = property(lambda self: self.arg.shape)  # type:ignore
 
     @property
-    def diagonal_length(self):
+    def diagonal_length(self) -> Expr | None:
         r, c = self.shape
         if r.is_Integer and c.is_Integer:
             m = min(r, c)
@@ -129,7 +133,7 @@ class DiagonalOf(MatrixExpr):
     """
     arg = property(lambda self: self.args[0])
     @property
-    def shape(self):
+    def shape(self) -> tuple[Any | None, Any]:
         r, c = self.arg.shape
         if r.is_Integer and c.is_Integer:
             m = min(r, c)
@@ -147,7 +151,7 @@ class DiagonalOf(MatrixExpr):
         return m, S.One
 
     @property
-    def diagonal_length(self):
+    def diagonal_length(self) -> Any | None:
         return self.shape[0]
 
     def _entry(self, i, j, **kwargs):
@@ -158,7 +162,7 @@ class DiagMatrix(MatrixExpr):
     """
     Turn a vector into a diagonal matrix.
     """
-    def __new__(cls, vector):
+    def __new__(cls, vector) -> Self:
         vector = _sympify(vector)
         obj = MatrixExpr.__new__(cls, vector)
         shape = vector.shape
@@ -191,7 +195,7 @@ class DiagMatrix(MatrixExpr):
         from sympy.matrices.dense import diag
         return diag(*list(self._vector.as_explicit()))
 
-    def doit(self, **hints):
+    def doit(self, **hints) ->     sympy.MatrixBase | DiagMatrix:
         from sympy.assumptions import ask, Q
         from sympy.matrices.expressions.matmul import MatMul
         from sympy.matrices.expressions.transpose import Transpose
@@ -216,5 +220,5 @@ class DiagMatrix(MatrixExpr):
         return DiagMatrix(vector)
 
 
-def diagonalize_vector(vector):
+def diagonalize_vector(vector) -> sympy.MatrixBase | DiagMatrix:
     return DiagMatrix(vector).doit()

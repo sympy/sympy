@@ -1,6 +1,8 @@
 from sympy.assumptions import Predicate, AppliedPredicate, Q
 from sympy.core.relational import Eq, Ne, Gt, Lt, Ge, Le
 from sympy.multipledispatch import Dispatcher
+import sympy.assumptions.assume
+from typing import Any
 
 
 class CommutativePredicate(Predicate):
@@ -70,7 +72,7 @@ class IsTruePredicate(Predicate):
         doc="Wrapper allowing to query the truth value of a boolean expression."
     )
 
-    def __call__(self, arg):
+    def __call__(self, arg) ->     sympy.assumptions.assume.AppliedPredicate | Any:
         # No need to wrap another predicate
         if isinstance(arg, AppliedPredicate):
             return arg

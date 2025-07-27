@@ -46,7 +46,7 @@ class Transform:
     4
     """
 
-    def __init__(self, transform, filter=lambda x: True):
+    def __init__(self, transform, filter=lambda x: True) -> None:
         self._transform = transform
         self._filter = filter
 
@@ -59,7 +59,7 @@ class Transform:
         else:
             raise KeyError(key)
 
-    def get(self, item, default=None):
+    def get(self, item, default=None) -> None:
         if item in self:
             return self[item]
         else:

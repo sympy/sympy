@@ -2,6 +2,8 @@
 
 
 from contextlib import contextmanager
+from collections.abc import Generator
+from typing import Any
 
 _default_config = {
     'USE_COLLINS_RESULTANT':      False,
@@ -25,7 +27,7 @@ _default_config = {
 _current_config = {}
 
 @contextmanager
-def using(**kwargs):
+def using(**kwargs) -> Generator[None, Any, None]:
     for k, v in kwargs.items():
         setup(k, v)
 
@@ -34,7 +36,7 @@ def using(**kwargs):
     for k in kwargs.keys():
         setup(k)
 
-def setup(key, value=None):
+def setup(key, value=None) -> None:
     """Assign a value to (or reset) a configuration item. """
     key = key.upper()
 
@@ -49,7 +51,7 @@ def query(key):
     return _current_config.get(key.upper(), None)
 
 
-def configure():
+def configure() -> None:
     """Initialized configuration of polys module. """
     from os import getenv
 

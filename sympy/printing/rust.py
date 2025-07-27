@@ -293,7 +293,7 @@ class RustCodePrinter(CodePrinter):
         'dereference': set(),
     })
 
-    def __init__(self, settings={}):
+    def __init__(self, settings={}) -> None:
         CodePrinter.__init__(self, settings)
         self.known_functions = dict(known_functions)
         userfuncs = settings.get('user_functions', {})
@@ -608,7 +608,7 @@ class RustCodePrinter(CodePrinter):
                 expr = expr.rewrite(target_f)
         return expr
 
-    def indent_code(self, code):
+    def indent_code(self, code) -> str | list[Any]:
         """Accepts a string of code or a list of code lines"""
 
         if isinstance(code, str):

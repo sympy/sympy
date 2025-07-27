@@ -18,6 +18,7 @@ from sympy.utilities.iterables import numbered_symbols, sift, \
         topological_sort, iterable
 
 from . import cse_opts
+from typing import Any
 
 # (preprocessor, postprocessor) pairs which are commonly useful. They should
 # each take a SymPy expression and return a possibly transformed expression.
@@ -40,7 +41,7 @@ basic_optimizations = [(cse_opts.sub_pre, cse_opts.sub_post),
 # ===============================================================
 
 
-def reps_toposort(r):
+def reps_toposort(r) -> list[Any]:
     """Sort replacements ``r`` so (k1, v1) appears before (k2, v2)
     if k2 is in v1's free symbols. This orders items in the
     way that cse returns its results (hence, in order to use the
@@ -69,7 +70,7 @@ def reps_toposort(r):
     return [r[i] for i in topological_sort((range(len(r)), E))]
 
 
-def cse_separate(r, e):
+def cse_separate(r, e) -> list[list[Any]]:
     """Move expressions that are in the form (symbol, expr) out of the
     expressions and sort them into the replacements using the reps_toposort.
 
@@ -95,7 +96,7 @@ def cse_separate(r, e):
     return [reps_toposort(r), e]
 
 
-def cse_release_variables(r, e):
+def cse_release_variables(r, e) -> tuple[Any, Any] | tuple[list[Any], Any]:
     """
     Return tuples giving ``(a, b)`` where ``a`` is a symbol and ``b`` is
     either an expression or None. The value of None is used when a
@@ -221,7 +222,7 @@ class FuncArgTracker:
     mapping from arguments to functions.
     """
 
-    def __init__(self, funcs):
+    def __init__(self, funcs) -> None:
         # To minimize the number of symbolic comparisons, all function arguments
         # get assigned a value number.
         self.value_numbers = {}
@@ -241,7 +242,7 @@ class FuncArgTracker:
 
             self.func_to_argset.append(func_argset)
 
-    def get_args_in_value_order(self, argset):
+    def get_args_in_value_order(self, argset) -> list[Any]:
         """
         Return the list of arguments in sorted order according to their value
         numbers.
@@ -259,7 +260,7 @@ class FuncArgTracker:
             self.arg_to_funcset.append(OrderedSet())
         return value_number
 
-    def stop_arg_tracking(self, func_i):
+    def stop_arg_tracking(self, func_i) -> None:
         """
         Remove the function func_i from the argument to function mapping.
         """
@@ -267,7 +268,7 @@ class FuncArgTracker:
             self.arg_to_funcset[arg].remove(func_i)
 
 
-    def get_common_arg_candidates(self, argset, min_func_i=0):
+    def get_common_arg_candidates(self, argset, min_func_i=0) -> defaultdict[Any, int] | dict[Any, int]:
         """Return a dict whose keys are function numbers. The entries of the dict are
         the number of arguments said function has in common with
         ``argset``. Entries have at least 2 items in common.  All keys have
@@ -307,7 +308,7 @@ class FuncArgTracker:
 
         return {k: v for k, v in count_map.items() if v >= 2}
 
-    def get_subset_candidates(self, argset, restrict_to_funcset=None):
+    def get_subset_candidates(self, argset, restrict_to_funcset=None) -> OrderedSet:
         """
         Return a set of functions each of which whose argument list contains
         ``argset``, optionally filtered only to contain functions in
@@ -326,7 +327,7 @@ class FuncArgTracker:
 
         return indices
 
-    def update_func_argset(self, func_i, new_argset):
+    def update_func_argset(self, func_i, new_argset) -> None:
         """
         Update a function with a new set of arguments.
         """
@@ -344,7 +345,7 @@ class FuncArgTracker:
 
 class Unevaluated:
 
-    def __init__(self, func, args):
+    def __init__(self, func, args) -> None:
         self.func = func
         self.args = args
 
@@ -356,13 +357,13 @@ class Unevaluated:
         return self.func(*self.args, evaluate=False)
 
     @property
-    def free_symbols(self):
+    def free_symbols(self) -> set[Any]:
         return set().union(*[a.free_symbols for a in self.args])
 
     __repr__ = __str__
 
 
-def match_common_args(func_class, funcs, opt_subs):
+def match_common_args(func_class, funcs, opt_subs) -> None:
     """
     Recognize and extract common subexpressions of function arguments within a
     set of function calls. For instance, for the following function calls::
@@ -456,7 +457,7 @@ def match_common_args(func_class, funcs, opt_subs):
         arg_tracker.stop_arg_tracking(i)
 
 
-def opt_cse(exprs, order='canonical'):
+def opt_cse(exprs, order='canonical') -> dict[Any, Any]:
     """Find optimization opportunities in Adds, Muls, Pows and negative
     coefficient Muls.
 
@@ -580,7 +581,7 @@ def opt_cse(exprs, order='canonical'):
     return opt_subs
 
 
-def tree_cse(exprs, symbols, opt_subs=None, order='canonical', ignore=()):
+def tree_cse(exprs, symbols, opt_subs=None, order='canonical', ignore=()) -> tuple[list[Any], list[Any]]:
     """Perform raw CSE on expression tree, taking opt_subs into account.
 
     Parameters
@@ -726,7 +727,14 @@ def tree_cse(exprs, symbols, opt_subs=None, order='canonical', ignore=()):
 
 
 def cse(exprs, symbols=None, optimizations=None, postprocess=None,
-        order='canonical', ignore=(), list=True):
+        order='canonical', ignore=(), list=True) -> (
+    tuple[Any, str]
+    | tuple[Any, list[Any] | set[Any] | tuple[Any, ...]]
+    | tuple[Any, dict[Any, Any]]
+    | tuple[Any, Any]
+    | tuple[list[Any], Any]
+    | tuple[list[Any], list[Any]]
+):
     """ Perform common subexpression elimination on an expression.
 
     Parameters

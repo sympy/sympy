@@ -9,16 +9,16 @@ the separate 'factorials' module.
 from __future__ import annotations
 from math import prod
 from collections import defaultdict
-from typing import Callable
+from typing import Any, ClassVar, Callable
 
 from sympy.core import S, Symbol, Add, Dummy
 from sympy.core.cache import cacheit
 from sympy.core.containers import Dict
 from sympy.core.expr import Expr
-from sympy.core.function import ArgumentIndexError, DefinedFunction, expand_mul
+from sympy.core.function import Function, UndefinedFunction, ArgumentIndexError, DefinedFunction, expand_mul
 from sympy.core.logic import fuzzy_not
 from sympy.core.mul import Mul
-from sympy.core.numbers import E, I, pi, oo, Rational, Integer
+from sympy.core.numbers import Float, E, I, pi, oo, Rational, Integer
 from sympy.core.relational import Eq, is_le, is_gt, is_lt
 from sympy.external.gmpy import SYMPY_INTS, remove, lcm, legendre, jacobi, kronecker
 from sympy.functions.combinatorial.factorials import (binomial,
@@ -40,6 +40,8 @@ from sympy.utilities.misc import as_int
 
 from mpmath import mp, workprec
 from mpmath.libmp import ifib as _ifib
+from sympy.series.order import Order
+from typing_extensions import Self
 
 
 def _product(a, b):
@@ -108,7 +110,7 @@ class carmichael(DefinedFunction):
     """
 
     @staticmethod
-    def is_perfect_square(n):
+    def is_perfect_square(n) -> bool:
         sympy_deprecation_warning(
         """
 is_perfect_square is just a wrapper around sympy.ntheory.primetest.is_square
@@ -131,7 +133,7 @@ so use that directly instead.
         return n % p == 0
 
     @staticmethod
-    def is_prime(n):
+    def is_prime(n) -> bool:
         sympy_deprecation_warning(
         """
 is_prime is just a wrapper around sympy.ntheory.primetest.isprime so use that
@@ -143,7 +145,7 @@ directly instead.
         return isprime(n)
 
     @staticmethod
-    def is_carmichael(n):
+    def is_carmichael(n) -> bool:
         sympy_deprecation_warning(
         """
 is_carmichael is just a wrapper around sympy.ntheory.factor_.is_carmichael so use that
@@ -155,7 +157,7 @@ directly instead.
         return is_carmichael(n)
 
     @staticmethod
-    def find_carmichael_numbers_in_range(x, y):
+    def find_carmichael_numbers_in_range(x, y) -> list[int]:
         sympy_deprecation_warning(
         """
 find_carmichael_numbers_in_range is just a wrapper around sympy.ntheory.factor_.find_carmichael_numbers_in_range so use that
@@ -167,7 +169,7 @@ directly instead.
         return find_carmichael_numbers_in_range(x, y)
 
     @staticmethod
-    def find_first_n_carmichaels(n):
+    def find_first_n_carmichaels(n) -> list[Any]:
         sympy_deprecation_warning(
         """
 find_first_n_carmichaels is just a wrapper around sympy.ntheory.factor_.find_first_n_carmichaels so use that
@@ -238,7 +240,7 @@ class fibonacci(DefinedFunction):
         return (prev[-2] + _sym*prev[-1]).expand()
 
     @classmethod
-    def eval(cls, n, sym=None):
+    def eval(cls, n, sym=None) -> Integer | None:
         if n is S.Infinity:
             return S.Infinity
 
@@ -307,7 +309,7 @@ class lucas(DefinedFunction):
     """
 
     @classmethod
-    def eval(cls, n):
+    def eval(cls, n) -> None:
         if n is S.Infinity:
             return S.Infinity
 
@@ -376,7 +378,7 @@ class tribonacci(DefinedFunction):
         return (prev[-3] + _sym*prev[-2] + _sym**2*prev[-1]).expand()
 
     @classmethod
-    def eval(cls, n, sym=None):
+    def eval(cls, n, sym=None) -> Integer | None:
         if n is S.Infinity:
             return S.Infinity
 
@@ -541,7 +543,7 @@ class bernoulli(DefinedFunction):
     _highest = {0: 0, 1: 1, 2: 2, 4: 4}
 
     @classmethod
-    def eval(cls, n, x=None):
+    def eval(cls, n, x=None) -> Self | Rational | Integer | Float | Any | None:
         if x is S.One:
             return cls(n)
         elif n.is_zero:
@@ -721,7 +723,7 @@ class bell(DefinedFunction):
         return expand_mul(s)
 
     @classmethod
-    def eval(cls, n, k_sym=None, symbols=None):
+    def eval(cls, n, k_sym=None, symbols=None) -> Integer | None:
         if n is S.Infinity:
             if k_sym is None:
                 return S.Infinity
@@ -895,7 +897,7 @@ class harmonic(DefinedFunction):
     harmonic_cache: dict[Integer, Callable[[int], Rational]] = {}
 
     @classmethod
-    def eval(cls, n, m=None):
+    def eval(cls, n, m=None) -> Self | type[UndefinedFunction] | Order | None:
         from sympy.functions.special.zeta_functions import zeta
         if m is S.One:
             return cls(n)
@@ -1117,7 +1119,7 @@ class euler(DefinedFunction):
     """
 
     @classmethod
-    def eval(cls, n, x=None):
+    def eval(cls, n, x=None) -> Integer | Any | None:
         if n.is_zero:
             return S.One
         elif n is S.NegativeOne:
@@ -1282,7 +1284,7 @@ class catalan(DefinedFunction):
     """
 
     @classmethod
-    def eval(cls, n):
+    def eval(cls, n) -> Rational | Integer | None:
         from sympy.functions.special.gamma_functions import gamma
         if (n.is_Integer and n.is_nonnegative) or \
            (n.is_noninteger and n.is_negative):
@@ -1399,7 +1401,7 @@ class genocchi(DefinedFunction):
     """
 
     @classmethod
-    def eval(cls, n, x=None):
+    def eval(cls, n, x=None) -> Self | Any | None:
         if x is S.One:
             return cls(n)
         elif n.is_integer is False or n.is_nonnegative is False:
@@ -1546,7 +1548,7 @@ class andre(DefinedFunction):
     """
 
     @classmethod
-    def eval(cls, n):
+    def eval(cls, n) -> None:
         if n is S.NaN:
             return S.NaN
         elif n is S.Infinity:
@@ -1633,11 +1635,11 @@ class partition(DefinedFunction):
     .. [2] https://en.wikipedia.org/wiki/Pentagonal_number_theorem
 
     """
-    is_integer = True
-    is_nonnegative = True
+    is_integer: ClassVar[bool] = True
+    is_nonnegative: ClassVar[bool] = True
 
     @classmethod
-    def eval(cls, n):
+    def eval(cls, n) -> Integer | None:
         if n.is_integer is False:
             raise TypeError("n should be an integer")
         if n.is_negative is True:
@@ -1700,8 +1702,8 @@ class divisor_sigma(DefinedFunction):
     .. [1] https://en.wikipedia.org/wiki/Divisor_function
 
     """
-    is_integer = True
-    is_positive = True
+    is_integer: ClassVar[bool] = True
+    is_positive: ClassVar[bool] = True
 
     @classmethod
     def eval(cls, n, k=S.One):
@@ -1779,8 +1781,8 @@ class udivisor_sigma(DefinedFunction):
     .. [1] https://mathworld.wolfram.com/UnitaryDivisorFunction.html
 
     """
-    is_integer = True
-    is_positive = True
+    is_integer: ClassVar[bool] = True
+    is_positive: ClassVar[bool] = True
 
     @classmethod
     def eval(cls, n, k=S.One):
@@ -1827,8 +1829,8 @@ class legendre_symbol(DefinedFunction):
     sympy.ntheory.residue_ntheory.is_quad_residue, jacobi_symbol
 
     """
-    is_integer = True
-    is_prime = False
+    is_integer: ClassVar[bool] = True
+    is_prime: ClassVar[bool] = False
 
     @classmethod
     def eval(cls, a, p):
@@ -1898,8 +1900,8 @@ class jacobi_symbol(DefinedFunction):
     sympy.ntheory.residue_ntheory.is_quad_residue, legendre_symbol
 
     """
-    is_integer = True
-    is_prime = False
+    is_integer: ClassVar[bool] = True
+    is_prime: ClassVar[bool] = False
 
     @classmethod
     def eval(cls, m, n):
@@ -1941,8 +1943,8 @@ class kronecker_symbol(DefinedFunction):
     .. [1] https://en.wikipedia.org/wiki/Kronecker_symbol
 
     """
-    is_integer = True
-    is_prime = False
+    is_integer: ClassVar[bool] = True
+    is_prime: ClassVar[bool] = False
 
     @classmethod
     def eval(cls, a, n):
@@ -2001,8 +2003,8 @@ class mobius(DefinedFunction):
     .. [3] https://oeis.org/A008683
 
     """
-    is_integer = True
-    is_prime = False
+    is_integer: ClassVar[bool] = True
+    is_prime: ClassVar[bool] = False
 
     @classmethod
     def eval(cls, n):
@@ -2071,8 +2073,8 @@ class primenu(DefinedFunction):
     .. [2] https://oeis.org/A001221
 
     """
-    is_integer = True
-    is_nonnegative = True
+    is_integer: ClassVar[bool] = True
+    is_nonnegative: ClassVar[bool] = True
 
     @classmethod
     def eval(cls, n):
@@ -2124,8 +2126,8 @@ class primeomega(DefinedFunction):
     .. [2] https://oeis.org/A001222
 
     """
-    is_integer = True
-    is_nonnegative = True
+    is_integer: ClassVar[bool] = True
+    is_nonnegative: ClassVar[bool] = True
 
     @classmethod
     def eval(cls, n):
@@ -2172,8 +2174,8 @@ class totient(DefinedFunction):
     .. [3] https://oeis.org/A000010
 
     """
-    is_integer = True
-    is_positive = True
+    is_integer: ClassVar[bool] = True
+    is_positive: ClassVar[bool] = True
 
     @classmethod
     def eval(cls, n):
@@ -2222,8 +2224,8 @@ class reduced_totient(DefinedFunction):
     .. [3] https://oeis.org/A002322
 
     """
-    is_integer = True
-    is_positive = True
+    is_integer: ClassVar[bool] = True
+    is_positive: ClassVar[bool] = True
 
     @classmethod
     def eval(cls, n):
@@ -2285,8 +2287,8 @@ class primepi(DefinedFunction):
     .. [1] https://oeis.org/A000720
 
     """
-    is_integer = True
-    is_nonnegative = True
+    is_integer: ClassVar[bool] = True
+    is_nonnegative: ClassVar[bool] = True
 
     @classmethod
     def eval(cls, n):
@@ -2350,7 +2352,7 @@ def _multiset_histogram(n):
         return _multiset_histogram(d)
 
 
-def nP(n, k=None, replacement=False):
+def nP(n, k=None, replacement=False) -> Integer:
     """Return the number of permutations of ``n`` items taken ``k`` at a time.
 
     Possible values for ``n``:
@@ -2521,7 +2523,7 @@ def _AOP_product(n):
     return d
 
 
-def nC(n, k=None, replacement=False):
+def nC(n, k=None, replacement=False) -> int | type[UndefinedFunction]:
     """Return the number of combinations of ``n`` items taken ``k`` at a time.
 
     Possible values for ``n``:
@@ -2671,7 +2673,7 @@ def _stirling2(n, k):
     return Integer(row[k])
 
 
-def stirling(n, k, d=None, kind=2, signed=False):
+def stirling(n, k, d=None, kind=2, signed=False) -> type[UndefinedFunction] | Integer:
     r"""Return Stirling number $S(n, k)$ of the first or second (default) kind.
 
     The sum of all Stirling numbers of the second kind for $k = 1$
@@ -2990,7 +2992,7 @@ class motzkin(DefinedFunction):
     """
 
     @staticmethod
-    def is_motzkin(n):
+    def is_motzkin(n) -> bool:
         try:
             n = as_int(n)
         except ValueError:
@@ -3017,7 +3019,7 @@ class motzkin(DefinedFunction):
             return False
 
     @staticmethod
-    def find_motzkin_numbers_in_range(x, y):
+    def find_motzkin_numbers_in_range(x, y) -> list[Any]:
         if 0 <= x <= y:
             motzkins = []
             if x <= 1 <= y:
@@ -3039,7 +3041,7 @@ class motzkin(DefinedFunction):
             raise ValueError('The provided range is not valid. This condition should satisfy x <= y')
 
     @staticmethod
-    def find_first_n_motzkins(n):
+    def find_first_n_motzkins(n) -> list[int]:
         try:
             n = as_int(n)
         except ValueError:
@@ -3067,7 +3069,7 @@ class motzkin(DefinedFunction):
         return ((2*n + 1)*prev[-1] + (3*n - 3)*prev[-2]) // (n + 2)
 
     @classmethod
-    def eval(cls, n):
+    def eval(cls, n) -> Integer:
         try:
             n = as_int(n)
         except ValueError:

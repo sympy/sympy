@@ -2,6 +2,7 @@ from sympy.ntheory.primetest import isprime
 from sympy.combinatorics.perm_groups import PermutationGroup
 from sympy.printing.defaults import DefaultPrinting
 from sympy.combinatorics.free_groups import free_group
+from typing import Any, Literal
 
 
 class PolycyclicGroup(DefaultPrinting):
@@ -9,7 +10,7 @@ class PolycyclicGroup(DefaultPrinting):
     is_group = True
     is_solvable = True
 
-    def __init__(self, pc_sequence, pc_series, relative_order, collector=None):
+    def __init__(self, pc_sequence, pc_series, relative_order, collector=None) -> None:
         """
 
         Parameters
@@ -32,10 +33,10 @@ class PolycyclicGroup(DefaultPrinting):
         self.relative_order = relative_order
         self.collector = Collector(self.pcgs, pc_series, relative_order) if not collector else collector
 
-    def is_prime_order(self):
+    def is_prime_order(self) -> bool:
         return all(isprime(order) for order in self.relative_order)
 
-    def length(self):
+    def length(self) -> int:
         return len(self.pcgs)
 
 
@@ -50,7 +51,7 @@ class Collector(DefaultPrinting):
            Section 8.1.3
     """
 
-    def __init__(self, pcgs, pc_series, relative_order, free_group_=None, pc_presentation=None):
+    def __init__(self, pcgs, pc_series, relative_order, free_group_=None, pc_presentation=None) -> None:
         """
 
         Most of the parameters for the Collector class are the same as for PolycyclicGroup.
@@ -79,7 +80,7 @@ class Collector(DefaultPrinting):
         self.index = {s: i for i, s in enumerate(self.free_group.symbols)}
         self.pc_presentation = self.pc_relators()
 
-    def minimal_uncollected_subword(self, word):
+    def minimal_uncollected_subword(self, word) -> tuple[tuple[Any, Any]] | tuple[tuple[Any, Any], tuple[Any, Literal[1, -1]]] | None:
         r"""
         Returns the minimal uncollected subwords.
 
@@ -137,7 +138,7 @@ class Collector(DefaultPrinting):
 
         return None
 
-    def relations(self):
+    def relations(self) -> tuple[dict[Any, Any], dict[Any, Any]]:
         """
         Separates the given relators of pc presentation in power and
         conjugate relations.
@@ -176,7 +177,7 @@ class Collector(DefaultPrinting):
                 conjugate_relators[key] = value
         return power_relators, conjugate_relators
 
-    def subword_index(self, word, w):
+    def subword_index(self, word, w) -> tuple[Literal[-1], Literal[-1]] | tuple[int, int]:
         """
         Returns the start and ending index of a given
         subword in a word.
@@ -384,7 +385,7 @@ class Collector(DefaultPrinting):
         return word
 
 
-    def pc_relators(self):
+    def pc_relators(self) -> dict[Any, Any]:
         r"""
         Return the polycyclic presentation.
 
@@ -505,7 +506,7 @@ class Collector(DefaultPrinting):
 
         return pc_relators
 
-    def exponent_vector(self, element):
+    def exponent_vector(self, element) -> list[int]:
         r"""
         Return the exponent vector of length equal to the
         length of polycyclic generating sequence.
@@ -574,7 +575,7 @@ class Collector(DefaultPrinting):
             exp_vector[index[t[0]]] = t[1]
         return exp_vector
 
-    def depth(self, element):
+    def depth(self, element) -> int:
         r"""
         Return the depth of a given element.
 
@@ -608,7 +609,7 @@ class Collector(DefaultPrinting):
         exp_vector = self.exponent_vector(element)
         return next((i+1 for i, x in enumerate(exp_vector) if x), len(self.pcgs)+1)
 
-    def leading_exponent(self, element):
+    def leading_exponent(self, element) -> int | None:
         r"""
         Return the leading non-zero exponent.
 
@@ -646,7 +647,7 @@ class Collector(DefaultPrinting):
             d = self.depth(h)
         return h
 
-    def induced_pcgs(self, gens):
+    def induced_pcgs(self, gens) -> list[int]:
         """
 
         Parameters
@@ -691,7 +692,7 @@ class Collector(DefaultPrinting):
         z = [gen for gen in z if gen != 1]
         return z
 
-    def constructive_membership_test(self, ipcgs, g):
+    def constructive_membership_test(self, ipcgs, g) -> list[int] | Literal[False]:
         """
         Return the exponent vector for induced pcgs.
         """

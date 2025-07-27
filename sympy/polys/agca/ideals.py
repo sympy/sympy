@@ -2,6 +2,10 @@
 
 from sympy.polys.polyerrors import CoercionFailed
 from sympy.polys.polyutils import IntegerPowerable
+from collections.abc import Generator
+from types import NotImplementedType
+from typing import Any
+from typing_extensions import LiteralString
 
 
 class Ideal(IntegerPowerable):
@@ -103,7 +107,7 @@ class Ideal(IntegerPowerable):
 
     # non-implemented methods end here
 
-    def __init__(self, ring):
+    def __init__(self, ring) -> None:
         self.ring = ring
 
     def _check_ideal(self, J):
@@ -128,7 +132,7 @@ class Ideal(IntegerPowerable):
         """
         return self._contains_elem(self.ring.convert(elem))
 
-    def subset(self, other):
+    def subset(self, other) -> bool:
         """
         Returns True if ``other`` is is a subset of ``self``.
 
@@ -251,7 +255,7 @@ class Ideal(IntegerPowerable):
 
     __radd__ = __add__
 
-    def __mul__(self, e):
+    def __mul__(self, e) -> NotImplementedType:
         if not isinstance(e, Ideal):
             try:
                 e = self.ring.ideal(e)
@@ -270,12 +274,12 @@ class Ideal(IntegerPowerable):
         # here so that the first power is no exception.
         return self * 1
 
-    def __eq__(self, e):
+    def __eq__(self, e) -> bool:
         if not isinstance(e, Ideal) or e.ring != self.ring:
             return False
         return self._equals(e)
 
-    def __ne__(self, e):
+    def __ne__(self, e) -> bool:
         return not (self == e)
 
 
@@ -288,7 +292,7 @@ class ModuleImplementedIdeal(Ideal):
     - _module - the underlying module
     """
 
-    def __init__(self, ring, module):
+    def __init__(self, ring, module) -> None:
         Ideal.__init__(self, ring)
         self._module = module
 
@@ -316,7 +320,7 @@ class ModuleImplementedIdeal(Ideal):
         return self.__class__(self.ring, self._module.union(J._module))
 
     @property
-    def gens(self):
+    def gens(self) -> Generator[Any, None, None]:
         """
         Return generators for ``self``.
 
@@ -364,7 +368,7 @@ class ModuleImplementedIdeal(Ideal):
         """
         return self._module.is_full_module()
 
-    def __repr__(self):
+    def __repr__(self) -> LiteralString:
         from sympy.printing.str import sstr
         gens = [self.ring.to_sympy(x) for [x] in self._module.gens]
         return '<' + ','.join(sstr(g) for g in gens) + '>'

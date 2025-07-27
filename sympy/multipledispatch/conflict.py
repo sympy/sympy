@@ -1,27 +1,28 @@
 from .utils import _toposort, groupby
+from typing import _T_co
 
 class AmbiguityWarning(Warning):
     pass
 
 
-def supercedes(a, b):
+def supercedes(a, b) -> bool:
     """ A is consistent and strictly more specific than B """
     return len(a) == len(b) and all(map(issubclass, a, b))
 
 
-def consistent(a, b):
+def consistent(a, b) -> bool:
     """ It is possible for an argument list to satisfy both A and B """
     return (len(a) == len(b) and
             all(issubclass(aa, bb) or issubclass(bb, aa)
                            for aa, bb in zip(a, b)))
 
 
-def ambiguous(a, b):
+def ambiguous(a, b) -> bool:
     """ A is consistent with B but neither is strictly more specific """
     return consistent(a, b) and not (supercedes(a, b) or supercedes(b, a))
 
 
-def ambiguities(signatures):
+def ambiguities(signatures) -> set[tuple[tuple[_T_co, ...], tuple[_T_co, ...]]]:
     """ All signature pairs such that A is ambiguous with B """
     signatures = list(map(tuple, signatures))
     return {(a, b) for a in signatures for b in signatures
@@ -31,7 +32,7 @@ def ambiguities(signatures):
                                     for c in signatures)}
 
 
-def super_signature(signatures):
+def super_signature(signatures) -> list[type]:
     """ A signature that would break ambiguities """
     n = len(signatures[0])
     assert all(len(s) == n for s in signatures)
@@ -40,7 +41,7 @@ def super_signature(signatures):
                for i in range(n)]
 
 
-def edge(a, b, tie_breaker=hash):
+def edge(a, b, tie_breaker=hash) -> bool:
     """ A should be checked before B
 
     Tie broken by tie_breaker, defaults to ``hash``

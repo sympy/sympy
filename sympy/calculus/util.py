@@ -18,13 +18,15 @@ from sympy.functions.elementary.trigonometric import (
 from sympy.functions.elementary.hyperbolic import (sinh, cosh, tanh, coth,
     sech, csch, asinh, acosh, atanh, acoth, asech, acsch)
 from sympy.polys.polytools import degree, lcm_list
-from sympy.sets.sets import (Interval, Intersection, FiniteSet, Union,
+from sympy.sets.sets import (Set, Interval, Intersection, FiniteSet, Union,
                              Complement)
 from sympy.sets.fancysets import ImageSet
 from sympy.sets.conditionset import ConditionSet
 from sympy.utilities import filldedent
 from sympy.utilities.iterables import iterable
 from sympy.matrices.dense import hessian
+import sympy
+from typing import Any
 
 
 def continuous_domain(f, symbol, domain):
@@ -158,7 +160,7 @@ def continuous_domain(f, symbol, domain):
     return cont_domain - singularities(f, symbol, domain)
 
 
-def function_range(f, symbol, domain):
+def function_range(f, symbol, domain) -> FiniteSet:
     """
     Finds the range of a function in a given domain.
     This method is limited by the ability to determine the singularities and
@@ -285,7 +287,7 @@ def function_range(f, symbol, domain):
     return range_int
 
 
-def not_empty_in(finset_intersection, *syms):
+def not_empty_in(finset_intersection, *syms) -> FiniteSet | sympy.Union | None:
     """
     Finds the domain of the functions in ``finset_intersection`` in which the
     ``finite_set`` is not-empty.
@@ -629,7 +631,7 @@ def _periodicity(args, symbol):
         return periods[0]
 
 
-def lcim(numbers):
+def lcim(numbers) -> Any | None:
     """Returns the least common integral multiple of a list of numbers.
 
     The numbers can be rational or irrational or a mixture of both.
@@ -676,7 +678,7 @@ def lcim(numbers):
 
     return result
 
-def is_convex(f, *syms, domain=S.Reals):
+def is_convex(f, *syms, domain=S.Reals) -> bool:
     r"""Determines the  convexity of the function passed in the argument.
 
     Parameters
@@ -749,7 +751,7 @@ def is_convex(f, *syms, domain=S.Reals):
     return True
 
 
-def stationary_points(f, symbol, domain=S.Reals):
+def stationary_points(f, symbol, domain=S.Reals) -> Set:
     """
     Returns the stationary points of a function (where derivative of the
     function is 0) in the given domain.

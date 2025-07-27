@@ -30,6 +30,7 @@ from sympy.polys.polytools import (Poly, poly_from_expr,
                                    PolificationFailed, ComputationFailed)
 from sympy.polys.sqfreetools import dup_sqf_p
 from sympy.utilities import public
+from typing import Any
 
 
 class MaxTriesException(GaloisGroupException):
@@ -37,7 +38,7 @@ class MaxTriesException(GaloisGroupException):
 
 
 def tschirnhausen_transformation(T, max_coeff=10, max_tries=30, history=None,
-                                 fixed_order=True):
+                                 fixed_order=True) -> tuple[Any, Any]:
     r"""
     Given a univariate, monic, irreducible polynomial over the integers, find
     another such polynomial defining the same number field.
@@ -143,7 +144,7 @@ def tschirnhausen_transformation(T, max_coeff=10, max_tries=30, history=None,
     raise MaxTriesException
 
 
-def has_square_disc(T):
+def has_square_disc(T) -> bool:
     """Convenience to check if a Poly or dup has square discriminant. """
     d = T.discriminant() if isinstance(T, Poly) else dup_discriminant(T, ZZ)
     return is_square(d)

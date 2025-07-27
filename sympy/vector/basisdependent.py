@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING
+from typing import Any, Literal, TYPE_CHECKING
 
 from sympy.simplify import simplify as simp, trigsimp as tsimp  # type: ignore
 from sympy.core.decorators import call_highest_priority, _sympifyit
@@ -9,6 +9,9 @@ from sympy.integrals.integrals import Integral
 from sympy.polys.polytools import factor as fctr
 from sympy.core import S, Add, Mul
 from sympy.core.expr import Expr
+from sympy.series.order import Order
+from sympy.vector.vector import BaseVector
+from typing_extensions import Self
 
 if TYPE_CHECKING:
     from sympy.vector.vector import BaseVector
@@ -59,10 +62,10 @@ class BasisDependent(Expr):
         return self._div_helper(other)
 
     @call_highest_priority('__truediv__')
-    def __rtruediv__(self, other):
+    def __rtruediv__(self, other) -> TypeError:
         return TypeError("Invalid divisor for division")
 
-    def evalf(self, n=15, subs=None, maxn=100, chop=False, strict=False, quad=None, verbose=False):
+    def evalf(self, n=15, subs=None, maxn=100, chop=False, strict=False, quad=None, verbose=False) -> "BasisDependentZero":
         """
         Implements the SymPy evalf routine for this quantity.
 
@@ -123,7 +126,7 @@ class BasisDependent(Expr):
                                for k, v in self.components.items()]
         return self._add_func(*integral_components)
 
-    def as_numer_denom(self):
+    def as_numer_denom(self) -> tuple[Self, Any]:
         """
         Returns the expression as a tuple wrt the following
         transformation -
@@ -148,11 +151,11 @@ class BasisDependent(Expr):
 
     factor.__doc__ += fctr.__doc__  # type: ignore
 
-    def as_coeff_Mul(self, rational=False):
+    def as_coeff_Mul(self, rational=False) -> tuple[Any, Self]:
         """Efficiently extract the coefficient of a product."""
         return (S.One, self)
 
-    def as_coeff_add(self, *deps):
+    def as_coeff_add(self, *deps) -> tuple[Literal[0], tuple[Any, ...]]:
         """Efficiently extract the coefficient of a summation."""
         return 0, tuple(x * self.components[x] for x in self.components)
 
@@ -186,7 +189,7 @@ class BasisDependentAdd(BasisDependent, Add):
     be expressed as base or Mul instances.
     """
 
-    def __new__(cls, *args, **options):
+    def __new__(cls, *args, **options) -> BasisDependentZero | Order:
         components = {}
 
         # Check each arg and simultaneously learn the components
@@ -233,7 +236,7 @@ class BasisDependentMul(BasisDependent, Mul):
     Denotes product of base- basis dependent quantity with a scalar.
     """
 
-    def __new__(cls, *args, **options):
+    def __new__(cls, *args, **options) -> Order | BasisDependentZero:
         obj = cls._new(*args, **options)
         return obj
 
@@ -317,18 +320,18 @@ class BasisDependentZero(BasisDependent):
     components: dict['BaseVector', Expr] = {}
     _latex_form: str
 
-    def __new__(cls):
+    def __new__(cls) -> Self:
         obj = super().__new__(cls)
         # Pre-compute a specific hash value for the zero vector
         # Use the same one always
         obj._hash = (S.Zero, cls).__hash__()
         return obj
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return self._hash
 
     @call_highest_priority('__req__')
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
         return isinstance(other, self._zero_func)
 
     __req__ = __eq__
@@ -361,10 +364,10 @@ class BasisDependentZero(BasisDependent):
         else:
             raise TypeError("Invalid argument types for subtraction")
 
-    def __neg__(self):
+    def __neg__(self) -> Self:
         return self
 
-    def normalize(self):
+    def normalize(self) -> Self:
         """
         Returns the normalized version of this vector.
         """

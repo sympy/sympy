@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import overload, TYPE_CHECKING
+from typing import Any, overload, TYPE_CHECKING
 
 from operator import attrgetter
 from collections import defaultdict
@@ -17,6 +17,9 @@ from sympy.utilities.iterables import sift
 from sympy.multipledispatch.dispatcher import (Dispatcher,
     ambiguity_register_error_ignore_dup,
     str_signature, RaiseNotImplementedError)
+from sympy.core.basic import Basic
+from sympy.series.order import Order
+from typing_extensions import LiteralString, Self
 
 
 if TYPE_CHECKING:
@@ -60,7 +63,7 @@ class AssocOp(Basic):
     _args_type: type[Basic] | None = None
 
     @cacheit
-    def __new__(cls, *args, evaluate=None, _sympify=True):
+    def __new__(cls, *args, evaluate=None, _sympify=True) -> Order:
         # Allow faster processing by passing ``_sympify=False``, if all arguments
         # are already sympified.
         if _sympify:
@@ -182,7 +185,7 @@ this object, use the * or + operator instead.
         return self._from_args(args, is_commutative)
 
     @classmethod
-    def flatten(cls, seq):
+    def flatten(cls, seq) -> tuple[list[Any], list[Any], None]:
         """Return seq so that none of the elements are of type `cls`. This is
         the vanilla routine that will be used if a class derived from AssocOp
         does not define its own flatten routine."""
@@ -473,7 +476,7 @@ this object, use the * or + operator instead.
         else:
             return (sympify(expr),)
 
-    def doit(self, **hints):
+    def doit(self, **hints) -> Self:
         if hints.get('deep', True):
             terms = [term.doit(**hints) for term in self.args]
         else:
@@ -570,7 +573,7 @@ class LatticeOp(AssocOp):
                 yield arg
 
     @classmethod
-    def make_args(cls, expr):
+    def make_args(cls, expr) -> frozenset[Any]:
         """
         Return a set of args such that cls(*arg_set) == expr.
         """
@@ -618,17 +621,17 @@ class AssocOpDispatcher:
     True
 
     """
-    def __init__(self, name, doc=None):
+    def __init__(self, name, doc=None) -> None:
         self.name = name
         self.doc = doc
         self.handlerattr = "_%s_handler" % name
         self._handlergetter = attrgetter(self.handlerattr)
         self._dispatcher = Dispatcher(name)
 
-    def __repr__(self):
+    def __repr__(self) -> LiteralString:
         return "<dispatched %s>" % self.name
 
-    def register_handlerclass(self, classes, typ, on_ambiguity=ambiguity_register_error_ignore_dup):
+    def register_handlerclass(self, classes, typ, on_ambiguity=ambiguity_register_error_ignore_dup) -> None:
         """
         Register the handler class for two classes, in both straight and reversed order.
 
@@ -671,7 +674,7 @@ class AssocOpDispatcher:
         return self.dispatch(handlers)(*args, _sympify=False, **kwargs)
 
     @cacheit
-    def dispatch(self, handlers):
+    def dispatch(self, handlers) -> type:
         """
         Select the handler class, and return its handler method.
         """
@@ -705,7 +708,7 @@ class AssocOpDispatcher:
         return handler
 
     @property
-    def __doc__(self):
+    def __doc__(self) -> str:
         docs = [
             "Multiply dispatched associative operator: %s" % self.name,
             "Note that support for this is experimental, see the docs for :class:`AssocOpDispatcher` for details"

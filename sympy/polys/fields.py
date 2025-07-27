@@ -30,6 +30,8 @@ from sympy.printing.defaults import DefaultPrinting
 from sympy.utilities import public
 from sympy.utilities.iterables import is_sequence
 from sympy.utilities.magic import pollute
+from types import NotImplementedType
+from typing_extensions import Self
 
 
 class FracElementConstructor(Protocol[Er]):
@@ -48,14 +50,14 @@ def field(symbols, domain, order=lex):
 
 
 @public
-def xfield(symbols, domain, order=lex):
+def xfield(symbols, domain, order=lex) -> tuple[FracField | Any, Any]:
     """Construct new rational function field returning (field, (x1, ..., xn)). """
     _field = FracField(symbols, domain, order)
     return (_field, _field.gens)
 
 
 @public
-def vfield(symbols, domain, order=lex):
+def vfield(symbols, domain, order=lex) -> FracField | Any:
     """Construct new rational function field and inject generators into global namespace. """
     _field = FracField(symbols, domain, order)
     pollute([ sym.name for sym in _field.symbols ], _field.gens)
@@ -63,7 +65,7 @@ def vfield(symbols, domain, order=lex):
 
 
 @public
-def sfield(exprs, *symbols, **options):
+def sfield(exprs, *symbols, **options) -> tuple[FracField | Any, Any] | tuple[FracField | Any, list[Any]]:
     """Construct a field deriving generators and domain
     from options and input expressions.
 
@@ -174,10 +176,10 @@ class FracField(DefaultPrinting, Generic[Er]):
         """Return a list of polynomial generators. """
         return tuple([ self.dtype(gen) for gen in self.ring.gens ])
 
-    def __getnewargs__(self):
+    def __getnewargs__(self) -> tuple[Any, Any, Any]:
         return (self.symbols, self.domain, self.order)
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return self._hash
 
     def index(self, gen):
@@ -186,12 +188,12 @@ class FracField(DefaultPrinting, Generic[Er]):
         else:
             raise ValueError("expected a %s, got %s instead" % (self.dtype,gen))
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
         return isinstance(other, FracField) and \
             (self.symbols, self.ngens, self.domain, self.order) == \
             (other.symbols, other.ngens, other.domain, other.order)
 
-    def __ne__(self, other):
+    def __ne__(self, other) -> bool:
         return not self == other
 
     def is_element(self, element):
@@ -341,7 +343,7 @@ class FracElement(DomainElement, DefaultPrinting, CantSympify, Generic[Er]):
                    denom: PolyElement[Er] | None = None) -> FracElement[Er]:
         return f.__class__(f.field, numer, denom)
 
-    def new(f, numer, denom):
+    def new(f, numer, denom) -> Self:
         return f.raw_new(*numer.cancel(denom))
 
     def to_poly(f):
@@ -352,18 +354,18 @@ class FracElement(DomainElement, DefaultPrinting, CantSympify, Generic[Er]):
     def parent(self):
         return self.field.to_domain()
 
-    def __getnewargs__(self):
+    def __getnewargs__(self) -> tuple[Any, Any, Any]:
         return (self.field, self.numer, self.denom)
 
     _hash = None
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         _hash = self._hash
         if _hash is None:
             self._hash = _hash = hash((self.field, self.numer, self.denom))
         return _hash
 
-    def copy(self):
+    def copy(self) -> Self:
         return self.raw_new(self.numer.copy(), self.denom.copy())
 
     def set_field(self, new_field: FracField[Es]) -> FracElement[Es]:
@@ -378,19 +380,19 @@ class FracElement(DomainElement, DefaultPrinting, CantSympify, Generic[Er]):
     def as_expr(self, *symbols) -> Expr:
         return self.numer.as_expr(*symbols)/self.denom.as_expr(*symbols)
 
-    def __eq__(f, g):
+    def __eq__(f, g) -> bool:
         if isinstance(g, FracElement) and f.field == g.field:
             return f.numer == g.numer and f.denom == g.denom
         else:
             return f.numer == g and f.denom == f.field.ring.one
 
-    def __ne__(f, g):
+    def __ne__(f, g) -> bool:
         return not f == g
 
-    def __bool__(f):
+    def __bool__(f) -> bool:
         return bool(f.numer)
 
-    def sort_key(self):
+    def sort_key(self) -> tuple[Any, Any]:
         return (self.denom.sort_key(), self.numer.sort_key())
 
     def _cmp(f1, f2, op):
@@ -399,20 +401,20 @@ class FracElement(DomainElement, DefaultPrinting, CantSympify, Generic[Er]):
         else:
             return NotImplemented
 
-    def __lt__(f1, f2):
+    def __lt__(f1, f2) -> bool:
         return f1._cmp(f2, lt)
-    def __le__(f1, f2):
+    def __le__(f1, f2) -> bool:
         return f1._cmp(f2, le)
-    def __gt__(f1, f2):
+    def __gt__(f1, f2) -> bool:
         return f1._cmp(f2, gt)
-    def __ge__(f1, f2):
+    def __ge__(f1, f2) -> bool:
         return f1._cmp(f2, ge)
 
-    def __pos__(f):
+    def __pos__(f) -> Self:
         """Negate all coefficients in ``f``. """
         return f.raw_new(f.numer, f.denom)
 
-    def __neg__(f):
+    def __neg__(f) -> Self:
         """Negate all coefficients in ``f``. """
         return f.raw_new(-f.numer, f.denom)
 
@@ -436,7 +438,7 @@ class FracElement(DomainElement, DefaultPrinting, CantSympify, Generic[Er]):
         else:
             return 1, element, None
 
-    def __add__(f, g):
+    def __add__(f, g) -> Self | FracElement | NotImplementedType | PolyElement:
         """Add rational functions ``f`` and ``g``. """
         field = f.field
 
@@ -467,7 +469,7 @@ class FracElement(DomainElement, DefaultPrinting, CantSympify, Generic[Er]):
 
         return f.__radd__(g)
 
-    def __radd__(f, c):
+    def __radd__(f, c) -> Self | NotImplementedType:
         if f.field.ring.is_element(c):
             return f.new(f.numer + f.denom*c, f.denom)
 
@@ -480,7 +482,7 @@ class FracElement(DomainElement, DefaultPrinting, CantSympify, Generic[Er]):
         else:
             return f.new(f.numer*g_denom + f.denom*g_numer, f.denom*g_denom)
 
-    def __sub__(f, g):
+    def __sub__(f, g) -> Self | FracElement | NotImplementedType:
         """Subtract rational functions ``f`` and ``g``. """
         field = f.field
 
@@ -518,7 +520,7 @@ class FracElement(DomainElement, DefaultPrinting, CantSympify, Generic[Er]):
         else:
             return f.new(f.numer*g_denom - f.denom*g_numer, f.denom*g_denom)
 
-    def __rsub__(f, c):
+    def __rsub__(f, c) -> Self | NotImplementedType:
         if f.field.ring.is_element(c):
             return f.new(-f.numer + f.denom*c, f.denom)
 
@@ -531,7 +533,7 @@ class FracElement(DomainElement, DefaultPrinting, CantSympify, Generic[Er]):
         else:
             return f.new(-f.numer*g_denom + f.denom*g_numer, f.denom*g_denom)
 
-    def __mul__(f, g):
+    def __mul__(f, g) -> Self | FracElement | NotImplementedType:
         """Multiply rational functions ``f`` and ``g``. """
         field = f.field
 
@@ -557,7 +559,7 @@ class FracElement(DomainElement, DefaultPrinting, CantSympify, Generic[Er]):
 
         return f.__rmul__(g)
 
-    def __rmul__(f, c):
+    def __rmul__(f, c) -> Self | NotImplementedType:
         if f.field.ring.is_element(c):
             return f.new(f.numer*c, f.denom)
 
@@ -570,7 +572,7 @@ class FracElement(DomainElement, DefaultPrinting, CantSympify, Generic[Er]):
         else:
             return f.new(f.numer*g_numer, f.denom*g_denom)
 
-    def __truediv__(f, g):
+    def __truediv__(f, g) -> Self | FracElement | NotImplementedType:
         """Computes quotient of fractions ``f`` and ``g``. """
         field = f.field
 
@@ -603,7 +605,7 @@ class FracElement(DomainElement, DefaultPrinting, CantSympify, Generic[Er]):
         else:
             return f.new(f.numer*g_denom, f.denom*g_numer)
 
-    def __rtruediv__(f, c):
+    def __rtruediv__(f, c) -> Self | NotImplementedType:
         if not f:
             raise ZeroDivisionError
         elif f.field.ring.is_element(c):
@@ -618,7 +620,7 @@ class FracElement(DomainElement, DefaultPrinting, CantSympify, Generic[Er]):
         else:
             return f.new(f.denom*g_numer, f.numer*g_denom)
 
-    def __pow__(f, n):
+    def __pow__(f, n) -> Self:
         """Raise ``f`` to a non-negative power ``n``. """
         if n >= 0:
             return f.raw_new(f.numer**n, f.denom**n)
@@ -627,7 +629,7 @@ class FracElement(DomainElement, DefaultPrinting, CantSympify, Generic[Er]):
         else:
             return f.raw_new(f.denom**-n, f.numer**-n)
 
-    def diff(f, x):
+    def diff(f, x) -> Self:
         """Computes partial derivative in ``x``.
 
         Examples
@@ -661,7 +663,7 @@ class FracElement(DomainElement, DefaultPrinting, CantSympify, Generic[Er]):
         field = numer.ring.to_field()
         return field.new(numer, denom)
 
-    def subs(f, x, a=None):
+    def subs(f, x, a=None) -> Self:
         if isinstance(x, list) and a is None:
             x = [ (X.to_poly(), a) for X, a in x ]
             numer, denom = f.numer.subs(x), f.denom.subs(x)

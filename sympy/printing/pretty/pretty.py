@@ -44,7 +44,7 @@ class PrettyPrinter(Printer):
         "perm_cyclic": True
     }
 
-    def __init__(self, settings=None):
+    def __init__(self, settings=None) -> None:
         Printer.__init__(self, settings)
 
         if not isinstance(self._settings['imaginary_unit'], str):
@@ -52,7 +52,7 @@ class PrettyPrinter(Printer):
         elif self._settings['imaginary_unit'] not in ("i", "j"):
             raise ValueError("'imaginary_unit' must be either 'i' or 'j', not '{}'".format(self._settings['imaginary_unit']))
 
-    def emptyPrinter(self, expr):
+    def emptyPrinter(self, expr) -> prettyForm:
         return prettyForm(str(expr))
 
     @property
@@ -2371,7 +2371,7 @@ class PrettyPrinter(Printer):
         s = prettyForm(*s.parens(left, right, ifascii_nougly=ifascii_nougly))
         return s
 
-    def join(self, delimiter, args):
+    def join(self, delimiter, args) -> prettyForm:
         pform = None
 
         for arg in args:
@@ -2871,7 +2871,7 @@ def pretty(expr, **settings):
         pretty_use_unicode(uflag)
 
 
-def pretty_print(expr, **kwargs):
+def pretty_print(expr, **kwargs) -> None:
     """Prints expr in pretty form.
 
     pprint is just a shortcut for this function.
@@ -2919,7 +2919,7 @@ def pretty_print(expr, **kwargs):
 pprint = pretty_print
 
 
-def pager_print(expr, **settings):
+def pager_print(expr, **settings) -> None:
     """Prints expr using the pager, in pretty form.
 
     This invokes a pager command using pydoc. Lines are not wrapped

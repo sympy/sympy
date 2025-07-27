@@ -35,7 +35,9 @@ from math import gcd
 from decimal import Decimal
 from fractions import Fraction
 import sys
-from typing import Type
+from typing import Any, Type
+from types import NotImplementedType
+from typing_extensions import Self
 
 
 # Used for __hash__
@@ -54,7 +56,7 @@ class PythonMPQ:
     """
     __slots__ = ('numerator', 'denominator')
 
-    def __new__(cls, numerator, denominator=None):
+    def __new__(cls, numerator, denominator=None) -> Self:
         """Construct PythonMPQ with gcd computation and checks"""
         if denominator is not None:
             #
@@ -108,7 +110,7 @@ class PythonMPQ:
         obj.denominator = denominator
         return obj
 
-    def __int__(self):
+    def __int__(self) -> int:
         """Convert to int (truncates towards zero)"""
         p, q = self.numerator, self.denominator
         if p < 0:
@@ -119,11 +121,11 @@ class PythonMPQ:
         """Convert to float (approximately)"""
         return self.numerator / self.denominator
 
-    def __bool__(self):
+    def __bool__(self) -> bool:
         """True/False if nonzero/zero"""
         return bool(self.numerator)
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
         """Compare equal with PythonMPQ, int, float, Decimal or Fraction"""
         if isinstance(other, PythonMPQ):
             return (self.numerator == other.numerator
@@ -133,7 +135,7 @@ class PythonMPQ:
         else:
             return NotImplemented
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         """hash - same as mpq/Fraction"""
         try:
             dinv = pow(self.denominator, -1, _PyHASH_MODULUS)
@@ -144,7 +146,7 @@ class PythonMPQ:
         result = hash_ if self.numerator >= 0 else -hash_
         return -2 if result == -1 else result
 
-    def __reduce__(self):
+    def __reduce__(self) -> tuple[type[Self], tuple[Any, Any]]:
         """Deconstruct for pickling"""
         return type(self), (self.numerator, self.denominator)
 
@@ -167,35 +169,35 @@ class PythonMPQ:
         rhs = other.numerator * self.denominator
         return op(lhs, rhs)
 
-    def __lt__(self, other):
+    def __lt__(self, other) -> bool:
         """self < other"""
         return self._cmp(other, operator.lt)
 
-    def __le__(self, other):
+    def __le__(self, other) -> bool:
         """self <= other"""
         return self._cmp(other, operator.le)
 
-    def __gt__(self, other):
+    def __gt__(self, other) -> bool:
         """self > other"""
         return self._cmp(other, operator.gt)
 
-    def __ge__(self, other):
+    def __ge__(self, other) -> bool:
         """self >= other"""
         return self._cmp(other, operator.ge)
 
-    def __abs__(self):
+    def __abs__(self) -> Self:
         """abs(q)"""
         return self._new(abs(self.numerator), self.denominator)
 
-    def __pos__(self):
+    def __pos__(self) -> Self:
         """+q"""
         return self
 
-    def __neg__(self):
+    def __neg__(self) -> Self:
         """-q"""
         return self._new(-self.numerator, self.denominator)
 
-    def __add__(self, other):
+    def __add__(self, other) -> NotImplementedType | Self:
         """q1 + q2"""
         if isinstance(other, PythonMPQ):
             #
@@ -228,7 +230,7 @@ class PythonMPQ:
 
         return self._new(p, q)
 
-    def __radd__(self, other):
+    def __radd__(self, other) -> Self | NotImplementedType:
         """z1 + q2"""
         if isinstance(other, int):
             p = self.numerator + self.denominator * other
@@ -237,7 +239,7 @@ class PythonMPQ:
         else:
             return NotImplemented
 
-    def __sub__(self ,other):
+    def __sub__(self ,other) -> NotImplementedType | Self:
         """q1 - q2"""
         if isinstance(other, PythonMPQ):
             ap, aq = self.numerator, self.denominator
@@ -259,7 +261,7 @@ class PythonMPQ:
 
         return self._new(p, q)
 
-    def __rsub__(self, other):
+    def __rsub__(self, other) -> Self | NotImplementedType:
         """z1 - q2"""
         if isinstance(other, int):
             p = self.denominator * other - self.numerator
@@ -268,7 +270,7 @@ class PythonMPQ:
         else:
             return NotImplemented
 
-    def __mul__(self, other):
+    def __mul__(self, other) -> NotImplementedType | Self:
         """q1 * q2"""
         if isinstance(other, PythonMPQ):
             ap, aq = self.numerator, self.denominator
@@ -285,7 +287,7 @@ class PythonMPQ:
 
         return self._new(p, q)
 
-    def __rmul__(self, other):
+    def __rmul__(self, other) -> Self | NotImplementedType:
         """z1 * q2"""
         if isinstance(other, int):
             x = gcd(self.denominator, other)
@@ -295,7 +297,7 @@ class PythonMPQ:
         else:
             return NotImplemented
 
-    def __pow__(self, exp):
+    def __pow__(self, exp) -> Self:
         """q ** z"""
         p, q = self.numerator, self.denominator
 
@@ -304,7 +306,7 @@ class PythonMPQ:
 
         return self._new_check(p**exp, q**exp)
 
-    def __truediv__(self, other):
+    def __truediv__(self, other) -> NotImplementedType | Self:
         """q1 / q2"""
         if isinstance(other, PythonMPQ):
             ap, aq = self.numerator, self.denominator
@@ -321,7 +323,7 @@ class PythonMPQ:
 
         return self._new_check(p, q)
 
-    def __rtruediv__(self, other):
+    def __rtruediv__(self, other) -> Self | NotImplementedType:
         """z / q"""
         if isinstance(other, int):
             x = gcd(self.numerator, other)

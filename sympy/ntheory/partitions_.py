@@ -244,7 +244,7 @@ def _partition(n: int) -> int:
 The `sympy.ntheory.partitions_.npartitions` has been moved to `sympy.functions.combinatorial.numbers.partition`.""",
 deprecated_since_version="1.13",
 active_deprecations_target='deprecated-ntheory-symbolic-functions')
-def npartitions(n, verbose=False):
+def npartitions(n, verbose=False) -> int:
     """
     Calculate the partition function P(n), i.e. the number of ways that
     n can be written as a sum of positive integers.

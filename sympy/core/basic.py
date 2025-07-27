@@ -5,7 +5,7 @@ from collections import Counter
 from collections.abc import Mapping, Iterable
 from itertools import zip_longest
 from functools import cmp_to_key
-from typing import TYPE_CHECKING, overload
+from typing import Any, Literal, TYPE_CHECKING, overload
 
 from .assumptions import _prepare_class_assumptions
 from .cache import cacheit
@@ -18,6 +18,10 @@ from sympy.utilities.decorator import deprecated
 from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.iterables import iterable, numbered_symbols
 from sympy.utilities.misc import filldedent, func_name
+from sympy import Symbol
+from sympy.core._print_helpers import Printable
+from sympy.core.kind import Kind
+from typing_extensions import Self
 
 
 if TYPE_CHECKING:
@@ -206,10 +210,10 @@ class Basic(Printable):
     _mhash: int | None
 
     @property
-    def __sympy__(self):
+    def __sympy__(self) -> Literal[True]:
         return True
 
-    def __init_subclass__(cls):
+    def __init_subclass__(cls) -> None:
         # Initialize the default_assumptions FactKB and also any assumptions
         # property methods. This method will only be called for subclasses of
         # Basic but not for Basic itself so we call
@@ -283,7 +287,7 @@ class Basic(Printable):
 
     kind: Kind = UndefinedKind
 
-    def __new__(cls, *args):
+    def __new__(cls, *args) -> Self:
         obj = object.__new__(cls)
         obj._assumptions = cls.default_assumptions
         obj._mhash = None  # will be set by __hash__ method.
@@ -291,20 +295,20 @@ class Basic(Printable):
         obj._args = args  # all items in args must be Basic objects
         return obj
 
-    def copy(self):
+    def copy(self) -> Self:
         return self.func(*self.args)
 
     def __getnewargs__(self) -> tuple[Basic, ...] | tuple[Hashable, ...]:
         return self.args
 
-    def __getstate__(self):
+    def __getstate__(self) -> None:
         return None
 
-    def __setstate__(self, state):
+    def __setstate__(self, state) -> None:
         for name, value in state.items():
             setattr(self, name, value)
 
-    def __reduce_ex__(self, protocol):
+    def __reduce_ex__(self, protocol) -> str | tuple[Any, ...]:
         if protocol < 2:
             msg = "Only pickle protocol 2 or higher is supported by SymPy"
             raise NotImplementedError(msg)
@@ -330,7 +334,7 @@ class Basic(Printable):
         return self._args
 
     @property
-    def assumptions0(self):
+    def assumptions0(self) -> dict[Any, Any]:
         """
         Return object `type` assumptions.
 
@@ -361,7 +365,7 @@ class Basic(Printable):
         """
         return {}
 
-    def compare(self, other):
+    def compare(self, other) -> int:
         """
         Return -1, 0, 1 if the object is less than, equal,
         or greater than other in a canonical sense.
@@ -420,7 +424,7 @@ class Basic(Printable):
         return 0
 
     @classmethod
-    def fromiter(cls, args, **assumptions):
+    def fromiter(cls, args, **assumptions) -> Self:
         """
         Create a new object from an iterable.
 
@@ -443,7 +447,7 @@ class Basic(Printable):
         return 5, 0, cls.__name__
 
     @cacheit
-    def sort_key(self, order=None):
+    def sort_key(self, order=None) -> tuple[tuple[Literal[5], Literal[0], str], tuple[int, tuple[Any, ...]], Any, Any]:
         """
         Return a sort key.
 
@@ -492,7 +496,7 @@ class Basic(Printable):
             return self == other._sympy_()
         return NotImplemented
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
         """Return a boolean indicating whether a == b on the basis of
         their symbolic trees.
 
@@ -534,7 +538,7 @@ class Basic(Printable):
                 return False
         return True
 
-    def __ne__(self, other):
+    def __ne__(self, other) -> bool:
         """``a != b``  -> Compare two symbolic trees and see whether they are different
 
         this is the same as:
@@ -723,7 +727,7 @@ class Basic(Printable):
         return empty.union(*(a.free_symbols for a in self.args))
 
     @property
-    def expr_free_symbols(self):
+    def expr_free_symbols(self) -> set[Any]:
         sympy_deprecation_warning("""
         The expr_free_symbols property is deprecated. Use free_symbols to get
         the free symbols of an expression.
@@ -812,7 +816,7 @@ class Basic(Printable):
             reps[b] = d
         return reps
 
-    def rcall(self, *args):
+    def rcall(self, *args) -> Symbol | Any:
         """Apply on the argument recursively through the expression tree.
 
         This method is used to simulate a common abuse of notation for
@@ -835,7 +839,7 @@ class Basic(Printable):
         else:
             return self
 
-    def is_hypergeometric(self, k):
+    def is_hypergeometric(self, k) -> bool | None:
         from sympy.simplify.simplify import hypersimp
         from sympy.functions.elementary.piecewise import Piecewise
         if self.has(Piecewise):
@@ -843,7 +847,7 @@ class Basic(Printable):
         return hypersimp(self, k) is not None
 
     @property
-    def is_comparable(self):
+    def is_comparable(self) -> Literal[False]:
         """Return True if self can be computed to a real number
         (or already is a real number) with precision, else False.
 
@@ -876,7 +880,7 @@ class Basic(Printable):
         return False
 
     @property
-    def func(self):
+    def func(self) -> type[Self]:
         """
         The top-level function in an expression.
 
@@ -942,7 +946,7 @@ class Basic(Printable):
         """
         return self.args
 
-    def as_content_primitive(self, radical=False, clear=True):
+    def as_content_primitive(self, radical=False, clear=True) -> tuple[Any, Self]:
         """A stub to allow Basic args (like Tuple) to be skipped when computing
         the content and primitive components of an expression.
 
@@ -1294,7 +1298,7 @@ class Basic(Printable):
         """
         return None
 
-    def xreplace(self, rule):
+    def xreplace(self, rule) -> Self:
         """
         Replace occurrences of objects within the expression.
 
@@ -1382,7 +1386,7 @@ class Basic(Printable):
         return self, False
 
     @cacheit
-    def has(self, *patterns):
+    def has(self, *patterns) -> bool:
         """
         Test whether any subexpression matches any of the patterns.
 
@@ -1430,7 +1434,7 @@ class Basic(Printable):
         """
         return self._has(iterargs, *patterns)
 
-    def has_xfree(self, s: set[Basic]):
+    def has_xfree(self, s: set[Basic]) -> bool:
         """Return True if self has any of the patterns in s as a
         free argument, else False. This is like `Basic.has_free`
         but this will only report exact argument matches.
@@ -1458,7 +1462,7 @@ class Basic(Printable):
         return any(a in s for a in iterfreeargs(self))
 
     @cacheit
-    def has_free(self, *patterns):
+    def has_free(self, *patterns) -> bool:
         """Return True if self has object(s) ``x`` as a free expression
         else False.
 
@@ -1793,7 +1797,7 @@ class Basic(Printable):
         rv = walk(self, rec_replace)
         return (rv, mapping) if map else rv # type: ignore
 
-    def find(self, query, group=False):
+    def find(self, query, group=False) -> set[Any] | dict[Any, Any]:
         """Find all subexpressions matching a query."""
         query = _make_find_query(query)
         results = list(filter(query, _preorder_traversal(self)))
@@ -1802,12 +1806,12 @@ class Basic(Printable):
             return set(results)
         return dict(Counter(results))
 
-    def count(self, query):
+    def count(self, query) -> int:
         """Count the number of matching subexpressions."""
         query = _make_find_query(query)
         return sum(bool(query(sub)) for sub in _preorder_traversal(self))
 
-    def matches(self, expr, repl_dict=None, old=False):
+    def matches(self, expr, repl_dict=None, old=False) -> dict[Any, Any] | None:
         """
         Helper method for match() that looks for a match between Wild symbols
         in self and expressions in expr.
@@ -1920,7 +1924,7 @@ class Basic(Printable):
         from .function import count_ops
         return count_ops(self, visual)
 
-    def doit(self, **hints):
+    def doit(self, **hints) -> Self:
         """Evaluate objects that are not evaluated by default like limits,
         integrals, sums and products. All objects of this kind will be
         evaluated recursively, unless some species were excluded via 'hints'
@@ -1951,7 +1955,7 @@ class Basic(Printable):
         from sympy.simplify.simplify import simplify
         return simplify(self, **kwargs)
 
-    def refine(self, assumption=True):
+    def refine(self, assumption=True) -> "Basic":
         """See the refine function in sympy.assumptions"""
         from sympy.assumptions.refine import refine
         return refine(self, assumption)
@@ -1977,7 +1981,7 @@ class Basic(Printable):
         else:
             return None
 
-    def rewrite(self, *args, deep=True, **hints):
+    def rewrite(self, *args, deep=True, **hints) -> Self | Any:
         """
         Rewrite *self* using a defined rule.
 
@@ -2241,7 +2245,7 @@ class Atom(Basic):
 
     __slots__ = ()
 
-    def matches(self, expr, repl_dict=None, old=False):
+    def matches(self, expr, repl_dict=None, old=False) -> dict[Any, Any] | None:
         if self == expr:
             if repl_dict is None:
                 return {}
@@ -2250,15 +2254,15 @@ class Atom(Basic):
     def xreplace(self, rule, hack2=False):
         return rule.get(self, self)
 
-    def doit(self, **hints):
+    def doit(self, **hints) -> Self:
         return self
 
     @classmethod
-    def class_key(cls):
+    def class_key(cls) -> tuple[Literal[2], Literal[0], str]:
         return 2, 0, cls.__name__
 
     @cacheit
-    def sort_key(self, order=None):
+    def sort_key(self, order=None) -> tuple[tuple[Literal[2], Literal[0], str], tuple[Literal[1], tuple[str]], Any, Any]:
         return self.class_key(), (1, (str(self),)), S.One.sort_key(), S.One
 
     def _eval_simplify(self, **kwargs):

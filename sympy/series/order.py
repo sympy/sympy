@@ -6,6 +6,9 @@ from sympy.core.sorting import default_sort_key
 from sympy.functions.elementary.exponential import exp, log
 from sympy.sets.sets import Complement
 from sympy.utilities.iterables import uniq, is_sequence
+from sympy.core.basic import Basic
+from typing import Any
+from typing_extensions import Self
 
 
 class Order(Expr):
@@ -319,25 +322,25 @@ class Order(Expr):
         return self
 
     @property
-    def expr(self):
+    def expr(self) -> Basic:
         return self.args[0]
 
     @property
-    def variables(self):
+    def variables(self) -> tuple[Any, ...] | tuple[()]:
         if self.args[1:]:
             return tuple(x[0] for x in self.args[1:])
         else:
             return ()
 
     @property
-    def point(self):
+    def point(self) -> tuple[Any, ...] | tuple[()]:
         if self.args[1:]:
             return tuple(x[1] for x in self.args[1:])
         else:
             return ()
 
     @property
-    def free_symbols(self):
+    def free_symbols(self) -> set[Basic]:
         return self.expr.free_symbols | set(self.variables)
 
     def _eval_power(b, e):
@@ -347,7 +350,7 @@ class Order(Expr):
             return b
         return
 
-    def as_expr_variables(self, order_symbols):
+    def as_expr_variables(self, order_symbols) -> tuple[Basic, tuple[tuple[Any, Any] | Basic, ...]]:
         if order_symbols is None:
             order_symbols = self.args[1:]
         else:
@@ -368,7 +371,7 @@ class Order(Expr):
     def removeO(self):
         return S.Zero
 
-    def getO(self):
+    def getO(self) -> Self:
         return self
 
     @cacheit
@@ -516,7 +519,7 @@ class Order(Expr):
         if expr is not None:
             return self.func(expr, *self.args[1:])
 
-    def __neg__(self):
+    def __neg__(self) -> Self:
         return self
 
 O = Order

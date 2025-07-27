@@ -18,6 +18,9 @@ from sympy.tensor.indexed import Idx, Indexed
 from sympy.utilities import sift
 
 from collections import OrderedDict
+import sympy
+import sympy.functions.elementary.exponential
+from typing import Any
 
 class IndexConformanceException(Exception):
     pass
@@ -199,7 +202,14 @@ def _get_indices_Add(expr):
     return non_scalars[0], symmetries
 
 
-def get_indices(expr):
+def get_indices(expr) -> (
+    tuple[set[Any], dict[Any, Any]]
+    | tuple[set[sympy.Idx], dict[Any, Any]]
+    | tuple[set[Any], dict[Any, Any], tuple[Any, ...]]
+    | tuple[Any, Any | dict[Any, Any]]
+    | tuple[Any, dict[Any, Any]]
+    | tuple[set[Any] | Any, Any]
+):
     """Determine the outer indices of expression ``expr``
 
     By *outer* we mean indices that are not summation indices.  Returns a set
@@ -295,7 +305,15 @@ def get_indices(expr):
             "FIXME: No specialized handling of type %s" % type(expr))
 
 
-def get_contraction_structure(expr):
+def get_contraction_structure(expr) -> (
+    dict[tuple[Any, ...] | None, set[sympy.Indexed]]
+    | dict[None, set[Any]]
+    | dict[tuple[Any, ...] | None, set[Any]]
+    | dict[None, set[Any | sympy.functions.elementary.exponential.exp]]
+    | dict[Any, Any]
+    | dict[None, sympy.Piecewise]
+    | dict[None, set[Function]]
+):
     """Determine dummy indices of ``expr`` and describe its structure
 
     By *dummy* we mean indices that are summation indices.

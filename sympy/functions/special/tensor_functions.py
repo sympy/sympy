@@ -1,7 +1,7 @@
 from math import prod
 
 from sympy.core import S, Integer
-from sympy.core.function import DefinedFunction
+from sympy.core.function import Function, UndefinedFunction, DefinedFunction
 from sympy.core.logic import fuzzy_not
 from sympy.core.relational import Ne
 from sympy.core.sorting import default_sort_key
@@ -9,13 +9,16 @@ from sympy.external.gmpy import SYMPY_INTS
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.utilities.iterables import has_dups
+from sympy.core.basic import Basic
+from typing import Literal
+from typing_extensions import Self
 
 ###############################################################################
 ###################### Kronecker Delta, Levi-Civita etc. ######################
 ###############################################################################
 
 
-def Eijk(*args, **kwargs):
+def Eijk(*args, **kwargs) -> type[UndefinedFunction]:
     """
     Represent the Levi-Civita symbol.
 
@@ -77,7 +80,7 @@ class LeviCivita(DefinedFunction):
     is_integer = True
 
     @classmethod
-    def eval(cls, *args):
+    def eval(cls, *args) -> None:
         if all(isinstance(a, (SYMPY_INTS, Integer)) for a in args):
             return eval_levicivita(*args)
         if has_dups(args):
@@ -144,7 +147,7 @@ class KroneckerDelta(DefinedFunction):
     is_integer = True
 
     @classmethod
-    def eval(cls, i, j, delta_range=None):
+    def eval(cls, i, j, delta_range=None) -> Self | None:
         """
         Evaluates the discrete delta function.
 
@@ -200,7 +203,7 @@ class KroneckerDelta(DefinedFunction):
                 return cls(j, i)
 
     @property
-    def delta_range(self):
+    def delta_range(self) -> Basic | None:
         if len(self.args) > 2:
             return self.args[2]
 
@@ -211,7 +214,7 @@ class KroneckerDelta(DefinedFunction):
             return 1/self
 
     @property
-    def is_above_fermi(self):
+    def is_above_fermi(self) -> bool:
         """
         True if Delta can be non-zero above fermi.
 
@@ -243,7 +246,7 @@ class KroneckerDelta(DefinedFunction):
         return True
 
     @property
-    def is_below_fermi(self):
+    def is_below_fermi(self) -> bool:
         """
         True if Delta can be non-zero below fermi.
 
@@ -275,7 +278,7 @@ class KroneckerDelta(DefinedFunction):
         return True
 
     @property
-    def is_only_above_fermi(self):
+    def is_only_above_fermi(self) -> Literal[False]:
         """
         True if Delta is restricted to above fermi.
 
@@ -306,7 +309,7 @@ class KroneckerDelta(DefinedFunction):
                 ) or False
 
     @property
-    def is_only_below_fermi(self):
+    def is_only_below_fermi(self) -> Literal[False]:
         """
         True if Delta is restricted to below fermi.
 
@@ -337,7 +340,7 @@ class KroneckerDelta(DefinedFunction):
                 ) or False
 
     @property
-    def indices_contain_equal_information(self):
+    def indices_contain_equal_information(self) -> bool:
         """
         Returns True if indices are either both above or below fermi.
 
@@ -368,7 +371,7 @@ class KroneckerDelta(DefinedFunction):
         return self.is_below_fermi and self.is_above_fermi
 
     @property
-    def preferred_index(self):
+    def preferred_index(self) -> Basic:
         """
         Returns the index which is preferred to keep in the final expression.
 
@@ -406,7 +409,7 @@ class KroneckerDelta(DefinedFunction):
             return self.args[0]
 
     @property
-    def killable_index(self):
+    def killable_index(self) -> Basic:
         """
         Returns the index which is preferred to substitute in the final
         expression.
@@ -466,7 +469,7 @@ class KroneckerDelta(DefinedFunction):
             return 0
 
     @property
-    def indices(self):
+    def indices(self) -> tuple[Basic, ...]:
         return self.args[0:2]
 
     def _eval_rewrite_as_Piecewise(self, *args, **kwargs):

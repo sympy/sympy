@@ -5,6 +5,7 @@ from sympy.combinatorics.perm_groups import PermutationGroup
 from sympy.core.intfunc import igcd
 from sympy.functions.combinatorial.numbers import totient
 from sympy.core.singleton import S
+from typing import Any, Literal
 
 class GroupHomomorphism:
     '''
@@ -17,7 +18,7 @@ class GroupHomomorphism:
 
     '''
 
-    def __init__(self, domain, codomain, images):
+    def __init__(self, domain, codomain, images) -> None:
         self.domain = domain
         self.codomain = codomain
         self.images = images
@@ -60,7 +61,7 @@ class GroupHomomorphism:
 
         return inverses
 
-    def invert(self, g):
+    def invert(self, g) -> list[Any] | None:
         '''
         Return an element of the preimage of ``g`` or of each element
         of ``g`` if ``g`` is a list.
@@ -106,7 +107,7 @@ class GroupHomomorphism:
         elif isinstance(g, list):
             return [self.invert(e) for e in g]
 
-    def kernel(self):
+    def kernel(self) -> PermutationGroup | FpSubgroup:
         '''
         Compute the kernel of `self`.
 
@@ -138,7 +139,7 @@ class GroupHomomorphism:
                     K = FpSubgroup(G, gens, normal=True)
         return K
 
-    def image(self):
+    def image(self) -> PermutationGroup | FpSubgroup:
         '''
         Compute the image of `self`.
 
@@ -183,17 +184,17 @@ class GroupHomomorphism:
                     i += abs(p)
         return value
 
-    def __call__(self, elem):
+    def __call__(self, elem) -> list[Any]:
         return self._apply(elem)
 
-    def is_injective(self):
+    def is_injective(self) -> bool:
         '''
         Check if the homomorphism is injective
 
         '''
         return self.kernel().order() == 1
 
-    def is_surjective(self):
+    def is_surjective(self) -> None:
         '''
         Check if the homomorphism is surjective
 
@@ -205,14 +206,14 @@ class GroupHomomorphism:
         else:
             return im == oth
 
-    def is_isomorphism(self):
+    def is_isomorphism(self) -> Literal[False] | None:
         '''
         Check if `self` is an isomorphism.
 
         '''
         return self.is_injective() and self.is_surjective()
 
-    def is_trivial(self):
+    def is_trivial(self) -> bool:
         '''
         Check is `self` is a trivial homomorphism, i.e. all elements
         are mapped to the identity.
@@ -220,7 +221,7 @@ class GroupHomomorphism:
         '''
         return self.image().order() == 1
 
-    def compose(self, other):
+    def compose(self, other) -> "GroupHomomorphism":
         '''
         Return the composition of `self` and `other`, i.e.
         the homomorphism phi such that for all g in the domain
@@ -233,7 +234,7 @@ class GroupHomomorphism:
         images = {g: self(other(g)) for g in other.images}
         return GroupHomomorphism(other.domain, self.codomain, images)
 
-    def restrict_to(self, H):
+    def restrict_to(self, H) -> "GroupHomomorphism":
         '''
         Return the restriction of the homomorphism to the subgroup `H`
         of the domain.
@@ -245,7 +246,7 @@ class GroupHomomorphism:
         images = {g: self(g) for g in H.generators}
         return GroupHomomorphism(domain, self.codomain, images)
 
-    def invert_subgroup(self, H):
+    def invert_subgroup(self, H) -> PermutationGroup:
         '''
         Return the subgroup of the domain that is the inverse image
         of the subgroup ``H`` of the homomorphism image
@@ -266,7 +267,7 @@ class GroupHomomorphism:
                     P = PermutationGroup(gens)
         return P
 
-def homomorphism(domain, codomain, gens, images=(), check=True):
+def homomorphism(domain, codomain, gens, images=(), check=True) -> GroupHomomorphism:
     '''
     Create (if possible) a group homomorphism from the group ``domain``
     to the group ``codomain`` defined by the images of the domain's
@@ -356,7 +357,7 @@ def _check_homomorphism(domain, codomain, images):
             return False
     return True
 
-def orbit_homomorphism(group, omega):
+def orbit_homomorphism(group, omega) -> GroupHomomorphism:
     '''
     Return the homomorphism induced by the action of the permutation
     group ``group`` on the set ``omega`` that is closed under the action.
@@ -376,7 +377,7 @@ def orbit_homomorphism(group, omega):
         H._kernel = PermutationGroup([group.identity])
     return H
 
-def block_homomorphism(group, blocks):
+def block_homomorphism(group, blocks) -> GroupHomomorphism:
     '''
     Return the homomorphism induced by the action of the permutation
     group ``group`` on the block system ``blocks``. The latter should be
@@ -412,7 +413,7 @@ def block_homomorphism(group, blocks):
     H = GroupHomomorphism(group, codomain, images)
     return H
 
-def group_isomorphism(G, H, isomorphism=True):
+def group_isomorphism(G, H, isomorphism=True) -> tuple[Literal[True], GroupHomomorphism] | tuple[Literal[False], None] | bool:
     '''
     Compute an isomorphism between 2 given groups.
 
@@ -528,7 +529,7 @@ def group_isomorphism(G, H, isomorphism=True):
         return False
     return (False, None)
 
-def is_isomorphic(G, H):
+def is_isomorphic(G, H) -> tuple[Literal[True], GroupHomomorphism] | tuple[Literal[False], None] | bool:
     '''
     Check if the groups are isomorphic to each other
 

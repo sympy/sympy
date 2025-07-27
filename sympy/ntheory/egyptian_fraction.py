@@ -4,9 +4,10 @@ from sympy.core.singleton import S
 import sympy.polys
 
 from math import gcd
+from typing import Any
 
 
-def egyptian_fraction(r, algorithm="Greedy"):
+def egyptian_fraction(r, algorithm="Greedy") -> list[Any | Integer] | list[Any]:
     """
     Return the list of denominators of an Egyptian fraction
     expansion [1]_ of the said rational `r`.
@@ -139,7 +140,7 @@ def egyptian_fraction(r, algorithm="Greedy"):
     return prefix + [Integer(i) for i in postfix]
 
 
-def egypt_greedy(x, y):
+def egypt_greedy(x, y) -> list[Any]:
     # assumes gcd(x, y) == 1
     if x == 1:
         return [y]
@@ -154,7 +155,7 @@ def egypt_greedy(x, y):
         return [y//x + 1] + egypt_greedy(num, denom)
 
 
-def egypt_graham_jewett(x, y):
+def egypt_graham_jewett(x, y) -> list[Any]:
     # assumes gcd(x, y) == 1
     l = [y] * x
 
@@ -176,7 +177,7 @@ def egypt_graham_jewett(x, y):
     return sorted(l)
 
 
-def egypt_takenouchi(x, y):
+def egypt_takenouchi(x, y) -> list[Any]:
     # assumes gcd(x, y) == 1
     # special cases for 3/y
     if x == 3:
@@ -201,7 +202,7 @@ def egypt_takenouchi(x, y):
     return sorted(l)
 
 
-def egypt_golomb(x, y):
+def egypt_golomb(x, y) -> list[Any]:
     # assumes x < y and gcd(x, y) == 1
     if x == 1:
         return [y]
@@ -211,7 +212,7 @@ def egypt_golomb(x, y):
     return sorted(rv)
 
 
-def egypt_harmonic(r):
+def egypt_harmonic(r) -> tuple[list[Any], Any]:
     # assumes r is Rational
     rv = []
     d = S.One

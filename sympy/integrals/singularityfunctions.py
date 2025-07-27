@@ -1,8 +1,11 @@
 from sympy.functions import SingularityFunction, DiracDelta
 from sympy.integrals import integrate
+from sympy.core.function import UndefinedFunction
+from sympy.core.relational import Equality, Ne, Relational
+from typing import Any
 
 
-def singularityintegrate(f, x):
+def singularityintegrate(f, x) -> type[UndefinedFunction] | Equality | Any | Relational | Ne | None:
     """
     This function handles the indefinite integrations of Singularity functions.
     The ``integrate`` function calls this function internally whenever an

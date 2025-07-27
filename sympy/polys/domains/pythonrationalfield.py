@@ -5,6 +5,7 @@ from sympy.polys.domains.groundtypes import PythonInteger, PythonRational, SymPy
 from sympy.polys.domains.rationalfield import RationalField
 from sympy.polys.polyerrors import CoercionFailed
 from sympy.utilities import public
+from sympy.core.numbers import Integer, Rational
 
 @public
 class PythonRationalField(RationalField):
@@ -19,7 +20,7 @@ class PythonRationalField(RationalField):
     one = dtype(1) # type: ignore
     alias = 'QQ_python'
 
-    def __init__(self):
+    def __init__(self) -> None:
         pass
 
     def get_ring(self):
@@ -27,7 +28,7 @@ class PythonRationalField(RationalField):
         from sympy.polys.domains import PythonIntegerRing
         return PythonIntegerRing()
 
-    def to_sympy(self, a):
+    def to_sympy(self, a) -> Rational | Integer:
         """Convert `a` to a SymPy object. """
         return SymPyRational(a.numerator, a.denominator)
 

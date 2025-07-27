@@ -6,6 +6,7 @@ from sympy.matrices.immutable import ImmutableDenseMatrix as Matrix
 from sympy.core.cache import cacheit
 from sympy.core.symbol import Str
 import sympy.vector
+from typing_extensions import Self
 
 
 class Orienter(Basic):
@@ -26,7 +27,7 @@ class AxisOrienter(Orienter):
     Class to denote an axis orienter.
     """
 
-    def __new__(cls, angle, axis):
+    def __new__(cls, angle, axis) -> Self:
         if not isinstance(axis, sympy.vector.Vector):
             raise TypeError("axis should be a Vector")
         angle = sympify(angle)
@@ -37,7 +38,7 @@ class AxisOrienter(Orienter):
 
         return obj
 
-    def __init__(self, angle, axis):
+    def __init__(self, angle, axis) -> None:
         """
         Axis rotation is a rotation about an arbitrary axis by
         some angle. The angle is supplied as a SymPy expr scalar, and
@@ -106,7 +107,7 @@ class ThreeAngleOrienter(Orienter):
     Super-class for Body and Space orienters.
     """
 
-    def __new__(cls, angle1, angle2, angle3, rot_order):
+    def __new__(cls, angle1, angle2, angle3, rot_order) -> Self:
         if isinstance(rot_order, Str):
             rot_order = rot_order.name
 
@@ -173,12 +174,12 @@ class BodyOrienter(ThreeAngleOrienter):
 
     _in_order = True
 
-    def __new__(cls, angle1, angle2, angle3, rot_order):
+    def __new__(cls, angle1, angle2, angle3, rot_order) -> Self:
         obj = ThreeAngleOrienter.__new__(cls, angle1, angle2, angle3,
                                          rot_order)
         return obj
 
-    def __init__(self, angle1, angle2, angle3, rot_order):
+    def __init__(self, angle1, angle2, angle3, rot_order) -> None:
         """
         Body orientation takes this coordinate system through three
         successive simple rotations.
@@ -243,12 +244,12 @@ class SpaceOrienter(ThreeAngleOrienter):
 
     _in_order = False
 
-    def __new__(cls, angle1, angle2, angle3, rot_order):
+    def __new__(cls, angle1, angle2, angle3, rot_order) -> Self:
         obj = ThreeAngleOrienter.__new__(cls, angle1, angle2, angle3,
                                          rot_order)
         return obj
 
-    def __init__(self, angle1, angle2, angle3, rot_order):
+    def __init__(self, angle1, angle2, angle3, rot_order) -> None:
         """
         Space rotation is similar to Body rotation, but the rotations
         are applied in the opposite order.
@@ -304,7 +305,7 @@ class QuaternionOrienter(Orienter):
     Class to denote a quaternion-orienter.
     """
 
-    def __new__(cls, q0, q1, q2, q3):
+    def __new__(cls, q0, q1, q2, q3) -> Self:
         q0 = sympify(q0)
         q1 = sympify(q1)
         q2 = sympify(q2)
@@ -332,7 +333,7 @@ class QuaternionOrienter(Orienter):
 
         return obj
 
-    def __init__(self, angle1, angle2, angle3, rot_order):
+    def __init__(self, angle1, angle2, angle3, rot_order) -> None:
         """
         Quaternion orientation orients the new CoordSys3D with
         Quaternions, defined as a finite rotation about lambda, a unit

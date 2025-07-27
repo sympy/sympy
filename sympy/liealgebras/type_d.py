@@ -1,9 +1,12 @@
 from .cartan_type import Standard_Cartan
 from sympy.core.backend import eye
+from sympy.liealgebras.cartan_type import Standard_Cartan
+from typing import Any
+from typing_extensions import Self
 
 class TypeD(Standard_Cartan):
 
-    def __new__(cls, n):
+    def __new__(cls, n) -> Self:
         if n < 3:
             raise ValueError("n cannot be less than 3")
         return Standard_Cartan.__new__(cls, "D", n)
@@ -76,7 +79,7 @@ class TypeD(Standard_Cartan):
             return root
 
 
-    def positive_roots(self):
+    def positive_roots(self) -> dict[Any, Any]:
         """
         This method generates all the positive roots of
         A_n.  This is half of all of the roots of D_n
@@ -154,7 +157,7 @@ class TypeD(Standard_Cartan):
         n = self.n
         return n*(n-1)/2
 
-    def lie_algebra(self):
+    def lie_algebra(self) -> str:
         """
         Returns the Lie algebra associated with D_n"
         """

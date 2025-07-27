@@ -1,11 +1,12 @@
 """Known matrices related to physics"""
 
 from sympy.core.numbers import I
-from sympy.matrices.dense import MutableDenseMatrix as Matrix
+from sympy.matrices.dense import MutableDenseMatrix, MutableDenseMatrix as Matrix
 from sympy.utilities.decorator import deprecated
+import sympy.matrices
 
 
-def msigma(i):
+def msigma(i) -> MutableDenseMatrix:
     r"""Returns a Pauli matrix `\sigma_i` with `i=1,2,3`.
 
     References
@@ -72,7 +73,7 @@ def pat_matrix(m, dx, dy, dz):
     return m*Matrix(mat)
 
 
-def mgamma(mu, lower=False):
+def mgamma(mu, lower=False) -> MutableDenseMatrix:
     r"""Returns a Dirac gamma matrix `\gamma^\mu` in the standard
     (Dirac) representation.
 
@@ -164,7 +165,7 @@ minkowski_tensor = Matrix( (
     deprecated_since_version="1.9",
     active_deprecations_target="deprecated-physics-mdft",
 )
-def mdft(n):
+def mdft(n) -> sympy.matrices.Matrix:
     r"""
     .. deprecated:: 1.9
 

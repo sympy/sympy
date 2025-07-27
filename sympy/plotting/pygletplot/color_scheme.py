@@ -3,13 +3,14 @@ from sympy.core.symbol import (Symbol, symbols)
 from sympy.utilities.lambdify import lambdify
 from .util import interpolate, rinterpolate, create_bounds, update_bounds
 from sympy.utilities.iterables import sift
+from typing import Any
 
 
 class ColorGradient:
     colors = [0.4, 0.4, 0.4], [0.9, 0.9, 0.9]
     intervals = 0.0, 1.0
 
-    def __init__(self, *args):
+    def __init__(self, *args) -> None:
         if len(args) == 2:
             self.colors = list(args)
             self.intervals = [0.0, 1.0]
@@ -20,7 +21,7 @@ class ColorGradient:
             self.intervals = [args[i] for i in range(0, len(args), 2)]
         assert len(self.colors) == len(self.intervals)
 
-    def copy(self):
+    def copy(self) -> "ColorGradient":
         c = ColorGradient()
         c.colors = [e[::] for e in self.colors]
         c.intervals = self.intervals[::]
@@ -38,7 +39,7 @@ class ColorGradient:
         v = rinterpolate(self.intervals[i - 1], self.intervals[i], v)
         return interpolate(self.colors[i - 1][axis], self.colors[i][axis], v)
 
-    def __call__(self, r, g, b):
+    def __call__(self, r, g, b) -> tuple[Any, Any, Any]:
         c = self._interpolate_axis
         return c(0, r), c(1, g), c(2, b)
 
@@ -47,7 +48,7 @@ default_color_schemes = {}  # defined at the bottom of this file
 
 class ColorScheme:
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         self.args = args
         self.f, self.gradient = None, ColorGradient()
 
@@ -222,13 +223,13 @@ class ColorScheme:
         except Exception:
             pass  # color function probably not valid at 0,0,0,0,0
 
-    def __call__(self, x, y, z, u, v):
+    def __call__(self, x, y, z, u, v) -> None:
         try:
             return self.f(x, y, z, u, v)
         except Exception:
             return None
 
-    def apply_to_curve(self, verts, u_set, set_len=None, inc_pos=None):
+    def apply_to_curve(self, verts, u_set, set_len=None, inc_pos=None) -> list[Any]:
         """
         Apply this color scheme to a
         set of vertices over a single
@@ -266,7 +267,7 @@ class ColorScheme:
                 inc_pos()
         return cverts
 
-    def apply_to_surface(self, verts, u_set, v_set, set_len=None, inc_pos=None):
+    def apply_to_surface(self, verts, u_set, v_set, set_len=None, inc_pos=None) -> list[Any]:
         """
         Apply this color scheme to a
         set of vertices over two
@@ -308,7 +309,7 @@ class ColorScheme:
                     inc_pos()
         return cverts
 
-    def str_base(self):
+    def str_base(self) -> str:
         return ", ".join(str(a) for a in self.args)
 
     def __repr__(self):

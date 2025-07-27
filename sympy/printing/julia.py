@@ -68,7 +68,7 @@ class JuliaCodePrinter(CodePrinter):
     # assignment (if False).  FIXME: this should be looked a more carefully
     # for Julia.
 
-    def __init__(self, settings={}):
+    def __init__(self, settings={}) -> None:
         super().__init__(settings)
         self.known_functions = dict(zip(known_fcns_src1, known_fcns_src1))
         self.known_functions.update(dict(known_fcns_src2))
@@ -475,7 +475,7 @@ class JuliaCodePrinter(CodePrinter):
         )
 
 
-    def indent_code(self, code):
+    def indent_code(self, code) -> str | list[Any]:
         """Accepts a string of code or a list of code lines"""
 
         # code mostly copied from ccode
@@ -507,7 +507,7 @@ class JuliaCodePrinter(CodePrinter):
         return pretty
 
 
-def julia_code(expr, assign_to=None, **settings):
+def julia_code(expr, assign_to=None, **settings) -> str | tuple[set[tuple[Any, str]], set[Any], str]:
     r"""Converts `expr` to a string of Julia code.
 
     Parameters
@@ -644,7 +644,7 @@ def julia_code(expr, assign_to=None, **settings):
     return JuliaCodePrinter(settings).doprint(expr, assign_to)
 
 
-def print_julia_code(expr, **settings):
+def print_julia_code(expr, **settings) -> None:
     """Prints the Julia representation of the given expression.
 
     See `julia_code` for the meaning of the optional arguments.

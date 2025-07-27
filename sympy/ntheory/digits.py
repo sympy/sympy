@@ -2,9 +2,10 @@ from collections import defaultdict
 
 from sympy.utilities.iterables import multiset, is_palindromic as _palindromic
 from sympy.utilities.misc import as_int
+from typing import Any
 
 
-def digits(n, b=10, digits=None):
+def digits(n, b=10, digits=None) -> list[Any]:
     """
     Return a list of the digits of ``n`` in base ``b``. The first
     element in the list is ``b`` (or ``-b`` if ``n`` is negative).
@@ -71,7 +72,7 @@ def digits(n, b=10, digits=None):
         return y
 
 
-def count_digits(n, b=10):
+def count_digits(n, b=10) -> defaultdict[Any, int]:
     """
     Return a dictionary whose keys are the digits of ``n`` in the
     given base, ``b``, with keys indicating the digits appearing in the
@@ -115,7 +116,7 @@ def count_digits(n, b=10):
     return rv
 
 
-def is_palindromic(n, b=10):
+def is_palindromic(n, b=10) -> bool:
     """return True if ``n`` is the same when read from left to right
     or right to left in the given base, ``b``.
 

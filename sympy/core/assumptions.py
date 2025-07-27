@@ -211,6 +211,9 @@ from .sympify import sympify
 
 from sympy.core.random import _assumptions_shuffle as shuffle
 from sympy.core.assumptions_generated import generated_assumptions as _assumptions
+from sympy.core.facts import FactKB
+from typing import Any
+from typing_extensions import Self
 
 def _load_pre_generated_assumption_rules() -> FactRules:
     """ Load the assumption rules from pre-generated data
@@ -294,7 +297,7 @@ _assume_defined.add('polar')
 _assume_defined = frozenset(_assume_defined)
 
 
-def assumptions(expr, _check=None):
+def assumptions(expr, _check=None) -> dict[Any, Any]:
     """return the T/F assumptions of ``expr``"""
     n = sympify(expr)
     if n.is_Symbol:
@@ -310,7 +313,7 @@ def assumptions(expr, _check=None):
     return rv
 
 
-def common_assumptions(exprs, check=None):
+def common_assumptions(exprs, check=None) -> dict[Any, Any]:
     """return those assumptions which have the same True or False
     value for all the given expressions.
 
@@ -346,7 +349,7 @@ def common_assumptions(exprs, check=None):
         for b in assume)}
 
 
-def failing_assumptions(expr, **assumptions):
+def failing_assumptions(expr, **assumptions) -> dict[Any, Any]:
     """
     Return a dictionary containing assumptions with values not
     matching those of the passed assumptions.
@@ -379,7 +382,7 @@ def failing_assumptions(expr, **assumptions):
     return failed  # {} or {assumption: value != desired}
 
 
-def check_assumptions(expr, against=None, **assume):
+def check_assumptions(expr, against=None, **assume) -> bool | None:
     """
     Checks whether assumptions of ``expr`` match the T/F assumptions
     given (or possessed by ``against``). True is returned if all
@@ -459,7 +462,7 @@ class StdFactKB(FactKB):
 
     This is the only kind of FactKB that Basic objects should use.
     """
-    def __init__(self, facts=None):
+    def __init__(self, facts=None) -> None:
         super().__init__(_assume_rules)
         # save a copy of the facts dict
         if not facts:
@@ -471,11 +474,11 @@ class StdFactKB(FactKB):
         if facts:
             self.deduce_all_facts(facts)
 
-    def copy(self):
+    def copy(self) -> Self:
         return self.__class__(self)
 
     @property
-    def generator(self):
+    def generator(self) -> dict[Any, Any]:
         return self._generator.copy()
 
 
@@ -484,7 +487,7 @@ def as_property(fact):
     return 'is_%s' % fact
 
 
-def make_property(fact):
+def make_property(fact) -> property:
     """Create the automagic property corresponding to a fact."""
 
     def getit(self):
@@ -671,7 +674,7 @@ def _prepare_class_assumptions(cls):
 # more but it should still be usable as a metaclass for Basic subclasses since
 # it is a subclass of type which is now the metaclass for Basic.
 class ManagedProperties(type):
-    def __init__(cls, *args, **kwargs):
+    def __init__(cls, *args, **kwargs) -> None:
         msg = ("The ManagedProperties metaclass. "
                "Basic does not use metaclasses any more")
         sympy_deprecation_warning(msg,

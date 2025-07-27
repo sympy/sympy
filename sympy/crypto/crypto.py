@@ -21,7 +21,7 @@ from itertools import cycle
 
 from sympy.external.gmpy import GROUND_TYPES
 from sympy.core import Symbol
-from sympy.core.numbers import Rational
+from sympy.core.numbers import Integer, Rational
 from sympy.core.random import _randrange, _randint
 from sympy.external.gmpy import gcd, invert
 from sympy.functions.combinatorial.numbers import (totient as _euler,
@@ -35,6 +35,9 @@ from sympy.polys.polytools import Poly
 from sympy.utilities.misc import as_int, filldedent, translate
 from sympy.utilities.iterables import uniq, multiset
 from sympy.utilities.decorator import doctest_depends_on
+from array import array
+from typing import Any, Literal
+from typing_extensions import LiteralString
 
 
 if GROUND_TYPES == 'flint':
@@ -43,17 +46,17 @@ if GROUND_TYPES == 'flint':
 
 class NonInvertibleCipherWarning(RuntimeWarning):
     """A warning raised if the cipher is not invertible."""
-    def __init__(self, msg):
+    def __init__(self, msg) -> None:
         self.fullMessage = msg
 
     def __str__(self):
         return '\n\t' + self.fullMessage
 
-    def warn(self, stacklevel=3):
+    def warn(self, stacklevel=3) -> None:
         warnings.warn(self, stacklevel=stacklevel)
 
 
-def AZ(s=None):
+def AZ(s=None) -> LiteralString | str | list[Any | str]:
     """Return the letters of ``s`` in uppercase. In case more than
     one string is passed, each of them will be processed and a list
     of upper case strings will be returned.
@@ -89,7 +92,7 @@ bifid6 = AZ() + string.digits
 bifid10 = printable
 
 
-def padded_key(key, symbols):
+def padded_key(key, symbols) -> str:
     """Return a string of the distinct characters of ``symbols`` with
     those of ``key`` appearing first. A ValueError is raised if
     a) there are duplicate characters in ``symbols`` or
@@ -122,7 +125,7 @@ def padded_key(key, symbols):
     return key0 + translate(''.join(syms), None, key0)
 
 
-def check_and_join(phrase, symbols=None, filter=None):
+def check_and_join(phrase, symbols=None, filter=None) -> str:
     """
     Joins characters of ``phrase`` and if ``symbols`` is given, raises
     an error if any character in ``phrase`` is not in ``symbols``.
@@ -181,7 +184,7 @@ def _prep(msg, key, alp, default=None):
     return msg, key, alp
 
 
-def cycle_list(k, n):
+def cycle_list(k, n) -> list[int]:
     """
     Returns the elements of the list ``range(n)`` shifted to the
     left by ``k`` (so the list starts with ``k`` (mod ``n``)).
@@ -201,7 +204,7 @@ def cycle_list(k, n):
 ######## shift cipher examples ############
 
 
-def encipher_shift(msg, key, symbols=None):
+def encipher_shift(msg, key, symbols=None) -> str:
     """
     Performs shift cipher encryption on plaintext msg, and returns the
     ciphertext.
@@ -278,7 +281,7 @@ def encipher_shift(msg, key, symbols=None):
     return translate(msg, key, A)
 
 
-def decipher_shift(msg, key, symbols=None):
+def decipher_shift(msg, key, symbols=None) -> str:
     """
     Return the text by shifting the characters of ``msg`` to the
     left by the amount given by ``key``.
@@ -304,7 +307,7 @@ def decipher_shift(msg, key, symbols=None):
     """
     return encipher_shift(msg, -key, symbols)
 
-def encipher_rot13(msg, symbols=None):
+def encipher_rot13(msg, symbols=None) -> str:
     """
     Performs the ROT13 encryption on a given plaintext ``msg``.
 
@@ -332,7 +335,7 @@ def encipher_rot13(msg, symbols=None):
     """
     return encipher_shift(msg, 13, symbols)
 
-def decipher_rot13(msg, symbols=None):
+def decipher_rot13(msg, symbols=None) -> str:
     """
     Performs the ROT13 decryption on a given plaintext ``msg``.
 
@@ -365,7 +368,7 @@ def decipher_rot13(msg, symbols=None):
 ######## affine cipher examples ############
 
 
-def encipher_affine(msg, key, symbols=None, _inverse=False):
+def encipher_affine(msg, key, symbols=None, _inverse=False) -> str:
     r"""
     Performs the affine cipher encryption on plaintext ``msg``, and
     returns the ciphertext.
@@ -444,7 +447,7 @@ def encipher_affine(msg, key, symbols=None, _inverse=False):
     return translate(msg, A, B)
 
 
-def decipher_affine(msg, key, symbols=None):
+def decipher_affine(msg, key, symbols=None) -> str:
     r"""
     Return the deciphered text that was made from the mapping,
     `x \rightarrow ax+b` (mod `N`), where ``N`` is the
@@ -472,7 +475,7 @@ def decipher_affine(msg, key, symbols=None):
     return encipher_affine(msg, key, symbols, _inverse=True)
 
 
-def encipher_atbash(msg, symbols=None):
+def encipher_atbash(msg, symbols=None) -> str:
     r"""
     Enciphers a given ``msg`` into its Atbash ciphertext and returns it.
 
@@ -495,7 +498,7 @@ def encipher_atbash(msg, symbols=None):
     return encipher_affine(msg, (25, 25), symbols)
 
 
-def decipher_atbash(msg, symbols=None):
+def decipher_atbash(msg, symbols=None) -> str:
     r"""
     Deciphers a given ``msg`` using Atbash cipher and returns it.
 
@@ -536,7 +539,7 @@ def decipher_atbash(msg, symbols=None):
 #################### substitution cipher ###########################
 
 
-def encipher_substitution(msg, old, new=None):
+def encipher_substitution(msg, old, new=None) -> str:
     r"""
     Returns the ciphertext obtained by replacing each character that
     appears in ``old`` with the corresponding character in ``new``.
@@ -599,7 +602,7 @@ def encipher_substitution(msg, old, new=None):
 #################### Vigenere cipher examples ########################
 ######################################################################
 
-def encipher_vigenere(msg, key, symbols=None):
+def encipher_vigenere(msg, key, symbols=None) -> LiteralString:
     """
     Performs the Vigenere cipher encryption on plaintext ``msg``, and
     returns the ciphertext.
@@ -766,7 +769,7 @@ def encipher_vigenere(msg, key, symbols=None):
     return rv
 
 
-def decipher_vigenere(msg, key, symbols=None):
+def decipher_vigenere(msg, key, symbols=None) -> str:
     """
     Decode using the Vigenere cipher.
 
@@ -793,7 +796,7 @@ def decipher_vigenere(msg, key, symbols=None):
 #################### Hill cipher  ########################
 
 
-def encipher_hill(msg, key, symbols=None, pad="Q"):
+def encipher_hill(msg, key, symbols=None, pad="Q") -> str:
     r"""
     Return the Hill cipher encryption of ``msg``.
 
@@ -890,7 +893,7 @@ def encipher_hill(msg, key, symbols=None, pad="Q"):
     return rv
 
 
-def decipher_hill(msg, key, symbols=None):
+def decipher_hill(msg, key, symbols=None) -> str:
     """
     Deciphering is the same as enciphering but using the inverse of the
     key matrix.
@@ -963,7 +966,7 @@ def decipher_hill(msg, key, symbols=None):
 #################### Bifid cipher  ########################
 
 
-def encipher_bifid(msg, key, symbols=None):
+def encipher_bifid(msg, key, symbols=None) -> str:
     r"""
     Performs the Bifid cipher encryption on plaintext ``msg``, and
     returns the ciphertext.
@@ -1025,7 +1028,7 @@ def encipher_bifid(msg, key, symbols=None):
     return rv
 
 
-def decipher_bifid(msg, key, symbols=None):
+def decipher_bifid(msg, key, symbols=None) -> str:
     r"""
     Performs the Bifid cipher decryption on ciphertext ``msg``, and
     returns the plaintext.
@@ -1125,7 +1128,7 @@ def decipher_bifid(msg, key, symbols=None):
     return rv
 
 
-def bifid_square(key):
+def bifid_square(key) -> Matrix:
     """Return characters of ``key`` arranged in a square.
 
     Examples
@@ -1166,7 +1169,7 @@ def bifid_square(key):
     return rv
 
 
-def encipher_bifid5(msg, key):
+def encipher_bifid5(msg, key) -> str:
     r"""
     Performs the Bifid cipher encryption on plaintext ``msg``, and
     returns the ciphertext.
@@ -1273,7 +1276,7 @@ def encipher_bifid5(msg, key):
     return encipher_bifid(msg, '', key)
 
 
-def decipher_bifid5(msg, key):
+def decipher_bifid5(msg, key) -> str:
     r"""
     Return the Bifid cipher decryption of ``msg``.
 
@@ -1320,7 +1323,7 @@ def decipher_bifid5(msg, key):
     return decipher_bifid(msg, '', key)
 
 
-def bifid5_square(key=None):
+def bifid5_square(key=None) -> Matrix:
     r"""
     5x5 Polybius square.
 
@@ -1347,7 +1350,7 @@ def bifid5_square(key=None):
     return bifid_square(key)
 
 
-def encipher_bifid6(msg, key):
+def encipher_bifid6(msg, key) -> str:
     r"""
     Performs the Bifid cipher encryption on plaintext ``msg``, and
     returns the ciphertext.
@@ -1384,7 +1387,7 @@ def encipher_bifid6(msg, key):
     return encipher_bifid(msg, '', key)
 
 
-def decipher_bifid6(msg, key):
+def decipher_bifid6(msg, key) -> str:
     r"""
     Performs the Bifid cipher decryption on ciphertext ``msg``, and
     returns the plaintext.
@@ -1427,7 +1430,7 @@ def decipher_bifid6(msg, key):
     return decipher_bifid(msg, '', key)
 
 
-def bifid6_square(key=None):
+def bifid6_square(key=None) -> Matrix:
     r"""
     6x6 Polybius square.
 
@@ -1587,7 +1590,7 @@ def _rsa_key(*args, public=True, private=True, totient='Euler', index=None, mult
     return False
 
 
-def rsa_public_key(*args, **kwargs):
+def rsa_public_key(*args, **kwargs) -> tuple[Any, Any] | tuple[Any, Any | int] | Literal[False]:
     r"""Return the RSA *public key* pair, `(n, e)`
 
     Parameters
@@ -1759,7 +1762,7 @@ def rsa_public_key(*args, **kwargs):
     return _rsa_key(*args, public=True, private=False, **kwargs)
 
 
-def rsa_private_key(*args, **kwargs):
+def rsa_private_key(*args, **kwargs) -> tuple[Any, Any] | tuple[Any, Any | int] | Literal[False]:
     r"""Return the RSA *private key* pair, `(n, d)`
 
     Parameters
@@ -2072,7 +2075,7 @@ def decipher_rsa(i, key, factors=None):
 #################### kid krypto (kid RSA) #############################
 
 
-def kid_rsa_public_key(a, b, A, B):
+def kid_rsa_public_key(a, b, A, B) -> tuple[Any, Any]:
     r"""
     Kid RSA is a version of RSA useful to teach grade school children
     since it does not involve exponentiation.
@@ -2111,7 +2114,7 @@ def kid_rsa_public_key(a, b, A, B):
     return n, e
 
 
-def kid_rsa_private_key(a, b, A, B):
+def kid_rsa_private_key(a, b, A, B) -> tuple[Any, Any]:
     """
     Compute `M = a b - 1`, `e = A M + a`, `d = B M + b`,
     `n = (e d - 1) / M`. The *private key* is `d`, which Bob
@@ -2209,7 +2212,7 @@ morse_char = {
 char_morse = {v: k for k, v in morse_char.items()}
 
 
-def encode_morse(msg, sep='|', mapping=None):
+def encode_morse(msg, sep='|', mapping=None) -> str:
     """
     Encodes a plaintext into popular Morse Code with letters
     separated by ``sep`` and words by a double ``sep``.
@@ -2257,7 +2260,7 @@ def encode_morse(msg, sep='|', mapping=None):
     return word_sep.join(morsestring) + (word_sep if suffix else '')
 
 
-def decode_morse(msg, sep='|', mapping=None):
+def decode_morse(msg, sep='|', mapping=None) -> LiteralString:
     """
     Decodes a Morse Code with letters separated by ``sep``
     (default is '|') and words by `word_sep` (default is '||)
@@ -2295,7 +2298,7 @@ def decode_morse(msg, sep='|', mapping=None):
 
 
 @doctest_depends_on(ground_types=['python', 'gmpy'])
-def lfsr_sequence(key, fill, n):
+def lfsr_sequence(key, fill, n) -> list[Any]:
     r"""
     This function creates an LFSR sequence.
 
@@ -2398,7 +2401,7 @@ def lfsr_sequence(key, fill, n):
     return L       # use [int(x) for x in L] for int version
 
 
-def lfsr_autocorrelation(L, P, k):
+def lfsr_autocorrelation(L, P, k) -> Rational | Integer:
     """
     This function computes the LFSR autocorrelation function.
 
@@ -2448,7 +2451,7 @@ def lfsr_autocorrelation(L, P, k):
     return Rational(tot, P)
 
 
-def lfsr_connection_polynomial(s):
+def lfsr_connection_polynomial(s) -> int:
     """
     This function computes the LFSR connection polynomial.
 
@@ -2548,7 +2551,7 @@ def lfsr_connection_polynomial(s):
 #################### ElGamal  #############################
 
 
-def elgamal_private_key(digit=10, seed=None):
+def elgamal_private_key(digit=10, seed=None) -> tuple[Any | int | array[int] | None, int | Any | None, int | Any]:
     r"""
     Return three number tuple as private key.
 
@@ -2603,7 +2606,7 @@ def elgamal_private_key(digit=10, seed=None):
     return p, primitive_root(p), randrange(2, p)
 
 
-def elgamal_public_key(key):
+def elgamal_public_key(key) -> tuple[Any, Any, Any]:
     r"""
     Return three number tuple as public key.
 
@@ -2633,7 +2636,7 @@ def elgamal_public_key(key):
     return p, r, pow(r, e, p)
 
 
-def encipher_elgamal(i, key, seed=None):
+def encipher_elgamal(i, key, seed=None) -> tuple[Any, Any]:
     r"""
     Encrypt message with public key.
 
@@ -2734,7 +2737,7 @@ def decipher_elgamal(msg, key):
 
 ################ Diffie-Hellman Key Exchange  #########################
 
-def dh_private_key(digit=10, seed=None):
+def dh_private_key(digit=10, seed=None) -> tuple[Any | int | array[int] | None, int | Any | None, int | Any]:
     r"""
     Return three integer tuple as private key.
 
@@ -2803,7 +2806,7 @@ def dh_private_key(digit=10, seed=None):
     return p, g, a
 
 
-def dh_public_key(key):
+def dh_public_key(key) -> tuple[Any, Any, Any]:
     r"""
     Return three number tuple as public key.
 
@@ -2927,7 +2930,7 @@ def _random_coprime_stream(n, seed=None):
             yield y
 
 
-def gm_private_key(p, q, a=None):
+def gm_private_key(p, q, a=None) -> tuple[Any, Any]:
     r"""
     Check if ``p`` and ``q`` can be used as private keys for
     the Goldwasser-Micali encryption. The method works
@@ -2998,7 +3001,7 @@ def gm_private_key(p, q, a=None):
     return p, q
 
 
-def gm_public_key(p, q, a=None, seed=None):
+def gm_public_key(p, q, a=None, seed=None) -> tuple[int | Any, Any] | Literal[False]:
     """
     Compute public keys for ``p`` and ``q``.
     Note that in Goldwasser-Micali Encryption,
@@ -3036,7 +3039,7 @@ def gm_public_key(p, q, a=None, seed=None):
     return (a, N)
 
 
-def encipher_gm(i, key, seed=None):
+def encipher_gm(i, key, seed=None) -> list[Any]:
     """
     Encrypt integer 'i' using public_key 'key'
     Note that gm uses random encryption.
@@ -3074,7 +3077,7 @@ def encipher_gm(i, key, seed=None):
 
 
 
-def decipher_gm(message, key):
+def decipher_gm(message, key) -> int:
     """
     Decrypt message 'message' using public_key 'key'.
 
@@ -3107,7 +3110,7 @@ def decipher_gm(message, key):
 
 ########### RailFence Cipher #############
 
-def encipher_railfence(message,rails):
+def encipher_railfence(message,rails) -> LiteralString:
     """
     Performs Railfence Encryption on plaintext and returns ciphertext
 
@@ -3140,7 +3143,7 @@ def encipher_railfence(message,rails):
     return ''.join(sorted(message, key=lambda i: next(p)))
 
 
-def decipher_railfence(ciphertext,rails):
+def decipher_railfence(ciphertext,rails) -> str:
     """
     Decrypt the message using the given rails
 
@@ -3175,7 +3178,7 @@ def decipher_railfence(ciphertext,rails):
 
 ################ Blum-Goldwasser cryptosystem  #########################
 
-def bg_private_key(p, q):
+def bg_private_key(p, q) -> tuple[Any, Any]:
     """
     Check if p and q can be used as private keys for
     the Blum-Goldwasser cryptosystem.
@@ -3249,7 +3252,7 @@ def bg_public_key(p, q):
     N = p * q
     return N
 
-def encipher_bg(i, key, seed=None):
+def encipher_bg(i, key, seed=None) -> tuple[list[Any], int]:
     """
     Encrypts the message using public key and seed.
 
@@ -3314,7 +3317,7 @@ def encipher_bg(i, key, seed=None):
 
     return (encrypt_msg, x_L)
 
-def decipher_bg(message, key):
+def decipher_bg(message, key) -> Literal[0]:
     """
     Decrypts the message using private keys.
 

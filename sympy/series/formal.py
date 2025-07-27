@@ -2,14 +2,14 @@
 
 from collections import defaultdict
 
-from sympy.core.numbers import (nan, oo, zoo)
+from sympy.core.numbers import (Float, Integer, nan, oo, zoo)
 from sympy.core.add import Add
 from sympy.core.expr import Expr
-from sympy.core.function import Derivative, Function, expand
+from sympy.core.function import UndefinedFunction, Derivative, Function, expand
 from sympy.core.mul import Mul
 from sympy.core.numbers import Rational
-from sympy.core.relational import Eq
-from sympy.sets.sets import Interval
+from sympy.core.relational import Equality, Ne, Relational, Eq
+from sympy.sets.sets import FiniteSet, Interval
 from sympy.core.singleton import S
 from sympy.core.symbol import Wild, Dummy, symbols, Symbol
 from sympy.core.sympify import sympify
@@ -21,13 +21,17 @@ from sympy.functions.elementary.miscellaneous import Min, Max
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.series.limits import Limit
 from sympy.series.order import Order
-from sympy.series.sequences import sequence
+from sympy.series.sequences import SeqFormula, SeqPer, sequence
 from sympy.series.series_class import SeriesBase
 from sympy.utilities.iterables import iterable
+from collections.abc import Generator
+from sympy.core.basic import Basic
+from typing import Any
+from typing_extensions import Self
 
 
 
-def rational_algorithm(f, x, k, order=4, full=False):
+def rational_algorithm(f, x, k, order=4, full=False) -> tuple[Any, Any, int] | None:
     """
     Rational algorithm for computing
     formula of coefficients of Formal Power Series
@@ -165,7 +169,7 @@ def rational_algorithm(f, x, k, order=4, full=False):
     return None
 
 
-def rational_independent(terms, x):
+def rational_independent(terms, x) -> list[Any]:
     """
     Returns a list of all the rationally independent terms.
 
@@ -199,7 +203,7 @@ def rational_independent(terms, x):
     return ind
 
 
-def simpleDE(f, x, g, order=4):
+def simpleDE(f, x, g, order=4) -> Generator[tuple[Any, int], Any, None]:
     r"""
     Generates simple DE.
 
@@ -485,7 +489,7 @@ def _rsolve_hypergeometric(f, x, P, Q, k, m):
     return sol, ind, mp
 
 
-def rsolve_hypergeometric(f, x, P, Q, k, m):
+def rsolve_hypergeometric(f, x, P, Q, k, m) -> tuple[Any | Piecewise, Any, Any | type[UndefinedFunction] | Rational | Integer | Float | Order] | None:
     """
     Solves RE of hypergeometric type.
 
@@ -676,7 +680,9 @@ def _transform_DE_RE(DE, g, k, order, syms):
     return RE
 
 
-def solve_de(f, x, DE, order, g, k):
+def solve_de(f, x, DE, order, g, k) -> (
+    tuple[Any | Piecewise, Any, Any | type[UndefinedFunction] | Rational | Integer | Float | Order] | tuple[Any, Any, Any] | None
+):
     """
     Solves the DE.
 
@@ -732,7 +738,9 @@ def solve_de(f, x, DE, order, g, k):
         return sol
 
 
-def hyper_algorithm(f, x, k, order=4):
+def hyper_algorithm(f, x, k, order=4) -> (
+    tuple[Any | Piecewise, Any, Any | type[UndefinedFunction] | Rational | Integer | Float | Order] | tuple[Any, Any, Any] | None
+):
     """
     Hypergeometric algorithm for computing Formal Power Series.
 
@@ -881,7 +889,12 @@ def _compute_fps(f, x, x0, dir, hyper, order, rational, full):
 
 
 def compute_fps(f, x, x0=0, dir=1, hyper=True, order=4, rational=True,
-                full=False):
+                full=False) -> (
+    tuple[Any, Any, Any]
+    | tuple[Any | SeqPer | SeqFormula, Any | SeqPer | SeqFormula, Any]
+    | tuple[Any | SeqPer | SeqFormula, Any | None, Any]
+    | None
+):
     """
     Computes the formula for Formal Power Series of a function.
 
@@ -960,7 +973,7 @@ class Coeff(Function):
     Coeff(p, x, n) represents the nth coefficient of the polynomial p in x
     """
     @classmethod
-    def eval(cls, p, x, n):
+    def eval(cls, p, x, n) -> None:
         if p.is_polynomial(x) and n.is_integer:
             return p.coeff(x, n)
 
@@ -982,11 +995,11 @@ class FormalPowerSeries(SeriesBase):
 
     sympy.series.formal.fps
     """
-    def __new__(cls, *args):
+    def __new__(cls, *args) -> Self:
         args = map(sympify, args)
         return Expr.__new__(cls, *args)
 
-    def __init__(self, *args):
+    def __init__(self, *args) -> None:
         ak = args[4][0]
         k = ak.variables[0]
         self.ak_seq = sequence(ak.formula, (k, 1, oo))
@@ -995,19 +1008,19 @@ class FormalPowerSeries(SeriesBase):
         self.sign_seq = sequence((-1, 1), (k, 1, oo))
 
     @property
-    def function(self):
+    def function(self) -> Basic:
         return self.args[0]
 
     @property
-    def x(self):
+    def x(self) -> Basic:
         return self.args[1]
 
     @property
-    def x0(self):
+    def x0(self) -> Basic:
         return self.args[2]
 
     @property
-    def dir(self):
+    def dir(self) -> Basic:
         return self.args[3]
 
     @property
@@ -1023,7 +1036,7 @@ class FormalPowerSeries(SeriesBase):
         return self.args[4][2]
 
     @property
-    def interval(self):
+    def interval(self) -> FiniteSet | Interval:
         return Interval(0, oo)
 
     @property
@@ -1055,7 +1068,7 @@ class FormalPowerSeries(SeriesBase):
             return S.Zero
         return pow_x
 
-    def polynomial(self, n=6):
+    def polynomial(self, n=6) -> Order:
         """
         Truncated series as polynomial.
 
@@ -1080,7 +1093,7 @@ class FormalPowerSeries(SeriesBase):
 
         return Add(*terms)
 
-    def truncate(self, n=6):
+    def truncate(self, n=6) -> Generator[Any, Any, None]:
         """
         Truncated series.
 
@@ -1162,7 +1175,7 @@ class FormalPowerSeries(SeriesBase):
 
         return self.func(f, self.x, self.x0, self.dir, (ak, self.xk, ind))
 
-    def integrate(self, x=None, **kwargs):
+    def integrate(self, x=None, **kwargs) -> Equality | Relational | Ne | Self:
         """
         Integrate Formal Power Series.
 
@@ -1207,7 +1220,7 @@ class FormalPowerSeries(SeriesBase):
 
         return self.func(f, self.x, self.x0, self.dir, (ak, self.xk, ind))
 
-    def product(self, other, x=None, n=6):
+    def product(self, other, x=None, n=6) -> Generator[Any, Any, None] | FormalPowerSeriesProduct:
         """
         Multiplies two Formal Power Series, using discrete convolution and
         return the truncated terms upto specified order.
@@ -1259,7 +1272,7 @@ class FormalPowerSeries(SeriesBase):
 
         return FormalPowerSeriesProduct(self, other)
 
-    def coeff_bell(self, n):
+    def coeff_bell(self, n) -> SeqPer | SeqFormula:
         r"""
         self.coeff_bell(n) returns a sequence of Bell polynomials of the second kind.
         Note that ``n`` should be a integer.
@@ -1290,7 +1303,7 @@ class FormalPowerSeries(SeriesBase):
         k = Dummy('k')
         return sequence(tuple(inner_coeffs), (k, 1, oo))
 
-    def compose(self, other, x=None, n=6):
+    def compose(self, other, x=None, n=6) -> Generator[Any, Any, None] | FormalPowerSeriesCompose:
         r"""
         Returns the truncated terms of the formal power series of the composed function,
         up to specified ``n``.
@@ -1364,7 +1377,7 @@ class FormalPowerSeries(SeriesBase):
 
         return FormalPowerSeriesCompose(self, other)
 
-    def inverse(self, x=None, n=6):
+    def inverse(self, x=None, n=6) -> Generator[Any, Any, None] | FormalPowerSeriesInverse:
         r"""
         Returns the truncated terms of the inverse of the formal power series,
         up to specified ``n``.
@@ -1422,7 +1435,7 @@ class FormalPowerSeries(SeriesBase):
 
         return FormalPowerSeriesInverse(self)
 
-    def __add__(self, other):
+    def __add__(self, other) -> Self | Order:
         other = sympify(other)
 
         if isinstance(other, FormalPowerSeries):
@@ -1460,20 +1473,20 @@ class FormalPowerSeries(SeriesBase):
 
         return Add(self, other)
 
-    def __radd__(self, other):
+    def __radd__(self, other) -> Self | Order:
         return self.__add__(other)
 
-    def __neg__(self):
+    def __neg__(self) -> Self:
         return self.func(-self.function, self.x, self.x0, self.dir,
                          (-self.ak, self.xk, -self.ind))
 
-    def __sub__(self, other):
+    def __sub__(self, other) -> Self | Order:
         return self.__add__(-other)
 
-    def __rsub__(self, other):
+    def __rsub__(self, other) -> FormalPowerSeries | Order:
         return (-self).__add__(other)
 
-    def __mul__(self, other):
+    def __mul__(self, other) -> Order | Self:
         other = sympify(other)
 
         if other.has(self.x):
@@ -1485,22 +1498,22 @@ class FormalPowerSeries(SeriesBase):
 
         return self.func(f, self.x, self.x0, self.dir, (ak, self.xk, ind))
 
-    def __rmul__(self, other):
+    def __rmul__(self, other) -> Order | Self:
         return self.__mul__(other)
 
 
 class FiniteFormalPowerSeries(FormalPowerSeries):
     """Base Class for Product, Compose and Inverse classes"""
 
-    def __init__(self, *args):
+    def __init__(self, *args) -> None:
         pass
 
     @property
-    def ffps(self):
+    def ffps(self) -> Basic:
         return self.args[0]
 
     @property
-    def gfps(self):
+    def gfps(self) -> Basic:
         return self.args[1]
 
     @property
@@ -1562,7 +1575,7 @@ class FormalPowerSeriesProduct(FiniteFormalPowerSeries):
 
     """
 
-    def __init__(self, *args):
+    def __init__(self, *args) -> None:
         ffps, gfps = self.ffps, self.gfps
 
         k = ffps.ak.variables[0]
@@ -1709,7 +1722,7 @@ class FormalPowerSeriesInverse(FiniteFormalPowerSeries):
     sympy.series.formal.FiniteFormalPowerSeries
 
     """
-    def __init__(self, *args):
+    def __init__(self, *args) -> None:
         ffps = self.ffps
         k = ffps.xk.variables[0]
 
@@ -1778,7 +1791,7 @@ class FormalPowerSeriesInverse(FiniteFormalPowerSeries):
         return Add(*terms)
 
 
-def fps(f, x=None, x0=0, dir=1, hyper=True, order=4, rational=True, full=False):
+def fps(f, x=None, x0=0, dir=1, hyper=True, order=4, rational=True, full=False) -> FormalPowerSeries:
     """
     Generates Formal Power Series of ``f``.
 

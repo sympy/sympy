@@ -1,6 +1,7 @@
 import pyglet.gl as pgl
 from sympy.core import S
 from sympy.plotting.pygletplot.plot_mode_base import PlotModeBase
+from typing import Callable
 
 
 class PlotCurve(PlotModeBase):
@@ -61,7 +62,7 @@ class PlotCurve(PlotModeBase):
         return self.color(vert[0], vert[1], vert[2],
                           self.t_set[t], None)
 
-    def draw_verts(self, use_cverts):
+    def draw_verts(self, use_cverts) -> Callable[[], None]:
         def f():
             pgl.glBegin(pgl.GL_LINE_STRIP)
             for t in range(len(self.t_set)):

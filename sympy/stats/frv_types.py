@@ -30,13 +30,15 @@ from sympy.functions.elementary.piecewise import Piecewise
 from sympy.logic.boolalg import Or
 from sympy.sets.contains import Contains
 from sympy.sets.fancysets import Range
-from sympy.sets.sets import (Intersection, Interval)
+from sympy.sets.sets import (Complement, Union, Intersection, Interval)
 from sympy.functions.special.beta_functions import beta as beta_fn
 from sympy.stats.frv import (SingleFiniteDistribution,
                              SingleFinitePSpace)
-from sympy.stats.rv import _value_check, Density, is_random
+from sympy.stats.rv import RandomSymbol, _value_check, Density, is_random
 from sympy.utilities.iterables import multiset
 from sympy.utilities.misc import filldedent
+import sympy
+from typing import Any
 
 
 __all__ = ['FiniteRV',
@@ -52,7 +54,7 @@ __all__ = ['FiniteRV',
 'RobustSoliton',
 ]
 
-def rv(name, cls, *args, **kwargs):
+def rv(name, cls, *args, **kwargs) -> RandomSymbol:
     args = list(map(sympify, args))
     dist = cls(*args)
     if kwargs.pop('check', True):
@@ -66,27 +68,27 @@ def rv(name, cls, *args, **kwargs):
 class FiniteDistributionHandmade(SingleFiniteDistribution):
 
     @property
-    def dict(self):
+    def dict(self) ->     sympy.Basic:
         return self.args[0]
 
-    def pmf(self, x):
+    def pmf(self, x) -> Lambda:
         x = Symbol('x')
         return Lambda(x, Piecewise(*(
             [(v, Eq(k, x)) for k, v in self.dict.items()] + [(S.Zero, True)])))
 
     @property
-    def set(self):
+    def set(self) -> set[Any]:
         return set(self.dict.keys())
 
     @staticmethod
-    def check(density):
+    def check(density) -> None:
         for p in density.values():
             _value_check((p >= 0, p <= 1),
                         "Probability at a point must be between 0 and 1.")
         val = sum(density.values())
         _value_check(Eq(val, 1) != S.false, "Total Probability must be 1.")
 
-def FiniteRV(name, density, **kwargs):
+def FiniteRV(name, density, **kwargs) -> RandomSymbol:
     r"""
     Create a Finite Random Variable given a dict representing the density.
 
@@ -128,7 +130,7 @@ def FiniteRV(name, density, **kwargs):
 class DiscreteUniformDistribution(SingleFiniteDistribution):
 
     @staticmethod
-    def check(*args):
+    def check(*args) -> None:
         # not using _value_check since there is a
         # suggestion for the user
         if len(set(args)) != len(args):
@@ -143,26 +145,26 @@ class DiscreteUniformDistribution(SingleFiniteDistribution):
                 '\nS("FiniteRV(%s, %s)")' % ("'X'", weights)))
 
     @property
-    def p(self):
+    def p(self) -> Rational | Integer:
         return Rational(1, len(self.args))
 
     @property  # type: ignore
     @cacheit
-    def dict(self):
+    def dict(self) -> dict[    sympy.Basic, Rational | Any | Integer]:
         return dict.fromkeys(self.set, self.p)
 
     @property
-    def set(self):
+    def set(self) -> set[    sympy.Basic]:
         return set(self.args)
 
-    def pmf(self, x):
+    def pmf(self, x) -> Rational | Integer:
         if x in self.args:
             return self.p
         else:
             return S.Zero
 
 
-def DiscreteUniform(name, items):
+def DiscreteUniform(name, items) -> RandomSymbol:
     r"""
     Create a Finite Random Variable representing a uniform distribution over
     the input set.
@@ -206,12 +208,12 @@ class DieDistribution(SingleFiniteDistribution):
     _argnames = ('sides',)
 
     @staticmethod
-    def check(sides):
+    def check(sides) -> None:
         _value_check((sides.is_positive, sides.is_integer),
                     "number of sides must be a positive integer.")
 
     @property
-    def is_symbolic(self):
+    def is_symbolic(self) -> bool:
         return not self.sides.is_number
 
     @property
@@ -223,12 +225,12 @@ class DieDistribution(SingleFiniteDistribution):
         return S.One
 
     @property
-    def set(self):
+    def set(self) ->     sympy.FiniteSet |     sympy.Intersection | Union | Complement | set[Any | Integer]:
         if self.is_symbolic:
             return Intersection(S.Naturals0, Interval(0, self.sides))
         return set(map(Integer, range(1, self.sides + 1)))
 
-    def pmf(self, x):
+    def pmf(self, x) ->     sympy.Piecewise:
         x = sympify(x)
         if not (x.is_number or x.is_Symbol or is_random(x)):
             raise ValueError("'x' expected as an argument of type 'number', 'Symbol', or "
@@ -236,7 +238,7 @@ class DieDistribution(SingleFiniteDistribution):
         cond = Ge(x, 1) & Le(x, self.sides) & Contains(x, S.Integers)
         return Piecewise((S.One/self.sides, cond), (S.Zero, True))
 
-def Die(name, sides=6):
+def Die(name, sides=6) -> RandomSymbol:
     r"""
     Create a Finite Random Variable representing a fair die.
 
@@ -280,15 +282,15 @@ class BernoulliDistribution(SingleFiniteDistribution):
     _argnames = ('p', 'succ', 'fail')
 
     @staticmethod
-    def check(p, succ, fail):
+    def check(p, succ, fail) -> None:
         _value_check((p >= 0, p <= 1),
                     "p should be in range [0, 1].")
 
     @property
-    def set(self):
+    def set(self) -> set[Any]:
         return {self.succ, self.fail}
 
-    def pmf(self, x):
+    def pmf(self, x) ->     sympy.Piecewise:
         if isinstance(self.succ, Symbol) and isinstance(self.fail, Symbol):
             return Piecewise((self.p, x == self.succ),
                              (1 - self.p, x == self.fail),
@@ -298,7 +300,7 @@ class BernoulliDistribution(SingleFiniteDistribution):
                          (S.Zero, True))
 
 
-def Bernoulli(name, p, succ=1, fail=0):
+def Bernoulli(name, p, succ=1, fail=0) -> RandomSymbol:
     r"""
     Create a Finite Random Variable representing a Bernoulli process.
 
@@ -342,7 +344,7 @@ def Bernoulli(name, p, succ=1, fail=0):
     return rv(name, BernoulliDistribution, p, succ, fail)
 
 
-def Coin(name, p=S.Half):
+def Coin(name, p=S.Half) -> RandomSymbol:
     r"""
     Create a Finite Random Variable representing a Coin toss.
 
@@ -392,7 +394,7 @@ class BinomialDistribution(SingleFiniteDistribution):
     _argnames = ('n', 'p', 'succ', 'fail')
 
     @staticmethod
-    def check(n, p, succ, fail):
+    def check(n, p, succ, fail) -> None:
         _value_check((n.is_integer, n.is_nonnegative),
                     "'n' must be nonnegative integer.")
         _value_check((p <= 1, p >= 0),
@@ -407,16 +409,16 @@ class BinomialDistribution(SingleFiniteDistribution):
         return S.Zero
 
     @property
-    def is_symbolic(self):
+    def is_symbolic(self) -> bool:
         return not self.n.is_number
 
     @property
-    def set(self):
+    def set(self) ->     sympy.FiniteSet |     sympy.Intersection | Union | Complement | set[Any]:
         if self.is_symbolic:
             return Intersection(S.Naturals0, Interval(0, self.n))
         return set(self.dict.keys())
 
-    def pmf(self, x):
+    def pmf(self, x) ->     sympy.Piecewise:
         n, p = self.n, self.p
         x = sympify(x)
         if not (x.is_number or x.is_Symbol or is_random(x)):
@@ -427,14 +429,14 @@ class BinomialDistribution(SingleFiniteDistribution):
 
     @property  # type: ignore
     @cacheit
-    def dict(self):
+    def dict(self) -> Density | dict[Any, Any |     sympy.Piecewise]:
         if self.is_symbolic:
             return Density(self)
         return {k*self.succ + (self.n-k)*self.fail: self.pmf(k)
                     for k in range(0, self.n + 1)}
 
 
-def Binomial(name, n, p, succ=1, fail=0):
+def Binomial(name, n, p, succ=1, fail=0) -> RandomSymbol:
     r"""
     Create a Finite Random Variable representing a binomial distribution.
 
@@ -490,7 +492,7 @@ class BetaBinomialDistribution(SingleFiniteDistribution):
     _argnames = ('n', 'alpha', 'beta')
 
     @staticmethod
-    def check(n, alpha, beta):
+    def check(n, alpha, beta) -> None:
         _value_check((n.is_integer, n.is_nonnegative),
         "'n' must be nonnegative integer. n = %s." % str(n))
         _value_check((alpha > 0),
@@ -507,11 +509,11 @@ class BetaBinomialDistribution(SingleFiniteDistribution):
         return S.Zero
 
     @property
-    def is_symbolic(self):
+    def is_symbolic(self) -> bool:
         return not self.n.is_number
 
     @property
-    def set(self):
+    def set(self) ->     sympy.FiniteSet |     sympy.Intersection | Union | Complement | set[Any | Integer]:
         if self.is_symbolic:
             return Intersection(S.Naturals0, Interval(0, self.n))
         return set(map(Integer, range(self.n + 1)))
@@ -521,7 +523,7 @@ class BetaBinomialDistribution(SingleFiniteDistribution):
         return binomial(n, k) * beta_fn(k + a, n - k + b) / beta_fn(a, b)
 
 
-def BetaBinomial(name, n, alpha, beta):
+def BetaBinomial(name, n, alpha, beta) -> RandomSymbol:
     r"""
     Create a Finite Random Variable representing a Beta-binomial distribution.
 
@@ -562,7 +564,7 @@ class HypergeometricDistribution(SingleFiniteDistribution):
     _argnames = ('N', 'm', 'n')
 
     @staticmethod
-    def check(n, N, m):
+    def check(n, N, m) -> None:
         _value_check((N.is_integer, N.is_nonnegative),
                      "'N' must be nonnegative integer. N = %s." % str(N))
         _value_check((n.is_integer, n.is_nonnegative),
@@ -571,19 +573,19 @@ class HypergeometricDistribution(SingleFiniteDistribution):
                      "'m' must be nonnegative integer. m = %s." % str(m))
 
     @property
-    def is_symbolic(self):
+    def is_symbolic(self) -> bool:
         return not all(x.is_number for x in (self.N, self.m, self.n))
 
     @property
-    def high(self):
+    def high(self) ->     sympy.Piecewise:
         return Piecewise((self.n, Lt(self.n, self.m) != False), (self.m, True))
 
     @property
-    def low(self):
+    def low(self) ->     sympy.Piecewise:
         return Piecewise((0, Gt(0, self.n + self.m - self.N) != False), (self.n + self.m - self.N, True))
 
     @property
-    def set(self):
+    def set(self) ->     sympy.FiniteSet |     sympy.Intersection | Union | Complement | set[int]:
         N, m, n = self.N, self.m, self.n
         if self.is_symbolic:
             return Intersection(S.Naturals0, Interval(self.low, self.high))
@@ -594,7 +596,7 @@ class HypergeometricDistribution(SingleFiniteDistribution):
         return S(binomial(m, k) * binomial(N - m, n - k))/binomial(N, n)
 
 
-def Hypergeometric(name, N, m, n):
+def Hypergeometric(name, N, m, n) -> RandomSymbol:
     r"""
     Create a Finite Random Variable representing a hypergeometric distribution.
 
@@ -636,15 +638,15 @@ def Hypergeometric(name, N, m, n):
 class RademacherDistribution(SingleFiniteDistribution):
 
     @property
-    def set(self):
+    def set(self) -> set[int]:
         return {-1, 1}
 
     @property
-    def pmf(self):
+    def pmf(self) -> Lambda:
         k = Dummy('k')
         return Lambda(k, Piecewise((S.Half, Or(Eq(k, -1), Eq(k, 1))), (S.Zero, True)))
 
-def Rademacher(name):
+def Rademacher(name) -> RandomSymbol:
     r"""
     Create a Finite Random Variable representing a Rademacher distribution.
 
@@ -679,7 +681,7 @@ class IdealSolitonDistribution(SingleFiniteDistribution):
     _argnames = ('k',)
 
     @staticmethod
-    def check(k):
+    def check(k) -> None:
         _value_check(k.is_integer and k.is_positive,
                     "'k' must be a positive integer.")
 
@@ -692,19 +694,19 @@ class IdealSolitonDistribution(SingleFiniteDistribution):
         return self.k
 
     @property
-    def set(self):
+    def set(self) -> set[Any | Integer]:
         return set(map(Integer, range(1, self.k + 1)))
 
     @property # type: ignore
     @cacheit
-    def dict(self):
+    def dict(self) -> Density | dict[int, Rational | Any | Integer]:
         if self.k.is_Symbol:
             return Density(self)
         d = {1: Rational(1, self.k)}
         d.update({i: Rational(1, i*(i - 1)) for i in range(2, self.k + 1)})
         return d
 
-    def pmf(self, x):
+    def pmf(self, x) ->     sympy.Piecewise:
         x = sympify(x)
         if not (x.is_number or x.is_Symbol or is_random(x)):
             raise ValueError("'x' expected as an argument of type 'number', 'Symbol', or "
@@ -713,7 +715,7 @@ class IdealSolitonDistribution(SingleFiniteDistribution):
         cond2 = Ge(x, 1) & Le(x, self.k) & x.is_integer
         return Piecewise((1/self.k, cond1), (1/(x*(x - 1)), cond2), (S.Zero, True))
 
-def IdealSoliton(name, k):
+def IdealSoliton(name, k) -> RandomSymbol:
     r"""
     Create a Finite Random Variable of Ideal Soliton Distribution
 
@@ -765,7 +767,7 @@ class RobustSolitonDistribution(SingleFiniteDistribution):
     _argnames= ('k', 'delta', 'c')
 
     @staticmethod
-    def check(k, delta, c):
+    def check(k, delta, c) -> None:
         _value_check(k.is_integer and k.is_positive,
                     "'k' must be a positive integer")
         _value_check(Gt(delta, 0) and Le(delta, 1),
@@ -794,11 +796,11 @@ class RobustSolitonDistribution(SingleFiniteDistribution):
         return self.k
 
     @property
-    def set(self):
+    def set(self) -> set[Any | Integer]:
         return set(map(Integer, range(1, self.k + 1)))
 
     @property
-    def is_symbolic(self):
+    def is_symbolic(self) -> bool:
         return not (self.k.is_number and self.c.is_number and self.delta.is_number)
 
     def pmf(self, x):
@@ -817,7 +819,7 @@ class RobustSolitonDistribution(SingleFiniteDistribution):
 
         return (rho + tau)/self.Z
 
-def RobustSoliton(name, k, delta, c):
+def RobustSoliton(name, k, delta, c) -> RandomSymbol:
     r'''
     Create a Finite Random Variable of Robust Soliton Distribution
 
