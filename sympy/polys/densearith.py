@@ -534,8 +534,8 @@ def dup_add(f: dup[Er], g: dup[Er], K: Domain[Er]) -> dup[Er]:
     if not g:
         return f
 
-    df: int = dup_degree(f) # type: ignore
-    dg: int = dup_degree(g) # type: ignore
+    df = dup_degree(f)
+    dg = dup_degree(g)
 
     if df == dg:
         return dup_strip([ a + b for a, b in zip(f, g) ])
@@ -567,12 +567,12 @@ def dmp_add(f: dmp[Er], g: dmp[Er], u: int, K: Domain[Er]) -> dmp[Er]:
     if not u:
         return _dmp(dup_add(_dup(f), _dup(g), K))
 
-    df: int = dmp_degree(f, u) # type: ignore
+    df = dmp_degree(f, u)
 
     if df < 0:
         return g
 
-    dg: int = dmp_degree(g, u) # type: ignore
+    dg = dmp_degree(g, u)
 
     if dg < 0:
         return f

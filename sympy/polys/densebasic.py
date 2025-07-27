@@ -60,10 +60,6 @@ else:
         return ps
 
 
-# XXX: This causes lots of type: ignore. It would be better just to use -1:
-ninf = float("-inf")
-
-
 def dup_LC(f: dup[Er], K: Domain[Er]) -> Er:
     """
     Return the leading coefficient of ``f``.
@@ -230,11 +226,11 @@ def dmp_true_LT(f: dmp[Er], u: int, K: Domain[Er]) -> tuple[monom, Er]:
     return tuple(monom), dup_LC(_dup(f), K)
 
 
-def dup_degree(f: dup[Er]) -> int | float:
+def dup_degree(f: dup[Er]) -> int:
     """
     Return the leading degree of ``f`` in ``K[x]``.
 
-    Note that the degree of 0 is negative infinity (``float('-inf')``).
+    Note that the degree of 0 is ``-1``.
 
     Examples
     ========
@@ -247,17 +243,19 @@ def dup_degree(f: dup[Er]) -> int | float:
     >>> dup_degree(f)
     3
 
+    .. versionchanged:: 1.15.0
+        The degree of a zero polynomial is now ``-1`` instead of
+        ``float('-inf')``.
+
     """
-    if not f:
-        return ninf
     return len(f) - 1
 
 
-def dmp_degree(f: dmp[Er], u: int) -> int | float:
+def dmp_degree(f: dmp[Er], u: int) -> int:
     """
     Return the leading degree of ``f`` in ``x_0`` in ``K[X]``.
 
-    Note that the degree of 0 is negative infinity (``float('-inf')``).
+    Note that the degree of 0 is ``-1``.
 
     Examples
     ========
@@ -266,21 +264,25 @@ def dmp_degree(f: dmp[Er], u: int) -> int | float:
     >>> from sympy.polys.densebasic import dmp_degree
 
     >>> dmp_degree([[[]]], 2)
-    -inf
+    -1
 
     >>> f = ZZ.map([[2], [1, 2, 3]])
 
     >>> dmp_degree(f, 1)
     1
 
+    .. versionchanged:: 1.15.0
+        The degree of a zero polynomial is now ``-1`` instead of
+        ``float('-inf')``.
+
     """
     if dmp_zero_p(f, u):
-        return ninf
+        return -1
     else:
         return len(f) - 1
 
 
-def _rec_degree_in(g: dmp[Er], v: int, i: int, j: int) -> int | float:
+def _rec_degree_in(g: dmp[Er], v: int, i: int, j: int) -> int:
     """Recursive helper function for :func:`dmp_degree_in`."""
     if i == j:
         return dmp_degree(g, v)
@@ -290,7 +292,7 @@ def _rec_degree_in(g: dmp[Er], v: int, i: int, j: int) -> int | float:
     return max(_rec_degree_in(c, v, i, j) for c in g)
 
 
-def dmp_degree_in(f: dmp[Er], j: int, u: int) -> int | float:
+def dmp_degree_in(f: dmp[Er], j: int, u: int) -> int:
     """
     Return the leading degree of ``f`` in ``x_j`` in ``K[X]``.
 
@@ -316,7 +318,7 @@ def dmp_degree_in(f: dmp[Er], j: int, u: int) -> int | float:
     return _rec_degree_in(f, u, 0, j)
 
 
-def _rec_degree_list(g: dmp[Er], v: int, i: int, degs: list[int | float]) -> None:
+def _rec_degree_list(g: dmp[Er], v: int, i: int, degs: list[int]) -> None:
     """Recursive helper for :func:`dmp_degree_list`."""
     degs[i] = max(degs[i], dmp_degree(g, v))
 
@@ -327,9 +329,11 @@ def _rec_degree_list(g: dmp[Er], v: int, i: int, degs: list[int | float]) -> Non
             _rec_degree_list(c, v, i, degs)
 
 
-def dmp_degree_list(f: dmp[Er], u: int) -> tuple[int | float, ...]:
+def dmp_degree_list(f: dmp[Er], u: int) -> tuple[int, ...]:
     """
     Return a list of degrees of ``f`` in ``K[X]``.
+
+    The degree of a zero polynomial is ``-1``.
 
     Examples
     ========
@@ -342,8 +346,12 @@ def dmp_degree_list(f: dmp[Er], u: int) -> tuple[int | float, ...]:
     >>> dmp_degree_list(f, 1)
     (1, 2)
 
+    .. versionchanged:: 1.15.0
+        The degree of a zero polynomial is now ``-1`` instead of
+        ``float('-inf')``.
+
     """
-    degs = [ninf] * (u + 1)
+    degs = [-1] * (u + 1)
     _rec_degree_list(f, u, 0, degs)
     return tuple(degs)
 
@@ -731,7 +739,7 @@ def dup_nth(f: dup[Er], n: int, K: Domain[Er]) -> Er:
     elif n >= len(f):
         return K.zero
     else:
-        return f[dup_degree(f) - n]  # type: ignore
+        return f[dup_degree(f) - n]
 
 
 def dmp_nth(f: dmp[Er], n: int, u: int, K: Domain[Er]) -> dmp[Er]:
@@ -757,7 +765,7 @@ def dmp_nth(f: dmp[Er], n: int, u: int, K: Domain[Er]) -> dmp[Er]:
     elif n >= len(f):
         return dmp_zero(u - 1)
     else:
-        return f[dmp_degree(f, u) - n]  # type: ignore
+        return f[dmp_degree(f, u) - n]
 
 
 def dmp_ground_nth(f: dmp[Er], N: Iterable[int], u: int, K: Domain[Er]) -> Er:
@@ -785,9 +793,7 @@ def dmp_ground_nth(f: dmp[Er], N: Iterable[int], u: int, K: Domain[Er]) -> Er:
             return K.zero
         else:
             d = dmp_degree(f, v)
-            if d == ninf:
-                d = -1
-            f, v = f[d - n], v - 1  # type: ignore
+            f, v = f[d - n], v - 1
 
     return f  # type: ignore
 
@@ -1202,10 +1208,7 @@ def dmp_to_dict(
 
     n, v, result = dmp_degree(f, u), u - 1, {}
 
-    if n == ninf:
-        n = -1
-
-    for k in range(0, n + 1):  # type: ignore
+    for k in range(0, n + 1):
         h = dmp_to_dict(f[n - k], v)  # type: ignore
 
         for exp, coeff in h.items():
@@ -1824,7 +1827,7 @@ def dmp_terms_gcd(f: dmp[Er], u: int, K: Domain[Er]) -> tuple[tuple[int, ...], d
 
 def _rec_list_terms(g: dmp[Er], v: int, monom: monom) -> list[tuple[monom, Er]]:
     """Recursive helper for :func:`dmp_list_terms`."""
-    d: int = dmp_degree(g, v)  # type: ignore
+    d = dmp_degree(g, v)
     terms: list[tuple[tuple[int, ...], Er]] = []
 
     if not v:
