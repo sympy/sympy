@@ -13,6 +13,8 @@ from sympy.geometry.polygon import deg, rad
 from sympy.physics.continuum_mechanics.beam import Beam
 from sympy.physics.continuum_mechanics.column import Column
 from sympy.simplify import nsimplify, simplify
+from sympy.solvers import solve
+from sympy import Basic, Eq
 
 plt = import_module(
     "matplotlib.pyplot",
@@ -133,7 +135,7 @@ class Load:
         return self.value * cos(self.global_angle)
 
     def _compute_y_component(self):
-        return self.value * sin(self.global_angle) * -1
+        return self.value * sin(self.global_angle)*-1
 
     def _compute_local_loc(self):
         pass
@@ -266,6 +268,7 @@ class Structure2d:
         self.column = self._init_column()
         self.reaction_loads = {}
         self.load_qz = 0
+        self.load_qx = 0
 
     def __repr__(self):
         return f"Structure2d(Members={len(self.members)}, Nodes={len(self.nodes)}, Supports={len(self.supports)})"
@@ -548,7 +551,7 @@ class Structure2d:
 
                     if nn[i] == 2:
                         self.beam.apply_load(B[i] * cos(oo[-1]), bb[i], -1)
-                        self.column.apply_load(B[i]*sin(oo[-1]), bb[i], -1)
+                        self.column.apply_load(B[i]*-1*sin(oo[-1]), bb[i], -1)
 
                     if nn[i] == 3:
                         self.beam.apply_load(B[i] * sin(oo[-1]), bb[i], -1)
@@ -556,7 +559,7 @@ class Structure2d:
 
                     if nn[i] == 4:
                         self.beam.apply_load(B[i] * cos(oo[-1]), bb[i], 0)
-                        self.column.apply_load(B[i] * sin(oo[-1]), bb[i], 0)
+                        self.column.apply_load(B[i] * -1*sin(oo[-1]), bb[i], 0)
 
                     if nn[i] == 5:
                         self.beam.apply_load(B[i] * sin(oo[-1]), bb[i], 0)
@@ -570,7 +573,7 @@ class Structure2d:
 
                         if nn[i] == 2:
                             self.beam.apply_load(B[i] * cos(oo[j - 1]), bb[i], -1)
-                            self.column.apply_load(B[i] * sin(oo[j-1]), bb[i], -1)
+                            self.column.apply_load(B[i] * -1*sin(oo[j-1]), bb[i], -1)
 
                         if nn[i] == 3:
                             self.beam.apply_load(B[i] * sin(oo[j - 1]), bb[i], -1)
@@ -578,7 +581,7 @@ class Structure2d:
 
                         if nn[i] == 4:
                             self.beam.apply_load(B[i] * cos(oo[j - 1]), bb[i], 0)
-                            self.column.apply_load(B[i] * sin(oo[j-1]), bb[i], 0)
+                            self.column.apply_load(B[i] * -1*sin(oo[j-1]), bb[i], 0)
 
                         if nn[i] == 5:
                             self.beam.apply_load(B[i] * sin(oo[j - 1]), bb[i], 0)
@@ -590,7 +593,7 @@ class Structure2d:
                 if bb[i] < aa[j]:
                     if nn[i] == 2:
                         self.beam.apply_load(B[i] * (cos(oo[j]) - cos(oo[j - 1])), aa[j], -1)
-                        self.column.apply_load(B[i] * (sin(oo[j]) - sin(oo[j - 1])), aa[j], -1)
+                        self.column.apply_load(B[i] * (-1*sin(oo[j]) + sin(oo[j - 1])), aa[j], -1)
 
                     if nn[i] == 3:
                         self.beam.apply_load(B[i] * (sin(oo[j]) - sin(oo[j - 1])), aa[j], -1)
@@ -599,8 +602,8 @@ class Structure2d:
                     if nn[i] == 4:
                         self.beam.apply_load(B[i] * (cos(oo[j]) - cos(oo[j - 1])), aa[j], 0)
                         self.beam.apply_load(B[i] * (aa[j] - bb[i]) * (cos(oo[j]) - cos(oo[j - 1])),aa[j],-1,)
-                        self.column.apply_load(B[i] * (sin(oo[j]) - sin(oo[j - 1])), aa[j], 0)
-                        self.column.apply_load(B[i] * (aa[j] - bb[i]) * (sin(oo[j]) - sin(oo[j - 1])),aa[j],-1,)
+                        self.column.apply_load(B[i] * (-1*sin(oo[j]) + sin(oo[j - 1])), aa[j], 0)
+                        self.column.apply_load(B[i] * (aa[j] - bb[i]) * (-1*sin(oo[j]) + sin(oo[j - 1])),aa[j],-1,)
 
                     if nn[i] == 5:
                         self.beam.apply_load(B[i] * (sin(oo[j]) - sin(oo[j - 1])), aa[j], 0)
@@ -609,6 +612,7 @@ class Structure2d:
                         self.column.apply_load(B[i] * (aa[j] - bb[i]) * (cos(oo[j]) - cos(oo[j - 1])),aa[j],-1,)
 
         self.load_qz = self.beam._load
+        self.load_qx = self.column._load
 
     ###################################################################################################################
 
@@ -876,103 +880,34 @@ class Structure2d:
         {R_h__0,__0: -3.84615384615385, R_v__0,__0: -70.3141025641026, R_v__15,__2: -143.916666666667}
         """
 
+        # Split the support symbols into its types for solving
+        reaction_loads_vertical = [s for s in self.support_symbols if "R_v" in str(s)]
+        reaction_loads_horizontal = [s for s in self.support_symbols if "R_h" in str(s)]
+        reaction_moments = [s for s in self.support_symbols if "T_" in str(s)]
 
-        # Split arguments into vertical and horizontal reaction loads
-        reaction_loads_vertical = [support for support in self.support_symbols if "R_v" in str(support)]
-        reaction_loads_horizontal = [support for support in self.support_symbols if "R_h" in str(support)]
-        reaction_moments = [support for support in self.support_symbols if "T_" in str(support)]
+        all_supports = reaction_loads_vertical + reaction_loads_horizontal + reaction_moments
 
-        args_for_beam_solver = tuple(
-            reaction_loads_vertical + reaction_moments + reaction_loads_horizontal
-        )
-
-        # display(self.beam.load)
-        # display(self.beam.shear_force(),'--')
-        # Solve for moment and vertical reaction loads using the beam solver
-        # print(args_for_beam_solver)
-        self.beam.solve_for_reaction_loads(*args_for_beam_solver)
-
+        self.beam.solve_for_reaction_loads(*all_supports)
         self.column.solve_for_reaction_loads(*reaction_loads_horizontal)
-        # self.column.solve_for_reaction_loads()
 
-        # Compute the horizontal reaction load by summing up all horizontal forces
-        sum_horizontal = 0
-        for load in self.loads:
-            if isinstance(load.value, (int, float)):
-                if load.order == -1:
-                    sum_horizontal += load.x_component
-                elif load.order == 0:
-                    length = sqrt(
-                        (load.end_y - load.start_y) ** 2
-                        + (load.end_x - load.start_x) ** 2
-                    )
-                    sum_horizontal += length * load.x_component
+        beam_eqs = [Eq(sym, expr) for sym, expr in self.beam._reaction_loads.items() if expr != sym]
+        column_eqs = [Eq(sym, expr) for sym, expr in self.column.reaction_loads.items() if expr != sym]
+        all_equations = beam_eqs + column_eqs
 
-        # Substitute horizontal reactions with their solved values
-        horizontal_key = {
-            support: float(-1 * sum_horizontal) for support in self.support_symbols if "R_h" in str(support)
-        }
+        solved = solve(all_equations, all_supports, dict=True)
+        solution = solved[0]
+        self.reaction_loads = solution
+        self.beam._load = self.beam._load.subs(solution)
 
-        # Update solved reaction loads dictionary with horizontal reaction values
-        for key in self.beam._reaction_loads.items():
-            key = key[0]
-            self.beam._reaction_loads[key] = self.beam._reaction_loads[key].subs(
-                horizontal_key
-            )
-
-        # Store reaction loads in the structure's state
-        self.reaction_loads = self.beam.reaction_loads
-
-        # Substitute solved reactions into the beam's load equation
-        self.beam._load = self.beam._load.subs(self.beam.reaction_loads)
-
-        # Check for symbolic or numerical reaction load solution
-        list_of_symbols = []
-        for key in self.reaction_loads.items():
-            list_of_symbols.append(str(key[0]))
-
-        list_of_symbols_reactions = []
         for load in self.loads:
             if isinstance(load.value, Basic):
-                list_of_symbols_reactions.append(str(load.value.as_coeff_Mul()[1]))
+                load.value = load.value.subs(solution)
+                load.x_component = load.x_component.subs(solution)
+                load.y_component = load.y_component.subs(solution)
 
-        # If all symbols are resolved
-        to_ignore_list = set(list_of_symbols).union(list_of_symbols_reactions)
-        if len(to_ignore_list) == len(list_of_symbols):
-            # print('Debug - Reaction loads are numerical')
-            vertical_key = {
-                support: self.beam._reaction_loads[support] for support in self.support_symbols if "R_v" in str(support)
-            }
-            bending_moment_key = {
-                support: self.beam._reaction_loads[support] for support in self.support_symbols if "T_" in str(support)
-            }
 
-            for load in self.loads:
-                if isinstance(load.value, Basic) and load.order != -2:
-                    # Substitute horizontal and vertical reaction loads
-                    load.value = load.value.subs(vertical_key).subs(horizontal_key)
-                    load.y_component = load.y_component.subs(vertical_key).subs(
-                        horizontal_key
-                    )
-                    load.x_component = load.x_component.subs(vertical_key).subs(
-                        horizontal_key
-                    )
-                    if isinstance(load.value, Basic):
-                        pass
-                    else:
-                        # Adjust load direction
-                        if load.y_component > 0:
-                            load.global_angle = load.global_angle + pi
-                        if load.x_component < 0:
-                            load.global_angle = load.global_angle + pi
-
-                elif isinstance(load.value, Basic) and load.order == -2:
-                    load.value = load.value.subs(bending_moment_key)
-
-        else:
-            # print('Debug - Reaction loads are symbolic')
-            pass
         return self.reaction_loads
+
 
     def shear_force(self, x=None, y=None):
         """

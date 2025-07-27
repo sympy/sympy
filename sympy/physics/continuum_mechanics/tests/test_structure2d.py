@@ -495,6 +495,8 @@ def test_structure2d_beam_column_loads():
 
     assert s.beam._applied_loads== [(0, 5, -1, None), (0, 5, -1, None), (-50, 5, -1, None), (0, 5, -1, None)]
     assert s.column._applied_loads== [(0, 5, -1, None), (50, 5, -1, None), (0, 5, -1, None), (0, 5, -1, None)]
+    assert s.load_qz == -50*SingularityFunction(x, 5, -1)
+    assert s.load_qx == 50*SingularityFunction(x, 5, -1)
 
     E, I, A=symbols('E I A')
     p=Structure2d()
@@ -512,7 +514,7 @@ def test_structure2d_beam_column_loads():
     d.apply_load(5, 5, 50, 270, -1)
     d.apply_load(5, 5, 50, 0, -1)
     assert d.beam._applied_loads==  [(25*sqrt(2), 5*sqrt(2), -1, None), (0, 5*sqrt(2), -1, None), (0, 5*sqrt(2), -1, None), (25*sqrt(2), 5*sqrt(2), -1, None)]
-    assert d.column._applied_loads==[(25*sqrt(2), 5*sqrt(2), -1, None), (0, 5*sqrt(2), -1, None), (0, 5*sqrt(2), -1, None), (25*sqrt(2), 5*sqrt(2), -1, None)]
+    assert d.column._applied_loads==[(-25*sqrt(2), 5*sqrt(2), -1, None), (0, 5*sqrt(2), -1, None), (0, 5*sqrt(2), -1, None), (25*sqrt(2), 5*sqrt(2), -1, None)]
 
 
 def test_structure2d():
@@ -527,7 +529,6 @@ def test_structure2d():
     s.apply_load(4,0,6,270,0,6,1.5)
     s.apply_support(11,-1,"fixed")
     result=s.solve_for_reaction_loads()
-    # assert s.column._reaction_loads=={}
     computed = sorted([float(v) for v in result.values()])
     expected = sorted([-55.0, -15.0, -435.0])
     assert s.beam.bc_deflection==[(14,0)]
@@ -535,3 +536,5 @@ def test_structure2d():
     assert s.beam.length==14
     assert s.column.length==14
     assert computed == expected
+
+
