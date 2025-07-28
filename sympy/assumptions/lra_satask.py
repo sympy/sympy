@@ -77,8 +77,8 @@ def check_satisfiability(prop, _prop, factbase):
     sat_true = _preprocess(sat_true)
     sat_false = _preprocess(sat_false)
 
-    can_be_true = satisfiable(sat_true, use_lra_theory=True) is not False
-    can_be_false = satisfiable(sat_false, use_lra_theory=True) is not False
+    can_be_true = satisfiable(sat_true, use_lra_theory=True, theories=['lra']) is not False
+    can_be_false = satisfiable(sat_false, use_lra_theory=True, theories=['lra']) is not False
 
     if can_be_true and can_be_false:
         return None

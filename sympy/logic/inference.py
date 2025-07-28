@@ -4,7 +4,7 @@ from sympy.logic.boolalg import And, Not, conjuncts, to_cnf, BooleanFunction
 from sympy.core.sorting import ordered
 from sympy.core.sympify import sympify
 from sympy.external.importtools import import_module
-
+import warnings
 
 def literal_symbol(literal):
     """
@@ -30,7 +30,7 @@ def literal_symbol(literal):
         raise ValueError("Argument must be a boolean literal.")
 
 
-def satisfiable(expr, algorithm=None, all_models=False, minimal=False, use_lra_theory=False):
+def satisfiable(expr, algorithm=None, all_models=False, minimal=False, use_lra_theory=False, theories=None):
     """
     Check satisfiability of a propositional sentence.
     Returns a model when it succeeds.
@@ -76,6 +76,14 @@ def satisfiable(expr, algorithm=None, all_models=False, minimal=False, use_lra_t
         if algorithm is not None and algorithm != "dpll2":
             raise ValueError(f"Currently only dpll2 can handle using lra theory. {algorithm} is not handled.")
         algorithm = "dpll2"
+        warnings.warn(
+            "The 'use_lra_theory' parameter is deprecated and will be removed in a future release. "
+            "Please use the 'theories' parameter instead.", DeprecationWarning, stacklevel=2)
+        if theories is None:
+            theories = ['lra']
+        if 'lra' not in theories:
+            theories.append('lra')
+        
 
     if algorithm is None or algorithm == "pycosat":
         pycosat = import_module('pycosat')

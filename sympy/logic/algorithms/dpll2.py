@@ -14,11 +14,10 @@ from heapq import heappush, heappop
 
 from sympy.core.sorting import ordered
 from sympy.assumptions.cnf import EncodedCNF
-
 from sympy.logic.algorithms.lra_theory import LRASolver
+import warnings
 
-
-def dpll_satisfiable(expr, all_models=False, use_lra_theory=False):
+def dpll_satisfiable(expr, all_models=False, use_lra_theory=False, theories=None):
     """
     Check satisfiability of a propositional sentence.
     It returns a model rather than True when it succeeds.
@@ -47,6 +46,13 @@ def dpll_satisfiable(expr, all_models=False, use_lra_theory=False):
         return False
 
     if use_lra_theory:
+        warnings.warn(
+            "The 'use_lra_theory' parameter is deprecated and will be removed. Use 'theories' instead.",
+            DeprecationWarning, stacklevel=2)
+        if theories is None:
+            theories = ['lra']
+        if 'lra' not in theories:
+            theories.append('lra')
         lra, immediate_conflicts = LRASolver.from_encoded_cnf(expr)
     else:
         lra = None

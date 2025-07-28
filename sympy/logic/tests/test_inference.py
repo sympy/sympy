@@ -366,7 +366,7 @@ def test_z3_vs_lra_dpll2():
         cnf = And(*clauses)
         return boolean_formula_to_encoded_cnf(cnf)
 
-    lra_dpll2_satisfiable = lambda x: dpll2_satisfiable(x, use_lra_theory=True)
+    lra_dpll2_satisfiable = lambda x: dpll2_satisfiable(x, use_lra_theory=True, theories=['lra'])
 
     for _ in range(50):
         cnf = make_random_cnf(num_clauses=10, num_constraints=15, num_var=2)
@@ -393,4 +393,4 @@ def test_issue_27733():
     encoding[Q.lt(x, 0)] = 12
 
     cnf = EncodedCNF(clauses, encoding)
-    assert satisfiable(cnf, use_lra_theory=True) is False
+    assert satisfiable(cnf, use_lra_theory=True, theories=['lra']) is False
