@@ -119,7 +119,6 @@ def test_basic_equality():
 
 
 def test_curried_lambda_congruence():
-    lam = Lambda(x, y + x)
     lam_curried = Lambda((x, y), x + y).curry()
     assert lam_curried == Lambda(x, Lambda(y, x + y))
     cc = EUFCongruenceClosure([
