@@ -5,7 +5,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, TypeVar, Iterable, Callable, Any
 
-from sympy.core import igcd, Symbol
+from sympy.core import igcd
 from sympy.core.expr import Expr
 from sympy.polys.domains.domain import Domain, Er, Es, Eg
 from sympy.polys.domains.polynomialring import PolynomialRing
@@ -2080,7 +2080,7 @@ def dup_from_list(f: list[Er], K: Domain[Er]) -> dup[Er]:
     return dup_strip([K.convert(c) for c in f])
 
 
-def dup_pretty(f: dup[Er], sym: str | Symbol, *, ascending: bool = False) -> str:
+def dup_pretty(f: dup[Er], sym: str, *, ascending: bool = False) -> str:
     """
     Return a string representation of a polynomial in ``K[x]``.
 
@@ -2095,8 +2095,6 @@ def dup_pretty(f: dup[Er], sym: str | Symbol, *, ascending: bool = False) -> str
     >>> dup_pretty(f, 'x', ascending=True)
     '7 + 5*x**2 + x**4'
     """
-    if isinstance(sym, Symbol):
-        sym = str(sym)
 
     if not f:
         return "0"
@@ -2120,10 +2118,11 @@ def dup_pretty(f: dup[Er], sym: str | Symbol, *, ascending: bool = False) -> str
         else:
             return f"{coeff}*{base}"
 
-    terms = [
-    t for i, coeff in enumerate(f)
-    if (t := format_term(coeff, deg - i)) is not None
-    ]
+    terms = []
+    for i, coeff in enumerate(f):
+        t = format_term(coeff, deg - i)
+        if t is not None:
+            terms.append(t)
 
     if ascending:
         terms.reverse()
@@ -2131,7 +2130,7 @@ def dup_pretty(f: dup[Er], sym: str | Symbol, *, ascending: bool = False) -> str
     return " + ".join(terms).replace("+ -", "- ")
 
 
-def dup_print(f: dup[Er], sym: str | Symbol, *, ascending: bool = False) -> None:
+def dup_print(f: dup[Er], sym: str, *, ascending: bool = False) -> None:
     """
     Print a polynomial in ``K[x]``.
 

@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from typing import Protocol, Sequence, TypeVar
-from sympy.core.symbol import Symbol
 from sympy.polys.domains import Domain
 from sympy.polys.domains.domain import Er
 from sympy.polys.densebasic import dup, dup_pretty
@@ -14,7 +13,7 @@ def series_pprint(
     series: dup[Er],
     prec: int | None,
     *,
-    sym: str | Symbol = "x",
+    sym: str = "x",
     ascending: bool = True,
 ) -> str:
     """Convert a list of coefficients into a string representation of a power series."""
