@@ -1,7 +1,6 @@
 """Tests for dense recursive polynomials' basic tools. """
 
 from sympy.polys.densebasic import (
-    ninf,
     dup_LC, dmp_LC,
     dup_TC, dmp_TC,
     dmp_ground_LC, dmp_ground_TC,
@@ -44,9 +43,9 @@ from sympy.polys.rings import ring
 from sympy.core.singleton import S
 from sympy.testing.pytest import raises
 
-from sympy.core.numbers import oo
 
 f_0, f_1, f_2, f_3, f_4, f_5, f_6 = [ f.to_dense() for f in f_polys() ]
+
 
 def test_dup_LC():
     assert dup_LC([], ZZ) == 0
@@ -96,25 +95,24 @@ def test_dmp_true_LT():
 
 
 def test_dup_degree():
-    assert ninf == float('-inf')
-    assert dup_degree([]) is ninf
+    assert dup_degree([]) == -1
     assert dup_degree([1]) == 0
     assert dup_degree([1, 0]) == 1
     assert dup_degree([1, 0, 0, 0, 1]) == 4
 
 
 def test_dmp_degree():
-    assert dmp_degree([[]], 1) is ninf
-    assert dmp_degree([[[]]], 2) is ninf
+    assert dmp_degree([[]], 1) == -1
+    assert dmp_degree([[[]]], 2) == -1
 
     assert dmp_degree([[1]], 1) == 0
     assert dmp_degree([[2], [1]], 1) == 1
 
 
 def test_dmp_degree_in():
-    assert dmp_degree_in([[[]]], 0, 2) is ninf
-    assert dmp_degree_in([[[]]], 1, 2) is ninf
-    assert dmp_degree_in([[[]]], 2, 2) is ninf
+    assert dmp_degree_in([[[]]], 0, 2) == -1
+    assert dmp_degree_in([[[]]], 1, 2) == -1
+    assert dmp_degree_in([[[]]], 2, 2) == -1
 
     assert dmp_degree_in([[[1]]], 0, 2) == 0
     assert dmp_degree_in([[[1]]], 1, 2) == 0
@@ -133,7 +131,7 @@ def test_dmp_degree_in():
 
 
 def test_dmp_degree_list():
-    assert dmp_degree_list([[[[ ]]]], 3) == (-oo, -oo, -oo, -oo)
+    assert dmp_degree_list([[[[ ]]]], 3) == (-1, -1, -1, -1)
     assert dmp_degree_list([[[[1]]]], 3) == ( 0, 0, 0, 0)
 
     assert dmp_degree_list(f_0, 2) == (2, 2, 2)

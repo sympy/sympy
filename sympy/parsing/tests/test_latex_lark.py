@@ -870,3 +870,10 @@ def test_matrix_expressions():
 
     for latex_str, sympy_expr in EVALUATED_MATRIX_EXPRESSION_PAIRS:
         assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+
+def test_latex_cases_environment_error():
+    from sympy.parsing.latex import parse_latex, LaTeXParsingError
+    from sympy.testing.pytest import raises
+    latex_string = r"\begin{cases} x=1 \\ y=2 \end{cases}"
+    with raises(LaTeXParsingError, match="The 'cases' environment is not currently supported"):
+        parse_latex(latex_string)

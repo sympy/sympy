@@ -36,6 +36,17 @@ available.
 Abstract Domains
 ================
 
+.. autoclass:: sympy.polys.domains.domain.RingElement
+.. autoclass:: sympy.polys.domains.domain.FieldElement
+
+.. autoclass:: sympy.polys.domains.domain.Er
+.. autoclass:: sympy.polys.domains.domain.Es
+.. autoclass:: sympy.polys.domains.domain.Et
+.. autoclass:: sympy.polys.domains.domain.Eg
+.. py:class:: sympy.polys.densebasic.Epa
+.. autoclass:: sympy.polys.domains.domain.Ef
+.. py:class:: sympy.polys.domains.domain.TypeIs
+
 .. autoclass:: sympy.polys.domains.domain.Domain
    :members:
 
@@ -292,6 +303,15 @@ EX
    :members:
 
 .. autoclass:: sympy.polys.domains.expressiondomain::ExpressionDomain.Expression
+   :members:
+
+
+.. _EXRAW:
+
+EXRAW
+=====
+
+.. autoclass:: sympy.polys.domains.expressionrawdomain::ExpressionRawDomain
    :members:
 
 

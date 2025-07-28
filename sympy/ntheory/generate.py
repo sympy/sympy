@@ -597,7 +597,7 @@ def _primepi(n:int) -> int:
         return 0
     if n <= sieve._list[-1]:
         return sieve.search(n)[0]
-    lim = sqrt(n)
+    lim = int(sqrt(n))
     arr1 = [(i + 1) >> 1 for i in range(lim + 1)]
     arr2 = [0] + [(n//i + 1) >> 1 for i in range(1, lim + 1)]
     skip = [False] * (lim + 1)
