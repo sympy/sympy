@@ -1025,7 +1025,7 @@ def dmp_positive_p(f: dmp[Er], u: int, K: Domain[Er]) -> bool:
     return K.is_positive(dmp_ground_LC(f, u, K))
 
 
-def dup_from_dict(f: dict[tuple[int], Er] | dict[int, Er], K: Domain[Er]) -> dup[Er]:
+def dup_from_dict(f: dict[tuple[int], Er], K: Domain[Er]) -> dup[Er]:
     """
     Create a ``K[x]`` polynomial from a ``dict``.
 
@@ -1046,14 +1046,10 @@ def dup_from_dict(f: dict[tuple[int], Er] | dict[int, Er], K: Domain[Er]) -> dup
 
     n, h = max(f.keys()), []
 
-    if isinstance(n, int):
-        for k in range(n, -1, -1):
-            h.append(f.get(k, K.zero))  # type: ignore
-    else:
-        (n,) = n
+    (N,) = n
 
-        for k in range(n, -1, -1):
-            h.append(f.get((k,), K.zero))  # type: ignore
+    for k in range(N, -1, -1):
+        h.append(f.get((k,), K.zero))
 
     return dup_strip(h)
 
