@@ -5,7 +5,7 @@ from sympy import functions, symbols, Equation
 # Testing that sympy functions work with Equations
 #####
 
-# Overridden elsewhere
+# Not in functions.__all__, but need to support
 _extended_ = ('sqrt', 'root')
 
 # Either not applicable to Equations or have not yet figured out a way
@@ -18,7 +18,7 @@ _not_applicable_to_equations_ = ('Min', 'Max', 'Id', 'real_root',
         'jacobi_normalized', 'Ynm_c', 'piecewise_exclusive', 'Piecewise',
         'motzkin', 'hyper','meijerg', 'chebyshevu_root', 'chebyshevt_root',
         'betainc_regularized')
-_skip_ = _extended_ + _not_applicable_to_equations_
+_skip_ = _not_applicable_to_equations_
 
 import importlib
 temp = importlib.import_module('sympy', package="functions")

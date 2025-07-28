@@ -609,9 +609,8 @@ class Equation(Basic, EvalfMixin):
     n = evalf
 
     def _eval_derivative(self, *args, **kwargs):
-        # TODO Find why diff and Derivative do not appear to pass through
-        #  kwargs to this. Since we cannot set evaluation of lhs manually
-        #  try to be intelligent about when to do it.
+        # TODO: In the creation of derivative about line 1489 in function.py
+        #  calls are made that do not pass on **kwargs. Consider changing.
         from sympy.core.function import Derivative
         from sympy.core.sympify import _sympify
         eval_lhs = False
@@ -624,8 +623,8 @@ class Equation(Basic, EvalfMixin):
                         self.rhs.diff(*args, **kwargs))
 
     def _eval_Integral(self, *args, **kwargs):
-        side = kwargs.pop('side', None)  # Could not seem to pass values for
-        # `evaluate` through to here.
+        side = kwargs.pop('side', None)
+        # TODO: look into getting evaluate keyword to pass through to here.
         if side is None:
             raise ValueError('You must specify `side="lhs"` or `side="rhs"` '
                              'when integrating an Equation')
