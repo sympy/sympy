@@ -126,6 +126,7 @@ from sympy.core.sympify import sympify
 from sympy.core.singleton import S
 from sympy.core.numbers import Rational, oo
 from sympy.matrices.dense import Matrix
+from sympy.logic.algorithms.theory_solver import TheorySolver
 
 class UnhandledInput(Exception):
     """
@@ -139,7 +140,7 @@ ALLOWED_PRED = {Q.eq, Q.gt, Q.lt, Q.le, Q.ge}
 # if true ~Q.gt(x, y) implies Q.le(x, y)
 HANDLE_NEGATION = True
 
-class LRASolver():
+class LRASolver(TheorySolver):
     """
     Linear Arithmetic Solver for DPLL(T) implemented with an algorithm based on
     the Dual Simplex method. Uses Bland's pivoting rule to avoid cycling.
