@@ -83,7 +83,6 @@ def satisfiable(expr, algorithm=None, all_models=False, minimal=False, use_lra_t
             theories = ['lra']
         if 'lra' not in theories:
             theories.append('lra')
-        
 
     if algorithm is None or algorithm == "pycosat":
         pycosat = import_module('pycosat')
