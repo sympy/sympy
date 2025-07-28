@@ -2089,6 +2089,29 @@ class Lambda(Expr):
 
         return symargmap
 
+    def curry(self):
+        """
+        Return a Curried Lambda.
+
+        >>> Lambda((x, y), x + y).curry()
+        Lambda(x, Lambda(y, x + y))
+        """
+        def _flatten_vars(sig):
+            if isinstance(sig, Tuple):
+                return sum([_flatten_vars(a) for a in sig], [])
+            else:
+                return [sig]
+        vars = _flatten_vars(self.signature)
+        e = self.expr
+        # If already curried (one variable per nested lambda), return as is
+        if len(vars) == 1 and isinstance(self.expr, Lambda):
+        # Already Lambda(x, Lambda(y, ...)), so nothing to do
+            return self
+        # Nest from the innermost outward
+        for v in reversed(vars):
+            e = Lambda(v, e)
+        return e
+
     @property
     def is_identity(self):
         """Return ``True`` if this ``Lambda`` is an identity function. """
