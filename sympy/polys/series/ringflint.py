@@ -3,6 +3,7 @@ from __future__ import annotations
 from contextlib import contextmanager
 from typing import Sequence, Union, TYPE_CHECKING
 
+from sympy.polys.densebasic import dup_reverse
 from sympy.polys.domains import Domain, QQ, ZZ
 from sympy.polys.series.ringpython import _useries_valuation
 from sympy.polys.series.base import series_pprint
@@ -167,11 +168,13 @@ class FlintPowerSeriesRingZZ:
 
     def pretty(self, s: ZZSeries) -> str:
         """Return a pretty-printed string representation of a power series."""
+        coeffs = dup_reverse(s.coeffs())
+
         if isinstance(s, fmpz_poly):
-            return series_pprint(s.coeffs(), None)
+            return series_pprint(coeffs, None)
 
         prec = _get_series_precision(s)
-        return series_pprint(s.coeffs(), prec)
+        return series_pprint(coeffs, prec)
 
     def print(self, s: ZZSeries) -> None:
         """Print a pretty-printed representation of a power series."""
@@ -558,11 +561,13 @@ class FlintPowerSeriesRingQQ:
 
     def pretty(self, s: QQSeries) -> str:
         """Return a pretty-printed string representation of a power series."""
+        coeffs = dup_reverse(s.coeffs())
+
         if isinstance(s, fmpq_poly):
-            return series_pprint(s.coeffs(), None)
+            return series_pprint(coeffs, None)
 
         prec = _get_series_precision(s)
-        return series_pprint(s.coeffs(), prec)
+        return series_pprint(coeffs, prec)
 
     def print(self, s: QQSeries) -> None:
         """Print a pretty-printed representation of a power series."""

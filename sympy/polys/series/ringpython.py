@@ -491,7 +491,7 @@ class PythonPowerSeriesRingZZ:
     def pretty(self, s: USeries[MPZ]) -> str:
         """Return a pretty-printed string representation of a power series."""
         coeffs, prec = s
-        return series_pprint(coeffs[::-1], prec)
+        return series_pprint(coeffs, prec)
 
     def print(self, s: USeries[MPZ]) -> None:
         """Print a pretty-printed representation of a power series."""
@@ -704,7 +704,7 @@ class PythonPowerSeriesRingQQ:
     def pretty(self, s: USeries[MPQ]) -> str:
         """Return a pretty-printed string representation of a power series."""
         coeffs, prec = s
-        return series_pprint(coeffs[::-1], prec)
+        return series_pprint(coeffs, prec)
 
     def print(self, s: USeries[MPQ]) -> None:
         """Print a pretty-printed representation of a power series."""

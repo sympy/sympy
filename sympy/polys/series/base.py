@@ -4,44 +4,33 @@ from typing import Protocol, Sequence, TypeVar
 from sympy.core.symbol import Symbol
 from sympy.polys.domains import Domain
 from sympy.polys.domains.domain import Er
+from sympy.polys.densebasic import dup, dup_pretty
 
 
-_x: Symbol = Symbol("x")
 TSeries = TypeVar("TSeries")
 
 
-def series_pprint(series: list[Er], prec: int | None) -> str:
+def series_pprint(
+    series: dup[Er],
+    prec: int | None,
+    *,
+    sym: str | Symbol = "x",
+    ascending: bool = True,
+) -> str:
     """Convert a list of coefficients into a string representation of a power series."""
-    terms = []
-
     if prec == 0:
-        return f"O({_x}**{prec})"
+        return f"O({sym}**{prec})"
 
-    for i, coeff in enumerate(series):
-        if coeff == 0:
-            continue
-        if coeff == 1 and i != 0:
-            term = f"{_x}" if i == 1 else f"{_x}**{i}"
-        elif coeff == -1 and i != 0:
-            term = f"-{_x}" if i == 1 else f"-{_x}**{i}"
-        else:
-            if i == 0:
-                term = f"{coeff}"
-            elif i == 1:
-                term = f"{coeff}*{_x}"
-            else:
-                term = f"{coeff}*{_x}**{i}"
-        terms.append(term)
+    poly = dup_pretty(series, sym, ascending=ascending)
 
-    if not terms:
+    if not poly or poly == "0":
         if prec is not None:
-            return f"0 + O({_x}**{prec})"
+            return f"0 + O({sym}**{prec})"
         else:
             return "0"
 
-    poly = " + ".join(term for term in terms).replace("+ -", "- ")
     if prec is not None:
-        return f"{poly} + O({_x}**{prec})"
+        return f"{poly} + O({sym}**{prec})"
     return poly
 
 

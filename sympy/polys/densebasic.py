@@ -5,7 +5,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, TypeVar, Iterable, Callable, Any
 
-from sympy.core import igcd
+from sympy.core import igcd, Symbol
 from sympy.core.expr import Expr
 from sympy.polys.domains.domain import Domain, Er, Es, Eg
 from sympy.polys.domains.polynomialring import PolynomialRing
@@ -2080,8 +2080,7 @@ def dup_from_list(f: list[Er], K: Domain[Er]) -> dup[Er]:
     return dup_strip([K.convert(c) for c in f])
 
 
-<<<<<<< HEAD
-def dup_pretty(f, sym, *, ascending=False):
+def dup_pretty(f: dup[Er], sym: str | Symbol, *, ascending: bool = False) -> str:
     """
     Return a string representation of a polynomial in ``K[x]``.
 
@@ -2096,8 +2095,8 @@ def dup_pretty(f, sym, *, ascending=False):
     >>> dup_pretty(f, 'x', ascending=True)
     '7 + 5*x**2 + x**4'
     """
-    if isinstance(sym, tuple):
-        sym = sym[0]
+    if isinstance(sym, Symbol):
+        sym = str(sym)
 
     if not f:
         return "0"
@@ -2122,10 +2121,9 @@ def dup_pretty(f, sym, *, ascending=False):
             return f"{coeff}*{base}"
 
     terms = [
-        format_term(coeff, deg - i)
-        for i, coeff in enumerate(f)
+    t for i, coeff in enumerate(f)
+    if (t := format_term(coeff, deg - i)) is not None
     ]
-    terms = [term for term in terms if term is not None]
 
     if ascending:
         terms.reverse()
@@ -2133,10 +2131,7 @@ def dup_pretty(f, sym, *, ascending=False):
     return " + ".join(terms).replace("+ -", "- ")
 
 
-def dup_print(f, sym, *, ascending=False):
-=======
-def dup_print(f: dup[Er], sym: str) -> None:
->>>>>>> master
+def dup_print(f: dup[Er], sym: str | Symbol, *, ascending: bool = False) -> None:
     """
     Print a polynomial in ``K[x]``.
 
@@ -2151,44 +2146,4 @@ def dup_print(f: dup[Er], sym: str) -> None:
     >>> dup_print(f, 'x', ascending=True)
     7 + 5*x**2 + x**4
     """
-<<<<<<< HEAD
     print(dup_pretty(f, sym, ascending=ascending))
-=======
-    if isinstance(sym, tuple):
-        sym = sym[0]
-
-    if not f:
-        print("0")
-        return
-
-    deg = dup_degree(f)
-    terms = []
-
-    for i, coeff in enumerate(f):
-        d = deg - i
-
-        if coeff == 0:
-            continue
-
-        if d == 0:
-            term = f"{coeff}"
-        elif d == 1:
-            if coeff == 1:
-                term = f"{sym}"
-            elif coeff == -1:
-                term = f"-{sym}"
-            else:
-                term = f"{coeff}*{sym}"
-        else:
-            if coeff == 1:
-                term = f"{sym}**{d}"
-            elif coeff == -1:
-                term = f"-{sym}**{d}"
-            else:
-                term = f"{coeff}*{sym}**{d}"
-
-        terms.append(term)
-
-    poly = " + ".join(terms).replace("+ -", "- ")
-    print(poly)
->>>>>>> master
