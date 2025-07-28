@@ -73,11 +73,15 @@ class PowerSeriesRingProto(Protocol[TSeries, Er]):
         """Return the generator (x) as a power series."""
         ...
 
-    def pretty(self, s: TSeries, /) -> str:
+    def pretty(
+        self, s: TSeries, /, *, symbol: str = "x", ascending: bool = True
+    ) -> str:
         """Return a pretty string representation of a power series."""
         ...
 
-    def print(self, s: TSeries, /) -> None:
+    def print(
+        self, s: TSeries, /, *, symbol: str = "x", ascending: bool = True
+    ) -> None:
         """Return a printable string representation of a power series."""
         ...
 

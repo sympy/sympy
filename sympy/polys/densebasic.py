@@ -2094,6 +2094,11 @@ def dup_pretty(f: dup[Er], sym: str, *, ascending: bool = False) -> str:
     'x**4 + 5*x**2 + 7'
     >>> dup_pretty(f, 'x', ascending=True)
     '7 + 5*x**2 + x**4'
+
+    See Also
+    ========
+
+    dup_print
     """
 
     if not f:
@@ -2144,5 +2149,10 @@ def dup_print(f: dup[Er], sym: str, *, ascending: bool = False) -> None:
     x**4 + 5*x**2 + 7
     >>> dup_print(f, 'x', ascending=True)
     7 + 5*x**2 + x**4
+
+    See Also
+    ========
+
+    dup_pretty
     """
     print(dup_pretty(f, sym, ascending=ascending))

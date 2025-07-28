@@ -488,14 +488,18 @@ class PythonPowerSeriesRingZZ:
             return ([], self._prec)
         return ([self._domain.one, self._domain.zero], None)
 
-    def pretty(self, s: USeries[MPZ]) -> str:
+    def pretty(
+        self, s: USeries[MPZ], *, symbol: str = "x", ascending: bool = True
+    ) -> str:
         """Return a pretty-printed string representation of a power series."""
         coeffs, prec = s
-        return series_pprint(coeffs, prec)
+        return series_pprint(coeffs, prec, sym=symbol, ascending=ascending)
 
-    def print(self, s: USeries[MPZ]) -> None:
+    def print(
+        self, s: USeries[MPZ], *, symbol: str = "x", ascending: bool = True
+    ) -> None:
         """Print a pretty-printed representation of a power series."""
-        print(self.pretty(s))
+        print(self.pretty(s, symbol=symbol, ascending=ascending))
 
     def from_list(self, coeffs: list[MPZ], prec: int | None = None) -> USeries[MPZ]:
         """
@@ -701,14 +705,18 @@ class PythonPowerSeriesRingQQ:
             return ([], self._prec)
         return ([self._domain.one, self._domain.zero], None)
 
-    def pretty(self, s: USeries[MPQ]) -> str:
+    def pretty(
+        self, s: USeries[MPQ], *, symbol: str = "x", ascending: bool = True
+    ) -> str:
         """Return a pretty-printed string representation of a power series."""
         coeffs, prec = s
-        return series_pprint(coeffs, prec)
+        return series_pprint(coeffs, prec, sym=symbol, ascending=ascending)
 
-    def print(self, s: USeries[MPQ]) -> None:
+    def print(
+        self, s: USeries[MPQ], *, symbol: str = "x", ascending: bool = True
+    ) -> None:
         """Print a pretty-printed representation of a power series."""
-        print(self.pretty(s))
+        print(self.pretty(s, symbol=symbol, ascending=ascending))
 
     def from_list(self, coeffs: list[MPQ], prec: int | None = None) -> USeries[MPQ]:
         """
