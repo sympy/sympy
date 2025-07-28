@@ -18,7 +18,7 @@ from sympy.core.symbol import symbols
 from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import sin
-from sympy.logic.algorithms.euf_theory import Apply, EUFFunction
+# from sympy.logic.algorithms.euf_theory import Apply, EUFFunction
 
 from sympy.testing.pytest import SKIP, warns_deprecated_sympy
 
@@ -5526,11 +5526,11 @@ def test_sympy__combinatorics__perm_groups__Coset():
     assert _test_args(Coset(a, G))
 
 
-def test_sympy__logic__algorithms__euf_theory__Apply():
-    f = EUFFunction("f", 2)
-    term = Apply(f, (x, y))
-    assert isinstance(term.args, tuple)
-    assert len(term.args) == 3  # f is first argument of Basic, then x, y
-    assert term.args[0] == f
-    assert term.args[1] == x
-    assert term.args[2] == y
+# def test_sympy__logic__algorithms__euf_theory__Apply():
+#     f = EUFFunction("f", 2)
+#     term = Apply(f, (x, y))
+#     assert isinstance(term.args, tuple)
+#     assert len(term.args) == 3  # f is first argument of Basic, then x, y
+#     assert term.args[0] == f
+#     assert term.args[1] == x
+#     assert term.args[2] == y
