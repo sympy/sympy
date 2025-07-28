@@ -833,3 +833,19 @@ class FlintPowerSeriesRingQQ:
             return fmpq_series(poly, prec=self._prec)
         with _global_cap(self._prec):
             return s.integral()
+
+    def log(self, s: QQSeries) -> QQSeries:
+        """Compute the logarithm of a power series."""
+        if isinstance(s, fmpq_poly):
+            s = fmpq_series(s, prec=self._prec)
+
+        with _global_cap(self._prec):
+            return s.log()
+
+    def exp(self, s: QQSeries) -> QQSeries:
+        """Compute the exponential of a power series."""
+        if isinstance(s, fmpq_poly):
+            s = fmpq_series(s, prec=self._prec)
+
+        with _global_cap(self._prec):
+            return s.exp()

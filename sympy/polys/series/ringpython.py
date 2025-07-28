@@ -31,6 +31,7 @@ from sympy.polys.domains.domain import Er, Ef
 from sympy.polys.domains.field import Field
 from sympy.polys.series.base import series_pprint
 from sympy.external.gmpy import MPZ, MPQ
+from sympy.polys.ring_series import _giant_steps
 
 
 USeries: TypeAlias = "tuple[dup[Er], Union[int, None]]"
@@ -795,3 +796,60 @@ class PythonPowerSeriesRingQQ:
     def integrate(self, s: USeries[MPQ]) -> USeries[MPQ]:
         """Compute the integral of a power series."""
         return _useries_integrate(s, self._domain, self._prec)
+
+    def log(self, s: USeries[MPQ]) -> USeries[MPQ]:
+        """Compute the logarithm of a power series."""
+        dom = self._domain
+        coeffs, prec = s
+
+        if prec is None:
+            s = coeffs, self._prec
+
+        if not coeffs:
+            raise ValueError("Logarithm of a zero series is undefined.")
+
+        if not dom.is_one(coeffs[0]):
+            raise ValueError(
+                "Logarithm of a power series requires the constant term to be one."
+            )
+
+        diff_s = self.differentiate(s)
+        inverse_s = self.inverse(s)
+        log_derivative = self.multiply(diff_s, inverse_s)
+        return self.integrate(log_derivative)
+
+    def exp(self, s: USeries[MPQ]) -> USeries[MPQ]:
+        dom = self._domain
+        coeffs, prec = s
+
+        if not coeffs or not dom.is_zero(coeffs[-1]):
+            raise ValueError(
+                "Exponential requires the constant term of the input series to be zero."
+            )
+
+        if prec is None:
+            prec = self._prec
+            s = coeffs, prec
+
+        if len(coeffs) > 20:
+            p_k = self.one
+
+            for prec_k in _giant_steps(prec):
+                log_pk = self.log((p_k[0], prec_k))
+                s_minus_log_pk = self.subtract(s, log_pk)
+                correction_term = self.add(self.one, s_minus_log_pk)
+                p_k = self.multiply(p_k, correction_term)
+
+            return p_k
+
+        else:
+            result = self.one
+            term = s
+            result = self.add(result, term)
+
+            for k in range(2, prec):
+                term = self.multiply(term, s)
+                term = self.multiply_ground(term, dom(1, k))
+                result = self.add(result, term)
+
+            return result

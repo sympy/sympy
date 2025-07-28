@@ -580,3 +580,74 @@ def test_rational_reversion(rd_rational):
             10,
         ),
     )
+
+
+# Tests for log and exp
+
+
+def test_log(rd_rational):
+    SeriesRing = rd_rational
+    R = SeriesRing()
+    R3 = SeriesRing(3)
+    R10 = SeriesRing(10)
+
+    assert R.equal_repr(
+        R.log(R.add(R.one, R.gen)),
+        R([(0, 1), (1, 1), (-1, 2), (1, 3), (-1, 4), (1, 5)], 6),
+    )
+    assert R3.equal_repr(
+        R3.log(R3.add(R3.one, R3.gen)),
+        R3([(0, 1), (1, 1), (-1, 2)], 3),
+    )
+    assert R10.equal_repr(
+        R10.log(R10.add(R10.one, R10.gen)),
+        R10(
+            [
+                (0, 1),
+                (1, 1),
+                (-1, 2),
+                (1, 3),
+                (-1, 4),
+                (1, 5),
+                (-1, 6),
+                (1, 7),
+                (-1, 8),
+                (1, 9),
+            ],
+            10,
+        ),
+    )
+
+
+def test_exp(rd_rational):
+    SeriesRing = rd_rational
+    R = SeriesRing()
+    R3 = SeriesRing(3)
+    R10 = SeriesRing(10)
+
+    assert R.equal_repr(
+        R.exp(R.gen),
+        R([(1, 1), (1, 1), (1, 2), (1, 6), (1, 24), (1, 120)], 6),
+    )
+    assert R3.equal_repr(
+        R3.exp(R3.gen),
+        R3([(1, 1), (1, 1), (1, 2)], 3),
+    )
+    assert R10.equal_repr(
+        R10.exp(R10.gen),
+        R10(
+            [
+                (1, 1),
+                (1, 1),
+                (1, 2),
+                (1, 6),
+                (1, 24),
+                (1, 120),
+                (1, 720),
+                (1, 5040),
+                (1, 40320),
+                (1, 362880),
+            ],
+            10,
+        ),
+    )
