@@ -14,7 +14,7 @@ from sympy.physics.continuum_mechanics.beam import Beam
 from sympy.physics.continuum_mechanics.column import Column
 from sympy.simplify import nsimplify, simplify
 from sympy.solvers import solve
-from sympy import Eq
+from sympy.core.relational import Eq
 
 plt = import_module(
     "matplotlib.pyplot",
@@ -196,7 +196,7 @@ class Structure2d:
         >>> s.apply_support(x=7, y=-1, type="roller")
         >>> s.apply_support(x=0, y=0, type="pin")
         >>> s.solve_for_reaction_loads()
-        {R_h__0,__0: 3.75, R_v__0,__0: -45.6696428571429, R_v__7,__-1: -29.3303571428571}
+        {R_h__0,__0: 15/4, R_v__0,__0: -5115/112, R_v__7,__-1: -3285/112}
         >>> s.draw(show_load_values=True) #doctest: +SKIP
 
     There is a structure containing 3 members. A point load is applied at 1/4 L of the first member.
@@ -245,7 +245,7 @@ class Structure2d:
         >>> s.apply_support(x=15, y=2, type="roller")
         >>> s.apply_support(x=0, y=0, type="pin")
         >>> s.solve_for_reaction_loads()
-        {R_h__0,__0: -38.4615384615385, R_v__0,__0: -133.891025641026, R_v__15,__2: -163.416666666667}
+        {R_h__0,__0: -500/13, R_v__0,__0: -20887/156, R_v__15,__2: -1961/12}
         >>> s.draw(show_load_values=True, forced_load_size=2) #doctest: +SKIP
 
     """
@@ -877,7 +877,7 @@ class Structure2d:
         >>> s.apply_support(x=15, y=2, type="roller")
         >>> s.apply_support(x=0, y=0, type="pin")
         >>> s.solve_for_reaction_loads()
-        {R_h__0,__0: -3.84615384615385, R_v__0,__0: -70.3141025641026, R_v__15,__2: -143.916666666667}
+        {R_h__0,__0: -50/13, R_v__0,__0: -10969/156, R_v__15,__2: -1727/12}
         """
 
         # Split the support symbols into its types for solving
@@ -1020,14 +1020,14 @@ class Structure2d:
         >>> s.apply_support(x=0, y=0, type="pin")
         >>> s.apply_support(x=4, y=0, type="roller")
         >>> s.solve_for_reaction_loads()
-        {R_h__0,__0: 0.0, R_v__0,__0: -5, R_v__4,__0: -5}
+        {R_h__0,__0: 0, R_v__0,__0: -5, R_v__4,__0: -5}
         >>> s.summary(round_digits=2)
         ===================== Structure Summary =====================
         <BLANKLINE>
         Reaction Loads:
+        R_h   [0.00,0.00]  (0.00)                = 0.0
         R_v   [0.00,0.00]  (0.00)                = -5.0
         R_v   [4.00,0.00]  (4.00)                = -5.0
-        R_h   [0.00,0.00]  (0.00)                = 0.0
         <BLANKLINE>
         Points of Interest - Bending Moment:
         bending_moment at [x.xx,y.yy]  (0.00)    = 0.0
@@ -1253,7 +1253,7 @@ class Structure2d:
             >>> s.apply_support(x=7, y=-1, type="roller")
             >>> s.apply_support(x=0, y=0, type="pin")
             >>> s.solve_for_reaction_loads()
-            {R_h__0,__0: 3.75, R_v__0,__0: -45.6696428571429, R_v__7,__-1: -29.3303571428571}
+            {R_h__0,__0: 15/4, R_v__0,__0: -5115/112, R_v__7,__-1: -3285/112}
             >>> s.draw(show_load_values=True) #doctest: +SKIP
 
         The optional parameter ``draw_support_icons`` will draw the following icons for the supports:
