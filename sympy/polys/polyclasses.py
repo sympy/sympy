@@ -55,7 +55,7 @@ from sympy.polys.densebasic import (
     dmp_ground_nth,
     dmp_one, dmp_ground,
     dmp_zero, dmp_zero_p, dmp_one_p, dmp_ground_p,
-    dup_from_dict, dmp_from_dict,
+    dup_from_dict, dup_from_raw_dict, dmp_from_dict,
     dmp_to_dict,
     dmp_deflate,
     dmp_inject, dmp_eject,
@@ -239,6 +239,11 @@ class DMP(CantSympify, Generic[Er]):
     def from_dict(cls, rep: dict[monom, Er], lev: int, dom: Domain[Er]) -> DMP[Er]:
         rep_dmp = dmp_from_dict(rep, lev, dom)
         return cls.new(rep_dmp, dom, lev)
+
+    @classmethod
+    def from_raw_dict(cls, rep: dict[int, Er], dom: Domain[Er]) -> DMP[Er]:
+        rep_dup = dup_from_raw_dict(rep, dom)
+        return cls.new(_dmp(rep_dup), dom, 0)
 
     @classmethod
     def from_list(cls, rep: dmp[Any], lev: int, dom: Domain[Er]) -> DMP[Er]:
@@ -3012,7 +3017,14 @@ class ANP(CantSympify, Generic[Eg]):
         if isinstance(rep, DMP):
             pass
         elif type(rep) is dict: # don't use isinstance
-            rep = DMP(dup_from_dict(rep, dom), dom, 0)
+            # rep can be dict[tuple[int], ...] or dict[int, ...]
+            n = None
+            for n in rep:
+                break
+            if isinstance(n, int):
+                rep = DMP(dup_from_raw_dict(rep, dom), dom, 0)
+            else:
+                rep = DMP(dup_from_dict(rep, dom), dom, 0)
         else:
             if isinstance(rep, list):
                 rep = [dom.convert(a) for a in rep]
@@ -3023,7 +3035,7 @@ class ANP(CantSympify, Generic[Eg]):
         if isinstance(mod, DMP):
             pass
         elif isinstance(mod, dict):
-            mod = DMP(dup_from_dict(mod, dom), dom, 0)
+            mod = DMP(dup_from_raw_dict(mod, dom), dom, 0)
         else:
             mod = DMP(dup_strip(mod), dom, 0)
 

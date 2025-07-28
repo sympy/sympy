@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 
 from functools import wraps, reduce
 from operator import mul
-from typing import Optional, overload, Literal, Any
+from typing import Optional, overload, Literal, Any, cast
 from collections import Counter, defaultdict
 from collections.abc import Iterator
 
@@ -231,7 +231,7 @@ class Poly(Basic):
         return (self.rep,) + self.gens
 
     @classmethod
-    def from_dict(cls, rep, *gens, **args):
+    def from_dict(cls, rep: dict[tuple[int, ...], Any] | dict[int, Any], *gens, **args):
         """Construct a polynomial from a ``dict``. """
         opt = options.build_options(gens, args)
         return cls._from_dict(rep, opt)
@@ -255,7 +255,7 @@ class Poly(Basic):
         return cls._from_expr(rep, opt)
 
     @classmethod
-    def _from_dict(cls, rep, opt):
+    def _from_dict(cls, rep: dict[tuple[int, ...], Any] | dict[int, Any], opt):
         """Construct a polynomial from a ``dict``. """
         gens = opt.gens
 
@@ -267,12 +267,22 @@ class Poly(Basic):
         domain = opt.domain
 
         if domain is None:
-            domain, rep = construct_domain(rep, opt=opt)
+            domain, rep_d = construct_domain(rep, opt=opt)
         else:
-            for monom, coeff in rep.items():
-                rep[monom] = domain.convert(coeff)
+            convert = domain.convert
+            rep_d = {monom: convert(coeff) for monom, coeff in rep.items()}
 
-        return cls.new(DMP.from_dict(rep, level, domain), *gens)
+        # rep_d could be dict[tuple[int, ...], Er] or dict[int, Er]
+        n = None
+        for n in rep_d: # type: ignore
+            break
+
+        if isinstance(n, int):
+            raw_dict = cast(dict[int, Any], rep_d)
+            return cls.new(DMP.from_raw_dict(raw_dict, domain), *gens)
+        else:
+            multi_dict = cast(dict[tuple[int, ...], Any], rep_d)
+            return cls.new(DMP.from_dict(multi_dict, level, domain), *gens)
 
     @classmethod
     def _from_list(cls, rep, opt):
