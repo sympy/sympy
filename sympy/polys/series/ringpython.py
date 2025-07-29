@@ -198,6 +198,11 @@ def _useries_mul_ground(
     return _useries(series, prec, dom, ring_prec)
 
 
+def _useries_square(s: USeries[Er], dom: Domain[Er], ring_prec: int) -> USeries[Er]:
+    """Compute the square of a power series."""
+    return _useries_mul(s, s, dom, ring_prec)
+
+
 def _useries_div_direct(
     s1: USeries[Er], s2: USeries[Er], dom: Domain[Er], ring_prec: int
 ) -> USeries[Er]:
@@ -370,6 +375,129 @@ def _useries_integrate(s: USeries[Ef], dom: Field[Ef], ring_prec: int) -> USerie
     if prec:
         prec += 1
     return _useries(series, prec, dom, ring_prec)
+
+
+def _useries_log(s: USeries[Ef], dom: Field[Ef], ring_prec: int) -> USeries[Ef]:
+    """Compute the logarithm of a power series."""
+    coeffs, prec = s
+
+    if not coeffs:
+        raise ValueError("Logarithm of a zero series is undefined.")
+
+    if not dom.is_one(coeffs[0]):
+        raise ValueError(
+            "Logarithm of a power series requires the constant term to be one."
+        )
+
+    if prec is None:
+        s = coeffs, ring_prec
+
+    if len(coeffs) == 1:
+        return ([], prec)
+
+    dv_s = _useries_derivative(s, dom, ring_prec)
+    inverse_s = _useries_inverse(s, dom, ring_prec)
+    log_derivative = _useries_mul(dv_s, inverse_s, dom, ring_prec)
+    return _useries_integrate(log_derivative, dom, ring_prec)
+
+
+def _useries_exp(s: USeries[Ef], dom: Field[Ef], ring_prec: int) -> USeries[Ef]:
+    coeffs, prec = s
+
+    if not coeffs:
+        return s
+
+    if not dom.is_zero(coeffs[-1]):
+        raise ValueError(
+            "Exponential requires the constant term of the input series to be zero."
+        )
+
+    if prec is None:
+        prec = ring_prec
+        s = coeffs, prec
+
+    one: USeries[Ef] = ([dom.one], prec)
+
+    if len(coeffs) > 20:
+        exp = one
+
+        for step_prec in _giant_steps(prec):
+            exp = exp[0], step_prec
+            log_exp = _useries_log(exp, dom, ring_prec)
+            diff = _useries_sub(s, log_exp, dom, ring_prec)
+            corr = _useries_mul(diff, exp, dom, ring_prec)
+            exp = _useries_mul(exp, corr, dom, ring_prec)
+
+        return exp
+
+    else:
+        n: Ef = dom(1)
+        c: list[Ef] = []
+        for k in range(prec):
+            c.append(dom.revert(n))
+            k += 1
+            n *= dom(k)
+
+        p: USeries[Ef] = c[::-1], prec
+        r = _useries_compose(p, s, dom, ring_prec)
+        return r
+
+
+def _useries_atan(s: USeries[Ef], dom: Field[Ef], ring_prec: int) -> USeries[Ef]:
+    """Compute the arctangent of a power series."""
+    coeffs, prec = s
+
+    if not coeffs:
+        return s
+
+    if not dom.is_zero(coeffs[-1]):
+        raise ValueError(
+            "Arctangent requires the constant term of the input series to be zero."
+        )
+
+    if prec is None:
+        prec = ring_prec
+
+    ds = _useries_derivative(s, dom, ring_prec)
+    s2 = _useries_square(s, dom, ring_prec)
+    s2 = _useries_add(s2, ([dom.one], prec), dom, ring_prec)  # 1 + s^2
+    inv_s2 = _useries_inverse(s2, dom, ring_prec)
+    dv_s = _useries_mul(ds, inv_s2, dom, ring_prec)
+    dv_s = dv_s[0], prec - 1
+    return _useries_integrate(dv_s, dom, ring_prec)
+
+
+def _useries_tan(s: USeries[Ef], dom: Field[Ef], ring_prec: int) -> USeries[Ef]:
+    """Compute the tangent of a power series."""
+    coeffs, prec = s
+
+    if not coeffs:
+        return s
+
+    if not dom.is_zero(coeffs[-1]):
+        raise ValueError(
+            "Tangent requires the constant term of the input series to be zero."
+        )
+
+    if prec is None:
+        prec = ring_prec
+
+    tan_s: USeries[Ef] = ([], prec)
+    # y_{n+1} = y_n + (s - \arctan(y_n)) * (1 + y_n^2)
+    #                       term1            term2
+    for precx in _giant_steps(prec):
+        tan_s = tan_s[0], precx
+        term1 = _useries_atan(tan_s, dom, ring_prec)
+        term1 = _useries_sub(s, term1, dom, ring_prec)
+
+        term2 = _useries_square(tan_s, dom, ring_prec)
+        term2 = _useries_add(term2, ([dom.one], ring_prec), dom, ring_prec)
+
+        mul = _useries_mul(term1, term2, dom, ring_prec)
+
+        tan_s = _useries_add(tan_s, mul, dom, ring_prec)
+
+    return tan_s
 
 
 class PythonPowerSeriesRingZZ:
@@ -806,58 +934,13 @@ class PythonPowerSeriesRingQQ:
         return _useries_integrate(s, self._domain, self._prec)
 
     def log(self, s: USeries[MPQ]) -> USeries[MPQ]:
-        """Compute the logarithm of a power series."""
-        dom = self._domain
-        coeffs, prec = s
-
-        if prec is None:
-            s = coeffs, self._prec
-
-        if not coeffs:
-            raise ValueError("Logarithm of a zero series is undefined.")
-
-        if not dom.is_one(coeffs[0]):
-            raise ValueError(
-                "Logarithm of a power series requires the constant term to be one."
-            )
-
-        diff_s = self.differentiate(s)
-        inverse_s = self.inverse(s)
-        log_derivative = self.multiply(diff_s, inverse_s)
-        return self.integrate(log_derivative)
+        return _useries_log(s, self._domain, self._prec)
 
     def exp(self, s: USeries[MPQ]) -> USeries[MPQ]:
-        dom = self._domain
-        coeffs, prec = s
+        return _useries_exp(s, self._domain, self._prec)
 
-        if not coeffs or not dom.is_zero(coeffs[-1]):
-            raise ValueError(
-                "Exponential requires the constant term of the input series to be zero."
-            )
+    def atan(self, s: USeries[MPQ]) -> USeries[MPQ]:
+        return _useries_atan(s, self._domain, self._prec)
 
-        if prec is None:
-            prec = self._prec
-            s = coeffs, prec
-
-        if len(coeffs) > 20:
-            p_k = self.one
-
-            for prec_k in _giant_steps(prec):
-                log_pk = self.log((p_k[0], prec_k))
-                s_minus_log_pk = self.subtract(s, log_pk)
-                correction_term = self.add(self.one, s_minus_log_pk)
-                p_k = self.multiply(p_k, correction_term)
-
-            return p_k
-
-        else:
-            result = self.one
-            term = s
-            result = self.add(result, term)
-
-            for k in range(2, prec):
-                term = self.multiply(term, s)
-                term = self.multiply_ground(term, dom(1, k))
-                result = self.add(result, term)
-
-            return result
+    def tan(self, s: USeries[MPQ]) -> USeries[MPQ]:
+        return _useries_tan(s, self._domain, self._prec)

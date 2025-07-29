@@ -582,9 +582,6 @@ def test_rational_reversion(rd_rational):
     )
 
 
-# Tests for log and exp
-
-
 def test_log(rd_rational):
     SeriesRing = rd_rational
     R = SeriesRing()
@@ -647,6 +644,74 @@ def test_exp(rd_rational):
                 (1, 5040),
                 (1, 40320),
                 (1, 362880),
+            ],
+            10,
+        ),
+    )
+
+
+def test_atan(rd_rational):
+    SeriesRing = rd_rational
+    R = SeriesRing()
+    R3 = SeriesRing(3)
+    R10 = SeriesRing(10)
+
+    assert R.equal_repr(
+        R.atan(R.gen),
+        R([(0, 1), (1, 1), (0, 1), (-1, 3), (0, 1), (1, 5)], 6),
+    )
+    assert R3.equal_repr(
+        R3.atan(R3.gen),
+        R3([(0, 1), (1, 1)], 3),
+    )
+
+    assert R10.equal_repr(
+        R10.atan(R10.gen),
+        R10(
+            [
+                (0, 1),
+                (1, 1),
+                (0, 1),
+                (-1, 3),
+                (0, 1),
+                (1, 5),
+                (0, 1),
+                (-1, 7),
+                (0, 1),
+                (1, 9),
+            ],
+            10,
+        ),
+    )
+
+
+def test_tan(rd_rational):
+    SeriesRing = rd_rational
+    R = SeriesRing()
+    R3 = SeriesRing(3)
+    R10 = SeriesRing(10)
+
+    assert R.equal_repr(
+        R.tan(R.gen), R([(0, 1), (1, 1), (0, 1), (1, 3), (0, 1), (2, 15)], 6)
+    )
+    assert R3.equal_repr(
+        R3.tan(R3.gen),
+        R3([(0, 1), (1, 1), (0, 1)], 3),
+    )
+    assert R10.equal_repr(
+        R10.tan(R10.gen),
+        R10(
+            [
+                (0, 1),
+                (1, 1),
+                (0, 1),
+                (1, 3),
+                (0, 1),
+                (2, 15),
+                (0, 1),
+                (17, 315),
+                (0, 1),
+                (62, 2835),
             ],
             10,
         ),

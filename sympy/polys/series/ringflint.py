@@ -842,6 +842,8 @@ class FlintPowerSeriesRingQQ:
     def log(self, s: QQSeries) -> QQSeries:
         """Compute the logarithm of a power series."""
         if isinstance(s, fmpq_poly):
+            if s == 1:
+                return fmpq_poly([])
             s = fmpq_series(s, prec=self._prec)
 
         with _global_cap(self._prec):
@@ -849,8 +851,33 @@ class FlintPowerSeriesRingQQ:
 
     def exp(self, s: QQSeries) -> QQSeries:
         """Compute the exponential of a power series."""
+        if not s:
+            return s
+
         if isinstance(s, fmpq_poly):
             s = fmpq_series(s, prec=self._prec)
 
         with _global_cap(self._prec):
             return s.exp()
+
+    def atan(self, s: QQSeries) -> QQSeries:
+        """Compute the arctangent of a power series."""
+        if not s:
+            return s
+
+        if isinstance(s, fmpq_poly):
+            s = fmpq_series(s, prec=self._prec)
+
+        with _global_cap(self._prec):
+            return s.atan()
+
+    def tan(self, s: QQSeries) -> QQSeries:
+        """Compute the tangent of a power series."""
+        if not s:
+            return s
+
+        if isinstance(s, fmpq_poly):
+            s = fmpq_series(s, prec=self._prec)
+
+        with _global_cap(self._prec):
+            return s.tan()
