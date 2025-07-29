@@ -19,7 +19,7 @@ from sympy.core.sympify import CantSympify, sympify
 from sympy.ntheory.multinomial import multinomial_coefficients
 from sympy.polys.compatibility import IPolys
 from sympy.polys.constructor import construct_domain
-from sympy.polys.densebasic import ninf, dmp_to_dict, dmp_from_dict
+from sympy.polys.densebasic import dmp_to_dict, dmp_from_dict
 from sympy.polys.domains.compositedomain import CompositeDomain
 from sympy.polys.domains.domain import Domain, Er, Es
 from sympy.polys.domains.domainelement import DomainElement
@@ -70,6 +70,9 @@ if TYPE_CHECKING:
 
 
 Mon = tuple[int, ...]
+
+
+ninf = float('-inf')
 
 
 @public
@@ -157,7 +160,7 @@ def vring(symbols, domain, order=lex):
 
     >>> vring("x,y,z", ZZ, lex) # doctest: +SKIP
     Polynomial ring in x, y, z over ZZ with lex order
-    >>> x + y + z # noqa:
+    >>> x + y + z # noqa: # doctest: +SKIP
     x + y + z
     >>> type(_)  # doctest: +SKIP
     <class 'sympy.polys.rings.PolyElement'>

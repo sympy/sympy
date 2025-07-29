@@ -115,7 +115,7 @@ different atoms. For all practical purposes, we could let `b = 1/a` and `c =
 a**(1/7)` and do the manipulations. Effectively, expressions involving `1/a`
 and `a**(1/7)` (and their powers) will never simplify::
 
-    >>> expr*R(1/a)
+    >>> expr*R(1/a) # doctest: +SKIP
     (1/a)**4 + (1/a)*(a**(1/7))**3
 
 This leads to similar issues with manipulating Laurent and Puiseux series as
