@@ -406,7 +406,7 @@ class Equation(Basic, EvalfMixin):
             is returned. Otherwise, the L - R symbolic expression is returned.
             Default to True.
 
-        `.eval_rewrite` code by Davide Sandonà <sandona.davide@gmail.com>. GIT
+        `.eval_rewrite` code by Davide Sandona <sandona.davide@gmail.com>. GIT
         attributions lost in transfers between Algebra_with_Sympy and Sympy.
 
         Examples
@@ -472,7 +472,7 @@ class Equation(Basic, EvalfMixin):
 
         Please, read ``help(Expr.subs)`` for more examples.
 
-        `.subs()` code by Davide Sandonà <sandona.davide@gmail.com>. GIT
+        `.subs()` code by Davide Sandona <sandona.davide@gmail.com>. GIT
         attributions
         lost in transfers between Algebra_with_Sympy and Sympy.
 
