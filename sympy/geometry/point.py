@@ -105,6 +105,8 @@ class Point(GeometryEntity):
 
     is_Point = True
 
+    _op_priority = 11.0
+
     def __new__(cls, *args, **kwargs):
         evaluate = kwargs.get('evaluate', global_evaluate[0])
         on_morph = kwargs.get('on_morph', 'ignore')
@@ -277,6 +279,9 @@ class Point(GeometryEntity):
         factor = sympify(factor)
         coords = [simplify(x*factor) for x in self.args]
         return Point(coords, evaluate=False)
+
+    def __rmul__(self, factor):
+        return self*factor
 
     def __neg__(self):
         """Negate the point."""

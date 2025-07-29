@@ -27,6 +27,8 @@ def test_point():
     assert (p3 + p4) == p4
     assert (p2 - p1) == Point(y1 - x1, y2 - x2)
     assert p4*5 == Point(5, 5)
+    assert S(2.0)*p4 == Point(2.0, 2.0)
+    assert p3 + S(2.0)*p4 == Point(2.0, 2.0)
     assert -p2 == Point(-y1, -y2)
     raises(ValueError, lambda: Point(3, I))
     raises(ValueError, lambda: Point(2*I, I))
