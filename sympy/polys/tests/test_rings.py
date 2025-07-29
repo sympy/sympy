@@ -841,7 +841,7 @@ def test_PolyElement___mul__():
 
     R, x = ring("x", ZZ)
     r, a = ring("a", ZZ)
-    raises(NotImplementedError, lambda: x.__rmul__(a))
+    assert x.__rmul__(a) is NotImplemented
 
     _, x, y = ring("x,y", ZZ)
     p = x + y
