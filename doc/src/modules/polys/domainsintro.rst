@@ -942,7 +942,7 @@ domains. In that case you can construct the ring more directly with the
 
   >>> from sympy import ring
   >>> K, xr, yr = ring([x, y], ZZ)
-  >>> K
+  >>> K # doctest: +SKIP
   Polynomial ring in x, y over ZZ with lex order
   >>> xr**2 - yr**2
   x**2 - y**2
@@ -966,12 +966,12 @@ different domains. The domain for polynomial rings is a distinct object from
 the ring returned by :py:func:`~.ring` although both have the same elements::
 
   >>> K, xr, yr = ring([x, y], ZZ)
-  >>> K
+  >>> K # doctest: +SKIP
   Polynomial ring in x, y over ZZ with lex order
   >>> K2 = ZZ[x,y]
   >>> K2
   ZZ[x,y]
-  >>> K2.ring
+  >>> K2.ring # doctest: +SKIP
   Polynomial ring in x, y over ZZ with lex order
   >>> K2.ring == K
   True

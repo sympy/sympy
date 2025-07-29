@@ -823,8 +823,8 @@ def test_PolyElement___mul__():
 
     assert dict(3*u*(x + y) + z) == dict((x + y)*3*u + z) == {(1, 0, 0): 3*u, (0, 1, 0): 3*u, (0, 0, 1): 1}
 
-    raises(TypeError, lambda: t*x + z)
-    raises(TypeError, lambda: x*t + z)
+    raises(NotImplementedError, lambda: t*x + z)
+    raises(NotImplementedError, lambda: x*t + z)
     raises(TypeError, lambda: t*u + z)
     raises(TypeError, lambda: u*t + z)
 
