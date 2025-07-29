@@ -353,6 +353,8 @@ class Equation(Basic, EvalfMixin):
         """
         Helper class for the `.do.`, `.dolhs.`, `.dorhs.` syntax for applying
         submethods of expressions.
+        
+        Code suggested by Oscar Benjamin <oscar.j.benjamin@gmail.com>
         """
 
         def __init__(self, eqn, side='both'):
@@ -403,7 +405,10 @@ class Equation(Basic, EvalfMixin):
             Control the returned type. If `eqn=True`, then Equation(L - R, 0)
             is returned. Otherwise, the L - R symbolic expression is returned.
             Default to True.
-
+        
+        `.eval_rewrite` code by Davide Sandonà <sandona.davide@gmail.com>. GIT 
+        attributions lost in transfers between Algebra_with_Sympy and Sympy.
+        
         Examples
         ========
         >>> from sympy import Add
@@ -466,6 +471,10 @@ class Equation(Basic, EvalfMixin):
         evaluated until all the substitutions have been made.
 
         Please, read ``help(Expr.subs)`` for more examples.
+        
+        `.subs()` code by Davide Sandonà <sandona.davide@gmail.com>. GIT 
+        attributions 
+        lost in transfers between Algebra_with_Sympy and Sympy.
 
         Examples
         ========
@@ -520,6 +529,8 @@ class Equation(Basic, EvalfMixin):
 
     #####
     # Overrides of binary math operations
+    #
+    # Code suggested by Oscar Benjamin <oscar.j.benjamin@gmail.com>
     #####
 
     @classmethod
