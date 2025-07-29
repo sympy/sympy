@@ -2,12 +2,13 @@
 
 from abc import ABC, abstractmethod
 
-from sympy import Integer, acos, pi, sqrt, sympify, tan, cos, sin
+from sympy import Integer, acos, pi, sqrt, sympify, tan, cos, sin, Piecewise
 from sympy.core.relational import Eq
 from sympy.functions.elementary.trigonometric import atan2
 from sympy.polys.polytools import cancel
 from sympy.physics.vector import Vector, dot
 from sympy.simplify.simplify import trigsimp
+from sympy.physics.mechanics import Point
 
 
 __all__ = [
@@ -616,12 +617,32 @@ class WrappingCone(WrappingGeometryBase):
             The axis along which the cone is aligned.
 
         """
+        if alpha.is_number:
+            if alpha == 0:
+                raise ValueError(
+                    "Cone angle alpha must be positive."
+                )
+            if alpha == pi / 2:
+                raise ValueError(
+                    "Cone angle alpha must be less than pi/2."
+                )
+        elif alpha.is_real is False or alpha.is_positive is False:
+            raise ValueError(
+                    "Cone angle alpha must be real and positive."
+                )
         self._alpha = alpha
+
+        if not isinstance(apex, Point):
+            raise TypeError("The 'apex' must be a Point object.")
         self._apex = apex
+
+        if not isinstance(axis, Vector):
+            raise TypeError("The 'axis' must be a Vector object.")
         self._axis = axis.normalize()
 
     @property
     def point(self):
+        """This method is implemented as required by WrappingGeometryBase, use WrappingCone.apex instead."""
         return self._apex
 
     @property
@@ -714,8 +735,7 @@ class WrappingCone(WrappingGeometryBase):
             cancel(n1.dot(n2))
         )
 
-        if central > pi:
-            central = 2 * pi - central
+        central = Piecewise((central, central <= pi), (2 * pi - central, True))
 
         delta_u = central * sin(self.alpha)
         return sqrt(s1**2 + s2**2 - 2*s1*s2*cos(delta_u))
