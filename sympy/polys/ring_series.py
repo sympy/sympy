@@ -1891,10 +1891,10 @@ def rs_hadamard_exp(p1, inverse=False):
     p = R.zero
     if not inverse:
         for exp1, v1 in p1.items():
-            p[exp1] = v1/int(ifac(exp1[0]))
+            p[exp1] = v1/int(ifac(int(exp1[0])))
     else:
         for exp1, v1 in p1.items():
-            p[exp1] = v1*int(ifac(exp1[0]))
+            p[exp1] = v1*int(ifac(int(exp1[0])))
     return p
 
 def rs_compose_add(p1, p2):
