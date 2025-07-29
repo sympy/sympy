@@ -3,6 +3,7 @@ from __future__ import annotations
 from contextlib import contextmanager
 from typing import Sequence, Union, TYPE_CHECKING
 
+from sympy.polys.densebasic import dup_reverse
 from sympy.polys.domains import Domain, QQ, ZZ
 from sympy.polys.series.ringpython import _useries_valuation
 from sympy.polys.series.base import series_pprint
@@ -165,17 +166,19 @@ class FlintPowerSeriesRingZZ:
             return fmpz_series([0, 1], prec=self._prec)
         return fmpz_poly([0, 1])
 
-    def pretty(self, s: ZZSeries) -> str:
+    def pretty(self, s: ZZSeries, *, symbol: str = "x", ascending: bool = True) -> str:
         """Return a pretty-printed string representation of a power series."""
+        coeffs = dup_reverse(s.coeffs())
+
         if isinstance(s, fmpz_poly):
-            return series_pprint(s.coeffs(), None)
+            return series_pprint(coeffs, None)
 
         prec = _get_series_precision(s)
-        return series_pprint(s.coeffs(), prec)
+        return series_pprint(coeffs, prec, sym=symbol, ascending=ascending)
 
-    def print(self, s: ZZSeries) -> None:
+    def print(self, s: ZZSeries, *, symbol: str = "x", ascending: bool = True) -> None:
         """Print a pretty-printed representation of a power series."""
-        print(self.pretty(s))
+        print(self.pretty(s, symbol=symbol, ascending=ascending))
 
     def from_list(self, coeffs: list[MPZ], prec: int | None = None) -> ZZSeries:
         """
@@ -556,17 +559,19 @@ class FlintPowerSeriesRingQQ:
             return fmpq_series([0, 1], prec=self._prec)
         return fmpq_poly([0, 1])
 
-    def pretty(self, s: QQSeries) -> str:
+    def pretty(self, s: QQSeries, *, symbol: str = "x", ascending: bool = True) -> str:
         """Return a pretty-printed string representation of a power series."""
+        coeffs = dup_reverse(s.coeffs())
+
         if isinstance(s, fmpq_poly):
-            return series_pprint(s.coeffs(), None)
+            return series_pprint(coeffs, None)
 
         prec = _get_series_precision(s)
-        return series_pprint(s.coeffs(), prec)
+        return series_pprint(coeffs, prec, sym=symbol, ascending=ascending)
 
-    def print(self, s: QQSeries) -> None:
+    def print(self, s: QQSeries, *, symbol: str = "x", ascending: bool = True) -> None:
         """Print a pretty-printed representation of a power series."""
-        print(self.pretty(s))
+        print(self.pretty(s, symbol=symbol, ascending=ascending))
 
     def from_list(self, coeffs: list[MPQ], prec: int | None = None) -> QQSeries:
         """
