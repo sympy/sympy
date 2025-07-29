@@ -4,6 +4,8 @@ import pytest
 from functools import reduce
 from operator import add, mul
 
+from sympy.external.gmpy import GROUND_TYPES
+
 from sympy.polys.domains import ZZ_I
 from sympy.polys.rings import ring, xring, sring, PolyRing, PolyElement, vring, ninf
 from sympy.polys.fields import field, FracField
@@ -822,8 +824,13 @@ def test_PolyElement___mul__():
 
     assert dict(3*u*(x + y) + z) == dict((x + y)*3*u + z) == {(1, 0, 0): 3*u, (0, 1, 0): 3*u, (0, 0, 1): 1}
 
-    raises(NotImplementedError, lambda: t*x + z)
-    raises(NotImplementedError, lambda: x*t + z)
+    if GROUND_TYPES != "flint":
+        raises(TypeError, lambda: t * x + z)
+        raises(TypeError, lambda: x * t + z)
+    else:
+        raises(NotImplementedError, lambda: t * x + z)
+        raises(NotImplementedError, lambda: x * t + z)
+
     raises(TypeError, lambda: t*u + z)
     raises(TypeError, lambda: u*t + z)
 
