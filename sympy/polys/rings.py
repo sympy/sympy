@@ -1502,6 +1502,26 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, Generic[Er]):
         else:
             return self.quo_ground(self.LC)
 
+    def rem(self, G):
+        f = self
+        if isinstance(G, PolyElement):
+            return f._rem(G)
+        else:
+            if not all(G):
+                raise ZeroDivisionError("polynomial division")
+            return f._rem_list(G)
+
+    def quo(self, G):
+        return self.div(G)[0]
+
+    def exquo(self, G):
+        q, r = self.div(G)
+
+        if not r:
+            return q
+        else:
+            raise ExactQuotientFailed(self, G)
+
     def div(self, fv):
         """Division algorithm, see [CLO] p64.
 
@@ -1530,7 +1550,60 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, Generic[Er]):
         y**6
 
         """
-        return self._div(fv)
+        if isinstance(fv, PolyElement):
+            ring = self.ring
+            if not fv:
+                raise ZeroDivisionError("polynomial division")
+            if not self:
+                return ring.zero, ring.zero
+            if fv.ring != ring:
+                raise ValueError("self and f must have the same ring")
+            return self._div(fv)
+        else:
+            ring = self.ring
+            if not all(fv):
+                raise ZeroDivisionError("polynomial division")
+            if not self:
+                return [], ring.zero
+            for f in fv:
+                if f.ring != ring:
+                    raise ValueError("self and f must have the same ring")
+            return self._div_list(fv)
+
+    def _term_div(self):
+        zm = self.ring.zero_monom
+        domain = self.ring.domain
+        domain_quo = domain.quo
+        monomial_div = self.ring.monomial_div
+
+        if domain.is_Field:
+
+            def term_div(a_lm_a_lc, b_lm_b_lc):
+                a_lm, a_lc = a_lm_a_lc
+                b_lm, b_lc = b_lm_b_lc
+                if b_lm == zm:  # apparently this is a very common case
+                    monom = a_lm
+                else:
+                    monom = monomial_div(a_lm, b_lm)
+                if monom is not None:
+                    return monom, domain_quo(a_lc, b_lc)
+                else:
+                    return None
+        else:
+
+            def term_div(a_lm_a_lc, b_lm_b_lc):
+                a_lm, a_lc = a_lm_a_lc
+                b_lm, b_lc = b_lm_b_lc
+                if b_lm == zm:  # apparently this is a very common case
+                    monom = a_lm
+                else:
+                    monom = monomial_div(a_lm, b_lm)
+                if not (monom is None or a_lc % b_lc):
+                    return monom, domain_quo(a_lc, b_lc)
+                else:
+                    return None
+
+        return term_div
 
     def quo_ground(self, x):
         domain = self.ring.domain
@@ -2155,50 +2228,6 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, Generic[Er]):
     def _truediv(self, p2):
         raise NotImplementedError
 
-    def _term_div(self):
-        zm = self.ring.zero_monom
-        domain = self.ring.domain
-        domain_quo = domain.quo
-        monomial_div = self.ring.monomial_div
-
-        if domain.is_Field:
-
-            def term_div(a_lm_a_lc, b_lm_b_lc):
-                a_lm, a_lc = a_lm_a_lc
-                b_lm, b_lc = b_lm_b_lc
-                if b_lm == zm:  # apparently this is a very common case
-                    monom = a_lm
-                else:
-                    monom = monomial_div(a_lm, b_lm)
-                if monom is not None:
-                    return monom, domain_quo(a_lc, b_lc)
-                else:
-                    return None
-        else:
-
-            def term_div(a_lm_a_lc, b_lm_b_lc):
-                a_lm, a_lc = a_lm_a_lc
-                b_lm, b_lc = b_lm_b_lc
-                if b_lm == zm:  # apparently this is a very common case
-                    monom = a_lm
-                else:
-                    monom = monomial_div(a_lm, b_lm)
-                if not (monom is None or a_lc % b_lc):
-                    return monom, domain_quo(a_lc, b_lc)
-                else:
-                    return None
-
-        return term_div
-
-    def rem(self, G):
-        raise NotImplementedError
-
-    def quo(self, G):
-        raise NotImplementedError
-
-    def exquo(self, G):
-        raise NotImplementedError
-
     def _iadd_monom(self, mc):
         """add to self the monomial coeff*x0**i0*x1**i1*...
         unless self is a generator -- then just return the sum of the two.
@@ -2281,6 +2310,9 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, Generic[Er]):
         raise NotImplementedError
 
     def _rem(self, G):
+        raise NotImplementedError
+
+    def _rem_list(self, g):
         raise NotImplementedError
 
     def _mod(self, other):
@@ -2913,25 +2945,6 @@ class PyPolyElement(PolyElement, dict): # type: ignore
     def _truediv(self, p2):
         return self.exquo(p2)
 
-    def rem(self, G):
-        f = self
-        if isinstance(G, PolyElement):
-            G = [G]
-        if not all(G):
-            raise ZeroDivisionError("polynomial division")
-        return f._rem(G)
-
-    def quo(self, G):
-        return self.div(G)[0]
-
-    def exquo(self, G):
-        q, r = self.div(G)
-
-        if not r:
-            return q
-        else:
-            raise ExactQuotientFailed(self, G)
-
     def _iadd_monom(self, mc):
         if self in self.ring._gens_set:
             cpself = self.copy()
@@ -2976,7 +2989,8 @@ class PyPolyElement(PolyElement, dict): # type: ignore
             self[exp] *= c
         return self
 
-    def _rem(self, G):
+    def _rem(self, g):
+        """Remainder when dividing by a single polynomial g"""
         ring = self.ring
         domain = ring.domain
         zero = domain.zero
@@ -2986,6 +3000,46 @@ class PyPolyElement(PolyElement, dict): # type: ignore
         ltf = self.LT
         f = self.copy()
         get = f.get
+
+        while f:
+            tq = term_div(ltf, g.LT)
+            if tq is not None:
+                m, c = tq
+                for mg, cg in g.iterterms():
+                    m1 = monomial_mul(mg, m)
+                    c1 = get(m1, zero) - c * cg
+                    if not c1:
+                        del f[m1]
+                    else:
+                        f[m1] = c1
+                ltm = f.leading_expv()
+                if ltm is not None:
+                    ltf = ltm, f[ltm]
+            else:
+                ltm, ltc = ltf
+                if ltm in r:
+                    r[ltm] += ltc
+                else:
+                    r[ltm] = ltc
+                del f[ltm]
+                ltm = f.leading_expv()
+                if ltm is not None:
+                    ltf = ltm, f[ltm]
+
+        return r
+
+    def _rem_list(self, G):
+        """Remainder when dividing by a list of polynomials G"""
+        ring = self.ring
+        domain = ring.domain
+        zero = domain.zero
+        monomial_mul = ring.monomial_mul
+        r = ring.zero
+        term_div = self._term_div()
+        ltf = self.LT
+        f = self.copy()
+        get = f.get
+
         while f:
             for g in G:
                 tq = term_div(ltf, g.LT)
@@ -3001,7 +3055,6 @@ class PyPolyElement(PolyElement, dict): # type: ignore
                     ltm = f.leading_expv()
                     if ltm is not None:
                         ltf = ltm, f[ltm]
-
                     break
             else:
                 ltm, ltc = ltf
@@ -3482,28 +3535,41 @@ class PyPolyElement(PolyElement, dict): # type: ignore
 
         return poly
 
-    def _div(self, fv):
+    def _div(self, f):
         ring = self.ring
-        ret_single = False
-        if isinstance(fv, PolyElement):
-            ret_single = True
-            fv = [fv]
-        if not all(fv):
-            raise ZeroDivisionError("polynomial division")
-        if not self:
-            if ret_single:
-                return ring.zero, ring.zero
+        q = ring.zero
+        p = self.copy()
+        r = ring.zero
+        term_div = self._term_div()
+        f_expv = f.leading_expv()
+        f_coeff = f[f_expv]
+
+        while p:
+            p_expv = p.leading_expv()
+            p_coeff = p[p_expv]
+            term = term_div((p_expv, p_coeff), (f_expv, f_coeff))
+            if term is not None:
+                expv1, c = term
+                q = q._iadd_monom((expv1, c))
+                p = p._iadd_poly_monom(f, (expv1, -c))
             else:
-                return [], ring.zero
-        for f in fv:
-            if f.ring != ring:
-                raise ValueError("self and f must have the same ring")
+                r = r._iadd_monom((p_expv, p_coeff))
+                del p[p_expv]
+
+        if p_expv == ring.zero_monom:
+            r += p
+
+        return q, r
+
+    def _div_list(self, fv):
+        ring = self.ring
         s = len(fv)
         qv = [ring.zero for i in range(s)]
         p = self.copy()
         r = ring.zero
         term_div = self._term_div()
         expvs = [fx.leading_expv() for fx in fv]
+
         while p:
             i = 0
             divoccurred = 0
@@ -3521,12 +3587,11 @@ class PyPolyElement(PolyElement, dict): # type: ignore
                 expv = p.leading_expv()
                 r = r._iadd_monom((expv, p[expv]))
                 del p[expv]
+
         if expv == ring.zero_monom:
             r += p
-        if ret_single:
-            return qv[0], r
-        else:
-            return qv, r
+
+        return qv, r
 
     def _prem(self, g, x):
         f = self
@@ -4098,86 +4163,41 @@ class FPolyElement(PolyElement):
 
         return self.ring.from_python(result_py)
 
-    def rem(self, G):
+    def _rem(self, g):
         python_ring = self._get_python_ring()
+
         self_py = python_ring.from_flint(self)
-        G_py = []
 
-        if isinstance(G, FPolyElement):
-            G_py = python_ring.from_flint(G)
-        elif isinstance(G, PyPolyElement):
-            G_py = G
+        if isinstance(g, FPolyElement):
+            g_py = python_ring.from_flint(g)
         else:
-            for poly in G:
-                if isinstance(poly, FPolyElement):
-                    G_py.append(python_ring.from_flint(poly))
-                elif isinstance(poly, PyPolyElement):
-                    G_py.append(poly)
-                else:
-                    raise TypeError(f"Expected PolyElement, got {type(poly)}")
+            g_py = g
 
-        rem_py = self_py.rem(G_py)
+        result_py = self_py._rem(g_py)
 
-        if isinstance(rem_py, list):
-            rem_flint = [self.ring.from_python(q) for q in rem_py]
-        else:
-            rem_flint = self.ring.from_python(rem_py)
+        return self.ring.from_python(result_py)
 
-        return rem_flint
-
-    def quo(self, G):
+    def _rem_list(self, g):
         python_ring = self._get_python_ring()
+
         self_py = python_ring.from_flint(self)
-        G_py = []
 
-        if isinstance(G, FPolyElement):
-            G_py = python_ring.from_flint(G)
-        elif isinstance(G, PyPolyElement):
-            G_py = G
+        g_py = []
+        for poly in g:
+            if isinstance(poly, FPolyElement):
+                g_py.append(python_ring.from_flint(poly))
+            elif isinstance(poly, PyPolyElement):
+                g_py.append(poly)
+            else:
+                raise TypeError(f"Expected PolyElement, got {type(poly)}")
+
+        result_py = self_py._rem_list(g_py)
+
+        if isinstance(result_py, PyPolyElement):
+            result_flint = self.ring.from_python(result_py)
+            return result_flint
         else:
-            for poly in G:
-                if isinstance(poly, FPolyElement):
-                    G_py.append(python_ring.from_flint(poly))
-                elif isinstance(poly, PyPolyElement):
-                    G_py.append(poly)
-                else:
-                    raise TypeError(f"Expected PolyElement, got {type(poly)}")
-
-        quo_py = self_py.quo(G_py)
-
-        if isinstance(quo_py, list):
-            quo_flint = [self.ring.from_python(q) for q in quo_py]
-        else:
-            quo_flint = self.ring.from_python(quo_py)
-
-        return quo_flint
-
-    def exquo(self, G):
-        python_ring = self._get_python_ring()
-        self_py = python_ring.from_flint(self)
-        G_py = []
-
-        if isinstance(G, FPolyElement):
-            G_py = python_ring.from_flint(G)
-        elif isinstance(G, PyPolyElement):
-            G_py = G
-        else:
-            for poly in G:
-                if isinstance(poly, FPolyElement):
-                    G_py.append(python_ring.from_flint(poly))
-                elif isinstance(poly, PyPolyElement):
-                    G_py.append(poly)
-                else:
-                    raise TypeError(f"Expected PolyElement, got {type(poly)}")
-
-        exquo_py = self_py.exquo(G_py)
-
-        if isinstance(exquo_py, list):
-            exquo_flint = [self.ring.from_python(q) for q in exquo_py]
-        else:
-            exquo_flint = self.ring.from_python(exquo_py)
-
-        return exquo_flint
+            return result_py
 
     def _iadd_monom(self, mc):
         python_ring = self._get_python_ring()
@@ -4267,6 +4287,8 @@ class FPolyElement(PolyElement):
         self._hash = None
 
         return self
+
+
 
     def _mod(self, other):
         python_ring = self._get_python_ring()
@@ -4820,7 +4842,6 @@ class FPolyElement(PolyElement):
         return domain.canonical_unit(self.LC)
 
     def _div(self, fv):
-        # Bootstrap remaining
         python_ring = self._get_python_ring()
         self_py = python_ring.from_flint(self)
 
@@ -4832,17 +4853,6 @@ class FPolyElement(PolyElement):
             if fv.ring != python_ring:
                 raise ValueError
             fv_py = fv
-        else:
-            fv_py = []
-            for poly in fv:
-                if isinstance(poly, FPolyElement):
-                    if poly.ring != self.ring:
-                        raise ValueError
-                    fv_py.append(python_ring.from_flint(poly))
-                elif isinstance(poly, PyPolyElement):
-                    if poly.ring != python_ring:
-                        raise ValueError
-                    fv_py.append(poly)
 
         qv_py, r_py = self_py._div(fv_py)
 
@@ -4851,14 +4861,39 @@ class FPolyElement(PolyElement):
             qv_flint = self.ring.from_python(qv_py)
         elif isinstance(qv_py, FPolyElement):
             qv_flint = qv_py
-        else:
-            qv_flint = []
-            for poly in qv_py:
-                if isinstance(poly, PyPolyElement):
-                    assert _supports_flint(poly.ring.domain, poly.ring.order)
-                    qv_flint.append(self.ring.from_python(poly))
-                elif isinstance(poly, FPolyElement):
-                    qv_flint.append(poly)
+
+        if isinstance(r_py, PyPolyElement):
+            assert _supports_flint(r_py.ring.domain, r_py.ring.order)
+            r_flint = self.ring.from_python(r_py)
+        elif isinstance(r_py, FPolyElement):
+            r_flint = r_py
+
+        return qv_flint, r_flint
+
+    def _div_list(self, fv):
+        python_ring = self._get_python_ring()
+        self_py = python_ring.from_flint(self)
+
+        fv_py = []
+        for poly in fv:
+            if isinstance(poly, FPolyElement):
+                if poly.ring != self.ring:
+                    raise ValueError
+                fv_py.append(python_ring.from_flint(poly))
+            elif isinstance(poly, PyPolyElement):
+                if poly.ring != python_ring:
+                    raise ValueError
+                fv_py.append(poly)
+
+        qv_py, r_py = self_py._div_list(fv_py)
+
+        qv_flint = []
+        for poly in qv_py:
+            if isinstance(poly, PyPolyElement):
+                assert _supports_flint(poly.ring.domain, poly.ring.order)
+                qv_flint.append(self.ring.from_python(poly))
+            elif isinstance(poly, FPolyElement):
+                qv_flint.append(poly)
 
         if isinstance(r_py, PyPolyElement):
             assert _supports_flint(r_py.ring.domain, r_py.ring.order)
