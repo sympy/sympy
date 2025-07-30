@@ -851,10 +851,9 @@ class FlintPowerSeriesRingQQ:
 
     def exp(self, s: QQSeries) -> QQSeries:
         """Compute the exponential of a power series."""
-        if not s:
-            return s
-
         if isinstance(s, fmpq_poly):
+            if not s:
+                return fmpq_poly([1])
             s = fmpq_series(s, prec=self._prec)
 
         with _global_cap(self._prec):
@@ -881,3 +880,25 @@ class FlintPowerSeriesRingQQ:
 
         with _global_cap(self._prec):
             return s.tan()
+
+    def sin(self, s: QQSeries) -> QQSeries:
+        """Compute the sine of a power series."""
+        if not s:
+            return s
+
+        if isinstance(s, fmpq_poly):
+            s = fmpq_series(s, prec=self._prec)
+
+        with _global_cap(self._prec):
+            return s.sin()
+
+    def cos(self, s: QQSeries) -> QQSeries:
+        """Compute the cosine of a power series."""
+        if not s:
+            return s
+
+        if isinstance(s, fmpq_poly):
+            s = fmpq_series(s, prec=self._prec)
+
+        with _global_cap(self._prec):
+            return s.cos()

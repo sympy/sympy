@@ -716,3 +716,74 @@ def test_tan(rd_rational):
             10,
         ),
     )
+
+
+def test_sin(rd_rational):
+    SeriesRing = rd_rational
+    R = SeriesRing()
+    R3 = SeriesRing(3)
+    R10 = SeriesRing(10)
+
+    assert R.equal_repr(
+        R.sin(R.gen),
+        R([(0, 1), (1, 1), (0, 1), (-1, 6), (0, 1), (1, 120)], 6),
+    )
+    assert R3.equal_repr(
+        R3.sin(R3.gen),
+        R3([(0, 1), (1, 1), (0, 1)], 3),
+    )
+    assert R10.equal_repr(
+        R10.sin(R10.gen),
+        R10(
+            [
+                (0, 1),
+                (1, 1),
+                (0, 1),
+                (-1, 6),
+                (0, 1),
+                (1, 120),
+                (0, 1),
+                (-1, 5040),
+                (0, 1),
+                (1, 362880),
+            ],
+            10,
+        ),
+    )
+
+
+def test_cos(rd_rational):
+    SeriesRing = rd_rational
+    R = SeriesRing()
+    R3 = SeriesRing(3)
+    R10 = SeriesRing(10)
+
+    assert R.equal_repr(
+        R.cos(R.gen),
+        R([(1, 1), (0, 1), (-1, 2), (0, 1), (1, 24), (0, 1)], 6),
+    )
+    assert R3.equal_repr(
+        R3.cos(R3.gen),
+        R3([(1, 1), (0, 1), (-1, 2)], 3),
+    )
+    assert R10.equal_repr(
+        R10.cos(R10.gen),
+        R10(
+            [
+                (1, 1),
+                (0, 1),
+                (-1, 2),
+                (0, 1),
+                (1, 24),
+                (0, 1),
+                (-1, 720),
+                (0, 1),
+                (1, 40320),
+                (0, 1),
+            ],
+            10,
+        ),
+    )
+
+
+#

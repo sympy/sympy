@@ -7,6 +7,7 @@ if TYPE_CHECKING:
 
 from sympy.polys.densearith import (
     dup_add,
+    dup_add_ground,
     dup_mul,
     dup_mul_ground,
     dup_neg,
@@ -151,6 +152,23 @@ def _useries_add(
     return dup_add(coeffs1, coeffs2, dom), prec
 
 
+def _useries_add_ground(
+    s: USeries[Er], n: Er, dom: Domain[Er], ring_prec: int
+) -> USeries[Er]:
+    """
+    Helper function to add a ground element to a power series.
+
+    Mostly need for the series expansion of functions like exp, log, etc.
+    """
+    coeffs, prec = s
+
+    if n == 0:
+        return s
+
+    series = dup_add_ground(coeffs, n, dom)
+    return _useries(series, prec, dom, ring_prec)
+
+
 def _useries_sub(
     s1: USeries[Er], s2: USeries[Er], dom: Domain[Er], ring_prec: int
 ) -> USeries[Er]:
@@ -256,6 +274,22 @@ def _useries_div(
 
         _, _, prec = _unify_prec(shifted_s1, shifted_s2, dom, ring_prec)
         return q_coeffs, prec
+
+
+def _useries_div_ground(
+    s: USeries[Er], n: Er, dom: Domain[Er], ring_prec: int
+) -> USeries[Er]:
+    coeffs, prec = s
+
+    if n == 0:
+        raise ZeroDivisionError("Division by zero in power series")
+    if n == 1:
+        return s
+    if n == -1:
+        return _useries_neg(s, dom, ring_prec)
+
+    series = dup_mul_ground(coeffs, dom.revert(n), dom)
+    return _useries(series, prec, dom, ring_prec)
 
 
 def _useries_pow_int(
@@ -405,7 +439,7 @@ def _useries_exp(s: USeries[Ef], dom: Field[Ef], ring_prec: int) -> USeries[Ef]:
     coeffs, prec = s
 
     if not coeffs:
-        return s
+        return ([dom.one], prec)
 
     if not dom.is_zero(coeffs[-1]):
         raise ValueError(
@@ -438,8 +472,8 @@ def _useries_exp(s: USeries[Ef], dom: Field[Ef], ring_prec: int) -> USeries[Ef]:
             k += 1
             n *= dom(k)
 
-        p: USeries[Ef] = c[::-1], prec
-        r = _useries_compose(p, s, dom, ring_prec)
+        f: USeries[Ef] = c[::-1], prec
+        r = _useries_compose(f, s, dom, ring_prec)
         return r
 
 
@@ -460,7 +494,7 @@ def _useries_atan(s: USeries[Ef], dom: Field[Ef], ring_prec: int) -> USeries[Ef]
 
     ds = _useries_derivative(s, dom, ring_prec)
     s2 = _useries_square(s, dom, ring_prec)
-    s2 = _useries_add(s2, ([dom.one], prec), dom, ring_prec)  # 1 + s^2
+    s2 = _useries_add_ground(s2, dom.one, dom, ring_prec)  # 1 + s^2
     inv_s2 = _useries_inverse(s2, dom, ring_prec)
     dv_s = _useries_mul(ds, inv_s2, dom, ring_prec)
     dv_s = dv_s[0], prec - 1
@@ -482,22 +516,104 @@ def _useries_tan(s: USeries[Ef], dom: Field[Ef], ring_prec: int) -> USeries[Ef]:
     if prec is None:
         prec = ring_prec
 
-    tan_s: USeries[Ef] = ([], prec)
+    y: USeries[Ef] = ([], prec)
     # y_{n+1} = y_n + (s - \arctan(y_n)) * (1 + y_n^2)
     #                       term1            term2
     for precx in _giant_steps(prec):
-        tan_s = tan_s[0], precx
-        term1 = _useries_atan(tan_s, dom, ring_prec)
+        y = y[0], precx
+        term1 = _useries_atan(y, dom, ring_prec)
         term1 = _useries_sub(s, term1, dom, ring_prec)
 
-        term2 = _useries_square(tan_s, dom, ring_prec)
-        term2 = _useries_add(term2, ([dom.one], ring_prec), dom, ring_prec)
+        term2 = _useries_square(y, dom, ring_prec)
+        term2 = _useries_add_ground(term2, dom.one, dom, ring_prec)
 
         mul = _useries_mul(term1, term2, dom, ring_prec)
+        y = _useries_add(y, mul, dom, ring_prec)
 
-        tan_s = _useries_add(tan_s, mul, dom, ring_prec)
+    return y
 
-    return tan_s
+
+def _useries_sin(s: USeries[Ef], dom: Field[Ef], ring_prec: int) -> USeries[Ef]:
+    """Compute the sine of a power series."""
+    coeffs, prec = s
+
+    if not coeffs:
+        return s
+
+    if not dom.is_zero(coeffs[-1]):
+        raise ValueError(
+            "Sine requires the constant term of the input series to be zero."
+        )
+
+    if prec is None:
+        prec = ring_prec
+
+    if len(coeffs) > 20:
+        # t = tan(s/2)
+        s = _useries_div_ground(s, dom(2), dom, ring_prec)
+        t = _useries_tan(s, dom, ring_prec)
+        t_sq = _useries_square(t, dom, ring_prec)
+
+        p = _useries_mul_ground(t, dom(2), dom, ring_prec)  # 2*t
+
+        q = _useries_add_ground(t_sq, dom.one, dom, ring_prec)
+        q_inv = _useries_inverse(q, dom, ring_prec)  # 1/(1 + t^2)
+
+        return _useries_mul(p, q_inv, dom, ring_prec)
+
+    else:
+        n: Ef = dom.one
+        c: list[Ef] = [dom.zero]
+
+        for k in range(2, prec + 2, 2):
+            c.append(dom.revert(n))
+            c.append(dom.zero)
+            n *= -k * (k + 1)
+
+        f: USeries[Ef] = (c[::-1], prec)
+        return _useries_compose(f, s, dom, ring_prec)
+
+
+def _useries_cos(s: USeries[Ef], dom: Field[Ef], ring_prec: int) -> USeries[Ef]:
+    """Compute the cosine of a power series."""
+    coeffs, prec = s
+
+    if not coeffs:
+        return s
+
+    if not dom.is_zero(coeffs[-1]):
+        raise ValueError(
+            "Sine requires the constant term of the input series to be zero."
+        )
+
+    if prec is None:
+        prec = ring_prec
+
+    if len(coeffs) > 20:
+        # t = tan(s/2)
+        s = _useries_div_ground(s, dom(2), dom, ring_prec)
+        t = _useries_tan(s, dom, ring_prec)
+
+        t_sq = _useries_square(t, dom, ring_prec)  # t_sq = tan^2(s/2)
+
+        neg_t_sq = _useries_neg(t_sq, dom, ring_prec)
+        p = _useries_add_ground(neg_t_sq, dom.one, dom, ring_prec)  # 1 - tan^2(s/2)
+
+        q = _useries_add_ground(t_sq, dom.one, dom, ring_prec)
+        q_inv = _useries_inverse(q, dom, ring_prec)  # 1/(1 + tan^2(s/2))
+
+        return _useries_mul(p, q_inv, dom, ring_prec)
+    else:
+        n: Ef = dom.one
+        c: list[Ef] = []
+
+        for k in range(2, prec + 2, 2):
+            c.append(dom.revert(n))
+            c.append(dom.zero)
+            n *= -k * (k - 1)
+
+        f: USeries[Ef] = (c[::-1], prec)
+        return _useries_compose(f, s, dom, ring_prec)
 
 
 class PythonPowerSeriesRingZZ:
@@ -934,13 +1050,25 @@ class PythonPowerSeriesRingQQ:
         return _useries_integrate(s, self._domain, self._prec)
 
     def log(self, s: USeries[MPQ]) -> USeries[MPQ]:
+        """Compute the logarithm of a power series."""
         return _useries_log(s, self._domain, self._prec)
 
     def exp(self, s: USeries[MPQ]) -> USeries[MPQ]:
+        """Compute the exponential of a power series."""
         return _useries_exp(s, self._domain, self._prec)
 
     def atan(self, s: USeries[MPQ]) -> USeries[MPQ]:
+        """Compute the arctangent of a power series."""
         return _useries_atan(s, self._domain, self._prec)
 
     def tan(self, s: USeries[MPQ]) -> USeries[MPQ]:
+        """Compute the tangent of a power series."""
         return _useries_tan(s, self._domain, self._prec)
+
+    def sin(self, s: USeries[MPQ]) -> USeries[MPQ]:
+        """Compute the sine of a power series."""
+        return _useries_sin(s, self._domain, self._prec)
+
+    def cos(self, s: USeries[MPQ]) -> USeries[MPQ]:
+        """Compute the cosine of a power series."""
+        return _useries_cos(s, self._domain, self._prec)
