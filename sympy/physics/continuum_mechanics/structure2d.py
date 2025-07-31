@@ -363,7 +363,7 @@ class Structure2d:
         """Adds a node to the structure at a specified location."""
 
         for node in self.nodes:
-            if node.x == x and node.y == y:
+            if simplify(node.x-x == 0) and simplify(node.y - y == 0):
                 # If you overwrite here, make sure the correct coordinates are being passed
                 if overwrite_type:
                     node.node_type = new_node_type
@@ -386,7 +386,9 @@ class Structure2d:
         # Check if the point corresponds to a node
         for node in self.nodes:
             if simplify(node.x - x) == 0 and simplify(node.y - y) == 0:
-                return f"n_{node.node_id}", 0, None
+                unwrapped_pos = self._find_unwrapped_position(x, y)
+                print(f"Node at ({x}, {y}) mapped to unwrapped position: {unwrapped_pos}")  # Use correct unwrapped position
+                return f"n_{node.node_id}", unwrapped_pos, None
 
         # Check if the point corresponds to a member
         for member in self.members:
@@ -525,8 +527,8 @@ class Structure2d:
             Fh = load.x_component
             B = [nsimplify(Fv), nsimplify(Fh)]
             bb = [
-                nsimplify(self.unwrapped_loadpoints[-1]["locals"][0]),
-                nsimplify(self.unwrapped_loadpoints[-1]["locals"][0]),
+                nsimplify(load.local_start),
+                nsimplify(load.local_start),
             ]
             nn = [2, 3]
         else:
@@ -898,6 +900,8 @@ class Structure2d:
         solution = solved[0]
         self.reaction_loads = solution
         self.beam._load = self.beam._load.subs(solution)
+        self.load_qx = self.load_qx.subs(solution)
+        self.load_qz = self.load_qz.subs(solution)
 
         for load in self.loads:
             if isinstance(load.value, Basic):

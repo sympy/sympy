@@ -518,6 +518,8 @@ def test_structure2d_beam_column_loads():
 
 
 def test_structure2d():
+    # Tests to check the integration of beam and column in a structure
+    # Alex Example 1 (https://oit.tudelft.nl/Macaulays-method/theses/Macaulay-2D/BEP%20v1.html)
     E, I, A=symbols('E I A')
     s=Structure2d()
     s.add_member(0,0,4,0,E,I,A)
@@ -536,3 +538,52 @@ def test_structure2d():
     assert s.beam.length==14
     assert s.column.length==14
     assert computed == expected
+
+    # Alex Example 2 (https://oit.tudelft.nl/Macaulays-method/theses/Macaulay-2D/BEP%20v2.html)
+    s = Structure2d()
+
+    s.add_member(0, 0, 4, 3, E, I, A)
+    s.add_member(4, 3, 8, 0, E, I, A)
+
+    s.apply_load(0, 0, 60, 0, 0, 4, 3)
+    s.apply_load(4, 3, 60, 0, 0, 8, 0)
+
+    s.apply_support(0, 0, type='pin')
+    s.apply_support(8, 0, type='fixed')
+    assert list(s.solve_for_reaction_loads().values()) == [-12, 0, -12, 4]
+
+
+    # Tests to check the integration of loads into the beam and column
+    E,I=symbols('E I')
+    s = Structure2d()
+    s.add_member(0, 0, 30, 0, E, I, 1e4)
+    s.apply_load(0, 0, 8, global_angle=270, order=-1)
+    s.apply_load(0, 0, 12, global_angle=0, order=-1)
+    s.apply_support(10, 0, 'pin')
+    s.apply_support(30, 0, 'pin')
+
+    assert list(s.solve_for_reaction_loads().values()) == [-12, 0, -12, 4]
+    assert simplify(s.load_qz) == simplify(-12*SingularityFunction(x, 10, -1) + 4*SingularityFunction(x, 30, -1) + 8*SingularityFunction(x, 0, -1))
+    assert simplify(s.load_qx) == simplify(-12*SingularityFunction(x, 10, -1) + 12*SingularityFunction(x, 0, -1))
+
+    # Tests to check Frames and loads at the joints or Nodes
+    s = Structure2d()
+    s.add_member(0, 0, 5, 3, E, I, 1e4)
+    s.add_member(5,3,9,-2, E, I, 1e4)
+    s.apply_load(5, 3, 100, global_angle=270, order=-1)
+    s.apply_support(0, 0, 'pin')
+    s.apply_support(5, -2, 'pin')
+
+    assert list(s.solve_for_reaction_loads().values()) == [38.71, -38.71, 51.61, 48.39]
+
+    # Tests to check Frames and loads at the joints or Nodes
+    s = Structure2d()
+    s.add_member(0, 0, 3, 5, E, I, 1e4)
+    s.add_member(3,5,8,2, E, I, 1e4)
+    s.apply_load(3, 5, 100, global_angle=270, order=-1)
+    s.apply_support(0, 0, 'pin')
+    s.apply_support(5, -2, 'pin')
+
+    assert list(s.solve_for_reaction_loads().values()) == [44.12, -44.12, 73.53, 26.47]
+
+
