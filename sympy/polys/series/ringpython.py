@@ -443,7 +443,7 @@ def _useries_log(s: USeries[Ef], dom: Field[Ef], ring_prec: int) -> USeries[Ef]:
     if not coeffs:
         raise ValueError("Logarithm of a zero series is undefined.")
 
-    if not dom.is_one(coeffs[0]):
+    if not dom.is_one(coeffs[-1]):
         raise ValueError(
             "Logarithm of a power series requires the constant term to be one."
         )

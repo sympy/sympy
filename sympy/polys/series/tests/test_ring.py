@@ -8,6 +8,22 @@ from sympy.external.gmpy import GROUND_TYPES
 import pytest
 from sympy.testing.pytest import raises
 from sympy.polys.polyerrors import NotReversible
+from sympy.polys.rings import ring
+from sympy.polys.ring_series import (
+    rs_log,
+    rs_exp,
+    rs_atan,
+    rs_atanh,
+    rs_asin,
+    rs_asinh,
+    rs_tan,
+    rs_tanh,
+    rs_sin,
+    rs_sinh,
+    rs_cos,
+    rs_cosh,
+)
+from sympy.polys.densebasic import dup_random
 
 # Rings
 Ring_ZZ: list[type[PowerSeriesRingProto]] = [PythonPowerSeriesRingZZ]
@@ -251,6 +267,9 @@ def test_sqrt(rd_rational):
     SeriesRing = rd_rational
     R = SeriesRing()
     R10 = SeriesRing(10)
+
+    assert R.equal_repr(R.sqrt(R([])), R([]))
+    raises(ValueError, lambda: R.sqrt(R([2, 2])))
 
     assert not R.equal_repr(
         R.sqrt(R.add(R.gen, R.one)), R([(1, 1), (1, 1), (1, 1)], None)
@@ -616,6 +635,7 @@ def test_log(rd_rational):
     R3 = SeriesRing(3)
     R10 = SeriesRing(10)
 
+    assert R.equal_repr(R.log(R([1])), R([]))
     raises(ValueError, lambda: R.log(R([])))
     raises(ValueError, lambda: R.log(R([(0, 1)])))
     raises(ValueError, lambda: R.log(R([(2, 1)])))
@@ -1006,3 +1026,33 @@ def test_cosh(rd_rational):
             10,
         ),
     )
+
+
+def test_high_deg(rd_rational):
+    SeriesRing = rd_rational
+    Rs = SeriesRing(30)
+    Rp, x = ring("x", QQ)
+
+    rand = dup_random(30, 0, 10, QQ)
+    rand[0] = 0
+    s = Rs(rand)
+    p = Rp.from_list(rand[::-1])
+
+    assert Rs.to_list(Rs.exp(s)) == (rs_exp(p, x, 30)).to_dense()[::-1]
+
+    assert Rs.to_list(Rs.atan(s)) == (rs_atan(p, x, 30)).to_dense()[::-1]
+    assert Rs.to_list(Rs.atanh(s)) == (rs_atanh(p, x, 30)).to_dense()[::-1]
+    assert Rs.to_list(Rs.asin(s)) == (rs_asin(p, x, 30)).to_dense()[::-1]
+    assert Rs.to_list(Rs.asinh(s)) == (rs_asinh(p, x, 30)).to_dense()[::-1]
+
+    assert Rs.to_list(Rs.tan(s)) == (rs_tan(p, x, 30)).to_dense()[::-1]
+    assert Rs.to_list(Rs.tanh(s)) == (rs_tanh(p, x, 30)).to_dense()[::-1]
+    assert Rs.to_list(Rs.sin(s)) == (rs_sin(p, x, 30)).to_dense()[::-1]
+    assert Rs.to_list(Rs.sinh(s)) == (rs_sinh(p, x, 30)).to_dense()[::-1]
+    assert Rs.to_list(Rs.cos(s)) == (rs_cos(p, x, 30)).to_dense()[::-1]
+    assert Rs.to_list(Rs.cosh(s)) == (rs_cosh(p, x, 30)).to_dense()[::-1]
+
+    rand[0] = 1
+    s = Rs(rand)
+    p = Rp.from_list(rand[::-1])
+    assert Rs.to_list(Rs.log(s)) == (rs_log(p, x, 30)).to_dense()[::-1]
