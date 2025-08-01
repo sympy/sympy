@@ -523,6 +523,7 @@ class Beam:
         >>> from sympy.physics.continuum_mechanics.beam import Beam
         >>> from sympy import symbols
         >>> E, I = symbols('E, I')
+        >>> R_0, R_20, M_0 = symbols('R_0, R_20, M_0')
         >>> b = Beam(20, E, I)
         >>> b.apply_support(0, 'fixed')
         >>> b.apply_support(20, 'roller')
@@ -545,6 +546,7 @@ class Beam:
         >>> from sympy.physics.continuum_mechanics.beam import Beam
         >>> from sympy import symbols
         >>> E, I = symbols('E, I')
+        >>> R_0, R_20, M_0 = symbols('R_0, R_20, M_0')
         >>> b = Beam(20, E, I)
         >>> b.apply_load(R_0, 0, -1)   # R_0 is the reaction load at 0
         >>> b.apply_load(M_0, 0, -2)   # M_0 is the moment reaction load at 0
