@@ -211,6 +211,7 @@ class Column:
         self._load += reaction_load * SingularityFunction(self.variable, loc, -1)
         self._bc_deflection.append(loc)
 
+
     def apply_load(self, value, start, order, end=None):
         """
         This method applies a load to the column object. Only
@@ -438,7 +439,7 @@ class Column:
         """
         return self._load
 
-    def solve_for_reaction_loads(self):
+    def solve_for_reaction_loads(self, *reactions):
         """
         This method solves the horizontal reaction loads and unknown
         displacement jumps due to telescope hinges.
@@ -483,14 +484,15 @@ class Column:
         eq_bc_hinge = [Eq(limit(axial_force, x, loc, dir='+'), 0) for loc in self._bc_hinge] # Just right to avoid infinity
 
         total_eq = eq_axial_force + eq_bc_displacement + eq_bc_hinge
-        unknowns = self._applied_supports + self._applied_hinges + [C_N, C_u]
+        unknowns = list(reactions) + self._applied_supports + self._applied_hinges + [C_N, C_u]
 
         solution = list((linsolve(total_eq, unknowns).args)[0])
         solution = [nsimplify(s, rational=True) for s in solution] # To get rid of tiny residuals
 
-        num_supports = len(self._applied_supports)
+        num_supports = len(reactions) + len(self._applied_supports)
         reaction_solutions = solution[:num_supports]
-        self._reaction_loads = dict(zip(self._applied_supports, reaction_solutions))
+        total_reactions = list(reactions) + self._applied_supports
+        self._reaction_loads = dict(zip(total_reactions, reaction_solutions))
 
         displacement_solutions = solution[num_supports:-2]
         self._hinge_deflections = dict(zip(self._applied_hinges, displacement_solutions))

@@ -503,10 +503,13 @@ test_telescope_hinge()
 
 def test_equations():
     c = Column(10, 210000, 1)
-    c.apply_support(0)
-    c.apply_support(10)
-    c.apply_load(5, 8, -1)
     R_0, R_10 = symbols("R_0 R_10")
+    c.apply_load(R_0,0,-1)
+    c.apply_load(R_10,10,-1)
+    c._bc_deflection.append(0)
+    c._bc_deflection.append(10)
+    c.apply_load(5, 8, -1)
+
     C_N, C_u = symbols("C_N C_u")
 
     # Test before solving the unkowns
@@ -529,7 +532,7 @@ def test_equations():
     assert p == q
 
     # Test after solving the unknowns
-    c.solve_for_reaction_loads()
+    c.solve_for_reaction_loads(R_0,R_10)
 
     p = c.axial_force()
     q = (
