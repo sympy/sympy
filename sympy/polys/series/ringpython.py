@@ -948,6 +948,11 @@ class PythonPowerSeriesRingZZ:
         coeffs, _ = s
         return coeffs[::-1]
 
+    def series_prec(self, s: USeries[MPZ]) -> int | None:
+        """Return the precision of a power series."""
+        _, prec = s
+        return prec
+
     def equal(self, s1: USeries[MPZ], s2: USeries[MPZ]) -> bool | None:
         """Check if two power series are equal up to their minimum precision."""
         return _useries_equality(s1, s2, self._domain)
@@ -1164,6 +1169,11 @@ class PythonPowerSeriesRingQQ:
         """Return the list of series coefficients."""
         coeffs, _ = s
         return coeffs[::-1]
+
+    def series_prec(self, s: USeries[MPQ]) -> int | None:
+        """Return the precision of a power series."""
+        _, prec = s
+        return prec
 
     def equal(self, s1: USeries[MPQ], s2: USeries[MPQ]) -> bool | None:
         """Check if two power series are equal up to their minimum precision."""

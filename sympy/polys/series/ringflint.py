@@ -197,6 +197,12 @@ class FlintPowerSeriesRingZZ:
         """Returns the list of series coefficients."""
         return s.coeffs()
 
+    def series_prec(self, s: ZZSeries) -> int | None:
+        """Return the precision of the series."""
+        if isinstance(s, fmpz_poly):
+            return None
+        return _get_series_precision(s)
+
     def equal(self, s1: ZZSeries, s2: ZZSeries) -> bool | None:
         """Check if two power series are equal up to their minimum precision."""
         if isinstance(s1, fmpz_poly) and isinstance(s2, fmpz_poly):
@@ -589,6 +595,12 @@ class FlintPowerSeriesRingQQ:
     def to_list(self, s: QQSeries) -> list[MPQ]:
         """Returns the list of series coefficients."""
         return s.coeffs()
+
+    def series_prec(self, s: QQSeries) -> int | None:
+        """Return the precision of the series."""
+        if isinstance(s, fmpq_poly):
+            return None
+        return _get_series_precision(s)
 
     def equal(self, s1: QQSeries, s2: QQSeries) -> bool | None:
         """Check if two power series are equal up to their minimum precision."""

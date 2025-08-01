@@ -93,6 +93,10 @@ class PowerSeriesRingProto(Protocol[TSeries, Er]):
         """Return the coefficients of a power series as a list."""
         ...
 
+    def series_prec(self, s: TSeries, /) -> int | None:
+        """Return the precision of a power series."""
+        ...
+
     def equal(self, s1: TSeries, s2: TSeries, /) -> bool | None:
         """Check if two power series are equal."""
         ...
