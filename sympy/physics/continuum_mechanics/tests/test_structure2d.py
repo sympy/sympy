@@ -541,16 +541,23 @@ def test_structure2d():
 
     # Alex Example 2 (https://oit.tudelft.nl/Macaulays-method/theses/Macaulay-2D/BEP%20v2.html)
     s = Structure2d()
-
-    s.add_member(0, 0, 4, 3, E, I, A)
-    s.add_member(4, 3, 8, 0, E, I, A)
-
-    s.apply_load(0, 0, 60, 0, 0, 4, 3)
-    s.apply_load(4, 3, 60, 0, 0, 8, 0)
-
+    s.add_member(0, 0, 3, 4, E, I, A)
+    s.add_member(3, 4, 6, 0, E, I, A)
+    s.apply_load(0, 0, 60, 0, 0, 3, 4)
+    s.apply_load(3, 4, 60, 0, 0, 6, 0)
     s.apply_support(0, 0, type='pin')
-    s.apply_support(8, 0, type='fixed')
-    assert list(s.solve_for_reaction_loads().values()) == [-12, 0, -12, 4]
+    s.apply_support(6, 0, type='pin')
+    assert list(s.solve_for_reaction_loads().values()) == [-300, -300, 200, -200]
+
+    # Alex Example 3 (https://oit.tudelft.nl/Macaulays-method/theses/Macaulay-2D/BEP%20v3.html)
+    s = Structure2d()
+    s.add_member(0, 0, 3, 4, E, I, A)
+    s.add_member(3, 4, 7, 1, E, I, A)
+    s.apply_load(3, 4, 18, 0, 0, 7, 1)
+    s.apply_load(3, 4, 60, 270,-1)
+    s.apply_support(0, 0, "fixed")
+    s.apply_support(7, 1, "roller")
+    assert list(s.solve_for_reaction_loads().values()) == [-90, -39.66, -20.34, 262.63]
 
 
     # Tests to check the integration of loads into the beam and column
