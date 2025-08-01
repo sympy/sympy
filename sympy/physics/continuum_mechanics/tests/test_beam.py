@@ -678,6 +678,7 @@ def test_remove_load():
 
 
 def test_apply_support():
+    # Test for applying supports using apply_support method.
     E = Symbol('E')
     I = Symbol('I')
 
@@ -691,12 +692,47 @@ def test_apply_support():
     assert simplify(b.deflection()) == simplify((40*SingularityFunction(x, 0, 2) - 10*SingularityFunction(x, 0, 3)/3
                 + 10*SingularityFunction(x, 4, 3)/3)/(E*I))
 
+    # Test for applying supports using apply_load method same above example.
+    E = Symbol('E')
+    I = Symbol('I')
+
+    b = Beam(4, E, I)
+    b.apply_load(R_0, 0, -1)
+    b.apply_load(M_0, 0, -2)
+    b.bc_deflection = [(0, 0)]
+    b.bc_slope = [(0, 0)]
+    b.apply_load(20, 4, -1)
+    M_0, R_0 = symbols('M_0, R_0')
+    b.solve_for_reaction_loads(R_0, M_0)
+    assert simplify(b.slope()) == simplify((80*SingularityFunction(x, 0, 1) - 10*SingularityFunction(x, 0, 2)
+                + 10*SingularityFunction(x, 4, 2))/(E*I))
+    assert simplify(b.deflection()) == simplify((40*SingularityFunction(x, 0, 2) - 10*SingularityFunction(x, 0, 3)/3
+                + 10*SingularityFunction(x, 4, 3)/3)/(E*I))
+    # Test for applying supports using apply_support method with roller, pin support.
     b = Beam(30, E, I)
     b.apply_support(10, "pin")
     b.apply_support(30, "roller")
     b.apply_load(-8, 0, -1)
     b.apply_load(120, 30, -2)
     b.solve_for_reaction_loads()
+    assert b.slope() == (-4*SingularityFunction(x, 0, 2) + 3*SingularityFunction(x, 10, 2)
+            + 120*SingularityFunction(x, 30, 1) + SingularityFunction(x, 30, 2) + Rational(4000, 3))/(E*I)
+    assert b.deflection() == (x*Rational(4000, 3) - 4*SingularityFunction(x, 0, 3)/3 + SingularityFunction(x, 10, 3)
+            + 60*SingularityFunction(x, 30, 2) + SingularityFunction(x, 30, 3)/3 - 12000)/(E*I)
+    R_10 = Symbol('R_10')
+    R_30 = Symbol('R_30')
+
+    assert b.reaction_loads == {R_10: 6, R_30: 2}
+    assert b.reaction_loads[R_10] == 6
+
+    # Test for applying supports using apply_load method same above example.
+    b = Beam(30, E, I)
+    b.apply_load(R_10,10,-1)
+    b.apply_load(R_30,30,-1)
+    b.bc_deflection = [(10, 0), (30, 0)]
+    b.apply_load(-8, 0, -1)
+    b.apply_load(120, 30, -2)
+    b.solve_for_reaction_loads(R_10, R_30)
     assert b.slope() == (-4*SingularityFunction(x, 0, 2) + 3*SingularityFunction(x, 10, 2)
             + 120*SingularityFunction(x, 30, 1) + SingularityFunction(x, 30, 2) + Rational(4000, 3))/(E*I)
     assert b.deflection() == (x*Rational(4000, 3) - 4*SingularityFunction(x, 0, 3)/3 + SingularityFunction(x, 10, 3)
@@ -936,7 +972,7 @@ def test_solve_for_ild_reactions():
     b.apply_support(0, type="pin")
     b.apply_support(10, type="pin")
     R_0, R_10 = symbols('R_0, R_10')
-    b.solve_for_ild_reactions(1,)
+    b.solve_for_ild_reactions(1)
     a = b.ild_variable
     assert b.ild_reactions == {R_0: -SingularityFunction(a, 0, 0) + SingularityFunction(a, 0, 1)/10
                                     - SingularityFunction(a, 10, 1)/10,

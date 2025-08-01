@@ -492,8 +492,11 @@ class Beam:
 
     def apply_support(self, loc, type="fixed"):
         """
-        This method applies support to a particular beam object and returns
-        the symbol of the unknown reaction load(s).
+        The supports can be applied via two methods in the module one using
+        the `apply_support` method and the other using the `apply_load` method.
+        The `apply_load` method is used to apply a support as a load and boundary conditions needed to be added manually, while
+        the `apply_support` method is used to apply a support as a support which automatically adds the necessary boundary conditions and creates a reaction unknown Symbol as R_location of the support.
+        This method applies support to a particular beam object via `apply_support`.
 
         Parameters
         ==========
@@ -506,12 +509,6 @@ class Beam:
             - one degree of freedom, type = "pin"
             - two degrees of freedom, type = "roller"
 
-        Returns
-        =======
-        Symbol or tuple of Symbol
-            The unknown reaction load as a symbol.
-            - Symbol(reaction_force) if type = "pin" or "roller"
-            - Symbol(reaction_force), Symbol(reaction_moment) if type = "fixed"
 
         Examples
         ========
@@ -526,13 +523,37 @@ class Beam:
         >>> from sympy.physics.continuum_mechanics.beam import Beam
         >>> from sympy import symbols
         >>> E, I = symbols('E, I')
-        >>> R_0 = symbols('R_0')
         >>> b = Beam(20, E, I)
         >>> b.apply_support(0, 'fixed')
         >>> b.apply_support(20, 'roller')
         >>> b.apply_load(-8, 10, -1)
         >>> b.apply_load(100, 20, -2)
         >>> b.solve_for_reaction_loads()
+        >>> b.reaction_loads
+        {M_0: 20, R_0: -2, R_20: 10}
+        >>> b.reaction_loads[R_0]
+        -2
+        >>> b.load
+        20*SingularityFunction(x, 0, -2) - 2*SingularityFunction(x, 0, -1)
+        - 8*SingularityFunction(x, 10, -1) + 100*SingularityFunction(x, 20, -2)
+        + 10*SingularityFunction(x, 20, -1)
+
+        The same example can be solved using the `apply_load` method
+        instead of `apply_support` method. The only difference is that the
+        boundary conditions need to be added manually.
+
+        >>> from sympy.physics.continuum_mechanics.beam import Beam
+        >>> from sympy import symbols
+        >>> E, I = symbols('E, I')
+        >>> b = Beam(20, E, I)
+        >>> b.apply_load(R_0, 0, -1)   # R_0 is the reaction load at 0
+        >>> b.apply_load(M_0, 0, -2)   # M_0 is the moment reaction load at 0
+        >>> b.apply_load(R_20, 20, -1) # R_20 is the reaction load at 20
+        >>> b.bc_deflection = [(0, 0), (20, 0)]
+        >>> b.bc_slope = [(0, 0)]
+        >>> b.apply_load(-8, 10, -1)
+        >>> b.apply_load(100, 20, -2)
+        >>> b.solve_for_reaction_loads(R_0, R_20, M_0)     # we need to pass all the reaction loads when applied via `apply_load`
         >>> b.reaction_loads
         {M_0: 20, R_0: -2, R_20: 10}
         >>> b.reaction_loads[R_0]
@@ -919,7 +940,18 @@ class Beam:
 
     def solve_for_reaction_loads(self, *reactions):
         """
-        Solves for the reaction forces.
+        This method solves for all the reaction loads, rotation jumps, deflection jumps.
+
+        Parameters
+        ==========
+        reactions : Symbol
+            The reaction loads to be solved for. If no reaction loads are passed,
+            it will solve for all the reaction loads present on the beam.
+            if supports are applied using `apply_support` method, the reaction loads
+            are automatically added to the beam object and can be solved for using
+            this method without explicitly passing them as arguments.
+            if supports are applied using `apply_load` method, the reaction loads
+            need to be passed as arguments to this method.
 
         Examples
         ========
@@ -1931,7 +1963,7 @@ class Beam:
         value : Integer
             Magnitude of moving load
         reactions :
-            The reaction forces applied on the beam.
+            The reaction forces applied on the beam pass reaction symbols if apply_load was used for applying supports and nothing if apply_support was used.
 
         Warning
         =======
@@ -2126,7 +2158,7 @@ class Beam:
         value : Integer
             Magnitude of moving load
         reactions :
-            The reaction forces applied on the beam.
+            The reaction forces applied on the beam. pass reaction symbols if apply_load() was used for applying supports and nothing if apply_support() was used.
 
         Warning
         =======
@@ -2271,7 +2303,7 @@ class Beam:
         value : Integer
             Magnitude of moving load
         reactions :
-            The reaction forces applied on the beam.
+            The reaction forces applied on the beam.pass reaction symbols if apply_load() was used for applying supports and nothing if apply_support() was used.
 
         Warning
         =======
@@ -2462,9 +2494,9 @@ class Beam:
             >>> b.apply_load(10, 30, 1, 50)
             >>> b.apply_load(M, 15, -2)
             >>> b.apply_load(-M, 30, -2)
-            >>> b.apply_support(50, "pin")
-            >>> b.apply_support(0, "fixed")
-            >>> b.apply_support(20, "roller")
+            >>> p50 = b.apply_support(50, "pin")
+            >>> p0, m0 = b.apply_support(0, "fixed")
+            >>> p20 = b.apply_support(20, "roller")
             >>> p = b.draw()  # doctest: +SKIP
             >>> p  # doctest: +ELLIPSIS,+SKIP
             Plot object containing:
@@ -2967,12 +2999,6 @@ class Beam3D(Beam):
             self._load_Singularity[0] += value*SingularityFunction(x, start, order)
 
     def apply_support(self, loc, type="fixed"):
-        if type in ("pin", "roller", "fixed"):
-            pass
-        else:
-            raise ValueError(
-                "Invalid support type. Choose from 'pin', 'roller', or 'fixed'."
-            )
         if type in ("pin", "roller"):
             reaction_load = Symbol('R_'+str(loc))
             self._reaction_loads[reaction_load] = reaction_load
