@@ -195,7 +195,6 @@ def test_flatten_simple_atoms_and_numbers():
 def test_flatten_lambdas_and_application_dummies():
     cc = EUFCongruenceClosure([])
 
-    f = Function('f')
     x, y = Symbol('x'), Symbol('y')
 
     # Lambda with multiple variables gets curried and flattened
