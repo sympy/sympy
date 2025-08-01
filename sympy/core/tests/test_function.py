@@ -1459,9 +1459,13 @@ def test_issue_27163():
     raises(TypeError, lambda: Derivative(f, t))
 
 
-def test_curry_two_args():
+def test_Lambda_curry():
     """
     Lambda((x, y), x + y) -> Lambda(x, Lambda(y, x + y))
+    Lambda(x, Lambda(y, x + y)) is already curried.
+    Lambda(x, x**2) should return itself.
+    Lambda((x, (y, z)), x*y*z) -> Lambda(x, Lambda(y, Lambda(z, x*y*z)))
+    Lambda((x, y, z), x*y + z) ==> Lambda(x, Lambda(y, Lambda(z, x*y+z)))
     """
     f = Lambda((x, y), x + y)
     fc = f.curry()
@@ -1470,30 +1474,12 @@ def test_curry_two_args():
     assert isinstance(fc.expr, Lambda)
     assert fc.expr.variables == (y,)
     assert fc.expr.expr == x + y
-
-
-def test_curry_already_curried():
-    """
-    Lambda(x, Lambda(y, x + y)) is already curried.
-    """
     c = Lambda(x, Lambda(y, x + y))
     out = c.curry()
     assert out == c
-
-
-def test_curry_single_var():
-    """
-    Lambda(x, x**2) should return itself.
-    """
     f = Lambda(x, x**2)
     out = f.curry()
     assert out == f
-
-
-def test_curry_tuple_in_tuple():
-    """
-    Lambda((x, (y, z)), x*y*z) -> Lambda(x, Lambda(y, Lambda(z, x*y*z)))
-    """
     f = Lambda((x, (y, z)), x*y*z)
     fc = f.curry()
     assert fc.variables == (x,)
@@ -1504,12 +1490,7 @@ def test_curry_tuple_in_tuple():
     assert isinstance(lv3, Lambda)
     assert lv3.variables == (z,)
     assert lv3.expr == x*y*z
-
-
-def test_curry_three_vars():
-    """
-    Lambda((x, y, z), x*y + z) ==> Lambda(x, Lambda(y, Lambda(z, x*y+z)))
-    """
+    assert fc == Lambda(x, Lambda(y, Lambda(z, x*y*z)))
     f = Lambda((x, y, z), x*y+z)
     fc = f.curry()
     assert isinstance(fc, Lambda)
@@ -1521,3 +1502,4 @@ def test_curry_three_vars():
     assert isinstance(lv3, Lambda)
     assert lv3.variables == (z,)
     assert lv3.expr == x*y+z
+    assert fc == Lambda(x, Lambda(y, Lambda(z, x*y+z)))
