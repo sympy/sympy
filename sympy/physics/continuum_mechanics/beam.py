@@ -2496,9 +2496,9 @@ class Beam:
             >>> b.apply_load(10, 30, 1, 50)
             >>> b.apply_load(M, 15, -2)
             >>> b.apply_load(-M, 30, -2)
-            >>> p50 = b.apply_support(50, "pin")
-            >>> p0, m0 = b.apply_support(0, "fixed")
-            >>> p20 = b.apply_support(20, "roller")
+            >>> b.apply_support(50, "pin")
+            >>> b.apply_support(0, "fixed")
+            >>> b.apply_support(20, "roller")
             >>> p = b.draw()  # doctest: +SKIP
             >>> p  # doctest: +ELLIPSIS,+SKIP
             Plot object containing:
