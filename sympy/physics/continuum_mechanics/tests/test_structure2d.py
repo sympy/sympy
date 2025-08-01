@@ -592,5 +592,3 @@ def test_structure2d():
     s.apply_support(5, -2, 'pin')
 
     assert list(s.solve_for_reaction_loads().values()) == [44.12, -44.12, 73.53, 26.47]
-
-
