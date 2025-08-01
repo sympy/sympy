@@ -8,6 +8,22 @@ from sympy.external.gmpy import GROUND_TYPES
 import pytest
 from sympy.testing.pytest import raises
 from sympy.polys.polyerrors import NotReversible
+from sympy.polys.rings import ring
+from sympy.polys.ring_series import (
+    rs_log,
+    rs_exp,
+    rs_atan,
+    rs_atanh,
+    rs_asin,
+    rs_asinh,
+    rs_tan,
+    rs_tanh,
+    rs_sin,
+    rs_sinh,
+    rs_cos,
+    rs_cosh,
+)
+from sympy.polys.densebasic import dup_random
 
 # Rings
 Ring_ZZ: list[type[PowerSeriesRingProto]] = [PythonPowerSeriesRingZZ]
@@ -244,6 +260,37 @@ def test_rational_square(rd_rational):
     )
     assert R10.equal_repr(
         R10.square(R10.subtract(R10.gen, R10.one)), R10([(1, 1), (-2, 1), (1, 1)], None)
+    )
+
+
+def test_sqrt(rd_rational):
+    SeriesRing = rd_rational
+    R = SeriesRing()
+    R10 = SeriesRing(10)
+
+    assert R.equal_repr(R.sqrt(R([])), R([]))
+    raises(ValueError, lambda: R.sqrt(R([2, 2])))
+
+    assert not R.equal_repr(
+        R.sqrt(R.add(R.gen, R.one)), R([(1, 1), (1, 1), (1, 1)], None)
+    )
+    assert R10.equal_repr(
+        R10.sqrt(R10.subtract(R10.one, R10.gen)),
+        R10(
+            [
+                (1, 1),
+                (-1, 2),
+                (-1, 8),
+                (-1, 16),
+                (-5, 128),
+                (-7, 256),
+                (-21, 1024),
+                (-33, 2048),
+                (-429, 32768),
+                (-715, 65536),
+            ],
+            10,
+        ),
     )
 
 
@@ -580,3 +627,432 @@ def test_rational_reversion(rd_rational):
             10,
         ),
     )
+
+
+def test_log(rd_rational):
+    SeriesRing = rd_rational
+    R = SeriesRing()
+    R3 = SeriesRing(3)
+    R10 = SeriesRing(10)
+
+    assert R.equal_repr(R.log(R([1])), R([]))
+    raises(ValueError, lambda: R.log(R([])))
+    raises(ValueError, lambda: R.log(R([(0, 1)])))
+    raises(ValueError, lambda: R.log(R([(2, 1)])))
+
+    assert R3.equal_repr(
+        R3.log(R3.add(R3.one, R3.gen)),
+        R3([(0, 1), (1, 1), (-1, 2)], 3),
+    )
+    assert R10.equal_repr(
+        R10.log(R10.add(R10.one, R10.gen)),
+        R10(
+            [
+                (0, 1),
+                (1, 1),
+                (-1, 2),
+                (1, 3),
+                (-1, 4),
+                (1, 5),
+                (-1, 6),
+                (1, 7),
+                (-1, 8),
+                (1, 9),
+            ],
+            10,
+        ),
+    )
+
+
+def test_exp(rd_rational):
+    SeriesRing = rd_rational
+    R = SeriesRing()
+    R3 = SeriesRing(3)
+    R10 = SeriesRing(10)
+
+    raises(ValueError, lambda: R.exp(R([1, 1])))
+    assert R.equal_repr(R.exp(R([])), R([1]))
+
+    assert R3.equal_repr(
+        R3.exp(R3.gen),
+        R3([(1, 1), (1, 1), (1, 2)], 3),
+    )
+    assert R10.equal_repr(
+        R10.exp(R10.gen),
+        R10(
+            [
+                (1, 1),
+                (1, 1),
+                (1, 2),
+                (1, 6),
+                (1, 24),
+                (1, 120),
+                (1, 720),
+                (1, 5040),
+                (1, 40320),
+                (1, 362880),
+            ],
+            10,
+        ),
+    )
+
+
+def test_atan(rd_rational):
+    SeriesRing = rd_rational
+    R = SeriesRing()
+    R3 = SeriesRing(3)
+    R10 = SeriesRing(10)
+
+    assert R.equal_repr(R.atan(R([])), R([]))
+    raises(ValueError, lambda: R.atan(R([2])))
+
+    assert R3.equal_repr(
+        R3.atan(R3.gen),
+        R3([(0, 1), (1, 1)], 3),
+    )
+
+    assert R10.equal_repr(
+        R10.atan(R10.gen),
+        R10(
+            [
+                (0, 1),
+                (1, 1),
+                (0, 1),
+                (-1, 3),
+                (0, 1),
+                (1, 5),
+                (0, 1),
+                (-1, 7),
+                (0, 1),
+                (1, 9),
+            ],
+            10,
+        ),
+    )
+
+
+def test_atanh(rd_rational):
+    SeriesRing = rd_rational
+    R = SeriesRing()
+    R3 = SeriesRing(3)
+    R10 = SeriesRing(10)
+
+    assert R.equal_repr(R.atanh(R([])), R([]))
+    raises(ValueError, lambda: R.atanh(R([1, 1])))
+
+    assert R3.equal_repr(
+        R3.atanh(R3.gen),
+        R3([(0, 1), (1, 1), (0, 1)], 3),
+    )
+    assert R10.equal_repr(
+        R10.atanh(R10.gen),
+        R10(
+            [
+                (0, 1),
+                (1, 1),
+                (0, 1),
+                (1, 3),
+                (0, 1),
+                (1, 5),
+                (0, 1),
+                (1, 7),
+                (0, 1),
+                (1, 9),
+            ],
+            10,
+        ),
+    )
+
+
+def test_asin(rd_rational):
+    SeriesRing = rd_rational
+    R = SeriesRing()
+    R3 = SeriesRing(3)
+    R10 = SeriesRing(10)
+
+    assert R.equal_repr(R.asin(R([])), R([]))
+    raises(ValueError, lambda: R.asin(R([1, 1])))
+
+    assert R3.equal_repr(
+        R3.asin(R3.gen),
+        R3([(0, 1), (1, 1), (0, 1)], 3),
+    )
+    assert R10.equal_repr(
+        R10.asin(R10.gen),
+        R10(
+            [
+                (0, 1),
+                (1, 1),
+                (0, 1),
+                (1, 6),
+                (0, 1),
+                (3, 40),
+                (0, 1),
+                (5, 112),
+                (0, 1),
+                (35, 1152),
+            ],
+            10,
+        ),
+    )
+
+
+def test_asinh(rd_rational):
+    SeriesRing = rd_rational
+    R = SeriesRing()
+    R3 = SeriesRing(3)
+    R10 = SeriesRing(10)
+
+    assert R.equal_repr(R.asinh(R([])), R([]))
+    raises(ValueError, lambda: R.asinh(R([1, 1])))
+
+    assert R3.equal_repr(
+        R3.asinh(R3.gen),
+        R3([(0, 1), (1, 1)], 3),
+    )
+    assert R10.equal_repr(
+        R10.asinh(R10.gen),
+        R10(
+            [
+                (0, 1),
+                (1, 1),
+                (0, 1),
+                (-1, 6),
+                (0, 1),
+                (3, 40),
+                (0, 1),
+                (-5, 112),
+                (0, 1),
+                (35, 1152),
+            ],
+            10,
+        ),
+    )
+
+
+def test_tan(rd_rational):
+    SeriesRing = rd_rational
+    R = SeriesRing()
+    R3 = SeriesRing(3)
+    R10 = SeriesRing(10)
+
+    assert R.equal_repr(R.tan(R([])), R([]))
+    raises(ValueError, lambda: R.tan(R([1, 1])))
+
+    assert R3.equal_repr(
+        R3.tan(R3.gen),
+        R3([(0, 1), (1, 1), (0, 1)], 3),
+    )
+    assert R10.equal_repr(
+        R10.tan(R10.gen),
+        R10(
+            [
+                (0, 1),
+                (1, 1),
+                (0, 1),
+                (1, 3),
+                (0, 1),
+                (2, 15),
+                (0, 1),
+                (17, 315),
+                (0, 1),
+                (62, 2835),
+            ],
+            10,
+        ),
+    )
+
+
+def test_tanh(rd_rational):
+    SeriesRing = rd_rational
+    R = SeriesRing()
+    R3 = SeriesRing(3)
+    R10 = SeriesRing(10)
+
+    assert R.equal_repr(R.tanh(R([])), R([]))
+    raises(ValueError, lambda: R.tanh(R([1, 1])))
+
+    assert R3.equal_repr(
+        R3.tanh(R3.gen),
+        R3([(0, 1), (1, 1), (0, 1)], 3),
+    )
+    assert R10.equal_repr(
+        R10.tanh(R10.gen),
+        R10(
+            [
+                (0, 1),
+                (1, 1),
+                (0, 1),
+                (-1, 3),
+                (0, 1),
+                (2, 15),
+                (0, 1),
+                (-17, 315),
+                (0, 1),
+                (62, 2835),
+            ],
+            10,
+        ),
+    )
+
+
+def test_sin(rd_rational):
+    SeriesRing = rd_rational
+    R = SeriesRing()
+    R3 = SeriesRing(3)
+    R10 = SeriesRing(10)
+
+    assert R.equal_repr(R.sin(R([])), R([]))
+    raises(ValueError, lambda: R.sin(R([1, 1])))
+
+    assert R3.equal_repr(
+        R3.sin(R3.gen),
+        R3([(0, 1), (1, 1), (0, 1)], 3),
+    )
+    assert R10.equal_repr(
+        R10.sin(R10.gen),
+        R10(
+            [
+                (0, 1),
+                (1, 1),
+                (0, 1),
+                (-1, 6),
+                (0, 1),
+                (1, 120),
+                (0, 1),
+                (-1, 5040),
+                (0, 1),
+                (1, 362880),
+            ],
+            10,
+        ),
+    )
+
+
+def test_sinh(rd_rational):
+    SeriesRing = rd_rational
+    R = SeriesRing()
+    R3 = SeriesRing(3)
+    R10 = SeriesRing(10)
+
+    assert R.equal_repr(R.sinh(R([])), R([]))
+    raises(ValueError, lambda: R.sinh(R([1, 1])))
+
+    assert R3.equal_repr(
+        R3.sinh(R3.gen),
+        R3([(0, 1), (1, 1), (0, 1)], 3),
+    )
+    assert R10.equal_repr(
+        R10.sinh(R10.gen),
+        R10(
+            [
+                (0, 1),
+                (1, 1),
+                (0, 1),
+                (1, 6),
+                (0, 1),
+                (1, 120),
+                (0, 1),
+                (1, 5040),
+                (0, 1),
+                (1, 362880),
+            ],
+            10,
+        ),
+    )
+
+
+def test_cos(rd_rational):
+    SeriesRing = rd_rational
+    R = SeriesRing()
+    R3 = SeriesRing(3)
+    R10 = SeriesRing(10)
+
+    assert R.equal_repr(R.cos(R([])), R([]))
+    raises(ValueError, lambda: R.cos(R([1, 1])))
+
+    assert R3.equal_repr(
+        R3.cos(R3.gen),
+        R3([(1, 1), (0, 1), (-1, 2)], 3),
+    )
+    assert R10.equal_repr(
+        R10.cos(R10.gen),
+        R10(
+            [
+                (1, 1),
+                (0, 1),
+                (-1, 2),
+                (0, 1),
+                (1, 24),
+                (0, 1),
+                (-1, 720),
+                (0, 1),
+                (1, 40320),
+                (0, 1),
+            ],
+            10,
+        ),
+    )
+
+
+def test_cosh(rd_rational):
+    SeriesRing = rd_rational
+    R = SeriesRing()
+    R3 = SeriesRing(3)
+    R10 = SeriesRing(10)
+
+    assert R.equal_repr(R.cosh(R([])), R([]))
+    raises(ValueError, lambda: R.cosh(R([1, 1])))
+
+    assert R3.equal_repr(
+        R3.cosh(R3.gen),
+        R3([(1, 1), (0, 1), (1, 2)], 3),
+    )
+    assert R10.equal_repr(
+        R10.cosh(R10.gen),
+        R10(
+            [
+                (1, 1),
+                (0, 1),
+                (1, 2),
+                (0, 1),
+                (1, 24),
+                (0, 1),
+                (1, 720),
+                (0, 1),
+                (1, 40320),
+                (0, 1),
+            ],
+            10,
+        ),
+    )
+
+
+def test_high_deg(rd_rational):
+    SeriesRing = rd_rational
+    Rs = SeriesRing(30)
+    Rp, x = ring("x", QQ)
+
+    rand = dup_random(30, 0, 10, QQ)
+    rand[0] = 0
+    s = Rs(rand)
+    p = Rp.from_list(rand[::-1])
+
+    assert Rs.to_list(Rs.exp(s)) == (rs_exp(p, x, 30)).to_dense()[::-1]
+
+    assert Rs.to_list(Rs.atan(s)) == (rs_atan(p, x, 30)).to_dense()[::-1]
+    assert Rs.to_list(Rs.atanh(s)) == (rs_atanh(p, x, 30)).to_dense()[::-1]
+    assert Rs.to_list(Rs.asin(s)) == (rs_asin(p, x, 30)).to_dense()[::-1]
+    assert Rs.to_list(Rs.asinh(s)) == (rs_asinh(p, x, 30)).to_dense()[::-1]
+
+    assert Rs.to_list(Rs.tan(s)) == (rs_tan(p, x, 30)).to_dense()[::-1]
+    assert Rs.to_list(Rs.tanh(s)) == (rs_tanh(p, x, 30)).to_dense()[::-1]
+    assert Rs.to_list(Rs.sin(s)) == (rs_sin(p, x, 30)).to_dense()[::-1]
+    assert Rs.to_list(Rs.sinh(s)) == (rs_sinh(p, x, 30)).to_dense()[::-1]
+    assert Rs.to_list(Rs.cos(s)) == (rs_cos(p, x, 30)).to_dense()[::-1]
+    assert Rs.to_list(Rs.cosh(s)) == (rs_cosh(p, x, 30)).to_dense()[::-1]
+
+    rand[0] = 1
+    s = Rs(rand)
+    p = Rp.from_list(rand[::-1])
+    assert Rs.to_list(Rs.log(s)) == (rs_log(p, x, 30)).to_dense()[::-1]

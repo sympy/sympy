@@ -729,6 +729,17 @@ class FlintPowerSeriesRingQQ:
         """Compute the square of a power series."""
         return self.pow_int(s, 2)
 
+    def sqrt(self, s: QQSeries) -> QQSeries:
+        """Compute the square root of a power series."""
+        if not s:
+            return s
+
+        if isinstance(s, fmpq_poly):
+            s = fmpq_series(s, prec=self._prec)
+
+        with _global_cap(self._prec):
+            return s.sqrt()
+
     def compose(self, s1: QQSeries, s2: QQSeries) -> QQSeries:
         """Compose two power series, `s1(s2)`."""
         dom: Domain[MPQ] = self._domain
@@ -838,3 +849,133 @@ class FlintPowerSeriesRingQQ:
             return fmpq_series(poly, prec=self._prec)
         with _global_cap(self._prec):
             return s.integral()
+
+    def log(self, s: QQSeries) -> QQSeries:
+        """Compute the logarithm of a power series."""
+        if isinstance(s, fmpq_poly):
+            if s == 1:
+                return fmpq_poly([])
+            s = fmpq_series(s, prec=self._prec)
+
+        with _global_cap(self._prec):
+            return s.log()
+
+    def exp(self, s: QQSeries) -> QQSeries:
+        """Compute the exponential of a power series."""
+        if isinstance(s, fmpq_poly):
+            if not s:
+                return fmpq_poly([1])
+            s = fmpq_series(s, prec=self._prec)
+
+        with _global_cap(self._prec):
+            return s.exp()
+
+    def atan(self, s: QQSeries) -> QQSeries:
+        """Compute the arctangent of a power series."""
+        if not s:
+            return s
+
+        if isinstance(s, fmpq_poly):
+            s = fmpq_series(s, prec=self._prec)
+
+        with _global_cap(self._prec):
+            return s.atan()
+
+    def atanh(self, s: QQSeries) -> QQSeries:
+        """Compute the hyperbolic arctangent of a power series."""
+        if not s:
+            return s
+
+        if isinstance(s, fmpq_poly):
+            s = fmpq_series(s, prec=self._prec)
+
+        with _global_cap(self._prec):
+            return s.atanh()
+
+    def asin(self, s: QQSeries) -> QQSeries:
+        """Compute the arcsine of a power series."""
+        if not s:
+            return s
+
+        if isinstance(s, fmpq_poly):
+            s = fmpq_series(s, prec=self._prec)
+
+        with _global_cap(self._prec):
+            return s.asin()
+
+    def asinh(self, s: QQSeries) -> QQSeries:
+        """Compute the hyperbolic arcsine of a power series."""
+        if not s:
+            return s
+
+        if isinstance(s, fmpq_poly):
+            s = fmpq_series(s, prec=self._prec)
+
+        with _global_cap(self._prec):
+            return s.asinh()
+
+    def tan(self, s: QQSeries) -> QQSeries:
+        """Compute the tangent of a power series."""
+        if not s:
+            return s
+
+        if isinstance(s, fmpq_poly):
+            s = fmpq_series(s, prec=self._prec)
+
+        with _global_cap(self._prec):
+            return s.tan()
+
+    def tanh(self, s: QQSeries) -> QQSeries:
+        """Compute the hyperbolic tangent of a power series."""
+        if not s:
+            return s
+
+        if isinstance(s, fmpq_poly):
+            s = fmpq_series(s, prec=self._prec)
+
+        with _global_cap(self._prec):
+            return s.tanh()
+
+    def sin(self, s: QQSeries) -> QQSeries:
+        """Compute the sine of a power series."""
+        if not s:
+            return s
+
+        if isinstance(s, fmpq_poly):
+            s = fmpq_series(s, prec=self._prec)
+
+        with _global_cap(self._prec):
+            return s.sin()
+
+    def sinh(self, s: QQSeries) -> QQSeries:
+        """Compute the hyperbolic sine of a power series."""
+        if not s:
+            return s
+
+        if isinstance(s, fmpq_poly):
+            s = fmpq_series(s, prec=self._prec)
+
+        with _global_cap(self._prec):
+            return s.sinh()
+
+    def cos(self, s: QQSeries) -> QQSeries:
+        """Compute the cosine of a power series."""
+        if not s:
+            return s
+
+        if isinstance(s, fmpq_poly):
+            s = fmpq_series(s, prec=self._prec)
+
+        with _global_cap(self._prec):
+            return s.cos()
+
+    def cosh(self, s: QQSeries) -> QQSeries:
+        """Compute the hyperbolic cosine of a power series."""
+        if not s:
+            return s
+
+        if isinstance(s, fmpq_poly):
+            s = fmpq_series(s, prec=self._prec)
+
+        with _global_cap(self._prec):
+            return s.cosh()

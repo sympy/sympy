@@ -7,6 +7,7 @@ if TYPE_CHECKING:
 
 from sympy.polys.densearith import (
     dup_add,
+    dup_add_ground,
     dup_mul,
     dup_mul_ground,
     dup_neg,
@@ -31,6 +32,7 @@ from sympy.polys.domains.domain import Er, Ef
 from sympy.polys.domains.field import Field
 from sympy.polys.series.base import series_pprint
 from sympy.external.gmpy import MPZ, MPQ
+from sympy.polys.ring_series import _giant_steps
 
 
 USeries: TypeAlias = "tuple[dup[Er], Union[int, None]]"
@@ -150,6 +152,23 @@ def _useries_add(
     return dup_add(coeffs1, coeffs2, dom), prec
 
 
+def _useries_add_ground(
+    s: USeries[Er], n: Er, dom: Domain[Er], ring_prec: int
+) -> USeries[Er]:
+    """
+    Helper function to add a ground element to a power series.
+
+    Mostly need for the series expansion of functions like exp, log, etc.
+    """
+    coeffs, prec = s
+
+    if n == 0:
+        return s
+
+    series = dup_add_ground(coeffs, n, dom)
+    return _useries(series, prec, dom, ring_prec)
+
+
 def _useries_sub(
     s1: USeries[Er], s2: USeries[Er], dom: Domain[Er], ring_prec: int
 ) -> USeries[Er]:
@@ -195,6 +214,36 @@ def _useries_mul_ground(
 
     series = dup_mul_ground(coeffs, n, dom)
     return _useries(series, prec, dom, ring_prec)
+
+
+def _useries_square(s: USeries[Er], dom: Domain[Er], ring_prec: int) -> USeries[Er]:
+    """Compute the square of a power series."""
+    return _useries_mul(s, s, dom, ring_prec)
+
+
+def _useries_sqrt(s: USeries[Ef], dom: Field[Ef], ring_prec: int) -> USeries[Ef]:
+    """Compute the square root of a power series."""
+    coeffs, prec = s
+
+    if not coeffs:
+        return s
+
+    if not dom.is_one(coeffs[-1]):
+        raise ValueError("Square root requires the constant term to be one.")
+
+    if prec is None:
+        prec = ring_prec
+
+    p: USeries[Ef] = ([dom.one], prec)
+    # P_{n+1} = 0.5 * (P_n + S / P_n)
+    for precx in _giant_steps(prec):
+        p = p[0], precx
+        p_inv = _useries_inverse(p, dom, precx)
+        tmp = _useries_mul(s, p_inv, dom, precx)
+        tmp = _useries_add(p, tmp, dom, precx)
+        p = _useries_div_ground(tmp, dom(2), dom, precx)
+
+    return p
 
 
 def _useries_div_direct(
@@ -250,6 +299,22 @@ def _useries_div(
 
         _, _, prec = _unify_prec(shifted_s1, shifted_s2, dom, ring_prec)
         return q_coeffs, prec
+
+
+def _useries_div_ground(
+    s: USeries[Er], n: Er, dom: Domain[Er], ring_prec: int
+) -> USeries[Er]:
+    coeffs, prec = s
+
+    if n == 0:
+        raise ZeroDivisionError("Division by zero in power series")
+    if n == 1:
+        return s
+    if n == -1:
+        return _useries_neg(s, dom, ring_prec)
+
+    series = dup_mul_ground(coeffs, dom.revert(n), dom)
+    return _useries(series, prec, dom, ring_prec)
 
 
 def _useries_pow_int(
@@ -369,6 +434,370 @@ def _useries_integrate(s: USeries[Ef], dom: Field[Ef], ring_prec: int) -> USerie
     if prec:
         prec += 1
     return _useries(series, prec, dom, ring_prec)
+
+
+def _useries_log(s: USeries[Ef], dom: Field[Ef], ring_prec: int) -> USeries[Ef]:
+    """Compute the logarithm of a power series."""
+    coeffs, prec = s
+
+    if not coeffs:
+        raise ValueError("Logarithm of a zero series is undefined.")
+
+    if not dom.is_one(coeffs[-1]):
+        raise ValueError(
+            "Logarithm of a power series requires the constant term to be one."
+        )
+
+    if prec is None:
+        s = coeffs, ring_prec
+
+    if len(coeffs) == 1:
+        return ([], prec)
+
+    dv_s = _useries_derivative(s, dom, ring_prec)
+    inverse_s = _useries_inverse(s, dom, ring_prec)
+    log_derivative = _useries_mul(dv_s, inverse_s, dom, ring_prec)
+    return _useries_integrate(log_derivative, dom, ring_prec)
+
+
+def _useries_exp(s: USeries[Ef], dom: Field[Ef], ring_prec: int) -> USeries[Ef]:
+    coeffs, prec = s
+
+    if not coeffs:
+        return ([dom.one], prec)
+
+    if not dom.is_zero(coeffs[-1]):
+        raise ValueError(
+            "Exponential requires the constant term of the input series to be zero."
+        )
+
+    if prec is None:
+        prec = ring_prec
+        s = coeffs, prec
+
+    one: USeries[Ef] = ([dom.one], prec)
+
+    if len(coeffs) > 20:
+        exp = one
+
+        for precx in _giant_steps(prec):
+            exp = exp[0], precx
+            log_exp = _useries_log(exp, dom, ring_prec)
+            diff = _useries_sub(s, log_exp, dom, ring_prec)
+            corr = _useries_mul(diff, exp, dom, ring_prec)
+            exp = _useries_add(exp, corr, dom, ring_prec)
+
+        return exp
+
+    else:
+        n: Ef = dom(1)
+        c: list[Ef] = []
+        for k in range(prec):
+            c.append(dom.revert(n))
+            k += 1
+            n *= dom(k)
+
+        f: USeries[Ef] = c[::-1], prec
+        r = _useries_compose(f, s, dom, ring_prec)
+        return r
+
+
+def _useries_atan(s: USeries[Ef], dom: Field[Ef], ring_prec: int) -> USeries[Ef]:
+    """Compute the arctangent of a power series."""
+    coeffs, prec = s
+
+    if not coeffs:
+        return s
+
+    if not dom.is_zero(coeffs[-1]):
+        raise ValueError(
+            "Arctangent requires the constant term of the input series to be zero."
+        )
+
+    if prec is None:
+        prec = ring_prec
+
+    ds = _useries_derivative(s, dom, ring_prec)
+    s2 = _useries_square(s, dom, ring_prec)
+    s2 = _useries_add_ground(s2, dom.one, dom, ring_prec)  # 1 + s^2
+    inv_s2 = _useries_inverse(s2, dom, ring_prec)
+    dv_s = _useries_mul(ds, inv_s2, dom, ring_prec)
+    dv_s = dv_s[0], prec - 1
+    return _useries_integrate(dv_s, dom, ring_prec)
+
+
+def _useries_atanh(s: USeries[Ef], dom: Field[Ef], ring_prec: int) -> USeries[Ef]:
+    """Compute the hyperbolic arctanh of a power series"""
+    coeffs, prec = s
+
+    if not coeffs:
+        return s
+
+    if not dom.is_zero(coeffs[-1]):
+        raise ValueError(
+            "Hyperbolic Arctanget requires the constant term of the input series to be zero."
+        )
+
+    if prec is None:
+        s = coeffs, ring_prec
+
+    ds = _useries_derivative(s, dom, ring_prec)
+    s2 = _useries_square(s, dom, ring_prec)
+    neg_s2 = _useries_neg(s2, dom, ring_prec)
+    q = _useries_add_ground(neg_s2, dom.one, dom, ring_prec)
+    q_inv = _useries_inverse(q, dom, ring_prec)
+    dv_atanh = _useries_mul(ds, q_inv, dom, ring_prec)
+    return _useries_integrate(dv_atanh, dom, ring_prec)
+
+
+def _useries_asin(s: USeries[Ef], dom: Field[Ef], ring_prec: int) -> USeries[Ef]:
+    """Compute the hyperbolic arcsine of a power series."""
+    coeffs, prec = s
+
+    if not coeffs:
+        return s
+
+    if not dom.is_zero(coeffs[-1]):
+        raise ValueError(
+            "Hyperbolic arcsine requires the constant term of the input series to be zero."
+        )
+
+    if prec is None:
+        prec = ring_prec
+
+    if len(coeffs) > 20:
+        ds = _useries_derivative(s, dom, ring_prec)
+        s2 = _useries_square(s, dom, ring_prec)
+        neg_s2 = _useries_neg(s2, dom, ring_prec)
+        q = _useries_add_ground(neg_s2, dom.one, dom, ring_prec)
+        q_sqrt = _useries_sqrt(q, dom, ring_prec)
+        q_sqrt_inv = _useries_inverse(q_sqrt, dom, ring_prec)  # 1 / sqrt(1 - s^2)
+
+        dv_asin = _useries_mul(ds, q_sqrt_inv, dom, ring_prec)
+        return _useries_integrate(dv_asin, dom, ring_prec)
+
+    c: list[Ef] = [dom.zero, dom.one, dom.zero]
+    for k in range(3, prec, 2):
+        c.append((k - 2) ** 2 * c[-2] / (k * (k - 1)))
+        c.append(dom.zero)
+
+    f: USeries[Ef] = (c[::-1], prec)
+    return _useries_compose(f, s, dom, ring_prec)
+
+
+def _useries_asinh(s: USeries[Ef], dom: Field[Ef], ring_prec: int) -> USeries[Ef]:
+    """Compute the hyperbolic arcsin of a power series"""
+    coeffs, prec = s
+
+    if not coeffs:
+        return s
+
+    if not dom.is_zero(coeffs[-1]):
+        raise ValueError(
+            "Hyperbolic Arcsine requires the constant term of the input series to be zero."
+        )
+
+    if prec is None:
+        s = coeffs, ring_prec
+
+    ds = _useries_derivative(s, dom, ring_prec)
+    s2 = _useries_square(s, dom, ring_prec)
+    q = _useries_add_ground(s2, dom.one, dom, ring_prec)
+    q_sqrt = _useries_sqrt(q, dom, ring_prec)
+    q_sqrt_inv = _useries_inverse(q_sqrt, dom, ring_prec)  # 1 / sqrt(1 + s^2)
+
+    dv_asinh = _useries_mul(ds, q_sqrt_inv, dom, ring_prec)
+    return _useries_integrate(dv_asinh, dom, ring_prec)
+
+
+def _useries_tan(s: USeries[Ef], dom: Field[Ef], ring_prec: int) -> USeries[Ef]:
+    """Compute the tangent of a power series."""
+    coeffs, prec = s
+
+    if not coeffs:
+        return s
+
+    if not dom.is_zero(coeffs[-1]):
+        raise ValueError(
+            "Tangent requires the constant term of the input series to be zero."
+        )
+
+    if prec is None:
+        prec = ring_prec
+
+    y: USeries[Ef] = ([], prec)
+    # y_{n+1} = y_n + (s - \arctan(y_n)) * (1 + y_n^2)
+    #                       term1            term2
+    for precx in _giant_steps(prec):
+        y = y[0], precx
+        term1 = _useries_atan(y, dom, ring_prec)
+        term1 = _useries_sub(s, term1, dom, ring_prec)
+
+        term2 = _useries_square(y, dom, ring_prec)
+        term2 = _useries_add_ground(term2, dom.one, dom, ring_prec)
+
+        mul = _useries_mul(term1, term2, dom, ring_prec)
+        y = _useries_add(y, mul, dom, ring_prec)
+
+    return y
+
+
+def _useries_tanh(s: USeries[Ef], dom: Field[Ef], ring_prec: int) -> USeries[Ef]:
+    """Compute the hyperbolic tangent of a power series."""
+    coeffs, prec = s
+
+    if not coeffs:
+        return s
+
+    if not dom.is_zero(coeffs[-1]):
+        raise ValueError(
+            "Hyperbolic Tangent requires the constant term of the input series to be zero."
+        )
+
+    if prec is None:
+        prec = ring_prec
+
+    y: USeries[Ef] = ([], prec)
+    # y_{n+1} = y_n + (s - \arctanh(y_n)) * (1 - y_n^2)
+    #                       term1            term2
+    for precx in _giant_steps(prec):
+        y = y[0], precx
+        term1 = _useries_atanh(y, dom, ring_prec)
+        term1 = _useries_sub(s, term1, dom, ring_prec)
+
+        term2 = _useries_square(y, dom, ring_prec)
+        neg_term2 = _useries_neg(term2, dom, ring_prec)
+        term2 = _useries_add_ground(neg_term2, dom.one, dom, ring_prec)
+
+        mul = _useries_mul(term1, term2, dom, ring_prec)
+        y = _useries_add(y, mul, dom, ring_prec)
+
+    return y
+
+
+def _useries_sin(s: USeries[Ef], dom: Field[Ef], ring_prec: int) -> USeries[Ef]:
+    """Compute the sine of a power series."""
+    coeffs, prec = s
+
+    if not coeffs:
+        return s
+
+    if not dom.is_zero(coeffs[-1]):
+        raise ValueError(
+            "Sine requires the constant term of the input series to be zero."
+        )
+
+    if prec is None:
+        prec = ring_prec
+
+    if len(coeffs) > 20:
+        # t = tan(s/2)
+        s = _useries_div_ground(s, dom(2), dom, ring_prec)
+        t = _useries_tan(s, dom, ring_prec)
+        t_sq = _useries_square(t, dom, ring_prec)
+
+        p = _useries_mul_ground(t, dom(2), dom, ring_prec)  # 2*t
+
+        q = _useries_add_ground(t_sq, dom.one, dom, ring_prec)
+        q_inv = _useries_inverse(q, dom, ring_prec)  # 1/(1 + t^2)
+
+        return _useries_mul(p, q_inv, dom, ring_prec)
+
+    else:
+        n: Ef = dom.one
+        c: list[Ef] = [dom.zero]
+
+        for k in range(2, prec + 2, 2):
+            c.append(dom.revert(n))
+            c.append(dom.zero)
+            n *= -k * (k + 1)
+
+        f: USeries[Ef] = (c[::-1], prec)
+        return _useries_compose(f, s, dom, ring_prec)
+
+
+def _useries_sinh(s: USeries[Ef], dom: Field[Ef], ring_prec: int) -> USeries[Ef]:
+    """Compute the hyperbolic sine of a power series"""
+    coeffs, prec = s
+
+    if not coeffs:
+        return s
+
+    if not dom.is_zero(coeffs[-1]):
+        raise ValueError(
+            "Hyperbolic sine requires the constant term of the input series to be zero."
+        )
+
+    if prec is None:
+        prec = ring_prec
+
+    e = _useries_exp(s, dom, ring_prec)
+    e_inv = _useries_inverse(e, dom, ring_prec)
+    diff = _useries_sub(e, e_inv, dom, ring_prec)
+    return _useries_div_ground(diff, dom(2), dom, ring_prec)
+
+
+def _useries_cos(s: USeries[Ef], dom: Field[Ef], ring_prec: int) -> USeries[Ef]:
+    """Compute the cosine of a power series."""
+    coeffs, prec = s
+
+    if not coeffs:
+        return s
+
+    if not dom.is_zero(coeffs[-1]):
+        raise ValueError(
+            "Cosine requires the constant term of the input series to be zero."
+        )
+
+    if prec is None:
+        prec = ring_prec
+
+    if len(coeffs) > 20:
+        # t = tan(s/2)
+        s = _useries_div_ground(s, dom(2), dom, ring_prec)
+        t = _useries_tan(s, dom, ring_prec)
+
+        t_sq = _useries_square(t, dom, ring_prec)  # t_sq = tan^2(s/2)
+
+        neg_t_sq = _useries_neg(t_sq, dom, ring_prec)
+        p = _useries_add_ground(neg_t_sq, dom.one, dom, ring_prec)  # 1 - tan^2(s/2)
+
+        q = _useries_add_ground(t_sq, dom.one, dom, ring_prec)
+        q_inv = _useries_inverse(q, dom, ring_prec)  # 1/(1 + tan^2(s/2))
+
+        return _useries_mul(p, q_inv, dom, ring_prec)
+    else:
+        n: Ef = dom.one
+        c: list[Ef] = []
+
+        for k in range(2, prec + 2, 2):
+            c.append(dom.revert(n))
+            c.append(dom.zero)
+            n *= -k * (k - 1)
+
+        f: USeries[Ef] = (c[::-1], prec)
+        return _useries_compose(f, s, dom, ring_prec)
+
+
+def _useries_cosh(s: USeries[Ef], dom: Field[Ef], ring_prec: int) -> USeries[Ef]:
+    """Compute the hyperbolic cosine of a power series"""
+    coeffs, prec = s
+
+    if not coeffs:
+        return s
+
+    if not dom.is_zero(coeffs[-1]):
+        raise ValueError(
+            "Hyperbolic cosine requires the constant term of the input series to be zero."
+        )
+
+    if prec is None:
+        prec = ring_prec
+
+    e = _useries_exp(s, dom, ring_prec)
+    e_inv = _useries_inverse(e, dom, ring_prec)
+    diff = _useries_add(e, e_inv, dom, ring_prec)
+    return _useries_div_ground(diff, dom(2), dom, ring_prec)
 
 
 class PythonPowerSeriesRingZZ:
@@ -778,7 +1207,11 @@ class PythonPowerSeriesRingQQ:
 
     def square(self, s: USeries[MPQ]) -> USeries[MPQ]:
         """Compute the square of a power series."""
-        return _useries_mul(s, s, self._domain, self._prec)
+        return _useries_square(s, self._domain, self._prec)
+
+    def sqrt(self, s: USeries[MPQ]) -> USeries[MPQ]:
+        """Compute the sqrt of a power series."""
+        return _useries_sqrt(s, self._domain, self._prec)
 
     def compose(self, s1: USeries[MPQ], s2: USeries[MPQ]) -> USeries[MPQ]:
         """Compose two power series, `s1(s2)`."""
@@ -803,3 +1236,51 @@ class PythonPowerSeriesRingQQ:
     def integrate(self, s: USeries[MPQ]) -> USeries[MPQ]:
         """Compute the integral of a power series."""
         return _useries_integrate(s, self._domain, self._prec)
+
+    def log(self, s: USeries[MPQ]) -> USeries[MPQ]:
+        """Compute the logarithm of a power series."""
+        return _useries_log(s, self._domain, self._prec)
+
+    def exp(self, s: USeries[MPQ]) -> USeries[MPQ]:
+        """Compute the exponential of a power series."""
+        return _useries_exp(s, self._domain, self._prec)
+
+    def atan(self, s: USeries[MPQ]) -> USeries[MPQ]:
+        """Compute the arctangent of a power series."""
+        return _useries_atan(s, self._domain, self._prec)
+
+    def atanh(self, s: USeries[MPQ]) -> USeries[MPQ]:
+        """Compute the hyperbolic arctangent of a power series."""
+        return _useries_atanh(s, self._domain, self._prec)
+
+    def asin(self, s: USeries[MPQ]) -> USeries[MPQ]:
+        """Compute the arcsine of a power series."""
+        return _useries_asin(s, self._domain, self._prec)
+
+    def asinh(self, s: USeries[MPQ]) -> USeries[MPQ]:
+        """Compute the hyperbolic arcsine of a power series."""
+        return _useries_asinh(s, self._domain, self._prec)
+
+    def tan(self, s: USeries[MPQ]) -> USeries[MPQ]:
+        """Compute the tangent of a power series."""
+        return _useries_tan(s, self._domain, self._prec)
+
+    def tanh(self, s: USeries[MPQ]) -> USeries[MPQ]:
+        """Compute the hyperbolic tangent of a power series."""
+        return _useries_tanh(s, self._domain, self._prec)
+
+    def sin(self, s: USeries[MPQ]) -> USeries[MPQ]:
+        """Compute the sine of a power series."""
+        return _useries_sin(s, self._domain, self._prec)
+
+    def sinh(self, s: USeries[MPQ]) -> USeries[MPQ]:
+        """Compute the hyperbolic sine of a power series."""
+        return _useries_sinh(s, self._domain, self._prec)
+
+    def cos(self, s: USeries[MPQ]) -> USeries[MPQ]:
+        """Compute the cosine of a power series."""
+        return _useries_cos(s, self._domain, self._prec)
+
+    def cosh(self, s: USeries[MPQ]) -> USeries[MPQ]:
+        """Compute the hyperbolic cosine of a power series."""
+        return _useries_cosh(s, self._domain, self._prec)

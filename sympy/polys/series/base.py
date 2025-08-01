@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Protocol, Sequence, TypeVar
 from sympy.polys.domains import Domain
-from sympy.polys.domains.domain import Er
+from sympy.polys.domains.domain import Ef, Er
 from sympy.polys.densebasic import dup, dup_pretty
 
 
@@ -135,4 +135,92 @@ class PowerSeriesRingProto(Protocol[TSeries, Er]):
 
     def truncate(self, s: TSeries, n: int, /) -> TSeries:
         """Truncate a power series to the first n terms."""
+        ...
+
+
+class PowerSeriesRingProtoZZ(PowerSeriesRingProto[TSeries, Er], Protocol[TSeries, Er]):
+    """A protocol for a power series ring over ZZ."""
+
+    def __call__(self, coeffs: Sequence[Er | int], prec: int | None = None) -> TSeries:
+        """Return a power series element over ZZ."""
+        ...
+
+    def compose(self, s1: TSeries, s2: TSeries, /) -> TSeries:
+        """Compose two power series."""
+        ...
+
+    def inverse(self, s: TSeries, /) -> TSeries:
+        """Return the inverse of a power series."""
+        ...
+
+    def reversion(self, s: TSeries, /) -> TSeries:
+        """Return the reversion of a power series."""
+        ...
+
+    def derivative(self, s: TSeries, /) -> TSeries:
+        """Return the derivative of a power series."""
+        ...
+
+
+class PowerSeriesRingProtoQQ(
+    PowerSeriesRingProtoZZ[TSeries, Ef], Protocol[TSeries, Ef]
+):
+    """A protocol for a power series ring over QQ."""
+
+    def __call__(
+        self, coeffs: Sequence[Ef | int | tuple[int, int]], prec: int | None = None
+    ) -> TSeries:
+        """Return a power series element over QQ."""
+        ...
+
+    def sqrt(self, s: TSeries, /) -> TSeries:
+        """Return the square root of a power seris."""
+        ...
+
+    def log(self, s: TSeries, /) -> TSeries:
+        """Return the logarithm of a power series."""
+        ...
+
+    def exp(self, s: TSeries, /) -> TSeries:
+        """Return the exponential of a power series."""
+        ...
+
+    def atan(self, s: TSeries, /) -> TSeries:
+        """Return the arctangent of a power series."""
+        ...
+
+    def atanh(self, s: TSeries, /) -> TSeries:
+        """Return the hyperbolic arctangent of a power series."""
+        ...
+
+    def asin(self, s: TSeries, /) -> TSeries:
+        """Return the arcsine of a power series."""
+        ...
+
+    def asinh(self, s: TSeries, /) -> TSeries:
+        """Return the hyperbolic arcsine of a power series."""
+        ...
+
+    def tan(self, s: TSeries, /) -> TSeries:
+        """Return the tangent of a power series."""
+        ...
+
+    def tanh(self, s: TSeries, /) -> TSeries:
+        """Return the hyperbolic tangent of a power series."""
+        ...
+
+    def sin(self, s: TSeries, /) -> TSeries:
+        """Return the sine of a power series."""
+        ...
+
+    def sinh(self, s: TSeries, /) -> TSeries:
+        """Return the hyperbolic sine of a power series."""
+        ...
+
+    def cos(self, s: TSeries, /) -> TSeries:
+        """Return the cosine of a power series."""
+        ...
+
+    def cosh(self, s: TSeries, /) -> TSeries:
+        """Return the hyperbolic cosine of a power series."""
         ...
