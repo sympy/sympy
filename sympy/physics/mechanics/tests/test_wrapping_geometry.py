@@ -12,6 +12,9 @@ from sympy import (
     pi,
     sin,
     sqrt,
+    diff,
+    Piecewise,
+    symbols,
 )
 from sympy.core.relational import Eq
 from sympy.physics.mechanics import (
@@ -21,6 +24,9 @@ from sympy.physics.mechanics import (
     WrappingSphere,
     WrappingCone,
     dynamicsymbols,
+    LagrangesMethod,
+    Lagrangian,
+    Particle,
 )
 from sympy.simplify.simplify import simplify
 from sympy.polys.polytools import cancel
@@ -471,3 +477,94 @@ class TestWrappingCone:
         with pytest.raises(ValueError,
                            match='No unique geodesic exists for coincident points'):
             cone.geodesic_end_vectors(p1, p1)
+
+
+class TestElasticConeModel:
+    """
+    A test class to verify the Lagrangian mechanics model of a particle
+    tethered by an elastic cable, constrainted to move on a conical surface.
+    This is a 2 DOF system.
+    """
+
+    @classmethod
+    def setup_class(cls):
+        # Setup basic symbols
+        cls.t = symbols('t')
+        cls.m, cls.g, cls.alpha, cls.k, cls.L0 = symbols('m g alpha k L0', positive=True)
+        cls.rA, cls.phiA = symbols('rA phiA', real=True)
+        cls.r, cls.phi = dynamicsymbols('r phi')
+        cls.dr, cls.dphi = dynamicsymbols('r phi', 1)
+
+        cls.N = ReferenceFrame('N')
+        cls.O = Point('O')
+        cls.O.set_vel(cls.N, 0)
+        cls.cone = WrappingCone(cls.alpha, cls.O, cls.N.z)
+
+        # Generalized point on the cone
+        P = Point('P')
+        x = cls.r * sin(cls.alpha) * cos(cls.phi)
+        y = cls.r * sin(cls.alpha) * sin(cls.phi)
+        z = cls.r * cos(cls.alpha)
+
+        P.set_pos(cls.O, x * cls.N.x + y * cls.N.y + z * cls.N.z)
+        P.set_vel(cls.N, P.pos_from(cls.O).diff(cls.t, cls.N))
+        P_part = Particle('P_part', P, cls.m)
+
+        A = Point('A')
+        xA = cls.rA * sin(cls.alpha) * cos(cls.phiA)
+        yA = cls.rA * sin(cls.alpha) * sin(cls.phiA)
+        zA = cls.rA * cos(cls.alpha)
+        A.set_pos(cls.O, xA * cls.N.x + yA * cls.N.y + zA * cls.N.z)
+
+        cls.T = P_part.kinetic_energy(cls.N)
+        cls.L_geo = cls.cone.geodesic_length(A, P)
+
+        # Gravitational potential energy
+        h = P.pos_from(cls.O).dot(cls.N.z)
+        Vg = cls.m * cls.g * h
+
+        # Elastic potential energy
+        Ve = Rational(1, 2) * cls.k * (cls.L_geo - cls.L0)**2
+
+        # Total potential energy
+        cls.V = Vg + Ve
+
+        P_part.potential_energy = cls.V
+
+        # Get EOMs
+        cls.L = Lagrangian(cls.N, P_part)
+        LM = LagrangesMethod(cls.L, [cls.r, cls.phi])
+        cls.eom = LM.form_lagranges_equations()
+        for i in range(len(cls.eom)):
+            cls.eom[i] = simplify(cls.eom[i])
+
+    def test_kinetic_energy(self):
+        expected_T = Rational(1, 2) * self.m * (self.dr**2 + self.r**2 * sin(self.alpha)**2 * self.dphi**2)
+        assert simplify(self.T - expected_T) == 0
+
+    def test_geodesic_length(self):
+        expected_L_geo = sqrt(self.rA**2 - 2*self.rA*self.r*cos(Piecewise((-self.phiA + self.phi + 2*pi, -self.phiA + self.phi + 2*pi <= pi), (self.phiA - self.phi, True))*sin(self.alpha)) + self.r**2)
+        assert simplify(self.L_geo - expected_L_geo) == 0
+
+    def test_potential_energy(self):
+        expected_V = (self.m * self.g * self.r * cos(self.alpha) + Rational(1, 2) * self.k * (self.L_geo - self.L0)**2)
+        assert simplify(self.V - expected_V) == 0
+
+    def test_lagrangian(self):
+        assert simplify(self.L - (self.T - self.V)) == 0
+
+    def test_equation_of_motion_r(self):
+        # Derived by hand: EOM for r: m*r_ddot - m*r*sin(alpha)**2*phi_dot**2 + dV/dr = 0
+        dV_dr = diff(self.V, self.r)
+        expected_eom_r = (self.m * diff(self.r, self.t, 2) -
+                          self.m * self.r * sin(self.alpha)**2 * self.dphi**2 +
+                          dV_dr)
+
+        assert simplify(self.eom[0] - expected_eom_r) == 0
+
+    def test_equation_of_motion_phi(self):
+        # Derived by hand: EOM for phi: d/dt(m*r**2*sin(alpha)**2*phi_dot) + dV/dphi = 0
+        dV_dphi = diff(self.V, self.phi)
+        expected_eom_phi = (diff(self.m * self.r**2 * sin(self.alpha)**2 * self.dphi, self.t) + dV_dphi)
+
+        assert simplify(self.eom[1] - expected_eom_phi) == 0
