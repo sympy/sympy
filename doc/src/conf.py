@@ -303,6 +303,7 @@ html_theme_options = {
             "class": "",
         },
     ],
+    "source_view_link": "https://github.com/sympy/sympy/blob/master/doc/src/{filename}?plain=1",
 }
 
 # Add a header for PR preview builds. See the Circle CI configuration.
