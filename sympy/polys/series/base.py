@@ -93,6 +93,10 @@ class PowerSeriesRingProto(Protocol[TSeries, Er]):
         """Return the coefficients of a power series as a list."""
         ...
 
+    def to_dense(self, s: TSeries, /) -> dup[Er]:
+        """Return the coefficients of a power series as a dense list."""
+        ...
+
     def series_prec(self, s: TSeries, /) -> int | None:
         """Return the precision of a power series."""
         ...

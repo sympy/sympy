@@ -3,7 +3,7 @@ from __future__ import annotations
 from contextlib import contextmanager
 from typing import Sequence, Union, TYPE_CHECKING
 
-from sympy.polys.densebasic import dup_reverse
+from sympy.polys.densebasic import dup, dup_reverse
 from sympy.polys.domains import Domain, QQ, ZZ
 from sympy.polys.series.ringpython import _useries_valuation
 from sympy.polys.series.base import series_pprint
@@ -196,6 +196,10 @@ class FlintPowerSeriesRingZZ:
     def to_list(self, s: ZZSeries) -> list[MPZ]:
         """Returns the list of series coefficients."""
         return s.coeffs()
+
+    def to_dense(self, s: ZZSeries) -> dup[MPZ]:
+        """Return the coefficients of a power series as a dense list."""
+        return s.coeffs()[::-1]
 
     def series_prec(self, s: ZZSeries) -> int | None:
         """Return the precision of the series."""
@@ -596,6 +600,10 @@ class FlintPowerSeriesRingQQ:
         """Returns the list of series coefficients."""
         return s.coeffs()
 
+    def to_dense(self, s: QQSeries) -> dup[MPQ]:
+        """Return the coefficients of a power series as a dense list."""
+        return s.coeffs()[::-1]
+
     def series_prec(self, s: QQSeries) -> int | None:
         """Return the precision of the series."""
         if isinstance(s, fmpq_poly):
@@ -972,10 +980,9 @@ class FlintPowerSeriesRingQQ:
 
     def cos(self, s: QQSeries) -> QQSeries:
         """Compute the cosine of a power series."""
-        if not s:
-            return s
-
         if isinstance(s, fmpq_poly):
+            if not s:
+                return fmpq_poly([1])
             s = fmpq_series(s, prec=self._prec)
 
         with _global_cap(self._prec):
@@ -983,10 +990,9 @@ class FlintPowerSeriesRingQQ:
 
     def cosh(self, s: QQSeries) -> QQSeries:
         """Compute the hyperbolic cosine of a power series."""
-        if not s:
-            return s
-
         if isinstance(s, fmpq_poly):
+            if not s:
+                return fmpq_poly([1])
             s = fmpq_series(s, prec=self._prec)
 
         with _global_cap(self._prec):

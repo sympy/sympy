@@ -73,6 +73,7 @@ def test_basics(rd_int):
     assert R == SeriesRing(6)
     assert hash(R) == hash(SeriesRing(6))
     assert R.to_list(R.gen) == [0, 1], None
+    assert R.to_dense(R.gen) == [1, 0], None
     assert R0.equal_repr(R0.zero, R0.one)
     assert R0.pretty(R0.gen) == "O(x**0)"
     assert R0.equal_repr(R0.gen, R0([], 0))
@@ -973,7 +974,7 @@ def test_cos(rd_rational):
     R3 = SeriesRing(3)
     R10 = SeriesRing(10)
 
-    assert R.equal_repr(R.cos(R([])), R([]))
+    assert R.equal_repr(R.cos(R([])), R([1]))
     raises(ValueError, lambda: R.cos(R([1, 1])))
 
     assert R3.equal_repr(
@@ -1006,7 +1007,7 @@ def test_cosh(rd_rational):
     R3 = SeriesRing(3)
     R10 = SeriesRing(10)
 
-    assert R.equal_repr(R.cosh(R([])), R([]))
+    assert R.equal_repr(R.cosh(R([])), R([1]))
     raises(ValueError, lambda: R.cosh(R([1, 1])))
 
     assert R3.equal_repr(
@@ -1043,21 +1044,21 @@ def test_high_deg(rd_rational):
     s = Rs(rand)
     p = Rp.from_list(rand[::-1])
 
-    assert Rs.to_list(Rs.exp(s)) == (rs_exp(p, x, 30)).to_dense()[::-1]
+    assert Rs.to_dense(Rs.exp(s)) == (rs_exp(p, x, 30)).to_dense()
 
-    assert Rs.to_list(Rs.atan(s)) == (rs_atan(p, x, 30)).to_dense()[::-1]
-    assert Rs.to_list(Rs.atanh(s)) == (rs_atanh(p, x, 30)).to_dense()[::-1]
-    assert Rs.to_list(Rs.asin(s)) == (rs_asin(p, x, 30)).to_dense()[::-1]
-    assert Rs.to_list(Rs.asinh(s)) == (rs_asinh(p, x, 30)).to_dense()[::-1]
+    assert Rs.to_dense(Rs.atan(s)) == (rs_atan(p, x, 30)).to_dense()
+    assert Rs.to_dense(Rs.atanh(s)) == (rs_atanh(p, x, 30)).to_dense()
+    assert Rs.to_dense(Rs.asin(s)) == (rs_asin(p, x, 30)).to_dense()
+    assert Rs.to_dense(Rs.asinh(s)) == (rs_asinh(p, x, 30)).to_dense()
 
-    assert Rs.to_list(Rs.tan(s)) == (rs_tan(p, x, 30)).to_dense()[::-1]
-    assert Rs.to_list(Rs.tanh(s)) == (rs_tanh(p, x, 30)).to_dense()[::-1]
-    assert Rs.to_list(Rs.sin(s)) == (rs_sin(p, x, 30)).to_dense()[::-1]
-    assert Rs.to_list(Rs.sinh(s)) == (rs_sinh(p, x, 30)).to_dense()[::-1]
-    assert Rs.to_list(Rs.cos(s)) == (rs_cos(p, x, 30)).to_dense()[::-1]
-    assert Rs.to_list(Rs.cosh(s)) == (rs_cosh(p, x, 30)).to_dense()[::-1]
+    assert Rs.to_dense(Rs.tan(s)) == (rs_tan(p, x, 30)).to_dense()
+    assert Rs.to_dense(Rs.tanh(s)) == (rs_tanh(p, x, 30)).to_dense()
+    assert Rs.to_dense(Rs.sin(s)) == (rs_sin(p, x, 30)).to_dense()
+    assert Rs.to_dense(Rs.sinh(s)) == (rs_sinh(p, x, 30)).to_dense()
+    assert Rs.to_dense(Rs.cos(s)) == (rs_cos(p, x, 30)).to_dense()
+    assert Rs.to_dense(Rs.cosh(s)) == (rs_cosh(p, x, 30)).to_dense()
 
     rand[0] = 1
     s = Rs(rand)
     p = Rp.from_list(rand[::-1])
-    assert Rs.to_list(Rs.log(s)) == (rs_log(p, x, 30)).to_dense()[::-1]
+    assert Rs.to_dense(Rs.log(s)) == (rs_log(p, x, 30)).to_dense()

@@ -17,9 +17,8 @@ from sympy.polys.densearith import (
     dup_series_pow,
     dup_rshift,
 )
-from sympy.polys.densebasic import dup_degree, dup_reverse, dup_truncate
+from sympy.polys.densebasic import dup, dup_degree, dup_reverse, dup_truncate
 from sympy.polys.densetools import (
-    dup,
     dup_diff,
     dup_integrate,
     dup_revert,
@@ -749,7 +748,7 @@ def _useries_cos(s: USeries[Ef], dom: Field[Ef], ring_prec: int) -> USeries[Ef]:
     coeffs, prec = s
 
     if not coeffs:
-        return s
+        return ([dom.one], prec)
 
     if not dom.is_zero(coeffs[-1]):
         raise ValueError(
@@ -792,7 +791,7 @@ def _useries_cosh(s: USeries[Ef], dom: Field[Ef], ring_prec: int) -> USeries[Ef]
     coeffs, prec = s
 
     if not coeffs:
-        return s
+        return ([dom.one], prec)
 
     if not dom.is_zero(coeffs[-1]):
         raise ValueError(
@@ -955,6 +954,10 @@ class PythonPowerSeriesRingZZ:
         """Returns the list of series coefficients."""
         coeffs, _ = s
         return coeffs[::-1]
+
+    def to_dense(self, s: USeries[MPZ]) -> dup[MPZ]:
+        """Return the coefficients of a power series as a dense list."""
+        return s[0]
 
     def series_prec(self, s: USeries[MPZ]) -> int | None:
         """Return the precision of a power series."""
@@ -1177,6 +1180,10 @@ class PythonPowerSeriesRingQQ:
         """Return the list of series coefficients."""
         coeffs, _ = s
         return coeffs[::-1]
+
+    def to_dense(self, s: USeries[MPQ]) -> dup[MPQ]:
+        """Return the coefficients of a power series as a dense list."""
+        return s[0]
 
     def series_prec(self, s: USeries[MPQ]) -> int | None:
         """Return the precision of a power series."""
