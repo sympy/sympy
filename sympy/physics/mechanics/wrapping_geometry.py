@@ -751,15 +751,21 @@ class WrappingCone(WrappingGeometryBase):
         cone. This vector is then mapped back to the 3D space at each
         endpoint.
         """
+        # Get the position vectors of the points relative to the cone's apex.
+        # All subsequent calculations are performed in the cone's reference frame.
         pos1 = point_1.pos_from(self.apex)
         pos2 = point_2.pos_from(self.apex)
 
+        # A unique geodesic cannot be defined between two identical points.
         if pos1 == pos2:
             raise ValueError(
                 f'No unique geodesic exists for coincident points {point_1} and {point_2}.'
             )
 
-        # Handle cases where one point is the apex
+        # If one point is the apex, the geodesic is the straight line along the
+        # cone's surface to the other point. The tangent at the apex points
+        # towards the other point, and the tangent at the other point points
+        # away from the apex.
         if pos1.magnitude() == 0:
             v = pos2.normalize()
             return (v, -v)
@@ -767,42 +773,63 @@ class WrappingCone(WrappingGeometryBase):
             v = pos1.normalize()
             return (-v, v)
 
+        # Project the position vectors onto the cone's axis to get the z-height.
         z1 = pos1.dot(self.axis)
         z2 = pos2.dot(self.axis)
+        # Calculate the slant height (distance from apex to point along the
+        # cone's surface). This is R in polar coordinates for the unrolled cone.
         s1 = z1 / cos(self.alpha)
         s2 = z2 / cos(self.alpha)
 
+        # Calculate the geodesic length (shortest distance on the surface).
+        # This will be the denominator when normalizing the tangent vectors.
         L = self.geodesic_length(point_1, point_2)
 
-        # Handle zero length case to avoid division by zero
+        # If the points are the same, the tangent vectors are zero vectors.
         if L == 0:
             return (Vector(0), Vector(0))
 
+        # Unrolling the cone
+        # Find the unit vectors perpendicular to the cone's axis that point
+        # towards each point's projection on the xy-plane.
         n1 = (pos1 - z1 * self.axis).normalize()
         n2 = (pos2 - z2 * self.axis).normalize()
 
+        # Calculate the central angle (theta) between the two points in the
+        # plane perpendicular to the cone's axis.
         central = _directional_atan(
             cancel((n1.cross(n2)).dot(self.axis)),
             cancel(n1.dot(n2))
         )
 
-        # Ensure the shortest path is used for vector calculation
+        # The shortest path is chosen by ensuring the angle is not reflex.
         if central > pi:
             central = 2 * pi - central
 
+        # Convert the 3D central angle to the corresponding angle (phi) in the
+        # unrolled 2D planar sector.
         delta_u = central * sin(self.alpha)
 
-        # Define the tangent plane basis vectors for each point
+        # At each point, define an orthogonal basis on the tangent plane.
+        # All vectors are expressed in the cone's main reference frame.
+        # g: The generator vector, pointing radially away from the apex.
+        # c: The circumferential vector, tangential to the circular base.
         g1 = pos1.normalize()
         c1 = self.axis.cross(n1)
         g2 = pos2.normalize()
         c2 = self.axis.cross(n2)
 
-        # Components of the tangent vector in the unrolled plane
+        # In the unrolled 2D plane, the tangent vector is constant. We find its
+        # components in the local polar basis at each point.
+        # v_radial: Component along the generator vector 'g'.
+        # v_circ: Component along the circumferential vector 'c'.
+
+        # Components for v1 (tangent vector at point_1)
         v1_radial_comp = (s2 * cos(delta_u) - s1) / L
         v1_circ_comp = (s2 * sin(delta_u)) / L
         v1 = v1_radial_comp * g1 + v1_circ_comp * c1
 
+        # Components for v2 (tangent vector at point_2)
         v2_radial_comp = (s1 * cos(delta_u) - s2) / L
         v2_circ_comp = (-s1 * sin(delta_u)) / L
         v2 = v2_radial_comp * g2 + v2_circ_comp * c2
