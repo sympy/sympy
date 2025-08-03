@@ -516,13 +516,13 @@ def _useries_atan(s: USeries[Ef], dom: Field[Ef], ring_prec: int) -> USeries[Ef]
 
     if prec is None:
         prec = ring_prec
+        s = coeffs, prec
 
     ds = _useries_derivative(s, dom, ring_prec)
     s2 = _useries_square(s, dom, ring_prec)
     s2 = _useries_add_ground(s2, dom.one, dom, ring_prec)  # 1 + s^2
     inv_s2 = _useries_inverse(s2, dom, ring_prec)
     dv_s = _useries_mul(ds, inv_s2, dom, ring_prec)
-    dv_s = dv_s[0], prec - 1
     return _useries_integrate(dv_s, dom, ring_prec)
 
 
@@ -539,7 +539,8 @@ def _useries_atanh(s: USeries[Ef], dom: Field[Ef], ring_prec: int) -> USeries[Ef
         )
 
     if prec is None:
-        s = coeffs, ring_prec
+        prec = ring_prec
+        s = coeffs, prec
 
     ds = _useries_derivative(s, dom, ring_prec)
     s2 = _useries_square(s, dom, ring_prec)
@@ -564,6 +565,7 @@ def _useries_asin(s: USeries[Ef], dom: Field[Ef], ring_prec: int) -> USeries[Ef]
 
     if prec is None:
         prec = ring_prec
+        s = coeffs, prec
 
     if len(coeffs) > 20:
         ds = _useries_derivative(s, dom, ring_prec)
@@ -598,7 +600,8 @@ def _useries_asinh(s: USeries[Ef], dom: Field[Ef], ring_prec: int) -> USeries[Ef
         )
 
     if prec is None:
-        s = coeffs, ring_prec
+        prec = ring_prec
+        s = coeffs, prec
 
     ds = _useries_derivative(s, dom, ring_prec)
     s2 = _useries_square(s, dom, ring_prec)
@@ -624,6 +627,7 @@ def _useries_tan(s: USeries[Ef], dom: Field[Ef], ring_prec: int) -> USeries[Ef]:
 
     if prec is None:
         prec = ring_prec
+        s = coeffs, prec
 
     y: USeries[Ef] = ([], prec)
     # y_{n+1} = y_n + (s - \arctan(y_n)) * (1 + y_n^2)
@@ -656,6 +660,7 @@ def _useries_tanh(s: USeries[Ef], dom: Field[Ef], ring_prec: int) -> USeries[Ef]
 
     if prec is None:
         prec = ring_prec
+        s = coeffs, prec
 
     y: USeries[Ef] = ([], prec)
     # y_{n+1} = y_n + (s - \arctanh(y_n)) * (1 - y_n^2)
@@ -689,6 +694,7 @@ def _useries_sin(s: USeries[Ef], dom: Field[Ef], ring_prec: int) -> USeries[Ef]:
 
     if prec is None:
         prec = ring_prec
+        s = coeffs, prec
 
     if len(coeffs) > 20:
         # t = tan(s/2)
@@ -730,6 +736,7 @@ def _useries_sinh(s: USeries[Ef], dom: Field[Ef], ring_prec: int) -> USeries[Ef]
 
     if prec is None:
         prec = ring_prec
+        s = coeffs, prec
 
     e = _useries_exp(s, dom, ring_prec)
     e_inv = _useries_inverse(e, dom, ring_prec)
@@ -751,6 +758,7 @@ def _useries_cos(s: USeries[Ef], dom: Field[Ef], ring_prec: int) -> USeries[Ef]:
 
     if prec is None:
         prec = ring_prec
+        s = coeffs, prec
 
     if len(coeffs) > 20:
         # t = tan(s/2)
