@@ -1706,7 +1706,7 @@ def rs_cosh(p, x, prec):
         return rs_puiseux(rs_cosh, p, x, prec)
     R = p.ring
     if not p:
-        return R(0)
+        return R(1)
     c = _get_constant_term(p, x)
     if c:
         try:
