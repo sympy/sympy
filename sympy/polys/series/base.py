@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from sympy.core.expr import Expr
 from typing import Protocol, Sequence, TypeVar
 from sympy.polys.domains import Domain
 from sympy.polys.domains.domain import Ef, Er
@@ -99,6 +100,10 @@ class PowerSeriesRingProto(Protocol[TSeries, Er]):
 
     def series_prec(self, s: TSeries, /) -> int | None:
         """Return the precision of a power series."""
+        ...
+
+    def as_expr(self, s: TSeries, symbol: str, /) -> Expr:
+        """Return a power series as an expression."""
         ...
 
     def equal(self, s1: TSeries, s2: TSeries, /) -> bool | None:

@@ -5,6 +5,11 @@ from typing import Sequence, TYPE_CHECKING
 if TYPE_CHECKING:
     from typing import TypeAlias, Union
 
+from sympy.core import Add, Mul, Pow
+from sympy.series.order import Order
+from sympy.core.expr import Expr
+from sympy.core.symbol import Symbol
+
 from sympy.polys.densearith import (
     dup_add,
     dup_add_ground,
@@ -68,6 +73,27 @@ def _useries_valuation(s: USeries[Er], dom: Domain) -> int:
         i -= 1
 
     return -i - 1
+
+
+def _useries_to_sympy_expr(s: USeries[Er], gen: str) -> Expr:
+    coeffs, prec = s
+    coeffs = coeffs[::-1]
+    result: list[Expr] = []
+    g: Symbol = Symbol(gen)
+
+    if coeffs and coeffs[0] != 0:
+        result.append(coeffs[0])  # type: ignore
+
+    for i, coeff in enumerate(coeffs[1:], start=1):
+        if coeff == 0:
+            continue
+        result.append(Mul(coeff, Pow(g, i)))  # type: ignore
+
+    p = Add(*result)
+    if prec is None:
+        return p
+    else:
+        return p + Order(g**prec)
 
 
 def _unify_prec(
@@ -964,6 +990,10 @@ class PythonPowerSeriesRingZZ:
         _, prec = s
         return prec
 
+    def as_expr(self, s: USeries[MPZ], symbol: str = "x") -> Expr:
+        """Convert a power series to a expression."""
+        return _useries_to_sympy_expr(s, symbol)
+
     def equal(self, s1: USeries[MPZ], s2: USeries[MPZ]) -> bool | None:
         """Check if two power series are equal up to their minimum precision."""
         return _useries_equality(s1, s2, self._domain)
@@ -1189,6 +1219,10 @@ class PythonPowerSeriesRingQQ:
         """Return the precision of a power series."""
         _, prec = s
         return prec
+
+    def as_expr(self, s: USeries[MPQ], symbol: str = "x") -> Expr:
+        """Convert a power series to a expression."""
+        return _useries_to_sympy_expr(s, symbol)
 
     def equal(self, s1: USeries[MPQ], s2: USeries[MPQ]) -> bool | None:
         """Check if two power series are equal up to their minimum precision."""
