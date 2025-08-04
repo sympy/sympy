@@ -16,7 +16,7 @@ def test_basic_and_chain_equality():
 
 def test_unary_function_congruence():
     cc = EUFCongruenceClosure([Eq(a, b), Eq(f(a), x)])
-    assert cc.are_equal(f(b), x)   # f(a) = x, a=b ⇒ f(b) = x
+    assert cc.are_equal(f(b), x)   # f(a) = x, a=b -> f(b) = x
 
 
 def test_binary_congruence_and_propagation():
@@ -25,7 +25,7 @@ def test_binary_congruence_and_propagation():
         Eq(c, d),
         Eq(g(a, c), x)
     ])
-    assert cc.are_equal(g(b, d), x)  # g(a,c) = x; a=b, c=d ⇒ g(b,d)=x
+    assert cc.are_equal(g(b, d), x)  # g(a,c) = x; a=b, c=d -> g(b,d)=x
 
 
 def test_lambda_curry_and_equivalent_application():
