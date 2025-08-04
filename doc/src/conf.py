@@ -303,7 +303,6 @@ html_theme_options = {
             "class": "",
         },
     ],
-    "source_view_link": "https://github.com/sympy/sympy/blob/master/doc/src/{filename}?plain=1",
 }
 
 # Add a header for PR preview builds. See the Circle CI configuration.
@@ -493,8 +492,9 @@ if not commit_hash:
 
 fork = 'sympy'
 blobpath = \
-    "https://github.com/{}/sympy/blob/{}/sympy/".format(fork, commit_hash)
+    "https://github.com/{}/sympy/blob/{}/".format(fork, commit_hash)
 
+html_theme_options["source_view_link"] = blobpath + "doc/src/{filename}?plain=1"
 
 def linkcode_resolve(domain, info):
     """Determine the URL corresponding to Python object."""
@@ -533,7 +533,7 @@ def linkcode_resolve(domain, info):
         linespec = ""
 
     fn = os.path.relpath(fn, start=os.path.dirname(sympy.__file__))
-    return blobpath + fn + linespec
+    return blobpath + "sympy/" + fn + linespec
 
 
 def resolve_type_aliases(app, env, node, contnode):
