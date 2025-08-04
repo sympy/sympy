@@ -431,8 +431,8 @@ def test_reflect():
     t1 = Triangle((0, 0), (1, 0), (2, 3))
     assert t1.area == -t1.reflect(l).area
     e = Ellipse((1, 0), 1, 2)
-    assert e.area == -e.reflect(Line((1, 0), slope=0)).area
-    assert e.area == -e.reflect(Line((1, 0), slope=oo)).area
+    assert e.area == e.reflect(Line((1, 0), slope=0)).area
+    assert e.area == e.reflect(Line((1, 0), slope=oo)).area
     raises(NotImplementedError, lambda: e.reflect(Line((1, 0), slope=m)))
     assert Circle((0, 1), 1).reflect(Line((0, 0), (1, 1))) == Circle(Point2D(1, 0), 1)
 

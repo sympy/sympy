@@ -1140,7 +1140,7 @@ class Ellipse(GeometrySet):
 
         >>> from sympy import Circle, Line
         >>> Circle((0, 1), 1).reflect(Line((0, 0), (1, 1)))
-        Circle(Point2D(1, 0), -1)
+        Circle(Point2D(1, 0), 1)
         >>> from sympy import Ellipse, Line, Point
         >>> Ellipse(Point(3, 4), 1, 3).reflect(Line(Point(0, -4), Point(5, 0)))
         Traceback (most recent call last):
@@ -1713,7 +1713,7 @@ class Circle(Ellipse):
 
         >>> from sympy import Circle, Line
         >>> Circle((0, 1), 1).reflect(Line((0, 0), (1, 1)))
-        Circle(Point2D(1, 0), -1)
+        Circle(Point2D(1, 0), 1)
         """
         c = self.center
         c = c.reflect(line)

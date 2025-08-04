@@ -80,7 +80,7 @@ def test_reflect_entity_overrides():
     c = Circle((x, y), 3)
     cr = c.reflect(l)
     assert cr == Circle(r, 3)
-    assert c.area == -cr.area
+    assert c.area == cr.area
 
     pent = RegularPolygon((1, 2), 1, 5)
     slope = S.ComplexInfinity
