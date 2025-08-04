@@ -1162,7 +1162,7 @@ class Ellipse(GeometrySet):
         if line.slope in (0, oo):
             c = self.center
             c = c.reflect(line)
-            return self.func(c, abs(self.hradius), abs(self.vradius))
+            return self.func(c, self.hradius, self.vradius)
         else:
             x, y = [uniquely_named_symbol(
                 name, (self, line), modify=lambda s: '_' + s, real=True)
