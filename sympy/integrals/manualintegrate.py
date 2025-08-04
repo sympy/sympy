@@ -63,6 +63,7 @@ from sympy.ntheory.factor_ import primefactors
 from sympy.polys.polytools import degree, lcm_list, gcd_list, Poly
 from sympy.simplify.radsimp import fraction
 from sympy.simplify.simplify import simplify
+from sympy.simplify.powsimp import powsimp
 from sympy.solvers.solvers import solve
 from sympy.strategies.core import switch, do_one, null_safe, condition
 from sympy.utilities.iterables import iterable
@@ -969,6 +970,29 @@ def exp_rule(integral):
     integrand, symbol = integral
     if isinstance(integrand.args[0], Symbol):
         return ExpRule(integrand, symbol, E, integrand.args[0])
+
+
+def powsimp_rule(integral):
+    """
+    Strategy that simplifies the exponent of a power.
+    exp(a*x**2) * exp(b*x) -> exp((a*x**2 + b*x))
+    For example, this is useful for the ErfRule.
+    """
+    integrand, symbol = integral
+    a = Wild('a', exclude=[symbol])
+    b = Wild('b', exclude=[symbol])
+    k = Wild('k', exclude=[symbol])
+
+    match = integrand.match(k**(a*symbol**2) * k**(b*symbol))
+
+    if not match:
+        return
+
+    simplified = powsimp(integrand, combine='exp')
+
+    if simplified != integrand:
+        steps = integral_steps(simplified, symbol)
+        return RewriteRule(integrand, symbol, simplified, steps)
 
 
 def orthogonal_poly_rule(integral):
@@ -2088,6 +2112,9 @@ def integral_steps(integrand, symbol, **options):
             null_safe(alternatives(
                 rewrites_rule,
                 substitution_rule,
+                condition(
+                    integral_is_subclass(Mul, Pow),
+                    powsimp_rule),
                 condition(
                     integral_is_subclass(Mul, Pow),
                     partial_fractions_rule),
