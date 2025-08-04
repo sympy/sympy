@@ -387,7 +387,7 @@ class GeometryEntity(Basic, EvalfMixin):
         >>> circ = Circle(Point(0, 0), 5)
         >>> rcirc = circ.reflect(l)
         >>> rcirc
-        Circle(Point2D(-pi, pi), -5)
+        Circle(Point2D(-pi, pi), 5)
 
         """
         from sympy.geometry.point import Point

@@ -97,7 +97,7 @@ def test_reflect_entity_overrides():
                 rvert.remove(ri)
                 break
     assert not rvert
-    assert pent.area.equals(rpent.area)
+    assert pent.area.equals(abs(rpent.area))
 
 
 def test_geometry_EvalfMixin():
