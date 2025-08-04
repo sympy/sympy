@@ -1717,7 +1717,7 @@ class Circle(Ellipse):
         """
         c = self.center
         c = c.reflect(line)
-        return self.func(c, abs(self.radius))
+        return self.func(c, self.radius)
 
     def scale(self, x=1, y=1, pt=None):
         """Override GeometryEntity.scale since the radius
