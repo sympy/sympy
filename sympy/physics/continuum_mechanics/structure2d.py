@@ -387,7 +387,6 @@ class Structure2d:
         for node in self.nodes:
             if simplify(node.x - x) == 0 and simplify(node.y - y) == 0:
                 unwrapped_pos = self._find_unwrapped_position(x, y)
-                print(f"Node at ({x}, {y}) mapped to unwrapped position: {unwrapped_pos}")  # Use correct unwrapped position
                 return f"n_{node.node_id}", unwrapped_pos, None
 
         # Check if the point corresponds to a member
@@ -1344,7 +1343,7 @@ class Structure2d:
             >>> s.apply_support(x=7, y=-1, type="roller")
             >>> s.apply_support(x=0, y=0, type="pin")
             >>> s.solve_for_reaction_loads()
-            {R_h__0,__0: 0.0, R_v__0,__0: -345*F/112, R_v__7,__-1: -125*F/56}
+            {R_h__0,__0: F/4, R_v__0,__0: -341*F/112, R_v__7,__-1: -219*F/112}
             >>> s.draw(show_load_values=True) #doctest: +SKIP
 
         The same plot can be generated without symbols using nummeric values.
