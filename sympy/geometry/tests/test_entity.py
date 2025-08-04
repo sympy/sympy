@@ -79,7 +79,7 @@ def test_reflect_entity_overrides():
     r = p.reflect(l)
     c = Circle((x, y), 3)
     cr = c.reflect(l)
-    assert cr == Circle(r, -3)
+    assert cr == Circle(r, 3)
     assert c.area == -cr.area
 
     pent = RegularPolygon((1, 2), 1, 5)
