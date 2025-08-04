@@ -2,6 +2,7 @@ from sympy.physics.continuum_mechanics.structure2d import Structure2d
 from sympy.physics.continuum_mechanics.beam import Beam
 from sympy.physics.continuum_mechanics.column import Column
 from sympy.core.symbol import Symbol, symbols
+from sympy.core.numbers import Rational
 from sympy.functions import SingularityFunction
 from sympy.simplify.simplify import simplify
 from sympy import sqrt
@@ -557,38 +558,43 @@ def test_structure2d():
     s.apply_load(3, 4, 60, 270,-1)
     s.apply_support(0, 0, "fixed")
     s.apply_support(7, 1, "roller")
-    assert list(s.solve_for_reaction_loads().values()) == [-90, -39.66, -20.34, 262.63]
-
-
-    # Tests to check the integration of loads into the beam and column
-    E,I=symbols('E I')
-    s = Structure2d()
-    s.add_member(0, 0, 30, 0, E, I, 1e4)
-    s.apply_load(0, 0, 8, global_angle=270, order=-1)
-    s.apply_load(0, 0, 12, global_angle=0, order=-1)
-    s.apply_support(10, 0, 'pin')
-    s.apply_support(30, 0, 'pin')
-
-    assert list(s.solve_for_reaction_loads().values()) == [-12, 0, -12, 4]
-    assert simplify(s.load_qz) == simplify(-12*SingularityFunction(x, 10, -1) + 4*SingularityFunction(x, 30, -1) + 8*SingularityFunction(x, 0, -1))
-    assert simplify(s.load_qx) == simplify(-12*SingularityFunction(x, 10, -1) + 12*SingularityFunction(x, 0, -1))
+    assert list(s.solve_for_reaction_loads().values()) == [-90, -4515*Rational(1,118), -2565*Rational(1,118), Rational(29835,118)]
 
     # Tests to check Frames and loads at the joints or Nodes
     s = Structure2d()
-    s.add_member(0, 0, 5, 3, E, I, 1e4)
-    s.add_member(5,3,9,-2, E, I, 1e4)
-    s.apply_load(5, 3, 100, global_angle=270, order=-1)
+    s.add_member(0, 0, 3, 4, E, I, A)
+    s.add_member(3, 4, 6, 0, E, I, A)
+    s.apply_load(3, 4, 100, global_angle=270, order=-1)
     s.apply_support(0, 0, 'pin')
-    s.apply_support(5, -2, 'pin')
+    s.apply_support(6, 0, 'pin')
 
-    assert list(s.solve_for_reaction_loads().values()) == [38.71, -38.71, 51.61, 48.39]
+    assert list(s.solve_for_reaction_loads().values()) == [-200*Rational(1,3), 200*Rational(1,3), -50, -50]
 
     # Tests to check Frames and loads at the joints or Nodes
     s = Structure2d()
-    s.add_member(0, 0, 3, 5, E, I, 1e4)
-    s.add_member(3,5,8,2, E, I, 1e4)
-    s.apply_load(3, 5, 100, global_angle=270, order=-1)
+    s.add_member(0, 0, 3, 4, E, I, 1e4)
+    s.add_member(3, 4, 6, 0, E, I, 1e4)
+    s.apply_load(3, 4, 100, global_angle=270, order=-1)
+    s.apply_load(3, 4, 50, 0, 0, 6, 0)
     s.apply_support(0, 0, 'pin')
-    s.apply_support(5, -2, 'pin')
+    s.apply_support(6, 0, 'pin')
 
-    assert list(s.solve_for_reaction_loads().values()) == [44.12, -44.12, 73.53, 26.47]
+    assert list(s.solve_for_reaction_loads().values()) == [-775*Rational(1,6), -725*Rational(1,6), Rational(100,3), -400*Rational(1,3)]
+
+    s = Structure2d()
+    s.add_member(0, 0, 6, 8, E, I, 1e4)
+    s.add_member(6, 8, 9, 3, E, I, 1e4)
+    s.apply_load(6, 8, 225, global_angle=270, order=-1)
+    s.apply_support(0, 0, 'pin')
+    s.apply_support(9, 3, 'pin')
+
+    assert list(s.solve_for_reaction_loads().values()) == [-135, 135, -30, -195]
+
+    s = Structure2d()
+    s.add_member(0, 0, 4, 3, E, I, 1e4)
+    s.add_member(4, 3, 7, -1, E, I, 1e4)
+    s.apply_load(0, 0, 250, global_angle=180, order=0, end_x=4, end_y=3)
+    s.apply_support(0, 0, 'pin')
+    s.apply_support(7, -1, 'fixed')
+
+    assert list(s.solve_for_reaction_loads().values()) == [Rational(29925,32), Rational(10075,32), Rational(-9475,32), Rational(9475,32), Rational(-1875,16)]

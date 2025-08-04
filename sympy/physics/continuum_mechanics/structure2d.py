@@ -527,8 +527,8 @@ class Structure2d:
             Fh = load.x_component
             B = [nsimplify(Fv), nsimplify(Fh)]
             bb = [
-                nsimplify(load.local_start),
-                nsimplify(load.local_start),
+                nsimplify(self.unwrapped_loadpoints[-1]["locals"][0]),
+                nsimplify(self.unwrapped_loadpoints[-1]["locals"][0]),
             ]
             nn = [2, 3]
         else:
@@ -832,7 +832,6 @@ class Structure2d:
             # unwrap is already called so it should be extaracatble from the unwrapped position
             self.beam.bc_slope.append((unwarap_x, 0))
 
-
     def solve_for_reaction_loads(self):
         """
         Solves for the reaction loads in the structure based on the applied loads and applied support reactions.
@@ -943,6 +942,7 @@ class Structure2d:
             unwarap_x = self._find_unwrapped_position(x, y)
             return self.beam.shear_force().subs(Symbol("x"), unwarap_x)
 
+
     def plot_shear_force(self):
         """
         Plots the shear force diagram for the beam.
@@ -952,6 +952,49 @@ class Structure2d:
         """
 
         self.beam.plot_shear_force()
+
+
+    def axial_force(self, x=None, y=None):
+        """
+        Calculates the axial force at a specified point on the structure.
+
+        This method returns the axial force equation if no arguments are provided.
+        When both x and y coordinates are provided, it calculates the axial force at the specified (x, y) coordinates.
+        (If the x-coordinate is provided, it returns the axial force at the unwrapped location, this for debugging purposes)
+
+        Parameters
+        ==========
+        x : Sympifyable, optional
+            X coordinate of the point to calculate the axial force. Defaults to None.
+        y : Sympifyable, optional
+            Y coordinate of the point to calculate the axial force. Defaults to None.
+
+        Returns:
+            If no arguments are provided: The axial force equation.
+            If both x and y coordinates are provided: The axial force at the specified (x, y) coordinates.
+            (If only the x-coordinate is given: The axial force at the unwrapped location.)
+        """
+
+        if x is None:
+            return self.column.axial_force()
+        if y is None:
+            x_symbol = Symbol("x")
+            return self.column.axial_force().subs(x_symbol, x)
+        else:
+            unwrapped_x = self._find_unwrapped_position(x, y)
+            return self.column.axial_force().subs(Symbol("x"), unwrapped_x)
+
+
+    def plot_axial_force(self):
+        """
+        Plots the axial force diagram for the Structure.
+
+        Returns:
+            Matplotlib plot: A plot showing the axial force distribution along the structure.
+        """
+
+        self.column.plot_axial_force()
+
 
     def bending_moment(self, x=None, y=None):
         """
@@ -993,6 +1036,90 @@ class Structure2d:
         """
 
         self.beam.plot_bending_moment()
+
+
+    def deflection(self, x=None, y=None):
+        """
+        Calculates the deflection at a specified point on the Structure.
+
+        This method returns the deflection equation if no arguments are provided.
+        When both x and y coordinates are provided, it computes the deflection at the specified (x, y) coordinates.
+        (If only the x-coordinate is given, it calculates the deflection at the unwrapped location.)
+
+        Parameters
+        ==========
+        x : Sympifyable, optional
+            X coordinate of the point to calculate the deflection. Defaults to None.
+        y : Sympifyable, optional
+            Y coordinate of the point to calculate the deflection. Defaults to None.
+
+        Returns:
+            If no arguments are provided: The deflection equation.
+            If both x and y coordinates are provided: The deflection at the specified (x, y) coordinates.
+            (If only the x-coordinate is given: The deflection at the unwrapped location.)
+        """
+
+        if x is None:
+            return self.beam.deflection()
+        if y is None:
+            x_symbol = Symbol("x")
+            return self.beam.deflection().subs(x_symbol, x)
+        else:
+            unwrapped_x = self._find_unwrapped_position(x, y)
+            return self.beam.deflection().subs(Symbol("x"), unwrapped_x)
+
+
+    def plot_deflection(self):
+        """
+        Plots the deflection diagram for the beam.
+
+        Returns:
+            Matplotlib plot: A plot showing the deflection along the structure.
+        """
+
+        self.beam.plot_deflection()
+
+
+    def extension(self, x=None, y=None):
+        """
+        Calculates the extension at a specified point on the Structure.
+
+        This method returns the extension equation if no arguments are provided.
+        When both x and y coordinates are provided, it computes the extension at the specified (x, y) coordinates.
+        (If only the x-coordinate is given, it calculates the extension at the unwrapped location.)
+
+        Parameters
+        ==========
+        x : Sympifyable, optional
+            X coordinate of the point to calculate the extension. Defaults to None.
+        y : Sympifyable, optional
+            Y coordinate of the point to calculate the extension. Defaults to None.
+
+        Returns:
+            If no arguments are provided: The extension equation.
+            If both x and y coordinates are provided: The extension at the specified (x, y) coordinates.
+            (If only the x-coordinate is given: The extension at the unwrapped location.)
+        """
+
+        if x is None:
+            return self.column.deflection()
+        if y is None:
+            x_symbol = Symbol("x")
+            return self.column.deflection().subs(x_symbol, x)
+        else:
+            unwrapped_x = self._find_unwrapped_position(x, y)
+            return self.column.deflection().subs(Symbol("x"), unwrapped_x)
+
+
+    def plot_extension(self):
+        """
+        Plots the extension diagram for the Structure.
+
+        Returns:
+            Matplotlib plot: A plot showing the extension along the structure.
+        """
+
+        self.column.plot_deflection()
 
     def summary(self, verbose=True, round_digits=None):
         """
