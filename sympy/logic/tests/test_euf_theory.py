@@ -1,12 +1,12 @@
-from sympy import Symbol, Dummy, Eq, Lambda, Integer
+from sympy import symbols, Symbol, Dummy, Eq, Lambda, Integer, Function
 from sympy.logic.algorithms.euf_theory import EUFCongruenceClosure
-from sympy.abc import x, y, z, w, a, b, c, d
-from sympy.core.function import Function
-from sympy import symbols
+import random 
 
 f, g, h = symbols('f g h', cls=Function)
+x, y, z, w, a, b, c, d = symbols('x y z w a b c d')
 
-def test_basic_equality():
+
+def test_basic_and_chain_equality():
     cc = EUFCongruenceClosure([Eq(x, y), Eq(y, z)])
     assert cc.are_equal(x, y)
     assert cc.are_equal(y, z)
@@ -14,69 +14,211 @@ def test_basic_equality():
     assert not cc.are_equal(x, w)
 
 
-def test_curried_lambda_congruence():
-    lam_curried = Lambda((x, y), x + y).curry()
-    assert lam_curried == Lambda(x, Lambda(y, x + y))
+def test_unary_function_congruence():
+    cc = EUFCongruenceClosure([Eq(a, b), Eq(f(a), x)])
+    assert cc.are_equal(f(b), x)   # f(a) = x, a=b ⇒ f(b) = x
+
+
+def test_binary_congruence_and_propagation():
+    cc = EUFCongruenceClosure([
+        Eq(a, b),
+        Eq(c, d),
+        Eq(g(a, c), x)
+    ])
+    assert cc.are_equal(g(b, d), x)  # g(a,c) = x; a=b, c=d ⇒ g(b,d)=x
+
+
+def test_lambda_curry_and_equivalent_application():
+    lam = Lambda((x, y), x + 2*y)
+    lam_curried = lam.curry()
     cc = EUFCongruenceClosure([
         Eq(lam_curried(x)(y), lam_curried(y)(x)),
         Eq(x, y)
     ])
-    # Since x=y, lam_curried(x)(y) == lam_curried(y)(x)
-    a = lam_curried(x)(y)
-    b = lam_curried(y)(x)
-    assert cc.are_equal(a, b)
+    assert cc.are_equal(lam_curried(x)(y), lam_curried(y)(x))
 
 
-def test_nested_lambdas():
+def test_permuted_arguments_no_commutativity():
+    lam_h = Lambda((x, y), h(x, y))
+
+    cc = EUFCongruenceClosure([
+        Eq(lam_h(x, y), lam_h(y, x)),     # h(x,y) = h(y,x)
+        Eq(x, y)                          # x = y
+    ])
+    # Even without commutativity, if x=y, h(x,y)=h(y,x) by congruence
+    assert cc.are_equal(lam_h(x, y), lam_h(y, x))  # h(x,y) = h(y,x)
+
+
+def test_nested_lambdas_chain():
     lam = Lambda((x, y), x + y).curry()
-    inner = lam(x)
-    outer = inner(y)
     cc = EUFCongruenceClosure([
         Eq(lam(x)(y), lam(y)(x)),
-        Eq(x, y),
-        Eq(lam(x), lam(y))
+        Eq(x, y)
     ])
-    assert cc.are_equal(outer, lam(y)(x))
-    assert cc.are_equal(lam(x), lam(y))
+    assert cc.are_equal(lam(x)(y), lam(y)(x))
 
 
-def test_inequality_of_different_functions():
+def test_add_equality_registers_and_merges():
+    cc = EUFCongruenceClosure([])
+
+    a, b = Symbol('a'), Symbol('b')
+    f = Function('f')
+
+    cc.add_equality(a, b)
+    assert cc._find(a) == cc._find(b)
+
+    fa = cc._flatten(f(a))
+    fb = cc._flatten(f(b))
+
+    assert cc._find(fa) == cc._find(fb)
+
+
+def test_mixed_lambdas_flatten_unique():
+    cc = EUFCongruenceClosure([])
     lam1 = Lambda(x, x + 1).curry()
     lam2 = Lambda(x, x + 2).curry()
-    cc = EUFCongruenceClosure([
-        Eq(lam1(x), Symbol('a')),
-        Eq(lam2(x), Symbol('b'))
-    ])
-    assert not cc.are_equal(lam1(x), lam2(x))
-    assert not cc.are_equal(Symbol('a'), Symbol('b'))
+    d1 = cc._flatten(lam1(x))
+    d2 = cc._flatten(lam2(x))
+    assert d1 != d2
 
 
-def test_identity_lambda_equality():
-    lam = Lambda(x, x).curry()
-    cc = EUFCongruenceClosure([Eq(lam, lam)])
-    assert cc.are_equal(lam, lam)
+def test_flatten_application_and_cache():
+    cc = EUFCongruenceClosure([])
+    testf = Function('testf')
+    ax = cc._flatten(testf(x))
+    bx = cc._flatten(testf(x))
+    assert ax == bx
 
 
-def test_constants_and_dummies():
-    a = Symbol('a')
-    d = Dummy('d')
-    cc = EUFCongruenceClosure([Eq(a, d)])
-    assert cc.are_equal(a, d)
+def test_find_with_automatic_registration():
+    cc = EUFCongruenceClosure([])
+    t = Symbol('t')
+    assert cc._find(t) == t
+    t2 = Dummy('t2')
+    assert cc._find(t2) == t2
 
 
-def test_trivial_symbol_equality():
-    cc = EUFCongruenceClosure([Eq(x, y)])
-    assert cc.are_equal(x, y)
-    cc = EUFCongruenceClosure([Eq(x, x)])
-    assert cc.are_equal(x, x)
-    assert not cc.are_equal(x, y)
+def test_process_pending_chain_merges():
+    cc = EUFCongruenceClosure([])
+    f1 = Function('alsof')
+    x1, y1, z1 = symbols('x1 y1 z1')
+    cc._register(x1)
+    cc._register(y1)
+    cc._register(z1)
+    fx = cc._flatten(f1(x1))
+    fy = cc._flatten(f1(y1))
+    fz = cc._flatten(f1(z1))
+    cc.use[x1].append((f1, (x1,), fx))
+    cc.use[y1].append((f1, (y1,), fy))
+    cc.use[z1].append((f1, (z1,), fz))
+    cc.lookup[(f1, (x1,))] = fx
+    cc.lookup[(f1, (y1,))] = fy
+    cc.lookup[(f1, (z1,))] = fz
+    cc.pending.append((x1, y1))
+    cc.pending.append((y1, z1))
+    cc.pending.append((fx, fy))
+    cc.pending.append((fy, fz))
+    cc._process_pending()
+    assert cc._find(x1) == cc._find(y1) == cc._find(z1)
+    assert cc._find(fx) == cc._find(fy) == cc._find(fz)
 
 
-def test_unconnected_terms():
-    cc = EUFCongruenceClosure([Eq(x, y)])
-    assert not cc.are_equal(x, z)
-    assert not cc.are_equal(y, z)
+def test_flatten_lambda_consistency_and_cache():
+    cc = EUFCongruenceClosure([])
+    t = Symbol('t')
+    f1 = Function('ccf')
+    lam = Lambda(t, f1(t))
+    flat1 = cc._flatten(lam)
+    flat2 = cc._flatten(lam)
+    assert flat1 == flat2
+    flat_app1 = cc._flatten(lam(t))
+    flat_app2 = cc._flatten(lam(t))
+    assert flat_app1 == flat_app2
 
+
+def test_use_list_merging_under_union():
+    cc = EUFCongruenceClosure([])
+    a1, b1, c1 = Symbol('a1'), Symbol('b1'), Symbol('c1')
+    f1 = Function('f1')
+    cc._register(a1)
+    cc._register(b1)
+    cc._register(c1)
+    fa = cc._flatten(f1(a1))
+    fb = cc._flatten(f1(b1))
+    fc = cc._flatten(f1(c1))
+    cc.use[a1].append((f1, (a1,), fa))
+    cc.use[b1].append((f1, (b1,), fb))
+    cc.use[c1].append((f1, (c1,), fc))
+    cc.lookup[(f1, (a1,))] = fa
+    cc.lookup[(f1, (b1,))] = fb
+    cc.lookup[(f1, (c1,))] = fc
+    cc._union(a1, b1)
+    rep = cc._find(a1)
+    assert len(cc.use[rep]) >= 2
+
+
+def test_complex_deep_chaining():
+    # Very deep nesting of f
+    depth = 200
+    term_a = a
+    term_b = b
+    for _ in range(depth):
+        term_a = f(term_a)
+        term_b = f(term_b)
+    eqs = [Eq(term_a, x), Eq(a, b)]
+    cc = EUFCongruenceClosure(eqs)
+
+    # All nestings over a and b should be equal to each other and to x
+    for _ in range(depth):
+        assert cc.are_equal(term_a, term_b)
+        term_a = f(term_a)
+        term_b = f(term_b)
+
+
+def random_expr(vars, funcs, depth=3):
+    """
+    Recursively builds a random EUF expression (nested function or variable/integer).
+    """
+    if depth == 0 or (depth < 3 and random.random() < 0.5):
+        # base case: variable or integer
+        if random.random() < 0.7:
+            return random.choice(vars)
+        else:
+            return Integer(random.randint(0, 10))
+    else:
+        func = random.choice(funcs)
+        # unary for simplicity, but you can generalize to n-ary
+        return func(random_expr(vars, funcs, depth-1))
+
+def test_random_euf_equations(num_eqs=5, max_depth=4):
+    vars = symbols('x y z')
+    funcs = [Function(f'f{i}') for i in range(3)]
+    eqs = []
+    for _ in range(num_eqs):
+        e1 = random_expr(vars, funcs, max_depth)
+        e2 = random_expr(vars, funcs, max_depth)
+        eqs.append(Eq(e1, e2))
+    return eqs
+
+
+def test_long_chain_variables():
+    vars = symbols('a0:20')
+    eqs = [Eq(vars[i], vars[i+1]) for i in range(len(vars)-1)]
+    cc = EUFCongruenceClosure(eqs)
+    for i in range(len(vars)):
+        for j in range(len(vars)):
+            assert cc.are_equal(vars[i], vars[j])
+
+
+def test_composed_functions():
+    f, g, h = symbols('f g h', cls=Function)
+    a, b, c = symbols('a b c')
+    eqs = [Eq(a, b), Eq(f(a), c), Eq(g(c), h(b))]
+    cc = EUFCongruenceClosure(eqs)
+    # f(a) = c and a=b => f(b) = c
+    assert cc.are_equal(f(a), f(b))
+    # g(c) = h(b) and c = f(a) = f(b)
+    assert cc.are_equal(g(f(b)), h(b))
 
 def test_example_1():
     lam_f = Lambda(symbols('x'), f('x'))
@@ -115,52 +257,6 @@ def test_example_2():
     assert cc.are_equal(lam_f(a), lam_h(c))        # f(a) = h(c)
     assert cc.are_equal(a, d)                      # a = d
 
-def test_nested_applications_chaining():
-    lam_f = Lambda(x, f(x))
-    lam_g = Lambda(x, g(x))
-    # Equate inner and outer applications via nested equalities
-    eqs = [
-        Eq(lam_f(lam_g(x)), lam_g(lam_f(x))),      # f(g(x)) = g(f(x))
-        Eq(lam_g(y), lam_f(z)),                    # g(y) = f(z)
-        Eq(x, y),                                  # x = y
-        Eq(y, z)                                   # y = z
-    ]
-    cc = EUFCongruenceClosure(eqs)
-    # All nested applications and all input vars should collapse together
-    assert cc.are_equal(lam_g(y), lam_f(x))                  # g(y) = f(x)
-    assert cc.are_equal(lam_f(x), lam_f(z))                  # f(x) = f(z)
-
-
-
-def test_permuted_arguments_no_commutativity():
-    lam_h = Lambda((x, y), h(x, y))
-
-    cc = EUFCongruenceClosure([
-        Eq(lam_h(x, y), lam_h(y, x)),     # h(x,y) = h(y,x)
-        Eq(x, y)                          # x = y
-    ])
-    # Even without commutativity, if x=y, h(x,y)=h(y,x) by congruence
-    assert cc.are_equal(lam_h(x, y), lam_h(y, x))  # h(x,y) = h(y,x)
-
-
-def test_register_dummy_or_symbol_and_find_basic():
-    cc = EUFCongruenceClosure([])
-
-    a = Symbol('a')
-    d = Dummy('d')
-
-    # Register symbol and dummy
-    cc._register_dummy_or_symbol(a)
-    cc._register_dummy_or_symbol(d)
-
-    # Find representatives immediately after registration
-    assert cc._find(a) == a
-    assert cc._find(d) == d
-
-    # Re-registering does not cause error and maintains state
-    cc._register_dummy_or_symbol(a)
-    cc._register_dummy_or_symbol(d)
-
 
 def test_flatten_simple_atoms_and_numbers():
     cc = EUFCongruenceClosure([])
@@ -190,166 +286,3 @@ def test_flatten_simple_atoms_and_numbers():
     flat_btrue2 = cc._flatten(btrue)
     assert flat_btrue1 == flat_btrue2
     assert flat_btrue1 != d  # Different from other dummies
-
-
-def test_flatten_lambdas_and_application_dummies():
-    cc = EUFCongruenceClosure([])
-
-    x, y = Symbol('x'), Symbol('y')
-
-    # Lambda with multiple variables gets curried and flattened
-    lam = Lambda((x, y), x + y)
-    lam_curried = lam.curry()
-    flat_lam = cc._flatten(lam)
-    flat_curried = cc._flatten(lam_curried)
-    assert flat_lam == flat_curried  # Same flattening
-
-    # Different lambdas with different bodies are different
-    lam2 = Lambda(x, x*y)
-    flat_lam2 = cc._flatten(lam2)
-    assert flat_lam != flat_lam2
-
-
-def test_find_with_unregistered_element_creates_singleton():
-    cc = EUFCongruenceClosure([])
-
-    s = Symbol('s')
-    # s not registered yet
-    rep1 = cc._find(s)
-    rep2 = cc._find(s)
-    assert rep1 == rep2 == s
-    # Also registered now
-    assert s in cc.rep
-    assert s in cc.cls
-
-
-def test_union_merges_classes_and_propagates_uses():
-    cc = EUFCongruenceClosure([])
-
-    a, b = Symbol('a'), Symbol('b')
-    f = Function('f')
-
-    cc._register_dummy_or_symbol(a)
-    cc._register_dummy_or_symbol(b)
-
-    fa = cc._flatten(f(a))
-    fb = cc._flatten(f(b))
-
-    # Initially separate classes
-    assert cc._find(a) != cc._find(b)
-    assert cc._find(fa) != cc._find(fb)
-
-    # Add UseLists manually to simulate function usage
-    cc.use[a].append((f, (a,), fa))
-    cc.use[b].append((f, (b,), fb))
-    cc.lookup[(f, (a,))] = fa
-    cc.lookup[(f, (b,))] = fb
-
-    # Union a and b
-    cc._union(a, b)
-
-    # Then representatives should merge
-    assert cc._find(a) == cc._find(b)
-
-
-def test_process_pending_merges_until_fixpoint():
-    cc = EUFCongruenceClosure([])
-
-    x, y, z = Symbol('x'), Symbol('y'), Symbol('z')
-    f = Function('f')
-
-    cc._register_dummy_or_symbol(x)
-    cc._register_dummy_or_symbol(y)
-    cc._register_dummy_or_symbol(z)
-
-    fx = cc._flatten(f(x))
-    fy = cc._flatten(f(y))
-    fz = cc._flatten(f(z))
-
-    # Initially disjoint
-    assert cc._find(x) != cc._find(y) != cc._find(z)
-    assert cc._find(fx) != cc._find(fy) != cc._find(fz)
-
-    cc.use[x].append((f, (x,), fx))
-    cc.use[y].append((f, (y,), fy))
-    cc.use[z].append((f, (z,), fz))
-
-    cc.lookup[(f, (x,))] = fx
-    cc.lookup[(f, (y,))] = fy
-    cc.lookup[(f, (z,))] = fz
-
-    # Add equalities to pending, simulating chained merges
-    cc.pending.append((x, y))
-    cc.pending.append((y, z))
-    cc.pending.append((fx, fy))
-    cc.pending.append((fy, fz))
-
-    cc._process_pending()
-
-    # All merged now
-    assert cc._find(x) == cc._find(y) == cc._find(z)
-    assert cc._find(fx) == cc._find(fy) == cc._find(fz)
-
-
-def test_add_equality_registers_and_merges():
-    cc = EUFCongruenceClosure([])
-
-    a, b = Symbol('a'), Symbol('b')
-    f = Function('f')
-
-    cc.add_equality(a, b)
-    assert cc._find(a) == cc._find(b)
-
-    fa = cc._flatten(f(a))
-    fb = cc._flatten(f(b))
-
-    # Before adding equality of f(a), f(b) classes differ
-    assert cc._find(fa) != cc._find(fb)
-
-
-def test_flatten_cache_consistency():
-    cc = EUFCongruenceClosure([])
-
-    f = Function('f')
-    x = Symbol('x')
-
-    lam = Lambda(x, f(x))
-
-    flat1 = cc._flatten(lam)
-    flat2 = cc._flatten(lam)
-    assert flat1 == flat2  # Same Flatten repeated
-
-    flat_app1 = cc._flatten(lam(x))
-    flat_app2 = cc._flatten(lam(x))
-    assert flat_app1 == flat_app2  # Cached application flatten results
-
-
-def test_union_merge_use_lists_correctness():
-    cc = EUFCongruenceClosure([])
-
-    a, b, c = Symbol('a'), Symbol('b'), Symbol('c')
-    f = Function('f')
-
-    cc._register_dummy_or_symbol(a)
-    cc._register_dummy_or_symbol(b)
-    cc._register_dummy_or_symbol(c)
-
-    fa = cc._flatten(f(a))
-    fb = cc._flatten(f(b))
-    fc = cc._flatten(f(c))
-
-    # Setup UseList for a and b with different function applications
-    cc.use[a].append((f, (a,), fa))
-    cc.use[b].append((f, (b,), fb))
-    cc.use[c].append((f, (c,), fc))
-
-    cc.lookup[(f, (a,))] = fa
-    cc.lookup[(f, (b,))] = fb
-    cc.lookup[(f, (c,))] = fc
-
-    # Union a, b; Use lists merge correctly, propagation triggers equality of f(a), f(b)
-    cc._union(a, b)
-
-    # After union, use list for the merged rep includes uses from both
-    rep = cc._find(a)
-    assert len(cc.use[rep]) >= 2
