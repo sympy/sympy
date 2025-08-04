@@ -102,3 +102,8 @@ Flint Implementation
 
 .. autoclass:: FlintPowerSeriesRingQQ
     :members:
+
+.. py:class:: ZZSeries
+.. py:class:: QQSeries
+.. py:class:: MPZ
+.. py:class:: MPQ
