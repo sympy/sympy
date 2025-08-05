@@ -481,16 +481,28 @@ def _useries_log(s: USeries[Ef], dom: Field[Ef], ring_prec: int) -> USeries[Ef]:
             "Logarithm of a power series requires the constant term to be one."
         )
 
-    if prec is None:
-        s = coeffs, ring_prec
-
     if len(coeffs) == 1:
         return ([], prec)
 
-    dv_s = _useries_derivative(s, dom, ring_prec)
-    inverse_s = _useries_inverse(s, dom, ring_prec)
-    log_derivative = _useries_mul(dv_s, inverse_s, dom, ring_prec)
-    return _useries_integrate(log_derivative, dom, ring_prec)
+    if prec is None:
+        prec = ring_prec
+        s = coeffs, prec
+
+    if len(coeffs) > 20:
+        dv_s = _useries_derivative(s, dom, ring_prec)
+        inverse_s = _useries_inverse(s, dom, ring_prec)
+        log_derivative = _useries_mul(dv_s, inverse_s, dom, ring_prec)
+        return _useries_integrate(log_derivative, dom, ring_prec)
+
+    else:
+        c: list[Ef] = [dom.zero]
+        for k in range(1, prec):
+            c.append(dom.quo((-1)**(k-1), dom(k)))
+
+        f: USeries[Ef] = c[::-1], prec
+        s = _useries_add_ground(s, dom(-1), dom, ring_prec)
+        r = _useries_compose(f, s, dom, ring_prec)
+        return r
 
 
 def _useries_exp(s: USeries[Ef], dom: Field[Ef], ring_prec: int) -> USeries[Ef]:
@@ -585,7 +597,7 @@ def _useries_atanh(s: USeries[Ef], dom: Field[Ef], ring_prec: int) -> USeries[Ef
 
 
 def _useries_asin(s: USeries[Ef], dom: Field[Ef], ring_prec: int) -> USeries[Ef]:
-    """Compute the hyperbolic arcsine of a power series."""
+    """Compute the arcsine of a power series."""
     coeffs, prec = s
 
     if not coeffs:
@@ -611,13 +623,14 @@ def _useries_asin(s: USeries[Ef], dom: Field[Ef], ring_prec: int) -> USeries[Ef]
         dv_asin = _useries_mul(ds, q_sqrt_inv, dom, ring_prec)
         return _useries_integrate(dv_asin, dom, ring_prec)
 
-    c: list[Ef] = [dom.zero, dom.one, dom.zero]
-    for k in range(3, prec, 2):
-        c.append((k - 2) ** 2 * c[-2] / (k * (k - 1)))
-        c.append(dom.zero)
+    else:
+        c: list[Ef] = [dom.zero, dom.one, dom.zero]
+        for k in range(3, prec, 2):
+            c.append((k - 2) ** 2 * c[-2] / (k * (k - 1)))
+            c.append(dom.zero)
 
-    f: USeries[Ef] = (c[::-1], prec)
-    return _useries_compose(f, s, dom, ring_prec)
+        f: USeries[Ef] = (c[::-1], prec)
+        return _useries_compose(f, s, dom, ring_prec)
 
 
 def _useries_asinh(s: USeries[Ef], dom: Field[Ef], ring_prec: int) -> USeries[Ef]:
@@ -771,10 +784,24 @@ def _useries_sinh(s: USeries[Ef], dom: Field[Ef], ring_prec: int) -> USeries[Ef]
         prec = ring_prec
         s = coeffs, prec
 
-    e = _useries_exp(s, dom, ring_prec)
-    e_inv = _useries_inverse(e, dom, ring_prec)
-    diff = _useries_sub(e, e_inv, dom, ring_prec)
-    return _useries_div_ground(diff, dom(2), dom, ring_prec)
+    if len(coeffs) > 40:
+        e = _useries_exp(s, dom, ring_prec)
+        e_inv = _useries_inverse(e, dom, ring_prec)
+        diff = _useries_sub(e, e_inv, dom, ring_prec)
+        return _useries_div_ground(diff, dom(2), dom, ring_prec)
+
+    else:
+        n: Ef = dom.one
+        c: list[Ef] = [dom.zero]
+
+        for k in range(2, prec + 2, 2):
+            c.append(dom.revert(n))
+            c.append(dom.zero)
+            n *= k * (k + 1)
+
+        f: USeries[Ef] = c[::-1], prec
+
+        return _useries_compose(f, s, dom, ring_prec)
 
 
 def _useries_cos(s: USeries[Ef], dom: Field[Ef], ring_prec: int) -> USeries[Ef]:
@@ -834,11 +861,25 @@ def _useries_cosh(s: USeries[Ef], dom: Field[Ef], ring_prec: int) -> USeries[Ef]
 
     if prec is None:
         prec = ring_prec
+        s = coeffs, prec
 
-    e = _useries_exp(s, dom, ring_prec)
-    e_inv = _useries_inverse(e, dom, ring_prec)
-    diff = _useries_add(e, e_inv, dom, ring_prec)
-    return _useries_div_ground(diff, dom(2), dom, ring_prec)
+    if len(coeffs) > 40:
+        e = _useries_exp(s, dom, ring_prec)
+        e_inv = _useries_inverse(e, dom, ring_prec)
+        diff = _useries_add(e, e_inv, dom, ring_prec)
+        return _useries_div_ground(diff, dom(2), dom, ring_prec)
+    else:
+        n: Ef = dom.one
+        c: list[Ef] = [dom.one, dom.zero]
+
+        for k in range(2, prec, 2):
+            n *= (k - 1) * k
+            c.append(dom.revert(n))
+            c.append(dom.zero)
+
+        f: USeries[Ef] = c[::-1], prec
+
+        return _useries_compose(f, s, dom, ring_prec)
 
 
 class PythonPowerSeriesRingZZ:
