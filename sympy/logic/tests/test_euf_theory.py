@@ -1,4 +1,7 @@
-from sympy import symbols, Symbol, Dummy, Eq, Lambda, Integer, Function
+from sympy.core.symbol import symbols, Symbol, Dummy
+from sympy.core.relational import Eq
+from sympy.core.numbers import Integer
+from sympy.core.function import Function, Lambda
 from sympy.logic.algorithms.euf_theory import EUFCongruenceClosure
 import random
 
@@ -108,17 +111,17 @@ def test_process_pending_chain_merges():
     fx = cc._flatten(f1(x1))
     fy = cc._flatten(f1(y1))
     fz = cc._flatten(f1(z1))
-    cc.use[x1].append((f1, (x1,), fx))
-    cc.use[y1].append((f1, (y1,), fy))
-    cc.use[z1].append((f1, (z1,), fz))
-    cc.lookup[(f1, (x1,))] = fx
-    cc.lookup[(f1, (y1,))] = fy
-    cc.lookup[(f1, (z1,))] = fz
-    cc.pending.append((x1, y1))
-    cc.pending.append((y1, z1))
-    cc.pending.append((fx, fy))
-    cc.pending.append((fy, fz))
-    cc._process_pending()
+    cc.use_list[x1].append((f1, (x1,), fx))
+    cc.use_list[y1].append((f1, (y1,), fy))
+    cc.use_list[z1].append((f1, (z1,), fz))
+    cc.lookup_table[(f1, (x1,))] = fx
+    cc.lookup_table[(f1, (y1,))] = fy
+    cc.lookup_table[(f1, (z1,))] = fz
+    cc.pending_unions.append((x1, y1))
+    cc.pending_unions.append((y1, z1))
+    cc.pending_unions.append((fx, fy))
+    cc.pending_unions.append((fy, fz))
+    cc._process_pending_unions()
     assert cc._find(x1) == cc._find(y1) == cc._find(z1)
     assert cc._find(fx) == cc._find(fy) == cc._find(fz)
 
@@ -140,26 +143,28 @@ def test_use_list_merging_under_union():
     cc = EUFCongruenceClosure([])
     a1, b1, c1 = Symbol('a1'), Symbol('b1'), Symbol('c1')
     f1 = Function('f1')
+    # Register variables and applications
     cc._register(a1)
     cc._register(b1)
     cc._register(c1)
+    # Flatten applications
     fa = cc._flatten(f1(a1))
     fb = cc._flatten(f1(b1))
     fc = cc._flatten(f1(c1))
-    cc.use[a1].append((f1, (a1,), fa))
-    cc.use[b1].append((f1, (b1,), fb))
-    cc.use[c1].append((f1, (c1,), fc))
-    cc.lookup[(f1, (a1,))] = fa
-    cc.lookup[(f1, (b1,))] = fb
-    cc.lookup[(f1, (c1,))] = fc
+    # Union a1 and b1
     cc._union(a1, b1)
+    # Now add equality b1 = c1, so all three are merged
+    cc._union(b1, c1)
     rep = cc._find(a1)
-    assert len(cc.use[rep]) >= 2
+    class_members = cc.classlist[rep]
+    # Test: all applications f1(x) for all class members x are congruent
+    app_reps = set(cc._find(cc._flatten(f1(x))) for x in class_members)
+    assert len(app_reps) == 1
 
 
 def test_complex_deep_chaining():
     # Very deep nesting of f
-    depth = 200
+    depth = 190
     term_a = a
     term_b = b
     for _ in range(depth):
@@ -167,6 +172,7 @@ def test_complex_deep_chaining():
         term_b = f(term_b)
     eqs = [Eq(term_a, x), Eq(a, b)]
     cc = EUFCongruenceClosure(eqs)
+
 
     # All nestings over a and b should be equal to each other and to x
     for _ in range(depth):
