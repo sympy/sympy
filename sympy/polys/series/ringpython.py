@@ -103,7 +103,9 @@ def _unify_prec(
     coeffs1, prec1 = s1
     coeffs2, prec2 = s2
 
-    if prec1 == prec2:
+    if prec1 == prec2 == ring_prec:
+        return coeffs1, coeffs2, ring_prec
+    elif prec1 == prec2:
         unified_prec = prec1
     elif prec1 is None:
         unified_prec = prec2
@@ -115,8 +117,14 @@ def _unify_prec(
     if unified_prec is None:
         unified_prec = ring_prec
 
-    coeffs1 = dup_truncate(coeffs1, unified_prec, dom)
-    coeffs2 = dup_truncate(coeffs2, unified_prec, dom)
+    d1 = dup_degree(coeffs1)
+    d2 = dup_degree(coeffs2)
+
+    if d1 >= unified_prec:
+        coeffs1 = dup_truncate(coeffs1, unified_prec, dom)
+    if d2 >= unified_prec:
+        coeffs2 = dup_truncate(coeffs2, unified_prec, dom)
+
     return coeffs1, coeffs2, unified_prec
 
 
