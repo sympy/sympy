@@ -1,4 +1,34 @@
-import sys
+"""
+Congruence Closure Engine for EUF
+
+Implements:
+    Nieuwenhuis & Oliveras, "Congruence Closure with Integer Offsets"
+    https://www.cs.upc.edu/~oliveras/dpllt.pdf
+
+This algorithm efficiently computes the equivalence closure of a set of
+ground equalities over uninterpreted functions, using union-find,
+curryfication/flattening, and congruence propagation.
+
+Terminology, variable names, and algorithm steps are consistent with those
+shown in the paper, especially Section 4.
+
+Example usage (doctest):
+
+>>> from sympy import symbols, Function, Eq
+>>> f, g = symbols('f g', cls=Function)
+>>> a, b, x, c = symbols('a b x c')
+>>> cc = EUFCongruenceClosure([Eq(a, b), Eq(f(a), x)])
+>>> cc.are_equal(f(b), x)
+True
+>>> cc.add_equality(a, c)
+>>> cc.are_equal(a, c)
+True
+
+Classes
+-------
+    EUFCongruenceClosure: Implements the congruence closure algorithm for EUF.
+"""
+
 from collections import defaultdict, deque
 import sympy as sp
 from sympy import Symbol, Eq, Lambda
@@ -6,48 +36,61 @@ from sympy.core.numbers import Number
 from sympy.core import Basic
 from sympy.utilities.iterables import numbered_symbols
 
-# Allow very deep terms
-sys.setrecursionlimit(max(10000, sys.getrecursionlimit()))
-
 class EUFCongruenceClosure:
     """
-    Congruence closure engine for ground EUF (equality with uninterpreted functions).
-    Implements the algorithm from Nieuwenhuis and Oliveras (2003).
+    Congruence closure algorithm for ground Equality with Uninterpreted Functions (EUF).
+
+    See:
+        Nieuwenhuis & Oliveras, "Congruence Closure with Integer Offsets"
+        https://www.cs.upc.edu/~oliveras/dpllt.pdf
+
+    Major data structures (using algorithm's variable names):
+        pending_unions:   deque, list of pairs of constants yet to be merged (PENDING).
+        representative_table: dict, mapping: constant -> its class representative (REPRESENTATIVE).
+        classlist: defaultdict(set), rep -> set of all elements in class (CLASSLIST).
+        lookup_table: dict, maps (function, tuple of args) to a constant (LOOKUP).
+        use_list: defaultdict(list), rep -> list of (func, args, result) triples (USELIST).
+
+    Curryfication and flattening (see Sec 3) are handled as in the paper.
     """
 
-    def __init__(self, eqs):
-        self._flat = {}               # Maps (func, args) or Lambda to Dummy
-        self.lookup = {}              # Congruence lookup for function applications
-        self.use = defaultdict(list) # Maps argument to list of applications using it
+    def __init__(self, equations):
+        """
+        Parameters
+        ----------
+        equations : list of Eq or SymPy expressions
+            The ground equalities to be saturated.
+        """
+        # ----- Section 4, Paper -----
+        self.pending_unions = deque()
+        self.representative_table = {}           # Representative[c]
+        self.classlist = defaultdict(set)        # ClassList[rep]
+        self.lookup_table = {}                   # Lookup_table[function, args]
+        self.use_list = defaultdict(list)        # UseList[rep]
 
         self._dummies = numbered_symbols('c', sp.Dummy)
-        self.rep = {}                # Union-find parent pointers
-        self.cls = defaultdict(set)  # Maps representatives to class members
-
         self._num_dummy_cache = {}
         self._atom_dummy_cache = {}
-        self._register_symbol_cache = {}
+        self._flatten_cache = {}
 
-        self.pending = deque()
-
-        # Flatten all initial equalities or terms and queue unions
-        for eq in eqs:
+        # Curryfication and flattening (Sec 3/4): every unique subterm assigned constant
+        for eq in equations:
             if isinstance(eq, Eq):
-                lhs = self._flatten(eq.lhs)
-                rhs = self._flatten(eq.rhs)
-                self._register(lhs)
-                self._register(rhs)
-                self.pending.append((lhs, rhs))
+                left_id = self._flatten(eq.lhs)
+                right_id = self._flatten(eq.rhs)
+                self._register(left_id)
+                self._register(right_id)
+                self.pending_unions.append((left_id, right_id))
             else:
-                val = self._flatten(eq)
-                self._register(val)
+                tid = self._flatten(eq)
+                self._register(tid)
+        self._process_pending_unions()
 
-        self._process_pending()
-
-    def _register(self, t):
-        if t not in self.rep:
-            self.rep[t] = t
-            self.cls[t].add(t)
+    def _register(self, const):
+        """Ensure const is in class structures as its own singleton."""
+        if const not in self.representative_table:
+            self.representative_table[const] = const
+            self.classlist[const].add(const)
 
     def _new_dummy(self):
         d = next(self._dummies)
@@ -56,95 +99,120 @@ class EUFCongruenceClosure:
 
     def _flatten(self, expr):
         """
-        Recursively flatten expr into canonical Dummy or Symbol.
-        Handles Lambdas with currying and caches flattened terms.
+        Curryfy and flatten expr, assign new dummy for each unique term as in Sec. 3.
+
+        Returns
+        -------
+        Symbol/Dummy : unique id for the term subtree.
         """
         if isinstance(expr, (sp.Dummy, Symbol)):
             self._register(expr)
             return expr
-
         if isinstance(expr, Number):
             if expr not in self._num_dummy_cache:
                 d = self._new_dummy()
                 self._num_dummy_cache[expr] = d
             return self._num_dummy_cache[expr]
-
         if getattr(expr, "is_Atom", False):
             if expr not in self._atom_dummy_cache:
                 d = self._new_dummy()
                 self._atom_dummy_cache[expr] = d
             return self._atom_dummy_cache[expr]
-
         if isinstance(expr, Lambda):
             lam = expr if len(expr.variables) == 1 else expr.curry()
-            body_flat = self._flatten(lam.expr)
-            lam_curried = Lambda(lam.variables[0], body_flat)
-            if lam_curried not in self._flat:
+            body_id = self._flatten(lam.expr)
+            lam_key = Lambda(lam.variables[0], body_id)
+            if lam_key not in self._flatten_cache:
                 d = self._new_dummy()
-                self._flat[lam_curried] = d
-            return self._flat[lam_curried]
-
-        # Flatten function application
+                self._flatten_cache[lam_key] = d
+            return self._flatten_cache[lam_key]
         func = expr.func
-        if isinstance(func, Basic) and not isinstance(expr, Lambda):
-            func_flat = self._flatten(func)
-        else:
-            func_flat = func
-
-        args_flat = tuple(self._find(self._flatten(arg)) for arg in expr.args)
-        key = (func_flat, args_flat)
-
-        if key not in self._flat:
+        func_id = self._flatten(func) if isinstance(func, Basic) and not isinstance(expr, Lambda) else func
+        arg_ids = tuple(self._find(self._flatten(arg)) for arg in expr.args)
+        key = (func_id, arg_ids)
+        if key not in self._flatten_cache:
             d = self._new_dummy()
-            self._flat[key] = d
-            self.lookup[key] = d
-            for arg in args_flat:
-                self.use[arg].append((func_flat, args_flat, d))
-        return self._flat[key]
+            self._flatten_cache[key] = d
+            self.lookup_table[key] = d
+            for arg in arg_ids:
+                self.use_list[arg].append((func_id, arg_ids, d))
+        return self._flatten_cache[key]
 
-    def _find(self, t):
-        # Register new elements before find to avoid KeyError
-        if t not in self.rep:
-            self._register(t)
-        while t != self.rep[t]:
-            self.rep[t] = self.rep[self.rep[t]]
-            t = self.rep[t]
-        return t
+    def _find(self, const):
+        """
+        Return the unique class representative for const (with path compression).
+        """
+        if const not in self.representative_table:
+            self._register(const)
+        while const != self.representative_table[const]:
+            self.representative_table[const] = self.representative_table[self.representative_table[const]]
+            const = self.representative_table[const]
+        return const
 
     def _union(self, a, b):
-        ra, rb = self._find(a), self._find(b)
-        if ra == rb:
+        """
+        Merge classes of a and b, propagate congruences (Sec 4, lines 3–14).
+        """
+        rep_a, rep_b = self._find(a), self._find(b)
+        if rep_a == rep_b:
             return
-        # Union by size heuristic
-        if len(self.cls[ra]) > len(self.cls[rb]):
-            ra, rb = rb, ra
-
-        for member in list(self.cls[ra]):
-            self.rep[member] = rb
-            self.cls[rb].add(member)
-            self.use[rb].extend(self.use.pop(member, []))
-        del self.cls[ra]
-
-        # Propagate congruence through use list of rb
-        for func, arg_ids, res in self.use[rb]:
+        # Always merge smaller class into larger to keep O(log n) bound.
+        if len(self.classlist[rep_a]) > len(self.classlist[rep_b]):
+            rep_a, rep_b = rep_b, rep_a
+        for elem in list(self.classlist[rep_a]):
+            self.representative_table[elem] = rep_b
+            self.classlist[rep_b].add(elem)
+            self.use_list[rep_b].extend(self.use_list.pop(elem, []))
+        del self.classlist[rep_a]
+        # Propagate for all applications referencing rep_b
+        for func, arg_ids, term in self.use_list[rep_b]:
             rep_args = tuple(self._find(arg) for arg in arg_ids)
-            rep_res = self._find(res)
+            rep_term = self._find(term)
             key = (func, rep_args)
-            if key in self.lookup:
-                other = self._find(self.lookup[key])
-                if other != rep_res:
-                    self.pending.append((rep_res, other))
-            self.lookup[key] = rep_res
-            self._flat[key] = rep_res
+            if key in self.lookup_table:
+                other = self._find(self.lookup_table[key])
+                if other != rep_term:
+                    self.pending_unions.append((rep_term, other))
+            self.lookup_table[key] = rep_term
+            self._flatten_cache[key] = rep_term
 
-    def _process_pending(self):
-        while self.pending:
-            self._union(*self.pending.popleft())
+    def _process_pending_unions(self):
+        """
+        Saturates pending_unions queue (Main loop, Paper Section 4).
+        """
+        while self.pending_unions:
+            self._union(*self.pending_unions.popleft())
 
     def add_equality(self, lhs, rhs):
-        self.pending.append((self._flatten(lhs), self._flatten(rhs)))
-        self._process_pending()
+        """
+        Incrementally add a new equality and propagate closure.
+
+        Examples
+        --------
+        >>> from sympy import symbols, Eq
+        >>> a, b = symbols('a b')
+        >>> cc = EUFCongruenceClosure([])
+        >>> cc.add_equality(a, b)
+        >>> cc.are_equal(a, b)
+        True
+        """
+        self.pending_unions.append((self._flatten(lhs), self._flatten(rhs)))
+        self._process_pending_unions()
 
     def are_equal(self, lhs, rhs):
-        lid, rid = self._flatten(lhs), self._flatten(rhs)
-        return self._find(lid) == self._find(rid)
+        """
+        Query whether two terms are in the same class under the closure.
+
+        Examples
+        --------
+        >>> from sympy import symbols, Function, Eq
+        >>> f = Function('f')
+        >>> x, y = symbols('x y')
+        >>> cc = EUFCongruenceClosure([Eq(x, y), Eq(f(x), f(y))])
+        >>> cc.are_equal(x, y)
+        True
+        >>> cc.are_equal(f(x), f(y))
+        True
+        """
+        lhs_id, rhs_id = self._flatten(lhs), self._flatten(rhs)
+        return self._find(lhs_id) == self._find(rhs_id)
