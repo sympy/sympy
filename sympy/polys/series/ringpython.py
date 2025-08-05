@@ -497,7 +497,7 @@ def _useries_log(s: USeries[Ef], dom: Field[Ef], ring_prec: int) -> USeries[Ef]:
     else:
         c: list[Ef] = [dom.zero]
         for k in range(1, prec):
-            c.append(dom.quo((-1)**(k-1), dom(k)))
+            c.append(dom.quo((-1) ** (k - 1), dom(k)))
 
         f: USeries[Ef] = c[::-1], prec
         s = _useries_add_ground(s, dom(-1), dom, ring_prec)
@@ -626,7 +626,9 @@ def _useries_asin(s: USeries[Ef], dom: Field[Ef], ring_prec: int) -> USeries[Ef]
     else:
         c: list[Ef] = [dom.zero, dom.one, dom.zero]
         for k in range(3, prec, 2):
-            c.append((k - 2) ** 2 * c[-2] / (k * (k - 1)))
+            term = dom(k - 2) ** 2 * c[-2]
+            term = dom.quo(term, dom(k * (k - 1)))
+            c.append(term)
             c.append(dom.zero)
 
         f: USeries[Ef] = (c[::-1], prec)
@@ -649,14 +651,27 @@ def _useries_asinh(s: USeries[Ef], dom: Field[Ef], ring_prec: int) -> USeries[Ef
         prec = ring_prec
         s = coeffs, prec
 
-    ds = _useries_derivative(s, dom, ring_prec)
-    s2 = _useries_square(s, dom, ring_prec)
-    q = _useries_add_ground(s2, dom.one, dom, ring_prec)
-    q_sqrt = _useries_sqrt(q, dom, ring_prec)
-    q_sqrt_inv = _useries_inverse(q_sqrt, dom, ring_prec)  # 1 / sqrt(1 + s^2)
+    if len(coeffs) > 20:
+        ds = _useries_derivative(s, dom, ring_prec)
+        s2 = _useries_square(s, dom, ring_prec)
+        q = _useries_add_ground(s2, dom.one, dom, ring_prec)
+        q_sqrt = _useries_sqrt(q, dom, ring_prec)
+        q_sqrt_inv = _useries_inverse(q_sqrt, dom, ring_prec)  # 1 / sqrt(1 + s^2)
 
-    dv_asinh = _useries_mul(ds, q_sqrt_inv, dom, ring_prec)
-    return _useries_integrate(dv_asinh, dom, ring_prec)
+        dv_asinh = _useries_mul(ds, q_sqrt_inv, dom, ring_prec)
+        return _useries_integrate(dv_asinh, dom, ring_prec)
+
+    else:
+        c: list[Ef] = [dom.zero, dom.one, dom.zero]
+
+        for k in range(3, prec, 2):
+            term = (k - 2) ** 2 * c[-2]
+            term = dom.quo(-term, dom(k * (k - 1)))
+            c.append(term)
+            c.append(dom.zero)
+
+        f: USeries[Ef] = c[::-1], prec
+        return _useries_compose(f, s, dom, ring_prec)
 
 
 def _useries_tan(s: USeries[Ef], dom: Field[Ef], ring_prec: int) -> USeries[Ef]:
