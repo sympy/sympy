@@ -154,7 +154,7 @@ def test_use_list_merging_under_union():
     rep = cc._find(a1)
     class_members = cc.classlist[rep]
     # Test: all applications f1(x) for all class members x are congruent
-    app_reps = set(cc._find(cc._flatten(f1(x))) for x in class_members)
+    app_reps = {cc._find(cc._flatten(f1(x))) for x in class_members}
     assert len(app_reps) == 1
 
 
