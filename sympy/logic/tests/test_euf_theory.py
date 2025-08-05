@@ -147,10 +147,6 @@ def test_use_list_merging_under_union():
     cc._register(a1)
     cc._register(b1)
     cc._register(c1)
-    # Flatten applications
-    fa = cc._flatten(f1(a1))
-    fb = cc._flatten(f1(b1))
-    fc = cc._flatten(f1(c1))
     # Union a1 and b1
     cc._union(a1, b1)
     # Now add equality b1 = c1, so all three are merged
