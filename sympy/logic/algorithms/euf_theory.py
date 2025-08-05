@@ -151,7 +151,7 @@ class EUFCongruenceClosure:
 
     def _union(self, a, b):
         """
-        Merge classes of a and b, propagate congruences (Sec 4, lines 3–14).
+        Merge classes of a and b, propagate congruences (Sec 4, lines 3.14).
         """
         rep_a, rep_b = self._find(a), self._find(b)
         if rep_a == rep_b:
