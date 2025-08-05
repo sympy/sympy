@@ -1055,7 +1055,7 @@ def dmp_positive_p(f: dmp[Er], u: int, K: Domain[Er]) -> bool:
     return K.is_positive(dmp_ground_LC(f, u, K))
 
 
-def dup_from_dict(f: dict[tuple[int], Er], K: Domain[Er]) -> dup[Er]:
+def dup_from_dict(f: dict[tuple[int, ...], Er], K: Domain[Er]) -> dup[Er]:
     """
     Create a ``K[x]`` polynomial from a ``dict``.
 
@@ -1074,12 +1074,11 @@ def dup_from_dict(f: dict[tuple[int], Er], K: Domain[Er]) -> dup[Er]:
     if not f:
         return []
 
-    n, h = max(f.keys()), []
+    (n,) = max(f.keys())
+    h = [K.zero] * (n + 1)
 
-    (N,) = n
-
-    for k in range(N, -1, -1):
-        h.append(f.get((k,), K.zero))
+    for (k,), fk in f.items():
+        h[n - k] = fk
 
     return dup_strip(h)
 
@@ -1101,10 +1100,11 @@ def dup_from_raw_dict(f: dict[int, Er], K: Domain[Er]) -> dup[Er]:
     if not f:
         return []
 
-    n, h = max(f.keys()), []
+    n = max(f.keys())
+    h = [K.zero] * (n + 1)
 
-    for k in range(n, -1, -1):
-        h.append(f.get(k, K.zero))
+    for k, fk in f.items():
+        h[n - k] = fk
 
     return dup_strip(h)
 
@@ -1126,7 +1126,7 @@ def dmp_from_dict(f: dict[tuple[int, ...], Er], u: int, K: Domain[Er]) -> dmp[Er
 
     """
     if not u:
-        return _dmp(dup_from_dict(f, K))  # type: ignore
+        return _dmp(dup_from_dict(f, K))
     if not f:
         return dmp_zero(u)
 
@@ -1154,36 +1154,28 @@ def dmp_from_dict(f: dict[tuple[int, ...], Er], u: int, K: Domain[Er]) -> dmp[Er
 
 
 def dup_to_dict(
-    f: dup[Er], K: Domain[Er] | None = None, zero: bool = False
-) -> dict[tuple[int], Er]:
+    f: dup[Er], K: Domain[Er] | None = None,
+) -> dict[tuple[int, ...], Er]:
     """
     Convert ``K[x]`` polynomial to a ``dict``.
 
     Examples
     ========
 
+    >>> from sympy import ZZ
     >>> from sympy.polys.densebasic import dup_to_dict
 
-    >>> dup_to_dict([1, 0, 5, 0, 7])
+    >>> dup_to_dict(ZZ.map([1, 0, 5, 0, 7]), ZZ)
     {(0,): 7, (2,): 5, (4,): 1}
-    >>> dup_to_dict([])
+    >>> dup_to_dict([], ZZ)
     {}
 
     """
-    if not f and zero:
-        return {(0,): K.zero}  # type: ignore
-
-    n, result = len(f) - 1, {}
-
-    for k in range(0, n + 1):
-        if f[n - k]:
-            result[(k,)] = f[n - k]
-
-    return result
+    return {(k,): fk for k, fk in enumerate(f[::-1]) if fk}
 
 
 def dup_to_raw_dict(
-    f: dup[Er], K: Domain[Er] | None = None, zero: bool = False
+    f: dup[Er], K: Domain[Er] | None = None,
 ) -> dict[int, Er]:
     """
     Convert a ``K[x]`` polynomial to a raw ``dict``.
@@ -1191,26 +1183,18 @@ def dup_to_raw_dict(
     Examples
     ========
 
+    >>> from sympy import ZZ
     >>> from sympy.polys.densebasic import dup_to_raw_dict
 
-    >>> dup_to_raw_dict([1, 0, 5, 0, 7])
+    >>> dup_to_raw_dict(ZZ.map([1, 0, 5, 0, 7]), ZZ)
     {0: 7, 2: 5, 4: 1}
 
     """
-    if not f and zero:
-        return {0: K.zero}  # type: ignore
-
-    n, result = len(f) - 1, {}
-
-    for k in range(0, n + 1):
-        if f[n - k]:
-            result[k] = f[n - k]
-
-    return result
+    return {k: fk for k, fk in enumerate(f[::-1]) if fk}
 
 
 def dmp_to_dict(
-    f: dmp[Er], u: int, K: Domain[Er] | None = None, zero: bool = False
+    f: dmp[Er], u: int, K: Domain[Er] | None = None,
 ) -> dict[tuple[int, ...], Er]:
     """
     Convert a ``K[X]`` polynomial to a ``dict````.
@@ -1218,24 +1202,22 @@ def dmp_to_dict(
     Examples
     ========
 
+    >>> from sympy import ZZ
     >>> from sympy.polys.densebasic import dmp_to_dict
 
-    >>> dmp_to_dict([[1, 0], [], [2, 3]], 1)
+    >>> dmp_to_dict([[1, 0], [], [2, 3]], 1, ZZ)
     {(0, 0): 3, (0, 1): 2, (2, 1): 1}
-    >>> dmp_to_dict([], 0)
+    >>> dmp_to_dict([], 0, ZZ)
     {}
 
     """
     if not u:
-        return dup_to_dict(_dup(f), K, zero=zero)  # type: ignore
-
-    if dmp_zero_p(f, u) and zero:
-        return {(0,) * (u + 1): K.zero}  # type: ignore
+        return dup_to_dict(_dup(f), K)
 
     n, v, result = dmp_degree(f, u), u - 1, {}
 
     for k in range(0, n + 1):
-        h = dmp_to_dict(f[n - k], v)  # type: ignore
+        h = dmp_to_dict(f[n - k], v, K)
 
         for exp, coeff in h.items():
             result[(k,) + exp] = coeff
@@ -1286,7 +1268,7 @@ def dmp_swap(f: dmp[Er], i: int, j: int, u: int, K: Domain[Er]) -> dmp[Er]:
     elif i == j:
         return f
 
-    F: dict[monom, Er] = dmp_to_dict(f, u)
+    F: dict[monom, Er] = dmp_to_dict(f, u, K)
     H: dict[monom, Er] = {}
 
     for exp, coeff in F.items():
@@ -1313,7 +1295,7 @@ def dmp_permute(f: dmp[Er], P: list[int], u: int, K: Domain[Er]) -> dmp[Er]:
     [[[1], []], [[2, 0], []]]
 
     """
-    F: dict[monom, Er] = dmp_to_dict(f, u)
+    F: dict[monom, Er] = dmp_to_dict(f, u, K)
     H: dict[monom, Er] = {}
 
     for exp, coeff in F.items():
@@ -1434,7 +1416,7 @@ def dmp_deflate(f: dmp[Er], u: int, K: Domain[Er]) -> tuple[tuple[int, ...], dmp
     if dmp_zero_p(f, u):
         return (1,) * (u + 1), f
 
-    F: dict[monom, Er] = dmp_to_dict(f, u)
+    F: dict[monom, Er] = dmp_to_dict(f, u, K)
     B = [0] * (u + 1)
 
     for M in F.keys():
@@ -1526,7 +1508,7 @@ def dmp_multi_deflate(
     F, B = [], [0] * (u + 1)
 
     for p in polys:
-        f: dict[monom, Er] = dmp_to_dict(p, u)
+        f: dict[monom, Er] = dmp_to_dict(p, u, K)
 
         if not dmp_zero_p(p, u):
             for m in f.keys():
@@ -1657,7 +1639,7 @@ def dmp_exclude(f: dmp[Er], u: int, K: Domain[Er]) -> tuple[list[int], dmp[Er], 
         return [], f, u
 
     J: list[int] = []
-    F: dict[monom, Er] = dmp_to_dict(f, u)
+    F: dict[monom, Er] = dmp_to_dict(f, u, K)
 
     for j in range(0, u + 1):
         for monom in F.keys():
@@ -1703,7 +1685,7 @@ def dmp_include(f: dmp[Er], J: list[int], u: int, K: Domain[Er]) -> dmp[Er]:
     if not J:
         return f
 
-    F: dict[tuple[int, ...], Er] = dmp_to_dict(f, u)
+    F: dict[tuple[int, ...], Er] = dmp_to_dict(f, u, K)
     d: dict[tuple[int, ...], Er] = {}
 
     for monom, coeff in F.items():
@@ -1743,6 +1725,8 @@ def dmp_inject(
     d: dict[monom, Er]
     h: dict[monom, Eg]
 
+    # XXX: Not clear what the domain should be here...
+    # d = dmp_to_dict(f, u, K)
     d = dmp_to_dict(f, u)
     h = {}
 
@@ -1781,6 +1765,8 @@ def dmp_eject(
     d: dict[monom, Er]
     h: dict[monom, dict[monom, Er]]
 
+    # XXX: Not clear what the domain should be here...
+    # d = dmp_to_dict(f, u, K)
     d = dmp_to_dict(f, u)
     h = {}
 
@@ -1852,7 +1838,7 @@ def dmp_terms_gcd(f: dmp[Er], u: int, K: Domain[Er]) -> tuple[tuple[int, ...], d
     if dmp_ground_TC(f, u, K) or dmp_zero_p(f, u):
         return (0,) * (u + 1), f
 
-    F: dict[monom, Er] = dmp_to_dict(f, u)
+    F: dict[monom, Er] = dmp_to_dict(f, u, K)
     G = monomial_min(*list(F.keys()))
 
     if all(g == 0 for g in G):
@@ -2055,7 +2041,7 @@ def dmp_slice_in(f: dmp[Er], m: int, n: int, j: int, u: int, K: Domain[Er]) -> d
     if not u:
         return _dmp(dup_slice(_dup(f), m, n, K))
 
-    d: dict[tuple[int, ...], Er] = dmp_to_dict(f, u)
+    d: dict[tuple[int, ...], Er] = dmp_to_dict(f, u, K)
     g: dict[tuple[int, ...], Er] = {}
 
     for monom, coeff in d.items():

@@ -1101,7 +1101,7 @@ def _dup_right_decompose(f: dup[Er], s: int, K: Domain[Er]) -> dup[Er]:
     n = len(f) - 1
     lc = dup_LC(f, K)
 
-    fd: dict[int, Er] = dup_to_raw_dict(f)
+    fd: dict[int, Er] = dup_to_raw_dict(f, K)
     g = { s: K.one }
 
     r = n // s
