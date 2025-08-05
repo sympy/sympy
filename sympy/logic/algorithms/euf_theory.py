@@ -189,7 +189,7 @@ class EUFCongruenceClosure:
 
         Examples
         --------
-        >>> from sympy import symbols, Eq
+        >>> from sympy import symbols
         >>> a, b = symbols('a b')
         >>> cc = EUFCongruenceClosure([])
         >>> cc.add_equality(a, b)
