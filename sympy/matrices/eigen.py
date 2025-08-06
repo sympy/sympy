@@ -1393,7 +1393,7 @@ def jordan_form_rational_matrix(M, calc_transform):
     def nullity_chain(val, algebraic_multiplicity):
         """Calculate the sequence  [0, nullity(E), nullity(E**2), ...]
         until it is constant where ``E = M - val*I``"""
-    
+
         ret     = [0]
         cols = M.cols
         mat_char = char_mat((factor_to_roots[val])[0], 1)
