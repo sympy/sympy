@@ -1607,7 +1607,8 @@ class DMP_Python(DMP[Er]):
 
     def _integrate(f, m: int, j: int) -> Self:
         """Computes the ``m``-th order indefinite integral of ``f`` in ``x_j``. """
-        return f.per(dmp_integrate_in(f._rep, m, j, f.lev, f.dom))
+        # XXX: This should only be for some domains (can fail over ZZ)
+        return f.per(dmp_integrate_in(f._rep, m, j, f.lev, f.dom)) # type: ignore
 
     def _diff(f, m: int, j: int) -> Self:
         """Computes the ``m``-th order derivative of ``f`` in ``x_j``. """
@@ -1690,11 +1691,13 @@ class DMP_Python(DMP[Er]):
 
     def _trunc(f, p: Er) -> Self:
         """Reduce ``f`` modulo a constant ``p``. """
-        return f.per(dmp_ground_trunc(f._rep, p, f.lev, f.dom))
+        # XXX: Not valid for all domains (needs %)
+        return f.per(dmp_ground_trunc(f._rep, p, f.lev, f.dom)) # type: ignore
 
     def monic(f) -> Self:
         """Divides all coefficients by ``LC(f)``. """
-        return f.per(dmp_ground_monic(f._rep, f.lev, f.dom))
+        # XXX: Not valid for all domains (needs /)
+        return f.per(dmp_ground_monic(f._rep, f.lev, f.dom)) # type: ignore
 
     def content(f) -> Er:
         """Returns GCD of polynomial coefficients. """

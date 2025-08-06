@@ -1243,6 +1243,23 @@ def dmp_to_dict(
     return result
 
 
+def dmp_to_raw_dict(f: dmp[Er], u: int, K: Domain[Er]) -> dict[int, dmp[Er]]:
+    """
+    Convert a ``K[X]`` polynomial to a raw ``dict``.
+
+    Examples
+    ========
+
+    >>> from sympy.polys.densebasic import dmp_to_raw_dict
+
+    >>> dmp_to_raw_dict([[[1]], [[1], [2]]], 1)
+    {0: [[1]], 1: [[1], [2]]}
+
+    """
+    v = u - 1
+    return {k: fk for k, fk in enumerate(f[::-1]) if not dmp_zero_p(fk, v)}
+
+
 def dmp_swap(f: dmp[Er], i: int, j: int, u: int, K: Domain[Er]) -> dmp[Er]:
     """
     Transform ``K[..x_i..x_j..]`` to ``K[..x_j..x_i..]``.
