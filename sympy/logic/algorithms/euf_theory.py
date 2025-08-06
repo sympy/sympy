@@ -15,6 +15,7 @@ shown in the paper, especially Section 4.
 Example usage (doctest):
 
 >>> from sympy import symbols, Function, Eq
+>>> from sympy.logic.algorithms.euf_theory import EUFCongruenceClosure
 >>> f, g = symbols('f g', cls=Function)
 >>> a, b, x, c = symbols('a b x c')
 >>> cc = EUFCongruenceClosure([Eq(a, b), Eq(f(a), x)])
@@ -190,6 +191,7 @@ class EUFCongruenceClosure:
         Examples
         --------
         >>> from sympy import symbols
+        >>> from sympy.logic.algorithms.euf_theory import EUFCongruenceClosure
         >>> a, b = symbols('a b')
         >>> cc = EUFCongruenceClosure([])
         >>> cc.add_equality(a, b)
@@ -206,6 +208,7 @@ class EUFCongruenceClosure:
         Examples
         --------
         >>> from sympy import symbols, Function, Eq
+        >>> from sympy.logic.algorithms.euf_theory import EUFCongruenceClosure
         >>> f = Function('f')
         >>> x, y = symbols('x y')
         >>> cc = EUFCongruenceClosure([Eq(x, y), Eq(f(x), f(y))])
