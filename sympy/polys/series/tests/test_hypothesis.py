@@ -43,16 +43,17 @@ def as_expr(s, ring):
     else:
         coeffs, prec = s
         coeffs = coeffs[::-1]
-
+    
+    dom = ring.domain
     result = []
 
     if coeffs and coeffs[0] != 0:
-        result.append(coeffs[0])
+        result.append(dom.to_sympy(coeffs[0]))
 
     for i, coeff in enumerate(coeffs[1:], start=1):
         if coeff == 0:
             continue
-        result.append(Mul(coeff, Pow(x, i)))
+        result.append(Mul(dom.to_sympy(coeff), Pow(x, i)))
 
     if prec is not None:
         result.append(Order(x**prec))
