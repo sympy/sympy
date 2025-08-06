@@ -1425,7 +1425,7 @@ def jordan_form_rational_matrix(M, calc_transform):
 
     char_eq = M.charpoly()
     _, factors = char_eq.factor_list()
-    factor_to_roots = {factor: list((all_roots(factor))) for factor, _ in factors}
+    factor_to_roots = {factor: list(set(all_roots(factor))) for factor, _ in factors}
     eigenvals = list(chain.from_iterable(factor_to_roots.values()))
 
     if len(set(eigenvals)) == M.cols:
