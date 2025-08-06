@@ -184,7 +184,7 @@ class FlintPowerSeriesRingZZ:
         if isinstance(s, fmpz_poly):
             return series_pprint(coeffs, None)
 
-        prec = _get_series_precision(s)
+        prec = self.series_prec(s)
         return series_pprint(coeffs, prec, sym=symbol, ascending=ascending)
 
     def print(self, s: ZZSeries, *, symbol: str = "x", ascending: bool = True) -> None:
@@ -225,9 +225,9 @@ class FlintPowerSeriesRingZZ:
         if isinstance(s1, fmpz_poly) and isinstance(s2, fmpz_poly):
             return s1 == s2
         elif isinstance(s1, fmpz_poly):
-            min_prec = _get_series_precision(s2)
+            min_prec = self.series_prec(s2)
         elif isinstance(s2, fmpz_poly):
-            min_prec = _get_series_precision(s1)
+            min_prec = self.series_prec(s1)
         else:
             min_prec = min(_get_series_precision(s1), _get_series_precision(s2))
 
@@ -406,13 +406,13 @@ class FlintPowerSeriesRingZZ:
                     return s1(s2)
 
         if isinstance(s1, fmpz_poly):
-            prec2: int = _get_series_precision(s2)
+            prec2 = self.series_prec(s2)
             s1 = fmpz_series(s1, prec=prec2)
         else:
             s1 = _cap_series_prec(s1, ring_prec)
 
         if isinstance(s2, fmpz_poly):
-            prec1: int = _get_series_precision(s1)
+            prec1 = self.series_prec(s1)
             s2 = fmpz_series(s2, prec=prec1)
         else:
             s2 = _cap_series_prec(s2, ring_prec)
@@ -618,7 +618,7 @@ class FlintPowerSeriesRingQQ:
         if isinstance(s, fmpq_poly):
             return series_pprint(coeffs, None)
 
-        prec = _get_series_precision(s)
+        prec = self.series_prec(s)
         return series_pprint(coeffs, prec, sym=symbol, ascending=ascending)
 
     def print(self, s: QQSeries, *, symbol: str = "x", ascending: bool = True) -> None:
@@ -659,9 +659,9 @@ class FlintPowerSeriesRingQQ:
         if isinstance(s1, fmpq_poly) and isinstance(s2, fmpq_poly):
             return s1 == s2
         elif isinstance(s1, fmpq_poly):
-            min_prec = _get_series_precision(s2)
+            min_prec = self.series_prec(s2)
         elif isinstance(s2, fmpq_poly):
-            min_prec = _get_series_precision(s1)
+            min_prec = self.series_prec(s1)
         else:
             min_prec = min(_get_series_precision(s1), _get_series_precision(s2))
 
@@ -851,13 +851,13 @@ class FlintPowerSeriesRingQQ:
                     return s1(s2)
 
         if isinstance(s1, fmpq_poly):
-            prec2: int = _get_series_precision(s2)
+            prec2 = self.series_prec(s2)
             s1 = fmpq_series(s1, prec=prec2)
         else:
             s1 = _cap_series_prec(s1, ring_prec)
 
         if isinstance(s2, fmpq_poly):
-            prec1: int = _get_series_precision(s1)
+            prec1 = self.series_prec(s1)
             s2 = fmpq_series(s2, prec=prec1)
         else:
             s2 = _cap_series_prec(s2, ring_prec)
