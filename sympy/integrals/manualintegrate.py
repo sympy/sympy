@@ -49,7 +49,7 @@ from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import (TrigonometricFunction,
     cos, sin, tan, cot, csc, sec, acos, asin, atan, acot, acsc, asec)
 from sympy.functions.special.delta_functions import Heaviside, DiracDelta
-from sympy.functions.special.error_functions import (erf, erfi, fresnelc,
+from sympy.functions.special.error_functions import (erf, erfc, erfi, fresnelc,
     fresnels, Ci, Chi, Si, Shi, Ei, li)
 from sympy.functions.special.gamma_functions import uppergamma
 from sympy.functions.special.elliptic_integrals import elliptic_e, elliptic_f
@@ -1257,7 +1257,7 @@ def _parts_rule(integrand, symbol) -> tuple[Expr, Expr, Expr, Expr, Rule] | None
         return pull_out_u_rl
 
     liate_rules = [pull_out_u(log), pull_out_u(*inverse_trig_functions),
-                   pull_out_u(erf), pull_out_algebraic, pull_out_u(sin, cos),
+                   pull_out_u(erf, erfc, erfi), pull_out_algebraic, pull_out_u(sin, cos),
                    pull_out_u(exp)]
 
 

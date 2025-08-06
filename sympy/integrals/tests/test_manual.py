@@ -12,7 +12,7 @@ from sympy.functions.elementary.piecewise import Piecewise, piecewise_fold
 from sympy.functions.elementary.trigonometric import (acos, acot, acsc, asec, asin, atan, cos, cot, csc, sec, sin, tan)
 from sympy.functions.special.delta_functions import Heaviside, DiracDelta
 from sympy.functions.special.elliptic_integrals import (elliptic_e, elliptic_f)
-from sympy.functions.special.error_functions import (Chi, Ci, Ei, Shi, Si, erf, erfi, fresnelc, fresnels, li)
+from sympy.functions.special.error_functions import (Chi, Ci, Ei, Shi, Si, erf, erfc, erfi, fresnelc, fresnels, li)
 from sympy.functions.special.gamma_functions import uppergamma
 from sympy.functions.special.polynomials import (assoc_laguerre, chebyshevt, chebyshevu, gegenbauer, hermite, jacobi, laguerre, legendre)
 from sympy.functions.special.zeta_functions import polylog
@@ -295,6 +295,10 @@ def test_manualintegrate_special():
     f, F = exp(-x**2)*exp(x), Rational(1,2)*exp(Rational(1,4))*sqrt(pi)*erf(x - Rational(1,2))
     assert_is_integral_of(f, F)
     f, F = erf(3*x)*exp(2*x), exp(2*x)*erf(3*x)/2 - exp(Rational(1,9))*erf(3*x - Rational(1,3))/2
+    assert_is_integral_of(f, F)
+    f, F = erfc(4*x)*exp(5*x), exp(5*x)*erfc(4*x)/5 + exp(Rational(25,64))*erf(4*x - Rational(5,8))/5
+    assert_is_integral_of(f, F)
+    f, F = erfi(7*x)*exp(6*x), exp(6*x)*erfi(7*x)/6 - exp(-Rational(9,49))*erfi(7*x + Rational(3,7))/6
     assert_is_integral_of(f, F)
 
 
