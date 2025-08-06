@@ -44,8 +44,8 @@ class PowerSeriesRingProto(Protocol[TSeries, Er]):
         """Return string representation of the ring."""
         ...
 
-    def __call__(self, coeffs: Sequence, prec: int | None = None) -> TSeries:
-        """Return a power series element."""
+    def __call__(self, coeffs: Sequence[Er | int], prec: int | None = None) -> TSeries:
+        """Return a power series element over ZZ."""
         ...
 
     @property
@@ -145,14 +145,6 @@ class PowerSeriesRingProto(Protocol[TSeries, Er]):
         """Truncate a power series to the first n terms."""
         ...
 
-
-class PowerSeriesRingProtoZZ(PowerSeriesRingProto[TSeries, Er], Protocol[TSeries, Er]):
-    """A protocol for a power series ring over ZZ."""
-
-    def __call__(self, coeffs: Sequence[Er | int], prec: int | None = None) -> TSeries:
-        """Return a power series element over ZZ."""
-        ...
-
     def compose(self, s1: TSeries, s2: TSeries, /) -> TSeries:
         """Compose two power series."""
         ...
@@ -165,14 +157,12 @@ class PowerSeriesRingProtoZZ(PowerSeriesRingProto[TSeries, Er], Protocol[TSeries
         """Return the reversion of a power series."""
         ...
 
-    def derivative(self, s: TSeries, /) -> TSeries:
+    def differentiate(self, s: TSeries, /) -> TSeries:
         """Return the derivative of a power series."""
         ...
 
 
-class PowerSeriesRingProtoQQ(
-    PowerSeriesRingProtoZZ[TSeries, Ef], Protocol[TSeries, Ef]
-):
+class PowerSeriesRingProtoQQ(PowerSeriesRingProto[TSeries, Ef], Protocol[TSeries, Ef]):
     """A protocol for a power series ring over QQ."""
 
     def __call__(

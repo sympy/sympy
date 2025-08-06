@@ -1040,25 +1040,25 @@ def test_high_deg(rd_rational):
     Rp, x = ring("x", QQ)
 
     rand = dup_random(30, 0, 10, QQ)
-    rand[0] = 0
+    rand[0] = QQ.zero
     s = Rs(rand)
     p = Rp.from_list(rand[::-1])
 
-    assert Rs.to_dense(Rs.exp(s)) == (rs_exp(p, x, 30)).to_dense()
+    assert Rs.to_dense(Rs.exp(s)) == rs_exp(p, x, 30).to_dense()
 
-    assert Rs.to_dense(Rs.atan(s)) == (rs_atan(p, x, 30)).to_dense()
-    assert Rs.to_dense(Rs.atanh(s)) == (rs_atanh(p, x, 30)).to_dense()
-    assert Rs.to_dense(Rs.asin(s)) == (rs_asin(p, x, 30)).to_dense()
-    assert Rs.to_dense(Rs.asinh(s)) == (rs_asinh(p, x, 30)).to_dense()
+    assert Rs.to_dense(Rs.atan(s)) == rs_atan(p, x, 30).to_dense()
+    assert Rs.to_dense(Rs.atanh(s)) == rs_atanh(p, x, 30).to_dense()
+    assert Rs.to_dense(Rs.asin(s)) == rs_asin(p, x, 30).to_dense()
+    assert Rs.to_dense(Rs.asinh(s)) == rs_asinh(p, x, 30).to_dense()
 
-    assert Rs.to_dense(Rs.tan(s)) == (rs_tan(p, x, 30)).to_dense()
-    assert Rs.to_dense(Rs.tanh(s)) == (rs_tanh(p, x, 30)).to_dense()
-    assert Rs.to_dense(Rs.sin(s)) == (rs_sin(p, x, 30)).to_dense()
-    assert Rs.to_dense(Rs.sinh(s)) == (rs_sinh(p, x, 30)).to_dense()
-    assert Rs.to_dense(Rs.cos(s)) == (rs_cos(p, x, 30)).to_dense()
-    assert Rs.to_dense(Rs.cosh(s)) == (rs_cosh(p, x, 30)).to_dense()
+    assert Rs.to_dense(Rs.tan(s)) == rs_tan(p, x, 30).to_dense()
+    assert Rs.to_dense(Rs.tanh(s)) == rs_tanh(p, x, 30).to_dense()
+    assert Rs.to_dense(Rs.sin(s)) == rs_sin(p, x, 30).to_dense()
+    assert Rs.to_dense(Rs.sinh(s)) == rs_sinh(p, x, 30).to_dense()
+    assert Rs.to_dense(Rs.cos(s)) == rs_cos(p, x, 30).to_dense()
+    assert Rs.to_dense(Rs.cosh(s)) == rs_cosh(p, x, 30).to_dense()
 
-    rand[0] = 1
+    rand[0] = QQ.one
     s = Rs(rand)
     p = Rp.from_list(rand[::-1])
-    assert Rs.to_dense(Rs.log(s)) == (rs_log(p, x, 30)).to_dense()
+    assert Rs.to_dense(Rs.log(s)) == rs_log(p, x, 30).to_dense()
