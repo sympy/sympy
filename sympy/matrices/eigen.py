@@ -1376,7 +1376,7 @@ def jordan_form_rational_matrix(M, calc_transform):
     from itertools import chain
 
     def char_mat(lam, mul):
-        #Build (A - λ·I)^mul over the algebraic field of lam
+        # Build (A - lambda * I)^mul over the algebraic field of lam
         K = QQ.algebraic_field(lam)
         dM = M.to_DM()
         return (dM.convert_to(K) - dM.eye(M.shape, K) * K.unit).pow(mul)
