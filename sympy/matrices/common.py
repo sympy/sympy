@@ -622,7 +622,7 @@ class MatrixShaping(MatrixRequired):
                 .format(self.rows, other.rows))
         return self._eval_row_join(other)
 
-    def diagonal(self, k: int=0):
+    def diagonal(self, k=0):
         """Returns the kth diagonal of self. The main diagonal
         corresponds to `k=0`; diagonals above and below correspond to
         `k > 0` and `k < 0`, respectively. The values of `self[i, j]`
@@ -805,7 +805,7 @@ class MatrixShaping(MatrixRequired):
         """
         return self._eval_vec()
 
-    def vech(self, diagonal: bool=True, check_symmetry: bool=True):
+    def vech(self, diagonal=True, check_symmetry=True):
         """Reshapes the matrix into a column vector by stacking the
         elements in the lower triangle.
 
@@ -936,7 +936,7 @@ class MatrixSpecial(MatrixRequired):
         return wminus, wplus
 
     @classmethod
-    def diag(kls, *args, strict: bool=False, unpack: bool=True, rows=None, cols=None, **kwargs):
+    def diag(kls, *args, strict=False, unpack=True, rows=None, cols=None, **kwargs):
         """Returns a matrix with the specified diagonal.
         If matrices are passed, a block-diagonal matrix
         is created (i.e. the "direct sum" of the matrices).
@@ -1102,7 +1102,7 @@ class MatrixSpecial(MatrixRequired):
         return klass._eval_eye(rows, cols)
 
     @classmethod
-    def jordan_block(kls, size=None, eigenvalue=None, *, band: str='upper', **kwargs):
+    def jordan_block(kls, size=None, eigenvalue=None, *, band='upper', **kwargs):
         """Returns a Jordan block
 
         Parameters
@@ -2085,7 +2085,7 @@ class MatrixOperations(MatrixRequired):
 
         return self._eval_applyfunc(f)
 
-    def as_real_imag(self, deep: bool=True, **hints):
+    def as_real_imag(self, deep=True, **hints):
         """Returns a tuple containing the (real, imaginary) part of matrix."""
         # XXX: Ignoring deep and hints...
         return self._eval_as_real_imag()
@@ -2121,14 +2121,14 @@ class MatrixOperations(MatrixRequired):
     def doit(self, **hints):
         return self.applyfunc(lambda x: x.doit(**hints))
 
-    def evalf(self, n: int=15, subs=None, maxn: int=100, chop: bool=False, strict: bool=False, quad=None, verbose: bool=False):
+    def evalf(self, n=15, subs=None, maxn=100, chop=False, strict=False, quad=None, verbose=False):
         """Apply evalf() to each element of self."""
         options = {'subs':subs, 'maxn':maxn, 'chop':chop, 'strict':strict,
                 'quad':quad, 'verbose':verbose}
         return self.applyfunc(lambda i: i.evalf(n, **options))
 
-    def expand(self, deep: bool=True, modulus=None, power_base: bool=True, power_exp: bool=True,
-               mul: bool=True, log: bool=True, multinomial: bool=True, basic: bool=True, **hints):
+    def expand(self, deep=True, modulus=None, power_base=True, power_exp=True,
+               mul=True, log=True, multinomial=True, basic=True, **hints):
         """Apply core.function.expand to each entry of the matrix.
 
         Examples
@@ -2172,7 +2172,7 @@ class MatrixOperations(MatrixRequired):
         """
         return self.T.C
 
-    def permute(self, perm, orientation: str='rows', direction: str='forward'):
+    def permute(self, perm, orientation='rows', direction='forward'):
         r"""Permute the rows or columns of a matrix by the given list of
         swaps.
 
@@ -2309,7 +2309,7 @@ class MatrixOperations(MatrixRequired):
         if orientation == 'cols':
             return self._eval_permute_cols(perm)
 
-    def permute_cols(self, swaps, direction: str='forward'):
+    def permute_cols(self, swaps, direction='forward'):
         """Alias for
         ``self.permute(swaps, orientation='cols', direction=direction)``
 
@@ -2320,7 +2320,7 @@ class MatrixOperations(MatrixRequired):
         """
         return self.permute(swaps, orientation='cols', direction=direction)
 
-    def permute_rows(self, swaps, direction: str='forward'):
+    def permute_rows(self, swaps, direction='forward'):
         """Alias for
         ``self.permute(swaps, orientation='rows', direction=direction)``
 
@@ -2331,7 +2331,7 @@ class MatrixOperations(MatrixRequired):
         """
         return self.permute(swaps, orientation='rows', direction=direction)
 
-    def refine(self, assumptions: bool=True):
+    def refine(self, assumptions=True):
         """Apply refine to each element of the matrix.
 
         Examples
@@ -2351,7 +2351,7 @@ class MatrixOperations(MatrixRequired):
         """
         return self.applyfunc(lambda x: refine(x, assumptions))
 
-    def replace(self, F, G, map: bool=False, simultaneous: bool=True, exact=None):
+    def replace(self, F, G, map=False, simultaneous=True, exact=None):
         """Replaces Function F in Matrix entries with Function G.
 
         Examples
@@ -2372,7 +2372,7 @@ class MatrixOperations(MatrixRequired):
         return self.applyfunc(
             lambda x: x.replace(F, G, map=map, simultaneous=simultaneous, exact=exact))
 
-    def rot90(self, k: int=1):
+    def rot90(self, k=1):
         """Rotates Matrix by 90 degrees
 
         Parameters
@@ -2546,7 +2546,7 @@ class MatrixOperations(MatrixRequired):
         from sympy.simplify.trigsimp import trigsimp
         return self.applyfunc(lambda x: trigsimp(x, **opts))
 
-    def upper_triangular(self, k: int=0):
+    def upper_triangular(self, k=0):
         """Return the elements on and above the kth diagonal of a matrix.
         If k is not specified then simply returns upper-triangular portion
         of a matrix
@@ -2585,7 +2585,7 @@ class MatrixOperations(MatrixRequired):
         return self._new(self.rows, self.cols, entry)
 
 
-    def lower_triangular(self, k: int=0):
+    def lower_triangular(self, k=0):
         """Return the elements on and below the kth diagonal of a matrix.
         If k is not specified then simply returns lower-triangular portion
         of a matrix
@@ -3066,7 +3066,7 @@ class _MinimalMatrix:
     def _new(cls, *args, **kwargs):
         return cls(*args, **kwargs)
 
-    def __init__(self, rows, cols=None, mat=None, copy: bool=False):
+    def __init__(self, rows, cols=None, mat=None, copy=False):
         if isfunction(mat):
             # if we passed in a function, use that to populate the indices
             mat = [mat(i, j) for i in range(rows) for j in range(cols)]
