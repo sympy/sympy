@@ -147,8 +147,6 @@ def dmp_LC(f: dmp[Er], K: Domain[Er]) -> dmp[Er]:
 
     """
     if not f:
-        # XXX: Remove this. It should not be needed since a zero dmp is
-        # represented like [[[]]].
         return K.zero # type: ignore
     else:
         return f[0]
@@ -1170,6 +1168,9 @@ def dup_to_dict(
     >>> dup_to_dict([], ZZ)
     {}
 
+    .. versionchanged:: 1.15.0
+        The ``zero`` parameter was removed.
+
     """
     return {(k,): fk for k, fk in enumerate(f[::-1]) if fk}
 
@@ -1188,6 +1189,9 @@ def dup_to_raw_dict(
 
     >>> dup_to_raw_dict(ZZ.map([1, 0, 5, 0, 7]), ZZ)
     {0: 7, 2: 5, 4: 1}
+
+    .. versionchanged:: 1.15.0
+        The ``zero`` parameter was removed.
 
     """
     return {k: fk for k, fk in enumerate(f[::-1]) if fk}
@@ -1209,6 +1213,9 @@ def dmp_to_dict(
     {(0, 0): 3, (0, 1): 2, (2, 1): 1}
     >>> dmp_to_dict([], 0, ZZ)
     {}
+
+    .. versionchanged:: 1.15.0
+        The ``zero`` parameter was removed.
 
     """
     if not u:
