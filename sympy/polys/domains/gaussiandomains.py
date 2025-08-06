@@ -1,7 +1,7 @@
 """Domains of Gaussian type."""
 
 from __future__ import annotations
-from typing import Generic, TypeVar, Self, Any
+from typing import Generic, TypeVar, Any, TYPE_CHECKING
 
 from sympy.external.gmpy import MPZ, MPQ
 from sympy.core.numbers import I
@@ -20,6 +20,10 @@ from sympy.polys.domains.ring import Ring
 
 Tdom = TypeVar('Tdom', MPZ, MPQ)
 Telem = TypeVar('Telem', bound="GaussianElement")
+
+
+if TYPE_CHECKING:
+    from typing import Self
 
 
 class GaussianElement(DomainElement, Generic[Tdom]):

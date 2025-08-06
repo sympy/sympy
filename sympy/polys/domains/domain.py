@@ -1,7 +1,7 @@
 """Implementation of :class:`Domain` class. """
 
 from __future__ import annotations
-from typing import Any, Generic, TypeVar, Protocol, Callable, Iterable, TYPE_CHECKING, Self
+from typing import Any, Generic, TypeVar, Protocol, Callable, Iterable, TYPE_CHECKING
 
 from sympy.core.numbers import AlgebraicNumber
 from sympy.core import Basic, Expr, sympify
@@ -33,6 +33,10 @@ if TYPE_CHECKING:
 
 
 T = TypeVar('T')
+
+
+if TYPE_CHECKING:
+    from typing import Self
 
 
 class RingElement(Protocol):
