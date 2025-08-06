@@ -1501,7 +1501,7 @@ class DMP_Python(DMP[Er]):
     def abs(f) -> Self:
         """Make all coefficients in ``f`` positive. """
         # XXX: Not defined for all domains.
-        return f.per(dmp_abs(f._rep, f.lev, f.dom))
+        return f.per(dmp_abs(f._rep, f.lev, f.dom)) # type: ignore
 
     def neg(f) -> Self:
         """Negate all coefficients in ``f``. """
@@ -1588,11 +1588,13 @@ class DMP_Python(DMP[Er]):
 
     def max_norm(f) -> Er:
         """Returns maximum norm of ``f``. """
-        return dmp_max_norm(f._rep, f.lev, f.dom)
+        # XXX: This is not defined for all domains. (needs abs)
+        return dmp_max_norm(f._rep, f.lev, f.dom) # type: ignore
 
     def l1_norm(f) -> Er:
         """Returns l1 norm of ``f``. """
-        return dmp_l1_norm(f._rep, f.lev, f.dom)
+        # XXX: This is not defined for all domains. (needs abs)
+        return dmp_l1_norm(f._rep, f.lev, f.dom) # type: ignore
 
     def l2_norm_squared(f) -> Er:
         """Return squared l2 norm of ``f``. """

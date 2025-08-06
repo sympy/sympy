@@ -38,6 +38,9 @@ Abstract Domains
 
 .. autoclass:: sympy.polys.domains.domain.RingElement
 .. autoclass:: sympy.polys.domains.domain.FieldElement
+.. autoclass:: sympy.polys.domains.domain.EuclidElement
+.. autoclass:: sympy.polys.domains.domain.AbsElement
+.. autoclass:: sympy.polys.domains.domain.OrderedElement
 
 .. autoclass:: sympy.polys.domains.domain.Er
 .. autoclass:: sympy.polys.domains.domain.Es
@@ -45,6 +48,9 @@ Abstract Domains
 .. autoclass:: sympy.polys.domains.domain.Eg
 .. py:class:: sympy.polys.densebasic.Epa
 .. autoclass:: sympy.polys.domains.domain.Ef
+.. autoclass:: sympy.polys.domains.domain.Eeuclid
+.. autoclass:: sympy.polys.domains.domain.Eabs
+.. autoclass:: sympy.polys.domains.domain.Eordered
 .. py:class:: sympy.polys.domains.domain.TypeIs
 
 .. autoclass:: sympy.polys.domains.domain.Domain

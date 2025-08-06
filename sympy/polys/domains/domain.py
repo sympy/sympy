@@ -54,10 +54,42 @@ class RingElement(Protocol[T]):
 class FieldElement(RingElement[T], Protocol[T]):
     """A field element.
 
-    Must support ``/``, ``//``, ``%`` and ``**``.
+    Must support ``/``.
     """
     def __truediv__(self, other: T | int, /) -> T: ...
     def __rtruediv__(self, other: int, /) -> T: ...
+
+
+class EuclidElement(RingElement[T], Protocol[T]):
+    """An Euclidean domain element.
+
+    Must support ``//``, ``%`` and ``divmod``.
+    """
+    def __floordiv__(self, other: T | int, /) -> T: ...
+    def __rfloordiv__(self, other: int, /) -> T: ...
+    def __mod__(self, other: T | int, /) -> T: ...
+    def __rmod__(self, other: int, /) -> T: ...
+    def __divmod__(self, other: T | int, /) -> tuple[T, T]: ...
+    def __rdivmod__(self, other: int, /) -> tuple[T, T]: ...
+
+
+class AbsElement(RingElement[T], Protocol[T]):
+    """An element that can be made positive or negative.
+
+    Must support ``abs``.
+    """
+    def __abs__(self, /) -> T: ...
+
+
+class OrderedElement(AbsElement[T], Protocol[T]):
+    """An element that can be compared to other elements.
+
+    Must support ``<``, ``<=``, ``>``, ``>=``.
+    """
+    def __lt__(self, other: T, /) -> bool: ...
+    def __le__(self, other: T, /) -> bool: ...
+    def __gt__(self, other: T, /) -> bool: ...
+    def __ge__(self, other: T, /) -> bool: ...
 
 
 Er = TypeVar('Er', bound=RingElement)
@@ -65,6 +97,9 @@ Es = TypeVar('Es', bound=RingElement)
 Et = TypeVar('Et', bound=RingElement)
 Eg = TypeVar('Eg', bound=RingElement)
 Ef = TypeVar('Ef', bound=FieldElement)
+Eeuclid = TypeVar('Eeuclid', bound=EuclidElement)
+Eabs = TypeVar('Eabs', bound=AbsElement)
+Eordered = TypeVar('Eordered', bound=OrderedElement)
 
 
 @public
