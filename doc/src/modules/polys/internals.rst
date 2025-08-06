@@ -125,6 +125,7 @@ representations. Many functions are available to manipulate polynomials in the
 .. autofunction:: dup_truncate
 .. autofunction:: dup_random
 .. autofunction:: dup_from_list
+.. autofunction:: dup_pretty
 .. autofunction:: dup_print
 
 **Arithmetic operations:**
