@@ -803,8 +803,7 @@ class WrappingCone(WrappingGeometryBase):
         )
 
         # The shortest path is chosen by ensuring the angle is not reflex.
-        if central > pi:
-            central = 2 * pi - central
+        central = Piecewise((central, central <= pi), (2 * pi - central, True))
 
         # Convert the 3D central angle to the corresponding angle (phi) in the
         # unrolled 2D planar sector.
