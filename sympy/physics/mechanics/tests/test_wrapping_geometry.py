@@ -482,8 +482,18 @@ class TestWrappingCone:
 class TestElasticConeModel:
     """
     A test class to verify the Lagrangian mechanics model of a particle
-    tethered by an elastic cable, constrainted to move on a conical surface.
-    This is a 2 DOF system.
+    tethered by an elastic cable that is constrained to move on the surface
+    of a fixed cone.
+
+    The physical system consists of a particle of mass `m` which can slide
+    freely on a cone with a half-angle `alpha`. This particle is attached to a
+    fixed anchor point `A` (also on the cone) by a massless, elastic cable
+    with a spring constant `k` and a natural rest length `L0`.
+
+    A key feature of this model is that the cable always follows the shortest
+    path—the geodesic—between the anchor point and the particle. The system has
+    two degrees of freedom, described by the generalized coordinates `r(t)`
+    (the slant distance from the cone's apex) and `phi(t)` (the azimuthal angle).
     """
 
     @classmethod
