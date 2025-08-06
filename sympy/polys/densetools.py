@@ -45,12 +45,11 @@ from sympy.polys.polyerrors import (
 
 from math import ceil as _ceil, log2 as _log2, sqrt
 
-from typing import TYPE_CHECKING, TypeVar
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from sympy.polys.domains.algebraicfield import AlgebraicField
     from sympy.polys.polyclasses import ANP
-    from sympy.external.gmpy import MPQ
     from sympy.polys.domains.gaussiandomains import (
         Tdom,
         GaussianDomain,

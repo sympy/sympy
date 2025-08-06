@@ -1,7 +1,7 @@
 """Domains of Gaussian type."""
 
 from __future__ import annotations
-from typing import Generic, TypeVar, Self, Any, ClassVar
+from typing import Generic, TypeVar, Self, Any
 
 from sympy.external.gmpy import MPZ, MPQ
 from sympy.core.numbers import I
