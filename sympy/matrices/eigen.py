@@ -1483,7 +1483,7 @@ def jordan_form_rational_matrix(M, calc_transform):
 
         for index, eig in enumerate(roots):
             eig_basis = []
-            
+
             for block_eig, size in block_structure:
                 if block_eig != eig:
                     continue
