@@ -1,6 +1,6 @@
 """ Caching facility for SymPy """
 from importlib import import_module
-from typing import TypeVar, Callable, TYPE_CHECKING
+from typing import Callable
 
 class _cache(list):
     """ List of cached functions """
@@ -42,9 +42,7 @@ clear_cache = CACHE.clear_cache
 
 from functools import lru_cache, wraps
 
-_CallableT = TypeVar("_CallableT", bound=Callable)
-
-def __cacheit(maxsize) -> Callable[[_CallableT], _CallableT]:
+def __cacheit(maxsize):
     """caching decorator.
 
         important: the result of cached function must be *immutable*
@@ -88,11 +86,11 @@ def __cacheit(maxsize) -> Callable[[_CallableT], _CallableT]:
 ########################################
 
 
-def __cacheit_nocache(func: _CallableT) -> _CallableT:
+def __cacheit_nocache(func):
     return func
 
 
-def __cacheit_debug(maxsize) -> Callable[[_CallableT], _CallableT]:
+def __cacheit_debug(maxsize):
     """cacheit + code to check cache consistency"""
     def func_wrapper(func):
         cfunc = __cacheit(maxsize)(func)
@@ -143,9 +141,7 @@ else:
             'SYMPY_CACHE_SIZE must be a valid integer or None. ' + \
             'Got: %s' % SYMPY_CACHE_SIZE)
 
-if TYPE_CHECKING:
-    def cacheit(func: _CallableT) -> _CallableT: ...
-elif USE_CACHE == 'no':
+if USE_CACHE == 'no':
     cacheit = __cacheit_nocache
 elif USE_CACHE == 'yes':
     cacheit = __cacheit(SYMPY_CACHE_SIZE)
