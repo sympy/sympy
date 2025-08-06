@@ -491,7 +491,7 @@ class TestElasticConeModel:
     with a spring constant `k` and a natural rest length `L0`.
 
     A key feature of this model is that the cable always follows the shortest
-    path—the geodesic—between the anchor point and the particle. The system has
+    path, the geodesic, between the anchor point and the particle. The system has
     two degrees of freedom, described by the generalized coordinates `r(t)`
     (the slant distance from the cone's apex) and `phi(t)` (the azimuthal angle).
     """
