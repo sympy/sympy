@@ -4,6 +4,9 @@ from hypothesis.strategies import composite
 
 from sympy import ring, QQ
 from sympy.abc import x
+from sympy.core import Add, Mul, Pow
+from sympy.series.order import Order
+from sympy.external.gmpy import GROUND_TYPES
 from sympy.functions.elementary.trigonometric import atan, asin, sin, cos, tan
 from sympy.functions.elementary.hyperbolic import atanh, asinh, sinh, cosh, tanh
 from sympy.functions.elementary.exponential import exp, log
@@ -26,6 +29,35 @@ from sympy.polys.ring_series import (
 )
 
 from sympy.testing.pytest import slow
+
+flint = False
+if GROUND_TYPES == "flint":
+    flint = True
+
+
+def as_expr(s, ring):
+    """Helper function to convert a series to an expression."""
+    if flint:
+        coeffs = s.coeffs()
+        prec = ring.series_prec(s)
+    else:
+        coeffs, prec = s
+        coeffs = coeffs[::-1]
+
+    result = []
+
+    if coeffs and coeffs[0] != 0:
+        result.append(coeffs[0])
+
+    for i, coeff in enumerate(coeffs[1:], start=1):
+        if coeff == 0:
+            continue
+        result.append(Mul(coeff, Pow(x, i)))
+
+    if prec is not None:
+        result.append(Order(x**prec))
+
+    return Add(*result)
 
 
 @composite
@@ -95,19 +127,19 @@ def test_global_series_zero(f):
 
     s = Rs(f[::-1])
     e = expr_from_dict(dup_to_dict(f), x)
-    assert Rs.as_expr(Rs.exp(s)) == exp(e).series(x, 0, 5)
+    assert as_expr(Rs.exp(s), Rs) == exp(e).series(x, 0, 5)
 
-    assert Rs.as_expr(Rs.atan(s)) == atan(e).series(x, 0, 5)
-    assert Rs.as_expr(Rs.atanh(s)) == atanh(e).series(x, 0, 5)
-    assert Rs.as_expr(Rs.asin(s)) == asin(e).series(x, 0, 5)
-    assert Rs.as_expr(Rs.asinh(s)) == asinh(e).series(x, 0, 5)
+    assert as_expr(Rs.atan(s), Rs) == atan(e).series(x, 0, 5)
+    assert as_expr(Rs.atanh(s), Rs) == atanh(e).series(x, 0, 5)
+    assert as_expr(Rs.asin(s), Rs) == asin(e).series(x, 0, 5)
+    assert as_expr(Rs.asinh(s), Rs) == asinh(e).series(x, 0, 5)
 
-    assert Rs.as_expr(Rs.tan(s)) == tan(e).series(x, 0, 5)
-    assert Rs.as_expr(Rs.tanh(s)) == tanh(e).series(x, 0, 5)
-    assert Rs.as_expr(Rs.sin(s)) == sin(e).series(x, 0, 5)
-    assert Rs.as_expr(Rs.sinh(s)) == sinh(e).series(x, 0, 5)
-    assert Rs.as_expr(Rs.cos(s)) == cos(e).series(x, 0, 5)
-    assert Rs.as_expr(Rs.cosh(s)) == cosh(e).series(x, 0, 5)
+    assert as_expr(Rs.tan(s), Rs) == tan(e).series(x, 0, 5)
+    assert as_expr(Rs.tanh(s), Rs) == tanh(e).series(x, 0, 5)
+    assert as_expr(Rs.sin(s), Rs) == sin(e).series(x, 0, 5)
+    assert as_expr(Rs.sinh(s), Rs) == sinh(e).series(x, 0, 5)
+    assert as_expr(Rs.cos(s), Rs) == cos(e).series(x, 0, 5)
+    assert as_expr(Rs.cosh(s), Rs) == cosh(e).series(x, 0, 5)
 
 
 @given(f=dup_one_const(max_size=5))
@@ -117,4 +149,4 @@ def test_global_series_one(f):
     s = Rs(f[::-1])
     e = expr_from_dict(dup_to_dict(f), x)
 
-    assert Rs.as_expr(Rs.log(s)) == log(e).series(x, 0, 5)
+    assert as_expr(Rs.log(s), Rs) == log(e).series(x, 0, 5)

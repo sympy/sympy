@@ -3,10 +3,9 @@ from __future__ import annotations
 from contextlib import contextmanager
 from typing import Sequence, Union, TYPE_CHECKING
 
-from sympy.core.expr import Expr
 from sympy.polys.densebasic import dup, dup_reverse
 from sympy.polys.domains import Domain, QQ, ZZ
-from sympy.polys.series.ringpython import _useries_valuation, _useries_to_sympy_expr
+from sympy.polys.series.ringpython import _useries_valuation
 from sympy.polys.series.base import series_pprint
 from sympy.external.gmpy import GROUND_TYPES, MPZ, MPQ
 from sympy.utilities.decorator import doctest_depends_on
@@ -220,15 +219,6 @@ class FlintPowerSeriesRingZZ:
         if isinstance(s, fmpz_poly):
             return None
         return _get_series_precision(s)
-
-    def as_expr(self, s: ZZSeries, symbol: str = "x") -> Expr:
-        """Convert a power series to a SymPy expression."""
-        coeffs = self.to_dense(s)
-        if isinstance(s, fmpz_poly):
-            s = coeffs, None
-        else:
-            s = coeffs, _get_series_precision(s)
-        return _useries_to_sympy_expr(s, symbol)
 
     def equal(self, s1: ZZSeries, s2: ZZSeries) -> bool | None:
         """Check if two power series are equal up to their minimum precision."""
@@ -663,15 +653,6 @@ class FlintPowerSeriesRingQQ:
         if isinstance(s, fmpq_poly):
             return None
         return _get_series_precision(s)
-
-    def as_expr(self, s: QQSeries, symbol: str = "x") -> Expr:
-        """Convert a power series to a SymPy expression."""
-        coeffs = self.to_dense(s)
-        if isinstance(s, fmpq_poly):
-            s = coeffs, None
-        else:
-            s = coeffs, _get_series_precision(s)
-        return _useries_to_sympy_expr(s, symbol)
 
     def equal(self, s1: QQSeries, s2: QQSeries) -> bool | None:
         """Check if two power series are equal up to their minimum precision."""
