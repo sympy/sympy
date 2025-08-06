@@ -1250,10 +1250,11 @@ def dmp_to_raw_dict(f: dmp[Er], u: int, K: Domain[Er]) -> dict[int, dmp[Er]]:
     Examples
     ========
 
+    >>> from sympy import ZZ
     >>> from sympy.polys.densebasic import dmp_to_raw_dict
 
-    >>> dmp_to_raw_dict([[[1]], [[1], [2]]], 1)
-    {0: [[1]], 1: [[1], [2]]}
+    >>> dmp_to_raw_dict([[[1]], [[1], [2]]], 1, ZZ)
+    {0: [[1], [2]], 1: [[1]]}
 
     """
     v = u - 1
