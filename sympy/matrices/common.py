@@ -10,9 +10,10 @@ should either not be used or should be imported from somewhere else.
 """
 from __future__ import annotations
 from collections import defaultdict
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable, Sequence
 from inspect import isfunction
 from functools import reduce
+from typing import TYPE_CHECKING
 
 from sympy.assumptions.refine import refine
 from sympy.core import SympifyError, Add
@@ -34,6 +35,8 @@ from sympy.tensor.array import NDimArray
 
 from .utilities import _get_intermediate_simp_bool
 
+if TYPE_CHECKING:
+    from sympy.core.expr import Expr
 
 # These exception types were previously defined in this module but were moved
 # to exceptions.py. We reimport them here for backwards compatibility in case
@@ -1472,7 +1475,7 @@ class MatrixProperties(MatrixRequired):
         """
         return self._eval_has(*patterns)
 
-    def is_anti_symmetric(self, simplify: bool=True):
+    def is_anti_symmetric(self, simplify: bool | Callable[[Expr], Expr] = True):
         """Check if matrix M is an antisymmetric matrix,
         that is, M is a square matrix with all M[i, j] == -M[j, i].
 
@@ -1839,7 +1842,7 @@ class MatrixProperties(MatrixRequired):
         """
         return self._eval_is_symbolic()
 
-    def is_symmetric(self, simplify: bool=True):
+    def is_symmetric(self, simplify: bool | Callable[[Expr], Expr] = True):
         """Check if matrix is symmetric matrix,
         that is square matrix and is equal to its transpose.
 
@@ -2283,7 +2286,7 @@ class MatrixOperations(MatrixRequired):
             raise TypeError("orientation='{}' is an invalid kwarg. "
                             "Try 'rows' or 'cols'".format(orientation))
 
-        if not isinstance(perm, (Permutation, Iterable)):
+        if not isinstance(perm, (Permutation, Sequence)):
             raise ValueError(
                 "{} must be a list, a list of lists, "
                 "or a SymPy permutation object.".format(perm))

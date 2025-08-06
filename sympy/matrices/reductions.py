@@ -164,28 +164,28 @@ def _is_echelon(M, iszerofunc=_iszero):
 @overload
 def _echelon_form(M: Tmat,
         iszerofunc: Callable[[Expr], bool | None] = _iszero,
-        simplify: bool = False,
+        simplify: bool | Callable[[Expr], Expr] = False,
         *,
         with_pivots: Literal[False] = False
     ) -> Tmat: ...
 @overload
 def _echelon_form(M: Tmat,
         iszerofunc: Callable[[Expr], bool | None] = _iszero,
-        simplify: bool = False,
+        simplify: bool | Callable[[Expr], Expr] = False,
         *,
         with_pivots: Literal[True],
     ) -> tuple[Tmat, tuple[int]]: ...
 @overload
 def _echelon_form(M: Tmat,
         iszerofunc: Callable[[Expr], bool | None] = _iszero,
-        simplify: bool = False,
+        simplify: bool | Callable[[Expr], Expr] = False,
         *,
         with_pivots: bool = False,
     ) -> Tmat | tuple[Tmat, tuple[int]]: ...
 
 def _echelon_form(M: Tmat,
         iszerofunc: Callable[[Expr], bool | None] = _iszero,
-        simplify: bool = False,
+        simplify: bool | Callable[[Expr], Expr] = False,
         *,
         with_pivots: bool = False,
     ) -> Tmat | tuple[Tmat, tuple[int]]:
