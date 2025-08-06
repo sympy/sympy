@@ -5,7 +5,7 @@ from sympy.matrices import Matrix, zeros, eye
 from sympy.core.symbol import Symbol
 from sympy.core.numbers import Rational
 from sympy.functions.elementary.miscellaneous import sqrt
-from sympy.simplify.simplify import simplify
+from sympy.simplify.simplify import simplify, expand
 from sympy.abc import x
 
 
@@ -267,6 +267,43 @@ def test_rref():
             [1, 0, sqrt(x)*(-x + 1)/(-x**Rational(5, 2) + x),
                 0, 1, 1/(sqrt(x) + x + 1)]):
         assert simplify(i - j).is_zero
+
+
+def test_inverse_GE_noncommutative():
+    a, b, c, d = symbols('a, b, c, d', commutative=False)
+    m = Matrix([
+                [a, b],
+                [c, d]])
+
+    m_inverse_calculated = (m).inverse_GE()
+
+    #Appealing to convenient authority,
+    #https://en.wikipedia.org/wiki/Schur_complement
+    m_inverse_expected = Matrix([
+                    [a**(-1) + a**(-1)*b*(-c*a**(-1)*b + d)**(-1)*c*a**(-1), -a**(-1)*b*(-c*a**(-1)*b + d)**(-1)],
+                    [-(-c*a**(-1)*b + d)**(-1)*c*a**(-1), (-c*a**(-1)*b + d)**(-1)]])
+    assert m_inverse_calculated == m_inverse_expected
+
+    #This result also agrees with Block inverse, upon expansion:
+    assert m_inverse_calculated == m.inverse_BLOCK().expand()
+
+    # More definitively, we expect the products of m and its inverse (in either order)
+    # to be the identity matrix. However, the results are not simple and
+    # because sympy simplification is limited for noncommutative expressions,
+    # current simplify() can only usefully apply expand() in this context.
+    # Consequently (in each case) only 2 of the 4 elements of the
+    # resulting product matrix can be asserted to be 1 or 0.
+    m_m_inverse = (m*m_inverse_calculated).expand()
+
+    assert (m_m_inverse)[0, 0] == 1
+
+    assert (m_m_inverse)[0, 1] == 0
+
+    m_inverse_m = (m_inverse_calculated*m).expand()
+
+    assert (m_inverse_m)[0, 0] == 1
+
+    assert (m_inverse_m)[1, 0] == 0
 
 
 def test_rref_rhs():
