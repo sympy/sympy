@@ -83,7 +83,7 @@ def test_basics(rd_int):
     assert R.series_prec(R([1, 2, 3])) == None
     assert R.series_prec(R([1, 2, 3], None)) == None
     assert R.series_prec(R([1, 2, 3, 4, 5, 6, 7])) == 6
-    assert R.series_prec(R([1, 2, 3, 4, 5, 6, 7], 10)) == 10
+    assert R.series_prec(R([1, 2, 3, 4, 5, 6, 7], 10)) == 6
 
 
 def test_positive(rd_int):

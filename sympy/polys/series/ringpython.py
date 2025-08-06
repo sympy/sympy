@@ -48,13 +48,18 @@ def _useries(
     """Helper function to decide if the polynomial can be exact or it become a useries
     element."""
 
+    deg = dup_degree(coeffs)
     if series_prec is None:
-        deg = dup_degree(coeffs)
         if deg < ring_prec:
             return coeffs, None
         series_prec = ring_prec
-    coeffs = dup_truncate(coeffs, series_prec, dom)
-    return coeffs, series_prec
+
+    prec = min(series_prec, ring_prec)
+    if deg < prec:
+        return coeffs, series_prec
+
+    coeffs = dup_truncate(coeffs, prec, dom)
+    return coeffs, prec
 
 
 def _useries_valuation(s: USeries[Er], dom: Domain) -> int:
@@ -105,6 +110,8 @@ def _unify_prec(
 
     if prec1 == prec2 == ring_prec:
         return coeffs1, coeffs2, ring_prec
+    elif prec1 is not None and prec2 is not None and prec1 == prec2 <= ring_prec:
+        return coeffs1, coeffs2, prec1
     elif prec1 == prec2:
         unified_prec = prec1
     elif prec1 is None:
@@ -116,6 +123,8 @@ def _unify_prec(
 
     if unified_prec is None:
         unified_prec = ring_prec
+    else:
+        unified_prec = min(unified_prec, ring_prec)
 
     d1 = dup_degree(coeffs1)
     d2 = dup_degree(coeffs2)
@@ -128,7 +137,9 @@ def _unify_prec(
     return coeffs1, coeffs2, unified_prec
 
 
-def _useries_equality(s1: USeries[Er], s2: USeries[Er], dom: Domain[Er]) -> bool | None:
+def _useries_equality(
+    s1: USeries[Er], s2: USeries[Er], dom: Domain[Er], ring_prec: int
+) -> bool | None:
     """Check if two power series are equal."""
     coeffs1, prec1 = s1
     coeffs2, prec2 = s2
@@ -136,7 +147,7 @@ def _useries_equality(s1: USeries[Er], s2: USeries[Er], dom: Domain[Er]) -> bool
     if prec1 is None and prec2 is None:
         return s1 == s2
 
-    coeffs1, coeffs2, _ = _unify_prec(s1, s2, dom, 0)
+    coeffs1, coeffs2, _ = _unify_prec(s1, s2, dom, ring_prec)
     if coeffs1 != coeffs2:
         return False
     return None
@@ -181,8 +192,8 @@ def _useries_add(
         series = dup_add(coeffs1, coeffs2, dom)
         return series, None
 
-    coeffs1, coeffs2, prec = _unify_prec(s1, s2, dom, ring_prec)
-    return dup_add(coeffs1, coeffs2, dom), prec
+    coeffs1, coeffs2, min_prec = _unify_prec(s1, s2, dom, ring_prec)
+    return dup_add(coeffs1, coeffs2, dom), min_prec
 
 
 def _useries_add_ground(
@@ -198,8 +209,8 @@ def _useries_add_ground(
     if n == 0:
         return s
 
-    series = dup_add_ground(coeffs, n, dom)
-    return _useries(series, prec, dom, ring_prec)
+    coeffs = dup_add_ground(coeffs, n, dom)
+    return _useries(coeffs, prec, dom, ring_prec)
 
 
 def _useries_sub(
@@ -213,8 +224,8 @@ def _useries_sub(
         series = dup_sub(coeffs1, coeffs2, dom)
         return series, None
 
-    coeffs1, coeffs2, prec = _unify_prec(s1, s2, dom, ring_prec)
-    return dup_sub(coeffs1, coeffs2, dom), prec
+    coeffs1, coeffs2, min_prec = _unify_prec(s1, s2, dom, ring_prec)
+    return dup_sub(coeffs1, coeffs2, dom), min_prec
 
 
 def _useries_mul(
@@ -245,8 +256,8 @@ def _useries_mul_ground(
     if n == -1:
         return _useries_neg(s, dom, ring_prec)
 
-    series = dup_mul_ground(coeffs, n, dom)
-    return _useries(series, prec, dom, ring_prec)
+    coeffs = dup_mul_ground(coeffs, n, dom)
+    return _useries(coeffs, prec, dom, ring_prec)
 
 
 def _useries_square(s: USeries[Er], dom: Domain[Er], ring_prec: int) -> USeries[Er]:
@@ -286,9 +297,9 @@ def _useries_div_direct(
     if not dom.is_unit(s2[0][-1]):
         raise ValueError("Trailing coefficient of the divisor must be a unit")
 
-    _, _, prec = _unify_prec(s1, s2, dom, ring_prec)
-    s2_inv = _useries_inverse(s2, dom, prec)
-    return _useries_mul(s1, s2_inv, dom, prec)
+    _, _, min_prec = _unify_prec(s1, s2, dom, ring_prec)
+    s2_inv = _useries_inverse(s2, dom, min_prec)
+    return _useries_mul(s1, s2_inv, dom, ring_prec)
 
 
 def _useries_div(
@@ -320,18 +331,15 @@ def _useries_div(
         shifted_coeffs1 = dup_rshift(coeffs1, val2, dom)
         shifted_coeffs2 = dup_rshift(coeffs2, val2, dom)
 
-        cap = ring_prec - val2
+        # cap = ring_prec - val2
 
         prec1 = prec1 - val2 if prec1 is not None else ring_prec
         prec2 = prec2 - val2 if prec2 is not None else ring_prec
 
-        shifted_s1 = _useries(shifted_coeffs1, prec1, dom, cap)
-        shifted_s2 = _useries(shifted_coeffs2, prec2, dom, cap)
+        shifted_s1 = _useries(shifted_coeffs1, prec1, dom, ring_prec)
+        shifted_s2 = _useries(shifted_coeffs2, prec2, dom, ring_prec)
 
-        q_coeffs = _useries_div_direct(shifted_s1, shifted_s2, dom, cap)[0]
-
-        _, _, prec = _unify_prec(shifted_s1, shifted_s2, dom, ring_prec)
-        return q_coeffs, prec
+        return _useries_div_direct(shifted_s1, shifted_s2, dom, ring_prec)
 
 
 def _useries_div_ground(
@@ -367,6 +375,8 @@ def _useries_pow_int(
         if deg < ring_prec:
             return dup_series_pow(coeffs, n, ring_prec, dom), None
         prec = ring_prec
+    else:
+        prec = min(prec, ring_prec)
 
     series = dup_series_pow(coeffs, n, prec, dom)
     return series, prec
@@ -424,6 +434,8 @@ def _useries_inverse(s: USeries[Er], dom: Domain[Er], ring_prec: int) -> USeries
         if len(coeffs) == 1:
             return [dom.revert(coeffs[0])], None
         prec = ring_prec
+    else:
+        prec = min(prec, ring_prec)
 
     inv = dup_revert(coeffs, prec, dom)
     inv = dup_truncate(inv, prec, dom)
@@ -446,6 +458,8 @@ def _useries_reversion(s: USeries[Er], dom: Domain[Er], ring_prec: int) -> USeri
 
     if prec is None:
         prec = ring_prec
+    else:
+        prec = min(prec, ring_prec)
 
     series = dup_series_reversion(coeffs, prec, dom)
     return series, prec
@@ -486,7 +500,10 @@ def _useries_log(s: USeries[Ef], dom: Field[Ef], ring_prec: int) -> USeries[Ef]:
 
     if prec is None:
         prec = ring_prec
-        s = coeffs, prec
+    else:
+        prec = min(prec, ring_prec)
+
+    s = coeffs, prec
 
     if len(coeffs) > 20:
         dv_s = _useries_derivative(s, dom, ring_prec)
@@ -518,7 +535,10 @@ def _useries_exp(s: USeries[Ef], dom: Field[Ef], ring_prec: int) -> USeries[Ef]:
 
     if prec is None:
         prec = ring_prec
-        s = coeffs, prec
+    else:
+        prec = min(prec, ring_prec)
+
+    s = coeffs, prec
 
     one: USeries[Ef] = ([dom.one], prec)
 
@@ -561,7 +581,10 @@ def _useries_atan(s: USeries[Ef], dom: Field[Ef], ring_prec: int) -> USeries[Ef]
 
     if prec is None:
         prec = ring_prec
-        s = coeffs, prec
+    else:
+        prec = min(prec, ring_prec)
+
+    s = coeffs, prec
 
     ds = _useries_derivative(s, dom, ring_prec)
     s2 = _useries_square(s, dom, ring_prec)
@@ -585,7 +608,10 @@ def _useries_atanh(s: USeries[Ef], dom: Field[Ef], ring_prec: int) -> USeries[Ef
 
     if prec is None:
         prec = ring_prec
-        s = coeffs, prec
+    else:
+        prec = min(prec, ring_prec)
+
+    s = coeffs, prec
 
     ds = _useries_derivative(s, dom, ring_prec)
     s2 = _useries_square(s, dom, ring_prec)
@@ -610,7 +636,10 @@ def _useries_asin(s: USeries[Ef], dom: Field[Ef], ring_prec: int) -> USeries[Ef]
 
     if prec is None:
         prec = ring_prec
-        s = coeffs, prec
+    else:
+        prec = min(prec, ring_prec)
+
+    s = coeffs, prec
 
     if len(coeffs) > 20:
         ds = _useries_derivative(s, dom, ring_prec)
@@ -649,7 +678,10 @@ def _useries_asinh(s: USeries[Ef], dom: Field[Ef], ring_prec: int) -> USeries[Ef
 
     if prec is None:
         prec = ring_prec
-        s = coeffs, prec
+    else:
+        prec = min(prec, ring_prec)
+
+    s = coeffs, prec
 
     if len(coeffs) > 20:
         ds = _useries_derivative(s, dom, ring_prec)
@@ -688,7 +720,10 @@ def _useries_tan(s: USeries[Ef], dom: Field[Ef], ring_prec: int) -> USeries[Ef]:
 
     if prec is None:
         prec = ring_prec
-        s = coeffs, prec
+    else:
+        prec = min(prec, ring_prec)
+
+    s = coeffs, prec
 
     y: USeries[Ef] = ([], prec)
     # y_{n+1} = y_n + (s - \arctan(y_n)) * (1 + y_n^2)
@@ -721,7 +756,10 @@ def _useries_tanh(s: USeries[Ef], dom: Field[Ef], ring_prec: int) -> USeries[Ef]
 
     if prec is None:
         prec = ring_prec
-        s = coeffs, prec
+    else:
+        prec = min(prec, ring_prec)
+
+    s = coeffs, prec
 
     y: USeries[Ef] = ([], prec)
     # y_{n+1} = y_n + (s - \arctanh(y_n)) * (1 - y_n^2)
@@ -755,7 +793,10 @@ def _useries_sin(s: USeries[Ef], dom: Field[Ef], ring_prec: int) -> USeries[Ef]:
 
     if prec is None:
         prec = ring_prec
-        s = coeffs, prec
+    else:
+        prec = min(prec, ring_prec)
+
+    s = coeffs, prec
 
     if len(coeffs) > 20:
         # t = tan(s/2)
@@ -797,7 +838,10 @@ def _useries_sinh(s: USeries[Ef], dom: Field[Ef], ring_prec: int) -> USeries[Ef]
 
     if prec is None:
         prec = ring_prec
-        s = coeffs, prec
+    else:
+        prec = min(prec, ring_prec)
+
+    s = coeffs, prec
 
     if len(coeffs) > 40:
         e = _useries_exp(s, dom, ring_prec)
@@ -833,7 +877,10 @@ def _useries_cos(s: USeries[Ef], dom: Field[Ef], ring_prec: int) -> USeries[Ef]:
 
     if prec is None:
         prec = ring_prec
-        s = coeffs, prec
+    else:
+        prec = min(prec, ring_prec)
+
+    s = coeffs, prec
 
     if len(coeffs) > 20:
         # t = tan(s/2)
@@ -876,7 +923,10 @@ def _useries_cosh(s: USeries[Ef], dom: Field[Ef], ring_prec: int) -> USeries[Ef]
 
     if prec is None:
         prec = ring_prec
-        s = coeffs, prec
+    else:
+        prec = min(prec, ring_prec)
+
+    s = coeffs, prec
 
     if len(coeffs) > 40:
         e = _useries_exp(s, dom, ring_prec)
@@ -1034,8 +1084,15 @@ class PythonPowerSeriesRingZZ:
         If `prec` is not specified, it defaults to the ring's precision.
         """
         coeffs = dup_reverse(coeffs)
-        if prec is None and len(coeffs) > self._prec:
-            prec = self._prec
+        if prec is None:
+            if len(coeffs) <= self._prec:
+                return coeffs, None
+            else:
+                prec = self._prec
+        else:
+            prec = min(prec, self._prec)
+
+        if len(coeffs) > prec:
             coeffs = dup_truncate(coeffs, prec, self._domain)
 
         return coeffs, prec
@@ -1060,7 +1117,7 @@ class PythonPowerSeriesRingZZ:
 
     def equal(self, s1: USeries[MPZ], s2: USeries[MPZ]) -> bool | None:
         """Check if two power series are equal up to their minimum precision."""
-        return _useries_equality(s1, s2, self._domain)
+        return _useries_equality(s1, s2, self._domain, self._prec)
 
     def equal_repr(self, s1: USeries[MPZ], s2: USeries[MPZ]) -> bool:
         """Check if two power series have the same representation."""
@@ -1264,8 +1321,15 @@ class PythonPowerSeriesRingQQ:
         If `prec` is not specified, it defaults to the ring's precision.
         """
         coeffs = dup_reverse(coeffs)
-        if prec is None and len(coeffs) > self._prec:
-            prec = self._prec
+        if prec is None:
+            if len(coeffs) <= self._prec:
+                return coeffs, None
+            else:
+                prec = self._prec
+        else:
+            prec = min(prec, self._prec)
+
+        if len(coeffs) > prec:
             coeffs = dup_truncate(coeffs, prec, self._domain)
 
         return coeffs, prec
@@ -1290,7 +1354,7 @@ class PythonPowerSeriesRingQQ:
 
     def equal(self, s1: USeries[MPQ], s2: USeries[MPQ]) -> bool | None:
         """Check if two power series are equal up to their minimum precision."""
-        return _useries_equality(s1, s2, self._domain)
+        return _useries_equality(s1, s2, self._domain, self._prec)
 
     def equal_repr(self, s1: USeries[MPQ], s2: USeries[MPQ]) -> bool:
         """Check if two power series have the same representation."""
