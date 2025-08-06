@@ -5400,7 +5400,7 @@ class MatrixBase(Printable):
         if S.Zero in self.shape:
             return '[]'
         # Build table of string representations of the elements
-        table: list[list[str]] = [] 
+        table: list[list[str]] = []
         # Track per-column max lengths for pretty alignment
         maxlen = [0] * self.cols
         for i in range(self.rows):
