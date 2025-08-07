@@ -159,7 +159,7 @@ def test_use_list_merging_under_union():
 
 
 def test_complex_deep_chaining():
-    # Very deep nesting of f
+    # Deep nesting of f
     depth = 190
     term_a = a
     term_b = b
