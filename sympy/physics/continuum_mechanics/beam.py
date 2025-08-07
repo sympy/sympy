@@ -974,11 +974,11 @@ class Beam:
         >>> R2 = b.apply_support(30,"pin")  # Reaction force at x = 30
         >>> b.apply_load(120, 30, -2)
         >>> b.load
-        R1*SingularityFunction(x, 10, -1) + R2*SingularityFunction(x, 30, -1)
+        R_10*SingularityFunction(x, 10, -1) + R_30*SingularityFunction(x, 30, -1)
             - 8*SingularityFunction(x, 0, -1) + 120*SingularityFunction(x, 30, -2)
         >>> b.solve_for_reaction_loads(R1, R2)       # passing the symbols for solving
         >>> b.reaction_loads
-        {R1: 6, R2: 2}
+        {R_10: 6, R_30: 2}
         >>> b.load
         -8*SingularityFunction(x, 0, -1) + 6*SingularityFunction(x, 10, -1)
             + 120*SingularityFunction(x, 30, -2) + 2*SingularityFunction(x, 30, -1)
@@ -993,11 +993,11 @@ class Beam:
         >>> R2 = b.apply_support(30,"pin")  # Reaction force at x = 30
         >>> b.apply_load(120, 30, -2)
         >>> b.load
-        R1*SingularityFunction(x, 10, -1) + R2*SingularityFunction(x, 30, -1)
+        R_10*SingularityFunction(x, 10, -1) + R_30*SingularityFunction(x, 30, -1)
             - 8*SingularityFunction(x, 0, -1) + 120*SingularityFunction(x, 30, -2)
         >>> b.solve_for_reaction_loads()                 # solving reactions without passing the symbols while using apply_support for supports
         >>> b.reaction_loads
-        {R1: 6, R2: 2}
+        {R_10: 6, R_30: 2}
         >>> b.load
         -8*SingularityFunction(x, 0, -1) + 6*SingularityFunction(x, 10, -1)
             + 120*SingularityFunction(x, 30, -2) + 2*SingularityFunction(x, 30, -1)
