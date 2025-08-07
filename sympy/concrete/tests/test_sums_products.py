@@ -1620,6 +1620,8 @@ def test_summation_by_residues():
     # is zero. This results in a shift of zero, which means the function should
     # return None.
     assert eval_sum_residue((1/k**3), (k,-oo, S(-1))) == None
+    # SO issue cited on #27827
+    assert summation(1 / ((k+1) ** 4 + 1), (k, -oo, oo)).simplify() == sqrt(2)*pi*(1 - I)*(I/tan(sqrt(2)*pi*(1 + I)/2) + 1/tan(sqrt(2)*pi*(1 - I)/2))/4
 
 
 @slow
