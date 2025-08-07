@@ -1,26 +1,87 @@
 from __future__ import annotations
-from sympy.polys.domains import EXRAW
+
+
+from typing import TYPE_CHECKING, TypeVar, Union, Iterable, Callable, Any
+
+from sympy.polys.domains import EXRAW, QQ, PolynomialRing, RationalField
+from sympy.polys.domains.domain import Er, Domain
 from sympy.polys.densebasic import dup_convert
 from sympy.polys.densetools import dup_clear_denoms
 from sympy.external.gmpy import MPQ
 from sympy.core.mul import prod
+from sympy.core.relational import StrictGreaterThan
+from sympy.logic.boolalg import Boolean
+from sympy.core.exprtools import factor_terms
+from sympy.simplify.simplify import signsimp
+from sympy.core.mul import Mul
 
-def routh_hurwitz(p: Poly):
+_T = TypeVar("_T")
+dup: TypeAlias = "list[_T]"
+dmp: TypeAlias = "list[dmp[_T]]"
+dup_tup: TypeAlias = "tuple[_T, ...]"
+dmp_tup: TypeAlias = "tuple[dmp_tup[_T], ...]"
+monom: TypeAlias = "tuple[int, ...]"
+conditions: TypeAlias = "list[Union[StrictGreaterThan, Boolean]]"
+
+# The _dup and _dmp functions do not do anything but are needed so that a type
+# checker can understand the conversion between the two types.
+#
+# A dup is a list of domain elements. A dmp is a list of lists of domain
+# elements of arbitrary depth.
+
+if TYPE_CHECKING:
+    from typing import TypeAlias
+    from sympy.polys.rings import PolyElement
+    from sympy.polys.polyclasses import ANP
+    Epa = TypeVar("Epa", PolyElement, ANP)
+
+    def _dup(p: dmp[_T], /) -> dup[_T]: ...
+    def _dmp(p: dup[_T], /) -> dmp[_T]: ...
+    def _dmp_tup(p: tuple[_T, ...], /) -> dmp_tup[_T]: ...
+    def _idup(ps: tuple[dmp[_T], ...], /) -> tuple[dup[_T], ...]: ...
+    def _idmp(ps: tuple[dup[_T], ...], /) -> tuple[dmp[_T], ...]: ...
+else:
+
+    def _dup(p, /):
+        return p
+
+    def _dmp(p, /):
+        return p
+
+    def _dmp_tup(p, /):
+        return p
+
+    def _idup(ps, /):
+        return ps
+
+    def _idmp(ps, /):
+        return ps
+
+def dup_routh_hurwitz(f: dup[Er], K: Domain[Er]) -> list[conditions]:
     """
     Return the conditions for the polynomial to have all roots with negative
     real part.
 
-    """
-    coeffs = p.rep.to_list()
-    domain = p.domain
+    Note: This method assumes that the leading coefficient is non-zero.
+    In the opposite case, additional verification is required.
 
-    conds = routh_hurwitz_dom(coeffs, domain)
+    Algorithm from:
+    https://courses.washington.edu/mengr471/resources/Routh_Hurwitz_Proof.pdf
+    In non-numeric cases, the algorithm is modified to avoid divisions.
+
+    """
+    conds = dup_routh_hurwitz_dom(f, K)
 
     # return And(*[domain.to_sympy(c) > 0 for c in conds])
-    return [domain.to_sympy(c) for c in conds]
+    return [K.to_sympy(c) for c in conds]
 
 
-def routh_hurwitz_dom(p: list[Er], K: Domain[Er]) -> list[Er]:
+def dup_routh_hurwitz_dom(p: list[Er], K: Domain[Er]) -> list[Er]:
+    """
+    Calculate the Routh-Hurwitz conditions for the polynomial with a different
+    algorithm depending on the domain.
+
+    """
 
     if K.is_QQ:
         return _routh_hurwitz_qq(p, K)
@@ -39,7 +100,8 @@ def routh_hurwitz_dom(p: list[Er], K: Domain[Er]) -> list[Er]:
         return dup_convert(conds, K.get_ring(), K)
 
     else:
-        raise NotImplementedError
+        # For everything else, we use the EXRAW domain
+        return _routh_hurwitz_exraw(p)
 
 
 def _routh_hurwitz_qq(p: list[MPQ], K: RationalField) -> list[MPQ]:
@@ -69,7 +131,7 @@ def _rec_routh_hurwitz_poly(p: list[PolyElement[Er]],
         return [K.one]
 
     if len(p) == 2:
-        return [_clear_cond(p[0] * p[1], previous_cond, K)]
+        return [_clear_cond_poly(p[0] * p[1], previous_cond, K)]
 
     qs = [p[1] * qi for qi in p]
     for i in range(1, len(p), 2):
@@ -77,11 +139,11 @@ def _rec_routh_hurwitz_poly(p: list[PolyElement[Er]],
     qs = qs[1:]
 
     cond = p[0] * p[1]
-    cond = _clear_cond(cond, previous_cond, K)
+    cond = _clear_cond_poly(cond, previous_cond, K)
 
     return [cond] + _rec_routh_hurwitz_poly(qs, previous_cond, K)
 
-def _clear_cond(cond: PolyElement[Er], previous_cond, K):
+def _clear_cond_poly(cond: PolyElement[Er], previous_cond, K):
     # Divide out factors known to be positive
     for c in previous_cond:
         cond_quo, r = K.div(cond, c)
@@ -97,6 +159,112 @@ def _clear_cond(cond: PolyElement[Er], previous_cond, K):
 
     return cond
 
+def _routh_hurwitz_exraw(p: list[Er]) -> list[Er]:
+    if all(c.is_number for c in p):
+        return _calc_conditions_div(p)
+
+    return _calc_conditions_no_div(p)
+
+def _calc_conditions_div(p: list[Er]) -> list[Er]:
+    """
+    Stability check with divisions, used for numeric cases.
+
+    """
+    if len(p) < 2:
+        return [EXRAW.one]
+
+    if (p[0]*p[1]).is_nonpositive:
+        return [EXRAW(-1)]
+
+    if len(p) == 2:
+        return [p[0]*p[1]]
+
+    qs = p.copy()
+    for i in range(1, len(p), 2):
+        qs[i - 1] -= p[i] * p[0] / p[1]
+    qs = qs[1:]
+
+    return [p[0] * p[1]] + _calc_conditions_div(qs)
+
+def _calc_conditions_no_div(p: list[Er]) -> list[Er]:
+    """
+    Stability check without divisions, used for EXRAW.
+
+    """
+    return _rec_calc_conditions_no_div(p, [])
+
+def _rec_calc_conditions_no_div(p: list[Er],
+                                previous_cond: list[set]) -> list[Er]:
+    if len(p) < 2:
+        return [EXRAW.one]
+
+    if len(p) == 2:
+        return [_clear_cond_exraw(p[0]*p[1], previous_cond)]
+
+    qs = [p[1] * qi for qi in p]
+    for i in range(1, len(p), 2):
+        qs[i - 1] -= p[i] * p[0]
+    qs = qs[1:]
+
+    cond = _clear_cond_exraw(p[0] * p[1], previous_cond)
+    return [cond] + _rec_calc_conditions_no_div(qs, previous_cond)
+
+def _clear_cond_exraw(cond: Mul, previous_cond: list[set]) -> Mul:
+    """
+    Clear the condition by removing even powers and simplifying odd powers.
+    Also, remove factors that are already present in previous conditions.
+
+    This function returns a simplified product of factors and updates the
+    `previous_cond` list with the new condition.
+
+    """
+
+    factors: set[Er] = _build_simplified_factors(cond)
+    _remove_previous_conditions(factors, previous_cond)
+
+    first_factor_iteration = factors.copy()
+
+    factors = _build_simplified_factors(factor_terms(Mul(*factors)))
+    _remove_previous_conditions(factors, previous_cond)
+
+    # It's important to keep the first factor iteration, because it follows the
+    # pattern of the unsimplified coefficients during the calculation.
+    # Adding the last factor form, probably lead to a worse simplification.
+    previous_cond.append(first_factor_iteration)
+    return Mul(*factors)
+
+def _build_simplified_factors(cond: Mul) -> set:
+    """
+    Build a set of factors from the condition.
+    Even powers are ignored, as they do not contribute to the condition.
+    Odd powers are simplified to the exponent of 1.
+
+    """
+    powers_dict = dict(cond.as_powers_dict()) # Dict of factors with their powers
+    factors = set()
+    for factor in powers_dict:
+        if powers_dict[factor] % 2 != 0:
+            signsimp_factor = signsimp(factor, evaluate=False)
+            if signsimp_factor.could_extract_minus_sign():
+                factors.add(-signsimp_factor)
+                factors.add(-1)
+            else:
+                factors.add(signsimp_factor)
+
+    return factors
+
+def _remove_previous_conditions(factors: set, previous_cond: list[set]):
+    """
+    Remove factors that are already present in previous conditions.
+
+    """
+    for prev_factors in previous_cond:
+        if prev_factors.issubset(factors):
+            factors -= prev_factors
+        elif -1 in prev_factors:
+            if (prev_factors - {-1}).issubset(factors):
+                factors -= (prev_factors - {-1})
+                factors.add(-1)
 # TODO Implement conditions for discrete time systems
 # Possuble ways are:
 # - Map z = (1+s)/(1-s) and use routh hurwitz
