@@ -924,12 +924,12 @@ The same Beam form Example 10 but using ``apply_rotation_hinge()`` and ``apply_s
     >>> E, I = symbols('E, I')
     >>> l = symbols('l', positive=True)
     >>> b = Beam(3*l, E, I)
-    >>> b.apply_support(0, type='fixed')
-    >>> b.apply_support(3*l, type='fixed')
+    >>> r0,m0 = b.apply_support(0, type='fixed')
+    >>> r3l,m3l = b.apply_support(3*l, type='fixed')
     >>> F = symbols('F')
     >>> p1 = b.apply_rotation_hinge(l)
     >>> b.apply_load(F, 2*l, -1)
-    >>> b.solve_for_reaction_loads()
+    >>> b.solve_for_reaction_loads(r0,m0,r3l,m3l)
     >>> b.reaction_loads
     ⎧    5⋅F⋅l         -4⋅F⋅l       -5⋅F          -13⋅F ⎫
     ⎨M₀: ─────, M_3*l: ───────, R₀: ─────, R_3*l: ──────⎬
@@ -988,13 +988,13 @@ is applied between ``2*l`` and ``3*l``. The beam has a sliding hinge located at 
     >>> E, I = symbols('E, I')
     >>> l = symbols('l', positive=True)
     >>> b = Beam(3*l, E, I)
-    >>> b.apply_support(0, type='fixed')
-    >>> b.apply_support(3*l, type='fixed')
+    >>> r0, m0 = b.apply_support(0, type='fixed')
+    >>> r3l, m3l = b.apply_support(3*l, type='fixed')
     >>> s1 = b.apply_sliding_hinge(l*Rational(5, 2))
     >>> P1, q1 = symbols('P1 q1')
     >>> b.apply_load(P1, l*Rational(1, 3), -1)
     >>> b.apply_load(q1, 2*l, 0, 3*l)
-    >>> b.solve_for_reaction_loads()
+    >>> b.solve_for_reaction_loads(r0, r3l, m0, m3l)
     >>> b.reaction_loads
     ⎧                  2                       2                                  ⎫
     ⎪    17⋅P₁⋅l   25⋅l ⋅q₁         P₁⋅l   11⋅l ⋅q₁            l⋅q₁         -l⋅q₁ ⎪
