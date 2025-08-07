@@ -91,7 +91,7 @@ sign is 0 or 1 and bc should correspond to the number of bits used to
 represent the mantissa (man) in binary notation, e.g.
 """
 
-MPF_TUP: TypeAlias = tuple[int, int, int, int]  # mpf value tuple
+MPF_TUP = tuple[int, int, int, int]  # mpf value tuple
 
 """
 Explanation
@@ -111,7 +111,7 @@ relative accuracy of the respective complex part, but may be anything
 if the corresponding complex part is None.
 
 """
-TMP_RES: TypeAlias = Any  # temporary result, should be some variant of
+TMP_RES = Any  # temporary result, should be some variant of
 # tUnion[tTuple[Optional[MPF_TUP], Optional[MPF_TUP],
 #               Optional[int], Optional[int]],
 #        'ComplexInfinity']
@@ -120,7 +120,7 @@ TMP_RES: TypeAlias = Any  # temporary result, should be some variant of
 # 2. sometimes the result can't be zoo
 
 # type of the "options" parameter in internal evalf functions
-OPT_DICT: TypeAlias = dict[str, Any]
+OPT_DICT = dict[str, Any]
 
 
 def fastlog(x: MPF_TUP | None) -> int | Any:
@@ -190,7 +190,7 @@ def pure_complex(v: Expr, or_real=False) -> tuple[Number, Number] | None:
 
 
 # I don't know what this is, see function scaled_zero below
-SCALED_ZERO_TUP: TypeAlias = tuple[list[int], int, int, int]
+SCALED_ZERO_TUP = tuple[list[int], int, int, int]
 
 
 

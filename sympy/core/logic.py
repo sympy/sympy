@@ -9,10 +9,10 @@ this stuff for general purpose.
 
 from __future__ import annotations
 from typing import Any, Optional
-from typing_extensions import Self, TypeAlias
+from typing_extensions import Self
 
 # Type of a fuzzy bool
-FuzzyBool: TypeAlias = Optional[bool]
+FuzzyBool = Optional[bool]
 
 
 def _torf(args):
