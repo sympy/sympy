@@ -1424,6 +1424,31 @@ def trig_product_rule(integral: IntegralInfo):
         return CscCotRule(integrand, symbol)
 
 
+def trig_cmplx_exp_rule(integral: IntegralInfo):
+    """
+    Strategy that rewrites sin, cos, sinh, and cosh in terms of complex exponentials.
+    Useful for integration techniques that handle exponentials better.
+    Applies only when the integrand belongs to a class that benefits from exponential rewriting,
+    such as combinations involving Error functions.
+
+    sin(x)  -> (exp(i*x) - exp(-i*x)) / (2*i)
+    cos(x)  -> (exp(i*x) + exp(-i*x)) / 2
+    sinh(x) -> (exp(x) - exp(-x)) / 2
+    cosh(x) -> (exp(x) + exp(-x)) / 2
+    """
+    integrand, symbol = integral
+
+    if not integrand.has(erf, erfc, erfi):
+        return
+
+    # Replace trig and hyperbolic functions with their exponential forms
+    rewritten = integrand.rewrite([sin, cos, sinh, cosh], exp)
+
+    if rewritten != integrand:
+        steps = integral_steps(rewritten, symbol)
+        return RewriteRule(integrand, symbol, rewritten, steps)
+
+
 def quadratic_denom_rule(integral):
     integrand, symbol = integral
     a = Wild('a', exclude=[symbol])
@@ -2129,7 +2154,8 @@ def integral_steps(integrand, symbol, **options):
                     integral_is_subclass(Mul, Pow),
                     distribute_expand_rule),
                 trig_powers_products_rule,
-                trig_expand_rule
+                trig_expand_rule,
+                trig_cmplx_exp_rule
             )),
             null_safe(condition(integral_is_subclass(Mul, Pow), nested_pow_rule)),
             null_safe(trig_substitution_rule)
