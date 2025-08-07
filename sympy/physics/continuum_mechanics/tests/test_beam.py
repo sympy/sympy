@@ -445,13 +445,13 @@ def test_point_cflexure():
     E = Symbol('E')
     I = Symbol('I')
     b = Beam(15, E, I)
-    b.apply_support(0, type='pin')
-    b.apply_support(10, type='pin')
-    b.apply_support(15, type='fixed')
+    r0 = b.apply_support(0, type='pin')
+    r10 = b.apply_support(10, type='pin')
+    r15, m15 = b.apply_support(15, type='fixed')
     b.apply_rotation_hinge(12)
     b.apply_load(-10, 5, -1)
     b.apply_load(-5, 10, 0, 15)
-    b.solve_for_reaction_loads()
+    b.solve_for_reaction_loads(r0, r10, r15, m15)
     assert b.point_cflexure() == [Rational(1200, 163), 12, Rational(163, 12)]
 
     # constant zero region in the end
@@ -678,29 +678,11 @@ def test_remove_load():
 
 
 def test_apply_support():
-    # Test for applying supports using apply_support method.
     E = Symbol('E')
     I = Symbol('I')
 
     b = Beam(4, E, I)
     b.apply_support(0, "fixed")
-    b.apply_load(20, 4, -1)
-    M_0, R_0 = symbols('M_0, R_0')
-    b.solve_for_reaction_loads()
-    assert simplify(b.slope()) == simplify((80*SingularityFunction(x, 0, 1) - 10*SingularityFunction(x, 0, 2)
-                + 10*SingularityFunction(x, 4, 2))/(E*I))
-    assert simplify(b.deflection()) == simplify((40*SingularityFunction(x, 0, 2) - 10*SingularityFunction(x, 0, 3)/3
-                + 10*SingularityFunction(x, 4, 3)/3)/(E*I))
-
-    # Test for applying supports using apply_load method same above example.
-    E = Symbol('E')
-    I = Symbol('I')
-
-    b = Beam(4, E, I)
-    b.apply_load(R_0, 0, -1)
-    b.apply_load(M_0, 0, -2)
-    b.bc_deflection = [(0, 0)]
-    b.bc_slope = [(0, 0)]
     b.apply_load(20, 4, -1)
     M_0, R_0 = symbols('M_0, R_0')
     b.solve_for_reaction_loads(R_0, M_0)
@@ -708,52 +690,50 @@ def test_apply_support():
                 + 10*SingularityFunction(x, 4, 2))/(E*I))
     assert simplify(b.deflection()) == simplify((40*SingularityFunction(x, 0, 2) - 10*SingularityFunction(x, 0, 3)/3
                 + 10*SingularityFunction(x, 4, 3)/3)/(E*I))
-    # Test for applying supports using apply_support method with roller, pin support.
+
     b = Beam(30, E, I)
-    b.apply_support(10, "pin")
-    b.apply_support(30, "roller")
+    p0 = b.apply_support(10, "pin")
+    p1 = b.apply_support(30, "roller")
     b.apply_load(-8, 0, -1)
     b.apply_load(120, 30, -2)
-    b.solve_for_reaction_loads()
+    b.solve_for_reaction_loads(p0, p1)
     assert b.slope() == (-4*SingularityFunction(x, 0, 2) + 3*SingularityFunction(x, 10, 2)
             + 120*SingularityFunction(x, 30, 1) + SingularityFunction(x, 30, 2) + Rational(4000, 3))/(E*I)
     assert b.deflection() == (x*Rational(4000, 3) - 4*SingularityFunction(x, 0, 3)/3 + SingularityFunction(x, 10, 3)
             + 60*SingularityFunction(x, 30, 2) + SingularityFunction(x, 30, 3)/3 - 12000)/(E*I)
     R_10 = Symbol('R_10')
     R_30 = Symbol('R_30')
-
+    assert p0 == R_10
     assert b.reaction_loads == {R_10: 6, R_30: 2}
-    assert b.reaction_loads[R_10] == 6
-
-    # Test for applying supports using apply_load method same above example.
-    b = Beam(30, E, I)
-    b.apply_load(R_10,10,-1)
-    b.apply_load(R_30,30,-1)
-    b.bc_deflection = [(10, 0), (30, 0)]
-    b.apply_load(-8, 0, -1)
-    b.apply_load(120, 30, -2)
-    b.solve_for_reaction_loads(R_10, R_30)
-    assert b.slope() == (-4*SingularityFunction(x, 0, 2) + 3*SingularityFunction(x, 10, 2)
-            + 120*SingularityFunction(x, 30, 1) + SingularityFunction(x, 30, 2) + Rational(4000, 3))/(E*I)
-    assert b.deflection() == (x*Rational(4000, 3) - 4*SingularityFunction(x, 0, 3)/3 + SingularityFunction(x, 10, 3)
-            + 60*SingularityFunction(x, 30, 2) + SingularityFunction(x, 30, 3)/3 - 12000)/(E*I)
-    R_10 = Symbol('R_10')
-    R_30 = Symbol('R_30')
-
-    assert b.reaction_loads == {R_10: 6, R_30: 2}
-    assert b.reaction_loads[R_10] == 6
+    assert b.reaction_loads[p0] == 6
 
     b = Beam(8, E, I)
-    b.apply_support(0, "fixed")
-    b.apply_support(8, "roller")
+    p0, m0 = b.apply_support(0, "fixed")
+    p1 = b.apply_support(8, "roller")
     b.apply_load(-5, 0, 0, 8)
-    b.solve_for_reaction_loads()
+    b.solve_for_reaction_loads(p0, m0, p1)
     R_0 = Symbol('R_0')
     M_0 = Symbol('M_0')
     R_8 = Symbol('R_8')
-
+    assert p0 == R_0
+    assert m0 == M_0
+    assert p1 == R_8
     assert b.reaction_loads == {R_0: 25, M_0: -40, R_8: 15}
-    assert b.reaction_loads[M_0] == -40
+    assert b.reaction_loads[m0] == -40
+
+    b = Beam(8, E, I)
+    p0, m0 = b.apply_support(0, "fixed")
+    p1 = b.apply_support(8, "roller")
+    b.apply_load(-5, 0, 0, 8)
+    b.solve_for_reaction_loads() # solving reactions without passing symbols
+    R_0 = Symbol('R_0')
+    M_0 = Symbol('M_0')
+    R_8 = Symbol('R_8')
+    assert p0 == R_0
+    assert m0 == M_0
+    assert p1 == R_8
+    assert b.reaction_loads == {R_0: 25, M_0: -40, R_8: 15}
+    assert b.reaction_loads[m0] == -40
 
     P = Symbol('P', positive=True)
     L = Symbol('L', positive=True)
@@ -762,8 +742,28 @@ def test_apply_support():
     b.apply_support(L, type='fixed')
     b.apply_load(-P, L/2, -1)
     R_0, R_L, M_0, M_L = symbols('R_0, R_L, M_0, M_L')
-    b.solve_for_reaction_loads()
+    b.solve_for_reaction_loads(R_0, R_L, M_0, M_L)
     assert b.reaction_loads == {R_0: P/2, R_L: P/2, M_0: -L*P/8, M_L: L*P/8}
+
+    P = Symbol('P', positive=True)
+    L = Symbol('L', positive=True)
+    b = Beam(L, E, I)
+    b.apply_support(0, type='fixed')
+    b.apply_support(L, type='fixed')
+    b.apply_load(-P, L/2, -1)
+    R_0, R_L, M_0, M_L = symbols('R_0, R_L, M_0, M_L')
+    b.solve_for_reaction_loads() # solving reactions without passing symbols
+    assert b.reaction_loads == {R_0: P/2, R_L: P/2, M_0: -L*P/8, M_L: L*P/8}
+
+    P = Symbol('P', positive=True)
+    L = Symbol('L', positive=True)
+    c = Beam(L, E, I)
+    c.apply_support(0, type='fixed')
+    c.apply_support(L, type='fixed')
+    c.apply_load(-P, L/2, -1)
+    R_0, R_L, M_0, M_L = symbols('R_0, R_L, M_0, M_L')
+    c.solve_for_reaction_loads()
+    assert c.reaction_loads == {R_0: P/2, R_L: P/2, M_0: -L*P/8, M_L: L*P/8}
 
     E = Symbol('E')
     I = Symbol('I')
@@ -773,18 +773,18 @@ def test_apply_support():
 
 def test_apply_rotation_hinge():
     b = Beam(15, 20, 20)
-    b.apply_support(0, type='fixed')
-    b.apply_support(10, type='pin')
-    b.apply_support(15, type='pin')
+    r0, m0 = b.apply_support(0, type='fixed')
+    r10 = b.apply_support(10, type='pin')
+    r15 = b.apply_support(15, type='pin')
     p7 = b.apply_rotation_hinge(7)
     p12 = b.apply_rotation_hinge(12)
     b.apply_load(-10, 7, -1)
     b.apply_load(-2, 10, 0, 15)
-    b.solve_for_reaction_loads()
+    b.solve_for_reaction_loads(r0, m0, r10, r15)
     R_0, M_0, R_10, R_15, P_7, P_12 = symbols('R_0, M_0, R_10, R_15, P_7, P_12')
     expected_reactions = {R_0: 20/3, M_0: -140/3, R_10: 31/3, R_15: 3}
     expected_rotations = {P_7: 2281/2160, P_12: -5137/5184}
-    reaction_symbols = [R_0, M_0, R_10, R_15]
+    reaction_symbols = [r0, m0, r10, r15]
     rotation_symbols = [p7, p12]
     tolerance = 1e-6
     assert all(abs(b.reaction_loads[r] - expected_reactions[r]) < tolerance for r in reaction_symbols)
@@ -812,11 +812,11 @@ def test_apply_rotation_hinge():
     I = Symbol('I')
     F = Symbol('F')
     b = Beam(10, E, I)
-    b.apply_support(0, type="fixed")
-    b.apply_support(10, type="pin")
+    r0, m0 = b.apply_support(0, type="fixed")
+    r10 = b.apply_support(10, type="pin")
     b.apply_rotation_hinge(6)
     b.apply_load(F, 8, -1)
-    b.solve_for_reaction_loads()
+    b.solve_for_reaction_loads(r0, m0, r10)
     assert b.reaction_loads == {R_0: -F/2, M_0: 3*F, R_10: -F/2}
     assert (b.bending_moment() == -3*F*SingularityFunction(x, 0, 0) + F*SingularityFunction(x, 0, 1)/2
             + 17*F*SingularityFunction(x, 6, -1) - F*SingularityFunction(x, 8, 1)
@@ -829,21 +829,19 @@ def test_apply_rotation_hinge():
     E = Symbol('E')
     I = Symbol('I')
     F = Symbol('F')
-    R = Symbol('R_l1 + l2 + l3')
     l1 = Symbol('l1', positive=True)
     l2 = Symbol('l2', positive=True)
     l3 = Symbol('l3', positive=True)
     L = l1 + l2 + l3
     b = Beam(L, E, I)
-    b.apply_support(0, type="fixed")
-    b.apply_support(L, type="pin")
+    r0, m0 = b.apply_support(0, type="fixed")
+    r1 = b.apply_support(L, type="pin")
     b.apply_rotation_hinge(l1)
     b.apply_load(F, l1+l2, -1)
-    b.solve_for_reaction_loads()
-
-    assert b.reaction_loads[R_0] == -F*l3/(l2 + l3)
-    assert b.reaction_loads[M_0] == F*l1*l3/(l2 + l3)
-    assert b.reaction_loads[R] == -F*l2/(l2 + l3)
+    b.solve_for_reaction_loads(r0, m0, r1)
+    assert b.reaction_loads[r0] == -F*l3/(l2 + l3)
+    assert b.reaction_loads[m0] == F*l1*l3/(l2 + l3)
+    assert b.reaction_loads[r1] == -F*l2/(l2 + l3)
     expected_bending_moment = (-F*l1*l3*SingularityFunction(x, 0, 0)/(l2 + l3)
             + F*l2*SingularityFunction(x, l1 + l2 + l3, 1)/(l2 + l3)
             + F*l3*SingularityFunction(x, 0, 1)/(l2 + l3) - F*SingularityFunction(x, l1 + l2, 1)
@@ -853,11 +851,11 @@ def test_apply_rotation_hinge():
 
 def test_apply_sliding_hinge():
     b = Beam(13, 20, 20)
-    b.apply_support(0, type="fixed")
+    r0, m0 = b.apply_support(0, type="fixed")
     w8 = b.apply_sliding_hinge(8)
-    b.apply_support(13, type="pin")
+    r13 = b.apply_support(13, type="pin")
     b.apply_load(-10, 5, -1)
-    b.solve_for_reaction_loads()
+    b.solve_for_reaction_loads(r0, m0, r13)
     R_0, M_0, R_13, W_8 = symbols('R_0, M_0, R_13 W_8')
     assert b.reaction_loads == {R_0: 10, M_0: -50, R_13: 0}
     tolerance = 1e-6
@@ -873,11 +871,11 @@ def test_apply_sliding_hinge():
     b1 = Beam(5, E, I)
     b2 = Beam(8, E, I2)
     b = b1.join(b2)
-    b.apply_support(0, type="fixed")
+    r0, m0 = b.apply_support(0, type="fixed")
     b.apply_sliding_hinge(8)
-    b.apply_support(13, type="pin")
+    r13 = b.apply_support(13, type="pin")
     b.apply_load(-10, 5, -1)
-    b.solve_for_reaction_loads()
+    b.solve_for_reaction_loads(r0, m0, r13)
     W_8 = Symbol('W_8')
     assert b.deflection_jumps == {W_8: 4250/(3*E*I2)}
 
@@ -889,12 +887,12 @@ def test_apply_sliding_hinge():
     l3 = Symbol('l3', positive=True)
     L = l1 + l2 + l3
     b = Beam(L, E, I)
-    b.apply_support(0, type="pin")
-    b.apply_support(l1, type="pin")
+    r0 = b.apply_support(0, type="pin")
+    r3 = b.apply_support(l1, type="pin")
     b.apply_sliding_hinge(l1 + l2)
-    b.apply_support(L, type="pin")
+    r10 = b.apply_support(L, type="pin")
     b.apply_load(q, 0, 0, l1)
-    b.solve_for_reaction_loads()
+    b.solve_for_reaction_loads(r0, r3, r10)
     assert (b.bending_moment() == l1*q*SingularityFunction(x, 0, 1)/2 + l1*q*SingularityFunction(x, l1, 1)/2
             - q*SingularityFunction(x, 0, 2)/2 + q*SingularityFunction(x, l1, 2)/2
             + (-l1**3*l2*q/24 - l1**3*l3*q/24)*SingularityFunction(x, l1 + l2, -2))
@@ -972,7 +970,7 @@ def test_solve_for_ild_reactions():
     b.apply_support(0, type="pin")
     b.apply_support(10, type="pin")
     R_0, R_10 = symbols('R_0, R_10')
-    b.solve_for_ild_reactions(1)
+    b.solve_for_ild_reactions(1, R_0, R_10)
     a = b.ild_variable
     assert b.ild_reactions == {R_0: -SingularityFunction(a, 0, 0) + SingularityFunction(a, 0, 1)/10
                                     - SingularityFunction(a, 10, 1)/10,
@@ -987,7 +985,7 @@ def test_solve_for_ild_reactions():
     b.apply_support(L, type="fixed")
     b.apply_load(F, 0, -1)
     R_L, M_L = symbols('R_L, M_L')
-    b.solve_for_ild_reactions(F)
+    b.solve_for_ild_reactions(F, R_L, M_L)
     a = b.ild_variable
     assert b.ild_reactions == {R_L: -F*SingularityFunction(a, 0, 0) + F*SingularityFunction(a, L, 0) - F,
                                M_L: -F*L*SingularityFunction(a, 0, 0) - F*L + F*SingularityFunction(a, 0, 1)
@@ -995,19 +993,18 @@ def test_solve_for_ild_reactions():
 
     E = Symbol('E')
     I = Symbol('I')
-    R_0, R_5, R_10, R_20, M_20 = symbols('R_0 R_5 R_10 R_20 M_20')
     b = Beam(20, E, I)
-    b.apply_support(0, type="pin")
-    b.apply_support(5, type="pin")
-    b.apply_support(10, type="pin")
-    b.apply_support(20, type="fixed")
-    b.solve_for_ild_reactions(1)
+    r0 = b.apply_support(0, type="pin")
+    r5 = b.apply_support(5, type="pin")
+    r10 = b.apply_support(10, type="pin")
+    r20, m20 = b.apply_support(20, type="fixed")
+    b.solve_for_ild_reactions(1, r0, r5, r10, r20, m20)
     a = b.ild_variable
-    assert b.ild_reactions[R_0].subs(a, 4) == -Rational(59, 475)
-    assert b.ild_reactions[R_5].subs(a, 4) == -Rational(2296, 2375)
-    assert b.ild_reactions[R_10].subs(a, 4) == Rational(243, 2375)
-    assert b.ild_reactions[R_20].subs(a, 12) == -Rational(83, 475)
-    assert b.ild_reactions[M_20].subs(a, 12) == -Rational(264, 475)
+    assert b.ild_reactions[r0].subs(a, 4) == -Rational(59, 475)
+    assert b.ild_reactions[r5].subs(a, 4) == -Rational(2296, 2375)
+    assert b.ild_reactions[r10].subs(a, 4) == Rational(243, 2375)
+    assert b.ild_reactions[r20].subs(a, 12) == -Rational(83, 475)
+    assert b.ild_reactions[m20].subs(a, 12) == -Rational(264, 475)
 
 def test_solve_for_ild_shear():
     E = Symbol('E')
@@ -1016,10 +1013,10 @@ def test_solve_for_ild_shear():
     L1 = Symbol('L1', positive=True)
     L2 = Symbol('L2', positive=True)
     b = Beam(L1 + L2, E, I)
-    b.apply_support(0, type="pin")
-    b.apply_support(L1 + L2, type="pin")
-    b.solve_for_ild_reactions(F)
-    b.solve_for_ild_shear(L1, F)
+    r0 = b.apply_support(0, type="pin")
+    rL = b.apply_support(L1 + L2, type="pin")
+    b.solve_for_ild_reactions(F, r0, rL)
+    b.solve_for_ild_shear(L1, F, r0, rL)
     a = b.ild_variable
     expected_shear = (-F*L1*SingularityFunction(a, 0, 0)/(L1 + L2) - F*L2*SingularityFunction(a, 0, 0)/(L1 + L2)
                       - F*SingularityFunction(-a, 0, 0) + F*SingularityFunction(a, L1 + L2, 0) + F
@@ -1032,12 +1029,12 @@ def test_solve_for_ild_shear():
     E = Symbol('E')
     I = Symbol('I')
     b = Beam(20, E, I)
-    b.apply_support(0, type="pin")
-    b.apply_support(5, type="pin")
-    b.apply_support(10, type="pin")
-    b.apply_support(20, type="fixed")
-    b.solve_for_ild_reactions(1)
-    b.solve_for_ild_shear(6, 1)
+    r0 = b.apply_support(0, type="pin")
+    r5 = b.apply_support(5, type="pin")
+    r10 = b.apply_support(10, type="pin")
+    r20, m20 = b.apply_support(20, type="fixed")
+    b.solve_for_ild_reactions(1, r0, r5, r10, r20, m20)
+    b.solve_for_ild_shear(6, 1, r0, r5, r10, r20, m20)
     a = b.ild_variable
     assert b.ild_shear.subs(a, 12) == Rational(96, 475)
     assert b.ild_shear.subs(a, 4) == -Rational(216, 2375)
@@ -1049,22 +1046,22 @@ def test_solve_for_ild_moment():
     L1 = Symbol('L1', positive=True)
     L2 = Symbol('L2', positive=True)
     b = Beam(L1 + L2, E, I)
-    b.apply_support(0, type="pin")
-    b.apply_support(L1 + L2, type="pin")
+    r0 = b.apply_support(0, type="pin")
+    rL = b.apply_support(L1 + L2, type="pin")
     a = b.ild_variable
-    b.solve_for_ild_reactions(F)
-    b.solve_for_ild_moment(L1, F)
+    b.solve_for_ild_reactions(F, r0, rL)
+    b.solve_for_ild_moment(L1, F, r0, rL)
     assert b.ild_moment.subs(a, 3).subs(L1, 5).subs(L2, 5) == -3*F/2
 
     E = Symbol('E')
     I = Symbol('I')
     b = Beam(20, E, I)
-    b.apply_support(0, type="pin")
-    b.apply_support(5, type="pin")
-    b.apply_support(10, type="pin")
-    b.apply_support(20, type="fixed")
-    b.solve_for_ild_reactions(1)
-    b.solve_for_ild_moment(5, 1)
+    r0 = b.apply_support(0, type="pin")
+    r5 = b.apply_support(5, type="pin")
+    r10 = b.apply_support(10, type="pin")
+    r20, m20 = b.apply_support(20, type="fixed")
+    b.solve_for_ild_reactions(1, r0, r5, r10, r20, m20)
+    b.solve_for_ild_moment(5, 1, r0, r5, r10, r20, m20)
     assert b.ild_moment.subs(a, 12) == -Rational(96, 475)
     assert b.ild_moment.subs(a, 4) == Rational(36, 95)
 
@@ -1075,47 +1072,43 @@ def test_ild_with_rotation_hinge():
     L1 = Symbol('L1', positive=True)
     L2 = Symbol('L2', positive=True)
     L3 = Symbol('L3', positive=True)
-    R_0 = Symbol('R_0')
-    R_1 = Symbol('R_L1 + L2')
-    R_2 = Symbol('R_L1 + L2 + L3')
     b = Beam(L1 + L2 + L3, E, I)
-    b.apply_support(0, type="pin")
-    b.apply_support(L1 + L2, type="pin")
-    b.apply_support(L1 + L2 + L3, type="pin")
+    r0 = b.apply_support(0, type="pin")
+    r1 = b.apply_support(L1 + L2, type="pin")
+    r2 = b.apply_support(L1 + L2 + L3, type="pin")
     b.apply_rotation_hinge(L1 + L2)
-    b.solve_for_ild_reactions(F)
+    b.solve_for_ild_reactions(F, r0, r1, r2)
     a = b.ild_variable
-    assert b.ild_reactions[R_0].subs(a, 4).subs(L1, 5).subs(L2, 5).subs(L3, 10) == -3*F/5
-    assert b.ild_reactions[R_0].subs(a, -10).subs(L1, 5).subs(L2, 5).subs(L3, 10) == 0
-    assert b.ild_reactions[R_0].subs(a, 25).subs(L1, 5).subs(L2, 5).subs(L3, 10) == 0
-    assert b.ild_reactions[R_1].subs(a, 4).subs(L1, 5).subs(L2, 5).subs(L3, 10) == -2*F/5
-    assert b.ild_reactions[R_2].subs(a, 18).subs(L1, 5).subs(L2, 5).subs(L3, 10) == -4*F/5
-    b.solve_for_ild_shear(L1, F)
+    assert b.ild_reactions[r0].subs(a, 4).subs(L1, 5).subs(L2, 5).subs(L3, 10) == -3*F/5
+    assert b.ild_reactions[r0].subs(a, -10).subs(L1, 5).subs(L2, 5).subs(L3, 10) == 0
+    assert b.ild_reactions[r0].subs(a, 25).subs(L1, 5).subs(L2, 5).subs(L3, 10) == 0
+    assert b.ild_reactions[r1].subs(a, 4).subs(L1, 5).subs(L2, 5).subs(L3, 10) == -2*F/5
+    assert b.ild_reactions[r2].subs(a, 18).subs(L1, 5).subs(L2, 5).subs(L3, 10) == -4*F/5
+    b.solve_for_ild_shear(L1, F, r0, r1, r2)
     assert b.ild_shear.subs(a, 7).subs(L1, 5).subs(L2, 5).subs(L3, 10) == -3*F/10
     assert b.ild_shear.subs(a, 70).subs(L1, 5).subs(L2, 5).subs(L3, 10) == 0
-    b.solve_for_ild_moment(L1, F)
+    b.solve_for_ild_moment(L1, F, r0, r1, r2)
     assert b.ild_moment.subs(a, 1).subs(L1, 5).subs(L2, 5).subs(L3, 10) == -F/2
     assert b.ild_moment.subs(a, 8).subs(L1, 5).subs(L2, 5).subs(L3, 10) == -F
 
 def test_ild_with_sliding_hinge():
     b = Beam(13, 200, 200)
-    b.apply_support(0, type="pin")
-    b.apply_support(6, type="pin")
-    b.apply_support(13, type="fixed")
+    r0 = b.apply_support(0, type="pin")
+    r6 = b.apply_support(6, type="pin")
+    r13, m13 = b.apply_support(13, type="fixed")
     w3 = b.apply_sliding_hinge(3)
-    b.solve_for_ild_reactions(1)
+    b.solve_for_ild_reactions(1, r0, r6, r13, m13)
     a = b.ild_variable
-    R_0, R_6, R_13, M_13 = symbols('R_0 R_6 R_13 M_13')
-    assert b.ild_reactions[R_0].subs(a, 3) == -1
-    assert b.ild_reactions[R_6].subs(a, 3) == Rational(9, 14)
-    assert b.ild_reactions[R_13].subs(a, 9) == -Rational(207, 343)
-    assert b.ild_reactions[M_13].subs(a, 9) == -Rational(60, 49)
-    assert b.ild_reactions[M_13].subs(a, 15) == 0
-    assert b.ild_reactions[M_13].subs(a, -3) == 0
+    assert b.ild_reactions[r0].subs(a, 3) == -1
+    assert b.ild_reactions[r6].subs(a, 3) == Rational(9, 14)
+    assert b.ild_reactions[r13].subs(a, 9) == -Rational(207, 343)
+    assert b.ild_reactions[m13].subs(a, 9) == -Rational(60, 49)
+    assert b.ild_reactions[m13].subs(a, 15) == 0
+    assert b.ild_reactions[m13].subs(a, -3) == 0
     assert b.ild_deflection_jumps[w3].subs(a, 9) == -Rational(9, 35000)
-    b.solve_for_ild_shear(7, 1)
+    b.solve_for_ild_shear(7, 1, r0, r6, r13, m13)
     assert b.ild_shear.subs(a, 8) == -Rational(200, 343)
-    b.solve_for_ild_moment(8, 1)
+    b.solve_for_ild_moment(8, 1, r0, r6, r13, m13)
     assert b.ild_moment.subs(a, 3) == -Rational(12, 7)
 
 def test_Beam3D():
