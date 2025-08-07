@@ -176,7 +176,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
 
     limits: tuple[tuple[Symbol, Expr, Expr]]
 
-    def __new__(cls, function, *symbols, **assumptions):
+    def __new__(cls, function, *symbols, **assumptions) -> Sum:
         obj = AddWithLimits.__new__(cls, function, *symbols, **assumptions)
         if not hasattr(obj, 'limits'):
             return obj
@@ -1460,23 +1460,13 @@ def eval_sum_residue(f, i_a_b):
     if a.is_comparable and b.is_comparable and a > b:
         return eval_sum_residue(f, (i, b + S.One, a - S.One))
 
-    def get_function_symmetry(numer, denom):
-        """
-        Returns 'even', 'odd', or 'neither' based on the symmetry of a
-        rational function.
-        """
-
+    def is_even_function(numer, denom):
+        """Test if the rational function is an even function"""
         numer_even = all(i % 2 == 0 for (i,) in numer.monoms())
         denom_even = all(i % 2 == 0 for (i,) in denom.monoms())
         numer_odd = all(i % 2 == 1 for (i,) in numer.monoms())
         denom_odd = all(i % 2 == 1 for (i,) in denom.monoms())
-
-        if (numer_even and denom_even) or (numer_odd and denom_odd):
-            return 'even'
-        elif (numer_odd and denom_even) or (numer_even and denom_odd):
-            return 'odd'
-        else:
-            return 'neither'
+        return (numer_even and denom_even) or (numer_odd and denom_odd)
 
     def match_rational(f, i):
         numer, denom = f.as_numer_denom()
@@ -1521,7 +1511,7 @@ def eval_sum_residue(f, i_a_b):
     if not (b.is_Integer or b in (S.Infinity, S.NegativeInfinity)):
         return None
 
-    # Quick exit heuristic for the sums which doesn't have infinite range
+    # Quick exit heuristic for the sums without infinite bound
     if a != S.NegativeInfinity and b != S.Infinity:
         return None
 
@@ -1553,20 +1543,9 @@ def eval_sum_residue(f, i_a_b):
         residues = [residue(residue_factor, z, root) for root in nonint_roots]
         return -S.Pi * sum(residues)
 
-    rational_function_symmetry = get_function_symmetry(numer, denom)
-
-    #for odd function flip the limit and negate
-    #limit (-oo, a) is flipped to (-a, oo) and the answer is negated
-    if (a is S.NegativeInfinity and b.is_finite) and (rational_function_symmetry == 'odd'):
-        res = eval_sum_residue(f, (i, -b, S.Infinity))
-        #if the function was successfully transformed to a
-        #even function by shifting
-        if res is not None:
-            return -res
-
-    elif rational_function_symmetry != 'even':
+    if not is_even_function(numer, denom):
         # Try shifting summation and check if the summand can be made
-        # and even function from the origin.
+        # even wrt the origin.
         # Sum(f(n), (n, a, b)) => Sum(f(n + s), (n, a - s, b - s))
         shift = get_shift(denom)
 
@@ -1578,7 +1557,7 @@ def eval_sum_residue(f, i_a_b):
         numer = numer.shift(shift)
         denom = denom.shift(shift)
 
-        if (get_function_symmetry(numer, denom) != 'even'):
+        if not is_even_function(numer, denom):
             return None
 
         if alternating:
@@ -1586,14 +1565,11 @@ def eval_sum_residue(f, i_a_b):
         else:
             f = numer.as_expr() / denom.as_expr()
         return eval_sum_residue(f, (i, a-shift, b-shift))
-    else:
-        #for even function flip the limit
-        #limit (-oo, a) is flipped to (-a, oo)
-        if a is S.NegativeInfinity and b.is_finite:
-            res = eval_sum_residue(f, (i, -b, S.Infinity))
-            if res is not None:
-                return res
 
+    if a is S.NegativeInfinity:
+        a, b = -b, -a
+
+    assert a.is_Integer and b is S.Infinity
 
     poles = get_poles(denom)
     if poles is None:
@@ -1605,7 +1581,7 @@ def eval_sum_residue(f, i_a_b):
         int_roots_max = max(int_roots)
         int_roots_min = min(int_roots)
         # Integer valued poles must be next to each other
-        # and also symmetric from origin (Because the function is even)
+        # and also symmetric from origin (because the function is even)
         if not len(int_roots) == int_roots_max - int_roots_min + 1:
             return None
 
