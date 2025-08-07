@@ -1952,6 +1952,7 @@ def test_positive():
 
     #exponential
     assert ask(Q.positive(exp(x)), Q.real(x)) is True
+    assert ask(Q.positive(x**y), Q.nonzero(x) & Q.even(y)) is True
     assert ask(~Q.negative(exp(x)), Q.real(x)) is True
     assert ask(Q.positive(x + exp(x)), Q.real(x)) is None
     assert ask(Q.positive(exp(x)), Q.imaginary(x)) is None
@@ -1959,7 +1960,13 @@ def test_positive():
     assert ask(Q.negative(exp(pi*I, evaluate=False)), Q.imaginary(x)) is True
     assert ask(Q.positive(exp(x*pi*I)), Q.even(x)) is True
     assert ask(Q.positive(exp(x*pi*I)), Q.odd(x)) is False
+    assert ask(Q.positive(x**y), Q.zero(x) & Q.positive(y)) is False
     assert ask(Q.positive(exp(x*pi*I)), Q.real(x)) is None
+    assert ask(Q.positive(x**2), Q.real(x)) is None
+    assert ask(Q.positive(x**y), Q.even(y) & Q.real(x)) is None
+    assert ask(Q.positive(x**y),Q.zero(x)) is None
+    assert ask(Q.positive(x**y), Q.zero(x) & Q.negative(y)) is None
+    assert ask(Q.positive(x**y), Q.zero(x) & Q.even(y)) is None
 
     # logarithm
     assert ask(Q.positive(log(x)), Q.imaginary(x)) is False
