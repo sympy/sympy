@@ -15,14 +15,14 @@ from heapq import heappush, heappop
 from sympy.core.sorting import ordered
 from sympy.assumptions.cnf import EncodedCNF
 
+from sympy.logic.algorithms.euf_solver import EUFSolver
 from sympy.logic.algorithms.lra_theory import LRASolver
 
-
-def dpll_satisfiable(expr, all_models=False, use_lra_theory=False):
+def dpll_satisfiable(expr, all_models=False, use_lra_theory=False, use_euf_theory=False):
     """
     Check satisfiability of a propositional sentence.
     It returns a model rather than True when it succeeds.
-    Returns a generator of all models if all_models is True.
+    Returns a generator of all models if all_models is True
 
     Examples
     ========
@@ -51,7 +51,13 @@ def dpll_satisfiable(expr, all_models=False, use_lra_theory=False):
     else:
         lra = None
         immediate_conflicts = []
-    solver = SATSolver(expr.data + immediate_conflicts, expr.variables, set(), expr.symbols, lra_theory=lra)
+    
+    if use_euf_theory:
+        euf, immediate_conflicts = EUFSolver.from_encoded_cnf(expr)
+    else:
+        euf = None
+        immediate_conflicts = []
+    solver = SATSolver(expr.data + immediate_conflicts, expr.variables, set(), expr.symbols, lra_theory=lra, euf_theory=euf)
     models = solver._find_model()
 
     if all_models:
@@ -88,7 +94,7 @@ class SATSolver:
 
     def __init__(self, clauses, variables, var_settings, symbols=None,
                 heuristic='vsids', clause_learning='none', INTERVAL=500,
-                 lra_theory = None):
+                 lra_theory = None, euf_theory = None):
 
         self.var_settings = var_settings
         self.heuristic = heuristic
@@ -138,6 +144,7 @@ class SATSolver:
         self.original_num_clauses = len(self.clauses)
 
         self.lra = lra_theory
+        self.euf = euf_theory
 
     def _initialize_variables(self, variables):
         """Set up the variable data structures needed."""
@@ -233,6 +240,17 @@ class SATSolver:
                         self.lra.reset_bounds()
                     else:
                         res = None
+
+                    if self.euf:  # should be very similar to lra
+                        for enc_var in self.var_settings:
+                            res = self.euf.assert_lit(enc_var)
+                            if res is not None:
+                                break
+                        res = self.euf.check()
+                        self.euf.reset()
+                    else:
+                        res = None
+
                     if res is None or res[0]:
                         yield {self.symbols[abs(lit) - 1]:
                                     lit > 0 for lit in self.var_settings}
