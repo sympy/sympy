@@ -820,7 +820,7 @@ def dup_real_imag(f, K):
         h = dmp_mul(h, g, 2, K)
         h = dmp_add_term(h, dmp_ground(c, 1), 0, 2, K)
 
-    H = dup_to_raw_dict(h)
+    H = dup_to_raw_dict(h, K)
 
     for k, h in H.items():
         m = k % 4
@@ -1090,7 +1090,7 @@ def _dup_right_decompose(f, s, K):
     n = len(f) - 1
     lc = dup_LC(f, K)
 
-    f = dup_to_raw_dict(f)
+    f = dup_to_raw_dict(f, K)
     g = { s: K.one }
 
     r = n // s
@@ -1230,7 +1230,7 @@ def dmp_alg_inject(f, u, K):
 
 def _dmp_alg_inject_gaussian(f, u, K):
     """Helper function for :func:`dmp_alg_inject`."""
-    f, h = dmp_to_dict(f, u), {}
+    f, h = dmp_to_dict(f, u, K), {}
 
     for f_monom, g in f.items():
         x, y = g.x, g.y
@@ -1246,7 +1246,7 @@ def _dmp_alg_inject_gaussian(f, u, K):
 
 def _dmp_alg_inject_alg(f, u, K):
     """Helper function for :func:`dmp_alg_inject`."""
-    f, h = dmp_to_dict(f, u), {}
+    f, h = dmp_to_dict(f, u, K), {}
 
     for f_monom, g in f.items():
         for g_monom, c in g.to_dict().items():
