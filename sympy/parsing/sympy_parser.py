@@ -10,7 +10,7 @@ import unicodedata
 from io import StringIO
 import builtins
 import types
-from typing import Any, Callable, TYPE_CHECKING
+from typing import Any, Callable
 from functools import reduce
 from sympy.assumptions.ask import AssumptionKeys
 from sympy.core.basic import Basic
@@ -19,15 +19,12 @@ from sympy.core.function import Function
 from sympy.utilities.misc import func_name
 from sympy.functions.elementary.miscellaneous import Max, Min
 
-if TYPE_CHECKING:
-    from typing_extensions import TypeAlias
-
 
 null = ''
 
-TOKEN: TypeAlias = tuple[int, str]
-DICT: TypeAlias = dict[str, Any]
-TRANS: TypeAlias = Callable[[list[TOKEN], DICT, DICT], list[TOKEN]]
+TOKEN = tuple[int, str]
+DICT = dict[str, Any]
+TRANS = Callable[[list[TOKEN], DICT, DICT], list[TOKEN]]
 
 def _token_splittable(token_name: str) -> bool:
     """
