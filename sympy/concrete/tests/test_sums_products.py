@@ -26,6 +26,7 @@ from sympy.functions.elementary.trigonometric import (cos, sin, atan)
 from sympy.functions.special.gamma_functions import (gamma, lowergamma)
 from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.functions.special.zeta_functions import zeta
+from sympy.functions.elementary.trigonometric import tab
 from sympy.integrals.integrals import Integral
 from sympy.logic.boolalg import And, Or
 from sympy.matrices.expressions.matexpr import MatrixSymbol
