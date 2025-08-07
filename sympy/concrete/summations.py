@@ -1530,19 +1530,6 @@ def eval_sum_residue(f, i_a_b):
     if denom.degree(i) - numer.degree(i) < 2:
         return None
 
-    if (a, b) == (S.NegativeInfinity, S.Infinity):
-        poles = get_poles(denom)
-        if poles is None:
-            return None
-        int_roots, nonint_roots = poles
-
-        if int_roots:
-            return None
-
-        residue_factor = get_residue_factor(numer, denom, alternating)
-        residues = [residue(residue_factor, z, root) for root in nonint_roots]
-        return -S.Pi * sum(residues)
-
     if not is_even_function(numer, denom):
         # Try shifting summation and check if the summand can be made
         # even wrt the origin.
@@ -1566,15 +1553,23 @@ def eval_sum_residue(f, i_a_b):
             f = numer.as_expr() / denom.as_expr()
         return eval_sum_residue(f, (i, a-shift, b-shift))
 
-    if a is S.NegativeInfinity:
+    if a is S.NegativeInfinity and b is not S.Infinity:
         a, b = -b, -a
-
-    assert a.is_Integer and b is S.Infinity
 
     poles = get_poles(denom)
     if poles is None:
         return None
     int_roots, nonint_roots = poles
+
+    if (a, b) == (S.NegativeInfinity, S.Infinity):
+        if int_roots:
+            return None
+
+        residue_factor = get_residue_factor(numer, denom, alternating)
+        residues = [residue(residue_factor, z, root) for root in nonint_roots]
+        return -S.Pi * sum(residues)
+
+    assert a.is_Integer and b is S.Infinity
 
     if int_roots:
         int_roots = [int(root) for root in int_roots]
