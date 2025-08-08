@@ -681,4 +681,3 @@ def test_loads_at_joints():
     assert result[Symbol('R_h__0,__0')] == Rational(4167, 100)
     assert result[Symbol('R_v__6,__1')] == Rational(5556, 100)
     assert result[Symbol('R_h__6,__1')] == Rational(-4167, 100)
-
