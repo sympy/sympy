@@ -18,7 +18,7 @@ from sympy.functions.combinatorial.factorials import (rf, binomial, factorial)
 from sympy.functions.combinatorial.numbers import harmonic
 from sympy.functions.elementary.complexes import Abs, re
 from sympy.functions.elementary.exponential import (exp, log)
-from sympy.functions.elementary.hyperbolic import (sinh, tanh)
+from sympy.functions.elementary.hyperbolic import (sinh, tanh, coth)
 from sympy.functions.elementary.integers import floor
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
@@ -1568,7 +1568,7 @@ def test_summation_by_residues():
     assert eval_sum_residue(1 / (4*x**2 - 1), (x, -oo, oo)) == 0
     assert eval_sum_residue(x**2 / (x**2 - S(1)/4)**2, (x, -oo, oo)) == pi**2/2
     assert eval_sum_residue(1 / (4*x**2 - 1)**2, (x, -oo, oo)) == pi**2/8
-    assert eval_sum_residue(1 / ((x - S(1)/2)**2 + 1), (x, -oo, oo)) == pi*tanh(pi)
+    assert eval_sum_residue(1 / ((x - S(1)/2)**2 + 1), (x, -oo, oo)) == pi/coth(pi)
     assert eval_sum_residue(1 / x**2, (x, S(1), oo)) == pi**2/6
     assert eval_sum_residue(1 / x**4, (x, S(1), oo)) == pi**4/90
     assert eval_sum_residue(1 / x**2 / (x**2 + 4), (x, S(1), oo)) == \

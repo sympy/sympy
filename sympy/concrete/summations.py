@@ -8,7 +8,7 @@ from .gosper import gosper_sum
 from sympy.core.expr import Expr
 from sympy.core.add import Add
 from sympy.core.containers import Tuple
-from sympy.core.function import Derivative, expand
+from sympy.core.function import Derivative, expand, expand_mul
 from sympy.core.mul import Mul
 from sympy.core.numbers import Float, _illegal
 from sympy.core.relational import Eq
@@ -20,7 +20,7 @@ from sympy.functions.combinatorial.numbers import bernoulli, harmonic
 from sympy.functions.elementary.complexes import re
 from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.piecewise import Piecewise
-from sympy.functions.elementary.trigonometric import cot, csc
+from sympy.functions.elementary.trigonometric import tan, sin, cot, csc
 from sympy.functions.special.hyper import hyper
 from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.functions.special.zeta_functions import zeta
@@ -32,7 +32,6 @@ from sympy.polys.polytools import parallel_poly_from_expr, Poly, factor
 from sympy.polys.rationaltools import together
 from sympy.series.limitseq import limit_seq
 from sympy.series.order import O
-from sympy.series.residues import residue
 from sympy.sets.contains import Contains
 from sympy.sets.sets import FiniteSet, Interval
 from sympy.utilities.iterables import sift
@@ -1504,17 +1503,8 @@ def eval_sum_residue(f, i_a_b):
         shift = - b / a / n
         return shift
 
-    z = Dummy('z')  # needed for residue calculation
     def residues(numer, denom, alternating, poles):
-        residue_factor = (numer.as_expr() / denom.as_expr()).subs(i, z)
-        if not alternating:
-            residue_factor *= cot(S.Pi * z)
-        else:
-            residue_factor *= csc(S.Pi * z)
-        factors = [residue_factor]*len(poles[0])  # int_roots
-        factors.extend([residue_factor.factor(extension=r)
-            for r in poles[1]])  # nonint_roots
-        return [residue(f, z, r) for f, r in zip(factors, int_roots + nonint_roots)]
+        return [_get_residue(numer, denom, a, alternating) for a in poles]
 
     match = match_rational(f, i)
     if match:
@@ -1566,7 +1556,7 @@ def eval_sum_residue(f, i_a_b):
         if int_roots:
             return None
 
-        return -S.Pi * sum(residues(numer, denom, alternating, poles))
+        return -S.Pi * sum(residues(numer, denom, alternating, nonint_roots))
 
     # handle even function with semi-infinite limits
 
@@ -1583,7 +1573,6 @@ def eval_sum_residue(f, i_a_b):
     int_roots, nonint_roots = poles
 
     if int_roots:
-        int_roots = [int(root) for root in int_roots]
         int_roots_max = max(int_roots)
         int_roots_min = min(int_roots)
         # Integer valued poles must be next to each other
@@ -1595,7 +1584,7 @@ def eval_sum_residue(f, i_a_b):
         if a <= max(int_roots):
             return None
 
-    full_sum = -S.Pi * sum(residues(numer, denom, alternating, poles))
+    full_sum = -S.Pi * sum(residues(numer, denom, alternating, int_roots + nonint_roots))
 
     if not int_roots:
         # Compute Sum(f, (i, 0, oo)) by adding a extraneous evaluation
@@ -1617,6 +1606,57 @@ def eval_sum_residue(f, i_a_b):
     result = half_sum - sum(extraneous)
 
     return result
+
+
+def _get_residue(numer: Poly, denom: Poly, a: Expr, alternating: bool) -> Expr:
+    """``Res((cot/csc)(pi*z)*numer(z)/denom(z))`` at ``a``."""
+    #
+    # Helper for eval_sum_residue. Since we know that a is a root of denom, we
+    # can factor out ``(x - a)^p`` from denom exactly using polynomials over
+    # the extension field containing ``a``. This is more efficient and more
+    # robust than the current implementation of ``residue`` which uses a series
+    # expansion.
+    #
+    x = denom.gen
+    z = Dummy("z")
+
+    if (2 * a).is_Integer:
+        # In this case we have to deal with zeros and poles of cot(pi*z) or
+        # csc(pi*z) which complicate the residue calculation. The series
+        # residue function handles rational roots well enough though.
+        from sympy.series.residues import residue
+        if not alternating:
+            return residue(cot(S.Pi*z)*(numer(z)/denom(z)), z, a)
+        else:
+            return residue(csc(S.Pi*z)*(numer(z)/denom(z)), z, a)
+
+    numer = numer.xreplace({x: z})
+    denom = denom.xreplace({x: z})
+    za = Poly(z - a, z, extension=True)
+    za, denom = za.unify(denom)
+
+    # Divide out (z - a)^p from denom
+    # Should this first cancel factors of (z - a) between numer and denom?
+    p = 0
+    q, r = denom.div(za)
+    while r == 0 and denom != 0:
+        denom = q
+        p += 1
+        q, r = denom.div(za)
+
+    assert p > 0, "a is not a pole"
+
+    if not alternating:
+        expr = (1/tan(S.Pi*z))*(numer/denom)
+    else:
+        expr = (1/sin(S.Pi*z))*(numer/denom)
+
+    if p > 1:
+        expr = expr.diff((z, p-1)) / factorial(p - 1)
+
+    expr = expr.xreplace({S.Pi*z: expand_mul(S.Pi*a), z: a})
+
+    return expr
 
 
 def _eval_matrix_sum(expression):
