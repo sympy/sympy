@@ -1553,8 +1553,6 @@ def eval_sum_residue(f, i_a_b):
         elif a.is_Integer or b.is_Integer:
             return None
 
-    if a is S.NegativeInfinity and b is not S.Infinity:
-        a, b = -b, -a
 
     poles = get_poles(denom)
     if poles is None:
@@ -1569,7 +1567,9 @@ def eval_sum_residue(f, i_a_b):
         residues = [residue(residue_factor, z, root) for root in nonint_roots]
         return -S.Pi * sum(residues)
 
-    assert a.is_Integer and b is S.Infinity
+    if a is S.NegativeInfinity:
+        a, b = -b, -a
+    assert a.is_Integer and b is S.Infinity  # and the function is even
 
     if int_roots:
         int_roots = [int(root) for root in int_roots]
