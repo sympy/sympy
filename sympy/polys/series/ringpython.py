@@ -362,8 +362,8 @@ def _useries_div(
 
 
 def _useries_div_ground(
-    s: USeries[Er], n: Er, dom: Domain[Er], ring_prec: int
-) -> USeries[Er]:
+    s: USeries[Ef], n: Ef, dom: Domain[Ef], ring_prec: int
+) -> USeries[Ef]:
     coeffs, prec = s
 
     if n == 0:
@@ -577,6 +577,7 @@ def _useries_exp(s: USeries[Ef], dom: Field[Ef], ring_prec: int) -> USeries[Ef]:
         exp = one
 
         for precx in _giant_steps(prec):
+            # log(f(x))' = f'(x) / f(x)
             exp = exp[0], precx
             log_exp = _useries_log(exp, dom, ring_prec)
             diff = _useries_sub(s, log_exp, dom, ring_prec)
@@ -623,6 +624,7 @@ def _useries_atan(s: USeries[Ef], dom: Field[Ef], ring_prec: int) -> USeries[Ef]
 
     s = coeffs, prec
 
+    # atan(f(x))' = f'(x) / (1 + f(x)**2)
     ds = _useries_derivative(s, dom, ring_prec)
     s2 = _useries_square(s, dom, ring_prec)
     s2 = _useries_add_ground(s2, dom.one, dom, ring_prec)  # 1 + s^2
@@ -650,6 +652,7 @@ def _useries_atanh(s: USeries[Ef], dom: Field[Ef], ring_prec: int) -> USeries[Ef
 
     s = coeffs, prec
 
+    # atanh(f(x))' = f'(x) / (1 - f(x)**2)
     ds = _useries_derivative(s, dom, ring_prec)
     s2 = _useries_square(s, dom, ring_prec)
     neg_s2 = _useries_neg(s2, dom, ring_prec)
@@ -679,6 +682,7 @@ def _useries_asin(s: USeries[Ef], dom: Field[Ef], ring_prec: int) -> USeries[Ef]
     s = coeffs, prec
 
     if len(coeffs) > 20:
+        # asin(f(x))' = f'(x) / sqrt(1 - f(x)**2)
         ds = _useries_derivative(s, dom, ring_prec)
         s2 = _useries_square(s, dom, ring_prec)
         neg_s2 = _useries_neg(s2, dom, ring_prec)
@@ -721,6 +725,7 @@ def _useries_asinh(s: USeries[Ef], dom: Field[Ef], ring_prec: int) -> USeries[Ef
     s = coeffs, prec
 
     if len(coeffs) > 20:
+        # asinh(f(x))' = f'(x) / sqrt(1 + f(x)**2)
         ds = _useries_derivative(s, dom, ring_prec)
         s2 = _useries_square(s, dom, ring_prec)
         q = _useries_add_ground(s2, dom.one, dom, ring_prec)
@@ -836,8 +841,9 @@ def _useries_sin(s: USeries[Ef], dom: Field[Ef], ring_prec: int) -> USeries[Ef]:
     s = coeffs, prec
 
     if len(coeffs) > 20:
-        # t = tan(s/2)
+        # sin(f(x)) = 2 * tan(f(x)/2) / (1 + tan(f(x)/2)**2)
         s = _useries_div_ground(s, dom(2), dom, ring_prec)
+        # t = tan(s/2)
         t = _useries_tan(s, dom, ring_prec)
         t_sq = _useries_square(t, dom, ring_prec)
 
@@ -881,6 +887,7 @@ def _useries_sinh(s: USeries[Ef], dom: Field[Ef], ring_prec: int) -> USeries[Ef]
     s = coeffs, prec
 
     if len(coeffs) > 40:
+        # sinh(f(x)) = (exp(f(x)) - exp(-f(x))) / 2
         e = _useries_exp(s, dom, ring_prec)
         e_inv = _useries_inverse(e, dom, ring_prec)
         diff = _useries_sub(e, e_inv, dom, ring_prec)
@@ -920,8 +927,9 @@ def _useries_cos(s: USeries[Ef], dom: Field[Ef], ring_prec: int) -> USeries[Ef]:
     s = coeffs, prec
 
     if len(coeffs) > 20:
-        # t = tan(s/2)
+        # cos(f(x)) = (1 - tan(f(x)/2)**2) / (1 + tan(f(x)/2)**2)
         s = _useries_div_ground(s, dom(2), dom, ring_prec)
+        # t = tan(s/2)
         t = _useries_tan(s, dom, ring_prec)
 
         t_sq = _useries_square(t, dom, ring_prec)  # t_sq = tan^2(s/2)
@@ -966,6 +974,7 @@ def _useries_cosh(s: USeries[Ef], dom: Field[Ef], ring_prec: int) -> USeries[Ef]
     s = coeffs, prec
 
     if len(coeffs) > 40:
+        # cosh(f(x)) = (exp(f(x)) + exp(-f(x))) / 2
         e = _useries_exp(s, dom, ring_prec)
         e_inv = _useries_inverse(e, dom, ring_prec)
         diff = _useries_add(e, e_inv, dom, ring_prec)
@@ -988,7 +997,7 @@ def _useries_hypot(
     s1: USeries[Ef], s2: USeries[Ef], dom: Field[Ef], ring_prec: int
 ) -> USeries[Ef]:
     """Compute the hypotenuse of two power series."""
-
+    # hypot(f(x), g(x)) = sqrt(f(x)**2 + g(x)**2)
     sqr_s1 = _useries_square(s1, dom, ring_prec)
     sqr_s2 = _useries_square(s2, dom, ring_prec)
     add = _useries_add(sqr_s1, sqr_s2, dom, ring_prec)
