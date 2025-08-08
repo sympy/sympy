@@ -230,6 +230,13 @@ def _(expr, assumptions):
 # RealPredicate
 
 def _RealPredicate_number(expr, assumptions):
+
+    # Check for undefined forms 
+    if expr.is_Pow:
+        base, exp = expr.as_base_exp()
+        if base.is_zero and exp.is_negative:
+            return False  # or None, depending on policy
+        
     # let as_real_imag() work first since the expression may
     # be simpler to evaluate
     i = expr.as_real_imag()[1].evalf(2)
