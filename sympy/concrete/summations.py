@@ -1458,7 +1458,7 @@ def eval_sum_residue(f, i_a_b):
 
     # If lower limit > upper limit: Karr Summation Convention
     if a.is_comparable and b.is_comparable and a > b:
-        return eval_sum_residue(f, (i, b + S.One, a - S.One))
+        return -eval_sum_residue(f, (i, b + S.One, a - S.One))
 
     def is_even_function(numer, denom):
         """Test if the rational function is an even function"""
