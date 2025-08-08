@@ -1455,10 +1455,6 @@ def eval_sum_residue(f, i_a_b):
     """
     i, a, b = i_a_b
 
-    # If lower limit > upper limit: Karr Summation Convention
-    if a.is_comparable and b.is_comparable and a > b:
-        return -eval_sum_residue(f, (i, b + S.One, a - S.One))
-
     # We don't know how to deal with symbolic constants in summand
     if f.free_symbols - {i}:
         return None
@@ -1468,9 +1464,15 @@ def eval_sum_residue(f, i_a_b):
     if not (b.is_Integer or b in (S.Infinity, S.NegativeInfinity)):
         return None
 
-    # Quick exit heuristic for the sums without infinite bound
-    if a != S.NegativeInfinity and b != S.Infinity:
+    # Quick exit heuristic for the sums without infinite bound;
+    # right now the order is arbitrary
+    if not any(x in (S.NegativeInfinity, S.Infinity) for x in (a, b)):
         return None
+
+    # If lower limit > upper limit: Karr Summation Convention;
+    # now order is canonical
+    if a > b:
+        return -eval_sum_residue(f, (i, b + S.One, a - S.One))
 
     def is_even_function(numer, denom):
         """Test if the rational function is an even function"""
