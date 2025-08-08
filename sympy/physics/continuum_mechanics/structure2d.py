@@ -264,44 +264,16 @@ class Structure2d:
         self.loads = []
         self.unwrapped_bendpoints = []
         self.unwrapped_loadpoints = []
-        self.beam = self._init_beam()
-        self.column = self._init_column()
+        self.beam = None
+        self.column = None
         self.reaction_loads = {}
         self.load_qz = 0
         self.load_qx = 0
 
+
     def __repr__(self):
         return f"Structure2d(Members={len(self.members)}, Nodes={len(self.nodes)}, Supports={len(self.supports)})"
 
-    def _init_beam(
-        self,
-        length=1,
-        elastic_modulus=1,
-        second_moment=1,
-        area=Symbol("A"),
-        variable=Symbol("x"),
-        base_char="C",
-        ild_variable=Symbol("a"),
-    ):
-        return Beam(
-            length=length,
-            elastic_modulus=elastic_modulus,
-            second_moment=second_moment,
-        )
-
-    def _init_column(
-        self,
-        length=1,
-        elastic_modulus=1,
-        area=1,
-        variable=Symbol("x"),
-        base_char="C",
-        ):
-        return Column(
-            length=length,
-            elastic_modulus=elastic_modulus,
-            area=area,
-        )
 
     def add_member(self, x1, y1, x2, y2, E, I, A):
         """
@@ -357,6 +329,12 @@ class Structure2d:
         self.members.append(member)
         self._add_or_update_node(x1, y1, "fixed", overwrite_type=False)
         self._add_or_update_node(x2, y2, "fixed", overwrite_type=False)
+
+        if len(self.members) == 1:
+            self.E, self.I, self.A = E, I, A
+            # create beam/column with correct props
+            self.beam = Beam(length=1, elastic_modulus=self.E, second_moment=self.I)
+            self.column = Column(length=1, elastic_modulus=self.E, area=self.A)
 
 
     def _add_or_update_node(self, x, y, new_node_type, overwrite_type=True):
