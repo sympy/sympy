@@ -923,11 +923,11 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
         ring = self.ring
         if isinstance(other, PolyElement):
             try:
-                p2 = ring.ring_new(other)
+                p2 = ring.domain_new(other)
             except CoercionFailed:
                 return NotImplemented # unreachable
             else:
-                return self._mul(p2)
+                return self.mul_ground(p2)
 
         try:
             cp2 = ring.domain_new(other)
