@@ -2,11 +2,10 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional, overload, Literal, Any, cast, Callable
 
 from functools import wraps, reduce
 from operator import mul
-from typing import Optional, overload, Literal, Any, cast
 from collections import Counter, defaultdict
 from collections.abc import Iterator
 
@@ -31,6 +30,7 @@ from sympy.logic.boolalg import BooleanAtom
 from sympy.polys import polyoptions as options
 from sympy.polys.constructor import construct_domain
 from sympy.polys.domains import FF, QQ, ZZ
+from sympy.polys.domains.domain import Domain
 from sympy.polys.domains.domainelement import DomainElement
 from sympy.polys.fglmtools import matrix_fglm
 from sympy.polys.groebnertools import groebner as _groebner
@@ -69,7 +69,7 @@ from mpmath.libmp.libhyper import NoConvergence
 
 
 if TYPE_CHECKING:
-    from typing_extensions import Self
+    from typing import Self
 
 
 def _polifyit(func):
@@ -459,7 +459,7 @@ class Poly(Basic):
         """Return one polynomial with ``self``'s properties. """
         return self.new(self.rep.one(self.rep.lev, self.rep.dom), *self.gens)
 
-    def unify(f, g):
+    def unify(f, g: Poly | Expr | complex) -> tuple[Poly, Poly]:
         """
         Make ``f`` and ``g`` belong to the same domain.
 
@@ -487,21 +487,21 @@ class Poly(Basic):
         _, per, F, G = f._unify(g)
         return per(F), per(G)
 
-    def _unify(f, g):
-        g = sympify(g)
+    def _unify(f, g: Poly | Expr | complex) -> tuple[Domain, Callable[[DMP], Poly], DMP, DMP]:
+        gs = cast('Poly | Expr', sympify(g))
 
-        if not g.is_Poly:
+        if not isinstance(gs, Poly):
             try:
-                g_coeff = f.rep.dom.from_sympy(g)
+                g_coeff = f.rep.dom.from_sympy(gs)
             except CoercionFailed:
-                raise UnificationFailed("Cannot unify %s with %s" % (f, g))
+                raise UnificationFailed("Cannot unify %s with %s" % (f, gs))
             else:
                 return f.rep.dom, f.per, f.rep, f.rep.ground_new(g_coeff)
 
-        if isinstance(f.rep, DMP) and isinstance(g.rep, DMP):
-            gens = _unify_gens(f.gens, g.gens)
+        if isinstance(f.rep, DMP) and isinstance(gs.rep, DMP):
+            gens = _unify_gens(f.gens, gs.gens)
 
-            dom, lev = f.rep.dom.unify(g.rep.dom, gens), len(gens) - 1
+            dom, lev = f.rep.dom.unify(gs.rep.dom, gens), len(gens) - 1
 
             if f.gens != gens:
                 f_monoms, f_coeffs = _dict_reorder(
@@ -514,18 +514,18 @@ class Poly(Basic):
             else:
                 F = f.rep.convert(dom)
 
-            if g.gens != gens:
+            if gs.gens != gens:
                 g_monoms, g_coeffs = _dict_reorder(
-                    g.rep.to_dict(), g.gens, gens)
+                    gs.rep.to_dict(), gs.gens, gens)
 
-                if g.rep.dom != dom:
-                    g_coeffs = [dom.convert(c, g.rep.dom) for c in g_coeffs]
+                if gs.rep.dom != dom:
+                    g_coeffs = [dom.convert(c, gs.rep.dom) for c in g_coeffs]
 
                 G = DMP.from_dict(dict(list(zip(g_monoms, g_coeffs))), lev, dom)
             else:
-                G = g.rep.convert(dom)
+                G = gs.rep.convert(dom)
         else:
-            raise UnificationFailed("Cannot unify %s with %s" % (f, g))
+            raise UnificationFailed("Cannot unify %s with %s" % (f, gs))
 
         cls = f.__class__
 
@@ -540,7 +540,18 @@ class Poly(Basic):
 
         return dom, per, F, G
 
-    def per(f, rep, gens=None, remove=None):
+    @overload
+    def per(
+        f, rep: DMP, gens: tuple[Expr, ...] | None = None, *, remove: int
+    ) -> Poly | Expr: ...
+    @overload
+    def per(
+        f, rep: DMP, gens: tuple[Expr, ...] | None = None, remove: None = None
+    ) -> Poly: ...
+
+    def per(
+        f, rep: DMP, gens: tuple[Expr, ...] | None = None, remove: int | None = None
+    ) -> Poly | Expr:
         """
         Create a Poly out of the given representation.
 
