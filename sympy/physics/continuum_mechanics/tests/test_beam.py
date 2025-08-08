@@ -771,6 +771,21 @@ def test_apply_support():
     with raises(ValueError, match="Invalid support type. Choose from 'pin', 'roller', or 'fixed'."):
         b.apply_support(0,"pen")
 
+
+def test_for_duplicate_symbols_to_solve_for_reaction_loads():
+    E, I = symbols('E I')
+    b = Beam(4, E, I)
+    b.apply_load(20, 4, -1)
+    R, M = symbols('R, M')
+    b.apply_load(R, 0, -1)
+    b.apply_load(M, 0, -2)
+    b.bc_deflection = [(0, 0)]
+    b.bc_slope = [(0, 0)]
+    b.solve_for_reaction_loads(R, M)
+    with raises(ValueError, match="Duplicate Symbols passed into solve_for_reaction_loads()"):
+        b.solve_for_reaction_loads(R,R)
+
+
 def test_apply_rotation_hinge():
     b = Beam(15, 20, 20)
     r0, m0 = b.apply_support(0, type='fixed')
