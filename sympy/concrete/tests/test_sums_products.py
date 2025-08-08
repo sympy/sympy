@@ -1610,7 +1610,9 @@ def test_summation_by_residues():
 
     #An example of function which is neither even nor odd which works for -oo to k
     assert eval_sum_residue(1 / (k**2 + 2*k +2), (k, -oo, S(0))) == 1 + pi/(2*tanh(pi))
-    assert eval_sum_residue(1 / (k**2 + 2*k +2), (k, -oo, -S(1))) == S.Half+pi/tanh(pi)/2
+    ans = Rational(1, 2) + pi/(2*tanh(pi))
+    assert eval_sum_residue((1/(k**2+1)), (k, -oo, S(0))) == ans
+    assert eval_sum_residue((1/(k**2+1)), (k, oo, -S(1))) == -ans  # Karr convention
 
     # Odd functions over (-oo to k) are handled by other parts of the summation
     # logic, so eval_sum_residue will return None in such cases.
@@ -1622,7 +1624,9 @@ def test_summation_by_residues():
     # return None.
     assert eval_sum_residue((1/k**3), (k,-oo, S(-1))) == None
     # SO issue cited on #27827
-    assert summation(1 / ((k+1) ** 4 + 1), (k, -oo, oo)).simplify() == sqrt(2)*pi*(1 - I)*(I/tan(sqrt(2)*pi*(1 + I)/2) + 1/tan(sqrt(2)*pi*(1 - I)/2))/4
+    # this will return 0 if it is not allowed to shift to become even
+    assert summation(1 / ((k + 1) ** 4 + 1), (k, -oo, oo)).simplify() == (sqrt(2)*pi*(1 - I)*(
+        I/tan(sqrt(2)*pi*(1 + I)/2) + 1/tan(sqrt(2)*pi*(1 - I)/2))/4)
 
 
 @slow
