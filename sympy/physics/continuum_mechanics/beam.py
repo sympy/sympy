@@ -1283,7 +1283,6 @@ class Beam:
                     if not (loc == interval.start or loc == interval.end):
                         continue
 
-            expr = expr.simplify()
             sol = solveset(expr, x, domain=interval)
             if isinstance(sol, FiniteSet):
                 for r in sol:
@@ -1301,11 +1300,8 @@ class Beam:
                 roots.add(sol.start)
                 roots.add(sol.end)
 
-        # Add boundary condition locations for jumps
-        jumps = set()
         for loc, _ in self.bc_slope:
             roots.add(loc)
-            jumps.add(loc)
 
         roots = sorted(roots)
 
@@ -1325,8 +1321,8 @@ class Beam:
                 left_mid = (roots[i - 1] + point) / 2
                 right_mid = (point + roots[i + 1]) / 2
 
-            left_val = bm.subs(x, left_mid).evalf()
-            right_val = bm.subs(x, right_mid).evalf()
+            left_val = bm.subs(x, left_mid)
+            right_val = bm.subs(x, right_mid)
 
             product=left_val*right_val
             if isinstance(product,Expr):
