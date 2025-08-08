@@ -40,6 +40,8 @@ from sympy.core.power import Pow
 from sympy.core.relational import Eq, Ne
 from sympy.core.singleton import S
 from sympy.core.symbol import Dummy, Symbol, Wild
+from sympy.core.exprtools import factor_terms
+from sympy.core.traversal import preorder_traversal
 from sympy.functions.elementary.complexes import Abs
 from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.hyperbolic import (HyperbolicFunction, csch,
@@ -2028,6 +2030,23 @@ def rewrites_rule(integral):
 def fallback_rule(integral):
     return DontKnowRule(*integral)
 
+def has_cmplx_exp_pair(expr):
+    """
+    Check if the expression contains a pair of complex exponentials
+    that can be simplified to a sin or cos function.
+    """
+    exp_args = set()
+
+    for sub in preorder_traversal(expr):
+        if sub.func == exp:
+            arg = simplify(sub.args[0])
+            exp_args.add(arg)
+
+    for a in exp_args:
+        if -a in exp_args:
+            return True
+    return False
+
 # Cache is used to break cyclic integrals.
 # Need to use the same dummy variable in cached expressions for them to match.
 # Also record "u" of integration by parts, to avoid infinite repetition.
@@ -2215,6 +2234,9 @@ def manualintegrate(f, var):
     sympy.integrals.integrals.Integral
     """
     result = integral_steps(f, var).eval()
+    if has_cmplx_exp_pair(result):
+        if result.has(erf):
+            result = result.rewrite(exp, cos).expand().rewrite([sinh, cosh], exp).collect(result.atoms(erf)).collect(result.atoms(exp), factor_terms)
     # Clear the cache of u-parts
     _parts_u_cache.clear()
     # If we got Piecewise with two parts, put generic first
