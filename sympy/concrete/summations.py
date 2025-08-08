@@ -1505,13 +1505,16 @@ def eval_sum_residue(f, i_a_b):
         return shift
 
     z = Dummy('z')  # needed for residue calculation
-    def residues(numer, denom, alternating, roots):
+    def residues(numer, denom, alternating, poles):
         residue_factor = (numer.as_expr() / denom.as_expr()).subs(i, z)
         if not alternating:
             residue_factor *= cot(S.Pi * z)
         else:
             residue_factor *= csc(S.Pi * z)
-        return [residue(residue_factor.factor(extension=True), z, root) for root in roots]
+        factors = [residue_factor]*len(poles[0])  # int_roots
+        factors.extend([residue_factor.factor(extension=r)
+            for r in poles[1]])  # nonint_roots
+        return [residue(f, z, r) for f, r in zip(factors, int_roots + nonint_roots)]
 
     match = match_rational(f, i)
     if match:
@@ -1569,7 +1572,7 @@ def eval_sum_residue(f, i_a_b):
         if int_roots:
             return None
 
-        return -S.Pi * sum(residues(numer, denom, alternating, nonint_roots))
+        return -S.Pi * sum(residues(numer, denom, alternating, poles))
 
     if a is S.NegativeInfinity:
         # this is ok for an even function and will be necessary
@@ -1596,7 +1599,7 @@ def eval_sum_residue(f, i_a_b):
         if a <= max(int_roots):
             return None
 
-    full_sum = -S.Pi * sum(residues(numer, denom, alternating, int_roots + nonint_roots))
+    full_sum = -S.Pi * sum(residues(numer, denom, alternating, poles))
 
     if not int_roots:
         # Compute Sum(f, (i, 0, oo)) by adding a extraneous evaluation
