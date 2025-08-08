@@ -1460,6 +1460,19 @@ def eval_sum_residue(f, i_a_b):
     if a.is_comparable and b.is_comparable and a > b:
         return -eval_sum_residue(f, (i, b + S.One, a - S.One))
 
+    # We don't know how to deal with symbolic constants in summand
+    if f.free_symbols - {i}:
+        return None
+
+    if not (a.is_Integer or a in (S.Infinity, S.NegativeInfinity)):
+        return None
+    if not (b.is_Integer or b in (S.Infinity, S.NegativeInfinity)):
+        return None
+
+    # Quick exit heuristic for the sums without infinite bound
+    if a != S.NegativeInfinity and b != S.Infinity:
+        return None
+
     def is_even_function(numer, denom):
         """Test if the rational function is an even function"""
         numer_even = all(i % 2 == 0 for (i,) in numer.monoms())
@@ -1491,29 +1504,14 @@ def eval_sum_residue(f, i_a_b):
         shift = - b / a / n
         return shift
 
-    #Need a dummy symbol with no assumptions set for get_residue_factor
-    z = Dummy('z')
-
-    def get_residue_factor(numer, denom, alternating):
+    z = Dummy('z')  # needed for residue calculation
+    def residues(numer, denom, alternating, roots):
         residue_factor = (numer.as_expr() / denom.as_expr()).subs(i, z)
         if not alternating:
             residue_factor *= cot(S.Pi * z)
         else:
             residue_factor *= csc(S.Pi * z)
-        return residue_factor
-
-    # We don't know how to deal with symbolic constants in summand
-    if f.free_symbols - {i}:
-        return None
-
-    if not (a.is_Integer or a in (S.Infinity, S.NegativeInfinity)):
-        return None
-    if not (b.is_Integer or b in (S.Infinity, S.NegativeInfinity)):
-        return None
-
-    # Quick exit heuristic for the sums without infinite bound
-    if a != S.NegativeInfinity and b != S.Infinity:
-        return None
+        return [residue(residue_factor.factor(extension=True), z, root) for root in roots]
 
     match = match_rational(f, i)
     if match:
@@ -1530,46 +1528,51 @@ def eval_sum_residue(f, i_a_b):
     if denom.degree(i) - numer.degree(i) < 2:
         return None
 
+    # handle non-even function with limits (-oo, oo), (-oo, k) or (k, oo)
+    
     if not is_even_function(numer, denom):
         # Try shifting summation and check if the summand can be made
         # even wrt the origin.
         # Sum(f(n), (n, a, b)) => Sum(f(n + s), (n, a - s, b - s))
         shift = get_shift(denom)
-
-        if shift and shift.is_Integer:
-
-            numer = numer.shift(shift)
-            denom = denom.shift(shift)
-
-            if not is_even_function(numer, denom):
-                return None
-
-            if alternating:
-                f = S.NegativeOne**i * (S.NegativeOne**shift * numer.as_expr() / denom.as_expr())
-            else:
-                f = numer.as_expr() / denom.as_expr()
-            return eval_sum_residue(f, (i, a-shift, b-shift))
-
-        elif a.is_Integer or b.is_Integer:
+        if not (shift and shift.is_Integer):
             return None
 
+        numer = numer.shift(shift)
+        denom = denom.shift(shift)
+
+        if not is_even_function(numer, denom):
+            return None
+
+        if alternating:
+            f = S.NegativeOne**i * (S.NegativeOne**shift * numer.as_expr() / denom.as_expr())
+        else:
+            f = numer.as_expr() / denom.as_expr()
+        return eval_sum_residue(f, (i, a-shift, b-shift))
+
+    if (a, b) == (S.NegativeInfinity, S.Infinity):
+        poles = get_poles(denom)
+        if poles is None:
+            return None
+        int_roots, nonint_roots = poles
+        if int_roots:
+            return None
+
+        return -S.Pi * sum(residues(numer, denom, alternating, nonint_roots))
+
+    # handle even function
+
+    if a is S.NegativeInfinity:
+        # this is ok for an even function and will be necessary
+        # so the extraneous roots can be handled properly below
+        a, b = -b, -a
+
+    assert a.is_Integer and b is S.Infinity  # even function with limits (k, oo)
 
     poles = get_poles(denom)
     if poles is None:
         return None
     int_roots, nonint_roots = poles
-
-    if (a, b) == (S.NegativeInfinity, S.Infinity):
-        if int_roots:
-            return None
-
-        residue_factor = get_residue_factor(numer, denom, alternating)
-        residues = [residue(residue_factor, z, root) for root in nonint_roots]
-        return -S.Pi * sum(residues)
-
-    if a is S.NegativeInfinity:
-        a, b = -b, -a
-    assert a.is_Integer and b is S.Infinity  # and the function is even
 
     if int_roots:
         int_roots = [int(root) for root in int_roots]
@@ -1584,9 +1587,7 @@ def eval_sum_residue(f, i_a_b):
         if a <= max(int_roots):
             return None
 
-    residue_factor = get_residue_factor(numer, denom, alternating)
-    residues = [residue(residue_factor, z, root) for root in int_roots + nonint_roots]
-    full_sum = -S.Pi * sum(residues)
+    full_sum = -S.Pi * sum(residues(numer, denom, alternating, int_roots + nonint_roots))
 
     if not int_roots:
         # Compute Sum(f, (i, 0, oo)) by adding a extraneous evaluation
