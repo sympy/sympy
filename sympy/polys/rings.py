@@ -16,7 +16,7 @@ from sympy.core.sympify import CantSympify, sympify
 from sympy.ntheory.multinomial import multinomial_coefficients
 from sympy.polys.compatibility import IPolys
 from sympy.polys.constructor import construct_domain
-from sympy.polys.densebasic import ninf, dmp_to_dict, dmp_from_dict
+from sympy.polys.densebasic import dmp_to_dict, dmp_from_dict
 from sympy.polys.domains.compositedomain import CompositeDomain
 from sympy.polys.domains.domain import Domain, Er, Es
 from sympy.polys.domains.domainelement import DomainElement
@@ -56,6 +56,9 @@ if TYPE_CHECKING:
 
 
 Mon = tuple[int, ...]
+
+
+ninf = float('-inf')
 
 
 @public
@@ -924,11 +927,11 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
         ring = self.ring
         if isinstance(other, PolyElement):
             try:
-                p2 = ring.ring_new(other)
+                p2 = ring.domain_new(other)
             except CoercionFailed:
                 return NotImplemented # unreachable
             else:
-                return self._mul(p2)
+                return self.mul_ground(p2)
 
         try:
             cp2 = ring.domain_new(other)

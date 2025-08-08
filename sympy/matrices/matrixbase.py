@@ -1635,7 +1635,7 @@ class MatrixBase(Printable):
         """
         return self._eval_has(*patterns)
 
-    def is_anti_symmetric(self, simplify: bool = True) -> bool | None:
+    def is_anti_symmetric(self, simplify: bool | Callable[[Expr], Expr] = True) -> bool | None:
         """Check if matrix M is an antisymmetric matrix,
         that is, M is a square matrix with all M[i, j] == -M[j, i].
 
@@ -2614,7 +2614,7 @@ class MatrixBase(Printable):
         """
         return self.applyfunc(lambda x: refine(x, assumptions))
 
-    def replace(self, F, G, map: bool=False, simultaneous: bool=True, exact: Incomplete | None=None):
+    def replace(self, F, G, map: bool=False, simultaneous: bool=True, exact=None):
         """Replaces Function F in Matrix entries with Function G.
 
         Examples
@@ -3349,7 +3349,7 @@ class MatrixBase(Printable):
     def cofactor_matrix(self, method: str="berkowitz") -> Self:
         return _cofactor_matrix(self, method=method)
 
-    def det(self, method: str="bareiss", iszerofunc: Incomplete | None=None) -> Expr:
+    def det(self, method: str="bareiss", iszerofunc=None) -> Expr:
         return _det(self, method=method, iszerofunc=iszerofunc)
 
     def per(self) -> Expr:
@@ -3381,21 +3381,21 @@ class MatrixBase(Printable):
     @overload
     def echelon_form(self,
                 iszerofunc: Callable[[Expr], bool | None] = _iszero,
-                simplify: bool = False,
+                simplify: bool | Callable[[Expr], Expr] = False,
                  *,
                 with_pivots: Literal[False] = False,
             ) -> Self: ...
     @overload
     def echelon_form(self,
                 iszerofunc: Callable[[Expr], bool | None] = _iszero,
-                simplify: bool = False,
+                simplify: bool | Callable[[Expr], Expr] = False,
                 *,
                 with_pivots: Literal[True],
             ) -> tuple[Self, tuple[int]]: ...
 
     def echelon_form(self,
                 iszerofunc: Callable[[Expr], bool | None] = _iszero,
-                simplify: bool = False,
+                simplify: bool | Callable[[Expr], Expr] = False,
                 *,
                 with_pivots: bool = False,
             ) -> Self | tuple[Self, tuple[int]]:
@@ -3408,7 +3408,7 @@ class MatrixBase(Printable):
 
     def rank(self,
              iszerofunc: Callable[[Expr], bool | None] = _iszero,
-             simplify: bool = False) -> int:
+             simplify: bool | Callable[[Expr], Expr] = False) -> int:
         return _rank(self, iszerofunc=iszerofunc, simplify=simplify)
 
     def rref_rhs(self, rhs: Self) -> tuple[Self, Self]:
@@ -3642,13 +3642,13 @@ class MatrixBase(Printable):
         else:
             raise ValueError(f'invalid operation {op!r}')
 
-    def columnspace(self, simplify: bool=False) -> list[Self]:
+    def columnspace(self, simplify: bool | Callable[[Expr], Expr] = False) -> list[Self]:
         return _columnspace(self, simplify=simplify)
 
-    def nullspace(self, simplify: bool=False, iszerofunc=_iszero) -> list[Self]:
+    def nullspace(self, simplify: bool | Callable[[Expr], Expr] = False, iszerofunc=_iszero) -> list[Self]:
         return _nullspace(self, simplify=simplify, iszerofunc=iszerofunc)
 
-    def rowspace(self, simplify: bool=False) -> list[Self]:
+    def rowspace(self, simplify: bool | Callable[[Expr], Expr] = False) -> list[Self]:
         return _rowspace(self, simplify=simplify)
 
     # XXX: Somehow replacing this with an ordinary use of classmethod breaks
@@ -5402,14 +5402,14 @@ class MatrixBase(Printable):
         if S.Zero in self.shape:
             return '[]'
         # Build table of string representations of the elements
-        res = []
+        table: list[list[str]] = []
         # Track per-column max lengths for pretty alignment
         maxlen = [0] * self.cols
         for i in range(self.rows):
-            res.append([])
+            table.append([])
             for j in range(self.cols):
                 s = printer._print(self[i, j])
-                res[-1].append(s)
+                table[-1].append(s)
                 maxlen[j] = max(len(s), maxlen[j])
         # Patch strings together
         align = {
@@ -5420,7 +5420,8 @@ class MatrixBase(Printable):
             '>': 'rjust',
             '^': 'center',
         }[align]
-        for i, row in enumerate(res):
+        res = [""] * len(table)
+        for i, row in enumerate(table):
             for j, elem in enumerate(row):
                 row[j] = getattr(elem, align)(maxlen[j])
             res[i] = rowstart + colsep.join(row) + rowend

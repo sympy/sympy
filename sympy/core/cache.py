@@ -1,6 +1,6 @@
 """ Caching facility for SymPy """
 from importlib import import_module
-from typing import TypeVar, Callable
+from typing import Callable
 
 class _cache(list):
     """ List of cached functions """
@@ -42,7 +42,6 @@ clear_cache = CACHE.clear_cache
 
 from functools import lru_cache, wraps
 
-_CallableT = TypeVar("_CallableT", bound=Callable)
 
 def __cacheit(maxsize):
     """caching decorator.

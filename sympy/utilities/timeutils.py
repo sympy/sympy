@@ -3,9 +3,9 @@
 
 import timeit
 import math
-from typing import Any, Callable
+from typing import Callable, TypeVar
 
-
+_CallableT = TypeVar("_CallableT", bound=Callable)
 _scales = [1e0, 1e3, 1e6, 1e9]
 _units = ['s', 'ms', '\N{GREEK SMALL LETTER MU}s', 'ns']
 
@@ -51,8 +51,8 @@ def _print_timestack(stack, level=1):
         _print_timestack(s, level + 1)
 
 
-def timethis(name) -> Callable[..., Any | Callable[..., Any]]:
-    def decorator(func):
+def timethis(name) -> Callable[[_CallableT], _CallableT]:
+    def decorator(func: _CallableT) -> _CallableT:
         if name not in _do_timings:
             return func
 

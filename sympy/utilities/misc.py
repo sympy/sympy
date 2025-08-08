@@ -8,7 +8,7 @@ import os
 import re as _re
 import struct
 from textwrap import fill, dedent
-from typing import Any, TypeVar
+from typing import Any, Callable, TypeVar
 from typing_extensions import LiteralString
 
 _CallableT = TypeVar("_CallableT", bound=Callable)
@@ -240,7 +240,7 @@ def debug_decorator(func: _CallableT) -> _CallableT:
     def decorated(*args, **kwargs):
         return maketree(func, *args, **kwargs)
 
-    return decorated
+    return decorated  # type: ignore
 
 
 def debug(*args) -> None:

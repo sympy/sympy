@@ -46,7 +46,6 @@ from sympy.polys.densebasic import (
     dmp,
     dmp_tup,
     monom,
-    ninf,
     dmp_validate,
     dup_normal, dmp_normal,
     dup_convert, dmp_convert,
@@ -60,7 +59,7 @@ from sympy.polys.densebasic import (
     dmp_ground_nth,
     dmp_one, dmp_ground,
     dmp_zero, dmp_zero_p, dmp_one_p, dmp_ground_p,
-    dup_from_dict, dmp_from_dict,
+    dup_from_dict, dup_from_raw_dict, dmp_from_dict,
     dmp_to_dict,
     dmp_deflate,
     dmp_inject, dmp_eject,
@@ -251,6 +250,11 @@ class DMP(CantSympify, Generic[Er]):
         return cls.new(rep_dmp, dom, lev)
 
     @classmethod
+    def from_raw_dict(cls, rep: dict[int, Er], dom: Domain[Er]) -> DMP[Er]:
+        rep_dup = dup_from_raw_dict(rep, dom)
+        return cls.new(_dmp(rep_dup), dom, 0)
+
+    @classmethod
     def from_list(cls, rep: dmp[Any], lev: int, dom: Domain[Er]) -> DMP[Er]:
         """Create an instance of ``cls`` given a list of native coefficients. """
         return cls.new(dmp_convert(rep, lev, None, dom), dom, lev)
@@ -419,7 +423,7 @@ class DMP(CantSympify, Generic[Er]):
         if f.lev:
             raise PolynomialError('multivariate polynomials not supported')
 
-        n: int = f.degree() # type: ignore
+        n = f.degree()
 
         if n < 0:
             return [(0,)]
@@ -431,7 +435,7 @@ class DMP(CantSympify, Generic[Er]):
         if f.lev:
             raise PolynomialError('multivariate polynomials not supported')
 
-        n: int = f.degree() # type: ignore
+        n = f.degree()
 
         if n < 0:
             return [((0,), f.dom.zero)]
@@ -652,28 +656,28 @@ class DMP(CantSympify, Generic[Er]):
     def _exquo(f, g: Self, /) -> Self:
         raise NotImplementedError
 
-    def degree(f, j: int = 0) -> int | float:
+    def degree(f, j: int = 0) -> int:
         """Returns the leading degree of ``f`` in ``x_j``. """
         if not isinstance(j, int):
             raise TypeError("``int`` expected, got %s" % type(j))
 
         return f._degree(j)
 
-    def _degree(f, j: int, /) -> int | float:
+    def _degree(f, j: int, /) -> int:
         raise NotImplementedError
 
-    def degree_list(f) -> tuple[int | float, ...]:
+    def degree_list(f) -> tuple[int, ...]:
         """Returns a list of degrees of ``f``. """
         raise NotImplementedError
 
-    def total_degree(f) -> int | float:
+    def total_degree(f) -> int:
         """Returns the total degree of ``f``. """
         raise NotImplementedError
 
     def homogenize(f, s: int) -> DMP[Er]:
         """Return homogeneous polynomial of ``f``"""
         # XXX: Handle the zero polynomial case?
-        td: int = f.total_degree() # type: ignore
+        td = f.total_degree()
         result: dict[monom, Er] = {}
         new_symbol = (s == len(f.terms()[0][0]))
         for term in f.terms():
@@ -1566,11 +1570,11 @@ class DMP_Python(DMP[Er]):
         """Computes polynomial exact quotient of ``f`` and ``g``. """
         return f.per(dmp_exquo(f._rep, g._rep, f.lev, f.dom))
 
-    def _degree(f, j: int) -> int | float:
+    def _degree(f, j: int) -> int:
         """Returns the leading degree of ``f`` in ``x_j``. """
         return dmp_degree_in(f._rep, j, f.lev)
 
-    def degree_list(f) -> tuple[int | float, ...]:
+    def degree_list(f) -> tuple[int, ...]:
         """Returns a list of degrees of ``f``. """
         return dmp_degree_list(f._rep, f.lev)
 
@@ -2100,28 +2104,28 @@ class DUP_Flint(DMP[Er]):
     def _pdiv(f, g: Self, /) -> tuple[Self, Self]:
         """Polynomial pseudo-division of ``f`` and ``g``. """
         # XXX: Handle the zero polynomial cases?
-        d: int = f.degree() - g.degree() + 1 # type: ignore
+        d = f.degree() - g.degree() + 1
         q, r = divmod(g.LC()**d * f._rep, g._rep)
         return f.from_rep(q, f.dom), f.from_rep(r, f.dom)
 
     def _prem(f, g: Self, /) -> Self:
         """Polynomial pseudo-remainder of ``f`` and ``g``. """
         # XXX: Handle the zero polynomial cases?
-        d: int = f.degree() - g.degree() + 1 # type: ignore
+        d = f.degree() - g.degree() + 1
         q = (g.LC()**d * f._rep) % g._rep
         return f.from_rep(q, f.dom)
 
     def _pquo(f, g: Self, /) -> Self:
         """Polynomial pseudo-quotient of ``f`` and ``g``. """
         # XXX: Handle the zero polynomial cases?
-        d: int = f.degree() - g.degree() + 1 # type: ignore
+        d = f.degree() - g.degree() + 1
         r = (g.LC()**d * f._rep) // g._rep
         return f.from_rep(r, f.dom)
 
     def _pexquo(f, g: Self, /) -> Self:
         """Polynomial exact pseudo-quotient of ``f`` and ``g``. """
         # XXX: Handle the zero polynomial cases?
-        d: int = f.degree() - g.degree() + 1 # type: ignore
+        d = f.degree() - g.degree() + 1
         q, r = divmod(g.LC()**d * f._rep, g._rep)
         if r:
             raise ExactQuotientFailed(f, g)
@@ -2152,20 +2156,17 @@ class DUP_Flint(DMP[Er]):
             raise ExactQuotientFailed(f, g)
         return q
 
-    def _degree(f, j: int) -> int | float:
+    def _degree(f, j: int) -> int:
         """Returns the leading degree of ``f`` in ``x_j``. """
-        d = f._rep.degree()
-        if d == -1:
-            d = ninf
-        return d
+        return f._rep.degree()
 
-    def degree_list(f) -> tuple[int | float, ...]:
+    def degree_list(f) -> tuple[int, ...]:
         """Returns a list of degrees of ``f``. """
-        return ( f._degree(0) ,)
+        return ( f._rep.degree() ,)
 
-    def total_degree(f) -> int | float:
+    def total_degree(f) -> int:
         """Returns the total degree of ``f``. """
-        return f._degree(0)
+        return f._rep.degree()
 
     def LC(f) -> Er:
         """Returns the leading coefficient of ``f``. """
@@ -3039,7 +3040,14 @@ class ANP(CantSympify, Generic[Eg]):
         if isinstance(rep, DMP):
             pass
         elif type(rep) is dict: # don't use isinstance
-            rep = DMP(dup_from_dict(rep, dom), dom, 0)
+            # rep can be dict[tuple[int], ...] or dict[int, ...]
+            n = None
+            for n in rep:
+                break
+            if isinstance(n, int):
+                rep = DMP(dup_from_raw_dict(rep, dom), dom, 0)
+            else:
+                rep = DMP(dup_from_dict(rep, dom), dom, 0)
         else:
             if isinstance(rep, list):
                 rep = [dom.convert(a) for a in rep]
@@ -3050,7 +3058,7 @@ class ANP(CantSympify, Generic[Eg]):
         if isinstance(mod, DMP):
             pass
         elif isinstance(mod, dict):
-            mod = DMP(dup_from_dict(mod, dom), dom, 0)
+            mod = DMP(dup_from_raw_dict(mod, dom), dom, 0)
         else:
             mod = DMP(dup_strip(mod), dom, 0)
 

@@ -116,7 +116,10 @@ class HyperbolicFunction(DefinedFunction):
     See Also
     ========
 
-    sinh, cosh, tanh, coth
+    sympy.functions.elementary.hyperbolic.sinh
+    sympy.functions.elementary.hyperbolic.cosh
+    sympy.functions.elementary.hyperbolic.tanh
+    sympy.functions.elementary.hyperbolic.coth
     """
 
     unbranched = True
@@ -173,7 +176,9 @@ class sinh(HyperbolicFunction):
     See Also
     ========
 
-    cosh, tanh, asinh
+    sympy.functions.elementary.hyperbolic.cosh
+    sympy.functions.elementary.hyperbolic.tanh
+    sympy.functions.elementary.hyperbolic.asinh
     """
 
     def fdiff(self, argindex=1) -> type[UndefinedFunction]:
@@ -385,7 +390,9 @@ class cosh(HyperbolicFunction):
     See Also
     ========
 
-    sinh, tanh, acosh
+    sympy.functions.elementary.hyperbolic.sinh
+    sympy.functions.elementary.hyperbolic.tanh
+    sympy.functions.elementary.hyperbolic.acosh
     """
 
     def fdiff(self, argindex=1) -> type[UndefinedFunction]:
@@ -629,7 +636,9 @@ class tanh(HyperbolicFunction):
     See Also
     ========
 
-    sinh, cosh, atanh
+    sympy.functions.elementary.hyperbolic.sinh
+    sympy.functions.elementary.hyperbolic.cosh
+    sympy.functions.elementary.hyperbolic.atanh
     """
 
     def fdiff(self, argindex=1):
@@ -842,7 +851,9 @@ class coth(HyperbolicFunction):
     See Also
     ========
 
-    sinh, cosh, acoth
+    sympy.functions.elementary.hyperbolic.sinh
+    sympy.functions.elementary.hyperbolic.cosh
+    sympy.functions.elementary.hyperbolic.acoth
     """
 
     def fdiff(self, argindex=1):
@@ -1088,7 +1099,12 @@ class csch(ReciprocalHyperbolicFunction):
     See Also
     ========
 
-    sinh, cosh, tanh, sech, asinh, acosh
+    sympy.functions.elementary.hyperbolic.sinh
+    sympy.functions.elementary.hyperbolic.cosh
+    sympy.functions.elementary.hyperbolic.tanh
+    sympy.functions.elementary.hyperbolic.sech
+    sympy.functions.elementary.hyperbolic.asinh
+    sympy.functions.elementary.hyperbolic.acosh
     """
 
     _reciprocal_of = sinh
@@ -1159,7 +1175,13 @@ class sech(ReciprocalHyperbolicFunction):
     See Also
     ========
 
-    sinh, cosh, tanh, coth, csch, asinh, acosh
+    sympy.functions.elementary.hyperbolic.sinh
+    sympy.functions.elementary.hyperbolic.cosh
+    sympy.functions.elementary.hyperbolic.tanh
+    sympy.functions.elementary.hyperbolic.coth
+    sympy.functions.elementary.hyperbolic.csch
+    sympy.functions.elementary.hyperbolic.asinh
+    sympy.functions.elementary.hyperbolic.acosh
     """
 
     _reciprocal_of = cosh
@@ -1226,7 +1248,9 @@ class asinh(InverseHyperbolicFunction):
     See Also
     ========
 
-    acosh, atanh, sinh
+    sympy.functions.elementary.hyperbolic.acosh
+    sympy.functions.elementary.hyperbolic.atanh
+    sympy.functions.elementary.hyperbolic.sinh
     """
 
     def fdiff(self, argindex=1):
@@ -1404,7 +1428,9 @@ class acosh(InverseHyperbolicFunction):
     See Also
     ========
 
-    asinh, atanh, cosh
+    sympy.functions.elementary.hyperbolic.asinh
+    sympy.functions.elementary.hyperbolic.atanh
+    sympy.functions.elementary.hyperbolic.cosh
     """
 
     def fdiff(self, argindex=1):
@@ -1588,7 +1614,9 @@ class atanh(InverseHyperbolicFunction):
     See Also
     ========
 
-    asinh, acosh, tanh
+    sympy.functions.elementary.hyperbolic.asinh
+    sympy.functions.elementary.hyperbolic.acosh
+    sympy.functions.elementary.hyperbolic.tanh
     """
 
     def fdiff(self, argindex=1):
@@ -1753,7 +1781,9 @@ class acoth(InverseHyperbolicFunction):
     See Also
     ========
 
-    asinh, acosh, coth
+    sympy.functions.elementary.hyperbolic.asinh
+    sympy.functions.elementary.hyperbolic.acosh
+    sympy.functions.elementary.hyperbolic.coth
     """
 
     def fdiff(self, argindex=1):
@@ -1908,7 +1938,10 @@ class asech(InverseHyperbolicFunction):
     See Also
     ========
 
-    asinh, atanh, cosh, acoth
+    sympy.functions.elementary.hyperbolic.asinh
+    sympy.functions.elementary.hyperbolic.atanh
+    sympy.functions.elementary.hyperbolic.cosh
+    sympy.functions.elementary.hyperbolic.acoth
 
     References
     ==========
@@ -2102,7 +2135,7 @@ class acsch(InverseHyperbolicFunction):
     See Also
     ========
 
-    asinh
+    sympy.functions.elementary.hyperbolic.asinh
 
     References
     ==========

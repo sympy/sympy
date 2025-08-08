@@ -49,7 +49,7 @@ from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import (TrigonometricFunction,
     cos, sin, tan, cot, csc, sec, acos, asin, atan, acot, acsc, asec)
 from sympy.functions.special.delta_functions import Heaviside, DiracDelta
-from sympy.functions.special.error_functions import (erf, erfi, fresnelc,
+from sympy.functions.special.error_functions import (erf, erfc, erfi, fresnelc,
     fresnels, Ci, Chi, Si, Shi, Ei, li)
 from sympy.functions.special.gamma_functions import uppergamma
 from sympy.functions.special.elliptic_integrals import elliptic_e, elliptic_f
@@ -63,6 +63,7 @@ from sympy.ntheory.factor_ import primefactors
 from sympy.polys.polytools import degree, lcm_list, gcd_list, Poly
 from sympy.simplify.radsimp import fraction
 from sympy.simplify.simplify import simplify
+from sympy.simplify.powsimp import powsimp
 from sympy.solvers.solvers import solve
 from sympy.strategies.core import switch, do_one, null_safe, condition
 from sympy.utilities.iterables import iterable
@@ -974,6 +975,29 @@ def exp_rule(integral) -> ExpRule | None:
         return ExpRule(integrand, symbol, E, integrand.args[0])
 
 
+def powsimp_rule(integral):
+    """
+    Strategy that simplifies the exponent of a power.
+    exp(a*x**2) * exp(b*x) -> exp((a*x**2 + b*x))
+    For example, this is useful for the ErfRule.
+    """
+    integrand, symbol = integral
+    a = Wild('a', exclude=[symbol])
+    b = Wild('b', exclude=[symbol])
+    k = Wild('k', exclude=[symbol])
+
+    match = integrand.match(k**(a*symbol**2) * k**(b*symbol))
+
+    if not match:
+        return
+
+    simplified = powsimp(integrand, combine='exp')
+
+    if simplified != integrand:
+        steps = integral_steps(simplified, symbol)
+        return RewriteRule(integrand, symbol, simplified, steps)
+
+
 def orthogonal_poly_rule(integral) -> None:
     orthogonal_poly_classes = {
         jacobi: JacobiRule,
@@ -1236,7 +1260,7 @@ def _parts_rule(integrand, symbol) -> tuple[Expr, Expr, Expr, Expr, Rule] | None
         return pull_out_u_rl
 
     liate_rules = [pull_out_u(log), pull_out_u(*inverse_trig_functions),
-                   pull_out_algebraic, pull_out_u(sin, cos),
+                   pull_out_u(erf, erfc, erfi), pull_out_algebraic, pull_out_u(sin, cos),
                    pull_out_u(exp)]
 
 
@@ -2091,6 +2115,9 @@ def integral_steps(integrand, symbol, **options) -> DontKnowRule | tuple[Any, An
             null_safe(alternatives(
                 rewrites_rule,
                 substitution_rule,
+                condition(
+                    integral_is_subclass(Mul, Pow),
+                    powsimp_rule),
                 condition(
                     integral_is_subclass(Mul, Pow),
                     partial_fractions_rule),

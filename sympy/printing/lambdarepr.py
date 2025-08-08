@@ -11,9 +11,9 @@ from typing import Any
 __all__ = [
     'PythonCodePrinter',
     'MpmathPrinter',  # MpmathPrinter is published for backward compatibility
+    'NumExprPrinter',
     'NumPyPrinter',
     'LambdaPrinter',
-    'NumPyPrinter',
     'IntervalPrinter',
     'lambdarepr',
 ]
