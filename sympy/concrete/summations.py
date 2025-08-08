@@ -1556,7 +1556,7 @@ def eval_sum_residue(f, i_a_b):
                 f = numer.as_expr() / denom.as_expr()
             return eval_sum_residue(f, (i, a-shift, b-shift))
         elif not both_inf:
-            return None  # can't make a shift that keeps limits integer  
+            return None  # can't make a shift that keeps limits integer
 
     if both_inf:  # even or not
         poles = get_poles(denom)
