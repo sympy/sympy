@@ -1540,31 +1540,25 @@ def eval_sum_residue(f, i_a_b):
         # even wrt the origin.
         # Sum(f(n), (n, a, b)) => Sum(f(n + s), (n, a - s, b - s))
         shift = get_shift(denom)
+
         if not shift:
             return None
-        if not shift.is_Integer:
-            if not both_inf:
-                return None
-            # we can handle a non-integer shift if limits are infinite
-            numer, denom = match_rational((numer.as_expr()/denom.as_expr()
-                ).subs(i, i + shift), i)
-        else:
+
+        if shift.is_Integer:
             numer = numer.shift(shift)
             denom = denom.shift(shift)
+            if not is_even_function(numer, denom):
+                return None
 
-        if not is_even_function(numer, denom):
-            return None
-
-        if not both_inf:
             if alternating:
                 f = S.NegativeOne**i * (S.NegativeOne**shift * numer.as_expr() / denom.as_expr())
             else:
                 f = numer.as_expr() / denom.as_expr()
             return eval_sum_residue(f, (i, a-shift, b-shift))
+        elif not both_inf:
+            return None  # can't make a shift that keeps limits integer  
 
-    # handle even function
-
-    if both_inf:
+    if both_inf:  # even or not
         poles = get_poles(denom)
         if poles is None:
             return None
@@ -1573,6 +1567,8 @@ def eval_sum_residue(f, i_a_b):
             return None
 
         return -S.Pi * sum(residues(numer, denom, alternating, poles))
+
+    # handle even function with semi-infinite limits
 
     if a is S.NegativeInfinity:
         # this is ok for an even function and will be necessary
