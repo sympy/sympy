@@ -61,13 +61,20 @@ def as_expr(s, ring):
     return Add(*result)
 
 
-@composite
-def dup_zero_const(draw, min_size=3, max_size=25):
-    """DUP zero constant strategy."""
-    element_strategy = st.tuples(
+def dup_QQ():
+    # This is a strategy of creating random dup_QQ elements.
+    elems = st.tuples(
         st.integers(min_value=-100, max_value=100),
         st.integers(min_value=1, max_value=100),
     ).map(lambda t: QQ(t[0], t[1]))
+
+    return elems
+
+
+@composite
+def dup_zero_const(draw, min_size=3, max_size=25):
+    """DUP zero constant strategy."""
+    element_strategy = dup_QQ()
 
     lst = draw(st.lists(element_strategy, min_size=min_size, max_size=max_size))
     lst[-1] = QQ.zero
@@ -77,10 +84,7 @@ def dup_zero_const(draw, min_size=3, max_size=25):
 @composite
 def dup_one_const(draw, min_size=3, max_size=25):
     """DUP zero constant strategy."""
-    element_strategy = st.tuples(
-        st.integers(min_value=-100, max_value=100),
-        st.integers(min_value=1, max_value=100),
-    ).map(lambda t: QQ(t[0], t[1]))
+    element_strategy = dup_QQ()
 
     lst = draw(st.lists(element_strategy, min_size=min_size, max_size=max_size))
     lst[-1] = QQ.one

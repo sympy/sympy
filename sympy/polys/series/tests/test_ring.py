@@ -40,17 +40,17 @@ if GROUND_TYPES == "flint":
 
 
 @pytest.fixture(params=Ring_ZZ + Ring_QQ)
-def rd_int(request):
+def ring_int(request):
     return request.param
 
 
 @pytest.fixture(params=Ring_QQ)
-def rd_rational(request):
+def ring_rational(request):
     return request.param
 
 
-def test_equal(rd_int):
-    SeriesRing = rd_int
+def test_equal(ring_int):
+    SeriesRing = ring_int
     R = SeriesRing()
     assert R.equal(R([1, 2, 3]), R([1, 2, 3])) is True
     assert R.equal(R([1, 21, 3]), R([1, 2, 3])) is False
@@ -65,8 +65,8 @@ def test_equal(rd_int):
     assert R.equal(R([1, 2], None), R([1, 2, 3], 3)) is False
 
 
-def test_basics(rd_int):
-    SeriesRing = rd_int
+def test_basics(ring_int):
+    SeriesRing = ring_int
     R = SeriesRing()
     R0 = SeriesRing(0)
 
@@ -86,8 +86,8 @@ def test_basics(rd_int):
     assert R.series_prec(R([1, 2, 3, 4, 5, 6, 7], 10)) == 6
 
 
-def test_positive(rd_int):
-    SeriesRing = rd_int
+def test_positive(ring_int):
+    SeriesRing = ring_int
     R = SeriesRing()
     assert R.equal_repr(
         R.positive(R([1, 2, 3, 4, 5, 6, 7], None)), R([1, 2, 3, 4, 5, 6], 6)
@@ -97,8 +97,8 @@ def test_positive(rd_int):
     )
 
 
-def test_negative(rd_int):
-    SeriesRing = rd_int
+def test_negative(ring_int):
+    SeriesRing = ring_int
     R = SeriesRing()
     assert R.equal_repr(R.negative(R.gen), R([0, -1], None))
     assert R.equal_repr(
@@ -111,15 +111,15 @@ def test_negative(rd_int):
     )
 
 
-def test_add(rd_int):
-    SeriesRing = rd_int
+def test_add(ring_int):
+    SeriesRing = ring_int
     R3 = SeriesRing(3)
     assert R3.equal_repr(R3.add(R3.gen, R3.one), R3([1, 1], None))
     assert R3.equal_repr(R3.add(R3.one, R3.pow_int(R3.gen, 4)), R3([1], 3))
 
 
-def test_int_subtract(rd_int):
-    SeriesRing = rd_int
+def test_int_subtract(ring_int):
+    SeriesRing = ring_int
     R = SeriesRing()
     R3 = SeriesRing(3)
     assert R.equal_repr(
@@ -130,8 +130,8 @@ def test_int_subtract(rd_int):
     )
 
 
-def test_int_multiply(rd_int):
-    SeriesRing = rd_int
+def test_int_multiply(ring_int):
+    SeriesRing = ring_int
     R = SeriesRing()
     R3 = SeriesRing(3)
     R10 = SeriesRing(10)
@@ -146,8 +146,8 @@ def test_int_multiply(rd_int):
     )
 
 
-def test_rational_multiply(rd_rational):
-    SeriesRing = rd_rational
+def test_rational_multiply(ring_rational):
+    SeriesRing = ring_rational
     R = SeriesRing()
     R3 = SeriesRing(3)
     assert R.equal_repr(R.multiply(R.gen, R.gen), R([(0, 1), (0, 1), (1, 1)], None))
@@ -165,8 +165,8 @@ def test_rational_multiply(rd_rational):
     )
 
 
-def test_int_multiply_ground(rd_int):
-    SeriesRing = rd_int
+def test_int_multiply_ground(ring_int):
+    SeriesRing = ring_int
     R = SeriesRing()
     assert R.equal_repr(R.multiply_ground(R.one, ZZ(1)), R([1], None))
     assert R.equal_repr(R.multiply_ground(R.gen, ZZ(-1)), R([0, -1], None))
@@ -179,8 +179,8 @@ def test_int_multiply_ground(rd_int):
     )
 
 
-def test_rational_multiply_ground(rd_rational):
-    SeriesRing = rd_rational
+def test_rational_multiply_ground(ring_rational):
+    SeriesRing = ring_rational
     R = SeriesRing()
     assert R.equal_repr(R.multiply_ground(R.gen, QQ(1, 2)), R([(0, 1), (1, 2)], None))
     assert R.equal_repr(R.multiply_ground(R.one, QQ(3, 4)), R([(3, 4)], None))
@@ -192,8 +192,8 @@ def test_rational_multiply_ground(rd_rational):
     )
 
 
-def test_int_divide(rd_int):
-    SeriesRing = rd_int
+def test_int_divide(ring_int):
+    SeriesRing = ring_int
     R = SeriesRing()
     R3 = SeriesRing(3)
     R10 = SeriesRing(10)
@@ -223,8 +223,8 @@ def test_int_divide(rd_int):
     raises(ValueError, lambda: R.divide(R([0, 1]), R([0, 0, 2])))
 
 
-def test_rational_divide(rd_rational):
-    SeriesRing = rd_rational
+def test_rational_divide(ring_rational):
+    SeriesRing = ring_rational
     R = SeriesRing()
     assert R.equal_repr(
         R.divide(R.add(R.one, R.gen), R.subtract(R.one, R.gen)),
@@ -247,8 +247,8 @@ def test_rational_divide(rd_rational):
     )
 
 
-def test_int_square(rd_int):
-    SeriesRing = rd_int
+def test_int_square(ring_int):
+    SeriesRing = ring_int
     R = SeriesRing()
     R3 = SeriesRing(3)
     assert not R.equal_repr(R.square(R.add(R.gen, R.one)), R([1, 1, 1], None))
@@ -257,8 +257,8 @@ def test_int_square(rd_int):
     )
 
 
-def test_rational_square(rd_rational):
-    SeriesRing = rd_rational
+def test_rational_square(ring_rational):
+    SeriesRing = ring_rational
     R = SeriesRing()
     R10 = SeriesRing(10)
     assert not R.equal_repr(
@@ -269,8 +269,8 @@ def test_rational_square(rd_rational):
     )
 
 
-def test_sqrt(rd_rational):
-    SeriesRing = rd_rational
+def test_sqrt(ring_rational):
+    SeriesRing = ring_rational
     R = SeriesRing()
     R10 = SeriesRing(10)
 
@@ -320,8 +320,8 @@ def test_sqrt(rd_rational):
     )
 
 
-def test_int_pow(rd_int):
-    SeriesRing = rd_int
+def test_int_pow(ring_int):
+    SeriesRing = ring_int
     R = SeriesRing()
     R3 = SeriesRing(3)
     R10 = SeriesRing(10)
@@ -339,8 +339,8 @@ def test_int_pow(rd_int):
     )
 
 
-def test_rational_pow(rd_rational):
-    SeriesRing = rd_rational
+def test_rational_pow(ring_rational):
+    SeriesRing = ring_rational
     R = SeriesRing()
     R3 = SeriesRing(3)
     R10 = SeriesRing(10)
@@ -373,8 +373,8 @@ def test_rational_pow(rd_rational):
     )
 
 
-def test_truncate(rd_int):
-    SeriesRing = rd_int
+def test_truncate(ring_int):
+    SeriesRing = ring_int
     R = SeriesRing()
     assert R.equal_repr(R.truncate(R.pow_int(R.gen, 3), 4), R([0, 0, 0, 1], None))
     assert R.equal_repr(
@@ -382,8 +382,8 @@ def test_truncate(rd_int):
     )
 
 
-def test_int_differentiate(rd_int):
-    SeriesRing = rd_int
+def test_int_differentiate(ring_int):
+    SeriesRing = ring_int
     R = SeriesRing()
     R3 = SeriesRing(3)
     R10 = SeriesRing(10)
@@ -408,8 +408,8 @@ def test_int_differentiate(rd_int):
     )
 
 
-def test_rational_differentiate(rd_rational):
-    SeriesRing = rd_rational
+def test_rational_differentiate(ring_rational):
+    SeriesRing = ring_rational
     R = SeriesRing()
     R3 = SeriesRing(3)
     R10 = SeriesRing(10)
@@ -437,8 +437,8 @@ def test_rational_differentiate(rd_rational):
     )
 
 
-def test_rational_integrate(rd_rational):
-    SeriesRing = rd_rational
+def test_rational_integrate(ring_rational):
+    SeriesRing = ring_rational
     R = SeriesRing()
     R3 = SeriesRing(3)
     R10 = SeriesRing(10)
@@ -468,16 +468,16 @@ def test_rational_integrate(rd_rational):
     )
 
 
-def test_error(rd_int):
-    SeriesRing = rd_int
+def test_error(ring_int):
+    SeriesRing = ring_int
     R = SeriesRing()
     raises(ValueError, lambda: SeriesRing(-1))
     raises(ValueError, lambda: R.pow_int(R.gen, -1))
     raises(ValueError, lambda: R.truncate(R.gen, -1))
 
 
-def test_int_compose(rd_int):
-    SeriesRing = rd_int
+def test_int_compose(ring_int):
+    SeriesRing = ring_int
     R = SeriesRing()
     R3 = SeriesRing(3)
     R10 = SeriesRing(10)
@@ -496,8 +496,8 @@ def test_int_compose(rd_int):
     raises(ValueError, lambda: R.compose(R([1, 2], 2), R([1, 2, 3], 2)))
 
 
-def test_rational_compose(rd_rational):
-    SeriesRing = rd_rational
+def test_rational_compose(ring_rational):
+    SeriesRing = ring_rational
     R = SeriesRing()
     R3 = SeriesRing(3)
     R10 = SeriesRing(10)
@@ -521,8 +521,8 @@ def test_rational_compose(rd_rational):
     )
 
 
-def test_int_inverse(rd_int):
-    SeriesRing = rd_int
+def test_int_inverse(ring_int):
+    SeriesRing = ring_int
     R = SeriesRing()
     R3 = SeriesRing(3)
     R10 = SeriesRing(10)
@@ -543,8 +543,8 @@ def test_int_inverse(rd_int):
     raises(NotReversible, lambda: R.inverse(R([0, 1, 2])))
 
 
-def test_rational_inverse(rd_rational):
-    SeriesRing = rd_rational
+def test_rational_inverse(ring_rational):
+    SeriesRing = ring_rational
     R = SeriesRing()
     R3 = SeriesRing(3)
     R10 = SeriesRing(10)
@@ -591,8 +591,8 @@ def test_rational_inverse(rd_rational):
     )
 
 
-def test_int_reversion(rd_int):
-    SeriesRing = rd_int
+def test_int_reversion(ring_int):
+    SeriesRing = ring_int
     R = SeriesRing()
     R3 = SeriesRing(3)
     R10 = SeriesRing(10)
@@ -619,8 +619,8 @@ def test_int_reversion(rd_int):
     raises(NotReversible, lambda: R.reversion(R([0, 0, 2])))
 
 
-def test_rational_reversion(rd_rational):
-    SeriesRing = rd_rational
+def test_rational_reversion(ring_rational):
+    SeriesRing = ring_rational
     R = SeriesRing()
     R3 = SeriesRing(3)
     R10 = SeriesRing(10)
@@ -655,8 +655,8 @@ def test_rational_reversion(rd_rational):
     )
 
 
-def test_log(rd_rational):
-    SeriesRing = rd_rational
+def test_log(ring_rational):
+    SeriesRing = ring_rational
     R = SeriesRing()
     R3 = SeriesRing(3)
     R10 = SeriesRing(10)
@@ -690,8 +690,8 @@ def test_log(rd_rational):
     )
 
 
-def test_exp(rd_rational):
-    SeriesRing = rd_rational
+def test_exp(ring_rational):
+    SeriesRing = ring_rational
     R = SeriesRing()
     R3 = SeriesRing(3)
     R10 = SeriesRing(10)
@@ -723,8 +723,8 @@ def test_exp(rd_rational):
     )
 
 
-def test_atan(rd_rational):
-    SeriesRing = rd_rational
+def test_atan(ring_rational):
+    SeriesRing = ring_rational
     R = SeriesRing()
     R3 = SeriesRing(3)
     R10 = SeriesRing(10)
@@ -757,8 +757,8 @@ def test_atan(rd_rational):
     )
 
 
-def test_atanh(rd_rational):
-    SeriesRing = rd_rational
+def test_atanh(ring_rational):
+    SeriesRing = ring_rational
     R = SeriesRing()
     R3 = SeriesRing(3)
     R10 = SeriesRing(10)
@@ -790,8 +790,8 @@ def test_atanh(rd_rational):
     )
 
 
-def test_asin(rd_rational):
-    SeriesRing = rd_rational
+def test_asin(ring_rational):
+    SeriesRing = ring_rational
     R = SeriesRing()
     R3 = SeriesRing(3)
     R10 = SeriesRing(10)
@@ -823,8 +823,8 @@ def test_asin(rd_rational):
     )
 
 
-def test_asinh(rd_rational):
-    SeriesRing = rd_rational
+def test_asinh(ring_rational):
+    SeriesRing = ring_rational
     R = SeriesRing()
     R3 = SeriesRing(3)
     R10 = SeriesRing(10)
@@ -856,8 +856,8 @@ def test_asinh(rd_rational):
     )
 
 
-def test_tan(rd_rational):
-    SeriesRing = rd_rational
+def test_tan(ring_rational):
+    SeriesRing = ring_rational
     R = SeriesRing()
     R3 = SeriesRing(3)
     R10 = SeriesRing(10)
@@ -889,8 +889,8 @@ def test_tan(rd_rational):
     )
 
 
-def test_tanh(rd_rational):
-    SeriesRing = rd_rational
+def test_tanh(ring_rational):
+    SeriesRing = ring_rational
     R = SeriesRing()
     R3 = SeriesRing(3)
     R10 = SeriesRing(10)
@@ -922,8 +922,8 @@ def test_tanh(rd_rational):
     )
 
 
-def test_sin(rd_rational):
-    SeriesRing = rd_rational
+def test_sin(ring_rational):
+    SeriesRing = ring_rational
     R = SeriesRing()
     R3 = SeriesRing(3)
     R10 = SeriesRing(10)
@@ -955,8 +955,8 @@ def test_sin(rd_rational):
     )
 
 
-def test_sinh(rd_rational):
-    SeriesRing = rd_rational
+def test_sinh(ring_rational):
+    SeriesRing = ring_rational
     R = SeriesRing()
     R3 = SeriesRing(3)
     R10 = SeriesRing(10)
@@ -988,8 +988,8 @@ def test_sinh(rd_rational):
     )
 
 
-def test_cos(rd_rational):
-    SeriesRing = rd_rational
+def test_cos(ring_rational):
+    SeriesRing = ring_rational
     R = SeriesRing()
     R3 = SeriesRing(3)
     R10 = SeriesRing(10)
@@ -1021,8 +1021,8 @@ def test_cos(rd_rational):
     )
 
 
-def test_cosh(rd_rational):
-    SeriesRing = rd_rational
+def test_cosh(ring_rational):
+    SeriesRing = ring_rational
     R = SeriesRing()
     R3 = SeriesRing(3)
     R10 = SeriesRing(10)
@@ -1054,8 +1054,8 @@ def test_cosh(rd_rational):
     )
 
 
-def test_high_deg(rd_rational):
-    SeriesRing = rd_rational
+def test_high_deg(ring_rational):
+    SeriesRing = ring_rational
     Rs = SeriesRing(30)
     Rp, x = ring("x", QQ)
 
@@ -1086,8 +1086,8 @@ def test_high_deg(rd_rational):
     assert Rs.to_dense(Rs.log1p(s)) == rs_log(p2, x, 30).to_dense()
 
 
-def test_hypot(rd_rational):
-    SeriesRing = rd_rational
+def test_hypot(ring_rational):
+    SeriesRing = ring_rational
     R = SeriesRing()
     R10 = SeriesRing(10)
 
