@@ -10,7 +10,7 @@ from sympy.core.function import (Derivative, Function)
 from sympy.core.mul import Mul
 from sympy.core.relational import Eq
 from sympy.core.sympify import sympify
-from sympy.solvers import linsolve
+from sympy.solvers import linsolve, linear_eq_to_matrix
 from sympy.solvers.ode.ode import dsolve
 from sympy.solvers.solvers import solve
 from sympy.printing import sstr
@@ -953,6 +953,17 @@ class Beam:
             + 120*SingularityFunction(x, 30, -2) + 2*SingularityFunction(x, 30, -1)
         """
 
+        if not reactions:
+            raise ValueError("No symbols supplied to solve_for_reaction_loads().")
+
+        if len(set(reactions)) != len(reactions):
+            raise ValueError("Duplicate symbols supplied to solve_for_reaction_loads().")
+
+        required = len(self.bc_deflection) + len(self.bc_slope)
+        if len(reactions) < required:
+            raise ValueError(f"Expected at least {required} reaction symbols (based on deflection and slope BCs), but got {len(reactions)}.")
+
+
         x = self.variable
         l = self.length
         C3 = Symbol('C3')
@@ -988,8 +999,35 @@ class Beam:
             eqs = deflection_curve.subs(x, position) - value
             deflection_eqs.append(eqs)
 
-        solution = list((linsolve([shear_curve, moment_curve] + shear_force_eqs + bending_moment_eqs + slope_eqs
-                            + deflection_eqs, (C3, C4) + reactions + rotation_jumps + deflection_jumps).args)[0])
+        equations = [shear_curve, moment_curve] + shear_force_eqs + bending_moment_eqs + slope_eqs + deflection_eqs
+        unknowns = (C3, C4) + reactions + rotation_jumps + deflection_jumps
+
+        A, b = linear_eq_to_matrix(equations, unknowns)
+
+        rref_A, rref_b = A.rref_rhs(b)
+        for i in range(rref_A.rows):
+            row_sum = sum(rref_A[i, :])
+            rhs = rref_b[i]
+
+            if row_sum == 0 and rhs != 0:
+                if not rhs.is_number:
+                    raise ValueError(
+                            f"The system is only solvable with symbolic constraint"
+                            f" {rhs} = 0.substitute to proceed"
+                    )
+                else:
+                    eqs_str = "\n".join(f"  {equation}" for equation in equations)
+                    unks_str = ", ".join(str(unknown) for unknown in unknowns)
+                    raise ValueError(
+                        f" Inconsistent system detected!\n"
+                        f"   Equations ({len(equations)}):\n{eqs_str}\n"
+                        f"   Unknowns ({len(unknowns)}): {unks_str}\n\n"
+                        "This means your supports/BCs generate contradictory or insufficient constraints."
+                        )
+
+        solutions = linsolve(equations, unknowns)
+        solution = list(solutions.args[0])
+
         reaction_index = 2+len(reactions)
         rotation_index = reaction_index + len(rotation_jumps)
         reaction_solution = solution[2:reaction_index]
