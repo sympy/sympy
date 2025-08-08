@@ -233,7 +233,7 @@ def rs_mul(p1, p2, x, prec):
     """
     R = p1.ring
     p = {}
-    if R.__class__ != p2.ring.__class__ or R != p2.ring:
+    if R != p2.ring:
         raise ValueError('p1 and p2 must have the same ring')
     iv = R.gens.index(x)
     if not isinstance(p2, (PolyElement, PuiseuxPoly)):
@@ -398,7 +398,7 @@ def rs_subs(p, rules, x, prec):
     """
     R = p.ring
     ngens = R.ngens
-    d = R(0)
+    d = {}
     for i in range(ngens):
         d[(i, 1)] = R.gens[i]
     for var in rules:
@@ -1892,10 +1892,10 @@ def rs_hadamard_exp(p1, inverse=False):
     p = R.zero
     if not inverse:
         for exp1, v1 in p1.items():
-            p[exp1] = v1/int(ifac(exp1[0]))
+            p[exp1] = v1/int(ifac(int(exp1[0])))
     else:
         for exp1, v1 in p1.items():
-            p[exp1] = v1*int(ifac(exp1[0]))
+            p[exp1] = v1*int(ifac(int(exp1[0])))
     return p
 
 def rs_compose_add(p1, p2):
