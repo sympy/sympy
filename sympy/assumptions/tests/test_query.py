@@ -2569,3 +2569,6 @@ def test_issue_25221():
 def test_issue_27440():
     nan = S.NaN
     assert ask(Q.negative(nan)) is None
+
+def test_issue_28150():
+    assert ask(Q.real(Pow(0, -1, evaluate=False))) is False
