@@ -8,7 +8,7 @@ import itertools as itl
 from collections.abc import Generator, ValuesView
 from itertools import islice
 from typing import Any, Callable
-from typing_extensions import LiteralString, Self
+from typing_extensions import Self
 
 
 class MDNotImplementedError(NotImplementedError):
@@ -394,7 +394,7 @@ class MethodDispatcher(Dispatcher):
         return func(self.obj, *args, **kwargs)
 
 
-def str_signature(sig) -> LiteralString:
+def str_signature(sig) -> str:
     """ String representation of type signature
 
     >>> from sympy.multipledispatch.dispatcher import str_signature

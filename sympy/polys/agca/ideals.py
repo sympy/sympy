@@ -5,7 +5,6 @@ from sympy.polys.polyutils import IntegerPowerable
 from collections.abc import Generator
 from types import NotImplementedType
 from typing import Any
-from typing_extensions import LiteralString
 
 
 class Ideal(IntegerPowerable):
@@ -368,7 +367,7 @@ class ModuleImplementedIdeal(Ideal):
         """
         return self._module.is_full_module()
 
-    def __repr__(self) -> LiteralString:
+    def __repr__(self) -> str:
         from sympy.printing.str import sstr
         gens = [self.ring.to_sympy(x) for [x] in self._module.gens]
         return '<' + ','.join(sstr(g) for g in gens) + '>'

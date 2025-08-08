@@ -28,7 +28,7 @@ from sympy.geometry.line import Line, Line2D, Line3D, Segment, Segment2D, Segmen
 from sympy.geometry.point import Point, Point2D, Point3D
 from types import NotImplementedType
 from typing import Any
-from typing_extensions import LiteralString, Self
+from typing_extensions import Self
 
 
 x, y, T = [Dummy('polygon_dummy', real=True) for i in range(3)]
@@ -1535,7 +1535,7 @@ class RegularPolygon(Polygon):
     def __str__(self):
         return 'RegularPolygon(%s, %s, %s, %s)' % tuple(self.args)
 
-    def __repr__(self) -> LiteralString:
+    def __repr__(self) -> str:
         return 'RegularPolygon(%s, %s, %s, %s)' % tuple(self.args)
 
     @property

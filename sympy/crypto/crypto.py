@@ -37,7 +37,6 @@ from sympy.utilities.iterables import uniq, multiset
 from sympy.utilities.decorator import doctest_depends_on
 from array import array
 from typing import Any, Literal
-from typing_extensions import LiteralString
 
 
 if GROUND_TYPES == 'flint':
@@ -56,7 +55,7 @@ class NonInvertibleCipherWarning(RuntimeWarning):
         warnings.warn(self, stacklevel=stacklevel)
 
 
-def AZ(s=None) -> LiteralString | str | list[Any | str]:
+def AZ(s=None) -> str | list[Any | str]:
     """Return the letters of ``s`` in uppercase. In case more than
     one string is passed, each of them will be processed and a list
     of upper case strings will be returned.
@@ -602,7 +601,7 @@ def encipher_substitution(msg, old, new=None) -> str:
 #################### Vigenere cipher examples ########################
 ######################################################################
 
-def encipher_vigenere(msg, key, symbols=None) -> LiteralString:
+def encipher_vigenere(msg, key, symbols=None) -> str:
     """
     Performs the Vigenere cipher encryption on plaintext ``msg``, and
     returns the ciphertext.
@@ -2260,7 +2259,7 @@ def encode_morse(msg, sep='|', mapping=None) -> str:
     return word_sep.join(morsestring) + (word_sep if suffix else '')
 
 
-def decode_morse(msg, sep='|', mapping=None) -> LiteralString:
+def decode_morse(msg, sep='|', mapping=None) -> str:
     """
     Decodes a Morse Code with letters separated by ``sep``
     (default is '|') and words by `word_sep` (default is '||)
@@ -3110,7 +3109,7 @@ def decipher_gm(message, key) -> int:
 
 ########### RailFence Cipher #############
 
-def encipher_railfence(message,rails) -> LiteralString:
+def encipher_railfence(message,rails) -> str:
     """
     Performs Railfence Encryption on plaintext and returns ciphertext
 

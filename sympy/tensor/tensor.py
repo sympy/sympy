@@ -64,7 +64,7 @@ from collections.abc import Generator
 from sympy.combinatorics.permutations import Perm
 from sympy.tensor.array.expressions.array_expressions import ArrayContraction, ArrayElement, ArrayTensorProduct, PermuteDims, ZeroArray
 from types import NotImplementedType
-from typing_extensions import LiteralString, Self
+from typing_extensions import Self
 
 
 def deprecate_data() -> None:
@@ -279,7 +279,7 @@ class _IndexStructure(CantSympify):
     def __str__(self):
         return "_IndexStructure({}, {}, {})".format(self.free, self.dum, self.index_types)
 
-    def __repr__(self) -> LiteralString:
+    def __repr__(self) -> str:
         return self.__str__()
 
     def _get_sorted_free_indices_for_canon(self):

@@ -15,12 +15,7 @@ from .primetest import isprime
 from sympy.utilities.decorator import deprecated
 from sympy.utilities.misc import as_int
 from collections.abc import Generator, Iterator
-from sympy import Function
 from typing import Any, Literal
-
-class primepi(Function):
-    @classmethod
-    def eval(cls, n) -> None: ...
 
 
 def _as_int_ceiling(a):

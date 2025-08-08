@@ -9,7 +9,7 @@ from typing_extensions import Self
 class SimpleDomain(Domain[Er]):
     """Base class for simple domains, e.g. ZZ, QQ. """
 
-    is_Simple: bool = True
+    is_Simple = True
 
     def inject(self, *gens) -> Self:
         """Inject generators into this domain. """

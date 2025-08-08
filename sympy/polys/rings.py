@@ -47,7 +47,7 @@ from sympy.utilities.magic import pollute
 from collections.abc import Iterator
 from sympy.polys.fields import FracField
 from sympy.series.order import Order
-from typing_extensions import LiteralString, Self
+from typing_extensions import Self
 
 
 if TYPE_CHECKING:
@@ -2463,7 +2463,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
         # Return a self.flint_poly.to_dict() in case of python-flint
         return dict(self)
 
-    def str(self, printer, precedence, exp_pattern, mul_symbol) -> LiteralString:
+    def str(self, printer, precedence, exp_pattern, mul_symbol) -> str:
         # Use str(self.flint_poly).replace("^", "**") in case of python-flint
         if not self:
             return printer._print(self.ring.domain.zero)

@@ -9,7 +9,6 @@ import re as _re
 import struct
 from textwrap import fill, dedent
 from typing import Any, Callable, TypeVar
-from typing_extensions import LiteralString
 
 _CallableT = TypeVar("_CallableT", bound=Callable)
 
@@ -39,7 +38,7 @@ def filldedent(s, w=70, **kwargs) -> str:
     return '\n' + fill(dedent(str(s)).strip('\n'), width=w, **kwargs)
 
 
-def strlines(s, c=64, short=False) -> str | LiteralString:
+def strlines(s, c=64, short=False) -> str:
     """Return a cut-and-pastable string that, when printed, is
     equivalent to the input.  The lines will be surrounded by
     parentheses and no line will be longer than c (default 64)
@@ -91,7 +90,7 @@ def strlines(s, c=64, short=False) -> str | LiteralString:
     return m % j.join(out)
 
 
-def rawlines(s) -> str | LiteralString:
+def rawlines(s) -> str:
     """Return a cut-and-pastable string that, when printed, is equivalent
     to the input. Use this when there is more than one line in the
     string. The string returned is formatted so it can be indented

@@ -19,7 +19,7 @@ from sympy.multipledispatch.dispatcher import (Dispatcher,
     str_signature, RaiseNotImplementedError)
 from sympy.core.basic import Basic
 from sympy.series.order import Order
-from typing_extensions import LiteralString, Self
+from typing_extensions import Self
 
 
 if TYPE_CHECKING:
@@ -628,7 +628,7 @@ class AssocOpDispatcher:
         self._handlergetter = attrgetter(self.handlerattr)
         self._dispatcher = Dispatcher(name)
 
-    def __repr__(self) -> LiteralString:
+    def __repr__(self) -> str:
         return "<dispatched %s>" % self.name
 
     def register_handlerclass(self, classes, typ, on_ambiguity=ambiguity_register_error_ignore_dup) -> None:

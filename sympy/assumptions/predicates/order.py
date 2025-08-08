@@ -1,6 +1,5 @@
 from sympy.assumptions import Predicate
 from sympy.multipledispatch import Dispatcher
-from typing_extensions import LiteralString
 
 
 class NegativePredicate(Predicate):
@@ -41,8 +40,8 @@ class NegativePredicate(Predicate):
     True
 
     """
-    name: LiteralString = 'negative'
-    handler: Dispatcher = Dispatcher(
+    name = 'negative'
+    handler = Dispatcher(
         "NegativeHandler",
         doc=("Handler for Q.negative. Test that an expression is strictly less"
         " than zero.")
@@ -82,8 +81,8 @@ class NonNegativePredicate(Predicate):
     False
 
     """
-    name: LiteralString = 'nonnegative'
-    handler: Dispatcher = Dispatcher(
+    name = 'nonnegative'
+    handler = Dispatcher(
         "NonNegativeHandler",
         doc=("Handler for Q.nonnegative.")
     )
@@ -129,8 +128,8 @@ class NonZeroPredicate(Predicate):
     False
 
     """
-    name: LiteralString = 'nonzero'
-    handler: Dispatcher = Dispatcher(
+    name = 'nonzero'
+    handler = Dispatcher(
         "NonZeroHandler",
         doc=("Handler for key 'nonzero'. Test that an expression is not identically"
         " zero.")
@@ -163,8 +162,8 @@ class ZeroPredicate(Predicate):
     True
 
     """
-    name: LiteralString = 'zero'
-    handler: Dispatcher = Dispatcher(
+    name = 'zero'
+    handler = Dispatcher(
         "ZeroHandler",
         doc="Handler for key 'zero'."
     )
@@ -204,8 +203,8 @@ class NonPositivePredicate(Predicate):
     False
 
     """
-    name: LiteralString = 'nonpositive'
-    handler: Dispatcher = Dispatcher(
+    name = 'nonpositive'
+    handler = Dispatcher(
         "NonPositiveHandler",
         doc="Handler for key 'nonpositive'."
     )
@@ -249,8 +248,8 @@ class PositivePredicate(Predicate):
     True
 
     """
-    name: LiteralString = 'positive'
-    handler: Dispatcher = Dispatcher(
+    name = 'positive'
+    handler = Dispatcher(
         "PositiveHandler",
         doc=("Handler for key 'positive'. Test that an expression is strictly"
         " greater than zero.")
@@ -279,8 +278,8 @@ class ExtendedPositivePredicate(Predicate):
     False
 
     """
-    name: LiteralString = 'extended_positive'
-    handler: Dispatcher = Dispatcher("ExtendedPositiveHandler")
+    name = 'extended_positive'
+    handler = Dispatcher("ExtendedPositiveHandler")
 
 
 class ExtendedNegativePredicate(Predicate):
@@ -305,8 +304,8 @@ class ExtendedNegativePredicate(Predicate):
     False
 
     """
-    name: LiteralString = 'extended_negative'
-    handler: Dispatcher = Dispatcher("ExtendedNegativeHandler")
+    name = 'extended_negative'
+    handler = Dispatcher("ExtendedNegativeHandler")
 
 
 class ExtendedNonZeroPredicate(Predicate):
@@ -331,8 +330,8 @@ class ExtendedNonZeroPredicate(Predicate):
     False
 
     """
-    name: LiteralString = 'extended_nonzero'
-    handler: Dispatcher = Dispatcher("ExtendedNonZeroHandler")
+    name = 'extended_nonzero'
+    handler = Dispatcher("ExtendedNonZeroHandler")
 
 
 class ExtendedNonPositivePredicate(Predicate):
@@ -359,8 +358,8 @@ class ExtendedNonPositivePredicate(Predicate):
     False
 
     """
-    name: LiteralString = 'extended_nonpositive'
-    handler: Dispatcher = Dispatcher("ExtendedNonPositiveHandler")
+    name = 'extended_nonpositive'
+    handler = Dispatcher("ExtendedNonPositiveHandler")
 
 
 class ExtendedNonNegativePredicate(Predicate):
@@ -387,5 +386,5 @@ class ExtendedNonNegativePredicate(Predicate):
     False
 
     """
-    name: LiteralString = 'extended_nonnegative'
-    handler: Dispatcher = Dispatcher("ExtendedNonNegativeHandler")
+    name = 'extended_nonnegative'
+    handler = Dispatcher("ExtendedNonNegativeHandler")

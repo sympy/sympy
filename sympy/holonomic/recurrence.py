@@ -4,7 +4,7 @@ from sympy.core.singleton import S
 from sympy.core.symbol import (Symbol, symbols)
 from sympy.printing import sstr
 from sympy.core.sympify import sympify
-from typing_extensions import LiteralString, Self
+from typing_extensions import Self
 
 
 def RecurrenceOperators(base, generator) -> tuple[RecurrenceOperatorAlgebra, RecurrenceOperator]:
@@ -319,7 +319,7 @@ class HolonomicSequence:
             self._have_init_cond = True
         self.n = recurrence.parent.base.gens[0]
 
-    def __repr__(self) -> LiteralString:
+    def __repr__(self) -> str:
         str_sol = 'HolonomicSequence(%s, %s)' % ((self.recurrence).__repr__(), sstr(self.n))
         if not self._have_init_cond:
             return str_sol

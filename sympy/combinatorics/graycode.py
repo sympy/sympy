@@ -3,7 +3,7 @@ from sympy.core import Basic, Integer
 import random
 from collections.abc import Generator
 from typing import Any
-from typing_extensions import LiteralString, Self
+from typing_extensions import Self
 
 
 class GrayCode(Basic):
@@ -336,7 +336,7 @@ def random_bitstring(n) -> str:
     return ''.join([random.choice('01') for i in range(n)])
 
 
-def gray_to_bin(bin_list) -> LiteralString:
+def gray_to_bin(bin_list) -> str:
     """
     Convert from Gray coding to binary coding.
 
@@ -360,7 +360,7 @@ def gray_to_bin(bin_list) -> LiteralString:
     return ''.join(b)
 
 
-def bin_to_gray(bin_list) -> LiteralString:
+def bin_to_gray(bin_list) -> str:
     """
     Convert from binary coding to gray coding.
 

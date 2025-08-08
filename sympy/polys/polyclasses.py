@@ -150,11 +150,6 @@ from sympy.polys.polyerrors import (
     UnificationFailed,
     PolynomialError)
 
-class GenericPoly(PicklableWithSlots):
-    def ground_to_ring(f): ...
-    def ground_to_field(f): ...
-    def ground_to_exact(f): ...
-
 
 def _supported_flint_domain_flint(D: Domain) -> bool:
     return D.is_ZZ or D.is_QQ or D.is_FF and D._is_flint # type: ignore

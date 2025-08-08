@@ -12,7 +12,7 @@ from sympy.utilities.misc import as_int
 from collections import defaultdict
 from sympy.core.function import UndefinedFunction
 from typing import Any, Literal
-from typing_extensions import LiteralString, Self
+from typing_extensions import Self
 
 
 class Partition(FiniteSet):
@@ -568,7 +568,7 @@ class IntegerPartition(Basic):
         """
         return list(reversed(self.partition)) <= list(reversed(other.partition))
 
-    def as_ferrers(self, char='#') -> LiteralString:
+    def as_ferrers(self, char='#') -> str:
         """
         Prints the ferrer diagram of a partition.
 

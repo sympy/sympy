@@ -24,34 +24,8 @@ from sympy.utilities.decorator import deprecated
 from sympy.utilities.iterables import flatten
 from sympy.utilities.misc import as_int, filldedent
 from .ecm import _ecm_one_factor
-from sympy import Function
 from sympy.series.order import Order
 from typing import Any, Literal
-from typing_extensions import LiteralString
-
-class totient(Function):
-    @classmethod
-    def eval(cls, n) -> Literal[1] | None: ...
-
-class reduced_totient(Function):
-    @classmethod
-    def eval(cls, n) -> Literal[1, 0] | None: ...
-
-class divisor_sigma(Function):
-    @classmethod
-    def eval(cls, n, k=...) -> Integer | Order | None: ...
-
-class udivisor_sigma(Function):
-    @classmethod
-    def eval(cls, n, k=...) -> Order | None: ...
-
-class primenu(Function):
-    @classmethod
-    def eval(cls, n) -> int | None: ...
-
-class primeomega(Function):
-    @classmethod
-    def eval(cls, n) -> int | None: ...
 
 
 def smoothness(n) -> tuple[Literal[1], Literal[1]] | tuple[Any, Any]:
@@ -84,7 +58,7 @@ def smoothness(n) -> tuple[Literal[1], Literal[1]] | tuple[Any, Any]:
     return max(facs), max(m**facs[m] for m in facs)
 
 
-def smoothness_p(n, m=-1, power=0, visual=None) -> str | dict[Any, Any] | tuple[Any, ...] | tuple[int, list[tuple[Any, tuple[Any, ...]]]] | LiteralString:
+def smoothness_p(n, m=-1, power=0, visual=None) -> str | dict[Any, Any] | tuple[Any, ...] | tuple[int, list[tuple[Any, tuple[Any, ...]]]]:
     """
     Return a list of [m, (p, (M, sm(p + m), psm(p + m)))...]
     where:

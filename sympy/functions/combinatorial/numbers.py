@@ -9,13 +9,13 @@ the separate 'factorials' module.
 from __future__ import annotations
 from math import prod
 from collections import defaultdict
-from typing import Any, ClassVar, Callable
+from typing import Any, Callable
 
 from sympy.core import S, Symbol, Add, Dummy
 from sympy.core.cache import cacheit
 from sympy.core.containers import Dict
 from sympy.core.expr import Expr
-from sympy.core.function import Function, UndefinedFunction, ArgumentIndexError, DefinedFunction, expand_mul
+from sympy.core.function import UndefinedFunction, ArgumentIndexError, DefinedFunction, expand_mul
 from sympy.core.logic import fuzzy_not
 from sympy.core.mul import Mul
 from sympy.core.numbers import Float, E, I, pi, oo, Rational, Integer
@@ -1635,8 +1635,8 @@ class partition(DefinedFunction):
     .. [2] https://en.wikipedia.org/wiki/Pentagonal_number_theorem
 
     """
-    is_integer: ClassVar[bool] = True
-    is_nonnegative: ClassVar[bool] = True
+    is_integer = True
+    is_nonnegative = True
 
     @classmethod
     def eval(cls, n) -> Integer | None:
@@ -1702,8 +1702,8 @@ class divisor_sigma(DefinedFunction):
     .. [1] https://en.wikipedia.org/wiki/Divisor_function
 
     """
-    is_integer: ClassVar[bool] = True
-    is_positive: ClassVar[bool] = True
+    is_integer = True
+    is_positive = True
 
     @classmethod
     def eval(cls, n, k=S.One):
@@ -1781,8 +1781,8 @@ class udivisor_sigma(DefinedFunction):
     .. [1] https://mathworld.wolfram.com/UnitaryDivisorFunction.html
 
     """
-    is_integer: ClassVar[bool] = True
-    is_positive: ClassVar[bool] = True
+    is_integer = True
+    is_positive = True
 
     @classmethod
     def eval(cls, n, k=S.One):
@@ -1829,8 +1829,8 @@ class legendre_symbol(DefinedFunction):
     sympy.ntheory.residue_ntheory.is_quad_residue, jacobi_symbol
 
     """
-    is_integer: ClassVar[bool] = True
-    is_prime: ClassVar[bool] = False
+    is_integer = True
+    is_prime = False
 
     @classmethod
     def eval(cls, a, p):
@@ -1900,8 +1900,8 @@ class jacobi_symbol(DefinedFunction):
     sympy.ntheory.residue_ntheory.is_quad_residue, legendre_symbol
 
     """
-    is_integer: ClassVar[bool] = True
-    is_prime: ClassVar[bool] = False
+    is_integer = True
+    is_prime = False
 
     @classmethod
     def eval(cls, m, n):
@@ -1943,8 +1943,8 @@ class kronecker_symbol(DefinedFunction):
     .. [1] https://en.wikipedia.org/wiki/Kronecker_symbol
 
     """
-    is_integer: ClassVar[bool] = True
-    is_prime: ClassVar[bool] = False
+    is_integer = True
+    is_prime = False
 
     @classmethod
     def eval(cls, a, n):
@@ -2003,8 +2003,8 @@ class mobius(DefinedFunction):
     .. [3] https://oeis.org/A008683
 
     """
-    is_integer: ClassVar[bool] = True
-    is_prime: ClassVar[bool] = False
+    is_integer = True
+    is_prime = False
 
     @classmethod
     def eval(cls, n):
@@ -2073,8 +2073,8 @@ class primenu(DefinedFunction):
     .. [2] https://oeis.org/A001221
 
     """
-    is_integer: ClassVar[bool] = True
-    is_nonnegative: ClassVar[bool] = True
+    is_integer = True
+    is_nonnegative = True
 
     @classmethod
     def eval(cls, n):
@@ -2126,8 +2126,8 @@ class primeomega(DefinedFunction):
     .. [2] https://oeis.org/A001222
 
     """
-    is_integer: ClassVar[bool] = True
-    is_nonnegative: ClassVar[bool] = True
+    is_integer = True
+    is_nonnegative = True
 
     @classmethod
     def eval(cls, n):
@@ -2174,8 +2174,8 @@ class totient(DefinedFunction):
     .. [3] https://oeis.org/A000010
 
     """
-    is_integer: ClassVar[bool] = True
-    is_positive: ClassVar[bool] = True
+    is_integer = True
+    is_positive = True
 
     @classmethod
     def eval(cls, n):
@@ -2224,8 +2224,8 @@ class reduced_totient(DefinedFunction):
     .. [3] https://oeis.org/A002322
 
     """
-    is_integer: ClassVar[bool] = True
-    is_positive: ClassVar[bool] = True
+    is_integer = True
+    is_positive = True
 
     @classmethod
     def eval(cls, n):
@@ -2287,8 +2287,8 @@ class primepi(DefinedFunction):
     .. [1] https://oeis.org/A000720
 
     """
-    is_integer: ClassVar[bool] = True
-    is_nonnegative: ClassVar[bool] = True
+    is_integer = True
+    is_nonnegative = True
 
     @classmethod
     def eval(cls, n):

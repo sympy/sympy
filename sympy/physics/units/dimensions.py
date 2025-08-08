@@ -29,7 +29,7 @@ from sympy.core.expr import Expr
 from sympy.core.power import Pow
 import sympy.matrices
 from typing import Any
-from typing_extensions import LiteralString, Self
+from typing_extensions import Self
 
 
 class _QuantityMapper:
@@ -210,7 +210,7 @@ class Dimension(Expr):
         else:
             return "Dimension(%s, %s)" % (self.name, self.symbol)
 
-    def __repr__(self) -> LiteralString:
+    def __repr__(self) -> str:
         return self.__str__()
 
     def __neg__(self) -> Self:

@@ -20,8 +20,8 @@ class GMPYRationalField(RationalField):
     """
 
     dtype = GMPYRational
-    zero: _GMPYRational = dtype(0)
-    one: _GMPYRational = dtype(1)
+    zero = dtype(0)
+    one = dtype(1)
     tp: type[_GMPYRational] = type(one)
     alias = 'QQ_gmpy'
 

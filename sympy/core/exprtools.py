@@ -29,7 +29,6 @@ from sympy.core.mul import Mul
 from sympy.core.numbers import Rational
 from types import NotImplementedType
 from typing import Any
-from typing_extensions import LiteralString
 
 
 _eps = Dummy(positive=True)
@@ -414,7 +413,7 @@ class Factors:
         values = [self.factors[k] for k in keys]
         return hash((keys, values))
 
-    def __repr__(self) -> LiteralString:  # Factors
+    def __repr__(self) -> str:  # Factors
         return "Factors({%s})" % ', '.join(
             ['%s: %s' % (k, v) for k, v in ordered(self.factors.items())])
 

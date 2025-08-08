@@ -17,7 +17,7 @@ import shutil
 from .pretty_symbology import hobj, vobj, xsym, xobj, pretty_use_unicode, line_width, center
 from sympy.utilities.exceptions import sympy_deprecation_warning
 from typing import Any, Literal
-from typing_extensions import LiteralString, Self
+from typing_extensions import Self
 
 _GLOBAL_WRAP_LINE = None
 
@@ -40,7 +40,7 @@ class stringPict:
         self.binding = None
 
     @staticmethod
-    def equalLengths(lines) -> list[str] | list[Any]:
+    def equalLengths(lines) -> list[str]:
         # empty lines
         if not lines:
             return ['']
@@ -112,7 +112,7 @@ class stringPict:
         return stringPict.next(*(args + (self,)))
 
     @staticmethod
-    def stack(*args) -> tuple[LiteralString, Any]:
+    def stack(*args) -> tuple[str, Any]:
         """Put pictures on top of each other,
         from top to bottom.
         Returns string, baseline arguments for stringPict.
@@ -147,7 +147,7 @@ class stringPict:
         newBaseline = objects[0].height() + objects[1].baseline
         return '\n'.join(newPicture), newBaseline
 
-    def below(self, *args) -> tuple[LiteralString, int]:
+    def below(self, *args) -> tuple[str, int]:
         """Put pictures under this picture.
         Returns string, baseline arguments for stringPict.
         Baseline is baseline of top picture
@@ -166,7 +166,7 @@ class stringPict:
         s, baseline = stringPict.stack(self, *args)
         return s, self.baseline
 
-    def above(self, *args) -> tuple[LiteralString, int]:
+    def above(self, *args) -> tuple[str, int]:
         """Put pictures above this picture.
         Returns string, baseline arguments for stringPict.
         Baseline is baseline of bottom picture.
@@ -248,7 +248,7 @@ class stringPict:
         root.baseline = result.baseline - result.height() + root.height()
         return result.left(root)
 
-    def render(self, * args, **kwargs) -> str | Any | LiteralString:
+    def render(self, * args, **kwargs) -> str | Any:
         """Return the string form of self.
 
            Unless the argument line_break is set to False, it will

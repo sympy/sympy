@@ -131,9 +131,8 @@ from sympy.series.order import Order
 from sympy.utilities.misc import debug_decorator as debug
 from sympy.utilities.timeutils import timethis
 import sympy.core.basic
-from typing import Any, Literal, TypeVar
+from typing import Any, Literal
 
-_CallableT = TypeVar("_CallableT", bound=Callable)
 
 timeit = timethis('gruntz')
 

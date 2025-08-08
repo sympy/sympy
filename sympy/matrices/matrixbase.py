@@ -39,7 +39,7 @@ from sympy.polys.polytools import Poly
 from sympy.utilities.iterables import flatten, is_sequence
 from sympy.utilities.misc import as_int, filldedent
 from sympy.core.decorators import call_highest_priority
-from sympy.core.logic import FuzzyBool, fuzzy_and
+from sympy.core.logic import fuzzy_and
 from sympy.tensor.array import NDimArray
 from sympy.utilities.iterables import NotIterable
 
@@ -88,7 +88,6 @@ from .decompositions import (
 from .graph import (
     _connected_components, _connected_components_decomposition,
     _strongly_connected_components, _strongly_connected_components_decomposition)
-from _typeshed import Incomplete
 from sympy.matrices.kind import MatrixKind
 
 
@@ -117,7 +116,7 @@ if TYPE_CHECKING:
     Slice = slice | list[int]
 
 
-__doctest_requires__: Incomplete = {
+__doctest_requires__ = {
     ('MatrixBase.is_indefinite',
      'MatrixBase.is_positive_definite',
      'MatrixBase.is_positive_semidefinite',
@@ -137,8 +136,8 @@ class MatrixBase(Printable):
 
     is_Matrix = True
     _class_priority = 3
-    zero: Incomplete = S.Zero
-    one: Incomplete = S.One
+    zero = S.Zero
+    one = S.One
 
     _diff_wrt: bool = True
     _simplify = None
@@ -4036,7 +4035,7 @@ class MatrixBase(Printable):
         """
         return [self[i, j] for i in range(self.rows) for j in range(self.cols)]
 
-    def __array__(self, dtype=object, copy: Incomplete | None=None):
+    def __array__(self, dtype=object, copy=None):
         if copy is not None and not copy:
             raise TypeError("Cannot implement copy=False when converting Matrix to ndarray")
         from .dense import matrix2numpy
@@ -5502,7 +5501,7 @@ class MatrixBase(Printable):
                            ) -> tuple[Self, Self] | tuple[Self, Self, list[int]]:
         return _gauss_jordan_solve(self, B, freevar=freevar)
 
-    def pinv_solve(self, B, arbitrary_matrix: Incomplete | None=None) -> Self:
+    def pinv_solve(self, B, arbitrary_matrix=None) -> Self:
         return _pinv_solve(self, B, arbitrary_matrix=arbitrary_matrix)
 
     def cramer_solve(self, rhs: Self, det_method: str="laplace") -> Self:
@@ -5711,7 +5710,7 @@ def _unify_with_other(self: MatrixBase, other: Any
     return self, other, T
 
 
-def a2idx(j, n: Incomplete | None=None):
+def a2idx(j, n=None):
     """Return integer after making positive and validating against n."""
     if not isinstance(j, int):
         jindex = getattr(j, '__index__', None)

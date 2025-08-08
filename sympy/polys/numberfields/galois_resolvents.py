@@ -35,7 +35,6 @@ from sympy.utilities.lambdify import lambdify
 from mpmath import MPContext
 from mpmath.libmp.libmpf import prec_to_dps
 from typing import Any, Literal
-from typing_extensions import LiteralString
 
 
 class GaloisGroupException(Exception):
@@ -429,7 +428,7 @@ class Resolvent:
         return R, a0, i0
 
 
-def wrap(text, width=80) -> LiteralString | Literal[""]:
+def wrap(text, width=80) -> str:
     """Line wrap a polynomial expression. """
     out = ''
     col = 0

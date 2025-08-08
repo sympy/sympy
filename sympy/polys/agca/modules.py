@@ -31,7 +31,7 @@ from sympy.utilities.iterables import iterable
 from sympy.polys.agca.homomorphisms import FreeModuleHomomorphism
 from types import NotImplementedType
 from typing import Any, Literal
-from typing_extensions import LiteralString, Self
+from typing_extensions import Self
 
 # TODO
 # - module saturation
@@ -273,7 +273,7 @@ class FreeModuleElement(ModuleElement):
     def div(self, d, p) -> tuple[Any, ...]:
         return tuple(x / p for x in d)
 
-    def __repr__(self) -> LiteralString:
+    def __repr__(self) -> str:
         from sympy.printing.str import sstr
         data = self.data
         if any(isinstance(x, DMP) for x in data):

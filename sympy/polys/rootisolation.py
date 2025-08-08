@@ -28,7 +28,7 @@ from sympy.polys.polyerrors import (
 from sympy.polys.sqfreetools import (
     dup_sqf_part, dup_sqf_list)
 from typing import Any, Literal
-from typing_extensions import LiteralString, Self
+from typing_extensions import Self
 
 
 def dup_sturm(f, K) -> list[Any | list[Any]]:
@@ -1816,7 +1816,7 @@ class RealInterval:
         """Return tuple representation of real isolating interval. """
         return (self.a, self.b)
 
-    def __repr__(self) -> LiteralString:
+    def __repr__(self) -> str:
         return "(%s, %s)" % (self.a, self.b)
 
     def __contains__(self, item) -> Literal[False]:
@@ -2098,7 +2098,7 @@ class ComplexInterval:
         interval's SW and NE corners, respectively. """
         return ((self.ax, self.ay), (self.bx, self.by))
 
-    def __repr__(self) -> LiteralString:
+    def __repr__(self) -> str:
         return "(%s, %s) x (%s, %s)" % (self.ax, self.bx, self.ay, self.by)
 
     def conjugate(self) -> "ComplexInterval":

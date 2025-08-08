@@ -21,8 +21,8 @@ class GMPYIntegerRing(IntegerRing):
     """
 
     dtype = GMPYInteger
-    zero: _GMPYInteger = dtype(0)
-    one: _GMPYInteger = dtype(1)
+    zero = dtype(0)
+    one = dtype(1)
     tp: type[_GMPYInteger] = type(one)
     alias = 'ZZ_gmpy'
 

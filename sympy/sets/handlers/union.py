@@ -9,7 +9,7 @@ from sympy.multipledispatch import Dispatcher
 from typing import Any
 
 
-union_sets: Dispatcher = Dispatcher('union_sets')
+union_sets = Dispatcher('union_sets')
 
 
 @union_sets.register(Naturals0, Naturals)

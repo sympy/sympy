@@ -1,5 +1,3 @@
-from typing_extensions import LiteralString
-
 class State:
     '''
     A representation of a state managed by a ``StateMachine``.
@@ -58,5 +56,5 @@ class StateMachine:
         new_state = State(state_name, self, state_type, rh_rule)
         self.states[state_name] = new_state
 
-    def __repr__(self) -> LiteralString:
+    def __repr__(self) -> str:
         return "%s" % (self.name)

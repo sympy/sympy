@@ -24,7 +24,7 @@ import time
 from fnmatch import fnmatch
 from timeit import default_timer as clock
 import doctest as pdoctest  # avoid clashing with our doctest() function
-from doctest import OutputChecker, DocTestFinder, DocTestRunner
+from doctest import DocTestFinder, DocTestRunner
 import random
 import subprocess
 import shutil
@@ -995,9 +995,6 @@ def split_list(l, split, density=None):
     return l[int(lower_frac*len(l)) : int(higher_frac*len(l))]
 
 from collections import namedtuple
-
-class SymPyTestResults(NamedTuple):
-    pass
 
 SymPyTestResults = namedtuple('SymPyTestResults', 'failed attempted')
 

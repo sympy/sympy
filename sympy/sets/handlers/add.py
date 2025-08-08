@@ -10,8 +10,8 @@ import sympy.sets.sets
 # XXX: The functions in this module are clearly not tested and are broken in a
 # number of ways.
 
-_set_add: Dispatcher = Dispatcher('_set_add')
-_set_sub: Dispatcher = Dispatcher('_set_sub')
+_set_add = Dispatcher('_set_add')
+_set_sub = Dispatcher('_set_sub')
 
 
 @_set_add.register(Basic, Basic)

@@ -17,12 +17,7 @@ from sympy.core.random import _randint, randint
 
 from itertools import product
 from collections.abc import Generator
-from sympy import Function
 from typing import Any, Literal
-
-class mobius(Function):
-    @classmethod
-    def eval(cls, n) -> None: ...
 
 
 def n_order(a, n) -> Literal[1]:

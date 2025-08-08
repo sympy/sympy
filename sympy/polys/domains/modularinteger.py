@@ -12,7 +12,7 @@ from sympy.polys.domains.domainelement import DomainElement
 from sympy.utilities import public
 from sympy.utilities.exceptions import sympy_deprecation_warning
 from types import NotImplementedType
-from typing_extensions import LiteralString, Self
+from typing_extensions import Self
 
 @public
 class ModularInteger(PicklableWithSlots, DomainElement):
@@ -37,7 +37,7 @@ class ModularInteger(PicklableWithSlots, DomainElement):
     def __hash__(self) -> int:
         return hash((self.val, self.mod))
 
-    def __repr__(self) -> LiteralString:
+    def __repr__(self) -> str:
         return "%s(%s)" % (self.__class__.__name__, self.val)
 
     def __str__(self):

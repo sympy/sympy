@@ -32,7 +32,7 @@ from sympy.multipledispatch.dispatcher import (Dispatcher,
     ambiguity_warn, ambiguity_register_error_ignore_dup,
     str_signature, RaiseNotImplementedError)
 from typing import Callable, Literal
-from typing_extensions import LiteralString, Self
+from typing_extensions import Self
 
 
 class KindMeta(type):
@@ -262,7 +262,7 @@ class KindDispatcher:
         self.commutative = commutative
         self._dispatcher = Dispatcher(name)
 
-    def __repr__(self) -> LiteralString:
+    def __repr__(self) -> str:
         return "<dispatched %s>" % self.name
 
     def register(self, *types, **kwargs) -> Callable[..., None]:

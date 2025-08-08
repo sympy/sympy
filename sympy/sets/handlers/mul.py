@@ -11,8 +11,8 @@ from typing import Any
 _x, _y = symbols("x y")
 
 
-_set_mul: Dispatcher = Dispatcher('_set_mul')
-_set_div: Dispatcher = Dispatcher('_set_div')
+_set_mul = Dispatcher('_set_mul')
+_set_div = Dispatcher('_set_div')
 
 
 @_set_mul.register(Basic, Basic)

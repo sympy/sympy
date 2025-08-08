@@ -10,7 +10,6 @@ from sympy.polys.domains.field import Field
 from sympy.polys.domains.simpledomain import SimpleDomain
 from sympy.polys.polyerrors import CoercionFailed
 from sympy.utilities import public
-from _typeshed import Incomplete
 from sympy.core.numbers import Integer, Rational
 from sympy.external.pythonmpq import PythonMPQ
 from types import NotImplementedType
@@ -45,7 +44,7 @@ class RationalField(Field[MPQ], CharacteristicZero, SimpleDomain):
     dtype = MPQ
     zero = dtype(0)
     one = dtype(1)
-    tp: type = type(one)
+    tp = type(one)
 
     def __init__(self) -> None:
         pass
@@ -163,7 +162,7 @@ class RationalField(Field[MPQ], CharacteristicZero, SimpleDomain):
         """Remainder of ``a`` and ``b``, implies nothing.  """
         return self.zero
 
-    def div(self, a, b) -> tuple[NotImplementedType | Self, Incomplete]:
+    def div(self, a, b) -> tuple[NotImplementedType | Self, PythonMPQ]:
         """Division of ``a`` and ``b``, implies ``__truediv__``. """
         return MPQ(a) / MPQ(b), self.zero
 

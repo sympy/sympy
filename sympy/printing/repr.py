@@ -15,7 +15,6 @@ from mpmath.libmp import repr_dps, to_str as mlib_to_str
 
 from .printer import Printer, print_function
 from sympy.printing.printer import Printer
-from typing_extensions import LiteralString
 
 
 class ReprPrinter(Printer):
@@ -32,7 +31,7 @@ class ReprPrinter(Printer):
         """
         return sep.join([self.doprint(item) for item in args])
 
-    def emptyPrinter(self, expr) -> str | LiteralString:
+    def emptyPrinter(self, expr) -> str:
         """
         The fallback printer.
         """
