@@ -1,27 +1,19 @@
 from __future__ import annotations
 
 
-from typing import TYPE_CHECKING, TypeVar, Union, Iterable, Callable, Any
+from typing import TYPE_CHECKING
+from sympy.polys.densebasic import _T, dup, dmp, dmp_tup
+from sympy.polys.domains.domain import Er, Domain
+from sympy.external.gmpy import MPQ
 
 from sympy.polys.domains import EXRAW, QQ, PolynomialRing, RationalField
-from sympy.polys.domains.domain import Er, Domain
 from sympy.polys.densebasic import dup_convert
 from sympy.polys.densetools import dup_clear_denoms
-from sympy.external.gmpy import MPQ
 from sympy.core.mul import prod
-from sympy.core.relational import StrictGreaterThan
-from sympy.logic.boolalg import Boolean
+
 from sympy.core.exprtools import factor_terms
 from sympy.simplify.simplify import signsimp
 from sympy.core.mul import Mul
-
-_T = TypeVar("_T")
-dup: TypeAlias = "list[_T]"
-dmp: TypeAlias = "list[dmp[_T]]"
-dup_tup: TypeAlias = "tuple[_T, ...]"
-dmp_tup: TypeAlias = "tuple[dmp_tup[_T], ...]"
-monom: TypeAlias = "tuple[int, ...]"
-conditions: TypeAlias = "list[Union[StrictGreaterThan, Boolean]]"
 
 # The _dup and _dmp functions do not do anything but are needed so that a type
 # checker can understand the conversion between the two types.
@@ -30,10 +22,11 @@ conditions: TypeAlias = "list[Union[StrictGreaterThan, Boolean]]"
 # elements of arbitrary depth.
 
 if TYPE_CHECKING:
-    from typing import TypeAlias
+    from typing import TypeAlias, Union
     from sympy.polys.rings import PolyElement
-    from sympy.polys.polyclasses import ANP
-    Epa = TypeVar("Epa", PolyElement, ANP)
+    from sympy.core.relational import StrictGreaterThan
+    from sympy.logic.boolalg import Boolean
+    conditions: TypeAlias = "list[Union[StrictGreaterThan, Boolean]]"
 
     def _dup(p: dmp[_T], /) -> dup[_T]: ...
     def _dmp(p: dup[_T], /) -> dmp[_T]: ...
@@ -131,7 +124,7 @@ def _rec_routh_hurwitz_poly(p: list[PolyElement[Er]],
         return [K.one]
 
     if len(p) == 2:
-        return [_clear_cond_poly(p[0] * p[1], previous_cond, K)]
+        return previous_cond + [_clear_cond_poly(p[0] * p[1], previous_cond, K)]
 
     qs = [p[1] * qi for qi in p]
     for i in range(1, len(p), 2):
@@ -141,7 +134,9 @@ def _rec_routh_hurwitz_poly(p: list[PolyElement[Er]],
     cond = p[0] * p[1]
     cond = _clear_cond_poly(cond, previous_cond, K)
 
-    return [cond] + _rec_routh_hurwitz_poly(qs, previous_cond, K)
+    previous_cond.append(cond)
+
+    return _rec_routh_hurwitz_poly(qs, previous_cond, K)
 
 def _clear_cond_poly(cond: PolyElement[Er], previous_cond, K):
     # Divide out factors known to be positive
@@ -154,8 +149,6 @@ def _clear_cond_poly(cond: PolyElement[Er], previous_cond, K):
     # Remove factors of even degree and reduce odd degree factors
     _, facs_m = cond.sqf_list()
     cond = prod([fac for fac, m in facs_m if m % 2 == 1])
-
-    previous_cond += [cond]
 
     return cond
 
@@ -206,7 +199,7 @@ def _rec_calc_conditions_no_div(p: list[Er],
         qs[i - 1] -= p[i] * p[0]
     qs = qs[1:]
 
-    cond = _clear_cond_exraw(p[0] * p[1], previous_cond)
+    cond: Mul = _clear_cond_exraw(p[0] * p[1], previous_cond)
     return [cond] + _rec_calc_conditions_no_div(qs, previous_cond)
 
 def _clear_cond_exraw(cond: Mul, previous_cond: list[set]) -> Mul:
@@ -214,21 +207,22 @@ def _clear_cond_exraw(cond: Mul, previous_cond: list[set]) -> Mul:
     Clear the condition by removing even powers and simplifying odd powers.
     Also, remove factors that are already present in previous conditions.
 
-    This function returns a simplified product of factors and updates the
+    This function returns a simplified product of factors and UPDATES the
     `previous_cond` list with the new condition.
 
     """
-
     factors: set[Er] = _build_simplified_factors(cond)
     _remove_previous_conditions(factors, previous_cond)
 
     first_factor_iteration = factors.copy()
 
+    # Second iteration to simplify the factors further using factor_terms.
     factors = _build_simplified_factors(factor_terms(Mul(*factors)))
     _remove_previous_conditions(factors, previous_cond)
 
     # It's important to keep the first factor iteration, because it follows the
-    # pattern of the unsimplified coefficients during the calculation.
+    # pattern of the unsimplified coefficients, which appears in the next
+    # iteration of the Routh-Hurwitz algorithm.
     # Adding the last factor form, probably lead to a worse simplification.
     previous_cond.append(first_factor_iteration)
     return Mul(*factors)
@@ -265,7 +259,8 @@ def _remove_previous_conditions(factors: set, previous_cond: list[set]):
             if (prev_factors - {-1}).issubset(factors):
                 factors -= (prev_factors - {-1})
                 factors.add(-1)
+
 # TODO Implement conditions for discrete time systems
-# Possuble ways are:
-# - Map z = (1+s)/(1-s) and use routh hurwitz
+# Possible ways are:
+# - Map z = (1+s)/(1-s) and use routh-hurwitz
 # - Use Jury's test

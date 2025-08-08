@@ -1,5 +1,6 @@
 from sympy.matrices.dense import MutableDenseMatrix
 from sympy.polys import Poly
+from sympy import Symbol
 
 __all__ = ['RouthHurwitz']
 
