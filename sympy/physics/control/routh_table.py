@@ -159,7 +159,7 @@ class RouthHurwitz(MutableDenseMatrix):
         self._coeffs = self._polynomial.all_coeffs()
 
         self._zero_row_case = False
-        self._zero_col_infos: list[tuple] = []
+        self._zero_col_infos = []
         self._aux_poly_degrees = []
 
         if self._poly_degree < 1:
