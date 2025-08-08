@@ -12,10 +12,12 @@ from sympy.polys.polyerrors import PolynomialError, GeneratorsError
 from sympy.polys.polyoptions import build_options
 
 import re
-from sympy.series.order import Order
 from types import NotImplementedType
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from typing_extensions import Self
+
+if TYPE_CHECKING:
+    from sympy.series.order import Order
 
 
 _gens_order = {
@@ -338,7 +340,7 @@ def _dict_from_expr_no_gens(expr, opt):
     return poly, gens
 
 
-def parallel_dict_from_expr(exprs, **args) -> tuple[list[Any], Any]:
+def parallel_dict_from_expr(exprs, **args) -> tuple[list, Any]:
     """Transform expressions into a multinomial form. """
     reps, opt = _parallel_dict_from_expr(exprs, build_options(args))
     return reps, opt.gens
@@ -485,7 +487,7 @@ class PicklableWithSlots:
 
     __slots__ = ()
 
-    def __getstate__(self, cls=None) -> dict[Any, Any]:
+    def __getstate__(self, cls=None) -> dict:
         if cls is None:
             # This is the case for the instance that gets pickled
             cls = self.__class__

@@ -9,7 +9,6 @@ from sympy.polys.domains.compositedomain import CompositeDomain
 from sympy.polys.domains.field import Field
 from sympy.polys.polyerrors import CoercionFailed, GeneratorsError
 from sympy.utilities import public
-from sympy.polys.fields import FracElement
 
 
 if TYPE_CHECKING:

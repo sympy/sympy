@@ -10,12 +10,14 @@ from sympy.utilities.iterables import flatten, is_sequence
 from sympy.utilities.magic import pollute
 from sympy.utilities.misc import as_int
 from types import NotImplementedType
-from typing import Any, Literal
-from typing_extensions import Self, Unpack
+from typing import Any, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from typing_extensions import Self
 
 
 @public
-def free_group(symbols) -> tuple[FreeGroup, Unpack[tuple[Any, ...]]]:
+def free_group(symbols) -> tuple[FreeGroup, ...]:
     """Construct a free group returning ``(FreeGroup, (f_0, f_1, ..., f_(n-1))``.
 
     Parameters
@@ -193,7 +195,7 @@ class FreeGroup(DefaultPrinting):
     def clone(self, symbols=None) -> Self:
         return self.__class__(symbols or self.symbols)
 
-    def __contains__(self, i) -> Literal[False]:
+    def __contains__(self, i) -> bool:
         """Return True if ``i`` is contained in FreeGroup."""
         if not isinstance(i, FreeGroupElement):
             return False
@@ -266,7 +268,7 @@ class FreeGroup(DefaultPrinting):
             return S.Infinity
 
     @property
-    def elements(self) -> set[Any]:
+    def elements(self) -> set:
         """
         Return the elements of the free group.
 
@@ -335,7 +337,7 @@ class FreeGroup(DefaultPrinting):
         """
         return isinstance(g, FreeGroupElement) and self == g.group
 
-    def center(self) -> set[Any]:
+    def center(self) -> set:
         """Returns the center of the free group `self`."""
         return {self.identity}
 
@@ -373,7 +375,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         return not self.array_form
 
     @property
-    def array_form(self) -> tuple[Any, ...]:
+    def array_form(self) -> tuple:
         """
         SymPy provides two different internal kinds of representation
         of associative words. The first one is called the `array_form`
@@ -407,7 +409,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         return tuple(self)
 
     @property
-    def letter_form(self) -> tuple[Any, ...]:
+    def letter_form(self) -> tuple:
         """
         The letter representation of a ``FreeGroupElement`` is a tuple
         of generator symbols, with each entry corresponding to a group
@@ -449,7 +451,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         return (self.letter_form).index(gen.letter_form[0])
 
     @property
-    def letter_form_elm(self) -> list[Any]:
+    def letter_form_elm(self) -> list:
         """
         """
         group = self.group
@@ -458,7 +460,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
                 else group.dtype(((-elm,-1),)) for elm in r]
 
     @property
-    def ext_rep(self) -> tuple[Any, ...]:
+    def ext_rep(self) -> tuple:
         """This is called the External Representation of ``FreeGroupElement``
         """
         return tuple(flatten(self.array_form))
@@ -977,7 +979,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         """
         return not self.is_dependent(word)
 
-    def contains_generators(self) -> set[Any]:
+    def contains_generators(self) -> set:
         """
         Examples
         ========
@@ -1009,7 +1011,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         word = letter_form_to_array_form(word, group)
         return group.dtype(word)
 
-    def cyclic_conjugates(self) -> set[Any]:
+    def cyclic_conjugates(self) -> set:
         """Returns a words which are cyclic to the word `self`.
 
         Examples
@@ -1173,7 +1175,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         else:              # finally
             return self.subword(0, from_i)*by*self.subword(to_j, lw)
 
-    def is_cyclically_reduced(self) -> Literal[True]:
+    def is_cyclically_reduced(self) -> bool:
         r"""Returns whether the word is cyclically reduced or not.
         A word is cyclically reduced if by forming the cycle of the
         word, the word is not reduced, i.e a word w = `a_1 ... a_n`
@@ -1310,7 +1312,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         return False
 
 
-def letter_form_to_array_form(array_form, group) -> list[Any] | None:
+def letter_form_to_array_form(array_form, group) -> list | None:
     """
     This method converts a list given with possible repetitions of elements in
     it. It returns a new list such that repetitions of consecutive elements is

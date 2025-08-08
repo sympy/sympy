@@ -1,6 +1,5 @@
 from sympy.core.logic import fuzzy_and, fuzzy_or, fuzzy_not, fuzzy_xor
 from collections.abc import Iterator
-from typing import Any, Literal
 
 
 class intervalMembership:
@@ -32,10 +31,10 @@ class intervalMembership:
                 "{} must be a valid indexing for the 2-tuple."
                 .format(i))
 
-    def __len__(self) -> Literal[2]:
+    def __len__(self) -> int:
         return 2
 
-    def __iter__(self) -> Iterator[Any]:
+    def __iter__(self) -> Iterator:
         return iter(self._wrapped)
 
     def __str__(self):

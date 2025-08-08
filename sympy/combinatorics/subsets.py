@@ -566,7 +566,7 @@ class Subset():
         return Subset.subset_from_bitlist(superset, graycode_bitlist)
 
     @classmethod
-    def subset_indices(self, subset, superset) -> list[Any]:
+    def subset_indices(self, subset, superset) -> list:
         """Return indices of subset in superset in a list; the list is empty
         if all elements of ``subset`` are not in ``superset``.
 
@@ -597,7 +597,7 @@ class Subset():
         return [d[bi] for bi in b]
 
 
-def ksubsets(superset, k) -> combinations[Any]:
+def ksubsets(superset, k) -> combinations:
     """
     Finds the subsets of size ``k`` in lexicographic order.
 

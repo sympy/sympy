@@ -358,7 +358,7 @@ def solve_generic(polys, opt, strict=False) -> list[tuple[Any]] | None:
         return sorted(result, key=default_sort_key)
 
 
-def solve_triangulated(polys, *gens, **args) -> list[Any]:
+def solve_triangulated(polys, *gens, **args) -> list:
     """
     Solve a polynomial system using Gianni-Kalkbrenner algorithm.
 

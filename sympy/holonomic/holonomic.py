@@ -1576,7 +1576,7 @@ class HolonomicFunction:
             char += 1
         return finalsol
 
-    def series(self, n=6, coefficient=False, order=True, _recur=None) -> list[Any]:
+    def series(self, n=6, coefficient=False, order=True, _recur=None) -> list:
         r"""
         Finds the power series expansion of given holonomic function about :math:`x_0`.
 
@@ -1692,7 +1692,7 @@ class HolonomicFunction:
 
         return roots(R.to_sympy(s), x)
 
-    def evalf(self, points, method='RK4', h=0.05, derivatives=False) -> list[Any]:
+    def evalf(self, points, method="RK4", h=0.05, derivatives=False) -> list:
         r"""
         Finds numerical value of a holonomic function using numerical methods.
         (RK4 by default). A set of points (real or complex) must be provided

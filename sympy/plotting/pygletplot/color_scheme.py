@@ -229,7 +229,7 @@ class ColorScheme:
         except Exception:
             return None
 
-    def apply_to_curve(self, verts, u_set, set_len=None, inc_pos=None) -> list[Any]:
+    def apply_to_curve(self, verts, u_set, set_len=None, inc_pos=None) -> list:
         """
         Apply this color scheme to a
         set of vertices over a single
@@ -267,7 +267,7 @@ class ColorScheme:
                 inc_pos()
         return cverts
 
-    def apply_to_surface(self, verts, u_set, v_set, set_len=None, inc_pos=None) -> list[Any]:
+    def apply_to_surface(self, verts, u_set, v_set, set_len=None, inc_pos=None) -> list:
         """
         Apply this color scheme to a
         set of vertices over two

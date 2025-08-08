@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Generic
+from typing import TYPE_CHECKING, Any, Generic
 
 from sympy.core.add import Add
 from sympy.core.mul import Mul
@@ -15,7 +15,9 @@ from sympy.polys.domains.simpledomain import SimpleDomain
 from sympy.polys.polyclasses import ANP
 from sympy.polys.polyerrors import CoercionFailed, DomainError, NotAlgebraic, IsomorphismFailed
 from sympy.utilities import public
-from sympy.series import Order
+
+if TYPE_CHECKING:
+    from sympy.series.order import Order
 
 
 @public
@@ -472,7 +474,7 @@ class AlgebraicField(Field, CharacteristicZero, SimpleDomain[Er], Generic[Er, Eg
             self._do_round_two()
         return self._maximal_order
 
-    def integral_basis(self, fmt=None) -> list[Any | Order] | list[Any] | list[ANP]:
+    def integral_basis(self, fmt=None) -> list[Any | Order] | list | list[ANP]:
         r"""
         Get an integral basis for the field.
 

@@ -339,7 +339,7 @@ class MCodePrinter(CodePrinter):
         return "(* {} *)".format(text)
 
 
-def mathematica_code(expr, **settings) -> str | tuple[set[tuple[Any, str]], set[Any], str]:
+def mathematica_code(expr, **settings) -> str | tuple[set[tuple[Any, str]], set, str]:
     r"""Converts an expr to a string of the Wolfram Mathematica code
 
     Examples

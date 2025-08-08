@@ -1,4 +1,7 @@
 """Module for querying SymPy objects about assumptions."""
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 
 from sympy.assumptions.assume import (UndefinedPredicate, global_assumptions, Predicate,
         AppliedPredicate)
@@ -11,15 +14,17 @@ from sympy.utilities.decorator import memoize_property
 from sympy.utilities.exceptions import (sympy_deprecation_warning,
                                         SymPyDeprecationWarning,
                                         ignore_warnings)
-from .handlers.calculus import FinitePredicate, InfinitePredicate, NegativeInfinitePredicate, PositiveInfinitePredicate
-from .handlers.common import CommutativePredicate, IsTruePredicate
-from .handlers.matrices import ComplexElementsPredicate, DiagonalPredicate, FullRankPredicate, IntegerElementsPredicate, InvertiblePredicate, LowerTriangularPredicate, OrthogonalPredicate, PositiveDefinitePredicate, RealElementsPredicate, SquarePredicate, SymmetricPredicate, UnitaryPredicate, UpperTriangularPredicate
-from .handlers.ntheory import CompositePredicate, EvenPredicate, OddPredicate, PrimePredicate
-from .handlers.order import ExtendedNegativePredicate, ExtendedNonNegativePredicate, ExtendedNonPositivePredicate, ExtendedNonZeroPredicate, ExtendedPositivePredicate, NegativePredicate, NonNegativePredicate, NonPositivePredicate, NonZeroPredicate, PositivePredicate, ZeroPredicate
-from .handlers.sets import AlgebraicPredicate, AntihermitianPredicate, ComplexPredicate, ExtendedRealPredicate, HermitianPredicate, ImaginaryPredicate, IntegerPredicate, IrrationalPredicate, RationalPredicate, RealPredicate
-from .predicates.matrices import NormalPredicate, SingularPredicate, TriangularPredicate, UnitTriangularPredicate
-from .predicates.sets import NonIntegerPredicate, TranscendentalPredicate
-from .relation.equality import EqualityPredicate, GreaterThanPredicate, LessThanPredicate, StrictGreaterThanPredicate, StrictLessThanPredicate, UnequalityPredicate
+
+if TYPE_CHECKING:
+    from .handlers.calculus import FinitePredicate, InfinitePredicate, NegativeInfinitePredicate, PositiveInfinitePredicate
+    from .handlers.common import CommutativePredicate, IsTruePredicate
+    from .handlers.matrices import ComplexElementsPredicate, DiagonalPredicate, FullRankPredicate, IntegerElementsPredicate, InvertiblePredicate, LowerTriangularPredicate, OrthogonalPredicate, PositiveDefinitePredicate, RealElementsPredicate, SquarePredicate, SymmetricPredicate, UnitaryPredicate, UpperTriangularPredicate
+    from .handlers.ntheory import CompositePredicate, EvenPredicate, OddPredicate, PrimePredicate
+    from .handlers.order import ExtendedNegativePredicate, ExtendedNonNegativePredicate, ExtendedNonPositivePredicate, ExtendedNonZeroPredicate, ExtendedPositivePredicate, NegativePredicate, NonNegativePredicate, NonPositivePredicate, NonZeroPredicate, PositivePredicate, ZeroPredicate
+    from .handlers.sets import AlgebraicPredicate, AntihermitianPredicate, ComplexPredicate, ExtendedRealPredicate, HermitianPredicate, ImaginaryPredicate, IntegerPredicate, IrrationalPredicate, RationalPredicate, RealPredicate
+    from .predicates.matrices import NormalPredicate, SingularPredicate, TriangularPredicate, UnitTriangularPredicate
+    from .predicates.sets import NonIntegerPredicate, TranscendentalPredicate
+    from .relation.equality import EqualityPredicate, GreaterThanPredicate, LessThanPredicate, StrictGreaterThanPredicate, StrictLessThanPredicate, UnequalityPredicate
 
 
 # Memoization is necessary for the properties of AssumptionKeys to

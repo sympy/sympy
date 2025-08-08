@@ -12,8 +12,10 @@ from sympy.logic.boolalg import (And, BooleanTrue, BooleanFalse, conjuncts,
 from sympy.utilities.exceptions import sympy_deprecation_warning
 
 from ..predicates.common import CommutativePredicate, IsTruePredicate
-from typing import Literal
-from typing_extensions import Self
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from typing_extensions import Self
 
 
 class AskHandler:
@@ -35,11 +37,11 @@ class CommonHandler(AskHandler):
     """Defines some useful methods common to most Handlers. """
 
     @staticmethod
-    def AlwaysTrue(expr, assumptions) -> Literal[True]:
+    def AlwaysTrue(expr, assumptions) -> bool:
         return True
 
     @staticmethod
-    def AlwaysFalse(expr, assumptions) -> Literal[False]:
+    def AlwaysFalse(expr, assumptions) -> bool:
         return False
 
     @staticmethod

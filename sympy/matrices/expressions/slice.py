@@ -3,10 +3,10 @@ from sympy.core.basic import Basic
 from sympy.core.containers import Tuple
 from sympy.functions.elementary.integers import floor
 from sympy.core.function import UndefinedFunction
-from typing import Any, Literal
+from typing import Any
 from typing_extensions import Self
 
-def normalize(i, parentsize) -> tuple[Any | Literal[0], Any, Any | Literal[1]]:
+def normalize(i, parentsize) -> tuple[Any | int, Any, Any | int]:
     if isinstance(i, slice):
         i = (i.start, i.stop, i.step)
     if not isinstance(i, (tuple, list, Tuple)):

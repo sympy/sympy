@@ -35,12 +35,12 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.integrals.risch import (gcdex_diophantine, frac_in, derivation,
     splitfactor, NonElementaryIntegralException, DecrementLevel, recognize_log_derivative)
 from sympy.polys.polymatrix import PolyMatrix
-from typing import Any, Literal
+from typing import Any
 
 # TODO: Add messages to NonElementaryIntegralException errors
 
 
-def order_at(a, p, t) -> Literal[0]:
+def order_at(a, p, t) -> int:
     """
     Computes the order of a at p, with respect to t.
 
@@ -386,7 +386,7 @@ def bound_degree(a, b, cQ, DE, case='auto', parametric=False):
     return n
 
 
-def spde(a, b, c, n, DE) -> tuple[Any, Any, Literal[0], Any, Any] | tuple[Any, Any, Any, Any, Any]:
+def spde(a, b, c, n, DE) -> tuple[Any, Any, int, Any, Any] | tuple[Any, Any, Any, Any, Any]:
     """
     Rothstein's Special Polynomial Differential Equation algorithm.
 
@@ -667,7 +667,15 @@ def cancel_exp(b, c, n, DE):
     return q
 
 
-def solve_poly_rde(b, cQ, n, DE, parametric=False) -> tuple[list[Any], Any] | Any | tuple[list[Any], PolyMatrix | Any] | tuple[Any, Any, Any] | tuple[Any, Any | int, Any]:
+def solve_poly_rde(
+    b, cQ, n, DE, parametric=False
+) -> (
+    tuple[list, Any]
+    | Any
+    | tuple[list, PolyMatrix | Any]
+    | tuple[Any, Any, Any]
+    | tuple[Any, Any | int, Any]
+):
     """
     Solve a Polynomial Risch Differential Equation with degree bound ``n``.
 

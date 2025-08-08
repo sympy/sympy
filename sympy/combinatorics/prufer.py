@@ -6,7 +6,7 @@ from sympy.utilities.iterables import flatten, iterable
 from sympy.utilities.misc import as_int
 
 from collections import defaultdict
-from typing import Any, Literal
+from typing import Any
 from typing_extensions import Self
 
 
@@ -32,7 +32,7 @@ class Prufer(Basic):
     _rank = None
 
     @property
-    def prufer_repr(self) -> list[Any]:
+    def prufer_repr(self) -> list:
         """Returns Prufer sequence for the Prufer object.
 
         This sequence is found by removing the highest numbered vertex,
@@ -59,7 +59,7 @@ class Prufer(Basic):
         return self._prufer_repr
 
     @property
-    def tree_repr(self) -> list[Any]:
+    def tree_repr(self) -> list:
         """Returns the tree representation of the Prufer object.
 
         Examples
@@ -143,7 +143,7 @@ class Prufer(Basic):
         return self.prev(self.rank).prev().rank + 1
 
     @staticmethod
-    def to_prufer(tree, n) -> list[Any]:
+    def to_prufer(tree, n) -> list:
         """Return the Prufer sequence for a tree given as a list of edges where
         ``n`` is the number of nodes in the tree.
 
@@ -194,7 +194,7 @@ class Prufer(Basic):
         return L
 
     @staticmethod
-    def to_tree(prufer) -> list[Any]:
+    def to_tree(prufer) -> list:
         """Return the tree (as a list of edges) of the given Prufer sequence.
 
         Examples
@@ -239,7 +239,7 @@ class Prufer(Basic):
         return tree
 
     @staticmethod
-    def edges(*runs) -> tuple[list[Any], Any]:
+    def edges(*runs) -> tuple[list, Any]:
         """Return a list of edges and the number of nodes from the given runs
         that connect nodes in an integer-labelled tree.
 
@@ -292,7 +292,7 @@ class Prufer(Basic):
             nmax -= nmin
         return sorted(rv), nmax + 1
 
-    def prufer_rank(self) -> Literal[0]:
+    def prufer_rank(self) -> int:
         """Computes the rank of a Prufer sequence.
 
         Examples

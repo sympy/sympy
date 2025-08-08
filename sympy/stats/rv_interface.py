@@ -118,7 +118,7 @@ def entropy(expr, condition=None, **kwargs) -> (
     | Mul
     | Basic
     | Expectation
-    | tuple[Any, ...]
+    | tuple
     | Sum
     | Order
     | Any
@@ -176,7 +176,7 @@ def covariance(X, Y, condition=None, **kwargs) -> (
     | Covariance
     | Basic
     | Expectation
-    | tuple[Any, ...]
+    | tuple
     | Sum
     | Order
     | Any
@@ -396,7 +396,7 @@ def factorial_moment(X, n, condition=None, **kwargs) -> (
     type[UndefinedFunction]
     | Basic
     | Expectation
-    | tuple[Any, ...]
+    | tuple
     | Sum
     | Order
     | Any

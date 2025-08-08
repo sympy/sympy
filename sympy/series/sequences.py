@@ -286,12 +286,12 @@ class SeqBase(Basic):
     def __rmul__(self, other):
         return self * other
 
-    def __iter__(self) -> Iterator[Any]:
+    def __iter__(self) -> Iterator:
         for i in range(self.length):
             pt = self._ith_point(i)
             yield self.coeff(pt)
 
-    def __getitem__(self, index) -> list[Any] | None:
+    def __getitem__(self, index) -> list | None:
         if isinstance(index, int):
             index = self._ith_point(index)
             return self.coeff(index)
@@ -304,7 +304,9 @@ class SeqBase(Basic):
             return [self.coeff(self._ith_point(i)) for i in
                     range(start, stop, index.step or 1)]
 
-    def find_linear_recurrence(self,n,d=None,gfvar=None) -> list[Any] | tuple[list[Any], None] | tuple[Any | list[Any], Any]:
+    def find_linear_recurrence(
+        self, n, d=None, gfvar=None
+    ) -> list | tuple[list, None] | tuple[Any | list, Any]:
         r"""
         Finds the shortest linear recurrence that satisfies the first n
         terms of sequence of order `\leq` ``n/2`` if possible.
@@ -412,7 +414,7 @@ class EmptySequence(SeqBase, metaclass=Singleton):
         """See docstring of SeqBase.coeff_mul"""
         return self
 
-    def __iter__(self) -> Iterator[Any]:
+    def __iter__(self) -> Iterator:
         return iter([])
 
 
@@ -989,7 +991,7 @@ class SeqExprOp(SeqBase):
     sympy.series.sequences.SeqMul
     """
     @property
-    def gen(self) -> tuple[Any, ...]:
+    def gen(self) -> tuple:
         """Generator for the sequence.
 
         returns a tuple of generators of all the argument sequences.
@@ -1012,7 +1014,7 @@ class SeqExprOp(SeqBase):
         return self.interval.sup
 
     @property
-    def variables(self) -> tuple[Any, ...]:
+    def variables(self) -> tuple:
         """Cumulative of all the bound variables"""
         return tuple(flatten([a.variables for a in self.args]))
 

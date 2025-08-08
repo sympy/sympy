@@ -607,7 +607,7 @@ for k in _known_constants_math:
     setattr(PythonCodePrinter, '_print_%s' % k, _print_known_const)
 
 
-def pycode(expr, **settings) -> str | tuple[set[tuple[Any, str]], set[Any], str]:
+def pycode(expr, **settings) -> str | tuple[set[tuple[Any, str]], set, str]:
     """ Converts an expr to a string of Python code
 
     Parameters

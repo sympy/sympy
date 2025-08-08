@@ -11,7 +11,6 @@ from sympy.polys.matrices.normalforms import (
         hermite_normal_form as _hnf,
     )
 from sympy.matrices.dense import MutableDenseMatrix
-from typing import Any
 
 
 def _to_domain(m, domain=None):
@@ -74,7 +73,7 @@ def smith_normal_decomp(m, domain=None):
     return a.to_Matrix(), s.to_Matrix(), t.to_Matrix()
 
 
-def invariant_factors(m, domain=None) -> tuple[Any, ...]:
+def invariant_factors(m, domain=None) -> tuple:
     '''
     Return the tuple of abelian invariants for a matrix `m`
     (as in the Smith-Normal form)

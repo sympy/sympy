@@ -195,7 +195,7 @@ from sympy.polys.polyutils import IntegerPowerable
 from .exceptions import ClosureFailure, MissingUnityError, StructureError
 from .utilities import AlgIntPowers, is_rat, get_num_denom
 from types import NotImplementedType
-from typing import Any, Literal
+from typing import Any
 from typing_extensions import Self
 
 
@@ -382,7 +382,7 @@ class Module:
         """
         raise NotImplementedError
 
-    def ancestors(self, include_self=False) -> list[Any]:
+    def ancestors(self, include_self=False) -> list:
         """
         Return the list of ancestor modules of this module, from the
         foundational :py:class:`~.PowerBasis` downward, optionally including
@@ -464,7 +464,7 @@ class Module:
         """
         return self.power_basis_ancestor().number_field
 
-    def is_compat_col(self, col) -> Literal[False]:
+    def is_compat_col(self, col) -> bool:
         """Say whether *col* is a suitable column vector for this module."""
         return isinstance(col, DomainMatrix) and col.shape == (self.n, 1) and col.domain.is_ZZ
 
@@ -740,7 +740,7 @@ class PowerBasis(Module):
     def n(self):
         return self._n
 
-    def mult_tab(self) -> dict[Any, Any] | None:
+    def mult_tab(self) -> dict | None:
         if self._mult_tab is None:
             self.compute_mult_tab()
         return self._mult_tab
@@ -772,7 +772,7 @@ class PowerBasis(Module):
         else:
             raise ClosureFailure('Element not representable in ZZ[theta].')
 
-    def starts_with_unity(self) -> Literal[True]:
+    def starts_with_unity(self) -> bool:
         return True
 
     def element_from_rational(self, a):
@@ -920,7 +920,7 @@ class Submodule(Module, IntegerPowerable):
     def n(self):
         return self._n
 
-    def mult_tab(self) -> dict[Any, Any] | None:
+    def mult_tab(self) -> dict | None:
         if self._mult_tab is None:
             self.compute_mult_tab()
         return self._mult_tab
@@ -1050,7 +1050,7 @@ class Submodule(Module, IntegerPowerable):
         else:
             raise ClosureFailure('Element outside ancestor chain of this module.')
 
-    def is_compat_submodule(self, other) -> Literal[False]:
+    def is_compat_submodule(self, other) -> bool:
         return isinstance(other, Submodule) and other.parent == self.parent
 
     def __eq__(self, other) -> bool:
@@ -1420,7 +1420,7 @@ class ModuleElement(IntegerPowerable):
             e = e.to_parent()
         return e
 
-    def is_compat(self, other) -> Literal[False]:
+    def is_compat(self, other) -> bool:
         """
         Test whether other is another :py:class:`~.ModuleElement` with same
         module.

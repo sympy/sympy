@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from functools import _Wrapped, wraps, reduce
+from functools import wraps, reduce
 from operator import mul
 from typing import Optional, overload, Literal, Any, cast
 from collections import Counter, defaultdict
@@ -68,16 +68,15 @@ import mpmath
 from mpmath.libmp.libhyper import NoConvergence
 import sympy.core.add
 import sympy.core.expr
-from sympy.combinatorics.galois.S1TransitiveSubgroups import S1
-from sympy.combinatorics.galois.S2TransitiveSubgroups import S2
-from sympy.combinatorics.galois.S3TransitiveSubgroups import A3, S3
-from sympy.combinatorics.perm_groups import PermutationGroup
-from sympy.series.order import Order
 from types import NotImplementedType
 from typing_extensions import Self
 
 
 if TYPE_CHECKING:
+    from sympy.combinatorics.galois import S1TransitiveSubgroups, S2TransitiveSubgroups, S3TransitiveSubgroups
+    from sympy.combinatorics.perm_groups import PermutationGroup
+    from sympy.series.order import Order
+    from functools import _Wrapped
     from typing_extensions import Self
 
 
@@ -358,7 +357,7 @@ class Poly(Basic):
         return super().__hash__()
 
     @property
-    def free_symbols(self) -> set[Any]:
+    def free_symbols(self) -> set:
         """
         Free symbols of a polynomial expression.
 
@@ -389,7 +388,7 @@ class Poly(Basic):
         return symbols | self.free_symbols_in_domain
 
     @property
-    def free_symbols_in_domain(self) -> set[Any]:
+    def free_symbols_in_domain(self) -> set:
         """
         Free symbols of the domain of ``self``.
 
@@ -895,7 +894,7 @@ class Poly(Basic):
 
         return f.per(result)
 
-    def coeffs(f, order=None) -> list[Any]:
+    def coeffs(f, order=None) -> list:
         """
         Returns all non-zero coefficients from ``f`` in lex order.
 
@@ -957,7 +956,7 @@ class Poly(Basic):
         """
         return [(m, f.rep.dom.to_sympy(c)) for m, c in f.rep.terms(order=order)]
 
-    def all_coeffs(f) -> list[Any]:
+    def all_coeffs(f) -> list:
         """
         Returns all coefficients from a univariate polynomial ``f``.
 
@@ -2752,7 +2751,7 @@ class Poly(Basic):
 
         return f.per(result, remove=0)
 
-    def dispersionset(f, g=None) -> set[int] | set[Any]:
+    def dispersionset(f, g=None) -> set[int] | set:
         r"""Compute the *dispersion set* of two polynomials.
 
         For two polynomials `f(x)` and `g(x)` with `\deg f > 0`
@@ -3412,7 +3411,7 @@ class Poly(Basic):
 
         return f.rep.dom.to_sympy(coeff), [(f.per(g), k) for g, k in factors]
 
-    def factor_list_include(f) -> list[tuple[Self, Literal[1]]] | list[tuple[Any | Self, Any]]:
+    def factor_list_include(f) -> list[tuple[Self, int]] | list[tuple[Any | Self, Any]]:
         """
         Returns a list of irreducible factors of ``f``.
 
@@ -3649,7 +3648,9 @@ class Poly(Basic):
         """
         return sympy.polys.rootoftools.rootof(f, index, radicals=radicals)
 
-    def real_roots(f, multiple=True, radicals=True) -> list[list[Any]] | list[tuple[Any, int]]:
+    def real_roots(
+        f, multiple=True, radicals=True
+    ) -> list[list] | list[tuple[Any, int]]:
         """
         Return a list of real roots with multiplicities.
 
@@ -3673,7 +3674,9 @@ class Poly(Basic):
         else:
             return group(reals, multiple=False)
 
-    def all_roots(f, multiple=True, radicals=True) -> list[list[Any]] | list[tuple[Any, int]]:
+    def all_roots(
+        f, multiple=True, radicals=True
+    ) -> list[list] | list[tuple[Any, int]]:
         """
         Return a list of real and complex roots with multiplicities.
 
@@ -3700,7 +3703,7 @@ class Poly(Basic):
         else:
             return group(roots, multiple=False)
 
-    def nroots(f, n=15, maxsteps=50, cleanup=True) -> list[Any]:
+    def nroots(f, n=15, maxsteps=50, cleanup=True) -> list:
         """
         Compute numerical approximations of roots of ``f``.
 
@@ -3781,7 +3784,7 @@ class Poly(Basic):
 
         return roots
 
-    def ground_roots(f) -> dict[Any, Any]:
+    def ground_roots(f) -> dict:
         """
         Compute roots of ``f`` by factorization in the ground domain.
 
@@ -4124,17 +4127,7 @@ class Poly(Basic):
             c, _ = fm.clear_denoms()
             return fm.transform(Poly(fm.gen), c).to_ring(), c
 
-    def galois_group(f, by_name=False, max_tries=30, randomize=False) -> tuple[
-        PermutationGroup
-        | Literal[
-            S1,
-            S2,
-            A3,
-            S3,
-        ]
-        | None,
-        bool,
-    ]:
+    def galois_group(f, by_name=False, max_tries=30, randomize=False) -> tuple[PermutationGroup | S1TransitiveSubgroups | S2TransitiveSubgroups | S3TransitiveSubgroups | None | bool]:
         """
         Compute the Galois group of this polynomial.
 
@@ -4568,7 +4561,7 @@ class Poly(Basic):
     def __bool__(f) -> bool:
         return not f.is_zero
 
-    def eq(f, g, strict=False) -> Literal[False]:
+    def eq(f, g, strict=False) -> bool:
         if not strict:
             return f == g
         else:
@@ -4723,7 +4716,7 @@ def _poly_from_expr(expr, opt):
 
 
 @public
-def parallel_poly_from_expr(exprs, *gens, **args) -> tuple[list[Any], Any]:
+def parallel_poly_from_expr(exprs, *gens, **args) -> tuple[list, Any]:
     """Construct polynomials from expressions. """
     opt = options.build_options(gens, args)
     return _parallel_poly_from_expr(exprs, opt)
@@ -5415,13 +5408,13 @@ def _gcdex_steps_polynomial(f, g, auto):
 
 @overload
 def gcdex_steps(
-    f: Expr, g: Expr, *gens: Expr, polys: Literal[False] = False, **args: Any
+    f: Expr, g: Expr, *gens: Expr, polys: bool = False, **args: Any
 ) -> Iterator[tuple[Expr, Expr, Expr]]:
     ...
 
 @overload
 def gcdex_steps(
-    f: Expr, g: Expr, *gens: Expr, polys: Literal[True], **args: Any
+    f: Expr, g: Expr, *gens: Expr, polys: bool, **args: Any
 ) -> Iterator[tuple[Poly, Poly, Poly]]:
     ...
 
@@ -5652,7 +5645,7 @@ def invert(f, g, *gens, **args):
 
 
 @public
-def subresultants(f, g, *gens, **args) -> list[Any] | Any:
+def subresultants(f, g, *gens, **args) -> list | Any:
     """
     Compute subresultant PRS of ``f`` and ``g``.
 
@@ -5682,7 +5675,9 @@ def subresultants(f, g, *gens, **args) -> list[Any] | Any:
 
 
 @public
-def resultant(f, g, *gens, includePRS=False, **args) -> tuple[Any, list[Any]] | Any | tuple[Any, Any]:
+def resultant(
+    f, g, *gens, includePRS=False, **args
+) -> tuple[Any, list] | Any | tuple[Any, Any]:
     """
     Compute resultant of ``f`` and ``g``.
 
@@ -6335,7 +6330,7 @@ def compose(f, g, *gens, **args):
 
 
 @public
-def decompose(f, *gens, **args) -> list[Any] | Any:
+def decompose(f, *gens, **args) -> list | Any:
     """
     Compute functional decomposition of ``f``.
 
@@ -6365,7 +6360,7 @@ def decompose(f, *gens, **args) -> list[Any] | Any:
 
 
 @public
-def sturm(f, *gens, **args) -> list[Any] | Any:
+def sturm(f, *gens, **args) -> list | Any:
     """
     Compute Sturm sequence of ``f``.
 
@@ -6841,9 +6836,11 @@ def _torational_factor_list(p, x):
 
 
 @public
-def sqf_list(f, *gens, **args) -> (
-    tuple[Any, list[tuple[Any, Any]] | list[Any]]
-    | tuple[Any, list[tuple[Any, Any]] | list[Any], list[tuple[Any, Any]] | list[Any]]
+def sqf_list(
+    f, *gens, **args
+) -> (
+    tuple[Any, list[tuple[Any, Any]] | list]
+    | tuple[Any, list[tuple[Any, Any]] | list, list[tuple[Any, Any]] | list]
 ):
     """
     Compute a list of square-free factors of ``f``.
@@ -6880,9 +6877,11 @@ def sqf(f, *gens, **args) -> sympy.core.add.Add | Order | Mul:
 
 
 @public
-def factor_list(f, *gens, **args) -> (
-    tuple[Any, list[tuple[Any, Any]] | list[Any]]
-    | tuple[Any, list[tuple[Any, Any]] | list[Any], list[tuple[Any, Any]] | list[Any]]
+def factor_list(
+    f, *gens, **args
+) -> (
+    tuple[Any, list[tuple[Any, Any]] | list]
+    | tuple[Any, list[tuple[Any, Any]] | list, list[tuple[Any, Any]] | list]
 ):
     """
     Compute a list of irreducible factors of ``f``.
@@ -7000,7 +6999,9 @@ def factor(f, *gens, deep=False, **args) -> sympy.core.add.Add | Order | Mul | s
 
 
 @public
-def intervals(F, all=False, eps=None, inf=None, sup=None, strict=False, fast=False, sqf=False) -> list[Any] | Any:
+def intervals(
+    F, all=False, eps=None, inf=None, sup=None, strict=False, fast=False, sqf=False
+) -> list | Any:
     """
     Compute isolating intervals for roots of ``f``.
 
@@ -7681,7 +7682,7 @@ def cancel(f, *gens, _signsimp=True, **args):
 
 
 @public
-def reduced(f, G, *gens, **args) -> tuple[list[Any], Any]:
+def reduced(f, G, *gens, **args) -> tuple[list, Any]:
     """
     Reduces a polynomial ``f`` modulo a set of polynomials ``G``.
 
@@ -7850,11 +7851,11 @@ class GroebnerBasis(Basic):
         return (Tuple(*basis), Tuple(*self._options.gens))
 
     @property
-    def exprs(self) -> list[Any]:
+    def exprs(self) -> list:
         return [poly.as_expr() for poly in self._basis]
 
     @property
-    def polys(self) -> list[Any]:
+    def polys(self) -> list:
         return list(self._basis)
 
     @property
@@ -7872,7 +7873,7 @@ class GroebnerBasis(Basic):
     def __len__(self) -> int:
         return len(self._basis)
 
-    def __iter__(self) -> Iterator[Any]:
+    def __iter__(self) -> Iterator:
         if self._options.polys:
             return iter(self.polys)
         else:
@@ -7998,7 +7999,7 @@ class GroebnerBasis(Basic):
 
         return self._new(G, opt)
 
-    def reduce(self, expr, auto=True) -> tuple[list[Any], Any]:
+    def reduce(self, expr, auto=True) -> tuple[list, Any]:
         """
         Reduces a polynomial modulo a Groebner basis.
 

@@ -2,9 +2,8 @@
 
 
 from sympy.polys.monomials import monomial_mul, monomial_div
-from typing import Any
 
-def matrix_fglm(F, ring, O_to) -> list[Any]:
+def matrix_fglm(F, ring, O_to) -> list:
     """
     Converts the reduced Groebner basis ``F`` of a zero-dimensional
     ideal w.r.t. ``O_from`` to a reduced Groebner basis

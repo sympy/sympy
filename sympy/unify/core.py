@@ -74,7 +74,7 @@ class CondVariable:
     def __str__(self):
         return "CondVariable(%s)" % str(self.arg)
 
-def unify(x, y, s=None, **fns) -> Generator[Any | dict[Any, Any], Any, None]:
+def unify(x, y, s=None, **fns) -> Generator[Any | dict]:
     """ Unify two expressions.
 
     Parameters
@@ -129,7 +129,7 @@ def unify(x, y, s=None, **fns) -> Generator[Any | dict[Any, Any], Any, None]:
             for shead in unify(x[0], y[0], s, **fns):
                 yield from unify(x[1:], y[1:], shead, **fns)
 
-def unify_var(var, x, s, **fns) -> Generator[Any, Any, None]:
+def unify_var(var, x, s, **fns) -> Generator:
     if var in s:
         yield from unify(s[var], x, s, **fns)
     elif occur_check(var, x):
@@ -165,7 +165,7 @@ def unpack(x) -> Compound:
     else:
         return x
 
-def allcombinations(A, B, ordered) -> Generator[tuple[tuple[tuple[Any], ...], Any] | tuple[Any, tuple[tuple[Any], ...]], Any, None]:
+def allcombinations(A, B, ordered) -> Generator[tuple[tuple[tuple[Any], ...], Any] | tuple[Any, tuple[tuple[Any], ...]]]:
     """
     Restructure A and B to have the same number of elements.
 

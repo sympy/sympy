@@ -9,7 +9,7 @@ from sympy.polys.domains.groundtypes import (
 from sympy.polys.domains.integerring import IntegerRing
 from sympy.polys.polyerrors import CoercionFailed
 from sympy.utilities import public
-from typing import Any, Literal
+from typing import Any
 
 @public
 class PythonIntegerRing(IntegerRing):
@@ -79,10 +79,10 @@ class PythonIntegerRing(IntegerRing):
             return PythonInteger(p)
 
     def gcdex(self, a, b) -> (
-        tuple[Literal[0], Literal[1], Literal[0]]
-        | tuple[Literal[0], Any, Any]
-        | tuple[Any, Literal[0], Any]
-        | tuple[Literal[-1, 1, 0], Literal[0, -1, 1], Any]
+        tuple[int, int, int]
+        | tuple[int, Any, Any]
+        | tuple[Any, int, Any]
+        | tuple[int, int, Any]
     ):
         """Compute extended GCD of ``a`` and ``b``. """
         return python_gcdex(a, b)
@@ -91,7 +91,7 @@ class PythonIntegerRing(IntegerRing):
         """Compute GCD of ``a`` and ``b``. """
         return python_gcd(a, b)
 
-    def lcm(self, a, b) -> Literal[0]:
+    def lcm(self, a, b) -> int:
         """Compute LCM of ``a`` and ``b``. """
         return python_lcm(a, b)
 

@@ -12,7 +12,7 @@ from sympy.core.singleton import S
 from sympy.matrices.expressions.diagonal import DiagMatrix
 from sympy.matrices.expressions.hadamard import hadamard_product, HadamardPower
 from sympy.matrices.expressions.matexpr import MatrixExpr
-from sympy.matrices.expressions.special import (GenericIdentity, GenericZeroMatrix, Identity, ZeroMatrix, OneMatrix)
+from sympy.matrices.expressions.special import Identity, ZeroMatrix, OneMatrix
 from sympy.matrices.expressions.trace import Trace
 from sympy.matrices.expressions.transpose import Transpose
 from sympy.combinatorics.permutations import _af_invert, Permutation
@@ -25,8 +25,6 @@ from sympy.tensor.array.expressions.array_expressions import PermuteDims, ArrayD
     ArrayElement, _array_tensor_product, _array_contraction, _array_diagonal, _array_add, _permute_dims
 from sympy.tensor.array.expressions.utils import _get_mapping_from_subranks
 import sympy
-import trace
-from sympy.series.order import Order
 
 
 def _get_candidate_for_matmul_from_contraction(scan_indices: list[int | None], remaining_args: list[_ArgE]) -> tuple[_ArgE | None, bool, int]:
@@ -322,7 +320,7 @@ def _(expr: ArrayAdd):
 
 
 @_array2matrix.register(ArrayElementwiseApplyFunc)
-def _(expr: ArrayElementwiseApplyFunc) -> tuple[ArrayElementwiseApplyFunc, list[Any]]:
+def _(expr: ArrayElementwiseApplyFunc) -> tuple[ArrayElementwiseApplyFunc, list]:
     subexpr = _array2matrix(expr.expr)
     if isinstance(subexpr, MatrixExpr):
         if subexpr.shape != (1, 1):
@@ -548,7 +546,7 @@ def _(expr: ElementwiseApplyFunction):
 
 
 @_remove_trivial_dims.register(ArrayElementwiseApplyFunc)
-def _(expr: ArrayElementwiseApplyFunc) -> tuple[ArrayElementwiseApplyFunc, list[Any]]:
+def _(expr: ArrayElementwiseApplyFunc) -> tuple[ArrayElementwiseApplyFunc, list]:
     subexpr, removed = _remove_trivial_dims(expr.expr)
     return ArrayElementwiseApplyFunc(expr.function, subexpr), removed
 

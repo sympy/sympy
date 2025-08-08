@@ -2,16 +2,8 @@
 
 from __future__ import annotations
 
-from typing import Any, Literal, TYPE_CHECKING
-from sympy.polys.rings import PolyElement
+from typing import Any, TYPE_CHECKING
 from sympy.polys.rootisolation import RealInterval
-
-if TYPE_CHECKING:
-    from sympy.core.expr import Expr
-    from sympy.polys.domains.domain import Domain
-    from sympy.polys.orderings import MonomialOrder
-    from sympy.polys.rings import PolyElement
-
 from sympy.polys.densearith import dup_add_term
 from sympy.polys.densearith import dmp_add_term
 from sympy.polys.densearith import dup_sub_term
@@ -239,6 +231,12 @@ from sympy.polys.galoistools import (
 
 from sympy.utilities import public
 
+if TYPE_CHECKING:
+    from sympy.core.expr import Expr
+    from sympy.polys.domains.domain import Domain
+    from sympy.polys.orderings import MonomialOrder
+    from sympy.polys.rings import PolyElement
+
 @public
 class IPolys:
 
@@ -276,7 +274,7 @@ class IPolys:
         else:
             return self.ground_new(element)
 
-    def to_dense(self, element) -> list[Any] | list[list[Any]]:
+    def to_dense(self, element) -> list | list[list]:
         return self.wrap(element).to_dense()
 
     def from_dense(self, element) -> None:
@@ -599,10 +597,13 @@ class IPolys:
         prs = dmp_primitive_prs(self.to_dense(f), self.to_dense(g), self.ngens-1, self.domain)
         return list(map(self.from_dense, prs))
 
-    def dup_inner_subresultants(self, f, g) -> tuple[list[None], list[Any]]:
+    def dup_inner_subresultants(self, f, g) -> tuple[list[None], list]:
         prs, sres = dup_inner_subresultants(self.to_dense(f), self.to_dense(g), self.domain)
         return (list(map(self.from_dense, prs)), sres)
-    def dmp_inner_subresultants(self, f, g) -> tuple[list[None], list[list[list[Any]] | Any | list[Any]]]:
+
+    def dmp_inner_subresultants(
+        self, f, g
+    ) -> tuple[list[None], list[list[list] | Any | list]]:
         prs, sres  = dmp_inner_subresultants(self.to_dense(f), self.to_dense(g), self.ngens-1, self.domain)
         return (list(map(self.from_dense, prs)), sres)
 
@@ -630,9 +631,16 @@ class IPolys:
         res = dmp_qq_collins_resultant(self.to_dense(f), self.to_dense(g), self.ngens-1, self.domain)
         return self[1:].from_dense(res)
 
-    def dup_resultant(self, f, g) -> tuple[Any, list[Any]]: #, includePRS=False):
-        return dup_resultant(self.to_dense(f), self.to_dense(g), self.domain) #, includePRS=includePRS)
-    def dmp_resultant(self, f, g) -> tuple[Any, list[Any]] | tuple[list[list[Any]], list[Any]] | tuple[list[list[Any]] | Any | list[Any], list[Any]]: #, includePRS=False):
+    def dup_resultant(self, f, g) -> tuple[Any, list]:  # , includePRS=False):
+        return dup_resultant(self.to_dense(f), self.to_dense(g), self.domain)  # , includePRS=includePRS)
+
+    def dmp_resultant(
+        self, f, g
+    ) -> (
+        tuple[Any, list]
+        | tuple[list[list], list]
+        | tuple[list[list] | Any | list, list]
+    ):  # , includePRS=False):
         res = dmp_resultant(self.to_dense(f), self.to_dense(g), self.ngens-1, self.domain) #, includePRS=includePRS)
         if isinstance(res, list):
             return self[1:].from_dense(res)
@@ -730,7 +738,9 @@ class IPolys:
         cont, prim = dmp_ground_primitive(self.to_dense(f), self.ngens-1, self.domain)
         return (cont, self.from_dense(prim))
 
-    def dup_cancel(self, f, g, include=True) -> tuple[Any | list[Any], Any | list[Any], None, None] | tuple[None, None]:
+    def dup_cancel(
+        self, f, g, include=True
+    ) -> tuple[Any | list, Any | list, None, None] | tuple[None, None]:
         result = dup_cancel(self.to_dense(f), self.to_dense(g), self.domain, include=include)
         if not include:
             cf, cg, F, G = result
@@ -738,7 +748,10 @@ class IPolys:
         else:
             F, G = result
             return (self.from_dense(F), self.from_dense(G))
-    def dmp_cancel(self, f, g, include=True) -> tuple[Any | list[Any], Any | list[Any], None, None] | tuple[None, None]:
+
+    def dmp_cancel(
+        self, f, g, include=True
+    ) -> tuple[Any | list, Any | list, None, None] | tuple[None, None]:
         result = dmp_cancel(self.to_dense(f), self.to_dense(g), self.ngens-1, self.domain, include=include)
         if not include:
             cf, cg, F, G = result
@@ -772,7 +785,7 @@ class IPolys:
         factors = dup_zz_zassenhaus(self.to_dense(f), self.domain)
         return [ (self.from_dense(g), k) for g, k in factors ]
 
-    def dup_zz_irreducible_p(self, f) -> Literal[True] | None:
+    def dup_zz_irreducible_p(self, f) -> bool | None:
         return dup_zz_irreducible_p(self.to_dense(f), self.domain)
     def dup_cyclotomic_p(self, f, irreducible=False) -> bool:
         return dup_cyclotomic_p(self.to_dense(f), self.domain, irreducible=irreducible)
@@ -787,7 +800,7 @@ class IPolys:
             return list(map(self.from_dense, result))
 
     # E: List[ZZ], cs: ZZ, ct: ZZ
-    def dmp_zz_wang_non_divisors(self, E, cs, ct) -> list[Any] | None:
+    def dmp_zz_wang_non_divisors(self, E, cs, ct) -> list | None:
         return dmp_zz_wang_non_divisors(E, cs, ct, self.domain)
 
     # f: Poly, T: List[(Poly, int)], ct: ZZ, A: List[ZZ]
@@ -795,7 +808,7 @@ class IPolys:
     #   dmp_zz_wang_test_points(self.to_dense(f), T, ct, A, self.ngens-1, self.domain)
 
     # f: Poly, T: List[(Poly, int)], cs: ZZ, E: List[ZZ], H: List[Poly], A: List[ZZ]
-    def dmp_zz_wang_lead_coeffs(self, f, T, cs, E, H, A) -> tuple[None, list[Any], list[Any]]:
+    def dmp_zz_wang_lead_coeffs(self, f, T, cs, E, H, A) -> tuple[None, list, list]:
         mv = self[1:]
         T = [ (mv.to_dense(t), k) for t, k in T ]
         uv = self[:1]
@@ -830,10 +843,10 @@ class IPolys:
         coeff, factors = dup_zz_factor_sqf(self.to_dense(f), self.domain)
         return (coeff, [ self.from_dense(g) for g in factors ])
 
-    def dup_zz_factor(self, f) -> tuple[Any, list[tuple[None, Literal[1]]]]:
+    def dup_zz_factor(self, f) -> tuple[Any, list[tuple[None, int]]]:
         coeff, factors = dup_zz_factor(self.to_dense(f), self.domain)
         return (coeff, [ (self.from_dense(g), k) for g, k in factors ])
-    def dmp_zz_factor(self, f) -> tuple[Any, list[tuple[None, Literal[1]]]]:
+    def dmp_zz_factor(self, f) -> tuple[Any, list[tuple[None, int]]]:
         coeff, factors = dmp_zz_factor(self.to_dense(f), self.ngens-1, self.domain)
         return (coeff, [ (self.from_dense(g), k) for g, k in factors ])
 
@@ -868,14 +881,14 @@ class IPolys:
     def dup_factor_list(self, f) -> tuple[Any, list[tuple[None, Any]]]:
         coeff, factors = dup_factor_list(self.to_dense(f), self.domain)
         return (coeff, [ (self.from_dense(g), k) for g, k in factors ])
-    def dup_factor_list_include(self, f) -> list[tuple[None, Any | Literal[1]]]:
+    def dup_factor_list_include(self, f) -> list[tuple[None, Any | int]]:
         factors = dup_factor_list_include(self.to_dense(f), self.domain)
         return [ (self.from_dense(g), k) for g, k in factors ]
 
     def dmp_factor_list(self, f) -> tuple[Any, list[tuple[None, Any]]]:
         coeff, factors = dmp_factor_list(self.to_dense(f), self.ngens-1, self.domain)
         return (coeff, [ (self.from_dense(g), k) for g, k in factors ])
-    def dmp_factor_list_include(self, f) -> list[tuple[None, Any | Literal[1]]]:
+    def dmp_factor_list_include(self, f) -> list[tuple[None, Any | int]]:
         factors = dmp_factor_list_include(self.to_dense(f), self.ngens-1, self.domain)
         return [ (self.from_dense(g), k) for g, k in factors ]
 
@@ -923,13 +936,13 @@ class IPolys:
     def dup_sqf_list(self, f, all=False) -> tuple[Any, list[tuple[None, Any]]]:
         coeff, factors = dup_sqf_list(self.to_dense(f), self.domain, all=all)
         return (coeff, [ (self.from_dense(g), k) for g, k in factors ])
-    def dup_sqf_list_include(self, f, all=False) -> list[tuple[None, Literal[1]]]:
+    def dup_sqf_list_include(self, f, all=False) -> list[tuple[None, int]]:
         factors = dup_sqf_list_include(self.to_dense(f), self.domain, all=all)
         return [ (self.from_dense(g), k) for g, k in factors ]
     def dmp_sqf_list(self, f, all=False) -> tuple[Any, list[tuple[None, Any]]]:
         coeff, factors = dmp_sqf_list(self.to_dense(f), self.ngens-1, self.domain, all=all)
         return (coeff, [ (self.from_dense(g), k) for g, k in factors ])
-    def dmp_sqf_list_include(self, f, all=False) -> list[tuple[None, Literal[1]]]:
+    def dmp_sqf_list_include(self, f, all=False) -> list[tuple[None, int]]:
         factors = dmp_sqf_list_include(self.to_dense(f), self.ngens-1, self.domain, all=all)
         return [ (self.from_dense(g), k) for g, k in factors ]
 
@@ -945,29 +958,62 @@ class IPolys:
     def dup_root_lower_bound(self, f) -> None:
         return dup_root_lower_bound(self.to_dense(f), self.domain)
 
-    def dup_step_refine_real_root(self, f, M, fast=False) -> (
+    def dup_step_refine_real_root(
+        self, f, M, fast=False
+    ) -> (
         tuple[Any, tuple[Any, Any, Any, Any]]
-        | tuple[list[Any], tuple[Any, Any, Any, Any]]
-        | tuple[list[Any] | Any, tuple[Any, Any, Any, Any]]
+        | tuple[list, tuple[Any, Any, Any, Any]]
+        | tuple[list | Any, tuple[Any, Any, Any, Any]]
     ):
         return dup_step_refine_real_root(self.to_dense(f), M, self.domain, fast=fast)
-    def dup_inner_refine_real_root(self, f, M, eps=None, steps=None, disjoint=None, fast=False, mobius=False) -> tuple[Any, Any] | tuple[Any | list[Any], tuple[Any, Any, Any, Any]]:
+
+    def dup_inner_refine_real_root(
+        self, f, M, eps=None, steps=None, disjoint=None, fast=False, mobius=False
+    ) -> tuple[Any, Any] | tuple[Any | list, tuple[Any, Any, Any, Any]]:
         return dup_inner_refine_real_root(self.to_dense(f), M, self.domain, eps=eps, steps=steps, disjoint=disjoint, fast=fast, mobius=mobius)
-    def dup_outer_refine_real_root(self, f, s, t, eps=None, steps=None, disjoint=None, fast=False) -> tuple[Any, Any] | tuple[Any | list[Any], tuple[Any, Any, Any, Any]]:
+
+    def dup_outer_refine_real_root(
+        self, f, s, t, eps=None, steps=None, disjoint=None, fast=False
+    ) -> tuple[Any, Any] | tuple[Any | list, tuple[Any, Any, Any, Any]]:
         return dup_outer_refine_real_root(self.to_dense(f), s, t, self.domain, eps=eps, steps=steps, disjoint=disjoint, fast=fast)
-    def dup_refine_real_root(self, f, s, t, eps=None, steps=None, disjoint=None, fast=False) -> tuple[Any, Any] | tuple[Any | list[Any], Any | tuple[Any, Any, Any, Any]]:
+
+    def dup_refine_real_root(
+        self, f, s, t, eps=None, steps=None, disjoint=None, fast=False
+    ) -> tuple[Any, Any] | tuple[Any | list, Any | tuple[Any, Any, Any, Any]]:
         return dup_refine_real_root(self.to_dense(f), s, t, self.domain, eps=eps, steps=steps, disjoint=disjoint, fast=fast)
-    def dup_inner_isolate_real_roots(self, f, eps=None, fast=False) -> list[Any] | list[tuple[Any, Any] | tuple[Any | list[Any], tuple[Any, Any, Any, Any]]]:
+
+    def dup_inner_isolate_real_roots(
+        self, f, eps=None, fast=False
+    ) -> list | list[tuple[Any, Any] | tuple[Any | list, tuple[Any, Any, Any, Any]]]:
         return dup_inner_isolate_real_roots(self.to_dense(f), self.domain, eps=eps, fast=fast)
-    def dup_inner_isolate_positive_roots(self, f, eps=None, inf=None, sup=None, fast=False, mobius=False) -> list[Any] | list[tuple[Any, Any] | tuple[Any | list[Any], tuple[Any, Any, Any, Any]]]:
+
+    def dup_inner_isolate_positive_roots(
+        self, f, eps=None, inf=None, sup=None, fast=False, mobius=False
+    ) -> list | list[tuple[Any, Any] | tuple[Any | list, tuple[Any, Any, Any, Any]]]:
         return dup_inner_isolate_positive_roots(self.to_dense(f), self.domain, eps=eps, inf=inf, sup=sup, fast=fast, mobius=mobius)
-    def dup_inner_isolate_negative_roots(self, f, inf=None, sup=None, eps=None, fast=False, mobius=False) -> list[Any] | list[tuple[Any, Any] | tuple[Any | list[Any], tuple[Any, Any, Any, Any]]]:
+
+    def dup_inner_isolate_negative_roots(
+        self, f, inf=None, sup=None, eps=None, fast=False, mobius=False
+    ) -> list | list[tuple[Any, Any] | tuple[Any | list, tuple[Any, Any, Any, Any]]]:
         return dup_inner_isolate_negative_roots(self.to_dense(f), self.domain, inf=inf, sup=sup, eps=eps, fast=fast, mobius=mobius)
-    def dup_isolate_real_roots_sqf(self, f, eps=None, inf=None, sup=None, fast=False, blackbox=False) -> list[Any] | list[tuple[Any, Any] | tuple[Any | list[Any], tuple[Any, Any, Any, Any]]] | list[RealInterval]:
+
+    def dup_isolate_real_roots_sqf(
+        self, f, eps=None, inf=None, sup=None, fast=False, blackbox=False
+    ) -> (
+        list
+        | list[tuple[Any, Any] | tuple[Any | list, tuple[Any, Any, Any, Any]]]
+        | list[RealInterval]
+    ):
         return dup_isolate_real_roots_sqf(self.to_dense(f), self.domain, eps=eps, inf=inf, sup=sup, fast=fast, blackbox=blackbox)
-    def dup_isolate_real_roots(self, f, eps=None, inf=None, sup=None, basis=False, fast=False) -> list[Any] | list[tuple[tuple[Any, Any], Any, Any] | tuple[Any, Any]]:
+
+    def dup_isolate_real_roots(
+        self, f, eps=None, inf=None, sup=None, basis=False, fast=False
+    ) -> list | list[tuple[tuple[Any, Any], Any, Any] | tuple[Any, Any]]:
         return dup_isolate_real_roots(self.to_dense(f), self.domain, eps=eps, inf=inf, sup=sup, basis=basis, fast=fast)
-    def dup_isolate_real_roots_list(self, polys, eps=None, inf=None, sup=None, strict=False, basis=False, fast=False) -> list[tuple[tuple[Any, Any], Any, Any] | tuple[tuple[Any, Any], dict[Any, Any]]]:
+
+    def dup_isolate_real_roots_list(
+        self, polys, eps=None, inf=None, sup=None, strict=False, basis=False, fast=False
+    ) -> list[tuple[tuple[Any, Any], Any, Any] | tuple[tuple[Any, Any], dict]]:
         return dup_isolate_real_roots_list(list(map(self.to_dense, polys)), self.domain, eps=eps, inf=inf, sup=sup, strict=strict, basis=basis, fast=fast)
     def dup_count_real_roots(self, f, inf=None, sup=None) -> int:
         return dup_count_real_roots(self.to_dense(f), self.domain, inf=inf, sup=sup)
@@ -975,11 +1021,22 @@ class IPolys:
         return dup_count_complex_roots(self.to_dense(f), self.domain, inf=inf, sup=sup, exclude=exclude)
     def dup_isolate_complex_roots_sqf(self, f, eps=None, inf=None, sup=None, blackbox=False):
         return dup_isolate_complex_roots_sqf(self.to_dense(f), self.domain, eps=eps, inf=inf, sup=sup, blackbox=blackbox)
-    def dup_isolate_all_roots_sqf(self, f, eps=None, inf=None, sup=None, fast=False, blackbox=False) -> tuple[
-        list[Any] | list[tuple[Any, Any] | tuple[Any | list[Any], tuple[Any, Any, Any, Any]]] | list[RealInterval], Any
+    def dup_isolate_all_roots_sqf(
+        self, f, eps=None, inf=None, sup=None, fast=False, blackbox=False
+    ) -> tuple[
+        list
+        | list[tuple[Any, Any] | tuple[Any | list, tuple[Any, Any, Any, Any]]]
+        | list[RealInterval],
+        Any,
     ]:
         return dup_isolate_all_roots_sqf(self.to_dense(f), self.domain, eps=eps, inf=inf, sup=sup, fast=fast, blackbox=blackbox)
-    def dup_isolate_all_roots(self, f, eps=None, inf=None, sup=None, fast=False) -> tuple[list[tuple[tuple[Any | list[Any], Any | tuple[Any, Any, Any, Any]], Any]], list[tuple[tuple[Any, Any], Any]]]:
+
+    def dup_isolate_all_roots(
+        self, f, eps=None, inf=None, sup=None, fast=False
+    ) -> tuple[
+        list[tuple[tuple[Any | list, Any | tuple[Any, Any, Any, Any]], Any]],
+        list[tuple[tuple[Any, Any], Any]],
+    ]:
         return dup_isolate_all_roots(self.to_dense(f), self.domain, eps=eps, inf=inf, sup=sup, fast=fast)
 
     def fateman_poly_F_1(self) -> tuple[None, ...]:
@@ -1015,12 +1072,14 @@ class IPolys:
 
     def gf_from_dict(self, f) -> None:
         return self.from_gf_dense(gf_from_dict(f, self.domain.mod, self.domain.dom))
-    def gf_to_dict(self, f, symmetric=True) -> dict[Any, Any]:
+
+    def gf_to_dict(self, f, symmetric=True) -> dict:
         return gf_to_dict(self.to_gf_dense(f), self.domain.mod, symmetric=symmetric)
 
     def gf_from_int_poly(self, f) -> None:
         return self.from_gf_dense(gf_from_int_poly(f, self.domain.mod))
-    def gf_to_int_poly(self, f, symmetric=True) -> list[Any]:
+
+    def gf_to_int_poly(self, f, symmetric=True) -> list:
         return gf_to_int_poly(self.to_gf_dense(f), self.domain.mod, symmetric=symmetric)
 
     def gf_neg(self, f) -> None:
@@ -1089,7 +1148,8 @@ class IPolys:
 
     def gf_eval(self, f, a):
         return gf_eval(self.to_gf_dense(f), a, self.domain.mod, self.domain.dom)
-    def gf_multi_eval(self, f, A) -> list[Any]:
+
+    def gf_multi_eval(self, f, A) -> list:
         return gf_multi_eval(self.to_gf_dense(f), A, self.domain.mod, self.domain.dom)
 
     def gf_compose(self, f, g) -> None:
@@ -1125,7 +1185,7 @@ class IPolys:
         coeff, factors = gf_sqf_part(self.to_gf_dense(f), self.domain.mod, self.domain.dom)
         return coeff, [ (self.from_gf_dense(g), k) for g, k in factors ]
 
-    def gf_Qmatrix(self, f) -> list[list[Any]]:
+    def gf_Qmatrix(self, f) -> list[list]:
         return gf_Qmatrix(self.to_gf_dense(f), self.domain.mod, self.domain.dom)
     def gf_berlekamp(self, f) -> list[None]:
         factors = gf_berlekamp(self.to_gf_dense(f), self.domain.mod, self.domain.dom)

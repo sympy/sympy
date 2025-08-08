@@ -105,7 +105,7 @@ class evaluate:
         global_parameters.evaluate = self.old.pop()
 
 @contextmanager
-def distribute(x) -> Generator[None, Any, None]:
+def distribute(x) -> Generator[None]:
     """ Control automatic distribution of Number over Add
 
     Explanation

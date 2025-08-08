@@ -157,7 +157,7 @@ class Curve(GeometrySet):
         return Point(*[w.subs(t, tnew) for w in self.functions])
 
     @property
-    def free_symbols(self) -> set[Any]:
+    def free_symbols(self) -> set:
         """Return a set of symbols other than the bound symbols used to
         parametrically define the Curve.
 

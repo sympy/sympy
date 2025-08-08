@@ -37,7 +37,7 @@ __all__ = [
 ]
 
 @is_random.register(RandomMatrixSymbol)
-def _(x) -> Literal[True]:
+def _(x) -> bool:
     return True
 
 

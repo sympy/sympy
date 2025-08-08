@@ -155,7 +155,7 @@ class PlotInterval:
         pass
 
     @require_all_args
-    def vrange(self) -> Generator[Any, Any, None]:
+    def vrange(self) -> Generator:
         """
         Yields v_steps+1 SymPy numbers ranging from
         v_min to v_max.
@@ -166,7 +166,7 @@ class PlotInterval:
             yield a
 
     @require_all_args
-    def vrange2(self) -> Generator[tuple[Any, Any], Any, None]:
+    def vrange2(self) -> Generator[tuple[Any, Any]]:
         """
         Yields v_steps pairs of SymPy numbers ranging from
         (v_min, v_min + step) to (v_max - step, v_max).
@@ -178,6 +178,6 @@ class PlotInterval:
             yield a, b
             a = b
 
-    def frange(self) -> Generator[float, Any, None]:
+    def frange(self) -> Generator[float]:
         for i in self.vrange():
             yield float(i.evalf())

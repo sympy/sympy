@@ -1,8 +1,7 @@
 from collections import OrderedDict
-from typing import Any
 
 
-def expand_tuples(L) -> list[tuple[()]] | list[Any]:
+def expand_tuples(L) -> list[tuple[()]] | list:
     """
     >>> from sympy.multipledispatch.utils import expand_tuples
     >>> expand_tuples([1, (2, 3)])
@@ -59,7 +58,7 @@ def _toposort(edges):
     return L
 
 
-def reverse_dict(d) -> dict[Any, Any]:
+def reverse_dict(d) -> dict:
     """Reverses direction of dependence dict
 
     >>> d = {'a': (1, 2), 'b': (2, 3), 'c':()}
@@ -81,7 +80,7 @@ def reverse_dict(d) -> dict[Any, Any]:
 
 # Taken from toolz
 # Avoids licensing issues because this version was authored by Matthew Rocklin
-def groupby(func, seq) -> dict[Any, Any]:
+def groupby(func, seq) -> dict:
     """ Group a collection by a key function
 
     >>> from sympy.multipledispatch.utils import groupby

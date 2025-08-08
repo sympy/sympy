@@ -91,7 +91,6 @@ from sympy.utilities.iterables import iterable
 from sympy.utilities.decorator import doctest_depends_on
 
 from itertools import chain
-from typing import Any
 
 
 __doctest_requires__ = {('preview_diagram',): 'pyglet'}
@@ -1299,7 +1298,7 @@ class DiagramGrid:
         return self._grid[i, j]
 
     @property
-    def morphisms(self) -> dict[Any, Any]:
+    def morphisms(self) -> dict:
         """
         Returns those morphisms (and their properties) which are
         sufficiently meaningful to be drawn.

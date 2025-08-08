@@ -131,13 +131,13 @@ from sympy.series.order import Order
 from sympy.utilities.misc import debug_decorator as debug
 from sympy.utilities.timeutils import timethis
 import sympy.core.basic
-from typing import Any, Literal
+from typing import Any
 
 
 timeit = timethis('gruntz')
 
 
-def compare(a, b, x) -> Literal["<", ">", "="]:
+def compare(a, b, x) -> str:
     """Returns "<" if a<b, "=" for a == b, ">" for a>b"""
     # log(exp(...)) must always be simplified here for termination
     la, lb = log(a), log(b)
@@ -253,7 +253,7 @@ def mrv(e, x) -> (
     | tuple[SubsSet, Any]
     | tuple[Any, sympy.core.basic.Basic]
     | tuple[Any, Any]
-    | tuple[SubsSet, Any | Literal[1]]
+    | tuple[SubsSet, Any | int]
     | tuple[Any, type[UndefinedFunction] | Any]
 ):
     """Returns a SubsSet of most rapidly varying (mrv) subexpressions of 'e',
@@ -374,7 +374,7 @@ def mrv_max1(f, g, exps, x) -> tuple[SubsSet, Any] | tuple[Any, Any]:
 @debug
 @cacheit
 @timeit
-def sign(e, x) -> type[UndefinedFunction] | Literal[1, -1, 0]:
+def sign(e, x) -> type[UndefinedFunction] | int:
     """
     Returns a sign of an expression e(x) for x->oo.
 
@@ -488,14 +488,14 @@ def moveup2(s, x) -> SubsSet:
     return r
 
 
-def moveup(l, x) -> list[Any]:
+def moveup(l, x) -> list:
     return [e.xreplace({x: exp(x)}) for e in l]
 
 
 @debug
 @timeit
 @cacheit
-def mrv_leadterm(e, x) -> tuple[Any, Any] | tuple[sympy.core.basic.Basic | Any | type[UndefinedFunction] | Literal[1], Any]:
+def mrv_leadterm(e, x) -> tuple[Any, Any] | tuple[sympy.core.basic.Basic | Any | type[UndefinedFunction] | int, Any]:
     """Returns (c0, e0) for e."""
     Omega = SubsSet()
     if not e.has(x):
@@ -547,7 +547,7 @@ def mrv_leadterm(e, x) -> tuple[Any, Any] | tuple[sympy.core.basic.Basic | Any |
     return (lt[0].subs(log(w), logw), lt[1])
 
 
-def build_expression_tree(Omega, rewrites) -> dict[Any, Any]:
+def build_expression_tree(Omega, rewrites) -> dict:
     r""" Helper function for rewrite.
 
     We need to sort Omega (mrv set) so that we replace an expression before

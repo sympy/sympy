@@ -3,7 +3,7 @@ from collections.abc import Generator
 from typing import Any, Callable
 
 
-def identity(x) -> Generator[Any, Any, None]:
+def identity(x) -> Generator:
     yield x
 
 

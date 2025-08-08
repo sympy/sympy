@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Literal, overload
+from typing import Any, overload, TYPE_CHECKING
 
 import numbers
 import decimal
@@ -35,12 +35,12 @@ from mpmath.libmp.libmpf import (
 from sympy.utilities.misc import debug
 from sympy.utilities.exceptions import sympy_deprecation_warning
 from .parameters import global_parameters
-from sympy.core.basic import Basic
-from sympy.core.expr import AtomicExpr, Expr
-from sympy.core.mul import Mul
-from sympy.series.order import Order
 from types import NotImplementedType
 from typing_extensions import Self
+
+if TYPE_CHECKING:
+    from .mul import Mul
+    from sympy.series.order import Order
 
 _LOG2 = math.log(2)
 
@@ -154,7 +154,7 @@ def comp(z1, z2, tol=None) -> bool:
         return diff <= tol
 
 
-def mpf_norm(mpf, prec) -> tuple[Literal[0], int | Any, Literal[0], Literal[0]] | tuple[Any, Any | Literal[1], Any, Any | Literal[1]]:
+def mpf_norm(mpf, prec) -> tuple[int, int | Any, int, int] | tuple[Any, Any | int, Any, Any | int]:
     """Return the mpf tuple normalized appropriately for the indicated
     precision after doing a check to see if zero should be returned or
     not when the mantissa is 0. ``mpf_normlize`` always assumes that this
@@ -442,11 +442,11 @@ class Number(AtomicExpr):
         return self  # there is no other possibility
 
     @classmethod
-    def class_key(cls) -> tuple[Literal[1], Literal[0], Literal["Number"]]:
+    def class_key(cls) -> tuple[int, int, str]:
         return 1, 0, 'Number'
 
     @cacheit
-    def sort_key(self, order=None) -> tuple[tuple[Literal[1], Literal[0], Literal["Number"]], tuple[Literal[0], tuple[()]], tuple[()], Self]:
+    def sort_key(self, order=None) -> tuple[tuple[int, int, str], tuple[int, tuple[()]], tuple[()], Self]:
         return self.class_key(), (0, ()), (), self
 
     def __neg__(self) -> Number:
@@ -552,7 +552,7 @@ class Number(AtomicExpr):
     def __hash__(self) -> int:
         return super().__hash__()
 
-    def is_constant(self, *wrt, **flags) -> Literal[True]:
+    def is_constant(self, *wrt, **flags) -> bool:
         return True
 
     def as_coeff_mul(self, *deps, rational=True, **kwargs) -> tuple[Self, tuple[()]] | tuple[Any, tuple[Any | Mul]] | tuple[Any, tuple[Self]]:
@@ -1697,8 +1697,15 @@ class Rational(Number):
     def __hash__(self) -> int:
         return super().__hash__()
 
-    def factors(self, limit=None, use_trial=True, use_rho=False,
-                use_pm1=False, verbose=False, visual=False) -> Order | dict[Any, int] | list[Any]:
+    def factors(
+        self,
+        limit=None,
+        use_trial=True,
+        use_rho=False,
+        use_pm1=False,
+        verbose=False,
+        visual=False,
+    ) -> Order | dict[Any, int] | list:
         """A wrapper to factorint which return factors of self that are
         smaller than limit (or cheap to compute). Special methods of
         factoring are disabled by default so that only trial division is used.
@@ -1863,13 +1870,13 @@ class Integer(Rational):
         else:
             return Integer(-self.p)
 
-    def __divmod__(self, other) -> tuple | tuple[Any, Any] | NotImplementedType:
+    def __divmod__(self, other) -> tuple | NotImplementedType:
         if isinstance(other, Integer) and global_parameters.evaluate:
             return Tuple(*(divmod(self.p, other.p)))
         else:
             return Number.__divmod__(self, other)
 
-    def __rdivmod__(self, other) -> tuple | tuple[Any, Any] | NotImplementedType:
+    def __rdivmod__(self, other) -> tuple | NotImplementedType:
         if isinstance(other, int) and global_parameters.evaluate:
             return Tuple(*(divmod(other, self.p)))
         else:
@@ -2517,7 +2524,7 @@ class AlgebraicNumber(Expr):
         """Create a Basic expression from ``self``. """
         return self.as_poly(x or self.root).as_expr().expand()
 
-    def coeffs(self) -> list[Any]:
+    def coeffs(self) -> list:
         """Returns all SymPy coefficients of an algebraic number. """
         return [ self.rep.dom.to_sympy(c) for c in self.rep.all_coeffs() ]
 
@@ -2830,7 +2837,7 @@ class Zero(IntegerConstant, metaclass=Singleton):
         # Order(0,x) -> 0
         return self
 
-    def __bool__(self) -> Literal[False]:
+    def __bool__(self) -> bool:
         return False
 
 
@@ -2877,8 +2884,14 @@ class One(IntegerConstant, metaclass=Singleton):
         return
 
     @staticmethod
-    def factors(limit=None, use_trial=True, use_rho=False, use_pm1=False,
-                verbose=False, visual=False) -> dict[Any, Any]:
+    def factors(
+        limit=None,
+        use_trial=True,
+        use_rho=False,
+        use_pm1=False,
+        verbose=False,
+        visual=False,
+    ) -> dict:
         if visual:
             return S.One
         else:
@@ -4182,7 +4195,7 @@ def int_valued(x):
     return False  # or add new types to recognize
 
 
-def equal_valued(x, y) -> Literal[False]:
+def equal_valued(x, y) -> bool:
     """Compare expressions treating plain floats as rationals.
 
     Examples

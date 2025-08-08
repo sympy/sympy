@@ -139,7 +139,7 @@ class Identity(MatrixExpr):
         return (self.args[0], self.args[0])
 
     @property
-    def is_square(self) -> Literal[True]:
+    def is_square(self) -> bool:
         return True
 
     def _eval_transpose(self):
@@ -200,7 +200,7 @@ class GenericIdentity(Identity):
         raise TypeError("GenericIdentity does not have a specified shape")
 
     @property
-    def is_square(self) -> Literal[True]:
+    def is_square(self) -> bool:
         return True
 
     # Avoid Matrix.__eq__ which might call .shape

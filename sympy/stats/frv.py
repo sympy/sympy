@@ -32,12 +32,11 @@ from sympy.stats.rv import (RandomDomain, ProductDomain, ConditionalDomain,
                             PSpace, IndependentProductPSpace, SinglePSpace, random_symbols,
                             sumsets, rv_subs, NamedArgsMixin, Density, Distribution)
 import sympy
-import sympy.core.logic
 from collections.abc import Iterator
 from sympy.series.order import Order
 from sympy.stats.crv import ProductContinuousDomain
 from sympy.stats.drv import ProductDiscreteDomain
-from typing import Any, Literal
+from typing import Any
 from typing_extensions import Self
 
 
@@ -45,7 +44,7 @@ class FiniteDensity(dict):
     """
     A domain with Finite Density.
     """
-    def __call__(self, item) -> Literal[0]:
+    def __call__(self, item) -> int:
         """
         Make instance of a class callable.
 
@@ -60,7 +59,7 @@ class FiniteDensity(dict):
             return 0
 
     @property
-    def dict(self) -> dict[Any, Any]:
+    def dict(self) -> dict:
         """
         Return item as dictionary.
         """
@@ -92,7 +91,7 @@ class FiniteDomain(RandomDomain):
     def __iter__(self):
         return self.elements.__iter__()
 
-    def as_boolean(self) ->     sympy.core.logic.Or:
+    def as_boolean(self) ->     Or:
         return Or(*[And(*[Eq(sym, val) for sym, val in item]) for item in self])
 
 
@@ -140,7 +139,7 @@ class ProductFiniteDomain(ProductDomain, FiniteDomain):
     Example: The possibilities of the rolls of three independent dice
     """
 
-    def __iter__(self) -> Iterator[frozenset[Any]]:
+    def __iter__(self) -> Iterator[frozenset]:
         proditer = product(*self.domains)
         return (sumsets(items) for items in proditer)
 
@@ -179,10 +178,10 @@ class ConditionalFiniteDomain(ConditionalDomain, ProductFiniteDomain):
             return val.lhs == val.rhs
         raise ValueError("Undecidable if %s" % str(val))
 
-    def __contains__(self, other) ->     sympy.Basic | Literal[False]:
+    def __contains__(self, other) ->     sympy.Basic | bool:
         return other in self.fulldomain and self._test(other)
 
-    def __iter__(self) -> Iterator[Any]:
+    def __iter__(self) -> Iterator:
         return (elem for elem in self.fulldomain if self._test(elem))
 
     @property
@@ -194,7 +193,7 @@ class ConditionalFiniteDomain(ConditionalDomain, ProductFiniteDomain):
             raise NotImplementedError(
                 "Not implemented on multi-dimensional conditional domain")
 
-    def as_boolean(self) ->     sympy.core.logic.Or:
+    def as_boolean(self) ->     Or:
         return FiniteDomain.as_boolean(self)
 
 
@@ -209,7 +208,7 @@ class SingleFiniteDistribution(Distribution, NamedArgsMixin):
 
     @property # type: ignore
     @cacheit
-    def dict(self) -> Density | dict[Any, Any]:
+    def dict(self) -> Density | dict:
         if self.is_symbolic:
             return Density(self)
         return {k: self.pmf(k) for k in self.set}
@@ -277,7 +276,7 @@ class FinitePSpace(PSpace):
         return d
 
     @cacheit
-    def compute_cdf(self, expr) -> dict[Any, Any]:
+    def compute_cdf(self, expr) -> dict:
         d = self.compute_density(expr)
         cum_prob = S.Zero
         cdf = []
@@ -354,7 +353,7 @@ class FinitePSpace(PSpace):
                 for key, val in self._density.items() if domain._test(key)}
         return FinitePSpace(domain, density)
 
-    def sample(self, size=(), library='scipy', seed=None) -> dict[Any, Any]:
+    def sample(self, size=(), library='scipy', seed=None) -> dict:
         """
         Internal sample method
 
@@ -439,7 +438,7 @@ class SingleFinitePSpace(SinglePSpace, FinitePSpace):
         expr = rv_subs(expr, self.values)
         return FinitePSpace(self.domain, self.distribution).compute_density(expr)
 
-    def compute_cdf(self, expr) -> Lambda | dict[Any, Any]:
+    def compute_cdf(self, expr) -> Lambda | dict:
         if self._is_symbolic:
             d = self.compute_density(expr)
             k = Dummy('k')
@@ -448,7 +447,7 @@ class SingleFinitePSpace(SinglePSpace, FinitePSpace):
         expr = rv_subs(expr, self.values)
         return FinitePSpace(self.domain, self.distribution).compute_cdf(expr)
 
-    def compute_expectation(self, expr, rvs=None, **kwargs) -> tuple[Any, ...] |     sympy.Sum | Order | Any |     sympy.Piecewise |     sympy.Basic |     sympy.Equality | Relational |     sympy.Ne | None:
+    def compute_expectation(self, expr, rvs=None, **kwargs) -> tuple |     sympy.Sum | Order | Any |     sympy.Piecewise |     sympy.Basic |     sympy.Equality | Relational |     sympy.Ne | None:
         if self._is_symbolic:
             rv = random_symbols(expr)[0]
             k = Dummy('k', integer=True)

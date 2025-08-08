@@ -531,8 +531,7 @@ class OctaveCodePrinter(CodePrinter):
             # Matlab two argument zeta is not equivalent to SymPy's
             return self._print_not_supported(expr)
 
-
-    def indent_code(self, code) -> str | list[Any]:
+    def indent_code(self, code) -> str | list:
         """Accepts a string of code or a list of code lines"""
 
         # code mostly copied from ccode
@@ -564,7 +563,9 @@ class OctaveCodePrinter(CodePrinter):
         return pretty
 
 
-def octave_code(expr, assign_to=None, **settings) -> str | tuple[set[tuple[Any, str]], set[Any], str]:
+def octave_code(
+    expr, assign_to=None, **settings
+) -> str | tuple[set[tuple[Any, str]], set, str]:
     r"""Converts `expr` to a string of Octave (or Matlab) code.
 
     The string uses a subset of the Octave language for Matlab compatibility.

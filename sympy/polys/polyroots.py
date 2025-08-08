@@ -37,7 +37,7 @@ from typing import Any
 z = Symbol('z')  # importing from abc cause O to be lost as clashing symbol
 
 
-def roots_linear(f) -> list[Any]:
+def roots_linear(f) -> list:
     """Returns a list of roots of a linear polynomial."""
     r = -f.nth(0)/f.nth(1)
     dom = f.get_domain()
@@ -52,7 +52,7 @@ def roots_linear(f) -> list[Any]:
     return [r]
 
 
-def roots_quadratic(f) -> list[Any]:
+def roots_quadratic(f) -> list:
     """Returns a list of roots of a quadratic polynomial. If the domain is ZZ
     then the roots will be sorted with negatives coming before positives.
     The ordering will be the same for any numerical coefficients as long as
@@ -122,7 +122,7 @@ def roots_quadratic(f) -> list[Any]:
     return [r0, r1]
 
 
-def roots_cubic(f, trig=False) -> list[Any]:
+def roots_cubic(f, trig=False) -> list:
     """Returns a list of roots of a cubic polynomial.
 
     References
@@ -247,7 +247,9 @@ def _roots_quartic_euler(p, q, r, a):
     return [c1 - c2 - a, -c1 - c3 - a, -c1 + c3 - a, c1 + c2 - a]
 
 
-def roots_quartic(f) -> Any | list[Any] | list[Any | sympy.functions.elementary.piecewise.Piecewise]:
+def roots_quartic(
+    f,
+) -> Any | list | list[Any | sympy.functions.elementary.piecewise.Piecewise]:
     r"""
     Returns a list of roots of a quartic polynomial.
 
@@ -497,7 +499,7 @@ def _inv_totient_estimate(m):
     return L, U
 
 
-def roots_cyclotomic(f, factor=False) -> list[Any]:
+def roots_cyclotomic(f, factor=False) -> list:
     """Compute roots of cyclotomic polynomials. """
     L, U = _inv_totient_estimate(f.degree())
 
@@ -529,7 +531,7 @@ def roots_cyclotomic(f, factor=False) -> list[Any]:
     return roots
 
 
-def roots_quintic(f) -> list[Any]:
+def roots_quintic(f) -> list:
     """
     Calculate exact roots of a solvable irreducible quintic with rational coefficients.
     Return an empty list if the quintic is reducible or not solvable.
@@ -1204,7 +1206,7 @@ def roots(f, *gens,
         return zeros
 
 
-def root_factors(f, *gens, filter=None, **args) -> list[Any]:
+def root_factors(f, *gens, filter=None, **args) -> list:
     """
     Returns all factors of a univariate polynomial.
 

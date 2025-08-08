@@ -211,7 +211,7 @@ def sympy_deprecation_warning(message, *, deprecated_since_version,
 
 
 @contextlib.contextmanager
-def ignore_warnings(warningcls) -> Generator[None, Any, None]:
+def ignore_warnings(warningcls) -> Generator[None]:
     '''
     Context manager to suppress warnings during tests.
 

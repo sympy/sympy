@@ -12,7 +12,7 @@ from .utilities import _get_intermediate_simp, _iszero
 
 
 if TYPE_CHECKING:
-    from typing import TypeVar, Literal
+    from typing import TypeVar
     from sympy.matrices.matrixbase import MatrixBase
     Tmat = TypeVar('Tmat', bound=MatrixBase)
 
@@ -447,7 +447,7 @@ def _QRsolve(M, b):
 def _gauss_jordan_solve(
     M: Tmat,
     B: Tmat,
-    freevar: Literal[False] = False,
+    freevar: bool = False,
 ) -> tuple[Tmat, Tmat]:
     ...
 
@@ -455,7 +455,7 @@ def _gauss_jordan_solve(
 def _gauss_jordan_solve(
     M: Tmat,
     B: Tmat,
-    freevar: Literal[True],
+    freevar: bool,
 ) -> tuple[Tmat, Tmat, list[int]]:
     ...
 

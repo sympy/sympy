@@ -243,7 +243,7 @@ class Polygon(GeometrySet):
         return res
 
     @property
-    def angles(self) -> dict[Any, Any]:
+    def angles(self) -> dict:
         """The internal angle at each vertex.
 
         Returns
@@ -623,7 +623,7 @@ class Polygon(GeometrySet):
 
 
     @property
-    def sides(self) -> list[Any]:
+    def sides(self) -> list:
         """The directed line segments that form the sides of the polygon.
 
         Returns
@@ -859,7 +859,7 @@ class Polygon(GeometrySet):
             perim_fraction_start = perim_fraction_end
         return Piecewise(*sides)
 
-    def parameter_value(self, other, t) -> dict[Any, Any]:
+    def parameter_value(self, other, t) -> dict:
         if not isinstance(other,GeometryEntity):
             other = Point(other, dim=self.ambient_dimension)
         if not isinstance(other,Point):
@@ -880,7 +880,7 @@ class Polygon(GeometrySet):
             raise ValueError("Given point may not be on %s" % func_name(self))
         raise ValueError("Given point is not on %s" % func_name(self))
 
-    def plot_interval(self, parameter='t') -> list[Any]:
+    def plot_interval(self, parameter="t") -> list:
         """The plot interval for the default geometric plot of the polygon.
 
         Parameters
@@ -907,7 +907,7 @@ class Polygon(GeometrySet):
         t = Symbol(parameter, real=True)
         return [t, 0, 1]
 
-    def intersection(self, o) -> list[Any]:
+    def intersection(self, o) -> list:
         """The intersection of polygon and geometry entity.
 
         The intersection may be empty and can contain individual Points and
@@ -1394,7 +1394,7 @@ class Polygon(GeometrySet):
 
         return False
 
-    def bisectors(p, prec=None) -> dict[Any, Any]:
+    def bisectors(p, prec=None) -> dict:
         """Returns angle bisectors of a polygon. If prec is given
         then approximate the point defining the ray to that precision.
 
@@ -1841,7 +1841,7 @@ class RegularPolygon(Polygon):
         return Circle(self.center, self.apothem)
 
     @property
-    def angles(self) -> dict[Any, Any]:
+    def angles(self) -> dict:
         """
         Returns a dictionary with keys, the vertices of the Polygon,
         and values, the interior angle at each vertex.
@@ -2627,7 +2627,7 @@ class Triangle(Polygon):
         return Circle(self.incenter, self.inradius)
 
     @property
-    def exradii(self) -> dict[Any, Any]:
+    def exradii(self) -> dict:
         """The radius of excircles of a triangle.
 
         An excircle of the triangle is a circle lying outside the triangle,

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from typing import Any, TYPE_CHECKING, overload, Literal
+from typing import TYPE_CHECKING, overload
+from collections import defaultdict
 from collections.abc import Iterable, Mapping
 from functools import reduce
 import re
@@ -20,25 +21,15 @@ from sympy.utilities.misc import as_int, func_name, filldedent
 from sympy.utilities.iterables import has_variety, _sift_true_false
 from mpmath.libmp import mpf_log, prec_to_dps
 from mpmath.libmp.libintmath import giant_steps
-import sympy
-from collections import defaultdict
-from sympy.core.basic import Atom, Basic
-from sympy.core.evalf import EvalfMixin
-from sympy.core.function import UndefinedFunction
-from sympy.core.numbers import Float, Number, Rational
-from sympy.core.relational import Ne, Relational
-from sympy.series.formal import FormalPowerSeries
-from sympy.series.fourier import FiniteFourierSeries, FourierSeries
-from sympy.tensor.array.array_derivatives import ArrayDerivative
-from typing_extensions import Self
-
 
 if TYPE_CHECKING:
     from typing import Any, Hashable
     from typing_extensions import Self
-    from .numbers import Number
-
-from collections import defaultdict
+    from .function import UndefinedFunction
+    from .relational import Ne, Relational
+    from .numbers import Float, Number, Rational
+    from sympy.series.formal import FormalPowerSeries
+    from sympy.series.fourier import FiniteFourierSeries, FourierSeries
 
 
 def _corem(eq, c):  # helper for extract_additively
@@ -176,23 +167,25 @@ class Expr(Basic, EvalfMixin):
         return False
 
     @cacheit
-    def sort_key(self, order=None) -> tuple[
-        tuple[Literal[5], Literal[0], str] | Any,
+    def sort_key(
+        self, order=None
+    ) -> tuple[
+        tuple[int, int, str] | Any,
         tuple[
             int,
             tuple[
-                tuple[tuple[Literal[5], Literal[0], str], tuple[int, tuple[Any, ...]], Any, Any]
+                tuple[tuple[int, int, str], tuple[int, tuple], Any, Any]
                 | Any
                 | tuple[
-                    tuple[Literal[10, 0], Literal[0], str | Any],
-                    tuple[int, tuple[Any, ...]] | tuple[Literal[1], tuple[str]],
+                    tuple[int, int, str | Any],
+                    tuple[int, tuple] | tuple[int, tuple[str]],
                     Any,
                     Any,
                 ],
                 ...,
             ],
         ],
-        tuple[tuple[Literal[5], Literal[0], str], tuple[int, tuple[Any, ...]], Any, Any] | Any,
+        tuple[tuple[int, int, str], tuple[int, tuple], Any, Any] | Any,
         Number,
     ]:
 
@@ -1208,7 +1201,7 @@ class Expr(Basic, EvalfMixin):
             # CoercionFailed is caught for e.g. pi.as_poly(x, domain='QQ')
             return None
 
-    def as_ordered_terms(self, order=None, data: Literal[False] = False) -> list[Expr]:
+    def as_ordered_terms(self, order=None, data: bool = False) -> list[Expr]:
         """
         Transform an expression to an ordered list of terms.
 
@@ -1367,7 +1360,7 @@ class Expr(Basic, EvalfMixin):
         from .function import count_ops
         return count_ops(self, visual)
 
-    def args_cnc(self, cset=False, warn=True, split_1=True) -> list[Any]:
+    def args_cnc(self, cset=False, warn=True, split_1=True) -> list:
         """Return [commutative factors, non-commutative factors] of self.
 
         Explanation
@@ -2530,7 +2523,7 @@ class Expr(Basic, EvalfMixin):
         return Add(*coeffs)
 
     @property
-    def expr_free_symbols(self) -> set[Any]:
+    def expr_free_symbols(self) -> set:
         """
         Like ``free_symbols``, but returns the free symbols only if
         they are contained in an expression node.
@@ -2667,7 +2660,7 @@ class Expr(Basic, EvalfMixin):
             res *= exp_polar(newexp)
         return res, n
 
-    def is_polynomial(self, *syms) -> Literal[True] | None:
+    def is_polynomial(self, *syms) -> bool | None:
         r"""
         Return True if self is a polynomial in syms and False otherwise.
 
@@ -2818,7 +2811,7 @@ class Expr(Basic, EvalfMixin):
         # subclasses should return True or False
         return None
 
-    def is_meromorphic(self, x, a) -> Literal[True] | None:
+    def is_meromorphic(self, x, a) -> bool | None:
         """
         This tests whether an expression is meromorphic as
         a function of the given symbol ``x`` at the point ``a``.
@@ -2887,7 +2880,7 @@ class Expr(Basic, EvalfMixin):
         # subclasses should return True or False
         return None
 
-    def is_algebraic_expr(self, *syms) -> Literal[True] | None:
+    def is_algebraic_expr(self, *syms) -> bool | None:
         """
         This tests whether a given expression is algebraic or not, in the
         given symbols, syms. When syms is not given, all free symbols

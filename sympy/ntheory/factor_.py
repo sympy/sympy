@@ -24,11 +24,13 @@ from sympy.utilities.decorator import deprecated
 from sympy.utilities.iterables import flatten
 from sympy.utilities.misc import as_int, filldedent
 from .ecm import _ecm_one_factor
-from sympy.series.order import Order
-from typing import Any, Literal
+from typing import Any, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from sympy.series.order import Order
 
 
-def smoothness(n) -> tuple[Literal[1], Literal[1]] | tuple[Any, Any]:
+def smoothness(n) -> tuple[int, int] | tuple[Any, Any]:
     """
     Return the B-smooth and B-power smooth values of n.
 
@@ -58,7 +60,7 @@ def smoothness(n) -> tuple[Literal[1], Literal[1]] | tuple[Any, Any]:
     return max(facs), max(m**facs[m] for m in facs)
 
 
-def smoothness_p(n, m=-1, power=0, visual=None) -> str | dict[Any, Any] | tuple[Any, ...] | tuple[int, list[tuple[Any, tuple[Any, ...]]]]:
+def smoothness_p(n, m=-1, power=0, visual=None) -> str | dict | tuple:
     """
     Return a list of [m, (p, (M, sm(p + m), psm(p + m)))...]
     where:
@@ -1652,8 +1654,16 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
         num_curves *= 4
 
 
-def factorrat(rat, limit=None, use_trial=True, use_rho=True, use_pm1=True,
-              verbose=False, visual=None, multiple=False) -> list[Any] | dict[Any, int] | Order:
+def factorrat(
+    rat,
+    limit=None,
+    use_trial=True,
+    use_rho=True,
+    use_pm1=True,
+    verbose=False,
+    visual=None,
+    multiple=False,
+) -> list | dict[Any, int] | Order:
     r"""
     Given a Rational ``r``, ``factorrat(r)`` returns a dict containing
     the prime factors of ``r`` as keys and their respective multiplicities
@@ -1807,7 +1817,9 @@ def _divisors(n, proper=False):
         yield from rec_gen()
 
 
-def divisors(n, generator=False, proper=False) -> list[int] | list[Any] | list[Any | Literal[1]] | Generator[Any | Literal[1], Any, None]:
+def divisors(
+    n, generator=False, proper=False
+) -> list[int] | list | list[Any | int] | Generator[Any | int, Any, None]:
     r"""
     Return all divisors of n sorted from 1..n by default.
     If generator is ``True`` an unordered generator is returned.
@@ -1843,7 +1855,7 @@ def divisors(n, generator=False, proper=False) -> list[int] | list[Any] | list[A
     return rv if generator else sorted(rv)
 
 
-def divisor_count(n, modulus=1, proper=False) -> Order | Literal[0]:
+def divisor_count(n, modulus=1, proper=False) -> Order | int:
     """
     Return the number of divisors of ``n``. If ``modulus`` is not 1 then only
     those that are divisible by ``modulus`` are counted. If ``proper`` is True
@@ -1881,7 +1893,9 @@ def divisor_count(n, modulus=1, proper=False) -> Order | Literal[0]:
     return n
 
 
-def proper_divisors(n, generator=False) -> list[int] | list[Any] | list[Any | Literal[1]] | Generator[Any | Literal[1], Any, None]:
+def proper_divisors(
+    n, generator=False
+) -> list[int] | list | list[Any | int] | Generator[Any | int, Any, None]:
     """
     Return all divisors of n except n, sorted by default.
     If generator is ``True`` an unordered generator is returned.
@@ -1906,7 +1920,7 @@ def proper_divisors(n, generator=False) -> list[int] | list[Any] | list[Any | Li
     return divisors(n, generator=generator, proper=True)
 
 
-def proper_divisor_count(n, modulus=1) -> Order | Literal[0]:
+def proper_divisor_count(n, modulus=1) -> Order | int:
     """
     Return the number of proper divisors of ``n``.
 
@@ -1955,7 +1969,9 @@ def _udivisors(n):
         yield d
 
 
-def udivisors(n, generator=False) -> list[int] | list[Any] | list[Any | Literal[1]] | Generator[Any | Literal[1], Any, None]:
+def udivisors(
+    n, generator=False
+) -> list[int] | list | list[Any | int] | Generator[Any | int, Any, None]:
     r"""
     Return all unitary divisors of n sorted from 1..n by default.
     If generator is ``True`` an unordered generator is returned.
@@ -1992,7 +2008,7 @@ def udivisors(n, generator=False) -> list[int] | list[Any] | list[Any | Literal[
     return rv if generator else sorted(rv)
 
 
-def udivisor_count(n) -> Any | Literal[0]:
+def udivisor_count(n) -> Any | int:
     """
     Return the number of unitary divisors of ``n``.
 
@@ -2049,7 +2065,9 @@ def _antidivisors(n):
             yield d
 
 
-def antidivisors(n, generator=False) -> list[Any] | list[Any | int] | Generator[Any | int, Any, None]:
+def antidivisors(
+    n, generator=False
+) -> list | list[Any | int] | Generator[Any | int, Any, None]:
     r"""
     Return all antidivisors of n sorted from 1..n by default.
 
@@ -2081,7 +2099,7 @@ def antidivisors(n, generator=False) -> list[Any] | list[Any | int] | Generator[
     return rv if generator else sorted(rv)
 
 
-def antidivisor_count(n) -> Literal[0]:
+def antidivisor_count(n) -> int:
     """
     Return the number of antidivisors [1]_ of ``n``.
 
@@ -2301,7 +2319,7 @@ def _divisor_sigma(n:int, k:int=1) -> int:
     return math.prod((p**(k*(e + 1)) - 1)//(p**k - 1) for p, e in factorint(n).items())
 
 
-def core(n, t=2) -> Literal[1]:
+def core(n, t=2) -> int:
     r"""
     Calculate core(n, t) = `core_t(n)` of a positive integer n
 
@@ -2531,59 +2549,7 @@ def primeomega(n):
     return _primeomega(n)
 
 
-def mersenne_prime_exponent(nth) -> Literal[
-    2,
-    3,
-    5,
-    7,
-    13,
-    17,
-    19,
-    31,
-    61,
-    89,
-    107,
-    127,
-    521,
-    607,
-    1279,
-    2203,
-    2281,
-    3217,
-    4253,
-    4423,
-    9689,
-    9941,
-    11213,
-    19937,
-    21701,
-    23209,
-    44497,
-    86243,
-    110503,
-    132049,
-    216091,
-    756839,
-    859433,
-    1257787,
-    1398269,
-    2976221,
-    3021377,
-    6972593,
-    13466917,
-    20996011,
-    24036583,
-    25964951,
-    30402457,
-    32582657,
-    37156667,
-    42643801,
-    43112609,
-    57885161,
-    74207281,
-    77232917,
-    82589933,
-]:
+def mersenne_prime_exponent(nth) -> int:
     """Returns the exponent ``i`` for the nth Mersenne prime (which
     has the form `2^i - 1`).
 

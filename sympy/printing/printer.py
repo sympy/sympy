@@ -224,7 +224,7 @@ from collections.abc import Generator
 
 
 @contextmanager
-def printer_context(printer, **kwargs) -> Generator[None, Any, None]:
+def printer_context(printer, **kwargs) -> Generator[None]:
     original = printer._context.copy()
     try:
         printer._context.update(kwargs)

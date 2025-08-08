@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Any, Literal, Callable, TYPE_CHECKING
+from typing import Any, Callable, TYPE_CHECKING
 from itertools import product
 
 from .sympify import _sympify
@@ -8,24 +8,22 @@ from .singleton import S
 from .expr import Expr
 from .evalf import PrecisionExhausted
 from .function import (expand_complex, expand_multinomial,
-    expand_mul, _mexpand, PoleError)
+    expand_mul, _mexpand, PoleError, UndefinedFunction)
 from .logic import fuzzy_bool, fuzzy_not, fuzzy_and, fuzzy_or
 from .parameters import global_parameters
 from .relational import is_gt, is_lt
-from .kind import NumberKind, UndefinedKind
+from .kind import NumberKind, UndefinedKind,  Kind, _UndefinedKind
 from sympy.utilities.iterables import sift
 from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.misc import as_int
 from sympy.multipledispatch import Dispatcher
-from sympy.core.basic import Basic
-from sympy.core.expr import Expr
-from sympy.core.function import UndefinedFunction
-from sympy.core.kind import Kind, _UndefinedKind
-from sympy.core.mul import Mul
-from sympy.core.numbers import Number
-from sympy.functions.elementary.exponential import log
-from sympy.series.order import Order
+from .basic import Basic
+from .mul import Mul
+from .numbers import Number
 from typing_extensions import Self
+
+if TYPE_CHECKING:
+    from sympy.series.order import Order
 
 
 class Pow(Expr):
@@ -248,7 +246,7 @@ class Pow(Expr):
         return None
 
     @classmethod
-    def class_key(cls) -> tuple[Literal[3], Literal[2], str]:
+    def class_key(cls) -> tuple[int, int, str]:
         return 3, 2, cls.__name__
 
     def _eval_refine(self, assumptions):
@@ -1435,7 +1433,7 @@ class Pow(Expr):
                 return self.func(n, exp), d
         return self.func(n, exp), self.func(d, exp)
 
-    def matches(self, expr, repl_dict=None, old=False) -> dict[Any, Any] | None:
+    def matches(self, expr, repl_dict=None, old=False) -> dict | None:
         expr = _sympify(expr)
         if repl_dict is None:
             repl_dict = {}

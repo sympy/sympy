@@ -5,7 +5,6 @@ from sympy.combinatorics.perm_groups import PermutationGroup
 from sympy.core.intfunc import igcd
 from sympy.functions.combinatorial.numbers import totient
 from sympy.core.singleton import S
-from typing import Any, Literal
 
 class GroupHomomorphism:
     '''
@@ -61,7 +60,7 @@ class GroupHomomorphism:
 
         return inverses
 
-    def invert(self, g) -> list[Any] | None:
+    def invert(self, g) -> list | None:
         '''
         Return an element of the preimage of ``g`` or of each element
         of ``g`` if ``g`` is a list.
@@ -184,7 +183,7 @@ class GroupHomomorphism:
                     i += abs(p)
         return value
 
-    def __call__(self, elem) -> list[Any]:
+    def __call__(self, elem) -> list:
         return self._apply(elem)
 
     def is_injective(self) -> bool:
@@ -206,7 +205,7 @@ class GroupHomomorphism:
         else:
             return im == oth
 
-    def is_isomorphism(self) -> Literal[False] | None:
+    def is_isomorphism(self) -> bool | None:
         '''
         Check if `self` is an isomorphism.
 
@@ -413,7 +412,7 @@ def block_homomorphism(group, blocks) -> GroupHomomorphism:
     H = GroupHomomorphism(group, codomain, images)
     return H
 
-def group_isomorphism(G, H, isomorphism=True) -> tuple[Literal[True], GroupHomomorphism] | tuple[Literal[False], None] | bool:
+def group_isomorphism(G, H, isomorphism=True) -> tuple[bool, GroupHomomorphism] | tuple[bool, None] | bool:
     '''
     Compute an isomorphism between 2 given groups.
 
@@ -529,7 +528,7 @@ def group_isomorphism(G, H, isomorphism=True) -> tuple[Literal[True], GroupHomom
         return False
     return (False, None)
 
-def is_isomorphic(G, H) -> tuple[Literal[True], GroupHomomorphism] | tuple[Literal[False], None] | bool:
+def is_isomorphic(G, H) -> tuple[bool, GroupHomomorphism] | tuple[bool, None] | bool:
     '''
     Check if the groups are isomorphic to each other
 

@@ -61,10 +61,20 @@ from sympy.series.order import Order
 
 
 if TYPE_CHECKING:
-    from typing import Literal
+    pass
 
 
-def separatevars(expr, symbols=[], dict=False, force=False) -> dict[str, Any] | dict[Any, list[Any]] | Order | Abs | type[UndefinedFunction] | Any | None:
+def separatevars(
+    expr, symbols=[], dict=False, force=False
+) -> (
+    dict[str, Any]
+    | dict[Any, list]
+    | Order
+    | Abs
+    | type[UndefinedFunction]
+    | Any
+    | None
+):
     """
     Separates variables in an expression, if possible.  By
     default, it separates with respect to all symbols in an
@@ -234,7 +244,7 @@ def _separatevars_dict(expr, symbols):
     return ret
 
 
-def posify(eq) -> tuple[Any, dict[Any, Any]] | tuple[Any, dict[sympy.core.symbol.Dummy, Any]]:
+def posify(eq) -> tuple[Any, dict] | tuple[Any, dict[sympy.core.symbol.Dummy, Any]]:
     """Return ``eq`` (with generic symbols made positive) and a
     dictionary containing the mapping between the old and new
     symbols.
@@ -364,7 +374,17 @@ def hypersimilar(f, g, k):
     return h.is_rational_function(k)
 
 
-def signsimp(expr, evaluate=None) -> sympy.core.expr.Expr | sympy.core.relational.Relational | Order | sympy.core.relational.Eq | sympy.core.relational.Ne | sympy.core.add.Add | tuple[Any, dict[Any, Any]]:
+def signsimp(
+    expr, evaluate=None
+) -> (
+    sympy.core.expr.Expr
+    | sympy.core.relational.Relational
+    | Order
+    | sympy.core.relational.Eq
+    | sympy.core.relational.Ne
+    | sympy.core.add.Add
+    | tuple[Any, dict]
+):
     """Make all Add sub-expressions canonical wrt sign.
 
     Explanation
@@ -1986,10 +2006,10 @@ def nc_simplify(expr, deep=True):
 
 
 @overload
-def dotprodsimp(expr: Expr, withsimp: Literal[False] = False) -> Expr:
+def dotprodsimp(expr: Expr, withsimp: bool = False) -> Expr:
     ...
 @overload
-def dotprodsimp(expr: Expr, withsimp: Literal[True]) -> tuple[Expr, bool]:
+def dotprodsimp(expr: Expr, withsimp: bool) -> tuple[Expr, bool]:
     ...
 @overload
 def dotprodsimp(expr: Expr, withsimp: bool) -> Expr | tuple[Expr, bool]:

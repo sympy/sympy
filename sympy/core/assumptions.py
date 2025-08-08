@@ -211,8 +211,6 @@ from .sympify import sympify
 
 from sympy.core.random import _assumptions_shuffle as shuffle
 from sympy.core.assumptions_generated import generated_assumptions as _assumptions
-from sympy.core.facts import FactKB
-from typing import Any
 from typing_extensions import Self
 
 def _load_pre_generated_assumption_rules() -> FactRules:
@@ -297,7 +295,7 @@ _assume_defined.add('polar')
 _assume_defined = frozenset(_assume_defined)
 
 
-def assumptions(expr, _check=None) -> dict[Any, Any]:
+def assumptions(expr, _check=None) -> dict:
     """return the T/F assumptions of ``expr``"""
     n = sympify(expr)
     if n.is_Symbol:
@@ -313,7 +311,7 @@ def assumptions(expr, _check=None) -> dict[Any, Any]:
     return rv
 
 
-def common_assumptions(exprs, check=None) -> dict[Any, Any]:
+def common_assumptions(exprs, check=None) -> dict:
     """return those assumptions which have the same True or False
     value for all the given expressions.
 
@@ -349,7 +347,7 @@ def common_assumptions(exprs, check=None) -> dict[Any, Any]:
         for b in assume)}
 
 
-def failing_assumptions(expr, **assumptions) -> dict[Any, Any]:
+def failing_assumptions(expr, **assumptions) -> dict:
     """
     Return a dictionary containing assumptions with values not
     matching those of the passed assumptions.
@@ -478,7 +476,7 @@ class StdFactKB(FactKB):
         return self.__class__(self)
 
     @property
-    def generator(self) -> dict[Any, Any]:
+    def generator(self) -> dict:
         return self._generator.copy()
 
 

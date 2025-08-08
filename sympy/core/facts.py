@@ -50,7 +50,6 @@ from collections import defaultdict
 from typing import Any, Iterator
 
 from .logic import Logic, And, Or, Not
-import collections.abc
 
 
 def _base_fact(atom):
@@ -73,7 +72,7 @@ def _as_pair(atom):
 # XXX this prepares forward-chaining rules for alpha-network
 
 
-def transitive_closure(implications) -> set[Any]:
+def transitive_closure(implications) -> set:
     """
     Computes the transitive closure of a list of implications
 
@@ -93,7 +92,7 @@ def transitive_closure(implications) -> set[Any]:
     return full_implications
 
 
-def deduce_alpha_implications(implications) -> defaultdict[Any, set[Any]]:
+def deduce_alpha_implications(implications) -> defaultdict[Any, set]:
     """deduce all implications
 
        Description by example
@@ -133,7 +132,7 @@ def deduce_alpha_implications(implications) -> defaultdict[Any, set[Any]]:
     return res
 
 
-def apply_beta_to_alpha_route(alpha_implications, beta_rules) -> dict[Any, Any]:
+def apply_beta_to_alpha_route(alpha_implications, beta_rules) -> dict:
     """apply additional beta-rules (And conditions) to already-built
     alpha implication tables
 
@@ -212,7 +211,7 @@ def apply_beta_to_alpha_route(alpha_implications, beta_rules) -> dict[Any, Any]:
     return x_impl
 
 
-def rules_2prereq(rules) -> defaultdict[Any, set[Any]]:
+def rules_2prereq(rules) -> defaultdict[Any, set]:
     """build prerequisites table from rules
 
        Description by example
@@ -288,7 +287,7 @@ class Prover:
         self.proved_rules = []
         self._rules_seen = set()
 
-    def split_alpha_beta(self) -> tuple[list[Any], list[Any]]:
+    def split_alpha_beta(self) -> tuple[list, list]:
         """split proved rules into alpha and beta chains"""
         rules_alpha = []    # a      -> b
         rules_beta = []     # &(...) -> b
@@ -300,11 +299,11 @@ class Prover:
         return rules_alpha, rules_beta
 
     @property
-    def rules_alpha(self) -> list[Any]:
+    def rules_alpha(self) -> list:
         return self.split_alpha_beta()[0]
 
     @property
-    def rules_beta(self) -> list[Any]:
+    def rules_beta(self) -> list:
         return self.split_alpha_beta()[1]
 
     def process_rule(self, a, b) -> None:

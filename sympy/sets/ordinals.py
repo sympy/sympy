@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from sympy.core import Basic, Integer
 import operator
 from types import NotImplementedType
@@ -105,7 +107,7 @@ class Ordinal(Basic):
         return self.terms[-1]
 
     @property
-    def is_successor_ordinal(self) -> Literal[False]:
+    def is_successor_ordinal(self) -> bool:
         try:
             return self.trailing_term.exp == ord0
         except ValueError:

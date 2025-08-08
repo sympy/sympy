@@ -32,8 +32,7 @@ from sympy.solvers.inequalities import reduce_rational_inequalities
 from sympy.stats.rv import (RandomSymbol, RandomDomain, SingleDomain, ConditionalDomain, is_random,
         ProductDomain, PSpace, SinglePSpace, random_symbols, NamedArgsMixin, Distribution)
 import sympy
-import sympy.core.logic
-from typing import Any, Literal
+from typing import Any
 from typing_extensions import Self
 
 
@@ -83,7 +82,7 @@ class ProductContinuousDomain(ProductDomain, ContinuousDomain):
                 expr = domain.compute_expectation(expr, domain_vars, **kwargs)
         return expr
 
-    def as_boolean(self) ->     sympy.core.logic.And:
+    def as_boolean(self) ->     And:
         return And(*[domain.as_boolean() for domain in self.domains])
 
 
@@ -140,7 +139,7 @@ class ConditionalContinuousDomain(ContinuousDomain, ConditionalDomain):
 
         return Integral(integrand, *limits, **kwargs)
 
-    def as_boolean(self) ->     sympy.core.logic.And:
+    def as_boolean(self) ->     And:
         return And(self.fulldomain.as_boolean(), self.condition)
 
     @property
@@ -258,7 +257,7 @@ class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
                     return mgf
         return self.compute_moment_generating_function(**kwargs)(t)
 
-    def expectation(self, expr, var, evaluate=True, **kwargs) ->     sympy.Equality | Relational |     sympy.Ne | Any |     sympy.Integral | Literal[0]:
+    def expectation(self, expr, var, evaluate=True, **kwargs) ->     sympy.Equality | Relational |     sympy.Ne | Any |     sympy.Integral | int:
         """ Expectation of expression over distribution """
         if evaluate:
             try:

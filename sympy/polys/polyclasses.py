@@ -6,7 +6,6 @@ from typing import (
     TYPE_CHECKING,
     Any,
     Generic,
-    Literal,
     overload,
     Callable,
     TypeVar,
@@ -26,8 +25,7 @@ from sympy.utilities.exceptions import sympy_deprecation_warning
 
 from sympy.core.expr import Expr
 from sympy.core.numbers import oo, NegativeInfinity
-from sympy.core.sympify import CantSympify
-from sympy.polys.polyutils import PicklableWithSlots, _sort_factors
+from sympy.polys.polyutils import _sort_factors
 from sympy.polys.domains import Domain, ZZ, QQ
 from sympy.polys.domains.domain import Er, Es, Et, Eg
 from sympy.polys.domains.polynomialring import PolynomialRing
@@ -842,11 +840,11 @@ class DMP(CantSympify, Generic[Er]):
 
     @overload
     def resultant(
-        f, g: Self, includePRS: Literal[True]
+        f, g: Self, includePRS: bool
     ) -> tuple[DMP[Er] | Er, list[DMP[Er]]]: ...
 
     @overload
-    def resultant(f, g: Self, includePRS: Literal[False] = ...) -> DMP[Er] | Er: ...
+    def resultant(f, g: Self, includePRS: bool = ...) -> DMP[Er] | Er: ...
 
     def resultant(
         f, g: Self, includePRS: bool = False
@@ -893,11 +891,11 @@ class DMP(CantSympify, Generic[Er]):
         raise NotImplementedError
 
     @overload
-    def cancel(f: Self, g: Self, include: Literal[True] = ...) -> tuple[Self, Self]:
+    def cancel(f: Self, g: Self, include: bool = ...) -> tuple[Self, Self]:
         ...
 
     @overload
-    def cancel(f: Self, g: Self, include: Literal[False]) -> tuple[Er, Er, Self, Self]:
+    def cancel(f: Self, g: Self, include: bool) -> tuple[Er, Er, Self, Self]:
         ...
 
     def cancel(f: Self, g: Self, include: bool = True) -> tuple[Self, Self] | tuple[Er, Er, Self, Self]:
@@ -962,7 +960,7 @@ class DMP(CantSympify, Generic[Er]):
     def _shift(f, a: Er) -> Self:
         raise NotImplementedError
 
-    def shift_list(f, a: list[Any]) -> Self:
+    def shift_list(f, a: list) -> Self:
         """Efficiently compute Taylor shift ``f(X + A)``. """
         a = [f.dom.convert(ai) for ai in a]
         return f._shift_list(a)
@@ -1065,7 +1063,7 @@ class DMP(CantSympify, Generic[Er]):
     @overload
     def intervals(
         f,
-        all: Literal[False] = ...,
+        all: bool = ...,
         eps: MPQ | None = ...,
         inf: MPQ | None = ...,
         sup: MPQ | None = ...,
@@ -1077,7 +1075,7 @@ class DMP(CantSympify, Generic[Er]):
     @overload
     def intervals(
         f,
-        all: Literal[True],
+        all: bool,
         eps: MPQ | None = ...,
         inf: MPQ | None = ...,
         sup: MPQ | None = ...,
@@ -2693,9 +2691,23 @@ class DMF(PicklableWithSlots, CantSympify):
         return hash((f.__class__.__name__, dmp_to_tuple(f.num, f.lev),
             dmp_to_tuple(f.den, f.lev), f.lev, f.dom))
 
-    def poly_unify(f, g) -> (
-        tuple[Any, Any, Callable[..., Any |     typing_extensions.Self], tuple[Any | list[Any], Any | list[Any]], list[Any] | Any | list[list[Any]]]
-        | tuple[Any, Any, Callable[..., Any |     typing_extensions.Self], tuple[Any | list[list[Any]], Any | list[list[Any]]], Any | list[list[Any]]]
+    def poly_unify(
+        f, g
+    ) -> (
+        tuple[
+            Any,
+            Any,
+            Callable[..., Any | typing_extensions.Self],
+            tuple[Any | list, Any | list],
+            list | Any | list[list],
+        ]
+        | tuple[
+            Any,
+            Any,
+            Callable[..., Any | typing_extensions.Self],
+            tuple[Any | list[list], Any | list[list]],
+            Any | list[list],
+        ]
     ):
         """Unify a multivariate fraction and a polynomial. """
         if not isinstance(g, DMP) or f.lev != g.lev:
@@ -2725,16 +2737,22 @@ class DMF(PicklableWithSlots, CantSympify):
 
             return lev, dom, per, F, G
 
-    def frac_unify(f, g) -> (
+    def frac_unify(
+        f, g
+    ) -> (
         tuple[
-            Any, Any, Callable[..., Any |     typing_extensions.Self], tuple[Any | list[Any], Any | list[Any]], tuple[Any | list[Any], Any | list[Any]]
+            Any,
+            Any,
+            Callable[..., Any | typing_extensions.Self],
+            tuple[Any | list, Any | list],
+            tuple[Any | list, Any | list],
         ]
         | tuple[
             Any,
             Any,
-            Callable[..., Any |     typing_extensions.Self],
-            tuple[Any | list[list[Any]], Any | list[list[Any]]],
-            tuple[Any | list[list[Any]], Any | list[list[Any]]],
+            Callable[..., Any | typing_extensions.Self],
+            tuple[Any | list[list], Any | list[list]],
+            tuple[Any | list[list], Any | list[list]],
         ]
     ):
         """Unify representations of two multivariate fractions. """
@@ -3107,9 +3125,11 @@ class ANP(CantSympify, Generic[Eg]):
         else:
             return f.new(f._rep.convert(dom), f._mod.convert(dom), dom)
 
-    def unify(f, g) -> (
-        tuple[Any, Callable[..., ANP], list[Any] | Any, list[Any] | Any, list[Any] | Any | list[list[Any]]]
-        | tuple[Any, Callable[..., ANP], Any, Any, Any | list[Any] | list[list[Any]]]
+    def unify(
+        f, g
+    ) -> (
+        tuple[Any, Callable[..., ANP], list | Any, list | Any, list | Any | list[list]]
+        | tuple[Any, Callable[..., ANP], Any, Any, Any | list | list[list]]
     ):
         """Unify representations of two algebraic numbers. """
 
@@ -3160,11 +3180,11 @@ class ANP(CantSympify, Generic[Eg]):
     def one(cls, mod, dom) -> "ANP":
         return ANP(1, mod, dom)
 
-    def to_dict(f) -> dict[tuple[Literal[0]], Any] | dict[Any, Any]:
+    def to_dict(f) -> dict[tuple[int], Any] | dict:
         """Convert ``f`` to a dict representation with native coefficients. """
         return f._rep.to_dict()
 
-    def to_sympy_dict(f) -> dict[tuple[Literal[0]], Any] | dict[Any, Any]:
+    def to_sympy_dict(f) -> dict[tuple[int], Any] | dict:
         """Convert ``f`` to a dict representation with SymPy coefficients. """
         rep = dmp_to_dict(f.rep, 0, f.dom)
 
@@ -3173,7 +3193,7 @@ class ANP(CantSympify, Generic[Eg]):
 
         return rep
 
-    def to_list(f) -> list[Any]:
+    def to_list(f) -> list:
         """Convert ``f`` to a list representation with native coefficients. """
         return f._rep.to_list()
 
@@ -3181,11 +3201,11 @@ class ANP(CantSympify, Generic[Eg]):
         """Return ``f.mod`` as a list with native coefficients. """
         return f._mod.to_list()
 
-    def to_sympy_list(f) -> list[Any]:
+    def to_sympy_list(f) -> list:
         """Convert ``f`` to a list representation with SymPy coefficients. """
         return [ f.dom.to_sympy(c) for c in f.to_list() ]
 
-    def to_tuple(f) -> tuple[Any, ...]:
+    def to_tuple(f) -> tuple:
         """
         Convert ``f`` to a tuple representation with native coefficients.
 

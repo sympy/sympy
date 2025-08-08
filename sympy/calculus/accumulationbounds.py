@@ -9,10 +9,12 @@ from sympy.logic.boolalg import And
 from sympy.multipledispatch import dispatch
 from sympy.series.order import Order
 from sympy.sets.sets import FiniteSet
-import sympy.core.logic
 import sympy.core.power
 from types import NotImplementedType
-from typing_extensions import Self
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from typing_extensions import Self
 
 
 class AccumulationBounds(Expr):
@@ -596,7 +598,7 @@ class AccumulationBounds(Expr):
             return self
 
 
-    def __contains__(self, other) ->     sympy.core.logic.And | bool:
+    def __contains__(self, other) ->     And | bool:
         """
         Returns ``True`` if other is contained in self, where other
         belongs to extended real numbers, ``False`` if not contained,

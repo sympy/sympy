@@ -2,7 +2,6 @@
     be displayed in the sphinx documentation. """
 
 from __future__ import annotations
-from typing import Any
 
 from sympy.integrals.meijerint import _create_lookup_table
 from sympy.core.add import Add
@@ -12,7 +11,7 @@ from sympy.core.relational import Eq
 from sympy.core.symbol import Symbol
 from sympy.printing.latex import latex
 
-t: dict[tuple[type[Basic], ...], list[Any]] = {}
+t: dict[tuple[type[Basic], ...], list] = {}
 _create_lookup_table(t)
 
 

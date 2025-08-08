@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Literal, TYPE_CHECKING, overload
+from typing import Any, TYPE_CHECKING, overload
 
 from .assumptions import StdFactKB, _assume_defined
 from .basic import Basic, Atom
@@ -23,13 +23,13 @@ import random
 from itertools import product
 from sympy.core.basic import Atom, Basic
 from sympy.core.expr import AtomicExpr
-from sympy.core.function import FunctionClass, UndefinedFunction
+from sympy.core.function import FunctionClass
 from sympy.core.kind import _NumberKind, _UndefinedKind
 from typing_extensions import Self
 
 
 if TYPE_CHECKING:
-    from typing import Any, Literal, Iterable, Callable
+    from typing import Any, Iterable, Callable
     from typing_extensions import Self
 
 
@@ -445,7 +445,7 @@ class Symbol(AtomicExpr, Boolean): # type: ignore
         return dict(self._assumptions0)
 
     @cacheit
-    def sort_key(self, order=None) -> tuple[tuple[Literal[2], Literal[0], str], tuple[Literal[1], tuple[str]], Any, Any]:
+    def sort_key(self, order=None) -> tuple[tuple[int, int, str], tuple[int, tuple[str]], Any, Any]:
         return self.class_key(), (1, (self.name,)), S.One.sort_key(), S.One
 
     def as_dummy(self) -> "Dummy":
@@ -538,7 +538,7 @@ class Dummy(Symbol):
         return ((self.name, self.dummy_index), self._assumptions_orig)
 
     @cacheit
-    def sort_key(self, order=None) -> tuple[tuple[Literal[2], Literal[0], str], tuple[Literal[2], tuple[str, Any]], Any, Any]:
+    def sort_key(self, order=None) -> tuple[tuple[int, int, str], tuple[int, tuple[str, Any]], Any, Any]:
         return self.class_key(), (
             2, (self.name, self.dummy_index)), S.One.sort_key(), S.One
 
@@ -664,7 +664,7 @@ class Wild(Symbol):
         return super()._hashable_content() + (self.exclude, self.properties)
 
     # TODO add check against another Wild
-    def matches(self, expr, repl_dict=None, old=False) -> dict[Any, Any] | None:
+    def matches(self, expr, repl_dict=None, old=False) -> dict | None:
         if any(expr.has(x) for x in self.exclude):
             return None
         if not all(f(expr) for f in self.properties):
@@ -681,13 +681,13 @@ _range = _re.compile('([0-9]*:[0-9]+|[a-zA-Z]?:[a-zA-Z])')
 
 
 @overload
-def symbols(names: str, *, cls: type[Symbol] = Symbol, seq: Literal[True],
+def symbols(names: str, *, cls: type[Symbol] = Symbol, seq: bool,
             **kwargs: bool | int) -> tuple[Symbol, ...]: ...
 @overload
-def symbols(names: str, *, cls: Any = Symbol, seq: Literal[True],
-            **kwargs: bool | int) -> tuple[Any, ...]: ...
+def symbols(names: str, *, cls: Any = Symbol, seq: bool,
+            **kwargs: bool | int) -> tuple: ...
 @overload
-def symbols(names: str, *, cls: Any = Symbol, seq: Literal[False] = False,
+def symbols(names: str, *, cls: Any = Symbol, seq: bool = False,
             **kwargs: bool | int) -> Any: ...
 
 def symbols(names, *, cls: Any = Symbol, **args) -> Any:

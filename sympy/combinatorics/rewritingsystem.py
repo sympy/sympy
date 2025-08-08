@@ -1,6 +1,5 @@
 from collections import deque
 from sympy.combinatorics.rewritingsystem_fsm import StateMachine
-from typing import Any
 
 class RewritingSystem:
     '''
@@ -88,7 +87,7 @@ class RewritingSystem:
         if self.reduction_automaton:
             self._new_rules[r1] = r2
 
-    def add_rule(self, w1, w2, check=False) -> set[Any]:
+    def add_rule(self, w1, w2, check=False) -> set:
         new_keys = set()
 
         if w1 == w2:

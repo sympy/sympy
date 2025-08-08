@@ -27,8 +27,7 @@ from sympy.sets.contains import Contains
 from sympy.utilities import filldedent
 from sympy.core.sympify import _sympify
 import sympy
-import sympy.core.logic
-from typing import Any, Literal
+from typing import Any
 from typing_extensions import Self
 
 
@@ -151,7 +150,7 @@ class SingleDiscreteDistribution(DiscreteDistribution, NamedArgsMixin):
                 return quantile
         return self.compute_quantile(**kwargs)(x)
 
-    def expectation(self, expr, var, evaluate=True, **kwargs) -> Any |     sympy.Equality | Relational |     sympy.Ne |     sympy.Sum | Literal[0]:
+    def expectation(self, expr, var, evaluate=True, **kwargs) -> Any |     sympy.Equality | Relational |     sympy.Ne |     sympy.Sum | int:
         """ Expectation of expression over distribution """
         # TODO: support discrete sets with non integer stepsizes
 
@@ -281,7 +280,7 @@ class DiscretePSpace(PSpace):
         return DiscretePSpace(domain, density)
 
 class ProductDiscreteDomain(ProductDomain, DiscreteDomain):
-    def as_boolean(self) ->     sympy.core.logic.And:
+    def as_boolean(self) ->     And:
         return And(*[domain.as_boolean for domain in self.domains])
 
 class SingleDiscretePSpace(DiscretePSpace, SinglePSpace):

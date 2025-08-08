@@ -37,7 +37,7 @@ from sympy.geometry.line import Segment, Segment2D, Segment3D
 from sympy.geometry.point import Point, Point2D, Point3D
 from sympy.geometry.polygon import Polygon, RegularPolygon, Triangle
 from sympy.series.order import Order
-from typing import Any, Literal
+from typing import Any
 
 
 def find(x, equation):
@@ -153,7 +153,7 @@ def are_coplanar(*e) -> bool:
         return are_coplanar(*pt3d)
 
 
-def are_similar(e1, e2) -> Any | Literal[True]:
+def are_similar(e1, e2) -> Any | bool:
     """Are two geometrical entities similar.
 
     Can one geometrical entity be uniformly scaled to the other?
@@ -365,7 +365,9 @@ def closest_points(*args) -> set[tuple[Point2D, ...]]:
     return {tuple([p[i] for i in pair]) for pair in rv}
 
 
-def convex_hull(*args, polygon=True) -> (
+def convex_hull(
+    *args, polygon=True
+) -> (
     tuple[Any, None]
     | Point
     | Point2D
@@ -377,7 +379,7 @@ def convex_hull(*args, polygon=True) -> (
     | RegularPolygon
     | Polygon
     | Triangle
-    | tuple[list[Any], list[Any]]
+    | tuple[list, list]
     | None
 ):
     """The convex hull surrounding the Points contained in the list of entities.
@@ -654,7 +656,7 @@ def idiff(eq, y, x, n=1) -> Basic | Add | Order | Mul | Any | None:
         dydx = dydx.diff(x)
 
 
-def intersection(*entities, pairwise=False, **kwargs) -> list[Any]:
+def intersection(*entities, pairwise=False, **kwargs) -> list:
     """The intersection of a collection of GeometryEntity instances.
 
     Parameters

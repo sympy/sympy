@@ -1009,7 +1009,7 @@ class TransferFunction(SISOLinearTimeInvariant):
         m = Mul(self.num, Pow(self.den, -1, evaluate=False), evaluate=False)
         return limit(m, self.var, 0)
 
-    def poles(self) -> list[Any] | Any:
+    def poles(self) -> list | Any:
         """
         Returns the poles of a transfer function.
 
@@ -1031,7 +1031,7 @@ class TransferFunction(SISOLinearTimeInvariant):
         """
         return _roots(Poly(self.den, self.var), self.var)
 
-    def zeros(self) -> list[Any] | Any:
+    def zeros(self) -> list | Any:
         """
         Returns the zeros of a transfer function.
 
@@ -4207,7 +4207,7 @@ class TransferFunctionMatrix(MIMOLinearTimeInvariant):
         transposed_mat = self._expr_mat.transpose()
         return _to_TFM(transposed_mat, self.var)
 
-    def elem_poles(self) -> list[list[Any]]:
+    def elem_poles(self) -> list[list]:
         """
         Returns the poles of each element of the ``TransferFunctionMatrix``.
 
@@ -4237,7 +4237,7 @@ class TransferFunctionMatrix(MIMOLinearTimeInvariant):
         """
         return [[element.poles() for element in row] for row in self.doit().args[0]]
 
-    def elem_zeros(self) -> list[list[Any]]:
+    def elem_zeros(self) -> list[list]:
         """
         Returns the zeros of each element of the ``TransferFunctionMatrix``.
 

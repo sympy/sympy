@@ -6,9 +6,9 @@ from sympy.polys.monomials import monomial_mul, monomial_lcm, monomial_divides, 
 from sympy.polys.orderings import lex
 from sympy.polys.polyerrors import DomainError
 from sympy.polys.polyconfig import query
-from typing import Any, Literal
+from typing import Any
 
-def groebner(seq, ring, method=None) -> list[Any]:
+def groebner(seq, ring, method=None) -> list:
     """
     Computes Groebner basis for a set of polynomials in `K[X]`.
 
@@ -297,7 +297,7 @@ def lbp(signature, polynomial, number) -> tuple[Any, Any, Any]:
 # signature functions
 
 
-def sig_cmp(u, v, order) -> Literal[-1, 1]:
+def sig_cmp(u, v, order) -> int:
     """
     Compare two signatures by extending the term order to K[X]^n.
 
@@ -369,7 +369,7 @@ def lbp_mul_term(f, cx) -> tuple[Any, Any, Any]:
     return lbp(sig_mult(Sign(f), cx[0]), Polyn(f).mul_term(cx), Num(f))
 
 
-def lbp_cmp(f, g) -> Literal[-1, 1]:
+def lbp_cmp(f, g) -> int:
     """
     Compare two labeled polynomials.
 
@@ -399,7 +399,9 @@ def lbp_key(f) -> tuple[tuple[Any, Any], Any]:
 # algorithm and helper functions
 
 
-def critical_pair(f, g, ring) -> tuple[Any, tuple[tuple[Any, ...], Any] | None, Any, Any, tuple[tuple[Any, ...], Any] | None, Any]:
+def critical_pair(
+    f, g, ring
+) -> tuple[Any, tuple[tuple, Any] | None, Any, Any, tuple[tuple, Any] | None, Any]:
     """
     Compute the critical pair corresponding to two labeled polynomials.
 
@@ -434,7 +436,7 @@ def critical_pair(f, g, ring) -> tuple[Any, tuple[tuple[Any, ...], Any] | None, 
         return (Sign(fr), um, f, Sign(gr), vm, g)
 
 
-def cp_cmp(c, d) -> Literal[-1, 1]:
+def cp_cmp(c, d) -> int:
     """
     Compare two critical pairs c and d.
 
@@ -688,7 +690,7 @@ def _f5b(F, ring):
     return sorted(H, key=lambda f: order(f.LM), reverse=True)
 
 
-def red_groebner(G, ring) -> list[Any]:
+def red_groebner(G, ring) -> list:
     """
     Compute reduced Groebner basis, from BeckerWeispfenning93, p. 216
 

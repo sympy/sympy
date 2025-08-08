@@ -9,7 +9,10 @@ from sympy.codegen.ast import (
 from sympy.core.basic import Basic
 from sympy.core.containers import Tuple
 from sympy.core.sympify import sympify
-from typing_extensions import Self
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from typing_extensions import Self
 
 void = Type('void')
 

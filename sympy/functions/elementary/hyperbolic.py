@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from sympy.core import S, sympify, cacheit
 from sympy.core.add import Add
 from sympy.core.function import Function, UndefinedFunction, DefinedFunction, ArgumentIndexError
@@ -18,10 +20,11 @@ from sympy.polys.specialpolys import symmetric_poly
 from sympy.core.basic import Basic
 from sympy.core.mul import Mul
 from sympy.core.power import Pow
-from sympy.series.order import Order
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from typing_extensions import Self
 
+if TYPE_CHECKING:
+    from sympy.series.order import Order
 
 def _rewrite_hyperbolics_as_exp(expr):
     return expr.xreplace({h: h.rewrite(exp)

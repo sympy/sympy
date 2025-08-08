@@ -22,7 +22,7 @@ from sympy.matrices.expressions.transpose import Transpose, transpose
 import sympy.core.basic
 from sympy.matrices.immutable import ImmutableDenseMatrix
 from sympy.series.order import Order
-from typing import Any, Literal
+from typing import Any
 from typing_extensions import Self
 
 
@@ -135,7 +135,7 @@ class BlockMatrix(MatrixExpr):
         return obj
 
     @property
-    def shape(self) -> tuple[Any | Literal[0], Any | Literal[0]]:
+    def shape(self) -> tuple[Any | int, Any | int]:
         numrows = numcols = 0
         M = self.blocks
         for i in range(M.shape[0]):
@@ -153,11 +153,11 @@ class BlockMatrix(MatrixExpr):
         return self.args[0]
 
     @property
-    def rowblocksizes(self) -> list[Any]:
+    def rowblocksizes(self) -> list:
         return [self.blocks[i, 0].rows for i in range(self.blockshape[0])]
 
     @property
-    def colblocksizes(self) -> list[Any]:
+    def colblocksizes(self) -> list:
         return [self.blocks[0, i].cols for i in range(self.blockshape[1])]
 
     def structurally_equal(self, other) -> bool:
@@ -621,11 +621,11 @@ class BlockDiagMatrix(BlockMatrix):
         return (n, n)
 
     @property
-    def rowblocksizes(self) -> list[Any]:
+    def rowblocksizes(self) -> list:
         return [block.rows for block in self.args]
 
     @property
-    def colblocksizes(self) -> list[Any]:
+    def colblocksizes(self) -> list:
         return [block.cols for block in self.args]
 
     def _all_square_blocks(self):
@@ -953,7 +953,7 @@ def reblock_2x2(expr) -> BlockMatrix:
                [BM(blocks[1:, 0]), BM(blocks[1:, 1:])]])
 
 
-def bounds(sizes) -> list[Any]:
+def bounds(sizes) -> list:
     """ Convert sequence of numbers into pairs of low-high pairs
 
     >>> from sympy.matrices.expressions.blockmatrix import bounds

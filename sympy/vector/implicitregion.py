@@ -78,7 +78,7 @@ class ImplicitRegion(Basic):
     def degree(self):
         return total_degree(self.equation)
 
-    def regular_point(self) -> tuple[Any] | tuple[Any, Any] | tuple[int, int, Any] | type[list[Any]]:
+    def regular_point(self) -> tuple[Any] | tuple[Any, Any] | tuple[int, int, Any] | type[list]:
         """
         Returns a point on the implicit region.
 

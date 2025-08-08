@@ -116,7 +116,6 @@ from sympy.multipledispatch import dispatch
 from sympy.utilities.iterables import is_sequence, NotIterable
 from sympy.utilities.misc import filldedent
 import sympy
-from typing import Any
 from typing_extensions import Self
 
 
@@ -208,7 +207,7 @@ class Indexed(Expr):
             return S.Zero
 
     @property
-    def assumptions0(self) -> dict[Any, Any]:
+    def assumptions0(self) -> dict:
         return {k: v for k, v in self._assumptions.items() if v is not None}
 
     @property
@@ -305,7 +304,7 @@ class Indexed(Expr):
         return Tuple(*sizes)
 
     @property
-    def ranges(self) -> list[Any]:
+    def ranges(self) -> list:
         """Returns a list of tuples with lower and upper range of each index.
 
         If an index does not define the data members upper and lower, the
@@ -481,7 +480,7 @@ class IndexedBase(Expr, NotIterable):
         return super()._hashable_content() + tuple(sorted(self.assumptions0.items()))
 
     @property
-    def assumptions0(self) -> dict[Any, Any]:
+    def assumptions0(self) -> dict:
         return {k: v for k, v in self._assumptions.items() if v is not None}
 
     def __getitem__(self, indices, **kw_args) -> Indexed:

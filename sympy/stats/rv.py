@@ -43,7 +43,6 @@ from sympy.utilities.decorator import doctest_depends_on
 from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.iterables import iterable
 import sympy
-import sympy.core.logic
 from collections.abc import Generator
 from sympy.series.order import Order
 from sympy.stats.compound_rv import CompoundPSpace
@@ -189,7 +188,7 @@ class ConditionalDomain(RandomDomain):
     def set(self):
         raise NotImplementedError("Set of Conditional Domain not Implemented")
 
-    def as_boolean(self) ->     sympy.core.logic.And:
+    def as_boolean(self) ->     And:
         return And(self.fulldomain.as_boolean(), self.condition)
 
 
@@ -438,7 +437,7 @@ class IndependentProductPSpace(ProductPSpace):
         return p.subs({rv: rv.symbol for rv in self.values})
 
     @property
-    def rs_space_dict(self) -> dict[Any, Any]:
+    def rs_space_dict(self) -> dict:
         d = {}
         for space in self.spaces:
             for value in space.values:
@@ -454,7 +453,7 @@ class IndependentProductPSpace(ProductPSpace):
         return FiniteSet(*self.args)
 
     @property
-    def values(self) -> frozenset[Any]:
+    def values(self) -> frozenset:
         return sumsets(space.values for space in self.spaces)
 
     def compute_expectation(self, expr, rvs=None, evaluate=False, **kwargs):
@@ -474,7 +473,7 @@ class IndependentProductPSpace(ProductPSpace):
     def density(self):
         raise NotImplementedError("Density not available for ProductSpaces")
 
-    def sample(self, size=(), library='scipy', seed=None) -> dict[Any, Any]:
+    def sample(self, size=(), library="scipy", seed=None) -> dict:
         return {k: v for space in self.spaces
             for k, v in space.sample(size=size, library=library, seed=seed).items()}
 
@@ -619,11 +618,11 @@ class ProductDomain(RandomDomain):
         # All subevents passed
         return True
 
-    def as_boolean(self) ->     sympy.core.logic.And:
+    def as_boolean(self) ->     And:
         return And(*[domain.as_boolean() for domain in self.domains])
 
 
-def random_symbols(expr) -> list[Any]:
+def random_symbols(expr) -> list:
     """
     Returns all RandomSymbols within a SymPy Expression.
     """
@@ -672,14 +671,14 @@ def pspace(expr) -> Any | CompoundPSpace | StochasticPSpace | ProductFinitePSpac
     return IndependentProductPSpace(*[rv.pspace for rv in rvs])
 
 
-def sumsets(sets) -> frozenset[Any]:
+def sumsets(sets) -> frozenset:
     """
     Union of sets
     """
     return frozenset().union(*sets)
 
 
-def rs_swap(a, b) -> dict[Any, Any]:
+def rs_swap(a, b) -> dict:
     """
     Build a dictionary to swap RandomSymbols based on their underlying symbol.
 
@@ -783,10 +782,12 @@ def given(expr, condition=None, **kwargs) -> Relational | Basic | bool:
     return expr
 
 
-def expectation(expr, condition=None, numsamples=None, evaluate=True, **kwargs) -> (
+def expectation(
+    expr, condition=None, numsamples=None, evaluate=True, **kwargs
+) -> (
     Basic
     | Expectation
-    | tuple[Any, ...]
+    | tuple
     | sympy.Sum
     | Order
     | Any
@@ -896,7 +897,9 @@ class Density(Basic):
         else:
             return None
 
-    def doit(self, evaluate=True, **kwargs) -> Density | dict[Any, Any] | Lambda | Basic | Any | FiniteDensity | None:
+    def doit(
+        self, evaluate=True, **kwargs
+    ) -> Density | dict | Lambda | Basic | Any | FiniteDensity | None:
         from sympy.stats.random_matrix import RandomMatrixPSpace
         from sympy.stats.joint_rv import JointPSpace
         from sympy.stats.matrix_distributions import MatrixPSpace
@@ -927,7 +930,9 @@ class Density(Basic):
             return result
 
 
-def density(expr, condition=None, evaluate=True, numsamples=None, **kwargs) -> dict[Any, Any] | Density | Lambda | Basic | Any | FiniteDensity | None:
+def density(
+    expr, condition=None, evaluate=True, numsamples=None, **kwargs
+) -> dict | Density | Lambda | Basic | Any | FiniteDensity | None:
     """
     Probability density of a random expression, optionally given a second
     condition.
@@ -975,7 +980,7 @@ def density(expr, condition=None, evaluate=True, numsamples=None, **kwargs) -> d
     return Density(expr, condition).doit(evaluate=evaluate, **kwargs)
 
 
-def cdf(expr, condition=None, evaluate=True, **kwargs) -> Lambda | Any | dict[Any, Any]:
+def cdf(expr, condition=None, evaluate=True, **kwargs) -> Lambda | Any | dict:
     """
     Cumulative Distribution Function of a random expression.
 
@@ -1267,7 +1272,7 @@ def quantile(expr, evaluate=True, **kwargs) -> Lambda | Any:
         return result
 
 def sample_iter(expr, condition=None, size=(), library='scipy',
-                    numsamples=S.Infinity, seed=None, **kwargs) -> Generator[Any, Any, None] | Generator[Any | JointRandomSymbol | Basic, Any, None]:
+                    numsamples=S.Infinity, seed=None, **kwargs) -> Generator[Any, Any, None] | Generator[Any | JointRandomSymbol | Basic]:
 
     """
     Returns an iterator of realizations from the expression given a condition.
@@ -1423,13 +1428,13 @@ def sample_iter(expr, condition=None, size=(), library='scipy',
     return return_generator_finite()
 
 def sample_iter_lambdify(expr, condition=None, size=(),
-                         numsamples=S.Infinity, seed=None, **kwargs) -> Generator[Any, Any, None] | Generator[Any | JointRandomSymbol | Basic, Any, None]:
+                         numsamples=S.Infinity, seed=None, **kwargs) -> Generator[Any, Any, None] | Generator[Any | JointRandomSymbol | Basic]:
 
     return sample_iter(expr, condition=condition, size=size,
                        numsamples=numsamples, seed=seed, **kwargs)
 
 def sample_iter_subs(expr, condition=None, size=(),
-                     numsamples=S.Infinity, seed=None, **kwargs) -> Generator[Any, Any, None] | Generator[Any | JointRandomSymbol | Basic, Any, None]:
+                     numsamples=S.Infinity, seed=None, **kwargs) -> Generator[Any, Any, None] | Generator[Any | JointRandomSymbol | Basic]:
 
     return sample_iter(expr, condition=condition, size=size,
                        numsamples=numsamples, seed=seed, **kwargs)
@@ -1488,8 +1493,9 @@ def sampling_E(expr, given_condition=None, library='scipy', numsamples=1,
     else:
         return result
 
-def sampling_density(expr, given_condition=None, library='scipy',
-                    numsamples=1, seed=None, **kwargs) -> dict[Any, Any]:
+def sampling_density(
+    expr, given_condition=None, library="scipy", numsamples=1, seed=None, **kwargs
+) -> dict:
     """
     Sampling version of density.
 

@@ -326,14 +326,14 @@ class Order(Expr):
         return self.args[0]
 
     @property
-    def variables(self) -> tuple[Any, ...] | tuple[()]:
+    def variables(self) -> tuple:
         if self.args[1:]:
             return tuple(x[0] for x in self.args[1:])
         else:
             return ()
 
     @property
-    def point(self) -> tuple[Any, ...] | tuple[()]:
+    def point(self) -> tuple:
         if self.args[1:]:
             return tuple(x[1] for x in self.args[1:])
         else:

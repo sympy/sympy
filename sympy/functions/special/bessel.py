@@ -1,4 +1,4 @@
-from functools import _Wrapped, wraps
+from functools import wraps
 
 from sympy.core import S
 from sympy.core.add import Add
@@ -23,7 +23,10 @@ from sympy.polys.orthopolys import spherical_bessel_fn
 from mpmath import mp, workprec
 from numpy import ndarray as NDArray
 from sympy.core.basic import Basic
-from typing import Any
+from typing import Any, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from functools import _Wrapped
 
 # TODO
 # o Scorer functions G1 and G2
@@ -1263,7 +1266,7 @@ class hn2(SphericalHankelBase):
         return sqrt(pi/(2*z))*hankel2(nu, z)
 
 
-def jn_zeros(n, k, method="sympy", dps=15) -> list[Any | Float] | list[Any | NDArray[Any, Any] | tuple[Any, Any]]:
+def jn_zeros(n, k, method="sympy", dps=15) -> list[Any | Float] | list[Any | NDArray | tuple[Any, Any]]:
     """
     Zeros of the spherical Bessel function of the first kind.
 

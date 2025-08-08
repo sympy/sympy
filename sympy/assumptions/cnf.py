@@ -4,15 +4,17 @@ only and should not be used anywhere else as these do not possess the
 signatures common to SymPy objects. For general use of logic constructs
 please refer to sympy.logic classes And, Or, Not, etc.
 """
+from __future__ import annotations
+
 from itertools import combinations, product, zip_longest
 from sympy.assumptions.assume import AppliedPredicate, Predicate
 from sympy.core.relational import Eq, Ne, Gt, Lt, Ge, Le
 from sympy.core.singleton import S
-from sympy.logic.boolalg import Or, And, Not, Xnor
-from sympy.logic.boolalg import (Equivalent, ITE, Implies, Nand, Nor, Xor)
-import sympy.core.logic
-from typing import Any
-from typing_extensions import Self
+from sympy.logic.boolalg import Or, And, Not, Xnor, Equivalent, ITE, Implies, Nand, Nor, Xor, And
+from typing import Any, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from typing_extensions import Self
 
 
 class Literal:
@@ -85,7 +87,7 @@ class OR:
         self._args = args
 
     @property
-    def args(self) -> list[Any]:
+    def args(self) -> list:
         return sorted(self._args, key=str)
 
     def rcall(self, expr) -> Self:
@@ -120,7 +122,7 @@ class AND:
         return OR(*[~arg for arg in self._args])
 
     @property
-    def args(self) -> list[Any]:
+    def args(self) -> list:
         return sorted(self._args, key=str)
 
     def rcall(self, expr) -> Self:
@@ -325,7 +327,7 @@ class CNF:
         self.add_clauses(other.clauses)
         return self
 
-    def all_predicates(self) -> set[Any]:
+    def all_predicates(self) -> set:
         predicates = set()
         for c in self.clauses:
             predicates |= {arg.lit for arg in c}
@@ -383,7 +385,7 @@ class CNF:
         return expr
 
     @classmethod
-    def CNF_to_cnf(cls, cnf) ->     sympy.core.logic.And:
+    def CNF_to_cnf(cls, cnf) ->     And:
         """
         Converts CNF object to SymPy's boolean expression
         retaining the form of expression.
@@ -413,7 +415,7 @@ class EncodedCNF:
         self.data = [self.encode(clause) for clause in cnf.clauses]
 
     @property
-    def symbols(self) -> list[Any]:
+    def symbols(self) -> list:
         return self._symbols
 
     @property

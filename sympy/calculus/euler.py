@@ -9,10 +9,9 @@ from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.core.sympify import sympify
 from sympy.utilities.iterables import iterable
-from typing import Any
 
 
-def euler_equations(L, funcs=(), vars=()) -> list[Any]:
+def euler_equations(L, funcs=(), vars=()) -> list:
     r"""
     Find the Euler-Lagrange equations [1]_ for a given Lagrangian.
 

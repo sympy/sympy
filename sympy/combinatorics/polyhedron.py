@@ -5,7 +5,6 @@ from sympy.sets import FiniteSet
 from sympy.utilities.iterables import (minlex, unflatten, flatten)
 from sympy.utilities.misc import as_int
 import sympy.sets.sets
-from typing import Any
 from typing_extensions import Self
 
 rmul = Perm.rmul
@@ -402,7 +401,7 @@ class Polyhedron(Basic):
         return obj
 
     @property
-    def corners(self) -> tuple[Any, ...] | Basic:
+    def corners(self) -> tuple | Basic:
         """
         Get the corners of the Polyhedron.
 
@@ -454,7 +453,7 @@ class Polyhedron(Basic):
         return [corners.index(c) for c in self.corners]
 
     @property
-    def cyclic_form(self) -> list[Any]:
+    def cyclic_form(self) -> list:
         """Return the indices of the corners in cyclic notation.
 
         The indices are given relative to the original position of corners.

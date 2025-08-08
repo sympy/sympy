@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Any, Literal, TYPE_CHECKING, ClassVar
+from typing import Any, TYPE_CHECKING, ClassVar
 
 from collections import defaultdict
 from functools import reduce
@@ -185,7 +185,7 @@ class Mul(Expr, AssocOp):
         def args(self) -> tuple[Expr, ...]:
             ...
 
-    def could_extract_minus_sign(self) -> Literal[False]:
+    def could_extract_minus_sign(self) -> bool:
         if self == (-self):
             return False  # e.g. zoo*x == -zoo*x
         c = self.args[0]
@@ -767,7 +767,7 @@ class Mul(Expr, AssocOp):
         return p
 
     @classmethod
-    def class_key(cls) -> tuple[Literal[3], Literal[0], str]:
+    def class_key(cls) -> tuple[int, int, str]:
         return 3, 0, cls.__name__
 
     def _eval_evalf(self, prec):
@@ -833,7 +833,7 @@ class Mul(Expr, AssocOp):
             return args[0], self._new_rawargs(*args[1:])
 
     @cacheit
-    def as_coeff_mul(self, *deps, rational=True, **kwargs) -> tuple[Any | Self, tuple[Any, ...]] | tuple[Expr, tuple[()]] | tuple[Any, tuple[Any | Mul]] | tuple[Any, tuple[Expr]]:
+    def as_coeff_mul(self, *deps, rational=True, **kwargs) -> tuple[Any | Self, tuple] | tuple[Expr, tuple[()]] | tuple[Any, tuple[Any | Mul]] | tuple[Any, tuple[Expr]]:
         if deps:
             l1, l2 = sift(self.args, lambda x: x.has(*deps), binary=True)
             return self._new_rawargs(*l2), tuple(l1)
@@ -1038,7 +1038,7 @@ class Mul(Expr, AssocOp):
             return terms[0].matches(newexpr, repl_dict)
         return
 
-    def matches(self, expr, repl_dict=None, old=False) -> dict[Any, Any] | None:
+    def matches(self, expr, repl_dict=None, old=False) -> dict | None:
         expr = sympify(expr)
         if self.is_commutative and expr.is_commutative:
             return self._matches_commutative(expr, repl_dict, old)

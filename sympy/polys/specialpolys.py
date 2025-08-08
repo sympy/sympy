@@ -1,5 +1,5 @@
 """Functions for generating interesting polynomials, e.g. for benchmarking. """
-
+from __future__ import annotations
 
 from sympy.core import Add, Mul, Symbol, sympify, Dummy, symbols
 from sympy.core.containers import Tuple
@@ -18,9 +18,10 @@ from sympy.polys.polyclasses import DMP
 from sympy.polys.polytools import Poly, PurePoly
 from sympy.polys.polyutils import _analyze_gens
 from sympy.utilities import subsets, public, filldedent
-from sympy.series.order import Order
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
+if TYPE_CHECKING:
+    from sympy.series.order import Order
 
 @public
 def swinnerton_dyer_poly(n, x=None, polys=False):
@@ -193,7 +194,9 @@ def fateman_poly_F_1(n) -> tuple[Any, Any, Any]:
     return F, G, H
 
 
-def dmp_fateman_poly_F_1(n, K) -> tuple[Any | list[Any] | list[list[Any]], Any | list[Any] | list[list[Any]], list[list[Any]] | Any | list[Any]]:
+def dmp_fateman_poly_F_1(
+    n, K
+) -> tuple[Any | list | list[list], Any | list | list[list], list[list] | Any | list]:
     """Fateman's GCD benchmark: trivial GCD """
     u = [K(1), K(0)]
 
@@ -239,7 +242,9 @@ def fateman_poly_F_2(n) -> tuple[Any, Any, Any]:
     return H*F, H*G, H
 
 
-def dmp_fateman_poly_F_2(n, K) -> tuple[Any | list[Any] | list[list[Any]], Any | list[Any] | list[list[Any]], Any | list[list[Any]]]:
+def dmp_fateman_poly_F_2(
+    n, K
+) -> tuple[Any | list | list[list], Any | list | list[list], Any | list[list]]:
     """Fateman's GCD benchmark: linearly dense quartic inputs """
     u = [K(1), K(0)]
 
@@ -276,7 +281,9 @@ def fateman_poly_F_3(n) -> tuple[Any, Any, Any]:
     return H*F, H*G, H
 
 
-def dmp_fateman_poly_F_3(n, K) -> tuple[Any | list[Any] | list[list[Any]], Any | list[Any] | list[list[Any]], Any | list[list[Any]]]:
+def dmp_fateman_poly_F_3(
+    n, K
+) -> tuple[Any | list | list[list], Any | list | list[list], Any | list[list]]:
     """Fateman's GCD benchmark: sparse inputs (deg f ~ vars f) """
     u = dup_from_raw_dict({n + 1: K.one}, K)
 

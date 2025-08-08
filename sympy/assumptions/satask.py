@@ -107,7 +107,7 @@ def check_satisfiability(prop, _prop, factbase) -> bool | None:
         raise ValueError("Inconsistent assumptions")
 
 
-def extract_predargs(proposition, assumptions=None, context=None) -> set[Any]:
+def extract_predargs(proposition, assumptions=None, context=None) -> set:
     """
     Extract every expression in the argument of predicates from *proposition*,
     *assumptions* and *context*.
@@ -164,7 +164,7 @@ def extract_predargs(proposition, assumptions=None, context=None) -> set[Any]:
             exprs.add(key)
     return exprs
 
-def find_symbols(pred) -> set[Any]:
+def find_symbols(pred) -> set:
     """
     Find every :obj:`~.Symbol` in *pred*.
 

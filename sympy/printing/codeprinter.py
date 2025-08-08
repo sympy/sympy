@@ -1,7 +1,7 @@
 from __future__ import annotations
-from typing import Any
+from typing import Any, TYPE_CHECKING
 
-from functools import _Wrapped, wraps
+from functools import wraps
 
 from sympy.core import Add, Mul, Pow, S, sympify, Float
 from sympy.core.basic import Basic
@@ -14,6 +14,8 @@ from sympy.functions.elementary.complexes import re
 from sympy.printing.str import StrPrinter
 from sympy.printing.precedence import precedence, PRECEDENCE
 
+if TYPE_CHECKING:
+    from functools import _Wrapped
 
 class requires:
     """ Decorator for registering requirements on print methods. """
@@ -125,7 +127,9 @@ class CodePrinter(StrPrinter):
         return expr.replace(re, lambda arg: arg if isinstance(
             arg, UnevaluatedExpr) and arg.args[0].is_real else re(arg))
 
-    def doprint(self, expr, assign_to=None) -> str | tuple[set[tuple[Any, str]], set[Any], str]:
+    def doprint(
+        self, expr, assign_to=None
+    ) -> str | tuple[set[tuple[Any, str]], set, str]:
         """
         Print the expression as code.
 
@@ -784,7 +788,9 @@ def print_ccode(expr, **settings) -> None:
     """Prints C representation of the given expression."""
     print(ccode(expr, **settings))
 
-def fcode(expr, assign_to=None, **settings) -> str | tuple[set[tuple[Any, str]], set[Any], str]:
+def fcode(
+    expr, assign_to=None, **settings
+) -> str | tuple[set[tuple[Any, str]], set, str]:
     """Converts an expr to a string of fortran code
 
     Parameters

@@ -6,7 +6,7 @@ from collections.abc import Generator
 from typing import Any
 
 
-def symmetric(n) -> Generator[Permutation, Any, None]:
+def symmetric(n) -> Generator[Permutation]:
     """
     Generates the symmetric group of order n, Sn.
 
@@ -20,7 +20,7 @@ def symmetric(n) -> Generator[Permutation, Any, None]:
     yield from (Permutation(perm) for perm in variations(range(n), n))
 
 
-def cyclic(n) -> Generator[Permutation, Any, None]:
+def cyclic(n) -> Generator[Permutation]:
     """
     Generates the cyclic group of order n, Cn.
 
@@ -43,7 +43,7 @@ def cyclic(n) -> Generator[Permutation, Any, None]:
         gen = rotate_left(gen, 1)
 
 
-def alternating(n) -> Generator[Permutation, Any, None]:
+def alternating(n) -> Generator[Permutation]:
     """
     Generates the alternating group of order n, An.
 
@@ -60,7 +60,7 @@ def alternating(n) -> Generator[Permutation, Any, None]:
             yield p
 
 
-def dihedral(n) -> Generator[Permutation, Any, None]:
+def dihedral(n) -> Generator[Permutation]:
     """
     Generates the dihedral group of order 2n, Dn.
 
@@ -117,7 +117,7 @@ def rubik_cube_generators() -> list[Permutation]:
     return [Permutation([[i - 1 for i in xi] for xi in x], size=48) for x in a]
 
 
-def rubik(n) -> list[Any]:
+def rubik(n) -> list:
     """Return permutations for an nxn Rubik's cube.
 
     Permutations returned are for rotation of each of the slice

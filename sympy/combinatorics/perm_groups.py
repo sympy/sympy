@@ -23,8 +23,10 @@ from collections.abc import Generator
 from sympy.combinatorics.fp_groups import FpGroup
 from sympy.combinatorics.pc_groups import PolycyclicGroup
 from sympy.core.function import UndefinedFunction
-from typing import Any, Literal
-from typing_extensions import Self
+from typing import Any, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from typing_extensions import Self
 
 rmul = Permutation.rmul_with_af
 _af_new = Permutation._af_new
@@ -446,7 +448,7 @@ class PermutationGroup(Basic):
         return rep
 
     @property
-    def base(self) -> list[Any]:
+    def base(self) -> list:
         r"""Return a base from the Schreier-Sims algorithm.
 
         Explanation
@@ -615,7 +617,7 @@ class PermutationGroup(Basic):
         return base_new, strong_gens_new
 
     @property
-    def basic_orbits(self) -> list[list[Any]]:
+    def basic_orbits(self) -> list[list]:
         r"""
         Return the basic orbits relative to a base and strong generating set.
 
@@ -647,7 +649,7 @@ class PermutationGroup(Basic):
         return self._basic_orbits
 
     @property
-    def basic_stabilizers(self) -> list[Any]:
+    def basic_stabilizers(self) -> list:
         r"""
         Return a chain of stabilizers relative to a base and strong generating
         set.
@@ -728,7 +730,7 @@ class PermutationGroup(Basic):
             self.schreier_sims()
         return self._transversals
 
-    def composition_series(self) -> list[Any]:
+    def composition_series(self) -> list:
         r"""
         Return the composition series for a group as a list
         of permutation groups.
@@ -802,7 +804,12 @@ class PermutationGroup(Basic):
         series.append(der[-1])
         return series
 
-    def coset_transversal(self, H) -> list[Any | Basic | list[Any] |     sympy.combinatorics.permutations.Permutation] | list[    sympy.combinatorics.permutations.Permutation]:
+    def coset_transversal(
+        self, H
+    ) -> (
+        list[Any | Basic | list | sympy.combinatorics.permutations.Permutation]
+        | list[sympy.combinatorics.permutations.Permutation]
+    ):
         """Return a transversal of the right cosets of self by its subgroup H
         using the second method described in [1], Subsection 4.6.7
 
@@ -892,7 +899,7 @@ class PermutationGroup(Basic):
             return x
         return step(0, g)
 
-    def coset_table(self, H) -> list[Any] | None:
+    def coset_table(self, H) -> list | None:
         """Return the standardised (right) coset table of self in H as
         a list of lists.
         """
@@ -1140,7 +1147,7 @@ class PermutationGroup(Basic):
         res = self.normal_closure(commutators)
         return res
 
-    def coset_factor(self, g, factor_index=False) -> list[Any]:
+    def coset_factor(self, g, factor_index=False) -> list:
         """Return ``G``'s (self's) coset factorization of ``g``
 
         Explanation
@@ -1231,7 +1238,7 @@ class PermutationGroup(Basic):
         factors = [tr[i][factors[i]] for i in range(len(base))]
         return factors
 
-    def generator_product(self, g, original=False) -> list[Any]:
+    def generator_product(self, g, original=False) -> list:
         r'''
         Return a list of strong generators `[s1, \dots, sn]`
         s.t `g = sn \times \dots \times s1`. If ``original=True``, make the
@@ -1319,7 +1326,9 @@ class PermutationGroup(Basic):
             b = b*len(transversals[i])
         return rank
 
-    def coset_unrank(self, rank, af=False) -> list[Any] |     sympy.combinatorics.permutations.Permutation | None:
+    def coset_unrank(
+        self, rank, af=False
+    ) -> list | sympy.combinatorics.permutations.Permutation | None:
         """unrank using Schreier-Sims representation
 
         coset_unrank is the inverse operation of coset_rank
@@ -1385,7 +1394,9 @@ class PermutationGroup(Basic):
         return _af_new(list(range(self.degree)))
 
     @property
-    def elements(self) -> set[Any | Basic | list[Any] |     sympy.combinatorics.permutations.Permutation]:
+    def elements(
+        self,
+    ) -> set[Any | Basic | list | sympy.combinatorics.permutations.Permutation]:
         """Returns all the elements of the permutation group as a list
 
         Examples
@@ -1498,8 +1509,15 @@ class PermutationGroup(Basic):
         G2 = self.normal_closure(cms)
         return G2
 
-    def generate(self, method="coset", af=False) -> (
-        Generator[Any | Basic | list[Any] |     sympy.combinatorics.permutations.Permutation, Any, None] | Generator[list[int] |     sympy.combinatorics.permutations.Permutation | list[Any], Any, None]
+    def generate(
+        self, method="coset", af=False
+    ) -> (
+        Generator[
+            Any | Basic | list | sympy.combinatorics.permutations.Permutation, Any, None
+        ]
+        | Generator[
+            list[int] | sympy.combinatorics.permutations.Permutation | list, Any, None
+        ]
     ):
         """Return iterator to generate the elements of the group.
 
@@ -1553,7 +1571,7 @@ class PermutationGroup(Basic):
         else:
             raise NotImplementedError('No generation defined for %s' % method)
 
-    def generate_dimino(self, af=False) -> Generator[list[int] |     sympy.combinatorics.permutations.Permutation | list[Any], Any, None]:
+    def generate_dimino(self, af=False) -> Generator[list[int] | sympy.combinatorics.permutations.Permutation | list]:
         """Yield group elements using Dimino's algorithm.
 
         If ``af == True`` it yields the array form of the permutations.
@@ -1611,7 +1629,7 @@ class PermutationGroup(Basic):
                                 N.append(ap)
         self._order = len(element_list)
 
-    def generate_schreier_sims(self, af=False) -> Generator[Any | Basic | list[Any] |     sympy.combinatorics.permutations.Permutation, Any, None]:
+    def generate_schreier_sims(self, af=False) -> Generator[Any | Basic | list | sympy.combinatorics.permutations.Permutation]:
         """Yield group elements using the Schreier-Sims representation
         in coset_rank order
 
@@ -1813,7 +1831,7 @@ class PermutationGroup(Basic):
                     return False
         return True
 
-    def abelian_invariants(self) -> list[Any]:
+    def abelian_invariants(self) -> list:
         """
         Returns the abelian invariants for the given group.
         Let ``G`` be a nontrivial finite abelian group. Then G is isomorphic to
@@ -2188,7 +2206,7 @@ class PermutationGroup(Basic):
         self._is_primitive = True
         return True
 
-    def minimal_blocks(self, randomized=True) -> list[Any] | Literal[False]:
+    def minimal_blocks(self, randomized=True) -> list | bool:
         '''
         For a transitive group, return the list of all minimal
         block systems. If a group is intransitive, return `False`.
@@ -2498,7 +2516,7 @@ class PermutationGroup(Basic):
         return res
 
     @property
-    def max_div(self) -> Literal[1] | None:
+    def max_div(self) -> int | None:
         """Maximum proper divisor of the degree of a permutation group.
 
         Explanation
@@ -2535,7 +2553,7 @@ class PermutationGroup(Basic):
                 self._max_div = d
                 return d
 
-    def minimal_block(self, points) -> list[Any] | Literal[False]:
+    def minimal_block(self, points) -> list | bool:
         r"""For a transitive group, finds the block system generated by
         ``points``.
 
@@ -2624,7 +2642,7 @@ class PermutationGroup(Basic):
         new_reps = {}
         return [new_reps.setdefault(r, i) for i, r in enumerate(parents)]
 
-    def conjugacy_class(self, x) -> set[Any]:
+    def conjugacy_class(self, x) -> set:
         r"""Return the conjugacy class of an element in the group.
 
         Explanation
@@ -2816,7 +2834,7 @@ class PermutationGroup(Basic):
         elif hasattr(other, 'array_form'):
             return self.normal_closure(PermutationGroup([other]))
 
-    def orbit(self, alpha, action='tuples') -> set[Any] | set[tuple[Any, ...]] | None:
+    def orbit(self, alpha, action="tuples") -> set | set[tuple] | None:
         r"""Compute the orbit of alpha `\{g(\alpha) | g \in G\}` as a set.
 
         Explanation
@@ -2854,7 +2872,7 @@ class PermutationGroup(Basic):
         """
         return _orbit(self.degree, self.generators, alpha, action)
 
-    def orbit_rep(self, alpha, beta, schreier_vector=None) ->     sympy.combinatorics.permutations.Permutation | Literal[False]:
+    def orbit_rep(self, alpha, beta, schreier_vector=None) ->     sympy.combinatorics.permutations.Permutation | bool:
         """Return a group element which sends ``alpha`` to ``beta``.
 
         Explanation
@@ -2894,14 +2912,20 @@ class PermutationGroup(Basic):
         else:
             return _af_new(list(range(self._degree)))
 
-    def orbit_transversal(self, alpha, pairs=False) -> (
-        list[tuple[Any,     sympy.combinatorics.permutations.Permutation]]
+    def orbit_transversal(
+        self, alpha, pairs=False
+    ) -> (
+        list[tuple[Any, sympy.combinatorics.permutations.Permutation]]
         | list[tuple[Any, list[int]]]
-        | tuple[list[tuple[Any,     sympy.combinatorics.permutations.Permutation]] | list[tuple[Any, list[int]]], dict[Any, list[Any]]]
+        | tuple[
+            list[tuple[Any, sympy.combinatorics.permutations.Permutation]]
+            | list[tuple[Any, list[int]]],
+            dict[Any, list],
+        ]
         | list[list[int]]
-        | tuple[list[list[int]], dict[Any, list[Any]]]
-        | list[    sympy.combinatorics.permutations.Permutation]
-        | tuple[list[    sympy.combinatorics.permutations.Permutation], dict[Any, list[Any]]]
+        | tuple[list[list[int]], dict[Any, list]]
+        | list[sympy.combinatorics.permutations.Permutation]
+        | tuple[list[sympy.combinatorics.permutations.Permutation], dict[Any, list]]
     ):
         r"""Computes a transversal for the orbit of ``alpha`` as a set.
 
@@ -2931,7 +2955,7 @@ class PermutationGroup(Basic):
         """
         return _orbit_transversal(self._degree, self.generators, alpha, pairs)
 
-    def orbits(self, rep=False) -> list[Any]:
+    def orbits(self, rep=False) -> list:
         """Return the orbits of ``self``, ordered according to lowest element
         in each orbit.
 
@@ -3434,7 +3458,9 @@ class PermutationGroup(Basic):
             result = rmul(result, p)
         return result
 
-    def random(self, af=False) -> list[Any] |     sympy.combinatorics.permutations.Permutation | None:
+    def random(
+        self, af=False
+    ) -> list | sympy.combinatorics.permutations.Permutation | None:
         """Return a random group element
         """
         rank = randrange(self.order())
@@ -3565,11 +3591,13 @@ class PermutationGroup(Basic):
         self._basic_orbits = [sorted(x) for x in basic_orbits]
         self._transversal_slp = slps
 
-    def schreier_sims_incremental(self, base=None, gens=None, slp_dict=False) -> (
-        tuple[Any | list[Any], list[Basic] | Any, dict[Basic | Any, list[Basic | Any]]]
-        | tuple[Any | list[Any], list[Basic] | Any]
-        | tuple[Any | list[Any], list[Basic | Any], dict[Any, Any]]
-        | tuple[Any | list[Any], list[Basic | Any]]
+    def schreier_sims_incremental(
+        self, base=None, gens=None, slp_dict=False
+    ) -> (
+        tuple[Any | list, list[Basic] | Any, dict[Basic | Any, list[Basic | Any]]]
+        | tuple[Any | list, list[Basic] | Any]
+        | tuple[Any | list, list[Basic | Any], dict]
+        | tuple[Any | list, list[Basic | Any]]
     ):
         """Extend a sequence of points and generating set to a base and strong
         generating set.
@@ -3755,8 +3783,9 @@ class PermutationGroup(Basic):
         strong_gens.extend([k for k, _ in strong_gens_slp])
         return _base, strong_gens
 
-    def schreier_sims_random(self, base=None, gens=None, consec_succ=10,
-                             _random_prec=None) -> tuple[Any | list[Any], list[Any]]:
+    def schreier_sims_random(
+        self, base=None, gens=None, consec_succ=10, _random_prec=None
+    ) -> tuple[Any | list, list]:
         r"""Randomized Schreier-Sims algorithm.
 
         Explanation
@@ -4773,7 +4802,9 @@ class PermutationGroup(Basic):
 
         return True, rels
 
-    def strong_presentation(self) -> FpGroup | tuple[Any, Any] | tuple[Any | list[Any], Any | list[Any]]:
+    def strong_presentation(
+        self,
+    ) -> FpGroup | tuple[Any, Any] | tuple[Any | list, Any | list]:
         '''
         Return a strong finite presentation of group. The generators
         of the returned group are in the same order as the strong
@@ -4895,7 +4926,9 @@ class PermutationGroup(Basic):
         group = FpGroup(F, rels)
         return simplify_presentation(group)
 
-    def presentation(self, eliminate_gens=True) -> FpGroup | tuple[Any, Any] | tuple[Any | list[Any], Any | list[Any]] | Any:
+    def presentation(
+        self, eliminate_gens=True
+    ) -> FpGroup | tuple[Any, Any] | tuple[Any | list, Any | list] | Any:
         '''
         Return an `FpGroup` presentation of the group.
 
@@ -5465,7 +5498,7 @@ class Coset(Basic):
         """
         return str(self._dir) == '+'
 
-    def as_list(self) -> list[Any]:
+    def as_list(self) -> list:
         """
         Return all the elements of coset in the form of list.
         """

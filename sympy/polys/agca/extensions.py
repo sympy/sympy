@@ -347,7 +347,7 @@ class MonogenicFiniteExtension(Domain):
         rep = self.ring.exquo(f.rep, g.rep)
         return ExtElem(rep % self.mod, self)
 
-    def is_negative(self, a) -> Literal[False]:
+    def is_negative(self, a) -> bool:
         return False
 
     def is_unit(self, a) -> bool | None:

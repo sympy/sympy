@@ -1,4 +1,7 @@
-from sympy.core import Function, S, sympify, NumberKind
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+from sympy.core import S, sympify, NumberKind
 from sympy.utilities.iterables import sift
 from sympy.core.add import Add
 from sympy.core.containers import Tuple
@@ -20,10 +23,12 @@ from sympy.core.logic import fuzzy_and, fuzzy_or, _torf
 from sympy.core.traversal import walk
 from sympy.core.numbers import Integer
 from sympy.logic.boolalg import And, Or
-from sympy.functions.elementary.piecewise import Piecewise
-from sympy.functions.special.delta_functions import Heaviside
-from sympy.series.order import Order
-from typing_extensions import Self
+
+if TYPE_CHECKING:
+    from sympy.functions.elementary.piecewise import Piecewise
+    from sympy.functions.special.delta_functions import Heaviside
+    from sympy.series.order import Order
+    from typing_extensions import Self
 
 
 def _minmax_as_Piecewise(op, *args):

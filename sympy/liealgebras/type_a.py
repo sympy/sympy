@@ -1,6 +1,5 @@
 from sympy.liealgebras.cartan_type import Standard_Cartan
 from sympy.core.backend import eye
-from typing import Any
 from typing_extensions import Self
 
 
@@ -74,7 +73,7 @@ class TypeA(Standard_Cartan):
 
         return self.basic_root(i-1, i)
 
-    def positive_roots(self) -> dict[Any, Any]:
+    def positive_roots(self) -> dict:
         """
         This method generates all the positive roots of
         A_n.  This is half of all of the roots of A_n;

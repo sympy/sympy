@@ -80,7 +80,7 @@ def is_isomorphism_possible(a, b) -> bool:
     return True
 
 
-def field_isomorphism_pslq(a, b) -> list[Any] | None:
+def field_isomorphism_pslq(a, b) -> list | None:
     """Construct field isomorphism using PSLQ algorithm. """
     if not a.root.is_real or not b.root.is_real:
         raise NotImplementedError("PSLQ doesn't support complex coefficients")
@@ -161,7 +161,7 @@ def field_isomorphism_factor(a, b) -> Any | None:
 
 
 @public
-def field_isomorphism(a, b, *, fast=True) -> list[Any] | Any | None:
+def field_isomorphism(a, b, *, fast=True) -> list | Any | None:
     r"""
     Find an embedding of one number field into another.
 
@@ -257,7 +257,9 @@ def _linsolve(p):
 
 
 @public
-def primitive_element(extension, x=None, *, ex=False, polys=False) -> tuple[Any, list[int]] | tuple[Any, list[int], list[Any]]:
+def primitive_element(
+    extension, x=None, *, ex=False, polys=False
+) -> tuple[Any, list[int]] | tuple[Any, list[int], list]:
     r"""
     Find a single generator for a number field given by several generators.
 

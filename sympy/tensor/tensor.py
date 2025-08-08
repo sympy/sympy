@@ -30,7 +30,7 @@ lowered when the tensor is put in canonical form.
 """
 
 from __future__ import annotations
-from typing import Literal, Any
+from typing import Any
 from functools import reduce
 from math import prod
 
@@ -224,7 +224,7 @@ class _IndexStructure(CantSympify):
         return self.indices[:]
 
     @staticmethod
-    def generate_indices_from_free_dum_index_types(free, dum, index_types) -> list[Any]:
+    def generate_indices_from_free_dum_index_types(free, dum, index_types) -> list:
         indices = [None]*(len(free)+2*len(dum))
         for idx, pos in free:
             indices[pos] = idx
@@ -346,7 +346,7 @@ class _IndexStructure(CantSympify):
 
         return _IndexStructure(free, dum, index_types, indices)
 
-    def indices_canon_args(self) -> tuple[Perm, list[Any], list[Any]]:
+    def indices_canon_args(self) -> tuple[Perm, list, list]:
         """
         Returns ``(g, dummies, msym, v)``, the entries of ``canonicalize``
 
@@ -401,7 +401,7 @@ class _IndexStructure(CantSympify):
         return _af_new(g), dummies, msym
 
 
-def components_canon_args(components) -> list[Any]:
+def components_canon_args(components) -> list:
     numtyp = []
     prev = None
     for t in components:
@@ -438,8 +438,9 @@ class _TensorDataLazyEvaluator(CantSympify):
     computed until they are accessed by reading the ``.data`` property
     associated to the tensor expression.
     """
-    _substitutions_dict: dict[Any, Any] = {}
-    _substitutions_dict_tensmul: dict[Any, Any] = {}
+
+    _substitutions_dict = {}
+    _substitutions_dict_tensmul = {}
 
     def __getitem__(self, key) -> (
         Any | Basic | ZeroArray | ArrayTensorProduct | ArrayContraction | PermuteDims |     sympy.Indexed |     sympy.ImmutableDenseNDimArray | None
@@ -833,7 +834,7 @@ class _TensorManager:
         self._comm_i2symbol = {0:0, 1:1, 2:2}
 
     @property
-    def comm(self) -> list[dict[Any, Any]]:
+    def comm(self) -> list[dict]:
         return self._comm
 
     def comm_symbols2i(self, i) -> int:
@@ -1836,7 +1837,7 @@ class TensorHead(Basic):
         return self.args[0].name
 
     @property
-    def index_types(self) -> list[Any]:
+    def index_types(self) -> list:
         return list(self.args[1])
 
     @property
@@ -2502,21 +2503,21 @@ class TensAdd(TensExpr, AssocOp):
         return self.func(*newargs)
 
     @memoize_property
-    def rank(self) -> Literal[0]:
+    def rank(self) -> int:
         if isinstance(self.args[0], TensExpr):
             return self.args[0].rank
         else:
             return 0
 
     @memoize_property
-    def free_args(self) -> list[Any]:
+    def free_args(self) -> list:
         if isinstance(self.args[0], TensExpr):
             return self.args[0].free_args
         else:
             return []
 
     @memoize_property
-    def free_indices(self) -> list[TensorIndex] | set[Any]:
+    def free_indices(self) -> list[TensorIndex] | set:
         if isinstance(self.args[0], TensExpr):
             return self.args[0].get_free_indices()
         else:
@@ -2617,7 +2618,7 @@ class TensAdd(TensExpr, AssocOp):
             new_args = [scalars] + new_args
         return new_args
 
-    def get_indices(self) -> list[Any]:
+    def get_indices(self) -> list:
         indices = []
         for arg in self.args:
             indices.extend([i for i in get_indices(arg) if i not in indices])
@@ -2960,7 +2961,7 @@ class Tensor(TensExpr):
         return set(self._index_structure.get_free_indices())
 
     @property
-    def index_types(self) -> list[Any]:
+    def index_types(self) -> list:
         return self.head.index_types
 
     @property
@@ -3016,18 +3017,18 @@ class Tensor(TensExpr):
         return set(self.args[1].args)
 
     @property
-    def free_in_args(self) -> list[tuple[Any, Any, Literal[0]]]:
+    def free_in_args(self) -> list[tuple[Any, Any, int]]:
         return [(ind, pos, 0) for ind, pos in self.free]
 
     @property
-    def dum_in_args(self) -> list[tuple[Any, Any, Literal[0], Literal[0]]]:
+    def dum_in_args(self) -> list[tuple[Any, Any, int, int]]:
         return [(p1, p2, 0, 0) for p1, p2 in self.dum]
 
     @property
-    def free_args(self) -> list[Any]:
+    def free_args(self) -> list:
         return sorted([x[0] for x in self.free])
 
-    def commutes_with(self, other) -> type[NotImplementedError] | Literal[0]:
+    def commutes_with(self, other) -> type[NotImplementedError] | int:
         """
         :param other:
         :return:
@@ -3719,11 +3720,11 @@ class TensMul(TensExpr, AssocOp):
         return arg_offset
 
     @property
-    def free_args(self) -> list[Any]:
+    def free_args(self) -> list:
         return sorted([x[0] for x in self.free])
 
     @property
-    def components(self) -> list[Any]:
+    def components(self) -> list:
         return self._get_components_from_args(self.args)
 
     @property
@@ -3816,7 +3817,7 @@ class TensMul(TensExpr, AssocOp):
     def _replace_indices(self, repl: dict[TensorIndex, TensorIndex]) -> TensExpr:
         return self.func(*[arg._replace_indices(repl) if isinstance(arg, TensExpr) else arg for arg in self.args])
 
-    def split(self) -> list[Self] | list[Any]:
+    def split(self) -> list[Self] | list:
         """
         Returns a list of tensors, whose product is ``self``.
 
@@ -4555,7 +4556,7 @@ class TensorElement(TensExpr):
         return [(index, i) for i, index in enumerate(self.get_free_indices())]
 
     @property
-    def dum(self) -> list[Any]:
+    def dum(self) -> list:
         # TODO: inherit dummies from expr
         return []
 
@@ -4756,8 +4757,7 @@ class WildTensor(Tensor):
 
         return obj
 
-
-    def matches(self, expr, repl_dict=None, old=False) -> dict[Any, Any] | None:
+    def matches(self, expr, repl_dict=None, old=False) -> dict | None:
         if not isinstance(expr, TensExpr) and expr != S(1):
             return None
 
@@ -4926,7 +4926,7 @@ class WildTensorIndex(TensorIndex):
                 (not self.is_up), self.ignore_updown)
         return t1
 
-    def matches(self, expr, repl_dict=None, old=False) -> dict[Any, Any] | None:
+    def matches(self, expr, repl_dict=None, old=False) -> dict | None:
         if not isinstance(expr, TensorIndex):
             return None
         if self.tensor_index_type != expr.tensor_index_type:
@@ -5083,7 +5083,7 @@ def riemann_cyclic(t2) -> TensMul | TensExpr | Basic | Expr | TensAdd:
         return canon_bp(t3)
 
 
-def get_lines(ex, index_type) -> tuple[list[Any], list[Any], list[int]]:
+def get_lines(ex, index_type) -> tuple[list, list, list[int]]:
     """
     Returns ``(lines, traces, rest)`` for an index type,
     where ``lines`` is the list of list of positions of a matrix line,
@@ -5214,7 +5214,7 @@ def get_indices(t) -> tuple[()]:
         return ()
     return t.get_indices()
 
-def get_dummy_indices(t) -> tuple[()] | list[Any]:
+def get_dummy_indices(t) -> tuple[()] | list:
     if not isinstance(t, TensExpr):
         return ()
     inds = t.get_indices()

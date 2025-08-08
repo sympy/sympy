@@ -21,7 +21,7 @@ class DotProdSimpState(local):
 _dotprodsimp_state = DotProdSimpState()
 
 @contextmanager
-def dotprodsimp(x) -> Generator[None, Any, None]:
+def dotprodsimp(x) -> Generator[None]:
     old = _dotprodsimp_state.state
 
     try:
@@ -31,9 +31,9 @@ def dotprodsimp(x) -> Generator[None, Any, None]:
         _dotprodsimp_state.state = old
 
 @overload
-def _dotprodsimp(expr: Expr, withsimp: Literal[False] = False) -> Expr: ...
+def _dotprodsimp(expr: Expr, withsimp: bool = False) -> Expr: ...
 @overload
-def _dotprodsimp(expr: Expr, withsimp: Literal[True]) -> tuple[Expr, bool]: ...
+def _dotprodsimp(expr: Expr, withsimp: bool) -> tuple[Expr, bool]: ...
 
 def _dotprodsimp(expr: Expr, withsimp: bool = False) -> Expr | tuple[Expr, bool]:
     """Wrapper for simplify.dotprodsimp to avoid circular imports."""

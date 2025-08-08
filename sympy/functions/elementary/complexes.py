@@ -1,11 +1,13 @@
 from __future__ import annotations
 
-from typing import Any, Literal, TYPE_CHECKING, overload
+from typing import Any, TYPE_CHECKING, overload
 
-from sympy.core import S, Add, Mul, sympify, Symbol, Dummy, Basic
+from sympy.core import S, Add, Mul, sympify
+from sympy.core.symbol import Symbol, Dummy
+from sympy.core.basic import Basic
 from sympy.core.expr import Expr
 from sympy.core.exprtools import factor_terms
-from sympy.core.function import (Function, UndefinedFunction, DefinedFunction, Derivative, ArgumentIndexError,
+from sympy.core.function import (UndefinedFunction, DefinedFunction, Derivative, ArgumentIndexError,
     AppliedUndef, expand_mul, PoleError)
 from sympy.core.logic import fuzzy_not, fuzzy_or
 from sympy.core.numbers import pi, I, oo
@@ -13,16 +15,14 @@ from sympy.core.power import Pow
 from sympy.core.relational import Equality, Ne, Relational, Eq
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
-import sympy.core.basic
-import sympy.core.symbol
-from sympy.integrals.integrals import Integral
-from sympy.series.order import Order
-from typing_extensions import Self
 
 if TYPE_CHECKING:
     from typing import TypeVar
+    from sympy.integrals.integrals import Integral
+    from sympy.series.order import Order
     from sympy.algebras.quaternion import Quaternion
     from sympy.matrices.matrixbase import MatrixBase
+    from typing_extensions import Self
     Tmat = TypeVar('Tmat', bound=MatrixBase)
 
 ###############################################################################
@@ -1196,7 +1196,7 @@ class periodic_argument(DefinedFunction):
         return unbranched
 
     @classmethod
-    def eval(cls, ar, period) -> type[UndefinedFunction] | Literal[0] | None:
+    def eval(cls, ar, period) -> type[UndefinedFunction] | int | None:
         # Our strategy is to evaluate the argument on the Riemann surface of the
         # logarithm, and then reduce.
         # NOTE evidently this means it is a rather bad idea to use this with
@@ -1399,12 +1399,12 @@ def _polarify(eq, lift, pause=False):
 
 def polarify(eq, subs=True, lift=False) -> (
     type[UndefinedFunction]
-    | sympy.core.symbol.Symbol
+    | Symbol
     | Equality
     | Relational
     | Ne
     | Integral
-    | tuple[Any | sympy.core.symbol.Symbol | sympy.core.basic.Basic | Equality | Relational | Ne | Integral, dict[sympy.core.symbol.Dummy, Any | sympy.core.symbol.Symbol | sympy.core.basic.Basic]]
+    | tuple[Any | Symbol | sympy.core.basic.Basic | Equality | Relational | Ne | Integral, dict[Dummy, Any | Symbol | sympy.core.basic.Basic]]
 ):
     """
     Turn all numbers in eq into their polar equivalents (under the standard

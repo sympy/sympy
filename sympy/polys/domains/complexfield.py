@@ -153,19 +153,19 @@ class ComplexField(Field, CharacteristicZero, SimpleDomain):
         """Returns an exact domain associated with ``self``. """
         return QQ_I
 
-    def is_negative(self, element) -> Literal[False]:
+    def is_negative(self, element) -> bool:
         """Returns ``False`` for any ``ComplexElement``. """
         return False
 
-    def is_positive(self, element) -> Literal[False]:
+    def is_positive(self, element) -> bool:
         """Returns ``False`` for any ``ComplexElement``. """
         return False
 
-    def is_nonnegative(self, element) -> Literal[False]:
+    def is_nonnegative(self, element) -> bool:
         """Returns ``False`` for any ``ComplexElement``. """
         return False
 
-    def is_nonpositive(self, element) -> Literal[False]:
+    def is_nonpositive(self, element) -> bool:
         """Returns ``False`` for any ``ComplexElement``. """
         return False
 

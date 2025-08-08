@@ -27,7 +27,7 @@ _default_config = {
 _current_config = {}
 
 @contextmanager
-def using(**kwargs) -> Generator[None, Any, None]:
+def using(**kwargs) -> Generator[None]:
     for k, v in kwargs.items():
         setup(k, v)
 

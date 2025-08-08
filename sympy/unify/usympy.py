@@ -73,7 +73,7 @@ def rebuild(s) -> Any | sympy.Basic:
     """
     return construct(deconstruct(s))
 
-def unify(x, y, s=None, variables=(), **kwargs) -> Generator[dict[Any, Any], Any, None]:
+def unify(x, y, s=None, variables=(), **kwargs) -> Generator[dict]:
     """ Structural unification of two expressions/patterns.
 
     Examples

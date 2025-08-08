@@ -40,7 +40,7 @@ from sympy.geometry.entity import GeometrySet
 from sympy.geometry.line import Line, Line2D, Line3D, Segment, Segment2D, Segment3D
 from sympy.geometry.point import Point, Point2D, Point3D
 from types import NotImplementedType
-from typing import Any, Literal
+from typing import Any
 from typing_extensions import Self
 
 x, y = [Dummy('ellipse_dummy', real=True) for i in range(2)]
@@ -187,7 +187,7 @@ class Ellipse(GeometrySet):
         ).format(2. * scale_factor, fill_color, c.x, c.y, h, v)
 
     @property
-    def ambient_dimension(self) -> Literal[2]:
+    def ambient_dimension(self) -> int:
         return 2
 
     @property
@@ -620,7 +620,7 @@ class Ellipse(GeometrySet):
         """
         return self.args[1]
 
-    def intersection(self, o) -> list[Point] | list[Any] | Self:
+    def intersection(self, o) -> list[Point] | list | Self:
         """The intersection of this ellipse and another geometrical entity
         `o`.
 
@@ -864,7 +864,7 @@ class Ellipse(GeometrySet):
             return b
         return self.vradius
 
-    def normal_lines(self, p, prec=None) -> list[Any] | list[Line | Line2D | Line3D | None]:
+    def normal_lines(self, p, prec=None) -> list | list[Line | Line2D | Line3D | None]:
         """Normal lines between `p` and the ellipse.
 
         Parameters
@@ -1056,7 +1056,7 @@ class Ellipse(GeometrySet):
         """
         return Circle(self.center, sqrt(self.hradius**2 + self.vradius**2))
 
-    def plot_interval(self, parameter='t') -> list[Any]:
+    def plot_interval(self, parameter="t") -> list:
         """The plot interval for the default geometric plot of the Ellipse.
 
         Parameters
@@ -1229,7 +1229,7 @@ class Ellipse(GeometrySet):
         v = self.vradius
         return self.func(c.scale(x, y), hradius=h*x, vradius=v*y)
 
-    def tangent_lines(self, p) -> list[Any] | list[Line | Line2D | Line3D | None]:
+    def tangent_lines(self, p) -> list | list[Line | Line2D | Line3D | None]:
         """Tangent lines between `p` and the ellipse.
 
         If `p` is on the ellipse, returns the tangent line through point `p`.
@@ -1336,7 +1336,7 @@ class Ellipse(GeometrySet):
         return self.args[2]
 
 
-    def second_moment_of_area(self, point=None) -> tuple[Any, Any, Literal[0]] | tuple[Any, Any, Any]:
+    def second_moment_of_area(self, point=None) -> tuple[Any, Any, int] | tuple[Any, Any, Any]:
         """Returns the second moment and product moment area of an ellipse.
 
         Parameters
@@ -1655,7 +1655,7 @@ class Circle(Ellipse):
         t2 = (y - self.center.y)**2
         return t1 + t2 - self.major**2
 
-    def intersection(self, o) -> list[Point] | list[Any] | Ellipse:
+    def intersection(self, o) -> list[Point] | list | Ellipse:
         """The intersection of this circle with another geometrical entity.
 
         Parameters

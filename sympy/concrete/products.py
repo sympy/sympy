@@ -254,7 +254,7 @@ class Product(ExprWithIntLimits):
         if self.has_finite_limits and self.function.is_finite:
             return True
 
-    def doit(self, **hints) -> tuple[Any, ...] | Self | Basic | Equality | Order | Relational | Ne | Any:
+    def doit(self, **hints) -> tuple | Self | Basic | Equality | Order | Relational | Ne | Any:
         # first make sure any definite limits have product
         # variables with matching assumptions
         reps = {}

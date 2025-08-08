@@ -2,7 +2,6 @@
 
 from sympy.core import Basic
 import sympy.core.basic
-from typing import Any
 from typing_extensions import Self
 
 
@@ -220,7 +219,7 @@ class EPath:
 
         return _apply(self._epath, expr, _func)
 
-    def select(self, expr) -> list[Any]:
+    def select(self, expr) -> list:
         """
         Retrieve parts of an expression selected by a path.
 
@@ -277,7 +276,9 @@ class EPath:
         return result
 
 
-def epath(path, expr=None, func=None, args=None, kwargs=None) -> EPath | list[Any] | sympy.core.basic.Basic:
+def epath(
+    path, expr=None, func=None, args=None, kwargs=None
+) -> EPath | list | sympy.core.basic.Basic:
     r"""
     Manipulate parts of an expression selected by a path.
 

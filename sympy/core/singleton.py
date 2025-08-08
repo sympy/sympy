@@ -192,7 +192,7 @@ class SingletonRegistry(Registry):
         del self._classes_to_install[name]
         return value_to_install
 
-    def __repr__(self) -> Literal["S"]:
+    def __repr__(self) -> str:
         return "S"
 
 S = SingletonRegistry()

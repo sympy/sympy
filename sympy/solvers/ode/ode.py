@@ -248,7 +248,7 @@ from sympy.functions.combinatorial.factorials import factorial
 from sympy.integrals.integrals import Integral
 from sympy.polys import (Poly, terms_gcd, PolynomialError, lcm)
 from sympy.polys.polytools import cancel
-from sympy.series import Order
+from sympy.series.order import Order
 from sympy.series.series import series
 from sympy.simplify import (collect, logcombine, powsimp,  # type: ignore
     separatevars, simplify, cse)
@@ -261,7 +261,7 @@ from sympy.solvers.deutils import _preprocess, ode_order, _desolve
 import sympy.core.add
 from collections.abc import Generator
 from sympy.core.basic import Basic
-from typing import Any, Literal, NoReturn
+from typing import Any, NoReturn
 
 
 #: This is a list of hints in the order that they should be preferred by
@@ -357,15 +357,25 @@ def iter_numbered_constants(eq, start=1, prefix='C') -> Generator[Symbol | Any, 
     return numbered_symbols(start=start, prefix=prefix, exclude=atom_set)
 
 
-def dsolve(eq, func=None, hint="default", simplify=True,
-    ics= None, xi=None, eta=None, x0=0, n=6, **kwargs) -> (
-    list[Any]
+def dsolve(
+    eq,
+    func=None,
+    hint="default",
+    simplify=True,
+    ics=None,
+    xi=None,
+    eta=None,
+    x0=0,
+    n=6,
+    **kwargs,
+) -> (
+    list
     | Any
-    | dict[Any, Any]
+    | dict
     | Equality
     | Basic
-    | list[list[Any] | Any]
-    | list[list[list[Any] | Any] | Any]
+    | list[list | Any]
+    | list[list[list | Any] | Any]
     | list[Equality]
 ):
     r"""
@@ -1364,7 +1374,7 @@ def classify_sysode(eq, funcs=None, **kwargs) -> dict[str, int]:
     return matching_hints
 
 
-def check_linear_2eq_order1(eq, func, func_coef) -> Literal["type6", "type7"] | None:
+def check_linear_2eq_order1(eq, func, func_coef) -> str | None:
     x = func[0].func
     y = func[1].func
     fc = func_coef
@@ -1419,7 +1429,7 @@ def check_linear_2eq_order1(eq, func, func_coef) -> Literal["type6", "type7"] | 
             else:
                 # Equations for type 7 are Eq(diff(x(t),t), f(t)*x(t) + g(t)*y(t)) and Eq(diff(y(t),t), h(t)*x(t) + p(t)*y(t))
                 return "type7"
-def check_nonlinear_2eq_order1(eq, func, func_coef) -> Literal["type5", "type1", "type2", "type3", "type4"] | None:
+def check_nonlinear_2eq_order1(eq, func, func_coef) -> str | None:
     t = list(list(eq[0].atoms(Derivative))[0].atoms(Symbol))[0]
     f = Wild('f')
     g = Wild('g')
@@ -1580,13 +1590,15 @@ def check_nonlinear_3eq_order2(eq, func, func_coef) -> None:
 
 
 @vectorize(0)
-def odesimp(ode, eq, func, hint) -> (
+def odesimp(
+    ode, eq, func, hint
+) -> (
     list[Eq | Any | Relational | Ne]
-    | list[list[Any] | Any]
+    | list[list | Any]
     | Eq
     | Relational
     | Ne
-    | list[list[Eq | Any | Relational | Ne] | list[list[Any] | Any] | Any]
+    | list[list[Eq | Any | Relational | Ne] | list[list | Any] | Any]
 ):
     r"""
     Simplifies solutions of ODEs, including trying to solve for ``func`` and
@@ -1943,7 +1955,9 @@ def __remove_linear_redundancies(expr, Cs):
         return _recursive_walk(expr)
 
 @vectorize(0)
-def constantsimp(expr, constants) -> list[list[Any] | Any] | Eq | Relational | Ne | sympy.core.add.Add | Basic | Any:
+def constantsimp(
+    expr, constants
+) -> list[list | Any] | Eq | Relational | Ne | sympy.core.add.Add | Basic | Any:
     r"""
     Simplifies an expression with arbitrary constants in it.
 
@@ -2070,7 +2084,9 @@ def constantsimp(expr, constants) -> list[list[Any] | Any] | Eq | Relational | N
     return expr
 
 
-def constant_renumber(expr, variables=None, newconstants=None) -> list[Any] | set[Any] | tuple[Any, ...] | tuple | Basic | Eq | Relational | Ne:
+def constant_renumber(
+    expr, variables=None, newconstants=None
+) -> list | set | tuple | Basic | Eq | Relational | Ne:
     r"""
     Renumber arbitrary constants in ``expr`` to use the symbol names as given
     in ``newconstants``. In the process, this reorders expression terms in a
@@ -2817,7 +2833,7 @@ def ode_1st_power_series(eq, func, order, match) -> Eq | Relational | Ne:
     return Eq(f(x), series)
 
 
-def checkinfsol(eq, infinitesimals, func=None, order=None) -> list[Any]:
+def checkinfsol(eq, infinitesimals, func=None, order=None) -> list:
     r"""
     This function is used to check if the given infinitesimals are the
     actual infinitesimals of the given first order differential equation.
@@ -3044,7 +3060,7 @@ def _linear_2eq_order1_type7(x, y, t, r, eq):
     return [Eq(x(t), sol1), Eq(y(t), sol2)]
 
 
-def sysode_nonlinear_2eq_order1(match_) -> set[Eq] | list[Any] | set[Any]:
+def sysode_nonlinear_2eq_order1(match_) -> set[Eq] | list | set:
     func = match_['func']
     eq = match_['eq']
     fc = match_['func_coeff']
@@ -3294,16 +3310,18 @@ def _nonlinear_2eq_order1_type5(func, t, eq):
     x1 = diff(x(t),t); y1 = diff(y(t),t)
     return {Eq(x(t), C1*t + r1[f].subs(x1,C1).subs(y1,C2)), Eq(y(t), C2*t + r2[g].subs(x1,C1).subs(y1,C2))}
 
-def sysode_nonlinear_3eq_order1(match_) -> (
+def sysode_nonlinear_3eq_order1(
+    match_,
+) -> (
     list[Any | Basic]
     | list[
         Any
-        | list[Any]
-        | dict[Any, Any]
+        | list
+        | dict
         | Equality
         | Basic
-        | list[list[Any] | Any]
-        | list[list[list[Any] | Any] | Any]
+        | list[list | Any]
+        | list[list[list | Any] | Any]
         | list[Equality]
     ]
 ):

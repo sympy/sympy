@@ -32,10 +32,9 @@ from sympy.utilities.misc import as_int, filldedent
 from sympy.utilities.iterables import (is_sequence, subsets, permute_signs,
                                        signed_permutations, ordered_partitions)
 from collections.abc import Generator
-from sympy import Pow
 from sympy.series.order import Order
 from types import NotImplementedType
-from typing import Any, Literal, NoReturn
+from typing import Any, NoReturn
 
 
 # these are imported with 'from sympy.solvers.diophantine import *
@@ -131,7 +130,7 @@ class DiophantineSolutionSet(set):
         for solution in solutions:
             self.add(solution)
 
-    def dict_iterator(self) -> Generator[dict[Any, Any], Any, None]:
+    def dict_iterator(self) -> Generator[dict]:
         for solution in ordered(self):
             yield dict(zip(self.symbols, solution))
 
@@ -196,7 +195,7 @@ class DiophantineEquationType:
         self.dimension = len(self.free_symbols)
         self._parameters = None
 
-    def matches(self) -> Literal[False]:
+    def matches(self) -> bool:
         """
         Determine whether the given equation can be matched to the particular equation type.
         """
@@ -1047,7 +1046,7 @@ class GeneralPythagorean(DiophantineEquationType):
 
     name = 'general_pythagorean'
 
-    def matches(self) -> Literal[False]:
+    def matches(self) -> bool:
         if not (self.total_degree == 2 and self.dimension >= 3):
             return False
         if not self.homogeneous_order:
@@ -1505,7 +1504,7 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None,
     return final_soln
 
 
-def merge_solution(var, var_t, solution) -> tuple[()] | tuple[Any, ...]:
+def merge_solution(var, var_t, solution) -> tuple[()] | tuple:
     """
     This is used to construct the full solution from the solutions of sub
     equations.
@@ -1546,12 +1545,14 @@ def _diop_solve(eq, params=None):
             return diop_type(eq).solve(parameters=params)
 
 
-def diop_solve(eq, param=symbols("t", integer=True)) -> (
+def diop_solve(
+    eq, param=symbols("t", integer=True)
+) -> (
     tuple[None, ...]
-    | set[Any]
+    | set
     | tuple[None, None, None]
     | tuple[Any, Any, Any]
-    | tuple[Any, ...]
+    | tuple
     | tuple[Any | None, Any | None, Any | None]
     | set[tuple[int]]
     | None
@@ -1641,7 +1642,7 @@ def diop_solve(eq, param=symbols("t", integer=True)) -> (
             'No solver has been written for %s.' % eq_type)
 
 
-def classify_diop(eq, _dict=True) -> tuple[Any, dict[Any, Any] | Any, Any]:
+def classify_diop(eq, _dict=True) -> tuple[Any, dict | Any, Any]:
     # docstring supplied externally
 
     matched = False
@@ -1769,7 +1770,7 @@ def diop_linear(eq, param=symbols("t", integer=True)) -> tuple[None, ...] | None
             return tuple([None]*len(result.parameters))
 
 
-def base_solution_linear(c, a, b, t=None) -> tuple[Any, Any] | tuple[Literal[0], Literal[0]] | tuple[None, None]:
+def base_solution_linear(c, a, b, t=None) -> tuple[Any, Any] | tuple[int, int] | tuple[None, None]:
     """
     Return the base solution for the linear equation, `ax + by = c`.
 
@@ -1866,7 +1867,7 @@ def divisible(a, b) -> bool:
     return not a % b
 
 
-def diop_quadratic(eq, param=symbols("t", integer=True)) -> set[Any] | None:
+def diop_quadratic(eq, param=symbols("t", integer=True)) -> set | None:
     """
     Solves quadratic diophantine equations.
 
@@ -2277,7 +2278,9 @@ def PQa(P_0, Q_0, D) -> Generator[tuple[Any, Any, type[UndefinedFunction] | Any,
         Q_i = (D - P_i**2) // Q_i
 
 
-def diop_bf_DN(D, N, t=symbols("t", integer=True)) -> list[tuple[Literal[0], Literal[0]]] | list[tuple[Literal[0], Any]] | list[tuple[Any, Any]] | list[Any]:
+def diop_bf_DN(
+    D, N, t=symbols("t", integer=True)
+) -> list[tuple[int, int]] | list[tuple[int, Any]] | list[tuple[Any, Any]] | list:
     r"""
     Uses brute force to solve the equation, `x^2 - Dy^2 = N`.
 
@@ -2667,7 +2670,7 @@ def check_param(x, y, a, params) -> DiophantineSolutionSet | None:
     return _diop_solve(eq, params=params)
 
 
-def diop_ternary_quadratic(eq, parameterize=False) -> tuple[None, None, None] | tuple[Any, Any, Any] | tuple[Any, ...] | tuple[Any | None, Any | None, Any | None] | None:
+def diop_ternary_quadratic(eq, parameterize=False) -> tuple | None:
     """
     Solves the general quadratic ternary form,
     `ax^2 + by^2 + cz^2 + fxy + gyz + hxz = 0`.
@@ -2822,7 +2825,9 @@ def _transformation_to_normal(var, coeff):
     return Matrix.eye(3)
 
 
-def parametrize_ternary_quadratic(eq) -> tuple[None, None, None] | tuple[Any, Any, Any] | tuple[Any, ...] | None:
+def parametrize_ternary_quadratic(
+    eq,
+) -> tuple[None, None, None] | tuple[Any, Any, Any] | tuple | None:
     """
     Returns the parametrized general solution for the ternary quadratic
     equation ``eq`` which has the form
@@ -2927,7 +2932,7 @@ def _parametrize_ternary_quadratic(solution, _var, coeff):
     return _remove_gcd(x, y, z)
 
 
-def diop_ternary_quadratic_normal(eq, parameterize=False) -> tuple[None, None, None] | tuple[Any, Any, Any] | tuple[Any, ...] | tuple[Any | None, Any | None, Any | None] | None:
+def diop_ternary_quadratic_normal(eq, parameterize=False) -> tuple | None:
     """
     Solves the quadratic ternary diophantine equation,
     `ax^2 + by^2 + cz^2 = 0`.
@@ -2976,7 +2981,9 @@ def _diop_ternary_quadratic_normal(var, coeff):
     return HomogeneousTernaryQuadraticNormal(eq, free_symbols=var).solve()
 
 
-def sqf_normal(a, b, c, steps=False) -> tuple[tuple[Any | Order, ...], tuple[Any, ...], tuple[Any, Any, Any]] | tuple[Any, Any, Any]:
+def sqf_normal(
+    a, b, c, steps=False
+) -> tuple[tuple[Any | Order, ...], tuple, tuple[Any, Any, Any]] | tuple[Any, Any, Any]:
     """
     Return `a', b', c'`, the coefficients of the square-free normal
     form of `ax^2 + by^2 + cz^2 = 0`, where `a', b', c'` are pairwise
@@ -3074,13 +3081,9 @@ def reconstruct(A, B, z):
     return z
 
 
-def ldescent(A, B) -> (
-    tuple[Any, Any, Any]
-    | tuple[Literal[1], Literal[1], Literal[0]]
-    | tuple[Literal[1], Literal[0], Literal[1]]
-    | tuple[Any, ...]
-    | None
-):
+def ldescent(
+    A, B
+) -> tuple[Any, Any, Any] | tuple[int, int, int] | tuple[int, int, int] | tuple | None:
     """
     Return a non-trivial solution to `w^2 = Ax^2 + By^2` using
     Lagrange's method; return None if there is no such solution.
@@ -3148,12 +3151,14 @@ def ldescent(A, B) -> (
             return _remove_gcd(-A*X + r*W, r*X - W, Y*B_0*d)
 
 
-def descent(A, B) -> (
+def descent(
+    A, B
+) -> (
     tuple[Any, Any, Any]
-    | tuple[Literal[1], Literal[0], Literal[1]]
-    | tuple[Literal[1], Literal[1], Literal[0]]
-    | tuple[Literal[0], Literal[1], Literal[1]]
-    | tuple[Any, ...]
+    | tuple[int, int, int]
+    | tuple[int, int, int]
+    | tuple[int, int, int]
+    | tuple
 ):
     """
     Returns a non-trivial solution, (x, y, z), to `x^2 = Ay^2 + Bz^2`
@@ -3396,7 +3401,7 @@ def diop_general_pythagorean(eq, param=symbols("m", integer=True)) -> None:
         return list(GeneralPythagorean(eq).solve(parameters=params))[0]
 
 
-def diop_general_sum_of_squares(eq, limit=1) -> set[Any] | None:
+def diop_general_sum_of_squares(eq, limit=1) -> set | None:
     r"""
     Solves the equation `x_{1}^2 + x_{2}^2 + . . . + x_{n}^2 - k = 0`.
 
@@ -3436,7 +3441,7 @@ def diop_general_sum_of_squares(eq, limit=1) -> set[Any] | None:
         return set(GeneralSumOfSquares(eq).solve(limit=limit))
 
 
-def diop_general_sum_of_even_powers(eq, limit=1) -> set[Any] | None:
+def diop_general_sum_of_even_powers(eq, limit=1) -> set | None:
     """
     Solves the equation `x_{1}^e + x_{2}^e + . . . + x_{n}^e - k = 0`
     where `e` is an even, integer power.
@@ -3474,7 +3479,7 @@ def diop_general_sum_of_even_powers(eq, limit=1) -> set[Any] | None:
 ## equation module.
 
 
-def partition(n, k=None, zeros=False) -> Generator[tuple[Any, ...] | Any, Any, None]:
+def partition(n, k=None, zeros=False) -> Generator[tuple | Any]:
     """
     Returns a generator that can be used to generate partitions of an integer
     `n`.
@@ -3600,7 +3605,7 @@ def prime_as_sum_of_two_squares(p) -> tuple[int, int] | None:
     return (int(a % b), int(b))  # convert from long
 
 
-def sum_of_three_squares(n) -> tuple[Literal[0], Literal[0], Literal[0]] | tuple[Any, ...] | tuple[Any, Literal[0], Literal[0]] | None:
+def sum_of_three_squares(n) -> tuple | None:
     r"""
     Returns a 3-tuple $(a, b, c)$ such that $a^2 + b^2 + c^2 = n$ and
     $a, b, c \geq 0$.
@@ -3693,7 +3698,7 @@ def sum_of_three_squares(n) -> tuple[Literal[0], Literal[0], Literal[0]] | tuple
     assert False
 
 
-def sum_of_four_squares(n) -> tuple[Literal[0], Literal[0], Literal[0], Literal[0]] | tuple[Any, ...]:
+def sum_of_four_squares(n) -> tuple[int, int, int, int] | tuple:
     r"""
     Returns a 4-tuple `(a, b, c, d)` such that `a^2 + b^2 + c^2 + d^2 = n`.
     Here `a, b, c, d \geq 0`.
@@ -3760,7 +3765,7 @@ def sum_of_four_squares(n) -> tuple[Literal[0], Literal[0], Literal[0], Literal[
     return tuple(sorted([v*d, v*x, v*y, v*z]))
 
 
-def power_representation(n, p, k, zeros=False) -> Generator[tuple[Any, ...] | tuple[Literal[0], ...] | tuple[int] | tuple[Any] | tuple[int, int] | None, Any, None]:
+def power_representation(n, p, k, zeros=False) -> Generator[tuple | None]:
     r"""
     Returns a generator for finding k-tuples of integers,
     `(n_{1}, n_{2}, . . . n_{k})`, such that
@@ -3890,7 +3895,9 @@ def power_representation(n, p, k, zeros=False) -> Generator[tuple[Any, ...] | tu
 sum_of_powers = power_representation
 
 
-def pow_rep_recursive(n_i, k, n_remaining, terms, p) -> Generator[tuple[Any, ...] | Any, Any, None]:
+def pow_rep_recursive(
+    n_i, k, n_remaining, terms, p
+) -> Generator[tuple | Any]:
     # Invalid arguments
     if n_i <= 0 or k <= 0:
         return
@@ -3921,7 +3928,7 @@ def pow_rep_recursive(n_i, k, n_remaining, terms, p) -> Generator[tuple[Any, ...
                 yield from pow_rep_recursive(next_term, k - 1, residual, terms + [next_term], p)
 
 
-def sum_of_squares(n, k, zeros=False) -> Generator[tuple[Any, ...] | tuple[Literal[0], ...] | tuple[int] | tuple[Any] | tuple[int, int] | None, Any, None]:
+def sum_of_squares(n, k, zeros=False) -> Generator[tuple]:
     """Return a generator that yields the k-tuples of nonnegative
     values, the squares of which sum to n. If zeros is False (default)
     then the solution will not contain zeros. The nonnegative

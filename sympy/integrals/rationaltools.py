@@ -185,7 +185,7 @@ def ratint_ratpart(f, g, x) -> tuple[Any, Any]:
     return rat_part, log_part
 
 
-def ratint_logpart(f, g, x, t=None) -> list[Any]:
+def ratint_logpart(f, g, x, t=None) -> list:
     r"""
     Lazard-Rioboo-Trager algorithm.
 

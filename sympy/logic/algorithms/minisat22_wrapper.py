@@ -1,9 +1,9 @@
 from sympy.assumptions.cnf import EncodedCNF
 from collections.abc import Generator
-from typing import Any, Literal, NoReturn
+from typing import Any, NoReturn
 
 def minisat22_satisfiable(expr, all_models=False, minimal=False) -> (
-    Generator[bool, None, None] | dict[Any, Any] | Generator[dict[Any, Any] | Literal[False], Any, NoReturn] | Literal[False]
+    Generator[bool, None, None] | dict | Generator[dict | bool, Any, NoReturn] | bool
 ):
 
     if not isinstance(expr, EncodedCNF):

@@ -7,7 +7,7 @@ from sympy.external.gmpy import SYMPY_INTS, MPZ, invert
 from sympy.polys.polyconfig import query
 from sympy.polys.polyerrors import ExactQuotientFailed
 from sympy.polys.polyutils import _sort_factors
-from typing import Any, Literal
+from typing import Any
 
 
 def gf_crt(U, M, K=None):
@@ -55,7 +55,7 @@ def gf_crt(U, M, K=None):
     return v % p
 
 
-def gf_crt1(M, K) -> tuple[float, list[Any], list[Any]]:
+def gf_crt1(M, K) -> tuple[float, list, list]:
     """
     First part of the Chinese Remainder Theorem.
 
@@ -309,7 +309,7 @@ def gf_from_dict(f, p, K):
     return gf_trunc(h, p)
 
 
-def gf_to_dict(f, p, symmetric=True) -> dict[Any, Any]:
+def gf_to_dict(f, p, symmetric=True) -> dict:
     """
     Convert a ``GF(p)[x]`` polynomial to a dict.
 
@@ -354,7 +354,7 @@ def gf_from_int_poly(f, p):
     return gf_trunc(f, p)
 
 
-def gf_to_int_poly(f, p, symmetric=True) -> list[Any]:
+def gf_to_int_poly(f, p, symmetric=True) -> list:
     """
     Convert a ``GF(p)[x]`` polynomial to ``Z[x]``.
 
@@ -376,7 +376,7 @@ def gf_to_int_poly(f, p, symmetric=True) -> list[Any]:
         return f
 
 
-def gf_neg(f, p, K) -> list[Any]:
+def gf_neg(f, p, K) -> list:
     """
     Negate a polynomial in ``GF(p)[x]``.
 
@@ -393,7 +393,7 @@ def gf_neg(f, p, K) -> list[Any]:
     return [ -coeff % p for coeff in f ]
 
 
-def gf_add_ground(f, a, p, K) -> list[Any]:
+def gf_add_ground(f, a, p, K) -> list:
     """
     Compute ``f + a`` where ``f`` in ``GF(p)[x]`` and ``a`` in ``GF(p)``.
 
@@ -421,7 +421,7 @@ def gf_add_ground(f, a, p, K) -> list[Any]:
         return [a]
 
 
-def gf_sub_ground(f, a, p, K) -> list[Any]:
+def gf_sub_ground(f, a, p, K) -> list:
     """
     Compute ``f - a`` where ``f`` in ``GF(p)[x]`` and ``a`` in ``GF(p)``.
 
@@ -449,7 +449,7 @@ def gf_sub_ground(f, a, p, K) -> list[Any]:
         return [a]
 
 
-def gf_mul_ground(f, a, p, K) -> list[Any]:
+def gf_mul_ground(f, a, p, K) -> list:
     """
     Compute ``f * a`` where ``f`` in ``GF(p)[x]`` and ``a`` in ``GF(p)``.
 
@@ -469,7 +469,7 @@ def gf_mul_ground(f, a, p, K) -> list[Any]:
         return [ (a*b) % p for b in f ]
 
 
-def gf_quo_ground(f, a, p, K) -> list[Any]:
+def gf_quo_ground(f, a, p, K) -> list:
     """
     Compute ``f/a`` where ``f`` in ``GF(p)[x]`` and ``a`` in ``GF(p)``.
 
@@ -521,7 +521,7 @@ def gf_add(f, g, p, K):
         return h + [ (a + b) % p for a, b in zip(f, g) ]
 
 
-def gf_sub(f, g, p, K) -> list[Any]:
+def gf_sub(f, g, p, K) -> list:
     """
     Subtract polynomials in ``GF(p)[x]``.
 
@@ -645,7 +645,7 @@ def gf_add_mul(f, g, h, p, K):
     return gf_add(f, gf_mul(g, h, p, K), p, K)
 
 
-def gf_sub_mul(f, g, h, p, K) -> list[Any]:
+def gf_sub_mul(f, g, h, p, K) -> list:
     """
     Compute ``f - g*h`` where ``f``, ``g``, ``h`` in ``GF(p)[x]``.
 
@@ -662,7 +662,7 @@ def gf_sub_mul(f, g, h, p, K) -> list[Any]:
     return gf_sub(f, gf_mul(g, h, p, K), p, K)
 
 
-def gf_expand(F, p, K) -> list[Any]:
+def gf_expand(F, p, K) -> list:
     """
     Expand results of :func:`~.factor` in ``GF(p)[x]``.
 
@@ -690,7 +690,7 @@ def gf_expand(F, p, K) -> list[Any]:
     return g
 
 
-def gf_div(f, g, p, K) -> tuple[list[Any], Any]:
+def gf_div(f, g, p, K) -> tuple[list, Any]:
     """
     Division with remainder in ``GF(p)[x]``.
 
@@ -761,7 +761,7 @@ def gf_rem(f, g, p, K):
     return gf_div(f, g, p, K)[1]
 
 
-def gf_quo(f, g, p, K) -> list[Any]:
+def gf_quo(f, g, p, K) -> list:
     """
     Compute exact quotient in ``GF(p)[x]``.
 
@@ -800,7 +800,7 @@ def gf_quo(f, g, p, K) -> list[Any]:
     return h[:dq + 1]
 
 
-def gf_exquo(f, g, p, K) -> list[Any]:
+def gf_exquo(f, g, p, K) -> list:
     """
     Compute polynomial quotient in ``GF(p)[x]``.
 
@@ -847,7 +847,7 @@ def gf_lshift(f, n, K):
         return f + [K.zero]*n
 
 
-def gf_rshift(f, n, K) -> tuple[Any, list[Any]] | tuple[Any, Any]:
+def gf_rshift(f, n, K) -> tuple[Any, list] | tuple[Any, Any]:
     """
     Efficiently divide ``f`` by ``x**n``.
 
@@ -867,7 +867,7 @@ def gf_rshift(f, n, K) -> tuple[Any, list[Any]] | tuple[Any, Any]:
         return f[:-n], f[-n:]
 
 
-def gf_pow(f, n, p, K) -> list[Any]:
+def gf_pow(f, n, p, K) -> list:
     """
     Compute ``f**n`` in ``GF(p)[x]`` using repeated squaring.
 
@@ -904,7 +904,7 @@ def gf_pow(f, n, p, K) -> list[Any]:
 
     return h
 
-def gf_frobenius_monomial_base(g, p, K) -> list[Any] | list[int]:
+def gf_frobenius_monomial_base(g, p, K) -> list | list[int]:
     """
     return the list of ``x**(i*p) mod g in Z_p`` for ``i = 0, .., n - 1``
     where ``n = gf_degree(g)``
@@ -936,7 +936,7 @@ def gf_frobenius_monomial_base(g, p, K) -> list[Any] | list[int]:
 
     return b
 
-def gf_frobenius_map(f, g, b, p, K) -> list[Any]:
+def gf_frobenius_map(f, g, b, p, K) -> list:
     """
     compute gf_pow_mod(f, p, g, p, K) using the Frobenius map
 
@@ -990,7 +990,7 @@ def _gf_pow_pnm1d2(f, n, g, b, p, K):
     res = gf_pow_mod(r, (p - 1)//2, g, p, K)
     return res
 
-def gf_pow_mod(f, n, g, p, K) -> list[Any]:
+def gf_pow_mod(f, n, g, p, K) -> list:
     """
     Compute ``f**n`` in ``GF(p)[x]/(g)`` using repeated squaring.
 
@@ -1039,7 +1039,7 @@ def gf_pow_mod(f, n, g, p, K) -> list[Any]:
     return h
 
 
-def gf_gcd(f, g, p, K) -> list[Any]:
+def gf_gcd(f, g, p, K) -> list:
     """
     Euclidean Algorithm in ``GF(p)[x]``.
 
@@ -1059,7 +1059,7 @@ def gf_gcd(f, g, p, K) -> list[Any]:
     return gf_monic(f, p, K)[1]
 
 
-def gf_lcm(f, g, p, K) -> list[Any]:
+def gf_lcm(f, g, p, K) -> list:
     """
     Compute polynomial LCM in ``GF(p)[x]``.
 
@@ -1082,7 +1082,9 @@ def gf_lcm(f, g, p, K) -> list[Any]:
     return gf_monic(h, p, K)[1]
 
 
-def gf_cofactors(f, g, p, K) -> tuple[list[Any], list[Any], list[Any]] | tuple[list[Any], list[Any] | Any, list[Any] | Any]:
+def gf_cofactors(
+    f, g, p, K
+) -> tuple[list, list, list] | tuple[list, list | Any, list | Any]:
     """
     Compute polynomial GCD and cofactors in ``GF(p)[x]``.
 
@@ -1105,7 +1107,7 @@ def gf_cofactors(f, g, p, K) -> tuple[list[Any], list[Any], list[Any]] | tuple[l
             gf_quo(g, h, p, K))
 
 
-def gf_gcdex(f, g, p, K) -> tuple[list[Any], list[Any], list[Any]]:
+def gf_gcdex(f, g, p, K) -> tuple[list, list, list]:
     """
     Extended Euclidean Algorithm in ``GF(p)[x]``.
 
@@ -1171,7 +1173,7 @@ def gf_gcdex(f, g, p, K) -> tuple[list[Any], list[Any], list[Any]]:
     return s1, t1, r1
 
 
-def gf_monic(f, p, K) -> tuple[Any, list[Any]]:
+def gf_monic(f, p, K) -> tuple[Any, list]:
     """
     Compute LC and a monic polynomial in ``GF(p)[x]``.
 
@@ -1250,7 +1252,7 @@ def gf_eval(f, a, p, K):
     return result
 
 
-def gf_multi_eval(f, A, p, K) -> list[Any]:
+def gf_multi_eval(f, A, p, K) -> list:
     """
     Evaluate ``f(a)`` for ``a`` in ``[a_1, ..., a_n]``.
 
@@ -1267,7 +1269,7 @@ def gf_multi_eval(f, A, p, K) -> list[Any]:
     return [ gf_eval(f, a, p, K) for a in A ]
 
 
-def gf_compose(f, g, p, K) -> list[Any]:
+def gf_compose(f, g, p, K) -> list:
     """
     Compute polynomial composition ``f(g)`` in ``GF(p)[x]``.
 
@@ -1296,7 +1298,7 @@ def gf_compose(f, g, p, K) -> list[Any]:
     return h
 
 
-def gf_compose_mod(g, h, f, p, K) -> list[Any]:
+def gf_compose_mod(g, h, f, p, K) -> list:
     """
     Compute polynomial composition ``g(h)`` in ``GF(p)[x]/(f)``.
 
@@ -1323,7 +1325,7 @@ def gf_compose_mod(g, h, f, p, K) -> list[Any]:
     return comp
 
 
-def gf_trace_map(a, b, c, n, f, p, K) -> tuple[list[Any] | Any, Any]:
+def gf_trace_map(a, b, c, n, f, p, K) -> tuple[list | Any, Any]:
     """
     Compute polynomial trace map in ``GF(p)[x]/(f)``.
 
@@ -1392,7 +1394,7 @@ def _gf_trace_map(f, n, g, b, p, K):
     return r
 
 
-def gf_random(n, p, K) -> list[Any]:
+def gf_random(n, p, K) -> list:
     """
     Generate a random polynomial in ``GF(p)[x]`` of degree ``n``.
 
@@ -1409,7 +1411,7 @@ def gf_random(n, p, K) -> list[Any]:
     return [K.one] + [ K(int(uniform(0, pi))) for i in range(0, n) ]
 
 
-def gf_irreducible(n, p, K) -> list[Any]:
+def gf_irreducible(n, p, K) -> list:
     """
     Generate random irreducible polynomial of degree ``n`` in ``GF(p)[x]``.
 
@@ -1572,7 +1574,7 @@ def gf_sqf_p(f, p, K) -> bool:
         return gf_gcd(f, gf_diff(f, p, K), p, K) == [K.one]
 
 
-def gf_sqf_part(f, p, K) -> list[Any]:
+def gf_sqf_part(f, p, K) -> list:
     """
     Return square-free part of a ``GF(p)[x]`` polynomial.
 
@@ -1596,7 +1598,7 @@ def gf_sqf_part(f, p, K) -> list[Any]:
     return g
 
 
-def gf_sqf_list(f, p, K, all=False) -> tuple[Any, list[Any]]:
+def gf_sqf_list(f, p, K, all=False) -> tuple[Any, list]:
     """
     Return the square-free decomposition of a ``GF(p)[x]`` polynomial.
 
@@ -1685,7 +1687,7 @@ def gf_sqf_list(f, p, K, all=False) -> tuple[Any, list[Any]]:
     return lc, factors
 
 
-def gf_Qmatrix(f, p, K) -> list[list[Any]]:
+def gf_Qmatrix(f, p, K) -> list[list]:
     """
     Calculate Berlekamp's ``Q`` matrix.
 
@@ -1725,7 +1727,7 @@ def gf_Qmatrix(f, p, K) -> list[list[Any]]:
     return Q
 
 
-def gf_Qbasis(Q, p, K) -> list[Any]:
+def gf_Qbasis(Q, p, K) -> list:
     """
     Compute a basis of the kernel of ``Q``.
 
@@ -1787,7 +1789,7 @@ def gf_Qbasis(Q, p, K) -> list[Any]:
     return basis
 
 
-def gf_berlekamp(f, p, K) -> list[Any]:
+def gf_berlekamp(f, p, K) -> list:
     """
     Factor a square-free ``f`` in ``GF(p)[x]`` for small ``p``.
 
@@ -1831,7 +1833,7 @@ def gf_berlekamp(f, p, K) -> list[Any]:
     return _sort_factors(factors, multiple=False)
 
 
-def gf_ddf_zassenhaus(f, p, K) -> list[Any]:
+def gf_ddf_zassenhaus(f, p, K) -> list:
     """
     Cantor-Zassenhaus: Deterministic Distinct Degree Factorization
 
@@ -1888,7 +1890,7 @@ def gf_ddf_zassenhaus(f, p, K) -> list[Any]:
         return factors
 
 
-def gf_edf_zassenhaus(f, n, p, K) -> list[Any]:
+def gf_edf_zassenhaus(f, n, p, K) -> list:
     """
     Cantor-Zassenhaus: Probabilistic Equal Degree Factorization
 
@@ -1952,7 +1954,7 @@ def gf_edf_zassenhaus(f, n, p, K) -> list[Any]:
     return _sort_factors(factors, multiple=False)
 
 
-def gf_ddf_shoup(f, p, K) -> list[Any]:
+def gf_ddf_shoup(f, p, K) -> list:
     """
     Kaltofen-Shoup: Deterministic Distinct Degree Factorization
 
@@ -2028,7 +2030,7 @@ def gf_ddf_shoup(f, p, K) -> list[Any]:
 
     return factors
 
-def gf_edf_shoup(f, n, p, K) -> list[Any]:
+def gf_edf_shoup(f, n, p, K) -> list:
     """
     Gathen-Shoup: Probabilistic Equal Degree Factorization
 
@@ -2091,7 +2093,7 @@ def gf_edf_shoup(f, n, p, K) -> list[Any]:
     return _sort_factors(factors, multiple=False)
 
 
-def gf_zassenhaus(f, p, K) -> list[Any]:
+def gf_zassenhaus(f, p, K) -> list:
     """
     Factor a square-free ``f`` in ``GF(p)[x]`` for medium ``p``.
 
@@ -2113,7 +2115,7 @@ def gf_zassenhaus(f, p, K) -> list[Any]:
     return _sort_factors(factors, multiple=False)
 
 
-def gf_shoup(f, p, K) -> list[Any]:
+def gf_shoup(f, p, K) -> list:
     """
     Factor a square-free ``f`` in ``GF(p)[x]`` for large ``p``.
 
@@ -2141,7 +2143,7 @@ _factor_methods = {
 }
 
 
-def gf_factor_sqf(f, p, K, method=None) -> tuple[Any, list[Any]]:
+def gf_factor_sqf(f, p, K, method=None) -> tuple[Any, list]:
     """
     Factor a square-free polynomial ``f`` in ``GF(p)[x]``.
 
@@ -2170,7 +2172,7 @@ def gf_factor_sqf(f, p, K, method=None) -> tuple[Any, list[Any]]:
     return lc, factors
 
 
-def gf_factor(f, p, K) -> tuple[Any, list[Any]]:
+def gf_factor(f, p, K) -> tuple[Any, list]:
     """
     Factor (non square-free) polynomials in ``GF(p)[x]``.
 
@@ -2234,7 +2236,7 @@ def gf_factor(f, p, K) -> tuple[Any, list[Any]]:
     return lc, _sort_factors(factors)
 
 
-def gf_value(f, a) -> Literal[0]:
+def gf_value(f, a) -> int:
     """
     Value of polynomial 'f' at 'a' in field R.
 
@@ -2254,7 +2256,7 @@ def gf_value(f, a) -> Literal[0]:
     return result
 
 
-def linear_congruence(a, b, m) -> list[int] | list[Any]:
+def linear_congruence(a, b, m) -> list[int] | list:
     """
     Returns the values of x satisfying a*x congruent b mod(m)
 
@@ -2422,7 +2424,7 @@ def _csolve_prime_las_vegas(f, p, seed=None):
     return sorted(root)
 
 
-def csolve_prime(f, p, e=1) -> list[int] | list[Any]:
+def csolve_prime(f, p, e=1) -> list[int] | list:
     r""" Solutions of `f(x) \equiv 0 \pmod{p^e}`.
 
     Parameters
@@ -2492,7 +2494,7 @@ def csolve_prime(f, p, e=1) -> list[int] | list[Any]:
     return sorted(X)
 
 
-def gf_csolve(f, n) -> list[Any]:
+def gf_csolve(f, n) -> list:
     """
     To solve f(x) congruent 0 mod(n).
 

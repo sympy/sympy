@@ -11,7 +11,7 @@ as unifying matrices with different domains.
 """
 from __future__ import annotations
 
-from typing import Any, Literal, overload
+from typing import Any, overload
 
 from collections import Counter
 from functools import reduce
@@ -780,7 +780,7 @@ class DomainMatrix:
         else:
             raise ValueError("fmt should be 'sparse' or 'dense'")
 
-    def unify(self, *others, fmt=None) -> tuple[Any, ...]:
+    def unify(self, *others, fmt=None) -> tuple:
         """
         Unifies the domains and the format of self and other
         matrices.
@@ -883,7 +883,7 @@ class DomainMatrix:
 
         return MutableDenseMatrix._fromrep(rep)
 
-    def to_list(self) -> list[Any]:
+    def to_list(self) -> list:
         """
         Convert :class:`DomainMatrix` to list of lists.
 
@@ -897,7 +897,7 @@ class DomainMatrix:
         """
         return self.rep.to_list()
 
-    def to_list_flat(self) -> list[Any]:
+    def to_list_flat(self) -> list:
         """
         Convert :class:`DomainMatrix` to flat list.
 
@@ -1185,7 +1185,7 @@ class DomainMatrix:
         """Matrix transpose of ``self``"""
         return self.from_rep(self.rep.transpose())
 
-    def flat(self) -> list[Any]:
+    def flat(self) -> list:
         rows, cols = self.shape
         return [self[i,j].element for i in range(rows) for j in range(cols)]
 
@@ -1713,7 +1713,7 @@ class DomainMatrix:
             sqrtAn = A ** (n // 2)
             return sqrtAn * sqrtAn
 
-    def scc(self) -> list[Any]:
+    def scc(self) -> list:
         """Compute the strongly connected components of a DomainMatrix
 
         Explanation
@@ -3229,7 +3229,7 @@ class DomainMatrix:
 
         return p_A_B
 
-    def lu(self) -> tuple[Self, Self, list[Any]]:
+    def lu(self) -> tuple[Self, Self, list]:
         r"""
         Returns Lower and Upper decomposition of the DomainMatrix
 
@@ -3473,7 +3473,7 @@ class DomainMatrix:
         nullspace = Arref.from_rep(nullspace_rep)
         return particular, nullspace
 
-    def charpoly(self) -> list[Any]:
+    def charpoly(self) -> list:
         r"""
         Characteristic polynomial of a square matrix.
 
@@ -3877,7 +3877,7 @@ class DomainMatrix:
             return NotImplemented
         return A.domain == B.domain and A.rep == B.rep
 
-    def unify_eq(A, B) -> Literal[False]:
+    def unify_eq(A, B) -> bool:
         if A.shape != B.shape:
             return False
         if A.domain != B.domain:

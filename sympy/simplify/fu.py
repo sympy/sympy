@@ -25,7 +25,7 @@ from sympy.strategies.core import identity, debug
 
 from sympy import SYMPY_DEBUG
 from sympy.series.order import Order
-from typing import Any, Callable, Literal
+from typing import Any, Callable
 
 
 # ================== Fu-like tools ===========================
@@ -1910,7 +1910,9 @@ def trig_split(a, b, two=False):
             return gcd, n1, n2, c.args[0], pi/6, False
 
 
-def as_f_sign_1(e) -> tuple[Any, Any, Any] | tuple[Any | Order, Any | Order, Literal[1, -1]] | None:
+def as_f_sign_1(
+    e,
+) -> tuple[Any, Any, Any] | tuple[Any | Order, Any | Order, int] | None:
     """If ``e`` is a sum that can be written as ``g*(a + s)`` where
     ``s`` is ``+/-1``, return ``g``, ``a``, and ``s`` where ``a`` does
     not have a leading negative coefficient.

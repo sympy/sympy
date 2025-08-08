@@ -18,11 +18,11 @@ from sympy.multipledispatch.dispatcher import (Dispatcher,
     ambiguity_register_error_ignore_dup,
     str_signature, RaiseNotImplementedError)
 from sympy.core.basic import Basic
-from sympy.series.order import Order
 from typing_extensions import Self
 
 
 if TYPE_CHECKING:
+    from sympy.series.order import Order
     from sympy.core.expr import Expr
     from sympy.core.add import Add
     from sympy.core.mul import Mul
@@ -185,7 +185,7 @@ this object, use the * or + operator instead.
         return self._from_args(args, is_commutative)
 
     @classmethod
-    def flatten(cls, seq) -> tuple[list[Any], list[Any], None]:
+    def flatten(cls, seq) -> tuple[list, list, None]:
         """Return seq so that none of the elements are of type `cls`. This is
         the vanilla routine that will be used if a class derived from AssocOp
         does not define its own flatten routine."""
@@ -573,7 +573,7 @@ class LatticeOp(AssocOp):
                 yield arg
 
     @classmethod
-    def make_args(cls, expr) -> frozenset[Any]:
+    def make_args(cls, expr) -> frozenset:
         """
         Return a set of args such that cls(*arg_set) == expr.
         """

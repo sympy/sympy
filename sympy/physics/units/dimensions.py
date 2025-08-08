@@ -480,7 +480,7 @@ class DimensionSystem(Basic, _QuantityMapper):
         return self.get_dimensional_dependencies(dimension) == {}
 
     @property
-    def list_can_dims(self) -> tuple[Any, ...]:
+    def list_can_dims(self) -> tuple:
         """
         Useless method, kept for compatibility with previous versions.
 

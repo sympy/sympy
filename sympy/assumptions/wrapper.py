@@ -46,8 +46,10 @@ False
 from sympy.assumptions import ask, Q
 from sympy.core.basic import Basic
 from sympy.core.sympify import _sympify
-from typing import Callable
-from typing_extensions import Self
+from typing import Callable, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from typing_extensions import Self
 
 
 def make_eval_method(fact) -> Callable[..., bool | None]:

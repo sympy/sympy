@@ -81,7 +81,7 @@ from sympy.series import residue
 from sympy.simplify.powsimp import powdenest
 from sympy.utilities.iterables import sift
 from sympy.core.function import UndefinedFunction
-from typing import Any, Callable, Literal
+from typing import Any, Callable
 from typing_extensions import Self
 
 # function to define "buckets"
@@ -556,7 +556,7 @@ class Hyper_Function(Expr):
 
         return (self.gamma, tr(abuckets), tr(bbuckets))
 
-    def difficulty(self, func) -> Literal[-1, 0]:
+    def difficulty(self, func) -> int:
         """ Estimate how many steps it takes to reach ``func`` from self.
             Return -1 if impossible. """
         if self.gamma != func.gamma:
@@ -629,7 +629,7 @@ class G_Function(Expr):
     def __call__(self, z) -> type[UndefinedFunction]:
         return meijerg(self.an, self.ap, self.bm, self.bq, z)
 
-    def compute_buckets(self) -> tuple[dict[Any, list[Any]], ...]:
+    def compute_buckets(self) -> tuple[dict[Any, list], ...]:
         """
         Compute buckets for the fours sets of parameters.
 
@@ -746,7 +746,7 @@ class Formula:
     def closed_form(self):
         return reduce(lambda s,m: s+m[0]*m[1], zip(self.C, self.B), S.Zero)
 
-    def find_instantiations(self, func) -> list[Any]:
+    def find_instantiations(self, func) -> list:
         """
         Find substitutions of the free symbols that match ``func``.
 
@@ -1437,7 +1437,7 @@ def _reduce_order(ap, bq, gen, key):
     return nap, bq, operators
 
 
-def reduce_order(func) -> tuple[Hyper_Function, list[Any]]:
+def reduce_order(func) -> tuple[Hyper_Function, list]:
     """
     Given the hypergeometric function ``func``, find a sequence of operators to
     reduces order as much as possible.
@@ -1465,7 +1465,7 @@ def reduce_order(func) -> tuple[Hyper_Function, list[Any]]:
     return Hyper_Function(Tuple(*nap), Tuple(*nbq)), operators
 
 
-def reduce_order_meijer(func) -> tuple[G_Function, list[Any]]:
+def reduce_order_meijer(func) -> tuple[G_Function, list]:
     """
     Given the Meijer G function parameters, ``func``, find a sequence of
     operators that reduces order as much as possible.
@@ -1515,7 +1515,7 @@ def apply_operators(obj, ops, op):
     return res
 
 
-def devise_plan(target, origin, z) -> list[Any]:
+def devise_plan(target, origin, z) -> list:
     """
     Devise a plan (consisting of shift and un-shift operators) to be applied
     to the hypergeometric function ``target`` to yield ``origin``.
@@ -1652,7 +1652,7 @@ def devise_plan(target, origin, z) -> list[Any]:
     return ops
 
 
-def try_shifted_sum(func, z) -> tuple[Hyper_Function, list[Any], Any | int] | None:
+def try_shifted_sum(func, z) -> tuple[Hyper_Function, list, Any | int] | None:
     """ Try to recognise a hypergeometric sum that starts from k > 0. """
     abuckets, bbuckets = sift(func.ap, _mod1), sift(func.bq, _mod1)
     if len(abuckets[S.Zero]) != 1:
@@ -2061,7 +2061,7 @@ def _hyperexpand(func, z, ops0=[], z0=Dummy('z0'), premult=1, prem=0,
     return powdenest(r, polar=True).replace(hyper, hyperexpand_special)
 
 
-def devise_plan_meijer(fro, to, z) -> list[Any]:
+def devise_plan_meijer(fro, to, z) -> list:
     """
     Find operators to convert G-function ``fro`` into G-function ``to``.
 

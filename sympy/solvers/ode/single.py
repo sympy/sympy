@@ -31,7 +31,6 @@ from .nonhomogeneous import _get_euler_characteristic_eq_sols, _get_const_charac
     _solve_undetermined_coefficients, _solve_variation_of_parameters, _test_term, _undetermined_coefficients_match, \
         _get_simplified_sol
 from .lie_group import _ode_lie_group
-import collections.abc
 from sympy.series.order import Order
 
 
@@ -298,7 +297,7 @@ class SinglePatternODESolver(SingleODESolver):
         order = prob.order
         return self._wilds(f, x, order)
 
-    def wilds_match(self) -> list[Any]:
+    def wilds_match(self) -> list:
         match = self._wilds_match
         return [match.get(w, S.Zero) for w in self.wilds()]
 

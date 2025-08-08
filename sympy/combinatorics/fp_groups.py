@@ -19,11 +19,10 @@ from sympy.utilities.magic import pollute
 from itertools import product
 from sympy.combinatorics.homomorphisms import GroupHomomorphism
 from typing import Any, Callable
-from typing_extensions import Unpack
 
 
 @public
-def fp_group(fr_grp, relators=()) -> tuple[FpGroup, Unpack[tuple[Any, ...]]]:
+def fp_group(fr_grp, relators=()) -> tuple[FpGroup, ...]:
     _fp_group = FpGroup(fr_grp, relators)
     return (_fp_group,) + tuple(_fp_group._generators)
 
@@ -419,7 +418,7 @@ class FpGroup(DefaultPrinting):
             result.append(T.invert(gens))
         return result[0] if single else result
 
-    def derived_series(self) -> list[Any]:
+    def derived_series(self) -> list:
         '''
         Return the list of lists containing the generators
         of the subgroups in the derived series of `self`.
@@ -427,7 +426,7 @@ class FpGroup(DefaultPrinting):
         '''
         return self._perm_group_list('derived_series')
 
-    def lower_central_series(self) -> list[Any]:
+    def lower_central_series(self) -> list:
         '''
         Return the list of lists containing the generators
         of the subgroups in the lower central series of `self`.
@@ -435,23 +434,21 @@ class FpGroup(DefaultPrinting):
         '''
         return self._perm_group_list('lower_central_series')
 
-    def center(self) -> list[Any]:
+    def center(self) -> list:
         '''
         Return the list of generators of the center of `self`.
 
         '''
         return self._perm_group_list('center')
 
-
-    def derived_subgroup(self) -> list[Any]:
+    def derived_subgroup(self) -> list:
         '''
         Return the list of generators of the derived subgroup of `self`.
 
         '''
         return self._perm_group_list('derived_subgroup')
 
-
-    def centralizer(self, other) -> list[Any]:
+    def centralizer(self, other) -> list:
         '''
         Return the list of generators of the centralizer of `other`
         (a list of elements of `self`) in `self`.
@@ -461,7 +458,7 @@ class FpGroup(DefaultPrinting):
         other = T(other)
         return self._perm_group_list('centralizer', other)
 
-    def normal_closure(self, other) -> list[Any]:
+    def normal_closure(self, other) -> list:
         '''
         Return the list of generators of the normal closure of `other`
         (a list of elements of `self`) in `self`.
@@ -505,7 +502,7 @@ class FpGroup(DefaultPrinting):
         return self._perm_property("is_solvable")
 
     @property
-    def elements(self) -> list[Any] | None:
+    def elements(self) -> list | None:
         '''
         List the elements of `self`.
 
@@ -528,7 +525,7 @@ class FpGroup(DefaultPrinting):
                                       "is not implemented")
         return P.is_cyclic
 
-    def abelian_invariants(self) -> list[Any]:
+    def abelian_invariants(self) -> list:
         """
         Return Abelian Invariants of a group.
         """
@@ -539,7 +536,7 @@ class FpGroup(DefaultPrinting):
                                       "for infinite group")
         return P.abelian_invariants()
 
-    def composition_series(self) -> list[Any]:
+    def composition_series(self) -> list:
         """
         Return subnormal series of maximum length for a group.
         """
@@ -720,7 +717,7 @@ class FpSubgroup(DefaultPrinting):
 #                           LOW INDEX SUBGROUPS                               #
 ###############################################################################
 
-def low_index_subgroups(G, N, Y=()) -> list[Any]:
+def low_index_subgroups(G, N, Y=()) -> list:
     """
     Implements the Low Index Subgroups algorithm, i.e find all subgroups of
     ``G`` upto a given index ``N``. This implements the method described in
@@ -947,7 +944,9 @@ def first_in_class(C, Y=()) -> bool:
 #                    Simplifying Presentation
 #========================================================================
 
-def simplify_presentation(*args, change_gens=False) -> FpGroup | tuple[Any, Any] | tuple[Any | list[Any], Any | list[Any]]:
+def simplify_presentation(
+    *args, change_gens=False
+) -> FpGroup | tuple[Any, Any] | tuple[Any | list, Any | list]:
     '''
     For an instance of `FpGroup`, return a simplified isomorphic copy of
     the group (e.g. remove redundant generators or relators). Alternatively,
@@ -1084,7 +1083,7 @@ def _simplify_relators(rels):
     return rels
 
 # Pg 350, section 2.5.1 from [2]
-def elimination_technique_1(gens, rels, identity) -> tuple[list[Any], list[Any]]:
+def elimination_technique_1(gens, rels, identity) -> tuple[list, list]:
     rels = rels[:]
     # the shorter relators are examined first so that generators selected for
     # elimination will have shorter strings as equivalent
@@ -1291,7 +1290,9 @@ def elimination_technique_2(C) -> tuple[Any, Any]:
     C._schreier_generators = gens
     return C._schreier_generators, C._reidemeister_relators
 
-def reidemeister_presentation(fp_grp, H, C=None, homomorphism=False) -> tuple[tuple[Any, ...], tuple[Any, ...], list[Any]] | tuple[tuple[Any, ...], tuple[Any, ...]]:
+def reidemeister_presentation(
+    fp_grp, H, C=None, homomorphism=False
+) -> tuple[tuple, tuple, list] | tuple[tuple, tuple]:
     """
     Parameters
     ==========

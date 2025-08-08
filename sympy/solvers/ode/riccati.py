@@ -211,7 +211,7 @@ from sympy.polys.domains import ZZ
 from sympy.polys.polytools import Poly
 from sympy.polys.polyroots import roots
 from sympy.solvers.solveset import linsolve
-from typing import Any, Literal
+from typing import Any
 
 
 def riccati_normal(w, x, b1, b2):
@@ -247,7 +247,7 @@ def riccati_inverse_normal(y, x, b1, b2, bp=None):
     return -y/b2 + bp
 
 
-def riccati_reduced(eq, f, x) -> Literal[False]:
+def riccati_reduced(eq, f, x) -> bool:
     """
     Convert a Riccati ODE into its corresponding
     normal Riccati ODE.
@@ -263,7 +263,7 @@ def riccati_reduced(eq, f, x) -> Literal[False]:
     # Normal form of Riccati ODE is f'(x) + f(x)^2 = a(x)
     return f(x).diff(x) + f(x)**2 - a
 
-def linsolve_dict(eq, syms) -> dict[Any, Any]:
+def linsolve_dict(eq, syms) -> dict:
     """
     Get the output of linsolve as a dict
     """
@@ -275,7 +275,7 @@ def linsolve_dict(eq, syms) -> dict[Any, Any]:
     return dict(zip(syms, list(sol)[0]))
 
 
-def match_riccati(eq, f, x) -> tuple[Literal[False], list[Any]] | tuple[Literal[True], list[Any]]:
+def match_riccati(eq, f, x) -> tuple[bool, list] | tuple[bool, list]:
     """
     A function that matches and returns the coefficients
     if an equation is a Riccati ODE
@@ -378,7 +378,7 @@ def inverse_transform_poly(num, den, x):
     return num.cancel(den, include=True)
 
 
-def limit_at_inf(num, den, x) -> Literal[0]:
+def limit_at_inf(num, den, x) -> int:
     """
     Find the limit of a rational function
     at oo
@@ -400,7 +400,7 @@ def limit_at_inf(num, den, x) -> Literal[0]:
         return 0
 
 
-def construct_c_case_1(num, den, x, pole) -> list[list[Any]]:
+def construct_c_case_1(num, den, x, pole) -> list[list]:
     # Find the coefficient of 1/(x - pole)**2 in the
     # Laurent series expansion of a(x) about pole.
     num1, den1 = (num*Poly((x - pole)**2, x, extension=True)).cancel(den, include=True)
@@ -459,7 +459,7 @@ def construct_c_case_3() -> list[list[int]]:
     return [[1]]
 
 
-def construct_c(num, den, x, poles, muls) -> list[Any]:
+def construct_c(num, den, x, poles, muls) -> list:
     """
     Helper function to calculate the coefficients
     in the c-vector for each pole.
@@ -533,7 +533,7 @@ def construct_d_case_5(ser) -> list[list[int]] | list[int]:
     return dplus
 
 
-def construct_d_case_6(num, den, x) -> list[list[Any]]:
+def construct_d_case_6(num, den, x) -> list[list]:
     # s_oo = lim x->0 1/x**2 * a(1/x) which is equivalent to
     # s_oo = lim x->oo x**2 * a(x)
     s_inf = limit_at_inf(Poly(x**2, x)*num, den, x)
@@ -544,7 +544,7 @@ def construct_d_case_6(num, den, x) -> list[list[Any]]:
     return [[S.Half]]
 
 
-def construct_d(num, den, x, val_inf) -> list[list[int]] | list[int] | list[list[Any]]:
+def construct_d(num, den, x, val_inf) -> list[list[int]] | list[int] | list[list]:
     """
     Helper function to calculate the coefficients
     in the d-vector based on the valuation of the
@@ -570,7 +570,7 @@ def construct_d(num, den, x, val_inf) -> list[list[int]] | list[int] | list[list
     return d
 
 
-def rational_laurent_series(num, den, x, r, m, n) -> dict[Any, Any]:
+def rational_laurent_series(num, den, x, r, m, n) -> dict:
     r"""
     The function computes the Laurent series coefficients
     of a rational function.
@@ -677,7 +677,9 @@ def compute_m_ybar(x, poles, choice, N) -> tuple[Any, Any]:
     return (m.expr, ybar)
 
 
-def solve_aux_eq(numa, dena, numy, deny, x, m) -> tuple[Any, dict[Any, Any], Literal[True]] | tuple[Any, Any, Any]:
+def solve_aux_eq(
+    numa, dena, numy, deny, x, m
+) -> tuple[Any, dict, bool] | tuple[Any, Any, Any]:
     """
     Helper function to find a polynomial solution
     of degree m for the auxiliary differential
@@ -735,7 +737,7 @@ def remove_redundant_sols(sol1, sol2, x) -> None:
                 return sol1
 
 
-def get_gen_sol_from_part_sol(part_sols, a, x) -> list[Any]:
+def get_gen_sol_from_part_sol(part_sols, a, x) -> list:
     """"
     Helper function which computes the general
     solution for a Riccati ODE from its particular

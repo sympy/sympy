@@ -299,7 +299,7 @@ class DiracDelta(DefinedFunction):
             pass
         return self
 
-    def is_simple(self, x) -> Literal[False]:
+    def is_simple(self, x) -> bool:
         """
         Tells whether the argument(args[0]) of DiracDelta is a linear
         expression in *x*.

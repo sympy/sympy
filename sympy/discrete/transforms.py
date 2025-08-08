@@ -68,7 +68,7 @@ def _fourier_transform(seq, dps, inverse=False):
     return a
 
 
-def fft(seq, dps=None) -> list[Any] | Any:
+def fft(seq, dps=None) -> list | Any:
     r"""
     Performs the Discrete Fourier Transform (**DFT**) in the complex domain.
 
@@ -117,7 +117,7 @@ def fft(seq, dps=None) -> list[Any] | Any:
     return _fourier_transform(seq, dps=dps)
 
 
-def ifft(seq, dps=None) -> list[Any] | Any:
+def ifft(seq, dps=None) -> list | Any:
     return _fourier_transform(seq, dps=dps, inverse=True)
 
 ifft.__doc__ = fft.__doc__
@@ -273,7 +273,7 @@ def _walsh_hadamard_transform(seq, inverse=False):
     return a
 
 
-def fwht(seq) -> list[Any] | Any:
+def fwht(seq) -> list | Any:
     r"""
     Performs the Walsh Hadamard Transform (**WHT**), and uses Hadamard
     ordering for the sequence.
@@ -312,7 +312,7 @@ def fwht(seq) -> list[Any] | Any:
     return _walsh_hadamard_transform(seq)
 
 
-def ifwht(seq) -> list[Any] | Any:
+def ifwht(seq) -> list | Any:
     return _walsh_hadamard_transform(seq, inverse=True)
 
 ifwht.__doc__ = fwht.__doc__
@@ -362,7 +362,7 @@ def _mobius_transform(seq, sgn, subset):
     return a
 
 
-def mobius_transform(seq, subset=True) -> list[Any] | Any:
+def mobius_transform(seq, subset=True) -> list | Any:
     r"""
     Performs the Mobius Transform for subset lattice with indices of
     sequence as bitmasks.
@@ -420,7 +420,7 @@ def mobius_transform(seq, subset=True) -> list[Any] | Any:
 
     return _mobius_transform(seq, sgn=+1, subset=subset)
 
-def inverse_mobius_transform(seq, subset=True) -> list[Any] | Any:
+def inverse_mobius_transform(seq, subset=True) -> list | Any:
     return _mobius_transform(seq, sgn=-1, subset=subset)
 
 inverse_mobius_transform.__doc__ = mobius_transform.__doc__

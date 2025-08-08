@@ -17,10 +17,10 @@ from sympy.core.random import _randint, randint
 
 from itertools import product
 from collections.abc import Generator
-from typing import Any, Literal
+from typing import Any
 
 
-def n_order(a, n) -> Literal[1]:
+def n_order(a, n) -> int:
     r""" Returns the order of ``a`` modulo ``n``.
 
     Explanation
@@ -531,7 +531,7 @@ def sqrt_mod(a, p, all_roots=False) -> list[Any | int] | Any | int | None:
     return x
 
 
-def sqrt_mod_iter(a, p, domain=int) -> Generator[Any | int, Any, None]:
+def sqrt_mod_iter(a, p, domain=int) -> Generator[Any | int]:
     """
     Iterate over solutions to ``x**2 = a mod p``.
 
@@ -980,7 +980,9 @@ def _nthroot_mod_prime_power(a, n, p, k):
     return sorted(tot_roots)
 
 
-def nthroot_mod(a, n, p, all_roots=False) -> list[Any | int] | Any | int | list[Any] | list[int] | list[int | Any] | None:
+def nthroot_mod(
+    a, n, p, all_roots=False
+) -> list[Any | int] | Any | int | list | list[int] | list[int | Any] | None:
     """
     Find the solutions to ``x**n = a mod p``.
 
@@ -1080,7 +1082,7 @@ def quadratic_residues(p) -> list[int]:
 The `sympy.ntheory.residue_ntheory.legendre_symbol` has been moved to `sympy.functions.combinatorial.numbers.legendre_symbol`.""",
 deprecated_since_version="1.13",
 active_deprecations_target='deprecated-ntheory-symbolic-functions')
-def legendre_symbol(a, p) -> Literal[0, 1, -1]:
+def legendre_symbol(a, p) -> int:
     r"""
     Returns the Legendre symbol `(a / p)`.
 
@@ -1685,7 +1687,7 @@ def discrete_log(n, a, b, order=None, prime_order=None) -> int:
 
 
 
-def quadratic_congruence(a, b, c, n) -> list[int] | list[Any]:
+def quadratic_congruence(a, b, c, n) -> list[int] | list:
     r"""
     Find the solutions to `a x^2 + b x + c \equiv 0 \pmod{n}`.
 
@@ -1772,7 +1774,9 @@ def _valid_expr(expr):
     return polynomial.all_coeffs()
 
 
-def polynomial_congruence(expr, m) -> list[Any | int] | Any | int | list[Any] | list[int] | list[int | Any] | None:
+def polynomial_congruence(
+    expr, m
+) -> list[Any | int] | Any | int | list | list[int] | list[int | Any] | None:
     """
     Find the solutions to a polynomial congruence equation modulo m.
 

@@ -16,7 +16,6 @@ from sympy.functions import sign
 from sympy.simplify.simplify import simplify
 from sympy.solvers.solvers import solve
 from sympy.core.basic import Basic
-from typing import Any, Literal
 from typing_extensions import Self
 
 
@@ -80,7 +79,7 @@ class Parabola(GeometrySet):
         return GeometryEntity.__new__(cls, focus, directrix, **kwargs)
 
     @property
-    def ambient_dimension(self) -> Literal[2]:
+    def ambient_dimension(self) -> int:
         """Returns the ambient dimension of parabola.
 
         Returns
@@ -292,7 +291,7 @@ class Parabola(GeometrySet):
         """
         return self.args[0]
 
-    def intersection(self, o) -> list[Parabola] | list[Any] | list[Point2D]:
+    def intersection(self, o) -> list[Parabola] | list | list[Point2D]:
         """The intersection of the parabola and another geometrical entity `o`.
 
         Parameters

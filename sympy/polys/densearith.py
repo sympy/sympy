@@ -46,7 +46,7 @@ def dup_add_term(f, c, i, K):
             return f[:m] + [f[m] + c] + f[m + 1:]
 
 
-def dmp_add_term(f, c, i, u, K) -> list[list[Any]]:
+def dmp_add_term(f, c, i, u, K) -> list[list]:
     """
     Add ``c(x_2..x_u)*x_0**i`` to ``f`` in ``K[X]``.
 
@@ -109,7 +109,7 @@ def dup_sub_term(f, c, i, K):
             return f[:m] + [f[m] - c] + f[m + 1:]
 
 
-def dmp_sub_term(f, c, i, u, K) -> list[list[Any]]:
+def dmp_sub_term(f, c, i, u, K) -> list[list]:
     """
     Subtract ``c(x_2..x_u)*x_0**i`` from ``f`` in ``K[X]``.
 
@@ -143,7 +143,7 @@ def dmp_sub_term(f, c, i, u, K) -> list[list[Any]]:
             return f[:m] + [dmp_sub(f[m], c, v, K)] + f[m + 1:]
 
 
-def dup_mul_term(f, c, i, K) -> list[Any]:
+def dup_mul_term(f, c, i, K) -> list:
     """
     Multiply ``f`` by ``c*x**i`` in ``K[x]``.
 
@@ -163,7 +163,7 @@ def dup_mul_term(f, c, i, K) -> list[Any]:
         return [ cf * c for cf in f ] + [K.zero]*i
 
 
-def dmp_mul_term(f, c, i, u, K) -> list[Any] | list[list[Any]] | list[Any | list[Any] | list[list[Any]]]:
+def dmp_mul_term(f, c, i, u, K) -> list | list[list] | list[Any | list | list[list]]:
     """
     Multiply ``f`` by ``c(x_2..x_u)*x_0**i`` in ``K[X]``.
 
@@ -207,7 +207,7 @@ def dup_add_ground(f, c, K):
     return dup_add_term(f, c, 0, K)
 
 
-def dmp_add_ground(f, c, u, K) -> list[list[Any]]:
+def dmp_add_ground(f, c, u, K) -> list[list]:
     """
     Add an element of the ground domain to ``f``.
 
@@ -241,7 +241,7 @@ def dup_sub_ground(f, c, K):
     return dup_sub_term(f, c, 0, K)
 
 
-def dmp_sub_ground(f, c, u, K) -> list[list[Any]]:
+def dmp_sub_ground(f, c, u, K) -> list[list]:
     """
     Subtract an element of the ground domain from ``f``.
 
@@ -258,7 +258,7 @@ def dmp_sub_ground(f, c, u, K) -> list[list[Any]]:
     return dmp_sub_term(f, dmp_ground(c, u - 1), 0, u, K)
 
 
-def dup_mul_ground(f, c, K) -> list[Any]:
+def dup_mul_ground(f, c, K) -> list:
     """
     Multiply ``f`` by a constant value in ``K[x]``.
 
@@ -278,7 +278,7 @@ def dup_mul_ground(f, c, K) -> list[Any]:
         return [ cf * c for cf in f ]
 
 
-def dmp_mul_ground(f, c, u, K) -> list[Any]:
+def dmp_mul_ground(f, c, u, K) -> list:
     """
     Multiply ``f`` by a constant value in ``K[X]``.
 
@@ -300,7 +300,7 @@ def dmp_mul_ground(f, c, u, K) -> list[Any]:
     return [ dmp_mul_ground(cf, c, v, K) for cf in f ]
 
 
-def dup_quo_ground(f, c, K) -> list[Any]:
+def dup_quo_ground(f, c, K) -> list:
     """
     Quotient by a constant in ``K[x]``.
 
@@ -329,7 +329,7 @@ def dup_quo_ground(f, c, K) -> list[Any]:
         return [ cf // c for cf in f ]
 
 
-def dmp_quo_ground(f, c, u, K) -> list[Any]:
+def dmp_quo_ground(f, c, u, K) -> list:
     """
     Quotient by a constant in ``K[X]``.
 
@@ -355,7 +355,7 @@ def dmp_quo_ground(f, c, u, K) -> list[Any]:
     return [ dmp_quo_ground(cf, c, v, K) for cf in f ]
 
 
-def dup_exquo_ground(f, c, K) -> list[Any]:
+def dup_exquo_ground(f, c, K) -> list:
     """
     Exact quotient by a constant in ``K[x]``.
 
@@ -377,7 +377,7 @@ def dup_exquo_ground(f, c, K) -> list[Any]:
     return [ K.exquo(cf, c) for cf in f ]
 
 
-def dmp_exquo_ground(f, c, u, K) -> list[Any]:
+def dmp_exquo_ground(f, c, u, K) -> list:
     """
     Exact quotient by a constant in ``K[X]``.
 
@@ -438,7 +438,7 @@ def dup_rshift(f, n, K):
     return f[:-n]
 
 
-def dup_abs(f, K) -> list[Any]:
+def dup_abs(f, K) -> list:
     """
     Make all coefficients positive in ``K[x]``.
 
@@ -455,7 +455,7 @@ def dup_abs(f, K) -> list[Any]:
     return [ K.abs(coeff) for coeff in f ]
 
 
-def dmp_abs(f, u, K) -> list[Any]:
+def dmp_abs(f, u, K) -> list:
     """
     Make all coefficients positive in ``K[X]``.
 
@@ -477,7 +477,7 @@ def dmp_abs(f, u, K) -> list[Any]:
     return [ dmp_abs(cf, v, K) for cf in f ]
 
 
-def dup_neg(f, K) -> list[Any]:
+def dup_neg(f, K) -> list:
     """
     Negate a polynomial in ``K[x]``.
 
@@ -494,7 +494,7 @@ def dup_neg(f, K) -> list[Any]:
     return [ -coeff for coeff in f ]
 
 
-def dmp_neg(f, u, K) -> list[Any]:
+def dmp_neg(f, u, K) -> list:
     """
     Negate a polynomial in ``K[X]``.
 
@@ -593,7 +593,7 @@ def dmp_add(f: dmp[Er], g: dmp[Er], u: int, K: Domain[Er]) -> dmp[Er]:
         return h + [ dmp_add(a, b, v, K) for a, b in zip(f, g) ]
 
 
-def dup_sub(f, g, K) -> list[Any]:
+def dup_sub(f, g, K) -> list:
     """
     Subtract dense polynomials in ``K[x]``.
 
@@ -628,7 +628,7 @@ def dup_sub(f, g, K) -> list[Any]:
         return h + [ a - b for a, b in zip(f, g) ]
 
 
-def dmp_sub(f, g, u, K) -> list[Any] | list[list[Any]]:
+def dmp_sub(f, g, u, K) -> list | list[list]:
     """
     Subtract dense polynomials in ``K[X]``.
 
@@ -687,7 +687,7 @@ def dup_add_mul(f, g, h, K):
     return dup_add(f, dup_mul(g, h, K), K)
 
 
-def dmp_add_mul(f, g, h, u, K) -> list[list[Any]]:
+def dmp_add_mul(f, g, h, u, K) -> list[list]:
     """
     Returns ``f + g*h`` where ``f, g, h`` are in ``K[X]``.
 
@@ -704,7 +704,7 @@ def dmp_add_mul(f, g, h, u, K) -> list[list[Any]]:
     return dmp_add(f, dmp_mul(g, h, u, K), u, K)
 
 
-def dup_sub_mul(f, g, h, K) -> list[Any]:
+def dup_sub_mul(f, g, h, K) -> list:
     """
     Returns ``f - g*h`` where ``f, g, h`` are in ``K[x]``.
 
@@ -721,7 +721,7 @@ def dup_sub_mul(f, g, h, K) -> list[Any]:
     return dup_sub(f, dup_mul(g, h, K), K)
 
 
-def dmp_sub_mul(f, g, h, u, K) -> list[Any] | list[list[Any]]:
+def dmp_sub_mul(f, g, h, u, K) -> list | list[list]:
     """
     Returns ``f - g*h`` where ``f, g, h`` are in ``K[X]``.
 
@@ -738,7 +738,7 @@ def dmp_sub_mul(f, g, h, u, K) -> list[Any] | list[list[Any]]:
     return dmp_sub(f, dmp_mul(g, h, u, K), u, K)
 
 
-def dup_mul(f, g, K) -> list[Any]:
+def dup_mul(f, g, K) -> list:
     """
     Multiply dense polynomials in ``K[x]``.
 
@@ -795,7 +795,7 @@ def dup_mul(f, g, K) -> list[Any]:
                        dup_lshift(hi, 2*n2, K), K)
 
 
-def dmp_mul(f, g, u, K) -> list[Any] | list[list[Any]]:
+def dmp_mul(f, g, u, K) -> list | list[list]:
     """
     Multiply dense polynomials in ``K[X]``.
 
@@ -957,7 +957,7 @@ def dup_sqr(f, K):
     return dup_strip(h)
 
 
-def dmp_sqr(f, u, K) -> list[list[Any]]:
+def dmp_sqr(f, u, K) -> list[list]:
     """
     Square dense polynomials in ``K[X]``.
 
@@ -1005,7 +1005,7 @@ def dmp_sqr(f, u, K) -> list[list[Any]]:
     return dmp_strip(h, u)
 
 
-def dup_pow(f, n, K) -> list[Any]:
+def dup_pow(f, n, K) -> list:
     """
     Raise ``f`` to the ``n``-th power in ``K[x]``.
 
@@ -1042,7 +1042,7 @@ def dup_pow(f, n, K) -> list[Any]:
     return g
 
 
-def dmp_pow(f, n, u, K) -> list[Any] | list[list[Any]]:
+def dmp_pow(f, n, u, K) -> list | list[list]:
     """
     Raise ``f`` to the ``n``-th power in ``K[X]``.
 
@@ -1125,7 +1125,7 @@ def dup_series_pow(f, n, prec, K):
     return _dup_recurse_pow(f, n, prec, K)
 
 
-def dup_pdiv(f, g, K) -> tuple[list[Any], Any] | tuple[list[Any], list[Any]]:
+def dup_pdiv(f, g, K) -> tuple[list, Any] | tuple[list, list]:
     """
     Polynomial pseudo-division in ``K[x]``.
 
@@ -1178,7 +1178,7 @@ def dup_pdiv(f, g, K) -> tuple[list[Any], Any] | tuple[list[Any], list[Any]]:
     return q, r
 
 
-def dup_prem(f, g, K) -> list[Any]:
+def dup_prem(f, g, K) -> list:
     """
     Polynomial pseudo-remainder in ``K[x]``.
 
@@ -1223,7 +1223,7 @@ def dup_prem(f, g, K) -> list[Any]:
     return dup_mul_ground(r, lc_g**N, K)
 
 
-def dup_pquo(f, g, K) -> list[Any]:
+def dup_pquo(f, g, K) -> list:
     """
     Polynomial exact pseudo-quotient in ``K[X]``.
 
@@ -1243,7 +1243,7 @@ def dup_pquo(f, g, K) -> list[Any]:
     return dup_pdiv(f, g, K)[0]
 
 
-def dup_pexquo(f, g, K) -> list[Any]:
+def dup_pexquo(f, g, K) -> list:
     """
     Polynomial pseudo-quotient in ``K[x]``.
 
@@ -1270,13 +1270,15 @@ def dup_pexquo(f, g, K) -> list[Any]:
         raise ExactQuotientFailed(f, g)
 
 
-def dmp_pdiv(f, g, u, K) -> (
-    tuple[list[Any], Any]
-    | tuple[list[Any], list[Any]]
-    | tuple[list[list[Any]], Any]
+def dmp_pdiv(
+    f, g, u, K
+) -> (
+    tuple[list, Any]
+    | tuple[list, list]
+    | tuple[list[list], Any]
     | tuple[
-        list[Any] | Any | list[list[Any]] | list[Any | list[Any] | list[list[Any]]],
-        list[Any] | Any | list[list[Any]] | list[Any | list[Any] | list[list[Any]]],
+        list | Any | list[list] | list[Any | list | list[list]],
+        list | Any | list[list] | list[Any | list | list[list]],
     ]
 ):
     """
@@ -1335,7 +1337,7 @@ def dmp_pdiv(f, g, u, K) -> (
     return q, r
 
 
-def dmp_prem(f, g, u, K) -> list[Any] | list[list[Any]] | list[Any | list[Any] | list[list[Any]]]:
+def dmp_prem(f, g, u, K) -> list | list[list] | list[Any | list | list[list]]:
     """
     Polynomial pseudo-remainder in ``K[X]``.
 
@@ -1386,7 +1388,7 @@ def dmp_prem(f, g, u, K) -> list[Any] | list[list[Any]] | list[Any | list[Any] |
     return dmp_mul_term(r, c, 0, u, K)
 
 
-def dmp_pquo(f, g, u, K) -> list[list[Any]] | list[Any] | list[Any | list[Any] | list[list[Any]]]:
+def dmp_pquo(f, g, u, K) -> list[list] | list | list[Any | list | list[list]]:
     """
     Polynomial exact pseudo-quotient in ``K[X]``.
 
@@ -1410,7 +1412,7 @@ def dmp_pquo(f, g, u, K) -> list[list[Any]] | list[Any] | list[Any | list[Any] |
     return dmp_pdiv(f, g, u, K)[0]
 
 
-def dmp_pexquo(f, g, u, K) -> list[Any] | list[list[Any]] | list[Any | list[Any] | list[list[Any]]]:
+def dmp_pexquo(f, g, u, K) -> list | list[list] | list[Any | list | list[list]]:
     """
     Polynomial pseudo-quotient in ``K[X]``.
 
@@ -1441,7 +1443,7 @@ def dmp_pexquo(f, g, u, K) -> list[Any] | list[list[Any]] | list[Any | list[Any]
         raise ExactQuotientFailed(f, g)
 
 
-def dup_rr_div(f, g, K) -> tuple[list[Any], Any] | tuple[Any | list[Any], Any | list[Any]]:
+def dup_rr_div(f, g, K) -> tuple[list, Any] | tuple[Any | list, Any | list]:
     """
     Univariate division with remainder over a ring.
 
@@ -1490,11 +1492,13 @@ def dup_rr_div(f, g, K) -> tuple[list[Any], Any] | tuple[Any | list[Any], Any | 
     return q, r
 
 
-def dmp_rr_div(f, g, u, K) -> (
-    tuple[list[Any], Any]
-    | tuple[Any | list[Any], Any | list[Any]]
-    | tuple[list[list[Any]], Any]
-    | tuple[list[list[Any]] | Any, Any | list[Any] | list[list[Any]]]
+def dmp_rr_div(
+    f, g, u, K
+) -> (
+    tuple[list, Any]
+    | tuple[Any | list, Any | list]
+    | tuple[list[list], Any]
+    | tuple[list[list] | Any, Any | list | list[list]]
 ):
     """
     Multivariate division with remainder over a ring.
@@ -1548,7 +1552,7 @@ def dmp_rr_div(f, g, u, K) -> (
     return q, r
 
 
-def dup_ff_div(f, g, K) -> tuple[list[Any], Any] | tuple[Any, list[Any] | Any]:
+def dup_ff_div(f, g, K) -> tuple[list, Any] | tuple[Any, list | Any]:
     """
     Polynomial division with remainder over a field.
 
@@ -1600,11 +1604,13 @@ def dup_ff_div(f, g, K) -> tuple[list[Any], Any] | tuple[Any, list[Any] | Any]:
     return q, r
 
 
-def dmp_ff_div(f, g, u, K) -> (
-    tuple[list[Any], Any]
-    | tuple[Any, list[Any] | Any]
-    | tuple[list[list[Any]], Any]
-    | tuple[list[list[Any]] | Any, Any | list[Any] | list[list[Any]]]
+def dmp_ff_div(
+    f, g, u, K
+) -> (
+    tuple[list, Any]
+    | tuple[Any, list | Any]
+    | tuple[list[list], Any]
+    | tuple[list[list] | Any, Any | list | list[list]]
 ):
     """
     Polynomial division with remainder over a field.
@@ -1658,7 +1664,9 @@ def dmp_ff_div(f, g, u, K) -> (
     return q, r
 
 
-def dup_div(f, g, K) -> tuple[list[Any], Any] | tuple[Any, list[Any] | Any] | tuple[Any | list[Any], Any | list[Any]]:
+def dup_div(
+    f, g, K
+) -> tuple[list, Any] | tuple[Any, list | Any] | tuple[Any | list, Any | list]:
     """
     Polynomial division with remainder in ``K[x]``.
 
@@ -1682,7 +1690,7 @@ def dup_div(f, g, K) -> tuple[list[Any], Any] | tuple[Any, list[Any] | Any] | tu
         return dup_rr_div(f, g, K)
 
 
-def dup_rem(f, g, K) -> list[Any]:
+def dup_rem(f, g, K) -> list:
     """
     Returns polynomial remainder in ``K[x]``.
 
@@ -1703,7 +1711,7 @@ def dup_rem(f, g, K) -> list[Any]:
     return dup_div(f, g, K)[1]
 
 
-def dup_quo(f, g, K) -> list[Any]:
+def dup_quo(f, g, K) -> list:
     """
     Returns exact polynomial quotient in ``K[x]``.
 
@@ -1724,7 +1732,7 @@ def dup_quo(f, g, K) -> list[Any]:
     return dup_div(f, g, K)[0]
 
 
-def dup_exquo(f, g, K) -> list[Any]:
+def dup_exquo(f, g, K) -> list:
     """
     Returns polynomial quotient in ``K[x]``.
 
@@ -1751,12 +1759,14 @@ def dup_exquo(f, g, K) -> list[Any]:
         raise ExactQuotientFailed(f, g)
 
 
-def dmp_div(f, g, u, K) -> (
-    tuple[list[Any], Any]
-    | tuple[Any, list[Any] | Any]
-    | tuple[list[list[Any]], Any]
-    | tuple[list[list[Any]] | Any, Any | list[Any] | list[list[Any]]]
-    | tuple[Any | list[Any], Any | list[Any]]
+def dmp_div(
+    f, g, u, K
+) -> (
+    tuple[list, Any]
+    | tuple[Any, list | Any]
+    | tuple[list[list], Any]
+    | tuple[list[list] | Any, Any | list | list[list]]
+    | tuple[Any | list, Any | list]
 ):
     """
     Polynomial division with remainder in ``K[X]``.
@@ -1781,7 +1791,7 @@ def dmp_div(f, g, u, K) -> (
         return dmp_rr_div(f, g, u, K)
 
 
-def dmp_rem(f, g, u, K) -> list[Any] | list[list[Any]]:
+def dmp_rem(f, g, u, K) -> list | list[list]:
     """
     Returns polynomial remainder in ``K[X]``.
 
@@ -1802,7 +1812,7 @@ def dmp_rem(f, g, u, K) -> list[Any] | list[list[Any]]:
     return dmp_div(f, g, u, K)[1]
 
 
-def dmp_quo(f, g, u, K) -> list[list[Any]]:
+def dmp_quo(f, g, u, K) -> list[list]:
     """
     Returns exact polynomial quotient in ``K[X]``.
 
@@ -1823,7 +1833,7 @@ def dmp_quo(f, g, u, K) -> list[list[Any]]:
     return dmp_div(f, g, u, K)[0]
 
 
-def dmp_exquo(f, g, u, K) -> list[list[Any]]:
+def dmp_exquo(f, g, u, K) -> list[list]:
     """
     Returns polynomial quotient in ``K[X]``.
 
@@ -1977,7 +1987,7 @@ def dmp_l2_norm_squared(f: dmp[Er], u: int, K: Domain[Er]) -> Er:
     return K.sum(dmp_l2_norm_squared(c, v, K) for c in f)
 
 
-def dup_expand(polys, K) -> list[Any]:
+def dup_expand(polys, K) -> list:
     """
     Multiply together several polynomials in ``K[x]``.
 
@@ -2002,7 +2012,7 @@ def dup_expand(polys, K) -> list[Any]:
     return f
 
 
-def dmp_expand(polys, u, K) -> list[list[Any]] | list[Any]:
+def dmp_expand(polys, u, K) -> list[list] | list:
     """
     Multiply together several polynomials in ``K[X]``.
 

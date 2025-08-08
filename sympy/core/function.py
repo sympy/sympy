@@ -32,8 +32,9 @@ There are three types of functions implemented in SymPy:
 
 from __future__ import annotations
 
-from typing import Callable, Literal, Any
+from typing import Callable, Any, TYPE_CHECKING
 from collections.abc import Iterable
+from collections import Counter
 import copyreg
 
 from .add import Add
@@ -64,16 +65,12 @@ import mpmath
 from mpmath.libmp.libmpf import prec_to_dps
 
 import inspect
-from collections import Counter
-from sympy.core.basic import Basic
-from sympy.core.expr import AtomicExpr, Expr
-from sympy.core.kind import Kind
-from sympy.core.logic import FuzzyBool
-from sympy.core.numbers import Float
-from sympy.sets.sets import FiniteSet
-from sympy.tensor.array.array_derivatives import ArrayDerivative
+from .kind import Kind
 from types import NotImplementedType
 from typing_extensions import Self
+
+if TYPE_CHECKING:
+    from sympy.tensor.array.array_derivatives import ArrayDerivative
 
 def _coeff_isneg(a):
     """Return True if the leading Number is negative.
@@ -222,7 +219,7 @@ class FunctionClass(type):
         return signature(self.eval)
 
     @property
-    def free_symbols(self) -> set[Any]:
+    def free_symbols(self) -> set:
         return set()
 
     @property
@@ -513,7 +510,7 @@ class Function(Application, Expr):
         return max(m[0]._prec, m[1]._prec)
 
     @classmethod
-    def class_key(cls) -> tuple[Literal[4], int, str]:
+    def class_key(cls) -> tuple[int, int, str]:
         from sympy.sets.fancysets import Naturals0
         funcs = {
             'exp': 10,
@@ -1021,7 +1018,7 @@ class WildFunction(Function, AtomicExpr):  # type: ignore
     """
 
     # XXX: What is this class attribute used for?
-    include: set[Any] = set()
+    include: set = set()
 
     def __init__(cls, name, **assumptions) -> None:
         from sympy.sets.sets import Set, FiniteSet
@@ -1036,7 +1033,7 @@ class WildFunction(Function, AtomicExpr):  # type: ignore
             nargs = FiniteSet(*nargs)
         cls.nargs = nargs
 
-    def matches(self, expr, repl_dict=None, old=False) -> dict[Any, Any] | None:
+    def matches(self, expr, repl_dict=None, old=False) -> dict | None:
         if not isinstance(expr, (AppliedUndef, Function)):
             return None
         if len(expr.args) not in self.nargs:
@@ -1678,7 +1675,7 @@ class Derivative(Expr):
         return [i[0] for i in self.variable_count]
 
     @property
-    def variables(self) -> tuple[Any, ...]:
+    def variables(self) -> tuple:
         # TODO: deprecate?  YES, make this 'enumerated_variables' and
         #       name _wrt_variables as variables
         # TODO: support for `d^n`?
@@ -1834,7 +1831,7 @@ class Derivative(Expr):
                 break
         return d
 
-    def as_finite_difference(self, points=1, x0=None, wrt=None) -> Literal[0]:
+    def as_finite_difference(self, points=1, x0=None, wrt=None) -> int:
         """ Expresses a Derivative instance as a finite difference.
 
         Parameters
@@ -2039,7 +2036,7 @@ class Lambda(Expr):
         return self._args[1]
 
     @property
-    def variables(self) -> tuple[Any, ...]:
+    def variables(self) -> tuple:
         """The variables used in the internal representation of the function"""
         def _variables(args):
             if isinstance(args, Tuple):
@@ -2345,7 +2342,7 @@ class Subs(Expr):
             set(self.point.free_symbols))
 
     @property
-    def expr_free_symbols(self) -> set[Any]:
+    def expr_free_symbols(self) -> set:
         sympy_deprecation_warning("""
         The expr_free_symbols property is deprecated. Use free_symbols to get
         the free symbols of an expression.
@@ -3341,7 +3338,9 @@ def count_ops(expr, visual=False):
     return sum(int((a.args or [1])[0]) for a in Add.make_args(ops))
 
 
-def nfloat(expr, n=15, exponent=False, dkeys=False) -> dict[Any, Any] | dict | Basic | Any | Float:
+def nfloat(
+    expr, n=15, exponent=False, dkeys=False
+) -> dict | dict | Basic | Any | Float:
     """Make all Rationals in expr Floats except those in exponents
     (unless the exponents flag is set to True) and those in undefined
     functions. When processing dictionaries, do not modify the keys

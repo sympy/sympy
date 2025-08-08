@@ -13,7 +13,6 @@ from sympy.polys.polyerrors import UnificationFailed, CoercionFailed, DomainErro
 from sympy.polys.polyutils import _unify_gens, _not_a_coeff
 from sympy.utilities import public
 from sympy.utilities.iterables import is_sequence
-from typing_extensions import Self
 
 
 if TYPE_CHECKING:

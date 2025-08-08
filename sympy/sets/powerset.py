@@ -106,7 +106,7 @@ class PowerSet(Set):
     def __len__(self):
         return 2 ** len(self.arg)
 
-    def __iter__(self) -> Iterator[Any]:
+    def __iter__(self) -> Iterator:
         found = [S.EmptySet]
         yield S.EmptySet
 

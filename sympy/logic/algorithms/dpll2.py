@@ -16,8 +16,6 @@ from sympy.core.sorting import ordered
 from sympy.assumptions.cnf import EncodedCNF
 
 from sympy.logic.algorithms.lra_theory import LRASolver
-from collections.abc import Generator
-from typing import Any, Literal
 
 
 def dpll_satisfiable(expr, all_models=False, use_lra_theory=False):

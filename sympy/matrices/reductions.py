@@ -166,14 +166,14 @@ def _echelon_form(M: Tmat,
         iszerofunc: Callable[[Expr], bool | None] = _iszero,
         simplify: bool | Callable[[Expr], Expr] = False,
         *,
-        with_pivots: Literal[False] = False
+        with_pivots: bool = False
     ) -> Tmat: ...
 @overload
 def _echelon_form(M: Tmat,
         iszerofunc: Callable[[Expr], bool | None] = _iszero,
         simplify: bool | Callable[[Expr], Expr] = False,
         *,
-        with_pivots: Literal[True],
+        with_pivots: bool,
     ) -> tuple[Tmat, tuple[int]]: ...
 @overload
 def _echelon_form(M: Tmat,
@@ -339,7 +339,7 @@ def _rref(
         iszerofunc: Callable[[Expr], bool | None] = _iszero,
         simplify: bool | Callable[[Expr], Expr] = False,
         *,
-        pivots: Literal[False],
+        pivots: bool,
         normalize_last: bool = True,
         ) -> Tmat: ...
 @overload
@@ -348,7 +348,7 @@ def _rref(
         iszerofunc: Callable[[Expr], bool | None] = _iszero,
         simplify: bool | Callable[[Expr], Expr] = False,
         *,
-        pivots: Literal[True] = True,
+        pivots: bool = True,
         normalize_last: bool = True,
     ) -> tuple[Tmat, tuple[int]]: ...
 @overload

@@ -1,16 +1,19 @@
 """
 General binary relations.
 """
-from typing import Optional
+from __future__ import annotations
+
+from typing import Optional, TYPE_CHECKING
 
 from sympy.core.singleton import S
 from sympy.assumptions import AppliedPredicate, ask, Predicate, Q  # type: ignore
 from sympy.core.kind import BooleanKind
 from sympy.core.relational import Eq, Ne, Gt, Lt, Ge, Le
 from sympy.logic.boolalg import conjuncts, Not
-import sympy.core.logic
 from sympy.core.basic import Basic
-from typing_extensions import Self
+
+if TYPE_CHECKING:
+    from typing_extensions import Self
 
 __all__ = ["BinaryRelation", "AppliedBinaryRelation"]
 
@@ -175,7 +178,7 @@ class AppliedBinaryRelation(AppliedPredicate):
         return self
 
     @property
-    def negated(self) ->     sympy.core.logic.Not:
+    def negated(self) ->     Not:
         neg_rel = self.function.negated
         if neg_rel is None:
             return Not(self, evaluate=False)

@@ -36,7 +36,7 @@ from sympy.utilities.misc import as_int, filldedent, translate
 from sympy.utilities.iterables import uniq, multiset
 from sympy.utilities.decorator import doctest_depends_on
 from array import array
-from typing import Any, Literal
+from typing import Any
 
 
 if GROUND_TYPES == 'flint':
@@ -1589,7 +1589,7 @@ def _rsa_key(*args, public=True, private=True, totient='Euler', index=None, mult
     return False
 
 
-def rsa_public_key(*args, **kwargs) -> tuple[Any, Any] | tuple[Any, Any | int] | Literal[False]:
+def rsa_public_key(*args, **kwargs) -> tuple[Any, Any] | tuple[Any, Any | int] | bool:
     r"""Return the RSA *public key* pair, `(n, e)`
 
     Parameters
@@ -1761,7 +1761,7 @@ def rsa_public_key(*args, **kwargs) -> tuple[Any, Any] | tuple[Any, Any | int] |
     return _rsa_key(*args, public=True, private=False, **kwargs)
 
 
-def rsa_private_key(*args, **kwargs) -> tuple[Any, Any] | tuple[Any, Any | int] | Literal[False]:
+def rsa_private_key(*args, **kwargs) -> tuple[Any, Any] | tuple[Any, Any | int] | bool:
     r"""Return the RSA *private key* pair, `(n, d)`
 
     Parameters
@@ -2297,7 +2297,7 @@ def decode_morse(msg, sep='|', mapping=None) -> str:
 
 
 @doctest_depends_on(ground_types=['python', 'gmpy'])
-def lfsr_sequence(key, fill, n) -> list[Any]:
+def lfsr_sequence(key, fill, n) -> list:
     r"""
     This function creates an LFSR sequence.
 
@@ -3000,7 +3000,7 @@ def gm_private_key(p, q, a=None) -> tuple[Any, Any]:
     return p, q
 
 
-def gm_public_key(p, q, a=None, seed=None) -> tuple[int | Any, Any] | Literal[False]:
+def gm_public_key(p, q, a=None, seed=None) -> tuple[int | Any, Any] | bool:
     """
     Compute public keys for ``p`` and ``q``.
     Note that in Goldwasser-Micali Encryption,
@@ -3038,7 +3038,7 @@ def gm_public_key(p, q, a=None, seed=None) -> tuple[int | Any, Any] | Literal[Fa
     return (a, N)
 
 
-def encipher_gm(i, key, seed=None) -> list[Any]:
+def encipher_gm(i, key, seed=None) -> list:
     """
     Encrypt integer 'i' using public_key 'key'
     Note that gm uses random encryption.
@@ -3251,7 +3251,7 @@ def bg_public_key(p, q):
     N = p * q
     return N
 
-def encipher_bg(i, key, seed=None) -> tuple[list[Any], int]:
+def encipher_bg(i, key, seed=None) -> tuple[list, int]:
     """
     Encrypts the message using public key and seed.
 
@@ -3316,7 +3316,7 @@ def encipher_bg(i, key, seed=None) -> tuple[list[Any], int]:
 
     return (encrypt_msg, x_L)
 
-def decipher_bg(message, key) -> Literal[0]:
+def decipher_bg(message, key) -> int:
     """
     Decrypts the message using private keys.
 

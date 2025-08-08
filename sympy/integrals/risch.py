@@ -49,7 +49,7 @@ from sympy.polys.polytools import (real_roots, cancel, Poly, gcd,
 from sympy.polys.rootoftools import RootSum
 from sympy.utilities.iterables import numbered_symbols
 from sympy.integrals.integrals import Integral
-from typing import Any, Literal
+from typing import Any
 
 
 def integer_powers(exprs) -> list[tuple[Any, Any]]:
@@ -747,7 +747,7 @@ class DifferentialExtension:
         return None
 
 
-def update_sets(seq, atoms, func) -> list[Any]:
+def update_sets(seq, atoms, func) -> list:
     s = set(seq)
     s = atoms.intersection(s)
     new = atoms - s
@@ -878,7 +878,7 @@ def as_poly_1t(p, t, z):
     return ans
 
 
-def derivation(p, DE, coefficientD=False, basic=False) -> Any | Literal[0]:
+def derivation(p, DE, coefficientD=False, basic=False) -> Any | int:
     """
     Computes Dp.
 
@@ -930,7 +930,7 @@ def derivation(p, DE, coefficientD=False, basic=False) -> Any | Literal[0]:
     return r
 
 
-def get_case(d, t) -> Literal["base", "primitive", "exp", "tan", "other_nonlinear", "other_linear"]:
+def get_case(d, t) -> str:
     """
     Returns the type of the derivation d.
 
@@ -993,7 +993,9 @@ def splitfactor(p, DE, coefficientD=False, z=None) -> tuple[Any, Any]:
         return (p, One)
 
 
-def splitfactor_sqf(p, DE, coefficientD=False, z=None, basic=False) -> tuple[tuple[tuple[Any, Literal[1]]], tuple[()]] | tuple[tuple[Any, ...], tuple[Any, ...]]:
+def splitfactor_sqf(
+    p, DE, coefficientD=False, z=None, basic=False
+) -> tuple[tuple[tuple[Any, int]], tuple[()]] | tuple[tuple, tuple]:
     """
     Splitting Square-free Factorization.
 
@@ -1135,7 +1137,7 @@ def polynomial_reduce(p, DE) -> tuple[Any, Any]:
     return (q, p)
 
 
-def laurent_series(a, d, F, n, DE) -> tuple[Any, Any, list[Any]] | Literal[0]:
+def laurent_series(a, d, F, n, DE) -> tuple[Any, Any, list] | int:
     """
     Contribution of ``F`` to the full partial fraction decomposition of A/D.
 
@@ -1257,7 +1259,9 @@ def recognize_log_derivative(a, d, DE, z=None) -> bool:
             return False
     return True
 
-def residue_reduce(a, d, DE, z=None, invert=True) -> tuple[list[Any], Literal[True]] | tuple[list[Any], bool]:
+def residue_reduce(
+    a, d, DE, z=None, invert=True
+) -> tuple[list, bool] | tuple[list, bool]:
     """
     Lazard-Rioboo-Rothstein-Trager resultant reduction.
 
@@ -1370,7 +1374,7 @@ def residue_reduce_derivation(H, DE, z):
         DE).as_expr().subs(z, i)/a[1].as_expr().subs(z, i))) for a in H))
 
 
-def integrate_primitive_polynomial(p, DE) -> tuple[Any, Any, Literal[True]] | tuple[Any, Any, Literal[False]]:
+def integrate_primitive_polynomial(p, DE) -> tuple[Any, Any, bool] | tuple[Any, Any, bool]:
     """
     Integration of primitive polynomials.
 
@@ -1417,7 +1421,7 @@ def integrate_primitive_polynomial(p, DE) -> tuple[Any, Any, Literal[True]] | tu
 
 
 def integrate_primitive(a, d, DE, z=None) -> (
-    tuple[Any, Any | Equality | Relational | Ne | NonElementaryIntegral, Literal[False]]
+    tuple[Any, Any | Equality | Relational | Ne | NonElementaryIntegral, bool]
     | tuple[Any, Any | Equality | Relational | Ne | NonElementaryIntegral, bool]
 ):
     """
@@ -1468,7 +1472,7 @@ def integrate_primitive(a, d, DE, z=None) -> (
     return (ret, i, b)
 
 
-def integrate_hyperexponential_polynomial(p, DE, z) -> tuple[Any, Any, Literal[True]] | tuple[Any, Any, bool]:
+def integrate_hyperexponential_polynomial(p, DE, z) -> tuple[Any, Any, bool] | tuple[Any, Any, bool]:
     """
     Integration of hyperexponential polynomials.
 
@@ -1521,7 +1525,7 @@ def integrate_hyperexponential_polynomial(p, DE, z) -> tuple[Any, Any, Literal[T
 
 
 def integrate_hyperexponential(a, d, DE, z=None, conds='piecewise') -> (
-    tuple[Any, Any | Equality | Relational | Ne | NonElementaryIntegral, Literal[False]]
+    tuple[Any, Any | Equality | Relational | Ne | NonElementaryIntegral, bool]
     | tuple[Any, Any | Equality | Relational | Ne | NonElementaryIntegral, bool]
 ):
     """
@@ -1607,7 +1611,7 @@ def integrate_hypertangent_polynomial(p, DE) -> tuple[Any, Any]:
     return (q, c)
 
 
-def integrate_nonlinear_no_specials(a, d, DE, z=None) -> tuple[Any, Literal[False]] | tuple[Any, bool]:
+def integrate_nonlinear_no_specials(a, d, DE, z=None) -> tuple[Any, bool] | tuple[Any, bool]:
     """
     Integration of nonlinear monomials with no specials.
 
@@ -1706,7 +1710,7 @@ class NonElementaryIntegral(Integral):
 
 def risch_integrate(f, x, extension=None, handle_first='log',
                     separate_integral=False, rewrite_complex=None,
-                    conds='piecewise') -> tuple[Any, NonElementaryIntegral] | tuple[Any, Literal[0]] | None:
+                    conds='piecewise') -> tuple[Any, NonElementaryIntegral] | tuple[Any, int] | None:
     r"""
     The Risch Integration Algorithm.
 

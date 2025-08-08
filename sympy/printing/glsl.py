@@ -74,7 +74,7 @@ class GLSLPrinter(CodePrinter):
     def _format_code(self, lines):
         return self.indent_code(lines)
 
-    def indent_code(self, code) -> str | list[Any]:
+    def indent_code(self, code) -> str | list:
         """Accepts a string of code or a list of code lines"""
 
         if isinstance(code, str):
@@ -336,7 +336,9 @@ class GLSLPrinter(CodePrinter):
         s = reduce(lambda a,b: mul(a,b), (self._print(t) for t in terms))
         return s
 
-def glsl_code(expr,assign_to=None,**settings) -> str | tuple[set[tuple[Any, str]], set[Any], str]:
+def glsl_code(
+    expr, assign_to=None, **settings
+) -> str | tuple[set[tuple[Any, str]], set, str]:
     """Converts an expr to a string of GLSL code
 
     Parameters

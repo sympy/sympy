@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from math import log
 
 from sympy.core.random import _randint
@@ -5,7 +7,6 @@ from sympy.external.gmpy import gcd, invert, sqrt
 from sympy.utilities.misc import as_int
 from .generate import sieve, primerange
 from .primetest import isprime
-from typing import Any
 from typing_extensions import Self
 
 
@@ -294,7 +295,7 @@ def _ecm_one_factor(n, B1=10000, B2=100000, max_curve=200, seed=None):
             return g
 
 
-def ecm(n, B1=10000, B2=100000, max_curve=200, seed=1234) -> set[Any]:
+def ecm(n, B1=10000, B2=100000, max_curve=200, seed=1234) -> set:
     """Performs factorization using Lenstra's Elliptic curve method.
 
     This function repeatedly calls ``_ecm_one_factor`` to compute the factors

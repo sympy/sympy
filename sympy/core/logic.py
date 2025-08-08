@@ -8,7 +8,7 @@ this stuff for general purpose.
 """
 
 from __future__ import annotations
-from typing import Any, Optional
+from typing import Optional
 from typing_extensions import Self
 
 # Type of a fuzzy bool
@@ -343,7 +343,7 @@ class AndOr_Base(Logic):
         return Logic.__new__(cls, *args)
 
     @classmethod
-    def flatten(cls, args) -> tuple[Any, ...]:
+    def flatten(cls, args) -> tuple:
         # quick-n-dirty flattening for And and Or
         args_queue = list(args)
         res = []

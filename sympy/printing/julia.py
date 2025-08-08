@@ -474,8 +474,7 @@ class JuliaCodePrinter(CodePrinter):
             (self.parenthesize(arg, precedence(expr)) for arg in expr.args)
         )
 
-
-    def indent_code(self, code) -> str | list[Any]:
+    def indent_code(self, code) -> str | list:
         """Accepts a string of code or a list of code lines"""
 
         # code mostly copied from ccode
@@ -507,7 +506,9 @@ class JuliaCodePrinter(CodePrinter):
         return pretty
 
 
-def julia_code(expr, assign_to=None, **settings) -> str | tuple[set[tuple[Any, str]], set[Any], str]:
+def julia_code(
+    expr, assign_to=None, **settings
+) -> str | tuple[set[tuple[Any, str]], set, str]:
     r"""Converts `expr` to a string of Julia code.
 
     Parameters

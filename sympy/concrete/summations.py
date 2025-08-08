@@ -215,7 +215,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         if self.has_finite_limits and self.function.is_finite:
             return True
 
-    def doit(self, **hints) -> tuple[Any, ...] | Self | Order | Any | Piecewise | Basic | Equality | Relational | Ne | Sum | None:
+    def doit(self, **hints) -> tuple | Self | Order | Any | Piecewise | Basic | Equality | Relational | Ne | Sum | None:
         if hints.get('deep', True):
             f = self.function.doit(**hints)
         else:

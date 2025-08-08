@@ -3,15 +3,19 @@ from collections import defaultdict
 from .sympify import sympify, SympifyError
 from sympy.utilities.iterables import iterable, uniq
 from collections.abc import Generator
-from typing import Any, Literal
+from typing import Any
 
 
 __all__ = ['default_sort_key', 'ordered']
 
 
-def default_sort_key(item, order=None) -> (
-    tuple[tuple[Literal[5], Literal[0], str], tuple[int, tuple[Any, ...]], Any, Any]
-    | tuple[tuple[Literal[10, 0], Literal[0], str | Any], tuple[int, tuple[Any, ...]] | tuple[Literal[1], tuple[str]], Any, Any]
+def default_sort_key(
+    item, order=None
+) -> (
+    tuple[tuple[int, int, str], tuple[int, tuple], Any, Any]
+    | tuple[
+        tuple[int, int, str | Any], tuple[int, tuple] | tuple[int, tuple[str]], Any, Any
+    ]
 ):
     """Return a key that can be used for sorting.
 
@@ -204,7 +208,7 @@ def _nodes(e):
         return 1
 
 
-def ordered(seq, keys=None, default=True, warn=False) -> Generator[Any, Any, None]:
+def ordered(seq, keys=None, default=True, warn=False) -> Generator:
     """Return an iterator of the seq where keys are used to break ties
     in a conservative fashion: if, after applying a key, there are no
     ties then no other keys will be computed.

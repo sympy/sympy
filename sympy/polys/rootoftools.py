@@ -31,7 +31,7 @@ from sympy.multipledispatch import dispatch
 from itertools import chain
 import sympy.core.numbers
 from sympy.series.order import Order
-from typing import Any, Literal
+from typing import Any
 from typing_extensions import Self
 
 
@@ -393,7 +393,7 @@ class ComplexRootOf(RootOf):
         return (self.expr, Integer(self.index))
 
     @property
-    def free_symbols(self) -> set[Any]:
+    def free_symbols(self) -> set:
         # CRootOf currently only works with univariate expressions
         # whose poly attribute should be a PurePoly with no free
         # symbols
@@ -413,12 +413,12 @@ class ComplexRootOf(RootOf):
         return False  # XXX is this necessary?
 
     @classmethod
-    def real_roots(cls, poly, radicals=True) -> list[Any]:
+    def real_roots(cls, poly, radicals=True) -> list:
         """Get real roots of a polynomial. """
         return cls._get_roots("_real_roots", poly, radicals)
 
     @classmethod
-    def all_roots(cls, poly, radicals=True) -> list[Any]:
+    def all_roots(cls, poly, radicals=True) -> list:
         """Get real and complex roots of a polynomial. """
         return cls._get_roots("_all_roots", poly, radicals)
 
@@ -1274,7 +1274,7 @@ class RootSum(Expr):
         return self.poly.free_symbols | self.fun.free_symbols
 
     @property
-    def is_commutative(self) -> Literal[True]:
+    def is_commutative(self) -> bool:
         return True
 
     def doit(self, **hints) -> Self | Order:

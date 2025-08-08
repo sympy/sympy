@@ -9,11 +9,12 @@ from __future__ import annotations
 
 from typing import Any, Callable, TYPE_CHECKING
 
-from functools import _Wrapped, wraps
+from functools import wraps
 from .sympify import SympifyError, sympify
 
 
 if TYPE_CHECKING:
+    from functools import _Wrapped
     from typing import Callable, TypeVar, Union
     T1 = TypeVar('T1')
     T2 = TypeVar('T2')

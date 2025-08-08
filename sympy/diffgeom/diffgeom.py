@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Literal, Any
+from typing import Any
 
 from functools import reduce
 from itertools import permutations
@@ -997,7 +997,7 @@ class BaseScalarField(Expr):
         return simplify(coords[self._index]).doit()
 
     # XXX Workaround for limitations on the content of args
-    free_symbols: set[Any] = set()
+    free_symbols: set = set()
 
 
 class BaseVectorField(Expr):
@@ -1165,7 +1165,7 @@ class Commutator(Expr):
     -2*cos(theta)*y**2/(x**2 + y**2)
 
     """
-    def __new__(cls, v1, v2) -> Self | Literal[0]:
+    def __new__(cls, v1, v2) -> Self | int:
         if (covariant_order(v1) or contravariant_order(v1) != 1
                 or covariant_order(v2) or contravariant_order(v2) != 1):
             raise ValueError(
@@ -1267,7 +1267,7 @@ class Differential(Expr):
     def form_field(self) -> Basic:
         return self.args[0]
 
-    def __call__(self, *vector_fields) -> Self | Literal[0]:
+    def __call__(self, *vector_fields) -> Self | int:
         """Apply on a list of vector_fields.
 
         Explanation
@@ -1497,7 +1497,7 @@ class LieDerivative(Expr):
     LieDerivative(e_x, TensorProduct(dx, dy))
 
     """
-    def __new__(cls, v_field, expr) -> Self | Commutator | Literal[0]:
+    def __new__(cls, v_field, expr) -> Self | Commutator | int:
         expr_form_ord = covariant_order(expr)
         if contravariant_order(v_field) != 1 or covariant_order(v_field):
             raise ValueError('Lie derivatives are defined only with respect to'
@@ -1800,7 +1800,9 @@ def intcurve_series(vector_field, param, start_point, n=6, coord_sys=None, coeff
         return Matrix([sum(c) for c in taylor_terms])
 
 
-def intcurve_diffequ(vector_field, param, start_point, coord_sys=None) -> tuple[list[Any], list[Any]]:
+def intcurve_diffequ(
+    vector_field, param, start_point, coord_sys=None
+) -> tuple[list, list]:
     r"""Return the differential equation for an integral curve of the field.
 
     Explanation

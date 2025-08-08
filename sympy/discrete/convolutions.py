@@ -14,7 +14,9 @@ from sympy.utilities.misc import as_int
 from typing import Any
 
 
-def convolution(a, b, cycle=0, dps=None, prime=None, dyadic=None, subset=None) -> list[int] | list[Any | int] | Any | list[Any]:
+def convolution(
+    a, b, cycle=0, dps=None, prime=None, dyadic=None, subset=None
+) -> list[int] | list[Any | int] | Any | list:
     """
     Performs convolution by determining the type of desired
     convolution using hints.
@@ -125,7 +127,7 @@ def convolution(a, b, cycle=0, dps=None, prime=None, dyadic=None, subset=None) -
 #                                                                            #
 #----------------------------------------------------------------------------#
 
-def convolution_fft(a, b, dps=None) -> list[Any] | Any:
+def convolution_fft(a, b, dps=None) -> list | Any:
     """
     Performs linear convolution using Fast Fourier Transform.
 
@@ -236,7 +238,7 @@ def convolution_ntt(a, b, prime) -> list[int] | list[Any | int] | Any:
 #                                                                            #
 #----------------------------------------------------------------------------#
 
-def convolution_fwht(a, b) -> list[Any] | Any:
+def convolution_fwht(a, b) -> list | Any:
     """
     Performs dyadic (*bitwise-XOR*) convolution using Fast Walsh Hadamard
     Transform.
@@ -302,7 +304,7 @@ def convolution_fwht(a, b) -> list[Any] | Any:
 #                                                                            #
 #----------------------------------------------------------------------------#
 
-def convolution_subset(a, b) -> list[Any] | Any:
+def convolution_subset(a, b) -> list | Any:
     """
     Performs Subset Convolution of given sequences.
 
@@ -379,7 +381,7 @@ def convolution_subset(a, b) -> list[Any] | Any:
 #                                                                            #
 #----------------------------------------------------------------------------#
 
-def covering_product(a, b) -> list[Any] | Any:
+def covering_product(a, b) -> list | Any:
     """
     Returns the covering product of given sequences.
 
@@ -449,7 +451,7 @@ def covering_product(a, b) -> list[Any] | Any:
 #                                                                            #
 #----------------------------------------------------------------------------#
 
-def intersecting_product(a, b) -> list[Any] | Any:
+def intersecting_product(a, b) -> list | Any:
     """
     Returns the intersecting product of given sequences.
 

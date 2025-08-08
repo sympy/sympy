@@ -2,6 +2,7 @@ import random
 from collections import defaultdict
 from collections.abc import Iterator, Iterable
 from functools import reduce
+from typing import List
 
 from sympy.core.parameters import global_parameters
 from sympy.core.basic import Atom
@@ -18,7 +19,7 @@ from sympy.utilities.misc import as_int
 from mpmath.libmp.libintmath import ifac
 from sympy.multipledispatch import dispatch
 from sympy.combinatorics.perm_groups import Coset
-from typing import Any, Literal
+from typing import Any
 from typing_extensions import Self
 
 def _af_rmul(a, b):
@@ -324,7 +325,7 @@ class Cycle(dict):
         """Enter arg into dictionary and return arg."""
         return as_int(arg)
 
-    def __iter__(self) -> Iterator[Any]:
+    def __iter__(self) -> Iterator:
         yield from self.list()
 
     def __call__(self, *other) -> "Cycle":
@@ -354,7 +355,7 @@ class Cycle(dict):
             rv[k] = v
         return rv
 
-    def list(self, size=None) -> _List[Any]:
+    def list(self, size=None) -> List:
         """Return the cycles as an explicit list starting from 0 up
         to the greater of the largest value in the cycles and size.
 
@@ -464,7 +465,7 @@ class Cycle(dict):
             self[args[i]] = args[i + 1]
 
     @property
-    def size(self) -> Literal[0]:
+    def size(self) -> int:
         if not self:
             return 0
         return max(self.keys()) + 1
@@ -1126,7 +1127,7 @@ class Permutation(Atom):
         return rv
 
     @property
-    def cyclic_form(self) -> _List[Any]:
+    def cyclic_form(self) -> List:
         """
         This is used to convert to the cyclic notation
         from the canonical notation. Singletons are omitted.
@@ -1169,7 +1170,7 @@ class Permutation(Atom):
         return cyclic_form
 
     @property
-    def full_cyclic_form(self) -> _List[Any]:
+    def full_cyclic_form(self) -> List:
         """Return permutation in cyclic form including singletons.
 
         Examples
@@ -1203,7 +1204,7 @@ class Permutation(Atom):
         """
         return self._size
 
-    def support(self) -> _List[int]:
+    def support(self) -> List[int]:
         """Return the elements in permutation, P, for which P[i] != i.
 
         Examples
@@ -1430,7 +1431,7 @@ class Permutation(Atom):
         n = int(n)
         return self._af_new(_af_pow(self.array_form, n))
 
-    def __rxor__(self, i) -> _List[Any] | Coset | Permutation:
+    def __rxor__(self, i) -> List | Coset | Permutation:
         """Return self(i) when ``i`` is an int.
 
         Examples
@@ -1527,7 +1528,7 @@ class Permutation(Atom):
             a[h[i]] = h[p[i]]
         return self._af_new(a)
 
-    def transpositions(self) -> _List[Any]:
+    def transpositions(self) -> List:
         """
         Return the permutation decomposed into a list of transpositions.
 
@@ -1613,7 +1614,7 @@ class Permutation(Atom):
         """
         return self._af_new(_af_invert(self._array_form))
 
-    def __iter__(self) -> Iterator[Any]:
+    def __iter__(self) -> Iterator:
         """Yield elements from array form.
 
         Examples
@@ -1628,7 +1629,7 @@ class Permutation(Atom):
     def __repr__(self):
         return srepr(self)
 
-    def __call__(self, *i) -> _List[Any] | Coset | Self:
+    def __call__(self, *i) -> List | Coset | Self:
         """
         Allows applying a permutation instance as a bijective function.
 
@@ -1669,7 +1670,7 @@ class Permutation(Atom):
         # P(1, 2, 3)
         return self*Permutation(Cycle(*i), size=self.size)
 
-    def atoms(self) -> set[Any]:
+    def atoms(self) -> set:
         """
         Returns all the elements of a permutation
 
@@ -1809,7 +1810,7 @@ class Permutation(Atom):
         _unrank1(n, r, id_perm)
         return self._af_new(id_perm)
 
-    def rank_nonlex(self, inv_perm=None) -> Literal[0]:
+    def rank_nonlex(self, inv_perm=None) -> int:
         """
         This is a linear time ranking algorithm that does not
         enforce lexicographic order [3].
@@ -2085,7 +2086,7 @@ class Permutation(Atom):
         af = self.array_form
         return not af or all(i == af[i] for i in range(self.size))
 
-    def ascents(self) -> _List[int]:
+    def ascents(self) -> List[int]:
         """
         Returns the positions of ascents in a permutation, ie, the location
         where p[i] < p[i+1]
@@ -2107,7 +2108,7 @@ class Permutation(Atom):
         pos = [i for i in range(len(a) - 1) if a[i] < a[i + 1]]
         return pos
 
-    def descents(self) -> _List[int]:
+    def descents(self) -> List[int]:
         """
         Returns the positions of descents in a permutation, ie, the location
         where p[i] > p[i+1]
@@ -2282,7 +2283,7 @@ class Permutation(Atom):
             invb[b[i]] = i
         return self._af_new([a[b[inva[i]]] for i in invb])
 
-    def signature(self) -> Literal[1, -1]:
+    def signature(self) -> int:
         """
         Gives the signature of the permutation needed to place the
         elements of the permutation in canonical order.
@@ -2430,7 +2431,7 @@ class Permutation(Atom):
 
         return sum(j for j in range(len(a) - 1) if a[j] > a[j + 1])
 
-    def runs(self) -> _List[Any]:
+    def runs(self) -> List:
         """
         Returns the runs of a permutation.
 
@@ -2450,7 +2451,7 @@ class Permutation(Atom):
         """
         return runs(self.array_form)
 
-    def inversion_vector(self) -> _List[int]:
+    def inversion_vector(self) -> List[int]:
         """Return the inversion vector of the permutation.
 
         The inversion vector consists of elements whose value

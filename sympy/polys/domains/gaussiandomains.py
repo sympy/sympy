@@ -12,8 +12,8 @@ from sympy.polys.domains.domainelement import DomainElement
 from sympy.polys.domains.field import Field
 from sympy.polys.domains.ring import Ring
 from types import NotImplementedType
-from typing import Any, Literal
-from typing_extensions import Self, Unpack
+from typing import Any
+from typing_extensions import Self
 
 
 class GaussianElement(DomainElement):
@@ -126,7 +126,7 @@ class GaussianElement(DomainElement):
     def __bool__(self) -> bool:
         return bool(self.x) or bool(self.y)
 
-    def quadrant(self) -> Literal[0, 1, 2, 3]:
+    def quadrant(self) -> int:
         """Return quadrant index 0-3.
 
         0 is included in quadrant 0.
@@ -282,19 +282,19 @@ class GaussianDomain():
         unit = self.units[-d.quadrant()]  # - for inverse power
         return unit
 
-    def is_negative(self, element) -> Literal[False]:
+    def is_negative(self, element) -> bool:
         """Returns ``False`` for any ``GaussianElement``. """
         return False
 
-    def is_positive(self, element) -> Literal[False]:
+    def is_positive(self, element) -> bool:
         """Returns ``False`` for any ``GaussianElement``. """
         return False
 
-    def is_nonnegative(self, element) -> Literal[False]:
+    def is_nonnegative(self, element) -> bool:
         """Returns ``False`` for any ``GaussianElement``. """
         return False
 
-    def is_nonpositive(self, element) -> Literal[False]:
+    def is_nonpositive(self, element) -> bool:
         """Returns ``False`` for any ``GaussianElement``. """
         return False
 
@@ -471,7 +471,7 @@ class GaussianIntegerRing(GaussianDomain, Ring):
         """Returns a field associated with ``self``. """
         return QQ_I
 
-    def normalize(self, d, *args) -> tuple[Any, Unpack[tuple[Any, ...]]]:
+    def normalize(self, d, *args) -> tuple:
         """Return first quadrant element associated with ``d``.
 
         Also multiply the other arguments by the same power of i.
@@ -481,7 +481,7 @@ class GaussianIntegerRing(GaussianDomain, Ring):
         args = tuple(a*unit for a in args)
         return (d,) + args if args else d
 
-    def gcd(self, a, b) -> tuple[Any, Unpack[tuple[Any, ...]]]:
+    def gcd(self, a, b) -> tuple:
         """Greatest common divisor of a and b over ZZ_I."""
         while b:
             a, b = b, a % b

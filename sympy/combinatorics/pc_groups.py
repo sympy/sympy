@@ -2,7 +2,7 @@ from sympy.ntheory.primetest import isprime
 from sympy.combinatorics.perm_groups import PermutationGroup
 from sympy.printing.defaults import DefaultPrinting
 from sympy.combinatorics.free_groups import free_group
-from typing import Any, Literal
+from typing import Any
 
 
 class PolycyclicGroup(DefaultPrinting):
@@ -80,7 +80,9 @@ class Collector(DefaultPrinting):
         self.index = {s: i for i, s in enumerate(self.free_group.symbols)}
         self.pc_presentation = self.pc_relators()
 
-    def minimal_uncollected_subword(self, word) -> tuple[tuple[Any, Any]] | tuple[tuple[Any, Any], tuple[Any, Literal[1, -1]]] | None:
+    def minimal_uncollected_subword(
+        self, word
+    ) -> tuple[tuple[Any, Any]] | tuple[tuple[Any, Any], tuple[Any, int]] | None:
         r"""
         Returns the minimal uncollected subwords.
 
@@ -138,7 +140,7 @@ class Collector(DefaultPrinting):
 
         return None
 
-    def relations(self) -> tuple[dict[Any, Any], dict[Any, Any]]:
+    def relations(self) -> tuple[dict, dict]:
         """
         Separates the given relators of pc presentation in power and
         conjugate relations.
@@ -177,7 +179,7 @@ class Collector(DefaultPrinting):
                 conjugate_relators[key] = value
         return power_relators, conjugate_relators
 
-    def subword_index(self, word, w) -> tuple[Literal[-1], Literal[-1]] | tuple[int, int]:
+    def subword_index(self, word, w) -> tuple[int, int] | tuple[int, int]:
         """
         Returns the start and ending index of a given
         subword in a word.
@@ -384,8 +386,7 @@ class Collector(DefaultPrinting):
 
         return word
 
-
-    def pc_relators(self) -> dict[Any, Any]:
+    def pc_relators(self) -> dict:
         r"""
         Return the polycyclic presentation.
 
@@ -692,7 +693,7 @@ class Collector(DefaultPrinting):
         z = [gen for gen in z if gen != 1]
         return z
 
-    def constructive_membership_test(self, ipcgs, g) -> list[int] | Literal[False]:
+    def constructive_membership_test(self, ipcgs, g) -> list[int] | bool:
         """
         Return the exponent vector for induced pcgs.
         """

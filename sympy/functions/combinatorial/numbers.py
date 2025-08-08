@@ -9,7 +9,7 @@ the separate 'factorials' module.
 from __future__ import annotations
 from math import prod
 from collections import defaultdict
-from typing import Any, Callable
+from typing import TYPE_CHECKING, Any, Callable
 
 from sympy.core import S, Symbol, Add, Dummy
 from sympy.core.cache import cacheit
@@ -40,8 +40,10 @@ from sympy.utilities.misc import as_int
 
 from mpmath import mp, workprec
 from mpmath.libmp import ifib as _ifib
-from sympy.series.order import Order
 from typing_extensions import Self
+
+if TYPE_CHECKING:
+    from sympy.series.order import Order
 
 
 def _product(a, b):
@@ -169,7 +171,7 @@ directly instead.
         return find_carmichael_numbers_in_range(x, y)
 
     @staticmethod
-    def find_first_n_carmichaels(n) -> list[Any]:
+    def find_first_n_carmichaels(n) -> list:
         sympy_deprecation_warning(
         """
 find_first_n_carmichaels is just a wrapper around sympy.ntheory.factor_.find_first_n_carmichaels so use that
@@ -3019,7 +3021,7 @@ class motzkin(DefinedFunction):
             return False
 
     @staticmethod
-    def find_motzkin_numbers_in_range(x, y) -> list[Any]:
+    def find_motzkin_numbers_in_range(x, y) -> list:
         if 0 <= x <= y:
             motzkins = []
             if x <= 1 <= y:

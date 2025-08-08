@@ -186,7 +186,7 @@ def sympy_eqs_to_ring(eqs, symbols) -> tuple[Any, Any]:
     return eqs_K, K.to_domain()
 
 
-def solve_lin_sys(eqs, ring, _raw=True) -> dict[Any, Any] | None:
+def solve_lin_sys(eqs, ring, _raw=True) -> dict | None:
     """Solve a system of linear equations from a PolynomialRing
 
     Explanation

@@ -2676,7 +2676,7 @@ def solvify(f, symbol, domain) -> list[sympy.core.basic.Basic] | None:
 ###############################################################################
 
 
-def linear_coeffs(eq, *syms, dict=False) -> list[Any]:
+def linear_coeffs(eq, *syms, dict=False) -> list:
     """Return a list whose elements are the coefficients of the
     corresponding symbols in the sum of terms in  ``eq``.
     The additive constant is returned as the last element of the

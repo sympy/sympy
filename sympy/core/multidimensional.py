@@ -3,12 +3,16 @@ Provides functionality for multidimensional usage of scalar-functions.
 
 Read the vectorize docstring for more details.
 """
+from __future__ import annotations
 
-from functools import _Wrapped, wraps
-from typing import Any
+from functools import wraps
+from typing import Any, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from functools import _Wrapped
 
 
-def apply_on_element(f, args, kwargs, n) -> list[list[Any] | Any]:
+def apply_on_element(f, args, kwargs, n) -> list[list | Any]:
     """
     Returns a structure with the same dimension as the specified argument,
     where each basic element is replaced by the function f applied on it. All
@@ -38,14 +42,14 @@ def apply_on_element(f, args, kwargs, n) -> list[list[Any] | Any]:
     return list(map(f_reduced, structure))
 
 
-def iter_copy(structure) -> list[Any]:
+def iter_copy(structure) -> list:
     """
     Returns a copy of an iterable object (also copying all embedded iterables).
     """
     return [iter_copy(i) if hasattr(i, "__iter__") else i for i in structure]
 
 
-def structure_copy(structure) -> list[Any]:
+def structure_copy(structure) -> list:
     """
     Returns a copy of the given structure (numpy-array, list, iterable, ..).
     """
@@ -91,7 +95,7 @@ class vectorize:
                 raise TypeError("a is of invalid type")
         self.mdargs = mdargs
 
-    def __call__(self, f) -> _Wrapped[..., Any, ..., list[list[Any] | Any] | Any]:
+    def __call__(self, f) -> _Wrapped[..., Any, ..., list[list | Any] | Any]:
         """
         Returns a wrapper for the one-dimensional function that can handle
         multidimensional arguments.

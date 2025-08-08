@@ -11,6 +11,6 @@ class CharacteristicZero(Domain):
 
     has_CharacteristicZero = True
 
-    def characteristic(self) -> Literal[0]:
+    def characteristic(self) -> int:
         """Return the characteristic of this domain. """
         return 0

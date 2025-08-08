@@ -1,6 +1,6 @@
 from typing import Literal
 
-def pprint_nodes(subtrees) -> Literal[""]:
+def pprint_nodes(subtrees) -> str:
     """
     Prettyprints systems of nodes.
 

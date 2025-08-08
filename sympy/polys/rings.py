@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Literal, Generic, overload, Callable, Iterable, TYPE_CHECKING
+from typing import Any, Generic, overload, Callable, Iterable, TYPE_CHECKING
 
 from operator import add, mul, lt, le, gt, ge
 from functools import reduce
@@ -158,7 +158,9 @@ def vring(symbols, domain, order=lex) -> PolyRing | Any:
 
 
 @public
-def sring(exprs, *symbols, **options) -> tuple[PolyRing | Any, Any] | tuple[PolyRing | Any, list[Any]]:
+def sring(
+    exprs, *symbols, **options
+) -> tuple[PolyRing | Any, Any] | tuple[PolyRing | Any, list]:
     """Construct a ring deriving generators and domain from options and input expressions.
 
     Parameters
@@ -1070,7 +1072,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
         else:
             return other._floordiv(self)
 
-    def __truediv__(self, other) -> list[Any] | NotImplementedType | Self:
+    def __truediv__(self, other) -> list | NotImplementedType | Self:
         ring = self.ring
 
         if not other:
@@ -1230,7 +1232,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
             else:
                 return ring.domain.almosteq(self.const(), other, tolerance)
 
-    def sort_key(self) -> tuple[int, list[Any]]:
+    def sort_key(self) -> tuple[int, list]:
         """Return a key for sorting polynomials."""
         return len(self), self.terms()
 
@@ -1307,7 +1309,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
         """
         return self._square()
 
-    def degree(self, x=None) -> Literal[0]:
+    def degree(self, x=None) -> int:
         """
         The leading degree in ``x`` or the main variable.
 
@@ -1323,7 +1325,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
         else:
             return self._degree(i)
 
-    def degrees(self) -> tuple[Any, ...]:
+    def degrees(self) -> tuple:
         """
         A tuple containing leading degrees in all variables.
 
@@ -1335,7 +1337,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
         else:
             return self._degrees()
 
-    def tail_degree(self, x=None) -> Literal[0]:
+    def tail_degree(self, x=None) -> int:
         """
         The tail degree in ``x`` or the main variable.
 
@@ -1351,7 +1353,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
         else:
             return min(monom[i] for monom in self.itermonoms())
 
-    def tail_degrees(self) -> tuple[Any, ...]:
+    def tail_degrees(self) -> tuple:
         """
         A tuple containing tail degrees in all variables.
 
@@ -1370,7 +1372,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
         else:
             return self.quo_ground(self.LC)
 
-    def div(self, fv) -> tuple[Any, Any] | tuple[list[Any], Any]:
+    def div(self, fv) -> tuple[Any, Any] | tuple[list, Any]:
         """Division algorithm, see [CLO] p64.
 
         fv array of polynomials
@@ -1445,7 +1447,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
     def l1_norm(self) -> int:
         return self._norm(sum)
 
-    def deflate(self, *G) -> tuple[tuple[Any, ...], list[Self]] | tuple[tuple[Any, ...], list[Any]]:
+    def deflate(self, *G) -> tuple[tuple, list[Self]] | tuple[tuple, list]:
         ring = self.ring
         polys = [self] + list(G)
 
@@ -1891,7 +1893,9 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
         """
         return self._subresultants(g, x)
 
-    def symmetrize(self) -> tuple[Self, Any, list[Any]] | tuple[Any, Self | Any, list[tuple[Any, Any]]]:
+    def symmetrize(
+        self,
+    ) -> tuple[Self, Any, list] | tuple[Any, Self | Any, list[tuple[Any, Any]]]:
         r"""
         Rewrite *self* in terms of elementary symmetric polynomials.
 
@@ -2185,10 +2189,10 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
             raise ZeroDivisionError("polynomial division")
         return f._rem(G)
 
-    def quo(self, G) -> list[Any]:
+    def quo(self, G) -> list:
         return self.div(G)[0]
 
-    def exquo(self, G) -> list[Any]:
+    def exquo(self, G) -> list:
         q, r = self.div(G)
 
         if not r:
@@ -2374,13 +2378,13 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
         return self == self.ring.one
 
     @property
-    def is_squarefree(self) -> Literal[True]:
+    def is_squarefree(self) -> bool:
         if not self.ring.ngens:
             return True
         return self.ring.dmp_sqf_p(self)
 
     @property
-    def is_irreducible(self) -> Literal[True]:
+    def is_irreducible(self) -> bool:
         if not self.ring.ngens:
             return True
         return self.ring.dmp_irreducible_p(self)
@@ -2456,10 +2460,10 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
         else:
             return NotImplemented
 
-    def to_dense(self) -> list[Any] | list[list[Any]]:
+    def to_dense(self) -> list | list[list]:
         return dmp_from_dict(self, self.ring.ngens - 1, self.ring.domain)
 
-    def to_dict(self) -> dict[Any, Any]:
+    def to_dict(self) -> dict:
         # Return a self.flint_poly.to_dict() in case of python-flint
         return dict(self)
 
@@ -2625,7 +2629,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
             p[expv] = self[expv]
         return p
 
-    def coeffs(self, order=None) -> list[Any]:
+    def coeffs(self, order=None) -> list:
         """Ordered list of polynomial coefficients.
 
         Parameters
@@ -2651,7 +2655,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
         """
         return [coeff for _, coeff in self.terms(order)]
 
-    def monoms(self, order=None) -> list[Any]:
+    def monoms(self, order=None) -> list:
         """Ordered list of polynomial monomials.
 
         Parameters
@@ -2677,7 +2681,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
         """
         return [monom for monom, _ in self.terms(order)]
 
-    def terms(self, order=None) -> list[Any]:
+    def terms(self, order=None) -> list:
         """Ordered list of polynomial terms.
 
         Parameters
@@ -2714,11 +2718,11 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
         else:
             return sorted(seq, key=lambda monom: order(monom[0]), reverse=True)
 
-    def itercoeffs(self) -> Iterator[Any]:
+    def itercoeffs(self) -> Iterator:
         """Iterator over coefficients of a polynomial."""
         return iter(self.values())
 
-    def itermonoms(self) -> Iterator[Any]:
+    def itermonoms(self) -> Iterator:
         """Iterator over monomials of a polynomial."""
         return iter(self.keys())
 
@@ -2726,11 +2730,11 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
         """Iterator over terms of a polynomial."""
         return iter(self.items())
 
-    def listcoeffs(self) -> list[Any]:
+    def listcoeffs(self) -> list:
         """Unordered list of polynomial coefficients."""
         return list(self.values())
 
-    def listmonoms(self) -> list[Any]:
+    def listmonoms(self) -> list:
         """Unordered list of polynomial monomials."""
         return list(self.keys())
 

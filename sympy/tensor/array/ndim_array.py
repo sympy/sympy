@@ -373,7 +373,7 @@ class NDimArray(Printable):
             return f"{self.__class__.__name__}([], {self.shape})"
         return f(self._loop_size, self.shape, 0, self._loop_size)
 
-    def tolist(self) -> list[Any]:
+    def tolist(self) -> list:
         """
         Converting MutableDenseNDimArray to one-dim list
 
@@ -486,7 +486,7 @@ class NDimArray(Printable):
         result_list = [-i for i in Flatten(self)]
         return type(self)(result_list, self.shape)
 
-    def __iter__(self) -> Iterator[Any]:
+    def __iter__(self) -> Iterator:
         def iterator():
             if self._shape:
                 for i in range(self._shape[0]):

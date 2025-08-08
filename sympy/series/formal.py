@@ -169,7 +169,7 @@ def rational_algorithm(f, x, k, order=4, full=False) -> tuple[Any, Any, int] | N
     return None
 
 
-def rational_independent(terms, x) -> list[Any]:
+def rational_independent(terms, x) -> list:
     """
     Returns a list of all the rationally independent terms.
 
@@ -203,7 +203,7 @@ def rational_independent(terms, x) -> list[Any]:
     return ind
 
 
-def simpleDE(f, x, g, order=4) -> Generator[tuple[Any, int], Any, None]:
+def simpleDE(f, x, g, order=4) -> Generator[tuple[Any, int]]:
     r"""
     Generates simple DE.
 
@@ -1093,7 +1093,7 @@ class FormalPowerSeries(SeriesBase):
 
         return Add(*terms)
 
-    def truncate(self, n=6) -> Generator[Any, Any, None]:
+    def truncate(self, n=6) -> Generator:
         """
         Truncated series.
 

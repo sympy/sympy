@@ -220,6 +220,6 @@ class TensorflowPrinter(ArrayPrinter, AbstractPythonCodePrinter):
     _zeros = "zeros"
 
 
-def tensorflow_code(expr, **settings) -> str | tuple[set[tuple[Any, str]], set[Any], str]:
+def tensorflow_code(expr, **settings) -> str | tuple[set[tuple[Any, str]], set, str]:
     printer = TensorflowPrinter(settings)
     return printer.doprint(expr)

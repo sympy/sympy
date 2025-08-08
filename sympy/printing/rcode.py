@@ -257,8 +257,7 @@ class RCodePrinter(CodePrinter):
         return 'for({target} in seq(from={start}, to={stop}, by={step}){{\n{body}\n}}'.format(target=target, start=start,
                 stop=stop-1, step=step, body=body)
 
-
-    def indent_code(self, code) -> str | list[Any]:
+    def indent_code(self, code) -> str | list:
         """Accepts a string of code or a list of code lines"""
 
         if isinstance(code, str):
@@ -287,7 +286,9 @@ class RCodePrinter(CodePrinter):
         return pretty
 
 
-def rcode(expr, assign_to=None, **settings) -> str | tuple[set[tuple[Any, str]], set[Any], str]:
+def rcode(
+    expr, assign_to=None, **settings
+) -> str | tuple[set[tuple[Any, str]], set, str]:
     """Converts an expr to a string of r code
 
     Parameters

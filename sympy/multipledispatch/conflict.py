@@ -1,5 +1,7 @@
 from .utils import _toposort, groupby
-from typing import _T_co
+from typing import TypeVar
+
+_T_co = TypeVar("_T_co", covariant=True)  # Any type covariant containers.
 
 class AmbiguityWarning(Warning):
     pass

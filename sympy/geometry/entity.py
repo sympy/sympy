@@ -38,7 +38,6 @@ from sympy.solvers.solvers import solve
 from sympy.utilities.misc import func_name
 from sympy.utilities.iterables import is_sequence
 import sympy.sets.sets
-from typing import Any
 from typing_extensions import Self
 
 
@@ -512,7 +511,7 @@ class GeometryEntity(Basic, EvalfMixin):
                 newargs.append(a)
         return self.func(*newargs)
 
-    def parameter_value(self, other, t) -> dict[Any, Any]:
+    def parameter_value(self, other, t) -> dict:
         """Return the parameter corresponding to the given point.
         Evaluating an arbitrary point of the entity at this parameter
         value will return the given point.

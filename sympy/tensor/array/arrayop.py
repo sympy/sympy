@@ -13,7 +13,7 @@ from sympy.tensor.array.sparse_ndim_array import SparseNDimArray
 import sympy
 import sympy.tensor.array.expressions.array_expressions
 from sympy.tensor.array.array_derivatives import ArrayDerivative
-from typing import Any, Literal
+from typing import Any
 from typing_extensions import Self
 
 
@@ -509,7 +509,7 @@ class Flatten(Printable):
     def __iter__(self) -> Self:
         return self
 
-    def __next__(self) ->     sympy.Basic | Literal[0]:
+    def __next__(self) ->     sympy.Basic | int:
         from sympy.matrices.matrixbase import MatrixBase
 
         if len(self._iter) > self._idx:
@@ -537,7 +537,7 @@ class Flatten(Printable):
         self._idx += 1
         return result
 
-    def next(self) ->     sympy.Basic | Literal[0]:
+    def next(self) ->     sympy.Basic | int:
         return self.__next__()
 
     def _sympystr(self, printer):

@@ -1,6 +1,5 @@
 from sympy.combinatorics import Permutation
 from sympy.combinatorics.util import _distribute_gens_by_base
-from typing import Any, Literal
 
 rmul = Permutation.rmul
 
@@ -199,7 +198,7 @@ def _verify_normal_closure(group, arg, closure=None):
     return closure.is_subgroup(naive_closure)
 
 
-def canonicalize_naive(g, dummies, sym, *v) -> list[Any] | Literal[0]:
+def canonicalize_naive(g, dummies, sym, *v) -> list | int:
     """
     Canonicalize tensor formed by tensors of the different types.
 
@@ -277,7 +276,7 @@ def canonicalize_naive(g, dummies, sym, *v) -> list[Any] | Literal[0]:
     return list(a[0])
 
 
-def graph_certificate(gr) -> list[Any] | Literal[0]:
+def graph_certificate(gr) -> list | int:
     """
     Return a certificate for the graph
 

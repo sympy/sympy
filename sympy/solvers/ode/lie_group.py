@@ -161,7 +161,7 @@ def _ode_lie_group( s, func, order, match):
     return sol
 
 
-def infinitesimals(eq, func=None, order=None, hint='default', match=None) -> list[Any] | Any:
+def infinitesimals(eq, func=None, order=None, hint="default", match=None) -> list | Any:
     r"""
     The infinitesimal functions of an ordinary differential equation, `\xi(x,y)`
     and `\eta(x,y)`, are the infinitesimals of the Lie group of point transformations
@@ -404,7 +404,9 @@ def lie_heuristic_abaco1_simple(match, comp=False):
     if xieta:
         return xieta
 
-def lie_heuristic_abaco1_product(match, comp=False) -> list[dict[UndefinedFunction | Any, Any]] | list[Any] | None:
+def lie_heuristic_abaco1_product(
+    match, comp=False
+) -> list[dict[UndefinedFunction | Any, Any]] | list | None:
     r"""
     The second heuristic uses the following two assumptions on `\xi` and `\eta`
 
@@ -620,7 +622,9 @@ def lie_heuristic_chi(match, comp=False) -> list[dict[UndefinedFunction | Any, A
                         inf = {eta: etac.subs(y, func), xi: -xic.subs(y, func)}
                         return [inf]
 
-def lie_heuristic_function_sum(match, comp=False) -> list[dict[UndefinedFunction | Any, Any]] | list[Any] | None:
+def lie_heuristic_function_sum(
+    match, comp=False
+) -> list[dict[UndefinedFunction | Any, Any]] | list | None:
     r"""
     This heuristic uses the following two assumptions on `\xi` and `\eta`
 

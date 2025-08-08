@@ -41,7 +41,7 @@ basic_optimizations = [(cse_opts.sub_pre, cse_opts.sub_post),
 # ===============================================================
 
 
-def reps_toposort(r) -> list[Any]:
+def reps_toposort(r) -> list:
     """Sort replacements ``r`` so (k1, v1) appears before (k2, v2)
     if k2 is in v1's free symbols. This orders items in the
     way that cse returns its results (hence, in order to use the
@@ -70,7 +70,7 @@ def reps_toposort(r) -> list[Any]:
     return [r[i] for i in topological_sort((range(len(r)), E))]
 
 
-def cse_separate(r, e) -> list[list[Any]]:
+def cse_separate(r, e) -> list[list]:
     """Move expressions that are in the form (symbol, expr) out of the
     expressions and sort them into the replacements using the reps_toposort.
 
@@ -96,7 +96,7 @@ def cse_separate(r, e) -> list[list[Any]]:
     return [reps_toposort(r), e]
 
 
-def cse_release_variables(r, e) -> tuple[Any, Any] | tuple[list[Any], Any]:
+def cse_release_variables(r, e) -> tuple[Any, Any] | tuple[list, Any]:
     """
     Return tuples giving ``(a, b)`` where ``a`` is a symbol and ``b`` is
     either an expression or None. The value of None is used when a
@@ -242,7 +242,7 @@ class FuncArgTracker:
 
             self.func_to_argset.append(func_argset)
 
-    def get_args_in_value_order(self, argset) -> list[Any]:
+    def get_args_in_value_order(self, argset) -> list:
         """
         Return the list of arguments in sorted order according to their value
         numbers.
@@ -357,7 +357,7 @@ class Unevaluated:
         return self.func(*self.args, evaluate=False)
 
     @property
-    def free_symbols(self) -> set[Any]:
+    def free_symbols(self) -> set:
         return set().union(*[a.free_symbols for a in self.args])
 
     __repr__ = __str__
@@ -457,7 +457,7 @@ def match_common_args(func_class, funcs, opt_subs) -> None:
         arg_tracker.stop_arg_tracking(i)
 
 
-def opt_cse(exprs, order='canonical') -> dict[Any, Any]:
+def opt_cse(exprs, order="canonical") -> dict:
     """Find optimization opportunities in Adds, Muls, Pows and negative
     coefficient Muls.
 
@@ -581,7 +581,9 @@ def opt_cse(exprs, order='canonical') -> dict[Any, Any]:
     return opt_subs
 
 
-def tree_cse(exprs, symbols, opt_subs=None, order='canonical', ignore=()) -> tuple[list[Any], list[Any]]:
+def tree_cse(
+    exprs, symbols, opt_subs=None, order="canonical", ignore=()
+) -> tuple[list, list]:
     """Perform raw CSE on expression tree, taking opt_subs into account.
 
     Parameters
@@ -726,14 +728,21 @@ def tree_cse(exprs, symbols, opt_subs=None, order='canonical', ignore=()) -> tup
     return replacements, reduced_exprs
 
 
-def cse(exprs, symbols=None, optimizations=None, postprocess=None,
-        order='canonical', ignore=(), list=True) -> (
+def cse(
+    exprs,
+    symbols=None,
+    optimizations=None,
+    postprocess=None,
+    order="canonical",
+    ignore=(),
+    list=True,
+) -> (
     tuple[Any, str]
-    | tuple[Any, list[Any] | set[Any] | tuple[Any, ...]]
-    | tuple[Any, dict[Any, Any]]
+    | tuple[Any, list | set | tuple]
+    | tuple[Any, dict]
     | tuple[Any, Any]
-    | tuple[list[Any], Any]
-    | tuple[list[Any], list[Any]]
+    | tuple[list, Any]
+    | tuple[list, list]
 ):
     """ Perform common subexpression elimination on an expression.
 

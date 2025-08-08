@@ -1,5 +1,5 @@
 from ctypes import Array, c_float, c_int
-from typing import Any, Literal
+from typing import Any
 
 try:
     from ctypes import c_float, c_int, c_double
@@ -52,9 +52,9 @@ def get_view_direction_vectors() -> tuple[tuple[Any, Any, Any], tuple[Any, Any, 
 
 
 def get_basis_vectors() -> tuple[
-    tuple[Literal[1], Literal[0], Literal[0]],
-    tuple[Literal[0], Literal[1], Literal[0]],
-    tuple[Literal[0], Literal[0], Literal[1]],
+    tuple[int, int, int],
+    tuple[int, int, int],
+    tuple[int, int, int],
 ]:
     return ((1, 0, 0), (0, 1, 0), (0, 0, 1))
 
@@ -77,7 +77,7 @@ def model_to_screen(x, y, z) -> tuple[float, float, float]:
     return float(mx.value), float(my.value), float(mz.value)
 
 
-def vec_subs(a, b) -> tuple[Any, ...]:
+def vec_subs(a, b) -> tuple:
     return tuple(a[i] - b[i] for i in range(len(a)))
 
 
@@ -106,7 +106,7 @@ def billboard_matrix() -> None:
     pgl.glLoadMatrixf(m)
 
 
-def create_bounds() -> list[list[Any]]:
+def create_bounds() -> list[list]:
     return [[S.Infinity, S.NegativeInfinity, 0],
             [S.Infinity, S.NegativeInfinity, 0],
             [S.Infinity, S.NegativeInfinity, 0]]
@@ -131,7 +131,7 @@ def rinterpolate(a_min, a_max, a_value):
     return (a_value - a_min) / float(a_range)
 
 
-def interpolate_color(color1, color2, ratio) -> tuple[Any, ...]:
+def interpolate_color(color1, color2, ratio) -> tuple:
     return tuple(interpolate(color1[i], color2[i], ratio) for i in range(3))
 
 
@@ -139,13 +139,13 @@ def scale_value(v, v_min, v_len):
     return (v - v_min) / v_len
 
 
-def scale_value_list(flist) -> list[Any]:
+def scale_value_list(flist) -> list:
     v_min, v_max = min(flist), max(flist)
     v_len = v_max - v_min
     return [scale_value(f, v_min, v_len) for f in flist]
 
 
-def strided_range(r_min, r_max, stride, max_steps=50) -> list[Any]:
+def strided_range(r_min, r_max, stride, max_steps=50) -> list:
     o_min, o_max = r_min, r_max
     if abs(r_min - r_max) < 0.001:
         return []
@@ -167,7 +167,7 @@ def strided_range(r_min, r_max, stride, max_steps=50) -> list[Any]:
     return [r_min] + [r_min + e*stride for e in range(1, r_steps + 1)] + [r_max]
 
 
-def parse_option_string(s) -> dict[Any, Any] | None:
+def parse_option_string(s) -> dict | None:
     if not isinstance(s, str):
         return None
     options = {}
@@ -187,7 +187,7 @@ def dot_product(v1, v2) -> int:
     return sum(v1[i]*v2[i] for i in range(3))
 
 
-def vec_sub(v1, v2) -> tuple[Any, ...]:
+def vec_sub(v1, v2) -> tuple:
     return tuple(v1[i] - v2[i] for i in range(3))
 
 

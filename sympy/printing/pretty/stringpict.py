@@ -11,12 +11,13 @@ TODO:
     - Allow left/center/right alignment options for above/below and
       top/center/bottom alignment options for left/right
 """
+from __future__ import annotations
 
 import shutil
 
 from .pretty_symbology import hobj, vobj, xsym, xobj, pretty_use_unicode, line_width, center
 from sympy.utilities.exceptions import sympy_deprecation_warning
-from typing import Any, Literal
+from typing import Any
 from typing_extensions import Self
 
 _GLOBAL_WRAP_LINE = None
@@ -324,7 +325,7 @@ class stringPict:
         # Add spacers between sub-pictures
         return "\n\n".join(pictures)
 
-    def terminal_width(self) -> Any | Literal[0]:
+    def terminal_width(self) -> Any | int:
         """Return the terminal width if possible, otherwise return 0.
         """
         size = shutil.get_terminal_size(fallback=(0, 0))

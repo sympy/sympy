@@ -2,8 +2,10 @@ from sympy.core import S, Basic, Dict, Symbol, Tuple, sympify
 from sympy.core.symbol import Str
 from sympy.sets import Set, FiniteSet, EmptySet
 from sympy.utilities.iterables import iterable
-from typing import Any
-from typing_extensions import Self
+from typing import Any, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from typing_extensions import Self
 
 
 class Class(Set):

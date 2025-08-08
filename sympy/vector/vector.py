@@ -18,7 +18,7 @@ from sympy.vector.kind import VectorKind
 import sympy
 import sympy.core.add
 from sympy.series.order import Order
-from typing import Any, Callable, Literal
+from typing import Any, Callable
 from typing_extensions import Self
 
 
@@ -142,7 +142,7 @@ class Vector(BasisDependent):
         diff_mag2 = diff.dot(diff)
         return diff_mag2.equals(0)
 
-    def dot(self, other) -> VectorZero | Callable[..., VectorZero | Any | Literal[0]] |     sympy.core.add.Add | Dot:
+    def dot(self, other) -> VectorZero | Callable[..., VectorZero | Any | int] |     sympy.core.add.Add | Dot:
         """
         Returns the dot product of this Vector, either with another
         Vector, or a Dyadic, or a Del operator.
@@ -204,7 +204,7 @@ class Vector(BasisDependent):
 
         return dot(self, other)
 
-    def __and__(self, other) -> VectorZero | Callable[..., VectorZero | Any | Literal[0]] |     sympy.core.add.Add | Dot:
+    def __and__(self, other) -> VectorZero | Callable[..., VectorZero | Any | int] |     sympy.core.add.Add | Dot:
         return self.dot(other)
 
     __and__.__doc__ = dot.__doc__
@@ -382,7 +382,7 @@ class Vector(BasisDependent):
         return Matrix([self.dot(unit_vec) for unit_vec in
                        system.base_vectors()])
 
-    def separate(self) -> dict[Any, Any]:
+    def separate(self) -> dict:
         """
         The constituents of this vector in different coordinate systems,
         as per its definition.

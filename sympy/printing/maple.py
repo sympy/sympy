@@ -257,7 +257,9 @@ class MapleCodePrinter(CodePrinter):
         return 'diff({func_expr}, {sec_arg})'.format(func_expr=self._print(_f), sec_arg=_second_arg)
 
 
-def maple_code(expr, assign_to=None, **settings) -> str | tuple[set[tuple[Any, str]], set[Any], str]:
+def maple_code(
+    expr, assign_to=None, **settings
+) -> str | tuple[set[tuple[Any, str]], set, str]:
     r"""Converts ``expr`` to a string of Maple code.
 
     Parameters

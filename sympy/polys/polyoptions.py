@@ -4,14 +4,12 @@ from __future__ import annotations
 from collections.abc import Generator
 from sympy.core.basic import Basic
 from sympy.core.symbol import Symbol
-from sympy.polys.domains.gaussiandomains import GaussianIntegerRing, GaussianRationalField
 from sympy.polys.orderings import LexOrder
-from typing import Any, Callable, Literal, NoReturn
+from typing import Any, Callable, NoReturn
 from typing_extensions import Self
 
 __all__ = ["Options"]
 
-from sympy.core.basic import Basic
 from sympy.core.expr import Expr
 from sympy.core.sympify import sympify
 from sympy.polys.polyerrors import GeneratorsError, OptionError, FlagError
@@ -229,7 +227,7 @@ class Options(dict):
             super().__setattr__(attr, value)
 
     @property
-    def args(self) -> dict[Any, Any]:
+    def args(self) -> dict:
         args = {}
 
         for option, value in self.items():
@@ -242,7 +240,7 @@ class Options(dict):
         return args
 
     @property
-    def options(self) -> dict[Any, Any]:
+    def options(self) -> dict:
         options = {}
 
         for option, cls in self.__options__.items():
@@ -252,7 +250,7 @@ class Options(dict):
         return options
 
     @property
-    def flags(self) -> dict[Any, Any]:
+    def flags(self) -> dict:
         flags = {}
 
         for option, cls in self.__options__.items():
@@ -271,7 +269,7 @@ class Expand(BooleanOption, metaclass=OptionType):
     excludes: list[str] = []
 
     @classmethod
-    def default(cls) -> Literal[True]:
+    def default(cls) -> bool:
         return True
 
 
@@ -315,7 +313,7 @@ class Wrt(Option, metaclass=OptionType):
     _re_split = re.compile(r"\s*,\s*|\s+")
 
     @classmethod
-    def preprocess(cls, wrt) -> list[str] | list[Any] | list[str | Any]:
+    def preprocess(cls, wrt) -> list[str] | list | list[str | Any]:
         if isinstance(wrt, Basic):
             return [str(wrt)]
         elif isinstance(wrt, str):
@@ -340,7 +338,7 @@ class Sort(Option, metaclass=OptionType):
     excludes: list[str] = []
 
     @classmethod
-    def default(cls) -> list[Any]:
+    def default(cls) -> list:
         return []
 
     @classmethod
@@ -557,7 +555,7 @@ class Extension(Option, metaclass=OptionType):
         'symmetric']
 
     @classmethod
-    def preprocess(cls, extension) -> bool | set[Any] | None:
+    def preprocess(cls, extension) -> bool | set | None:
         if extension == 1:
             return bool(extension)
         elif extension == 0:
@@ -621,7 +619,7 @@ class Strict(BooleanOption, metaclass=OptionType):
     option = 'strict'
 
     @classmethod
-    def default(cls) -> Literal[True]:
+    def default(cls) -> bool:
         return True
 
 
@@ -633,7 +631,7 @@ class Auto(BooleanOption, Flag, metaclass=OptionType):
     after = ['field', 'domain', 'extension', 'gaussian']
 
     @classmethod
-    def default(cls) -> Literal[True]:
+    def default(cls) -> bool:
         return True
 
     @classmethod
@@ -648,7 +646,7 @@ class Frac(BooleanOption, Flag, metaclass=OptionType):
     option = 'frac'
 
     @classmethod
-    def default(cls) -> Literal[False]:
+    def default(cls) -> bool:
         return False
 
 
@@ -658,7 +656,7 @@ class Formal(BooleanOption, Flag, metaclass=OptionType):
     option = 'formal'
 
     @classmethod
-    def default(cls) -> Literal[False]:
+    def default(cls) -> bool:
         return False
 
 
@@ -674,7 +672,7 @@ class Include(BooleanOption, Flag, metaclass=OptionType):
     option = 'include'
 
     @classmethod
-    def default(cls) -> Literal[False]:
+    def default(cls) -> bool:
         return False
 
 
@@ -684,7 +682,7 @@ class All(BooleanOption, Flag, metaclass=OptionType):
     option = 'all'
 
     @classmethod
-    def default(cls) -> Literal[False]:
+    def default(cls) -> bool:
         return False
 
 
@@ -694,7 +692,7 @@ class Gen(Flag, metaclass=OptionType):
     option = 'gen'
 
     @classmethod
-    def default(cls) -> Literal[0]:
+    def default(cls) -> int:
         return 0
 
     @classmethod
@@ -711,7 +709,7 @@ class Series(BooleanOption, Flag, metaclass=OptionType):
     option = 'series'
 
     @classmethod
-    def default(cls) -> Literal[False]:
+    def default(cls) -> bool:
         return False
 
 
@@ -787,7 +785,7 @@ def allowed_flags(args, flags) -> None:
             raise OptionError("'%s' is not a valid option" % arg)
 
 
-def set_defaults(options, **defaults) -> dict[Any, Any]:
+def set_defaults(options, **defaults) -> dict:
     """Update options with default values. """
     if 'defaults' not in options:
         options = dict(options)

@@ -145,7 +145,7 @@ class ParametricIntegral(Basic):
         return self.args[1]
 
 
-def vector_integrate(field, *region) -> Equality | Relational | Ne | ParametricIntegral | Literal[0]:
+def vector_integrate(field, *region) -> Equality | Relational | Ne | ParametricIntegral | int:
     """
     Compute the integral of a vector/scalar field
     over a a region or a set of parameters.

@@ -105,12 +105,12 @@ class CompoundPSpace(PSpace):
         expr = expr.subs({self.value: new_pspace.value})
         return new_pspace.compute_density(expr, **kwargs)
 
-    def compute_cdf(self, expr, *, compound_evaluate=True, **kwargs) -> Lambda | dict[Any, Any]:
+    def compute_cdf(self, expr, *, compound_evaluate=True, **kwargs) -> Lambda | dict:
         new_pspace = self._get_newpspace(compound_evaluate)
         expr = expr.subs({self.value: new_pspace.value})
         return new_pspace.compute_cdf(expr, **kwargs)
 
-    def compute_expectation(self, expr, rvs=None, evaluate=False, **kwargs) -> tuple[Any, ...] |     sympy.Sum | Order | Any |     sympy.Piecewise |     sympy.Basic |     sympy.Equality | Relational |     sympy.Ne |     sympy.Integral | None:
+    def compute_expectation(self, expr, rvs=None, evaluate=False, **kwargs) -> tuple |     sympy.Sum | Order | Any |     sympy.Piecewise |     sympy.Basic |     sympy.Equality | Relational |     sympy.Ne |     sympy.Integral | None:
         new_pspace = self._get_newpspace(evaluate)
         expr = expr.subs({self.value: new_pspace.value})
         if rvs:

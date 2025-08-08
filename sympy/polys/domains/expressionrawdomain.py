@@ -1,15 +1,17 @@
 """Implementation of :class:`ExpressionRawDomain` class. """
+from __future__ import annotations
 
-
+from typing import TYPE_CHECKING
 from sympy.core import Expr, S, sympify, Add
 from sympy.polys.domains.characteristiczero import CharacteristicZero
 from sympy.polys.domains.field import Field
 from sympy.polys.domains.simpledomain import SimpleDomain
 from sympy.polys.polyerrors import CoercionFailed
 from sympy.utilities import public
-from sympy.series import Order
 from typing_extensions import Self
 
+if TYPE_CHECKING:
+    from sympy.series.order import Order
 
 @public
 class ExpressionRawDomain(Field, CharacteristicZero, SimpleDomain):

@@ -437,7 +437,7 @@ class C89CodePrinter(CodePrinter):
             }
         return inner_print_min(expr.args)
 
-    def indent_code(self, code) -> str | list[Any]:
+    def indent_code(self, code) -> str | list:
         """Accepts a string of code or a list of code lines"""
 
         if isinstance(code, str):

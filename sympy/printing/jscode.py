@@ -187,7 +187,7 @@ class JavascriptCodePrinter(CodePrinter):
             PRECEDENCE["Atom"], strict=True),
             expr.j + expr.i*expr.parent.shape[1])
 
-    def indent_code(self, code) -> str | list[Any]:
+    def indent_code(self, code) -> str | list:
         """Accepts a string of code or a list of code lines"""
 
         if isinstance(code, str):
@@ -216,7 +216,9 @@ class JavascriptCodePrinter(CodePrinter):
         return pretty
 
 
-def jscode(expr, assign_to=None, **settings) -> str | tuple[set[tuple[Any, str]], set[Any], str]:
+def jscode(
+    expr, assign_to=None, **settings
+) -> str | tuple[set[tuple[Any, str]], set, str]:
     """Converts an expr to a string of javascript code
 
     Parameters

@@ -68,8 +68,6 @@ from sympy.solvers.solvers import solve
 from sympy.strategies.core import switch, do_one, null_safe, condition
 from sympy.utilities.iterables import iterable
 from sympy.utilities.misc import debug
-import collections.abc
-import sympy.core.relational
 from sympy.tensor.array.array_derivatives import ArrayDerivative
 
 
@@ -800,7 +798,7 @@ def manual_subs(expr, *args):
 inverse_trig_functions = (atan, asin, acos, acot, acsc, asec)
 
 
-def find_substitutions(integrand, symbol, u_var) -> list[Any]:
+def find_substitutions(integrand, symbol, u_var) -> list:
     results = []
 
     def test_subterm(u, u_diff):

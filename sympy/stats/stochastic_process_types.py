@@ -1,7 +1,7 @@
 from __future__ import annotations
 import random
 import itertools
-from typing import Any, Literal, Sequence as tSequence
+from typing import Any, Sequence as tSequence
 from sympy.concrete.summations import Sum
 from sympy.core.add import Add
 from sympy.core.basic import Basic
@@ -51,7 +51,6 @@ from sympy.stats.drv_types import Poisson, PoissonDistribution
 from sympy.stats.crv_types import Normal, NormalDistribution, Gamma, GammaDistribution
 from sympy.core.sympify import _sympify, sympify
 import sympy
-import sympy.core.logic
 from collections.abc import Generator
 from sympy.series.order import Order
 from sympy.stats.symbolic_multivariate_probability import ExpectationMatrix
@@ -75,11 +74,11 @@ __all__ = [
 
 
 @is_random.register(Indexed)
-def _(x) -> Literal[True]:
+def _(x) -> bool:
     return is_random(x.base)
 
 @is_random.register(RandomIndexedSymbol)  # type: ignore
-def _(x) -> Literal[True]:
+def _(x) -> bool:
     return True
 
 def _set_converter(itr):
@@ -1154,7 +1153,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
         )
         return self.absorbing_probabilities()
 
-    def is_regular(self) ->     sympy.core.logic.And:
+    def is_regular(self) ->     And:
         tuples = self.communication_classes()
         if len(tuples) == 0:
             return S.false  # not defined for a 0x0 matrix
@@ -1174,7 +1173,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
             state < trans_probs.shape[0]:
             return S(trans_probs[state, state]) is S.One
 
-    def is_absorbing_chain(self) ->     sympy.core.logic.And:
+    def is_absorbing_chain(self) ->     And:
         states, A, B, C = self.decompose()
         r = A.shape[0]
         return And(r > 0, A == Identity(r).as_explicit())
@@ -1478,7 +1477,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
         O = zeros(A.shape[0], C.shape[1])
         return states, BlockMatrix([[A, O], [B, C]]).as_explicit()
 
-    def sample(self) -> Generator[Basic, Any, None]:
+    def sample(self) -> Generator[Basic]:
         """
         Returns
         =======
@@ -1724,7 +1723,22 @@ class BernoulliProcess(DiscreteTimeStochasticProcess):
         return Bernoulli(rv.name, p=self.p,
                 succ=self.success, fail=self.failure)
 
-    def expectation(self, expr, condition=None, evaluate=True, **kwargs) -> Order | tuple[Any, ...] |     sympy.Sum | Any |     sympy.Piecewise | Basic |     sympy.Equality | Relational |     sympy.Ne |     sympy.Integral | bool | None:
+    def expectation(
+        self, expr, condition=None, evaluate=True, **kwargs
+    ) -> (
+        Order
+        | tuple
+        | sympy.Sum
+        | Any
+        | sympy.Piecewise
+        | Basic
+        | sympy.Equality
+        | Relational
+        | sympy.Ne
+        | sympy.Integral
+        | bool
+        | None
+    ):
         """
         Computes expectation.
 
@@ -1901,7 +1915,7 @@ class _SubstituteRV:
         else:
             return result
 
-def get_timerv_swaps(expr, condition) -> tuple[list[Any], dict[Any, Any]]:
+def get_timerv_swaps(expr, condition) -> tuple[list, dict]:
     """
     Finds the appropriate interval for each time stamp in expr by parsing
     the given condition and returns intervals for each timestamp and
@@ -1975,20 +1989,22 @@ class CountingProcess(ContinuousTimeStochasticProcess):
     def symbol(self) -> Basic:
         return self.args[0]
 
-    def expectation(self, expr, condition=None, evaluate=True, **kwargs) -> (
+    def expectation(
+        self, expr, condition=None, evaluate=True, **kwargs
+    ) -> (
         Add
         | ExpectationMatrix
         | Expectation
         | Order
-        | tuple[Any, ...]
-        |     sympy.Sum
+        | tuple
+        | sympy.Sum
         | Any
-        |     sympy.Piecewise
+        | sympy.Piecewise
         | Basic
-        |     sympy.Equality
+        | sympy.Equality
         | Relational
-        |     sympy.Ne
-        |     sympy.Integral
+        | sympy.Ne
+        | sympy.Integral
         | bool
         | None
     ):

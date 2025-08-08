@@ -12,10 +12,9 @@ from ..polytools import Poly
 from ..rootoftools import CRootOf
 
 from .domainmatrix import DomainMatrix
-from typing import Any
 
 
-def dom_eigenvects(A, l=Dummy('lambda')) -> tuple[list[Any], list[Any]]:
+def dom_eigenvects(A, l=Dummy("lambda")) -> tuple[list, list]:
     charpoly = A.charpoly()
     rows, cols = A.shape
     domain = A.domain
@@ -57,9 +56,8 @@ def dom_eigenvects(A, l=Dummy('lambda')) -> tuple[list[Any], list[Any]]:
 
 
 def dom_eigenvects_to_sympy(
-    rational_eigenvects, algebraic_eigenvects,
-    Matrix, **kwargs
-) -> list[Any]:
+    rational_eigenvects, algebraic_eigenvects, Matrix, **kwargs
+) -> list:
     result = []
 
     for field, eigenvalue, multiplicity, eigenvects in rational_eigenvects:

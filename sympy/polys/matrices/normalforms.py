@@ -8,7 +8,6 @@ from sympy.ntheory.modular import symmetric_residue
 from sympy.polys.domains import QQ, ZZ
 from sympy.polys.matrices.domainmatrix import DomainMatrix
 from sympy.polys.matrices.domainscalar import DomainScalar
-from typing import Any
 
 
 # TODO (future work):
@@ -78,7 +77,7 @@ def add_columns(m, i, j, a, b, c, d) -> None:
         m[k][j] = c*e + d*m[k][j]
 
 
-def invariant_factors(m) -> tuple[()] | tuple[Any, ...]:
+def invariant_factors(m) -> tuple[()] | tuple:
     '''
     Return the tuple of abelian invariants for a matrix `m`
     (as in the Smith-Normal form)

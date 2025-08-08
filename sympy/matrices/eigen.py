@@ -26,7 +26,7 @@ from .utilities import _iszero, _simplify
 
 
 if TYPE_CHECKING:
-    from typing import TypeVar, Callable, Any, Literal
+    from typing import TypeVar, Callable, Any
     from sympy.core.expr import Expr
     from sympy.matrices.matrixbase import MatrixBase
     Tmat = TypeVar('Tmat', bound=MatrixBase)
@@ -92,7 +92,7 @@ def _eigenvals(M,
         error_when_incomplete: bool = True,
         *,
         simplify: Callable[[Expr], Expr] | bool = False,
-        multiple: Literal[False] = False,
+        multiple: bool = False,
         rational: bool = False,
         **flags: Any,
    ) -> dict[Expr, int]:
@@ -102,7 +102,7 @@ def _eigenvals(M,
         error_when_incomplete: bool = True,
         *,
         simplify: Callable[[Expr], Expr] | bool = False,
-        multiple: Literal[True],
+        multiple: bool,
         rational: bool = False,
         **flags: Any,
 ) -> list[Expr]:
@@ -1093,14 +1093,14 @@ _is_indefinite.__doc__            = _doc_positive_definite
 @overload
 def _jordan_form(
         M: Tmat,
-        calc_transform: Literal[True] = True,
+        calc_transform: bool = True,
         *,
         chop: bool = False
     ) -> tuple[Tmat, Tmat]: ...
 @overload
 def _jordan_form(
         M: Tmat,
-        calc_transform: Literal[False],
+        calc_transform: bool,
         *,
         chop: bool = False,
     ) -> Tmat: ...

@@ -77,7 +77,7 @@ class FiniteDistributionHandmade(SingleFiniteDistribution):
             [(v, Eq(k, x)) for k, v in self.dict.items()] + [(S.Zero, True)])))
 
     @property
-    def set(self) -> set[Any]:
+    def set(self) -> set:
         return set(self.dict.keys())
 
     @staticmethod
@@ -287,7 +287,7 @@ class BernoulliDistribution(SingleFiniteDistribution):
                     "p should be in range [0, 1].")
 
     @property
-    def set(self) -> set[Any]:
+    def set(self) -> set:
         return {self.succ, self.fail}
 
     def pmf(self, x) ->     sympy.Piecewise:
@@ -413,7 +413,7 @@ class BinomialDistribution(SingleFiniteDistribution):
         return not self.n.is_number
 
     @property
-    def set(self) ->     sympy.FiniteSet |     sympy.Intersection | Union | Complement | set[Any]:
+    def set(self) -> sympy.FiniteSet | sympy.Intersection | Union | Complement | set:
         if self.is_symbolic:
             return Intersection(S.Naturals0, Interval(0, self.n))
         return set(self.dict.keys())

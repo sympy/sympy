@@ -14,7 +14,7 @@ from sympy.utilities import numbered_symbols, take, public
 from typing import Any
 
 @public
-def symmetrize(F, *gens, **args) -> list[Any] | tuple[Any | list[Any], list[tuple[Any, Any]]]:
+def symmetrize(F, *gens, **args) -> list | tuple[Any | list, list[tuple[Any, Any]]]:
     r"""
     Rewrite a polynomial in terms of elementary symmetric polynomials.
 
@@ -266,7 +266,7 @@ def rational_interpolate(data, degnum, X=symbols('x')) -> float:
 
 
 @public
-def viete(f, roots=None, *gens, **args) -> list[Any]:
+def viete(f, roots=None, *gens, **args) -> list:
     """
     Generate Viete's formulas for ``f``.
 

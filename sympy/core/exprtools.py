@@ -21,14 +21,11 @@ from sympy.utilities.iterables import (common_prefix, common_suffix,
         variations, iterable, is_sequence)
 
 from collections import defaultdict
-from sympy import Order
-from sympy.core.add import Add
-from sympy.core.basic import Basic
-from sympy.core.expr import Expr
-from sympy.core.mul import Mul
-from sympy.core.numbers import Rational
 from types import NotImplementedType
-from typing import Any
+from typing import Any, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from sympy.series.order import Order
 
 
 _eps = Dummy(positive=True)

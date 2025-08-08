@@ -1,4 +1,5 @@
 """A module which implements predicates and assumption context."""
+from __future__ import annotations
 
 from contextlib import contextmanager
 import inspect
@@ -11,8 +12,10 @@ from sympy.utilities.iterables import is_sequence
 from sympy.utilities.source import get_class
 from collections.abc import Generator
 from sympy.core.basic import Basic
-from typing import Any, Callable
-from typing_extensions import Self
+from typing import Any, Callable, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from typing_extensions import Self
 
 
 class AssumptionsContext(set):
@@ -160,7 +163,7 @@ class AppliedPredicate(Boolean):
         return self.function.eval(self.arguments, assumptions)
 
     @property
-    def binary_symbols(self) -> set[Basic] | set[Any]:
+    def binary_symbols(self) -> set[Basic] | set:
         from .ask import Q
         if self.function == Q.is_true:
             i = self.arguments[0]
@@ -465,7 +468,7 @@ class UndefinedPredicate(Predicate):
 
 
 @contextmanager
-def assuming(*assumptions) -> Generator[None, Any, None]:
+def assuming(*assumptions) -> Generator[None]:
     """
     Context manager for assumptions.
 

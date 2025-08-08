@@ -30,7 +30,7 @@ from sympy.matrices.expressions.special import GenericIdentity, GenericZeroMatri
 from sympy.matrices.expressions.transpose import Transpose
 from sympy.matrices.immutable import ImmutableDenseMatrix
 from sympy.series.order import Order
-from typing import Any, Callable, Literal
+from typing import Any, Callable
 from typing_extensions import Self
 
 
@@ -299,7 +299,7 @@ class MatrixExpr(Expr):
     def I(self) -> Inverse:
         return self.inverse()
 
-    def valid_index(self, i, j) -> Literal[False]:
+    def valid_index(self, i, j) -> bool:
         def is_valid(idx):
             return isinstance(idx, (int, Integer, Symbol, Expr))
         return (is_valid(i) and is_valid(j) and
@@ -748,7 +748,7 @@ class MatrixSymbol(MatrixExpr):
             )]
 
 
-def matrix_symbols(expr) -> list[Any]:
+def matrix_symbols(expr) -> list:
     return [sym for sym in expr.free_symbols if sym.is_Matrix]
 
 
@@ -817,14 +817,14 @@ class _LeftRightArgs:
         else:
             return expr
 
-    def build(self) -> list[Any]:
+    def build(self) -> list:
         data = [self._build(i) for i in self._lines]
         if self.higher != 1:
             data += [self._build(self.higher)]
         data = list(data)
         return data
 
-    def matrix_form(self) -> Literal[1]:
+    def matrix_form(self) -> int:
         if self.first != 1 and self.higher != 1:
             raise ValueError("higher dimensional array cannot be represented")
 

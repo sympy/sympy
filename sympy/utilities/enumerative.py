@@ -145,7 +145,7 @@ class PartComponent:
 # - renamed variable l to lpart.
 # - flag variable x takes on values True/False instead of 1/0
 #
-def multiset_partitions_taocp(multiplicities) -> Generator[list[Any], Any, None]:
+def multiset_partitions_taocp(multiplicities) -> Generator[list]:
     """Enumerates partitions of a multiset.
 
     Parameters
@@ -301,7 +301,7 @@ def multiset_partitions_taocp(multiplicities) -> Generator[list[Any], Any, None]
 # output (such as the actual partition).
 
 
-def factoring_visitor(state, primes) -> list[Any]:
+def factoring_visitor(state, primes) -> list:
     """Use with multiset_partitions_taocp to enumerate the ways a
     number can be expressed as a product of factors.  For this usage,
     the exponents of the prime factors of a number are arguments to
@@ -338,7 +338,7 @@ def factoring_visitor(state, primes) -> list[Any]:
     return factoring
 
 
-def list_visitor(state, components) -> list[Any]:
+def list_visitor(state, components) -> list:
     """Return a list of lists to represent the partition.
 
     Examples
@@ -750,7 +750,7 @@ class MultisetPartitionTraverser():
 
     # Same interface and functionality as multiset_partitions_taocp(),
     # but some might find this refactored version easier to follow.
-    def enum_all(self, multiplicities) -> Generator[list[Any], Any, None]:
+    def enum_all(self, multiplicities) -> Generator[list]:
         """Enumerate the partitions of a multiset.
 
         Examples
@@ -797,7 +797,7 @@ class MultisetPartitionTraverser():
                     return
                 self.lpart -= 1
 
-    def enum_small(self, multiplicities, ub) -> Generator[list[Any], Any, None]:
+    def enum_small(self, multiplicities, ub) -> Generator[list]:
         """Enumerate multiset partitions with no more than ``ub`` parts.
 
         Equivalent to enum_range(multiplicities, 0, ub)
@@ -864,7 +864,7 @@ class MultisetPartitionTraverser():
                 self.db_trace("Backtracked to")
             self.db_trace("decrement ok, about to expand")
 
-    def enum_large(self, multiplicities, lb) -> Generator[list[Any], Any, None]:
+    def enum_large(self, multiplicities, lb) -> Generator[list]:
         """Enumerate the partitions of a multiset with lb < num(parts)
 
         Equivalent to enum_range(multiplicities, lb, sum(multiplicities))
@@ -925,7 +925,7 @@ class MultisetPartitionTraverser():
                     return
                 self.lpart -= 1
 
-    def enum_range(self, multiplicities, lb, ub) -> Generator[list[Any], Any, None]:
+    def enum_range(self, multiplicities, lb, ub) -> Generator[list]:
 
         """Enumerate the partitions of a multiset with
         ``lb < num(parts) <= ub``.
@@ -1133,7 +1133,7 @@ class MultisetPartitionTraverser():
             self.dp_stack[-1].append((pkey, self.pcount),)
 
 
-def part_key(part) -> tuple[Any, ...]:
+def part_key(part) -> tuple:
     """Helper for MultisetPartitionTraverser.count_partitions that
     creates a key for ``part``, that only includes information which can
     affect the count for that part.  (Any irrelevant information just

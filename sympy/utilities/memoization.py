@@ -1,5 +1,10 @@
-from functools import _Wrapped, wraps
-from typing import Any, Callable
+from __future__ import annotations
+
+from functools import wraps
+from typing import Any, Callable, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from functools import _Wrapped
 
 
 def recurrence_memo(initial) -> Callable[..., _Wrapped[..., Any, ..., Any]]:

@@ -173,7 +173,7 @@ class DDM(list):
     def from_ddm(cls, other):
         return other.copy()
 
-    def to_list(self) -> list[Any]:
+    def to_list(self) -> list:
         """
         Convert to a list of lists.
 
@@ -194,7 +194,7 @@ class DDM(list):
         """
         return [row[:] for row in self]
 
-    def to_list_flat(self) -> list[Any]:
+    def to_list_flat(self) -> list:
         """
         Convert to a flat list of elements.
 
@@ -248,10 +248,10 @@ class DDM(list):
         lol = [flat[i*cols:(i+1)*cols] for i in range(rows)]
         return cls(lol, shape, domain)
 
-    def flatiter(self) -> chain[Any]:
+    def flatiter(self) -> chain:
         return chain.from_iterable(self)
 
-    def flat(self) -> list[Any]:
+    def flat(self) -> list:
         items = []
         for row in self:
             items.extend(row)
@@ -794,7 +794,7 @@ class DDM(list):
         """
         return sum(sum(map(bool, row)) for row in a)
 
-    def scc(a) -> list[Any]:
+    def scc(a) -> list:
         """Strongly connected components of a square matrix *a*.
 
         Examples
@@ -833,7 +833,7 @@ class DDM(list):
         """
         return SDM.diag(values, domain).to_ddm()
 
-    def rref(a) -> tuple[DDM, list[Any]]:
+    def rref(a) -> tuple[DDM, list]:
         """Reduced-row echelon form of a and list of pivots.
 
         See Also
@@ -866,7 +866,7 @@ class DDM(list):
         denom, pivots = ddm_irref_den(b, K)
         return b, denom, pivots
 
-    def nullspace(a) -> tuple[DDM, list[Any]]:
+    def nullspace(a) -> tuple[DDM, list]:
         """Returns a basis for the nullspace of a.
 
         The domain of the matrix must be a field.
@@ -951,7 +951,7 @@ class DDM(list):
         ddm_iinv(ainv, a, K)
         return ainv
 
-    def lu(a) -> tuple[DDM, DDM, list[Any]]:
+    def lu(a) -> tuple[DDM, DDM, list]:
         """L, U decomposition of a"""
         m, n = a.shape
         K = a.domain
@@ -1122,7 +1122,7 @@ class DDM(list):
         ddm_ilu_solve(x, L, U, swaps, b)
         return x
 
-    def charpoly(a) -> list[Any]:
+    def charpoly(a) -> list:
         """Coefficients of characteristic polynomial of a"""
         K = a.domain
         m, n = a.shape

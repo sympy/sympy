@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Callable, Literal, Any, TYPE_CHECKING, overload
+from typing import Any, TYPE_CHECKING, overload
 from functools import reduce
 from collections import defaultdict
 from collections.abc import Iterator, Mapping, Iterable
@@ -14,7 +14,7 @@ from sympy.core.evalf import EvalfMixin
 from sympy.core.expr import Expr
 from sympy.core.function import Lambda
 from sympy.core.logic import (FuzzyBool, fuzzy_bool, fuzzy_or, fuzzy_and,
-    fuzzy_not)
+    fuzzy_not, And, Or, Not)
 from sympy.core.numbers import Float, Integer
 from sympy.core.operations import LatticeOp
 from sympy.core.parameters import global_parameters
@@ -35,12 +35,13 @@ from sympy.utilities.misc import func_name, filldedent
 from mpmath import mpi, mpf
 
 from mpmath.libmp.libmpf import prec_to_dps
-import sympy.core.logic
-from sympy.sets.contains import Contains
-from sympy.sets.fancysets import ImageSet
-from sympy.sets.powerset import PowerSet
 from types import NotImplementedType
-from typing_extensions import Self
+
+if TYPE_CHECKING:
+    from sympy.sets.contains import Contains
+    from sympy.sets.fancysets import ImageSet
+    from sympy.sets.powerset import PowerSet
+    from typing_extensions import Self
 
 
 tfn: dict[bool | Boolean | None, Boolean | None] = defaultdict(lambda: None, {
@@ -721,7 +722,7 @@ class Set(Basic, EvalfMixin):
         return self._boundary
 
     @property
-    def is_open(self) ->     sympy.core.logic.FuzzyBool:
+    def is_open(self) ->     FuzzyBool:
         """
         Property method to check whether a set is open.
 
@@ -966,7 +967,7 @@ ProductSet(iterable) is deprecated. Use ProductSet(*iterable) instead.
 
         return And(*[s.contains(e) for s, e in zip(self.sets, element)])
 
-    def as_relational(self, *symbols) ->     sympy.core.logic.And:
+    def as_relational(self, *symbols) ->     And:
         symbols = [_sympify(s) for s in symbols]
         if len(symbols) != len(self.sets) or not all(
                 i.is_Symbol for i in symbols):
@@ -1263,7 +1264,7 @@ class Interval(Set):
         d = Dummy()
         return self.as_relational(d).subs(d, other)
 
-    def as_relational(self, x) ->     sympy.core.logic.And:
+    def as_relational(self, x) ->     And:
         """Rewrite an interval in terms of inequalities and logic operators."""
         x = sympify(x)
         if self.right_open:
@@ -1474,7 +1475,7 @@ class Union(Set, LatticeOp):
         if fuzzy_or(arg.is_superset(other) for arg in self.args):
             return True
 
-    def as_relational(self, symbol) ->     sympy.core.logic.And |     sympy.core.logic.Or:
+    def as_relational(self, symbol) ->     And |     Or:
         """Rewrite a Union in terms of equalities and logic operators. """
         if (len(self.args) == 2 and
                 all(isinstance(i, Interval) for i in self.args)):
@@ -1495,7 +1496,7 @@ class Union(Set, LatticeOp):
     def is_iterable(self) -> bool:
         return all(arg.is_iterable for arg in self.args)
 
-    def __iter__(self) -> Iterator[Any]:
+    def __iter__(self) -> Iterator:
         return roundrobin(*(iter(arg) for arg in self.args))
 
 
@@ -1562,7 +1563,7 @@ class Intersection(Set, LatticeOp):
         return any(arg.is_iterable for arg in self.args)
 
     @property
-    def is_finite_set(self) -> Literal[True] | None:
+    def is_finite_set(self) -> bool | None:
         if fuzzy_or(arg.is_finite_set for arg in self.args):
             return True
 
@@ -1586,7 +1587,7 @@ class Intersection(Set, LatticeOp):
     def _contains(self, other):
         return And(*[set.contains(other) for set in self.args])
 
-    def __iter__(self) -> Iterator[Any]:
+    def __iter__(self) -> Iterator:
         sets_sift = sift(self.args, lambda x: x.is_iterable)
 
         completed = False
@@ -1724,7 +1725,7 @@ class Intersection(Set, LatticeOp):
         else:
             return Intersection(*sets, evaluate=False)
 
-    def as_relational(self, symbol) ->     sympy.core.logic.And:
+    def as_relational(self, symbol) ->     And:
         """Rewrite an Intersection in terms of equalities and logic operators"""
         return And(*[set.as_relational(symbol) for set in self.args])
 
@@ -1791,7 +1792,7 @@ class Complement(Set):
         if A.is_subset(other):
             return True
 
-    def as_relational(self, symbol) ->     sympy.core.logic.And:
+    def as_relational(self, symbol) ->     And:
         """Rewrite a complement in terms of equalities and logic
         operators"""
         A, B = self.args
@@ -1805,7 +1806,7 @@ class Complement(Set):
         return self.args[0].kind
 
     @property
-    def is_iterable(self) -> Literal[True] | None:
+    def is_iterable(self) -> bool | None:
         if self.args[0].is_iterable:
             return True
 
@@ -1818,7 +1819,7 @@ class Complement(Set):
         elif a_finite is False and B.is_finite_set:
             return False
 
-    def __iter__(self) -> Iterator[Any]:
+    def __iter__(self) -> Iterator:
         A, B = self.args
         for a in A:
             if a not in B:
@@ -1865,7 +1866,7 @@ class EmptySet(Set, metaclass=Singleton):
         deprecated_since_version="1.5",
         active_deprecations_target="deprecated-is-emptyset",
     )
-    def is_EmptySet(self) -> Literal[True]:
+    def is_EmptySet(self) -> bool:
         return True
 
     @property
@@ -1878,10 +1879,10 @@ class EmptySet(Set, metaclass=Singleton):
     def as_relational(self, symbol) -> BooleanFalse:
         return false
 
-    def __len__(self) -> Literal[0]:
+    def __len__(self) -> int:
         return 0
 
-    def __iter__(self) -> Iterator[Any]:
+    def __iter__(self) -> Iterator:
         return iter([])
 
     def _eval_powerset(self):
@@ -2114,7 +2115,7 @@ class FiniteSet(Set):
         return Max(*self)
 
     @property
-    def measure(self) -> Literal[0]:
+    def measure(self) -> int:
         return 0
 
     def _kind(self):
@@ -2128,7 +2129,7 @@ class FiniteSet(Set):
     def __len__(self) -> int:
         return len(self.args)
 
-    def as_relational(self, symbol) ->     sympy.core.logic.Or:
+    def as_relational(self, symbol) ->     Or:
         """Rewrite a FiniteSet in terms of equalities and logic operators. """
         return Or(*[Eq(symbol, elem) for elem in self])
 
@@ -2240,7 +2241,7 @@ class SymmetricDifference(Set):
         else:
             return SymmetricDifference(A, B, evaluate=False)
 
-    def as_relational(self, symbol) -> BooleanFalse |     sympy.core.logic.Not | Xor:
+    def as_relational(self, symbol) -> BooleanFalse |     Not | Xor:
         """Rewrite a symmetric_difference in terms of equalities and
         logic operators"""
         A, B = self.args
@@ -2251,11 +2252,11 @@ class SymmetricDifference(Set):
         return Xor(A_rel, B_rel)
 
     @property
-    def is_iterable(self) -> Literal[True] | None:
+    def is_iterable(self) -> bool | None:
         if all(arg.is_iterable for arg in self.args):
             return True
 
-    def __iter__(self) -> Iterator[Any]:
+    def __iter__(self) -> Iterator:
 
         args = self.args
         union = roundrobin(*(iter(arg) for arg in args))
@@ -2385,7 +2386,7 @@ class DisjointUnion(Set):
         else:
             return SetKind(UndefinedKind)
 
-    def __iter__(self) -> Iterator[Any]:
+    def __iter__(self) -> Iterator:
         if self.is_iterable:
 
             iters = []
@@ -2554,7 +2555,7 @@ def imageset(*args) -> Basic | ImageSet | FiniteSet:
     return ImageSet(f, *set_list)
 
 
-def is_function_invertible_in_set(func, setv) -> Literal[True] | None:
+def is_function_invertible_in_set(func, setv) -> bool | None:
     """
     Checks whether function ``func`` is invertible when the domain is
     restricted to set ``setv``.
@@ -2810,7 +2811,7 @@ class SetKind(Kind):
         obj.element_kind = element_kind
         return obj
 
-    def __repr__(self) -> Literal["SetKind()"]:
+    def __repr__(self) -> str:
         if not self.element_kind:
             return "SetKind()"
         else:

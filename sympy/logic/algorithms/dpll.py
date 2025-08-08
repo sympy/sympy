@@ -13,10 +13,10 @@ from sympy.logic.boolalg import Or, Not, conjuncts, disjuncts, to_cnf, \
     to_int_repr, _find_predicates
 from sympy.assumptions.cnf import CNF
 from sympy.logic.inference import pl_true, literal_symbol
-from typing import Any, Literal
+from typing import Any
 
 
-def dpll_satisfiable(expr) -> dict[Any, Any] | Literal[False]:
+def dpll_satisfiable(expr) -> dict | bool:
     """
     Check satisfiability of a propositional sentence.
     It returns a model rather than True when it succeeds
@@ -47,7 +47,7 @@ def dpll_satisfiable(expr) -> dict[Any, Any] | Literal[False]:
     return output
 
 
-def dpll(clauses, symbols, model) -> Literal[False]:
+def dpll(clauses, symbols, model) -> bool:
     """
     Compute satisfiability in a partial model.
     Clauses is an array of conjuncts.
@@ -96,7 +96,7 @@ def dpll(clauses, symbols, model) -> Literal[False]:
             dpll(unit_propagate(unknown_clauses, Not(P)), symbols_copy, model_copy))
 
 
-def dpll_int_repr(clauses, symbols, model) -> Literal[False]:
+def dpll_int_repr(clauses, symbols, model) -> bool:
     """
     Compute satisfiability in a partial model.
     Arguments are expected to be in integer representation
@@ -171,7 +171,7 @@ def pl_true_int_repr(clause, model={}) -> bool | None:
     return result
 
 
-def unit_propagate(clauses, symbol) -> list[Any]:
+def unit_propagate(clauses, symbol) -> list:
     """
     Returns an equivalent set of clauses
     If a set of clauses contains the unit clause l, the other clauses are
@@ -204,7 +204,7 @@ def unit_propagate(clauses, symbol) -> list[Any]:
     return output
 
 
-def unit_propagate_int_repr(clauses, s) -> list[Any]:
+def unit_propagate_int_repr(clauses, s) -> list:
     """
     Same as unit_propagate, but arguments are expected to be in integer
     representation
@@ -241,7 +241,7 @@ def find_pure_symbol(symbols, unknown_clauses) -> tuple[Any, bool] | tuple[None,
     return None, None
 
 
-def find_pure_symbol_int_repr(symbols, unknown_clauses) -> tuple[Any, Literal[True]] | tuple[Any, Literal[False]] | tuple[None, None]:
+def find_pure_symbol_int_repr(symbols, unknown_clauses) -> tuple[Any, bool] | tuple[Any, bool] | tuple[None, None]:
     """
     Same as find_pure_symbol, but arguments are expected
     to be in integer representation
@@ -286,7 +286,7 @@ def find_unit_clause(clauses, model) -> tuple[Any | bool, Any | bool] | tuple[No
     return None, None
 
 
-def find_unit_clause_int_repr(clauses, model) -> tuple[Any, Literal[False]] | tuple[Any, Literal[True]] | tuple[None, None]:
+def find_unit_clause_int_repr(clauses, model) -> tuple[Any, bool] | tuple[Any, bool] | tuple[None, None]:
     """
     Same as find_unit_clause, but arguments are expected to be in
     integer representation.

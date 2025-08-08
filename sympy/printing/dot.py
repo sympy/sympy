@@ -13,7 +13,7 @@ default_styles = (
 )
 
 slotClasses = (Symbol, Integer, Rational, Float)
-def purestr(x, with_args=False) -> tuple[str | Any, tuple[()] | tuple[Any, ...]] | str:
+def purestr(x, with_args=False) -> tuple[str | Any, tuple[()] | tuple] | str:
     """A string that follows ```obj = type(obj)(*obj.args)``` exactly.
 
     Parameters
@@ -76,7 +76,7 @@ def purestr(x, with_args=False) -> tuple[str | Any, tuple[()] | tuple[Any, ...]]
     return rv
 
 
-def styleof(expr, styles=default_styles) -> dict[Any, Any]:
+def styleof(expr, styles=default_styles) -> dict:
     """ Merge style dictionaries in order
 
     Examples
@@ -138,7 +138,9 @@ def dotnode(expr, styles=default_styles, labelfunc=str, pos=(), repeat=True) -> 
     return '"%s" [%s];' % (expr_str, attrprint(style))
 
 
-def dotedges(expr, atom=lambda x: not isinstance(x, Basic), pos=(), repeat=True) -> list[Any] | list[str]:
+def dotedges(
+    expr, atom=lambda x: not isinstance(x, Basic), pos=(), repeat=True
+) -> list | list[str]:
     """ List of strings for all expr->expr.arg pairs
 
     See the docstring of dotprint for explanations of the options.

@@ -1,13 +1,16 @@
 """Useful utility decorators. """
+from __future__ import annotations
 
-from typing import Any, Callable, TypeVar
+from typing import Any, Callable, TypeVar, TYPE_CHECKING
 import sys
 import types
 import inspect
-from functools import _Wrapped, wraps, update_wrapper
+from functools import wraps, update_wrapper
 
 from sympy.utilities.exceptions import sympy_deprecation_warning
 
+if TYPE_CHECKING:
+    from functools import _Wrapped
 
 T = TypeVar('T')
 """A generic type"""

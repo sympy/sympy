@@ -1317,7 +1317,7 @@ class Line(LinearEntity):
             return False
         return Point.is_collinear(self.p1, other.p1, self.p2, other.p2)
 
-    def plot_interval(self, parameter='t') -> list[Any]:
+    def plot_interval(self, parameter="t") -> list:
         """The plot interval for the default geometric plot of line. Gives
         values that will produce a line that is +/- 5 units long (where a
         unit is the distance between the two points that define the line).
@@ -1528,7 +1528,7 @@ class Ray(LinearEntity):
             return False
         return self.source == other.source and other.p2 in self
 
-    def plot_interval(self, parameter='t') -> list[Any]:
+    def plot_interval(self, parameter="t") -> list:
         """The plot interval for the default geometric plot of the Ray. Gives
         values that will produce a ray that is 10 units long (where a unit is
         the distance between the two points that define the ray).
@@ -1847,7 +1847,7 @@ class Segment(LinearEntity):
                 return Segment(p2, self.midpoint)
         return l
 
-    def plot_interval(self, parameter='t') -> list[Any]:
+    def plot_interval(self, parameter="t") -> list:
         """The plot interval for the default geometric plot of the Segment gives
         values that will produce the full segment in a plot.
 
@@ -2088,7 +2088,7 @@ class Line2D(LinearEntity2D, Line):
         ).format(2.*scale_factor, path, fill_color)
 
     @property
-    def coefficients(self) -> tuple[Any, Any, Any] | tuple[Any, ...]:
+    def coefficients(self) -> tuple[Any, Any, Any] | tuple:
         """The coefficients (`a`, `b`, `c`) for `ax + by + c = 0`.
 
         See Also

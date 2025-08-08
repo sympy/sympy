@@ -8,7 +8,6 @@ from sympy.core.sympify import sympify
 from sympy.physics.units.dimensions import Dimension, _QuantityMapper
 from sympy.physics.units.prefixes import Prefix
 from sympy.core.add import Add
-from typing import Any
 from typing_extensions import Self
 
 
@@ -140,7 +139,7 @@ class Quantity(AtomicExpr):
         return convert_to(self, other, unit_system)
 
     @property
-    def free_symbols(self) -> set[Any]:
+    def free_symbols(self) -> set:
         """Return free symbols from quantity."""
         return set()
 

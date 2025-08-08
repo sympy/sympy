@@ -12,9 +12,8 @@ from sympy.polys.polyerrors import (GeneratorsNeeded, PolynomialError,
 from sympy.polys.polyutils import dict_from_basic, basic_from_dict, _dict_reorder
 from sympy.utilities import public
 from sympy.utilities.iterables import iterable
-from sympy.polys.domains.characteristiczero import CharacteristicZero
 from sympy.series.order import Order
-from typing import Any, Literal
+from typing import Any
 
 
 @public
@@ -341,7 +340,7 @@ class GeneralizedPolynomialRing(PolynomialRingBase):
                                  % (sstr(res), self))
         return res
 
-    def __contains__(self, a) -> Literal[False]:
+    def __contains__(self, a) -> bool:
         try:
             a = self.convert(a)
         except CoercionFailed:

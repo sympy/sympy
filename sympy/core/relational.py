@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 from .basic import Atom, Basic
 from .coreerrors import LazyExceptionMessage
@@ -550,7 +550,7 @@ class Relational(Boolean, EvalfMixin):
         return xset
 
     @property
-    def binary_symbols(self) -> set[Any]:
+    def binary_symbols(self) -> set:
         # override where necessary
         return set()
 
@@ -704,7 +704,7 @@ class Equality(Relational):
         return Add._from_args(args)
 
     @property
-    def binary_symbols(self) -> set[Basic] | set[Any]:
+    def binary_symbols(self) -> set[Basic] | set:
         if S.true in self.args or S.false in self.args:
             if self.lhs.is_Symbol:
                 return {self.lhs}
@@ -816,7 +816,7 @@ class Unequality(Relational):
         return _sympify(lhs != rhs)
 
     @property
-    def binary_symbols(self) -> set[Basic] | set[Any]:
+    def binary_symbols(self) -> set[Basic] | set:
         if S.true in self.args or S.false in self.args:
             if self.lhs.is_Symbol:
                 return {self.lhs}

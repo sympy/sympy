@@ -24,7 +24,6 @@ from sympy.functions.elementary.integers import ceiling
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.logic.boolalg import (And, Or)
 from sympy import ordered
-import sympy.core.logic
 from sympy.core.basic import Basic
 from typing_extensions import Self
 
@@ -371,7 +370,7 @@ class hyper(TupleParametersBase):
             return S.Zero
 
     @property
-    def convergence_statement(self) ->     sympy.core.logic.Or | bool:
+    def convergence_statement(self) ->     Or | bool:
         """ Return a condition on z under which the series converges. """
         R = self.radius_of_convergence
         if R == 0:

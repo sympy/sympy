@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from functools import reduce
 from itertools import product
 
@@ -5,7 +7,7 @@ from sympy.core.basic import Basic
 from sympy.core.containers import Tuple
 from sympy.core.expr import Expr
 from sympy.core.function import Lambda
-from sympy.core.logic import fuzzy_not, fuzzy_or, fuzzy_and
+from sympy.core.logic import fuzzy_not, fuzzy_or, fuzzy_and, And, Or
 from sympy.core.mod import Mod
 from sympy.core.intfunc import igcd
 from sympy.core.numbers import oo, Rational, Integer
@@ -16,13 +18,10 @@ from sympy.core.symbol import Dummy, symbols, Symbol
 from sympy.core.sympify import _sympify, sympify, _sympy_converter
 from sympy.functions.elementary.integers import ceiling, floor
 from sympy.functions.elementary.trigonometric import sin, cos
-from sympy.logic.boolalg import And, Or
 from .sets import tfn, Set, Interval, Union, FiniteSet, ProductSet, SetKind
 from sympy.utilities.misc import filldedent
-import sympy.core.logic
 from collections.abc import Generator, Iterator
-from sympy.sets.sets import FiniteSet, Interval, ProductSet, Set, Union
-from typing import Any, Literal, NoReturn
+from typing import Any, NoReturn
 from typing_extensions import Self
 
 
@@ -134,7 +133,7 @@ class Naturals(Set, metaclass=Singleton):
     def _boundary(self):
         return self
 
-    def as_relational(self, x) ->     sympy.core.logic.And:
+    def as_relational(self, x) ->     And:
         return And(Eq(floor(x), x), x >= self.inf, x < oo)
 
     def _kind(self):
@@ -231,7 +230,7 @@ class Integers(Set, metaclass=Singleton):
     def _kind(self):
         return SetKind(NumberKind)
 
-    def as_relational(self, x) ->     sympy.core.logic.And:
+    def as_relational(self, x) ->     And:
         return And(Eq(floor(x), x), -oo < x, x < oo)
 
     def _eval_is_subset(self, other):
@@ -279,11 +278,11 @@ class Reals(Interval, metaclass=Singleton):
         return S.Infinity
 
     @property
-    def left_open(self) -> Literal[True]:
+    def left_open(self) -> bool:
         return True
 
     @property
-    def right_open(self) -> Literal[True]:
+    def right_open(self) -> bool:
         return True
 
     def __eq__(self, other) -> bool:
@@ -414,7 +413,7 @@ class ImageSet(Set):
             # _contains probably only works for ProductSet.
             return True # Give the benefit of the doubt
 
-    def __iter__(self) -> Iterator[Any]:
+    def __iter__(self) -> Iterator:
         already_seen = set()
         for i in self.base_pset:
             val = self.lamda(*i)
@@ -744,7 +743,7 @@ class Range(Set):
         else:  # symbolic/unsimplified residue modulo step
             return None
 
-    def __iter__(self) -> Iterator[Any]:
+    def __iter__(self) -> Iterator:
         n = self.size  # validate
         if not (n.has(S.Infinity) or n.has(S.NegativeInfinity) or n.is_Integer):
             raise TypeError("Cannot iterate over symbolic Range")
@@ -793,7 +792,7 @@ class Range(Set):
         raise ValueError('Invalid method for symbolic Range')
 
     @property
-    def is_finite_set(self) -> Literal[True]:
+    def is_finite_set(self) -> bool:
         if self.start.is_integer and self.stop.is_integer:
             return True
         return self.size.is_finite
@@ -992,7 +991,7 @@ class Range(Set):
     def _boundary(self):
         return self
 
-    def as_relational(self, x) ->     sympy.core.logic.And:
+    def as_relational(self, x) ->     And:
         """Rewrite a Range in terms of equalities and logic operators. """
         if self.start.is_infinite:
             assert not self.stop.is_infinite  # by instantiation

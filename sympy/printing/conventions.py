@@ -11,7 +11,7 @@ from typing import Any
 _name_with_digits_p = re.compile(r'^([^\W\d_]+)(\d+)$', re.UNICODE)
 
 
-def split_super_sub(text) -> tuple[Any, list[Any], list[Any]] | tuple[Any | None, list[Any], list[Any]]:
+def split_super_sub(text) -> tuple[Any, list, list] | tuple[Any | None, list, list]:
     """Split a symbol name into a name, superscripts and subscripts
 
     The first part of the symbol name is considered to be its actual

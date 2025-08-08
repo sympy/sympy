@@ -4,7 +4,6 @@ from sympy.polys.polyerrors import CoercionFailed
 from sympy.polys.polyutils import IntegerPowerable
 from collections.abc import Generator
 from types import NotImplementedType
-from typing import Any
 
 
 class Ideal(IntegerPowerable):
@@ -319,7 +318,7 @@ class ModuleImplementedIdeal(Ideal):
         return self.__class__(self.ring, self._module.union(J._module))
 
     @property
-    def gens(self) -> Generator[Any, None, None]:
+    def gens(self) -> Generator:
         """
         Return generators for ``self``.
 

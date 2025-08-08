@@ -15,7 +15,7 @@ from .primetest import isprime
 from sympy.utilities.decorator import deprecated
 from sympy.utilities.misc import as_int
 from collections.abc import Generator, Iterator
-from typing import Any, Literal
+from typing import Any
 
 
 def _as_int_ceiling(a):
@@ -187,7 +187,7 @@ class Sieve:
         while len(self._list) < i:
             self.extend(int(self._list[-1] * 1.5))
 
-    def primerange(self, a, b=None) -> Generator[Any, Any, None]:
+    def primerange(self, a, b=None) -> Generator:
         """Generate all prime numbers in the range [2, a) or [a, b).
 
         Examples
@@ -223,7 +223,7 @@ class Sieve:
         yield from self._list[bisect_left(self._list, a):
                               bisect_left(self._list, b)]
 
-    def totientrange(self, a, b) -> Generator[int, Any, None]:
+    def totientrange(self, a, b) -> Generator[int]:
         """Generate all totient numbers for the range [a, b).
 
         Examples
@@ -260,7 +260,7 @@ class Sieve:
                 if i >= a:
                     yield self._tlist[i]
 
-    def mobiusrange(self, a, b) -> Generator[int, Any, None]:
+    def mobiusrange(self, a, b) -> Generator[int]:
         """Generate all mobius numbers for the range [a, b).
 
         Parameters
@@ -763,7 +763,7 @@ def prevprime(n) -> int | array[int] | None:
         n -= 4
 
 
-def primerange(a, b=None) -> Generator[Any | int | array[int] | None, Any, None]:
+def primerange(a, b=None) -> Generator[Any | int | array[int] | None]:
     """ Generate a list of all prime numbers in the range [2, a),
         or [a, b).
 
@@ -978,7 +978,7 @@ def primorial(n, nth=True) -> array[int] | int:
     return p
 
 
-def cycle_length(f, x0, nmax=None, values=False) -> Generator[Any | tuple[int, None] | tuple[int, int], Any, None]:
+def cycle_length(f, x0, nmax=None, values=False) -> Generator[Any | tuple[int, None] | tuple[int, int]]:
     """For a given iterated sequence, return a generator that gives
     the length of the iterated cycle (lambda) and the length of terms
     before the cycle begins (mu); if ``values`` is True then the
@@ -1131,7 +1131,7 @@ def composite(nth) -> int:
     return a
 
 
-def compositepi(n) -> Literal[0]:
+def compositepi(n) -> int:
     """ Return the number of positive composite numbers less than or equal to n.
         The first positive composite is 4, i.e. compositepi(4) = 1.
 

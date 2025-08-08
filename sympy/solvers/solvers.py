@@ -69,7 +69,7 @@ from sympy.series.order import Order
 from typing import Any
 
 
-def recast_to_symbols(eqs, symbols) -> tuple[list[Any], list[Any], dict[Any, Any]]:
+def recast_to_symbols(eqs, symbols) -> tuple[list, list, dict]:
     """
     Return (e, s, d) where e and s are versions of *eqs* and
     *symbols* in which any non-Symbol objects in *symbols* have
@@ -134,7 +134,7 @@ def _simple_dens(f, symbols):
     return dens
 
 
-def denoms(eq, *symbols) -> set[Any]:
+def denoms(eq, *symbols) -> set:
     """
     Return (recursively) set of all denominators that appear in *eq*
     that contain any symbol in *symbols*; if *symbols* are not
@@ -2212,7 +2212,7 @@ def solve_linear(lhs, rhs=0, symbols=[], exclude=[]) -> tuple[Any, Any]:
     return n, d
 
 
-def minsolve_linear_system(system, *symbols, **flags) -> dict[Any, Any] | None:
+def minsolve_linear_system(system, *symbols, **flags) -> dict | None:
     r"""
     Find a particular solution to a linear system.
 
@@ -2295,7 +2295,7 @@ def minsolve_linear_system(system, *symbols, **flags) -> dict[Any, Any] | None:
         return bestsol
 
 
-def solve_linear_system(system, *symbols, **flags) -> dict[Any, Any] | None:
+def solve_linear_system(system, *symbols, **flags) -> dict | None:
     r"""
     Solve system of $N$ linear equations with $M$ variables, which means
     both under- and overdetermined systems are supported.
@@ -2353,7 +2353,9 @@ def solve_linear_system(system, *symbols, **flags) -> dict[Any, Any] | None:
     return sol
 
 
-def solve_undetermined_coeffs(equ, coeffs, *syms, **flags) -> tuple[list[Any], dict[Any, Any]] | list[Any] | dict[Any, Any] | None:
+def solve_undetermined_coeffs(
+    equ, coeffs, *syms, **flags
+) -> tuple[list, dict] | list | dict | None:
     r"""
     Solve a system of equations in $k$ parameters that is formed by
     matching coefficients in variables ``coeffs`` that are on
@@ -2485,7 +2487,7 @@ def solve_undetermined_coeffs(equ, coeffs, *syms, **flags) -> tuple[list[Any], d
     return soln[0]
 
 
-def solve_linear_system_LU(matrix, syms) -> dict[Any, Any]:
+def solve_linear_system_LU(matrix, syms) -> dict:
     """
     Solves the augmented matrix system using ``LUsolve`` and returns a
     dictionary in which solutions are keyed to the symbols of *syms* as ordered.
@@ -2904,7 +2906,7 @@ def _tsolve(eq, sym, **flags):
 # TODO: option for calculating J numerically
 
 @conserve_mpmath_dps
-def nsolve(*args, dict=False, **kwargs) -> list[dict[Any, Any]] | Matrix:
+def nsolve(*args, dict=False, **kwargs) -> list[dict] | Matrix:
     r"""
     Solve a nonlinear equation system numerically: ``nsolve(f, [args,] x0,
     modules=['mpmath'], **kwargs)``.

@@ -194,7 +194,7 @@ def finite_diff_weights(order, x_list, x0=S.One) -> list[list[list[int]]]:
     return delta
 
 
-def apply_finite_diff(order, x_list, y_list, x0=S.Zero) -> Literal[0]:
+def apply_finite_diff(order, x_list, y_list, x0=S.Zero) -> int:
     """
     Calculates the finite difference approximation of
     the derivative of requested order at ``x0`` from points

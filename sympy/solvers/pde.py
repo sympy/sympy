@@ -61,7 +61,9 @@ allhints = (
     )
 
 
-def pdsolve(eq, func=None, hint='default', dict=False, solvefun=None, **kwargs) -> dict[Any, Any] | Any:
+def pdsolve(
+    eq, func=None, hint="default", dict=False, solvefun=None, **kwargs
+) -> dict | Any:
     """
     Solves any (supported) kind of partial differential equation.
 
@@ -776,7 +778,7 @@ def _simplify_variable_coeff(sol, syms, func, funcarg):
     return simplify(final.subs(eta, funcarg))
 
 
-def pde_separate(eq, fun, sep, strategy='mul') -> list[Any] | None:
+def pde_separate(eq, fun, sep, strategy="mul") -> list | None:
     """Separate variables in partial differential equation either by additive
     or multiplicative separation approach. It tries to rewrite an equation so
     that one of the specified variables occurs on a different side of the
@@ -863,7 +865,7 @@ def pde_separate(eq, fun, sep, strategy='mul') -> list[Any] | None:
     return _separate(result, svar, dvar)
 
 
-def pde_separate_add(eq, fun, sep) -> list[Any] | None:
+def pde_separate_add(eq, fun, sep) -> list | None:
     """
     Helper function for searching additive separable solutions.
 
@@ -888,7 +890,7 @@ def pde_separate_add(eq, fun, sep) -> list[Any] | None:
     return pde_separate(eq, fun, sep, strategy='add')
 
 
-def pde_separate_mul(eq, fun, sep) -> list[Any] | None:
+def pde_separate_mul(eq, fun, sep) -> list | None:
     """
     Helper function for searching multiplicative separable solutions.
 

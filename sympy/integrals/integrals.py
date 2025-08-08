@@ -108,7 +108,7 @@ class Integral(AddWithLimits):
         return (self.function,) + tuple([tuple(xab) for xab in self.limits])
 
     @property
-    def free_symbols(self) -> set[Any]:
+    def free_symbols(self) -> set:
         """
         This method returns the symbols that will exist when the
         integral is evaluated. This is useful if one is trying to

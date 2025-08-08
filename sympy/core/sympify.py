@@ -13,7 +13,6 @@ from sympy.core.random import choice
 from .parameters import global_parameters
 
 from sympy.utilities.iterables import iterable
-from sympy.core.basic import Basic
 
 
 if TYPE_CHECKING:
@@ -39,10 +38,10 @@ class SympifyError(ValueError):
             str(self.base_exc)))
 
 
-converter: dict[type[Any], Callable[[Any], Basic]] = {}
+converter: dict[type, Callable[[Any], Basic]] = {}
 
 #holds the conversions defined in SymPy itself, i.e. non-user defined conversions
-_sympy_converter: dict[type[Any], Callable[[Any], Basic]] = {}
+_sympy_converter: dict[type, Callable[[Any], Basic]] = {}
 
 #alias for clearer use in the library
 _external_converter = converter
@@ -541,7 +540,7 @@ def _sympify(a):
     return sympify(a, strict=True)
 
 
-def kernS(s) -> list[Any] | set[Any] | tuple[Any, ...]:
+def kernS(s) -> list | set | tuple:
     """Use a hack to try keep autosimplification from distributing a
     a number into an Add; this modification does not
     prevent the 2-arg Mul from becoming an Add, however.

@@ -23,10 +23,12 @@ from sympy.logic.boolalg import And
 from sympy.ntheory import factorint
 from sympy.polys.specialpolys import symmetric_poly
 from sympy.utilities.iterables import numbered_symbols
-from sympy.calculus.accumulationbounds import AccumBounds
 from sympy.core.mul import Mul
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from typing_extensions import Self
+
+if TYPE_CHECKING:
+    from sympy.calculus.accumulationbounds import AccumBounds
 
 
 ###############################################################################

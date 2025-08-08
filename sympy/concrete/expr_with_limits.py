@@ -19,7 +19,6 @@ from sympy.utilities.iterables import sift, is_sequence
 from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.core.basic import Basic
 from sympy.core.kind import Kind
-from typing import Any
 from typing_extensions import Self
 
 
@@ -268,7 +267,7 @@ class ExprWithLimits(Expr):
         return self._args[1:]
 
     @property
-    def variables(self) -> list[Any]:
+    def variables(self) -> list:
         """Return a list of the limit variables.
 
         >>> from sympy import Sum
@@ -286,7 +285,7 @@ class ExprWithLimits(Expr):
         return [l[0] for l in self.limits]
 
     @property
-    def bound_symbols(self) -> list[Any]:
+    def bound_symbols(self) -> list:
         """Return only variables that are dummy variables.
 
         Examples
@@ -307,7 +306,7 @@ class ExprWithLimits(Expr):
         return [l[0] for l in self.limits if len(l) != 1]
 
     @property
-    def free_symbols(self) -> set[Any]:
+    def free_symbols(self) -> set:
         """
         This method returns the symbols in the object, excluding those
         that take on a specific value (i.e. the dummy symbols).

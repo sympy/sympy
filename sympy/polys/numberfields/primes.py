@@ -12,7 +12,6 @@ from .basis import round_two, nilradical_mod_p
 from .exceptions import StructureError
 from .modules import ModuleEndomorphism, find_min_poly
 from .utilities import coeff_search, supplement_a_subspace
-from typing import Any
 
 
 def _check_formal_conditions_for_maximal_order(submodule):
@@ -703,7 +702,7 @@ def _prime_decomp_split_ideal(I, p, N, G, ZK):
 
 
 @public
-def prime_decomp(p, T=None, ZK=None, dK=None, radical=None) -> list[PrimeIdeal] | list[Any]:
+def prime_decomp(p, T=None, ZK=None, dK=None, radical=None) -> list[PrimeIdeal] | list:
     r"""
     Compute the decomposition of rational prime *p* in a number field.
 

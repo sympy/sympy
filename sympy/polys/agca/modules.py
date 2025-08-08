@@ -30,7 +30,6 @@ from sympy.core.basic import _aresame
 from sympy.utilities.iterables import iterable
 from sympy.polys.agca.homomorphisms import FreeModuleHomomorphism
 from types import NotImplementedType
-from typing import Any, Literal
 from typing_extensions import Self
 
 # TODO
@@ -264,13 +263,13 @@ class ModuleElement:
 class FreeModuleElement(ModuleElement):
     """Element of a free module. Data stored as a tuple."""
 
-    def add(self, d1, d2) -> tuple[Any, ...]:
+    def add(self, d1, d2) -> tuple:
         return tuple(x + y for x, y in zip(d1, d2))
 
-    def mul(self, d, p) -> tuple[Any, ...]:
+    def mul(self, d, p) -> tuple:
         return tuple(x * p for x in d)
 
-    def div(self, d, p) -> tuple[Any, ...]:
+    def div(self, d, p) -> tuple:
         return tuple(x / p for x in d)
 
     def __repr__(self) -> str:
@@ -309,7 +308,7 @@ class FreeModule(Module):
     def __repr__(self):
         return repr(self.ring) + "**" + repr(self.rank)
 
-    def is_submodule(self, other) -> Literal[False]:
+    def is_submodule(self, other) -> bool:
         """
         Returns True if ``other`` is a submodule of ``self``.
 
@@ -1387,7 +1386,7 @@ class QuotientModule(Module):
         """
         return self.base == self.killed_module
 
-    def is_submodule(self, other) -> Literal[False]:
+    def is_submodule(self, other) -> bool:
         """
         Return True if ``other`` is a submodule of ``self``.
 

@@ -16,7 +16,7 @@ def is_valid(x) -> bool:
     return not math.isinf(x) and not math.isnan(x)
 
 
-def rescale(y, W, H, mi, ma) -> list[Any]:
+def rescale(y, W, H, mi, ma) -> list:
     """Rescale the given array `y` to fit into the integer values
     between `0` and `H-1` for the values between ``mi`` and ``ma``.
     """
@@ -39,11 +39,11 @@ def rescale(y, W, H, mi, ma) -> list[Any]:
     return y_new
 
 
-def linspace(start, stop, num) -> list[Any]:
+def linspace(start, stop, num) -> list:
     return [start + (stop - start) * x / (num-1) for x in range(num)]
 
 
-def textplot_str(expr, a, b, W=55, H=21) -> Generator[str, Any, None]:
+def textplot_str(expr, a, b, W=55, H=21) -> Generator[str]:
     """Generator for the lines of the plot"""
     free = expr.free_symbols
     if len(free) > 1:

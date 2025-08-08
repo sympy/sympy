@@ -20,7 +20,10 @@ from sympy.core.sympify import sympify
 from sympy.logic import true, false
 from sympy.utilities.iterables import iterable
 import ast
-from typing_extensions import Self
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from typing_extensions import Self
 
 
 

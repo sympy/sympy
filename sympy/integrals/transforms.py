@@ -30,13 +30,11 @@ from sympy.polys.polytools import factor, Poly
 from sympy.polys.rootoftools import CRootOf
 from sympy.utilities.iterables import iterable
 from sympy.utilities.misc import debug
-import sympy.core.logic
 import sympy.integrals.integrals
 from sympy.core.basic import Basic
 from sympy.core.relational import Equality, Ne, Relational
 from sympy.series.order import Order
-from typing import Any, Literal
-from typing_extensions import Unpack
+from typing import Any
 
 
 ##########################################################################
@@ -140,7 +138,7 @@ class IntegralTransform(Function):
             fn = expand_mul(fn)
         return fn, T
 
-    def doit(self, **hints) -> Order | tuple[Any | Order, Unpack[tuple[Any, ...]]] | tuple[Any | Order, Any |     sympy.core.logic.And]:
+    def doit(self, **hints) -> Order | tuple[Any | Order, ...] | tuple[Any | Order, Any |     And]:
         """
         Try to evaluate the transform in closed form.
 
@@ -1002,7 +1000,7 @@ class FourierTransform(FourierTypeTransform):
 
     _name = 'Fourier'
 
-    def a(self) -> Literal[1]:
+    def a(self) -> int:
         return 1
 
     def b(self):
@@ -1063,7 +1061,7 @@ class InverseFourierTransform(FourierTypeTransform):
 
     _name = 'Inverse Fourier'
 
-    def a(self) -> Literal[1]:
+    def a(self) -> int:
         return 1
 
     def b(self):

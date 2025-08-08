@@ -31,7 +31,7 @@ from .cache import cacheit
 from sympy.multipledispatch.dispatcher import (Dispatcher,
     ambiguity_warn, ambiguity_register_error_ignore_dup,
     str_signature, RaiseNotImplementedError)
-from typing import Callable, Literal
+from typing import Callable
 from typing_extensions import Self
 
 
@@ -99,7 +99,7 @@ class _UndefinedKind(Kind):
     def __new__(cls) -> Self:
         return super().__new__(cls)
 
-    def __repr__(self) -> Literal["UndefinedKind"]:
+    def __repr__(self) -> str:
         return "UndefinedKind"
 
 UndefinedKind = _UndefinedKind()
@@ -158,7 +158,7 @@ class _NumberKind(Kind):
     def __new__(cls) -> Self:
         return super().__new__(cls)
 
-    def __repr__(self) -> Literal["NumberKind"]:
+    def __repr__(self) -> str:
         return "NumberKind"
 
 NumberKind = _NumberKind()
@@ -183,7 +183,7 @@ class _BooleanKind(Kind):
     def __new__(cls) -> Self:
         return super().__new__(cls)
 
-    def __repr__(self) -> Literal["BooleanKind"]:
+    def __repr__(self) -> str:
         return "BooleanKind"
 
 BooleanKind = _BooleanKind()

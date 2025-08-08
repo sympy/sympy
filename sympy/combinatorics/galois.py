@@ -33,7 +33,6 @@ from sympy.combinatorics.named_groups import (
 )
 from sympy.combinatorics.perm_groups import PermutationGroup
 from sympy.combinatorics.permutations import Permutation
-from typing import Any
 
 
 class S1TransitiveSubgroups(Enum):
@@ -394,7 +393,7 @@ def PGL2F5() -> PermutationGroup:
     return G
 
 
-def find_transitive_subgroups_of_S6(*targets, print_report=False) -> dict[Any, Any]:
+def find_transitive_subgroups_of_S6(*targets, print_report=False) -> dict:
     r"""
     Search for certain transitive subgroups of $S_6$.
 

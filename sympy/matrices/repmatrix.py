@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, TYPE_CHECKING, overload
+from typing import TYPE_CHECKING, overload
 
 from collections import defaultdict
 from abc import abstractmethod
@@ -25,7 +25,6 @@ from .exceptions import ShapeError, NonSquareMatrixError, NonInvertibleMatrixErr
 from .matrixbase import classof, MatrixBase
 from .kind import MatrixKind
 from sympy import MatrixBase
-from sympy.matrices.expressions.matexpr import MatrixElement
 from sympy.matrices.kind import MatrixKind
 from typing_extensions import Self
 
@@ -254,7 +253,7 @@ class RepMatrix(MatrixBase):
         rep = cls._dod_to_DomainMatrix(rows, cols, elements_dod, types)
         return rep
 
-    def flat(self) -> list[Any]:
+    def flat(self) -> list:
         return self._rep.to_sympy().to_list_flat()
 
     def _eval_tolist(self):

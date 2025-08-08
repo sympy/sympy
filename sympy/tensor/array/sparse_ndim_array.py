@@ -9,7 +9,6 @@ from sympy.utilities.iterables import flatten
 import functools
 from sympy import Indexed
 from sympy.matrices import SparseMatrix
-from typing import Any
 from typing_extensions import Self
 
 class SparseNDimArray(NDimArray):
@@ -196,5 +195,5 @@ class MutableSparseNDimArray(MutableNDimArray, SparseNDimArray):
         return ImmutableSparseNDimArray(self)
 
     @property
-    def free_symbols(self) -> set[Any]:
+    def free_symbols(self) -> set:
         return {i for j in self._sparse_array.values() for i in j.free_symbols}

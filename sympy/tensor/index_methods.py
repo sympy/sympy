@@ -202,13 +202,15 @@ def _get_indices_Add(expr):
     return non_scalars[0], symmetries
 
 
-def get_indices(expr) -> (
-    tuple[set[Any], dict[Any, Any]]
-    | tuple[set[sympy.Idx], dict[Any, Any]]
-    | tuple[set[Any], dict[Any, Any], tuple[Any, ...]]
-    | tuple[Any, Any | dict[Any, Any]]
-    | tuple[Any, dict[Any, Any]]
-    | tuple[set[Any] | Any, Any]
+def get_indices(
+    expr,
+) -> (
+    tuple[set, dict]
+    | tuple[set[sympy.Idx], dict]
+    | tuple[set, dict, tuple]
+    | tuple[Any, Any | dict]
+    | tuple[Any, dict]
+    | tuple[set | Any, Any]
 ):
     """Determine the outer indices of expression ``expr``
 
@@ -305,12 +307,14 @@ def get_indices(expr) -> (
             "FIXME: No specialized handling of type %s" % type(expr))
 
 
-def get_contraction_structure(expr) -> (
-    dict[tuple[Any, ...] | None, set[sympy.Indexed]]
-    | dict[None, set[Any]]
-    | dict[tuple[Any, ...] | None, set[Any]]
+def get_contraction_structure(
+    expr,
+) -> (
+    dict[tuple | None, set[sympy.Indexed]]
+    | dict[None, set]
+    | dict[tuple | None, set]
     | dict[None, set[Any | sympy.functions.elementary.exponential.exp]]
-    | dict[Any, Any]
+    | dict
     | dict[None, sympy.Piecewise]
     | dict[None, set[Function]]
 ):

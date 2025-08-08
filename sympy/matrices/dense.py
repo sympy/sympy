@@ -18,7 +18,7 @@ from .decompositions import _cholesky, _LDLdecomposition
 from .matrixbase import MatrixBase
 from .repmatrix import MutableRepMatrix, RepMatrix
 from .solvers import _lower_triangular_solve, _upper_triangular_solve
-from numpy import ndarray as NDArray, ndarray as NDArray, ndarray as NDArray
+from numpy import ndarray as NDArray
 from sympy.matrices.immutable import ImmutableDenseMatrix
 from sympy.matrices.repmatrix import MutableRepMatrix, RepMatrix
 from sympy.series.order import Order
@@ -154,7 +154,7 @@ Matrix = MutableDenseMatrix
 ###########
 
 
-def list2numpy(l, dtype=object) -> NDArray[Any, Any]:  # pragma: no cover
+def list2numpy(l, dtype=object) -> NDArray:  # pragma: no cover
     """Converts Python list of SymPy expressions to a NumPy array.
 
     See Also
@@ -169,7 +169,7 @@ def list2numpy(l, dtype=object) -> NDArray[Any, Any]:  # pragma: no cover
     return a
 
 
-def matrix2numpy(m, dtype=object) -> NDArray[Any, Any]:  # pragma: no cover
+def matrix2numpy(m, dtype=object) -> NDArray:  # pragma: no cover
     """Converts SymPy's matrix to a NumPy array.
 
     See Also
@@ -641,7 +641,7 @@ def rot_ccw_axis1(theta):
 
 
 @doctest_depends_on(modules=('numpy',))
-def symarray(prefix, shape, **kwargs) -> NDArray[Any, Any]:  # pragma: no cover
+def symarray(prefix, shape, **kwargs) -> NDArray:  # pragma: no cover
     r"""Create a numpy ndarray of symbols (as an object array).
 
     The created symbols are named ``prefix_i1_i2_``...  You should thus provide a
@@ -811,7 +811,7 @@ def diag(*values, strict=True, unpack=False, **kwargs):
     return Matrix.diag(*values, strict=strict, unpack=unpack, **kwargs)
 
 
-def GramSchmidt(vlist, orthonormal=False) -> list[Any]:
+def GramSchmidt(vlist, orthonormal=False) -> list:
     """Apply the Gram-Schmidt process to a set of vectors.
 
     Parameters

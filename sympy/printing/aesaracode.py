@@ -1,6 +1,5 @@
 from __future__ import annotations
 import math
-from typing import Any
 
 from sympy.external import import_module
 from sympy.printing.printer import Printer
@@ -322,7 +321,7 @@ class AesaraPrinter(Printer):
         return self._print(expr, dtypes=dtypes, broadcastables=broadcastables)
 
 
-global_cache: dict[Any, Any] = {}
+global_cache = {}
 
 
 def aesara_code(expr, cache=None, **kwargs):

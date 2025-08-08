@@ -16,7 +16,7 @@ from sympy.polys.polyerrors import CoercionFailed
 from sympy.utilities import public
 
 import math
-from typing import Any, Literal
+from typing import Any
 
 @public
 class IntegerRing(Ring[MPZ], CharacteristicZero, SimpleDomain):
@@ -224,8 +224,8 @@ class IntegerRing(Ring[MPZ], CharacteristicZero, SimpleDomain):
             return K1.from_sympy(a)
 
     def gcdex(self, a, b) -> (
-        tuple[Any | Literal[1, 0, -1], Any | Literal[0], Any | Literal[0, -1, 1]]
-        | tuple[Any | Literal[0, -1, 1], Any | Literal[1, 0, -1], Any | Literal[0]]
+        tuple[Any | int, Any | int, Any | int]
+        | tuple[Any | int, Any | int, Any | int]
     ):
         """Compute extended GCD of ``a`` and ``b``. """
         h, s, t = gcdex(a, b)
@@ -239,7 +239,7 @@ class IntegerRing(Ring[MPZ], CharacteristicZero, SimpleDomain):
         """Compute GCD of ``a`` and ``b``. """
         return gcd(a, b)
 
-    def lcm(self, a, b) -> Literal[0]:
+    def lcm(self, a, b) -> int:
         """Compute LCM of ``a`` and ``b``. """
         return lcm(a, b)
 

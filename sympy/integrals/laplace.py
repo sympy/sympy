@@ -41,7 +41,6 @@ from sympy.polys.rootoftools import RootSum
 from sympy.utilities.exceptions import (
     sympy_deprecation_warning, SymPyDeprecationWarning, ignore_warnings)
 from sympy.utilities.misc import debugf
-import sympy.core.logic
 from sympy.core.basic import Basic
 from sympy.series.order import Order
 from typing import Any
@@ -178,7 +177,7 @@ def _simplifyconds(expr, s, a):
 
 
 @DEBUG_WRAP
-def expand_dirac_delta(expr) -> tuple[Any, dict[Any, Any]] | tuple[Any | Order, dict[Any, Any | Order]] | tuple[Any | Mul, dict[Any, Any]]:
+def expand_dirac_delta(expr) -> tuple[Any, dict] | tuple[Any | Order, dict[Any, Any | Order]] | tuple[Any | Mul, dict]:
     """
     Expand an expression involving DiractDelta to get it as a linear
     combination of DiracDelta functions.
@@ -1292,7 +1291,7 @@ class LaplaceTransform(IntegralTransform):
     def _as_integral(self, f, t, s):
         return Integral(f*exp(-s*t), (t, S.Zero, S.Infinity))
 
-    def doit(self, **hints) -> Order | tuple[Any | Order, Any | Max, Any |     sympy.core.logic.And]:
+    def doit(self, **hints) -> Order | tuple[Any | Order, Any | Max, Any |     And]:
         """
         Try to evaluate the transform in closed form.
 
@@ -1324,7 +1323,7 @@ class LaplaceTransform(IntegralTransform):
             return r
 
 
-def laplace_transform(f, t, s, legacy_matrix=True, **hints) -> tuple[sympy.MatrixBase, Any | Max, Any | sympy.core.logic.And] | sympy.MatrixBase:
+def laplace_transform(f, t, s, legacy_matrix=True, **hints) -> tuple[sympy.MatrixBase, Any | Max, Any | And] | sympy.MatrixBase:
     r"""
     Compute the Laplace Transform `F(s)` of `f(t)`,
 
@@ -2241,7 +2240,7 @@ class InverseLaplaceTransform(IntegralTransform):
                                   c + S.ImaginaryUnit*S.Infinity)) /
             (2*S.Pi*S.ImaginaryUnit))
 
-    def doit(self, **hints) -> Order | tuple[Any | Order, Any |     sympy.core.logic.And]:
+    def doit(self, **hints) -> Order | tuple[Any | Order, Any |     And]:
         """
         Try to evaluate the transform in closed form.
 

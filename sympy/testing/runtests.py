@@ -40,7 +40,7 @@ from sympy.core.cache import clear_cache
 from sympy.external import import_module
 from sympy.external.gmpy import GROUND_TYPES
 from collections.abc import Generator
-from typing import Any, Literal, NamedTuple
+from typing import Any
 
 IS_WINDOWS = (os.name == 'nt')
 ON_CI = os.getenv('CI', None)
@@ -126,7 +126,7 @@ if IS_WINDOWS:
     DocTestRunner.report_failure = _report_failure  # type: ignore
 
 
-def convert_to_native_paths(lst) -> list[Any]:
+def convert_to_native_paths(lst) -> list:
     """
     Converts a list of '/' separated paths into a list of
     native (os.sep separated) paths and converts to lowercase
@@ -180,7 +180,7 @@ def setup_pprint(disable_line_wrap=True):
 
 
 @contextmanager
-def raise_on_deprecated() -> Generator[None, Any, None]:
+def raise_on_deprecated() -> Generator[None]:
     """Context manager to make DeprecationWarning raise an error
 
     This is to catch SymPyDeprecationWarning from library code while running
@@ -196,7 +196,7 @@ def raise_on_deprecated() -> Generator[None, Any, None]:
 def run_in_subprocess_with_hash_randomization(
         function, function_args=(),
         function_kwargs=None, command=sys.executable,
-        module='sympy.testing.runtests', force=False) -> int | Any | Literal[False]:
+        module='sympy.testing.runtests', force=False) -> int | Any | bool:
     """
     Run a function in a Python subprocess with hash randomization enabled.
 
@@ -1364,7 +1364,7 @@ class SymPyTests:
                 return True
         return False
 
-    def get_test_files(self, dir, pat='test_*.py') -> list[Any]:
+    def get_test_files(self, dir, pat="test_*.py") -> list:
         """
         Returns the list of test_*.py (default) files at or below directory
         ``dir`` relative to the SymPy home directory.
@@ -1497,7 +1497,7 @@ class SymPyDocTests:
 
         self._reporter.leaving_filename()
 
-    def get_test_files(self, dir, pat='*.py', init_only=True) -> list[Any]:
+    def get_test_files(self, dir, pat="*.py", init_only=True) -> list:
         r"""
         Returns the list of \*.py files (default) from which docstrings
         will be tested which are at or below directory ``dir``. By default,

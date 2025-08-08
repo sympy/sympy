@@ -3,8 +3,10 @@ from sympy.printing.defaults import DefaultPrinting
 
 from itertools import chain, product
 from bisect import bisect_left
-from typing import Any
-from typing_extensions import Self
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from typing_extensions import Self
 
 
 ###############################################################################
@@ -832,7 +834,7 @@ class CosetTable(DefaultPrinting):
             for j in range(len(self.A)):
                 row[j] -= bisect_left(chi, row[j])
 
-    def conjugates(self, R) -> list[Any]:
+    def conjugates(self, R) -> list:
         R_c = list(chain.from_iterable((rel.cyclic_conjugates(), \
                 (rel**-1).cyclic_conjugates()) for rel in R))
         R_set = set()

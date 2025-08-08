@@ -4,7 +4,7 @@ from itertools import product
 from sympy.core.add import Add
 from sympy.core.cache import cacheit
 from sympy.core.expr import Expr
-from sympy.core.function import (Function, UndefinedFunction, DefinedFunction, ArgumentIndexError, expand_log,
+from sympy.core.function import (UndefinedFunction, DefinedFunction, ArgumentIndexError, expand_log,
     expand_mul, FunctionClass, PoleError, expand_multinomial, expand_complex)
 from sympy.core.logic import fuzzy_and, fuzzy_not, fuzzy_or
 from sympy.core.mul import Mul
@@ -19,11 +19,13 @@ from sympy.functions.elementary.complexes import arg, unpolarify, im, re, Abs
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.ntheory import multiplicity, perfect_power
 from sympy.ntheory.factor_ import factorint
-from sympy.core.basic import Basic
-from sympy.core.kind import Kind
-from sympy.series.order import Order
-from typing import Any, Literal
+from typing import TYPE_CHECKING, Any
 from typing_extensions import Self
+
+if TYPE_CHECKING:
+    from sympy.core.basic import Basic
+    from sympy.core.kind import Kind
+    from sympy.series.order import Order
 
 # NOTE IMPORTANT
 # The series expansion code in this file is an important part of the gruntz
@@ -588,7 +590,7 @@ class exp(ExpBase, metaclass=ExpMeta):
                 return Pow(logs[0].args[0], arg.coeff(logs[0]))
 
 
-def match_real_imag(expr) -> tuple[Any, Literal[0]] | tuple[Any, Any] | tuple[None, None]:
+def match_real_imag(expr) -> tuple[Any, int] | tuple[Any, Any] | tuple[None, None]:
     r"""
     Try to match expr with $a + Ib$ for real $a$ and $b$.
 

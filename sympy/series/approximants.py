@@ -12,7 +12,7 @@ from sympy.polys.polytools import gcdex_steps
 from typing import Any
 
 @public
-def approximants(l, X=Symbol('x'), simplify=False) -> Generator[Any, Any, None]:
+def approximants(l, X=Symbol('x'), simplify=False) -> Generator:
     """
     Return a generator for consecutive Pade approximants for a series.
     It can also be used for computing the rational generating function of a

@@ -7,7 +7,6 @@ BIN_PREFIXES.
 from sympy.core.expr import Expr
 from sympy.core.sympify import sympify
 from sympy.core.singleton import S
-from typing import Any, Literal
 from typing_extensions import Self
 
 class Prefix(Expr):
@@ -80,7 +79,7 @@ class Prefix(Expr):
             return "Prefix(%r, %r, %r, %r)" % (
                 str(self.name), str(self.abbrev), self._exponent, self.base)
 
-    def __mul__(self, other) -> Prefix | Literal[1]:
+    def __mul__(self, other) -> Prefix | int:
         from sympy.physics.units import Quantity
         if not isinstance(other, (Quantity, Prefix)):
             return super().__mul__(other)
@@ -98,7 +97,7 @@ class Prefix(Expr):
 
         return self.scale_factor * other
 
-    def __truediv__(self, other) -> Prefix | Literal[1]:
+    def __truediv__(self, other) -> Prefix | int:
         if not hasattr(other, "scale_factor"):
             return super().__truediv__(other)
 
@@ -122,7 +121,7 @@ class Prefix(Expr):
         return other / self.scale_factor
 
 
-def prefix_unit(unit, prefixes) -> list[Any]:
+def prefix_unit(unit, prefixes) -> list:
     """
     Return a list of all units formed by unit and the given prefixes.
 

@@ -11,8 +11,10 @@ from sympy.utilities.misc import as_int
 
 from collections import defaultdict
 from sympy.core.function import UndefinedFunction
-from typing import Any, Literal
-from typing_extensions import Self
+from typing import Any, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from typing_extensions import Self
 
 
 class Partition(FiniteSet):
@@ -93,11 +95,16 @@ class Partition(FiniteSet):
         obj.size = len(U)
         return obj
 
-    def sort_key(self, order=None) -> tuple[
-        tuple[tuple[Literal[5], Literal[0], str], tuple[int, tuple[Any, ...]], Any, Any]
+    def sort_key(
+        self, order=None
+    ) -> tuple[
+        tuple[tuple[int, int, str], tuple[int, tuple], Any, Any]
         | Any
         | tuple[
-            tuple[Literal[10, 0], Literal[0], str | Any], tuple[int, tuple[Any, ...]] | tuple[Literal[1], tuple[str]], Any, Any
+            tuple[int, int, str | Any],
+            tuple[int, tuple] | tuple[int, tuple[str]],
+            Any,
+            Any,
         ],
         ...,
     ]:
@@ -128,7 +135,7 @@ class Partition(FiniteSet):
         return tuple(map(default_sort_key, (self.size, members, self.rank)))
 
     @property
-    def partition(self) -> list[Any]:
+    def partition(self) -> list:
         """Return partition as a sorted list of lists.
 
         Examples
@@ -242,7 +249,7 @@ class Partition(FiniteSet):
         return self._rank
 
     @property
-    def RGS(self) -> tuple[Any, ...]:
+    def RGS(self) -> tuple:
         """
         Returns the "restricted growth string" of the partition.
 
@@ -587,7 +594,7 @@ class IntegerPartition(Basic):
         return str(list(self.partition))
 
 
-def random_integer_partition(n, seed=None) -> list[Any]:
+def random_integer_partition(n, seed=None) -> list:
     """
     Generates a random integer partition summing to ``n`` as a list
     of reverse-sorted integers.
@@ -658,7 +665,7 @@ def RGS_generalized(m):
     return d
 
 
-def RGS_enum(m) -> type[UndefinedFunction] | Literal[0, 1]:
+def RGS_enum(m) -> type[UndefinedFunction] | int:
     """
     RGS_enum computes the total number of restricted growth strings
     possible for a superset of size m.
@@ -695,7 +702,7 @@ def RGS_enum(m) -> type[UndefinedFunction] | Literal[0, 1]:
         return bell(m)
 
 
-def RGS_unrank(rank, m) -> list[Any]:
+def RGS_unrank(rank, m) -> list:
     """
     Gives the unranked restricted growth string for a given
     superset size.
@@ -730,7 +737,7 @@ def RGS_unrank(rank, m) -> list[Any]:
     return [x - 1 for x in L[1:]]
 
 
-def RGS_rank(rgs) -> Literal[0]:
+def RGS_rank(rgs) -> int:
     """
     Computes the rank of a restricted growth string.
 

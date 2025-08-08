@@ -65,7 +65,9 @@ def vfield(symbols, domain, order=lex) -> FracField | Any:
 
 
 @public
-def sfield(exprs, *symbols, **options) -> tuple[FracField | Any, Any] | tuple[FracField | Any, list[Any]]:
+def sfield(
+    exprs, *symbols, **options
+) -> tuple[FracField | Any, Any] | tuple[FracField | Any, list]:
     """Construct a field deriving generators and domain
     from options and input expressions.
 

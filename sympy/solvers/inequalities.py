@@ -11,17 +11,15 @@ from sympy.sets.sets import Interval, FiniteSet, Union, Intersection
 from sympy.core.singleton import S
 from sympy.core.function import expand_mul
 from sympy.functions.elementary.complexes import Abs
-from sympy.logic import And
+from sympy.core.logic import And
 from sympy.polys import Poly, PolynomialError, parallel_poly_from_expr
 from sympy.polys.polyutils import _nsort
 from sympy.solvers.solveset import solvify, solveset
 from sympy.utilities.iterables import sift, iterable
 from sympy.utilities.misc import filldedent
-import sympy.core.logic
-from typing import Any
 
 
-def solve_poly_inequality(poly, rel) -> list[Any]:
+def solve_poly_inequality(poly, rel) -> list:
     """Solve a polynomial inequality with rational coefficients.
 
     Examples
@@ -357,7 +355,7 @@ def reduce_abs_inequality(expr, rel, gen):
     return reduce_rational_inequalities(inequalities, gen)
 
 
-def reduce_abs_inequalities(exprs, gen) -> sympy.core.logic.And:
+def reduce_abs_inequalities(exprs, gen) -> And:
     """Reduce a system of inequalities with nested absolute values.
 
     Examples
@@ -928,7 +926,7 @@ def _reduce_inequalities(inequalities, symbols):
     return And(*(poly_reduced + abs_reduced + other))
 
 
-def reduce_inequalities(inequalities, symbols=[]) -> sympy.core.logic.And:
+def reduce_inequalities(inequalities, symbols=[]) -> And:
     """Reduce a system of inequalities with rational coefficients.
 
     Examples

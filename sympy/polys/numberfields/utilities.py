@@ -12,10 +12,10 @@ from sympy.utilities.lambdify import lambdify
 
 from mpmath import mp
 from collections.abc import Generator
-from typing import Any, Literal, NoReturn
+from typing import Any, NoReturn
 
 
-def is_rat(c) -> Any | Literal[True]:
+def is_rat(c) -> Any | bool:
     r"""
     Test whether an argument is of an acceptable type to be used as a rational
     number.
@@ -40,7 +40,7 @@ def is_rat(c) -> Any | Literal[True]:
     return isinstance(c, int) or ZZ.of_type(c) or QQ.of_type(c)
 
 
-def is_int(c) -> Any | Literal[True]:
+def is_int(c) -> Any | bool:
     r"""
     Test whether an argument is of an acceptable type to be used as an integer.
 
@@ -77,7 +77,9 @@ def get_num_denom(c) -> tuple[Any, Any]:
 
 
 @public
-def extract_fundamental_discriminant(a) -> tuple[dict[Any, Any], dict[int, int]] | tuple[dict[Any, Any], dict[Any, Any]]:
+def extract_fundamental_discriminant(
+    a,
+) -> tuple[dict, dict[int, int]] | tuple[dict, dict]:
     r"""
     Extract a fundamental discriminant from an integer *a*.
 
@@ -246,7 +248,7 @@ class AlgIntPowers:
             )
         self.max_so_far = e
 
-    def get(self, e) -> list[int] | list[Any]:
+    def get(self, e) -> list[int] | list:
         n = self.n
         if e < 0:
             raise ValueError('Exponent must be non-negative.')
@@ -256,7 +258,7 @@ class AlgIntPowers:
             self.compute_up_through(e)
             return self.powers_n_and_up[e - n]
 
-    def __getitem__(self, item) -> list[int] | list[Any]:
+    def __getitem__(self, item) -> list[int] | list:
         return self.get(item)
 
 

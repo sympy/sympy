@@ -5,7 +5,7 @@ from sympy.utilities.misc import as_int
 from typing import Any
 
 
-def digits(n, b=10, digits=None) -> list[Any]:
+def digits(n, b=10, digits=None) -> list:
     """
     Return a list of the digits of ``n`` in base ``b``. The first
     element in the list is ``b`` (or ``-b`` if ``n`` is negative).

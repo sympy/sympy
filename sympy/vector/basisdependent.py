@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Any, Literal, TYPE_CHECKING
+from typing import Any, TYPE_CHECKING
 
 from sympy.simplify import simplify as simp, trigsimp as tsimp  # type: ignore
 from sympy.core.decorators import call_highest_priority, _sympifyit
@@ -155,7 +155,7 @@ class BasisDependent(Expr):
         """Efficiently extract the coefficient of a product."""
         return (S.One, self)
 
-    def as_coeff_add(self, *deps) -> tuple[Literal[0], tuple[Any, ...]]:
+    def as_coeff_add(self, *deps) -> tuple[int, tuple]:
         """Efficiently extract the coefficient of a summation."""
         return 0, tuple(x * self.components[x] for x in self.components)
 

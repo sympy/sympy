@@ -13,12 +13,10 @@ from sympy.core.symbol import Symbol
 from sympy.logic.boolalg import (to_cnf, And, Not, Implies, Equivalent,
     Exclusive,)
 from sympy.logic.inference import satisfiable
-import sympy.core.logic
-from typing import Any
 
 
 @cacheit
-def get_composite_predicates() -> dict[Any, Any]:
+def get_composite_predicates() -> dict:
     # To reduce the complexity of sat solver, these predicates are
     # transformed into the combination of primitive predicates.
     return {
@@ -38,7 +36,7 @@ def get_composite_predicates() -> dict[Any, Any]:
 
 
 @cacheit
-def get_known_facts(x=None) -> sympy.core.logic.And:
+def get_known_facts(x=None) -> And:
     """
     Facts between unary predicates.
 
@@ -173,7 +171,7 @@ def get_matrix_facts(x = None):
 
 
 
-def generate_known_facts_dict(keys, fact) -> dict[Any, Any]:
+def generate_known_facts_dict(keys, fact) -> dict:
     """
     Computes and returns a dictionary which contains the relations between
     unary predicates.
@@ -224,7 +222,7 @@ def generate_known_facts_dict(keys, fact) -> dict[Any, Any]:
 
 
 @cacheit
-def get_known_facts_keys() -> list[Any]:
+def get_known_facts_keys() -> list:
     """
     Return every unary predicates registered to ``Q``.
 
@@ -246,7 +244,7 @@ def get_known_facts_keys() -> list[Any]:
     return result
 
 
-def single_fact_lookup(known_facts_keys, known_facts_cnf) -> dict[Any, Any]:
+def single_fact_lookup(known_facts_keys, known_facts_cnf) -> dict:
     # Return the dictionary for quick lookup of single fact
     mapping = {}
     for key in known_facts_keys:

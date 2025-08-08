@@ -3,7 +3,7 @@ from functools import reduce
 
 from sympy.core import S, sympify, Dummy, Mod
 from sympy.core.cache import cacheit
-from sympy.core.function import Function, UndefinedFunction, DefinedFunction, ArgumentIndexError, PoleError
+from sympy.core.function import UndefinedFunction, DefinedFunction, ArgumentIndexError, PoleError
 from sympy.core.logic import fuzzy_and
 from sympy.core.numbers import Integer, pi, I
 from sympy.core.relational import Eq
@@ -13,8 +13,10 @@ from sympy.ntheory.residue_ntheory import binomial_mod
 from sympy.polys.polytools import Poly
 
 from math import factorial as _factorial, prod, sqrt as _sqrt
-from sympy.series.order import Order
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from sympy.series.order import Order
 
 class CombinatorialFunction(DefinedFunction):
     """Base class for combinatorial functions. """

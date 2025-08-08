@@ -1156,7 +1156,7 @@ class EvaluateFalseTransformer(ast.NodeTransformer):
             keywords=[ast.keyword(arg="evaluate", value=ast.Constant(value=False))],
         )
 
-    def flatten(self, args, func) -> list[Any]:
+    def flatten(self, args, func) -> list:
         result = []
         for arg in args:
             if isinstance(arg, ast.Call):
@@ -1257,7 +1257,7 @@ class _T():
     def __str__(self):
         return transformations
 
-    def __getitem__(self, t) -> tuple[Any, ...]:
+    def __getitem__(self, t) -> tuple:
         if not type(t) is tuple:
             t = (t,)
         i = []

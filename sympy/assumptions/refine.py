@@ -7,12 +7,11 @@ from sympy.core.logic import fuzzy_not
 from sympy.logic.boolalg import Boolean
 
 from sympy.assumptions import ask, Q  # type: ignore
-import sympy.core.basic
-from sympy.core.function import UndefinedFunction
-from sympy.matrices.expressions.matexpr import MatrixElement
 
 
 if TYPE_CHECKING:
+    from sympy.core.function import UndefinedFunction
+    from sympy.matrices.expressions.matexpr import MatrixElement
     from typing import Callable
 
 
@@ -264,7 +263,7 @@ def refine_atan2(expr, assumptions) -> type[UndefinedFunction]:
         return expr
 
 
-def refine_re(expr, assumptions) -> sympy.core.basic.Basic | None:
+def refine_re(expr, assumptions) -> Basic | None:
     """
     Handler for real part.
 
@@ -287,7 +286,7 @@ def refine_re(expr, assumptions) -> sympy.core.basic.Basic | None:
     return _refine_reim(expr, assumptions)
 
 
-def refine_im(expr, assumptions) -> sympy.core.basic.Basic | None:
+def refine_im(expr, assumptions) -> Basic | None:
     """
     Handler for imaginary part.
 

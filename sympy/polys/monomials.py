@@ -13,16 +13,17 @@ from sympy.polys.polyutils import PicklableWithSlots, dict_from_expr
 from sympy.utilities import public
 from sympy.utilities.iterables import is_sequence, iterable
 from collections.abc import Generator, Iterator
-from sympy.series.order import Order
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from typing_extensions import Self
 
+if TYPE_CHECKING:
+    from sympy.series.order import Order
 
 monom = tuple[int, ...]
 
 
 @public
-def itermonomials(variables, max_degrees, min_degrees=None) -> Generator[Any | Order, Any, None]:
+def itermonomials(variables, max_degrees, min_degrees=None) -> Generator[Any | Order]:
     r"""
     ``max_degrees`` and ``min_degrees`` are either both integers or both lists.
     Unless otherwise specified, ``min_degrees`` is either ``0`` or
@@ -182,7 +183,7 @@ def monomial_count(V, N):
     from sympy.functions.combinatorial.factorials import factorial
     return factorial(V + N) / factorial(V) / factorial(N)
 
-def monomial_mul(A, B) -> tuple[Any, ...]:
+def monomial_mul(A, B) -> tuple:
     """
     Multiplication of tuples representing monomials.
 
@@ -254,11 +255,11 @@ def monomial_ldiv(A: monom, B: monom) -> monom:
     """
     return tuple([ a - b for a, b in zip(A, B) ])
 
-def monomial_pow(A, n) -> tuple[Any, ...]:
+def monomial_pow(A, n) -> tuple:
     """Return the n-th pow of the monomial. """
     return tuple([ a*n for a in A ])
 
-def monomial_gcd(A, B) -> tuple[Any, ...]:
+def monomial_gcd(A, B) -> tuple:
     """
     Greatest common divisor of tuples representing monomials.
 
@@ -277,7 +278,7 @@ def monomial_gcd(A, B) -> tuple[Any, ...]:
     """
     return tuple([ min(a, b) for a, b in zip(A, B) ])
 
-def monomial_lcm(A, B) -> tuple[Any, ...]:
+def monomial_lcm(A, B) -> tuple:
     """
     Least common multiple of tuples representing monomials.
 
@@ -311,7 +312,7 @@ def monomial_divides(A, B) -> bool:
     """
     return all(a <= b for a, b in zip(A, B))
 
-def monomial_max(*monoms) -> tuple[Any, ...]:
+def monomial_max(*monoms) -> tuple:
     """
     Returns maximal degree for each variable in a set of monomials.
 
@@ -376,7 +377,7 @@ def monomial_deg(M) -> int:
     """
     return sum(M)
 
-def term_div(a, b, domain) -> tuple[tuple[Any, ...], Any] | None:
+def term_div(a, b, domain) -> tuple[tuple, Any] | None:
     """Division of two terms in over a ring/field. """
     a_lm, a_lc = a
     b_lm, b_lc = b

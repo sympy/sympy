@@ -2,8 +2,10 @@ from sympy.core import Basic, Integer
 
 import random
 from collections.abc import Generator
-from typing import Any
-from typing_extensions import Self
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from typing_extensions import Self
 
 
 class GrayCode(Basic):
@@ -150,7 +152,7 @@ class GrayCode(Basic):
         """
         return self.args[0]
 
-    def generate_gray(self, **hints) -> Generator[str, Any, None]:
+    def generate_gray(self, **hints) -> Generator[str]:
         """
         Generates the sequence of bit vectors of a Gray Code.
 
@@ -384,7 +386,7 @@ def bin_to_gray(bin_list) -> str:
     return ''.join(b)
 
 
-def get_subset_from_bitstring(super_set, bitstring) -> list[Any]:
+def get_subset_from_bitstring(super_set, bitstring) -> list:
     """
     Gets the subset defined by the bitstring.
 
@@ -408,7 +410,7 @@ def get_subset_from_bitstring(super_set, bitstring) -> list[Any]:
             if bitstring[i] == '1']
 
 
-def graycode_subsets(gray_code_set) -> Generator[list[Any], Any, None]:
+def graycode_subsets(gray_code_set) -> Generator[list]:
     """
     Generates the subsets as enumerated by a Gray code.
 

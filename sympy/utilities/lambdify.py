@@ -4,7 +4,7 @@ lambda functions which can be used to calculate numerical values very fast.
 """
 
 from __future__ import annotations
-from typing import Any
+from typing import Any, TYPE_CHECKING
 
 import builtins
 import inspect
@@ -20,7 +20,9 @@ from sympy.utilities.decorator import doctest_depends_on
 from sympy.utilities.iterables import (is_sequence, iterable,
     NotIterable, flatten)
 from sympy.utilities.misc import filldedent
-from sympy.core.function import UndefinedFunction
+
+if TYPE_CHECKING:
+    from sympy.core.function import UndefinedFunction
 
 
 __doctest_requires__ = {('lambdify',): ['numpy', 'tensorflow']}

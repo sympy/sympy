@@ -3,7 +3,7 @@ from sympy.core.backend import Matrix, Rational
 import sympy.core.numbers
 import sympy.matrices
 from sympy.liealgebras.cartan_type import Standard_Cartan
-from typing import Any, Literal
+from typing import Any
 from typing_extensions import Self
 
 
@@ -14,7 +14,7 @@ class TypeF(Standard_Cartan):
             raise ValueError("n should be 4")
         return Standard_Cartan.__new__(cls, "F", 4)
 
-    def dimension(self) -> Literal[4]:
+    def dimension(self) -> int:
         """Dimension of the vector space V underlying the Lie algebra
 
         Examples
@@ -72,7 +72,7 @@ class TypeF(Standard_Cartan):
             root = [Rational(-1, 2)]*4
             return root
 
-    def positive_roots(self) -> dict[Any, Any]:
+    def positive_roots(self) -> dict:
         """Generate all the positive roots of A_n
 
         This is half of all of the roots of F_4; by multiplying all the
@@ -124,7 +124,7 @@ class TypeF(Standard_Cartan):
         return posroots
 
 
-    def roots(self) -> Literal[48]:
+    def roots(self) -> int:
         """
         Returns the total number of roots for F_4
         """
@@ -155,7 +155,7 @@ class TypeF(Standard_Cartan):
             -1, 2, -1, 0, 0, -1, 2])
         return m
 
-    def basis(self) -> Literal[52]:
+    def basis(self) -> int:
         """
         Returns the number of independent generators of F_4
         """

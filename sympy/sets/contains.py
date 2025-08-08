@@ -6,7 +6,6 @@ from sympy.logic.boolalg import BooleanFunction, Boolean
 from sympy.utilities.misc import func_name
 from .sets import Set
 from sympy.core.basic import Basic
-from sympy.sets.sets import Set
 from typing import Any
 
 

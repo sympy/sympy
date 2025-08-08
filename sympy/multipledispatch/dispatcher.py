@@ -160,7 +160,7 @@ class Dispatcher:
             return sig.parameters.values()
 
     @classmethod
-    def get_func_annotations(cls, func) -> tuple[Any, ...] | None:
+    def get_func_annotations(cls, func) -> tuple | None:
         """ Get annotations of function positional parameters
         """
         params = cls.get_func_params(func)
@@ -292,7 +292,7 @@ class Dispatcher:
         except StopIteration:
             return None
 
-    def dispatch_iter(self, *types) -> Generator[Any, Any, None]:
+    def dispatch_iter(self, *types) -> Generator:
         n = len(types)
         for signature in self.ordering:
             if len(signature) == n and all(map(issubclass, types, signature)):

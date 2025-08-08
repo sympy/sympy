@@ -43,7 +43,7 @@ from sympy.integrals.integrals import integrate
 from typing import Any
 
 
-def components(f, x) -> set[Any]:
+def components(f, x) -> set:
     """
     Returns a set of all functional components of the given expression
     which includes symbols, function applications and compositions and

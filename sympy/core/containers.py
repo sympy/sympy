@@ -362,7 +362,7 @@ class OrderedSet(MutableSet):
     def pop(self, last=True):
         return self.map.popitem(last=last)[0]
 
-    def __iter__(self) -> Iterator[Any]:
+    def __iter__(self) -> Iterator:
         yield from self.map.keys()
 
     def __repr__(self):

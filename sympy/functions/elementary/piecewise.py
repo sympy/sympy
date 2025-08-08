@@ -1,4 +1,4 @@
-from sympy.core import Function, S, diff, Tuple, Dummy, Mul
+from sympy.core import S, diff, Tuple, Dummy, Mul
 from sympy.core.basic import Basic, as_Basic
 from sympy.core.function import DefinedFunction
 from sympy.core.numbers import Rational, NumberSymbol, _illegal
@@ -14,7 +14,6 @@ from sympy.utilities.misc import filldedent, func_name
 
 from itertools import product
 from collections.abc import Iterator
-from typing import Any
 from typing_extensions import Self
 
 Undefined = S.NaN  # Piecewise()
@@ -840,7 +839,7 @@ class Piecewise(DefinedFunction):
             except TypeError:
                 pass
 
-    def as_expr_set_pairs(self, domain=None) -> list[Any]:
+    def as_expr_set_pairs(self, domain=None) -> list:
         """Return tuples for each argument of self that give
         the expression and the interval in which it is valid
         which is contained within the given domain.

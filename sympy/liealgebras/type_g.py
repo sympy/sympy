@@ -15,7 +15,7 @@ class TypeG(Standard_Cartan):
         return Standard_Cartan.__new__(cls, "G", 2)
 
 
-    def dimension(self) -> Literal[3]:
+    def dimension(self) -> int:
         """Dimension of the vector space V underlying the Lie algebra
 
         Examples
@@ -75,7 +75,7 @@ class TypeG(Standard_Cartan):
                 5: [1, 1, -2], 6: [2, -1, -1]}
         return roots
 
-    def roots(self) -> Literal[12]:
+    def roots(self) -> int:
         """
         Returns the total number of roots of G_2"
         """
@@ -104,12 +104,12 @@ class TypeG(Standard_Cartan):
         m = Matrix( 2, 2, [2, -1, -3, 2])
         return m
 
-    def basis(self) -> Literal[14]:
+    def basis(self) -> int:
         """
         Returns the number of independent generators of G_2
         """
         return 14
 
-    def dynkin_diagram(self) -> Literal["0≡<≡0\n1   2"]:
+    def dynkin_diagram(self) -> str:
         diag = "0≡<≡0\n1   2"
         return diag

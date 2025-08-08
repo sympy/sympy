@@ -28,13 +28,13 @@ from sympy.polys import Poly, lcm, cancel, sqf_list
 from sympy.polys.polymatrix import PolyMatrix, PolyMatrix as Matrix
 from sympy.solvers import solve
 from sympy.series.order import Order
-from typing import Any, Literal
+from typing import Any
 
 zeros = Matrix.zeros
 eye = Matrix.eye
 
 
-def prde_normal_denom(fa, fd, G, DE) -> tuple[Any, tuple[Any, Any], list[Any], Any]:
+def prde_normal_denom(fa, fd, G, DE) -> tuple[Any, tuple[Any, Any], list, Any]:
     """
     Parametric Risch Differential Equation - Normal part of the denominator.
 
@@ -93,7 +93,9 @@ def real_imag(ba, bd, gen) -> tuple[Any, Any, Any]:
     return (ba[0], ba[1], bd)
 
 
-def prde_special_denom(a, ba, bd, G, DE, case='auto') -> tuple[Any, Any, Any, Any] | tuple[Any, Any, list[Any], Any]:
+def prde_special_denom(
+    a, ba, bd, G, DE, case="auto"
+) -> tuple[Any, Any, Any, Any] | tuple[Any, Any, list, Any]:
     """
     Parametric Risch Differential Equation - Special part of the denominator.
 
@@ -296,7 +298,7 @@ def constant_system(A, u, DE) -> tuple[Any, Any]:
     return (A, u)
 
 
-def prde_spde(a, b, Q, n, DE) -> tuple[Any, Any, list[Any], list[Any], Any]:
+def prde_spde(a, b, Q, n, DE) -> tuple[Any, Any, list, list, Any]:
     """
     Special Polynomial Differential Equation algorithm: Parametric Version.
 
@@ -321,7 +323,7 @@ def prde_spde(a, b, Q, n, DE) -> tuple[Any, Any, list[Any], list[Any], Any]:
     return (A, B, Qq, R, n1)
 
 
-def prde_no_cancel_b_large(b, Q, n, DE) -> tuple[list[Any], Any]:
+def prde_no_cancel_b_large(b, Q, n, DE) -> tuple[list, Any]:
     """
     Parametric Poly Risch Differential Equation - No cancellation: deg(b) large enough.
 
@@ -357,7 +359,9 @@ def prde_no_cancel_b_large(b, Q, n, DE) -> tuple[list[Any], Any]:
     return (H, A)
 
 
-def prde_no_cancel_b_small(b, Q, n, DE) -> tuple[list[Any], Any] | tuple[list[Any], PolyMatrix | Any]:
+def prde_no_cancel_b_small(
+    b, Q, n, DE
+) -> tuple[list, Any] | tuple[list, PolyMatrix | Any]:
     """
     Parametric Poly Risch Differential Equation - No cancellation: deg(b) small enough.
 
@@ -457,7 +461,7 @@ def prde_no_cancel_b_small(b, Q, n, DE) -> tuple[list[Any], Any] | tuple[list[An
     return f + H, A.col_join(B).col_join(C)
 
 
-def prde_cancel_liouvillian(b, Q, n, DE) -> tuple[list[Any], Any]:
+def prde_cancel_liouvillian(b, Q, n, DE) -> tuple[list, Any]:
     """
     Pg, 237.
     """
@@ -505,7 +509,9 @@ def prde_cancel_liouvillian(b, Q, n, DE) -> tuple[list[Any], Any]:
     return (H, M)
 
 
-def param_poly_rischDE(a, b, q, n, DE) -> tuple[list[Any], PolyMatrix] | tuple[list[Any], Any] | tuple[list[Any], PolyMatrix | Any]:
+def param_poly_rischDE(
+    a, b, q, n, DE
+) -> tuple[list, PolyMatrix] | tuple[list, Any] | tuple[list, PolyMatrix | Any]:
     """Polynomial solutions of a parametric Risch differential equation.
 
     Explanation
@@ -642,7 +648,7 @@ def param_poly_rischDE(a, b, q, n, DE) -> tuple[list[Any], PolyMatrix] | tuple[l
     return h, A
 
 
-def param_rischDE(fa, fd, G, DE) -> tuple[list[Any], PolyMatrix]:
+def param_rischDE(fa, fd, G, DE) -> tuple[list, PolyMatrix]:
     """
     Solve a Parametric Risch Differential Equation: Dy + f*y == Sum(ci*Gi, (i, 1, m)).
 
@@ -778,7 +784,7 @@ def param_rischDE(fa, fd, G, DE) -> tuple[list[Any], PolyMatrix]:
     return [hk.cancel(gamma, include=True) for hk in h], C
 
 
-def limited_integrate_reduce(fa, fd, G, DE) -> tuple[Any, Any, Any, Any, Any, list[Any]]:
+def limited_integrate_reduce(fa, fd, G, DE) -> tuple[Any, Any, Any, Any, Any, list]:
     """
     Simpler version of step 1 & 2 for the limited integration problem.
 
@@ -828,7 +834,7 @@ def limited_integrate_reduce(fa, fd, G, DE) -> tuple[Any, Any, Any, Any, Any, li
     return (a, b, a, N, (a*hn*fa).cancel(fd, include=True), V)
 
 
-def limited_integrate(fa, fd, G, DE) -> tuple[tuple[Any, Any], list[Any]] | None:
+def limited_integrate(fa, fd, G, DE) -> tuple[tuple[Any, Any], list] | None:
     """
     Solves the limited integration problem:  f = Dv + Sum(ci*wi, (i, 1, n))
     """
@@ -1084,7 +1090,7 @@ def is_deriv_k(fa, fd, DE) -> tuple[list[tuple[Any, Any]], Any | Order, Any] | N
             return (ans, result, const)
 
 
-def is_log_deriv_k_t_radical(fa, fd, DE, Df=True) -> tuple[list[tuple[Any, Any]], Any | Order, Any | Literal[0], Any] | None:
+def is_log_deriv_k_t_radical(fa, fd, DE, Df=True) -> tuple[list[tuple[Any, Any]], Any | Order, Any | int, Any] | None:
     r"""
     Checks if Df is the logarithmic derivative of a k(t)-radical.
 

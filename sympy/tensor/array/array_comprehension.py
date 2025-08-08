@@ -7,7 +7,7 @@ from sympy.core.symbol import Symbol
 from sympy.core.numbers import Integer
 import sympy
 from sympy.matrices import Matrix
-from typing import Any, Literal
+from typing import Any
 from typing_extensions import Self
 
 
@@ -111,7 +111,7 @@ class ArrayComprehension(Basic):
         return expr_free_sym
 
     @property
-    def variables(self) -> list[Any]:
+    def variables(self) -> list:
         """The tuples of the variables in the limits.
 
         Examples
@@ -127,7 +127,7 @@ class ArrayComprehension(Basic):
         return [l[0] for l in self._limits]
 
     @property
-    def bound_symbols(self) -> list[Any]:
+    def bound_symbols(self) -> list:
         """The list of dummy variables.
 
         Note
@@ -285,7 +285,7 @@ class ArrayComprehension(Basic):
             temp = temp.subs(var, val)
         return temp
 
-    def tolist(self) -> list[Any]:
+    def tolist(self) -> list:
         """Transform the expanded array to a list.
 
         Raises
@@ -341,7 +341,7 @@ class ArrayComprehension(Basic):
         return Matrix(self._expand_array().tomatrix())
 
 
-def isLambda(v) -> Literal[False]:
+def isLambda(v) -> bool:
     LAMBDA = lambda: 0
     return isinstance(v, type(LAMBDA)) and v.__name__ == LAMBDA.__name__
 
@@ -388,7 +388,7 @@ class ArrayComprehensionMap(ArrayComprehension):
         return obj
 
     @property
-    def func(self) -> type[Any]:
+    def func(self) -> type:
         class _(ArrayComprehensionMap):
             def __new__(cls, *args, **kwargs):
                 return ArrayComprehensionMap(self._lambda, *args, **kwargs)

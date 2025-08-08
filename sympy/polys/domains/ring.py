@@ -1,13 +1,16 @@
 """Implementation of :class:`Ring` class. """
+from __future__ import annotations
 
-
+from typing import TYPE_CHECKING
 from sympy.polys.domains.domain import Domain, Er
 from sympy.polys.polyerrors import ExactQuotientFailed, NotInvertible, NotReversible
 
 from sympy.utilities import public
-from sympy.polys.agca.ideals import ModuleImplementedIdeal
-from sympy.polys.domains.quotientring import QuotientRing
 from typing_extensions import Self
+
+if TYPE_CHECKING:
+    from sympy.polys.agca.ideals import ModuleImplementedIdeal
+    from sympy.polys.domains.quotientring import QuotientRing
 
 
 @public

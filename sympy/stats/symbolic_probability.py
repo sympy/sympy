@@ -22,21 +22,21 @@ import sympy
 from sympy.series.order import Order
 from sympy.stats.frv_types import BernoulliDistribution
 from sympy.stats.symbolic_multivariate_probability import CrossCovarianceMatrix, ExpectationMatrix, VarianceMatrix
-from typing import Any, Literal
+from typing import Any
 from typing_extensions import Self
 
 __all__ = ['Probability', 'Expectation', 'Variance', 'Covariance']
 
 
 @is_random.register(Expr)
-def _(x) -> Literal[True]:
+def _(x) -> bool:
     atoms = x.free_symbols
     if len(atoms) == 1 and next(iter(atoms)) == x:
         return False
     return any(is_random(i) for i in atoms)
 
 @is_random.register(RandomSymbol)  # type: ignore
-def _(x) -> Literal[True]:
+def _(x) -> bool:
     return True
 
 
@@ -258,7 +258,7 @@ class Expectation(Expr):
     def doit(self, **hints) -> (
             sympy.Basic
         | Expectation
-        | tuple[Any, ...]
+        | tuple
         |     sympy.Sum
         | Order
         | Any
@@ -345,7 +345,7 @@ class Expectation(Expr):
     def evaluate_integral(self) -> (
             sympy.Basic
         | Expectation
-        | tuple[Any, ...]
+        | tuple
         |     sympy.Sum
         | Order
         | Any

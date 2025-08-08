@@ -11,7 +11,6 @@ from sympy.vector.dyadic import DyadicZero, Dyadic
 from sympy import Equality, Ne
 from sympy.core.add import Add
 from sympy.core.relational import Relational
-from typing import Any, Literal
 
 
 def express(expr, system, system2=None, variables=False) -> VectorZero | DyadicZero:
@@ -127,7 +126,7 @@ def express(expr, system, system2=None, variables=False) -> VectorZero | DyadicZ
         return expr
 
 
-def directional_derivative(field, direction_vector) -> VectorZero | Literal[0]:
+def directional_derivative(field, direction_vector) -> VectorZero | int:
     """
     Returns the directional derivative of a scalar or vector field computed
     along a given vector in coordinate system which parameters are expressed.
@@ -207,7 +206,7 @@ def laplacian(expr) -> Divergence | Add:
     return delop.dot(delop(expr)).doit()
 
 
-def is_conservative(field) -> Literal[True]:
+def is_conservative(field) -> bool:
     """
     Checks if a field is conservative.
 
@@ -462,7 +461,7 @@ def _path(from_object, to_object):
     return index, from_path
 
 
-def orthogonalize(*vlist, orthonormal=False) -> list[Any]:
+def orthogonalize(*vlist, orthonormal=False) -> list:
     """
     Takes a sequence of independent vectors and orthogonalizes them
     using the Gram - Schmidt process. Returns a list of

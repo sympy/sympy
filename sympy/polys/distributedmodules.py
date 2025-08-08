@@ -38,12 +38,11 @@ from sympy.polys.polyutils import parallel_dict_from_expr
 from sympy.core.singleton import S
 from sympy.core.sympify import sympify
 from typing import Any
-from typing_extensions import Unpack
 
 # Additional monomial tools.
 
 
-def sdm_monomial_mul(M, X) -> tuple[Any, Unpack[tuple[Any, ...]]]:
+def sdm_monomial_mul(M, X) -> tuple:
     """
     Multiply tuple ``X`` representing a monomial of `K[X]` into the tuple
     ``M`` representing a monomial of `F`.
@@ -76,7 +75,7 @@ def sdm_monomial_deg(M) -> int:
     return monomial_deg(M[1:])
 
 
-def sdm_monomial_lcm(A, B) -> tuple[Any, Unpack[tuple[Any, ...]]]:
+def sdm_monomial_lcm(A, B) -> tuple:
     r"""
     Return the "least common multiple" of ``A`` and ``B``.
 
@@ -158,7 +157,7 @@ def sdm_LC(f, K):
         return f[0][1]
 
 
-def sdm_to_dict(f) -> dict[Any, Any]:
+def sdm_to_dict(f) -> dict:
     """Make a dictionary from a distributed polynomial. """
     return dict(f)
 
@@ -181,7 +180,7 @@ def sdm_from_dict(d, O) -> list[tuple[Any, Any]]:
     return sdm_strip(sdm_sort(list(d.items()), O))
 
 
-def sdm_sort(f, O) -> list[Any]:
+def sdm_sort(f, O) -> list:
     """Sort terms in ``f`` using the given monomial order ``O``. """
     return sorted(f, key=lambda term: O(term[0]), reverse=True)
 
@@ -277,7 +276,7 @@ def sdm_LT(f):
     return f[0]
 
 
-def sdm_mul_term(f, term, O, K) -> list[Any] | list[tuple[tuple[Any, Unpack[tuple[Any, ...]]], Any]]:
+def sdm_mul_term(f, term, O, K) -> list | list[tuple[tuple, Any]]:
     """
     Multiply a distributed module element ``f`` by a (polynomial) term ``term``.
 
@@ -321,7 +320,7 @@ def sdm_mul_term(f, term, O, K) -> list[Any] | list[tuple[tuple[Any, Unpack[tupl
             return [ (sdm_monomial_mul(f_M, X), f_c * c) for f_M, f_c in f ]
 
 
-def sdm_zero() -> list[Any]:
+def sdm_zero() -> list:
     """Return the zero module element."""
     return []
 
@@ -370,7 +369,7 @@ def sdm_from_vector(vec, O, K, **opts) -> list[tuple[Any, Any]]:
     return sdm_from_dict(dic, O)
 
 
-def sdm_to_vector(f, gens, K, n=None) -> list[Any]:
+def sdm_to_vector(f, gens, K, n=None) -> list:
     """
     Convert sdm ``f`` into a list of polynomial expressions.
 
@@ -404,7 +403,9 @@ def sdm_to_vector(f, gens, K, n=None) -> list[Any]:
 # Algorithms.
 
 
-def sdm_spoly(f, g, O, K, phantom=None) -> list[Any] | list[tuple[Any, Any]] | tuple[list[tuple[Any, Any]], list[tuple[Any, Any]]]:
+def sdm_spoly(
+    f, g, O, K, phantom=None
+) -> list | list[tuple[Any, Any]] | tuple[list[tuple[Any, Any]], list[tuple[Any, Any]]]:
     """
     Compute the generalized s-polynomial of ``f`` and ``g``.
 
@@ -477,14 +478,20 @@ def sdm_ecart(f) -> int:
     return sdm_deg(f) - sdm_monomial_deg(sdm_LM(f))
 
 
-def sdm_nf_mora(f, G, O, K, phantom=None) -> (
+def sdm_nf_mora(
+    f, G, O, K, phantom=None
+) -> (
     tuple[
-        Any | tuple[Any, Any] | list[tuple[Any, Any]] | list[Any] | tuple[list[tuple[Any, Any]], list[tuple[Any, Any]]],
+        Any
+        | tuple[Any, Any]
+        | list[tuple[Any, Any]]
+        | list
+        | tuple[list[tuple[Any, Any]], list[tuple[Any, Any]]],
         Any | tuple[Any, Any] | list[tuple[Any, Any]],
     ]
     | tuple[Any, Any]
     | list[tuple[Any, Any]]
-    | list[Any]
+    | list
     | tuple[list[tuple[Any, Any]], list[tuple[Any, Any]]]
 ):
     r"""
@@ -542,14 +549,20 @@ def sdm_nf_mora(f, G, O, K, phantom=None) -> (
     return h
 
 
-def sdm_nf_buchberger(f, G, O, K, phantom=None) -> (
+def sdm_nf_buchberger(
+    f, G, O, K, phantom=None
+) -> (
     tuple[
-        Any | tuple[Any, Any] | list[tuple[Any, Any]] | list[Any] | tuple[list[tuple[Any, Any]], list[tuple[Any, Any]]],
+        Any
+        | tuple[Any, Any]
+        | list[tuple[Any, Any]]
+        | list
+        | tuple[list[tuple[Any, Any]], list[tuple[Any, Any]]],
         Any | tuple[Any, Any] | list[tuple[Any, Any]],
     ]
     | tuple[Any, Any]
     | list[tuple[Any, Any]]
-    | list[Any]
+    | list
     | tuple[list[tuple[Any, Any]], list[tuple[Any, Any]]]
 ):
     r"""
@@ -591,7 +604,7 @@ def sdm_nf_buchberger(f, G, O, K, phantom=None) -> (
     return h
 
 
-def sdm_nf_buchberger_reduced(f, G, O, K) -> list[Any] | list[tuple[Any, Any]]:
+def sdm_nf_buchberger_reduced(f, G, O, K) -> list | list[tuple[Any, Any]]:
     r"""
     Compute a reduced normal form of ``f`` with respect to ``G`` and order ``O``.
 
@@ -617,7 +630,9 @@ def sdm_nf_buchberger_reduced(f, G, O, K) -> list[Any] | list[tuple[Any, Any]]:
     return h
 
 
-def sdm_groebner(G, NF, O, K, extended=False) -> tuple[list[Any], list[Any]] | list[Any] | tuple[list[list[Any]], list[Any]] | list[list[Any]]:
+def sdm_groebner(
+    G, NF, O, K, extended=False
+) -> tuple[list, list] | list | tuple[list[list], list] | list[list]:
     """
     Compute a minimal standard basis of ``G`` with respect to order ``O``.
 

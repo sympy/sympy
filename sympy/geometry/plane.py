@@ -28,7 +28,7 @@ from sympy.core.function import UndefinedFunction
 from sympy.geometry.entity import GeometryEntity
 from sympy.geometry.line import Line3D, Ray3D, Segment3D
 from sympy.geometry.point import Point, Point2D, Point3D
-from typing import Any, Literal
+from typing import Any
 from typing_extensions import Self
 
 
@@ -85,7 +85,7 @@ class Plane(GeometryEntity):
                 raise ValueError('Normal vector cannot be zero vector')
         return GeometryEntity.__new__(cls, p1, normal_vector, **kwargs)
 
-    def __contains__(self, o) -> Literal[False]:
+    def __contains__(self, o) -> bool:
         k = self.equation(x, y, z)
         if isinstance(o, (LinearEntity, LinearEntity3D)):
             d = Point3D(o.arbitrary_point(t))
@@ -315,7 +315,7 @@ class Plane(GeometryEntity):
         return abs(d)
 
 
-    def equals(self, o) -> Any | Literal[False]:
+    def equals(self, o) -> Any | bool:
         """
         Returns True if self and o are the same mathematical entities.
 
@@ -363,9 +363,11 @@ class Plane(GeometryEntity):
         return (sum(i*j for i, j in zip(b, c)))
 
 
-    def intersection(self, o) -> (
+    def intersection(
+        self, o
+    ) -> (
         list[Point | Point2D | Point3D]
-        | list[Any]
+        | list
         | list[Point | Point2D | Point3D | Segment3D | Ray3D | Line3D]
         | list[Any | Point3D | Basic]
         | list[Self]

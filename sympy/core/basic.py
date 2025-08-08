@@ -5,7 +5,7 @@ from collections import Counter
 from collections.abc import Mapping, Iterable
 from itertools import zip_longest
 from functools import cmp_to_key
-from typing import Any, Literal, TYPE_CHECKING, overload
+from typing import Any, TYPE_CHECKING, overload
 
 from .assumptions import _prepare_class_assumptions
 from .cache import cacheit
@@ -18,11 +18,8 @@ from sympy.utilities.decorator import deprecated
 from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.iterables import iterable, numbered_symbols
 from sympy.utilities.misc import filldedent, func_name
-from sympy import Symbol
 from sympy.core._print_helpers import Printable
 from sympy.core.kind import Kind
-from typing_extensions import Self
-
 
 if TYPE_CHECKING:
     from typing import ClassVar, TypeVar, Any, Hashable
@@ -210,7 +207,7 @@ class Basic(Printable):
     _mhash: int | None
 
     @property
-    def __sympy__(self) -> Literal[True]:
+    def __sympy__(self) -> bool:
         return True
 
     def __init_subclass__(cls) -> None:
@@ -308,7 +305,7 @@ class Basic(Printable):
         for name, value in state.items():
             setattr(self, name, value)
 
-    def __reduce_ex__(self, protocol) -> str | tuple[Any, ...]:
+    def __reduce_ex__(self, protocol) -> str | tuple:
         if protocol < 2:
             msg = "Only pickle protocol 2 or higher is supported by SymPy"
             raise NotImplementedError(msg)
@@ -334,7 +331,7 @@ class Basic(Printable):
         return self._args
 
     @property
-    def assumptions0(self) -> dict[Any, Any]:
+    def assumptions0(self) -> dict:
         """
         Return object `type` assumptions.
 
@@ -447,7 +444,9 @@ class Basic(Printable):
         return 5, 0, cls.__name__
 
     @cacheit
-    def sort_key(self, order=None) -> tuple[tuple[Literal[5], Literal[0], str], tuple[int, tuple[Any, ...]], Any, Any]:
+    def sort_key(
+        self, order=None
+    ) -> tuple[tuple[int, int, str], tuple[int, tuple], Any, Any]:
         """
         Return a sort key.
 
@@ -727,7 +726,7 @@ class Basic(Printable):
         return empty.union(*(a.free_symbols for a in self.args))
 
     @property
-    def expr_free_symbols(self) -> set[Any]:
+    def expr_free_symbols(self) -> set:
         sympy_deprecation_warning("""
         The expr_free_symbols property is deprecated. Use free_symbols to get
         the free symbols of an expression.
@@ -847,7 +846,7 @@ class Basic(Printable):
         return hypersimp(self, k) is not None
 
     @property
-    def is_comparable(self) -> Literal[False]:
+    def is_comparable(self) -> bool:
         """Return True if self can be computed to a real number
         (or already is a real number) with precision, else False.
 
@@ -1795,9 +1794,9 @@ class Basic(Printable):
             return expr
 
         rv = walk(self, rec_replace)
-        return (rv, mapping) if map else rv # type: ignore
+        return (rv, mapping) if map else rv  # type: ignore
 
-    def find(self, query, group=False) -> set[Any] | dict[Any, Any]:
+    def find(self, query, group=False) -> set | dict:
         """Find all subexpressions matching a query."""
         query = _make_find_query(query)
         results = list(filter(query, _preorder_traversal(self)))
@@ -1811,7 +1810,7 @@ class Basic(Printable):
         query = _make_find_query(query)
         return sum(bool(query(sub)) for sub in _preorder_traversal(self))
 
-    def matches(self, expr, repl_dict=None, old=False) -> dict[Any, Any] | None:
+    def matches(self, expr, repl_dict=None, old=False) -> dict | None:
         """
         Helper method for match() that looks for a match between Wild symbols
         in self and expressions in expr.
@@ -2245,7 +2244,7 @@ class Atom(Basic):
 
     __slots__ = ()
 
-    def matches(self, expr, repl_dict=None, old=False) -> dict[Any, Any] | None:
+    def matches(self, expr, repl_dict=None, old=False) -> dict | None:
         if self == expr:
             if repl_dict is None:
                 return {}
@@ -2258,11 +2257,11 @@ class Atom(Basic):
         return self
 
     @classmethod
-    def class_key(cls) -> tuple[Literal[2], Literal[0], str]:
+    def class_key(cls) -> tuple[int, int, str]:
         return 2, 0, cls.__name__
 
     @cacheit
-    def sort_key(self, order=None) -> tuple[tuple[Literal[2], Literal[0], str], tuple[Literal[1], tuple[str]], Any, Any]:
+    def sort_key(self, order=None) -> tuple[tuple[int, int, str], tuple[int, tuple[str]], Any, Any]:
         return self.class_key(), (1, (str(self),)), S.One.sort_key(), S.One
 
     def _eval_simplify(self, **kwargs):

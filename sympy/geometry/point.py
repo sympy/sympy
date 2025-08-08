@@ -488,7 +488,7 @@ class Point(GeometryEntity):
         coords = [x.evalf(n=dps, **options) for x in self.args]
         return Point(*coords, evaluate=False)
 
-    def intersection(self, other) -> list[Self] | list[Any]:
+    def intersection(self, other) -> list[Self] | list:
         """The intersection between this point and another GeometryEntity.
 
         Parameters
@@ -1170,7 +1170,7 @@ class Point3D(Point):
         """
         return Point.is_collinear(*points)
 
-    def direction_cosine(self, point) -> list[Any]:
+    def direction_cosine(self, point) -> list:
         """
         Gives the direction cosine between 2 points
 
@@ -1197,7 +1197,7 @@ class Point3D(Point):
         return [(point.x - self.x) / b,(point.y - self.y) / b,
                 (point.z - self.z) / b]
 
-    def direction_ratio(self, point) -> list[Any]:
+    def direction_ratio(self, point) -> list:
         """
         Gives the direction ratio between 2 points
 
@@ -1221,7 +1221,7 @@ class Point3D(Point):
         """
         return [(point.x - self.x),(point.y - self.y),(point.z - self.z)]
 
-    def intersection(self, other) -> list[Self] | list[Any] | list[Point] | list[Point2D]:
+    def intersection(self, other) -> list[Self] | list | list[Point] | list[Point2D]:
         """The intersection between this point and another GeometryEntity.
 
         Parameters

@@ -3382,14 +3382,14 @@ class MatrixBase(Printable):
                 iszerofunc: Callable[[Expr], bool | None] = _iszero,
                 simplify: bool | Callable[[Expr], Expr] = False,
                  *,
-                with_pivots: Literal[False] = False,
+                with_pivots: bool = False,
             ) -> Self: ...
     @overload
     def echelon_form(self,
                 iszerofunc: Callable[[Expr], bool | None] = _iszero,
                 simplify: bool | Callable[[Expr], Expr] = False,
                 *,
-                with_pivots: Literal[True],
+                with_pivots: bool,
             ) -> tuple[Self, tuple[int]]: ...
 
     def echelon_form(self,
@@ -3435,7 +3435,7 @@ class MatrixBase(Printable):
              iszerofunc: Callable[[Expr], bool | None] = _iszero,
              simplify: bool | Callable[[Expr], Expr] = False,
              *,
-             pivots: Literal[True] = True,
+             pivots: bool = True,
              normalize_last: bool = True
         ) -> tuple[Self, tuple[int]]: ...
     @overload
@@ -3443,7 +3443,7 @@ class MatrixBase(Printable):
              iszerofunc: Callable[[Expr], bool | None] = _iszero,
              simplify: bool | Callable[[Expr], Expr] = False,
              *,
-             pivots: Literal[False],
+             pivots: bool,
              normalize_last: bool = True
         ) -> Self: ...
 
@@ -3716,14 +3716,14 @@ class MatrixBase(Printable):
     @overload
     def jordan_form(
             self: Tmat,
-            calc_transform: Literal[True] = True,
+            calc_transform: bool = True,
             *,
             chop: bool = False
         ) -> tuple[Tmat, Tmat]: ...
     @overload
     def jordan_form(
             self: Tmat,
-            calc_transform: Literal[False],
+            calc_transform: bool,
             *,
             chop: bool = False,
         ) -> Tmat: ...
@@ -5001,7 +5001,7 @@ class MatrixBase(Printable):
         from .sparsetools import banded
         return self._as_type(banded(size, bands))
 
-    def log(self, simplify: Callable[[Self], Self] | Literal[False] = cancel) -> Self:
+    def log(self, simplify: Callable[[Self], Self] | bool = cancel) -> Self:
         """Return the logarithm of a square matrix.
 
         Parameters
@@ -5491,10 +5491,10 @@ class MatrixBase(Printable):
         return _QRsolve(self, b)
 
     @overload
-    def gauss_jordan_solve(self, B: MatrixBase, freevar: Literal[False] = False,
+    def gauss_jordan_solve(self, B: MatrixBase, freevar: bool = False,
                            ) -> tuple[Self, Self]: ...
     @overload
-    def gauss_jordan_solve(self, B: MatrixBase, freevar: Literal[True],
+    def gauss_jordan_solve(self, B: MatrixBase, freevar: bool,
                            ) -> tuple[Self, Self, list[int]]: ...
 
     def gauss_jordan_solve(self, B, freevar: bool=False

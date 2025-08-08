@@ -608,7 +608,7 @@ class RustCodePrinter(CodePrinter):
                 expr = expr.rewrite(target_f)
         return expr
 
-    def indent_code(self, code) -> str | list[Any]:
+    def indent_code(self, code) -> str | list:
         """Accepts a string of code or a list of code lines"""
 
         if isinstance(code, str):

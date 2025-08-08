@@ -9,6 +9,7 @@ sympy.stats.crv
 sympy.stats.drv
 """
 from math import prod
+from collections.abc import AbstractSet as Set
 
 from sympy.core.basic import Basic
 from sympy.core.function import Lambda
@@ -385,7 +386,7 @@ class MarginalDistribution(Distribution):
         return ProductSet(*[rv.pspace.set for rv in rvs])
 
     @property
-    def symbols(self) -> _Set[Any]:
+    def symbols(self) -> Set:
         rvs = self.args[1]
         return {rv.pspace.symbol for rv in rvs}
 

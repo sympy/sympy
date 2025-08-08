@@ -100,7 +100,7 @@ def crt(m, v, symmetric=False, check=True) -> tuple[Any, Any | int] | None:
     return int(result), int(mm)
 
 
-def crt1(m) -> tuple[float, list[Any], list[Any]]:
+def crt1(m) -> tuple[float, list, list]:
     """First part of Chinese Remainder Theorem, for multiple application.
 
     Examples

@@ -201,7 +201,7 @@ def simpsol(sol, wrt1, wrt2, doit=True) -> list[Eq | Any | Relational | Ne]:
     return sol
 
 
-def linodesolve_type(A, t, b=None) -> dict[Any, Any]:
+def linodesolve_type(A, t, b=None) -> dict:
     r"""
     Helper function that determines the type of the system of ODEs for solving with :obj:`sympy.solvers.ode.systems.linodesolve()`
 
@@ -340,7 +340,7 @@ def _first_order_type5_6_subs(A, t, b=None):
     return match
 
 
-def linear_ode_to_matrix(eqs, funcs, t, order) -> tuple[list[Any], Any | Matrix]:
+def linear_ode_to_matrix(eqs, funcs, t, order) -> tuple[list, Any | Matrix]:
     r"""
     Convert a linear system of ODEs to matrix form
 
@@ -683,8 +683,7 @@ def matrix_exp_jordan_form(A, t) -> tuple[Matrix, Any]:
 
 
 # Note: To add a docstring example with tau
-def linodesolve(A, t, b=None, B=None, type="auto", doit=False,
-                tau=None) -> list[Any]:
+def linodesolve(A, t, b=None, B=None, type="auto", doit=False, tau=None) -> list:
     r"""
     System of n equations linear first-order differential equations
 
@@ -1007,7 +1006,7 @@ def _matrix_is_constant(M, t):
     return all(coef.as_independent(t, as_Add=True)[1] == 0 for coef in M)
 
 
-def canonical_odes(eqs, funcs, t) -> list[Any]:
+def canonical_odes(eqs, funcs, t) -> list:
     r"""
     Function that solves for highest order derivatives in a system
 
@@ -1968,7 +1967,7 @@ def _higher_order_to_first_order(eqs, sys_order, t, funcs=None, type="type0", **
     return eqs, new_funcs
 
 
-def dsolve_system(eqs, funcs=None, t=None, ics=None, doit=False, simplify=True) -> list[Any]:
+def dsolve_system(eqs, funcs=None, t=None, ics=None, doit=False, simplify=True) -> list:
     r"""
     Solves any(supported) system of Ordinary Differential Equations
 

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Literal, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 from sympy.core.expr import Expr
 from sympy.polys.orderings import MonomialOrder
@@ -12,7 +12,6 @@ from sympy.polys.domains.compositedomain import CompositeDomain
 
 from sympy.polys.polyerrors import CoercionFailed, GeneratorsError
 from sympy.utilities import public
-from sympy.polys.rings import PolyElement
 
 
 if TYPE_CHECKING:

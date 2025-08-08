@@ -205,7 +205,7 @@ class MatMul(MatrixExpr, Mul):
         return expr
 
     # Needed for partial compatibility with Mul
-    def args_cnc(self, cset=False, warn=True, **kwargs) -> list[Any]:
+    def args_cnc(self, cset=False, warn=True, **kwargs) -> list:
         coeff_c = [x for x in self.args if x.is_commutative]
         coeff_nc = [x for x in self.args if not x.is_commutative]
         if cset:
@@ -453,7 +453,7 @@ rules = (
 
 canonicalize = exhaust(typed({MatMul: do_one(*rules)}))
 
-def only_squares(*matrices) -> list[Any]:
+def only_squares(*matrices) -> list:
     """factor matrices only if they are square"""
     if matrices[0].rows != matrices[-1].cols:
         raise RuntimeError("Invalid matrices being multiplied")

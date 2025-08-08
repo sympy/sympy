@@ -12,7 +12,7 @@ from typing_extensions import Self
 
 
 
-def iterargs(expr) -> Generator[Any, Any, None]:
+def iterargs(expr) -> Generator:
     """Yield the args of a Basic object in a breadth-first traversal.
     Depth-traversal stops if `arg.args` is either empty or is not
     an iterable.
@@ -37,7 +37,7 @@ def iterargs(expr) -> Generator[Any, Any, None]:
         args.extend(i.args)
 
 
-def iterfreeargs(expr, _first=True) -> Generator[Any, Any, None]:
+def iterfreeargs(expr, _first=True) -> Generator:
     """Yield the args of a Basic object in a breadth-first traversal.
     Depth-traversal stops if `arg.args` is either empty or is not
     an iterable. The bound objects of an expression will be returned
@@ -199,7 +199,7 @@ def use(expr, func, level=0, args=(), kwargs={}):
     return _use(sympify(expr), level)
 
 
-def walk(e, *target) -> Generator[Any, Any, None]:
+def walk(e, *target) -> Generator:
     """Iterate through the args that are the given types (target) and
     return a list of the args that were traversed; arguments
     that are not of the specified types are not traversed.
@@ -250,7 +250,7 @@ def bottom_up(rv, F, atoms=False, nonbasic=False):
     return rv
 
 
-def postorder_traversal(node, keys=None) -> Generator[Any | Basic, Any, None]:
+def postorder_traversal(node, keys=None) -> Generator[Any | Basic]:
     """
     Do a postorder traversal of a tree.
 

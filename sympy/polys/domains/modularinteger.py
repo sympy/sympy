@@ -208,7 +208,7 @@ class ModularInteger(PicklableWithSlots, DomainElement):
 
 _modular_integer_cache: dict[tuple[Any, Any, Any], type[ModularInteger]] = {}
 
-def ModularIntegerFactory(_mod, _dom, _sym, parent) -> type[Any]:
+def ModularIntegerFactory(_mod, _dom, _sym, parent) -> type:
     """Create custom class for specific integer modulus."""
     try:
         _mod = _dom.convert(_mod)

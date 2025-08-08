@@ -13,7 +13,7 @@ from mpmath.ctx_mp_python import PythonMPContext, _mpf, _mpc, _constant
 from mpmath.libmp import (MPZ_ONE, fzero, fone, finf, fninf, fnan,
     round_nearest, mpf_mul, repr_dps, int_types,
     from_int, from_float, from_str, to_rational)
-from typing import Any, Literal
+from typing import Any
 
 
 @public
@@ -127,7 +127,7 @@ class MPContext(PythonMPContext):
     def _str_digits(ctx):
         return ctx._dps
 
-    def to_rational(ctx, s, limit=True) -> tuple[Any, Any | Literal[1]]:
+    def to_rational(ctx, s, limit=True) -> tuple[Any, Any | int]:
         p, q = to_rational(s._mpf_)
 
         # Needed for GROUND_TYPES=flint if gmpy2 is installed because mpmath's
@@ -162,7 +162,7 @@ class MPContext(PythonMPContext):
         else:
             return bound1.numerator, bound1.denominator
 
-    def almosteq(ctx, s, t, rel_eps=None, abs_eps=None) -> Literal[True]:
+    def almosteq(ctx, s, t, rel_eps=None, abs_eps=None) -> bool:
         t = ctx.convert(t)
         if abs_eps is None and rel_eps is None:
             rel_eps = abs_eps = ctx.tolerance or ctx.make_tol()

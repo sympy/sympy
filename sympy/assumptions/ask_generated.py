@@ -175,7 +175,7 @@ def get_all_known_number_facts():
     }
 
 @cacheit
-def get_known_facts_dict() -> dict[Any, Any]:
+def get_known_facts_dict() -> dict:
     """
     Logical relations between unary predicates as dictionary.
 

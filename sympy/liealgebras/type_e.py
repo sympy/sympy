@@ -4,7 +4,6 @@ from .cartan_type import Standard_Cartan
 from sympy.core.backend import eye, Rational
 from sympy.core.singleton import S
 from sympy.liealgebras.cartan_type import Standard_Cartan
-from typing import Any, Literal
 from typing_extensions import Self
 
 class TypeE(Standard_Cartan):
@@ -14,7 +13,7 @@ class TypeE(Standard_Cartan):
             raise ValueError("Invalid value of n")
         return Standard_Cartan.__new__(cls, "E", n)
 
-    def dimension(self) -> Literal[8]:
+    def dimension(self) -> int:
         """Dimension of the vector space V underlying the Lie algebra
 
         Examples
@@ -81,7 +80,7 @@ class TypeE(Standard_Cartan):
 
             return self.basic_root(i - 3, i - 2)
 
-    def positive_roots(self) -> dict[Any, Any] | None:
+    def positive_roots(self) -> dict | None:
         """
         This method generates all the positive roots of
         A_n.  This is half of all of the roots of E_n;
@@ -203,9 +202,7 @@ class TypeE(Standard_Cartan):
                     posroots[k] = root[:]
             return posroots
 
-
-
-    def roots(self) -> Literal[72, 126, 240] | None:
+    def roots(self) -> int | None:
         """
         Returns the total number of roots of E_n
         """
@@ -253,8 +250,7 @@ class TypeE(Standard_Cartan):
         m[n-1, n-2] = -1
         return m
 
-
-    def basis(self) -> Literal[78, 133, 248] | None:
+    def basis(self) -> int | None:
         """
         Returns the number of independent generators of E_n
         """

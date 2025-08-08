@@ -3,7 +3,7 @@ Boolean algebra module for SymPy
 """
 
 from __future__ import annotations
-from typing import Literal, TYPE_CHECKING, overload, Any
+from typing import TYPE_CHECKING, overload, Any
 from collections.abc import Generator, Iterable, Mapping
 
 from collections import defaultdict
@@ -23,9 +23,11 @@ from sympy.core.sorting import ordered
 from sympy.core.sympify import _sympy_converter, _sympify, sympify
 from sympy.utilities.iterables import sift, ibin
 from sympy.utilities.misc import filldedent
-from sympy.core.relational import Eq, Ne
-from sympy.core.symbol import Symbol
 from typing_extensions import Self
+
+if TYPE_CHECKING:
+    from sympy.core.relational import Eq, Ne
+    from sympy.core.symbol import Symbol
 
 
 def as_Boolean(e) -> BooleanTrue | BooleanFalse | Symbol | Boolean:
@@ -366,7 +368,7 @@ class BooleanTrue(BooleanAtom, metaclass=Singleton):
     sympy.logic.boolalg.BooleanFalse
 
     """
-    def __bool__(self) -> Literal[True]:
+    def __bool__(self) -> bool:
         return True
 
     def __hash__(self) -> int:
@@ -441,7 +443,7 @@ class BooleanFalse(BooleanAtom, metaclass=Singleton):
     sympy.logic.boolalg.BooleanTrue
 
     """
-    def __bool__(self) -> Literal[False]:
+    def __bool__(self) -> bool:
         return False
 
     def __hash__(self) -> int:
@@ -1516,7 +1518,7 @@ class Exclusive(BooleanFunction):
 # end class definitions. Some useful methods
 
 
-def conjuncts(expr) -> frozenset[Any]:
+def conjuncts(expr) -> frozenset:
     """Return a list of the conjuncts in ``expr``.
 
     Examples
@@ -1533,7 +1535,7 @@ def conjuncts(expr) -> frozenset[Any]:
     return And.make_args(expr)
 
 
-def disjuncts(expr) -> frozenset[Any]:
+def disjuncts(expr) -> frozenset:
     """Return a list of the disjuncts in ``expr``.
 
     Examples
@@ -2006,7 +2008,7 @@ def is_literal(expr) -> bool:
     return False
 
 
-def to_int_repr(clauses, symbols) -> list[set[Any]]:
+def to_int_repr(clauses, symbols) -> list[set]:
     """
     Takes clauses in CNF format and puts them into an integer representation.
 
@@ -2059,7 +2061,7 @@ def term_to_integer(term) -> int:
 integer_to_term = ibin  # XXX could delete?
 
 
-def truth_table(expr, variables, input=True) -> Generator[tuple[list[Literal[0, 1]], Any | BooleanFunction] | Any | BooleanFunction, Any, None]:
+def truth_table(expr, variables, input=True) -> Generator[tuple[list[int], Any | BooleanFunction] | Any | BooleanFunction]:
     """
     Return a generator of all possible configurations of the input variables,
     and the result of the boolean expression for those values.
@@ -2595,7 +2597,7 @@ def ANFform(variables, truthvalues) -> BooleanFalse | Not | Xor:
                remove_true=False)
 
 
-def anf_coeffs(truthvalues) -> list[Any]:
+def anf_coeffs(truthvalues) -> list:
     """
     Convert a list of truth values of some boolean expression
     to the list of coefficients of the polynomial mod 2 (exclusive
@@ -2995,7 +2997,7 @@ def _finger(eq):
     return inv
 
 
-def bool_map(bool1, bool2) -> tuple[Any, dict[Any, Any]] | dict[Any, Any] | Literal[False] | None:
+def bool_map(bool1, bool2) -> tuple[Any, dict] | dict | bool | None:
     """
     Return the simplified version of *bool1*, and the mapping of variables
     that makes the two expressions *bool1* and *bool2* represent the same

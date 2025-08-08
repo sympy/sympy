@@ -210,8 +210,9 @@ def pole_zero_plot(system, pole_color='blue', pole_markersize=10,
     return plt
 
 
-def step_response_numerical_data(system, prec=8, lower_limit=0,
-    upper_limit=10, **kwargs) -> tuple[Any, Any] | tuple[list[Any], list[Any]]:
+def step_response_numerical_data(
+    system, prec=8, lower_limit=0, upper_limit=10, **kwargs
+) -> tuple[Any, Any] | tuple[list, list]:
     """
     Returns the numerical values of the points in the step response plot
     of a SISO continuous-time system. By default, adaptive sampling
@@ -361,8 +362,9 @@ def step_response_plot(system, color='b', prec=8, lower_limit=0,
     return plt
 
 
-def impulse_response_numerical_data(system, prec=8, lower_limit=0,
-    upper_limit=10, **kwargs) -> tuple[Any, Any] | tuple[list[Any], list[Any]]:
+def impulse_response_numerical_data(
+    system, prec=8, lower_limit=0, upper_limit=10, **kwargs
+) -> tuple[Any, Any] | tuple[list, list]:
     """
     Returns the numerical values of the points in the impulse response plot
     of a SISO continuous-time system. By default, adaptive sampling
@@ -512,8 +514,9 @@ def impulse_response_plot(system, color='b', prec=8, lower_limit=0,
     return plt
 
 
-def ramp_response_numerical_data(system, slope=1, prec=8,
-    lower_limit=0, upper_limit=10, **kwargs) -> tuple[Any, Any] | tuple[list[Any], list[Any]]:
+def ramp_response_numerical_data(
+    system, slope=1, prec=8, lower_limit=0, upper_limit=10, **kwargs
+) -> tuple[Any, Any] | tuple[list, list]:
     """
     Returns the numerical values of the points in the ramp response plot
     of a SISO continuous-time system. By default, adaptive sampling
@@ -676,7 +679,9 @@ def ramp_response_plot(system, slope=1, color='b', prec=8, lower_limit=0,
     return plt
 
 
-def bode_magnitude_numerical_data(system, initial_exp=-5, final_exp=5, freq_unit='rad/sec', **kwargs) -> tuple[Any | list[Any], Any | list[Any]]:
+def bode_magnitude_numerical_data(
+    system, initial_exp=-5, final_exp=5, freq_unit="rad/sec", **kwargs
+) -> tuple[Any | list, Any | list]:
     """
     Returns the numerical data of the Bode magnitude plot of the system.
     It is internally used by ``bode_magnitude_plot`` to get the data

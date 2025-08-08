@@ -34,10 +34,10 @@ from sympy.polys.polytools import cancel, factor
 from sympy.simplify import collect, simplify, logcombine # type: ignore
 from sympy.simplify.powsimp import powdenest
 from sympy.solvers.ode.ode import get_numbered_constants
-from typing import Any, Literal
+from typing import Any
 
 
-def match_2nd_hypergeometric(eq, func) -> list[Any]:
+def match_2nd_hypergeometric(eq, func) -> list:
     x = func.args[0]
     df = func.diff(x)
     a3 = Wild('a3', exclude=[func, func.diff(x), func.diff(x, 2)])
@@ -208,7 +208,7 @@ def match_2nd_2F1_hypergeometric(I, k, sing_point, func) -> dict[str, Any]:
     return rn
 
 
-def equivalence(max_num_pow, dem_pow) -> Literal["2F1"] | None:
+def equivalence(max_num_pow, dem_pow) -> str | None:
     # this function is made for checking the equivalence with 2F1 type of equation.
     # max_num_pow is the value of maximum power of x in numerator
     # and dem_pow is list of powers of different factor of form (a*x b).

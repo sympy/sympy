@@ -81,14 +81,14 @@ class SeriesBase(Expr):
 
         return initial + i*step
 
-    def __iter__(self) -> Iterator[Any]:
+    def __iter__(self) -> Iterator:
         i = 0
         while i < self.length:
             pt = self._ith_point(i)
             yield self.term(pt)
             i += 1
 
-    def __getitem__(self, index) -> list[Any] | None:
+    def __getitem__(self, index) -> list | None:
         if isinstance(index, int):
             index = self._ith_point(index)
             return self.term(index)

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Literal, NoReturn, TYPE_CHECKING
+from typing import Any, NoReturn, TYPE_CHECKING
 
 from collections import Counter, defaultdict, OrderedDict
 from itertools import (
@@ -20,11 +20,11 @@ from sympy.utilities.misc import as_int
 from sympy.utilities.decorator import deprecated
 import sympy
 from collections.abc import Generator, Iterator
-from typing_extensions import Never
 
 
 if TYPE_CHECKING:
     from typing import TypeVar, Iterable, Callable
+    from typing_extensions import Never
     T = TypeVar('T')
 
 
@@ -65,7 +65,7 @@ def is_palindromic(s, i=0, j=None) -> bool:
     return all(s[i + k] == s[j - 1 - k] for k in range(m))
 
 
-def flatten(iterable, levels=None, cls=None) -> list[Any]:  # noqa: F811
+def flatten(iterable, levels=None, cls=None) -> list:  # noqa: F811
     """
     Recursively denest iterable containers.
 
@@ -131,7 +131,7 @@ def flatten(iterable, levels=None, cls=None) -> list[Any]:  # noqa: F811
     return result
 
 
-def unflatten(iter, n=2) -> list[Any]:
+def unflatten(iter, n=2) -> list:
     """Group ``iter`` into tuples of length ``n``. Raise an error if
     the length of ``iter`` is not a multiple of ``n``.
     """
@@ -200,7 +200,7 @@ def reshape(seq, how):
     return type(seq)(rv)
 
 
-def group(seq, multiple=True) -> list[list[Any]] | list[tuple[Any, int]]:
+def group(seq, multiple=True) -> list[list] | list[tuple[Any, int]]:
     """
     Splits a sequence into a list of lists of equal, adjacent elements.
 
@@ -254,7 +254,7 @@ def _iproduct2(iterable1, iterable2):
         append(it2, elems2)
 
 
-def iproduct(*iterables) -> Generator[tuple[()] | tuple[Any] | tuple[Any, Any] | Any, Any, None]:
+def iproduct(*iterables) -> Generator[tuple[()] | tuple[Any] | tuple[Any, Any] | Any]:
     '''
     Cartesian product of iterables.
 
@@ -318,12 +318,14 @@ def multiset(seq) -> dict[Any, int]:
 
 
 
-def ibin(n, bits=None, str=False) -> (
+def ibin(
+    n, bits=None, str=False
+) -> (
     list[int]
     | Iterator[Never]
-    | permutations[Any]
+    | permutations
     | Iterator[tuple[()]]
-    | product[tuple[Any, ...]]
+    | product[tuple]
     | str
     | Generator[str, None, None]
 ):
@@ -398,7 +400,9 @@ def ibin(n, bits=None, str=False) -> (
             return (bin(i)[2:].rjust(n, "0") for i in range(2**n))
 
 
-def variations(seq, n, repetition=False) -> Iterator[Never] | permutations[Any] | Iterator[tuple[()]] | product[tuple[Any, ...]]:
+def variations(
+    seq, n, repetition=False
+) -> Iterator[Never] | permutations | Iterator[tuple[()]] | product[tuple]:
     r"""Returns an iterator over the n-sized variations of ``seq`` (size N).
     ``repetition`` controls whether items in ``seq`` can appear more than once;
 
@@ -445,7 +449,9 @@ def variations(seq, n, repetition=False) -> Iterator[Never] | permutations[Any] 
             return product(seq, repeat=n)
 
 
-def subsets(seq, k=None, repetition=False) -> chain[tuple[Any, ...]] | combinations[Any] | combinations_with_replacement[Any]:
+def subsets(
+    seq, k=None, repetition=False
+) -> chain[tuple] | combinations | combinations_with_replacement:
     r"""Generates all `k`-subsets (combinations) from an `n`-element set, ``seq``.
 
     A `k`-subset of an `n`-element set is any subset of length exactly `k`. The
@@ -501,7 +507,7 @@ def subsets(seq, k=None, repetition=False) -> chain[tuple[Any, ...]] | combinati
             return combinations_with_replacement(seq, k)
 
 
-def filter_symbols(iterator, exclude) -> Generator[Any, Any, None]:
+def filter_symbols(iterator, exclude) -> Generator:
     """
     Only yield elements from `iterator` that do not occur in `exclude`.
 
@@ -601,7 +607,7 @@ def capture(func) -> str:
     return file.getvalue()
 
 
-def sift(seq, keyfunc, binary=False) -> defaultdict[Any, list[Any]] | tuple[list[Any], list[Any]]:
+def sift(seq, keyfunc, binary=False) -> defaultdict[Any, list] | tuple[list, list]:
     """
     Sift the sequence, ``seq`` according to ``keyfunc``.
 
@@ -700,12 +706,12 @@ def _sift_true_false(seq: Iterable[T], keyfunc: Callable[[T], bool]) -> tuple[li
     return true, false
 
 
-def take(iter, n) -> list[Any]:
+def take(iter, n) -> list:
     """Return ``n`` items from ``iter`` iterator. """
     return [ value for _, value in zip(range(n), iter) ]
 
 
-def dict_merge(*dicts) -> dict[Any, Any]:
+def dict_merge(*dicts) -> dict:
     """Merge dictionaries into a single dictionary. """
     merged = {}
 
@@ -715,7 +721,7 @@ def dict_merge(*dicts) -> dict[Any, Any]:
     return merged
 
 
-def common_prefix(*seqs) -> list[Any]:
+def common_prefix(*seqs) -> list:
     """Return the subsequence that is a common start of sequences in ``seqs``.
 
     >>> from sympy.utilities.iterables import common_prefix
@@ -741,7 +747,7 @@ def common_prefix(*seqs) -> list[Any]:
     return seqs[0][:i]
 
 
-def common_suffix(*seqs) -> list[Any]:
+def common_suffix(*seqs) -> list:
     """Return the subsequence that is a common ending of sequences in ``seqs``.
 
     >>> from sympy.utilities.iterables import common_suffix
@@ -771,7 +777,7 @@ def common_suffix(*seqs) -> list[Any]:
         return seqs[0][i + 1:]
 
 
-def prefixes(seq) -> Generator[Any, Any, None]:
+def prefixes(seq) -> Generator:
     """
     Generate all prefixes of a sequence.
 
@@ -790,7 +796,7 @@ def prefixes(seq) -> Generator[Any, Any, None]:
         yield seq[:i + 1]
 
 
-def postfixes(seq) -> Generator[Any, Any, None]:
+def postfixes(seq) -> Generator:
     """
     Generate all postfixes of a sequence.
 
@@ -809,7 +815,7 @@ def postfixes(seq) -> Generator[Any, Any, None]:
         yield seq[n - i - 1:]
 
 
-def topological_sort(graph, key=None) -> list[Any]:
+def topological_sort(graph, key=None) -> list:
     r"""
     Topological sort of graph's vertices.
 
@@ -923,7 +929,7 @@ def topological_sort(graph, key=None) -> list[Any]:
         return L
 
 
-def strongly_connected_components(G) -> list[Any]:
+def strongly_connected_components(G) -> list:
     r"""
     Strongly connected components of a directed graph in reverse topological
     order.
@@ -1077,7 +1083,7 @@ def _strongly_connected_components(V, Gmap):
     return components
 
 
-def connected_components(G) -> list[Any]:
+def connected_components(G) -> list:
     r"""
     Connected components of an undirected graph or weakly connected components
     of a directed graph.
@@ -1155,7 +1161,7 @@ def connected_components(G) -> list[Any]:
     return strongly_connected_components((V, E_undirected))
 
 
-def rotate_left(x, y) -> list[Any]:
+def rotate_left(x, y) -> list:
     """
     Left rotates a list x by the number of steps specified
     in y.
@@ -1174,7 +1180,7 @@ def rotate_left(x, y) -> list[Any]:
     return x[y:] + x[:y]
 
 
-def rotate_right(x, y) -> list[Any]:
+def rotate_right(x, y) -> list:
     """
     Right rotates a list x by the number of steps specified
     in y.
@@ -1235,7 +1241,7 @@ def least_rotation(x, key=None) -> int:
     return k
 
 
-def multiset_combinations(m, n, g=None) -> Generator[Any | list[Any], Any, None]:
+def multiset_combinations(m, n, g=None) -> Generator[Any | list]:
     """
     Return the unique combinations of size ``n`` from multiset ``m``.
 
@@ -1298,7 +1304,7 @@ def multiset_combinations(m, n, g=None) -> Generator[Any | list[Any], Any, None]
                     if len(rv) == n:
                         yield rv
 
-def multiset_permutations(m, size=None, g=None) -> Generator[list[Any | int] | Any, Any, None]:
+def multiset_permutations(m, size=None, g=None) -> Generator[list[Any | int] | Any]:
     """
     Return the unique permutations of multiset ``m``.
 
@@ -1467,7 +1473,9 @@ def _set_partitions(n):
         yield nc, q
 
 
-def multiset_partitions(multiset, m=None) -> Generator[list[list[int]] | list[list[Any]] | list[list[str] | Any] | list[Any], Any, None]:
+def multiset_partitions(
+    multiset, m=None
+) -> Generator[list[list[int]] | list[list] | list[list[str] | Any] | list]:
     """
     Return unique partitions of the given multiset (in list form).
     If ``m`` is None, all multisets will be returned, otherwise only
@@ -1625,7 +1633,7 @@ def multiset_partitions(multiset, m=None) -> Generator[list[list[int]] | list[li
                     yield [[multiset[j] for j in i] for i in rv]
 
 
-def partitions(n, m=None, k=None, size=False) -> Generator[tuple[Literal[0], dict[Any, Any]] | tuple[int, dict[int, int]] | dict[int, int], Any, None]:
+def partitions(n, m=None, k=None, size=False) -> Generator[tuple[int, dict] | tuple[int, dict[int, int]] | dict[int, int]]:
     """Generate all partitions of positive integer, n.
 
     Each partition is represented as a dictionary, mapping an integer
@@ -1757,7 +1765,7 @@ def partitions(n, m=None, k=None, size=False) -> Generator[tuple[Literal[0], dic
             yield ms.copy()
 
 
-def ordered_partitions(n, m=None, sort=True) -> Generator[Any | list[Any], Any, None]:
+def ordered_partitions(n, m=None, sort=True) -> Generator[Any | list]:
     """Generates ordered partitions of integer *n*.
 
     Parameters
@@ -1893,7 +1901,7 @@ def ordered_partitions(n, m=None, sort=True) -> Generator[Any | list[Any], Any, 
                         a[-mi:] = [b]*mi
 
 
-def binary_partitions(n) -> Generator[Any | list[Any], Any, None]:
+def binary_partitions(n) -> Generator[Any | list]:
     """
     Generates the binary partition of *n*.
 
@@ -1998,7 +2006,7 @@ def has_variety(seq) -> bool:
     return False
 
 
-def uniq(seq, result=None) -> Generator[Any, Any, None]:
+def uniq(seq, result=None) -> Generator:
     """
     Yield unique elements from ``seq`` as an iterator. The second
     parameter ``result``  is used internally; it is not necessary
@@ -2052,9 +2060,7 @@ def uniq(seq, result=None) -> Generator[Any, Any, None]:
             yield from uniq(seq, result)
 
 
-def generate_bell(n) -> Generator[
-    tuple[Literal[0]] | tuple[Literal[0], Literal[1]] | tuple[Literal[1], Literal[0]] | Any | tuple[int, ...], Any, None
-]:
+def generate_bell(n) -> Generator[tuple[int] | tuple[int, int] | tuple[int, int] | Any | tuple[int, ...]]:
     """Return permutations of [0, 1, ..., n - 1] such that each permutation
     differs from the last by the exchange of a single pair of neighbors.
     The ``n!`` permutations are returned as an iterator. In order to obtain
@@ -2161,7 +2167,7 @@ def generate_bell(n) -> Generator[
                     op[i] = -1
 
 
-def generate_involutions(n) -> Generator[tuple[int, ...], Any, None]:
+def generate_involutions(n) -> Generator[tuple[int, ...]]:
     """
     Generates involutions.
 
@@ -2198,7 +2204,7 @@ def generate_involutions(n) -> Generator[tuple[int, ...], Any, None]:
             yield p
 
 
-def multiset_derangements(s) -> Generator[list[Any] | list[None] | Any, Any, None]:
+def multiset_derangements(s) -> Generator[list | list[None] | Any]:
     """Generate derangements of the elements of s *in place*.
 
     Examples
@@ -2387,7 +2393,7 @@ def multiset_derangements(s) -> Generator[list[Any] | list[None] | Any, Any, Non
     rv[:] = [None]*n
 
 
-def random_derangement(t, choice=None, strict=True) -> str | list[None] | list[Any]:
+def random_derangement(t, choice=None, strict=True) -> str | list[None] | list:
     """Return a list of elements in which none are in the same positions
     as they were originally. If an element fills more than half of the positions
     then an error will be raised since no derangement is possible. To obtain
@@ -2503,7 +2509,7 @@ def _set_derangements(s):
             yield list(p)
 
 
-def generate_derangements(s) -> Generator[list[Any] | list[None], Any, None]:
+def generate_derangements(s) -> Generator[list | list[None]]:
     """
     Return unique derangements of the elements of iterable ``s``.
 
@@ -2531,7 +2537,7 @@ def generate_derangements(s) -> Generator[list[Any] | list[None], Any, None]:
             yield list(p)
 
 
-def necklaces(n, k, free=False) -> Generator[tuple[Any, ...], Any, None]:
+def necklaces(n, k, free=False) -> Generator[tuple]:
     """
     A routine to generate necklaces that may (free=True) or may not
     (free=False) be turned over to be viewed. The "necklaces" returned
@@ -2597,12 +2603,12 @@ def necklaces(n, k, free=False) -> Generator[tuple[Any, ...], Any, None]:
             yield tuple(a)
 
 
-def bracelets(n, k) -> Generator[tuple[Any, ...], Any, None]:
+def bracelets(n, k) -> Generator[tuple]:
     """Wrapper to necklaces to return a free (unrestricted) necklace."""
     return necklaces(n, k, free=True)
 
 
-def generate_oriented_forest(n) -> Generator[list[int], Any, None]:
+def generate_oriented_forest(n) -> Generator[list[int]]:
     """
     This algorithm generates oriented forests.
 
@@ -2648,7 +2654,7 @@ def generate_oriented_forest(n) -> Generator[list[int], Any, None]:
                 break
 
 
-def minlex(seq, directed=True, key=None) -> tuple[Any, ...] | list[Any]:
+def minlex(seq, directed=True, key=None) -> tuple | list:
     r"""
     Return the rotation of the sequence in which the lexically smallest
     elements appear first, e.g. `cba \rightarrow acb`.
@@ -2695,7 +2701,7 @@ def minlex(seq, directed=True, key=None) -> tuple[Any, ...] | list[Any]:
     return tuple(best) if not isinstance(seq, str) else best
 
 
-def runs(seq, op=gt) -> list[Any]:
+def runs(seq, op=gt) -> list:
     """Group the sequence into lists in which successive elements
     all compare the same with the comparison operator, ``op``:
     op(seq[i + 1], seq[i]) is True from all elements in a run.
@@ -2732,7 +2738,7 @@ def runs(seq, op=gt) -> list[Any]:
     return cycles
 
 
-def sequence_partitions(l, n, /) -> Generator[list[Any] | Any, Any, None]:
+def sequence_partitions(l, n, /) -> Generator[list | Any]:
     r"""Returns the partition of sequence $l$ into $n$ bins
 
     Explanation
@@ -2793,7 +2799,7 @@ def sequence_partitions(l, n, /) -> Generator[list[Any] | Any, Any, None]:
             yield [l[:i]] + part
 
 
-def sequence_partitions_empty(l, n, /) -> Generator[list[Any] | Any, Any, None]:
+def sequence_partitions_empty(l, n, /) -> Generator[list | Any]:
     r"""Returns the partition of sequence $l$ into $n$ bins with
     empty sequence
 
@@ -2856,7 +2862,7 @@ def sequence_partitions_empty(l, n, /) -> Generator[list[Any] | Any, Any, None]:
             yield [l[:i]] + part
 
 
-def kbins(l, k, ordered=None) -> Generator[list[Any] | Any | list[list[int]] | list[list[Any]] | list[list[str] | Any], Any, None]:
+def kbins(    l, k, ordered=None) -> Generator[list | Any | list[list[int]] | list[list] | list[list[str] | Any]]:
     """
     Return sequence ``l`` partitioned into ``k`` bins.
 
@@ -2968,7 +2974,7 @@ def kbins(l, k, ordered=None) -> Generator[list[Any] | Any | list[list[int]] | l
             'ordered must be one of 00, 01, 10 or 11, not %s' % ordered)
 
 
-def permute_signs(t) -> Generator[Any, Any, None]:
+def permute_signs(t) -> Generator:
     """Return iterator in which the signs of non-zero elements
     of t are permuted.
 
@@ -2984,7 +2990,7 @@ def permute_signs(t) -> Generator[Any, Any, None]:
         yield type(t)([i*signs.pop() if i else i for i in t])
 
 
-def signed_permutations(t) -> Generator[Any, None, None]:
+def signed_permutations(t) -> Generator:
     """Return iterator in which the signs of non-zero elements
     of t and the order of the elements are permuted and all
     returned values are unique.
@@ -3004,7 +3010,7 @@ def signed_permutations(t) -> Generator[Any, None, None]:
         for i in permute_signs(j))
 
 
-def rotations(s, dir=1) -> Generator[list[Any] | Any, Any, None]:
+def rotations(s, dir=1) -> Generator[list | Any]:
     """Return a generator giving the items in s as list where
     each subsequent list has the items rotated to the left (default)
     or right (``dir=-1``) relative to the previous list.
@@ -3024,7 +3030,7 @@ def rotations(s, dir=1) -> Generator[list[Any] | Any, Any, None]:
         seq = rotate_left(seq, dir)
 
 
-def roundrobin(*iterables) -> Generator[Any, Any, None]:
+def roundrobin(*iterables) -> Generator:
     """roundrobin recipe taken from itertools documentation:
     https://docs.python.org/3/library/itertools.html#itertools-recipes
 
@@ -3164,7 +3170,7 @@ def is_sequence(i, include=None) -> bool:
     """,
     deprecated_since_version="1.10",
     active_deprecations_target="deprecated-traversal-functions-moved")
-def postorder_traversal(node, keys=None) -> Generator[Any | sympy.Basic, Any, None]:
+def postorder_traversal(node, keys=None) -> Generator[Any | sympy.Basic]:
     from sympy.core.traversal import postorder_traversal as _postorder_traversal
     return _postorder_traversal(node, keys=keys)
 
@@ -3194,9 +3200,16 @@ def interactive_traversal(expr) -> sympy.Basic:
     deprecated_since_version="1.10",
 active_deprecations_target="deprecated-sympy-core-compatibility",
 )
-def default_sort_key(*args, **kwargs) -> (
-    tuple[tuple[Literal[5], Literal[0], str], tuple[int, tuple[Any, ...]], Any, Any]
-    | tuple[tuple[Literal[10, 0], Literal[0], str | Any], tuple[int, tuple[Any, ...]] | tuple[Literal[1], tuple[str]], Any, Any]
+def default_sort_key(
+    *args, **kwargs
+) -> (
+    tuple[tuple[int, int, str], tuple[int, tuple], Any, Any]
+    | tuple[
+        tuple[int, int, str | Any],
+        tuple[int, tuple] | tuple[int, tuple[str]],
+        Any,
+        Any,
+    ]
 ):
     from sympy import default_sort_key as _default_sort_key
     return _default_sort_key(*args, **kwargs)
@@ -3210,6 +3223,6 @@ def default_sort_key(*args, **kwargs) -> (
     deprecated_since_version="1.10",
 active_deprecations_target="deprecated-sympy-core-compatibility",
 )
-def ordered(*args, **kwargs) -> Generator[Any, Any, None]:
+def ordered(*args, **kwargs) -> Generator:
     from sympy import ordered as _ordered
     return _ordered(*args, **kwargs)

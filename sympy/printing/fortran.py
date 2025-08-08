@@ -572,7 +572,7 @@ class FCodePrinter(CodePrinter):
                 result.append(line)
         return result
 
-    def indent_code(self, code) -> str | list[Any]:
+    def indent_code(self, code) -> str | list:
         """Accepts a string of code or a list of code lines"""
         if isinstance(code, str):
             code_lines = self.indent_code(code.splitlines(True))

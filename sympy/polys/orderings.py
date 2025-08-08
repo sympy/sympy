@@ -1,7 +1,7 @@
 """Definitions of monomial orderings. """
 
 from __future__ import annotations
-from typing import Any, Callable
+from typing import Any
 
 __all__ = ["lex", "grlex", "grevlex", "ilex", "igrlex", "igrevlex"]
 
@@ -58,7 +58,7 @@ class ReversedGradedLexOrder(MonomialOrder):
     alias = 'grevlex'
     is_global = True
 
-    def __call__(self, monomial) -> tuple[int, tuple[Any, ...]]:
+    def __call__(self, monomial) -> tuple[int, tuple]:
         return (sum(monomial), tuple(reversed([-m for m in monomial])))
 
 class ProductOrder(MonomialOrder):
@@ -108,7 +108,7 @@ class ProductOrder(MonomialOrder):
     def __init__(self, *args) -> None:
         self.args = args
 
-    def __call__(self, monomial) -> tuple[Any, ...]:
+    def __call__(self, monomial) -> tuple:
         return tuple(O(lamda(monomial)) for (O, lamda) in self.args)
 
     def __repr__(self):
@@ -160,7 +160,7 @@ class InverseOrder(MonomialOrder):
     def __str__(self):
         return "i" + str(self.O)
 
-    def __call__(self, monomial) -> tuple[Any, ...]:
+    def __call__(self, monomial) -> tuple:
         def inv(l):
             if iterable(l):
                 return tuple(inv(x) for x in l)
@@ -246,7 +246,7 @@ class _ItemGetter:
     def __init__(self, seq) -> None:
         self.seq = tuple(seq)
 
-    def __call__(self, m) -> tuple[Any, ...]:
+    def __call__(self, m) -> tuple:
         return tuple(m[idx] for idx in self.seq)
 
     def __eq__(self, other) -> bool:

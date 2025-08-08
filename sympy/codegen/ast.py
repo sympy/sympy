@@ -127,7 +127,7 @@ There is a function constructing a loop (or a complete function) like this in
 """
 
 from __future__ import annotations
-from typing import Callable, Literal, Any
+from typing import Callable, Any, TYPE_CHECKING
 
 from collections import defaultdict
 
@@ -141,7 +141,9 @@ from sympy.utilities.iterables import (iterable, topological_sort,
                                        numbered_symbols, filter_symbols)
 from collections.abc import Iterator
 from sympy.core.function import UndefinedFunction
-from typing_extensions import Self
+
+if TYPE_CHECKING:
+    from typing_extensions import Self
 
 
 def _mk_Tuple(args):
@@ -322,7 +324,7 @@ class Token(CodegenAST):
         from sympy.printing import srepr
         return srepr(self)
 
-    def kwargs(self, exclude=(), apply=None) -> dict[Any, Any]:
+    def kwargs(self, exclude=(), apply=None) -> dict:
         """ Get instance's attributes as dict of keyword arguments.
 
         Parameters
@@ -910,7 +912,7 @@ class String(Atom, Token):
     def _sympystr(self, printer, *args, **kwargs):
         return self.text
 
-    def kwargs(self, exclude = (), apply = None) -> dict[Any, Any]:
+    def kwargs(self, exclude = (), apply = None) -> dict:
         return {}
 
     #to be removed when Atom is given a suitable func
@@ -1181,11 +1183,11 @@ class UnsignedIntType(_SizedIntType):
     """ Represents an unsigned integer type. """
     __slots__ = ()
     @property
-    def min(self) -> Literal[0]:
+    def min(self) -> int:
         return 0
 
     @property
-    def max(self) -> Literal[0]:
+    def max(self) -> int:
         return 2**self.nbits - 1
 
 two = Integer(2)

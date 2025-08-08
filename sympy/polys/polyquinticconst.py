@@ -37,7 +37,7 @@ class PolyQuintic:
         return Poly(f20, x)
 
     @property
-    def b(self) -> tuple[list[Any], list[int], list[int], list[int], list[int]]:
+    def b(self) -> tuple[list, list[int], list[int], list[int], list[int]]:
         p, q, r, s = self.p, self.q, self.r, self.s
         b = ( [], [0,0,0,0,0,0], [0,0,0,0,0,0], [0,0,0,0,0,0], [0,0,0,0,0,0],)
 
@@ -184,5 +184,5 @@ class PolyQuintic:
         return N(u), N(v)
 
     @property
-    def zeta(self) -> list[Any]:
+    def zeta(self) -> list:
         return [self.zeta1, self.zeta2, self.zeta3, self.zeta4]

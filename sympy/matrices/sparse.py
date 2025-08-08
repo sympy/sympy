@@ -310,7 +310,7 @@ class SparseRepMatrix(RepMatrix):
         """
         return MutableSparseMatrix(self)
 
-    def col_list(self) -> list[tuple[Any, ...]]:
+    def col_list(self) -> list[tuple]:
         """Returns a column-sorted list of non-zero elements of the matrix.
 
         Examples
@@ -336,7 +336,7 @@ class SparseRepMatrix(RepMatrix):
         """Returns the number of non-zero elements in Matrix."""
         return len(self.todok())
 
-    def row_list(self) -> list[tuple[Any, ...]]:
+    def row_list(self) -> list[tuple]:
         """Returns a row-sorted list of non-zero elements of the matrix.
 
         Examples
@@ -436,7 +436,7 @@ class SparseRepMatrix(RepMatrix):
     RL = property(row_list, None, None, "Alternate faster representation")
     CL = property(col_list, None, None, "Alternate faster representation")
 
-    def liupc(self) -> tuple[list[list[Any]], Any]:
+    def liupc(self) -> tuple[list[list], Any]:
         return _liupc(self)
 
     def row_structure_symbolic_cholesky(self):

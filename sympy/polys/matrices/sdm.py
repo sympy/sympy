@@ -16,7 +16,6 @@ from .exceptions import DMBadInputError, DMDomainError, DMShapeError
 from sympy.polys.domains import QQ
 
 from .ddm import DDM
-from sympy.polys.matrices.ddm import DDM
 from types import NotImplementedType
 from typing import Any
 from typing_extensions import Self
@@ -310,7 +309,7 @@ class SDM(dict):
         """
         return cls.from_list(ddm, ddm.shape, ddm.domain)
 
-    def to_list(M) -> list[Any]:
+    def to_list(M) -> list:
         """
         Convert a :py:class:`~.SDM` object to a list of lists.
 
@@ -950,7 +949,7 @@ class SDM(dict):
         """
         return sum(map(len, A.values()))
 
-    def scc(A) -> list[Any]:
+    def scc(A) -> list:
         """Strongly connected components of a square matrix *A*.
 
         Examples
@@ -973,7 +972,7 @@ class SDM(dict):
         Emap = {v: list(A.get(v, [])) for v in V}
         return _strongly_connected_components(V, Emap)
 
-    def rref(A) -> tuple[Self, list[Any]]:
+    def rref(A) -> tuple[Self, list]:
         """
 
         Returns reduced-row echelon form and list of pivots for the :py:class:`~.SDM`
@@ -1051,7 +1050,7 @@ class SDM(dict):
         # if possible (dfm).
         return A.to_dfm_or_ddm().det()
 
-    def lu(A) -> tuple[Self, Self, list[Any]]:
+    def lu(A) -> tuple[Self, Self, list]:
         """
 
         Returns LU decomposition for a matrix A
@@ -1320,7 +1319,7 @@ class SDM(dict):
         sdm = {i: {j: func(e) for j, e in row.items()} for i, row in self.items()}
         return self.new(sdm, self.shape, domain)
 
-    def charpoly(A) -> list[Any]:
+    def charpoly(A) -> list:
         """
         Returns the coefficients of the characteristic polynomial
         of the :py:class:`~.SDM` matrix. These elements will be domain elements.
@@ -1402,7 +1401,7 @@ class SDM(dict):
         return reduced.to_sdm(), transform.to_sdm()
 
 
-def binop_dict(A, B, fab, fa, fb) -> dict[Any, Any]:
+def binop_dict(A, B, fab, fa, fb) -> dict:
     Anz, Bnz = set(A), set(B)
     C = {}
 
@@ -1448,7 +1447,7 @@ def binop_dict(A, B, fab, fa, fb) -> dict[Any, Any]:
     return C
 
 
-def unop_dict(A, f) -> dict[Any, Any]:
+def unop_dict(A, f) -> dict:
     B = {}
     for i, Ai in A.items():
         Bi = {}
@@ -1461,7 +1460,7 @@ def unop_dict(A, f) -> dict[Any, Any]:
     return B
 
 
-def sdm_transpose(M) -> dict[Any, Any]:
+def sdm_transpose(M) -> dict:
     MT = {}
     for i, Mi in M.items():
         for j, Mij in Mi.items():
@@ -1485,7 +1484,7 @@ def sdm_matvecmul(A, B, K):
     return C
 
 
-def sdm_matmul(A, B, K, m, o) -> dict[Any, Any]:
+def sdm_matmul(A, B, K, m, o) -> dict:
     #
     # Should be fast if A and B are very sparse.
     # Consider e.g. A = B = eye(1000).
@@ -1529,7 +1528,7 @@ def sdm_matmul(A, B, K, m, o) -> dict[Any, Any]:
     return C
 
 
-def sdm_matmul_exraw(A, B, K, m, o) -> dict[Any, Any]:
+def sdm_matmul_exraw(A, B, K, m, o) -> dict:
     #
     # Like sdm_matmul above except that:
     #
@@ -1593,7 +1592,7 @@ def sdm_matmul_exraw(A, B, K, m, o) -> dict[Any, Any]:
     return C
 
 
-def sdm_irref(A) -> tuple[dict[int, Any], list[Any], dict[Any, set[int]]]:
+def sdm_irref(A) -> tuple[dict[int, Any], list, dict[Any, set[int]]]:
     """RREF and pivots of a sparse matrix *A*.
 
     Compute the reduced row echelon form (RREF) of the matrix *A* and return a
@@ -2060,7 +2059,9 @@ def sdm_rref_den(A, K):
     return A_rref_sdm, denom, pivots
 
 
-def sdm_nullspace_from_rref(A, one, ncols, pivots, nonzero_cols) -> tuple[list[Any], list[int]]:
+def sdm_nullspace_from_rref(
+    A, one, ncols, pivots, nonzero_cols
+) -> tuple[list, list[int]]:
     """Get nullspace from A which is in RREF"""
     nonpivots = sorted(set(range(ncols)) - set(pivots))
 
@@ -2074,7 +2075,7 @@ def sdm_nullspace_from_rref(A, one, ncols, pivots, nonzero_cols) -> tuple[list[A
     return K, nonpivots
 
 
-def sdm_particular_from_rref(A, ncols, pivots) -> dict[Any, Any]:
+def sdm_particular_from_rref(A, ncols, pivots) -> dict:
     """Get a particular solution from A which is in RREF"""
     P = {}
     for i, j in enumerate(pivots):

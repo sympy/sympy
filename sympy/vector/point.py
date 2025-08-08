@@ -4,7 +4,6 @@ from sympy.vector.vector import VectorZero, Vector
 from sympy.vector.coordsysrect import CoordSys3D
 from sympy.vector.functions import _path
 from sympy.core.cache import cacheit
-from typing import Any
 from typing_extensions import Self
 
 
@@ -117,7 +116,7 @@ class Point(Basic):
         """
         return Point(name, position, self)
 
-    def express_coordinates(self, coordinate_system) -> tuple[Any, ...]:
+    def express_coordinates(self, coordinate_system) -> tuple:
         """
         Returns the Cartesian/rectangular coordinates of this point
         wrt the origin of the given CoordSys3D instance.

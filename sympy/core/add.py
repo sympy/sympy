@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Literal, TYPE_CHECKING, ClassVar
+from typing import Any, TYPE_CHECKING, ClassVar
 from collections import defaultdict
 from functools import reduce
 from operator import attrgetter
@@ -12,19 +12,14 @@ from .operations import AssocOp, AssocOpDispatcher
 from .cache import cacheit
 from .intfunc import ilcm, igcd
 from .expr import Expr
-from .kind import UndefinedKind
+from .kind import UndefinedKind, _UndefinedKind
 from sympy.utilities.iterables import is_sequence, sift
-from sympy.core.expr import Expr
-from sympy.core.kind import _UndefinedKind
-from sympy.core.mul import Mul
-from sympy.core.numbers import Integer, Rational
-from sympy.core.operations import AssocOp
-from sympy.series.order import Order
+from .mul import Mul
 from typing_extensions import Self
 
 
 if TYPE_CHECKING:
-    from sympy.core.numbers import Number
+    from .numbers import Integer, Rational, Number
     from sympy.series.order import Order
 
 
@@ -413,7 +408,7 @@ class Add(Expr, AssocOp):
             return newseq, [], None
 
     @classmethod
-    def class_key(cls) -> tuple[Literal[3], Literal[1], str]:
+    def class_key(cls) -> tuple[int, int, str]:
         return 3, 1, cls.__name__
 
     @property
@@ -433,7 +428,7 @@ class Add(Expr, AssocOp):
         return _could_extract_minus_sign(self)
 
     @cacheit
-    def as_coeff_add(self, *deps) -> tuple[Any | Self, tuple[Any, ...]] | tuple[Expr, tuple[Expr, ...]] | tuple[Any, tuple[Expr, ...]]:
+    def as_coeff_add(self, *deps) -> tuple[Any | Self, tuple] | tuple[Expr, tuple[Expr, ...]] | tuple[Any, tuple[Expr, ...]]:
         """
         Returns a tuple (coeff, args) where self is treated as an Add and coeff
         is the Number term and args is a tuple of all other terms.

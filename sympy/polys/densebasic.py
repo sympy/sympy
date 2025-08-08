@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 
-from typing import TYPE_CHECKING, TypeVar, Iterable, Callable, Any
+from typing import TYPE_CHECKING, TypeVar, Iterable, Callable
 
 from sympy.core import igcd
 from sympy.core.expr import Expr
@@ -1879,7 +1879,7 @@ def dmp_list_terms(
 
 
 def dup_apply_pairs(
-    f: dup[Er], g: dup[Er], h: Callable[..., Er], args: tuple[Any, ...], K: Domain[Er]
+    f: dup[Er], g: dup[Er], h: Callable[..., Er], args: tuple, K: Domain[Er]
 ) -> dup[Er]:
     """
     Apply ``h`` to pairs of coefficients of ``f`` and ``g``.
@@ -1916,7 +1916,7 @@ def dmp_apply_pairs(
     f: dmp[Er],
     g: dmp[Er],
     h: Callable[..., Er],
-    args: tuple[Any, ...],
+    args: tuple,
     u: int,
     K: Domain[Er],
 ) -> dmp[Er]:

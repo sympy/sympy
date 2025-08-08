@@ -167,7 +167,7 @@ class MutablePolyDenseMatrix:
     def __len__(self):
         return self.rows * self.cols
 
-    def __getitem__(self, key) -> list[Any] | Any | Self:
+    def __getitem__(self, key) -> list | Any | Self:
 
         def to_poly(v):
             ground = self._dm.domain.domain

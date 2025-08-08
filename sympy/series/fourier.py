@@ -16,7 +16,7 @@ from sympy.utilities.iterables import is_sequence
 from collections.abc import Generator
 from sympy.core.basic import Basic
 from sympy.series.order import Order
-from typing import Any, Literal
+from typing import Any
 from typing_extensions import Self
 
 
@@ -99,7 +99,7 @@ def _process_limits(func, limits):
     return sympify((x, start, stop))
 
 
-def finite_check(f, x, L) -> tuple[Literal[False], Any] | tuple[Literal[True], Any]:
+def finite_check(f, x, L) -> tuple[bool, Any] | tuple[bool, Any]:
 
     def check_fx(exprs, x):
         return x not in exprs.free_symbols
