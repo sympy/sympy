@@ -1003,6 +1003,10 @@ class Beam:
             + 120*SingularityFunction(x, 30, -2) + 2*SingularityFunction(x, 30, -1)
         """
 
+        if len(set(reactions)) != len(reactions):
+            raise ValueError(
+                "Duplicate Symbols passed into solve_for_reaction_loads()"
+            )
         x = self.variable
         l = self.length
         C3 = Symbol('C3')
