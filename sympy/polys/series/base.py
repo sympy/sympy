@@ -179,8 +179,16 @@ class PowerSeriesRingProtoQQ(PowerSeriesRingProto[TSeries, Ef], Protocol[TSeries
         """Return the logarithm of a power series."""
         ...
 
+    def log1p(self, s: TSeries, /) -> TSeries:
+        """Return the logarithm of (1 + s) for a power series with constant term."""
+        ...
+
     def exp(self, s: TSeries, /) -> TSeries:
         """Return the exponential of a power series."""
+        ...
+
+    def expm1(self, s: TSeries, /) -> TSeries:
+        """Return the exponential of a power series minus 1."""
         ...
 
     def atan(self, s: TSeries, /) -> TSeries:
@@ -221,4 +229,8 @@ class PowerSeriesRingProtoQQ(PowerSeriesRingProto[TSeries, Ef], Protocol[TSeries
 
     def cosh(self, s: TSeries, /) -> TSeries:
         """Return the hyperbolic cosine of a power series."""
+        ...
+
+    def hypot(self, s1: TSeries, s2: TSeries, /) -> TSeries:
+        """Return the hypotenuse of two power series."""
         ...

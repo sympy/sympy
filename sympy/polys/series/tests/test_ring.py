@@ -1065,6 +1065,7 @@ def test_high_deg(rd_rational):
     p = Rp.from_list(rand[::-1])
 
     assert Rs.to_dense(Rs.exp(s)) == rs_exp(p, x, 30).to_dense()
+    assert Rs.to_dense(Rs.expm1(s)) == (rs_exp(p, x, 30) - 1).to_dense()
 
     assert Rs.to_dense(Rs.atan(s)) == rs_atan(p, x, 30).to_dense()
     assert Rs.to_dense(Rs.atanh(s)) == rs_atanh(p, x, 30).to_dense()
@@ -1079,6 +1080,43 @@ def test_high_deg(rd_rational):
     assert Rs.to_dense(Rs.cosh(s)) == rs_cosh(p, x, 30).to_dense()
 
     rand[0] = QQ.one
-    s = Rs(rand)
-    p = Rp.from_list(rand[::-1])
-    assert Rs.to_dense(Rs.log(s)) == rs_log(p, x, 30).to_dense()
+    s2 = Rs(rand)
+    p2 = Rp.from_list(rand[::-1])
+    assert Rs.to_dense(Rs.log(s2)) == rs_log(p2, x, 30).to_dense()
+    assert Rs.to_dense(Rs.log1p(s)) == rs_log(p2, x, 30).to_dense()
+
+
+def test_hypot(rd_rational):
+    SeriesRing = rd_rational
+    R = SeriesRing()
+    R10 = SeriesRing(10)
+
+    assert R.equal_repr(R.hypot(R([(3, 1)]), R([(4, 1)])), R([(5, 1)], None))
+
+    assert R.equal_repr(
+        R.hypot(R([(1, 1), (0, 1), (-1, 1)]), R([(0, 1), (2, 1)])),
+        R([(1, 1), (0, 1), (1, 1)], None),
+    )
+
+    assert R10.equal_repr(
+        R10.hypot(R10([(1, 1)]), R10.gen),
+        R10(
+            [
+                (1, 1),
+                (0, 1),
+                (1, 2),
+                (0, 1),
+                (-1, 8),
+                (0, 1),
+                (1, 16),
+                (0, 1),
+                (-5, 128),
+                (0, 1),
+            ],
+            10,
+        ),
+    )
+
+    assert R.equal_repr(
+        R.hypot(R([(1, 1), (1, 1)]), R([(0, 1)])), R([(1, 1), (1, 1)], None)
+    )

@@ -541,6 +541,18 @@ def _useries_log(s: USeries[Ef], dom: Field[Ef], ring_prec: int) -> USeries[Ef]:
         return r
 
 
+def _useries_log1p(s: USeries[Ef], dom: Field[Ef], ring_prec: int) -> USeries[Ef]:
+    """Computes log(1 + s) of power series with zero constant term."""
+
+    if not dom.is_zero(s[0][-1]):
+        raise ValueError(
+            "Log1p requires the constant term of the input series to be zero."
+        )
+
+    s = _useries_add_ground(s, dom.one, dom, ring_prec)
+    return _useries_log(s, dom, ring_prec)
+
+
 def _useries_exp(s: USeries[Ef], dom: Field[Ef], ring_prec: int) -> USeries[Ef]:
     coeffs, prec = s
 
@@ -584,6 +596,12 @@ def _useries_exp(s: USeries[Ef], dom: Field[Ef], ring_prec: int) -> USeries[Ef]:
         f: USeries[Ef] = c[::-1], prec
         r = _useries_compose(f, s, dom, ring_prec)
         return r
+
+
+def _useries_expm1(s: USeries[Ef], dom: Field[Ef], ring_prec: int) -> USeries[Ef]:
+    """Computes exp(s) - 1 of power series."""
+    exp_s = _useries_exp(s, dom, ring_prec)
+    return _useries_add_ground(exp_s, dom(-1), dom, ring_prec)
 
 
 def _useries_atan(s: USeries[Ef], dom: Field[Ef], ring_prec: int) -> USeries[Ef]:
@@ -964,6 +982,17 @@ def _useries_cosh(s: USeries[Ef], dom: Field[Ef], ring_prec: int) -> USeries[Ef]
         f: USeries[Ef] = c[::-1], prec
 
         return _useries_compose(f, s, dom, ring_prec)
+
+
+def _useries_hypot(
+    s1: USeries[Ef], s2: USeries[Ef], dom: Field[Ef], ring_prec: int
+) -> USeries[Ef]:
+    """Compute the hypotenuse of two power series."""
+
+    sqr_s1 = _useries_square(s1, dom, ring_prec)
+    sqr_s2 = _useries_square(s2, dom, ring_prec)
+    add = _useries_add(sqr_s1, sqr_s2, dom, ring_prec)
+    return _useries_sqrt(add, dom, ring_prec)
 
 
 class PythonPowerSeriesRingZZ:
@@ -1439,9 +1468,17 @@ class PythonPowerSeriesRingQQ:
         """Compute the logarithm of a power series."""
         return _useries_log(s, self._domain, self._prec)
 
+    def log1p(self, s: USeries[MPQ]) -> USeries[MPQ]:
+        """Compute the logarithm of (1 + x) for a power series."""
+        return _useries_log1p(s, self._domain, self._prec)
+
     def exp(self, s: USeries[MPQ]) -> USeries[MPQ]:
         """Compute the exponential of a power series."""
         return _useries_exp(s, self._domain, self._prec)
+
+    def expm1(self, s: USeries[MPQ]) -> USeries[MPQ]:
+        """Compute the exponential of a power series minus 1."""
+        return _useries_expm1(s, self._domain, self._prec)
 
     def atan(self, s: USeries[MPQ]) -> USeries[MPQ]:
         """Compute the arctangent of a power series."""
@@ -1482,3 +1519,7 @@ class PythonPowerSeriesRingQQ:
     def cosh(self, s: USeries[MPQ]) -> USeries[MPQ]:
         """Compute the hyperbolic cosine of a power series."""
         return _useries_cosh(s, self._domain, self._prec)
+
+    def hypot(self, s1: USeries[MPQ], s2: USeries[MPQ]) -> USeries[MPQ]:
+        """Compute the hypotenuse of two power series."""
+        return _useries_hypot(s1, s2, self._domain, self._prec)

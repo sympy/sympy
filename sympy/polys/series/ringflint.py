@@ -894,6 +894,18 @@ class FlintPowerSeriesRingQQ:
         with _global_cap(self._prec):
             return s.log()
 
+    def log1p(self, s: QQSeries) -> QQSeries:
+        """Compute the logarithm of (1 + s) for a power series with zero constant term."""
+        if s[0] != 0:
+            raise ValueError(
+                "Log1p requires the constant term of the input series to be zero."
+            )
+
+        with _global_cap(self._prec):
+            s = s + 1
+
+        return self.log(s)
+
     def exp(self, s: QQSeries) -> QQSeries:
         """Compute the exponential of a power series."""
         if isinstance(s, fmpq_poly):
@@ -903,6 +915,16 @@ class FlintPowerSeriesRingQQ:
 
         with _global_cap(self._prec):
             return s.exp()
+
+    def expm1(self, s: QQSeries) -> QQSeries:
+        """Compute the exponential of a power series minus 1."""
+        if isinstance(s, fmpq_poly):
+            if not s:
+                return fmpq_poly([-1])
+            s = fmpq_series(s, prec=self._prec)
+
+        with _global_cap(self._prec):
+            return s.exp() - 1
 
     def atan(self, s: QQSeries) -> QQSeries:
         """Compute the arctangent of a power series."""
@@ -1011,3 +1033,13 @@ class FlintPowerSeriesRingQQ:
 
         with _global_cap(self._prec):
             return s.cosh()
+
+    def hypot(self, s1: QQSeries, s2: QQSeries) -> QQSeries:
+        """Compute the hypotenuse of two power series."""
+
+        with _global_cap(self._prec):
+            sqr_s1 = s1**2
+            sqr_s2 = s2**2
+            add = sqr_s1 + sqr_s2
+
+        return self.sqrt(add)
