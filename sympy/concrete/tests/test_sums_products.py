@@ -18,7 +18,7 @@ from sympy.functions.combinatorial.factorials import (rf, binomial, factorial)
 from sympy.functions.combinatorial.numbers import harmonic
 from sympy.functions.elementary.complexes import Abs, re
 from sympy.functions.elementary.exponential import (exp, log)
-from sympy.functions.elementary.hyperbolic import (sinh, tanh, coth)
+from sympy.functions.elementary.hyperbolic import (sinh, tanh)
 from sympy.functions.elementary.integers import floor
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
@@ -1605,28 +1605,22 @@ def test_summation_by_residues():
     assert eval_sum_residue((-1)**x / x**2, (x, S(2), oo)) == 1 - pi**2/12
 
     # https://github.com/sympy/sympy/issues/27824
-    #An example of even function which works for -oo to k
-    assert eval_sum_residue((1/(k**2+1)), (k, -oo, S(0))) == Rational(1, 2) + pi/(2*tanh(pi))
-
-    #An example of function which is neither even nor odd which works for -oo to k
-    assert eval_sum_residue(1 / (k**2 + 2*k +2), (k, -oo, S(0))) == 1 + pi/(2*tanh(pi))
+    # even function which works for -oo to k
     ans = Rational(1, 2) + pi/(2*tanh(pi))
     assert eval_sum_residue((1/(k**2+1)), (k, -oo, S(0))) == ans
     assert eval_sum_residue((1/(k**2+1)), (k, oo, -S(1))) == -ans  # Karr convention
 
-    # Odd functions over (-oo to k) are handled by other parts of the summation
-    # logic, so eval_sum_residue will return None in such cases.
-    # The odd function when called directly in eval_sum_residue returns None
-    # because the current implementation attempts to convert non-even functions
-    # into even ones by shifting. However, this doesn't work in this case,
-    # as the coefficient of the second-highest power in the denominator (k**2)
-    # is zero. This results in a shift of zero, which means the function should
-    # return None.
-    assert eval_sum_residue((1/k**3), (k,-oo, S(-1))) == None
+    # function which is neither even nor odd which works for -oo to k
+    assert eval_sum_residue(1 / (k**2 + 2*k +2), (k, -oo, S(0))) == 1 + pi/(2*tanh(pi))
+    assert eval_sum_residue(1 / (k**2 + 2*k +2), (k, -oo, -S(1))) == S.Half+pi/tanh(pi)/2
+
+    # odd function that cannot be made even returns None
+    assert eval_sum_residue(1/(k**3 + 1), (k, S(0), oo)) is None
+
     # SO issue cited on #27827
-    # this will return 0 if it is not allowed to shift to become even
-    assert summation(1 / ((k + 1) ** 4 + 1), (k, -oo, oo)).simplify() == (sqrt(2)*pi*(1 - I)*(
-        I/tan(sqrt(2)*pi*(1 + I)/2) + 1/tan(sqrt(2)*pi*(1 - I)/2))/4)
+    assert summation(1 / ((k+1) ** 4 + 1), (k, -oo, oo)).simplify() == (
+        sqrt(2)*pi*(1 - I)*(I/tan(sqrt(2)*pi*(1 + I)/2) +
+        1/tan(sqrt(2)*pi*(1 - I)/2))/4)
 
 
 @slow
