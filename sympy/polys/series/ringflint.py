@@ -37,17 +37,6 @@ def _get_series_precision(s: fmpz_series | fmpq_series) -> int:
     return prec
 
 
-def _cap_series_prec(
-    s: fmpz_series | fmpq_series, ring_prec: int
-) -> fmpz_series | fmpq_series:
-    """Coerce a series to the specified precision."""
-    series_prec = _get_series_precision(s)
-    if series_prec > ring_prec:
-        return fmpz_series(s, prec=ring_prec)
-    else:
-        return s
-
-
 @contextmanager
 def _global_cap(cap: int):
     """Temporarily set the global series cap within a context."""
@@ -273,10 +262,6 @@ class FlintPowerSeriesRingZZ:
             if poly.degree() < ring_prec:
                 return poly
             return fmpz_series(poly, prec=ring_prec)
-        elif isinstance(s1, fmpz_series):
-            s1 = _cap_series_prec(s1, ring_prec)
-        elif isinstance(s2, fmpz_series):
-            s2 = _cap_series_prec(s2, ring_prec)
 
         with _global_cap(ring_prec):
             return s1 + s2
@@ -289,10 +274,6 @@ class FlintPowerSeriesRingZZ:
             if poly.degree() < ring_prec:
                 return poly
             return fmpz_series(poly, prec=ring_prec)
-        elif isinstance(s1, fmpz_series):
-            s1 = _cap_series_prec(s1, ring_prec)
-        elif isinstance(s2, fmpz_series):
-            s2 = _cap_series_prec(s2, ring_prec)
 
         with _global_cap(ring_prec):
             return s1 - s2
@@ -313,10 +294,6 @@ class FlintPowerSeriesRingZZ:
                     s2 = self.truncate(s2, ring_prec)
 
                 return fmpz_series(s1 * s2, prec=ring_prec)
-        elif isinstance(s1, fmpz_series):
-            s1 = _cap_series_prec(s1, ring_prec)
-        elif isinstance(s2, fmpz_series):
-            s2 = _cap_series_prec(s2, ring_prec)
 
         with _global_cap(ring_prec):
             return s1 * s2
@@ -329,8 +306,6 @@ class FlintPowerSeriesRingZZ:
             if poly.degree() < ring_prec:
                 return poly
             return fmpz_series(poly, prec=ring_prec)
-        else:
-            s = _cap_series_prec(s, ring_prec)
 
         with _global_cap(ring_prec):
             return s * n
@@ -347,10 +322,6 @@ class FlintPowerSeriesRingZZ:
                 )
                 s1 = fmpz_series(s1, prec=ring_prec)
                 s2 = fmpz_series(s2, prec=ring_prec)
-        elif isinstance(s1, fmpz_series):
-            s1 = _cap_series_prec(s1, ring_prec)
-        elif isinstance(s2, fmpz_series):
-            s2 = _cap_series_prec(s2, ring_prec)
 
         with _global_cap(ring_prec):
             return s1 / s2
@@ -369,8 +340,6 @@ class FlintPowerSeriesRingZZ:
                 s = self.truncate(s, ring_prec)
             poly = s**n
             return fmpz_series(poly, prec=ring_prec)
-        else:
-            s = _cap_series_prec(s, ring_prec)
 
         with _global_cap(ring_prec):
             return s**n
@@ -408,14 +377,10 @@ class FlintPowerSeriesRingZZ:
         if isinstance(s1, fmpz_poly):
             prec2 = self.series_prec(s2)
             s1 = fmpz_series(s1, prec=prec2)
-        else:
-            s1 = _cap_series_prec(s1, ring_prec)
 
         if isinstance(s2, fmpz_poly):
             prec1 = self.series_prec(s1)
             s2 = fmpz_series(s2, prec=prec1)
-        else:
-            s2 = _cap_series_prec(s2, ring_prec)
 
         with _global_cap(ring_prec):
             return s1(s2)
@@ -434,8 +399,6 @@ class FlintPowerSeriesRingZZ:
             if len(s) == 1:
                 return 1 / s
             s = fmpz_series(s, prec=ring_prec)
-        else:
-            s = _cap_series_prec(s, ring_prec)
 
         with _global_cap(ring_prec):
             return 1 / s
@@ -456,8 +419,6 @@ class FlintPowerSeriesRingZZ:
 
         if isinstance(s, fmpz_poly):
             s = fmpz_series(s, prec=self._prec)
-        else:
-            s = _cap_series_prec(s, self._prec)
 
         with _global_cap(self._prec):
             return s.reversion()
@@ -707,10 +668,6 @@ class FlintPowerSeriesRingQQ:
             if poly.degree() < ring_prec:
                 return poly
             return fmpq_series(poly, prec=ring_prec)
-        elif isinstance(s1, fmpq_series):
-            s1 = _cap_series_prec(s1, ring_prec)
-        elif isinstance(s2, fmpq_series):
-            s2 = _cap_series_prec(s2, ring_prec)
 
         with _global_cap(ring_prec):
             return s1 + s2
@@ -723,10 +680,6 @@ class FlintPowerSeriesRingQQ:
             if poly.degree() < ring_prec:
                 return poly
             return fmpq_series(poly, prec=ring_prec)
-        elif isinstance(s1, fmpq_series):
-            s1 = _cap_series_prec(s1, ring_prec)
-        elif isinstance(s2, fmpq_series):
-            s2 = _cap_series_prec(s2, ring_prec)
 
         with _global_cap(ring_prec):
             return s1 - s2
@@ -747,10 +700,6 @@ class FlintPowerSeriesRingQQ:
                     s2 = self.truncate(s2, ring_prec)
 
                 return fmpq_series(s1 * s2, prec=ring_prec)
-        elif isinstance(s1, fmpq_series):
-            s1 = _cap_series_prec(s1, ring_prec)
-        elif isinstance(s2, fmpq_series):
-            s2 = _cap_series_prec(s2, ring_prec)
 
         with _global_cap(ring_prec):
             return s1 * s2
@@ -763,8 +712,6 @@ class FlintPowerSeriesRingQQ:
             if poly.degree() < ring_prec:
                 return poly
             return fmpq_series(poly, prec=ring_prec)
-        else:
-            s = _cap_series_prec(s, ring_prec)
 
         with _global_cap(ring_prec):
             return s * n
@@ -781,10 +728,6 @@ class FlintPowerSeriesRingQQ:
                 )
                 s1 = fmpq_series(s1, prec=ring_prec)
                 s2 = fmpq_series(s2, prec=ring_prec)
-        elif isinstance(s1, fmpq_series):
-            s1 = _cap_series_prec(s1, ring_prec)
-        elif isinstance(s2, fmpq_series):
-            s2 = _cap_series_prec(s2, ring_prec)
 
         with _global_cap(ring_prec):
             return s1 / s2
@@ -803,8 +746,6 @@ class FlintPowerSeriesRingQQ:
                 s = self.truncate(s, ring_prec)
             poly = s**n
             return fmpq_series(poly, prec=ring_prec)
-        else:
-            s = _cap_series_prec(s, ring_prec)
 
         with _global_cap(ring_prec):
             return s**n
@@ -819,7 +760,10 @@ class FlintPowerSeriesRingQQ:
             return s
 
         if isinstance(s, fmpq_poly):
-            s = fmpq_series(s, prec=self._prec)
+            try:
+                return s.sqrt()
+            except DomainError:
+                s = fmpq_series(s, prec=self._prec)
 
         with _global_cap(self._prec):
             return s.sqrt()
@@ -853,14 +797,10 @@ class FlintPowerSeriesRingQQ:
         if isinstance(s1, fmpq_poly):
             prec2 = self.series_prec(s2)
             s1 = fmpq_series(s1, prec=prec2)
-        else:
-            s1 = _cap_series_prec(s1, ring_prec)
 
         if isinstance(s2, fmpq_poly):
             prec1 = self.series_prec(s1)
             s2 = fmpq_series(s2, prec=prec1)
-        else:
-            s2 = _cap_series_prec(s2, ring_prec)
 
         with _global_cap(ring_prec):
             return s1(s2)
@@ -879,8 +819,6 @@ class FlintPowerSeriesRingQQ:
             if len(s) == 1:
                 return 1 / s
             s = fmpq_series(s, prec=ring_prec)
-        else:
-            s = _cap_series_prec(s, ring_prec)
 
         with _global_cap(ring_prec):
             return s.inv()
@@ -901,8 +839,6 @@ class FlintPowerSeriesRingQQ:
 
         if isinstance(s, fmpq_poly):
             s = fmpq_series(s, prec=self._prec)
-        else:
-            s = _cap_series_prec(s, self._prec)
 
         with _global_cap(self._prec):
             return s.reversion()
@@ -954,8 +890,6 @@ class FlintPowerSeriesRingQQ:
             if s == 1:
                 return fmpq_poly([])
             s = fmpq_series(s, prec=self._prec)
-        else:
-            s = _cap_series_prec(s, self._prec)
 
         with _global_cap(self._prec):
             return s.log()
@@ -966,8 +900,6 @@ class FlintPowerSeriesRingQQ:
             if not s:
                 return fmpq_poly([1])
             s = fmpq_series(s, prec=self._prec)
-        else:
-            s = _cap_series_prec(s, self._prec)
 
         with _global_cap(self._prec):
             return s.exp()
@@ -979,8 +911,6 @@ class FlintPowerSeriesRingQQ:
 
         if isinstance(s, fmpq_poly):
             s = fmpq_series(s, prec=self._prec)
-        else:
-            s = _cap_series_prec(s, self._prec)
 
         with _global_cap(self._prec):
             return s.atan()
@@ -992,8 +922,6 @@ class FlintPowerSeriesRingQQ:
 
         if isinstance(s, fmpq_poly):
             s = fmpq_series(s, prec=self._prec)
-        else:
-            s = _cap_series_prec(s, self._prec)
 
         with _global_cap(self._prec):
             return s.atanh()
@@ -1005,8 +933,6 @@ class FlintPowerSeriesRingQQ:
 
         if isinstance(s, fmpq_poly):
             s = fmpq_series(s, prec=self._prec)
-        else:
-            s = _cap_series_prec(s, self._prec)
 
         with _global_cap(self._prec):
             return s.asin()
@@ -1018,8 +944,6 @@ class FlintPowerSeriesRingQQ:
 
         if isinstance(s, fmpq_poly):
             s = fmpq_series(s, prec=self._prec)
-        else:
-            s = _cap_series_prec(s, self._prec)
 
         with _global_cap(self._prec):
             return s.asinh()
@@ -1031,8 +955,6 @@ class FlintPowerSeriesRingQQ:
 
         if isinstance(s, fmpq_poly):
             s = fmpq_series(s, prec=self._prec)
-        else:
-            s = _cap_series_prec(s, self._prec)
 
         with _global_cap(self._prec):
             return s.tan()
@@ -1044,8 +966,6 @@ class FlintPowerSeriesRingQQ:
 
         if isinstance(s, fmpq_poly):
             s = fmpq_series(s, prec=self._prec)
-        else:
-            s = _cap_series_prec(s, self._prec)
 
         with _global_cap(self._prec):
             return s.tanh()
@@ -1057,8 +977,6 @@ class FlintPowerSeriesRingQQ:
 
         if isinstance(s, fmpq_poly):
             s = fmpq_series(s, prec=self._prec)
-        else:
-            s = _cap_series_prec(s, self._prec)
 
         with _global_cap(self._prec):
             return s.sin()
@@ -1070,8 +988,6 @@ class FlintPowerSeriesRingQQ:
 
         if isinstance(s, fmpq_poly):
             s = fmpq_series(s, prec=self._prec)
-        else:
-            s = _cap_series_prec(s, self._prec)
 
         with _global_cap(self._prec):
             return s.sinh()
@@ -1082,8 +998,6 @@ class FlintPowerSeriesRingQQ:
             if not s:
                 return fmpq_poly([1])
             s = fmpq_series(s, prec=self._prec)
-        else:
-            s = _cap_series_prec(s, self._prec)
 
         with _global_cap(self._prec):
             return s.cos()
@@ -1094,8 +1008,6 @@ class FlintPowerSeriesRingQQ:
             if not s:
                 return fmpq_poly([1])
             s = fmpq_series(s, prec=self._prec)
-        else:
-            s = _cap_series_prec(s, self._prec)
 
         with _global_cap(self._prec):
             return s.cosh()

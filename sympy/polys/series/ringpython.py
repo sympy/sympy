@@ -240,8 +240,8 @@ def _useries_square(s: USeries[Er], dom: Domain[Er], ring_prec: int) -> USeries[
     return _useries_mul(s, s, dom, ring_prec)
 
 
-def _useries_sqrt(s: USeries[Ef], dom: Field[Ef], ring_prec: int) -> USeries[Ef]:
-    """Compute the square root of a power series."""
+def _useries_sqrt_newton(s: USeries[Ef], dom: Field[Ef], ring_prec: int) -> USeries[Ef]:
+    """Compute the square root of a power series using Newton Iteration."""
     coeffs, prec = s
 
     if not coeffs:
@@ -254,7 +254,7 @@ def _useries_sqrt(s: USeries[Ef], dom: Field[Ef], ring_prec: int) -> USeries[Ef]
         prec = ring_prec
 
     p: USeries[Ef] = ([dom.one], prec)
-    # P_{n+1} = 0.5 * (P_n + S / P_n)
+    # P_{n+1} = 1/2 * (P_n + S / P_n)
     for precx in _giant_steps(prec):
         p = p[0], precx
         p_inv = _useries_inverse(p, dom, precx)
@@ -263,6 +263,50 @@ def _useries_sqrt(s: USeries[Ef], dom: Field[Ef], ring_prec: int) -> USeries[Ef]
         p = _useries_div_ground(tmp, dom(2), dom, precx)
 
     return p
+
+
+def _useries_sqrt(s: USeries[Ef], dom: Field[Ef], ring_prec: int) -> USeries[Ef]:
+    """
+    Computes the square root of a power series.
+    """
+    coeffs, prec = s
+
+    if not coeffs:
+        return s
+
+    c0 = coeffs[-1]
+
+    if dom.is_zero(c0):
+        raise ValueError(
+            "Cannot compute square root of a series with zero constant term."
+        )
+
+    sqrt_c0 = dom.exsqrt(c0)
+    if not sqrt_c0:
+        raise ValueError("Constant term is not a perfect square in the domain.")
+
+    # Normalize
+    norm_s = _useries_div_ground(s, c0, dom, ring_prec)
+
+    if prec is None:
+        ds = dup_degree(coeffs)
+        if ds % 2 == 0:
+            dp = ds // 2
+            required_prec = dp + 1
+            root = _useries_sqrt_newton(norm_s, dom, required_prec)
+            tmp_root = (root[0], ds + 1)
+            squared = _useries_square(tmp_root, dom, ds + 1)
+
+            if squared[0] == norm_s[0]:
+                print("yes")
+                root = (root[0], None)
+                return _useries_mul_ground(root, sqrt_c0, dom, ring_prec)
+
+    approx_prec = min(prec, ring_prec) if prec is not None else ring_prec
+    sqrt_norm_s = _useries_sqrt_newton(norm_s, dom, approx_prec)
+    # Denormalize
+    sqrt_s = _useries_mul_ground(sqrt_norm_s, sqrt_c0, dom, approx_prec)
+    return sqrt_s[0], approx_prec
 
 
 def _useries_div_direct(

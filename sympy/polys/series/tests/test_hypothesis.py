@@ -43,7 +43,7 @@ def as_expr(s, ring):
     else:
         coeffs, prec = s
         coeffs = coeffs[::-1]
-    
+
     dom = ring.domain
     result = []
 

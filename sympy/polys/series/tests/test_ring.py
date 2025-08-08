@@ -275,11 +275,12 @@ def test_sqrt(rd_rational):
     R10 = SeriesRing(10)
 
     assert R.equal_repr(R.sqrt(R([])), R([]))
-    raises(ValueError, lambda: R.sqrt(R([2, 2])))
+    raises(ValueError, lambda: R.sqrt(R([3, 2])))
 
-    assert not R.equal_repr(
-        R.sqrt(R.add(R.gen, R.one)), R([(1, 1), (1, 1), (1, 1)], None)
-    )
+    assert R.equal_repr(R.sqrt(R([1, 2, 1])), R([1, 1], None))
+    assert R.equal_repr(R.sqrt(R([4, 4, 1])), R([2, 1], None))
+    assert R.equal_repr(R.sqrt(R([9])), R([3], None))
+
     assert R10.equal_repr(
         R10.sqrt(R10.subtract(R10.one, R10.gen)),
         R10(
@@ -294,6 +295,25 @@ def test_sqrt(rd_rational):
                 (-33, 2048),
                 (-429, 32768),
                 (-715, 65536),
+            ],
+            10,
+        ),
+    )
+
+    assert R10.equal_repr(
+        R10.sqrt(R10([1, 0, 0, 1])),
+        R10(
+            [
+                (1, 1),
+                (0, 1),
+                (0, 1),
+                (1, 2),
+                (0, 1),
+                (0, 1),
+                (-1, 8),
+                (0, 1),
+                (0, 1),
+                (1, 16),
             ],
             10,
         ),
