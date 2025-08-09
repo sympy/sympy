@@ -3966,7 +3966,6 @@ class Poly(Basic):
         prec = 10
         # using Counter bc its like an ordered set
         root_counts = Counter(candidates)
-
         while len(root_counts) > num_roots:
             for r in list(root_counts.keys()):
                 # If f(r) != 0 then f(r).evalf() gives a float/complex with precision.
@@ -4163,6 +4162,21 @@ class Poly(Basic):
             name, alt = gg[n](g, max_tries=max_tries, randomize=randomize)
         G = name if by_name else name.get_perm_group()
         return G, alt
+
+    def negative_real_part_conditions(f):
+        """
+        Returns a list of conditions to ensure that all roots of the polynomial
+        have negative real parts.
+
+        Note: This method assumes that the leading coefficient is non-zero.
+        In the opposite case, additional verification is required.
+
+        """
+        from sympy.polys.rootconditions import dup_routh_hurwitz
+        coeffs = f.rep.to_list()
+        domain = f.domain
+
+        return dup_routh_hurwitz(coeffs, domain)
 
     @property
     def is_zero(f):
