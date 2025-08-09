@@ -525,6 +525,7 @@ def _useries_log(s: USeries[Ef], dom: Field[Ef], ring_prec: int) -> USeries[Ef]:
     s = coeffs, prec
 
     if len(coeffs) > 20:
+        # log(f(x))' = f'(x) / f(x)
         dv_s = _useries_derivative(s, dom, ring_prec)
         inverse_s = _useries_inverse(s, dom, ring_prec)
         log_derivative = _useries_mul(dv_s, inverse_s, dom, ring_prec)
@@ -577,7 +578,6 @@ def _useries_exp(s: USeries[Ef], dom: Field[Ef], ring_prec: int) -> USeries[Ef]:
         exp = one
 
         for precx in _giant_steps(prec):
-            # log(f(x))' = f'(x) / f(x)
             exp = exp[0], precx
             log_exp = _useries_log(exp, dom, ring_prec)
             diff = _useries_sub(s, log_exp, dom, ring_prec)

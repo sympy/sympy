@@ -920,7 +920,7 @@ class FlintPowerSeriesRingQQ:
         """Compute the exponential of a power series minus 1."""
         if isinstance(s, fmpq_poly):
             if not s:
-                return fmpq_poly([-1])
+                return fmpq_poly([])
             s = fmpq_series(s, prec=self._prec)
 
         with _global_cap(self._prec):
