@@ -45,6 +45,16 @@ def dup_integrate(f, m, K):
     """
     Computes the indefinite integral of ``f`` in ``K[x]``.
 
+    Parameters
+    ==========
+
+    f : list
+        List of coefficients of the polynomial to integrate.
+    m : int
+        Number of integrations to perform.
+    K : Ring
+        Coefficient domain.
+
     Examples
     ========
 
@@ -55,6 +65,11 @@ def dup_integrate(f, m, K):
     1/3*x**3 + x**2
     >>> R.dup_integrate(x**2 + 2*x, 2)
     1/12*x**4 + 1/3*x**3
+
+    >>> from sympy.polys.densetools import dup_integrate
+    >>> dup_integrate([1, 2], 1, QQ)
+    [1/2, 2, 0]
+
 
     """
     if m <= 0 or not f:
@@ -77,6 +92,18 @@ def dmp_integrate(f, m, u, K):
     """
     Computes the indefinite integral of ``f`` in ``x_0`` in ``K[X]``.
 
+    Parameters
+    ==========
+
+    f : list[list]
+        List of list of coefficients representing the polynomial.
+    m : int
+        Number of integrations to perform.
+    u : int
+        Number of variables, excluding the main variable x_0.
+    K : Ring
+        Coefficient domain.
+
     Examples
     ========
 
@@ -87,6 +114,12 @@ def dmp_integrate(f, m, u, K):
     1/2*x**2 + 2*x*y
     >>> R.dmp_integrate(x + 2*y, 2)
     1/6*x**3 + x**2*y
+
+    >>> from sympy.polys.densetools import dmp_integrate
+    >>> # Integration of x+2*y+z by x, Result: 1/2*x**2 + 2*x*y + x*z
+    >>> dmp_integrate([[[1]], [[2], [1, 0]]], 1, 2, QQ)
+    [[[1/2]], [[2], [1, 0]], [[]]]
+
 
     """
     if not u:
@@ -122,6 +155,20 @@ def dmp_integrate_in(f, m, j, u, K):
     """
     Computes the indefinite integral of ``f`` in ``x_j`` in ``K[X]``.
 
+    Parameters
+    ==========
+
+    f : list[list]
+        List of list of coefficients representing the polynomial.
+    m : int
+        Number of integrations to perform.
+    j : int
+        Index to the variable to integrate.
+    u : int
+        Number of variables, excluding the variable x_j.
+    K : Ring
+        Coefficient domain.
+
     Examples
     ========
 
@@ -133,6 +180,12 @@ def dmp_integrate_in(f, m, j, u, K):
     >>> R.dmp_integrate_in(x + 2*y, 1, 1)
     x*y + y**2
 
+    >>> from sympy.polys.densetools import dmp_integrate_in
+    >>> # Integration of x+2*y+z by y, Result: x*y + y**2 + y*z
+    >>> dmp_integrate_in([[[1]], [[2], [1, 0]]], 1, 1, 2, QQ)
+    [[[1], []], [[1], [1, 0], []]]
+
+
     """
     if j < 0 or j > u:
         raise IndexError("0 <= j <= u expected, got u = %d, j = %d" % (u, j))
@@ -143,6 +196,16 @@ def dmp_integrate_in(f, m, j, u, K):
 def dup_diff(f, m, K):
     """
     ``m``-th order derivative of a polynomial in ``K[x]``.
+
+    Parameters
+    ==========
+
+    f : list
+        List of coefficients of the polynomial.
+    m : int
+        Number of differentiations to perform.
+    K : Ring
+        Coefficient domain.
 
     Examples
     ========
@@ -159,26 +222,26 @@ def dup_diff(f, m, K):
     if m <= 0:
         return f
 
-    n = dup_degree(f)
+    poly_degree = dup_degree(f)
 
-    if n < m:
+    if poly_degree < m:
         return []
 
     deriv = []
 
     if m == 1:
         for coeff in f[:-m]:
-            deriv.append(K(n)*coeff)
-            n -= 1
+            deriv.append(K(poly_degree)*coeff)
+            poly_degree -= 1
     else:
         for coeff in f[:-m]:
-            k = n
+            k = poly_degree
 
-            for i in range(n - 1, n - m, -1):
+            for i in range(poly_degree - 1, poly_degree - m, -1):
                 k *= i
 
             deriv.append(K(k)*coeff)
-            n -= 1
+            poly_degree -= 1
 
     return dup_strip(deriv)
 
@@ -186,6 +249,18 @@ def dup_diff(f, m, K):
 def dmp_diff(f, m, u, K):
     """
     ``m``-th order derivative in ``x_0`` of a polynomial in ``K[X]``.
+
+    Parameters
+    ==========
+
+    f : list[list]
+        List of list of coefficients representing the polynomial.
+    m : int
+        Number of differentiations to perform.
+    u : int
+        Number of variables, excluding the main variable x_0.
+    K : Ring
+        Coefficient domain.
 
     Examples
     ========
@@ -206,26 +281,27 @@ def dmp_diff(f, m, u, K):
     if m <= 0:
         return f
 
-    n = dmp_degree(f, u)
+    # degree of the polynomial in x_0
+    poly_degree = dmp_degree(f, u)
 
-    if n < m:
+    if poly_degree < m:
         return dmp_zero(u)
 
     deriv, v = [], u - 1
 
     if m == 1:
         for coeff in f[:-m]:
-            deriv.append(dmp_mul_ground(coeff, K(n), v, K))
-            n -= 1
+            deriv.append(dmp_mul_ground(coeff, K(poly_degree), v, K))
+            poly_degree -= 1
     else:
         for coeff in f[:-m]:
-            k = n
+            k = poly_degree
 
-            for i in range(n - 1, n - m, -1):
+            for i in range(poly_degree - 1, poly_degree - m, -1):
                 k *= i
 
             deriv.append(dmp_mul_ground(coeff, K(k), v, K))
-            n -= 1
+            poly_degree -= 1
 
     return dmp_strip(deriv, u)
 
@@ -243,6 +319,20 @@ def _rec_diff_in(g, m, v, i, j, K):
 def dmp_diff_in(f, m, j, u, K):
     """
     ``m``-th order derivative in ``x_j`` of a polynomial in ``K[X]``.
+
+    Parameters
+    ==========
+
+    f : list[list]
+        List of list of coefficients representing the polynomial.
+    m : int
+        Number of differentiations to perform.
+    j : int
+        Index to the variable to be derived.
+    u : int
+        Number of variables, excluding the variable x_j.
+    K : Ring
+        Coefficient domain.
 
     Examples
     ========
@@ -267,6 +357,16 @@ def dmp_diff_in(f, m, j, u, K):
 def dup_eval(f, a, K):
     """
     Evaluate a polynomial at ``x = a`` in ``K[x]`` using Horner scheme.
+
+    Parameters
+    ==========
+
+    f : list[list]
+        List of coefficients of the polynomial.
+    a : int | float
+        Value at which to evaluate the polynomial.
+    K : Ring
+        Coefficient domain.
 
     Examples
     ========
@@ -293,6 +393,18 @@ def dup_eval(f, a, K):
 def dmp_eval(f, a, u, K):
     """
     Evaluate a polynomial at ``x_0 = a`` in ``K[X]`` using the Horner scheme.
+
+    Parameters
+    ==========
+
+    f : list[list]
+        List of list of coefficients representing the polynomial.
+    a : int | float
+        Value at which to evaluate the polynomial.
+    u : int
+        Number of variables, excluding the main variable x_0.
+    K : Ring
+        Coefficient domain.
 
     Examples
     ========
@@ -333,6 +445,20 @@ def dmp_eval_in(f, a, j, u, K):
     """
     Evaluate a polynomial at ``x_j = a`` in ``K[X]`` using the Horner scheme.
 
+    Parameters
+    ==========
+
+    f : list[list]
+        List of list of coefficients representing the polynomial.
+    a : int | float
+        Value at which to evaluate the polynomial.
+    j : int
+        Index of the variable to evaluate.
+    u : int
+        Number of variables, excluding the variable x_j.
+    K : Ring
+        Coefficient domain.
+
     Examples
     ========
 
@@ -369,6 +495,18 @@ def _rec_eval_tail(g, i, A, u, K):
 def dmp_eval_tail(f, A, u, K):
     """
     Evaluate a polynomial at ``x_j = a_j, ...`` in ``K[X]``.
+
+    Parameters
+    ==========
+
+    f : list[list]
+        List of list of coefficients representing the polynomial.
+    A : list[int | float]
+        List of values at which to evaluate the polynomial.
+    u : int
+        Number of variables, excluding the main variable x_0.
+    K : Ring
+        Coefficient domain.
 
     Examples
     ========
@@ -412,6 +550,22 @@ def dmp_diff_eval_in(f, m, a, j, u, K):
     """
     Differentiate and evaluate a polynomial in ``x_j`` at ``a`` in ``K[X]``.
 
+    Parameters
+    ==========
+
+    f : list[list]
+        List of list of coefficients representing the polynomial.
+    m : int
+        Number of differentiations to perform.
+    a : int | float
+        Value at which to evaluate the polynomial.
+    j : int
+        Index of the variable to evaluate.
+    u : int
+        Number of variables, excluding the variable x_j.
+    K : Ring
+        Coefficient domain.
+
     Examples
     ========
 
@@ -437,6 +591,16 @@ def dmp_diff_eval_in(f, m, a, j, u, K):
 def dup_trunc(f, p, K):
     """
     Reduce a ``K[x]`` polynomial modulo a constant ``p`` in ``K``.
+
+    Parameters
+    ==========
+
+    f : list[list]
+        List of coefficients of the polynomial.
+    p : int
+        Constant to reduce the polynomial by.
+    K : Ring
+        Coefficient domain.
 
     Examples
     ========
@@ -472,6 +636,18 @@ def dmp_trunc(f, p, u, K):
     """
     Reduce a ``K[X]`` polynomial modulo a polynomial ``p`` in ``K[Y]``.
 
+    Parameters
+    ==========
+
+    f : list[list]
+        List of list of coefficients representing the polynomial.
+    p : list[list]
+        List of list of coefficients of the polynomial to reduce by.
+    u : int
+        Number of variables, excluding the main variable x_0
+    K : Ring
+        Coefficient domain.
+
     Examples
     ========
 
@@ -491,6 +667,17 @@ def dmp_trunc(f, p, u, K):
 def dmp_ground_trunc(f, p, u, K):
     """
     Reduce a ``K[X]`` polynomial modulo a constant ``p`` in ``K``.
+
+    Parameters
+    ==========
+    f : list[list]
+        List of list of coefficients representing the polynomial.
+    p : int
+        Constant to reduce the polynomial by.
+    u : int
+        Number of variables, excluding the main variable x_0
+    K : Ring
+        Coefficient domain.
 
     Examples
     ========
@@ -515,6 +702,13 @@ def dmp_ground_trunc(f, p, u, K):
 def dup_monic(f, K):
     """
     Divide all coefficients by ``LC(f)`` in ``K[x]``.
+
+    Parameters
+    ==========
+    f : list
+        List of coefficients of the polynomial.
+    K : Ring
+        Coefficient domain.
 
     Examples
     ========
@@ -544,6 +738,15 @@ def dup_monic(f, K):
 def dmp_ground_monic(f, u, K):
     """
     Divide all coefficients by ``LC(f)`` in ``K[X]``.
+
+    Parameters
+    ==========
+    f : list[list]
+        List of list of coefficients representing the polynomial.
+    u : int
+        Number of variables, excluding the main variable x_0
+    K : Ring
+        Coefficient domain.
 
     Examples
     ========
@@ -580,6 +783,13 @@ def dmp_ground_monic(f, u, K):
 def dup_content(f, K):
     """
     Compute the GCD of coefficients of ``f`` in ``K[x]``.
+
+    Parameters
+    ==========
+    f : list
+        List of coefficients of the polynomial.
+    K : Ring
+        Coefficient domain.
 
     Examples
     ========
@@ -622,6 +832,15 @@ def dup_content(f, K):
 def dmp_ground_content(f, u, K):
     """
     Compute the GCD of coefficients of ``f`` in ``K[X]``.
+
+    Parameters
+    ==========
+    f : list[list]
+        List of list of coefficients representing the polynomial.
+    u : int
+        Number of variables, excluding the main variable x_0
+    K : Ring
+        Coefficient domain.
 
     Examples
     ========
@@ -668,6 +887,13 @@ def dup_primitive(f, K):
     """
     Compute content and the primitive form of ``f`` in ``K[x]``.
 
+    Parameters
+    ==========
+    f : list
+        List of coefficients of the polynomial.
+    K : Ring
+        Coefficient domain.
+
     Examples
     ========
 
@@ -700,6 +926,15 @@ def dup_primitive(f, K):
 def dmp_ground_primitive(f, u, K):
     """
     Compute content and the primitive form of ``f`` in ``K[X]``.
+
+    Parameters
+    ==========
+    f : list[list]
+        List of list of coefficients representing the polynomial.
+    u : int
+        Number of variables, excluding the main variable x_0
+    K : Ring
+        Coefficient domain.
 
     Examples
     ========
@@ -737,6 +972,15 @@ def dup_extract(f, g, K):
     """
     Extract common content from a pair of polynomials in ``K[x]``.
 
+    Parameters
+    ==========
+    f : list
+        List of coefficients of the first polynomial.
+    g : list
+        List of coefficients of the second polynomial.
+    K : Ring
+        Coefficient domain.
+
     Examples
     ========
 
@@ -763,6 +1007,17 @@ def dmp_ground_extract(f, g, u, K):
     """
     Extract common content from a pair of polynomials in ``K[X]``.
 
+    Parameters
+    ==========
+    f : list[list]
+        List of list of coefficients representing the first polynomial.
+    g : list[list]
+        List of list of coefficients representing the second polynomial.
+    u : int
+        Number of variables, excluding the main variable x_0
+    K : Ring
+        Coefficient domain.
+
     Examples
     ========
 
@@ -788,6 +1043,13 @@ def dmp_ground_extract(f, g, u, K):
 def dup_real_imag(f, K):
     """
     Find ``f1`` and ``f2``, such that ``f(x+I*y) = f1(x,y) + f2(x,y)*I``.
+
+    Parameters
+    ==========
+    f : list
+        List of coefficients of the polynomial.
+    K : Ring
+        Coefficient domain.
 
     Examples
     ========
@@ -841,6 +1103,13 @@ def dup_mirror(f, K):
     """
     Evaluate efficiently the composition ``f(-x)`` in ``K[x]``.
 
+    Parameters
+    ==========
+    f : list
+        List of coefficients of the polynomial.
+    K : Ring
+        Coefficient domain.
+
     Examples
     ========
 
@@ -862,6 +1131,15 @@ def dup_mirror(f, K):
 def dup_scale(f, a, K):
     """
     Evaluate efficiently composition ``f(a*x)`` in ``K[x]``.
+
+    Parameters
+    ==========
+    f : list
+        List of coefficients of the polynomial.
+    a : Element of K or its subdomain
+        Value by which to scale the polynomial.
+    K : Ring
+        Coefficient domain.
 
     Examples
     ========
@@ -885,6 +1163,15 @@ def dup_shift(f, a, K):
     """
     Evaluate efficiently Taylor shift ``f(x + a)`` in ``K[x]``.
 
+    Parameters
+    ==========
+    f : list
+        List of coefficients of the polynomial.
+    a : Element of K or its subdomain
+        Value by which to shift the polynomial.
+    K : Ring
+        Coefficient domain.
+
     Examples
     ========
 
@@ -907,6 +1194,17 @@ def dup_shift(f, a, K):
 def dmp_shift(f, a, u, K):
     """
     Evaluate efficiently Taylor shift ``f(X + A)`` in ``K[X]``.
+
+    Parameters
+    ==========
+    f : list[list]
+        List of list of coefficients representing the polynomial.
+    a : list of element of K or its subdomain
+        List of values at which to shift the polynomial.
+    u : int
+        Number of variables, excluding the main variable x_0
+    K : Ring
+        Coefficient domain.
 
     Examples
     ========
@@ -951,6 +1249,17 @@ def dup_transform(f: dup[Er], p: dup[Er], q: dup[Er], K: Domain[Er]) -> dup[Er]:
     """
     Evaluate functional transformation ``q**n * f(p/q)`` in ``K[x]``.
 
+    Parameters
+    ==========
+    f : list
+        List of coefficients of the polynomial f(x).
+    p : list
+        List of coefficients of the polynomial p, used in the transformation.
+    q : list
+        List of coefficients of the polynomial q, used in the transformation.
+    K : Ring
+        Coefficient domain.
+
     Examples
     ========
 
@@ -982,6 +1291,15 @@ def dup_compose(f, g, K):
     """
     Evaluate functional composition ``f(g)`` in ``K[x]``.
 
+    Parameters
+    ==========
+    f : list
+        List of coefficients of the polynomial to be evaluated.
+    g : list
+        List of coefficients of the polynomial to evaluate with.
+    K : Ring
+        Coefficient domain.
+
     Examples
     ========
 
@@ -1010,6 +1328,17 @@ def dup_compose(f, g, K):
 def dmp_compose(f, g, u, K):
     """
     Evaluate functional composition ``f(g)`` in ``K[X]``.
+
+    Parameters
+    ==========
+    f : list[list]
+        List of list of coefficients of the polynomial to be evaluated.
+    g : list[list]
+        List of list of coefficients of the polynomial to evaluate with.
+    u : int
+        Number of variables, excluding the main variable x_0
+    K : Ring
+        Coefficient domain.
 
     Examples
     ========
@@ -1169,6 +1498,13 @@ def dup_decompose(f, K):
 
     where ``T_n`` and ``T_m`` are Chebyshev polynomials.
 
+    Parameters
+    ==========
+    f : list
+        List of coefficients of the polynomial.
+    K : Ring
+        Coefficient domain.
+
     Examples
     ========
 
@@ -1290,6 +1626,13 @@ def dmp_lift(f, u, K):
 def dup_sign_variations(f, K):
     """
     Compute the number of sign variations of ``f`` in ``K[x]``.
+
+    Parameters
+    ==========
+    f : list
+        List of coefficients of the polynomial.
+    K : Ring
+        Coefficient domain.
 
     Examples
     ========
@@ -1448,6 +1791,15 @@ def dup_revert(f, n, K):
     This function computes first ``2**n`` terms of a polynomial that
     is a result of inversion of a polynomial modulo ``x**n``. This is
     useful to efficiently compute series expansion of ``1/f``.
+
+    Parameters
+    ==========
+    f : list
+        List of coefficients of the polynomial.
+    n : int
+        Exponent of the polynomial modulo ``x**n``
+    K : Ring
+        Coefficient domain.
 
     Examples
     ========
