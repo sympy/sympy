@@ -1004,6 +1004,54 @@ def dmp_sqr(f, u, K):
     return dmp_strip(h, u)
 
 
+def dup_series_sqr(f, n, K):
+    """
+    Square dense polynomials in ``K[[x]]`` modulo ``x**n``.
+
+    Examples
+    ========
+    >>> from sympy import ZZ
+    >>> from sympy.polys.densearith import dup_series_sqr
+    >>> from sympy.polys.densebasic import dup_from_list, dup_print
+    >>> f = dup_from_list([1, 2, 3], ZZ)
+    >>> p = dup_series_sqr(f, 5, ZZ)
+    >>> dup_print(p, 'x')
+    x**4 + 4*x**3 + 10*x**2 + 12*x + 9
+
+    """
+    if not f or n<=0:
+        return []
+
+    df = dup_degree(f)
+
+    if df > 100:
+        # Use Karatsuba's algorithm for larger polynomials
+        return dup_series_mul(f, f, n, K)
+
+
+    h = []
+
+    for i in range(n):
+        c = K.zero
+
+        j_min = max(0, i - df)
+        j_max = (i + 1) // 2
+
+        for j in range(j_min, j_max):
+            c += f[df - j] * f[df - (i - j)]
+
+        c += c
+
+        if i % 2 == 0:
+            j = i // 2
+            if j <= df:
+                c += f[df - j]**2
+
+        h.append(c)
+
+    return dup_strip(h[::-1])
+
+
 def dup_pow(f, n, K):
     """
     Raise ``f`` to the ``n``-th power in ``K[x]``.

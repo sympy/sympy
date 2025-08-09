@@ -151,7 +151,9 @@ representations. Many functions are available to manipulate polynomials in the
 .. autofunction:: dup_mul
 .. autofunction:: dmp_mul
 .. autofunction:: dup_series_mul
+.. autofunction:: dup_sqr
 .. autofunction:: dmp_sqr
+.. autofunction:: dup_series_sqr
 .. autofunction:: dmp_pow
 .. autofunction:: dup_series_pow
 .. autofunction:: dmp_pdiv
