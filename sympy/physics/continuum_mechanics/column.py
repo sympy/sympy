@@ -222,8 +222,8 @@ class Column:
         >>> c = Column(10, E, A)
         >>> c.apply_load(R_0,0,-1)   # Reaction applied as a point load
         >>> c.apply_load(R_10,10,-1) # Reaction applied as a poinnt load
-        >>> c.bc_extension.append(0) # boundary conditions are added manually
-        >>> c.bc_extension.append(10) # boundary conditions are added manually
+        >>> c._bc_extension.append(0) # boundary conditions are added manually
+        >>> c._bc_extension.append(10) # boundary conditions are added manually
         >>> c.apply_load(-10, 10, -1)
         >>> print(c.load)
         R_0*SingularityFunction(x, 0, -1) + R_10*SingularityFunction(x, 10, -1)
@@ -508,8 +508,8 @@ class Column:
         >>> c = Column(10, A, E)
         >>> c.apply_load(R,0,-1) # applied reaction load as a point load
         >>> c.apply_load(G,10,-1) # applied reaction load as a point load
-        >>> c.bc_extension.append(0) # boundary conditions are added manually
-        >>> c.bc_extension.append(10) # boundary conditions are added manually
+        >>> c._bc_extension.append(0) # boundary conditions are added manually
+        >>> c._bc_extension.append(10) # boundary conditions are added manually
         >>> c.apply_load(-5, 0, 0, end=10)
         >>> c.apply_load(-10, 4, -1)
         >>> c.solve_for_reaction_loads(R,G) # Reaction loads need to be passed.
