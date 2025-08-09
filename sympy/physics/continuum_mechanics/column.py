@@ -63,7 +63,7 @@ class Column:
     99*SingularityFunction(x, 0, 0)/2 - 5*SingularityFunction(x, 0, 1)
     + 5*SingularityFunction(x, 10, 1) - 20*SingularityFunction(x, 12, 0)
     - 20*SingularityFunction(x, 16, 0) + 81*SingularityFunction(x, 20, 0)/2
-    >>> c.deflection()
+    >>> c.extension()
     0.0033*SingularityFunction(x, 0, 1) - 0.000166666666666667*SingularityFunction(x, 0, 2)
     + 0.000166666666666667*SingularityFunction(x, 10, 2) - 0.00133333333333333*SingularityFunction(x, 12, 1)
     - 0.00133333333333333*SingularityFunction(x, 16, 1) + 0.0027*SingularityFunction(x, 20, 1)
@@ -102,19 +102,19 @@ class Column:
         self.area = area
         self.variable = variable
         self._base_char = base_char
-        self._bc_deflection = []
+        self._bc_extension = []
         self._bc_hinge = []
         self._applied_supports = []
         self._applied_hinges = []
         self._applied_loads = []
 
         self._reaction_loads = {}
-        self._hinge_deflections = {}
+        self._hinge_extensions = {}
         self._integration_constants = {}
 
         self._load = 0
         self._axial_force = 0
-        self._deflection = 0
+        self._extension = 0
 
         self._is_solved = False
 
@@ -166,9 +166,9 @@ class Column:
         return self._reaction_loads
 
     @property
-    def hinge_deflections(self):
-        """Returns the hinge deflections as dictionary."""
-        return self._hinge_deflections
+    def hinge_extensions(self):
+        """Returns the hinge extensions as dictionary."""
+        return self._hinge_extensions
 
     def apply_support(self, loc):
         """
@@ -209,7 +209,7 @@ class Column:
 
         self._applied_supports.append(reaction_load)
         self._load += reaction_load * SingularityFunction(self.variable, loc, -1)
-        self._bc_deflection.append(loc)
+        self._bc_extension.append(loc)
 
     def apply_load(self, value, start, order, end=None):
         """
@@ -392,7 +392,7 @@ class Column:
         >>> c.solve_for_reaction_loads()
         >>> c.reaction_loads
         {R_0: -10, R_10: 0}
-        >>> c.hinge_deflections
+        >>> c.hinge_extensions
         {u_8: 1/200}
         """
         E = self.elastic_modulus
@@ -402,12 +402,12 @@ class Column:
         self._bc_hinge.append(loc)
 
         if loc.is_number:
-            deflection = Symbol(f'u_{float(loc):g}')
+            extension = Symbol(f'u_{float(loc):g}')
         else:
-            deflection = Symbol(f'u_{str(loc)}')
+            extension = Symbol(f'u_{str(loc)}')
 
-        self._applied_hinges.append(deflection)
-        self._load += (E * A * deflection) * SingularityFunction(self.variable, loc, -2)
+        self._applied_hinges.append(extension)
+        self._load += (E * A * extension) * SingularityFunction(self.variable, loc, -2)
 
     @property
     def load(self):
@@ -471,14 +471,14 @@ class Column:
         C_N, C_u = symbols('C_N, C_u')
 
         axial_force = -integrate(qx, x) + C_N
-        deflection = -(integrate(integrate(qx, x), x)) / (E * A) + C_N * x + C_u
+        extension = -(integrate(integrate(qx, x), x)) / (E * A) + C_N * x + C_u
 
         eq_axial_force = [
             limit(axial_force, x, 0, dir='-'),
             limit(axial_force, x, L, dir='+')
         ]
 
-        eq_bc_displacement = [Eq(deflection.subs(x, loc), 0) for loc in self._bc_deflection]
+        eq_bc_displacement = [Eq(extension.subs(x, loc), 0) for loc in self._bc_extension]
 
         eq_bc_hinge = [Eq(limit(axial_force, x, loc, dir='+'), 0) for loc in self._bc_hinge] # Just right to avoid infinity
 
@@ -493,7 +493,7 @@ class Column:
         self._reaction_loads = dict(zip(self._applied_supports, reaction_solutions))
 
         displacement_solutions = solution[num_supports:-2]
-        self._hinge_deflections = dict(zip(self._applied_hinges, displacement_solutions))
+        self._hinge_extensions = dict(zip(self._applied_hinges, displacement_solutions))
 
         integration_constants = solution[-2:]
         self._integration_constants = dict(zip([C_N, C_u], integration_constants))
@@ -507,7 +507,7 @@ class Column:
         """
         solved_load = self._load
         solved_load = solved_load.subs(self._reaction_loads)
-        solved_load = solved_load.subs(self._hinge_deflections)
+        solved_load = solved_load.subs(self._hinge_extensions)
         return solved_load
 
     def axial_force(self):
@@ -547,10 +547,10 @@ class Column:
         C_N = self._integration_constants[Symbol('C_N')] if self._is_solved else Symbol('C_N')
         return -integrate(load_equation, x) + C_N
 
-    def deflection(self):
+    def extension(self):
         """
         Returns a singularity function expression that
-        represents the deflection of the column.
+        represents the extension of the column.
 
         Examples
         ========
@@ -564,11 +564,11 @@ class Column:
         >>> c.apply_support(0)
         >>> c.apply_support(10)
         >>> c.apply_load(10, 5, -1)
-        >>> c.deflection()
+        >>> c.extension()
         C_N*x + C_u - R_0*SingularityFunction(x, 0, 1)/210000
         - R_10*SingularityFunction(x, 10, 1)/210000 - SingularityFunction(x, 5, 1)/21000
         >>> c.solve_for_reaction_loads()
-        >>> c.deflection()
+        >>> c.extension()
         SingularityFunction(x, 0, 1)/42000 - SingularityFunction(x, 5, 1)/21000
         + SingularityFunction(x, 10, 1)/42000
         """
@@ -619,10 +619,10 @@ class Column:
         return plot(self.axial_force(), (self.variable, 0, self.length), title='Axial Force',
                 xlabel=r'$\mathrm{x}$', ylabel=r'$\mathrm{N(x)}$', line_color='r')
 
-    def plot_deflection(self):
+    def plot_extension(self):
         """
-        Returns a plot for the deflections in the column. To plot
-        the deflection, numeric values for elastic modulus E and
+        Returns a plot for the extensions in the column. To plot
+        the extension, numeric values for elastic modulus E and
         are A should be provided.
 
         Examples
@@ -647,12 +647,12 @@ class Column:
             >>> c.apply_load(-10, 5, -1)
             >>> c.apply_load(5, 8, -1)
             >>> c.solve_for_reaction_loads()
-            >>> c.plot_deflection()
+            >>> c.plot_extension()
             Plot object containing:
             [0]: cartesian line: 13*SingularityFunction(x, 0, 1)/168000
             - SingularityFunction(x, 0, 2)/84000 + SingularityFunction(x, 5, 1)/21000
             + SingularityFunction(x, 8, 1)/11200 + SingularityFunction(x, 10, 1)/42000
             + SingularityFunction(x, 10, 2)/84000 for x over (0.0, 10.0)
         """
-        return plot(self.deflection(), (self.variable, 0, self.length), title='Deflection',
+        return plot(self.extension(), (self.variable, 0, self.length), title='Extension',
                 xlabel=r'$\mathrm{x}$', ylabel=r'$\mathrm{u(x)}$', line_color='b')
