@@ -860,6 +860,14 @@ def test_trunc():
     raises(TypeError, lambda: math.trunc(oo))
 
 
+class CustomAdd(Add):
+    pass
+
+
+class CustomMul(Mul):
+    pass
+
+
 def test_as_independent():
     assert S.Zero.as_independent(x, as_Add=True) == (0, 0)
     assert S.Zero.as_independent(x, as_Add=False) == (0, 0)
@@ -916,6 +924,22 @@ def test_as_independent():
     assert eq.as_independent(x) == (-6, Mul(x, 1/x, evaluate=False))
 
     assert (x*y).as_independent(z, as_Add=True) == (x*y, 0)
+
+    # subclassing Add and Mul
+    eq = CustomAdd(y, CustomMul(x, y), z)
+    ind, dep = eq.as_independent(x)
+    assert ind - (y + z) == 0
+    assert isinstance(ind, CustomAdd)
+    assert dep/(x*y) == 1
+    assert isinstance(dep, CustomMul)
+
+    eq = CustomMul(y, CustomAdd(x, y), z)
+    ind, dep = eq.as_independent(x)
+    assert ind/(y*z) == 1
+    assert isinstance(ind, CustomMul)
+    assert dep - (x + y) == 0
+    assert isinstance(dep, CustomAdd)
+
 
 @XFAIL
 def test_call_2():

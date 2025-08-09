@@ -17,6 +17,7 @@ from sympy.core.sympify import CantSympify, sympify
 from sympy.functions.elementary.exponential import ExpBase
 from sympy.polys.domains.domain import Domain, Er, Es
 from sympy.polys.domains.domainelement import DomainElement
+from sympy.polys.domains.field import Field
 from sympy.polys.domains.fractionfield import FractionField
 from sympy.polys.domains.polynomialring import PolynomialRing
 from sympy.polys.constructor import construct_domain
@@ -221,7 +222,7 @@ class FracField(DefaultPrinting, Generic[Er]):
 
             if not domain.is_Field and domain.has_assoc_Field:
                 ring = self.ring
-                ground_field = domain.get_field()
+                ground_field: Field = domain.get_field()
                 element = ground_field.convert(element)
                 numer = ring.ground_new(ground_field.numer(element))
                 denom = ring.ground_new(ground_field.denom(element))

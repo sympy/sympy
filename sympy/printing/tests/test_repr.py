@@ -1,6 +1,7 @@
 from __future__ import annotations
 from typing import Any
 
+from sympy import Add, Mul
 from sympy.external.gmpy import GROUND_TYPES
 from sympy.testing.pytest import raises, warns_deprecated_sympy
 from sympy.assumptions.ask import Q
@@ -59,9 +60,10 @@ def test_printmethod():
 
 def test_Add():
     sT(x + y, "Add(Symbol('x'), Symbol('y'))")
-    assert srepr(x**2 + 1, order='lex') == "Add(Pow(Symbol('x'), Integer(2)), Integer(1))"
+    assert srepr(x**2 + 1, order='lex') == "Add(Integer(1), Pow(Symbol('x'), Integer(2)))"
     assert srepr(x**2 + 1, order='old') == "Add(Integer(1), Pow(Symbol('x'), Integer(2)))"
     assert srepr(sympify('x + 3 - 2', evaluate=False), order='none') == "Add(Symbol('x'), Integer(3), Mul(Integer(-1), Integer(2)))"
+    assert srepr(Add(Add(Add(Integer(1), Integer(2), evaluate=False), Integer(3), evaluate=False), Integer(4), evaluate=False)) == "Add(Add(Add(Integer(1), Integer(2)), Integer(3)), Integer(4))"
 
 
 def test_more_than_255_args_issue_10259():
@@ -231,9 +233,10 @@ def test_settins():
 
 
 def test_Mul():
-    sT(3*x**3*y, "Mul(Integer(3), Pow(Symbol('x'), Integer(3)), Symbol('y'))")
+    sT(3*x**3*y, "Mul(Integer(3), Symbol('y'), Pow(Symbol('x'), Integer(3)))")
     assert srepr(3*x**3*y, order='old') == "Mul(Integer(3), Symbol('y'), Pow(Symbol('x'), Integer(3)))"
     assert srepr(sympify('(x+4)*2*x*7', evaluate=False), order='none') == "Mul(Add(Symbol('x'), Integer(4)), Integer(2), Symbol('x'), Integer(7))"
+    assert srepr(Mul(Symbol('x'), Integer(2), evaluate=False)) == "Mul(Symbol('x'), Integer(2))"
 
 
 def test_AlgebraicNumber():
