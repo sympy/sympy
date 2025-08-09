@@ -1,12 +1,16 @@
 from __future__ import annotations
 
 
-from typing import TYPE_CHECKING
-from sympy.polys.densebasic import _T, dup, dmp, dmp_tup
+from typing import TYPE_CHECKING, TypeAlias, Union
+from sympy.core.relational import StrictGreaterThan
+from sympy.logic.boolalg import Boolean
+
+from sympy.polys.densebasic import dup, dmp, dmp_tup, _T
 from sympy.polys.domains.domain import Er, Domain
 from sympy.external.gmpy import MPQ
 
 from sympy.polys.domains import EXRAW, QQ, PolynomialRing, RationalField
+from sympy.polys.rings import PolyElement
 from sympy.polys.densebasic import dup_convert
 from sympy.polys.densetools import dup_clear_denoms
 from sympy.core.mul import prod
@@ -15,6 +19,8 @@ from sympy.core.exprtools import factor_terms
 from sympy.simplify.simplify import signsimp
 from sympy.core.mul import Mul
 
+conditions: TypeAlias = "list[Union[StrictGreaterThan, Boolean]]"
+
 # The _dup and _dmp functions do not do anything but are needed so that a type
 # checker can understand the conversion between the two types.
 #
@@ -22,12 +28,6 @@ from sympy.core.mul import Mul
 # elements of arbitrary depth.
 
 if TYPE_CHECKING:
-    from typing import TypeAlias, Union
-    from sympy.polys.rings import PolyElement
-    from sympy.core.relational import StrictGreaterThan
-    from sympy.logic.boolalg import Boolean
-    conditions: TypeAlias = "list[Union[StrictGreaterThan, Boolean]]"
-
     def _dup(p: dmp[_T], /) -> dup[_T]: ...
     def _dmp(p: dup[_T], /) -> dmp[_T]: ...
     def _dmp_tup(p: tuple[_T, ...], /) -> dmp_tup[_T]: ...
@@ -65,8 +65,8 @@ def dup_routh_hurwitz(f: dup[Er], K: Domain[Er]) -> list[conditions]:
     """
     conds = dup_routh_hurwitz_dom(f, K)
 
-    # return And(*[domain.to_sympy(c) > 0 for c in conds])
-    return [K.to_sympy(c) for c in conds]
+    # return [K.to_sympy(c) for c in conds]
+    return [K.to_sympy(c) > 0 for c in conds]
 
 
 def dup_routh_hurwitz_dom(p: list[Er], K: Domain[Er]) -> list[Er]:
@@ -147,10 +147,11 @@ def _clear_cond_poly(cond: PolyElement[Er], previous_cond, K):
             cond_quo, r = K.div(cond, c)
 
     # Remove factors of even degree and reduce odd degree factors
-    _, facs_m = cond.sqf_list()
-    cond = prod([fac for fac, m in facs_m if m % 2 == 1])
+    sign, facs_m = cond.sqf_list()
+    cond = prod([fac for fac, m in facs_m if m % 2 == 1]) * sign
 
     return cond
+
 
 def _routh_hurwitz_exraw(p: list[Er]) -> list[Er]:
     if all(c.is_number for c in p):
@@ -211,14 +212,17 @@ def _clear_cond_exraw(cond: Mul, previous_cond: list[set]) -> Mul:
     `previous_cond` list with the new condition.
 
     """
-    factors: set[Er] = _build_simplified_factors(cond)
-    _remove_previous_conditions(factors, previous_cond)
+    factors: set[Er] = _build_simplified_factors(cond, previous_cond)
 
     first_factor_iteration = factors.copy()
 
     # Second iteration to simplify the factors further using factor_terms.
-    factors = _build_simplified_factors(factor_terms(Mul(*factors)))
-    _remove_previous_conditions(factors, previous_cond)
+    # To reach a better simplification, it could be better to use `factor`, but
+    # it could be slower.
+    # Because the point of the algorithm for EXRAW is to be fast, we prefer to
+    # use `factor_terms`.
+    factors = _build_simplified_factors(factor_terms(Mul(*factors)),
+                                        previous_cond)
 
     # It's important to keep the first factor iteration, because it follows the
     # pattern of the unsimplified coefficients, which appears in the next
@@ -227,27 +231,44 @@ def _clear_cond_exraw(cond: Mul, previous_cond: list[set]) -> Mul:
     previous_cond.append(first_factor_iteration)
     return Mul(*factors)
 
-def _build_simplified_factors(cond: Mul) -> set:
+def _build_simplified_factors(cond: Mul,
+                              previous_cond: list[set[Er]]) -> set[Er]:
     """
-    Build a set of factors from the condition.
+    Build a set of simplified factors from the expression removing even powers
+    and simplifying odd powers.
+    This function also removes factors that are already present in previous
+    conditions.
+
+    """
+    factors: set[Er] = _extract_odd_factors(cond)
+    _remove_previous_conditions(factors, previous_cond)
+    return factors
+
+def _extract_odd_factors(cond: Mul) -> set[Er]:
+    """
+    Extract factors with odd powers from a Mul expression.
     Even powers are ignored, as they do not contribute to the condition.
     Odd powers are simplified to the exponent of 1.
 
     """
     powers_dict = dict(cond.as_powers_dict()) # Dict of factors with their powers
     factors = set()
+    n_minus_one = 0
     for factor in powers_dict:
         if powers_dict[factor] % 2 != 0:
             signsimp_factor = signsimp(factor, evaluate=False)
             if signsimp_factor.could_extract_minus_sign():
                 factors.add(-signsimp_factor)
-                factors.add(-1)
+                n_minus_one += 1
             else:
                 factors.add(signsimp_factor)
 
+    if n_minus_one % 2 == 1:
+        factors.add(-1)
+
     return factors
 
-def _remove_previous_conditions(factors: set, previous_cond: list[set]):
+def _remove_previous_conditions(factors: set, previous_cond: list[set[Er]]):
     """
     Remove factors that are already present in previous conditions.
 

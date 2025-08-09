@@ -50,7 +50,7 @@ from sympy.polys.polyerrors import (
 from sympy.polys.polyclasses import DMP
 
 from sympy.polys.fields import field
-from sympy.polys.domains import FF, ZZ, QQ, ZZ_I, QQ_I, RR, EX
+from sympy.polys.domains import FF, ZZ, QQ, ZZ_I, QQ_I, RR, EX, EXRAW
 from sympy.polys.domains.realfield import RealField
 from sympy.polys.domains.complexfield import ComplexField
 from sympy.polys.orderings import lex, grlex, grevlex
@@ -66,13 +66,14 @@ from sympy.core.numbers import (Float, I, Integer, Rational, oo, pi)
 from sympy.core.power import Pow
 from sympy.core.relational import Eq
 from sympy.core.singleton import S
-from sympy.core.symbol import Symbol
+from sympy.core.symbol import Symbol, symbols
 from sympy.functions.elementary.complexes import (im, re)
 from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.hyperbolic import tanh
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import sin
+from sympy.logic.boolalg import true, false
 from sympy.matrices.dense import Matrix
 from sympy.matrices.expressions.matexpr import MatrixSymbol
 from sympy.polys.rootoftools import rootof
@@ -84,7 +85,7 @@ from sympy.testing.pytest import (
     raises, warns_deprecated_sympy, warns, tooslow, XFAIL
 )
 
-from sympy.abc import a, b, c, d, p, q, t, w, x, y, z
+from sympy.abc import a, b, c, d, p, q, t, w, x, y, z, s
 
 
 def _epsilon_eq(a, b):
@@ -4082,3 +4083,78 @@ def test_issue_28156():
     )
     roots = rhs.ground_roots()
     assert roots
+
+def test_negative_real_part_conditions():
+    # TODO:
+    #   - update the expected results with the simplified conditions
+    #   - write tests for different domains
+    b0, b1, b2, b3, b4 = symbols('b_0 b_1 b_2 b_3 b_4')
+    p1 = Poly(b4 * s**4 + b3 * s**3 + b2 * s**2 + b1 * s + b0, s)
+
+    conds = p1.negative_real_part_conditions()
+    assert conds == [
+        b3*b4 > 0, b3**2*(-b1*b4 + b2*b3) > 0,
+        (-b0*b3**3 + b1*b3*(-b1*b4 + b2*b3))*(-b1*b4 + b2*b3)**2 > 0,
+        b0*b3*(-b0*b3**3 + b1*b3*(-b1*b4 + b2*b3))**3*(-b1*b4 + b2*b3) > 0]
+
+    p2 = Poly(-3*s**2 - 2*s - b0, s)
+    assert p2.negative_real_part_conditions() == [true, 8 * b0 > 0]
+
+    a_ = symbols('a', nonpositive = True)
+
+    p4 = Poly(b0*s**2 + a_*s + 3, s)
+    assert p4.negative_real_part_conditions() == [a_ * b0 > 0, false]
+
+    p5 = Poly(b0*s**2 + a_*s - 3, s)
+    assert p5.negative_real_part_conditions() == [a_ * b0 > 0, -3 * a_**3 > 0]
+
+    p6 = Poly(b0 + b1*s**2 + b1*s + b3*s**4 + b3*s**3, s)
+    expected6 = [b3**2 > 0, false]
+
+    assert p6.negative_real_part_conditions() == expected6
+
+    # test for issue https://github.com/sympy/sympy/issues/28010
+    # In that test we want to be sure that negative_real_conditions works fast
+    I_L = Symbol('I_L', nonnegative=True, real=True)
+    I_T = Symbol('I_T', nonnegative=True, real=True)
+    d_L = Symbol('d_L', nonnegative=True, real=True)
+    d_T = Symbol('d_T', nonnegative=True, real=True)
+    l_L = Symbol('l_L', nonnegative=True, real=True)
+    m_L = Symbol('m_L', nonnegative=True, real=True)
+    m_T = Symbol('m_T', nonnegative=True, real=True)
+    g = Symbol('g', nonnegative=True, real=True)
+    k_00, k_01, k_02, k_03 = symbols('k_00 k_01 k_02 k_03')
+    k_10, k_11, k_12, k_13 = symbols('k_10 k_11 k_12 k_13')
+    s_00, s_01, s_02, s_03 = symbols('s_00 s_01 s_02 s_03')
+    s_10, s_11, s_12, s_13 = symbols('s_10 s_11 s_12 s_13')
+
+    common_denom = (I_L*I_T + I_L*d_T**2*m_T + I_T*d_L**2*m_L +
+                    I_T*l_L**2*m_T + d_L**2*d_T**2*m_L*m_T)
+
+    p7 = PurePoly(
+        s**4 + s**3/common_denom*(
+            I_L*k_13*s_13 + I_T*k_02*s_02- I_T*k_03*s_03 - I_T*k_12*s_12 +
+            I_T*k_13*s_13 + d_L**2*k_13*m_L*s_13 + d_T**2*k_02*m_T*s_02 -
+            d_T**2*k_03*m_T*s_03 - d_T**2*k_12*m_T*s_12 + d_T**2*k_13*m_T*s_13 -
+            d_T*k_03*l_L*m_T*s_03 - d_T*k_12*l_L*m_T*s_12 +
+            2*d_T*k_13*l_L*m_T*s_13 + k_13*l_L**2*m_T*s_13) +
+        s**2/common_denom*(
+            I_L*d_T*g*m_T - I_L*k_11*s_11 + I_T*d_L*g*m_L + I_T*g*l_L*m_T -
+            I_T*k_00*s_00 + I_T*k_01*s_01 + I_T*k_10*s_10 - I_T*k_11*s_11 +
+            d_L**2*d_T*g*m_L*m_T - d_L**2*k_11*m_L*s_11 + d_L*d_T**2*g*m_L*m_T +
+            d_T**2*g*l_L*m_T**2 - d_T**2*k_00*m_T*s_00 + d_T**2*k_01*m_T*s_01 +
+            d_T**2*k_10*m_T*s_10 - d_T**2*k_11*m_T*s_11 + d_T*g*l_L**2*m_T**2 +
+            d_T*k_01*l_L*m_T*s_01 + d_T*k_10*l_L*m_T*s_10 -
+            2*d_T*k_11*l_L*m_T*s_11 + k_02*k_13*s_02*s_13 - k_03*k_12*s_03*s_12
+            - k_11*l_L**2*m_T*s_11) +
+        s/common_denom*(
+            d_L*g*k_13*m_L*s_13 +d_T*g*k_02*m_T*s_02 - d_T*g*k_03*m_T*s_03 -
+            d_T*g*k_12*m_T*s_12 + d_T*g*k_13*m_T*s_13 + g*k_13*l_L*m_T*s_13 -
+            k_00*k_13*s_00*s_13 + k_01*k_12*s_01*s_12 - k_02*k_11*s_02*s_11 +
+            k_03*k_10*s_03*s_10) +
+            1/common_denom*(d_L*d_T*g**2*m_L*m_T - d_L*g*k_11*m_L*s_11 +
+            d_T*g**2*l_L*m_T**2 - d_T*g*k_00*m_T*s_00 + d_T*g*k_01*m_T*s_01 +
+            d_T*g*k_10*m_T*s_10 - d_T*g*k_11*m_T*s_11 - g*k_11*l_L*m_T*s_11 +
+            k_00*k_11*s_00*s_11 - k_01*k_10*s_01*s_10), s, domain = EXRAW)
+
+    p7.negative_real_part_conditions()
