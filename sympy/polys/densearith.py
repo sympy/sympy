@@ -1,7 +1,11 @@
 """Arithmetics for dense recursive polynomials in ``K[x]`` or ``K[X]``. """
 
+from __future__ import annotations
+
+from sympy.polys.domains.domain import Domain, Er
 
 from sympy.polys.densebasic import (
+    dup, dmp, _dup, _dmp,
     dup_slice, dup_truncate,
     dup_reverse,
     dup_LC, dmp_LC,
@@ -511,7 +515,7 @@ def dmp_neg(f, u, K):
     return [ dmp_neg(cf, v, K) for cf in f ]
 
 
-def dup_add(f, g, K):
+def dup_add(f: dup[Er], g: dup[Er], K: Domain[Er]) -> dup[Er]:
     """
     Add dense polynomials in ``K[x]``.
 
@@ -546,7 +550,7 @@ def dup_add(f, g, K):
         return h + [ a + b for a, b in zip(f, g) ]
 
 
-def dmp_add(f, g, u, K):
+def dmp_add(f: dmp[Er], g: dmp[Er], u: int, K: Domain[Er]) -> dmp[Er]:
     """
     Add dense polynomials in ``K[X]``.
 
@@ -561,7 +565,7 @@ def dmp_add(f, g, u, K):
 
     """
     if not u:
-        return dup_add(f, g, K)
+        return _dmp(dup_add(_dup(f), _dup(g), K))
 
     df = dmp_degree(f, u)
 
@@ -998,6 +1002,54 @@ def dmp_sqr(f, u, K):
         h.append(c)
 
     return dmp_strip(h, u)
+
+
+def dup_series_sqr(f, n, K):
+    """
+    Square dense polynomials in ``K[[x]]`` modulo ``x**n``.
+
+    Examples
+    ========
+    >>> from sympy import ZZ
+    >>> from sympy.polys.densearith import dup_series_sqr
+    >>> from sympy.polys.densebasic import dup_from_list, dup_print
+    >>> f = dup_from_list([1, 2, 3], ZZ)
+    >>> p = dup_series_sqr(f, 5, ZZ)
+    >>> dup_print(p, 'x')
+    x**4 + 4*x**3 + 10*x**2 + 12*x + 9
+
+    """
+    if not f or n<=0:
+        return []
+
+    df = dup_degree(f)
+
+    if df > 100:
+        # Use Karatsuba's algorithm for larger polynomials
+        return dup_series_mul(f, f, n, K)
+
+
+    h = []
+
+    for i in range(n):
+        c = K.zero
+
+        j_min = max(0, i - df)
+        j_max = (i + 1) // 2
+
+        for j in range(j_min, j_max):
+            c += f[df - j] * f[df - (i - j)]
+
+        c += c
+
+        if i % 2 == 0:
+            j = i // 2
+            if j <= df:
+                c += f[df - j]**2
+
+        h.append(c)
+
+    return dup_strip(h[::-1])
 
 
 def dup_pow(f, n, K):
@@ -1867,7 +1919,7 @@ def dmp_max_norm(f, u, K):
     return max(dmp_max_norm(c, v, K) for c in f)
 
 
-def dup_l1_norm(f, K):
+def dup_l1_norm(f: dup[Er], K: Domain[Er]) -> Er:
     """
     Returns l1 norm of a polynomial in ``K[x]``.
 
@@ -1884,10 +1936,10 @@ def dup_l1_norm(f, K):
     if not f:
         return K.zero
     else:
-        return sum(dup_abs(f, K))
+        return K.sum(dup_abs(f, K))
 
 
-def dmp_l1_norm(f, u, K):
+def dmp_l1_norm(f: dmp[Er], u: int, K: Domain[Er]) -> Er:
     """
     Returns l1 norm of a polynomial in ``K[X]``.
 
@@ -1902,14 +1954,14 @@ def dmp_l1_norm(f, u, K):
 
     """
     if not u:
-        return dup_l1_norm(f, K)
+        return dup_l1_norm(_dup(f), K)
 
     v = u - 1
 
-    return sum(dmp_l1_norm(c, v, K) for c in f)
+    return K.sum(dmp_l1_norm(c, v, K) for c in f)
 
 
-def dup_l2_norm_squared(f, K):
+def dup_l2_norm_squared(f: dup[Er], K: Domain[Er]) -> Er:
     """
     Returns squared l2 norm of a polynomial in ``K[x]``.
 
@@ -1923,10 +1975,10 @@ def dup_l2_norm_squared(f, K):
     14
 
     """
-    return sum([coeff**2 for coeff in f], K.zero)
+    return K.sum([coeff**2 for coeff in f])
 
 
-def dmp_l2_norm_squared(f, u, K):
+def dmp_l2_norm_squared(f: dmp[Er], u: int, K: Domain[Er]) -> Er:
     """
     Returns squared l2 norm of a polynomial in ``K[X]``.
 
@@ -1941,11 +1993,11 @@ def dmp_l2_norm_squared(f, u, K):
 
     """
     if not u:
-        return dup_l2_norm_squared(f, K)
+        return dup_l2_norm_squared(_dup(f), K)
 
     v = u - 1
 
-    return sum(dmp_l2_norm_squared(c, v, K) for c in f)
+    return K.sum(dmp_l2_norm_squared(c, v, K) for c in f)
 
 
 def dup_expand(polys, K):

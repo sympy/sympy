@@ -64,6 +64,18 @@ may be slightly more efficient.)
 
 .. currentmodule:: sympy.polys.densebasic
 
+.. py:class:: dup
+.. py:class:: dmp
+.. py:class:: dmp_tup
+.. py:class:: monom
+
+The ``dup`` representation is a list of coefficients that are themselves domain
+elements. The ``dmp`` type represents dense, multivariate polynomials
+recursively as a list of lists. See :ref:`polys-domainsintro` for an
+introductory explanation of the domain system and the ``dup`` and ``dmp``
+representations. Many functions are available to manipulate polynomials in the
+``dup`` and ``dmp`` representations. This section lists some of them.
+
 .. autofunction:: dmp_LC
 .. autofunction:: dmp_TC
 .. autofunction:: dmp_ground_LC
@@ -113,6 +125,7 @@ may be slightly more efficient.)
 .. autofunction:: dup_truncate
 .. autofunction:: dup_random
 .. autofunction:: dup_from_list
+.. autofunction:: dup_pretty
 .. autofunction:: dup_print
 
 **Arithmetic operations:**
@@ -138,7 +151,9 @@ may be slightly more efficient.)
 .. autofunction:: dup_mul
 .. autofunction:: dmp_mul
 .. autofunction:: dup_series_mul
+.. autofunction:: dup_sqr
 .. autofunction:: dmp_sqr
+.. autofunction:: dup_series_sqr
 .. autofunction:: dmp_pow
 .. autofunction:: dup_series_pow
 .. autofunction:: dmp_pdiv

@@ -49,7 +49,7 @@ def negative_real_part_conditions(polynomial, var, /, *, domain=None):
     [a + 1 > 0, a*(a + 1)**3 > 0]
 
     """
-    p: Poly = Poly(polynomial, var, domain = domain)
+    p = Poly(polynomial, var, domain = domain)
 
     _, p = p.clear_denoms(convert=True)
 
@@ -266,7 +266,7 @@ class RouthHurwitz(MutableDenseMatrix):
         self._coeffs = self._polynomial.all_coeffs()
 
         self._zero_row_case = False
-        self._zero_col_infos: list[tuple] = []
+        self._zero_col_infos = []
         self._aux_poly_degrees = []
 
         if self._poly_degree < 1:

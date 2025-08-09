@@ -22,7 +22,7 @@ from sympy.polys.densearith import (
     dup_add, dmp_add,
     dup_sub, dmp_sub,
     dup_mul, dmp_mul, dup_series_mul,
-    dup_sqr, dmp_sqr,
+    dup_sqr, dmp_sqr, dup_series_sqr,
     dup_pow, dmp_pow, dup_series_pow,
     dup_add_mul, dmp_add_mul,
     dup_sub_mul, dmp_sub_mul,
@@ -747,6 +747,22 @@ def test_dmp_sqr():
     K = FF(9)
 
     assert dmp_sqr([[K(3)], [K(4)]], 1, K) == [[K(6)], [K(7)]]
+
+
+def test_dup_series_sqr():
+    assert dup_series_sqr([], 2, ZZ) == []
+
+    f = dup_from_list([2, 0, 0, 1, 7], ZZ)
+    assert dup_series_sqr(f, 10, ZZ) == dup_series_mul(f, f, 10, ZZ)
+
+    f2 = dup_from_list([QQ(1, 2), QQ(0), QQ(1, 3), QQ(1, 4)], QQ)
+    assert dup_series_sqr(f2, 4, QQ) == dup_series_mul(f2, f2, 4, QQ)
+
+    f3 = dup_from_list([QQ(3, 4), QQ(-1, 2), QQ(1, 6)], QQ)
+    assert dup_series_sqr(f3, 3, QQ) == dup_series_mul(f3, f3, 3, QQ)
+
+    f4 = dup_from_list([QQ(1, 3), QQ(2, 3), QQ(1, 4), QQ(1, 5), QQ(1, 6), QQ(1, 2)], QQ)
+    assert dup_series_sqr(f4, 7, QQ) == dup_series_mul(f4, f4, 7, QQ)
 
 
 def test_dup_pow():

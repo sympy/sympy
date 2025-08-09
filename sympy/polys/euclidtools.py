@@ -1,6 +1,10 @@
 """Euclidean algorithms, GCDs, LCMs and polynomial remainder sequences. """
 
+from __future__ import annotations
 
+from typing import overload, Literal
+
+from sympy.polys.domains.domain import Domain, Er
 from sympy.polys.densearith import (
     dup_sub_mul,
     dup_neg, dmp_neg,
@@ -17,6 +21,7 @@ from sympy.polys.densearith import (
     dup_quo_ground, dmp_quo_ground,
     dup_max_norm, dmp_max_norm)
 from sympy.polys.densebasic import (
+    dup, dmp, _dup, _dmp,
     dup_strip, dmp_raise,
     dmp_zero, dmp_one, dmp_ground,
     dmp_one_p, dmp_zero_p,
@@ -767,7 +772,25 @@ def dmp_qq_collins_resultant(f, g, u, K0):
     return dmp_quo_ground(r, c, u - 1, K0)
 
 
-def dmp_resultant(f, g, u, K, includePRS=False):
+@overload
+def dmp_resultant(
+    f: dmp[Er], g: dmp[Er], u: int, K: Domain[Er], includePRS: Literal[False] = ...
+) -> dmp[Er] | Er: ...
+
+
+@overload
+def dmp_resultant(
+    f: dmp[Er],
+    g: dmp[Er],
+    u: int,
+    K: Domain[Er],
+    includePRS: Literal[True],
+) -> tuple[dmp[Er] | Er, list[dmp[Er]]]: ...
+
+
+def dmp_resultant(
+    f: dmp[Er], g: dmp[Er], u: int, K: Domain[Er], includePRS: bool = False
+) -> dmp[Er] | Er | tuple[dmp[Er] | Er, list[dmp[Er]]]:
     """
     Computes resultant of two polynomials in `K[X]`.
 
@@ -1842,7 +1865,21 @@ def dmp_primitive(f, u, K):
         return cont, [ dmp_quo(c, cont, v, K) for c in f ]
 
 
-def dup_cancel(f, g, K, include=True):
+@overload
+def dup_cancel(
+    f: dup[Er], g: dup[Er], K: Domain[Er], include: Literal[True] = ...
+) -> tuple[dup[Er], dup[Er]]: ...
+
+
+@overload
+def dup_cancel(
+    f: dup[Er], g: dup[Er], K: Domain[Er], include: Literal[False]
+) -> tuple[Er, Er, dup[Er], dup[Er]]: ...
+
+
+def dup_cancel(
+    f: dup[Er], g: dup[Er], K: Domain[Er], include: bool = True
+) -> tuple[dup[Er], dup[Er]] | tuple[Er, Er, dup[Er], dup[Er]]:
     """
     Cancel common factors in a rational function `f/g`.
 
@@ -1856,10 +1893,29 @@ def dup_cancel(f, g, K, include=True):
     (2*x + 2, x - 1)
 
     """
-    return dmp_cancel(f, g, 0, K, include=include)
+    if include:
+        F, G = dmp_cancel(_dmp(f), _dmp(g), 0, K, include=True)
+        return _dup(F), _dup(G)
+    else:
+        cf, cg, F, G = dmp_cancel(_dmp(f), _dmp(g), 0, K, include=False)
+        return cf, cg, _dup(F), _dup(G)
 
 
-def dmp_cancel(f, g, u, K, include=True):
+@overload
+def dmp_cancel(
+    f: dmp[Er], g: dmp[Er], u: int, K: Domain[Er], include: Literal[True] = ...
+) -> tuple[dmp[Er], dmp[Er]]: ...
+
+
+@overload
+def dmp_cancel(
+    f: dmp[Er], g: dmp[Er], u: int, K: Domain[Er], include: Literal[False]
+) -> tuple[Er, Er, dmp[Er], dmp[Er]]: ...
+
+
+def dmp_cancel(
+    f: dmp[Er], g: dmp[Er], u: int, K: Domain[Er], include: bool = True
+) -> tuple[dmp[Er], dmp[Er]] | tuple[Er, Er, dmp[Er], dmp[Er]]:
     """
     Cancel common factors in a rational function `f/g`.
 
