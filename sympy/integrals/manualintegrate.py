@@ -2047,6 +2047,25 @@ def has_cmplx_exp_pair(expr):
             return True
     return False
 
+
+def rewrite_exp_hyperbolic(expr):
+    a = Wild('a')
+    def sinh_replacement(expr):
+        return expr.replace(
+            exp(a) - exp(-a),
+            lambda a: 2*sinh(a)
+        )
+    def cosh_replacement(expr):
+        return expr.replace(
+            exp(a) + exp(-a),
+            lambda a: 2*cosh(a)
+        )
+
+    expr = cosh_replacement(expr)
+    expr = sinh_replacement(expr)
+    return expr
+
+
 # Cache is used to break cyclic integrals.
 # Need to use the same dummy variable in cached expressions for them to match.
 # Also record "u" of integration by parts, to avoid infinite repetition.
@@ -2237,6 +2256,7 @@ def manualintegrate(f, var):
     if has_cmplx_exp_pair(result):
         if result.has(erf):
             result = result.rewrite(exp, cos).expand().rewrite([sinh, cosh], exp).collect(result.atoms(erf)).collect(result.atoms(exp), factor_terms)
+            result = rewrite_exp_hyperbolic(result)
     # Clear the cache of u-parts
     _parts_u_cache.clear()
     # If we got Piecewise with two parts, put generic first
