@@ -32,7 +32,7 @@ from sympy.core.add import Add
 from sympy.core.cache import cacheit
 from sympy.core.containers import Dict
 from sympy.core.expr import Expr
-from sympy.core.function import Derivative
+from sympy.core.function import Derivative, expand
 from sympy.core.logic import fuzzy_not
 from sympy.core.mul import Mul
 from sympy.core.numbers import Integer, Number, E
@@ -66,6 +66,7 @@ from sympy.polys.polytools import degree, lcm_list, gcd_list, Poly
 from sympy.simplify.radsimp import fraction
 from sympy.simplify.simplify import simplify
 from sympy.simplify.powsimp import powsimp
+from sympy.simplify.trigsimp import trigsimp
 from sympy.solvers.solvers import solve
 from sympy.strategies.core import switch, do_one, null_safe, condition
 from sympy.utilities.iterables import iterable
@@ -2039,7 +2040,7 @@ def has_cmplx_exp_pair(expr):
 
     for sub in preorder_traversal(expr):
         if sub.func == exp:
-            arg = simplify(sub.args[0])
+            arg = trigsimp(powsimp(factor_terms(expand(sub.args[0]))))
             exp_args.add(arg)
 
     for a in exp_args:
