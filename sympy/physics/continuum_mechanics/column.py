@@ -172,9 +172,22 @@ class Column:
 
     def apply_support(self, loc):
         """
-        This method applies a support that is fixed in the
-        horizontal direction. It returns the name of the
-        unknown reaction load.
+        Add supports to the system.
+
+        Supports can be defined in two ways in the module:
+
+        1. Using ``apply_support()``
+        Automatically applies all required boundary conditions internally and
+        generates a ``Symbol(R_loc)`` representing the reaction load at the
+        specified support location.
+
+        2. Manual method
+        Add a reaction symbol as a load using ``apply_load()`` and manually
+        specify the corresponding boundary conditions.
+
+
+        This applies a support that is fixed in the
+        horizontal direction. using the apply_support() method
 
         Parameters
         ==========
@@ -193,6 +206,23 @@ class Column:
         >>> c = Column(10, E, A)
         >>> c.apply_support(0)
         >>> c.apply_support(10)
+        >>> c.apply_load(-10, 10, -1)
+        >>> print(c.load)
+        R_0*SingularityFunction(x, 0, -1) + R_10*SingularityFunction(x, 10, -1)
+            - 10*SingularityFunction(x, 10, -1)
+
+
+        This applies a support that is fixed in the
+        horizontal direction. using the apply_load() method
+
+        >>> from sympy.physics.continuum_mechanics.column import Column
+        >>> from sympy.core.symbol import symbols
+        >>> E, A = symbols('E A ')
+        >>> c = Column(10, E, A)
+        >>> c.apply_load(R_0,0,-1)   # Reaction applied as a point load
+        >>> c.apply_load(R_10,10,-1) # Reaction applied as a poinnt load
+        >>> c.bc_extension.append(0) # boundary conditions are added manually
+        >>> c.bc_extension.append(10) # boundary conditions are added manually
         >>> c.apply_load(-10, 10, -1)
         >>> print(c.load)
         R_0*SingularityFunction(x, 0, -1) + R_10*SingularityFunction(x, 10, -1)
@@ -438,10 +468,15 @@ class Column:
         """
         return self._load
 
-    def solve_for_reaction_loads(self):
+    def solve_for_reaction_loads(self,*reactions):
         """
         This method solves the horizontal reaction loads and unknown
         displacement jumps due to telescope hinges.
+
+        Parameters
+        ==========
+        reactions: If supports of the system are applied manually using apply_load()
+        method The reaction load symbols to be passed as reactions.
 
         Examples
         ========
@@ -461,12 +496,31 @@ class Column:
         >>> c.solve_for_reaction_loads()
         >>> c.reaction_loads
         {R_0: 31, R_10: 29}
+
+        The same example when applied applied supports using manual method
+        apply_load()
+
+        >>> from sympy.physics.continuum_mechanics.column import Column
+        >>> from sympy.core.symbol import symbols
+        >>> E, A = symbols('E A')
+        >>> R, G = symbols('R G')
+        >>> c = Column(10, A, E)
+        >>> c.apply_load(R,0,-1) # applied reaction load as a point load
+        >>> c.apply_load(G,10,-1) # applied reaction load as a point load
+        >>> c.bc_extension.append(0) # boundary conditions are added manually
+        >>> c.bc_extension.append(10) # boundary conditions are added manually
+        >>> c.apply_load(-5, 0, 0, end=10)
+        >>> c.apply_load(-10, 4, -1)
+        >>> c.solve_for_reaction_loads(R,G) # Reaction loads need to be passed.
+        >>> c.reaction_loads
+        {R: 31, G: 29}
         """
         x = self.variable
         qx = self._load
         L = self.length
         A = self.area
         E = self.elastic_modulus
+        applied_supports = list(reactions) + self._applied_supports
 
         C_N, C_u = symbols('C_N, C_u')
 
@@ -483,14 +537,14 @@ class Column:
         eq_bc_hinge = [Eq(limit(axial_force, x, loc, dir='+'), 0) for loc in self._bc_hinge] # Just right to avoid infinity
 
         total_eq = eq_axial_force + eq_bc_displacement + eq_bc_hinge
-        unknowns = self._applied_supports + self._applied_hinges + [C_N, C_u]
+        unknowns = applied_supports + self._applied_hinges + [C_N, C_u]
 
         solution = list((linsolve(total_eq, unknowns).args)[0])
         solution = [nsimplify(s, rational=True) for s in solution] # To get rid of tiny residuals
 
-        num_supports = len(self._applied_supports)
+        num_supports = len(applied_supports)
         reaction_solutions = solution[:num_supports]
-        self._reaction_loads = dict(zip(self._applied_supports, reaction_solutions))
+        self._reaction_loads = dict(zip(applied_supports, reaction_solutions))
 
         displacement_solutions = solution[num_supports:-2]
         self._hinge_extensions = dict(zip(self._applied_hinges, displacement_solutions))
