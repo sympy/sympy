@@ -204,6 +204,24 @@ def _useries_sub(
     return dup_sub(coeffs1, coeffs2, dom), min_prec
 
 
+def _useries_rsub_ground(
+    s: USeries[Er], n: Er, dom: Domain[Er], ring_prec: int
+) -> USeries[Er]:
+    """
+    Helper function to subtract a power series from the ground element.
+
+    Mostly need for the series expansion of functions like exp, log, etc.
+    """
+    coeffs, prec = s
+
+    if n == 0:
+        return s
+
+    coeffs_neg = dup_neg(coeffs, dom)
+    coeffs = dup_add_ground(coeffs_neg, n, dom)
+    return _useries(coeffs, prec, dom, ring_prec)
+
+
 def _useries_mul(
     s1: USeries[Er], s2: USeries[Er], dom: Domain[Er], ring_prec: int
 ) -> USeries[Er]:
@@ -308,7 +326,6 @@ def _useries_sqrt(s: USeries[Ef], dom: Field[Ef], ring_prec: int) -> USeries[Ef]
             squared = _useries_square(tmp_root, dom, ds + 1)
 
             if squared[0] == norm_s[0]:
-                print("yes")
                 root = (root[0], None)
                 return _useries_mul_ground(root, sqrt_c0, dom, ring_prec)
 
@@ -359,8 +376,6 @@ def _useries_div(
         # Shift both series to make divisor's valuation zero
         shifted_coeffs1 = dup_rshift(coeffs1, val2, dom)
         shifted_coeffs2 = dup_rshift(coeffs2, val2, dom)
-
-        # cap = ring_prec - val2
 
         prec1 = prec1 - val2 if prec1 is not None else ring_prec
         prec2 = prec2 - val2 if prec2 is not None else ring_prec
@@ -652,7 +667,7 @@ def _useries_atanh(s: USeries[Ef], dom: Field[Ef], ring_prec: int) -> USeries[Ef
 
     if not dom.is_zero(coeffs[-1]):
         raise ValueError(
-            "Hyperbolic Arctanget requires the constant term of the input series to be zero."
+            "Hyperbolic Arctangent requires the constant term of the input series to be zero."
         )
 
     if prec is None:
@@ -665,8 +680,7 @@ def _useries_atanh(s: USeries[Ef], dom: Field[Ef], ring_prec: int) -> USeries[Ef
     # atanh(f(x))' = f'(x) / (1 - f(x)**2)
     ds = _useries_derivative(s, dom, ring_prec)
     s2 = _useries_square(s, dom, ring_prec)
-    neg_s2 = _useries_neg(s2, dom, ring_prec)
-    q = _useries_add_ground(neg_s2, dom.one, dom, ring_prec)
+    q = _useries_rsub_ground(s2, dom.one, dom, ring_prec)
     q_inv = _useries_inverse(q, dom, ring_prec)
     dv_atanh = _useries_mul(ds, q_inv, dom, ring_prec)
     return _useries_integrate(dv_atanh, dom, ring_prec)
@@ -695,8 +709,7 @@ def _useries_asin(s: USeries[Ef], dom: Field[Ef], ring_prec: int) -> USeries[Ef]
         # asin(f(x))' = f'(x) / sqrt(1 - f(x)**2)
         ds = _useries_derivative(s, dom, ring_prec)
         s2 = _useries_square(s, dom, ring_prec)
-        neg_s2 = _useries_neg(s2, dom, ring_prec)
-        q = _useries_add_ground(neg_s2, dom.one, dom, ring_prec)
+        q = _useries_rsub_ground(s2, dom.one, dom, ring_prec)
         q_sqrt = _useries_sqrt(q, dom, ring_prec)
         q_sqrt_inv = _useries_inverse(q_sqrt, dom, ring_prec)  # 1 / sqrt(1 - s^2)
 
@@ -822,8 +835,7 @@ def _useries_tanh(s: USeries[Ef], dom: Field[Ef], ring_prec: int) -> USeries[Ef]
         term1 = _useries_sub(s, term1, dom, ring_prec)
 
         term2 = _useries_square(y, dom, ring_prec)
-        neg_term2 = _useries_neg(term2, dom, ring_prec)
-        term2 = _useries_add_ground(neg_term2, dom.one, dom, ring_prec)
+        term2 = _useries_rsub_ground(term2, dom.one, dom, ring_prec)
 
         mul = _useries_mul(term1, term2, dom, ring_prec)
         y = _useries_add(y, mul, dom, ring_prec)
@@ -943,9 +955,7 @@ def _useries_cos(s: USeries[Ef], dom: Field[Ef], ring_prec: int) -> USeries[Ef]:
         t = _useries_tan(s, dom, ring_prec)
 
         t_sq = _useries_square(t, dom, ring_prec)  # t_sq = tan^2(s/2)
-
-        neg_t_sq = _useries_neg(t_sq, dom, ring_prec)
-        p = _useries_add_ground(neg_t_sq, dom.one, dom, ring_prec)  # 1 - tan^2(s/2)
+        p = _useries_rsub_ground(t_sq, dom.one, dom, ring_prec)  # 1 - tan^2(s/2)
 
         q = _useries_add_ground(t_sq, dom.one, dom, ring_prec)
         q_inv = _useries_inverse(q, dom, ring_prec)  # 1/(1 + tan^2(s/2))
@@ -1171,7 +1181,7 @@ class PythonPowerSeriesRingZZ:
 
     def to_dense(self, s: USeries[MPZ]) -> dup[MPZ]:
         """Return the coefficients of a power series as a dense list."""
-        return s[0]
+        return list(s[0])
 
     def series_prec(self, s: USeries[MPZ]) -> int | None:
         """Return the precision of a power series."""
@@ -1404,7 +1414,7 @@ class PythonPowerSeriesRingQQ:
 
     def to_dense(self, s: USeries[MPQ]) -> dup[MPQ]:
         """Return the coefficients of a power series as a dense list."""
-        return s[0]
+        return list(s[0])
 
     def series_prec(self, s: USeries[MPQ]) -> int | None:
         """Return the precision of a power series."""
