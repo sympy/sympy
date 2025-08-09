@@ -827,5 +827,5 @@ class PuiseuxPoly(Generic[Er]):
             if n:
                 e = list(expv)
                 e[i] -= 1
-                g[tuple(e)] = coeff * n
+                g[tuple(e)] = coeff * n # type: ignore
         return ring.from_dict(g)
