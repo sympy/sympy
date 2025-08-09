@@ -32,7 +32,7 @@ from sympy.core.add import Add
 from sympy.core.cache import cacheit
 from sympy.core.containers import Dict
 from sympy.core.expr import Expr
-from sympy.core.function import Derivative
+from sympy.core.function import Derivative, expand
 from sympy.core.logic import fuzzy_not
 from sympy.core.mul import Mul
 from sympy.core.numbers import Integer, Number, E
@@ -40,6 +40,8 @@ from sympy.core.power import Pow
 from sympy.core.relational import Eq, Ne
 from sympy.core.singleton import S
 from sympy.core.symbol import Dummy, Symbol, Wild
+from sympy.core.exprtools import factor_terms
+from sympy.core.traversal import preorder_traversal
 from sympy.functions.elementary.complexes import Abs
 from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.hyperbolic import (HyperbolicFunction, csch,
@@ -64,6 +66,7 @@ from sympy.polys.polytools import degree, lcm_list, gcd_list, Poly
 from sympy.simplify.radsimp import fraction
 from sympy.simplify.simplify import simplify
 from sympy.simplify.powsimp import powsimp
+from sympy.simplify.trigsimp import trigsimp
 from sympy.solvers.solvers import solve
 from sympy.strategies.core import switch, do_one, null_safe, condition
 from sympy.utilities.iterables import iterable
@@ -1424,6 +1427,31 @@ def trig_product_rule(integral: IntegralInfo):
         return CscCotRule(integrand, symbol)
 
 
+def trig_cmplx_exp_rule(integral: IntegralInfo):
+    """
+    Strategy that rewrites sin, cos, sinh, and cosh in terms of complex exponentials.
+    Useful for integration techniques that handle exponentials better.
+    Applies only when the integrand belongs to a class that benefits from exponential rewriting,
+    such as combinations involving Error functions.
+
+    sin(x)  -> (exp(i*x) - exp(-i*x)) / (2*i)
+    cos(x)  -> (exp(i*x) + exp(-i*x)) / 2
+    sinh(x) -> (exp(x) - exp(-x)) / 2
+    cosh(x) -> (exp(x) + exp(-x)) / 2
+    """
+    integrand, symbol = integral
+
+    if not integrand.has(erf, erfc, erfi):
+        return
+
+    # Replace trig and hyperbolic functions with their exponential forms
+    rewritten = integrand.rewrite([sin, cos, sinh, cosh], exp)
+
+    if rewritten != integrand:
+        steps = integral_steps(rewritten, symbol)
+        return RewriteRule(integrand, symbol, rewritten, steps)
+
+
 def quadratic_denom_rule(integral):
     integrand, symbol = integral
     a = Wild('a', exclude=[symbol])
@@ -2003,6 +2031,42 @@ def rewrites_rule(integral):
 def fallback_rule(integral):
     return DontKnowRule(*integral)
 
+def has_cmplx_exp_pair(expr):
+    """
+    Check if the expression contains a pair of complex exponentials
+    that can be simplified to a sin or cos function.
+    """
+    exp_args = set()
+
+    for sub in preorder_traversal(expr):
+        if sub.func == exp:
+            arg = trigsimp(powsimp(factor_terms(expand(sub.args[0]))))
+            exp_args.add(arg)
+
+    for a in exp_args:
+        if -a in exp_args:
+            return True
+    return False
+
+
+def rewrite_exp_hyperbolic(expr):
+    a = Wild('a')
+    def sinh_replacement(expr):
+        return expr.replace(
+            exp(a) - exp(-a),
+            lambda a: 2*sinh(a)
+        )
+    def cosh_replacement(expr):
+        return expr.replace(
+            exp(a) + exp(-a),
+            lambda a: 2*cosh(a)
+        )
+
+    expr = cosh_replacement(expr)
+    expr = sinh_replacement(expr)
+    return expr
+
+
 # Cache is used to break cyclic integrals.
 # Need to use the same dummy variable in cached expressions for them to match.
 # Also record "u" of integration by parts, to avoid infinite repetition.
@@ -2129,7 +2193,8 @@ def integral_steps(integrand, symbol, **options):
                     integral_is_subclass(Mul, Pow),
                     distribute_expand_rule),
                 trig_powers_products_rule,
-                trig_expand_rule
+                trig_expand_rule,
+                trig_cmplx_exp_rule
             )),
             null_safe(condition(integral_is_subclass(Mul, Pow), nested_pow_rule)),
             null_safe(trig_substitution_rule)
@@ -2189,6 +2254,10 @@ def manualintegrate(f, var):
     sympy.integrals.integrals.Integral
     """
     result = integral_steps(f, var).eval()
+    if has_cmplx_exp_pair(result):
+        if result.has(erf):
+            result = result.rewrite(exp, cos).expand().rewrite([sinh, cosh], exp).collect(result.atoms(erf)).collect(result.atoms(exp), factor_terms)
+            result = rewrite_exp_hyperbolic(result)
     # Clear the cache of u-parts
     _parts_u_cache.clear()
     # If we got Piecewise with two parts, put generic first
