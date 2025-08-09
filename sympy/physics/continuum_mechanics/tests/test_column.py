@@ -85,6 +85,66 @@ def test_column():
 
 test_column()
 
+
+def test_supports_using_manual_method():
+    # Test the load equation for column with a support
+    E = Symbol('E')
+    A = Symbol('A')
+    R_0 = Symbol('R_0')
+    c5 = Column(10, E, A)
+    c5.apply_load(R_0,0,-1)
+    c5._bc_extension.append(0)
+    c5.apply_load(10, 0, -1)
+    c5.apply_load(10, 5, -1)
+
+    p = c5.load
+    q = R_0 * SingularityFunction(x, 0, -1) + 10 * SingularityFunction(x, 0, -1) + 10 * SingularityFunction(x, 5, -1)
+    assert p == q
+
+    # Test for one fixed support at x=0
+    E, A = symbols('E A')
+    R_0 = Symbol('R_0')
+
+    c = Column(5, E, A)
+    c.apply_load(R_0,0,-1)
+    c._bc_extension.append(0)
+    c.apply_load(-1, 2.5, -1)
+    c.apply_load(2, 5, -1)
+
+    c.solve_for_reaction_loads(R_0)
+    p = c.reaction_loads
+    q = {R_0: -1}
+    assert p == q
+
+    # Test for one fixed support at x=L
+    c1 = Column(5, E, A)
+    R_5 = Symbol('R_5')
+    c1.apply_load(R_5,5,-1)
+    c1._bc_extension.append(5)
+    c1.apply_load(-4, 2.5, -1)
+    c1.apply_load(2, 5, -1)
+
+    c1.solve_for_reaction_loads(R_5)
+    p = c1.reaction_loads
+    q = {R_5: 2}
+    assert p == q
+
+    # Test for two supports at ends
+    c2 = Column(10, E, A)
+    R_0 = Symbol('R_0')
+    R_10 = Symbol('R_10')
+    c2.apply_load(R_10,10,-1)
+    c2.apply_load(R_0,0,-1)
+    c2._bc_extension.append(0)
+    c2._bc_extension.append(10)
+    c2.apply_load(-1, 5, -1)
+
+    c2.solve_for_reaction_loads(R_0,R_10)
+    p = c2.reaction_loads
+    q = {R_0: Rational(1,2), R_10: Rational(1,2)}
+    assert p == q
+
+
 def test_distributed_loads():
     E, A = symbols('E A')
     c = Column(10, E, A)
@@ -135,6 +195,7 @@ def test_distributed_loads():
     assert p == q
 
 test_distributed_loads()
+
 
 def test_remove_load():
     E, A = symbols('E A')
@@ -203,6 +264,7 @@ def test_remove_load():
     assert p == q
 
 test_remove_load()
+
 
 def test_reactions_point_loads():
     E, A = symbols('E A')
@@ -342,6 +404,7 @@ def test_reactions_point_loads():
 
 test_reactions_point_loads()
 
+
 def test_reactions_higher_orders():
     E, A = symbols('E A')
 
@@ -442,6 +505,7 @@ def test_reactions_higher_orders():
 
 test_reactions_higher_orders()
 
+
 def test_telescope_hinge():
     E, A = symbols('E A')
     c = Column(10, E, A)
@@ -500,6 +564,7 @@ def test_telescope_hinge():
     assert p == q
 
 test_telescope_hinge()
+
 
 def test_equations():
     c = Column(10, 210000, 1)
