@@ -11,13 +11,13 @@ from mpmath.libmp.libmpf import prec_to_dps
 from sympy.core.sorting import default_sort_key
 from sympy.core.evalf import DEFAULT_MAXPREC, PrecisionExhausted
 from sympy.core.logic import fuzzy_and, fuzzy_or
-from sympy.core.numbers import Float
+from sympy.core.numbers import AlgebraicNumber, Float
 from sympy.core.sympify import _sympify
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.polys import roots, CRootOf, ZZ, QQ, EX
 from sympy.polys.matrices import DomainMatrix
 from sympy.polys.matrices.eigen import dom_eigenvects, dom_eigenvects_to_sympy
-from sympy.polys.polytools import gcd
+from sympy.polys.polytools import all_roots, gcd
 
 from .exceptions import MatrixError, NonSquareMatrixError
 from .determinant import _find_reasonable_pivot
@@ -1090,6 +1090,36 @@ _is_negative_semidefinite.__doc__ = _doc_positive_definite
 _is_indefinite.__doc__            = _doc_positive_definite
 
 
+def _blocks_from_nullity_chain(d):
+    """Return a list of the size of each Jordan block.
+    If d_n is the nullity of E**n, then the number
+    of Jordan blocks of size n is
+        2*d_n - d_(n-1) - d_(n+1)"""
+
+    # d[0] is always the number of columns, so skip past it
+    mid = [2*d[n] - d[n - 1] - d[n + 1] for n in range(1, len(d) - 1)]
+    # d is assumed to plateau with "d[ len(d) ] == d[-1]", so
+    # 2*d_n - d_(n-1) - d_(n+1) == d_n - d_(n-1)
+    end = [d[-1] - d[-2]] if len(d) > 1 else [d[0]]
+
+    return mid + end
+
+
+def _pick_vec(M, small_basis, big_basis):
+    """Picks a vector from big_basis that isn't in
+    the subspace spanned by small_basis"""
+
+    if len(small_basis) == 0:
+        return big_basis[0]
+
+    for v in big_basis:
+        _, pivots = M.hstack(*(small_basis + [v])).echelon_form(
+                with_pivots=True)
+
+        if pivots[-1] == len(small_basis):
+            return v
+
+
 @overload
 def _jordan_form(
         M: Tmat,
@@ -1228,40 +1258,21 @@ def _jordan_form(M: Tmat,
 
         return ret
 
-    def blocks_from_nullity_chain(d):
-        """Return a list of the size of each Jordan block.
-        If d_n is the nullity of E**n, then the number
-        of Jordan blocks of size n is
-
-            2*d_n - d_(n-1) - d_(n+1)"""
-
-        # d[0] is always the number of columns, so skip past it
-        mid = [2*d[n] - d[n - 1] - d[n + 1] for n in range(1, len(d) - 1)]
-        # d is assumed to plateau with "d[ len(d) ] == d[-1]", so
-        # 2*d_n - d_(n-1) - d_(n+1) == d_n - d_(n-1)
-        end = [d[-1] - d[-2]] if len(d) > 1 else [d[0]]
-
-        return mid + end
-
-    def pick_vec(small_basis, big_basis):
-        """Picks a vector from big_basis that isn't in
-        the subspace spanned by small_basis"""
-
-        if len(small_basis) == 0:
-            return big_basis[0]
-
-        for v in big_basis:
-            _, pivots = M.hstack(*(small_basis + [v])).echelon_form(
-                    with_pivots=True)
-
-            if pivots[-1] == len(small_basis):
-                return v
-
     # roots doesn't like Floats, so replace them with Rationals
     if has_floats:
         from sympy.simplify import nsimplify
         mat = mat.applyfunc(lambda x: nsimplify(x, rational=True))
 
+    # check if matrix is rational
+    has_rationals = all(num.is_rational for num in list(mat.iter_values()))
+
+    if has_rationals:
+        if calc_transform:
+            P, J = jordan_form_rational_matrix(mat, calc_transform=True)
+            return restore_floats2(P, J)
+        else:
+            J = jordan_form_rational_matrix(mat, calc_transform=False)
+            return restore_floats1(J)
     # first calculate the jordan block structure
     eigs = mat.eigenvals()
 
@@ -1293,7 +1304,7 @@ def _jordan_form(M: Tmat,
     for eig in sorted(eigs.keys(), key=default_sort_key):
         algebraic_multiplicity = eigs[eig]
         chain = nullity_chain(eig, algebraic_multiplicity)
-        block_sizes = blocks_from_nullity_chain(chain)
+        block_sizes = _blocks_from_nullity_chain(chain)
 
         # if block_sizes =       = [a, b, c, ...], then the number of
         # Jordan blocks of size 1 is a, of size 2 is b, etc.
@@ -1347,7 +1358,7 @@ def _jordan_form(M: Tmat,
             # and not the small, but also something that is independent
             # of any other generalized eigenvectors from a different
             # generalized eigenspace sharing the same eigenvalue.
-            vec      = pick_vec(null_small + eig_basis, null_big)
+            vec      = _pick_vec(mat, null_small + eig_basis, null_big)
             new_vecs = [eig_mat(eig, i).multiply(vec, dotprodsimp=None) for i in range(size)]
 
             eig_basis.extend(new_vecs)
@@ -1356,6 +1367,144 @@ def _jordan_form(M: Tmat,
     basis_mat = mat.hstack(*jordan_basis)
 
     return restore_floats2(basis_mat, jordan_mat)
+
+def jordan_form_rational_matrix(M, calc_transform):
+    """
+    Return (P, J), where J is the Jordan form and P satisfies M = P J P^{-1},
+    if the matrix is rational. If calc_transform is False, return only J.
+    """
+    from itertools import chain
+
+    def char_mat(lam, mul):
+        # Build (A - lambda * I)^mul over the algebraic field of lam
+        K = QQ.algebraic_field(lam)
+        dM = M.to_DM()
+        return (dM.convert_to(K) - dM.eye(M.shape, K) * K.unit).pow(mul)
+
+    def nullspace_matrix(fac, multiplicity):
+        roots = factor_to_roots[fac]
+        base_root = roots[0]
+        a = AlgebraicNumber(base_root, alias='a')
+        base_nullspace = char_mat(a, multiplicity).nullspace().to_Matrix().T
+        all_vectors = [base_nullspace.subs(a, r)  for r in roots]
+        return all_vectors
+
+    # helper functions
+    def nullity_chain(val, algebraic_multiplicity):
+        """Calculate the sequence  [0, nullity(E), nullity(E**2), ...]
+        until it is constant where ``E = M - val*I``"""
+
+        ret     = [0]
+        cols = M.cols
+        mat_char = char_mat((factor_to_roots[val])[0], 1)
+        mat_pow = mat_char
+        nullity = cols -  mat_char.rank()
+        i       = 2
+
+        while nullity != ret[-1]:
+            ret.append(nullity)
+
+            if nullity == algebraic_multiplicity:
+                break
+            mat_pow = mat_pow * mat_char
+            nullity = cols - mat_pow.rank()
+            i       += 1
+            # Due to issues like #7146 and #15872, SymPy sometimes
+            # gives the wrong rank. In this case, raise an error
+            # instead of returning an incorrect matrix
+            if nullity < ret[-1] or nullity > algebraic_multiplicity:
+                raise MatrixError(
+                    "SymPy had encountered an inconsistent "
+                    "result while computing Jordan block: "
+                    "{}".format(M))
+        return ret
+
+    def nullspace_to_list(mat):
+        # Convert list of matrices to list of column vectors
+        return [[j.col(i) for i in range(j.cols)] for j in mat]
+
+    char_eq = M.charpoly()
+    _, factors = char_eq.factor_list()
+    factor_to_roots = {factor: list(set(all_roots(factor))) for factor, _ in factors}
+    eigenvals = list(chain.from_iterable(factor_to_roots.values()))
+
+    if len(set(eigenvals)) == M.cols:
+        jordan_mat = M.diag(*sorted(eigenvals, key=default_sort_key))
+
+        if not calc_transform:
+            return jordan_mat
+
+        jordan_basis = []
+        for fac, multiplicity in factors:
+            eigenvectors = nullspace_matrix(fac, multiplicity)
+            jordan_basis.extend(eigenvectors)
+
+        basis_mat = M.hstack(*jordan_basis)
+        return basis_mat, jordan_mat
+
+    block_structure = []
+    for fac, m in factors:
+        chain = nullity_chain(fac, m)
+        block_sizes = _blocks_from_nullity_chain(chain)
+        size_nums = [(i+1, num) for i, num in enumerate(block_sizes)]
+
+        # we expect larger Jordan blocks to come earlier
+        size_nums.reverse()
+
+        roots = factor_to_roots[fac]
+        block_structure.extend(
+            [(r, size) for r in roots for size, num in size_nums for _ in range(num)]
+        )
+
+    jordan_form_size = sum(size for _, size in block_structure)
+
+    if jordan_form_size != M.rows:
+        raise MatrixError(
+            "SymPy had encountered an inconsistent result while "
+            "computing Jordan block. : {}".format(M))
+
+    blocks2     = (M.jordan_block(size=size, eigenvalue=eig) for eig, size in block_structure)
+    jordan_mat = M.diag(*blocks2)
+
+    if not calc_transform:
+        return jordan_mat
+    jordan_basis = []
+
+    for fac, _ in factors:
+        roots = factor_to_roots[fac]
+        a = AlgebraicNumber(roots[0], alias='a')
+        null_big, null_small = {}, {}
+
+        # Precompute nullspaces once per size
+        for _, size in block_structure:
+            if (fac, size) not in null_big:
+                null_big[(fac, size)] = nullspace_to_list(nullspace_matrix(fac, size))
+                null_small[(fac, size)] = nullspace_to_list(nullspace_matrix(fac, size - 1))
+
+        for index, eig in enumerate(roots):
+            eig_basis = []
+
+            for block_eig, size in block_structure:
+                if block_eig != eig:
+                    continue
+
+                vec = _pick_vec(M, null_small[(fac, size)][index] + eig_basis, null_big[(fac, size)][index])
+                new_vecs = [M.eye(M.cols).multiply(vec, dotprodsimp=None)]
+                if size > 1:
+                    mat_char = char_mat(eig, 1)
+                    mat_power = mat_char
+                    new_vecs.append(mat_power.to_Matrix().subs(a, eig).multiply(vec, dotprodsimp=None))
+                    for _ in range(2, size):
+                        mat_power = mat_power * mat_char
+                        new_vecs.append(mat_power.to_Matrix().subs(a, eig).multiply(vec, dotprodsimp=None))
+
+                eig_basis.extend(new_vecs)
+                jordan_basis.extend(reversed(new_vecs))
+
+
+    basis_mat = M.hstack(*jordan_basis)
+
+    return basis_mat, jordan_mat
 
 
 def _left_eigenvects(M, **flags):
