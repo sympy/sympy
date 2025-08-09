@@ -218,6 +218,7 @@ class Column:
         >>> from sympy.physics.continuum_mechanics.column import Column
         >>> from sympy.core.symbol import symbols
         >>> E, A = symbols('E A ')
+        >>> R_0, R_10 = symbols('R_0 R_10')
         >>> c = Column(10, E, A)
         >>> c.apply_load(R_0,0,-1)   # Reaction applied as a point load
         >>> c.apply_load(R_10,10,-1) # Reaction applied as a poinnt load
