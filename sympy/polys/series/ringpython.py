@@ -15,6 +15,7 @@ from sympy.polys.densearith import (
     dup_sub,
     dup_exquo,
     dup_series_mul,
+    dup_series_sqr,
     dup_series_pow,
     dup_rshift,
 )
@@ -237,7 +238,16 @@ def _useries_mul_ground(
 
 def _useries_square(s: USeries[Er], dom: Domain[Er], ring_prec: int) -> USeries[Er]:
     """Compute the square of a power series."""
-    return _useries_mul(s, s, dom, ring_prec)
+    coeffs, prec = s
+
+    if prec is None:
+        d = dup_degree(coeffs) * 2
+        if d < ring_prec:
+            return dup_series_sqr(coeffs, ring_prec, dom), None
+        else:
+            prec = ring_prec
+
+    return dup_series_sqr(coeffs, prec, dom), prec
 
 
 def _useries_sqrt_newton(s: USeries[Ef], dom: Field[Ef], ring_prec: int) -> USeries[Ef]:
