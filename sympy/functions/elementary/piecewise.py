@@ -226,6 +226,12 @@ class Piecewise(DefinedFunction):
         for e, c in self.args:
             if c == True or c.subs(x, 0) == True:
                 return e.as_leading_term(x)
+            elif cdir == -1 and c.subs(x, 0) == False:
+                if c.func == Lt and c.lhs==x:
+                    return e.as_leading_term(x)
+            elif cdir == 1 and c.subs(x, 0) == False:
+                if c.func == Gt and c.lhs==x:
+                    return e.as_leading_term(x)
 
     def _eval_adjoint(self):
         return self.func(*[(e.adjoint(), c) for e, c in self.args])
