@@ -514,7 +514,7 @@ class Column:
         >>> c.apply_load(-10, 4, -1)
         >>> c.solve_for_reaction_loads(R,G) # Reaction loads need to be passed.
         >>> c.reaction_loads
-        {R: 31, G: 29}
+        {G: 29, R: 31}
         """
         x = self.variable
         qx = self._load
