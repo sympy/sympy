@@ -4085,20 +4085,24 @@ def test_issue_28156():
     assert roots
 
 def test_negative_real_part_conditions():
-    # TODO:
-    #   - update the expected results with the simplified conditions
-    #   - write tests for different domains
     b0, b1, b2, b3, b4 = symbols('b_0 b_1 b_2 b_3 b_4')
     p1 = Poly(b4 * s**4 + b3 * s**3 + b2 * s**2 + b1 * s + b0, s)
+    p1_ = Poly(b4 * s**4 + b3 * s**3 + b2 * s**2 + b1 * s + b0, s,
+               domain = EXRAW)
 
     conds = p1.negative_real_part_conditions()
+    conds_ = p1_.negative_real_part_conditions()
     assert conds == [
-        b3*b4 > 0, b3**2*(-b1*b4 + b2*b3) > 0,
-        (-b0*b3**3 + b1*b3*(-b1*b4 + b2*b3))*(-b1*b4 + b2*b3)**2 > 0,
-        b0*b3*(-b0*b3**3 + b1*b3*(-b1*b4 + b2*b3))**3*(-b1*b4 + b2*b3) > 0]
+        b3*b4 > 0, -b1*b4 + b2*b3 > 0,
+        -b0*b3**3 - b1**2*b3*b4 + b1*b2*b3**2 > 0,
+        b0*b3 > 0]
+    assert conds_ == [
+        b3*b4 > 0, -b1*b4 + b2*b3 > 0,
+        -b3*(b0*b3**2+b1*(b1*b4 - b2*b3)) > 0,
+        b0*b3 > 0]
 
     p2 = Poly(-3*s**2 - 2*s - b0, s)
-    assert p2.negative_real_part_conditions() == [true, 8 * b0 > 0]
+    assert p2.negative_real_part_conditions() == [b0 > 0]
 
     a_ = symbols('a', nonpositive = True)
 
@@ -4106,15 +4110,17 @@ def test_negative_real_part_conditions():
     assert p4.negative_real_part_conditions() == [a_ * b0 > 0, false]
 
     p5 = Poly(b0*s**2 + a_*s - 3, s)
-    assert p5.negative_real_part_conditions() == [a_ * b0 > 0, -3 * a_**3 > 0]
+    assert p5.negative_real_part_conditions() == [a_ * b0 > 0, -a_ > 0]
 
     p6 = Poly(b0 + b1*s**2 + b1*s + b3*s**4 + b3*s**3, s)
-    expected6 = [b3**2 > 0, false]
+    p6_ = Poly(b0 + b1*s**2 + b1*s + b3*s**4 + b3*s**3, s, domain = EXRAW)
 
-    assert p6.negative_real_part_conditions() == expected6
+    assert p6.negative_real_part_conditions() == [false]
+    assert p6_.negative_real_part_conditions() == [true, false, true, true]
 
     # test for issue https://github.com/sympy/sympy/issues/28010
     # In that test we want to be sure that negative_real_conditions works fast
+    # with EXRAW
     I_L = Symbol('I_L', nonnegative=True, real=True)
     I_T = Symbol('I_T', nonnegative=True, real=True)
     d_L = Symbol('d_L', nonnegative=True, real=True)

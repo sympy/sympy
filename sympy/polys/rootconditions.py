@@ -132,14 +132,31 @@ def _rec_routh_hurwitz_poly(p: list[PolyElement[Er]],
     qs = qs[1:]
 
     cond = p[0] * p[1]
+
+    # This check is really important. It stops the recursion immediately and
+    # avoid a possible infinite while loop in _clear_cond_poly.
+    if cond.is_zero:
+        return [K.zero]
+
     cond = _clear_cond_poly(cond, previous_cond, K)
 
-    previous_cond.append(cond)
+    # These checks are also important, because adding 1 or -1 to the previous
+    # conditions will lead to an infinite loop in the next _clear_cond_poly.
+    if cond == K(-1):
+        return [K(-1)]
+
+    if not cond.is_one:
+        previous_cond.append(cond)
 
     return _rec_routh_hurwitz_poly(qs, previous_cond, K)
 
 def _clear_cond_poly(cond: PolyElement[Er], previous_cond, K):
-    # Divide out factors known to be positive
+    # Divide out factors known to be positive from previous conditions.
+
+    # There are not controls in that functions on cond and previous_cond,
+    # we assume that at this point, there are no zeroes, ones and negative ones
+    # in previous_cond.
+    # If there are, there will be an infinite while loop.
     for c in previous_cond:
         cond_quo, r = K.div(cond, c)
         while not r:
@@ -147,8 +164,11 @@ def _clear_cond_poly(cond: PolyElement[Er], previous_cond, K):
             cond_quo, r = K.div(cond, c)
 
     # Remove factors of even degree and reduce odd degree factors
-    sign, facs_m = cond.sqf_list()
-    cond = prod([fac for fac, m in facs_m if m % 2 == 1]) * sign
+    common_factor, facs_m = cond.sqf_list()
+
+    cond = K(prod([fac for fac, m in facs_m if m % 2 == 1]))
+    if common_factor < 0:
+        cond = cond * K(-1)
 
     return cond
 

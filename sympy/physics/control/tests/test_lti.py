@@ -294,11 +294,11 @@ def test_TransferFunction_functions():
 
     stab_cond = TransferFunction(1, generic_den, s).get_asymptotic_stability_conditions()
     assert stab_cond == [
-        b3*b4 > 0, b3**2*(-b1*b4 + b2*b3) > 0,
-        (-b0*b3**3 + b1*b3*(-b1*b4 + b2*b3))*(-b1*b4 + b2*b3)**2 > 0,
-        b0*b3*(-b0*b3**3 + b1*b3*(-b1*b4 + b2*b3))**3*(-b1*b4 + b2*b3) > 0]
-    assert TransferFunction(1, (s+1)*(s+2*I)*(s-2*I), s).get_asymptotic_stability_conditions() == [true, false]
-    assert TransferFunction(1, (s+1)*(s+2)*(s+1/2), s).get_asymptotic_stability_conditions() == [true, true, true]
+        b3*b4 > 0, -b1*b4 + b2*b3 > 0,
+        -b0*b3**3 -b1**2*b3*b4 + b1*b2*b3**2 > 0,
+        b0*b3 > 0]
+    assert TransferFunction(1, (s+1)*(s+2*I)*(s-2*I), s).get_asymptotic_stability_conditions() == [false]
+    assert TransferFunction(1, (s+1)*(s+2)*(s+1/2), s).get_asymptotic_stability_conditions() == [true]
     assert stable_tf.get_asymptotic_stability_conditions() == [true]
 
     # Zeros of a transfer function.
@@ -2308,9 +2308,9 @@ def test_StateSpace_stability():
     A1 = Matrix([[0,1,0],[0,0,1], [k-1, -2*k, -1]])
     ss1 = StateSpace(A1, B, C, D)
     ineq = ss1.get_asymptotic_stability_conditions()
-    assert ineq == [True, 3 * k - 1 > 0, (1 - k)*(3 * k - 1)**3 > 0]
+    assert ineq == [3 * k - 1 > 0, 1 - k > 0]
 
     A2 = Matrix([[1,0,0], [0,-1,k], [0,0,-1]])
     ss2 = StateSpace(A2, B, C, D)
     ineq = ss2.get_asymptotic_stability_conditions()
-    assert ineq == [True, False]
+    assert ineq == [False]
