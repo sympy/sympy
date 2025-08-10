@@ -3,7 +3,7 @@ from __future__ import annotations
 from contextlib import contextmanager
 from typing import Sequence, Union, TYPE_CHECKING
 
-from sympy.polys.densebasic import dup_reverse
+from sympy.polys.densebasic import dup, dup_reverse
 from sympy.polys.domains import Domain, QQ, ZZ
 from sympy.polys.series.ringpython import _useries_valuation
 from sympy.polys.series.base import series_pprint
@@ -173,7 +173,7 @@ class FlintPowerSeriesRingZZ:
         if isinstance(s, fmpz_poly):
             return series_pprint(coeffs, None)
 
-        prec = _get_series_precision(s)
+        prec = self.series_prec(s)
         return series_pprint(coeffs, prec, sym=symbol, ascending=ascending)
 
     def print(self, s: ZZSeries, *, symbol: str = "x", ascending: bool = True) -> None:
@@ -190,6 +190,8 @@ class FlintPowerSeriesRingZZ:
             if len(coeffs) <= self._prec:
                 return fmpz_poly(coeffs)
             prec = self._prec
+        else:
+            prec = min(prec, self._prec)
 
         return fmpz_series(coeffs, prec=prec)
 
@@ -197,14 +199,24 @@ class FlintPowerSeriesRingZZ:
         """Returns the list of series coefficients."""
         return s.coeffs()
 
+    def to_dense(self, s: ZZSeries) -> dup[MPZ]:
+        """Return the coefficients of a power series as a dense list."""
+        return s.coeffs()[::-1]
+
+    def series_prec(self, s: ZZSeries) -> int | None:
+        """Return the precision of the series."""
+        if isinstance(s, fmpz_poly):
+            return None
+        return _get_series_precision(s)
+
     def equal(self, s1: ZZSeries, s2: ZZSeries) -> bool | None:
         """Check if two power series are equal up to their minimum precision."""
         if isinstance(s1, fmpz_poly) and isinstance(s2, fmpz_poly):
             return s1 == s2
         elif isinstance(s1, fmpz_poly):
-            min_prec = _get_series_precision(s2)
+            min_prec = self.series_prec(s2)
         elif isinstance(s2, fmpz_poly):
-            min_prec = _get_series_precision(s1)
+            min_prec = self.series_prec(s1)
         else:
             min_prec = min(_get_series_precision(s1), _get_series_precision(s2))
 
@@ -363,10 +375,11 @@ class FlintPowerSeriesRingZZ:
                     return s1(s2)
 
         if isinstance(s1, fmpz_poly):
-            prec2: int = _get_series_precision(s2)
+            prec2 = self.series_prec(s2)
             s1 = fmpz_series(s1, prec=prec2)
+
         if isinstance(s2, fmpz_poly):
-            prec1: int = _get_series_precision(s1)
+            prec1 = self.series_prec(s1)
             s2 = fmpz_series(s2, prec=prec1)
 
         with _global_cap(ring_prec):
@@ -433,8 +446,8 @@ class FlintPowerSeriesRingZZ:
 
         poly = fmpz_poly(s.coeffs())
         derivative = poly.derivative()
-        prec = _get_series_precision(s)
-        return fmpz_series(derivative, prec=prec - 1)
+        prec = min(_get_series_precision(s) - 1, self._prec)
+        return fmpz_series(derivative, prec=prec)
 
 
 @doctest_depends_on(ground_types=["flint"])
@@ -566,7 +579,7 @@ class FlintPowerSeriesRingQQ:
         if isinstance(s, fmpq_poly):
             return series_pprint(coeffs, None)
 
-        prec = _get_series_precision(s)
+        prec = self.series_prec(s)
         return series_pprint(coeffs, prec, sym=symbol, ascending=ascending)
 
     def print(self, s: QQSeries, *, symbol: str = "x", ascending: bool = True) -> None:
@@ -583,6 +596,8 @@ class FlintPowerSeriesRingQQ:
             if len(coeffs) <= self._prec:
                 return fmpq_poly(coeffs)
             prec = self._prec
+        else:
+            prec = min(prec, self._prec)
 
         return fmpq_series(coeffs, prec=prec)
 
@@ -590,14 +605,24 @@ class FlintPowerSeriesRingQQ:
         """Returns the list of series coefficients."""
         return s.coeffs()
 
+    def to_dense(self, s: QQSeries) -> dup[MPQ]:
+        """Return the coefficients of a power series as a dense list."""
+        return s.coeffs()[::-1]
+
+    def series_prec(self, s: QQSeries) -> int | None:
+        """Return the precision of the series."""
+        if isinstance(s, fmpq_poly):
+            return None
+        return _get_series_precision(s)
+
     def equal(self, s1: QQSeries, s2: QQSeries) -> bool | None:
         """Check if two power series are equal up to their minimum precision."""
         if isinstance(s1, fmpq_poly) and isinstance(s2, fmpq_poly):
             return s1 == s2
         elif isinstance(s1, fmpq_poly):
-            min_prec = _get_series_precision(s2)
+            min_prec = self.series_prec(s2)
         elif isinstance(s2, fmpq_poly):
-            min_prec = _get_series_precision(s1)
+            min_prec = self.series_prec(s1)
         else:
             min_prec = min(_get_series_precision(s1), _get_series_precision(s2))
 
@@ -729,6 +754,20 @@ class FlintPowerSeriesRingQQ:
         """Compute the square of a power series."""
         return self.pow_int(s, 2)
 
+    def sqrt(self, s: QQSeries) -> QQSeries:
+        """Compute the square root of a power series."""
+        if not s:
+            return s
+
+        if isinstance(s, fmpq_poly):
+            try:
+                return s.sqrt()
+            except DomainError:
+                s = fmpq_series(s, prec=self._prec)
+
+        with _global_cap(self._prec):
+            return s.sqrt()
+
     def compose(self, s1: QQSeries, s2: QQSeries) -> QQSeries:
         """Compose two power series, `s1(s2)`."""
         dom: Domain[MPQ] = self._domain
@@ -756,10 +795,11 @@ class FlintPowerSeriesRingQQ:
                     return s1(s2)
 
         if isinstance(s1, fmpq_poly):
-            prec2: int = _get_series_precision(s2)
+            prec2 = self.series_prec(s2)
             s1 = fmpq_series(s1, prec=prec2)
+
         if isinstance(s2, fmpq_poly):
-            prec1: int = _get_series_precision(s1)
+            prec1 = self.series_prec(s1)
             s2 = fmpq_series(s2, prec=prec1)
 
         with _global_cap(ring_prec):
@@ -826,8 +866,8 @@ class FlintPowerSeriesRingQQ:
 
         poly = fmpq_poly(s.coeffs())
         derivative = poly.derivative()
-        prec = _get_series_precision(s)
-        return fmpq_series(derivative, prec=prec - 1)
+        prec = min(_get_series_precision(s) - 1, self._prec)
+        return fmpq_series(derivative, prec=prec)
 
     def integrate(self, s: QQSeries) -> QQSeries:
         """Compute the integral of a power series."""
@@ -836,5 +876,170 @@ class FlintPowerSeriesRingQQ:
             if poly.degree() < self._prec:
                 return poly
             return fmpq_series(poly, prec=self._prec)
+        else:
+            s_prec = _get_series_precision(s)
+            if s_prec >= self._prec:
+                s = fmpq_series(s, prec=self._prec - 1)
+
         with _global_cap(self._prec):
             return s.integral()
+
+    def log(self, s: QQSeries) -> QQSeries:
+        """Compute the logarithm of a power series."""
+        if isinstance(s, fmpq_poly):
+            if s == 1:
+                return fmpq_poly([])
+            s = fmpq_series(s, prec=self._prec)
+
+        with _global_cap(self._prec):
+            return s.log()
+
+    def log1p(self, s: QQSeries) -> QQSeries:
+        """Compute the logarithm of (1 + s) for a power series with zero constant term."""
+        if s[0] != 0:
+            raise ValueError(
+                "Log1p requires the constant term of the input series to be zero."
+            )
+
+        with _global_cap(self._prec):
+            s = s + 1
+
+        return self.log(s)
+
+    def exp(self, s: QQSeries) -> QQSeries:
+        """Compute the exponential of a power series."""
+        if isinstance(s, fmpq_poly):
+            if not s:
+                return fmpq_poly([1])
+            s = fmpq_series(s, prec=self._prec)
+
+        with _global_cap(self._prec):
+            return s.exp()
+
+    def expm1(self, s: QQSeries) -> QQSeries:
+        """Compute the exponential of a power series minus 1."""
+        if isinstance(s, fmpq_poly):
+            if not s:
+                return fmpq_poly([])
+            s = fmpq_series(s, prec=self._prec)
+
+        with _global_cap(self._prec):
+            return s.exp() - 1
+
+    def atan(self, s: QQSeries) -> QQSeries:
+        """Compute the arctangent of a power series."""
+        if not s:
+            return s
+
+        if isinstance(s, fmpq_poly):
+            s = fmpq_series(s, prec=self._prec)
+
+        with _global_cap(self._prec):
+            return s.atan()
+
+    def atanh(self, s: QQSeries) -> QQSeries:
+        """Compute the hyperbolic arctangent of a power series."""
+        if not s:
+            return s
+
+        if isinstance(s, fmpq_poly):
+            s = fmpq_series(s, prec=self._prec)
+
+        with _global_cap(self._prec):
+            return s.atanh()
+
+    def asin(self, s: QQSeries) -> QQSeries:
+        """Compute the arcsine of a power series."""
+        if not s:
+            return s
+
+        if isinstance(s, fmpq_poly):
+            s = fmpq_series(s, prec=self._prec)
+
+        with _global_cap(self._prec):
+            return s.asin()
+
+    def asinh(self, s: QQSeries) -> QQSeries:
+        """Compute the hyperbolic arcsine of a power series."""
+        if not s:
+            return s
+
+        if isinstance(s, fmpq_poly):
+            s = fmpq_series(s, prec=self._prec)
+
+        with _global_cap(self._prec):
+            return s.asinh()
+
+    def tan(self, s: QQSeries) -> QQSeries:
+        """Compute the tangent of a power series."""
+        if not s:
+            return s
+
+        if isinstance(s, fmpq_poly):
+            s = fmpq_series(s, prec=self._prec)
+
+        with _global_cap(self._prec):
+            return s.tan()
+
+    def tanh(self, s: QQSeries) -> QQSeries:
+        """Compute the hyperbolic tangent of a power series."""
+        if not s:
+            return s
+
+        if isinstance(s, fmpq_poly):
+            s = fmpq_series(s, prec=self._prec)
+
+        with _global_cap(self._prec):
+            return s.tanh()
+
+    def sin(self, s: QQSeries) -> QQSeries:
+        """Compute the sine of a power series."""
+        if not s:
+            return s
+
+        if isinstance(s, fmpq_poly):
+            s = fmpq_series(s, prec=self._prec)
+
+        with _global_cap(self._prec):
+            return s.sin()
+
+    def sinh(self, s: QQSeries) -> QQSeries:
+        """Compute the hyperbolic sine of a power series."""
+        if not s:
+            return s
+
+        if isinstance(s, fmpq_poly):
+            s = fmpq_series(s, prec=self._prec)
+
+        with _global_cap(self._prec):
+            return s.sinh()
+
+    def cos(self, s: QQSeries) -> QQSeries:
+        """Compute the cosine of a power series."""
+        if isinstance(s, fmpq_poly):
+            if not s:
+                return fmpq_poly([1])
+            s = fmpq_series(s, prec=self._prec)
+
+        with _global_cap(self._prec):
+            return s.cos()
+
+    def cosh(self, s: QQSeries) -> QQSeries:
+        """Compute the hyperbolic cosine of a power series."""
+        if isinstance(s, fmpq_poly):
+            if not s:
+                return fmpq_poly([1])
+            s = fmpq_series(s, prec=self._prec)
+
+        with _global_cap(self._prec):
+            return s.cosh()
+
+    def hypot(self, s1: QQSeries, s2: QQSeries) -> QQSeries:
+        """Compute the hypotenuse of two power series."""
+
+        with _global_cap(self._prec):
+            sqr_s1 = s1**2
+            sqr_s2 = s2**2
+            add = sqr_s1 + sqr_s2
+
+        return self.sqrt(add)

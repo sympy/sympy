@@ -711,3 +711,4 @@ class Column:
         """
         return plot(self.extension(), (self.variable, 0, self.length), title='Extension',
                 xlabel=r'$\mathrm{x}$', ylabel=r'$\mathrm{u(x)}$', line_color='b')
+
