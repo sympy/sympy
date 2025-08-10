@@ -11,6 +11,7 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import atan2, cos, sin, tan
 from sympy.geometry.polygon import deg, rad
 from sympy.physics.continuum_mechanics.beam import Beam
+from sympy.physics.continuum_mechanics.column import Column
 from sympy.simplify import nsimplify, simplify
 
 plt = import_module(
@@ -147,10 +148,8 @@ class Structure2d:
         The positive direction for the x-axis is to the right, and the positive direction for the y-axis is downwards.
 
         Limitations:
-            - Only bending moments and shear forces are considered in the analysis.
             - Only non-branching or non-intersecting structures are supported. (All members must either be connected to ONE other member at each end or to nothing)
             - All E, A, I values must be the same for all members.
-            - Supports can only have ONE unknown reaction force in the horizontal direction.
             - Members must be added in order of the unwrapping of the structure, from left to right or right to left.
             - Support must be added at the end of the a member.
 
@@ -192,9 +191,9 @@ class Structure2d:
         ...     end_x=3,
         ...     end_y=4,
         ... )
-        >>> Rv1 = s.apply_support(x=7, y=-1, type="roller")
-        >>> Rv2, Rh2 = s.apply_support(x=0, y=0, type="pin")
-        >>> s.solve_for_reaction_loads(Rv1, Rv2, Rh2)
+        >>> s.apply_support(x=7, y=-1, type="roller")
+        >>> s.apply_support(x=0, y=0, type="pin")
+        >>> s.solve_for_reaction_loads()
         {R_h__0,__0: 3.75, R_v__0,__0: -45.6696428571429, R_v__7,__-1: -29.3303571428571}
         >>> s.draw(show_load_values=True) #doctest: +SKIP
 
@@ -241,9 +240,9 @@ class Structure2d:
         ...     global_angle=s.members[0].angle_deg + 270,
         ...     order=-1,
         ... )
-        >>> Rv1 = s.apply_support(x=15, y=2, type="roller")
-        >>> Rv2, Rh2 = s.apply_support(x=0, y=0, type="pin")
-        >>> s.solve_for_reaction_loads(Rv1, Rv2, Rh2)
+        >>> s.apply_support(x=15, y=2, type="roller")
+        >>> s.apply_support(x=0, y=0, type="pin")
+        >>> s.solve_for_reaction_loads()
         {R_h__0,__0: -38.4615384615385, R_v__0,__0: -133.891025641026, R_v__15,__2: -163.416666666667}
         >>> s.draw(show_load_values=True, forced_load_size=2) #doctest: +SKIP
 
@@ -258,13 +257,16 @@ class Structure2d:
         """
         self.members = []
         self.supports = []
+        self.support_symbols = []
         self.nodes = []
         self.loads = []
         self.unwrapped_bendpoints = []
         self.unwrapped_loadpoints = []
         self.beam = self._init_beam()
+        self.column = self._init_column()
         self.reaction_loads = {}
         self.load_qz = 0
+        self.load_qx = 0
 
     def __repr__(self):
         return f"Structure2d(Members={len(self.members)}, Nodes={len(self.nodes)}, Supports={len(self.supports)})"
@@ -284,6 +286,22 @@ class Structure2d:
             elastic_modulus=elastic_modulus,
             second_moment=second_moment,
         )
+
+    def _init_column(
+            self,
+            length=1,
+            elastic_modulus=1,
+            area=1,
+            variable=Symbol('x'),
+            base_char='C',
+    ):
+        return Column(
+        length=length,
+        elastic_modulus=elastic_modulus,
+        area=area
+
+        )
+
 
     def add_member(self, x1, y1, x2, y2, E, I, A):
         """
@@ -337,6 +355,12 @@ class Structure2d:
         member_id = len(self.members)
         member = Member(x1, y1, x2, y2, E, I, A, member_id)
         self.members.append(member)
+        if len(self.members) == 1:
+            self.beam.elastic_modulus = E
+            self.column.elastic_modulus = E
+            self.beam.second_moment = I
+            self.column.area = A
+
         self._add_or_update_node(x1, y1, "fixed", overwrite_type=False)
         self._add_or_update_node(x2, y2, "fixed", overwrite_type=False)
 
@@ -533,15 +557,18 @@ class Structure2d:
 
                     if nn[i] == 2:
                         self.beam.apply_load(B[i] * cos(oo[-1]), bb[i], -1)
+                        self.column.apply_load(B[i] * -sin(oo[-1]), bb[i], -1)
 
                     if nn[i] == 3:
                         self.beam.apply_load(B[i] * sin(oo[-1]), bb[i], -1)
-
+                        self.column.apply_load(B[i] * cos(oo[-1]), bb[i], -1)
                     if nn[i] == 4:
                         self.beam.apply_load(B[i] * cos(oo[-1]), bb[i], 0)
+                        self.column.apply_load(B[i] * -sin(oo[-1]), bb[i], 0)
 
                     if nn[i] == 5:
                         self.beam.apply_load(B[i] * sin(oo[-1]), bb[i], 0)
+                        self.column.apply_load(B[i] * cos(oo[-1]), bb[i], 0)
 
                     break
                 else:
@@ -551,15 +578,19 @@ class Structure2d:
 
                         if nn[i] == 2:
                             self.beam.apply_load(B[i] * cos(oo[j - 1]), bb[i], -1)
+                            self.column.apply_load(B[i] * -sin(oo[j - 1]), bb[i], -1)
 
                         if nn[i] == 3:
                             self.beam.apply_load(B[i] * sin(oo[j - 1]), bb[i], -1)
+                            self.column.apply_load(B[i] * cos(oo[j - 1]), bb[i], -1)
 
                         if nn[i] == 4:
                             self.beam.apply_load(B[i] * cos(oo[j - 1]), bb[i], 0)
+                            self.column.apply_load(B[i] * -sin(oo[j - 1]), bb[i], 0)
 
                         if nn[i] == 5:
                             self.beam.apply_load(B[i] * sin(oo[j - 1]), bb[i], 0)
+                            self.column.apply_load(B[i] * cos(oo[j - 1]), bb[i], 0)
                         break
 
         for i in range(len(B)):
@@ -569,10 +600,16 @@ class Structure2d:
                         self.beam.apply_load(
                             B[i] * (cos(oo[j]) - cos(oo[j - 1])), aa[j], -1
                         )
+                        self.column.apply_load(
+                            B[i] * (-sin(oo[j]) + sin(oo[j - 1])), aa[j], -1
+                        )
 
                     if nn[i] == 3:
                         self.beam.apply_load(
                             B[i] * (sin(oo[j]) - sin(oo[j - 1])), aa[j], -1
+                        )
+                        self.column.apply_load(
+                            B[i] * (cos(oo[j]) - cos(oo[j - 1])), aa[j], -1
                         )
 
                     if nn[i] == 4:
@@ -581,6 +618,14 @@ class Structure2d:
                         )
                         self.beam.apply_load(
                             B[i] * (aa[j] - bb[i]) * (cos(oo[j]) - cos(oo[j - 1])),
+                            aa[j],
+                            -1,
+                        )
+                        self.column.apply_load(
+                            B[i] * (-sin(oo[j]) + sin(oo[j - 1])), aa[j], 0
+                        )
+                        self.column.apply_load(
+                            B[i] * (aa[j] - bb[i]) * (-sin(oo[j]) + sin(oo[j - 1])),
                             aa[j],
                             -1,
                         )
@@ -594,8 +639,17 @@ class Structure2d:
                             aa[j],
                             -1,
                         )
+                        self.column.apply_load(
+                            B[i] * (cos(oo[j]) - cos(oo[j - 1])), aa[j], 0
+                        )
+                        self.column.apply_load(
+                            B[i] * (aa[j] - bb[i]) * (cos(oo[j]) - cos(oo[j - 1])),
+                            aa[j],
+                            -1,
+                        )
 
         self.load_qz = self.beam._load
+        self.load_qx = self.column._load
 
     ###################################################################################################################
 
@@ -671,6 +725,7 @@ class Structure2d:
 
         L = unwrapped_len
         self.beam.length = L
+        self.column.length = L
 
         return aa, oo, L
         ### Emulate Alexes input for his algorithm
@@ -719,9 +774,6 @@ class Structure2d:
             - "roller": Roller support that restricts vertical movement.
             - "fixed": Fixed support that restricts vertical, horizontal, and rotational movement.
 
-        Returns:
-            SymPy Symbol(s): The reaction loads at the support location. The return value depends on the type of support applied.
-
         Examples
         ========
         A pin support is applied at coordinates (0, 0) and a roller support is applied at coordinates (4, 0).
@@ -734,8 +786,8 @@ class Structure2d:
         >>> s = Structure2d()
         >>> s.add_member(0, 0, 4, 0, E, I, A)
         >>> s.apply_load(2, 0, F, global_angle=225, order=0, end_x=3, end_y=0)
-        >>> Rv1, Rh1 = s.apply_support(x=0, y=0, type="pin")
-        >>> Rv2 = s.apply_support(x=4, y=0, type="roller")
+        >>> s.apply_support(x=0, y=0, type="pin")
+        >>> s.apply_support(x=4, y=0, type="roller")
         """
 
         support = self._add_or_update_node(x, y, type)
@@ -770,7 +822,10 @@ class Structure2d:
             self.loads[-2].is_support_reaction = True
 
             self.beam.bc_deflection.append((unwarap_x, 0))
-            return Rv, Rh
+            self.column._bc_extension.append(unwarap_x)
+
+            self.support_symbols.append(Rv)
+            self.support_symbols.append(Rh)
 
         elif type == "roller":
             load_v = -1 * Rv
@@ -782,7 +837,8 @@ class Structure2d:
             self.loads[-1].is_support_reaction = True
 
             self.beam.bc_deflection.append((unwarap_x, 0))
-            return Rv
+
+            self.support_symbols.append(Rv)
 
         elif type == "fixed":
             load_t = T
@@ -807,16 +863,15 @@ class Structure2d:
             # This i think sould be slope of the beam at this point beacause 0 is assuming supports and horizontal members
             # unwrap is already called so it should be extaracatble from the unwrapped position
             self.beam.bc_slope.append((unwarap_x, 0))
-            return T, Rv, Rh
+            self.column._bc_extension.append(unwarap_x)
 
-    def solve_for_reaction_loads(self, *args):
+            self.support_symbols.append(Rv)
+            self.support_symbols.append(Rh)
+            self.support_symbols.append(T)
+
+    def solve_for_reaction_loads(self):
         """
         Solves for the reaction loads in the structure based on the applied loads and applied support reactions.
-
-        Parameters
-        ==========
-        *args : dict
-            Variables representing the reaction loads.
 
         Returns:
             dict: A dictionary containing the solved reaction loads for the structure
@@ -856,17 +911,17 @@ class Structure2d:
         ...     global_angle=s.members[0].angle_deg + 270,
         ...     order=-1,
         ... )
-        >>> Rv1 = s.apply_support(x=15, y=2, type="roller")
-        >>> Rv2, Rh2 = s.apply_support(x=0, y=0, type="pin")
-        >>> s.solve_for_reaction_loads(Rv1, Rv2, Rh2)
+        >>> s.apply_support(x=15, y=2, type="roller")
+        >>> s.apply_support(x=0, y=0, type="pin")
+        >>> s.solve_for_reaction_loads()
         {R_h__0,__0: -3.84615384615385, R_v__0,__0: -70.3141025641026, R_v__15,__2: -143.916666666667}
         """
 
-
+        supports = self.support_symbols
         # Split arguments into vertical and horizontal reaction loads
-        reaction_loads_vertical = [arg for arg in args if "R_v" in str(arg)]
-        reaction_loads_horizontal = [arg for arg in args if "R_h" in str(arg)]
-        reaction_moments = [arg for arg in args if "T_" in str(arg)]
+        reaction_loads_vertical = [support for support in supports if "R_v" in str(support)]
+        reaction_loads_horizontal = [support for support in supports if "R_h" in str(support)]
+        reaction_moments = [support for support in supports if "T_" in str(support)]
 
         args_for_beam_solver = tuple(
             reaction_loads_vertical + reaction_moments + reaction_loads_horizontal
@@ -893,7 +948,7 @@ class Structure2d:
 
         # Substitute horizontal reactions with their solved values
         horizontal_key = {
-            arg: float(-1 * sum_horizontal) for arg in args if "R_h" in str(arg)
+            support: float(-1 * sum_horizontal) for support in supports if "R_h" in str(support)
         }
 
         # Update solved reaction loads dictionary with horizontal reaction values
@@ -924,10 +979,10 @@ class Structure2d:
         if len(to_ignore_list) == len(list_of_symbols):
             # print('Debug - Reaction loads are numerical')
             vertical_key = {
-                arg: self.beam._reaction_loads[arg] for arg in args if "R_v" in str(arg)
+                support: self.beam._reaction_loads[support] for support in supports if "R_v" in str(support)
             }
             bending_moment_key = {
-                arg: self.beam._reaction_loads[arg] for arg in args if "T_" in str(arg)
+                support: self.beam._reaction_loads[support] for support in supports if "T_" in str(support)
             }
 
             for load in self.loads:
@@ -1064,9 +1119,9 @@ class Structure2d:
         >>> s = Structure2d()
         >>> s.add_member(0, 0, 4, 0, E, I, A)
         >>> s.apply_load(2, 0, F, global_angle=270, order=-1)
-        >>> Rv1, Rh1 = s.apply_support(x=0, y=0, type="pin")
-        >>> Rv2 = s.apply_support(x=4, y=0, type="roller")
-        >>> s.solve_for_reaction_loads(Rh1, Rv1, Rv2)
+        >>> s.apply_support(x=0, y=0, type="pin")
+        >>> s.apply_support(x=4, y=0, type="roller")
+        >>> s.solve_for_reaction_loads()
         {R_h__0,__0: 0.0, R_v__0,__0: -5, R_v__4,__0: -5}
         >>> s.summary(round_digits=2)
         ===================== Structure Summary =====================
@@ -1257,9 +1312,9 @@ class Structure2d:
             ...     end_x=3,
             ...     end_y=4,
             ... )
-            >>> Rv1 = s.apply_support(x=7, y=-1, type="roller")
-            >>> Rv2, Rh2 = s.apply_support(x=0, y=0, type="pin")
-            >>> s.solve_for_reaction_loads(Rv1, Rv2, Rh2)
+            >>> s.apply_support(x=7, y=-1, type="roller")
+            >>> s.apply_support(x=0, y=0, type="pin")
+            >>> s.solve_for_reaction_loads()
             {R_h__0,__0: 0.0, R_v__0,__0: -345*F/112, R_v__7,__-1: -125*F/56}
             >>> s.draw(show_load_values=True) #doctest: +SKIP
 
@@ -1297,9 +1352,9 @@ class Structure2d:
             ...     end_x=3,
             ...     end_y=4,
             ... )
-            >>> Rv1 = s.apply_support(x=7, y=-1, type="roller")
-            >>> Rv2, Rh2 = s.apply_support(x=0, y=0, type="pin")
-            >>> s.solve_for_reaction_loads(Rv1, Rv2, Rh2)
+            >>> apply_support(x=7, y=-1, type="roller")
+            >>> s.apply_support(x=0, y=0, type="pin")
+            >>> s.solve_for_reaction_loads()
             {R_h__0,__0: 3.75, R_v__0,__0: -45.6696428571429, R_v__7,__-1: -29.3303571428571}
             >>> s.draw(show_load_values=True) #doctest: +SKIP
 
@@ -1316,9 +1371,9 @@ class Structure2d:
             >>> A = 1e4
             >>> s = Structure2d()
             >>> s.add_member(x1=0, y1=0, x2=7, y2=0, E=E, I=I, A=A)
-            >>> Rv1, Rh1 = s.apply_support(x=0, y=0, type="pin")
-            >>> Rv2 = s.apply_support(x=7/2, y=0, type="roller")
-            >>> Rv3, Rh3, T1 = s.apply_support(x=7, y=0, type="fixed")
+            >>> s.apply_support(x=0, y=0, type="pin")
+            >>> s.apply_support(x=7/2, y=0, type="roller")
+            >>> s.apply_support(x=7, y=0, type="fixed")
             >>> s.draw(show_load_values=True, forced_load_size=2, draw_support_icons=True) #doctest: +SKIP
         """
 
