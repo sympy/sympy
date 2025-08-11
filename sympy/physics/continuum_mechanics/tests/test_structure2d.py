@@ -586,19 +586,6 @@ def test_frame_problems():
     assert result[Symbol('R_v__6,__0')] == 0
     assert result[Symbol('R_h__6,__0')] == 0
 
-    s = Structure2d()
-    E, I, A = symbols('E I A')
-    s.add_member(0, 0, 3, 4, E, I, A)
-    s.add_member(3, 4, 6, 0, E, I, A)
-    s.apply_load(3, 4, 60, 270, -1)
-    s.apply_support(0, 0,"pin")
-    s.apply_support(6, 0,"pin")
-    s.apply_rotation_hinge(3,4)
-    result = s.solve_for_reaction_loads()
-    assert result[Symbol('R_v__0,__0')] == -30
-    assert result[Symbol('R_h__0,__0')] == Rational(2250,100)
-    assert result[Symbol('R_v__6,__0')] == -30
-    assert result[Symbol('R_h__6,__0')] == Rational(-2250,100)
 
     # Alex Example 3
     s = Structure2d()
@@ -670,6 +657,20 @@ def test_frame_problems():
     assert result[Symbol('R_h__0,__0')] == -90
     assert result[Symbol('R_v__7,__1')] == Rational(-2034,100)
     assert result[Symbol('T__7,__1')] == Rational(26263,100)
+
+    s = Structure2d()
+    E, I, A = symbols('E I A')
+    s.add_member(0, 0, 3, 4, E, I, A)
+    s.add_member(3, 4, 6, 0, E, I, A)
+    s.apply_load(3, 4, 60, 270, -1)
+    s.apply_support(0, 0,"pin")
+    s.apply_support(6, 0,"pin")
+    s.apply_rotation_hinge(3,4)
+    result = s.solve_for_reaction_loads()
+    assert result[Symbol('R_v__0,__0')] == -30
+    assert result[Symbol('R_h__0,__0')] == Rational(2250,100)
+    assert result[Symbol('R_v__6,__0')] == -30
+    assert result[Symbol('R_h__6,__0')] == Rational(-2250,100)
 
 
 def test_distributed_loads():
