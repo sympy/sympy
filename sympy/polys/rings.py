@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Generic, overload, Callable, Iterable, TYPE_CHECKING
+from typing import Generic, overload, Callable, Iterable, TYPE_CHECKING, Mapping
 
 from operator import add, mul, lt, le, gt, ge
 from functools import reduce
@@ -451,7 +451,7 @@ class PolyRing(DefaultPrinting, IPolys, Generic[Er]):
         return poly
 
     # Polynomial creation from various formats
-    def from_dict(self, element: dict[Mon, int | Er | Expr], orig_domain: Domain[Er] | None =None) -> PolyElement[Er]:
+    def from_dict(self, element: Mapping[Mon, int | Er | Expr], orig_domain: Domain[Er] | None =None) -> PolyElement[Er]:
         """Create polynomial from dictionary of monomials to coefficients."""
         if not isinstance(element, dict):
             raise TypeError(
@@ -700,7 +700,7 @@ class PolyRing(DefaultPrinting, IPolys, Generic[Er]):
             other.order,
         )
 
-    def _from_dict_ground(self, element: dict[Mon, int| Er | Expr], orig_domain=None) -> PolyElement[Er]:
+    def _from_dict_ground(self, element: Mapping[Mon, int| Er | Expr], orig_domain=None) -> PolyElement[Er]:
         # Create polynomial from dictionary with ground domain conversion.
         poly = self.zero
         domain_new = self.domain_new
