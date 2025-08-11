@@ -30,7 +30,7 @@ def literal_symbol(literal):
         raise ValueError("Argument must be a boolean literal.")
 
 
-def satisfiable(expr, algorithm=None, all_models=False, minimal=False, use_lra_theory=False):
+def satisfiable(expr, algorithm=None, all_models=False, minimal=False, use_lra_theory=False, use_euf_theory=False):
     """
     Check satisfiability of a propositional sentence.
     Returns a model when it succeeds.
@@ -77,6 +77,11 @@ def satisfiable(expr, algorithm=None, all_models=False, minimal=False, use_lra_t
             raise ValueError(f"Currently only dpll2 can handle using lra theory. {algorithm} is not handled.")
         algorithm = "dpll2"
 
+    if use_euf_theory:
+        if algorithm is not None and algorithm != "dpll2":
+            raise ValueError(f"Currently only dpll2 can handle using euf theory. {algorithm} is not handled.")
+        algorithm = "dpll2"
+
     if algorithm is None or algorithm == "pycosat":
         pycosat = import_module('pycosat')
         if pycosat is not None:
@@ -103,7 +108,7 @@ def satisfiable(expr, algorithm=None, all_models=False, minimal=False, use_lra_t
         return dpll_satisfiable(expr)
     elif algorithm == "dpll2":
         from sympy.logic.algorithms.dpll2 import dpll_satisfiable
-        return dpll_satisfiable(expr, all_models, use_lra_theory=use_lra_theory)
+        return dpll_satisfiable(expr, all_models, use_lra_theory=use_lra_theory, use_euf_theory=use_euf_theory)
     elif algorithm == "pycosat":
         from sympy.logic.algorithms.pycosat_wrapper import pycosat_satisfiable
         return pycosat_satisfiable(expr, all_models)

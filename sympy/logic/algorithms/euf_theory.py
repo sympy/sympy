@@ -37,6 +37,13 @@ from sympy.core.numbers import Number
 from sympy.core import Basic
 from sympy.utilities.iterables import numbered_symbols
 
+
+class EUFUnhandledInput(Exception):
+    """
+    Raised while creating an LRASolver if non-linearity
+    or non-rational numbers are present.
+    """
+
 class EUFCongruenceClosure:
     """
     Congruence closure algorithm for ground Equality with Uninterpreted Functions (EUF).
