@@ -291,7 +291,7 @@ class PolyRing(DefaultPrinting, IPolys, Generic[Er]):
 
         return obj
 
-    def _init_monomial_operations(self):
+    def _init_monomial_operations(self) -> None:
         # Initialize monomial operations based on number of generators.
         if self.ngens:
             # Operations for rings with at least one variable
@@ -314,14 +314,14 @@ class PolyRing(DefaultPrinting, IPolys, Generic[Er]):
             self.monomial_lcm = monunit
             self.monomial_gcd = monunit
 
-    def _init_leading_expv_function(self, order):
+    def _init_leading_expv_function(self, order) -> None:
         # Initialize the leading exponent vector function.
         if order is lex:
             self.leading_expv = max
         else:
             self.leading_expv = lambda f: max(f, key=order)
 
-    def _add_generator_attributes(self):
+    def _add_generator_attributes(self) -> None:
         """Add generator attributes for Symbol names."""
         for symbol, generator in zip(self.symbols, self.gens):
             if isinstance(symbol, Symbol):
@@ -330,11 +330,11 @@ class PolyRing(DefaultPrinting, IPolys, Generic[Er]):
                     setattr(self, name, generator)
 
     # Pickle support
-    def __getnewargs__(self):
+    def __getnewargs__(self)-> tuple[tuple[Expr, ...], Domain[Er], MonomialOrder]:
         return self.symbols, self.domain, self.order
 
     # Hash and equality
-    def __hash__(self):
+    def __hash__(self) -> int:
         return self._hash
 
     def __eq__(self, other):
@@ -343,7 +343,7 @@ class PolyRing(DefaultPrinting, IPolys, Generic[Er]):
     def __ne__(self, other):
         return not self == other
 
-    def __getitem__(self, key):
+    def __getitem__(self, key: slice | int) -> PolyRing[Er] | Domain[Er]:
         # Get a subring with subset of symbols.
         symbols = self.symbols[key]
 
@@ -374,17 +374,20 @@ class PolyRing(DefaultPrinting, IPolys, Generic[Er]):
         return self.ngens > 1
 
     @overload
-    def clone(self, symbols: list[Expr] | tuple[Expr, ...] | None = None,
+    def clone(self, symbols: Expr | list[Expr] | tuple[Expr, ...] | None = None,
                     domain: None = None,
                     order: None = None) -> PolyRing[Er]: ...
     @overload
-    def clone(self, symbols: list[Expr] | tuple[Expr, ...] | None = None,
+    def clone(self, symbols: Expr | list[Expr] | tuple[Expr, ...] | None = None,
                     *,
-                    domain: Domain[Es],
+                    domain: PolyRing[Es] | Domain[Es],
                     order: None = None) -> PolyRing[Es]: ...
 
     # Ring operations and cloning
-    def clone(self, symbols=None, domain=None, order=None) -> PolyRing:
+    def clone(self,
+             symbols: Expr | list[Expr] | tuple[Expr, ...] | None = None,
+             domain: PolyRing[Es] | Domain[Es] | None = None,
+             order: str | MonomialOrder | None = None) -> PolyRing[Er] | PolyRing[Es]:
         """Create a clone with modified parameters."""
         # Convert list to tuple for hashability
         if symbols is not None and isinstance(symbols, list):
@@ -392,13 +395,15 @@ class PolyRing(DefaultPrinting, IPolys, Generic[Er]):
         return self._clone(symbols, domain, order)
 
     @cacheit
-    def _clone(self, symbols, domain, order):
-        # Cached clone implementation.
+    def _clone(self,
+              symbols: Expr | tuple[Expr, ...] | None,
+              domain: PolyRing[Es] | Domain[Es] | None,
+              order: str | MonomialOrder | None) -> PolyRing[Er] | PolyRing[Es]:
         return self.__class__(
-            symbols or self.symbols, domain or self.domain, order or self.order
+            symbols or self.symbols, domain or self.domain, order or self.order # type: ignore
         )
 
-    def compose(self, other):
+    def compose(self, other: PolyRing[Er]) -> PolyRing[Er]:
         """Add the generators of other ring to this ring."""
         if self != other:
             syms = set(self.symbols).union(set(other.symbols))
@@ -417,7 +422,7 @@ class PolyRing(DefaultPrinting, IPolys, Generic[Er]):
 
         return FracField(self.symbols, self.domain, self.order)
 
-    def to_ground(self) -> PolyRing:
+    def to_ground(self) -> PolyRing[Es]:
         """Convert to ground domain."""
         if isinstance(self.domain, CompositeDomain) or hasattr(self.domain, 'domain'):
             return self.clone(domain=self.domain.domain)
@@ -437,7 +442,7 @@ class PolyRing(DefaultPrinting, IPolys, Generic[Er]):
         """Create a constant polynomial with given coefficient."""
         return self.term_new(self.zero_monom, coeff)
 
-    def term_new(self, monom, coeff) -> PolyElement[Er]:
+    def term_new(self, monom: Mon, coeff: int | Er) -> PolyElement[Er]:
         """Create a polynomial with a single term."""
         coeff = self.domain_new(coeff)
         poly = self.zero
@@ -446,7 +451,7 @@ class PolyRing(DefaultPrinting, IPolys, Generic[Er]):
         return poly
 
     # Polynomial creation from various formats
-    def from_dict(self, element, orig_domain=None) -> PolyElement[Er]:
+    def from_dict(self, element: dict[Mon, int | Er | Expr], orig_domain: Domain[Er] | None =None) -> PolyElement[Er]:
         """Create polynomial from dictionary of monomials to coefficients."""
         if not isinstance(element, dict):
             raise TypeError(
@@ -454,11 +459,11 @@ class PolyRing(DefaultPrinting, IPolys, Generic[Er]):
             )
         return self._from_dict_ground(element, orig_domain)
 
-    def from_terms(self, element, orig_domain=None) -> PolyElement[Er]:
+    def from_terms(self, element: Iterable[tuple[Mon, Er]], orig_domain: Domain[Er] | None =None) -> PolyElement[Er]:
         """Create polynomial from sequence of (monomial, coefficient) pairs."""
         return self.from_dict(dict(element), orig_domain)
 
-    def from_list(self, element) -> PolyElement[Er]:
+    def from_list(self, element: list[Er]) -> PolyElement[Er]:
         """Create polynomial from list(dense) representation."""
         return self.from_dict(dmp_to_dict(element, self.ngens - 1, self.domain))
 
@@ -506,7 +511,7 @@ class PolyRing(DefaultPrinting, IPolys, Generic[Er]):
         basis[i] = 1
         return tuple(basis)
 
-    def index(self, gen) -> int:
+    def index(self, gen: PolyElement[Er] | int | str | None) -> int:
         """Get index of generator in the ring."""
         if gen is None:
             return 0 if self.ngens else -1  # Impossible choice indicator
@@ -523,7 +528,7 @@ class PolyRing(DefaultPrinting, IPolys, Generic[Er]):
                 f"got {gen}"
             )
 
-    def _gen_index(self, gen):
+    def _gen_index(self, gen: int | str):
         # Get generator index from int or string.
         if isinstance(gen, int):
             if 0 <= gen < self.ngens:
@@ -536,12 +541,12 @@ class PolyRing(DefaultPrinting, IPolys, Generic[Er]):
             except ValueError:
                 raise ValueError(f"invalid generator: {gen}")
 
-    def add_gens(self, symbols):
+    def add_gens(self, symbols: Iterable[Symbol]) -> PolyRing[Er]:
         """Add new generators to the ring."""
         syms = set(self.symbols).union(set(symbols))
         return self.clone(symbols=list(syms))
 
-    def drop(self, *gens):
+    def drop(self, *gens: PolyElement[Er] | int | str | None) -> PolyRing[Er] | Domain[Er]:
         """Remove specified generators from the ring."""
         indices = set(map(self.index, gens))
         symbols = [s for i, s in enumerate(self.symbols) if i not in indices]
@@ -551,7 +556,7 @@ class PolyRing(DefaultPrinting, IPolys, Generic[Er]):
         else:
             return self.clone(symbols=symbols)
 
-    def drop_to_ground(self, *gens):
+    def drop_to_ground(self, *gens: PolyElement[Er] | int | str | None) -> PolyRing[Er]:
         """Remove generators and inject them into the ground domain."""
         indices = set(map(self.index, gens))
         symbols = [s for i, s in enumerate(self.symbols) if i not in indices]
@@ -617,7 +622,7 @@ class PolyRing(DefaultPrinting, IPolys, Generic[Er]):
 
         return result
 
-    def symmetric_poly(self, n):
+    def symmetric_poly(self, n: int) -> PolyElement[Er]:
         """Return the elementary symmetric polynomial of degree n."""
         if n < 0 or n > self.ngens:
             raise ValueError(
@@ -673,7 +678,7 @@ class PolyRing(DefaultPrinting, IPolys, Generic[Er]):
         return state
 
     # Internal helper methods
-    def _gens(self):
+    def _gens(self) -> tuple[PolyElement[Er], ...]:
         # Generate the polynomial generators.
         one = self.domain.one
         generators = []
@@ -686,7 +691,7 @@ class PolyRing(DefaultPrinting, IPolys, Generic[Er]):
 
         return tuple(generators)
 
-    def _ring_equality(self, other):
+    def _ring_equality(self, other: PolyRing[Er]) -> bool:
         # Check equality of two polynomial rings.
         return (self.symbols, self.domain, self.ngens, self.order) == (
             other.symbols,
@@ -695,7 +700,7 @@ class PolyRing(DefaultPrinting, IPolys, Generic[Er]):
             other.order,
         )
 
-    def _from_dict_ground(self, element, orig_domain=None):
+    def _from_dict_ground(self, element: dict[Mon, int| Er | Expr], orig_domain=None) -> PolyElement[Er]:
         # Create polynomial from dictionary with ground domain conversion.
         poly = self.zero
         domain_new = self.domain_new
