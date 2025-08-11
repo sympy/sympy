@@ -3,7 +3,8 @@ This module can be used to solve 2D problems with
 singularity functions in mechanics.
 """
 
-from sympy.core import Basic, Symbol
+from sympy.core import Basic, Symbol, symbols
+from sympy.core.relational import Eq
 from sympy.core.numbers import pi
 from sympy.external import import_module
 from sympy.functions.elementary.complexes import Abs
@@ -13,6 +14,9 @@ from sympy.geometry.polygon import deg, rad
 from sympy.physics.continuum_mechanics.beam import Beam
 from sympy.physics.continuum_mechanics.column import Column
 from sympy.simplify import nsimplify, simplify
+from sympy.solvers import linsolve
+from sympy.integrals import integrate
+from sympy.series import limit
 
 plt = import_module(
     "matplotlib.pyplot",
@@ -258,6 +262,7 @@ class Structure2d:
         self.members = []
         self.supports = []
         self.support_symbols = []
+        self.rotation_jumps = []
         self.nodes = []
         self.loads = []
         self.unwrapped_bendpoints = []
@@ -521,12 +526,17 @@ class Structure2d:
         aa, oo, L = self._unwrap_structure()
         # Convert to alexes input
         # T = 1, Fv = 2, Fh = 3, qv = 4, qh = 5
-        if load.order == -2:
+        if load.order == -3:
+            load_p = load.value
+            B = [nsimplify(load_p)]
+            bb = [nsimplify(self.unwrapped_loadpoints[-1]["locals"][0])]
+            nn = [6]
+        elif load.order == -2:
             qz = load.value
             B = [nsimplify(qz)]
             bb = [nsimplify(self.unwrapped_loadpoints[-1]["locals"][0])]
             nn = [1]
-        elif end_x is None and end_y is None:
+        elif load.order == -1:
             Fv = load.y_component
             Fh = load.x_component
             B = [nsimplify(Fv), nsimplify(Fh)]
@@ -555,18 +565,18 @@ class Structure2d:
                     if nn[i] == 1:
                         self.beam.apply_load(B[i], bb[i], -2)
 
-                    if nn[i] == 2:
+                    elif nn[i] == 2:
                         self.beam.apply_load(B[i] * cos(oo[-1]), bb[i], -1)
                         self.column.apply_load(B[i] * -sin(oo[-1]), bb[i], -1)
 
-                    if nn[i] == 3:
+                    elif nn[i] == 3:
                         self.beam.apply_load(B[i] * sin(oo[-1]), bb[i], -1)
                         self.column.apply_load(B[i] * cos(oo[-1]), bb[i], -1)
-                    if nn[i] == 4:
+                    elif nn[i] == 4:
                         self.beam.apply_load(B[i] * cos(oo[-1]), bb[i], 0)
                         self.column.apply_load(B[i] * -sin(oo[-1]), bb[i], 0)
 
-                    if nn[i] == 5:
+                    elif nn[i] == 5:
                         self.beam.apply_load(B[i] * sin(oo[-1]), bb[i], 0)
                         self.column.apply_load(B[i] * cos(oo[-1]), bb[i], 0)
 
@@ -576,21 +586,26 @@ class Structure2d:
                         if nn[i] == 1:
                             self.beam.apply_load(B[i], bb[i], -2)
 
-                        if nn[i] == 2:
+                        elif nn[i] == 2:
                             self.beam.apply_load(B[i] * cos(oo[j - 1]), bb[i], -1)
                             self.column.apply_load(B[i] * -sin(oo[j - 1]), bb[i], -1)
 
-                        if nn[i] == 3:
+                        elif nn[i] == 3:
                             self.beam.apply_load(B[i] * sin(oo[j - 1]), bb[i], -1)
                             self.column.apply_load(B[i] * cos(oo[j - 1]), bb[i], -1)
 
-                        if nn[i] == 4:
+                        elif nn[i] == 4:
                             self.beam.apply_load(B[i] * cos(oo[j - 1]), bb[i], 0)
                             self.column.apply_load(B[i] * -sin(oo[j - 1]), bb[i], 0)
 
-                        if nn[i] == 5:
+                        elif nn[i] == 5:
                             self.beam.apply_load(B[i] * sin(oo[j - 1]), bb[i], 0)
                             self.column.apply_load(B[i] * cos(oo[j - 1]), bb[i], 0)
+
+                        elif nn[i] == 6:
+                            E = self.beam.elastic_modulus
+                            I = self.beam.second_moment
+                            self.beam.apply_load(B[i]*E*I,bb[i],-3)
                         break
 
         for i in range(len(B)):
@@ -604,7 +619,7 @@ class Structure2d:
                             B[i] * (-sin(oo[j]) + sin(oo[j - 1])), aa[j], -1
                         )
 
-                    if nn[i] == 3:
+                    elif nn[i] == 3:
                         self.beam.apply_load(
                             B[i] * (sin(oo[j]) - sin(oo[j - 1])), aa[j], -1
                         )
@@ -612,7 +627,7 @@ class Structure2d:
                             B[i] * (cos(oo[j]) - cos(oo[j - 1])), aa[j], -1
                         )
 
-                    if nn[i] == 4:
+                    elif nn[i] == 4:
                         self.beam.apply_load(
                             B[i] * (cos(oo[j]) - cos(oo[j - 1])), aa[j], 0
                         )
@@ -630,7 +645,7 @@ class Structure2d:
                             -1,
                         )
 
-                    if nn[i] == 5:
+                    elif nn[i] == 5:
                         self.beam.apply_load(
                             B[i] * (sin(oo[j]) - sin(oo[j - 1])), aa[j], 0
                         )
@@ -822,6 +837,9 @@ class Structure2d:
             self.loads[-2].is_support_reaction = True
 
             self.beam.bc_deflection.append((unwarap_x, 0))
+
+            self.beam.bc_bending_moment.append((unwarap_x, 0))
+
             self.column._bc_extension.append(unwarap_x)
 
             self.support_symbols.append(Rv)
@@ -837,6 +855,8 @@ class Structure2d:
             self.loads[-1].is_support_reaction = True
 
             self.beam.bc_deflection.append((unwarap_x, 0))
+
+            self.beam.bc_bending_moment.append((unwarap_x, 0))
 
             self.support_symbols.append(Rv)
 
@@ -868,6 +888,18 @@ class Structure2d:
             self.support_symbols.append(Rv)
             self.support_symbols.append(Rh)
             self.support_symbols.append(T)
+
+    def apply_rotation_hinge(self, x, y):
+        self._add_or_update_node(x, y, type)
+
+        unwarap_x = self._find_unwrapped_position(x, y)
+        P = Symbol(f"P__{round(x,2)},__{round(y,2)}")
+        load_p = P
+        self.apply_load(
+                start_x=x, start_y=y, value=load_p, global_angle=0, order=-3
+            )
+        self.rotation_jumps.append(P)
+        self.beam.bc_bending_moment.append((unwarap_x,0))
 
     def solve_for_reaction_loads(self):
         """
@@ -917,100 +949,86 @@ class Structure2d:
         {R_h__0,__0: -3.84615384615385, R_v__0,__0: -70.3141025641026, R_v__15,__2: -143.916666666667}
         """
 
-        supports = self.support_symbols
-        # Split arguments into vertical and horizontal reaction loads
-        reaction_loads_vertical = [support for support in supports if "R_v" in str(support)]
-        reaction_loads_horizontal = [support for support in supports if "R_h" in str(support)]
-        reaction_moments = [support for support in supports if "T_" in str(support)]
+        C3, C4 = symbols('C3 C4')
+        C_N, C_u = symbols('C_N C_u')
 
-        args_for_beam_solver = tuple(
-            reaction_loads_vertical + reaction_moments + reaction_loads_horizontal
-        )
+        b = self.beam
+        c = self.column
+        xb, Lb = b.variable, b.length
+        xc, Lc = c.variable, c.length
 
-        # display(self.beam.load)
-        # display(self.beam.shear_force(),'--')
-        # Solve for moment and vertical reaction loads using the beam solver
-        # print(args_for_beam_solver)
-        self.beam.solve_for_reaction_loads(*args_for_beam_solver)
+        beam_eqs = []
 
-        # Compute the horizontal reaction load by summing up all horizontal forces
-        sum_horizontal = 0
-        for load in self.loads:
-            if isinstance(load.value, (int, float)):
-                if load.order == -1:
-                    sum_horizontal += load.x_component
-                elif load.order == 0:
-                    length = sqrt(
-                        (load.end_y - load.start_y) ** 2
-                        + (load.end_x - load.start_x) ** 2
-                    )
-                    sum_horizontal += length * load.x_component
+        beam_eqs.append(limit(b.shear_force(), xb, Lb, dir='+'))
+        beam_eqs.append(limit(b.bending_moment(), xb, Lb, dir='+'))
 
-        # Substitute horizontal reactions with their solved values
-        horizontal_key = {
-            support: float(-1 * sum_horizontal) for support in supports if "R_h" in str(support)
-        }
+        for pos, val in b.bc_shear_force:
+            e = b.shear_force().subs(xb, pos) - val
+            beam_eqs.append(e)
+        for pos, val in b.bc_bending_moment:
+            e = b.bending_moment().subs(xb, pos) - val
+            beam_eqs.append(e)
+        Mb = b.bending_moment()
+        E = b.elastic_modulus
+        I = b.second_moment
+        slope_curve = integrate(Mb/(E*I), xb) + C3
+        defl_curve  = integrate(slope_curve, xb) + C4
 
-        # Update solved reaction loads dictionary with horizontal reaction values
-        for key in self.beam._reaction_loads.items():
-            key = key[0]
-            self.beam._reaction_loads[key] = self.beam._reaction_loads[key].subs(
-                horizontal_key
-            )
+        for pos, val in b.bc_slope:
+            beam_eqs.append(slope_curve.subs(xb, pos) - val)
 
-        # Store reaction loads in the structure's state
-        self.reaction_loads = self.beam.reaction_loads
+        for pos, val in b.bc_deflection:
+            beam_eqs.append(defl_curve.subs(xb, pos) - val)
 
-        # Substitute solved reactions into the beam's load equation
-        self.beam._load = self.beam._load.subs(self.beam.reaction_loads)
+        column_eqs = []
+        qx = self.load_qx
 
-        # Check for symbolic or numerical reaction load solution
-        list_of_symbols = []
-        for key in self.reaction_loads.items():
-            list_of_symbols.append(str(key[0]))
+        E = c.elastic_modulus
+        A =  c.area
+        axial_force = -integrate(qx, xc) + C_N
+        extension   = integrate(axial_force/(E*A), xc) + C_u
 
-        list_of_symbols_reactions = []
-        for load in self.loads:
-            if isinstance(load.value, Basic):
-                list_of_symbols_reactions.append(str(load.value.as_coeff_Mul()[1]))
 
-        # If all symbols are resolved
-        to_ignore_list = set(list_of_symbols).union(list_of_symbols_reactions)
-        if len(to_ignore_list) == len(list_of_symbols):
-            # print('Debug - Reaction loads are numerical')
-            vertical_key = {
-                support: self.beam._reaction_loads[support] for support in supports if "R_v" in str(support)
-            }
-            bending_moment_key = {
-                support: self.beam._reaction_loads[support] for support in supports if "T_" in str(support)
-            }
+        column_eqs.append(limit(axial_force, xc, 0,  dir='-'))
+        column_eqs.append(limit(axial_force, xc, Lc, dir='+'))
 
-            for load in self.loads:
-                if isinstance(load.value, Basic) and load.order != -2:
-                    # Substitute horizontal and vertical reaction loads
-                    load.value = load.value.subs(vertical_key).subs(horizontal_key)
-                    load.y_component = load.y_component.subs(vertical_key).subs(
-                        horizontal_key
-                    )
-                    load.x_component = load.x_component.subs(vertical_key).subs(
-                        horizontal_key
-                    )
-                    if isinstance(load.value, Basic):
-                        pass
-                    else:
-                        # Adjust load direction
-                        if load.y_component > 0:
-                            load.global_angle = load.global_angle + pi
-                        if load.x_component < 0:
-                            load.global_angle = load.global_angle + pi
+        for loc in getattr(c, "_bc_extension", []):
+            column_eqs.append(extension.subs(xc, loc))
 
-                elif isinstance(load.value, Basic) and load.order == -2:
-                    load.value = load.value.subs(bending_moment_key)
+        for loc in getattr(c, "_bc_hinge", []):
+            column_eqs.append(limit(axial_force, xc, loc, dir='+'))
 
-        else:
-            # print('Debug - Reaction loads are symbolic')
-            pass
+
+        reaction_syms = tuple(self.support_symbols)
+        rotation_jumps = tuple(self.rotation_jumps)
+        tel_hinges  = tuple(getattr(c, "_applied_hinges", ()))
+
+        unknowns_ordered = (C3, C4) + reaction_syms + rotation_jumps + tel_hinges + (C_N, C_u)
+        unknowns = tuple(unknowns_ordered)
+
+        eqs = []
+        for e in (beam_eqs + column_eqs):
+            eqs.append(e.lhs - e.rhs if isinstance(e, Eq) else e)
+
+
+        sol_tuple = list((linsolve(eqs, unknowns).args)[0])
+        sol_map   = dict(zip(unknowns, sol_tuple))
+
+        b._reaction_loads = {s: sol_map[s] for s in reaction_syms if s in sol_map}
+        c._reaction_loads = {s: sol_map[s] for s in reaction_syms if s in sol_map}
+        self.reaction_loads = dict(b._reaction_loads)
+
+
+        c._hinge_extensions     = {s: sol_map[s] for s in tel_hinges}
+        c._integration_constants = {Symbol('C_N'): sol_map[C_N], Symbol('C_u'): sol_map[C_u]}
+
+        b._load = b._load.subs(sol_map)
+        self.load_qz = self.load_qz.subs(sol_map)
+        c._load = c._load.subs(sol_map)
+        self.load_qx = self.load_qx.subs(sol_map)
+
         return self.reaction_loads
+
 
     def shear_force(self, x=None, y=None):
         """
@@ -1052,6 +1070,47 @@ class Structure2d:
 
         self.beam.plot_shear_force()
 
+    def axial_force(self, x=None, y=None):
+        """
+        Calculates the axial force at a specified point on the structure.
+
+        This method returns the axial force equation if no arguments are provided.
+        When both x and y coordinates are provided, it calculates the axial force at the specified (x, y) coordinates.
+        (If the x-coordinate is provided, it returns the axial force at the unwrapped location)
+
+        Parameters
+        ==========
+        x : Sympifyable, optional
+            X coordinate of the point to calculate the axial force. Defaults to None.
+        y : Sympifyable, optional
+            Y coordinate of the point to calculate the axial force. Defaults to None.
+
+        Returns:
+            If no arguments are provided: The axial force equation.
+            If both x and y coordinates are provided: The axial force at the specified (x, y) coordinates.
+            (If only the x-coordinate is given: The axial force at the unwrapped location.)
+        """
+
+        if x is None:
+            return self.column.axial_force()
+        if y is None:
+            x_symbol = Symbol("x")
+            return self.column.axial_force().subs(x_symbol, x)
+        else:
+            unwarap_x = self._find_unwrapped_position(x, y)
+            return self.column.axial_force().subs(Symbol("x"), unwarap_x)
+
+    def plot_axial_force(self):
+        """
+        Plots the axial force diagram for the structure.
+
+        Returns:
+            Matplotlib plot: A plot showing the axial force distribution along the structure.
+        """
+
+        self.column.plot_axial_force()
+
+
     def bending_moment(self, x=None, y=None):
         """
         Calculates the bending moment at a specified point on the beam.
@@ -1091,6 +1150,91 @@ class Structure2d:
         """
 
         self.beam.plot_bending_moment()
+
+
+    def extension(self, x=None, y=None):
+        """
+        Calculates the extension at a specified point on the beam.
+
+        This method returns the extension equation if no arguments are provided.
+        When both x and y coordinates are provided, it computes the extension at the specified (x, y) coordinates.
+        (If only the x-coordinate is given, it calculates the extension at the unwrapped location.)
+
+        Parameters
+        ==========
+        x : Sympifyable, optional
+            X coordinate of the point to calculate the extension. Defaults to None.
+        y : Sympifyable, optional
+            Y coordinate of the point to calculate the extension. Defaults to None.
+
+        Returns:
+            If no arguments are provided: The extension equation.
+            If both x and y coordinates are provided: The extension at the specified (x, y) coordinates.
+            (If only the x-coordinate is given: The extension at the unwrapped location.)
+        """
+
+        if x is None:
+            return self.column.extension()
+        if y is None:
+            x_symbol = Symbol("x")
+            return self.column.extension().subs(x_symbol, x)
+        else:
+            unwarap_x = self._find_unwrapped_position(x, y)
+            return self.column.extension().subs(Symbol("x"), unwarap_x)
+
+
+    def plot_extension(self):
+        """
+        Plots the extension diagram for the beam.
+
+        Returns:
+            Matplotlib plot: A plot showing the extension along the structure.
+        """
+
+        self.column.extension()
+
+
+    def deflection(self, x=None, y=None):
+        """
+        Calculates the deflection at a specified point on the beam.
+
+        This method returns the deflection equation if no arguments are provided.
+        When both x and y coordinates are provided, it computes the deflection at the specified (x, y) coordinates.
+        (If only the x-coordinate is given, it calculates the deflection at the unwrapped location.)
+
+        Parameters
+        ==========
+        x : Sympifyable, optional
+            X coordinate of the point to calculate the deflection. Defaults to None.
+        y : Sympifyable, optional
+            Y coordinate of the point to calculate the deflection. Defaults to None.
+
+        Returns:
+            If no arguments are provided: The deflection equation.
+            If both x and y coordinates are provided: The deflection at the specified (x, y) coordinates.
+            (If only the x-coordinate is given: The deflection at the unwrapped location.)
+        """
+
+        if x is None:
+            return self.beam.deflection()
+        if y is None:
+            x_symbol = Symbol("x")
+            return self.beam.deflection().subs(x_symbol, x)
+        else:
+            unwarap_x = self._find_unwrapped_position(x, y)
+            return self.beam.deflection().subs(Symbol("x"), unwarap_x)
+
+
+    def plot_deflection(self):
+        """
+        Plots the deflection diagram for the beam.
+
+        Returns:
+            Matplotlib plot: A plot showing the deflection along the structure.
+        """
+
+        self.column.extension()
+
 
     def summary(self, verbose=True, round_digits=None):
         """
