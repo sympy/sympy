@@ -7,6 +7,7 @@ from sympy.core import Basic, Symbol, symbols
 from sympy.core.relational import Eq
 from sympy.core.numbers import pi
 from sympy.external import import_module
+from sympy.functions import SingularityFunction
 from sympy.functions.elementary.complexes import Abs
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import atan2, cos, sin, tan
@@ -838,7 +839,7 @@ class Structure2d:
 
             self.beam.bc_deflection.append((unwarap_x, 0))
 
-            self.beam.bc_bending_moment.append((unwarap_x, 0))
+            #self.beam.bc_bending_moment.append((unwarap_x, 0))
 
             self.column._bc_extension.append(unwarap_x)
 
@@ -856,7 +857,7 @@ class Structure2d:
 
             self.beam.bc_deflection.append((unwarap_x, 0))
 
-            self.beam.bc_bending_moment.append((unwarap_x, 0))
+            #self.beam.bc_bending_moment.append((unwarap_x, 0))
 
             self.support_symbols.append(Rv)
 
@@ -890,7 +891,6 @@ class Structure2d:
             self.support_symbols.append(T)
 
     def apply_rotation_hinge(self, x, y):
-        self._add_or_update_node(x, y, type)
 
         unwarap_x = self._find_unwrapped_position(x, y)
         P = Symbol(f"P__{round(x,2)},__{round(y,2)}")
@@ -900,6 +900,33 @@ class Structure2d:
             )
         self.rotation_jumps.append(P)
         self.beam.bc_bending_moment.append((unwarap_x,0))
+
+
+    def _build_local_displacements(self, uz, ux):
+
+        x = self.beam.variable
+        aa, oo, _ = self._unwrap_structure()
+        o0 = oo[0] if oo else 0
+
+        # local v = projection of (uz, ux) on each segment's local v-axis
+        uvz = uz.subs(x, aa[0]) * cos(o0)
+        uvx = -ux.subs(x, aa[0]) * sin(o0)
+        for i in range(len(oo)):
+            a, b, th = aa[i], aa[i+1], oo[i]
+            uvz += ((uz - uz.subs(x, a)) * SingularityFunction(x, a, 0) - (uz - uz.subs(x, b)) * SingularityFunction(x, b, 0)) * cos(th)
+            uvx += -((ux - ux.subs(x, a)) * SingularityFunction(x, a, 0) - (ux - ux.subs(x, b)) * SingularityFunction(x, b, 0)) * sin(th)
+        uv = uvz + uvx
+
+        # local h = projection of (uz, ux) on each segment's local h-axis
+        uhz = uz.subs(x, aa[0]) * sin(o0)
+        uhx = ux.subs(x, aa[0]) * cos(o0)
+        for i in range(len(oo)):
+            a, b, th = aa[i], aa[i+1], oo[i]
+            uhz += ((uz - uz.subs(x, a)) * SingularityFunction(x, a, 0) - (uz - uz.subs(x, b)) * SingularityFunction(x, b, 0)) * sin(th)
+            uhx += ((ux - ux.subs(x, a)) * SingularityFunction(x, a, 0) - (ux - ux.subs(x, b)) * SingularityFunction(x, b, 0)) * cos(th)
+        uh = uhz + uhx
+        return uv, uh
+
 
     def solve_for_reaction_loads(self):
         """
@@ -949,82 +976,127 @@ class Structure2d:
         {R_h__0,__0: -3.84615384615385, R_v__0,__0: -70.3141025641026, R_v__15,__2: -143.916666666667}
         """
 
-        C3, C4 = symbols('C3 C4')
-        C_N, C_u = symbols('C_N C_u')
+        C_V, C_M, C_phi, C_uz, C_N, C_ux = symbols('C_V C_M C_phi C_uz C_N C_ux')
+        b, c = self.beam, self.column
+        x = b.variable
+        L = b.length
 
-        b = self.beam
-        c = self.column
-        xb, Lb = b.variable, b.length
-        xc, Lc = c.variable, c.length
 
-        beam_eqs = []
-
-        beam_eqs.append(limit(b.shear_force(), xb, Lb, dir='+'))
-        beam_eqs.append(limit(b.bending_moment(), xb, Lb, dir='+'))
-
-        for pos, val in b.bc_shear_force:
-            e = b.shear_force().subs(xb, pos) - val
-            beam_eqs.append(e)
-        for pos, val in b.bc_bending_moment:
-            e = b.bending_moment().subs(xb, pos) - val
-            beam_eqs.append(e)
-        Mb = b.bending_moment()
         E = b.elastic_modulus
         I = b.second_moment
-        slope_curve = integrate(Mb/(E*I), xb) + C3
-        defl_curve  = integrate(slope_curve, xb) + C4
+        A = c.area
 
-        for pos, val in b.bc_slope:
-            beam_eqs.append(slope_curve.subs(xb, pos) - val)
-
-        for pos, val in b.bc_deflection:
-            beam_eqs.append(defl_curve.subs(xb, pos) - val)
-
-        column_eqs = []
+        qz = self.load_qz
         qx = self.load_qx
 
-        E = c.elastic_modulus
-        A =  c.area
-        axial_force = -integrate(qx, xc) + C_N
-        extension   = integrate(axial_force/(E*A), xc) + C_u
+        V   = -integrate(qz, x) + C_V
+        M   =  integrate(V,  x) + C_M
+        phi =  integrate(M/(E*I), x) + C_phi
+        uz  = -integrate(phi, x) + C_uz
 
 
-        column_eqs.append(limit(axial_force, xc, 0,  dir='-'))
-        column_eqs.append(limit(axial_force, xc, Lc, dir='+'))
-
-        for loc in getattr(c, "_bc_extension", []):
-            column_eqs.append(extension.subs(xc, loc))
-
-        for loc in getattr(c, "_bc_hinge", []):
-            column_eqs.append(limit(axial_force, xc, loc, dir='+'))
+        N   = -integrate(qx, x) + C_N
+        ux  =  integrate(N/(E*A), x) + C_ux
 
 
-        reaction_syms = tuple(self.support_symbols)
-        rotation_jumps = tuple(self.rotation_jumps)
-        tel_hinges  = tuple(getattr(c, "_applied_hinges", ()))
+        uv, uh = self._build_local_displacements(uz, ux)
 
-        unknowns_ordered = (C3, C4) + reaction_syms + rotation_jumps + tel_hinges + (C_N, C_u)
-        unknowns = tuple(unknowns_ordered)
 
         eqs = []
-        for e in (beam_eqs + column_eqs):
-            eqs.append(e.lhs - e.rhs if isinstance(e, Eq) else e)
+        eqs.append(limit(V, x, 0,  dir='-'))   # V(0-) = 0
+        eqs.append(limit(V, x, L,  dir='+'))   # V(L+) = 0
+        eqs.append(limit(N, x, 0,  dir='-'))   # N(0-) = 0
+        eqs.append(limit(N, x, L,  dir='+'))   # N(L+) = 0
+
+        support_pos = []
+        for s in self.supports:
+            s_pos = self._find_unwrapped_position(float(s.x), float(s.y))
+            support_pos.append((s_pos, s.node_type))
+
+        for s_pos, s_type in support_pos:
+            if s_type == "roller":
+                eqs.append(uv.subs(x, s_pos))
+            elif s_type == "pin":
+                eqs.append(uv.subs(x, s_pos))
+                eqs.append(uh.subs(x, s_pos))
+            elif s_type == "fixed":
+                eqs.append(uv.subs(x, s_pos))
+                eqs.append(uh.subs(x, s_pos))
+                eqs.append(phi.subs(x, s_pos))
+
+        left_is_fixed  = any((abs(float(s.x) - float(self.members[0].x1)) < 1e-12 and
+                            abs(float(s.y) - float(self.members[0].y1)) < 1e-12 and
+                            s.node_type == "fixed") for s in self.supports)
+
+        right_is_fixed = any((abs(float(s.x) - float(self.members[-1].x2)) < 1e-12 and
+                            abs(float(s.y) - float(self.members[-1].y2)) < 1e-12 and
+                            s.node_type == "fixed") for s in self.supports)
+
+        # left end
+        if left_is_fixed:
+            eqs.append(limit(M, x, 0, dir='-'))
+        else:
+            eqs.append(M.subs(x, 0))
+
+        # right end
+        if right_is_fixed:
+            eqs.append(limit(M, x, L, dir='+'))
+        else:
+            eqs.append(M.subs(x, L))
 
 
-        sol_tuple = list((linsolve(eqs, unknowns).args)[0])
+        for pos, val in b.bc_bending_moment:
+
+            if val != 0:
+                eqs.append(M.subs(x, pos) - val)
+                continue
+
+
+            if pos > 0:
+                eqs.append(limit(M, x, pos, dir='-'))
+            if pos < L:
+                eqs.append(limit(M, x, pos, dir='+'))
+
+        support_positions = {p for p, _ in support_pos}
+        for pos, val in getattr(b, "bc_slope", []):
+            if pos not in support_positions:
+                eqs.append(phi.subs(x, pos) - val)
+        for pos, val in getattr(b, "bc_deflection", []):
+            if pos not in support_positions:
+                eqs.append(uz.subs(x, pos) - val)
+
+
+        for pos in getattr(c, "_bc_extension", []):
+            if pos not in support_positions:
+                eqs.append(ux.subs(x, pos))
+        for pos in getattr(c, "_bc_hinge", []):
+            eqs.append(limit(N, x, pos, dir='+'))
+
+
+        reaction_syms  = tuple(self.support_symbols)
+        rotation_jumps = tuple(self.rotation_jumps)
+        unknowns = (C_V, C_M, C_phi, C_uz) + reaction_syms + rotation_jumps + (C_N, C_ux)
+
+
+        flat_eqs = []
+        for e in eqs:
+            flat_eqs.append(e.lhs - e.rhs if isinstance(e, Eq) else e)
+
+
+
+        sol_tuple = list((linsolve(flat_eqs, unknowns).args)[0])
         sol_map   = dict(zip(unknowns, sol_tuple))
+
 
         b._reaction_loads = {s: sol_map[s] for s in reaction_syms if s in sol_map}
         c._reaction_loads = {s: sol_map[s] for s in reaction_syms if s in sol_map}
         self.reaction_loads = dict(b._reaction_loads)
 
 
-        c._hinge_extensions     = {s: sol_map[s] for s in tel_hinges}
-        c._integration_constants = {Symbol('C_N'): sol_map[C_N], Symbol('C_u'): sol_map[C_u]}
 
-        b._load = b._load.subs(sol_map)
+        b._load      = b._load.subs(sol_map)
         self.load_qz = self.load_qz.subs(sol_map)
-        c._load = c._load.subs(sol_map)
+        c._load      = c._load.subs(sol_map)
         self.load_qx = self.load_qx.subs(sol_map)
 
         return self.reaction_loads
@@ -1060,6 +1132,7 @@ class Structure2d:
             unwarap_x = self._find_unwrapped_position(x, y)
             return self.beam.shear_force().subs(Symbol("x"), unwarap_x)
 
+
     def plot_shear_force(self):
         """
         Plots the shear force diagram for the beam.
@@ -1069,6 +1142,7 @@ class Structure2d:
         """
 
         self.beam.plot_shear_force()
+
 
     def axial_force(self, x=None, y=None):
         """
@@ -1099,6 +1173,7 @@ class Structure2d:
         else:
             unwarap_x = self._find_unwrapped_position(x, y)
             return self.column.axial_force().subs(Symbol("x"), unwarap_x)
+
 
     def plot_axial_force(self):
         """
@@ -1140,6 +1215,7 @@ class Structure2d:
         else:
             unwarap_x = self._find_unwrapped_position(x, y)
             return self.beam.bending_moment().subs(Symbol("x"), unwarap_x)
+
 
     def plot_bending_moment(self):
         """
@@ -1191,7 +1267,7 @@ class Structure2d:
             Matplotlib plot: A plot showing the extension along the structure.
         """
 
-        self.column.extension()
+        self.column.plot_extension()
 
 
     def deflection(self, x=None, y=None):
@@ -1233,7 +1309,7 @@ class Structure2d:
             Matplotlib plot: A plot showing the deflection along the structure.
         """
 
-        self.column.extension()
+        self.beam.plot_deflection()
 
 
     def summary(self, verbose=True, round_digits=None):
