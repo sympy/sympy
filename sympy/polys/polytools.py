@@ -4163,20 +4163,55 @@ class Poly(Basic):
         G = name if by_name else name.get_perm_group()
         return G, alt
 
-    def negative_real_part_conditions(f):
+    def routh_hurwitz_stability(f):
         """
-        Returns a list of conditions to ensure that all roots of the polynomial
-        have negative real parts.
+        Return the conditions for the polynomial to be stable (all roots with
+        negative real part).
+        The conditions, in general, are represented by a list of multivariate
+        polynomials which must be positive to ensure stability.
 
-        Note: This method assumes that the leading coefficient is non-zero.
+        Note
+        =====
+        This method assumes that the leading coefficient is non-zero.
         In the opposite case, additional verification is required.
 
-        """
-        from sympy.polys.rootconditions import dup_routh_hurwitz
-        coeffs = f.rep.to_list()
-        domain = f.domain
+        Depending on the domain, a different approach is used.
+        In non-numeric cases, the algorithm is modified to avoid divisions.
 
-        return dup_routh_hurwitz(coeffs, domain)
+        If you need a fast computation of the conditions, consider using the
+        domain ``EXRAW``. Conditions may be less simplified, but the computation
+        will be a lot faster.
+
+        Examples
+        ========
+        >>> from sympy import EXRAW, symbols, Poly, reduce_inequalities
+        >>> x, k = symbols("x k")
+        >>> p1 = Poly(symbols("a:e"), x)
+        >>> p1.routh_hurwitz_stability()
+        [a*b, -a*d + b*c, -a*b*d**2 - b**3*e + b**2*c*d, b*e]
+        >>> p2 = Poly(symbols("a:e"), x, domain = EXRAW)
+        >>> p2.routh_hurwitz_stability()
+        [a*b, -a*d + b*c, -b*(b**2*e + d*(a*d - b*c)), b*e]
+
+        For some polynomials(e.g. polynomials with just a free variable),
+        we can calculate the conditions explicitly:
+        >>> p3 = Poly(x**3 + x**2 + 2*k*x + 1 - k, x)
+        >>> conditions = p3.routh_hurwitz_stability()
+        >>> conditions
+        [3*k - 1, -k + 1]
+        >>> conditions = [p3.domain.to_sympy(cond) > 0 for cond in conditions]
+        >>> reduce_inequalities(conditions)
+        (1/3 < k) & (k < 1)
+
+        References
+        ==========
+        .. [1] G. Meinsma: Elementary proof of the Routh-Hurwitz test.
+               Systems & Control Letters, Volume 25, Issue 4, 1995, Pages 237-242,
+               https://courses.washington.edu/mengr471/resources/Routh_Hurwitz_Proof.pdf
+
+
+        """
+        return f.rep.routh_hurwitz_stability()
 
     @property
     def is_zero(f):
@@ -7795,6 +7830,27 @@ def is_zero_dimensional(F, *gens, **args):
     """
     return GroebnerBasis(F, *gens, **args).is_zero_dimensional
 
+
+@public
+def routh_hurwitz_stability(f, var, /, *, domain=None):
+    """
+    See :func:`~.Poly.routh_hurwitz_stability`.
+
+    Note
+    =====
+    If an expression is passed instead of a ``Poly`` object, the conditions will
+    be in expression format.
+    If a ``Poly`` object is passed, the conditions will be in terms of the
+    ``Poly`` elements.
+
+    """
+    p = Poly(f, var, domain=domain)
+    conditions = p.routh_hurwitz_stability()
+
+    if f.is_Poly:
+        return conditions
+    else:
+        return [p.domain.to_sympy(cond) for cond in conditions]
 
 @public
 class GroebnerBasis(Basic):

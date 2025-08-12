@@ -1157,6 +1157,14 @@ class DMP(CantSympify, Generic[Er]):
         """Return the number of complex roots of ``f`` in ``[inf, sup]``. """
         raise NotImplementedError
 
+    def routh_hurwitz_stability(f) -> list[Self | Er]:
+        """
+        Computes symbolic conditions for the asymptotic stability of a
+        continuous-time system represented by ``f``.
+
+        """
+        raise NotImplementedError
+
     @property
     def is_zero(f) -> bool:
         """Returns ``True`` if ``f`` is a zero polynomial. """
@@ -1818,6 +1826,17 @@ class DMP_Python(DMP[Er]):
     ) -> int:
         """Return the number of complex roots of ``f`` in ``[inf, sup]``. """
         return dup_count_complex_roots(f._rep, f.dom, inf=inf, sup=sup)
+
+    def routh_hurwitz_stability(f) -> list[Self | Er]:
+        """
+        Computes symbolic conditions for the asymptotic stability of a
+        continuous-time system represented by ``f``.
+
+        """
+        from sympy.polys.rootconditions import dup_routh_hurwitz_stability
+        if f.lev:
+            raise ValueError("Routh-Hurwitz stability is only defined for univariate polynomials.")
+        return dup_routh_hurwitz_stability(f._rep, f.dom)
 
     @property
     def is_zero(f) -> bool:
@@ -2522,6 +2541,14 @@ class DUP_Flint(DMP[Er]):
     ) -> int:
         """Return the number of complex roots of ``f`` in ``[inf, sup]``. """
         return f.to_DMP_Python().count_complex_roots(inf=inf, sup=sup)
+
+    def routh_hurwitz_stability(f) -> list[Self | Er]:
+        """
+        Computes symbolic conditions for the asymptotic stability of a
+        continuous-time system represented by ``f``.
+
+        """
+        return f.to_DMP_Python().routh_hurwitz_stability()
 
     @property
     def is_zero(f) -> bool:

@@ -1,11 +1,6 @@
 from __future__ import annotations
 
-
-from typing import TYPE_CHECKING, TypeAlias, Union
-from sympy.core.relational import StrictGreaterThan
-from sympy.logic.boolalg import Boolean
-
-from sympy.polys.densebasic import dup, dmp, dmp_tup, _T
+from sympy.polys.densebasic import dup
 from sympy.polys.domains.domain import Er, Domain
 from sympy.external.gmpy import MPQ
 
@@ -19,82 +14,44 @@ from sympy.core.exprtools import factor_terms
 from sympy.simplify.simplify import signsimp
 from sympy.core.mul import Mul
 
-conditions: TypeAlias = "list[Union[StrictGreaterThan, Boolean]]"
-
-# The _dup and _dmp functions do not do anything but are needed so that a type
-# checker can understand the conversion between the two types.
-#
-# A dup is a list of domain elements. A dmp is a list of lists of domain
-# elements of arbitrary depth.
-
-if TYPE_CHECKING:
-    def _dup(p: dmp[_T], /) -> dup[_T]: ...
-    def _dmp(p: dup[_T], /) -> dmp[_T]: ...
-    def _dmp_tup(p: tuple[_T, ...], /) -> dmp_tup[_T]: ...
-    def _idup(ps: tuple[dmp[_T], ...], /) -> tuple[dup[_T], ...]: ...
-    def _idmp(ps: tuple[dup[_T], ...], /) -> tuple[dmp[_T], ...]: ...
-else:
-
-    def _dup(p, /):
-        return p
-
-    def _dmp(p, /):
-        return p
-
-    def _dmp_tup(p, /):
-        return p
-
-    def _idup(ps, /):
-        return ps
-
-    def _idmp(ps, /):
-        return ps
-
-def dup_routh_hurwitz(f: dup[Er], K: Domain[Er]) -> list[conditions]:
+def dup_routh_hurwitz_stability(f: dup[Er], K: Domain[Er]) -> list[Er]:
     """
-    Return the conditions for the polynomial to have all roots with negative
-    real part.
+    Return the conditions for the polynomial to be stable (all roots with
+    negative real part).
+    The conditions, in general, are represented by a list of multivariate
+    polynomials which must be positive to ensure stability.
 
     Note: This method assumes that the leading coefficient is non-zero.
     In the opposite case, additional verification is required.
 
-    Algorithm from:
-    https://courses.washington.edu/mengr471/resources/Routh_Hurwitz_Proof.pdf
+    Depending on the domain, a different approach is used.
     In non-numeric cases, the algorithm is modified to avoid divisions.
 
-    """
-    conds = dup_routh_hurwitz_dom(f, K)
-
-    # return [K.to_sympy(c) for c in conds]
-    return [K.to_sympy(c) > 0 for c in conds]
-
-
-def dup_routh_hurwitz_dom(p: list[Er], K: Domain[Er]) -> list[Er]:
-    """
-    Calculate the Routh-Hurwitz conditions for the polynomial with a different
-    algorithm depending on the domain.
+    References
+    ==========
+    .. [1] G. Meinsma: Elementary proof of the Routh-Hurwitz test.
+           Systems & Control Letters, Volume 25, Issue 4, 1995, Pages 237-242,
+           https://courses.washington.edu/mengr471/resources/Routh_Hurwitz_Proof.pdf
 
     """
-
     if K.is_QQ:
-        return _routh_hurwitz_qq(p, K)
+        return _routh_hurwitz_qq(f, K)
 
     elif K.is_ZZ or K.is_RR:
-        pq = dup_convert(p, K, QQ)
+        pq = dup_convert(f, K, QQ)
         conds = _routh_hurwitz_qq(pq, QQ)
         return dup_convert(conds, QQ, K)
 
     elif K.is_PolynomialRing:
-        return _routh_hurwitz_poly(p, K)
+        return _routh_hurwitz_poly(f, K)
 
     elif K.is_FractionField:
-        _, pp = dup_clear_denoms(p, K, convert=True)
+        _, pp = dup_clear_denoms(f, K, convert=True)
         conds = _routh_hurwitz_poly(pp, K)
         return dup_convert(conds, K.get_ring(), K)
 
     else:
-        # For everything else, we use the EXRAW domain
-        return _routh_hurwitz_exraw(p)
+        return _routh_hurwitz_exraw(dup_convert(f, K, EXRAW))
 
 
 def _routh_hurwitz_qq(p: list[MPQ], K: RationalField) -> list[MPQ]:

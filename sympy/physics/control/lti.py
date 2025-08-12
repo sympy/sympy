@@ -1231,7 +1231,10 @@ class TransferFunction(SISOLinearTimeInvariant):
         """
         standard_form = self.to_standard_form(cancel_poles_zeros)
 
-        return Poly(standard_form.den, self.var).negative_real_part_conditions()
+        p = Poly(standard_form.den, self.var)
+        conditions = p.routh_hurwitz_stability()
+
+        return [p.domain.to_sympy(c) > 0 for c in conditions]
 
     def __add__(self, other):
         if hasattr(other, "is_StateSpace_object") and other.is_StateSpace_object:
@@ -5158,4 +5161,5 @@ class StateSpace(LinearTimeInvariant):
         s = Symbol('s')
         determinant = self.A.charpoly(s)
         # TODO: Add a way to switch between normal domains and EXRAW
-        return determinant.negative_real_part_conditions()
+        conditions = determinant.routh_hurwitz_stability()
+        return [determinant.domain.to_sympy(c) > 0 for c in conditions]

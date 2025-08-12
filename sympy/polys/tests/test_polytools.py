@@ -73,7 +73,6 @@ from sympy.functions.elementary.hyperbolic import tanh
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import sin
-from sympy.logic.boolalg import true, false
 from sympy.matrices.dense import Matrix
 from sympy.matrices.expressions.matexpr import MatrixSymbol
 from sympy.polys.rootoftools import rootof
@@ -4084,39 +4083,43 @@ def test_issue_28156():
     roots = rhs.ground_roots()
     assert roots
 
-def test_negative_real_part_conditions():
+def test_routh_hurwitz_stability():
     b0, b1, b2, b3, b4 = symbols('b_0 b_1 b_2 b_3 b_4')
     p1 = Poly(b4 * s**4 + b3 * s**3 + b2 * s**2 + b1 * s + b0, s)
     p1_ = Poly(b4 * s**4 + b3 * s**3 + b2 * s**2 + b1 * s + b0, s,
                domain = EXRAW)
 
-    conds = p1.negative_real_part_conditions()
-    conds_ = p1_.negative_real_part_conditions()
-    assert conds == [
-        b3*b4 > 0, -b1*b4 + b2*b3 > 0,
-        -b0*b3**3 - b1**2*b3*b4 + b1*b2*b3**2 > 0,
-        b0*b3 > 0]
-    assert conds_ == [
-        b3*b4 > 0, -b1*b4 + b2*b3 > 0,
-        -b3*(b0*b3**2+b1*(b1*b4 - b2*b3)) > 0,
-        b0*b3 > 0]
+    conds = p1.routh_hurwitz_stability()
+    conds_ = p1_.routh_hurwitz_stability()
+    assert [p1.domain.to_sympy(c) for c in conds] == [
+        b3*b4, -b1*b4 + b2*b3,
+        -b0*b3**3 - b1**2*b3*b4 + b1*b2*b3**2,
+        b0*b3]
+    assert [p1_.domain.to_sympy(c) for c in conds_] == [
+        b3*b4, -b1*b4 + b2*b3,
+        -b3*(b0*b3**2+b1*(b1*b4 - b2*b3)),
+        b0*b3]
 
     p2 = Poly(-3*s**2 - 2*s - b0, s)
-    assert p2.negative_real_part_conditions() == [b0 > 0]
+    assert[p2.domain.to_sympy(c) for c in p2.routh_hurwitz_stability()] == [b0]
 
     a_ = symbols('a', nonpositive = True)
 
-    p4 = Poly(b0*s**2 + a_*s + 3, s)
-    assert p4.negative_real_part_conditions() == [a_ * b0 > 0, false]
+    p3 = Poly(b0*s**2 + a_*s + 3, s)
+    assert [p3.domain.to_sympy(c) for c in p3.routh_hurwitz_stability()] == \
+           [a_ * b0, a_]
 
-    p5 = Poly(b0*s**2 + a_*s - 3, s)
-    assert p5.negative_real_part_conditions() == [a_ * b0 > 0, -a_ > 0]
+    p4 = Poly(b0*s**2 + a_*s - 3, s)
+    assert [p4.domain.to_sympy(c) for c in p4.routh_hurwitz_stability()] == \
+           [a_ * b0, -a_]
 
-    p6 = Poly(b0 + b1*s**2 + b1*s + b3*s**4 + b3*s**3, s)
-    p6_ = Poly(b0 + b1*s**2 + b1*s + b3*s**4 + b3*s**3, s, domain = EXRAW)
+    p5 = Poly(b0 + b1*s**2 + b1*s + b3*s**4 + b3*s**3, s)
+    p5_ = Poly(b0 + b1*s**2 + b1*s + b3*s**4 + b3*s**3, s, domain = EXRAW)
 
-    assert p6.negative_real_part_conditions() == [false]
-    assert p6_.negative_real_part_conditions() == [true, false, true, true]
+    assert [p5.domain.to_sympy(c) for c in p5.routh_hurwitz_stability()] == \
+           [0]
+    assert [p5_.domain.to_sympy(c) for c in p5_.routh_hurwitz_stability()] == \
+           [1, 0, 1, 1]
 
     # test for issue https://github.com/sympy/sympy/issues/28010
     # In that test we want to be sure that negative_real_conditions works fast
@@ -4137,7 +4140,7 @@ def test_negative_real_part_conditions():
     common_denom = (I_L*I_T + I_L*d_T**2*m_T + I_T*d_L**2*m_L +
                     I_T*l_L**2*m_T + d_L**2*d_T**2*m_L*m_T)
 
-    p7 = PurePoly(
+    p6 = PurePoly(
         s**4 + s**3/common_denom*(
             I_L*k_13*s_13 + I_T*k_02*s_02- I_T*k_03*s_03 - I_T*k_12*s_12 +
             I_T*k_13*s_13 + d_L**2*k_13*m_L*s_13 + d_T**2*k_02*m_T*s_02 -
@@ -4163,4 +4166,4 @@ def test_negative_real_part_conditions():
             d_T*g*k_10*m_T*s_10 - d_T*g*k_11*m_T*s_11 - g*k_11*l_L*m_T*s_11 +
             k_00*k_11*s_00*s_11 - k_01*k_10*s_01*s_10), s, domain = EXRAW)
 
-    p7.negative_real_part_conditions()
+    p6.routh_hurwitz_stability()
