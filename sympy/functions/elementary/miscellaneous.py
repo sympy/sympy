@@ -942,7 +942,7 @@ class Hyperoperation(DefinedFunction):
     ========
 
     >>> from sympy.abc import x, y
-    >>> from sympy import Hyperoperation
+    >>> from sympy.functions.elementary.miscellaneous import Hyperoperation
     >>> Hyperoperation(1, x, y)
     x + y
     >>> Hyperoperation(3, x, y)
@@ -1005,7 +1005,7 @@ class Loop(DefinedFunction):
     Examples
     ========
     >>> from sympy.abc import x, y
-    >>> from sympy import Loop
+    >>> from sympy.functions.elementary.miscellaneous import Loop
     >>> Loop(x + 1, 3)
     x + 3
     >>> Loop(2 ** x, 2)
