@@ -1469,11 +1469,7 @@ def test_Lambda_curry():
     """
     f = Lambda((x, y), x + y)
     fc = f.curry()
-    assert isinstance(fc, Lambda)
-    assert fc.variables == (x,)
-    assert isinstance(fc.expr, Lambda)
-    assert fc.expr.variables == (y,)
-    assert fc.expr.expr == x + y
+    assert fc == Lambda(x, Lambda(y, x + y))
     c = Lambda(x, Lambda(y, x + y))
     out = c.curry()
     assert out == c
@@ -1482,24 +1478,7 @@ def test_Lambda_curry():
     assert out == f
     f = Lambda((x, (y, z)), x*y*z)
     fc = f.curry()
-    assert fc.variables == (x,)
-    lv2 = fc.expr
-    assert isinstance(lv2, Lambda)
-    assert lv2.variables == (y,)
-    lv3 = lv2.expr
-    assert isinstance(lv3, Lambda)
-    assert lv3.variables == (z,)
-    assert lv3.expr == x*y*z
     assert fc == Lambda(x, Lambda(y, Lambda(z, x*y*z)))
     f = Lambda((x, y, z), x*y+z)
     fc = f.curry()
-    assert isinstance(fc, Lambda)
-    assert fc.variables == (x,)
-    lv2 = fc.expr
-    assert isinstance(lv2, Lambda)
-    assert lv2.variables == (y,)
-    lv3 = lv2.expr
-    assert isinstance(lv3, Lambda)
-    assert lv3.variables == (z,)
-    assert lv3.expr == x*y+z
     assert fc == Lambda(x, Lambda(y, Lambda(z, x*y+z)))
