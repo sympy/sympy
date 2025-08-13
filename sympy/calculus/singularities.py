@@ -77,13 +77,13 @@ def singularities(expression, symbol, domain=None):
     >>> singularities(x**2 + x + 1, x)
     EmptySet
     >>> singularities(1/(x + 1), x)
-    {-1}
+    FiniteSet(-1)
     >>> singularities(1/(y**2 + 1), y)
-    {-I, I}
+    FiniteSet(-I, I)
     >>> singularities(1/(y**3 + 1), y)
-    {-1, 1/2 - sqrt(3)*I/2, 1/2 + sqrt(3)*I/2}
+    FiniteSet(-1, 1/2 - sqrt(3)*I/2, 1/2 + sqrt(3)*I/2)
     >>> singularities(log(x), x)
-    {0}
+    FiniteSet(0)
 
     """
     from sympy.solvers.solveset import solveset
