@@ -4189,8 +4189,8 @@ class Poly(Basic):
         >>> p3 = Poly(x**3 + x**2 + 2*k*x + 1 - k, x)
         >>> conditions = p3.routh_hurwitz_stability()
         >>> conditions
-        [3*k - 1, -k + 1]
-        >>> reduce_inequalities(conditions)
+        [3*k - 1, 1 - k]
+        >>> reduce_inequalities([c > 0 for c in conditions])
         (1/3 < k) & (k < 1)
 
         References
