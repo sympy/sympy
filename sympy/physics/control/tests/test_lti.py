@@ -808,13 +808,13 @@ def test_DiscreteTransferFunction_functions():
     assert expect3.poles() == [-0.25*p]
 
     exp_poles1 = [-0.4 - 0.66332495807108*I, -0.4 + 0.66332495807108*I]
-    for p, i in enumerate(expect1.poles()):
-        assert _are_complex_equals(expect2.poles()[i], exp_poles1[i])
+    for i, pol in enumerate(expect1.poles()):
+        assert _are_complex_equals(pol, exp_poles1[i])
 
     exp_poles2 = [0.729001428685125, -0.564500714342563 - 0.710198984796332*I,
              -0.564500714342563 + 0.710198984796332*I]
-    for p, i in enumerate(expect2.poles()):
-        assert _are_complex_equals(expect2.poles()[i], exp_poles2[i])
+    for i, pol in enumerate(expect2.poles()):
+        assert _are_complex_equals(pol, exp_poles2[i])
 
     assert _tf.poles() == [k**(Rational(1, 4)), -k**(Rational(1, 4)),
                            I*k**(Rational(1, 4)), -I*k**(Rational(1, 4))]
@@ -856,10 +856,9 @@ def test_DiscreteTransferFunction_functions():
         -s**(S(1)/3)/(2*a1**(S(1)/3)) + sqrt(3)*I*s**(S(1)/3)/(2*a1**(S(1)/3))
     ]
 
-    exp_zeros1 = [0.125 - 1.11102430216445*sqrt(-0.405063291139241*p**3 - 1.0),
-        1.11102430216445*sqrt(-0.405063291139241*p**3 - 1.0) + 0.125]
-    assert for z, i in enumerate(expect3.zeros()):
-        assert _are_complex_equals(expect3.zeros()[i], exp_zeros1[i])
+    assert str(expect3.zeros()) == \
+        str([0.125 - 1.11102430216445*sqrt(-0.405063291139241*p**3 - 1.0),
+            1.11102430216445*sqrt(-0.405063291139241*p**3 - 1.0) + 0.125])
 
     assert tf_.zeros() == [
         k**(Rational(1, 3)),
