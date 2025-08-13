@@ -177,32 +177,6 @@ def test_complex_deep_chaining():
         term_b = f(term_b)
 
 
-def random_expr(vars, funcs, depth=3):
-    """
-    Recursively builds a random EUF expression (nested function or variable/integer).
-    """
-    if depth == 0 or (depth < 3 and random.random() < 0.5):
-        # base case: variable or integer
-        if random.random() < 0.7:
-            return random.choice(vars)
-        else:
-            return Integer(random.randint(0, 10))
-    else:
-        func = random.choice(funcs)
-        # unary for simplicity, but you can generalize to n-ary
-        return func(random_expr(vars, funcs, depth-1))
-
-def test_random_euf_equations(num_eqs=5, max_depth=4):
-    vars = symbols('x y z')
-    funcs = [Function(f'f{i}') for i in range(3)]
-    eqs = []
-    for _ in range(num_eqs):
-        e1 = random_expr(vars, funcs, max_depth)
-        e2 = random_expr(vars, funcs, max_depth)
-        eqs.append(Eq(e1, e2))
-    return eqs
-
-
 def test_long_chain_variables():
     vars = symbols('a0:20')
     eqs = [Eq(vars[i], vars[i+1]) for i in range(len(vars)-1)]
