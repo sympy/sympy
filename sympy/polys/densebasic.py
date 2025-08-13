@@ -8,7 +8,6 @@ from typing import TYPE_CHECKING, TypeVar, Iterable, Callable, Any
 from sympy.core import igcd
 from sympy.core.expr import Expr
 from sympy.polys.domains.domain import Domain, Er, Es, Eg
-from sympy.polys.domains.polynomialring import PolynomialRing
 from sympy.polys.monomials import monomial_min, monomial_ldiv
 from sympy.polys.orderings import monomial_key, MonomialOrder
 
@@ -33,9 +32,10 @@ monom: TypeAlias = "tuple[int, ...]"
 if TYPE_CHECKING:
     from typing import TypeAlias
     from sympy.polys.rings import PolyElement
-    from sympy.polys.domains.algebraicfield import AlgebraicField
-    from sympy.polys.polyclasses import ANP
-    Epa = TypeVar("Epa", PolyElement, ANP)
+    from sympy.polys.domains.polynomialring import PolynomialRing
+    from sympy.polys.domains.ringextension import (
+        RingExtension,
+    )
 
     def _dup(p: dmp[_T], /) -> dup[_T]:
         """Convert level 0 dmp to dup."""
@@ -1719,11 +1719,8 @@ def dmp_include(f: dmp[Er], J: list[int], u: int, K: Domain[Er]) -> dmp[Er]:
     return dmp_from_dict(d, u, K)
 
 
-# XXX: K could be a PolynomialRing or an AlgebraicField or ...
 def dmp_inject(
-    f: dmp[Epa]
-    , u: int, K: PolynomialRing[Eg] | AlgebraicField[Epa, Eg]
-    , front: bool = False
+    f: dmp[Er], u: int, K: RingExtension[Er, Eg], front: bool = False
 ) -> tuple[dmp[Eg], int]:
     """
     Convert ``f`` from ``K[X][Y]`` to ``K[X,Y]``.
@@ -1743,7 +1740,7 @@ def dmp_inject(
     ([[[1]], [[1, 2]]], 2)
 
     """
-    d: dict[monom, Epa]
+    d: dict[monom, Er]
     h: dict[monom, Eg]
 
     d = dmp_to_dict(f, u)
@@ -1751,8 +1748,8 @@ def dmp_inject(
 
     v = K.ngens - 1
 
-    for f_monom, g in d.items():
-        g = g.to_dict()
+    for f_monom, gd in d.items():
+        g = K.to_dict(gd)
 
         for g_monom, c in g.items():
             if front:

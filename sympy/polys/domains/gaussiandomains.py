@@ -11,11 +11,12 @@ from sympy.polys.polyerrors import CoercionFailed
 from sympy.polys.domains.integerring import ZZ, IntegerRing
 from sympy.polys.domains.rationalfield import QQ, RationalField
 from sympy.polys.domains.polynomialring import PolynomialRing
-from sympy.polys.domains.algebraicfield import AlgebraicField, ANP
+from sympy.polys.domains.algebraicfield import AlgebraicField
 from sympy.polys.domains.domain import Domain
 from sympy.polys.domains.domainelement import DomainElement
 from sympy.polys.domains.field import Field
 from sympy.polys.domains.ring import Ring
+from sympy.polys.domains.ringextension import RingExtension
 
 
 Tdom = TypeVar('Tdom', MPZ, MPQ)
@@ -29,7 +30,7 @@ if TYPE_CHECKING:
 class GaussianElement(DomainElement, Generic[Tdom]):
     """Base class for elements of Gaussian type domains."""
     base: Domain[Tdom]
-    _parent: GaussianDomain[Self]
+    _parent: GaussianDomain[Self, Tdom]
     x: Tdom
     y: Tdom
 
@@ -83,10 +84,10 @@ class GaussianElement(DomainElement, Generic[Tdom]):
             return other.x, other.y
         else:
             try:
-                other = cls._parent.convert(other)
+                other_convert = cls._parent.convert(other)
             except CoercionFailed:
                 return None
-            return other.x, other.y
+            return other_convert.x, other_convert.y
 
     def __add__(self, other: Self | int) -> Self:
         other_conv = self._get_xy(other)
@@ -157,11 +158,11 @@ class GaussianElement(DomainElement, Generic[Tdom]):
 
     def __rdivmod__(self, other: Self | int) -> tuple[Self, Self]:
         try:
-            other = self._parent.convert(other)
+            other_convert = self._parent.convert(other)
         except CoercionFailed:
             return NotImplemented
         else:
-            return other.__divmod__(self)
+            return other_convert.__divmod__(self)
 
     def __rtruediv__(self, other: GaussianElement | int) -> GaussianRational:
         try:
@@ -274,7 +275,7 @@ class GaussianRational(GaussianElement[MPQ]):
             return self/other, self._parent.zero
 
 
-class GaussianDomain(Domain[Telem]):
+class GaussianDomain(RingExtension[Telem, Tdom]):
     """Base class for Gaussian domains."""
     dom: Domain
     units: tuple[Telem, Telem, Telem, Telem]
@@ -284,6 +285,9 @@ class GaussianDomain(Domain[Telem]):
 
     has_assoc_Ring = True
     has_assoc_Field = True
+
+    def to_dict(self, element: Telem) -> dict[tuple[int, ...], Tdom]:
+        return {(0,): element.x, (1,): element.y}
 
     def to_sympy(self, a: Telem) -> Expr:
         """Convert ``a`` to a SymPy object. """
@@ -358,7 +362,7 @@ class GaussianDomain(Domain[Telem]):
         return None
 
 
-class GaussianIntegerRing(GaussianDomain[GaussianInteger], Ring):
+class GaussianIntegerRing(GaussianDomain[GaussianInteger, MPZ], Ring[MPZ]):
     r"""Ring of Gaussian integers ``ZZ_I``
 
     The :ref:`ZZ_I` domain represents the `Gaussian integers`_ `\mathbb{Z}[i]`
@@ -552,7 +556,7 @@ class GaussianIntegerRing(GaussianDomain[GaussianInteger], Ring):
 ZZ_I = GaussianInteger._parent = GaussianIntegerRing() # type: ignore
 
 
-class GaussianRationalField(GaussianDomain[GaussianRational], Field):
+class GaussianRationalField(GaussianDomain[GaussianRational, MPQ], Field[GaussianRational]):
     r"""Field of Gaussian rationals ``QQ_I``
 
     The :ref:`QQ_I` domain represents the `Gaussian rationals`_ `\mathbb{Q}(i)`
@@ -711,7 +715,7 @@ class GaussianRationalField(GaussianDomain[GaussianRational], Field):
         """Returns a field associated with ``self``. """
         return self
 
-    def as_AlgebraicField(self) -> AlgebraicField[ANP[MPQ], MPQ]:
+    def as_AlgebraicField(self) -> AlgebraicField:
         """Get equivalent domain as an ``AlgebraicField``. """
         return AlgebraicField(self.dom, I)
 

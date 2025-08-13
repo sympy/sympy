@@ -2,23 +2,27 @@
 
 from __future__ import annotations
 
-from typing import Generic
-
 from sympy.core.add import Add
 from sympy.core.mul import Mul
+from sympy.core.expr import Expr
 from sympy.core.singleton import S
 from sympy.core.symbol import Dummy, symbols
-from sympy.polys.domains.domain import Domain, Er, Eg
+from sympy.external.gmpy import MPQ
+from sympy.polys.domains.domain import Domain
 from sympy.polys.domains.characteristiczero import CharacteristicZero
 from sympy.polys.domains.field import Field
 from sympy.polys.domains.simpledomain import SimpleDomain
+from sympy.polys.domains.ringextension import RingExtension
 from sympy.polys.polyclasses import ANP
 from sympy.polys.polyerrors import CoercionFailed, DomainError, NotAlgebraic, IsomorphismFailed
 from sympy.utilities import public
 
 
+Alg = ANP[MPQ]
+
+
 @public
-class AlgebraicField(Field, CharacteristicZero, SimpleDomain[Er], Generic[Er, Eg]):
+class AlgebraicField(Field[Alg], CharacteristicZero, SimpleDomain[Alg], RingExtension[Alg, MPQ]):
     r"""Algebraic number field :ref:`QQ(a)`
 
     A :ref:`QQ(a)` domain represents an `algebraic number field`_
@@ -247,7 +251,7 @@ class AlgebraicField(Field, CharacteristicZero, SimpleDomain[Er], Generic[Er, Eg
     .. _primitive element: https://en.wikipedia.org/wiki/Primitive_element_theorem
     """
 
-    dtype: type[ANP[Eg]] = ANP
+    dtype: type[Alg] = ANP
 
     is_AlgebraicField = is_Algebraic = True
     is_Numerical = True
@@ -255,9 +259,9 @@ class AlgebraicField(Field, CharacteristicZero, SimpleDomain[Er], Generic[Er, Eg
     has_assoc_Ring = False
     has_assoc_Field = True
 
-    dom: Domain[Eg]
+    dom: Domain[MPQ]
 
-    def __init__(self, dom: Domain[Eg], *ext, alias=None):
+    def __init__(self, dom: Domain[MPQ], *ext: Expr, alias: str | None = None) -> None:
         r"""
         Parameters
         ==========
@@ -350,6 +354,9 @@ class AlgebraicField(Field, CharacteristicZero, SimpleDomain[Er], Generic[Er, Eg
     def algebraic_field(self, *extension, alias=None):
         r"""Returns an algebraic field, i.e. `\mathbb{Q}(\alpha, \ldots)`. """
         return AlgebraicField(self.dom, *((self.ext,) + extension), alias=alias)
+
+    def to_dict(self, element: Alg) -> dict[tuple[int, ...], MPQ]:
+        return element.to_dict()
 
     def to_alg_num(self, a):
         """Convert ``a`` of ``dtype`` to an :py:class:`~.AlgebraicNumber`. """
