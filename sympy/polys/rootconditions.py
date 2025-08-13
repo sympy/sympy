@@ -14,7 +14,7 @@ from sympy.core.exprtools import factor_terms
 from sympy.simplify.simplify import signsimp
 from sympy.core.mul import Mul
 
-def dup_routh_hurwitz_stability(f: dup[Er], K: Domain[Er]) -> list[Er]:
+def dup_routh_hurwitz(f: dup[Er], K: Domain[Er]) -> list[Er]:
     """
     Return the conditions for the polynomial to be stable (all roots with
     negative real part).
@@ -29,32 +29,33 @@ def dup_routh_hurwitz_stability(f: dup[Er], K: Domain[Er]) -> list[Er]:
 
     References
     ==========
+
     .. [1] G. Meinsma: Elementary proof of the Routh-Hurwitz test.
            Systems & Control Letters, Volume 25, Issue 4, 1995, Pages 237-242,
            https://courses.washington.edu/mengr471/resources/Routh_Hurwitz_Proof.pdf
 
     """
     if K.is_QQ:
-        return _routh_hurwitz_qq(f, K)
+        return _dup_routh_hurwitz_qq(f, K) # type: ignore
 
     elif K.is_ZZ or K.is_RR:
         pq = dup_convert(f, K, QQ)
-        conds = _routh_hurwitz_qq(pq, QQ)
+        conds = _dup_routh_hurwitz_qq(pq, QQ)
         return dup_convert(conds, QQ, K)
 
     elif K.is_PolynomialRing:
-        return _routh_hurwitz_poly(f, K)
+        return _dup_routh_hurwitz_poly(f, K)
 
     elif K.is_FractionField:
         _, pp = dup_clear_denoms(f, K, convert=True)
-        conds = _routh_hurwitz_poly(pp, K)
+        conds = _dup_routh_hurwitz_poly(pp, K)
         return dup_convert(conds, K.get_ring(), K)
 
     else:
-        return _routh_hurwitz_exraw(dup_convert(f, K, EXRAW))
+        return _dup_routh_hurwitz_exraw(dup_convert(f, K, EXRAW))
 
 
-def _routh_hurwitz_qq(p: list[MPQ], K: RationalField) -> list[MPQ]:
+def _dup_routh_hurwitz_qq(p: list[MPQ], K: RationalField) -> list[MPQ]:
     if len(p) < 2:
         return [K.one]
     elif p[0] * p[1] <= 0:
@@ -67,14 +68,14 @@ def _routh_hurwitz_qq(p: list[MPQ], K: RationalField) -> list[MPQ]:
         qs[i - 1] -= p[i] * p[0] / p[1]
     qs = qs[1:]
 
-    return _routh_hurwitz_qq(qs, K)
+    return _dup_routh_hurwitz_qq(qs, K)
 
 
-def _routh_hurwitz_poly(p: list[PolyElement[Er]], K: PolynomialRing[Er]):
-    return _rec_routh_hurwitz_poly(p, [], K)
+def _dup_routh_hurwitz_poly(p: list[PolyElement[Er]], K: PolynomialRing[Er]):
+    return _rec_dup_routh_hurwitz_poly(p, [], K)
 
 
-def _rec_routh_hurwitz_poly(p: list[PolyElement[Er]],
+def _rec_dup_routh_hurwitz_poly(p: list[PolyElement[Er]],
                             previous_cond: list[PolyElement[Er]],
                             K: PolynomialRing[Er]):
     if len(p) < 2:
@@ -105,7 +106,7 @@ def _rec_routh_hurwitz_poly(p: list[PolyElement[Er]],
     if not cond.is_one:
         previous_cond.append(cond)
 
-    return _rec_routh_hurwitz_poly(qs, previous_cond, K)
+    return _rec_dup_routh_hurwitz_poly(qs, previous_cond, K)
 
 def _clear_cond_poly(cond: PolyElement[Er], previous_cond, K):
     # Divide out factors known to be positive from previous conditions.
@@ -130,8 +131,8 @@ def _clear_cond_poly(cond: PolyElement[Er], previous_cond, K):
     return cond
 
 
-def _routh_hurwitz_exraw(p: list[Er]) -> list[Er]:
-    if all(c.is_number for c in p):
+def _dup_routh_hurwitz_exraw(p: list[Er]) -> list[Er]:
+    if all(c.is_Number for c in p):
         return _calc_conditions_div(p)
 
     return _calc_conditions_no_div(p)
