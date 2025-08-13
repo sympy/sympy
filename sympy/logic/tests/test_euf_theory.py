@@ -3,7 +3,6 @@ from sympy.core.relational import Eq
 from sympy.core.numbers import Integer
 from sympy.core.function import Function, Lambda
 from sympy.logic.algorithms.euf_theory import EUFCongruenceClosure
-import random
 
 f, g, h = symbols('f g h', cls=Function)
 x, y, z, w, a, b, c, d = symbols('x y z w a b c d')
