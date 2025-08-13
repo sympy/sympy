@@ -37,11 +37,35 @@ if TYPE_CHECKING:
     from sympy.polys.polyclasses import ANP
     Epa = TypeVar("Epa", PolyElement, ANP)
 
-    def _dup(p: dmp[_T], /) -> dup[_T]: ...
-    def _dmp(p: dup[_T], /) -> dmp[_T]: ...
-    def _dmp_tup(p: tuple[_T, ...], /) -> dmp_tup[_T]: ...
-    def _idup(ps: tuple[dmp[_T], ...], /) -> tuple[dup[_T], ...]: ...
-    def _idmp(ps: tuple[dup[_T], ...], /) -> tuple[dmp[_T], ...]: ...
+    def _dup(p: dmp[_T], /) -> dup[_T]:
+        """Convert level 0 dmp to dup."""
+        ...
+
+    def _dmp(p: dup[_T], /) -> dmp[_T]:
+        """Convert dup to level 0 dmp."""
+        ...
+
+    def _dmp_tup(p: tuple[_T, ...], /) -> dmp_tup[_T]:
+        """Convert tuple to dmp_tup."""
+        ...
+
+    def _idup(ps: tuple[dmp[_T], ...], /) -> tuple[dup[_T], ...]:
+        """Convert tuple of level 0 dmp to tuple of dup."""
+        ...
+
+    def _idmp(ps: tuple[dup[_T], ...], /) -> tuple[dmp[_T], ...]:
+        """Convert tuple of dup to tuple of level 0 dmp."""
+        ...
+
+    # XXX: mypy does not understand this for some reason (likely a bug)
+    def _dmp_ground(p: dmp[_T], /) -> _T: # type: ignore
+        """Convert level -1 dmp to ground type."""
+        ...
+
+    def _ground_dmp(p: _T, /) -> dmp[_T]:
+        """Convert ground type to level -1 dmp."""
+        ...
+
 else:
 
     def _dup(p, /):
@@ -58,6 +82,12 @@ else:
 
     def _idmp(ps, /):
         return ps
+
+    def _dmp_ground(p, /):
+        return p
+
+    def _ground_dmp(p, /):
+        return p
 
 
 def dup_LC(f: dup[Er], K: Domain[Er]) -> Er:
@@ -795,7 +825,7 @@ def dmp_ground_nth(f: dmp[Er], N: Iterable[int], u: int, K: Domain[Er]) -> Er:
             d = dmp_degree(f, v)
             f, v = f[d - n], v - 1
 
-    return f  # type: ignore
+    return _dmp_ground(f)
 
 
 def dmp_zero_p(f: dmp[Er], u: int) -> bool:
@@ -861,7 +891,7 @@ def dmp_one_p(f: dmp[Er], u: int, K: Domain[Er]) -> bool:
     return dmp_ground_p(f, K.one, u)
 
 
-def dmp_one(u: int, K: Domain[Er]) -> dmp[Er] | Er:
+def dmp_one(u: int, K: Domain[Er]) -> dmp[Er]:
     """
     Return a multivariate one over ``K``.
 
@@ -908,7 +938,7 @@ def dmp_ground_p(f: dmp[Er], c: Er | None, u: int) -> bool:
         return f == [c]
 
 
-def dmp_ground(c: Er, u: int) -> dmp[Er] | Er:
+def dmp_ground(c: Er, u: int) -> dmp[Er]:
     """
     Return a multivariate constant.
 
@@ -927,7 +957,7 @@ def dmp_ground(c: Er, u: int) -> dmp[Er] | Er:
         return dmp_zero(u)
 
     if u < 0:
-        return c
+        return _ground_dmp(c)
 
     f = _dmp([c])
 
@@ -982,7 +1012,7 @@ def dmp_grounds(c: Er, n: int, u: int) -> list[dmp[Er]] | list[Er]:
         return []
 
     if u < 0:
-        return _dmp([c]) * n
+        return [c] * n
     else:
         return [dmp_ground(c, u) for i in range(n)]  # type: ignore
 
@@ -1211,6 +1241,24 @@ def dmp_to_dict(
             result[(k,) + exp] = coeff
 
     return result
+
+
+def dmp_to_raw_dict(f: dmp[Er], u: int, K: Domain[Er]) -> dict[int, dmp[Er]]:
+    """
+    Convert a ``K[X]`` polynomial to a raw ``dict``.
+
+    Examples
+    ========
+
+    >>> from sympy import ZZ
+    >>> from sympy.polys.densebasic import dmp_to_raw_dict
+
+    >>> dmp_to_raw_dict([[[1]], [[1], [2]]], 1, ZZ)
+    {0: [[1], [2]], 1: [[1]]}
+
+    """
+    v = u - 1
+    return {k: fk for k, fk in enumerate(f[::-1]) if not dmp_zero_p(fk, v)}
 
 
 def dmp_swap(f: dmp[Er], i: int, j: int, u: int, K: Domain[Er]) -> dmp[Er]:
