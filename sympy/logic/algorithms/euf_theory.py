@@ -31,8 +31,10 @@ Classes
 """
 
 from collections import defaultdict, deque
-import sympy as sp
-from sympy import Symbol, Eq, Lambda
+from sympy.core.symbol import Symbol
+from sympy.core.relational import Eq
+from sympy.core.function import Lambda
+from sympy.core.symbol import Dummy
 from sympy.core.numbers import Number
 from sympy.core import Basic
 from sympy.utilities.iterables import numbered_symbols
@@ -76,7 +78,7 @@ class EUFCongruenceClosure:
         self.lookup_table = {}                   # Lookup_table[function, args]
         self.use_list = defaultdict(list)        # UseList[rep]
 
-        self._dummies = numbered_symbols('c', sp.Dummy)
+        self._dummies = numbered_symbols('c', Dummy)
         self._num_dummy_cache = {}
         self._atom_dummy_cache = {}
         self._flatten_cache = {}
@@ -113,7 +115,7 @@ class EUFCongruenceClosure:
         -------
         Symbol/Dummy : unique id for the term subtree.
         """
-        if isinstance(expr, (sp.Dummy, Symbol)):
+        if isinstance(expr, (Dummy, Symbol)):
             self._register(expr)
             return expr
         if isinstance(expr, Number):
@@ -158,22 +160,19 @@ class EUFCongruenceClosure:
         return const
 
     def _union(self, a, b):
-        """
-        Merge classes of a and b, propagate congruences (Sec 4, lines 3.14).
-        """
         rep_a, rep_b = self._find(a), self._find(b)
         if rep_a == rep_b:
             return
-        # Always merge smaller class into larger to keep O(log n) bound.
+        # Ensure |ClassList(a)| <= |ClassList(b)|
         if len(self.classlist[rep_a]) > len(self.classlist[rep_b]):
             rep_a, rep_b = rep_b, rep_a
-        for elem in list(self.classlist[rep_a]):
-            self.representative_table[elem] = rep_b
-            self.classlist[rep_b].add(elem)
-            self.use_list[rep_b].extend(self.use_list.pop(elem, []))
+        # Move all members of ClassList(rep_a) into ClassList(rep_b)
+        for c in list(self.classlist[rep_a]):
+            self.representative_table[c] = rep_b
+            self.classlist[rep_b].add(c)
         del self.classlist[rep_a]
-        # Propagate for all applications referencing rep_b
-        for func, arg_ids, term in self.use_list[rep_b]:
+        # For each application (func, args, term) in UseList(rep_a)
+        for func, arg_ids, term in list(self.use_list.pop(rep_a, [])):
             rep_args = tuple(self._find(arg) for arg in arg_ids)
             rep_term = self._find(term)
             key = (func, rep_args)
@@ -182,6 +181,7 @@ class EUFCongruenceClosure:
                 if other != rep_term:
                     self.pending_unions.append((rep_term, other))
             self.lookup_table[key] = rep_term
+            self.use_list[rep_b].append((func, arg_ids, term))
             self._flatten_cache[key] = rep_term
 
     def _process_pending_unions(self):
