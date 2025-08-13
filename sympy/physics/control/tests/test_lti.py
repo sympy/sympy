@@ -1,7 +1,7 @@
 from sympy.core.add import Add
 from sympy.core.function import Function
 from sympy.core.mul import Mul
-from sympy.core.numbers import (I, pi, Rational, oo)
+from sympy.core.numbers import (I, pi, Rational, oo, Float)
 from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.core.symbol import symbols
@@ -10,6 +10,7 @@ from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.special.delta_functions import Heaviside
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import atan
+from sympy.functions.elementary.complexes import re, im
 from sympy.matrices.dense import eye
 from sympy.physics.control.lti import SISOLinearTimeInvariant
 from sympy.polys.polytools import factor
@@ -26,6 +27,8 @@ from sympy.physics.control.lti import (
     phase_margin, gain_margin)
 from sympy.testing.pytest import raises
 from sympy.logic.boolalg import true, false
+
+from math import isclose
 
 a, x, b, c, s, g, d, p, k, tau, zeta, wn, T, z = symbols('a, x, b, c, s, g, d,\
     p, k, tau, zeta, wn, T, z')
@@ -569,7 +572,7 @@ def test_DiscreteTransferFunction_construction():
     assert tf6.den == 6
     assert tf6.args == (5, 6, s, 1)
 
-    tf6_ = DiscreteTransferFunction(1/2, 4, s)
+    tf6_ = DiscreteTransferFunction(0.5, 4, s)
     assert tf6_.num == 0.5
     assert tf6_.den == 4
     assert tf6_.args == (0.500000000000000, 4, s, 1)
@@ -611,7 +614,7 @@ def test_DiscreteTransferFunction_construction():
     tf14 = DiscreteTransferFunction(a0*s**0.5 + a2*s**0.6 - a1, a1*p**(-8.7), s, 6)
     assert tf14.args == (a0*s**0.5 - a1 + a2*s**0.6, a1*p**(-8.7), s, 6)
 
-    tf15 = DiscreteTransferFunction(a2**2*p**(1/4) + a1*s**(-4/5), a0*s - p, p)
+    tf15 = DiscreteTransferFunction(a2**2*p**(0.25) + a1*s**(-0.8), a0*s - p, p)
     assert tf15.args == (a1*s**(-0.8) + a2**2*p**0.25, a0*s - p, p, 1)
 
     omega_o, k_p, k_o, k_i = symbols('omega_o, k_p, k_o, k_i')
@@ -633,6 +636,23 @@ def test_DiscreteTransferFunction_construction():
     raises(TypeError, lambda: DiscreteTransferFunction(3, 4, 8))
 
     raises(ValueError, lambda: DiscreteTransferFunction(s + 1, s**2 + 2, s, 0)) # sampling time cannot be zero
+
+def _are_floats_equals(n1, n2):
+    """
+    Helper function to compare two floats.
+    Returns True if they are approximately equal, otherwise False.
+
+    """
+    return Float(n1).is_same(Float(n2), isclose)
+
+def _are_complex_equals(n1, n2):
+    """
+    Helper function to compare two complex numbers.
+    Returns True if they are approximately equal, otherwise False.
+
+    """
+    return (_are_floats_equals(re(n1), re(n2)) and
+            _are_floats_equals(im(n1), im(n2)))
 
 def test_DiscreteTransferFunction_functions():
     # classmethod from_rational_expression
@@ -786,11 +806,16 @@ def test_DiscreteTransferFunction_functions():
     assert expect4_.poles() == [s]
     assert SP4.poles() == [-a0*s]
     assert expect3.poles() == [-0.25*p]
-    assert str(expect2.poles()) == \
-        str([0.729001428685125, -0.564500714342563 - 0.710198984796332*I,
-             -0.564500714342563 + 0.710198984796332*I])
-    assert str(expect1.poles()) == str([-0.4 - 0.66332495807108*I,
-                                        -0.4 + 0.66332495807108*I])
+
+    exp_poles1 = [-0.4 - 0.66332495807108*I, -0.4 + 0.66332495807108*I]
+    for p, i in enumerate(expect1.poles()):
+        assert _are_complex_equals(expect2.poles()[i], exp_poles1[i])
+
+    exp_poles2 = [0.729001428685125, -0.564500714342563 - 0.710198984796332*I,
+             -0.564500714342563 + 0.710198984796332*I]
+    for p, i in enumerate(expect2.poles()):
+        assert _are_complex_equals(expect2.poles()[i], exp_poles2[i])
+
     assert _tf.poles() == [k**(Rational(1, 4)), -k**(Rational(1, 4)),
                            I*k**(Rational(1, 4)), -I*k**(Rational(1, 4))]
     assert TF_.poles() == [CRootOf(x**9 + x + 1, 0), 0,
@@ -830,9 +855,12 @@ def test_DiscreteTransferFunction_functions():
         -s**(S(1)/3)/(2*a1**(S(1)/3)) - sqrt(3)*I*s**(S(1)/3)/(2*a1**(S(1)/3)),
         -s**(S(1)/3)/(2*a1**(S(1)/3)) + sqrt(3)*I*s**(S(1)/3)/(2*a1**(S(1)/3))
     ]
-    assert str(expect3.zeros()) == \
-        str([0.125 - 1.11102430216445*sqrt(-0.405063291139241*p**3 - 1.0),
-        1.11102430216445*sqrt(-0.405063291139241*p**3 - 1.0) + 0.125])
+
+    exp_zeros1 = [0.125 - 1.11102430216445*sqrt(-0.405063291139241*p**3 - 1.0),
+        1.11102430216445*sqrt(-0.405063291139241*p**3 - 1.0) + 0.125]
+    assert for z, i in enumerate(expect3.zeros()):
+        assert _are_complex_equals(expect3.zeros()[i], exp_zeros1[i])
+
     assert tf_.zeros() == [
         k**(Rational(1, 3)),
         -k**(Rational(1, 3))/2 - sqrt(3)*I*k**(Rational(1, 3))/2,
