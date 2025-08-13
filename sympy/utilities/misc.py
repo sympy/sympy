@@ -168,9 +168,9 @@ def rawlines(s):
     else:
         rv = '\n    '.join(lines)
         if triple[0]:
-            return 'dedent("""\\\n    %s""")' % rv
+            return f'dedent("""\\\n    {rv}""")'
         else:
-            return "dedent('''\\\n    %s''')" % rv
+            return f"dedent('''\\\n    {rv}''')"
 
 ARCH = str(struct.calcsize('P') * 8) + "-bit"
 
@@ -199,14 +199,14 @@ def debug_decorator(func: _CallableT) -> _CallableT:
         def tree(subtrees):
             def indent(s, variant=1):
                 x = s.split("\n")
-                r = "+-%s\n" % x[0]
+                r = f"+-{x[0]}\n"
                 for a in x[1:]:
                     if a == "":
                         continue
                     if variant == 1:
-                        r += "| %s\n" % a
+                        r += f"| {a}\n"
                     else:
-                        r += "  %s\n" % a
+                        r += f"  {a}\n"
                 return r
             if len(subtrees) == 0:
                 return ""
@@ -226,7 +226,7 @@ def debug_decorator(func: _CallableT) -> _CallableT:
         r = f(*args, **kw)
 
         _debug_iter -= 1
-        s = "%s%s = %s\n" % (f.__name__, args, r)
+        s = f"{f.__name__}{args} = {r}\n"
         if _debug_tmp != []:
             s += tree(_debug_tmp)
         _debug_tmp = oldtmp
@@ -453,7 +453,7 @@ def translate(s, a, b=None, c=None):
     mr = {}
     if a is None:
         if c is not None:
-            raise ValueError('c should be None when a=None is passed, instead got %s' % c)
+            raise ValueError(f'c should be None when a=None is passed, instead got {c}')
         if b is None:
             return s
         c = b
@@ -556,12 +556,12 @@ def as_int(n, strict=True):
                 raise TypeError
             return operator.index(n)
         except TypeError:
-            raise ValueError('%s is not an integer' % (n,))
+            raise ValueError(f'{n} is not an integer')
     else:
         try:
             result = int(n)
         except TypeError:
-            raise ValueError('%s is not an integer' % (n,))
+            raise ValueError(f'{n} is not an integer')
         if n - result:
-            raise ValueError('%s is not an integer' % (n,))
+            raise ValueError(f'{n} is not an integer')
         return result
