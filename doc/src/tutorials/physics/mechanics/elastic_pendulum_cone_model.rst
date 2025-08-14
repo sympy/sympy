@@ -159,7 +159,7 @@ $$\frac{d}{dt}\left(\frac{\partial \mathcal{L}}{\partial \dot{q}_i}\right) - \fr
     >>> # Equation for s:
     >>> print(simplify(eqns[0]))
     -L0*k - g*m*cos(alpha) + k*s(t) - m*s(t)*sin(alpha)**2*Derivative(phi(t), t)**2 + m*Derivative(s(t), (t, 2))
-    >>> # Equation for phi: 
+    >>> # Equation for phi:
     >>> print(simplify(eqns[1]))
     m*(s(t)*Derivative(phi(t), (t, 2)) + 2*Derivative(phi(t), t)*Derivative(s(t), t))*s(t)*sin(alpha)**2
 
