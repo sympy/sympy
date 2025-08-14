@@ -814,3 +814,58 @@ def test_hinge_problems():
     assert result[Symbol('R_h__0,__0')] == Rational(45,2)
     assert result[Symbol('R_v__6,__0')] == -30
     assert result[Symbol('R_h__6,__0')] == Rational(-45,2)
+
+
+def test_joint_loads():
+
+    E = 10**4
+    I = 10**4
+    A = 10**4
+    s1 = Structure2d()
+    s1.add_member(0, 0, 3, 4, E, I, A)
+    s1.add_member(3, 4, 8, 16, E, I, A)
+    s1.add_member(8, 16, 15, 40, E, I, A)
+    s1.apply_support(0, 0, "pin")
+    s1.apply_support(15, 40, "pin")
+    s1.apply_load(3, 4, 150, 270, -1)
+    s1.apply_rotation_hinge(3, 4)
+    result = s1.solve_for_reaction_loads()
+    assert result[Symbol('R_v__0,__0')] == 120
+    assert result[Symbol('R_h__0,__0')] == -90
+    assert result[Symbol('R_v__15,__40')] == -270
+    assert result[Symbol('R_h__15,__40')] == 90
+
+    E = 10**4
+    I = 10**4
+    A = 10**4
+    s1 = Structure2d()
+    s1.add_member(0, 0, 3, 4, E, I, A)
+    s1.add_member(3, 4, 8, 16, E, I, A)
+    s1.add_member(8, 16, 15, 40, E, I, A)
+    s1.apply_support(0, 0, "pin")
+    s1.apply_support(15, 40, "pin")
+    s1.apply_load(3, 4, 150, 0, -1)
+    s1.apply_rotation_hinge(3, 4)
+    result = s1.solve_for_reaction_loads()
+    assert result[Symbol('R_v__0,__0')] == 360
+    assert result[Symbol('R_h__0,__0')] == -270
+    assert result[Symbol('R_v__15,__40')] == -360
+    assert result[Symbol('R_h__15,__40')] == 120
+
+    s2 = Structure2d()
+    E = 10**4
+    I = 10**4
+    A = 10**4
+    s2.add_member(0, 0, 5, 12, E, I, A)
+    s2.add_member(5, 12, 14, 52, E, I, A)
+    s2.apply_support(0, 0, "pin")
+    s2.apply_support(14, 52, "pin")
+    s2.apply_load(0, 0, 150, 0, -1)
+    s2.apply_load(5, 12, 150, 270, -1)
+    s2.apply_load(14, 52, 150, 180, -1)
+    s2.apply_rotation_hinge(5, 12)
+    result = s2.solve_for_reaction_loads()
+    assert result[Symbol('R_v__0,__0')] == Rational(4050,23)
+    assert result[Symbol('R_h__0,__0')] == Rational(-10275,46)
+    assert result[Symbol('R_v__14,__52')] == Rational(-7500,23)
+    assert result[Symbol('R_h__14,__52')] == Rational(10275,46)

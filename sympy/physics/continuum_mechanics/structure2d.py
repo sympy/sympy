@@ -273,6 +273,12 @@ class Structure2d:
         self.reaction_loads = {}
         self.load_qz = 0
         self.load_qx = 0
+        self.V   = None
+        self.M   = None
+        self.phi = None
+        self.uz  = None
+        self.N   = None
+        self.ux  = None
 
     def __repr__(self):
         return f"Structure2d(Members={len(self.members)}, Nodes={len(self.nodes)}, Supports={len(self.supports)})"
@@ -604,6 +610,7 @@ class Structure2d:
                             self.column.apply_load(B[i] * cos(oo[j - 1]), bb[i], 0)
 
                         elif nn[i] == 6:
+                            # hinge load
                             E = self.beam.elastic_modulus
                             I = self.beam.second_moment
                             self.beam.apply_load(B[i]*E*I,bb[i],-3)
@@ -989,24 +996,24 @@ class Structure2d:
         qz = self.load_qz
         qx = self.load_qx
 
-        V   = -integrate(qz, x) + C_V
-        M   =  integrate(V,  x) + C_M
-        phi =  integrate(M/(E*I), x) + C_phi
-        uz  = -integrate(phi, x) + C_uz
+        self.V   = integrate(-qz, x) + C_V
+        self.M   =  integrate(self.V,  x) + C_M
+        self.phi =  integrate(self.M/(E*I), x) + C_phi
+        self.uz  = integrate(-self.phi, x) + C_uz
 
 
-        N   = -integrate(qx, x) + C_N
-        ux  =  integrate(N/(E*A), x) + C_ux
+        self.N   = integrate(-qx, x) + C_N
+        self.ux  =  integrate(self.N/(E*A), x) + C_ux
 
 
-        uv, uh = self._build_local_displacements(uz, ux)
+        uv, uh = self._build_local_displacements(self.uz, self.ux)
 
 
         eqs = []
-        eqs.append(limit(V, x, 0,  dir='-'))   # V(0-) = 0
-        eqs.append(limit(V, x, L,  dir='+'))   # V(L+) = 0
-        eqs.append(limit(N, x, 0,  dir='-'))   # N(0-) = 0
-        eqs.append(limit(N, x, L,  dir='+'))   # N(L+) = 0
+        eqs.append(limit(self.V, x, 0,  dir='-'))   # V(0-) = 0
+        eqs.append(limit(self.V, x, L,  dir='+'))   # V(L+) = 0
+        eqs.append(limit(self.N, x, 0,  dir='-'))   # N(0-) = 0
+        eqs.append(limit(self.N, x, L,  dir='+'))   # N(L+) = 0
 
         support_pos = []
         for s in self.supports:
@@ -1022,7 +1029,7 @@ class Structure2d:
             elif s_type == "fixed":
                 eqs.append(uv.subs(x, s_pos))
                 eqs.append(uh.subs(x, s_pos))
-                eqs.append(phi.subs(x, s_pos))
+                eqs.append(self.phi.subs(x, s_pos))
 
         left_is_fixed  = any((abs(float(s.x) - float(self.members[0].x1)) < 1e-12 and
                             abs(float(s.y) - float(self.members[0].y1)) < 1e-12 and
@@ -1034,43 +1041,43 @@ class Structure2d:
 
         # left end
         if left_is_fixed:
-            eqs.append(limit(M, x, 0, dir='-'))
+            eqs.append(limit(self.M, x, 0, dir='-'))
         else:
-            eqs.append(M.subs(x, 0))
+            eqs.append(self.M.subs(x, 0))
 
         # right end
         if right_is_fixed:
-            eqs.append(limit(M, x, L, dir='+'))
+            eqs.append(limit(self.M, x, L, dir='+'))
         else:
-            eqs.append(M.subs(x, L))
+            eqs.append(self.M.subs(x, L))
 
 
         for pos, val in b.bc_bending_moment:
 
             if val != 0:
-                eqs.append(M.subs(x, pos) - val)
+                eqs.append(self.M.subs(x, pos) - val)
                 continue
 
 
             if pos > 0:
-                eqs.append(limit(M, x, pos, dir='-'))
+                eqs.append(limit(self.M, x, pos, dir='-'))
             if pos < L:
-                eqs.append(limit(M, x, pos, dir='+'))
+                eqs.append(limit(self.M, x, pos, dir='+'))
 
         support_positions = {p for p, _ in support_pos}
         for pos, val in getattr(b, "bc_slope", []):
             if pos not in support_positions:
-                eqs.append(phi.subs(x, pos) - val)
+                eqs.append(self.phi.subs(x, pos) - val)
         for pos, val in getattr(b, "bc_deflection", []):
             if pos not in support_positions:
-                eqs.append(uz.subs(x, pos) - val)
+                eqs.append(self.uz.subs(x, pos) - val)
 
 
         for pos in getattr(c, "_bc_extension", []):
             if pos not in support_positions:
-                eqs.append(ux.subs(x, pos))
+                eqs.append(self.ux.subs(x, pos))
         for pos in getattr(c, "_bc_hinge", []):
-            eqs.append(limit(N, x, pos, dir='+'))
+            eqs.append(limit(self.N, x, pos, dir='+'))
 
 
         reaction_syms  = tuple(self.support_symbols)
@@ -1083,8 +1090,9 @@ class Structure2d:
             flat_eqs.append(e.lhs - e.rhs if isinstance(e, Eq) else e)
 
 
-
+        print(f"equations{flat_eqs}unknowns{unknowns}")
         sol_tuple = list((linsolve(flat_eqs, unknowns).args)[0])
+        print(f"sol{sol_tuple}")
         sol_map   = dict(zip(unknowns, sol_tuple))
 
 
@@ -1098,6 +1106,13 @@ class Structure2d:
         self.load_qz = self.load_qz.subs(sol_map)
         c._load      = c._load.subs(sol_map)
         self.load_qx = self.load_qx.subs(sol_map)
+
+        self.V   = self.V.subs(sol_map)
+        self.M   = self.M.subs(sol_map)
+        self.phi = self.phi.subs(sol_map)
+        self.uz  = self.uz.subs(sol_map)
+        self.N   = self.N.subs(sol_map)
+        self.ux  = self.ux.subs(sol_map)
 
         return self.reaction_loads
 
@@ -1140,7 +1155,8 @@ class Structure2d:
         Returns:
             Matplotlib plot: A plot showing the shear force distribution along the structure.
         """
-
+        if self.V is None :
+            raise RuntimeError("Call solve_for_reaction_loads() first.")
         self.beam.plot_shear_force()
 
 
@@ -1166,13 +1182,13 @@ class Structure2d:
         """
 
         if x is None:
-            return self.column.axial_force()
+            return self.N
         if y is None:
             x_symbol = Symbol("x")
-            return self.column.axial_force().subs(x_symbol, x)
+            return self.N.subs(x_symbol, x)
         else:
             unwarap_x = self._find_unwrapped_position(x, y)
-            return self.column.axial_force().subs(Symbol("x"), unwarap_x)
+            return self.N.subs(Symbol("x"), unwarap_x)
 
 
     def plot_axial_force(self):
@@ -1183,7 +1199,16 @@ class Structure2d:
             Matplotlib plot: A plot showing the axial force distribution along the structure.
         """
 
-        self.column.plot_axial_force()
+        if self.N is None:
+            raise RuntimeError("Call solve_for_reaction_loads() first.")
+        from sympy.plotting import plot
+        x = self.column.variable
+        L = self.beam.length
+        return plot(self.N, (x, 0, L),
+                    title='Axial Force',
+                    xlabel=r'$\mathrm{x}$',
+                    ylabel=r'$\mathrm{N(x)}$',
+                    line_color='r')
 
 
     def bending_moment(self, x=None, y=None):
@@ -1224,7 +1249,8 @@ class Structure2d:
         Returns:
             Matplotlib plot: A plot showing the bending moment distribution along the structure.
         """
-
+        if self.M is None and not self.reaction_loads:
+            raise RuntimeError("Call solve_for_reaction_loads() first.")
         self.beam.plot_bending_moment()
 
 
@@ -1250,13 +1276,13 @@ class Structure2d:
         """
 
         if x is None:
-            return self.column.extension()
+            return self.ux
         if y is None:
             x_symbol = Symbol("x")
-            return self.column.extension().subs(x_symbol, x)
+            return self.ux.subs(x_symbol, x)
         else:
             unwarap_x = self._find_unwrapped_position(x, y)
-            return self.column.extension().subs(Symbol("x"), unwarap_x)
+            return self.ux.subs(Symbol("x"), unwarap_x)
 
 
     def plot_extension(self):
@@ -1267,7 +1293,16 @@ class Structure2d:
             Matplotlib plot: A plot showing the extension along the structure.
         """
 
-        self.column.plot_extension()
+        if self.ux is None:
+            raise RuntimeError("Call solve_for_reaction_loads() first.")
+        from sympy.plotting import plot
+        x = self.column.variable
+        L = self.beam.length
+        return plot(self.ux, (x, 0, L),
+                    title='Extension',
+                    xlabel=r'$\mathrm{x}$',
+                    ylabel=r'$\mathrm{u(x)}$',
+                    line_color='r')
 
 
     def deflection(self, x=None, y=None):
@@ -1308,8 +1343,233 @@ class Structure2d:
         Returns:
             Matplotlib plot: A plot showing the deflection along the structure.
         """
-
+        if self.uz is None :
+            raise RuntimeError("Call solve_for_reaction_loads() first.")
         self.beam.plot_deflection()
+
+
+    def _plot_expression_on_structure(self, expr, *, factor=75.0, show_values=True, title=None):
+
+        SAMPLES_PER_MEMBER = 60
+        KEEP_FRACTION      = 1/10
+        COLOR              = 'tab:red'
+        LINE_WIDTH         = 1.0
+        ZERO_TOL           = 1e-9
+        LABEL_DECIMALS     = 2
+        LABEL_FMT          = "[{v:.2f}]"
+        LABEL_OFFSET       = 0.06
+
+        label_mode = 'ends' if bool(show_values) else 'none'
+
+        x = self.beam.variable
+        self._unwrap_structure()
+
+        fig, ax = plt.subplots()
+        ax.set_aspect("equal")
+
+        # draw structure
+        for m in self.members:
+            ax.plot([float(m.x1), float(m.x2)],
+                    [float(m.y1), float(m.y2)],
+                    color="black", linewidth=2, zorder=10)
+
+        def _eval_sub(e, xi):
+            try:    return float(e.subs(x, xi).evalf())
+            except: return float('nan')
+
+        def _eval_limit(e, xi, side):
+            try:    return float(limit(e, x, xi, dir=side))
+            except: return _eval_sub(e, xi)
+
+        stride = max(1, int(np.ceil(1.0 / float(KEEP_FRACTION))))
+
+        cum = 0.0
+        for m in self.members:
+            Lm = float(m.length)
+            if Lm <= 0:
+                cum += Lm
+                continue
+
+            dx = float(m.x2 - m.x1); dy = float(m.y2 - m.y1)
+            mag = (dx*dx + dy*dy)**0.5 or 1e-15
+            tx, ty = dx/mag, dy/mag
+            nx, ny = -ty, tx
+
+            n   = max(2, int(SAMPLES_PER_MEMBER))
+            xs  = np.linspace(cum, cum + Lm, n)
+            bx  = float(m.x1) + (xs - cum) * tx
+            by  = float(m.y1) + (xs - cum) * ty
+
+            vals       = np.array([_eval_sub(expr, s) for s in xs], dtype=float)
+            vals[0]    = _eval_limit(expr, cum,    '+')
+            vals[-1]   = _eval_limit(expr, cum+Lm, '-')
+
+            scaled     = vals / float(factor) if factor else vals
+            scaled[np.abs(scaled) < float(ZERO_TOL)] = 0.0
+
+            txs = bx + scaled * nx
+            tys = by + scaled * ny
+
+            for j in range(0, n, stride):
+                ax.plot([bx[j], txs[j]], [by[j], tys[j]], color=COLOR, linewidth=1.0, zorder=20)
+            ax.plot([bx[0],  txs[0]],  [by[0],  tys[0]],  color=COLOR, linewidth=1.0, zorder=20)
+            ax.plot([bx[-1], txs[-1]], [by[-1], tys[-1]], color=COLOR, linewidth=1.0, zorder=20)
+
+            ax.plot(txs, tys, color=COLOR, linewidth=LINE_WIDTH, zorder=21)
+
+            if label_mode == 'ends':
+                for j in (0, n-1):
+                    v_raw = vals[j]
+                    if abs(scaled[j]) < float(ZERO_TOL):
+                        v_raw = 0.0
+                    lx = txs[j] + LABEL_OFFSET * nx
+                    ly = tys[j] + LABEL_OFFSET * ny
+                    try:
+                        txt = LABEL_FMT.format(v=round(v_raw, int(LABEL_DECIMALS)))
+                    except Exception:
+                        txt = f"[{v_raw:.{int(LABEL_DECIMALS)}f}]"
+                    ax.text(lx, ly, txt, fontsize=8, color=COLOR,
+                            zorder=30, ha='center', va='center')
+
+            cum += Lm
+
+        core = title if title else "Diagram"
+        ax.set_title(core)
+        ax.set_xlabel("x"); ax.set_ylabel("y"); ax.grid(True, zorder=5)
+        return fig, ax
+
+
+    def plot_shear_force_on_structure(self, *, factor=75.0, show_values=True):
+        """
+        Plots the shear force on the structure geometry (member-wise).
+
+        This method draws short ticks representing magnitude of shear force/factor at the point perpendicular to each member
+          the tick length is V/factor.
+
+
+        Parameters
+        ==========
+        factor : float(optional)
+            Visual scale for tick length (offset = V / factor). Default is 75.0.
+            This is to adjust the magnitude lengths for better visual analysis.
+        show_values : bool, optional
+            If True, prints shear values at member ends. Default is True.
+
+
+        Examples
+        ========
+        Plot the shear diagram on the structure after solving reactions.
+
+        .. plot::
+            :context: close-figs
+            :format: doctest
+            :include-source: True
+
+            >>> from sympy.physics.continuum_mechanics.structure2d import Structure2d
+            >>> E, I, A = 3e4, 1, 1e4
+            >>> F = 15
+            >>> s = Structure2d()
+            >>> s.add_member(x1=0, y1=0, x2=4, y2=0, E=E, I=I, A=A)
+            >>> s.apply_load(start_x=2, start_y=0, value=F, global_angle=270, order=-1)
+            >>> s.apply_support(x=0, y=0, type="pin")
+            >>> s.apply_support(x=4, y=0, type="roller")
+            >>> s.solve_for_reaction_loads()
+            >>> s.plot_shear_force_on_structure(factor=75.0, show_values=True)  # doctest: +SKIP
+        """
+        if self.V is None :
+            raise RuntimeError("Call solve_for_reaction_loads() first.")
+        return self._plot_expression_on_structure(self.shear_force(),
+                                                factor=factor,
+                                                show_values=show_values,
+                                                title="Shear diagram")
+
+    def plot_bending_moment_on_structure(self, *, factor=150.0, show_values=True):
+        """
+        Plots the bending moment on the structure geometry (member-wise).
+
+        This method draws short ticks representing magnitude of bending moment/factor at the point perpendicular to each member
+          the tick length is M/factor.
+
+
+        Parameters
+        ==========
+        factor : float(optional)
+            Visual scale for tick length (offset = M / factor). Default is 150.0.
+            This is to adjust the magnitude lengths for better visual analysis.
+        show_values : bool, optional
+            If True, prints moment values at member ends. Default is True.
+
+
+        Examples
+        ========
+        Plot the bending moment diagram on the structure after solving reactions.
+
+        .. plot::
+            :context: close-figs
+            :format: doctest
+            :include-source: True
+
+            >>> from sympy.physics.continuum_mechanics.structure2d import Structure2d
+            >>> E, I, A = 3e4, 1, 1e4
+            >>> F = 15
+            >>> s = Structure2d()
+            >>> s.add_member(x1=0, y1=0, x2=4, y2=0, E=E, I=I, A=A)
+            >>> s.apply_load(start_x=2, start_y=0, value=F, global_angle=270, order=-1)
+            >>> s.apply_support(x=0, y=0, type="pin")
+            >>> s.apply_support(x=4, y=0, type="roller")
+            >>> s.solve_for_reaction_loads()
+            >>> s.plot_bending_moment_on_structure(factor=150.0, show_values=True)  # doctest: +SKIP
+        """
+        if self.M is None :
+            raise RuntimeError("Call solve_for_reaction_loads() first.")
+        return self._plot_expression_on_structure(self.bending_moment(),
+                                                factor=factor,
+                                                show_values=show_values,
+                                                title="Bending moment diagram")
+
+    def plot_axial_force_on_structure(self, *, factor=75.0, show_values=True):
+        """
+        Plots the axial force on the structure geometry (member-wise).
+
+        This method draws short ticks representing magnitude of axial force/factor at the point perpendicular to each member
+          the tick length is N/factor.
+
+
+        Parameters
+        ==========
+        factor : float(optional)
+            Visual scale for tick length (offset = V / factor). Default is 75.0.
+            This is to adjust the magnitude lengths for better visual analysis.
+        show_values : bool, optional
+            If True, prints axial force values at member ends. Default is True.
+
+
+        Examples
+        ========
+        Plot the axial force diagram on the structure after solving reactions.
+
+        .. plot::
+            :context: close-figs
+            :format: doctest
+            :include-source: True
+
+            >>> from sympy.physics.continuum_mechanics.structure2d import Structure2d
+            >>> E, I, A = 3e4, 1, 1e4
+            >>> F = 15
+            >>> s = Structure2d()
+            >>> s.add_member(x1=0, y1=0, x2=4, y2=0, E=E, I=I, A=A)
+            >>> s.apply_load(start_x=2, start_y=0, value=F, global_angle=270, order=-1)
+            >>> s.apply_support(x=0, y=0, type="pin")
+            >>> s.apply_support(x=4, y=0, type="roller")
+            >>> s.solve_for_reaction_loads()
+            >>> s.plot_axial_force_on_structure(factor=75.0, show_values=True)  # doctest: +SKIP
+        """
+        if self.N is None :
+            raise RuntimeError("Call solve_for_reaction_loads() first.")
+        return self._plot_expression_on_structure(self.axial_force(),
+                                                factor=factor,
+                                                show_values=show_values,
+                                                title="Axial force diagram")
 
 
     def summary(self, verbose=True, round_digits=None):
@@ -1317,7 +1577,7 @@ class Structure2d:
         Provides a summary of the structure, including reaction loads and points of interest.
 
         This method prints a formatted summary of the structure's members, nodes, and supports,
-        along with the reaction loads and points of interest related to bending moments and shear forces.
+        along with the reaction loads and points of interest related to bending moments shear forces and axial forces.
         It allows for a quick overview of the structural state and key values for analysis.
 
         Parameters
@@ -1353,6 +1613,7 @@ class Structure2d:
         <BLANKLINE>
         Points of Interest - Bending Moment:
         bending_moment at [x.xx,y.yy]  (0.00)    = 0.0
+        bending_moment at [x.xx,y.yy]  (2.00)    = 10.0
         bending_moment at [x.xx,y.yy]  (4.00)-   = 0.0
         <BLANKLINE>
         Points of Interest - Shear Force:
@@ -1360,6 +1621,12 @@ class Structure2d:
         shear_force at [x.xx,y.yy]  (2.00-)      = 5.0
         shear_force at [x.xx,y.yy]  (2.00+)      = -5.0
         shear_force at [x.xx,y.yy]  (4.00-)      = -5.0
+        <BLANKLINE>
+        Points of Interest - Axial Force:
+        axial_force at [x.xx,y.yy]  (0.00+)      = 0.0
+        axial_force at [x.xx,y.yy]  (2.00-)      = 0.0
+        axial_force at [x.xx,y.yy]  (2.00+)      = 0.0
+        axial_force at [x.xx,y.yy]  (4.00-)      = 0.0
         """
 
         title = "Structure Summary"
@@ -1394,6 +1661,7 @@ class Structure2d:
             support_str = f"{support_name:<5} [{support_x_loc:.2f},{support_y_loc:.2f}]  ({unwrapped_xl_loc:.2f})"
             print(f"{support_str:<40} = {(value)}")
 
+
     def _print_points_of_interest(self, round_digits):
         """Prints the points of interest for shear force and bending moment."""
         dx = 1e-6
@@ -1407,8 +1675,18 @@ class Structure2d:
                 for point in item["bend_point"]
             }
         )
-        for point in bend_points:
-            if point == bend_points[-1]:
+        moment_points = sorted({
+            nsimplify(p)
+            for item in self.unwrapped_bendpoints
+            for p in (
+                # This is to add mid points also as points of interest as moments will have critical values at mid points.
+                item["bend_point"][0],                       # start
+                item["bend_point"][1],                       # end
+                (item["bend_point"][0] + item["bend_point"][1]) / 2  # midpoint
+            )
+        })
+        for point in moment_points:
+            if point == moment_points[-1]:
                 bending_moment_value = self.bending_moment(point - dx)
                 if round_digits is not None and not bending_moment_value.has(Symbol):
                     bending_moment_value = round(
@@ -1472,6 +1750,31 @@ class Structure2d:
                 print(f"{string_text:<40} = {shear_force_value_minus}")
                 string_text = f"shear_force at [x.xx,y.yy]  ({point:.02f}+)"
                 print(f"{string_text:<40} = {shear_force_value_plus}")
+
+        print("\nPoints of Interest - Axial Force:")
+        axial_points = load_points  # reuse same POIs (member ends + point loads)
+        for point in sorted(axial_points):
+            axial_value_minus = self.axial_force(point - dx)
+            axial_value_plus  = self.axial_force(nsimplify(point))
+
+            if round_digits is not None:
+                if isinstance(axial_value_minus, Basic) and not axial_value_minus.has(Symbol):
+                    axial_value_minus = round(float(axial_value_minus), round_digits)
+                if isinstance(axial_value_plus, Basic) and not axial_value_plus.has(Symbol):
+                    axial_value_plus = round(float(axial_value_plus), round_digits)
+
+            if point == axial_points[0]:
+                string_text = f"axial_force at [x.xx,y.yy]  ({point:.02f}+)"
+                print(f"{string_text:<40} = {axial_value_plus}")
+            elif point == axial_points[-1]:
+                string_text = f"axial_force at [x.xx,y.yy]  ({point:.02f}-)"
+                print(f"{string_text:<40} = {axial_value_minus}")
+            else:
+                string_text = f"axial_force at [x.xx,y.yy]  ({point:.02f}-)"
+                print(f"{string_text:<40} = {axial_value_minus}")
+                string_text = f"axial_force at [x.xx,y.yy]  ({point:.02f}+)"
+                print(f"{string_text:<40} = {axial_value_plus}")
+
 
     #################################################################################
     def draw(
