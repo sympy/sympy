@@ -1,5 +1,6 @@
 from sympy.calculus.accumulationbounds import AccumBounds
 from sympy.core import S, Symbol, Add, sympify, Expr, PoleError, Mul
+from sympy.core.mod import Mod
 from sympy.core.exprtools import factor_terms
 from sympy.core.numbers import Float, _illegal
 from sympy.core.function import AppliedUndef
@@ -7,11 +8,29 @@ from sympy.core.symbol import Dummy
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.elementary.complexes import (Abs, sign, arg, re)
 from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.elementary.trigonometric import sin, cos, tan, cot
+from sympy import pi
 from sympy.functions.special.gamma_functions import gamma
 from sympy.polys import PolynomialError, factor
 from sympy.series.order import Order
 from .gruntz import gruntz
 
+def _reduce_periodic_arg(expr, var):
+    """
+    For periodic functions in expr, reduce their arguments modulo their period
+    with respect to var.
+    """
+    def _periodic_arg(f, period):
+        arg = f.args[0]
+        if arg.has(var):
+            # Try to reduce argument modulo period
+            return f.func(Mod(arg, period))
+        return f
+    return expr.replace(
+        lambda x: x.func in (sin, cos, tan, cot) and x.args[0].has(var),
+        lambda x: _periodic_arg(x, 2*pi)
+    )
+    
 def limit(e, z, z0, dir="+"):
     """Computes the limit of ``e(z)`` at the point ``z0``.
 
@@ -377,6 +396,8 @@ class Limit(Expr):
         l = None
 
         try:
+            # Reduce periodic function arguments modulo their period before gruntz
+            e = _reduce_periodic_arg(e, z)
             r = gruntz(e, z, z0, dir)
             if r is S.NaN or l is S.NaN:
                 raise PoleError()

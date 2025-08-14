@@ -1449,3 +1449,9 @@ def test_issue_28130():
     assert limit(3**x, x, -oo) == 0
     assert limit(E**x, x, -oo) == 0
     assert limit((0.3)**x, x, -oo) == oo
+
+def test_issue_28313():
+    # https://github.com/sympy/sympy/issues/28313
+    n = Symbol('n')
+    expr = (1 + sin(pi * sqrt(4 * n**2 + 1)))**n
+    assert limit(expr, n, oo) == exp(pi/4)
