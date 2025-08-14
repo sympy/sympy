@@ -1038,8 +1038,11 @@ class Beam:
         return -integrate(self.load, x)
 
     def max_shear_force(self):
-        """Returns maximum Shear force and its coordinate
-        in the Beam object."""
+        """
+        Returns the maximum absolute shear force in the beam and all x-location(s)
+        or interval(s) where it occurs (e.g. a point or continuous region).
+        """
+
         shear_curve = self.shear_force()
         x = self.variable
 
@@ -1054,38 +1057,48 @@ class Beam:
 
         intervals = []    # List of Intervals with discrete value of shear force
         shear_values = []   # List of values of shear force in each interval
-        for i, s in enumerate(singularity):
-            if s == 0:
+        for i in range(1,len(singularity)):
+            start = singularity[i-1]
+            end = singularity[i]
+
+            length=end-start
+
+            left_mid = start + 0.25 * length
+            mid = start + 0.5 * length
+            right_mid = start + 0.75 * length
+
+            shear_left = shear_curve.subs(x, left_mid)
+            shear_middle = shear_curve.subs(x, mid)
+            shear_right = shear_curve.subs(x, right_mid)
+
+            # skips zero constant regions
+            if shear_left == shear_middle == shear_right == 0:
                 continue
-            try:
-                shear_slope = Piecewise((float("nan"), x<=singularity[i-1]),(self._load.rewrite(Piecewise), x<s), (float("nan"), True))
-                points = solve(shear_slope, x)
-                val = []
-                for point in points:
-                    val.append(abs(shear_curve.subs(x, point)))
-                points.extend([singularity[i-1], s])
-                val += [abs(limit(shear_curve, x, singularity[i-1], '+')), abs(limit(shear_curve, x, s, '-'))]
-                max_shear = max(val)
-                shear_values.append(max_shear)
-                intervals.append(points[val.index(max_shear)])
-            # If shear force in a particular Interval has zero or constant
-            # slope, then above block gives NotImplementedError as
-            # solve can't represent Interval solutions.
-            except NotImplementedError:
-                initial_shear = limit(shear_curve, x, singularity[i-1], '+')
-                final_shear = limit(shear_curve, x, s, '-')
-                # If shear_curve has a constant slope(it is a line).
-                if shear_curve.subs(x, (singularity[i-1] + s)/2) == (initial_shear + final_shear)/2 and initial_shear != final_shear:
-                    shear_values.extend([initial_shear, final_shear])
-                    intervals.extend([singularity[i-1], s])
-                else:    # shear_curve has same value in whole Interval
-                    shear_values.append(final_shear)
-                    intervals.append(Interval(singularity[i-1], s))
+            else:
+                left_val=limit(shear_curve, x, start, "+")
+                right_val=limit(shear_curve, x, end, "-")
+                if left_val == right_val:
+                    intervals.append(Interval(start, end))
+                    shear_values.append(left_val)
+                else:
+                    if abs(right_val) < abs(left_val):
+                        intervals.append(start)
+                        shear_values.append(left_val)
+                    elif abs(right_val) > abs(left_val):
+                        intervals.append(end)
+                        shear_values.append(right_val)
+                    else:
+                        intervals.append(start)
+                        shear_values.append(left_val)
+                        intervals.append(end)
+                        shear_values.append(right_val)
 
         shear_values = list(map(abs, shear_values))
         maximum_shear = max(shear_values)
-        point = intervals[shear_values.index(maximum_shear)]
-        return (point, maximum_shear)
+
+        points = [intervals[i] for i, shear in enumerate(shear_values) if shear == maximum_shear]
+
+        return (points, maximum_shear)
 
     def bending_moment(self):
         """
