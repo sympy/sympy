@@ -194,6 +194,7 @@ class Beam:
         self._load = 0
         self.area = area
         self._applied_supports = []
+        self._applied_support_symbols = []
         self._applied_rotation_hinges = []
         self._applied_sliding_hinges = []
         self._rotation_hinge_symbols = []
@@ -552,11 +553,14 @@ class Beam:
         self._applied_supports.append((loc, type))
         if type in ("pin", "roller"):
             reaction_load = Symbol('R_'+str(loc))
+            self._applied_support_symbols.append(reaction_load)
             self.apply_load(reaction_load, loc, -1)
             self.bc_deflection.append((loc, 0))
         else:
             reaction_load = Symbol('R_'+str(loc))
+            self._applied_support_symbols.append(reaction_load)
             reaction_moment = Symbol('M_'+str(loc))
+            self._applied_support_symbols.append(reaction_moment)
             self.apply_load(reaction_load, loc, -1)
             self.apply_load(reaction_moment, loc, -2)
             self.bc_deflection.append((loc, 0))
@@ -918,7 +922,14 @@ class Beam:
 
     def solve_for_reaction_loads(self, *reactions):
         """
-        Solves for the reaction forces.
+        This method solves for all the reaction loads, rotation jumps, deflection jumps.
+
+        Parameters
+        ==========
+        reactions : Symbol
+            If the supports are added using apply_load method the unknown support loads needs to be passed as reactions
+            if the supports are applied uing the apply_support method the reaction symbols are optional as they are internally
+            tracked and added for solve_for_reaction_loads and if user is comfortable passing them they can pass the rection symbols too
 
         Examples
         ========
@@ -931,6 +942,7 @@ class Beam:
 
         Using the sign convention of upward forces and clockwise moment
         being positive.
+        Below are the three ways you can apply supports and solve_for_reaction_loads
 
         >>> from sympy.physics.continuum_mechanics.beam import Beam
         >>> from sympy import symbols
@@ -945,20 +957,63 @@ class Beam:
         >>> b.load
         R1*SingularityFunction(x, 10, -1) + R2*SingularityFunction(x, 30, -1)
             - 8*SingularityFunction(x, 0, -1) + 120*SingularityFunction(x, 30, -2)
-        >>> b.solve_for_reaction_loads(R1, R2)
+        >>> b.solve_for_reaction_loads(R1, R2)          # The user must pass symbols for solving reactions when applied supports as loads.
         >>> b.reaction_loads
         {R1: 6, R2: 2}
         >>> b.load
         -8*SingularityFunction(x, 0, -1) + 6*SingularityFunction(x, 10, -1)
             + 120*SingularityFunction(x, 30, -2) + 2*SingularityFunction(x, 30, -1)
+
+        >>> from sympy.physics.continuum_mechanics.beam import Beam
+        >>> from sympy import symbols
+        >>> E, I = symbols('E, I')
+        >>> R1, R2 = symbols('R1, R2')
+        >>> b = Beam(30, E, I)
+        >>> b.apply_load(-8, 0, -1)
+        >>> R1 = b.apply_support(10,"pin")  # Reaction force at x = 10
+        >>> R2 = b.apply_support(30,"pin")  # Reaction force at x = 30
+        >>> b.apply_load(120, 30, -2)
+        >>> b.load
+        R_10*SingularityFunction(x, 10, -1) + R_30*SingularityFunction(x, 30, -1)
+            - 8*SingularityFunction(x, 0, -1) + 120*SingularityFunction(x, 30, -2)
+        >>> b.solve_for_reaction_loads(R1, R2)       # passing the symbols for solving
+        >>> b.reaction_loads
+        {R_10: 6, R_30: 2}
+        >>> b.load
+        -8*SingularityFunction(x, 0, -1) + 6*SingularityFunction(x, 10, -1)
+            + 120*SingularityFunction(x, 30, -2) + 2*SingularityFunction(x, 30, -1)
+
+        >>> from sympy.physics.continuum_mechanics.beam import Beam
+        >>> from sympy import symbols
+        >>> E, I = symbols('E, I')
+        >>> R1, R2 = symbols('R1, R2')
+        >>> b = Beam(30, E, I)
+        >>> b.apply_load(-8, 0, -1)
+        >>> R1 = b.apply_support(10,"pin")  # Reaction force at x = 10
+        >>> R2 = b.apply_support(30,"pin")  # Reaction force at x = 30
+        >>> b.apply_load(120, 30, -2)
+        >>> b.load
+        R_10*SingularityFunction(x, 10, -1) + R_30*SingularityFunction(x, 30, -1)
+            - 8*SingularityFunction(x, 0, -1) + 120*SingularityFunction(x, 30, -2)
+        >>> b.solve_for_reaction_loads()                 # solving reactions without passing the symbols while using apply_support for supports
+        >>> b.reaction_loads
+        {R_10: 6, R_30: 2}
+        >>> b.load
+        -8*SingularityFunction(x, 0, -1) + 6*SingularityFunction(x, 10, -1)
+            + 120*SingularityFunction(x, 30, -2) + 2*SingularityFunction(x, 30, -1)
         """
 
+        if len(set(reactions)) != len(reactions):
+            raise ValueError(
+                "Duplicate Symbols passed into solve_for_reaction_loads()"
+            )
         x = self.variable
         l = self.length
         C3 = Symbol('C3')
         C4 = Symbol('C4')
         rotation_jumps = tuple(self._rotation_hinge_symbols)
         deflection_jumps = tuple(self._sliding_hinge_symbols)
+        applied_supports = tuple(self._applied_support_symbols)
 
         shear_curve = limit(self.shear_force(), x, l)
         moment_curve = limit(self.bending_moment(), x, l)
@@ -987,16 +1042,16 @@ class Beam:
         for position, value in self._boundary_conditions['deflection']:
             eqs = deflection_curve.subs(x, position) - value
             deflection_eqs.append(eqs)
-
+        total_supports = tuple(set(applied_supports + reactions))
         solution = list((linsolve([shear_curve, moment_curve] + shear_force_eqs + bending_moment_eqs + slope_eqs
-                            + deflection_eqs, (C3, C4) + reactions + rotation_jumps + deflection_jumps).args)[0])
-        reaction_index = 2+len(reactions)
+                            + deflection_eqs, (C3, C4) + total_supports + rotation_jumps + deflection_jumps).args)[0])
+        reaction_index = 2+len(total_supports)
         rotation_index = reaction_index + len(rotation_jumps)
         reaction_solution = solution[2:reaction_index]
         rotation_solution = solution[reaction_index:rotation_index]
         deflection_solution = solution[rotation_index:]
 
-        self._reaction_loads = dict(zip(reactions, reaction_solution))
+        self._reaction_loads = dict(zip(total_supports, reaction_solution))
         self._rotation_jumps = dict(zip(rotation_jumps, rotation_solution))
         self._deflection_jumps = dict(zip(deflection_jumps, deflection_solution))
         self._load = self._load.subs(self._reaction_loads)
