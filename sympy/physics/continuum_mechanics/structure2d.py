@@ -1090,9 +1090,8 @@ class Structure2d:
             flat_eqs.append(e.lhs - e.rhs if isinstance(e, Eq) else e)
 
 
-        print(f"equations{flat_eqs}unknowns{unknowns}")
         sol_tuple = list((linsolve(flat_eqs, unknowns).args)[0])
-        print(f"sol{sol_tuple}")
+
         sol_map   = dict(zip(unknowns, sol_tuple))
 
 
