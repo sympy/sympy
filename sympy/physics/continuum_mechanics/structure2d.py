@@ -1422,9 +1422,9 @@ class Structure2d:
                         v_raw = 0.0
                     lx = txs[j] + LABEL_OFFSET * nx
                     ly = tys[j] + LABEL_OFFSET * ny
-
                     txt = LABEL_FMT.format(v=round(v_raw, int(LABEL_DECIMALS)))
-
+                    ax.text(lx, ly, txt, fontsize=8, color=COLOR,
+                            zorder=30, ha='center', va='center')
 
             cum += Lm
 
