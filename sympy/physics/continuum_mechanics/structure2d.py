@@ -1374,12 +1374,10 @@ class Structure2d:
                     color="black", linewidth=2, zorder=10)
 
         def _eval_sub(e, xi):
-            try:    return float(e.subs(x, xi).evalf())
-            except: return float('nan')
+            return float(e.subs(x, xi).evalf())
 
         def _eval_limit(e, xi, side):
-            try:    return float(limit(e, x, xi, dir=side))
-            except: return _eval_sub(e, xi)
+            return float(limit(e, x, xi, dir=side))
 
         stride = max(1, int(np.ceil(1.0 / float(KEEP_FRACTION))))
 
@@ -1424,12 +1422,9 @@ class Structure2d:
                         v_raw = 0.0
                     lx = txs[j] + LABEL_OFFSET * nx
                     ly = tys[j] + LABEL_OFFSET * ny
-                    try:
-                        txt = LABEL_FMT.format(v=round(v_raw, int(LABEL_DECIMALS)))
-                    except Exception:
-                        txt = f"[{v_raw:.{int(LABEL_DECIMALS)}f}]"
-                    ax.text(lx, ly, txt, fontsize=8, color=COLOR,
-                            zorder=30, ha='center', va='center')
+
+                    txt = LABEL_FMT.format(v=round(v_raw, int(LABEL_DECIMALS)))
+
 
             cum += Lm
 
