@@ -3,7 +3,6 @@ from sympy.core.relational import Eq
 from sympy.core.numbers import Integer
 from sympy.core.function import Function, Lambda
 from sympy.logic.algorithms.euf_theory import EUFCongruenceClosure
-import random
 
 f, g, h = symbols('f g h', cls=Function)
 x, y, z, w, a, b, c, d = symbols('x y z w a b c d')
@@ -175,32 +174,6 @@ def test_complex_deep_chaining():
         assert cc.are_equal(term_a, term_b)
         term_a = f(term_a)
         term_b = f(term_b)
-
-
-def random_expr(vars, funcs, depth=3):
-    """
-    Recursively builds a random EUF expression (nested function or variable/integer).
-    """
-    if depth == 0 or (depth < 3 and random.random() < 0.5):
-        # base case: variable or integer
-        if random.random() < 0.7:
-            return random.choice(vars)
-        else:
-            return Integer(random.randint(0, 10))
-    else:
-        func = random.choice(funcs)
-        # unary for simplicity, but you can generalize to n-ary
-        return func(random_expr(vars, funcs, depth-1))
-
-def test_random_euf_equations(num_eqs=5, max_depth=4):
-    vars = symbols('x y z')
-    funcs = [Function(f'f{i}') for i in range(3)]
-    eqs = []
-    for _ in range(num_eqs):
-        e1 = random_expr(vars, funcs, max_depth)
-        e2 = random_expr(vars, funcs, max_depth)
-        eqs.append(Eq(e1, e2))
-    return eqs
 
 
 def test_long_chain_variables():
