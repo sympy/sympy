@@ -1468,6 +1468,7 @@ class Structure2d:
             >>> s.apply_support(x=0, y=0, type="pin")
             >>> s.apply_support(x=4, y=0, type="roller")
             >>> s.solve_for_reaction_loads()
+            {R_h__0,__0: 0, R_v__0,__0: -7.5, R_v__4,__0: -7.5}
             >>> s.plot_shear_force_on_structure(factor=75.0, show_values=True)  # doctest: +SKIP
         """
         if self.V is None :
@@ -1512,6 +1513,7 @@ class Structure2d:
             >>> s.apply_support(x=0, y=0, type="pin")
             >>> s.apply_support(x=4, y=0, type="roller")
             >>> s.solve_for_reaction_loads()
+            {R_h__0,__0: 0, R_v__0,__0: -7.5, R_v__4,__0: -7.5}
             >>> s.plot_bending_moment_on_structure(factor=150.0, show_values=True)  # doctest: +SKIP
         """
         if self.M is None :
@@ -1556,6 +1558,7 @@ class Structure2d:
             >>> s.apply_support(x=0, y=0, type="pin")
             >>> s.apply_support(x=4, y=0, type="roller")
             >>> s.solve_for_reaction_loads()
+            {R_h__0,__0: 0, R_v__0,__0: -7.5, R_v__4,__0: -7.5}
             >>> s.plot_axial_force_on_structure(factor=75.0, show_values=True)  # doctest: +SKIP
         """
         if self.N is None :
