@@ -42,11 +42,11 @@ def test_column():
     # Test applying supports
     c2 = Column(10, E, A)
     c2.apply_support(0)
-    assert c2._bc_deflection == [0]
+    assert c2._bc_extension == [0]
     c2.apply_support(10)
-    assert c2._bc_deflection == [0, 10]
+    assert c2._bc_extension == [0, 10]
     c2.apply_support(5)
-    assert c2._bc_deflection == [0, 10, 5]
+    assert c2._bc_extension == [0, 10, 5]
 
     # Test applying a load
     c3 = Column(10, E, A)
@@ -476,7 +476,7 @@ def test_telescope_hinge():
     q = {R_0: -10, R_10: 0}
     assert p == q
 
-    p = c.hinge_deflections
+    p = c.hinge_extensions
     q = {Symbol('u_7.5'): 50/(E*A)}
     assert p == q
 
@@ -494,7 +494,7 @@ def test_telescope_hinge():
     q = {R_0: 5, R_10: 10}
     assert p == q
 
-    p = c2.hinge_deflections
+    p = c2.hinge_extensions
     u_4 = Symbol('u_4')
     q = {u_4: Rational(1, 2000)}
     assert p == q
@@ -519,7 +519,7 @@ def test_equations():
     )
     assert p == q
 
-    p = c.deflection()
+    p = c.extension()
     q = (
         C_N*x + C_u
         - R_0*SingularityFunction(x, 0, 1)/210000
@@ -539,7 +539,7 @@ def test_equations():
     )
     assert p == q
 
-    p = c.deflection()
+    p = c.extension()
     q = (
         SingularityFunction(x, 0, 1)/210000
         - SingularityFunction(x, 8, 1)/42000
