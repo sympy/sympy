@@ -16,7 +16,7 @@ def make_random_problem(num_constants=2, num_functions=2, num_constraints=2, dis
 
     Args:
         num_constants (int): number of distinct constant symbols (c1, c2, ...)
-        num_functions (int): number of function symbols (f1, f2, ...) — all unary for simplicity
+        num_functions (int): number of function symbols (f1, f2, ...) - all unary for simplicity
         num_constraints (int): how many equations to generate
         disequality_proportion (float): kept for compatibility; currently unused
                                        because EUFCongruenceClosure works with equalities.
