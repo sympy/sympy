@@ -1,11 +1,55 @@
 from sympy.core.symbol import symbols, Symbol, Dummy
-from sympy.core.relational import Eq
+from sympy.core.relational import Eq, Ne
 from sympy.core.numbers import Integer
 from sympy.core.function import Function, Lambda
 from sympy.logic.algorithms.euf_theory import EUFCongruenceClosure
+import random
+
 
 f, g, h = symbols('f g h', cls=Function)
 x, y, z, w, a, b, c, d = symbols('x y z w a b c d')
+
+
+def make_random_problem(num_constants=2, num_functions=2, num_constraints=2, disequality_proportion=0.3):
+    """
+    Generate a list of random EUF equalities between (possibly nested) terms.
+
+    Args:
+        num_constants (int): number of distinct constant symbols (c1, c2, ...)
+        num_functions (int): number of function symbols (f1, f2, ...) — all unary for simplicity
+        num_constraints (int): how many equations to generate
+        disequality_proportion (float): kept for compatibility; currently unused
+                                       because EUFCongruenceClosure works with equalities.
+
+    Returns:
+        List[Eq]: a list of SymPy Eq constraints over EUF terms.
+    """
+    # Create a pool of constants and function symbols
+    constants = symbols(f'c1:{num_constants+1}')
+    functions = symbols(f'f1:{num_functions+1}', cls=Function)
+
+    # Helper: build a random (possibly nested) unary-function term over atoms
+    def rand_term(max_depth=3):
+        depth = random.randint(0, max_depth)
+        t = random.choice(constants)
+        for _ in range(depth):
+            f = random.choice(functions)
+            t = f(t)
+        return t
+
+    constraints = []
+    while len(constraints) < num_constraints:
+        lhs = rand_term(max_depth=3)
+        rhs = rand_term(max_depth=3)
+        # Avoid trivial Eq(t, t) to keep constraints informative
+        if lhs == rhs:
+            continue
+        if random.random() < disequality_proportion:
+            constraints.append(Ne(lhs, rhs))
+        else:
+            constraints.append(Eq(lhs, rhs))
+
+    return constraints
 
 
 def test_basic_and_chain_equality():
