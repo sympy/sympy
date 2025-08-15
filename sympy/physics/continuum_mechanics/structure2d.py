@@ -7,17 +7,19 @@ from sympy.core import Basic, Symbol, symbols
 from sympy.core.relational import Eq
 from sympy.core.numbers import pi
 from sympy.external import import_module
-from sympy.functions import SingularityFunction
+from sympy.functions import SingularityFunction, Piecewise
 from sympy.functions.elementary.complexes import Abs
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import atan2, cos, sin, tan
 from sympy.geometry.polygon import deg, rad
 from sympy.physics.continuum_mechanics.beam import Beam
 from sympy.physics.continuum_mechanics.column import Column
+from sympy.plotting import plot
 from sympy.simplify import nsimplify, simplify
 from sympy.solvers import linsolve
 from sympy.integrals import integrate
 from sympy.series import limit
+from sympy.utilities.lambdify import lambdify
 
 plt = import_module(
     "matplotlib.pyplot",
@@ -1152,7 +1154,7 @@ class Structure2d:
         Plots the shear force diagram for the beam.
 
         Returns:
-            Matplotlib plot: A plot showing the shear force distribution along the structure.
+            A plot showing the shear force distribution along the structure.
         """
         if self.V is None :
             raise RuntimeError("Call solve_for_reaction_loads() first.")
@@ -1195,7 +1197,7 @@ class Structure2d:
         Plots the axial force diagram for the structure.
 
         Returns:
-            Matplotlib plot: A plot showing the axial force distribution along the structure.
+            A plot showing the axial force distribution along the structure.
         """
 
         if self.N is None:
@@ -1207,7 +1209,7 @@ class Structure2d:
                     title='Axial Force',
                     xlabel=r'$\mathrm{x}$',
                     ylabel=r'$\mathrm{N(x)}$',
-                    line_color='r')
+                    line_color='c')
 
 
     def bending_moment(self, x=None, y=None):
@@ -1246,7 +1248,7 @@ class Structure2d:
         Plots the bending moment diagram for the beam.
 
         Returns:
-            Matplotlib plot: A plot showing the bending moment distribution along the structure.
+            A plot showing the bending moment distribution along the structure.
         """
         if self.M is None and not self.reaction_loads:
             raise RuntimeError("Call solve_for_reaction_loads() first.")
@@ -1289,19 +1291,19 @@ class Structure2d:
         Plots the extension diagram for the beam.
 
         Returns:
-            Matplotlib plot: A plot showing the extension along the structure.
+            A plot showing the extension along the structure.
         """
 
         if self.ux is None:
             raise RuntimeError("Call solve_for_reaction_loads() first.")
-        from sympy.plotting import plot
+
         x = self.column.variable
         L = self.beam.length
         return plot(self.ux, (x, 0, L),
                     title='Extension',
                     xlabel=r'$\mathrm{x}$',
                     ylabel=r'$\mathrm{u(x)}$',
-                    line_color='r')
+                    line_color='m')
 
 
     def deflection(self, x=None, y=None):
@@ -1326,13 +1328,13 @@ class Structure2d:
         """
 
         if x is None:
-            return self.beam.deflection()
+            return self.uz
         if y is None:
             x_symbol = Symbol("x")
-            return self.beam.deflection().subs(x_symbol, x)
+            return self.uz.subs(x_symbol, x)
         else:
             unwarap_x = self._find_unwrapped_position(x, y)
-            return self.beam.deflection().subs(Symbol("x"), unwarap_x)
+            return self.uz.subs(Symbol("x"), unwarap_x)
 
 
     def plot_deflection(self):
@@ -1340,18 +1342,25 @@ class Structure2d:
         Plots the deflection diagram for the beam.
 
         Returns:
-            Matplotlib plot: A plot showing the deflection along the structure.
+            A plot showing the deflection along the structure.
         """
-        if self.uz is None :
+        if self.ux is None:
             raise RuntimeError("Call solve_for_reaction_loads() first.")
-        self.beam.plot_deflection()
+
+        x = self.column.variable
+        L = self.beam.length
+        return plot(self.uz, (x, 0, L),
+                    title='Deflection',
+                    xlabel=r'$\mathrm{x}$',
+                    ylabel=r'$\mathrm{u(z)}$',
+                    line_color='r')
 
 
-    def _plot_expression_on_structure(self, expr, *, factor=75.0, show_values=True, title=None):
+    def _plot_expression_on_structure(self, expr, *, factor=75.0, show_values=True, title=None, _color='tab:red'):
+        # helper plotting function to reduce duplication of code
 
         SAMPLES_PER_MEMBER = 60
         KEEP_FRACTION      = 1/10
-        COLOR              = 'tab:red'
         LINE_WIDTH         = 1.0
         ZERO_TOL           = 1e-9
         LABEL_DECIMALS     = 2
@@ -1408,11 +1417,11 @@ class Structure2d:
             tys = by + scaled * ny
 
             for j in range(0, n, stride):
-                ax.plot([bx[j], txs[j]], [by[j], tys[j]], color=COLOR, linewidth=1.0, zorder=20)
-            ax.plot([bx[0],  txs[0]],  [by[0],  tys[0]],  color=COLOR, linewidth=1.0, zorder=20)
-            ax.plot([bx[-1], txs[-1]], [by[-1], tys[-1]], color=COLOR, linewidth=1.0, zorder=20)
+                ax.plot([bx[j], txs[j]], [by[j], tys[j]], color=_color, linewidth=1.0, zorder=20)
+            ax.plot([bx[0],  txs[0]],  [by[0],  tys[0]],  color=_color, linewidth=1.0, zorder=20)
+            ax.plot([bx[-1], txs[-1]], [by[-1], tys[-1]], color=_color, linewidth=1.0, zorder=20)
 
-            ax.plot(txs, tys, color=COLOR, linewidth=LINE_WIDTH, zorder=21)
+            ax.plot(txs, tys, color=_color, linewidth=LINE_WIDTH, zorder=21)
 
             if label_mode == 'ends':
                 for j in (0, n-1):
@@ -1422,14 +1431,16 @@ class Structure2d:
                     lx = txs[j] + LABEL_OFFSET * nx
                     ly = tys[j] + LABEL_OFFSET * ny
                     txt = LABEL_FMT.format(v=round(v_raw, int(LABEL_DECIMALS)))
-                    ax.text(lx, ly, txt, fontsize=8, color=COLOR,
+                    ax.text(lx, ly, txt, fontsize=12, color=_color,
                             zorder=30, ha='center', va='center')
 
             cum += Lm
 
         core = title if title else "Diagram"
         ax.set_title(core)
-        ax.set_xlabel("x"); ax.set_ylabel("y"); ax.grid(True, zorder=5)
+        ax.set_xlabel("x")
+        ax.set_ylabel("y")
+        ax.grid(True, zorder=5)
         return fig, ax
 
 
@@ -1476,7 +1487,7 @@ class Structure2d:
         return self._plot_expression_on_structure(self.shear_force(),
                                                 factor=factor,
                                                 show_values=show_values,
-                                                title="Shear diagram")
+                                                title="Shear diagram",_color='tab:green')
 
     def plot_bending_moment_on_structure(self, *, factor=150.0, show_values=True):
         """
@@ -1521,7 +1532,7 @@ class Structure2d:
         return self._plot_expression_on_structure(self.bending_moment(),
                                                 factor=factor,
                                                 show_values=show_values,
-                                                title="Bending moment diagram")
+                                                title="Bending moment diagram", _color='tab:blue')
 
     def plot_axial_force_on_structure(self, *, factor=75.0, show_values=True):
         """
@@ -1566,7 +1577,107 @@ class Structure2d:
         return self._plot_expression_on_structure(self.axial_force(),
                                                 factor=factor,
                                                 show_values=show_values,
-                                                title="Axial force diagram")
+                                                title="Axial force diagram", _color='tab:orange')
+
+    def _build_geometry_functions(self):
+
+        x = self.beam.variable
+        aa, oo, _ = self._unwrap_structure()
+
+
+        x0 = self.members[0].x1
+        y0 = self.members[0].y1
+
+        h = x0
+        v = y0
+
+        for i in range(len(oo)):
+            a = aa[i]
+            b = aa[i+1]
+            th = oo[i]
+            gate_len = (x - a) * SingularityFunction(x, a, 0) - (x - b) * SingularityFunction(x, b, 0)
+            h += gate_len * cos(th)
+            v += gate_len * sin(th)
+        return h, v
+
+    def plot_deformation_on_structure(self, *, factor=1/10000.0, show_axes=True, legend=True):
+        """
+        Plots the deformation on the structure geometry.
+
+
+        Parameters
+        ==========
+        factor : float(optional)
+            Visual scale for deformation.
+            This is to make shift in the deformed structure for better visual analysis.
+
+
+        Examples
+        ========
+        Plot the deformation on the structure after solving reactions.
+
+        .. plot::
+            :context: close-figs
+            :format: doctest
+            :include-source: True
+
+            >>> from sympy.physics.continuum_mechanics.structure2d import Structure2d
+            >>> E, I, A = 3e4, 1, 1e4
+            >>> F = 15
+            >>> s = Structure2d()
+            >>> s.add_member(x1=0, y1=0, x2=4, y2=0, E=E, I=I, A=A)
+            >>> s.apply_load(start_x=2, start_y=0, value=F, global_angle=270, order=-1)
+            >>> s.apply_support(x=0, y=0, type="pin")
+            >>> s.apply_support(x=4, y=0, type="roller")
+            >>> s.solve_for_reaction_loads()
+            {R_h__0,__0: 0, R_v__0,__0: -7.5, R_v__4,__0: -7.5}
+            >>> s.plot_deformation_on_structure(factor=75.0)  # doctest: +SKIP
+        """
+        if self.uz is None or self.ux is None:
+            raise RuntimeError("Call solve_for_reaction_loads() first.")
+
+
+        x = self.beam.variable
+        L = float(self.beam.length)
+
+        # symbolic geometry + local displacements
+        h, v = self._build_geometry_functions()
+        uv, uh = self._build_local_displacements(self.uz, self.ux)
+
+        h_np  = lambdify(x, h.rewrite(Piecewise))
+        v_np  = lambdify(x, v.rewrite(Piecewise))
+        uv_np = lambdify(x, uv.rewrite(Piecewise))
+        uh_np = lambdify(x, uh.rewrite(Piecewise))
+
+        s = np.linspace(0.0, L, int(800))
+        base_h, base_v = h_np(s), v_np(s)
+        def_h  = base_h + uh_np(s) / float(factor if factor else 1.0)
+        def_v  = base_v - uv_np(s) / float(factor if factor else 1.0)
+
+        # plot
+        fig, ax = plt.subplots()
+        ax.set_aspect("equal")
+
+        # draw members as solid black for reference
+        for m in self.members:
+            ax.plot([float(m.x1), float(m.x2)],
+                    [float(m.y1), float(m.y2)],
+                    linewidth=2)
+
+        # baseline polyline & deformed
+        ax.plot(base_h, base_v, linewidth=2, label='structure')
+        ax.plot(def_h,  def_v,  linewidth=2, label='deformed')
+
+        ax.set_xlabel('h'); ax.set_ylabel('v')
+        if show_axes:
+            ax.spines['right']
+            ax.spines['top']
+            ax.spines['bottom']
+            ax.spines['left']
+        ax.grid(True); ax.axis('scaled')
+        if legend:
+            ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.05), ncol=2)
+        return fig, ax
 
 
     def summary(self, verbose=True, round_digits=None):
