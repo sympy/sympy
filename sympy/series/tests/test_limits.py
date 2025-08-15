@@ -1455,3 +1455,4 @@ def test_issue_28313():
     n = Symbol('n')
     expr = (1 + sin(pi * sqrt(4 * n**2 + 1)))**n
     assert limit(expr, n, oo) == exp(pi/4)
+    

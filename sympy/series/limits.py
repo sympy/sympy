@@ -412,7 +412,8 @@ class Limit(Expr):
 
         try:
             # Reduce periodic function arguments modulo their period before gruntz
-            e = _reduce_periodic_arg(e, z)
+            if z0 in (S.Infinity, S.NegativeInfinity):
+                e = _reduce_periodic_arg(e, z)
             r = gruntz(e, z, z0, dir)
             if r is S.NaN or l is S.NaN:
                 raise PoleError()
