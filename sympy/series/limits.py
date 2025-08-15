@@ -1,6 +1,5 @@
 from sympy.calculus.accumulationbounds import AccumBounds
 from sympy.core import S, Symbol, Add, sympify, Expr, PoleError, Mul
-from sympy.core.mod import Mod
 from sympy.core.exprtools import factor_terms
 from sympy.core.numbers import Float, _illegal
 from sympy.core.function import AppliedUndef
@@ -13,24 +12,40 @@ from sympy import pi
 from sympy.functions.special.gamma_functions import gamma
 from sympy.polys import PolynomialError, factor
 from sympy.series.order import Order
+from sympy import series, oo
 from .gruntz import gruntz
 
 def _reduce_periodic_arg(expr, var):
     """
-    For periodic functions in expr, reduce their arguments modulo their period
-    with respect to var.
+    For periodic functions in expr, extract the asymptotically small part
+    of their arguments with respect to var approaching infinity.
+    Only applies to sin, cos, tan, cot.
     """
     def _periodic_arg(f, period):
         arg = f.args[0]
-        if arg.has(var):
-            # Try to reduce argument modulo period
-            return f.func(Mod(arg, period))
+        if not arg.has(var):
+            return f
+        try:
+            s = arg.series(var, oo, 5).removeO()
+            terms = s.as_ordered_terms()
+            small = 0
+            for t in terms:
+               if t.limit(var, oo) == 0:
+                  small += t
+            # If all terms vanish, use 0
+            if small == 0:
+                return f.func(0)
+            # Only replace if small vanishes at infinity
+            if small.limit(var, oo) == 0:
+                return f.func(small)
+        except Exception:
+            pass
         return f
     return expr.replace(
         lambda x: x.func in (sin, cos, tan, cot) and x.args[0].has(var),
         lambda x: _periodic_arg(x, 2*pi)
     )
-    
+
 def limit(e, z, z0, dir="+"):
     """Computes the limit of ``e(z)`` at the point ``z0``.
 
