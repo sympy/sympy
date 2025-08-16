@@ -1157,10 +1157,12 @@ class DMP(CantSympify, Generic[Er]):
         """Return the number of complex roots of ``f`` in ``[inf, sup]``. """
         raise NotImplementedError
 
-    def routh_hurwitz_stability(f) -> list[Self | Er]:
+    def routh_hurwitz_stability(f) -> list[Er]:
         """
-        Computes symbolic conditions for the asymptotic stability of a
-        continuous-time system represented by ``f``.
+        Computes the Routh Hurwitz criteria of ``f``.
+
+        The conditions, in general, are represented by a list of multivariate
+        polynomials which must be positive to ensure stability.
 
         """
         raise NotImplementedError
@@ -1829,8 +1831,10 @@ class DMP_Python(DMP[Er]):
 
     def routh_hurwitz_stability(f) -> list[Er]:
         """
-        Computes symbolic conditions for the asymptotic stability of a
-        continuous-time system represented by ``f``.
+        Computes the Routh Hurwitz criteria of ``f``.
+
+        The conditions, in general, are represented by a list of multivariate
+        polynomials which must be positive to ensure stability.
 
         """
         from sympy.polys.rootconditions import dup_routh_hurwitz
@@ -2542,10 +2546,12 @@ class DUP_Flint(DMP[Er]):
         """Return the number of complex roots of ``f`` in ``[inf, sup]``. """
         return f.to_DMP_Python().count_complex_roots(inf=inf, sup=sup)
 
-    def routh_hurwitz_stability(f) -> list[Self | Er]:
+    def routh_hurwitz_stability(f) -> list[Er]:
         """
-        Computes symbolic conditions for the asymptotic stability of a
-        continuous-time system represented by ``f``.
+        Computes the Routh Hurwitz criteria of ``f``.
+
+        The conditions, in general, are represented by a list of multivariate
+        polynomials which must be positive to ensure stability.
 
         """
         return f.to_DMP_Python().routh_hurwitz_stability() # type: ignore

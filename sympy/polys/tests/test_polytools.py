@@ -4083,6 +4083,7 @@ def test_issue_28156():
     roots = rhs.ground_roots()
     assert roots
 
+
 def test_routh_hurwitz_stability():
     b0, b1, b2, b3, b4 = symbols('b_0 b_1 b_2 b_3 b_4')
     p1 = Poly(b4 * s**4 + b3 * s**3 + b2 * s**2 + b1 * s + b0, s)
@@ -4117,7 +4118,7 @@ def test_routh_hurwitz_stability():
     p5_ = Poly(b0 + b1*s**2 + b1*s + b3*s**4 + b3*s**3, s, domain = EXRAW)
 
     assert [p5.domain.to_sympy(c) for c in p5.routh_hurwitz_stability()] == \
-           [0]
+           [-1]
     assert [p5_.domain.to_sympy(c) for c in p5_.routh_hurwitz_stability()] == \
            [1, 0, 1, 1]
 

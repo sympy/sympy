@@ -4165,14 +4165,13 @@ class Poly(Basic):
 
     def routh_hurwitz_stability(f):
         """
-        Return the conditions for the polynomial to be stable in the
-        continuous-time case (all roots with negative real part).
+        Computes the Routh Hurwitz criteria.
 
         Note
         ====
 
-        The conditions, in general, are represented by a list of multivariate
-        polynomials which must be positive to ensure stability.
+        The conditions, in general, are represented by a list of expressions
+        which must be positive to ensure stability.
 
         This method assumes that the leading coefficient is non-zero.
         In the opposite case, additional verification is required.

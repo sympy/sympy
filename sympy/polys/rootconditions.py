@@ -9,15 +9,15 @@ from sympy.polys.rings import PolyElement
 from sympy.polys.densebasic import dup_convert
 from sympy.polys.densetools import dup_clear_denoms
 from sympy.core.mul import prod
-
 from sympy.core.exprtools import factor_terms
+from sympy.core.expr import Expr
 from sympy.simplify.simplify import signsimp
 from sympy.core.mul import Mul
 
 def dup_routh_hurwitz(f: dup[Er], K: Domain[Er]) -> list[Er]:
     """
-    Return the conditions for the polynomial to be stable (all roots with
-    negative real part).
+    Computes the Routh Hurwitz criteria of ``f``.
+
     The conditions, in general, are represented by a list of multivariate
     polynomials which must be positive to ensure stability.
 
@@ -91,15 +91,15 @@ def _rec_dup_routh_hurwitz_poly(p: list[PolyElement[Er]],
 
     cond = p[0] * p[1]
 
-    # This check is really important. It stops the recursion immediately and
-    # avoid a possible infinite while loop in _clear_cond_poly.
+    # This check stops the recursion immediately and avoid a possible infinite
+    # while loop in _clear_cond_poly.
     if cond.is_zero:
-        return [K.zero]
+        return [K(-1)]
 
     cond = _clear_cond_poly(cond, previous_cond, K)
 
-    # These checks are also important, because adding 1 or -1 to the previous
-    # conditions will lead to an infinite loop in the next _clear_cond_poly.
+    # We avoid adding 1 or -1 to the previous conditions, since it will lead to
+    # an infinite loop in the next _clear_cond_poly.
     if cond == K(-1):
         return [K(-1)]
 
@@ -124,20 +124,20 @@ def _clear_cond_poly(cond: PolyElement[Er], previous_cond, K):
     # Remove factors of even degree and reduce odd degree factors
     common_factor, facs_m = cond.sqf_list()
 
-    cond = K(prod([fac for fac, m in facs_m if m % 2 == 1]))
+    cond = prod([fac for fac, m in facs_m if m % 2 == 1], K.one)
     if common_factor < 0:
         cond = cond * K(-1)
 
     return cond
 
 
-def _dup_routh_hurwitz_exraw(p: list[Er]) -> list[Er]:
+def _dup_routh_hurwitz_exraw(p: list[Expr]) -> list[Expr]:
     if all(c.is_Number for c in p):
         return _calc_conditions_div(p)
 
     return _calc_conditions_no_div(p)
 
-def _calc_conditions_div(p: list[Er]) -> list[Er]:
+def _calc_conditions_div(p: list[Expr]) -> list[Expr]:
     """
     Stability check with divisions, used for numeric cases.
 
@@ -158,15 +158,15 @@ def _calc_conditions_div(p: list[Er]) -> list[Er]:
 
     return [p[0] * p[1]] + _calc_conditions_div(qs)
 
-def _calc_conditions_no_div(p: list[Er]) -> list[Er]:
+def _calc_conditions_no_div(p: list[Expr]) -> list[Expr]:
     """
     Stability check without divisions, used for EXRAW.
 
     """
     return _rec_calc_conditions_no_div(p, [])
 
-def _rec_calc_conditions_no_div(p: list[Er],
-                                previous_cond: list[set]) -> list[Er]:
+def _rec_calc_conditions_no_div(p: list[Expr],
+                                previous_cond: list[set]) -> list[Expr]:
     if len(p) < 2:
         return [EXRAW.one]
 
@@ -178,10 +178,10 @@ def _rec_calc_conditions_no_div(p: list[Er],
         qs[i - 1] -= p[i] * p[0]
     qs = qs[1:]
 
-    cond: Mul = _clear_cond_exraw(p[0] * p[1], previous_cond)
+    cond: Expr = _clear_cond_exraw(p[0] * p[1], previous_cond)
     return [cond] + _rec_calc_conditions_no_div(qs, previous_cond)
 
-def _clear_cond_exraw(cond: Mul, previous_cond: list[set]) -> Mul:
+def _clear_cond_exraw(cond: Expr, previous_cond: list[set[Expr]]) -> Expr:
     """
     Clear the condition by removing even powers and simplifying odd powers.
     Also, remove factors that are already present in previous conditions.
@@ -190,11 +190,11 @@ def _clear_cond_exraw(cond: Mul, previous_cond: list[set]) -> Mul:
     `previous_cond` list with the new condition.
 
     """
-    factors: set[Er] = _build_simplified_factors(cond, previous_cond)
+    factors: set[Expr] = _build_simplified_factors(cond, previous_cond)
 
     first_factor_iteration = factors.copy()
 
-    # Second iteration to simplify the factors further using factor_terms.
+    # Second iteration to simplify the factors further using `factor_terms`.
     # To reach a better simplification, it could be better to use `factor`, but
     # it could be slower.
     # Because the point of the algorithm for EXRAW is to be fast, we prefer to
@@ -209,26 +209,16 @@ def _clear_cond_exraw(cond: Mul, previous_cond: list[set]) -> Mul:
     previous_cond.append(first_factor_iteration)
     return Mul(*factors)
 
-def _build_simplified_factors(cond: Mul,
-                              previous_cond: list[set[Er]]) -> set[Er]:
+def _build_simplified_factors(cond: Expr,
+                              previous_cond: list[set[Expr]]) -> set[Expr]:
     """
-    Build a set of simplified factors from the expression removing even powers
+    Build a set of simplified factors from the expression rem oving even powers
     and simplifying odd powers.
     This function also removes factors that are already present in previous
     conditions.
 
     """
-    factors: set[Er] = _extract_odd_factors(cond)
-    _remove_previous_conditions(factors, previous_cond)
-    return factors
-
-def _extract_odd_factors(cond: Mul) -> set[Er]:
-    """
-    Extract factors with odd powers from a Mul expression.
-    Even powers are ignored, as they do not contribute to the condition.
-    Odd powers are simplified to the exponent of 1.
-
-    """
+    # Build a set of factors without even powers and simplified odd powers.
     powers_dict = dict(cond.as_powers_dict()) # Dict of factors with their powers
     factors = set()
     n_minus_one = 0
@@ -244,13 +234,7 @@ def _extract_odd_factors(cond: Mul) -> set[Er]:
     if n_minus_one % 2 == 1:
         factors.add(-1)
 
-    return factors
-
-def _remove_previous_conditions(factors: set, previous_cond: list[set[Er]]):
-    """
-    Remove factors that are already present in previous conditions.
-
-    """
+    # Remove factors that are already present in previous conditions.
     for prev_factors in previous_cond:
         if prev_factors.issubset(factors):
             factors -= prev_factors
@@ -258,6 +242,8 @@ def _remove_previous_conditions(factors: set, previous_cond: list[set[Er]]):
             if (prev_factors - {-1}).issubset(factors):
                 factors -= (prev_factors - {-1})
                 factors.add(-1)
+
+    return factors
 
 # TODO Implement conditions for discrete time systems
 # Possible ways are:
