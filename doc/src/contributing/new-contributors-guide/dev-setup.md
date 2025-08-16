@@ -171,15 +171,47 @@ github https://github.com/<your-github-username>/sympy (push)
 
 ## Virtual Environment Setup
 
-You may want to take advantage of using virtual environments to isolate your development version of SymPy from any system wide installed versions, e.g. from `apt-get install python-sympy`.
+Use of virtual environments is strongly reccomended to isolate your development version of SymPy from any system wide installed versions, e.g. from `apt-get install python-sympy` .
+There are several methods to do so. Not doing so may result in installation conflicts and other problems.
 
+```{note}
+After creation of a virtual environment you must tell python to use the venv by activating it every time you create a new shell in the directory,
+many editors do this automatically if yours does not, activation instructions for each method are included.
+you may also run `deactivate`, to return the `python` command to useing the system installation of python.
+```
+
+### [ uv ]( https://docs.astral.sh/uv/pip/environments/#creating-a-virtual-environment )
+you may install uv using one of the commands provided (here)[https://docs.astral.sh/uv/getting-started/installation/#standalone-installer]
+
+Once installed simply run
+```bash
+uv sync
+```
+
+You may wish to install all optional dependencies sympy supports or the python dependencies for building the documentation
+you can do this by adding `--group all-optional` or `--group doc` respectively to the command.
+for example
+```bash
+uv sync --group all-optional
+```
+
+```{note}
+Installation via uv sync will automatically install linters: `ruff` `mypy` and `sphinx-lint` which are tested in CI, to skip installing them simply add `--no-group lint`
+```
+#### Activation
+uv supports using python without activation by subsituting the `python` command for `uv run python`
+you may still wish to activate for ease of use to do so `source .venv/bin/activate`
+
+### [Conda](https://docs.conda.io/projects/conda/en/latest/commands/create.html)
 If you use `conda`, you can use it to create a virtual environment:
-
 ```bash
 $ conda create -n sympy-dev -c conda-forge --file requirements-dev.txt
 ```
+#### Activation
+to activate the environment created by conda`conda activate sympy-dev`
 
-If you prefer to use `pip` and `venv`, you can use something like
+### [pip]( https://packaging.python.org/en/latest/guides/installing-using-pip-and-virtual-environments/ )
+If you prefer to only python to create a venv the command is as follows
 
 ```bash
 cd sympy
@@ -188,13 +220,18 @@ source .venv/bin/activate
 pip install -r requirements-dev.txt
 ```
 
-You can add any other packages to this command that you might find useful for
-your contribution, such as the [optional dependencies](../dependencies.md).
+#### Activation
+to activate the environment run: `source .venv/bin/activate`
+
+### Installing additional packages
+you may also wish to install other packages from the optional dependencies that you might find useful to your contribution,
+[optional dependencies](../dependencies.md).
 
 You now have a environment that you can use for testing your development copy of SymPy.
 
-Now activate the environment:
+## Documentation
+If you wish to contribute you will likely want to build the documentation instructions on what dependencies to install to do that can be found where
+[ https://docs.sympy.org/latest/contributing/new-contributors-guide/build-docs.html#build-the-documentation ]( https://docs.sympy.org/latest/contributing/new-contributors-guide/build-docs.html#build-the-documentation )
 
-```bash
-$ conda activate sympy-dev
-```
+## Congratulations
+You now have a working sympy development environment, have fun!
