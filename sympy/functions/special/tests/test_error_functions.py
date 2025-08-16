@@ -499,8 +499,10 @@ def test_expint():
         z**3*(log(z)/6 - Rational(11, 36) + EulerGamma/6 - I*pi/6) - z**4/24 + \
         z**5/240 + O(z**6)
 
-    assert expint(n, x).series(x, oo, n=3) == \
-        (n*(n + 1)/x**2 - n/x + 1 + O(x**(-3), (x, oo)))*exp(-x)/x
+    assert expint(n, x).series(x, oo, n=3) == (1/x - n/x**2 + O(x**(-3), (x, oo)))*exp(-x)
+    assert expint(4, x).series(x, oo, n=4) == (20/x**3 - 4/x**2 + 1/x + O(x**(-4), (x, oo)))*exp(-x)
+    assert expint(1, x).series(x, oo, n=4) == (2/x**3 - 1/x**2 + 1/x + O(x**(-4), (x, oo)))*exp(-x)
+    assert expint(4, x).series(x, -oo, n=4) == (20/x**3 - 4/x**2 + 1/x + O(x**(-4), (x, -oo)))*exp(-x)
 
     assert expint(z, y).series(z, 0, 2) == exp(-y)/y - z*meijerg(((), (1, 1)),
                                   ((0, 0, 1), ()), y)/y + O(z**2)
@@ -509,6 +511,19 @@ def test_expint():
     neg = Symbol('neg', negative=True)
     assert Ei(neg).rewrite(Si) == Shi(neg) + Chi(neg) - I*pi
 
+    # test leading term
+    assert expint(1, x).as_leading_term(x) == -log(x) - EulerGamma
+    assert expint(3, x).as_leading_term(x) == S.Half
+    assert expint(1, 1/x).as_leading_term(x, logx=None, cdir=1) ==  expint(1, 1/x)
+    assert expint(1, 1/x).as_leading_term(x, logx=None, cdir=-1) ==  expint(1, 1/x)
+
+    # test limits
+    assert limit(expint(3, x), x, oo) == S.Zero
+    assert limit(expint(1, x), x, oo) == S.Zero
+    assert limit(expint(3, x), x, -oo) == S.NegativeInfinity
+    assert limit(expint(1, x), x, -oo) == S.NegativeInfinity
+    assert limit(expint(1, 1/x), x, 0, dir='+') == S.Zero
+    assert limit(expint(1, 1/x), x, 0, dir='-') == S.NegativeInfinity
 
 def test__eis():
     assert _eis(z).diff(z) == -_eis(z) + 1/z
