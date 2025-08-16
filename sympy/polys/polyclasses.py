@@ -1157,6 +1157,16 @@ class DMP(CantSympify, Generic[Er]):
         """Return the number of complex roots of ``f`` in ``[inf, sup]``. """
         raise NotImplementedError
 
+    def routh_hurwitz_stability(f) -> list[Er]:
+        """
+        Computes the Routh Hurwitz criteria of ``f``.
+
+        The conditions, in general, are represented by a list of multivariate
+        polynomials which must be positive to ensure stability.
+
+        """
+        raise NotImplementedError
+
     @property
     def is_zero(f) -> bool:
         """Returns ``True`` if ``f`` is a zero polynomial. """
@@ -1823,6 +1833,19 @@ class DMP_Python(DMP[Er]):
     ) -> int:
         """Return the number of complex roots of ``f`` in ``[inf, sup]``. """
         return dup_count_complex_roots(f._rep, f.dom, inf=inf, sup=sup)
+
+    def routh_hurwitz_stability(f) -> list[Er]:
+        """
+        Computes the Routh Hurwitz criteria of ``f``.
+
+        The conditions, in general, are represented by a list of multivariate
+        polynomials which must be positive to ensure stability.
+
+        """
+        from sympy.polys.rootconditions import dup_routh_hurwitz
+        if f.lev:
+            raise ValueError("Routh-Hurwitz stability is only defined for univariate polynomials.")
+        return dup_routh_hurwitz(f._rep, f.dom) # type: ignore
 
     @property
     def is_zero(f) -> bool:
@@ -2527,6 +2550,16 @@ class DUP_Flint(DMP[Er]):
     ) -> int:
         """Return the number of complex roots of ``f`` in ``[inf, sup]``. """
         return f.to_DMP_Python().count_complex_roots(inf=inf, sup=sup)
+
+    def routh_hurwitz_stability(f) -> list[Er]:
+        """
+        Computes the Routh Hurwitz criteria of ``f``.
+
+        The conditions, in general, are represented by a list of multivariate
+        polynomials which must be positive to ensure stability.
+
+        """
+        return f.to_DMP_Python().routh_hurwitz_stability() # type: ignore
 
     @property
     def is_zero(f) -> bool:
