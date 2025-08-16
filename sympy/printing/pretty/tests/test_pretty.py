@@ -5089,13 +5089,13 @@ RootSum⎝x  + 11⋅x - 2⎠\
     expr = RootSum(x**5 + 11*x - 2, Lambda(z, exp(z)))
     ascii_str = \
 """\
-       / 5                   z\\\n\
-RootSum\\x  + 11*x - 2, z -> e /\
+       / 5                   x\\\n\
+RootSum\\x  + 11*x - 2, x -> e /\
 """
     ucode_str = \
 """\
-       ⎛ 5                  z⎞\n\
-RootSum⎝x  + 11⋅x - 2, z ↦ ℯ ⎠\
+       ⎛ 5                  x⎞\n\
+RootSum⎝x  + 11⋅x - 2, x ↦ ℯ ⎠\
 """
 
     assert pretty(expr) == ascii_str
