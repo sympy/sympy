@@ -1650,7 +1650,9 @@ class Structure2d:
         uh_np = lambdify(x, uh.rewrite(Piecewise))
 
         s = np.linspace(0.0, L, int(npts))
-        base_h, base_v = h_np(s), v_np(s)
+        base_h = np.array(h_np(s), dtype=float).flatten()
+        base_v = np.array(v_np(s), dtype=float).flatten()
+
         def_h  = base_h + uh_np(s) / float(factor if factor else 1.0)
         def_v  = base_v - uv_np(s) / float(factor if factor else 1.0)
 
