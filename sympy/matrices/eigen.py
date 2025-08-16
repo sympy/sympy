@@ -1454,10 +1454,7 @@ def jordan_form_rational_matrix(M, calc_transform):
 
     jordan_form_size = sum(size for sizes in block_structure.values() for size in sizes)
 
-    if jordan_form_size != M.rows:
-        raise MatrixError(
-            "SymPy had encountered an inconsistent result while "
-            "computing Jordan block. : {}".format(M))
+    assert jordan_form_size == M.rows
 
     blocks2 = (
         M.jordan_block(size=size, eigenvalue=eig)
