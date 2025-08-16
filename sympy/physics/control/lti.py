@@ -1177,14 +1177,8 @@ class TransferFunction(SISOLinearTimeInvariant):
         """
         Returns the asymptotic stability conditions for the transfer function.
 
-        >>> sys.get_asymptotic_stability_conditions()
-        ...
-
-        This is a convenient shorthand for:
-
-        >>> [c > 0 for c in Poly(sys.den, sys.var).routh_hurwitz_stability()
-        ...
-
+        This is a convenient shorthand for
+        `[c > 0 for c in Poly(sys.den, sys.var).routh_hurwitz_stability()`
         which gives conditions for stability such that the poles of the transfer
         function are in the left half of the complex plane.
 
@@ -5163,14 +5157,8 @@ class StateSpace(LinearTimeInvariant):
         """
         Returns the asymptotic stability conditions for the state space.
 
-        >>> sys.get_asymptotic_stability_conditions()
-        ...
-
-        This is a convenient shorthand for:
-
-        >>> [c > 0 for c in sys.A.charpoly().routh_hurwitz_stability()
-        ...
-
+        This is a convenient shorthand for
+        `[c > 0 for c in sys.A.charpoly().routh_hurwitz_stability()`
         which gives conditions for stability such that the eigenvalues of
         the A matrix are in the left half of the complex plane.
 
