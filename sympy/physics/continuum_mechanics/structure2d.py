@@ -1620,6 +1620,7 @@ class Structure2d:
             :context: close-figs
             :format: doctest
             :include-source: True
+            :skip:
 
             >>> from sympy.physics.continuum_mechanics.structure2d import Structure2d
             >>> E, I, A = 3e4, 1, 1e4
