@@ -169,7 +169,7 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
                 if m:
                     e.append(m)
                     coeff /= b**m
-            c_powers[b] = Add(*e)
+            c_powers[b] = expand_mul(Add(*e))
         if coeff is not S.One:
             if coeff in c_powers:
                 c_powers[coeff] += S.One
