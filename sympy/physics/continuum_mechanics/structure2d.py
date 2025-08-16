@@ -1600,7 +1600,7 @@ class Structure2d:
             v += gate_len * sin(th)
         return h, v
 
-    def plot_deformation_on_structure(self, *, factor=1/10000.0, show_axes=True, legend=True):
+    def plot_deformation_on_structure(self, *, factor=1/10000.0, npts=800, show_axes=True, legend=True):
         """
         Plots the deformation on the structure geometry.
 
@@ -1649,7 +1649,7 @@ class Structure2d:
         uv_np = lambdify(x, uv.rewrite(Piecewise))
         uh_np = lambdify(x, uh.rewrite(Piecewise))
 
-        s = np.linspace(0.0, L, int(800))
+        s = np.linspace(0.0, L, int(npts))
         base_h, base_v = h_np(s), v_np(s)
         def_h  = base_h + uh_np(s) / float(factor if factor else 1.0)
         def_v  = base_v - uv_np(s) / float(factor if factor else 1.0)
