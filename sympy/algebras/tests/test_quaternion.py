@@ -12,13 +12,21 @@ from sympy.integrals.integrals import integrate
 from sympy.matrices.dense import Matrix
 from sympy.simplify import simplify
 from sympy.simplify.trigsimp import trigsimp
-from sympy.algebras.quaternion import Quaternion
+from sympy.algebras.quaternion import Quaternion, wrap_angle
 from sympy.testing.pytest import raises
 import math
 from itertools import permutations, product
+from sympy import pi
 
 w, x, y, z = symbols('w:z')
 phi = symbols('phi')
+
+def test_wrap_angle():
+    assert wrap_angle(0) == 0
+    assert wrap_angle(2*pi) == 0
+    assert wrap_angle(-pi) == -pi
+    assert wrap_angle(3*pi) == -pi
+    assert wrap_angle(5*pi/2) == pi/2
 
 def test_quaternion_construction():
     q = Quaternion(w, x, y, z)

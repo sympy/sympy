@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING, overload
 
 from sympy.core.numbers import Rational
 from sympy.core.singleton import S
+from sympy.core.numbers import Rational, pi
 from sympy.core.relational import is_eq
 from sympy.functions.elementary.complexes import (conjugate, im, re, sign)
 from sympy.functions.elementary.exponential import (exp, log as ln)
@@ -24,6 +25,9 @@ if TYPE_CHECKING:
     from typing import Iterable, Sequence
     from sympy.integrals.integrals import SymbolLimits
     SExpr = Expr | complex
+
+def wrap_angle(angle):
+    return (angle + pi) % (2*pi) - pi
 
 def _check_norm(elements: Iterable[Expr], norm: Expr | None) -> None:
     """validate if input norm is consistent"""
@@ -581,8 +585,8 @@ class Quaternion(Expr):
 
         if case == 0:
             if angle_addition:
-                angles0 = atan2(b, a) + atan2(d, c)
-                angles2 = atan2(b, a) - atan2(d, c)
+                angles0 = wrap_angle(atan2(b, a) + atan2(d, c))
+                angles2 = wrap_angle(atan2(b, a) - atan2(d, c))
             else:
                 angles0 = atan2(b*c + a*d, a*c - b*d)
                 angles2 = atan2(b*c - a*d, a*c + b*d)
