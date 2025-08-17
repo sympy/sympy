@@ -4084,14 +4084,14 @@ def test_issue_28156():
     assert roots
 
 
-def test_routh_hurwitz_stability():
+def test_routh_hurwitz_conditions():
     b0, b1, b2, b3, b4 = symbols('b_0 b_1 b_2 b_3 b_4')
     p1 = Poly(b4 * s**4 + b3 * s**3 + b2 * s**2 + b1 * s + b0, s)
     p1_ = Poly(b4 * s**4 + b3 * s**3 + b2 * s**2 + b1 * s + b0, s,
                domain = EXRAW)
 
-    conds = p1.routh_hurwitz_stability()
-    conds_ = p1_.routh_hurwitz_stability()
+    conds = p1.routh_hurwitz_conditions()
+    conds_ = p1_.routh_hurwitz_conditions()
     assert [p1.domain.to_sympy(c) for c in conds] == [
         b3*b4, -b1*b4 + b2*b3,
         -b0*b3**3 - b1**2*b3*b4 + b1*b2*b3**2,
@@ -4102,24 +4102,24 @@ def test_routh_hurwitz_stability():
         b0*b3]
 
     p2 = Poly(-3*s**2 - 2*s - b0, s)
-    assert[p2.domain.to_sympy(c) for c in p2.routh_hurwitz_stability()] == [b0]
+    assert[p2.domain.to_sympy(c) for c in p2.routh_hurwitz_conditions()] == [b0]
 
     a_ = symbols('a', nonpositive = True)
 
     p3 = Poly(b0*s**2 + a_*s + 3, s)
-    assert [p3.domain.to_sympy(c) for c in p3.routh_hurwitz_stability()] == \
+    assert [p3.domain.to_sympy(c) for c in p3.routh_hurwitz_conditions()] == \
            [a_ * b0, a_]
 
     p4 = Poly(b0*s**2 + a_*s - 3, s)
-    assert [p4.domain.to_sympy(c) for c in p4.routh_hurwitz_stability()] == \
+    assert [p4.domain.to_sympy(c) for c in p4.routh_hurwitz_conditions()] == \
            [a_ * b0, -a_]
 
     p5 = Poly(b0 + b1*s**2 + b1*s + b3*s**4 + b3*s**3, s)
     p5_ = Poly(b0 + b1*s**2 + b1*s + b3*s**4 + b3*s**3, s, domain = EXRAW)
 
-    assert [p5.domain.to_sympy(c) for c in p5.routh_hurwitz_stability()] == \
+    assert [p5.domain.to_sympy(c) for c in p5.routh_hurwitz_conditions()] == \
            [-1]
-    assert [p5_.domain.to_sympy(c) for c in p5_.routh_hurwitz_stability()] == \
+    assert [p5_.domain.to_sympy(c) for c in p5_.routh_hurwitz_conditions()] == \
            [1, 0, 1, 1]
 
     # test for issue https://github.com/sympy/sympy/issues/28010
@@ -4167,4 +4167,4 @@ def test_routh_hurwitz_stability():
             d_T*g*k_10*m_T*s_10 - d_T*g*k_11*m_T*s_11 - g*k_11*l_L*m_T*s_11 +
             k_00*k_11*s_00*s_11 - k_01*k_10*s_01*s_10), s, domain = EXRAW)
 
-    p6.routh_hurwitz_stability()
+    p6.routh_hurwitz_conditions()

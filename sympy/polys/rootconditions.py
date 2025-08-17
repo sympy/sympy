@@ -44,15 +44,15 @@ def dup_routh_hurwitz(f: dup[Er], K: Domain[Er]) -> list[Er]:
         return dup_convert(conds, QQ, K)
 
     elif K.is_PolynomialRing:
-        return _dup_routh_hurwitz_poly(f, K)
+        return _dup_routh_hurwitz_poly(f, K) # type: ignore
 
     elif K.is_FractionField:
         _, pp = dup_clear_denoms(f, K, convert=True)
-        conds = _dup_routh_hurwitz_poly(pp, K)
+        conds = _dup_routh_hurwitz_poly(pp, K) # type: ignore
         return dup_convert(conds, K.get_ring(), K)
 
     else:
-        return _dup_routh_hurwitz_exraw(dup_convert(f, K, EXRAW))
+        return _dup_routh_hurwitz_exraw(dup_convert(f, K, EXRAW)) # type: ignore
 
 
 def _dup_routh_hurwitz_qq(p: list[MPQ], K: RationalField) -> list[MPQ]:
@@ -239,8 +239,8 @@ def _build_simplified_factors(cond: Expr,
         if prev_factors.issubset(factors):
             factors -= prev_factors
         elif -1 in prev_factors:
-            if (prev_factors - {-1}).issubset(factors):
-                factors -= (prev_factors - {-1})
+            if (prev_factors - {-1}).issubset(factors): # type: ignore
+                factors -= (prev_factors - {-1}) # type: ignore
                 factors.add(-1)
 
     return factors
