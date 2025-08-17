@@ -11,6 +11,7 @@ from sympy.core.numbers import I, pi, oo
 from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.core.symbol import Dummy, Symbol
+from sympy.core.logic import fuzzy_and
 from sympy.functions import Abs
 from sympy.core.sympify import sympify, _sympify
 from sympy.matrices import Matrix, ImmutableMatrix, ImmutableDenseMatrix, eye, ShapeError, zeros
@@ -26,12 +27,15 @@ from sympy.solvers.solveset import linsolve, linear_eq_to_matrix
 from sympy.logic.boolalg import false, true
 from sympy.solvers.inequalities import reduce_inequalities
 from sympy.physics.control.routh_table import negative_real_part_conditions
+from abc import ABC, abstractmethod
 
 from mpmath.libmp.libmpf import prec_to_dps
 
-__all__ = ['TransferFunction', 'PIDController', 'Series', 'MIMOSeries', 'Parallel', 'MIMOParallel',
-    'Feedback', 'MIMOFeedback', 'TransferFunctionMatrix', 'StateSpace', 'gbt', 'bilinear', 'forward_diff', 'backward_diff',
-    'phase_margin', 'gain_margin']
+__all__ = ['TransferFunction', 'DiscreteTransferFunction', 'PIDController', 'Series',
+           'MIMOSeries', 'Parallel', 'MIMOParallel', 'Feedback', 'MIMOFeedback',
+           'TransferFunctionMatrix', 'StateSpace', 'DiscreteStateSpace', 'gbt',
+           'bilinear', 'forward_diff', 'backward_diff', 'phase_margin',
+           'gain_margin']
 
 def _roots(poly, var):
     """ like roots, but works on higher-order polynomials. """
@@ -45,14 +49,24 @@ def gbt(tf, sample_per, alpha):
     r"""
     Returns falling coefficients of H(z) from numerator and denominator.
 
+    Parameters
+    ==========
+
+    tf : TransferFunction
+        The continuous transfer function H(s) to be discretized.
+    sample_per : Symbol, Number
+        Time interval between two consecutive sampling instants.
+    alpha: Symbol, Number
+        The parameter for the generalised bilinear transformation method.
+
     Explanation
     ===========
 
     Where H(z) is the corresponding discretized transfer function,
     discretized with the generalised bilinear transformation method.
     H(z) is obtained from the continuous transfer function H(s)
-    by substituting $s(z) = \frac{z-1}{T(\alpha z + (1-\alpha))}$ into H(s), where T is the
-    sample period.
+    by substituting $s(z) = \frac{z-1}{T(\alpha z + (1-\alpha))}$ into H(s),
+    where T is the sample period.
     Coefficients are falling, i.e. $H(z) = \frac{az+b}{cz+d}$ is returned
     as [a, b], [c, d].
 
@@ -121,14 +135,22 @@ def bilinear(tf, sample_per):
     r"""
     Returns falling coefficients of H(z) from numerator and denominator.
 
+    Parameters
+    ==========
+
+    tf : TransferFunction
+        The continuous transfer function H(s) to be discretized.
+    sampling_time : Symbol, Number
+        Time interval between two consecutive sampling instants.
+
     Explanation
     ===========
 
     Where H(z) is the corresponding discretized transfer function,
     discretized with the bilinear transform method.
     H(z) is obtained from the continuous transfer function H(s)
-    by substituting $s(z) = \frac{2}{T}\frac{z-1}{z+1}$ into H(s), where T is the
-    sample period.
+    by substituting $s(z) = \frac{2}{T}\frac{z-1}{z+1}$ into H(s), where T is
+    the sample period.
     Coefficients are falling, i.e. $H(z) = \frac{az+b}{cz+d}$ is returned
     as [a, b], [c, d].
 
@@ -150,6 +172,14 @@ def bilinear(tf, sample_per):
 def forward_diff(tf, sample_per):
     r"""
     Returns falling coefficients of H(z) from numerator and denominator.
+
+    Parameters
+    ==========
+
+    tf : TransferFunction
+        The continuous transfer function H(s) to be discretized.
+    sampling_time : Symbol, Number
+        Time interval between two consecutive sampling instants.
 
     Explanation
     ===========
@@ -180,6 +210,14 @@ def forward_diff(tf, sample_per):
 def backward_diff(tf, sample_per):
     r"""
     Returns falling coefficients of H(z) from numerator and denominator.
+
+    Parameters
+    ==========
+
+    tf : TransferFunction
+        The continuous transfer function H(s) to be discretized.
+    sampling_time : Symbol, Number
+        Time interval between two consecutive sampling instants.
 
     Explanation
     ===========
@@ -363,7 +401,7 @@ def gain_margin(system):
 
     return gm
 
-class LinearTimeInvariant(Basic, EvalfMixin):
+class LinearTimeInvariant(Basic, EvalfMixin, ABC):
     """A common class for all the Linear Time-Invariant Dynamical Systems."""
 
     _clstype: Type
@@ -376,6 +414,13 @@ class LinearTimeInvariant(Basic, EvalfMixin):
 
     @classmethod
     def _check_args(cls, args):
+        """
+        Check if the arguments passed to the class are valid.
+        Every argument must be of the same type as the class (_clstype).
+        All arguments must have the same complex variable of the Laplace
+        transform.
+
+        """
         if not args:
             raise ValueError("At least 1 argument must be passed.")
         if not all(isinstance(arg, cls._clstype) for arg in args):
@@ -384,8 +429,20 @@ class LinearTimeInvariant(Basic, EvalfMixin):
         if len(var_set) != 1:
             raise ValueError(filldedent(f"""
                 All transfer functions should use the same complex variable
-                of the Laplace transform. {len(var_set)} different
+                of the Laplace transform or z-transform. {len(var_set)} different
                 values found."""))
+
+    @property
+    def is_continuous(self):
+        """Returns `True` if the passed LTI system is continuous,
+        else returns `False`."""
+        return self._is_continuous
+
+    @property
+    @abstractmethod
+    def sampling_time(self):
+        """Returns the sampling time of the passed LTI system."""
+        pass
 
     @property
     def is_SISO(self):
@@ -438,69 +495,1056 @@ def _check_other_MIMO(func):
     return wrapper
 
 
-class TransferFunction(SISOLinearTimeInvariant):
+def _check_time_compatibility(systems):
+    """
+    Checks compatibility between different systems
+    Every system must be either continuous-time or discrete-time and
+    must have the same sampling time if discrete-time.
+
+    """
+    if not all(isinstance(system, LinearTimeInvariant) \
+               for system in systems):
+        return
+
+    continuous = systems[0].is_continuous
+    sampling_time = systems[0].sampling_time
+    for system in systems[1:]:
+        if system.is_continuous != continuous:
+            raise TypeError("""
+                Incompatible systems detected.
+                All systems should be either continuous-time or discrete-time.
+                Found: {} and {}""".format(systems[0], system,))
+        if system.sampling_time != sampling_time:
+            raise TypeError("""
+                Incompatible sampling times detected.
+                All systems should have the same sampling time.
+                Found sampling time: {} and {}""".\
+                    format(systems[0].sampling_time, system.sampling_time))
+
+def _compatibility_decorator(func):
+    """
+    Decorator to check compatibility of systems before performing operations.
+    """
+    def wrapper(self, *args, **kwargs):
+        _check_time_compatibility([self] + list(args))
+        return func(self, *args, **kwargs)
+    return wrapper
+
+def create_transfer_function(num, den, var, sampling_time=0):
+    """
+    Creates a new transfer function object.
+    sampling_time == 0 means continuous time transfer function.
+    sampling_time > 0 means discrete time transfer function.
+
+    Parameters
+    ==========
+
+    num : Expr, Number
+        The numerator polynomial of the transfer function.
+    den : Expr, Number
+        The denominator polynomial of the transfer function.
+    var : Symbol
+        Complex variable of the Laplace or z transform used by the
+        polynomials of the transfer function.
+    sampling_time : Symbol, Number, optional
+        Default is 0.
+        Time interval between two consecutive sampling instants.
+        If sampling_time == 0, it is a continuous time transfer function,
+        else it is a discrete time transfer function.
+
+    Examples
+    ========
+
+    >>> from sympy.abc import s, z
+    >>> from sympy.physics.control.lti import create_transfer_function
+    >>> num = s + 5
+    >>> den = 3*s**2 + 2*s + 1
+    >>> tf = create_transfer_function(num, den, s)
+    >>> tf
+    TransferFunction(s + 5, 3*s**2 + 2*s + 1, s)
+    >>> num = z
+    >>> den = z + 1
+    >>> dtf = create_transfer_function(num, den, z, 0.1)
+    >>> dtf
+    DiscreteTransferFunction(z, z + 1, z, 0.1)
+
+    See Also
+    ========
+
+    TransferFunction, DiscreteTransferFunction
+
+    """
+    if sampling_time == 0:
+        return TransferFunction(num, den, var)
+    return DiscreteTransferFunction(num, den, var, sampling_time)
+
+class TransferFunctionBase(SISOLinearTimeInvariant, ABC):
     r"""
-    A class for representing LTI (Linear, time-invariant) systems that can be strictly described
-    by ratio of polynomials in the Laplace transform complex variable. The arguments
+    Base class for transfer tunction objects.
+    This class is not meant to be used directly
+
+    Explanation
+    ===========
+
+    LTI systems can be described by linear differential equations (for
+    continuous-time systems) or linear difference equations (for discrete-time
+    systems).
+    Mathematical transforms are employed to convert these equations into simpler
+    algebraic forms in a complex variable domain.
+    For continuous-time systems, the Laplace transform (using complex variable
+    :math:`s`) is used. For discrete-time systems, the z-transform (using
+    complex variable :math:`z`) is used.
+
+    We will call the generic transformation used as :math:`\mathcal{T\{\cdot\}}`
+    and the variable of the transform as :math:`p`.
+
+    Consider a continuous-time LTI system described by a linear ordinary
+    differential equation:
+
+    .. math::
+        b_{m}y^{\left(m\right)}+b_{m-1}y^{\left(m-1\right)}+\dots+b_{1}
+        y^{\left(1\right)}+b_{0}y=
+        a_{n}x^{\left(n\right)}+a_{n-1}x^{\left(n-1\right)}+\dots+a_{1}
+        x^{\left(1\right)}+a_{0}x
+
+    or a discrete-time LTI system described by a linear difference equation:
+
+    .. math::
+        b_{m}y[k-m]+b_{m-1}y[k-m+1]+\dots+b_{1}y[k-1]+b_{0}y[k]=
+        a_{n}x[k-n]+a_{n-1}x[k-n+1]+\dots+a_{1}x[k-1]+a_{0}x[k]
+
+    Here, :math:`x` is the input signal and :math:`y` is the output signal.
+
+    It is not feasible to analyse the properties of such systems in their native
+    form therefore, we use mathematical tools like Laplace transform or
+    z-transform to get a better perspective.
+    Taking the transform :math:`\mathcal{T}\{\cdot\}` of both the sides in the
+    equation (at zero initial conditions), we get:
+
+    .. math::
+        \mathcal{T}[b_{m}y^{\left(m\right)}+b_{m-1}y^{\left(m-1\right)}+\dots+
+        b_{1}y^{\left(1\right)}+b_{0}y]=
+        \mathcal{T}[a_{n}x^{\left(n\right)}+a_{n-1}x^{\left(n-1\right)}+\dots+
+        a_{1}x^{\left(1\right)}+a_{0}x]
+
+    and using its linearity and differentiation properties
+    (:math:`\mathcal{L}\{f^{(k)}(t)\} = s^k F(s)` under zero initial conditions),
+    we get:
+
+    .. math::
+        b_{m}p^{m}\mathcal{T}[y]+\dots+b_{1}p\mathcal{T}[y]+b_{0}\mathcal{T}[y]=
+        a_{n}p^{n}\mathcal{T}[x]+\dots+a_{1}p\mathcal{T}[x]+a_{0}\mathcal{T}[x]
+
+    Note that the zero initial conditions assumption, mentioned above,
+    is very important and cannot be ignored otherwise the dynamical system
+    cannot be considered time-independent and the simplified equation above
+    cannot be reached.
+
+    The numerator of the transfer function is, therefore, the transform of the
+    output signal and similarly, the denominator of the transfer function is
+    the transform of the input signal.
+    It is also a convention to denote the input and output signal's transform
+    with capital alphabets like shown below:
+
+    .. math::
+        H(p) = \frac{Y(p)}{X(p)} = \frac{ \mathcal{T}\left\{y(t)\right\}}
+        {\mathcal{T}\left\{x(t)\right\}}
+
+    Transfer functions are sometimes also referred to as the transform of the
+    system's impulse response. Transfer function, :math:`H`, is represented as a
+    rational function like,
+
+    .. math::
+        H(p) =\ \frac{a_{n}p^{n}+a_{n-1}p^{n-1}+\dots+a_{1}p+a_{0}}{b_{m}p^{m}+
+        b_{m-1}p^{m-1}+\dots+b_{1}p+b_{0}}
+
+    Parameters
+    ==========
+
+    num : Expr, Number
+        The numerator polynomial of the transfer function.
+    den : Expr, Number
+        The denominator polynomial of the transfer function.
+    var : Symbol
+        Complex variable of the Laplace transform used by the
+        polynomials of the transfer function.
+    *args, **kwargs:
+        Additional arguments and keyword arguments that are passed to the
+        parent class such as sampling time for discrete-time systems.
+
+    Raises
+    ======
+
+    TypeError
+        When ``var`` is not a Symbol or when ``num`` or ``den`` is not a
+        number or a polynomial.
+    ValueError
+        When ``den`` is zero.
+
+    See Also
+    ========
+
+    TransferFunction, DiscreteTransferFunction, Feedback, Series, Parallel
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Transfer_function
+    .. [2] https://en.wikipedia.org/wiki/Laplace_transform
+    .. [3] https://en.wikipedia.org/wiki/Z-transform
+
+    """
+    def __new__(cls, num, den, var, *args, **kwargs):
+        if cls is TransferFunctionBase:
+            raise NotImplementedError(
+                """
+                The TransferFunctionBase class is not meant to be used directly.
+                """)
+        num, den = _sympify(num), _sympify(den)
+
+        if not isinstance(var, Symbol):
+            raise TypeError("Variable input must be a Symbol.")
+
+        if den == 0:
+            raise ValueError("TransferFunction cannot have a zero denominator.")
+
+        accepted_istances = (Expr, TransferFunctionBase, Series, Parallel)
+        num_accepted = ((isinstance(num, accepted_istances) and num.has(Symbol))
+                    or num.is_number)
+        den_accepted = ((isinstance(den, accepted_istances) and den.has(Symbol))
+                    or den.is_number)
+
+        if not num_accepted or not den_accepted:
+            raise TypeError("""Unsupported type for numerator or denominator of
+                            TransferFunction.""")
+
+        obj = super(TransferFunctionBase, cls).__new__(cls, num, den, var,
+                                                        *args, **kwargs)
+        obj.is_StateSpace_object = False
+        return obj
+
+
+    @classmethod
+    def from_rational_expression(cls, expr, var=None, *args, **kwargs):
+        r"""
+        Creates a new transfer function efficiently from a rational
+        expression.
+
+        Parameters
+        ==========
+
+        expr : Expr, Number
+            The rational expression representing the transfer function.
+        var : Symbol, optional
+            Complex variable used by the polynomials of the transfer function.
+        *args, **kwargs :
+            Additional positional and keyword arguments to be passed to the
+            constructor of the :class:`~.TransferFunctionBase`, such as
+            sampling_time.
+
+        Raises
+        ======
+
+        ValueError
+            When ``expr`` is of type ``Number`` and optional parameter ``var``
+            is not passed.
+
+            When ``expr`` has more than one variables and an optional parameter
+            ``var`` is not passed.
+        ZeroDivisionError
+            When denominator of ``expr`` is zero or it has ``ComplexInfinity``
+            in its numerator.
+
+        Examples
+        ========
+
+        >>> from sympy.abc import s, p, a, z
+        >>> from sympy.physics.control.lti import TransferFunction, DiscreteTransferFunction
+        >>> expr1 = (s + 5)/(3*s**2 + 2*s + 1)
+        >>> tf1 = TransferFunction.from_rational_expression(expr1)
+        >>> tf1
+        TransferFunction(s + 5, 3*s**2 + 2*s + 1, s)
+        >>> expr2 = (a*p**3 - a*p**2 + s*p)/(p + a**2)  # Expr with more than one variables
+        >>> tf2 = TransferFunction.from_rational_expression(expr2, p)
+        >>> tf2
+        TransferFunction(a*p**3 - a*p**2 + p*s, a**2 + p, p)
+        >>> expr3 = (z + 1)/(z**2 + 2*z + 1)  # Discrete time transfer function
+        >>> dtf = DiscreteTransferFunction.from_rational_expression(expr3, z, sampling_time=0.1)
+        >>> dtf
+        DiscreteTransferFunction(z + 1, z**2 + 2*z + 1, z, 0.1)
+
+        In case of conflict between two or more variables in a expression, SymPy will
+        raise a ``ValueError``, if ``var`` is not passed by the user.
+
+        >>> tf = TransferFunction.from_rational_expression((a + a*s)/(s**2 + s + 1))
+        Traceback (most recent call last):
+        ...
+        ValueError: Conflicting values found for positional argument `var` ({a, s}). Specify it manually.
+
+        This can be corrected by specifying the ``var`` parameter manually.
+
+        >>> tf = TransferFunction.from_rational_expression((a + a*s)/(s**2 + s + 1), s)
+        >>> tf
+        TransferFunction(a*s + a, s**2 + s + 1, s)
+
+        ``var`` also need to be specified when ``expr`` is a ``Number``
+
+        >>> tf3 = TransferFunction.from_rational_expression(10, s)
+        >>> tf3
+        TransferFunction(10, 1, s)
+
+        """
+        expr = _sympify(expr)
+        if var is None:
+            _free_symbols = expr.free_symbols
+            _len_free_symbols = len(_free_symbols)
+            if _len_free_symbols == 1:
+                var = list(_free_symbols)[0]
+            elif _len_free_symbols == 0:
+                raise ValueError(filldedent("""
+                    Positional argument `var` not found in the
+                    TransferFunction defined. Specify it manually."""))
+            else:
+                raise ValueError(filldedent("""
+                    Conflicting values found for positional argument `var` ({}).
+                    Specify it manually.""".format(_free_symbols)))
+
+        _num, _den = expr.as_numer_denom()
+        if _den == 0 or _num.has(S.ComplexInfinity):
+            raise ZeroDivisionError("TransferFunction cannot have a zero denominator.")
+        return cls(_num, _den, var, *args, **kwargs)
+
+    @classmethod
+    def from_coeff_lists(cls, num_list, den_list, var, *args, **kwargs):
+        r"""
+        Creates a new transfer function efficiently from a list of coefficients.
+
+        Parameters
+        ==========
+
+        num_list : Sequence
+            Sequence comprising of numerator coefficients.
+        den_list : Sequence
+            Sequence comprising of denominator coefficients.
+        var : Symbol
+            Complex variable used by the polynomials of the transfer function.
+        *args, **kwargs :
+            Additional positional and keyword arguments to be passed to the
+            constructor of the :class:`~.TransferFunctionBase`, such as
+            sampling_time.
+
+        Raises
+        ======
+
+        ZeroDivisionError
+            When the constructed denominator is zero.
+
+        Examples
+        ========
+
+        >>> from sympy.abc import s, p, z
+        >>> from sympy.physics.control.lti import TransferFunction, DiscreteTransferFunction
+        >>> num = [1, 0, 2]
+        >>> den = [3, 2, 2, 1]
+        >>> tf = TransferFunction.from_coeff_lists(num, den, s)
+        >>> tf
+        TransferFunction(s**2 + 2, 3*s**3 + 2*s**2 + 2*s + 1, s)
+        >>> #Create a Transfer Function with more than one variable
+        >>> tf1 = TransferFunction.from_coeff_lists([p, 1], [2*p, 0, 4], s)
+        >>> tf1
+        TransferFunction(p*s + 1, 2*p*s**2 + 4, s)
+        >>> dtf = DiscreteTransferFunction.from_coeff_lists([2, 1, -3], [1, 4, 3, 2], z, sampling_time=0.1)
+        >>> dtf
+        DiscreteTransferFunction(2*z**2 + z - 3, z**3 + 4*z**2 + 3*z + 2, z, 0.1)
+
+        """
+        num_list = num_list[::-1]
+        den_list = den_list[::-1]
+        num_var_powers = [var**i for i in range(len(num_list))]
+        den_var_powers = [var**i for i in range(len(den_list))]
+
+        _num = sum(coeff * var_power for coeff, var_power in zip(num_list, num_var_powers))
+        _den = sum(coeff * var_power for coeff, var_power in zip(den_list, den_var_powers))
+
+        if _den == 0:
+            raise ZeroDivisionError("TransferFunction cannot have a zero denominator.")
+
+        return cls(_num, _den, var, *args, **kwargs)
+
+    @classmethod
+    def from_zpk(cls, zeros, poles, gain, var, *args, **kwargs):
+        r"""
+        Creates a new transfer function from given zeros, poles and gain.
+
+        Parameters
+        ==========
+
+        zeros : Sequence
+            Sequence comprising of zeros of transfer function.
+        poles : Sequence
+            Sequence comprising of poles of transfer function.
+        gain : Number, Symbol, Expression
+            A scalar value specifying gain of the model.
+        var : Symbol
+            Complex variable used by the polynomials of the transfer function.
+        *args, **kwargs :
+            Additional positional and keyword arguments to be passed to the
+            constructor of the :class:`~.TransferFunctionBase`, such as
+            sampling_time.
+
+        Examples
+        ========
+
+        >>> from sympy.abc import s, p, k
+        >>> from sympy.physics.control.lti import TransferFunction
+        >>> zeros = [1, 2, 3]
+        >>> poles = [6, 5, 4]
+        >>> gain = 7
+        >>> tf = TransferFunction.from_zpk(zeros, poles, gain, s)
+        >>> tf
+        TransferFunction(7*(s - 3)*(s - 2)*(s - 1), (s - 6)*(s - 5)*(s - 4), s)
+        >>> #Create a Transfer Function with variable poles and zeros
+        >>> tf1 = TransferFunction.from_zpk([p, k], [p + k, p - k], 2, s)
+        >>> tf1
+        TransferFunction(2*(-k + s)*(-p + s), (-k - p + s)*(k - p + s), s)
+        >>> #Complex poles or zeros are acceptable
+        >>> tf2 = TransferFunction.from_zpk([0], [1-1j, 1+1j, 2], -2, s)
+        >>> tf2
+        TransferFunction(-2*s, (s - 2)*(s - 1.0 - 1.0*I)*(s - 1.0 + 1.0*I), s)
+
+        """
+        num_poly = 1
+        den_poly = 1
+        for zero in zeros:
+            num_poly *= var - zero
+        for pole in poles:
+            den_poly *= var - pole
+
+        return cls(gain*num_poly, den_poly, var, *args, **kwargs)
+
+    @property
+    def num(self):
+        """
+        Returns the numerator polynomial of the transfer function.
+
+        Examples
+        ========
+
+        >>> from sympy.abc import s, p
+        >>> from sympy.physics.control.lti import TransferFunction
+        >>> G1 = TransferFunction(s**2 + p*s + 3, s - 4, s)
+        >>> G1.num
+        p*s + s**2 + 3
+        >>> G2 = TransferFunction((p + 5)*(p - 3), (p - 3)*(p + 1), p)
+        >>> G2.num
+        (p - 3)*(p + 5)
+
+        """
+        return self.args[0]
+
+    @property
+    def den(self):
+        """
+        Returns the denominator polynomial of the transfer function.
+
+        Examples
+        ========
+
+        >>> from sympy.abc import s, p
+        >>> from sympy.physics.control.lti import TransferFunction
+        >>> G1 = TransferFunction(s + 4, p**3 - 2*p + 4, s)
+        >>> G1.den
+        p**3 - 2*p + 4
+        >>> G2 = TransferFunction(3, 4, s)
+        >>> G2.den
+        4
+
+        """
+        return self.args[1]
+
+    @property
+    def var(self):
+        """
+        Returns the complex variable used by the polynomials of the transfer
+        function.
+
+        Examples
+        ========
+
+        >>> from sympy.abc import s, p
+        >>> from sympy.physics.control.lti import TransferFunction
+        >>> G1 = TransferFunction(p**2 + 2*p + 4, p - 6, p)
+        >>> G1.var
+        p
+        >>> G2 = TransferFunction(0, s - 5, s)
+        >>> G2.var
+        s
+
+        """
+        return self.args[2]
+
+    def _eval_subs(self, old, new):
+        if old == self.var:
+            return self
+
+        arg_num = self.num.subs(old, new)
+        arg_den = self.den.subs(old, new)
+
+        argnew = create_transfer_function(arg_num, arg_den, self.var, self.sampling_time)
+
+        return argnew
+
+    def _eval_evalf(self, prec):
+        return create_transfer_function(
+            self.num._eval_evalf(prec),
+            self.den._eval_evalf(prec),
+            self.var, self.sampling_time)
+
+    def _eval_simplify(self, **kwargs):
+        tf = cancel(Mul(self.num, 1/self.den, evaluate=False),
+                    expand=False).as_numer_denom()
+        num_, den_ = tf[0], tf[1]
+
+        return create_transfer_function(num_, den_, self.var, self.sampling_time)
+
+    def expand(self):
+        """
+        Returns the transfer function with numerator and denominator
+        in expanded form.
+
+        Examples
+        ========
+
+        >>> from sympy.abc import s, p, a, b
+        >>> from sympy.physics.control.lti import TransferFunction, DiscreteTransferFunction
+        >>> G1 = TransferFunction((a - s)**2, (s**2 + a)**2, s)
+        >>> G1.expand()
+        TransferFunction(a**2 - 2*a*s + s**2, a**2 + 2*a*s**2 + s**4, s)
+        >>> G2 = DiscreteTransferFunction((p + 3*b)*(p - b), (p - b)*(p + 2*b), p, 12)
+        >>> G2.expand()
+        DiscreteTransferFunction(-3*b**2 + 2*b*p + p**2, -2*b**2 + b*p + p**2, p, 12)
+
+        """
+        return create_transfer_function(expand(self.num), expand(self.den), self.var,
+                              self.sampling_time)
+
+    @abstractmethod
+    def dc_gain(self):
+        """
+        Computes the gain of the response as the frequency approaches zero.
+
+        The DC gain is infinite for systems with pure integrators.
+
+        Examples
+        ========
+
+        >>> from sympy.abc import s, p, a, b, z
+        >>> from sympy.physics.control.lti import TransferFunction, DiscreteTransferFunction
+        >>> tf1 = TransferFunction(s + 3, s**2 - 9, s)
+        >>> tf1.dc_gain()
+        -1/3
+        >>> tf2 = TransferFunction(p**2, p - 3 + p**3, p)
+        >>> tf2.dc_gain()
+        0
+        >>> tf3 = TransferFunction(a*p**2 - b, s + b, s)
+        >>> tf3.dc_gain()
+        (a*p**2 - b)/b
+        >>> tf4 = TransferFunction(1, s, s)
+        >>> tf4.dc_gain()
+        oo
+        >>> dtf1 = DiscreteTransferFunction(z, z - 1, z, 0.1)
+        >>> dtf1.dc_gain()
+        oo
+
+        """
+        pass
+
+    def poles(self):
+        """
+        Returns the poles of a transfer function.
+
+        Examples
+        ========
+
+        >>> from sympy.abc import s, p, a
+        >>> from sympy.physics.control.lti import TransferFunction
+        >>> tf1 = TransferFunction((p + 3)*(p - 1), (p - 1)*(p + 5), p)
+        >>> tf1.poles()
+        [-5, 1]
+        >>> tf2 = TransferFunction((1 - s)**2, (s**2 + 1)**2, s)
+        >>> tf2.poles()
+        [I, I, -I, -I]
+        >>> tf3 = TransferFunction(s**2, a*s + p, s)
+        >>> tf3.poles()
+        [-p/a]
+
+        """
+        return _roots(Poly(self.den, self.var), self.var)
+
+    def zeros(self):
+        """
+        Returns the zeros of a transfer function.
+
+        Examples
+        ========
+
+        >>> from sympy.abc import s, p, a
+        >>> from sympy.physics.control.lti import TransferFunction
+        >>> tf1 = TransferFunction((p + 3)*(p - 1), (p - 1)*(p + 5), p)
+        >>> tf1.zeros()
+        [-3, 1]
+        >>> tf2 = TransferFunction((1 - s)**2, (s**2 + 1)**2, s)
+        >>> tf2.zeros()
+        [1, 1]
+        >>> tf3 = TransferFunction(s**2, a*s + p, s)
+        >>> tf3.zeros()
+        [0, 0]
+
+        """
+        return _roots(Poly(self.num, self.var), self.var)
+
+    def eval_frequency(self, other):
+        """
+        Returns the system response at any point in the real or complex plane.
+
+        Examples
+        ========
+
+        >>> from sympy.abc import s, p, a
+        >>> from sympy.physics.control.lti import TransferFunction
+        >>> from sympy import I
+        >>> tf1 = TransferFunction(1, s**2 + 2*s + 1, s)
+        >>> omega = 0.1
+        >>> tf1.eval_frequency(I*omega)
+        0.970493088912852 - 0.196059209881384*I
+        >>> tf2 = TransferFunction(s**2, a*s + p, s)
+        >>> tf2.eval_frequency(2)
+        4/(2*a + p)
+        >>> tf2.eval_frequency(I*2)
+        -4/(2*I*a + p)
+        """
+        arg_num = self.num.subs(self.var, other)
+        arg_den = self.den.subs(self.var, other)
+        return Mul(arg_num, S.One / arg_den).expand()
+
+    @abstractmethod
+    def is_stable(self, cancel_poles_zeros=False):
+        """
+        Returns True if the transfer function is asymptotically stable;
+        else False.
+
+        This would not check the marginal or conditional stability
+        of the system.
+
+        Note: Also with cancel_poles_zeros = True, there could be unaccounted
+        pole-zero cancellations.
+
+        Parameters
+        ==========
+
+        cancel_poles_zeros : Boolean
+            If True, cancels common factors between numerator and denominator
+            before checking stability.
+
+        Examples
+        ========
+
+        >>> from sympy.abc import s, p, a
+        >>> from sympy import symbols
+        >>> from sympy.physics.control.lti import TransferFunction
+        >>> q, r = symbols('q, r', negative=True)
+        >>> tf1 = TransferFunction((1 - s)**2, (s + 1)**2, s)
+        >>> tf1.is_stable()
+        True
+        >>> tf2 = TransferFunction((1 - p)**2, (s**2 + 1)**2, s)
+        >>> tf2.is_stable()
+        False
+        >>> tf3 = TransferFunction(4, q*s - r, s)
+        >>> tf3.is_stable()
+        False
+        >>> tf4 = TransferFunction(p + 1, a*p - s**2, p)
+        >>> tf4.is_stable() is None   # Not enough info about the symbols to determine stability
+        True
+        >>> tf5 = TransferFunction((s+1)*(s-1), (s-1)*(s+2)*(s+4), s)
+        >>> tf5.is_stable()
+        False
+        >>> tf5.is_stable(cancel_poles_zeros = True)
+        True
+
+        """
+        pass
+
+    def to_standard_form(self, cancel_poles_zeros=False):
+        r"""
+        Return the transfer function in its standard form.
+
+        Standard form:
+
+        .. math::
+            \frac{a_n s^n + a_{n-1} s^{n-1} + \cdots + a_1 s + a_0}
+            {b_m s^m + b_{m-1} s^{m-1} + \cdots + b_1 s + b_0}
+
+        Note: Also with cancel_poles_zeros = True, there could be unaccounted
+        pole-zero cancellations.
+
+        Examples
+        ========
+        >>> from sympy import symbols
+        >>> from sympy.physics.control.lti import TransferFunction, Feedback
+        >>> s,k = symbols('s k')
+        >>> tf1 = TransferFunction(-2*s + 12, s**3 + 2*s**2 + 100*s, s)
+        >>> tf2 = TransferFunction(1, k, s)
+        >>> feedback = Feedback(tf1, tf2).doit()
+        >>> feedback
+        TransferFunction(k*(12 - 2*s)*(s**3 + 2*s**2 + 100*s), (s**3 + 2*s**2 + 100*s)*(k*(s**3 + 2*s**2 + 100*s) - 2*s + 12), s)
+        >>> feedback.to_standard_form(cancel_poles_zeros=True)
+        TransferFunction(-2*k*s + 12*k, k*s**3 + 2*k*s**2 + s*(100*k - 2) + 12, s)
+
+        """
+        tf = self.expand()
+
+        num = tf.num
+        den = tf.den
+        if cancel_poles_zeros:
+            num, den = cancel(tf.num / tf.den).as_numer_denom()
+
+        return create_transfer_function(num.collect(self.var), den.collect(self.var),
+                      self.var, self.sampling_time)
+
+    @abstractmethod
+    def get_asymptotic_stability_conditions(self, cancel_poles_zeros=False):
+        """
+        Returns the asymptotic stability conditions for
+        the transfer function.
+
+        Notes:
+
+        - Also with cancel_poles_zeros = True, the set generated by the
+          inequalities may be a subset of the real asymptotic stability
+          conditions set due to potentially unaccounted pole-zero cancellations.
+        - This method assumes that the leading coefficient is non-zero.
+          In the opposite case, additional verification is required.
+
+        Parameters
+        ==========
+
+        cancel_poles_zeros : Boolean
+            If True, cancels common factors between numerator and denominator
+            before checking stability.
+
+        Examples
+        ========
+
+        >>> from sympy import symbols, solve, reduce_inequalities
+        >>> from sympy.abc import s
+        >>> from sympy.physics.control.lti import TransferFunction, Feedback
+
+        >>> b1, b2, b3, b4 = symbols('b_1 b_2 b_3 b_4')
+        >>> p1 = b1*s**3 + b2*s**2 + b3*s + b4
+        >>> tf1 = TransferFunction(1, p1, s)
+        >>> tf1.get_asymptotic_stability_conditions()
+        [b_1*b_2 > 0, b_2**2*(-b_1*b_4 + b_2*b_3) > 0, b_2*b_4*(-b_1*b_4 + b_2*b_3)**3 > 0]
+
+        >>> p2 = s**4 + 3*s**3 + 6*s**2 + 12*s + 8
+        >>> solve(p2)
+        [-2, -1, -2*I, 2*I]
+        >>> tf2 = TransferFunction(1, p2, s)
+        >>> tf2.get_asymptotic_stability_conditions()
+        [True, True, False]
+
+        >>> p3 = s**4 + 17*s**3 + 137/2*s**2 + 213/2*s + 54
+        >>> solve(p3)
+        [-12.0, -1.0, -2.0 - 0.707106781186548*I, -2.0 + 0.707106781186548*I]
+        >>> tf3 = TransferFunction(1, p3, s)
+        >>> tf3.get_asymptotic_stability_conditions()
+        [True, True, True, True]
+
+        >>> k = symbols('k')
+        >>> tf4 = TransferFunction(-20*s + 20, s**3 + 2*s**2 + 100*s, s)
+        >>> tf5 = TransferFunction(1, k, s)
+        >>> feedback = Feedback(tf4, tf5).doit()
+        >>> ineq = feedback.get_asymptotic_stability_conditions(cancel_poles_zeros = True)
+        >>> ineq
+        [2*k**2 > 0, 4*k**2*(2*k*(100*k - 20) - 20*k) > 0, 40*k*(2*k*(100*k - 20) - 20*k)**3 > 0]
+        >>> reduce_inequalities(ineq)
+        (3/10 < k) & (k < oo)
+
+        """
+        pass
+
+    @_compatibility_decorator
+    def __add__(self, other):
+        if hasattr(other, "is_StateSpace_object") and other.is_StateSpace_object:
+            return Parallel(self, other)
+        if isinstance(other, (self.__class__, Series, Feedback)):
+            if not self.var == other.var:
+                raise ValueError(filldedent("""
+                    All the transfer functions should use the same complex
+                    variable of the Laplace domain or z-domain."""))
+            return Parallel(self, other)
+        elif isinstance(other, Parallel):
+            if not self.var == other.var:
+                raise ValueError(filldedent("""
+                    All the transfer functions should use the same complex
+                    variable of the Laplace domain or z-domain."""))
+            arg_list = list(other.args)
+            return Parallel(self, *arg_list)
+        else:
+            raise ValueError("{} cannot be added with {}.".
+                format(type(self), type(other)))
+
+    @_compatibility_decorator
+    def __radd__(self, other):
+        return self + other
+
+    @_compatibility_decorator
+    def __sub__(self, other):
+        if hasattr(other, "is_StateSpace_object") and other.is_StateSpace_object:
+            return Parallel(self, -other)
+        elif isinstance(other, (self.__class__, Series)):
+            if not self.var == other.var:
+                raise ValueError(filldedent("""
+                    All the transfer functions should use the same complex
+                    variable of the Laplace domain or z-domain."""))
+            return Parallel(self, -other)
+        elif isinstance(other, Parallel):
+            if not self.var == other.var:
+                raise ValueError(filldedent("""
+                    All the transfer functions should use the same complex
+                    variable of the Laplace transform."""))
+            arg_list = [-i for i in list(other.args)]
+            return Parallel(self, *arg_list)
+        else:
+            raise ValueError("{} cannot be subtracted from a {}."
+                .format(type(self), type(other)))
+
+    @_compatibility_decorator
+    def __rsub__(self, other):
+        return -self + other
+
+    @_compatibility_decorator
+    def __mul__(self, other):
+        if hasattr(other, "is_StateSpace_object") and other.is_StateSpace_object:
+            return Series(self, other)
+        elif isinstance(other, (self.__class__, Parallel, Feedback)):
+            if not self.var == other.var:
+                raise ValueError(filldedent("""
+                    All the transfer functions should use the same complex variable
+                    of the Laplace domain or z-domain."""))
+            return Series(self, other)
+        elif isinstance(other, Series):
+            if not self.var == other.var:
+                raise ValueError(filldedent("""
+                    All the transfer functions should use the same complex variable
+                    of the Laplace domain or z-domain."""))
+            arg_list = list(other.args)
+            return Series(self, *arg_list)
+        else:
+            raise ValueError("{} cannot be multiplied with {}."
+                .format(type(self), type(other)))
+
+    __rmul__ = __mul__
+
+    @_compatibility_decorator
+    def __truediv__(self, other):
+        if isinstance(other, self.__class__):
+            if not self.var == other.var:
+                raise ValueError(filldedent("""
+                    All the transfer functions should use the same complex
+                    variable of the Laplace domain or z-domain."""))
+            return Series(self, create_transfer_function(other.den, other.num,
+                                       self.var, self.sampling_time))
+        elif (isinstance(other, Parallel) and len(other.args
+                ) == 2 and isinstance(other.args[0], self.__class__)
+            and isinstance(other.args[1], (Series, self.__class__))):
+
+            if not self.var == other.var:
+                raise ValueError(filldedent("""
+                    Both TransferFunction and Parallel should use the
+                    same complex variable of the Laplace domain or z-domain."""))
+            if other.args[1] == self:
+                # plant and controller with unit feedback.
+                return Feedback(self, other.args[0])
+            other_arg_list = list(other.args[1].args) if isinstance(
+                other.args[1], Series) else other.args[1]
+            if other_arg_list == other.args[1]:
+                return Feedback(self, other_arg_list)
+            elif self in other_arg_list:
+                other_arg_list.remove(self)
+            else:
+                return Feedback(self, Series(*other_arg_list))
+
+            if len(other_arg_list) == 1:
+                return Feedback(self, *other_arg_list)
+            else:
+                return Feedback(self, Series(*other_arg_list))
+        else:
+            raise ValueError("{} cannot be divided by {}.".
+                format(type(self), type(other)))
+
+    __rtruediv__ = __truediv__
+
+    def __pow__(self, p):
+        p = sympify(p)
+        if not p.is_Integer:
+            raise ValueError("Exponent must be an integer.")
+        if p is S.Zero:
+            return create_transfer_function(1, 1, self.var, self.sampling_time)
+        elif p > 0:
+            num_, den_ = self.num**p, self.den**p
+        else:
+            p = abs(p)
+            num_, den_ = self.den**p, self.num**p
+
+        return create_transfer_function(num_, den_, self.var, self.sampling_time)
+
+    def __neg__(self):
+        return create_transfer_function(-self.num, self.den, self.var, self.sampling_time)
+
+    def _StateSpace_matrices_equivalent(self):
+        """
+        Returns the state-space matrices equivalent
+        to the transfer function.
+        The state-space matrices are returned in the form of (A, B, C, D) in
+        the controllable canonical form.
+        """
+        if not self.is_proper:
+            raise ValueError("Transfer Function must be proper.")
+
+        num_poly = Poly(self.num, self.var)
+        den_poly = Poly(self.den, self.var)
+        n = den_poly.degree()
+
+        num_coeffs = num_poly.all_coeffs()
+        den_coeffs = den_poly.all_coeffs()
+        diff = n - num_poly.degree()
+        num_coeffs = [0]*diff + num_coeffs
+
+        a = den_coeffs[1:]
+        a_mat = Matrix([[(-1)*coefficient/den_coeffs[0] for coefficient in reversed(a)]])
+        vert = zeros(n-1, 1)
+        mat = eye(n-1)
+        A = vert.row_join(mat)
+        A = A.col_join(a_mat)
+
+        B = zeros(n, 1)
+        B[n-1] = 1
+
+        i = n
+        C = []
+        while(i > 0):
+            C.append(num_coeffs[i] - den_coeffs[i]*num_coeffs[0])
+            i -= 1
+        C = Matrix([C])
+
+        D = Matrix([num_coeffs[0]])
+
+        return A, B, C, D
+
+    @property
+    def is_proper(self):
+        """
+        Returns True if degree of the numerator polynomial is less than
+        or equal to degree of the denominator polynomial, else False.
+
+        Examples
+        ========
+
+        >>> from sympy.abc import s, p, a, b
+        >>> from sympy.physics.control.lti import TransferFunction
+        >>> tf1 = TransferFunction(b*s**2 + p**2 - a*p + s, b - p**2, s)
+        >>> tf1.is_proper
+        False
+        >>> tf2 = TransferFunction(p**2 - 4*p, p**3 + 3*p + 2, p)
+        >>> tf2.is_proper
+        True
+
+        """
+        return degree(self.num, self.var) <= degree(self.den, self.var)
+
+    @property
+    def is_strictly_proper(self):
+        """
+        Returns True if degree of the numerator polynomial is strictly less
+        than degree of the denominator polynomial, else False.
+
+        Examples
+        ========
+
+        >>> from sympy.abc import s, p, a, b
+        >>> from sympy.physics.control.lti import TransferFunction
+        >>> tf1 = TransferFunction(a*p**2 + b*s, s - p, s)
+        >>> tf1.is_strictly_proper
+        False
+        >>> tf2 = TransferFunction(s**3 - 2, s**4 + 5*s + 6, s)
+        >>> tf2.is_strictly_proper
+        True
+
+        """
+        return degree(self.num, self.var) < degree(self.den, self.var)
+
+    @property
+    def is_biproper(self):
+        """
+        Returns True if degree of the numerator polynomial is equal to
+        degree of the denominator polynomial, else False.
+
+        Examples
+        ========
+
+        >>> from sympy.abc import s, p, a, b
+        >>> from sympy.physics.control.lti import TransferFunction
+        >>> tf1 = TransferFunction(a*p**2 + b*s, s - p, s)
+        >>> tf1.is_biproper
+        True
+        >>> tf2 = TransferFunction(p**2, p + a, p)
+        >>> tf2.is_biproper
+        False
+
+        """
+        return degree(self.num, self.var) == degree(self.den, self.var)
+
+    def to_expr(self):
+        """
+        Converts a :obj:`~.TransferFunction` object to SymPy
+        :obj:`sympy.core.expr.Expr`.
+
+        Examples
+        ========
+
+        >>> from sympy.abc import s, p, a, b
+        >>> from sympy.physics.control.lti import TransferFunction
+        >>> from sympy import Expr
+        >>> tf1 = TransferFunction(s, a*s**2 + 1, s)
+        >>> tf1.to_expr()
+        s/(a*s**2 + 1)
+        >>> isinstance(_, Expr)
+        True
+        >>> tf2 = TransferFunction(1, (p + 3*b)*(b - p), p)
+        >>> tf2.to_expr()
+        1/((b - p)*(3*b + p))
+        >>> tf3 = TransferFunction((s - 2)*(s - 3), (s - 1)*(s - 2)*(s - 3), s)
+        >>> tf3.to_expr()
+        ((s - 3)*(s - 2))/(((s - 3)*(s - 2)*(s - 1)))
+
+        """
+
+        if self.num != 1:
+            return Mul(self.num, Pow(self.den, -1, evaluate=False), evaluate=False)
+        else:
+            return Pow(self.den, -1, evaluate=False)
+
+class TransferFunction(TransferFunctionBase):
+    r"""
+    A class for representing LTI (Linear, time-invariant) systems that can be
+    strictly described by ratio of polynomials in the Laplace transform complex variable. The arguments
     are ``num``, ``den``, and ``var``, where ``num`` and ``den`` are numerator and
     denominator polynomials of the ``TransferFunction`` respectively, and the third argument is
     a complex variable of the Laplace transform used by these polynomials of the transfer function.
     ``num`` and ``den`` can be either polynomials or numbers, whereas ``var``
     has to be a :py:class:`~.Symbol`.
 
-    Explanation
-    ===========
-
-    Generally, a dynamical system representing a physical model can be described in terms of Linear
-    Ordinary Differential Equations like -
-
-            $b_{m}y^{\left(m\right)}+b_{m-1}y^{\left(m-1\right)}+\dots+b_{1}y^{\left(1\right)}+b_{0}y=
-            a_{n}x^{\left(n\right)}+a_{n-1}x^{\left(n-1\right)}+\dots+a_{1}x^{\left(1\right)}+a_{0}x$
-
-    Here, $x$ is the input signal and $y$ is the output signal and superscript on both is the order of derivative
-    (not exponent). Derivative is taken with respect to the independent variable, $t$. Also, generally $m$ is greater
-    than $n$.
-
-    It is not feasible to analyse the properties of such systems in their native form therefore, we use
-    mathematical tools like Laplace transform to get a better perspective. Taking the Laplace transform
-    of both the sides in the equation (at zero initial conditions), we get -
-
-            $\mathcal{L}[b_{m}y^{\left(m\right)}+b_{m-1}y^{\left(m-1\right)}+\dots+b_{1}y^{\left(1\right)}+b_{0}y]=
-            \mathcal{L}[a_{n}x^{\left(n\right)}+a_{n-1}x^{\left(n-1\right)}+\dots+a_{1}x^{\left(1\right)}+a_{0}x]$
-
-    Using the linearity property of Laplace transform and also considering zero initial conditions
-    (i.e. $y(0^{-}) = 0$, $y'(0^{-}) = 0$ and so on), the equation
-    above gets translated to -
-
-            $b_{m}\mathcal{L}[y^{\left(m\right)}]+\dots+b_{1}\mathcal{L}[y^{\left(1\right)}]+b_{0}\mathcal{L}[y]=
-            a_{n}\mathcal{L}[x^{\left(n\right)}]+\dots+a_{1}\mathcal{L}[x^{\left(1\right)}]+a_{0}\mathcal{L}[x]$
-
-    Now, applying Derivative property of Laplace transform,
-
-            $b_{m}s^{m}\mathcal{L}[y]+\dots+b_{1}s\mathcal{L}[y]+b_{0}\mathcal{L}[y]=
-            a_{n}s^{n}\mathcal{L}[x]+\dots+a_{1}s\mathcal{L}[x]+a_{0}\mathcal{L}[x]$
-
-    Here, the superscript on $s$ is **exponent**. Note that the zero initial conditions assumption, mentioned above, is very important
-    and cannot be ignored otherwise the dynamical system cannot be considered time-independent and the simplified equation above
-    cannot be reached.
-
-    Collecting $\mathcal{L}[y]$ and $\mathcal{L}[x]$ terms from both the sides and taking the ratio
-    $\frac{ \mathcal{L}\left\{y\right\} }{ \mathcal{L}\left\{x\right\} }$, we get the typical rational form of transfer
-    function.
-
-    The numerator of the transfer function is, therefore, the Laplace transform of the output signal
-    (The signals are represented as functions of time) and similarly, the denominator
-    of the transfer function is the Laplace transform of the input signal. It is also a convention
-    to denote the input and output signal's Laplace transform with capital alphabets like shown below.
-
-            $H(s) = \frac{Y(s)}{X(s)} = \frac{ \mathcal{L}\left\{y(t)\right\} }{ \mathcal{L}\left\{x(t)\right\} }$
-
-    $s$, also known as complex frequency, is a complex variable in the Laplace domain. It corresponds to the
-    equivalent variable $t$, in the time domain. Transfer functions are sometimes also referred to as the Laplace
-    transform of the system's impulse response. Transfer function, $H$, is represented as a rational
-    function in $s$ like,
-
-            $H(s) =\ \frac{a_{n}s^{n}+a_{n-1}s^{n-1}+\dots+a_{1}s+a_{0}}{b_{m}s^{m}+b_{m-1}s^{m-1}+\dots+b_{1}s+b_{0}}$
+    See :class:`TransferFunctionBase` for more information.
 
     Parameters
     ==========
@@ -615,299 +1659,80 @@ class TransferFunction(SISOLinearTimeInvariant):
     See Also
     ========
 
-    Feedback, Series, Parallel
-
-    References
-    ==========
-
-    .. [1] https://en.wikipedia.org/wiki/Transfer_function
-    .. [2] https://en.wikipedia.org/wiki/Laplace_transform
+    TransferFunctionBase, DiscreteTransferFunction, Feedback, Series, Parallel
 
     """
     def __new__(cls, num, den, var):
-        num, den = _sympify(num), _sympify(den)
-
-        if not isinstance(var, Symbol):
-            raise TypeError("Variable input must be a Symbol.")
-
-        if den == 0:
-            raise ValueError("TransferFunction cannot have a zero denominator.")
-
-        if (((isinstance(num, (Expr, TransferFunction, Series, Parallel)) and num.has(Symbol)) or num.is_number) and
-            ((isinstance(den, (Expr, TransferFunction, Series, Parallel)) and den.has(Symbol)) or den.is_number)):
-            cls.is_StateSpace_object = False
-            return super(TransferFunction, cls).__new__(cls, num, den, var)
-
-        else:
-            raise TypeError("Unsupported type for numerator or denominator of TransferFunction.")
+        return super(TransferFunction, cls).__new__(cls, num, den, var)
 
     @classmethod
     def from_rational_expression(cls, expr, var=None):
         r"""
-        Creates a new ``TransferFunction`` efficiently from a rational expression.
-
-        Parameters
-        ==========
-
-        expr : Expr, Number
-            The rational expression representing the ``TransferFunction``.
-        var : Symbol, optional
-            Complex variable of the Laplace transform used by the
-            polynomials of the transfer function.
-
-        Raises
-        ======
-
-        ValueError
-            When ``expr`` is of type ``Number`` and optional parameter ``var``
-            is not passed.
-
-            When ``expr`` has more than one variables and an optional parameter
-            ``var`` is not passed.
-        ZeroDivisionError
-            When denominator of ``expr`` is zero or it has ``ComplexInfinity``
-            in its numerator.
-
-        Examples
-        ========
-
-        >>> from sympy.abc import s, p, a
-        >>> from sympy.physics.control.lti import TransferFunction
-        >>> expr1 = (s + 5)/(3*s**2 + 2*s + 1)
-        >>> tf1 = TransferFunction.from_rational_expression(expr1)
-        >>> tf1
-        TransferFunction(s + 5, 3*s**2 + 2*s + 1, s)
-        >>> expr2 = (a*p**3 - a*p**2 + s*p)/(p + a**2)  # Expr with more than one variables
-        >>> tf2 = TransferFunction.from_rational_expression(expr2, p)
-        >>> tf2
-        TransferFunction(a*p**3 - a*p**2 + p*s, a**2 + p, p)
-
-        In case of conflict between two or more variables in a expression, SymPy will
-        raise a ``ValueError``, if ``var`` is not passed by the user.
-
-        >>> tf = TransferFunction.from_rational_expression((a + a*s)/(s**2 + s + 1))
-        Traceback (most recent call last):
-        ...
-        ValueError: Conflicting values found for positional argument `var` ({a, s}). Specify it manually.
-
-        This can be corrected by specifying the ``var`` parameter manually.
-
-        >>> tf = TransferFunction.from_rational_expression((a + a*s)/(s**2 + s + 1), s)
-        >>> tf
-        TransferFunction(a*s + a, s**2 + s + 1, s)
-
-        ``var`` also need to be specified when ``expr`` is a ``Number``
-
-        >>> tf3 = TransferFunction.from_rational_expression(10, s)
-        >>> tf3
-        TransferFunction(10, 1, s)
-
+        See :func:`TransferFunctionBase.from_rational_expression`.
         """
-        expr = _sympify(expr)
-        if var is None:
-            _free_symbols = expr.free_symbols
-            _len_free_symbols = len(_free_symbols)
-            if _len_free_symbols == 1:
-                var = list(_free_symbols)[0]
-            elif _len_free_symbols == 0:
-                raise ValueError(filldedent("""
-                    Positional argument `var` not found in the
-                    TransferFunction defined. Specify it manually."""))
-            else:
-                raise ValueError(filldedent("""
-                    Conflicting values found for positional argument `var` ({}).
-                    Specify it manually.""".format(_free_symbols)))
-
-        _num, _den = expr.as_numer_denom()
-        if _den == 0 or _num.has(S.ComplexInfinity):
-            raise ZeroDivisionError("TransferFunction cannot have a zero denominator.")
-        return cls(_num, _den, var)
+        return super().from_rational_expression(expr, var)
 
     @classmethod
     def from_coeff_lists(cls, num_list, den_list, var):
         r"""
-        Creates a new ``TransferFunction`` efficiently from a list of coefficients.
-
-        Parameters
-        ==========
-
-        num_list : Sequence
-            Sequence comprising of numerator coefficients.
-        den_list : Sequence
-            Sequence comprising of denominator coefficients.
-        var : Symbol
-            Complex variable of the Laplace transform used by the
-            polynomials of the transfer function.
-
-        Raises
-        ======
-
-        ZeroDivisionError
-            When the constructed denominator is zero.
-
-        Examples
-        ========
-
-        >>> from sympy.abc import s, p
-        >>> from sympy.physics.control.lti import TransferFunction
-        >>> num = [1, 0, 2]
-        >>> den = [3, 2, 2, 1]
-        >>> tf = TransferFunction.from_coeff_lists(num, den, s)
-        >>> tf
-        TransferFunction(s**2 + 2, 3*s**3 + 2*s**2 + 2*s + 1, s)
-        >>> #Create a Transfer Function with more than one variable
-        >>> tf1 = TransferFunction.from_coeff_lists([p, 1], [2*p, 0, 4], s)
-        >>> tf1
-        TransferFunction(p*s + 1, 2*p*s**2 + 4, s)
-
+        See :func:`TransferFunctionBase.from_coeff_lists`.
         """
-        num_list = num_list[::-1]
-        den_list = den_list[::-1]
-        num_var_powers = [var**i for i in range(len(num_list))]
-        den_var_powers = [var**i for i in range(len(den_list))]
-
-        _num = sum(coeff * var_power for coeff, var_power in zip(num_list, num_var_powers))
-        _den = sum(coeff * var_power for coeff, var_power in zip(den_list, den_var_powers))
-
-        if _den == 0:
-            raise ZeroDivisionError("TransferFunction cannot have a zero denominator.")
-
-        return cls(_num, _den, var)
+        return super().from_coeff_lists(num_list, den_list, var)
 
     @classmethod
     def from_zpk(cls, zeros, poles, gain, var):
         r"""
-        Creates a new ``TransferFunction`` from given zeros, poles and gain.
-
-        Parameters
-        ==========
-
-        zeros : Sequence
-            Sequence comprising of zeros of transfer function.
-        poles : Sequence
-            Sequence comprising of poles of transfer function.
-        gain : Number, Symbol, Expression
-            A scalar value specifying gain of the model.
-        var : Symbol
-            Complex variable of the Laplace transform used by the
-            polynomials of the transfer function.
-
-        Examples
-        ========
-
-        >>> from sympy.abc import s, p, k
-        >>> from sympy.physics.control.lti import TransferFunction
-        >>> zeros = [1, 2, 3]
-        >>> poles = [6, 5, 4]
-        >>> gain = 7
-        >>> tf = TransferFunction.from_zpk(zeros, poles, gain, s)
-        >>> tf
-        TransferFunction(7*(s - 3)*(s - 2)*(s - 1), (s - 6)*(s - 5)*(s - 4), s)
-        >>> #Create a Transfer Function with variable poles and zeros
-        >>> tf1 = TransferFunction.from_zpk([p, k], [p + k, p - k], 2, s)
-        >>> tf1
-        TransferFunction(2*(-k + s)*(-p + s), (-k - p + s)*(k - p + s), s)
-        >>> #Complex poles or zeros are acceptable
-        >>> tf2 = TransferFunction.from_zpk([0], [1-1j, 1+1j, 2], -2, s)
-        >>> tf2
-        TransferFunction(-2*s, (s - 2)*(s - 1.0 - 1.0*I)*(s - 1.0 + 1.0*I), s)
-
+        See :func:`TransferFunctionBase.from_zpk`.
         """
-        num_poly = 1
-        den_poly = 1
-        for zero in zeros:
-            num_poly *= var - zero
-        for pole in poles:
-            den_poly *= var - pole
+        return super().from_zpk(zeros, poles, gain, var)
 
-        return cls(gain*num_poly, den_poly, var)
-
-    @property
-    def num(self):
+    def dc_gain(self):
+        r"""
+        See :func:`TransferFunctionBase.dc_gain`.
         """
-        Returns the numerator polynomial of the transfer function.
+        m = Mul(self.num, Pow(self.den, -1, evaluate=False), evaluate=False)
+        return limit(m, self.var, 0)
 
-        Examples
-        ========
-
-        >>> from sympy.abc import s, p
-        >>> from sympy.physics.control.lti import TransferFunction
-        >>> G1 = TransferFunction(s**2 + p*s + 3, s - 4, s)
-        >>> G1.num
-        p*s + s**2 + 3
-        >>> G2 = TransferFunction((p + 5)*(p - 3), (p - 3)*(p + 1), p)
-        >>> G2.num
-        (p - 3)*(p + 5)
-
+    def is_stable(self, cancel_poles_zeros=False):
+        r"""
+        See :func:`TransferFunctionBase.is_stable`.
         """
-        return self.args[0]
+        tf = self.to_standard_form(cancel_poles_zeros)
 
-    @property
-    def den(self):
+        conditions = tf.get_asymptotic_stability_conditions(
+            cancel_poles_zeros = False
+        )
+
+        try:
+            output = reduce_inequalities(conditions)
+        except NotImplementedError:
+            # If there are more than one symbols,
+            # reduce_inequalities could fail
+            return None
+
+        if output in (true, false):
+            return bool(output)
+
+        return None
+
+    def get_asymptotic_stability_conditions(self, cancel_poles_zeros=False):
+        r"""
+        See :func:`TransferFunctionBase.get_asymptotic_stability_conditions`.
         """
-        Returns the denominator polynomial of the transfer function.
+        standard_form = self.to_standard_form(cancel_poles_zeros)
 
-        Examples
-        ========
-
-        >>> from sympy.abc import s, p
-        >>> from sympy.physics.control.lti import TransferFunction
-        >>> G1 = TransferFunction(s + 4, p**3 - 2*p + 4, s)
-        >>> G1.den
-        p**3 - 2*p + 4
-        >>> G2 = TransferFunction(3, 4, s)
-        >>> G2.den
-        4
-
-        """
-        return self.args[1]
-
-    @property
-    def var(self):
-        """
-        Returns the complex variable of the Laplace transform used by the polynomials of
-        the transfer function.
-
-        Examples
-        ========
-
-        >>> from sympy.abc import s, p
-        >>> from sympy.physics.control.lti import TransferFunction
-        >>> G1 = TransferFunction(p**2 + 2*p + 4, p - 6, p)
-        >>> G1.var
-        p
-        >>> G2 = TransferFunction(0, s - 5, s)
-        >>> G2.var
-        s
-
-        """
-        return self.args[2]
-
-    def _eval_subs(self, old, new):
-        arg_num = self.num.subs(old, new)
-        arg_den = self.den.subs(old, new)
-        argnew = TransferFunction(arg_num, arg_den, self.var)
-        return self if old == self.var else argnew
-
-    def _eval_evalf(self, prec):
-        return TransferFunction(
-            self.num._eval_evalf(prec),
-            self.den._eval_evalf(prec),
-            self.var)
-
-    def _eval_simplify(self, **kwargs):
-        tf = cancel(Mul(self.num, 1/self.den, evaluate=False), expand=False).as_numer_denom()
-        num_, den_ = tf[0], tf[1]
-        return TransferFunction(num_, den_, self.var)
+        return negative_real_part_conditions(standard_form.den, self.var)
 
     def _eval_rewrite_as_StateSpace(self, *args):
         """
         Returns the equivalent space model of the transfer function model.
-        The state space model will be returned in the controllable canonical form.
+        The state space model will be returned in the controllable canonical
+        form.
 
-        Unlike the space state to transfer function model conversion, the transfer function
-        to state space model conversion is not unique. There can be multiple state space
-        representations of a given transfer function model.
+        Unlike the space state to transfer function model conversion, the
+        transfer function to state space model conversion is not unique.
+        There can be multiple state space representations of a given transfer
+        function model.
 
         Examples
         ========
@@ -925,529 +1750,478 @@ class TransferFunction(SISOLinearTimeInvariant):
         [1]]), Matrix([[1, 0, 1]]), Matrix([[0]]))
 
         """
-        if not self.is_proper:
-            raise ValueError("Transfer Function must be proper.")
-
-        num_poly = Poly(self.num, self.var)
-        den_poly = Poly(self.den, self.var)
-        n = den_poly.degree()
-
-        num_coeffs = num_poly.all_coeffs()
-        den_coeffs = den_poly.all_coeffs()
-        diff = n - num_poly.degree()
-        num_coeffs = [0]*diff + num_coeffs
-
-        a = den_coeffs[1:]
-        a_mat = Matrix([[(-1)*coefficient/den_coeffs[0] for coefficient in reversed(a)]])
-        vert = zeros(n-1, 1)
-        mat = eye(n-1)
-        A = vert.row_join(mat)
-        A = A.col_join(a_mat)
-
-        B = zeros(n, 1)
-        B[n-1] = 1
-
-        i = n
-        C = []
-        while(i > 0):
-            C.append(num_coeffs[i] - den_coeffs[i]*num_coeffs[0])
-            i -= 1
-        C = Matrix([C])
-
-        D = Matrix([num_coeffs[0]])
-
+        A, B, C, D = self._StateSpace_matrices_equivalent()
         return StateSpace(A, B, C, D)
 
-    def expand(self):
+    def _eval_rewrite_as_DiscreteStateSpace(self, *args):
+        raise TypeError("""
+            The continuous transfer function model cannot be rewritten as a
+            discrete-time state space model.
+            """)
+
+    @property
+    def sampling_time(self):
+        """The sampling time of the transfer function is zero."""
+        return S.Zero
+
+    _is_continuous = True
+
+class DiscreteTransferFunction(TransferFunctionBase):
+    r"""
+    A class for representing LTI (Linear, time-invariant) systems that can be
+    strictly described by ratio of polynomials in the z-transform complex
+    variable.
+    The arguments are ``num``, ``den``, ``var``, and ``sampling_time``,
+    where ``num`` and ``den`` are numerator and denominator polynomials of the
+    ``DiscreteTransferFunction`` respectively, the third argument is
+    a complex variable of the z-transform used by these polynomials of the
+    transfer function, and the fourth represents the time interval between two
+    consecutive sampling instants. If not specified, it defaults to 1 and, if
+    it's set to 0, an instance of :class:`TransferFunction` is returned.
+    ``num`` and ``den`` can be either polynomials or numbers, ``var``
+    has to be a :py:class:`~.Symbol` and ``sampling_time`` can be both
+    :py:class:`~.Symbol` or numbers.
+
+    See :class:`TransferFunctionBase` for more information.
+
+    Parameters
+    ==========
+
+    num : Expr, Number
+        The numerator polynomial of the transfer function.
+    den : Expr, Number
+        The denominator polynomial of the transfer function.
+    var : Symbol
+        Complex variable of the z-transform used by the
+        polynomials of the transfer function.
+    sampling_time : Symbol, Number
+        Time interval between two consecutive sampling instants
+        Defaults to 1.
+        If sampling_time == 0, an instance of :class:`TransferFunction` is
+        returned.
+
+    Raises
+    ======
+
+    TypeError
+        When ``var`` is not a Symbol or when ``num`` or ``den`` is not a
+        number or a polynomial.
+    ValueError
+        When ``den`` is zero.
+
+    Examples
+    ========
+
+    >>> from sympy.abc import z, p, a, k
+    >>> from sympy.physics.control.lti import DiscreteTransferFunction
+    >>> dtf1 = DiscreteTransferFunction(z**2 + a*z, z**2 + z + 1, z, 0.1)
+    >>> dtf1
+    DiscreteTransferFunction(a*z + z**2, z**2 + z + 1, z, 0.1)
+    >>> dtf1.num
+    a*z + z**2
+    >>> dtf1.den
+    z**2 + z + 1
+    >>> dtf1.var
+    z
+    >>> dtf1.sampling_time
+    0.1
+    >>> dtf1.args
+    (a*z + z**2, z**2 + z + 1, z, 0.1)
+
+    Any complex variable can be used for ``var``.
+
+    >>> dtf2 = DiscreteTransferFunction(a*p**3 - a*p**2 + z*p, p + a**2, p, k)
+    >>> dtf2
+    DiscreteTransferFunction(a*p**3 - a*p**2 + p*z, a**2 + p, p, k)
+    >>> dtf3 = DiscreteTransferFunction((p + 3)*(p - 1), (p - 1)*(p + 5), p, k)
+    >>> dtf3
+    DiscreteTransferFunction((p - 1)*(p + 3), (p - 1)*(p + 5), p, k)
+
+    To negate a transfer function the ``-`` operator can be prepended:
+
+    >>> dtf4 = DiscreteTransferFunction(-a + z, p**2 + z, p, 0.2)
+    >>> -dtf4
+    DiscreteTransferFunction(a - z, p**2 + z, p, 0.2)
+    >>> dtf5 = DiscreteTransferFunction(z**4 - 2*z**3 + 5*z + 4, z + 4, z, 12)
+    >>> -dtf5
+    DiscreteTransferFunction(-z**4 + 2*z**3 - 5*z - 4, z + 4, z, 12)
+
+    You can use a float or an integer (or other constants) as numerator and
+    denominator:
+
+    >>> dtf6 = DiscreteTransferFunction(1/2, 4, z, k)
+    >>> dtf6.num
+    0.500000000000000
+    >>> dtf6.den
+    4
+    >>> dtf6.var
+    z
+    >>> dtf6.sampling_time
+    k
+    >>> dtf6.args
+    (0.5, 4, z, k)
+
+    You can take the integer power of a transfer function using the ``**``
+    operator:
+
+    >>> dtf7 = DiscreteTransferFunction(z + a, z - a, z, 0.3)
+    >>> dtf7**3
+    DiscreteTransferFunction((a + z)**3, (-a + z)**3, z, 0.3)
+    >>> dtf7**0
+    DiscreteTransferFunction(1, 1, z, 0.3)
+    >>> dtf8 = DiscreteTransferFunction(p + 4, p - 3, p, k)
+    >>> dtf8**-1
+    DiscreteTransferFunction(p - 3, p + 4, p, k)
+
+    Addition, subtraction, and multiplication of transfer functions can form
+    unevaluated ``Series`` or ``Parallel`` objects.
+
+    >>> dtf9 = DiscreteTransferFunction(z + 1, z**2 + z + 1, z, k)
+    >>> dtf10 = DiscreteTransferFunction(z - p, z + 3, z, k)
+    >>> dtf11 = DiscreteTransferFunction(4*z**2 + 2*z - 4, z - 1, z, k)
+    >>> dtf12 = DiscreteTransferFunction(1 - z, z**2 + 4, z, k)
+    >>> dtf9 + dtf10
+    Parallel(DiscreteTransferFunction(z + 1, z**2 + z + 1, z, k), DiscreteTransferFunction(-p + z, z + 3, z, k))
+    >>> dtf10 - dtf11
+    Parallel(DiscreteTransferFunction(-p + z, z + 3, z, k), DiscreteTransferFunction(-4*z**2 - 2*z + 4, z - 1, z, k))
+    >>> dtf9 * dtf10
+    Series(DiscreteTransferFunction(z + 1, z**2 + z + 1, z, k), DiscreteTransferFunction(-p + z, z + 3, z, k))
+    >>> dtf10 - (dtf9 + dtf12)
+    Parallel(DiscreteTransferFunction(-p + z, z + 3, z, k), DiscreteTransferFunction(-z - 1, z**2 + z + 1, z, k), DiscreteTransferFunction(z - 1, z**2 + 4, z, k))
+    >>> dtf10 - (dtf9 * dtf12)
+    Parallel(DiscreteTransferFunction(-p + z, z + 3, z, k), Series(DiscreteTransferFunction(-1, 1, z, k), DiscreteTransferFunction(z + 1, z**2 + z + 1, z, k), DiscreteTransferFunction(1 - z, z**2 + 4, z, k)))
+    >>> dtf11 * dtf10 * dtf9
+    Series(DiscreteTransferFunction(4*z**2 + 2*z - 4, z - 1, z, k), DiscreteTransferFunction(-p + z, z + 3, z, k), DiscreteTransferFunction(z + 1, z**2 + z + 1, z, k))
+    >>> dtf9 * dtf11 + dtf10 * dtf12
+    Parallel(Series(DiscreteTransferFunction(z + 1, z**2 + z + 1, z, k), DiscreteTransferFunction(4*z**2 + 2*z - 4, z - 1, z, k)), Series(DiscreteTransferFunction(-p + z, z + 3, z, k), DiscreteTransferFunction(1 - z, z**2 + 4, z, k)))
+    >>> (dtf9 + dtf12) * (dtf10 + dtf11)
+    Series(Parallel(DiscreteTransferFunction(z + 1, z**2 + z + 1, z, k), DiscreteTransferFunction(1 - z, z**2 + 4, z, k)), Parallel(DiscreteTransferFunction(-p + z, z + 3, z, k), DiscreteTransferFunction(4*z**2 + 2*z - 4, z - 1, z, k)))
+
+    These unevaluated ``Series`` or ``Parallel`` objects can convert into the
+    resultant transfer function using ``.doit()`` method or by ``.rewrite(DiscreteTransferFunction)``.
+
+    >>> ((dtf9 + dtf10) * dtf12).doit()
+    DiscreteTransferFunction((1 - z)*((-p + z)*(z**2 + z + 1) + (z + 1)*(z + 3)), (z + 3)*(z**2 + 4)*(z**2 + z + 1), z, k)
+    >>> (dtf9 * dtf10 - dtf11 * dtf12).rewrite(DiscreteTransferFunction)
+    DiscreteTransferFunction(-(1 - z)*(z + 3)*(z**2 + z + 1)*(4*z**2 + 2*z - 4) + (-p + z)*(z - 1)*(z + 1)*(z**2 + 4), (z - 1)*(z + 3)*(z**2 + 4)*(z**2 + z + 1), z, k)
+
+    See Also
+    ========
+
+    TransferFunctionBase, TransferFunction, Feedback, Series, Parallel
+
+    """
+    def __new__(cls, num, den, var, sampling_time=1):
+        if sampling_time == 0:
+            raise ValueError(filldedent("""
+                The sampling time cannot be zero.
+                If you want to create a continuous transfer function,
+                use the TransferFunction class instead."""))
+
+        sampling_time = sympify(sampling_time)
+        obj = super(DiscreteTransferFunction, cls).__new__(cls, num, den, var,
+                                                      sampling_time)
+        obj._sampling_time = sampling_time
+        return obj
+
+    @classmethod
+    def from_rational_expression(cls, expr, var=None, sampling_time=1):
+        r"""
+        See :func:`TransferFunctionBase.from_rational_expression`.
         """
-        Returns the transfer function with numerator and denominator
-        in expanded form.
+        return super().from_rational_expression(expr, var,
+                                                sampling_time=sampling_time)
+
+    @classmethod
+    def from_coeff_lists(cls, num_list, den_list, var, sampling_time=1):
+        r"""
+        See :func:`TransferFunctionBase.from_coeff_lists`.
+        """
+        return super().from_coeff_lists(num_list, den_list, var,
+                                        sampling_time=sampling_time)
+
+    @classmethod
+    def from_zpk(cls, zeros, poles, gain, var, sampling_time=1):
+        r"""
+        See :func:`TransferFunctionBase.from_zpk`.
+        """
+        return super().from_zpk(zeros, poles, gain,
+                                var, sampling_time = sampling_time)
+
+    @classmethod
+    def gbt(cls, cont_tf, sampling_time, alpha, var):
+        r"""
+        Returns the discretized transfer function H(z) from a continuous
+        transfer function H(s).
+
+        Parameters
+        ==========
+
+        cont_tf : TransferFunction
+            The continuous transfer function H(s) to be discretized.
+        sampling_time : Symbol, Number
+            Time interval between two consecutive sampling instants.
+        alpha: Symbol, Number
+            The parameter for the generalised bilinear transformation method.
+        var: Symbol
+            The complex variable of the z-transform used by the polynomials
+            of the transfer function.
+
+        Explanation
+        ===========
+
+        Where H(z) is the corresponding discretized transfer function,
+        discretized with the generalised bilinear transformation method.
+        H(z) is obtained from the continuous transfer function H(s)
+        by substituting $s(z) = \frac{z-1}{T(\alpha z + (1-\alpha))}$ into H(s),
+        where T is the sample time.
 
         Examples
         ========
 
-        >>> from sympy.abc import s, p, a, b
-        >>> from sympy.physics.control.lti import TransferFunction
-        >>> G1 = TransferFunction((a - s)**2, (s**2 + a)**2, s)
-        >>> G1.expand()
-        TransferFunction(a**2 - 2*a*s + s**2, a**2 + 2*a*s**2 + s**4, s)
-        >>> G2 = TransferFunction((p + 3*b)*(p - b), (p - b)*(p + 2*b), p)
-        >>> G2.expand()
-        TransferFunction(-3*b**2 + 2*b*p + p**2, -2*b**2 + b*p + p**2, p)
+        >>> from sympy.physics.control.lti import TransferFunction, DiscreteTransferFunction
+        >>> from sympy.abc import s, z, L, R, T
+
+        >>> tf = TransferFunction(1, s*L + R, s)
+        >>> dttf1 = DiscreteTransferFunction.gbt(tf, T, 0.5, z)
+        >>> dttf1.num
+        T*z/(2*(L + R*T/2)) + T/(2*(L + R*T/2))
+        >>> dttf1.den
+        z + (-L + R*T/2)/(L + R*T/2)
+        >>> dttf1.sampling_time
+        T
+
+        >>> dttf2 = DiscreteTransferFunction.gbt(tf, T, 0, z)
+        >>> dttf2.num
+        T/L
+        >>> dttf2.den
+        z + (-L + R*T)/L
+        >>> dttf2.sampling_time
+        T
+
+        >>> dttf3 = DiscreteTransferFunction.gbt(tf, T, 1, z)
+        >>> dttf3.num
+        T*z/(L + R*T)
+        >>> dttf3.den
+        -L/(L + R*T) + z
+        >>> dttf3.sampling_time
+        T
+
+        >>> dttf4 = DiscreteTransferFunction.gbt(tf, T, 0.3, z)
+        >>> dttf4.num
+        3*T*z/(10*(L + 3*R*T/10)) + 7*T/(10*(L + 3*R*T/10))
+        >>> dttf4.den
+        z + (-L + 7*R*T/10)/(L + 3*R*T/10)
+        >>> dttf4.sampling_time
+        T
+
+        References
+        ==========
+
+        .. [1] https://www.polyu.edu.hk/ama/profile/gfzhang/Research/ZCC09_IJC.pdf
+        """
+        num, den = gbt(cont_tf, sampling_time, alpha)
+        return cls.from_coeff_lists(num, den, var, sampling_time)
+
+    @classmethod
+    def bilinear(cls, cont_tf, sampling_time, var):
+        r"""
+        Returns the discretized transfer function H(z) from a continuous
+        transfer function H(s).
+
+        Parameters
+        ==========
+
+        cont_tf : TransferFunction
+            The continuous transfer function H(s) to be discretized.
+        sampling_time : Symbol, Number
+            Time interval between two consecutive sampling instants.
+        var: Symbol
+            The complex variable of the z-transform used by the polynomials
+            of the transfer function.
+
+        Explanation
+        ===========
+
+        Where H(z) is the corresponding discretized transfer function,
+        discretized with the bilinear transform method.
+        H(z) is obtained from the continuous transfer function H(s)
+        by substituting $s(z) = \frac{2}{T}\frac{z-1}{z+1}$ into H(s), where T
+        is the sample time.
+
+        Examples
+        ========
+
+        >>> from sympy.physics.control.lti import TransferFunction, DiscreteTransferFunction
+        >>> from sympy.abc import s, z, L, R, T
+
+        >>> tf = TransferFunction(1, s*L + R, s)
+        >>> dttf = DiscreteTransferFunction.bilinear(tf, T, z)
+        >>> dttf.num
+        T*z/(2*(L + R*T/2)) + T/(2*(L + R*T/2))
+        >>> dttf.den
+        z + (-L + R*T/2)/(L + R*T/2)
+        >>> dttf.sampling_time
+        T
 
         """
-        return TransferFunction(expand(self.num), expand(self.den), self.var)
+        num, den = bilinear(cont_tf, sampling_time)
+        return cls.from_coeff_lists(num, den, var, sampling_time)
+
+    @classmethod
+    def forward_diff(cls, cont_tf, sampling_time, var):
+        r"""
+        Returns the discretized transfer function H(z) from a continuous
+        transfer function H(s).
+
+        Parameters
+        ==========
+
+        cont_tf : TransferFunction
+            The continuous transfer function H(s) to be discretized.
+        sampling_time : Symbol, Number
+            Time interval between two consecutive sampling instants.
+        var: Symbol
+            The complex variable of the z-transform used by the polynomials
+            of the transfer function.
+
+        Explanation
+        ===========
+
+        Where H(z) is the corresponding discretized transfer function,
+        discretized with the forward difference transform method.
+        H(z) is obtained from the continuous transfer function H(s)
+        by substituting $s(z) = \frac{z-1}{T}$ into H(s), where T is the
+        sample time.
+
+        Examples
+        ========
+
+        >>> from sympy.physics.control.lti import TransferFunction, DiscreteTransferFunction
+        >>> from sympy.abc import s, z, L, R, T
+
+        >>> tf = TransferFunction(1, s*L + R, s)
+        >>> dttf = DiscreteTransferFunction.forward_diff(tf, T, z)
+        >>> dttf.num
+        T/L
+        >>> dttf.den
+        z + (-L + R*T)/L
+        >>> dttf.sampling_time
+        T
+
+        """
+        num, den = forward_diff(cont_tf, sampling_time)
+        return cls.from_coeff_lists(num, den, var, sampling_time)
+
+    @classmethod
+    def backward_diff(cls, cont_tf, sampling_time, var):
+        r"""
+        Returns the discretized transfer function H(z) from a continuous
+        transfer function H(s).
+
+        Parameters
+        ==========
+
+        cont_tf : TransferFunction
+            The continuous transfer function H(s) to be discretized.
+        sampling_time : Symbol, Number
+            Time interval between two consecutive sampling instants.
+        var: Symbol
+            The complex variable of the z-transform used by the polynomials
+            of the transfer function.
+
+        Explanation
+        ===========
+
+        Where H(z) is the corresponding discretized transfer function,
+        discretized with the backward difference transform method.
+        H(z) is obtained from the continuous transfer function H(s)
+        by substituting $s(z) =  \frac{z-1}{Tz}$ into H(s), where T is the
+        sample time.
+
+        Examples
+        ========
+
+        >>> from sympy.physics.control.lti import TransferFunction, DiscreteTransferFunction
+        >>> from sympy.abc import s, z, L, R, T
+
+        >>> tf = TransferFunction(1, s*L + R, s)
+        >>> dttf = DiscreteTransferFunction.backward_diff(tf, T, z)
+        >>> dttf.num
+        T*z/(L + R*T)
+        >>> dttf.den
+        -L/(L + R*T) + z
+        >>> dttf.sampling_time
+        T
+
+        """
+        num, den = backward_diff(cont_tf, sampling_time)
+        return cls.from_coeff_lists(num, den, var, sampling_time)
 
     def dc_gain(self):
-        """
-        Computes the gain of the response as the frequency approaches zero.
-
-        The DC gain is infinite for systems with pure integrators.
-
-        Examples
-        ========
-
-        >>> from sympy.abc import s, p, a, b
-        >>> from sympy.physics.control.lti import TransferFunction
-        >>> tf1 = TransferFunction(s + 3, s**2 - 9, s)
-        >>> tf1.dc_gain()
-        -1/3
-        >>> tf2 = TransferFunction(p**2, p - 3 + p**3, p)
-        >>> tf2.dc_gain()
-        0
-        >>> tf3 = TransferFunction(a*p**2 - b, s + b, s)
-        >>> tf3.dc_gain()
-        (a*p**2 - b)/b
-        >>> tf4 = TransferFunction(1, s, s)
-        >>> tf4.dc_gain()
-        oo
-
+        r"""
+        See :func:`TransferFunctionBase.dc_gain`.
         """
         m = Mul(self.num, Pow(self.den, -1, evaluate=False), evaluate=False)
-        return limit(m, self.var, 0)
-
-    def poles(self):
-        """
-        Returns the poles of a transfer function.
-
-        Examples
-        ========
-
-        >>> from sympy.abc import s, p, a
-        >>> from sympy.physics.control.lti import TransferFunction
-        >>> tf1 = TransferFunction((p + 3)*(p - 1), (p - 1)*(p + 5), p)
-        >>> tf1.poles()
-        [-5, 1]
-        >>> tf2 = TransferFunction((1 - s)**2, (s**2 + 1)**2, s)
-        >>> tf2.poles()
-        [I, I, -I, -I]
-        >>> tf3 = TransferFunction(s**2, a*s + p, s)
-        >>> tf3.poles()
-        [-p/a]
-
-        """
-        return _roots(Poly(self.den, self.var), self.var)
-
-    def zeros(self):
-        """
-        Returns the zeros of a transfer function.
-
-        Examples
-        ========
-
-        >>> from sympy.abc import s, p, a
-        >>> from sympy.physics.control.lti import TransferFunction
-        >>> tf1 = TransferFunction((p + 3)*(p - 1), (p - 1)*(p + 5), p)
-        >>> tf1.zeros()
-        [-3, 1]
-        >>> tf2 = TransferFunction((1 - s)**2, (s**2 + 1)**2, s)
-        >>> tf2.zeros()
-        [1, 1]
-        >>> tf3 = TransferFunction(s**2, a*s + p, s)
-        >>> tf3.zeros()
-        [0, 0]
-
-        """
-        return _roots(Poly(self.num, self.var), self.var)
-
-    def eval_frequency(self, other):
-        """
-        Returns the system response at any point in the real or complex plane.
-
-        Examples
-        ========
-
-        >>> from sympy.abc import s, p, a
-        >>> from sympy.physics.control.lti import TransferFunction
-        >>> from sympy import I
-        >>> tf1 = TransferFunction(1, s**2 + 2*s + 1, s)
-        >>> omega = 0.1
-        >>> tf1.eval_frequency(I*omega)
-        1/(0.99 + 0.2*I)
-        >>> tf2 = TransferFunction(s**2, a*s + p, s)
-        >>> tf2.eval_frequency(2)
-        4/(2*a + p)
-        >>> tf2.eval_frequency(I*2)
-        -4/(2*I*a + p)
-        """
-        arg_num = self.num.subs(self.var, other)
-        arg_den = self.den.subs(self.var, other)
-        argnew = TransferFunction(arg_num, arg_den, self.var).to_expr()
-        return argnew.expand()
+        return limit(m, self.var, 1)
 
     def is_stable(self, cancel_poles_zeros=False):
-        """
-        Returns True if the transfer function is asymptotically stable;
-        else False.
-
-        This would not check the marginal or conditional stability
-        of the system.
-
-        Note: Also with cancel_poles_zeros = True, there could be unaccounted
-        pole-zero cancellations.
-
-        Parameters
-        ==========
-
-        cancel_poles_zeros : Boolean
-            If True, cancels common factors between numerator and denominator
-            before checking stability.
-
-        Examples
-        ========
-
-        >>> from sympy.abc import s, p, a
-        >>> from sympy import symbols
-        >>> from sympy.physics.control.lti import TransferFunction
-        >>> q, r = symbols('q, r', negative=True)
-        >>> tf1 = TransferFunction((1 - s)**2, (s + 1)**2, s)
-        >>> tf1.is_stable()
-        True
-        >>> tf2 = TransferFunction((1 - p)**2, (s**2 + 1)**2, s)
-        >>> tf2.is_stable()
-        False
-        >>> tf3 = TransferFunction(4, q*s - r, s)
-        >>> tf3.is_stable()
-        False
-        >>> tf4 = TransferFunction(p + 1, a*p - s**2, p)
-        >>> tf4.is_stable() is None   # Not enough info about the symbols to determine stability
-        True
-        >>> tf5 = TransferFunction((s+1)*(s-1), (s-1)*(s+2)*(s+4), s)
-        >>> tf5.is_stable()
-        False
-        >>> tf5.is_stable(cancel_poles_zeros = True)
-        True
-
-        """
-        tf = self.to_standard_form(cancel_poles_zeros)
-
-        conditions = tf.get_asymptotic_stability_conditions(cancel_poles_zeros)
-
-        try:
-            output = reduce_inequalities(conditions)
-        except NotImplementedError:
-            # If there are more than one symbols,
-            # reduce_inequalities could fail
-            return None
-
-        if output in (true, false):
-            return bool(output)
-
-        return None
-
-    def to_standard_form(self, cancel_poles_zeros=False):
         r"""
-        Return the transfer function in its standard form.
-
-        Standard form:
-
-        .. math::
-            \frac{a_n s^n + a_{n-1} s^{n-1} + \cdots + a_1 s + a_0}
-            {b_m s^m + b_{m-1} s^{m-1} + \cdots + b_1 s + b_0}
-
-        Note: Also with cancel_poles_zeros = True, there could be unaccounted
-        pole-zero cancellations.
-
-        Examples
-        ========
-        >>> from sympy import symbols
-        >>> from sympy.physics.control.lti import TransferFunction, Feedback
-        >>> s,k = symbols('s k')
-        >>> tf1 = TransferFunction(-2*s + 12, s**3 + 2*s**2 + 100*s, s)
-        >>> tf2 = TransferFunction(1, k, s)
-        >>> feedback = Feedback(tf1, tf2).doit()
-        >>> feedback
-        TransferFunction(k*(12 - 2*s)*(s**3 + 2*s**2 + 100*s), (s**3 + 2*s**2 + 100*s)*(k*(s**3 + 2*s**2 + 100*s) - 2*s + 12), s)
-        >>> feedback.to_standard_form(cancel_poles_zeros=True)
-        TransferFunction(-2*k*s + 12*k, k*s**3 + 2*k*s**2 + s*(100*k - 2) + 12, s)
-
+        See :func:`TransferFunctionBase.is_stable`.
         """
-        tf = self.expand()
+        return fuzzy_and(abs(pole) < 1 for pole in self.poles())
 
-        num = tf.num
-        den = tf.den
-        if cancel_poles_zeros:
-            num, den = cancel(tf.num / tf.den).as_numer_denom()
-
-        return TransferFunction(num.collect(self.var),
-                                den.collect(self.var), self.var)
-
-    def get_asymptotic_stability_conditions(self, cancel_poles_zeros = False):
+    def get_asymptotic_stability_conditions(self, cancel_poles_zeros=False):
+        r"""
+        See :func:`TransferFunctionBase.get_asymptotic_stability_conditions`.
         """
-        Returns the asymptotic stability conditions for
-        the transfer function.
+        # TODO
+        raise NotImplementedError("""
+            The asymptotic stability conditions for the discrete transfer
+            function model are not implemented yet.
+            """)
 
-        Notes:
+    def _eval_rewrite_as_DiscreteStateSpace(self, *args):
+        """
+        Returns the equivalent space model of the transfer function model.
+        The state space model will be returned in the controllable canonical
+        form.
 
-        - Also with cancel_poles_zeros = True, the set generated by the
-          inequalities may be a subset of the real asymptotic stability
-          conditions set due to potentially unaccounted pole-zero cancellations.
-        - This method assumes that the leading coefficient is non-zero.
-          In the opposite case, additional verification is required.
-
-        Parameters
-        ==========
-
-        cancel_poles_zeros : Boolean
-            If True, cancels common factors between numerator and denominator
-            before checking stability.
+        Unlike the space state to transfer function model conversion, the
+        transfer function to state space model conversion is not unique.
+        There can be multiple state space representations of a given transfer function model.
 
         Examples
         ========
 
-        >>> from sympy import symbols, solve, reduce_inequalities
-        >>> from sympy.abc import s
-        >>> from sympy.physics.control.lti import TransferFunction, Feedback
-
-        >>> b1, b2, b3, b4 = symbols('b_1 b_2 b_3 b_4')
-        >>> p1 = b1*s**3 + b2*s**2 + b3*s + b4
-        >>> tf1 = TransferFunction(1, p1, s)
-        >>> tf1.get_asymptotic_stability_conditions()
-        [b_1*b_2 > 0, b_2**2*(-b_1*b_4 + b_2*b_3) > 0, b_2*b_4*(-b_1*b_4 + b_2*b_3)**3 > 0]
-
-        >>> p2 = s**4 + 3*s**3 + 6*s**2 + 12*s + 8
-        >>> solve(p2)
-        [-2, -1, -2*I, 2*I]
-        >>> tf2 = TransferFunction(1, p2, s)
-        >>> tf2.get_asymptotic_stability_conditions()
-        [True, True, False]
-
-        >>> p3 = s**4 + 17*s**3 + 137/2*s**2 + 213/2*s + 54
-        >>> solve(p3)
-        [-12.0, -1.0, -2.0 - 0.707106781186548*I, -2.0 + 0.707106781186548*I]
-        >>> tf3 = TransferFunction(1, p3, s)
-        >>> tf3.get_asymptotic_stability_conditions()
-        [True, True, True, True]
-
-        >>> k = symbols('k')
-        >>> tf4 = TransferFunction(-20*s + 20, s**3 + 2*s**2 + 100*s, s)
-        >>> tf5 = TransferFunction(1, k, s)
-        >>> feedback = Feedback(tf4, tf5).doit()
-        >>> ineq = feedback.get_asymptotic_stability_conditions(cancel_poles_zeros = True)
-        >>> ineq
-        [2*k**2 > 0, 4*k**2*(2*k*(100*k - 20) - 20*k) > 0, 40*k*(2*k*(100*k - 20) - 20*k)**3 > 0]
-        >>> reduce_inequalities(ineq)
-        (3/10 < k) & (k < oo)
+        >>> from sympy.abc import z
+        >>> from sympy.physics.control import DiscreteTransferFunction, DiscreteStateSpace
+        >>> dtf = DiscreteTransferFunction(z**2 + 1, z**3 + z*2 + 10, z, 0.1)
+        >>> dtf.rewrite(DiscreteStateSpace)
+        DiscreteStateSpace(Matrix([
+        [  0,  1, 0],
+        [  0,  0, 1],
+        [-10, -2, 0]]), Matrix([
+        [0],
+        [0],
+        [1]]), Matrix([[1, 0, 1]]), Matrix([[0]]), 0.1)
 
         """
-        standard_form = self.to_standard_form(cancel_poles_zeros)
+        A, B, C, D = self._StateSpace_matrices_equivalent()
+        return DiscreteStateSpace(A, B, C, D, self.sampling_time)
 
-        return negative_real_part_conditions(standard_form.den, self.var)
-
-    def __add__(self, other):
-        if hasattr(other, "is_StateSpace_object") and other.is_StateSpace_object:
-            return Parallel(self, other)
-        elif isinstance(other, (TransferFunction, Series, Feedback)):
-            if not self.var == other.var:
-                raise ValueError(filldedent("""
-                    All the transfer functions should use the same complex variable
-                    of the Laplace transform."""))
-            return Parallel(self, other)
-        elif isinstance(other, Parallel):
-            if not self.var == other.var:
-                raise ValueError(filldedent("""
-                    All the transfer functions should use the same complex variable
-                    of the Laplace transform."""))
-            arg_list = list(other.args)
-            return Parallel(self, *arg_list)
-        else:
-            raise ValueError("TransferFunction cannot be added with {}.".
-                format(type(other)))
-
-    def __radd__(self, other):
-        return self + other
-
-    def __sub__(self, other):
-        if hasattr(other, "is_StateSpace_object") and other.is_StateSpace_object:
-            return Parallel(self, -other)
-        elif isinstance(other, (TransferFunction, Series)):
-            if not self.var == other.var:
-                raise ValueError(filldedent("""
-                    All the transfer functions should use the same complex variable
-                    of the Laplace transform."""))
-            return Parallel(self, -other)
-        elif isinstance(other, Parallel):
-            if not self.var == other.var:
-                raise ValueError(filldedent("""
-                    All the transfer functions should use the same complex variable
-                    of the Laplace transform."""))
-            arg_list = [-i for i in list(other.args)]
-            return Parallel(self, *arg_list)
-        else:
-            raise ValueError("{} cannot be subtracted from a TransferFunction."
-                .format(type(other)))
-
-    def __rsub__(self, other):
-        return -self + other
-
-    def __mul__(self, other):
-        if hasattr(other, "is_StateSpace_object") and other.is_StateSpace_object:
-            return Series(self, other)
-        elif isinstance(other, (TransferFunction, Parallel, Feedback)):
-            if not self.var == other.var:
-                raise ValueError(filldedent("""
-                    All the transfer functions should use the same complex variable
-                    of the Laplace transform."""))
-            return Series(self, other)
-        elif isinstance(other, Series):
-            if not self.var == other.var:
-                raise ValueError(filldedent("""
-                    All the transfer functions should use the same complex variable
-                    of the Laplace transform."""))
-            arg_list = list(other.args)
-            return Series(self, *arg_list)
-        else:
-            raise ValueError("TransferFunction cannot be multiplied with {}."
-                .format(type(other)))
-
-    __rmul__ = __mul__
-
-    def __truediv__(self, other):
-        if isinstance(other, TransferFunction):
-            if not self.var == other.var:
-                raise ValueError(filldedent("""
-                    All the transfer functions should use the same complex variable
-                    of the Laplace transform."""))
-            return Series(self, TransferFunction(other.den, other.num, self.var))
-        elif (isinstance(other, Parallel) and len(other.args
-                ) == 2 and isinstance(other.args[0], TransferFunction)
-            and isinstance(other.args[1], (Series, TransferFunction))):
-
-            if not self.var == other.var:
-                raise ValueError(filldedent("""
-                    Both TransferFunction and Parallel should use the
-                    same complex variable of the Laplace transform."""))
-            if other.args[1] == self:
-                # plant and controller with unit feedback.
-                return Feedback(self, other.args[0])
-            other_arg_list = list(other.args[1].args) if isinstance(
-                other.args[1], Series) else other.args[1]
-            if other_arg_list == other.args[1]:
-                return Feedback(self, other_arg_list)
-            elif self in other_arg_list:
-                other_arg_list.remove(self)
-            else:
-                return Feedback(self, Series(*other_arg_list))
-
-            if len(other_arg_list) == 1:
-                return Feedback(self, *other_arg_list)
-            else:
-                return Feedback(self, Series(*other_arg_list))
-        else:
-            raise ValueError("TransferFunction cannot be divided by {}.".
-                format(type(other)))
-
-    __rtruediv__ = __truediv__
-
-    def __pow__(self, p):
-        p = sympify(p)
-        if not p.is_Integer:
-            raise ValueError("Exponent must be an integer.")
-        if p is S.Zero:
-            return TransferFunction(1, 1, self.var)
-        elif p > 0:
-            num_, den_ = self.num**p, self.den**p
-        else:
-            p = abs(p)
-            num_, den_ = self.den**p, self.num**p
-
-        return TransferFunction(num_, den_, self.var)
-
-    def __neg__(self):
-        return TransferFunction(-self.num, self.den, self.var)
+    def _eval_rewrite_as_StateSpace(self, *args):
+        raise TypeError("""
+            The discrete transfer function model cannot be rewritten as a
+            continuous-time state space model.
+            """)
 
     @property
-    def is_proper(self):
-        """
-        Returns True if degree of the numerator polynomial is less than
-        or equal to degree of the denominator polynomial, else False.
+    def sampling_time(self):
+        """Returns the sampling time of the DiscreteTransferFunction."""
+        return self._sampling_time
 
-        Examples
-        ========
-
-        >>> from sympy.abc import s, p, a, b
-        >>> from sympy.physics.control.lti import TransferFunction
-        >>> tf1 = TransferFunction(b*s**2 + p**2 - a*p + s, b - p**2, s)
-        >>> tf1.is_proper
-        False
-        >>> tf2 = TransferFunction(p**2 - 4*p, p**3 + 3*p + 2, p)
-        >>> tf2.is_proper
-        True
-
-        """
-        return degree(self.num, self.var) <= degree(self.den, self.var)
-
-    @property
-    def is_strictly_proper(self):
-        """
-        Returns True if degree of the numerator polynomial is strictly less
-        than degree of the denominator polynomial, else False.
-
-        Examples
-        ========
-
-        >>> from sympy.abc import s, p, a, b
-        >>> from sympy.physics.control.lti import TransferFunction
-        >>> tf1 = TransferFunction(a*p**2 + b*s, s - p, s)
-        >>> tf1.is_strictly_proper
-        False
-        >>> tf2 = TransferFunction(s**3 - 2, s**4 + 5*s + 6, s)
-        >>> tf2.is_strictly_proper
-        True
-
-        """
-        return degree(self.num, self.var) < degree(self.den, self.var)
-
-    @property
-    def is_biproper(self):
-        """
-        Returns True if degree of the numerator polynomial is equal to
-        degree of the denominator polynomial, else False.
-
-        Examples
-        ========
-
-        >>> from sympy.abc import s, p, a, b
-        >>> from sympy.physics.control.lti import TransferFunction
-        >>> tf1 = TransferFunction(a*p**2 + b*s, s - p, s)
-        >>> tf1.is_biproper
-        True
-        >>> tf2 = TransferFunction(p**2, p + a, p)
-        >>> tf2.is_biproper
-        False
-
-        """
-        return degree(self.num, self.var) == degree(self.den, self.var)
-
-    def to_expr(self):
-        """
-        Converts a ``TransferFunction`` object to SymPy Expr.
-
-        Examples
-        ========
-
-        >>> from sympy.abc import s, p, a, b
-        >>> from sympy.physics.control.lti import TransferFunction
-        >>> from sympy import Expr
-        >>> tf1 = TransferFunction(s, a*s**2 + 1, s)
-        >>> tf1.to_expr()
-        s/(a*s**2 + 1)
-        >>> isinstance(_, Expr)
-        True
-        >>> tf2 = TransferFunction(1, (p + 3*b)*(b - p), p)
-        >>> tf2.to_expr()
-        1/((b - p)*(3*b + p))
-        >>> tf3 = TransferFunction((s - 2)*(s - 3), (s - 1)*(s - 2)*(s - 3), s)
-        >>> tf3.to_expr()
-        ((s - 3)*(s - 2))/(((s - 3)*(s - 2)*(s - 1)))
-
-        """
-
-        if self.num != 1:
-            return Mul(self.num, Pow(self.den, -1, evaluate=False), evaluate=False)
-        else:
-            return Pow(self.den, -1, evaluate=False)
-
+    _is_continuous = False
 
 class PIDController(TransferFunction):
     r"""
@@ -1516,8 +2290,13 @@ class PIDController(TransferFunction):
         num = kp*tf*var**2 + kp*var + ki*tf*var + ki + kd*var**2
         den = tf*var**2 + var
         obj = TransferFunction.__new__(cls, num, den, var)
-        obj._kp, obj._ki, obj._kd, obj._tf = kp, ki, kd, tf
         return obj
+
+    def __init__(self, kp=Symbol('kp'), ki=Symbol('ki'), kd=Symbol('kd'), tf=0, var=Symbol('s')):
+        self._kp = kp
+        self._ki = ki
+        self._kd = kd
+        self._tf = tf
 
     def __repr__(self):
         return f"PIDController({self.kp}, {self.ki}, {self.kd}, {self.tf}, {self.var})"
@@ -1558,6 +2337,7 @@ class PIDController(TransferFunction):
         """
         return TransferFunction(self.num, self.den, self.var)
 
+    _is_continuous = True
 
 def _flatten_args(args, _cls):
     temp_args = []
@@ -1581,6 +2361,30 @@ def _dummify_args(_arg, var):
 
     return dummy_arg_list, dummy_dict
 
+def _any_state_space_systems(arg_list: tuple) -> bool:
+    """
+    Check if there are any state space objects in the argument list.
+    If there are, return True, else return False.
+
+    Systems are considered to be state space systems if they are instances of
+    StateSpaceBase or have an attribute `is_StateSpace_object` that is True.
+
+    """
+    return any(isinstance(arg, StateSpaceBase) or
+               (hasattr(arg, 'is_StateSpace_object') and
+                arg.is_StateSpace_object) for arg in arg_list)
+
+def _are_input_output_compatible(args):
+    """
+    Check if the input and output of the systems are compatible for series
+    connection. The input of the second system should match the output of the
+    first system.
+
+    """
+    for i in range(1, len(args)):
+        if args[i].num_inputs != args[i-1].num_outputs:
+            return False
+    return True
 
 class Series(SISOLinearTimeInvariant):
     r"""
@@ -1678,26 +2482,30 @@ class Series(SISOLinearTimeInvariant):
 
     """
     def __new__(cls, *args, evaluate=False):
-
         args = _flatten_args(args, Series)
-        # For StateSpace series connection
-        if args and any(isinstance(arg, StateSpace) or (hasattr(arg, 'is_StateSpace_object')
-                                            and arg.is_StateSpace_object)for arg in args):
-            # Check for SISO
-            if (args[0].num_inputs == 1) and (args[-1].num_outputs == 1):
-                # Check the interconnection
-                for i in range(1, len(args)):
-                    if args[i].num_inputs != args[i-1].num_outputs:
-                        raise ValueError(filldedent("""Systems with incompatible inputs and outputs
-                            cannot be connected in Series."""))
-                cls._is_series_StateSpace = True
-            else:
-                raise ValueError("To use Series connection for MIMO systems use MIMOSeries instead.")
-        else:
-            cls._is_series_StateSpace = False
-            cls._check_args(args)
-
+        _check_time_compatibility(args)
         obj = super().__new__(cls, *args)
+
+        # For StateSpace series connection
+        if args and _any_state_space_systems(args):
+            # Check for SISO
+            if any(not arg.is_SISO for arg in args):
+                raise ValueError(
+                    filldedent("""To use Series connection for MIMO systems use
+                               MIMOSeries instead."""))
+            # Check the interconnection
+            if not _are_input_output_compatible(args):
+                raise ValueError(
+                    filldedent("""
+                        Systems with incompatible inputs and outputs
+                        cannot be connected in Series.
+                        """))
+            obj._is_series_StateSpace = True
+        else:
+            obj._is_series_StateSpace = False
+            obj._check_args(args)
+
+        obj._is_continuous = args[0].is_continuous
 
         return obj.doit() if evaluate else obj
 
@@ -1730,8 +2538,8 @@ class Series(SISOLinearTimeInvariant):
 
     def doit(self, **hints):
         """
-        Returns the resultant transfer function or StateSpace obtained after evaluating
-        the series interconnection.
+        Returns the resultant transfer function or state space obtained after
+        evaluating the series interconnection.
 
         Examples
         ========
@@ -1748,37 +2556,53 @@ class Series(SISOLinearTimeInvariant):
         Notes
         =====
 
-        If a series connection contains only TransferFunction components, the equivalent system returned
-        will be a TransferFunction. However, if a StateSpace object is used in any of the arguments,
-        the output will be a StateSpace object.
+        If a series connection contains only TransferFunctionBase components,
+        the equivalent system returned will be a transfer function. However, if
+        a StateSpaceBase object is used in any of the arguments,
+        the output will be a state space object.
 
         """
         # Check if the system is a StateSpace
         if self._is_series_StateSpace:
             # Return the equivalent StateSpace model
+            ss_class = StateSpace if self.is_continuous else DiscreteStateSpace
+
             res = self.args[0]
-            if not isinstance(res, StateSpace):
-                res = res.doit().rewrite(StateSpace)
+            if not isinstance(res, ss_class):
+                res = res.doit().rewrite(ss_class)
             for arg in self.args[1:]:
-                if not isinstance(arg, StateSpace):
-                    arg = arg.doit().rewrite(StateSpace)
-                else:
-                    arg = arg.doit()
-                arg = arg.doit()
+                if not isinstance(arg, ss_class):
+                    arg = arg.doit().rewrite(ss_class)
                 res = arg * res
-                return res
+            return res
 
         _num_arg = (arg.doit().num for arg in self.args)
         _den_arg = (arg.doit().den for arg in self.args)
         res_num = Mul(*_num_arg, evaluate=True)
         res_den = Mul(*_den_arg, evaluate=True)
-        return TransferFunction(res_num, res_den, self.var)
+
+        sampling_time = self.args[0].sampling_time
+        return create_transfer_function(res_num, res_den, self.var, sampling_time)
 
     def _eval_rewrite_as_TransferFunction(self, *args, **kwargs):
+        if not self.is_continuous:
+            raise TypeError("""
+                    Cannot rewrite a discrete-time Series object as a
+                    TransferFunction.""")
         if self._is_series_StateSpace:
             return self.doit().rewrite(TransferFunction)[0][0]
         return self.doit()
 
+    def _eval_rewrite_as_DiscreteTransferFunction(self, *args, **kwargs):
+        if self.is_continuous:
+            raise TypeError("""
+                    Cannot rewrite a continuous-time Series object as a
+                    DiscreteTransferFunction.""")
+        if self._is_series_StateSpace:
+            return self.doit().rewrite(DiscreteTransferFunction)[0][0]
+        return self.doit()
+
+    @_compatibility_decorator
     @_check_other_SISO
     def __add__(self, other):
 
@@ -1790,33 +2614,42 @@ class Series(SISOLinearTimeInvariant):
 
     __radd__ = __add__
 
+    @_compatibility_decorator
     @_check_other_SISO
     def __sub__(self, other):
         return self + (-other)
 
+    @_compatibility_decorator
     def __rsub__(self, other):
         return -self + other
 
+    @_compatibility_decorator
     @_check_other_SISO
     def __mul__(self, other):
 
         arg_list = list(self.args)
         return Series(*arg_list, other)
 
+    @_compatibility_decorator
     def __truediv__(self, other):
-        if isinstance(other, TransferFunction):
-            return Series(*self.args, TransferFunction(other.den, other.num, other.var))
+        tf_class = TransferFunction if self.is_continuous\
+                            else DiscreteTransferFunction
+
+        if isinstance(other, TransferFunctionBase):
+            return Series(*self.args, create_transfer_function(other.den, other.num,
+                                             other.var, other.sampling_time))
         elif isinstance(other, Series):
-            tf_self = self.rewrite(TransferFunction)
-            tf_other = other.rewrite(TransferFunction)
+            tf_self = self.rewrite(tf_class)
+            tf_other = other.rewrite(tf_class)
             return tf_self / tf_other
         elif (isinstance(other, Parallel) and len(other.args) == 2
-            and isinstance(other.args[0], TransferFunction) and isinstance(other.args[1], Series)):
+            and isinstance(other.args[0], tf_class) and \
+                isinstance(other.args[1], Series)):
 
             if not self.var == other.var:
                 raise ValueError(filldedent("""
-                    All the transfer functions should use the same complex variable
-                    of the Laplace transform."""))
+                    All the transfer functions should use the same complex
+                    variable of the Laplace transform or z-transform."""))
             self_arg_list = set(self.args)
             other_arg_list = set(other.args[1].args)
             res = list(self_arg_list ^ other_arg_list)
@@ -1830,7 +2663,7 @@ class Series(SISOLinearTimeInvariant):
             raise ValueError("This transfer function expression is invalid.")
 
     def __neg__(self):
-        return Series(TransferFunction(-1, 1, self.var), self)
+        return Series(create_transfer_function(-1, 1, self.var, self.sampling_time), self)
 
     def to_expr(self):
         """Returns the equivalent ``Expr`` object."""
@@ -1915,10 +2748,9 @@ class Series(SISOLinearTimeInvariant):
     def is_StateSpace_object(self):
         return self._is_series_StateSpace
 
-def _mat_mul_compatible(*args):
-    """To check whether shapes are compatible for matrix mul."""
-    return all(args[i].num_outputs == args[i+1].num_inputs for i in range(len(args)-1))
-
+    @property
+    def sampling_time(self):
+        return self.args[0].sampling_time
 
 class MIMOSeries(MIMOLinearTimeInvariant):
     r"""
@@ -2049,27 +2881,27 @@ class MIMOSeries(MIMOLinearTimeInvariant):
 
     """
     def __new__(cls, *args, evaluate=False):
-
-        if args and any(isinstance(arg, StateSpace) or (hasattr(arg, 'is_StateSpace_object')
-                                            and arg.is_StateSpace_object) for arg in args):
+        args = _flatten_args(args, MIMOSeries)
+        obj = super().__new__(cls, *args)
+        if args and _any_state_space_systems(args):
             # Check compatibility
-            for i in range(1, len(args)):
-                if args[i].num_inputs != args[i - 1].num_outputs:
-                    raise ValueError(filldedent("""Systems with incompatible inputs and outputs
-                        cannot be connected in MIMOSeries."""))
-            obj = super().__new__(cls, *args)
-            cls._is_series_StateSpace = True
+            if not _are_input_output_compatible(args):
+                raise ValueError(filldedent("""
+                    Systems with incompatible inputs and outputs
+                    cannot be connected in MIMOSeries."""))
+            obj._is_series_StateSpace = True
+
         else:
             cls._check_args(args)
-            cls._is_series_StateSpace = False
+            obj._is_series_StateSpace = False
 
-            if _mat_mul_compatible(*args):
-                obj = super().__new__(cls, *args)
-
-            else:
+            if not _are_input_output_compatible(args):
                 raise ValueError(filldedent("""
                     Number of input signals do not match the number
                     of output signals of adjacent systems for some args."""))
+
+        _check_time_compatibility(args)
+        obj._is_continuous = args[0].is_continuous
 
         return obj.doit() if evaluate else obj
 
@@ -2116,8 +2948,9 @@ class MIMOSeries(MIMOLinearTimeInvariant):
     def doit(self, cancel=False, **kwargs):
         """
         Returns the resultant obtained after evaluating the MIMO systems arranged
-        in a series configuration. For TransferFunction systems it returns a TransferFunctionMatrix
-        and for StateSpace systems it returns the resultant StateSpace system.
+        in a series configuration.
+        For transfer function systems it returns a TransferFunctionMatrix
+        and for state space systems it returns the resultant state space system.
 
         Examples
         ========
@@ -2134,14 +2967,13 @@ class MIMOSeries(MIMOLinearTimeInvariant):
         """
         if self._is_series_StateSpace:
             # Return the equivalent StateSpace model
+            ss_class = StateSpace if self.is_continuous else DiscreteStateSpace
             res = self.args[0]
-            if not isinstance(res, StateSpace):
-                res = res.doit().rewrite(StateSpace)
+            if not isinstance(res, ss_class):
+                res = res.doit().rewrite(ss_class)
             for arg in self.args[1:]:
-                if not isinstance(arg, StateSpace):
-                    arg = arg.doit().rewrite(StateSpace)
-                else:
-                    arg = arg.doit()
+                if not isinstance(arg, ss_class):
+                    arg = arg.doit().rewrite(ss_class)
                 res = arg * res
             return res
 
@@ -2153,12 +2985,15 @@ class MIMOSeries(MIMOLinearTimeInvariant):
 
         _dummy_args, _dummy_dict = _dummify_args(_arg, self.var)
         res = MatMul(*_dummy_args, evaluate=True)
-        temp_tfm = TransferFunctionMatrix.from_Matrix(res, self.var)
+        temp_tfm = TransferFunctionMatrix.from_Matrix(res, self.var,
+                                                      self.sampling_time)
         return temp_tfm.subs(_dummy_dict)
 
     def _eval_rewrite_as_TransferFunctionMatrix(self, *args, **kwargs):
+        tf_class = TransferFunction if self.is_continuous \
+            else DiscreteTransferFunction
         if self._is_series_StateSpace:
-            return self.doit().rewrite(TransferFunction)
+            return self.doit().rewrite(tf_class)
         return self.doit()
 
     @_check_other_MIMO
@@ -2195,6 +3030,9 @@ class MIMOSeries(MIMOLinearTimeInvariant):
         arg_list[0] = -arg_list[0]
         return MIMOSeries(*arg_list)
 
+    @property
+    def sampling_time(self):
+        return self.args[0].sampling_time
 
 class Parallel(SISOLinearTimeInvariant):
     r"""
@@ -2296,20 +3134,22 @@ class Parallel(SISOLinearTimeInvariant):
     """
 
     def __new__(cls, *args, evaluate=False):
-
         args = _flatten_args(args, Parallel)
-        # For StateSpace parallel connection
-        if args and any(isinstance(arg, StateSpace) or (hasattr(arg, 'is_StateSpace_object')
-                                                        and arg.is_StateSpace_object) for arg in args):
-            # Check for SISO
-            if all(arg.is_SISO for arg in args):
-                cls._is_parallel_StateSpace = True
-            else:
-                raise ValueError("To use Parallel connection for MIMO systems use MIMOParallel instead.")
-        else:
-            cls._is_parallel_StateSpace = False
-            cls._check_args(args)
         obj = super().__new__(cls, *args)
+        # For StateSpace parallel connection
+        if args and _any_state_space_systems(args):
+            # Check for SISO
+            if any(not arg.is_SISO for arg in args):
+                raise ValueError(filldedent("""
+                    To use Parallel connection for MIMO systems use
+                    MIMOParallel instead."""))
+            obj._is_parallel_StateSpace = True
+        else:
+            obj._is_parallel_StateSpace = False
+            obj._check_args(args)
+
+        _check_time_compatibility(args)
+        obj._is_continuous = args[0].is_continuous
 
         return obj.doit() if evaluate else obj
 
@@ -2360,24 +3200,46 @@ class Parallel(SISOLinearTimeInvariant):
         """
         if self._is_parallel_StateSpace:
             # Return the equivalent StateSpace model
+            ss_class = StateSpace if self.is_continuous else DiscreteStateSpace
+
             res = self.args[0].doit()
-            if not isinstance(res, StateSpace):
-                res = res.rewrite(StateSpace)
+            if not isinstance(res, ss_class):
+                res = res.rewrite(ss_class)
             for arg in self.args[1:]:
-                if not isinstance(arg, StateSpace):
-                    arg = arg.doit().rewrite(StateSpace)
+                if not isinstance(arg, ss_class):
+                    arg = arg.doit().rewrite(ss_class)
                 res += arg
             return res
 
         _arg = (arg.doit().to_expr() for arg in self.args)
         res = Add(*_arg).as_numer_denom()
-        return TransferFunction(*res, self.var)
+
+        sampling_time = self.args[0].sampling_time
+        return create_transfer_function(*res, self.var, sampling_time)
 
     def _eval_rewrite_as_TransferFunction(self, *args, **kwargs):
+        if not self.is_continuous:
+            raise TypeError("""
+                    Cannot rewrite a discrete-time Parallel object as a
+                    TransferFunction.""")
+        if not self.is_continuous:
+            raise TypeError("""
+                    Cannot rewrite a discrete-time Parallel object as a
+                    TransferFunction.""")
         if self._is_parallel_StateSpace:
             return self.doit().rewrite(TransferFunction)[0][0]
         return self.doit()
 
+    def _eval_rewrite_as_DiscreteTransferFunction(self, *args, **kwargs):
+        if self.is_continuous:
+            raise TypeError("""
+                    Cannot rewrite a continuous-time Parallel object as a
+                    DiscreteTransferFunction.""")
+        if self._is_parallel_StateSpace:
+            return self.doit().rewrite(DiscreteTransferFunction)[0][0]
+        return self.doit()
+
+    @_compatibility_decorator
     @_check_other_SISO
     def __add__(self, other):
 
@@ -2386,13 +3248,16 @@ class Parallel(SISOLinearTimeInvariant):
 
     __radd__ = __add__
 
+    @_compatibility_decorator
     @_check_other_SISO
     def __sub__(self, other):
         return self + (-other)
 
+    @_compatibility_decorator
     def __rsub__(self, other):
         return -self + other
 
+    @_compatibility_decorator
     @_check_other_SISO
     def __mul__(self, other):
 
@@ -2403,7 +3268,7 @@ class Parallel(SISOLinearTimeInvariant):
         return Series(self, other)
 
     def __neg__(self):
-        return Series(TransferFunction(-1, 1, self.var), self)
+        return Series(create_transfer_function(-1, 1, self.var, self.sampling_time), self)
 
     def to_expr(self):
         """Returns the equivalent ``Expr`` object."""
@@ -2488,6 +3353,9 @@ class Parallel(SISOLinearTimeInvariant):
     def is_StateSpace_object(self):
         return self._is_parallel_StateSpace
 
+    @property
+    def sampling_time(self):
+        return self.args[0].sampling_time
 
 class MIMOParallel(MIMOLinearTimeInvariant):
     r"""
@@ -2625,23 +3493,22 @@ class MIMOParallel(MIMOLinearTimeInvariant):
     """
 
     def __new__(cls, *args, evaluate=False):
-
         args = _flatten_args(args, MIMOParallel)
-
+        obj = super().__new__(cls, *args)
         # For StateSpace Parallel connection
-        if args and any(isinstance(arg, StateSpace) or (hasattr(arg, 'is_StateSpace_object')
-                                    and arg.is_StateSpace_object) for arg in args):
-            if any(arg.num_inputs != args[0].num_inputs or arg.num_outputs != args[0].num_outputs
-                   for arg in args[1:]):
-                raise ShapeError("Systems with incompatible inputs and outputs cannot be "
-                                 "connected in MIMOParallel.")
-            cls._is_parallel_StateSpace = True
+        if args and _any_state_space_systems(args):
+            if not _are_input_output_compatible(args):
+                raise ShapeError("Systems with incompatible inputs and outputs"
+                                 "cannot be connected in MIMOParallel.")
+            obj._is_parallel_StateSpace = True
         else:
-            cls._check_args(args)
+            obj._check_args(args)
             if any(arg.shape != args[0].shape for arg in args):
                 raise TypeError("Shape of all the args is not equal.")
-            cls._is_parallel_StateSpace = False
-        obj = super().__new__(cls, *args)
+            obj._is_parallel_StateSpace = False
+
+        _check_time_compatibility(args)
+        obj._is_continuous = args[0].is_continuous
 
         return obj.doit() if evaluate else obj
 
@@ -2688,8 +3555,8 @@ class MIMOParallel(MIMOLinearTimeInvariant):
 
     def doit(self, **hints):
         """
-        Returns the resultant transfer function matrix or StateSpace obtained after evaluating
-        the MIMO systems arranged in a parallel configuration.
+        Returns the resultant transfer function matrix or StateSpace obtained
+        after evaluating the MIMO systems arranged in a parallel configuration.
 
         Examples
         ========
@@ -2718,11 +3585,14 @@ class MIMOParallel(MIMOLinearTimeInvariant):
             return res
         _arg = (arg.doit()._expr_mat for arg in self.args)
         res = MatAdd(*_arg, evaluate=True)
-        return TransferFunctionMatrix.from_Matrix(res, self.var)
+        return TransferFunctionMatrix.from_Matrix(res, self.var,
+                                                  self.sampling_time)
 
     def _eval_rewrite_as_TransferFunctionMatrix(self, *args, **kwargs):
+        tf_class = TransferFunction if self.is_continuous \
+                                    else DiscreteTransferFunction
         if self._is_parallel_StateSpace:
-            return self.doit().rewrite(TransferFunction)
+            return self.doit().rewrite(tf_class)
         return self.doit()
 
     @_check_other_MIMO
@@ -2753,6 +3623,9 @@ class MIMOParallel(MIMOLinearTimeInvariant):
         arg_list = [-arg for arg in list(self.args)]
         return MIMOParallel(*arg_list)
 
+    @property
+    def sampling_time(self):
+        return self.args[0].sampling_time
 
 class Feedback(SISOLinearTimeInvariant):
     r"""
@@ -2763,14 +3636,14 @@ class Feedback(SISOLinearTimeInvariant):
     system or in simple words, the dynamical model representing the process
     to be controlled. The second argument, ``sys2``, is the feedback system
     and controls the fed back signal to ``sys1``. Both ``sys1`` and ``sys2``
-    can either be ``Series``, ``StateSpace`` or ``TransferFunction`` objects.
+    can either be ``Series``, state space or transfer function objects.
 
     Parameters
     ==========
 
-    sys1 : Series, StateSpace, TransferFunction
+    sys1 : Series, StateSpaceBase, TransferFunctionBase
         The feedforward path system.
-    sys2 : Series, StateSpace, TransferFunction, optional
+    sys2 : Series, StateSpaceBase, TransferFunctionBase, optional
         The feedback path system (often a feedback controller).
         It is the model sitting on the feedback path.
 
@@ -2786,14 +3659,14 @@ class Feedback(SISOLinearTimeInvariant):
 
     ValueError
         When ``sys1`` and ``sys2`` are not using the
-        same complex variable of the Laplace transform.
+        same complex variable of the Laplace transform or z-transform.
 
         When a combination of ``sys1`` and ``sys2`` yields
         zero denominator.
 
     TypeError
-        When either ``sys1`` or ``sys2`` is not a ``Series``, ``StateSpace`` or
-        ``TransferFunction`` object.
+        When either ``sys1`` or ``sys2`` is not a ``Series``, ``StateSpaceBase``
+        or ``TransferFunctionBase`` object.
 
     Examples
     ========
@@ -2874,18 +3747,20 @@ class Feedback(SISOLinearTimeInvariant):
     """
     def __new__(cls, sys1, sys2=None, sign=-1):
         if not sys2:
-            sys2 = TransferFunction(1, 1, sys1.var)
+            sys2 = create_transfer_function(1, 1, sys1.var, sys1.sampling_time)
 
-        if not isinstance(sys1, (TransferFunction, Series, StateSpace, Feedback)):
+        if not isinstance(sys1, (TransferFunctionBase, Series, StateSpaceBase,
+                                 Feedback)):
             raise TypeError("Unsupported type for `sys1` in Feedback.")
 
-        if not isinstance(sys2, (TransferFunction, Series, StateSpace, Feedback)):
+        if not isinstance(sys2, (TransferFunctionBase, Series, StateSpaceBase,
+                                 Feedback)):
             raise TypeError("Unsupported type for `sys2` in Feedback.")
 
         if not (sys1.num_inputs == sys1.num_outputs == sys2.num_inputs ==
                 sys2.num_outputs == 1):
-            raise ValueError("""To use Feedback connection for MIMO systems
-                            use MIMOFeedback instead.""")
+            raise ValueError(filldedent("""To use Feedback connection for MIMO systems
+                            use MIMOFeedback instead."""))
 
         if sign not in [-1, 1]:
             raise ValueError(filldedent("""
@@ -2893,17 +3768,24 @@ class Feedback(SISOLinearTimeInvariant):
                 either be 1 (positive feedback loop) or -1
                 (negative feedback loop)."""))
 
+        obj = super(SISOLinearTimeInvariant, cls).__new__(cls, sys1, sys2,
+                                                          _sympify(sign))
+
         if sys1.is_StateSpace_object or sys2.is_StateSpace_object:
-            cls.is_StateSpace_object = True
+            obj.is_StateSpace_object = True
         else:
             if Mul(sys1.to_expr(), sys2.to_expr()).simplify() == sign:
-                raise ValueError("The equivalent system will have zero denominator.")
+                raise ValueError(filldedent("""The equivalent system will have zero
+                                 denominator."""))
             if sys1.var != sys2.var:
-                raise ValueError(filldedent("""Both `sys1` and `sys2` should be using the
-                same complex variable."""))
-            cls.is_StateSpace_object = False
+                raise ValueError(filldedent("""Both `sys1` and `sys2` should be
+                    using the same complex variable."""))
+            obj.is_StateSpace_object = False
 
-        return super(SISOLinearTimeInvariant, cls).__new__(cls, sys1, sys2, _sympify(sign))
+        _check_time_compatibility([sys1, sys2])
+        obj._is_continuous = sys1.is_continuous
+
+        return obj
 
     def __repr__(self):
         return f"Feedback({self.sys1}, {self.sys2}, {self.sign})"
@@ -3006,7 +3888,7 @@ class Feedback(SISOLinearTimeInvariant):
         """
         Returns the denominator of the closed loop feedback model.
         """
-        unit = TransferFunction(1, 1, self.var)
+        unit = create_transfer_function(1, 1, self.var, self.args[0].sampling_time)
         arg_list = list(self.sys1.args) if isinstance(self.sys1, Series) else [self.sys1]
         if self.sign == 1:
             return Parallel(unit, -Series(self.sys2, *arg_list))
@@ -3095,8 +3977,10 @@ class Feedback(SISOLinearTimeInvariant):
 
         """
         if self.is_StateSpace_object:
-            sys1_ss = self.sys1.doit().rewrite(StateSpace)
-            sys2_ss = self.sys2.doit().rewrite(StateSpace)
+            ss_class = StateSpace if self.is_continuous else DiscreteStateSpace
+
+            sys1_ss = self.sys1.doit().rewrite(ss_class)
+            sys2_ss = self.sys2.doit().rewrite(ss_class)
             A1, B1, C1, D1 = sys1_ss.A, sys1_ss.B, sys1_ss.C, sys1_ss.D
             A2, B2, C2, D2 = sys2_ss.A, sys2_ss.B, sys2_ss.C, sys2_ss.D
 
@@ -3120,17 +4004,20 @@ class Feedback(SISOLinearTimeInvariant):
             B = Matrix.vstack(B1 * T2, B2 * D1 * T2)
             C = Matrix.hstack(T1 * C1, self.sign * D1 * E_C2)
             D = D1 * T2
-            return StateSpace(A, B, C, D)
+            return create_state_space(A, B, C, D, self.sampling_time)
 
         arg_list = list(self.sys1.args) if isinstance(self.sys1, Series) else [self.sys1]
         # F_n and F_d are resultant TFs of num and den of Feedback.
-        F_n, unit = self.sys1.doit(), TransferFunction(1, 1, self.sys1.var)
+        F_n = self.sys1.doit()
+        unit = create_transfer_function(1, 1, self.sys1.var, self.sys1.sampling_time)
+
         if self.sign == -1:
             F_d = Parallel(unit, Series(self.sys2, *arg_list)).doit()
         else:
             F_d = Parallel(unit, -Series(self.sys2, *arg_list)).doit()
 
-        _resultant_tf = TransferFunction(F_n.num * F_d.den, F_n.den * F_d.num, F_n.var)
+        _resultant_tf = create_transfer_function(F_n.num * F_d.den, F_n.den * F_d.num,
+                               F_n.var, self.sys1.sampling_time)
 
         if cancel:
             _resultant_tf = _resultant_tf.simplify()
@@ -3141,8 +4028,21 @@ class Feedback(SISOLinearTimeInvariant):
         return _resultant_tf
 
     def _eval_rewrite_as_TransferFunction(self, num, den, sign, **kwargs):
+        if not self.is_continuous:
+            raise TypeError("""
+                    Cannot rewrite a discrete-time Feedback object as a
+                    TransferFunction.""")
         if self.is_StateSpace_object:
             return self.doit().rewrite(TransferFunction)[0][0]
+        return self.doit()
+
+    def _eval_rewrite_as_DiscreteTransferFunction(self, *args, **kwargs):
+        if self.is_continuous:
+            raise TypeError("""
+                    Cannot rewrite a continuous-time Feedback object as a
+                    DiscreteTransferFunction.""")
+        if self.is_StateSpace_object:
+            return self.doit().rewrite(DiscreteTransferFunction)[0][0]
         return self.doit()
 
     def to_expr(self):
@@ -3169,6 +4069,10 @@ class Feedback(SISOLinearTimeInvariant):
     def __neg__(self):
         return Feedback(-self.sys1, -self.sys2, self.sign)
 
+    @property
+    def sampling_time(self):
+        return self.sys1.sampling_time
+
 
 def _is_invertible(a, b, sign):
     """
@@ -3189,9 +4093,9 @@ class MIMOFeedback(MIMOLinearTimeInvariant):
     Parameters
     ==========
 
-    sys1 : MIMOSeries, TransferFunctionMatrix, StateSpace
+    sys1 : MIMOSeries, TransferFunctionMatrix, StateSpaceBase
         The MIMO system placed on the feedforward path.
-    sys2 : MIMOSeries, TransferFunctionMatrix, StateSpace
+    sys2 : MIMOSeries, TransferFunctionMatrix, StateSpaceBase
         The system placed on the feedback path
         (often a feedback controller).
     sign : int, optional
@@ -3204,7 +4108,7 @@ class MIMOFeedback(MIMOLinearTimeInvariant):
 
     ValueError
         When ``sys1`` and ``sys2`` are not using the
-        same complex variable of the Laplace transform.
+        same complex variable of the Laplace transform or z-transform.
 
         Forward path model should have an equal number of inputs/outputs
         to the feedback path outputs/inputs.
@@ -3215,7 +4119,7 @@ class MIMOFeedback(MIMOLinearTimeInvariant):
 
     TypeError
         When either ``sys1`` or ``sys2`` is not a ``MIMOSeries``,
-        ``TransferFunctionMatrix`` or a ``StateSpace`` object.
+        ``TransferFunctionMatrix`` or a ``StateSpaceBase`` object.
 
     Examples
     ========
@@ -3320,10 +4224,12 @@ class MIMOFeedback(MIMOLinearTimeInvariant):
 
     """
     def __new__(cls, sys1, sys2, sign=-1):
-        if not isinstance(sys1, (TransferFunctionMatrix, MIMOSeries, StateSpace)):
+        if not isinstance(sys1,
+                          (TransferFunctionMatrix, MIMOSeries, StateSpaceBase)):
             raise TypeError("Unsupported type for `sys1` in MIMO Feedback.")
 
-        if not isinstance(sys2, (TransferFunctionMatrix, MIMOSeries, StateSpace)):
+        if not isinstance(sys2,
+                          (TransferFunctionMatrix, MIMOSeries, StateSpaceBase)):
             raise TypeError("Unsupported type for `sys2` in MIMO Feedback.")
 
         if sys1.num_inputs != sys2.num_outputs or \
@@ -3338,19 +4244,24 @@ class MIMOFeedback(MIMOLinearTimeInvariant):
                 either be 1 (positive feedback loop) or -1
                 (negative feedback loop)."""))
 
+        obj = super().__new__(cls, sys1, sys2, _sympify(sign))
+
         if sys1.is_StateSpace_object or sys2.is_StateSpace_object:
-            cls.is_StateSpace_object = True
+            obj.is_StateSpace_object = True
         else:
             if not _is_invertible(sys1, sys2, sign):
                 raise ValueError("Non-Invertible system inputted.")
-            cls.is_StateSpace_object = False
+            obj.is_StateSpace_object = False
 
-        if not cls.is_StateSpace_object and sys1.var != sys2.var:
+        if not obj.is_StateSpace_object and sys1.var != sys2.var:
             raise ValueError(filldedent("""
                 Both `sys1` and `sys2` should be using the
                 same complex variable."""))
 
-        return super().__new__(cls, sys1, sys2, _sympify(sign))
+        _check_time_compatibility([sys1, sys2])
+        obj._is_continuous = sys1.is_continuous
+
+        return obj
 
     @property
     def sys1(self):
@@ -3584,8 +4495,9 @@ class MIMOFeedback(MIMOLinearTimeInvariant):
 
         """
         if self.is_StateSpace_object:
-            sys1_ss = self.sys1.doit().rewrite(StateSpace)
-            sys2_ss = self.sys2.doit().rewrite(StateSpace)
+            ss_class = StateSpace if self.is_continuous else DiscreteStateSpace
+            sys1_ss = self.sys1.doit().rewrite(ss_class)
+            sys2_ss = self.sys2.doit().rewrite(ss_class)
             A1, B1, C1, D1 = sys1_ss.A, sys1_ss.B, sys1_ss.C, sys1_ss.D
             A2, B2, C2, D2 = sys2_ss.A, sys2_ss.B, sys2_ss.C, sys2_ss.D
 
@@ -3609,11 +4521,11 @@ class MIMOFeedback(MIMOLinearTimeInvariant):
             B = Matrix.vstack(B1 * T2, B2 * D1 * T2)
             C = Matrix.hstack(T1 * C1, self.sign * D1 * E_C2)
             D = D1 * T2
-            return StateSpace(A, B, C, D)
+            return create_state_space(A, B, C, D, self.sampling_time)
 
         _mat = self.sensitivity * self.sys1.doit()._expr_mat
 
-        _resultant_tfm = _to_TFM(_mat, self.var)
+        _resultant_tfm = _to_TFM(_mat, self.var, self.sampling_time)
 
         if cancel:
             _resultant_tfm = _resultant_tfm.simplify()
@@ -3629,10 +4541,20 @@ class MIMOFeedback(MIMOLinearTimeInvariant):
     def __neg__(self):
         return MIMOFeedback(-self.sys1, -self.sys2, self.sign)
 
+    @property
+    def sampling_time(self):
+        return self.sys1.sampling_time
 
-def _to_TFM(mat, var):
-    """Private method to convert ImmutableMatrix to TransferFunctionMatrix efficiently"""
-    to_tf = lambda expr: TransferFunction.from_rational_expression(expr, var)
+
+def _to_TFM(mat, var, sampling_time):
+    """Private method to convert ImmutableMatrix to TransferFunctionMatrix
+    efficiently"""
+    if sampling_time == 0:
+        to_tf = lambda expr: \
+            TransferFunction.from_rational_expression(expr,var)
+    else:
+        to_tf = lambda expr: \
+            DiscreteTransferFunction.from_rational_expression(expr,var, sampling_time)
     arg = [[to_tf(expr) for expr in row] for row in mat.tolist()]
     return TransferFunctionMatrix(arg)
 
@@ -3989,7 +4911,7 @@ class TransferFunctionMatrix(MIMOLinearTimeInvariant):
     See Also
     ========
 
-    TransferFunction, MIMOSeries, MIMOParallel, Feedback
+    DiscreteTransferFunction, TransferFunction, MIMOSeries, MIMOParallel, Feedback
 
     """
     def __new__(cls, arg):
@@ -4000,7 +4922,7 @@ class TransferFunctionMatrix(MIMOLinearTimeInvariant):
         except TypeError:
             raise ValueError(filldedent("""
                 `arg` param in TransferFunctionMatrix should
-                strictly be a nested list containing TransferFunction
+                strictly be a nested list containing TransferFunctionBase
                 objects."""))
         for row in arg:
             temp = []
@@ -4012,12 +4934,15 @@ class TransferFunctionMatrix(MIMOLinearTimeInvariant):
 
                 if var != element.var:
                     raise ValueError(filldedent("""
-                        Conflicting value(s) found for `var`. All TransferFunction
-                        instances in TransferFunctionMatrix should use the same
-                        complex variable in Laplace domain."""))
+                        Conflicting value(s) found for `var`.
+                        All TransferFunction instances in TransferFunctionMatrix
+                        should use the same complex variable in Laplace domain
+                        or z-domain."""))
 
                 temp.append(element.to_expr())
             expr_mat_arg.append(temp)
+
+        _check_time_compatibility([sys for row in arg for sys in row])
 
         if isinstance(arg, (tuple, list, Tuple)):
             # Making nested Tuple (sympy.core.containers.Tuple) from nested list or nested Python tuple
@@ -4026,25 +4951,33 @@ class TransferFunctionMatrix(MIMOLinearTimeInvariant):
         obj = super(TransferFunctionMatrix, cls).__new__(cls, arg)
         obj._expr_mat = ImmutableMatrix(expr_mat_arg)
         obj.is_StateSpace_object = False
+        obj._is_continuous = arg[0][0].is_continuous
+
         return obj
 
     @classmethod
-    def from_Matrix(cls, matrix, var):
+    def from_Matrix(cls, matrix, var, sampling_time=0):
         """
-        Creates a new ``TransferFunctionMatrix`` efficiently from a SymPy Matrix of ``Expr`` objects.
+        Creates a new ``TransferFunctionMatrix`` efficiently from a SymPy Matrix
+        of ``Expr`` objects.
 
         Parameters
         ==========
 
         matrix : ``ImmutableMatrix`` having ``Expr``/``Number`` elements.
         var : Symbol
-            Complex variable of the Laplace transform which will be used by the
-            all the ``TransferFunction`` objects in the ``TransferFunctionMatrix``.
+            Complex variable of the Laplace transform or z-transform which will
+            be used by the all the transfer function objects in the
+            ``TransferFunctionMatrix``.
+        sampling_time : Number, Symbol, optional
+            Sampling time for the discrete-time transfer function matrix.
+            Default is 0, which means that the transfer function matrix will be
+            treated as a continuous-time transfer function matrix.
 
         Examples
         ========
 
-        >>> from sympy.abc import s
+        >>> from sympy.abc import s, z
         >>> from sympy.physics.control.lti import TransferFunctionMatrix
         >>> from sympy import Matrix, pprint
         >>> M = Matrix([[s, 1/s], [1/(s+1), s]])
@@ -4061,9 +4994,22 @@ class TransferFunctionMatrix(MIMOLinearTimeInvariant):
         [[[], [0]], [[-1], []]]
         >>> M_tf.elem_zeros()
         [[[0], []], [[], [0]]]
+        >>> M_2 = Matrix([[z/(z-1), z/(z-8)], [z**2/(z**2-2+1), z]])
+        >>> M2_tf = TransferFunctionMatrix.from_Matrix(M_2, z, 0.1)
+        >>> pprint(M2_tf, use_unicode=False)
+        [  z       z  ]
+        [-----   -----]
+        [z - 1   z - 8]
+        [             ]
+        [   2         ]
+        [  z       z  ]
+        [------    -  ]
+        [ 2        1  ]
+        [z  - 1       ]{k}, sampling time: 0.1
+
 
         """
-        return _to_TFM(matrix, var)
+        return _to_TFM(matrix, var, sampling_time)
 
     @property
     def var(self):
@@ -4149,7 +5095,8 @@ class TransferFunctionMatrix(MIMOLinearTimeInvariant):
     @property
     def shape(self):
         """
-        Returns the shape of the transfer function matrix, that is, ``(# of outputs, # of inputs)``.
+        Returns the shape of the transfer function matrix, that is,
+        ``(# of outputs, # of inputs)``.
 
         Examples
         ========
@@ -4171,7 +5118,7 @@ class TransferFunctionMatrix(MIMOLinearTimeInvariant):
 
     def __neg__(self):
         neg = -self._expr_mat
-        return _to_TFM(neg, self.var)
+        return _to_TFM(neg, self.var, self.sampling_time)
 
     @_check_other_MIMO
     def __add__(self, other):
@@ -4196,20 +5143,33 @@ class TransferFunctionMatrix(MIMOLinearTimeInvariant):
     def __getitem__(self, key):
         trunc = self._expr_mat.__getitem__(key)
         if isinstance(trunc, ImmutableMatrix):
-            return _to_TFM(trunc, self.var)
-        return TransferFunction.from_rational_expression(trunc, self.var)
+            return _to_TFM(trunc, self.var, self.sampling_time)
+
+        if self.sampling_time == 0:
+            to_tf = lambda expr: \
+                TransferFunction.from_rational_expression(expr, self.var)
+        else:
+            to_tf = lambda expr: \
+                DiscreteTransferFunction.from_rational_expression(expr, self.var,
+                                                            self.sampling_time)
+        return to_tf(trunc)
 
     def transpose(self):
-        """Returns the transpose of the ``TransferFunctionMatrix`` (switched input and output layers)."""
+        """
+        Returns the transpose of the ``TransferFunctionMatrix``
+        (switched input and output layers).
+
+        """
         transposed_mat = self._expr_mat.transpose()
-        return _to_TFM(transposed_mat, self.var)
+        return _to_TFM(transposed_mat, self.var, self.sampling_time)
 
     def elem_poles(self):
         """
         Returns the poles of each element of the ``TransferFunctionMatrix``.
 
         .. note::
-            Actual poles of a MIMO system are NOT the poles of individual elements.
+            Actual poles of a MIMO system are NOT the poles of individual
+            elements.
 
         Examples
         ========
@@ -4232,14 +5192,16 @@ class TransferFunctionMatrix(MIMOLinearTimeInvariant):
         elem_zeros
 
         """
-        return [[element.poles() for element in row] for row in self.doit().args[0]]
+        return [[element.poles() for element in row] for row in \
+                                                        self.doit().args[0]]
 
     def elem_zeros(self):
         """
         Returns the zeros of each element of the ``TransferFunctionMatrix``.
 
         .. note::
-            Actual zeros of a MIMO system are NOT the zeros of individual elements.
+            Actual zeros of a MIMO system are NOT the zeros of individual
+            elements.
 
         Examples
         ========
@@ -4262,11 +5224,13 @@ class TransferFunctionMatrix(MIMOLinearTimeInvariant):
         elem_poles
 
         """
-        return [[element.zeros() for element in row] for row in self.doit().args[0]]
+        return [[element.zeros() for element in row] for row in \
+                                                        self.doit().args[0]]
 
     def eval_frequency(self, other):
         """
-        Evaluates system response of each transfer function in the ``TransferFunctionMatrix`` at any point in the real or complex plane.
+        Evaluates system response of each transfer function in the
+        ``TransferFunctionMatrix`` at any point in the real or complex plane.
 
         Examples
         ========
@@ -4298,77 +5262,123 @@ class TransferFunctionMatrix(MIMOLinearTimeInvariant):
         return [elem for tup in self.args[0] for elem in tup]
 
     def _eval_evalf(self, prec):
-        """Calls evalf() on each transfer function in the transfer function matrix"""
+        """
+        Calls evalf() on each transfer function in the transfer function
+        matrix
+
+        """
         dps = prec_to_dps(prec)
         mat = self._expr_mat.applyfunc(lambda a: a.evalf(n=dps))
-        return _to_TFM(mat, self.var)
+        return _to_TFM(mat, self.var, self.sampling_time)
 
     def _eval_simplify(self, **kwargs):
         """Simplifies the transfer function matrix"""
         simp_mat = self._expr_mat.applyfunc(lambda a: cancel(a, expand=False))
-        return _to_TFM(simp_mat, self.var)
+        return _to_TFM(simp_mat, self.var, self.sampling_time)
 
     def expand(self, **hints):
         """Expands the transfer function matrix"""
         expand_mat = self._expr_mat.expand(**hints)
-        return _to_TFM(expand_mat, self.var)
+        return _to_TFM(expand_mat, self.var, self.sampling_time)
 
-class StateSpace(LinearTimeInvariant):
-    r"""
-    State space model (ssm) of a linear, time invariant control system.
+    @property
+    def sampling_time(self):
+        return self.args[0][0][0].sampling_time
 
-    Represents the standard state-space model with A, B, C, D as state-space matrices.
-    This makes the linear control system:
-
-        (1) x'(t) = A * x(t) + B * u(t);    x in R^n , u in R^k
-        (2) y(t)  = C * x(t) + D * u(t);    y in R^m
-
-    where u(t) is any input signal, y(t) the corresponding output, and x(t) the system's state.
+def create_state_space(A, B, C, D, sampling_time=0):
+    """
+    Creates a new state space object.
+    sampling_time == 0 means continuous time state space.
+    sampling_time > 0 means discrete time state space.
 
     Parameters
     ==========
 
-    A : Matrix
-        The State matrix of the state space model.
-    B : Matrix
-        The Input-to-State matrix of the state space model.
-    C : Matrix
-        The State-to-Output matrix of the state space model.
-    D : Matrix
-        The Feedthrough matrix of the state space model.
+
+    sampling_time : Symbol, Number, optional
+        Default is 0.
+        Time interval between two consecutive sampling instants.
+        If sampling_time == 0, it is a continuous time state space,
+        else it is a discrete time state space.
 
     Examples
     ========
 
     >>> from sympy import Matrix
-    >>> from sympy.physics.control import StateSpace
-
-    The easiest way to create a StateSpaceModel is via four matrices:
-
-    >>> A = Matrix([[1, 2], [1, 0]])
-    >>> B = Matrix([1, 1])
-    >>> C = Matrix([[0, 1]])
+    >>> from sympy.abc import t
+    >>> from sympy.physics.control.lti import create_state_space
+    >>> A = Matrix([[1,0],[0,1]])
+    >>> B = Matrix([1,0])
+    >>> C = Matrix([1,0]).T
     >>> D = Matrix([0])
-    >>> StateSpace(A, B, C, D)
+    >>> create_state_space(A, B, C, D)
     StateSpace(Matrix([
-    [1, 2],
-    [1, 0]]), Matrix([
+    [1, 0],
+    [0, 1]]), Matrix([
     [1],
-    [1]]), Matrix([[0, 1]]), Matrix([[0]]))
-
-    One can use less matrices. The rest will be filled with a minimum of zeros:
-
-    >>> StateSpace(A, B)
-    StateSpace(Matrix([
-    [1, 2],
-    [1, 0]]), Matrix([
+    [0]]), Matrix([[1, 0]]), Matrix([[0]]))
+    >>> create_state_space(A, B, C, D, t)
+    DiscreteStateSpace(Matrix([
+    [1, 0],
+    [0, 1]]), Matrix([
     [1],
-    [1]]), Matrix([[0, 0]]), Matrix([[0]]))
+    [0]]), Matrix([[1, 0]]), Matrix([[0]]), t)
 
     See Also
     ========
 
-    TransferFunction, TransferFunctionMatrix
+    StateSpace, DiscreteStateSpace
+
+    """
+    if sampling_time == 0:
+        return StateSpace(A, B, C, D)
+
+    return DiscreteStateSpace(A, B, C, D, sampling_time)
+
+class StateSpaceBase(LinearTimeInvariant, ABC):
+    r"""
+    Base class for state space objects.
+    This class is not meant to be used directly.
+
+    Explanation
+    ===========
+
+    State space model (ssm) of a linear, time invariant control system.
+
+    Represents the standard state-space model with A, B, C, D as state-space
+    matrices. This makes the linear control system:
+
+    For continuous-time systems:
+        (1) x'(t) = A * x(t) + B * u(t);    x in R^n , u in R^k
+        (2) y(t)  = C * x(t) + D * u(t);    y in R^m
+
+    For discrete-time systems:
+        (1) x[k+1] = A * x[k] + B * u[k];    x in R^n , u in R^k
+        (2) y[k]   = C * x[k] + D * u[k];    y in R^m
+
+    where u(t) or u[k] is any input signal, y(t) or y[k] the corresponding
+    output, and x(t) or x[k] the system's state.
+
+    Parameters
+    ==========
+
+    A : Matrix, optional
+        The State matrix of the state space model.
+    B : Matrix, optional
+        The Input-to-State matrix of the state space model.
+    C : Matrix, optional
+        The State-to-Output matrix of the state space model.
+    D : Matrix, optional
+        The Feedthrough matrix of the state space model.
+    *args, **kwargs:
+        Additional arguments and keyword arguments that are passed to the
+        parent class such as sampling time for discrete-time systems.
+
+    See Also
+    ========
+
+    StateSpace, DiscreteStateSpace, TransferFunction, DiscreteTransferFunction,
+    TransferFunctionMatrix
 
     References
     ==========
@@ -4377,7 +5387,12 @@ class StateSpace(LinearTimeInvariant):
     .. [2] https://in.mathworks.com/help/control/ref/ss.html
 
     """
-    def __new__(cls, A=None, B=None, C=None, D=None):
+    def __new__(cls, A=None, B=None, C=None, D=None, *args, **kwargs):
+        if cls is StateSpaceBase:
+            raise NotImplementedError(
+                """
+                The StateSpaceBase class is not meant to be used directly.
+                """)
         if A is None:
             A = zeros(1)
         if B is None:
@@ -4414,7 +5429,8 @@ class StateSpace(LinearTimeInvariant):
             if B.cols != D.cols:
                 raise ShapeError("Matrices B and D must have the same number of columns.")
 
-            obj = super(StateSpace, cls).__new__(cls, A, B, C, D)
+            obj = super(StateSpaceBase, cls).__new__(cls, A, B, C, D,
+                                                     *args, **kwargs)
             obj._A = A
             obj._B = B
             obj._C = C
@@ -4547,7 +5563,7 @@ class StateSpace(LinearTimeInvariant):
         2
 
         """
-        return self._A.rows
+        return self.A.rows
 
     @property
     def num_inputs(self):
@@ -4568,7 +5584,7 @@ class StateSpace(LinearTimeInvariant):
         1
 
         """
-        return self._D.cols
+        return self.D.cols
 
     @property
     def num_outputs(self):
@@ -4589,7 +5605,7 @@ class StateSpace(LinearTimeInvariant):
         1
 
         """
-        return self._D.rows
+        return self.D.rows
 
 
     @property
@@ -4597,113 +5613,17 @@ class StateSpace(LinearTimeInvariant):
         """Returns the shape of the equivalent StateSpace system."""
         return self.num_outputs, self.num_inputs
 
-    def dsolve(self, initial_conditions=None, input_vector=None, var=Symbol('t')):
-        r"""
-        Returns `y(t)` or output of StateSpace given by the solution of equations:
-            x'(t) = A * x(t) + B * u(t)
-            y(t)  = C * x(t) + D * u(t)
-
-        Parameters
-        ============
-
-        initial_conditions : Matrix
-            The initial conditions of `x` state vector. If not provided, it defaults to a zero vector.
-        input_vector : Matrix
-            The input vector for state space. If not provided, it defaults to a zero vector.
-        var : Symbol
-            The symbol representing time. If not provided, it defaults to `t`.
-
-        Examples
-        ==========
-
-        >>> from sympy import Matrix
-        >>> from sympy.physics.control import StateSpace
-        >>> A = Matrix([[-2, 0], [1, -1]])
-        >>> B = Matrix([[1], [0]])
-        >>> C = Matrix([[2, 1]])
-        >>> ip = Matrix([5])
-        >>> i = Matrix([0, 0])
-        >>> ss = StateSpace(A, B, C)
-        >>> ss.dsolve(input_vector=ip, initial_conditions=i).simplify()
-        Matrix([[15/2 - 5*exp(-t) - 5*exp(-2*t)/2]])
-
-        If no input is provided it defaults to solving the system with zero initial conditions and zero input.
-
-        >>> ss.dsolve()
-        Matrix([[0]])
-
-        References
-        ==========
-        .. [1] https://web.mit.edu/2.14/www/Handouts/StateSpaceResponse.pdf
-        .. [2] https://docs.sympy.org/latest/modules/solvers/ode.html#sympy.solvers.ode.systems.linodesolve
-
-        """
-
-        if not isinstance(var, Symbol):
-            raise ValueError("Variable for representing time must be a Symbol.")
-        if not initial_conditions:
-            initial_conditions = zeros(self._A.shape[0], 1)
-        elif initial_conditions.shape != (self._A.shape[0], 1):
-            raise ShapeError("Initial condition vector should have the same number of "
-                             "rows as the state matrix.")
-        if not input_vector:
-            input_vector = zeros(self._B.shape[1], 1)
-        elif input_vector.shape != (self._B.shape[1], 1):
-            raise ShapeError("Input vector should have the same number of "
-                             "columns as the input matrix.")
-        sol = linodesolve(A=self._A, t=var, b=self._B*input_vector, type='type2', doit=True)
-        mat1 = Matrix(sol)
-        mat2 = mat1.replace(var, 0)
-        free1 = self._A.free_symbols | self._B.free_symbols | input_vector.free_symbols
-        free2 = mat2.free_symbols
-        # Get all the free symbols form the matrix
-        dummy_symbols = list(free2-free1)
-        # Convert the matrix to a Coefficient matrix
-        r1, r2 = linear_eq_to_matrix(mat2, dummy_symbols)
-        s = linsolve((r1, initial_conditions+r2))
-        res_tuple = next(iter(s))
-        for ind, v in enumerate(res_tuple):
-            mat1 = mat1.replace(dummy_symbols[ind], v)
-        res = self._C*mat1 + self._D*input_vector
-        return res
-
     def _eval_evalf(self, prec):
         """
         Returns state space model where numerical expressions are evaluated into floating point numbers.
         """
         dps = prec_to_dps(prec)
-        return StateSpace(
+        return create_state_space(
             self._A.evalf(n = dps),
             self._B.evalf(n = dps),
             self._C.evalf(n = dps),
-            self._D.evalf(n = dps))
-
-    def _eval_rewrite_as_TransferFunction(self, *args):
-        """
-        Returns the equivalent Transfer Function of the state space model.
-
-        Examples
-        ========
-
-        >>> from sympy import Matrix
-        >>> from sympy.physics.control import TransferFunction, StateSpace
-        >>> A = Matrix([[-5, -1], [3, -1]])
-        >>> B = Matrix([2, 5])
-        >>> C = Matrix([[1, 2]])
-        >>> D = Matrix([0])
-        >>> ss = StateSpace(A, B, C, D)
-        >>> ss.rewrite(TransferFunction)
-        [[TransferFunction(12*s + 59, s**2 + 6*s + 8, s)]]
-
-        """
-        s = Symbol('s')
-        n = self._A.shape[0]
-        I = eye(n)
-        G = self._C*(s*I - self._A).solve(self._B) + self._D
-        G = G.simplify()
-        to_tf = lambda expr: TransferFunction.from_rational_expression(expr, s)
-        tf_mat = [[to_tf(expr) for expr in sublist] for sublist in G.tolist()]
-        return tf_mat
+            self._D.evalf(n = dps),
+            self.sampling_time)
 
     def __add__(self, other):
         """
@@ -4734,28 +5654,30 @@ class StateSpace(LinearTimeInvariant):
         """
         # Check for scalars
         if isinstance(other, (int, float, complex, Symbol)):
-            A = self._A
-            B = self._B
-            C = self._C
-            D = self._D.applyfunc(lambda element: element + other)
+            A = self.A
+            B = self.B
+            C = self.C
+            D = self.D.applyfunc(lambda element: element + other)
+            return create_state_space(A, B, C, D, self.sampling_time)
 
-        else:
-            # Check nature of system
-            if not isinstance(other, StateSpace):
-                raise ValueError("Addition is only supported for 2 State Space models.")
-            # Check dimensions of system
-            elif ((self.num_inputs != other.num_inputs) or (self.num_outputs != other.num_outputs)):
-                raise ShapeError("Systems with incompatible inputs and outputs cannot be added.")
+        # Check nature of system
+        if not isinstance(other, StateSpaceBase):
+            raise ValueError("Addition is only supported for 2 State Space models.")
+        # Check dimensions of system
+        elif ((self.num_inputs != other.num_inputs) or (self.num_outputs != other.num_outputs)):
+            raise ShapeError("Systems with incompatible inputs and outputs cannot be added.")
 
-            m1 = (self._A).row_join(zeros(self._A.shape[0], other._A.shape[-1]))
-            m2 = zeros(other._A.shape[0], self._A.shape[-1]).row_join(other._A)
+        _check_time_compatibility([self, other])
 
-            A = m1.col_join(m2)
-            B = self._B.col_join(other._B)
-            C = self._C.row_join(other._C)
-            D = self._D + other._D
+        m1 = (self.A).row_join(zeros(self.A.shape[0], other.A.shape[-1]))
+        m2 = zeros(other.A.shape[0], self.A.shape[-1]).row_join(other.A)
 
-        return StateSpace(A, B, C, D)
+        A = m1.col_join(m2)
+        B = self.B.col_join(other.B)
+        C = self.C.row_join(other.C)
+        D = self.D + other.D
+
+        return create_state_space(A, B, C, D, self.sampling_time)
 
     def __radd__(self, other):
         """
@@ -4838,7 +5760,8 @@ class StateSpace(LinearTimeInvariant):
         [5]]), Matrix([[-1, -2]]), Matrix([[0]]))
 
         """
-        return StateSpace(self._A, self._B, -self._C, -self._D)
+        return create_state_space(self.A, self.B, -self.C, -self.D,
+                               self.sampling_time)
 
     def __mul__(self, other):
         """
@@ -4864,28 +5787,30 @@ class StateSpace(LinearTimeInvariant):
         """
         # Check for scalars
         if isinstance(other, (int, float, complex, Symbol)):
-            A = self._A
-            B = self._B
-            C = self._C.applyfunc(lambda element: element*other)
-            D = self._D.applyfunc(lambda element: element*other)
+            A = self.A
+            B = self.B
+            C = self.C.applyfunc(lambda element: element*other)
+            D = self.D.applyfunc(lambda element: element*other)
+            return create_state_space(A, B, C, D, self.sampling_time)
 
-        else:
-            # Check nature of system
-            if not isinstance(other, StateSpace):
-                raise ValueError("Multiplication is only supported for 2 State Space models.")
-            # Check dimensions of system
-            elif self.num_inputs != other.num_outputs:
-                raise ShapeError("Systems with incompatible inputs and outputs cannot be multiplied.")
+        # Check nature of system
+        if not isinstance(other, StateSpaceBase):
+            raise ValueError("Multiplication is only supported for 2 State Space models.")
+        # Check dimensions of system
+        elif self.num_inputs != other.num_outputs:
+            raise ShapeError("Systems with incompatible inputs and outputs cannot be multiplied.")
 
-            m1 = (other._A).row_join(zeros(other._A.shape[0], self._A.shape[1]))
-            m2 = (self._B * other._C).row_join(self._A)
+        _check_time_compatibility([self, other])
 
-            A = m1.col_join(m2)
-            B = (other._B).col_join(self._B * other._D)
-            C = (self._D * other._C).row_join(self._C)
-            D = self._D * other._D
+        m1 = (other.A).row_join(zeros(other.A.shape[0], self.A.shape[1]))
+        m2 = (self.B * other.C).row_join(self.A)
 
-        return StateSpace(A, B, C, D)
+        A = m1.col_join(m2)
+        B = (other.B).col_join(self.B * other.D)
+        C = (self.D * other.C).row_join(self.C)
+        D = self.D * other.D
+
+        return create_state_space(A, B, C, D, self.sampling_time)
 
     def __rmul__(self, other):
         """
@@ -4910,23 +5835,23 @@ class StateSpace(LinearTimeInvariant):
 
         """
         if isinstance(other, (int, float, complex, Symbol)):
-            A = self._A
-            C = self._C
-            B = self._B.applyfunc(lambda element: element*other)
-            D = self._D.applyfunc(lambda element: element*other)
-            return StateSpace(A, B, C, D)
+            A = self.A
+            C = self.C
+            B = self.B.applyfunc(lambda element: element*other)
+            D = self.D.applyfunc(lambda element: element*other)
+            return create_state_space(A, B, C, D, self.sampling_time)
         else:
             return self*other
 
     def __repr__(self):
-        A_str = self._A.__repr__()
-        B_str = self._B.__repr__()
-        C_str = self._C.__repr__()
-        D_str = self._D.__repr__()
+        A_str = self.A.__repr__()
+        B_str = self.B.__repr__()
+        C_str = self.C.__repr__()
+        D_str = self.D.__repr__()
 
-        return f"StateSpace(\n{A_str},\n\n{B_str},\n\n{C_str},\n\n{D_str})"
+        return f"StateSpaceBase(\n{A_str},\n\n{B_str},\n\n{C_str},\n\n{D_str})"
 
-
+    @_compatibility_decorator
     def append(self, other):
         """
         Returns the first model appended with the second model. The order is preserved.
@@ -4967,15 +5892,15 @@ class StateSpace(LinearTimeInvariant):
         C = zeros(p, n)
         D = zeros(p, m)
 
-        A[:self.num_states, :self.num_states] = self._A
-        A[self.num_states:, self.num_states:] = other._A
-        B[:self.num_states, :self.num_inputs] = self._B
-        B[self.num_states:, self.num_inputs:] = other._B
-        C[:self.num_outputs, :self.num_states] = self._C
-        C[self.num_outputs:, self.num_states:] = other._C
-        D[:self.num_outputs, :self.num_inputs] = self._D
-        D[self.num_outputs:, self.num_inputs:] = other._D
-        return StateSpace(A, B, C, D)
+        A[:self.num_states, :self.num_states] = self.A
+        A[self.num_states:, self.num_states:] = other.A
+        B[:self.num_states, :self.num_inputs] = self.B
+        B[self.num_states:, self.num_inputs:] = other.B
+        C[:self.num_outputs, :self.num_states] = self.C
+        C[self.num_outputs:, self.num_states:] = other.C
+        D[:self.num_outputs, :self.num_inputs] = self.D
+        D[self.num_outputs:, self.num_inputs:] = other.D
+        return create_state_space(A, B, C, D, self.sampling_time)
 
     def observability_matrix(self):
         """
@@ -5004,9 +5929,9 @@ class StateSpace(LinearTimeInvariant):
 
         """
         n = self.num_states
-        ob = self._C
+        ob = self.C
         for i in range(1,n):
-            ob = ob.col_join(self._C * self._A**i)
+            ob = ob.col_join(self.C * self.A**i)
 
         return ob
 
@@ -5080,10 +6005,10 @@ class StateSpace(LinearTimeInvariant):
         .. [1] https://in.mathworks.com/help/control/ref/statespacemodel.ctrb.html
 
         """
-        co = self._B
-        n = self._A.shape[0]
+        co = self.B
+        n = self.A.shape[0]
         for i in range(1, n):
-            co = co.row_join(((self._A)**i) * self._B)
+            co = co.row_join(((self.A)**i) * self.B)
 
         return co
 
@@ -5132,7 +6057,180 @@ class StateSpace(LinearTimeInvariant):
         """
         return self.controllability_matrix().rank() == self.num_states
 
-    def get_asymptotic_stability_conditions(self):
+    @abstractmethod
+    def get_asymptotic_stability_conditions(self) -> list[bool]:
+        pass
+
+class StateSpace(StateSpaceBase):
+    """
+    State space model of a linear, continuous-time, time invariant control
+    system.
+
+    See py:class:`~.StateSpaceBase` for more details.
+
+    Parameters
+    ==========
+
+    A : Matrix, optional
+        The State matrix of the state space model.
+    B : Matrix, optional
+        The Input-to-State matrix of the state space model.
+    C : Matrix, optional
+        The State-to-Output matrix of the state space model.
+    D : Matrix, optional
+        The Feedthrough matrix of the state space model.
+
+    Examples
+    ========
+
+    >>> from sympy import Matrix
+    >>> from sympy.physics.control import StateSpace
+
+    The easiest way to create a StateSpaceModel is via four matrices:
+
+    >>> A = Matrix([[1, 2], [1, 0]])
+    >>> B = Matrix([1, 1])
+    >>> C = Matrix([[0, 1]])
+    >>> D = Matrix([0])
+    >>> StateSpace(A, B, C, D)
+    StateSpace(Matrix([
+    [1, 2],
+    [1, 0]]), Matrix([
+    [1],
+    [1]]), Matrix([[0, 1]]), Matrix([[0]]))
+
+    One can use less matrices. The rest will be filled with a minimum of zeros:
+
+    >>> StateSpace(A, B)
+    StateSpace(Matrix([
+    [1, 2],
+    [1, 0]]), Matrix([
+    [1],
+    [1]]), Matrix([[0, 0]]), Matrix([[0]]))
+
+    See Also
+    ========
+
+    StateSpaceBase, DiscreteStateSpace, TransferFunction,
+    DiscreteTransferFunction
+
+    """
+    def __new__(cls, A=None, B=None, C=None, D=None):
+        return super(StateSpace, cls).__new__(cls, A, B, C, D)
+
+    def __repr__(self):
+        A_str = self.A.__repr__()
+        B_str = self.B.__repr__()
+        C_str = self.C.__repr__()
+        D_str = self.D.__repr__()
+
+        return f"StateSpace(\n{A_str},\n\n{B_str},\n\n{C_str},\n\n{D_str})"
+
+    def dsolve(self, initial_conditions=None, input_vector=None, var=Symbol('t')):
+        r"""
+        Returns `y(t)` or output of StateSpace given by the solution of equations:
+            x'(t) = A * x(t) + B * u(t)
+            y(t)  = C * x(t) + D * u(t)
+
+        Parameters
+        ============
+
+        initial_conditions : Matrix
+            The initial conditions of `x` state vector. If not provided, it defaults to a zero vector.
+        input_vector : Matrix
+            The input vector for state space. If not provided, it defaults to a zero vector.
+        var : Symbol
+            The symbol representing time. If not provided, it defaults to `t`.
+
+        Examples
+        ==========
+
+        >>> from sympy import Matrix
+        >>> from sympy.physics.control import StateSpace
+        >>> A = Matrix([[-2, 0], [1, -1]])
+        >>> B = Matrix([[1], [0]])
+        >>> C = Matrix([[2, 1]])
+        >>> ip = Matrix([5])
+        >>> i = Matrix([0, 0])
+        >>> ss = StateSpace(A, B, C)
+        >>> ss.dsolve(input_vector=ip, initial_conditions=i).simplify()
+        Matrix([[15/2 - 5*exp(-t) - 5*exp(-2*t)/2]])
+
+        If no input is provided it defaults to solving the system with zero initial conditions and zero input.
+
+        >>> ss.dsolve()
+        Matrix([[0]])
+
+        References
+        ==========
+        .. [1] https://web.mit.edu/2.14/www/Handouts/StateSpaceResponse.pdf
+        .. [2] https://docs.sympy.org/latest/modules/solvers/ode.html#sympy.solvers.ode.systems.linodesolve
+
+        """
+
+        if not isinstance(var, Symbol):
+            raise ValueError("Variable for representing time must be a Symbol.")
+        if not initial_conditions:
+            initial_conditions = zeros(self._A.shape[0], 1)
+        elif initial_conditions.shape != (self._A.shape[0], 1):
+            raise ShapeError("Initial condition vector should have the same number of "
+                             "rows as the state matrix.")
+        if not input_vector:
+            input_vector = zeros(self._B.shape[1], 1)
+        elif input_vector.shape != (self._B.shape[1], 1):
+            raise ShapeError("Input vector should have the same number of "
+                             "columns as the input matrix.")
+        sol = linodesolve(A=self._A, t=var, b=self._B*input_vector, type='type2', doit=True)
+        mat1 = Matrix(sol)
+        mat2 = mat1.replace(var, 0)
+        free1 = self._A.free_symbols | self._B.free_symbols | input_vector.free_symbols
+        free2 = mat2.free_symbols
+        # Get all the free symbols form the matrix
+        dummy_symbols = list(free2-free1)
+        # Convert the matrix to a Coefficient matrix
+        r1, r2 = linear_eq_to_matrix(mat2, dummy_symbols)
+        s = linsolve((r1, initial_conditions+r2))
+        res_tuple = next(iter(s))
+        for ind, v in enumerate(res_tuple):
+            mat1 = mat1.replace(dummy_symbols[ind], v)
+        res = self._C*mat1 + self._D*input_vector
+        return res
+
+    def _eval_rewrite_as_TransferFunction(self, *args):
+        """
+        Returns the equivalent :class:`~.TransferFunction` of the state space
+        model.
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix
+        >>> from sympy.physics.control import TransferFunction, StateSpace
+        >>> A = Matrix([[-5, -1], [3, -1]])
+        >>> B = Matrix([2, 5])
+        >>> C = Matrix([[1, 2]])
+        >>> D = Matrix([0])
+        >>> ss = StateSpace(A, B, C, D)
+        >>> ss.rewrite(TransferFunction)
+        [[TransferFunction(12*s + 59, s**2 + 6*s + 8, s)]]
+
+        """
+        s = Symbol('s')
+        n = self.A.shape[0]
+        I = eye(n)
+        G = self.C*(s*I - self.A).solve(self.B) + self.D
+        G = G.simplify()
+        to_tf = lambda expr: TransferFunction.from_rational_expression(expr, s)
+        tf_mat = [[to_tf(expr) for expr in sublist] for sublist in G.tolist()]
+        return tf_mat
+
+    def _eval_rewrite_as_DiscreteTransferFunction(self, *args):
+        raise TypeError("""
+            The continuous state space model cannot be rewritten as a
+            discrete-time transfer function model.
+            """)
+
+    def get_asymptotic_stability_conditions(self) -> list[bool]:
         """
         Returns the asymptotic stability conditions for
         the state space.
@@ -5160,3 +6258,137 @@ class StateSpace(LinearTimeInvariant):
         determinant = self.A.charpoly(s)
 
         return negative_real_part_conditions(determinant, s)
+
+    @property
+    def sampling_time(self):
+        return S.Zero
+
+    _is_continuous = True
+
+class DiscreteStateSpace(StateSpaceBase):
+    """
+    State space model of a linear, discrete-time, time invariant control
+    system.
+
+    See py:class:`~.StateSpaceBase` for more details.
+
+    Parameters
+    ==========
+
+    A : Matrix, optional
+        The State matrix of the state space model.
+    B : Matrix, optional
+        The Input-to-State matrix of the state space model.
+    C : Matrix, optional
+        The State-to-Output matrix of the state space model.
+    D : Matrix, optional
+        The Feedthrough matrix of the state space model.
+    sampling_time : Symbol, Number, optional
+        Time interval between two consecutive sampling instants
+        Defaults to 1.
+
+    Examples
+    ========
+
+    >>> from sympy import Matrix
+    >>> from sympy.physics.control import DiscreteStateSpace
+
+    The easiest way to create a StateSpaceModel is via four matrices:
+
+    >>> A = Matrix([[1, 2], [1, 0]])
+    >>> B = Matrix([1, 1])
+    >>> C = Matrix([[0, 1]])
+    >>> D = Matrix([0])
+    >>> DiscreteStateSpace(A, B, C, D)
+    DiscreteStateSpace(Matrix([
+    [1, 2],
+    [1, 0]]), Matrix([
+    [1],
+    [1]]), Matrix([[0, 1]]), Matrix([[0]]), 1)
+
+    One can use less matrices. The rest will be filled with a minimum of zeros:
+
+    >>> DiscreteStateSpace(A, B, sampling_time=0.2)
+    DiscreteStateSpace(Matrix([
+    [1, 2],
+    [1, 0]]), Matrix([
+    [1],
+    [1]]), Matrix([[0, 0]]), Matrix([[0]]), 0.2)
+
+    See Also
+    ========
+
+    StateSpaceBase, StateSpace, TransferFunction,
+    DiscreteTransferFunction
+
+    """
+    #XXX: StateSpace is not in latex printing, consider add that and StateSpace
+    def __new__(cls, A=None, B=None, C=None, D=None, sampling_time=1):
+        if sampling_time == 0:
+            raise ValueError(filldedent("""
+                The sampling time cannot be zero.
+                If you want to create a continuous state space,
+                use the StateSpace class instead."""))
+
+        sampling_time = sympify(sampling_time)
+        obj = super(DiscreteStateSpace, cls).__new__(cls, A, B, C, D, sampling_time)
+        obj._sampling_time = sampling_time
+
+        return obj
+
+    def __repr__(self):
+        A_str = self.A.__repr__()
+        B_str = self.B.__repr__()
+        C_str = self.C.__repr__()
+        D_str = self.D.__repr__()
+
+        return f"""DiscreteStateSpace(\n{A_str},
+        \n{B_str},
+        \n{C_str},
+        \n{D_str},
+        \nsampling time: {self.sampling_time})"""
+
+    def _eval_rewrite_as_DiscreteTransferFunction(self, *args):
+        """
+        Returns the equivalent :class:`~.DiscreteTransferFunction` of the state
+        space model.
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix
+        >>> from sympy.physics.control import DiscreteTransferFunction, DiscreteStateSpace
+        >>> A = Matrix([[-5, -1], [3, -1]])
+        >>> B = Matrix([2, 5])
+        >>> C = Matrix([[1, 2]])
+        >>> D = Matrix([0])
+        >>> ss = DiscreteStateSpace(A, B, C, D)
+        >>> ss.rewrite(DiscreteTransferFunction)
+        [[DiscreteTransferFunction(12*z + 59, z**2 + 6*z + 8, z, 1)]]
+
+        """
+        z = Symbol('z')
+        n = self.A.shape[0]
+        I = eye(n)
+        G = self.C*(z*I - self.A).solve(self.B) + self.D
+        G = G.simplify()
+        to_tf = lambda expr: DiscreteTransferFunction.\
+            from_rational_expression(expr, z, self.sampling_time)
+        tf_mat = [[to_tf(expr) for expr in sublist] for sublist in G.tolist()]
+        return tf_mat
+
+    def _eval_rewrite_as_TransferFunction(self, *args):
+        raise TypeError("""
+            The discrete state space model cannot be rewritten as a
+            continuous-time transfer function model.
+            """)
+
+    def get_asymptotic_stability_conditions(self) -> list[bool]:
+        #TODO
+        pass
+
+    @property
+    def sampling_time(self):
+        return self._sampling_time
+
+    _is_continuous = False
