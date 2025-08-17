@@ -1473,20 +1473,19 @@ def jordan_form_rational_matrix(M, calc_transform):
         roots = factor_to_roots[fac]
         algebraic_num = AlgebraicNumber(roots[0], alias='a')
 
-        new_vecs = {}
+        big_null, small_null = {}, {}
         for _, sizes in block_structure.items():
             for size in sizes:
                 key = (fac, size)
-                if key not in new_vecs:
-                    big_null = nullspace_to_list(char_mat(algebraic_num, size).nullspace().transpose())
-                    small_null = nullspace_to_list(char_mat(algebraic_num, size-1).nullspace().transpose())
-                    vec = pick_vec(small_null, big_null)
-                    new_vecs[key] = [char_mat(algebraic_num, i) * vec for i in range(size)]
+                if key not in big_null:
+                    big_null[key] = nullspace_to_list(char_mat(algebraic_num, size).nullspace().transpose())
+                    small_null[key] = nullspace_to_list(char_mat(algebraic_num, size-1).nullspace().transpose())
 
         for eig in roots:
             eig_basis = []
             for size in block_structure.get(eig, []):
-                new_vec = new_vecs[(fac, size)]
+                vec = pick_vec(small_null[(fac, size)] + eig_basis, big_null[(fac, size)])
+                new_vec = [char_mat(algebraic_num, i) * vec for i in range(size)]
                 eig_basis.extend(new_vec)
                 jordan_basis.extend(
                     [vec.to_Matrix().subs(algebraic_num, eig) for vec in reversed(new_vec)]
