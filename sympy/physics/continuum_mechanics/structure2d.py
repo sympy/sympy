@@ -1600,10 +1600,9 @@ class Structure2d:
             v += gate_len * sin(th)
         return h, v
 
-    def plot_deformation_on_structure(self, *, factor=1/10000.0, npts=800, show_axes=True, legend=True):
+    def plot_deformation_on_structure(self, factor=1/10000.0):
         """
         Plots the deformation on the structure geometry.
-
 
         Parameters
         ==========
@@ -1611,28 +1610,21 @@ class Structure2d:
             Visual scale for deformation.
             This is to make shift in the deformed structure for better visual analysis.
 
-
         Examples
         ========
         Plot the deformation on the structure after solving reactions.
 
-        .. plot::
-            :context: close-figs
-            :format: doctest
-            :include-source: True
-            :skip:
-
-            >>> from sympy.physics.continuum_mechanics.structure2d import Structure2d
-            >>> E, I, A = 3e4, 1, 1e4
-            >>> F = 15
-            >>> s = Structure2d()
-            >>> s.add_member(x1=0, y1=0, x2=4, y2=0, E=E, I=I, A=A)
-            >>> s.apply_load(start_x=2, start_y=0, value=F, global_angle=270, order=-1)
-            >>> s.apply_support(x=0, y=0, type="pin")
-            >>> s.apply_support(x=4, y=0, type="roller")
-            >>> s.solve_for_reaction_loads()
-            {R_h__0,__0: 0, R_v__0,__0: -7.5, R_v__4,__0: -7.5}
-            >>> s.plot_deformation_on_structure(factor=75.0)  # doctest: +SKIP
+        >>> from sympy.physics.continuum_mechanics.structure2d import Structure2d
+        >>> E, I, A = 3e4, 1, 1e4
+        >>> F = 15
+        >>> s = Structure2d()
+        >>> s.add_member(x1=0, y1=0, x2=4, y2=0, E=E, I=I, A=A)
+        >>> s.apply_load(start_x=2, start_y=0, value=F, global_angle=270, order=-1)
+        >>> s.apply_support(x=0, y=0, type="pin")
+        >>> s.apply_support(x=4, y=0, type="roller")
+        >>> s.solve_for_reaction_loads()
+        {R_h__0,__0: 0, R_v__0,__0: -7.5, R_v__4,__0: -7.5}
+        >>> s.plot_deformation_on_structure(factor=75.0)  # doctest: +SKIP
         """
         if self.uz is None or self.ux is None:
             raise RuntimeError("Call solve_for_reaction_loads() first.")
@@ -1650,7 +1642,7 @@ class Structure2d:
         uv_np = lambdify(x, uv.rewrite(Piecewise))
         uh_np = lambdify(x, uh.rewrite(Piecewise))
 
-        s = np.linspace(0.0, L, int(npts))
+        s = np.linspace(0.0, L, int(800))
 
         base_h = np.array(h_np(s), dtype=float).reshape(-1)
         base_v = np.array(v_np(s), dtype=float).reshape(-1)
@@ -1673,15 +1665,15 @@ class Structure2d:
         ax.plot(base_h, base_v, linewidth=2, label='structure')
         ax.plot(def_h,  def_v,  linewidth=2, label='deformed')
 
-        ax.set_xlabel('h'); ax.set_ylabel('v')
-        if show_axes:
-            ax.spines['right']
-            ax.spines['top']
-            ax.spines['bottom']
-            ax.spines['left']
+        ax.set_xlabel('x'); ax.set_ylabel('y')
+
+        ax.spines['right']
+        ax.spines['top']
+        ax.spines['bottom']
+        ax.spines['left']
         ax.grid(True); ax.axis('scaled')
-        if legend:
-            ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.05), ncol=2)
+
+        ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.05), ncol=2)
         return fig, ax
 
 
