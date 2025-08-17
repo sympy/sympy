@@ -16,7 +16,6 @@ from sympy.algebras.quaternion import Quaternion, wrap_angle
 from sympy.testing.pytest import raises
 import math
 from itertools import permutations, product
-from sympy import pi
 
 w, x, y, z = symbols('w:z')
 phi = symbols('phi')
