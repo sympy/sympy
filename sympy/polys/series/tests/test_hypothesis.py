@@ -35,32 +35,6 @@ if GROUND_TYPES == "flint":
     flint = True
 
 
-def as_expr(s, ring):
-    """Helper function to convert a series to an expression."""
-    if flint:
-        coeffs = s.coeffs()
-        prec = ring.series_prec(s)
-    else:
-        coeffs, prec = s
-        coeffs = coeffs[::-1]
-
-    dom = ring.domain
-    result = []
-
-    if coeffs and coeffs[0] != 0:
-        result.append(dom.to_sympy(coeffs[0]))
-
-    for i, coeff in enumerate(coeffs[1:], start=1):
-        if coeff == 0:
-            continue
-        result.append(Mul(dom.to_sympy(coeff), Pow(x, i)))
-
-    if prec is not None:
-        result.append(Order(x**prec))
-
-    return Add(*result)
-
-
 def _dup_QQ():
     """This is a strategy of creating random dup_QQ elements."""
     elems = st.tuples(
@@ -93,65 +67,64 @@ def dup_one_const(draw, min_size=3, max_size=25):
 
 @given(f=dup_zero_const())
 def test_rs_series_zero(f):
-    Rs = power_series_ring(QQ, 25)
+    Rs, _ = power_series_ring("x", QQ, 25)
     Rp, x = ring("x", QQ)
 
-    s = Rs(f[::-1])
+    s = Rs.from_list(f[::-1])
     p = Rp.from_list(f)
 
-    assert Rs.to_dense(Rs.exp(s)) == (rs_exp(p, x, 25)).to_dense()
+    assert (Rs.exp(s)).to_dense() == (rs_exp(p, x, 25)).to_dense()
 
-    assert Rs.to_dense(Rs.atan(s)) == (rs_atan(p, x, 25)).to_dense()
-    assert Rs.to_dense(Rs.atanh(s)) == (rs_atanh(p, x, 25)).to_dense()
-    assert Rs.to_dense(Rs.asin(s)) == (rs_asin(p, x, 25)).to_dense()
-    assert Rs.to_dense(Rs.asinh(s)) == (rs_asinh(p, x, 25)).to_dense()
+    assert (Rs.atan(s)).to_dense() == (rs_atan(p, x, 25)).to_dense()
+    assert (Rs.atanh(s)).to_dense() == (rs_atanh(p, x, 25)).to_dense()
+    assert (Rs.asin(s)).to_dense() == (rs_asin(p, x, 25)).to_dense()
+    assert (Rs.asinh(s)).to_dense() == (rs_asinh(p, x, 25)).to_dense()
 
-    assert Rs.to_dense(Rs.tan(s)) == (rs_tan(p, x, 25)).to_dense()
-    assert Rs.to_dense(Rs.tanh(s)) == (rs_tanh(p, x, 25)).to_dense()
-    assert Rs.to_dense(Rs.sin(s)) == (rs_sin(p, x, 25)).to_dense()
-    assert Rs.to_dense(Rs.sinh(s)) == (rs_sinh(p, x, 25)).to_dense()
-    assert Rs.to_dense(Rs.cos(s)) == (rs_cos(p, x, 25)).to_dense()
-    assert Rs.to_dense(Rs.cosh(s)) == (rs_cosh(p, x, 25)).to_dense()
+    assert (Rs.tan(s)).to_dense() == (rs_tan(p, x, 25)).to_dense()
+    assert (Rs.tanh(s)).to_dense() == (rs_tanh(p, x, 25)).to_dense()
+    assert (Rs.sin(s)).to_dense() == (rs_sin(p, x, 25)).to_dense()
+    assert (Rs.sinh(s)).to_dense() == (rs_sinh(p, x, 25)).to_dense()
+    assert (Rs.cos(s)).to_dense() == (rs_cos(p, x, 25)).to_dense()
+    assert (Rs.cosh(s)).to_dense() == (rs_cosh(p, x, 25)).to_dense()
 
 
 @given(f=dup_one_const())
 def test_rs_series_one(f):
-    Rs = power_series_ring(QQ, 25)
+    Rs, _ = power_series_ring("x", QQ, 25)
     Rp, x = ring("x", QQ)
 
-    s = Rs(f[::-1])
+    s = Rs.from_list(f[::-1])
     p = Rp.from_list(f)
 
-    assert Rs.to_dense(Rs.log(s)) == (rs_log(p, x, 25)).to_dense()
+    assert (Rs.log(s)).to_dense() == (rs_log(p, x, 25)).to_dense()
 
 
 @slow
 @given(f=dup_zero_const(max_size=5))
 def test_global_series_zero(f):
-    Rs = power_series_ring(QQ, 5)
+    Rs, _ = power_series_ring("x", QQ, 5)
 
-    s = Rs(f[::-1])
+    s = Rs.from_list(f[::-1])
     e = expr_from_dict(dup_to_dict(f), x)
-    assert as_expr(Rs.exp(s), Rs) == exp(e).series(x, 0, 5)
+    assert (Rs.exp(s)).as_expr() == exp(e).series(x, 0, 5)
 
-    assert as_expr(Rs.atan(s), Rs) == atan(e).series(x, 0, 5)
-    assert as_expr(Rs.atanh(s), Rs) == atanh(e).series(x, 0, 5)
-    assert as_expr(Rs.asin(s), Rs) == asin(e).series(x, 0, 5)
-    assert as_expr(Rs.asinh(s), Rs) == asinh(e).series(x, 0, 5)
+    assert (Rs.atan(s)).as_expr() == atan(e).series(x, 0, 5)
+    assert (Rs.atanh(s)).as_expr() == atanh(e).series(x, 0, 5)
+    assert (Rs.asin(s)).as_expr() == asin(e).series(x, 0, 5)
+    assert (Rs.asinh(s)).as_expr() == asinh(e).series(x, 0, 5)
 
-    assert as_expr(Rs.tan(s), Rs) == tan(e).series(x, 0, 5)
-    assert as_expr(Rs.tanh(s), Rs) == tanh(e).series(x, 0, 5)
-    assert as_expr(Rs.sin(s), Rs) == sin(e).series(x, 0, 5)
-    assert as_expr(Rs.sinh(s), Rs) == sinh(e).series(x, 0, 5)
-    assert as_expr(Rs.cos(s), Rs) == cos(e).series(x, 0, 5)
-    assert as_expr(Rs.cosh(s), Rs) == cosh(e).series(x, 0, 5)
+    assert (Rs.tan(s)).as_expr() == tan(e).series(x, 0, 5)
+    assert (Rs.tanh(s)).as_expr() == tanh(e).series(x, 0, 5)
+    assert (Rs.sin(s)).as_expr() == sin(e).series(x, 0, 5)
+    assert (Rs.sinh(s)).as_expr() == sinh(e).series(x, 0, 5)
+    assert (Rs.cos(s)).as_expr() == cos(e).series(x, 0, 5)
+    assert (Rs.cosh(s)).as_expr() == cosh(e).series(x, 0, 5)
 
 
 @given(f=dup_one_const(max_size=5))
 def test_global_series_one(f):
-    Rs = power_series_ring(QQ, 5)
-
-    s = Rs(f[::-1])
+    Rs, _ = power_series_ring("x", QQ, 5)
+    s = Rs.from_list(f[::-1])
     e = expr_from_dict(dup_to_dict(f), x)
 
-    assert as_expr(Rs.log(s), Rs) == log(e).series(x, 0, 5)
+    assert (Rs.log(s)).as_expr() == log(e).series(x, 0, 5)

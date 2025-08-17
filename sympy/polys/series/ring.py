@@ -13,6 +13,7 @@ from sympy.core.add import Add
 from sympy.core.power import Pow
 from sympy.series.order import Order
 from sympy.polys.domains.domainelement import DomainElement
+from sympy.polys.densebasic import dup_strip, dup
 from sympy.polys.series.ringflint import QQSeries, ZZSeries
 from sympy.polys.series.ringpython import (
     USeries,
@@ -170,7 +171,7 @@ class PowerSeriesRing(Generic[Er]):
 
         if fring_prec:
             prec = self.prec
-        return coeffs, prec
+        return self.ring(dup_strip(coeffs), prec)
 
     def from_list(
         self, lst: list[Er], prec: int | None = None
@@ -493,9 +494,9 @@ class PowerSeriesElement(DomainElement, CantSympify, Generic[Er]):
     def __rsub__(self, other: Er | int) -> PowerSeriesElement[Er]:
         domain = self.ring.domain
         if isinstance(other, int):
-            return self._sub_ground(self.ring.domain_new(other))
+            return self._rsub_ground(self.ring.domain_new(other))
         elif domain.of_type(other):
-            return self._sub_ground(other)
+            return self._rsub_ground(other)
         else:
             raise NotImplementedError
 
@@ -568,6 +569,10 @@ class PowerSeriesElement(DomainElement, CantSympify, Generic[Er]):
         s2 = self.ring.ground_new(other)
         return self._sub(s2)
 
+    def _rsub_ground(self, other: Er) -> PowerSeriesElement[Er]:
+        s2 = self.ring.ground_new(other)
+        return s2._sub(self)
+
     def _mul(self, other: PowerSeriesElement[Er]) -> PowerSeriesElement[Er]:
         R = self.ring.ring
         series = R.multiply(self.series, other.series)
@@ -590,6 +595,15 @@ class PowerSeriesElement(DomainElement, CantSympify, Generic[Er]):
     def _div_ground(self, other: Er) -> PowerSeriesElement[Er]:
         s2 = self.ring.ground_new(other)
         return self._div(s2)
+
+    def to_list(self) -> list[Er]:
+        R = self.ring.ring
+        return R.to_list(self.series)
+
+    def to_dense(self) -> dup[Er]:
+        """Convert the power series to a dense representation."""
+        R = self.ring.ring
+        return R.to_dense(self.series)
 
     def as_expr(self) -> Expr:
         dom: Domain[Er] = self.ring.domain
