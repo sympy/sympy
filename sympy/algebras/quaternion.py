@@ -2,9 +2,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, overload
 
-from sympy.core.numbers import Rational
-from sympy.core.singleton import S
 from sympy.core.numbers import Rational, pi
+from sympy.core.singleton import S
 from sympy.core.relational import is_eq
 from sympy.functions.elementary.complexes import (conjugate, im, re, sign)
 from sympy.functions.elementary.exponential import (exp, log as ln)
