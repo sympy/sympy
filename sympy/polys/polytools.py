@@ -4165,13 +4165,17 @@ class Poly(Basic):
 
     def hurwitz_conditions(f):
         """
-        Computes the Routh Hurwitz criteria.
+        Compute the conditions that ensure ``f`` is a Hurwitz polynomial.
+
+        Explanation
+        ===========
+
+        Returns expressions ``[e1, e2, ...]`` such that all roots of the
+        polynomial have strictly negative real part if and only if ``ei > 0``
+        for all ``i``.
 
         Note
         ====
-
-        The conditions, in general, are represented by a list of expressions
-        which must be positive to ensure stability.
 
         This method assumes that the leading coefficient is non-zero.
         In the opposite case, additional verification is required.

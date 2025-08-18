@@ -232,32 +232,22 @@ def _build_simplified_factors(cond: Expr,
 
     # Build a set of factors without even powers
     factors = set()
-    powers_dict = dict(cond.as_powers_dict())
 
-    for factor in powers_dict:
-        if powers_dict[factor] % 2 != 0:
-                factors.add(factor)
-
-    factors_rep = (sign, factors)
+    for b, e in cond.as_powers_dict().items():
+        if not e.is_Integer:
+            factors.add(b**e)
+        elif e % 2 != 0:
+            factors.add(b)
 
     # Remove factors that are already present in previous conditions.
-    for prev_factors in previous_cond:
-        cond_quo = _div(factors_rep, prev_factors)
-        if cond_quo is not None:
-            factors_rep = cond_quo
 
-    return factors_rep
+    for sign_prev, factors_prev  in previous_cond:
+        if factors.issuperset(factors_prev):
+            sign *= sign_prev
+            factors -= factors_prev
 
 
-def _div(n: tuple[int, set[Expr]],
-        d: tuple[int, set[Expr]]) -> tuple[int, set[Expr]] | None:
-    """Divide n by d if possible else return None."""
-    nsign, nfactors = n
-    dsign, dfactors = d
-    if nfactors.issuperset(dfactors):
-        return nsign*dsign, nfactors - dfactors
-    else:
-        return None
+    return (sign, factors)
 
 # TODO Implement conditions for discrete time systems
 # Possible ways are:
