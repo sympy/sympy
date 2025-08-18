@@ -1253,6 +1253,7 @@ def _jordan_form(M: Tmat,
         for v in big_basis:
             _, pivots = M.hstack(*(small_basis + [v])).echelon_form(
                     with_pivots=True)
+
             if pivots[-1] == len(small_basis):
                 return v
 
@@ -1266,10 +1267,10 @@ def _jordan_form(M: Tmat,
 
     if has_rationals:
         if calc_transform:
-            P, J = jordan_form_rational_matrix(mat, calc_transform=True)
+            P, J = _jordan_form_rational_matrix(mat, calc_transform=True)
             return restore_floats2(P, J)
         else:
-            J = jordan_form_rational_matrix(mat, calc_transform=False)
+            J = _jordan_form_rational_matrix(mat, calc_transform=False)
             return restore_floats1(J)
 
     # first calculate the jordan block structure
@@ -1367,11 +1368,8 @@ def _jordan_form(M: Tmat,
 
     return restore_floats2(basis_mat, jordan_mat)
 
-def jordan_form_rational_matrix(M, calc_transform):
-    """
-    Return (P, J), where J is the Jordan form and P satisfies M = P J P^{-1},
-    if the matrix is rational. If calc_transform is False, return only J.
-    """
+def _jordan_form_rational_matrix(M, calc_transform):
+
     from itertools import chain
 
     def char_mat(lam, mul):
@@ -1406,14 +1404,15 @@ def jordan_form_rational_matrix(M, calc_transform):
         return [mat[:, i] for i in range(mat.shape[1])]
 
     def pick_vec(small_basis, big_basis):
-        """Picks a DomainMatrix column vector from big_basis that isn't in
-        the subspace spanned by small_basis."""
+        """Picks a vector from big_basis that isn't in
+        the subspace spanned by small_basis"""
 
         if len(small_basis) == 0:
             return big_basis[0]
 
         for v in big_basis:
             _, pivots = DomainMatrix.hstack(*small_basis, v).rref()
+
             if pivots[-1] == len(small_basis):
                 return v
 
@@ -1422,8 +1421,8 @@ def jordan_form_rational_matrix(M, calc_transform):
     factor_to_roots = {factor: list(OrderedDict.fromkeys(all_roots(factor))) for factor, _ in factors}
     eigenvals = list(chain.from_iterable(factor_to_roots.values()))
 
-    if len(set(eigenvals)) == M.cols:
-        jordan_mat = M.diag(eigenvals)
+    if len(eigenvals) == M.cols:
+        jordan_mat = M.diag(*eigenvals)
 
         if not calc_transform:
             return jordan_mat
