@@ -1,7 +1,6 @@
 from __future__ import annotations
 
-from typing import Generic, Type, Union
-from typing_extensions import TypeIs
+from typing import Generic, Type, Union, TypeIs
 from sympy.polys.domains.domain import Domain, Er
 
 from sympy.core.expr import Expr
@@ -13,7 +12,7 @@ from sympy.core.add import Add
 from sympy.core.power import Pow
 from sympy.series.order import Order
 from sympy.polys.domains.domainelement import DomainElement
-from sympy.polys.densebasic import dup_strip, dup
+from sympy.polys.densebasic import dup
 from sympy.polys.series.ringflint import QQSeries, ZZSeries
 from sympy.polys.series.ringpython import (
     USeries,
@@ -64,10 +63,10 @@ def power_series_ring(
     >>> from sympy import QQ
     >>> from sympy.polys.series import power_series_ring
     >>> R, x = power_series_ring("x", QQ)
-    >>> R.sin(x+x**2)
-    x + 1/6*x**3 + O(x**4)
-    >>> R.cos(x+x**2)
-    1 - 1/2*x**2 + O(x**4)
+    >>> R.sin(x + x**2)
+    x + x**2 - 1/6*x**3 - 1/2*x**4 - 59/120*x**5 + O(x**6)
+    >>> R.log(1 + 7*x**2)
+    7*x**2 - 49/2*x**4 + O(x**6)
     """
 
     ring = PowerSeriesRing(K, symbol, prec)
@@ -144,7 +143,16 @@ class PowerSeriesRing(Generic[Er]):
         fring_prec: bool = False
 
         if expr.has(Order):
-            prec = int(expr.getO().expr.args[1])
+            var, p = expr.getO().expr.args
+
+            if var != self.symbol:
+                raise ValueError("Order contains different symbol than ring.")
+
+            if int(p) > self.prec:
+                prec = self.prec
+            else:
+                prec = int(p)
+
             expr = expr.removeO()
 
         max_prec = prec if prec else self.prec
@@ -164,14 +172,18 @@ class PowerSeriesRing(Generic[Er]):
                     else:
                         raise ValueError("Expr contains different symbol than ring.")
 
-            if pow < len(coeffs):
-                coeffs[-pow - 1] = coeff
+            if pow < max_prec:
+                coeffs[pow] = coeff
             else:
                 fring_prec = True
 
         if fring_prec:
             prec = self.prec
-        return self.ring(dup_strip(coeffs), prec)
+
+        while coeffs and coeffs[-1] == self.domain.zero:
+            coeffs.pop()
+
+        return self.ring(coeffs, prec)
 
     def from_list(
         self, lst: list[Er], prec: int | None = None
@@ -449,7 +461,7 @@ class PowerSeriesElement(DomainElement, CantSympify, Generic[Er]):
         return self.__class__(self.ring, series)
 
     def __add__(
-        self, other: PowerSeriesElement[Er] | Er | int
+        self, other: PowerSeriesElement[Er] | Er | int | Order
     ) -> PowerSeriesElement[Er]:
         if not other:
             return self
@@ -460,15 +472,19 @@ class PowerSeriesElement(DomainElement, CantSympify, Generic[Er]):
         domain = self.ring.domain
         if isinstance(other, int):
             return self._add_ground(self.ring.domain_new(other))
+        elif isinstance(other, Order):
+            return self._add_order(other)
         elif domain.of_type(other):
             return self._add_ground(other)
         else:
             raise NotImplementedError
 
-    def __radd__(self, other: Er | int) -> PowerSeriesElement[Er]:
+    def __radd__(self, other: Er | int | Order) -> PowerSeriesElement[Er]:
         domain = self.ring.domain
         if isinstance(other, int):
             return self._add_ground(self.ring.domain_new(other))
+        elif isinstance(other, Order):
+            return self._add_order(other)
         elif domain.of_type(other):
             return self._add_ground(other)
         else:
@@ -560,6 +576,22 @@ class PowerSeriesElement(DomainElement, CantSympify, Generic[Er]):
         s2 = self.ring.ground_new(other)
         return self._add(s2)
 
+    def _add_order(self, other: Order) -> PowerSeriesElement[Er]:
+        var, prec = other.expr.args
+
+        if var != self.ring.symbol:
+            raise NotImplementedError
+
+        if int(prec) > self.ring.prec:
+            prec = self.ring.prec
+        else:
+            prec = int(prec)
+
+        R = self.ring.ring
+        coeffs = R.to_list(self.series)
+        s = R(coeffs, prec)
+        return self.new(s)
+
     def _sub(self, other: PowerSeriesElement[Er]) -> PowerSeriesElement[Er]:
         R = self.ring.ring
         series = R.subtract(self.series, other.series)
@@ -632,6 +664,13 @@ class PowerSeriesElement(DomainElement, CantSympify, Generic[Er]):
         if len(coeffs) == 0:
             return self.ring.domain.zero
         return self.ring.domain_new(coeffs[0])
+
+    def removeO(self) -> PowerSeriesElement[Er]:
+        """Remove the big O notation from the series."""
+        R = self.ring.ring
+        coeffs = R.to_list(self.series)
+        series = R.from_list(coeffs)
+        return self.new(series)
 
     @property
     def is_ground(self) -> bool:

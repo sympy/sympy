@@ -4,8 +4,7 @@ from sympy.polys.domains.compositedomain import CompositeDomain
 from sympy.polys.domains.domain import Er, Domain
 from sympy.core.expr import Expr
 from sympy.utilities import public
-from typing import Type
-from typing_extensions import TypeIs
+from typing import Type, TypeIs
 
 
 @public

@@ -1,5 +1,6 @@
+from sympy.core.symbol import symbols
+from sympy.series.order import O
 from sympy.polys.domains import ZZ, QQ
-from sympy.polys.domains.powerseriesring import Series
 from sympy.polys.series.base import PowerSeriesRingProto
 from sympy.polys.series.ring import PowerSeriesRing, PowerSeriesElement
 from sympy.polys.series.ringpython import (
@@ -1198,11 +1199,27 @@ def test_PowerSeriesRing():
     assert RQQ.domain == QQ
     assert RZZ.gen == RZZ(x)
     assert RQQ.gen == RQQ(x)
-    assert RZZ.gen is PowerSeriesElement
-    assert RQQ.gen is PowerSeriesElement
+    assert isinstance(RZZ.gen, PowerSeriesElement)
+    assert isinstance(RQQ.gen, PowerSeriesElement)
     assert RZZ.prec == 6
     assert RQQ.prec == 6
     assert RZZ.symbol == RQQ.symbol
+
+
+def test_PowerSeriesRing_from_expr():
+    R = PowerSeriesRing(QQ, "x", 5)
+    x = R.gen
+    _x = symbols("x")
+
+    assert R.from_expr(_x) == x
+    assert R.from_expr(1 + _x + 2 * _x**2) == 1 + x + 2 * x**2
+    assert R.from_expr(2 + _x**2 + O(_x**3)) == 2 + x**2 + O(_x**3)
+    assert R.from_expr(
+        2 + 4 * _x + 6 * _x**2 + 6 * _x**3 + _x**5
+    ) == 2 + 4 * x + 6 * x**2 + 6 * x**3 + O(_x**5)
+    assert R.from_expr(_x + O(_x**7)) == x + O(_x**5)
+
+    raises(ValueError, lambda: R.from_expr(symbols("y") ** 6))
 
 
 def test_PowerSeriesRing_arith(groundring_int):
@@ -1267,4 +1284,230 @@ def test_PowerSeriesRing_operations_int(groundring_int):
     )
     assert RL.equal_repr(
         RU.reversion(x + 2 * x**2 + x**3).series, RL.from_list([0, 1, -2, 7, -30], 5)
+    )
+
+
+def test_PowerSeriesRing_operations_rational(groundring_rational):
+    SeriesRing = groundring_rational
+    R = SeriesRing(5)
+    RU = PowerSeriesRing(QQ, "x", 5)
+    x = RU.gen
+
+    assert R.equal_repr(
+        RU.compose(
+            QQ(1, 2) + QQ(2, 3) * x**2 + QQ(3, 4) * x**3, x + QQ(1, 5) * x**3
+        ).series,
+        R.from_list([QQ(1, 2), QQ(0, 1), QQ(2, 3), QQ(3, 4), QQ(4, 15)], 5),
+    )
+    assert R.equal_repr(
+        RU.compose(
+            QQ(3, 4) + QQ(1, 6) * x**2 + QQ(2, 7) * x**4,
+            x + QQ(3, 8) * x**2 + QQ(1, 9) * x**3,
+        ).series,
+        R.from_list([QQ(3, 4), QQ(0, 1), QQ(1, 6), QQ(1, 8), QQ(8375, 24192)], 5),
+    )
+
+    assert R.equal_repr(
+        RU.differentiate(
+            QQ(5, 6)
+            + QQ(2, 3) * x
+            + QQ(4, 7) * x**2
+            + QQ(1, 8) * x**3
+            + QQ(3, 5) * x**4
+        ).series,
+        R.from_list([QQ(2, 3), QQ(8, 7), QQ(3, 8), QQ(12, 5)]),
+    )
+    assert R.equal_repr(
+        RU.differentiate(QQ(1, 9) * x**2 + QQ(5, 11) * x**3 + QQ(2, 13) * x**4).series,
+        R.from_list([QQ(0, 1), QQ(2, 9), QQ(15, 11), QQ(8, 13)]),
+    )
+
+    p5 = QQ(2, 3) + QQ(1, 4) * x + QQ(3, 5) * x**2
+    assert R.equal_repr(
+        (p5 * RU.inverse(p5)).series,
+        R.from_list([QQ(1, 1)], 5),
+    )
+    p6 = QQ(3, 7) + QQ(2, 9) * x + QQ(1, 11) * x**2 + QQ(4, 13) * x**3
+    assert R.equal_repr(
+        (p6 * RU.inverse(p6)).series,
+        R.from_list([QQ(1, 1)], 5),
+    )
+
+    p7 = x + QQ(1, 3) * x**2 + QQ(2, 5) * x**3
+    assert R.equal_repr(
+        RU.compose(p7, RU.reversion(p7)).series,
+        R.from_list([QQ(0, 1), QQ(1, 1)], 5),
+    )
+    p8 = x + QQ(3, 7) * x**3 + QQ(1, 11) * x**4
+    assert R.equal_repr(
+        RU.compose(p8, RU.reversion(p8)).series,
+        R.from_list([QQ(0, 1), QQ(1, 1)], 5),
+    )
+
+    assert R.equal_repr(
+        RU.integrate(
+            QQ(1, 2) + QQ(3, 4) * x + QQ(2, 3) * x**2 + QQ(5, 6) * x**3
+        ).series,
+        R.from_list([QQ(0, 1), QQ(1, 2), QQ(3, 8), QQ(2, 9), QQ(5, 24)]),
+    )
+    assert R.equal_repr(
+        RU.integrate(QQ(2, 3) * x**2 + QQ(4, 5) * x**3 + QQ(1, 7) * x**4).series,
+        R.from_list([QQ(0, 1), QQ(0, 1), QQ(0, 1), QQ(2, 9), QQ(1, 5), QQ(1, 35)]),
+    )
+
+
+def test_PowerSeriesRing_series():
+    R = PowerSeriesRing(QQ, "x", 10)
+    x = R.gen
+    _x = symbols("x")
+    o = O(_x**10)
+
+    p1 = x + 2 * x + 3 * x**4
+
+    assert (
+        R.log(1 + p1)
+        == 3 * x
+        - 9 * x**2 / 2
+        + 9 * x**3
+        - 69 * x**4 / 4
+        + 198 * x**5 / 5
+        - 189 * x**6 / 2
+        + 1620 * x**7 / 7
+        - 4653 * x**8 / 8
+        + 1485 * x**9
+        + o
+    )
+    assert (
+        R.exp(p1)
+        == 1
+        + 3 * x
+        + 9 * x**2 / 2
+        + 9 * x**3 / 2
+        + 51 * x**4 / 8
+        + 441 * x**5 / 40
+        + 1161 * x**6 / 80
+        + 7803 * x**7 / 560
+        + 66249 * x**8 / 4480
+        + 87939 * x**9 / 4480
+        + o
+    )
+    assert (
+        R.atan(p1)
+        == 3 * x
+        - 9 * x**3
+        + 3 * x**4
+        + 243 * x**5 / 5
+        - 27 * x**6
+        - 2187 * x**7 / 7
+        + 243 * x**8
+        + 2160 * x**9
+        + o
+    )
+    assert (
+        R.atanh(p1)
+        == 3 * x
+        + 9 * x**3
+        + 3 * x**4
+        + 243 * x**5 / 5
+        + 27 * x**6
+        + 2187 * x**7 / 7
+        + 243 * x**8
+        + 2214 * x**9
+        + o
+    )
+    assert (
+        R.asin(p1)
+        == 3 * x
+        + 9 * x**3 / 2
+        + 3 * x**4
+        + 729 * x**5 / 40
+        + 27 * x**6 / 2
+        + 10935 * x**7 / 112
+        + 729 * x**8 / 8
+        + 78273 * x**9 / 128
+        + o
+    )
+    assert (
+        R.asinh(p1)
+        == 3 * x
+        - 9 * x**3 / 2
+        + 3 * x**4
+        + 729 * x**5 / 40
+        - 27 * x**6 / 2
+        - 10935 * x**7 / 112
+        + 729 * x**8 / 8
+        + 74817 * x**9 / 128
+        + o
+    )
+    assert (
+        R.tan(p1)
+        == 3 * x
+        + 9 * x**3
+        + 3 * x**4
+        + 162 * x**5 / 5
+        + 27 * x**6
+        + 4131 * x**7 / 35
+        + 162 * x**8
+        + 16011 * x**9 / 35
+        + o
+    )
+    assert (
+        R.tanh(p1)
+        == 3 * x
+        - 9 * x**3
+        + 3 * x**4
+        + 162 * x**5 / 5
+        - 27 * x**6
+        - 4131 * x**7 / 35
+        + 162 * x**8
+        + 14121 * x**9 / 35
+        + o
+    )
+    assert (
+        R.sin(p1)
+        == 3 * x
+        - 9 * x**3 / 2
+        + 3 * x**4
+        + 81 * x**5 / 40
+        - 27 * x**6 / 2
+        - 243 * x**7 / 560
+        + 81 * x**8 / 8
+        - 60237 * x**9 / 4480
+        + o
+    )
+    assert (
+        R.sinh(p1)
+        == 3 * x
+        + 9 * x**3 / 2
+        + 3 * x**4
+        + 81 * x**5 / 40
+        + 27 * x**6 / 2
+        + 243 * x**7 / 560
+        + 81 * x**8 / 8
+        + 60723 * x**9 / 4480
+        + o
+    )
+    assert (
+        R.cos(p1)
+        == 1
+        - 9 * x**2 / 2
+        + 27 * x**4 / 8
+        - 9 * x**5
+        - 81 * x**6 / 80
+        + 27 * x**7 / 2
+        - 19431 * x**8 / 4480
+        - 243 * x**9 / 40
+        + o
+    )
+    assert (
+        R.cosh(p1)
+        == 1
+        + 9 * x**2 / 2
+        + 27 * x**4 / 8
+        + 9 * x**5
+        + 81 * x**6 / 80
+        + 27 * x**7 / 2
+        + 20889 * x**8 / 4480
+        + 243 * x**9 / 40
+        + o
     )

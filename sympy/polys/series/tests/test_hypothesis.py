@@ -4,8 +4,6 @@ from hypothesis.strategies import composite
 
 from sympy import ring, QQ
 from sympy.abc import x
-from sympy.core import Add, Mul, Pow
-from sympy.series.order import Order
 from sympy.external.gmpy import GROUND_TYPES
 from sympy.functions.elementary.trigonometric import atan, asin, sin, cos, tan
 from sympy.functions.elementary.hyperbolic import atanh, asinh, sinh, cosh, tanh
