@@ -108,6 +108,7 @@ def _rec_dup_routh_hurwitz_poly(p: list[PolyElement[Er]],
 
     return _rec_dup_routh_hurwitz_poly(qs, previous_cond, K)
 
+
 def _clear_cond_poly(cond: PolyElement[Er], previous_cond, K):
     # Divide out factors known to be positive from previous conditions.
 
@@ -126,18 +127,19 @@ def _clear_cond_poly(cond: PolyElement[Er], previous_cond, K):
 
     cond = prod([fac for fac, m in facs_m if m % 2 == 1], K.one)
     if common_factor < 0:
-        cond = cond * K(-1)
+        cond = -K.one* cond
 
     return cond
 
 
 def _dup_routh_hurwitz_exraw(p: list[Expr]) -> list[Expr]:
     if all(c.is_Number for c in p):
-        return _calc_conditions_div(p)
+        return _dup_routh_hurwitz_exraw_div(p)
 
-    return _calc_conditions_no_div(p)
+    return _dup_routh_hurwitz_exraw_no_div(p)
 
-def _calc_conditions_div(p: list[Expr]) -> list[Expr]:
+
+def _dup_routh_hurwitz_exraw_div(p: list[Expr]) -> list[Expr]:
     """
     Stability check with divisions, used for numeric cases.
 
@@ -146,7 +148,7 @@ def _calc_conditions_div(p: list[Expr]) -> list[Expr]:
         return [EXRAW.one]
 
     if (p[0]*p[1]).is_nonpositive:
-        return [EXRAW(-1)]
+        return [-EXRAW.one]
 
     if len(p) == 2:
         return [p[0]*p[1]]
@@ -156,61 +158,66 @@ def _calc_conditions_div(p: list[Expr]) -> list[Expr]:
         qs[i - 1] -= p[i] * p[0] / p[1]
     qs = qs[1:]
 
-    return [p[0] * p[1]] + _calc_conditions_div(qs)
+    return [p[0] * p[1]] + _dup_routh_hurwitz_exraw_div(qs)
 
-def _calc_conditions_no_div(p: list[Expr]) -> list[Expr]:
+
+def _dup_routh_hurwitz_exraw_no_div(p: list[Expr]) -> list[Expr]:
     """
     Stability check without divisions, used for EXRAW.
 
     """
-    return _rec_calc_conditions_no_div(p, [])
+    return _rec_dup_routh_hurwitz_exraw_no_div(p, [])
 
-def _rec_calc_conditions_no_div(p: list[Expr],
-                                previous_cond: list[set]) -> list[Expr]:
+
+def _rec_dup_routh_hurwitz_exraw_no_div(p: list[Expr],
+                                previous_cond: list[tuple[int, set[Expr]]]) -> list[Expr]:
     if len(p) < 2:
         return [EXRAW.one]
 
     if len(p) == 2:
-        return [_clear_cond_exraw(p[0]*p[1], previous_cond)]
+        return [_clear_cond_exraw(p[0]*p[1], previous_cond)[0]]
 
     qs = [p[1] * qi for qi in p]
     for i in range(1, len(p), 2):
         qs[i - 1] -= p[i] * p[0]
     qs = qs[1:]
 
-    cond: Expr = _clear_cond_exraw(p[0] * p[1], previous_cond)
-    return [cond] + _rec_calc_conditions_no_div(qs, previous_cond)
+    cond, previous_cond = _clear_cond_exraw(p[0] * p[1], previous_cond)
+    return [cond] + _rec_dup_routh_hurwitz_exraw_no_div(qs, previous_cond)
 
-def _clear_cond_exraw(cond: Expr, previous_cond: list[set[Expr]]) -> Expr:
+
+def _clear_cond_exraw(cond: Expr, previous_cond: list[tuple[int, set]]) -> tuple[Expr, list[tuple[int, set[Expr]]]]:
     """
     Clear the condition by removing even powers and simplifying odd powers.
     Also, remove factors that are already present in previous conditions.
 
-    This function returns a simplified product of factors and UPDATES the
+    This function returns a simplified product of factors and the
     `previous_cond` list with the new condition.
 
     """
-    factors: set[Expr] = _build_simplified_factors(cond, previous_cond)
+    factors_repr: tuple[int, set[Expr]] = _build_simplified_factors(cond, previous_cond)
 
-    first_factor_iteration = factors.copy()
+    first_factor_iteration = factors_repr
 
     # Second iteration to simplify the factors further using `factor_terms`.
     # To reach a better simplification, it could be better to use `factor`, but
     # it could be slower.
     # Because the point of the algorithm for EXRAW is to be fast, we prefer to
     # use `factor_terms`.
-    factors = _build_simplified_factors(factor_terms(Mul(*factors)),
-                                        previous_cond)
+    new_cond = Mul(factors_repr[0], *factors_repr[1])
+    factors_repr = _build_simplified_factors(factor_terms(new_cond), previous_cond)
 
     # It's important to keep the first factor iteration, because it follows the
     # pattern of the unsimplified coefficients, which appears in the next
     # iteration of the Routh-Hurwitz algorithm.
     # Adding the last factor form, probably lead to a worse simplification.
-    previous_cond.append(first_factor_iteration)
-    return Mul(*factors)
+    previous_cond = previous_cond + [first_factor_iteration]
+
+    return Mul(factors_repr[0], *factors_repr[1]), previous_cond
+
 
 def _build_simplified_factors(cond: Expr,
-                              previous_cond: list[set[Expr]]) -> set[Expr]:
+                              previous_cond: list[tuple[int, set[Expr]]]) -> tuple[int, set[Expr]]:
     """
     Build a set of simplified factors from the expression rem oving even powers
     and simplifying odd powers.
@@ -218,32 +225,39 @@ def _build_simplified_factors(cond: Expr,
     conditions.
 
     """
-    # Build a set of factors without even powers and simplified odd powers.
-    powers_dict = dict(cond.as_powers_dict()) # Dict of factors with their powers
+    cond, sign = signsimp(cond, evaluate=False), 1
+
+    if cond.could_extract_minus_sign():
+        cond, sign = -cond, -1
+
+    # Build a set of factors without even powers
     factors = set()
-    n_minus_one = 0
+    powers_dict = dict(cond.as_powers_dict())
+
     for factor in powers_dict:
         if powers_dict[factor] % 2 != 0:
-            signsimp_factor = signsimp(factor, evaluate=False)
-            if signsimp_factor.could_extract_minus_sign():
-                factors.add(-signsimp_factor)
-                n_minus_one += 1
-            else:
-                factors.add(signsimp_factor)
+                factors.add(factor)
 
-    if n_minus_one % 2 == 1:
-        factors.add(-1)
+    factors_rep = (sign, factors)
 
     # Remove factors that are already present in previous conditions.
     for prev_factors in previous_cond:
-        if prev_factors.issubset(factors):
-            factors -= prev_factors
-        elif -1 in prev_factors:
-            if (prev_factors - {-1}).issubset(factors): # type: ignore
-                factors -= (prev_factors - {-1}) # type: ignore
-                factors.add(-1)
+        cond_quo = _div(factors_rep, prev_factors)
+        if cond_quo is not None:
+            factors_rep = cond_quo
 
-    return factors
+    return factors_rep
+
+
+def _div(n: tuple[int, set[Expr]],
+        d: tuple[int, set[Expr]]) -> tuple[int, set[Expr]] | None:
+    """Divide n by d if possible else return None."""
+    nsign, nfactors = n
+    dsign, dfactors = d
+    if nfactors.issuperset(dfactors):
+        return nsign*dsign, nfactors - dfactors
+    else:
+        return None
 
 # TODO Implement conditions for discrete time systems
 # Possible ways are:

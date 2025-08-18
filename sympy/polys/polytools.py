@@ -4163,7 +4163,7 @@ class Poly(Basic):
         G = name if by_name else name.get_perm_group()
         return G, alt
 
-    def routh_hurwitz_conditions(f):
+    def hurwitz_conditions(f):
         """
         Computes the Routh Hurwitz criteria.
 
@@ -4186,7 +4186,7 @@ class Poly(Basic):
         >>> from sympy import symbols, Poly, reduce_inequalities
         >>> x, k = symbols("x k")
         >>> p3 = Poly(x**3 + x**2 + 2*k*x + 1 - k, x)
-        >>> conditions = p3.routh_hurwitz_conditions()
+        >>> conditions = p3.hurwitz_conditions()
         >>> conditions
         [3*k - 1, 1 - k]
         >>> reduce_inequalities([c > 0 for c in conditions])
@@ -4201,7 +4201,7 @@ class Poly(Basic):
 
 
         """
-        conds = f.rep.routh_hurwitz_conditions()
+        conds = f.rep.hurwitz_conditions()
         return [f.domain.to_sympy(cond) for cond in conds]
 
     @property
@@ -7823,9 +7823,9 @@ def is_zero_dimensional(F, *gens, **args):
 
 
 @public
-def routh_hurwitz_conditions(f, *gens, **args):
+def hurwitz_conditions(f, *gens, **args):
     """
-    See :func:`~.Poly.routh_hurwitz_conditions`.
+    See :func:`~.Poly.hurwitz_conditions`.
 
     """
     options.allowed_flags(args, ['polys'])
@@ -7833,9 +7833,9 @@ def routh_hurwitz_conditions(f, *gens, **args):
     try:
         F, opt = poly_from_expr(f, *gens, **args)
     except PolificationFailed as exc:
-        raise ComputationFailed('routh_hurwitz_conditions', 1, exc)
+        raise ComputationFailed('hurwitz_conditions', 1, exc)
 
-    return F.routh_hurwitz_conditions()
+    return F.hurwitz_conditions()
 
 @public
 class GroebnerBasis(Basic):
