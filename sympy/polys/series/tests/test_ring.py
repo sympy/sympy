@@ -1260,11 +1260,11 @@ def test_PowerSeriesRing_operations_int(groundring_int):
 
     assert RL.equal_repr(
         RU.compose(1 + x**2 + 12 * x**3, x + 7 * x**3).series,
-        RL.from_list([1, 0, 1, 12, 14], 5),
+        RL([1, 0, 1, 12, 14], 5),
     )
     assert RL.equal_repr(
         RU.compose(3 * x**3, x + 2 * x**3 + 2 * x**4).series,
-        RL.from_list([0, 0, 0, 3], 5),
+        RL([0, 0, 0, 3], 5),
     )
 
     assert RL.equal_repr(
@@ -1274,16 +1274,12 @@ def test_PowerSeriesRing_operations_int(groundring_int):
         RU.differentiate(x**4 + 5 * x**3 + 2 * x).series, RL([2, 0, 15, 4])
     )
 
-    assert RL.equal_repr(RU.inverse(1 + x).series, RL.from_list([1, -1, 1, -1, 1], 5))
-    assert RL.equal_repr(
-        RU.inverse(1 + 2 * x + x**2).series, RL.from_list([1, -2, 3, -4, 5], 5)
-    )
+    assert RL.equal_repr(RU.inverse(1 + x).series, RL([1, -1, 1, -1, 1], 5))
+    assert RL.equal_repr(RU.inverse(1 + 2 * x + x**2).series, RL([1, -2, 3, -4, 5], 5))
 
+    assert RL.equal_repr(RU.reversion(x + x**2).series, RL([0, 1, -1, 2, -5], 5))
     assert RL.equal_repr(
-        RU.reversion(x + x**2).series, RL.from_list([0, 1, -1, 2, -5], 5)
-    )
-    assert RL.equal_repr(
-        RU.reversion(x + 2 * x**2 + x**3).series, RL.from_list([0, 1, -2, 7, -30], 5)
+        RU.reversion(x + 2 * x**2 + x**3).series, RL([0, 1, -2, 7, -30], 5)
     )
 
 
@@ -1297,14 +1293,14 @@ def test_PowerSeriesRing_operations_rational(groundring_rational):
         RU.compose(
             QQ(1, 2) + QQ(2, 3) * x**2 + QQ(3, 4) * x**3, x + QQ(1, 5) * x**3
         ).series,
-        R.from_list([QQ(1, 2), QQ(0, 1), QQ(2, 3), QQ(3, 4), QQ(4, 15)], 5),
+        R([QQ(1, 2), QQ(0, 1), QQ(2, 3), QQ(3, 4), QQ(4, 15)], 5),
     )
     assert R.equal_repr(
         RU.compose(
             QQ(3, 4) + QQ(1, 6) * x**2 + QQ(2, 7) * x**4,
             x + QQ(3, 8) * x**2 + QQ(1, 9) * x**3,
         ).series,
-        R.from_list([QQ(3, 4), QQ(0, 1), QQ(1, 6), QQ(1, 8), QQ(8375, 24192)], 5),
+        R([QQ(3, 4), QQ(0, 1), QQ(1, 6), QQ(1, 8), QQ(8375, 24192)], 5),
     )
 
     assert R.equal_repr(
@@ -1315,44 +1311,44 @@ def test_PowerSeriesRing_operations_rational(groundring_rational):
             + QQ(1, 8) * x**3
             + QQ(3, 5) * x**4
         ).series,
-        R.from_list([QQ(2, 3), QQ(8, 7), QQ(3, 8), QQ(12, 5)]),
+        R([QQ(2, 3), QQ(8, 7), QQ(3, 8), QQ(12, 5)]),
     )
     assert R.equal_repr(
         RU.differentiate(QQ(1, 9) * x**2 + QQ(5, 11) * x**3 + QQ(2, 13) * x**4).series,
-        R.from_list([QQ(0, 1), QQ(2, 9), QQ(15, 11), QQ(8, 13)]),
+        R([QQ(0, 1), QQ(2, 9), QQ(15, 11), QQ(8, 13)]),
     )
 
     p5 = QQ(2, 3) + QQ(1, 4) * x + QQ(3, 5) * x**2
     assert R.equal_repr(
         (p5 * RU.inverse(p5)).series,
-        R.from_list([QQ(1, 1)], 5),
+        R([QQ(1, 1)], 5),
     )
     p6 = QQ(3, 7) + QQ(2, 9) * x + QQ(1, 11) * x**2 + QQ(4, 13) * x**3
     assert R.equal_repr(
         (p6 * RU.inverse(p6)).series,
-        R.from_list([QQ(1, 1)], 5),
+        R([QQ(1, 1)], 5),
     )
 
     p7 = x + QQ(1, 3) * x**2 + QQ(2, 5) * x**3
     assert R.equal_repr(
         RU.compose(p7, RU.reversion(p7)).series,
-        R.from_list([QQ(0, 1), QQ(1, 1)], 5),
+        R([QQ(0, 1), QQ(1, 1)], 5),
     )
     p8 = x + QQ(3, 7) * x**3 + QQ(1, 11) * x**4
     assert R.equal_repr(
         RU.compose(p8, RU.reversion(p8)).series,
-        R.from_list([QQ(0, 1), QQ(1, 1)], 5),
+        R([QQ(0, 1), QQ(1, 1)], 5),
     )
 
     assert R.equal_repr(
         RU.integrate(
             QQ(1, 2) + QQ(3, 4) * x + QQ(2, 3) * x**2 + QQ(5, 6) * x**3
         ).series,
-        R.from_list([QQ(0, 1), QQ(1, 2), QQ(3, 8), QQ(2, 9), QQ(5, 24)]),
+        R([QQ(0, 1), QQ(1, 2), QQ(3, 8), QQ(2, 9), QQ(5, 24)]),
     )
     assert R.equal_repr(
         RU.integrate(QQ(2, 3) * x**2 + QQ(4, 5) * x**3 + QQ(1, 7) * x**4).series,
-        R.from_list([QQ(0, 1), QQ(0, 1), QQ(0, 1), QQ(2, 9), QQ(1, 5), QQ(1, 35)]),
+        R([QQ(0, 1), QQ(0, 1), QQ(0, 1), QQ(2, 9), QQ(1, 5), QQ(1, 35)]),
     )
 
 

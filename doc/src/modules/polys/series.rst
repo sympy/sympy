@@ -25,56 +25,77 @@ The architecture includes two backends: a pure Python implementation and a
 high-performance backend using the ``FLINT`` library. The system automatically
 selects the ``FLINT`` backend if it is available, falling back to the Python
 implementation otherwise. The primary factory function,
-:func:`~sympy.polys.series.power_series_ring`, handles this selection
+:func:`~sympy.polys.series.ring.power_series_ring`, handles this selection
 transparently.
 
-To create a power series ring, use the :func:`~sympy.polys.series.power_series_ring`
-function, specifying a domain and the desired precision. Ring elements can then be
-created by passing a list of coefficients.
+To create a power series ring, use the :func:`~sympy.polys.series.ring.power_series_ring`
+function by specifying the domain, generator, and desired precision. This function
+returns a tuple containing a new instance of the 
+:class:`~sympy.polys.series.ring.PowerSeriesRing` class over the given domain with the
+chosen generator.
 
 For example, let's create a ring with precision 8 over the integers:
 
     >>> from sympy.polys.series import power_series_ring
-    >>> from sympy import ZZ
-    >>> R = power_series_ring(ZZ, prec=8)
-    >>> f = R([1, 2, 3])
-    >>> g = R([4, 1])
+    >>> from sympy import ZZ, QQ
+    >>> R, x = power_series_ring('x', ZZ, 8)
+    >>> f = 1 + 2*x + 3*x**2
+    >>> g = 4 + x
 
 Arithmetic operations are performed using the ring's methods. The print method
 provides a readable string representation.
 
-    >>> R.print(R.add(f, g))
+    >>> f + g
     5 + 3*x + 3*x**2
-    >>> R.print(R.multiply(f, g))
+    >>> f * g
     4 + 9*x + 14*x**2 + 3*x**3
 
 As shown below, when the result of an operation is a polynomial with a degree
 less than the ring's precision, the exact result is returned.
 
-    >>> p = R([2, -3])
-    >>> q = R([0, 7, 6, 1])
-    >>> R.print(R.multiply(p, q))
+    >>> p = 2 - 3*x
+    >>> q = 7*x + 6*x**2 + x**3
+    >>> p * q
     14*x - 9*x**2 - 16*x**3 - 3*x**4
 
 However, if an operation produces a result that exceeds the precision threshold,
 it is automatically truncated.
 
-    >>> r = R([1, 2, 3, 4, 5, 6, 7, 8])
-    >>> s = R([0, 1, 1])
-    >>> R.print(R.multiply(r, s))
+    >>> r = 1 + 2*x + 3*x**2 + 4*x**3 + 5*x**4 + 6*x**5 + 7*x**6 + 8*x**7
+    >>> s = x + x**2
+    >>> r * s
     x + 3*x**2 + 5*x**3 + 7*x**4 + 9*x**5 + 11*x**6 + 13*x**7 + O(x**8)
 
-.. autofunction:: sympy.polys.series.power_series_ring
+The power series ring also supports common mathematical functions like logarithm
+and trigonometric functions:
 
-.. py:class:: sympy.polys.series.ring.TSeries
+    >>> R, x = power_series_ring("x", QQ, 8)
+    >>> R.log(1 + x)
+    x - 1/2*x**2 + 1/3*x**3 - 1/4*x**4 + 1/5*x**5 - 1/6*x**6 + 1/7*x**7 + O(x**8)
+    >>> R.tan(x)
+    x + 1/3*x**3 + 2/15*x**5 + 17/315*x**7 + O(x**8)
+
+
+Univariate Power Series Ring
+============================
+
+.. currentmodule:: sympy.polys.series.ring
+
+.. autofunction:: power_series_ring
+
+.. autoclass:: PowerSeriesRing
+    :members:
+
+.. autoclass:: PowerSeriesElement
+    :members:
+
+.. py:class:: TSeries
 
 
 Protocols for Power Series Rings
 ================================
 
 .. autoclass:: sympy.polys.series.base.PowerSeriesRingProto
-
-.. py:class:: TSeries
 
 
 Python Implementation

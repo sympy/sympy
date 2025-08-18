@@ -1,11 +1,11 @@
+from sympy.core.expr import Expr
 from sympy.polys.series.ring import PowerSeriesRing, PowerSeriesElement, TSeries
 from sympy.polys.domains.ring import Ring
 from sympy.polys.domains.compositedomain import CompositeDomain
 from sympy.polys.domains.domain import Er, Domain
-from sympy.core.expr import Expr
 from sympy.utilities import public
-from typing import Type, TypeIs
 
+from typing import Type
 
 @public
 class Series(Ring[PowerSeriesElement[Er]], CompositeDomain):
@@ -35,7 +35,7 @@ class Series(Ring[PowerSeriesElement[Er]], CompositeDomain):
     def new(self, element: TSeries | Expr | Er | int) -> PowerSeriesElement[Er]:  # type: ignore
         return self.ring.ring_new(element)
 
-    def of_type(self, element) -> TypeIs[PowerSeriesElement[Er]]:
+    def of_type(self, element) -> bool:
         """Check if ``a`` is of type ``dtype``."""
         return self.ring.is_element(element)
 

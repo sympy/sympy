@@ -1,8 +1,5 @@
 from __future__ import annotations
 
-from typing import Generic, Type, Union, TypeIs
-from sympy.polys.domains.domain import Domain, Er
-
 from sympy.core.expr import Expr
 from sympy.core.symbol import Symbol
 from sympy.core.sympify import CantSympify, sympify
@@ -10,7 +7,10 @@ from sympy.core.exprtools import decompose_power
 from sympy.core.mul import Mul
 from sympy.core.add import Add
 from sympy.core.power import Pow
-from sympy.series.order import Order
+
+from sympy.external.gmpy import GROUND_TYPES
+
+from sympy.polys.domains.domain import Domain, Er
 from sympy.polys.domains.domainelement import DomainElement
 from sympy.polys.densebasic import dup
 from sympy.polys.series.ringflint import QQSeries, ZZSeries
@@ -19,7 +19,9 @@ from sympy.polys.series.ringpython import (
     PythonPowerSeriesRingZZ,
     PythonPowerSeriesRingQQ,
 )
-from sympy.external.gmpy import GROUND_TYPES
+from sympy.series.order import Order
+
+from typing import Generic, Union, Type
 
 flint: bool = False
 
@@ -130,7 +132,7 @@ class PowerSeriesRing(Generic[Er]):
     def __eq__(self, other) -> bool:
         return self.ring == other.ring
 
-    def is_element(self, element) -> TypeIs[PowerSeriesElement[Er]]:
+    def is_element(self, element) -> bool:
         """Check if element belongs to this ring."""
         return isinstance(element, PowerSeriesElement) and element.ring == self
 
@@ -183,7 +185,7 @@ class PowerSeriesRing(Generic[Er]):
         while coeffs and coeffs[-1] == self.domain.zero:
             coeffs.pop()
 
-        return self.ring(coeffs, prec)
+        return self.ring.from_list(coeffs, prec)
 
     def from_list(
         self, lst: list[Er], prec: int | None = None
@@ -227,7 +229,7 @@ class PowerSeriesRing(Generic[Er]):
         R = self.ring
 
         if hasattr(R, "sqrt"):
-            series = R.sqrt(s.series)
+            series = R.sqrt(s.series)  # type: ignore[attr-defined]
             return self.from_element(series)
         else:
             raise NotImplementedError(
@@ -264,7 +266,7 @@ class PowerSeriesRing(Generic[Er]):
         """Return the integral of a power series."""
         R = self.ring
         if hasattr(R, "integrate"):
-            series = R.integrate(s.series)
+            series = R.integrate(s.series)  # type: ignore[attr-defined]
             return self.from_element(series)
         else:
             raise NotImplementedError(
@@ -275,7 +277,7 @@ class PowerSeriesRing(Generic[Er]):
         """Return the logarithm of a power series."""
         R = self.ring
         if hasattr(R, "log"):
-            series = R.log(s.series)
+            series = R.log(s.series)  # type: ignore[attr-defined]
             return self.from_element(series)
         else:
             raise NotImplementedError(
@@ -286,7 +288,7 @@ class PowerSeriesRing(Generic[Er]):
         """Return the logarithm of a power series plus one."""
         R = self.ring
         if hasattr(R, "logp1"):
-            series = R.logp1(s.series)
+            series = R.logp1(s.series)  # type: ignore[attr-defined]
             return self.from_element(series)
         else:
             raise NotImplementedError(
@@ -297,7 +299,7 @@ class PowerSeriesRing(Generic[Er]):
         """Return the exponential of a power series."""
         R = self.ring
         if hasattr(R, "exp"):
-            series = R.exp(s.series)
+            series = R.exp(s.series)  # type: ignore[attr-defined]
             return self.from_element(series)
         else:
             raise NotImplementedError(
@@ -308,7 +310,7 @@ class PowerSeriesRing(Generic[Er]):
         """Return the exponential of a power series minus one."""
         R = self.ring
         if hasattr(R, "expm1"):
-            series = R.expm1(s.series)
+            series = R.expm1(s.series)  # type: ignore[attr-defined]
             return self.from_element(series)
         else:
             raise NotImplementedError(
@@ -319,7 +321,7 @@ class PowerSeriesRing(Generic[Er]):
         """Return the arctangent of a power series."""
         R = self.ring
         if hasattr(R, "atan"):
-            series = R.atan(s.series)
+            series = R.atan(s.series)  # type: ignore[attr-defined]
             return self.from_element(series)
         else:
             raise NotImplementedError(
@@ -330,7 +332,7 @@ class PowerSeriesRing(Generic[Er]):
         """Return the hyperbolic arctangent of a power series."""
         R = self.ring
         if hasattr(R, "atanh"):
-            series = R.atanh(s.series)
+            series = R.atanh(s.series)  # type: ignore[attr-defined]
             return self.from_element(series)
         else:
             raise NotImplementedError(
@@ -341,7 +343,7 @@ class PowerSeriesRing(Generic[Er]):
         """Return the arcsine of a power series."""
         R = self.ring
         if hasattr(R, "asin"):
-            series = R.asin(s.series)
+            series = R.asin(s.series)  # type: ignore[attr-defined]
             return self.from_element(series)
         else:
             raise NotImplementedError(
@@ -352,7 +354,7 @@ class PowerSeriesRing(Generic[Er]):
         """Return the hyperbolic arcsine of a power series."""
         R = self.ring
         if hasattr(R, "asinh"):
-            series = R.asinh(s.series)
+            series = R.asinh(s.series)  # type: ignore[attr-defined]
             return self.from_element(series)
         else:
             raise NotImplementedError(
@@ -363,7 +365,7 @@ class PowerSeriesRing(Generic[Er]):
         """Return the tangent of a power series."""
         R = self.ring
         if hasattr(R, "tan"):
-            series = R.tan(s.series)
+            series = R.tan(s.series)  # type: ignore[attr-defined]
             return self.from_element(series)
         else:
             raise NotImplementedError(
@@ -374,7 +376,7 @@ class PowerSeriesRing(Generic[Er]):
         """Return the hyperbolic tangent of a power series."""
         R = self.ring
         if hasattr(R, "tanh"):
-            series = R.tanh(s.series)
+            series = R.tanh(s.series)  # type: ignore[attr-defined]
             return self.from_element(series)
         else:
             raise NotImplementedError(
@@ -385,7 +387,7 @@ class PowerSeriesRing(Generic[Er]):
         """Return the sine of a power series."""
         R = self.ring
         if hasattr(R, "sin"):
-            series = R.sin(s.series)
+            series = R.sin(s.series)  # type: ignore[attr-defined]
             return self.from_element(series)
         else:
             raise NotImplementedError(
@@ -396,7 +398,7 @@ class PowerSeriesRing(Generic[Er]):
         """Return the hyperbolic sine of a power series."""
         R = self.ring
         if hasattr(R, "sinh"):
-            series = R.sinh(s.series)
+            series = R.sinh(s.series)  # type: ignore[attr-defined]
             return self.from_element(series)
         else:
             raise NotImplementedError(
@@ -407,7 +409,7 @@ class PowerSeriesRing(Generic[Er]):
         """Return the cosine of a power series."""
         R = self.ring
         if hasattr(R, "cos"):
-            series = R.cos(s.series)
+            series = R.cos(s.series)  # type: ignore[attr-defined]
             return self.from_element(series)
         else:
             raise NotImplementedError(
@@ -418,7 +420,7 @@ class PowerSeriesRing(Generic[Er]):
         """Return the hyperbolic cosine of a power series."""
         R = self.ring
         if hasattr(R, "cosh"):
-            series = R.cosh(s.series)
+            series = R.cosh(s.series)  # type: ignore[attr-defined]
             return self.from_element(series)
         else:
             raise NotImplementedError(

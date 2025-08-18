@@ -82,11 +82,17 @@ class FlintPowerSeriesRingZZ:
     Note
     ====
 
-    The recommended way to create a power series ring is using the factory function:
+    The recommended way to create a power series ring is using the factory function
+    which returns a new instance of the higher level PowerSeriesRing class with
+    the ring generator:
 
     >>> from sympy.polys.series import power_series_ring
     >>> from sympy.polys.domains import ZZ
-    >>> R = power_series_ring(ZZ, prec=6)
+    >>> R, x = power_series_ring("x", ZZ, 6)
+    >>> R
+    ZZ[[x], 6]
+    >>> type(x)
+    <class 'sympy.polys.series.ring.PowerSeriesElement'>
 
     This function automatically uses the Flint implementation if available for better
     performance, falling back to the Python implementation otherwise.
@@ -97,6 +103,8 @@ class FlintPowerSeriesRingZZ:
     FlintPowerSeriesRingQQ
     PythonPowerSeriesRingZZ
     power_series_ring
+    PowerSeriesRing
+    PowerSeriesElement
     """
 
     _domain = ZZ
@@ -486,11 +494,17 @@ class FlintPowerSeriesRingQQ:
     Note
     ====
 
-    The recommended way to create a power series ring is using the factory function:
+    The recommended way to create a power series ring is using the factory function
+    which returns a new instance of the higher level PowerSeriesRing class with
+    the ring generator:
 
     >>> from sympy.polys.series import power_series_ring
     >>> from sympy.polys.domains import QQ
-    >>> R = power_series_ring(QQ, prec=6)
+    >>> R, x = power_series_ring("x", QQ, 6)
+    >>> R
+    QQ[[x], 6]
+    >>> type(x)
+    <class 'sympy.polys.series.ring.PowerSeriesElement'>
 
     This function automatically uses the Flint implementation if available for better
     performance, falling back to the Python implementation otherwise.
@@ -501,6 +515,8 @@ class FlintPowerSeriesRingQQ:
     FlintPowerSeriesRingZZ
     PythonPowerSeriesRingQQ
     power_series_ring
+    PowerSeriesRing
+    PowerSeriesElement
     """
 
     _domain = QQ
