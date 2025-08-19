@@ -520,9 +520,9 @@ class Quaternion(Expr):
         >>> from sympy.abc import a, b, c, d
         >>> euler = Quaternion(a, b, c, d).to_euler('zyz')
         >>> euler
-        (-atan2(-b, c) + atan2(d, a),
-         2*atan2(sqrt(b**2 + c**2), sqrt(a**2 + d**2)),
-         atan2(-b, c) + atan2(d, a))
+        (Mod(-atan2(-b, c) + atan2(d, a) + pi, 2*pi) - pi,
+        2*atan2(sqrt(b**2 + c**2), sqrt(a**2 + d**2)),
+        Mod(atan2(-b, c) + atan2(d, a) + pi, 2*pi) - pi)
 
 
         References
@@ -584,8 +584,8 @@ class Quaternion(Expr):
 
         if case == 0:
             if angle_addition:
-                angles0 = wrap_angle(atan2(b, a) + atan2(d, c))
-                angles2 = wrap_angle(atan2(b, a) - atan2(d, c))
+                angles0 = atan2(b, a) + atan2(d, c)
+                angles2 = atan2(b, a) - atan2(d, c)
             else:
                 angles0 = atan2(b*c + a*d, a*c - b*d)
                 angles2 = atan2(b*c - a*d, a*c + b*d)
@@ -609,9 +609,9 @@ class Quaternion(Expr):
             angles0 *= sign
 
         if extrinsic:
-            return (angles2, angles1, angles0)
+            return (wrap_angle(angles2), angles1, wrap_angle(angles0))
         else:
-            return (angles0, angles1, angles2)
+            return (wrap_angle(angles0), angles1, wrap_angle(angles2))
 
     @classmethod
     def from_axis_angle(cls, vector: tuple[SExpr, SExpr, SExpr], angle: SExpr) -> Quaternion:
