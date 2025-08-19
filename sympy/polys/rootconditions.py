@@ -90,21 +90,9 @@ def _rec_dup_routh_hurwitz_poly(p: list[PolyElement[Er]],
     qs = qs[1:]
 
     cond = p[0] * p[1]
-
-    # This check stops the recursion immediately and avoid a possible infinite
-    # while loop in _clear_cond_poly.
-    if cond.is_zero:
-        return [K(-1)]
-
     cond = _clear_cond_poly(cond, previous_cond, K)
 
-    # We avoid adding 1 or -1 to the previous conditions, since it will lead to
-    # an infinite loop in the next _clear_cond_poly.
-    if cond == K(-1):
-        return [K(-1)]
-
-    if not cond.is_one:
-        previous_cond.append(cond)
+    previous_cond.append(cond)
 
     return _rec_dup_routh_hurwitz_poly(qs, previous_cond, K)
 
@@ -116,7 +104,13 @@ def _clear_cond_poly(cond: PolyElement[Er], previous_cond, K):
     # we assume that at this point, there are no zeroes, ones and negative ones
     # in previous_cond.
     # If there are, there will be an infinite while loop.
+    if cond.is_zero:
+        return K(-1)
+
     for c in previous_cond:
+        if is_totally_ground(c):
+            continue
+
         cond_quo, r = K.div(cond, c)
         while not r:
             cond = cond_quo
@@ -127,9 +121,21 @@ def _clear_cond_poly(cond: PolyElement[Er], previous_cond, K):
 
     cond = prod([fac for fac, m in facs_m if m % 2 == 1], K.one)
     if common_factor < 0:
-        cond = -K.one* cond
+        cond = -K.one*cond
 
     return cond
+
+
+def is_totally_ground(c: PolyElement[Er]) -> bool:
+    """Check if the condition is ground in all subrings"""
+    while True:
+        if not c.is_ground:
+            return False
+        ring = c.ring
+        domain = ring.domain
+        if not domain.is_PolynomialRing:
+            return True
+        c = c.drop(*ring.gens)
 
 
 def _dup_routh_hurwitz_exraw(p: list[Expr]) -> list[Expr]:

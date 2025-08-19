@@ -2308,9 +2308,9 @@ def test_StateSpace_stability():
     A1 = Matrix([[0,1,0],[0,0,1], [k-1, -2*k, -1]])
     ss1 = StateSpace(A1, B, C, D)
     ineq = ss1.get_asymptotic_stability_conditions()
-    assert ineq == [3 * k - 1 > 0, 1 - k > 0]
+    assert ineq == [True, 3 * k - 1 > 0, 1 - k > 0]
 
     A2 = Matrix([[1,0,0], [0,-1,k], [0,0,-1]])
     ss2 = StateSpace(A2, B, C, D)
     ineq = ss2.get_asymptotic_stability_conditions()
-    assert ineq == [False]
+    assert ineq == [True, False, False]

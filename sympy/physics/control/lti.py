@@ -1241,7 +1241,7 @@ class TransferFunction(SISOLinearTimeInvariant):
         >>> feedback = Feedback(tf4, tf5).doit()
         >>> ineq = feedback.get_asymptotic_stability_conditions(cancel_poles_zeros = True)
         >>> ineq
-        [10*k**2 - 3*k > 0, k > 0]
+        [True, 10*k**2 - 3*k > 0, k > 0]
         >>> reduce_inequalities(ineq)
         (3/10 < k) & (k < oo)
 
@@ -5190,7 +5190,7 @@ class StateSpace(LinearTimeInvariant):
         >>> ss = StateSpace(A, B, C, D)
         >>> ineq = ss.get_asymptotic_stability_conditions()
         >>> ineq
-        [3*k - 1 > 0, 1 - k > 0]
+        [True, 3*k - 1 > 0, 1 - k > 0]
         >>> reduce_inequalities(ineq)
         (1/3 < k) & (k < 1)
 

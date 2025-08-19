@@ -4102,7 +4102,7 @@ def test_hurwitz_conditions():
         b0*b3]
 
     p2 = Poly(-3*s**2 - 2*s - b0, s)
-    assert[p2.domain.to_sympy(c) for c in p2.hurwitz_conditions()] == [b0]
+    assert[p2.domain.to_sympy(c) for c in p2.hurwitz_conditions()] == [1, b0]
 
     a_ = symbols('a', nonpositive = True)
 
@@ -4118,7 +4118,7 @@ def test_hurwitz_conditions():
     p5_ = Poly(b0 + b1*s**2 + b1*s + b3*s**4 + b3*s**3, s, domain = EXRAW)
 
     assert [p5.domain.to_sympy(c) for c in p5.hurwitz_conditions()] == \
-           [-1]
+           [1, -1, -1, -1]
     assert [p5_.domain.to_sympy(c) for c in p5_.hurwitz_conditions()] == \
            [1, 0, 1, 1]
 
