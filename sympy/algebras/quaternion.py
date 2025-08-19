@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, overload
 
-from sympy.core.numbers import Rational, pi
+from sympy.core.numbers import Rational, pi, Number
 from sympy.core.singleton import S
 from sympy.core.relational import is_eq
 from sympy.functions.elementary.complexes import (conjugate, im, re, sign)
@@ -26,7 +26,11 @@ if TYPE_CHECKING:
     SExpr = Expr | complex
 
 def wrap_angle(angle):
-    return (angle + pi) % (2*pi) - pi
+    if isinstance(angle, Number):
+        return (angle + pi) % (2*pi) - pi
+    if isinstance(angle, Expr) and angle.is_number:
+        return (angle + pi) % (2*pi) - pi
+    return angle
 
 def _check_norm(elements: Iterable[Expr], norm: Expr | None) -> None:
     """validate if input norm is consistent"""
