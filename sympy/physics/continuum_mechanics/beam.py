@@ -1272,36 +1272,18 @@ class Beam:
         # Solve for roots in each interval
         roots = set()
         for interval in intervals:
+            # adding singularity points as default roots for temporary
+            roots.add(interval.start)
+            roots.add(interval.end)
             expr = non_singular_bending_moment
-            for sf in expr.atoms(SingularityFunction):
-                loc, order = sf.args[1], sf.args[2]
-                if interval.end <= loc:
-                    expr = expr.subs(sf, 0)
-                elif interval.start > loc:
-                    expr = expr.subs(sf, (x - loc)**order)
-                else:
-                    if not (loc == interval.start or loc == interval.end):
-                        continue
 
             sol = solveset(expr, x, domain=interval)
             if isinstance(sol, FiniteSet):
                 for r in sol:
                     roots.add(r)
-            elif isinstance(sol, Union):
-                for part in sol.args:
-                    if isinstance(part, FiniteSet):
-                        for r in part:
-                            roots.add(r)
-                    elif isinstance(part, Interval):
-                        roots.add(part.start)
-                        roots.add(part.end)
-
             elif isinstance(sol, Interval):
                 roots.add(sol.start)
                 roots.add(sol.end)
-
-        for loc, _ in self.bc_slope:
-            roots.add(loc)
 
         roots = sorted(roots)
 
