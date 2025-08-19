@@ -19,7 +19,7 @@ from sympy.polys.densearith import (
     dup_exquo_ground, dmp_exquo_ground,
 )
 from sympy.polys.densebasic import (
-    dup, dmp, _dup, _dmp, _ground_dmp,
+    dup, dmp, _dup, _dmp, _dmp2, _ground_dmp,
     dup_strip, dmp_strip, dup_truncate,
     dup_convert, dmp_convert,
     dup_degree, dmp_degree,
@@ -34,7 +34,6 @@ from sympy.polys.densebasic import (
     dmp_zeros,
     dmp_include,
     dup_nth,
-    dup_normal,
 )
 from sympy.polys.polyerrors import (
     MultivariatePolynomialError,
@@ -46,7 +45,9 @@ from math import ceil as _ceil, log2 as _log2, sqrt
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from sympy.external.gmpy import MPQ
     from sympy.polys.domains.ringextension import RingExtension
+    from sympy.polys.domains.algebraicfield import AlgebraicField, Alg
 
 
 def dup_integrate(f: dup[Ef], m: int, K: Field[Ef]) -> dup[Ef]:
@@ -172,7 +173,7 @@ def dup_diff(f: dup[Er], m: int, K: Domain[Er]) -> dup[Er]:
     if n < m:
         return []
 
-    deriv = []
+    deriv: list[Er] = []
 
     if m == 1:
         for coeff in f[:-m]:
@@ -219,7 +220,8 @@ def dmp_diff(f: dmp[Er], m: int, u: int, K: Domain[Er]) -> dmp[Er]:
     if n < m:
         return dmp_zero(u)
 
-    deriv, v = [], u - 1
+    deriv: list[dmp[Er]] = []
+    v = u - 1
 
     if m == 1:
         for coeff in f[:-m]:
@@ -457,7 +459,7 @@ def dup_trunc(f: dup[Eeuclid], p: Eeuclid, K: Domain[Eeuclid]) -> dup[Eeuclid]:
 
     """
     if K.is_ZZ:
-        g = []
+        g: list[Eeuclid] = []
 
         for c in f:
             c = c % p
@@ -824,7 +826,7 @@ def dup_real_imag(f: dup[Er], K: Domain[Er]) -> tuple[dmp[Er], dmp[Er]]:
     if not f:
         return f1, f2
 
-    g = [[[K.one, K.zero]], [[K.one], []]]
+    g = _dmp2([[[K.one, K.zero]], [[K.one], []]])
     h = dmp_ground(f[0], 2)
 
     for c in f[1:]:
@@ -1126,7 +1128,8 @@ def _dup_right_decompose(f: dup[Er], s: int, K: Domain[Er]) -> dup[Er]:
 
 def _dup_left_decompose(f: dup[Er], h: dup[Er], K: Domain[Er]) -> dup[Er] | None:
     """Helper function for :func:`_dup_decompose`."""
-    g, i = {}, 0
+    g: dict[int, Er] = {}
+    i = 0
 
     while f:
         q, r = dup_div(f, h, K)
@@ -1149,12 +1152,10 @@ def _dup_decompose(f: dup[Er], K: Domain[Er]) -> tuple[dup[Er], dup[Er]] | None:
             continue
 
         h = _dup_right_decompose(f, s, K)
+        g = _dup_left_decompose(f, h, K)
 
-        if h is not None:
-            g = _dup_left_decompose(f, h, K)
-
-            if g is not None:
-                return g, h
+        if g is not None:
+            return g, h
 
     return None
 
@@ -1238,7 +1239,7 @@ def dmp_alg_inject(
     if not (K.is_Algebraic or K.is_GaussianRing or K.is_GaussianField):
         raise DomainError('computation can be done only in an algebraic domain')
 
-    fd: dict[tuple[int, ...], Er] = dmp_to_dict(f, u)
+    fd: dict[tuple[int, ...], Er] = dmp_to_dict(f, u, K)
     h: dict[tuple[int, ...], Eg] = {}
 
     for f_monom, g in fd.items():
@@ -1250,7 +1251,7 @@ def dmp_alg_inject(
     return F, u + 1, K.dom
 
 
-def dmp_lift(f, u, K):
+def dmp_lift(f: dmp[Alg], u: int, K: AlgebraicField) -> dmp[MPQ]:
     """
     Convert algebraic coefficients to integers in ``K[X]``.
 
@@ -1277,7 +1278,7 @@ def dmp_lift(f, u, K):
     p_a = K.mod.to_list()
     P_A = dmp_include(p_a, list(range(1, v + 1)), 0, K2)
 
-    return dmp_resultant(F, P_A, v, K2)
+    return dmp_resultant(F, P_A, v, K2) # type: ignore
 
 
 def dup_sign_variations(f, K):
@@ -1509,7 +1510,7 @@ def _dup_series_reversion_small(f: dup[Er], n: int, K: Domain[Er]) -> dup[Er]:
     if n >= 4:
         g[-4] = (2 * b ** 2 - a * c) * cinv ** 5
 
-    return dup_normal(g, K)
+    return dup_strip(g)
 
 
 def dup_series_reversion(f: dup[Er], n: int, K: Domain[Er]) -> dup[Er]:

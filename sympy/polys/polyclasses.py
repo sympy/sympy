@@ -1445,7 +1445,7 @@ class DMP_Python(DMP[Er]):
     def _lift(f) -> DMP:
         """Convert algebraic coefficients to rationals. """
         # XXX: This is only for AlgebraicField domains
-        r = dmp_lift(f._rep, f.lev, f.dom)
+        r = dmp_lift(f._rep, f.lev, f.dom) # type: ignore
         return f._new(r, f.dom.dom, f.lev) # type: ignore
 
     def deflate(f) -> tuple[monom, DMP_Python[Er]]:

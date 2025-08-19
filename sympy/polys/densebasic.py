@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 
-from typing import TYPE_CHECKING, TypeVar, Iterable, Callable, Any
+from typing import TYPE_CHECKING, TypeVar, Iterable, Callable, Any, cast
 
+from sympy.external.gmpy import MPZ
 from sympy.core import igcd
 from sympy.core.expr import Expr
 from sympy.polys.domains.domain import Domain, Er, Es, Eg
@@ -45,6 +46,14 @@ if TYPE_CHECKING:
         """Convert dup to level 0 dmp."""
         ...
 
+    def _dmp1(p: list[dup[_T]], /) -> dmp[_T]:
+        """Convert dup to level 0 dmp."""
+        ...
+
+    def _dmp2(p: list[list[dup[_T]]], /) -> dmp[_T]:
+        """Convert dup to level 0 dmp."""
+        ...
+
     def _dmp_tup(p: tuple[_T, ...], /) -> dmp_tup[_T]:
         """Convert tuple to dmp_tup."""
         ...
@@ -72,6 +81,12 @@ else:
         return p
 
     def _dmp(p, /):
+        return p
+
+    def _dmp1(p, /):
+        return p
+
+    def _dmp2(p, /):
         return p
 
     def _dmp_tup(p, /):
@@ -169,7 +184,7 @@ def dmp_TC(f: dmp[Er], K: Domain[Er]) -> dmp[Er]:
 
     """
     if not f:
-        return K.zero # type: ignore
+        return _ground_dmp(K.zero)
     else:
         return f[-1]
 
@@ -240,7 +255,7 @@ def dmp_true_LT(f: dmp[Er], u: int, K: Domain[Er]) -> tuple[monom, Er]:
     ((2, 0), 4)
 
     """
-    monom = []
+    monom: list[int] = []
 
     while u:
         monom.append(len(f) - 1)
@@ -456,7 +471,7 @@ def _rec_validate(
     elif not g:
         return {i}
     else:
-        levels = set()
+        levels: set[int] = set()
 
         for c in g:
             levels |= _rec_validate(f, c, i + 1, K)
@@ -610,7 +625,7 @@ def dmp_to_tuple(f: dmp[Er], u: int) -> dmp_tup[Er]:
     return tuple(dmp_to_tuple(c, v) for c in f)
 
 
-def dup_normal(f: dup[Er], K: Domain[Er]) -> dup[Er]:
+def dup_normal(f: dup[int] | dup[MPZ], K: Domain[Er]) -> dup[Er]:
     """
     Normalize univariate polynomial in the given domain.
 
@@ -627,7 +642,7 @@ def dup_normal(f: dup[Er], K: Domain[Er]) -> dup[Er]:
     return dup_strip([K.normal(c) for c in f])
 
 
-def dmp_normal(f: dmp[Er], u: int, K: Domain[Er]) -> dmp[Er]:
+def dmp_normal(f: dmp[int] | dmp[MPZ], u: int, K: Domain[Er]) -> dmp[Er]:
     """
     Normalize a multivariate polynomial in the given domain.
 
@@ -669,7 +684,7 @@ def dup_convert(f: dup[Er], K0: Domain[Er] | None, K1: Domain[Es]) -> dup[Es]:
 
     """
     if K0 is not None and K0 == K1:
-        return f  # type: ignore
+        return cast('dup[Es]', f)
     else:
         return dup_strip([K1.convert(c, K0) for c in f])
 
@@ -696,7 +711,7 @@ def dmp_convert(f: dmp[Er], u: int, K0: Domain[Er] | None, K1: Domain[Es]) -> dm
     if not u:
         return _dmp(dup_convert(_dup(f), K0, K1))
     if K0 is not None and K0 == K1:
-        return f  # type: ignore
+        return cast('dmp[Es]', f)
 
     v = u - 1
 
@@ -990,7 +1005,7 @@ def dmp_zeros(n: int, u: int, K: Domain[Er]) -> dmp[Er]:
         return [dmp_zero(u) for i in range(n)]
 
 
-def dmp_grounds(c: Er, n: int, u: int) -> list[dmp[Er]] | list[Er]:
+def dmp_grounds(c: Er, n: int, u: int) -> list[dmp[Er]]:
     """
     Return a list of multivariate constants.
 
@@ -1010,9 +1025,9 @@ def dmp_grounds(c: Er, n: int, u: int) -> list[dmp[Er]] | list[Er]:
         return []
 
     if u < 0:
-        return [c] * n
+        return [_ground_dmp(c)] * n
     else:
-        return [dmp_ground(c, u) for i in range(n)]  # type: ignore
+        return [dmp_ground(c, u) for i in range(n)]
 
 
 def dmp_negative_p(f: dmp[Er], u: int, K: Domain[Er]) -> bool:
@@ -1138,7 +1153,9 @@ def dmp_from_dict(f: dict[tuple[int, ...], Er], u: int, K: Domain[Er]) -> dmp[Er
         else:
             coeffs[head] = {tail: coeff}
 
-    n, v, h = max(coeffs.keys()), u - 1, []
+    n = max(coeffs.keys())
+    v = u - 1
+    h: dmp[Er] = []
 
     for k in range(n, -1, -1):
         dcoeff = coeffs.get(k)
@@ -1151,9 +1168,7 @@ def dmp_from_dict(f: dict[tuple[int, ...], Er], u: int, K: Domain[Er]) -> dmp[Er
     return dmp_strip(h, u)
 
 
-def dup_to_dict(
-    f: dup[Er], K: Domain[Er] | None = None,
-) -> dict[tuple[int, ...], Er]:
+def dup_to_dict(f: dup[Er], K: Domain[Er]) -> dict[tuple[int, ...], Er]:
     """
     Convert ``K[x]`` polynomial to a ``dict``.
 
@@ -1169,15 +1184,14 @@ def dup_to_dict(
     {}
 
     .. versionchanged:: 1.15.0
-        The ``zero`` parameter was removed.
+        The ``zero`` parameter was removed and the ``K`` parameter is now
+        required.
 
     """
     return {(k,): fk for k, fk in enumerate(f[::-1]) if fk}
 
 
-def dup_to_raw_dict(
-    f: dup[Er], K: Domain[Er] | None = None,
-) -> dict[int, Er]:
+def dup_to_raw_dict(f: dup[Er], K: Domain[Er]) -> dict[int, Er]:
     """
     Convert a ``K[x]`` polynomial to a raw ``dict``.
 
@@ -1191,15 +1205,14 @@ def dup_to_raw_dict(
     {0: 7, 2: 5, 4: 1}
 
     .. versionchanged:: 1.15.0
-        The ``zero`` parameter was removed.
+        The ``zero`` parameter was removed and the ``K`` parameter is now
+        required.
 
     """
     return {k: fk for k, fk in enumerate(f[::-1]) if fk}
 
 
-def dmp_to_dict(
-    f: dmp[Er], u: int, K: Domain[Er] | None = None,
-) -> dict[tuple[int, ...], Er]:
+def dmp_to_dict(f: dmp[Er], u: int, K: Domain[Er]) -> dict[tuple[int, ...], Er]:
     """
     Convert a ``K[X]`` polynomial to a ``dict````.
 
@@ -1215,13 +1228,16 @@ def dmp_to_dict(
     {}
 
     .. versionchanged:: 1.15.0
-        The ``zero`` parameter was removed.
+        The ``zero`` parameter was removed and the ``K`` parameter is now
+        required.
 
     """
     if not u:
         return dup_to_dict(_dup(f), K)
 
-    n, v, result = dmp_degree(f, u), u - 1, {}
+    n = dmp_degree(f, u)
+    v = u - 1
+    result: dict[monom, Er] = {}
 
     for k in range(0, n + 1):
         h = dmp_to_dict(f[n - k], v, K)
@@ -1364,7 +1380,7 @@ def dmp_raise(f: dmp[Er], l: int, u: int, K: Domain[Er]) -> dmp[Er]:
 
         k = l - 1
 
-        return [dmp_ground(c, k) for c in _dup(f)]  # type: ignore
+        return [dmp_ground(c, k) for c in _dup(f)]
 
     v = u - 1
 
@@ -1439,7 +1455,7 @@ def dmp_deflate(f: dmp[Er], u: int, K: Domain[Er]) -> tuple[tuple[int, ...], dmp
     if all(b == 1 for b in Bt):
         return Bt, f
 
-    H = {}
+    H: dict[tuple[int, ...], Er] = {}
 
     for A, coeff in F.items():
         N = [a // b for a, b in zip(A, Bt)]
@@ -1512,7 +1528,8 @@ def dmp_multi_deflate(
         M, H = dup_multi_deflate(_idup(polys), K)
         return (M,), _idmp(H)
 
-    F, B = [], [0] * (u + 1)
+    F: list[dict[monom, Er]] = []
+    B = [0] * (u + 1)
 
     for p in polys:
         f: dict[monom, Er] = dmp_to_dict(p, u, K)
@@ -1536,7 +1553,7 @@ def dmp_multi_deflate(
     H2: list[dmp[Er]] = []
 
     for f in F:
-        h = {}
+        h: dict[monom, Er] = {}
 
         for A, coeff in f.items():
             N = [a // b for a, b in zip(A, Bt)]
@@ -1646,7 +1663,7 @@ def dmp_exclude(f: dmp[Er], u: int, K: Domain[Er]) -> tuple[list[int], dmp[Er], 
         return [], f, u
 
     J: list[int] = []
-    F: dict[monom, Er] = dmp_to_dict(f, u, K)
+    F = dmp_to_dict(f, u, K)
 
     for j in range(0, u + 1):
         for monom in F.keys():
@@ -1658,7 +1675,7 @@ def dmp_exclude(f: dmp[Er], u: int, K: Domain[Er]) -> tuple[list[int], dmp[Er], 
     if not J:
         return [], f, u
 
-    d = {}
+    d: dict[tuple[int, ...], Er] = {}
 
     for monom, coeff in F.items():
         lmonom = list(monom)
@@ -1896,20 +1913,16 @@ def dmp_list_terms(
     [((1, 1), 1), ((1, 0), 1), ((0, 1), 2), ((0, 0), 3)]
 
     """
-    terms: list[tuple[monom, Er]]
-
-    def sort(terms, O):
-        return sorted(terms, key=lambda term: O(term[0]), reverse=True)
-
-    terms = _rec_list_terms(f, u, ())
+    terms: list[tuple[monom, Er]] = _rec_list_terms(f, u, ())
 
     if not terms:
         return [((0,) * (u + 1), K.zero)]
 
-    if order is None:
-        return terms
-    else:
-        return sort(terms, monomial_key(order))
+    if order is not None:
+        O = monomial_key(order)
+        terms = sorted(terms, key=lambda term: O(term[0]), reverse=True)
+
+    return terms
 
 
 def dup_apply_pairs(
@@ -1980,7 +1993,7 @@ def dmp_apply_pairs(
         else:
             f = dmp_zeros(m - n, v, K) + f
 
-    result = []
+    result: list[dmp[Er]] = []
 
     for a, b in zip(f, g):
         result.append(dmp_apply_pairs(a, b, h, args, v, K))
@@ -2017,7 +2030,7 @@ def dmp_slice(f: dmp[Er], m: int, n: int, u: int, K: Domain[Er]) -> dmp[Er]:
     return dmp_slice_in(f, m, n, 0, u, K)
 
 
-def dup_truncate(f, n, K):
+def dup_truncate(f: dup[Er], n: int, K: Domain[Er]) -> dup[Er]:
     """
     Truncate ``f`` to the first ``n`` terms in ``K[x]``.
 
@@ -2136,7 +2149,7 @@ def dup_pretty(f: dup[Er], sym: str, *, ascending: bool = False) -> str:
 
     deg = dup_degree(f)
 
-    def format_term(coeff, exp):
+    def format_term(coeff: Er, exp: int):
         if coeff == 0:
             return None
         if exp == 0:
@@ -2153,7 +2166,7 @@ def dup_pretty(f: dup[Er], sym: str, *, ascending: bool = False) -> str:
         else:
             return f"{coeff}*{base}"
 
-    terms = []
+    terms: list[str] = []
     for i, coeff in enumerate(f):
         t = format_term(coeff, deg - i)
         if t is not None:
