@@ -1,7 +1,11 @@
 from __future__ import annotations
 
-from sympy.external.gmpy import (gcd, lcm, invert, sqrt, jacobi,
+from typing import Literal, SupportsIndex, cast, overload
+
+from sympy.external.gmpy import (MPZ, gcd, lcm, invert, sqrt, jacobi,
                                  bit_scan1, remove)
+from sympy.core.expr import Expr
+from sympy.core.numbers import Integer
 from sympy.polys import Poly
 from sympy.polys.domains import ZZ
 from sympy.polys.galoistools import gf_crt1, gf_crt2, linear_congruence, gf_csolve
@@ -900,7 +904,7 @@ def _nthroot_mod1(s, q, p, all_roots):
     return min(res)
 
 
-def _nthroot_mod_prime_power(a, n, p, k):
+def _nthroot_mod_prime_power(a, n, p, k) -> list[int]:
     """ Root of ``x**n = a mod p**k``.
 
     Parameters
@@ -978,7 +982,22 @@ def _nthroot_mod_prime_power(a, n, p, k):
     return sorted(tot_roots)
 
 
-def nthroot_mod(a, n, p, all_roots=False):
+@overload
+def nthroot_mod(
+    a: SupportsIndex,
+    n: SupportsIndex,
+    p: SupportsIndex,
+    all_roots: Literal[False] = False,
+) -> int | None: ...
+@overload
+def nthroot_mod(
+    a: SupportsIndex, n: SupportsIndex, p: SupportsIndex, all_roots: Literal[True]
+) -> list[int]: ...
+
+
+def nthroot_mod(
+    a: SupportsIndex, n: SupportsIndex, p: SupportsIndex, all_roots: bool = False
+) -> int | list[int] | None:
     """
     Find the solutions to ``x**n = a mod p``.
 
@@ -1030,32 +1049,40 @@ def nthroot_mod(a, n, p, all_roots=False):
     .. [1] P. Hackman "Elementary Number Theory" (2009), page 76
 
     """
-    a = a % p
-    a, n, p = as_int(a), as_int(n), as_int(p)
+    a = a % p # type: ignore
+    ai = as_int(a)
+    ni = as_int(n)
+    pi = as_int(p)
 
-    if n < 1:
+    if ni < 1:
         raise ValueError("n should be positive")
-    if p < 1:
+    if pi < 1:
         raise ValueError("p should be positive")
-    if n == 1:
-        return [a] if all_roots else a
-    if n == 2:
-        return sqrt_mod(a, p, all_roots)
-    base = []
-    prime_power = []
+    if ni == 1:
+        return [ai] if all_roots else ai
+    if ni == 2:
+        return sqrt_mod(ai, pi, all_roots)
+
+    base: list[list[MPZ]] = []
+    prime_power: list[MPZ] = []
+
     for q, e in factorint(p).items():
-        tot_roots = _nthroot_mod_prime_power(a, n, q, e)
+        tot_roots = _nthroot_mod_prime_power(ai, ni, q, e)
         if not tot_roots:
             return [] if all_roots else None
-        prime_power.append(q**e)
-        base.append(sorted(tot_roots))
+        prime_power.append(ZZ(q)**e)
+        base.append(sorted(map(ZZ, tot_roots)))
+
     P, E, S = gf_crt1(prime_power, ZZ)
-    ret = sorted(map(int, {gf_crt2(c, prime_power, P, E, S, ZZ)
+    ret = sorted(map(int, {gf_crt2(list(c), prime_power, P, E, S, ZZ)
                            for c in product(*base)}))
+
     if all_roots:
         return ret
-    if ret:
+    elif ret:
         return ret[0]
+    else:
+        return None
 
 
 def quadratic_residues(p) -> list[int]:
@@ -1754,7 +1781,7 @@ def quadratic_congruence(a, b, c, n):
     return sorted(res)
 
 
-def _valid_expr(expr):
+def _valid_expr(expr: Expr) -> list[MPZ]:
     """
     return coefficients of expr if it is a univariate polynomial
     with integer coefficients else raise a ValueError.
@@ -1767,10 +1794,10 @@ def _valid_expr(expr):
         raise ValueError("The expression should be univariate")
     if not polynomial.domain == ZZ:
         raise ValueError("The expression should should have integer coefficients")
-    return polynomial.all_coeffs()
+    return cast('list[MPZ]', polynomial.rep.to_list())
 
 
-def polynomial_congruence(expr, m):
+def polynomial_congruence(expr: Expr, m: int) -> list[MPZ]:
     """
     Find the solutions to a polynomial congruence equation modulo m.
 
@@ -1799,11 +1826,13 @@ def polynomial_congruence(expr, m):
     coefficients = [num % m for num in coefficients]
     rank = len(coefficients)
     if rank == 3:
-        return quadratic_congruence(*coefficients, m)
+        a, b, c = coefficients
+        return quadratic_congruence(a, b, c, m)
     if rank == 2:
-        return quadratic_congruence(0, *coefficients, m)
+        a, b = coefficients
+        return quadratic_congruence(0, a, b, m)
     if coefficients[0] == 1 and 1 + coefficients[-1] == sum(coefficients):
-        return nthroot_mod(-coefficients[-1], rank - 1, m, True)
+        return [ZZ(s) for s in nthroot_mod(-coefficients[-1], rank - 1, m, True)]
     return gf_csolve(coefficients, m)
 
 
