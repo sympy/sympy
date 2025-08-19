@@ -147,7 +147,7 @@ def dmp_LC(f: dmp[Er], K: Domain[Er]) -> dmp[Er]:
 
     """
     if not f:
-        return K.zero # type: ignore
+        return _ground_dmp(K.zero)
     else:
         return f[0]
 
@@ -1732,9 +1732,7 @@ def dmp_inject(
     d: dict[monom, Er]
     h: dict[monom, Eg]
 
-    # XXX: Not clear what the domain should be here...
-    # d = dmp_to_dict(f, u, K)
-    d = dmp_to_dict(f, u)
+    d = dmp_to_dict(f, u, K)
     h = {}
 
     v = K.ngens - 1
@@ -1772,9 +1770,7 @@ def dmp_eject(
     d: dict[monom, Er]
     h: dict[monom, dict[monom, Er]]
 
-    # XXX: Not clear what the domain should be here...
-    # d = dmp_to_dict(f, u, K)
-    d = dmp_to_dict(f, u)
+    d = dmp_to_dict(f, u, K.dom)
     h = {}
 
     n = K.ngens
