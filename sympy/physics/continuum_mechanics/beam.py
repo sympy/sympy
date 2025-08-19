@@ -10,7 +10,7 @@ from sympy.core.function import (Derivative, Function)
 from sympy.core.mul import Mul
 from sympy.core.relational import Eq
 from sympy.core.sympify import sympify
-from sympy.solvers import linsolve
+from sympy.solvers import linsolve, solveset
 from sympy.solvers.ode.ode import dsolve
 from sympy.solvers.solvers import solve
 from sympy.printing import sstr
@@ -20,7 +20,7 @@ from sympy.series import limit
 from sympy.plotting import plot, PlotGrid
 from sympy.geometry.entity import GeometryEntity
 from sympy.external import import_module
-from sympy.sets.sets import Interval
+from sympy.sets.sets import Interval, FiniteSet
 from sympy.utilities.lambdify import lambdify
 from sympy.utilities.decorator import doctest_depends_on
 from sympy.utilities.iterables import iterable
@@ -1217,6 +1217,7 @@ class Beam:
         distribute load of magnitude of magnitude 3KN/m is also
         applied on top starting from 6 meters away from starting
         point till end.
+
         Using the sign convention of upward forces and clockwise moment
         being positive.
 
@@ -1232,23 +1233,83 @@ class Beam:
         >>> b.point_cflexure()
         [10/3]
         """
-        #Removes the singularity functions of order < 0 from the bending moment equation used in this method
-        non_singular_bending_moment = sum(arg for arg in self.bending_moment().args if not arg.args[1].args[2] < 0)
 
-        # To restrict the range within length of the Beam
-        moment_curve = Piecewise((float("nan"), self.variable<=0),
-                (non_singular_bending_moment, self.variable<self.length),
-                (float("nan"), True))
-        try:
-            points = solve(moment_curve.rewrite(Piecewise), self.variable,
-                           domain=S.Reals)
-        except NotImplementedError as e:
-            if "An expression is already zero when" in str(e):
-                raise NotImplementedError("This method cannot be used when a whole region of "
-                                          "the bending moment line is equal to 0.")
+        x = self.variable
+        l = self.length
+
+        bm = self.bending_moment()
+
+        # Filter out singularity terms with order < 0
+        terms = []
+        for term in bm.args:
+            sfs = list(term.atoms(SingularityFunction))
+
+            if not sfs:
+                terms.append(term)
             else:
-                raise
+                for sf in sfs:
+                    order = sf.args[2]
+                    if order >= 0:
+                        terms.append(term)
 
+        non_singular_bending_moment = sum(terms)
+
+        # Identify singularity points to define intervals
+        singularity_points = set()
+        for term in non_singular_bending_moment.atoms(SingularityFunction):
+            location = term.args[1]
+            singularity_points.add(location)
+        singularity_points = sorted(singularity_points, key=lambda p: p.evalf())
+
+        # Define intervals
+        intervals = []
+        points = [0] + [p for p in singularity_points if p != 0 and p != l] + [l]
+        for i in range(len(points) - 1):
+            start, end = points[i], points[i + 1]
+            if start != end:
+                intervals.append(Interval(start, end))
+
+        # Solve for roots in each interval
+        roots = set()
+        for interval in intervals:
+            # adding singularity points as default roots for temporary
+            roots.add(interval.start)
+            roots.add(interval.end)
+            expr = non_singular_bending_moment
+
+            sol = solveset(expr, x, domain=interval)
+            if isinstance(sol, FiniteSet):
+                for r in sol:
+                    roots.add(r)
+            elif isinstance(sol, Interval):
+                roots.add(sol.start)
+                roots.add(sol.end)
+
+        roots = sorted(roots)
+
+        # Check for sign changes
+        points = []
+        if len(roots) <= 1:
+            return []
+
+        for i, point in enumerate(roots):
+            if i == 0:
+                left_mid = (0 + point) / 2
+                right_mid = (point + roots[i + 1]) / 2
+            elif i == len(roots) - 1:
+                left_mid = (roots[i - 1] + point) / 2
+                right_mid = (point + self.length) / 2
+            else:
+                left_mid = (roots[i - 1] + point) / 2
+                right_mid = (point + roots[i + 1]) / 2
+
+            left_val = bm.subs(x, left_mid)
+            right_val = bm.subs(x, right_mid)
+
+            product=left_val*right_val
+            if isinstance(product,Expr):
+                if product.is_negative:
+                    points.append(point)
         return points
 
     def slope(self):
