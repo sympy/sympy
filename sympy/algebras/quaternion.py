@@ -524,9 +524,9 @@ class Quaternion(Expr):
         >>> from sympy.abc import a, b, c, d
         >>> euler = Quaternion(a, b, c, d).to_euler('zyz')
         >>> euler
-        (Mod(-atan2(-b, c) + atan2(d, a) + pi, 2*pi) - pi,
+        (-atan2(-b, c) + atan2(d, a),
         2*atan2(sqrt(b**2 + c**2), sqrt(a**2 + d**2)),
-        Mod(atan2(-b, c) + atan2(d, a) + pi, 2*pi) - pi)
+        atan2(-b, c) + atan2(d, a))
 
 
         References
