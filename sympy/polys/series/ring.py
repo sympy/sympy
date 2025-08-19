@@ -21,7 +21,7 @@ from sympy.polys.series.ringpython import (
 )
 from sympy.series.order import Order
 
-from typing import Generic, Union, Type
+from typing import Generic, Union
 
 flint: bool = False
 
@@ -82,7 +82,7 @@ class PowerSeriesRing(Generic[Er]):
     has_assoc_Ring: bool = True
     has_assoc_Field: bool = False
 
-    dtype: Type[PowerSeriesElement[Er]]
+    dtype: type[PowerSeriesElement[Er]]
     domain: Domain[Er]
     symbol: Expr
     prec: int
@@ -135,6 +135,10 @@ class PowerSeriesRing(Generic[Er]):
     def is_element(self, element) -> bool:
         """Check if element belongs to this ring."""
         return isinstance(element, PowerSeriesElement) and element.ring == self
+
+    def order_term(self):
+        o = self.ring([], self.prec)
+        return self.from_element(o)
 
     def from_expr(self, expr) -> PowerSeriesElement[Er]:
         poly = self._rebuild_expr(sympify(expr))
@@ -284,15 +288,15 @@ class PowerSeriesRing(Generic[Er]):
                 f"Power Series Ring over ground domain {self.domain} does not implement log."
             )
 
-    def logp1(self, s: PowerSeriesElement[Er]) -> PowerSeriesElement[Er]:
+    def log1p(self, s: PowerSeriesElement[Er]) -> PowerSeriesElement[Er]:
         """Return the logarithm of a power series plus one."""
         R = self.ring
-        if hasattr(R, "logp1"):
-            series = R.logp1(s.series)  # type: ignore[attr-defined]
+        if hasattr(R, "log1p"):
+            series = R.log1p(s.series)  # type: ignore[attr-defined]
             return self.from_element(series)
         else:
             raise NotImplementedError(
-                f"Power Series Ring over ground domain {self.domain} does not implement logp1."
+                f"Power Series Ring over ground domain {self.domain} does not implement log1p."
             )
 
     def exp(self, s: PowerSeriesElement[Er]) -> PowerSeriesElement[Er]:
@@ -463,7 +467,7 @@ class PowerSeriesElement(DomainElement, CantSympify, Generic[Er]):
         return self.__class__(self.ring, series)
 
     def __add__(
-        self, other: PowerSeriesElement[Er] | Er | int | Order
+        self, other: PowerSeriesElement[Er] | Er | int
     ) -> PowerSeriesElement[Er]:
         if not other:
             return self
@@ -474,19 +478,15 @@ class PowerSeriesElement(DomainElement, CantSympify, Generic[Er]):
         domain = self.ring.domain
         if isinstance(other, int):
             return self._add_ground(self.ring.domain_new(other))
-        elif isinstance(other, Order):
-            return self._add_order(other)
         elif domain.of_type(other):
             return self._add_ground(other)
         else:
             raise NotImplementedError
 
-    def __radd__(self, other: Er | int | Order) -> PowerSeriesElement[Er]:
+    def __radd__(self, other: Er | int) -> PowerSeriesElement[Er]:
         domain = self.ring.domain
         if isinstance(other, int):
             return self._add_ground(self.ring.domain_new(other))
-        elif isinstance(other, Order):
-            return self._add_order(other)
         elif domain.of_type(other):
             return self._add_ground(other)
         else:
@@ -569,6 +569,15 @@ class PowerSeriesElement(DomainElement, CantSympify, Generic[Er]):
         else:
             raise NotImplementedError
 
+    def __rtruediv__(self, other: Er | int) -> PowerSeriesElement[Er]:
+        domain = self.ring.domain
+        if isinstance(other, int):
+            return self._rdiv_ground(self.ring.domain_new(other))
+        elif domain.of_type(other):
+            return self._rdiv_ground(other)
+        else:
+            raise NotImplementedError
+
     def _add(self, other: PowerSeriesElement[Er]) -> PowerSeriesElement[Er]:
         R = self.ring.ring
         series = R.add(self.series, other.series)
@@ -577,22 +586,6 @@ class PowerSeriesElement(DomainElement, CantSympify, Generic[Er]):
     def _add_ground(self, other: Er) -> PowerSeriesElement[Er]:
         s2 = self.ring.ground_new(other)
         return self._add(s2)
-
-    def _add_order(self, other: Order) -> PowerSeriesElement[Er]:
-        var, prec = other.expr.args
-
-        if var != self.ring.symbol:
-            raise NotImplementedError
-
-        if int(prec) > self.ring.prec:
-            prec = self.ring.prec
-        else:
-            prec = int(prec)
-
-        R = self.ring.ring
-        coeffs = R.to_list(self.series)
-        s = R(coeffs, prec)
-        return self.new(s)
 
     def _sub(self, other: PowerSeriesElement[Er]) -> PowerSeriesElement[Er]:
         R = self.ring.ring
@@ -629,6 +622,10 @@ class PowerSeriesElement(DomainElement, CantSympify, Generic[Er]):
     def _div_ground(self, other: Er) -> PowerSeriesElement[Er]:
         s2 = self.ring.ground_new(other)
         return self._div(s2)
+
+    def _rdiv_ground(self, other: Er) -> PowerSeriesElement[Er]:
+        s2 = self.ring.ground_new(other)
+        return s2._div(self)
 
     def to_list(self) -> list[Er]:
         R = self.ring.ring

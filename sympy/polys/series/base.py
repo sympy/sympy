@@ -24,7 +24,7 @@ def series_pprint(
 
     if not poly or poly == "0":
         if prec is not None:
-            return f"0 + O({sym}**{prec})"
+            return f"O({sym}**{prec})"
         else:
             return "0"
 

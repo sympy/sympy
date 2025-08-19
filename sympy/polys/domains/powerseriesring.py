@@ -5,11 +5,11 @@ from sympy.polys.domains.compositedomain import CompositeDomain
 from sympy.polys.domains.domain import Er, Domain
 from sympy.utilities import public
 
-from typing import Type
+from typing import Union
 
 @public
-class Series(Ring[PowerSeriesElement[Er]], CompositeDomain):
-    """A class for representing multivariate power series rings."""
+class SeriesRing(Ring[PowerSeriesElement[Er]], CompositeDomain):
+    """A Domain class for representing univariate power series rings."""
 
     is_PowerSeriesRing = is_Series = True
 
@@ -17,12 +17,12 @@ class Series(Ring[PowerSeriesElement[Er]], CompositeDomain):
     has_assoc_Field = False
 
     ring: PowerSeriesRing[Er]
-    dtype: Type[PowerSeriesElement[Er]]
+    dtype: type[PowerSeriesElement[Er]]
     gen: PowerSeriesElement[Er]
     symbol: Expr
     domain: Domain[Er]
 
-    def __init__(self, domain: Domain[Er], symbol: str | Expr = "x", prec: int = 6):
+    def __init__(self, domain: Domain[Er], symbol = "x", prec: int = 6):
         ring = PowerSeriesRing(domain, symbol, prec)
 
         self.ring = ring
@@ -32,7 +32,7 @@ class Series(Ring[PowerSeriesElement[Er]], CompositeDomain):
         self.gen = ring.gen
         self.symbol = ring.symbol
 
-    def new(self, element: TSeries | Expr | Er | int) -> PowerSeriesElement[Er]:  # type: ignore
+    def new(self, element: Union[TSeries, Expr, Er, int]) -> PowerSeriesElement[Er]:  # type: ignore
         return self.ring.ring_new(element)
 
     def of_type(self, element) -> bool:
@@ -58,7 +58,7 @@ class Series(Ring[PowerSeriesElement[Er]], CompositeDomain):
         return hash((self.__class__.__name__, self.ring, self.domain, self.symbol))
 
     def __eq__(self, other: object) -> bool:
-        if not isinstance(other, Series):
+        if not isinstance(other, SeriesRing):
             return NotImplemented
         return self.ring == other.ring
 

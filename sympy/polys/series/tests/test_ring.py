@@ -1208,16 +1208,21 @@ def test_PowerSeriesRing():
 
 def test_PowerSeriesRing_from_expr():
     R = PowerSeriesRing(QQ, "x", 5)
+    o = R.order_term()
+    R3 = PowerSeriesRing(QQ, "x", 3)
+    o3 = R3.order_term()
+
     x = R.gen
     _x = symbols("x")
 
     assert R.from_expr(_x) == x
     assert R.from_expr(1 + _x + 2 * _x**2) == 1 + x + 2 * x**2
-    assert R.from_expr(2 + _x**2 + O(_x**3)) == 2 + x**2 + O(_x**3)
-    assert R.from_expr(
-        2 + 4 * _x + 6 * _x**2 + 6 * _x**3 + _x**5
-    ) == 2 + 4 * x + 6 * x**2 + 6 * x**3 + O(_x**5)
-    assert R.from_expr(_x + O(_x**7)) == x + O(_x**5)
+    assert R.from_expr(2 + _x**2 + O(_x**3)) == 2 + x**2 + o3
+    assert (
+        R.from_expr(2 + 4 * _x + 6 * _x**2 + 6 * _x**3 + _x**5)
+        == 2 + 4 * x + 6 * x**2 + 6 * x**3 + o
+    )
+    assert R.from_expr(_x + O(_x**7)) == x + o
 
     raises(ValueError, lambda: R.from_expr(symbols("y") ** 6))
 
@@ -1355,8 +1360,7 @@ def test_PowerSeriesRing_operations_rational(groundring_rational):
 def test_PowerSeriesRing_series():
     R = PowerSeriesRing(QQ, "x", 10)
     x = R.gen
-    _x = symbols("x")
-    o = O(_x**10)
+    o = R.order_term()
 
     p1 = x + 2 * x + 3 * x**4
 
@@ -1373,10 +1377,38 @@ def test_PowerSeriesRing_series():
         + 1485 * x**9
         + o
     )
+    assert R.log1p(p1) == R.log(1 + p1)
+    assert (
+        R.log1p(p1)
+        == 3 * x
+        - 9 * x**2 / 2
+        + 9 * x**3
+        - 69 * x**4 / 4
+        + 198 * x**5 / 5
+        - 189 * x**6 / 2
+        + 1620 * x**7 / 7
+        - 4653 * x**8 / 8
+        + 1485 * x**9
+        + o
+    )
     assert (
         R.exp(p1)
         == 1
         + 3 * x
+        + 9 * x**2 / 2
+        + 9 * x**3 / 2
+        + 51 * x**4 / 8
+        + 441 * x**5 / 40
+        + 1161 * x**6 / 80
+        + 7803 * x**7 / 560
+        + 66249 * x**8 / 4480
+        + 87939 * x**9 / 4480
+        + o
+    )
+    assert R.expm1(p1) == R.exp(p1) - 1
+    assert (
+        R.expm1(p1)
+        == 3 * x
         + 9 * x**2 / 2
         + 9 * x**3 / 2
         + 51 * x**4 / 8
