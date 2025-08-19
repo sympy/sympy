@@ -146,7 +146,7 @@ The complete Lagrangian for the system is:
 Equations of Motion Derivation
 ==============================
 
-We use `LagrangesMethod` to automatically apply the Euler-Lagrange equations for each generalized coordinate, $s$ and $\phi$.
+We use ``LagrangesMethod`` to automatically apply the Euler-Lagrange equations for each generalized coordinate, $s$ and $\phi$.
 
 $$\frac{d}{dt}\left(\frac{\partial \mathcal{L}}{\partial \dot{q}_i}\right) - \frac{\partial \mathcal{L}}{\partial q_i} = 0$$
 
