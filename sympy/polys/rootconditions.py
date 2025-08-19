@@ -128,14 +128,9 @@ def _clear_cond_poly(cond: PolyElement[Er], previous_cond, K):
 
 def is_totally_ground(c: PolyElement[Er]) -> bool:
     """Check if the condition is ground in all subrings"""
-    while True:
-        if not c.is_ground:
-            return False
-        ring = c.ring
-        domain = ring.domain
-        if not domain.is_PolynomialRing:
-            return True
-        c = c.drop(*ring.gens)
+    while c.ring.domain.is_PolynomialRing and c.is_ground:
+        c = c.LC
+    return c.is_ground
 
 
 def _dup_routh_hurwitz_exraw(p: list[Expr]) -> list[Expr]:
