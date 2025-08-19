@@ -2096,7 +2096,7 @@ def dup_random(n: int, a: int, b: int, K: Domain[Er]) -> dup[Er]:
     return f
 
 
-def dup_from_list(f: list[Er], K: Domain[Er]) -> dup[Er]:
+def dup_from_list(f: list[int] | list[Er], K: Domain[Er]) -> dup[Er]:
     """
     Create a ``K[x]`` polynomial from a list.
 

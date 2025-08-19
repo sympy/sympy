@@ -289,7 +289,7 @@ def test_dmp_revert():
 
 def test_dup_series_reversion():
     assert dup_series_reversion([], 3, QQ) == []
-    assert dup_series_reversion([ZZ(12), ZZ(1), ZZ(0)], 3, QQ) == \
+    assert dup_series_reversion([ZZ(12), ZZ(1), ZZ(0)], 3, ZZ) == \
            dup_from_list([-12, 1, 0], QQ)
 
     f = dup_from_list([4, 3, 4, 1, 0], QQ)
