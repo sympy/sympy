@@ -875,9 +875,11 @@ class Structure2d:
         if type == "pin":
             load_v = -1 * Rv
             load_h = Rh
+            # apply vertical support reaction load  as a point  load with 90 degrees which is upwards
             self.apply_load(
                 start_x=x, start_y=y, value=load_v, global_angle=90, order=-1
             )
+            # apply horizontal support reaction load as a point load with 0 degrees which is right wards
             self.apply_load(
                 start_x=x, start_y=y, value=load_h, global_angle=0, order=-1
             )
@@ -886,6 +888,7 @@ class Structure2d:
             self.loads[-1].is_support_reaction = True
             self.loads[-2].is_support_reaction = True
 
+            # apply boundary conditions for pin support.
             self.beam.bc_deflection.append((unwarap_x, 0))
             self.column._bc_extension.append(unwarap_x)
 
@@ -894,6 +897,7 @@ class Structure2d:
 
         elif type == "roller":
             load_v = -1 * Rv
+            # apply vertical support reaction load  as a point  load with 90 degrees which is upwards
             self.apply_load(
                 start_x=x, start_y=y, value=load_v, global_angle=90, order=-1
             )
@@ -901,6 +905,7 @@ class Structure2d:
             # Mark this load as a support reaction
             self.loads[-1].is_support_reaction = True
 
+            # apply boundary conditions for roller support.
             self.beam.bc_deflection.append((unwarap_x, 0))
             self.support_symbols.append(Rv)
 
@@ -908,12 +913,15 @@ class Structure2d:
             load_t = T
             load_v = -1 * Rv
             load_h = Rh
+            # apply support reaction load as a moment load.
             self.apply_load(
                 start_x=x, start_y=y, value=load_t, global_angle=0, order=-2
             )
+            # apply vertical support reaction load  as a point  load with 90 degrees which is upwards
             self.apply_load(
                 start_x=x, start_y=y, value=load_v, global_angle=90, order=-1
             )
+            # apply horizontal support reaction load as a point load with 0 degrees which is right wards
             self.apply_load(
                 start_x=x, start_y=y, value=load_h, global_angle=0, order=-1
             )
@@ -923,6 +931,7 @@ class Structure2d:
             self.loads[-2].is_support_reaction = True
             self.loads[-3].is_support_reaction = True
 
+            # apply boundary conditions for fixed support.
             self.beam.bc_deflection.append((unwarap_x, 0))
             # This i think sould be slope of the beam at this point beacause 0 is assuming supports and horizontal members
             # unwrap is already called so it should be extaracatble from the unwrapped position
@@ -1113,8 +1122,6 @@ class Structure2d:
         for pos in getattr(c, "_bc_extension", []):
             if pos not in support_positions:
                 eqs.append(self.ux.subs(x, pos))
-        for pos in getattr(c, "_bc_hinge", []):
-            eqs.append(limit(self.N, x, pos, dir='+'))
 
 
         reaction_syms  = tuple(self.support_symbols)
