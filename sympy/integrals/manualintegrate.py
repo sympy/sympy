@@ -1444,11 +1444,12 @@ def trig_cmplx_exp_rule(integral: IntegralInfo):
     if not integrand.has(erf, erfc, erfi, exp):
         return
 
-    a = Wild('a', exclude=[symbol, 0])
-    b = Wild('b', exclude=[symbol])
-    pattern = exp(a * symbol**2 + b * symbol)
-    if not any(term.match(pattern) for term in integrand.atoms(exp)):
-        return
+    if integrand.has(exp):
+        a = Wild('a', exclude=[symbol, 0])
+        b = Wild('b', exclude=[symbol])
+        pattern = exp(a * symbol**2 + b * symbol)
+        if not any(term.match(pattern) for term in integrand.atoms(exp)):
+            return
 
     # Replace trig and hyperbolic functions with their exponential forms
     rewritten = integrand.rewrite([sin, cos, sinh, cosh], exp)
