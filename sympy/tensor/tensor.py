@@ -189,7 +189,7 @@ class _IndexStructure(CantSympify):
                 # check consistency and update free
                 if is_contr:
                     if contr:
-                        raise ValueError('two equal contravariant indices in slots %d and %d' %(pos, i))
+                        raise ValueError(f"two equal contravariant indices in slots {pos} and {i}")
                     else:
                         free[pos] = False
                         free[i] = False
@@ -198,7 +198,7 @@ class _IndexStructure(CantSympify):
                         free[pos] = False
                         free[i] = False
                     else:
-                        raise ValueError('two equal covariant indices in slots %d and %d' %(pos, i))
+                        raise ValueError(f"two equal covariant indices in slots {pos} and {i}")
                 if contr:
                     dum.append((i, pos))
                 else:
@@ -1347,7 +1347,7 @@ class TensorIndex(Basic):
     def _print(self):
         s = self.name
         if not self.is_up:
-            s = '-%s' % s
+            s = f'-{s}'
         return s
 
     def __lt__(self, other):
@@ -1636,7 +1636,7 @@ class TensorType(Basic):
         return sorted(set(self.index_types), key=lambda x: x.name)
 
     def __str__(self):
-        return 'TensorType(%s)' % ([str(x) for x in self.index_types])
+        return f"TensorType({[str(x) for x in self.index_types]})"
 
     def __call__(self, s, comm=0):
         """
@@ -1855,7 +1855,7 @@ class TensorHead(Basic):
         return r
 
     def _print(self):
-        return '%s(%s)' %(self.name, ','.join([str(x) for x in self.index_types]))
+        return f"{self.name}({','.join([str(x) for x in self.index_types])})"
 
     def __call__(self, *indices, **kw_args):
         """
@@ -2239,7 +2239,7 @@ class TensExpr(Expr, ABC):
             else:
                 index2 = free2remaining[pos1]
                 if index2 is None:
-                    raise ValueError("incompatible indices: %s and %s" % (free_ind1, free_ind2))
+                    raise ValueError(f"incompatible indices: {free_ind1} and {free_ind2}")
                 free2remaining[pos1] = None
                 free_ind2[pos1] = index1
                 if index1.is_up ^ index2.is_up:
@@ -2249,8 +2249,7 @@ class TensExpr(Expr, ABC):
                         pos2down.append(pos1)
 
         if len(set(free_ind1) & set(free_ind2)) < len(free_ind1):
-            raise ValueError("incompatible indices: %s and %s" % (free_ind1, free_ind2))
-
+            raise ValueError(f"incompatible indices: {free_ind1} and {free_ind2}")
         # Raise indices:
         for pos in pos2up:
             index_type_pos = index_types1[pos]
@@ -2364,9 +2363,8 @@ class TensExpr(Expr, ABC):
             if len(expected_shape) != array.rank() or (not all(dim1 == dim2 if
                 dim1.is_number else True for dim1, dim2 in zip(expected_shape,
                 array.shape))):
-                raise ValueError("shapes for tensor %s expected to be %s, "\
-                    "replacement array shape is %s" % (tensor, expected_shape,
-                    array.shape))
+                raise ValueError(f"shapes for tensor {tensor} expected to be {expected_shape}, "\
+                    "replacement array shape is {array.shape}")
 
         ret_indices, array = self._extract_data(replacement_dict)
 
@@ -2962,7 +2960,7 @@ class Tensor(TensExpr):
     @staticmethod
     def _parse_indices(tensor_head, indices):
         if not isinstance(indices, (tuple, list, Tuple)):
-            raise TypeError("indices should be an array, got %s" % type(indices))
+            raise TypeError(f"indices should be an array, got {type(indices)}")
         indices = list(indices)
         for i, index in enumerate(indices):
             if isinstance(index, Symbol):
@@ -2972,9 +2970,9 @@ class Tensor(TensExpr):
                 if c == -1 and isinstance(e, Symbol):
                     indices[i] = TensorIndex(e, tensor_head.index_types[i], False)
                 else:
-                    raise ValueError("index not understood: %s" % index)
+                    raise ValueError(f"index not understood: {index}")
             elif not isinstance(index, TensorIndex):
-                raise TypeError("wrong type for index: %s is %s" % (index, type(index)))
+                raise TypeError(f"wrong type for index: {index} is {type(index)}")
         return indices
 
     def _set_new_index_structure(self, im, is_canon_bp=False):
@@ -3220,7 +3218,7 @@ class Tensor(TensExpr):
                 array = v
                 break
         else:
-            raise ValueError("%s not found in %s" % (self, replacement_dict))
+            raise ValueError(f"{self} not found in {replacement_dict}")
 
         # TODO: inefficient, this should be done at root level only:
         replacement_dict = {k: Array(v) for k, v in replacement_dict.items()}
@@ -3233,7 +3231,7 @@ class Tensor(TensExpr):
             for pair in dum2:
                 # allow `dum2` if the contained values are also in `dum1`.
                 if pair not in dum1:
-                    raise NotImplementedError("%s with contractions is not implemented" % other)
+                    raise NotImplementedError(f"{other} with contractions is not implemented")
             # Remove elements in `dum2` from `dum1`:
             dum1 = [pair for pair in dum1 if pair not in dum2]
         if len(dum1) > 0:
@@ -3282,9 +3280,9 @@ class Tensor(TensExpr):
         indices = [str(ind) for ind in self.indices]
         component = self.component
         if component.rank > 0:
-            return ('%s(%s)' % (component.name, ', '.join(indices)))
+            return (f"{component.name}({', '.join(indices)})")
         else:
-            return ('%s' % component.name)
+            return (f"{component.name}")
 
     def equals(self, other):
         if other == 0:
@@ -3522,7 +3520,7 @@ class TensMul(TensExpr, AssocOp):
                         dummy_data.append((-index, other_pos1, pos1, other_pos2, pos2))
                     indices.append(index)
                 elif index in free2pos1:
-                    raise ValueError("Repeated index: %s" % index)
+                    raise ValueError(f"Repeated index: {index}")
                 else:
                     free2pos1[index] = pos1
                     free2pos2[index] = pos2
@@ -4517,7 +4515,7 @@ class TensorElement(TensExpr):
         if not isinstance(expr, Tensor):
             # remap
             if not isinstance(expr, TensExpr):
-                raise TypeError("%s is not a tensor expression" % expr)
+                raise TypeError(f"{expr} is not a tensor expression")
             return expr.func(*[TensorElement(arg, index_map) for arg in expr.args])
         expr_free_indices = expr.get_free_indices()
         name_translation = {i.args[0]: i for i in expr_free_indices}
@@ -5125,7 +5123,7 @@ def get_lines(ex, index_type):
             if index_types[i] is index_type:
                 a.append(i)
         if len(a) > 2:
-            raise ValueError('at most two indices of type %s allowed' % index_type)
+            raise ValueError(f"at most two indices of type {index_type} allowed")
         if len(a) == 2:
             dt[c] = a
     #dum = ex.dum
