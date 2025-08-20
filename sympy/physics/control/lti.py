@@ -33,7 +33,7 @@ from mpmath.libmp.libmpf import prec_to_dps
 
 __all__ = ['TransferFunction', 'DiscreteTransferFunction', 'PIDController', 'Series',
            'MIMOSeries', 'Parallel', 'MIMOParallel', 'Feedback', 'MIMOFeedback',
-           'TransferFunctionMatrix', 'StateSpace', 'DiscreteStateSpace', 'gbt',
+           'TransferFunctionMatrix', 'StateSpace', 'gbt',
            'bilinear', 'forward_diff', 'backward_diff', 'phase_margin',
            'gain_margin']
 
@@ -6367,7 +6367,3 @@ class StateSpace(StateSpaceBase):
         return 0
 
     _is_continuous = True
-
-class DiscreteStateSpace(StateSpaceBase):
-    def __new__(cls, A=None, B=None, C=None, D=None, sampling_time = 1):
-        raise NotImplementedError("DiscreteStateSpace is not implemented yet. ")

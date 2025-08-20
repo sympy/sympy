@@ -23,8 +23,7 @@ from sympy.physics.control.lti import (
     create_transfer_function,TransferFunctionBase, TransferFunction,
     DiscreteTransferFunction, PIDController,Series, Parallel, Feedback,
     TransferFunctionMatrix, MIMOSeries, MIMOParallel, MIMOFeedback, StateSpace,
-    DiscreteStateSpace, gbt, bilinear, forward_diff, backward_diff,
-    phase_margin, gain_margin)
+    gbt, bilinear, forward_diff, backward_diff, phase_margin, gain_margin)
 from sympy.testing.pytest import raises
 from sympy.logic.boolalg import true, false
 
@@ -3407,7 +3406,7 @@ def test_conversion():
     assert SS.rewrite(TransferFunction)[0][0] == TF1
 
     # TransferFunction cannot be converted to DiscreteStateSpace
-    raises(TypeError, lambda: TF1.rewrite(DiscreteStateSpace))
+    # TODO: raises(TypeError, lambda: TF1.rewrite(DiscreteStateSpace))
 
     # Transfer function has to be proper
     raises(ValueError, lambda: TransferFunction(b*s**2 + p**2 - a*p + s, b - p**2, s).rewrite(StateSpace))
@@ -3424,11 +3423,11 @@ def test_conversion():
 
     # TODO: assert DSS.rewrite(DiscreteTransferFunction)[0][0] == dtf1
 
-    # DiscreteTransferFunction cannot be converted to DiscreteStateSpace
+    # DiscreteTransferFunction cannot be converted to StateSpace
     raises(TypeError, lambda: dtf1.rewrite(StateSpace))
 
     # discrete-time Transfer function has to be proper
-    raises(ValueError, lambda: DiscreteTransferFunction(b2*z**2 + b1*z + b0, z + a0, z).rewrite(DiscreteStateSpace))
+    # TODO: raises(ValueError, lambda: DiscreteTransferFunction(b2*z**2 + b1*z + b0, z + a0, z).rewrite(DiscreteStateSpace))
 
 def test_StateSpace_dsolve():
     # https://web.mit.edu/2.14/www/Handouts/StateSpaceResponse.pdf
