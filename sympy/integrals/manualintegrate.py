@@ -2168,7 +2168,7 @@ def integral_steps(integrand, symbol, **options):
             Mul: do_one(null_safe(mul_rule), null_safe(trig_product_rule),
                         null_safe(heaviside_rule), null_safe(quadratic_denom_rule),
                         null_safe(sqrt_linear_rule),
-                        null_safe(sqrt_quadratic_rule)),
+                        null_safe(sqrt_quadratic_rule), null_safe(trig_cmplx_exp_rule)),
             Derivative: derivative_rule,
             TrigonometricFunction: trig_rule,
             Heaviside: heaviside_rule,
@@ -2199,8 +2199,7 @@ def integral_steps(integrand, symbol, **options):
                     integral_is_subclass(Mul, Pow),
                     distribute_expand_rule),
                 trig_powers_products_rule,
-                trig_expand_rule,
-                trig_cmplx_exp_rule
+                trig_expand_rule
             )),
             null_safe(condition(integral_is_subclass(Mul, Pow), nested_pow_rule)),
             null_safe(trig_substitution_rule)
