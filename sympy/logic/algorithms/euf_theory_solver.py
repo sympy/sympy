@@ -1,11 +1,9 @@
 from collections import defaultdict
 from sympy import Eq, Unequality, Not
 from sympy.assumptions.ask import Q, AppliedPredicate
-from sympy.logic.algorithms.euf_theory import EUFCongruenceClosure, EUFUnhandledInput
+from sympy.logic.algorithms.euf_theory import EUFCongruenceClosure
 from sympy.core.symbol import Dummy
-from sympy.core.relational import Eq, Ne
-from sympy.assumptions.ask import Q
-from sympy.logic.boolalg import Not
+from sympy.core.relational import Ne
 from sympy.utilities.iterables import numbered_symbols
 
 def _order_key(expr):
@@ -78,7 +76,6 @@ class EUFTheorySolver:
         literal_eqs = {}
         conflicts = []
         dummies = numbered_symbols('_c', lambda name=None: Dummy(name, finite=True))
-        lambda_map = {}
         ALLOWED_BIN_PRED = {Q.eq, Q.ne}
 
         def process_pred(pred):
@@ -137,7 +134,8 @@ class EUFTheorySolver:
                     continue
                 if eqs:
                     literal_eqs[enc] = eqs
-            except Exception:
+            except (TypeError, ValueError):
+                # Skip unsupported/invalid predicates; raise other errors
                 continue
 
         solver.literal_eqs = literal_eqs
@@ -169,9 +167,10 @@ class EUFTheorySolver:
                     self.negative_literal_list[lhs_c].append(ceq)
                     self.negative_literal_list[rhs_c].append(ceq)
             except TypeError:
-                # Re-raise the TypeError for unsupported types
+                # unsupported literal type -> propagate to caller/tests
                 raise
-            except Exception:
+            except (AttributeError, ValueError):
+                # Skip malformed/unsupported literals that fail during flattening
                 continue
 
     def assert_lit(self, enc_constraint):
@@ -288,7 +287,7 @@ class EUFTheorySolver:
 
     def Explanation(self, literal):
         """Produce explanation for why literal is true/false."""
-        return set([literal])  # Simplified
+        return {literal}
 
     def _get_conflict_explanation(self):
         """Extract conflict explanation from current state."""
@@ -318,8 +317,6 @@ class EUFTheorySolver:
         self.disequality_causes.clear()
 
         # Re-assert remaining literals in order
-        saved_stack = self.interpretation_stack.copy()
-        saved_timestamps = self.literal_timestamp.copy()
         self.interpretation_stack.clear()
         self.literal_timestamp.clear()
         self.timestamp_counter = 0

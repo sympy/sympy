@@ -2,7 +2,6 @@ import pytest
 from sympy import symbols, Function, Eq, Not, Unequality
 from sympy.logic.algorithms.euf_theory_solver import EUFTheorySolver
 from sympy.assumptions.cnf import CNF, EncodedCNF
-from sympy.assumptions.ask import Q
 from sympy.logic import boolalg
 
 f, g = symbols('f g', cls=Function)
