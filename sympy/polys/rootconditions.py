@@ -14,6 +14,7 @@ from sympy.core.expr import Expr
 from sympy.simplify.simplify import signsimp
 from sympy.core.mul import Mul
 
+
 def dup_routh_hurwitz(f: dup[Er], K: Domain[Er]) -> list[Er]:
     """
     Computes the Routh Hurwitz criteria of ``f``.
@@ -52,13 +53,15 @@ def dup_routh_hurwitz(f: dup[Er], K: Domain[Er]) -> list[Er]:
         return dup_convert(conds, K.get_ring(), K)
 
     else:
-        return _dup_routh_hurwitz_exraw(dup_convert(f, K, EXRAW)) # type: ignore
+        pe = dup_convert(f, K, EXRAW)
+        conds = _dup_routh_hurwitz_exraw(pe) # type: ignore
+        return dup_convert(conds, EXRAW, K)
 
 
 def _dup_routh_hurwitz_qq(p: list[MPQ], K: RationalField) -> list[MPQ]:
     if len(p) < 2:
         return [K.one]
-    elif p[0] * p[1] <= 0:
+    elif p[0] * p[1] <= K.zero:
         return [-K.one]
     elif len(p) == 2:
         return [K.one]
