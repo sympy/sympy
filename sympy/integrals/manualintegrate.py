@@ -66,7 +66,7 @@ from sympy.polys.polytools import degree, lcm_list, gcd_list, Poly
 from sympy.simplify.radsimp import fraction
 from sympy.simplify.simplify import simplify
 from sympy.simplify.powsimp import powsimp
-from sympy.simplify.trigsimp import trigsimp
+from sympy.simplify.trigsimp import trigsimp, exptrigsimp
 from sympy.solvers.solvers import solve
 from sympy.strategies.core import switch, do_one, null_safe, condition
 from sympy.utilities.iterables import iterable
@@ -2056,24 +2056,6 @@ def has_cmplx_exp_pair(expr):
     return False
 
 
-def rewrite_exp_hyperbolic(expr):
-    a = Wild('a')
-    def sinh_replacement(expr):
-        return expr.replace(
-            exp(a) - exp(-a),
-            lambda a: 2*sinh(a)
-        )
-    def cosh_replacement(expr):
-        return expr.replace(
-            exp(a) + exp(-a),
-            lambda a: 2*cosh(a)
-        )
-
-    expr = cosh_replacement(expr)
-    expr = sinh_replacement(expr)
-    return expr
-
-
 # Cache is used to break cyclic integrals.
 # Need to use the same dummy variable in cached expressions for them to match.
 # Also record "u" of integration by parts, to avoid infinite repetition.
@@ -2263,7 +2245,7 @@ def manualintegrate(f, var):
     if has_cmplx_exp_pair(result):
         if result.has(erf):
             result = result.rewrite(exp, cos).expand().rewrite([sinh, cosh], exp).collect(result.atoms(erf)).collect(result.atoms(exp), factor_terms)
-            result = rewrite_exp_hyperbolic(result)
+            result = exptrigsimp(result)
     # Clear the cache of u-parts
     _parts_u_cache.clear()
     # If we got Piecewise with two parts, put generic first
