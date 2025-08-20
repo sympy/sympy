@@ -1937,7 +1937,7 @@ class DiscreteTransferFunction(TransferFunctionBase):
                                 var, sampling_time = sampling_time)
 
     @classmethod
-    def gbt(cls, cont_tf, sampling_time, alpha, var):
+    def from_gbt(cls, cont_tf, sampling_time, alpha, var):
         r"""
         Returns the discretized transfer function H(z) from a continuous
         transfer function H(s).
@@ -1971,7 +1971,7 @@ class DiscreteTransferFunction(TransferFunctionBase):
         >>> from sympy.abc import s, z, L, R, T
 
         >>> tf = TransferFunction(1, s*L + R, s)
-        >>> dttf1 = DiscreteTransferFunction.gbt(tf, T, 0.5, z)
+        >>> dttf1 = DiscreteTransferFunction.from_gbt(tf, T, 0.5, z)
         >>> dttf1.num
         T*z/(2*(L + R*T/2)) + T/(2*(L + R*T/2))
         >>> dttf1.den
@@ -1979,7 +1979,7 @@ class DiscreteTransferFunction(TransferFunctionBase):
         >>> dttf1.sampling_time
         T
 
-        >>> dttf2 = DiscreteTransferFunction.gbt(tf, T, 0, z)
+        >>> dttf2 = DiscreteTransferFunction.from_gbt(tf, T, 0, z)
         >>> dttf2.num
         T/L
         >>> dttf2.den
@@ -1987,7 +1987,7 @@ class DiscreteTransferFunction(TransferFunctionBase):
         >>> dttf2.sampling_time
         T
 
-        >>> dttf3 = DiscreteTransferFunction.gbt(tf, T, 1, z)
+        >>> dttf3 = DiscreteTransferFunction.from_gbt(tf, T, 1, z)
         >>> dttf3.num
         T*z/(L + R*T)
         >>> dttf3.den
@@ -1995,7 +1995,7 @@ class DiscreteTransferFunction(TransferFunctionBase):
         >>> dttf3.sampling_time
         T
 
-        >>> dttf4 = DiscreteTransferFunction.gbt(tf, T, 0.3, z)
+        >>> dttf4 = DiscreteTransferFunction.from_gbt(tf, T, 0.3, z)
         >>> dttf4.num
         3*T*z/(10*(L + 3*R*T/10)) + 7*T/(10*(L + 3*R*T/10))
         >>> dttf4.den
@@ -2012,7 +2012,7 @@ class DiscreteTransferFunction(TransferFunctionBase):
         return cls.from_coeff_lists(num, den, var, sampling_time)
 
     @classmethod
-    def bilinear(cls, cont_tf, sampling_time, var):
+    def from_bilinear(cls, cont_tf, sampling_time, var):
         r"""
         Returns the discretized transfer function H(z) from a continuous
         transfer function H(s).
@@ -2044,7 +2044,7 @@ class DiscreteTransferFunction(TransferFunctionBase):
         >>> from sympy.abc import s, z, L, R, T
 
         >>> tf = TransferFunction(1, s*L + R, s)
-        >>> dttf = DiscreteTransferFunction.bilinear(tf, T, z)
+        >>> dttf = DiscreteTransferFunction.from_bilinear(tf, T, z)
         >>> dttf.num
         T*z/(2*(L + R*T/2)) + T/(2*(L + R*T/2))
         >>> dttf.den
@@ -2057,7 +2057,7 @@ class DiscreteTransferFunction(TransferFunctionBase):
         return cls.from_coeff_lists(num, den, var, sampling_time)
 
     @classmethod
-    def forward_diff(cls, cont_tf, sampling_time, var):
+    def from_forward_diff(cls, cont_tf, sampling_time, var):
         r"""
         Returns the discretized transfer function H(z) from a continuous
         transfer function H(s).
@@ -2089,7 +2089,7 @@ class DiscreteTransferFunction(TransferFunctionBase):
         >>> from sympy.abc import s, z, L, R, T
 
         >>> tf = TransferFunction(1, s*L + R, s)
-        >>> dttf = DiscreteTransferFunction.forward_diff(tf, T, z)
+        >>> dttf = DiscreteTransferFunction.from_forward_diff(tf, T, z)
         >>> dttf.num
         T/L
         >>> dttf.den
@@ -2102,7 +2102,7 @@ class DiscreteTransferFunction(TransferFunctionBase):
         return cls.from_coeff_lists(num, den, var, sampling_time)
 
     @classmethod
-    def backward_diff(cls, cont_tf, sampling_time, var):
+    def from_backward_diff(cls, cont_tf, sampling_time, var):
         r"""
         Returns the discretized transfer function H(z) from a continuous
         transfer function H(s).
@@ -2134,7 +2134,7 @@ class DiscreteTransferFunction(TransferFunctionBase):
         >>> from sympy.abc import s, z, L, R, T
 
         >>> tf = TransferFunction(1, s*L + R, s)
-        >>> dttf = DiscreteTransferFunction.backward_diff(tf, T, z)
+        >>> dttf = DiscreteTransferFunction.from_backward_diff(tf, T, z)
         >>> dttf.num
         T*z/(L + R*T)
         >>> dttf.den
@@ -5249,10 +5249,6 @@ class TransferFunctionMatrix(MIMOLinearTimeInvariant):
     def sampling_time(self):
         return self.args[0][0][0].sampling_time
 
-def new_state_space(A=None, B=None, C=None, D=None, sampling_time=0):
-    #TODO: finish
-    return DiscreteStateSpace(A, B, C, D, sampling_time)
-
 class StateSpaceBase(LinearTimeInvariant):
     r"""
     State space model (ssm) of a linear, time invariant control system.
@@ -6113,19 +6109,5 @@ class StateSpace(StateSpaceBase):
     _is_continuous = True
 
 class DiscreteStateSpace(StateSpaceBase):
-    #TODO: add it to latex and pretty printer
     def __new__(cls, A=None, B=None, C=None, D=None, sampling_time = 1):
-        if sampling_time == 0:
-            return StateSpace(A, B, C, D)
-
-        sampling_time = sympify(sampling_time)
-        obj = super(DiscreteStateSpace, cls).__new__(cls, A, B, C, D, sampling_time)
-        obj._sampling_time = sampling_time
-
-        return obj
-
-    @property
-    def sampling_time(self):
-        return self._sampling_time
-
-    _is_continuous = False
+        raise NotImplementedError("DiscreteStateSpace is not implemented yet. ")
