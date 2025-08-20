@@ -2,7 +2,6 @@ from sympy.physics.continuum_mechanics.structure2d import Structure2d
 from sympy.core.symbol import Symbol, symbols
 from sympy.core.numbers import Rational
 from sympy.functions import SingularityFunction
-from sympy.core.function import expand
 from sympy.simplify.simplify import simplify
 # from sympy import pi, cos, sin, rad, sympify
 import pytest
