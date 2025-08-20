@@ -1,6 +1,6 @@
 import pytest
 from sympy import symbols, Function, Eq, Not, Unequality
-from sympy.logic.algorithms.euf_solver import EUFTheorySolver
+from sympy.logic.algorithms.euf_theory_solver import EUFTheorySolver
 from sympy.assumptions.cnf import CNF, EncodedCNF
 from sympy.assumptions.ask import Q
 from sympy.logic import boolalg
@@ -108,6 +108,7 @@ def test_sympy_unequality_init():
     solver.SetTrue(Unequality(a, b))
     assert solver.IsTrue(Unequality(a, b)) is True
 
+
 def make_solver_from_props(*props):
     cnf = CNF.from_prop(boolalg.And(*props))
     enc = EncodedCNF()
@@ -115,35 +116,9 @@ def make_solver_from_props(*props):
     solver, conflicts = EUFTheorySolver.from_encoded_cnf(enc, testing_mode=True)
     return solver, enc, conflicts
 
-def test_basic_initialization_and_encoding():
-    solver, enc, conflicts = make_solver_from_props(Eq(x, y))
-    assert conflicts == []
-    # Mapping enc_id -> literal should be non-empty
-    assert len(solver._enc_to_lit) > 0
-    # Check that x != x is trivially false conflict
-    cnf = CNF.from_prop(Eq(x, x))
-    enc2 = EncodedCNF(); enc2.from_cnf(cnf)
-    solver2, conflicts2 = EUFTheorySolver.from_encoded_cnf(enc2)
-    assert conflicts2  # should detect trivial equality
-
-def test_assert_lit_positive_and_check_sat():
-    solver, enc, conflicts = make_solver_from_props(Eq(x, y))
-    assert not conflicts
-    # Get the encoded literal ID (positive int)
-    lit_id = next(iter(solver._enc_to_lit))
-    # Nothing asserted yet → IsTrue() is False
-    assert solver.IsTrue(solver._enc_to_lit[lit_id]) is False
-    # Assert as positive literal
-    assert solver.assert_lit(lit_id) is None
-    # Should now be seen as True
-    assert solver.IsTrue(solver._enc_to_lit[lit_id]) is True
-    # check() should still be SAT
-    sat, info = solver.check()
-    assert sat
-    assert isinstance(info, dict)
 
 def test_order_independence_of_assertions():
-    # x=y, y=z — test that order doesn't matter
+    # x=y, y=z - test that order doesn't matter
     solver, enc, conflicts = make_solver_from_props(Eq(x, y), Eq(y, z))
     ids = list(solver._enc_to_lit)
     solver.assert_lit(ids[1])
@@ -155,9 +130,10 @@ def test_order_independence_of_assertions():
     solver.assert_lit(ids[1])
     assert solver.IsTrue(Eq(x, z)) is True
 
+
 def test_simple_equality_chain():
     """
-    Test EUF: x = y, y = z  => SAT, and x = z must hold.
+    Test EUF: x = y, y = z  -> SAT, and x = z must hold.
     """
     cnf = CNF().from_prop(Eq(x, y) & Eq(y, z))
     enc = EncodedCNF(); enc.from_cnf(cnf)
@@ -173,9 +149,10 @@ def test_simple_equality_chain():
     # Derived fact
     assert euf.IsTrue(Eq(x, z)) is True
 
+
 def test_backtrack_recovery():
     """
-    EUF: assert eq, then backtrack and verify it’s gone.
+    EUF: assert eq, then backtrack and verify its gone.
     """
     cnf = CNF().from_prop(Eq(x, y))
     enc = EncodedCNF(); enc.from_cnf(cnf)

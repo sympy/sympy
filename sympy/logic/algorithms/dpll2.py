@@ -16,7 +16,7 @@ from sympy.core.sorting import ordered
 from sympy.assumptions.cnf import EncodedCNF
 
 from sympy.logic.algorithms.lra_theory import LRASolver
-from sympy.logic.algorithms.euf_solver import EUFTheorySolver
+from sympy.logic.algorithms.euf_theory_solver import EUFTheorySolver
 
 
 def dpll_satisfiable(expr, all_models=False, use_lra_theory=False, use_euf_theory= False):
@@ -252,35 +252,35 @@ class SATSolver:
                         while not any(-lit in res[1] for lit in self._current_level.var_settings):
                             self._undo()
 
-                    # check if assignment satisfies lra theory
+                    # check if assignment satisfies euf theory
                     if self.euf:
+                        conflict_lits = []
                         for enc_var in self.var_settings:
                             res = self.euf.assert_lit(enc_var)
                             if res is not None:
+                                conflict_lits.extend(res[1] if isinstance(res, tuple) else [])
                                 break
-                        res = self.euf.check()
-                        self.euf.reset()
-                    else:
-                        res = None
-                    if res is None or res[0]:
-                        yield {self.symbols[abs(lit) - 1]:
-                                    lit > 0 for lit in self.var_settings}
-                    else:
-                        self._simple_add_learned_clause(res[1])
 
-                        # backtrack until we unassign one of the literals causing the conflict
-                        while not any(-lit in res[1] for lit in self._current_level.var_settings):
-                            self._undo()
+                        if conflict_lits:
+                            self._simple_add_learned_clause(conflict_lits)
+                            # backtrack until we unassign one of the literals causing the conflict
+                            while not any(-lit in conflict_lits for lit in self._current_level.var_settings):
+                                self._undo()
+                            continue
 
-                    while self._current_level.flipped:
-                        self._undo()
-                    if len(self.levels) == 1:
-                        return
-                    flip_lit = -self._current_level.decision
-                    self._undo()
-                    self.levels.append(Level(flip_lit, flipped=True))
-                    flip_var = True
-                    continue
+                        sat_result = self.euf.check()
+                        if not sat_result[0]:  # If EUF theory is inconsistent
+                            conflict_explanation = sat_result[1] if len(sat_result) > 1 else []
+                            if conflict_explanation:
+                                self._simple_add_learned_clause(list(conflict_explanation))
+                                # backtrack until we unassign one of the literals causing the conflict
+                                while not any(-lit in conflict_explanation for lit in self._current_level.var_settings):
+                                    self._undo()
+                            continue
+
+                        yield {self.symbols[abs(lit) - 1]: lit > 0 for lit in self.var_settings}
+                    else:
+                        yield {self.symbols[abs(lit) - 1]: lit > 0 for lit in self.var_settings}
 
                 # Start the new decision level
                 self.levels.append(Level(lit))
