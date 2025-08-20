@@ -510,15 +510,15 @@ def ask(proposition, assumptions=True, context=global_assumptions):
         return res
 
     try:
+        res = lra_satask(proposition, assumptions=assumptions, context=context)
+    except UnhandledInput:
+        return None
+
+    try:
         res = euf_ask(proposition, assumptions=assumptions, context=context)
         if res is not None:
             return res
     except EUFUnhandledInput:
-        return None
-
-    try:
-        res = lra_satask(proposition, assumptions=assumptions, context=context)
-    except UnhandledInput:
         return None
 
     return res
