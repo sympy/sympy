@@ -21,7 +21,7 @@ from sympy.physics.control import (TransferFunction, PIDController, Series, Para
     Feedback, TransferFunctionMatrix, MIMOSeries, MIMOParallel, MIMOFeedback,
     StateSpace, gbt, bilinear, forward_diff, backward_diff, phase_margin, gain_margin)
 from sympy.testing.pytest import raises
-from sympy.logic.boolalg import true, false
+from sympy.logic.boolalg import false
 
 a, x, b, c, s, g, d, p, k, tau, zeta, wn, T = symbols('a, x, b, c, s, g, d, p, k,\
     tau, zeta, wn, T')
