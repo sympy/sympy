@@ -395,6 +395,7 @@ class Structure2d:
         self.nodes.append(new_node)
         return new_node
 
+
     def _find_applied_to(self, x, y, x_end=None, y_end=None):
         """ Finds the member or node to which the load is applied. """
         # Calculate the midpoint if end coordinates are provided
@@ -439,6 +440,7 @@ class Structure2d:
                 else:
                     local_x_end = None
                 return f"m_{member.member_id}", local_x_start, local_x_end
+
 
     def apply_load(
         self, start_x, start_y, value, global_angle, order, end_x=None, end_y=None
@@ -532,154 +534,189 @@ class Structure2d:
         # build load equation
         ########################
 
-        aa, oo, L = self._unwrap_structure()
+        bend_points, member_angles, L = self._unwrap_structure()
+        # self._unwrap_structure returns
         # Convert to alexes input
         # T = 1, Fv = 2, Fh = 3, qv = 4, qh = 5
+        # load_types supported in the module are -2(moment loads), -1(point loads), 0(distributed loads)
+        """
+        In order to to apply these loads into alex algorithm we update them here to
+        -2 --> 1
+        -1 --> 2, 3 one for vertical point load and one for horizontal point load projection
+         0 --> 4, 5 one for vertical distributed load and one for horizontal distributed load
+        -3 --> 6 which is only used internally for handling hinges when ever an hinge is applied it
+        applies a load with order -3 to the structure which is inspired from Beam module and alex algorithm
+        """
+        # for hinge
         if load.order == -3:
             load_p = load.value
-            B = [nsimplify(load_p)]
-            bb = [nsimplify(self.unwrapped_loadpoints[-1]["locals"][0])]
-            nn = [6]
+            load_values = [nsimplify(load_p)]
+            load_points = [nsimplify(self.unwrapped_loadpoints[-1]["locals"][0])]
+            load_type = [6]
+        # for moment loads and for fixed support moment reaction from apply_support().
         elif load.order == -2:
             qz = load.value
-            B = [nsimplify(qz)]
-            bb = [nsimplify(self.unwrapped_loadpoints[-1]["locals"][0])]
-            nn = [1]
+            load_values = [nsimplify(qz)]
+            load_points = [nsimplify(self.unwrapped_loadpoints[-1]["locals"][0])]
+            load_type = [1]
+        # for point loads and for reaction loads from apply_support()
         elif load.order == -1:
             Fv = load.y_component
             Fh = load.x_component
-            B = [nsimplify(Fv), nsimplify(Fh)]
-            bb = [
+            load_values = [nsimplify(Fv), nsimplify(Fh)]
+            load_points = [
                 nsimplify(self.unwrapped_loadpoints[-1]["locals"][0]),
                 nsimplify(self.unwrapped_loadpoints[-1]["locals"][0]),
             ]
-            nn = [2, 3]
+            load_type = [2, 3]
+        # for distributed loads for order 0
         else:
             qv = load.y_component
             qh = load.x_component
-            B = [nsimplify(qv), nsimplify(-qv), nsimplify(qh), nsimplify(-qh)]
-            bb = [
+            load_values = [nsimplify(qv), nsimplify(-qv), nsimplify(qh), nsimplify(-qh)]
+            load_points = [
                 nsimplify(self.unwrapped_loadpoints[-1]["locals"][0]),
                 nsimplify(self.unwrapped_loadpoints[-1]["locals"][1]),
                 nsimplify(self.unwrapped_loadpoints[-1]["locals"][0]),
                 nsimplify(self.unwrapped_loadpoints[-1]["locals"][1]),
             ]
-            nn = [4, 4, 5, 5]
+            load_type = [4, 4, 5, 5]
 
         # ALEX algo ############################################################################################
         # bendpoints
-        for i in range(len(B)):
-            for j in range(len(aa)):
-                if bb[i] == aa[-1]:
-                    if nn[i] == 1:
-                        self.beam.apply_load(B[i], bb[i], -2)
+        for i in range(len(load_values)):
+            for j in range(len(bend_points)):
+                if load_points[i] == bend_points[-1]:
+                    # moment load.
+                    if load_type[i] == 1:
+                        self.beam.apply_load(load_values[i], load_points[i], -2)
 
-                    elif nn[i] == 2:
-                        self.beam.apply_load(B[i] * cos(oo[-1]), bb[i], -1)
-                        self.column.apply_load(B[i] * -sin(oo[-1]), bb[i], -1)
+                    # vertical point load.
+                    elif load_type[i] == 2:
+                        self.beam.apply_load(load_values[i] * cos(member_angles[-1]), load_points[i], -1)
+                        self.column.apply_load(load_values[i] * -sin(member_angles[-1]), load_points[i], -1)
 
-                    elif nn[i] == 3:
-                        self.beam.apply_load(B[i] * sin(oo[-1]), bb[i], -1)
-                        self.column.apply_load(B[i] * cos(oo[-1]), bb[i], -1)
-                    elif nn[i] == 4:
-                        self.beam.apply_load(B[i] * cos(oo[-1]), bb[i], 0)
-                        self.column.apply_load(B[i] * -sin(oo[-1]), bb[i], 0)
+                    # horizontal point load
+                    elif load_type[i] == 3:
+                        self.beam.apply_load(load_values[i] * sin(member_angles[-1]), load_points[i], -1)
+                        self.column.apply_load(load_values[i] * cos(member_angles[-1]), load_points[i], -1)
 
-                    elif nn[i] == 5:
-                        self.beam.apply_load(B[i] * sin(oo[-1]), bb[i], 0)
-                        self.column.apply_load(B[i] * cos(oo[-1]), bb[i], 0)
+                    # vertical distributed load
+                    elif load_type[i] == 4:
+                        self.beam.apply_load(load_values[i] * cos(member_angles[-1]), load_points[i], 0)
+                        self.column.apply_load(load_values[i] * -sin(member_angles[-1]), load_points[i], 0)
+
+                    # horizontal distributed load
+                    elif load_type[i] == 5:
+                        self.beam.apply_load(load_values[i] * sin(member_angles[-1]), load_points[i], 0)
+                        self.column.apply_load(load_values[i] * cos(member_angles[-1]), load_points[i], 0)
 
                     break
                 else:
-                    if bb[i] < aa[j]:
-                        if nn[i] == 1:
-                            self.beam.apply_load(B[i], bb[i], -2)
+                    if load_points[i] < bend_points[j]:
+                        # moment load.
+                        if load_type[i] == 1:
+                            self.beam.apply_load(load_values[i], load_points[i], -2)
 
-                        elif nn[i] == 2:
-                            self.beam.apply_load(B[i] * cos(oo[j - 1]), bb[i], -1)
-                            self.column.apply_load(B[i] * -sin(oo[j - 1]), bb[i], -1)
+                        # vertical point load.
+                        elif load_type[i] == 2:
+                            self.beam.apply_load(load_values[i] * cos(member_angles[j - 1]), load_points[i], -1)
+                            self.column.apply_load(load_values[i] * -sin(member_angles[j - 1]), load_points[i], -1)
 
-                        elif nn[i] == 3:
-                            self.beam.apply_load(B[i] * sin(oo[j - 1]), bb[i], -1)
-                            self.column.apply_load(B[i] * cos(oo[j - 1]), bb[i], -1)
+                        # horizontal point load.
+                        elif load_type[i] == 3:
+                            self.beam.apply_load(load_values[i] * sin(member_angles[j - 1]), load_points[i], -1)
+                            self.column.apply_load(load_values[i] * cos(member_angles[j - 1]), load_points[i], -1)
 
-                        elif nn[i] == 4:
-                            self.beam.apply_load(B[i] * cos(oo[j - 1]), bb[i], 0)
-                            self.column.apply_load(B[i] * -sin(oo[j - 1]), bb[i], 0)
+                        # vertical distributed load.
+                        elif load_type[i] == 4:
+                            self.beam.apply_load(load_values[i] * cos(member_angles[j - 1]), load_points[i], 0)
+                            self.column.apply_load(load_values[i] * -sin(member_angles[j - 1]), load_points[i], 0)
 
-                        elif nn[i] == 5:
-                            self.beam.apply_load(B[i] * sin(oo[j - 1]), bb[i], 0)
-                            self.column.apply_load(B[i] * cos(oo[j - 1]), bb[i], 0)
+                        # horizontal distributed load.
+                        elif load_type[i] == 5:
+                            self.beam.apply_load(load_values[i] * sin(member_angles[j - 1]), load_points[i], 0)
+                            self.column.apply_load(load_values[i] * cos(member_angles[j - 1]), load_points[i], 0)
 
-                        elif nn[i] == 6:
-                            # hinge load
+                        # for hinge inspired from beam module and alex algorithm.
+                        elif load_type[i] == 6:
                             E = self.beam.elastic_modulus
                             I = self.beam.second_moment
-                            self.beam.apply_load(B[i]*E*I,bb[i],-3)
+                            self.beam.apply_load(load_values[i]*E*I,load_points[i],-3)
                         break
 
-        for i in range(len(B)):
-            for j in range(len(aa) - 1):
-                if bb[i] < aa[j]:
-                    if nn[i] == 2:
+        for i in range(len(load_values)):
+            for j in range(len(bend_points) - 1):
+                if load_points[i] < bend_points[j]:
+                    # vertical point load.
+                    if load_type[i] == 2:
                         self.beam.apply_load(
-                            B[i] * (cos(oo[j]) - cos(oo[j - 1])), aa[j], -1
+                            load_values[i] * (cos(member_angles[j]) - cos(member_angles[j - 1])), bend_points[j], -1
                         )
                         self.column.apply_load(
-                            B[i] * (-sin(oo[j]) + sin(oo[j - 1])), aa[j], -1
+                            load_values[i] * (-sin(member_angles[j]) + sin(member_angles[j - 1])), bend_points[j], -1
                         )
 
-                    elif nn[i] == 3:
+                    # horizontal point load.
+                    elif load_type[i] == 3:
                         self.beam.apply_load(
-                            B[i] * (sin(oo[j]) - sin(oo[j - 1])), aa[j], -1
+                            load_values[i] * (sin(member_angles[j]) - sin(member_angles[j - 1])), bend_points[j], -1
                         )
                         self.column.apply_load(
-                            B[i] * (cos(oo[j]) - cos(oo[j - 1])), aa[j], -1
+                            load_values[i] * (cos(member_angles[j]) - cos(member_angles[j - 1])), bend_points[j], -1
                         )
 
-                    elif nn[i] == 4:
+                    # vertical distributed load.
+                    elif load_type[i] == 4:
                         self.beam.apply_load(
-                            B[i] * (cos(oo[j]) - cos(oo[j - 1])), aa[j], 0
+                            load_values[i] * (cos(member_angles[j]) - cos(member_angles[j - 1])), bend_points[j], 0
                         )
                         self.beam.apply_load(
-                            B[i] * (aa[j] - bb[i]) * (cos(oo[j]) - cos(oo[j - 1])),
-                            aa[j],
+                            load_values[i] * (bend_points[j] - load_points[i]) * (cos(member_angles[j]) - cos(member_angles[j - 1])),
+                            bend_points[j],
                             -1,
                         )
                         self.column.apply_load(
-                            B[i] * (-sin(oo[j]) + sin(oo[j - 1])), aa[j], 0
+                            load_values[i] * (-sin(member_angles[j]) + sin(member_angles[j - 1])), bend_points[j], 0
                         )
                         self.column.apply_load(
-                            B[i] * (aa[j] - bb[i]) * (-sin(oo[j]) + sin(oo[j - 1])),
-                            aa[j],
+                            load_values[i] * (bend_points[j] - load_points[i]) * (-sin(member_angles[j]) + sin(member_angles[j - 1])),
+                            bend_points[j],
                             -1,
                         )
 
-                    elif nn[i] == 5:
+                    # horizontal distributed load.
+                    elif load_type[i] == 5:
                         self.beam.apply_load(
-                            B[i] * (sin(oo[j]) - sin(oo[j - 1])), aa[j], 0
+                            load_values[i] * (sin(member_angles[j]) - sin(member_angles[j - 1])), bend_points[j], 0
                         )
                         self.beam.apply_load(
-                            B[i] * (aa[j] - bb[i]) * (sin(oo[j]) - sin(oo[j - 1])),
-                            aa[j],
+                            load_values[i] * (bend_points[j] - load_points[i]) * (sin(member_angles[j]) - sin(member_angles[j - 1])),
+                            bend_points[j],
                             -1,
                         )
                         self.column.apply_load(
-                            B[i] * (cos(oo[j]) - cos(oo[j - 1])), aa[j], 0
+                            load_values[i] * (cos(member_angles[j]) - cos(member_angles[j - 1])), bend_points[j], 0
                         )
                         self.column.apply_load(
-                            B[i] * (aa[j] - bb[i]) * (cos(oo[j]) - cos(oo[j - 1])),
-                            aa[j],
+                            load_values[i] * (bend_points[j] - load_points[i]) * (cos(member_angles[j]) - cos(member_angles[j - 1])),
+                            bend_points[j],
                             -1,
                         )
-
+        # all vertical projections on to the beam
         self.load_qz = self.beam._load
+        # all horizontal projections on to the beam
         self.load_qx = self.column._load
 
     ###################################################################################################################
 
     def _unwrap_structure(self):
-        """Unwraps the structure to a 1D beam for analysis."""
+        """
+        Unwraps the structure to a 1D beam for analysis and
+          returns all the bend points or joints, angles of members
+          with global horizontal axis, length of the un wrapped 1d structure.
+        """
+
         unwrapped_len = 0
         unwrapped_bendpoints = []
         unwrapped_loadpoints = []
@@ -740,20 +777,22 @@ class Structure2d:
             unwrapped_loadpoints, key=lambda x: x["l_id"]
         )
         ### Emulate Alexes input for his algorithm
-        aa = []
-        oo = []
+        bend_points = []
+        member_angles = []
 
         for unwrapped_bendpoint in unwrapped_bendpoints:
-            aa.append(unwrapped_bendpoint["bend_point"][0])
-            oo.append(unwrapped_bendpoint["angle"])
-        aa.append(unwrapped_bendpoints[-1]["bend_point"][1])
+            bend_points.append(unwrapped_bendpoint["bend_point"][0])
+            member_angles.append(unwrapped_bendpoint["angle"])
+        bend_points.append(unwrapped_bendpoints[-1]["bend_point"][1])
 
         L = unwrapped_len
         self.beam.length = L
         self.column.length = L
 
-        return aa, oo, L
+        # returns all bend points, member angles , length.
+        return bend_points, member_angles, L
         ### Emulate Alexes input for his algorithm
+
 
     def _find_unwrapped_position(self, x, y):
         """Finds the unwrapped position based on the x and y from the grid."""
@@ -776,6 +815,7 @@ class Structure2d:
             unwrapped_position_x = current_length
         # print("Debug - unwrapped position:", unwrapped_position_x)
         return nsimplify(unwrapped_position_x)  # ALSO NEEDS SIMPLIFY
+
 
     def apply_support(self, x, y, type="pin"):
         """
@@ -847,9 +887,6 @@ class Structure2d:
             self.loads[-2].is_support_reaction = True
 
             self.beam.bc_deflection.append((unwarap_x, 0))
-
-            #self.beam.bc_bending_moment.append((unwarap_x, 0))
-
             self.column._bc_extension.append(unwarap_x)
 
             self.support_symbols.append(Rv)
@@ -865,9 +902,6 @@ class Structure2d:
             self.loads[-1].is_support_reaction = True
 
             self.beam.bc_deflection.append((unwarap_x, 0))
-
-            #self.beam.bc_bending_moment.append((unwarap_x, 0))
-
             self.support_symbols.append(Rv)
 
         elif type == "fixed":
@@ -899,6 +933,7 @@ class Structure2d:
             self.support_symbols.append(Rh)
             self.support_symbols.append(T)
 
+
     def apply_rotation_hinge(self, x, y):
 
         unwarap_x = self._find_unwrapped_position(x, y)
@@ -914,23 +949,23 @@ class Structure2d:
     def _build_local_displacements(self, uz, ux):
 
         x = self.beam.variable
-        aa, oo, _ = self._unwrap_structure()
-        o0 = oo[0] if oo else 0
+        bend_points, member_angles, _ = self._unwrap_structure()
+        o0 = member_angles[0] if member_angles else 0
 
         # local v = projection of (uz, ux) on each segment's local v-axis
-        uvz = uz.subs(x, aa[0]) * cos(o0)
-        uvx = -ux.subs(x, aa[0]) * sin(o0)
-        for i in range(len(oo)):
-            a, b, th = aa[i], aa[i+1], oo[i]
+        uvz = uz.subs(x, bend_points[0]) * cos(o0)
+        uvx = -ux.subs(x, bend_points[0]) * sin(o0)
+        for i in range(len(member_angles)):
+            a, b, th = bend_points[i], bend_points[i+1], member_angles[i]
             uvz += ((uz - uz.subs(x, a)) * SingularityFunction(x, a, 0) - (uz - uz.subs(x, b)) * SingularityFunction(x, b, 0)) * cos(th)
             uvx += -((ux - ux.subs(x, a)) * SingularityFunction(x, a, 0) - (ux - ux.subs(x, b)) * SingularityFunction(x, b, 0)) * sin(th)
         uv = uvz + uvx
 
         # local h = projection of (uz, ux) on each segment's local h-axis
-        uhz = uz.subs(x, aa[0]) * sin(o0)
-        uhx = ux.subs(x, aa[0]) * cos(o0)
-        for i in range(len(oo)):
-            a, b, th = aa[i], aa[i+1], oo[i]
+        uhz = uz.subs(x, bend_points[0]) * sin(o0)
+        uhx = ux.subs(x, bend_points[0]) * cos(o0)
+        for i in range(len(member_angles)):
+            a, b, th = bend_points[i], bend_points[i+1], member_angles[i]
             uhz += ((uz - uz.subs(x, a)) * SingularityFunction(x, a, 0) - (uz - uz.subs(x, b)) * SingularityFunction(x, b, 0)) * sin(th)
             uhx += ((ux - ux.subs(x, a)) * SingularityFunction(x, a, 0) - (ux - ux.subs(x, b)) * SingularityFunction(x, b, 0)) * cos(th)
         uh = uhz + uhx
