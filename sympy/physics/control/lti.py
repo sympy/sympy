@@ -5914,6 +5914,192 @@ class StateSpaceBase(LinearTimeInvariant):
         D[self.num_outputs:, self.num_inputs:] = other._D
         return StateSpace(A, B, C, D)
 
+    def _calc_orthogonal_complement(self, M, dim):
+        """
+        Returns a basis of the orthogonal complement of a subspace
+        represented by the matrix M.
+        The orthogonal complement is computed as the null space of the
+        transpose of M.
+
+        """
+        if M.shape[0] == 0:
+            return eye(dim).columnspace()
+
+        return M.T.nullspace()
+
+    def apply_similarity_transform(self, transform_matrix):
+        r"""
+        Returns an algebrically equivalent state space model, based on the
+        transformation matrix `T` such that:
+
+        .. math::
+            \begin{cases}
+            \bar A=T^{-1}AT\\
+            \bar B=T^{-1}B\\
+            \bar C=CT\\
+            \bar D=D\end{cases}
+
+        Parameters
+        ==========
+
+        transform_matrix : Matrix
+            The transformation matrix `T` to be applied to the state space
+            model.
+            The transformation matrix must be invertible and have the same
+            dimensions as the state matrix `A`.
+
+        Returns
+        =======
+
+        StateSpace
+            The transformed state space model.
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix, Rational
+        >>> from sympy.physics.control import StateSpace
+        >>> A = Matrix([[5, -2, 2], [0, 1, -4], [0, 0, -3]])
+        >>> B = Matrix([1,0,0])
+        >>> C = Matrix([1, 0, 0]).T
+        >>> ss = StateSpace(A, B, C)
+        >>> T = Matrix([[0, Rational(1, 2), 1], [1, 1, 0], [1, 0, 0]])
+        >>> ss.apply_similarity_transform(T).A
+            Matrix([
+            [-3, 0, 0],
+            [ 0, 1, 0],
+            [ 0, 0, 5]])
+
+        """
+        T_inv = transform_matrix.inv()
+        A_decomp = T_inv * self._A * transform_matrix
+        B_decomp = T_inv * self._B
+        C_decomp = self._C * transform_matrix
+
+        return StateSpace(A_decomp, B_decomp, C_decomp, self._D)
+
+    def to_observable_form(self):
+        r"""
+        Returns an equivalent state space model decomposed in observable and
+        unobservable parts.
+        The returned system is algebraically similar to the original but with
+        the A and C matrices in block triangular form showing the observable
+        and unobservable subsystems.
+
+        .. math::
+            \begin{bmatrix}
+            A_{O} & 0\\ A_{O\bar O} & A_{\bar O}
+            \end{bmatrix}
+
+        .. math::
+            \begin{bmatrix}
+            B_{O} \\ B_{\bar O}
+            \end{bmatrix}
+
+        .. math::
+            \begin{bmatrix}
+            C_{O} & 0
+            \end{bmatrix}
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix, Rational
+        >>> from sympy.physics.control import StateSpace
+        >>> A = Matrix([[1, 0, 1], [0, 0, 0],[0, 0, -2]])
+        >>> B = Matrix([1, 1, 0])
+        >>> C = Matrix([1, 1, Rational(1,3)]).T
+        >>> ss = StateSpace(A, B, C)
+        >>> ss = ss.to_observable_form()
+        >>> ss.A
+        Matrix([
+        [0,  0,  0],
+        [0,  1,  0],
+        [0, -3, -2]])
+        >>> ss.B
+        Matrix([
+        [    1],
+        [ 3/10],
+        [-3/10]])
+        >>> ss.C
+        Matrix([[1, 10/3, 0]])
+
+        """
+        obs_subsp = Matrix.hstack(*self.observable_subspace())
+        unobs_subsp = Matrix.hstack(*self.unobservable_subspace())
+
+        if unobs_subsp.shape[1] == 0:
+            # fully observable system
+            return self
+
+        if obs_subsp.shape[1] == 0:
+            # fully unobservable system
+            return self
+
+        T = Matrix.hstack(obs_subsp, unobs_subsp)
+        return self.apply_similarity_transform(T)
+
+    def to_controllable_form(self):
+        r"""
+        Returns an equivalent state space model decomposed in controllable and
+        uncontrollable parts.
+        The returned system is algebraically similar to the original but with
+        the A and B matrices in block triangular form showing the controllable
+        and uncontrollable subsystems.
+
+        .. math::
+            \begin{bmatrix}
+            A_{R} & A_{R\bar R}\\0  & A_{\bar R}
+            \end{bmatrix}
+
+        .. math::
+            \begin{bmatrix}
+            B_{R} \\ 0
+            \end{bmatrix}
+
+        .. math::
+            \begin{bmatrix}
+            C_{R} & C_{\bar R}
+            \end{bmatrix}
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix
+        >>> from sympy.physics.control import StateSpace
+        >>> A = Matrix([[1, 0, 1], [0, 0, 0],[0, 0, -2]])
+        >>> B = Matrix([1, 1, 0])
+        >>> C = Matrix([1, 1, 0]).T
+        >>> ss = StateSpace(A, B, C)
+        >>> ss = ss.to_controllable_form()
+        >>> ss.A
+        Matrix([
+        [0, 0,  0],
+        [1, 1,  1],
+        [0, 0, -2]])
+        >>> ss.B
+        Matrix([
+        [1],
+        [0],
+        [0]])
+        >>> ss.C
+        Matrix([[2, 1, 0]])
+
+        """
+        contr_subsp = Matrix.hstack(*self.controllable_subspace())
+        uncontr_subsp = Matrix.hstack(*self.uncontrollable_subspace())
+
+        if uncontr_subsp.shape[1] == 0:
+            # fully controllable system
+            return self
+
+        if contr_subsp.shape[1] == 0:
+            # fully uncontrollable system
+            return self
+
+        T = Matrix.hstack(contr_subsp, uncontr_subsp)
+        return self.apply_similarity_transform(T)
+
     def observability_matrix(self):
         """
         Returns the observability matrix of the state space model:
@@ -5945,11 +6131,21 @@ class StateSpaceBase(LinearTimeInvariant):
         for i in range(1,n):
             ob = ob.col_join(self._C * self._A**i)
 
-        return ob
+        return Matrix(ob)
 
-    def observable_subspace(self):
+    def unobservable_subspace(self):
         """
-        Returns the observable subspace of the state space model.
+        Returns the unobservable subspace of the state space model.
+
+        Note: this method raises an error for matrices with symbolic entries
+        because it is not possible determine the unobservable subspace
+        in general.
+
+        Raises
+        ======
+        NotImplementedError
+            If the state space model has symbolic entries, the unobservable
+            subspace cannot be determined in general.
 
         Examples
         ========
@@ -5964,17 +6160,32 @@ class StateSpaceBase(LinearTimeInvariant):
         >>> ob_subspace = ss.observable_subspace()
         >>> ob_subspace
         [Matrix([
-        [0],
-        [1]]), Matrix([
         [1],
-        [0]])]
-
+        [0]]), Matrix([
+        [0],
+        [1]])]
         """
-        return self.observability_matrix().columnspace()
+        M = self.observability_matrix()
+        if len(M.free_symbols) > 0:
+            raise NotImplementedError(
+                "Unbservable subspace cannot be determined for " \
+                "symbolic matrices."
+            )
+        return M.nullspace()
 
-    def is_observable(self):
+    def observable_subspace(self):
         """
-        Returns if the state space model is observable.
+        Returns the observable subspace of the state space model.
+
+        Note: this method raises an error for matrices with symbolic entries
+        because it is not possible determine the observable subspace
+        in general.
+
+        Raises
+        ======
+        NotImplementedError
+            If the state space model has symbolic entries, the observable
+            subspace cannot be determined in general.
 
         Examples
         ========
@@ -5986,7 +6197,38 @@ class StateSpaceBase(LinearTimeInvariant):
         >>> C = Matrix([[0, 1]])
         >>> D = Matrix([1])
         >>> ss = StateSpace(A, B, C, D)
-        >>> ss.is_observable()
+        >>> ob_subspace = ss.observable_subspace()
+        >>> ob_subspace
+        [Matrix([
+        [1],
+        [0]]), Matrix([
+        [0],
+        [1]])]
+
+        """
+        M = Matrix.hstack(*self.unobservable_subspace())
+        if len(M.free_symbols) > 0:
+                raise NotImplementedError(
+                    "Observable subspace cannot be determined for " \
+                    "symbolic matrices."
+                )
+        return self._calc_orthogonal_complement(M, self._A.shape[0])
+
+    def is_observable(self):
+        """
+        Returns conditions for the state space model to be observable.
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix
+        >>> from sympy.physics.control import StateSpace
+        >>> A1 = Matrix([[-1.5, -2], [1, 0]])
+        >>> B1 = Matrix([0.5, 0])
+        >>> C1 = Matrix([[0, 1]])
+        >>> D1 = Matrix([1])
+        >>> ss1 = StateSpace(A1, B1, C1, D1)
+        >>> ss1.is_observable()
         True
 
         """
@@ -6022,7 +6264,48 @@ class StateSpaceBase(LinearTimeInvariant):
         for i in range(1, n):
             co = co.row_join(((self._A)**i) * self._B)
 
-        return co
+        return Matrix(co)
+
+    def uncontrollable_subspace(self):
+        """
+        Returns the uncontrollable subspace of the state space model.
+
+        Note: this method raises an error for matrices with symbolic entries
+        because it is not possible determine the uncontrollable subspace
+        in general.
+
+        Raises
+        ======
+        NotImplementedError
+            If the state space model has symbolic entries, the uncontrollable
+            subspace cannot be determined in general.
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix
+        >>> from sympy.physics.control import StateSpace
+        >>> A = Matrix([[-1.5, -2], [1, 0]])
+        >>> B = Matrix([0.5, 0])
+        >>> C = Matrix([[0, 1]])
+        >>> D = Matrix([1])
+        >>> ss = StateSpace(A, B, C, D)
+        >>> co_subspace = ss.controllable_subspace()
+        >>> co_subspace
+        [Matrix([
+        [0.5],
+        [  0]]), Matrix([
+        [-0.75],
+        [  0.5]])]
+
+        """
+        M = Matrix.hstack(*self.controllable_subspace())
+        if len(M.free_symbols) > 0:
+            raise NotImplementedError(
+                "Uncontrollable subspace cannot be determined for " \
+                "symbolic matrices."
+            )
+        return self._calc_orthogonal_complement(M, self._A.shape[0])
 
     def controllable_subspace(self):
         """
@@ -6051,20 +6334,26 @@ class StateSpaceBase(LinearTimeInvariant):
 
     def is_controllable(self):
         """
-        Returns if the state space model is controllable.
+        Returns conditions for the state space model to be controllable.
 
         Examples
         ========
 
-        >>> from sympy import Matrix
+        >>> from sympy import symbols, Matrix
         >>> from sympy.physics.control import StateSpace
-        >>> A = Matrix([[-1.5, -2], [1, 0]])
-        >>> B = Matrix([0.5, 0])
-        >>> C = Matrix([[0, 1]])
-        >>> D = Matrix([1])
-        >>> ss = StateSpace(A, B, C, D)
-        >>> ss.is_controllable()
+        >>> A1 = Matrix([[-1.5, -2], [1, 0]])
+        >>> B1 = Matrix([0.5, 0])
+        >>> C1 = Matrix([[0, 1]])
+        >>> D1 = Matrix([1])
+        >>> ss1 = StateSpace(A1, B1, C1, D1)
+        >>> ss1.is_controllable()
         True
+
+        >>> a = symbols("a")
+        >>> A2 = Matrix([[1, 0, 1], [1, 1, 0], [0, 0, a]])
+        >>> B2 = Matrix([0.5, 1, 1])
+        >>> C2 = Matrix([[0, 1, 0]])
+        >>> ss2 = StateSpace(A2, B2, C2)
 
         """
         return self.controllability_matrix().rank() == self.num_states

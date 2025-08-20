@@ -3018,6 +3018,10 @@ class ANP(CantSympify, Generic[Eg]):
 
     __slots__ = ('_rep', '_mod', 'dom')
 
+    _rep: DMP[Eg]
+    _mod: DMP[Eg]
+    dom: Domain[Eg]
+
     def __new__(cls, rep, mod, dom):
         if isinstance(rep, DMP):
             pass
@@ -3144,7 +3148,7 @@ class ANP(CantSympify, Generic[Eg]):
     def one(cls, mod, dom):
         return ANP(1, mod, dom)
 
-    def to_dict(f):
+    def to_dict(f) -> dict[monom, Eg]:
         """Convert ``f`` to a dict representation with native coefficients. """
         return f._rep.to_dict()
 
@@ -3331,6 +3335,14 @@ class ANP(CantSympify, Generic[Eg]):
             return NotImplemented
         else:
             return f.quo_ground(g)
+
+    def __rtruediv__(f, g):
+        try:
+            g = f.dom.convert(g)
+        except CoercionFailed:
+            return NotImplemented
+        else:
+            return f.pow(-1).mul_ground(g)
 
     def __eq__(f, g):
         try:

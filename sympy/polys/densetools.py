@@ -2,9 +2,7 @@
 
 from __future__ import annotations
 
-from typing import overload
-
-from sympy.polys.domains.domain import Domain, Er, Ef, Eeuclid
+from sympy.polys.domains.domain import Domain, Er, Eg, Ef, Eeuclid
 from sympy.polys.domains.field import Field
 from sympy.polys.densearith import (
     dup_add_term, dmp_add_term,
@@ -48,13 +46,7 @@ from math import ceil as _ceil, log2 as _log2, sqrt
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from sympy.polys.domains.algebraicfield import AlgebraicField
-    from sympy.polys.polyclasses import ANP
-    from sympy.polys.domains.gaussiandomains import (
-        Tdom,
-        GaussianDomain,
-        GaussianElement,
-    )
+    from sympy.polys.domains.ringextension import RingExtension
 
 
 def dup_integrate(f: dup[Ef], m: int, K: Field[Ef]) -> dup[Ef]:
@@ -1217,21 +1209,11 @@ def dup_decompose(f: dup[Er], K: Domain[Er]) -> list[dup[Er]]:
     return [f] + F
 
 
-@overload
 def dmp_alg_inject(
-    f: dmp[ANP[Tdom]], u: int, K: AlgebraicField[ANP[Tdom], Tdom]
-) -> tuple[dmp[Tdom], int, Domain[Tdom]]: ...
-@overload
-def dmp_alg_inject(
-    f: dmp[GaussianElement[Tdom]], u: int, K: GaussianDomain[GaussianElement[Tdom]]
-) -> tuple[dmp[Tdom], int, Domain[Tdom]]: ...
-
-
-def dmp_alg_inject(
-    f: dmp[ANP[Tdom]] | dmp[GaussianElement[Tdom]],
+    f: dmp[Er],
     u: int,
-    K: AlgebraicField[ANP[Tdom], Tdom] | GaussianDomain[GaussianElement[Tdom]],
-) -> tuple[dmp[Tdom], int, Domain[Tdom]]:
+    K: RingExtension[Er, Eg],
+) -> tuple[dmp[Eg], int, Domain[Eg]]:
     """
     Convert polynomial from ``K(a)[X]`` to ``K[a,X]``.
 
@@ -1253,44 +1235,14 @@ def dmp_alg_inject(
     QQ
 
     """
-    if K.is_GaussianRing or K.is_GaussianField:
-        return _dmp_alg_inject_gaussian(f, u, K) # type: ignore
-    elif K.is_Algebraic:
-        return _dmp_alg_inject_alg(f, u, K) # type: ignore
-    else:
+    if not (K.is_Algebraic or K.is_GaussianRing or K.is_GaussianField):
         raise DomainError('computation can be done only in an algebraic domain')
 
-
-def _dmp_alg_inject_gaussian(
-    f: dmp[GaussianElement[Tdom]], u: int, K: GaussianDomain[GaussianElement[Tdom]]
-) -> tuple[dmp[Tdom], int, Domain[Tdom]]:
-    """Helper function for :func:`dmp_alg_inject`."""
-
-    fd: dict[tuple[int, ...], GaussianElement[Tdom]] = dmp_to_dict(f, u)
-    h: dict[tuple[int, ...], Tdom] = {}
+    fd: dict[tuple[int, ...], Er] = dmp_to_dict(f, u)
+    h: dict[tuple[int, ...], Eg] = {}
 
     for f_monom, g in fd.items():
-        x, y = g.x, g.y
-        if x:
-            h[(0,) + f_monom] = x
-        if y:
-            h[(1,) + f_monom] = y
-
-    F = dmp_from_dict(h, u + 1, K.dom)
-
-    return F, u + 1, K.dom
-
-
-def _dmp_alg_inject_alg(
-    f: dmp[ANP[Tdom]], u: int, K: AlgebraicField[ANP[Tdom], Tdom]
-) -> tuple[dmp[Tdom], int, Domain[Tdom]]:
-    """Helper function for :func:`dmp_alg_inject`."""
-
-    fd: dict[tuple[int, ...], ANP[Tdom]] = dmp_to_dict(f, u)
-    h: dict[tuple[int, ...], Tdom] = {}
-
-    for f_monom, g in fd.items():
-        for g_monom, c in g.to_dict().items():
+        for g_monom, c in K.to_dict(g).items():
             h[g_monom + f_monom] = c
 
     F = dmp_from_dict(h, u + 1, K.dom)

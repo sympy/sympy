@@ -492,6 +492,9 @@ class Domain(Generic[Er]):
     is_Composite: bool = False
     """Boolean flag indicating if the domain is a composite domain."""
 
+    is_RingExtension: bool = False
+    """Boolean flag indicating if the domain is a ring extension domain."""
+
     is_PID: bool = False
     """Boolean flag indicating if the domain is a `principal ideal domain`_.
 
@@ -1031,7 +1034,7 @@ class Domain(Generic[Er]):
         """Returns a ring associated with ``self``. """
         raise DomainError('there is no ring associated with %s' % self)
 
-    def get_field(self) -> Field[Ef]:
+    def get_field(self) -> Field:
         """Returns a field associated with ``self``. """
         raise DomainError('there is no field associated with %s' % self)
 
