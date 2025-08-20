@@ -2169,35 +2169,6 @@ class DiscreteTransferFunction(TransferFunctionBase):
             function model are not implemented yet.
             """)
 
-    def _eval_rewrite_as_DiscreteStateSpace(self, *args):
-        """
-        Returns the equivalent space model of the transfer function model.
-        The state space model will be returned in the controllable canonical
-        form.
-
-        Unlike the space state to transfer function model conversion, the
-        transfer function to state space model conversion is not unique.
-        There can be multiple state space representations of a given transfer function model.
-
-        Examples
-        ========
-
-        >>> from sympy.abc import z
-        >>> from sympy.physics.control import DiscreteTransferFunction, DiscreteStateSpace
-        >>> dtf = DiscreteTransferFunction(z**2 + 1, z**3 + z*2 + 10, z, 0.1)
-        >>> dtf.rewrite(DiscreteStateSpace)
-        DiscreteStateSpace(Matrix([
-        [  0,  1, 0],
-        [  0,  0, 1],
-        [-10, -2, 0]]), Matrix([
-        [0],
-        [0],
-        [1]]), Matrix([[1, 0, 1]]), Matrix([[0]]), 0.1)
-
-        """
-        A, B, C, D = self._StateSpace_matrices_equivalent()
-        return DiscreteStateSpace(A, B, C, D, self.sampling_time)
-
     def _eval_rewrite_as_StateSpace(self, *args):
         raise TypeError("""
             The discrete transfer function model cannot be rewritten as a
