@@ -60,11 +60,10 @@ def dup_routh_hurwitz(f: dup[Er], K: Domain[Er]) -> list[Er]:
 
 def _dup_routh_hurwitz_qq(p: list[MPQ], K: RationalField) -> list[MPQ]:
     if len(p) < 2:
-        return [K.one]
+        return []
+
     elif p[0] * p[1] <= K.zero:
         return [-K.one]
-    elif len(p) == 2:
-        return [K.one]
 
     qs = p.copy()
     for i in range(1, len(p), 2):
@@ -82,10 +81,7 @@ def _rec_dup_routh_hurwitz_poly(p: list[PolyElement[Er]],
                             previous_cond: list[PolyElement[Er]],
                             K: PolynomialRing[Er]):
     if len(p) < 2:
-        return [K.one]
-
-    if len(p) == 2:
-        return previous_cond + [_clear_cond_poly(p[0] * p[1], previous_cond, K)]
+        return previous_cond
 
     qs = [p[1] * qi for qi in p]
     for i in range(1, len(p), 2):
@@ -149,13 +145,10 @@ def _dup_routh_hurwitz_exraw_div(p: list[Expr]) -> list[Expr]:
 
     """
     if len(p) < 2:
-        return [EXRAW.one]
+        return []
 
     if (p[0]*p[1]).is_nonpositive:
         return [-EXRAW.one]
-
-    if len(p) == 2:
-        return [p[0]*p[1]]
 
     qs = p.copy()
     for i in range(1, len(p), 2):
@@ -176,10 +169,7 @@ def _dup_routh_hurwitz_exraw_no_div(p: list[Expr]) -> list[Expr]:
 def _rec_dup_routh_hurwitz_exraw_no_div(p: list[Expr],
                                 previous_cond: list[tuple[int, set[Expr]]]) -> list[Expr]:
     if len(p) < 2:
-        return [EXRAW.one]
-
-    if len(p) == 2:
-        return [_clear_cond_exraw(p[0]*p[1], previous_cond)[0]]
+        return []
 
     qs = [p[1] * qi for qi in p]
     for i in range(1, len(p), 2):

@@ -1233,7 +1233,7 @@ class TransferFunction(SISOLinearTimeInvariant):
         [-12.0, -1.0, -2.0 - 0.707106781186548*I, -2.0 + 0.707106781186548*I]
         >>> tf3 = TransferFunction(1, p3, s)
         >>> tf3.get_asymptotic_stability_conditions()
-        [True]
+        []
 
         >>> k = symbols('k')
         >>> tf4 = TransferFunction(-20*s + 20, s**3 + 2*s**2 + 100*s, s)
