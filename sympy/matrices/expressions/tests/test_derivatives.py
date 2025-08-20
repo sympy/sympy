@@ -3,12 +3,12 @@ Some examples have been taken from:
 
 http://www.math.uwaterloo.ca/~hwolkowi//matrixcookbook.pdf
 """
-from sympy import KroneckerProduct
+from sympy import KroneckerProduct, Matrix, diff, eye, Array
 from sympy.combinatorics import Permutation
 from sympy.concrete.summations import Sum
 from sympy.core.numbers import Rational
 from sympy.core.singleton import S
-from sympy.core.symbol import symbols
+from sympy.core.symbol import symbols, Symbol
 from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import (cos, sin, tan)
@@ -18,14 +18,14 @@ from sympy.matrices.expressions.diagonal import DiagMatrix
 from sympy.matrices.expressions.hadamard import (HadamardPower, HadamardProduct, hadamard_product)
 from sympy.matrices.expressions.inverse import Inverse
 from sympy.matrices.expressions.matexpr import MatrixSymbol
-from sympy.matrices.expressions.special import OneMatrix
-from sympy.matrices.expressions.trace import Trace
+from sympy.matrices.expressions.special import OneMatrix, MatrixUnit
+from sympy.matrices.expressions.trace import Trace, trace
 from sympy.matrices.expressions.matadd import MatAdd
 from sympy.matrices.expressions.matmul import MatMul
 from sympy.matrices.expressions.special import (Identity, ZeroMatrix)
 from sympy.tensor.array.array_derivatives import ArrayDerivative
 from sympy.matrices.expressions import hadamard_power
-from sympy.tensor.array.expressions.array_expressions import ArrayAdd, ArrayTensorProduct, PermuteDims
+from sympy.tensor.array.expressions.array_expressions import ArrayAdd, ArrayTensorProduct, PermuteDims, ArrayContraction
 
 i, j, k = symbols("i j k")
 m, n = symbols("m n")
@@ -475,3 +475,136 @@ def test_derivatives_of_hadamard_expressions():
 
     expr = hadamard_power(a.T*X*b, S.Half)
     assert expr.diff(X) == a/(2*sqrt(a.T*X*b))*b.T
+
+
+def test_fix_issue_24021():
+    E = MatrixSymbol('E', 3, 3)
+    expr = Trace(E)**2 + Trace(E*E.T)
+    assert expr.diff(E) == 2*Trace(E)*Identity(3) + 2*E
+
+
+def test_fix_issue_on_stackoverflow():
+    # https://stackoverflow.com/questions/69874089/calculating-the-gradient-and-hessian-of-a-symbolic-function-containing-matrices/69876854#69876854
+    x = MatrixSymbol('x', 2, 1)
+    m1 = Matrix([[1, 2], [4, 7]])
+    m3 = Matrix([3, 5])
+    fx = x.T * MatMul(m1, x) + x.T * Matrix(m3) + 6*Identity(1)
+    assert fx.diff(x) == m1*x + m1.T*x + m3
+
+
+def test_issue_25118():
+    # https://github.com/sympy/sympy/issues/25118
+    F = MatrixSymbol('F', 3, 3)
+
+    assert (trace(F) - 1).diff(F) == Identity(3)
+
+    C = F.T * F
+    I1 = Trace(C)
+    phi = I1 - 3
+    P = phi.diff(F)
+    assert P == 2*F
+
+
+def test_issue_24725():
+    # https://github.com/sympy/sympy/issues/24725
+
+    N = Symbol("N")
+
+    x = MatrixSymbol("x", N, 1)
+    one = OneMatrix(N, 1)
+    m = Symbol("m", commutative=True)
+    d = x - m * one
+    assert diff(Trace(d.T @ d), m) == -Trace(((-m) * one.T + x.T) * one) - Trace(one.T * ((-m) * one + x))
+
+    w = MatrixSymbol("w", N, 1)
+    b = symbols("b")
+    assert diff(Trace(x.T @ w) + b, w) == x
+
+
+def test_issue_23492():
+    # https://github.com/sympy/sympy/issues/23492
+    A = MatrixSymbol('A', 3, 3)
+    assert trace(A).diff(A) == Identity(3)
+    assert trace(A).as_explicit().diff(A) == MatrixUnit(0, 0, (3, 3)) + MatrixUnit(1, 1, (3, 3)) + MatrixUnit(2, 2, (3, 3))
+    assert trace(A).diff(A.as_explicit()) == eye(3)
+
+
+def test_issue_23364():
+    # https://github.com/sympy/sympy/issues/23364
+
+    x = symbols('x')
+    F = MatrixSymbol('F', 3, 3)
+    assert ((x * F) ** 2).diff(x) == (2/x)*(x*F)**2
+
+
+def test_issue_21597():
+    # https://github.com/sympy/sympy/issues/21597
+    b = MatrixSymbol('b', 3, 1)
+    c = MatrixSymbol('c', 3, 1)
+    F = MatrixSymbol('F', 3, 3)
+    assert diff(b - F * c, b) == Identity(3)
+
+
+def test_issue_23931():
+    # https://github.com/sympy/sympy/issues/23931
+    F = MatrixSymbol('F', 3, 3)
+    I3 = Identity(3)
+
+    expr = 1/trace(F)
+    result = (-1/Trace(F)**2)*I3
+    assert expr.diff(F) == result
+
+    d = symbols('d', integer=True, positive=True)
+    x = MatrixSymbol('x', d, 1)
+
+    expr = x / trace(x.T @ x)
+    result = (-2/Trace(x*x.T)**2)*x*x.T + 1/Trace(x*x.T)*Identity(d)
+    assert expr.diff(x) == result
+
+
+def test_issue_17229():
+    # https://github.com/sympy/sympy/issues/17229#issuecomment-591863771
+
+    M = MatrixSymbol('M', 3, 3)
+
+    # MatrixSymbol and MatrixElement:
+    assert M[1, 2].diff(M) == MatrixUnit(1, 2, (3, 3))
+    assert M[1, 2].diff(M.as_explicit()) == Matrix([[0, 0, 0], [0, 0, 1], [0, 0, 0]])
+    assert M.diff(M[1, 1]) == MatrixUnit(1, 1, (3, 3))
+    assert M.as_explicit().diff(M[1, 2]) == Matrix([[0, 0, 0], [0, 0, 1], [0, 0, 0]])
+
+    # MatrixSymbol and component-explicit matrix:
+    assert M.diff(M.as_explicit()) == Array([[MatrixUnit(i, j, (3, 3)) for j in range(3)] for i in range(3)])
+    assert M.as_explicit().diff(M) == Matrix([[MatrixUnit(i, j, (3, 3)) for j in range(3)] for i in range(3)])
+
+
+def test_issue_15651():
+    # https://github.com/sympy/sympy/issues/15651
+
+    X = MatrixSymbol("X", 3, 3)
+
+    I3 = Identity(3)
+
+    expr = X.as_explicit()*X
+    expected = ArrayAdd(
+        ArrayContraction(
+            ArrayTensorProduct(
+                Array([[[[1, 0, 0], [0, 0, 0], [0, 0, 0]], [[0, 1, 0], [0, 0, 0], [0, 0, 0]], [[0, 0, 1], [0, 0, 0], [0, 0, 0]]], [[[0, 0, 0], [1, 0, 0], [0, 0, 0]], [[0, 0, 0], [0, 1, 0], [0, 0, 0]], [[0, 0, 0], [0, 0, 1], [0, 0, 0]]], [[[0, 0, 0], [0, 0, 0], [1, 0, 0]], [[0, 0, 0], [0, 0, 0], [0, 1, 0]], [[0, 0, 0], [0, 0, 0], [0, 0, 1]]]]),
+                X),
+            (3, 4)),
+        PermuteDims(
+            ArrayTensorProduct(Matrix([
+                    [X[0, 0], X[1, 0], X[2, 0]],
+                    [X[0, 1], X[1, 1], X[2, 1]],
+                    [X[0, 2], X[1, 2], X[2, 2]]
+                ]),
+                I3),
+            Permutation(3)(1, 2)))
+    assert expr.diff(X) == expected
+
+
+def test_issue_15667():
+    # https://github.com/sympy/sympy/issues/15667
+    expr = Trace(A) * A
+    I = Identity(k)
+    assert expr.diff(A) == ArrayAdd(ArrayTensorProduct(I, A), PermuteDims(ArrayTensorProduct(Trace(A)*I, I), Permutation(3)(1, 2)))
