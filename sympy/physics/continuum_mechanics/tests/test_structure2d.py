@@ -932,7 +932,7 @@ def test_distributed_loads():
     expected_shear_force = -6*SingularityFunction(x, 0, 1) + 24*SingularityFunction(x, 4, 0)/5 + 6*SingularityFunction(x, 4, 1) + 24*SingularityFunction(x, 9, 0)/5 - 18*SingularityFunction(x, 9, 1)/5 + 261*SingularityFunction(x, 14, -1) + 162*SingularityFunction(x, 14, 0)/5 + 18*SingularityFunction(x, 14, 1)/5
     assert simplify(s.V.expand()) == simplify(expected_shear_force.expand())
 
-    expected_moment = -3*SingularityFunction(x, 0, 2) + 24*SingularityFunction(x, 4, 1)/5 + 3*SingularityFunction(x, 4, 2) + 24*SingularityFunction(x, 9, 1)/5 - 9*SingularityFunction(x, 9, 2)/5 + 261*SingularityFunction(x, 14, 0) + 162*SingularityFunction(x, 14, 1)/5 + 9*SingularityFunction(x, 14, 2)/5    
+    expected_moment = -3*SingularityFunction(x, 0, 2) + 24*SingularityFunction(x, 4, 1)/5 + 3*SingularityFunction(x, 4, 2) + 24*SingularityFunction(x, 9, 1)/5 - 9*SingularityFunction(x, 9, 2)/5 + 261*SingularityFunction(x, 14, 0) + 162*SingularityFunction(x, 14, 1)/5 + 9*SingularityFunction(x, 14, 2)/5
     assert simplify(s.M.expand()) == simplify(expected_moment.expand())
 
     #UDL loads from middle of the members
