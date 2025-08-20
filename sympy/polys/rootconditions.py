@@ -5,7 +5,7 @@ from sympy.polys.domains.domain import Er, Domain
 from sympy.external.gmpy import MPQ
 from sympy.core.numbers import I
 
-from sympy.polys.domains import EXRAW, QQ, PolynomialRing, RationalField
+from sympy.polys.domains import EXRAW, EX, QQ, PolynomialRing, RationalField
 from sympy.polys.rings import PolyElement
 from sympy.polys.densebasic import dup_convert
 from sympy.polys.densetools import dup_clear_denoms
@@ -42,7 +42,8 @@ def dup_routh_hurwitz(f: dup[Er], K: Domain[Er]) -> list[Er]:
            https://courses.washington.edu/mengr471/resources/Routh_Hurwitz_Proof.pdf
 
     """
-    if I in K:
+    excluded_domains = [EX, EXRAW]
+    if not K in excluded_domains and I in K:
         raise NotImplementedError(
             "Routh-Hurwitz is not implemented for complex domains"
         )
