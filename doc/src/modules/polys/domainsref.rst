@@ -73,6 +73,9 @@ Abstract Domains
 .. autoclass:: sympy.polys.domains.compositedomain.CompositeDomain
    :members:
 
+.. autoclass:: sympy.polys.domains.ringextension.RingExtension
+   :members:
+
 
 .. _GF(p):
 
@@ -152,6 +155,17 @@ when available.
    :members:
    :exclude-members: dtype, tp
 
+
+MPZ
+===
+
+The ``MPZ`` type is either ``int`` or otherwise the ``gmpy2.mpz`` type or if
+python-flint is installed then it is the :class:`~.fmpz` type. The ``MPZ``
+type is the type of the elements in the :ref:`ZZ` domain.
+
+.. py:class:: sympy.polys.domains.integerring.MPZ
+.. py:class:: flint.types.fmpz.fmpz
+
 .. _QQ:
 
 
@@ -218,7 +232,11 @@ MPQ
 ===
 
 The ``MPQ`` type is either :py:class:`~.PythonMPQ` or otherwise the ``mpq``
-type from ``gmpy2``.
+type from ``gmpy2`` or ``flint.fmpq`` if python-flint is installed. The ``MPQ``
+type is the type of the elements in the :ref:`QQ` domain.
+
+.. py:class:: sympy.polys.domains.rationalfield.MPQ
+.. py:class:: flint.types.fmpq.fmpq
 
 
 Gaussian domains
@@ -261,6 +279,8 @@ QQ_I
 
 QQ<a>
 =====
+
+.. py:class:: sympy.polys.domains.algebraicfield.Alg
 
 .. autoclass:: AlgebraicField
    :members:

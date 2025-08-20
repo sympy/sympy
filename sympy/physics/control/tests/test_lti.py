@@ -34,6 +34,7 @@ a, x, b, c, s, g, d, p, k, tau, zeta, wn, T, z = symbols('a, x, b, c, s, g, d,\
     p, k, tau, zeta, wn, T, z')
 a0, a1, a2, a3, b0, b1, b2, b3, b4, c0, c1, c2, c3, d0, d1, d2, d3 = \
     symbols('a0:4, b0:5, c0:4, d0:4')
+
 TF1 = TransferFunction(1, s**2 + 2*zeta*wn*s + wn**2, s)
 TF2 = TransferFunction(k, 1, s)
 TF3 = TransferFunction(a2*p - s, a2*s + p, s)
@@ -3499,34 +3500,53 @@ def test_StateSpace_functions():
     C_mat = Matrix([[0, 1]])
     D_mat = Matrix([1])
     SS1 = StateSpace(A_mat, B_mat, C_mat, D_mat)
-    SS2 = StateSpace(Matrix([[1, 1], [4, -2]]),Matrix([[0, 1], [0, 2]]),Matrix([[-1, 1], [1, -1]]))
+    SS2 = StateSpace(Matrix([[1, 1], [4, -2]]),Matrix([[0, 1], [0, 2]]),
+                     Matrix([[-1, 1], [1, -1]]))
     SS3 = StateSpace(Matrix([[1, 1], [4, -2]]),Matrix([[1, -1], [1, -1]]))
-    SS4 = StateSpace(Matrix([[a0, a1], [a2, a3]]), Matrix([[b1], [b2]]), Matrix([[c1, c2]]))
+    SS4 = StateSpace(Matrix([[a0, a1], [a2, a3]]), Matrix([[b1], [b2]]),
+                     Matrix([[c1, c2]]))
 
     # Observability
     assert SS1.is_observable() == True
     assert SS2.is_observable() == False
     assert SS1.observability_matrix() == Matrix([[0, 1], [1, 0]])
     assert SS2.observability_matrix() == Matrix([[-1,  1], [ 1, -1], [ 3, -3], [-3,  3]])
-    assert SS1.observable_subspace() == [Matrix([[0], [1]]), Matrix([[1], [0]])]
-    assert SS2.observable_subspace() == [Matrix([[-1], [ 1], [ 3], [-3]])]
+    assert SS1.observable_subspace() == [Matrix([[1], [0]]), Matrix([[0], [1]])]
+    assert SS2.observable_subspace() == [Matrix([[-1], [ 1]])]
+    raises(NotImplementedError, lambda: SS4.observable_subspace())
+    assert SS1.unobservable_subspace() == []
+    assert SS2.unobservable_subspace() == [Matrix([[1],[1]])]
+    raises(NotImplementedError, lambda: SS4.unobservable_subspace())
+
     Qo = SS4.observability_matrix().subs([(a0, 0), (a1, -6), (a2, 1), (a3, -5), (c1, 0), (c2, 1)])
     assert Qo == Matrix([[0, 1], [1, -5]])
+
+    ss_obs = StateSpace(Matrix([[1, 0, 1], [0,0,0],[0,0,-2]]), Matrix([1,1,0]), Matrix([1,1,Rational(1,3)]).T).to_observable_form()
+    A_obs = ss_obs.A[:2, :2]
+    A_nobs = ss_obs.A[2:, 2:]
+    assert A_obs.eigenvals() == {0: 1, 1: 1}
+    assert A_nobs.eigenvals() == {-2: 1}
 
     # Controllability
     assert SS1.is_controllable() == True
     assert SS3.is_controllable() == False
     assert SS1.controllability_matrix() ==  Matrix([[0.5, -0.75], [  0,   0.5]])
     assert SS3.controllability_matrix() == Matrix([[1, -1, 2, -2], [1, -1, 2, -2]])
+    assert SS4.controllability_matrix() == \
+        Matrix([[b1, a0*b1 + a1*b2], [b2, a2*b1 + a3*b2]])
     assert SS1.controllable_subspace() == [Matrix([[0.5], [  0]]), Matrix([[-0.75], [  0.5]])]
     assert SS3.controllable_subspace() == [Matrix([[1], [1]])]
-    assert SS4.controllable_subspace() == [Matrix([
-                                          [b1],
-                                          [b2]]), Matrix([
-                                          [a0*b1 + a1*b2],
-                                          [a2*b1 + a3*b2]])]
+    assert SS1.uncontrollable_subspace() == []
+    assert SS3.uncontrollable_subspace() == [Matrix([[-1], [1]])]
+    raises(NotImplementedError, lambda: SS4.uncontrollable_subspace()) # uncontrollable subspace fo symbols not implemented
+
     Qc = SS4.controllability_matrix().subs([(a0, 0), (a1, 1), (a2, -6), (a3, -5), (b1, 0), (b2, 1)])
     assert Qc == Matrix([[0, 1], [1, -5]])
+    ss_contr = StateSpace(Matrix([[1, 0, 1], [0,0,0],[0,0,-2]]), Matrix([1,1,0]), Matrix([1,1,0]).T).to_controllable_form()
+    A_contr = ss_contr.A[:2, :2]
+    A_ncontr = ss_contr.A[2:, 2:]
+    assert A_contr.eigenvals() == {0: 1, 1: 1}
+    assert A_ncontr.eigenvals() == {-2: 1}
 
     # Append
     A1 = Matrix([[0, 1], [1, 0]])
