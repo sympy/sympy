@@ -3,6 +3,7 @@ from __future__ import annotations
 from sympy.polys.densebasic import dup
 from sympy.polys.domains.domain import Er, Domain
 from sympy.external.gmpy import MPQ
+from sympy.core.numbers import I
 
 from sympy.polys.domains import EXRAW, QQ, PolynomialRing, RationalField
 from sympy.polys.rings import PolyElement
@@ -19,10 +20,15 @@ def dup_routh_hurwitz(f: dup[Er], K: Domain[Er]) -> list[Er]:
     """
     Computes the Routh Hurwitz criteria of ``f``.
 
-    The conditions, in general, are represented by a list of multivariate
-    polynomials which must be positive to ensure stability.
+    The criteria consist of a list of conditions (istances of PolyElement,
+    expressions or numbers depending on the ground domain) that must be strictly
+    positive to ensure all roots of `f` lie in the negative half-plane of the
+    complex space.
 
-    Note: This method assumes that the leading coefficient is non-zero.
+    Note
+    ====
+
+    This method assumes that the leading coefficient is non-zero.
     In the opposite case, additional verification is required.
 
     Depending on the domain, a different approach is used.
@@ -36,6 +42,11 @@ def dup_routh_hurwitz(f: dup[Er], K: Domain[Er]) -> list[Er]:
            https://courses.washington.edu/mengr471/resources/Routh_Hurwitz_Proof.pdf
 
     """
+    if I in K:
+        raise NotImplementedError(
+            "Routh-Hurwitz is not implemented for complex domains"
+        )
+
     if K.is_QQ:
         return _dup_routh_hurwitz_qq(f, K) # type: ignore
 
