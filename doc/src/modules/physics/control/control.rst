@@ -12,7 +12,7 @@ dynamic systems. The additive property is used for transfer functions in the
 functions in the ``Series`` class.
 Also, there is a ``Feedback`` class which is used to represent negative feedback
 interconnection between two input/output systems. MIMO systems are also
-supportedwith ``TransferFunctionMatrix`` as the base class for representing one.
+supported with ``TransferFunctionMatrix`` as the base class for representing one.
 ``MIMOSeries``, ``MIMOParallel``  and ``MIMOFeedback`` are MIMO equivalent of
 ``Series``, ``Parallel`` and ``Feedback`` classes.
 
