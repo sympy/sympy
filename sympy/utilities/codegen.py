@@ -1857,6 +1857,20 @@ class RustCodeGen(CodeGen):
         code_lines.append(" */\n")
         return code_lines
 
+    @staticmethod
+    def _get_rust_type(result):
+        """
+        Returns the corresponding rust type (if available) for the given Result object.
+        """
+        if isinstance(result.expr, MatrixBase):
+            nrows, ncols = result.expr.shape
+            dtype = result.get_datatype('Rust')
+            matrix_type = f"[[{dtype}; {ncols}]; {nrows}]"
+            return matrix_type
+        else:
+            return result.get_datatype('Rust')
+
+
     def get_prototype(self, routine):
         """Returns a string for the function prototype of the routine.
 
@@ -1866,7 +1880,7 @@ class RustCodeGen(CodeGen):
         See: https://en.wikipedia.org/wiki/Function_prototype
 
         """
-        results = [i.get_datatype('Rust') for i in routine.results]
+        results = [RustCodeGen._get_rust_type(res) for res in routine.results]
 
         if len(results) == 1:
             rstype = " -> " + results[0]
