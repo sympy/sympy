@@ -270,6 +270,7 @@ class EUFTheorySolver:
         Doctest:
             >>> from sympy import Eq
             >>> from sympy.abc import x, y, z
+            >>> from sympy.logic.algorithms.euf_theory_solver import EUFTheorySolver
             >>> solver = EUFTheorySolver()
             >>> solver.Initialize({Eq(x,y), Eq(y,z)})
             >>> sorted(str(k) for k in solver.literal_terms.keys())
@@ -302,6 +303,7 @@ class EUFTheorySolver:
         Doctest:
             >>> from sympy import Eq
             >>> from sympy.abc import x, y
+            >>> from sympy.logic.algorithms.euf_theory_solver import EUFTheorySolver
             >>> solver = EUFTheorySolver()
             >>> solver.Initialize({Eq(x,y)})
             >>> solver.assert_lit(1) #doctest: +SKIP
@@ -347,6 +349,7 @@ class EUFTheorySolver:
         Doctest:
             >>> from sympy import Eq
             >>> from sympy.abc import x, y
+            >>> from sympy.logic.algorithms.euf_theory_solver import EUFTheorySolver
             >>> solver = EUFTheorySolver()
             >>> solver.Initialize({Eq(x,y)})
             >>> solver.SetTrue(Eq(x, y))
@@ -451,6 +454,7 @@ class EUFTheorySolver:
         Doctest:
             >>> from sympy import Eq
             >>> from sympy.abc import x, y
+            >>> from sympy.logic.algorithms.euf_theory_solver import EUFTheorySolver
             >>> solver = EUFTheorySolver()
             >>> solver.Initialize({Eq(x,y)})
             >>> solver.SetTrue(Eq(x, y))
@@ -489,6 +493,7 @@ class EUFTheorySolver:
         Doctest:
             >>> from sympy import Eq
             >>> from sympy.abc import x, y, z
+            >>> from sympy.logic.algorithms.euf_theory_solver import EUFTheorySolver
             >>> solver = EUFTheorySolver()
             >>> solver.Initialize({Eq(x,y), Eq(y,z)})
             >>> solver.SetTrue(Eq(x, y))
