@@ -179,7 +179,6 @@ class EUFTheorySolver:
             >>> from sympy.assumptions.cnf import EncodedCNF
             >>> from sympy import symbols, Eq
             >>> x, y = symbols('x y')
-            >>> from sympy.assumptions.ask import Q
             >>> from sympy.logic.algorithms.euf_theory_solver import EUFTheorySolver
             >>> enc = EncodedCNF()
             >>> enc.encoding = {Eq(x,y): 1}
