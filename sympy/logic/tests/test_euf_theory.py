@@ -1,5 +1,5 @@
 from sympy.core.symbol import symbols, Symbol, Dummy
-from sympy.core.relational import Eq, Ne
+from sympy.core.relational import Eq
 from sympy.core.numbers import Integer
 from sympy.core.function import Function, Lambda
 from sympy.logic.algorithms.euf_theory import EUFCongruenceClosure
