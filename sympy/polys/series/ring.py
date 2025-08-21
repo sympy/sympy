@@ -14,7 +14,10 @@ from sympy.polys.series.tring import TElement, _power_series_ring
 from sympy.series.order import Order
 
 
-from typing import Generic, cast, overload
+from typing import Generic, cast, overload, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from typing import TypeIs
 
 
 @overload
@@ -125,7 +128,7 @@ class PowerSeriesRingRing(Generic[Er]):
     def __eq__(self, other) -> bool:
         return self.ring == other.ring
 
-    def is_element(self, element) -> bool:
+    def is_element(self, element) -> TypeIs[PowerSeriesElement[Er]]:
         """Check if element belongs to this ring."""
         return isinstance(element, PowerSeriesElement) and element.ring == self
 

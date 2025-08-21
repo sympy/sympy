@@ -87,19 +87,23 @@ Univariate Power Series Ring
 .. autoclass:: PowerSeriesRingRing
     :members:
 
-..autoclass:: PowerSeriesRingField
+.. autoclass:: PowerSeriesRingField
     :members:
 
 .. autoclass:: PowerSeriesElement
     :members:
-
-.. py:class:: TSeries
 
 
 Protocols for Power Series Rings
 ================================
 
 .. autoclass:: sympy.polys.series.base.PowerSeriesRingProto
+
+.. autoclass:: sympy.polys.series.base.PowerSeriesRingFieldProto
+
+.. py:class:: sympy.polys.series.base.TSeries
+
+.. py:class:: sympy.polys.series.tring.TElement
 
 
 Python Implementation

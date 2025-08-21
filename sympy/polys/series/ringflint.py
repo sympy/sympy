@@ -103,7 +103,8 @@ class FlintPowerSeriesRingZZ:
     FlintPowerSeriesRingQQ
     PythonPowerSeriesRingZZ
     power_series_ring
-    PowerSeriesRing
+    PowerSeriesRingRing
+    PowerSeriesRingField
     PowerSeriesElement
     """
 
@@ -519,7 +520,8 @@ class FlintPowerSeriesRingQQ:
     FlintPowerSeriesRingZZ
     PythonPowerSeriesRingQQ
     power_series_ring
-    PowerSeriesRing
+    PowerSeriesRingRing
+    PowerSeriesRingField
     PowerSeriesElement
     """
 

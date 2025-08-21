@@ -6,7 +6,10 @@ from sympy.polys.series.ring import power_series_ring, PowerSeriesRingRing, Powe
 from sympy.polys.series.tring import TElement
 from sympy.utilities import public
 
-from typing import Union
+from typing import Union, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from typing import TypeIs
 
 @public
 class PowerSeriesRing(Ring[PowerSeriesElement[Er]], CompositeDomain):
@@ -36,7 +39,7 @@ class PowerSeriesRing(Ring[PowerSeriesElement[Er]], CompositeDomain):
     def new(self, element: Union[TElement, Expr, Er, int]) -> PowerSeriesElement[Er]:  # type: ignore
         return self.ring.ring_new(element)
 
-    def of_type(self, element) -> bool:
+    def of_type(self, element) -> TypeIs[PowerSeriesElement[Er]]:
         """Check if ``a`` is of type ``dtype``."""
         return self.ring.is_element(element)
 
