@@ -2507,7 +2507,7 @@ class Series(SISOLinearTimeInvariant):
                     arg = arg.doit()
                 arg = arg.doit()
                 res = arg * res
-                return res
+            return res
 
         _num_arg = (arg.doit().num for arg in self.args)
         _den_arg = (arg.doit().den for arg in self.args)
