@@ -47,18 +47,20 @@ def dpll_satisfiable(expr, all_models=False, use_lra_theory=False, use_euf_theor
             return (f for f in [False])
         return False
 
+    immediate_conflicts = []
+
     if use_lra_theory:
-        lra, immediate_conflicts = LRASolver.from_encoded_cnf(expr)
+        lra, lra_conflicts = LRASolver.from_encoded_cnf(expr)
+        immediate_conflicts.extend(lra_conflicts)
     else:
         lra = None
-        immediate_conflicts = []
 
     if use_euf_theory:
-        euf, immediate_conflicts_euf = EUFTheorySolver.from_encoded_cnf(expr)
-        immediate_conflicts += immediate_conflicts_euf
+        euf, euf_conflicts = EUFTheorySolver.from_encoded_cnf(expr)
+        immediate_conflicts.extend(euf_conflicts)
     else:
         euf = None
-        immediate_conflicts = []
+
     solver = SATSolver(expr.data + immediate_conflicts, expr.variables, set(), expr.symbols, lra_theory=lra, euf_theory=euf)
     models = solver._find_model()
 

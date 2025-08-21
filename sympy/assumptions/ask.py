@@ -511,6 +511,8 @@ def ask(proposition, assumptions=True, context=global_assumptions):
 
     try:
         res = lra_satask(proposition, assumptions=assumptions, context=context)
+        if res is not None:
+            return res
     except UnhandledInput:
         return None
 
@@ -520,8 +522,6 @@ def ask(proposition, assumptions=True, context=global_assumptions):
             return res
     except EUFUnhandledInput:
         return None
-
-    return res
 
 
 def _ask_single_fact(key, local_facts):
