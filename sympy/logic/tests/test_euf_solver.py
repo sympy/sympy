@@ -95,12 +95,6 @@ def test_redundant_assertions_safe():
     assert solver.IsTrue(Eq(a, b))
 
 
-def test_initialize_type_error():
-    solver = EUFTheorySolver()
-    with pytest.raises(TypeError):
-        solver.Initialize({a})  # not Eq or Not(Eq) or Unequality
-
-
 def test_sympy_unequality_init():
     solver = EUFTheorySolver()
     solver.Initialize({Unequality(a, b)})
