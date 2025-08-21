@@ -536,29 +536,37 @@ class Structure2d:
 
         bend_points, member_angles, L = self._unwrap_structure()
         # self._unwrap_structure returns
-        # Convert to alexes input
-        # T = 1, Fv = 2, Fh = 3, qv = 4, qh = 5
-        # load_types supported in the module are -2(moment loads), -1(point loads), 0(distributed loads)
         """
-        In order to to apply these loads into alex algorithm we update them here to
-        -2 --> 1
-        -1 --> 2, 3 one for vertical point load and one for horizontal point load projection
-         0 --> 4, 5 one for vertical distributed load and one for horizontal distributed load
-        -3 --> 6 which is only used internally for handling hinges when ever an hinge is applied it
-        applies a load with order -3 to the structure which is inspired from Beam module and alex algorithm
+        load_types supported in the module are -2(moment loads), -1(point loads), 0(distributed loads)
+        # Convert these load_types to alexes load_types
+        load types in alex algorithm
+                # Moment(-2)           -->      'moment_load'
+                # Point load(-1)       -->      'vertical_point_load', 'horizontal_point_load'
+                # Distributed load(0)  -->      'vertical_distributed_load', 'horizontal_distributed_load'
+                # hinges(-3 only for internal usage) --> 'hinge'
+
+        As the members are inclined with some angles with global axis
+        every load is projected into members axial and vertical so every
+        load order will be split and projected into both vertical, horizontal
+        after resolving into their components
+        moment is purely applied no resolutions
+        point loads are resolved into their respective components and split to both horizontal point load
+        and vertical point load
+        similarly with distributed loads they are resolved into their respective components and split into vertical
+        distributed load and horizontal distributed load
         """
         # for hinge
         if load.order == -3:
             load_p = load.value
             load_values = [nsimplify(load_p)]
             load_points = [nsimplify(self.unwrapped_loadpoints[-1]["locals"][0])]
-            load_type = [6]
+            load_type = ['hinge']
         # for moment loads and for fixed support moment reaction from apply_support().
         elif load.order == -2:
             qz = load.value
             load_values = [nsimplify(qz)]
             load_points = [nsimplify(self.unwrapped_loadpoints[-1]["locals"][0])]
-            load_type = [1]
+            load_type = ['moment_load']
         # for point loads and for reaction loads from apply_support()
         elif load.order == -1:
             Fv = load.y_component
@@ -568,7 +576,7 @@ class Structure2d:
                 nsimplify(self.unwrapped_loadpoints[-1]["locals"][0]),
                 nsimplify(self.unwrapped_loadpoints[-1]["locals"][0]),
             ]
-            load_type = [2, 3]
+            load_type = ['vertical_point_load', 'horizontal_point_load']
         # for distributed loads for order 0
         else:
             qv = load.y_component
@@ -580,7 +588,7 @@ class Structure2d:
                 nsimplify(self.unwrapped_loadpoints[-1]["locals"][0]),
                 nsimplify(self.unwrapped_loadpoints[-1]["locals"][1]),
             ]
-            load_type = [4, 4, 5, 5]
+            load_type = ['vertical_distributed_load', 'vertical_distributed_load', 'horizontal_distributed_load', 'horizontal_distributed_load']
 
         # ALEX algo ############################################################################################
         # bendpoints
@@ -588,26 +596,26 @@ class Structure2d:
             for j in range(len(bend_points)):
                 if load_points[i] == bend_points[-1]:
                     # moment load.
-                    if load_type[i] == 1:
+                    if load_type[i] == 'moment_load':
                         self.beam.apply_load(load_values[i], load_points[i], -2)
 
                     # vertical point load.
-                    elif load_type[i] == 2:
+                    elif load_type[i] == 'vertical_point_load':
                         self.beam.apply_load(load_values[i] * cos(member_angles[-1]), load_points[i], -1)
                         self.column.apply_load(load_values[i] * -sin(member_angles[-1]), load_points[i], -1)
 
                     # horizontal point load
-                    elif load_type[i] == 3:
+                    elif load_type[i] == 'horizontal_point_load':
                         self.beam.apply_load(load_values[i] * sin(member_angles[-1]), load_points[i], -1)
                         self.column.apply_load(load_values[i] * cos(member_angles[-1]), load_points[i], -1)
 
                     # vertical distributed load
-                    elif load_type[i] == 4:
+                    elif load_type[i] == 'vertical_distributed_load':
                         self.beam.apply_load(load_values[i] * cos(member_angles[-1]), load_points[i], 0)
                         self.column.apply_load(load_values[i] * -sin(member_angles[-1]), load_points[i], 0)
 
                     # horizontal distributed load
-                    elif load_type[i] == 5:
+                    elif load_type[i] == 'horizontal_distributed_load':
                         self.beam.apply_load(load_values[i] * sin(member_angles[-1]), load_points[i], 0)
                         self.column.apply_load(load_values[i] * cos(member_angles[-1]), load_points[i], 0)
 
@@ -615,31 +623,31 @@ class Structure2d:
                 else:
                     if load_points[i] < bend_points[j]:
                         # moment load.
-                        if load_type[i] == 1:
+                        if load_type[i] == 'moment_load':
                             self.beam.apply_load(load_values[i], load_points[i], -2)
 
                         # vertical point load.
-                        elif load_type[i] == 2:
+                        elif load_type[i] == 'vertical_point_load':
                             self.beam.apply_load(load_values[i] * cos(member_angles[j - 1]), load_points[i], -1)
                             self.column.apply_load(load_values[i] * -sin(member_angles[j - 1]), load_points[i], -1)
 
                         # horizontal point load.
-                        elif load_type[i] == 3:
+                        elif load_type[i] == 'horizontal_point_load':
                             self.beam.apply_load(load_values[i] * sin(member_angles[j - 1]), load_points[i], -1)
                             self.column.apply_load(load_values[i] * cos(member_angles[j - 1]), load_points[i], -1)
 
                         # vertical distributed load.
-                        elif load_type[i] == 4:
+                        elif load_type[i] == 'vertical_distributed_load':
                             self.beam.apply_load(load_values[i] * cos(member_angles[j - 1]), load_points[i], 0)
                             self.column.apply_load(load_values[i] * -sin(member_angles[j - 1]), load_points[i], 0)
 
                         # horizontal distributed load.
-                        elif load_type[i] == 5:
+                        elif load_type[i] == 'horizontal_distributed_load':
                             self.beam.apply_load(load_values[i] * sin(member_angles[j - 1]), load_points[i], 0)
                             self.column.apply_load(load_values[i] * cos(member_angles[j - 1]), load_points[i], 0)
 
                         # for hinge inspired from beam module and alex algorithm.
-                        elif load_type[i] == 6:
+                        elif load_type[i] == 'hinge':
                             E = self.beam.elastic_modulus
                             I = self.beam.second_moment
                             self.beam.apply_load(load_values[i]*E*I,load_points[i],-3)
@@ -649,7 +657,7 @@ class Structure2d:
             for j in range(len(bend_points) - 1):
                 if load_points[i] < bend_points[j]:
                     # vertical point load.
-                    if load_type[i] == 2:
+                    if load_type[i] == 'vertical_point_load':
                         self.beam.apply_load(
                             load_values[i] * (cos(member_angles[j]) - cos(member_angles[j - 1])), bend_points[j], -1
                         )
@@ -658,7 +666,7 @@ class Structure2d:
                         )
 
                     # horizontal point load.
-                    elif load_type[i] == 3:
+                    elif load_type[i] == 'horizontal_point_load':
                         self.beam.apply_load(
                             load_values[i] * (sin(member_angles[j]) - sin(member_angles[j - 1])), bend_points[j], -1
                         )
@@ -667,7 +675,7 @@ class Structure2d:
                         )
 
                     # vertical distributed load.
-                    elif load_type[i] == 4:
+                    elif load_type[i] == 'vertical_distributed_load':
                         self.beam.apply_load(
                             load_values[i] * (cos(member_angles[j]) - cos(member_angles[j - 1])), bend_points[j], 0
                         )
@@ -686,7 +694,7 @@ class Structure2d:
                         )
 
                     # horizontal distributed load.
-                    elif load_type[i] == 5:
+                    elif load_type[i] == 'horizontal_distributed_load':
                         self.beam.apply_load(
                             load_values[i] * (sin(member_angles[j]) - sin(member_angles[j - 1])), bend_points[j], 0
                         )
