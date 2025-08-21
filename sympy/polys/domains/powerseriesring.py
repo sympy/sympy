@@ -17,7 +17,7 @@ class PowerSeriesRing(Ring[PowerSeriesElement[Er]], CompositeDomain):
     has_assoc_Ring = True
     has_assoc_Field = False
 
-    ring: PowerSeriesRingRing | PowerSeriesRingField
+    ring: Union[PowerSeriesRingRing, PowerSeriesRingField]
     dtype: type[PowerSeriesElement[Er]]
     gen: PowerSeriesElement[Er]
     symbol: Expr

@@ -221,7 +221,7 @@ class PowerSeriesRingRing(Generic[Er]):
         elif self.ring.is_element(arg):
             return self.from_element(arg)
         elif self.domain.of_type(arg):
-            return self.ground_new(arg)
+            return self.ground_new(arg) #type:ignore
         else:
             raise NotImplementedError
 

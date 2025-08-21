@@ -31,8 +31,9 @@ transparently.
 To create a power series ring, use the :func:`~sympy.polys.series.ring.power_series_ring`
 function by specifying the domain, generator, and desired precision. This function
 returns a tuple containing a new instance of the
-:class:`~sympy.polys.series.ring.PowerSeriesRing` class over the given domain with the
-chosen generator.
+:class:`~sympy.polys.series.ring.PowerSeriesRingRing` or
+:class:`~sympy.polys.series.ring.PowerSeriesRingField`
+class over the given domain with the chosen generator.
 
 For example, let's create a ring with precision 8 over the integers:
 
@@ -83,7 +84,10 @@ Univariate Power Series Ring
 
 .. autofunction:: power_series_ring
 
-.. autoclass:: PowerSeriesRing
+.. autoclass:: PowerSeriesRingRing
+    :members:
+
+..autoclass:: PowerSeriesRingField
     :members:
 
 .. autoclass:: PowerSeriesElement
