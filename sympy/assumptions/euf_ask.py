@@ -1,3 +1,40 @@
+"""
+EUF Ask Module
+==============
+
+This module implements the interface for querying assumptions using the EUF
+(theory of Equality with Uninterpreted Functions) solver. It follows a scheme
+similar to the LRA SAT-ask interface [see lra_satask.py] and is integrated with a
+DPLL(T) framework.
+
+Key functions:
+    - euf_ask: Main entry point for answering queries using EUF theory.
+    - _is_direct_euf_propagation: Checks for simple propagation cases.
+    - _handle_direct_propagation: Handles direct propagation when a predicate's
+      assumption can be inferred immediately.
+    - check_satisfiability: Determines satisfiability under the EUF theory.
+
+References:
+    [1] DPLL(T): Fast Decision Procedures.
+    [2] Proof-Producing Congruence Closure.
+
+Examples:
+    >>> from sympy.assumptions.euf_ask import euf_ask
+    >>> from sympy.assumptions.ask import Q
+    >>> from sympy import symbols
+    >>> x, y = symbols('x y')
+    >>> euf_ask(Q.prime(x), Q.prime(y) & Q.eq(x, y))
+    True
+
+Doctest:
+    >>> from sympy.assumptions.euf_ask import euf_ask
+    >>> from sympy.assumptions.ask import Q
+    >>> from sympy import symbols
+    >>> x, y = symbols('x y')
+    >>> euf_ask(Q.prime(x), Q.prime(y) & Q.eq(x, y))
+    True
+"""
+
 from sympy.assumptions.assume import global_assumptions, AppliedPredicate
 from sympy.assumptions.cnf import CNF, EncodedCNF
 from sympy.assumptions.ask import Q
@@ -13,7 +50,28 @@ ALLOWED_BIN_PRED = {Q.eq, Q.ne}
 
 def euf_ask(proposition, assumptions=True, context=global_assumptions):
     """
-    Ask using EUF theory with direct propagation handling.
+    Query whether the proposition holds under the given assumptions using
+    the EUF theory solver.
+
+    Parameters:
+        proposition : logical expression
+            The query (e.g., Q.prime(x)).
+        assumptions : logical expression, optional
+            Assumptions under which to check the proposition.
+        context : optional
+            Additional context assumptions (default: global_assumptions).
+
+    Returns:
+        True if the proposition can be inferred; False if its negation holds;
+        None if unknown or if the input is unsupported.
+
+    Doctest:
+        >>> from sympy.assumptions.euf_ask import euf_ask
+        >>> from sympy.assumptions.ask import Q
+        >>> from sympy import symbols
+        >>> x, y = symbols('x y')
+        >>> euf_ask(Q.positive(x), Q.positive(y) & Q.eq(x, y))
+        True
     """
     try:
         # Convert to CNF
@@ -38,8 +96,13 @@ def euf_ask(proposition, assumptions=True, context=global_assumptions):
         return None
 
 def _is_direct_euf_propagation(proposition, assumptions):
-    """Check if this is a case where EUF can directly handle propagation."""
-    # Check if proposition is a unary predicate on a symbol
+    """
+    Check if the proposition can be directly propagated based on a direct
+    connection (e.g., same predicate on different symbols connected by equality).
+
+    Returns:
+        True if direct propagation applies; False otherwise.
+    """
     if not isinstance(proposition, AppliedPredicate):
         return False
 
@@ -75,13 +138,14 @@ def _is_direct_euf_propagation(proposition, assumptions):
     return has_same_predicate and has_equality
 
 def _handle_direct_propagation(proposition, assumptions):
-    """Handle direct EUF propagation cases."""
-    from sympy.logic.boolalg import And
-    if isinstance(assumptions, And):
-        assumption_terms = assumptions.args
-    else:
-        assumption_terms = [assumptions]
+    """
+    Handle cases of direct EUF propagation.
 
+    Returns:
+        True if propagation applies; None otherwise.
+    """
+    from sympy.logic.boolalg import And
+    assumption_terms = assumptions.args if isinstance(assumptions, And) else [assumptions]
     prop_predicate = proposition.function
     prop_arg = proposition.arguments[0]
 
@@ -118,7 +182,12 @@ def _handle_direct_propagation(proposition, assumptions):
     return None
 
 def _has_equality_path(start, end, equalities):
-    """Check if there's a path of equalities from start to end."""
+    """
+    Check for a path of equalities connecting 'start' and 'end'.
+
+    Returns:
+        True if there is a connecting path; False otherwise.
+    """
     if start == end:
         return True
 
@@ -152,6 +221,12 @@ def _has_equality_path(start, end, equalities):
     return False
 
 def check_satisfiability(prop, _prop, factbase):
+    """
+    Check satisfiability using the EUF theory under the constraints in factbase.
+
+    Returns:
+        True if prop is forced, False if _prop holds, else None.
+    """
     sat_true = factbase.copy()
     sat_false = factbase.copy()
     sat_true.add_from_cnf(prop)
@@ -185,6 +260,12 @@ def check_satisfiability(prop, _prop, factbase):
     raise ValueError("Inconsistent assumptions")
 
 def get_all_pred_and_expr_from_enc_cnf(enc_cnf):
+    """
+    Extract all predicate symbols and their arguments from an encoded CNF.
+
+    Returns:
+        (all_pred, all_expr): Tuple containing a set of predicates and a set of expressions.
+    """
     all_exprs, all_pred = set(), set()
     for pred in enc_cnf.encoding.keys():
         if isinstance(pred, AppliedPredicate):
