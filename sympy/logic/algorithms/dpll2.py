@@ -279,8 +279,16 @@ class SATSolver:
                             continue
 
                         yield {self.symbols[abs(lit) - 1]: lit > 0 for lit in self.var_settings}
-                    else:
-                        yield {self.symbols[abs(lit) - 1]: lit > 0 for lit in self.var_settings}
+
+                    while self._current_level.flipped:
+                        self._undo()
+                    if len(self.levels) == 1:
+                        return
+                    flip_lit = -self._current_level.decision
+                    self._undo()
+                    self.levels.append(Level(flip_lit, flipped=True))
+                    flip_var = True
+                    continue
 
                 # Start the new decision level
                 self.levels.append(Level(lit))

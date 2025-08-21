@@ -1,7 +1,7 @@
 from collections import defaultdict
 from sympy import Eq, Unequality, Not
 from sympy.assumptions.ask import Q, AppliedPredicate
-from sympy.logic.algorithms.euf_theory import EUFCongruenceClosure
+from sympy.logic.algorithms.euf_theory import EUFCongruenceClosure, EUFUnhandledInput
 from sympy.core.symbol import Dummy
 from sympy.core.relational import Ne
 from sympy.utilities.iterables import numbered_symbols
@@ -27,7 +27,7 @@ def _canonical_lit(literal):
         eq = literal.args[0]
         return eq.lhs, eq.rhs, False
     else:
-        raise TypeError(f"Unsupported literal type: {type(literal)}")
+        raise EUFUnhandledInput(f"Unsupported literal type: {type(literal)}")
 
 def _canon_eq(lhs, rhs):
     """Return canonical equality (ordered)."""
@@ -134,7 +134,7 @@ class EUFTheorySolver:
                     continue
                 if eqs:
                     literal_eqs[enc] = eqs
-            except (TypeError, ValueError):
+            except EUFUnhandledInput:
                 # Skip unsupported/invalid predicates; raise other errors
                 continue
 
@@ -151,7 +151,6 @@ class EUFTheorySolver:
     def Initialize(self, literal_set):
         """Initialize solver with a set of literals for proper tracking."""
         for lit in literal_set:
-            try:
                 lhs, rhs, is_positive = _canonical_lit(lit)
                 ceq = _canon_eq(lhs, rhs)
                 self.literal_terms[ceq] = (lhs, rhs, is_positive)
@@ -166,12 +165,6 @@ class EUFTheorySolver:
                 else:
                     self.negative_literal_list[lhs_c].append(ceq)
                     self.negative_literal_list[rhs_c].append(ceq)
-            except TypeError:
-                # unsupported literal type -> propagate to caller/tests
-                raise
-            except (AttributeError, ValueError):
-                # Skip malformed/unsupported literals that fail during flattening
-                continue
 
     def assert_lit(self, enc_constraint):
         """Assert a literal representing a constraint and update internal state."""
@@ -282,7 +275,7 @@ class EUFTheorySolver:
                 # Check if explicitly asserted as disequal
                 return ceq in self.disequality_causes.values()
 
-        except (TypeError, ValueError):
+        except ValueError:
             return None
 
     def Explanation(self, literal):
