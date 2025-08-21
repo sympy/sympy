@@ -1,8 +1,12 @@
 from sympy.core.symbol import symbols
 from sympy.series.order import O
 from sympy.polys.domains import ZZ, QQ
-from sympy.polys.series.base import PowerSeriesRingProto
-from sympy.polys.series.ring import PowerSeriesRing, PowerSeriesElement
+from sympy.polys.series.base import PowerSeriesRingProto, PowerSeriesRingFieldProto
+from sympy.polys.series.ring import (
+    PowerSeriesElement,
+    PowerSeriesRingRing,
+    PowerSeriesRingField,
+)
 from sympy.polys.series.ringpython import (
     PythonPowerSeriesRingZZ,
     PythonPowerSeriesRingQQ,
@@ -32,6 +36,9 @@ from sympy.polys.densebasic import dup_random
 Ring_ZZ: list[type[PowerSeriesRingProto]] = [PythonPowerSeriesRingZZ]
 Ring_QQ: list[type[PowerSeriesRingProto]] = [PythonPowerSeriesRingQQ]
 
+ground_int: list[type[PowerSeriesRingProto]]
+ground_rational: list[type[PowerSeriesRingFieldProto]]
+
 flint: bool = False
 
 if GROUND_TYPES == "flint":
@@ -43,8 +50,10 @@ if GROUND_TYPES == "flint":
 
     Ring_ZZ.append(FlintPowerSeriesRingZZ)
     Ring_QQ.append(FlintPowerSeriesRingQQ)
+
     ground_int = [FlintPowerSeriesRingZZ, FlintPowerSeriesRingQQ]
     ground_rational = [FlintPowerSeriesRingQQ]
+
 else:
     ground_int = [PythonPowerSeriesRingZZ, PythonPowerSeriesRingQQ]
     ground_rational = [PythonPowerSeriesRingQQ]
@@ -1186,13 +1195,13 @@ def test_hypot(ring_rational):
 def test_PowerSeriesRing():
     from sympy.abc import x
 
-    RZZ = PowerSeriesRing(ZZ, "x")
-    RQQ = PowerSeriesRing(QQ, "x")
+    RZZ = PowerSeriesRingRing(ZZ, "x")
+    RQQ = PowerSeriesRingField(QQ, "x")
 
-    assert RZZ == PowerSeriesRing(ZZ, "x", 6)
-    assert RQQ == PowerSeriesRing(QQ, "x", 6)
-    assert RZZ != PowerSeriesRing(ZZ, "x", 10)
-    assert RQQ != PowerSeriesRing(QQ, "x", 10)
+    assert RZZ == PowerSeriesRingRing(ZZ, "x", 6)
+    assert RQQ == PowerSeriesRingField(QQ, "x", 6)
+    assert RZZ != PowerSeriesRingRing(ZZ, "x", 10)
+    assert RQQ != PowerSeriesRingField(QQ, "x", 10)
     assert RZZ != RQQ
 
     assert RZZ.domain == ZZ
@@ -1207,9 +1216,9 @@ def test_PowerSeriesRing():
 
 
 def test_PowerSeriesRing_from_expr():
-    R = PowerSeriesRing(QQ, "x", 5)
+    R = PowerSeriesRingField(QQ, "x", 5)
     o = R.order_term()
-    R3 = PowerSeriesRing(QQ, "x", 3)
+    R3 = PowerSeriesRingField(QQ, "x", 3)
     o3 = R3.order_term()
 
     x = R.gen
@@ -1230,7 +1239,10 @@ def test_PowerSeriesRing_from_expr():
 def test_PowerSeriesRing_arith(groundring_int):
     SeriesRing = groundring_int
     RL = SeriesRing(5)
-    RU = PowerSeriesRing(RL.domain, "x", 5)
+    if RL.domain.is_ZZ:
+        RU = PowerSeriesRingRing(RL.domain, "x", 5)
+    else:
+        RU = PowerSeriesRingField(RL.domain, "x", 5)
     x = RU.gen
 
     p1 = 1 + 2 * x + 3 * x**2
@@ -1260,7 +1272,10 @@ def test_PowerSeriesRing_arith(groundring_int):
 def test_PowerSeriesRing_operations_int(groundring_int):
     SeriesRing = groundring_int
     RL = SeriesRing(5)
-    RU = PowerSeriesRing(RL.domain, "x", 5)
+    if RL.domain.is_ZZ:
+        RU = PowerSeriesRingRing(RL.domain, "x", 5)
+    else:
+        RU = PowerSeriesRingField(RL.domain, "x", 5)
     x = RU.gen
 
     assert RL.equal_repr(
@@ -1291,7 +1306,7 @@ def test_PowerSeriesRing_operations_int(groundring_int):
 def test_PowerSeriesRing_operations_rational(groundring_rational):
     SeriesRing = groundring_rational
     R = SeriesRing(5)
-    RU = PowerSeriesRing(QQ, "x", 5)
+    RU = PowerSeriesRingField(QQ, "x", 5)
     x = RU.gen
 
     assert R.equal_repr(
@@ -1358,7 +1373,7 @@ def test_PowerSeriesRing_operations_rational(groundring_rational):
 
 
 def test_PowerSeriesRing_series():
-    R = PowerSeriesRing(QQ, "x", 10)
+    R = PowerSeriesRingField(QQ, "x", 10)
     x = R.gen
     o = R.order_term()
 

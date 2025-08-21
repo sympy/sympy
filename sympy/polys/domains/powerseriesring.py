@@ -1,14 +1,15 @@
 from sympy.core.expr import Expr
-from sympy.polys.series.ring import PowerSeriesRing, PowerSeriesElement, TSeries
 from sympy.polys.domains.ring import Ring
 from sympy.polys.domains.compositedomain import CompositeDomain
 from sympy.polys.domains.domain import Er, Domain
+from sympy.polys.series.ring import power_series_ring, PowerSeriesRingRing, PowerSeriesRingField, PowerSeriesElement
+from sympy.polys.series.tring import TElement
 from sympy.utilities import public
 
 from typing import Union
 
 @public
-class SeriesRing(Ring[PowerSeriesElement[Er]], CompositeDomain):
+class PowerSeriesRing(Ring[PowerSeriesElement[Er]], CompositeDomain):
     """A Domain class for representing univariate power series rings."""
 
     is_PowerSeriesRing = is_Series = True
@@ -16,23 +17,23 @@ class SeriesRing(Ring[PowerSeriesElement[Er]], CompositeDomain):
     has_assoc_Ring = True
     has_assoc_Field = False
 
-    ring: PowerSeriesRing[Er]
+    ring: PowerSeriesRingRing | PowerSeriesRingField
     dtype: type[PowerSeriesElement[Er]]
     gen: PowerSeriesElement[Er]
     symbol: Expr
     domain: Domain[Er]
 
     def __init__(self, domain: Domain[Er], symbol = "x", prec: int = 6):
-        ring = PowerSeriesRing(domain, symbol, prec)
+        ring, gen = power_series_ring(symbol, domain, prec)
 
         self.ring = ring
-        self.dtype = ring.dtype
+        self.gen = gen
 
+        self.dtype = ring.dtype
         self.domain = ring.domain
-        self.gen = ring.gen
         self.symbol = ring.symbol
 
-    def new(self, element: Union[TSeries, Expr, Er, int]) -> PowerSeriesElement[Er]:  # type: ignore
+    def new(self, element: Union[TElement, Expr, Er, int]) -> PowerSeriesElement[Er]:  # type: ignore
         return self.ring.ring_new(element)
 
     def of_type(self, element) -> bool:
@@ -58,7 +59,7 @@ class SeriesRing(Ring[PowerSeriesElement[Er]], CompositeDomain):
         return hash((self.__class__.__name__, self.ring, self.domain, self.symbol))
 
     def __eq__(self, other: object) -> bool:
-        if not isinstance(other, SeriesRing):
+        if not isinstance(other, PowerSeriesRing):
             return NotImplemented
         return self.ring == other.ring
 

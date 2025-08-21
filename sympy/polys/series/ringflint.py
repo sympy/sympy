@@ -244,6 +244,10 @@ class FlintPowerSeriesRingZZ:
         else:
             return False
 
+    def is_element(self, s: ZZSeries) -> bool:
+        """Check if a series is an element of the power series ring."""
+        return isinstance(s, (fmpz_poly, fmpz_series))
+
     def positive(self, s: ZZSeries) -> ZZSeries:
         """Return the unary positive of a power series, adjusted to the ring's precision."""
         ring_prec = self._prec
@@ -657,6 +661,10 @@ class FlintPowerSeriesRingQQ:
             return s1._equal_repr(s2)
         else:
             return False
+
+    def is_element(self, s: QQSeries) -> bool:
+        """Check if a series is an element of the power series ring."""
+        return isinstance(s, (fmpq_poly, fmpq_series))
 
     def positive(self, s: QQSeries) -> QQSeries:
         """Return the unary positive of a power series, adjusted to the ring's precision."""

@@ -2,39 +2,36 @@ from __future__ import annotations
 
 from sympy.core.expr import Expr
 from sympy.core.symbol import Symbol
-from sympy.core.sympify import CantSympify, sympify
 from sympy.core.exprtools import decompose_power
 from sympy.core.mul import Mul
 from sympy.core.add import Add
 from sympy.core.power import Pow
-
-from sympy.external.gmpy import GROUND_TYPES
-
-from sympy.polys.domains.domain import Domain, Er
-from sympy.polys.domains.domainelement import DomainElement
+from sympy.core.sympify import CantSympify, sympify
+from sympy.polys.domains.domain import Er, Ef, Domain, DomainElement
 from sympy.polys.densebasic import dup
-from sympy.polys.series.ringflint import QQSeries, ZZSeries
-from sympy.polys.series.ringpython import (
-    USeries,
-    PythonPowerSeriesRingZZ,
-    PythonPowerSeriesRingQQ,
-)
+from sympy.polys.series.base import PowerSeriesRingProto, PowerSeriesRingFieldProto
+from sympy.polys.series.tring import TElement, _power_series_ring
 from sympy.series.order import Order
 
-from typing import Generic, Union
 
-flint: bool = False
-
-if GROUND_TYPES == "flint":
-    flint = True
+from typing import Generic, cast, overload
 
 
-TSeries = Union[USeries, ZZSeries, QQSeries]
+@overload
+def power_series_ring(
+    symbol: str, K: Domain[Ef], prec: int = 6
+) -> tuple[PowerSeriesRingField[Ef], PowerSeriesElement[Ef]]: ...
+
+
+@overload
+def power_series_ring(
+    symbol: str, K: Domain[Er], prec: int = 6
+) -> tuple[PowerSeriesRingRing[Er], PowerSeriesElement[Er]]: ...
 
 
 def power_series_ring(
-    symbol: str, K: Domain[Er], prec: int = 6
-) -> tuple[PowerSeriesRing[Er], PowerSeriesElement[Er]]:
+    symbol: str, K: Domain, prec: int = 6
+) -> tuple[PowerSeriesRingRing | PowerSeriesRingField, PowerSeriesElement]:
     """
     Create a power series ring over the given domain.
 
@@ -71,12 +68,18 @@ def power_series_ring(
     7*x**2 - 49/2*x**4 + O(x**6)
     """
 
-    ring = PowerSeriesRing(K, symbol, prec)
-    return ring, ring.gen
+    if K.is_ZZ:
+        ring = PowerSeriesRingRing(K, symbol, prec)
+        return ring, ring.gen
+    elif K.is_QQ:
+        ring = PowerSeriesRingField(K, symbol, prec)
+        return ring, ring.gen
+    else:
+        raise ValueError(f"Unsupported ground domain: {K}")
 
 
-class PowerSeriesRing(Generic[Er]):
-    """A class for representing Univariate Power Series Rings."""
+class PowerSeriesRingRing(Generic[Er]):
+    """A class for representing Univariate Power Series Rings over a Ring."""
 
     is_PowerSeries: bool = True
     has_assoc_Ring: bool = True
@@ -88,31 +91,21 @@ class PowerSeriesRing(Generic[Er]):
     prec: int
 
     def __init__(self, domain: Domain[Er], symbol: str | Expr = "x", prec: int = 6):
-        if domain.is_ZZ:
-            if flint:
-                from sympy.polys.series.ringflint import FlintPowerSeriesRingZZ
-
-                ring = FlintPowerSeriesRingZZ(prec)
-            else:
-                ring = PythonPowerSeriesRingZZ(prec)
-        elif domain.is_QQ:
-            if flint:
-                from sympy.polys.series.ringflint import FlintPowerSeriesRingQQ
-
-                ring = FlintPowerSeriesRingQQ(prec)
-            else:
-                ring = PythonPowerSeriesRingQQ(prec)
-        else:
-            raise ValueError(f"Unsupported ground domain: {domain}")
-
         if isinstance(symbol, str):
             symbol = Symbol(symbol)
 
-        self.ring = ring
         self.dtype = PowerSeriesElement
         self.domain = domain
         self.symbol = symbol
         self.prec = prec
+
+    @property
+    def ring(self) -> PowerSeriesRingProto[TElement, Er]:
+        """Return the base ring of the power series."""
+        return cast(
+            "PowerSeriesRingProto[TElement, Er]",
+            _power_series_ring(self.domain, self.prec),
+        )
 
     @property
     def one(self) -> PowerSeriesElement[Er]:
@@ -144,7 +137,7 @@ class PowerSeriesRing(Generic[Er]):
         poly = self._rebuild_expr(sympify(expr))
         return self.ring_new(poly)
 
-    def _rebuild_expr(self, expr) -> TSeries:
+    def _rebuild_expr(self, expr) -> TElement:
         prec = None
         fring_prec: bool = False
 
@@ -198,8 +191,18 @@ class PowerSeriesRing(Generic[Er]):
         s = R.from_list(lst, prec)
         return self.from_element(s)
 
-    def from_element(self, element: TSeries) -> PowerSeriesElement[Er]:
+    def from_element(self, element: TElement) -> PowerSeriesElement[Er]:
         return PowerSeriesElement(self, element)
+
+    def to_list(self, element: TElement | PowerSeriesElement[Er]) -> list[Er]:
+        if isinstance(element, PowerSeriesElement):
+            return self.ring.to_list(element.series)
+        return self.ring.to_list(element)
+
+    def to_dense(self, element: TElement | PowerSeriesElement[Er]) -> dup[Er]:
+        if isinstance(element, PowerSeriesElement):
+            return self.ring.to_dense(element.series)
+        return self.ring.to_dense(element)
 
     def domain_new(self, arg: Expr | Er | int) -> Er:
         return self.domain.convert(arg, self.domain)
@@ -210,15 +213,17 @@ class PowerSeriesRing(Generic[Er]):
         series = R.from_list([g])
         return self.from_element(series)
 
-    def ring_new(self, arg: TSeries | Expr | Er | int) -> PowerSeriesElement[Er]:
+    def ring_new(self, arg: TElement | Expr | Er | int) -> PowerSeriesElement[Er]:
         if isinstance(arg, Expr):
             return self.from_expr(arg)
         elif isinstance(arg, int):
             return self.ground_new(arg)
+        elif self.ring.is_element(arg):
+            return self.from_element(arg)
         elif self.domain.of_type(arg):
             return self.ground_new(arg)
         else:
-            return self.from_element(arg)
+            raise NotImplementedError
 
     __call__ = ring_new
 
@@ -227,18 +232,6 @@ class PowerSeriesRing(Generic[Er]):
         R = self.ring
         series = R.square(s.series)
         return self.from_element(series)
-
-    def sqrt(self, s: PowerSeriesElement[Er]) -> PowerSeriesElement[Er]:
-        """Return the square root of a power series."""
-        R = self.ring
-
-        if hasattr(R, "sqrt"):
-            series = R.sqrt(s.series)  # type: ignore[attr-defined]
-            return self.from_element(series)
-        else:
-            raise NotImplementedError(
-                f"Power Series Ring over ground domain {self.domain} does not implement sqrt."
-            )
 
     def compose(
         self, s: PowerSeriesElement[Er], t: PowerSeriesElement[Er]
@@ -266,176 +259,131 @@ class PowerSeriesRing(Generic[Er]):
         series = R.differentiate(s.series)
         return self.from_element(series)
 
-    def integrate(self, s: PowerSeriesElement[Er]) -> PowerSeriesElement[Er]:
+
+class PowerSeriesRingField(PowerSeriesRingRing[Ef], Generic[Ef]):
+    dtype: type[PowerSeriesElement[Ef]]
+    domain: Domain[Ef]
+    prec: int
+    symbol: Expr
+
+    def __init__(self, domain: Domain[Ef], symbol: str | Expr = "x", prec: int = 6):
+        if isinstance(symbol, str):
+            symbol = Symbol(symbol)
+
+        self.dtype = PowerSeriesElement
+        self.domain = domain
+        self.symbol = symbol
+        self.prec = prec
+
+    @property
+    def ring(self) -> PowerSeriesRingFieldProto[TElement, Ef]:
+        """Return the base ring of the power series."""
+        return cast(
+            "PowerSeriesRingFieldProto[TElement, Ef]",
+            _power_series_ring(self.domain, self.prec),
+        )
+
+    def sqrt(self, s: PowerSeriesElement[Ef]) -> PowerSeriesElement[Ef]:
+        """Return the square root of a power series."""
+        R = self.ring
+        series = R.sqrt(s.series)
+        return self.from_element(series)
+
+    def integrate(self, s: PowerSeriesElement[Ef]) -> PowerSeriesElement[Ef]:
         """Return the integral of a power series."""
         R = self.ring
-        if hasattr(R, "integrate"):
-            series = R.integrate(s.series)  # type: ignore[attr-defined]
-            return self.from_element(series)
-        else:
-            raise NotImplementedError(
-                f"Power Series Ring over ground domain {self.domain} does not implement integrate."
-            )
+        series = R.integrate(s.series)
+        return self.from_element(series)
 
-    def log(self, s: PowerSeriesElement[Er]) -> PowerSeriesElement[Er]:
+    def log(self, s: PowerSeriesElement[Ef]) -> PowerSeriesElement[Ef]:
         """Return the logarithm of a power series."""
         R = self.ring
-        if hasattr(R, "log"):
-            series = R.log(s.series)  # type: ignore[attr-defined]
-            return self.from_element(series)
-        else:
-            raise NotImplementedError(
-                f"Power Series Ring over ground domain {self.domain} does not implement log."
-            )
+        series = R.log(s.series)
+        return self.from_element(series)
 
-    def log1p(self, s: PowerSeriesElement[Er]) -> PowerSeriesElement[Er]:
+    def log1p(self, s: PowerSeriesElement[Ef]) -> PowerSeriesElement[Ef]:
         """Return the logarithm of a power series plus one."""
         R = self.ring
-        if hasattr(R, "log1p"):
-            series = R.log1p(s.series)  # type: ignore[attr-defined]
-            return self.from_element(series)
-        else:
-            raise NotImplementedError(
-                f"Power Series Ring over ground domain {self.domain} does not implement log1p."
-            )
+        series = R.log1p(s.series)
+        return self.from_element(series)
 
-    def exp(self, s: PowerSeriesElement[Er]) -> PowerSeriesElement[Er]:
+    def exp(self, s: PowerSeriesElement[Ef]) -> PowerSeriesElement[Ef]:
         """Return the exponential of a power series."""
         R = self.ring
-        if hasattr(R, "exp"):
-            series = R.exp(s.series)  # type: ignore[attr-defined]
-            return self.from_element(series)
-        else:
-            raise NotImplementedError(
-                f"Power Series Ring over ground domain {self.domain} does not implement exp."
-            )
+        series = R.exp(s.series)
+        return self.from_element(series)
 
-    def expm1(self, s: PowerSeriesElement[Er]) -> PowerSeriesElement[Er]:
+    def expm1(self, s: PowerSeriesElement[Ef]) -> PowerSeriesElement[Ef]:
         """Return the exponential of a power series minus one."""
         R = self.ring
-        if hasattr(R, "expm1"):
-            series = R.expm1(s.series)  # type: ignore[attr-defined]
-            return self.from_element(series)
-        else:
-            raise NotImplementedError(
-                f"Power Series Ring over ground domain {self.domain} does not implement expm1."
-            )
+        series = R.expm1(s.series)
+        return self.from_element(series)
 
-    def atan(self, s: PowerSeriesElement[Er]) -> PowerSeriesElement[Er]:
+    def atan(self, s: PowerSeriesElement[Ef]) -> PowerSeriesElement[Ef]:
         """Return the arctangent of a power series."""
         R = self.ring
-        if hasattr(R, "atan"):
-            series = R.atan(s.series)  # type: ignore[attr-defined]
-            return self.from_element(series)
-        else:
-            raise NotImplementedError(
-                f"Power Series Ring over ground domain {self.domain} does not implement atan."
-            )
+        series = R.atan(s.series)
+        return self.from_element(series)
 
-    def atanh(self, s: PowerSeriesElement[Er]) -> PowerSeriesElement[Er]:
+    def atanh(self, s: PowerSeriesElement[Ef]) -> PowerSeriesElement[Ef]:
         """Return the hyperbolic arctangent of a power series."""
         R = self.ring
-        if hasattr(R, "atanh"):
-            series = R.atanh(s.series)  # type: ignore[attr-defined]
-            return self.from_element(series)
-        else:
-            raise NotImplementedError(
-                f"Power Series Ring over ground domain {self.domain} does not implement atanh."
-            )
+        series = R.atanh(s.series)
+        return self.from_element(series)
 
-    def asin(self, s: PowerSeriesElement[Er]) -> PowerSeriesElement[Er]:
+    def asin(self, s: PowerSeriesElement[Ef]) -> PowerSeriesElement[Ef]:
         """Return the arcsine of a power series."""
         R = self.ring
-        if hasattr(R, "asin"):
-            series = R.asin(s.series)  # type: ignore[attr-defined]
-            return self.from_element(series)
-        else:
-            raise NotImplementedError(
-                f"Power Series Ring over ground domain {self.domain} does not implement asin."
-            )
+        series = R.asin(s.series)
+        return self.from_element(series)
 
-    def asinh(self, s: PowerSeriesElement[Er]) -> PowerSeriesElement[Er]:
+    def asinh(self, s: PowerSeriesElement[Ef]) -> PowerSeriesElement[Ef]:
         """Return the hyperbolic arcsine of a power series."""
         R = self.ring
-        if hasattr(R, "asinh"):
-            series = R.asinh(s.series)  # type: ignore[attr-defined]
-            return self.from_element(series)
-        else:
-            raise NotImplementedError(
-                f"Power Series Ring over ground domain {self.domain} does not implement asinh."
-            )
+        series = R.asinh(s.series)
+        return self.from_element(series)
 
-    def tan(self, s: PowerSeriesElement[Er]) -> PowerSeriesElement[Er]:
+    def tan(self, s: PowerSeriesElement[Ef]) -> PowerSeriesElement[Ef]:
         """Return the tangent of a power series."""
         R = self.ring
-        if hasattr(R, "tan"):
-            series = R.tan(s.series)  # type: ignore[attr-defined]
-            return self.from_element(series)
-        else:
-            raise NotImplementedError(
-                f"Power Series Ring over ground domain {self.domain} does not implement tan."
-            )
+        series = R.tan(s.series)
+        return self.from_element(series)
 
-    def tanh(self, s: PowerSeriesElement[Er]) -> PowerSeriesElement[Er]:
+    def tanh(self, s: PowerSeriesElement[Ef]) -> PowerSeriesElement[Ef]:
         """Return the hyperbolic tangent of a power series."""
         R = self.ring
-        if hasattr(R, "tanh"):
-            series = R.tanh(s.series)  # type: ignore[attr-defined]
-            return self.from_element(series)
-        else:
-            raise NotImplementedError(
-                f"Power Series Ring over ground domain {self.domain} does not implement tanh."
-            )
+        series = R.tanh(s.series)
+        return self.from_element(series)
 
-    def sin(self, s: PowerSeriesElement[Er]) -> PowerSeriesElement[Er]:
+    def sin(self, s: PowerSeriesElement[Ef]) -> PowerSeriesElement[Ef]:
         """Return the sine of a power series."""
         R = self.ring
-        if hasattr(R, "sin"):
-            series = R.sin(s.series)  # type: ignore[attr-defined]
-            return self.from_element(series)
-        else:
-            raise NotImplementedError(
-                f"Power Series Ring over ground domain {self.domain} does not implement sin."
-            )
+        series = R.sin(s.series)
+        return self.from_element(series)
 
-    def sinh(self, s: PowerSeriesElement[Er]) -> PowerSeriesElement[Er]:
+    def sinh(self, s: PowerSeriesElement[Ef]) -> PowerSeriesElement[Ef]:
         """Return the hyperbolic sine of a power series."""
         R = self.ring
-        if hasattr(R, "sinh"):
-            series = R.sinh(s.series)  # type: ignore[attr-defined]
-            return self.from_element(series)
-        else:
-            raise NotImplementedError(
-                f"Power Series Ring over ground domain {self.domain} does not implement sinh."
-            )
+        series = R.sinh(s.series)
+        return self.from_element(series)
 
-    def cos(self, s: PowerSeriesElement[Er]) -> PowerSeriesElement[Er]:
+    def cos(self, s: PowerSeriesElement[Ef]) -> PowerSeriesElement[Ef]:
         """Return the cosine of a power series."""
         R = self.ring
-        if hasattr(R, "cos"):
-            series = R.cos(s.series)  # type: ignore[attr-defined]
-            return self.from_element(series)
-        else:
-            raise NotImplementedError(
-                f"Power Series Ring over ground domain {self.domain} does not implement cos."
-            )
+        series = R.cos(s.series)
+        return self.from_element(series)
 
-    def cosh(self, s: PowerSeriesElement[Er]) -> PowerSeriesElement[Er]:
+    def cosh(self, s: PowerSeriesElement[Ef]) -> PowerSeriesElement[Ef]:
         """Return the hyperbolic cosine of a power series."""
         R = self.ring
-        if hasattr(R, "cosh"):
-            series = R.cosh(s.series)  # type: ignore[attr-defined]
-            return self.from_element(series)
-        else:
-            raise NotImplementedError(
-                f"Power Series Ring over ground domain {self.domain} does not implement cosh."
-            )
+        series = R.cosh(s.series)
+        return self.from_element(series)
 
 
 class PowerSeriesElement(DomainElement, CantSympify, Generic[Er]):
     """A class for representing elements of a Power Series."""
 
-    def __init__(self, ring: PowerSeriesRing[Er], series: TSeries):
+    def __init__(self, ring: PowerSeriesRingRing[Er], series: TElement):
         self.series = series
         self.ring = ring
 
@@ -463,7 +411,7 @@ class PowerSeriesElement(DomainElement, CantSympify, Generic[Er]):
         s = R.negative(self.series)
         return self.new(s)
 
-    def new(self, series: TSeries) -> PowerSeriesElement[Er]:
+    def new(self, series: TElement) -> PowerSeriesElement[Er]:
         return self.__class__(self.ring, series)
 
     def __add__(

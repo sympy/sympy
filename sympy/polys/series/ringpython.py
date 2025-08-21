@@ -1204,6 +1204,13 @@ class PythonPowerSeriesRingZZ:
         """Check if two power series have the same representation."""
         return _useries_equal_repr(s1, s2)
 
+    def is_element(self, s: USeries[MPZ]) -> bool:
+        """Check if a series is an element of the power series ring."""
+        if isinstance(s, tuple) and len(s) == 2:
+            if isinstance(s[0], list) and all(isinstance(c, MPZ) for c in s[0]):
+                return True
+        return False
+
     def positive(self, s: USeries[MPZ]) -> USeries[MPZ]:
         """Return the unary positive of a power series, adjusted to the ring's precision."""
         return _useries_pos(s, self._domain, self._prec)
@@ -1444,6 +1451,13 @@ class PythonPowerSeriesRingQQ:
     def equal_repr(self, s1: USeries[MPQ], s2: USeries[MPQ]) -> bool:
         """Check if two power series have the same representation."""
         return _useries_equal_repr(s1, s2)
+
+    def is_element(self, s: USeries[MPQ]) -> bool:
+        """Check if a series is an element of the power series ring."""
+        if isinstance(s, tuple) and len(s) == 2:
+            if isinstance(s[0], list) and all(isinstance(c, MPQ) for c in s[0]):
+                return True
+        return False
 
     def positive(self, s: USeries[MPQ]) -> USeries[MPQ]:
         """Return the unary positive of a power series, adjusted to the ring's precision."""
