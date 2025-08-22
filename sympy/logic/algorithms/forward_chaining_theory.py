@@ -90,7 +90,7 @@ class FCSolver():
         state = {expr_id : 0 for expr_id in range(fc.expr_count)}
         # state is a dictionary mapping expr_id to a bitset representing all of the direct
         # implications of the active literals
-        return FCSolver(pred_to_enc), state
+        return fc, state
 
     def decompose_AppliedPredicate(self, appliedPredicate):
         neg = False
