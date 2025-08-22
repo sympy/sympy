@@ -1826,11 +1826,11 @@ class Structure2d:
         bend_points = []
         for item in self.unwrapped_bendpoints:
             bend_points.extend(item["bend_point"])
-        moment_points = sorted(set([
+        moment_points = sorted([
             nsimplify(p)
             for item in self.unwrapped_bendpoints
             for p in (item["bend_point"][0], item["bend_point"][1], (item["bend_point"][0] + item["bend_point"][1]) / 2)
-        ]))
+        ])
         for point in moment_points:
             coords = None
             for item in self.unwrapped_bendpoints:
