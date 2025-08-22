@@ -315,7 +315,7 @@ class Set(Basic, EvalfMixin):
 
     @property
     def _inf(self):
-        raise NotImplementedError("(%s)._inf" % self)
+        raise NotImplementedError(f"({self})._inf")
 
     @property
     def sup(self):
@@ -336,7 +336,7 @@ class Set(Basic, EvalfMixin):
 
     @property
     def _sup(self):
-        raise NotImplementedError("(%s)._sup" % self)
+        raise NotImplementedError(f"({self})._sup")
 
     def contains(self, other):
         """
@@ -431,7 +431,7 @@ class Set(Basic, EvalfMixin):
 
         """
         if not isinstance(other, Set):
-            raise ValueError("Unknown argument '%s'" % other)
+            raise ValueError(f"Unknown argument '{other}'")
 
         # Handle the trivial cases
         if self == other:
@@ -493,7 +493,7 @@ class Set(Basic, EvalfMixin):
                 fuzzy_not(other.is_subset(self)),
             ])
         else:
-            raise ValueError("Unknown argument '%s'" % other)
+            raise ValueError(f"Unknown argument '{other}'")
 
     def is_superset(self, other):
         """
@@ -512,7 +512,7 @@ class Set(Basic, EvalfMixin):
         if isinstance(other, Set):
             return other.is_subset(self)
         else:
-            raise ValueError("Unknown argument '%s'" % other)
+            raise ValueError(f"Unknown argument '{other}'")
 
     # This should be deprecated:
     def issuperset(self, other):
@@ -538,7 +538,7 @@ class Set(Basic, EvalfMixin):
         if isinstance(other, Set):
             return other.is_proper_subset(self)
         else:
-            raise ValueError("Unknown argument '%s'" % other)
+            raise ValueError(f"Unknown argument '{other}'")
 
     def _eval_powerset(self):
         from .powerset import PowerSet
@@ -797,7 +797,7 @@ class Set(Basic, EvalfMixin):
 
     @property
     def _measure(self):
-        raise NotImplementedError("(%s)._measure" % self)
+        raise NotImplementedError(f"({self})._measure")
 
     def _kind(self):
         return SetKind(UndefinedKind)
@@ -829,7 +829,7 @@ class Set(Basic, EvalfMixin):
     @sympify_return([('exp', Expr)], NotImplemented)
     def __pow__(self, exp):
         if not (exp.is_Integer and exp >= 0):
-            raise ValueError("%s: Exponent must be a positive Integer" % exp)
+            raise ValueError(f"{exp}: Exponent must be a positive Integer")
         return ProductSet(*[self]*exp)
 
     @sympify_return([('other', 'Set')], NotImplemented)
@@ -843,7 +843,7 @@ class Set(Basic, EvalfMixin):
         if b is None:
             # x in y must evaluate to T or F; to entertain a None
             # result with Set use y.contains(x)
-            raise TypeError('did not evaluate to a bool: %r' % c)
+            raise TypeError('did not evaluate to a bool: {c!r}')
         return b
 
 
@@ -1083,7 +1083,7 @@ class Interval(Set):
             for a in [left_open, right_open]):
             raise NotImplementedError(
                 "left_open and right_open can have only true/false values, "
-                "got %s and %s" % (left_open, right_open))
+                f"got {left_open} and {right_open}")
 
         # Only allow real intervals
         if fuzzy_not(fuzzy_and(i.is_extended_real for i in (start, end, end-start))):
@@ -2165,22 +2165,22 @@ class FiniteSet(Set):
 
     def __ge__(self, other):
         if not isinstance(other, Set):
-            raise TypeError("Invalid comparison of set with %s" % func_name(other))
+            raise TypeError(f"Invalid comparison of set with {func_name(other)}")
         return other.is_subset(self)
 
     def __gt__(self, other):
         if not isinstance(other, Set):
-            raise TypeError("Invalid comparison of set with %s" % func_name(other))
+            raise TypeError(f"Invalid comparison of set with {func_name(other)}")
         return self.is_proper_superset(other)
 
     def __le__(self, other):
         if not isinstance(other, Set):
-            raise TypeError("Invalid comparison of set with %s" % func_name(other))
+            raise TypeError(f"Invalid comparison of set with {func_name(other)}")
         return self.is_subset(other)
 
     def __lt__(self, other):
         if not isinstance(other, Set):
-            raise TypeError("Invalid comparison of set with %s" % func_name(other))
+            raise TypeError(f"Invalid comparison of set with {func_name(other)}")
         return self.is_proper_subset(other)
 
     def __eq__(self, other):
@@ -2297,8 +2297,8 @@ class DisjointUnion(Set):
             if isinstance(set_i, Set):
                 dj_collection.append(set_i)
             else:
-                raise TypeError("Invalid input: '%s', input args \
-                    to DisjointUnion must be Sets" % set_i)
+                raise TypeError(f"Invalid input: '{set_i}', input args "
+                    "to DisjointUnion must be Sets")
         obj = Basic.__new__(cls, *dj_collection)
         return obj
 
@@ -2388,7 +2388,7 @@ class DisjointUnion(Set):
 
             return iter(roundrobin(*iters))
         else:
-            raise ValueError("'%s' is not iterable." % self)
+            raise ValueError(f"'{self}' is not iterable.")
 
     def __len__(self):
         """
@@ -2417,7 +2417,7 @@ class DisjointUnion(Set):
                 size += len(set)
             return size
         else:
-            raise ValueError("'%s' is not a finite set." % self)
+            raise ValueError(f"'{self}' is not a finite set.")
 
 
 def imageset(*args):
@@ -2471,7 +2471,7 @@ def imageset(*args):
     from .setexpr import set_function
 
     if len(args) < 2:
-        raise ValueError('imageset expects at least 2 args, got: %s' % len(args))
+        raise ValueError(f"imageset expects at least 2 args, got: {len(args)}")
 
     if isinstance(args[0], (Symbol, tuple)) and len(args) > 2:
         f = Lambda(args[0], args[1])
@@ -2496,7 +2496,7 @@ def imageset(*args):
             if N == 1:
                 s = 'x'
             else:
-                s = [Symbol('x%i' % i) for i in range(1, N + 1)]
+                s = [Symbol(f"x{i}") for i in range(1, N + 1)]
         else:
             s = inspect.signature(f).parameters
 
@@ -2507,12 +2507,12 @@ def imageset(*args):
     else:
         raise TypeError(filldedent('''
             expecting lambda, Lambda, or FunctionClass,
-            not \'%s\'.''' % func_name(f)))
+            not '{func_name(f)}'.'''))
 
     if any(not isinstance(s, Set) for s in set_list):
         name = [func_name(s) for s in set_list]
         raise ValueError(
-            'arguments after mapping should be sets, not %s' % name)
+            f"arguments after mapping should be sets, not {name}")
 
     if len(set_list) == 1:
         set = set_list[0]
@@ -2808,4 +2808,4 @@ class SetKind(Kind):
         if not self.element_kind:
             return "SetKind()"
         else:
-            return "SetKind(%s)" % self.element_kind
+            return f"SetKind({self.element_kind})"

@@ -359,7 +359,7 @@ class ImageSet(Set):
             raise TypeError("Set arguments to ImageSet should of type Set")
 
         if not all(cls._check_sig(sg, st) for sg, st in zip(signature, sets)):
-            raise ValueError("Signature %s does not match sets %s" % (signature, sets))
+            raise ValueError(f"Signature {signature} does not match sets {sets}")
 
         if flambda is S.IdentityFunction and len(sets) == 1:
             return sets[0]
@@ -603,7 +603,7 @@ class Range(Set):
         if len(args) == 1:
             if isinstance(args[0], range):
                 raise TypeError(
-                    'use sympify(%s) to convert range to Range' % args[0])
+                    f"use sympify({args[0]}) to convert range to Range")
 
         # expand range
         slc = slice(*args)
@@ -657,8 +657,8 @@ class Range(Set):
             if span is S.NaN or span <= 0:
                 null = True
             elif step.is_Integer and stop.is_infinite and abs(step) != 1:
-                raise ValueError(filldedent('''
-                    Step size must be %s in this case.''' % (1 if step > 0 else -1)))
+                raise ValueError(filldedent(f'''
+                    Step size must be {(1 if step > 0 else -1)} in this case.'''))
             else:
                 end = stop
         else:
@@ -1101,10 +1101,10 @@ def normalize_theta_set(theta):
         return Union(*[normalize_theta_set(interval) for interval in theta.args])
 
     elif theta.is_subset(S.Reals):
-        raise NotImplementedError("Normalizing theta when, it is of type %s is not "
-                                  "implemented" % type(theta))
+        raise NotImplementedError(f"Normalizing theta when, it is of type {type(theta)} "
+                                  "is not implemented")
     else:
-        raise ValueError(" %s is not a real set" % (theta))
+        raise ValueError(f"{theta} is not a real set")
 
 
 class ComplexRegion(Set):

@@ -36,7 +36,7 @@ class Contains(Boolean):
             evaluate = global_parameters.evaluate
 
         if not isinstance(s, Set):
-            raise TypeError('expecting Set, not %s' % func_name(s))
+            raise TypeError(f"expecting Set, not {func_name(s)}")
 
         if evaluate:
             # _contains can return symbolic booleans that would be returned by
