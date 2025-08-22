@@ -735,6 +735,7 @@ class Structure2d:
                 {
                     "bend_point": [unwrapped_len, unwrapped_len + member.length],
                     "angle": member.angle,
+                    "2positions": [(member.x1, member.y1), (member.x2, member.y2)]
                 }
             )
 
@@ -746,8 +747,8 @@ class Structure2d:
                             "l_id": load.load_id,
                             "locals": [
                                 nsimplify(unwrapped_len + load.local_start),
-                                nsimplify(unwrapped_len + load.local_end),
-                            ],
+                                nsimplify(unwrapped_len + load.local_end)],
+                            "2positions": [(load.start_x, load.start_y), (load.end_x, load.end_y)]
                         }
                     )
                 else:
@@ -755,6 +756,7 @@ class Structure2d:
                         {
                             "l_id": load.load_id,
                             "locals": [nsimplify(unwrapped_len + load.local_start)],
+                            "2positions": [(load.start_x, load.start_y)]
                         }
                     )
 
@@ -764,7 +766,9 @@ class Structure2d:
                 if simplify(node.x - x_start) == 0 and simplify(node.y - y_start) == 0:
                     for load in node.node_loads:
                         unwrapped_loadpoints.append(
-                            {"l_id": load.load_id, "locals": [nsimplify(unwrapped_len)]}
+                            {"l_id": load.load_id, "locals": [nsimplify(unwrapped_len)],
+                            "2positions": [(load.start_x, load.start_y)]
+                             }
                         )
                     break
 
@@ -776,7 +780,9 @@ class Structure2d:
                 if simplify(node.x - x_end) == 0 and simplify(node.y - y_end) == 0:
                     for load in node.node_loads:
                         unwrapped_loadpoints.append(
-                            {"l_id": load.load_id, "locals": [nsimplify(unwrapped_len)]}
+                            {"l_id": load.load_id, "locals": [nsimplify(unwrapped_len)],
+                             "2positions": [(load.start_x, load.start_y)]
+                             }
                         )
                     break
 
@@ -1762,26 +1768,26 @@ class Structure2d:
         ===================== Structure Summary =====================
         <BLANKLINE>
         Reaction Loads:
-        R_v   [0.00,0.00]  (0.00)                = -5.0
-        R_h   [0.00,0.00]  (0.00)                = 0.0
-        R_v   [4.00,0.00]  (4.00)                = -5.0
+        R_v   (x=0.00,y=0.00)  (unwrapped x=0.00)          = -5.0
+        R_h   (x=0.00,y=0.00)  (unwrapped x=0.00)          = 0.0
+        R_v   (x=4.00,y=0.00)  (unwrapped x=4.00)          = -5.0
         <BLANKLINE>
         Points of Interest - Bending Moment:
-        bending_moment at [x.xx,y.yy]  (0.00)    = 0.0
-        bending_moment at [x.xx,y.yy]  (2.00)    = 10.0
-        bending_moment at [x.xx,y.yy]  (4.00)-   = 0.0
+        bending_moment at (x=0.00,y=0.00)  (unwrapped x=0.00) = 0.0
+        bending_moment at (x=2.00,y=0.00)  (unwrapped x=2.00) = 10.0
+        bending_moment at (x=4.00,y=0.00)  (unwrapped x=4.00-) = 0.0
         <BLANKLINE>
         Points of Interest - Shear Force:
-        shear_force at [x.xx,y.yy]  (0.00+)      = 5.0
-        shear_force at [x.xx,y.yy]  (2.00-)      = 5.0
-        shear_force at [x.xx,y.yy]  (2.00+)      = -5.0
-        shear_force at [x.xx,y.yy]  (4.00-)      = -5.0
+        shear_force at (x=0.00,y=0.00)  (unwrapped x=0.00+) = 5.0
+        shear_force at (x=2.00,y=0.00)  (unwrapped x=2.00-) = 5.0
+        shear_force at (x=2.00,y=0.00)  (unwrapped x=2.00+) = -5.0
+        shear_force at (x=4.00,y=0.00)  (unwrapped x=4.00-) = -5.0
         <BLANKLINE>
         Points of Interest - Axial Force:
-        axial_force at [x.xx,y.yy]  (0.00+)      = 0.0
-        axial_force at [x.xx,y.yy]  (2.00-)      = 0.0
-        axial_force at [x.xx,y.yy]  (2.00+)      = 0.0
-        axial_force at [x.xx,y.yy]  (4.00-)      = 0.0
+        axial_force at (x=0.00,y=0.00)  (unwrapped x=0.00+) = 0.0
+        axial_force at (x=2.00,y=0.00)  (unwrapped x=2.00-) = 0.0
+        axial_force at (x=2.00,y=0.00)  (unwrapped x=2.00+) = 0.0
+        axial_force at (x=4.00,y=0.00)  (unwrapped x=4.00-) = 0.0
         """
 
         title = "Structure Summary"
@@ -1800,135 +1806,113 @@ class Structure2d:
             self._print_points_of_interest(round_digits)
 
     def _print_reaction_loads(self, round_digits):
-        """Prints the reaction loads in the structure."""
+        import re
         print("\nReaction Loads:")
         for key, value in self.reaction_loads.items():
-            support_name = str(key).split("__")[0]
-            support_x_loc = float(str(key).split("__")[1].strip(","))
-            support_y_loc = float(str(key).split("__")[2].strip(","))
-            unwrapped_xl_loc = self._find_unwrapped_position(
-                support_x_loc, support_y_loc
-            )
+            match = re.match(r"(\w+.*?)\s*\(x=([\d.-]+),y=([\d.-]+)\)", str(key))
 
+            support_name = match.group(1).strip()
+            support_x_loc = float(match.group(2))
+            support_y_loc = float(match.group(3))
+            unwrapped_xl_loc = self._find_unwrapped_position(support_x_loc, support_y_loc)
             if round_digits is not None and not value.has(Symbol):
                 value = round(float(value), round_digits)
-
-            support_str = f"{support_name:<5} [{support_x_loc:.2f},{support_y_loc:.2f}]  ({unwrapped_xl_loc:.2f})"
-            print(f"{support_str:<40} = {(value)}")
-
+            support_str = f"{support_name:<5} (x={support_x_loc:.2f},y={support_y_loc:.2f})  (unwrapped x={unwrapped_xl_loc:.2f})"
+            print(f"{support_str:<50} = {value}")
 
     def _print_points_of_interest(self, round_digits):
-        """Prints the points of interest for shear force and bending moment."""
         dx = 1e-6
-        # dx = 0
-
         print("\nPoints of Interest - Bending Moment:")
-        bend_points = sorted(
-            {
-                nsimplify(point)
-                for item in self.unwrapped_bendpoints
-                for point in item["bend_point"]
-            }
-        )
-        moment_points = sorted({
+        bend_points = []
+        for item in self.unwrapped_bendpoints:
+            bend_points.extend(item["bend_point"])
+        moment_points = sorted(set([
             nsimplify(p)
             for item in self.unwrapped_bendpoints
-            for p in (
-                # This is to add mid points also as points of interest as moments will have critical values at mid points.
-                item["bend_point"][0],                       # start
-                item["bend_point"][1],                       # end
-                (item["bend_point"][0] + item["bend_point"][1]) / 2  # midpoint
-            )
-        })
+            for p in (item["bend_point"][0], item["bend_point"][1], (item["bend_point"][0] + item["bend_point"][1]) / 2)
+        ]))
         for point in moment_points:
+            coords = None
+            for item in self.unwrapped_bendpoints:
+                if nsimplify(point) in [nsimplify(item["bend_point"][0]), nsimplify(item["bend_point"][1])]:
+                    idx = 0 if nsimplify(point) == nsimplify(item["bend_point"][0]) else 1
+                    coords = item["2positions"][idx]
+                    break
+                elif nsimplify(point) == nsimplify((item["bend_point"][0] + item["bend_point"][1]) / 2):
+                    x_mid = (item["2positions"][0][0] + item["2positions"][1][0]) / 2
+                    y_mid = (item["2positions"][0][1] + item["2positions"][1][1]) / 2
+                    coords = (x_mid, y_mid)
+                    break
+            if coords is None:
+                coords = (float(point), 0.0)
+            x_loc, y_loc = coords
+            unwrapped_x_loc = float(point)
             if point == moment_points[-1]:
                 bending_moment_value = self.bending_moment(point - dx)
                 if round_digits is not None and not bending_moment_value.has(Symbol):
-                    bending_moment_value = round(
-                        float(bending_moment_value), round_digits
-                    )
-                string_text = f"bending_moment at [x.xx,y.yy]  ({point:.02f})-"
-                print(f"{string_text:<40} = {bending_moment_value}")
-
+                    bending_moment_value = round(float(bending_moment_value), round_digits)
+                string_text = f"bending_moment at (x={x_loc:.2f},y={y_loc:.2f})  (unwrapped x={unwrapped_x_loc:.2f}-)"
+                print(f"{string_text:<50} = {bending_moment_value}")
             else:
                 bending_moment_value = self.bending_moment(nsimplify(point))
-
                 if round_digits is not None and not bending_moment_value.has(Symbol):
-                    bending_moment_value = round(
-                        float(bending_moment_value), round_digits
-                    )
-                string_text = f"bending_moment at [x.xx,y.yy]  ({point:.02f})"
-                print(f"{string_text:<40} = {bending_moment_value}")
+                    bending_moment_value = round(float(bending_moment_value), round_digits)
+                string_text = f"bending_moment at (x={x_loc:.2f},y={y_loc:.2f})  (unwrapped x={unwrapped_x_loc:.2f})"
+                print(f"{string_text:<50} = {bending_moment_value}")
 
         print("\nPoints of Interest - Shear Force:")
-        load_points = sorted(
-            {
-                nsimplify(local)
-                for point in self.unwrapped_loadpoints
-                for local in point["locals"]
-            }
-        )
         load_points = []
         for item in self.unwrapped_loadpoints:
-            # print(item["locals"])
             if len(item["locals"]) == 1:
-                load_points.append(item["locals"][0])
-        load_points = sorted(set(load_points + bend_points))
-        # print(load_points)
-
-        for point in sorted(load_points):
+                load_points.append((item["locals"][0], item["2positions"][0]))
+        for item in self.unwrapped_bendpoints:
+            load_points.extend([(p, c) for p, c in zip(item["bend_point"], item["2positions"])])
+        load_points = sorted(set(load_points), key=lambda x: x[0])
+        for point, coords in load_points:
+            x_loc, y_loc = coords
+            unwrapped_x_loc = float(point)
             shear_force_value_minus = self.shear_force(point - dx)
             shear_force_value_plus = self.shear_force(nsimplify(point))
-
             if round_digits is not None:
-                if isinstance(
-                    shear_force_value_minus, Basic
-                ) and not shear_force_value_minus.has(Symbol):
-                    shear_force_value_minus = round(
-                        float(shear_force_value_minus), round_digits
-                    )
-                if isinstance(
-                    shear_force_value_plus, Basic
-                ) and not shear_force_value_plus.has(Symbol):
-                    shear_force_value_plus = round(
-                        float(shear_force_value_plus), round_digits
-                    )
-
-            if point == load_points[0]:
-                string_text = f"shear_force at [x.xx,y.yy]  ({point:.02f}+)"
-                print(f"{string_text:<40} = {shear_force_value_plus}")
-            elif point == load_points[-1]:
-                string_text = f"shear_force at [x.xx,y.yy]  ({point:.02f}-)"
-                print(f"{string_text:<40} = {shear_force_value_minus}")
+                if isinstance(shear_force_value_minus, Basic) and not shear_force_value_minus.has(Symbol):
+                    shear_force_value_minus = round(float(shear_force_value_minus), round_digits)
+                if isinstance(shear_force_value_plus, Basic) and not shear_force_value_plus.has(Symbol):
+                    shear_force_value_plus = round(float(shear_force_value_plus), round_digits)
+            if point == load_points[0][0]:
+                string_text = f"shear_force at (x={x_loc:.2f},y={y_loc:.2f})  (unwrapped x={unwrapped_x_loc:.2f}+)"
+                print(f"{string_text:<50} = {shear_force_value_plus}")
+            elif point == load_points[-1][0]:
+                string_text = f"shear_force at (x={x_loc:.2f},y={y_loc:.2f})  (unwrapped x={unwrapped_x_loc:.2f}-)"
+                print(f"{string_text:<50} = {shear_force_value_minus}")
             else:
-                string_text = f"shear_force at [x.xx,y.yy]  ({point:.02f}-)"
-                print(f"{string_text:<40} = {shear_force_value_minus}")
-                string_text = f"shear_force at [x.xx,y.yy]  ({point:.02f}+)"
-                print(f"{string_text:<40} = {shear_force_value_plus}")
+                string_text = f"shear_force at (x={x_loc:.2f},y={y_loc:.2f})  (unwrapped x={unwrapped_x_loc:.2f}-)"
+                print(f"{string_text:<50} = {shear_force_value_minus}")
+                string_text = f"shear_force at (x={x_loc:.2f},y={y_loc:.2f})  (unwrapped x={unwrapped_x_loc:.2f}+)"
+                print(f"{string_text:<50} = {shear_force_value_plus}")
 
         print("\nPoints of Interest - Axial Force:")
-        axial_points = load_points  # reuse same POIs (member ends + point loads)
-        for point in sorted(axial_points):
+        axial_points = load_points
+        for point, coords in axial_points:
+            x_loc, y_loc = coords
+            unwrapped_x_loc = float(point)
             axial_value_minus = self.axial_force(point - dx)
-            axial_value_plus  = self.axial_force(nsimplify(point))
-
+            axial_value_plus = self.axial_force(nsimplify(point))
             if round_digits is not None:
                 if isinstance(axial_value_minus, Basic) and not axial_value_minus.has(Symbol):
                     axial_value_minus = round(float(axial_value_minus), round_digits)
                 if isinstance(axial_value_plus, Basic) and not axial_value_plus.has(Symbol):
                     axial_value_plus = round(float(axial_value_plus), round_digits)
-
-            if point == axial_points[0]:
-                string_text = f"axial_force at [x.xx,y.yy]  ({point:.02f}+)"
-                print(f"{string_text:<40} = {axial_value_plus}")
-            elif point == axial_points[-1]:
-                string_text = f"axial_force at [x.xx,y.yy]  ({point:.02f}-)"
-                print(f"{string_text:<40} = {axial_value_minus}")
+            if point == axial_points[0][0]:
+                string_text = f"axial_force at (x={x_loc:.2f},y={y_loc:.2f})  (unwrapped x={unwrapped_x_loc:.2f}+)"
+                print(f"{string_text:<50} = {axial_value_plus}")
+            elif point == axial_points[-1][0]:
+                string_text = f"axial_force at (x={x_loc:.2f},y={y_loc:.2f})  (unwrapped x={unwrapped_x_loc:.2f}-)"
+                print(f"{string_text:<50} = {axial_value_minus}")
             else:
-                string_text = f"axial_force at [x.xx,y.yy]  ({point:.02f}-)"
-                print(f"{string_text:<40} = {axial_value_minus}")
-                string_text = f"axial_force at [x.xx,y.yy]  ({point:.02f}+)"
-                print(f"{string_text:<40} = {axial_value_plus}")
+                string_text = f"axial_force at (x={x_loc:.2f},y={y_loc:.2f})  (unwrapped x={unwrapped_x_loc:.2f}-)"
+                print(f"{string_text:<50} = {axial_value_minus}")
+                string_text = f"axial_force at (x={x_loc:.2f},y={y_loc:.2f})  (unwrapped x={unwrapped_x_loc:.2f}+)"
+                print(f"{string_text:<50} = {axial_value_plus}")
 
 
     #################################################################################
