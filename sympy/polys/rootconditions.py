@@ -1,9 +1,7 @@
 from __future__ import annotations
-from typing import Union
 
 from sympy.polys.densebasic import dup
 from sympy.polys.domains.domain import Er, Domain
-from sympy.external.gmpy import MPZ
 from sympy.core.numbers import I
 
 from sympy.polys.densearith import dup_exquo_ground
@@ -75,21 +73,19 @@ def dup_routh_hurwitz(f: dup[Er], K: Domain[Er]) -> list[Er]:
         return dup_convert(conds, EXRAW, K)
 
 
-def _dup_routh_hurwitz_fraction_free(
-    p: Union[dup[Er], list[MPZ]], K: Domain[Er]
-) -> list[Er]:
+def _dup_routh_hurwitz_fraction_free(p: dup[Er], K: Domain[Er]) -> list[Er]:
     if not p:
         raise ValueError("zero polynomial")
     elif len(p) == 1:
         return []
     elif len(p) == 2:
-        return [p[0] * p[1]]  # type: ignore
+        return [p[0] * p[1]]
     elif len(p) == 3:
-        return [p[0] * p[1], p[0] * p[2]]  # type: ignore
+        return [p[0] * p[1], p[0] * p[2]]
 
     LC = p[0]
     TC = p[-1]
-    monic = K.is_one(LC)  # type: ignore
+    monic = K.is_one(LC)
 
     p1s = [p[1]]
 
@@ -100,16 +96,16 @@ def _dup_routh_hurwitz_fraction_free(
         p = qs
 
         p1 = p[1]
-        if K.is_zero(p1):  # type: ignore
+        if K.is_zero(p1):
             return [-K.one]
 
         if len(p1s) >= 2:
-            p1 = K.exquo(p1, p1s[-2])  # type: ignore
+            p1 = K.exquo(p1, p1s[-2])
         if len(p1s) >= 3:
-            p1 = K.exquo(p1, p1s[-3])  # type: ignore
-            p1 = K.exquo(p1, p1s[-3])  # type: ignore
-            p = dup_exquo_ground(p, p1s[-3], K) # type: ignore
-            p = dup_exquo_ground(p, p1s[-3], K) # type: ignore
+            p1 = K.exquo(p1, p1s[-3])
+            p1 = K.exquo(p1, p1s[-3])
+            p = dup_exquo_ground(p, p1s[-3], K)
+            p = dup_exquo_ground(p, p1s[-3], K)
 
         p1s.append(p1)
 
@@ -119,7 +115,7 @@ def _dup_routh_hurwitz_fraction_free(
 
     p1s.append(LC * TC)
 
-    return p1s  # type: ignore
+    return p1s
 
 
 def _dup_routh_hurwitz_exraw(p: list[Expr]) -> list[Expr]:
@@ -176,7 +172,9 @@ def _rec_dup_routh_hurwitz_exraw_no_div(
     return [cond] + _rec_dup_routh_hurwitz_exraw_no_div(qs, previous_cond)
 
 
-def _clear_cond_exraw(cond: Expr, previous_cond: list) -> tuple[Expr, list[list]]:
+def _clear_cond_exraw(
+    cond: Expr, previous_cond: list
+) -> tuple[Expr, list[list]]:
     """
     Clear the condition by removing even powers and simplifying odd powers.
     Also, remove factors that are already present in previous conditions.
