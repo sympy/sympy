@@ -1357,4 +1357,3 @@ def test_moment_loads():
 
     expected_moment = -30873*SingularityFunction(x, 0, 0)/160 + 59517*SingularityFunction(x, 0, 1)/800 - 60*SingularityFunction(x, 5, 0) - 100161*SingularityFunction(x, 5, 1)/800 + 27*SingularityFunction(x, 5, 2)/5 - 639*SingularityFunction(x, 10, 1)/200 - 27*SingularityFunction(x, 10, 2)/5
     assert simplify(s.M.expand()) == simplify(expected_moment.expand())
-
