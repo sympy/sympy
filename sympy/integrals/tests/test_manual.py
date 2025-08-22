@@ -300,6 +300,10 @@ def test_manualintegrate_special():
     assert_is_integral_of(f, F)
     f, F = erfi(7*x)*exp(6*x), exp(6*x)*erfi(7*x)/6 - exp(-Rational(9,49))*erfi(7*x + Rational(3,7))/6
     assert_is_integral_of(f, F)
+    f, F = sin(2*x)*exp(-3*x**2), -I*(sqrt(3)*sqrt(pi)*exp(-Rational(1,3))*erf(sqrt(3)*(6*x - 2*I)/6)/6 - sqrt(3)*sqrt(pi)*exp(-Rational(1,3))*erf(sqrt(3)*(6*x + 2*I)/6)/6)/2
+    assert_is_integral_of(f, F)
+    f, F = cos(2*x)*exp(-3*x**2), sqrt(3)*sqrt(pi)*exp(-Rational(1,3))*erf(sqrt(3)*(6*x - 2*I)/6)/12 + sqrt(3)*sqrt(pi)*exp(-Rational(1,3))*erf(sqrt(3)*(6*x + 2*I)/6)/12
+    assert_is_integral_of(f, F)
 
 
 def test_manualintegrate_derivative():
