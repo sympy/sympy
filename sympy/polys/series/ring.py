@@ -123,7 +123,9 @@ class PowerSeriesRingRing(Generic[Er]):
         return self.from_element(self.ring.gen)
 
     def __repr__(self) -> str:
-        return f"{self.domain}[[{self.symbol}], {self.prec}]"
+        return (
+            f"Power Series Ring in {self.symbol} over {self.domain} of size {self.prec}"
+        )
 
     def __eq__(self, other) -> bool:
         return self.ring == other.ring
@@ -133,14 +135,46 @@ class PowerSeriesRingRing(Generic[Er]):
         return isinstance(element, PowerSeriesElement) and element.ring == self
 
     def order_term(self):
+        """
+        Return the order term of the power series.
+
+        Examples
+        ========
+        >>> from sympy import ZZ
+        >>> from sympy.polys.series import PowerSeriesRingRing
+        >>> R = PowerSeriesRingRing(ZZ, "x")
+        >>> R.order_term()
+        O(x**6)
+        >>> R10 = PowerSeriesRingRing(ZZ, "x", 10)
+        >>> R10.order_term()
+        O(x**10)
+
+        """
         o = self.ring([], self.prec)
         return self.from_element(o)
 
     def from_expr(self, expr) -> PowerSeriesElement[Er]:
+        """
+        Convert an expression to a power series element.
+
+        Examples
+        ========
+
+        >>> from sympy import ZZ
+        >>> from sympy.polys.series import PowerSeriesRingRing
+        >>> R = PowerSeriesRingRing(ZZ, "x", 5)
+        >>> from sympy.abc import x
+        >>> s = R.from_expr(x + x**2 + x**4 + x**7); s
+        x + x**2 + x**4 + O(x**5)
+        >>> type(s)
+        <class 'sympy.polys.series.ring.PowerSeriesElement'>
+
+        """
         poly = self._rebuild_expr(sympify(expr))
         return self.ring_new(poly)
 
     def _rebuild_expr(self, expr) -> TElement:
+        """Build the sympy expr into Lower Power Series format"""
         prec = None
         fring_prec: bool = False
 
@@ -190,33 +224,40 @@ class PowerSeriesRingRing(Generic[Er]):
     def from_list(
         self, lst: list[Er], prec: int | None = None
     ) -> PowerSeriesElement[Er]:
+        """Create a power series element from a list of coefficients."""
         R = self.ring
         s = R.from_list(lst, prec)
         return self.from_element(s)
 
     def from_element(self, element: TElement) -> PowerSeriesElement[Er]:
+        """Convert a lower power series element to a PowerSeriesElement."""
         return PowerSeriesElement(self, element)
 
     def to_list(self, element: TElement | PowerSeriesElement[Er]) -> list[Er]:
+        """Returns a list of coefficients of a power series."""
         if isinstance(element, PowerSeriesElement):
             return self.ring.to_list(element.series)
         return self.ring.to_list(element)
 
     def to_dense(self, element: TElement | PowerSeriesElement[Er]) -> dup[Er]:
+        """Returns a dense list coefficients of a power series."""
         if isinstance(element, PowerSeriesElement):
             return self.ring.to_dense(element.series)
         return self.ring.to_dense(element)
 
     def domain_new(self, arg: Expr | Er | int) -> Er:
+        """Convert arg to the element of ground domain of ring."""
         return self.domain.convert(arg, self.domain)
 
     def ground_new(self, arg: Expr | Er | int) -> PowerSeriesElement[Er]:
+        """Convert arg to the power series element."""
         R = self.ring
         g: Er = self.domain_new(arg)
         series = R.from_list([g])
         return self.from_element(series)
 
     def ring_new(self, arg: TElement | Expr | Er | int) -> PowerSeriesElement[Er]:
+        """Create a power series element from various types."""
         if isinstance(arg, Expr):
             return self.from_expr(arg)
         elif isinstance(arg, int):
@@ -224,14 +265,27 @@ class PowerSeriesRingRing(Generic[Er]):
         elif self.ring.is_element(arg):
             return self.from_element(arg)
         elif self.domain.of_type(arg):
-            return self.ground_new(arg) #type:ignore
+            return self.ground_new(arg)  # type:ignore
         else:
             raise NotImplementedError
 
     __call__ = ring_new
 
     def square(self, s: PowerSeriesElement[Er]) -> PowerSeriesElement[Er]:
-        """Return the square of a power series."""
+        """
+        Compute the square of a power series.
+
+        Examples
+        ========
+
+        >>> from sympy import ZZ
+        >>> from sympy.polys.series import PowerSeriesRingRing
+        >>> R = PowerSeriesRingRing(ZZ, "x", 5)
+        >>> x = R.gen
+        >>> R.square(1 + x + x**2)
+        1 + 2*x + 3*x**2 + 2*x**3 + x**4
+
+        """
         R = self.ring
         series = R.square(s.series)
         return self.from_element(series)
@@ -239,25 +293,79 @@ class PowerSeriesRingRing(Generic[Er]):
     def compose(
         self, s: PowerSeriesElement[Er], t: PowerSeriesElement[Er]
     ) -> PowerSeriesElement[Er]:
-        """Return the composition of two power series."""
+        """
+        Compute the composition of two power series.
+
+        Examples
+        ========
+
+        >>> from sympy import ZZ
+        >>> from sympy.polys.series import PowerSeriesRingRing
+        >>> R = PowerSeriesRingRing(ZZ, "x", 5)
+        >>> x = R.gen
+
+        >>> R.compose(3 + x + 14*x**2, x**2 + x**3)
+        3 + x**2 + x**3 + 14*x**4 + O(x**5)
+
+        """
         R = self.ring
         series = R.compose(s.series, t.series)
         return self.from_element(series)
 
     def inverse(self, s: PowerSeriesElement[Er]) -> PowerSeriesElement[Er]:
-        """Return the inverse of a power series."""
+        """
+        Compute the multiplicative inverse of a power series.
+
+        Examples
+        ========
+
+        >>> from sympy import ZZ
+        >>> from sympy.polys.series import PowerSeriesRingRing
+        >>> R = PowerSeriesRingRing(ZZ, "x", 5)
+        >>> x = R.gen
+        >>> R.inverse(1 + x)
+        1 - x + x**2 - x**3 + x**4 + O(x**5)
+
+        """
         R = self.ring
         series = R.inverse(s.series)
         return self.from_element(series)
 
     def reversion(self, s: PowerSeriesElement[Er]) -> PowerSeriesElement[Er]:
-        """Return the reversion of a power series."""
+        """
+        Compute the compositional inverse of a power series.
+
+        Examples
+        ========
+
+        >>> from sympy import ZZ
+        >>> from sympy.polys.series import PowerSeriesRingRing
+        >>> R = PowerSeriesRingRing(ZZ, "x", 5)
+        >>> x = R.gen
+        >>> R.reversion(x + 4*x**2 + 8*x**3)
+        x - 4*x**2 + 24*x**3 - 160*x**4 + O(x**5)
+
+        """
         R = self.ring
         series = R.reversion(s.series)
         return self.from_element(series)
 
     def differentiate(self, s: PowerSeriesElement[Er]) -> PowerSeriesElement[Er]:
-        """Return the derivative of a power series."""
+        """
+        Compute the derivative of a power series.
+
+        Examples
+        ========
+
+        >>> from sympy import ZZ
+        >>> from sympy.polys.series import PowerSeriesRingRing
+        >>> R = PowerSeriesRingRing(ZZ, "x", 5)
+        >>> x = R.gen
+        >>> R.differentiate(10 + x + x**2 + x**3 + x**4 + R.order_term())
+        1 + 2*x + 3*x**2 + 4*x**3 + O(x**4)
+
+        """
+
         R = self.ring
         series = R.differentiate(s.series)
         return self.from_element(series)
@@ -287,97 +395,296 @@ class PowerSeriesRingField(PowerSeriesRingRing[Ef], Generic[Ef]):
         )
 
     def sqrt(self, s: PowerSeriesElement[Ef]) -> PowerSeriesElement[Ef]:
-        """Return the square root of a power series."""
+        """
+        Compute the square root of a power series.
+
+        Examples
+        ========
+
+        >>> from sympy import QQ
+        >>> from sympy.polys.series import PowerSeriesRingField
+        >>> R = PowerSeriesRingField(QQ, "x")
+        >>> x = R.gen
+        >>> R.sqrt(1 + 2*x + 4*x**2 + 8*x**3)
+        1 + x + 3/2*x**2 + 5/2*x**3 - 29/8*x**4 - 1/8*x**5 + O(x**6)
+
+        """
         R = self.ring
         series = R.sqrt(s.series)
         return self.from_element(series)
 
     def integrate(self, s: PowerSeriesElement[Ef]) -> PowerSeriesElement[Ef]:
-        """Return the integral of a power series."""
+        """
+        Compute the integral of a power series.
+
+        Examples
+        ========
+
+        >>> from sympy import QQ
+        >>> from sympy.polys.series import PowerSeriesRingField
+        >>> R = PowerSeriesRingField(QQ, "x")
+        >>> x = R.gen
+        >>> R.integrate(1 + x + x**2 + x**3 + x**4 + x**5 + R.order_term())
+        x + 1/2*x**2 + 1/3*x**3 + 1/4*x**4 + 1/5*x**5 + O(x**6)
+
+        """
         R = self.ring
         series = R.integrate(s.series)
         return self.from_element(series)
 
     def log(self, s: PowerSeriesElement[Ef]) -> PowerSeriesElement[Ef]:
-        """Return the logarithm of a power series."""
+        """
+        Compute the logarithm of a power series.
+
+        Examples
+        ========
+
+        >>> from sympy import QQ
+        >>> from sympy.polys.series import PowerSeriesRingField
+        >>> R = PowerSeriesRingField(QQ, "x")
+        >>> x = R.gen
+        >>> R.log(1 + x)
+        x - 1/2*x**2 + 1/3*x**3 - 1/4*x**4 + 1/5*x**5 + O(x**6)
+
+        """
         R = self.ring
         series = R.log(s.series)
         return self.from_element(series)
 
     def log1p(self, s: PowerSeriesElement[Ef]) -> PowerSeriesElement[Ef]:
-        """Return the logarithm of a power series plus one."""
+        """
+        Compute the logarithm of a power series plus one.
+
+        Examples
+        ========
+
+        >>> from sympy import QQ
+        >>> from sympy.polys.series import PowerSeriesRingField
+        >>> R = PowerSeriesRingField(QQ, "x")
+        >>> x = R.gen
+        >>> R.log1p(x)
+        x - 1/2*x**2 + 1/3*x**3 - 1/4*x**4 + 1/5*x**5 + O(x**6)
+
+        """
+
         R = self.ring
         series = R.log1p(s.series)
         return self.from_element(series)
 
     def exp(self, s: PowerSeriesElement[Ef]) -> PowerSeriesElement[Ef]:
-        """Return the exponential of a power series."""
+        """
+        Compute the exponential of a power series.
+
+        Examples
+        ========
+
+        >>> from sympy import QQ
+        >>> from sympy.polys.series import PowerSeriesRingField
+        >>> R = PowerSeriesRingField(QQ, "x")
+        >>> x = R.gen
+        >>> R.exp(x)
+        1 + x + 1/2*x**2 + 1/6*x**3 + 1/24*x**4 + 1/120*x**5 + O(x**6)
+
+        """
         R = self.ring
         series = R.exp(s.series)
         return self.from_element(series)
 
     def expm1(self, s: PowerSeriesElement[Ef]) -> PowerSeriesElement[Ef]:
-        """Return the exponential of a power series minus one."""
+        """
+        Compute the exponential of a power series minus one.
+
+        Examples
+        ========
+
+        >>> from sympy import QQ
+        >>> from sympy.polys.series import PowerSeriesRingField
+        >>> R = PowerSeriesRingField(QQ, "x")
+        >>> x = R.gen
+        >>> R.expm1(x)
+        x + 1/2*x**2 + 1/6*x**3 + 1/24*x**4 + 1/120*x**5 + O(x**6)
+
+        """
         R = self.ring
         series = R.expm1(s.series)
         return self.from_element(series)
 
     def atan(self, s: PowerSeriesElement[Ef]) -> PowerSeriesElement[Ef]:
-        """Return the arctangent of a power series."""
+        """
+        Compute the arctangent of a power series.
+
+        Examples
+        ========
+        >>> from sympy import QQ
+        >>> from sympy.polys.series import PowerSeriesRingField
+        >>> R = PowerSeriesRingField(QQ, "x")
+        >>> x = R.gen
+        >>> R.atan(x)
+        x - 1/3*x**3 + 1/5*x**5 + O(x**6)
+
+        """
         R = self.ring
         series = R.atan(s.series)
         return self.from_element(series)
 
     def atanh(self, s: PowerSeriesElement[Ef]) -> PowerSeriesElement[Ef]:
-        """Return the hyperbolic arctangent of a power series."""
+        """
+        Compute the hyperbolic arctangent of a power series.
+
+        Examples
+        ========
+        >>> from sympy import QQ
+        >>> from sympy.polys.series import PowerSeriesRingField
+        >>> R = PowerSeriesRingField(QQ, "x")
+        >>> x = R.gen
+        >>> R.atanh(x)
+        x + 1/3*x**3 + 1/5*x**5 + O(x**6)
+
+        """
         R = self.ring
         series = R.atanh(s.series)
         return self.from_element(series)
 
     def asin(self, s: PowerSeriesElement[Ef]) -> PowerSeriesElement[Ef]:
-        """Return the arcsine of a power series."""
+        """
+        Compute the arcsine of a power series.
+
+        Examples
+        ========
+        >>> from sympy import QQ
+        >>> from sympy.polys.series import PowerSeriesRingField
+        >>> R = PowerSeriesRingField(QQ, "x")
+        >>> x = R.gen
+        >>> R.asin(x)
+        x + 1/6*x**3 + 3/40*x**5 + O(x**6)
+
+        """
         R = self.ring
         series = R.asin(s.series)
         return self.from_element(series)
 
     def asinh(self, s: PowerSeriesElement[Ef]) -> PowerSeriesElement[Ef]:
-        """Return the hyperbolic arcsine of a power series."""
+        """
+        Compute the hyperbolic arcsine of a power series.
+
+        Examples
+        ========
+        >>> from sympy import QQ
+        >>> from sympy.polys.series import PowerSeriesRingField
+        >>> R = PowerSeriesRingField(QQ, "x")
+        >>> x = R.gen
+        >>> R.asinh(x)
+        x - 1/6*x**3 + 3/40*x**5 + O(x**6)
+
+        """
         R = self.ring
         series = R.asinh(s.series)
         return self.from_element(series)
 
     def tan(self, s: PowerSeriesElement[Ef]) -> PowerSeriesElement[Ef]:
-        """Return the tangent of a power series."""
+        """
+        Compute the tangent of a power series.
+
+        Examples
+        ========
+        >>> from sympy import QQ
+        >>> from sympy.polys.series import PowerSeriesRingField
+        >>> R = PowerSeriesRingField(QQ, "x")
+        >>> x = R.gen
+        >>> R.tan(x)
+        x + 1/3*x**3 + 2/15*x**5 + O(x**6)
+
+        """
         R = self.ring
         series = R.tan(s.series)
         return self.from_element(series)
 
     def tanh(self, s: PowerSeriesElement[Ef]) -> PowerSeriesElement[Ef]:
-        """Return the hyperbolic tangent of a power series."""
+        """
+        Compute the hyperbolic tangent of a power series.
+
+        Examples
+        ========
+        >>> from sympy import QQ
+        >>> from sympy.polys.series import PowerSeriesRingField
+        >>> R = PowerSeriesRingField(QQ, "x")
+        >>> x = R.gen
+        >>> R.tanh(x)
+        x - 1/3*x**3 + 2/15*x**5 + O(x**6)
+
+        """
         R = self.ring
         series = R.tanh(s.series)
         return self.from_element(series)
 
     def sin(self, s: PowerSeriesElement[Ef]) -> PowerSeriesElement[Ef]:
-        """Return the sine of a power series."""
+        """
+        Compute the sine of a power series.
+
+        Examples
+        ========
+        >>> from sympy import QQ
+        >>> from sympy.polys.series import PowerSeriesRingField
+        >>> R = PowerSeriesRingField(QQ, "x")
+        >>> x = R.gen
+        >>> R.sin(x)
+        x - 1/6*x**3 + 1/120*x**5 + O(x**6)
+
+        """
         R = self.ring
         series = R.sin(s.series)
         return self.from_element(series)
 
     def sinh(self, s: PowerSeriesElement[Ef]) -> PowerSeriesElement[Ef]:
-        """Return the hyperbolic sine of a power series."""
+        """
+        Compute the hyperbolic sine of a power series.
+
+        Examples
+        ========
+        >>> from sympy import QQ
+        >>> from sympy.polys.series import PowerSeriesRingField
+        >>> R = PowerSeriesRingField(QQ, "x")
+        >>> x = R.gen
+        >>> R.sinh(x)
+        x + 1/6*x**3 + 1/120*x**5 + O(x**6)
+
+        """
         R = self.ring
         series = R.sinh(s.series)
         return self.from_element(series)
 
     def cos(self, s: PowerSeriesElement[Ef]) -> PowerSeriesElement[Ef]:
-        """Return the cosine of a power series."""
+        """
+        Compute the cosine of a power series.
+
+        Examples
+        ========
+        >>> from sympy import QQ
+        >>> from sympy.polys.series import PowerSeriesRingField
+        >>> R = PowerSeriesRingField(QQ, "x")
+        >>> x = R.gen
+        >>> R.cos(x)
+        1 - 1/2*x**2 + 1/24*x**4 + O(x**6)
+
+        """
         R = self.ring
         series = R.cos(s.series)
         return self.from_element(series)
 
     def cosh(self, s: PowerSeriesElement[Ef]) -> PowerSeriesElement[Ef]:
-        """Return the hyperbolic cosine of a power series."""
+        """
+        Compute the hyperbolic cosine of a power series.
+
+        Examples
+        ========
+        >>> from sympy import QQ
+        >>> from sympy.polys.series import PowerSeriesRingField
+        >>> R = PowerSeriesRingField(QQ, "x")
+        >>> x = R.gen
+        >>> R.cosh(x)
+        1 + 1/2*x**2 + 1/24*x**4 + O(x**6)
+
+        """
         R = self.ring
         series = R.cosh(s.series)
         return self.from_element(series)
@@ -420,6 +727,20 @@ class PowerSeriesElement(DomainElement, CantSympify, Generic[Er]):
     def __add__(
         self, other: PowerSeriesElement[Er] | Er | int
     ) -> PowerSeriesElement[Er]:
+        """
+        Add two power Series.
+
+        Examples
+        ========
+
+        >>> from sympy import QQ
+        >>> from sympy.polys.series import PowerSeriesRingField
+        >>> R = PowerSeriesRingField(QQ, "x")
+        >>> x = R.gen
+        >>> R.sin(x) + R.cos(x)
+        1 + x - 1/2*x**2 - 1/6*x**3 + 1/24*x**4 + 1/120*x**5 + O(x**6)
+
+        """
         if not other:
             return self
 
@@ -446,6 +767,20 @@ class PowerSeriesElement(DomainElement, CantSympify, Generic[Er]):
     def __sub__(
         self, other: PowerSeriesElement[Er] | Er | int
     ) -> PowerSeriesElement[Er]:
+        """
+        Subtract two power Series.
+
+        Examples
+        ========
+
+        >>> from sympy import QQ
+        >>> from sympy.polys.series import PowerSeriesRingField
+        >>> R = PowerSeriesRingField(QQ, "x")
+        >>> x = R.gen
+        >>> R.sin(x) - R.cos(x)
+        -1 + x + 1/2*x**2 - 1/6*x**3 - 1/24*x**4 + 1/120*x**5 + O(x**6)
+
+        """
         if not other:
             return self
 
@@ -472,6 +807,20 @@ class PowerSeriesElement(DomainElement, CantSympify, Generic[Er]):
     def __mul__(
         self, other: PowerSeriesElement[Er] | Er | int
     ) -> PowerSeriesElement[Er]:
+        """
+        Multiply two power Series.
+
+        Examples
+        ========
+
+        >>> from sympy import QQ
+        >>> from sympy.polys.series import PowerSeriesRingField
+        >>> R = PowerSeriesRingField(QQ, "x")
+        >>> x = R.gen
+        >>> R.sin(x) * R.cos(x)
+        x - 2/3*x**3 + 2/15*x**5 + O(x**6)
+
+        """
         if not other:
             return self
 
@@ -496,8 +845,22 @@ class PowerSeriesElement(DomainElement, CantSympify, Generic[Er]):
             raise NotImplementedError
 
     def __pow__(self, n: int) -> PowerSeriesElement[Er]:
+        """
+        Raise a power Series to a non-negative integer power.
+
+        Examples
+        ========
+
+        >>> from sympy import QQ
+        >>> from sympy.polys.series import PowerSeriesRingField
+        >>> R = PowerSeriesRingField(QQ, "x")
+        >>> x = R.gen
+        >>> (1 + x)**3
+        1 + 3*x + 3*x**2 + x**3
+
+        """
         if n == 0:
-            return self.ring.zero
+            return self.ring.one
         if n == 1:
             return self
         else:
@@ -506,6 +869,21 @@ class PowerSeriesElement(DomainElement, CantSympify, Generic[Er]):
     def __truediv__(
         self, other: PowerSeriesElement[Er] | Er | int
     ) -> PowerSeriesElement[Er]:
+        """
+        Divide two power Series.
+
+        Examples
+        ========
+
+        >>> from sympy import QQ
+        >>> from sympy.polys.series import PowerSeriesRingField
+        >>> R = PowerSeriesRingField(QQ, "x")
+        >>> x = R.gen
+        >>> t = R.sin(x) / R.cos(x); t
+        x + 1/3*x**3 + 2/15*x**5 + O(x**6)
+        >>> R.tan(x) == t
+        True
+        """
         if not other:
             return self
 

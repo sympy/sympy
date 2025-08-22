@@ -1,8 +1,15 @@
+from __future__ import annotations
+
 from sympy.core.expr import Expr
 from sympy.polys.domains.ring import Ring
 from sympy.polys.domains.compositedomain import CompositeDomain
 from sympy.polys.domains.domain import Er, Domain
-from sympy.polys.series.ring import power_series_ring, PowerSeriesRingRing, PowerSeriesRingField, PowerSeriesElement
+from sympy.polys.series.ring import (
+    power_series_ring,
+    PowerSeriesRingRing,
+    PowerSeriesRingField,
+    PowerSeriesElement,
+)
 from sympy.polys.series.tring import TElement
 from sympy.utilities import public
 
@@ -10,6 +17,7 @@ from typing import Union, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from typing import TypeIs
+
 
 @public
 class PowerSeriesRing(Ring[PowerSeriesElement[Er]], CompositeDomain):
@@ -26,8 +34,8 @@ class PowerSeriesRing(Ring[PowerSeriesElement[Er]], CompositeDomain):
     symbol: Expr
     domain: Domain[Er]
 
-    def __init__(self, domain: Domain[Er], symbol = "x", prec: int = 6):
-        ring, gen = power_series_ring(symbol, domain, prec)
+    def __init__(self, domain: Domain[Er], symbol: Expr | str = "x", prec: int = 6):
+        ring, gen = power_series_ring(str(symbol), domain, prec)
 
         self.ring = ring
         self.gen = gen

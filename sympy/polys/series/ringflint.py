@@ -90,7 +90,7 @@ class FlintPowerSeriesRingZZ:
     >>> from sympy.polys.domains import ZZ
     >>> R, x = power_series_ring("x", ZZ, 6)
     >>> R
-    ZZ[[x], 6]
+    Power Series Ring in x over ZZ of size 6
     >>> type(x)
     <class 'sympy.polys.series.ring.PowerSeriesElement'>
 
@@ -507,7 +507,7 @@ class FlintPowerSeriesRingQQ:
     >>> from sympy.polys.domains import QQ
     >>> R, x = power_series_ring("x", QQ, 6)
     >>> R
-    QQ[[x], 6]
+    Power Series Ring in x over QQ of size 6
     >>> type(x)
     <class 'sympy.polys.series.ring.PowerSeriesElement'>
 

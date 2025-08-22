@@ -27,6 +27,7 @@ if TYPE_CHECKING:
     from sympy.polys.domains.realfield import RealField
     from sympy.polys.domains.complexfield import ComplexField
     from sympy.polys.domains.polynomialring import PolynomialRing
+    from sympy.polys.domains.powerseriesring import PowerSeriesRing
     from sympy.polys.domains.fractionfield import FractionField
     from sympy.polys.rings import PolyElement
     from sympy.polys.fields import FracElement
@@ -1011,6 +1012,11 @@ class Domain(Generic[Er]):
         """Returns a polynomial ring, i.e. `K[X]`. """
         from sympy.polys.domains.polynomialring import PolynomialRing
         return PolynomialRing(self, symbols, order)
+
+    def power_series_ring(self, *symbols: str | Expr, prec: int = 6) -> PowerSeriesRing:
+        """Returns a Power Series ring over ring or field. """
+        from sympy.polys.domains.powerseriesring import PowerSeriesRing
+        return PowerSeriesRing(self, symbols[0], prec)
 
     def frac_field(self, *symbols: str | Expr, order: str | MonomialOrder = lex) -> FractionField:
         """Returns a fraction field, i.e. `K(X)`. """
