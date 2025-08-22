@@ -369,6 +369,9 @@ class Expr(Basic, EvalfMixin):
         if not i:
             return i
         if int_valued(r):
+            r = self.round(15)
+            i = int(r)
+        if int_valued(r):
             # non-integer self should pass one of these tests
             if (self > i) is S.true:
                 return i

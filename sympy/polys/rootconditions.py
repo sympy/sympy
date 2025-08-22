@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Union, Sequence
+from typing import Union
 
 from sympy.polys.densebasic import dup
 from sympy.polys.domains.domain import Er, Domain
@@ -108,8 +108,8 @@ def _dup_routh_hurwitz_fraction_free(
         if len(p1s) >= 3:
             p1 = K.exquo(p1, p1s[-3])  # type: ignore
             p1 = K.exquo(p1, p1s[-3])  # type: ignore
-            p = dup_exquo_ground(p, p1s[-3], K)
-            p = dup_exquo_ground(p, p1s[-3], K)
+            p = dup_exquo_ground(p, p1s[-3], K) # type: ignore
+            p = dup_exquo_ground(p, p1s[-3], K) # type: ignore
 
         p1s.append(p1)
 

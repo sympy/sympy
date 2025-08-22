@@ -993,6 +993,18 @@ class PrettyPrinter(Printer):
         else:
             return self._print(1)/self._print(expr.den)
 
+    def _print_DiscreteTransferFunction(self, expr):
+        if not expr.num == 1:
+            num, den = expr.num, expr.den
+            res = Mul(num, Pow(den, -1, evaluate=False), evaluate=False)
+
+            result = self._print_Mul(res)
+            result = prettyForm(\
+                *result.right(f", sampling time: {expr.sampling_time}"))
+            return result
+        else:
+            return self._print(1)/self._print(expr.den)
+
     def _print_Series(self, expr):
         args = list(expr.args)
         for i, a in enumerate(expr.args):
@@ -1101,9 +1113,16 @@ class PrettyPrinter(Printer):
     def _print_TransferFunctionMatrix(self, expr):
         mat = self._print(expr._expr_mat)
         mat.baseline = mat.height() - 1
-        subscript = greek_unicode['tau'] if self._use_unicode else r'{t}'
+        if expr.sampling_time == 0:
+            subscript = greek_unicode['tau'] if self._use_unicode else r'{t}'
+        else:
+            subscript = r'{k}'
         mat = prettyForm(*mat.right(subscript))
-        return mat
+
+        if expr.sampling_time == 0:
+            return mat
+
+        return prettyForm(*mat.right(f", sampling time: {expr.sampling_time}"))
 
     def _print_StateSpace(self, expr):
         from sympy.matrices.expressions.blockmatrix import BlockMatrix

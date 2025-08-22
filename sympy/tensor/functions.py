@@ -132,7 +132,7 @@ def shape(expr):
     if hasattr(expr, "shape"):
         return expr.shape
     raise NoShapeError(
-        "%s does not have shape, or its type is not registered to shape()." % expr)
+        f"{expr} does not have shape, or its type is not registered to shape().")
 
 
 class NoShapeError(Exception):

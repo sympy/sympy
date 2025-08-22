@@ -89,8 +89,6 @@ Python Implementation
     :members:
 
 .. py:class:: USeries
-.. py:class:: MPZ
-.. py:class:: MPQ
 
 Flint Implementation
 ====================
@@ -102,3 +100,11 @@ Flint Implementation
 
 .. autoclass:: FlintPowerSeriesRingQQ
     :members:
+
+.. py:class:: ZZSeries
+.. py:class:: QQSeries
+
+.. py:class:: flint.types.fmpz_poly.fmpz_poly
+.. py:class:: flint.types.fmpq_poly.fmpq_poly
+.. py:class:: flint.types.fmpz_series.fmpz_series
+.. py:class:: flint.types.fmpq_series.fmpq_series

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Protocol, Sequence, TypeVar
 from sympy.polys.domains import Domain
-from sympy.polys.domains.domain import Er
+from sympy.polys.domains.domain import Ef, Er
 from sympy.polys.densebasic import dup, dup_pretty
 
 
@@ -44,8 +44,8 @@ class PowerSeriesRingProto(Protocol[TSeries, Er]):
         """Return string representation of the ring."""
         ...
 
-    def __call__(self, coeffs: Sequence, prec: int | None = None) -> TSeries:
-        """Return a power series element."""
+    def __call__(self, coeffs: Sequence[Er | int], prec: int | None = None) -> TSeries:
+        """Return a power series element over ZZ."""
         ...
 
     @property
@@ -93,6 +93,14 @@ class PowerSeriesRingProto(Protocol[TSeries, Er]):
         """Return the coefficients of a power series as a list."""
         ...
 
+    def to_dense(self, s: TSeries, /) -> dup[Er]:
+        """Return the coefficients of a power series as a dense list."""
+        ...
+
+    def series_prec(self, s: TSeries, /) -> int | None:
+        """Return the precision of a power series."""
+        ...
+
     def equal(self, s1: TSeries, s2: TSeries, /) -> bool | None:
         """Check if two power series are equal."""
         ...
@@ -135,4 +143,94 @@ class PowerSeriesRingProto(Protocol[TSeries, Er]):
 
     def truncate(self, s: TSeries, n: int, /) -> TSeries:
         """Truncate a power series to the first n terms."""
+        ...
+
+    def compose(self, s1: TSeries, s2: TSeries, /) -> TSeries:
+        """Compose two power series."""
+        ...
+
+    def inverse(self, s: TSeries, /) -> TSeries:
+        """Return the inverse of a power series."""
+        ...
+
+    def reversion(self, s: TSeries, /) -> TSeries:
+        """Return the reversion of a power series."""
+        ...
+
+    def differentiate(self, s: TSeries, /) -> TSeries:
+        """Return the derivative of a power series."""
+        ...
+
+
+class PowerSeriesRingProtoQQ(PowerSeriesRingProto[TSeries, Ef], Protocol[TSeries, Ef]):
+    """A protocol for a power series ring over QQ."""
+
+    def __call__(
+        self, coeffs: Sequence[Ef | int | tuple[int, int]], prec: int | None = None
+    ) -> TSeries:
+        """Return a power series element over QQ."""
+        ...
+
+    def sqrt(self, s: TSeries, /) -> TSeries:
+        """Return the square root of a power seris."""
+        ...
+
+    def log(self, s: TSeries, /) -> TSeries:
+        """Return the logarithm of a power series."""
+        ...
+
+    def log1p(self, s: TSeries, /) -> TSeries:
+        """Return the logarithm of (1 + s) for a power series with constant term."""
+        ...
+
+    def exp(self, s: TSeries, /) -> TSeries:
+        """Return the exponential of a power series."""
+        ...
+
+    def expm1(self, s: TSeries, /) -> TSeries:
+        """Return the exponential of a power series minus 1."""
+        ...
+
+    def atan(self, s: TSeries, /) -> TSeries:
+        """Return the arctangent of a power series."""
+        ...
+
+    def atanh(self, s: TSeries, /) -> TSeries:
+        """Return the hyperbolic arctangent of a power series."""
+        ...
+
+    def asin(self, s: TSeries, /) -> TSeries:
+        """Return the arcsine of a power series."""
+        ...
+
+    def asinh(self, s: TSeries, /) -> TSeries:
+        """Return the hyperbolic arcsine of a power series."""
+        ...
+
+    def tan(self, s: TSeries, /) -> TSeries:
+        """Return the tangent of a power series."""
+        ...
+
+    def tanh(self, s: TSeries, /) -> TSeries:
+        """Return the hyperbolic tangent of a power series."""
+        ...
+
+    def sin(self, s: TSeries, /) -> TSeries:
+        """Return the sine of a power series."""
+        ...
+
+    def sinh(self, s: TSeries, /) -> TSeries:
+        """Return the hyperbolic sine of a power series."""
+        ...
+
+    def cos(self, s: TSeries, /) -> TSeries:
+        """Return the cosine of a power series."""
+        ...
+
+    def cosh(self, s: TSeries, /) -> TSeries:
+        """Return the hyperbolic cosine of a power series."""
+        ...
+
+    def hypot(self, s1: TSeries, s2: TSeries, /) -> TSeries:
+        """Return the hypotenuse of two power series."""
         ...
