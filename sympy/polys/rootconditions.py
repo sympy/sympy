@@ -1,15 +1,15 @@
 from __future__ import annotations
+from typing import Union, Sequence
 
 from sympy.polys.densebasic import dup
 from sympy.polys.domains.domain import Er, Domain
-from sympy.external.gmpy import MPQ
+from sympy.external.gmpy import MPZ
 from sympy.core.numbers import I
 
-from sympy.polys.domains import EXRAW, EX, QQ, PolynomialRing, RationalField
-from sympy.polys.rings import PolyElement
+from sympy.polys.densearith import dup_exquo_ground
+from sympy.polys.domains import EXRAW, EX, QQ, ZZ
 from sympy.polys.densebasic import dup_convert
 from sympy.polys.densetools import dup_clear_denoms
-from sympy.core.mul import prod
 from sympy.core.exprtools import factor_terms
 from sympy.core.expr import Expr
 from sympy.simplify.simplify import signsimp
@@ -47,101 +47,79 @@ def dup_routh_hurwitz(f: dup[Er], K: Domain[Er]) -> list[Er]:
         raise NotImplementedError(
             "Routh-Hurwitz is not implemented for complex domains"
         )
+    if K.is_RR:
+        pq = dup_convert(f, K, QQ)
+        _, pz = dup_clear_denoms(pq, QQ, convert=True)
+        conds: list = _dup_routh_hurwitz_fraction_free(pz, ZZ)
+        return dup_convert(conds, ZZ, K)
 
     if K.is_QQ:
-        return _dup_routh_hurwitz_qq(f, K) # type: ignore
+        _, pz = dup_clear_denoms(f, K, convert=True)
+        conds = _dup_routh_hurwitz_fraction_free(pz, ZZ)
+        return dup_convert(conds, ZZ, K)
 
-    elif K.is_ZZ or K.is_RR:
-        pq = dup_convert(f, K, QQ)
-        conds = _dup_routh_hurwitz_qq(pq, QQ)
-        return dup_convert(conds, QQ, K)
+    elif K.is_ZZ:
+        return _dup_routh_hurwitz_fraction_free(f, K)
 
     elif K.is_PolynomialRing:
-        return _dup_routh_hurwitz_poly(f, K) # type: ignore
+        return _dup_routh_hurwitz_fraction_free(f, K)
 
     elif K.is_FractionField:
         _, pp = dup_clear_denoms(f, K, convert=True)
-        conds = _dup_routh_hurwitz_poly(pp, K) # type: ignore
+        conds = _dup_routh_hurwitz_fraction_free(pp, K)
         return dup_convert(conds, K.get_ring(), K)
 
     else:
         pe = dup_convert(f, K, EXRAW)
-        conds = _dup_routh_hurwitz_exraw(pe) # type: ignore
+        conds = _dup_routh_hurwitz_exraw(pe)
         return dup_convert(conds, EXRAW, K)
 
 
-def _dup_routh_hurwitz_qq(p: list[MPQ], K: RationalField) -> list[MPQ]:
-    if len(p) < 2:
+def _dup_routh_hurwitz_fraction_free(
+    p: Union[dup[Er], list[MPZ]], K: Domain[Er]
+) -> list[Er]:
+    if not p:
+        raise ValueError("zero polynomial")
+    elif len(p) == 1:
         return []
+    elif len(p) == 2:
+        return [p[0] * p[1]]  # type: ignore
+    elif len(p) == 3:
+        return [p[0] * p[1], p[0] * p[2]]  # type: ignore
 
-    elif p[0] * p[1] <= K.zero:
-        return [-K.one]
+    LC = p[0]
+    TC = p[-1]
+    monic = K.is_one(LC)  # type: ignore
 
-    qs = p.copy()
-    for i in range(1, len(p), 2):
-        qs[i - 1] -= p[i] * p[0] / p[1]
-    qs = qs[1:]
+    p1s = [p[1]]
 
-    return _dup_routh_hurwitz_qq(qs, K)
+    while len(p) > 3:
+        qs = [p[1] * qi for qi in p[1:]]
+        for i in range(1, len(qs) - 1, 2):
+            qs[i] = qs[i] - p[i + 2] * p[0]
+        p = qs
 
+        p1 = p[1]
+        if K.is_zero(p1):  # type: ignore
+            return [-K.one]
 
-def _dup_routh_hurwitz_poly(p: list[PolyElement[Er]], K: PolynomialRing[Er]):
-    return _rec_dup_routh_hurwitz_poly(p, [], K)
+        if len(p1s) >= 2:
+            p1 = K.exquo(p1, p1s[-2])  # type: ignore
+        if len(p1s) >= 3:
+            p1 = K.exquo(p1, p1s[-3])  # type: ignore
+            p1 = K.exquo(p1, p1s[-3])  # type: ignore
+            p = dup_exquo_ground(p, p1s[-3], K)
+            p = dup_exquo_ground(p, p1s[-3], K)
 
+        p1s.append(p1)
 
-def _rec_dup_routh_hurwitz_poly(p: list[PolyElement[Er]],
-                            previous_cond: list[PolyElement[Er]],
-                            K: PolynomialRing[Er]):
-    if len(p) < 2:
-        return previous_cond
+    if not monic:
+        for i in range(0, len(p1s), 2):
+            p1s[i] *= LC
 
-    qs = [p[1] * qi for qi in p]
-    for i in range(1, len(p), 2):
-        qs[i - 1] -= p[i] * p[0]
-    qs = qs[1:]
+    p1s.append(LC * TC)
 
-    cond = p[0] * p[1]
-    cond = _clear_cond_poly(cond, previous_cond, K)
-
-    previous_cond.append(cond)
-
-    return _rec_dup_routh_hurwitz_poly(qs, previous_cond, K)
-
-
-def _clear_cond_poly(cond: PolyElement[Er], previous_cond, K):
-    # Divide out factors known to be positive from previous conditions.
-
-    # There are not controls in that functions on cond and previous_cond,
-    # we assume that at this point, there are no zeroes, ones and negative ones
-    # in previous_cond.
-    # If there are, there will be an infinite while loop.
-    if cond.is_zero:
-        return K(-1)
-
-    for c in previous_cond:
-        if is_totally_ground(c):
-            continue
-
-        cond_quo, r = K.div(cond, c)
-        while not r:
-            cond = cond_quo
-            cond_quo, r = K.div(cond, c)
-
-    # Remove factors of even degree and reduce odd degree factors
-    common_factor, facs_m = cond.sqf_list()
-
-    cond = prod([fac for fac, m in facs_m if m % 2 == 1], K.one)
-    if common_factor < 0:
-        cond = -K.one*cond
-
-    return cond
-
-
-def is_totally_ground(c: PolyElement[Er]) -> bool:
-    """Check if the condition is ground in all subrings"""
-    while c.ring.domain.is_PolynomialRing and c.is_ground:
-        c = c.LC
-    return c.is_ground
+    return p1s  # type: ignore
 
 
 def _dup_routh_hurwitz_exraw(p: list[Expr]) -> list[Expr]:
@@ -159,7 +137,7 @@ def _dup_routh_hurwitz_exraw_div(p: list[Expr]) -> list[Expr]:
     if len(p) < 2:
         return []
 
-    if (p[0]*p[1]).is_nonpositive:
+    if (p[0] * p[1]).is_nonpositive:
         return [-EXRAW.one]
 
     qs = p.copy()
@@ -175,13 +153,19 @@ def _dup_routh_hurwitz_exraw_no_div(p: list[Expr]) -> list[Expr]:
     Stability check without divisions, used for EXRAW.
 
     """
-    return _rec_dup_routh_hurwitz_exraw_no_div(p, [])
+
+    # previous_cond: [[normal conditions],
+    #                 {inequalities}]
+
+    previous_cond: list = [[], set()]
+    return _rec_dup_routh_hurwitz_exraw_no_div(p, previous_cond)
 
 
-def _rec_dup_routh_hurwitz_exraw_no_div(p: list[Expr],
-                                previous_cond: list[tuple[int, set[Expr]]]) -> list[Expr]:
+def _rec_dup_routh_hurwitz_exraw_no_div(
+    p: list[Expr], previous_cond: list
+) -> list[Expr]:
     if len(p) < 2:
-        return []
+        return [ineq**2 for ineq in previous_cond[1]]
 
     qs = [p[1] * qi for qi in p]
     for i in range(1, len(p), 2):
@@ -192,7 +176,7 @@ def _rec_dup_routh_hurwitz_exraw_no_div(p: list[Expr],
     return [cond] + _rec_dup_routh_hurwitz_exraw_no_div(qs, previous_cond)
 
 
-def _clear_cond_exraw(cond: Expr, previous_cond: list[tuple[int, set]]) -> tuple[Expr, list[tuple[int, set[Expr]]]]:
+def _clear_cond_exraw(cond: Expr, previous_cond: list) -> tuple[Expr, list[list]]:
     """
     Clear the condition by removing even powers and simplifying odd powers.
     Also, remove factors that are already present in previous conditions.
@@ -201,7 +185,7 @@ def _clear_cond_exraw(cond: Expr, previous_cond: list[tuple[int, set]]) -> tuple
     `previous_cond` list with the new condition.
 
     """
-    factors_repr: tuple[int, set[Expr]] = _build_simplified_factors(cond, previous_cond)
+    factors_repr, inequalities = _build_simplified_factors(cond, previous_cond)
 
     first_factor_iteration = factors_repr
 
@@ -211,19 +195,24 @@ def _clear_cond_exraw(cond: Expr, previous_cond: list[tuple[int, set]]) -> tuple
     # Because the point of the algorithm for EXRAW is to be fast, we prefer to
     # use `factor_terms`.
     new_cond = Mul(factors_repr[0], *factors_repr[1])
-    factors_repr = _build_simplified_factors(factor_terms(new_cond), previous_cond)
+    factors_repr, inequalities2 = _build_simplified_factors(
+        factor_terms(new_cond), previous_cond
+    )
 
+    inequalities.update(inequalities2)
     # It's important to keep the first factor iteration, because it follows the
     # pattern of the unsimplified coefficients, which appears in the next
     # iteration of the Routh-Hurwitz algorithm.
     # Adding the last factor form, probably lead to a worse simplification.
-    previous_cond = previous_cond + [first_factor_iteration]
+    previous_cond[0] = previous_cond[0] + [first_factor_iteration]
+    previous_cond[1] = previous_cond[1] | inequalities
 
     return Mul(factors_repr[0], *factors_repr[1]), previous_cond
 
 
-def _build_simplified_factors(cond: Expr,
-                              previous_cond: list[tuple[int, set[Expr]]]) -> tuple[int, set[Expr]]:
+def _build_simplified_factors(
+    cond: Expr, previous_cond: list
+) -> tuple[tuple[int, set[Expr]], set[Expr]]:
     """
     Build a set of simplified factors from the expression rem oving even powers
     and simplifying odd powers.
@@ -238,22 +227,27 @@ def _build_simplified_factors(cond: Expr,
 
     # Build a set of factors without even powers
     factors = set()
+    inequalities = set()
 
     for b, e in cond.as_powers_dict().items():
         if not e.is_Integer:
             factors.add(b**e)
         elif e % 2 != 0:
             factors.add(b)
+        else:
+            inequalities.add(b)
 
     # Remove factors that are already present in previous conditions.
 
-    for sign_prev, factors_prev  in previous_cond:
+    for sign_prev, factors_prev in previous_cond[0]:
         if factors.issuperset(factors_prev):
             sign *= sign_prev
             factors -= factors_prev
 
+        inequalities -= factors_prev
 
-    return (sign, factors)
+    return (sign, factors), inequalities
+
 
 # TODO Implement conditions for discrete time systems
 # Possible ways are:

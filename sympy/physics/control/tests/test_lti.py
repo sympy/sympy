@@ -21,7 +21,7 @@ from sympy.physics.control import (TransferFunction, PIDController, Series, Para
     Feedback, TransferFunctionMatrix, MIMOSeries, MIMOParallel, MIMOFeedback,
     StateSpace, gbt, bilinear, forward_diff, backward_diff, phase_margin, gain_margin)
 from sympy.testing.pytest import raises
-from sympy.logic.boolalg import false
+from sympy.logic.boolalg import false, true
 
 a, x, b, c, s, g, d, p, k, tau, zeta, wn, T = symbols('a, x, b, c, s, g, d, p, k,\
     tau, zeta, wn, T')
@@ -295,10 +295,10 @@ def test_TransferFunction_functions():
     stab_cond = TransferFunction(1, generic_den, s).get_asymptotic_stability_conditions()
     assert stab_cond == [
         b3*b4 > 0, -b1*b4 + b2*b3 > 0,
-        -b0*b3**3 -b1**2*b3*b4 + b1*b2*b3**2 > 0,
-        b0*b3 > 0]
+        -b0*b3**2*b4 -b1**2*b4**2 + b1*b2*b3*b4 > 0,
+        b0*b4 > 0]
     assert TransferFunction(1, (s+1)*(s+2*I)*(s-2*I), s).get_asymptotic_stability_conditions() == [false]
-    assert TransferFunction(1, (s+1)*(s+2)*(s+1/2), s).get_asymptotic_stability_conditions() == []
+    assert TransferFunction(1, (s+1)*(s+2)*(s+1/2), s).get_asymptotic_stability_conditions() == [true, true, true]
     assert stable_tf.get_asymptotic_stability_conditions() == [True]
 
     # Zeros of a transfer function.
@@ -2313,4 +2313,4 @@ def test_StateSpace_stability():
     A2 = Matrix([[1,0,0], [0,-1,k], [0,0,-1]])
     ss2 = StateSpace(A2, B, C, D)
     ineq = ss2.get_asymptotic_stability_conditions()
-    assert ineq == [True, False, False]
+    assert ineq == [False]

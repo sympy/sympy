@@ -4090,37 +4090,37 @@ def test_hurwitz_conditions():
     p1_ = Poly(b4 * s**4 + b3 * s**3 + b2 * s**2 + b1 * s + b0, s,
                domain = EXRAW)
 
-    conds = p1.hurwitz_conditions()
-    conds_ = p1_.hurwitz_conditions()
-    assert [p1.domain.to_sympy(c) for c in conds] == [
+    assert p1.hurwitz_conditions() == [
         b3*b4, -b1*b4 + b2*b3,
-        -b0*b3**3 - b1**2*b3*b4 + b1*b2*b3**2,
-        b0*b3]
-    assert [p1_.domain.to_sympy(c) for c in conds_] == [
+        -b0*b3**2*b4 - b1**2*b4**2 + b1*b2*b3*b4,
+        b0*b4]
+    assert p1_.hurwitz_conditions() == [
         b3*b4, -b1*b4 + b2*b3,
         -b3*(b0*b3**2+b1*(b1*b4 - b2*b3)),
         b0*b3]
 
     p2 = Poly(-3*s**2 - 2*s - b0, s)
-    assert[p2.domain.to_sympy(c) for c in p2.hurwitz_conditions()] == [1, b0]
+    assert p2.hurwitz_conditions() == [6, 3*b0]
 
     a_ = symbols('a', nonpositive = True)
 
     p3 = Poly(b0*s**2 + a_*s + 3, s)
-    assert [p3.domain.to_sympy(c) for c in p3.hurwitz_conditions()] == \
-           [a_ * b0, a_]
+    assert p3.hurwitz_conditions() == [a_ * b0, 3 * b0]
 
     p4 = Poly(b0*s**2 + a_*s - 3, s)
-    assert [p4.domain.to_sympy(c) for c in p4.hurwitz_conditions()] == \
-           [a_ * b0, -a_]
+    assert p4.hurwitz_conditions() == [a_ * b0, -3 * b0]
 
     p5 = Poly(b0 + b1*s**2 + b1*s + b3*s**4 + b3*s**3, s)
     p5_ = Poly(b0 + b1*s**2 + b1*s + b3*s**4 + b3*s**3, s, domain = EXRAW)
 
-    assert [p5.domain.to_sympy(c) for c in p5.hurwitz_conditions()] == \
-           [1, -1, -1, -1]
-    assert [p5_.domain.to_sympy(c) for c in p5_.hurwitz_conditions()] == \
-           [1, 0, 1, 1]
+    assert p5.hurwitz_conditions() == [-1]
+    assert p5_.hurwitz_conditions() == [1, 0, 1, 1, b3**2]
+
+    p6 = Poly(b0 * s**2 + b1**2 * s + b2, s)
+    p6_ = Poly(b0 * s**2 + b1**2 * s + b2, s, domain = EXRAW)
+
+    assert p6.hurwitz_conditions() == [b0 * b1**2, b2 * b0]
+    assert p6_.hurwitz_conditions() == [b0, b2, b1**2]
 
     # test for issue https://github.com/sympy/sympy/issues/28010
     # In that test we want to be sure that negative_real_conditions works fast
@@ -4141,7 +4141,7 @@ def test_hurwitz_conditions():
     common_denom = (I_L*I_T + I_L*d_T**2*m_T + I_T*d_L**2*m_L +
                     I_T*l_L**2*m_T + d_L**2*d_T**2*m_L*m_T)
 
-    p6 = PurePoly(
+    p7 = PurePoly(
         s**4 + s**3/common_denom*(
             I_L*k_13*s_13 + I_T*k_02*s_02- I_T*k_03*s_03 - I_T*k_12*s_12 +
             I_T*k_13*s_13 + d_L**2*k_13*m_L*s_13 + d_T**2*k_02*m_T*s_02 -
@@ -4167,4 +4167,4 @@ def test_hurwitz_conditions():
             d_T*g*k_10*m_T*s_10 - d_T*g*k_11*m_T*s_11 - g*k_11*l_L*m_T*s_11 +
             k_00*k_11*s_00*s_11 - k_01*k_10*s_01*s_10), s, domain = EXRAW)
 
-    p6.hurwitz_conditions()
+    p7.hurwitz_conditions()

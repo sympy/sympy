@@ -1219,7 +1219,7 @@ class TransferFunction(SISOLinearTimeInvariant):
         >>> p1 = b1*s**3 + b2*s**2 + b3*s + b4
         >>> tf1 = TransferFunction(1, p1, s)
         >>> tf1.get_asymptotic_stability_conditions()
-        [b_1*b_2 > 0, -b_1*b_4 + b_2*b_3 > 0, b_2*b_4 > 0]
+        [b_1*b_2 > 0, -b_1*b_4 + b_2*b_3 > 0, b_1*b_4 > 0]
 
         >>> p2 = s**4 + 3*s**3 + 6*s**2 + 12*s + 8
         >>> solve(p2)
@@ -1233,7 +1233,7 @@ class TransferFunction(SISOLinearTimeInvariant):
         [-12.0, -1.0, -2.0 - 0.707106781186548*I, -2.0 + 0.707106781186548*I]
         >>> tf3 = TransferFunction(1, p3, s)
         >>> tf3.get_asymptotic_stability_conditions()
-        []
+        [True, True, True, True]
 
         >>> k = symbols('k')
         >>> tf4 = TransferFunction(-20*s + 20, s**3 + 2*s**2 + 100*s, s)
@@ -1241,7 +1241,7 @@ class TransferFunction(SISOLinearTimeInvariant):
         >>> feedback = Feedback(tf4, tf5).doit()
         >>> ineq = feedback.get_asymptotic_stability_conditions(cancel_poles_zeros = True)
         >>> ineq
-        [True, 10*k**2 - 3*k > 0, k > 0]
+        [2*k**2 > 0, 200*k**2 - 60*k > 0, 20*k > 0]
         >>> reduce_inequalities(ineq)
         (3/10 < k) & (k < oo)
 
