@@ -26,9 +26,7 @@ if TYPE_CHECKING:
     SExpr = Expr | complex
 
 def wrap_angle(angle):
-    if isinstance(angle, Number):
-        return (angle + pi) % (2*pi) - pi
-    if isinstance(angle, Expr) and angle.is_number:
+    if isinstance(angle, (Number, Expr)) and getattr(angle, 'is_number', True):
         return (angle + pi) % (2*pi) - pi
     return angle
 
