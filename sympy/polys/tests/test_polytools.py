@@ -4085,7 +4085,14 @@ def test_issue_28156():
 
 
 def test_hurwitz_conditions():
+    raises(ValueError, lambda: Poly(0, x).hurwitz_conditions())
+    raises(NotImplementedError, lambda: Poly(x**2 + (1+I)).hurwitz_conditions())
+    assert Poly(1,x).hurwitz_conditions() == []
+
     b0, b1, b2, b3, b4 = symbols('b_0 b_1 b_2 b_3 b_4')
+
+    assert Poly(b1 * x + b0, x).hurwitz_conditions() == [b0 * b1]
+
     p1 = Poly(b4 * s**4 + b3 * s**3 + b2 * s**2 + b1 * s + b0, s)
     p1_ = Poly(b4 * s**4 + b3 * s**3 + b2 * s**2 + b1 * s + b0, s,
                domain = EXRAW)
@@ -4168,3 +4175,31 @@ def test_hurwitz_conditions():
             k_00*k_11*s_00*s_11 - k_01*k_10*s_01*s_10), s, domain = EXRAW)
 
     p7.hurwitz_conditions()
+
+    p8 = Poly(y*x**2 + y**z*x+2, x, domain = EXRAW)
+    assert p8.hurwitz_conditions() == [y**(z+1), 2*y**(3*z)]
+
+    p9 = Poly((x+12)*(x+2345)*(x+2332)*(x+843), x)
+    assert all(c > 0 for c in p9.hurwitz_conditions())
+
+    p10 = Poly((x+12)*(x-2345)*(x+2332)*(x+843), x)
+    assert any(c <= 0 for c in p10.hurwitz_conditions())
+
+    p11 = Poly((x+12)*(x+2345)*(x+2332)*(x+843)*x, x)
+    assert any(c <= 0 for c in p11.hurwitz_conditions())
+
+    p12 = Poly((x+12.234)*(x+0.012)*(x**2+0.03*x+0.03**2+1.23), x)
+    assert all(c > 0 for c in p12.hurwitz_conditions())
+
+    assert all(c > 0 for c in p12.set_domain(QQ).hurwitz_conditions())
+    assert all(c > 0 for c in p12.set_domain(EXRAW).hurwitz_conditions())
+
+    p13 = Poly((x+8.412)*(x+0.2)*(x-0.1942)*(x**2+0.0175*x+0.0175**2+0.23), x)
+    assert any(c <= 0 for c in p13.hurwitz_conditions())
+
+    assert any(c <= 0 for c in p13.set_domain(QQ).hurwitz_conditions())
+    assert any(c <= 0 for c in p13.set_domain(EXRAW).hurwitz_conditions())
+
+    p14 = Poly(x**2 + 1/y, x)
+    assert 0 in p14.hurwitz_conditions()
+    assert 0 in p14.set_domain(EXRAW).hurwitz_conditions()

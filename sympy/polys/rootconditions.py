@@ -26,8 +26,9 @@ def dup_routh_hurwitz(f: dup[Er], K: Domain[Er]) -> list[Er]:
     Note
     ====
 
-    This method assumes that the leading coefficient is non-zero.
-    In the opposite case, additional verification is required.
+    This method assumes that the leading coefficient is nonzero.
+    If it were zero, the polynomial would have lower degree and different
+    conditions would be needed to test whether it is a Hurwitz polynomial.
 
     Depending on the domain, a different approach is used.
     In non-numeric cases, the algorithm is modified to avoid divisions.
@@ -49,12 +50,12 @@ def dup_routh_hurwitz(f: dup[Er], K: Domain[Er]) -> list[Er]:
         pq = dup_convert(f, K, QQ)
         _, pz = dup_clear_denoms(pq, QQ, convert=True)
         conds: list = _dup_routh_hurwitz_fraction_free(pz, ZZ)
-        return dup_convert(conds, ZZ, K)
+        return [K.convert_from(c, ZZ) for c in conds]
 
     if K.is_QQ:
         _, pz = dup_clear_denoms(f, K, convert=True)
         conds = _dup_routh_hurwitz_fraction_free(pz, ZZ)
-        return dup_convert(conds, ZZ, K)
+        return [K.convert_from(c, ZZ) for c in conds]
 
     elif K.is_ZZ:
         return _dup_routh_hurwitz_fraction_free(f, K)
@@ -65,12 +66,12 @@ def dup_routh_hurwitz(f: dup[Er], K: Domain[Er]) -> list[Er]:
     elif K.is_FractionField:
         _, pp = dup_clear_denoms(f, K, convert=True)
         conds = _dup_routh_hurwitz_fraction_free(pp, K)
-        return dup_convert(conds, K.get_ring(), K)
+        return [K.convert_from(c, K.get_ring()) for c in conds]
 
     else:
         pe = dup_convert(f, K, EXRAW)
         conds = _dup_routh_hurwitz_exraw(pe)
-        return dup_convert(conds, EXRAW, K)
+        return [K.convert_from(c, EXRAW) for c in conds]
 
 
 def _dup_routh_hurwitz_fraction_free(p: dup[Er], K: Domain[Er]) -> list[Er]:

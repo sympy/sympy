@@ -4176,7 +4176,8 @@ class Poly(Basic):
 
     def hurwitz_conditions(f):
         """
-        Compute the conditions that ensure ``f`` is a Hurwitz polynomial.
+        Compute the conditions that ensure ``f`` is a Hurwitz polynomial of
+        full degree.
 
         Explanation
         ===========
@@ -4188,8 +4189,9 @@ class Poly(Basic):
         Note
         ====
 
-        This method assumes that the leading coefficient is non-zero.
-        In the opposite case, additional verification is required.
+        This method assumes that the leading coefficient is nonzero.
+        If it were zero, the polynomial would have lower degree and different
+        conditions would be needed to test whether it is a Hurwitz polynomial.
 
         If you need a fast computation of the conditions, consider using the
         domain ``EXRAW``. Conditions may be less simplified, but the computation
