@@ -868,9 +868,9 @@ class Structure2d:
 
         unwarap_x = self._find_unwrapped_position(x, y)
 
-        Rh = Symbol(f"R_h__{round(x,2)},__{round(y,2)}")
-        Rv = Symbol(f"R_v__{round(x,2)},__{round(y,2)}")
-        T = Symbol(f"T__{round(x,2)},__{round(y,2)}")
+        Rh = Symbol(f"R_h (x={round(x,2)},y={round(y,2)})")
+        Rv = Symbol(f"R_v (x={round(x,2)},y={round(y,2)})")
+        T = Symbol(f"T (x={round(x,2)},y={round(y,2)})")
 
         if type == "pin" or type == "roller" or type == "fixed":
             pass

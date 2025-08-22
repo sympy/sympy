@@ -10,9 +10,9 @@ import math
 x = Symbol('x')
 F = Symbol('F')
 # Rv_0, Rh_0, Rv_4 = symbols('R_v__0,__0 R_h__0,__0 R_v__4,__0')
-Rv_0 = Symbol('R_v__0,__0')
-Rh_0 = Symbol('R_h__0,__0')
-Rv_4 = Symbol('R_v__4,__0')
+Rv_0 = Symbol('R_v (x=0,y=0)')
+Rh_0 = Symbol('R_h (x=0,y=0)')
+Rv_4 = Symbol('R_v (x=4,y=0)')
 
 
 
@@ -389,9 +389,9 @@ def test_numerical_distload(test_beam_fixture, test_data):
 
 # Test Data Definitions
 # Rv_7, Rh_7, T_7 = symbols('R_v__7,__-1 R_h__7,__-1 T__7,__-1')
-Rv_7 = Symbol('R_v__7,__-1')
-Rh_7 = Symbol('R_h__7,__-1')
-T_7 = Symbol('T__7,__-1')
+Rv_7 = Symbol('R_v (x=7,y=-1)')
+Rh_7 = Symbol('R_h (x=7,y=-1)')
+T_7 = Symbol('T (x=7,y=-1)')
 
 numerical_test_data = [
     {
@@ -480,9 +480,12 @@ def test_frame_problems():
     s.apply_load(4, 0, 6, 270, 0, 6, 1.5)
     s.apply_support(11,-1,"fixed")
     result = s.solve_for_reaction_loads()
-    assert result[Symbol('R_v__11,__-1')] == -55
-    assert result[Symbol('R_h__11,__-1')] == -15
-    assert result[Symbol('T__11,__-1')] == -435
+
+    assert result[Symbol('R_v (x=11,y=-1)')] == -55
+
+    assert result[Symbol('R_h (x=11,y=-1)')] == -15
+
+    assert result[Symbol('T (x=11,y=-1)')] == -435
 
     expected_axial_force = -15*SingularityFunction(x, 0, 0) + 27*SingularityFunction(x, 4, 0) + 18*SingularityFunction(x, 4, 1)/5 - 18*SingularityFunction(x, Rational(13,2), 1)/5 - 74*SingularityFunction(x, 9, 0) + 53*SingularityFunction(x, 14, 0)
     assert simplify(s.N.expand()) == simplify(expected_axial_force.expand())
@@ -504,9 +507,12 @@ def test_frame_problems():
     s.apply_load(4, 0, 6, 0, 0, 6, 1.5)
     s.apply_support(11,-1,"fixed")
     result = s.solve_for_reaction_loads()
-    assert result[Symbol('R_v__11,__-1')] == -15
-    assert result[Symbol('R_h__11,__-1')] == -55
-    assert result[Symbol('T__11,__-1')] == Rational(-9875,100)
+
+    assert result[Symbol('R_v (x=11,y=-1)')] == -15
+
+    assert result[Symbol('R_h (x=11,y=-1)')] == -55
+
+    assert result[Symbol('T (x=11,y=-1)')] == Rational(-9875,100)
 
     expected_axial_force = -6*SingularityFunction(x, 0, 1) - 16*SingularityFunction(x, 2, 0) + 17*SingularityFunction(x, 4, 0) + 6*SingularityFunction(x, 4, 1)/5 + 24*SingularityFunction(x, Rational(13,2), 1)/5 - 10*SingularityFunction(x, 9, 0) + 45*SingularityFunction(x, 14, 0)
     assert simplify(s.N.expand()) == simplify(expected_axial_force.expand())
@@ -527,9 +533,12 @@ def test_frame_problems():
     s.apply_load(4, 0, 6, 270, 0, 6, 1.5)
     s.apply_support(11,-1,"fixed")
     result = s.solve_for_reaction_loads()
-    assert result[Symbol('R_v__11,__-1')] == -31
-    assert result[Symbol('R_h__11,__-1')] == -15
-    assert result[Symbol('T__11,__-1')] == -251
+
+    assert result[Symbol('R_v (x=11,y=-1)')] == -31
+
+    assert result[Symbol('R_h (x=11,y=-1)')] == -15
+
+    assert result[Symbol('T (x=11,y=-1)')] == -251
 
     expected_axial_force = -12*SingularityFunction(x, 4, 0)/5 + 18*SingularityFunction(x, 4, 1)/5 - 18*SingularityFunction(x, Rational(13,2), 1)/5 - 202*SingularityFunction(x, 9, 0)/5 + 169*SingularityFunction(x, 14, 0)/5
     assert simplify(s.N.expand()) == simplify(expected_axial_force.expand())
@@ -549,9 +558,12 @@ def test_frame_problems():
     s.apply_load(0, 0, 16, 270, -1)
     s.apply_support(11,-1,"fixed")
     result = s.solve_for_reaction_loads()
-    assert result[Symbol('R_v__11,__-1')] == -16
-    assert result[Symbol('R_h__11,__-1')] == -15
-    assert result[Symbol('T__11,__-1')] == -161
+
+    assert result[Symbol('R_v (x=11,y=-1)')] == -16
+
+    assert result[Symbol('R_h (x=11,y=-1)')] == -15
+
+    assert result[Symbol('T (x=11,y=-1)')] == -161
 
     expected_axial_force = -12*SingularityFunction(x, 4, 0)/5 - 97*SingularityFunction(x, 9, 0)/5 + 109*SingularityFunction(x, 14, 0)/5
     assert simplify(s.N.expand()) == simplify(expected_axial_force.expand())
@@ -573,10 +585,14 @@ def test_frame_problems():
     s.apply_support(0, 0,"pin")
     s.apply_support(6, 0,"pin")
     result = s.solve_for_reaction_loads()
-    assert result[Symbol('R_v__0,__0')] == 200
-    assert result[Symbol('R_h__0,__0')] == -300
-    assert result[Symbol('R_v__6,__0')] == -200
-    assert result[Symbol('R_h__6,__0')] == -300
+
+    assert result[Symbol('R_v (x=0,y=0)')] == 200
+
+    assert result[Symbol('R_h (x=0,y=0)')] == -300
+
+    assert result[Symbol('R_v (x=6,y=0)')] == -200
+
+    assert result[Symbol('R_h (x=6,y=0)')] == -300
 
     expected_axial_force = 340*SingularityFunction(x, 0, 0) - 36*SingularityFunction(x, 0, 1) - 320*SingularityFunction(x, 5, 0) + 340*SingularityFunction(x, 10, 0) + 36*SingularityFunction(x, 10, 1)
     assert simplify(s.N.expand()) == simplify(expected_axial_force.expand())
@@ -595,10 +611,14 @@ def test_frame_problems():
     s.apply_support(0, 0,"pin")
     s.apply_support(6, 0,"pin")
     result = s.solve_for_reaction_loads()
-    assert result[Symbol('R_v__0,__0')] == 40
-    assert result[Symbol('R_h__0,__0')] == -30
-    assert result[Symbol('R_v__6,__0')] == -40
-    assert result[Symbol('R_h__6,__0')] == -30
+
+    assert result[Symbol('R_v (x=0,y=0)')] == 40
+
+    assert result[Symbol('R_h (x=0,y=0)')] == -30
+
+    assert result[Symbol('R_v (x=6,y=0)')] == -40
+
+    assert result[Symbol('R_h (x=6,y=0)')] == -30
 
     expected_axial_force = 50*SingularityFunction(x, 0, 0) - 100*SingularityFunction(x, 5, 0) + 50*SingularityFunction(x, 10, 0)
     assert simplify(s.N.expand()) == simplify(expected_axial_force.expand())
@@ -617,10 +637,14 @@ def test_frame_problems():
     s.apply_support(0, 0,"pin")
     s.apply_support(6, 0,"pin")
     result = s.solve_for_reaction_loads()
-    assert result[Symbol('R_v__0,__0')] == -30
-    assert result[Symbol('R_h__0,__0')] == Rational(7920,427)
-    assert result[Symbol('R_v__6,__0')] == -30
-    assert result[Symbol('R_h__6,__0')] == Rational(-7920,427)
+
+    assert result[Symbol('R_v (x=0,y=0)')] == -30
+
+    assert result[Symbol('R_h (x=0,y=0)')] == Rational(7920,427)
+
+    assert result[Symbol('R_v (x=6,y=0)')] == -30
+
+    assert result[Symbol('R_h (x=6,y=0)')] == Rational(-7920,427)
 
     expected_axial_force = -15000*SingularityFunction(x, 0, 0)/427 + 15000*SingularityFunction(x, 10, 0)/427
     assert simplify(s.N.expand()) == simplify(expected_axial_force.expand())
@@ -639,10 +663,14 @@ def test_frame_problems():
     s.apply_support(0, 0,"pin")
     s.apply_support(6, 0,"pin")
     result = s.solve_for_reaction_loads()
-    assert result[Symbol('R_v__0,__0')] == -60
-    assert result[Symbol('R_h__0,__0')] == 0
-    assert result[Symbol('R_v__6,__0')] == 0
-    assert result[Symbol('R_h__6,__0')] == 0
+
+    assert result[Symbol('R_v (x=0,y=0)')] == -60
+
+    assert result[Symbol('R_h (x=0,y=0)')] == 0
+
+    assert result[Symbol('R_v (x=6,y=0)')] == 0
+
+    assert result[Symbol('R_h (x=6,y=0)')] == 0
 
     expected_axial_force = 0
     assert simplify(s.N.expand()) == simplify(expected_axial_force)
@@ -661,10 +689,14 @@ def test_frame_problems():
     s.apply_support(0, 0,"pin")
     s.apply_support(6, 0,"pin")
     result = s.solve_for_reaction_loads()
-    assert result[Symbol('R_v__0,__0')] == 0
-    assert result[Symbol('R_h__0,__0')] == -60
-    assert result[Symbol('R_v__6,__0')] == 0
-    assert result[Symbol('R_h__6,__0')] == 0
+
+    assert result[Symbol('R_v (x=0,y=0)')] == 0
+
+    assert result[Symbol('R_h (x=0,y=0)')] == -60
+
+    assert result[Symbol('R_v (x=6,y=0)')] == 0
+
+    assert result[Symbol('R_h (x=6,y=0)')] == 0
 
     expected_axial_force = 0
     assert simplify(s.N.expand()) == simplify(expected_axial_force)
@@ -685,10 +717,14 @@ def test_frame_problems():
     s.apply_support(0, 0,"fixed")
     s.apply_support(7, 1,"roller")
     result = s.solve_for_reaction_loads()
-    assert result[Symbol('R_v__0,__0')] == Rational(-44421,1120)
-    assert result[Symbol('R_h__0,__0')] == -90
-    assert result[Symbol('R_v__7,__1')] == Rational(-22779,1120)
-    assert result[Symbol('T__0,__0')] == Rational(42021,160)
+
+    assert result[Symbol('R_v (x=0,y=0)')] == Rational(-44421,1120)
+
+    assert result[Symbol('R_h (x=0,y=0)')] == -90
+
+    assert result[Symbol('R_v (x=7,y=1)')] == Rational(-22779,1120)
+
+    assert result[Symbol('T (x=0,y=0)')] == Rational(42021,160)
 
     expected_axial_force = 31179*SingularityFunction(x, 0, 0)/1400 + 30021*SingularityFunction(x, 5, 0)/800 - 72*SingularityFunction(x, 5, 1)/5 + 68337*SingularityFunction(x, 10, 0)/5600 + 72*SingularityFunction(x, 10, 1)/5
     assert simplify(s.N.expand()) == simplify(expected_axial_force.expand())
@@ -707,10 +743,14 @@ def test_frame_problems():
     s.apply_support(0, 0,"fixed")
     s.apply_support(7, 1,"roller")
     result = s.solve_for_reaction_loads()
-    assert result[Symbol('R_v__0,__0')] == Rational(5427,1120)
-    assert result[Symbol('R_h__0,__0')] == -90
-    assert result[Symbol('R_v__7,__1')] == Rational(-5427,1120)
-    assert result[Symbol('T__0,__0')] == Rational(30573,160)
+
+    assert result[Symbol('R_v (x=0,y=0)')] == Rational(5427,1120)
+
+    assert result[Symbol('R_h (x=0,y=0)')] == -90
+
+    assert result[Symbol('R_v (x=7,y=1)')] == Rational(-5427,1120)
+
+    assert result[Symbol('T (x=0,y=0)')] == Rational(30573,160)
 
     expected_axial_force = 81027*SingularityFunction(x, 0, 0)/1400 + 8973*SingularityFunction(x, 5, 0)/800 - 72*SingularityFunction(x, 5, 1)/5 + 16281*SingularityFunction(x, 10, 0)/5600 + 72*SingularityFunction(x, 10, 1)/5
     assert simplify(s.N.expand()) == simplify(expected_axial_force.expand())
@@ -733,9 +773,12 @@ def test_frame_problems():
     s.apply_load(8, 3, 6, 270, 0, 11, -1)
     s.apply_support(11,-1,"fixed")
     result = s.solve_for_reaction_loads()
-    assert result[Symbol('R_v__11,__-1')] == -100
-    assert result[Symbol('R_h__11,__-1')] == -15
-    assert result[Symbol('T__11,__-1')] == -444
+
+    assert result[Symbol('R_v (x=11,y=-1)')] == -100
+
+    assert result[Symbol('R_h (x=11,y=-1)')] == -15
+
+    assert result[Symbol('T (x=11,y=-1)')] == -444
 
     expected_axial_force = -15*SingularityFunction(x, 0, 0) + 87*SingularityFunction(x, 4, 0)/5 + 18*SingularityFunction(x, 4, 1)/5 - 427*SingularityFunction(x, 9, 0)/5 - 42*SingularityFunction(x, 9, 1)/5 + 89*SingularityFunction(x, 14, 0) + 24*SingularityFunction(x, 14, 1)/5
     assert simplify(s.N.expand()) == simplify(expected_axial_force.expand())
@@ -757,9 +800,12 @@ def test_frame_problems():
     s.apply_load(4, 0, 6, 270, 0, 8, 3)
     s.apply_support(11,-1,"fixed")
     result = s.solve_for_reaction_loads()
-    assert result[Symbol('R_v__11,__-1')] == -70
-    assert result[Symbol('R_h__11,__-1')] == -15
-    assert result[Symbol('T__11,__-1')] == -450
+
+    assert result[Symbol('R_v (x=11,y=-1)')] == -70
+
+    assert result[Symbol('R_h (x=11,y=-1)')] == -15
+
+    assert result[Symbol('T (x=11,y=-1)')] == -450
 
     expected_axial_force = 24*SingularityFunction(x, 4, 0) + 18*SingularityFunction(x, 4, 1)/5 - 107*SingularityFunction(x, 9, 0) - 18*SingularityFunction(x, 9, 1)/5 + 65*SingularityFunction(x, 14, 0)
     assert simplify(s.N.expand()) == simplify(expected_axial_force.expand())
@@ -778,10 +824,14 @@ def test_frame_problems():
     s.apply_support(0, 0,"fixed")
     s.apply_support(7, 1,"roller")
     result = s.solve_for_reaction_loads()
-    assert result[Symbol('R_v__0,__0')] == Rational(5427,1120)
-    assert result[Symbol('R_h__0,__0')] == -90
-    assert result[Symbol('R_v__7,__1')] == Rational(-5427,1120)
-    assert result[Symbol('T__0,__0')] == Rational(30573,160)
+
+    assert result[Symbol('R_v (x=0,y=0)')] == Rational(5427,1120)
+
+    assert result[Symbol('R_h (x=0,y=0)')] == -90
+
+    assert result[Symbol('R_v (x=7,y=1)')] == Rational(-5427,1120)
+
+    assert result[Symbol('T (x=0,y=0)')] == Rational(30573,160)
 
     expected_axial_force = 81027*SingularityFunction(x, 0, 0)/1400 + 8973*SingularityFunction(x, 5, 0)/800 - 72*SingularityFunction(x, 5, 1)/5 + 16281*SingularityFunction(x, 10, 0)/5600 + 72*SingularityFunction(x, 10, 1)/5
     assert simplify(s.N.expand()) == simplify(expected_axial_force.expand())
@@ -804,10 +854,14 @@ def test_distributed_loads():
     s.apply_support(0, 0,"pin")
     s.apply_support(6, 0,"pin")
     result = s.solve_for_reaction_loads()
-    assert result[Symbol('R_v__0,__0')] == 200
-    assert result[Symbol('R_h__0,__0')] == -300
-    assert result[Symbol('R_v__6,__0')] == -200
-    assert result[Symbol('R_h__6,__0')] == -300
+
+    assert result[Symbol('R_v (x=0,y=0)')] == 200
+
+    assert result[Symbol('R_h (x=0,y=0)')] == -300
+
+    assert result[Symbol('R_v (x=6,y=0)')] == -200
+
+    assert result[Symbol('R_h (x=6,y=0)')] == -300
 
     expected_axial_force = 340*SingularityFunction(x, 0, 0) - 36*SingularityFunction(x, 0, 1) - 320*SingularityFunction(x, 5, 0) + 340*SingularityFunction(x, 10, 0) + 36*SingularityFunction(x, 10, 1)
     assert simplify(s.N.expand()) == simplify(expected_axial_force.expand())
@@ -829,9 +883,12 @@ def test_distributed_loads():
     s.apply_load(8, 3, 6, 270, 0, 11, -1)
     s.apply_support(11,-1,"fixed")
     result = s.solve_for_reaction_loads()
-    assert result[Symbol('R_v__11,__-1')] == -84
-    assert result[Symbol('R_h__11,__-1')] == 0
-    assert result[Symbol('T__11,__-1')] == -411
+
+    assert result[Symbol('R_v (x=11,y=-1)')] == -84
+
+    assert result[Symbol('R_h (x=11,y=-1)')] == 0
+
+    assert result[Symbol('T (x=11,y=-1)')] == -411
 
     expected_axial_force = 72*SingularityFunction(x, 4, 0)/5 + 18*SingularityFunction(x, 4, 1)/5 - 378*SingularityFunction(x, 9, 0)/5 - 42*SingularityFunction(x, 9, 1)/5 + 336*SingularityFunction(x, 14, 0)/5 + 24*SingularityFunction(x, 14, 1)/5
     assert simplify(s.N.expand()) == simplify(expected_axial_force.expand())
@@ -852,9 +909,12 @@ def test_distributed_loads():
     s.apply_load(8, 3, 6, 270, 0, 11, -1)
     s.apply_support(11,-1,"fixed")
     result = s.solve_for_reaction_loads()
-    assert result[Symbol('R_v__11,__-1')] == -84
-    assert result[Symbol('R_h__11,__-1')] == 0
-    assert result[Symbol('T__11,__-1')] == -411
+
+    assert result[Symbol('R_v (x=11,y=-1)')] == -84
+
+    assert result[Symbol('R_h (x=11,y=-1)')] == 0
+
+    assert result[Symbol('T (x=11,y=-1)')] == -411
 
     expected_axial_force = 72*SingularityFunction(x, 4, 0)/5 + 18*SingularityFunction(x, 4, 1)/5 - 378*SingularityFunction(x, 9, 0)/5 - 42*SingularityFunction(x, 9, 1)/5 + 336*SingularityFunction(x, 14, 0)/5 + 24*SingularityFunction(x, 14, 1)/5
     assert simplify(s.N.expand()) == simplify(expected_axial_force.expand())
@@ -875,9 +935,12 @@ def test_distributed_loads():
     s.apply_load(8, 3, 6, 0, 0, 11, -1)
     s.apply_support(11,-1,"fixed")
     result = s.solve_for_reaction_loads()
-    assert result[Symbol('R_v__11,__-1')] == 0
-    assert result[Symbol('R_h__11,__-1')] == -84
-    assert result[Symbol('T__11,__-1')] == 159
+
+    assert result[Symbol('R_v (x=11,y=-1)')] == 0
+
+    assert result[Symbol('R_h (x=11,y=-1)')] == -84
+
+    assert result[Symbol('T (x=11,y=-1)')] == 159
 
     expected_axial_force = -6*SingularityFunction(x, 0, 1) + 24*SingularityFunction(x, 4, 0)/5 + 6*SingularityFunction(x, 4, 1)/5 + 54*SingularityFunction(x, 9, 0)/5 + 6*SingularityFunction(x, 9, 1)/5 + 252*SingularityFunction(x, 14, 0)/5 + 18*SingularityFunction(x, 14, 1)/5
     assert simplify(s.N.expand()) == simplify(expected_axial_force.expand())
@@ -898,9 +961,12 @@ def test_distributed_loads():
     s.apply_load(8, 3, 6, 0, 0, 11, -1)
     s.apply_support(11,-1,"fixed")
     result = s.solve_for_reaction_loads()
-    assert result[Symbol('R_v__11,__-1')] == 0
-    assert result[Symbol('R_h__11,__-1')] == -54
-    assert result[Symbol('T__11,__-1')] == 84
+
+    assert result[Symbol('R_v (x=11,y=-1)')] == 0
+
+    assert result[Symbol('R_h (x=11,y=-1)')] == -54
+
+    assert result[Symbol('T (x=11,y=-1)')] == 84
 
     expected_axial_force = -6*SingularityFunction(x, 0, 1) + 24*SingularityFunction(x, 4, 0)/5 + 6*SingularityFunction(x, 4, 1) + 24*SingularityFunction(x, 9, 0)/5 - 18*SingularityFunction(x, 9, 1)/5 + 162*SingularityFunction(x, 14, 0)/5 + 18*SingularityFunction(x, 14, 1)/5
     assert simplify(s.N.expand()) == simplify(expected_axial_force.expand())
@@ -921,9 +987,12 @@ def test_distributed_loads():
     s.apply_load(8, 3, 6, 270, 0, 11, -1)
     s.apply_support(11,-1,"fixed")
     result = s.solve_for_reaction_loads()
-    assert result[Symbol('R_v__11,__-1')] == -54
-    assert result[Symbol('R_h__11,__-1')] == 0
-    assert result[Symbol('T__11,__-1')] == -261
+
+    assert result[Symbol('R_v (x=11,y=-1)')] == -54
+
+    assert result[Symbol('R_h (x=11,y=-1)')] == 0
+
+    assert result[Symbol('T (x=11,y=-1)')] == -261
 
     expected_axial_force = 72*SingularityFunction(x, 4, 0)/5 - 168*SingularityFunction(x, 9, 0)/5 - 24*SingularityFunction(x, 9, 1)/5 + 216*SingularityFunction(x, 14, 0)/5 + 24*SingularityFunction(x, 14, 1)/5
     assert simplify(s.N.expand()) == simplify(expected_axial_force.expand())
@@ -945,9 +1014,12 @@ def test_distributed_loads():
     s.apply_load(9.5, 1, 6, 270, 0, 11, -1)
     s.apply_support(11,-1,"fixed")
     result = s.solve_for_reaction_loads()
-    assert result[Symbol('R_v__11,__-1')] == -42
-    assert result[Symbol('R_h__11,__-1')] == 0
-    assert result[Symbol('T__11,__-1')] == Rational(-19725,100)
+
+    assert result[Symbol('R_v (x=11,y=-1)')] == -42
+
+    assert result[Symbol('R_h (x=11,y=-1)')] == 0
+
+    assert result[Symbol('T (x=11,y=-1)')] == Rational(-19725,100)
 
     expected_axial_force = 36*SingularityFunction(x, 4, 0)/5 + 18*SingularityFunction(x, 4, 1)/5 - 18*SingularityFunction(x, Rational(13,2), 1)/5 - 189*SingularityFunction(x, 9, 0)/5 - 24*SingularityFunction(x, Rational(23,2), 1)/5 + 168*SingularityFunction(x, 14, 0)/5 + 24*SingularityFunction(x, 14, 1)/5
     assert simplify(s.N.expand()) == simplify(expected_axial_force.expand())
@@ -969,9 +1041,12 @@ def test_distributed_loads():
     s.apply_load(9.5, 1, 6, 0, 0, 11, -1)
     s.apply_support(11,-1,"fixed")
     result = s.solve_for_reaction_loads()
-    assert result[Symbol('R_v__11,__-1')] == 0
-    assert result[Symbol('R_h__11,__-1')] == -42
-    assert result[Symbol('T__11,__-1')] == Rational(5325,100)
+
+    assert result[Symbol('R_v (x=11,y=-1)')] == 0
+
+    assert result[Symbol('R_h (x=11,y=-1)')] == -42
+
+    assert result[Symbol('T (x=11,y=-1)')] == Rational(5325,100)
 
     expected_axial_force = -6*SingularityFunction(x, 2, 1) + 12*SingularityFunction(x, 4, 0)/5 + 6*SingularityFunction(x, 4, 1)/5 + 24*SingularityFunction(x, Rational(13,2), 1)/5 + 27*SingularityFunction(x, 9, 0)/5 - 18*SingularityFunction(x, Rational(23,2), 1)/5 + 126*SingularityFunction(x, 14, 0)/5 + 18*SingularityFunction(x, 14, 1)/5
     assert simplify(s.N.expand()) == simplify(expected_axial_force.expand())
@@ -996,10 +1071,14 @@ def test_hinge_problems():
     s.apply_support(0, 0,"pin")
     s.apply_support(6, 0,"pin")
     result = s.solve_for_reaction_loads()
-    assert result[Symbol('R_v__0,__0')] == 200
-    assert result[Symbol('R_h__0,__0')] == -300
-    assert result[Symbol('R_v__6,__0')] == -200
-    assert result[Symbol('R_h__6,__0')] == -300
+
+    assert result[Symbol('R_v (x=0,y=0)')] == 200
+
+    assert result[Symbol('R_h (x=0,y=0)')] == -300
+
+    assert result[Symbol('R_v (x=6,y=0)')] == -200
+
+    assert result[Symbol('R_h (x=6,y=0)')] == -300
 
     expected_axial_force = 340*SingularityFunction(x, 0, 0) - 36*SingularityFunction(x, 0, 1) - 320*SingularityFunction(x, 5, 0) + 340*SingularityFunction(x, 10, 0) + 36*SingularityFunction(x, 10, 1)
     assert simplify(s.N.expand()) == simplify(expected_axial_force.expand())
@@ -1021,10 +1100,14 @@ def test_hinge_problems():
     s.apply_support(0, 0,"pin")
     s.apply_support(6, 0,"pin")
     result = s.solve_for_reaction_loads()
-    assert result[Symbol('R_v__0,__0')] == -300
-    assert result[Symbol('R_h__0,__0')] == Rational(225,2)
-    assert result[Symbol('R_v__6,__0')] == -300
-    assert result[Symbol('R_h__6,__0')] == Rational(-225,2)
+
+    assert result[Symbol('R_v (x=0,y=0)')] == -300
+
+    assert result[Symbol('R_h (x=0,y=0)')] == Rational(225,2)
+
+    assert result[Symbol('R_v (x=6,y=0)')] == -300
+
+    assert result[Symbol('R_h (x=6,y=0)')] == Rational(-225,2)
 
     expected_axial_force = -615*SingularityFunction(x, 0, 0)/2 + 48*SingularityFunction(x, 0, 1) - 96*SingularityFunction(x, 5, 1) + 615*SingularityFunction(x, 10, 0)/2 + 48*SingularityFunction(x, 10, 1)
     assert simplify(s.N.expand()) == simplify(expected_axial_force.expand())
@@ -1044,10 +1127,14 @@ def test_hinge_problems():
     s.apply_support(0, 0,"pin")
     s.apply_support(6, 0,"pin")
     result = s.solve_for_reaction_loads()
-    assert result[Symbol('R_v__0,__0')] == -30
-    assert result[Symbol('R_h__0,__0')] == Rational(45,2)
-    assert result[Symbol('R_v__6,__0')] == -30
-    assert result[Symbol('R_h__6,__0')] == Rational(-45,2)
+
+    assert result[Symbol('R_v (x=0,y=0)')] == -30
+
+    assert result[Symbol('R_h (x=0,y=0)')] == Rational(45,2)
+
+    assert result[Symbol('R_v (x=6,y=0)')] == -30
+
+    assert result[Symbol('R_h (x=6,y=0)')] == Rational(-45,2)
 
     expected_axial_force = -75*SingularityFunction(x, 0, 0)/2 + 75*SingularityFunction(x, 10, 0)/2
     assert simplify(s.N.expand()) == simplify(expected_axial_force.expand())
@@ -1071,10 +1158,14 @@ def test_hinge_problems():
     s.apply_rotation_hinge(4,3)
     s.apply_load(4,3,375,270,-1)
     result = s.solve_for_reaction_loads()
-    assert result[Symbol('R_v__0,__0')] == -135
-    assert result[Symbol('R_h__0,__0')] == 180
-    assert result[Symbol('R_v__7,__-1')] == -240
-    assert result[Symbol('R_h__7,__-1')] == -180
+
+    assert result[Symbol('R_v (x=0,y=0)')] == -135
+
+    assert result[Symbol('R_h (x=0,y=0)')] == 180
+
+    assert result[Symbol('R_v (x=7,y=-1)')] == -240
+
+    assert result[Symbol('R_h (x=7,y=-1)')] == -180
 
     expected_axial_force = -225*SingularityFunction(x, 0, 0) - 75*SingularityFunction(x, 5, 0) + 300*SingularityFunction(x, 10, 0)
     assert simplify(s.N.expand()) == simplify(expected_axial_force.expand())
@@ -1100,10 +1191,14 @@ def test_joint_loads():
     s1.apply_load(3, 4, 150, 270, -1)
     s1.apply_rotation_hinge(3, 4)
     result = s1.solve_for_reaction_loads()
-    assert result[Symbol('R_v__0,__0')] == 120
-    assert result[Symbol('R_h__0,__0')] == -90
-    assert result[Symbol('R_v__15,__40')] == -270
-    assert result[Symbol('R_h__15,__40')] == 90
+
+    assert result[Symbol('R_v (x=0,y=0)')] == 120
+
+    assert result[Symbol('R_h (x=0,y=0)')] == -90
+
+    assert result[Symbol('R_v (x=15,y=40)')] == -270
+
+    assert result[Symbol('R_h (x=15,y=40)')] == 90
 
     expected_axial_force = 150*SingularityFunction(x, 0, 0) + 1740*SingularityFunction(x, 5, 0)/13 + 36*SingularityFunction(x, 18, 0)/65 - 1422*SingularityFunction(x, 43, 0)/5
     assert simplify(s1.N.expand()) == simplify(expected_axial_force.expand())
@@ -1127,10 +1222,14 @@ def test_joint_loads():
     s1.apply_load(3, 4, 150, 0, -1)
     s1.apply_rotation_hinge(3, 4)
     result = s1.solve_for_reaction_loads()
-    assert result[Symbol('R_v__0,__0')] == 360
-    assert result[Symbol('R_h__0,__0')] == -270
-    assert result[Symbol('R_v__15,__40')] == -360
-    assert result[Symbol('R_h__15,__40')] == 120
+
+    assert result[Symbol('R_v (x=0,y=0)')] == 360
+
+    assert result[Symbol('R_h (x=0,y=0)')] == -270
+
+    assert result[Symbol('R_v (x=15,y=40)')] == -360
+
+    assert result[Symbol('R_h (x=15,y=40)')] == 120
 
     expected_axial_force = 450*SingularityFunction(x, 0, 0) - 930*SingularityFunction(x, 5, 0)/13 + 48*SingularityFunction(x, 18, 0)/65 - 1896*SingularityFunction(x, 43, 0)/5
     assert simplify(s1.N.expand()) == simplify(expected_axial_force.expand())
@@ -1155,10 +1254,14 @@ def test_joint_loads():
     s2.apply_load(14, 52, 150, 180, -1)
     s2.apply_rotation_hinge(5, 12)
     result = s2.solve_for_reaction_loads()
-    assert result[Symbol('R_v__0,__0')] == Rational(4050,23)
-    assert result[Symbol('R_h__0,__0')] == Rational(-10275,46)
-    assert result[Symbol('R_v__14,__52')] == Rational(-7500,23)
-    assert result[Symbol('R_h__14,__52')] == Rational(10275,46)
+
+    assert result[Symbol('R_v (x=0,y=0)')] == Rational(4050,23)
+
+    assert result[Symbol('R_h (x=0,y=0)')] == Rational(-10275,46)
+
+    assert result[Symbol('R_v (x=14,y=52)')] == Rational(-7500,23)
+
+    assert result[Symbol('R_h (x=14,y=52)')] == Rational(10275,46)
 
     expected_axial_force = 8775*SingularityFunction(x, 0, 0)/46 + 3300*SingularityFunction(x, 13, 0)/23 - 15375*SingularityFunction(x, 54, 0)/46
     assert simplify(s2.N.expand()) == simplify(expected_axial_force.expand())
@@ -1184,9 +1287,12 @@ def test_moment_loads():
     s.apply_load(0, 0, 6, 270, -2)
     s.apply_support(11,-1,"fixed")
     result = s.solve_for_reaction_loads()
-    assert result[Symbol('R_v__11,__-1')] == 0
-    assert result[Symbol('R_h__11,__-1')] == 0
-    assert result[Symbol('T__11,__-1')] == -10
+
+    assert result[Symbol('R_v (x=11,y=-1)')] == 0
+
+    assert result[Symbol('R_h (x=11,y=-1)')] == 0
+
+    assert result[Symbol('T (x=11,y=-1)')] == -10
 
     expected_axial_force = 0
     assert simplify(s.N.expand()) == simplify(expected_axial_force)
@@ -1207,10 +1313,14 @@ def test_moment_loads():
     s.apply_support(0, 0,"pin")
     s.apply_support(6, 0,"pin")
     result = s.solve_for_reaction_loads()
-    assert result[Symbol('R_v__0,__0')] == 100
-    assert result[Symbol('R_h__0,__0')] == -75
-    assert result[Symbol('R_v__6,__0')] == -100
-    assert result[Symbol('R_h__6,__0')] == -225
+
+    assert result[Symbol('R_v (x=0,y=0)')] == 100
+
+    assert result[Symbol('R_h (x=0,y=0)')] == -75
+
+    assert result[Symbol('R_v (x=6,y=0)')] == -100
+
+    assert result[Symbol('R_h (x=6,y=0)')] == -225
 
     expected_axial_force = 125*SingularityFunction(x, 0, 0) - 160*SingularityFunction(x, 5, 0) - 36*SingularityFunction(x, 5, 1) + 215*SingularityFunction(x, 10, 0) + 36*SingularityFunction(x, 10, 1)
     assert simplify(s.N.expand()) == simplify(expected_axial_force.expand())
@@ -1230,10 +1340,14 @@ def test_moment_loads():
     s.apply_support(0, 0,"fixed")
     s.apply_support(7, 1,"roller")
     result = s.solve_for_reaction_loads()
-    assert result[Symbol('R_v__0,__0')] == Rational(-639,160)
-    assert result[Symbol('R_h__0,__0')] == -90
-    assert result[Symbol('R_v__7,__1')] == Rational(639,160)
-    assert result[Symbol('T__0,__0')] == Rational(30873,160)
+
+    assert result[Symbol('R_v (x=0,y=0)')] == Rational(-639,160)
+
+    assert result[Symbol('R_h (x=0,y=0)')] == -90
+
+    assert result[Symbol('R_v (x=7,y=1)')] == Rational(639,160)
+
+    assert result[Symbol('T (x=0,y=0)')] == Rational(30873,160)
 
     expected_axial_force = 10161*SingularityFunction(x, 0, 0)/200 + 18873*SingularityFunction(x, 5, 0)/800 - 72*SingularityFunction(x, 5, 1)/5 - 1917*SingularityFunction(x, 10, 0)/800 + 72*SingularityFunction(x, 10, 1)/5
     assert simplify(s.N.expand()) == simplify(expected_axial_force.expand())
@@ -1243,3 +1357,4 @@ def test_moment_loads():
 
     expected_moment = -30873*SingularityFunction(x, 0, 0)/160 + 59517*SingularityFunction(x, 0, 1)/800 - 60*SingularityFunction(x, 5, 0) - 100161*SingularityFunction(x, 5, 1)/800 + 27*SingularityFunction(x, 5, 2)/5 - 639*SingularityFunction(x, 10, 1)/200 - 27*SingularityFunction(x, 10, 2)/5
     assert simplify(s.M.expand()) == simplify(expected_moment.expand())
+
