@@ -3977,7 +3977,6 @@ class Poly(Basic):
         prec = 10
         # using Counter bc its like an ordered set
         root_counts = Counter(candidates)
-
         while len(root_counts) > num_roots:
             for r in list(root_counts.keys()):
                 # If f(r) != 0 then f(r).evalf() gives a float/complex with precision.
@@ -4174,6 +4173,49 @@ class Poly(Basic):
             name, alt = gg[n](g, max_tries=max_tries, randomize=randomize)
         G = name if by_name else name.get_perm_group()
         return G, alt
+
+    def hurwitz_conditions(f):
+        """
+        Compute the conditions that ensure ``f`` is a Hurwitz polynomial of
+        full degree.
+
+        Explanation
+        ===========
+
+        Returns expressions ``[e1, e2, ...]`` such that the leading coefficient
+        is nonzero and all roots of the polynomial have strictly negative real
+        part if and only if ``ei > 0`` for all ``i``.
+
+        Note
+        ====
+
+        If you need a fast computation of the conditions, consider using the
+        domain ``EXRAW``. Conditions may be less simplified, but the computation
+        will be a lot faster.
+
+        Examples
+        ========
+
+        >>> from sympy import symbols, Poly, reduce_inequalities
+        >>> x, k = symbols("x k")
+        >>> p3 = Poly(x**3 + x**2 + 2*k*x + 1 - k, x)
+        >>> conditions = p3.hurwitz_conditions()
+        >>> conditions
+        [1, 3*k - 1, 1 - k]
+        >>> reduce_inequalities([c > 0 for c in conditions])
+        (1/3 < k) & (k < 1)
+
+        References
+        ==========
+
+        .. [1] G. Meinsma: Elementary proof of the Routh-Hurwitz test.
+               Systems & Control Letters, Volume 25, Issue 4, 1995, Pages 237-242,
+               https://courses.washington.edu/mengr471/resources/Routh_Hurwitz_Proof.pdf
+
+
+        """
+        conds = f.rep.hurwitz_conditions()
+        return [f.domain.to_sympy(cond) for cond in conds]
 
     @property
     def is_zero(f):
@@ -7792,6 +7834,21 @@ def is_zero_dimensional(F, *gens, **args):
     """
     return GroebnerBasis(F, *gens, **args).is_zero_dimensional
 
+
+@public
+def hurwitz_conditions(f, *gens, **args):
+    """
+    See :func:`~.Poly.hurwitz_conditions`.
+
+    """
+    options.allowed_flags(args, ['polys'])
+
+    try:
+        F, opt = poly_from_expr(f, *gens, **args)
+    except PolificationFailed as exc:
+        raise ComputationFailed('hurwitz_conditions', 1, exc)
+
+    return F.hurwitz_conditions()
 
 @public
 class GroebnerBasis(Basic):
