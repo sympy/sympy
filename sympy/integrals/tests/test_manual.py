@@ -21,7 +21,6 @@ from sympy.logic.boolalg import And
 from sympy.integrals.manualintegrate import (manualintegrate, find_substitutions,
     _parts_rule, integral_steps, manual_subs)
 from sympy.testing.pytest import raises, slow
-from sympy.testing.pytest import XFAIL
 
 x, y, z, u, n, a, b, c, d, e = symbols('x y z u n a b c d e')
 f = Function('f')
@@ -301,21 +300,25 @@ def test_manualintegrate_special():
     assert_is_integral_of(f, F)
     f, F = erfi(7*x)*exp(6*x), exp(6*x)*erfi(7*x)/6 - exp(-Rational(9,49))*erfi(7*x + Rational(3,7))/6
     assert_is_integral_of(f, F)
-    f, F = sin(2*x)*exp(-3*x**2), -I*(sqrt(3)*sqrt(pi)*exp(-Rational(1,3))*erf(sqrt(3)*(6*x - 2*I)/6)/6 - sqrt(3)*sqrt(pi)*exp(-Rational(1,3))*erf(sqrt(3)*(6*x + 2*I)/6)/6)/2
+    f = sin(2*x)*exp(-3*x**2)
+    F = -I*(sqrt(3)*sqrt(pi)*exp(-Rational(1,3))*erf(sqrt(3)*(6*x - 2*I)/6)/6 -
+        sqrt(3)*sqrt(pi)*exp(-Rational(1,3))*erf(sqrt(3)*(6*x + 2*I)/6)/6)/2
     assert_is_integral_of(f, F)
-    f, F = cos(2*x)*exp(-3*x**2), sqrt(3)*sqrt(pi)*exp(-Rational(1,3))*erf(sqrt(3)*(6*x - 2*I)/6)/12 + sqrt(3)*sqrt(pi)*exp(-Rational(1,3))*erf(sqrt(3)*(6*x + 2*I)/6)/12
+    f = cos(2*x)*exp(-3*x**2)
+    F = (sqrt(3)*sqrt(pi)*exp(-Rational(1,3))*erf(sqrt(3)*(6*x - 2*I)/6)/12 +
+        sqrt(3)*sqrt(pi)*exp(-Rational(1,3))*erf(sqrt(3)*(6*x + 2*I)/6)/12)
     assert_is_integral_of(f, F)
-
-
-@XFAIL
-def test_pull_request_28295():
-    f, F = sin(x)*erf(x), (erf(x - I/2) + erf(x + I/2))*exp(-Rational(1,4))/2 - cos(x)*erf(x)
+    f = sin(x)*erf(x)
+    F = (erf(x - I/2) + erf(x + I/2))*exp(-Rational(1,4))/2 - cos(x)*erf(x)
     assert_is_integral_of(f, F)
-    f, F = cos(x)*erf(x), I*(erf(x - I/2) - erf(x + I/2))*exp(-Rational(1,4))/2 + sin(x)*erf(x)
+    f = cos(x)*erf(x)
+    F = I*(erf(x - I/2) - erf(x + I/2))*exp(-Rational(1,4))/2 + sin(x)*erf(x)
     assert_is_integral_of(f, F)
-    f, F = sinh(-x)*erf(x), (erf(x - Rational(1,2)) + erf(x + Rational(1,2)))*exp(Rational(1,4))/2 - cosh(x)*erf(x)
+    f = sinh(-x)*erf(x)
+    F = (erf(x - Rational(1,2)) + erf(x + Rational(1,2)))*exp(Rational(1,4))/2 - cosh(x)*erf(x)
     assert_is_integral_of(f, F)
-    f, F = -cosh(x/2)*erf(x), (erf(x - Rational(1,4)) - erf(x + Rational(1,4)))*exp(Rational(1,16)) - 2*sinh(x/2)*erf(x)
+    f = -cosh(x/2)*erf(x)
+    F = (erf(x - Rational(1,4)) - erf(x + Rational(1,4)))*exp(Rational(1,16)) - 2*sinh(x/2)*erf(x)
     assert_is_integral_of(f, F)
 
 
