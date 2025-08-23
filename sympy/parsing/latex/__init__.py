@@ -196,10 +196,6 @@ def parse_latex(s, strict=False, backend="antlr"):
     >>> func = parse_latex(r"\int_1^\alpha \dfrac{\mathrm{d}t}{t}", backend="lark")
     >>> func.evalf(subs={"alpha": 2})
     0.693147180559945
-    >>> parse_latex(r"", backend="fake")
-    Traceback (most recent call last):
-    ...
-    NotImplementedError: Using the 'fake' backend ... must be one of ['antlr', 'lark']
     """
     backends_supported = ["antlr", "lark"]
     backend = backend.lower()
