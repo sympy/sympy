@@ -40,6 +40,7 @@ from sympy.core.power import Pow
 from sympy.core.relational import Eq, Ne
 from sympy.core.singleton import S
 from sympy.core.symbol import Dummy, Symbol, Wild
+from sympy.core.exprtools import factor_terms
 from sympy.functions.elementary.complexes import Abs
 from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.hyperbolic import (HyperbolicFunction, csch,
@@ -2231,4 +2232,12 @@ def manualintegrate(f, var):
             result = result.func(
                 (result.args[1][0], Ne(*cond.args)),
                 (result.args[0][0], True))
+    # Factor terms like erf(x)*sin(x) that may have been expanded
+    def _has_erf_trig_mul(expr):
+        for sub in expr.find(Mul):
+            if sub.has(erf, erfc, erfi) and sub.has(sin, cos, sinh, cosh):
+                return True
+        return False
+    if _has_erf_trig_mul(f) and _has_erf_trig_mul(result):
+        result = factor_terms(result)
     return result
