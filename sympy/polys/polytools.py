@@ -4185,13 +4185,11 @@ class Poly(Basic):
         Returns expressions ``[e1, e2, ...]`` such that all roots of the
         polynomial have strictly negative real part if and only if ``ei > 0``
         for all ``i``.
+        In particular, these conditions imply that the leading coefficient of
+        ``f`` is nonzero, so the polynomial truly has the full degree.
 
         Note
         ====
-
-        This method assumes that the leading coefficient is nonzero.
-        If it were zero, the polynomial would have lower degree and different
-        conditions would be needed to test whether it is a Hurwitz polynomial.
 
         If you need a fast computation of the conditions, consider using the
         domain ``EXRAW``. Conditions may be less simplified, but the computation

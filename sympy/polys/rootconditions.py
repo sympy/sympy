@@ -18,20 +18,15 @@ def dup_routh_hurwitz(f: dup[Er], K: Domain[Er]) -> list[Er]:
     """
     Computes the Routh Hurwitz criteria of ``f``.
 
-    The criteria consist of a list of conditions (istances of PolyElement,
-    expressions or numbers depending on the ground domain) that must be strictly
-    positive to ensure all roots of `f` lie in the negative half-plane of the
-    complex space.
+    Explanation
+    ===========
 
-    Note
-    ====
-
-    This method assumes that the leading coefficient is nonzero.
-    If it were zero, the polynomial would have lower degree and different
-    conditions would be needed to test whether it is a Hurwitz polynomial.
-
-    Depending on the domain, a different approach is used.
-    In non-numeric cases, the algorithm is modified to avoid divisions.
+    Returns conditions (instances of ``PolyElement``, expressions,
+    or numbers depending on the ground domain) ``[c1, c2, ...]`` such that all
+    roots of the polynomial have strictly negative real part if and only if
+    ``ci > 0`` for all ``i``.
+    In particular, these conditions imply that the leading coefficient of
+    ``f`` is nonzero, so the polynomial truly has the full degree.
 
     References
     ==========
@@ -66,7 +61,8 @@ def dup_routh_hurwitz(f: dup[Er], K: Domain[Er]) -> list[Er]:
     elif K.is_FractionField:
         _, pp = dup_clear_denoms(f, K, convert=True)
         conds = _dup_routh_hurwitz_fraction_free(pp, K)
-        return [K.convert_from(c, K.get_ring()) for c in conds]
+        R = K.get_ring()
+        return [K.convert_from(c, R) for c in conds]
 
     else:
         pe = dup_convert(f, K, EXRAW)
@@ -151,31 +147,33 @@ def _dup_routh_hurwitz_exraw_no_div(p: list[Expr]) -> list[Expr]:
 
     """
 
-    # previous_cond: [[normal conditions],
-    #                 {inequalities}]
-
-    previous_cond: list = [[], set()]
-    return _rec_dup_routh_hurwitz_exraw_no_div(p, previous_cond)
+    return _rec_dup_routh_hurwitz_exraw_no_div(p, [], set())
 
 
 def _rec_dup_routh_hurwitz_exraw_no_div(
-    p: list[Expr], previous_cond: list
+    p: list[Expr],
+    previous_cond: list[tuple[int, set[Expr]]],
+    nonzeros: set[Expr],
 ) -> list[Expr]:
     if len(p) < 2:
-        return [ineq**2 for ineq in previous_cond[1]]
+        return [z**2 for z in nonzeros]
 
     qs = [p[1] * qi for qi in p]
     for i in range(1, len(p), 2):
         qs[i - 1] -= p[i] * p[0]
     qs = qs[1:]
 
-    cond, previous_cond = _clear_cond_exraw(p[0] * p[1], previous_cond)
-    return [cond] + _rec_dup_routh_hurwitz_exraw_no_div(qs, previous_cond)
+    cond, previous_cond, nonzeros = _clear_cond_exraw(
+        p[0] * p[1], previous_cond, nonzeros
+    )
+    return [cond] + _rec_dup_routh_hurwitz_exraw_no_div(
+        qs, previous_cond, nonzeros
+    )
 
 
 def _clear_cond_exraw(
-    cond: Expr, previous_cond: list
-) -> tuple[Expr, list[list]]:
+    cond: Expr, previous_cond: list[tuple[int, set[Expr]]], nonzeros: set[Expr]
+) -> tuple[Expr, list[tuple[int, set[Expr]]], set[Expr]]:
     """
     Clear the condition by removing even powers and simplifying odd powers.
     Also, remove factors that are already present in previous conditions.
@@ -184,8 +182,9 @@ def _clear_cond_exraw(
     `previous_cond` list with the new condition.
 
     """
-    factors_repr, inequalities = _build_simplified_factors(cond, previous_cond)
+    factors_repr, new_nonzeros1 = _build_simplified_factors(cond, previous_cond)
 
+    nonzeros_updated = nonzeros | new_nonzeros1
     first_factor_iteration = factors_repr
 
     # Second iteration to simplify the factors further using `factor_terms`.
@@ -194,23 +193,24 @@ def _clear_cond_exraw(
     # Because the point of the algorithm for EXRAW is to be fast, we prefer to
     # use `factor_terms`.
     new_cond = Mul(factors_repr[0], *factors_repr[1])
-    factors_repr, inequalities2 = _build_simplified_factors(
+    factors_repr, new_nonzeros2 = _build_simplified_factors(
         factor_terms(new_cond), previous_cond
     )
 
-    inequalities.update(inequalities2)
+    nonzeros_updated.update(new_nonzeros2)
+
     # It's important to keep the first factor iteration, because it follows the
     # pattern of the unsimplified coefficients, which appears in the next
     # iteration of the Routh-Hurwitz algorithm.
     # Adding the last factor form, probably lead to a worse simplification.
-    previous_cond[0] = previous_cond[0] + [first_factor_iteration]
-    previous_cond[1] = previous_cond[1] | inequalities
+    previous_cond = previous_cond + [first_factor_iteration]
 
-    return Mul(factors_repr[0], *factors_repr[1]), previous_cond
+    clear_cond = Mul(factors_repr[0], *factors_repr[1])
+    return clear_cond, previous_cond, nonzeros_updated
 
 
 def _build_simplified_factors(
-    cond: Expr, previous_cond: list
+    cond: Expr, previous_cond: list[tuple[int, set[Expr]]]
 ) -> tuple[tuple[int, set[Expr]], set[Expr]]:
     """
     Build a set of simplified factors from the expression rem oving even powers
@@ -226,7 +226,7 @@ def _build_simplified_factors(
 
     # Build a set of factors without even powers
     factors = set()
-    inequalities = set()
+    nonzeros = set()
 
     for b, e in cond.as_powers_dict().items():
         if not e.is_Integer:
@@ -234,18 +234,17 @@ def _build_simplified_factors(
         elif e % 2 != 0:
             factors.add(b)
         else:
-            inequalities.add(b)
+            nonzeros.add(b)
 
     # Remove factors that are already present in previous conditions.
-
-    for sign_prev, factors_prev in previous_cond[0]:
+    for sign_prev, factors_prev in previous_cond:
         if factors.issuperset(factors_prev):
             sign *= sign_prev
             factors -= factors_prev
 
-        inequalities -= factors_prev
+        nonzeros -= factors_prev
 
-    return (sign, factors), inequalities
+    return (sign, factors), nonzeros
 
 
 # TODO Implement conditions for discrete time systems
