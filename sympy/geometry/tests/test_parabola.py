@@ -159,14 +159,14 @@ def check_tangent(parabola, point, expected_slope):
         print(f"❌ Tangent check assertion failed: {e}")
 
 def test_parabola_tangent():
-    
+
     # Various focuses for testing
     p1 = Point(0, 0)
     p2 = Point(3, 7)
     p3 = Point(0, 4)
     p4 = Point(6, 0)
     p5 = Point(1, 1)
-    
+
     # Various respective directrices for testing
     d1 = Line(Point(4, 0), slope=oo       )
     d2 = Line(Point(7, 6), slope=0)
