@@ -15,6 +15,7 @@ from sympy.geometry.ellipse import Ellipse
 from sympy.functions import sign
 from sympy.simplify.simplify import simplify
 from sympy.solvers.solvers import solve
+from sympy import diff
 
 
 class Parabola(GeometrySet):
@@ -41,6 +42,8 @@ class Parabola(GeometrySet):
     p parameter
     vertex
     eccentricity
+    tangent
+    contain
 
     Raises
     ======
@@ -75,7 +78,7 @@ class Parabola(GeometrySet):
             raise ValueError('The focus must not be a point of directrix')
 
         return GeometryEntity.__new__(cls, focus, directrix, **kwargs)
-
+    
     @property
     def ambient_dimension(self):
         """Returns the ambient dimension of parabola.
@@ -235,7 +238,7 @@ class Parabola(GeometrySet):
         Returns
         =======
 
-        focal_lenght : number or symbolic expression
+        focal_length : number or symbolic expression
 
         Notes
         =====
@@ -420,3 +423,61 @@ class Parabola(GeometrySet):
         else:
             vertex = self.axis_of_symmetry.intersection(self)[0]
         return vertex
+    
+    #functin to check if point is on parabola
+    def contain(self, p):
+        """Check if the point `p` is on the parabola."""
+        if not isinstance(p, Point): #check if p is a Point instance
+            p = Point(p)
+        x, y = symbols('x y')
+        eq = self.equation(x, y)
+        return simplify(eq.subs({x: p.x, y: p.y})) == 0
+    
+    def tangent(self, p):
+        """The tangent line to the parabola at point `p`.
+
+        Parameters
+        ==========
+
+        p : Point
+
+        Returns
+        =======
+
+        tangent : Line
+
+        Examples
+        ========
+
+        >>> from sympy import Parabola, Point, Line
+        >>> p1 = Parabola(Point(0, 0), Line(Point(5, 8), Point(7, 8)))
+        >>> p1.tangent(Point(0,4))
+        Line2D(Point2D(-4, 4), Point2D(4, 4))
+
+        """
+        if not isinstance(p, Point): #check if p is a Point instance
+            p = Point(p) # if its not a Point instance, convert it to Point
+        
+        containPoint = self.contain(p) #check if p is on the parabola
+        
+        if not containPoint: # if p is not on the parabola, raise an error
+            raise ValueError("The point must be on the parabola")
+
+        
+        x,y = symbols('x y') #defining symbols x and y for equation of parabola
+        F = self.equation(x, y) # equation of parabola
+
+        dFdX = diff(F, x) #differentiating the equation with respect to x    
+        dFdY = diff(F, y)# differentiating the equation with respect to y
+        
+        dY_val = dFdY.subs({ _symbol('x'): p.x, _symbol('y'): p.y}) # substituting the coordinates of point p in dFdY
+        dX_val = dFdX.subs({ _symbol('x'): p.x, _symbol('y'): p.y}) # substituting the coordinates of point p in dFdX
+        
+        if dY_val == 0:
+            m = S.Infinity # slope is infinity if dFdY is 0
+        else:
+            m = -dX_val/dY_val# slope of the tangent line at point p
+        
+        tangent = Line(p, slope=m) # tangent line at point p
+        
+        return tangent

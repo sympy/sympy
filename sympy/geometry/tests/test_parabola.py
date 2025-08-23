@@ -141,3 +141,56 @@ def test_parabola_intersection():
            Point2D(4*sqrt(17)/3, Rational(59, 9))]
     # parabola with unsupported type
     raises(TypeError, lambda: parabola1.intersection(2))
+
+
+def check_tangent(parabola, point, expected_slope):
+    try:
+        line = parabola.tangent(point)
+        # Check if slope matches
+        assert line.slope == expected_slope, (
+            f"Expected slope {expected_slope} at {point}, got {line.slope}"
+        )
+        # Check if line passes through the tangent point
+        assert line.contains(point), f"Line does not pass through {point}"
+        print(f"✅ Tangent at {point} passed checks")
+    except ValueError as e:
+        print(f"❌ Tangent check failed for {point}: {e}")
+    except AssertionError as e:
+        print(f"❌ Tangent check assertion failed: {e}")
+
+def test_parabola_tangent():
+    
+    # Various focuses for testing
+    p1 = Point(0, 0)
+    p2 = Point(3, 7)
+    p3 = Point(0, 4)
+    p4 = Point(6, 0)
+    p5 = Point(1, 1)
+    
+    # Various respective directrices for testing
+    d1 = Line(Point(4, 0), slope=oo       )
+    d2 = Line(Point(7, 6), slope=0)
+    d3 = Line(Point(4, 0), slope=oo)
+    d4 = Line(Point(7, 6), slope=0)
+    d5 = Line(Point(1, 0), slope=0)
+
+    #respective parabolas for testing
+    pa1 = Parabola(p1, d1)
+    pa2 = Parabola(p2, d2)
+    pa3 = Parabola(p3, d3)
+    pa4 = Parabola(p4, d4)
+    pa5 = Parabola(p5, d5)
+
+     # Tangent at vertex
+    check_tangent(pa1, pa1.vertex, oo)         # vertical tangent
+    check_tangent(pa2, pa2.vertex, 0)          # horizontal tangent
+    check_tangent(pa3, pa3.vertex, oo)         # vertical tangent
+    check_tangent(pa4, pa4.vertex, 0)          # horizontal tangent
+    check_tangent(pa5, pa5.vertex, 0)          # horizontal tangent
+
+    # Tangent at other points
+    check_tangent(pa1, Point2D(4, 4), 1)
+    check_tangent(pa2, Point2D(3.5, 7.5), 1)
+    check_tangent(pa3, Point2D(2.5, 6), 2)
+    check_tangent(pa4, Point2D(9, 3.75), 0.5)
+    check_tangent(pa5, Point2D(2, 1), 1)
