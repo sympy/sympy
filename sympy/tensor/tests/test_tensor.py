@@ -1943,7 +1943,7 @@ def test_tensor_replacement():
     expr = K(i, j, k, -l)
     repl = {K(i,j,k,l): Array([ (i+1) for i in range(2**4)]).reshape(2,2,2,2), L: diag(1, -1)}
     assert expr.replace_with_arrays(repl) == Array([(i+1)*(-1)**i for i in range(2**4)]).reshape(2,2,2,2)
-    
+
     expr = H(j, k)
     repl = {H(i,j): [[1,2],[3,4]], L: diag(1, -1)}
     raises(ValueError, lambda: expr._extract_data(repl))
