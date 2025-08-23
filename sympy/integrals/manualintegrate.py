@@ -1446,8 +1446,15 @@ def trig_cmplx_exp_rule(integral: IntegralInfo):
 
     a = Wild('a', exclude=[symbol, 0])
     b = Wild('b', exclude=[symbol])
-    pattern = exp(a * symbol**2 + b * symbol)
-    if not any(term.match(pattern) for term in integrand.atoms(exp)):
+    c = Wild('c', exclude=[symbol])
+    n = Wild('n', exclude=[symbol], properties=[lambda n: n > 0])
+    f = WildFunction('f')
+    guassian_pattern = exp(a * symbol**2 + b * symbol + c)
+    trigexp_over_x_pattern = f*exp(a * symbol)/symbol**n
+    trigexp_over_x_match = integrand.match(trigexp_over_x_pattern)
+    if not (any(term.match(guassian_pattern) for term in integrand.atoms(exp))
+            or (trigexp_over_x_match and
+                trigexp_over_x_match[f].has(sin, cos, sinh, cosh))):
         return
 
     # Replace trig and hyperbolic functions with their exponential forms
