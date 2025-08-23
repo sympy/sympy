@@ -78,7 +78,6 @@ class Parabola(GeometrySet):
             raise ValueError('The focus must not be a point of directrix')
 
         return GeometryEntity.__new__(cls, focus, directrix, **kwargs)
-    
     @property
     def ambient_dimension(self):
         """Returns the ambient dimension of parabola.
@@ -423,7 +422,7 @@ class Parabola(GeometrySet):
         else:
             vertex = self.axis_of_symmetry.intersection(self)[0]
         return vertex
-    
+
     #functin to check if point is on parabola
     def contain(self, p):
         """Check if the point `p` is on the parabola."""
@@ -432,7 +431,7 @@ class Parabola(GeometrySet):
         x, y = symbols('x y')
         eq = self.equation(x, y)
         return simplify(eq.subs({x: p.x, y: p.y})) == 0
-    
+
     def tangent(self, p):
         """The tangent line to the parabola at point `p`.
 
@@ -457,27 +456,27 @@ class Parabola(GeometrySet):
         """
         if not isinstance(p, Point): #check if p is a Point instance
             p = Point(p) # if its not a Point instance, convert it to Point
-        
+
         containPoint = self.contain(p) #check if p is on the parabola
-        
+
         if not containPoint: # if p is not on the parabola, raise an error
             raise ValueError("The point must be on the parabola")
 
-        
+
         x,y = symbols('x y') #defining symbols x and y for equation of parabola
         F = self.equation(x, y) # equation of parabola
 
-        dFdX = diff(F, x) #differentiating the equation with respect to x    
+        dFdX = diff(F, x) #differentiating the equation with respect to x
         dFdY = diff(F, y)# differentiating the equation with respect to y
-        
+
         dY_val = dFdY.subs({ _symbol('x'): p.x, _symbol('y'): p.y}) # substituting the coordinates of point p in dFdY
         dX_val = dFdX.subs({ _symbol('x'): p.x, _symbol('y'): p.y}) # substituting the coordinates of point p in dFdX
-        
+
         if dY_val == 0:
             m = S.Infinity # slope is infinity if dFdY is 0
         else:
             m = -dX_val/dY_val# slope of the tangent line at point p
-        
+
         tangent = Line(p, slope=m) # tangent line at point p
-        
+
         return tangent
