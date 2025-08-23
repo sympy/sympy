@@ -1510,7 +1510,6 @@ class Structure2d:
                 transform=ax.transAxes,
                 fontsize=7,
                 ha="right", va="top",
-                bbox=dict(facecolor="white", alpha=0.7, edgecolor="none")
             )
 
         return fig, ax
