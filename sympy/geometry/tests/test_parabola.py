@@ -155,7 +155,7 @@ def check_tangent(parabola, point, expected_slope):
         print("Tangent at {point} passed checks")
     except ValueError:
         print("Tangent check failed for {point}")
-    except AssertionError as e:
+    except AssertionError:
         print("Tangent check assertion failed")
 
 def test_parabola_tangent():
