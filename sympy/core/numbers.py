@@ -32,7 +32,7 @@ from mpmath.libmp.libmpf import (
     finf as _mpf_inf, fninf as _mpf_ninf,
     fnan as _mpf_nan, fzero, _normalize as mpf_normalize,
     prec_to_dps, dps_to_prec)
-from sympy.utilities.misc import debug
+from sympy.utilities.misc import debug, as_int
 from sympy.utilities.exceptions import sympy_deprecation_warning
 from .parameters import global_parameters
 
@@ -1955,6 +1955,18 @@ class Integer(Rational):
                 return Integer(other.p % self.p)
             return Rational.__rmod__(self, other)
         return Rational.__rmod__(self, other)
+
+    def __pow__(self, other, mod=None):
+        if mod is not None:
+            try:
+                other_int = as_int(other)
+                mod_int = as_int(mod)
+            except ValueError:
+                pass
+            else:
+                return Integer(pow(self.p, other_int, mod_int))
+
+        return super().__pow__(other, mod)
 
     def __eq__(self, other):
         if isinstance(other, int):

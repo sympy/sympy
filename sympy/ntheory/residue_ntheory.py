@@ -488,7 +488,26 @@ def _sqrt_mod_tonelli_shanks(a, p):
     return x
 
 
-def sqrt_mod(a, p, all_roots=False):
+@overload
+def sqrt_mod(
+    a: SupportsIndex, p: SupportsIndex, all_roots: Literal[False] = False
+) -> int | None: ...
+
+
+@overload
+def sqrt_mod(
+    a: SupportsIndex, p: SupportsIndex, all_roots: Literal[True]
+) -> list[int]: ...
+
+@overload
+def sqrt_mod(
+    a: SupportsIndex, p: SupportsIndex, all_roots: bool,
+) -> int | list[int] | None: ...
+
+
+def sqrt_mod(
+    a: SupportsIndex, p: SupportsIndex, all_roots: bool = False
+) -> int | list[int] | None:
     """
     Find a root of ``x**2 = a mod p``.
 
@@ -497,14 +516,14 @@ def sqrt_mod(a, p, all_roots=False):
 
     a : integer
     p : positive integer
-    all_roots : if True the list of roots is returned or None
+    all_roots : if True the list of roots is returned.
 
     Notes
     =====
 
-    If there is no root it is returned None; else the returned root
-    is less or equal to ``p // 2``; in general is not the smallest one.
-    It is returned ``p // 2`` only if it is the only root.
+    If there is no root and all_roots if False, None is returned; else the
+    returned root is less or equal to ``p // 2``; in general is not the
+    smallest one. It is returned ``p // 2`` only if it is the only root.
 
     Use ``all_roots`` only when it is expected that all the roots fit
     in memory; otherwise use ``sqrt_mod_iter``.
