@@ -3620,6 +3620,26 @@ def test_StateSpace_series():
     ser3 = Series(ser2, ss2)
     assert ser3.doit() == ser1.doit()
 
+    # test issue #28326
+    ss_issue = StateSpace(a2, b1+b2, c1+c2, d1)
+    assert Series(ss_issue, ss_issue, ss_issue).doit() == StateSpace(
+        Matrix([
+        [1, 0, 0, 0, 0, 0],
+        [0, 1, 0, 0, 0, 0],
+        [1, 1, 1, 0, 0, 0],
+        [1, 1, 0, 1, 0, 0],
+        [0, 0, 1, 1, 1, 0],
+        [0, 0, 1, 1, 0, 1]]),
+        Matrix([
+        [1],
+        [1],
+        [0],
+        [0],
+        [0],
+        [0]]),
+        Matrix([[0, 0, 0, 0, 1, 1]]),
+        Matrix([[0]]))
+
     # TransferFunction interconnection with StateSpace
     ser_tf = Series(tf1, ss1)
     assert ser_tf == Series(TransferFunction(s, s + 1, s), StateSpace(Matrix([
