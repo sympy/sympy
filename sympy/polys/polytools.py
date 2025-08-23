@@ -4182,11 +4182,9 @@ class Poly(Basic):
         Explanation
         ===========
 
-        Returns expressions ``[e1, e2, ...]`` such that all roots of the
-        polynomial have strictly negative real part if and only if ``ei > 0``
-        for all ``i``.
-        In particular, these conditions imply that the leading coefficient of
-        ``f`` is nonzero, so the polynomial truly has the full degree.
+        Returns expressions ``[e1, e2, ...]`` such that the leading coefficient
+        is nonzero and all roots of the polynomial have strictly negative real
+        part if and only if ``ei > 0`` for all ``i``.
 
         Note
         ====

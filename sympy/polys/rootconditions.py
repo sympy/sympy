@@ -21,12 +21,9 @@ def dup_routh_hurwitz(f: dup[Er], K: Domain[Er]) -> list[Er]:
     Explanation
     ===========
 
-    Returns conditions (instances of ``PolyElement``, expressions,
-    or numbers depending on the ground domain) ``[c1, c2, ...]`` such that all
-    roots of the polynomial have strictly negative real part if and only if
-    ``ci > 0`` for all ``i``.
-    In particular, these conditions imply that the leading coefficient of
-    ``f`` is nonzero, so the polynomial truly has the full degree.
+    Returns a list of conditions ``[c1, c2, ...]`` such that the leading
+    coefficient is nonzero and all roots of the polynomial have strictly
+    negative real part if and only if ``ci > 0`` for all ``i``.
 
     References
     ==========
