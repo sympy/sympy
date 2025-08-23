@@ -1412,7 +1412,7 @@ class Structure2d:
                     line_color='r')
 
 
-    def _plot_expression_on_structure(self, expr, *, factor=75.0, show_values=True, title=None, _color='tab:red'):
+    def _plot_expression_on_structure(self, expr, *, factor=75.0, show_values=True, title=None, _color='tab:red', scale_text=None):
         # helper plotting function to reduce duplication of code
 
         SAMPLES_PER_MEMBER = 60
@@ -1421,7 +1421,7 @@ class Structure2d:
         ZERO_TOL           = 1e-9
         LABEL_DECIMALS     = 2
         LABEL_FMT          = "[{v:.2f}]"
-        LABEL_OFFSET       = 0.06
+        LABEL_OFFSET       = 0.2
 
         label_mode = 'ends' if bool(show_values) else 'none'
 
@@ -1484,19 +1484,35 @@ class Structure2d:
                     v_raw = vals[j]
                     if abs(scaled[j]) < float(ZERO_TOL):
                         v_raw = 0.0
+                    sign = 1 if (j % 2 == 0) else -1
                     lx = txs[j] + LABEL_OFFSET * nx
-                    ly = tys[j] + LABEL_OFFSET * ny
+                    ly = tys[j] + sign*LABEL_OFFSET * ny
                     txt = LABEL_FMT.format(v=round(v_raw, int(LABEL_DECIMALS)))
                     ax.text(lx, ly, txt, fontsize=12, color=_color,
-                            zorder=30, ha='center', va='center')
+                            zorder=30, ha='center', va='center',bbox={
+                            "facecolor": "lightgrey",
+                            "alpha": 0.5,
+                            "edgecolor": "none",
+                        },
+                    )
 
             cum += Lm
 
-        core = title if title else "Diagram"
+        core = title
         ax.set_title(core)
         ax.set_xlabel("x")
         ax.set_ylabel("y")
         ax.grid(True, zorder=5)
+        scale_text_ = scale_text
+        if scale_text:
+            ax.text(
+                0.99, 0.99, scale_text_,
+                transform=ax.transAxes,
+                fontsize=7,
+                ha="right", va="top",
+                bbox=dict(facecolor="white", alpha=0.7, edgecolor="none")
+            )
+
         return fig, ax
 
 
@@ -1548,7 +1564,8 @@ class Structure2d:
         return self._plot_expression_on_structure(self.shear_force(),
                                                 factor=factor,
                                                 show_values=show_values,
-                                                title="Shear diagram",_color='tab:green')
+                                                title="Shear diagram",_color='tab:green',scale_text="(x, y in metre)\n (Shear in kN)"
+)
 
     def plot_bending_moment_on_structure(self, *, factor=150.0, show_values=True):
         """
@@ -1598,7 +1615,7 @@ class Structure2d:
         return self._plot_expression_on_structure(self.bending_moment(),
                                                 factor=factor,
                                                 show_values=show_values,
-                                                title="Bending moment diagram", _color='tab:blue')
+                                                title="Bending moment diagram", _color='tab:blue', scale_text="(x, y in metre)\n (Bending in kN/metre)")
 
     def plot_axial_force_on_structure(self, *, factor=75.0, show_values=True):
         """
@@ -1648,7 +1665,7 @@ class Structure2d:
         return self._plot_expression_on_structure(self.axial_force(),
                                                 factor=factor,
                                                 show_values=show_values,
-                                                title="Axial force diagram", _color='tab:orange')
+                                                title="Axial force diagram", _color='tab:orange', scale_text="(x, y in metre)\n (Axial in kN)")
 
     def _build_geometry_functions(self):
 
