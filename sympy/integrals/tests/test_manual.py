@@ -300,6 +300,26 @@ def test_manualintegrate_special():
     assert_is_integral_of(f, F)
     f, F = erfi(7*x)*exp(6*x), exp(6*x)*erfi(7*x)/6 - exp(-Rational(9,49))*erfi(7*x + Rational(3,7))/6
     assert_is_integral_of(f, F)
+    f = sin(2*x)*exp(-3*x**2)
+    F = -I*(sqrt(3)*sqrt(pi)*exp(-Rational(1,3))*erf(sqrt(3)*(6*x - 2*I)/6)/6 -
+        sqrt(3)*sqrt(pi)*exp(-Rational(1,3))*erf(sqrt(3)*(6*x + 2*I)/6)/6)/2
+    assert_is_integral_of(f, F)
+    f = cos(2*x)*exp(-3*x**2)
+    F = (sqrt(3)*sqrt(pi)*exp(-Rational(1,3))*erf(sqrt(3)*(6*x - 2*I)/6)/12 +
+        sqrt(3)*sqrt(pi)*exp(-Rational(1,3))*erf(sqrt(3)*(6*x + 2*I)/6)/12)
+    assert_is_integral_of(f, F)
+    f = sin(x)*erf(x)
+    F = (erf(x - I/2) + erf(x + I/2))*exp(-Rational(1,4))/2 - cos(x)*erf(x)
+    assert_is_integral_of(f, F)
+    f = cos(x)*erf(x)
+    F = I*(erf(x - I/2) - erf(x + I/2))*exp(-Rational(1,4))/2 + sin(x)*erf(x)
+    assert_is_integral_of(f, F)
+    f = sinh(-x)*erf(x)
+    F = (erf(x - Rational(1,2)) + erf(x + Rational(1,2)))*exp(Rational(1,4))/2 - cosh(x)*erf(x)
+    assert_is_integral_of(f, F)
+    f = -cosh(x/2)*erf(x)
+    F = (erf(x - Rational(1,4)) - erf(x + Rational(1,4)))*exp(Rational(1,16)) - 2*sinh(x/2)*erf(x)
+    assert_is_integral_of(f, F)
 
 
 def test_manualintegrate_derivative():
