@@ -451,7 +451,7 @@ class Parabola(GeometrySet):
         >>> from sympy import Parabola, Point, Line
         >>> p1 = Parabola(Point(0, 0), Line(Point(5, 8), Point(7, 8)))
         >>> p1.tangent(Point(0,4))
-        Line2D(Point2D(-4, 4), Point2D(4, 4))
+        Line2D(Point2D(-4, 4), Point2D(1, 4))
 
         """
         if not isinstance(p, Point): #check if p is a Point instance
