@@ -1527,15 +1527,20 @@ class Structure2d:
             :include-source: True
 
             >>> from sympy.physics.continuum_mechanics.structure2d import Structure2d
-            >>> E, I, A = 3e4, 1, 1e4
-            >>> F = 15
+            >>> from sympy import symbols
             >>> s = Structure2d()
-            >>> s.add_member(x1=0, y1=0, x2=4, y2=0, E=E, I=I, A=A)
-            >>> s.apply_load(start_x=2, start_y=0, value=F, global_angle=270, order=-1)
-            >>> s.apply_support(x=0, y=0, type="pin")
-            >>> s.apply_support(x=4, y=0, type="roller")
+            >>> E, I, A = symbols('E I A')
+            >>> E = 10**4
+            >>> I = 10**4
+            >>> A = 10**4
+            >>> s.add_member(0, 0, 3, 4, E, 10**4, 10**4)
+            >>> s.add_member(3, 4, 7, 1, E, I, A)
+            >>> s.apply_load(3, 4, 60, 270, -1)
+            >>> s.apply_load(3, 4, 18, 0, 0, 7, 1)
+            >>> s.apply_support(0, 0,"fixed")
+            >>> s.apply_support(7, 1,"roller")
             >>> s.solve_for_reaction_loads()
-            {R_h (x=0,y=0): 0, R_v (x=0,y=0): -7.5, R_v (x=4,y=0): -7.5}
+            {R_h (x=0,y=0): -90, R_v (x=0,y=0): -44421/1120, R_v (x=7,y=1): -22779/1120, T (x=0,y=0): 42021/160}
             >>> s.plot_shear_force_on_structure(factor=75.0, show_values=True)  # doctest: +SKIP
         """
         if self.V is None :
@@ -1572,15 +1577,20 @@ class Structure2d:
             :include-source: True
 
             >>> from sympy.physics.continuum_mechanics.structure2d import Structure2d
-            >>> E, I, A = 3e4, 1, 1e4
-            >>> F = 15
+            >>> from sympy import symbols
             >>> s = Structure2d()
-            >>> s.add_member(x1=0, y1=0, x2=4, y2=0, E=E, I=I, A=A)
-            >>> s.apply_load(start_x=2, start_y=0, value=F, global_angle=270, order=-1)
-            >>> s.apply_support(x=0, y=0, type="pin")
-            >>> s.apply_support(x=4, y=0, type="roller")
+            >>> E, I, A = symbols('E I A')
+            >>> E = 10**4
+            >>> I = 10**4
+            >>> A = 10**4
+            >>> s.add_member(0, 0, 3, 4, E, 10**4, 10**4)
+            >>> s.add_member(3, 4, 7, 1, E, I, A)
+            >>> s.apply_load(3, 4, 60, 270, -1)
+            >>> s.apply_load(3, 4, 18, 0, 0, 7, 1)
+            >>> s.apply_support(0, 0,"fixed")
+            >>> s.apply_support(7, 1,"roller")
             >>> s.solve_for_reaction_loads()
-            {R_h (x=0,y=0): 0, R_v (x=0,y=0): -7.5, R_v (x=4,y=0): -7.5}
+            {R_h (x=0,y=0): -90, R_v (x=0,y=0): -44421/1120, R_v (x=7,y=1): -22779/1120, T (x=0,y=0): 42021/160}
             >>> s.plot_bending_moment_on_structure(factor=150.0, show_values=True)  # doctest: +SKIP
         """
         if self.M is None :
@@ -1630,7 +1640,7 @@ class Structure2d:
             >>> s.apply_support(0, 0,"fixed")
             >>> s.apply_support(7, 1,"roller")
             >>> s.solve_for_reaction_loads()
-            {R_v (x=0,y=0): -44421/1120, R_h (x=0,y=0): -90, T (x=0,y=0): 42021/160, R_v (x=7,y=1): -22779/1120}
+            {R_h (x=0,y=0): -90, R_v (x=0,y=0): -44421/1120, R_v (x=7,y=1): -22779/1120, T (x=0,y=0): 42021/160}
             >>> s.plot_axial_force_on_structure(factor=75.0, show_values=True)  # doctest: +SKIP
         """
         if self.N is None :
