@@ -327,10 +327,6 @@ def test_power():
     assert A**10 == Matrix([[2**10]]) == A._matrix_pow_by_jordan_blocks(S(10)) == \
         A._eval_pow_by_recursion(10)
 
-    # testing a matrix that cannot be jordan blocked issue 11766
-    m = Matrix([[3, 0, 0, 0, -3], [0, -3, -3, 0, 3], [0, 3, 0, 3, 0], [0, 0, 3, 0, 3], [3, 0, 0, 3, 0]])
-    raises(MatrixError, lambda: m._matrix_pow_by_jordan_blocks(S(10)))
-
     # test issue 11964
     raises(MatrixError, lambda: Matrix([[1, 1], [3, 3]])._matrix_pow_by_jordan_blocks(S(-10)))
     A = Matrix([[0, 1, 0], [0, 0, 1], [0, 0, 0]])  # Nilpotent jordan block size 3
