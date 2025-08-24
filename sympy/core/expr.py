@@ -282,18 +282,12 @@ class Expr(Basic, EvalfMixin):
         return Pow(self, other)
 
     def __pow__(self, other, mod=None) -> Expr:
+        power = self._pow(other)
         if mod is None:
-            return self._pow(other)
-        try:
-            _self, other, mod = as_int(self), as_int(other), as_int(mod)
-            if other >= 0:
-                return _sympify(pow(_self, other, mod))
-            else:
-                return _sympify(mod_inverse(pow(_self, -other, mod), mod))
-        except ValueError:
-            power = self._pow(other)
+            return power
+        else:
             try:
-                return power%mod
+                return power % mod
             except TypeError:
                 return NotImplemented
 
