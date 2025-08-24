@@ -12,7 +12,7 @@ from sympy.polys.domains.domain import Domain
 from sympy.polys.densebasic import dup
 from sympy.polys.polyconfig import query
 from sympy.polys.polyerrors import ExactQuotientFailed
-from sympy.polys.polyutils import _sort_factors
+from sympy.polys.polyutils import _sort_factors_single, _sort_factors_multiple
 
 
 def gf_crt(U: list[MPZ], M: list[MPZ], K: Domain[MPZ]) -> MPZ:
@@ -1865,11 +1865,11 @@ def gf_berlekamp(f: dup[MPZ], p: MPZ, K: Domain[MPZ]) -> list[dup[MPZ]]:
                     factors.extend([f, h])
 
                 if len(factors) == len(V):
-                    return _sort_factors(factors, multiple=False)
+                    return _sort_factors_single(factors)
 
                 s += K.one
 
-    return _sort_factors(factors, multiple=False)
+    return _sort_factors_single(factors)
 
 
 def gf_ddf_zassenhaus(
@@ -1995,7 +1995,7 @@ def gf_edf_zassenhaus(f: dup[MPZ], n: int, p: MPZ, K: Domain[MPZ]) -> list[dup[M
                 gf_quo(f, g, p, K), n, p, K
             )
 
-    return _sort_factors(factors, multiple=False)
+    return _sort_factors_single(factors)
 
 
 def gf_ddf_shoup(f: dup[MPZ], p: MPZ, K: Domain[MPZ]) -> list[tuple[dup[MPZ], int]]:
@@ -2136,7 +2136,7 @@ def gf_edf_shoup(f: dup[MPZ], n: int, p: MPZ, K: Domain[MPZ]) -> list[dup[MPZ]]:
             + gf_edf_shoup(h3, n, p, K)
         )
 
-    return _sort_factors(factors, multiple=False)
+    return _sort_factors_single(factors)
 
 
 def gf_zassenhaus(f: dup[MPZ], p: MPZ, K: Domain[MPZ]) -> list[dup[MPZ]]:
@@ -2158,7 +2158,7 @@ def gf_zassenhaus(f: dup[MPZ], p: MPZ, K: Domain[MPZ]) -> list[dup[MPZ]]:
     for factor, n in gf_ddf_zassenhaus(f, p, K):
         factors += gf_edf_zassenhaus(factor, n, p, K)
 
-    return _sort_factors(factors, multiple=False)
+    return _sort_factors_single(factors)
 
 
 def gf_shoup(f: dup[MPZ], p: MPZ, K: Domain[MPZ]) -> list[dup[MPZ]]:
@@ -2180,7 +2180,7 @@ def gf_shoup(f: dup[MPZ], p: MPZ, K: Domain[MPZ]) -> list[dup[MPZ]]:
     for factor, n in gf_ddf_shoup(f, p, K):
         factors += gf_edf_shoup(factor, n, p, K)
 
-    return _sort_factors(factors, multiple=False)
+    return _sort_factors_single(factors)
 
 
 _factor_methods: dict[str, Callable[[dup[MPZ], MPZ, Domain[MPZ]], list[dup[MPZ]]]] = {  # type: ignore
@@ -2221,7 +2221,7 @@ def gf_factor_sqf(
     return lc, factors
 
 
-def gf_factor(f: dup[MPZ], p: MPZ, K: Domain[MPZ]) -> tuple[MPZ, list[dup[MPZ]]]:
+def gf_factor(f: dup[MPZ], p: MPZ, K: Domain[MPZ]) -> tuple[MPZ, list[tuple[dup[MPZ], int]]]:
     """
     Factor (non square-free) polynomials in ``GF(p)[x]``.
 
@@ -2282,7 +2282,7 @@ def gf_factor(f: dup[MPZ], p: MPZ, K: Domain[MPZ]) -> tuple[MPZ, list[dup[MPZ]]]
         for h in gf_factor_sqf(g, p, K)[1]:
             factors.append((h, n))
 
-    return lc, _sort_factors(factors)
+    return lc, _sort_factors_multiple(factors)
 
 
 def gf_value(f: dup[MPZ], a: MPZ) -> MPZ:
