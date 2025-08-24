@@ -2,7 +2,8 @@ from __future__ import annotations
 
 from sympy.external.gmpy import GROUND_TYPES, MPQ, MPZ
 
-from sympy.polys.domains.domain import Domain, Er, Ef
+from sympy.polys.domains.domain import Domain, Er
+from sympy.polys.domains.field import Field, Ef
 from sympy.polys.series.base import PowerSeriesRingProto, PowerSeriesRingFieldProto
 from sympy.polys.series.ringpython import (
     USeries,
@@ -10,7 +11,7 @@ from sympy.polys.series.ringpython import (
     PythonPowerSeriesRingQQ,
 )
 
-from typing import Generic, TYPE_CHECKING, cast, Union
+from typing import Generic, TYPE_CHECKING, cast, overload
 
 
 if GROUND_TYPES == "flint":
@@ -46,9 +47,6 @@ class TSeriesElement(Generic[Er]):
     flint = True
 
 
-# Common type for the all lower power series elements.
-TElement = Union[USeries, ZZSeries, QQSeries]
-
 # Types for lower ring power series ring combining different ground types.
 TSeriesRing = PowerSeriesRingProto[TSeriesElement[Er], Er]
 TSeriesRingField = PowerSeriesRingFieldProto[TSeriesElement[Ef], Ef]
@@ -76,14 +74,26 @@ def PowerSeriesRingQQ(prec: int = 6) -> TSeriesRingField[MPQ]:
         return cast("TSeriesRingField[MPQ]", R_flint)
 
 
-def _power_series_ring(K: Domain, prec: int = 6) -> TSeriesRing | TSeriesRingField:
+@overload
+def _power_series_ring(K: Field[Ef], prec: int = 6) -> TSeriesRingField[Ef]: ...
+
+
+@overload
+def _power_series_ring(K: Domain[Er], prec: int = 6) -> TSeriesRing[Er]: ...
+
+
+def _power_series_ring(
+    K: Domain[Er] | Field[Ef], prec: int = 6
+) -> TSeriesRing[Er] | TSeriesRingField[Ef]:
     """
     Helper function for the Power Series Ring classes to create a base ring from lower
     power series rings.
     """
     if K.is_ZZ:
-        return cast("TSeriesRing", PowerSeriesRingZZ(prec))
+        R_ZZ: TSeriesRing[MPZ] = PowerSeriesRingZZ(prec)
+        return cast("TSeriesRing[Er]", R_ZZ)
     elif K.is_QQ:
-        return cast("TSeriesRingField", PowerSeriesRingQQ(prec))
+        R_QQ: TSeriesRingField[MPQ] = PowerSeriesRingQQ(prec)
+        return cast("TSeriesRingField[Ef]", R_QQ)
     else:
         raise ValueError(f"Unsupported ground domain: {K}")

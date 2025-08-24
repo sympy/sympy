@@ -1015,6 +1015,8 @@ class Domain(Generic[Er]):
 
     def power_series_ring(self, *symbols: str | Expr, prec: int = 6) -> PowerSeriesRing:
         """Returns a Power Series ring over ring or field. """
+        if len(symbols) != 1:
+            raise ValueError("Power series ring supports only univariate series.")
         from sympy.polys.domains.powerseriesring import PowerSeriesRing
         return PowerSeriesRing(self, symbols[0], prec)
 

@@ -10,7 +10,7 @@ from sympy.polys.series.ring import (
     PowerSeriesRingField,
     PowerSeriesElement,
 )
-from sympy.polys.series.tring import TElement
+from sympy.polys.series.tring import TSeriesElement
 from sympy.utilities import public
 
 from typing import Union, TYPE_CHECKING
@@ -44,7 +44,9 @@ class PowerSeriesRing(Ring[PowerSeriesElement[Er]], CompositeDomain):
         self.domain = ring.domain
         self.symbol = ring.symbol
 
-    def new(self, element: Union[TElement, Expr, Er, int]) -> PowerSeriesElement[Er]:  # type: ignore
+    def new(
+        self, element: TSeriesElement[Er] | Expr | Er | int
+    ) -> PowerSeriesElement[Er]:  # type: ignore
         return self.ring.ring_new(element)
 
     def of_type(self, element) -> TypeIs[PowerSeriesElement[Er]]:

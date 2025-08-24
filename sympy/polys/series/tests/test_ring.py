@@ -1254,7 +1254,7 @@ def test_PowerSeriesRing_arith(groundring_int):
     assert RL.equal_repr(((1 + x) * (1 + x)).series, RL([1, 2, 1]))
     assert RL.equal_repr(((1 + 2 * x) * (3 + 4 * x)).series, RL([3, 10, 8]))
 
-    assert RL.equal_repr((x**0).series, RL([]))
+    assert RL.equal_repr((x**0).series, RL([1]))
     assert RL.equal_repr((x**1).series, RL([0, 1]))
     assert RL.equal_repr((x**3).series, RL([0, 0, 0, 1]))
     assert RL.equal_repr(((1 + x) ** 2).series, RL([1, 2, 1]))
