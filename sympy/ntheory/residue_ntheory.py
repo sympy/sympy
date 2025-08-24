@@ -5,7 +5,6 @@ from typing import Literal, SupportsIndex, cast, overload
 from sympy.external.gmpy import (MPZ, gcd, lcm, invert, sqrt, jacobi,
                                  bit_scan1, remove)
 from sympy.core.expr import Expr
-from sympy.core.numbers import Integer
 from sympy.polys import Poly
 from sympy.polys.domains import ZZ
 from sympy.polys.galoistools import gf_crt1, gf_crt2, linear_congruence, gf_csolve
