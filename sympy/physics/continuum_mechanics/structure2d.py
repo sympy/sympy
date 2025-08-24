@@ -281,6 +281,7 @@ class Structure2d:
         self.uz  = None
         self.N   = None
         self.ux  = None
+        self._is_solved = False
 
     def __repr__(self):
         return f"Structure2d(Members={len(self.members)}, Nodes={len(self.nodes)}, Supports={len(self.supports)})"
@@ -1171,6 +1172,7 @@ class Structure2d:
         self.N   = self.N.subs(sol_map)
         self.ux  = self.ux.subs(sol_map)
 
+        self._is_solved = True
         return self.reaction_loads
 
 
@@ -1212,7 +1214,7 @@ class Structure2d:
         Returns:
             A plot showing the shear force distribution along the structure.
         """
-        if self.V is None :
+        if not self._is_solved :
             raise RuntimeError("Call solve_for_reaction_loads() first.")
         x = self.column.variable
         L = self.beam.length
@@ -1262,7 +1264,7 @@ class Structure2d:
             A plot showing the axial force distribution along the structure.
         """
 
-        if self.N is None:
+        if not self._is_solved :
             raise RuntimeError("Call solve_for_reaction_loads() first.")
         x = self.column.variable
         L = self.beam.length
@@ -1311,7 +1313,7 @@ class Structure2d:
         Returns:
             A plot showing the bending moment distribution along the structure.
         """
-        if self.M is None and not self.reaction_loads:
+        if not self._is_solved :
             raise RuntimeError("Call solve_for_reaction_loads() first.")
         x = self.column.variable
         L = self.beam.length
@@ -1362,7 +1364,7 @@ class Structure2d:
             A plot showing the extension along the structure.
         """
 
-        if self.ux is None:
+        if not self._is_solved :
             raise RuntimeError("Call solve_for_reaction_loads() first.")
 
         x = self.column.variable
@@ -1412,7 +1414,7 @@ class Structure2d:
         Returns:
             A plot showing the deflection along the structure.
         """
-        if self.ux is None:
+        if not self._is_solved :
             raise RuntimeError("Call solve_for_reaction_loads() first.")
 
         x = self.column.variable
@@ -1587,7 +1589,7 @@ class Structure2d:
             {R_h (x=0,y=0): -90, R_v (x=0,y=0): -44421/1120, R_v (x=7,y=1): -22779/1120, T (x=0,y=0): 42021/160}
             >>> s.plot_shear_force_on_structure(factor=75.0, show_values=True)  # doctest: +SKIP
         """
-        if self.V is None :
+        if not self._is_solved :
             raise RuntimeError("Call solve_for_reaction_loads() first.")
         return self._plot_expression_on_structure(self.shear_force(),
                                                 factor=factor,
@@ -1638,7 +1640,7 @@ class Structure2d:
             {R_h (x=0,y=0): -90, R_v (x=0,y=0): -44421/1120, R_v (x=7,y=1): -22779/1120, T (x=0,y=0): 42021/160}
             >>> s.plot_bending_moment_on_structure(factor=150.0, show_values=True)  # doctest: +SKIP
         """
-        if self.M is None :
+        if not self._is_solved :
             raise RuntimeError("Call solve_for_reaction_loads() first.")
         return self._plot_expression_on_structure(self.bending_moment(),
                                                 factor=factor,
@@ -1688,7 +1690,7 @@ class Structure2d:
             {R_h (x=0,y=0): -90, R_v (x=0,y=0): -44421/1120, R_v (x=7,y=1): -22779/1120, T (x=0,y=0): 42021/160}
             >>> s.plot_axial_force_on_structure(factor=75.0, show_values=True)  # doctest: +SKIP
         """
-        if self.N is None :
+        if not self._is_solved :
             raise RuntimeError("Call solve_for_reaction_loads() first.")
         return self._plot_expression_on_structure(self.axial_force(),
                                                 factor=factor,
@@ -1742,7 +1744,7 @@ class Structure2d:
         {R_h (x=0,y=0): 0, R_v (x=0,y=0): -7.5, R_v (x=4,y=0): -7.5}
         >>> s.plot_deformation_on_structure(factor=75.0)  # doctest: +SKIP
         """
-        if self.uz is None or self.ux is None:
+        if not self._is_solved :
             raise RuntimeError("Call solve_for_reaction_loads() first.")
 
 
@@ -1857,9 +1859,8 @@ class Structure2d:
             f'{"=" * ((line_length - len(title)) // 2)} {title} {"=" * ((line_length - len(title)) // 2)}'
         )
 
-        if not self.reaction_loads:
-            print("\nPlease solve for reaction loads first")
-            return
+        if not self._is_solved :
+            raise RuntimeError("Call solve_for_reaction_loads() first.")
 
         if verbose:
             self._print_reaction_loads(round_digits)
