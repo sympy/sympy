@@ -1213,6 +1213,34 @@ class Structure2d:
 
         Returns:
             A plot showing the shear force distribution along the structure.
+
+        Examples
+        ========
+        Plot the shear force diagram of unwrapped structure.
+
+        .. plot::
+            :context: close-figs
+            :format: doctest
+            :include-source: True
+
+            >>> from sympy.physics.continuum_mechanics.structure2d import Structure2d
+            >>> from sympy import symbols
+            >>> s = Structure2d()
+            >>> E, I, A = symbols('E I A')
+            >>> E = 10**4
+            >>> I = 10**4
+            >>> A = 10**4
+            >>> s.add_member(0, 0, 4, 0, E, I, A)
+            >>> s.add_member(4, 0, 8, 3, E, I, A)
+            >>> s.add_member(8, 3, 11, -1, E, I, A)
+            >>> s.apply_load(0, 0, 15, 0, -1)
+            >>> s.apply_load(2, 0, 16, 270, -1)
+            >>> s.apply_load(0, 0, 6, 270, 0, 4, 0)
+            >>> s.apply_load(4, 0, 6, 270, 0, 6, 1.5)
+            >>> s.apply_support(11,-1,"fixed")
+            >>> s.solve_for_reaction_loads()
+            {R_h (x=11,y=-1): -15, R_v (x=11,y=-1): -55, T (x=11,y=-1): -435}
+            >>> s.plot_shear_force()  # doctest: +SKIP
         """
         if not self._is_solved :
             raise RuntimeError("Call solve_for_reaction_loads() first.")
@@ -1262,6 +1290,34 @@ class Structure2d:
 
         Returns:
             A plot showing the axial force distribution along the structure.
+
+        Examples
+        ========
+        Plot the axial force diagram on the unwrapped 1d structure after solving reactions.
+
+        .. plot::
+            :context: close-figs
+            :format: doctest
+            :include-source: True
+
+            >>> from sympy.physics.continuum_mechanics.structure2d import Structure2d
+            >>> from sympy import symbols
+            >>> s = Structure2d()
+            >>> E, I, A = symbols('E I A')
+            >>> E = 10**4
+            >>> I = 10**4
+            >>> A = 10**4
+            >>> s.add_member(0, 0, 4, 0, E, I, A)
+            >>> s.add_member(4, 0, 8, 3, E, I, A)
+            >>> s.add_member(8, 3, 11, -1, E, I, A)
+            >>> s.apply_load(0, 0, 15, 0, -1)
+            >>> s.apply_load(2, 0, 16, 270, -1)
+            >>> s.apply_load(0, 0, 6, 270, 0, 4, 0)
+            >>> s.apply_load(4, 0, 6, 270, 0, 6, 1.5)
+            >>> s.apply_support(11,-1,"fixed")
+            >>> s.solve_for_reaction_loads()
+            {R_h (x=11,y=-1): -15, R_v (x=11,y=-1): -55, T (x=11,y=-1): -435}
+            >>> s.plot_axial_force()  # doctest: +SKIP
         """
 
         if not self._is_solved :
@@ -1312,6 +1368,32 @@ class Structure2d:
 
         Returns:
             A plot showing the bending moment distribution along the structure.
+
+        Examples
+        ========
+        Plot the bending moment diagram on the unwrapped 1d structure after solving reactions.
+
+        .. plot::
+            :context: close-figs
+            :format: doctest
+            :include-source: True
+
+            >>> from sympy.physics.continuum_mechanics.structure2d import Structure2d
+            >>> from sympy import symbols
+            >>> s = Structure2d()
+            >>> E, I, A = symbols('E I A')
+            >>> E = 10**4
+            >>> I = 10**4
+            >>> A = 10**4
+            >>> s.add_member(0, 0, 3, 4, E, I, A)
+            >>> s.add_member(3, 4, 6, 0, E, I, A)
+            >>> s.apply_load(0, 0, 60, 0, 0, 3, 4)
+            >>> s.apply_load(3, 4, 60, 0, 0, 6, 0)
+            >>> s.apply_support(0, 0,"pin")
+            >>> s.apply_support(6, 0,"pin")
+            >>> s.solve_for_reaction_loads()
+            {R_h (x=0,y=0): -300, R_h (x=6,y=0): -300, R_v (x=0,y=0): 200, R_v (x=6,y=0): -200}
+            >>> s.plot_bending_moment()  # doctest: +SKIP
         """
         if not self._is_solved :
             raise RuntimeError("Call solve_for_reaction_loads() first.")
@@ -1362,6 +1444,33 @@ class Structure2d:
 
         Returns:
             A plot showing the extension along the structure.
+
+
+        Examples
+        ========
+        Plot the extension diagram on the unwrapped 1d structure after solving reactions.
+
+        .. plot::
+            :context: close-figs
+            :format: doctest
+            :include-source: True
+
+            >>> from sympy.physics.continuum_mechanics.structure2d import Structure2d
+            >>> from sympy import symbols
+            >>> s = Structure2d()
+            >>> E, I, A = symbols('E I A')
+            >>> E = 10**4
+            >>> I = 10**4
+            >>> A = 10**4
+            >>> s.add_member(0, 0, 3, 4, E, I, A)
+            >>> s.add_member(3, 4, 6, 0, E, I, A)
+            >>> s.apply_load(0, 0, 60, 0, 0, 3, 4)
+            >>> s.apply_load(3, 4, 60, 0, 0, 6, 0)
+            >>> s.apply_support(0, 0,"pin")
+            >>> s.apply_support(6, 0,"pin")
+            >>> s.solve_for_reaction_loads()
+            {R_h (x=0,y=0): -300, R_h (x=6,y=0): -300, R_v (x=0,y=0): 200, R_v (x=6,y=0): -200}
+            >>> s.plot_extension()  # doctest: +SKIP
         """
 
         if not self._is_solved :
@@ -1413,6 +1522,32 @@ class Structure2d:
 
         Returns:
             A plot showing the deflection along the structure.
+
+        Examples
+        ========
+        Plot the deflection diagram on the unwrapped 1d structure after solving reactions.
+
+        .. plot::
+            :context: close-figs
+            :format: doctest
+            :include-source: True
+
+            >>> from sympy.physics.continuum_mechanics.structure2d import Structure2d
+            >>> from sympy import symbols
+            >>> s = Structure2d()
+            >>> E, I, A = symbols('E I A')
+            >>> E = 10**4
+            >>> I = 10**4
+            >>> A = 10**4
+            >>> s.add_member(0, 0, 3, 4, E, I, A)
+            >>> s.add_member(3, 4, 6, 0, E, I, A)
+            >>> s.apply_load(0, 0, 60, 0, 0, 3, 4)
+            >>> s.apply_load(3, 4, 60, 0, 0, 6, 0)
+            >>> s.apply_support(0, 0,"pin")
+            >>> s.apply_support(6, 0,"pin")
+            >>> s.solve_for_reaction_loads()
+            {R_h (x=0,y=0): -300, R_h (x=6,y=0): -300, R_v (x=0,y=0): 200, R_v (x=6,y=0): -200}
+            >>> s.plot_deflection()  # doctest: +SKIP
         """
         if not self._is_solved :
             raise RuntimeError("Call solve_for_reaction_loads() first.")
@@ -1424,6 +1559,7 @@ class Structure2d:
                     xlabel=r'$\mathrm{x}$',
                     ylabel=r'$\mathrm{u(z)}$',
                     line_color='r')
+
 
     def _plot_expression_on_structure(self, expr, *, factor=75.0, show_values=True, title=None, _color='tab:red', scale_text=None):
         # helper plotting function to reduce duplication of code
@@ -1597,6 +1733,7 @@ class Structure2d:
                                                 title="Shear diagram",_color='tab:green',scale_text="(x, y in metre)\n (Shear in kN)"
 )
 
+
     def plot_bending_moment_on_structure(self, *, factor=150.0, show_values=True):
         """
         Plots the bending moment on the structure geometry (member-wise).
@@ -1646,6 +1783,7 @@ class Structure2d:
                                                 factor=factor,
                                                 show_values=show_values,
                                                 title="Bending moment diagram", _color='tab:blue', scale_text="(x, y in metre)\n (Bending in kN/metre)")
+
 
     def plot_axial_force_on_structure(self, *, factor=75.0, show_values=True):
         """
@@ -1697,6 +1835,7 @@ class Structure2d:
                                                 show_values=show_values,
                                                 title="Axial force diagram", _color='tab:orange', scale_text="(x, y in metre)\n (Axial in kN)")
 
+
     def _build_geometry_functions(self):
 
         x = self.beam.variable
@@ -1717,6 +1856,7 @@ class Structure2d:
             h += gate_len * cos(th)
             v += gate_len * sin(th)
         return h, v
+
 
     def plot_deformation_on_structure(self, factor=1/10000.0):
         """
@@ -1866,6 +2006,7 @@ class Structure2d:
             self._print_reaction_loads(round_digits)
             self._print_points_of_interest(round_digits)
 
+
     def _print_reaction_loads(self, round_digits):
         import re
         print("\nReaction Loads:")
@@ -1880,6 +2021,7 @@ class Structure2d:
                 value = round(float(value), round_digits)
             support_str = f"{support_name:<5} (x={support_x_loc:.2f},y={support_y_loc:.2f})  (unwrapped x={unwrapped_xl_loc:.2f})"
             print(f"{support_str:<50} = {value}")
+
 
     def _print_points_of_interest(self, round_digits):
         dx = 1e-6
