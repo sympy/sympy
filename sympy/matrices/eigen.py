@@ -1263,7 +1263,7 @@ def _jordan_form(M: Tmat,
         mat = mat.applyfunc(lambda x: nsimplify(x, rational=True))
 
     # check if matrix is rational
-    has_rationals = all(num.is_rational for num in list(mat.iter_values()))
+    has_rationals = all(num.is_rational and num.is_number for num in list(mat.iter_values()))
 
     if has_rationals:
         if calc_transform:
