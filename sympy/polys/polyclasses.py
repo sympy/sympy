@@ -323,7 +323,10 @@ class DMP(CantSympify, Generic[Er]):
 
     def to_dict(f, zero: bool = False) -> dict[monom, Er]:
         """Convert ``f`` to a dict representation with native coefficients. """
-        return dmp_to_dict(f.to_list(), f.lev, f.dom, zero=zero)
+        if zero and not f:
+            return {(0,)*(f.lev + 1): f.dom.zero}
+        else:
+            return dmp_to_dict(f.to_list(), f.lev, f.dom)
 
     def to_sympy_dict(f, zero: bool = False) -> dict[monom, Expr]:
         """Convert ``f`` to a dict representation with SymPy coefficients. """
@@ -1446,7 +1449,7 @@ class DMP_Python(DMP[Er]):
     def _lift(f) -> DMP:
         """Convert algebraic coefficients to rationals. """
         # XXX: This is only for AlgebraicField domains
-        r = dmp_lift(f._rep, f.lev, f.dom)
+        r = dmp_lift(f._rep, f.lev, f.dom) # type: ignore
         return f._new(r, f.dom.dom, f.lev) # type: ignore
 
     def deflate(f) -> tuple[monom, DMP_Python[Er]]:

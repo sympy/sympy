@@ -13,7 +13,7 @@ from sympy.polys.domains.characteristiczero import CharacteristicZero
 from sympy.polys.domains.field import Field
 from sympy.polys.domains.simpledomain import SimpleDomain
 from sympy.polys.domains.ringextension import RingExtension
-from sympy.polys.polyclasses import ANP
+from sympy.polys.polyclasses import ANP, DMP
 from sympy.polys.polyerrors import CoercionFailed, DomainError, NotAlgebraic, IsomorphismFailed
 from sympy.utilities import public
 
@@ -260,6 +260,7 @@ class AlgebraicField(Field[Alg], CharacteristicZero, SimpleDomain[Alg], RingExte
     has_assoc_Field = True
 
     dom: Domain[MPQ]
+    mod: DMP[MPQ]
 
     def __init__(self, dom: Domain[MPQ], *ext: Expr, alias: str | None = None) -> None:
         r"""
