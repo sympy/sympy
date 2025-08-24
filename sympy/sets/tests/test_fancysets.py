@@ -331,8 +331,7 @@ def test_Range_set():
                 R = R.reversed
                 result = list(R[a:b:c])
                 ans = r[a:b:c]
-                txt = ('\n%s[%s:%s:%s] = %s -> %s' % (
-                R, a, b, c, result, ans))
+                txt = (f"\n{R}[{a}:{b}:{c}] = {result} -> {ans}")
                 check = ans == result
                 assert check, txt
 
