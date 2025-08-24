@@ -2,7 +2,7 @@
 
 from sympy.assumptions.ask import Q
 from sympy.core.symbol import symbols
-from sympy.core.relational import Unequality
+from sympy.core.relational import Unequality, Equality
 from sympy.logic.boolalg import And, Or, Implies, Equivalent, true, false
 from sympy.logic.inference import literal_symbol, \
      pl_true, satisfiable, valid, entails, PropKB
@@ -19,6 +19,9 @@ from sympy.core.random import randint
 
 from sympy.testing.pytest import raises, skip
 from sympy.external import import_module
+
+from sympy.core.function import Function
+
 
 
 def test_literal():
@@ -39,7 +42,7 @@ def test_find_pure_symbol():
     assert find_pure_symbol(
         [A, B, C], [~A | B, ~B | ~C, C | A]) == (None, None)
 
-
+# D:\SymPy\sympy\sympy\logic\tests\test_inference.py
 def test_find_pure_symbol_int_repr():
     assert find_pure_symbol_int_repr([1], [{1}]) == (1, True)
     assert find_pure_symbol_int_repr([1, 2],
@@ -340,6 +343,30 @@ def test_z3():
     # test nonlinear function
     assert z3_satisfiable((x ** 2 >= 2) & (x < 1) & (x > -1)) is False
 
+    f = symbols('f1', cls=Function)
+    model = z3_satisfiable(f(A))
+    assert bool(model) is True
+
+    f,h = symbols('f h', cls=Function)
+    x,y,c2 = symbols('x y c2')
+
+    assert z3_satisfiable(Equality(h(x, y), h(y, x))) == {Q.eq(h(x, y), h(y, x)): True}
+    # assert z3_satisfiable(Equality(f(h(x, y)), h(f(x), f(y)))) is True
+    # assert z3_satisfiable(Unequality(f(c2), x)) is True
+
+    expr = And(
+        Unequality(x, y),
+        Equality(f(x), f(y)),
+        Unequality(h(f(x)), h(f(y)))
+    )
+    assert z3_satisfiable(expr) is False
+
+    expr = And(
+        Equality(x, y),
+        Unequality(f(x), f(y))
+    )
+    assert z3_satisfiable(expr) is False
+
 
 def test_z3_vs_lra_dpll2():
     z3 = import_module("z3")
@@ -377,7 +404,8 @@ def test_z3_vs_lra_dpll2():
             continue
 
         lra_dpll2_sat = lra_dpll2_satisfiable(cnf) is not False
-
+        print(f"\nlra model is {lra_dpll2_sat}")
+        print(f"z3 model is {z3_sat}\n")
         assert z3_sat == lra_dpll2_sat
 
 def test_issue_27733():
