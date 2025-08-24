@@ -1196,13 +1196,13 @@ class Structure2d:
         """
 
         if x is None:
-            return self.beam.shear_force()
+            return self.V
         if y is None:
             x_symbol = Symbol("x")
-            return self.beam.shear_force().subs(x_symbol, x)
+            return self.V.subs(x_symbol, x)
         else:
             unwarap_x = self._find_unwrapped_position(x, y)
-            return self.beam.shear_force().subs(Symbol("x"), unwarap_x)
+            return self.V.subs(Symbol("x"), unwarap_x)
 
 
     def plot_shear_force(self):
@@ -1214,7 +1214,13 @@ class Structure2d:
         """
         if self.V is None :
             raise RuntimeError("Call solve_for_reaction_loads() first.")
-        self.beam.plot_shear_force()
+        x = self.column.variable
+        L = self.beam.length
+        return plot(self.V, (x, 0, L),
+                    title='Shear Force',
+                    xlabel=r'$\mathrm{x}$',
+                    ylabel=r'$\mathrm{V}$',
+                    line_color='g')
 
 
     def axial_force(self, x=None, y=None):
@@ -1258,7 +1264,6 @@ class Structure2d:
 
         if self.N is None:
             raise RuntimeError("Call solve_for_reaction_loads() first.")
-        from sympy.plotting import plot
         x = self.column.variable
         L = self.beam.length
         return plot(self.N, (x, 0, L),
@@ -1290,13 +1295,13 @@ class Structure2d:
         """
 
         if x is None:
-            return self.beam.bending_moment()
+            return self.M
         if y is None:
             x_symbol = Symbol("x")
-            return self.beam.bending_moment().subs(x_symbol, x)
+            return self.M.subs(x_symbol, x)
         else:
             unwarap_x = self._find_unwrapped_position(x, y)
-            return self.beam.bending_moment().subs(Symbol("x"), unwarap_x)
+            return self.M.subs(Symbol("x"), unwarap_x)
 
 
     def plot_bending_moment(self):
@@ -1308,7 +1313,14 @@ class Structure2d:
         """
         if self.M is None and not self.reaction_loads:
             raise RuntimeError("Call solve_for_reaction_loads() first.")
-        self.beam.plot_bending_moment()
+        x = self.column.variable
+        L = self.beam.length
+        return plot(self.M, (x, 0, L),
+                    title='Bending Moment',
+                    xlabel=r'$\mathrm{x}$',
+                    ylabel=r'$\mathrm{M}$',
+                    line_color='b')
+
 
 
     def extension(self, x=None, y=None):
