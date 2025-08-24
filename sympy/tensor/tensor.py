@@ -2210,7 +2210,7 @@ class TensExpr(Expr, ABC):
 
         array = tensorcontraction(tensorproduct(metric, array), (1, 2+pos))
         permu = list(range(dim))
-        permu[0], permu[pos] = permu[pos], permu[0]
+        permu.insert(pos, permu.pop(0))
         return permutedims(array, permu)
 
     @staticmethod
