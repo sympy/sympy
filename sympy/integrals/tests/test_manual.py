@@ -12,7 +12,7 @@ from sympy.functions.elementary.piecewise import Piecewise, piecewise_fold
 from sympy.functions.elementary.trigonometric import (acos, acot, acsc, asec, asin, atan, cos, cot, csc, sec, sin, tan)
 from sympy.functions.special.delta_functions import Heaviside, DiracDelta
 from sympy.functions.special.elliptic_integrals import (elliptic_e, elliptic_f)
-from sympy.functions.special.error_functions import (Chi, Ci, Ei, Shi, Si, erf, erfc, erfi, fresnelc, fresnels, li)
+from sympy.functions.special.error_functions import (Chi, Ci, Ei, Shi, Si, expint, erf, erfc, erfi, fresnelc, fresnels, li)
 from sympy.functions.special.gamma_functions import uppergamma
 from sympy.functions.special.polynomials import (assoc_laguerre, chebyshevt, chebyshevu, gegenbauer, hermite, jacobi, laguerre, legendre)
 from sympy.functions.special.zeta_functions import polylog
@@ -20,7 +20,7 @@ from sympy.integrals.integrals import (Integral, integrate)
 from sympy.logic.boolalg import And
 from sympy.integrals.manualintegrate import (manualintegrate, find_substitutions,
     _parts_rule, integral_steps, manual_subs)
-from sympy.testing.pytest import raises, slow
+from sympy.testing.pytest import raises, slow, XFAIL
 
 x, y, z, u, n, a, b, c, d, e = symbols('x y z u n a b c d e')
 f = Function('f')
@@ -319,6 +319,17 @@ def test_manualintegrate_special():
     assert_is_integral_of(f, F)
     f = -cosh(x/2)*erf(x)
     F = (erf(x - Rational(1,4)) - erf(x + Rational(1,4)))*exp(Rational(1,16)) - 2*sinh(x/2)*erf(x)
+    assert_is_integral_of(f, F)
+    f, F = exp(x)*cos(x)/x, Ei(x*(1 - I))/2 + Ei(x*(1 + I))/2
+    assert_is_integral_of(f, F)
+    f, F = exp(7*x)*sinh(16*x)/x, -Ei(-9*x)/2 + Ei(23*x)/2
+    assert_is_integral_of(f, F)
+
+@XFAIL
+def test_manualintegrate_special_xfail():
+    f, F = exp(x)*sin(x)/x**2, (I*expint(2, -x - I*x) - I*expint(2, -x + I*x))/(2*x)
+    f, F = exp(x)*sin(x)/x**3, (I*expint(3, -x - I*x) - I*expint(3, -x + I*x))/(2*x**2)
+    f, F = exp(x)*cosh(x)/x**2, (-expint(2, -2*x) - 1)/(2*x)
     assert_is_integral_of(f, F)
 
 
