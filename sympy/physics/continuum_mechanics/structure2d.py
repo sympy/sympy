@@ -1411,7 +1411,6 @@ class Structure2d:
                     ylabel=r'$\mathrm{u(z)}$',
                     line_color='r')
 
-
     def _plot_expression_on_structure(self, expr, *, factor=75.0, show_values=True, title=None, _color='tab:red', scale_text=None):
         # helper plotting function to reduce duplication of code
 
@@ -1472,12 +1471,30 @@ class Structure2d:
             txs = bx + scaled * nx
             tys = by + scaled * ny
 
+            # Plot individual line segments
             for j in range(0, n, stride):
                 ax.plot([bx[j], txs[j]], [by[j], tys[j]], color=_color, linewidth=1.0, zorder=20)
             ax.plot([bx[0],  txs[0]],  [by[0],  tys[0]],  color=_color, linewidth=1.0, zorder=20)
             ax.plot([bx[-1], txs[-1]], [by[-1], tys[-1]], color=_color, linewidth=1.0, zorder=20)
 
+            # Plot the expression line
             ax.plot(txs, tys, color=_color, linewidth=LINE_WIDTH, zorder=21)
+
+            # Add filled polygon between member line (bx, by) and expression line (txs, tys)
+            polygon_coords = (
+                [(bx[i], by[i]) for i in range(n)] +  # Member line points
+                [(txs[i], tys[i]) for i in range(n-1, -1, -1)]  # Expression line points in reverse
+            )
+            polygon = plt.Polygon(
+                polygon_coords,
+                closed=True,
+                fill=True,
+                color=_color,
+                edgecolor=None,
+                alpha=0.25,  # Semi-transparent fill, similar to distributed load in draw method
+                zorder=19,   # Place below tip and expression line
+            )
+            ax.add_patch(polygon)
 
             if label_mode == 'ends':
                 for j in (0, n-1):
@@ -1488,10 +1505,10 @@ class Structure2d:
                     lx = txs[j] + LABEL_OFFSET * nx
                     ly = tys[j] + sign*LABEL_OFFSET * ny
                     txt = LABEL_FMT.format(v=round(v_raw, int(LABEL_DECIMALS)))
-                    ax.text(lx, ly, txt, fontsize=12, color=_color,
-                            zorder=30, ha='center', va='center',bbox={
+                    ax.text(lx, ly, txt, fontsize=8, color="black",
+                            zorder=30, ha='center', va='center', bbox={
                             "facecolor": "lightgrey",
-                            "alpha": 0.5,
+                            "alpha": 0.6,
                             "edgecolor": "none",
                         },
                     )
