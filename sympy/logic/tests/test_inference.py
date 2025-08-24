@@ -20,6 +20,9 @@ from sympy.core.random import randint
 from sympy.testing.pytest import raises, skip
 from sympy.external import import_module
 
+from sympy.core.function import Function
+
+
 
 def test_literal():
     A, B = symbols('A,B')
@@ -39,7 +42,7 @@ def test_find_pure_symbol():
     assert find_pure_symbol(
         [A, B, C], [~A | B, ~B | ~C, C | A]) == (None, None)
 
-
+# D:\SymPy\sympy\sympy\logic\tests\test_inference.py
 def test_find_pure_symbol_int_repr():
     assert find_pure_symbol_int_repr([1], [{1}]) == (1, True)
     assert find_pure_symbol_int_repr([1, 2],
@@ -339,6 +342,10 @@ def test_z3():
 
     # test nonlinear function
     assert z3_satisfiable((x ** 2 >= 2) & (x < 1) & (x > -1)) is False
+
+    f = symbols('f1', cls=Function)
+    model = z3_satisfiable(f(A))
+    assert bool(model) is True
 
 
 def test_z3_vs_lra_dpll2():
