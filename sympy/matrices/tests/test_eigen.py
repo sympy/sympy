@@ -410,6 +410,8 @@ def test_is_diagonalizable():
 
 
 def test_jordan_form():
+    from sympy import nsimplify
+
     m = Matrix(3, 2, [-3, 1, -3, 20, 3, 10])
     raises(NonSquareMatrixError, lambda: m.jordan_form())
 
@@ -451,6 +453,10 @@ def test_jordan_form():
     P, J = m.jordan_form()
     assert all(isinstance(x, Float) or x == 0 for x in P)
     assert all(isinstance(x, Float) or x == 0 for x in J)
+
+    A = Matrix([[-3, 1, 2], [1, -1, 0], [1, 0, -2]])
+    P, J = A.jordan_form()
+    assert (P * J * P.inv()).applyfunc(nsimplify) == A
 
 
 def test_singular_values():
