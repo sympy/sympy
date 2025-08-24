@@ -40,6 +40,7 @@ from sympy.core.power import Pow
 from sympy.core.relational import Eq, Ne
 from sympy.core.singleton import S
 from sympy.core.symbol import Dummy, Symbol, Wild
+from sympy.core.exprtools import factor_terms
 from sympy.functions.elementary.complexes import Abs
 from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.hyperbolic import (HyperbolicFunction, csch,
@@ -1257,7 +1258,8 @@ def _parts_rule(integrand, symbol) -> tuple[Expr, Expr, Expr, Expr, Rule] | None
         return pull_out_u_rl
 
     liate_rules = [pull_out_u(log), pull_out_u(*inverse_trig_functions),
-                   pull_out_u(erf, erfc, erfi), pull_out_algebraic, pull_out_u(sin, cos),
+                   pull_out_u(erf, erfc, erfi), pull_out_algebraic,
+                   pull_out_u(sin, cos), pull_out_u(sinh, cosh),
                    pull_out_u(exp)]
 
 
@@ -1291,7 +1293,7 @@ def _parts_rule(integrand, symbol) -> tuple[Expr, Expr, Expr, Expr, Rule] | None
 
             # Can integrate a polynomial times OrthogonalPolynomial
             if rule == pull_out_algebraic:
-                if dv.is_Derivative or dv.has(TrigonometricFunction) or \
+                if dv.is_Derivative or dv.has(TrigonometricFunction, HyperbolicFunction) or \
                         isinstance(dv, OrthogonalPolynomial):
                     v_step = integral_steps(dv, symbol)
                     if v_step.contains_dont_know():
@@ -1422,6 +1424,37 @@ def trig_product_rule(integral: IntegralInfo):
         return SecTanRule(integrand, symbol)
     if integrand == csc(symbol) * cot(symbol):
         return CscCotRule(integrand, symbol)
+
+
+def trig_cmplx_exp_rule(integral: IntegralInfo):
+    """
+    Strategy that rewrites sin, cos, sinh, and cosh in terms of complex exponentials.
+    Useful for integration techniques that handle exponentials better.
+    Applies only when the integrand belongs to a class that benefits from exponential rewriting,
+    such as combinations involving Gaussian exponentials.
+
+    sin(x)  -> (exp(i*x) - exp(-i*x)) / (2*i)
+    cos(x)  -> (exp(i*x) + exp(-i*x)) / 2
+    sinh(x) -> (exp(x) - exp(-x)) / 2
+    cosh(x) -> (exp(x) + exp(-x)) / 2
+    """
+    integrand, symbol = integral
+
+    if not integrand.has(exp) and not integrand.has(sin, cos, sinh, cosh):
+        return
+
+    a = Wild('a', exclude=[symbol, 0])
+    b = Wild('b', exclude=[symbol])
+    pattern = exp(a * symbol**2 + b * symbol)
+    if not any(term.match(pattern) for term in integrand.atoms(exp)):
+        return
+
+    # Replace trig and hyperbolic functions with their exponential forms
+    rewritten = integrand.rewrite([sin, cos, sinh, cosh], exp)
+
+    if rewritten != integrand:
+        steps = integral_steps(rewritten, symbol)
+        return RewriteRule(integrand, symbol, rewritten, steps)
 
 
 def quadratic_denom_rule(integral):
@@ -2003,6 +2036,7 @@ def rewrites_rule(integral):
 def fallback_rule(integral):
     return DontKnowRule(*integral)
 
+
 # Cache is used to break cyclic integrals.
 # Need to use the same dummy variable in cached expressions for them to match.
 # Also record "u" of integration by parts, to avoid infinite repetition.
@@ -2098,7 +2132,7 @@ def integral_steps(integrand, symbol, **options):
             Mul: do_one(null_safe(mul_rule), null_safe(trig_product_rule),
                         null_safe(heaviside_rule), null_safe(quadratic_denom_rule),
                         null_safe(sqrt_linear_rule),
-                        null_safe(sqrt_quadratic_rule)),
+                        null_safe(sqrt_quadratic_rule), null_safe(trig_cmplx_exp_rule)),
             Derivative: derivative_rule,
             TrigonometricFunction: trig_rule,
             Heaviside: heaviside_rule,
@@ -2198,4 +2232,12 @@ def manualintegrate(f, var):
             result = result.func(
                 (result.args[1][0], Ne(*cond.args)),
                 (result.args[0][0], True))
+    # Factor terms like erf(x)*sin(x) that may have been expanded
+    def _has_erf_trig_mul(expr):
+        for sub in expr.find(Mul):
+            if sub.has(erf, erfc, erfi) and sub.has(sin, cos, sinh, cosh):
+                return True
+        return False
+    if _has_erf_trig_mul(f) and _has_erf_trig_mul(result):
+        result = factor_terms(result)
     return result

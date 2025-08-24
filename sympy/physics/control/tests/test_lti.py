@@ -20,13 +20,13 @@ from sympy.core.containers import Tuple
 from sympy.matrices import ImmutableMatrix, Matrix, ShapeError
 from sympy.functions.elementary.trigonometric import sin, cos
 from sympy.physics.control.lti import (
-    create_transfer_function,TransferFunctionBase, TransferFunction,
+    create_transfer_function, TransferFunctionBase, TransferFunction,
     DiscreteTransferFunction, PIDController,Series, Parallel, Feedback,
     TransferFunctionMatrix, MIMOSeries, MIMOParallel, MIMOFeedback, StateSpace,
     DiscreteStateSpace, create_state_space, gbt, bilinear, forward_diff,
     backward_diff, phase_margin, gain_margin)
 from sympy.testing.pytest import raises
-from sympy.logic.boolalg import true, false
+from sympy.logic.boolalg import false, true
 
 from math import isclose
 
@@ -34,9 +34,11 @@ a, x, b, c, s, g, d, p, k, tau, zeta, wn, T, z = symbols('a, x, b, c, s, g, d,\
     p, k, tau, zeta, wn, T, z')
 a0, a1, a2, a3, b0, b1, b2, b3, b4, c0, c1, c2, c3, d0, d1, d2, d3 = \
     symbols('a0:4, b0:5, c0:4, d0:4')
+
 TF1 = TransferFunction(1, s**2 + 2*zeta*wn*s + wn**2, s)
 TF2 = TransferFunction(k, 1, s)
 TF3 = TransferFunction(a2*p - s, a2*s + p, s)
+
 
 def test_create_transfer_function():
     cont_tf1 = create_transfer_function(s+1, s**2 + 2, s)
@@ -234,7 +236,7 @@ def test_TransferFunction_functions():
     assert G3.expand() == TransferFunction(e, f, s)
     assert G4.expand() == TransferFunction(a0*s**s - b0*p**p, g, p)
 
-    # purely symbolic polynomials.
+    # testing that subs works.
     p1 = a1*s + a0
     p2 = b2*s**2 + b1*s + b0
     SP1 = TransferFunction(p1, p2, s)
@@ -268,7 +270,9 @@ def test_TransferFunction_functions():
     assert expect4_.evalf() == expect4
 
     # evaluate the transfer function at particular frequencies.
-    assert tf1.eval_frequency(wn) == wn/(wn + 5) + 3/(wn + 5)
+    assert simplify(tf1.eval_frequency(wn) - (wn**2/(wn**2 + 4*wn - 5) +
+                                              2*wn/(wn**2 + 4*wn - 5) -
+                                              3/(wn**2 + 4*wn - 5))) == 0
     assert G1.eval_frequency(1 + I) == S(3)/25 + S(4)*I/25
     assert G4.eval_frequency(S(5)/3) == \
         a0*s**s/(a1*a2*s**(S(8)/3) + S(5)*a1*s/3 + 5*a2*b1*s**(S(8)/3)/3 + S(25)*b1*s/9) - 5*3**(S(1)/3)*5**(S(2)/3)*b0/(9*a1*a2*s**(S(8)/3) + 15*a1*s + 15*a2*b1*s**(S(8)/3) + 25*b1*s)
@@ -323,12 +327,12 @@ def test_TransferFunction_functions():
 
     stab_cond = TransferFunction(1, generic_den, s).get_asymptotic_stability_conditions()
     assert stab_cond == [
-        b3*b4 > 0, b3**2*(-b1*b4 + b2*b3) > 0,
-        (-b0*b3**3 + b1*b3*(-b1*b4 + b2*b3))*(-b1*b4 + b2*b3)**2 > 0,
-        b0*b3*(-b0*b3**3 + b1*b3*(-b1*b4 + b2*b3))**3*(-b1*b4 + b2*b3) > 0]
-    assert TransferFunction(1, (s+1)*(s+2*I)*(s-2*I), s).get_asymptotic_stability_conditions() == [true, false]
+        b3*b4 > 0, -b1*b4 + b2*b3 > 0,
+        -b0*b3**2*b4 -b1**2*b4**2 + b1*b2*b3*b4 > 0,
+        b0*b4 > 0]
+    assert TransferFunction(1, (s+1)*(s+2*I)*(s-2*I), s).get_asymptotic_stability_conditions() == [false]
     assert TransferFunction(1, (s+1)*(s+2)*(s+1/2), s).get_asymptotic_stability_conditions() == [true, true, true]
-    assert stable_tf.get_asymptotic_stability_conditions() == [true]
+    assert stable_tf.get_asymptotic_stability_conditions() == [True]
 
     # Zeros of a transfer function.
     assert G1.zeros() == [1, 1]
@@ -746,7 +750,7 @@ def test_DiscreteTransferFunction_functions():
     assert G4.expand() == DiscreteTransferFunction(a0*s**s - b0*p**p, g, p, 2.4)
     assert G4.expand() != DiscreteTransferFunction(a0*s**s - b0*p**p, g, p)
 
-    # purely symbolic polynomials.
+    # testing that subs works.
     p1 = a1*s + a0
     p2 = b2*s**2 + b1*s + b0
     SP1 = DiscreteTransferFunction(p1, p2, s)
@@ -823,6 +827,10 @@ def test_DiscreteTransferFunction_functions():
                            CRootOf(x**9 + x + 1, 3), CRootOf(x**9 + x + 1, 4),
                            CRootOf(x**9 + x + 1, 5), CRootOf(x**9 + x + 1, 6),
                            CRootOf(x**9 + x + 1, 7), CRootOf(x**9 + x + 1, 8)]
+    # test generic poles denominator
+    assert DiscreteTransferFunction(1, b0*x**2 + b1*x + b2, x).poles() == [
+        -b1/(2*b0) - sqrt(-4*b0*b2 + b1**2)/(2*b0),
+        -b1/(2*b0) + sqrt(-4*b0*b2 + b1**2)/(2*b0)]
     raises(NotImplementedError, lambda:
            DiscreteTransferFunction(x**2, a0*x**10 + x + x**2, x).poles())
 
@@ -2983,22 +2991,28 @@ def test_TransferFunction_gbt():
     dtf_test_bilinear1 = DiscreteTransferFunction.from_coeff_lists(numZ,
                                                              denZ,
                                                              z, T).expand()
-    dtf_test_bilinear2 = DiscreteTransferFunction.gbt(tf, T, 0.5, z).expand()
+    dtf_test_bilinear2 = DiscreteTransferFunction.from_gbt(tf, T,
+                                                           0.5, z).expand()
     # corresponding tf with manually calculated coefs
+    num_manual = [T/(2*(a + b*T/2)), T/(2*(a + b*T/2))]
+    den_manual = [1, (-a + b*T/2)/(a + b*T/2)]
+    dtf_manual = DiscreteTransferFunction.\
+        from_coeff_lists(num_manual, den_manual, z, T).expand()
     num_manual = [T/(2*(a + b*T/2)), T/(2*(a + b*T/2))]
     den_manual = [1, (-a + b*T/2)/(a + b*T/2)]
     dtf_manual = DiscreteTransferFunction.\
         from_coeff_lists(num_manual, den_manual, z, T).expand()
 
     assert dtf_test_bilinear1 == dtf_test_bilinear2 == dtf_manual
+    assert dtf_test_bilinear1 == dtf_test_bilinear2 == dtf_manual
 
     tf = TransferFunction(1, a*s+b, s)
     numZ, denZ = gbt(tf, T, 0)
-    # discretized transfer function with coefs from tf.gbt()
+    # discretized transfer function with coefs from tf.from_gbt()
     dtf_test_forward1 = DiscreteTransferFunction.from_coeff_lists(numZ,
                                                            denZ,
                                                            z, T).expand()
-    dtf_test_forward2 = DiscreteTransferFunction.gbt(tf, T, 0, z).expand()
+    dtf_test_forward2 = DiscreteTransferFunction.from_gbt(tf, T, 0, z).expand()
 
     # corresponding tf with manually calculated coefs
     num_manual = [T/a]
@@ -3010,11 +3024,11 @@ def test_TransferFunction_gbt():
 
     tf = TransferFunction(1, a*s+b, s)
     numZ, denZ = gbt(tf, T, 1)
-    # discretized transfer function with coefs from tf.gbt()
+    # discretized transfer function with coefs from tf.from_gbt()
     dtf_test_backward1 = DiscreteTransferFunction.from_coeff_lists(numZ,
                                                              denZ,
                                                              z, T).expand()
-    dtf_test_backward2 = DiscreteTransferFunction.gbt(tf, T, 1, z).expand()
+    dtf_test_backward2 = DiscreteTransferFunction.from_gbt(tf, T, 1, z).expand()
     # corresponding tf with manually calculated coefs
     num_manual = [T/(a + b*T), 0]
     den_manual = [1, -a/(a + b*T)]
@@ -3025,11 +3039,11 @@ def test_TransferFunction_gbt():
 
     tf = TransferFunction(1, a*s+b, s)
     numZ, denZ = gbt(tf, T, 0.3)
-    # discretized transfer function with coefs from tf.gbt()
+    # discretized transfer function with coefs from tf.from_gbt()
     dtf_test_gbt1 = DiscreteTransferFunction.from_coeff_lists(numZ,
                                                         denZ,
                                                         z, T).expand()
-    dtf_test_gbt2 = DiscreteTransferFunction.gbt(tf, T, 0.3, z).expand()
+    dtf_test_gbt2 = DiscreteTransferFunction.from_gbt(tf, T, 0.3, z).expand()
     # corresponding tf with manually calculated coefs
     num_manual = [3*T/(10*(a + 3*b*T/10)), 7*T/(10*(a + 3*b*T/10))]
     den_manual = [1, (-a + 7*b*T/10)/(a + 3*b*T/10)]
@@ -3046,7 +3060,8 @@ def test_TransferFunction_bilinear():
     dtf_test_bilinear1 = DiscreteTransferFunction.from_coeff_lists(numZ,
                                                              denZ,
                                                              z, T).expand()
-    dtf_test_bilinear2 = DiscreteTransferFunction.bilinear(tf, T, z).expand()
+    dtf_test_bilinear2 = \
+        DiscreteTransferFunction.from_bilinear(tf, T, z).expand()
     # corresponding tf with manually calculated coefs
     num_manual = [T/(2*(a + b*T/2)), T/(2*(a + b*T/2))]
     den_manual = [1, (-a + b*T/2)/(a + b*T/2)]
@@ -3063,7 +3078,8 @@ def test_TransferFunction_forward_diff():
     dtf_test_forward1 = DiscreteTransferFunction.from_coeff_lists(numZ,
                                                            denZ,
                                                            z, T).expand()
-    dtf_test_forward2 = DiscreteTransferFunction.forward_diff(tf, T, z).expand()
+    dtf_test_forward2 = \
+        DiscreteTransferFunction.from_forward_diff(tf, T, z).expand()
     # corresponding tf with manually calculated coefs
     num_manual = [T/a]
     den_manual = [1, (-a + b*T)/a]
@@ -3076,11 +3092,12 @@ def test_TransferFunction_backward_diff():
     # simple transfer function, e.g. ohms law
     tf = TransferFunction(1, a*s+b, s)
     numZ, denZ = backward_diff(tf, T)
-    # discretized transfer function with coefs from tf.backward_diff()
+    # discretized transfer function with coefs from tf.from_backward_diff()
     dtf_test_backward1 = DiscreteTransferFunction.from_coeff_lists(numZ,
                                                              denZ,
                                                              z, T).expand()
-    dtf_test_backward2 = DiscreteTransferFunction.backward_diff(tf, T, z).expand()
+    dtf_test_backward2 = \
+        DiscreteTransferFunction.from_backward_diff(tf, T, z).expand()
     # corresponding tf with manually calculated coefs
     num_manual = [T/(a + b*T), 0]
     den_manual = [1, -a/(a + b*T)]
@@ -3569,34 +3586,54 @@ def test_StateSpace_functions():
     C_mat = Matrix([[0, 1]])
     D_mat = Matrix([1])
     SS1 = StateSpace(A_mat, B_mat, C_mat, D_mat)
-    SS2 = StateSpace(Matrix([[1, 1], [4, -2]]),Matrix([[0, 1], [0, 2]]),Matrix([[-1, 1], [1, -1]]))
+    SS2 = StateSpace(Matrix([[1, 1], [4, -2]]),Matrix([[0, 1], [0, 2]]),
+                     Matrix([[-1, 1], [1, -1]]))
     SS3 = StateSpace(Matrix([[1, 1], [4, -2]]),Matrix([[1, -1], [1, -1]]))
-    SS4 = StateSpace(Matrix([[a0, a1], [a2, a3]]), Matrix([[b1], [b2]]), Matrix([[c1, c2]]))
+    SS4 = StateSpace(Matrix([[a0, a1], [a2, a3]]), Matrix([[b1], [b2]]),
+                     Matrix([[c1, c2]]))
 
     # Observability
     assert SS1.is_observable() == True
     assert SS2.is_observable() == False
     assert SS1.observability_matrix() == Matrix([[0, 1], [1, 0]])
     assert SS2.observability_matrix() == Matrix([[-1,  1], [ 1, -1], [ 3, -3], [-3,  3]])
-    assert SS1.observable_subspace() == [Matrix([[0], [1]]), Matrix([[1], [0]])]
-    assert SS2.observable_subspace() == [Matrix([[-1], [ 1], [ 3], [-3]])]
+    assert SS1.observable_subspace() == [Matrix([[1], [0]]), Matrix([[0], [1]])]
+    assert SS2.observable_subspace() == [Matrix([[-1], [ 1]])]
+    raises(NotImplementedError, lambda: SS4.observable_subspace())
+    assert SS1.unobservable_subspace() == []
+    assert SS2.unobservable_subspace() == [Matrix([[1],[1]])]
+    raises(NotImplementedError, lambda: SS4.unobservable_subspace())
+
     Qo = SS4.observability_matrix().subs([(a0, 0), (a1, -6), (a2, 1), (a3, -5), (c1, 0), (c2, 1)])
     assert Qo == Matrix([[0, 1], [1, -5]])
+
+    ss_obs = StateSpace(Matrix([[1, 0, 1], [0,0,0],[0,0,-2]]), Matrix([1,1,0]),
+                        Matrix([1,1, Rational(1,3)]).T).to_observable_form()
+    A_obs = ss_obs.A[:2, :2]
+    A_nobs = ss_obs.A[2:, 2:]
+    assert A_obs.eigenvals() == {0: 1, 1: 1}
+    assert A_nobs.eigenvals() == {-2: 1}
 
     # Controllability
     assert SS1.is_controllable() == True
     assert SS3.is_controllable() == False
     assert SS1.controllability_matrix() ==  Matrix([[0.5, -0.75], [  0,   0.5]])
     assert SS3.controllability_matrix() == Matrix([[1, -1, 2, -2], [1, -1, 2, -2]])
+    assert SS4.controllability_matrix() == \
+        Matrix([[b1, a0*b1 + a1*b2], [b2, a2*b1 + a3*b2]])
     assert SS1.controllable_subspace() == [Matrix([[0.5], [  0]]), Matrix([[-0.75], [  0.5]])]
     assert SS3.controllable_subspace() == [Matrix([[1], [1]])]
-    assert SS4.controllable_subspace() == [Matrix([
-                                          [b1],
-                                          [b2]]), Matrix([
-                                          [a0*b1 + a1*b2],
-                                          [a2*b1 + a3*b2]])]
+    assert SS1.uncontrollable_subspace() == []
+    assert SS3.uncontrollable_subspace() == [Matrix([[-1], [1]])]
+    raises(NotImplementedError, lambda: SS4.uncontrollable_subspace()) # uncontrollable subspace fo symbols not implemented
+
     Qc = SS4.controllability_matrix().subs([(a0, 0), (a1, 1), (a2, -6), (a3, -5), (b1, 0), (b2, 1)])
     assert Qc == Matrix([[0, 1], [1, -5]])
+    ss_contr = StateSpace(Matrix([[1, 0, 1], [0,0,0],[0,0,-2]]), Matrix([1,1,0]), Matrix([1,1,0]).T).to_controllable_form()
+    A_contr = ss_contr.A[:2, :2]
+    A_ncontr = ss_contr.A[2:, 2:]
+    assert A_contr.eigenvals() == {0: 1, 1: 1}
+    assert A_ncontr.eigenvals() == {-2: 1}
 
     # Append
     A1 = Matrix([[0, 1], [1, 0]])
@@ -3671,6 +3708,26 @@ def test_StateSpace_series():
     ser2 = Series(ss1)
     ser3 = Series(ser2, ss2)
     assert ser3.doit() == ser1.doit()
+
+    # test issue #28326
+    ss_issue = StateSpace(a2, b1+b2, c1+c2, d1)
+    assert Series(ss_issue, ss_issue, ss_issue).doit() == StateSpace(
+        Matrix([
+        [1, 0, 0, 0, 0, 0],
+        [0, 1, 0, 0, 0, 0],
+        [1, 1, 1, 0, 0, 0],
+        [1, 1, 0, 1, 0, 0],
+        [0, 0, 1, 1, 1, 0],
+        [0, 0, 1, 1, 0, 1]]),
+        Matrix([
+        [1],
+        [1],
+        [0],
+        [0],
+        [0],
+        [0]]),
+        Matrix([[0, 0, 0, 0, 1, 1]]),
+        Matrix([[0]]))
 
     # TransferFunction interconnection with StateSpace
     ser_tf = Series(tf1, ss1)
@@ -4034,12 +4091,12 @@ def test_StateSpace_stability():
     A1 = Matrix([[0,1,0],[0,0,1], [k-1, -2*k, -1]])
     ss1 = StateSpace(A1, B, C, D)
     ineq = ss1.get_asymptotic_stability_conditions()
-    assert ineq == [True, 3 * k - 1 > 0, (1 - k)*(3 * k - 1)**3 > 0]
+    assert ineq == [True, 3 * k - 1 > 0, 1 - k > 0]
 
     A2 = Matrix([[1,0,0], [0,-1,k], [0,0,-1]])
     ss2 = StateSpace(A2, B, C, D)
     ineq = ss2.get_asymptotic_stability_conditions()
-    assert ineq == [True, False]
+    assert ineq == [False]
 
 def test_DiscreteStateSpace_construction():
     # using different numbers for a SISO system.
@@ -4277,7 +4334,6 @@ def test_DiscreteStateSpace_negation():
 
 def test_DiscreteStateSpace_functions():
     # https://in.mathworks.com/help/control/ref/statespacemodel.obsv.html
-
     A_mat = Matrix([[-1.5, -2], [1, 0]])
     B_mat = Matrix([0.5, 0])
     C_mat = Matrix([[0, 1]])
@@ -4295,31 +4351,44 @@ def test_DiscreteStateSpace_functions():
     assert SS1.is_observable() == True
     assert SS2.is_observable() == False
     assert SS1.observability_matrix() == Matrix([[0, 1], [1, 0]])
-    assert SS2.observability_matrix() == Matrix([[-1,  1], [ 1, -1], [ 3, -3],
-                                                 [-3,  3]])
-    assert SS1.observable_subspace() == [Matrix([[0], [1]]), Matrix([[1], [0]])]
-    assert SS2.observable_subspace() == [Matrix([[-1], [ 1], [ 3], [-3]])]
-    Qo = SS4.observability_matrix().subs([(a0, 0), (a1, -6), (a2, 1), (a3, -5),
-                                          (c1, 0), (c2, 1)])
+    assert SS2.observability_matrix() == Matrix([[-1,  1], [ 1, -1], [ 3, -3], [-3,  3]])
+    assert SS1.observable_subspace() == [Matrix([[1], [0]]), Matrix([[0], [1]])]
+    assert SS2.observable_subspace() == [Matrix([[-1], [ 1]])]
+    raises(NotImplementedError, lambda: SS4.observable_subspace())
+    assert SS1.unobservable_subspace() == []
+    assert SS2.unobservable_subspace() == [Matrix([[1],[1]])]
+    raises(NotImplementedError, lambda: SS4.unobservable_subspace())
+
+    Qo = SS4.observability_matrix().subs([(a0, 0), (a1, -6), (a2, 1), (a3, -5), (c1, 0), (c2, 1)])
     assert Qo == Matrix([[0, 1], [1, -5]])
+
+    ss_obs = StateSpace(Matrix([[1, 0, 1], [0,0,0],[0,0,-2]]), Matrix([1,1,0]),
+                        Matrix([1,1, Rational(1,3)]).T).to_observable_form()
+    A_obs = ss_obs.A[:2, :2]
+    A_nobs = ss_obs.A[2:, 2:]
+    assert A_obs.eigenvals() == {0: 1, 1: 1}
+    assert A_nobs.eigenvals() == {-2: 1}
 
     # Controllability
     assert SS1.is_controllable() == True
     assert SS3.is_controllable() == False
     assert SS1.controllability_matrix() ==  Matrix([[0.5, -0.75], [  0,   0.5]])
-    assert SS3.controllability_matrix() == Matrix([[1, -1, 2, -2],
-                                                   [1, -1, 2, -2]])
-    assert SS1.controllable_subspace() == [Matrix([[0.5], [  0]]),
-                                           Matrix([[-0.75], [  0.5]])]
+    assert SS3.controllability_matrix() == Matrix([[1, -1, 2, -2], [1, -1, 2, -2]])
+    assert SS4.controllability_matrix() == \
+        Matrix([[b1, a0*b1 + a1*b2], [b2, a2*b1 + a3*b2]])
+    assert SS1.controllable_subspace() == [Matrix([[0.5], [  0]]), Matrix([[-0.75], [  0.5]])]
     assert SS3.controllable_subspace() == [Matrix([[1], [1]])]
-    assert SS4.controllable_subspace() == [Matrix([
-                                          [b1],
-                                          [b2]]), Matrix([
-                                          [a0*b1 + a1*b2],
-                                          [a2*b1 + a3*b2]])]
-    Qc = SS4.controllability_matrix().subs([(a0, 0), (a1, 1), (a2, -6),
-                                            (a3, -5), (b1, 0), (b2, 1)])
+    assert SS1.uncontrollable_subspace() == []
+    assert SS3.uncontrollable_subspace() == [Matrix([[-1], [1]])]
+    raises(NotImplementedError, lambda: SS4.uncontrollable_subspace()) # uncontrollable subspace fo symbols not implemented
+
+    Qc = SS4.controllability_matrix().subs([(a0, 0), (a1, 1), (a2, -6), (a3, -5), (b1, 0), (b2, 1)])
     assert Qc == Matrix([[0, 1], [1, -5]])
+    ss_contr = StateSpace(Matrix([[1, 0, 1], [0,0,0],[0,0,-2]]), Matrix([1,1,0]), Matrix([1,1,0]).T).to_controllable_form()
+    A_contr = ss_contr.A[:2, :2]
+    A_ncontr = ss_contr.A[2:, 2:]
+    assert A_contr.eigenvals() == {0: 1, 1: 1}
+    assert A_ncontr.eigenvals() == {-2: 1}
 
     # Append
     A1 = Matrix([[0, 1], [1, 0]])

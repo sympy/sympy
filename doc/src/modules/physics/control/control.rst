@@ -10,6 +10,12 @@ z-domain; where Transfer functions are input to output representations of
 dynamic systems. The additive property is used for transfer functions in the
 ``Parallel`` class, and the multiplicative property is used for transfer
 functions in the ``Series`` class.
+represent Continuous-time Transfer functions in the Laplace domain, while
+``DiscreteTransferFunction`` represent Discrete-time Transfer functions in the
+z-domain; where Transfer functions are input to output representations of
+dynamic systems. The additive property is used for transfer functions in the
+``Parallel`` class, and the multiplicative property is used for transfer
+functions in the ``Series`` class.
 Also, there is a ``Feedback`` class which is used to represent negative feedback
 interconnection between two input/output systems. MIMO systems are also
 supportedwith ``TransferFunctionMatrix`` as the base class for representing one.

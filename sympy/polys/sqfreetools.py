@@ -3,13 +3,12 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Iterator
 
 if TYPE_CHECKING:
-    from sympy.polys.domains.algebraicfield import AlgebraicField
-    from sympy.polys.polyclasses import ANP
+    from sympy.polys.domains.algebraicfield import AlgebraicField, Alg
+    from sympy.external.gmpy import MPQ
 
-from sympy.polys.domains.domain import Eg
 from sympy.polys.densearith import (
     dup_neg, dmp_neg,
     dup_sub, dmp_sub,
@@ -112,7 +111,7 @@ def dmp_sqf_p(f, u, K):
     return True
 
 
-def dup_sqf_norm(f: dup[ANP[Eg]], K: AlgebraicField[ANP[Eg], Eg]) -> tuple[int, dup[ANP[Eg]], dup[Eg]]:
+def dup_sqf_norm(f: dup[Alg], K: AlgebraicField) -> tuple[int, dup[Alg], dup[MPQ]]:
     r"""
     Find a shift of `f` in `K[x]` that has square-free norm.
 
@@ -186,7 +185,7 @@ def dup_sqf_norm(f: dup[ANP[Eg]], K: AlgebraicField[ANP[Eg], Eg]) -> tuple[int, 
         h, _ = dmp_inject(_dmp(f), 0, K, front=True)
         r = dmp_resultant(g, h, 1, K.dom)
 
-        r2: dmp[Eg] = r # type: ignore
+        r2: dmp[MPQ] = r # type: ignore
 
         if dup_sqf_p(r2, K.dom):
             break
@@ -196,7 +195,7 @@ def dup_sqf_norm(f: dup[ANP[Eg]], K: AlgebraicField[ANP[Eg], Eg]) -> tuple[int, 
     return s, f, _dup(r2)
 
 
-def _dmp_sqf_norm_shifts(f, u, K):
+def _dmp_sqf_norm_shifts(f: dmp[Alg], u: int, K: AlgebraicField) -> Iterator[tuple[list[int], dmp[Alg]]]:
     """Generate a sequence of candidate shifts for dmp_sqf_norm."""
     #
     # We want to find a minimal shift if possible because shifting high degree
@@ -237,8 +236,8 @@ def _dmp_sqf_norm_shifts(f, u, K):
 
 
 def dmp_sqf_norm(
-    f: dmp[ANP[Eg]], u: int, K: AlgebraicField[ANP[Eg], Eg]
-) -> tuple[list[int], dmp[ANP[Eg]], dmp[Eg]]:
+    f: dmp[Alg], u: int, K: AlgebraicField
+) -> tuple[list[int], dmp[Alg], dmp[MPQ]]:
     r"""
     Find a shift of ``f`` in ``K[X]`` that has square-free norm.
 
@@ -313,19 +312,19 @@ def dmp_sqf_norm(
 
     g = dmp_raise(K.mod.to_list(), u + 1, 0, K.dom)
 
-    for s, f in _dmp_sqf_norm_shifts(f, u, K):
+    for ss, f in _dmp_sqf_norm_shifts(f, u, K):
 
         h, _ = dmp_inject(f, u, K, front=True)
         r = dmp_resultant(g, h, u + 1, K.dom)
 
-        r2: dmp[Eg] = r # type: ignore
+        r2: dmp[MPQ] = r # type: ignore
 
         if dmp_sqf_p(r2, u, K.dom):
             break
     else:
         assert False
 
-    return s, f, r2
+    return ss, f, r2
 
 
 def dmp_norm(f, u, K):

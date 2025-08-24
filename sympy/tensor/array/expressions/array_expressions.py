@@ -1598,8 +1598,7 @@ class _ArgE:
             self.indices = indices
 
     def __str__(self):
-        return "_ArgE(%s, %s)" % (self.element, self.indices)
-
+        return f"_ArgE({self.element}, {self.indices})"
     __repr__ = __str__
 
 
@@ -1615,7 +1614,7 @@ class _IndPos:
         self.rel = rel
 
     def __str__(self):
-        return "_IndPos(%i, %i)" % (self.arg, self.rel)
+        return f"_IndPos({self.arg}, {self.rel})"
 
     __repr__ = __str__
 

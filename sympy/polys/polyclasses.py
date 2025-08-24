@@ -1157,6 +1157,10 @@ class DMP(CantSympify, Generic[Er]):
         """Return the number of complex roots of ``f`` in ``[inf, sup]``. """
         raise NotImplementedError
 
+    def hurwitz_conditions(f) -> list[Er]:
+        """Computes the Routh Hurwitz criteria of ``f``. """
+        raise NotImplementedError
+
     @property
     def is_zero(f) -> bool:
         """Returns ``True`` if ``f`` is a zero polynomial. """
@@ -1823,6 +1827,13 @@ class DMP_Python(DMP[Er]):
     ) -> int:
         """Return the number of complex roots of ``f`` in ``[inf, sup]``. """
         return dup_count_complex_roots(f._rep, f.dom, inf=inf, sup=sup)
+
+    def hurwitz_conditions(f) -> list[Er]:
+        """Computes the Routh Hurwitz criteria of ``f``. """
+        from sympy.polys.rootconditions import dup_routh_hurwitz
+        if f.lev:
+            raise ValueError("Routh-Hurwitz stability is only defined for univariate polynomials.")
+        return dup_routh_hurwitz(f._rep, f.dom)
 
     @property
     def is_zero(f) -> bool:
@@ -2528,6 +2539,10 @@ class DUP_Flint(DMP[Er]):
         """Return the number of complex roots of ``f`` in ``[inf, sup]``. """
         return f.to_DMP_Python().count_complex_roots(inf=inf, sup=sup)
 
+    def hurwitz_conditions(f) -> list[Er]:
+        """Computes the Routh Hurwitz criteria of ``f``. """
+        return f.to_DMP_Python().hurwitz_conditions()
+
     @property
     def is_zero(f) -> bool:
         """Returns ``True`` if ``f`` is a zero polynomial. """
@@ -3018,6 +3033,10 @@ class ANP(CantSympify, Generic[Eg]):
 
     __slots__ = ('_rep', '_mod', 'dom')
 
+    _rep: DMP[Eg]
+    _mod: DMP[Eg]
+    dom: Domain[Eg]
+
     def __new__(cls, rep, mod, dom):
         if isinstance(rep, DMP):
             pass
@@ -3144,7 +3163,7 @@ class ANP(CantSympify, Generic[Eg]):
     def one(cls, mod, dom):
         return ANP(1, mod, dom)
 
-    def to_dict(f):
+    def to_dict(f) -> dict[monom, Eg]:
         """Convert ``f`` to a dict representation with native coefficients. """
         return f._rep.to_dict()
 
@@ -3331,6 +3350,14 @@ class ANP(CantSympify, Generic[Eg]):
             return NotImplemented
         else:
             return f.quo_ground(g)
+
+    def __rtruediv__(f, g):
+        try:
+            g = f.dom.convert(g)
+        except CoercionFailed:
+            return NotImplemented
+        else:
+            return f.pow(-1).mul_ground(g)
 
     def __eq__(f, g):
         try:

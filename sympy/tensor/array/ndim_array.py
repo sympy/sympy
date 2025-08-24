@@ -71,7 +71,7 @@ class ArrayKind(Kind):
         return obj
 
     def __repr__(self):
-        return "ArrayKind(%s)" % self.element_kind
+        return f"ArrayKind({self.element_kind})"
 
     @classmethod
     def _union(cls, kinds) -> 'ArrayKind':
