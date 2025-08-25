@@ -80,7 +80,7 @@ class PowerSeriesRing(Ring[PowerSeriesElement[Er]], CompositeDomain):
         if not a.is_ground:
             return False
         K = self.domain
-        return K.is_unit(K.convert_from(a, self))
+        return K.is_unit(a.leading_coefficient())
 
     def canonical_unit(self, a: PowerSeriesElement[Er]) -> PowerSeriesElement[Er]:
         u = self.domain.canonical_unit(a.leading_coefficient())

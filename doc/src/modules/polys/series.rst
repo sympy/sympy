@@ -76,6 +76,10 @@ and trigonometric functions:
     >>> R.tan(x)
     x + 1/3*x**3 + 2/15*x**5 + 17/315*x**7 + O(x**8)
 
+Domain for Univariate Power Series Rings
+=========================================
+
+.. autoclass:: sympy.polys.domains.powerseriesring.PowerSeriesRing
 
 Univariate Power Series Ring
 ============================
