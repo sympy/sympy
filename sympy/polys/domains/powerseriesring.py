@@ -6,8 +6,7 @@ from sympy.polys.domains.compositedomain import CompositeDomain
 from sympy.polys.domains.domain import Er, Domain
 from sympy.polys.series.ring import (
     power_series_ring,
-    PowerSeriesRingRing,
-    PowerSeriesRingField,
+    SeriesRingProto,
     PowerSeriesElement,
 )
 from sympy.polys.series.tring import TSeriesElement
@@ -28,7 +27,7 @@ class PowerSeriesRing(Ring[PowerSeriesElement[Er]], CompositeDomain):
     has_assoc_Ring = True
     has_assoc_Field = False
 
-    ring: Union[PowerSeriesRingRing, PowerSeriesRingField]
+    ring: SeriesRingProto[Er]
     dtype: type[PowerSeriesElement[Er]]
     gen: PowerSeriesElement[Er]
     symbol: Expr
@@ -44,9 +43,9 @@ class PowerSeriesRing(Ring[PowerSeriesElement[Er]], CompositeDomain):
         self.domain = ring.domain
         self.symbol = ring.symbol
 
-    def new(
+    def new(  # type: ignore
         self, element: TSeriesElement[Er] | Expr | Er | int
-    ) -> PowerSeriesElement[Er]:  # type: ignore
+    ) -> PowerSeriesElement[Er]:
         return self.ring.ring_new(element)
 
     def of_type(self, element) -> TypeIs[PowerSeriesElement[Er]]:

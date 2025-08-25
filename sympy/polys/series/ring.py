@@ -18,10 +18,54 @@ from sympy.polys.series.tring import TSeriesElement, _power_series_ring
 from sympy.series.order import Order
 
 
-from typing import Generic, overload, TYPE_CHECKING
+from typing import Generic, Protocol, overload, TYPE_CHECKING, TypeVar, Any
 
 if TYPE_CHECKING:
-    pass
+    from typing_extensions import TypeIs
+
+T = TypeVar("T")
+
+
+class SeriesRingProto(Protocol[Er]):
+    """Generic protocol for power series rings."""
+
+    ring: PowerSeriesRingProto[TSeriesElement[Er], Er]
+    dtype: type[PowerSeriesElement[Er]]
+    domain: Domain[Er]
+    symbol: Expr
+    prec: int
+
+    one: PowerSeriesElement[Er]
+    zero: PowerSeriesElement[Er]
+    gen: PowerSeriesElement[Er]
+
+    def __init__(self, domain: Domain[Er], symbol: str | Expr = "x", prec: int = 6): ...
+
+    def __repr__(self) -> str: ...
+
+    def __eq__(self, other) -> bool: ...
+
+    def is_element(self, element) -> TypeIs[PowerSeriesElement[Er]]: ...
+
+    def order_term(self) -> PowerSeriesElement[Er]: ...
+
+    def from_expr(self, expr) -> PowerSeriesElement[Er]: ...
+
+    def from_list(
+        self, lst: list[Er], prec: int | None = None
+    ) -> PowerSeriesElement[Er]: ...
+
+    def from_element(self, element) -> PowerSeriesElement[Er]: ...
+
+    def to_list(self, element) -> list[Er]: ...
+
+    def to_dense(self, element) -> dup[Er]: ...
+
+    def domain_new(self, arg: Expr | Er | int) -> Er: ...
+
+    def ground_new(self, arg: Expr | Er | int) -> PowerSeriesElement[Er]: ...
+
+    def ring_new(self, arg) -> PowerSeriesElement[Er]: ...
 
 
 @overload
@@ -120,7 +164,7 @@ class PowerSeriesRingRing(Generic[Er]):
     def __eq__(self, other) -> bool:
         return self.ring == other.ring
 
-    def is_element(self, element) -> bool:
+    def is_element(self, element) -> TypeIs[PowerSeriesElement[Er]]:
         """Check if element belongs to this ring."""
         return isinstance(element, PowerSeriesElement) and element.ring == self
 
