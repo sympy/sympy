@@ -1,6 +1,9 @@
 from __future__ import annotations
 
+from functools import reduce
+from operator import add, mul
 
+from sympy.core.sympify import sympify
 from sympy.core.expr import Expr
 from sympy.core.symbol import Symbol
 from sympy.core.exprtools import (
@@ -187,6 +190,11 @@ class PowerSeriesRingRing(Generic[Er]):
         o = self.ring([], self.prec)
         return self.from_element(o)
 
+    def truncate(self, s: PowerSeriesElement[Er], prec: int) -> PowerSeriesElement[Er]:
+        """Truncate the power series to the given precision."""
+        R = self.ring
+        return self.from_element(R.truncate(s.series, prec))
+
     def from_expr(self, expr) -> PowerSeriesElement[Er]:
         """
         Convert an expression to a power series element.
@@ -204,13 +212,11 @@ class PowerSeriesRingRing(Generic[Er]):
         <class 'sympy.polys.series.ring.PowerSeriesElement'>
 
         """
-        poly = self._rebuild_expr(sympify(expr))
-        return self.ring_new(poly)
+        return self._rebuild_expr(expr)
 
-    def _rebuild_expr(self, expr) -> TSeriesElement[Er]:
-        """Build the sympy expr into Lower Power Series format."""
+    def _rebuild_expr(self, expr) -> PowerSeriesElement[Er]:
+        """Rebuild the expression into a power series element."""
         prec = None
-        fring_prec: bool = False
 
         if expr.has(Order):
             var, p = expr.getO().expr.args
@@ -225,35 +231,31 @@ class PowerSeriesRingRing(Generic[Er]):
 
             expr = expr.removeO()
 
-        max_prec = prec if prec else self.prec
-
-        coeffs: dict[tuple[int], Er] = {}
-
-        for term in Add.make_args(expr):
-            coeff = self.domain.one
-            pow = 0
-
-            for factor in Mul.make_args(term):
-                if factor.is_Number:
-                    coeff = self.domain_new(factor)
+        def _rebuild(expr):
+            if expr.is_Symbol:
+                if expr == self.symbol:
+                    return self.gen
                 else:
-                    base, exp = decompose_power(factor)
-                    if base == self.symbol:
-                        pow = int(exp)
-                    else:
-                        raise ValueError("Expr contains different symbol than ring.")
-
-            if pow < max_prec:
-                coeffs[(pow,)] = coeff
+                    raise ValueError("Expr contains different symbol than ring.")
+            elif expr.is_Add:
+                return reduce(add, map(_rebuild, expr.args))
+            elif expr.is_Mul:
+                return reduce(mul, map(_rebuild, expr.args))
             else:
-                fring_prec = True
+                base, exp = expr.as_base_exp()
+                if exp.is_Integer and exp > 1:
+                    return _rebuild(base) ** int(exp)
+                else:
+                    return self.ground_new(self.domain.convert(expr))
 
-        if fring_prec:
-            prec = self.prec
+        series = _rebuild(sympify(expr))
 
-        coeffs_list = dup_from_dict(coeffs, self.domain)[::-1]
-
-        return self.ring.from_list(coeffs_list, prec)
+        if prec is None:
+            return series
+        else:
+            R = self.ring
+            s = R(self.to_list(series), prec)
+            return self.from_element(s)
 
     def from_list(
         self, lst: list[Er], prec: int | None = None

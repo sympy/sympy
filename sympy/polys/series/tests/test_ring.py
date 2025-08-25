@@ -1227,6 +1227,7 @@ def test_PowerSeriesRing_from_expr():
     assert R.from_expr(_x) == x
     assert R.from_expr(1 + _x + 2 * _x**2) == 1 + x + 2 * x**2
     assert R.from_expr(2 + _x**2 + O(_x**3)) == 2 + x**2 + o3
+    assert R.from_expr(7 + QQ(1, 4) * _x**2 + O(_x**3)) == 7 + QQ(1, 4) * x**2 + o3
     assert (
         R.from_expr(2 + 4 * _x + 6 * _x**2 + 6 * _x**3 + _x**5)
         == 2 + 4 * x + 6 * x**2 + 6 * x**3 + o
