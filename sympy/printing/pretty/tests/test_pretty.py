@@ -2464,23 +2464,23 @@ def test_pretty_DiscreteTransferFunction():
     tf1 = DiscreteTransferFunction(s - 1, s + 1, s)
     assert upretty(tf1) == \
 """\
-s - 1                  \n\
+s - 1                    \n\
 ───── -> sampling time: 1\n\
-s + 1                  \
+s + 1                    \
 """
     tf2 = DiscreteTransferFunction(2*s + 1, 3 - p, s, Symbol('T'))
     assert upretty(tf2) == \
 """\
-2⋅s + 1                  \n\
+2⋅s + 1                    \n\
 ─────── -> sampling time: T\n\
- 3 - p                   \
+ 3 - p                     \
 """
     tf3 = DiscreteTransferFunction(p, p + 1, p, 0.1)
     assert upretty(tf3) == \
 """\
-  p                                    \n\
+  p                                      \n\
 ───── -> sampling time: 0.100000000000000\n\
-p + 1                                  \
+p + 1                                    \
 """
 
 
