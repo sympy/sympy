@@ -1393,7 +1393,7 @@ class PermutationGroup(Basic):
         if not self._elements:
             self._elements = list(self.generate())
 
-        return self._elements
+        return self._elements[:]
 
     def derived_series(self):
         r"""Return the derived series for the group.

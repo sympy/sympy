@@ -38,6 +38,9 @@ Abstract Domains
 
 .. autoclass:: sympy.polys.domains.domain.RingElement
 .. autoclass:: sympy.polys.domains.domain.FieldElement
+.. autoclass:: sympy.polys.domains.domain.EuclidElement
+.. autoclass:: sympy.polys.domains.domain.AbsElement
+.. autoclass:: sympy.polys.domains.domain.OrderedElement
 
 .. autoclass:: sympy.polys.domains.domain.Er
 .. autoclass:: sympy.polys.domains.domain.Es
@@ -45,7 +48,12 @@ Abstract Domains
 .. autoclass:: sympy.polys.domains.domain.Eg
 .. py:class:: sympy.polys.densebasic.Epa
 .. autoclass:: sympy.polys.domains.domain.Ef
+.. autoclass:: sympy.polys.domains.domain.Eeuclid
+.. autoclass:: sympy.polys.domains.domain.Eabs
+.. autoclass:: sympy.polys.domains.domain.Eordered
 .. py:class:: sympy.polys.domains.domain.TypeIs
+.. autoclass:: sympy.polys.domains.gaussiandomains.Telem
+.. autoclass:: sympy.polys.domains.gaussiandomains.Tdom
 
 .. autoclass:: sympy.polys.domains.domain.Domain
    :members:
@@ -63,6 +71,9 @@ Abstract Domains
    :members:
 
 .. autoclass:: sympy.polys.domains.compositedomain.CompositeDomain
+   :members:
+
+.. autoclass:: sympy.polys.domains.ringextension.RingExtension
    :members:
 
 
@@ -144,6 +155,17 @@ when available.
    :members:
    :exclude-members: dtype, tp
 
+
+MPZ
+===
+
+The ``MPZ`` type is either ``int`` or otherwise the ``gmpy2.mpz`` type or if
+python-flint is installed then it is the :class:`~.fmpz` type. The ``MPZ``
+type is the type of the elements in the :ref:`ZZ` domain.
+
+.. py:class:: sympy.polys.domains.integerring.MPZ
+.. py:class:: flint.types.fmpz.fmpz
+
 .. _QQ:
 
 
@@ -210,7 +232,11 @@ MPQ
 ===
 
 The ``MPQ`` type is either :py:class:`~.PythonMPQ` or otherwise the ``mpq``
-type from ``gmpy2``.
+type from ``gmpy2`` or ``flint.fmpq`` if python-flint is installed. The ``MPQ``
+type is the type of the elements in the :ref:`QQ` domain.
+
+.. py:class:: sympy.polys.domains.rationalfield.MPQ
+.. py:class:: flint.types.fmpq.fmpq
 
 
 Gaussian domains
@@ -253,6 +279,8 @@ QQ_I
 
 QQ<a>
 =====
+
+.. py:class:: sympy.polys.domains.algebraicfield.Alg
 
 .. autoclass:: AlgebraicField
    :members:

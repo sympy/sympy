@@ -1157,6 +1157,10 @@ class DMP(CantSympify, Generic[Er]):
         """Return the number of complex roots of ``f`` in ``[inf, sup]``. """
         raise NotImplementedError
 
+    def hurwitz_conditions(f) -> list[Er]:
+        """Computes the Routh Hurwitz criteria of ``f``. """
+        raise NotImplementedError
+
     @property
     def is_zero(f) -> bool:
         """Returns ``True`` if ``f`` is a zero polynomial. """
@@ -1501,7 +1505,7 @@ class DMP_Python(DMP[Er]):
     def abs(f) -> Self:
         """Make all coefficients in ``f`` positive. """
         # XXX: Not defined for all domains.
-        return f.per(dmp_abs(f._rep, f.lev, f.dom))
+        return f.per(dmp_abs(f._rep, f.lev, f.dom)) # type: ignore
 
     def neg(f) -> Self:
         """Negate all coefficients in ``f``. """
@@ -1588,11 +1592,13 @@ class DMP_Python(DMP[Er]):
 
     def max_norm(f) -> Er:
         """Returns maximum norm of ``f``. """
-        return dmp_max_norm(f._rep, f.lev, f.dom)
+        # XXX: This is not defined for all domains. (needs abs)
+        return dmp_max_norm(f._rep, f.lev, f.dom) # type: ignore
 
     def l1_norm(f) -> Er:
         """Returns l1 norm of ``f``. """
-        return dmp_l1_norm(f._rep, f.lev, f.dom)
+        # XXX: This is not defined for all domains. (needs abs)
+        return dmp_l1_norm(f._rep, f.lev, f.dom) # type: ignore
 
     def l2_norm_squared(f) -> Er:
         """Return squared l2 norm of ``f``. """
@@ -1605,7 +1611,8 @@ class DMP_Python(DMP[Er]):
 
     def _integrate(f, m: int, j: int) -> Self:
         """Computes the ``m``-th order indefinite integral of ``f`` in ``x_j``. """
-        return f.per(dmp_integrate_in(f._rep, m, j, f.lev, f.dom))
+        # XXX: This should only be for some domains (can fail over ZZ)
+        return f.per(dmp_integrate_in(f._rep, m, j, f.lev, f.dom)) # type: ignore
 
     def _diff(f, m: int, j: int) -> Self:
         """Computes the ``m``-th order derivative of ``f`` in ``x_j``. """
@@ -1688,11 +1695,13 @@ class DMP_Python(DMP[Er]):
 
     def _trunc(f, p: Er) -> Self:
         """Reduce ``f`` modulo a constant ``p``. """
-        return f.per(dmp_ground_trunc(f._rep, p, f.lev, f.dom))
+        # XXX: Not valid for all domains (needs %)
+        return f.per(dmp_ground_trunc(f._rep, p, f.lev, f.dom)) # type: ignore
 
     def monic(f) -> Self:
         """Divides all coefficients by ``LC(f)``. """
-        return f.per(dmp_ground_monic(f._rep, f.lev, f.dom))
+        # XXX: Not valid for all domains (needs /)
+        return f.per(dmp_ground_monic(f._rep, f.lev, f.dom)) # type: ignore
 
     def content(f) -> Er:
         """Returns GCD of polynomial coefficients. """
@@ -1818,6 +1827,13 @@ class DMP_Python(DMP[Er]):
     ) -> int:
         """Return the number of complex roots of ``f`` in ``[inf, sup]``. """
         return dup_count_complex_roots(f._rep, f.dom, inf=inf, sup=sup)
+
+    def hurwitz_conditions(f) -> list[Er]:
+        """Computes the Routh Hurwitz criteria of ``f``. """
+        from sympy.polys.rootconditions import dup_routh_hurwitz
+        if f.lev:
+            raise ValueError("Routh-Hurwitz stability is only defined for univariate polynomials.")
+        return dup_routh_hurwitz(f._rep, f.dom)
 
     @property
     def is_zero(f) -> bool:
@@ -2523,6 +2539,10 @@ class DUP_Flint(DMP[Er]):
         """Return the number of complex roots of ``f`` in ``[inf, sup]``. """
         return f.to_DMP_Python().count_complex_roots(inf=inf, sup=sup)
 
+    def hurwitz_conditions(f) -> list[Er]:
+        """Computes the Routh Hurwitz criteria of ``f``. """
+        return f.to_DMP_Python().hurwitz_conditions()
+
     @property
     def is_zero(f) -> bool:
         """Returns ``True`` if ``f`` is a zero polynomial. """
@@ -3013,6 +3033,10 @@ class ANP(CantSympify, Generic[Eg]):
 
     __slots__ = ('_rep', '_mod', 'dom')
 
+    _rep: DMP[Eg]
+    _mod: DMP[Eg]
+    dom: Domain[Eg]
+
     def __new__(cls, rep, mod, dom):
         if isinstance(rep, DMP):
             pass
@@ -3139,7 +3163,7 @@ class ANP(CantSympify, Generic[Eg]):
     def one(cls, mod, dom):
         return ANP(1, mod, dom)
 
-    def to_dict(f):
+    def to_dict(f) -> dict[monom, Eg]:
         """Convert ``f`` to a dict representation with native coefficients. """
         return f._rep.to_dict()
 
@@ -3326,6 +3350,14 @@ class ANP(CantSympify, Generic[Eg]):
             return NotImplemented
         else:
             return f.quo_ground(g)
+
+    def __rtruediv__(f, g):
+        try:
+            g = f.dom.convert(g)
+        except CoercionFailed:
+            return NotImplemented
+        else:
+            return f.pow(-1).mul_ground(g)
 
     def __eq__(f, g):
         try:
