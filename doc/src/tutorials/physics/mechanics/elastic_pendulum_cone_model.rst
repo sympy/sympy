@@ -170,7 +170,7 @@ The resulting equations of motion, after rearranging for clarity, are:
 
 .. math::
 
-    m\ddot{s} = ms^2\sin^2\alpha\dot{\phi}^2 + mg\cos\alpha - k(s - L_0)
+    m\ddot{s} = ms\sin^2\alpha\dot{\phi}^2 + mg\cos\alpha - k(s - L_0)
 
 **Equation 2 (for `φ`):**
 
@@ -206,13 +206,28 @@ Physical Interpretation of the Equations
 
 The two equations describe the coupled dynamics of the system:
 
-1.  **Equation 1 (for $s$):** The acceleration along the cone's slant ($\ddot{s}$) is a balance of three forces:
+1.  **`s`-Equation (Radial Motion):** The acceleration along the cone's slant (:math:`\ddot{s}`) is a balance of three forces:
 
-      - The outward **centrifugal force** ($ms\sin^2\alpha\dot{\phi}^2$) due to rotation.
-      - The downward component of **gravity** ($mg\cos\alpha$).
-      - The inward **elastic restoring force** ($-k(s - L\_0)$) from the spring.
+    - The outward **centrifugal force** (:math:`ms\sin^2\alpha\dot{\phi}^2`) due to rotation.
+    - The downward component of **gravity** (:math:`mg\cos\alpha`).
+    - The inward **elastic restoring force** (:math:`-k(s - L_0)`) from the spring.
 
-2.  **Equation 2 (for $\phi$):** This equation shows that the time derivative of the quantity $p\_\phi = ms^2\sin^2\alpha\dot{\phi}$ is zero. This quantity is the particle's **angular momentum** about the vertical axis. Because gravity and the spring force are central (acting along the `s` direction), there is no torque in the `φ` direction, and thus angular momentum is conserved.
+2.  **`φ`-Equation (Cyclic Coordinate and Conservation of Angular Momentum):** The equation for :math:`\phi` reveals a fundamental conservation law stemming from the system's rotational symmetry.
+
+    We first observe that the Lagrangian, :math:`\mathcal{L}`, does not explicitly depend on the coordinate :math:`\phi`, only on its time derivative, :math:`\dot{\phi}`. In Lagrangian mechanics, a coordinate with this property is called a **cyclic coordinate**.
+
+    The existence of a cyclic coordinate implies a conserved quantity: its corresponding **conjugate momentum**, :math:`p_\phi`, which is defined as:
+
+    .. math::
+
+        p_\phi = \frac{\partial \mathcal{L}}{\partial \dot{\phi}} = ms^2\sin^2\alpha\dot{\phi}
+
+    The Euler-Lagrange equation for :math:`\phi` then simplifies directly to :math:`\frac{d}{dt}(p_\phi) = 0`, which is exactly the equation derived by ``LagrangesMethod``. This conserved quantity is physically equivalent to the z-component of the particle's angular momentum, :math:`J_z`.
+
+    This conservation law has a direct and intuitive physical consequence:
+
+    - If the particle moves farther from the apex (as :math:`s` increases), its angular speed :math:`\dot{\phi}` must decrease to keep the angular momentum constant.
+    - Conversely, if the particle moves closer to the apex (as :math:`s` decreases), it will spin faster.
 
 Conclusion
 ==========
