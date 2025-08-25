@@ -82,6 +82,8 @@ Univariate Power Series Ring
 
 .. currentmodule:: sympy.polys.series.ring
 
+.. autoclass:: SeriesRingProto
+
 .. autofunction:: power_series_ring
 
 .. autoclass:: PowerSeriesRingRing

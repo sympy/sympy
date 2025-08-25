@@ -3,28 +3,24 @@ from __future__ import annotations
 from functools import reduce
 from operator import add, mul
 
-from sympy.core.sympify import sympify
 from sympy.core.expr import Expr
 from sympy.core.symbol import Symbol
-from sympy.core.exprtools import (
-    decompose_power,
-)  # retained for potential backward compatibility (not used now)
 from sympy.core.mul import Mul
 from sympy.core.add import Add
 from sympy.core.power import Pow
 from sympy.core.sympify import CantSympify, sympify
 from sympy.polys.domains.domain import Er, Ef, Domain, DomainElement
-from sympy.polys.densebasic import dup, dup_from_dict
+from sympy.polys.densebasic import dup
 from sympy.polys.polyerrors import GeneratorsError
 from sympy.polys.series.base import PowerSeriesRingProto, PowerSeriesRingFieldProto
 from sympy.polys.series.tring import TSeriesElement, _power_series_ring
 from sympy.series.order import Order
 
 
-from typing import Generic, Protocol, overload, TYPE_CHECKING, TypeVar, Any
+from typing import Generic, Protocol, overload, TYPE_CHECKING, TypeVar
 
 if TYPE_CHECKING:
-    from typing_extensions import TypeIs
+    from typing import TypeIs
 
 T = TypeVar("T")
 
@@ -821,11 +817,9 @@ class PowerSeriesElement(DomainElement, CantSympify, Generic[Er]):
         1 + x - 1/2*x**2 - 1/6*x**3 + 1/24*x**4 + 1/120*x**5 + O(x**6)
 
         """
-        if not other:
-            if isinstance(other, (PowerSeriesElement, int)) or self.domain.of_type(
-                other
-            ):
-                return self
+        if not isinstance(other, (PowerSeriesElement, int)) or self.domain.of_type(
+            other
+        ):
             raise TypeError(
                 f"Unsupported type {type(other).__name__} for addition with PowerSeriesElement."
             )
@@ -869,11 +863,8 @@ class PowerSeriesElement(DomainElement, CantSympify, Generic[Er]):
         -1 + x + 1/2*x**2 - 1/6*x**3 - 1/24*x**4 + 1/120*x**5 + O(x**6)
 
         """
-        if not other:
-            if isinstance(other, (PowerSeriesElement, int)) or self.domain.of_type(
-                other
-            ):
-                return self
+
+        if isinstance(other, (PowerSeriesElement, int)) or self.domain.of_type(other):
             raise TypeError(
                 f"Unsupported type {type(other).__name__} for subtraction with PowerSeriesElement."
             )
@@ -917,11 +908,7 @@ class PowerSeriesElement(DomainElement, CantSympify, Generic[Er]):
         x - 2/3*x**3 + 2/15*x**5 + O(x**6)
 
         """
-        if not other:
-            if isinstance(other, (PowerSeriesElement, int)) or self.domain.of_type(
-                other
-            ):
-                return self
+        if isinstance(other, (PowerSeriesElement, int)) or self.domain.of_type(other):
             raise TypeError(
                 f"Unsupported type {type(other).__name__} for multiplication with PowerSeriesElement."
             )
@@ -988,11 +975,7 @@ class PowerSeriesElement(DomainElement, CantSympify, Generic[Er]):
         >>> R.tan(x) == t
         True
         """
-        if not other:
-            if isinstance(other, (PowerSeriesElement, int)) or self.domain.of_type(
-                other
-            ):
-                return self
+        if isinstance(other, (PowerSeriesElement, int)) or self.domain.of_type(other):
             raise TypeError(
                 f"Unsupported type {type(other).__name__} for division with PowerSeriesElement."
             )

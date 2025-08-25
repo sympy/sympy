@@ -12,7 +12,7 @@ from sympy.polys.series.ring import (
 from sympy.polys.series.tring import TSeriesElement
 from sympy.utilities import public
 
-from typing import Union, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from typing import TypeIs
