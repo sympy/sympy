@@ -2635,7 +2635,7 @@ class LatexPrinter(Printer):
     def _print_DiscreteTransferFunction(self, expr):
         num, den = self._print(expr.num), self._print(expr.den)
         sampling_time = self._print(expr.sampling_time)
-        return r"\frac{%s}{%s} \text{, sampling time: } {%s}" % \
+        return r"\frac{%s}{%s} \text{ -> sampling time: } {%s}" % \
             (num, den, sampling_time)
 
     def _print_Series(self, expr):

@@ -6656,7 +6656,7 @@ class DiscreteStateSpace(StateSpaceBase):
     DiscreteTransferFunction
 
     """
-    #XXX: StateSpace is not in latex printing, consider add that and StateSpace
+    #XXX: DiscreteStateSpace is not in latex printing, consider add that and StateSpace
     def __new__(cls, A=None, B=None, C=None, D=None, sampling_time=1):
         if sampling_time == 0:
             raise ValueError(filldedent("""

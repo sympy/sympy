@@ -995,15 +995,16 @@ class PrettyPrinter(Printer):
 
     def _print_DiscreteTransferFunction(self, expr):
         if not expr.num == 1:
-            num, den = expr.num, expr.den
-            res = Mul(num, Pow(den, -1, evaluate=False), evaluate=False)
-
+            res = Mul(expr.num, Pow(expr.den, -1, evaluate=False),
+                      evaluate=False)
             result = self._print_Mul(res)
-            result = prettyForm(\
-                *result.right(f", sampling time: {expr.sampling_time}"))
-            return result
         else:
-            return self._print(1)/self._print(expr.den)
+            result =  self._print(1)/self._print(expr.den)
+
+        result = prettyForm(\
+            *result.right(f" -> sampling time: {expr.sampling_time}"))
+        return result
+
 
     def _print_Series(self, expr):
         args = list(expr.args)

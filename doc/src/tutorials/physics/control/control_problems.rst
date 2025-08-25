@@ -346,8 +346,6 @@ Solution
 
     .. plot:: tutorials/physics/control/generate_plots.py q5
 
-
-
 Example 6
 ---------
 
@@ -425,10 +423,74 @@ We can check that the output is asymptotically stable:
 >>> Y = Y.doit().to_standard_form(cancel_poles_zeros = True)
 >>> pprint(Y, use_unicode = False)
   2*z
--------, sampling time: 1
+------- -> sampling time: 1
 2*z - 1
 >>> Y.is_stable()
 True
+
+Example 7
+---------
+
+Consider the discrete-time system described by the following input-state-output model:
+
+.. math::
+        \begin{aligned}
+        x_1(k + 1) &= u_1(k) \\
+        x_2(k + 1) &= x_1(k) + u_2(k) \\
+        x_3(k + 1) &= x_1(k) + x_2(k) \\
+        y(k) &= x_3(k)
+        \end{aligned}
+
+1. Determine the forced response in the output :math:`y_f(k)` with respect to the inputs :math:`u_1(k)=\theta(k)` and :math:`u_2(k) = 0\ \forall k`.
+(:math:`\theta(k)` represent the heaviside function).
+
+Solution
+
+>>> # Imports
+>>> from sympy import *
+>>> from sympy.abc import z
+>>> from sympy.physics.control import *
+>>> # State-space representation
+>>> A = Matrix([[0,0,0],[1,0,0],[1,1,0]])
+>>> B = Matrix([[1,0],[0,1],[0,0]])
+>>> C = Matrix([0,0,1]).T
+>>> ss = DiscreteStateSpace(A, B, C)
+
+We know that the heaviside function :math:`\theta(k)` has the following Z-transform:
+
+.. math::
+        \theta(z) = \frac{z}{z - 1}
+
+So, we can define the input as follows:
+
+>>> U1 = z / (z - 1)
+
+The forced response in the output is given by:
+
+.. math::
+        Y_f(z) = G(z) \cdot U(z)
+
+where :math:`G(z)` is the transfer function associated to the state-space representation
+``ss`` and :math:`U(z)` is :math:`[\frac{z}{z - 1}, 0]^T`.
+(Since :math:`U_2(z) = 0`, we can consider only the first column of :math:`G(z)`).
+
+>>> G = ss.rewrite(DiscreteTransferFunction)[0][0]
+>>> pprint(G, use_unicode = False)
+z + 1
+----- -> sampling time: 1
+  3
+ z
+>>> Yf = G.to_expr() * U1
+>>> pprint(Yf, use_unicode = False)
+  z + 1
+----------
+ 2
+z *(z - 1)
+
+which can be simply converted to the time domain:
+
+.. math::
+        y_f(k) = \mathcal{Z}^{-1}\{Y_f(z)\} = \theta(k-2) + \theta(k-3)
 
 References
 ^^^^^^^^^^
