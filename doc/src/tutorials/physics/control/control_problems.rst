@@ -387,7 +387,7 @@ Subpart 1
 >>> pprint(W, use_unicode = False)
        2
     2*z
-------------, sampling time: 1
+------------ -> sampling time: 1
    2
 2*z  + z - 1
 
@@ -476,15 +476,15 @@ where :math:`G(z)` is the transfer function associated to the state-space repres
 
 >>> G = ss.rewrite(DiscreteTransferFunction)[0][0]
 >>> pprint(G, use_unicode = False)
-z + 1
------ -> sampling time: 1
+z*(z + 1)
+--------- -> sampling time: 1
   3
  z
 >>> Yf = G.to_expr() * U1
 >>> pprint(Yf, use_unicode = False)
-  z + 1
+z*(z + 1)
 ----------
- 2
+ 3
 z *(z - 1)
 
 which can be simply converted to the time domain:
