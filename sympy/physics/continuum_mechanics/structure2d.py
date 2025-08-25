@@ -151,8 +151,12 @@ class Structure2d:
     Represents a 2D structure composed of members, supports, and loads.
 
     .. note::
-        A consistent sign convention should be maintained for all forces and reactions.
-        The positive direction for the x-axis is to the right, and the positive direction for the y-axis is downwards.
+        - A consistent sign convention should be maintained for all forces and reactions.
+            The positive direction for the x-axis is to the right, and the positive direction for the y-axis is downwards.
+        - The angles for applying loads follow an anticlockwise convention.
+            Load applied along the positive x-axis is 0°, along the upward y-axis direction is 90°,
+            along the negative x-axis is 180°, and along the downward y-axis direction is 270°.
+
 
         Limitations:
             - Only non-branching or non-intersecting structures are supported. (All members must either be connected to ONE other member at each end or to nothing)
