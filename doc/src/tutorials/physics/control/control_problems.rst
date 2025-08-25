@@ -476,8 +476,8 @@ where :math:`G(z)` is the transfer function associated to the state-space repres
 
 >>> G = ss.rewrite(DiscreteTransferFunction)[0][0]
 >>> pprint(G, use_unicode = False)
-z*(z + 1)
---------- -> sampling time: 1
+z + 1
+----- -> sampling time: 1
   3
  z
 >>> Yf = G.to_expr() * U1
