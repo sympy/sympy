@@ -825,7 +825,7 @@ class PowerSeriesElement(DomainElement, CantSympify, Generic[Er]):
         1 + x - 1/2*x**2 - 1/6*x**3 + 1/24*x**4 + 1/120*x**5 + O(x**6)
 
         """
-        if not isinstance(other, (PowerSeriesElement, int)) or self.domain.of_type(
+        if not isinstance(other, (PowerSeriesElement, int)) and not self.domain.of_type(
             other
         ):
             raise TypeError(
@@ -872,7 +872,9 @@ class PowerSeriesElement(DomainElement, CantSympify, Generic[Er]):
 
         """
 
-        if isinstance(other, (PowerSeriesElement, int)) or self.domain.of_type(other):
+        if not isinstance(other, (PowerSeriesElement, int)) and not self.domain.of_type(
+            other
+        ):
             raise TypeError(
                 f"Unsupported type {type(other).__name__} for subtraction with PowerSeriesElement."
             )
@@ -916,7 +918,9 @@ class PowerSeriesElement(DomainElement, CantSympify, Generic[Er]):
         x - 2/3*x**3 + 2/15*x**5 + O(x**6)
 
         """
-        if isinstance(other, (PowerSeriesElement, int)) or self.domain.of_type(other):
+        if not isinstance(other, (PowerSeriesElement, int)) and not self.domain.of_type(
+            other
+        ):
             raise TypeError(
                 f"Unsupported type {type(other).__name__} for multiplication with PowerSeriesElement."
             )
@@ -983,7 +987,9 @@ class PowerSeriesElement(DomainElement, CantSympify, Generic[Er]):
         >>> R.tan(x) == t
         True
         """
-        if isinstance(other, (PowerSeriesElement, int)) or self.domain.of_type(other):
+        if not isinstance(other, (PowerSeriesElement, int)) and not self.domain.of_type(
+            other
+        ):
             raise TypeError(
                 f"Unsupported type {type(other).__name__} for division with PowerSeriesElement."
             )
@@ -1118,10 +1124,7 @@ class PowerSeriesElement(DomainElement, CantSympify, Generic[Er]):
     def leading_coefficient(self) -> Er:
         """Return the leading coefficient of the series."""
         R = self.ring
-        coeffs = R.to_list(self.series)
-        if len(coeffs) == 0:
-            return self.domain.zero
-        return self._parent_ring.domain_new(coeffs[0])
+        return R.leading_coefficient(self.series)
 
     def removeO(self) -> PowerSeriesElement[Er]:
         """Remove the big O notation from the series."""
@@ -1131,7 +1134,7 @@ class PowerSeriesElement(DomainElement, CantSympify, Generic[Er]):
         return self.new(series)
 
     @property
-    def is_ground(self) -> bool:
+    def is_ground(self) -> bool | None:
         """Check if the series is a ground element."""
         R = self.ring
-        return len(R.to_list(self.series)) <= 1
+        return R.is_ground(self.series)

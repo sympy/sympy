@@ -245,9 +245,25 @@ class FlintPowerSeriesRingZZ:
         else:
             return False
 
-    def is_element(self, s: ZZSeries) -> bool:
-        """Check if a series is an element of the power series ring."""
-        return isinstance(s, (fmpz_poly, fmpz_series))
+    def is_element(self, arg: ZZSeries) -> bool:
+        """Check if a arg is an element of the power series ring."""
+        return isinstance(arg, (fmpz_poly, fmpz_series))
+
+    def is_ground(self, arg: ZZSeries | MPZ) -> bool | None:
+        """Check if a arg is a ground element of the power series ring."""
+        if self.prec == 0:
+            return None
+
+        if isinstance(arg, MPZ):
+            return True
+        elif self.is_element(arg):
+            return len(arg) <= 1
+        else:
+            return False
+
+    def leading_coefficient(self, s: ZZSeries) -> MPZ:
+        """Return the leading coefficient of a power series."""
+        return s[0]
 
     def positive(self, s: ZZSeries) -> ZZSeries:
         """Return the unary positive of a power series, adjusted to the ring's precision."""
@@ -664,9 +680,25 @@ class FlintPowerSeriesRingQQ:
         else:
             return False
 
-    def is_element(self, s: QQSeries) -> bool:
-        """Check if a series is an element of the power series ring."""
-        return isinstance(s, (fmpq_poly, fmpq_series))
+    def is_element(self, arg: QQSeries) -> bool:
+        """Check if a arg is an element of the power series ring."""
+        return isinstance(arg, (fmpq_poly, fmpq_series))
+
+    def is_ground(self, arg: QQSeries | MPQ) -> bool | None:
+        """Check if a arg is a ground element of the power series ring."""
+        if self.prec == 0:
+            return None
+
+        if isinstance(arg, MPQ):
+            return True
+        elif self.is_element(arg):
+            return len(arg) <= 1
+        else:
+            return False
+
+    def leading_coefficient(self, s: QQSeries) -> MPQ:
+        """Return the leading coefficient of a power series."""
+        return s[0]
 
     def positive(self, s: QQSeries) -> QQSeries:
         """Return the unary positive of a power series, adjusted to the ring's precision."""

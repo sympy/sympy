@@ -36,7 +36,7 @@ from sympy.external.gmpy import MPZ, MPQ
 from sympy.polys.ring_series import _giant_steps
 
 
-USeries: TypeAlias = "tuple[dup[Er], Union[int, None]]"
+USeries: TypeAlias = "tuple[list[Er], Union[int, None]]"
 
 
 def _useries(
@@ -1205,12 +1205,31 @@ class PythonPowerSeriesRingZZ:
         """Check if two power series have the same representation."""
         return _useries_equal_repr(s1, s2)
 
-    def is_element(self, s: USeries[MPZ]) -> bool:
-        """Check if a series is an element of the power series ring."""
-        if isinstance(s, tuple) and len(s) == 2:
-            if isinstance(s[0], list) and all(isinstance(c, MPZ) for c in s[0]):
+    def is_element(self, arg: USeries[MPZ]) -> bool:
+        """Check if a arg is an element of the power series ring."""
+        if isinstance(arg, tuple) and len(arg) == 2:
+            if isinstance(arg[0], list) and all(isinstance(c, MPZ) for c in arg[0]):
                 return True
         return False
+
+    def is_ground(self, arg: USeries[MPZ] | MPZ) -> bool | None:
+        """Check if a arg is a ground element of the power series ring."""
+        if self.prec == 0:
+            return None
+
+        if isinstance(arg, MPZ):
+            return True
+        elif self.is_element(arg):
+            return len(self.to_list(arg)) <= 1
+        else:
+            return False
+
+    def leading_coefficient(self, s: USeries[MPZ]) -> MPZ:
+        """Return the leading coefficient of a power series."""
+        coeffs, _ = s
+        if len(coeffs) > 0:
+            return coeffs[-1]
+        return self._domain.zero
 
     def positive(self, s: USeries[MPZ]) -> USeries[MPZ]:
         """Return the unary positive of a power series, adjusted to the ring's precision."""
@@ -1454,12 +1473,31 @@ class PythonPowerSeriesRingQQ:
         """Check if two power series have the same representation."""
         return _useries_equal_repr(s1, s2)
 
-    def is_element(self, s: USeries[MPQ]) -> bool:
-        """Check if a series is an element of the power series ring."""
-        if isinstance(s, tuple) and len(s) == 2:
-            if isinstance(s[0], list) and all(isinstance(c, MPQ) for c in s[0]):
+    def is_element(self, arg: USeries[MPQ]) -> bool:
+        """Check if a arg is an element of the power series ring."""
+        if isinstance(arg, tuple) and len(arg) == 2:
+            if isinstance(arg[0], list) and all(isinstance(c, MPQ) for c in arg[0]):
                 return True
         return False
+
+    def is_ground(self, arg: USeries[MPQ] | MPQ) -> bool | None:
+        """Check if a arg is a ground element of the power series ring."""
+        if self.prec == 0:
+            return None
+
+        if isinstance(arg, MPQ):
+            return True
+        elif self.is_element(arg):
+            return len(self.to_list(arg)) <= 1
+        else:
+            return False
+
+    def leading_coefficient(self, s: USeries[MPQ]) -> MPQ:
+        """Return the leading coefficient of a power series."""
+        coeffs, _ = s
+        if len(coeffs) > 0:
+            return coeffs[-1]
+        return self._domain.zero
 
     def positive(self, s: USeries[MPQ]) -> USeries[MPQ]:
         """Return the unary positive of a power series, adjusted to the ring's precision."""

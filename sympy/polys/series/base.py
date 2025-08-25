@@ -109,8 +109,16 @@ class PowerSeriesRingProto(Protocol[TSeries, Er]):
         """Check if two power series have the same representation."""
         ...
 
-    def is_element(self, s: TSeries) -> bool:
-        """Check if a series is an element of the power series ring."""
+    def is_element(self, arg: TSeries) -> bool:
+        """Check if a arg is an element of the power series ring."""
+        ...
+
+    def is_ground(self, arg: TSeries | Er) -> bool | None:
+        """Check if a arg is a ground element of the power series ring."""
+        ...
+
+    def leading_coefficient(self, s: TSeries) -> Er:
+        """Return the leading coefficient of a power series."""
         ...
 
     def positive(self, s: TSeries, /) -> TSeries:
