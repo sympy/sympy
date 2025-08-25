@@ -82,11 +82,17 @@ class FlintPowerSeriesRingZZ:
     Note
     ====
 
-    The recommended way to create a power series ring is using the factory function:
+    The recommended way to create a power series ring is using the factory function
+    which returns a new instance of the higher level PowerSeriesRing class with
+    the ring generator:
 
     >>> from sympy.polys.series import power_series_ring
     >>> from sympy.polys.domains import ZZ
-    >>> R = power_series_ring(ZZ, prec=6)
+    >>> R, x = power_series_ring("x", ZZ, 6)
+    >>> R
+    Power Series Ring in x over ZZ of size 6
+    >>> type(x)
+    <class 'sympy.polys.series.ring.PowerSeriesElement'>
 
     This function automatically uses the Flint implementation if available for better
     performance, falling back to the Python implementation otherwise.
@@ -94,9 +100,12 @@ class FlintPowerSeriesRingZZ:
     See Also
     ========
 
-    FlintPowerSeriesRingQQ
-    PythonPowerSeriesRingZZ
-    power_series_ring
+    sympy.polys.series.ringflint.FlintPowerSeriesRingQQ
+    sympy.polys.series.ringpython.PythonPowerSeriesRingZZ
+    sympy.polys.series.ring.power_series_ring
+    sympy.polys.series.ring.PowerSeriesRingRing
+    sympy.polys.series.ring.PowerSeriesRingField
+    sympy.polys.series.ring.PowerSeriesElement
     """
 
     _domain = ZZ
@@ -235,6 +244,26 @@ class FlintPowerSeriesRingZZ:
             return s1._equal_repr(s2)
         else:
             return False
+
+    def is_element(self, arg: ZZSeries) -> bool:
+        """Check if a arg is an element of the power series ring."""
+        return isinstance(arg, (fmpz_poly, fmpz_series))
+
+    def is_ground(self, arg: ZZSeries | MPZ) -> bool | None:
+        """Check if a arg is a ground element of the power series ring."""
+        if self.prec == 0:
+            return None
+
+        if isinstance(arg, MPZ):
+            return True
+        elif self.is_element(arg):
+            return len(arg) <= 1
+        else:
+            return False
+
+    def leading_coefficient(self, s: ZZSeries) -> MPZ:
+        """Return the leading coefficient of a power series."""
+        return s[0]
 
     def positive(self, s: ZZSeries) -> ZZSeries:
         """Return the unary positive of a power series, adjusted to the ring's precision."""
@@ -486,11 +515,17 @@ class FlintPowerSeriesRingQQ:
     Note
     ====
 
-    The recommended way to create a power series ring is using the factory function:
+    The recommended way to create a power series ring is using the factory function
+    which returns a new instance of the higher level PowerSeriesRing class with
+    the ring generator:
 
     >>> from sympy.polys.series import power_series_ring
     >>> from sympy.polys.domains import QQ
-    >>> R = power_series_ring(QQ, prec=6)
+    >>> R, x = power_series_ring("x", QQ, 6)
+    >>> R
+    Power Series Ring in x over QQ of size 6
+    >>> type(x)
+    <class 'sympy.polys.series.ring.PowerSeriesElement'>
 
     This function automatically uses the Flint implementation if available for better
     performance, falling back to the Python implementation otherwise.
@@ -498,9 +533,12 @@ class FlintPowerSeriesRingQQ:
     See Also
     ========
 
-    FlintPowerSeriesRingZZ
-    PythonPowerSeriesRingQQ
-    power_series_ring
+    sympy.polys.series.ringflint.FlintPowerSeriesRingZZ
+    sympy.polys.series.ringpython.PythonPowerSeriesRingQQ
+    sympy.polys.series.ring.power_series_ring
+    sympy.polys.series.ring.PowerSeriesRingRing
+    sympy.polys.series.ring.PowerSeriesRingField
+    sympy.polys.series.ring.PowerSeriesElement
     """
 
     _domain = QQ
@@ -641,6 +679,26 @@ class FlintPowerSeriesRingQQ:
             return s1._equal_repr(s2)
         else:
             return False
+
+    def is_element(self, arg: QQSeries) -> bool:
+        """Check if a arg is an element of the power series ring."""
+        return isinstance(arg, (fmpq_poly, fmpq_series))
+
+    def is_ground(self, arg: QQSeries | MPQ) -> bool | None:
+        """Check if a arg is a ground element of the power series ring."""
+        if self.prec == 0:
+            return None
+
+        if isinstance(arg, MPQ):
+            return True
+        elif self.is_element(arg):
+            return len(arg) <= 1
+        else:
+            return False
+
+    def leading_coefficient(self, s: QQSeries) -> MPQ:
+        """Return the leading coefficient of a power series."""
+        return s[0]
 
     def positive(self, s: QQSeries) -> QQSeries:
         """Return the unary positive of a power series, adjusted to the ring's precision."""
