@@ -220,7 +220,7 @@ def public(obj: T) -> T:
         ns = sys.modules[obj.__module__].__dict__
         name = obj.__name__
     else:
-        raise TypeError("expected a function or a class, got %s" % obj)
+        raise TypeError(f"expected a function or a class, got {obj}")
 
     if "__all__" not in ns:
         ns["__all__"] = [name]

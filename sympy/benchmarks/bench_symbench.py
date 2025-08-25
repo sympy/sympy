@@ -131,4 +131,4 @@ if __name__ == '__main__':
         t = clock()
         b()
         t = clock() - t
-        print("%s%65s: %f" % (b.__name__, b.__doc__, t))
+        print(f"{b.__name__}{b.__doc__:>65}: {t:f}")

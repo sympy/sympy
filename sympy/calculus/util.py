@@ -346,14 +346,12 @@ def not_empty_in(finset_intersection, *syms):
         _sets = finset_intersection.args[0]
 
     if not isinstance(finite_set, FiniteSet):
-        raise ValueError('A FiniteSet must be given, not %s: %s' %
-                         (type(finite_set), finite_set))
+        raise ValueError(f"A FiniteSet must be given, not {type(finite_set)}: {finite_set}")
 
     if len(syms) == 1:
         symb = syms[0]
     else:
-        raise NotImplementedError('more than one variables %s not handled' %
-                                  (syms,))
+        raise NotImplementedError(f'more than one variables {syms} not handled')
 
     def elm_domain(expr, intrvl):
         """ Finds the domain of an expression in any given interval """
@@ -456,7 +454,7 @@ def periodicity(f, symbol, check=False):
     >>> periodicity(exp(x), x)
     """
     if symbol.kind is not NumberKind:
-        raise NotImplementedError("Cannot use symbol of kind %s" % symbol.kind)
+        raise NotImplementedError(f"Cannot use symbol of kind {symbol.kind}")
     temp = Dummy('x', real=True)
     f = f.subs(symbol, temp)
     symbol = temp
@@ -467,15 +465,15 @@ def periodicity(f, symbol, check=False):
         if new_f.equals(orig_f):
             return period
         else:
-            raise NotImplementedError(filldedent('''
+            raise NotImplementedError(filldedent(f'''
                 The period of the given function cannot be verified.
-                When `%s` was replaced with `%s + %s` in `%s`, the result
-                was `%s` which was not recognized as being the same as
+                When `{symbol}` was replaced with `{symbol} + {period}` in `{orig_f}`,
+                the result was `{new_f}` which was not recognized as being the same as
                 the original function.
                 So either the period was wrong or the two forms were
                 not recognized as being equal.
-                Set check=False to obtain the value.''' %
-                (symbol, symbol, period, orig_f, new_f)))
+                Set check=False to obtain the value.'''
+            ))
 
     orig_f = f
     period = None
@@ -845,7 +843,7 @@ def maximum(f, symbol, domain=S.Reals):
 
         return function_range(f, symbol, domain).sup
     else:
-        raise ValueError("%s is not a valid symbol." % symbol)
+        raise ValueError(f"{symbol} is not a valid symbol.")
 
 
 def minimum(f, symbol, domain=S.Reals):
@@ -892,4 +890,4 @@ def minimum(f, symbol, domain=S.Reals):
 
         return function_range(f, symbol, domain).inf
     else:
-        raise ValueError("%s is not a valid symbol." % symbol)
+        raise ValueError(f"{symbol} is not a valid symbol.")

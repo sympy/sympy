@@ -1470,13 +1470,12 @@ class ArrowStringDescription:
 
     def __str__(self):
         if self.curving:
-            curving_str = "@/%s%d%s/" % (self.curving, self.curving_amount,
-                                         self.unit)
+            curving_str = f"@/{self.curving}{self.curving_amount}{self.unit}/"
         else:
             curving_str = ""
 
         if self.looping_start and self.looping_end:
-            looping_str = "@(%s,%s)" % (self.looping_start, self.looping_end)
+            looping_str = f"@({self.looping_start},{self.looping_end})"
         else:
             looping_str = ""
 
@@ -1486,10 +1485,11 @@ class ArrowStringDescription:
         else:
             style_str = ""
 
-        return "\\ar%s%s%s[%s%s]%s%s{%s}" % \
-               (curving_str, looping_str, style_str, self.horizontal_direction,
-                self.vertical_direction, self.label_position,
-                self.label_displacement, self.label)
+        return (
+            f"\\ar{curving_str}{looping_str}{style_str}["
+            f"{self.horizontal_direction}{self.vertical_direction}]"
+            f"{self.label_position}{self.label_displacement}{{{self.label}}}"
+        )
 
 
 class XypicDiagramDrawer:
@@ -2353,7 +2353,7 @@ class XypicDiagramDrawer:
         for morphism in morphisms:
             object_morphisms[morphism.domain].append(morphism)
 
-        result = "\\xymatrix%s{\n" % diagram_format
+        result = f"\\xymatrix{diagram_format}{{\n"
 
         for i in range(grid.height):
             for j in range(grid.width):

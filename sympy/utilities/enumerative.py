@@ -115,7 +115,7 @@ class PartComponent:
 
     def __repr__(self):
         "for debug/algorithm animation purposes"
-        return 'c:%d u:%d v:%d' % (self.c, self.u, self.v)
+        return f'c:{self.c} u:{self.u} v:{self.v}'
 
     def __eq__(self, other):
         """Define  value oriented equality, which is useful for testers"""

@@ -118,11 +118,11 @@ class CodeWrapper:
 
     @property
     def filename(self):
-        return "%s_%s" % (self._filename, CodeWrapper._module_counter)
+        return f"{self._filename}_{CodeWrapper._module_counter}"
 
     @property
     def module_name(self):
-        return "%s_%s" % (self._module_basename, CodeWrapper._module_counter)
+        return f"{self._module_basename}_{CodeWrapper._module_counter}"
 
     def __init__(self, generator, filepath=None, flags=[], verbose=False):
         """
@@ -183,8 +183,9 @@ class CodeWrapper:
             retoutput = check_output(command, stderr=STDOUT)
         except CalledProcessError as e:
             raise CodeWrapError(
-                "Error while executing command: %s. Command output is:\n%s" % (
-                    " ".join(command), e.output.decode('utf-8')))
+                f"Error while executing command: {' '.join(command)}. "
+                f"Command output is:\n{e.output.decode('utf-8')}"
+            )
         if not self.quiet:
             print(retoutput)
 
@@ -203,7 +204,7 @@ def %(name)s():
         return
 
     def _generate_code(self, routine, helpers):
-        with open('%s.py' % self.module_name, 'w') as f:
+        with open(f"{self.module_name}.py", 'w') as f:
             printed = ", ".join(
                 [str(res.expr) for res in routine.result_variables])
             # convert OutputArguments to return value like f2py
@@ -322,7 +323,7 @@ setup(ext_modules=cythonize(ext_mods, **cy_opts))
     def _prepare_files(self, routine, build_dir=os.curdir):
         # NOTE : build_dir is used for testing purposes.
         pyxfilename = self.module_name + '.pyx'
-        codefilename = "%s.%s" % (self.filename, self.generator.code_extension)
+        codefilename = f"{self.filename}.{self.generator.code_extension}"
 
         # pyx
         with open(os.path.join(build_dir, pyxfilename), 'w') as f:
@@ -400,11 +401,11 @@ setup(ext_modules=cythonize(ext_mods, **cy_opts))
             args_c = ", ".join([self._call_arg(a) for a in routine.arguments])
             rets = ", ".join([self._string_var(r.name) for r in py_rets])
             if routine.results:
-                body = '    return %s(%s)' % (routine.name, args_c)
+                body = f'    return {routine.name}({args_c})'
                 if rets:
                     body = body + ', ' + rets
             else:
-                body = '    %s(%s)\n' % (routine.name, args_c)
+                body = f'    {routine.name}({args_c})\n'
                 body = body + '    return ' + rets
 
             functions.append(self.pyx_func.format(name=name, arg_string=arg_string,
@@ -458,7 +459,7 @@ setup(ext_modules=cythonize(ext_mods, **cy_opts))
             mtype = np_types[t]
             return mat_dec.format(mtype=mtype, ndim=ndim, name=self._string_var(arg.name))
         else:
-            return "%s %s" % (t, self._string_var(arg.name))
+            return f"{t} {self._string_var(arg.name)}"
 
     def _declare_arg(self, arg):
         proto = self._prototype_arg(arg)
@@ -1168,7 +1169,7 @@ def ufuncify(args, expr, language=None, backend='numpy', tempdir=None,
         m = Dummy('m', integer=True)
         i = Idx(Dummy('i', integer=True), m)
         f_dummy = Dummy('f')
-        f = implemented_function('%s_%d' % (f_dummy.name, f_dummy.dummy_index), Lambda(args, expr))
+        f = implemented_function(f"{f_dummy.name}_{f_dummy.dummy_index}", Lambda(args, expr))
         # For each of the args create an indexed version.
         indexed_args = [IndexedBase(Dummy(str(a))) for a in args]
         # Order the arguments (out, args, dim)

@@ -105,8 +105,7 @@ def flatten(iterable, levels=None, cls=None):  # noqa: F811
         elif levels > 0:
             levels -= 1
         else:
-            raise ValueError(
-                "expected non-negative number of levels, got %s" % levels)
+            raise ValueError(f"expected non-negative number of levels, got {levels}")
 
     if cls is None:
         def reducible(x):
@@ -133,7 +132,7 @@ def unflatten(iter, n=2):
     the length of ``iter`` is not a multiple of ``n``.
     """
     if n < 1 or len(iter) % n:
-        raise ValueError('iter length is not a multiple of %i' % n)
+        raise ValueError(f'iter length is not a multiple of {n}')
     return list(zip(*(iter[i::n] for i in range(n))))
 
 
@@ -553,7 +552,7 @@ def numbered_symbols(prefix='x', cls=None, start=0, exclude=(), *args, **assumpt
         cls = Symbol
 
     while True:
-        name = '%s%s' % (prefix, start)
+        name = f'{prefix}{start}'
         s = cls(name, *args, **assumptions)
         if s not in exclude:
             yield s
@@ -2951,8 +2950,7 @@ def kbins(l, k, ordered=None):
                         i = j
                 yield rv
     else:
-        raise ValueError(
-            'ordered must be one of 00, 01, 10 or 11, not %s' % ordered)
+        raise ValueError(f'ordered must be one of 00, 01, 10 or 11, not {ordered}')
 
 
 def permute_signs(t):
