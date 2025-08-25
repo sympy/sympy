@@ -36,14 +36,15 @@ from sympy.core.relational import Eq
 from sympy.core.function import Lambda
 from sympy.core.symbol import Dummy
 from sympy.core.numbers import Number
-from sympy.core import Basic
+from sympy.core import Basic, Add, Mul
 from sympy.utilities.iterables import numbered_symbols
+from sympy.assumptions.assume import AppliedPredicate
+
 
 
 class EUFUnhandledInput(Exception):
     """
-    Raised while creating an LRASolver if non-linearity
-    or non-rational numbers are present.
+    Raised while creating an EUFCongruenceClosure if unhandled input is present.
     """
 
 class EUFCongruenceClosure:
@@ -82,6 +83,8 @@ class EUFCongruenceClosure:
         self._num_dummy_cache = {}
         self._atom_dummy_cache = {}
         self._flatten_cache = {}
+        self._predicate_cache = {}
+        self._lambda_pattern_cache = {}
 
         # Curryfication and flattening (Sec 3/4): every unique subterm assigned constant
         for eq in equations:
@@ -128,6 +131,18 @@ class EUFCongruenceClosure:
                 d = self._new_dummy()
                 self._atom_dummy_cache[expr] = d
             return self._atom_dummy_cache[expr]
+        if isinstance(expr, AppliedPredicate):
+            pred = expr.function
+            args = expr.arguments
+            arg_ids = tuple(self._flatten(arg) for arg in args)
+            key = (pred, arg_ids)
+            if key not in self._flatten_cache:
+                d = self._new_dummy()
+                self._flatten_cache[key] = d
+                self.lookup_table[key] = d
+                for arg_id in arg_ids:
+                    self.use_list[arg_id].append((pred, arg_ids, d))
+            return self._flatten_cache[key]
         if isinstance(expr, Lambda):
             lam = expr if len(expr.variables) == 1 else expr.curry()
             body_id = self._flatten(lam.expr)

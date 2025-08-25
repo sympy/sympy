@@ -32,12 +32,11 @@ def test_binary_congruence_and_propagation():
 
 def test_lambda_curry_and_equivalent_application():
     lam = Lambda((x, y), x + 2*y)
-    lam_curried = lam.curry()
     cc = EUFCongruenceClosure([
-        Eq(lam_curried(x)(y), lam_curried(y)(x)),
+        Eq(lam(x,y), lam(y,x)),
         Eq(x, y)
     ])
-    assert cc.are_equal(lam_curried(x)(y), lam_curried(y)(x))
+    assert cc.are_equal(lam(x,y), lam(y,x))
 
 
 def test_permuted_arguments_no_commutativity():

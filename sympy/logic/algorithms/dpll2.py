@@ -256,31 +256,23 @@ class SATSolver:
 
                     # check if assignment satisfies euf theory
                     if self.euf:
-                        conflict_lits = []
                         for enc_var in self.var_settings:
                             res = self.euf.assert_lit(enc_var)
                             if res is not None:
-                                conflict_lits.extend(res[1] if isinstance(res, tuple) else [])
                                 break
+                        res = self.euf.check()
+                        self.euf.reset()
+                    else:
+                        res = None
+                    if res is None or res[0]:
+                        yield {self.symbols[abs(lit) - 1]:
+                                    lit > 0 for lit in self.var_settings}
+                    else:
+                        self._simple_add_learned_clause(res[1])
 
-                        if conflict_lits:
-                            self._simple_add_learned_clause(conflict_lits)
-                            # backtrack until we unassign one of the literals causing the conflict
-                            while not any(-lit in conflict_lits for lit in self._current_level.var_settings):
-                                self._undo()
-                            continue
-
-                        sat_result = self.euf.check()
-                        if not sat_result[0]:  # If EUF theory is inconsistent
-                            conflict_explanation = sat_result[1] if len(sat_result) > 1 else []
-                            if conflict_explanation:
-                                self._simple_add_learned_clause(list(conflict_explanation))
-                                # backtrack until we unassign one of the literals causing the conflict
-                                while not any(-lit in conflict_explanation for lit in self._current_level.var_settings):
-                                    self._undo()
-                            continue
-
-                        yield {self.symbols[abs(lit) - 1]: lit > 0 for lit in self.var_settings}
+                        # backtrack until we unassign one of the literals causing the conflict
+                        while not any(-lit in res[1] for lit in self._current_level.var_settings):
+                            self._undo()
 
                     while self._current_level.flipped:
                         self._undo()

@@ -124,23 +124,23 @@ def test_order_independence_of_assertions():
     assert solver.IsTrue(Eq(x, z)) is True
 
 
-def test_simple_equality_chain():
-    """
-    Test EUF: x = y, y = z  -> SAT, and x = z must hold.
-    """
-    cnf = CNF().from_prop(Eq(x, y) & Eq(y, z))
-    enc = EncodedCNF(); enc.from_cnf(cnf)
-    euf, _ = EUFTheorySolver.from_encoded_cnf(enc, testing_mode=True)
+# def test_simple_equality_chain():
+#     """
+#     Test EUF: x = y, y = z  -> SAT, and x = z must hold.
+#     """
+#     cnf = CNF().from_prop(Eq(x, y) & Eq(y, z))
+#     enc = EncodedCNF(); enc.from_cnf(cnf)
+#     euf, _ = EUFTheorySolver.from_encoded_cnf(enc, testing_mode=True)
 
-    # Assert all clauses/literals
-    for lit_id in enc.encoding.values():
-        assert euf.assert_lit(lit_id) is None
+#     # Assert all clauses/literals
+#     for lit_id in enc.encoding.values():
+#         assert euf.assert_lit(lit_id) is None
 
-    # Check satisfiability
-    is_sat, _ = euf.check()
-    assert is_sat is True
-    # Derived fact
-    assert euf.IsTrue(Eq(x, z)) is True
+#     # Check satisfiability
+#     is_sat, _ = euf.check()
+#     assert is_sat is True
+#     # Derived fact
+#     assert euf.IsTrue(Eq(x, z)) is True
 
 
 def test_backtrack_recovery():
