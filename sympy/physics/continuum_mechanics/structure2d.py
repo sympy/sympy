@@ -154,8 +154,8 @@ class Structure2d:
         - A consistent sign convention should be maintained for all forces and reactions.
             The positive direction for the x-axis is to the right, and the positive direction for the y-axis is downwards.
         - The angles for applying loads follow an anticlockwise convention.
-            Load applied along the positive x-axis is 0°, along the upward y-axis direction is 90°,
-            along the negative x-axis is 180°, and along the downward y-axis direction is 270°.
+            Load applied along the positive x-axis is 0 degrees, along the upward y-axis direction is 90 degrees,
+            along the negative x-axis is 180 degrees, and along the downward y-axis direction is 270 degrees.
 
 
         Limitations:
