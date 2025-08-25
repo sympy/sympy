@@ -1075,12 +1075,12 @@ class PythonPowerSeriesRingZZ:
     See Also
     ========
 
-    PythonPowerSeriesRingQQ
-    FlintPowerSeriesRingZZ
-    power_series_ring
-    PowerSeriesRingRing
-    PowerSeriesRingField
-    PowerSeriesElement
+    sympy.polys.series.ringpython.PythonPowerSeriesRingQQ
+    sympy.polys.series.ringflint.FlintPowerSeriesRingZZ
+    sympy.polys.series.ring.power_series_ring
+    sympy.polys.series.ring.PowerSeriesRingRing
+    sympy.polys.series.ring.PowerSeriesRingField
+    sympy.polys.series.ring.PowerSeriesElement
     """
 
     _domain = ZZ
@@ -1322,12 +1322,12 @@ class PythonPowerSeriesRingQQ:
     See Also
     ========
 
-    PythonPowerSeriesRingZZ
-    FlintPowerSeriesRingQQ
-    power_series_ring
-    PowerSeriesRingRing
-    PowerSeriesRingField
-    PowerSeriesElement
+    sympy.polys.series.ringpython.PythonPowerSeriesRingZZ
+    sympy.polys.series.ringflint.FlintPowerSeriesRingQQ
+    sympy.polys.series.ring.power_series_ring
+    sympy.polys.series.ring.PowerSeriesRingRing
+    sympy.polys.series.ring.PowerSeriesRingField
+    sympy.polys.series.ring.PowerSeriesElement
     """
 
     _domain = QQ

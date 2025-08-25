@@ -105,7 +105,7 @@ Protocols for Power Series Rings
 
 .. py:class:: sympy.polys.series.base.TSeries
 
-.. py:class:: sympy.polys.series.tring.TElement
+.. py:class:: sympy.polys.series.tring.TSeriesElement
 
 
 Python Implementation

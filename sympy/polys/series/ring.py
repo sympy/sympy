@@ -116,6 +116,14 @@ def power_series_ring(
     x + x**2 - 1/6*x**3 - 1/2*x**4 - 59/120*x**5 + O(x**6)
     >>> R.log(1 + 7*x**2)
     7*x**2 - 49/2*x**4 + O(x**6)
+
+    See Also
+    ========
+
+    sympy.polys.series.ring.PowerSeriesRingRing
+    sympy.polys.series.ring.PowerSeriesRingField
+    sympy.polys.series.ring.PowerSeriesElement
+
     """
 
     if K.is_ZZ:
