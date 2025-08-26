@@ -141,3 +141,42 @@ def test_parabola_intersection():
            Point2D(4*sqrt(17)/3, Rational(59, 9))]
     # parabola with unsupported type
     raises(TypeError, lambda: parabola1.intersection(2))
+
+def test_parabola_tangent():
+    from sympy.geometry import Parabola, Point, Line
+
+    # Parabola with focus (0, 4) and directrix y = -4
+    # Equation: x**2 = 16*y
+    p1 = Parabola(Point(0, 4), Line(Point(-10, -4), Point(10, -4)))
+
+    # Point (8, 4) is on the parabola: 8**2 = 64, 16*4 = 64
+    # Tangent at (8, 4): dy/dx = x/8. At x=8, slope = 1.
+    # Line: y - 4 = 1 * (x - 8)  => y = x - 4
+    # This line passes through (8, 4) and (0, -4)
+    tangent_line_p1 = p1.tangent(Point(8, 4))
+    assert tangent_line_p1.contains(Point(8, 4))
+    assert tangent_line_p1.contains(Point(0, -4))
+
+    # Test with a point not on the parabola
+    raises(ValueError, lambda: p1.tangent(Point(1, 1)))
+
+    # Parabola with focus (4, 0) and directrix x = -4
+    # Equation: y**2 = 16*x
+    p2 = Parabola(Point(4, 0), Line(Point(-4, -10), Point(-4, 10)))
+
+    # Point (4, 8) is on the parabola: 8**2 = 64, 16*4 = 64
+    # Tangent at (4, 8): 2y * dy/dx = 16 => dy/dx = 8/y. At y=8, slope = 1.
+    # Line: y - 8 = 1 * (x - 4) => y = x + 4
+    # This line passes through (4, 8) and (0, 4)
+    tangent_line_p2 = p2.tangent(Point(4, 8))
+    assert tangent_line_p2.contains(Point(4, 8))
+    assert tangent_line_p2.contains(Point(0, 4))
+
+    # Test with a different point on p2
+    # Point (1, 4) is on the parabola: 4**2 = 16, 16*1 = 16
+    # Tangent at (1, 4): dy/dx = 8/y. At y=4, slope = 2.
+    # Line: y - 4 = 2 * (x - 1) => y = 2x + 2
+    # This line passes through (1, 4) and (0, 2)
+    tangent_line_p3 = p2.tangent(Point(1, 4))
+    assert tangent_line_p3.contains(Point(1, 4))
+    assert tangent_line_p3.contains(Point(0, 2))
