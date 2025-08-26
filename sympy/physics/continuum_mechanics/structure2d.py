@@ -965,7 +965,7 @@ class Structure2d:
     def apply_rotation_hinge(self, x, y):
 
         unwarap_x = self._find_unwrapped_position(x, y)
-        P = Symbol(f"P__{round(x,2)},__{round(y,2)}")
+        P = Symbol(f"P (x={round(x,2)},y={round(y,2)})")
         load_p = P
         self.apply_load(
                 start_x=x, start_y=y, value=load_p, global_angle=0, order=-3
