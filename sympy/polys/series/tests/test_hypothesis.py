@@ -71,19 +71,19 @@ def test_rs_series_zero(f):
     s = Rs.from_list(f[::-1])
     p = Rp.from_list(f)
 
-    assert (Rs.exp(s)).to_dense() == (rs_exp(p, x, 25)).to_dense()
+    assert Rs.to_dense((Rs.exp(s))) == (rs_exp(p, x, 25)).to_dense()
 
-    assert (Rs.atan(s)).to_dense() == (rs_atan(p, x, 25)).to_dense()
-    assert (Rs.atanh(s)).to_dense() == (rs_atanh(p, x, 25)).to_dense()
-    assert (Rs.asin(s)).to_dense() == (rs_asin(p, x, 25)).to_dense()
-    assert (Rs.asinh(s)).to_dense() == (rs_asinh(p, x, 25)).to_dense()
+    assert Rs.to_dense((Rs.atan(s))) == (rs_atan(p, x, 25)).to_dense()
+    assert Rs.to_dense((Rs.atanh(s))) == (rs_atanh(p, x, 25)).to_dense()
+    assert Rs.to_dense((Rs.asin(s))) == (rs_asin(p, x, 25)).to_dense()
+    assert Rs.to_dense((Rs.asinh(s))) == (rs_asinh(p, x, 25)).to_dense()
 
-    assert (Rs.tan(s)).to_dense() == (rs_tan(p, x, 25)).to_dense()
-    assert (Rs.tanh(s)).to_dense() == (rs_tanh(p, x, 25)).to_dense()
-    assert (Rs.sin(s)).to_dense() == (rs_sin(p, x, 25)).to_dense()
-    assert (Rs.sinh(s)).to_dense() == (rs_sinh(p, x, 25)).to_dense()
-    assert (Rs.cos(s)).to_dense() == (rs_cos(p, x, 25)).to_dense()
-    assert (Rs.cosh(s)).to_dense() == (rs_cosh(p, x, 25)).to_dense()
+    assert Rs.to_dense((Rs.tan(s))) == (rs_tan(p, x, 25)).to_dense()
+    assert Rs.to_dense((Rs.tanh(s))) == (rs_tanh(p, x, 25)).to_dense()
+    assert Rs.to_dense((Rs.sin(s))) == (rs_sin(p, x, 25)).to_dense()
+    assert Rs.to_dense((Rs.sinh(s))) == (rs_sinh(p, x, 25)).to_dense()
+    assert Rs.to_dense((Rs.cos(s))) == (rs_cos(p, x, 25)).to_dense()
+    assert Rs.to_dense((Rs.cosh(s))) == (rs_cosh(p, x, 25)).to_dense()
 
 
 @given(f=dup_one_const())
@@ -94,7 +94,7 @@ def test_rs_series_one(f):
     s = Rs.from_list(f[::-1])
     p = Rp.from_list(f)
 
-    assert (Rs.log(s)).to_dense() == (rs_log(p, x, 25)).to_dense()
+    assert Rs.to_dense((Rs.log(s))) == (rs_log(p, x, 25)).to_dense()
 
 
 @slow
