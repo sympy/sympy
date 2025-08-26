@@ -174,7 +174,7 @@ class PowerSeriesRingRing(Generic[Er]):
 
     def is_element(self, element) -> TypeIs[PowerSeriesElement[Er]]:
         """Check if element belongs to this ring."""
-        return isinstance(element, PowerSeriesElement) and element.ring == self
+        return isinstance(element, PowerSeriesElement) and element.ring == self.ring
 
     def order_term(self):
         """
@@ -279,17 +279,13 @@ class PowerSeriesRingRing(Generic[Er]):
         """Convert a lower power series element to a PowerSeriesElement."""
         return PowerSeriesElement(self, element)
 
-    def to_list(self, element: TSeriesElement[Er] | PowerSeriesElement[Er]) -> list[Er]:
+    def to_list(self, element: PowerSeriesElement[Er]) -> list[Er]:
         """Returns a list of coefficients of a power series."""
-        if isinstance(element, PowerSeriesElement):
-            return self.ring.to_list(element.series)
-        return self.ring.to_list(element)
+        return self.ring.to_list(element.series)
 
-    def to_dense(self, element: TSeriesElement[Er] | PowerSeriesElement[Er]) -> dup[Er]:
+    def to_dense(self, element: PowerSeriesElement[Er]) -> dup[Er]:
         """Returns a dense list coefficients of a power series."""
-        if isinstance(element, PowerSeriesElement):
-            return self.ring.to_dense(element.series)
-        return self.ring.to_dense(element)
+        return self.ring.to_dense(element.series)
 
     def domain_new(self, arg: Expr | Er | int) -> Er:
         """Convert arg to the element of ground domain of ring."""
@@ -1045,15 +1041,6 @@ class PowerSeriesElement(DomainElement, CantSympify, Generic[Er]):
     def _rdiv_ground(self, other: Er) -> PowerSeriesElement[Er]:
         s2 = self._parent_ring.ground_new(other)
         return s2._div(self)
-
-    def to_list(self) -> list[Er]:
-        R = self.ring
-        return R.to_list(self.series)
-
-    def to_dense(self) -> dup[Er]:
-        """Convert the power series to a dense representation."""
-        R = self.ring
-        return R.to_dense(self.series)
 
     def as_expr(self) -> Expr:
         dom: Domain[Er] = self.domain

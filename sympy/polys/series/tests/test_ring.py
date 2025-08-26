@@ -1218,6 +1218,78 @@ def test_PowerSeriesRing():
     assert RZZ.symbol == RQQ.symbol
 
 
+def test_PowerSeriesRing_basics():
+    RZZ = PowerSeriesRingRing(ZZ, "x")
+    RQQ = PowerSeriesRingField(QQ, "x")
+    xz = RZZ.gen
+    xq = RQQ.gen
+
+    assert RZZ.is_element(xz)
+    assert not RZZ.is_element(xq)
+
+    assert (
+        RZZ.truncate(xz + xz**2 + xz**3, 3)
+        == xz + xz**2 + PowerSeriesRingRing(ZZ, "x", 3).order_term()
+    )
+    assert (
+        RZZ.from_list([ZZ(1), ZZ(2), ZZ(3), ZZ(4), ZZ(2), ZZ(13), ZZ(2)])
+        == 1
+        + 2 * xz
+        + 3 * xz**2
+        + 4 * xz**3
+        + 2 * xz**4
+        + 13 * xz**5
+        + RZZ.order_term()
+    )
+    assert (
+        RQQ.from_list([QQ(1, 3), QQ(3, 2), QQ(1, 3)])
+        == QQ(1, 3) + 3 * xq / 2 + xq**2 / 3
+    )
+
+    assert RZZ.to_list(xz + 2 * xz**2 + 3 * xz**3) == [0, 1, 2, 3]
+    assert RZZ.to_dense(xz + 2 * xz**2 + 3 * xz**3) == [3, 2, 1, 0]
+
+
+def test_PowerSeriesElement_basics():
+    R = PowerSeriesRingField(QQ, "x")
+    Ry = PowerSeriesRingField(QQ, "y")
+    x = R.gen
+    y = Ry.gen
+
+    _x = symbols("x")
+
+    assert (QQ(2) + x) == x + QQ(2)
+    assert (QQ(2) - x) == 2 - x
+    assert (x - QQ(2)) == x - 2
+    assert (QQ(2) * x) == x * QQ(2)
+    assert (QQ(1) / (1 + x)) == 1 / (1 + x)
+    assert ((1 + x) / QQ(3)) == (1 + x) / QQ(3)
+
+    assert (2 + x + 3 * x**2).as_expr() == 2 + _x + 3 * _x**2
+    assert (0 + 3 * x**2).as_expr() == 3 * _x**2
+    assert (2 + x + 3 * x**2 + R.order_term()).as_expr() == 2 + _x + 3 * _x**2 + O(
+        _x**6
+    )
+    assert (2 + x + 3 * x**2).constant_coefficient() == 2
+    assert (2 + x + R.order_term()).removeO() == 2 + x
+    assert R.ground_new(5).is_ground
+    assert not (1 + x + x**2).is_ground
+
+    raises(ValueError, lambda: (1 + x + y))
+    raises(ValueError, lambda: (1 + x - y))
+    raises(ValueError, lambda: (1 + x * y))
+    raises(ValueError, lambda: (1 + x / y))
+
+    raises(TypeError, lambda: (x + _x))
+    raises(TypeError, lambda: (x - _x))
+    raises(TypeError, lambda: (x * _x))
+    raises(TypeError, lambda: (x / _x))
+    raises(TypeError, lambda: (_x + x))
+    raises(TypeError, lambda: (_x - x))
+    raises(TypeError, lambda: (_x * x))
+    raises(TypeError, lambda: (_x / x))
+
+
 def test_PowerSeriesRing_from_expr():
     R = PowerSeriesRingField(QQ, "x", 5)
     o = R.order_term()
@@ -1242,8 +1314,19 @@ def test_PowerSeriesRing_from_expr():
     )
 
     raises(ValueError, lambda: R.from_expr(symbols("y") ** 4))
+    raises(ValueError, lambda: R.from_expr(O(symbols("y") ** 4)))
     raises(ValueError, lambda: R.from_expr(_x ** (-2)))
     raises(ValueError, lambda: R.from_expr(_x ** (1 / 2)))
+
+
+def test_PowerSeriesRing_ring_new():
+    R = PowerSeriesRingRing(QQ, "x", 5)
+
+    assert R.ring_new(QQ(7)) == R.ground_new(QQ(7))
+    assert R.ring_new(3) == R.ground_new(3)
+    assert R.ring_new(([QQ(1), QQ(2), QQ(3)], 5)) == R.from_element(
+        ([QQ(1), QQ(2), QQ(3)], 5)
+    )
 
 
 def test_PowerSeriesRing_arith(groundring_int):
@@ -1277,6 +1360,10 @@ def test_PowerSeriesRing_arith(groundring_int):
     p4 = 2 + 4 * x + 6 * x**2
     assert RL.equal_repr((p4 / 2).series, RL([1, 2, 3]))
     assert RL.equal_repr((p4 / (1 + x**2 + x**5)).series, RL([2, 4, 4, -4, -4], 5))
+
+    assert RU.square(1 + x) == (1 + x) ** 2
+    assert RL.equal_repr(RU.square(1 + x).series, RL([1, 2, 1]))
+    assert RL.equal_repr(RU.square(x**2 + 7 * x**3).series, RL([0, 0, 0, 0, 1], 5))
 
 
 def test_PowerSeriesRing_operations_int(groundring_int):
@@ -1379,6 +1466,12 @@ def test_PowerSeriesRing_operations_rational(groundring_rational):
     assert R.equal_repr(
         RU.integrate(QQ(2, 3) * x**2 + QQ(4, 5) * x**3 + QQ(1, 7) * x**4).series,
         R([QQ(0, 1), QQ(0, 1), QQ(0, 1), QQ(2, 9), QQ(1, 5), QQ(1, 35)]),
+    )
+
+    assert R.equal_repr(RU.sqrt(x**2 + 2 * x + 1).series, R([1, 1]))
+    assert R.equal_repr(
+        RU.sqrt(1 + 5 * x + 2 * x**2 + 12 * x**3 + 12 * x**5).series,
+        R([QQ(1, 1), QQ(5, 2), QQ(-17, 8), QQ(181, 16), QQ(-3909, 128)], 5),
     )
 
 
