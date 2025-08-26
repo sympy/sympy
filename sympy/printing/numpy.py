@@ -315,12 +315,10 @@ class UnumPyPrinter(NumPyPrinter):
     """
     uncertainties.unumpy printer which handles vectorized piecewise functions,
     logical operators, etc.
-
-    This currently exists primarily to ensure unumpy functions return a scalar variable as output,
-    if the input was also a scalar.
     """
 
     def doprint(self, expr, assign_to=None):
+        # performing an arbitrary identity operation on the result, prompts unumpy to convert 0d arrays to scalar values.
         return f"({super().doprint(expr, assign_to=assign_to)}) * 1"
 
 for func in _unumpy_known_functions:
