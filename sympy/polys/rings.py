@@ -1637,7 +1637,15 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
                 % (self.ring.ngens, len(values))
             )
 
-    def evaluate(self, *args, **kwargs):
+    @overload
+    def evaluate(self, values: list[tuple[Expr, Er | int]]) -> PolyElement[Er] | Er:
+        ...
+
+    @overload
+    def evaluate(self, x: Expr, a: Er | int) -> PolyElement[Er] | Er:
+        ...
+
+    def evaluate(self, *args, **kwargs) -> PolyElement[Er] | Er:
         eval_dict = {}
         ring = self.ring
 
@@ -1660,9 +1668,17 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
         else:
             temp_result = self._subs(eval_dict)
             new_ring = ring.drop(*[ring.gens[i] for i in eval_dict.keys()])
-            return temp_result.set_ring(new_ring)
+            return temp_result.set_ring(new_ring) # type: ignore
 
-    def subs(self, *args, **kwargs):
+    @overload
+    def subs(self, values: list[tuple[Expr, Er | int]]) -> PolyElement[Er]:
+        ...
+
+    @overload
+    def subs(self, x: Expr, a: Er | int) -> PolyElement[Er]:
+        ...
+
+    def subs(self, *args, **kwargs) -> PolyElement[Er]:
         subs_dict = {}
         ring = self.ring
 
@@ -3278,22 +3294,22 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
 
         return R
 
-    def _subs(self, subs_dict):
+    def _subs(self, subs_dict: Mapping[int, Er]) -> PolyElement[Er]:
         ring = self.ring
         result_poly = ring.zero
 
         for monom, coeff in self.iterterms():
             new_coeff = coeff
-            new_monom = list(monom)
+            new_monom_list = list(monom)
 
             for i, val in subs_dict.items():
                 exp = monom[i]
                 if exp > 0:
                     new_coeff *= val**exp
-                new_monom[i] = 0
+                new_monom_list[i] = 0
 
             if new_coeff:
-                new_monom = tuple(new_monom)
+                new_monom = tuple(new_monom_list)
                 if new_monom in result_poly:
                     result_poly[new_monom] += new_coeff
                     if not result_poly[new_monom]:
@@ -3303,7 +3319,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
 
         return result_poly
 
-    def _evaluate(self, eval_dict):
+    def _evaluate(self, eval_dict: Mapping[int, Er]) -> Er:
         result = self.ring.domain.zero
 
         for monom, coeff in self.iterterms():
