@@ -249,20 +249,18 @@ class FlintPowerSeriesRingZZ:
         """Check if a arg is an element of the power series ring."""
         return isinstance(arg, (fmpz_poly, fmpz_series))
 
-    def is_ground(self, arg: ZZSeries | MPZ) -> bool | None:
+    def is_ground(self, arg: ZZSeries) -> bool | None:
         """Check if a arg is a ground element of the power series ring."""
         if self.prec == 0:
             return None
 
-        if isinstance(arg, MPZ):
-            return True
-        elif self.is_element(arg):
+        if self.is_element(arg):
             return len(arg) <= 1
         else:
             return False
 
-    def leading_coefficient(self, s: ZZSeries) -> MPZ:
-        """Return the leading coefficient of a power series."""
+    def constant_coefficient(self, s: ZZSeries) -> MPZ:
+        """Return the constant coefficient of a power series."""
         return s[0]
 
     def positive(self, s: ZZSeries) -> ZZSeries:
@@ -295,6 +293,11 @@ class FlintPowerSeriesRingZZ:
         with _global_cap(ring_prec):
             return s1 + s2
 
+    def add_ground(self, s: ZZSeries, n: MPZ) -> ZZSeries:
+        """Add a ground element to a power series."""
+        with _global_cap(self._prec):
+            return s + n
+
     def subtract(self, s1: ZZSeries, s2: ZZSeries) -> ZZSeries:
         """Subtract two power series."""
         ring_prec = self._prec
@@ -306,6 +309,16 @@ class FlintPowerSeriesRingZZ:
 
         with _global_cap(ring_prec):
             return s1 - s2
+
+    def subtract_ground(self, s: ZZSeries, n: MPZ) -> ZZSeries:
+        """Subtract a ground element from a power series."""
+        with _global_cap(self._prec):
+            return s - n
+
+    def rsubtract_ground(self, s: ZZSeries, n: MPZ) -> ZZSeries:
+        """Subtract a power series from a ground element."""
+        with _global_cap(self._prec):
+            return n - s
 
     def multiply(self, s1: ZZSeries, s2: ZZSeries) -> ZZSeries:
         """Multiply two power series."""
@@ -356,10 +369,16 @@ class FlintPowerSeriesRingZZ:
             return s1 / s2
 
     def pow_int(self, s: ZZSeries, n: int) -> ZZSeries:
-        """Raise a power series to a non-negative integer power."""
+        """Raise a power series to a integer power."""
         ring_prec = self._prec
         if n < 0:
-            raise ValueError("Power must be non-negative")
+            n = -n
+            s = self.pow_int(s, n)
+            try:
+                inv = self.inverse(s)
+                return inv
+            except NotReversible:
+                raise ValueError("Result would not be a power series")
 
         if isinstance(s, fmpz_poly):
             if s.degree() * n < ring_prec:
@@ -684,20 +703,18 @@ class FlintPowerSeriesRingQQ:
         """Check if a arg is an element of the power series ring."""
         return isinstance(arg, (fmpq_poly, fmpq_series))
 
-    def is_ground(self, arg: QQSeries | MPQ) -> bool | None:
+    def is_ground(self, arg: QQSeries) -> bool | None:
         """Check if a arg is a ground element of the power series ring."""
         if self.prec == 0:
             return None
 
-        if isinstance(arg, MPQ):
-            return True
-        elif self.is_element(arg):
+        if self.is_element(arg):
             return len(arg) <= 1
         else:
             return False
 
-    def leading_coefficient(self, s: QQSeries) -> MPQ:
-        """Return the leading coefficient of a power series."""
+    def constant_coefficient(self, s: QQSeries) -> MPQ:
+        """Return the constant coefficient of a power series."""
         return s[0]
 
     def positive(self, s: QQSeries) -> QQSeries:
@@ -730,6 +747,11 @@ class FlintPowerSeriesRingQQ:
         with _global_cap(ring_prec):
             return s1 + s2
 
+    def add_ground(self, s: QQSeries, n: MPQ) -> QQSeries:
+        """Add a ground element to a power series."""
+        with _global_cap(self._prec):
+            return s + n
+
     def subtract(self, s1: QQSeries, s2: QQSeries) -> QQSeries:
         """Subtract two power series."""
         ring_prec = self._prec
@@ -741,6 +763,16 @@ class FlintPowerSeriesRingQQ:
 
         with _global_cap(ring_prec):
             return s1 - s2
+
+    def subtract_ground(self, s: QQSeries, n: MPQ) -> QQSeries:
+        """Subtract a ground element from a power series."""
+        with _global_cap(self._prec):
+            return s - n
+
+    def rsubtract_ground(self, s: QQSeries, n: MPQ) -> QQSeries:
+        """Subtract a power series from a ground element."""
+        with _global_cap(self._prec):
+            return n - s
 
     def multiply(self, s1: QQSeries, s2: QQSeries) -> QQSeries:
         """Multiply two power series."""
@@ -791,10 +823,16 @@ class FlintPowerSeriesRingQQ:
             return s1 / s2
 
     def pow_int(self, s: QQSeries, n: int) -> QQSeries:
-        """Raise a power series to a non-negative integer power."""
+        """Raise a power series to a integer power."""
         ring_prec = self._prec
         if n < 0:
-            raise ValueError("Power must be non-negative")
+            n = -n
+            s = self.pow_int(s, n)
+            try:
+                inv = self.inverse(s)
+                return inv
+            except NotReversible:
+                raise ValueError("Result would not be a power series")
 
         if isinstance(s, fmpq_poly):
             if s.degree() * n < ring_prec:

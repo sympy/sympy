@@ -375,6 +375,7 @@ def test_int_pow(ring_int):
     assert R.equal_repr(R.pow_int(R([1, 2, 1], 5), 3), R([1, 6, 15, 20, 15], 5))
     assert R.equal_repr(R.pow_int(R.add(R.gen, R.one), 6), R([1, 6, 15, 20, 15, 6], 6))
     assert R.equal_repr(R.pow_int(R.gen, 10), R([], 6))
+    assert R.equal_repr(R.pow_int(R.add(R.one, R.gen), 3), R([1, 3, 3, 1], None))
     assert R3.equal_repr(R3.pow_int(R3.add(R3.gen, R3.one), 5), R3([1, 5, 10], 3))
     assert R3.equal_repr(R3.pow_int(R([1, 1, 1, 1, 1]), 2), R3([1, 2, 3], 3))
     assert R3.equal_repr(
@@ -385,6 +386,8 @@ def test_int_pow(ring_int):
         R10.pow_int(R10.add(R10.gen, R10.one), 12),
         R10([1, 12, 66, 220, 495, 792, 924, 792, 495, 220], 10),
     )
+
+    raises(ValueError, lambda: R.pow_int(R.gen, -2))
 
 
 def test_rational_pow(ring_rational):
@@ -1233,8 +1236,14 @@ def test_PowerSeriesRing_from_expr():
         == 2 + 4 * x + 6 * x**2 + 6 * x**3 + o
     )
     assert R.from_expr(_x + O(_x**7)) == x + o
+    assert (
+        R.from_expr(1 + _x + (3 + _x**2) ** (-2) + _x**5)
+        == QQ(10, 9) + x - 2 * x**2 / 27 + x**4 / 27 + x**5 + o
+    )
 
-    raises(ValueError, lambda: R.from_expr(symbols("y") ** 6))
+    raises(ValueError, lambda: R.from_expr(symbols("y") ** 4))
+    raises(ValueError, lambda: R.from_expr(_x ** (-2)))
+    raises(ValueError, lambda: R.from_expr(_x ** (1 / 2)))
 
 
 def test_PowerSeriesRing_arith(groundring_int):

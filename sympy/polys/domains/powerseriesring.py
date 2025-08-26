@@ -80,10 +80,10 @@ class PowerSeriesRing(Ring[PowerSeriesElement[Er]], CompositeDomain):
         if not a.is_ground:
             return False
         K = self.domain
-        return K.is_unit(a.leading_coefficient())
+        return K.is_unit(a.constant_coefficient())
 
     def canonical_unit(self, a: PowerSeriesElement[Er]) -> PowerSeriesElement[Er]:
-        u = self.domain.canonical_unit(a.leading_coefficient())
+        u = self.domain.canonical_unit(a.constant_coefficient())
         return self.ring.ground_new(u)
 
     def to_sympy(self, a: PowerSeriesElement[Er]) -> Expr:
@@ -120,20 +120,20 @@ class PowerSeriesRing(Ring[PowerSeriesElement[Er]], CompositeDomain):
 
     def is_positive(self, a: PowerSeriesElement[Er]) -> bool:
         """Returns True if `LC(a)` is positive."""
-        lc = a.leading_coefficient()
-        return self.domain.is_positive(lc)
+        c = a.constant_coefficient()
+        return self.domain.is_positive(c)
 
     def is_negative(self, a: PowerSeriesElement[Er]) -> bool:
         """Returns True if `LC(a)` is negative."""
-        lc = a.leading_coefficient()
-        return self.domain.is_negative(lc)
+        c = a.constant_coefficient()
+        return self.domain.is_negative(c)
 
     def is_nonpositive(self, a: PowerSeriesElement[Er]) -> bool:
         """Returns True if `LC(a)` is non-positive."""
-        lc = a.leading_coefficient()
-        return self.domain.is_nonpositive(lc)
+        c = a.constant_coefficient()
+        return self.domain.is_nonpositive(c)
 
     def is_nonnegative(self, a: PowerSeriesElement[Er]) -> bool:
         """Returns True if `LC(a)` is non-negative."""
-        lc = a.leading_coefficient()
-        return self.domain.is_nonnegative(lc)
+        c = a.constant_coefficient()
+        return self.domain.is_nonnegative(c)

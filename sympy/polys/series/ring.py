@@ -11,6 +11,7 @@ from sympy.core.power import Pow
 from sympy.core.sympify import CantSympify, sympify
 from sympy.polys.domains.domain import Er, Ef, Domain, DomainElement
 from sympy.polys.densebasic import dup
+from sympy.polys.domains.field import Field
 from sympy.polys.polyerrors import GeneratorsError
 from sympy.polys.series.base import PowerSeriesRingProto, PowerSeriesRingFieldProto
 from sympy.polys.series.tring import TSeriesElement, _power_series_ring
@@ -69,7 +70,7 @@ class SeriesRingProto(Protocol[Er]):
 
 @overload
 def power_series_ring(
-    symbol: str, K: Domain[Ef], prec: int = 6
+    symbol: str, K: Field[Ef], prec: int = 6
 ) -> tuple[PowerSeriesRingField[Ef], PowerSeriesElement[Ef]]: ...
 
 
@@ -245,12 +246,17 @@ class PowerSeriesRingRing(Generic[Er]):
                 return reduce(add, map(_rebuild, expr.args))
             elif expr.is_Mul:
                 return reduce(mul, map(_rebuild, expr.args))
-            else:
+            elif expr.is_Pow:
                 base, exp = expr.as_base_exp()
-                if exp.is_Integer and exp > 1:
-                    return _rebuild(base) ** int(exp)
+                if exp.is_Integer:
+                    try:
+                        return _rebuild(base) ** exp
+                    except ValueError:
+                        raise ValueError("Invalid exponent in power series")
                 else:
-                    return self.ground_new(self.domain.convert(expr))
+                    raise ValueError("Invalid exponent in power series")
+            else:
+                return self.ground_new(self.domain.convert(expr))
 
         series = _rebuild(sympify(expr))
 
@@ -825,13 +831,6 @@ class PowerSeriesElement(DomainElement, CantSympify, Generic[Er]):
         1 + x - 1/2*x**2 - 1/6*x**3 + 1/24*x**4 + 1/120*x**5 + O(x**6)
 
         """
-        if not isinstance(other, (PowerSeriesElement, int)) and not self.domain.of_type(
-            other
-        ):
-            raise TypeError(
-                f"Unsupported type {type(other).__name__} for addition with PowerSeriesElement."
-            )
-
         if isinstance(other, PowerSeriesElement):
             if self.symbol == other.symbol:
                 return self._add(other)
@@ -843,7 +842,7 @@ class PowerSeriesElement(DomainElement, CantSympify, Generic[Er]):
         elif domain.of_type(other):
             return self._add_ground(other)
         else:
-            raise NotImplementedError
+            return NotImplemented
 
     def __radd__(self, other: Er | int) -> PowerSeriesElement[Er]:
         domain = self.domain
@@ -852,7 +851,7 @@ class PowerSeriesElement(DomainElement, CantSympify, Generic[Er]):
         elif domain.of_type(other):
             return self._add_ground(other)
         else:
-            raise NotImplementedError
+            return NotImplemented
 
     def __sub__(
         self, other: PowerSeriesElement[Er] | Er | int
@@ -871,14 +870,6 @@ class PowerSeriesElement(DomainElement, CantSympify, Generic[Er]):
         -1 + x + 1/2*x**2 - 1/6*x**3 - 1/24*x**4 + 1/120*x**5 + O(x**6)
 
         """
-
-        if not isinstance(other, (PowerSeriesElement, int)) and not self.domain.of_type(
-            other
-        ):
-            raise TypeError(
-                f"Unsupported type {type(other).__name__} for subtraction with PowerSeriesElement."
-            )
-
         if isinstance(other, PowerSeriesElement):
             if self.symbol == other.symbol:
                 return self._sub(other)
@@ -890,7 +881,7 @@ class PowerSeriesElement(DomainElement, CantSympify, Generic[Er]):
         elif domain.of_type(other):
             return self._sub_ground(other)
         else:
-            raise NotImplementedError
+            return NotImplemented
 
     def __rsub__(self, other: Er | int) -> PowerSeriesElement[Er]:
         domain = self.domain
@@ -899,7 +890,7 @@ class PowerSeriesElement(DomainElement, CantSympify, Generic[Er]):
         elif domain.of_type(other):
             return self._rsub_ground(other)
         else:
-            raise NotImplementedError
+            return NotImplemented
 
     def __mul__(
         self, other: PowerSeriesElement[Er] | Er | int
@@ -918,13 +909,6 @@ class PowerSeriesElement(DomainElement, CantSympify, Generic[Er]):
         x - 2/3*x**3 + 2/15*x**5 + O(x**6)
 
         """
-        if not isinstance(other, (PowerSeriesElement, int)) and not self.domain.of_type(
-            other
-        ):
-            raise TypeError(
-                f"Unsupported type {type(other).__name__} for multiplication with PowerSeriesElement."
-            )
-
         if isinstance(other, PowerSeriesElement):
             if self.symbol == other.symbol:
                 return self._mul(other)
@@ -936,7 +920,7 @@ class PowerSeriesElement(DomainElement, CantSympify, Generic[Er]):
         elif domain.of_type(other):
             return self._mul_ground(other)
         else:
-            raise NotImplementedError
+            return NotImplemented
 
     def __rmul__(self, other: Er | int) -> PowerSeriesElement[Er]:
         domain = self.domain
@@ -949,7 +933,7 @@ class PowerSeriesElement(DomainElement, CantSympify, Generic[Er]):
 
     def __pow__(self, n: int) -> PowerSeriesElement[Er]:
         """
-        Raise a power Series to a non-negative integer power.
+        Raise a power Series to a integer power.
 
         Examples
         ========
@@ -987,13 +971,6 @@ class PowerSeriesElement(DomainElement, CantSympify, Generic[Er]):
         >>> R.tan(x) == t
         True
         """
-        if not isinstance(other, (PowerSeriesElement, int)) and not self.domain.of_type(
-            other
-        ):
-            raise TypeError(
-                f"Unsupported type {type(other).__name__} for division with PowerSeriesElement."
-            )
-
         if isinstance(other, PowerSeriesElement):
             if self.symbol == other.symbol:
                 return self._div(other)
@@ -1023,10 +1000,7 @@ class PowerSeriesElement(DomainElement, CantSympify, Generic[Er]):
 
     def _add_ground(self, other: Er) -> PowerSeriesElement[Er]:
         R = self.ring
-        coeffs = R.to_list(self.series)
-        prec = R.series_prec(self.series)
-        coeffs[0] += other
-        series = R(coeffs, prec)
+        series = R.add_ground(self.series, other)
         return self.new(series)
 
     def _sub(self, other: PowerSeriesElement[Er]) -> PowerSeriesElement[Er]:
@@ -1036,24 +1010,12 @@ class PowerSeriesElement(DomainElement, CantSympify, Generic[Er]):
 
     def _sub_ground(self, other: Er) -> PowerSeriesElement[Er]:
         R = self.ring
-        coeffs = R.to_list(self.series)
-        prec = R.series_prec(self.series)
-        if not coeffs:
-            coeffs = [self.domain.zero]
-        coeffs[0] -= other
-        series = R(coeffs, prec)
+        series = R.subtract_ground(self.series, other)
         return self.new(series)
 
     def _rsub_ground(self, other: Er) -> PowerSeriesElement[Er]:
         R = self.ring
-        coeffs = R.to_list(self.series)
-        prec = R.series_prec(self.series)
-        if not coeffs:
-            coeffs = [other]
-        else:
-            coeffs = [-c for c in coeffs]
-            coeffs[0] += other
-        series = R(coeffs, prec)
+        series = R.rsubtract_ground(self.series, other)
         return self.new(series)
 
     def _mul(self, other: PowerSeriesElement[Er]) -> PowerSeriesElement[Er]:
@@ -1062,16 +1024,8 @@ class PowerSeriesElement(DomainElement, CantSympify, Generic[Er]):
         return self.new(series)
 
     def _mul_ground(self, other: Er) -> PowerSeriesElement[Er]:
-        if other == self.domain.zero:
-            return self._parent_ring.zero
-        if other == self.domain.one:
-            return self
-
         R = self.ring
-        coeffs = R.to_list(self.series)
-        prec = R.series_prec(self.series)
-        coeffs = [c * other for c in coeffs]
-        series = R(coeffs, prec)
+        series = R.multiply_ground(self.series, other)
         return self.new(series)
 
     def _pow_int(self, n: int) -> PowerSeriesElement[Er]:
@@ -1121,10 +1075,10 @@ class PowerSeriesElement(DomainElement, CantSympify, Generic[Er]):
 
         return Add(*result)
 
-    def leading_coefficient(self) -> Er:
-        """Return the leading coefficient of the series."""
+    def constant_coefficient(self) -> Er:
+        """Return the constant coefficient of the series."""
         R = self.ring
-        return R.leading_coefficient(self.series)
+        return R.constant_coefficient(self.series)
 
     def removeO(self) -> PowerSeriesElement[Er]:
         """Remove the big O notation from the series."""

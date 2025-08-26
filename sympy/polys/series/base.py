@@ -113,12 +113,12 @@ class PowerSeriesRingProto(Protocol[TSeries, Er]):
         """Check if a arg is an element of the power series ring."""
         ...
 
-    def is_ground(self, arg: TSeries | Er) -> bool | None:
+    def is_ground(self, arg: TSeries) -> bool | None:
         """Check if a arg is a ground element of the power series ring."""
         ...
 
-    def leading_coefficient(self, s: TSeries) -> Er:
-        """Return the leading coefficient of a power series."""
+    def constant_coefficient(self, s: TSeries) -> Er:
+        """Return the constant coefficient of a power series."""
         ...
 
     def positive(self, s: TSeries, /) -> TSeries:
@@ -133,8 +133,20 @@ class PowerSeriesRingProto(Protocol[TSeries, Er]):
         """Add two power series."""
         ...
 
+    def add_ground(self, s: TSeries, n: Er, /) -> TSeries:
+        """Add a ground element to a power series."""
+        ...
+
     def subtract(self, s1: TSeries, s2: TSeries, /) -> TSeries:
         """Subtract two power series."""
+        ...
+
+    def subtract_ground(self, s: TSeries, n: Er, /) -> TSeries:
+        """Subtract a ground element from a power series."""
+        ...
+
+    def rsubtract_ground(self, s: TSeries, n: Er, /) -> TSeries:
+        """Subtract a power series from a ground element."""
         ...
 
     def multiply(self, s1: TSeries, s2: TSeries, /) -> TSeries:

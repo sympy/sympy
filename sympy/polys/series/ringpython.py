@@ -13,6 +13,7 @@ from sympy.polys.densearith import (
     dup_mul_ground,
     dup_neg,
     dup_sub,
+    dup_sub_ground,
     dup_exquo,
     dup_series_mul,
     dup_series_sqr,
@@ -202,6 +203,18 @@ def _useries_sub(
 
     coeffs1, coeffs2, min_prec = _unify_prec(s1, s2, dom, ring_prec)
     return dup_sub(coeffs1, coeffs2, dom), min_prec
+
+
+def _useries_sub_ground(
+    s: USeries[Er], n: Er, dom: Domain[Er], ring_prec: int
+) -> USeries[Er]:
+    coeffs, prec = s
+
+    if n == 0:
+        return s
+
+    coeffs = dup_sub_ground(coeffs, n, dom)
+    return _useries(coeffs, prec, dom, ring_prec)
 
 
 def _useries_rsub_ground(
@@ -405,9 +418,15 @@ def _useries_div_ground(
 def _useries_pow_int(
     s: USeries[Er], n: int, dom: Domain[Er], ring_prec: int
 ) -> USeries[Er]:
-    """Raise a power series to a non-negative integer power with truncation."""
+    """Raise a power series to a integer power with truncation."""
     if n < 0:
-        raise ValueError("Power must be a non-negative integer")
+        n = -n
+        s = _useries_pow_int(s, n, dom, ring_prec)
+        try:
+            inv = _useries_inverse(s, dom, ring_prec)
+            return inv
+        except NotReversible:
+            raise ValueError("Result would not be a power series")
 
     coeffs, prec = s
 
@@ -1212,20 +1231,18 @@ class PythonPowerSeriesRingZZ:
                 return True
         return False
 
-    def is_ground(self, arg: USeries[MPZ] | MPZ) -> bool | None:
+    def is_ground(self, arg: USeries[MPZ]) -> bool | None:
         """Check if a arg is a ground element of the power series ring."""
         if self.prec == 0:
             return None
 
-        if isinstance(arg, MPZ):
-            return True
-        elif self.is_element(arg):
+        if self.is_element(arg):
             return len(self.to_list(arg)) <= 1
         else:
             return False
 
-    def leading_coefficient(self, s: USeries[MPZ]) -> MPZ:
-        """Return the leading coefficient of a power series."""
+    def constant_coefficient(self, s: USeries[MPZ]) -> MPZ:
+        """Return the constant coefficient of a power series."""
         coeffs, _ = s
         if len(coeffs) > 0:
             return coeffs[-1]
@@ -1243,9 +1260,21 @@ class PythonPowerSeriesRingZZ:
         """Add two power series."""
         return _useries_add(s1, s2, self._domain, self._prec)
 
+    def add_ground(self, s: USeries[MPZ], n: MPZ) -> USeries[MPZ]:
+        """Add a ground element to a power series."""
+        return _useries_add_ground(s, n, self._domain, self._prec)
+
     def subtract(self, s1: USeries[MPZ], s2: USeries[MPZ]) -> USeries[MPZ]:
         """Subtract two power series."""
         return _useries_sub(s1, s2, self._domain, self._prec)
+
+    def subtract_ground(self, s: USeries[MPZ], n: MPZ) -> USeries[MPZ]:
+        """Subtract a ground element from a power series."""
+        return _useries_sub_ground(s, n, self._domain, self._prec)
+
+    def rsubtract_ground(self, s: USeries[MPZ], n: MPZ) -> USeries[MPZ]:
+        """Subtract a power series from a ground element."""
+        return _useries_rsub_ground(s, n, self._domain, self._prec)
 
     def multiply(self, s1: USeries[MPZ], s2: USeries[MPZ]) -> USeries[MPZ]:
         """Multiply two power series."""
@@ -1260,7 +1289,7 @@ class PythonPowerSeriesRingZZ:
         return _useries_div(s1, s2, self._domain, self._prec)
 
     def pow_int(self, s: USeries[MPZ], n: int) -> USeries[MPZ]:
-        """Raise a power series to a non-negative integer power."""
+        """Raise a power series to a integer power."""
         return _useries_pow_int(s, n, self._domain, self._prec)
 
     def square(self, s: USeries[MPZ]) -> USeries[MPZ]:
@@ -1480,20 +1509,18 @@ class PythonPowerSeriesRingQQ:
                 return True
         return False
 
-    def is_ground(self, arg: USeries[MPQ] | MPQ) -> bool | None:
+    def is_ground(self, arg: USeries[MPQ]) -> bool | None:
         """Check if a arg is a ground element of the power series ring."""
         if self.prec == 0:
             return None
 
-        if isinstance(arg, MPQ):
-            return True
-        elif self.is_element(arg):
+        if self.is_element(arg):
             return len(self.to_list(arg)) <= 1
         else:
             return False
 
-    def leading_coefficient(self, s: USeries[MPQ]) -> MPQ:
-        """Return the leading coefficient of a power series."""
+    def constant_coefficient(self, s: USeries[MPQ]) -> MPQ:
+        """Return the constant coefficient of a power series."""
         coeffs, _ = s
         if len(coeffs) > 0:
             return coeffs[-1]
@@ -1511,9 +1538,21 @@ class PythonPowerSeriesRingQQ:
         """Add two power series."""
         return _useries_add(s1, s2, self._domain, self._prec)
 
+    def add_ground(self, s: USeries[MPQ], n: MPQ) -> USeries[MPQ]:
+        """Add a ground element to a power series."""
+        return _useries_add_ground(s, n, self._domain, self._prec)
+
     def subtract(self, s1: USeries[MPQ], s2: USeries[MPQ]) -> USeries[MPQ]:
         """Subtract two power series."""
         return _useries_sub(s1, s2, self._domain, self._prec)
+
+    def subtract_ground(self, s: USeries[MPQ], n: MPQ) -> USeries[MPQ]:
+        """Subtract a ground element from a power series."""
+        return _useries_sub_ground(s, n, self._domain, self._prec)
+
+    def rsubtract_ground(self, s: USeries[MPQ], n: MPQ) -> USeries[MPQ]:
+        """Subtract a power series from a ground element."""
+        return _useries_rsub_ground(s, n, self._domain, self._prec)
 
     def multiply(self, s1: USeries[MPQ], s2: USeries[MPQ]) -> USeries[MPQ]:
         """Multiply two power series."""
@@ -1528,7 +1567,7 @@ class PythonPowerSeriesRingQQ:
         return _useries_div(s1, s2, self._domain, self._prec)
 
     def pow_int(self, s: USeries[MPQ], n: int) -> USeries[MPQ]:
-        """Raise a power series to a non-negative integer power."""
+        """Raise a power series to a integer power."""
         return _useries_pow_int(s, n, self._domain, self._prec)
 
     def square(self, s: USeries[MPQ]) -> USeries[MPQ]:
