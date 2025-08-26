@@ -1,6 +1,6 @@
 from sympy.printing.smtlib import smtlib_code
 from sympy import symbols
-from sympy.core.function import Function
+from sympy.core.function import Function, UndefinedFunction, AppliedUndef
 from sympy.assumptions.assume import AppliedPredicate
 from sympy.assumptions.cnf import EncodedCNF
 from sympy.assumptions.ask import Q
@@ -108,6 +108,24 @@ def clause_to_assertion(clause):
     clause_strings = [f"d{abs(lit)}" if lit > 0 else f"(not d{abs(lit)})" for lit in clause]
     return "(assert (or " + " ".join(clause_strings) + "))"
 
+n = 4
+uninterpreted_functions = symbols(f"f1:{n+1}", cls=Function)   # (f1, f2, f3, f4)
+uninterpreted_variables = symbols(f"u1:{n+1}")   # (u1, u2, u3, u4)
+
+x = symbols('x')
+
+# The printer spits out the smt lib code, but WE disabled the auto_declare fucntionality
+
+def find_uninterpreted_functions(expr):
+    # takes all atoms, spits out the symbol table for everything
+    # f: []
+    uf_arity = {}
+    # bare heads, e.g. a symbol 'f' that shows up without being called
+    for head in expr.atoms(UndefinedFunction):
+        uf_arity[head] = Callable[[float], float]
+
+    return uf_arity
+
 
 def encoded_cnf_to_z3_solver(enc_cnf, z3):
     def dummify_bool(pred):
@@ -119,21 +137,9 @@ def encoded_cnf_to_z3_solver(enc_cnf, z3):
         else:
             return False
 
-    n = 4
-    uninterpreted_functions = symbols(f"f1:{n+1}", cls=Function)   # (f1, f2, f3, f4)
-    x = symbols('x')
-
-    class U: 
-        pass
-
-    symbol_table = {x: U}
-    for f in uninterpreted_functions:
-        symbol_table[f] = Callable[[U], U]
-
-    known_types = {U: "U"}
-
     s = z3.Solver()
 
+    uf_table = {}
     declarations = []
     declarations.append(f"(declare-sort U 0)")
     for fhead in uninterpreted_functions:
@@ -152,24 +158,10 @@ def encoded_cnf_to_z3_solver(enc_cnf, z3):
         if pred.function not in (Q.gt, Q.lt, Q.ge, Q.le, Q.ne, Q.eq, Q.positive, Q.negative, Q.extended_negative, Q.extended_positive, Q.zero, Q.nonzero, Q.nonnegative, Q.nonpositive, Q.extended_nonzero, Q.extended_nonnegative, Q.extended_nonpositive):
             continue
 
-        args_used_by_ufs = set()
-        for call in pred.atoms(Function):
-            if call.func in uninterpreted_functions:
-                for arg in call.args:
-                    if getattr(arg, "is_Symbol", False):
-                        args_used_by_ufs.add(arg)
-        # update global sets
-        uf_arg_consts |= args_used_by_ufs
-        real_consts   |= (pred.free_symbols - args_used_by_ufs)
 
-        # local typing for this predicate: UF args -> U, others -> Real
-        symbol_table = dict(symbol_table)
-        for sym in args_used_by_ufs:
-            symbol_table[sym] = U
-        for sym in (pred.free_symbols - args_used_by_ufs):
-            symbol_table[sym] = "Real"
-
-        pred_str = smtlib_code(pred, auto_declare=False, known_types=known_types, auto_assert=False, known_functions=known_functions, symbol_table=symbol_table)
+        uf_table = find_uninterpreted_functions(pred)
+        print(f"uf_table = {uf_table}")
+        pred_str = smtlib_code(pred, auto_declare=False, known_types=known_types, auto_assert=False, known_functions=known_functions, symbol_table=uf_table)
 
         free_symbols |= pred.free_symbols
         pred = pred_str
@@ -182,6 +174,10 @@ def encoded_cnf_to_z3_solver(enc_cnf, z3):
 
     for sym in free_symbols:
         declarations.append(f"(declare-const {sym} Real)")
+
+    # declare uninterpreted functions for real numbers
+    for sym in uf_table.keys():
+        declarations.append(f"declare-fun {sym} (Real) Real")
     
 
     print(f"declarations: \n{declarations}")
