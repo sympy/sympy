@@ -1319,14 +1319,15 @@ def test_PowerSeriesRing_from_expr():
     raises(ValueError, lambda: R.from_expr(_x ** (1 / 2)))
 
 
-def test_PowerSeriesRing_ring_new():
+def test_PowerSeriesRing_ring_new(groundring_rational):
+    SeriesRing = groundring_rational
+    RL = SeriesRing(5)
     R = PowerSeriesRingRing(QQ, "x", 5)
+    x = R.gen
 
     assert R.ring_new(QQ(7)) == R.ground_new(QQ(7))
     assert R.ring_new(3) == R.ground_new(3)
-    assert R.ring_new(([QQ(1), QQ(2), QQ(3)], 5)) == R.from_element(
-        ([QQ(1), QQ(2), QQ(3)], 5)
-    )
+    assert R.ring_new(RL([1, 2, 3], None)) == 1 + 2 * x + 3 * x**2
 
 
 def test_PowerSeriesRing_arith(groundring_int):
