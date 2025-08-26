@@ -16,7 +16,7 @@ from sympy.core.sympify import CantSympify, sympify
 from sympy.ntheory.multinomial import multinomial_coefficients
 from sympy.polys.compatibility import IPolys
 from sympy.polys.constructor import construct_domain
-from sympy.polys.densebasic import dmp_to_dict, dmp_from_dict
+from sympy.polys.densebasic import dmp, dmp_to_dict, dmp_from_dict
 from sympy.polys.domains.compositedomain import CompositeDomain
 from sympy.polys.domains.domain import Domain, Er, Es
 from sympy.polys.domains.domainelement import DomainElement
@@ -463,9 +463,10 @@ class PolyRing(DefaultPrinting, IPolys, Generic[Er]):
         """Create polynomial from sequence of (monomial, coefficient) pairs."""
         return self.from_dict(dict(element), orig_domain)
 
-    def from_list(self, element: list[Er]) -> PolyElement[Er]:
+    def from_list(self, element: dmp[Er]) -> PolyElement[Er]:
         """Create polynomial from list(dense) representation."""
-        return self.from_dict(dmp_to_dict(element, self.ngens - 1, self.domain))
+        poly_dict = dmp_to_dict(element, self.ngens - 1, self.domain)
+        return self.from_dict(poly_dict)
 
     def from_expr(self, expr) -> PolyElement[Er]:
         """Create polynomial from SymPy expression."""
@@ -1202,7 +1203,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
             return self # type: ignore
         return self._change_ring(new_ring)
 
-    def strip_zero(self):
+    def strip_zero(self) -> None:
         """Eliminate monomials with zero coefficient."""
         for monom, coeff in self.listterms():
             if not coeff:
@@ -1245,7 +1246,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
             new_ring = ring.drop(gen)
             return i, new_ring
 
-    def drop(self, gen: PolyElement[Er] | int | str | None) -> int | PolyElement[Er] | Er:
+    def drop(self, gen: PolyElement[Er] | int | str | None) -> PolyElement[Er] | Er:
         i, ring = self._drop(gen)
 
         if self.ring.ngens == 1:
@@ -1428,7 +1429,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
 
         return result
 
-    def quo_ground(self, x):
+    def quo_ground(self, x: Er) -> PolyElement[Er]:
         domain = self.ring.domain
 
         if not x:
@@ -1437,7 +1438,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
             return self
         return self._quo_ground(x)
 
-    def extract_ground(self, g):
+    def extract_ground(self, g: PolyElement[Er]) -> tuple[Er | PolyElement[Er], PolyElement[Er], PolyElement[Er]]:
         f = self
         fc = f.content()
         gc = g.content()
@@ -1449,7 +1450,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
 
         return gcd, f, g
 
-    def quo_term(self, term):
+    def quo_term(self, term: tuple[Mon, Er]) -> PolyElement[Er]:
         monom, coeff = term
 
         if not coeff:
@@ -1498,7 +1499,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
         domain = self.ring.domain
         return domain.canonical_unit(self.LC)
 
-    def diff(self, x):
+    def diff(self, x: int | str | PolyElement[Er]) -> PolyElement[Er]:
         """Computes partial derivative in ``x``.
 
         Examples
@@ -1517,7 +1518,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
         i = ring.index(x)
         return self._diff(i)
 
-    def trunc_ground(self, p):
+    def trunc_ground(self, p: PolyElement[Er]) -> PolyElement[Er]:
         if self.ring.domain.is_ZZ:
             terms = []
 
@@ -1537,7 +1538,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
 
     rem_ground = trunc_ground
 
-    def lcm(self, g):
+    def lcm(self, g: PolyElement[Er]) -> PolyElement[Er]:
         f = self
         domain = f.ring.domain
 
@@ -1553,7 +1554,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
         else:
             return h.monic()
 
-    def coeff_wrt(self, x, deg):
+    def coeff_wrt(self, x: int | str | PolyElement[Er], deg: int) -> PolyElement[Er]:
         """
         Coefficient of ``self`` with respect to ``x**deg``.
 
@@ -1603,7 +1604,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
             return p.ring.zero
 
         monoms, coeffs = zip(*terms)
-        monoms = [m[:i] + (0,) + m[i + 1 :] for m in monoms]
+        monoms = tuple(m[:i] + (0,) + m[i + 1:] for m in monoms)
         return p.ring.from_dict(dict(zip(monoms, coeffs)))
 
     def compose(self, x, a=None):
@@ -2132,7 +2133,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
                 del poly[monom]
         return poly
 
-    def _square(self):
+    def _square(self) -> PolyElement[Er]:
         ring = self.ring
         p = ring.zero
         get = p.get
@@ -2851,7 +2852,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
         ]
         return self.new(terms)
 
-    def _quo_ground(self, x):
+    def _quo_ground(self, x: Er) -> PolyElement[Er]:
         domain = self.ring.domain
         if domain.is_Field:
             quo = domain.quo
@@ -2892,7 +2893,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
     def gcd(self, other):
         return self.cofactors(other)[0]
 
-    def _diff(self, i):
+    def _diff(self, i: int) -> PolyElement[Er]:
         # Use the native derivative() method in case of python-flint
         ring = self.ring
         m = ring.monomial_basis(i)

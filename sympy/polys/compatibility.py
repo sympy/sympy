@@ -2,13 +2,14 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from abc import abstractmethod
+from typing import TYPE_CHECKING, Generic, Mapping
+from sympy.polys.domains.domain import Domain, Er, Es
 
 if TYPE_CHECKING:
     from sympy.core.expr import Expr
-    from sympy.polys.domains.domain import Domain
     from sympy.polys.orderings import MonomialOrder
-    from sympy.polys.rings import PolyElement
+    from sympy.polys.rings import PolyElement, PolyRing
 
 from sympy.polys.densearith import dup_add_term
 from sympy.polys.densearith import dmp_add_term
@@ -238,31 +239,37 @@ from sympy.polys.galoistools import (
 from sympy.utilities import public
 
 @public
-class IPolys:
+class IPolys(Generic[Er]):
 
-    gens: tuple[PolyElement, ...]
+    gens: tuple[PolyElement[Er], ...]
     symbols: tuple[Expr, ...]
     ngens: int
-    domain: Domain
+    domain: Domain[Er]
     order: MonomialOrder
 
-    def drop(self, gen):
-        pass
+    @abstractmethod
+    def drop(self, *gens) -> PolyRing[Er] | Domain[Er]:
+        ...
 
+    @abstractmethod
     def clone(self, symbols=None, domain=None, order=None):
         pass
 
-    def to_ground(self):
-        pass
+    @abstractmethod
+    def to_ground(self) -> PolyRing[Es]:
+        ...
 
-    def ground_new(self, element):
-        pass
+    @abstractmethod
+    def ground_new(self, coeff) -> PolyElement[Er]:
+        ...
 
-    def domain_new(self, element):
-        pass
+    @abstractmethod
+    def domain_new(self, element) -> Er:
+        ...
 
-    def from_dict(self, d):
-        pass
+    @abstractmethod
+    def from_dict(self, element: Mapping[tuple[int, ...], int | Er | Expr], orig_domain: Domain[Er] | None =None) -> PolyElement[Er]:
+        ...
 
     def wrap(self, element):
         from sympy.polys.rings import PolyElement
