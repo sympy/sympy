@@ -29,11 +29,10 @@ if TYPE_CHECKING:
     from sympy.tensor.array import NDimArray
     from sympy.vector.basisdependent import BasisDependent
 
-# need further check
+# remove frac and root 
 accepted_typst_functions = ['arcsin', 'arccos', 'arctan', 'sin', 'cos', 'tan',
                             'sinh', 'cosh', 'tanh', 'sqrt', 'ln', 'log', 'sec',
-                            'csc', 'cot', 'coth', 're', 'im', 'frac', 'root',
-                            'arg',
+                            'csc', 'cot', 'coth', 're', 'im', 'arg',
                             ]
 
 typst_greek_dictionary = {
@@ -79,8 +78,8 @@ typst_greek_dictionary = {
     'hbar': 'plank.reduce' # not greek, may need another dictionary
 }
 
-other_symbols = {'aleph', 'beth', 'daleth', 'gimel', 'ell', 'eth', 'hslash',
-                     'mho', 'wp'}
+# remove eth, hslash, mho and wp
+other_symbols = {'aleph', 'beth', 'daleth', 'gimel', 'ell'}
 
 # Variable name modifiers
 modifier_dict: dict[str, Callable[[str], str]] = {
@@ -112,8 +111,11 @@ modifier_dict: dict[str, Callable[[str], str]] = {
     'abs': lambda s: r'abs('+s+r')',
     'mag': lambda s: r'abs('+s+r')',
 }
+modifier_set = frozenset({"accent", "bold", "cal", "frak", "(", "abs", "norm", "lr"})
 
 greek_letters_set = frozenset(greeks)
+greek_letters_value_set = frozenset(v.lower() for v in typst_greek_dictionary.values())
+
 
 _between_two_numbers_p = (
     re.compile(r'[0-9]$'),  # search
@@ -477,6 +479,14 @@ class TypstPrinter(Printer):
         separator: str = self._settings['mul_symbol_typst']
         numbersep: str = self._settings['mul_symbol_typst_numbers']
 
+
+        def _mul_add_parens(denom, sdenom):
+            if denom.is_negative:
+                return r"(%s)" % sdenom
+            if denom.is_Integer or denom.is_Symbol or denom.is_Pow:
+                return sdenom
+            return r"(%s)" % sdenom
+
         def convert(expr) -> str:
             if not expr.is_Mul:
                 return str(self._print(expr))
@@ -548,19 +558,18 @@ class TypstPrinter(Printer):
             sdenom = convert(denom)
             ldenom = len(sdenom.split())
             ratio = self._settings['long_frac_ratio']
-            if self._settings['fold_short_frac'] and ldenom <= 2 and \
-                    "^" not in sdenom:
-                # handle short fractions
-                if self._needs_mul_brackets(numer, last=False):
-                    typ += r"(%s)/%s" % (snumer, sdenom)
-                else:
-                    typ += r"%s/%s" % (snumer, sdenom)
-            elif ratio is not None and \
+            # if self._settings['fold_short_frac'] and ldenom <= 2 and \
+            #         "^" not in sdenom:
+            #     # handle short fractions
+            #     if self._needs_mul_brackets(numer, last=False):
+            #         typ += r"(%s)/%s" % (snumer, sdenom)
+            #     else:
+            #         typ += r"%s/%s" % (snumer, sdenom)
+            if ratio is not None and \
                     len(snumer.split()) > ratio*ldenom:
                 # handle long fractions
                 if self._needs_mul_brackets(numer, last=True):
-                    typ += r"1/%s %s(%s)" \
-                        % (sdenom, separator, snumer)
+                    typ += r"1/%s%s(%s)" % (_mul_add_parens(denom, sdenom), separator, snumer)
                 elif numer.is_Mul:
                     # split a long numerator
                     a = S.One
@@ -573,22 +582,15 @@ class TypstPrinter(Printer):
                         else:
                             a *= x
                     if self._needs_mul_brackets(b, last=True):
-                        typ += r"%s/%s %s(%s)" \
-                            % (convert(a), sdenom, separator, convert(b))
+                        typ += r"%s/%s%s(%s)" \
+                            % (_mul_add_parens(a, convert(a)), sdenom, separator, convert(b))
                     else:
-                        typ += r"%s/%s %s%s" \
-                            % (convert(a), sdenom, separator, convert(b))
+                        typ += r"%s/%s%s%s" \
+                                % (_mul_add_parens(a, convert(a)), _mul_add_parens(denom, sdenom), separator, convert(b))
                 else:
-                    typ += r"1/%s %s%s" % (sdenom, separator, snumer)
+                        typ += r"1/%s%s%s" % (_mul_add_parens(denom, sdenom), separator, snumer)
             else:
-                if numer.is_number or numer.is_symbol or numer.is_Pow:
-                    if denom.is_number or denom.is_symbol or denom.is_Pow:
-                        typ += r"%s/%s" % (snumer, sdenom)
-                    else:
-                        typ += r"%s/(%s)" % (snumer, sdenom)
-                else:
-                    typ += r"(%s)/%s" % (snumer, sdenom)
-
+                typ += r"%s/%s" % (_mul_add_parens(numer, snumer), _mul_add_parens(denom, sdenom))
         if include_parens:
             typ += ")"
         return typ
@@ -771,6 +773,49 @@ class TypstPrinter(Printer):
                                                   is_neg=False,
                                                   strict=True))
 
+    def _print_Subs(self, subs):
+        expr, old, new = subs.args
+        typst_expr = self._print(expr)
+        typst_old = (self._print(e) for e in old)
+        typst_new = (self._print(e) for e in new)
+        typst_subs = r' \ '.join(
+            e[0] + '=' + e[1] for e in zip(typst_old, typst_new))
+        return r'%s|_(%s)' % (typst_expr, typst_subs)
+
+    def _print_Integral(self, expr):
+        typst, symbols = "", []
+        diff_symbol = self._settings["diff_operator_typst"]
+
+        # Only up to integral.quad exists
+        if len(expr.limits) <= 4 and all(len(lim) == 1 for lim in expr.limits):
+            typst = "integral" + (".double" if len(expr.limits) == 2 else
+                                  ".triple" if len(expr.limits) == 3 else
+                                  ".quad" if len(expr.limits) == 4 else "")
+
+            symbols = [r"%s %s" % (diff_symbol, self._print(symbol[0]))
+                       for symbol in expr.limits]
+
+        else:
+            for lim in reversed(expr.limits):
+                symbol = lim[0]
+                typst += "integral"
+
+                if len(lim) > 1:
+                    # ignore inline setting
+                    if len(lim) == 3:
+                        typst += "_(%s)^(%s)" % (self._print(lim[1]),
+                                               self._print(lim[2]))
+                    if len(lim) == 2:
+                        typst += "^(%s)" % (self._print(lim[1]))
+
+                symbols.insert(0, r"%s %s" % (diff_symbol, self._print(symbol)))
+
+        return r"%s %s %s" % (typst, self.parenthesize(expr.function,
+                                                    PRECEDENCE["Mul"],
+                                                    is_neg=any(i.could_extract_minus_sign() for i in expr.args),
+                                                    strict=True),
+                             "".join(symbols))
+
     def _print_Limit(self, expr):
         e, z, z0, dir = expr.args
 
@@ -784,6 +829,54 @@ class TypstPrinter(Printer):
             return r"%s(%s)" % (typst, self._print(e))
         else:
             return r"%s %s" % (typst, self._print(e))
+        
+    def _print_subfactorial(self, expr, exp=None):
+        typ = r"!%s" % self.parenthesize(expr.args[0], PRECEDENCE["Func"])
+
+        if exp is not None:
+            return r"(%s)^(%s)" % (typ, exp)
+        else:
+            return typ
+        
+    def _print_factorial(self, expr, exp=None):
+        typ = r"%s!" % self.parenthesize(expr.args[0], PRECEDENCE["Func"])
+
+        if exp is not None:
+            return r"%s^(%s)" % (typ, exp)
+        else:
+            return typ
+
+    def _print_factorial2(self, expr, exp=None):
+        typ = r"%s!!" % self.parenthesize(expr.args[0], PRECEDENCE["Func"])
+
+        if exp is not None:
+            return r"%s^(%s)" % (typ, exp)
+        else:
+            return typ
+    
+    def _print_binomial(self, expr, exp=None):
+        typst = "binom(%s, %s)" % (self._print(expr.args[0]), self._print(expr.args[1]))
+        if exp is not None:
+            return "%s^(%s)" % (typst, exp)
+        else:
+            return typst
+        
+    def _print_RisingFactorial(self, expr, exp=None):
+        n, k = expr.args
+        base = r"%s" % self.parenthesize(n, PRECEDENCE['Func'])
+
+        typ = r"%s^((%s))" % (base, self._print(k))
+
+        return self._do_exponent(typ, exp)
+
+    def _print_FallingFactorial(self, expr, exp=None):
+        n, k = expr.args
+        sub = r"%s" % self.parenthesize(k, PRECEDENCE['Func'])
+
+        typ = r"(%s)_(%s)" % (self._print(n), sub)
+
+        return self._do_exponent(typ, exp)
+
 
     def _hprint_Function(self, func: str) -> str:
         r'''
@@ -796,25 +889,35 @@ class TypstPrinter(Printer):
         func = self._deal_with_super_sub(func)
         superscriptidx = func.find("^")
         subscriptidx = func.find("_")
-        if func in accepted_typst_functions:
-            name = r"%s" % func
-        elif len(func) == 1 or func.startswith('\\') or subscriptidx == 1 or superscriptidx == 1:
+
+        # for greek letters
+        idx = -1
+        if subscriptidx > 0 and superscriptidx > 0:
+            idx = min(subscriptidx, superscriptidx)
+        elif subscriptidx > 0:
+            idx = subscriptidx
+        elif superscriptidx > 0:
+            idx = superscriptidx
+
+        if func in accepted_typst_functions or func in greek_letters_value_set:
+            name = func
+        elif idx == 1 or len(func) == 1 or subscriptidx == 1 or superscriptidx == 1 or func[:idx].lower() in greek_letters_value_set:
             name = func
         else:
             if superscriptidx > 0 and subscriptidx > 0:
-                name = r"upright(%s)%s" %(
+                name = r'upright("%s")%s' %(
                     func[:min(subscriptidx,superscriptidx)],
                     func[min(subscriptidx,superscriptidx):])
             elif superscriptidx > 0:
-                name = r"upright(%s)%s" %(
+                name = r'upright("%s")%s' %(
                     func[:superscriptidx],
                     func[superscriptidx:])
             elif subscriptidx > 0:
-                name = r"upright(%s)%s" %(
+                name = r'upright("%s")%s' %(
                     func[:subscriptidx],
                     func[subscriptidx:])
             else:
-                name = r"upright(%s)" % func
+                name = r'upright("%s")' % func
         return name
 
     def _print_Function(self, expr: Function, exp=None) -> str:
@@ -882,7 +985,7 @@ class TypstPrinter(Printer):
                 if func in accepted_typst_functions:
                     # Wrap argument safely to avoid parse-time conflicts
                     # with the function name itself
-                    name += r" (%s)"
+                    name += r" %s"
                 else:
                     name += r"%s"
             else:
@@ -912,7 +1015,7 @@ class TypstPrinter(Printer):
         return {KroneckerDelta: r'delta',
                 gamma:  r'Gamma',
                 lowergamma: r'gamma',
-                beta: r'Beta',
+            beta: r'Beta',
                 DiracDelta: r'delta',
                 Chi: r'Chi'}
 
@@ -1076,8 +1179,8 @@ class TypstPrinter(Printer):
             if expr.p < 0:
                 sign = "- "
                 p = -p
-            if self._settings['fold_short_frac']:
-                return r"%s%d / %d" % (sign, p, expr.q)
+            # if self._settings['fold_short_frac']:
+                # return r"%s%d / %d" % (sign, p, expr.q)
             return r"%s%d/%d" % (sign, p, expr.q)
         else:
             return self._print(expr.p)
@@ -1094,13 +1197,55 @@ class TypstPrinter(Printer):
                             self._print(expr.args[-1].cond)))
         typ = r'cases( %s )'
         return typ % r', '.join(ecpairs)
+    
+    def _print_Order(self, expr):
+        s = self._print(expr.expr)
+        if expr.point and any(p != S.Zero for p in expr.point) or \
+           len(expr.variables) > 1:
+            s += '; '
+            if len(expr.variables) > 1:
+                s += self._print(expr.variables)
+            elif expr.variables:
+                s += self._print(expr.variables[0])
+            s += r'->'
+            if len(expr.point) > 1:
+                s += self._print(expr.point)
+            else:
+                s += self._print(expr.point[0])
+        return r"O(%s)" % s
 
     def _print_Symbol(self, expr: Symbol, style='plain'):
         name: str = self._settings['symbol_names'].get(expr)
         if name is not None:
             return name
 
-        return self._deal_with_super_sub(expr.name, style=style)
+        typ = self._deal_with_super_sub(expr.name, style=style)
+        if any(typ.startswith(mod) for mod in modifier_set):
+            return typ
+
+
+        superscriptidx = typ.find("^")
+        subscriptidx = typ.find("_")
+
+        # for greek letters
+        idx = -1
+        if subscriptidx > 0 and superscriptidx > 0:
+            idx = min(subscriptidx, superscriptidx)
+        elif subscriptidx > 0:
+            idx = subscriptidx
+        elif superscriptidx > 0:
+            idx = superscriptidx
+
+
+        if idx == -1 and (typ.lower() in greek_letters_value_set) or (typ.lower() in other_symbols):
+            return typ
+    
+        if len(typ) == 1 or subscriptidx == 1 or superscriptidx == 1 or (idx != -1 and typ[:idx].lower() in greek_letters_value_set):
+            return typ
+        elif idx == -1:
+            return r'"%s"' % typ
+        else:
+            return r'"%s"%s' % typ[:idx], typ[idx:]
 
     _print_RandomSymbol = _print_Symbol
 
@@ -1120,7 +1265,10 @@ class TypstPrinter(Printer):
 
         # glue all items together:
         if supers:
-            name += "^(%s)" % " ".join(supers)
+            if self._settings['parenthesize_super']:
+                name += "^(%s)" % " ".join(supers)
+            else:
+                name += "^%s" % " ".join(supers)
         if subs:
             name += "_(%s)" % " ".join(subs)
 
@@ -1215,6 +1363,24 @@ class TypstPrinter(Printer):
                 return r"(%s)^(%s)" % (s, adjoint_style)
             else:
                 return r"%s^(%s)" % (s, adjoint_style)
+            
+    def _print_uppergamma(self, expr, exp=None):
+        typ = r"(%s, %s)" % (self._print(expr.args[0]),
+                                        self._print(expr.args[1]))
+
+        if exp is not None:
+            return r"Gamma^(%s)%s" % (exp, typ)
+        else:
+            return r"Gamma%s" % typ
+
+    def _print_lowergamma(self, expr, exp=None):
+        typ = r"(%s, %s)" % (self._print(expr.args[0]),
+                                        self._print(expr.args[1]))
+
+        if exp is not None:
+            return r"gamma^(%s)%s" % (exp, typ)
+        else:
+            return r"gamma%s" % typ
 
     def _print_MatMul(self, expr):
         from sympy import MatMul
@@ -1399,6 +1565,14 @@ class TypstPrinter(Printer):
         return r'%s_(%s)' % (
             self.parenthesize(expr.name, PRECEDENCE["Func"], True),
             ", ".join([f"{self._print(i)}" for i in expr.indices]))
+    
+    def _print_SingularityFunction(self, expr, exp=None):
+        shift = self._print(expr.args[0] - expr.args[1])
+        power = self._print(expr.args[2])
+        typ = r"angle.l %s angle.r ^ (%s)" % (shift, power)
+        if exp is not None:
+            typ = r"(angle.l %s angle.r ^ (%s))^(%s)" % (shift, power, exp)
+        return typ
 
 
 def translate(s: str) -> str:
