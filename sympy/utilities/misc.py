@@ -8,7 +8,7 @@ import os
 import re as _re
 import struct
 from textwrap import fill, dedent
-from typing import TypeVar, Callable
+from typing import TypeVar, Callable, Literal, SupportsIndex, SupportsInt, overload
 
 _CallableT = TypeVar("_CallableT", bound=Callable)
 
@@ -500,7 +500,14 @@ def ordinal(num):
     return str(n) + suffix
 
 
-def as_int(n, strict=True):
+@overload
+def as_int(n: SupportsIndex, strict: Literal[True] = True) -> int:
+    ...
+@overload
+def as_int(n: SupportsInt, strict: Literal[False]) -> int:
+    ...
+
+def as_int(n: SupportsIndex | SupportsInt, strict: bool = True) -> int:
     """
     Convert the argument to a builtin integer.
 
@@ -554,7 +561,7 @@ def as_int(n, strict=True):
         try:
             if isinstance(n, bool):
                 raise TypeError
-            return operator.index(n)
+            return operator.index(n) # type: ignore
         except TypeError:
             raise ValueError('%s is not an integer' % (n,))
     else:
@@ -562,6 +569,6 @@ def as_int(n, strict=True):
             result = int(n)
         except TypeError:
             raise ValueError('%s is not an integer' % (n,))
-        if n - result:
+        if n - result: # type: ignore
             raise ValueError('%s is not an integer' % (n,))
         return result
