@@ -41,6 +41,7 @@ from sympy.core.relational import Eq, Ne
 from sympy.core.singleton import S
 from sympy.core.symbol import Dummy, Symbol, Wild
 from sympy.core.exprtools import factor_terms
+from sympy.core.function import WildFunction
 from sympy.functions.elementary.complexes import Abs
 from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.hyperbolic import (HyperbolicFunction, csch,
@@ -1445,8 +1446,15 @@ def trig_cmplx_exp_rule(integral: IntegralInfo):
 
     a = Wild('a', exclude=[symbol, 0])
     b = Wild('b', exclude=[symbol])
-    pattern = exp(a * symbol**2 + b * symbol)
-    if not any(term.match(pattern) for term in integrand.atoms(exp)):
+    c = Wild('c', exclude=[symbol])
+    # n = Wild('n', exclude=[symbol], properties=[lambda n: n > 0])
+    f = WildFunction('f')
+    guassian_pattern = exp(a * symbol**2 + b * symbol + c)
+    trigexp_over_x_pattern = f*exp(a * symbol)/symbol
+    trigexp_over_x_match = integrand.match(trigexp_over_x_pattern)
+    if not (any(term.match(guassian_pattern) for term in integrand.atoms(exp))
+            or (trigexp_over_x_match and
+                trigexp_over_x_match[f].has(sin, cos, sinh, cosh))):
         return
 
     # Replace trig and hyperbolic functions with their exponential forms
@@ -2132,7 +2140,9 @@ def integral_steps(integrand, symbol, **options):
             Mul: do_one(null_safe(mul_rule), null_safe(trig_product_rule),
                         null_safe(heaviside_rule), null_safe(quadratic_denom_rule),
                         null_safe(sqrt_linear_rule),
-                        null_safe(sqrt_quadratic_rule), null_safe(trig_cmplx_exp_rule)),
+                        null_safe(sqrt_quadratic_rule),
+                        null_safe(powsimp_rule),
+                        null_safe(trig_cmplx_exp_rule)),
             Derivative: derivative_rule,
             TrigonometricFunction: trig_rule,
             Heaviside: heaviside_rule,
@@ -2146,9 +2156,6 @@ def integral_steps(integrand, symbol, **options):
             null_safe(alternatives(
                 rewrites_rule,
                 substitution_rule,
-                condition(
-                    integral_is_subclass(Mul, Pow),
-                    powsimp_rule),
                 condition(
                     integral_is_subclass(Mul, Pow),
                     partial_fractions_rule),

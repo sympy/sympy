@@ -323,6 +323,10 @@ def test_manualintegrate_special():
     f = erf(x)*log(x)
     F = (x*log(x) - x)*erf(x) + (log(x) - 1)*exp(-x**2)/sqrt(pi) - Ei(-x**2)/(2*sqrt(pi))
     assert_is_integral_of(f, F)
+    f, F = exp(x)*cos(x)/x, Ei(x*(1 - I))/2 + Ei(x*(1 + I))/2
+    assert_is_integral_of(f, F)
+    f, F = exp(7*x)*sinh(16*x)/x, -Ei(-9*x)/2 + Ei(23*x)/2
+    assert_is_integral_of(f, F)
 
 
 def test_manualintegrate_derivative():
