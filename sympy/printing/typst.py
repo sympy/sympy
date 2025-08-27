@@ -6,8 +6,9 @@ from typing import Any, Callable, TYPE_CHECKING
 
 import itertools
 
-from sympy.core import Add, Mod, Mul, Number, S, Symbol, Expr
+from sympy.core import Add, Float, Mod, Mul, Number, S, Symbol, Expr
 from sympy.core.alphabets import greeks
+from sympy.core.containers import Tuple
 from sympy.core.function import Function, AppliedUndef
 from sympy.core.operations import AssocOp
 from sympy.core.power import Pow
@@ -21,7 +22,7 @@ from sympy.printing.precedence import precedence, PRECEDENCE
 
 from mpmath.libmp.libmpf import prec_to_dps, to_str as mlib_to_str
 
-from sympy.utilities.iterables import sift
+from sympy.utilities.iterables import has_variety, sift
 
 import re
 
@@ -206,6 +207,10 @@ class TypstPrinter(Printer):
 
     def _add_parens(self, s) -> str:
         return r"({})".format(s)
+    
+    # TODO: merge this with the above, which requires a lot of test changes
+    def _add_parens_lspace(self, s) -> str:
+        return r"({})".format(s)
 
     def parenthesize(self, item, level, is_neg=False, strict=False) -> str:
         prec_val = precedence_traditional(item)
@@ -329,12 +334,30 @@ class TypstPrinter(Printer):
 
     def _print_Basic(self, expr):
         name = self._deal_with_super_sub(expr.__class__.__name__)
+        superscriptidx = name.find("^")
+        subscriptidx = name.find("_")
+        idx = -1
+        if superscriptidx != -1 and subscriptidx != -1:
+            idx = min(superscriptidx, subscriptidx)
+        elif superscriptidx != -1:
+            idx = superscriptidx
+        elif subscriptidx != -1:
+            idx = subscriptidx
+
+        s = r'upright("{}")'
+        if idx != -1:
+            s = r'upright("{}"{})'
+
         if expr.args:
             ls = [self._print(o) for o in expr.args]
-            s = r'upright("{}")("{}")'
+            s = s+r'({})'
+            if idx != -1:
+                return s.format(name[:idx], name[idx:], ", ".join(ls))
             return s.format(name, ", ".join(ls))
         else:
-            return r'upright("{}")'.format(name)
+            if idx != -1:
+                return s.format(name[:idx], name[idx:])
+            return s.format(name)
 
     def _print_bool(self, e: bool | BooleanTrue | BooleanFalse):
         return r'upright("%s")' % e
@@ -434,7 +457,7 @@ class TypstPrinter(Printer):
             if exp[0] == '+':
                 exp = exp[1:]
             if self._settings['decimal_separator'] == 'comma':
-                mant = mant.replace('.','{,}')
+                mant = mant.replace('.',',')
 
             return r"%s%s10^(%s)" % (mant, separator, exp)
         elif str_real == "+inf":
@@ -473,19 +496,18 @@ class TypstPrinter(Printer):
     def _print_Laplacian(self, expr):
         func = expr._expr
         return r"Delta %s" % self.parenthesize(func, PRECEDENCE['Mul'])
+    
+    def _mul_add_parens(self, denom, sdenom):
+        if denom.is_negative:
+            return r"(%s)" % sdenom
+        if denom.is_Integer or denom.is_Symbol or denom.is_Pow:
+            return sdenom
+        return r"(%s)" % sdenom
 
     def _print_Mul(self, expr: Expr):
         from sympy.simplify import fraction
         separator: str = self._settings['mul_symbol_typst']
         numbersep: str = self._settings['mul_symbol_typst_numbers']
-
-
-        def _mul_add_parens(denom, sdenom):
-            if denom.is_negative:
-                return r"(%s)" % sdenom
-            if denom.is_Integer or denom.is_Symbol or denom.is_Pow:
-                return sdenom
-            return r"(%s)" % sdenom
 
         def convert(expr) -> str:
             if not expr.is_Mul:
@@ -569,7 +591,7 @@ class TypstPrinter(Printer):
                     len(snumer.split()) > ratio*ldenom:
                 # handle long fractions
                 if self._needs_mul_brackets(numer, last=True):
-                    typ += r"1/%s%s(%s)" % (_mul_add_parens(denom, sdenom), separator, snumer)
+                    typ += r"1/%s%s(%s)" % (self._mul_add_parens(denom, sdenom), separator, snumer)
                 elif numer.is_Mul:
                     # split a long numerator
                     a = S.One
@@ -583,14 +605,14 @@ class TypstPrinter(Printer):
                             a *= x
                     if self._needs_mul_brackets(b, last=True):
                         typ += r"%s/%s%s(%s)" \
-                            % (_mul_add_parens(a, convert(a)), sdenom, separator, convert(b))
+                            % (self._mul_add_parens(a, convert(a)), sdenom, separator, convert(b))
                     else:
                         typ += r"%s/%s%s%s" \
-                                % (_mul_add_parens(a, convert(a)), _mul_add_parens(denom, sdenom), separator, convert(b))
+                                % (self._mul_add_parens(a, convert(a)), self._mul_add_parens(denom, sdenom), separator, convert(b))
                 else:
-                        typ += r"1/%s%s%s" % (_mul_add_parens(denom, sdenom), separator, snumer)
+                        typ += r"1/%s%s%s" % (self._mul_add_parens(denom, sdenom), separator, snumer)
             else:
-                typ += r"%s/%s" % (_mul_add_parens(numer, snumer), _mul_add_parens(denom, sdenom))
+                typ += r"%s/%s" % (self._mul_add_parens(numer, snumer), self._mul_add_parens(denom, sdenom))
         if include_parens:
             typ += ")"
         return typ
@@ -667,6 +689,9 @@ class TypstPrinter(Printer):
         #     # don't use parentheses around dotted derivative
         #     base = base[6: -7]  # remove outermost added parens
         return template % (base, exp)
+    
+    def _print_UnevaluatedExpr(self, expr):
+        return self._print(expr.args[0])
 
     def _print_Sum(self, expr):
         if len(expr.limits) == 1:
@@ -899,7 +924,7 @@ class TypstPrinter(Printer):
         elif superscriptidx > 0:
             idx = superscriptidx
 
-        if func in accepted_typst_functions or func in greek_letters_value_set:
+        if func in accepted_typst_functions or func.lower() in greek_letters_value_set:
             name = func
         elif idx == 1 or len(func) == 1 or subscriptidx == 1 or superscriptidx == 1 or func[:idx].lower() in greek_letters_value_set:
             name = func
@@ -994,7 +1019,7 @@ class TypstPrinter(Printer):
             if inv_trig_power_case and exp is not None:
                 name += r"^(%s)" % exp
 
-            return name % ",".join(args)
+            return name % ", ".join(args)
 
     def _print_UndefinedFunction(self, expr):
         return self._hprint_Function(str(expr))
@@ -1172,6 +1197,68 @@ class TypstPrinter(Printer):
     def _print_Exp1(self, expr, exp=None):
         return "e"
 
+    def _print_elliptic_k(self, expr, exp=None):
+        tex = r"(%s)" % self._print(expr.args[0])
+        if exp is not None:
+            return r"K^(%s)%s" % (exp, tex)
+        else:
+            return r"K%s" % tex
+
+    def _print_elliptic_f(self, expr, exp=None):
+        tex = r"(%s | %s)" % \
+            (self._print(expr.args[0]), self._print(expr.args[1]))
+        if exp is not None:
+            return r"F^(%s)%s" % (exp, tex)
+        else:
+            return r"F%s" % tex
+
+    def _print_elliptic_e(self, expr, exp=None):
+        if len(expr.args) == 2:
+            tex = r"(%s | %s)" % \
+                (self._print(expr.args[0]), self._print(expr.args[1]))
+        else:
+            tex = r"(%s)" % self._print(expr.args[0])
+        if exp is not None:
+            return r"E^(%s)%s" % (exp, tex)
+        else:
+            return r"E%s" % tex
+
+    def _print_elliptic_pi(self, expr, exp=None):
+        if len(expr.args) == 3:
+            tex = r"(%s; %s | %s)" % \
+                (self._print(expr.args[0]), self._print(expr.args[1]),
+                 self._print(expr.args[2]))
+        else:
+            tex = r"(%s | %s)" % \
+                (self._print(expr.args[0]), self._print(expr.args[1]))
+        if exp is not None:
+            return r"Pi^(%s)%s" % (exp, tex)
+        else:
+            return r"Pi%s" % tex
+
+    def _print_beta(self, expr, exp=None):
+        x = expr.args[0]
+        # Deal with unevaluated single argument beta
+        y = expr.args[0] if len(expr.args) == 1 else expr.args[1]
+        tex = rf"({x}, {y})"
+
+        if exp is not None:
+            return r"Beta^(%s)%s" % (exp, tex)
+        else:
+            return r"Beta%s" % tex
+
+    def _print_betainc(self, expr, exp=None, operator='B'):
+        largs = [self._print(arg) for arg in expr.args]
+        tex = r"(%s, %s)" % (largs[0], largs[1])
+
+        if exp is not None:
+            return r'upright("%s")_((%s, %s))^(%s)%s' % (operator, largs[2], largs[3], exp, tex)
+        else:
+            return r'upright("%s")_((%s, %s))%s' % (operator, largs[2], largs[3], tex)
+
+    def _print_betainc_regularized(self, expr, exp=None):
+        return self._print_betainc(expr, exp, operator='I')
+
     def _print_Rational(self, expr):
         if expr.q != 1:
             sign = ""
@@ -1309,7 +1396,7 @@ class TypstPrinter(Printer):
     def _print_MatrixElement(self, expr):
         matrix_part = self.parenthesize(expr.parent, PRECEDENCE['Atom'], strict=True)
         index_part = f"{self._print(expr.i)},{self._print(expr.j)}"
-        return f"{{{matrix_part}}}_{{{index_part}}}"
+        return "%s_(%s)" % (matrix_part, index_part)
 
     def _print_MatrixSlice(self, expr):
         def latexslice(x, dim):
@@ -1398,6 +1485,11 @@ class TypstPrinter(Printer):
             return '- ' + ' '.join(map(parens, args))
         else:
             return ' '.join(map(parens, args))
+        
+    def _print_DotProduct(self, expr):
+        level = precedence_traditional(expr)
+        left, right = expr.args
+        return rf"{self.parenthesize(left, level)} dot {self.parenthesize(right, level)}"
 
     def _print_Determinant(self, expr):
         mat = expr.arg
@@ -1407,6 +1499,14 @@ class TypstPrinter(Printer):
                 return r"|(%s)|" % self._print_matrix_contents(mat.blocks)
             return r"|(%s)|" % self._print(mat)
         return r"|(%s)|" % self._print_matrix_contents(mat)
+    
+    def _print_KroneckerProduct(self, expr):
+        args = expr.args
+        prec = PRECEDENCE['Pow']
+        parens = self.parenthesize
+
+        return r' times.circle '.join(
+            (parens(arg, prec, strict=True) for arg in args))
 
     def _print_MatPow(self, expr):
         base, exp = expr.base, expr.exp
@@ -1557,6 +1657,53 @@ class TypstPrinter(Printer):
                 " ".join([r"partial %s" % self._print(i) for i in expr.variables]),
                 self.parenthesize(expr.expr, PRECEDENCE["Mul"], False)
             )
+        
+    def _print_Manifold(self, manifold):
+        string = manifold.name.name
+        if '{' in string:
+            name, supers, subs = string, [], []
+        else:
+            name, supers, subs = split_super_sub(string)
+
+            name = translate(name)
+            supers = [translate(sup) for sup in supers]
+            subs = [translate(sub) for sub in subs]
+
+        name = r'upright("%s")' % name
+        if supers:
+            name += "^(%s)" % " ".join(supers)
+        if subs:
+            name += "_(%s)" % " ".join(subs)
+
+        return name
+
+    def _print_Patch(self, patch):
+        return r'upright("%s")_(%s)' % (self._print(patch.name), self._print(patch.manifold))
+
+    def _print_CoordSystem(self, coordsys):
+        return r'upright("%s")^(upright("%s"))_(%s)' % (
+            self._print(coordsys.name), self._print(coordsys.patch.name), self._print(coordsys.manifold)
+        )
+
+    def _print_CovarDerivativeOp(self, cvd):
+        return r'nabla_(%s)' % self._print(cvd._wrt)
+
+    def _print_BaseScalarField(self, field):
+        string = field._coord_sys.symbols[field._index].name
+        return r'bold({})'.format(self._print(Symbol(string)))
+
+    def _print_BaseVectorField(self, field):
+        string = field._coord_sys.symbols[field._index].name
+        return r'partial_({})'.format(self._print(Symbol(string)))
+
+    def _print_Differential(self, diff):
+        field = diff._form_field
+        if hasattr(field, '_coord_sys'):
+            string = field._coord_sys.symbols[field._index].name
+            return r'upright(d){}'.format(self._print(Symbol(string)))
+        else:
+            string = self._print(field)
+            return r'upright(d)({})'.format(string)
 
     def _print_ArraySymbol(self, expr):
         return self._print(expr.name)
@@ -1566,6 +1713,71 @@ class TypstPrinter(Printer):
             self.parenthesize(expr.name, PRECEDENCE["Func"], True),
             ", ".join([f"{self._print(i)}" for i in expr.indices]))
     
+    def _print_tuple(self, expr):
+        if self._settings['decimal_separator'] == 'comma':
+            sep = ";"
+        elif self._settings['decimal_separator'] == 'period':
+            sep = ","
+        else:
+            raise ValueError('Unknown Decimal Separator')
+
+        if len(expr) == 1:
+            # 1-tuple needs a trailing separator
+            return self._add_parens_lspace(self._print(expr[0]) + sep)
+        else:
+            return self._add_parens_lspace(
+                (sep + r" #h(0.5em)").join([self._print(i) for i in expr]))
+    
+    def _print_TensorProduct(self, expr):
+        elements = [self._print(a) for a in expr.args]
+        return r' times.circle '.join(elements)
+
+    def _print_WedgeProduct(self, expr):
+        elements = [self._print(a) for a in expr.args]
+        return r' and '.join(elements)
+    
+    def _print_Tuple(self, expr):
+        return self._print_tuple(expr)
+    
+    def _print_list(self, expr):
+        if self._settings['decimal_separator'] == 'comma':
+            return r"[%s]" % \
+                r"; #h(0.5em)".join([self._print(i) for i in expr])
+        elif self._settings['decimal_separator'] == 'period':
+            return r"[%s]" % \
+                r", #h(0.5em)".join([self._print(i) for i in expr])
+        else:
+            raise ValueError('Unknown Decimal Separator')
+
+
+    def _print_dict(self, d):
+        keys = sorted(d.keys(), key=default_sort_key)
+        items = []
+
+        for key in keys:
+            val = d[key]
+            items.append("%s : %s" % (self._print(key), self._print(val)))
+
+        return r"{%s}" % r", #h(0.5em)".join(items)
+
+    def _print_Dict(self, expr):
+        return self._print_dict(expr)
+    
+
+    def _print_FiniteSet(self, s):
+        items = sorted(s.args, key=default_sort_key)
+        return self._print_set(items)
+
+    def _print_set(self, s):
+        items = sorted(s, key=default_sort_key)
+        if self._settings['decimal_separator'] == 'comma':
+            items = "; ".join(map(self._print, items))
+        elif self._settings['decimal_separator'] == 'period':
+            items = ", ".join(map(self._print, items))
+        else:
+            raise ValueError('Unknown Decimal Separator')
+        return r"{%s}" % items
+
     def _print_SingularityFunction(self, expr, exp=None):
         shift = self._print(expr.args[0] - expr.args[1])
         power = self._print(expr.args[2])
@@ -1573,6 +1785,231 @@ class TypstPrinter(Printer):
         if exp is not None:
             typ = r"(angle.l %s angle.r ^ (%s))^(%s)" % (shift, power, exp)
         return typ
+
+    def _print_ProductSet(self, p):
+        prec = precedence_traditional(p)
+        if len(p.sets) >= 1 and not has_variety(p.sets):
+            return self.parenthesize(p.sets[0], prec) + "^(%d)" % len(p.sets)
+        return r" times ".join(
+            self.parenthesize(set, prec) for set in p.sets)
+    
+    def _print_EmptySet(self, e):
+        return r"nothing"
+
+    def _print_Naturals(self, n):
+        return r"NN"
+
+    def _print_Naturals0(self, n):
+        return r"NN_(0)"
+
+    def _print_Integers(self, i):
+        return r"ZZ"
+
+    def _print_Rationals(self, i):
+        return r"QQ"
+
+    def _print_Reals(self, i):
+        return r"RR"
+
+    def _print_Complexes(self, i):
+        return r"CC"
+    
+    def _print_ImageSet(self, s):
+        expr = s.lamda.expr
+        sig = s.lamda.signature
+        xys = ((self._print(x), self._print(y)) for x, y in zip(sig, s.base_sets))
+        xinys = r", ".join(r"%s \in %s" % xy for xy in xys)
+        return r"{%s | %s}" % (self._print(expr), xinys)
+
+    def _print_ConditionSet(self, s):
+        vars_print = ', '.join([self._print(var) for var in Tuple(s.sym)])
+        if s.base_set is S.UniversalSet:
+            return r"{%s | %s}" % \
+                (vars_print, self._print(s.condition))
+
+        return r"{%s | %s in %s and %s}" % (
+            vars_print,
+            vars_print,
+            self._print(s.base_set),
+            self._print(s.condition))
+
+    def _print_PowerSet(self, expr):
+        arg_print = self._print(expr.args[0])
+        return r"cal{{P}}({})".format(arg_print)
+
+    def _print_ComplexRegion(self, s):
+        vars_print = ', '.join([self._print(var) for var in s.variables])
+        return r"{%s | %s in %s}" % (
+            self._print(s.expr),
+            vars_print,
+            self._print(s.sets))
+
+    def _print_Contains(self, e):
+        return r"%s in %s" % tuple(self._print(a) for a in e.args)
+
+    def _print_FourierSeries(self, s):
+        if s.an.formula is S.Zero and s.bn.formula is S.Zero:
+            return self._print(s.a0)
+        return self._print_Add(s.truncate()) + r' + ...'
+
+    def _print_FormalPowerSeries(self, s):
+        return self._print_Add(s.infinite)
+
+    def _print_FiniteField(self, expr):
+        return r"\mathbb{F}_{%s}" % expr.mod
+
+    def _print_IntegerRing(self, expr):
+        return r"\mathbb{Z}"
+
+    def _print_RationalField(self, expr):
+        return r"\mathbb{Q}"
+
+    def _print_RealField(self, expr):
+        return r"\mathbb{R}"
+
+    def _print_ComplexField(self, expr):
+        return r"\mathbb{C}"
+
+    def _print_PolynomialRing(self, expr):
+        domain = self._print(expr.domain)
+        symbols = ", ".join(map(self._print, expr.symbols))
+        return r"%s\left[%s\right]" % (domain, symbols)
+
+    def _print_FractionField(self, expr):
+        domain = self._print(expr.domain)
+        symbols = ", ".join(map(self._print, expr.symbols))
+        return r"%s\left(%s\right)" % (domain, symbols)
+
+    def _print_PolynomialRingBase(self, expr):
+        domain = self._print(expr.domain)
+        symbols = ", ".join(map(self._print, expr.symbols))
+        inv = ""
+        if not expr.is_Poly:
+            inv = r"S_<^{-1}"
+        return r"%s%s\left[%s\right]" % (inv, domain, symbols)
+    
+    def _print_Expectation(self, expr):
+        return r'upright("E")[{}]'.format(self._print(expr.args[0]))
+
+    def _print_Variance(self, expr):
+        return r'upright("Var")({})'.format(self._print(expr.args[0]))
+
+    def _print_Covariance(self, expr):
+        return r'upright("Cov")({})'.format(", ".join(self._print(arg) for arg in expr.args))
+
+    def _print_Probability(self, expr):
+        return r'upright("P")({})'.format(self._print(expr.args[0]))
+
+    def _print_Morphism(self, morphism):
+        domain = self._print(morphism.domain)
+        codomain = self._print(morphism.codomain)
+        return "%s -> %s" % (domain, codomain)
+    
+    def _print_TransferFunction(self, expr):
+        num, den = self._print(expr.num), self._print(expr.den)
+        return r"%s/%s" % (self._mul_add_parens(expr.num, num), self._mul_add_parens(expr.den, den))
+
+    def _print_Series(self, expr):
+        args = list(expr.args)
+        parens = lambda x: self.parenthesize(x, precedence_traditional(expr),
+                                            False)
+        return ' '.join(map(parens, args))
+    
+    def _print_MIMOSeries(self, expr):
+        from sympy.physics.control.lti import MIMOParallel
+        args = list(expr.args)[::-1]
+        parens = lambda x: self.parenthesize(x, precedence_traditional(expr),
+                                             False) if isinstance(x, MIMOParallel) else self._print(x)
+        return r" dot ".join(map(parens, args))
+
+    def _print_Parallel(self, expr):
+        return ' + '.join(map(self._print, expr.args))
+    
+    def _print_MIMOParallel(self, expr):
+        return ' + '.join(map(self._print, expr.args))
+    
+    def _print_Feedback(self, expr):
+        from sympy.physics.control import TransferFunction, Series
+
+        num, tf = expr.sys1, TransferFunction(1, 1, expr.var)
+        num_arg_list = list(num.args) if isinstance(num, Series) else [num]
+        den_arg_list = list(expr.sys2.args) if \
+            isinstance(expr.sys2, Series) else [expr.sys2]
+        den_term_1 = tf
+
+        if isinstance(num, Series) and isinstance(expr.sys2, Series):
+            den_term_2 = Series(*num_arg_list, *den_arg_list)
+        elif isinstance(num, Series) and isinstance(expr.sys2, TransferFunction):
+            if expr.sys2 == tf:
+                den_term_2 = Series(*num_arg_list)
+            else:
+                den_term_2 = tf, Series(*num_arg_list, expr.sys2)
+        elif isinstance(num, TransferFunction) and isinstance(expr.sys2, Series):
+            if num == tf:
+                den_term_2 = Series(*den_arg_list)
+            else:
+                den_term_2 = Series(num, *den_arg_list)
+        else:
+            if num == tf:
+                den_term_2 = Series(*den_arg_list)
+            elif expr.sys2 == tf:
+                den_term_2 = Series(*num_arg_list)
+            else:
+                den_term_2 = Series(*num_arg_list, *den_arg_list)
+
+        numer = self._print(num)
+        denom_1 = self._print(den_term_1)
+        denom_2 = self._print(den_term_2)
+        _sign = "+" if expr.sign == -1 else "-"
+
+        return r"%s/(%s %s %s)" % (self._mul_add_parens(num, numer), denom_1, _sign, denom_2)
+
+    def _print_MIMOFeedback(self, expr):
+        from sympy.physics.control import MIMOSeries
+        inv_mat = self._print(MIMOSeries(expr.sys2, expr.sys1))
+        sys1 = self._print(expr.sys1)
+        _sign = "+" if expr.sign == -1 else "-"
+        return r"(I_(tau) %s %s)^(-1) dot %s" % (_sign, inv_mat, sys1)
+
+    def _print_TransferFunctionMatrix(self, expr):
+        mat = self._print(expr._expr_mat)
+        return r"%s_tau" % mat
+    
+    def _print_Quaternion(self, expr):
+        # TODO: This expression is potentially confusing,
+        # shall we print it as `Quaternion( ... )`?
+        s = [self.parenthesize(i, PRECEDENCE["Mul"], strict=True)
+             for i in expr.args]
+        a = [s[0]] + [i+" "+j for i, j in zip(s[1:], "ijk")]
+        return " + ".join(a)
+    
+    def _print_Str(self, s):
+        return str(s.name)
+    
+    def _print_float(self, expr):
+        return self._print(Float(expr))
+    
+    def _print_int(self, expr):
+        return str(expr)
+
+    def _print_mpz(self, expr):
+        return str(expr)
+
+    def _print_mpq(self, expr):
+        return str(expr)
+
+    def _print_fmpz(self, expr):
+        return str(expr)
+
+    def _print_fmpq(self, expr):
+        return str(expr)
+    
+    def emptyPrinter(self, expr):
+        # default to just printing as monospace, like would normally be shown
+        s = super().emptyPrinter(expr)
+
+        return r'"%s"' % s
+
 
 
 def translate(s: str) -> str:

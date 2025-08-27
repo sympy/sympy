@@ -22,7 +22,7 @@ class Quantity(AtomicExpr):
     _diff_wrt = True
 
     def __new__(cls, name, abbrev=None,
-                latex_repr=None, pretty_unicode_repr=None,
+                latex_repr=None, typst_repr=None, pretty_unicode_repr=None,
                 pretty_ascii_repr=None, mathml_presentation_repr=None,
                 is_prefixed=False,
                 **assumptions):
@@ -42,6 +42,7 @@ class Quantity(AtomicExpr):
         obj._name = name
         obj._abbrev = abbrev
         obj._latex_repr = latex_repr
+        obj._typst_repr = typst_repr
         obj._unicode_repr = pretty_unicode_repr
         obj._ascii_repr = pretty_ascii_repr
         obj._mathml_repr = mathml_presentation_repr
@@ -114,6 +115,14 @@ class Quantity(AtomicExpr):
             return self._latex_repr
         else:
             return r'\text{{{}}}'.format(self.args[1] \
+                          if len(self.args) >= 2 else self.args[0])
+
+    def _typst(self, printer):
+        # TODO
+        if self._typst_repr:
+            return self._typst_repr
+        else:
+            return r'upright("{}")'.format(self.args[1] \
                           if len(self.args) >= 2 else self.args[0])
 
     def convert_to(self, other, unit_system="SI"):

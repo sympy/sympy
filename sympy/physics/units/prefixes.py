@@ -30,7 +30,7 @@ class Prefix(Expr):
     _op_priority = 13.0
     is_commutative = True
 
-    def __new__(cls, name, abbrev, exponent, base=sympify(10), latex_repr=None):
+    def __new__(cls, name, abbrev, exponent, base=sympify(10), latex_repr=None, typst_repr=None):
 
         name = sympify(name)
         abbrev = sympify(abbrev)
@@ -44,6 +44,7 @@ class Prefix(Expr):
         obj._exponent = exponent
         obj._base = base
         obj._latex_repr = latex_repr
+        obj._typst_repr = typst_repr
         return obj
 
     @property
@@ -62,6 +63,11 @@ class Prefix(Expr):
         if self._latex_repr is None:
             return r'\text{%s}' % self._abbrev
         return self._latex_repr
+
+    def _typst(self, printer):
+        if self._typst_repr is None:
+            return r'upright("%s")' % self._abbrev
+        return self._typst_repr
 
     @property
     def base(self):
@@ -166,7 +172,7 @@ deca = Prefix('deca', 'da', 1)
 deci = Prefix('deci', 'd', -1)
 centi = Prefix('centi', 'c', -2)
 milli = Prefix('milli', 'm', -3)
-micro = Prefix('micro', 'mu', -6, latex_repr=r"\mu")
+micro = Prefix('micro', 'mu', -6, latex_repr=r"\mu", typst_repr='mu')
 nano = Prefix('nano', 'n', -9)
 pico = Prefix('pico', 'p', -12)
 femto = Prefix('femto', 'f', -15)
