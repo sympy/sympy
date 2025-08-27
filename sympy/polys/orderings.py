@@ -38,6 +38,7 @@ class MonomialOrder:
     def __ne__(self, other):
         return not (self == other)
 
+
 class LexOrder(MonomialOrder):
     """Lexicographic order of monomials. """
 
@@ -48,6 +49,7 @@ class LexOrder(MonomialOrder):
     def __call__(self, monomial):
         return monomial
 
+
 class GradedLexOrder(MonomialOrder):
     """Graded lexicographic order of monomials. """
 
@@ -57,6 +59,7 @@ class GradedLexOrder(MonomialOrder):
     def __call__(self, monomial):
         return (sum(monomial), monomial)
 
+
 class ReversedGradedLexOrder(MonomialOrder):
     """Reversed graded lexicographic order of monomials. """
 
@@ -65,6 +68,7 @@ class ReversedGradedLexOrder(MonomialOrder):
 
     def __call__(self, monomial):
         return (sum(monomial), tuple(reversed([-m for m in monomial])))
+
 
 class ProductOrder(MonomialOrder):
     """
@@ -186,12 +190,14 @@ class InverseOrder(MonomialOrder):
     def __hash__(self):
         return hash((self.__class__, self.O))
 
+
 lex = LexOrder()
 grlex = GradedLexOrder()
 grevlex = ReversedGradedLexOrder()
 ilex = InverseOrder(lex)
 igrlex = InverseOrder(grlex)
 igrevlex = InverseOrder(grevlex)
+
 
 _monomial_key: dict[str, MonomialOrder] = {
     'lex': lex,
@@ -207,12 +213,18 @@ _monomial_key: dict[str, MonomialOrder] = {
 def monomial_key(
     order: str | Symbol | None = None, gens: None = None
 ) -> MonomialOrder: ...
+
+
 @overload
 def monomial_key(order: MonomKey, gens: None = None) -> MonomKey: ...
 @overload
+
+
 def monomial_key(
     order: str | Symbol | MonomKey | None = None, *, gens: Sequence[Symbol]
 ) -> Callable[[Expr], Any]: ...
+
+
 @overload
 def monomial_key(
     order: str | Symbol | MonomKey | None, gens: Sequence[Symbol]
@@ -268,6 +280,7 @@ def monomial_key(
 
     return func
 
+
 class _ItemGetter:
     """Helper class to return a subsequence of values."""
 
@@ -281,6 +294,7 @@ class _ItemGetter:
         if not isinstance(other, _ItemGetter):
             return False
         return self.seq == other.seq
+
 
 def build_product_order(arg, gens):
     """
