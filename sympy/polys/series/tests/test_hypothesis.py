@@ -131,7 +131,7 @@ def test_global_series_zero(f):
     Rs = power_series_ring(QQ, 5)
 
     s = Rs(f[::-1])
-    e = expr_from_dict(dup_to_dict(f), x)
+    e = expr_from_dict(dup_to_dict(f, QQ), x)
     assert as_expr(Rs.exp(s), Rs) == exp(e).series(x, 0, 5)
 
     assert as_expr(Rs.atan(s), Rs) == atan(e).series(x, 0, 5)
@@ -152,6 +152,6 @@ def test_global_series_one(f):
     Rs = power_series_ring(QQ, 5)
 
     s = Rs(f[::-1])
-    e = expr_from_dict(dup_to_dict(f), x)
+    e = expr_from_dict(dup_to_dict(f, QQ), x)
 
     assert as_expr(Rs.log(s), Rs) == log(e).series(x, 0, 5)
