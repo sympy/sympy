@@ -3,11 +3,12 @@
 from __future__ import annotations
 
 from abc import abstractmethod
-from typing import TYPE_CHECKING, Generic, Mapping, Any, cast, TypeAlias, overload
+from typing import TYPE_CHECKING, Generic, Mapping, Any, cast, overload
 from sympy.polys.domains.domain import Domain, Er, Es
 from sympy.polys.densebasic import dup, dmp
 
 if TYPE_CHECKING:
+    from typing import TypeAlias
     from sympy.core.expr import Expr
     from sympy.polys.orderings import MonomialOrder
     from sympy.polys.rings import PolyElement, PolyRing
