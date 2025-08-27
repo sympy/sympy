@@ -79,14 +79,15 @@ and trigonometric functions:
 Domain for Univariate Power Series Rings
 =========================================
 
+.. autoclass:: sympy.polys.domains.powerseriesring.SeriesRingProto
+
 .. autoclass:: sympy.polys.domains.powerseriesring.PowerSeriesRing
+    :members:
 
 Univariate Power Series Ring
 ============================
 
 .. currentmodule:: sympy.polys.series.ring
-
-.. autoclass:: SeriesRingProto
 
 .. autofunction:: power_series_ring
 
