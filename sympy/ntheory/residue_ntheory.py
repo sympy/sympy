@@ -498,6 +498,7 @@ def sqrt_mod(
     a: SupportsIndex, p: SupportsIndex, all_roots: Literal[True]
 ) -> list[int]: ...
 
+
 @overload
 def sqrt_mod(
     a: SupportsIndex, p: SupportsIndex, all_roots: bool,
