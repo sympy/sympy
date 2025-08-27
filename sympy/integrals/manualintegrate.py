@@ -1232,6 +1232,9 @@ def mul_rule(integral: IntegralInfo):
             return ConstantTimesRule(integrand, symbol, coeff, f, next_step)
 
 
+special_error_functions = (erf, erfc, erfi, fresnelc, fresnels, Ci, Chi, Si, Shi, Ei, li)
+
+
 def _parts_rule(integrand, symbol) -> tuple[Expr, Expr, Expr, Expr, Rule] | None:
     # LIATE rule:
     # log, inverse trig, algebraic, trigonometric, exponential
@@ -1258,7 +1261,7 @@ def _parts_rule(integrand, symbol) -> tuple[Expr, Expr, Expr, Expr, Rule] | None
 
         return pull_out_u_rl
 
-    liate_rules = [pull_out_u(erf, erfc, erfi), pull_out_u(log),
+    liate_rules = [pull_out_u(*special_error_functions), pull_out_u(log),
                    pull_out_u(*inverse_trig_functions), pull_out_algebraic,
                    pull_out_u(sin, cos), pull_out_u(sinh, cosh),
                    pull_out_u(exp)]
