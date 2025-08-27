@@ -1008,10 +1008,18 @@ def nthroot_mod(
     p: SupportsIndex,
     all_roots: Literal[False] = False,
 ) -> int | None: ...
+
+
 @overload
 def nthroot_mod(
     a: SupportsIndex, n: SupportsIndex, p: SupportsIndex, all_roots: Literal[True]
 ) -> list[int]: ...
+
+
+@overload
+def nthroot_mod(
+    a: SupportsIndex, n: SupportsIndex, p: SupportsIndex, all_roots: bool,
+) -> list[int] | int | None: ...
 
 
 def nthroot_mod(
