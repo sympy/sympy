@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Generic, overload, Callable, Iterable, TYPE_CHECKING, Mapping
+from typing import Generic, overload, Callable, Iterable, TYPE_CHECKING, Mapping, cast
 
 from operator import add, mul, lt, le, gt, ge
 from functools import reduce
@@ -16,7 +16,7 @@ from sympy.core.sympify import CantSympify, sympify
 from sympy.ntheory.multinomial import multinomial_coefficients
 from sympy.polys.compatibility import IPolys
 from sympy.polys.constructor import construct_domain
-from sympy.polys.densebasic import dmp, dmp_to_dict, dmp_from_dict
+from sympy.polys.densebasic import dup, dmp, dmp_to_dict, dup_from_dict, dmp_from_dict
 from sympy.polys.domains.compositedomain import CompositeDomain
 from sympy.polys.domains.domain import Domain, Er, Es
 from sympy.polys.domains.domainelement import DomainElement
@@ -223,7 +223,7 @@ def _parse_symbols(symbols):
     )
 
 
-class PolyRing(DefaultPrinting, IPolys, Generic[Er]):
+class PolyRing(DefaultPrinting, IPolys[Er], Generic[Er]):
     """Multivariate distributed polynomial ring."""
 
     symbols: tuple[Expr, ...]
@@ -547,7 +547,7 @@ class PolyRing(DefaultPrinting, IPolys, Generic[Er]):
         syms = set(self.symbols).union(set(symbols))
         return self.clone(symbols=list(syms))
 
-    def drop(self, *gens: PolyElement[Er] | int | str | None) -> PolyRing[Er] | Domain[Er]:
+    def drop(self, *gens: PolyElement[Er] | int | str) -> PolyRing[Er] | Domain[Er]:
         """Remove specified generators from the ring."""
         indices = set(map(self.index, gens))
         symbols = [s for i, s in enumerate(self.symbols) if i not in indices]
@@ -1236,7 +1236,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
         """Return a key for sorting polynomials."""
         return len(self), self.terms()
 
-    def _drop(self, gen: PolyElement[Er] | int | str | None) -> tuple[int, PolyRing[Er] | Domain[Er]]:
+    def _drop(self, gen: PolyElement[Er] | int | str) -> tuple[int, PolyRing[Er] | Domain[Er]]:
         ring = self.ring
         i = ring.index(gen)
 
@@ -1246,7 +1246,11 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
             new_ring = ring.drop(gen)
             return i, new_ring
 
-    def drop(self, gen: PolyElement[Er] | int | str | None) -> PolyElement[Er] | Er:
+    def _drop_multi(self, i: int) -> PolyElement[Er]:
+        assert self.ring.ngens > 1
+        return cast('PolyElement[Er]', self.drop(i))
+
+    def drop(self, gen: PolyElement[Er] | int | str) -> PolyElement[Er] | Er:
         i, ring = self._drop(gen)
 
         if self.ring.ngens == 1:
@@ -2545,6 +2549,10 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
 
     def to_dense(self):
         return dmp_from_dict(self, self.ring.ngens - 1, self.ring.domain)
+
+    def to_dup(self) -> dup[Er]:
+        assert self.ring.ngens == 1
+        return dup_from_dict(self, self.ring.domain) # type: ignore
 
     def to_dict(self):
         # Return a self.flint_poly.to_dict() in case of python-flint
