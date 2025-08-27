@@ -109,10 +109,6 @@ class PowerSeriesRingProto(Protocol[TSeries, Er]):
         """Check if two power series have the same representation."""
         ...
 
-    def is_element(self, arg: TSeries) -> bool:
-        """Check if a arg is an element of the power series ring."""
-        ...
-
     def is_ground(self, arg: TSeries) -> bool | None:
         """Check if a arg is a ground element of the power series ring."""
         ...

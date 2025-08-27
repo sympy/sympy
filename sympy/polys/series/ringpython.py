@@ -1224,22 +1224,12 @@ class PythonPowerSeriesRingZZ:
         """Check if two power series have the same representation."""
         return _useries_equal_repr(s1, s2)
 
-    def is_element(self, arg: USeries[MPZ]) -> bool:
-        """Check if a arg is an element of the power series ring."""
-        if isinstance(arg, tuple) and len(arg) == 2:
-            if isinstance(arg[0], list) and all(isinstance(c, MPZ) for c in arg[0]):
-                return True
-        return False
-
     def is_ground(self, arg: USeries[MPZ]) -> bool | None:
         """Check if a arg is a ground element of the power series ring."""
         if self.prec == 0:
             return None
 
-        if self.is_element(arg):
-            return len(self.to_list(arg)) <= 1
-        else:
-            return False
+        return len(self.to_list(arg)) <= 1
 
     def constant_coefficient(self, s: USeries[MPZ]) -> MPZ:
         """Return the constant coefficient of a power series."""
@@ -1502,22 +1492,12 @@ class PythonPowerSeriesRingQQ:
         """Check if two power series have the same representation."""
         return _useries_equal_repr(s1, s2)
 
-    def is_element(self, arg: USeries[MPQ]) -> bool:
-        """Check if a arg is an element of the power series ring."""
-        if isinstance(arg, tuple) and len(arg) == 2:
-            if isinstance(arg[0], list) and all(isinstance(c, MPQ) for c in arg[0]):
-                return True
-        return False
-
     def is_ground(self, arg: USeries[MPQ]) -> bool | None:
         """Check if a arg is a ground element of the power series ring."""
         if self.prec == 0:
             return None
 
-        if self.is_element(arg):
-            return len(self.to_list(arg)) <= 1
-        else:
-            return False
+        return len(self.to_list(arg)) <= 1
 
     def constant_coefficient(self, s: USeries[MPQ]) -> MPQ:
         """Return the constant coefficient of a power series."""

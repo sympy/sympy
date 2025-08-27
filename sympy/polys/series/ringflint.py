@@ -245,19 +245,12 @@ class FlintPowerSeriesRingZZ:
         else:
             return False
 
-    def is_element(self, arg: ZZSeries) -> bool:
-        """Check if a arg is an element of the power series ring."""
-        return isinstance(arg, (fmpz_poly, fmpz_series))
-
     def is_ground(self, arg: ZZSeries) -> bool | None:
         """Check if a arg is a ground element of the power series ring."""
         if self.prec == 0:
             return None
 
-        if self.is_element(arg):
-            return len(arg) <= 1
-        else:
-            return False
+        return len(arg) <= 1
 
     def constant_coefficient(self, s: ZZSeries) -> MPZ:
         """Return the constant coefficient of a power series."""
@@ -699,19 +692,12 @@ class FlintPowerSeriesRingQQ:
         else:
             return False
 
-    def is_element(self, arg: QQSeries) -> bool:
-        """Check if a arg is an element of the power series ring."""
-        return isinstance(arg, (fmpq_poly, fmpq_series))
-
     def is_ground(self, arg: QQSeries) -> bool | None:
         """Check if a arg is a ground element of the power series ring."""
         if self.prec == 0:
             return None
 
-        if self.is_element(arg):
-            return len(arg) <= 1
-        else:
-            return False
+        return len(arg) <= 1
 
     def constant_coefficient(self, s: QQSeries) -> MPQ:
         """Return the constant coefficient of a power series."""

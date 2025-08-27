@@ -1223,14 +1223,12 @@ def test_PowerSeriesRing_basics():
     RQQ = PowerSeriesRingField(QQ, "x")
     xz = RZZ.gen
     xq = RQQ.gen
+    _x = symbols("x")
 
     assert RZZ.is_element(xz)
     assert not RZZ.is_element(xq)
 
-    assert (
-        RZZ.truncate(xz + xz**2 + xz**3, 3)
-        == xz + xz**2 + PowerSeriesRingRing(ZZ, "x", 3).order_term()
-    )
+    assert RZZ.truncate(xz + xz**2 + xz**3, 3) == RZZ.from_expr(_x + _x**2 + O(_x**3))
     assert (
         RZZ.from_list([ZZ(1), ZZ(2), ZZ(3), ZZ(4), ZZ(2), ZZ(13), ZZ(2)])
         == 1
@@ -1272,7 +1270,7 @@ def test_PowerSeriesElement_basics():
     )
     assert (2 + x + 3 * x**2).constant_coefficient() == 2
     assert (2 + x + R.order_term()).removeO() == 2 + x
-    assert R.ground_new(5).is_ground
+    assert R.from_int(5).is_ground
     assert not (1 + x + x**2).is_ground
 
     raises(ValueError, lambda: (1 + x + y))
@@ -1293,16 +1291,12 @@ def test_PowerSeriesElement_basics():
 def test_PowerSeriesRing_from_expr():
     R = PowerSeriesRingField(QQ, "x", 5)
     o = R.order_term()
-    R3 = PowerSeriesRingField(QQ, "x", 3)
-    o3 = R3.order_term()
 
     x = R.gen
     _x = symbols("x")
 
     assert R.from_expr(_x) == x
     assert R.from_expr(1 + _x + 2 * _x**2) == 1 + x + 2 * x**2
-    assert R.from_expr(2 + _x**2 + O(_x**3)) == 2 + x**2 + o3
-    assert R.from_expr(7 + QQ(1, 4) * _x**2 + O(_x**3)) == 7 + QQ(1, 4) * x**2 + o3
     assert (
         R.from_expr(2 + 4 * _x + 6 * _x**2 + 6 * _x**3 + _x**5)
         == 2 + 4 * x + 6 * x**2 + 6 * x**3 + o
@@ -1319,15 +1313,11 @@ def test_PowerSeriesRing_from_expr():
     raises(ValueError, lambda: R.from_expr(_x ** (1 / 2)))
 
 
-def test_PowerSeriesRing_ring_new(groundring_rational):
-    SeriesRing = groundring_rational
-    RL = SeriesRing(5)
+def test_PowerSeriesRing_ring_new():
     R = PowerSeriesRingRing(QQ, "x", 5)
-    x = R.gen
 
-    assert R.ring_new(QQ(7)) == R.ground_new(QQ(7))
-    assert R.ring_new(3) == R.ground_new(3)
-    assert R.ring_new(RL([1, 2, 3], None)) == 1 + 2 * x + 3 * x**2
+    assert R.ring_new(QQ(7)) == R.from_ground(QQ(7))
+    assert R.ring_new(3) == R.from_int(3)
 
 
 def test_PowerSeriesRing_arith(groundring_int):

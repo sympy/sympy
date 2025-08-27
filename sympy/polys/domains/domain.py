@@ -1055,8 +1055,15 @@ class Domain(Generic[Er]):
         from sympy.polys.domains.polynomialring import PolynomialRing
         return PolynomialRing(self, symbols, order)
 
-    def power_series_ring(self, *symbols: str | Expr, prec: int = 6) -> PowerSeriesRing:
-        """Returns a Power Series ring over ring or field. """
+    def _power_series_ring(self, *symbols: str | Expr, prec: int = 6) -> PowerSeriesRing:
+        """Returns a univariate power series ring with specified precision, i.e. `K[[X], <X^prec>]`.
+
+        Notes
+        =====
+        This method is private at the moment because the PowerSeriesRing class
+        needs to be properly integrated into SymPy's domain system.
+
+        """
         if len(symbols) != 1:
             raise ValueError("Power series ring supports only univariate series.")
         from sympy.polys.domains.powerseriesring import PowerSeriesRing
