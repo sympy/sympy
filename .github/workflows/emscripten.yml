@@ -45,15 +45,10 @@ jobs:
           python-version: ${{ env.PYTHON_VERSION }}
 
       - name: Set up Emscripten toolchain
-        uses: mymindstorm/setup-emsdk@6ab9eb1bda2574c4ddb79809fc9247783eaf9021 # v14
+        uses: pyodide/setup-emsdk@ca2dd8aef8c2a0e11743c5c36f0b430ddb694b5c # v15
         with:
           version: ${{ env.EMSCRIPTEN_VERSION }}
           actions-cache-folder: emsdk-cache
-
-      # XXX: Remove this later...
-      # https://github.com/sympy/sympy/issues/27883
-      - name: Pin the wheel package
-        run: pip install 'wheel != 0.46.0'
 
       - name: Install pyodide-build
         run: pip install pyodide-build
