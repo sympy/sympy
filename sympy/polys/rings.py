@@ -1417,21 +1417,28 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
         """
         ring = self.ring
 
-        if not self:
-            return (ring.zero, ring.zero) if isinstance(fv, PolyElement) else ([], ring.zero)
-
-        is_single = isinstance(fv, PolyElement)
-        divisors = [fv] if is_single else fv
-
-        if not all(divisors):
-            raise ZeroDivisionError("polynomial division")
-
-        if any(f.ring != ring for f in divisors):
-            raise ValueError("self and f must have the same ring")
-
-        result = self._div(divisors[0]) if is_single else self._div_list(divisors)
-
-        return result
+        if isinstance(fv, PolyElement):
+            # should have the same ring
+            if fv.ring != ring:
+                raise ValueError("self and f must have the same ring")
+            # division by zero
+            if not fv:
+                raise ZeroDivisionError("polynomial division")
+            # in case the dividend is zero
+            if not self:
+                return (ring.zero, ring.zero)
+            return self._div(fv)
+        else:
+            # should have the same ring
+            if not all(f.ring == ring for f in fv):
+                raise ValueError("self and f must have the same ring")
+            # division by zero
+            if not all(fv):
+                raise ZeroDivisionError("polynomial division")
+            # in case the dividend is zero
+            if not self:
+                return ([], ring.zero)
+            return self._div_list(fv)
 
     def quo_ground(self, x: Er) -> PolyElement[Er]:
         domain = self.ring.domain
@@ -1608,8 +1615,8 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
             return p.ring.zero
 
         monoms, coeffs = zip(*terms)
-        monoms = tuple(m[:i] + (0,) + m[i + 1:] for m in monoms)
-        return p.ring.from_dict(dict(zip(monoms, coeffs)))
+        monoms_list = [m[:i] + (0,) + m[i + 1:] for m in monoms]
+        return p.ring.from_dict(dict(zip(monoms_list, coeffs)))
 
     def compose(self, x, a=None):
         ring = self.ring
@@ -1679,7 +1686,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
         ...
 
     @overload
-    def subs(self, x: Expr, a: Er | int) -> PolyElement[Er]:
+    def subs(self, x: PolyElement[Er] | int | str, a: Er | int) -> PolyElement[Er]:
         ...
 
     def subs(self, *args, **kwargs) -> PolyElement[Er]:
@@ -2365,42 +2372,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
 
     def _rem(self, g):
         """Remainder when dividing by a single polynomial g"""
-        ring = self.ring
-        domain = ring.domain
-        zero = domain.zero
-        monomial_mul = ring.monomial_mul
-        r = ring.zero
-        term_div = self._term_div()
-        ltf = self.LT
-        f = self.copy()
-        get = f.get
-
-        while f:
-            tq = term_div(ltf, g.LT)
-            if tq is not None:
-                m, c = tq
-                for mg, cg in g.iterterms():
-                    m1 = monomial_mul(mg, m)
-                    c1 = get(m1, zero) - c * cg
-                    if not c1:
-                        del f[m1]
-                    else:
-                        f[m1] = c1
-                ltm = f.leading_expv()
-                if ltm is not None:
-                    ltf = ltm, f[ltm]
-            else:
-                ltm, ltc = ltf
-                if ltm in r:
-                    r[ltm] += ltc
-                else:
-                    r[ltm] = ltc
-                del f[ltm]
-                ltm = f.leading_expv()
-                if ltm is not None:
-                    ltf = ltm, f[ltm]
-
-        return r
+        return self._rem_list([g])
 
     def _rem_list(self, G):
         """Remainder when dividing by a list of polynomials G"""
