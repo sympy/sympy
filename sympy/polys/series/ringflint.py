@@ -30,8 +30,14 @@ def _get_series_precision(s: fmpz_series | fmpq_series) -> int:
     """Helper function to get the precision of a series. By using the
     representation of the ring"""
 
-    # XXX: This approach is inefficient, but as of python-flint 0.7.1, there is
+    prec = getattr(s, "prec", None)
+    if prec is not None:
+        return prec
+
+    # XXX: This approach is inefficient, but for python-flint <= 0.7.1, there is
     # no alternative method to extract the precision from a series element.
+    # This function could be removed when python-flint 0.8 becomes the
+    # minimum supported version.
     rep = s.repr()
     prec = int(rep.split("prec=")[1].split(")")[0].strip())
     return prec
