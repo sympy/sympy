@@ -173,7 +173,7 @@ class DMP(CantSympify, Generic[Er]):
     def __new__(cls, rep: dmp[Er], dom: Domain[Er], lev: int | None = None):
 
         if lev is None:
-            rep, lev = dmp_validate(rep)
+            rep, lev = dmp_validate(rep, dom)
         elif not isinstance(rep, list):
             raise CoercionFailed("expected list, got %s" % type(rep))
 
@@ -279,7 +279,7 @@ class DMP(CantSympify, Generic[Er]):
 
     @classmethod
     def zero(cls, lev: int, dom: Domain[Er]) -> DMP[Er]:
-        return DMP(dmp_zero(lev), dom, lev)
+        return DMP(dmp_zero(lev, dom), dom, lev)
 
     @classmethod
     def one(cls, lev: int, dom: Domain[Er]) -> DMP[Er]:
@@ -1390,8 +1390,7 @@ class DMP_Python(DMP[Er]):
 
     def ground_new(f, coeff: Er) -> DMP_Python[Er]:
         """Construct a new ground instance of ``f``. """
-        poly: dmp[Er] = dmp_ground(coeff, f.lev) # type: ignore
-        return f._new(poly, f.dom, f.lev)
+        return f._new(dmp_ground(coeff, f.lev, f.dom), f.dom, f.lev)
 
     def _one(f) -> Self:
         return f._new(dmp_one(f.lev, f.dom), f.dom, f.lev) # type: ignore
@@ -2673,8 +2672,8 @@ class DMF(PicklableWithSlots, CantSympify):
                 if isinstance(den, dict):
                     den = dmp_from_dict(den, lev, dom)
             else:
-                num, num_lev = dmp_validate(num)
-                den, den_lev = dmp_validate(den)
+                num, num_lev = dmp_validate(num, dom)
+                den, den_lev = dmp_validate(den, dom)
 
                 if num_lev == den_lev:
                     lev = num_lev
@@ -2697,9 +2696,9 @@ class DMF(PicklableWithSlots, CantSympify):
                 if isinstance(num, dict):
                     num = dmp_from_dict(num, lev, dom)
                 elif not isinstance(num, list):
-                    num = dmp_ground(dom.convert(num), lev)
+                    num = dmp_ground(dom.convert(num), lev, dom)
             else:
-                num, lev = dmp_validate(num)
+                num, lev = dmp_validate(num, dom)
 
             den = dmp_one(lev, dom)
 
@@ -3057,14 +3056,14 @@ class ANP(CantSympify, Generic[Eg]):
                 rep = [dom.convert(a) for a in rep]
             else:
                 rep = [dom.convert(rep)]
-            rep = DMP(dup_strip(rep), dom, 0)
+            rep = DMP(dup_strip(rep, dom), dom, 0)
 
         if isinstance(mod, DMP):
             pass
         elif isinstance(mod, dict):
             mod = DMP(dup_from_raw_dict(mod, dom), dom, 0)
         else:
-            mod = DMP(dup_strip(mod), dom, 0)
+            mod = DMP(dup_strip(mod, dom), dom, 0)
 
         rep = rep.rem(mod)
 
@@ -3201,7 +3200,7 @@ class ANP(CantSympify, Generic[Eg]):
 
     @classmethod
     def from_list(cls, rep, mod, dom):
-        return ANP(dup_strip(list(map(dom.convert, rep))), mod, dom)
+        return ANP(dup_strip(list(map(dom.convert, rep)), dom), mod, dom)
 
     def add_ground(f, c):
         """Add an element of the ground domain to ``f``. """

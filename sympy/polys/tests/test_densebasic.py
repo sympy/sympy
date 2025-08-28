@@ -144,48 +144,48 @@ def test_dmp_degree_list():
 
 
 def test_dup_strip():
-    assert dup_strip([]) == []
-    assert dup_strip([0]) == []
-    assert dup_strip([0, 0, 0]) == []
+    assert dup_strip([], ZZ) == []
+    assert dup_strip([0], ZZ) == []
+    assert dup_strip([0, 0, 0], ZZ) == []
 
-    assert dup_strip([1]) == [1]
-    assert dup_strip([0, 1]) == [1]
-    assert dup_strip([0, 0, 0, 1]) == [1]
+    assert dup_strip([1], ZZ) == [1]
+    assert dup_strip([0, 1], ZZ) == [1]
+    assert dup_strip([0, 0, 0, 1], ZZ) == [1]
 
-    assert dup_strip([1, 2, 0]) == [1, 2, 0]
-    assert dup_strip([0, 1, 2, 0]) == [1, 2, 0]
-    assert dup_strip([0, 0, 0, 1, 2, 0]) == [1, 2, 0]
+    assert dup_strip([1, 2, 0], ZZ) == [1, 2, 0]
+    assert dup_strip([0, 1, 2, 0], ZZ) == [1, 2, 0]
+    assert dup_strip([0, 0, 0, 1, 2, 0], ZZ) == [1, 2, 0]
 
 
 def test_dmp_strip():
-    assert dmp_strip([0, 1, 0], 0) == [1, 0]
+    assert dmp_strip([0, 1, 0], 0, ZZ) == [1, 0]
 
-    assert dmp_strip([[]], 1) == [[]]
-    assert dmp_strip([[], []], 1) == [[]]
-    assert dmp_strip([[], [], []], 1) == [[]]
+    assert dmp_strip([[]], 1, ZZ) == [[]]
+    assert dmp_strip([[], []], 1, ZZ) == [[]]
+    assert dmp_strip([[], [], []], 1, ZZ) == [[]]
 
-    assert dmp_strip([[[]]], 2) == [[[]]]
-    assert dmp_strip([[[]], [[]]], 2) == [[[]]]
-    assert dmp_strip([[[]], [[]], [[]]], 2) == [[[]]]
+    assert dmp_strip([[[]]], 2, ZZ) == [[[]]]
+    assert dmp_strip([[[]], [[]]], 2, ZZ) == [[[]]]
+    assert dmp_strip([[[]], [[]], [[]]], 2, ZZ) == [[[]]]
 
-    assert dmp_strip([[[1]]], 2) == [[[1]]]
-    assert dmp_strip([[[]], [[1]]], 2) == [[[1]]]
-    assert dmp_strip([[[]], [[1]], [[]]], 2) == [[[1]], [[]]]
+    assert dmp_strip([[[1]]], 2, ZZ) == [[[1]]]
+    assert dmp_strip([[[]], [[1]]], 2, ZZ) == [[[1]]]
+    assert dmp_strip([[[]], [[1]], [[]]], 2, ZZ) == [[[1]], [[]]]
 
 
 def test_dmp_validate():
-    assert dmp_validate([]) == ([], 0)
-    assert dmp_validate([0, 0, 0, 1, 0]) == ([1, 0], 0)
+    assert dmp_validate([], ZZ) == ([], 0)
+    assert dmp_validate([0, 0, 0, 1, 0], ZZ) == ([1, 0], 0)
 
-    assert dmp_validate([[[]]]) == ([[[]]], 2)
-    assert dmp_validate([[0], [], [0], [1], [0]]) == ([[1], []], 1)
+    assert dmp_validate([[[]]], ZZ) == ([[[]]], 2)
+    assert dmp_validate([[0], [], [0], [1], [0]], ZZ) == ([[1], []], 1)
 
-    raises(ValueError, lambda: dmp_validate([[0], 0, [0], [1], [0]]))
+    raises(ValueError, lambda: dmp_validate([[0], 0, [0], [1], [0]], ZZ))
 
 
 def test_dup_reverse():
-    assert dup_reverse([1, 2, 0, 3]) == [3, 0, 2, 1]
-    assert dup_reverse([1, 2, 3, 0]) == [3, 2, 1]
+    assert dup_reverse([1, 2, 0, 3], ZZ) == [3, 0, 2, 1]
+    assert dup_reverse([1, 2, 3, 0], ZZ) == [3, 2, 1]
 
 
 def test_dup_copy():
@@ -289,8 +289,8 @@ def test_dmp_zero_p():
 
 
 def test_dmp_zero():
-    assert dmp_zero(0) == []
-    assert dmp_zero(2) == [[[]]]
+    assert dmp_zero(0, ZZ) == []
+    assert dmp_zero(2, ZZ) == [[[]]]
 
 
 def test_dmp_one_p():
@@ -326,11 +326,11 @@ def test_dmp_ground_p():
 
 
 def test_dmp_ground():
-    assert dmp_ground(ZZ(0), 2) == [[[]]]
+    assert dmp_ground(ZZ(0), 2, ZZ) == [[[]]]
 
-    assert dmp_ground(ZZ(7), -1) == ZZ(7)
-    assert dmp_ground(ZZ(7), 0) == [ZZ(7)]
-    assert dmp_ground(ZZ(7), 2) == [[[ZZ(7)]]]
+    assert dmp_ground(ZZ(7), -1, ZZ) == ZZ(7)
+    assert dmp_ground(ZZ(7), 0, ZZ) == [ZZ(7)]
+    assert dmp_ground(ZZ(7), 2, ZZ) == [[[ZZ(7)]]]
 
 
 def test_dmp_zeros():
@@ -345,13 +345,13 @@ def test_dmp_zeros():
 
 
 def test_dmp_grounds():
-    assert dmp_grounds(ZZ(7), 0, 2) == []
+    assert dmp_grounds(ZZ(7), 0, 2, ZZ) == []
 
-    assert dmp_grounds(ZZ(7), 1, 2) == [[[[7]]]]
-    assert dmp_grounds(ZZ(7), 2, 2) == [[[[7]]], [[[7]]]]
-    assert dmp_grounds(ZZ(7), 3, 2) == [[[[7]]], [[[7]]], [[[7]]]]
+    assert dmp_grounds(ZZ(7), 1, 2, ZZ) == [[[[7]]]]
+    assert dmp_grounds(ZZ(7), 2, 2, ZZ) == [[[[7]]], [[[7]]]]
+    assert dmp_grounds(ZZ(7), 3, 2, ZZ) == [[[[7]]], [[[7]]], [[[7]]]]
 
-    assert dmp_grounds(ZZ(7), 3, -1) == [7, 7, 7]
+    assert dmp_grounds(ZZ(7), 3, -1, ZZ) == [7, 7, 7]
 
 
 def test_dmp_negative_p():

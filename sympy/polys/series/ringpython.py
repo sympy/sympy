@@ -1160,7 +1160,7 @@ class PythonPowerSeriesRingZZ:
 
         If `prec` is not specified, it defaults to the ring's precision.
         """
-        coeffs = dup_reverse(coeffs)
+        coeffs = dup_reverse(coeffs, ZZ)
         if prec is None:
             if len(coeffs) <= self._prec:
                 return coeffs, None
@@ -1393,7 +1393,7 @@ class PythonPowerSeriesRingQQ:
 
         If `prec` is not specified, it defaults to the ring's precision.
         """
-        coeffs = dup_reverse(coeffs)
+        coeffs = dup_reverse(coeffs, QQ)
         if prec is None:
             if len(coeffs) <= self._prec:
                 return coeffs, None

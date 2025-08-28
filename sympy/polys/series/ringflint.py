@@ -168,7 +168,7 @@ class FlintPowerSeriesRingZZ:
 
     def pretty(self, s: ZZSeries, *, symbol: str = "x", ascending: bool = True) -> str:
         """Return a pretty-printed string representation of a power series."""
-        coeffs = dup_reverse(s.coeffs())
+        coeffs = dup_reverse(s.coeffs(), ZZ)
 
         if isinstance(s, fmpz_poly):
             return series_pprint(coeffs, None)
@@ -574,7 +574,7 @@ class FlintPowerSeriesRingQQ:
 
     def pretty(self, s: QQSeries, *, symbol: str = "x", ascending: bool = True) -> str:
         """Return a pretty-printed string representation of a power series."""
-        coeffs = dup_reverse(s.coeffs())
+        coeffs = dup_reverse(s.coeffs(), QQ)
 
         if isinstance(s, fmpq_poly):
             return series_pprint(coeffs, None)
