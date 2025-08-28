@@ -374,8 +374,8 @@ class CNF:
 
     @classmethod
     def to_CNF(cls, expr):
-        from sympy.assumptions.facts import get_composite_predicates
-        expr = to_NNF(expr, get_composite_predicates())
+        #from sympy.assumptions.facts import get_composite_predicates
+        expr = to_NNF(expr)
         expr = distribute_AND_over_OR(expr)
         return expr
 
