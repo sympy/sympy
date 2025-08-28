@@ -294,7 +294,7 @@ class PowerSeriesRingRing(Generic[Er]):
         elif self.domain.of_type(arg):
             return self.from_ground(arg)
         else:
-            return NotImplemented
+            raise TypeError(f"{arg.__class__.__name__} type not supported")
 
     __call__ = ring_new
 

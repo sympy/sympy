@@ -102,28 +102,28 @@ def test_rs_series_one(f):
 def test_global_series_zero(f):
     Rs, _ = power_series_ring("x", QQ, 5)
 
-    s = Rs(f[::-1])
+    s = Rs.from_list(f[::-1])
     e = expr_from_dict(dup_to_dict(f, QQ), x)
-    assert (Rs.exp(s)).as_expr() == exp(e).series(x, 0, 5)
+    assert Rs.to_expr((Rs.exp(s))) == exp(e).series(x, 0, 5)
 
-    assert (Rs.atan(s)).as_expr() == atan(e).series(x, 0, 5)
-    assert (Rs.atanh(s)).as_expr() == atanh(e).series(x, 0, 5)
-    assert (Rs.asin(s)).as_expr() == asin(e).series(x, 0, 5)
-    assert (Rs.asinh(s)).as_expr() == asinh(e).series(x, 0, 5)
+    assert Rs.to_expr((Rs.atan(s))) == atan(e).series(x, 0, 5)
+    assert Rs.to_expr((Rs.atanh(s))) == atanh(e).series(x, 0, 5)
+    assert Rs.to_expr((Rs.asin(s))) == asin(e).series(x, 0, 5)
+    assert Rs.to_expr((Rs.asinh(s))) == asinh(e).series(x, 0, 5)
 
-    assert (Rs.tan(s)).as_expr() == tan(e).series(x, 0, 5)
-    assert (Rs.tanh(s)).as_expr() == tanh(e).series(x, 0, 5)
-    assert (Rs.sin(s)).as_expr() == sin(e).series(x, 0, 5)
-    assert (Rs.sinh(s)).as_expr() == sinh(e).series(x, 0, 5)
-    assert (Rs.cos(s)).as_expr() == cos(e).series(x, 0, 5)
-    assert (Rs.cosh(s)).as_expr() == cosh(e).series(x, 0, 5)
+    assert Rs.to_expr((Rs.tan(s))) == tan(e).series(x, 0, 5)
+    assert Rs.to_expr((Rs.tanh(s))) == tanh(e).series(x, 0, 5)
+    assert Rs.to_expr((Rs.sin(s))) == sin(e).series(x, 0, 5)
+    assert Rs.to_expr((Rs.sinh(s))) == sinh(e).series(x, 0, 5)
+    assert Rs.to_expr((Rs.cos(s))) == cos(e).series(x, 0, 5)
+    assert Rs.to_expr((Rs.cosh(s))) == cosh(e).series(x, 0, 5)
 
 
 @given(f=dup_one_const(max_size=5))
 def test_global_series_one(f):
     Rs, _ = power_series_ring("x", QQ, 5)
 
-    s = Rs(f[::-1])
+    s = Rs.from_list(f[::-1])
     e = expr_from_dict(dup_to_dict(f, QQ), x)
 
-    assert (Rs.log(s)).as_expr() == log(e).series(x, 0, 5)
+    assert Rs.to_expr((Rs.log(s))) == log(e).series(x, 0, 5)

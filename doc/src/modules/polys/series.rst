@@ -82,7 +82,6 @@ Domain for Univariate Power Series Rings
 .. autoclass:: sympy.polys.domains.powerseriesring.SeriesRingProto
 
 .. autoclass:: sympy.polys.domains.powerseriesring.PowerSeriesRing
-    :members:
 
 Univariate Power Series Ring
 ============================
