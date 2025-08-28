@@ -791,12 +791,12 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
             elif (
                 isinstance(ring.domain, PolynomialRing) and ring.domain.ring == other.ring
             ):
-                return self._add_ground(other)
+                pass
             elif (
                 isinstance(other.ring.domain, PolynomialRing)
                 and other.ring.domain.ring == ring
             ):
-                return other._add_ground(self)
+                return other.__radd__(self)
             else:
                 return NotImplemented
 
@@ -1485,7 +1485,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
     def l1_norm(self):
         return self._norm(sum)
 
-    def deflate(self, *G):
+    def deflate(self, *G: PolyElement[Er]) -> tuple[tuple[int, ...], list[PolyElement[Er]]]:
         ring = self.ring
         polys = [self] + list(G)
 
@@ -1499,12 +1499,12 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
             if not b:
                 J[i] = 1
 
-        J = tuple(J)
+        J2 = tuple(J)
 
-        if all(b == 1 for b in J):
-            return J, polys
+        if all(b == 1 for b in J2):
+            return J2, polys
 
-        return J, self._deflate(J, polys)
+        return J2, self._deflate(J2, polys)
 
     def canonical_unit(self):
         domain = self.ring.domain
@@ -1653,7 +1653,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
         ...
 
     @overload
-    def evaluate(self, x: Expr, a: Er | int) -> PolyElement[Er] | Er:
+    def evaluate(self, x: PolyElement[Er] | int | str, a: Er | int) -> PolyElement[Er] | Er:
         ...
 
     def evaluate(self, *args, **kwargs) -> PolyElement[Er] | Er:
@@ -1713,7 +1713,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
         else:
             return self._subs(subs_dict)
 
-    def prem(self, g, x=None):
+    def prem(self, g: PolyElement[Er], x: PolyElement[Er] | int | None=None):
         """
         Pseudo-remainder of the polynomial ``self`` with respect to ``g``.
 
@@ -1769,7 +1769,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
         """
         return self._prem(g, x)
 
-    def pdiv(self, g, x=None):
+    def pdiv(self, g: PolyElement[Er], x: PolyElement[Er] | int | None=None):
         """
         Computes the pseudo-division of the polynomial ``self`` with respect to ``g``.
 
@@ -1851,7 +1851,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
         """
         return self._pdiv(g, x)
 
-    def pquo(self, g, x=None):
+    def pquo(self, g: PolyElement[Er], x: PolyElement[Er] | int | None=None):
         """
         Polynomial pseudo-quotient in multivariate polynomial ring.
 
@@ -1880,7 +1880,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
         """
         return self._pquo(g, x)
 
-    def pexquo(self, g, x=None):
+    def pexquo(self, g: PolyElement[Er], x: PolyElement[Er] | int | None=None):
         """
         Polynomial exact pseudo-quotient in multivariate polynomial ring.
 
@@ -1911,7 +1911,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
         """
         return self._pexquo(g, x)
 
-    def subresultants(self, g, x=None):
+    def subresultants(self, g: PolyElement[Er], x: PolyElement[Er] | int | None=None):
         """
         Computes the subresultant PRS of two polynomials ``self`` and ``g``.
 
@@ -1947,7 +1947,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
         """
         return self._subresultants(g, x)
 
-    def symmetrize(self):
+    def symmetrize(self) -> tuple[PolyElement[Er], PolyElement[Er], list[tuple[PolyElement[Er], PolyElement[Er]]]]:
         r"""
         Rewrite *self* in terms of elementary symmetric polynomials.
 
@@ -2008,7 +2008,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
         """
         return self._symmetrize()
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
         """Equality test for polynomials.
 
         Examples
@@ -2036,7 +2036,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
         # Return (-1) * self in case of python-flint
         return self.new([(monom, -coeff) for monom, coeff in self.iterterms()])
 
-    def _add(self, p2):
+    def _add(self, p2: PolyElement[Er]) -> PolyElement[Er]:
         p = self.copy()
         get = p.get
         zero = self.ring.domain.zero
@@ -2048,7 +2048,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
                 del p[k]
         return p
 
-    def _add_ground(self, cp2):
+    def _add_ground(self, cp2: Er) -> PolyElement[Er]:
         p = self.copy()
         if not cp2:
             return p
@@ -2866,7 +2866,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
         terms = [term_div(t, term) for t in self.iterterms()]
         return self.new([t for t in terms if t is not None])
 
-    def _deflate(self, J, polys):
+    def _deflate(self, J: tuple[int, ...], polys: list[PolyElement[Er]]) -> list[PolyElement[Er]]:
         ring = self.ring
         H = []
         for p in polys:
@@ -3121,11 +3121,12 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
     # The following _p* and _subresultants methods can just be converted to pure python
     # methods in case of python-flint since their speeds don't exactly matter wrt the
     # flint version.
-    def _prem(self, g, x):
+    def _prem(self, g: PolyElement[Er], x: PolyElement[Er] | int | None):
         f = self
         x = f.ring.index(x)
-        df = f.degree(x)
-        dg = g.degree(x)
+
+        df = cast('int', f.degree(x))
+        dg = cast('int', g.degree(x))
 
         if dg < 0:
             raise ZeroDivisionError("polynomial division")
@@ -3149,7 +3150,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
             G = g * lc_r * xp**j
             r = R - G
 
-            dr = r.degree(x)
+            dr = cast('int', r.degree(x))
 
             if dr < dg:
                 break
@@ -3158,17 +3159,18 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
 
         return r * c
 
-    def _pdiv(self, g, x):
+    def _pdiv(self, g: PolyElement[Er], x: PolyElement[Er] | int | None):
         f = self
         x = f.ring.index(x)
 
-        df = f.degree(x)
-        dg = g.degree(x)
+        df = cast('int', f.degree(x))
+        dg = cast('int', g.degree(x))
+
 
         if dg < 0:
             raise ZeroDivisionError("polynomial division")
 
-        q, r, dr = x, f, df
+        q, r, dr = cast('PolyElement[Er]', x), f, df
 
         if df < dg:
             return q, r
@@ -3192,7 +3194,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
 
             r = R - G
 
-            dr = r.degree(x)
+            dr = cast('int', r.degree(x))
 
             if dr < dg:
                 break
@@ -3204,11 +3206,11 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
 
         return q, r
 
-    def _pquo(self, g, x):
+    def _pquo(self, g: PolyElement[Er], x: PolyElement[Er] | int | None):
         f = self
         return f.pdiv(g, x)[0]
 
-    def _pexquo(self, g, x):
+    def _pexquo(self, g: PolyElement[Er], x: PolyElement[Er] | int | None):
         f = self
         q, r = f.pdiv(g, x)
 
@@ -3217,11 +3219,15 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
         else:
             raise ExactQuotientFailed(f, g)
 
-    def _subresultants(self, g, x):
+    def _subresultants(self, g: PolyElement[Er], x: PolyElement[Er] | int | None):
         f = self
         x = f.ring.index(x)
+
         n = f.degree(x)
+        n = cast('int', n)
+
         m = g.degree(x)
+        m = cast('int', m)
 
         if n < m:
             f, g = g, f
