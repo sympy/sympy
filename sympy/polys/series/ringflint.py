@@ -30,8 +30,14 @@ def _get_series_precision(s: fmpz_series | fmpq_series) -> int:
     """Helper function to get the precision of a series. By using the
     representation of the ring"""
 
-    # XXX: This approach is inefficient, but as of python-flint 0.7.1, there is
+    prec = getattr(s, "prec", None)
+    if prec is not None:
+        return prec
+
+    # XXX: This approach is inefficient, but for python-flint <= 0.7.1, there is
     # no alternative method to extract the precision from a series element.
+    # This function could be removed when python-flint 0.8 becomes the
+    # minimum supported version.
     rep = s.repr()
     prec = int(rep.split("prec=")[1].split(")")[0].strip())
     return prec
@@ -82,11 +88,17 @@ class FlintPowerSeriesRingZZ:
     Note
     ====
 
-    The recommended way to create a power series ring is using the factory function:
+    The recommended way to create a power series ring is using the factory function
+    which returns a new instance of the higher level PowerSeriesRing class with
+    the ring generator:
 
     >>> from sympy.polys.series import power_series_ring
     >>> from sympy.polys.domains import ZZ
-    >>> R = power_series_ring(ZZ, prec=6)
+    >>> R, x = power_series_ring("x", ZZ, 6)
+    >>> R
+    Power Series Ring in x over ZZ of size 6
+    >>> type(x)
+    <class 'sympy.polys.series.ring.PowerSeriesElement'>
 
     This function automatically uses the Flint implementation if available for better
     performance, falling back to the Python implementation otherwise.
@@ -94,9 +106,12 @@ class FlintPowerSeriesRingZZ:
     See Also
     ========
 
-    FlintPowerSeriesRingQQ
-    PythonPowerSeriesRingZZ
-    power_series_ring
+    sympy.polys.series.ringflint.FlintPowerSeriesRingQQ
+    sympy.polys.series.ringpython.PythonPowerSeriesRingZZ
+    sympy.polys.series.ring.power_series_ring
+    sympy.polys.series.ring.PowerSeriesRingRing
+    sympy.polys.series.ring.PowerSeriesRingField
+    sympy.polys.series.ring.PowerSeriesElement
     """
 
     _domain = ZZ
@@ -236,6 +251,17 @@ class FlintPowerSeriesRingZZ:
         else:
             return False
 
+    def is_ground(self, arg: ZZSeries) -> bool | None:
+        """Check if a arg is a ground element of the power series ring."""
+        if self.prec == 0:
+            return None
+
+        return len(arg) <= 1
+
+    def constant_coefficient(self, s: ZZSeries) -> MPZ:
+        """Return the constant coefficient of a power series."""
+        return s[0]
+
     def positive(self, s: ZZSeries) -> ZZSeries:
         """Return the unary positive of a power series, adjusted to the ring's precision."""
         ring_prec = self._prec
@@ -266,6 +292,11 @@ class FlintPowerSeriesRingZZ:
         with _global_cap(ring_prec):
             return s1 + s2
 
+    def add_ground(self, s: ZZSeries, n: MPZ) -> ZZSeries:
+        """Add a ground element to a power series."""
+        with _global_cap(self._prec):
+            return s + n
+
     def subtract(self, s1: ZZSeries, s2: ZZSeries) -> ZZSeries:
         """Subtract two power series."""
         ring_prec = self._prec
@@ -277,6 +308,16 @@ class FlintPowerSeriesRingZZ:
 
         with _global_cap(ring_prec):
             return s1 - s2
+
+    def subtract_ground(self, s: ZZSeries, n: MPZ) -> ZZSeries:
+        """Subtract a ground element from a power series."""
+        with _global_cap(self._prec):
+            return s - n
+
+    def rsubtract_ground(self, s: ZZSeries, n: MPZ) -> ZZSeries:
+        """Subtract a power series from a ground element."""
+        with _global_cap(self._prec):
+            return n - s
 
     def multiply(self, s1: ZZSeries, s2: ZZSeries) -> ZZSeries:
         """Multiply two power series."""
@@ -327,10 +368,16 @@ class FlintPowerSeriesRingZZ:
             return s1 / s2
 
     def pow_int(self, s: ZZSeries, n: int) -> ZZSeries:
-        """Raise a power series to a non-negative integer power."""
+        """Raise a power series to a integer power."""
         ring_prec = self._prec
         if n < 0:
-            raise ValueError("Power must be non-negative")
+            n = -n
+            s = self.pow_int(s, n)
+            try:
+                inv = self.inverse(s)
+                return inv
+            except NotReversible:
+                raise ValueError("Result would not be a power series")
 
         if isinstance(s, fmpz_poly):
             if s.degree() * n < ring_prec:
@@ -486,11 +533,17 @@ class FlintPowerSeriesRingQQ:
     Note
     ====
 
-    The recommended way to create a power series ring is using the factory function:
+    The recommended way to create a power series ring is using the factory function
+    which returns a new instance of the higher level PowerSeriesRing class with
+    the ring generator:
 
     >>> from sympy.polys.series import power_series_ring
     >>> from sympy.polys.domains import QQ
-    >>> R = power_series_ring(QQ, prec=6)
+    >>> R, x = power_series_ring("x", QQ, 6)
+    >>> R
+    Power Series Ring in x over QQ of size 6
+    >>> type(x)
+    <class 'sympy.polys.series.ring.PowerSeriesElement'>
 
     This function automatically uses the Flint implementation if available for better
     performance, falling back to the Python implementation otherwise.
@@ -498,9 +551,12 @@ class FlintPowerSeriesRingQQ:
     See Also
     ========
 
-    FlintPowerSeriesRingZZ
-    PythonPowerSeriesRingQQ
-    power_series_ring
+    sympy.polys.series.ringflint.FlintPowerSeriesRingZZ
+    sympy.polys.series.ringpython.PythonPowerSeriesRingQQ
+    sympy.polys.series.ring.power_series_ring
+    sympy.polys.series.ring.PowerSeriesRingRing
+    sympy.polys.series.ring.PowerSeriesRingField
+    sympy.polys.series.ring.PowerSeriesElement
     """
 
     _domain = QQ
@@ -642,6 +698,17 @@ class FlintPowerSeriesRingQQ:
         else:
             return False
 
+    def is_ground(self, arg: QQSeries) -> bool | None:
+        """Check if a arg is a ground element of the power series ring."""
+        if self.prec == 0:
+            return None
+
+        return len(arg) <= 1
+
+    def constant_coefficient(self, s: QQSeries) -> MPQ:
+        """Return the constant coefficient of a power series."""
+        return s[0]
+
     def positive(self, s: QQSeries) -> QQSeries:
         """Return the unary positive of a power series, adjusted to the ring's precision."""
         ring_prec = self._prec
@@ -672,6 +739,11 @@ class FlintPowerSeriesRingQQ:
         with _global_cap(ring_prec):
             return s1 + s2
 
+    def add_ground(self, s: QQSeries, n: MPQ) -> QQSeries:
+        """Add a ground element to a power series."""
+        with _global_cap(self._prec):
+            return s + n
+
     def subtract(self, s1: QQSeries, s2: QQSeries) -> QQSeries:
         """Subtract two power series."""
         ring_prec = self._prec
@@ -683,6 +755,16 @@ class FlintPowerSeriesRingQQ:
 
         with _global_cap(ring_prec):
             return s1 - s2
+
+    def subtract_ground(self, s: QQSeries, n: MPQ) -> QQSeries:
+        """Subtract a ground element from a power series."""
+        with _global_cap(self._prec):
+            return s - n
+
+    def rsubtract_ground(self, s: QQSeries, n: MPQ) -> QQSeries:
+        """Subtract a power series from a ground element."""
+        with _global_cap(self._prec):
+            return n - s
 
     def multiply(self, s1: QQSeries, s2: QQSeries) -> QQSeries:
         """Multiply two power series."""
@@ -733,10 +815,16 @@ class FlintPowerSeriesRingQQ:
             return s1 / s2
 
     def pow_int(self, s: QQSeries, n: int) -> QQSeries:
-        """Raise a power series to a non-negative integer power."""
+        """Raise a power series to a integer power."""
         ring_prec = self._prec
         if n < 0:
-            raise ValueError("Power must be non-negative")
+            n = -n
+            s = self.pow_int(s, n)
+            try:
+                inv = self.inverse(s)
+                return inv
+            except NotReversible:
+                raise ValueError("Result would not be a power series")
 
         if isinstance(s, fmpq_poly):
             if s.degree() * n < ring_prec:

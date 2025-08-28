@@ -24,7 +24,7 @@ def series_pprint(
 
     if not poly or poly == "0":
         if prec is not None:
-            return f"0 + O({sym}**{prec})"
+            return f"O({sym}**{prec})"
         else:
             return "0"
 
@@ -37,7 +37,7 @@ class PowerSeriesRingProto(Protocol[TSeries, Er]):
     """A protocol for a power series ring."""
 
     def __init__(self, prec: int = 6, /) -> None:
-        """Initialize a power series ring over ZZ."""
+        """Initialize a power series ring over a ring."""
         ...
 
     def __repr__(self, /) -> str:
@@ -45,7 +45,7 @@ class PowerSeriesRingProto(Protocol[TSeries, Er]):
         ...
 
     def __call__(self, coeffs: Sequence[Er | int], prec: int | None = None) -> TSeries:
-        """Return a power series element over ZZ."""
+        """Return a power series element over a ring."""
         ...
 
     @property
@@ -109,6 +109,14 @@ class PowerSeriesRingProto(Protocol[TSeries, Er]):
         """Check if two power series have the same representation."""
         ...
 
+    def is_ground(self, arg: TSeries) -> bool | None:
+        """Check if a arg is a ground element of the power series ring."""
+        ...
+
+    def constant_coefficient(self, s: TSeries) -> Er:
+        """Return the constant coefficient of a power series."""
+        ...
+
     def positive(self, s: TSeries, /) -> TSeries:
         """Return the positive of a power series."""
         ...
@@ -121,8 +129,20 @@ class PowerSeriesRingProto(Protocol[TSeries, Er]):
         """Add two power series."""
         ...
 
+    def add_ground(self, s: TSeries, n: Er, /) -> TSeries:
+        """Add a ground element to a power series."""
+        ...
+
     def subtract(self, s1: TSeries, s2: TSeries, /) -> TSeries:
         """Subtract two power series."""
+        ...
+
+    def subtract_ground(self, s: TSeries, n: Er, /) -> TSeries:
+        """Subtract a ground element from a power series."""
+        ...
+
+    def rsubtract_ground(self, s: TSeries, n: Er, /) -> TSeries:
+        """Subtract a power series from a ground element."""
         ...
 
     def multiply(self, s1: TSeries, s2: TSeries, /) -> TSeries:
@@ -131,6 +151,10 @@ class PowerSeriesRingProto(Protocol[TSeries, Er]):
 
     def multiply_ground(self, s: TSeries, n: Er, /) -> TSeries:
         """Multiply a power series by a ground element (integer or rational)."""
+        ...
+
+    def divide(self, s1: TSeries, s2: TSeries, /) -> TSeries:
+        """Divide a power series by another power series."""
         ...
 
     def pow_int(self, s: TSeries, n: int, /) -> TSeries:
@@ -162,13 +186,19 @@ class PowerSeriesRingProto(Protocol[TSeries, Er]):
         ...
 
 
-class PowerSeriesRingProtoQQ(PowerSeriesRingProto[TSeries, Ef], Protocol[TSeries, Ef]):
-    """A protocol for a power series ring over QQ."""
+class PowerSeriesRingFieldProto(
+    PowerSeriesRingProto[TSeries, Ef], Protocol[TSeries, Ef]
+):
+    """A protocol for a power series ring over a field."""
 
     def __call__(
         self, coeffs: Sequence[Ef | int | tuple[int, int]], prec: int | None = None
     ) -> TSeries:
-        """Return a power series element over QQ."""
+        """Return a power series element over a field."""
+        ...
+
+    def integrate(self, s: TSeries, /) -> TSeries:
+        """Return the integral of a power series."""
         ...
 
     def sqrt(self, s: TSeries, /) -> TSeries:

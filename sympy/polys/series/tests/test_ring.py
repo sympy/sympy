@@ -1,5 +1,12 @@
+from sympy.core.symbol import symbols
+from sympy.series.order import O
 from sympy.polys.domains import ZZ, QQ
-from sympy.polys.series.base import PowerSeriesRingProto
+from sympy.polys.series.base import PowerSeriesRingProto, PowerSeriesRingFieldProto
+from sympy.polys.series.ring import (
+    PowerSeriesElement,
+    PowerSeriesRingRing,
+    PowerSeriesRingField,
+)
 from sympy.polys.series.ringpython import (
     PythonPowerSeriesRingZZ,
     PythonPowerSeriesRingQQ,
@@ -29,7 +36,13 @@ from sympy.polys.densebasic import dup_random
 Ring_ZZ: list[type[PowerSeriesRingProto]] = [PythonPowerSeriesRingZZ]
 Ring_QQ: list[type[PowerSeriesRingProto]] = [PythonPowerSeriesRingQQ]
 
+ground_int: list[type[PowerSeriesRingProto]]
+ground_rational: list[type[PowerSeriesRingFieldProto]]
+
+flint: bool = False
+
 if GROUND_TYPES == "flint":
+    flint = True
     from sympy.polys.series.ringflint import (
         FlintPowerSeriesRingZZ,
         FlintPowerSeriesRingQQ,
@@ -37,6 +50,13 @@ if GROUND_TYPES == "flint":
 
     Ring_ZZ.append(FlintPowerSeriesRingZZ)
     Ring_QQ.append(FlintPowerSeriesRingQQ)
+
+    ground_int = [FlintPowerSeriesRingZZ, FlintPowerSeriesRingQQ]
+    ground_rational = [FlintPowerSeriesRingQQ]
+
+else:
+    ground_int = [PythonPowerSeriesRingZZ, PythonPowerSeriesRingQQ]
+    ground_rational = [PythonPowerSeriesRingQQ]
 
 
 @pytest.fixture(params=Ring_ZZ + Ring_QQ)
@@ -46,6 +66,16 @@ def ring_int(request):
 
 @pytest.fixture(params=Ring_QQ)
 def ring_rational(request):
+    return request.param
+
+
+@pytest.fixture(params=ground_int)
+def groundring_int(request):
+    return request.param
+
+
+@pytest.fixture(params=ground_rational)
+def groundring_rational(request):
     return request.param
 
 
@@ -345,6 +375,7 @@ def test_int_pow(ring_int):
     assert R.equal_repr(R.pow_int(R([1, 2, 1], 5), 3), R([1, 6, 15, 20, 15], 5))
     assert R.equal_repr(R.pow_int(R.add(R.gen, R.one), 6), R([1, 6, 15, 20, 15, 6], 6))
     assert R.equal_repr(R.pow_int(R.gen, 10), R([], 6))
+    assert R.equal_repr(R.pow_int(R.add(R.one, R.gen), 3), R([1, 3, 3, 1], None))
     assert R3.equal_repr(R3.pow_int(R3.add(R3.gen, R3.one), 5), R3([1, 5, 10], 3))
     assert R3.equal_repr(R3.pow_int(R([1, 1, 1, 1, 1]), 2), R3([1, 2, 3], 3))
     assert R3.equal_repr(
@@ -355,6 +386,8 @@ def test_int_pow(ring_int):
         R10.pow_int(R10.add(R10.gen, R10.one), 12),
         R10([1, 12, 66, 220, 495, 792, 924, 792, 495, 220], 10),
     )
+
+    raises(ValueError, lambda: R.pow_int(R.gen, -2))
 
 
 def test_rational_pow(ring_rational):
@@ -1159,4 +1192,459 @@ def test_hypot(ring_rational):
 
     assert R.equal_repr(
         R.hypot(R([(1, 1), (1, 1)]), R([(0, 1)])), R([(1, 1), (1, 1)], None)
+    )
+
+
+def test_PowerSeriesRing():
+    from sympy.abc import x
+
+    RZZ = PowerSeriesRingRing(ZZ, "x")
+    RQQ = PowerSeriesRingField(QQ, "x")
+
+    assert RZZ == PowerSeriesRingRing(ZZ, "x", 6)
+    assert RQQ == PowerSeriesRingField(QQ, "x", 6)
+    assert RZZ != PowerSeriesRingRing(ZZ, "x", 10)
+    assert RQQ != PowerSeriesRingField(QQ, "x", 10)
+    assert RZZ != RQQ
+
+    assert RZZ.domain == ZZ
+    assert RQQ.domain == QQ
+    assert RZZ.gen == RZZ(x)
+    assert RQQ.gen == RQQ(x)
+    assert isinstance(RZZ.gen, PowerSeriesElement)
+    assert isinstance(RQQ.gen, PowerSeriesElement)
+    assert RZZ.prec == 6
+    assert RQQ.prec == 6
+    assert RZZ.symbol == RQQ.symbol
+
+
+def test_PowerSeriesRing_basics():
+    RZZ = PowerSeriesRingRing(ZZ, "x")
+    RQQ = PowerSeriesRingField(QQ, "x")
+    xz = RZZ.gen
+    xq = RQQ.gen
+    _x = symbols("x")
+
+    assert RZZ.is_element(xz)
+    assert not RZZ.is_element(xq)
+
+    assert RZZ.truncate(xz + xz**2 + xz**3, 3) == RZZ.from_expr(_x + _x**2 + O(_x**3))
+    assert (
+        RZZ.from_list([ZZ(1), ZZ(2), ZZ(3), ZZ(4), ZZ(2), ZZ(13), ZZ(2)])
+        == 1
+        + 2 * xz
+        + 3 * xz**2
+        + 4 * xz**3
+        + 2 * xz**4
+        + 13 * xz**5
+        + RZZ.order_term()
+    )
+    assert (
+        RQQ.from_list([QQ(1, 3), QQ(3, 2), QQ(1, 3)])
+        == QQ(1, 3) + 3 * xq / 2 + xq**2 / 3
+    )
+
+    assert RZZ.to_list(xz + 2 * xz**2 + 3 * xz**3) == [0, 1, 2, 3]
+    assert RZZ.to_dense(xz + 2 * xz**2 + 3 * xz**3) == [3, 2, 1, 0]
+
+
+def test_PowerSeriesElement_basics():
+    R = PowerSeriesRingField(QQ, "x")
+    Ry = PowerSeriesRingField(QQ, "y")
+    x = R.gen
+    y = Ry.gen
+
+    _x = symbols("x")
+
+    assert (QQ(2) + x) == x + QQ(2)
+    assert (QQ(2) - x) == 2 - x
+    assert (x - QQ(2)) == x - 2
+    assert (QQ(2) * x) == x * QQ(2)
+    assert (QQ(1) / (1 + x)) == 1 / (1 + x)
+    assert ((1 + x) / QQ(3)) == (1 + x) / QQ(3)
+
+    assert (2 + x + 3 * x**2).as_expr() == 2 + _x + 3 * _x**2
+    assert (0 + 3 * x**2).as_expr() == 3 * _x**2
+    assert (2 + x + 3 * x**2 + R.order_term()).as_expr() == 2 + _x + 3 * _x**2 + O(
+        _x**6
+    )
+    assert (2 + x + 3 * x**2).constant_coefficient() == 2
+    assert (2 + x + R.order_term()).removeO() == 2 + x
+    assert R.from_int(5).is_ground
+    assert not (1 + x + x**2).is_ground
+
+    raises(ValueError, lambda: (1 + x + y))
+    raises(ValueError, lambda: (1 + x - y))
+    raises(ValueError, lambda: (1 + x * y))
+    raises(ValueError, lambda: (1 + x / y))
+
+    raises(TypeError, lambda: (x + _x))
+    raises(TypeError, lambda: (x - _x))
+    raises(TypeError, lambda: (x * _x))
+    raises(TypeError, lambda: (x / _x))
+    raises(TypeError, lambda: (_x + x))
+    raises(TypeError, lambda: (_x - x))
+    raises(TypeError, lambda: (_x * x))
+    raises(TypeError, lambda: (_x / x))
+
+
+def test_PowerSeriesRing_from_expr():
+    R = PowerSeriesRingField(QQ, "x", 5)
+    o = R.order_term()
+
+    x = R.gen
+    _x = symbols("x")
+
+    assert R.from_expr(_x) == x
+    assert R.from_expr(1 + _x + 2 * _x**2) == 1 + x + 2 * x**2
+    assert (
+        R.from_expr(2 + 4 * _x + 6 * _x**2 + 6 * _x**3 + _x**5)
+        == 2 + 4 * x + 6 * x**2 + 6 * x**3 + o
+    )
+    assert R.from_expr(_x + O(_x**7)) == x + o
+    assert (
+        R.from_expr(1 + _x + (3 + _x**2) ** (-2) + _x**5)
+        == QQ(10, 9) + x - 2 * x**2 / 27 + x**4 / 27 + x**5 + o
+    )
+
+    raises(ValueError, lambda: R.from_expr(symbols("y") ** 4))
+    raises(ValueError, lambda: R.from_expr(O(symbols("y") ** 4)))
+    raises(ValueError, lambda: R.from_expr(_x ** (-2)))
+    raises(ValueError, lambda: R.from_expr(_x ** (1 / 2)))
+
+
+def test_PowerSeriesRing_ring_new():
+    R = PowerSeriesRingRing(QQ, "x", 5)
+
+    assert R.ring_new(QQ(7)) == R.from_ground(QQ(7))
+    assert R.ring_new(3) == R.from_int(3)
+
+
+def test_PowerSeriesRing_arith(groundring_int):
+    SeriesRing = groundring_int
+    RL = SeriesRing(5)
+    if RL.domain.is_ZZ:
+        RU = PowerSeriesRingRing(RL.domain, "x", 5)
+    else:
+        RU = PowerSeriesRingField(RL.domain, "x", 5)
+    x = RU.gen
+
+    p1 = 1 + 2 * x + 3 * x**2
+    p2 = 4 + 5 * x + 6 * x**2
+    assert RL.equal_repr((p1 + p2).series, RL([5, 7, 9]))
+    assert RL.equal_repr((p2 - p1).series, RL([3, 3, 3]))
+
+    assert RL.equal_repr((x * x).series, RL([0, 0, 1]))
+    assert RL.equal_repr(((1 + x) * (1 + x)).series, RL([1, 2, 1]))
+    assert RL.equal_repr(((1 + 2 * x) * (3 + 4 * x)).series, RL([3, 10, 8]))
+
+    assert RL.equal_repr((x**0).series, RL([1]))
+    assert RL.equal_repr((x**1).series, RL([0, 1]))
+    assert RL.equal_repr((x**3).series, RL([0, 0, 0, 1]))
+    assert RL.equal_repr(((1 + x) ** 2).series, RL([1, 2, 1]))
+    assert RL.equal_repr(((1 + x) ** 3).series, RL([1, 3, 3, 1]))
+
+    p3 = 1 - x + 2 * x**2 + x**6
+    assert RL.equal_repr(p3.series, RL([1, -1, 2, 0, 0, 0, 1]))
+    assert RL.equal_repr((-p3).series, RL([-1, 1, -2, 0, 0, 0, -1]))
+
+    p4 = 2 + 4 * x + 6 * x**2
+    assert RL.equal_repr((p4 / 2).series, RL([1, 2, 3]))
+    assert RL.equal_repr((p4 / (1 + x**2 + x**5)).series, RL([2, 4, 4, -4, -4], 5))
+
+    assert RU.square(1 + x) == (1 + x) ** 2
+    assert RL.equal_repr(RU.square(1 + x).series, RL([1, 2, 1]))
+    assert RL.equal_repr(RU.square(x**2 + 7 * x**3).series, RL([0, 0, 0, 0, 1], 5))
+
+
+def test_PowerSeriesRing_operations_int(groundring_int):
+    SeriesRing = groundring_int
+    RL = SeriesRing(5)
+    if RL.domain.is_ZZ:
+        RU = PowerSeriesRingRing(RL.domain, "x", 5)
+    else:
+        RU = PowerSeriesRingField(RL.domain, "x", 5)
+    x = RU.gen
+
+    assert RL.equal_repr(
+        RU.compose(1 + x**2 + 12 * x**3, x + 7 * x**3).series,
+        RL([1, 0, 1, 12, 14], 5),
+    )
+    assert RL.equal_repr(
+        RU.compose(3 * x**3, x + 2 * x**3 + 2 * x**4).series,
+        RL([0, 0, 0, 3], 5),
+    )
+
+    assert RL.equal_repr(
+        RU.differentiate(x**3 + 2 * x**2 + 3 * x + 4).series, RL([3, 4, 3])
+    )
+    assert RL.equal_repr(
+        RU.differentiate(x**4 + 5 * x**3 + 2 * x).series, RL([2, 0, 15, 4])
+    )
+
+    assert RL.equal_repr(RU.inverse(1 + x).series, RL([1, -1, 1, -1, 1], 5))
+    assert RL.equal_repr(RU.inverse(1 + 2 * x + x**2).series, RL([1, -2, 3, -4, 5], 5))
+
+    assert RL.equal_repr(RU.reversion(x + x**2).series, RL([0, 1, -1, 2, -5], 5))
+    assert RL.equal_repr(
+        RU.reversion(x + 2 * x**2 + x**3).series, RL([0, 1, -2, 7, -30], 5)
+    )
+
+
+def test_PowerSeriesRing_operations_rational(groundring_rational):
+    SeriesRing = groundring_rational
+    R = SeriesRing(5)
+    RU = PowerSeriesRingField(QQ, "x", 5)
+    x = RU.gen
+
+    assert R.equal_repr(
+        RU.compose(
+            QQ(1, 2) + QQ(2, 3) * x**2 + QQ(3, 4) * x**3, x + QQ(1, 5) * x**3
+        ).series,
+        R([QQ(1, 2), QQ(0, 1), QQ(2, 3), QQ(3, 4), QQ(4, 15)], 5),
+    )
+    assert R.equal_repr(
+        RU.compose(
+            QQ(3, 4) + QQ(1, 6) * x**2 + QQ(2, 7) * x**4,
+            x + QQ(3, 8) * x**2 + QQ(1, 9) * x**3,
+        ).series,
+        R([QQ(3, 4), QQ(0, 1), QQ(1, 6), QQ(1, 8), QQ(8375, 24192)], 5),
+    )
+
+    assert R.equal_repr(
+        RU.differentiate(
+            QQ(5, 6)
+            + QQ(2, 3) * x
+            + QQ(4, 7) * x**2
+            + QQ(1, 8) * x**3
+            + QQ(3, 5) * x**4
+        ).series,
+        R([QQ(2, 3), QQ(8, 7), QQ(3, 8), QQ(12, 5)]),
+    )
+    assert R.equal_repr(
+        RU.differentiate(QQ(1, 9) * x**2 + QQ(5, 11) * x**3 + QQ(2, 13) * x**4).series,
+        R([QQ(0, 1), QQ(2, 9), QQ(15, 11), QQ(8, 13)]),
+    )
+
+    p5 = QQ(2, 3) + QQ(1, 4) * x + QQ(3, 5) * x**2
+    assert R.equal_repr(
+        (p5 * RU.inverse(p5)).series,
+        R([QQ(1, 1)], 5),
+    )
+    p6 = QQ(3, 7) + QQ(2, 9) * x + QQ(1, 11) * x**2 + QQ(4, 13) * x**3
+    assert R.equal_repr(
+        (p6 * RU.inverse(p6)).series,
+        R([QQ(1, 1)], 5),
+    )
+
+    p7 = x + QQ(1, 3) * x**2 + QQ(2, 5) * x**3
+    assert R.equal_repr(
+        RU.compose(p7, RU.reversion(p7)).series,
+        R([QQ(0, 1), QQ(1, 1)], 5),
+    )
+    p8 = x + QQ(3, 7) * x**3 + QQ(1, 11) * x**4
+    assert R.equal_repr(
+        RU.compose(p8, RU.reversion(p8)).series,
+        R([QQ(0, 1), QQ(1, 1)], 5),
+    )
+
+    assert R.equal_repr(
+        RU.integrate(
+            QQ(1, 2) + QQ(3, 4) * x + QQ(2, 3) * x**2 + QQ(5, 6) * x**3
+        ).series,
+        R([QQ(0, 1), QQ(1, 2), QQ(3, 8), QQ(2, 9), QQ(5, 24)]),
+    )
+    assert R.equal_repr(
+        RU.integrate(QQ(2, 3) * x**2 + QQ(4, 5) * x**3 + QQ(1, 7) * x**4).series,
+        R([QQ(0, 1), QQ(0, 1), QQ(0, 1), QQ(2, 9), QQ(1, 5), QQ(1, 35)]),
+    )
+
+    assert R.equal_repr(RU.sqrt(x**2 + 2 * x + 1).series, R([1, 1]))
+    assert R.equal_repr(
+        RU.sqrt(1 + 5 * x + 2 * x**2 + 12 * x**3 + 12 * x**5).series,
+        R([QQ(1, 1), QQ(5, 2), QQ(-17, 8), QQ(181, 16), QQ(-3909, 128)], 5),
+    )
+
+
+def test_PowerSeriesRing_series():
+    R = PowerSeriesRingField(QQ, "x", 10)
+    x = R.gen
+    o = R.order_term()
+
+    p1 = x + 2 * x + 3 * x**4
+
+    assert (
+        R.log(1 + p1)
+        == 3 * x
+        - 9 * x**2 / 2
+        + 9 * x**3
+        - 69 * x**4 / 4
+        + 198 * x**5 / 5
+        - 189 * x**6 / 2
+        + 1620 * x**7 / 7
+        - 4653 * x**8 / 8
+        + 1485 * x**9
+        + o
+    )
+    assert R.log1p(p1) == R.log(1 + p1)
+    assert (
+        R.log1p(p1)
+        == 3 * x
+        - 9 * x**2 / 2
+        + 9 * x**3
+        - 69 * x**4 / 4
+        + 198 * x**5 / 5
+        - 189 * x**6 / 2
+        + 1620 * x**7 / 7
+        - 4653 * x**8 / 8
+        + 1485 * x**9
+        + o
+    )
+    assert (
+        R.exp(p1)
+        == 1
+        + 3 * x
+        + 9 * x**2 / 2
+        + 9 * x**3 / 2
+        + 51 * x**4 / 8
+        + 441 * x**5 / 40
+        + 1161 * x**6 / 80
+        + 7803 * x**7 / 560
+        + 66249 * x**8 / 4480
+        + 87939 * x**9 / 4480
+        + o
+    )
+    assert R.expm1(p1) == R.exp(p1) - 1
+    assert (
+        R.expm1(p1)
+        == 3 * x
+        + 9 * x**2 / 2
+        + 9 * x**3 / 2
+        + 51 * x**4 / 8
+        + 441 * x**5 / 40
+        + 1161 * x**6 / 80
+        + 7803 * x**7 / 560
+        + 66249 * x**8 / 4480
+        + 87939 * x**9 / 4480
+        + o
+    )
+    assert (
+        R.atan(p1)
+        == 3 * x
+        - 9 * x**3
+        + 3 * x**4
+        + 243 * x**5 / 5
+        - 27 * x**6
+        - 2187 * x**7 / 7
+        + 243 * x**8
+        + 2160 * x**9
+        + o
+    )
+    assert (
+        R.atanh(p1)
+        == 3 * x
+        + 9 * x**3
+        + 3 * x**4
+        + 243 * x**5 / 5
+        + 27 * x**6
+        + 2187 * x**7 / 7
+        + 243 * x**8
+        + 2214 * x**9
+        + o
+    )
+    assert (
+        R.asin(p1)
+        == 3 * x
+        + 9 * x**3 / 2
+        + 3 * x**4
+        + 729 * x**5 / 40
+        + 27 * x**6 / 2
+        + 10935 * x**7 / 112
+        + 729 * x**8 / 8
+        + 78273 * x**9 / 128
+        + o
+    )
+    assert (
+        R.asinh(p1)
+        == 3 * x
+        - 9 * x**3 / 2
+        + 3 * x**4
+        + 729 * x**5 / 40
+        - 27 * x**6 / 2
+        - 10935 * x**7 / 112
+        + 729 * x**8 / 8
+        + 74817 * x**9 / 128
+        + o
+    )
+    assert (
+        R.tan(p1)
+        == 3 * x
+        + 9 * x**3
+        + 3 * x**4
+        + 162 * x**5 / 5
+        + 27 * x**6
+        + 4131 * x**7 / 35
+        + 162 * x**8
+        + 16011 * x**9 / 35
+        + o
+    )
+    assert (
+        R.tanh(p1)
+        == 3 * x
+        - 9 * x**3
+        + 3 * x**4
+        + 162 * x**5 / 5
+        - 27 * x**6
+        - 4131 * x**7 / 35
+        + 162 * x**8
+        + 14121 * x**9 / 35
+        + o
+    )
+    assert (
+        R.sin(p1)
+        == 3 * x
+        - 9 * x**3 / 2
+        + 3 * x**4
+        + 81 * x**5 / 40
+        - 27 * x**6 / 2
+        - 243 * x**7 / 560
+        + 81 * x**8 / 8
+        - 60237 * x**9 / 4480
+        + o
+    )
+    assert (
+        R.sinh(p1)
+        == 3 * x
+        + 9 * x**3 / 2
+        + 3 * x**4
+        + 81 * x**5 / 40
+        + 27 * x**6 / 2
+        + 243 * x**7 / 560
+        + 81 * x**8 / 8
+        + 60723 * x**9 / 4480
+        + o
+    )
+    assert (
+        R.cos(p1)
+        == 1
+        - 9 * x**2 / 2
+        + 27 * x**4 / 8
+        - 9 * x**5
+        - 81 * x**6 / 80
+        + 27 * x**7 / 2
+        - 19431 * x**8 / 4480
+        - 243 * x**9 / 40
+        + o
+    )
+    assert (
+        R.cosh(p1)
+        == 1
+        + 9 * x**2 / 2
+        + 27 * x**4 / 8
+        + 9 * x**5
+        + 81 * x**6 / 80
+        + 27 * x**7 / 2
+        + 20889 * x**8 / 4480
+        + 243 * x**9 / 40
+        + o
     )
