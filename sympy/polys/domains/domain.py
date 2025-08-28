@@ -6,7 +6,7 @@ from typing import Any, Generic, TypeVar, Protocol, Callable, Iterable, TYPE_CHE
 from sympy.core.numbers import AlgebraicNumber
 from sympy.core import Basic, Expr, sympify
 from sympy.core.sorting import ordered
-from sympy.external.gmpy import GROUND_TYPES
+from sympy.external.gmpy import GROUND_TYPES, MPZ
 from sympy.polys.domains.domainelement import DomainElement
 from sympy.polys.orderings import lex, MonomialOrder
 from sympy.polys.polyerrors import UnificationFailed, CoercionFailed, DomainError
@@ -279,6 +279,7 @@ class Domain(Generic[Er]):
 
     """
 
+    # XXX: Should this be Callable[[int | MPZ], Er]?
     dtype: type[Er] | Callable[..., Er]
     """The type (class) of the elements of this :py:class:`~.Domain`:
 
@@ -542,7 +543,7 @@ class Domain(Generic[Er]):
         """Construct an element of ``self`` domain from ``args``. """
         return self.new(*args)
 
-    def normal(self, *args) -> Er:
+    def normal(self, *args: int | MPZ) -> Er:
         return self.dtype(*args)
 
     def convert_from(self, element: Es, base: Domain[Es]) -> Er:
