@@ -411,7 +411,6 @@ class EUFTheorySolver:
         rep_b = self.cc._find(b_id)
 
         # Find the source disequality
-        source_diseq = None
         for diseq_pair, diseq_cause in self.disequality_causes.items():
             da, db = diseq_pair
             rep_da = self.cc._find(da)
