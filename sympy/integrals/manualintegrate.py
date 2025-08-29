@@ -706,6 +706,17 @@ class PolylogRule(AtomicRule):
 
 
 @dataclass
+class DilogRule(AtomicRule):
+    a: Expr
+    b: Expr
+    c: Expr
+
+    def eval(self) -> Expr:
+        a, b, c, x = self.a, self.b, self.c, self.variable
+        return log(a)*log(abs(x)) - polylog(2, b*x**c/a)/c
+
+
+@dataclass
 class UpperGammaRule(AtomicRule):
     a: Expr
     e: Expr
@@ -1054,6 +1065,7 @@ def special_function_rule(integral):
             (cos, cos(quadratic_pattern, evaluate=False), None, FresnelCRule),
             (Mul, _symbol**e*exp(a*_symbol, evaluate=False), None, UpperGammaRule),
             (Mul, polylog(b, a*_symbol, evaluate=False)/_symbol, None, PolylogRule),
+            (Mul, log(a-b*_symbol**c)/_symbol, None, DilogRule),
             (Pow, 1/sqrt(a - d*sin(_symbol, evaluate=False)**2),
                 lambda a, d: a != d, EllipticFRule),
             (Pow, sqrt(a - d*sin(_symbol, evaluate=False)**2),
