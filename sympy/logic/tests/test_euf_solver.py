@@ -1,7 +1,7 @@
 import pytest
 from sympy.testing.pytest import XFAIL
 from sympy import symbols, Function, Eq, Not, Unequality
-from sympy.logic.algorithms.euf_theory_solver import *
+from sympy.logic.algorithms.euf_theory_solver import EUFTheorySolver, EUFDisequalityContradictionException
 from sympy.assumptions.cnf import CNF, EncodedCNF
 from sympy.logic import boolalg
 from sympy.assumptions.ask import Q
