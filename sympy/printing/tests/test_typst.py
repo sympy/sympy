@@ -453,6 +453,16 @@ def test_typst_sum():
     assert typst(Sum(x**2 + y, (x, -2, 2))**2) == \
         r"(sum_(x=-2)^(2) (x^(2) + y))^(2)"
 
+def test_typst_product():
+    assert typst(Product(x*y**2, (x, -2, 2), (y, -5, 5))) == \
+        r"product_(-2 <= x <= 2 \ -5 <= y <= 5) x y^(2)"
+    assert typst(Product(x**2, (x, -2, 2))) == \
+        r"product_(x=-2)^(2) x^(2)"
+    assert typst(Product(x**2 + y, (x, -2, 2))) == \
+        r"product_(x=-2)^(2) (x^(2) + y)"
+
+    assert typst(Product(x, (x, -2, 2))**2) == \
+        r"(product_(x=-2)^(2) x)^(2)"
 
 def test_typst_symbols():
     Gamma, lmbda, rho = symbols('Gamma, lambda, rho')
@@ -1617,6 +1627,24 @@ def test_typst_with_unevaluated():
     with evaluate(False):
         assert typst(a * a) == r"a a"
 
+def test_typst_indexed():
+    Psi_symbol = Symbol('Psi_0', complex=True, real=False)
+    Psi_indexed = IndexedBase(Symbol('Psi', complex=True, real=False))
+    symbol_typst = typst(Psi_symbol * conjugate(Psi_symbol))
+    indexed_typst = typst(Psi_indexed[0] * conjugate(Psi_indexed[0]))
+    # overline(Psi_(0)) Psi_(0)  vs.  Psi_(0) overline(Psi_(0))
+    assert symbol_typst == r'Psi_(0) overline(Psi_(0))'
+    assert indexed_typst == r'overline(Psi_(0)) Psi_(0)'
+
+    interval = r'.. '
+    assert typst(Indexed('x1', Symbol('i'))) == r'x_1_(i)'
+    assert typst(Indexed('x2', Idx('i'))) == r'x_2_(i)'
+    assert typst(Indexed('x3', Idx('i', Symbol('N')))) == r'x_3_(i_(0.. N - 1))'
+    assert typst(Indexed('x3', Idx('i', Symbol('N')+1))) == r'x_3_(i_(0.. N))'
+    assert typst(Indexed('x4', Idx('i', (Symbol('a'),Symbol('b'))))) == r'x_4_(i_(a.. b))'
+    assert typst(IndexedBase('gamma')) == r'gamma'
+    assert typst(IndexedBase('a b')) == r'"a b"'
+    assert typst(IndexedBase('a_b')) == r'a_(b)'
 
 def test_typst_derivatives():
     # regular "d" for ordinary derivatives

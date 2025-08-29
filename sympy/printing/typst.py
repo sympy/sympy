@@ -13,6 +13,7 @@ from sympy.core.function import Function, AppliedUndef
 from sympy.core.operations import AssocOp
 from sympy.core.power import Pow
 from sympy.core.sorting import default_sort_key
+from sympy.core.sympify import SympifyError
 from sympy.logic.boolalg import true, BooleanTrue, BooleanFalse
 
 from sympy.printing.precedence import precedence_traditional
@@ -711,6 +712,25 @@ class TypstPrinter(Printer):
             typst += self._print(expr.function)
 
         return typst
+    
+    def _print_Product(self, expr):
+        if len(expr.limits) == 1:
+            typ = r"product_(%s=%s)^(%s) " % \
+                tuple([self._print(i) for i in expr.limits[0]])
+        else:
+            def _format_ineq(l):
+                return r"%s <= %s <= %s" % \
+                    tuple([self._print(s) for s in (l[1], l[0], l[2])])
+
+            typ = r"product_(%s) " % \
+                str.join(' \ ', [_format_ineq(l) for l in expr.limits])
+
+        if isinstance(expr.function, Add):
+            typ += r"(%s)" % self._print(expr.function)
+        else:
+            typ += self._print(expr.function)
+
+        return typ
 
     def _print_BasisDependent(self, expr: 'BasisDependent'):
         from sympy.vector import Vector
@@ -741,22 +761,32 @@ class TypstPrinter(Printer):
         else:
             outstr = outstr[1:]
         return outstr
+    
+    def _print_Indexed(self, expr):
+        typ_base = self._print(expr.base)
+        # Remove trailing _(...) from typ_base, but keep _ and its content
+        typ_base = re.sub(r'_\(([^)]*)\)$', r'_\1', typ_base)
+        typ = typ_base+'_(%s)' % ','.join(
+            map(self._print, expr.indices))
+        return typ
 
-    def _print_CoordSystem(self, coordsys):
-        return r'upright(%s)^(upright(%s))_(%s)' % (
-            self._print(coordsys.name), self._print(coordsys.patch.name), self._print(coordsys.manifold)
-        )
+    def _print_IndexedBase(self, expr):
+        return self._print(expr.label)
 
-    def _print_CovarDerivativeOp(self, cvd):
-        return r'nabla_(%s)' % self._print(cvd._wrt)
-
-    def _print_BaseScalarField(self, field):
-        string = field._coord_sys.symbols[field._index].name
-        return r'bold({})'.format(self._print(Symbol(string)))
-
-    def _print_BaseVectorField(self, field):
-        string = field._coord_sys.symbols[field._index].name
-        return r'partial_({})'.format(self._print(Symbol(string)))
+    def _print_Idx(self, expr):
+        label = self._print(expr.label)
+        if expr.upper is not None:
+            upper = self._print(expr.upper)
+            if expr.lower is not None:
+                lower = self._print(expr.lower)
+            else:
+                lower = self._print(S.Zero)
+            interval = '{lower}.. {upper}'.format(
+                    lower = lower, upper = upper)
+            return '{label}_({interval})'.format(
+                label = label, interval = interval)
+        #if no bounds are defined this just prints the label
+        return label
 
     def _print_Derivative(self, expr):
         if requires_partial(expr.expr):
@@ -854,53 +884,6 @@ class TypstPrinter(Printer):
             return r"%s(%s)" % (typst, self._print(e))
         else:
             return r"%s %s" % (typst, self._print(e))
-        
-    def _print_subfactorial(self, expr, exp=None):
-        typ = r"!%s" % self.parenthesize(expr.args[0], PRECEDENCE["Func"])
-
-        if exp is not None:
-            return r"(%s)^(%s)" % (typ, exp)
-        else:
-            return typ
-        
-    def _print_factorial(self, expr, exp=None):
-        typ = r"%s!" % self.parenthesize(expr.args[0], PRECEDENCE["Func"])
-
-        if exp is not None:
-            return r"%s^(%s)" % (typ, exp)
-        else:
-            return typ
-
-    def _print_factorial2(self, expr, exp=None):
-        typ = r"%s!!" % self.parenthesize(expr.args[0], PRECEDENCE["Func"])
-
-        if exp is not None:
-            return r"%s^(%s)" % (typ, exp)
-        else:
-            return typ
-    
-    def _print_binomial(self, expr, exp=None):
-        typst = "binom(%s, %s)" % (self._print(expr.args[0]), self._print(expr.args[1]))
-        if exp is not None:
-            return "%s^(%s)" % (typst, exp)
-        else:
-            return typst
-        
-    def _print_RisingFactorial(self, expr, exp=None):
-        n, k = expr.args
-        base = r"%s" % self.parenthesize(n, PRECEDENCE['Func'])
-
-        typ = r"%s^((%s))" % (base, self._print(k))
-
-        return self._do_exponent(typ, exp)
-
-    def _print_FallingFactorial(self, expr, exp=None):
-        n, k = expr.args
-        sub = r"%s" % self.parenthesize(k, PRECEDENCE['Func'])
-
-        typ = r"(%s)_(%s)" % (self._print(n), sub)
-
-        return self._do_exponent(typ, exp)
 
 
     def _hprint_Function(self, func: str) -> str:
@@ -1259,6 +1242,354 @@ class TypstPrinter(Printer):
     def _print_betainc_regularized(self, expr, exp=None):
         return self._print_betainc(expr, exp, operator='I')
 
+    def _print_uppergamma(self, expr, exp=None):
+        typ = r"(%s, %s)" % (self._print(expr.args[0]),
+                                        self._print(expr.args[1]))
+
+        if exp is not None:
+            return r"Gamma^(%s)%s" % (exp, typ)
+        else:
+            return r"Gamma%s" % typ
+
+    def _print_lowergamma(self, expr, exp=None):
+        typ = r"(%s, %s)" % (self._print(expr.args[0]),
+                                        self._print(expr.args[1]))
+
+        if exp is not None:
+            return r"gamma^(%s)%s" % (exp, typ)
+        else:
+            return r"gamma%s" % typ
+
+    def _hprint_one_arg_func(self, expr, exp=None) -> str:
+        typ = r"(%s)" % self._print(expr.args[0])
+
+        if exp is not None:
+            return r"%s^(%s)%s" % (self._print(expr.func), exp, typ)
+        else:
+            return r"%s%s" % (self._print(expr.func), typ)
+
+    _print_gamma = _hprint_one_arg_func
+
+    def _print_Chi(self, expr, exp=None):
+        typ = r"(%s)" % self._print(expr.args[0])
+
+        if exp is not None:
+            return r'upright("Chi")^{%s}%s' % (exp, typ)
+        else:
+            return r'upright("Chi")%s' % typ
+
+    def _print_expint(self, expr, exp=None):
+        typ = r"(%s)" % self._print(expr.args[1])
+        nu = self._print(expr.args[0])
+
+        if exp is not None:
+            return r"upright(E)_(%s)^(%s)%s" % (nu, exp, typ)
+        else:
+            return r"upright(E)_(%s)%s" % (nu, typ)
+
+    def _print_fresnels(self, expr, exp=None):
+        typ = r"(%s)" % self._print(expr.args[0])
+
+        if exp is not None:
+            return r"S^(%s)%s" % (exp, typ)
+        else:
+            return r"S%s" % typ
+
+    def _print_fresnelc(self, expr, exp=None):
+        typ = r"(%s)" % self._print(expr.args[0])
+
+        if exp is not None:
+            return r"C^(%s)%s" % (exp, typ)
+        else:
+            return r"C%s" % typ
+
+    def _print_subfactorial(self, expr, exp=None):
+        typ = r"!%s" % self.parenthesize(expr.args[0], PRECEDENCE["Func"])
+
+        if exp is not None:
+            return r"(%s)^(%s)" % (typ, exp)
+        else:
+            return typ
+        
+    def _print_factorial(self, expr, exp=None):
+        typ = r"%s!" % self.parenthesize(expr.args[0], PRECEDENCE["Func"])
+
+        if exp is not None:
+            return r"%s^(%s)" % (typ, exp)
+        else:
+            return typ
+
+    def _print_factorial2(self, expr, exp=None):
+        typ = r"%s!!" % self.parenthesize(expr.args[0], PRECEDENCE["Func"])
+
+        if exp is not None:
+            return r"%s^(%s)" % (typ, exp)
+        else:
+            return typ
+    
+    def _print_binomial(self, expr, exp=None):
+        typst = "binom(%s, %s)" % (self._print(expr.args[0]), self._print(expr.args[1]))
+        if exp is not None:
+            return "%s^(%s)" % (typst, exp)
+        else:
+            return typst
+        
+    def _print_RisingFactorial(self, expr, exp=None):
+        n, k = expr.args
+        base = r"%s" % self.parenthesize(n, PRECEDENCE['Func'])
+
+        typ = r"%s^((%s))" % (base, self._print(k))
+
+        return self._do_exponent(typ, exp)
+
+    def _print_FallingFactorial(self, expr, exp=None):
+        n, k = expr.args
+        sub = r"%s" % self.parenthesize(k, PRECEDENCE['Func'])
+
+        typ = r"(%s)_(%s)" % (self._print(n), sub)
+
+        return self._do_exponent(typ, exp)
+
+    def _hprint_BesselBase(self, expr, exp, sym: str) -> str:
+        typ = r"%s" % (sym)
+
+        need_exp = False
+        if exp is not None:
+            if typ.find('^') == -1:
+                typ = r"%s^(%s)" % (typ, exp)
+            else:
+                need_exp = True
+
+        typ = r"%s_(%s})(%s)" % (typ, self._print(expr.order),
+                                           self._print(expr.argument))
+
+        if need_exp:
+            typ = self._do_exponent(typ, exp)
+        return typ
+
+    def _hprint_vec(self, vec) -> str:
+        if not vec:
+            return ""
+        s = ""
+        for i in vec[:-1]:
+            s += "%s, " % self._print(i)
+        s += self._print(vec[-1])
+        return s
+
+    def _print_besselj(self, expr, exp=None):
+        return self._hprint_BesselBase(expr, exp, 'J')
+
+    def _print_besseli(self, expr, exp=None):
+        return self._hprint_BesselBase(expr, exp, 'I')
+
+    def _print_besselk(self, expr, exp=None):
+        return self._hprint_BesselBase(expr, exp, 'K')
+
+    def _print_bessely(self, expr, exp=None):
+        return self._hprint_BesselBase(expr, exp, 'Y')
+
+    def _print_yn(self, expr, exp=None):
+        return self._hprint_BesselBase(expr, exp, 'y')
+
+    def _print_jn(self, expr, exp=None):
+        return self._hprint_BesselBase(expr, exp, 'j')
+
+    def _print_hankel1(self, expr, exp=None):
+        return self._hprint_BesselBase(expr, exp, 'H^((1))')
+
+    def _print_hankel2(self, expr, exp=None):
+        return self._hprint_BesselBase(expr, exp, 'H^((2))')
+
+    def _print_hn1(self, expr, exp=None):
+        return self._hprint_BesselBase(expr, exp, 'h^((1))')
+
+    def _print_hn2(self, expr, exp=None):
+        return self._hprint_BesselBase(expr, exp, 'h^((2))')
+
+    def _hprint_airy(self, expr, exp=None, notation="") -> str:
+        typ = r"(%s)" % self._print(expr.args[0])
+
+        if exp is not None:
+            return r"%s^(%s)%s" % (notation, exp, typ)
+        else:
+            return r"%s%s" % (notation, typ)
+
+    def _hprint_airy_prime(self, expr, exp=None, notation="") -> str:
+        typ = r"(%s)" % self._print(expr.args[0])
+
+        if exp is not None:
+            return r"(%s^prime)^(%s)%s" % (notation, exp, typ)
+        else:
+            return r"%s^prime%s" % (notation, typ)
+
+    def _print_airyai(self, expr, exp=None):
+        return self._hprint_airy(expr, exp, 'Ai')
+
+    def _print_airybi(self, expr, exp=None):
+        return self._hprint_airy(expr, exp, 'Bi')
+
+    def _print_airyaiprime(self, expr, exp=None):
+        return self._hprint_airy_prime(expr, exp, 'Ai')
+
+    def _print_airybiprime(self, expr, exp=None):
+        return self._hprint_airy_prime(expr, exp, 'Bi')
+
+    def _print_hyper(self, expr, exp=None):
+        tex = r'scripts("")_(%s)F_(%s)(mat(delim: "[", %s; %s)' \
+              r'| %s)' % \
+            (self._print(len(expr.ap)), self._print(len(expr.bq)),
+              self._hprint_vec(expr.ap), self._hprint_vec(expr.bq),
+              self._print(expr.argument))
+
+        if exp is not None:
+            tex = r"(%s)^(%s)" % (tex, exp)
+        return tex
+
+    def _print_meijerg(self, expr, exp=None):
+        tex = r'G_(%s, %s)^(%s, %s)(mat(delim: "[", %s, %s;' \
+              r'%s , %s) | %s)' % \
+            (self._print(len(expr.ap)), self._print(len(expr.bq)),
+              self._print(len(expr.bm)), self._print(len(expr.an)),
+              self._hprint_vec(expr.an), self._hprint_vec(expr.aother),
+              self._hprint_vec(expr.bm), self._hprint_vec(expr.bother),
+              self._print(expr.argument))
+
+        if exp is not None:
+            tex = r"(%s)^(%s)" % (tex, exp)
+        return tex
+
+    def _print_dirichlet_eta(self, expr, exp=None):
+        tex = r"(%s)" % self._print(expr.args[0])
+        if exp is not None:
+            return r"eta^(%s)%s" % (exp, tex)
+        return r"eta%s" % tex
+
+    def _print_zeta(self, expr, exp=None):
+        if len(expr.args) == 2:
+            tex = r"(%s, %s)" % tuple(map(self._print, expr.args))
+        else:
+            tex = r"(%s)" % self._print(expr.args[0])
+        if exp is not None:
+            return r"zeta^(%s)%s" % (exp, tex)
+        return r"zeta%s" % tex
+
+    def _print_stieltjes(self, expr, exp=None):
+        if len(expr.args) == 2:
+            tex = r'scripts("")_(%s)(%s)' % tuple(map(self._print, expr.args))
+        else:
+            tex = r'_(%s)' % self._print(expr.args[0])
+        if exp is not None:
+            return r"gamma%s^(%s)" % (tex, exp)
+        return r"gamma%s" % tex
+
+    def _print_lerchphi(self, expr, exp=None):
+        tex = r"(%s, %s, %s)" % tuple(map(self._print, expr.args))
+        if exp is None:
+            return r"Phi%s" % tex
+        return r"Phi^(%s)%s" % (exp, tex)
+
+    def _print_polylog(self, expr, exp=None):
+        s, z = map(self._print, expr.args)
+        tex = r"(%s)" % z
+        if exp is None:
+            return r'upright("Li")_(%s)%s' % (s, tex)
+        return r'upright("Li")_(%s)^(%s)%s' % (s, exp, tex)
+
+    def _print_jacobi(self, expr, exp=None):
+        n, a, b, x = map(self._print, expr.args)
+        tex = r"P_(%s)^(%s,%s)(%s)" % (n, a, b, x)
+        if exp is not None:
+            tex = r"(" + tex + r")^(%s)" % (exp)
+        return tex
+
+    def _print_gegenbauer(self, expr, exp=None):
+        n, a, x = map(self._print, expr.args)
+        tex = r"C_(%s)^((%s))(%s)" % (n, a, x)
+        if exp is not None:
+            tex = r"(" + tex + r")^(%s)" % (exp)
+        return tex
+
+    def _print_chebyshevt(self, expr, exp=None):
+        n, x = map(self._print, expr.args)
+        tex = r"T_(%s)(%s)" % (n, x)
+        if exp is not None:
+            tex = r"(" + tex + r")^(%s)" % (exp)
+        return tex
+
+    def _print_chebyshevu(self, expr, exp=None):
+        n, x = map(self._print, expr.args)
+        tex = r"U_(%s)(%s)" % (n, x)
+        if exp is not None:
+            tex = r"(" + tex + r")^(%s)" % (exp)
+        return tex
+
+    def _print_legendre(self, expr, exp=None):
+        n, x = map(self._print, expr.args)
+        tex = r"P_(%s)(%s)" % (n, x)
+        if exp is not None:
+            tex = r"(" + tex + r")^(%s)" % (exp)
+        return tex
+
+    def _print_assoc_legendre(self, expr, exp=None):
+        n, a, x = map(self._print, expr.args)
+        tex = r"P_(%s)^(%s)(%s)" % (n, a, x)
+        if exp is not None:
+            tex = r"(" + tex + r")^(%s)" % (exp)
+        return tex
+
+    def _print_hermite(self, expr, exp=None):
+        n, x = map(self._print, expr.args)
+        tex = r"H_(%s)(%s)" % (n, x)
+        if exp is not None:
+            tex = r"(" + tex + r")^(%s)" % (exp)
+        return tex
+
+    def _print_laguerre(self, expr, exp=None):
+        n, x = map(self._print, expr.args)
+        tex = r"L_(%s)(%s)" % (n, x)
+        if exp is not None:
+            tex = r"(" + tex + r")^(%s)" % (exp)
+        return tex
+
+    def _print_assoc_laguerre(self, expr, exp=None):
+        n, a, x = map(self._print, expr.args)
+        tex = r"L_(%s)^(%s)(%s)" % (n, a, x)
+        if exp is not None:
+            tex = r"(" + tex + r")^(%s)" % (exp)
+        return tex
+
+    def _print_Ynm(self, expr, exp=None):
+        n, m, theta, phi = map(self._print, expr.args)
+        tex = r"Y_(%s)^(%s)(%s,%s)" % (n, m, theta, phi)
+        if exp is not None:
+            tex = r"(" + tex + r")^(%s)" % (exp)
+        return tex
+
+    def _print_Znm(self, expr, exp=None):
+        n, m, theta, phi = map(self._print, expr.args)
+        tex = r"Z_(%s)^(%s)(%s,%s)" % (n, m, theta, phi)
+        if exp is not None:
+            tex = r"(" + tex + r")^(%s)" % (exp)
+        return tex
+
+    def __print_mathieu_functions(self, character, args, prime=False, exp=None):
+        a, q, z = map(self._print, args)
+        sup = r"^(prime)" if prime else ""
+        exp = "" if not exp else "^(%s)" % exp
+        return r"%s%s(%s, %s, %s)%s" % (character, sup, a, q, z, exp)
+
+    def _print_mathieuc(self, expr, exp=None):
+        return self.__print_mathieu_functions("C", expr.args, exp=exp)
+
+    def _print_mathieus(self, expr, exp=None):
+        return self.__print_mathieu_functions("S", expr.args, exp=exp)
+
+    def _print_mathieucprime(self, expr, exp=None):
+        return self.__print_mathieu_functions("C", expr.args, prime=True, exp=exp)
+
+    def _print_mathieusprime(self, expr, exp=None):
+        return self.__print_mathieu_functions("S", expr.args, prime=True, exp=exp)
+
     def _print_Rational(self, expr):
         if expr.q != 1:
             sign = ""
@@ -1271,19 +1602,6 @@ class TypstPrinter(Printer):
             return r"%s%d/%d" % (sign, p, expr.q)
         else:
             return self._print(expr.p)
-
-    def _print_Piecewise(self, expr):
-        ecpairs = [r'%s & upright("for") %s' % (self._print(e), self._print(c))
-                   for e, c in expr.args[:-1]]
-        if expr.args[-1].cond == true:
-            ecpairs.append(r'%s & upright("otherwise")' %
-                           self._print(expr.args[-1].expr))
-        else:
-            ecpairs.append(r'%s & upright("for") %s' %
-                           (self._print(expr.args[-1].expr),
-                            self._print(expr.args[-1].cond)))
-        typ = r'cases( %s )'
-        return typ % r', '.join(ecpairs)
     
     def _print_Order(self, expr):
         s = self._print(expr.expr)
@@ -1374,6 +1692,19 @@ class TypstPrinter(Printer):
         return "%s %s %s" % (self._print(expr.lhs),
                              charmap[expr.rel_op], self._print(expr.rhs))
 
+    def _print_Piecewise(self, expr):
+        ecpairs = [r'%s & upright("for") %s' % (self._print(e), self._print(c))
+                   for e, c in expr.args[:-1]]
+        if expr.args[-1].cond == true:
+            ecpairs.append(r'%s & upright("otherwise")' %
+                           self._print(expr.args[-1].expr))
+        else:
+            ecpairs.append(r'%s & upright("for") %s' %
+                           (self._print(expr.args[-1].expr),
+                            self._print(expr.args[-1].cond)))
+        typ = r'cases( %s )'
+        return typ % r', '.join(ecpairs)
+
     def _print_matrix_contents(self, expr):
         lines = []
 
@@ -1450,24 +1781,6 @@ class TypstPrinter(Printer):
                 return r"(%s)^(%s)" % (s, adjoint_style)
             else:
                 return r"%s^(%s)" % (s, adjoint_style)
-            
-    def _print_uppergamma(self, expr, exp=None):
-        typ = r"(%s, %s)" % (self._print(expr.args[0]),
-                                        self._print(expr.args[1]))
-
-        if exp is not None:
-            return r"Gamma^(%s)%s" % (exp, typ)
-        else:
-            return r"Gamma%s" % typ
-
-    def _print_lowergamma(self, expr, exp=None):
-        typ = r"(%s, %s)" % (self._print(expr.args[0]),
-                                        self._print(expr.args[1]))
-
-        if exp is not None:
-            return r"gamma^(%s)%s" % (exp, typ)
-        else:
-            return r"gamma%s" % typ
 
     def _print_MatMul(self, expr):
         from sympy import MatMul
@@ -1499,7 +1812,37 @@ class TypstPrinter(Printer):
                 return r"|(%s)|" % self._print_matrix_contents(mat.blocks)
             return r"|(%s)|" % self._print(mat)
         return r"|(%s)|" % self._print_matrix_contents(mat)
-    
+
+    def _print_Mod(self, expr, exp=None):
+        if exp is not None:
+            return r'(%s mod %s)^(%s)' % \
+                (self.parenthesize(expr.args[0], PRECEDENCE['Mul'],
+                                   strict=True),
+                 self.parenthesize(expr.args[1], PRECEDENCE['Mul'],
+                                   strict=True),
+                 exp)
+        return r'%s mod %s' % (self.parenthesize(expr.args[0],
+                                                   PRECEDENCE['Mul'],
+                                                   strict=True),
+                                 self.parenthesize(expr.args[1],
+                                                   PRECEDENCE['Mul'],
+                                                   strict=True))
+
+    def _print_HadamardProduct(self, expr):
+        args = expr.args
+        prec = PRECEDENCE['Pow']
+        parens = self.parenthesize
+
+        return r' circle.small '.join(
+            (parens(arg, prec, strict=True) for arg in args))
+
+    def _print_HadamardPower(self, expr):
+        if precedence_traditional(expr.exp) < PRECEDENCE["Mul"]:
+            template = r"%s^(circle.small (%s))"
+        else:
+            template = r"%s^(circle.small %s)"
+        return self._helper_print_standard_power(expr, template)
+
     def _print_KroneckerProduct(self, expr):
         args = expr.args
         prec = PRECEDENCE['Pow']
@@ -1657,53 +2000,6 @@ class TypstPrinter(Printer):
                 " ".join([r"partial %s" % self._print(i) for i in expr.variables]),
                 self.parenthesize(expr.expr, PRECEDENCE["Mul"], False)
             )
-        
-    def _print_Manifold(self, manifold):
-        string = manifold.name.name
-        if '{' in string:
-            name, supers, subs = string, [], []
-        else:
-            name, supers, subs = split_super_sub(string)
-
-            name = translate(name)
-            supers = [translate(sup) for sup in supers]
-            subs = [translate(sub) for sub in subs]
-
-        name = r'upright("%s")' % name
-        if supers:
-            name += "^(%s)" % " ".join(supers)
-        if subs:
-            name += "_(%s)" % " ".join(subs)
-
-        return name
-
-    def _print_Patch(self, patch):
-        return r'upright("%s")_(%s)' % (self._print(patch.name), self._print(patch.manifold))
-
-    def _print_CoordSystem(self, coordsys):
-        return r'upright("%s")^(upright("%s"))_(%s)' % (
-            self._print(coordsys.name), self._print(coordsys.patch.name), self._print(coordsys.manifold)
-        )
-
-    def _print_CovarDerivativeOp(self, cvd):
-        return r'nabla_(%s)' % self._print(cvd._wrt)
-
-    def _print_BaseScalarField(self, field):
-        string = field._coord_sys.symbols[field._index].name
-        return r'bold({})'.format(self._print(Symbol(string)))
-
-    def _print_BaseVectorField(self, field):
-        string = field._coord_sys.symbols[field._index].name
-        return r'partial_({})'.format(self._print(Symbol(string)))
-
-    def _print_Differential(self, diff):
-        field = diff._form_field
-        if hasattr(field, '_coord_sys'):
-            string = field._coord_sys.symbols[field._index].name
-            return r'upright(d){}'.format(self._print(Symbol(string)))
-        else:
-            string = self._print(field)
-            return r'upright(d)({})'.format(string)
 
     def _print_ArraySymbol(self, expr):
         return self._print(expr.name)
@@ -1713,6 +2009,18 @@ class TypstPrinter(Printer):
             self.parenthesize(expr.name, PRECEDENCE["Func"], True),
             ", ".join([f"{self._print(i)}" for i in expr.indices]))
     
+    def _print_UniversalSet(self, expr):
+        return r"UU"
+
+    def _print_frac(self, expr, exp=None):
+        if exp is None:
+            return r'upright("frac")((%s))' % self._print(expr.args[0])
+        else:
+            return r'upright("frac")((%s))^(%s)' % (
+                    self._print(expr.args[0]), exp)
+
+
+
     def _print_tuple(self, expr):
         if self._settings['decimal_separator'] == 'comma':
             sep = ";"
@@ -1764,9 +2072,70 @@ class TypstPrinter(Printer):
         return self._print_dict(expr)
     
 
+
+    def _print_DiracDelta(self, expr, exp=None):
+        if len(expr.args) == 1 or expr.args[1] == 0:
+            typ = r"delta(%s)" % self._print(expr.args[0])
+        else:
+            typ = r"delta^((%s))(%s)" % (
+                self._print(expr.args[1]), self._print(expr.args[0]))
+        if exp:
+            typ = r"(%s)^(%s)ß" % (typ, exp)
+        return typ
+
+    def _print_SingularityFunction(self, expr, exp=None):
+        shift = self._print(expr.args[0] - expr.args[1])
+        power = self._print(expr.args[2])
+        typ = r"angle.l %s angle.r ^ (%s)" % (shift, power)
+        if exp is not None:
+            typ = r"(angle.l %s angle.r ^ (%s))^(%s)" % (shift, power, exp)
+        return typ
+
+
+    def _print_Heaviside(self, expr, exp=None):
+        pargs = ', '.join(self._print(arg) for arg in expr.pargs)
+        typ = r"theta(%s)" % pargs
+        if exp:
+            typ = r"(%s)^(%s)" % (typ, exp)
+        return typ
+
+    def _print_KroneckerDelta(self, expr, exp=None):
+        i = self._print(expr.args[0])
+        j = self._print(expr.args[1])
+        if expr.args[0].is_Atom and expr.args[1].is_Atom:
+            typ = r'delta_(%s %s)' % (i, j)
+        else:
+            typ = r'delta_(%s, %s)' % (i, j)
+        if exp is not None:
+            typ = r'(%s)^(%s)' % (typ, exp)
+        return typ
+
+    def _print_LeviCivita(self, expr, exp=None):
+        indices = map(self._print, expr.args)
+        if all(x.is_Atom for x in expr.args):
+            typ = r'epsilon_(%s)' % " ".join(indices)
+        else:
+            typ = r'epsilon_(%s)' % ", ".join(indices)
+        if exp:
+            typ = r'(%s)^(%s)' % (typ, exp)
+        return typ
+
+    def _print_RandomDomain(self, d):
+        if hasattr(d, 'as_boolean'):
+            return 'upright("Domain: ")' + self._print(d.as_boolean())
+        elif hasattr(d, 'set'):
+            return ('upright("Domain: ")' + self._print(d.symbols) + ' in ' +
+                    self._print(d.set))
+        elif hasattr(d, 'symbols'):
+            return 'upright("Domain on ")' + self._print(d.symbols)
+        else:
+            return self._print(None)
+
+
     def _print_FiniteSet(self, s):
         items = sorted(s.args, key=default_sort_key)
         return self._print_set(items)
+
 
     def _print_set(self, s):
         items = sorted(s, key=default_sort_key)
@@ -1776,15 +2145,170 @@ class TypstPrinter(Printer):
             items = ", ".join(map(self._print, items))
         else:
             raise ValueError('Unknown Decimal Separator')
-        return r"{%s}" % items
+        return r"(%s)" % items
 
-    def _print_SingularityFunction(self, expr, exp=None):
-        shift = self._print(expr.args[0] - expr.args[1])
-        power = self._print(expr.args[2])
-        typ = r"angle.l %s angle.r ^ (%s)" % (shift, power)
+    _print_frozenset = _print_set
+
+    def _print_Range(self, s):
+        def _print_symbolic_range():
+            # Symbolic Range that cannot be resolved
+            if s.args[0] == 0:
+                if s.args[2] == 1:
+                    cont = self._print(s.args[1])
+                else:
+                    cont = ", ".join(self._print(arg) for arg in s.args)
+            else:
+                if s.args[2] == 1:
+                    cont = ", ".join(self._print(arg) for arg in s.args[:2])
+                else:
+                    cont = ", ".join(self._print(arg) for arg in s.args)
+
+            return r'upright("Range")(%s)' % cont
+
+        dots = object()
+
+        if s.start.is_infinite and s.stop.is_infinite:
+            if s.step.is_positive:
+                printset = dots, -1, 0, 1, dots
+            else:
+                printset = dots, 1, 0, -1, dots
+        elif s.start.is_infinite:
+            printset = dots, s[-1] - s.step, s[-1]
+        elif s.stop.is_infinite:
+            it = iter(s)
+            printset = next(it), next(it), dots
+        elif s.is_empty is not None:
+            if (s.size < 4) == True:
+                printset = tuple(s)
+            elif s.is_iterable:
+                it = iter(s)
+                printset = next(it), next(it), dots, s[-1]
+            else:
+                return _print_symbolic_range()
+        else:
+            return _print_symbolic_range()
+        return (r"{" +
+                r", ".join(self._print(el) if el is not dots else r'dots.l' for el in printset) +
+                r"}")
+
+    def __print_number_polynomial(self, expr, letter, exp=None):
+        if len(expr.args) == 2:
+            if exp is not None:
+                return r"%s_(%s)^(%s)(%s)" % (letter,
+                            self._print(expr.args[0]), exp,
+                            self._print(expr.args[1]))
+            return r"%s_(%s)(%s)" % (letter,
+                        self._print(expr.args[0]), self._print(expr.args[1]))
+
+        tex = r"%s_(%s)" % (letter, self._print(expr.args[0]))
         if exp is not None:
-            typ = r"(angle.l %s angle.r ^ (%s))^(%s)" % (shift, power, exp)
-        return typ
+            tex = r"%s^(%s)" % (tex, exp)
+        return tex
+
+    def _print_bernoulli(self, expr, exp=None):
+        return self.__print_number_polynomial(expr, "B", exp)
+
+    def _print_genocchi(self, expr, exp=None):
+        return self.__print_number_polynomial(expr, "G", exp)
+
+    def _print_bell(self, expr, exp=None):
+        if len(expr.args) == 3:
+            tex1 = r"B_(%s, %s)" % (self._print(expr.args[0]),
+                                self._print(expr.args[1]))
+            tex2 = r"(%s)" % r", ".join(self._print(el) for
+                                               el in expr.args[2])
+            if exp is not None:
+                tex = r"%s^(%s)%s" % (tex1, exp, tex2)
+            else:
+                tex = tex1 + tex2
+            return tex
+        return self.__print_number_polynomial(expr, "B", exp)
+
+    def _print_fibonacci(self, expr, exp=None):
+        return self.__print_number_polynomial(expr, "F", exp)
+
+    def _print_lucas(self, expr, exp=None):
+        tex = r"L_(%s)" % self._print(expr.args[0])
+        if exp is not None:
+            tex = r"%s^(%s)" % (tex, exp)
+        return tex
+
+    def _print_tribonacci(self, expr, exp=None):
+        return self.__print_number_polynomial(expr, "T", exp)
+
+    def _print_mobius(self, expr, exp=None):
+        if exp is None:
+            return r'mu(%s)' % self._print(expr.args[0])
+        return r'mu^(%s)(%s)' % (exp, self._print(expr.args[0]))
+
+    def _print_SeqFormula(self, s):
+        dots = object()
+        if len(s.start.free_symbols) > 0 or len(s.stop.free_symbols) > 0:
+            return r"{%s}_(%s=%s)^(%s)" % (
+                self._print(s.formula),
+                self._print(s.variables[0]),
+                self._print(s.start),
+                self._print(s.stop)
+            )
+        if s.start is S.NegativeInfinity:
+            stop = s.stop
+            printset = (dots, s.coeff(stop - 3), s.coeff(stop - 2),
+                        s.coeff(stop - 1), s.coeff(stop))
+        elif s.stop is S.Infinity or s.length > 4:
+            printset = s[:4]
+            printset.append(dots)
+        else:
+            printset = tuple(s)
+
+        return (r"[" +
+                r", ".join(self._print(el) if el is not dots else r'dots.l' for el in printset) +
+                r"]")
+
+    _print_SeqPer = _print_SeqFormula
+    _print_SeqAdd = _print_SeqFormula
+    _print_SeqMul = _print_SeqFormula
+
+    def _print_Interval(self, i):
+        if i.start == i.end:
+            return r"{%s}" % self._print(i.start)
+
+        else:
+            if i.left_open:
+                left = '('
+            else:
+                left = '['
+
+            if i.right_open:
+                right = ')'
+            else:
+                right = ']'
+
+            return r"%s%s, %s%s" % \
+                   (left, self._print(i.start), self._print(i.end), right)
+
+    def _print_AccumulationBounds(self, i):
+        return r"angle.l %s, %s angle.r" % \
+                (self._print(i.min), self._print(i.max))
+
+    def _print_Union(self, u):
+        prec = precedence_traditional(u)
+        args_str = [self.parenthesize(i, prec) for i in u.args]
+        return r" union ".join(args_str)
+
+    def _print_Complement(self, u):
+        prec = precedence_traditional(u)
+        args_str = [self.parenthesize(i, prec) for i in u.args]
+        return r" without ".join(args_str)
+
+    def _print_Intersection(self, u):
+        prec = precedence_traditional(u)
+        args_str = [self.parenthesize(i, prec) for i in u.args]
+        return r" inter ".join(args_str)
+
+    def _print_SymmetricDifference(self, u):
+        prec = precedence_traditional(u)
+        args_str = [self.parenthesize(i, prec) for i in u.args]
+        return r" triangle ".join(args_str)
 
     def _print_ProductSet(self, p):
         prec = precedence_traditional(p)
@@ -1886,8 +2410,195 @@ class TypstPrinter(Printer):
         inv = ""
         if not expr.is_Poly:
             inv = r"S_<^{-1}"
-        return r"%s%s\left[%s\right]" % (inv, domain, symbols)
-    
+        return r"%s%s[%s]" % (inv, domain, symbols)
+
+    def _print_Poly(self, poly):
+        cls = poly.__class__.__name__
+        terms = []
+        for monom, coeff in poly.terms():
+            s_monom = ''
+            for i, exp in enumerate(monom):
+                if exp > 0:
+                    if exp == 1:
+                        s_monom += self._print(poly.gens[i])
+                    else:
+                        s_monom += self._print(pow(poly.gens[i], exp))
+
+            if coeff.is_Add:
+                if s_monom:
+                    s_coeff = r"(%s)" % self._print(coeff)
+                else:
+                    s_coeff = self._print(coeff)
+            else:
+                if s_monom:
+                    if coeff is S.One:
+                        terms.extend(['+', s_monom])
+                        continue
+
+                    if coeff is S.NegativeOne:
+                        terms.extend(['-', s_monom])
+                        continue
+
+                s_coeff = self._print(coeff)
+
+            if not s_monom:
+                s_term = s_coeff
+            else:
+                s_term = s_coeff + " " + s_monom
+
+            if s_term.startswith('-'):
+                terms.extend(['-', s_term[1:]])
+            else:
+                terms.extend(['+', s_term])
+
+        if terms[0] in ('-', '+'):
+            modifier = terms.pop(0)
+
+            if modifier == '-':
+                terms[0] = '-' + terms[0]
+
+        expr = ' '.join(terms)
+        gens = list(map(self._print, poly.gens))
+        domain = "domain=%s" % self._print(poly.get_domain())
+
+        args = ", ".join([expr] + gens + [domain])
+        if cls in accepted_typst_functions:
+            typ = r"\%s {\left(%s \right)}" % (cls, args)
+        else:
+            typ = r"\operatorname{%s}{\left( %s \right)}" % (cls, args)
+
+        return typ
+
+    def _print_ComplexRootOf(self, root):
+        cls = root.__class__.__name__
+        if cls == "ComplexRootOf":
+            cls = "CRootOf"
+        expr = self._print(root.expr)
+        index = root.index
+        if cls in accepted_typst_functions:
+            return r"%s(%s, %d)" % (cls, expr, index)
+        else:
+            return r'upright("%s")(%s, %d)' % (cls, expr,
+                                                                 index)
+
+    def _print_RootSum(self, expr):
+        cls = expr.__class__.__name__
+        args = [self._print(expr.expr)]
+
+        if expr.fun is not S.IdentityFunction:
+            args.append(self._print(expr.fun))
+
+        if cls in accepted_typst_functions:
+            return r"%s(%s)" % (cls, ", ".join(args))
+        else:
+            return r'upright("%s")(%s)' % (cls,
+                                                             ", ".join(args))
+
+    def _print_OrdinalOmega(self, expr):
+        return r"omega"
+
+    def _print_OmegaPower(self, expr):
+        exp, mul = expr.args
+        if mul != 1:
+            if exp != 1:
+                return r"{} omega^({})".format(mul, exp)
+            else:
+                return r"{} omega".format(mul)
+        else:
+            if exp != 1:
+                return r"omega^({})".format(exp)
+            else:
+                return r"omega"
+
+    def _print_Ordinal(self, expr):
+        return " + ".join([self._print(arg) for arg in expr.args])
+
+    def _print_PolyElement(self, poly):
+        mul_symbol = self._settings['mul_symbol_typst']
+        return poly.str(self, PRECEDENCE, "(%s)^(%d)", mul_symbol)
+
+    def _print_FracElement(self, frac):
+        if frac.denom == 1:
+            return self._print(frac.numer)
+        else:
+            numer = self._print(frac.numer)
+            denom = self._print(frac.denom)
+            return r"frac(%s, %s)" % (numer, denom)
+
+    def _print_euler(self, expr, exp=None):
+        m, x = (expr.args[0], None) if len(expr.args) == 1 else expr.args
+        typ = r"E_(%s)" % self._print(m)
+        if exp is not None:
+            typ = r"%s^(%s)" % (typ, exp)
+        if x is not None:
+            typ = r"%s(%s)" % (typ, self._print(x))
+        return typ
+
+    def _print_catalan(self, expr, exp=None):
+        typ = r"C_(%s)" % self._print(expr.args[0])
+        if exp is not None:
+            typ = r"%s^(%s)" % (typ, exp)
+        return typ
+
+    def _print_UnifiedTransform(self, expr, s, inverse=False):
+        return r"cal({}){}_({})[{}]({})".format(s, '^(-1)' if inverse else '', self._print(expr.args[1]), self._print(expr.args[0]), self._print(expr.args[2]))
+
+    def _print_MellinTransform(self, expr):
+        return self._print_UnifiedTransform(expr, 'M')
+
+    def _print_InverseMellinTransform(self, expr):
+        return self._print_UnifiedTransform(expr, 'M', True)
+
+    def _print_LaplaceTransform(self, expr):
+        return self._print_UnifiedTransform(expr, 'L')
+
+    def _print_InverseLaplaceTransform(self, expr):
+        return self._print_UnifiedTransform(expr, 'L', True)
+
+    def _print_FourierTransform(self, expr):
+        return self._print_UnifiedTransform(expr, 'F')
+
+    def _print_InverseFourierTransform(self, expr):
+        return self._print_UnifiedTransform(expr, 'F', True)
+
+    def _print_SineTransform(self, expr):
+        return self._print_UnifiedTransform(expr, 'SIN')
+
+    def _print_InverseSineTransform(self, expr):
+        return self._print_UnifiedTransform(expr, 'SIN', True)
+
+    def _print_CosineTransform(self, expr):
+        return self._print_UnifiedTransform(expr, 'COS')
+
+    def _print_InverseCosineTransform(self, expr):
+        return self._print_UnifiedTransform(expr, 'COS', True)
+
+    def _print_DMP(self, p):
+        try:
+            if p.ring is not None:
+                # TODO incorporate order
+                return self._print(p.ring.to_sympy(p))
+        except SympifyError:
+            pass
+        return self._print(repr(p))
+
+    def _print_DMF(self, p):
+        return self._print_DMP(p)
+
+    def _print_Object(self, object):
+        return self._print(Symbol(object.name))
+
+    def _print_LambertW(self, expr, exp=None):
+        arg0 = self._print(expr.args[0])
+        exp = r"^(%s)" % (exp,) if exp is not None else ""
+        if len(expr.args) == 1:
+            result = r"W%s(%s)" % (exp, arg0)
+        else:
+            arg1 = self._print(expr.args[1])
+            result = "W{0}_({1})({2})".format(exp, arg1, arg0)
+        return result
+
+
     def _print_Expectation(self, expr):
         return r'upright("E")[{}]'.format(self._print(expr.args[0]))
 
@@ -1975,6 +2686,88 @@ class TypstPrinter(Printer):
         mat = self._print(expr._expr_mat)
         return r"%s_tau" % mat
     
+    def _print_DFT(self, expr):
+        return r'upright("{}")_({})'.format(expr.__class__.__name__, expr.n)
+    _print_IDFT = _print_DFT
+
+    def _print_NamedMorphism(self, morphism):
+        pretty_name = self._print(Symbol(morphism.name))
+        pretty_morphism = self._print_Morphism(morphism)
+        return "%s:%s" % (pretty_name, pretty_morphism)
+
+    def _print_IdentityMorphism(self, morphism):
+        from sympy.categories import NamedMorphism
+        return self._print_NamedMorphism(NamedMorphism(
+            morphism.domain, morphism.codomain, "id"))
+
+    def _print_CompositeMorphism(self, morphism):
+        # All components of the morphism have names and it is thus
+        # possible to build the name of the composite.
+        component_names_list = [self._print(Symbol(component.name)) for
+                                component in morphism.components]
+        component_names_list.reverse()
+        component_names = "circle.small ".join(component_names_list) + ":"
+
+        pretty_morphism = self._print_Morphism(morphism)
+        return component_names + pretty_morphism
+
+    def _print_Category(self, morphism):
+        return r"upright(bold({}))".format(self._print(Symbol(morphism.name)))
+
+    def _print_Diagram(self, diagram):
+        if not diagram.premises:
+            # This is an empty diagram.
+            return self._print(S.EmptySet)
+
+        latex_result = self._print(diagram.premises)
+        if diagram.conclusions:
+            latex_result += "arrow.r.long %s" % \
+                            self._print(diagram.conclusions)
+
+        return latex_result
+
+    def _print_DiagramGrid(self, grid):
+        typst_result = r'mat(delim:#none, %s' % ("c" * grid.width)
+
+        for i in range(grid.height):
+            for j in range(grid.width):
+                if grid[i, j]:
+                    typst_result += typst(grid[i, j])
+                typst_result += " "
+                if j != grid.width - 1:
+                    typst_result += ", "
+
+            if i != grid.height - 1:
+                typst_result += ";"
+
+        typst_result += ")"
+        return typst_result
+
+    def _print_FreeModule(self, M):
+        return '({})^({})'.format(self._print(M.ring), self._print(M.rank))
+
+    def _print_FreeModuleElement(self, m):
+        # Print as row vector for convenience, for now.
+        return r"[ {} ]".format(",".join(
+            self._print(x) for x in m))
+
+    def _print_SubModule(self, m):
+        gens = [[self._print(m.ring.to_sympy(x)) for x in g] for g in m.gens]
+        curly = lambda o: r"（" + o + r"）"
+        square = lambda o: r"[ " + o + r" ]"
+        gens_latex = ",".join(curly(square(",".join(curly(x) for x in g))) for g in gens)
+        return r"angle.l {} angle.r".format(gens_latex)
+
+    def _print_SubQuotientModule(self, m):
+        gens_latex = ",".join(["{" + self._print(g) + "}" for g in m.gens])
+        return r"angle.l {} angle.r".format(gens_latex)
+
+    def _print_ModuleImplementedIdeal(self, m):
+        gens = [m.ring.to_sympy(x) for [x] in m._module.gens]
+        gens_latex = ",".join('{' + self._print(x) + '}' for x in gens)
+        return r"angle.l {} angle.r".format(gens_latex)
+
+
     def _print_Quaternion(self, expr):
         # TODO: This expression is potentially confusing,
         # shall we print it as `Quaternion( ... )`?
@@ -1982,7 +2775,131 @@ class TypstPrinter(Printer):
              for i in expr.args]
         a = [s[0]] + [i+" "+j for i, j in zip(s[1:], "ijk")]
         return " + ".join(a)
-    
+
+    def _print_QuotientRing(self, R):
+        # TODO nicer fractions for few generators...
+        return r"frac({}, {})".format(self._print(R.ring),
+                 self._print(R.base_ideal))
+
+    def _print_QuotientRingElement(self, x):
+        x_latex = self._print(x.ring.to_sympy(x))
+        return r"({}) + ({})".format(x_latex,
+                 self._print(x.ring.base_ideal))
+
+    def _print_QuotientModuleElement(self, m):
+        data = [m.module.ring.to_sympy(x) for x in m.data]
+        data_latex = r"[ {} ]".format(",".join(
+            self._print(x) for x in data))
+        return r"({}) + ({})".format(data_latex,
+                 self._print(m.module.killed_module))
+
+    def _print_QuotientModule(self, M):
+        # TODO nicer fractions for few generators...
+        return r"frac({}, {})".format(self._print(M.base),
+                 self._print(M.killed_module))
+
+    def _print_MatrixHomomorphism(self, h):
+        return r"{} : {} to {}".format(self._print(h._sympy_matrix()),
+            self._print(h.domain), self._print(h.codomain))
+
+
+    def _print_Manifold(self, manifold):
+        string = manifold.name.name
+        if '{' in string:
+            name, supers, subs = string, [], []
+        else:
+            name, supers, subs = split_super_sub(string)
+
+            name = translate(name)
+            supers = [translate(sup) for sup in supers]
+            subs = [translate(sub) for sub in subs]
+
+        name = r'upright("%s")' % name
+        if supers:
+            name += "^(%s)" % " ".join(supers)
+        if subs:
+            name += "_(%s)" % " ".join(subs)
+
+        return name
+
+    def _print_Patch(self, patch):
+        return r'upright("%s")_(%s)' % (self._print(patch.name), self._print(patch.manifold))
+
+    def _print_CoordSystem(self, coordsys):
+        return r'upright("%s")^(upright("%s"))_(%s)' % (
+            self._print(coordsys.name), self._print(coordsys.patch.name), self._print(coordsys.manifold)
+        )
+
+    def _print_CovarDerivativeOp(self, cvd):
+        return r'nabla_(%s)' % self._print(cvd._wrt)
+
+    def _print_BaseScalarField(self, field):
+        string = field._coord_sys.symbols[field._index].name
+        return r'bold({})'.format(self._print(Symbol(string)))
+
+    def _print_BaseVectorField(self, field):
+        string = field._coord_sys.symbols[field._index].name
+        return r'partial_({})'.format(self._print(Symbol(string)))
+
+    def _print_Differential(self, diff):
+        field = diff._form_field
+        if hasattr(field, '_coord_sys'):
+            string = field._coord_sys.symbols[field._index].name
+            return r'upright(d){}'.format(self._print(Symbol(string)))
+        else:
+            string = self._print(field)
+            return r'upright(d)({})'.format(string)
+
+    def _print_Tr(self, p):
+        # TODO: Handle indices
+        contents = self._print(p.args[0])
+        return r'upright("tr")({})'.format(contents)
+
+    def _print_totient(self, expr, exp=None):
+        if exp is not None:
+            return r'(phi(%s))^(%s)' % \
+                (self._print(expr.args[0]), exp)
+        return r'(phi(%s))' % self._print(expr.args[0])
+
+    def _print_reduced_totient(self, expr, exp=None):
+        if exp is not None:
+            return r'(lambda(%s))^{%s}' % \
+                (self._print(expr.args[0]), exp)
+        return r'(lambda(%s))' % self._print(expr.args[0])
+
+    def _print_divisor_sigma(self, expr, exp=None):
+        if len(expr.args) == 2:
+            tex = r"_%s(%s)" % tuple(map(self._print,
+                                                (expr.args[1], expr.args[0])))
+        else:
+            tex = r"(%s)" % self._print(expr.args[0])
+        if exp is not None:
+            return r"sigma^(%s)%s" % (exp, tex)
+        return r"sigma%s" % tex
+
+    def _print_udivisor_sigma(self, expr, exp=None):
+        if len(expr.args) == 2:
+            tex = r"_%s(%s)" % tuple(map(self._print,
+                                                (expr.args[1], expr.args[0])))
+        else:
+            tex = r"(%s)" % self._print(expr.args[0])
+        if exp is not None:
+            return r"sigma^*^(%s)%s" % (exp, tex)
+        return r"sigma^*%s" % tex
+
+    def _print_primenu(self, expr, exp=None):
+        if exp is not None:
+            return r'(nu(%s))^(%s)' % \
+                (self._print(expr.args[0]), exp)
+        return r'(nu(%s))' % self._print(expr.args[0])
+
+    def _print_primeomega(self, expr, exp=None):
+        if exp is not None:
+            return r'(Omega(%s))^(%s)' % \
+                (self._print(expr.args[0]), exp)
+        return r'(Omega(%s))' % self._print(expr.args[0])
+
+
     def _print_Str(self, s):
         return str(s.name)
     
@@ -2004,6 +2921,17 @@ class TypstPrinter(Printer):
     def _print_fmpq(self, expr):
         return str(expr)
     
+    def _print_Predicate(self, expr):
+        return r'upright(Q)_(upright("{}"))'.format((str(expr.name)))
+
+    def _print_AppliedPredicate(self, expr):
+        pred = expr.function
+        args = expr.arguments
+        pred_latex = self._print(pred)
+        args_latex = ', '.join([self._print(a) for a in args])
+        return '%s(%s)' % (pred_latex, args_latex)
+
+
     def emptyPrinter(self, expr):
         # default to just printing as monospace, like would normally be shown
         s = super().emptyPrinter(expr)
