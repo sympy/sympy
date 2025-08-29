@@ -520,7 +520,7 @@ def ask(proposition, assumptions=True, context=global_assumptions):
         res = euf_ask(proposition, assumptions=assumptions, context=context)
         if res is not None:
             return res
-    except EUFUnhandledInput:
+    except (EUFUnhandledInput, ValueError):
         return None
 
 
