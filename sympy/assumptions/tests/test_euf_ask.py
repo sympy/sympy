@@ -3,6 +3,7 @@
 from sympy.assumptions.euf_ask import euf_ask
 from sympy.assumptions.ask import Q
 from sympy import symbols
+from sympy.testing.pytest import XFAIL
 
 # simple symbols
 x, y, z, u, v = symbols("x y z u v")
@@ -50,3 +51,16 @@ def test_multiple_predicates_different_vars():
     mixed = Q.prime(z) & Q.eq(z, x) & Q.positive(y) & Q.eq(y, x)
     assert euf_ask(Q.prime(x), mixed) is True
     assert euf_ask(Q.positive(x), mixed) is True
+
+def test_negations():
+    assert euf_ask(~Q.prime(x), Q.prime(y) & Q.eq(x, y)) is False
+    assert euf_ask(~Q.even(x), Q.even(y) & Q.eq(x, y)) is False
+    assert euf_ask(~Q.positive(x), Q.positive(y) & Q.eq(x, y)) is False
+
+def test_or():
+    assumptions = Q.prime(x) | (Q.eq(x, y) & Q.prime(y))
+    assert euf_ask(Q.prime(x), assumptions) is True
+
+@XFAIL
+def test_failing_negations():
+    assert euf_ask(~Q.integer(x), Q.prime(y) & Q.eq(x, y)) is False

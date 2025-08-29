@@ -19,7 +19,7 @@ from sympy.logic.algorithms.lra_theory import LRASolver
 from sympy.logic.algorithms.euf_theory_solver import EUFTheorySolver
 
 
-def dpll_satisfiable(expr, all_models=False, use_lra_theory=False, use_euf_theory= False):
+def dpll_satisfiable(expr, all_models=False, use_lra_theory=False, use_euf_theory=False):
     """
     Check satisfiability of a propositional sentence.
     It returns a model rather than True when it succeeds.
@@ -245,7 +245,8 @@ class SATSolver:
                     else:
                         res = None
                     if res is None or res[0]:
-                        yield {self.symbols[abs(lit) - 1]:
+                        if not self.euf:
+                            yield {self.symbols[abs(lit) - 1]:
                                     lit > 0 for lit in self.var_settings}
                     else:
                         self._simple_add_learned_clause(res[1])
@@ -254,25 +255,24 @@ class SATSolver:
                         while not any(-lit in res[1] for lit in self._current_level.var_settings):
                             self._undo()
 
-                    # check if assignment satisfies euf theory
+                    res1 = None
                     if self.euf:
                         for enc_var in self.var_settings:
-                            res = self.euf.assert_lit(enc_var)
-                            if res is not None:
+                            res1 = self.euf.assert_lit(enc_var)
+                            if res1[0] is False:
                                 break
-                        res = self.euf.check()
                         self.euf.reset()
                     else:
-                        res = None
-                    if res is None or res[0]:
-                        yield {self.symbols[abs(lit) - 1]:
+                        res1 = None
+                    if res1 is not None:
+                        if res1[0] is True:
+                            yield {self.symbols[abs(lit) - 1]:
                                     lit > 0 for lit in self.var_settings}
-                    else:
-                        self._simple_add_learned_clause(res[1])
+                        # else:
+                            # self._simple_add_learned_clause(res1[1])
+                            # while not any(-lit in res1[1] for lit in self._current_level.var_settings):
+                            #     self._undo()
 
-                        # backtrack until we unassign one of the literals causing the conflict
-                        while not any(-lit in res[1] for lit in self._current_level.var_settings):
-                            self._undo()
 
                     while self._current_level.flipped:
                         self._undo()

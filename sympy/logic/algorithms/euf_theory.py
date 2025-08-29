@@ -240,4 +240,5 @@ class EUFCongruenceClosure:
         True
         """
         lhs_id, rhs_id = self._flatten(lhs), self._flatten(rhs)
-        return self._find(lhs_id) == self._find(rhs_id)
+        if self._find(lhs_id) == self._find(rhs_id):
+            return True

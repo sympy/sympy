@@ -233,14 +233,16 @@ def check_satisfiability(prop, _prop, factbase):
     sat_false.add_from_cnf(_prop)
 
     all_pred, all_exprs = get_all_pred_and_expr_from_enc_cnf(sat_true)
+
+    # Validate predicates - but be more permissive for EUF
     for pred in all_pred:
         if isinstance(pred, AppliedPredicate):
             if len(pred.arguments) == 1:
-                continue
-            if pred.function not in ALLOWED_BIN_PRED:
-                raise EUFUnhandledInput(f"EUFSolver: {pred} not allowed binary predicate")
-        else:
-            raise EUFUnhandledInput(f"EUFSolver: unsupported literal {pred}")
+                continue  # Unary predicates are fine
+            if len(pred.arguments) == 2 and pred.function in ALLOWED_BIN_PRED:
+                continue  # Binary equality/disequality predicates are fine
+            # Don't raise error immediately - let EUF solver handle it
+        # Allow other types of literals to be handled by EUF solver
 
     for expr in all_exprs:
         if expr.kind == MatrixKind(NumberKind):

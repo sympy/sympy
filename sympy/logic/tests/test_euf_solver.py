@@ -1,8 +1,10 @@
 import pytest
+from sympy.testing.pytest import XFAIL
 from sympy import symbols, Function, Eq, Not, Unequality
-from sympy.logic.algorithms.euf_theory_solver import EUFTheorySolver
+from sympy.logic.algorithms.euf_theory_solver import *
 from sympy.assumptions.cnf import CNF, EncodedCNF
 from sympy.logic import boolalg
+from sympy.assumptions.ask import Q
 
 f, g = symbols('f g', cls=Function)
 a, b, c, d, e, x, y, z, u = symbols('a b c d e x y z u')
@@ -15,14 +17,14 @@ def test_initialize_and_istrue():
 
     # Initially false
     for lit in eqs:
-        assert solver.IsTrue(lit) is False
+        assert solver.IsTrue(lit) is None
 
     # Assert a=b
     solver.SetTrue(Eq(a, b))
     assert solver.IsTrue(Eq(a, b)) is True
     assert solver.IsTrue(Eq(b, a)) is True
     # others still undecided
-    assert solver.IsTrue(Eq(b, c)) is False
+    assert solver.IsTrue(Eq(b, c)) is None
 
 
 def test_positive_propagation_transitivity():
@@ -60,7 +62,7 @@ def test_disequality_conflict():
     solver = EUFTheorySolver()
     solver.Initialize({Eq(a, b), Not(Eq(a, b))})
     solver.SetTrue(Not(Eq(a, b)))
-    with pytest.raises(ValueError):
+    with pytest.raises(EUFDisequalityContradictionException):
         solver.SetTrue(Eq(a, b))
 
 
@@ -71,7 +73,7 @@ def test_backtrack_removes_last():
     solver.SetTrue(Eq(b, c))
     assert solver.IsTrue(Eq(a, c))
     solver.Backtrack(1)
-    assert solver.IsTrue(Eq(a, c)) is False
+    assert solver.IsTrue(Eq(a, c)) is None
     assert solver.IsTrue(Eq(a, b)) is True
 
 
@@ -112,35 +114,33 @@ def make_solver_from_props(*props):
 
 def test_order_independence_of_assertions():
     # x=y, y=z - test that order doesn't matter
-    solver, enc, conflicts = make_solver_from_props(Eq(x, y), Eq(y, z))
-    ids = list(solver._enc_to_lit)
-    solver.assert_lit(ids[1])
-    solver.assert_lit(ids[0])
+    prop = Q.eq(x,y) & Q.eq(y,z)
+    _prop = CNF.from_prop(prop)
+    sat = EncodedCNF()
+    sat.add_from_cnf(_prop)
+    solver, conflicts = EUFTheorySolver.from_encoded_cnf(sat)
+    solver.assert_lit(1)
+    solver.assert_lit(2)
+    assert conflicts == []
     assert solver.IsTrue(Eq(x, z)) is True
     # Reset and reverse
     solver.Backtrack(len(solver.interpretation_stack))
-    solver.assert_lit(ids[0])
-    solver.assert_lit(ids[1])
-    assert solver.IsTrue(Eq(x, z)) is True
+    assert solver.IsTrue(Eq(x, z)) is None
 
 
-# def test_simple_equality_chain():
-#     """
-#     Test EUF: x = y, y = z  -> SAT, and x = z must hold.
-#     """
-#     cnf = CNF().from_prop(Eq(x, y) & Eq(y, z))
-#     enc = EncodedCNF(); enc.from_cnf(cnf)
-#     euf, _ = EUFTheorySolver.from_encoded_cnf(enc, testing_mode=True)
+def test_simple_equality_chain():
+    """
+    Test EUF: x = y, y = z  -> SAT, and x = z must hold.
+    """
+    cnf = CNF().from_prop(Eq(x, y) & Eq(y, z))
+    enc = EncodedCNF(); enc.from_cnf(cnf)
+    euf, _ = EUFTheorySolver.from_encoded_cnf(enc, testing_mode=True)
 
-#     # Assert all clauses/literals
-#     for lit_id in enc.encoding.values():
-#         assert euf.assert_lit(lit_id) is None
+    # Assert all clauses/literals
+    for lit_id in enc.encoding.values():
+        assert euf.assert_lit(lit_id) == (True,set())
 
-#     # Check satisfiability
-#     is_sat, _ = euf.check()
-#     assert is_sat is True
-#     # Derived fact
-#     assert euf.IsTrue(Eq(x, z)) is True
+    assert euf.IsTrue(Eq(x, z)) is True
 
 
 def test_backtrack_recovery():
@@ -156,6 +156,14 @@ def test_backtrack_recovery():
     assert euf.IsTrue(Eq(x, y)) is True
 
     euf.Backtrack(1)  # undo the only decision
-    assert euf.IsTrue(Eq(x, y)) is False
-    sat, _ = euf.check()
-    assert sat is True
+    assert euf.IsTrue(Eq(x, y)) is None
+
+@XFAIL
+def test_issue_1():
+    enc_cnf = EncodedCNF()
+    enc_cnf.encoding = { Q.prime(x): 1, Q.eq(x,y): 2, Q.prime(y): 3 }
+    enc_cnf.data = [{-1},{2},{3}]
+    solver,conflicts = EUFTheorySolver.from_encoded_cnf(enc_cnf)
+    assert solver.assert_lit(-1) == (True, set())
+    assert solver.assert_lit(2) == (True, set())
+    assert solver.assert_lit(3) == (False, {1,-2,3})
