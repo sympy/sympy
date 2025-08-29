@@ -3,7 +3,7 @@ from sympy import Eq, Ne, Not
 from sympy.assumptions.ask import Q
 from sympy.assumptions.assume import AppliedPredicate
 from sympy.logic.algorithms.euf_theory import EUFCongruenceClosure, EUFUnhandledInput
-from sympy.core.symbol import Symbol, Dummy
+from sympy.core.symbol import Dummy
 from sympy.utilities.iterables import numbered_symbols
 
 def _order_key(expr):
@@ -335,10 +335,8 @@ class EUFTheorySolver:
 
                 return [new_constraint], []
 
-            # Other predicates -> dummy equality
-            dummy = next(dummies)
-            return [Eq(pred, dummy)], []
-
+            else:
+                raise EUFUnhandledInput(f"Unsupported predicate: {pred}")
 
         # Process all predicates
         encoded_items = (sorted(encoded_cnf.encoding.items(), key=lambda x: str(x[0]))
@@ -367,7 +365,7 @@ class EUFTheorySolver:
                 if False in triv:
                     conflicts.append([-enc])
 
-            except Exception:
+            except EUFUnhandledInput:
                 continue
 
         solver.literal_eqs = literal_eqs
@@ -384,25 +382,20 @@ class EUFTheorySolver:
     def Initialize(self, literal_set):
         """Initialize solver with set of literals for proper tracking."""
         for lit in literal_set:
-            try:
-                lhs, rhs, is_positive = _canonical_lit(lit)
-                ceq = _canon_eq(lhs, rhs)
-                self.literal_terms[ceq] = (lhs, rhs, is_positive)
+            lhs, rhs, is_positive = _canonical_lit(lit)
+            ceq = _canon_eq(lhs, rhs)
+            self.literal_terms[ceq] = (lhs, rhs, is_positive)
 
-                # Add to literal lists for T-consequence propagation
-                lhs_c = self.cc._flatten(lhs)
-                rhs_c = self.cc._flatten(rhs)
+            # Add to literal lists for T-consequence propagation
+            lhs_c = self.cc._flatten(lhs)
+            rhs_c = self.cc._flatten(rhs)
 
-                if is_positive:
-                    self.positive_literal_list[lhs_c].append(ceq)
-                    self.positive_literal_list[rhs_c].append(ceq)
-                else:
-                    self.negative_literal_list[lhs_c].append(ceq)
-                    self.negative_literal_list[rhs_c].append(ceq)
-            except:
-                continue
-
-
+            if is_positive:
+                self.positive_literal_list[lhs_c].append(ceq)
+                self.positive_literal_list[rhs_c].append(ceq)
+            else:
+                self.negative_literal_list[lhs_c].append(ceq)
+                self.negative_literal_list[rhs_c].append(ceq)
 
 
     def explain_disequality(self, a, b):
@@ -426,7 +419,6 @@ class EUFTheorySolver:
 
             if ((rep_da == rep_a and rep_db == rep_b) or
                 (rep_da == rep_b and rep_db == rep_a)):
-                source_diseq = diseq_cause
                 # Add the source disequality to explanation
                 explanation.add(diseq_cause)
 
@@ -610,36 +602,33 @@ class EUFTheorySolver:
 
     def IsTrue(self, literal):
         """Check if literal is true, false, or unknown."""
-        try:
-            lhs, rhs, is_positive = _canonical_lit(literal)
-            lhs_c = self.cc._flatten(lhs)
-            rhs_c = self.cc._flatten(rhs)
-            rep_lhs = self.cc._find(lhs_c)
-            rep_rhs = self.cc._find(rhs_c)
-            if is_positive:
-                if self.cc.are_equal(lhs, rhs) is True:
-                    return True
-                else:
-                    for diseq_pair in self.disequality_causes.keys():
-                        da, db = diseq_pair
-                        poss1 = self.cc._find(da) == rep_lhs and self.cc._find(db) == rep_rhs
-                        poss2 = self.cc._find(da) == rep_rhs and self.cc._find(db) == rep_lhs
-                        if poss1 or poss2:
-                            return False
-
+        lhs, rhs, is_positive = _canonical_lit(literal)
+        lhs_c = self.cc._flatten(lhs)
+        rhs_c = self.cc._flatten(rhs)
+        rep_lhs = self.cc._find(lhs_c)
+        rep_rhs = self.cc._find(rhs_c)
+        if is_positive:
+            if self.cc.are_equal(lhs, rhs) is True:
+                return True
             else:
-                if self.cc.are_equal(lhs,rhs):
-                    return False # Equal, so disequality is false
-
                 for diseq_pair in self.disequality_causes.keys():
                     da, db = diseq_pair
                     poss1 = self.cc._find(da) == rep_lhs and self.cc._find(db) == rep_rhs
                     poss2 = self.cc._find(da) == rep_rhs and self.cc._find(db) == rep_lhs
                     if poss1 or poss2:
-                        return True
+                        return False
 
-        except:
-            return None
+        else:
+            if self.cc.are_equal(lhs,rhs):
+                return False # Equal, so disequality is false
+
+            for diseq_pair in self.disequality_causes.keys():
+                da, db = diseq_pair
+                poss1 = self.cc._find(da) == rep_lhs and self.cc._find(db) == rep_rhs
+                poss2 = self.cc._find(da) == rep_rhs and self.cc._find(db) == rep_lhs
+                if poss1 or poss2:
+                    return True
+
 
     def Explanation(self, literal):
         """Produce explanation for why literal is true using proof forest."""

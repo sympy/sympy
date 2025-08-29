@@ -36,7 +36,7 @@ from sympy.core.relational import Eq
 from sympy.core.function import Lambda
 from sympy.core.symbol import Dummy
 from sympy.core.numbers import Number
-from sympy.core import Basic, Add, Mul
+from sympy.core import Basic
 from sympy.utilities.iterables import numbered_symbols
 from sympy.assumptions.assume import AppliedPredicate
 
