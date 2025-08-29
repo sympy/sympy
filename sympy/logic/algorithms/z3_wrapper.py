@@ -57,11 +57,11 @@ def z3_satisfiable(expr, all_models=False, return_model=None):
         has_theory_preds = any(is_supported_predicate(pred) for pred in expr.encoding.keys())
 
         if return_model is True:
-            # Always return the model (fallback to True if empty)
             return model if model else True
+        
         elif return_model is False:
-            # Always return a boolean
             return True
+        
         else:
             # - If the CNF has theory predicates => boolean
             # - Else (pure propositional) => model dict (fallback to True if empty)
@@ -88,6 +88,7 @@ def z3_model_to_sympy_model(z3_model, enc_cnf):
     return result
 
 
+# Converts a single CNF clause to SMT-LIB assertion format.
 def clause_to_assertion(clause):
     clause_strings = [f"d{abs(lit)}" if lit > 0 else f"(not d{abs(lit)})" for lit in clause]
     return "(assert (or " + " ".join(clause_strings) + "))"
@@ -154,9 +155,6 @@ def encoded_cnf_to_z3_solver(enc_cnf, z3):
     uf_table = collect_all_uninterpreted_functions(enc_cnf)
     free_symbols = collect_all_free_symbols(enc_cnf)
     
-    print(f"Collected uf_table = {uf_table}")
-    print(f"Collected free_symbols = {[str(sym) for sym in free_symbols]}")
-    
     declarations = []
     assertions = []
     
@@ -209,11 +207,6 @@ def encoded_cnf_to_z3_solver(enc_cnf, z3):
     
     declarations = "\n".join(declarations)
     assertions= "\n".join(assertions)
-    # # Debug output
-    # print("DECLARATIONS")
-    # print(declarations)
-    # print("ASSERTIONS")
-    # print(assertions)
     s.from_string(declarations)
     s.from_string(assertions)
 

@@ -512,20 +512,11 @@ def smtlib_code(
         ]
         declarations = [decl for decl in declarations if decl]
 
+    
     if auto_assert:
-        # Filter for Booleans and Relationals
-        expr = [_auto_assert_smtlib(e, p, log_warn) for e in expr if (getattr(e, "is_Boolean", False) or getattr(e, "is_Relational", False))]
+        expr = [_auto_assert_smtlib(e, p, log_warn) for e in expr]
 
-    # filter non-boolean, invalid SMT   
-    expr = [
-        e for e in expr 
-        if (isinstance(e, str) 
-            or getattr(e, "is_Boolean", False)
-            or getattr(e, "is_Relational", False) 
-            or not getattr(e, "is_Atom", False)
-        )
-    ]
-
+    # return SMTLibPrinter().doprint(expr)
     return '\n'.join([
         # ';; PREFIX EXPRESSIONS',
         *[
@@ -541,13 +532,49 @@ def smtlib_code(
             e if isinstance(e, str) else p.doprint(e)
             for e in expr
         ],
-
-        # ';; SUFFIX EXPRESSIONS',
+                # ';; SUFFIX EXPRESSIONS',
         *[
             e if isinstance(e, str) else p.doprint(e)
             for e in suffix_expressions
         ],
     ])
+
+    # if auto_assert:
+    #     # Filter for Booleans and Relationals
+    #     expr = [_auto_assert_smtlib(e, p, log_warn) for e in expr if (getattr(e, "is_Boolean", False) or getattr(e, "is_Relational", False))]
+
+    # # filter non-boolean, invalid SMT   
+    # expr = [
+    #     e for e in expr 
+    #     if (isinstance(e, str) 
+    #         or getattr(e, "is_Boolean", False)
+    #         or getattr(e, "is_Relational", False) 
+    #         or not getattr(e, "is_Atom", False)
+    #     )
+    # ]
+
+    # return '\n'.join([
+    #     # ';; PREFIX EXPRESSIONS',
+    #     *[
+    #         e if isinstance(e, str) else p.doprint(e)
+    #         for e in prefix_expressions
+    #     ],
+
+    #     # ';; DECLARATIONS',
+    #     *sorted(e for e in declarations),
+
+    #     # ';; EXPRESSIONS',
+    #     *[
+    #         e if isinstance(e, str) else p.doprint(e)
+    #         for e in expr
+    #     ],
+
+    #     # ';; SUFFIX EXPRESSIONS',
+    #     *[
+    #         e if isinstance(e, str) else p.doprint(e)
+    #         for e in suffix_expressions
+    #     ],
+    # ])
 
 def _auto_declare_smtlib(sym: typing.Union[Symbol, Function], p: SMTLibPrinter, log_warn: typing.Callable[[str], None]):
     if sym.is_Symbol:
