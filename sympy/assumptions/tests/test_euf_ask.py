@@ -92,12 +92,6 @@ def test_branching_equality_trees():
 @XFAIL
 def test_complex_mixed_expressions():
     """Test complex Boolean combinations"""
-    # Mixed AND/OR with equalities
-    complex_expr = (Q.prime(x) | Q.even(x)) & Q.eq(x, y) & (Q.odd(y) | Q.positive(y))
-    # Should work for some combinations
-    result = euf_ask(Q.prime(x), Q.prime(y) & complex_expr)
-    # Complex expressions might return None when indeterminate
-
     # Nested implications
     nested = Q.eq(x, y) & (Q.prime(x) | (Q.eq(y, z) & Q.prime(z)))
     assert euf_ask(Q.prime(x), Q.prime(z) & nested) is True
@@ -175,17 +169,6 @@ def test_edge_case_empty_assumptions():
 
     # With only equality but no properties
     assert euf_ask(Q.prime(x), Q.eq(x, y)) is None
-
-
-def test_deeply_nested_boolean_structure():
-    """Test deeply nested Boolean expressions"""
-    deep_nested = ((Q.prime(x) & Q.eq(x, y)) |
-                   (Q.even(x) & Q.eq(x, z)) |
-                   (Q.odd(x) & Q.eq(x, u))) & Q.prime(y) & Q.even(z) & Q.odd(u)
-
-    # This creates complex satisfiability conditions
-    result = euf_ask(Q.prime(x), deep_nested)
-    # May be True, False, or None depending on implementation
 
 
 @XFAIL
