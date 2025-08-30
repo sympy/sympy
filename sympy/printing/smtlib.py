@@ -264,6 +264,48 @@ class SMTLibPrinter(Printer):
         raise NotImplementedError(f'Cannot convert `{repr(expr)}` of type `{type(expr)}` to SMT.')
 
 
+from sympy.core.function import Function, FunctionClass
+from sympy import Symbol
+import sympy
+from typing import Callable, get_args
+
+def generate_smtlib_declaration(func_head, p):
+    """Generate SMT-LIB declaration for a function head.
+
+    This version keys into p.symbol_table by the **function head object**
+    (e.g., `f`, `g`, `h`) rather than by its Python type, so mixed arities
+    across different heads won't collide.
+    """
+    # find function head's domain/range 
+    type_signature = p.symbol_table[func_head]
+    func_name = func_head.name
+
+    # checks if uf head is a function
+    if callable(type_signature):
+        # Callable[[arg_types...], return_type]
+        tuple_args = get_args(type_signature)
+        if tuple_args:  # has type arguments
+            func_params, func_return_type = tuple_args[0], tuple_args[1]
+            if isinstance(func_params, (list, tuple)):
+                arg_types = list(func_params)   # already a list/tuple → just convert
+            else:
+                arg_types = [func_params] 
+
+            smt_arg_types = [p._known_types[arg_type] for arg_type in arg_types]
+            smt_return_type = p._known_types[func_return_type]
+
+            params_signature = f"({' '.join(smt_arg_types)})"
+            return f"(declare-fun {func_name} {params_signature} {smt_return_type})"
+        else:
+            # If no args provided in Callable, treat function head like a constant of that return type
+            smt_return_type = p._known_types[type_signature]
+            return f"(declare-const {func_name} {smt_return_type})"
+    else:
+        # type like float for 0-arity heads
+        smt_type = p._known_types[type_signature]
+        return f"(declare-const {func_name} {smt_type})"
+
+
 def smtlib_code(
     expr,
     auto_assert=True, auto_declare=True,
@@ -355,18 +397,21 @@ def smtlib_code(
     """
     log_warn = log_warn or (lambda _: None)
 
+    # Normalize input to list and preserve original items to detect bare heads
     if not isinstance(expr, list): expr = [expr]
+    _raw_expr = expr[:]  # keep raw to find FunctionClass heads later
+    # Replace bare function heads with a plain Symbol for the body
+    # Declarations treat the head as a 0-arity function/constant.
     expr = [
-        sympy.sympify(_, strict=True, evaluate=False, convert_xor=False)
+        Symbol(_.name) if isinstance(_, FunctionClass)
+        else sympy.sympify(_, strict=True, evaluate=False, convert_xor=False)
         for _ in expr
     ]
 
     if not symbol_table: symbol_table = {}
     symbol_table = _auto_infer_smtlib_types(
         *expr, symbol_table=symbol_table
-    )
-    # See [FALLBACK RULES]
-    # Need SMTLibPrinter to populate known_functions and known_constants first.
+        )
 
     settings = {}
     if precision: settings['precision'] = precision
@@ -387,6 +432,37 @@ def smtlib_code(
     p = SMTLibPrinter(settings, symbol_table)
     del symbol_table
 
+    # Pre-populate function heads (by head object) with arity-based types
+    if auto_declare:
+        function_head_to_arity = {}
+
+        # A) Applied function uses inside the (already sympified) expressions
+        for e in expr:
+            for fnc in e.atoms(Function):
+                if (fnc.func not in p._known_functions and not fnc.is_Piecewise):
+                    func_head = fnc.func  # <-- key by head, not type(fnc.func)
+                    arity = len(fnc.args)
+                    function_head_to_arity[func_head] = max(function_head_to_arity.get(func_head, 0), arity)
+
+        # B) Bare function heads from the raw input → arity 0
+        for raw in _raw_expr:
+            if isinstance(raw, FunctionClass):
+                func_head = raw
+                function_head_to_arity[func_head] = max(function_head_to_arity.get(func_head, 0), 0)
+
+        # Map discovered heads to Callable[...] (or float for 0-arity)
+        for func_head, arity in function_head_to_arity.items():
+            if func_head not in p.symbol_table:
+                if arity == 0:
+                    p.symbol_table[func_head] = float
+                elif arity == 1:
+                    p.symbol_table[func_head] = Callable[[float], float]
+                elif arity == 2:
+                    p.symbol_table[func_head] = Callable[[float, float], float]
+                else:
+                    arg_types = [float] * arity
+                    p.symbol_table[func_head] = Callable[arg_types, float]  # type: ignore[arg-type]
+
     # [FALLBACK RULES]
     for e in expr:
         for sym in e.atoms(Symbol, Function):
@@ -399,30 +475,44 @@ def smtlib_code(
                 p.symbol_table[sym] = float
             if (
                 sym.is_Function and
-                type(sym) not in p._known_functions and
-                type(sym) not in p.symbol_table and
+                sym.func not in p._known_functions and
+                sym.func not in p.symbol_table and  # <-- check head presence, not its type
                 not sym.is_Piecewise
-            ): raise TypeError(
-                f"Unknown type of undefined function `{sym}`. "
-                f"Must be mapped to ``str`` in known_functions or mapped to ``Callable[..]`` in symbol_table."
-            )
+            ):
+                raise TypeError(
+                    f"Unknown type of undefined function `{sym}`. "
+                    f"Must be mapped to ``str`` in known_functions or mapped to ``Callable[..]`` in symbol_table."
+                )
 
     declarations = []
     if auto_declare:
+        # Collect function heads to declare (both applied and unapplied)
+        functions = {}
+        for e in expr:
+            for fnc in e.atoms(Function):
+                if fnc.func not in p._known_functions and not fnc.is_Piecewise:
+                    func_head = fnc.func
+                    functions.setdefault(func_head.name, func_head)
+
+        for raw in _raw_expr:
+            if isinstance(raw, FunctionClass):
+                functions.setdefault(raw.name, raw)
+        # Gather constants from free symbols, excluding names that are function heads
+        function_names = set(functions.keys())
+
         constants = {sym.name: sym for e in expr for sym in e.free_symbols
-                     if sym not in p._known_constants}
-        functions = {fnc.name: fnc for e in expr for fnc in e.atoms(Function)
-                     if type(fnc) not in p._known_functions and not fnc.is_Piecewise}
-        declarations = \
-            [
-                _auto_declare_smtlib(sym, p, log_warn)
-                for sym in constants.values()
-            ] + [
-                _auto_declare_smtlib(fnc, p, log_warn)
-                for fnc in functions.values()
-            ]
+            if (sym not in p._known_constants) and (sym.name not in function_names)}
+
+        declarations = [
+            _auto_declare_smtlib(sym, p, log_warn)
+            for sym in constants.values()
+        ] + [
+            generate_smtlib_declaration(fnc, p)
+            for fnc in functions.values()
+        ]
         declarations = [decl for decl in declarations if decl]
 
+    
     if auto_assert:
         expr = [_auto_assert_smtlib(e, p, log_warn) for e in expr]
 
@@ -442,14 +532,49 @@ def smtlib_code(
             e if isinstance(e, str) else p.doprint(e)
             for e in expr
         ],
-
-        # ';; SUFFIX EXPRESSIONS',
+                # ';; SUFFIX EXPRESSIONS',
         *[
             e if isinstance(e, str) else p.doprint(e)
             for e in suffix_expressions
         ],
     ])
 
+    # if auto_assert:
+    #     # Filter for Booleans and Relationals
+    #     expr = [_auto_assert_smtlib(e, p, log_warn) for e in expr if (getattr(e, "is_Boolean", False) or getattr(e, "is_Relational", False))]
+
+    # # filter non-boolean, invalid SMT   
+    # expr = [
+    #     e for e in expr 
+    #     if (isinstance(e, str) 
+    #         or getattr(e, "is_Boolean", False)
+    #         or getattr(e, "is_Relational", False) 
+    #         or not getattr(e, "is_Atom", False)
+    #     )
+    # ]
+
+    # return '\n'.join([
+    #     # ';; PREFIX EXPRESSIONS',
+    #     *[
+    #         e if isinstance(e, str) else p.doprint(e)
+    #         for e in prefix_expressions
+    #     ],
+
+    #     # ';; DECLARATIONS',
+    #     *sorted(e for e in declarations),
+
+    #     # ';; EXPRESSIONS',
+    #     *[
+    #         e if isinstance(e, str) else p.doprint(e)
+    #         for e in expr
+    #     ],
+
+    #     # ';; SUFFIX EXPRESSIONS',
+    #     *[
+    #         e if isinstance(e, str) else p.doprint(e)
+    #         for e in suffix_expressions
+    #     ],
+    # ])
 
 def _auto_declare_smtlib(sym: typing.Union[Symbol, Function], p: SMTLibPrinter, log_warn: typing.Callable[[str], None]):
     if sym.is_Symbol:
@@ -471,7 +596,17 @@ def _auto_declare_smtlib(sym: typing.Union[Symbol, Function], p: SMTLibPrinter, 
         log_warn(f"Non-Symbol/Function `{sym}` will not be declared.")
         return None
 
+def _auto_assert_smtlib(e, p, log_warn):
+    # Assert only if SymPy considers it Boolean (Boolean expression or relation)
+    is_boolean = isinstance(e, Boolean) or isinstance(e, Relational) \
+                 or getattr(e, "is_Boolean", False) is True
 
+    if is_boolean:
+        return f"(assert {p.doprint(e)})"
+    else:
+        log_warn(f"Non-Boolean expression `{e}` will not be asserted. Converting to SMTLib verbatim.")
+        return p.doprint(e)
+    
 def _auto_assert_smtlib(e: Expr, p: SMTLibPrinter, log_warn: typing.Callable[[str], None]):
     if isinstance(e, Boolean) or (
         e in p.symbol_table and p.symbol_table[e] == bool
