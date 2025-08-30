@@ -176,8 +176,7 @@ def parse_latex(s, strict=False, backend="antlr"):
         Use ``backend="antlr"`` for the ANTLR-based parser, and
         ``backend="lark"`` for the Lark-based parser.
 
-        The ``backend`` option is case-sensitive, and must be in
-        all lowercase.
+        The ``backend`` option is case-insensitive.
     strict : bool, optional
         This option is only available with the ANTLR backend.
 
@@ -197,7 +196,13 @@ def parse_latex(s, strict=False, backend="antlr"):
     >>> func = parse_latex(r"\int_1^\alpha \dfrac{\mathrm{d}t}{t}", backend="lark")
     >>> func.evalf(subs={"alpha": 2})
     0.693147180559945
+    >>> parse_latex(r"", backend="fake")
+    Traceback (most recent call last):
+    ...
+    NotImplementedError: Using the 'fake' backend ... must be one of ['antlr', 'lark']
     """
+    backends_supported = ["antlr", "lark"]
+    backend = backend.lower()
 
     check_cases_env(s)
 
@@ -214,4 +219,5 @@ def parse_latex(s, strict=False, backend="antlr"):
         return parse_latex_lark(s)
     else:
         raise NotImplementedError(f"Using the '{backend}' backend in the LaTeX" \
-                                   " parser is not supported.")
+                                  f" parser is not supported, backend must be one of" \
+                                  f" {backends_supported}")
