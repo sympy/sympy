@@ -549,6 +549,14 @@ class EUFTheorySolver:
                 self._current_exception_type = 'equality_contradiction'
                 raise EUFEqualityContradictionException("EUF conflict: disequality within same equivalence class")
 
+            lhs, rhs, is_positive = _canonical_lit(literal)
+            if self.cc.are_equal(lhs,rhs):
+                # Terms are already equal - disequality contradicts equality
+                self.current_conflict_diseq = ceq  # The disequality we're trying to assert
+                self.current_conflict_eq = None
+                self._current_exception_type = 'equality_contradiction'
+                raise EUFEqualityContradictionException("EUF conflict: disequality within same equivalence class")
+
             # Record disequality
             diseq_key = _ordered_pair(rep_lhs, rep_rhs)
             self.disequalities_set[rep_lhs].add(rep_rhs)
