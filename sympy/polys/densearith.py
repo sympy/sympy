@@ -38,7 +38,7 @@ def dup_add_term(f: dup[Er], c: Er, i: int, K: Domain[Er]) -> dup[Er]:
     m = n - i - 1
 
     if i == n - 1:
-        return dup_strip([f[0] + c] + f[1:])
+        return dup_strip([f[0] + c] + f[1:], K)
     else:
         if i >= n:
             return [c] + [K.zero]*(i - n) + f
@@ -72,7 +72,7 @@ def dmp_add_term(f: dmp[Er], c: dmp[Er], i: int, u: int, K: Domain[Er]) -> dmp[E
     m = n - i - 1
 
     if i == n - 1:
-        return dmp_strip([dmp_add(f[0], c, v, K)] + f[1:], u)
+        return dmp_strip([dmp_add(f[0], c, v, K)] + f[1:], u, K)
     else:
         if i >= n:
             return [c] + dmp_zeros(i - n, v, K) + f
@@ -101,7 +101,7 @@ def dup_sub_term(f: dup[Er], c: Er, i: int, K: Domain[Er]) -> dup[Er]:
     m = n - i - 1
 
     if i == n - 1:
-        return dup_strip([f[0] - c] + f[1:])
+        return dup_strip([f[0] - c] + f[1:], K)
     else:
         if i >= n:
             return [-c] + [K.zero]*(i - n) + f
@@ -135,7 +135,7 @@ def dmp_sub_term(f: dmp[Er], c: dmp[Er], i: int, u: int, K: Domain[Er]) -> dmp[E
     m = n - i - 1
 
     if i == n - 1:
-        return dmp_strip([dmp_sub(f[0], c, v, K)] + f[1:], u)
+        return dmp_strip([dmp_sub(f[0], c, v, K)] + f[1:], u, K)
     else:
         if i >= n:
             return [dmp_neg(c, v, K)] + dmp_zeros(i - n, v, K) + f
@@ -185,7 +185,7 @@ def dmp_mul_term(f: dmp[Er], c: dmp[Er], i: int, u: int, K: Domain[Er]) -> dmp[E
     if dmp_zero_p(f, u):
         return f
     if dmp_zero_p(c, v):
-        return dmp_zero(u)
+        return dmp_zero(u, K)
     else:
         return [ dmp_mul(cf, c, v, K) for cf in f ] + dmp_zeros(i, v, K)
 
@@ -221,7 +221,7 @@ def dmp_add_ground(f: dmp[Er], c: Er, u: int, K: Domain[Er]) -> dmp[Er]:
     x**3 + 2*x**2 + 3*x + 8
 
     """
-    return dmp_add_term(f, dmp_ground(c, u - 1), 0, u, K)
+    return dmp_add_term(f, dmp_ground(c, u - 1, K), 0, u, K)
 
 
 def dup_sub_ground(f: dup[Er], c: Er, K: Domain[Er]) -> dup[Er]:
@@ -255,7 +255,7 @@ def dmp_sub_ground(f: dmp[Er], c: Er, u: int, K: Domain[Er]) -> dmp[Er]:
     x**3 + 2*x**2 + 3*x
 
     """
-    return dmp_sub_term(f, dmp_ground(c, u - 1), 0, u, K)
+    return dmp_sub_term(f, dmp_ground(c, u - 1, K), 0, u, K)
 
 
 def dup_mul_ground(f: dup[Er], c: Er, K: Domain[Er]) -> dup[Er]:
@@ -541,7 +541,7 @@ def dup_add(f: dup[Er], g: dup[Er], K: Domain[Er]) -> dup[Er]:
     dg = dup_degree(g)
 
     if df == dg:
-        return dup_strip([ a + b for a, b in zip(f, g) ])
+        return dup_strip([ a + b for a, b in zip(f, g) ], K)
     else:
         k = abs(df - dg)
 
@@ -583,7 +583,7 @@ def dmp_add(f: dmp[Er], g: dmp[Er], u: int, K: Domain[Er]) -> dmp[Er]:
     v = u - 1
 
     if df == dg:
-        return dmp_strip([ dmp_add(a, b, v, K) for a, b in zip(f, g) ], u)
+        return dmp_strip([ dmp_add(a, b, v, K) for a, b in zip(f, g) ], u, K)
     else:
         k = abs(df - dg)
 
@@ -618,7 +618,7 @@ def dup_sub(f: dup[Er], g: dup[Er], K: Domain[Er]) -> dup[Er]:
     dg = dup_degree(g)
 
     if df == dg:
-        return dup_strip([ a - b for a, b in zip(f, g) ])
+        return dup_strip([ a - b for a, b in zip(f, g) ], K)
     else:
         k = abs(df - dg)
 
@@ -660,7 +660,7 @@ def dmp_sub(f: dmp[Er], g: dmp[Er], u: int, K: Domain[Er]) -> dmp[Er]:
     v = u - 1
 
     if df == dg:
-        return dmp_strip([ dmp_sub(a, b, v, K) for a, b in zip(f, g) ], u)
+        return dmp_strip([ dmp_sub(a, b, v, K) for a, b in zip(f, g) ], u, K)
     else:
         k = abs(df - dg)
 
@@ -766,7 +766,7 @@ def dup_mul(f: dup[Er], g: dup[Er], K: Domain[Er]) -> dup[Er]:
     n = max(df, dg) + 1
 
     if n < 100 or not K.is_Exact:
-        h = []
+        h: list[Er] = []
 
         for i in range(0, df + dg + 1):
             coeff = K.zero
@@ -776,7 +776,7 @@ def dup_mul(f: dup[Er], g: dup[Er], K: Domain[Er]) -> dup[Er]:
 
             h.append(coeff)
 
-        return dup_strip(h)
+        return dup_strip(h, K)
     else:
         # Use Karatsuba's algorithm (divide and conquer), see e.g.:
         # Joris van der Hoeven, Relax But Don't Be Too Lazy,
@@ -827,17 +827,18 @@ def dmp_mul(f: dmp[Er], g: dmp[Er], u: int, K: Domain[Er]) -> dmp[Er]:
     if dg < 0:
         return g
 
-    h, v = [], u - 1
+    h: list[dmp[Er]] = []
+    v = u - 1
 
     for i in range(0, df + dg + 1):
-        coeff = dmp_zero(v)
+        coeff = dmp_zero(v, K)
 
         for j in range(max(0, i - dg), min(df, i) + 1):
             coeff = dmp_add(coeff, dmp_mul(f[j], g[i - j], v, K), v, K)
 
         h.append(coeff)
 
-    return dmp_strip(h, u)
+    return dmp_strip(h, u, K)
 
 
 def _dup_series_mul_base(f: dup[Er], g: dup[Er], n: int, K: Domain[Er]) -> dup[Er]:
@@ -852,7 +853,7 @@ def _dup_series_mul_base(f: dup[Er], g: dup[Er], n: int, K: Domain[Er]) -> dup[E
         for j in range(min(len(g), n - i)):
             h[i + j] += f[i] * g[j]
 
-    return dup_reverse(h)
+    return dup_reverse(h, K)
 
 
 def _dup_series_mul_karatsuba(f: dup[Er], g: dup[Er], prec: int, K: Domain[Er]) -> dup[Er]:
@@ -891,7 +892,7 @@ def _dup_series_mul_karatsuba(f: dup[Er], g: dup[Er], prec: int, K: Domain[Er]) 
         res = dup_add(res, dup_lshift(hi, 2 * n2, K), K)
 
     res = dup_truncate(res, prec, K)
-    return dup_strip(res)
+    return dup_strip(res, K)
 
 
 def dup_series_mul(f: dup[Er], g: dup[Er], n: int, K: Domain[Er]) -> dup[Er]:
@@ -933,7 +934,8 @@ def dup_sqr(f: dup[Er], K: Domain[Er]) -> dup[Er]:
     x**4 + 2*x**2 + 1
 
     """
-    df, h = len(f) - 1, []
+    h: list[Er] = []
+    df = len(f) - 1
 
     for i in range(0, 2*df + 1):
         c = K.zero
@@ -956,7 +958,7 @@ def dup_sqr(f: dup[Er], K: Domain[Er]) -> dup[Er]:
 
         h.append(c)
 
-    return dup_strip(h)
+    return dup_strip(h, K)
 
 
 def dmp_sqr(f: dmp[Er], u: int, K: Domain[Er]) -> dmp[Er]:
@@ -981,10 +983,11 @@ def dmp_sqr(f: dmp[Er], u: int, K: Domain[Er]) -> dmp[Er]:
     if df < 0:
         return f
 
-    h, v = [], u - 1
+    h: list[dmp[Er]] = []
+    v = u - 1
 
     for i in range(0, 2*df + 1):
-        c = dmp_zero(v)
+        c = dmp_zero(v, K)
 
         jmin = max(0, i - df)
         jmax = min(i, df)
@@ -1004,7 +1007,7 @@ def dmp_sqr(f: dmp[Er], u: int, K: Domain[Er]) -> dmp[Er]:
 
         h.append(c)
 
-    return dmp_strip(h, u)
+    return dmp_strip(h, u, K)
 
 
 def dup_series_sqr(f: dup[Er], n: int, K: Domain[Er]) -> dup[Er]:
@@ -1032,7 +1035,7 @@ def dup_series_sqr(f: dup[Er], n: int, K: Domain[Er]) -> dup[Er]:
         return dup_series_mul(f, f, n, K)
 
 
-    h = []
+    h: list[Er] = []
 
     for i in range(n):
         c = K.zero
@@ -1052,7 +1055,7 @@ def dup_series_sqr(f: dup[Er], n: int, K: Domain[Er]) -> dup[Er]:
 
         h.append(c)
 
-    return dup_strip(h[::-1])
+    return dup_strip(h[::-1], K)
 
 
 def dup_pow(f: dup[Er], n: int, K: Domain[Er]) -> dup[Er]:
@@ -1346,7 +1349,7 @@ def dmp_pdiv(f: dmp[Er], g: dmp[Er], u: int, K: Domain[Er]) -> tuple[dmp[Er], dm
     if dg < 0:
         raise ZeroDivisionError("polynomial division")
 
-    q, r, dr = dmp_zero(u), f, df
+    q, r, dr = dmp_zero(u, K), f, df
 
     if df < dg:
         return q, r
@@ -1565,7 +1568,7 @@ def dmp_rr_div(
     if dg < 0:
         raise ZeroDivisionError("polynomial division")
 
-    q, r, dr = dmp_zero(u), f, df
+    q, r, dr = dmp_zero(u, K), f, df
 
     if df < dg:
         return q, r
@@ -1639,7 +1642,7 @@ def dup_ff_div(f: dup[Ef], g: dup[Ef], K: Domain[Ef]) -> tuple[dup[Ef], dup[Ef]]
             break
         elif dr == _dr and not K.is_Exact:
             # remove leading term created by rounding error
-            r = dup_strip(r[1:])
+            r = dup_strip(r[1:], K)
             dr = dup_degree(r)
             if dr < dg:
                 break
@@ -1675,7 +1678,7 @@ def dmp_ff_div(
     if dg < 0:
         raise ZeroDivisionError("polynomial division")
 
-    q, r, dr = dmp_zero(u), f, df
+    q, r, dr = dmp_zero(u, K), f, df
 
     if df < dg:
         return q, r

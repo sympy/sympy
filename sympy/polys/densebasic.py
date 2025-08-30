@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-
-from typing import TYPE_CHECKING, TypeVar, Iterable, Callable, Any, cast
+from typing import TYPE_CHECKING, TypeVar, Callable, Any, cast
+from typing import Iterable # noqa: F401
 
 from sympy.external.gmpy import MPZ
 from sympy.core import igcd
@@ -16,10 +16,16 @@ import random
 
 
 _T = TypeVar("_T")
+
 dup: TypeAlias = "list[_T]"
 dmp: TypeAlias = "list[dmp[_T]]"
+
+idup: TypeAlias = "Iterable[_T]"
+idmp: TypeAlias = "Iterable[idmp[_T]]"
+
 dup_tup: TypeAlias = "tuple[_T, ...]"
 dmp_tup: TypeAlias = "tuple[dmp_tup[_T], ...]"
+
 monom: TypeAlias = "tuple[int, ...]"
 
 
@@ -66,6 +72,10 @@ if TYPE_CHECKING:
         """Convert tuple of dup to tuple of level 0 dmp."""
         ...
 
+    def _2idup(p: idmp[_T], /) -> idup[_T]:
+        """Iterable dmp to iterable dup."""
+        ...
+
     # XXX: mypy does not understand this for some reason (likely a bug)
     def _dmp_ground(p: dmp[_T], /) -> _T: # type: ignore
         """Convert level -1 dmp to ground type."""
@@ -97,6 +107,9 @@ else:
 
     def _idmp(ps, /):
         return ps
+
+    def _2idup(p, /):
+        return p
 
     def _dmp_ground(p, /):
         return p
@@ -399,16 +412,17 @@ def dmp_degree_list(f: dmp[Er], u: int) -> tuple[int, ...]:
     return tuple(degs)
 
 
-def dup_strip(f: dup[Er]) -> dup[Er]:
+def dup_strip(f: dup[Er], K: Domain[Er] | None = None) -> dup[Er]:
     """
     Remove leading zeros from ``f`` in ``K[x]``.
 
     Examples
     ========
 
+    >>> from sympy import ZZ
     >>> from sympy.polys.densebasic import dup_strip
 
-    >>> dup_strip([0, 0, 1, 2, 3, 0])
+    >>> dup_strip([0, 0, 1, 2, 3, 0], ZZ)
     [1, 2, 3, 0]
 
     """
@@ -426,7 +440,7 @@ def dup_strip(f: dup[Er]) -> dup[Er]:
     return f[i:]
 
 
-def dmp_strip(f: dmp[Er], u: int) -> dmp[Er]:
+def dmp_strip(f: dmp[Er], u: int, K: Domain[Er] | None = None) -> dmp[Er]:
     """
     Remove leading zeros from ``f`` in ``K[X]``.
 
@@ -440,7 +454,7 @@ def dmp_strip(f: dmp[Er], u: int) -> dmp[Er]:
 
     """
     if not u:
-        return _dmp(dup_strip(_dup(f)))
+        return _dmp(dup_strip(_dup(f), K))
 
     if dmp_zero_p(f, u):
         return f
@@ -454,18 +468,18 @@ def dmp_strip(f: dmp[Er], u: int) -> dmp[Er]:
             i += 1
 
     if i == len(f):
-        return dmp_zero(u)
+        return dmp_zero(u, K)
     else:
         return f[i:]
 
 
 def _rec_validate(
-    f: dmp[Er], g: dmp[Er] | Er, i: int, K: Domain[Er] | None
+    f: dmp[Er], g: dmp[Er] | Er, i: int, K: Domain[Er] | None, strict: bool
 ) -> set[int]:
     """Recursive helper for :func:`dmp_validate`."""
     if not isinstance(g, list):
-        if K is not None and not K.of_type(g):
-            raise TypeError("%s in %s in not of type %s" % (g, f, K.dtype))
+        if strict and K is not None and not K.of_type(g):
+            raise TypeError("%s in %s is not of type %s" % (g, f, K.dtype))
 
         return {i - 1}
     elif not g:
@@ -474,50 +488,58 @@ def _rec_validate(
         levels: set[int] = set()
 
         for c in g:
-            levels |= _rec_validate(f, c, i + 1, K)
+            levels |= _rec_validate(f, c, i + 1, K, strict)
 
         return levels
 
 
-def _rec_strip(g: dmp[Er], v: int) -> dmp[Er]:
+def _rec_strip(g: dmp[Er], v: int, K: Domain[Er] | None = None) -> dmp[Er]:
     """Recursive helper for :func:`_rec_strip`."""
     if not v:
-        return _dmp(dup_strip(_dup(g)))
+        return _dmp(dup_strip(_dup(g), K))
 
     w = v - 1
 
-    return dmp_strip([_rec_strip(c, w) for c in g], v)
+    return dmp_strip([_rec_strip(c, w, K) for c in g], v, K)
 
 
-def dmp_validate(f: dmp[Er], K: Domain[Er] | None = None) -> tuple[dmp[Er], int]:
+def dmp_validate(
+    f: dmp[Er], K: Domain[Er] | None = None, *, strict: bool = False
+) -> tuple[dmp[Er], int]:
     """
     Return the number of levels in ``f`` and recursively strip it.
 
     Examples
     ========
 
+    >>> from sympy import ZZ
     >>> from sympy.polys.densebasic import dmp_validate
 
-    >>> dmp_validate([[], [0, 1, 2], [1]])
+    >>> dmp_validate([[], [ZZ(0), ZZ(1), ZZ(2)], [ZZ(1)]], ZZ)
     ([[1, 2], [1]], 1)
 
-    >>> dmp_validate([[1], 1])
+    >>> dmp_validate([[ZZ(1)], ZZ(1)], ZZ)
     Traceback (most recent call last):
     ...
     ValueError: invalid data structure for a multivariate polynomial
 
+    >>> dmp_validate([['invalid'], [1]], ZZ, strict=True)
+    Traceback (most recent call last):
+    ...
+    TypeError: 1 in [1] is not of type ZZ
+
     """
-    levels = _rec_validate(f, f, 0, K)
+    levels = _rec_validate(f, f, 0, K, strict)
 
     u = levels.pop()
 
     if not levels:
-        return _rec_strip(f, u), u
+        return _rec_strip(f, u, K), u
     else:
         raise ValueError("invalid data structure for a multivariate polynomial")
 
 
-def dup_reverse(f: dup[Er]) -> dup[Er]:
+def dup_reverse(f: dup[Er], K: Domain[Er]) -> dup[Er]:
     """
     Compute ``x**n * f(1/x)``, i.e.: reverse ``f`` in ``K[x]``.
 
@@ -529,11 +551,11 @@ def dup_reverse(f: dup[Er]) -> dup[Er]:
 
     >>> f = ZZ.map([1, 2, 3, 0])
 
-    >>> dup_reverse(f)
+    >>> dup_reverse(f, ZZ)
     [3, 2, 1]
 
     """
-    return dup_strip(list(reversed(f)))
+    return dup_strip(list(reversed(f)), K)
 
 
 def dup_copy(f: dup[Er]) -> dup[Er]:
@@ -625,7 +647,7 @@ def dmp_to_tuple(f: dmp[Er], u: int) -> dmp_tup[Er]:
     return tuple(dmp_to_tuple(c, v) for c in f)
 
 
-def dup_normal(f: dup[int] | dup[MPZ], K: Domain[Er]) -> dup[Er]:
+def dup_normal(f: idup[int | MPZ], K: Domain[Er]) -> dup[Er]:
     """
     Normalize univariate polynomial in the given domain.
 
@@ -639,10 +661,10 @@ def dup_normal(f: dup[int] | dup[MPZ], K: Domain[Er]) -> dup[Er]:
     [1, 2, 3]
 
     """
-    return dup_strip([K.normal(c) for c in f])
+    return dup_strip([K.normal(c) for c in f], K)
 
 
-def dmp_normal(f: dmp[int] | dmp[MPZ], u: int, K: Domain[Er]) -> dmp[Er]:
+def dmp_normal(f: idmp[int | MPZ], u: int, K: Domain[Er]) -> dmp[Er]:
     """
     Normalize a multivariate polynomial in the given domain.
 
@@ -657,11 +679,11 @@ def dmp_normal(f: dmp[int] | dmp[MPZ], u: int, K: Domain[Er]) -> dmp[Er]:
 
     """
     if not u:
-        return _dmp(dup_normal(_dup(f), K))
+        return _dmp(dup_normal(_2idup(f), K))
 
     v = u - 1
 
-    return dmp_strip([dmp_normal(c, v, K) for c in f], u)
+    return dmp_strip([dmp_normal(c, v, K) for c in f], u, K)
 
 
 def dup_convert(f: dup[Er], K0: Domain[Er] | None, K1: Domain[Es]) -> dup[Es]:
@@ -686,7 +708,7 @@ def dup_convert(f: dup[Er], K0: Domain[Er] | None, K1: Domain[Es]) -> dup[Es]:
     if K0 is not None and K0 == K1:
         return cast('dup[Es]', f)
     else:
-        return dup_strip([K1.convert(c, K0) for c in f])
+        return dup_strip([K1.convert(c, K0) for c in f], K1)
 
 
 def dmp_convert(f: dmp[Er], u: int, K0: Domain[Er] | None, K1: Domain[Es]) -> dmp[Es]:
@@ -715,7 +737,7 @@ def dmp_convert(f: dmp[Er], u: int, K0: Domain[Er] | None, K1: Domain[Es]) -> dm
 
     v = u - 1
 
-    return dmp_strip([dmp_convert(c, v, K0, K1) for c in f], u)
+    return dmp_strip([dmp_convert(c, v, K0, K1) for c in f], u, K1)
 
 
 def dup_from_sympy(f: list[Expr], K: Domain[Er]) -> dup[Er]:
@@ -733,7 +755,7 @@ def dup_from_sympy(f: list[Expr], K: Domain[Er]) -> dup[Er]:
     True
 
     """
-    return dup_strip([K.from_sympy(c) for c in f])
+    return dup_strip([K.from_sympy(c) for c in f], K)
 
 
 def dmp_from_sympy(f: dmp[Expr], u: int, K: Domain[Er]) -> dmp[Er]:
@@ -756,7 +778,7 @@ def dmp_from_sympy(f: dmp[Expr], u: int, K: Domain[Er]) -> dmp[Er]:
 
     v = u - 1
 
-    return dmp_strip([dmp_from_sympy(c, v, K) for c in f], u)
+    return dmp_strip([dmp_from_sympy(c, v, K) for c in f], u, K)
 
 
 def dup_nth(f: dup[Er], n: int, K: Domain[Er]) -> Er:
@@ -806,12 +828,12 @@ def dmp_nth(f: dmp[Er], n: int, u: int, K: Domain[Er]) -> dmp[Er]:
     if n < 0:
         raise IndexError("'n' must be non-negative, got %i" % n)
     elif n >= len(f):
-        return dmp_zero(u - 1)
+        return dmp_zero(u - 1, K)
     else:
         return f[dmp_degree(f, u) - n]
 
 
-def dmp_ground_nth(f: dmp[Er], N: Iterable[int], u: int, K: Domain[Er]) -> Er:
+def dmp_ground_nth(f: dmp[Er], N: tuple[int, ...], u: int, K: Domain[Er]) -> Er:
     """
     Return the ground ``n``-th coefficient of ``f`` in ``K[x]``.
 
@@ -866,7 +888,7 @@ def dmp_zero_p(f: dmp[Er], u: int) -> bool:
     return not f
 
 
-def dmp_zero(u: int) -> dmp:
+def dmp_zero(u: int, K: Domain[Er] | None = None) -> dmp[Er]:
     """
     Return a multivariate zero.
 
@@ -879,7 +901,7 @@ def dmp_zero(u: int) -> dmp:
     [[[[[]]]]]
 
     """
-    r: dmp = []
+    r: dmp[Er] = []
 
     for i in range(u):
         r = [r]
@@ -918,7 +940,7 @@ def dmp_one(u: int, K: Domain[Er]) -> dmp[Er]:
     [[[1]]]
 
     """
-    return dmp_ground(K.one, u)
+    return dmp_ground(K.one, u, K)
 
 
 def dmp_ground_p(f: dmp[Er], c: Er | None, u: int) -> bool:
@@ -951,23 +973,24 @@ def dmp_ground_p(f: dmp[Er], c: Er | None, u: int) -> bool:
         return f == [c]
 
 
-def dmp_ground(c: Er, u: int) -> dmp[Er]:
+def dmp_ground(c: Er, u: int, K: Domain[Er]) -> dmp[Er]:
     """
     Return a multivariate constant.
 
     Examples
     ========
 
+    >>> from sympy import ZZ
     >>> from sympy.polys.densebasic import dmp_ground
 
-    >>> dmp_ground(3, 5)
+    >>> dmp_ground(3, 5, ZZ)
     [[[[[[3]]]]]]
-    >>> dmp_ground(1, -1)
+    >>> dmp_ground(1, -1, ZZ)
     1
 
     """
     if not c:
-        return dmp_zero(u)
+        return dmp_zero(u, K)
 
     if u < 0:
         return _ground_dmp(c)
@@ -1002,10 +1025,10 @@ def dmp_zeros(n: int, u: int, K: Domain[Er]) -> dmp[Er]:
     if u < 0:
         return _dmp([K.zero] * n)
     else:
-        return [dmp_zero(u) for i in range(n)]
+        return [dmp_zero(u, K) for i in range(n)]
 
 
-def dmp_grounds(c: Er, n: int, u: int) -> list[dmp[Er]]:
+def dmp_grounds(c: Er, n: int, u: int, K: Domain[Er]) -> list[dmp[Er]]:
     """
     Return a list of multivariate constants.
 
@@ -1015,9 +1038,9 @@ def dmp_grounds(c: Er, n: int, u: int) -> list[dmp[Er]]:
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densebasic import dmp_grounds
 
-    >>> dmp_grounds(ZZ(4), 3, 2)
+    >>> dmp_grounds(ZZ(4), 3, 2, ZZ)
     [[[[4]]], [[[4]]], [[[4]]]]
-    >>> dmp_grounds(ZZ(4), 3, -1)
+    >>> dmp_grounds(ZZ(4), 3, -1, ZZ)
     [4, 4, 4]
 
     """
@@ -1027,7 +1050,7 @@ def dmp_grounds(c: Er, n: int, u: int) -> list[dmp[Er]]:
     if u < 0:
         return [_ground_dmp(c)] * n
     else:
-        return [dmp_ground(c, u) for i in range(n)]
+        return [dmp_ground(c, u, K) for i in range(n)]
 
 
 def dmp_negative_p(f: dmp[Er], u: int, K: Domain[Er]) -> bool:
@@ -1093,7 +1116,7 @@ def dup_from_dict(f: dict[tuple[int, ...], Er], K: Domain[Er]) -> dup[Er]:
     for (k,), fk in f.items():
         h[n - k] = fk
 
-    return dup_strip(h)
+    return dup_strip(h, K)
 
 
 def dup_from_raw_dict(f: dict[int, Er], K: Domain[Er]) -> dup[Er]:
@@ -1119,7 +1142,7 @@ def dup_from_raw_dict(f: dict[int, Er], K: Domain[Er]) -> dup[Er]:
     for k, fk in f.items():
         h[n - k] = fk
 
-    return dup_strip(h)
+    return dup_strip(h, K)
 
 
 def dmp_from_dict(f: dict[tuple[int, ...], Er], u: int, K: Domain[Er]) -> dmp[Er]:
@@ -1141,7 +1164,7 @@ def dmp_from_dict(f: dict[tuple[int, ...], Er], u: int, K: Domain[Er]) -> dmp[Er
     if not u:
         return _dmp(dup_from_dict(f, K))
     if not f:
-        return dmp_zero(u)
+        return dmp_zero(u, K)
 
     coeffs: dict[int, dict[monom, Er]] = {}
 
@@ -1163,9 +1186,9 @@ def dmp_from_dict(f: dict[tuple[int, ...], Er], u: int, K: Domain[Er]) -> dmp[Er
         if dcoeff is not None:
             h.append(dmp_from_dict(dcoeff, v, K))
         else:
-            h.append(dmp_zero(v))
+            h.append(dmp_zero(v, K))
 
-    return dmp_strip(h, u)
+    return dmp_strip(h, u, K)
 
 
 def dup_to_dict(f: dup[Er], K: Domain[Er]) -> dict[tuple[int, ...], Er]:
@@ -1347,7 +1370,7 @@ def dmp_nest(f: dmp[Er], l: int, K: Domain[Er]) -> dmp[Er]:
 
     """
     if not isinstance(f, list):
-        return dmp_ground(f, l)
+        return dmp_ground(f, l, K)
 
     for i in range(l):
         f = [f]
@@ -1376,11 +1399,11 @@ def dmp_raise(f: dmp[Er], l: int, u: int, K: Domain[Er]) -> dmp[Er]:
 
     if not u:
         if not f:
-            return dmp_zero(l)
+            return dmp_zero(l, K)
 
         k = l - 1
 
-        return [dmp_ground(c, k) for c in _dup(f)]
+        return [dmp_ground(c, k, K) for c in _dup(f)]
 
     v = u - 1
 
@@ -1609,7 +1632,7 @@ def _rec_inflate(g: dmp[Er], M: list[int], v: int, i: int, K: Domain[Er]) -> dmp
 
     for coeff in g[1:]:
         for _ in range(1, M[i]):
-            result.append(dmp_zero(w))
+            result.append(dmp_zero(w, K))
 
         result.append(coeff)
 
@@ -1956,7 +1979,7 @@ def dup_apply_pairs(
     for a, b in zip(f, g):
         result.append(h(a, b, *args))
 
-    return dup_strip(result)
+    return dup_strip(result, K)
 
 
 def dmp_apply_pairs(
@@ -1998,7 +2021,7 @@ def dmp_apply_pairs(
     for a, b in zip(f, g):
         result.append(dmp_apply_pairs(a, b, h, args, v, K))
 
-    return dmp_strip(result, u)
+    return dmp_strip(result, u, K)
 
 
 def dup_slice(f: dup[Er], m: int, n: int, K: Domain[Er]) -> dup[Er]:
@@ -2120,7 +2143,7 @@ def dup_from_list(f: list[int] | list[Er], K: Domain[Er]) -> dup[Er]:
     if not f:
         return []
 
-    return dup_strip([K.convert(c) for c in f])
+    return dup_strip([K.convert(c) for c in f], K)
 
 
 def dup_pretty(f: dup[Er], sym: str, *, ascending: bool = False) -> str:
