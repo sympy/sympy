@@ -1080,7 +1080,7 @@ def test_atan():
     assert atan.nargs == FiniteSet(1)
     assert atan(oo) == pi/2
     assert atan(-oo) == -pi/2
-    assert atan(zoo) == AccumBounds(-pi/2, pi/2)
+    assert unchanged(atan, zoo)
 
     assert atan(0) == 0
     assert atan(1) == pi/4

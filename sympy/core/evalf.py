@@ -1009,7 +1009,10 @@ def evalf_log(expr: 'log', prec: int, options: OPT_DICT) -> TMP_RES:
 
 def evalf_atan(v: 'atan', prec: int, options: OPT_DICT) -> TMP_RES:
     arg = v.args[0]
-    xre, xim, reacc, imacc = evalf(arg, prec + 5, options)
+    result = evalf(arg, prec + 5, options)
+    if result is S.ComplexInfinity:
+        return result
+    xre, xim, reacc, imacc = result
     if xre is xim is None:
         return (None,)*4
     if xim:
