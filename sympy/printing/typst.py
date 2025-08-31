@@ -31,10 +31,10 @@ if TYPE_CHECKING:
     from sympy.tensor.array import NDimArray
     from sympy.vector.basisdependent import BasisDependent
 
-# remove frac and root 
+# remove root
 accepted_typst_functions = ['arcsin', 'arccos', 'arctan', 'sin', 'cos', 'tan',
                             'sinh', 'cosh', 'tanh', 'sqrt', 'ln', 'log', 'sec',
-                            'csc', 'cot', 'coth', 're', 'im', 'arg',
+                            'csc', 'cot', 'coth', 're', 'im', 'frac','arg',
                             ]
 
 typst_greek_dictionary = {
@@ -208,7 +208,7 @@ class TypstPrinter(Printer):
 
     def _add_parens(self, s) -> str:
         return r"({})".format(s)
-    
+
     # TODO: merge this with the above, which requires a lot of test changes
     def _add_parens_lspace(self, s) -> str:
         return r"({})".format(s)
@@ -497,7 +497,7 @@ class TypstPrinter(Printer):
     def _print_Laplacian(self, expr):
         func = expr._expr
         return r"Delta %s" % self.parenthesize(func, PRECEDENCE['Mul'])
-    
+
     def _mul_add_parens(self, denom, sdenom):
         if denom.is_negative:
             return r"(%s)" % sdenom
@@ -690,7 +690,7 @@ class TypstPrinter(Printer):
         #     # don't use parentheses around dotted derivative
         #     base = base[6: -7]  # remove outermost added parens
         return template % (base, exp)
-    
+
     def _print_UnevaluatedExpr(self, expr):
         return self._print(expr.args[0])
 
@@ -712,7 +712,7 @@ class TypstPrinter(Printer):
             typst += self._print(expr.function)
 
         return typst
-    
+
     def _print_Product(self, expr):
         if len(expr.limits) == 1:
             typ = r"product_(%s=%s)^(%s) " % \
@@ -723,7 +723,7 @@ class TypstPrinter(Printer):
                     tuple([self._print(s) for s in (l[1], l[0], l[2])])
 
             typ = r"product_(%s) " % \
-                str.join(' \ ', [_format_ineq(l) for l in expr.limits])
+                str.join(r' \ ', [_format_ineq(l) for l in expr.limits])
 
         if isinstance(expr.function, Add):
             typ += r"(%s)" % self._print(expr.function)
@@ -761,7 +761,7 @@ class TypstPrinter(Printer):
         else:
             outstr = outstr[1:]
         return outstr
-    
+
     def _print_Indexed(self, expr):
         typ_base = self._print(expr.base)
         # Remove trailing _(...) from typ_base, but keep _ and its content
@@ -847,12 +847,14 @@ class TypstPrinter(Printer):
                                   ".triple" if len(expr.limits) == 3 else
                                   ".quad" if len(expr.limits) == 4 else "")
 
-            symbols = [r"%s %s" % (diff_symbol, self._print(symbol[0]))
-                       for symbol in expr.limits]
+            symbols = " ".join([r"%s %s" % (diff_symbol, self._print(symbol[0]))
+                                for symbol in expr.limits])
 
         else:
             for lim in reversed(expr.limits):
                 symbol = lim[0]
+                if typst:
+                    typst += " "
                 typst += "integral"
 
                 if len(lim) > 1:
@@ -864,6 +866,7 @@ class TypstPrinter(Printer):
                         typst += "^(%s)" % (self._print(lim[1]))
 
                 symbols.insert(0, r"%s %s" % (diff_symbol, self._print(symbol)))
+            symbols = " ".join(symbols)
 
         return r"%s %s %s" % (typst, self.parenthesize(expr.function,
                                                     PRECEDENCE["Mul"],
@@ -1041,22 +1044,22 @@ class TypstPrinter(Printer):
         else:
             symbols = self._print(tuple(symbols))
 
-        tex = r"( %s arrow.r.bar %s )" % (symbols, self._print(expr))
+        typ = r"(%s arrow.r.bar %s)" % (symbols, self._print(expr))
 
-        return tex
+        return typ
 
     def _print_IdentityFunction(self, expr):
-        return r"( x arrow.r.bar x )"
+        return r"(x arrow.r.bar x)"
 
     def _hprint_variadic_function(self, expr, exp=None) -> str:
         args = sorted(expr.args, key=default_sort_key)
-        texargs = [r"%s" % self._print(symbol) for symbol in args]
-        tex = r"%s(%s)" % (str(expr.func).lower(),
-                                       ", ".join(texargs))
+        typargs = [r"%s" % self._print(symbol) for symbol in args]
+        typ = r"%s(%s)" % (str(expr.func).lower(),
+                                       ", ".join(typargs))
         if exp is not None:
-            return r"%s^(%s)" % (tex, exp)
+            return r"%s^(%s)" % (typ, exp)
         else:
-            return tex
+            return typ
 
     _print_Min = _print_Max = _hprint_variadic_function
 
@@ -1097,11 +1100,11 @@ class TypstPrinter(Printer):
 
     def _print_re(self, expr, exp=None):
         if self._settings['gothic_re_im']:
-            tex = r"Re(%s)" % expr.args[0]
+            typ = r"Re(%s)" % expr.args[0]
         else:
-            tex = r'upright("re")({})'.format(expr.args[0])
+            typ = r'upright("re")({})'.format(expr.args[0])
 
-        return self._do_exponent(tex, exp)
+        return self._do_exponent(typ, exp)
 
     def _print_im(self, expr, exp=None):
         if self._settings['gothic_re_im']:
@@ -1188,7 +1191,7 @@ class TypstPrinter(Printer):
             return r"K%s" % tex
 
     def _print_elliptic_f(self, expr, exp=None):
-        tex = r"(%s | %s)" % \
+        tex = r"(%s mid(|) %s)" % \
             (self._print(expr.args[0]), self._print(expr.args[1]))
         if exp is not None:
             return r"F^(%s)%s" % (exp, tex)
@@ -1197,7 +1200,7 @@ class TypstPrinter(Printer):
 
     def _print_elliptic_e(self, expr, exp=None):
         if len(expr.args) == 2:
-            tex = r"(%s | %s)" % \
+            tex = r"(%s mid(|) %s)" % \
                 (self._print(expr.args[0]), self._print(expr.args[1]))
         else:
             tex = r"(%s)" % self._print(expr.args[0])
@@ -1208,11 +1211,11 @@ class TypstPrinter(Printer):
 
     def _print_elliptic_pi(self, expr, exp=None):
         if len(expr.args) == 3:
-            tex = r"(%s; %s | %s)" % \
+            tex = r"(%s; %s mid(|) %s)" % \
                 (self._print(expr.args[0]), self._print(expr.args[1]),
                  self._print(expr.args[2]))
         else:
-            tex = r"(%s | %s)" % \
+            tex = r"(%s mid(|) %s)" % \
                 (self._print(expr.args[0]), self._print(expr.args[1]))
         if exp is not None:
             return r"Pi^(%s)%s" % (exp, tex)
@@ -1274,7 +1277,7 @@ class TypstPrinter(Printer):
         typ = r"(%s)" % self._print(expr.args[0])
 
         if exp is not None:
-            return r'upright("Chi")^{%s}%s' % (exp, typ)
+            return r'upright("Chi")^(%s)%s' % (exp, typ)
         else:
             return r'upright("Chi")%s' % typ
 
@@ -1310,7 +1313,7 @@ class TypstPrinter(Printer):
             return r"(%s)^(%s)" % (typ, exp)
         else:
             return typ
-        
+
     def _print_factorial(self, expr, exp=None):
         typ = r"%s!" % self.parenthesize(expr.args[0], PRECEDENCE["Func"])
 
@@ -1326,14 +1329,14 @@ class TypstPrinter(Printer):
             return r"%s^(%s)" % (typ, exp)
         else:
             return typ
-    
+
     def _print_binomial(self, expr, exp=None):
         typst = "binom(%s, %s)" % (self._print(expr.args[0]), self._print(expr.args[1]))
         if exp is not None:
             return "%s^(%s)" % (typst, exp)
         else:
             return typst
-        
+
     def _print_RisingFactorial(self, expr, exp=None):
         n, k = expr.args
         base = r"%s" % self.parenthesize(n, PRECEDENCE['Func'])
@@ -1360,7 +1363,7 @@ class TypstPrinter(Printer):
             else:
                 need_exp = True
 
-        typ = r"%s_(%s})(%s)" % (typ, self._print(expr.order),
+        typ = r"%s_(%s)(%s)" % (typ, self._print(expr.order),
                                            self._print(expr.argument))
 
         if need_exp:
@@ -1372,7 +1375,7 @@ class TypstPrinter(Printer):
             return ""
         s = ""
         for i in vec[:-1]:
-            s += "%s, " % self._print(i)
+            s += r'%s"," ' % self._print(i)
         s += self._print(vec[-1])
         return s
 
@@ -1436,7 +1439,7 @@ class TypstPrinter(Printer):
 
     def _print_hyper(self, expr, exp=None):
         tex = r'scripts("")_(%s)F_(%s)(mat(delim: "[", %s; %s)' \
-              r'| %s)' % \
+              r' mid(|) %s)' % \
             (self._print(len(expr.ap)), self._print(len(expr.bq)),
               self._hprint_vec(expr.ap), self._hprint_vec(expr.bq),
               self._print(expr.argument))
@@ -1446,8 +1449,8 @@ class TypstPrinter(Printer):
         return tex
 
     def _print_meijerg(self, expr, exp=None):
-        tex = r'G_(%s, %s)^(%s, %s)(mat(delim: "[", %s, %s;' \
-              r'%s , %s) | %s)' % \
+        tex = r'G_(%s, %s)^(%s, %s)(mat(delim:#none, %s, %s;' \
+              r'%s , %s) mid(|) %s)' % \
             (self._print(len(expr.ap)), self._print(len(expr.bq)),
               self._print(len(expr.bm)), self._print(len(expr.an)),
               self._hprint_vec(expr.an), self._hprint_vec(expr.aother),
@@ -1475,7 +1478,7 @@ class TypstPrinter(Printer):
 
     def _print_stieltjes(self, expr, exp=None):
         if len(expr.args) == 2:
-            tex = r'scripts("")_(%s)(%s)' % tuple(map(self._print, expr.args))
+            tex = r'_(%s)(%s)' % tuple(map(self._print, expr.args))
         else:
             tex = r'_(%s)' % self._print(expr.args[0])
         if exp is not None:
@@ -1560,14 +1563,14 @@ class TypstPrinter(Printer):
 
     def _print_Ynm(self, expr, exp=None):
         n, m, theta, phi = map(self._print, expr.args)
-        tex = r"Y_(%s)^(%s)(%s,%s)" % (n, m, theta, phi)
+        tex = r"Y_(%s)^(%s)(%s, %s)" % (n, m, theta, phi)
         if exp is not None:
             tex = r"(" + tex + r")^(%s)" % (exp)
         return tex
 
     def _print_Znm(self, expr, exp=None):
         n, m, theta, phi = map(self._print, expr.args)
-        tex = r"Z_(%s)^(%s)(%s,%s)" % (n, m, theta, phi)
+        tex = r"Z_(%s)^(%s)(%s, %s)" % (n, m, theta, phi)
         if exp is not None:
             tex = r"(" + tex + r")^(%s)" % (exp)
         return tex
@@ -1602,7 +1605,7 @@ class TypstPrinter(Printer):
             return r"%s%d/%d" % (sign, p, expr.q)
         else:
             return self._print(expr.p)
-    
+
     def _print_Order(self, expr):
         s = self._print(expr.expr)
         if expr.point and any(p != S.Zero for p in expr.point) or \
@@ -1644,7 +1647,7 @@ class TypstPrinter(Printer):
 
         if idx == -1 and (typ.lower() in greek_letters_value_set) or (typ.lower() in other_symbols):
             return typ
-    
+
         if len(typ) == 1 or subscriptidx == 1 or superscriptidx == 1 or (idx != -1 and typ[:idx].lower() in greek_letters_value_set):
             return typ
         elif idx == -1:
@@ -1766,7 +1769,7 @@ class TypstPrinter(Printer):
     def _print_Adjoint(self, expr):
         style_to_latex = {
             "dagger"   : r"dagger",
-            "star"     : r"ast",
+            "star"     : r"star",
             "hermitian": r"sans(upright(H))"
         }
         adjoint_style = style_to_latex.get(self._settings["adjoint_style"], r"dagger")
@@ -1798,7 +1801,7 @@ class TypstPrinter(Printer):
             return '- ' + ' '.join(map(parens, args))
         else:
             return ' '.join(map(parens, args))
-        
+
     def _print_DotProduct(self, expr):
         level = precedence_traditional(expr)
         left, right = expr.args
@@ -1809,9 +1812,9 @@ class TypstPrinter(Printer):
         if mat.is_MatrixExpr:
             from sympy.matrices.expressions.blockmatrix import BlockMatrix
             if isinstance(mat, BlockMatrix):
-                return r"|(%s)|" % self._print_matrix_contents(mat.blocks)
-            return r"|(%s)|" % self._print(mat)
-        return r"|(%s)|" % self._print_matrix_contents(mat)
+                return r'mat(delim: "|", %s)' % self._print_matrix_contents(mat.blocks)
+            return r'mat(delim: "|", %s)' % self._print(mat)
+        return r'mat(delim: "|", %s)' % self._print_matrix_contents(mat)
 
     def _print_Mod(self, expr, exp=None):
         if exp is not None:
@@ -2008,15 +2011,15 @@ class TypstPrinter(Printer):
         return r'%s_(%s)' % (
             self.parenthesize(expr.name, PRECEDENCE["Func"], True),
             ", ".join([f"{self._print(i)}" for i in expr.indices]))
-    
+
     def _print_UniversalSet(self, expr):
         return r"UU"
 
     def _print_frac(self, expr, exp=None):
         if exp is None:
-            return r'upright("frac")((%s))' % self._print(expr.args[0])
+            return r'upright("frac")(%s)' % self._print(expr.args[0])
         else:
-            return r'upright("frac")((%s))^(%s)' % (
+            return r'upright("frac")(%s)^(%s)' % (
                     self._print(expr.args[0]), exp)
 
 
@@ -2035,7 +2038,7 @@ class TypstPrinter(Printer):
         else:
             return self._add_parens_lspace(
                 (sep + r" #h(0.5em)").join([self._print(i) for i in expr]))
-    
+
     def _print_TensorProduct(self, expr):
         elements = [self._print(a) for a in expr.args]
         return r' times.circle '.join(elements)
@@ -2043,10 +2046,10 @@ class TypstPrinter(Printer):
     def _print_WedgeProduct(self, expr):
         elements = [self._print(a) for a in expr.args]
         return r' and '.join(elements)
-    
+
     def _print_Tuple(self, expr):
         return self._print_tuple(expr)
-    
+
     def _print_list(self, expr):
         if self._settings['decimal_separator'] == 'comma':
             return r"[%s]" % \
@@ -2070,7 +2073,6 @@ class TypstPrinter(Printer):
 
     def _print_Dict(self, expr):
         return self._print_dict(expr)
-    
 
 
     def _print_DiracDelta(self, expr, exp=None):
@@ -2080,7 +2082,7 @@ class TypstPrinter(Printer):
             typ = r"delta^((%s))(%s)" % (
                 self._print(expr.args[1]), self._print(expr.args[0]))
         if exp:
-            typ = r"(%s)^(%s)ß" % (typ, exp)
+            typ = r"(%s)^(%s)" % (typ, exp)
         return typ
 
     def _print_SingularityFunction(self, expr, exp=None):
@@ -2145,7 +2147,7 @@ class TypstPrinter(Printer):
             items = ", ".join(map(self._print, items))
         else:
             raise ValueError('Unknown Decimal Separator')
-        return r"(%s)" % items
+        return r"{%s}" % items
 
     _print_frozenset = _print_set
 
@@ -2188,7 +2190,7 @@ class TypstPrinter(Printer):
         else:
             return _print_symbolic_range()
         return (r"{" +
-                r", ".join(self._print(el) if el is not dots else r'dots.l' for el in printset) +
+                r", ".join(self._print(el) if el is not dots else r'...' for el in printset) +
                 r"}")
 
     def __print_number_polynomial(self, expr, letter, exp=None):
@@ -2200,10 +2202,10 @@ class TypstPrinter(Printer):
             return r"%s_(%s)(%s)" % (letter,
                         self._print(expr.args[0]), self._print(expr.args[1]))
 
-        tex = r"%s_(%s)" % (letter, self._print(expr.args[0]))
+        typ = r"%s_(%s)" % (letter, self._print(expr.args[0]))
         if exp is not None:
-            tex = r"%s^(%s)" % (tex, exp)
-        return tex
+            typ = r"%s^(%s)" % (typ, exp)
+        return typ
 
     def _print_bernoulli(self, expr, exp=None):
         return self.__print_number_polynomial(expr, "B", exp)
@@ -2261,7 +2263,7 @@ class TypstPrinter(Printer):
             printset = tuple(s)
 
         return (r"[" +
-                r", ".join(self._print(el) if el is not dots else r'dots.l' for el in printset) +
+                r", ".join(self._print(el) if el is not dots else r'...' for el in printset) +
                 r"]")
 
     _print_SeqPer = _print_SeqFormula
@@ -2316,7 +2318,7 @@ class TypstPrinter(Printer):
             return self.parenthesize(p.sets[0], prec) + "^(%d)" % len(p.sets)
         return r" times ".join(
             self.parenthesize(set, prec) for set in p.sets)
-    
+
     def _print_EmptySet(self, e):
         return r"nothing"
 
@@ -2337,21 +2339,21 @@ class TypstPrinter(Printer):
 
     def _print_Complexes(self, i):
         return r"CC"
-    
+
     def _print_ImageSet(self, s):
         expr = s.lamda.expr
         sig = s.lamda.signature
         xys = ((self._print(x), self._print(y)) for x, y in zip(sig, s.base_sets))
-        xinys = r", ".join(r"%s \in %s" % xy for xy in xys)
-        return r"{%s | %s}" % (self._print(expr), xinys)
+        xinys = r", ".join(r"%s in %s" % xy for xy in xys)
+        return r"{%s mid(|) %s}" % (self._print(expr), xinys)
 
     def _print_ConditionSet(self, s):
         vars_print = ', '.join([self._print(var) for var in Tuple(s.sym)])
         if s.base_set is S.UniversalSet:
-            return r"{%s | %s}" % \
+            return r"{%s mid(|) %s}" % \
                 (vars_print, self._print(s.condition))
 
-        return r"{%s | %s in %s and %s}" % (
+        return r"{%s mid(|) %s in %s and %s}" % (
             vars_print,
             vars_print,
             self._print(s.base_set),
@@ -2359,11 +2361,11 @@ class TypstPrinter(Printer):
 
     def _print_PowerSet(self, expr):
         arg_print = self._print(expr.args[0])
-        return r"cal{{P}}({})".format(arg_print)
+        return r"cal(P)({})".format(arg_print)
 
     def _print_ComplexRegion(self, s):
         vars_print = ', '.join([self._print(var) for var in s.variables])
-        return r"{%s | %s in %s}" % (
+        return r"{%s mid(|) %s in %s}" % (
             self._print(s.expr),
             vars_print,
             self._print(s.sets))
@@ -2380,36 +2382,36 @@ class TypstPrinter(Printer):
         return self._print_Add(s.infinite)
 
     def _print_FiniteField(self, expr):
-        return r"\mathbb{F}_{%s}" % expr.mod
+        return r"FF_(%s)" % expr.mod
 
     def _print_IntegerRing(self, expr):
-        return r"\mathbb{Z}"
+        return r"ZZ"
 
     def _print_RationalField(self, expr):
-        return r"\mathbb{Q}"
+        return r"QQ"
 
     def _print_RealField(self, expr):
-        return r"\mathbb{R}"
+        return r"RR"
 
     def _print_ComplexField(self, expr):
-        return r"\mathbb{C}"
+        return r"CC"
 
     def _print_PolynomialRing(self, expr):
         domain = self._print(expr.domain)
         symbols = ", ".join(map(self._print, expr.symbols))
-        return r"%s\left[%s\right]" % (domain, symbols)
+        return r"%s[%s]" % (domain, symbols)
 
     def _print_FractionField(self, expr):
         domain = self._print(expr.domain)
         symbols = ", ".join(map(self._print, expr.symbols))
-        return r"%s\left(%s\right)" % (domain, symbols)
+        return r"%s(%s)" % (domain, symbols)
 
     def _print_PolynomialRingBase(self, expr):
         domain = self._print(expr.domain)
         symbols = ", ".join(map(self._print, expr.symbols))
         inv = ""
         if not expr.is_Poly:
-            inv = r"S_<^{-1}"
+            inv = r"S_<^(-1)"
         return r"%s%s[%s]" % (inv, domain, symbols)
 
     def _print_Poly(self, poly):
@@ -2463,9 +2465,9 @@ class TypstPrinter(Printer):
 
         args = ", ".join([expr] + gens + [domain])
         if cls in accepted_typst_functions:
-            typ = r"\%s {\left(%s \right)}" % (cls, args)
+            typ = r"%s(%s)" % (cls, args)
         else:
-            typ = r"\operatorname{%s}{\left( %s \right)}" % (cls, args)
+            typ = r'upright("%s")(%s)' % (cls, args)
 
         return typ
 
@@ -2515,7 +2517,7 @@ class TypstPrinter(Printer):
 
     def _print_PolyElement(self, poly):
         mul_symbol = self._settings['mul_symbol_typst']
-        return poly.str(self, PRECEDENCE, "(%s)^(%d)", mul_symbol)
+        return poly.str(self, PRECEDENCE, "%s^(%d)", mul_symbol)
 
     def _print_FracElement(self, frac):
         if frac.denom == 1:
@@ -2535,7 +2537,7 @@ class TypstPrinter(Printer):
         return typ
 
     def _print_catalan(self, expr, exp=None):
-        typ = r"C_(%s)" % self._print(expr.args[0])
+        typ = r"G_(%s)" % self._print(expr.args[0])
         if exp is not None:
             typ = r"%s^(%s)" % (typ, exp)
         return typ
@@ -2614,8 +2616,8 @@ class TypstPrinter(Printer):
     def _print_Morphism(self, morphism):
         domain = self._print(morphism.domain)
         codomain = self._print(morphism.codomain)
-        return "%s -> %s" % (domain, codomain)
-    
+        return "%s arrow.r.bar %s" % (domain, codomain)
+
     def _print_TransferFunction(self, expr):
         num, den = self._print(expr.num), self._print(expr.den)
         return r"%s/%s" % (self._mul_add_parens(expr.num, num), self._mul_add_parens(expr.den, den))
@@ -2625,7 +2627,7 @@ class TypstPrinter(Printer):
         parens = lambda x: self.parenthesize(x, precedence_traditional(expr),
                                             False)
         return ' '.join(map(parens, args))
-    
+
     def _print_MIMOSeries(self, expr):
         from sympy.physics.control.lti import MIMOParallel
         args = list(expr.args)[::-1]
@@ -2635,10 +2637,10 @@ class TypstPrinter(Printer):
 
     def _print_Parallel(self, expr):
         return ' + '.join(map(self._print, expr.args))
-    
+
     def _print_MIMOParallel(self, expr):
         return ' + '.join(map(self._print, expr.args))
-    
+
     def _print_Feedback(self, expr):
         from sympy.physics.control import TransferFunction, Series
 
@@ -2685,7 +2687,7 @@ class TypstPrinter(Printer):
     def _print_TransferFunctionMatrix(self, expr):
         mat = self._print(expr._expr_mat)
         return r"%s_tau" % mat
-    
+
     def _print_DFT(self, expr):
         return r'upright("{}")_({})'.format(expr.__class__.__name__, expr.n)
     _print_IDFT = _print_DFT
@@ -2727,13 +2729,13 @@ class TypstPrinter(Printer):
         return latex_result
 
     def _print_DiagramGrid(self, grid):
-        typst_result = r'mat(delim:#none, %s' % ("c" * grid.width)
+        typst_result = r'mat(delim:#none, %s' % ("" * grid.width)
 
         for i in range(grid.height):
             for j in range(grid.width):
                 if grid[i, j]:
                     typst_result += typst(grid[i, j])
-                typst_result += " "
+                typst_result += ""
                 if j != grid.width - 1:
                     typst_result += ", "
 
@@ -2753,18 +2755,18 @@ class TypstPrinter(Printer):
 
     def _print_SubModule(self, m):
         gens = [[self._print(m.ring.to_sympy(x)) for x in g] for g in m.gens]
-        curly = lambda o: r"（" + o + r"）"
-        square = lambda o: r"[ " + o + r" ]"
-        gens_latex = ",".join(curly(square(",".join(curly(x) for x in g))) for g in gens)
+        curly = lambda o: r"" + o + r""
+        square = lambda o: r"[" + o + r"]"
+        gens_latex = ", ".join(curly(square(", ".join(curly(x) for x in g))) for g in gens)
         return r"angle.l {} angle.r".format(gens_latex)
 
     def _print_SubQuotientModule(self, m):
-        gens_latex = ",".join(["{" + self._print(g) + "}" for g in m.gens])
+        gens_latex = ", ".join([ self._print(g)  for g in m.gens])
         return r"angle.l {} angle.r".format(gens_latex)
 
     def _print_ModuleImplementedIdeal(self, m):
         gens = [m.ring.to_sympy(x) for [x] in m._module.gens]
-        gens_latex = ",".join('{' + self._print(x) + '}' for x in gens)
+        gens_latex = ", ".join( self._print(x)  for x in gens)
         return r"angle.l {} angle.r".format(gens_latex)
 
 
@@ -2783,14 +2785,14 @@ class TypstPrinter(Printer):
 
     def _print_QuotientRingElement(self, x):
         x_latex = self._print(x.ring.to_sympy(x))
-        return r"({}) + ({})".format(x_latex,
+        return r"{} + {}".format(x_latex,
                  self._print(x.ring.base_ideal))
 
     def _print_QuotientModuleElement(self, m):
         data = [m.module.ring.to_sympy(x) for x in m.data]
-        data_latex = r"[ {} ]".format(",".join(
+        data_latex = r"[{}]".format(",".join(
             self._print(x) for x in data))
-        return r"({}) + ({})".format(data_latex,
+        return r"{} + {}".format(data_latex,
                  self._print(m.module.killed_module))
 
     def _print_QuotientModule(self, M):
@@ -2799,7 +2801,7 @@ class TypstPrinter(Printer):
                  self._print(M.killed_module))
 
     def _print_MatrixHomomorphism(self, h):
-        return r"{} : {} to {}".format(self._print(h._sympy_matrix()),
+        return r"{} : {} arrow.r.bar {}".format(self._print(h._sympy_matrix()),
             self._print(h.domain), self._print(h.codomain))
 
 
@@ -2859,17 +2861,17 @@ class TypstPrinter(Printer):
         if exp is not None:
             return r'(phi(%s))^(%s)' % \
                 (self._print(expr.args[0]), exp)
-        return r'(phi(%s))' % self._print(expr.args[0])
+        return r'phi(%s)' % self._print(expr.args[0])
 
     def _print_reduced_totient(self, expr, exp=None):
         if exp is not None:
-            return r'(lambda(%s))^{%s}' % \
+            return r'(lambda(%s))^(%s)' % \
                 (self._print(expr.args[0]), exp)
-        return r'(lambda(%s))' % self._print(expr.args[0])
+        return r'lambda(%s)' % self._print(expr.args[0])
 
     def _print_divisor_sigma(self, expr, exp=None):
         if len(expr.args) == 2:
-            tex = r"_%s(%s)" % tuple(map(self._print,
+            tex = r"_(%s)(%s)" % tuple(map(self._print,
                                                 (expr.args[1], expr.args[0])))
         else:
             tex = r"(%s)" % self._print(expr.args[0])
@@ -2879,7 +2881,7 @@ class TypstPrinter(Printer):
 
     def _print_udivisor_sigma(self, expr, exp=None):
         if len(expr.args) == 2:
-            tex = r"_%s(%s)" % tuple(map(self._print,
+            tex = r"_(%s)(%s)" % tuple(map(self._print,
                                                 (expr.args[1], expr.args[0])))
         else:
             tex = r"(%s)" % self._print(expr.args[0])
@@ -2891,21 +2893,21 @@ class TypstPrinter(Printer):
         if exp is not None:
             return r'(nu(%s))^(%s)' % \
                 (self._print(expr.args[0]), exp)
-        return r'(nu(%s))' % self._print(expr.args[0])
+        return r'nu(%s)' % self._print(expr.args[0])
 
     def _print_primeomega(self, expr, exp=None):
         if exp is not None:
             return r'(Omega(%s))^(%s)' % \
                 (self._print(expr.args[0]), exp)
-        return r'(Omega(%s))' % self._print(expr.args[0])
+        return r'Omega(%s)' % self._print(expr.args[0])
 
 
     def _print_Str(self, s):
         return str(s.name)
-    
+
     def _print_float(self, expr):
         return self._print(Float(expr))
-    
+
     def _print_int(self, expr):
         return str(expr)
 
@@ -2920,7 +2922,7 @@ class TypstPrinter(Printer):
 
     def _print_fmpq(self, expr):
         return str(expr)
-    
+
     def _print_Predicate(self, expr):
         return r'upright(Q)_(upright("{}"))'.format((str(expr.name)))
 
@@ -2975,3 +2977,9 @@ def typst(expr, **settings):
     r"""Convert the given expression to Typst string representation.
     """
     return TypstPrinter(settings).doprint(expr)
+
+def print_typst(expr, **settings):
+    """Prints Typst representation of the given expression. Takes the same
+    settings as ``typst()``."""
+
+    print(typst(expr, **settings))

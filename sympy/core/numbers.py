@@ -3211,7 +3211,7 @@ class NegativeInfinity(Number, metaclass=Singleton):
 
     def _latex(self, printer):
         return r"-\infty"
-    
+
     def _typst(self, printer):
         return r"-infinity"
 
@@ -3816,6 +3816,9 @@ class Pi(NumberSymbol, metaclass=Singleton):
     def _latex(self, printer):
         return r"\pi"
 
+    def _typst(self, printer):
+        return r"pi"
+
     @staticmethod
     def __abs__():
         return S.Pi
@@ -3876,6 +3879,9 @@ class GoldenRatio(NumberSymbol, metaclass=Singleton):
 
     def _latex(self, printer):
         return r"\phi"
+
+    def _typst(self, printer):
+        return r"phi"
 
     def __int__(self):
         return 1
@@ -4014,6 +4020,9 @@ class EulerGamma(NumberSymbol, metaclass=Singleton):
     def _latex(self, printer):
         return r"\gamma"
 
+    def _typst(self, printer):
+        return r"gamma"
+
     def __int__(self):
         return 0
 
@@ -4092,6 +4101,8 @@ class Catalan(NumberSymbol, metaclass=Singleton):
     def _latex(self, printer):
         return "G"
 
+    def _typst(self, printer):
+        return "G"
 
 class ImaginaryUnit(AtomicExpr, metaclass=Singleton):
     r"""The imaginary unit, `i = \sqrt{-1}`.

@@ -84,7 +84,7 @@ from sympy.tensor.toperators import PartialDerivative
 from sympy.vector import CoordSys3D, Cross, Curl, Dot, Divergence, Gradient, Laplacian
 
 
-from sympy.testing.pytest import (XFAIL, raises, _both_exp_pow,
+from sympy.testing.pytest import (raises, _both_exp_pow,
                                   warns_deprecated_sympy)
 from sympy.printing.typst import (typst, translate, greek_letters_set,
                                   typst_greek_dictionary)
@@ -393,77 +393,6 @@ def test_typst_vector_expressions():
     assert typst(x*Laplacian(A.x)) == r"x (Delta bold(x_(A)))"
     assert typst(Laplacian(x*A.x)) == r"Delta (bold(x_(A)) x)"
 
-def test_AppliedPermutation():
-    p = Permutation(0, 1, 2)
-    x = Symbol('x')
-    assert typst(AppliedPermutation(p, x)) == \
-        r'sigma_((0 space 1 space 2))(x)'
-
-def test_imaginary_unit():
-    assert typst(1 + I) == r'1 + i'
-    assert typst(1 + I, imaginary_unit='i') == r'1 + i'
-    assert typst(1 + I, imaginary_unit='j') == r'1 + j'
-    assert typst(1 + I, imaginary_unit='foo') == r'1 + foo'
-    assert typst(I, imaginary_unit="ti") == r'text(i)'
-    assert typst(I, imaginary_unit="tj") == r'text(j)'
-
-
-def test_text_re_im():
-    assert typst(im(x), gothic_re_im=True) == r'Im(x)'
-    assert typst(im(x), gothic_re_im=False) == r'upright("im")(x)'
-    assert typst(re(x), gothic_re_im=True) == r'Re(x)'
-    assert typst(re(x), gothic_re_im=False) == r'upright("re")(x)'
-
-def test_typst_limits():
-    assert typst(Limit(x, x, oo)) == r"lim_(x -> infinity) x"
-
-    # issue 8175
-    f = Function('f')
-    assert typst(Limit(f(x), x, 0)) == r"lim_(x -> 0^+) f(x)"
-    assert typst(Limit(f(x), x, 0, "-")) == \
-        r"lim_(x -> 0^-) f(x)"
-
-    # issue #10806
-    assert typst(Limit(f(x), x, 0)**2) == \
-        r"(lim_(x -> 0^+) f(x))^(2)"
-    # bi-directional limit
-    assert typst(Limit(f(x), x, 0, dir='+-')) == \
-        r"lim_(x -> 0) f(x)"
-
-
-def test_typst_log():
-    assert typst(log(x)) == r"log(x)"
-    assert typst(log(x), ln_notation=True) == r"ln(x)"
-    assert typst(log(x) + log(y)) == \
-        r"log(x) + log(y)"
-    assert typst(log(x) + log(y), ln_notation=True) == \
-        r"ln(x) + ln(y)"
-    assert typst(pow(log(x), x)) == r"log(x)^(x)"
-    assert typst(pow(log(x), x), ln_notation=True) == \
-        r"ln(x)^(x)"
-
-
-def test_typst_sum():
-    assert typst(Sum(x*y**2, (x, -2, 2), (y, -5, 5))) == \
-        r"sum_(-2 <= x <= 2 \ -5 <= y <= 5) x y^(2)"
-    assert typst(Sum(x**2, (x, -2, 2))) == \
-        r"sum_(x=-2)^(2) x^(2)"
-    assert typst(Sum(x**2 + y, (x, -2, 2))) == \
-        r"sum_(x=-2)^(2) (x^(2) + y)"
-    assert typst(Sum(x**2 + y, (x, -2, 2))**2) == \
-        r"(sum_(x=-2)^(2) (x^(2) + y))^(2)"
-
-def test_typst_product():
-    assert typst(Product(x*y**2, (x, -2, 2), (y, -5, 5))) == \
-        r"product_(-2 <= x <= 2 \ -5 <= y <= 5) x y^(2)"
-    assert typst(Product(x**2, (x, -2, 2))) == \
-        r"product_(x=-2)^(2) x^(2)"
-    assert typst(Product(x**2 + y, (x, -2, 2))) == \
-        r"product_(x=-2)^(2) (x^(2) + y)"
-
-    assert typst(Product(x, (x, -2, 2))**2) == \
-        r"(product_(x=-2)^(2) x)^(2)"
-
 def test_typst_symbols():
     Gamma, lmbda, rho = symbols('Gamma, lambda, rho')
     tau, Tau, TAU, taU = symbols('tau, Tau, TAU, taU')
@@ -549,7 +478,7 @@ def test_typst_functions():
         r'upright("polar_lift")(0)'
     assert typst(polar_lift(0)**3) == \
         r'upright("polar_lift")^(3)(0)'
-    
+
     assert typst(Function('ab')) == r'upright("ab")'
     assert typst(Function('ab1')) == r'upright("ab")_(1)'
     assert typst(Function('ab12')) == r'upright("ab")_(12)'
@@ -668,7 +597,7 @@ def test_typst_functions():
     assert typst(frac(x)) == r'upright("frac")(x)'
     assert typst(floor(x)**2) == r"floor(x)^(2)"
     assert typst(ceiling(x)**2) == r"ceil(x)^(2)"
-    assert typst(frac(x)**2) == r'upright("frac")^(2)(x)'
+    assert typst(frac(x)**2) == r'upright("frac")(x)^(2)'
 
     assert typst(Min(x, 2, x**3)) == r"min(2, x, x^(3))"
     assert typst(Min(x, y)**2) == r"min(x, y)^(2)"
@@ -683,9 +612,9 @@ def test_typst_functions():
     assert typst(conjugate(x)) == r"overline(x)"
     assert typst(conjugate(x)**2) == r"overline(x)^(2)"
     assert typst(conjugate(x**2)) == r"overline(x)^(2)"
-    assert typst(gamma(x)) == r"gamma(x)"
+    assert typst(gamma(x)) == r"Gamma(x)"
     w = Wild('w')
-    assert typst(gamma(w)) == r"gamma(w)"
+    assert typst(gamma(w)) == r"Gamma(w)"
     assert typst(Order(x)) == r"O(x)"
     assert typst(Order(x, x)) == r"O(x)"
     assert typst(Order(x, (x, 0))) == r"O(x)"
@@ -710,117 +639,117 @@ def test_typst_functions():
     assert typst(root(x, y)) == r'x^(1/y)'
     assert typst(arg(x)) == r'arg(x)'
 
-    # assert typst(zeta(x)) == r'zeta(x)'
-    # assert typst(zeta(x)**2) == r'zeta^(2)(x)'
-    # assert typst(zeta(x, y)) == r'zeta(x, y)'
-    # assert typst(zeta(x, y)**2) == r'zeta^(2)(x, y)'
-    # assert typst(dirichlet_eta(x)) == r'upright("dirichlet_eta")(x)'
-    # assert typst(dirichlet_eta(x)**2) == r'upright("dirichlet_eta")^(2)(x)'
-    # assert typst(polylog(x, y)) == r'polylog(x, y)'
-    # assert typst(polylog(x, y)**2) == r'polylog^(2)(x, y)'
-    # assert typst(lerchphi(x, y, n)) == r'lerchphi(x, y, n)'
-    # assert typst(lerchphi(x, y, n)**2) == r'lerchphi^(2)(x, y, n)'
-    # assert typst(stieltjes(x)) == r'stieltjes(x)'
-    # assert typst(stieltjes(x)**2) == r'stieltjes^(2)(x)'
-    # assert typst(stieltjes(x, y)) == r'stieltjes(x, y)'
-    # assert typst(stieltjes(x, y)**2) == r'stieltjes^(2)(x, y)'
+    assert typst(zeta(x)) == r'zeta(x)'
+    assert typst(zeta(x)**2) == r'zeta^(2)(x)'
+    assert typst(zeta(x, y)) == r'zeta(x, y)'
+    assert typst(zeta(x, y)**2) == r'zeta^(2)(x, y)'
+    assert typst(dirichlet_eta(x)) == r'eta(x)'
+    assert typst(dirichlet_eta(x)**2) == r'eta^(2)(x)'
+    assert typst(polylog(x, y)) == r'upright("Li")_(x)(y)'
+    assert typst(polylog(x, y)**2) == r'upright("Li")_(x)^(2)(y)'
+    assert typst(lerchphi(x, y, n)) == r'Phi(x, y, n)'
+    assert typst(lerchphi(x, y, n)**2) == r'Phi^(2)(x, y, n)'
+    assert typst(stieltjes(x)) == r'gamma_(x)'
+    assert typst(stieltjes(x)**2) == r'gamma_(x)^(2)'
+    assert typst(stieltjes(x, y)) == r'gamma_(x)(y)'
+    assert typst(stieltjes(x, y)**2) == r'gamma_(x)(y)^(2)'
 
-    # assert typst(elliptic_k(z)) == r'elliptic_k(z)'
-    # assert typst(elliptic_k(z)**2) == r'elliptic_k^(2)(z)'
-    # assert typst(elliptic_f(x, y)) == r'elliptic_f(x, y)'
-    # assert typst(elliptic_f(x, y)**2) == r'elliptic_f^(2)(x, y)'
-    # assert typst(elliptic_e(x, y)) == r'elliptic_e(x, y)'
-    # assert typst(elliptic_e(x, y)**2) == r'elliptic_e^(2)(x, y)'
-    # assert typst(elliptic_e(z)) == r'elliptic_e(z)'
-    # assert typst(elliptic_e(z)**2) == r'elliptic_e^(2)(z)'
-    # assert typst(elliptic_pi(x, y, z)) == r'elliptic_pi(x, y, z)'
-    # assert typst(elliptic_pi(x, y, z)**2) == r'elliptic_pi^(2)(x, y, z)'
-    # assert typst(elliptic_pi(x, y)) == r'elliptic_pi(x, y)'
-    # assert typst(elliptic_pi(x, y)**2) == r'elliptic_pi^(2)(x, y)'
+    assert typst(elliptic_k(z)) == r'K(z)'
+    assert typst(elliptic_k(z)**2) == r'K^(2)(z)'
+    assert typst(elliptic_f(x, y)) == r'F(x mid(|) y)'
+    assert typst(elliptic_f(x, y)**2) == r'F^(2)(x mid(|) y)'
+    assert typst(elliptic_e(x, y)) == r'E(x mid(|) y)'
+    assert typst(elliptic_e(x, y)**2) == r'E^(2)(x mid(|) y)'
+    assert typst(elliptic_e(z)) == r'E(z)'
+    assert typst(elliptic_e(z)**2) == r'E^(2)(z)'
+    assert typst(elliptic_pi(x, y, z)) == r'Pi(x; y mid(|) z)'
+    assert typst(elliptic_pi(x, y, z)**2) == r'Pi^(2)(x; y mid(|) z)'
+    assert typst(elliptic_pi(x, y)) == r'Pi(x mid(|) y)'
+    assert typst(elliptic_pi(x, y)**2) == r'Pi^(2)(x mid(|) y)'
 
-    # assert typst(Ei(x)) == r'upright("Ei")(x)'
-    # assert typst(Ei(x)**2) == r'upright("Ei")^(2)(x)'
-    # assert typst(expint(x, y)) == r'expint(x, y)'
-    # assert typst(expint(x, y)**2) == r'expint^(2)(x, y)'
-    # assert typst(Shi(x)**2) == r'upright("Shi")^(2)(x)'
-    # assert typst(Si(x)**2) == r'upright("Si")^(2)(x)'
-    # assert typst(Ci(x)**2) == r'upright("Ci")^(2)(x)'
-    # assert typst(Chi(x)**2) == r'Chi^(2)(x)'
-    # assert typst(Chi(x)) == r'Chi(x)'
-    # assert typst(jacobi(n, a, b, x)) == r'jacobi(n, a, b, x)'
-    # assert typst(jacobi(n, a, b, x)**2) == r'jacobi^(2)(n, a, b, x)'
-    # assert typst(gegenbauer(n, a, x)) == r'gegenbauer(n, a, x)'
-    # assert typst(gegenbauer(n, a, x)**2) == r'gegenbauer^(2)(n, a, x)'
-    # assert typst(chebyshevt(n, x)) == r'chebyshevt(n, x)'
-    # assert typst(chebyshevt(n, x)**2) == r'chebyshevt^(2)(n, x)'
-    # assert typst(chebyshevu(n, x)) == r'chebyshevu(n, x)'
-    # assert typst(chebyshevu(n, x)**2) == r'chebyshevu^(2)(n, x)'
-    # assert typst(legendre(n, x)) == r'legendre(n, x)'
-    # assert typst(legendre(n, x)**2) == r'legendre^(2)(n, x)'
-    # assert typst(assoc_legendre(n, a, x)) == r'assoc_legendre(n, a, x)'
-    # assert typst(assoc_legendre(n, a, x)**2) == r'assoc_legendre^(2)(n, a, x)'
-    # assert typst(laguerre(n, x)) == r'laguerre(n, x)'
-    # assert typst(laguerre(n, x)**2) == r'laguerre^(2)(n, x)'
-    # assert typst(assoc_laguerre(n, a, x)) == r'assoc_laguerre(n, a, x)'
-    # assert typst(assoc_laguerre(n, a, x)**2) == r'assoc_laguerre^(2)(n, a, x)'
-    # assert typst(hermite(n, x)) == r'hermite(n, x)'
-    # assert typst(hermite(n, x)**2) == r'hermite^(2)(n, x)'
+    assert typst(Ei(x)) == r'upright("Ei")(x)'
+    assert typst(Ei(x)**2) == r'upright("Ei")^(2)(x)'
+    assert typst(expint(x, y)) == r'upright(E)_(x)(y)'
+    assert typst(expint(x, y)**2) == r'upright(E)_(x)^(2)(y)'
+    assert typst(Shi(x)**2) == r'upright("Shi")^(2)(x)'
+    assert typst(Si(x)**2) == r'upright("Si")^(2)(x)'
+    assert typst(Ci(x)**2) == r'upright("Ci")^(2)(x)'
+    assert typst(Chi(x)**2) == r'upright("Chi")^(2)(x)'
+    assert typst(Chi(x)) == r'upright("Chi")(x)'
+    assert typst(jacobi(n, a, b, x)) == r'P_(n)^(a,b)(x)'
+    assert typst(jacobi(n, a, b, x)**2) == r'(P_(n)^(a,b)(x))^(2)'
+    assert typst(gegenbauer(n, a, x)) == r'C_(n)^((a))(x)'
+    assert typst(gegenbauer(n, a, x)**2) == r'(C_(n)^((a))(x))^(2)'
+    assert typst(chebyshevt(n, x)) == r'T_(n)(x)'
+    assert typst(chebyshevt(n, x)**2) == r'(T_(n)(x))^(2)'
+    assert typst(chebyshevu(n, x)) == r'U_(n)(x)'
+    assert typst(chebyshevu(n, x)**2) == r'(U_(n)(x))^(2)'
+    assert typst(legendre(n, x)) == r'P_(n)(x)'
+    assert typst(legendre(n, x)**2) == r'(P_(n)(x))^(2)'
+    assert typst(assoc_legendre(n, a, x)) == r'P_(n)^(a)(x)'
+    assert typst(assoc_legendre(n, a, x)**2) == r'(P_(n)^(a)(x))^(2)'
+    assert typst(laguerre(n, x)) == r'L_(n)(x)'
+    assert typst(laguerre(n, x)**2) == r'(L_(n)(x))^(2)'
+    assert typst(assoc_laguerre(n, a, x)) == r'L_(n)^(a)(x)'
+    assert typst(assoc_laguerre(n, a, x)**2) == r'(L_(n)^(a)(x))^(2)'
+    assert typst(hermite(n, x)) == r'H_(n)(x)'
+    assert typst(hermite(n, x)**2) == r'(H_(n)(x))^(2)'
 
-    # theta = Symbol("theta", real=True)
-    # phi = Symbol("phi", real=True)
-    # assert typst(Ynm(n, m, theta, phi)) == r'Ynm(n, m, theta, phi)'
-    # assert typst(Ynm(n, m, theta, phi)**3) == r'Ynm^(3)(n, m, theta, phi)'
-    # assert typst(Znm(n, m, theta, phi)) == r'Znm(n, m, theta, phi)'
-    # assert typst(Znm(n, m, theta, phi)**3) == r'Znm^(3)(n, m, theta, phi)'
+    theta = Symbol("theta", real=True)
+    phi = Symbol("phi", real=True)
+    assert typst(Ynm(n, m, theta, phi)) == r'Y_(n)^(m)(theta, phi.alt)'
+    assert typst(Ynm(n, m, theta, phi)**3) == r'(Y_(n)^(m)(theta, phi.alt))^(3)'
+    assert typst(Znm(n, m, theta, phi)) == r'Z_(n)^(m)(theta, phi.alt)'
+    assert typst(Znm(n, m, theta, phi)**3) == r'(Z_(n)^(m)(theta, phi.alt))^(3)'
 
-    # # Test typst printing of function names with "_"
-    # assert typst(polar_lift(0)) == r'upright("polar_lift")(0)'
-    # assert typst(polar_lift(0)**3) == r'upright("polar_lift")^(3)(0)'
+    # Test typst printing of function names with "_"
+    assert typst(polar_lift(0)) == r'upright("polar_lift")(0)'
+    assert typst(polar_lift(0)**3) == r'upright("polar_lift")^(3)(0)'
 
-    # assert typst(totient(n)) == r'totient(n)'
-    # assert typst(totient(n) ** 2) == r'totient^(2)(n)'
+    assert typst(totient(n)) == r'phi(n)'
+    assert typst(totient(n) ** 2) == r'(phi(n))^(2)'
 
-    # assert typst(reduced_totient(n)) == r'reduced_totient(n)'
-    # assert typst(reduced_totient(n) ** 2) == r'reduced_totient^(2)(n)'
+    assert typst(reduced_totient(n)) == r'lambda(n)'
+    assert typst(reduced_totient(n) ** 2) == r'(lambda(n))^(2)'
 
-    # assert typst(divisor_sigma(x)) == r'divisor_sigma(x)'
-    # assert typst(divisor_sigma(x)**2) == r'divisor_sigma^(2)(x)'
-    # assert typst(divisor_sigma(x, y)) == r'divisor_sigma(x, y)'
-    # assert typst(divisor_sigma(x, y)**2) == r'divisor_sigma^(2)(x, y)'
+    assert typst(divisor_sigma(x)) == r'sigma(x)'
+    assert typst(divisor_sigma(x)**2) == r'sigma^(2)(x)'
+    assert typst(divisor_sigma(x, y)) == r'sigma_(y)(x)'
+    assert typst(divisor_sigma(x, y)**2) == r'sigma^(2)_(y)(x)'
 
-    # assert typst(udivisor_sigma(x)) == r'udivisor_sigma(x)'
-    # assert typst(udivisor_sigma(x)**2) == r'udivisor_sigma^(2)(x)'
-    # assert typst(udivisor_sigma(x, y)) == r'udivisor_sigma(x, y)'
-    # assert typst(udivisor_sigma(x, y)**2) == r'udivisor_sigma^(2)(x, y)'
+    assert typst(udivisor_sigma(x)) == r'sigma^*(x)'
+    assert typst(udivisor_sigma(x)**2) == r'sigma^*^(2)(x)'
+    assert typst(udivisor_sigma(x, y)) == r'sigma^*_(y)(x)'
+    assert typst(udivisor_sigma(x, y)**2) == r'sigma^*^(2)_(y)(x)'
 
-    # assert typst(primenu(n)) == r'primenu(n)'
-    # assert typst(primenu(n) ** 2) == r'primenu^(2)(n)'
+    assert typst(primenu(n)) == r'nu(n)'
+    assert typst(primenu(n) ** 2) == r'(nu(n))^(2)'
 
-    # assert typst(primeomega(n)) == r'primeomega(n)'
-    # assert typst(primeomega(n) ** 2) == r'primeomega^(2)(n)'
+    assert typst(primeomega(n)) == r'Omega(n)'
+    assert typst(primeomega(n) ** 2) == r'(Omega(n))^(2)'
 
-    # assert typst(LambertW(n)) == r'LambertW(n)'
-    # assert typst(LambertW(n, -1)) == r'LambertW(-1, n)'
-    # assert typst(LambertW(n, k)) == r'LambertW(k, n)'
-    # assert typst(LambertW(n) * LambertW(n)) == r'LambertW(n) LambertW(n)'
-    # assert typst(Pow(LambertW(n), 2)) == r'LambertW^(2)(n)'
-    # assert typst(LambertW(n)**k) == r'LambertW^(k)(n)'
-    # assert typst(LambertW(n, k)**p) == r'LambertW^(p)(k, n)'
+    assert typst(LambertW(n)) == r'W(n)'
+    assert typst(LambertW(n, -1)) == r'W_(-1)(n)'
+    assert typst(LambertW(n, k)) == r'W_(k)(n)'
+    assert typst(LambertW(n) * LambertW(n)) == r'W^(2)(n)'
+    assert typst(Pow(LambertW(n), 2)) == r'W^(2)(n)'
+    assert typst(LambertW(n)**k) == r'W^(k)(n)'
+    assert typst(LambertW(n, k)**p) == r'W^(p)_(k)(n)'
 
-    # assert typst(Mod(x, 7)) == r'Mod(x, 7)'
-    # assert typst(Mod(x + 1, 7)) == r'Mod(x + 1, 7)'
-    # assert typst(Mod(7, x + 1)) == r'Mod(7, x + 1)'
-    # assert typst(Mod(2 * x, 7)) == r'Mod(2 x, 7)'
-    # assert typst(Mod(7, 2 * x)) == r'Mod(7, 2 x)'
-    # assert typst(Mod(x, 7) + 1) == r'Mod(x, 7) + 1'
-    # assert typst(2 * Mod(x, 7)) == r'2 Mod(x, 7)'
-    # assert typst(Mod(7, 2 * x)**n) == r'Mod(7, 2 x)^(n)'
+    assert typst(Mod(x, 7)) == r'x mod 7'
+    assert typst(Mod(x + 1, 7)) == r'(x + 1) mod 7'
+    assert typst(Mod(7, x + 1)) == r'7 mod (x + 1)'
+    assert typst(Mod(2 * x, 7)) == r'2 x mod 7'
+    assert typst(Mod(7, 2 * x)) == r'7 mod 2 x'
+    assert typst(Mod(x, 7) + 1) == r'(x mod 7) + 1'
+    assert typst(2 * Mod(x, 7)) == r'2 (x mod 7)'
+    assert typst(Mod(7, 2 * x)**n) == r'(7 mod 2 x)^(n)'
 
-    # # some unknown function name should get rendered with upright
-    # fjlkd = Function('fjlkd')
-    # assert typst(fjlkd(x)) == r'upright("fjlkd")(x)'
-    # # even when it is referred to without an argument
-    # assert typst(fjlkd) == r'upright("fjlkd")'
+    # some unknown function name should get rendered with upright
+    fjlkd = Function('fjlkd')
+    assert typst(fjlkd(x)) == r'upright("fjlkd")(x)'
+    # even when it is referred to without an argument
+    assert typst(fjlkd) == r'upright("fjlkd")'
 
 # test that notation passes to subclasses of the same name only
 def test_function_subclass_different_name():
@@ -829,6 +758,1296 @@ def test_function_subclass_different_name():
     assert typst(mygamma) == r'upright("mygamma")'
     assert typst(mygamma(x)) == r'upright("mygamma")(x)'
 
+def test_hyper_printing():
+    from sympy.abc import x, z
+
+    assert typst(meijerg(Tuple(pi, pi, x), Tuple(1),
+                         (0, 1), Tuple(1, 2, 3/pi), z)) == \
+        r'G_(4, 5)^(2, 3)(mat(delim:#none, pi"," pi"," x, 1;' \
+        r'0"," 1 , 1"," 2"," 3/(pi)) mid(|) z)'
+    assert typst(meijerg(Tuple(), Tuple(1), (0,), Tuple(), z)) == \
+        r'G_(1, 1)^(1, 0)(mat(delim:#none, , 1;0 , ) mid(|) z)'
+    assert typst(hyper((x, 2), (3,), z)) == \
+        r'scripts("")_(2)F_(1)(mat(delim: "[", 2"," x; 3) mid(|) z)'
+    assert typst(hyper(Tuple(), Tuple(1), z)) == \
+        r'scripts("")_(0)F_(1)(mat(delim: "[", ; 1) mid(|) z)'
+
+
+def test_typst_bessel():
+    from sympy.functions.special.bessel import (besselj, bessely, besseli,
+                                                besselk, hankel1, hankel2,
+                                                jn, yn, hn1, hn2)
+    from sympy.abc import z
+    assert typst(besselj(n, z**2)**k) == r'J^(k)_(n)(z^(2))'
+    assert typst(bessely(n, z)) == r'Y_(n)(z)'
+    assert typst(besseli(n, z)) == r'I_(n)(z)'
+    assert typst(besselk(n, z)) == r'K_(n)(z)'
+    assert typst(hankel1(n, z**2)**2) == \
+        r'(H^((1))_(n)(z^(2)))^(2)'
+    assert typst(hankel2(n, z)) == r'H^((2))_(n)(z)'
+    assert typst(jn(n, z)) == r'j_(n)(z)'
+    assert typst(yn(n, z)) == r'y_(n)(z)'
+    assert typst(hn1(n, z)) == r'h^((1))_(n)(z)'
+    assert typst(hn2(n, z)) == r'h^((2))_(n)(z)'
+
+
+def test_typst_fresnel():
+    from sympy.functions.special.error_functions import (fresnels, fresnelc)
+    from sympy.abc import z
+    assert typst(fresnels(z)) == r'S(z)'
+    assert typst(fresnelc(z)) == r'C(z)'
+    assert typst(fresnels(z)**2) == r'S^(2)(z)'
+    assert typst(fresnelc(z)**2) == r'C^(2)(z)'
+
+
+def test_typst_brackets():
+    assert typst((-1)**x) == r"(-1)^(x)"
+
+
+def test_typst_indexed():
+    Psi_symbol = Symbol('Psi_0', complex=True, real=False)
+    Psi_indexed = IndexedBase(Symbol('Psi', complex=True, real=False))
+    symbol_typst = typst(Psi_symbol * conjugate(Psi_symbol))
+    indexed_typst = typst(Psi_indexed[0] * conjugate(Psi_indexed[0]))
+    # overline(Psi_(0)) Psi_(0)  vs.  Psi_(0) overline(Psi_(0))
+    assert symbol_typst == r'Psi_(0) overline(Psi_(0))'
+    assert indexed_typst == r'overline(Psi_(0)) Psi_(0)'
+
+    assert typst(Indexed('x1', Symbol('i'))) == r'x_1_(i)'
+    assert typst(Indexed('x2', Idx('i'))) == r'x_2_(i)'
+    assert typst(Indexed('x3', Idx('i', Symbol('N')))) == r'x_3_(i_(0.. N - 1))'
+    assert typst(Indexed('x3', Idx('i', Symbol('N')+1))) == r'x_3_(i_(0.. N))'
+    assert typst(Indexed('x4', Idx('i', (Symbol('a'),Symbol('b'))))) == r'x_4_(i_(a.. b))'
+    assert typst(IndexedBase('gamma')) == r'gamma'
+    assert typst(IndexedBase('a b')) == r'"a b"'
+    assert typst(IndexedBase('a_b')) == r'a_(b)'
+
+def test_typst_derivatives():
+    # regular "d" for ordinary derivatives
+    assert typst(diff(x**3, x, evaluate=False)) == \
+        r"d / (d x) x^(3)"
+    assert typst(diff(sin(x) + x**2, x, evaluate=False)) == \
+        r"d / (d x) (x^(2) + sin(x))"
+    assert typst(diff(diff(sin(x) + x**2, x, evaluate=False), evaluate=False))\
+        == \
+        r"d^(2) / (d x^(2)) (x^(2) + sin(x))"
+    assert typst(diff(diff(diff(sin(x) + x**2, x, evaluate=False), evaluate=False), evaluate=False)) == \
+        r"d^(3) / (d x^(3)) (x^(2) + sin(x))"
+
+    # partial for partial derivatives
+    assert typst(diff(sin(x * y), x, evaluate=False)) == \
+        r"partial / (partial x) sin(x y)"
+    assert typst(diff(sin(x * y) + x**2, x, evaluate=False)) == \
+        r"partial / (partial x) (x^(2) + sin(x y))"
+    assert typst(diff(diff(sin(x*y) + x**2, x, evaluate=False), x, evaluate=False)) == \
+        r"partial^(2) / (partial x^(2)) (x^(2) + sin(x y))"
+    assert typst(diff(diff(diff(sin(x*y) + x**2, x, evaluate=False), x, evaluate=False), x, evaluate=False)) == \
+        r"partial^(3) / (partial x^(3)) (x^(2) + sin(x y))"
+
+    # mixed partial derivatives
+    f = Function("f")
+    assert typst(diff(diff(f(x, y), x, evaluate=False), y, evaluate=False)) == \
+        r"partial^(2) / (partial y partial x) " + typst(f(x, y))
+
+    assert typst(diff(diff(diff(f(x, y), x, evaluate=False), x, evaluate=False), y, evaluate=False)) == \
+        r"partial^(3) / (partial y partial x^(2)) " + typst(f(x, y))
+
+    # for negative nested Derivative
+    assert typst(diff(-diff(y**2,x,evaluate=False),x,evaluate=False)) == r'd / (d x) (- d / (d x) y^(2))'
+    assert typst(diff(diff(-diff(diff(y,x,evaluate=False),x,evaluate=False),x,evaluate=False),x,evaluate=False)) == \
+        r'd^(2) / (d x^(2)) (- d^(2) / (d x^(2)) y)'
+
+    # # use ordinary d when one of the variables has been integrated out
+    # assert typst(diff(Integral(exp(-x*y), (x, 0, oo)), y, evaluate=False)) == \
+    #     r"(d / d y) int(limits_(0)^(infty) e^(- x y), dx"
+
+    # Derivative wrapped in power:
+    assert typst(diff(x, x, evaluate=False)**2) == \
+        r"(d / (d x) x)^(2)"
+
+    assert typst(diff(f(x), x)**2) == \
+        r"(d / (d x) f(x))^(2)"
+
+    assert typst(diff(f(x), (x, n))) == \
+        r"d^(n) / (d x^(n)) f(x)"
+
+    x1 = Symbol('x1')
+    x2 = Symbol('x2')
+    assert typst(diff(f(x1, x2), x1)) == r'partial / (partial x_(1)) f(x_(1), x_(2))'
+
+    n1 = Symbol('n1')
+    assert typst(diff(f(x), (x, n1))) == r'd^(n_(1)) / (d x^(n_(1))) f(x)'
+
+    n2 = Symbol('n2')
+    assert typst(diff(f(x), (x, Max(n1, n2)))) == \
+        r'd^(max(n_(1), n_(2))) / (d x^(max(n_(1), n_(2)))) f(x)'
+
+    # set diff operator
+    assert typst(diff(f(x), x), diff_operator="rd") == r'bold(d) / (bold(d) x) f(x)'
+
+def test_typst_subs():
+    assert typst(Subs(x*y, (x, y), (1, 2))) == r'x y|_(x=1 \ y=2)'
+
+def test_typst_integrals():
+    assert typst(Integral(log(x), x)) == r"integral log(x) d x"
+    assert typst(Integral(x**2, (x, 0, 1))) == r"integral_(0)^(1) x^(2) d x"
+    assert typst(Integral(x**2, (x, 10, 20))) == r"integral_(10)^(20) x^(2) d x"
+    assert typst(Integral(y*x**2, (x, 0, 1), y)) == r"integral integral_(0)^(1) x^(2) y d x d y"
+    assert typst(Integral(y*x**2, (x, 0, 1), y), mode='equation*') == r"integral integral_(0)^(1) x^(2) y d x d y"
+    assert typst(Integral(y*x**2, (x, 0, 1), y), mode='equation*') == r"integral integral_(0)^(1) x^(2) y d x d y"
+    assert typst(Integral(x, (x, 0))) == r"integral^(0) x d x"
+    assert typst(Integral(x*y, x, y)) == r"integral.double x y d x d y"
+    assert typst(Integral(x*y*z, x, y, z)) == r"integral.triple x y z d x d y d z"
+    assert typst(Integral(x*y*z*t, x, y, z, t)) == r"integral.quad t x y z d x d y d z d t"
+    assert typst(Integral(x, x, x, x, x, x, x)) == r"integral integral integral integral integral integral x d x d x d x d x d x d x"
+    assert typst(Integral(x, x, y, (z, 0, 1))) == r"integral_(0)^(1) integral integral x d x d y d z"
+
+    # for negative nested Integral
+    assert typst(Integral(-Integral(y**2,x),x)) == r"integral (- integral y^(2) d x) d x"
+    assert typst(Integral(-Integral(-Integral(y,x),x),x)) == r"integral (- integral (- integral y d x) d x) d x"
+
+    # fix issue #10806
+    assert typst(Integral(z, z)**2) == r"(integral z d z)^(2)"
+    assert typst(Integral(x + z, z)) == r"integral (x + z) d z"
+    assert typst(Integral(x+z/2, z)) == r"integral (x + z/2) d z"
+    assert typst(Integral(x**y, z)) == r"integral x^(y) d z"
+
+    # set diff operator
+    assert typst(Integral(x, x), diff_operator="rd") == r"integral x bold(d) x"
+    assert typst(Integral(x, (x, 0, 1)), diff_operator="rd") == r"integral_(0)^(1) x bold(d) x"
+
+
+def test_typst_sets():
+    for s in (frozenset, set):
+        assert typst(s([x*y, x**2])) == r"{x^(2), x y}"
+        assert typst(s(range(1, 6))) == r"{1, 2, 3, 4, 5}"
+        assert typst(s(range(1, 13))) == r"{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12}"
+
+    s = FiniteSet
+    assert typst(s(*[x*y, x**2])) == r"{x^(2), x y}"
+    assert typst(s(*range(1, 6))) == r"{1, 2, 3, 4, 5}"
+    assert typst(s(*range(1, 13))) == r"{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12}"
+
+
+def test_typst_SetExpr():
+    iv = Interval(1, 3)
+    se = SetExpr(iv)
+    assert typst(se) == r'upright("SetExpr")([1, 3])'
+
+
+def test_typst_Range():
+    assert typst(Range(1, 51)) == r"{1, 2, ..., 50}"
+    assert typst(Range(1, 4)) == r"{1, 2, 3}"
+    assert typst(Range(0, 3, 1)) == r"{0, 1, 2}"
+    assert typst(Range(0, 30, 1)) == r"{0, 1, ..., 29}"
+    assert typst(Range(30, 1, -1)) == r"{30, 29, ..., 2}"
+    assert typst(Range(0, oo, 2)) == r"{0, 2, ...}"
+    assert typst(Range(oo, -2, -2)) == r"{..., 2, 0}"
+    assert typst(Range(-2, -oo, -1)) == r"{-2, -3, ...}"
+    assert typst(Range(-oo, oo)) == r"{..., -1, 0, 1, ...}"
+    assert typst(Range(oo, -oo, -1)) == r"{..., 1, 0, -1, ...}"
+
+    a, b, c = symbols('a:c')
+    assert typst(Range(a, b, c)) == r'upright("Range")(a, b, c)'
+    assert typst(Range(a, 10, 1)) == r'upright("Range")(a, 10)'
+    assert typst(Range(0, b, 1)) == r'upright("Range")(b)'
+    assert typst(Range(0, 10, c)) == r'upright("Range")(0, 10, c)'
+
+    i = Symbol('i', integer=True)
+    n = Symbol('n', negative=True, integer=True)
+    p = Symbol('p', positive=True, integer=True)
+
+    assert typst(Range(i, i + 3)) == r"{i, i + 1, i + 2}"
+    assert typst(Range(-oo, n, 2)) == r"{..., n - 4, n - 2}"
+    assert typst(Range(p, oo)) == r"{p, p + 1, ...}"
+    # The following will work if __iter__ is improved
+    # assert typst(Range(-3, p + 7)) == r"{-3, -2, .., p + 6}"
+    # Must have integer assumptions
+    assert typst(Range(a, a + 3)) == r'upright("Range")(a, a + 3)'
+
+
+def test_typst_sequences():
+    s1 = SeqFormula(a**2, (0, oo))
+    s2 = SeqPer((1, 2))
+
+    typst_str = r'[0, 1, 4, 9, ...]'
+    assert typst(s1) == typst_str
+
+    typst_str = r'[1, 2, 1, 2, ...]'
+    assert typst(s2) == typst_str
+
+    s3 = SeqFormula(a**2, (0, 2))
+    s4 = SeqPer((1, 2), (0, 2))
+
+    typst_str = r'[0, 1, 4]'
+    assert typst(s3) == typst_str
+
+    typst_str = r'[1, 2, 1]'
+    assert typst(s4) == typst_str
+
+    s5 = SeqFormula(a**2, (-oo, 0))
+    s6 = SeqPer((1, 2), (-oo, 0))
+
+    typst_str = r'[..., 9, 4, 1, 0]'
+    assert typst(s5) == typst_str
+
+    typst_str = r'[..., 2, 1, 2, 1]'
+    assert typst(s6) == typst_str
+
+    typst_str = r'[1, 3, 5, 11, ...]'
+    assert typst(SeqAdd(s1, s2)) == typst_str
+
+    typst_str = r'[1, 3, 5]'
+    assert typst(SeqAdd(s3, s4)) == typst_str
+
+    typst_str = r'[..., 11, 5, 3, 1]'
+    assert typst(SeqAdd(s5, s6)) == typst_str
+
+    typst_str = r'[0, 2, 4, 18, ...]'
+    assert typst(SeqMul(s1, s2)) == typst_str
+
+    typst_str = r'[0, 2, 4]'
+    assert typst(SeqMul(s3, s4)) == typst_str
+
+    typst_str = r'[..., 18, 4, 2, 0]'
+    assert typst(SeqMul(s5, s6)) == typst_str
+
+    # Sequences with symbolic limits, issue 12629
+    s7 = SeqFormula(a**2, (a, 0, x))
+    typst_str = r'{a^(2)}_(a=0)^(x)'
+    assert typst(s7) == typst_str
+
+    b = Symbol('b')
+    s8 = SeqFormula(b*a**2, (a, 0, 2))
+    typst_str = r'[0, b, 4 b]'
+    assert typst(s8) == typst_str
+
+
+def test_typst_FourierSeries():
+    typst_str = \
+        r'2 sin(x) - sin(2 x) + (2 sin(3 x))/3 + ...'
+    assert typst(fourier_series(x, (x, -pi, pi))) == typst_str
+
+
+def test_typst_FormalPowerSeries():
+    typst_str = r'sum_(k=1)^(infinity) - ((-1)^(- k) x^(k))/k'
+    assert typst(fps(log(1 + x))) == typst_str
+
+
+def test_typst_intervals():
+    a = Symbol('a', real=True)
+    assert typst(Interval(0, 0)) == r"{0}"
+    assert typst(Interval(0, a)) == r"[0, a]"
+    assert typst(Interval(0, a, False, False)) == r"[0, a]"
+    assert typst(Interval(0, a, True, False)) == r"(0, a]"
+    assert typst(Interval(0, a, False, True)) == r"[0, a)"
+    assert typst(Interval(0, a, True, True)) == r"(0, a)"
+
+
+def test_typst_AccumuBounds():
+    a = Symbol('a', real=True)
+    assert typst(AccumBounds(0, 1)) == r"angle.l 0, 1 angle.r"
+    assert typst(AccumBounds(0, a)) == r"angle.l 0, a angle.r"
+    assert typst(AccumBounds(a + 1, a + 2)) == \
+        r"angle.l a + 1, a + 2 angle.r"
+
+
+def test_typst_emptyset():
+    assert typst(S.EmptySet) == r"nothing"
+
+
+def test_typst_universalset():
+    assert typst(S.UniversalSet) == r"UU"
+
+
+def test_typst_commutator():
+    A = Operator('A')
+    B = Operator('B')
+    comm = Commutator(B, A)
+    assert typst(comm.doit()) == r"- (A B - B A)"
+
+
+def test_typst_union():
+    assert typst(Union(Interval(0, 1), Interval(2, 3))) == \
+        r"[0, 1] union [2, 3]"
+    assert typst(Union(Interval(1, 1), Interval(2, 2), Interval(3, 4))) == \
+        r"{1, 2} union [3, 4]"
+
+
+def test_typst_intersection():
+    assert typst(Intersection(Interval(0, 1), Interval(x, y))) == \
+        r"[0, 1] inter [x, y]"
+
+
+def test_typst_symmetric_difference():
+    assert typst(SymmetricDifference(Interval(2, 5), Interval(4, 7),
+                                     evaluate=False)) == \
+        r'[2, 5] triangle [4, 7]'
+
+
+def test_typst_Complement():
+    assert typst(Complement(S.Reals, S.Naturals)) == \
+        r'RR without NN'
+
+
+def test_typst_productset():
+    line = Interval(0, 1)
+    bigline = Interval(0, 10)
+    fset = FiniteSet(1, 2, 3)
+    assert typst(line**2) == r'[0, 1]^(2)'
+    assert typst(line**10) == r'[0, 1]^(10)'
+    assert typst((line * bigline * fset).flatten()) == r'[0, 1] times [0, 10] times {1, 2, 3}'
+
+
+def test_typst_powerset():
+    fset = FiniteSet(1, 2, 3)
+    assert typst(PowerSet(fset)) == r'cal(P)({1, 2, 3})'
+
+
+def test_typst_ordinals():
+    w = OrdinalOmega()
+    assert typst(w) == r'omega'
+    wp = OmegaPower(2, 3)
+    assert typst(wp) == r'3 omega^(2)'
+    assert typst(Ordinal(wp, OmegaPower(1, 1))) == r'3 omega^(2) + omega'
+    assert typst(Ordinal(OmegaPower(2, 1), OmegaPower(1, 2))) == r'omega^(2) + 2 omega'
+
+
+def test_set_operators_parenthesis_typst():
+    a, b, c, d = symbols('a:d')
+    A = FiniteSet(a)
+    B = FiniteSet(b)
+    C = FiniteSet(c)
+    D = FiniteSet(d)
+
+    U1 = Union(A, B, evaluate=False)
+    U2 = Union(C, D, evaluate=False)
+    I1 = Intersection(A, B, evaluate=False)
+    I2 = Intersection(C, D, evaluate=False)
+    C1 = Complement(A, B, evaluate=False)
+    C2 = Complement(C, D, evaluate=False)
+    D1 = SymmetricDifference(A, B, evaluate=False)
+    D2 = SymmetricDifference(C, D, evaluate=False)
+    # XXX ProductSet does not support evaluate keyword
+    P1 = ProductSet(A, B)
+    P2 = ProductSet(C, D)
+
+    assert typst(Intersection(A, U2, evaluate=False)) == \
+        r'{a} inter ({c} union {d})'
+    assert typst(Intersection(U1, U2, evaluate=False)) == \
+        r'({a} union {b}) inter ({c} union {d})'
+    assert typst(Intersection(C1, C2, evaluate=False)) == \
+        r'({a} without {b}) inter ({c} without {d})'
+    assert typst(Intersection(D1, D2, evaluate=False)) == \
+        r'({a} triangle {b}) inter ({c} triangle {d})'
+    assert typst(Intersection(P1, P2, evaluate=False)) == \
+        r'({a} times {b}) inter ({c} times {d})'
+
+    assert typst(Union(A, I2, evaluate=False)) == \
+        r'{a} union ({c} inter {d})'
+    assert typst(Union(I1, I2, evaluate=False)) == \
+        r'({a} inter {b}) union ({c} inter {d})'
+    assert typst(Union(C1, C2, evaluate=False)) == \
+        r'({a} without {b}) union ({c} without {d})'
+    assert typst(Union(D1, D2, evaluate=False)) == \
+        r'({a} triangle {b}) union ({c} triangle {d})'
+    assert typst(Union(P1, P2, evaluate=False)) == \
+        r'({a} times {b}) union ({c} times {d})'
+
+    assert typst(Complement(A, C2, evaluate=False)) == \
+        r'{a} without ({c} without {d})'
+    assert typst(Complement(U1, U2, evaluate=False)) == \
+        r'({a} union {b}) without ({c} union {d})'
+    assert typst(Complement(I1, I2, evaluate=False)) == \
+        r'({a} inter {b}) without ({c} inter {d})'
+    assert typst(Complement(D1, D2, evaluate=False)) == \
+        r'({a} triangle {b}) without ({c} triangle {d})'
+    assert typst(Complement(P1, P2, evaluate=False)) == \
+        r'({a} times {b}) without ({c} times {d})'
+
+    assert typst(SymmetricDifference(A, D2, evaluate=False)) == \
+        r'{a} triangle ({c} triangle {d})'
+    assert typst(SymmetricDifference(U1, U2, evaluate=False)) == \
+        r'({a} union {b}) triangle ({c} union {d})'
+    assert typst(SymmetricDifference(I1, I2, evaluate=False)) == \
+        r'({a} inter {b}) triangle ({c} inter {d})'
+    assert typst(SymmetricDifference(C1, C2, evaluate=False)) == \
+        r'({a} without {b}) triangle ({c} without {d})'
+    assert typst(SymmetricDifference(P1, P2, evaluate=False)) == \
+        r'({a} times {b}) triangle ({c} times {d})'
+
+    # XXX This can be incorrect since cartesian product is not associative
+    assert typst(ProductSet(A, P2).flatten()) == \
+        r'{a} times {c} times {d}'
+    assert typst(ProductSet(U1, U2)) == \
+        r'({a} union {b}) times ({c} union {d})'
+    assert typst(ProductSet(I1, I2)) == \
+        r'({a} inter {b}) times ({c} inter {d})'
+    assert typst(ProductSet(C1, C2)) == \
+        r'({a} without {b}) times ({c} without {d})'
+    assert typst(ProductSet(D1, D2)) == \
+        r'({a} triangle {b}) times ({c} triangle {d})'
+
+
+def test_typst_Complexes():
+    assert typst(S.Complexes) == r'CC'
+
+
+def test_typst_Naturals():
+    assert typst(S.Naturals) == r'NN'
+
+
+def test_typst_Naturals0():
+    assert typst(S.Naturals0) == r'NN_(0)'
+
+
+def test_typst_Integers():
+    assert typst(S.Integers) == r'ZZ'
+
+
+def test_typst_ImageSet():
+    x = Symbol('x')
+    assert typst(ImageSet(Lambda(x, x**2), S.Naturals)) == \
+        r'{x^(2) mid(|) x in NN}'
+
+    y = Symbol('y')
+    imgset = ImageSet(Lambda((x, y), x + y), {1, 2, 3}, {3, 4})
+    assert typst(imgset) == \
+        r'{x + y mid(|) x in {1, 2, 3}, y in {3, 4}}'
+
+    imgset = ImageSet(Lambda(((x, y),), x + y), ProductSet({1, 2, 3}, {3, 4}))
+    assert typst(imgset) == \
+        r'{x + y mid(|) (x, #h(0.5em)y) in {1, 2, 3} times {3, 4}}'
+
+
+def test_typst_ConditionSet():
+    x = Symbol('x')
+    assert typst(ConditionSet(x, Eq(x**2, 1), S.Reals)) == \
+        r'{x mid(|) x in RR and x^(2) = 1}'
+    assert typst(ConditionSet(x, Eq(x**2, 1), S.UniversalSet)) == \
+        r'{x mid(|) x^(2) = 1}'
+
+
+def test_typst_ComplexRegion():
+    assert typst(ComplexRegion(Interval(3, 5)*Interval(4, 6))) == \
+        r'{x + y i mid(|) x, y in [3, 5] times [4, 6]}'
+    assert typst(ComplexRegion(Interval(0, 1)*Interval(0, 2*pi), polar=True)) == \
+        r'{r (i sin(theta) + cos(theta)) mid(|) r, theta in [0, 1] times [0, 2 pi)}'
+
+
+def test_typst_Contains():
+    x = Symbol('x')
+    assert typst(Contains(x, S.Naturals)) == r'x in NN'
+
+
+def test_typst_sum():
+    assert typst(Sum(x*y**2, (x, -2, 2), (y, -5, 5))) == \
+        r"sum_(-2 <= x <= 2 \ -5 <= y <= 5) x y^(2)"
+    assert typst(Sum(x**2, (x, -2, 2))) == \
+        r"sum_(x=-2)^(2) x^(2)"
+    assert typst(Sum(x**2 + y, (x, -2, 2))) == \
+        r"sum_(x=-2)^(2) (x^(2) + y)"
+    assert typst(Sum(x**2 + y, (x, -2, 2))**2) == \
+        r"(sum_(x=-2)^(2) (x^(2) + y))^(2)"
+
+
+def test_typst_product():
+    assert typst(Product(x*y**2, (x, -2, 2), (y, -5, 5))) == \
+        r"product_(-2 <= x <= 2 \ -5 <= y <= 5) x y^(2)"
+    assert typst(Product(x**2, (x, -2, 2))) == \
+        r"product_(x=-2)^(2) x^(2)"
+    assert typst(Product(x**2 + y, (x, -2, 2))) == \
+        r"product_(x=-2)^(2) (x^(2) + y)"
+
+    assert typst(Product(x, (x, -2, 2))**2) == \
+        r"(product_(x=-2)^(2) x)^(2)"
+
+
+def test_typst_limits():
+    assert typst(Limit(x, x, oo)) == r"lim_(x -> infinity) x"
+
+    # issue 8175
+    f = Function('f')
+    assert typst(Limit(f(x), x, 0)) == r"lim_(x -> 0^+) f(x)"
+    assert typst(Limit(f(x), x, 0, "-")) == \
+        r"lim_(x -> 0^-) f(x)"
+
+    # issue #10806
+    assert typst(Limit(f(x), x, 0)**2) == \
+        r"(lim_(x -> 0^+) f(x))^(2)"
+    # bi-directional limit
+    assert typst(Limit(f(x), x, 0, dir='+-')) == \
+        r"lim_(x -> 0) f(x)"
+
+
+def test_typst_log():
+    assert typst(log(x)) == r"log(x)"
+    assert typst(log(x), ln_notation=True) == r"ln(x)"
+    assert typst(log(x) + log(y)) == \
+        r"log(x) + log(y)"
+    assert typst(log(x) + log(y), ln_notation=True) == \
+        r"ln(x) + ln(y)"
+    assert typst(pow(log(x), x)) == r"log(x)^(x)"
+    assert typst(pow(log(x), x), ln_notation=True) == \
+        r"ln(x)^(x)"
+
+
+def test_issue_3568():
+    beta = Symbol(r'\beta')
+    y = beta + x
+    assert typst(y) in [r'"\beta" + x', r'x + "\beta"']
+
+    beta = Symbol(r'beta')
+    y = beta + x
+    assert typst(y) in [r'beta + x', r'x + beta']
+
+
+def test_typst():
+    assert typst((2*tau)**Rational(7, 2)) == r"8 sqrt(2) tau^(7/2)"
+    assert typst((2*mu)**Rational(7, 2), mode='equation*') == \
+        r"8 sqrt(2) mu^(7/2)"
+    assert typst([2/x, y]) == r"[2/x, #h(0.5em)y]"
+
+
+def test_typst_dict():
+    d = {Rational(1): 1, x**2: 2, x: 3, x**3: 4}
+    assert typst(d) == \
+        r'{1 : 1, #h(0.5em)x : 3, #h(0.5em)x^(2) : 2, #h(0.5em)x^(3) : 4}'
+    D = Dict(d)
+    assert typst(D) == \
+        r'{1 : 1, #h(0.5em)x : 3, #h(0.5em)x^(2) : 2, #h(0.5em)x^(3) : 4}'
+
+
+def test_typst_list():
+    ll = [Symbol('omega1'), Symbol('a'), Symbol('alpha')]
+    assert typst(ll) == r'[omega_(1), #h(0.5em)a, #h(0.5em)alpha]'
+
+
+def test_typst_NumberSymbols():
+    assert typst(S.Catalan) == "G"
+    assert typst(S.EulerGamma) == r"gamma"
+    assert typst(S.Exp1) == "e"
+    assert typst(S.GoldenRatio) == r"phi"
+    assert typst(S.Pi) == r"pi"
+    assert typst(S.TribonacciConstant) == r'upright("TribonacciConstant")'
+
+
+def test_typst_rational():
+    # tests issue 3973
+    assert typst(-Rational(1, 2)) == r"- 1/2"
+    assert typst(Rational(-1, 2)) == r"- 1/2"
+    assert typst(Rational(1, -2)) == r"- 1/2"
+    assert typst(-Rational(-1, 2)) == r"1/2"
+    assert typst(-Rational(1, 2)*x) == r"- x/2"
+    assert typst(-Rational(1, 2)*x + Rational(-2, 3)*y) == \
+        r"- x/2 - (2 y)/3"
+
+
+def test_typst_inverse():
+    # tests issue 4129
+    assert typst(1/x) == r"1/x"
+    assert typst(1/(x + y)) == r"1/(x + y)"
+
+
+def test_typst_DiracDelta():
+    assert typst(DiracDelta(x)) == r"delta(x)"
+    assert typst(DiracDelta(x)**2) == r"(delta(x))^(2)"
+    assert typst(DiracDelta(x, 0)) == r"delta(x)"
+    assert typst(DiracDelta(x, 5)) == \
+        r"delta^((5))(x)"
+    assert typst(DiracDelta(x, 5)**2) == \
+        r"(delta^((5))(x))^(2)"
+
+
+def test_typst_Heaviside():
+    assert typst(Heaviside(x)) == r"theta(x)"
+    assert typst(Heaviside(x)**2) == r"(theta(x))^(2)"
+
+
+def test_typst_KroneckerDelta():
+    assert typst(KroneckerDelta(x, y)) == r"delta_(x y)"
+    assert typst(KroneckerDelta(x, y + 1)) == r"delta_(x, y + 1)"
+    # issue 6578
+    assert typst(KroneckerDelta(x + 1, y)) == r"delta_(y, x + 1)"
+    assert typst(Pow(KroneckerDelta(x, y), 2, evaluate=False)) == \
+        r"(delta_(x y))^(2)"
+
+
+def test_typst_LeviCivita():
+    assert typst(LeviCivita(x, y, z)) == r"epsilon_(x y z)"
+    assert typst(LeviCivita(x, y, z)**2) == \
+        r"(epsilon_(x y z))^(2)"
+    assert typst(LeviCivita(x, y, z + 1)) == r"epsilon_(x, y, z + 1)"
+    assert typst(LeviCivita(x, y + 1, z)) == r"epsilon_(x, y + 1, z)"
+    assert typst(LeviCivita(x + 1, y, z)) == r"epsilon_(x + 1, y, z)"
+
+
+
+def test_typst_mathieu():
+    assert typst(mathieuc(x, y, z)) == r'C(x, y, z)'
+    assert typst(mathieus(x, y, z)) == r'S(x, y, z)'
+    assert typst(mathieuc(x, y, z)**2) == r'C(x, y, z)^(2)'
+    assert typst(mathieus(x, y, z)**2) == r'S(x, y, z)^(2)'
+    assert typst(mathieucprime(x, y, z)) == r"C^(prime)(x, y, z)"
+    assert typst(mathieusprime(x, y, z)) == r"S^(prime)(x, y, z)"
+    assert typst(mathieucprime(x, y, z)**2) == r"C^(prime)(x, y, z)^(2)"
+    assert typst(mathieusprime(x, y, z)**2) == r"S^(prime)(x, y, z)^(2)"
+
+
+def test_typst_Piecewise():
+    p = Piecewise((x, x < 1), (x**2, True))
+    assert typst(p) == r'cases( x & upright("for") x < 1, x^(2) &' \
+                       r' upright("otherwise") )'
+    p = Piecewise((x, x < 0), (0, x >= 0))
+    assert typst(p) == r'cases( x & upright("for") x < 0, 0 &' \
+                       r' upright("otherwise") )'
+    A, B = symbols("A B", commutative=False)
+    p = Piecewise((A**2, Eq(A, B)), (A*B, True))
+    s = r'cases( A^(2) & upright("for") A = B, A B & upright("otherwise") )'
+    assert typst(p) == s
+    assert typst(A*p) == r'A (%s)' % s
+    assert typst(p*A) == r'(%s) A' % s
+    assert typst(Piecewise((x, x < 1), (x**2, x < 2))) == \
+        r'cases( x & ' \
+        r'upright("for") x < 1, x^(2) & upright("for") x < 2 )'
+
+def test_typst_Matrix():
+    M = Matrix([[1 + x, y], [y, x - 1]])
+    assert typst(M) == \
+        r'mat(delim: "[", x + 1, y; y, x - 1)'
+    assert typst(M, mat_delim=None) == \
+        r'mat(delim: #none, x + 1, y; y, x - 1)'
+
+    M2 = Matrix(1, 11, range(11))
+    assert typst(M2) == \
+        r'mat(delim: "[", 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10)'
+
+
+def test_typst_matrix_with_functions():
+    t = symbols('t')
+    theta1 = symbols('theta1', cls=Function)
+
+    M = Matrix([[sin(theta1(t)), cos(theta1(t))],
+                [cos(theta1(t).diff(t)), sin(theta1(t).diff(t))]])
+
+    expected = (r'mat(delim: "[", sin(theta_(1)(t)), '\
+                r'cos(theta_(1)(t)); '\
+                r'cos(d / (d t) theta_(1)(t)), '\
+                r'sin(d / (d t) theta_(1)(t)))')
+
+    assert typst(M) == expected
+
+def test_typst_NDimArray():
+    x, y, z, w = symbols("x y z w")
+
+    for ArrayType in (ImmutableDenseNDimArray, ImmutableSparseNDimArray,
+                      MutableDenseNDimArray, MutableSparseNDimArray):
+        # Basic: scalar array
+        M = ArrayType(x)
+
+        assert typst(M) == r"x"
+
+        M = ArrayType([[1 / x, y], [z, w]])
+        M1 = ArrayType([1 / x, y, z])
+
+        M2 = tensorproduct(M1, M)
+        M3 = tensorproduct(M, M)
+
+        assert typst(M) == \
+            r'mat(delim: "[", 1/x, y; z, w )'
+        assert typst(M1) == \
+            r'mat(delim: "[", 1/x, y, z )'
+        assert typst(M2) == \
+            r'mat(delim: "[", mat(delim: "[", 1/x^(2), y/x; z/x, w/x ), '\
+            r'mat(delim: "[", y/x, y^(2); y z, w y ), '\
+            r'mat(delim: "[", z/x, y z; z^(2), w z ) )'
+        assert typst(M3) == \
+            r'mat(delim: "[", mat(delim: "[", 1/x^(2), y/x; z/x, w/x ), '\
+            r'mat(delim: "[", y/x, y^(2); y z, w y ); '\
+            r'mat(delim: "[", z/x, y z; z^(2), w z ), '\
+            r'mat(delim: "[", w/x, w y; w z, w^(2) ) )'
+
+        Mrow = ArrayType([[x, y, 1/z]])
+        Mcolumn = ArrayType([[x], [y], [1/z]])
+        Mcol2 = ArrayType([Mcolumn.tolist()])
+
+        assert typst(Mrow) == \
+            r'[mat(delim: "[", x, y, 1/z )]'
+        assert typst(Mcolumn) == \
+            r'mat(delim: "[", x; y; 1/z )'
+        assert typst(Mcol2) == \
+            r'mat(delim: "[", mat(delim: "[", x; y; 1/z ) )'
+
+def test_typst_mul_symbol():
+    assert typst(4*4**x, mul_symbol='times') == r"4 times 4^(x)"
+    assert typst(4*4**x, mul_symbol='dot') == r"4 dot 4^(x)"
+    # assert typst(4*4**x, mul_symbol='ldot') == r"4 #h(0.5em).#h(0.5em) 4^(x)"
+
+    assert typst(4*x, mul_symbol='times') == r"4 times x"
+    assert typst(4*x, mul_symbol='dot') == r"4 dot x"
+    # assert typst(4*x, mul_symbol='ldot') == r"4 #h(0.5em).#h(0.5em) x"
+
+
+def test_typst_issue_4381():
+    y = 4*4**log(2)
+    assert typst(y) == r'4 dot 4^(log(2))'
+    assert typst(1/y) == r'1/(4 dot 4^(log(2)))'
+
+
+def test_typst_issue_4576():
+    assert typst(Symbol("beta_13_2")) == r"beta_(13 2)"
+    assert typst(Symbol("beta_132_20")) == r"beta_(132 20)"
+    assert typst(Symbol("beta_13")) == r"beta_(13)"
+    assert typst(Symbol("x_a_b")) == r"x_(a b)"
+    assert typst(Symbol("x_1_2_3")) == r"x_(1 2 3)"
+    assert typst(Symbol("x_a_b1")) == r"x_(a b1)"
+    assert typst(Symbol("x_a_1")) == r"x_(a 1)"
+    assert typst(Symbol("x_1_a")) == r"x_(1 a)"
+    assert typst(Symbol("x_1^aa")) == r"x^(aa)_(1)"
+    assert typst(Symbol("x_1__aa")) == r"x^(aa)_(1)"
+    assert typst(Symbol("x_11^a")) == r"x^(a)_(11)"
+    assert typst(Symbol("x_11__a")) == r"x^(a)_(11)"
+    assert typst(Symbol("x_a_a_a_a")) == r"x_(a a a a)"
+    assert typst(Symbol("x_a_a^a^a")) == r"x^(a a)_(a a)"
+    assert typst(Symbol("x_a_a__a__a")) == r"x^(a a)_(a a)"
+    assert typst(Symbol("alpha_11")) == r"alpha_(11)"
+    assert typst(Symbol("alpha_11_11")) == r"alpha_(11 11)"
+    assert typst(Symbol("alpha_alpha")) == r"alpha_(alpha)"
+    assert typst(Symbol("alpha^aleph")) == r"alpha^(aleph)"
+    assert typst(Symbol("alpha__aleph")) == r"alpha^(aleph)"
+
+
+def test_typst_pow_fraction():
+    x = Symbol('x')
+    # Testing exp
+    assert r'e^(-x)' in typst(exp(-x)/2).replace(' ', '')  # Remove Whitespace
+
+    # Testing e^{-x} in case future changes alter behavior of muls or fracs
+    # In particular current output is 1/2 e^(- x) but perhaps this will
+    # change to 1/(e^(-x))/2
+
+    # Testing general, non-exp, power
+    assert r'3^(-x)' in typst(3**-x/2).replace(' ', '')
+
+
+def test_typst_noncommutative():
+    A, B, C = symbols('A,B,C', commutative=False)
+
+    assert typst(A*B*C**-1) == r"A B C^(-1)"
+    assert typst(C**-1*A*B) == r"C^(-1) A B"
+    assert typst(A*C**-1*B) == r"A C^(-1) B"
+
+
+def test_typst_order():
+    expr = x**3 + x**2*y + y**4 + 3*x*y**3
+
+    assert typst(expr, order='lex') == r"x^(3) + x^(2) y + 3 x y^(3) + y^(4)"
+    assert typst(
+        expr, order='rev-lex') == r"y^(4) + 3 x y^(3) + x^(2) y + x^(3)"
+    assert typst(expr, order='none') == r"x^(3) + y^(4) + y x^(2) + 3 x y^(3)"
+
+
+def test_typst_Lambda():
+    assert typst(Lambda(x, x + 1)) == r"(x arrow.r.bar x + 1)"
+    assert typst(Lambda((x, y), x + 1)) == r"((x, #h(0.5em)y) arrow.r.bar x + 1)"
+    assert typst(Lambda(x, x)) == r"(x arrow.r.bar x)"
+
+def test_typst_PolyElement():
+    Ruv, u, v = ring("u,v", ZZ)
+    Rxyz, x, y, z = ring("x,y,z", Ruv)
+
+    assert typst(x - x) == r"0"
+    assert typst(x - 1) == r"x - 1"
+    assert typst(x + 1) == r"x + 1"
+
+    assert typst((u**2 + 3*u*v + 1)*x**2*y + u + 1) == \
+        r"(u^(2) + 3 u v + 1) x^(2) y + u + 1"
+    assert typst((u**2 + 3*u*v + 1)*x**2*y + (u + 1)*x) == \
+        r"(u^(2) + 3 u v + 1) x^(2) y + (u + 1) x"
+    assert typst((u**2 + 3*u*v + 1)*x**2*y + (u + 1)*x + 1) == \
+        r"(u^(2) + 3 u v + 1) x^(2) y + (u + 1) x + 1"
+    assert typst((-u**2 + 3*u*v - 1)*x**2*y - (u + 1)*x - 1) == \
+        r"-(u^(2) - 3 u v + 1) x^(2) y - (u + 1) x - 1"
+
+    assert typst(-(v**2 + v + 1)*x + 3*u*v + 1) == \
+        r"-(v^(2) + v + 1) x + 3 u v + 1"
+    assert typst(-(v**2 + v + 1)*x - 3*u*v + 1) == \
+        r"-(v^(2) + v + 1) x - 3 u v + 1"
+
+
+def test_typst_FracElement():
+    Fuv, u, v = field("u,v", ZZ)
+    Fxyzt, x, y, z, t = field("x,y,z,t", Fuv)
+
+    assert typst(x - x) == r"0"
+    assert typst(x - 1) == r"x - 1"
+    assert typst(x + 1) == r"x + 1"
+
+    assert typst(x/3) == r"frac(x, 3)"
+    assert typst(x/z) == r"frac(x, z)"
+    assert typst(x*y/z) == r"frac(x y, z)"
+    assert typst(x/(z*t)) == r"frac(x, z t)"
+    assert typst(x*y/(z*t)) == r"frac(x y, z t)"
+
+    assert typst((x - 1)/y) == r"frac(x - 1, y)"
+    assert typst((x + 1)/y) == r"frac(x + 1, y)"
+    assert typst((-x - 1)/y) == r"frac(-x - 1, y)"
+    assert typst((x + 1)/(y*z)) == r"frac(x + 1, y z)"
+    assert typst(-y/(x + 1)) == r"frac(-y, x + 1)"
+    assert typst(y*z/(x + 1)) == r"frac(y z, x + 1)"
+
+    assert typst(((u + 1)*x*y + 1)/((v - 1)*z - 1)) == \
+        r"frac((u + 1) x y + 1, (v - 1) z - 1)"
+    assert typst(((u + 1)*x*y + 1)/((v - 1)*z - t*u*v - 1)) == \
+        r"frac((u + 1) x y + 1, (v - 1) z - u v t - 1)"
+
+
+def test_typst_Poly():
+    assert typst(Poly(x**2 + 2 * x, x)) == \
+        r'upright("Poly")(x^(2) + 2 x, x, domain=ZZ)'
+    assert typst(Poly(x/y, x)) == \
+        r'upright("Poly")(1/y x, x, domain=ZZ(y))'
+    assert typst(Poly(2.0*x + y)) == \
+        r'upright("Poly")(2.0 x + 1.0 y, x, y, domain=RR)'
+
+
+def test_typst_Poly_order():
+    assert typst(Poly([a, 1, b, 2, c, 3], x)) == \
+        r'upright("Poly")(a x^(5) + x^(4) + b x^(3) + 2 x^(2) + c x + 3, x, domain=ZZ[a, b, c])'
+    assert typst(Poly([a, 1, b+c, 2, 3], x)) == \
+        r'upright("Poly")(a x^(4) + x^(3) + (b + c) x^(2) + 2 x + 3, x, domain=ZZ[a, b, c])'
+    assert typst(Poly(a*x**3 + x**2*y - x*y - c*y**3 - b*x*y**2 + y - a*x + b,
+                      (x, y))) == \
+        r'upright("Poly")(a x^(3) + x^(2)y -  b xy^(2) - xy -  a x -  c y^(3) + y + b, x, y, domain=ZZ[a, b, c])'
+
+
+def test_typst_ComplexRootOf():
+    assert typst(rootof(x**5 + x + 3, 0)) == \
+        r'upright("CRootOf")(x^(5) + x + 3, 0)'
+
+
+def test_typst_RootSum():
+    assert typst(RootSum(x**5 + x + 3, sin)) == \
+        r'upright("RootSum")(x^(5) + x + 3, (x arrow.r.bar sin(x)))'
+
+
+def test_settings():
+    raises(TypeError, lambda: typst(x*y, method="garbage"))
+
+
+def test_typst_numbers():
+    assert typst(catalan(n)) == r'G_(n)'
+    assert typst(catalan(n)**2) == r'G_(n)^(2)'
+    assert typst(bernoulli(n)) == r'B_(n)'
+    assert typst(bernoulli(n, x)) == r'B_(n)(x)'
+    assert typst(bernoulli(n)**2) == r'B_(n)^(2)'
+    assert typst(bernoulli(n, x)**2) == r'B_(n)^(2)(x)'
+    assert typst(genocchi(n)) == r'G_(n)'
+    assert typst(genocchi(n, x)) == r'G_(n)(x)'
+    assert typst(genocchi(n)**2) == r'G_(n)^(2)'
+    assert typst(genocchi(n, x)**2) == r'G_(n)^(2)(x)'
+    assert typst(bell(n)) == r'B_(n)'
+    assert typst(bell(n, x)) == r'B_(n)(x)'
+    assert typst(bell(n, m, (x, y))) == r'B_(n, m)(x, y)'
+    assert typst(bell(n)**2) == r'B_(n)^(2)'
+    assert typst(bell(n, x)**2) == r'B_(n)^(2)(x)'
+    assert typst(bell(n, m, (x, y))**2) == r'B_(n, m)^(2)(x, y)'
+    assert typst(fibonacci(n)) == r'F_(n)'
+    assert typst(fibonacci(n, x)) == r'F_(n)(x)'
+    assert typst(fibonacci(n)**2) == r'F_(n)^(2)'
+    assert typst(fibonacci(n, x)**2) == r'F_(n)^(2)(x)'
+    assert typst(lucas(n)) == r'L_(n)'
+    assert typst(lucas(n)**2) == r'L_(n)^(2)'
+    assert typst(tribonacci(n)) == r'T_(n)'
+    assert typst(tribonacci(n, x)) == r'T_(n)(x)'
+    assert typst(tribonacci(n)**2) == r'T_(n)^(2)'
+    assert typst(tribonacci(n, x)**2) == r'T_(n)^(2)(x)'
+    assert typst(mobius(n)) == r'mu(n)'
+    assert typst(mobius(n)**2) == r'mu^(2)(n)'
+
+
+def test_typst_euler():
+    assert typst(euler(n)) == r'E_(n)'
+    assert typst(euler(n, x)) == r'E_(n)(x)'
+    assert typst(euler(n, x)**2) == r'E_(n)^(2)(x)'
+
+
+def test_lamda():
+    assert typst(Symbol('lamda')) == r'lambda'
+    assert typst(Symbol('Lamda')) == r'Lambda'
+
+
+def test_custom_symbol_names():
+    x = Symbol('x')
+    y = Symbol('y')
+    assert typst(x) == r'x'
+    assert typst(x, symbol_names={x: "x_i"}) == r'x_i'
+    assert typst(x + y, symbol_names={x: "x_i"}) == r'x_i + y'
+    assert typst(x**2, symbol_names={x: "x_i"}) == r'x_i^(2)'
+    assert typst(x + y, symbol_names={x: "x_i", y: "y_j"}) == r'x_i + y_j'
+
+def test_matAdd():
+    C = MatrixSymbol('C', 5, 5)
+    B = MatrixSymbol('B', 5, 5)
+
+    n = symbols("n")
+    h = MatrixSymbol("h", 1, 1)
+
+    assert typst(C - 2*B) in [r'- 2 B + C', r'C -2 B']
+    assert typst(C + 2*B) in [r'2 B + C', r'C + 2 B']
+    assert typst(B - 2*C) in [r'B - 2 C', r'- 2 C + B']
+    assert typst(B + 2*C) in [r'B + 2 C', r'2 C + B']
+
+    assert typst(n * h - (-h + h.T) * (h + h.T)) == r'n h - (- h + h^(T)) (h + h^(T))'
+    assert typst(MatAdd(MatAdd(h, h), MatAdd(h, h))) == r'(h + h) + (h + h)'
+    assert typst(MatMul(MatMul(h, h), MatMul(h, h))) == r'(h h) (h h)'
+
+
+def test_matMul():
+    A = MatrixSymbol('A', 5, 5)
+    B = MatrixSymbol('B', 5, 5)
+    x = Symbol('x')
+    assert typst(2*A) == r'2 A'
+    assert typst(2*x*A) == r'2 x A'
+    assert typst(-2*A) == r'- 2 A'
+    assert typst(1.5*A) == r'1.5 A'
+    assert typst(sqrt(2)*A) == r'sqrt(2) A'
+    assert typst(-sqrt(2)*A) == r'- sqrt(2) A'
+    assert typst(2*sqrt(2)*x*A) == r'2 sqrt(2) x A'
+    assert typst(-2*A*(A + 2*B)) in [r'- 2 A (A + 2 B)',
+                                        r'- 2 A (2 B + A)']
+
+
+def test_typst_MatrixSlice():
+    n = Symbol('n', integer=True)
+    x, y, z, w, t, = symbols('x y z w t')
+    X = MatrixSymbol('X', n, n)
+    Y = MatrixSymbol('Y', 10, 10)
+    Z = MatrixSymbol('Z', 10, 10)
+
+    assert typst(MatrixSlice(X, (None, None, None), (None, None, None))) == r'X[:, :]'
+    assert typst(X[x:x + 1, y:y + 1]) == r'X[x:x + 1, y:y + 1]'
+    assert typst(X[x:x + 1:2, y:y + 1:2]) == r'X[x:x + 1:2, y:y + 1:2]'
+    assert typst(X[:x, y:]) == r'X[:x, y:]'
+    assert typst(X[:x, y:]) == r'X[:x, y:]'
+    assert typst(X[x:, :y]) == r'X[x:, :y]'
+    assert typst(X[x:y, z:w]) == r'X[x:y, z:w]'
+    assert typst(X[x:y:t, w:t:x]) == r'X[x:y:t, w:t:x]'
+    assert typst(X[x::y, t::w]) == r'X[x::y, t::w]'
+    assert typst(X[:x:y, :t:w]) == r'X[:x:y, :t:w]'
+    assert typst(X[::x, ::y]) == r'X[::x, ::y]'
+    assert typst(MatrixSlice(X, (0, None, None), (0, None, None))) == r'X[:, :]'
+    assert typst(MatrixSlice(X, (None, n, None), (None, n, None))) == r'X[:, :]'
+    assert typst(MatrixSlice(X, (0, n, None), (0, n, None))) == r'X[:, :]'
+    assert typst(MatrixSlice(X, (0, n, 2), (0, n, 2))) == r'X[::2, ::2]'
+    assert typst(X[1:2:3, 4:5:6]) == r'X[1:2:3, 4:5:6]'
+    assert typst(X[1:3:5, 4:6:8]) == r'X[1:3:5, 4:6:8]'
+    assert typst(X[1:10:2]) == r'X[1:10:2, :]'
+    assert typst(Y[:5, 1:9:2]) == r'Y[:5, 1:9:2]'
+    assert typst(Y[:5, 1:10:2]) == r'Y[:5, 1::2]'
+    assert typst(Y[5, :5:2]) == r'Y[5:6, :5:2]'
+    assert typst(X[0:1, 0:1]) == r'X[:1, :1]'
+    assert typst(X[0:1:2, 0:1:2]) == r'X[:1:2, :1:2]'
+    assert typst((Y + Z)[2:, 2:]) == r'(Y + Z)[2:, 2:]'
+
+
+def test_typst_RandomDomain():
+    from sympy.stats import Normal, Die, Exponential, pspace, where
+    from sympy.stats.rv import RandomDomain
+
+    X = Normal('x1', 0, 1)
+    assert typst(where(X > 0)) == r'upright("Domain: ")0 < x_(1) and x_(1) < infinity'
+
+    D = Die('d1', 6)
+    assert typst(where(D > 4)) == r'upright("Domain: ")d_(1) = 5 or d_(1) = 6'
+
+    A = Exponential('a', 1)
+    B = Exponential('b', 1)
+    assert typst(
+        pspace(Tuple(A, B)).domain) == \
+        r'upright("Domain: ")0 <= a and 0 <= b and a < infinity and b < infinity'
+
+    assert typst(RandomDomain(FiniteSet(x), FiniteSet(1, 2))) == \
+        r'upright("Domain: "){x} in {1, 2}'
+
+def test_typst_PrettyPoly():
+    from sympy.polys.domains import QQ
+    F = QQ.frac_field(x, y)
+    R = QQ[x, y]
+
+    assert typst(F.convert(x/(x + y))) == r'frac(x, x + y)'
+    assert typst(R.convert(x + y)) == typst(x + y)
+
+
+def test_typst_integral_transforms():
+    x = Symbol("x")
+    k = Symbol("k")
+    f = Function("f")
+    a = Symbol("a")
+    b = Symbol("b")
+
+    assert typst(MellinTransform(f(x), x, k)) == \
+        r'cal(M)_(x)[f(x)](k)'
+    assert typst(InverseMellinTransform(f(k), k, x, a, b)) == \
+        r'cal(M)^(-1)_(k)[f(k)](x)'
+
+    assert typst(LaplaceTransform(f(x), x, k)) == \
+        r'cal(L)_(x)[f(x)](k)'
+    assert typst(InverseLaplaceTransform(f(k), k, x, (a, b))) == \
+        r'cal(L)^(-1)_(k)[f(k)](x)'
+
+    assert typst(FourierTransform(f(x), x, k)) == \
+        r'cal(F)_(x)[f(x)](k)'
+    assert typst(InverseFourierTransform(f(k), k, x)) == \
+        r'cal(F)^(-1)_(k)[f(k)](x)'
+
+    assert typst(CosineTransform(f(x), x, k)) == \
+        r'cal(COS)_(x)[f(x)](k)'
+    assert typst(InverseCosineTransform(f(k), k, x)) == \
+        r'cal(COS)^(-1)_(k)[f(k)](x)'
+
+    assert typst(SineTransform(f(x), x, k)) == \
+        r'cal(SIN)_(x)[f(x)](k)'
+    assert typst(InverseSineTransform(f(k), k, x)) == \
+        r'cal(SIN)^(-1)_(k)[f(k)](x)'
+
+
+def test_typst_PolynomialRingBase():
+    from sympy.polys.domains import QQ
+    assert typst(QQ.old_poly_ring(x, y)) == r'QQ[x, y]'
+    assert typst(QQ.old_poly_ring(x, y, order="ilex")) == \
+        r'S_<^(-1)QQ[x, y]'
+
+
+def test_typst_categories():
+    from sympy.categories import (Object, IdentityMorphism,
+                                  NamedMorphism, Category, Diagram,
+                                  DiagramGrid)
+
+    A1 = Object("A1")
+    A2 = Object("A2")
+    A3 = Object("A3")
+
+    f1 = NamedMorphism(A1, A2, "f1")
+    f2 = NamedMorphism(A2, A3, "f2")
+    id_A1 = IdentityMorphism(A1)
+
+    K1 = Category("K1")
+
+    assert typst(A1) == r'A_(1)'
+    assert typst(f1) == r'f_(1):A_(1) arrow.r.bar A_(2)'
+    assert typst(id_A1) == r'"id":A_(1) arrow.r.bar A_(1)'
+    assert typst(f2*f1) == r'f_(2)circle.small f_(1):A_(1) arrow.r.bar A_(3)'
+
+    assert typst(K1) == r'upright(bold(K_(1)))'
+
+    d = Diagram()
+    assert typst(d) == r'nothing'
+
+    d = Diagram({f1: "unique", f2: S.EmptySet})
+    assert typst(d) == r'{f_(2)circle.small f_(1):A_(1) arrow.r.bar A_(3) : ' \
+        r'nothing, #h(0.5em)"id":A_(1) arrow.r.bar A_(1) : nothing, #h(0.5em)' \
+        r'"id":A_(2) arrow.r.bar A_(2) : nothing, #h(0.5em)"id":A_(3) arrow.r.bar ' \
+        r'A_(3) : nothing, #h(0.5em)f_(1):A_(1) arrow.r.bar A_(2) : {"unique"}, #h(0.5em)f_(2):A_(2) arrow.r.bar A_(3) : nothing}'
+
+    d = Diagram({f1: "unique", f2: S.EmptySet}, {f2 * f1: "unique"})
+    assert typst(d) == r'{f_(2)circle.small f_(1):A_(1) arrow.r.bar A_(3) : ' \
+        r'nothing, #h(0.5em)"id":A_(1) arrow.r.bar A_(1) : nothing, #h(0.5em)' \
+        r'"id":A_(2) arrow.r.bar A_(2) : nothing, #h(0.5em)"id":A_(3) arrow.r.bar A_(3) ' \
+        r': nothing, #h(0.5em)f_(1):A_(1) arrow.r.bar A_(2) : {"unique"}, #h(0.5em)' \
+        r'f_(2):A_(2) arrow.r.bar A_(3) : nothing}arrow.r.long {f_(2)circle.small f_(1):A_(1) arrow.r.bar A_(3) : {"unique"}}'
+
+    # A linear diagram.
+    A = Object("A")
+    B = Object("B")
+    C = Object("C")
+    f = NamedMorphism(A, B, "f")
+    g = NamedMorphism(B, C, "g")
+    d = Diagram([f, g])
+    grid = DiagramGrid(d)
+
+    assert typst(grid) == r'mat(delim:#none, A, B;, C)'
+
+
+def test_typst_Modules():
+    from sympy.polys.domains import QQ
+    from sympy.polys.agca import homomorphism
+
+    R = QQ.old_poly_ring(x, y)
+    F = R.free_module(2)
+    M = F.submodule([x, y], [1, x**2])
+
+    assert typst(F) == r'(QQ[x, y])^(2)'
+    assert typst(M) == \
+        r'angle.l [x, y], [1, x^(2)] angle.r'
+
+    I = R.ideal(x**2, y)
+    assert typst(I) == r'angle.l x^(2), y angle.r'
+
+    Q = F / M
+    assert typst(Q) == \
+        r'frac((QQ[x, y])^(2), angle.l [x, y], [1, x^(2)] angle.r)'
+    assert typst(Q.submodule([1, x**3/2], [2, y])) == \
+        r'angle.l [1,x^(3)/2] + angle.l [x, y], [1, x^(2)] angle.r, [2,y] + angle.l [x, y], [1, x^(2)] angle.r angle.r'
+
+    h = homomorphism(QQ.old_poly_ring(x).free_module(2),
+                     QQ.old_poly_ring(x).free_module(2), [0, 0])
+
+    assert typst(h) == \
+        r'mat(delim: "[", 0, 0; 0, 0) : (QQ[x])^(2) arrow.r.bar (QQ[x])^(2)'
+
+
+def test_typst_QuotientRing():
+    from sympy.polys.domains import QQ
+    R = QQ.old_poly_ring(x)/[x**2 + 1]
+
+    assert typst(R) == \
+        r'frac(QQ[x], angle.l x^(2) + 1 angle.r)'
+    assert typst(R.one) == r'1 + angle.l x^(2) + 1 angle.r'
+
+
+def test_typst_Tr():
+    #TODO: Handle indices
+    A, B = symbols('A B', commutative=False)
+    t = Tr(A*B)
+    assert typst(t) == r'upright("tr")(A B)'
+
+
+def test_typst_Determinant():
+    from sympy.matrices import Determinant, Inverse, BlockMatrix, OneMatrix, ZeroMatrix
+    m = Matrix(((1, 2), (3, 4)))
+    assert typst(Determinant(m)) == r'mat(delim: "|", 1, 2; 3, 4)'
+    assert typst(Determinant(Inverse(m))) == \
+        r'mat(delim: "|", mat(delim: "[", 1, 2; 3, 4)^(-1))'
+    X = MatrixSymbol('X', 2, 2)
+    assert typst(Determinant(X)) == r'mat(delim: "|", X)'
+    assert typst(Determinant(X + m)) == \
+        r'mat(delim: "|", mat(delim: "[", 1, 2; 3, 4) + X)'
+    assert typst(Determinant(BlockMatrix(((OneMatrix(2, 2), X),
+                                          (m, ZeroMatrix(2, 2)))))) == \
+        r'mat(delim: "|", 1, X; mat(delim: "[", 1, 2; 3, 4), 0)'
+
+def test_Adjoint():
+    from sympy.matrices import Adjoint, Inverse, Transpose
+    X = MatrixSymbol('X', 2, 2)
+    Y = MatrixSymbol('Y', 2, 2)
+    assert typst(Adjoint(X)) == r'X^(dagger)'
+    assert typst(Adjoint(X + Y)) == r'(X + Y)^(dagger)'
+    assert typst(Adjoint(X) + Adjoint(Y)) == r'X^(dagger) + Y^(dagger)'
+    assert typst(Adjoint(X*Y)) == r'(X Y)^(dagger)'
+    assert typst(Adjoint(Y)*Adjoint(X)) == r'Y^(dagger) X^(dagger)'
+    assert typst(Adjoint(X**2)) == r'(X^(2))^(dagger)'
+    assert typst(Adjoint(X)**2) == r'(X^(dagger))^(2)'
+    assert typst(Adjoint(Inverse(X))) == r'(X^(-1))^(dagger)'
+    assert typst(Inverse(Adjoint(X))) == r'(X^(dagger))^(-1)'
+    assert typst(Adjoint(Transpose(X))) == r'(X^(T))^(dagger)'
+    assert typst(Transpose(Adjoint(X))) == r'(X^(dagger))^(T)'
+    assert typst(Transpose(Adjoint(X) + Y)) == r'(X^(dagger) + Y)^(T)'
+    m = Matrix(((1, 2), (3, 4)))
+    assert typst(Adjoint(m)) == r'mat(delim: "[", 1, 2; 3, 4)^(dagger)'
+    assert typst(Adjoint(m+X)) == r'(mat(delim: "[", 1, 2; 3, 4) + X)^(dagger)'
+    from sympy.matrices import BlockMatrix, OneMatrix, ZeroMatrix
+    assert typst(Adjoint(BlockMatrix(((OneMatrix(2, 2), X),
+                                      (m, ZeroMatrix(2, 2)))))) == \
+        r'mat(delim: "[", 1, X; mat(delim: "[", 1, 2; 3, 4), 0)^(dagger)'
+    # Issue 20959
+    Mx = MatrixSymbol('M^x', 2, 2)
+    assert typst(Adjoint(Mx)) == r'(M^(x))^(dagger)'
+
+    # adjoint style
+    assert typst(Adjoint(X), adjoint_style="star") == r'X^(star)'
+    assert typst(Adjoint(X + Y), adjoint_style="hermitian") == r'(X + Y)^(sans(upright(H)))'
+    assert typst(Adjoint(X) + Adjoint(Y), adjoint_style="dagger") == r'X^(dagger) + Y^(dagger)'
+    assert typst(Adjoint(Y)*Adjoint(X)) == r'Y^(dagger) X^(dagger)'
+    assert typst(Adjoint(X**2), adjoint_style="star") == r'(X^(2))^(star)'
+    assert typst(Adjoint(X)**2, adjoint_style="hermitian") == r'(X^(sans(upright(H))))^(2)'
+
+def test_Transpose():
+    from sympy.matrices import Transpose, MatPow, HadamardPower
+    X = MatrixSymbol('X', 2, 2)
+    Y = MatrixSymbol('Y', 2, 2)
+    assert typst(Transpose(X)) == r'X^(T)'
+    assert typst(Transpose(X + Y)) == r'(X + Y)^(T)'
+
+    assert typst(Transpose(HadamardPower(X, 2))) == r'(X^(circle.small 2))^(T)'
+    assert typst(HadamardPower(Transpose(X), 2)) == r'(X^(T))^(circle.small 2)'
+    assert typst(Transpose(MatPow(X, 2))) == r'(X^(2))^(T)'
+    assert typst(MatPow(Transpose(X), 2)) == r'(X^(T))^(2)'
+    m = Matrix(((1, 2), (3, 4)))
+    assert typst(Transpose(m)) == r'mat(delim: "[", 1, 2; 3, 4)^(T)'
+    assert typst(Transpose(m+X)) == r'(mat(delim: "[", 1, 2; 3, 4) + X)^(T)'
+    from sympy.matrices import BlockMatrix, OneMatrix, ZeroMatrix
+    assert typst(Transpose(BlockMatrix(((OneMatrix(2, 2), X),
+                                        (m, ZeroMatrix(2, 2)))))) == \
+        r'mat(delim: "[", 1, X; mat(delim: "[", 1, 2; 3, 4), 0)^(T)'
+    # Issue 20959
+    Mx = MatrixSymbol('M^x', 2, 2)
+    assert typst(Transpose(Mx)) == r'(M^(x))^(T)'
+
+
+def test_Hadamard():
+    from sympy.matrices import HadamardProduct, HadamardPower
+    from sympy.matrices.expressions import MatAdd, MatMul, MatPow
+    X = MatrixSymbol('X', 2, 2)
+    Y = MatrixSymbol('Y', 2, 2)
+    assert typst(HadamardProduct(X, Y*Y)) == r'X circle.small Y^(2)'
+    assert typst(HadamardProduct(X, Y)*Y) == r'(X circle.small Y) Y'
+
+    assert typst(HadamardPower(X, 2)) == r'X^(circle.small 2)'
+    assert typst(HadamardPower(X, -1)) == r'X^(circle.small (-1))'
+    assert typst(HadamardPower(MatAdd(X, Y), 2)) == r'(X + Y)^(circle.small 2)'
+    assert typst(HadamardPower(MatMul(X, Y), 2)) == r'(X Y)^(circle.small 2)'
+
+    assert typst(HadamardPower(MatPow(X, -1), -1)) == r'(X^(-1))^(circle.small (-1))'
+    assert typst(MatPow(HadamardPower(X, -1), -1)) == r'(X^(circle.small (-1)))^(-1)'
+
+    assert typst(HadamardPower(X, n+1)) == r'X^(circle.small (n + 1))'
+
+
+def test_MatPow():
+    from sympy.matrices.expressions import MatPow
+    X = MatrixSymbol('X', 2, 2)
+    Y = MatrixSymbol('Y', 2, 2)
+    assert typst(MatPow(X, 2)) == r'X^(2)'
+    assert typst(MatPow(X*X, 2)) == r'(X^(2))^(2)'
+    assert typst(MatPow(X*Y, 2)) == r'(X Y)^(2)'
+    assert typst(MatPow(X + Y, 2)) == r'(X + Y)^(2)'
+    assert typst(MatPow(X + X, 2)) == r'(2 X)^(2)'
+    # Issue 20959
+    Mx = MatrixSymbol('M^x', 2, 2)
+    assert typst(MatPow(Mx, 2)) == r'(M^(x))^(2)'
+
+
+def test_ElementwiseApplyFunction():
+    X = MatrixSymbol('X', 2, 2)
+    expr = (X.T*X).applyfunc(sin)
+    assert typst(expr) == r'(d arrow.r.bar sin(d))_circle.stroked.small (X^(T) X)'
+    expr = X.applyfunc(Lambda(x, 1/x))
+    assert typst(expr) == r'(x arrow.r.bar 1/x)_circle.stroked.small (X)'
+
+
+def test_ZeroMatrix():
+    from sympy.matrices.expressions.special import ZeroMatrix
+    assert typst(ZeroMatrix(1, 1), mat_symbol_style='plain') == r"0"
+    assert typst(ZeroMatrix(1, 1), mat_symbol_style='bold') == r"bold(0)"
+
+
+def test_OneMatrix():
+    from sympy.matrices.expressions.special import OneMatrix
+    assert typst(OneMatrix(3, 4), mat_symbol_style='plain') == r"1"
+    assert typst(OneMatrix(3, 4), mat_symbol_style='bold') == r"bold(1)"
+
+
+def test_Identity():
+    from sympy.matrices.expressions.special import Identity
+    assert typst(Identity(1), mat_symbol_style='plain') == r"II"
+    assert typst(Identity(1), mat_symbol_style='bold') == r"bold(I)"
+
+
+def test_typst_DFT_IDFT():
+    from sympy.matrices.expressions.fourier import DFT, IDFT
+    assert typst(DFT(13)) == r'upright("DFT")_(13)'
+    assert typst(IDFT(x)) == r'upright("IDFT")_(x)'
 
 def test_boolean_args_order():
     syms = symbols('a:f')
@@ -847,9 +2066,43 @@ def test_boolean_args_order():
     assert typst(expr) == \
         r'a \u{22BB} b \u{22BB} c \u{22BB} d \u{22BB} e \u{22BB} f'
 
-def test_issue_7180():
-    assert typst(Equivalent(x, y)) == r"x <=> y"
-    assert typst(Not(Equivalent(x, y))) == r"x arrow.l.r.double.not y"
+def test_imaginary():
+    i = sqrt(-1)
+    assert typst(i) == r'i'
+
+
+def test_builtins_without_args():
+    assert typst(sin) == r'sin'
+    assert typst(cos) == r'cos'
+    assert typst(tan) == r'tan'
+    assert typst(log) == r'log'
+    assert typst(Ei) == r'upright("Ei")'
+    assert typst(zeta) == r'zeta'
+
+
+def test_typst_greek_functions():
+    # bug because capital greeks that have roman equivalents should not use
+    # Alpha, Beta, Eta, etc.
+    s = Function('Alpha')
+    assert typst(s) == r'Alpha'
+    assert typst(s(x)) == r'Alpha(x)'
+    s = Function('Beta')
+    assert typst(s) == r'Beta'
+    s = Function('Eta')
+    assert typst(s) == r'Eta'
+    assert typst(s(x)) == r'Eta(x)'
+
+    # bug because sympy.core.numbers.Pi is special
+    p = Function('Pi')
+    # assert typst(p(x)) == r'Pi(x)'
+    assert typst(p) == r'Pi'
+
+    # bug because not all greeks are included
+    c = Function('chi')
+    assert typst(c(x)) == r'chi(x)'
+    assert typst(c) == r'chi'
+
+
 
 
 def test_translate():
@@ -1383,7 +2636,7 @@ def test_issue_15353():
     sol = ConditionSet(
         Tuple(x, a), Eq(sin(a*x), 0) & Eq(cos(a*x), 0), S.Complexes**2)
     assert typst(sol) == \
-        r'{(x, #h(0.5em)a) | (x, #h(0.5em)a) in CC^(2) and sin(a x) = 0 and cos(a x) = 0}'
+        r'{(x, #h(0.5em)a) mid(|) (x, #h(0.5em)a) in CC^(2) and sin(a x) = 0 and cos(a x) = 0}'
 
 def test_typst_symbolic_probability():
     mu = symbols("mu")
@@ -1463,7 +2716,6 @@ def test_AppliedPermutation():
     assert typst(AppliedPermutation(p, x)) == \
         r'sigma_((0 space 1 space 2))(x)'
 
-
 def test_PermutationMatrix():
     p = Permutation(0, 1, 2)
     assert typst(PermutationMatrix(p)) == r'P_((0 space 1 space 2))'
@@ -1483,7 +2735,23 @@ def test_issue_21758():
         r'& upright("for") n > -infinity and n < infinity and n != 0, 0 & upright("otherwise") )'
     assert typst(FourierSeries(x, (x, -pi, pi), (0, SeqFormula(0, (k, 1, oo)),
                                                  SeqFormula(0, (n, 1, oo))))) == '0'
-    
+
+def test_imaginary_unit():
+    assert typst(1 + I) == r'1 + i'
+    assert typst(1 + I, imaginary_unit='i') == r'1 + i'
+    assert typst(1 + I, imaginary_unit='j') == r'1 + j'
+    assert typst(1 + I, imaginary_unit='foo') == r'1 + foo'
+    assert typst(I, imaginary_unit="ti") == r'text(i)'
+    assert typst(I, imaginary_unit="tj") == r'text(j)'
+
+
+def test_text_re_im():
+    assert typst(im(x), gothic_re_im=True) == r'Im(x)'
+    assert typst(im(x), gothic_re_im=False) == r'upright("im")(x)'
+    assert typst(re(x), gothic_re_im=True) == r'Re(x)'
+    assert typst(re(x), gothic_re_im=False) == r'upright("re")(x)'
+
+
 def test_typst_diffgeom():
     from sympy.diffgeom import Manifold, Patch, CoordSystem, BaseScalarField, Differential
     from sympy.diffgeom.rn import R2
@@ -1626,348 +2894,3 @@ def test_Array():
 def test_typst_with_unevaluated():
     with evaluate(False):
         assert typst(a * a) == r"a a"
-
-def test_typst_indexed():
-    Psi_symbol = Symbol('Psi_0', complex=True, real=False)
-    Psi_indexed = IndexedBase(Symbol('Psi', complex=True, real=False))
-    symbol_typst = typst(Psi_symbol * conjugate(Psi_symbol))
-    indexed_typst = typst(Psi_indexed[0] * conjugate(Psi_indexed[0]))
-    # overline(Psi_(0)) Psi_(0)  vs.  Psi_(0) overline(Psi_(0))
-    assert symbol_typst == r'Psi_(0) overline(Psi_(0))'
-    assert indexed_typst == r'overline(Psi_(0)) Psi_(0)'
-
-    interval = r'.. '
-    assert typst(Indexed('x1', Symbol('i'))) == r'x_1_(i)'
-    assert typst(Indexed('x2', Idx('i'))) == r'x_2_(i)'
-    assert typst(Indexed('x3', Idx('i', Symbol('N')))) == r'x_3_(i_(0.. N - 1))'
-    assert typst(Indexed('x3', Idx('i', Symbol('N')+1))) == r'x_3_(i_(0.. N))'
-    assert typst(Indexed('x4', Idx('i', (Symbol('a'),Symbol('b'))))) == r'x_4_(i_(a.. b))'
-    assert typst(IndexedBase('gamma')) == r'gamma'
-    assert typst(IndexedBase('a b')) == r'"a b"'
-    assert typst(IndexedBase('a_b')) == r'a_(b)'
-
-def test_typst_derivatives():
-    # regular "d" for ordinary derivatives
-    assert typst(diff(x**3, x, evaluate=False)) == \
-        r"d / (d x) x^(3)"
-    assert typst(diff(sin(x) + x**2, x, evaluate=False)) == \
-        r"d / (d x) (x^(2) + sin(x))"
-    assert typst(diff(diff(sin(x) + x**2, x, evaluate=False), evaluate=False))\
-        == \
-        r"d^(2) / (d x^(2)) (x^(2) + sin(x))"
-    assert typst(diff(diff(diff(sin(x) + x**2, x, evaluate=False), evaluate=False), evaluate=False)) == \
-        r"d^(3) / (d x^(3)) (x^(2) + sin(x))"
-
-    # partial for partial derivatives
-    assert typst(diff(sin(x * y), x, evaluate=False)) == \
-        r"partial / (partial x) sin(x y)"
-    assert typst(diff(sin(x * y) + x**2, x, evaluate=False)) == \
-        r"partial / (partial x) (x^(2) + sin(x y))"
-    assert typst(diff(diff(sin(x*y) + x**2, x, evaluate=False), x, evaluate=False)) == \
-        r"partial^(2) / (partial x^(2)) (x^(2) + sin(x y))"
-    assert typst(diff(diff(diff(sin(x*y) + x**2, x, evaluate=False), x, evaluate=False), x, evaluate=False)) == \
-        r"partial^(3) / (partial x^(3)) (x^(2) + sin(x y))"
-
-    # mixed partial derivatives
-    f = Function("f")
-    assert typst(diff(diff(f(x, y), x, evaluate=False), y, evaluate=False)) == \
-        r"partial^(2) / (partial y partial x) " + typst(f(x, y))
-
-    assert typst(diff(diff(diff(f(x, y), x, evaluate=False), x, evaluate=False), y, evaluate=False)) == \
-        r"partial^(3) / (partial y partial x^(2)) " + typst(f(x, y))
-
-    # for negative nested Derivative
-    assert typst(diff(-diff(y**2,x,evaluate=False),x,evaluate=False)) == r'd / (d x) (- d / (d x) y^(2))'
-    assert typst(diff(diff(-diff(diff(y,x,evaluate=False),x,evaluate=False),x,evaluate=False),x,evaluate=False)) == \
-        r'd^(2) / (d x^(2)) (- d^(2) / (d x^(2)) y)'
-
-    # # use ordinary d when one of the variables has been integrated out
-    # assert typst(diff(Integral(exp(-x*y), (x, 0, oo)), y, evaluate=False)) == \
-    #     r"(d / d y) int(limits_(0)^(infty) e^(- x y), dx"
-
-    # Derivative wrapped in power:
-    assert typst(diff(x, x, evaluate=False)**2) == \
-        r"(d / (d x) x)^(2)"
-
-    assert typst(diff(f(x), x)**2) == \
-        r"(d / (d x) f(x))^(2)"
-
-    assert typst(diff(f(x), (x, n))) == \
-        r"d^(n) / (d x^(n)) f(x)"
-
-    x1 = Symbol('x1')
-    x2 = Symbol('x2')
-    assert typst(diff(f(x1, x2), x1)) == r'partial / (partial x_(1)) f(x_(1), x_(2))'
-
-    n1 = Symbol('n1')
-    assert typst(diff(f(x), (x, n1))) == r'd^(n_(1)) / (d x^(n_(1))) f(x)'
-
-    n2 = Symbol('n2')
-    assert typst(diff(f(x), (x, Max(n1, n2)))) == \
-        r'd^(max(n_(1), n_(2))) / (d x^(max(n_(1), n_(2)))) f(x)'
-
-    # set diff operator
-    assert typst(diff(f(x), x), diff_operator="rd") == r'bold(d) / (bold(d) x) f(x)'
-
-def test_issue_17092():
-    x_star = Symbol('x^*')
-    assert typst(Derivative(x_star, x_star,2)) == r'd^(2) / (d (x^(*))^(2)) x^(*)'
-
-def test_typst_Piecewise():
-    p = Piecewise((x, x < 1), (x**2, True))
-    assert typst(p) == r'cases( x & upright("for") x < 1, x^(2) &' \
-                       r' upright("otherwise") )'
-    p = Piecewise((x, x < 0), (0, x >= 0))
-    assert typst(p) == r'cases( x & upright("for") x < 0, 0 &' \
-                       r' upright("otherwise") )'
-    A, B = symbols("A B", commutative=False)
-    p = Piecewise((A**2, Eq(A, B)), (A*B, True))
-    s = r'cases( A^(2) & upright("for") A = B, A B & upright("otherwise") )'
-    assert typst(p) == s
-    assert typst(A*p) == r'A (%s)' % s
-    assert typst(p*A) == r'(%s) A' % s
-    assert typst(Piecewise((x, x < 1), (x**2, x < 2))) == \
-        r'cases( x & ' \
-        r'upright("for") x < 1, x^(2) & upright("for") x < 2 )'
-
-def test_typst_Matrix():
-    M = Matrix([[1 + x, y], [y, x - 1]])
-    assert typst(M) == \
-        r'mat(delim: "[", x + 1, y; y, x - 1)'
-    assert typst(M, mat_delim=None) == \
-        r'mat(delim: #none, x + 1, y; y, x - 1)'
-
-    M2 = Matrix(1, 11, range(11))
-    assert typst(M2) == \
-        r'mat(delim: "[", 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10)'
-
-
-def test_typst_matrix_with_functions():
-    t = symbols('t')
-    theta1 = symbols('theta1', cls=Function)
-
-    M = Matrix([[sin(theta1(t)), cos(theta1(t))],
-                [cos(theta1(t).diff(t)), sin(theta1(t).diff(t))]])
-
-    expected = (r'mat(delim: "[", sin(theta_(1)(t)), '\
-                r'cos(theta_(1)(t)); '\
-                r'cos(d / (d t) theta_(1)(t)), '\
-                r'sin(d / (d t) theta_(1)(t)))')
-
-    assert typst(M) == expected
-
-def test_typst_NDimArray():
-    x, y, z, w = symbols("x y z w")
-
-    for ArrayType in (ImmutableDenseNDimArray, ImmutableSparseNDimArray,
-                      MutableDenseNDimArray, MutableSparseNDimArray):
-        # Basic: scalar array
-        M = ArrayType(x)
-
-        assert typst(M) == r"x"
-
-        M = ArrayType([[1 / x, y], [z, w]])
-        M1 = ArrayType([1 / x, y, z])
-
-        M2 = tensorproduct(M1, M)
-        M3 = tensorproduct(M, M)
-
-        assert typst(M) == \
-            r'mat(delim: "[", 1/x, y; z, w )'
-        assert typst(M1) == \
-            r'mat(delim: "[", 1/x, y, z )'
-        assert typst(M2) == \
-            r'mat(delim: "[", mat(delim: "[", 1/x^(2), y/x; z/x, w/x ), '\
-            r'mat(delim: "[", y/x, y^(2); y z, w y ), '\
-            r'mat(delim: "[", z/x, y z; z^(2), w z ) )'
-        assert typst(M3) == \
-            r'mat(delim: "[", mat(delim: "[", 1/x^(2), y/x; z/x, w/x ), '\
-            r'mat(delim: "[", y/x, y^(2); y z, w y ); '\
-            r'mat(delim: "[", z/x, y z; z^(2), w z ), '\
-            r'mat(delim: "[", w/x, w y; w z, w^(2) ) )'
-
-        Mrow = ArrayType([[x, y, 1/z]])
-        Mcolumn = ArrayType([[x], [y], [1/z]])
-        Mcol2 = ArrayType([Mcolumn.tolist()])
-
-        assert typst(Mrow) == \
-            r'[mat(delim: "[", x, y, 1/z )]'
-        assert typst(Mcolumn) == \
-            r'mat(delim: "[", x; y; 1/z )'
-        assert typst(Mcol2) == \
-            r'mat(delim: "[", mat(delim: "[", x; y; 1/z ) )'
-
-def test_matAdd():
-    C = MatrixSymbol('C', 5, 5)
-    B = MatrixSymbol('B', 5, 5)
-
-    n = symbols("n")
-    h = MatrixSymbol("h", 1, 1)
-
-    assert typst(C - 2*B) in [r'- 2 B + C', r'C -2 B']
-    assert typst(C + 2*B) in [r'2 B + C', r'C + 2 B']
-    assert typst(B - 2*C) in [r'B - 2 C', r'- 2 C + B']
-    assert typst(B + 2*C) in [r'B + 2 C', r'2 C + B']
-
-    assert typst(n * h - (-h + h.T) * (h + h.T)) == r'n h - (- h + h^(T)) (h + h^(T))'
-    assert typst(MatAdd(MatAdd(h, h), MatAdd(h, h))) == r'(h + h) + (h + h)'
-    assert typst(MatMul(MatMul(h, h), MatMul(h, h))) == r'(h h) (h h)'
-
-
-def test_matMul():
-    A = MatrixSymbol('A', 5, 5)
-    B = MatrixSymbol('B', 5, 5)
-    x = Symbol('x')
-    assert typst(2*A) == r'2 A'
-    assert typst(2*x*A) == r'2 x A'
-    assert typst(-2*A) == r'- 2 A'
-    assert typst(1.5*A) == r'1.5 A'
-    assert typst(sqrt(2)*A) == r'sqrt(2) A'
-    assert typst(-sqrt(2)*A) == r'- sqrt(2) A'
-    assert typst(2*sqrt(2)*x*A) == r'2 sqrt(2) x A'
-    assert typst(-2*A*(A + 2*B)) in [r'- 2 A (A + 2 B)',
-                                        r'- 2 A (2 B + A)']
-
-
-def test_typst_MatrixSlice():
-    n = Symbol('n', integer=True)
-    x, y, z, w, t, = symbols('x y z w t')
-    X = MatrixSymbol('X', n, n)
-    Y = MatrixSymbol('Y', 10, 10)
-    Z = MatrixSymbol('Z', 10, 10)
-
-    assert typst(MatrixSlice(X, (None, None, None), (None, None, None))) == r'X[:, :]'
-    assert typst(X[x:x + 1, y:y + 1]) == r'X[x:x + 1, y:y + 1]'
-    assert typst(X[x:x + 1:2, y:y + 1:2]) == r'X[x:x + 1:2, y:y + 1:2]'
-    assert typst(X[:x, y:]) == r'X[:x, y:]'
-    assert typst(X[:x, y:]) == r'X[:x, y:]'
-    assert typst(X[x:, :y]) == r'X[x:, :y]'
-    assert typst(X[x:y, z:w]) == r'X[x:y, z:w]'
-    assert typst(X[x:y:t, w:t:x]) == r'X[x:y:t, w:t:x]'
-    assert typst(X[x::y, t::w]) == r'X[x::y, t::w]'
-    assert typst(X[:x:y, :t:w]) == r'X[:x:y, :t:w]'
-    assert typst(X[::x, ::y]) == r'X[::x, ::y]'
-    assert typst(MatrixSlice(X, (0, None, None), (0, None, None))) == r'X[:, :]'
-    assert typst(MatrixSlice(X, (None, n, None), (None, n, None))) == r'X[:, :]'
-    assert typst(MatrixSlice(X, (0, n, None), (0, n, None))) == r'X[:, :]'
-    assert typst(MatrixSlice(X, (0, n, 2), (0, n, 2))) == r'X[::2, ::2]'
-    assert typst(X[1:2:3, 4:5:6]) == r'X[1:2:3, 4:5:6]'
-    assert typst(X[1:3:5, 4:6:8]) == r'X[1:3:5, 4:6:8]'
-    assert typst(X[1:10:2]) == r'X[1:10:2, :]'
-    assert typst(Y[:5, 1:9:2]) == r'Y[:5, 1:9:2]'
-    assert typst(Y[:5, 1:10:2]) == r'Y[:5, 1::2]'
-    assert typst(Y[5, :5:2]) == r'Y[5:6, :5:2]'
-    assert typst(X[0:1, 0:1]) == r'X[:1, :1]'
-    assert typst(X[0:1:2, 0:1:2]) == r'X[:1:2, :1:2]'
-    assert typst((Y + Z)[2:, 2:]) == r'(Y + Z)[2:, 2:]'
-
-def test_typst_printer_tensor():
-    from sympy.tensor.tensor import TensorIndexType, tensor_indices, TensorHead, tensor_heads
-    L = TensorIndexType("L")
-    i, j, k, l = tensor_indices("i j k l", L)
-    i0 = tensor_indices("i_0", L)
-    A, B, C, D = tensor_heads("A B C D", [L])
-    H = TensorHead("H", [L, L])
-    K = TensorHead("K", [L, L, L, L])
-
-    assert typst(i) == r'scripts("")^(i)'
-    assert typst(-i) == r'scripts("")_(i)'
-
-    expr = A(i)
-    assert typst(expr) == r'A scripts("")^(i)'
-
-    expr = A(i0)
-    assert typst(expr) == r'A scripts("")^(i_(0))'
-
-    expr = A(-i)
-    assert typst(expr) == r'A scripts("")_(i)'
-
-    expr = -3*A(i)
-    assert typst(expr) == r'-3A scripts("")^(i)'
-
-    expr = K(i, j, -k, -i0)
-    assert typst(expr) == r'K scripts("")^(i) scripts("")^(j) scripts("")_(k) scripts("")_(i_(0))'
-
-    expr = K(i, -j, -k, i0)
-    assert typst(expr) == r'K scripts("")^(i) scripts("")_(j) scripts("")_(k) scripts("")^(i_(0))'
-
-    expr = K(i, -j, k, -i0)
-    assert typst(expr) == r'K scripts("")^(i) scripts("")_(j) scripts("")^(k) scripts("")_(i_(0))'
-
-    expr = H(i, -j)
-    assert typst(expr) == r'H scripts("")^(i) scripts("")_(j)'
-
-    expr = H(i, j)
-    assert typst(expr) == r'H scripts("")^(i) scripts("")^(j)'
-
-    expr = H(-i, -j)
-    assert typst(expr) == r'H scripts("")_(i) scripts("")_(j)'
-
-    expr = (1+x)*A(i)
-    assert typst(expr) == r'(x + 1)A scripts("")^(i)'
-
-    expr = H(i, -i)
-    assert typst(expr) == r'H scripts("")^(L_(0)) scripts("")_(L_(0))'
-
-    expr = H(i, -j)*A(j)*B(k)
-    assert typst(expr) == r'H scripts("")^(i) scripts("")_(L_(0))A scripts("")^(L_(0))B scripts("")^(k)'
-
-    expr = A(i) + 3*B(i)
-    assert typst(expr) == r'3B scripts("")^(i) + A scripts("")^(i)'
-
-    # Test ``TensorElement``:
-    from sympy.tensor.tensor import TensorElement
-
-    expr = TensorElement(K(i, j, k, l), {i: 3, k: 2})
-    assert typst(expr) == r'K scripts("")^(i=3) scripts("")^(,j) scripts("")^(,k=2) scripts("")^(,l)'
-
-    expr = TensorElement(K(i, j, k, l), {i: 3})
-    assert typst(expr) == r'K scripts("")^(i=3) scripts("")^(,j) scripts("")^(k) scripts("")^(l)'
-
-    expr = TensorElement(K(i, -j, k, l), {i: 3, k: 2})
-    assert typst(expr) == r'K scripts("")^(i=3) scripts("")_(j) scripts("")^(k=2) scripts("")^(,l)'
-
-    expr = TensorElement(K(i, -j, k, -l), {i: 3, k: 2})
-    assert typst(expr) == r'K scripts("")^(i=3) scripts("")_(j) scripts("")^(k=2) scripts("")_(l)'
-
-    expr = TensorElement(K(i, j, -k, -l), {i: 3, -k: 2})
-    assert typst(expr) == r'K scripts("")^(i=3) scripts("")^(,j) scripts("")_(k=2) scripts("")_(,l)'
-
-    expr = TensorElement(K(i, j, -k, -l), {i: 3})
-    assert typst(expr) == r'K scripts("")^(i=3) scripts("")^(,j) scripts("")_(k) scripts("")_(l)'
-
-    expr = PartialDerivative(A(i), A(i))
-    assert typst(expr) == r'partial / (partial A scripts("")^(L_(0))) A scripts("")^(L_(0))'
-
-    expr = PartialDerivative(A(-i), A(-j))
-    assert typst(expr) == r'partial / (partial A scripts("")_(j)) A scripts("")_(i)'
-
-    expr = PartialDerivative(K(i, j, -k, -l), A(m), A(-n))
-    assert typst(expr) == r'partial^(2) / (partial A scripts("")^(m) partial A scripts("")_(n)) '\
-                          r'K scripts("")^(i) scripts("")^(j) scripts("")_(k) scripts("")_(l)'
-
-    expr = PartialDerivative(B(-i) + A(-i), A(-j), A(-n))
-    assert typst(expr) == r'partial^(2) / (partial A scripts("")_(j) partial A scripts("")_(n)) '\
-                          r'(A scripts("")_(i) + B scripts("")_(i))'
-
-    expr = PartialDerivative(3*A(-i), A(-j), A(-n))
-    assert typst(expr) == r'partial^(2) / (partial A scripts("")_(j) partial A scripts("")_(n)) '\
-                          r'(3A scripts("")_(i))'
-
-def test_trace():
-    # Issue 15303
-    from sympy.matrices.expressions.trace import trace
-    A = MatrixSymbol("A", 2, 2)
-    assert typst(trace(A)) == r'upright("tr")(A )'
-    assert typst(trace(A**2)) == r'upright("tr")(A^(2) )'
-
-def test_printing_typst_array_expressions():
-    assert typst(ArraySymbol("A", (2, 3, 4))) == "A"
-    assert typst(ArrayElement("A", (2, 1/(1-x), 0))) == r"A_(2, 1/(1 - x), 0)"
-    M = MatrixSymbol("M", 3, 3)
-    N = MatrixSymbol("N", 3, 3)
-    assert typst(ArrayElement(M*N, [x, 0])) == r"(M N)_(x, 0)"
-
-
-def test_typst_subs():
-    assert typst(Subs(x*y, (x, y), (1, 2))) == r'x y|_(x=1 \ y=2)'
