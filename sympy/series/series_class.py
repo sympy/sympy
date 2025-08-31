@@ -67,7 +67,20 @@ class SeriesBase(Expr):
         Examples
         ========
 
-        TODO
+        >>> from sympy.series.series_class import SeriesBase
+        >>> class DummySeries(SeriesBase):
+        ...     @property
+        ...     def start(self): return 0
+        ...     @property
+        ...     def stop(self): return 5
+        ...     @property
+        ...     def length(self): return 6
+        ...     def _eval_term(self, pt): return pt
+        >>> s = DummySeries()
+        >>> s._ith_point(0)
+        0
+        >>> s._ith_point(3)
+        3
         """
         if self.start is S.NegativeInfinity:
             initial = self.stop
