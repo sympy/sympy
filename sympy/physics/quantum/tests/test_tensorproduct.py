@@ -145,7 +145,7 @@ def test_pr24993():
 
 def test_tensor_product_with_scalars_expand():
     """Test that TensorProduct with scalars can be expanded without AttributeError.
-    
+
     This tests the fix for the bug where (TensorProduct(2, B) + TensorProduct(B, 2))**2
     would raise AttributeError: 'NoneType' object has no attribute 'is_commutative'
     """
