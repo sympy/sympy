@@ -676,7 +676,7 @@ def test_quadratic_denom():
     f = (5*x + 2)/(3*x**2 - 2*x + 8)
     assert manualintegrate(f, x) == 5*log(3*x**2 - 2*x + 8)/6 + 11*sqrt(23)*atan(3*sqrt(23)*(x - Rational(1, 3))/23)/69
     g = 3/(2*x**2 + 3*x + 1)
-    assert manualintegrate(g, x) == 3*log(4*x + 2) - 3*log(4*x + 4)
+    assert manualintegrate(g, x) == 3*log(x + 1/S(2)) - 3*log(x + 1)
 
 def test_issue_22757():
     assert manualintegrate(sin(x), y) == y * sin(x)
@@ -731,7 +731,7 @@ def test_manualintegrate_sqrt_linear():
     assert_is_integral_of((sqrt(3*x+3)+1)/((2*x+2)**(1/S(3))+1),
                           3*sqrt(6)*(2*x + 2)**(S(7)/6)/14 - 3*sqrt(6)*(2*x + 2)**(S(5)/6)/10 -
                           3*sqrt(6)*(2*x + 2)**(S.One/6)/2 + 3*(2*x + 2)**(S(2)/3)/4 - 3*(2*x + 2)**(S.One/3)/2 +
-                          sqrt(6)*sqrt(2*x + 2)/2 + 3*log((2*x + 2)**(S.One/3) + 1)/2 +
+                          sqrt(6)*sqrt(2*x + 2)/2 + 3*log(2*(2*x + 2)**(S.One/3) + 2)/2 +
                           3*sqrt(6)*atan((2*x + 2)**(S.One/6))/2)
     assert_is_integral_of(sqrt(x+sqrt(x)),
                           2*sqrt(sqrt(x) + x)*(sqrt(x)/12 + x/3 - S(1)/8) + log(2*sqrt(x) + 2*sqrt(sqrt(x) + x) + 1)/8)
