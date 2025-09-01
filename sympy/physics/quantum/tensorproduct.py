@@ -22,7 +22,7 @@ from sympy.physics.quantum.matrixutils import (
     scipy_sparse_matrix,
     matrix_tensor_product
 )
-from sympy.physics.quantum.state import Ket, Bra
+from sympy.physics.quantum.state import Ket, Bra, KetBase, BraBase
 from sympy.physics.quantum.trace import Tr
 
 
@@ -172,7 +172,7 @@ class TensorProduct(Expr):
             s = s + printer._print(self.args[i])
             if isinstance(self.args[i], (Add, Pow, Mul)):
                 s = s + ')'
-            if i != length - 1:
+            if i != length - 1 and not isinstance(self.args[i], (KetBase, BraBase)):
                 s = s + 'x'
         return s
 
@@ -213,7 +213,7 @@ class TensorProduct(Expr):
                     *next_pform.parens(left='(', right=')')
                 )
             pform = prettyForm(*pform.right(next_pform))
-            if i != length - 1:
+            if i != length - 1 and not isinstance(self.args[i], (KetBase, BraBase)):
                 if printer._use_unicode:
                     pform = prettyForm(*pform.right('\N{N-ARY CIRCLED TIMES OPERATOR}' + ' '))
                 else:
@@ -245,7 +245,7 @@ class TensorProduct(Expr):
             s = s + '{' + printer._print(self.args[i], *args) + '}'
             if isinstance(self.args[i], (Add, Mul)):
                 s = s + '\\right)'
-            if i != length - 1:
+            if i != length - 1 and not isinstance(self.args[i], (KetBase, BraBase)):
                 s = s + '\\otimes '
         return s
 
