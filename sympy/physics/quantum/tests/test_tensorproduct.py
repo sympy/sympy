@@ -1,4 +1,5 @@
 from sympy.core.numbers import I
+from sympy.core.singleton import S
 from sympy.core.symbol import symbols
 from sympy.core.expr import unchanged
 from sympy.matrices import Matrix, SparseMatrix, ImmutableMatrix
@@ -140,3 +141,16 @@ def test_pr24993():
     assert TensorProduct(Xi, Xi) == TensorProduct(X, X)
     assert TensorProduct(Xi, Xi) == matrix_tensor_product(X, X)
     assert TensorProduct(Xi, Xi) == matrix_kronecker_product(X, X)
+
+
+def test_tensor_product_with_scalars_expand():
+    """Test that TensorProduct with scalars can be expanded without AttributeError.
+
+    This tests the fix for the bug where (TensorProduct(2, B) + TensorProduct(B, 2))**2
+    would raise AttributeError: 'NoneType' object has no attribute 'is_commutative'
+    """
+    e = TensorProduct(x, A) + TensorProduct(B, y)
+    result = (e**2).expand()
+    expected = x**2*TensorProduct(S.One, A**2) + 2*x*y*TensorProduct(B, A) + \
+        y**2*TensorProduct(B**2, S.One)
+    assert result == expected

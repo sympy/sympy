@@ -2,7 +2,7 @@
 
 from sympy.core.add import Add
 from sympy.core.expr import Expr
-from sympy.core.kind import KindDispatcher
+from sympy.core.kind import KindDispatcher, _NumberKind
 from sympy.core.mul import Mul
 from sympy.core.power import Pow
 from sympy.core.sympify import sympify
@@ -353,11 +353,26 @@ def find_op_kind(e1, e2):
     return OperatorKind
 
 
+@TensorProduct._kind_dispatcher.register(_OperatorKind, _NumberKind)
+def find_op_number_kind(e1, e2):
+    return OperatorKind
+
+
 @TensorProduct._kind_dispatcher.register(_KetKind, _KetKind)
 def find_ket_kind(e1, e2):
     return KetKind
 
 
+@TensorProduct._kind_dispatcher.register(_NumberKind, _KetKind)
+def find_number__ket_kind(e1, e2):
+    return KetKind
+
+
 @TensorProduct._kind_dispatcher.register(_BraKind, _BraKind)
 def find_bra_kind(e1, e2):
+    return BraKind
+
+
+@TensorProduct._kind_dispatcher.register(_NumberKind, _BraKind)
+def find_number_bra_kind(e1, e2):
     return BraKind
