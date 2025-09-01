@@ -2014,9 +2014,33 @@ def substitution_rule(integral):
             return ways[0]
 
 
+def is_fraction(expr):
+    if not expr.is_Mul:
+        return False
+    numer, denom = expr.as_numer_denom()
+    # Should be a non trivial denominator
+    if denom.is_constant() or not denom.is_polynomial():
+        return False
+    return True
+
+def decompose_fraction(expr, var):
+    numer, denom = expr.as_numer_denom()
+    numer_factors = factor_terms(numer).as_ordered_factors()
+
+    numer_poly_factors = [f for f in numer_factors if f.is_polynomial(var)]
+    numer_trans_factors = [f for f in numer_factors if not f.is_polynomial(var)]
+
+    numer_poly = Mul(*numer_poly_factors)
+    numer_trans = Mul(*numer_trans_factors)
+
+    frac = numer_poly / denom
+    part_frac = frac.apart(var)
+    return (numer_trans * part_frac).expand()
+
+
 partial_fractions_rule = rewriter(
-    lambda integrand, symbol: integrand.is_rational_function(),
-    lambda integrand, symbol: integrand.apart(symbol))
+    lambda integrand, symbol: is_fraction(integrand),
+    lambda integrand, symbol: decompose_fraction(integrand, symbol))
 
 cancel_rule = rewriter(
     # lambda integrand, symbol: integrand.is_algebraic_expr(),
