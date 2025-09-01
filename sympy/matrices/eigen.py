@@ -1422,14 +1422,14 @@ def _jordan_form_rational_matrix(M, calc_transform):
     _, factors = char_eq.factor_list()
 
     for factor, _ in factors:
-        radical_roots = roots(factor, quartics=False, cubics=False)
         all_root = list(OrderedDict.fromkeys(all_roots(factor)))
+        radical_roots = roots(factor, quartics=False, cubics=False)
         roots_list = []
 
         for root in all_root:
             if root.has(CRootOf):
                 matched = next((r for r in radical_roots if factor.same_root(root, r)), None)
-                roots_list.append(matched if matched else root)
+                roots_list.append(matched if matched is not None else root)
             else:
                 roots_list.append(root)
 
@@ -1487,7 +1487,7 @@ def _jordan_form_rational_matrix(M, calc_transform):
 
     for fac, _ in factors:
         eigen_vals = factor_to_roots[fac]
-        algebraic_num = AlgebraicNumber(eigenvals[0], alias='a')
+        algebraic_num = AlgebraicNumber(eigen_vals[0], alias='a')
 
         big_null, small_null = {}, {}
         for _, sizes in block_structure.items():
