@@ -4354,7 +4354,7 @@ def test_sympy__physics__control__lti__MIMOLinearTimeInvariant():
     # Direct instances of MIMOLinearTimeInvariant class are not allowed.
     pass
 
-
+@SKIP("abstract class")
 def test_sympy__physics__control__lti__TransferFunctionBase():
     # Direct instances of TransferFunctionBase class are not allowed.
     pass
@@ -4442,7 +4442,7 @@ def test_sympy__physics__control__lti__TransferFunctionMatrix():
     tf2 = TransferFunction(y - x, z + y, x)
     assert _test_args(TransferFunctionMatrix([[tf1, tf2]]))
 
-
+@SKIP("abstract class")
 def test_sympy__physics__control__lti__StateSpaceBase():
     # Direct instances of StateSpaceBase class are not allowed.
     pass

@@ -23,8 +23,9 @@ supported with ``TransferFunctionMatrix`` as the base class for representing one
 ``Series``, ``Parallel`` and ``Feedback`` classes.
 
 Alongside transfer functions representations, the ``StateSpace``
-and ``DiscreteStateSpace`` classes can be used to model continuous state-space
-systems. They support various methods for analyzing and manipulating systems,
+and ``DiscreteStateSpace`` classes can be used to model continuous and discrete
+state-space systems.
+They support various methods for analyzing and manipulating systems,
 such as controllability, observability, and transformations between state-space
 and transfer function representations.
 MIMO state-space systems are also supported, making this module

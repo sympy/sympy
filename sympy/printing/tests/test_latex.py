@@ -2630,12 +2630,12 @@ def test_TransferFunction_printing():
 
 def test_DiscreteTransferFunction_printing():
     tf1 = DiscreteTransferFunction(x - 1, x + 1, x)
-    assert latex(tf1) == r"\frac{x - 1}{x + 1} \text{ \to sampling time: } {1}"
+    assert latex(tf1) == r"\frac{x - 1}{x + 1} \text{ \to st: } {1}"
     tf2 = DiscreteTransferFunction(x + 1, 2 - y, x, Symbol('T'))
-    assert latex(tf2) == r"\frac{x + 1}{2 - y} \text{ \to sampling time: } {T}"
+    assert latex(tf2) == r"\frac{x + 1}{2 - y} \text{ \to st: } {T}"
     tf3 = DiscreteTransferFunction(y, y**2 + 2*y + 3, y, 0.1)
     assert latex(tf3) == \
-        r"\frac{y}{y^{2} + 2 y + 3} \text{ \to sampling time: } {0.1}"
+        r"\frac{y}{y^{2} + 2 y + 3} \text{ \to st: } {0.1}"
 
 
 def test_Parallel_printing():

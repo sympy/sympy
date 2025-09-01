@@ -2181,7 +2181,7 @@ def test_Feedback_construction():
     assert f7.args == (Series(TransferFunction(-1, 1, p), Series(tf4, tf6)), -TransferFunction(1, 1, p), -1)
     assert f7.sys1 == Series(TransferFunction(-1, 1, p), Series(tf4, tf6))
 
-    # denominator can't be a Parallel instance #XXX: Why? It can be done in python-control
+    # denominator can't be a Parallel instance
     raises(TypeError, lambda: Feedback(tf1, tf2 + tf3))
     raises(TypeError, lambda: Feedback(tf1, Matrix([1, 2, 3])))
     raises(TypeError, lambda: Feedback(TransferFunction(1, 1, s), s - 1))
@@ -3422,7 +3422,6 @@ def test_SymPy_substitution_functions():
 
 def test_conversion():
     # StateSpace to TransferFunction for SISO
-    #TODO: DiscreteTransferFunction
     A1 = Matrix([[-5, -1], [3, -1]])
     B1 = Matrix([2, 5])
     C1 = Matrix([[1, 2]])

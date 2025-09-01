@@ -582,7 +582,7 @@ def create_transfer_function(num, den, var, sampling_time=0):
 class TransferFunctionBase(SISOLinearTimeInvariant, ABC):
     r"""
     Base class for transfer tunction objects.
-    This class is not meant to be used directly
+    This class is not meant to be used directly.
 
     Explanation
     ===========
@@ -6660,7 +6660,6 @@ class DiscreteStateSpace(StateSpaceBase):
     DiscreteTransferFunction
 
     """
-    #XXX: DiscreteStateSpace is not in latex printing, consider add that and StateSpace
     def __new__(cls, A=None, B=None, C=None, D=None, sampling_time=1):
         if sampling_time == 0:
             raise ValueError(filldedent("""
