@@ -89,7 +89,6 @@ def test_branching_equality_trees():
     assert euf_ask(Q.positive(y), tree) is True  # y should inherit from z through x
 
 
-@XFAIL
 def test_complex_mixed_expressions():
     """Test complex Boolean combinations"""
     # Nested implications
@@ -161,7 +160,6 @@ def test_function_equality():
     assert euf_ask(Q.prime(g), func_eq) is True
 
 
-@XFAIL
 def test_edge_case_empty_assumptions():
     """Test behavior with minimal or empty assumptions"""
     # With no assumptions, we should get None (unknown)
@@ -171,7 +169,6 @@ def test_edge_case_empty_assumptions():
     assert euf_ask(Q.prime(x), Q.eq(x, y)) is None
 
 
-@XFAIL
 def test_failing_cases():
     # But contradictions should still work
     not_equal = Q.ne(x, y) & Q.prime(x) & Q.composite(x)
