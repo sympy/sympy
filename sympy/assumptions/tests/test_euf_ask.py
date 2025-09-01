@@ -3,7 +3,6 @@
 from sympy.assumptions.euf_ask import euf_ask
 from sympy.assumptions.ask import Q
 from sympy import symbols
-from sympy.testing.pytest import XFAIL
 
 # simple symbols
 x, y, z, u, v = symbols("x y z u v")
