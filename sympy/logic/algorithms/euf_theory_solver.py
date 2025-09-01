@@ -576,7 +576,7 @@ class EUFTheorySolver:
         abs_enc = abs(enc_constraint)
 
         if abs_enc not in self.literal_eqs:
-            return False, set()
+            return True, set()
 
         is_positive = enc_constraint > 0
         constraint = self.literal_eqs[abs_enc][0]

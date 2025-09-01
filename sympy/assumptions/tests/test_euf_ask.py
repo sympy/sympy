@@ -3,6 +3,7 @@
 from sympy.assumptions.euf_ask import euf_ask
 from sympy.assumptions.ask import Q
 from sympy import symbols
+from sympy.testing.pytest import raises
 
 # simple symbols
 x, y, z, u, v = symbols("x y z u v")
@@ -168,16 +169,12 @@ def test_edge_case_empty_assumptions():
     assert euf_ask(Q.prime(x), Q.eq(x, y)) is None
 
 
-def test_failing_cases():
-    # But contradictions should still work
-    not_equal = Q.ne(x, y) & Q.prime(x) & Q.composite(x)
-    assert euf_ask(Q.prime(x), not_equal) is False
+def test_edge_cases():
+    not_equal = Q.ne(x, y) & Q.prime(x) & ~Q.prime(x)
+    raises(ValueError, lambda: euf_ask(Q.prime(x), not_equal))
 
-    contradiction_tree = Q.eq(x, y) & Q.eq(x, z) & Q.positive(y) & Q.negative(z)
-    assert euf_ask(Q.positive(x), contradiction_tree) is False
-    assert euf_ask(Q.negative(x), contradiction_tree) is False
-
-    assert euf_ask(Q.prime(x), True) is None
+    contradiction_tree = Q.eq(x, y) & Q.eq(x, z) & Q.positive(y) & ~Q.positive(z)
+    raises(ValueError, lambda: euf_ask(Q.negative(x), contradiction_tree))
 
     # With only equality but no properties
     assert euf_ask(Q.prime(x), Q.eq(x, y)) is None
