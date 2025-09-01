@@ -1416,9 +1416,24 @@ def _jordan_form_rational_matrix(M, calc_transform):
             if pivots[-1] == len(small_basis):
                 return v
 
+    factor_to_roots = {}
+
     char_eq = M.charpoly()
     _, factors = char_eq.factor_list()
-    factor_to_roots = {factor: list(OrderedDict.fromkeys(all_roots(factor))) for factor, _ in factors}
+
+    for factor, _ in factors:
+        radical_roots = roots(factor, quartics=False, cubics=False)
+        all_root = list(OrderedDict.fromkeys(factor.all_roots()))
+        roots_list = []
+
+        for root in all_root:
+            if root.has(CRootOf):
+                matched = next((r for r in radical_roots if factor.same_root(root, r)), None)
+                roots_list.append(matched if matched else root)
+            else:
+                roots_list.append(root)
+
+        factor_to_roots[factor] = roots_list
     eigenvals = list(chain.from_iterable(factor_to_roots.values()))
 
     if len(eigenvals) == M.cols:
@@ -1428,12 +1443,14 @@ def _jordan_form_rational_matrix(M, calc_transform):
             return jordan_mat
 
         jordan_basis = []
+
         for factor, multiplicity in factors:
-            roots = factor_to_roots[factor]
-            algebraic_num = AlgebraicNumber(roots[0], alias='a')
+            eigen_vals = factor_to_roots[factor]
+            algebraic_num = AlgebraicNumber(eigen_vals[0], alias='a')
             nullspace = char_mat(algebraic_num, multiplicity).nullspace().transpose().to_Matrix()
-            eigenvectors = [nullspace.subs(algebraic_num, root) for root in roots]
+            eigenvectors = [nullspace.subs(algebraic_num, eigen_val) for eigen_val in eigen_vals]
             jordan_basis.extend(eigenvectors)
+
         basis_mat = M.hstack(*jordan_basis)
         return basis_mat, jordan_mat
 
@@ -1446,8 +1463,8 @@ def _jordan_form_rational_matrix(M, calc_transform):
         # we expect larger Jordan blocks to come earlier
         size_nums.reverse()
 
-        roots = factor_to_roots[fac]
-        for r in roots:
+        eigen_vals = factor_to_roots[fac]
+        for r in eigen_vals:
             for size, num in size_nums:
                 block_structure.setdefault(r, []).extend([size] * num)
 
@@ -1469,8 +1486,8 @@ def _jordan_form_rational_matrix(M, calc_transform):
 
 
     for fac, _ in factors:
-        roots = factor_to_roots[fac]
-        algebraic_num = AlgebraicNumber(roots[0], alias='a')
+        eigen_vals = factor_to_roots[fac]
+        algebraic_num = AlgebraicNumber(eigenvals[0], alias='a')
 
         big_null, small_null = {}, {}
         for _, sizes in block_structure.items():
@@ -1480,7 +1497,7 @@ def _jordan_form_rational_matrix(M, calc_transform):
                     big_null[key] = nullspace_to_list(char_mat(algebraic_num, size).nullspace().transpose())
                     small_null[key] = nullspace_to_list(char_mat(algebraic_num, size-1).nullspace().transpose())
 
-        for eig in roots:
+        for eig in eigen_vals:
             eig_basis = []
             for size in block_structure.get(eig, []):
                 vec = pick_vec(small_null[(fac, size)] + eig_basis, big_null[(fac, size)])
