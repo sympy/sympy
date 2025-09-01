@@ -5025,7 +5025,7 @@ class TransferFunctionMatrix(MIMOLinearTimeInvariant):
         [  z       z  ]
         [------    -  ]
         [ 2        1  ]
-        [z  - 1       ]{k}, sampling time: 0.1
+        [z  - 1       ]{k}, st: 0.1
 
 
         """
@@ -6683,7 +6683,7 @@ class DiscreteStateSpace(StateSpaceBase):
         \n{B_str},
         \n{C_str},
         \n{D_str},
-        \nsampling time: {self.sampling_time})"""
+        \nst: {self.sampling_time})"""
 
     def _eval_rewrite_as_DiscreteTransferFunction(self, *args):
         """

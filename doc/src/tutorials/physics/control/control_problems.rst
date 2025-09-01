@@ -387,7 +387,7 @@ Subpart 1
 >>> pprint(W, use_unicode = False)
        2
     2*z
------------- -> sampling time: 1
+------------ -> st: 1
    2
 2*z  + z - 1
 
@@ -423,7 +423,7 @@ We can check that the output is asymptotically stable:
 >>> Y = Y.doit().to_standard_form(cancel_poles_zeros = True)
 >>> pprint(Y, use_unicode = False)
   2*z
-------- -> sampling time: 1
+------- -> st: 1
 2*z - 1
 >>> Y.is_stable()
 True
@@ -477,7 +477,7 @@ where :math:`G(z)` is the transfer function associated to the state-space repres
 >>> G = ss.rewrite(DiscreteTransferFunction)[0][0]
 >>> pprint(G, use_unicode = False)
 z + 1
------ -> sampling time: 1
+----- -> st: 1
   3
  z
 >>> Yf = G.to_expr() * U1
