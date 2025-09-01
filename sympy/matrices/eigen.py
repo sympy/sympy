@@ -1423,7 +1423,7 @@ def _jordan_form_rational_matrix(M, calc_transform):
 
     for factor, _ in factors:
         radical_roots = roots(factor, quartics=False, cubics=False)
-        all_root = list(OrderedDict.fromkeys(factor.all_roots()))
+        all_root = list(OrderedDict.fromkeys(all_roots(factor)))
         roots_list = []
 
         for root in all_root:
