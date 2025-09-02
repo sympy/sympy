@@ -20,7 +20,7 @@ from sympy.logic.boolalg import (
     anf_coeffs, ANFform, bool_minterm, bool_maxterm, bool_monomial,
     _check_pair, _convert_to_varsSOP, _convert_to_varsPOS, Exclusive,
     gateinputcount)
-from sympy.assumptions.cnf import CNF
+from sympy.assumptions.cnf import CNF, EncodedCNF
 
 from sympy.testing.pytest import raises, XFAIL, slow
 
@@ -1457,3 +1457,21 @@ def test_evaluate_false():
     expr = Equivalent(x, x, x, evaluate=False)
     assert isinstance(expr, Equivalent)
     assert expr.args == (x, x, x)
+
+
+def test_encoded_cnf():
+    encoded_cnf = EncodedCNF()
+    prop = Or(Or(a, Not(b)), Or(Not(c), b))
+    cnf = CNF.from_prop(prop)
+    encoded_cnf.add_from_cnf(cnf)
+    expected_literals = list(encoded_cnf.encoding.keys())
+
+    # Test decode_literal()
+    for i in range(len(expected_literals)):
+        decoded_literal = encoded_cnf.decode_literal(i + 1)
+        assert decoded_literal == expected_literals[i], f"Expected: {expected_literals[i]}, Decoded: {decoded_literal}"
+
+    # Test decode()
+    decoded_prop = encoded_cnf.decode()
+    original_prop = Or(Or(a, Not(b)), Or(Not(c), b))
+    assert decoded_prop == original_prop, "Decoded prop is not equal to the original prop"
