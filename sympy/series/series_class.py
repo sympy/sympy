@@ -59,29 +59,6 @@ class SeriesBase(Expr):
                                   % self.func)
 
     def _ith_point(self, i):
-        """
-        Returns the i'th point of a series
-        If start point is negative infinity, point is returned from the end.
-        Assumes the first point to be indexed zero.
-
-        Examples
-        ========
-
-        >>> from sympy.series.series_class import SeriesBase
-        >>> class DummySeries(SeriesBase):
-        ...     @property
-        ...     def start(self): return 0
-        ...     @property
-        ...     def stop(self): return 5
-        ...     @property
-        ...     def length(self): return 6
-        ...     def _eval_term(self, pt): return pt
-        >>> s = DummySeries()
-        >>> s._ith_point(0)
-        0
-        >>> s._ith_point(3)
-        3
-        """
         if self.start is S.NegativeInfinity:
             initial = self.stop
             step = -1
