@@ -635,7 +635,7 @@ class MarkovProcess(StochasticProcess):
                     return s if greater else 1 - s
 
             rv = rv[0]
-            states = condition.as_set()
+            states = condition.as_set(condition.lhs) # XXX: is the variate symbol always condition.lhs?
             prob, gstate = {}, None
             for gc in gcs:
                 if gc.has(min_key_rv):
@@ -643,7 +643,7 @@ class MarkovProcess(StochasticProcess):
                         p, gp = (gc.rhs, gc.lhs) if isinstance(gc.lhs, Probability) \
                                     else (gc.lhs, gc.rhs)
                         gr = gp.args[0]
-                        gset = Intersection(gr.as_set(), state_index)
+                        gset = Intersection(gr.as_set(gr.lhs), state_index) # XXX: is the variate symbol always gr.lhs?
                         gstate = list(gset)[0]
                         prob[gset] = p
                     else:
@@ -700,7 +700,7 @@ class MarkovProcess(StochasticProcess):
             ris = []
             for ri in state2cond:
                 ris.append(ri)
-                cset = Intersection(state2cond[ri].as_set(), state_index)
+                cset = Intersection(state2cond[ri].as_set(ri), state_index)
                 if len(cset) == 0:
                     return S.Zero
                 state2cond[ri] = cset.as_relational(ri)
@@ -2047,11 +2047,11 @@ class CountingProcess(ContinuousTimeStochasticProcess):
             if isinstance(curr, Eq):
                 working_set = Intersection(working_set, Interval.Lopen(curr.args[1], oo))
             else:
-                working_set = Intersection(working_set, curr.as_set())
+                working_set = Intersection(working_set, curr.as_set(curr.lhs)) # XXX: is the variate symbol always curr.lhs?
             if isinstance(nex, Eq):
                 working_set = Intersection(working_set, Interval(-oo, nex.args[1]))
             else:
-                working_set = Intersection(working_set, nex.as_set())
+                working_set = Intersection(working_set, nex.as_set(nex.lhs)) # XXX: is the variate symbol always nex.lhs?
             if working_set == EmptySet:
                 rv = Eq(curr.args[0].pspace.process(diff_key), 0)
                 result.append(_SubstituteRV._probability(rv))
