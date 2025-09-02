@@ -726,7 +726,7 @@ def test_sysode_linear_neq_order1_type1_slow():
                - (2*sqrt(3)*C1 + 4*C2)*sin(sqrt(3)*t)),
             Eq(v(t), (4*C1 - 2*sqrt(3)*C2)*cos(sqrt(3)*t)
                - (2*sqrt(3)*C1 + 4*C2)*sin(sqrt(3)*t)),
-            Eq(w(t), 7*C3*exp(-2*t) + (3*C1 - 5*sqrt(3)*C2)*cos(sqrt(3)*t) 
+            Eq(w(t), 7*C3*exp(-2*t) + (3*C1 - 5*sqrt(3)*C2)*cos(sqrt(3)*t)
                - (5*sqrt(3)*C1 + 3*C2)*sin(sqrt(3)*t))]
     assert dsolve(eqs3) == sol3
     assert checksysodesol(eqs3, sol3) == (True, [0, 0, 0])
