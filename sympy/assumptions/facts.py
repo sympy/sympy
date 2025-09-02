@@ -31,7 +31,9 @@ def get_composite_predicates():
         Q.extended_nonzero: Q.negative_infinite | Q.negative | Q.positive | Q.positive_infinite,
         Q.extended_nonpositive: Q.negative_infinite | Q.negative | Q.zero,
         Q.extended_nonnegative: Q.zero | Q.positive | Q.positive_infinite,
-        Q.complex : Q.algebraic | Q.transcendental
+        Q.complex : Q.algebraic | Q.transcendental,
+        Q.ge : Q.gt | Q.eq,
+        Q.le : Q.lt | Q.eq
     }
 
 
