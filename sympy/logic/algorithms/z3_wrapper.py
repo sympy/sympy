@@ -32,8 +32,27 @@ def is_supported_predicate(pred):
 
     return False
 
+# def z3_satisfiable(expr, all_models=False):
+#     if not isinstance(expr, EncodedCNF):
+#         exprs = EncodedCNF()
+#         exprs.add_prop(expr)
+#         expr = exprs
 
-def z3_satisfiable(expr, all_models=False, return_model=None):
+#     z3 = import_module("z3")
+#     if z3 is None:
+#         raise ImportError("z3 is not installed")
+
+#     s = encoded_cnf_to_z3_solver(expr, z3)
+
+#     res = str(s.check())
+#     if res == "unsat":
+#         return False
+#     elif res == "sat":
+#         return z3_model_to_sympy_model(s.model(), expr)
+#     else:
+#         return None
+    
+def z3_satisfiable(expr, all_models=False):
 
     if not isinstance(expr, EncodedCNF):
         exprs = EncodedCNF()
@@ -43,37 +62,26 @@ def z3_satisfiable(expr, all_models=False, return_model=None):
     z3 = import_module("z3")
     if z3 is None:
         raise ImportError("z3 is not installed")
-    try:
-        s = encoded_cnf_to_z3_solver(expr, z3)
-    except Exception:
-        return False
+    
+    s = encoded_cnf_to_z3_solver(expr, z3)
 
     res = str(s.check())
     if res == "unsat":
         return False
     elif res == "sat":
         model = z3_model_to_sympy_model(s.model(), expr)
-
+        
         has_theory_preds = any(is_supported_predicate(pred) for pred in expr.encoding.keys())
 
-        if return_model is True:
-            return model if model else True
-        
-        elif return_model is False:
+        if has_theory_preds:
             return True
         
-        else:
-            # - If the CNF has theory predicates => boolean
-            # - Else (pure propositional) => model dict (fallback to True if empty)
-            if has_theory_preds:
-                return True
-            else:
-                return model if model else True
-    else:
-        return False
+        if model:
+            return model
+
+        return True
 
 def z3_model_to_sympy_model(z3_model, enc_cnf):
-    """Convert Z3 model back to SymPy model."""
     rev_enc = {value: key for key, value in enc_cnf.encoding.items()}
     result = {}
     
@@ -88,7 +96,7 @@ def z3_model_to_sympy_model(z3_model, enc_cnf):
     return result
 
 
-# Converts a single CNF clause to SMT-LIB assertion format.
+"""Converts a single CNF clause to SMT-LIB assertion format."""
 def clause_to_assertion(clause):
     clause_strings = [f"d{abs(lit)}" if lit > 0 else f"(not d{abs(lit)})" for lit in clause]
     return "(assert (or " + " ".join(clause_strings) + "))"

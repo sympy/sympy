@@ -2,7 +2,7 @@
 
 from sympy.assumptions.ask import Q
 from sympy.core.symbol import symbols
-from sympy.core.relational import Unequality
+from sympy.core.relational import Unequality, Equality
 from sympy.logic.boolalg import And, Or, Implies, Equivalent, true, false
 from sympy.logic.inference import literal_symbol, \
      pl_true, satisfiable, valid, entails, PropKB
@@ -347,6 +347,26 @@ def test_z3():
     model = z3_satisfiable(f(A))
     assert bool(model) is True
 
+    f,h = symbols('f h', cls=Function)
+    x,y,c2 = symbols('x y c2')
+
+    assert z3_satisfiable(Equality(h(x, y), h(y, x))) is True
+    assert z3_satisfiable(Equality(f(h(x, y)), h(f(x), f(y)))) is True
+    assert z3_satisfiable(Unequality(f(c2), x)) is True
+
+    expr = And(
+        Unequality(x, y),
+        Equality(f(x), f(y)),
+        Unequality(h(f(x)), h(f(y)))
+    )
+    assert z3_satisfiable(expr) is False
+
+    expr = And(
+        Equality(x, y),
+        Unequality(f(x), f(y))
+    )
+    assert z3_satisfiable(expr) is False
+
 
 def test_z3_vs_lra_dpll2():
     z3 = import_module("z3")
@@ -384,7 +404,8 @@ def test_z3_vs_lra_dpll2():
             continue
 
         lra_dpll2_sat = lra_dpll2_satisfiable(cnf) is not False
-
+        print("z3_sat:", z3_sat)
+        print("lra_dpll2_sat:", lra_dpll2_sat)
         assert z3_sat == lra_dpll2_sat
 
 def test_issue_27733():
