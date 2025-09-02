@@ -2035,6 +2035,11 @@ def decompose_fraction(expr, var):
 
     frac = numer_poly / denom
     part_frac = frac.apart(var)
+
+    # If no partial fraction decomposition was done, return the original
+    # expression
+    if not part_frac.is_Add or part_frac == frac:
+        return expr
     return (numer_trans * part_frac).expand()
 
 
