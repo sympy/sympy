@@ -146,6 +146,13 @@ def test_plot_and_save_1(adaptive):
         p.save(os.path.join(tmpdir, filename))
         p._backend.close()
 
+        # test issue 24339
+        p = plot(1/(1+exp(-x)), exp(-x)/(1+exp(-x))**2, (x, -10, 10), \
+            show=False, legend=True, legend_loc="upper left")
+        filename = 'test_change_location.png'
+        p.save(os.path.join(tmpdir, filename))
+        p._backend.close()
+
 
 @pytest.mark.parametrize("adaptive", [True, False])
 def test_plot_and_save_2(adaptive):
