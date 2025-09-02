@@ -724,7 +724,7 @@ def test_sysode_linear_neq_order1_type1_slow():
             5*u(t) + v(t) - 3*w(t) + Derivative(w(t), t)]
     sol3 = [Eq(u(t), 7*C3*exp(-2*t) + (4*C1 - 2*sqrt(3)*C2)*cos(sqrt(3)*t)
                - (2*sqrt(3)*C1 + 4*C2)*sin(sqrt(3)*t)),
-            Eq(v(t), (4*C1 - 2*sqrt(3)*C2)*cos(sqrt(3)*t) 
+            Eq(v(t), (4*C1 - 2*sqrt(3)*C2)*cos(sqrt(3)*t)
                - (2*sqrt(3)*C1 + 4*C2)*sin(sqrt(3)*t)),
             Eq(w(t), 7*C3*exp(-2*t) + (3*C1 - 5*sqrt(3)*C2)*cos(sqrt(3)*t) 
                - (5*sqrt(3)*C1 + 3*C2)*sin(sqrt(3)*t))]
