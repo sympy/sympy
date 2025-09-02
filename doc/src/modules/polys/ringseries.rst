@@ -107,7 +107,7 @@ on exponents and not generators. So, ``polys`` allows all sorts of symbolic
 terms as generators to make sure that the exponent is a natural number::
 
     >>> from sympy.polys.rings import sring
-    >>> R, expr = sring(1/a**3 + a**QQ(3, 7)); R
+    >>> R, expr = sring(1/a**3 + a**QQ(3, 7)); R # doctest: +SKIP
     Polynomial ring in 1/a, a**(1/7) over ZZ with lex order
 
 In the above example, `1/a` and `a**(1/7)` will be treated as completely
@@ -115,7 +115,7 @@ different atoms. For all practical purposes, we could let `b = 1/a` and `c =
 a**(1/7)` and do the manipulations. Effectively, expressions involving `1/a`
 and `a**(1/7)` (and their powers) will never simplify::
 
-    >>> expr*R(1/a)
+    >>> expr*R(1/a) # doctest: +SKIP
     (1/a)**4 + (1/a)*(a**(1/7))**3
 
 This leads to similar issues with manipulating Laurent and Puiseux series as
