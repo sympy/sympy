@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, ClassVar
+from typing import TYPE_CHECKING, ClassVar, overload, Literal
 
 from collections import defaultdict
 from functools import reduce
@@ -19,6 +19,8 @@ from .kind import KindDispatcher
 from .traversal import bottom_up
 from sympy.utilities.iterables import sift
 
+if TYPE_CHECKING:
+    from .numbers import Number
 
 # internal marker to indicate:
 #   "there are still non-commutative objects -- don't forget to process them"
@@ -841,7 +843,11 @@ class Mul(Expr, AssocOp):
                 return S.NegativeOne, (-args[0],) + args[1:]
         return S.One, args
 
-    def as_coeff_Mul(self, rational=False):
+    @overload
+    def as_coeff_Mul(self, rational: Literal[True]) -> tuple['Rational', Expr]: ...
+    @overload
+    def as_coeff_Mul(self, rational: bool = False) -> tuple['Number', Expr]: ...
+    def as_coeff_Mul(self, rational=False) -> tuple['Number', Expr]:
         """
         Efficiently extract the coefficient of a product.
         """
