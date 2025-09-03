@@ -20,7 +20,7 @@ Define Symbols and Import Modules
 
 First, we import the necessary functions and classes from SymPy, including the ``WrappingCone`` class.
 
->>> from sympy import symbols, sin, cos, simplify, Rational
+>>> from sympy import symbols, sin, cos, simplify, Rational, Q, refine
 >>> from sympy.physics.mechanics import (
 ...     dynamicsymbols, ReferenceFrame, Point,
 ...     LagrangesMethod, Lagrangian, Particle, WrappingCone
@@ -122,7 +122,8 @@ The total potential energy is the sum of gravitational ($V_g$) and elastic ($V_e
 >>> # The spring's length is the geodesic distance from the apex to P.
 >>> # For a cone, this is our coordinate `s`. We use the class
 >>> # method to demonstrate its function
->>> spring_length = cone.geodesic_length(O, P)
+>>> spring_length = cone.geodesic_length(O, P).simplify()
+>>> spring_length = refine(spring_length, Q.positive(s))
 >>> print(spring_length)
 s(t)
 >>>
