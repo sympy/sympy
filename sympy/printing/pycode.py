@@ -200,6 +200,16 @@ class AbstractPythonCodePrinter(CodePrinter):
     def _print_ComplexInfinity(self, expr):
         return self._print_NaN(expr)
 
+    def _print_Assignment(self, expr):
+        # Emit a single outer assignment when rhs is piecewise to avoid
+        # invalid python like "((x = a) if cond else (x = b))"
+        from sympy.functions.elementary.piecewise import Piecewise
+        lhs = expr.lhs
+        rhs = expr.rhs
+        if isinstance(rhs, Piecewise):
+            return f"{self._print(lhs)} = {self._print(rhs)}"
+        return super()._print_Assignment(expr)
+
     def _print_Mod(self, expr):
         PREC = precedence(expr)
         return ('{} % {}'.format(*(self.parenthesize(x, PREC) for x in expr.args)))
@@ -591,16 +601,6 @@ class PythonCodePrinter(AbstractPythonCodePrinter):
             return name.replace('{', '').replace('}', '')
         else:
             return name
-
-    def _print_Assignment(self, expr):
-        # Emit a single outer assignment when rhs is piecewise to avoid
-        # invalid python like "((x = a) if cond else (x = b))"
-        from sympy.functions.elementary.piecewise import Piecewise
-        lhs = expr.lhs
-        rhs = expr.rhs
-        if isinstance(rhs, Piecewise):
-            return f"{self._print(lhs)} = {self._print(rhs)}"
-        return super()._print_Assignment(expr)
 
     _print_lowergamma = CodePrinter._print_not_supported
     _print_uppergamma = CodePrinter._print_not_supported

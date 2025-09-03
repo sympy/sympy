@@ -515,7 +515,12 @@ def test_custom_Derivative_methods():
 
 def test_piecewise_assign_to():
     x, a, b, c = symbols('x a b c')
-    prntr = PythonCodePrinter()
+    pyprinter = PythonCodePrinter()
+    symprinter = SymPyPrinter()
+
     expr = Piecewise((a + b, c), (0, True))
-    out = prntr.doprint(expr, assign_to=x)
-    assert out == 'x = ((a + b) if c else (0))'
+    pyprint = pyprinter.doprint(expr, assign_to=x)
+    symprint = symprinter.doprint(expr, assign_to=x)
+
+    assert pyprint == 'x = ((a + b) if c else (0))'
+    assert symprint == 'x = ((a + b) if c else (0))'
