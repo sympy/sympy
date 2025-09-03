@@ -12,10 +12,10 @@ from __future__ import print_function
 # files listed here can be in unix forward slash format with paths
 # listed relative to sympy (which contains bin, etc...)
 blacklist = [
-    'doc/src/tutorials/physics/biomechanics/biomechanical-model-example.rst',
-    'doc/src/explanation/modules/physics/biomechanics/biomechanics.rst',
-    'doc/src/explanation/modules/physics/mechanics/autolev_parser.rst',
-    'doc/src/tutorials/physics/biomechanics/biomechanics.rst',
+    ':doc:`biomechanics`',
+    ':doc:`../../../tutorials/physics/biomechanics/biomechanical-model-example`',
+    ':doc:`../../tutorials/physics/biomechanics/biomechanics`'
+    ':doc:`biomechanical-model-example`',
 ]
 
 import sys
