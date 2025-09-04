@@ -93,7 +93,7 @@ class ConditionSet(Set):
         base_set = _sympify(base_set)
         if not isinstance(base_set, Set):
             raise TypeError(
-                'base set should be a Set object, not %s' % base_set)
+                f"base set should be a Set object, not {base_set}")
         condition = _sympify(condition)
 
         if isinstance(condition, FiniteSet):
@@ -131,10 +131,10 @@ with
         # no simple answers, so now check syms
         for i in flat:
             if not getattr(i, '_diff_wrt', False):
-                raise ValueError('`%s` is not symbol-like' % i)
+                raise ValueError(f"`{i}` is not symbol-like")
 
         if base_set.contains(sym) is S.false:
-            raise TypeError('sym `%s` is not in base_set `%s`' % (sym, base_set))
+            raise TypeError(f"sym `{sym}` is not in base_set `{base_set}`")
 
         know = None
         if isinstance(base_set, FiniteSet):

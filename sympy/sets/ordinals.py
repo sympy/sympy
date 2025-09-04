@@ -169,12 +169,12 @@ class Ordinal(Basic):
             elif i.exp == 1:
                 net_str += 'w'
             elif len(i.exp.terms) > 1 or i.exp.is_limit_ordinal:
-                net_str += 'w**(%s)'%i.exp
+                net_str += f"w**({i.exp})"
             else:
-                net_str += 'w**%s'%i.exp
+                net_str += f"w**{i.exp}"
 
             if not i.mult == 1 and not i.exp == ord0:
-                net_str += '*%s'%i.mult
+                net_str += f"*{i.mult}"
         return(net_str)
 
     __repr__ = __str__
