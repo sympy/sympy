@@ -1370,7 +1370,7 @@ def _jordan_form(M: Tmat,
 
     return restore_floats2(basis_mat, jordan_mat)
 
-def _jordan_form_rational_matrix(M: Tmat, calc_transform: bool) -> tuple[Tmat, Tmat] | Tmat:
+def _jordan_form_rational_matrix(M, calc_transform):
 
     dM = M.to_DM()
 
@@ -1391,14 +1391,16 @@ def _jordan_form_rational_matrix(M: Tmat, calc_transform: bool) -> tuple[Tmat, T
             eigenvals = []
 
             minpoly = Poly.from_list(base, l, domain=domain)
-            roots_found = list(roots(minpoly.as_expr(), l, quartics=False, cubics=False))
-            degree = minpoly.degree()
-            if len(roots_found) != degree:
-                roots_found = [CRootOf(minpoly, l, idx) for idx in range(degree)]
-            eigenvals.extend(roots_found)
+            if len(base) == 2:
+                eigenvals.append(domain.to_sympy(-base[1] / base[0]))
+            else:
+                roots_found = list(roots(minpoly.as_expr(), l, quartics=False, cubics=False))
+                degree = minpoly.degree()
+                if len(roots_found) != degree:
+                    roots_found = [CRootOf(minpoly, l, idx) for idx in range(degree)]
+                eigenvals.extend(roots_found)
 
             eigenvals_by_factor[(minpoly, exp)] = eigenvals
-
         return eigenvals_by_factor
 
     # helper functions
