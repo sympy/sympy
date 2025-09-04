@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, overload
 
 from types import FunctionType
-from collections import Counter, OrderedDict
+from collections import Counter
 
 from mpmath import mp, workprec
 from mpmath.libmp.libmpf import prec_to_dps
@@ -12,12 +12,14 @@ from sympy.core.sorting import default_sort_key
 from sympy.core.evalf import DEFAULT_MAXPREC, PrecisionExhausted
 from sympy.core.logic import fuzzy_and, fuzzy_or
 from sympy.core.numbers import AlgebraicNumber, Float
+from sympy.core.symbol import Dummy
 from sympy.core.sympify import _sympify
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.polys import roots, CRootOf, ZZ, QQ, EX
 from sympy.polys.matrices import DomainMatrix
 from sympy.polys.matrices.eigen import dom_eigenvects, dom_eigenvects_to_sympy
-from sympy.polys.polytools import all_roots, gcd
+from sympy.polys.factortools import dup_factor_list
+from sympy.polys.polytools import all_roots, gcd, Poly
 
 from .exceptions import MatrixError, NonSquareMatrixError
 from .determinant import _find_reasonable_pivot
@@ -1368,15 +1370,36 @@ def _jordan_form(M: Tmat,
 
     return restore_floats2(basis_mat, jordan_mat)
 
-def _jordan_form_rational_matrix(M, calc_transform):
+def _jordan_form_rational_matrix(M: Tmat, calc_transform: bool) -> tuple[Tmat, Tmat] | Tmat:
 
-    from itertools import chain
+    dM = M.to_DM()
 
     def char_mat(lam, mul):
         # Build (A - lambda * I)^mul over the algebraic field of lam
         K = QQ.algebraic_field(lam)
-        dM = M.to_DM()
         return (dM.convert_to(K) - dM.eye(M.shape, K) * K.unit).pow(mul)
+
+    def factors_to_eigenvals() :
+        eigenvals_by_factor = {}
+
+        charpoly = dM.charpoly()
+        domain = dM.domain
+        l=Dummy('lambda')
+        _, factors = dup_factor_list(charpoly, domain)
+
+        for base, exp in factors:
+            eigenvals = []
+
+            minpoly = Poly.from_list(base, l, domain=domain)
+            roots_found = list(roots(minpoly.as_expr(), l, quartics=False, cubics=False))
+            degree = minpoly.degree()
+            if len(roots_found) != degree:
+                roots_found = [CRootOf(minpoly, l, idx) for idx in range(degree)]
+            eigenvals.extend(roots_found)
+
+            eigenvals_by_factor[(minpoly, exp)] = eigenvals
+
+        return eigenvals_by_factor
 
     # helper functions
     def nullity_chain(fac, algebraic_multiplicity):
@@ -1384,7 +1407,7 @@ def _jordan_form_rational_matrix(M, calc_transform):
         until it is constant where ``E = M - val*I``"""
 
         ret     = [0]
-        mat_char = char_mat((factor_to_roots[fac])[0], 1)
+        mat_char = char_mat((eigenvals_by_factor[(fac, algebraic_multiplicity)])[0], 1)
         mat_pow = mat_char
         nullity = len(nullspace_to_list(mat_char.nullspace().transpose()))
         i       = 2
@@ -1416,25 +1439,8 @@ def _jordan_form_rational_matrix(M, calc_transform):
             if pivots[-1] == len(small_basis):
                 return v
 
-    factor_to_roots = {}
-
-    char_eq = M.charpoly()
-    _, factors = char_eq.factor_list()
-
-    for factor, _ in factors:
-        all_root = list(OrderedDict.fromkeys(all_roots(factor)))
-        radical_roots = roots(factor, quartics=False, cubics=False)
-        roots_list = []
-
-        for root in all_root:
-            if root.has(CRootOf):
-                matched = next((r for r in radical_roots if factor.same_root(root, r)), None)
-                roots_list.append(matched if matched is not None else root)
-            else:
-                roots_list.append(root)
-
-        factor_to_roots[factor] = roots_list
-    eigenvals = list(chain.from_iterable(factor_to_roots.values()))
+    eigenvals_by_factor = factors_to_eigenvals()
+    eigenvals = [eig_val  for eigen_list in eigenvals_by_factor.values() for eig_val in eigen_list]
 
     if len(eigenvals) == M.cols:
         jordan_mat = M.diag(*eigenvals)
@@ -1444,8 +1450,8 @@ def _jordan_form_rational_matrix(M, calc_transform):
 
         jordan_basis = []
 
-        for factor, multiplicity in factors:
-            eigen_vals = factor_to_roots[factor]
+        for factor, multiplicity in eigenvals_by_factor:
+            eigen_vals = eigenvals_by_factor[(factor, multiplicity)]
             algebraic_num = AlgebraicNumber(eigen_vals[0], alias='a')
             nullspace = char_mat(algebraic_num, multiplicity).nullspace().transpose().to_Matrix()
             eigenvectors = [nullspace.subs(algebraic_num, eigen_val) for eigen_val in eigen_vals]
@@ -1455,7 +1461,7 @@ def _jordan_form_rational_matrix(M, calc_transform):
         return basis_mat, jordan_mat
 
     block_structure = {}
-    for fac, m in factors:
+    for fac, m in eigenvals_by_factor:
         chain = nullity_chain(fac, m)
         block_sizes = _blocks_from_nullity_chain(chain)
         size_nums = [(i+1, num) for i, num in enumerate(block_sizes)]
@@ -1463,7 +1469,7 @@ def _jordan_form_rational_matrix(M, calc_transform):
         # we expect larger Jordan blocks to come earlier
         size_nums.reverse()
 
-        eigen_vals = factor_to_roots[fac]
+        eigen_vals = eigenvals_by_factor[(fac, m)]
         for r in eigen_vals:
             for size, num in size_nums:
                 block_structure.setdefault(r, []).extend([size] * num)
@@ -1485,14 +1491,14 @@ def _jordan_form_rational_matrix(M, calc_transform):
     jordan_basis = []
 
 
-    for fac, _ in factors:
-        eigen_vals = factor_to_roots[fac]
+    for factor, multiplicity in eigenvals_by_factor:
+        eigen_vals = eigenvals_by_factor[(factor, multiplicity)]
         algebraic_num = AlgebraicNumber(eigen_vals[0], alias='a')
 
         big_null, small_null = {}, {}
         for _, sizes in block_structure.items():
             for size in sizes:
-                key = (fac, size)
+                key = (factor, size)
                 if key not in big_null:
                     big_null[key] = nullspace_to_list(char_mat(algebraic_num, size).nullspace().transpose())
                     small_null[key] = nullspace_to_list(char_mat(algebraic_num, size-1).nullspace().transpose())
@@ -1500,7 +1506,7 @@ def _jordan_form_rational_matrix(M, calc_transform):
         for eig in eigen_vals:
             eig_basis = []
             for size in block_structure.get(eig, []):
-                vec = pick_vec(small_null[(fac, size)] + eig_basis, big_null[(fac, size)])
+                vec = pick_vec(small_null[(factor, size)] + eig_basis, big_null[(factor, size)])
                 new_vec = [char_mat(algebraic_num, i) * vec for i in range(size)]
                 eig_basis.extend(new_vec)
                 jordan_basis.extend(
