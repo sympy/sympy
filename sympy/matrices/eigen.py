@@ -1381,7 +1381,7 @@ def _jordan_form_rational_matrix(M, calc_transform):
 
     def factors_to_eigenvals() :
         eigenvals_by_factor = {}
-        is_diagonalizable = False
+        is_diagonalizable = True
 
         charpoly = dM.charpoly()
         domain = dM.domain
@@ -1391,7 +1391,9 @@ def _jordan_form_rational_matrix(M, calc_transform):
         for base, exp in factors:
             eigenvals = []
 
-            is_diagonalizable = (exp == 1)
+            if exp != 1:
+                is_diagonalizable = False
+
             minpoly = Poly.from_list(base, l, domain=domain)
             if len(base) == 2:
                 eigenvals.append(domain.to_sympy(-base[1] / base[0]))
