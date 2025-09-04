@@ -234,12 +234,9 @@ class Symbol(AtomicExpr, Boolean): # type: ignore
 
     Assumptions:
 
-    commutative = True
-    positive = True
-    real = True
-    imaginary = True
-    complex = True
-    complete list of more assumptions- :ref:`predicates`
+    By default, all assumption properties are set to None(e.g, real = None). You can define an assumption by
+    setting its value to True or False. For a symbol having concrete value(e.g, Number(5)), assumptions are automatically inferred.
+    complete list of all assumptions- :ref:`predicates`
 
     You can override the default assumptions in the constructor.
 
