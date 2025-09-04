@@ -19,7 +19,7 @@ from sympy.polys import roots, CRootOf, ZZ, QQ, EX
 from sympy.polys.matrices import DomainMatrix
 from sympy.polys.matrices.eigen import dom_eigenvects, dom_eigenvects_to_sympy
 from sympy.polys.factortools import dup_factor_list
-from sympy.polys.polytools import all_roots, gcd, Poly
+from sympy.polys.polytools import gcd, Poly
 
 from .exceptions import MatrixError, NonSquareMatrixError
 from .determinant import _find_reasonable_pivot
