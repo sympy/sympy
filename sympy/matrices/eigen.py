@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, overload
 
 from types import FunctionType
+from itertools import chain
 from collections import Counter
 
 from mpmath import mp, workprec
@@ -1449,12 +1450,9 @@ def _jordan_form_rational_matrix(M, calc_transform):
 
     if _is_diagonalizable:
         if len(eigenvals_by_factor) == 1:
-            eigenvals = list(eigenvals_by_factor.values())
+            jordan_mat = M.diag(*eigenvals_by_factor.values())
         else:
-            eigenvals = [eig_val  for eigen_list in eigenvals_by_factor.values()
-                        for eig_val in eigen_list]
-
-        jordan_mat = M.diag(*eigenvals)
+            jordan_mat = M.diag(*chain.from_iterable(eigenvals_by_factor.values()))
 
         if not calc_transform:
             return jordan_mat
@@ -1473,8 +1471,8 @@ def _jordan_form_rational_matrix(M, calc_transform):
 
     block_structure = {}
     for fac, m in eigenvals_by_factor:
-        chain = nullity_chain(fac, m)
-        block_sizes = _blocks_from_nullity_chain(chain)
+        nullity = nullity_chain(fac, m)
+        block_sizes = _blocks_from_nullity_chain(nullity)
         size_nums = [(i+1, num) for i, num in enumerate(block_sizes)]
 
         # we expect larger Jordan blocks to come earlier
