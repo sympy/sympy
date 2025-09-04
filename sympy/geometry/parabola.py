@@ -343,6 +343,18 @@ class Parabola(GeometrySet):
         else:
             raise TypeError('Wrong type of argument were put')
 
+    def __contains__(self, other):
+        """
+        Returns True if other is on the Parabola.
+        """
+        if isinstance(other, Point):
+            # Check if the point satisfies the parabola's equation
+            x, y = symbols('x y', real=True)
+            eq = self.equation(x, y)
+            sub_result = simplify(eq.subs([(x, other.x), (y, other.y)]))
+            return sub_result == 0
+        return super(Parabola, self).__contains__(other)
+
     @property
     def p_parameter(self):
         """P is a parameter of parabola.
@@ -387,6 +399,42 @@ class Parabola(GeometrySet):
             d = self.directrix.projection(self.focus)
             p = sign(self.focus.x - d.x)
         return p * self.focal_length
+
+    def tangent(self, p):
+        """Tangent to the parabola at the point p.
+
+        Parameters
+        ==========
+
+        p : Point
+
+        Returns
+        =======
+
+        tangent : Line
+
+        Raises
+        ======
+        ValueError
+            When `p` is not a point on the parabola.
+
+        Examples
+        ========
+
+        >>> from sympy import Parabola, Point, Line
+        >>> p1 = Parabola(Point(0, 4), Line(Point(-10, -4), Point(10, -4)))
+        >>> p1.tangent(Point(8, 4))
+        Line2D(Point2D(8, 4), Point2D(0, -4))
+
+        """
+        if not self.contains(p):
+            raise ValueError("The point must be on the parabola")
+
+        x, y = symbols('x y', real=True)
+        eq = self.equation(x, y)
+        dydx = -eq.diff(x) / eq.diff(y)
+        slope = dydx.subs([(x, p.x), (y, p.y)])
+        return Line(p, slope=slope)
 
     @property
     def vertex(self):
