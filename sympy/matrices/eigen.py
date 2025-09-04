@@ -1381,6 +1381,7 @@ def _jordan_form_rational_matrix(M, calc_transform):
 
     def factors_to_eigenvals() :
         eigenvals_by_factor = {}
+        is_diagonalizable = False
 
         charpoly = dM.charpoly()
         domain = dM.domain
@@ -1390,6 +1391,7 @@ def _jordan_form_rational_matrix(M, calc_transform):
         for base, exp in factors:
             eigenvals = []
 
+            is_diagonalizable = (exp == 1)
             minpoly = Poly.from_list(base, l, domain=domain)
             if len(base) == 2:
                 eigenvals.append(domain.to_sympy(-base[1] / base[0]))
@@ -1401,7 +1403,7 @@ def _jordan_form_rational_matrix(M, calc_transform):
                 eigenvals.extend(roots_found)
 
             eigenvals_by_factor[(minpoly, exp)] = eigenvals
-        return eigenvals_by_factor
+        return eigenvals_by_factor, is_diagonalizable
 
     # helper functions
     def nullity_chain(fac, algebraic_multiplicity):
@@ -1441,10 +1443,15 @@ def _jordan_form_rational_matrix(M, calc_transform):
             if pivots[-1] == len(small_basis):
                 return v
 
-    eigenvals_by_factor = factors_to_eigenvals()
-    eigenvals = [eig_val  for eigen_list in eigenvals_by_factor.values() for eig_val in eigen_list]
+    eigenvals_by_factor, _is_diagonalizable = factors_to_eigenvals()
 
-    if len(eigenvals) == M.cols:
+    if _is_diagonalizable:
+        if len(eigenvals_by_factor) == 1:
+            eigenvals = list(eigenvals_by_factor.values())
+        else:
+            eigenvals = [eig_val  for eigen_list in eigenvals_by_factor.values()
+                        for eig_val in eigen_list]
+
         jordan_mat = M.diag(*eigenvals)
 
         if not calc_transform:
