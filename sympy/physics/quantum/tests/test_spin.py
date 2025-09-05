@@ -4010,7 +4010,7 @@ def test_jx():
     assert qapply(Jx*TensorProduct(JyKet(j1, m1), JyKet(j2, m2))) == \
         TensorProduct(Sum(hbar*mi*WignerD(j1, mi, m1, 0, 0, pi/2)*Sum(WignerD(j1, mi1, mi, pi*Rational(3, 2), 0, 0)*JyKet(j1, mi1), (mi1, -j1, j1)), (mi, -j1, j1)), JyKet(j2, m2)) + \
         TensorProduct(JyKet(j1, m1), Sum(hbar*mi*WignerD(j2, mi, m2, 0, 0, pi/2)*Sum(WignerD(j2, mi1, mi, pi*Rational(3, 2), 0, 0)*JyKet(j2, mi1), (mi1, -j2, j2)), (mi, -j2, j2)))
-    assert qapply(Jx*TensorProduct(JzKet(j1, m1), JzKet(j2, m2))) == \
+    assert qapply(Jx*TensorProduct(JzKet(j1, m1), JzKet(j2, m2))).expand(tensorproduct=True) == \
         hbar*sqrt(j1**2 + j1 - m1**2 - m1)*TensorProduct(JzKet(j1, m1 + 1), JzKet(j2, m2))/2 + \
         hbar*sqrt(j1**2 + j1 - m1**2 + m1)*TensorProduct(JzKet(j1, m1 - 1), JzKet(j2, m2))/2 + \
         hbar*sqrt(j2**2 + j2 - m2**2 - m2)*TensorProduct(JzKet(j1, m1), JzKet(j2, m2 + 1))/2 + \
@@ -4103,7 +4103,7 @@ def test_jy():
     assert qapply(Jy*TensorProduct(JyKet(j1, m1), JyKet(j2, m2))) == \
         hbar*m1*TensorProduct(JyKet(j1, m1), JyKet(
             j2, m2)) + hbar*m2*TensorProduct(JyKet(j1, m1), JyKet(j2, m2))
-    assert qapply(Jy*TensorProduct(JzKet(j1, m1), JzKet(j2, m2))).expand() == \
+    assert qapply(Jy*TensorProduct(JzKet(j1, m1), JzKet(j2, m2))).expand(tensorproduct=True) == \
         -hbar*I*sqrt(j1**2 + j1 - m1**2 - m1)*TensorProduct(JzKet(j1, m1 + 1), JzKet(j2, m2))/2 + \
         hbar*I*sqrt(j1**2 + j1 - m1**2 + m1)*TensorProduct(JzKet(j1, m1 - 1), JzKet(j2, m2))/2 + \
         -hbar*I*sqrt(j2**2 + j2 - m2**2 - m2)*TensorProduct(JzKet(j1, m1), JzKet(j2, m2 + 1))/2 + \
