@@ -2572,4 +2572,4 @@ def test_issue_27440():
 
 def test_issue_28150():
     assert ask(Q.real(Pow(0, -1, evaluate=False))) is False
-
+    
