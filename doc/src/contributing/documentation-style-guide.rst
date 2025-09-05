@@ -135,7 +135,7 @@ The purpose of these docstrings are to explain the API of that class or
 function. The doctests examples are tested as part of the test suite, so that we
 know that they always produce the output that they say that they do. Here is an
 `example docstring
-<https://github.com/sympy/sympy/blob/b176f6a1d9890b42dc361857c887992315e3d5ad/sympy/functions/elementary/complexes.py#L22-L47>`_.
+<https://github.com/sympy/sympy/blob/master/sympy/functions/elementary/complexes.py>`_.
 Most docstrings are also automatically included in the Sphinx documentation
 above, so that they appear on the SymPy Documentation website. Here is that
 :obj:`same docstring <.im>` on the SymPy website. The docstrings are formatted
