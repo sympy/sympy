@@ -259,7 +259,7 @@ This example shows some important aspects of regression tests:
   identified in the issue. In this example, the second test (the test added to
   `test_as_leading_term()`) was identified as a related problem in a [comment
   on the
-  issue](https://github.com/sympy/sympy/issues/21177#issuecomment-812816346).
+  issue](https://github.com/sympy/sympy/issues/21177).
 
 - It is useful to cross-reference the issue number in a regression test,
   either using a comment or in the test name. A comment is preferred if the

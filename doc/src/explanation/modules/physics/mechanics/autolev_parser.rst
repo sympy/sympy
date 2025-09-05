@@ -342,7 +342,7 @@ Gotchas
 
 - Need to change ``me.dynamicsymbols._t`` to ``me.dynamicsymbols('t')`` for
   all occurrences of it in the Kane's equations. For example have a look at
-  line 10 of this `spring damper example <https://github.com/sympy/sympy/blob/master/sympy/parsing/autolev/test-examples/pydy-example-repo/mass_spring_damper.py#L10>`_.
+  line 10 of this `spring damper example <https://github.com/sympy/sympy/blob/master/sympy/parsing/autolev/test-examples/pydy-example-repo/mass_spring_damper.py>`_.
   This equation is used in forming the Kane's equations so we need to
   change ``me.dynamicsymbols._t`` to ``me.dynamicsymbols('t')`` in this case.
 
@@ -564,7 +564,7 @@ Future Improvements
 1. Completing Dynamics Online
 -----------------------------
 The parser has been built by referring to and parsing codes from the
-`Autolev Tutorial <https://mae.ufl.edu/~fregly/PDFs/autolev_tutorial.pdf>`_
+`Autolev Tutorial <https://web.archive.org/web/20180731093609/http://docs.sympy.org/0.7.6/modules/mpmath/calculus/polynomials.html>`_
 and the book *Dynamics Online: Theory and Implementation Using Autolev*.
 Basically, the process involved going through each of these codes,
 validating the parser results and improving the rules if required

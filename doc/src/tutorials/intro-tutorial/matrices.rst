@@ -508,7 +508,7 @@ while being harmless to other polynomials or transcendental functions.
     ⎢⎢             4⋅cosh ⎜─⎟ - 1              ⎥⎥
     ⎢⎢                    ⎝3⎠                  ⎥⎥
     ⎢⎢                                         ⎥⎥
-    ⎣⎣                    1                    ⎦⎦
+    ⎣⎣                    1                    ⎦⦦
 
 You can clearly see ``nullspace`` returning proper result, after injecting an
 alternative zero test.
@@ -527,7 +527,7 @@ with any symbolic entities,
 it's because of the constant problem stating that zero testing is undecidable
 [#constantproblemwikilink-fn]_ ,
 and not only the SymPy, but also other computer algebra systems
-[#mathematicazero-fn]_ [#matlabzero-fn]_
+[#mathematicazero-fn]_[#matlabzero-fn]_
 would face the same fundamental issue.
 
 However, discovery of any zero test failings can provide some good examples to
