@@ -340,6 +340,8 @@ def apply_grover(oracle, nqubits, iterations=None):
     iterated = superposition_basis(nqubits)
     for iter in range(iterations):
         iterated = grover_iteration(iterated, v)
-        iterated = qapply(iterated)
+        # qapply no longer does expand, so this is needed to optimize
+        # and avoid having lots of products of sums in qapply calls
+        iterated = qapply(iterated).expand()
 
     return iterated

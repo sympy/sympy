@@ -6,7 +6,6 @@ from sympy.physics.quantum.qubit import IntQubit
 from sympy.physics.quantum.grover import (apply_grover, superposition_basis,
         OracleGate, grover_iteration, WGate)
 
-import pytest
 
 def return_one_on_two(qubits):
     return qubits == IntQubit(2, qubits.nqubits)
@@ -88,7 +87,6 @@ def test_grover_two_qubits():
     assert apply_grover(return_one_on_one, nqubits).expand() == IntQubit(1, nqubits=nqubits)
 
 
-@pytest.mark.slow
 def test_grover_four_qubits():
     nqubits = 4
     basis_states = superposition_basis(nqubits)
