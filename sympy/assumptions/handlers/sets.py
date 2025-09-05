@@ -231,7 +231,6 @@ def _(expr, assumptions):
 
 def _RealPredicate_number(expr, assumptions):
     from sympy import Pow
-    # Special case: Pow(0, negative exponent) → division by zero (not real)
     if isinstance(expr, Pow):
         base, exp = expr.as_base_exp()
         if base == 0 and exp.is_negative:
