@@ -23,7 +23,7 @@ def _split_cnc(seq):
 
 
 class SlidingTransform(object):
- 
+
     def __init__(self, unary=None, binary=None, reverse=False, from_args=True):
         self._unary = unary
         self._binary = binary
