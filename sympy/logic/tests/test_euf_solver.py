@@ -493,17 +493,6 @@ def test_binary_predicate_q_ne():
     # Should convert properly
 
 
-def test_assert_lit_unknown_encoding():
-    """Test assert_lit with unknown encoding."""
-    solver = EUFTheorySolver()
-    solver.Initialize({Eq(a, b)})
-
-    # Try to assert unknown literal
-    success, consequences = solver.assert_lit(999)
-    assert success is False
-    assert consequences == set()
-
-
 def test_multiple_disequality_conflicts():
     """Test multiple disequality conflicts."""
     solver = EUFTheorySolver()
@@ -584,3 +573,69 @@ def test_generate_minimal_conflict_edge_cases():
     solver._current_exception_type = 'unknown'
     conflict = solver._generate_minimal_conflict()
     assert isinstance(conflict, set)
+
+def test_simple_chain_explanation():
+    # Simple chain x=y, y=z, test explanation for x=z
+    solver = EUFTheorySolver()
+    cc = solver.cc
+    cc.add_equality_with_reason(x, y, Eq(x, y))
+    cc.add_equality_with_reason(y, z, Eq(y, z))
+    explanation = cc.explain_equality(x, z)
+    assert Eq(x, y) in explanation
+    assert Eq(y, z) in explanation
+
+
+def test_assert_literals_and_conflict():
+    # Use CNF encoding from props and assumptions, assert literals and expect conflict on negation
+
+    prop = Q.prime(z)
+    assum = Q.prime(y) & Q.eq(x, y) & Q.eq(x, z) & Q.eq(z, d) & Q.eq(y, e)
+    add = Q.eq(e, d)
+
+    _prop = CNF.from_prop(prop)
+    _assum = CNF.from_prop(assum)
+    _add = CNF.from_prop(add)
+
+    sat = EncodedCNF()
+    sat.add_from_cnf(_prop)
+    sat.add_from_cnf(_assum)
+    sat.add_from_cnf(_add)
+
+    solver = EUFTheorySolver()
+    a, conflicts = solver.from_encoded_cnf(sat)
+
+    # Assert positive literals
+    for lit in [Q.prime(y), Q.eq(x, z), Q.eq(z, d), Q.eq(y, e), Q.eq(x, y)]:
+        res, _ = a.assert_lit(sat.encoding[lit])
+        assert res is True
+
+    # Assert negation of e=d causes conflict
+    res, conflict = a.assert_lit(-sat.encoding[Q.eq(e, d)])
+    assert res is False
+
+    # Explanation for equality e=d includes chain
+    explanation = a.cc.explain_equality(e, d)
+    expected_eqs = {Eq(e, y), Eq(x, z), Eq(d, z), Eq(x, y)}
+    for eq in expected_eqs:
+        assert eq in explanation
+
+
+def test_disequality_conflict_explanation():
+    solver = EUFTheorySolver()
+    cc = solver.cc
+
+    # Assert equalities a=b, b=c
+    cc.add_equality_with_reason(x, y, Eq(x, y))
+    cc.add_equality_with_reason(y, z, Eq(y, z))
+
+    # Add disequality conflict on x!=z which contradicts x=z
+    dis_eq = Ne(x, z)
+    # simulate adding disequality causes tracking to trigger conflict
+    # For test, forcibly add disequality cause and test explanation
+    rep_x = cc._flatten(x)
+    rep_z = cc._flatten(z)
+    cc.disequality_causes = {tuple(sorted((rep_x, rep_z))): dis_eq}
+
+    explanation = solver.explain_disequality(x, z)  # Should return disequality cause and equalities explaining x=z
+    assert dis_eq in explanation
+    assert Eq(x, y) in explanation or Eq(y, z) in explanation

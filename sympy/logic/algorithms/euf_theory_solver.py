@@ -56,190 +56,68 @@ class ProofProducingCongruenceClosure(EUFCongruenceClosure):
         self.direct_explanations = {}  # Maps (a,b) -> literal that directly asserted a=b
         self.merge_sequence = []  # Track order of merges for explanation
 
+        # New: Map flattened term to equality literals that involve it
+        self.equalities_for_term = defaultdict(set)
+
     def add_equality_with_reason(self, lhs, rhs, reason):
-        """Add equality and record the reason for proof production."""
+        """Add equality and record reason for proof production."""
         lhs_id = self._flatten(lhs)
         rhs_id = self._flatten(rhs)
 
         rep_lhs = self._find(lhs_id)
         rep_rhs = self._find(rhs_id)
 
-        # Check if already equal
+        # Skip if already equal
         if rep_lhs == rep_rhs:
             return
 
-        # Record direct assertion
+        # Record direct assertion for flattened terms
         key = _ordered_pair(lhs_id, rhs_id)
         self.direct_explanations[key] = reason
 
-        # Record in proof forest before merging
+        # Record in proof forest and merge sequence
         proof_key = _ordered_pair(rep_lhs, rep_rhs)
         self.proof_forest[proof_key] = reason
         self.merge_sequence.append((rep_lhs, rep_rhs, reason, lhs_id, rhs_id))
 
-        # Perform the actual merge
+        # Record reason for each flattened term involved
+        self.equalities_for_term[lhs_id].add(reason)
+        self.equalities_for_term[rhs_id].add(reason)
+
+        # Perform the actual merge using base class method
         super().add_equality(lhs, rhs)
 
     def explain_equality(self, a, b):
-        """
-        Explain why a = b using minimal set of literals from proof forest.
-        Returns set of equality literals that justify a = b.
-        """
+        """Explain why a = b using DFS over equality literals connecting flattened terms."""
         a_id = self._flatten(a)
         b_id = self._flatten(b)
-        rep_a = self._find(a_id)
-        rep_b = self._find(b_id)
 
-        # If not equal, cannot explain
-        if rep_a != rep_b:
-            return set()
-
-        # If same term, trivially equal (no explanation needed)
         if a_id == b_id:
             return set()
 
-        # Check if directly asserted
-        direct_key = _ordered_pair(a_id, b_id)
-        if direct_key in self.direct_explanations:
-            return {self.direct_explanations[direct_key]}
-
-        # Build explanation using proof forest path
-        explanation = self._find_proof_path(a_id, b_id)
-        return explanation
-
-    def _find_proof_path(self, start_id, target_id):
-        """
-        Find proof path from start_id to target_id using the merge sequence.
-        Uses BFS to find minimal explanation.
-        """
-        if start_id == target_id:
-            return set()
-
-        # Build adjacency graph from merge sequence
-        adjacency = defaultdict(list)
-        edge_reasons = {}
-
-        for rep_x, rep_y, reason, orig_lhs, orig_rhs in self.merge_sequence:
-            # Add edges for the original terms that were merged
-            adj_key1 = _ordered_pair(orig_lhs, orig_rhs)
-            adjacency[orig_lhs].append(orig_rhs)
-            adjacency[orig_rhs].append(orig_lhs)
-            edge_reasons[adj_key1] = reason
-
-            # Also add transitive connections through representatives
-            current_rep = self._find(orig_lhs)  # Current representative after all merges
-
-            # Find all terms in the same equivalence class
-            same_class_terms = []
-            for other_rep_x, other_rep_y, other_reason, other_orig_lhs, other_orig_rhs in self.merge_sequence:
-                if self._find(other_orig_lhs) == current_rep:
-                    same_class_terms.append(other_orig_lhs)
-                if self._find(other_orig_rhs) == current_rep:
-                    same_class_terms.append(other_orig_rhs)
-
-            # Add transitive edges within equivalence class
-            for term1 in same_class_terms:
-                for term2 in same_class_terms:
-                    if term1 != term2:
-                        adjacency[term1].append(term2)
-
-        # BFS to find shortest path
-        queue = deque([(start_id, [])])
-        visited = {start_id}
-
-        while queue:
-            current_id, path = queue.popleft()
-
-            if current_id == target_id:
-                # Found path, collect reasons
-                explanation = set()
-                for i in range(len(path)):
-                    if i > 0:
-                        edge_key = _ordered_pair(path[i-1], path[i])
-                        if edge_key in edge_reasons:
-                            explanation.add(edge_reasons[edge_key])
-                return explanation
-
-            # Explore neighbors
-            for neighbor in adjacency[current_id]:
-                if neighbor not in visited:
-                    visited.add(neighbor)
-                    queue.append((neighbor, path + [current_id, neighbor]))
-
-        # If no path found, use merge sequence directly
-        return self._explain_using_merge_sequence(start_id, target_id)
-
-    def _explain_using_merge_sequence(self, a_id, b_id):
-        """
-        Fallback method to explain equality using merge sequence directly.
-        """
-        explanation = set()
-
-        # Find all merges that contributed to making a_id and b_id equal
-        target_rep = self._find(a_id)  # Should be same as self._find(b_id)
-
-        # Collect all equality literals that led to this representative
-        contributing_merges = []
-
-        for rep_x, rep_y, reason, orig_lhs, orig_rhs in self.merge_sequence:
-            # Check if this merge contributed to the final equivalence class
-            if (self._find(orig_lhs) == target_rep and
-                (orig_lhs == a_id or orig_lhs == b_id or
-                orig_rhs == a_id or orig_rhs == b_id)):
-                contributing_merges.append((orig_lhs, orig_rhs, reason))
-            elif (self._find(orig_rhs) == target_rep and
-                (orig_lhs == a_id or orig_lhs == b_id or
-                orig_rhs == a_id or orig_rhs == b_id)):
-                contributing_merges.append((orig_lhs, orig_rhs, reason))
-
-        # Add all contributing merge reasons
-        for _, _, reason in contributing_merges:
-            explanation.add(reason)
-
-        # If still no explanation and terms are transitively connected
-        if not explanation:
-            # Find chain of equalities connecting a_id to b_id
-            chain = self._find_equality_chain(a_id, b_id)
-            explanation.update(chain)
-
-        return explanation
-
-    def _find_equality_chain(self, start_id, target_id):
-        """
-        Find a chain of direct equality assertions that connect start_id to target_id.
-        """
-        explanation = set()
-
-        # Use the direct explanations and merge sequence to build chain
-        current_id = start_id
         visited = set()
+        path = []
+        explanation = set()
 
-        while current_id != target_id and current_id not in visited:
-            visited.add(current_id)
+        def dfs(current):
+            if current == b_id:
+                return True
+            visited.add(current)
+            for eq in self.equalities_for_term[current]:
+                other = eq.rhs if eq.lhs == current else eq.lhs
+                other_id = self._flatten(other)
+                if other_id not in visited:
+                    path.append(eq)
+                    if dfs(other_id):
+                        return True
+                    path.pop()
+            return False
 
-            # Look for direct connection
-            direct_key = _ordered_pair(current_id, target_id)
-            if direct_key in self.direct_explanations:
-                explanation.add(self.direct_explanations[direct_key])
-                break
-
-            # Look for intermediate connection
-            found_intermediate = False
-            for (orig_lhs, orig_rhs), reason in self.direct_explanations.items():
-                if orig_lhs == current_id and self._find(orig_rhs) == self._find(target_id):
-                    explanation.add(reason)
-                    current_id = orig_rhs
-                    found_intermediate = True
-                    break
-                elif orig_rhs == current_id and self._find(orig_lhs) == self._find(target_id):
-                    explanation.add(reason)
-                    current_id = orig_lhs
-                    found_intermediate = True
-                    break
-
-            if not found_intermediate:
-                break
-
+        found = dfs(a_id)
+        if found:
+            explanation = set(path)
+        else:
+            explanation = set()
         return explanation
 
 class EUFTheorySolver:
@@ -476,6 +354,11 @@ class EUFTheorySolver:
                     diseq_encoding = self.lit_to_enc.get(self.current_conflict_diseq)
                     if diseq_encoding is not None:
                         conflict_clause.add(-diseq_encoding)
+                    else :
+                        new_diseq = Ne(self.current_conflict_diseq.rhs, self.current_conflict_diseq.lhs)
+                        diseq_encoding = self.lit_to_enc.get(new_diseq)
+                        if diseq_encoding is not None:
+                            conflict_clause.add(-diseq_encoding)
 
                 # Get explanation for why the terms are already equal
                 if self.current_conflict_diseq is not None:
@@ -488,6 +371,11 @@ class EUFTheorySolver:
                         exp_encoding = self.lit_to_enc.get(exp_lit)
                         if exp_encoding is not None:
                             conflict_clause.add(-exp_encoding)
+                        else:
+                            new_eq = Eq(exp_lit.rhs, exp_lit.lhs)
+                            exp_encoding = self.lit_to_enc.get(new_eq)
+                            if exp_encoding is not None:
+                                conflict_clause.add(-exp_encoding)
 
         return conflict_clause
 
