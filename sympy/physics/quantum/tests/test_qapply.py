@@ -59,8 +59,6 @@ class SimpleKet(Ket):
 
 TP = TensorProduct
 
-sqa = lambda x: simplify(qapply(x))
-
 A = Operator('A')
 
 
@@ -175,9 +173,9 @@ def test_mul_binary_bra_op():
 
 
 def test_mul_binary_add():
-    assert sqa((Jplus + Jminus)*z/sqrt(2)) == \
-        hbar*(po + mo)
-    assert sqa(Jz*(po + mo)) == hbar*(po - mo)
+    assert qapply((Jplus + Jminus)*z/sqrt(2)).expand() == \
+        (hbar*(po + mo)).expand()
+    assert qapply(Jz*(po + mo)).expand() == (hbar*(po - mo)).expand()
 
 
 def test_mul_binary_sum():
@@ -208,7 +206,7 @@ def test_mul_binary_integral():
 
 def test_basic():
     assert qapply(Jz*po) == hbar*po
-    assert sqa(Jx*z) == sqrt(2)*hbar*(po + mo)/sympify(2)
+    assert qapply(Jx*z).expand() == (sqrt(2)*hbar*(po + mo)/sympify(2)).expand()
     assert qapply(Jminus*Jminus*po) == 2*hbar**2*mo
     assert qapply(Jplus**2*mo) == 2*hbar**2*po
     assert qapply(Jplus**2*Jminus**2*po) == 4*hbar**4*po
@@ -217,14 +215,14 @@ def test_basic():
 def test_extra():
     extra = z.dual*A*z
     assert qapply(Jz*po*extra) == hbar*po*extra
-    assert sqa(Jx*z*extra) == simplify((hbar*po/sqrt(2) + hbar*mo/sqrt(2))*extra)
-    assert sqa(
-        (Jplus + Jminus)*z/sqrt(2)*extra) == hbar*(po + mo)*extra
-    assert sqa(Jz*(po + mo)*extra) == hbar*(po - mo)*extra
-    assert sqa(Jz*po*extra + Jz*mo*extra) == hbar*(po - mo)*extra
-    assert sqa(Jminus*Jminus*po*extra) == 2*hbar**2*mo*extra
-    assert sqa(Jplus**2*mo*extra) == 2*hbar**2*po*extra
-    assert sqa(Jplus**2*Jminus**2*po*extra) == 4*hbar**4*po*extra
+    assert qapply(Jx*z*extra).expand() == ((hbar*po/sqrt(2) + hbar*mo/sqrt(2))*extra).expand()
+    assert qapply(
+        (Jplus + Jminus)*z/sqrt(2)*extra).expand() == (hbar*(po + mo)*extra).expand()
+    assert qapply(Jz*(po + mo)*extra).expand() == (hbar*(po - mo)*extra).expand()
+    assert qapply(Jz*po*extra + Jz*mo*extra).expand() == (hbar*(po - mo)*extra).expand()
+    assert qapply(Jminus*Jminus*po*extra) == 2*hbar**2*mo*extra
+    assert qapply(Jplus**2*mo*extra) == 2*hbar**2*po*extra
+    assert qapply(Jplus**2*Jminus**2*po*extra) == 4*hbar**4*po*extra
 
 
 def test_innerproduct():

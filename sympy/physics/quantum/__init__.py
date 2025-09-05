@@ -1,7 +1,7 @@
 # Names exposed by 'from sympy.physics.quantum import *'
 
 __all__ = [
-   # 'SlidingTransform', 'DipatchingSlidingTransform'
+    'SlidingTransform',
 
     'AntiCommutator',
 
@@ -31,12 +31,12 @@ __all__ = [
 
     'hbar', 'HBar',
 
-    '_postprocess_state_mul', '_postprocess_state_pow'
+    '_postprocess_qexpr_mul', '_postprocess_state_pow'
 ]
 
-# from .slidingtransform import (
-#     SlidingTransform, DipatchingSlidingTransform
-# )
+from .slidingtransform import (
+    SlidingTransform
+)
 
 from .anticommutator import AntiCommutator
 
@@ -68,4 +68,4 @@ from .constants import hbar, HBar
 
 # These are private, but need to be imported so they are registered
 # as postprocessing transformers with Mul and Pow.
-from .transforms import _postprocess_state_mul, _postprocess_state_pow
+from .transforms import _postprocess_qexpr_mul, _postprocess_state_pow
