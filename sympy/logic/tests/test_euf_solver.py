@@ -638,4 +638,4 @@ def test_disequality_conflict_explanation():
 
     explanation = solver.explain_disequality(x, z)  # Should return disequality cause and equalities explaining x=z
     assert dis_eq in explanation
-    assert Eq(x, y) in explanation or Eq(y, z) in explanation
+    assert Eq(x, y) in explanation or Eq(y, z) in
