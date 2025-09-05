@@ -61,7 +61,7 @@ def dpll_satisfiable(expr, all_models=False, use_lra_theory=False, use_euf_theor
     else:
         euf = None
 
-    solver = SATSolver(expr.data + immediate_conflicts, expr.variables, set(), expr.symbols, lra_theory=lra, euf_theory=euf)
+    solver = SATSolver(expr.data + immediate_conflicts, expr.variables, set(), expr.symbols, lra_theory=lra, euf_theory=euf, expr=expr)
     models = solver._find_model()
 
     if all_models:
@@ -98,7 +98,7 @@ class SATSolver:
 
     def __init__(self, clauses, variables, var_settings, symbols=None,
                 heuristic='vsids', clause_learning='none', INTERVAL=500,
-                 lra_theory = None, euf_theory = None):
+                 lra_theory = None, euf_theory = None,expr = None):
 
         self.var_settings = var_settings
         self.heuristic = heuristic
@@ -106,6 +106,7 @@ class SATSolver:
         self._unit_prop_queue = []
         self.update_functions = []
         self.INTERVAL = INTERVAL
+        self.expr = expr
 
         if symbols is None:
             self.symbols = list(ordered(variables))
@@ -261,7 +262,7 @@ class SATSolver:
                             res1 = self.euf.assert_lit(enc_var)
                             if res1[0] is False:
                                 break
-                        self.euf.reset()
+                        self.euf, conflict = EUFTheorySolver.from_encoded_cnf(self.expr)
                     else:
                         res1 = None
                     if res1 is not None:

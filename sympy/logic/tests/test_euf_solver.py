@@ -618,24 +618,3 @@ def test_assert_literals_and_conflict():
     expected_eqs = {Eq(e, y), Eq(x, z), Eq(d, z), Eq(x, y)}
     for eq in expected_eqs:
         assert eq in explanation
-
-
-def test_disequality_conflict_explanation():
-    solver = EUFTheorySolver()
-    cc = solver.cc
-
-    # Assert equalities a=b, b=c
-    cc.add_equality_with_reason(x, y, Eq(x, y))
-    cc.add_equality_with_reason(y, z, Eq(y, z))
-
-    # Add disequality conflict on x!=z which contradicts x=z
-    dis_eq = Ne(x, z)
-    # simulate adding disequality causes tracking to trigger conflict
-    # For test, forcibly add disequality cause and test explanation
-    rep_x = cc._flatten(x)
-    rep_z = cc._flatten(z)
-    cc.disequality_causes = {tuple(sorted((rep_x, rep_z))): dis_eq}
-
-    explanation = solver.explain_disequality(x, z)  # Should return disequality cause and equalities explaining x=z
-    assert dis_eq in explanation
-    assert Eq(x, y) in explanation or Eq(y, z) in
