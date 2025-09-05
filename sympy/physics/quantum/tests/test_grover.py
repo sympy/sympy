@@ -7,7 +7,6 @@ from sympy.physics.quantum.grover import (apply_grover, superposition_basis,
         OracleGate, grover_iteration, WGate)
 
 import pytest
-pytest.skip("Skipping grover tests", allow_module_level=True)
 
 def return_one_on_two(qubits):
     return qubits == IntQubit(2, qubits.nqubits)
@@ -51,10 +50,10 @@ def test_OracleGate():
 def test_WGate():
     nqubits = 2
     basis_states = superposition_basis(nqubits)
-    assert qapply(WGate(nqubits)*basis_states) == basis_states
+    assert qapply(WGate(nqubits)*basis_states).expand() == basis_states
 
     expected = ((2/sqrt(pow(2, nqubits)))*basis_states) - IntQubit(1, nqubits=nqubits)
-    assert qapply(WGate(nqubits)*IntQubit(1, nqubits=nqubits)) == expected
+    assert qapply(WGate(nqubits)*IntQubit(1, nqubits=nqubits)).expand() == expected
 
 
 def test_grover_iteration_1():
@@ -62,7 +61,7 @@ def test_grover_iteration_1():
     basis_states = superposition_basis(numqubits)
     v = OracleGate(numqubits, return_one_on_one)
     expected = IntQubit(1, nqubits=numqubits)
-    assert qapply(grover_iteration(basis_states, v)) == expected
+    assert qapply(grover_iteration(basis_states, v)).expand() == expected
 
 
 def test_grover_iteration_2():
@@ -72,23 +71,26 @@ def test_grover_iteration_2():
     # After (pi/4)sqrt(pow(2, n)), IntQubit(2) should have highest prob
     # In this case, after around pi times (3 or 4)
     iterated = grover_iteration(basis_states, v)
-    iterated = qapply(iterated)
+    iterated = qapply(iterated).expand()
     iterated = grover_iteration(iterated, v)
-    iterated = qapply(iterated)
+    iterated = qapply(iterated).expand()
     iterated = grover_iteration(iterated, v)
-    iterated = qapply(iterated)
+    iterated = qapply(iterated).expand()
     # In this case, probability was highest after 3 iterations
     # Probability of Qubit('0010') was 251/256 (3) vs 781/1024 (4)
     # Ask about measurement
     expected = (-13*basis_states)/64 + 264*IntQubit(2, numqubits)/256
-    assert qapply(expected) == iterated
+    assert qapply(expected).expand() == iterated
 
 
-def test_grover():
+def test_grover_two_qubits():
     nqubits = 2
-    assert apply_grover(return_one_on_one, nqubits) == IntQubit(1, nqubits=nqubits)
+    assert apply_grover(return_one_on_one, nqubits).expand() == IntQubit(1, nqubits=nqubits)
 
+
+@pytest.mark.slow
+def test_grover_four_qubits():
     nqubits = 4
     basis_states = superposition_basis(nqubits)
-    expected = (-13*basis_states)/64 + 264*IntQubit(2, nqubits)/256
-    assert apply_grover(return_one_on_two, 4) == qapply(expected)
+    expected = ((-13*basis_states)/64 + 264*IntQubit(2, nqubits)/256).expand()
+    assert apply_grover(return_one_on_two, 4).expand() == expected
