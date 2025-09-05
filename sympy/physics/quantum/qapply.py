@@ -275,7 +275,7 @@ def _qapply_mul_binary_expr_expr(lhs, rhs, **options):
     return None
 
 
-@qapply_Mul.binary.register(Operator, Wavefunction)
+@qapply_Mul.binary.register(Operator, (KetBase, TensorProduct, Wavefunction))
 @_flatten_mul
 def _qapply_mul_binary_op_wavefunction(lhs, rhs, **options):
     _apply = getattr(lhs, '_apply_operator', None)
@@ -298,27 +298,27 @@ def _qapply_mul_binary_op_wavefunction(lhs, rhs, **options):
     return None if result is None else (result,)
 
 
-@qapply_Mul.binary.register(Operator, KetBase)
-@_flatten_mul
-def _qapply_mul_binary_op_ket(lhs, rhs, **options):
-    _apply = getattr(lhs, '_apply_operator', None)
-    if _apply is not None:
-        try:
-            result = _apply(rhs, **options)
-        except NotImplementedError:
-            result = None
-    else:
-        result = None
+# @qapply_Mul.binary.register(Operator, KetBase)
+# @_flatten_mul
+# def _qapply_mul_binary_op_ket(lhs, rhs, **options):
+#     _apply = getattr(lhs, '_apply_operator', None)
+#     if _apply is not None:
+#         try:
+#             result = _apply(rhs, **options)
+#         except NotImplementedError:
+#             result = None
+#     else:
+#         result = None
 
-    if result is None:
-        _apply_right = getattr(rhs, '_apply_from_right_to', None)
-        if _apply_right is not None:
-            try:
-                result = _apply_right(lhs, **options)
-            except NotImplementedError:
-                result = None
+#     if result is None:
+#         _apply_right = getattr(rhs, '_apply_from_right_to', None)
+#         if _apply_right is not None:
+#             try:
+#                 result = _apply_right(lhs, **options)
+#             except NotImplementedError:
+#                 result = None
 
-    return None if result is None else (result,)
+#     return None if result is None else (result,)
 
 
 @qapply_Mul.binary.register(BraBase, Operator)
