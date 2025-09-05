@@ -2053,6 +2053,10 @@ def test_real_pow():
     assert ask(Q.real(x**y), Q.zero(x) & Q.positive(y)) is True
 
 
+def test_zero_base_negative_exponent_not_real():
+    expr = Pow(S.Zero, S.NegativeOne, evaluate=False)
+    assert ask(Q.real(expr)) is False
+
 @_both_exp_pow
 def test_real_functions():
     # trigonometric functions
