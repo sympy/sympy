@@ -2,13 +2,9 @@
 
 TODO:
 
-- Finish slidingtransform
 - Finish slidingtransform tests
 - Add extra type handlers to get rid of warnings in qapply
-- Optimize performance
-- Finish tests for qapply
-- Fix all other tests
-
+- Optimize _apply_operator methods
 """
 
 from sympy.concrete import Sum
