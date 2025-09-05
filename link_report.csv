@@ -1,6 +1,0 @@
-# created by LinkChecker at 2025-09-05 15:00:16+005
-# Read the documentation at https://linkchecker.github.io/linkchecker/
-# Write comments and bugs to https://github.com/linkchecker/linkchecker/issues
-urlname;parentname;base;result;warningstring;infostring;valid;url;line;column;name;dltime;size;checktime;cached;level;modified
-{{ pathto('_static/jquery.js', 1) }};file:///C|/Users/adith/sympy/doc/src/_templates/sidebar/versions.html;;"URLError: <urlopen error [WinError 3] The system cannot find the path specified: ""C:\\Users\\adith\\sympy\\doc\\src\\_templates\\sidebar\\{{ pathto('_static\\jquery.js', 1) }}"">";;;False;file:///C|/Users/adith/sympy/doc/src/_templates/sidebar/%7B%7B%20pathto(%27_static/jquery.js%27,%201)%20%7D%7D;12;1;;-1;-1;0.00035572052001953125;0;5;
-# Stopped checking at 2025-09-05 15:00:18+005 (2 seconds)
