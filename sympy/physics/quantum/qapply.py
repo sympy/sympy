@@ -13,6 +13,7 @@ TODO:
 
 from sympy.concrete import Sum
 from sympy.core.add import Add
+from sympy.core.basic import Basic
 from sympy.core.expr import Expr
 from sympy.core.kind import NumberKind
 from sympy.core.mul import Mul
@@ -30,7 +31,9 @@ from sympy.physics.quantum.commutator import Commutator
 from sympy.physics.quantum.dagger import Dagger
 from sympy.physics.quantum.density import Density
 from sympy.physics.quantum.innerproduct import InnerProduct
-from sympy.physics.quantum.operator import OuterProduct, Operator
+from sympy.physics.quantum.operator import (
+    OuterProduct, Operator, IdentityOperator
+)
 from sympy.physics.quantum.state import State, KetBase, BraBase, Wavefunction
 from sympy.physics.quantum.tensorproduct import TensorProduct
 from sympy.physics.quantum.slidingtransform import SlidingTransform
@@ -119,7 +122,6 @@ def _qapply_unary_number(expr, **options):
 
 @_qapply_unary.register(Abs)
 def _qapply_unary_abs(expr, **options):
-    debug('Abs: ', expr, **options)
     return Abs(qapply(expr.args[0], **options))
 
 
@@ -189,7 +191,6 @@ def _qapply_unary_tp(expr, **options):
 #-----------------------------------------------------------------------------
 
 def qapply(e, **options):
-    debug('qapply: ', e)
     ip_doit = options.get('ip_doit', True)
 
     e = _sympify(e)
@@ -213,7 +214,8 @@ def qapply(e, **options):
 qapply_Mul = SlidingTransform(
     unary=Dispatcher('_qapply_mul_unary'),
     binary=Dispatcher('_qapply_mul_binary'),
-    reverse=True
+    reverse=True,
+    from_args=False
 )
 
 # Unary transformations for qapply_Mul
@@ -271,6 +273,29 @@ def _qapply_mul_unary_density(expr, **options):
 @qapply_Mul.binary.register(Expr, Expr)
 def _qapply_mul_binary_expr_expr(lhs, rhs, **options):
     return None
+
+
+@qapply_Mul.binary.register(Operator, Wavefunction)
+@_flatten_mul
+def _qapply_mul_binary_op_wavefunction(lhs, rhs, **options):
+    _apply = getattr(lhs, '_apply_operator', None)
+    if _apply is not None:
+        try:
+            result = _apply(rhs, **options)
+        except NotImplementedError:
+            result = None
+    else:
+        result = None
+
+    if result is None:
+        _apply_right = getattr(rhs, '_apply_from_right_to', None)
+        if _apply_right is not None:
+            try:
+                result = _apply_right(lhs, **options)
+            except NotImplementedError:
+                result = None
+
+    return None if result is None else (result,)
 
 
 @qapply_Mul.binary.register(Operator, KetBase)
