@@ -314,4 +314,4 @@ References
 ==========
 
 .. [1] https://en.wikipedia.org/wiki/Atwood_machine
-.. [2] https://www.aplusphysics.com/courses/honors/dynamics/Atwood.html
+.. [2] https://web.archive.org/web/20210101000000/https://www.aplusphysics.com/courses/honors/dynamics/Atwood.html

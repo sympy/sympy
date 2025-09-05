@@ -87,7 +87,7 @@ expressions. **These are not exact equivalents**, but rather should be
 taken as hints to get you going in the right direction. For more detail
 read the built-in documentation on :ref:`SymPy vectors <physics_vector>`,
 :ref:`SymPy mechanics <physics_mechanics>` and
-`PyDy <https://www.pydy.org/documentation.html>`_ .
+`PyDy <https://pydy.github.io/pydy/>`_ .
 
 In the tables below, it is assumed that you have executed the following
 commands in Python:
@@ -633,7 +633,7 @@ Numerical evaluation for dynamics can be achieved using PyDy. One can
 pass in the KanesMethod object to the System class along with the values
 for the constants, specifieds, initial conditions and time steps. The
 equations of motion can then be integrated. The plotting is achieved
-using matlplotlib. Here is an example from the `PyDy Documentation <https://www.pydy.org/documentation.html>`_
+using matlplotlib. Here is an example from the `PyDy Documentation <https://pydy.github.io/pydy/>`_
 on how it is done::
 
     from numpy import array, linspace, sin
@@ -654,7 +654,7 @@ on how it is done::
     plt.show()
 
 For information on all the things PyDy can accomplish refer to the
-`PyDy Documentation <https://www.pydy.org/documentation.html>`_.
+`PyDy Documentation <https://pydy.github.io/pydy/>`_.
 
 The tools in the PyDy workflow are :
 
@@ -709,6 +709,6 @@ Documentation <physics_vector>`
 :ref:`SymPy Mechanics
 Documentation <physics_mechanics>`
 
-`PyDy Documentation <https://www.pydy.org/documentation.html>`_
+`PyDy Documentation <https://pydy.github.io/pydy/>`_
 
 `MultiBody Dynamics with Python <https://www.youtube.com/watch?v=mdo2NYtA-xY>`_

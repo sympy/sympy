@@ -71,7 +71,7 @@ The following lists the processing tools:
     modified fork of numpydoc, which is included in the SymPy source code.)
   * ``sphinx_math_dollar``: Allows math to be delimited with dollar signs
     instead of reStructuredText directives (e.g., ``$a^2$`` instead of
-    ``:math:`a^2```). See https://www.sympy.org/sphinx-math-dollar/ for more info.
+    ``:math:`a^2```). See https://www.sympy.org//sphinx-math-dollar/ for more info.
   * ``matplotlib.sphinxext.plot_directive``: Provides directives for included
     matplotlib generated figures in reStructuredText. See
     https://matplotlib.org/devel/plot_directive.html for more info.
@@ -90,7 +90,7 @@ Types of Documentation
 
 There are four main locations where SymPy’s documentation can be found:
 
-**SymPy Website** https://www.sympy.org/
+**SymPy Website** https://www.sympy.org//
 
 The SymPy website’s primary function is to advertise the software to users and
 developers. It also serves as an initial location to point viewers to other
