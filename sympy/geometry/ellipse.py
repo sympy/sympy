@@ -772,7 +772,7 @@ class Ellipse(GeometrySet):
                 return False
             try:
                 inside = o.encloses_point(self.center)
-            except Exception:
+            except (GeometryError, TypeError):
                 inside = False
             return inside or tangent_count >= 2
         elif isinstance(o, (LinearEntity3D, Point3D)):
