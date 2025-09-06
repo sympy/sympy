@@ -856,11 +856,11 @@ class Mul(Expr, AssocOp):
         if coeff.is_Number:
             if not rational or coeff.is_Rational:
                 if len(args) == 1:
-                    return coeff, args[0]
+                    return coeff, args[0] # type: ignore
                 else:
-                    return coeff, self._new_rawargs(*args)
+                    return coeff, self._new_rawargs(*args) # type: ignore
             elif coeff.is_extended_negative:
-                return S.NegativeOne, self._new_rawargs(*((-coeff,) + args))
+                return S.NegativeOne, self._new_rawargs(*((-coeff,) + args)) # type: ignore
         return S.One, self
 
     def as_real_imag(self, deep=True, **hints):

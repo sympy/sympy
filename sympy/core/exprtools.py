@@ -280,7 +280,7 @@ def decompose_power_rat(expr: Expr) -> tuple[Expr, Rational]:
     if not exp.is_Rational:
         base, exp_i = decompose_power(expr)
         exp = Integer(exp_i)
-    return base, exp
+    return base, exp # type: ignore
 
 
 class Factors:
