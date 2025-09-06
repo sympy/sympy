@@ -1,4 +1,29 @@
-"""A sliding window tranform to process Mul-like expressions."""
+"""
+A sliding window transform algorithm for processing multiplication expressions.
+
+The SlidingTransform provides a systematic way to apply transformations to
+multiplication expressions (Mul) by processing their arguments in sequence using
+a sliding window approach. This is particularly useful in quantum mechanics where
+non-commutative operators need careful ordering and transformation.
+
+The algorithm operates in two main phases:
+
+1. **Unary Phase**: If a unary transformation function is provided, each argument
+   in the multiplication is processed individually. The transform can expand,
+   modify, or leave unchanged each factor. Commutative factors are collected
+   separately to maintain proper ordering.
+
+2. **Binary Phase**: If a binary transformation function is provided, adjacent
+   pairs of non-commutative arguments are processed in sequence. The algorithm
+   maintains a sliding window that moves through the expression, applying the
+   binary transform to consecutive pairs. When a transformation produces new
+   terms, the last term is fed back into the window for further processing,
+   creating a cascading effect.
+
+The transform handles both forward and reverse processing directions, automatically
+separates commutative from non-commutative terms, and efficiently reconstructs
+the final multiplication expression while preserving mathematical properties.
+"""
 
 from itertools import tee
 
@@ -25,6 +50,64 @@ def _split_cnc(seq):
 class SlidingTransform(object):
 
     def __init__(self, unary=None, binary=None, reverse=False, from_args=True):
+        """
+        Initialize a SlidingTransform instance.
+
+        Parameters
+        ==========
+
+        unary : callable, optional
+            A function that transforms individual factors in the multiplication.
+            Should accept a single argument (the factor) and optional keyword
+            arguments, returning either None (no transformation), a tuple of
+            transformed factors, or (S.Zero,) to indicate the entire expression
+            should be zero. Default is None (no unary transformations).
+
+        binary : callable, optional
+            A function that transforms pairs of adjacent non-commutative factors.
+            Should accept two arguments (lhs, rhs) and optional keyword arguments,
+            returning either None (no transformation) or a tuple of transformed
+            factors. When transformation occurs, the last factor is fed back into
+            the sliding window for further processing. Default is None (no binary
+            transformations).
+
+        reverse : bool, optional
+            If True, the binary transformation phase processes factors from right
+            to left instead of left to right. This can be important when the order
+            of transformations matters for non-commutative operations. Default is
+            False (left-to-right processing).
+
+        from_args : bool, optional
+            Controls how the final non-commutative part is reconstructed. If True,
+            uses Mul._from_args to avoid triggering post-processors. If False,
+            creates a standard Mul which may apply additional simplifications.
+            Default is True (avoid post-processors).
+
+        Examples
+        ========
+
+        Create a transform that applies a unary function to each factor:
+
+        >>> def expand_factor(factor):
+        ...     # Custom expansion logic
+        ...     return None  # or tuple of expanded factors
+        >>> transform = SlidingTransform(unary=expand_factor)
+
+        Create a transform that simplifies adjacent pairs:
+
+        >>> def simplify_pair(lhs, rhs):
+        ...     # Custom simplification logic
+        ...     return None  # or tuple of simplified factors  
+        >>> transform = SlidingTransform(binary=simplify_pair)
+
+        Create a transform with both unary and binary phases:
+
+        >>> transform = SlidingTransform(
+        ...     unary=expand_factor,
+        ...     binary=simplify_pair,
+        ...     reverse=True
+        ... )
+        """
         self._unary = unary
         self._binary = binary
         self._reverse = reverse
@@ -47,6 +130,31 @@ class SlidingTransform(object):
         return self._from_args
 
     def __call__(self, expr, **options):
+        """Apply the sliding transform to a multiplication expression.
+
+        Parameters
+        ==========
+
+        expr : Mul
+            The multiplication expression to transform.
+
+        **options
+            Additional keyword arguments passed to the unary and binary
+            transformation functions.
+
+        Returns
+        =======
+
+        Expr
+            The transformed expression after applying unary and binary
+            transformations in sequence.
+
+        Raises
+        ======
+
+        TypeError
+            If expr is not a Mul instance.
+        """
         debug(f"SlidingTransform(): {expr} {self.reverse} {self.from_args}")
         if not isinstance(expr, Mul):
             raise TypeError('The SlidingTransform only works on Mul instances.')
