@@ -19,8 +19,10 @@ from .kind import KindDispatcher
 from .traversal import bottom_up
 from sympy.utilities.iterables import sift
 
+
 if TYPE_CHECKING:
     from .numbers import Number
+
 
 # internal marker to indicate:
 #   "there are still non-commutative objects -- don't forget to process them"
@@ -845,8 +847,10 @@ class Mul(Expr, AssocOp):
 
     @overload
     def as_coeff_Mul(self, rational: Literal[True]) -> tuple['Rational', Expr]: ...
+
     @overload
     def as_coeff_Mul(self, rational: bool = False) -> tuple['Number', Expr]: ...
+
     def as_coeff_Mul(self, rational=False) -> tuple['Number', Expr]:
         """
         Efficiently extract the coefficient of a product.

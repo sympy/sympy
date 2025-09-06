@@ -3586,8 +3586,10 @@ class Expr(Basic, EvalfMixin):
 
     @overload
     def as_coeff_Mul(self, rational: Literal[True]) -> tuple['Rational', Expr]: ...
+
     @overload
     def as_coeff_Mul(self, rational: bool = False) -> tuple['Number', Expr]: ...
+
     def as_coeff_Mul(self, rational: bool = False) -> tuple['Number', Expr]:
         """Efficiently extract the coefficient of a product."""
         return S.One, self
