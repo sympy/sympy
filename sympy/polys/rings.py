@@ -6,7 +6,7 @@ from typing import Generic, overload, Callable, Iterable, TYPE_CHECKING, Mapping
 
 from operator import add, mul, lt, le, gt, ge
 from functools import reduce
-from types import GeneratorType
+from types import GeneratorType, NotImplementedType
 
 from sympy.core.cache import cacheit
 from sympy.core.expr import Expr
@@ -766,7 +766,15 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
             )
         return expr_from_dict(self.as_expr_dict(), *symbols)
 
-    def __add__(self, other: PolyElement[Er] | Er | int) -> PolyElement[Er]:
+    @overload
+    def __add__(self, other: PolyElement[Er] | Er | int, /) -> PolyElement[Er]: ...
+
+    @overload
+    def __add__(self, other: PolyElement[PolyElement[Er]], /) -> PolyElement[PolyElement[Er]]: ...
+
+    def __add__(
+        self, other: PolyElement[Er] | Er | int | PolyElement[PolyElement[Er]], /
+    ) -> PolyElement[Er] | PolyElement[PolyElement[Er]]:
         """Add two polynomials.
 
         Examples
@@ -780,25 +788,24 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
         2*x**2 + 2*y**2
 
         """
-        if not other:
-            return self.copy()
+        if self.ring.is_element(other):
+            return self._add(other)
+        res = self._try_add_ground(other)
+        if res is not NotImplemented:
+            return res
+        if isinstance(other, PolyElement):
+            return other._try_add_ground(self)
+        return NotImplemented
 
+    def __radd__(self, other: Er | int) -> PolyElement[Er]:
+        return self._try_add_ground(other)
+
+    def _try_add_ground(self, other: object) -> PolyElement[Er] | NotImplementedType:
         ring = self.ring
 
-        if isinstance(other, PolyElement):
-            if other.ring == ring:
-                return self._add(other)
-            elif (
-                isinstance(ring.domain, PolynomialRing) and ring.domain.ring == other.ring
-            ):
-                pass
-            elif (
-                isinstance(other.ring.domain, PolynomialRing)
-                and other.ring.domain.ring == ring
-            ):
-                return other.__radd__(self)
-            else:
-                return NotImplemented
+        domain = ring.domain
+        if domain.of_type(other):
+            return self._add_ground(other)
 
         try:
             cp2 = ring.domain_new(other)
@@ -807,14 +814,6 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
         else:
             return self._add_ground(cp2)
 
-    def __radd__(self, other: PolyElement[Er] | Er | int) -> PolyElement[Er]:
-        ring = self.ring
-        try:
-            other = ring.domain_new(other)
-        except CoercionFailed:
-            return NotImplemented
-        else:
-            return self._add_ground(other)
 
     def __sub__(self, other: PolyElement[Er] | Er | int) -> PolyElement[Er]:
         """Subtract polynomial p2 from p1.
