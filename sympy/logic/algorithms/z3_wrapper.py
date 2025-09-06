@@ -17,9 +17,9 @@ from typing import Callable
 
 # Define supported predicates as a constant set
 supported_predicates = {
-    Q.gt, Q.lt, Q.ge, Q.le, Q.ne, Q.eq, Q.positive, Q.negative, 
-    Q.extended_negative, Q.extended_positive, Q.zero, Q.nonzero, 
-    Q.nonnegative, Q.nonpositive, Q.extended_nonzero, 
+    Q.gt, Q.lt, Q.ge, Q.le, Q.ne, Q.eq, Q.positive, Q.negative,
+    Q.extended_negative, Q.extended_positive, Q.zero, Q.nonzero,
+    Q.nonnegative, Q.nonpositive, Q.extended_nonzero,
     Q.extended_nonnegative, Q.extended_nonpositive
 }
 
@@ -27,33 +27,9 @@ def is_supported_predicate(pred):
     if not isinstance(pred, AppliedPredicate):
         return False
     
-    if pred.function in supported_predicates:
-        return True
+    return pred.function in supported_predicates
 
-    return False
-
-# def z3_satisfiable(expr, all_models=False):
-#     if not isinstance(expr, EncodedCNF):
-#         exprs = EncodedCNF()
-#         exprs.add_prop(expr)
-#         expr = exprs
-
-#     z3 = import_module("z3")
-#     if z3 is None:
-#         raise ImportError("z3 is not installed")
-
-#     s = encoded_cnf_to_z3_solver(expr, z3)
-
-#     res = str(s.check())
-#     if res == "unsat":
-#         return False
-#     elif res == "sat":
-#         return z3_model_to_sympy_model(s.model(), expr)
-#     else:
-#         return None
-    
 def z3_satisfiable(expr, all_models=False):
-
     if not isinstance(expr, EncodedCNF):
         exprs = EncodedCNF()
         exprs.add_prop(expr)
@@ -70,7 +46,7 @@ def z3_satisfiable(expr, all_models=False):
         return False
     elif res == "sat":
         model = z3_model_to_sympy_model(s.model(), expr)
-        
+
         has_theory_preds = any(is_supported_predicate(pred) for pred in expr.encoding.keys())
 
         if has_theory_preds:
@@ -95,9 +71,8 @@ def z3_model_to_sympy_model(z3_model, enc_cnf):
                 result[rev_enc[var_id]] = bool(z3_model[var])
     return result
 
-
-"""Converts a single CNF clause to SMT-LIB assertion format."""
 def clause_to_assertion(clause):
+    """Converts a single CNF clause to SMT-LIB assertion format."""
     clause_strings = [f"d{abs(lit)}" if lit > 0 else f"(not d{abs(lit)})" for lit in clause]
     return "(assert (or " + " ".join(clause_strings) + "))"
 
@@ -127,7 +102,7 @@ def collect_all_uninterpreted_functions(enc_cnf):
     uf_table = {}
     
     for pred, enc in enc_cnf.encoding.items():
-        if not is_supported_predicate(pred):
+        if not isinstance(pred, AppliedPredicate) or pred.function not in supported_predicates:
             continue
             
         pred_ufs = find_uninterpreted_functions(pred)
