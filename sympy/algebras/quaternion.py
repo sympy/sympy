@@ -697,6 +697,19 @@ class Quaternion(Expr):
 
         return Quaternion(a, b, c, d)
 
+    from sympy.core.expr import Expr
+
+def cosine_angle(self, other: "Quaternion") -> Expr:
+    """Returns the cosine of the angle between self and another quaternion.
+    Given two quaternions, q₁ (self) and q₂ (other), the cosine of the angle between them is defined as:
+        cos(θ) = (q₁ · q₂) / (||q₁|| * ||q₂||)
+    where the dot product is computed as:
+        q₁ · q₂ = a₁*a₂ + b₁*b₂ + c₁*c₂ + d₁*d₂
+    """
+    dot = self.a * other.a + self.b * other.b + self.c * other.c + self.d * other.d
+    return dot / (self.norm().sqrt() * other.norm().sqrt())
+
+
     def __add__(self, other: SExpr | Quaternion) -> Quaternion:
         return self.add(other)
 
