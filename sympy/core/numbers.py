@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import overload
+from typing import overload, Literal
 
 import numbers
 import decimal
@@ -1754,6 +1754,12 @@ class Rational(Number):
                 return self, S.One
             return -self, S.NegativeOne
         return S.One, self
+
+    @overload
+    def as_coeff_Mul(self, rational: Literal[True]) -> tuple[Rational, Expr]: ...
+
+    @overload
+    def as_coeff_Mul(self, rational: bool = False) -> tuple["Number", Expr]: ...
 
     def as_coeff_Mul(self, rational=False):
         """Efficiently extract the coefficient of a product."""
