@@ -31,12 +31,6 @@ commutators, and other quantum constructs while maintaining symbolic exactness.
 
 This system is also extensible so developers can add handlers for new operators
 and states through the multiple dispatch system.
-
-TODO:
-
-- Finish slidingtransform tests
-- Add extra type handlers to get rid of warnings in qapply
-- Optimize _apply_operator methods
 """
 
 from sympy.concrete import Sum
@@ -121,18 +115,6 @@ def _flatten_mul(f):
 
     return g
 
-
-#-----------------------------------------------------------------------------
-# Main code
-#-----------------------------------------------------------------------------
-
-# Level 0: int, float, complex
-# Level 1: Expr
-# Level 2: Mul, Add, Pow, Abs
-# Level 3: Sum, Integral
-# Level 3: Bra, Ket, Operator, Dagger
-# Level 4: InnerProduct, OuterProduct
-# Level 5: TensorProduct, Density
 
 #-----------------------------------------------------------------------------
 # _qapply_unary
@@ -401,49 +383,65 @@ def _qapply_mul_binary_bra_op(lhs, rhs, **options):
 @qapply_Mul.binary.register(Sum, Add)
 def _qapply_mul_binary_sum_add(lhs, rhs, **options):
     """Apply sum to add combination."""
+    # Require that both are OperatorKind, BraKind, KetKind, or UndefinedKind
     if lhs.kind != NumberKind and rhs.kind != NumberKind:
-        # Implementation needed
-        pass
+        terms = (qapply(lhs.function*term, **options) for term in rhs.args)
+        return Sum(Add(*terms), *lhs.limits)
 
 
 @qapply_Mul.binary.register(Add, Sum)
 def _qapply_mul_binary_add_sum(lhs, rhs, **options):
     """Apply add to sum combination."""
+    # Require that both are OperatorKind, BraKind, KetKind, or UndefinedKind
     if lhs.kind != NumberKind and rhs.kind != NumberKind:
-        # Implementation needed
-        pass
+        terms = (qapply(term*rhs.function, **options) for term in lhs.args)
+        return Sum(Add(*terms), *rhs.limits)
 
 
 @qapply_Mul.binary.register(Integral, Add)
 def _qapply_mul_binary_integral_add(lhs, rhs, **options):
     """Apply sum to add combination."""
+    # Require that both are OperatorKind, BraKind, KetKind, or UndefinedKind
     if lhs.kind != NumberKind and rhs.kind != NumberKind:
-        # Implementation needed
-        pass
+        terms = (qapply(lhs.function*term, **options) for term in rhs.args)
+        return Integral(Add(*terms), *lhs.limits)
 
 
 @qapply_Mul.binary.register(Add, Integral)
 def _qapply_mul_binary_add_integral(lhs, rhs, **options):
     """Apply add to sum combination."""
+    # Require that both are OperatorKind, BraKind, KetKind, or UndefinedKind
     if lhs.kind != NumberKind and rhs.kind != NumberKind:
-        # Implementation needed
-        pass
+        terms = (qapply(term*rhs.function, **options) for term in lhs.args)
+        return Integral(Add(*terms), *rhs.limits)
 
 
 @qapply_Mul.binary.register(Sum, Integral)
 def _qapply_mul_binary_sum_integral(lhs, rhs, **options):
     """Apply sum to integral combination."""
+    # Require that both are OperatorKind, BraKind, KetKind, or UndefinedKind
     if lhs.kind != NumberKind and rhs.kind != NumberKind:
-        # Implementation needed
-        pass
+        return Sum(
+            Integral(
+                qapply(lhs.function*rhs.function, **options),
+                *rhs.limits
+            ),
+            *lhs.limits
+        )
 
 
 @qapply_Mul.binary.register(Integral, Sum)
 def _qapply_mul_binary_integral_sum(lhs, rhs, **options):
     """Apply integral to sum combination."""
+    # Require that both are OperatorKind, BraKind, KetKind, or UndefinedKind
     if lhs.kind != NumberKind and rhs.kind != NumberKind:
-        # Implementation needed
-        pass
+        return Integral(
+            Sum(
+                qapply(lhs.function*rhs.function, **options),
+                *rhs.limits
+            ),
+            *lhs.limits
+        )
 
 
 @qapply_Mul.binary.register(Add, Expr, on_ambiguity=ambiguity_register_error_ignore_dup)
