@@ -860,7 +860,7 @@ class Mul(Expr, AssocOp):
                 else:
                     return coeff, self._new_rawargs(*args) # type: ignore
             elif coeff.is_extended_negative:
-                return S.NegativeOne, self._new_rawargs(*((-coeff,) + args)) # type: ignore
+                return S.NegativeOne, self._new_rawargs(*((-coeff,) + args))
         return S.One, self
 
     def as_real_imag(self, deep=True, **hints):
