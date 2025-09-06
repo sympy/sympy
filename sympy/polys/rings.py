@@ -6,7 +6,7 @@ from typing import Generic, overload, Callable, Iterable, TYPE_CHECKING, Mapping
 
 from operator import add, mul, lt, le, gt, ge
 from functools import reduce
-from types import GeneratorType, NotImplementedType
+from types import GeneratorType
 
 from sympy.core.cache import cacheit
 from sympy.core.expr import Expr
@@ -49,6 +49,7 @@ from sympy.utilities.magic import pollute
 if TYPE_CHECKING:
     from typing import TypeIs
     from sympy.polys.fields import FracField
+    from types import NotImplementedType
 
 
 Mon = tuple[int, ...]
