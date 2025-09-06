@@ -8,6 +8,7 @@ Todo:
 * Implement _represent_ZGate in OracleGate
 """
 
+from sympy.core.add import Add
 from sympy.core.numbers import pi
 from sympy.core.sympify import sympify
 from sympy.core.basic import Atom
@@ -257,8 +258,11 @@ class WGate(Gate):
         # state and phi is the superposition of basis states (see function
         # create_computational_basis above)
         basis_states = superposition_basis(self.nqubits)
-        change_to_basis = (2/sqrt(2**self.nqubits))*basis_states
-        return change_to_basis - qubits
+        terms = []
+        for term in basis_states.args:
+            terms.append(2/sqrt(2**self.nqubits)*term)
+        terms.append(-qubits)
+        return Add(*terms)
 
 
 def grover_iteration(qstate, oracle):
