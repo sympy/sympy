@@ -86,12 +86,6 @@ def test_issue_4891():
 
 
 @XFAIL
-@slow
-def test_issue_1796a():
-    assert not integrate(exp(2*b*x)*exp(-a*x**2), x).has(Integral)
-
-
-@XFAIL
 def test_issue_4895b():
     assert not integrate(exp(2*b*x)*exp(-a*x**2), (x, -oo, 0)).has(Integral)
 
@@ -175,12 +169,6 @@ def test_issue_14709a():
     i = integrate(x*acos(1 - 2*x/h), (x, 0, h))
     assert not i.has(Integral)
     # assert i == 5*h**2*pi/16
-
-
-@slow
-@XFAIL
-def test_issue_14398():
-    assert not integrate(exp(x**2)*cos(x), x).has(Integral)
 
 
 @XFAIL

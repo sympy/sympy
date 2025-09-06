@@ -1,5 +1,8 @@
 """Configuration utilities for polynomial manipulation algorithms. """
 
+from __future__ import annotations
+
+from typing import Literal, overload
 
 from contextlib import contextmanager
 
@@ -43,8 +46,32 @@ def setup(key, value=None):
     else:
         _current_config[key] = _default_config[key]
 
+@overload
+def query(key: Literal['USE_COLLINS_RESULTANT']) -> bool | None: ...
+@overload
+def query(key: Literal['USE_SIMPLIFY_GCD']) -> bool | None: ...
+@overload
+def query(key: Literal['USE_HEU_GCD']) -> bool | None: ...
+@overload
+def query(key: Literal['USE_IRREDUCIBLE_IN_FACTOR']) -> bool | None: ...
+@overload
+def query(key: Literal['USE_CYCLOTOMIC_FACTOR']) -> bool | None: ...
+@overload
+def query(key: Literal['EEZ_RESTART_IF_NEEDED']) -> bool | None: ...
+@overload
+def query(key: Literal['EEZ_NUMBER_OF_CONFIGS']) -> int | None: ...
+@overload
+def query(key: Literal['EEZ_NUMBER_OF_TRIES']) -> int | None: ...
+@overload
+def query(key: Literal['EEZ_MODULUS_STEP']) -> int | None: ...
+@overload
+def query(key: Literal['GF_IRRED_METHOD']) -> str | None: ...
+@overload
+def query(key: Literal['GF_FACTOR_METHOD']) -> str | None: ...
+@overload
+def query(key: Literal['GROEBNER']) -> str | None: ...
 
-def query(key):
+def query(key: str) -> bool | int | str | None:
     """Ask for a value of the given configuration item. """
     return _current_config.get(key.upper(), None)
 

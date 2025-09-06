@@ -508,8 +508,8 @@ def dup_cyclotomic_p(f, K, irreducible=False):
     for i in range(n - 1, -1, -2):
         h.insert(0, f[i])
 
-    g = dup_sqr(dup_strip(g), K)
-    h = dup_sqr(dup_strip(h), K)
+    g = dup_sqr(dup_strip(g, K), K)
+    h = dup_sqr(dup_strip(h, K), K)
 
     F = dup_sub(g, dup_lshift(h, 1, K), K)
 
@@ -1525,7 +1525,7 @@ def dup_factor_list_include(f, K):
     coeff, factors = dup_factor_list(f, K)
 
     if not factors:
-        return [(dup_strip([coeff]), 1)]
+        return [(dup_strip([coeff], K), 1)]
     else:
         g = dup_mul_ground(factors[0][0], coeff, K)
         return [(g, factors[0][1])] + factors[1:]
@@ -1616,7 +1616,7 @@ def dmp_factor_list_include(f, u, K):
     coeff, factors = dmp_factor_list(f, u, K)
 
     if not factors:
-        return [(dmp_ground(coeff, u), 1)]
+        return [(dmp_ground(coeff, u, K), 1)]
     else:
         g = dmp_mul_ground(factors[0][0], coeff, u, K)
         return [(g, factors[0][1])] + factors[1:]

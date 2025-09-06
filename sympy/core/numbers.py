@@ -32,7 +32,7 @@ from mpmath.libmp.libmpf import (
     finf as _mpf_inf, fninf as _mpf_ninf,
     fnan as _mpf_nan, fzero, _normalize as mpf_normalize,
     prec_to_dps, dps_to_prec)
-from sympy.utilities.misc import debug
+from sympy.utilities.misc import debug, as_int
 from sympy.utilities.exceptions import sympy_deprecation_warning
 from .parameters import global_parameters
 
@@ -1691,6 +1691,9 @@ class Rational(Number):
     def __hash__(self):
         return super().__hash__()
 
+    def __format__(self, format_spec):
+        return format(fractions.Fraction(self.p, self.q), format_spec)
+
     def factors(self, limit=None, use_trial=True, use_rho=False,
                 use_pm1=False, verbose=False, visual=False):
         """A wrapper to factorint which return factors of self that are
@@ -1955,6 +1958,18 @@ class Integer(Rational):
                 return Integer(other.p % self.p)
             return Rational.__rmod__(self, other)
         return Rational.__rmod__(self, other)
+
+    def __pow__(self, other, mod=None):
+        if mod is not None:
+            try:
+                other_int = as_int(other)
+                mod_int = as_int(mod)
+            except ValueError:
+                pass
+            else:
+                return Integer(pow(self.p, other_int, mod_int))
+
+        return super().__pow__(other, mod)
 
     def __eq__(self, other):
         if isinstance(other, int):

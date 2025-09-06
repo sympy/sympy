@@ -46,6 +46,7 @@ from sympy.tensor.indexed import Indexed
 from sympy.physics.units import meter
 
 import pytest
+import sys
 from sympy.testing.pytest import raises, XFAIL
 
 from sympy.abc import a, b, c, n, t, u, x, y, z
@@ -2340,7 +2341,10 @@ def test_21494():
 def test_Expr__eq__iterable_handling():
     assert x != range(3)
 
-
+@pytest.mark.skipif(
+        sys.version_info < (3, 12),
+        reason = "Format works for Python version >= 3.12"
+)
 def test_format():
     assert '{:1.2f}'.format(S.Zero) == '0.00'
     assert '{:+3.0f}'.format(S(3)) == ' +3'

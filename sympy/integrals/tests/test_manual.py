@@ -300,6 +300,79 @@ def test_manualintegrate_special():
     assert_is_integral_of(f, F)
     f, F = erfi(7*x)*exp(6*x), exp(6*x)*erfi(7*x)/6 - exp(-Rational(9,49))*erfi(7*x + Rational(3,7))/6
     assert_is_integral_of(f, F)
+    f = sin(2*x)*exp(-3*x**2)
+    F = -I*(sqrt(3)*sqrt(pi)*exp(-Rational(1,3))*erf(sqrt(3)*(6*x - 2*I)/6)/6 -
+        sqrt(3)*sqrt(pi)*exp(-Rational(1,3))*erf(sqrt(3)*(6*x + 2*I)/6)/6)/2
+    assert_is_integral_of(f, F)
+    f = cos(2*x)*exp(-3*x**2)
+    F = (sqrt(3)*sqrt(pi)*exp(-Rational(1,3))*erf(sqrt(3)*(6*x - 2*I)/6)/12 +
+        sqrt(3)*sqrt(pi)*exp(-Rational(1,3))*erf(sqrt(3)*(6*x + 2*I)/6)/12)
+    assert_is_integral_of(f, F)
+    f = sin(x)*erf(x)
+    F = (erf(x - I/2) + erf(x + I/2))*exp(-Rational(1,4))/2 - cos(x)*erf(x)
+    assert_is_integral_of(f, F)
+    f = cos(x)*erf(x)
+    F = I*(erf(x - I/2) - erf(x + I/2))*exp(-Rational(1,4))/2 + sin(x)*erf(x)
+    assert_is_integral_of(f, F)
+    f = sinh(-x)*erf(x)
+    F = (erf(x - Rational(1,2)) + erf(x + Rational(1,2)))*exp(Rational(1,4))/2 - cosh(x)*erf(x)
+    assert_is_integral_of(f, F)
+    f = -cosh(x/2)*erf(x)
+    F = (erf(x - Rational(1,4)) - erf(x + Rational(1,4)))*exp(Rational(1,16)) - 2*sinh(x/2)*erf(x)
+    assert_is_integral_of(f, F)
+    f = erf(x)*log(x)
+    F = (x*log(x) - x)*erf(x) + (log(x) - 1)*exp(-x**2)/sqrt(pi) - Ei(-x**2)/(2*sqrt(pi))
+    assert_is_integral_of(f, F)
+    f, F = exp(x)*cos(x)/x, Ei(x*(1 - I))/2 + Ei(x*(1 + I))/2
+    assert_is_integral_of(f, F)
+    f, F = exp(7*x)*sinh(16*x)/x, -Ei(-9*x)/2 + Ei(23*x)/2
+    assert_is_integral_of(f, F)
+
+
+@slow
+def test_manualintegrate_parts_special():
+    f = fresnelc(x)*log(x)
+    F = ((x*log(x) - x)*fresnelc(x) - (log(x) - 1)*sin(pi*x**2/2)/pi +
+        Si(pi*x**2/2)/(2*pi))
+    assert_is_integral_of(f, F)
+    f = fresnels(x)*log(x)
+    F = ((x*log(x) - x)*fresnels(x) + (log(x) - 1)*cos(pi*x**2/2)/pi -
+        Ci(pi*x**2/2)/(2*pi))
+    assert_is_integral_of(f, F)
+    f = Ci(x)*log(x)
+    F = (x*log(x) - x)*Ci(x) - (log(x) - 1)*sin(x) + Si(x)
+    assert_is_integral_of(f, F)
+    f = Si(x)*log(x)
+    F = (x*log(x) - x)*Si(x) + (log(x) - 1)*cos(x) - Ci(x)
+    assert_is_integral_of(f, F)
+    f = Chi(x)*log(x)
+    F = (x*log(x) - x)*Chi(x) - (log(x) - 1)*sinh(x) + Shi(x)
+    assert_is_integral_of(f, F)
+    f = Shi(x)*log(x)
+    F = (x*log(x) - x)*Shi(x) - (log(x) - 1)*cosh(x) + Chi(x)
+    assert_is_integral_of(f, F)
+    f = Ei(x)*log(x)
+    F = (x*log(x) - x)*Ei(x) - (log(x) - 1)*exp(x) + Ei(x)
+    assert_is_integral_of(f, F)
+    f = li(x)*log(x)
+    F = -x**2/2 + (x*log(x) - x)*li(x) + Ei(2*log(x))
+    assert_is_integral_of(f, F)
+    f = Ci(x)*Si(x)
+    F = (x*Ci(x)*Si(x) - sin(x)*Si(x) + cos(x)*Ci(x) +
+        Integral(sin(x)**2/x, x) - Integral(cos(x)**2/x, x))
+    assert_is_integral_of(f, F)
+    f = Chi(x)*Shi(x)
+    F = (x*Chi(x)*Shi(x) - sinh(x)*Shi(x) - cosh(x)*Chi(x) +
+        Integral(sinh(x)**2/x, x) + Integral(cosh(x)**2/x, x))
+    assert_is_integral_of(f, F)
+    f = Ei(x)*Si(x)
+    F = (x*Ei(x)*Si(x) - I*(-Ei(x*(1 - I)) + Ei(x*(1 + I)))/2 -
+        exp(x)*Si(x) + cos(x)*Ei (x) - Ei(x*(1 - I))/2 - Ei(x*(1 +
+            I))/2)
+    assert_is_integral_of(f, F)
+    f = Ei(x)*Shi(x)
+    F = x*Ei(x)*Shi(x) - exp(x)*Shi(x) - cosh(x)*Ei(x) + Ei(2*x)
+    assert_is_integral_of(f, F)
 
 
 def test_manualintegrate_derivative():

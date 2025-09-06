@@ -6,7 +6,7 @@ from typing import Any, Generic, TypeVar, Protocol, Callable, Iterable, TYPE_CHE
 from sympy.core.numbers import AlgebraicNumber
 from sympy.core import Basic, Expr, sympify
 from sympy.core.sorting import ordered
-from sympy.external.gmpy import GROUND_TYPES
+from sympy.external.gmpy import GROUND_TYPES, MPZ
 from sympy.polys.domains.domainelement import DomainElement
 from sympy.polys.orderings import lex, MonomialOrder
 from sympy.polys.polyerrors import UnificationFailed, CoercionFailed, DomainError
@@ -27,6 +27,7 @@ if TYPE_CHECKING:
     from sympy.polys.domains.realfield import RealField
     from sympy.polys.domains.complexfield import ComplexField
     from sympy.polys.domains.polynomialring import PolynomialRing
+    from sympy.polys.domains.powerseriesring import PowerSeriesRing
     from sympy.polys.domains.fractionfield import FractionField
     from sympy.polys.rings import PolyElement
     from sympy.polys.fields import FracElement
@@ -278,6 +279,7 @@ class Domain(Generic[Er]):
 
     """
 
+    # XXX: Should this be Callable[[int | MPZ], Er]?
     dtype: type[Er] | Callable[..., Er]
     """The type (class) of the elements of this :py:class:`~.Domain`:
 
@@ -492,6 +494,9 @@ class Domain(Generic[Er]):
     is_Composite: bool = False
     """Boolean flag indicating if the domain is a composite domain."""
 
+    is_RingExtension: bool = False
+    """Boolean flag indicating if the domain is a ring extension domain."""
+
     is_PID: bool = False
     """Boolean flag indicating if the domain is a `principal ideal domain`_.
 
@@ -538,7 +543,7 @@ class Domain(Generic[Er]):
         """Construct an element of ``self`` domain from ``args``. """
         return self.new(*args)
 
-    def normal(self, *args) -> Er:
+    def normal(self, *args: int | MPZ) -> Er:
         return self.dtype(*args)
 
     def convert_from(self, element: Es, base: Domain[Es]) -> Er:
@@ -1031,7 +1036,7 @@ class Domain(Generic[Er]):
         """Returns a ring associated with ``self``. """
         raise DomainError('there is no ring associated with %s' % self)
 
-    def get_field(self) -> Field[Ef]:
+    def get_field(self) -> Field:
         """Returns a field associated with ``self``. """
         raise DomainError('there is no field associated with %s' % self)
 
@@ -1050,6 +1055,20 @@ class Domain(Generic[Er]):
         """Returns a polynomial ring, i.e. `K[X]`. """
         from sympy.polys.domains.polynomialring import PolynomialRing
         return PolynomialRing(self, symbols, order)
+
+    def _power_series_ring(self, *symbols: str | Expr, prec: int = 6) -> PowerSeriesRing:
+        """Returns a univariate power series ring with specified precision, i.e. `K[[X], <X^prec>]`.
+
+        Notes
+        =====
+        This method is private at the moment because the PowerSeriesRing class
+        needs to be properly integrated into SymPy's domain system.
+
+        """
+        if len(symbols) != 1:
+            raise ValueError("Power series ring supports only univariate series.")
+        from sympy.polys.domains.powerseriesring import PowerSeriesRing
+        return PowerSeriesRing(self, symbols[0], prec)
 
     def frac_field(self, *symbols: str | Expr, order: str | MonomialOrder = lex) -> FractionField:
         """Returns a fraction field, i.e. `K(X)`. """

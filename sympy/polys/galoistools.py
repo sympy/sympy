@@ -1,15 +1,21 @@
-"""Dense univariate polynomials with coefficients in Galois fields. """
+"""Dense univariate polynomials with coefficients in Galois fields."""
+
+from __future__ import annotations
+
+from typing import Callable
 
 from math import ceil as _ceil, sqrt as _sqrt, prod
 
 from sympy.core.random import uniform, _randint
-from sympy.external.gmpy import SYMPY_INTS, MPZ, invert
+from sympy.external.gmpy import MPZ, invert
+from sympy.polys.domains.domain import Domain
+from sympy.polys.densebasic import dup
 from sympy.polys.polyconfig import query
 from sympy.polys.polyerrors import ExactQuotientFailed
-from sympy.polys.polyutils import _sort_factors
+from sympy.polys.polyutils import _sort_factors_single, _sort_factors_multiple
 
 
-def gf_crt(U, M, K=None):
+def gf_crt(U: list[MPZ], M: list[MPZ], K: Domain[MPZ]) -> MPZ:
     """
     Chinese Remainder Theorem.
 
@@ -49,12 +55,12 @@ def gf_crt(U, M, K=None):
     for u, m in zip(U, M):
         e = p // m
         s, _, _ = K.gcdex(e, m)
-        v += e*(u*s % m)
+        v += e * (u * s % m)
 
     return v % p
 
 
-def gf_crt1(M, K):
+def gf_crt1(M: list[MPZ], K: Domain[MPZ]) -> tuple[MPZ, list[MPZ], list[MPZ]]:
     """
     First part of the Chinese Remainder Theorem.
 
@@ -93,7 +99,8 @@ def gf_crt1(M, K):
     sympy.polys.galoistools.gf_crt2
 
     """
-    E, S = [], []
+    E: list[MPZ] = []
+    S: list[MPZ] = []
     p = prod(M, start=K.one)
 
     for m in M:
@@ -103,7 +110,9 @@ def gf_crt1(M, K):
     return p, E, S
 
 
-def gf_crt2(U, M, p, E, S, K):
+def gf_crt2(
+    U: list[MPZ], M: list[MPZ], p: MPZ, E: list[MPZ], S: list[MPZ], K: Domain[MPZ]
+) -> MPZ:
     """
     Second part of the Chinese Remainder Theorem.
 
@@ -135,12 +144,12 @@ def gf_crt2(U, M, p, E, S, K):
     v = K.zero
 
     for u, m, e, s in zip(U, M, E, S):
-        v += e*(u*s % m)
+        v += e * (u * s % m)
 
     return v % p
 
 
-def gf_int(a, p):
+def gf_int(a: MPZ, p: MPZ) -> MPZ:
     """
     Coerce ``a mod p`` to an integer in the range ``[-p/2, p/2]``.
 
@@ -161,7 +170,7 @@ def gf_int(a, p):
         return a - p
 
 
-def gf_degree(f):
+def gf_degree(f: dup[MPZ]) -> int:
     """
     Return the leading degree of ``f``.
 
@@ -179,7 +188,7 @@ def gf_degree(f):
     return len(f) - 1
 
 
-def gf_LC(f, K):
+def gf_LC(f: dup[MPZ], K: Domain[MPZ]) -> MPZ:
     """
     Return the leading coefficient of ``f``.
 
@@ -199,7 +208,7 @@ def gf_LC(f, K):
         return f[0]
 
 
-def gf_TC(f, K):
+def gf_TC(f: dup[MPZ], K: Domain[MPZ]) -> MPZ:
     """
     Return the trailing coefficient of ``f``.
 
@@ -219,7 +228,7 @@ def gf_TC(f, K):
         return f[-1]
 
 
-def gf_strip(f):
+def gf_strip(f: dup[MPZ]) -> dup[MPZ]:
     """
     Remove leading zeros from ``f``.
 
@@ -247,7 +256,7 @@ def gf_strip(f):
     return f[k:]
 
 
-def gf_trunc(f, p):
+def gf_trunc(f: dup[MPZ], p: MPZ) -> dup[MPZ]:
     """
     Reduce all coefficients modulo ``p``.
 
@@ -260,10 +269,10 @@ def gf_trunc(f, p):
     [2, 3, 3]
 
     """
-    return gf_strip([ a % p for a in f ])
+    return gf_strip([a % p for a in f])
 
 
-def gf_normal(f, p, K):
+def gf_normal(f: dup[MPZ], p: MPZ, K: Domain[MPZ]) -> dup[MPZ]:
     """
     Normalize all coefficients in ``K``.
 
@@ -280,7 +289,7 @@ def gf_normal(f, p, K):
     return gf_trunc(list(map(K, f)), p)
 
 
-def gf_from_dict(f, p, K):
+def gf_from_dict(f: dict[int, MPZ], p: MPZ, K: Domain[MPZ]) -> dup[MPZ]:
     """
     Create a ``GF(p)[x]`` polynomial from a dict.
 
@@ -294,21 +303,16 @@ def gf_from_dict(f, p, K):
     [4, 0, 0, 0, 0, 0, 3, 0, 0, 0, 4]
 
     """
-    n, h = max(f.keys()), []
+    n = max(f.keys())
+    h: dup[MPZ] = []
 
-    if isinstance(n, SYMPY_INTS):
-        for k in range(n, -1, -1):
-            h.append(f.get(k, K.zero) % p)
-    else:
-        (n,) = n
-
-        for k in range(n, -1, -1):
-            h.append(f.get((k,), K.zero) % p)
+    for k in range(n, -1, -1):
+        h.append(f.get(k, K.zero) % p)
 
     return gf_trunc(h, p)
 
 
-def gf_to_dict(f, p, symmetric=True):
+def gf_to_dict(f: dup[MPZ], p: MPZ, symmetric: bool = True) -> dict[int, MPZ]:
     """
     Convert a ``GF(p)[x]`` polynomial to a dict.
 
@@ -323,7 +327,8 @@ def gf_to_dict(f, p, symmetric=True):
     {0: 4, 4: 3, 10: 4}
 
     """
-    n, result = gf_degree(f), {}
+    n = gf_degree(f)
+    result: dict[int, MPZ] = {}
 
     for k in range(0, n + 1):
         if symmetric:
@@ -337,7 +342,7 @@ def gf_to_dict(f, p, symmetric=True):
     return result
 
 
-def gf_from_int_poly(f, p):
+def gf_from_int_poly(f: dup[MPZ], p: MPZ) -> dup[MPZ]:
     """
     Create a ``GF(p)[x]`` polynomial from ``Z[x]``.
 
@@ -353,7 +358,7 @@ def gf_from_int_poly(f, p):
     return gf_trunc(f, p)
 
 
-def gf_to_int_poly(f, p, symmetric=True):
+def gf_to_int_poly(f: dup[MPZ], p: MPZ, symmetric: bool = True) -> dup[MPZ]:
     """
     Convert a ``GF(p)[x]`` polynomial to ``Z[x]``.
 
@@ -370,12 +375,12 @@ def gf_to_int_poly(f, p, symmetric=True):
 
     """
     if symmetric:
-        return [ gf_int(c, p) for c in f ]
+        return [gf_int(c, p) for c in f]
     else:
         return f
 
 
-def gf_neg(f, p, K):
+def gf_neg(f: dup[MPZ], p: MPZ, K: Domain[MPZ]) -> dup[MPZ]:
     """
     Negate a polynomial in ``GF(p)[x]``.
 
@@ -389,10 +394,10 @@ def gf_neg(f, p, K):
     [2, 3, 4, 0]
 
     """
-    return [ -coeff % p for coeff in f ]
+    return [-coeff % p for coeff in f]
 
 
-def gf_add_ground(f, a, p, K):
+def gf_add_ground(f: dup[MPZ], a: MPZ, p: MPZ, K: Domain[MPZ]) -> dup[MPZ]:
     """
     Compute ``f + a`` where ``f`` in ``GF(p)[x]`` and ``a`` in ``GF(p)``.
 
@@ -420,7 +425,7 @@ def gf_add_ground(f, a, p, K):
         return [a]
 
 
-def gf_sub_ground(f, a, p, K):
+def gf_sub_ground(f: dup[MPZ], a: MPZ, p: MPZ, K: Domain[MPZ]) -> dup[MPZ]:
     """
     Compute ``f - a`` where ``f`` in ``GF(p)[x]`` and ``a`` in ``GF(p)``.
 
@@ -448,7 +453,7 @@ def gf_sub_ground(f, a, p, K):
         return [a]
 
 
-def gf_mul_ground(f, a, p, K):
+def gf_mul_ground(f: dup[MPZ], a: MPZ, p: MPZ, K: Domain[MPZ]) -> dup[MPZ]:
     """
     Compute ``f * a`` where ``f`` in ``GF(p)[x]`` and ``a`` in ``GF(p)``.
 
@@ -465,10 +470,10 @@ def gf_mul_ground(f, a, p, K):
     if not a:
         return []
     else:
-        return [ (a*b) % p for b in f ]
+        return [(a * b) % p for b in f]
 
 
-def gf_quo_ground(f, a, p, K):
+def gf_quo_ground(f: dup[MPZ], a: MPZ, p: MPZ, K: Domain[MPZ]) -> dup[MPZ]:
     """
     Compute ``f/a`` where ``f`` in ``GF(p)[x]`` and ``a`` in ``GF(p)``.
 
@@ -485,7 +490,7 @@ def gf_quo_ground(f, a, p, K):
     return gf_mul_ground(f, K.invert(a, p), p, K)
 
 
-def gf_add(f, g, p, K):
+def gf_add(f: dup[MPZ], g: dup[MPZ], p: MPZ, K: Domain[MPZ]) -> dup[MPZ]:
     """
     Add polynomials in ``GF(p)[x]``.
 
@@ -508,7 +513,7 @@ def gf_add(f, g, p, K):
     dg = gf_degree(g)
 
     if df == dg:
-        return gf_strip([ (a + b) % p for a, b in zip(f, g) ])
+        return gf_strip([(a + b) % p for a, b in zip(f, g)])
     else:
         k = abs(df - dg)
 
@@ -517,10 +522,10 @@ def gf_add(f, g, p, K):
         else:
             h, g = g[:k], g[k:]
 
-        return h + [ (a + b) % p for a, b in zip(f, g) ]
+        return h + [(a + b) % p for a, b in zip(f, g)]
 
 
-def gf_sub(f, g, p, K):
+def gf_sub(f: dup[MPZ], g: dup[MPZ], p: MPZ, K: Domain[MPZ]) -> dup[MPZ]:
     """
     Subtract polynomials in ``GF(p)[x]``.
 
@@ -543,7 +548,7 @@ def gf_sub(f, g, p, K):
     dg = gf_degree(g)
 
     if df == dg:
-        return gf_strip([ (a - b) % p for a, b in zip(f, g) ])
+        return gf_strip([(a - b) % p for a, b in zip(f, g)])
     else:
         k = abs(df - dg)
 
@@ -552,10 +557,10 @@ def gf_sub(f, g, p, K):
         else:
             h, g = gf_neg(g[:k], p, K), g[k:]
 
-        return h + [ (a - b) % p for a, b in zip(f, g) ]
+        return h + [(a - b) % p for a, b in zip(f, g)]
 
 
-def gf_mul(f, g, p, K):
+def gf_mul(f: dup[MPZ], g: dup[MPZ], p: MPZ, K: Domain[MPZ]) -> dup[MPZ]:
     """
     Multiply polynomials in ``GF(p)[x]``.
 
@@ -573,20 +578,20 @@ def gf_mul(f, g, p, K):
     dg = gf_degree(g)
 
     dh = df + dg
-    h = [0]*(dh + 1)
+    h = [K.zero] * (dh + 1)
 
     for i in range(0, dh + 1):
         coeff = K.zero
 
         for j in range(max(0, i - dg), min(i, df) + 1):
-            coeff += f[j]*g[i - j]
+            coeff += f[j] * g[i - j]
 
         h[i] = coeff % p
 
     return gf_strip(h)
 
 
-def gf_sqr(f, p, K):
+def gf_sqr(f: dup[MPZ], p: MPZ, K: Domain[MPZ]) -> dup[MPZ]:
     """
     Square polynomials in ``GF(p)[x]``.
 
@@ -602,8 +607,8 @@ def gf_sqr(f, p, K):
     """
     df = gf_degree(f)
 
-    dh = 2*df
-    h = [0]*(dh + 1)
+    dh = 2 * df
+    h = [K.zero] * (dh + 1)
 
     for i in range(0, dh + 1):
         coeff = K.zero
@@ -616,7 +621,7 @@ def gf_sqr(f, p, K):
         jmax = jmin + n // 2 - 1
 
         for j in range(jmin, jmax + 1):
-            coeff += f[j]*f[i - j]
+            coeff += f[j] * f[i - j]
 
         coeff += coeff
 
@@ -629,7 +634,9 @@ def gf_sqr(f, p, K):
     return gf_strip(h)
 
 
-def gf_add_mul(f, g, h, p, K):
+def gf_add_mul(
+    f: dup[MPZ], g: dup[MPZ], h: dup[MPZ], p: MPZ, K: Domain[MPZ]
+) -> dup[MPZ]:
     """
     Returns ``f + g*h`` where ``f``, ``g``, ``h`` in ``GF(p)[x]``.
 
@@ -644,7 +651,9 @@ def gf_add_mul(f, g, h, p, K):
     return gf_add(f, gf_mul(g, h, p, K), p, K)
 
 
-def gf_sub_mul(f, g, h, p, K):
+def gf_sub_mul(
+    f: dup[MPZ], g: dup[MPZ], h: dup[MPZ], p: MPZ, K: Domain[MPZ]
+) -> dup[MPZ]:
     """
     Compute ``f - g*h`` where ``f``, ``g``, ``h`` in ``GF(p)[x]``.
 
@@ -661,7 +670,11 @@ def gf_sub_mul(f, g, h, p, K):
     return gf_sub(f, gf_mul(g, h, p, K), p, K)
 
 
-def gf_expand(F, p, K):
+def gf_expand(
+    F: list[tuple[dup[MPZ], int]] | tuple[MPZ, list[tuple[dup[MPZ], int]]],
+    p: MPZ,
+    K: Domain[MPZ],
+) -> dup[MPZ]:
     """
     Expand results of :func:`~.factor` in ``GF(p)[x]``.
 
@@ -689,7 +702,9 @@ def gf_expand(F, p, K):
     return g
 
 
-def gf_div(f, g, p, K):
+def gf_div(
+    f: dup[MPZ], g: dup[MPZ], p: MPZ, K: Domain[MPZ]
+) -> tuple[dup[MPZ], dup[MPZ]]:
     """
     Division with remainder in ``GF(p)[x]``.
 
@@ -740,10 +755,10 @@ def gf_div(f, g, p, K):
 
         h[i] = coeff % p
 
-    return h[:dq + 1], gf_strip(h[dq + 1:])
+    return h[: dq + 1], gf_strip(h[dq + 1 :])
 
 
-def gf_rem(f, g, p, K):
+def gf_rem(f: dup[MPZ], g: dup[MPZ], p: MPZ, K: Domain[MPZ]) -> dup[MPZ]:
     """
     Compute polynomial remainder in ``GF(p)[x]``.
 
@@ -760,7 +775,7 @@ def gf_rem(f, g, p, K):
     return gf_div(f, g, p, K)[1]
 
 
-def gf_quo(f, g, p, K):
+def gf_quo(f: dup[MPZ], g: dup[MPZ], p: MPZ, K: Domain[MPZ]) -> dup[MPZ]:
     """
     Compute exact quotient in ``GF(p)[x]``.
 
@@ -796,10 +811,10 @@ def gf_quo(f, g, p, K):
 
         h[i] = (coeff * inv) % p
 
-    return h[:dq + 1]
+    return h[: dq + 1]
 
 
-def gf_exquo(f, g, p, K):
+def gf_exquo(f: dup[MPZ], g: dup[MPZ], p: MPZ, K: Domain[MPZ]) -> dup[MPZ]:
     """
     Compute polynomial quotient in ``GF(p)[x]``.
 
@@ -826,7 +841,7 @@ def gf_exquo(f, g, p, K):
         raise ExactQuotientFailed(f, g)
 
 
-def gf_lshift(f, n, K):
+def gf_lshift(f: dup[MPZ], n: MPZ, K: Domain[MPZ]) -> dup[MPZ]:
     """
     Efficiently multiply ``f`` by ``x**n``.
 
@@ -843,10 +858,10 @@ def gf_lshift(f, n, K):
     if not f:
         return f
     else:
-        return f + [K.zero]*n
+        return f + [K.zero] * n
 
 
-def gf_rshift(f, n, K):
+def gf_rshift(f: dup[MPZ], n: int, K: Domain[MPZ]) -> tuple[dup[MPZ], dup[MPZ]]:
     """
     Efficiently divide ``f`` by ``x**n``.
 
@@ -866,7 +881,7 @@ def gf_rshift(f, n, K):
         return f[:-n], f[-n:]
 
 
-def gf_pow(f, n, p, K):
+def gf_pow(f: dup[MPZ], n: int, p: MPZ, K: Domain[MPZ]) -> dup[MPZ]:
     """
     Compute ``f**n`` in ``GF(p)[x]`` using repeated squaring.
 
@@ -903,7 +918,8 @@ def gf_pow(f, n, p, K):
 
     return h
 
-def gf_frobenius_monomial_base(g, p, K):
+
+def gf_frobenius_monomial_base(g: dup[MPZ], p: MPZ, K: Domain[MPZ]) -> list[dup[MPZ]]:
     """
     return the list of ``x**(i*p) mod g in Z_p`` for ``i = 0, .., n - 1``
     where ``n = gf_degree(g)``
@@ -921,8 +937,8 @@ def gf_frobenius_monomial_base(g, p, K):
     n = gf_degree(g)
     if n == 0:
         return []
-    b = [0]*n
-    b[0] = [1]
+    b = [[K.zero]] * n
+    b[0] = [K.one]
     if p < n:
         for i in range(1, n):
             mon = gf_lshift(b[i - 1], p, K)
@@ -935,7 +951,10 @@ def gf_frobenius_monomial_base(g, p, K):
 
     return b
 
-def gf_frobenius_map(f, g, b, p, K):
+
+def gf_frobenius_map(
+    f: dup[MPZ], g: dup[MPZ], b: list[dup[MPZ]], p: MPZ, K: Domain[MPZ]
+) -> dup[MPZ]:
     """
     compute gf_pow_mod(f, p, g, p, K) using the Frobenius map
 
@@ -972,7 +991,10 @@ def gf_frobenius_map(f, g, b, p, K):
         sf = gf_add(sf, v, p, K)
     return sf
 
-def _gf_pow_pnm1d2(f, n, g, b, p, K):
+
+def _gf_pow_pnm1d2(
+    f: dup[MPZ], n: int, g: dup[MPZ], b: list[dup[MPZ]], p: MPZ, K: Domain[MPZ]
+) -> dup[MPZ]:
     """
     utility function for ``gf_edf_zassenhaus``
     Compute ``f**((p**n - 1) // 2)`` in ``GF(p)[x]/(g)``
@@ -986,10 +1008,13 @@ def _gf_pow_pnm1d2(f, n, g, b, p, K):
         r = gf_mul(r, h, p, K)
         r = gf_rem(r, g, p, K)
 
-    res = gf_pow_mod(r, (p - 1)//2, g, p, K)
+    res = gf_pow_mod(r, (p - 1) // 2, g, p, K)
     return res
 
-def gf_pow_mod(f, n, g, p, K):
+
+def gf_pow_mod(
+    f: dup[MPZ], n: MPZ | int, g: dup[MPZ], p: MPZ, K: Domain[MPZ]
+) -> dup[MPZ]:
     """
     Compute ``f**n`` in ``GF(p)[x]/(g)`` using repeated squaring.
 
@@ -1038,7 +1063,7 @@ def gf_pow_mod(f, n, g, p, K):
     return h
 
 
-def gf_gcd(f, g, p, K):
+def gf_gcd(f: dup[MPZ], g: dup[MPZ], p: MPZ, K: Domain[MPZ]) -> dup[MPZ]:
     """
     Euclidean Algorithm in ``GF(p)[x]``.
 
@@ -1058,7 +1083,7 @@ def gf_gcd(f, g, p, K):
     return gf_monic(f, p, K)[1]
 
 
-def gf_lcm(f, g, p, K):
+def gf_lcm(f: dup[MPZ], g: dup[MPZ], p: MPZ, K: Domain[MPZ]) -> dup[MPZ]:
     """
     Compute polynomial LCM in ``GF(p)[x]``.
 
@@ -1075,13 +1100,14 @@ def gf_lcm(f, g, p, K):
     if not f or not g:
         return []
 
-    h = gf_quo(gf_mul(f, g, p, K),
-               gf_gcd(f, g, p, K), p, K)
+    h = gf_quo(gf_mul(f, g, p, K), gf_gcd(f, g, p, K), p, K)
 
     return gf_monic(h, p, K)[1]
 
 
-def gf_cofactors(f, g, p, K):
+def gf_cofactors(
+    f: dup[MPZ], g: dup[MPZ], p: MPZ, K: Domain[MPZ]
+) -> tuple[dup[MPZ], dup[MPZ], dup[MPZ]]:
     """
     Compute polynomial GCD and cofactors in ``GF(p)[x]``.
 
@@ -1100,11 +1126,12 @@ def gf_cofactors(f, g, p, K):
 
     h = gf_gcd(f, g, p, K)
 
-    return (h, gf_quo(f, h, p, K),
-            gf_quo(g, h, p, K))
+    return (h, gf_quo(f, h, p, K), gf_quo(g, h, p, K))
 
 
-def gf_gcdex(f, g, p, K):
+def gf_gcdex(
+    f: dup[MPZ], g: dup[MPZ], p: MPZ, K: Domain[MPZ]
+) -> tuple[dup[MPZ], dup[MPZ], dup[MPZ]]:
     """
     Extended Euclidean Algorithm in ``GF(p)[x]``.
 
@@ -1148,8 +1175,10 @@ def gf_gcdex(f, g, p, K):
     if not g:
         return [K.invert(p0, p)], [], r0
 
-    s0, s1 = [K.invert(p0, p)], []
-    t0, t1 = [], [K.invert(p1, p)]
+    s0: dup[MPZ] = [K.invert(p0, p)]
+    s1: dup[MPZ] = []
+    t0: dup[MPZ] = []
+    t1: dup[MPZ] = [K.invert(p1, p)]
 
     while True:
         Q, R = gf_div(r0, r1, p, K)
@@ -1170,7 +1199,7 @@ def gf_gcdex(f, g, p, K):
     return s1, t1, r1
 
 
-def gf_monic(f, p, K):
+def gf_monic(f: dup[MPZ], p: MPZ, K: Domain[MPZ]) -> tuple[MPZ, dup[MPZ]]:
     """
     Compute LC and a monic polynomial in ``GF(p)[x]``.
 
@@ -1195,7 +1224,7 @@ def gf_monic(f, p, K):
             return lc, gf_quo_ground(f, lc, p, K)
 
 
-def gf_diff(f, p, K):
+def gf_diff(f: dup[MPZ], p: MPZ, K: Domain[MPZ]) -> dup[MPZ]:
     """
     Differentiate polynomial in ``GF(p)[x]``.
 
@@ -1211,7 +1240,7 @@ def gf_diff(f, p, K):
     """
     df = gf_degree(f)
 
-    h, n = [K.zero]*df, df
+    h, n = [K.zero] * df, df
 
     for coeff in f[:-1]:
         coeff *= K(n)
@@ -1225,7 +1254,7 @@ def gf_diff(f, p, K):
     return gf_strip(h)
 
 
-def gf_eval(f, a, p, K):
+def gf_eval(f: dup[MPZ], a: MPZ, p: MPZ, K: Domain[MPZ]) -> MPZ:
     """
     Evaluate ``f(a)`` in ``GF(p)`` using Horner scheme.
 
@@ -1249,7 +1278,7 @@ def gf_eval(f, a, p, K):
     return result
 
 
-def gf_multi_eval(f, A, p, K):
+def gf_multi_eval(f: dup[MPZ], A: list[MPZ], p: MPZ, K: Domain[MPZ]) -> list[MPZ]:
     """
     Evaluate ``f(a)`` for ``a`` in ``[a_1, ..., a_n]``.
 
@@ -1263,10 +1292,10 @@ def gf_multi_eval(f, A, p, K):
     [4, 4, 0, 2, 0]
 
     """
-    return [ gf_eval(f, a, p, K) for a in A ]
+    return [gf_eval(f, a, p, K) for a in A]
 
 
-def gf_compose(f, g, p, K):
+def gf_compose(f: dup[MPZ], g: dup[MPZ], p: MPZ, K: Domain[MPZ]) -> dup[MPZ]:
     """
     Compute polynomial composition ``f(g)`` in ``GF(p)[x]``.
 
@@ -1295,7 +1324,9 @@ def gf_compose(f, g, p, K):
     return h
 
 
-def gf_compose_mod(g, h, f, p, K):
+def gf_compose_mod(
+    g: dup[MPZ], h: dup[MPZ], f: dup[MPZ], p: MPZ, K: Domain[MPZ]
+) -> dup[MPZ]:
     """
     Compute polynomial composition ``g(h)`` in ``GF(p)[x]/(f)``.
 
@@ -1322,7 +1353,9 @@ def gf_compose_mod(g, h, f, p, K):
     return comp
 
 
-def gf_trace_map(a, b, c, n, f, p, K):
+def gf_trace_map(
+    a: dup[MPZ], b: dup[MPZ], c: dup[MPZ], n: int, f: dup[MPZ], p: MPZ, K: Domain[MPZ]
+) -> tuple[dup[MPZ], dup[MPZ]]:
     """
     Compute polynomial trace map in ``GF(p)[x]/(f)``.
 
@@ -1377,7 +1410,10 @@ def gf_trace_map(a, b, c, n, f, p, K):
 
     return gf_compose_mod(a, V, f, p, K), U
 
-def _gf_trace_map(f, n, g, b, p, K):
+
+def _gf_trace_map(
+    f: dup[MPZ], n: int, g: dup[MPZ], b: list[dup[MPZ]], p: MPZ, K: Domain[MPZ]
+) -> dup[MPZ]:
     """
     utility for ``gf_edf_shoup``
     """
@@ -1391,7 +1427,7 @@ def _gf_trace_map(f, n, g, b, p, K):
     return r
 
 
-def gf_random(n, p, K):
+def gf_random(n: int, p: MPZ, K: Domain[MPZ]) -> dup[MPZ]:
     """
     Generate a random polynomial in ``GF(p)[x]`` of degree ``n``.
 
@@ -1405,10 +1441,10 @@ def gf_random(n, p, K):
 
     """
     pi = int(p)
-    return [K.one] + [ K(int(uniform(0, pi))) for i in range(0, n) ]
+    return [K.one] + [K(int(uniform(0, pi))) for i in range(0, n)]
 
 
-def gf_irreducible(n, p, K):
+def gf_irreducible(n: int, p: MPZ, K: Domain[MPZ]) -> dup[MPZ]:
     """
     Generate random irreducible polynomial of degree ``n`` in ``GF(p)[x]``.
 
@@ -1427,7 +1463,7 @@ def gf_irreducible(n, p, K):
             return f
 
 
-def gf_irred_p_ben_or(f, p, K):
+def gf_irred_p_ben_or(f: dup[MPZ], p: MPZ, K: Domain[MPZ]) -> bool:
     """
     Ben-Or's polynomial irreducibility test over finite fields.
 
@@ -1452,7 +1488,7 @@ def gf_irred_p_ben_or(f, p, K):
     if n < 5:
         H = h = gf_pow_mod([K.one, K.zero], p, f, p, K)
 
-        for i in range(0, n//2):
+        for i in range(0, n // 2):
             g = gf_sub(h, [K.one, K.zero], p, K)
 
             if gf_gcd(f, g, p, K) == [K.one]:
@@ -1462,7 +1498,7 @@ def gf_irred_p_ben_or(f, p, K):
     else:
         b = gf_frobenius_monomial_base(f, p, K)
         H = h = gf_frobenius_map([K.one, K.zero], f, b, p, K)
-        for i in range(0, n//2):
+        for i in range(0, n // 2):
             g = gf_sub(h, [K.one, K.zero], p, K)
             if gf_gcd(f, g, p, K) == [K.one]:
                 h = gf_frobenius_map(h, f, b, p, K)
@@ -1472,7 +1508,7 @@ def gf_irred_p_ben_or(f, p, K):
     return True
 
 
-def gf_irred_p_rabin(f, p, K):
+def gf_irred_p_rabin(f: dup[MPZ], p: MPZ, K: Domain[MPZ]) -> bool:
     """
     Rabin's polynomial irreducibility test over finite fields.
 
@@ -1499,7 +1535,7 @@ def gf_irred_p_rabin(f, p, K):
 
     from sympy.ntheory import factorint
 
-    indices = { n//d for d in factorint(n) }
+    indices = {n // d for d in factorint(n)}
 
     b = gf_frobenius_monomial_base(f, p, K)
     h = b[1]
@@ -1515,13 +1551,14 @@ def gf_irred_p_rabin(f, p, K):
 
     return h == x
 
+
 _irred_methods = {
-    'ben-or': gf_irred_p_ben_or,
-    'rabin': gf_irred_p_rabin,
+    "ben-or": gf_irred_p_ben_or,
+    "rabin": gf_irred_p_rabin,
 }
 
 
-def gf_irreducible_p(f, p, K):
+def gf_irreducible_p(f: dup[MPZ], p: MPZ, K: Domain[MPZ]) -> bool:
     """
     Test irreducibility of a polynomial ``f`` in ``GF(p)[x]``.
 
@@ -1537,7 +1574,7 @@ def gf_irreducible_p(f, p, K):
     False
 
     """
-    method = query('GF_IRRED_METHOD')
+    method = query("GF_IRRED_METHOD")
 
     if method is not None:
         irred = _irred_methods[method](f, p, K)
@@ -1547,7 +1584,7 @@ def gf_irreducible_p(f, p, K):
     return irred
 
 
-def gf_sqf_p(f, p, K):
+def gf_sqf_p(f: dup[MPZ], p: MPZ, K: Domain[MPZ]) -> bool:
     """
     Return ``True`` if ``f`` is square-free in ``GF(p)[x]``.
 
@@ -1571,7 +1608,7 @@ def gf_sqf_p(f, p, K):
         return gf_gcd(f, gf_diff(f, p, K), p, K) == [K.one]
 
 
-def gf_sqf_part(f, p, K):
+def gf_sqf_part(f: dup[MPZ], p: MPZ, K: Domain[MPZ]) -> dup[MPZ]:
     """
     Return square-free part of a ``GF(p)[x]`` polynomial.
 
@@ -1595,7 +1632,9 @@ def gf_sqf_part(f, p, K):
     return g
 
 
-def gf_sqf_list(f, p, K, all=False):
+def gf_sqf_list(
+    f: dup[MPZ], p: MPZ, K: Domain[MPZ], all: bool = False
+) -> tuple[MPZ, list[tuple[dup[MPZ], int]]]:
     """
     Return the square-free decomposition of a ``GF(p)[x]`` polynomial.
 
@@ -1638,7 +1677,10 @@ def gf_sqf_list(f, p, K, all=False):
     .. [1] [Geddes92]_
 
     """
-    n, sqf, factors, r = 1, False, [], int(p)
+    n = 1
+    sqf = False
+    factors: list[tuple[dup[MPZ], int]] = []
+    r = int(p)
 
     lc, f = gf_monic(f, p, K)
 
@@ -1659,7 +1701,7 @@ def gf_sqf_list(f, p, K, all=False):
                 H = gf_quo(h, G, p, K)
 
                 if gf_degree(H) > 0:
-                    factors.append((H, i*n))
+                    factors.append((H, i * n))
 
                 g, h, i = gf_quo(g, G, p, K), G, i + 1
 
@@ -1672,9 +1714,9 @@ def gf_sqf_list(f, p, K, all=False):
             d = gf_degree(f) // r
 
             for i in range(0, d + 1):
-                f[i] = f[i*r]
+                f[i] = f[i * r]
 
-            f, n = f[:d + 1], n*r
+            f, n = f[: d + 1], n * r
         else:
             break
 
@@ -1684,7 +1726,7 @@ def gf_sqf_list(f, p, K, all=False):
     return lc, factors
 
 
-def gf_Qmatrix(f, p, K):
+def gf_Qmatrix(f: dup[MPZ], p: MPZ, K: Domain[MPZ]) -> list[list[MPZ]]:
     """
     Calculate Berlekamp's ``Q`` matrix.
 
@@ -1707,24 +1749,24 @@ def gf_Qmatrix(f, p, K):
     """
     n, r = gf_degree(f), int(p)
 
-    q = [K.one] + [K.zero]*(n - 1)
-    Q = [list(q)] + [[]]*(n - 1)
+    q = [K.one] + [K.zero] * (n - 1)
+    Q = [list(q)] + [[]] * (n - 1)
 
-    for i in range(1, (n - 1)*r + 1):
-        qq, c = [(-q[-1]*f[-1]) % p], q[-1]
+    for i in range(1, (n - 1) * r + 1):
+        qq, c = [(-q[-1] * f[-1]) % p], q[-1]
 
         for j in range(1, n):
-            qq.append((q[j - 1] - c*f[-j - 1]) % p)
+            qq.append((q[j - 1] - c * f[-j - 1]) % p)
 
         if not (i % r):
-            Q[i//r] = list(qq)
+            Q[i // r] = list(qq)
 
         q = qq
 
     return Q
 
 
-def gf_Qbasis(Q, p, K):
+def gf_Qbasis(Q: list[list[MPZ]], p: MPZ, K: Domain[MPZ]) -> list[list[MPZ]]:
     """
     Compute a basis of the kernel of ``Q``.
 
@@ -1741,7 +1783,7 @@ def gf_Qbasis(Q, p, K):
     [[1, 0]]
 
     """
-    Q, n = [ list(q) for q in Q ], len(Q)
+    Q, n = [list(q) for q in Q], len(Q)
 
     for k in range(0, n):
         Q[k][k] = (Q[k][k] - K.one) % p
@@ -1756,7 +1798,7 @@ def gf_Qbasis(Q, p, K):
         inv = K.invert(Q[k][i], p)
 
         for j in range(0, n):
-            Q[j][i] = (Q[j][i]*inv) % p
+            Q[j][i] = (Q[j][i] * inv) % p
 
         for j in range(0, n):
             t = Q[j][k]
@@ -1768,7 +1810,7 @@ def gf_Qbasis(Q, p, K):
                 q = Q[k][i]
 
                 for j in range(0, n):
-                    Q[j][i] = (Q[j][i] - Q[j][k]*q) % p
+                    Q[j][i] = (Q[j][i] - Q[j][k] * q) % p
 
     for i in range(0, n):
         for j in range(0, n):
@@ -1777,16 +1819,16 @@ def gf_Qbasis(Q, p, K):
             else:
                 Q[i][j] = (-Q[i][j]) % p
 
-    basis = []
+    basis: list[list[MPZ]] = []
 
-    for q in Q:
-        if any(q):
-            basis.append(q)
+    for qv in Q:
+        if any(qv):
+            basis.append(qv)
 
     return basis
 
 
-def gf_berlekamp(f, p, K):
+def gf_berlekamp(f: dup[MPZ], p: MPZ, K: Domain[MPZ]) -> list[dup[MPZ]]:
     """
     Factor a square-free ``f`` in ``GF(p)[x]`` for small ``p``.
 
@@ -1823,14 +1865,16 @@ def gf_berlekamp(f, p, K):
                     factors.extend([f, h])
 
                 if len(factors) == len(V):
-                    return _sort_factors(factors, multiple=False)
+                    return _sort_factors_single(factors)
 
                 s += K.one
 
-    return _sort_factors(factors, multiple=False)
+    return _sort_factors_single(factors)
 
 
-def gf_ddf_zassenhaus(f, p, K):
+def gf_ddf_zassenhaus(
+    f: dup[MPZ], p: MPZ, K: Domain[MPZ]
+) -> list[tuple[dup[MPZ], int]]:
     """
     Cantor-Zassenhaus: Deterministic Distinct Degree Factorization
 
@@ -1865,10 +1909,12 @@ def gf_ddf_zassenhaus(f, p, K):
     .. [2] [Geddes92]_
 
     """
-    i, g, factors = 1, [K.one, K.zero], []
+    i = 1
+    g = [K.one, K.zero]
+    factors: list[tuple[dup[MPZ], int]] = []
 
     b = gf_frobenius_monomial_base(f, p, K)
-    while 2*i <= gf_degree(f):
+    while 2 * i <= gf_degree(f):
         g = gf_frobenius_map(g, f, b, p, K)
         h = gf_gcd(f, gf_sub(g, [K.one, K.zero], p, K), p, K)
 
@@ -1887,7 +1933,7 @@ def gf_ddf_zassenhaus(f, p, K):
         return factors
 
 
-def gf_edf_zassenhaus(f, n, p, K):
+def gf_edf_zassenhaus(f: dup[MPZ], n: int, p: MPZ, K: Domain[MPZ]) -> list[dup[MPZ]]:
     """
     Cantor-Zassenhaus: Probabilistic Equal Degree Factorization
 
@@ -1945,13 +1991,14 @@ def gf_edf_zassenhaus(f, n, p, K):
             g = gf_gcd(f, gf_sub_ground(h, K.one, p, K), p, K)
 
         if g != [K.one] and g != f:
-            factors = gf_edf_zassenhaus(g, n, p, K) \
-                + gf_edf_zassenhaus(gf_quo(f, g, p, K), n, p, K)
+            factors = gf_edf_zassenhaus(g, n, p, K) + gf_edf_zassenhaus(
+                gf_quo(f, g, p, K), n, p, K
+            )
 
-    return _sort_factors(factors, multiple=False)
+    return _sort_factors_single(factors)
 
 
-def gf_ddf_shoup(f, p, K):
+def gf_ddf_shoup(f: dup[MPZ], p: MPZ, K: Domain[MPZ]) -> list[tuple[dup[MPZ], int]]:
     """
     Kaltofen-Shoup: Deterministic Distinct Degree Factorization
 
@@ -1984,23 +2031,23 @@ def gf_ddf_shoup(f, p, K):
 
     """
     n = gf_degree(f)
-    k = int(_ceil(_sqrt(n//2)))
+    k = int(_ceil(_sqrt(n // 2)))
     b = gf_frobenius_monomial_base(f, p, K)
     h = gf_frobenius_map([K.one, K.zero], f, b, p, K)
     # U[i] = x**(p**i)
-    U = [[K.one, K.zero], h] + [K.zero]*(k - 1)
+    U = [[K.one, K.zero], h] + [[K.zero]] * (k - 1)
 
     for i in range(2, k + 1):
-        U[i] = gf_frobenius_map(U[i-1], f, b, p, K)
+        U[i] = gf_frobenius_map(U[i - 1], f, b, p, K)
 
     h, U = U[k], U[:k]
     # V[i] = x**(p**(k*(i+1)))
-    V = [h] + [K.zero]*(k - 1)
+    V = [h] + [[K.zero]] * (k - 1)
 
     for i in range(1, k):
         V[i] = gf_compose_mod(V[i - 1], h, f, p, K)
 
-    factors = []
+    factors: list[tuple[dup[MPZ], int]] = []
 
     for i, v in enumerate(V):
         h, j = [K.one], k - 1
@@ -2018,7 +2065,7 @@ def gf_ddf_shoup(f, p, K):
             F = gf_gcd(g, h, p, K)
 
             if F != [K.one]:
-                factors.append((F, k*(i + 1) - j))
+                factors.append((F, k * (i + 1) - j))
 
             g, j = gf_quo(g, F, p, K), j - 1
 
@@ -2027,7 +2074,8 @@ def gf_ddf_shoup(f, p, K):
 
     return factors
 
-def gf_edf_shoup(f, n, p, K):
+
+def gf_edf_shoup(f: dup[MPZ], n: int, p: MPZ, K: Domain[MPZ]) -> list[dup[MPZ]]:
     """
     Gathen-Shoup: Probabilistic Equal Degree Factorization
 
@@ -2072,25 +2120,26 @@ def gf_edf_shoup(f, n, p, K):
         h1 = gf_gcd(f, H, p, K)
         h2 = gf_quo(f, h1, p, K)
 
-        factors = gf_edf_shoup(h1, n, p, K) \
-            + gf_edf_shoup(h2, n, p, K)
+        factors = gf_edf_shoup(h1, n, p, K) + gf_edf_shoup(h2, n, p, K)
     else:
         b = gf_frobenius_monomial_base(f, p, K)
         H = _gf_trace_map(r, n, f, b, p, K)
-        h = gf_pow_mod(H, (q - 1)//2, f, p, K)
+        h = gf_pow_mod(H, (q - 1) // 2, f, p, K)
 
         h1 = gf_gcd(f, h, p, K)
         h2 = gf_gcd(f, gf_sub_ground(h, K.one, p, K), p, K)
         h3 = gf_quo(f, gf_mul(h1, h2, p, K), p, K)
 
-        factors = gf_edf_shoup(h1, n, p, K) \
-            + gf_edf_shoup(h2, n, p, K) \
+        factors = (
+            gf_edf_shoup(h1, n, p, K)
+            + gf_edf_shoup(h2, n, p, K)
             + gf_edf_shoup(h3, n, p, K)
+        )
 
-    return _sort_factors(factors, multiple=False)
+    return _sort_factors_single(factors)
 
 
-def gf_zassenhaus(f, p, K):
+def gf_zassenhaus(f: dup[MPZ], p: MPZ, K: Domain[MPZ]) -> list[dup[MPZ]]:
     """
     Factor a square-free ``f`` in ``GF(p)[x]`` for medium ``p``.
 
@@ -2104,15 +2153,15 @@ def gf_zassenhaus(f, p, K):
     [[1, 1], [1, 3]]
 
     """
-    factors = []
+    factors: list[dup[MPZ]] = []
 
     for factor, n in gf_ddf_zassenhaus(f, p, K):
         factors += gf_edf_zassenhaus(factor, n, p, K)
 
-    return _sort_factors(factors, multiple=False)
+    return _sort_factors_single(factors)
 
 
-def gf_shoup(f, p, K):
+def gf_shoup(f: dup[MPZ], p: MPZ, K: Domain[MPZ]) -> list[dup[MPZ]]:
     """
     Factor a square-free ``f`` in ``GF(p)[x]`` for large ``p``.
 
@@ -2126,21 +2175,24 @@ def gf_shoup(f, p, K):
     [[1, 1], [1, 3]]
 
     """
-    factors = []
+    factors: list[dup[MPZ]] = []
 
     for factor, n in gf_ddf_shoup(f, p, K):
         factors += gf_edf_shoup(factor, n, p, K)
 
-    return _sort_factors(factors, multiple=False)
+    return _sort_factors_single(factors)
 
-_factor_methods = {
-    'berlekamp': gf_berlekamp,  # ``p`` : small
-    'zassenhaus': gf_zassenhaus,  # ``p`` : medium
-    'shoup': gf_shoup,      # ``p`` : large
+
+_factor_methods: dict[str, Callable[[dup[MPZ], MPZ, Domain[MPZ]], list[dup[MPZ]]]] = {  # type: ignore
+    "berlekamp": gf_berlekamp,  # ``p`` : small
+    "zassenhaus": gf_zassenhaus,  # ``p`` : medium
+    "shoup": gf_shoup,  # ``p`` : large
 }
 
 
-def gf_factor_sqf(f, p, K, method=None):
+def gf_factor_sqf(
+    f: dup[MPZ], p: MPZ, K: Domain[MPZ], method: str | None = None
+) -> tuple[MPZ, list[dup[MPZ]]]:
     """
     Factor a square-free polynomial ``f`` in ``GF(p)[x]``.
 
@@ -2159,7 +2211,7 @@ def gf_factor_sqf(f, p, K, method=None):
     if gf_degree(f) < 1:
         return lc, []
 
-    method = method or query('GF_FACTOR_METHOD')
+    method = method or query("GF_FACTOR_METHOD")
 
     if method is not None:
         factors = _factor_methods[method](f, p, K)
@@ -2169,7 +2221,7 @@ def gf_factor_sqf(f, p, K, method=None):
     return lc, factors
 
 
-def gf_factor(f, p, K):
+def gf_factor(f: dup[MPZ], p: MPZ, K: Domain[MPZ]) -> tuple[MPZ, list[tuple[dup[MPZ], int]]]:
     """
     Factor (non square-free) polynomials in ``GF(p)[x]``.
 
@@ -2224,16 +2276,16 @@ def gf_factor(f, p, K):
     if gf_degree(f) < 1:
         return lc, []
 
-    factors = []
+    factors: list[tuple[dup[MPZ], int]] = []
 
     for g, n in gf_sqf_list(f, p, K)[1]:
         for h in gf_factor_sqf(g, p, K)[1]:
             factors.append((h, n))
 
-    return lc, _sort_factors(factors)
+    return lc, _sort_factors_multiple(factors)
 
 
-def gf_value(f, a):
+def gf_value(f: dup[MPZ], a: MPZ) -> MPZ:
     """
     Value of polynomial 'f' at 'a' in field R.
 
@@ -2246,14 +2298,16 @@ def gf_value(f, a):
     2204
 
     """
-    result = 0
+    from sympy.polys.domains import ZZ
+
+    result = ZZ.zero
     for c in f:
         result *= a
         result += c
     return result
 
 
-def linear_congruence(a, b, m):
+def linear_congruence(a: MPZ, b: MPZ, m: MPZ) -> list[MPZ]:
     """
     Returns the values of x satisfying a*x congruent b mod(m)
 
@@ -2276,19 +2330,21 @@ def linear_congruence(a, b, m):
     .. [1] https://en.wikipedia.org/wiki/Linear_congruence_theorem
 
     """
-    from sympy.polys.polytools import gcdex
+    # XXX: Pass in domain parameter
+    from sympy.polys.domains import ZZ
+
     if a % m == 0:
         if b % m == 0:
-            return list(range(m))
+            return list(map(ZZ, range(m)))
         else:
             return []
-    r, _, g = gcdex(a, m)
+    r, _, g = ZZ.gcdex(a, m)
     if b % g != 0:
         return []
     return [(r * b // g + t * m // g) % m for t in range(g)]
 
 
-def _raise_mod_power(x, s, p, f):
+def _raise_mod_power(x: MPZ, s: int, p: MPZ, f: dup[MPZ]) -> dup[MPZ]:
     """
     Used in gf_csolve to generate solutions of f(x) cong 0 mod(p**(s + 1))
     from the solutions of f(x) cong 0 mod(p**s).
@@ -2322,14 +2378,15 @@ def _raise_mod_power(x, s, p, f):
 
     """
     from sympy.polys.domains import ZZ
+
     f_f = gf_diff(f, p, ZZ)
     alpha = gf_value(f_f, x)
-    beta = - gf_value(f, x) // p**s
+    beta = -gf_value(f, x) // p**s
     return linear_congruence(alpha, beta, p)
 
 
-def _csolve_prime_las_vegas(f, p, seed=None):
-    r""" Solutions of `f(x) \equiv 0 \pmod{p}`, `f(0) \not\equiv 0 \pmod{p}`.
+def _csolve_prime_las_vegas(f: dup[MPZ], p: MPZ, seed: int | None = None) -> list[MPZ]:
+    r"""Solutions of `f(x) \equiv 0 \pmod{p}`, `f(0) \not\equiv 0 \pmod{p}`.
 
     Explanation
     ===========
@@ -2386,10 +2443,11 @@ def _csolve_prime_las_vegas(f, p, seed=None):
     """
     from sympy.polys.domains import ZZ
     from sympy.ntheory import sqrt_mod
+
     randint = _randint(seed)
-    root = set()
-    g = gf_pow_mod([1, 0], p - 1, f, p, ZZ)
-    g = gf_sub_ground(g, 1, p, ZZ)
+    root: set[MPZ] = set()
+    g = gf_pow_mod([ZZ.one, ZZ.zero], p - 1, f, p, ZZ)
+    g = gf_sub_ground(g, ZZ.one, p, ZZ)
     # We want to calculate gcd(x**(p-1) - 1, f(x))
     factors = [gf_gcd(f, g, p, ZZ)]
     while factors:
@@ -2404,15 +2462,16 @@ def _csolve_prime_las_vegas(f, p, seed=None):
             inv = invert(f[0], p)
             b = f[1] * inv % p
             b = (b + p * (b % 2)) // 2
-            root.update((r - b) % p for r in
-                        sqrt_mod(b**2 - f[2] * inv, p, all_roots=True))
+            root.update(
+                (r - b) % p for r in sqrt_mod(b**2 - f[2] * inv, p, all_roots=True)
+            )
             continue
         while True:
             # Determine `a` randomly and
             # compute gcd((x+a)**((p-1)//2)-1, f(x))
-            a = randint(0, p - 1)
-            g = gf_pow_mod([1, a], (p - 1) // 2, f, p, ZZ)
-            g = gf_sub_ground(g, 1, p, ZZ)
+            a = randint(0, int(p - 1))
+            g = gf_pow_mod([ZZ.one, ZZ(a)], (p - 1) // 2, f, p, ZZ)
+            g = gf_sub_ground(g, ZZ.one, p, ZZ)
             g = gf_gcd(f, g, p, ZZ)
             if 1 < len(g) < len(f):
                 factors.append(g)
@@ -2421,8 +2480,8 @@ def _csolve_prime_las_vegas(f, p, seed=None):
     return sorted(root)
 
 
-def csolve_prime(f, p, e=1):
-    r""" Solutions of `f(x) \equiv 0 \pmod{p^e}`.
+def csolve_prime(f: dup[MPZ], p: MPZ, e: int = 1) -> list[MPZ]:
+    r"""Solutions of `f(x) \equiv 0 \pmod{p^e}`.
 
     Parameters
     ==========
@@ -2453,11 +2512,12 @@ def csolve_prime(f, p, e=1):
     from solution [1] (mod 3).
     """
     from sympy.polys.domains import ZZ
+
     g = [MPZ(int(c)) for c in f]
     # Convert to polynomial of degree at most p-1
     for i in range(len(g) - p):
         g[i + p - 1] += g[i]
-        g[i] = 0
+        g[i] = ZZ.zero
     g = gf_trunc(g, p)
     # Checks whether g(x) is divisible by x
     k = 0
@@ -2465,21 +2525,21 @@ def csolve_prime(f, p, e=1):
         k += 1
     if k:
         g = g[:-k]
-        root_zero = [0]
+        root_zero = [ZZ.zero]
     else:
         root_zero = []
     if g == []:
-        X1 = list(range(p))
-    elif len(g)**2 < p:
+        X1 = list(map(ZZ, range(p)))
+    elif len(g) ** 2 < p:
         # The conditions under which `_csolve_prime_las_vegas` is faster than
         # a naive solution are worth considering.
         X1 = root_zero + _csolve_prime_las_vegas(g, p)
     else:
-        X1 = root_zero + [i for i in range(p) if gf_eval(g, i, p, ZZ) == 0]
+        X1 = root_zero + [i for i in map(ZZ, range(p)) if gf_eval(g, i, p, ZZ) == 0]
     if e == 1:
         return X1
-    X = []
-    S = list(zip(X1, [1]*len(X1)))
+    X: list[MPZ] = []
+    S = list(zip(X1, [1] * len(X1)))
     while S:
         x, s = S.pop()
         if s == e:
@@ -2487,11 +2547,11 @@ def csolve_prime(f, p, e=1):
         else:
             s1 = s + 1
             ps = p**s
-            S.extend([(x + v*ps, s1) for v in _raise_mod_power(x, s, p, f)])
+            S.extend([(x + v * ps, s1) for v in _raise_mod_power(x, s, p, f)])
     return sorted(X)
 
 
-def gf_csolve(f, n):
+def gf_csolve(f: dup[MPZ], n: int) -> list[MPZ]:
     """
     To solve f(x) congruent 0 mod(n).
 
@@ -2522,10 +2582,11 @@ def gf_csolve(f, n):
     """
     from sympy.polys.domains import ZZ
     from sympy.ntheory import factorint
+
     P = factorint(n)
     X = [csolve_prime(f, p, e) for p, e in P.items()]
     pools = list(map(tuple, X))
-    perms = [[]]
+    perms: list[list[MPZ]] = [[]]
     for pool in pools:
         perms = [x + [y] for x in perms for y in pool]
     dist_factors = [pow(p, e) for p, e in P.items()]
