@@ -42,7 +42,6 @@ from sympy.logic.inference import satisfiable
 from sympy.logic.algorithms.euf_theory import EUFUnhandledInput
 from sympy.matrices.kind import MatrixKind
 from sympy.core.kind import NumberKind
-from sympy.core.symbol import Symbol
 from sympy.core.singleton import S
 
 # Allowed binary preds
@@ -87,138 +86,10 @@ def euf_ask(proposition, assumptions=True, context=global_assumptions):
             context_cnf = context_cnf.extend(context)
         assumptions_enc.add_from_cnf(context_cnf)
 
-        # Check if this is a direct EUF propagation case
-        if _is_direct_euf_propagation(proposition, assumptions):
-            return _handle_direct_propagation(proposition, assumptions)
-
         return check_satisfiability(props, _props, assumptions_enc)
     except EUFUnhandledInput:
         return None
 
-def _is_direct_euf_propagation(proposition, assumptions):
-    """
-    Check if the proposition can be directly propagated based on a direct
-    connection (e.g., same predicate on different symbols connected by equality).
-
-    Returns:
-        True if direct propagation applies; False otherwise.
-    """
-    if not isinstance(proposition, AppliedPredicate):
-        return False
-
-    if len(proposition.arguments) != 1:
-        return False
-
-    prop_arg = proposition.arguments[0]
-    if not isinstance(prop_arg, Symbol):
-        return False
-
-    # Check if assumptions contain the same predicate on another symbol with equality
-    from sympy.logic.boolalg import And
-    if isinstance(assumptions, And):
-        assumption_terms = assumptions.args
-    else:
-        assumption_terms = [assumptions]
-
-    has_same_predicate = False
-    has_equality = False
-
-    for term in assumption_terms:
-        if isinstance(term, AppliedPredicate):
-            if (term.function == proposition.function and
-                len(term.arguments) == 1 and
-                isinstance(term.arguments[0], Symbol) and
-                term.arguments[0] != prop_arg):
-                has_same_predicate = True
-            elif (term.function == Q.eq and
-                  len(term.arguments) == 2 and
-                  prop_arg in term.arguments):
-                has_equality = True
-
-    return has_same_predicate and has_equality
-
-def _handle_direct_propagation(proposition, assumptions):
-    """
-    Handle cases of direct EUF propagation.
-
-    Returns:
-        True if propagation applies; None otherwise.
-    """
-    from sympy.logic.boolalg import And
-    assumption_terms = assumptions.args if isinstance(assumptions, And) else [assumptions]
-    prop_predicate = proposition.function
-    prop_arg = proposition.arguments[0]
-
-    # Find the other symbol with the same predicate
-    other_symbol = None
-    for term in assumption_terms:
-        if (isinstance(term, AppliedPredicate) and
-            term.function == prop_predicate and
-            len(term.arguments) == 1 and
-            isinstance(term.arguments[0], Symbol) and
-            term.arguments[0] != prop_arg):
-            other_symbol = term.arguments[0]
-            break
-
-    if other_symbol is None:
-        return None
-
-    # Check if there's an equality chain connecting them
-    equality_chains = []
-    for term in assumption_terms:
-        if (isinstance(term, AppliedPredicate) and
-            term.function == Q.eq and
-            len(term.arguments) == 2):
-            equality_chains.append((term.arguments[0], term.arguments[1]))
-
-    # Simple case: direct equality
-    if (prop_arg, other_symbol) in equality_chains or (other_symbol, prop_arg) in equality_chains:
-        return True
-
-    # Check for transitive equality chains
-    if _has_equality_path(prop_arg, other_symbol, equality_chains):
-        return True
-
-    return None
-
-def _has_equality_path(start, end, equalities):
-    """
-    Check for a path of equalities connecting 'start' and 'end'.
-
-    Returns:
-        True if there is a connecting path; False otherwise.
-    """
-    if start == end:
-        return True
-
-    # Build adjacency list
-    graph = {}
-    for a, b in equalities:
-        if a not in graph:
-            graph[a] = []
-        if b not in graph:
-            graph[b] = []
-        graph[a].append(b)
-        graph[b].append(a)
-
-    if start not in graph:
-        return False
-
-    # BFS to find path
-    visited = set()
-    queue = [start]
-
-    while queue:
-        current = queue.pop(0)
-        if current == end:
-            return True
-        if current in visited:
-            continue
-        visited.add(current)
-        if current in graph:
-            queue.extend(graph[current])
-
-    return False
 
 def check_satisfiability(prop, _prop, factbase):
     """
@@ -239,8 +110,6 @@ def check_satisfiability(prop, _prop, factbase):
         if isinstance(pred, AppliedPredicate):
             if len(pred.arguments) == 1:
                 continue  # Unary predicates are fine
-            if len(pred.arguments) == 2 and pred.function in ALLOWED_BIN_PRED:
-                continue  # Binary equality/disequality predicates are fine
             # Don't raise error immediately - let EUF solver handle it
         # Allow other types of literals to be handled by EUF solver
 

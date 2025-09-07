@@ -1,4 +1,4 @@
-from collections import defaultdict, deque
+from collections import defaultdict
 from sympy import Eq, Ne, Not
 from sympy.assumptions.ask import Q
 from sympy.assumptions.assume import AppliedPredicate
@@ -6,9 +6,11 @@ from sympy.logic.algorithms.euf_theory import EUFCongruenceClosure, EUFUnhandled
 from sympy.core.symbol import Dummy
 from sympy.utilities.iterables import numbered_symbols
 
+
 def _order_key(expr):
     """Return a key for ordering expressions consistently."""
     return str(expr)
+
 
 def _ordered_pair(a, b):
     """Return a consistently ordered pair."""
@@ -16,6 +18,7 @@ def _ordered_pair(a, b):
         return (a, b)
     else:
         return (b, a)
+
 
 def _canonical_lit(literal):
     """Extract canonical form (lhs, rhs, is_positive) from a literal."""
@@ -29,6 +32,7 @@ def _canonical_lit(literal):
     else:
         raise EUFUnhandledInput(f"Unsupported literal type: {type(literal)}")
 
+
 def _canon_eq(lhs, rhs):
     """Return a canonical equality (ordered) from lhs and rhs."""
     if _order_key(lhs) <= _order_key(rhs):
@@ -36,89 +40,256 @@ def _canon_eq(lhs, rhs):
     else:
         return Eq(rhs, lhs)
 
+
 class EUFDisequalityContradictionException(Exception):
     """
     Raised when a disequality which is already asserted is being contradicted.
     """
+
 
 class EUFEqualityContradictionException(Exception):
     """
     Raised when an equality which is already asserted is being contradicted.
     """
 
+
 class ProofProducingCongruenceClosure(EUFCongruenceClosure):
-    """Extended congruence closure with proof forest for explanations."""
+    """
+    Extended congruence closure with proof forest for explanations.
+
+    This class implements a proof-producing variant of congruence closure for
+    Equality with Uninterpreted Functions (EUF) theory. It extends the basic
+    congruence closure algorithm to track reasons (proof certificates) for
+    why terms become equal, enabling the generation of minimal explanations
+    for equalities and conflicts in DPLL(T) solvers.
+
+    **Theoretical Background:**
+    Congruence closure maintains equivalence classes of terms under the
+    congruence relation: if f(a1, ..., an) and f(b1, ..., bn) are terms
+    and ai = bi for all i, then f(a1, ..., an) = f(b1, ..., bn). This class
+    extends the algorithm to track WHY terms are equal by maintaining a proof
+    forest that records the sequence of equality assertions that led to each merge.
+
+    **Key Features:**
+    - Proof forest: Maps representative pairs to the equality literal that caused their merge
+    - Direct explanations: Maps term pairs to literals that directly asserted their equality
+    - Merge tracking: Records chronological sequence of all merges with reasons
+    - Explanation generation: Uses DFS to find minimal sets of equalities explaining why a=b
+
+    **Use Cases:**
+    - Conflict explanation in SAT/SMT solvers
+    - Proof generation for theorem provers
+    - Debugging equality reasoning in automated verification
+    - Theory propagation in DPLL(T) frameworks
+    """
+
 
     def __init__(self, equations):
-        super().__init__(equations)
-        # Proof forest for explanations (as described in the paper)
-        self.proof_forest = {}  # Maps (rep_a, rep_b) -> reason (literal that caused merge)
-        self.direct_explanations = {}  # Maps (a,b) -> literal that directly asserted a=b
-        self.merge_sequence = []  # Track order of merges for explanation
+        """
+        Initialize proof-producing congruence closure.
 
-        # New: Map flattened term to equality literals that involve it
+        Parameters:
+        -----------
+        equations : list
+            Initial set of equality constraints to process
+
+        Attributes:
+        -----------
+        proof_forest : dict
+            Maps (rep_a, rep_b) -> reason
+            Stores the equality literal that caused representatives rep_a and rep_b
+            to be merged. Key invariant: for any merged pair, there exists exactly
+            one reason in the forest explaining their equality.
+
+        direct_explanations : dict
+            Maps (term_a, term_b) -> literal
+            Records equality literals that were directly asserted between flattened
+            terms, before any congruence propagation. Used for base cases in explanation.
+
+        merge_sequence : list
+            Chronological log of all merges: [(rep_a, rep_b, reason, orig_a, orig_b), ...]
+            Useful for backtracking and debugging merge order dependencies.
+
+        equalities_for_term : defaultdict(set)
+            Maps flattened_term -> {equality_literals involving this term}
+            Enables efficient lookup of all equality literals mentioning a given term
+            for explanation graph construction.
+        """
+        super().__init__(equations)
+
+        # Proof forest maps (representative_a, representative_b) -> equality_literal
+        # that caused these representatives to be unified
+        self.proof_forest = {}
+
+        # Direct explanations map (flattened_term_a, flattened_term_b) -> equality_literal
+        # that directly asserted a=b (before congruence closure propagation)
+        self.direct_explanations = {}
+
+        # Chronological sequence of all merges with full context
+        self.merge_sequence = []
+
+        # Adjacency list: flattened_term -> {equality_literals involving this term}
+        # Forms the explanation graph for DFS traversal
         self.equalities_for_term = defaultdict(set)
 
+
     def add_equality_with_reason(self, lhs, rhs, reason):
-        """Add equality and record reason for proof production."""
+        """
+        Add equality constraint and record the reason for proof production.
+
+        This method extends the base congruence closure to track WHY the equality
+        holds. It performs the standard union-find merge while maintaining proof
+        certificates that can later be used to explain why any two terms are equal.
+
+        Parameters:
+        -----------
+        lhs, rhs : sympy expressions
+            The left and right-hand sides of the equality constraint
+        reason : sympy.Eq
+            The equality literal (Eq object) that justifies this constraint.
+            This serves as the proof certificate for why lhs = rhs.
+
+        Algorithm:
+        ----------
+        1. Flatten terms to canonical internal representations
+        2. Find current representatives of equivalence classes
+        3. Skip if terms already in same equivalence class
+        4. Record direct explanation for the original term pair
+        5. Record reason in proof forest between current representatives
+        6. Update explanation graph (equalities_for_term adjacency lists)
+        7. Delegate to base class for actual union-find merge
+
+        Complexity: O(alpha(n)) where alpha is inverse Ackermann function
+
+        """
         lhs_id = self._flatten(lhs)
         rhs_id = self._flatten(rhs)
 
         rep_lhs = self._find(lhs_id)
         rep_rhs = self._find(rhs_id)
 
-        # Skip if already equal
+        # Early termination: terms already equal
         if rep_lhs == rep_rhs:
             return
 
-        # Record direct assertion for flattened terms
+        # Record direct explanation between original flattened terms
+        # This captures the immediate justification before any congruence propagation
         key = _ordered_pair(lhs_id, rhs_id)
         self.direct_explanations[key] = reason
 
-        # Record in proof forest and merge sequence
+        # Record in proof forest between current equivalence class representatives
+        # This enables explanation of why representatives became equal
         proof_key = _ordered_pair(rep_lhs, rep_rhs)
         self.proof_forest[proof_key] = reason
+
+        # Log merge in chronological sequence for backtracking/debugging
         self.merge_sequence.append((rep_lhs, rep_rhs, reason, lhs_id, rhs_id))
 
-        # Record reason for each flattened term involved
+        # Update explanation graph: add this equality as an edge between both terms
+        # This creates bidirectional edges in the explanation graph
         self.equalities_for_term[lhs_id].add(reason)
         self.equalities_for_term[rhs_id].add(reason)
 
-        # Perform the actual merge using base class method
+        # Perform actual union-find merge using base class implementation
+        # This handles congruence propagation and updates internal data structures
         super().add_equality(lhs, rhs)
 
+
     def explain_equality(self, a, b):
-        """Explain why a = b using DFS over equality literals connecting flattened terms."""
+        """
+        Generate minimal explanation for why terms a and b are equal.
+
+        This method produces a set of equality literals that together constitute
+        a proof/explanation for why a = b holds in the current congruence closure.
+        The explanation consists of a path of equalities connecting a to b through
+        the equivalence graph.
+
+        Parameters:
+        -----------
+        a, b : sympy expressions
+            The terms whose equality needs to be explained
+
+        Returns:
+        --------
+        set of sympy.Eq
+            A set of equality literals {Eq(x1,y1), Eq(x2,y2), ...} such that
+            asserting all these equalities is sufficient to derive a = b.
+            Returns empty set if a and b are not equal.
+
+        Algorithm:
+        ----------
+        Uses depth-first search (DFS) on the explanation graph where:
+        - Nodes are flattened term identifiers
+        - Edges are equality literals connecting terms
+        - Goal: find path from a to b, collecting edge labels (equality literals)
+
+        The explanation graph is constructed from equalities_for_term, where each
+        equality literal creates bidirectional edges between the terms it connects.
+
+        Complexity: O(V + E) where V = number of terms, E = number of equalities
+
+        Properties:
+        -----------
+        - Soundness: If explanation E is returned, then E |= (a = b)
+        - Completeness: If a = b in congruence closure, some explanation exists
+        - Minimality: Attempts to find concise explanations (though not globally minimal)
+        """
         a_id = self._flatten(a)
         b_id = self._flatten(b)
 
+        # Base case: terms are syntactically identical
         if a_id == b_id:
             return set()
 
         visited = set()
-        path = []
-        explanation = set()
+        path = []  # Current path of equality literals being explored
 
         def dfs(current):
+            """
+            Depth-first search to find path of equalities from current to b_id.
+
+            Returns True if path found, False otherwise.
+            Modifies 'path' to contain the sequence of equality literals on success.
+            """
             if current == b_id:
                 return True
+
             visited.add(current)
+
+            # Explore all equality literals involving current term
             for eq in self.equalities_for_term[current]:
-                other = eq.rhs if eq.lhs == current else eq.lhs
-                other_id = self._flatten(other)
-                if other_id not in visited:
-                    path.append(eq)
-                    if dfs(other_id):
-                        return True
-                    path.pop()
+                # Determine the "other" term in this equality literal
+                if hasattr(eq, 'lhs') and hasattr(eq, 'rhs'):
+                    if self._flatten(eq.lhs) == current:
+                        other = eq.rhs
+                    elif self._flatten(eq.rhs) == current:
+                        other = eq.lhs
+                    else:
+                        continue  # This equality doesn't involve current term
+
+                    other_id = self._flatten(other)
+
+                    # Recurse on unvisited neighbors
+                    if other_id not in visited:
+                        path.append(eq)
+                        if dfs(other_id):
+                            return True
+                        path.pop()  # Backtrack
+
             return False
 
+        # Perform DFS from a_id to find path to b_id
         found = dfs(a_id)
+
         if found:
+            # Convert path list to set for consistency with API
             explanation = set(path)
         else:
+            # No path found - terms are not equal in current closure
             explanation = set()
+
         return explanation
+
 
 class EUFTheorySolver:
     """
@@ -129,6 +300,7 @@ class EUFTheorySolver:
     - DPLL(T): Fast Decision Procedures
     - Proof-Producing Congruence Closure
     """
+
 
     def __init__(self):
         # DPLL(T) interface data structures
@@ -157,6 +329,7 @@ class EUFTheorySolver:
         self.current_conflict_diseq = None
         self.current_conflict_eq = None
         self.current_conflict_eq_explanation = None
+
 
     @classmethod
     def from_encoded_cnf(cls, encoded_cnf, testing_mode=False):
@@ -316,6 +489,7 @@ class EUFTheorySolver:
 
         return explanation
 
+
     def _generate_minimal_conflict(self):
         """
         Generate minimal conflict clause based on the type of contradiction.
@@ -378,6 +552,7 @@ class EUFTheorySolver:
                                 conflict_clause.add(-exp_encoding)
 
         return conflict_clause
+
 
     def SetTrue(self, literal):
         """
@@ -456,6 +631,7 @@ class EUFTheorySolver:
         self.literal_timestamp[literal] = self.timestamp_counter
 
         return consequences
+
 
     def assert_lit(self, enc_constraint):
         """
@@ -556,6 +732,7 @@ class EUFTheorySolver:
                         explanation.add(eq)
         return explanation
 
+
     def Backtrack(self, n):
         """Backtrack n decision levels."""
         for _ in range(n):
@@ -566,6 +743,7 @@ class EUFTheorySolver:
 
         # Rebuild state (simplified - full implementation would be more efficient)
         self._rebuild_state()
+
 
     def _rebuild_state(self):
         """Rebuild congruence closure state after backtracking."""
@@ -591,6 +769,7 @@ class EUFTheorySolver:
                         self.SetTrue(Ne(lhs, rhs))
                 except ValueError:
                     pass  # Ignore conflicts during rebuild
+
 
     def reset(self):
         """Reset solver to initial state."""
