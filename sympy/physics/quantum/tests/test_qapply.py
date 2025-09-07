@@ -1,7 +1,7 @@
 from sympy.concrete.summations import Sum
 from sympy.core import oo
 from sympy.core.mul import Mul
-from sympy.core.numbers import (I, Integer, Rational)
+from sympy.core.numbers import (I, Rational)
 from sympy.core.singleton import S
 from sympy.simplify import simplify
 from sympy.core.symbol import symbols, Symbol

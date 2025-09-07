@@ -1,8 +1,6 @@
 from sympy.core.mul import Mul
 from sympy.core.singleton import S
 from sympy.core.symbol import symbols
-from sympy.core.add import Add
-from sympy.core.power import Pow
 from sympy.testing.pytest import raises
 
 from sympy.physics.quantum.slidingtransform import SlidingTransform
