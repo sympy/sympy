@@ -213,6 +213,6 @@ def parse_latex(s, strict=False, backend="antlr"):
     elif backend == "lark":
         return parse_latex_lark(s)
     else:  # TODO consider typing.get_args() for names from Literal/StringLiteral
-        raise ValueError(f"Using the '{backend}' backend in the LaTeX" \
-                         " parser is not supported, backend must be one of" \
-                         " ('antlr', 'lark')")
+        raise NotImplementedError(f"Using the '{backend}' backend in the LaTeX" \
+                                   " parser is not supported, backend must be one of" \
+                                   " ('antlr', 'lark')")
