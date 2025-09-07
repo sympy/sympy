@@ -514,13 +514,12 @@ def ask(proposition, assumptions=True, context=global_assumptions):
         if res is not None:
             return res
     except UnhandledInput:
-        return None
-
-    try:
-        res = euf_ask(proposition, assumptions=assumptions, context=context)
-        if res is not None:
-            return res
-    except (EUFUnhandledInput, ValueError):
+        try:
+            res = euf_ask(proposition, assumptions=assumptions, context=context)
+            if res is not None:
+                return res
+        except EUFUnhandledInput:
+            return None
         return None
 
 

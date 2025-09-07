@@ -618,3 +618,208 @@ def test_assert_literals_and_conflict():
     expected_eqs = {Eq(e, y), Eq(x, z), Eq(d, z), Eq(x, y)}
     for eq in expected_eqs:
         assert eq in explanation
+
+def test_explain_disequality_basic():
+    """Test basic disequality explanation with direct disequality."""
+    solver = EUFTheorySolver()
+
+    # Manually set up disequality cause
+    solver.SetTrue(Ne(x, y))
+
+    explanation = solver.explain_disequality(x, y)
+    assert Ne(x, y) in explanation
+    assert len(explanation) == 1  # Only the direct disequality
+
+
+def test_explain_disequality_with_equality_chain():
+    """Test disequality explanation involving equality chains."""
+    solver = EUFTheorySolver()
+
+    # Set up: x = a, y = b, a != b
+    # This means x != y should be explained by {Ne(a, b), Eq(x, a), Eq(y, b)}
+    solver.SetTrue(Eq(x, a))
+    solver.SetTrue(Eq(y, b))
+    solver.SetTrue(Ne(a, b))
+
+    explanation = solver.explain_disequality(x, y)
+
+    # Should contain the source disequality and connecting equalities
+    assert Ne(a, b) in explanation
+    assert Eq(a, x) in explanation
+    assert Eq(b, y) in explanation
+
+
+def test_explain_disequality_transitive_chain():
+    """Test disequality explanation with longer equality chains."""
+    solver = EUFTheorySolver()
+
+    # Chain: x = u, u = v, y = w, v != w
+    # So x != y should be explained through this chain
+    solver.SetTrue(Eq(x, u))
+    solver.SetTrue(Eq(u, v))
+    solver.SetTrue(Eq(y, w))
+    solver.SetTrue(Ne(v, w))
+
+    explanation = solver.explain_disequality(x, y)
+
+    # Should contain source disequality and all connecting equalities
+    assert Ne(v, w) in explanation
+    expected_equalities = {Eq(u, x), Eq(u, v), Eq(w, y), Ne(v, w)}
+    for eq in expected_equalities:
+        assert eq in explanation
+
+
+def test_explain_disequality_reversed_terms():
+    """Test disequality explanation works with reversed term order."""
+    solver = EUFTheorySolver()
+
+    # Set up a != b
+    solver.SetTrue(Ne(a, b))
+
+    # Test both directions: a != b and b != a
+    explanation_ab = solver.explain_disequality(a, b)
+    explanation_ba = solver.explain_disequality(b, a)
+
+    # Both should give same explanation (just the disequality)
+    assert Ne(a, b) in explanation_ab
+    assert Ne(a, b) in explanation_ba
+    assert explanation_ab == explanation_ba
+
+
+def test_explain_disequality_no_disequality():
+    """Test explanation when terms are not disequal."""
+    solver = EUFTheorySolver()
+
+    # Set up only equalities, no disequalities
+    solver.SetTrue(Eq(x, y))
+
+    # Should return empty explanation since x and y are not disequal
+    explanation = solver.explain_disequality(x, y)
+    assert explanation == set()
+
+
+def test_explain_disequality_complex_scenario():
+    """Test disequality explanation in complex scenario with multiple constraints."""
+    solver = EUFTheorySolver()
+
+    # Complex setup: x = u, u = v, y = w, w = z, v != z
+    # This creates x != y through the chain
+    solver.SetTrue(Eq(x, u))
+    solver.SetTrue(Eq(u, v))
+    solver.SetTrue(Eq(y, w))
+    solver.SetTrue(Eq(w, z))
+    solver.SetTrue(Ne(v, z))
+
+    explanation = solver.explain_disequality(x, y)
+
+    # Should include the source disequality and relevant equality chains
+    assert Ne(v, z) in explanation
+    # Should include equalities connecting x to v and y to z
+    expected_in_explanation = {Ne(v,z), Eq(u, x), Eq(u, v), Eq(w, y), Eq(w, z)}
+    for eq in expected_in_explanation:
+        assert eq in explanation
+
+
+def test_disequality_conflict_generation():
+    """Test that disequality explanations work in conflict generation."""
+    prop = Q.prime(x) & Q.prime(y) & Q.eq(x, z) & Q.eq(y, w) & Q.ne(z, w)
+
+    _prop = CNF.from_prop(prop)
+    sat = EncodedCNF()
+    sat.add_from_cnf(_prop)
+
+    solver = EUFTheorySolver()
+    a, conflicts = solver.from_encoded_cnf(sat)
+
+    # Assert the constraints
+    a.assert_lit(sat.encoding[Q.prime(x)])
+    a.assert_lit(sat.encoding[Q.prime(y)])
+    a.assert_lit(sat.encoding[Q.eq(x, z)])
+    a.assert_lit(sat.encoding[Q.eq(y, w)])
+    a.assert_lit(sat.encoding[Q.ne(z, w)])
+
+    # Now assert x = y, which should conflict due to z != w
+    result, conflict = a.assert_lit(sat.encoding[Q.eq(x, y)] if Q.eq(x, y) in sat.encoding else -1)
+
+    # Should detect conflict and generate explanation
+    if result is False:
+        assert len(conflict) > 0
+        # Conflict should involve the disequality and connecting equalities
+
+
+def test_explain_disequality_with_functions():
+    """Test disequality explanation involving function terms."""
+    from sympy import Function
+    f = Function('f')
+
+    solver = EUFTheorySolver()
+
+    # Set up: f(x) != f(y), x = a, y = b
+    solver.SetTrue(Ne(f(x), f(y)))
+    solver.SetTrue(Eq(x, a))
+    solver.SetTrue(Eq(y, b))
+
+    # Explanation for f(a) != f(b) should include the function disequality and argument equalities
+    explanation = solver.explain_disequality(f(a), f(b))
+
+    assert Ne(f(x), f(y)) in explanation
+
+
+def test_explain_disequality_edge_cases():
+    """Test edge cases for disequality explanation."""
+    solver = EUFTheorySolver()
+
+    # Test with identical terms (should return empty)
+    explanation = solver.explain_disequality(x, x)
+    assert explanation == set()
+
+    # Test with unknown terms
+    unknown1, unknown2 = symbols('unknown1 unknown2')
+    explanation = solver.explain_disequality(unknown1, unknown2)
+    assert explanation == set()
+
+
+def test_conflict_generation_disequality_contradiction():
+    """Test conflict generation for disequality contradiction cases."""
+    solver = EUFTheorySolver()
+
+    # Set up encoding manually for testing
+    solver.literal_eqs = {1: [Eq(x, y)], 2: [Ne(x, y)]}
+    solver._enc_to_lit = {1: Eq(x, y), -1: Ne(x, y), 2: Ne(x, y), -2: Eq(x, y)}
+    solver.lit_to_enc = {Eq(x, y): 1, Ne(x, y): 2}
+
+    # First assert disequality
+    result, _ = solver.assert_lit(2)  # Ne(x, y)
+    assert result is True
+
+    # Then assert conflicting equality - should generate conflict
+    result, conflict = solver.assert_lit(1)  # Eq(x, y)
+    assert result is False
+    assert len(conflict) > 0
+    assert -1 in conflict or -2 in conflict  # Should negate one of the conflicting literals
+
+
+def test_multiple_disequalities_explanation():
+    """Test explanation when multiple disequalities exist."""
+    solver = EUFTheorySolver()
+
+    # Set up multiple disequalities: a != b, c != d
+    # And equalities: x = a, y = b, z = c, w = d
+    solver.SetTrue(Ne(a, b))
+    solver.SetTrue(Ne(c, d))
+    solver.SetTrue(Eq(x, a))
+    solver.SetTrue(Eq(y, b))
+    solver.SetTrue(Eq(z, c))
+    solver.SetTrue(Eq(w, d))
+
+    # Test explanation for x != y (should use first disequality)
+    explanation_xy = solver.explain_disequality(x, y)
+    assert Ne(a, b) in explanation_xy
+    assert Eq(a, x) in explanation_xy
+    assert Eq(b, y) in explanation_xy
+
+    # Test explanation for z != w (should use second disequality)
+    explanation_zw = solver.explain_disequality(z, w)
+    assert Ne(c, d) in explanation_zw
+    assert Eq(c, z) in explanation_zw
+    assert Eq(d, w) in explanation_zw

@@ -472,19 +472,14 @@ class EUFTheorySolver:
                 # Add the source disequality to explanation
                 explanation.add(diseq_cause)
 
-                # Now explain why da = a and db = b (or da = b and db = a)
-                if rep_da == rep_a and rep_db == rep_b:
-                    # Explain da = a and db = b
-                    if da != a_id:
-                        explanation.update(self.cc.explain_equality(da, a))
-                    if db != b_id:
-                        explanation.update(self.cc.explain_equality(db, b))
-                else:  # rep_da == rep_b and rep_db == rep_a
-                    # Explain da = b and db = a
-                    if da != b_id:
-                        explanation.update(self.cc.explain_equality(da, b))
-                    if db != a_id:
-                        explanation.update(self.cc.explain_equality(db, a))
+                lhs_diseq = diseq_cause.lhs
+                rhs_diseq = diseq_cause.rhs
+                if self.cc._find(lhs_diseq) == rep_a and self.cc._find(rhs_diseq) == rep_b:
+                    explanation.update(self.cc.explain_equality(lhs_diseq, a))
+                    explanation.update(self.cc.explain_equality(rhs_diseq, b))
+                else:
+                    explanation.update(self.cc.explain_equality(lhs_diseq, b))
+                    explanation.update(self.cc.explain_equality(rhs_diseq, a))
                 break
 
         return explanation
