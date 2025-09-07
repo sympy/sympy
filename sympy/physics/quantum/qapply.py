@@ -35,19 +35,16 @@ and states through the multiple dispatch system.
 
 from sympy.concrete import Sum
 from sympy.core.add import Add
-from sympy.core.basic import Basic
 from sympy.core.expr import Expr
 from sympy.core.kind import NumberKind
 from sympy.core.mul import Mul
 from sympy.core.power import Pow
-from sympy.core.singleton import S
 from sympy.core.sympify import sympify, _sympify
 from sympy.functions.elementary.complexes import Abs
 from sympy.integrals import Integral
 from sympy.multipledispatch import Dispatcher
 from sympy.multipledispatch.dispatcher import ambiguity_register_error_ignore_dup
 
-from sympy.utilities.misc import debug
 
 from sympy.physics.quantum.anticommutator import AntiCommutator
 from sympy.physics.quantum.commutator import Commutator
@@ -55,9 +52,9 @@ from sympy.physics.quantum.dagger import Dagger
 from sympy.physics.quantum.density import Density
 from sympy.physics.quantum.innerproduct import InnerProduct
 from sympy.physics.quantum.operator import (
-    OuterProduct, Operator, IdentityOperator
+    OuterProduct, Operator
 )
-from sympy.physics.quantum.state import State, KetBase, BraBase, Wavefunction
+from sympy.physics.quantum.state import KetBase, BraBase, Wavefunction
 from sympy.physics.quantum.tensorproduct import TensorProduct
 from sympy.physics.quantum.slidingtransform import SlidingTransform
 

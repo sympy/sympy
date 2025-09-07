@@ -12,7 +12,6 @@ THIS IS EXPERIMENTAL.
 """
 from sympy.core.basic import Basic
 from sympy.core.expr import Expr
-from sympy.core.mul import Mul
 from sympy.core.singleton import S
 from sympy.multipledispatch.dispatcher import (
     Dispatcher, ambiguity_register_error_ignore_dup
@@ -22,7 +21,7 @@ from sympy.utilities.misc import debug
 from sympy.physics.quantum.innerproduct import InnerProduct
 from sympy.physics.quantum.kind import KetKind, BraKind, OperatorKind
 from sympy.physics.quantum.operator import (
-    OuterProduct, IdentityOperator, Operator
+    OuterProduct, IdentityOperator
 )
 from sympy.physics.quantum.qexpr import QExpr
 from sympy.physics.quantum.slidingtransform import SlidingTransform
@@ -59,13 +58,13 @@ register their own transforms to control the canonical form of products
 of quantum expressions.
 """
 
-@_postprocess_qexpr_mul.unary.register(Expr)
-def _remove_identity(a, **options):
-    return None
-
 @_postprocess_qexpr_mul.unary.register(IdentityOperator)
 def _remove_identity(a, **options):
     return ()
+
+@_postprocess_qexpr_mul.unary.register(Expr)
+def _pass_on_expr(a, **options):
+    return None
 
 
 @_postprocess_qexpr_mul.binary.register(Expr, Expr)
