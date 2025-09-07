@@ -85,28 +85,6 @@ class SlidingTransform(object):
 
         Examples
         ========
-
-        Create a transform that applies a unary function to each factor:
-
-        >>> def expand_factor(factor):
-        ...     # Custom expansion logic
-        ...     return None  # or tuple of expanded factors
-        >>> transform = SlidingTransform(unary=expand_factor)
-
-        Create a transform that simplifies adjacent pairs:
-
-        >>> def simplify_pair(lhs, rhs):
-        ...     # Custom simplification logic
-        ...     return None  # or tuple of simplified factors
-        >>> transform = SlidingTransform(binary=simplify_pair)
-
-        Create a transform with both unary and binary phases:
-
-        >>> transform = SlidingTransform(
-        ...     unary=expand_factor,
-        ...     binary=simplify_pair,
-        ...     reverse=True
-        ... )
         """
         self._unary = unary
         self._binary = binary

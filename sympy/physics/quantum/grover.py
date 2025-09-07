@@ -295,7 +295,7 @@ def grover_iteration(qstate, oracle):
         >>> basis_states = superposition_basis(numqubits)
         >>> f = lambda qubits: qubits == IntQubit(2)
         >>> v = OracleGate(numqubits, f)
-        >>> qapply(grover_iteration(basis_states, v))
+        >>> qapply(grover_iteration(basis_states, v)).expand()
         |2>
 
     """
