@@ -97,7 +97,7 @@ class SlidingTransform(object):
 
         >>> def simplify_pair(lhs, rhs):
         ...     # Custom simplification logic
-        ...     return None  # or tuple of simplified factors  
+        ...     return None  # or tuple of simplified factors
         >>> transform = SlidingTransform(binary=simplify_pair)
 
         Create a transform with both unary and binary phases:
@@ -269,7 +269,7 @@ class SlidingTransform(object):
 
         nc_parts = tuple(input)
         c_parts = tuple(c_parts)
-                        
+
         # In the logic below, we go out of our way to avoid triggering the post-processor logic
         # unless it is absolutely needed by using Mul._from_args and always validating when we
         # have an actual Mul
@@ -298,7 +298,7 @@ class SlidingTransform(object):
                     nc_result_args = (m,)
         else:
             nc_result_args = nc_parts
-           
+
         # Combine the commutative and non-commutative parts
         is_commutative = False if nc_result_args else True
         result = Mul._from_args(c_result_args + nc_result_args, is_commutative=is_commutative)
