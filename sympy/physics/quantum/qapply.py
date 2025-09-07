@@ -100,7 +100,7 @@ def _handle_doit_unary(f):
 
 def _flatten_mul(f):
     """Decorator that flattens Mul expressions in transformation results."""
-    
+
     def g(*args, **options):
         seq = f(*args, **options)
         if seq is None:
