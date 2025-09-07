@@ -204,7 +204,7 @@ class SlidingTransform(object):
                         output.append(lhs)
                     else:
                         c_t, nc_t = _split_cnc(transformed)
-                        if S.Zero in c_parts:
+                        if S.Zero in c_t:
                             # Return immediately if we get a zero
                             return S.Zero
                         c_parts.extend(c_t)
@@ -245,7 +245,7 @@ class SlidingTransform(object):
                         output.insert(0, rhs)
                     else:
                         c_t, nc_t = _split_cnc(transformed)
-                        if S.Zero in c_parts:
+                        if S.Zero in c_t:
                             # Return immediately if we get a zero
                             return S.Zero
                         c_parts.extend(c_t)
@@ -270,7 +270,7 @@ class SlidingTransform(object):
         nc_parts = tuple(input)
         c_parts = tuple(c_parts)
                         
-        # In the logic below, we go out of our ways to avoid triggering the post-processor logic
+        # In the logic below, we go out of our way to avoid triggering the post-processor logic
         # unless it is absolutely needed by using Mul._from_args and always validating when we
         # have an actual Mul
 
@@ -294,6 +294,7 @@ class SlidingTransform(object):
                 if isinstance(m, Mul):
                     nc_result_args = m.args
                 else:
+                    # The Mul mutated into something else, just include it
                     nc_result_args = (m,)
         else:
             nc_result_args = nc_parts
