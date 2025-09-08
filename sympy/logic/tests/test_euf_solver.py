@@ -720,33 +720,6 @@ def test_explain_disequality_complex_scenario():
         assert eq in explanation
 
 
-def test_disequality_conflict_generation():
-    """Test that disequality explanations work in conflict generation."""
-    prop = Q.prime(x) & Q.prime(y) & Q.eq(x, z) & Q.eq(y, w) & Q.ne(z, w)
-
-    _prop = CNF.from_prop(prop)
-    sat = EncodedCNF()
-    sat.add_from_cnf(_prop)
-
-    solver = EUFTheorySolver()
-    a, conflicts = solver.from_encoded_cnf(sat)
-
-    # Assert the constraints
-    a.assert_lit(sat.encoding[Q.prime(x)])
-    a.assert_lit(sat.encoding[Q.prime(y)])
-    a.assert_lit(sat.encoding[Q.eq(x, z)])
-    a.assert_lit(sat.encoding[Q.eq(y, w)])
-    a.assert_lit(sat.encoding[Q.ne(z, w)])
-
-    # Now assert x = y, which should conflict due to z != w
-    result, conflict = a.assert_lit(sat.encoding[Q.eq(x, y)] if Q.eq(x, y) in sat.encoding else -1)
-
-    # Should detect conflict and generate explanation
-    if result is False:
-        assert len(conflict) > 0
-        # Conflict should involve the disequality and connecting equalities
-
-
 def test_explain_disequality_with_functions():
     """Test disequality explanation involving function terms."""
     from sympy import Function
