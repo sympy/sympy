@@ -276,6 +276,8 @@ def test_atan():
     x = Symbol("x", real=True)
     assert limit(atan(x)*sin(1/x), x, 0) == 0
     assert limit(atan(x) + sqrt(x + 1) - sqrt(x), x, oo) == pi/2
+    # https://github.com/sympy/sympy/issues/28360
+    assert limit(tan(k*atan(x) - pi*(k - 1)/2)/x, x, oo) == 1/k
 
 
 def test_set_signs():

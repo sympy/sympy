@@ -1,7 +1,6 @@
 """Tests for dense recursive polynomials' basic tools. """
 
 from sympy.polys.densebasic import (
-    ninf,
     dup_LC, dmp_LC,
     dup_TC, dmp_TC,
     dmp_ground_LC, dmp_ground_TC,
@@ -44,9 +43,9 @@ from sympy.polys.rings import ring
 from sympy.core.singleton import S
 from sympy.testing.pytest import raises
 
-from sympy.core.numbers import oo
 
 f_0, f_1, f_2, f_3, f_4, f_5, f_6 = [ f.to_dense() for f in f_polys() ]
+
 
 def test_dup_LC():
     assert dup_LC([], ZZ) == 0
@@ -96,25 +95,24 @@ def test_dmp_true_LT():
 
 
 def test_dup_degree():
-    assert ninf == float('-inf')
-    assert dup_degree([]) is ninf
+    assert dup_degree([]) == -1
     assert dup_degree([1]) == 0
     assert dup_degree([1, 0]) == 1
     assert dup_degree([1, 0, 0, 0, 1]) == 4
 
 
 def test_dmp_degree():
-    assert dmp_degree([[]], 1) is ninf
-    assert dmp_degree([[[]]], 2) is ninf
+    assert dmp_degree([[]], 1) == -1
+    assert dmp_degree([[[]]], 2) == -1
 
     assert dmp_degree([[1]], 1) == 0
     assert dmp_degree([[2], [1]], 1) == 1
 
 
 def test_dmp_degree_in():
-    assert dmp_degree_in([[[]]], 0, 2) is ninf
-    assert dmp_degree_in([[[]]], 1, 2) is ninf
-    assert dmp_degree_in([[[]]], 2, 2) is ninf
+    assert dmp_degree_in([[[]]], 0, 2) == -1
+    assert dmp_degree_in([[[]]], 1, 2) == -1
+    assert dmp_degree_in([[[]]], 2, 2) == -1
 
     assert dmp_degree_in([[[1]]], 0, 2) == 0
     assert dmp_degree_in([[[1]]], 1, 2) == 0
@@ -133,7 +131,7 @@ def test_dmp_degree_in():
 
 
 def test_dmp_degree_list():
-    assert dmp_degree_list([[[[ ]]]], 3) == (-oo, -oo, -oo, -oo)
+    assert dmp_degree_list([[[[ ]]]], 3) == (-1, -1, -1, -1)
     assert dmp_degree_list([[[[1]]]], 3) == ( 0, 0, 0, 0)
 
     assert dmp_degree_list(f_0, 2) == (2, 2, 2)
@@ -146,48 +144,48 @@ def test_dmp_degree_list():
 
 
 def test_dup_strip():
-    assert dup_strip([]) == []
-    assert dup_strip([0]) == []
-    assert dup_strip([0, 0, 0]) == []
+    assert dup_strip([], ZZ) == []
+    assert dup_strip([0], ZZ) == []
+    assert dup_strip([0, 0, 0], ZZ) == []
 
-    assert dup_strip([1]) == [1]
-    assert dup_strip([0, 1]) == [1]
-    assert dup_strip([0, 0, 0, 1]) == [1]
+    assert dup_strip([1], ZZ) == [1]
+    assert dup_strip([0, 1], ZZ) == [1]
+    assert dup_strip([0, 0, 0, 1], ZZ) == [1]
 
-    assert dup_strip([1, 2, 0]) == [1, 2, 0]
-    assert dup_strip([0, 1, 2, 0]) == [1, 2, 0]
-    assert dup_strip([0, 0, 0, 1, 2, 0]) == [1, 2, 0]
+    assert dup_strip([1, 2, 0], ZZ) == [1, 2, 0]
+    assert dup_strip([0, 1, 2, 0], ZZ) == [1, 2, 0]
+    assert dup_strip([0, 0, 0, 1, 2, 0], ZZ) == [1, 2, 0]
 
 
 def test_dmp_strip():
-    assert dmp_strip([0, 1, 0], 0) == [1, 0]
+    assert dmp_strip([0, 1, 0], 0, ZZ) == [1, 0]
 
-    assert dmp_strip([[]], 1) == [[]]
-    assert dmp_strip([[], []], 1) == [[]]
-    assert dmp_strip([[], [], []], 1) == [[]]
+    assert dmp_strip([[]], 1, ZZ) == [[]]
+    assert dmp_strip([[], []], 1, ZZ) == [[]]
+    assert dmp_strip([[], [], []], 1, ZZ) == [[]]
 
-    assert dmp_strip([[[]]], 2) == [[[]]]
-    assert dmp_strip([[[]], [[]]], 2) == [[[]]]
-    assert dmp_strip([[[]], [[]], [[]]], 2) == [[[]]]
+    assert dmp_strip([[[]]], 2, ZZ) == [[[]]]
+    assert dmp_strip([[[]], [[]]], 2, ZZ) == [[[]]]
+    assert dmp_strip([[[]], [[]], [[]]], 2, ZZ) == [[[]]]
 
-    assert dmp_strip([[[1]]], 2) == [[[1]]]
-    assert dmp_strip([[[]], [[1]]], 2) == [[[1]]]
-    assert dmp_strip([[[]], [[1]], [[]]], 2) == [[[1]], [[]]]
+    assert dmp_strip([[[1]]], 2, ZZ) == [[[1]]]
+    assert dmp_strip([[[]], [[1]]], 2, ZZ) == [[[1]]]
+    assert dmp_strip([[[]], [[1]], [[]]], 2, ZZ) == [[[1]], [[]]]
 
 
 def test_dmp_validate():
-    assert dmp_validate([]) == ([], 0)
-    assert dmp_validate([0, 0, 0, 1, 0]) == ([1, 0], 0)
+    assert dmp_validate([], ZZ) == ([], 0)
+    assert dmp_validate([0, 0, 0, 1, 0], ZZ) == ([1, 0], 0)
 
-    assert dmp_validate([[[]]]) == ([[[]]], 2)
-    assert dmp_validate([[0], [], [0], [1], [0]]) == ([[1], []], 1)
+    assert dmp_validate([[[]]], ZZ) == ([[[]]], 2)
+    assert dmp_validate([[0], [], [0], [1], [0]], ZZ) == ([[1], []], 1)
 
-    raises(ValueError, lambda: dmp_validate([[0], 0, [0], [1], [0]]))
+    raises(ValueError, lambda: dmp_validate([[0], 0, [0], [1], [0]], ZZ))
 
 
 def test_dup_reverse():
-    assert dup_reverse([1, 2, 0, 3]) == [3, 0, 2, 1]
-    assert dup_reverse([1, 2, 3, 0]) == [3, 2, 1]
+    assert dup_reverse([1, 2, 0, 3], ZZ) == [3, 0, 2, 1]
+    assert dup_reverse([1, 2, 3, 0], ZZ) == [3, 2, 1]
 
 
 def test_dup_copy():
@@ -291,8 +289,8 @@ def test_dmp_zero_p():
 
 
 def test_dmp_zero():
-    assert dmp_zero(0) == []
-    assert dmp_zero(2) == [[[]]]
+    assert dmp_zero(0, ZZ) == []
+    assert dmp_zero(2, ZZ) == [[[]]]
 
 
 def test_dmp_one_p():
@@ -328,11 +326,11 @@ def test_dmp_ground_p():
 
 
 def test_dmp_ground():
-    assert dmp_ground(ZZ(0), 2) == [[[]]]
+    assert dmp_ground(ZZ(0), 2, ZZ) == [[[]]]
 
-    assert dmp_ground(ZZ(7), -1) == ZZ(7)
-    assert dmp_ground(ZZ(7), 0) == [ZZ(7)]
-    assert dmp_ground(ZZ(7), 2) == [[[ZZ(7)]]]
+    assert dmp_ground(ZZ(7), -1, ZZ) == ZZ(7)
+    assert dmp_ground(ZZ(7), 0, ZZ) == [ZZ(7)]
+    assert dmp_ground(ZZ(7), 2, ZZ) == [[[ZZ(7)]]]
 
 
 def test_dmp_zeros():
@@ -347,13 +345,13 @@ def test_dmp_zeros():
 
 
 def test_dmp_grounds():
-    assert dmp_grounds(ZZ(7), 0, 2) == []
+    assert dmp_grounds(ZZ(7), 0, 2, ZZ) == []
 
-    assert dmp_grounds(ZZ(7), 1, 2) == [[[[7]]]]
-    assert dmp_grounds(ZZ(7), 2, 2) == [[[[7]]], [[[7]]]]
-    assert dmp_grounds(ZZ(7), 3, 2) == [[[[7]]], [[[7]]], [[[7]]]]
+    assert dmp_grounds(ZZ(7), 1, 2, ZZ) == [[[[7]]]]
+    assert dmp_grounds(ZZ(7), 2, 2, ZZ) == [[[[7]]], [[[7]]]]
+    assert dmp_grounds(ZZ(7), 3, 2, ZZ) == [[[[7]]], [[[7]]], [[[7]]]]
 
-    assert dmp_grounds(ZZ(7), 3, -1) == [7, 7, 7]
+    assert dmp_grounds(ZZ(7), 3, -1, ZZ) == [7, 7, 7]
 
 
 def test_dmp_negative_p():
@@ -372,21 +370,18 @@ def test_dup_from_to_dict():
     assert dup_from_raw_dict({}, ZZ) == []
     assert dup_from_dict({}, ZZ) == []
 
-    assert dup_to_raw_dict([]) == {}
-    assert dup_to_dict([]) == {}
+    assert dup_to_raw_dict([], ZZ) == {}
+    assert dup_to_dict([], ZZ) == {}
 
-    assert dup_to_raw_dict([], ZZ, zero=True) == {0: ZZ(0)}
-    assert dup_to_dict([], ZZ, zero=True) == {(0,): ZZ(0)}
-
-    f = [3, 0, 0, 2, 0, 0, 0, 0, 8]
-    g = {8: 3, 5: 2, 0: 8}
-    h = {(8,): 3, (5,): 2, (0,): 8}
+    f = ZZ.map([3, 0, 0, 2, 0, 0, 0, 0, 8])
+    g = {8: ZZ(3), 5: ZZ(2), 0: ZZ(8)}
+    h = {(8,): ZZ(3), (5,): ZZ(2), (0,): ZZ(8)}
 
     assert dup_from_raw_dict(g, ZZ) == f
     assert dup_from_dict(h, ZZ) == f
 
-    assert dup_to_raw_dict(f) == g
-    assert dup_to_dict(f) == h
+    assert dup_to_raw_dict(f, ZZ) == g
+    assert dup_to_dict(f, ZZ) == h
 
     R, x,y = ring("x,y", ZZ)
     K = R.to_domain()
@@ -398,22 +393,19 @@ def test_dup_from_to_dict():
     assert dup_from_raw_dict(g, K) == f
     assert dup_from_dict(h, K) == f
 
-    assert dup_to_raw_dict(f) == g
-    assert dup_to_dict(f) == h
+    assert dup_to_raw_dict(f, K) == g
+    assert dup_to_dict(f, K) == h
 
 
 def test_dmp_from_to_dict():
     assert dmp_from_dict({}, 1, ZZ) == [[]]
-    assert dmp_to_dict([[]], 1) == {}
-
-    assert dmp_to_dict([], 0, ZZ, zero=True) == {(0,): ZZ(0)}
-    assert dmp_to_dict([[]], 1, ZZ, zero=True) == {(0, 0): ZZ(0)}
+    assert dmp_to_dict([[]], 1, ZZ) == {}
 
     f = [[3], [], [], [2], [], [], [], [], [8]]
-    g = {(8, 0): 3, (5, 0): 2, (0, 0): 8}
+    g = {(8, 0): ZZ(3), (5, 0): ZZ(2), (0, 0): ZZ(8)}
 
     assert dmp_from_dict(g, 1, ZZ) == f
-    assert dmp_to_dict(f, 1) == g
+    assert dmp_to_dict(f, 1, ZZ) == g
 
 
 def test_dmp_swap():

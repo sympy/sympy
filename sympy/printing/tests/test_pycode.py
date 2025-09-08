@@ -74,6 +74,27 @@ def test_PythonCodePrinter():
     assert prntr.doprint(Min(x, y)) == "min(x, y)"
     assert prntr.doprint(Max(x, y)) == "max(x, y)"
 
+def test_PythonCodePrinter_print_Indexed():
+    from sympy import Symbol
+
+    class CustomIndex(Symbol):
+        def __str__(self):
+            return f"not_printed_recursively({self.name})"
+
+    class CustomIndexed(IndexedBase):
+        def __str__(self):
+            return f"not_printed_recursively({self.name})"
+
+    class CustomPrinter(PythonCodePrinter):
+        def _print_CustomIndexed(self, expr):
+            return f"printed_recursively({expr.name})"
+        def _print_CustomIndex(self, expr):
+            return f"printed_recursively({expr.name})"
+
+    printer = CustomPrinter()
+    assert (printer.doprint(CustomIndexed('foo')[CustomIndex("a"), CustomIndex("b")]) ==
+            "printed_recursively(foo)[printed_recursively(a), printed_recursively(b)]")
+
 
 def test_PythonCodePrinter_standard():
     prntr = PythonCodePrinter()
@@ -491,3 +512,15 @@ def test_custom_Derivative_methods():
         assert '_print_Derivative(' in repr(e)
     else:
         assert False  # should have thrown
+
+def test_piecewise_assign_to():
+    x, a, b, c = symbols('x a b c')
+    pyprinter = PythonCodePrinter()
+    symprinter = SymPyPrinter()
+
+    expr = Piecewise((a + b, c), (0, True))
+    pyprint = pyprinter.doprint(expr, assign_to=x)
+    symprint = symprinter.doprint(expr, assign_to=x)
+
+    assert pyprint == 'x = ((a + b) if c else (0))'
+    assert symprint == 'x = ((a + b) if c else (0))'

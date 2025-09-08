@@ -1,18 +1,29 @@
 """Implementation of :class:`CompositeDomain` class. """
 
+from __future__ import annotations
 
-from sympy.polys.domains.domain import Domain
+from typing import TYPE_CHECKING
+
+from sympy.polys.domains.domain import Domain, Er
 from sympy.polys.polyerrors import GeneratorsError
 
 from sympy.utilities import public
 
+
+if TYPE_CHECKING:
+    from sympy.core.expr import Expr
+
+
 @public
-class CompositeDomain(Domain):
+class CompositeDomain(Domain[Er]):
     """Base class for composite domains, e.g. ZZ[x], ZZ(X). """
 
     is_Composite = True
 
-    gens, ngens, symbols, domain = [None]*4
+    gens: Er
+    ngens: int
+    symbols: tuple[Expr, ...]
+    domain: Domain[Er]
 
     def inject(self, *symbols):
         """Inject generators into this domain.  """
@@ -31,7 +42,7 @@ class CompositeDomain(Domain):
         else:
             return self.__class__(domain, newsyms, self.order)
 
-    def set_domain(self, domain):
+    def set_domain(self, domain, /):
         """Set the ground domain of this domain. """
         return self.__class__(domain, self.symbols, self.order)
 

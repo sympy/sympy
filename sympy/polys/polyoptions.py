@@ -412,7 +412,7 @@ class Domain(Option, metaclass=OptionType):
     _re_algebraic = re.compile(r"^(Q|QQ)\<(.+)\>$")
 
     @classmethod
-    def preprocess(cls, domain):
+    def preprocess(cls, domain) -> sympy.polys.domains.Domain:
         if isinstance(domain, sympy.polys.domains.Domain):
             return domain
         elif hasattr(domain, 'to_domain'):
