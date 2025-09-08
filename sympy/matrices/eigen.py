@@ -1449,25 +1449,30 @@ def _jordan_form_rational_matrix(M, calc_transform):
     eigenvals_by_factor, _is_diagonalizable = factors_to_eigenvals()
 
     if _is_diagonalizable:
-        if len(eigenvals_by_factor) == 1:
-            jordan_mat = M.diag(*eigenvals_by_factor.values())
-        else:
-            jordan_mat = M.diag(*chain.from_iterable(eigenvals_by_factor.values()))
-
-        if not calc_transform:
-            return jordan_mat
-
-        jordan_basis = []
+        eigen_values = []
+        if calc_transform:
+            jordan_basis = []
 
         for factor, multiplicity in eigenvals_by_factor:
-            eigen_vals = eigenvals_by_factor[(factor, multiplicity)]
-            algebraic_num = AlgebraicNumber(eigen_vals[0], alias='a')
-            nullspace = char_mat(algebraic_num, multiplicity).nullspace().transpose().to_Matrix()
-            eigenvectors = [nullspace.subs(algebraic_num, eigen_val) for eigen_val in eigen_vals]
-            jordan_basis.extend(eigenvectors)
+            eigen_vals_fac = eigenvals_by_factor[(factor, multiplicity)]
 
-        basis_mat = M.hstack(*jordan_basis)
-        return basis_mat, jordan_mat
+            if len(eigenvals_by_factor)!=1:
+                eigen_values.extend(eigen_vals_fac)
+            else:
+                eigen_values = eigen_vals_fac
+
+            if calc_transform:
+                algebraic_num = AlgebraicNumber(eigen_vals_fac[0], alias='a')
+                nullspace = char_mat(algebraic_num, multiplicity).nullspace().transpose().to_Matrix()
+                eigenvectors = [nullspace.subs(algebraic_num, eigen_val) for eigen_val in eigen_vals_fac]
+                jordan_basis.extend(eigenvectors)
+
+        jordan_mat = M.diag(*eigen_values)
+        if not calc_transform:
+            return jordan_mat
+        else:
+            basis_mat = M.hstack(*jordan_basis)
+            return basis_mat, jordan_mat
 
     block_structure = {}
     for fac, m in eigenvals_by_factor:
