@@ -815,8 +815,17 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
         else:
             return self._add_ground(cp2)
 
+    @overload
+    def __sub__(self, other: PolyElement[Er] | Er | int, /) -> PolyElement[Er]:
+        ...
 
-    def __sub__(self, other: PolyElement[Er] | Er | int) -> PolyElement[Er]:
+    @overload
+    def __sub__(self, other: PolyElement[PolyElement[Er]], /) -> PolyElement[PolyElement[Er]]:
+        ...
+
+    def __sub__(
+        self, other: PolyElement[Er] | Er | int | PolyElement[PolyElement[Er]], /
+    ) -> PolyElement[Er] | PolyElement[PolyElement[Er]]:
         """Subtract polynomial p2 from p1.
 
         Examples
@@ -832,25 +841,27 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
         -x*y + x
 
         """
-        if not other:
-            return self.copy()
+        if self.ring.is_element(other):
+            return self._sub(other)
 
-        ring = self.ring
+        res = self._try_sub_ground(other)
+        if res is not NotImplemented:
+            return res
 
         if isinstance(other, PolyElement):
-            if other.ring == ring:
-                return self._sub(other)
-            elif (
-                isinstance(ring.domain, PolynomialRing) and ring.domain.ring == other.ring
-            ):
-                pass
-            elif (
-                isinstance(other.ring.domain, PolynomialRing)
-                and other.ring.domain.ring == ring
-            ):
-                return other.__rsub__(self)
-            else:
-                return NotImplemented
+            return other._try_rsub_ground(self)
+
+        return NotImplemented
+
+    def __rsub__(self, other: PolyElement[Er] | Er | int) -> PolyElement[Er]:
+        return self._try_rsub_ground(other)
+
+    def _try_sub_ground(self, other: object) -> PolyElement[Er] | NotImplementedType:
+        ring = self.ring
+        domain = ring.domain
+
+        if domain.of_type(other):
+            return self._sub_ground(other)
 
         try:
             cp2 = ring.domain_new(other)
@@ -859,15 +870,19 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
         else:
             return self._sub_ground(cp2)
 
-    def __rsub__(self, n: PolyElement[Er] | Er | int) -> PolyElement[Er]:
+    def _try_rsub_ground(self, other: object) -> PolyElement[Er] | NotImplementedType:
         ring = self.ring
+        domain = ring.domain
+
+        if domain.of_type(other):
+            return self._rsub_ground(other)
+
         try:
-            n = ring.domain_new(n)
+            cp2 = ring.domain_new(other)
         except CoercionFailed:
             return NotImplemented
         else:
-            p = self.__neg__()
-            return p._add_ground(n)
+            return self._rsub_ground(cp2)
 
     def __mul__(self, other: PolyElement[Er] | Er | int) -> PolyElement[Er]:
         """Multiply two polynomials.
@@ -2080,8 +2095,8 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
 
     def _sub_ground(self, cp2: Er) -> PolyElement[Er]:
         p = self.copy()
-        #if not cp2:
-            #return p
+        if not cp2:
+            return p
         ring = self.ring
         zm = ring.zero_monom
         v = self.get(zm, ring.domain.zero) - cp2
@@ -2090,6 +2105,9 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
         else:
             del p[zm]
         return p
+
+    def _rsub_ground(self, cp2: Er) -> PolyElement[Er]:
+        return self.__neg__()._add_ground(cp2)
 
     def _mul(self, other: PolyElement[Er]) -> PolyElement[Er]:
         ring = self.ring
