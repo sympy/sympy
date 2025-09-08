@@ -3,7 +3,6 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, overload
 
 from types import FunctionType
-from itertools import chain
 from collections import Counter
 
 from mpmath import mp, workprec
