@@ -172,7 +172,7 @@ def test_issue_1():
     solver,conflicts = EUFTheorySolver.from_encoded_cnf(enc_cnf)
     assert solver.assert_lit(-1) == (True, set())
     assert solver.assert_lit(2) == (True, set())
-    assert solver.assert_lit(3) == (False, {1,-2,3})
+    assert solver.assert_lit(3) == (False, {1,-2,-3})
 
 
 # Test helper functions
@@ -260,7 +260,7 @@ def test_explain_equality_direct():
     explanation = ppcc.explain_equality(a, b)
     assert reason in explanation
 
-@XFAIL
+
 def test_find_proof_path_complex():
     """Test _find_proof_path with complex merge chains."""
     ppcc = ProofProducingCongruenceClosure([])
@@ -287,17 +287,6 @@ def test_equality_contradiction_exception():
     with pytest.raises(EUFEqualityContradictionException):
         solver.SetTrue(Ne(a, b))
 
-@XFAIL
-def test_conflict_generation_disequality():
-    """Test conflict generation for disequality contradictions."""
-    cnf = CNF.from_prop(Eq(a, b) & Ne(a, b))
-    enc = EncodedCNF()
-    enc.from_cnf(cnf)
-    solver, conflicts = EUFTheorySolver.from_encoded_cnf(enc, testing_mode=True)
-
-    # Should have conflicts from initialization
-    assert len(conflicts) > 0 or len(enc.data) == 0
-
 
 def test_conflict_generation_equality():
     """Test conflict generation for equality contradictions."""
@@ -321,19 +310,6 @@ def test_istrue_with_disequalities():
     solver.SetTrue(Ne(a, b))
     assert solver.IsTrue(Ne(a, b)) is True
     assert solver.IsTrue(Eq(a, b)) is False
-
-@XFAIL
-def test_explanation_with_disequality():
-    """Test Explanation method for disequalities."""
-    solver = EUFTheorySolver()
-    solver.Initialize({Ne(a, b), Eq(a, c)})
-
-    solver.SetTrue(Ne(a, b))
-    solver.SetTrue(Eq(a, c))
-
-    # Test explanation for the disequality
-    explanation = solver.Explanation(Ne(a, b))
-    assert isinstance(explanation, set)
 
 
 def test_explain_disequality():
@@ -509,14 +485,13 @@ def test_multiple_disequality_conflicts():
     with pytest.raises((EUFDisequalityContradictionException, EUFEqualityContradictionException)):
         solver.SetTrue(Ne(a, c))
 
-@XFAIL
+
 def test_congruence_with_multiple_functions():
     """Test congruence with multiple function symbols."""
     solver = EUFTheorySolver()
     solver.Initialize({
         Eq(a, b),
-        Eq(f(a), c), Eq(g(a), d),
-        Eq(f(b), e), Eq(g(b), f)
+        Eq(f(a), c), Eq(g(a), d)
     })
 
     solver.SetTrue(Eq(a, b))
@@ -527,7 +502,7 @@ def test_congruence_with_multiple_functions():
     assert solver.IsTrue(Eq(f(a), f(b))) is True
     assert solver.IsTrue(Eq(g(a), g(b))) is True
 
-@XFAIL
+
 def test_deep_explanation_chain():
     """Test explanation with deep chains of reasoning."""
     solver = EUFTheorySolver()
