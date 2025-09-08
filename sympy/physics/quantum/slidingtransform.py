@@ -258,9 +258,9 @@ class SlidingTransform(object):
             if isinstance(m, Mul):
                 c_result_args = m.args
             else:
-                c_result_args = (m,)
+                c_result_args = () if m == S.One else (m,) 
         else:
-            c_result_args = c_parts
+            c_result_args = () if (c_parts and c_parts[0] == S.One) else c_parts
 
         # Handle the non-commutative part
         if len(nc_parts) > 1:
