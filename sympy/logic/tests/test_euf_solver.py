@@ -12,12 +12,14 @@ from sympy.logic.algorithms.euf_theory import EUFUnhandledInput
 from sympy.assumptions.assume import AppliedPredicate
 
 f, g = symbols('f g', cls=Function)
-a, b, c, d, e, x, y, z, u, v, w = symbols('a b c d e x y z u v w')
-
+F, G, H, I, J, K = symbols('F G H I J K', cls=Function)
+# Create large sets of symbols and functions for complex testing
+variables = symbols('a b c d e f g h i j k l m n o p q r s t u v w x y z')
+a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z = variables
 
 def test_initialize_and_istrue():
     solver = EUFTheorySolver()
-    eqs = {Eq(a, b), Eq(b, c), Eq(f(a), f(b))}
+    eqs = {Eq(a, b), Eq(b, c), Eq(F(a), F(b))}
     solver.Initialize(eqs)
 
     # Initially false
@@ -45,12 +47,12 @@ def test_positive_propagation_transitivity():
 
 def test_functional_congruence_propagation():
     solver = EUFTheorySolver()
-    lits = {Eq(a, b), Eq(f(a), f(b))}
+    lits = {Eq(a, b), Eq(F(a), F(b))}
     solver.Initialize(lits)
 
     solver.SetTrue(Eq(a, b))
-    # should propagate f(a)=f(b)
-    assert solver.IsTrue(Eq(f(a), f(b))) is True
+    # should propagate F(a)=F(b)
+    assert solver.IsTrue(Eq(F(a), F(b))) is True
 
 
 def test_disequality_no_merge():
@@ -164,6 +166,114 @@ def test_backtrack_recovery():
     assert euf.IsTrue(Eq(x, y)) is None
 
 
+def test_multiple_function_symbols_deep_nesting():
+        """Test congruence with multiple function symbols and deep nesting."""
+        solver = EUFTheorySolver()
+
+        # Set up complex function applications with deep nesting
+        constraints = [
+            Eq(a, b),
+            Eq(c, d),
+            Eq(e, f),
+            Eq(F(a), G(c)),
+            Eq(G(c), H(e)),
+            Eq(H(F(a)), I(G(c))),
+            Eq(I(H(F(a))), J(I(G(c)))),
+            Eq(J(I(H(F(a)))), K(J(I(G(c)))))
+        ]
+
+        solver.Initialize(set(constraints))
+
+        # Assert base equalities
+        solver.SetTrue(Eq(a, b))
+        solver.SetTrue(Eq(c, d))
+        solver.SetTrue(Eq(e, f))
+
+        # Assert function equalities
+        solver.SetTrue(Eq(F(a), G(c)))
+        solver.SetTrue(Eq(G(c), H(e)))
+        solver.SetTrue(Eq(H(F(a)), I(G(c))))
+        solver.SetTrue(Eq(I(H(F(a))), J(I(G(c)))))
+        solver.SetTrue(Eq(J(I(H(F(a)))), K(J(I(G(c))))))
+
+        # Test congruence propagation through all levels
+        assert solver.IsTrue(Eq(F(b), G(d))) is True  # F(a)=F(b), G(c)=G(d)
+        assert solver.IsTrue(Eq(G(d), H(f))) is True  # G(c)=G(d), H(e)=H(f)
+        assert solver.IsTrue(Eq(H(F(b)), I(G(d)))) is True
+        assert solver.IsTrue(Eq(I(H(F(b))), J(I(G(d))))) is True
+        assert solver.IsTrue(Eq(J(I(H(F(b)))), K(J(I(G(d)))))) is True
+
+
+def test_function_array_like_operations():
+    """Test function applications that simulate array operations."""
+    solver = EUFTheorySolver()
+
+    # Simulate array[index] = value operations with functions
+    # Let F represent an array, indices are the first argument
+    constraints = [
+            # Set up index equalities
+            Eq(i, j),  # indices i and j are equal
+            Eq(x, y),  # values x and y are equal
+
+            # Array operations: F(i, v) represents array updated at index i with value v
+            Eq(F(a, x), F(b, y)),  # F(a,x) = F(b,y)
+            Eq(F(i, x), F(j, y)),  # Should be equal due to i=j, x=y
+
+            # Nested function calls
+            Eq(G(F(a, x)), G(F(b, y))),
+            Eq(H(G(F(a, x))), c),
+        ]
+
+    solver.Initialize(set(constraints))
+
+    # Assert the constraints
+    for constraint in constraints:
+        solver.SetTrue(constraint)
+
+    # Verify congruence holds
+    assert solver.IsTrue(Eq(F(i, x), F(j, y))) is True
+    assert solver.IsTrue(Eq(G(F(i, x)), G(F(j, y)))) is True
+
+def test_functional_composition_chains():
+    """Test long chains of functional composition."""
+    solver = EUFTheorySolver()
+
+    # Create a composition chain: F(G(H(I(J(x)))))
+    # with various equalities that should propagate through
+    constraints = [
+            Eq(x, y),
+            Eq(J(x), a),
+            Eq(I(a), b),
+            Eq(H(b), c),
+            Eq(G(c), d),
+            Eq(F(d), e),
+
+            # Additional constraints for testing
+            Eq(J(y), a),  # Should be inferred by congruence
+            Eq(F(G(H(I(J(x))))), e)  # Should be inferred
+        ]
+
+    solver.Initialize(set(constraints))
+
+    # Assert base constraints (except the ones that should be inferred)
+    solver.SetTrue(Eq(x, y))
+    solver.SetTrue(Eq(J(x), a))
+    solver.SetTrue(Eq(I(a), b))
+    solver.SetTrue(Eq(H(b), c))
+    solver.SetTrue(Eq(G(c), d))
+    solver.SetTrue(Eq(F(d), e))
+
+    # Test that congruence propagated correctly
+    assert solver.IsTrue(Eq(J(y), a)) is True
+    assert solver.IsTrue(Eq(I(J(x)), b)) is True
+    assert solver.IsTrue(Eq(H(I(J(x))), c)) is True
+    assert solver.IsTrue(Eq(G(H(I(J(x)))), d)) is True
+    assert solver.IsTrue(Eq(F(G(H(I(J(x))))), e)) is True
+
+    # Test the full composition
+    assert solver.IsTrue(Eq(F(G(H(I(J(y))))), e)) is True
+
+
 @XFAIL
 def test_issue_1():
     enc_cnf = EncodedCNF()
@@ -179,7 +289,7 @@ def test_issue_1():
 def test_order_key():
     """Test _order_key function for consistent ordering."""
     assert _order_key(a) == str(a)
-    assert _order_key(f(a)) == str(f(a))
+    assert _order_key(F(a)) == str(F(a))
 
 
 def test_ordered_pair():
@@ -372,16 +482,16 @@ def test_functional_congruence_complex():
     solver = EUFTheorySolver()
     solver.Initialize({
         Eq(a, b),
-        Eq(f(a), c),
-        Eq(f(b), d),
-        Eq(g(f(a)), e)
+        Eq(F(a), c),
+        Eq(F(b), d),
+        Eq(G(F(a)), e)
     })
 
     solver.SetTrue(Eq(a, b))
-    solver.SetTrue(Eq(f(a), c))
+    solver.SetTrue(Eq(F(a), c))
 
-    # f(a) should equal f(b) by congruence
-    assert solver.IsTrue(Eq(f(a), f(b))) is True
+    # F(a) should equal F(b) by congruence
+    assert solver.IsTrue(Eq(F(a), F(b))) is True
 
 
 def test_nested_functions():
@@ -389,15 +499,15 @@ def test_nested_functions():
     solver = EUFTheorySolver()
     solver.Initialize({
         Eq(a, b),
-        Eq(f(g(a)), c),
-        Eq(f(g(b)), d)
+        Eq(F(G(a)), c),
+        Eq(F(G(b)), d)
     })
 
     solver.SetTrue(Eq(a, b))
-    solver.SetTrue(Eq(f(g(a)), c))
+    solver.SetTrue(Eq(F(G(a)), c))
 
     # Should propagate through nested functions
-    assert solver.IsTrue(Eq(f(g(a)), f(g(b)))) is True
+    assert solver.IsTrue(Eq(F(G(a)), F(G(b)))) is True
 
 
 def test_from_encoded_cnf_with_trivial_true():
@@ -491,16 +601,16 @@ def test_congruence_with_multiple_functions():
     solver = EUFTheorySolver()
     solver.Initialize({
         Eq(a, b),
-        Eq(f(a), c), Eq(g(a), d)
+        Eq(F(a), c), Eq(G(a), d)
     })
 
     solver.SetTrue(Eq(a, b))
-    solver.SetTrue(Eq(f(a), c))
-    solver.SetTrue(Eq(g(a), d))
+    solver.SetTrue(Eq(F(a), c))
+    solver.SetTrue(Eq(G(a), d))
 
-    # Both f and g should respect congruence
-    assert solver.IsTrue(Eq(f(a), f(b))) is True
-    assert solver.IsTrue(Eq(g(a), g(b))) is True
+    # Both F and G should respect congruence
+    assert solver.IsTrue(Eq(F(a), F(b))) is True
+    assert solver.IsTrue(Eq(G(a), G(b))) is True
 
 
 def test_deep_explanation_chain():
@@ -697,20 +807,17 @@ def test_explain_disequality_complex_scenario():
 
 def test_explain_disequality_with_functions():
     """Test disequality explanation involving function terms."""
-    from sympy import Function
-    f = Function('f')
-
     solver = EUFTheorySolver()
 
-    # Set up: f(x) != f(y), x = a, y = b
-    solver.SetTrue(Ne(f(x), f(y)))
+    # Set up: F(x) != F(y), x = a, y = b
+    solver.SetTrue(Ne(F(x), F(y)))
     solver.SetTrue(Eq(x, a))
     solver.SetTrue(Eq(y, b))
 
-    # Explanation for f(a) != f(b) should include the function disequality and argument equalities
-    explanation = solver.explain_disequality(f(a), f(b))
+    # Explanation for F(a) != F(b) should include the function disequality and argument equalities
+    explanation = solver.explain_disequality(F(a), F(b))
 
-    assert Ne(f(x), f(y)) in explanation
+    assert Ne(F(x), F(y)) in explanation
 
 
 def test_explain_disequality_edge_cases():
