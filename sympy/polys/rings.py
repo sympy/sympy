@@ -795,7 +795,9 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
         if res is not NotImplemented:
             return res
         if isinstance(other, PolyElement):
-            return other._try_add_ground(self)
+            domain = other.ring.domain
+            if isinstance(domain, PolynomialRing) and domain.ring.is_element(self):
+                return other._add_ground(self)
         return NotImplemented
 
     def __radd__(self, other: Er | int) -> PolyElement[Er]:
@@ -884,7 +886,19 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
         else:
             return self._rsub_ground(cp2)
 
-    def __mul__(self, other: PolyElement[Er] | Er | int) -> PolyElement[Er]:
+    @overload
+    def __mul__(self, other: PolyElement[Er] | Er | int, /) -> PolyElement[Er]:
+        ...
+
+    @overload
+    def __mul__(
+        self, other: PolyElement[PolyElement[Er]], /
+    ) -> PolyElement[PolyElement[Er]]:
+        ...
+
+    def __mul__(
+        self, other: PolyElement[Er] | Er | int | PolyElement[PolyElement[Er]], /
+    ) -> PolyElement[Er] | PolyElement[PolyElement[Er]]:
         """Multiply two polynomials.
 
         Examples
@@ -900,31 +914,25 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
         x**2 - y**2
 
         """
-        ring = self.ring
         if not self or not other:
-            return ring.zero
+            return self.ring.zero
+
+        if self.ring.is_element(other):
+            return self._mul(other)
 
         if isinstance(other, PolyElement):
-            if other.ring == ring:
-                return self._mul(other)
-            elif (
-                isinstance(ring.domain, PolynomialRing) and ring.domain.ring == other.ring
-            ):
-                pass
-            elif (
-                isinstance(other.ring.domain, PolynomialRing)
-                and other.ring.domain.ring == ring
-            ):
-                return other.__rmul__(self)
-            else:
-                return NotImplemented
+            domain = other.ring.domain
+            if isinstance(domain, PolynomialRing) and domain.ring.is_element(self):
+                return other.mul_ground(self)
 
-        try:
-            cp2 = ring.domain_new(other)
-        except CoercionFailed:
-            return NotImplemented
-        else:
-            return self.mul_ground(cp2)
+        res = self._try_mul_ground(other)
+        if res is not NotImplemented:
+            return res
+
+        if isinstance(other, PolyElement):
+            return other._try_mul_ground(self)
+
+        return NotImplemented
 
     def __rmul__(self, other: PolyElement[Er] | Er | int) -> PolyElement[Er]:
         """p2 * p1 with p2 in the coefficient domain of p1.
@@ -941,14 +949,14 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
         4*x + 4*y
 
         """
+        return self._try_mul_ground(other)
+
+    def _try_mul_ground(self, other: object) -> PolyElement[Er] | NotImplementedType:
         ring = self.ring
-        if isinstance(other, PolyElement):
-            try:
-                p2 = ring.domain_new(other)
-            except CoercionFailed:
-                return NotImplemented # unreachable
-            else:
-                return self.mul_ground(p2)
+
+        domain = ring.domain
+        if domain.of_type(other):
+            return self.mul_ground(other)
 
         try:
             cp2 = ring.domain_new(other)
