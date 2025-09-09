@@ -5,7 +5,7 @@ from sympy.matrices import Matrix, zeros, eye
 from sympy.core.symbol import Symbol
 from sympy.core.numbers import Rational
 from sympy.functions.elementary.miscellaneous import sqrt
-from sympy.simplify.simplify import simplify
+from sympy.simplify.simplify import simplify, factor_nc
 from sympy.abc import x
 
 
@@ -270,40 +270,37 @@ def test_rref():
 
 
 def test_inverse_GE_noncommutative():
-    a, b, c, d = symbols('a, b, c, d', commutative=False)
-    m = Matrix([
-                [a, b],
-                [c, d]])
+    A, B, C, D = symbols('A, B, C, D', commutative=False)
+    M = Matrix([[A, B], [C, D]])
 
-    m_inverse_calculated = (m).inverse_GE()
+    # Appealing to convenient authority,
+    # https://en.wikipedia.org/wiki/Schur_complement
+    S = D - C*A**(-1)*B
+    M_inv_expected = Matrix([
+        [A**(-1) + A**(-1)*B*S**(-1)*C*A**(-1), -A**(-1)*B*S**(-1)],
+        [-S**(-1)*C*A**(-1), S**(-1)]
+    ])
 
-    #Appealing to convenient authority,
-    #https://en.wikipedia.org/wiki/Schur_complement
-    m_inverse_expected = Matrix([
-                    [a**(-1) + a**(-1)*b*(-c*a**(-1)*b + d)**(-1)*c*a**(-1), -a**(-1)*b*(-c*a**(-1)*b + d)**(-1)],
-                    [-(-c*a**(-1)*b + d)**(-1)*c*a**(-1), (-c*a**(-1)*b + d)**(-1)]])
-    assert m_inverse_calculated == m_inverse_expected
+    M_inv = M.inverse_GE()
+    assert M_inv == M_inv_expected
 
-    #This result also agrees with Block inverse, upon expansion:
-    assert m_inverse_calculated == m.inverse_BLOCK().expand()
+    # This result also agrees with Block inverse, upon expansion:
+    assert M_inv == M.inverse_BLOCK().expand()
 
-    # More definitively, we expect the products of m and its inverse (in either order)
-    # to be the identity matrix. However, the results are not simple and
-    # because sympy simplification is limited for noncommutative expressions,
-    # current simplify() can only usefully apply expand() in this context.
-    # Consequently (in each case) only 2 of the 4 elements of the
-    # resulting product matrix can be asserted to be 1 or 0.
-    m_m_inverse = (m*m_inverse_calculated).expand()
+    # SymPy noncommutative simplification calls can currently
+    # verify that M * M_inv == I and M_inv * M == I
+    # for only 3 of 4 entries each, so we check those:
+    M_M_inv = (M*M_inv).expand().applyfunc(factor_nc)
+    assert M_M_inv[0, 0] == 1
+    assert M_M_inv[0, 1] == 0
+    # assert M_M_inv[1, 0] == 0
+    assert M_M_inv[1, 1] == 1
 
-    assert (m_m_inverse)[0, 0] == 1
-
-    assert (m_m_inverse)[0, 1] == 0
-
-    m_inverse_m = (m_inverse_calculated*m).expand()
-
-    assert (m_inverse_m)[0, 0] == 1
-
-    assert (m_inverse_m)[1, 0] == 0
+    M_inv_M = (M_inv*M).expand().applyfunc(factor_nc)
+    assert M_inv_M[0, 0] == 1
+    # assert M_inv_M[0, 1] == 0
+    assert M_inv_M[1, 0] == 0
+    assert M_inv_M[1, 1] == 1
 
 
 def test_rref_rhs():
