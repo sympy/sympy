@@ -791,13 +791,20 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
         """
         if self.ring.is_element(other):
             return self._add(other)
-        res = self._try_add_ground(other)
-        if res is not NotImplemented:
-            return res
+
+
         if isinstance(other, PolyElement):
             domain = other.ring.domain
             if isinstance(domain, PolynomialRing) and domain.ring.is_element(self):
-                return other._add_ground(self)
+                return cast('PolyElement[PolyElement[Er]]', other)._add_ground(self)
+
+        res = self._try_add_ground(other)
+        if res is not NotImplemented:
+            return res
+
+        if isinstance(other, PolyElement):
+            return other._try_add_ground(self)
+
         return NotImplemented
 
     def __radd__(self, other: Er | int) -> PolyElement[Er]:
@@ -845,6 +852,11 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
         """
         if self.ring.is_element(other):
             return self._sub(other)
+
+        if isinstance(other, PolyElement):
+            domain = other.ring.domain
+            if isinstance(domain, PolynomialRing) and domain.ring.is_element(self):
+                return - cast('PolyElement[PolyElement[Er]]', other)._rsub_ground(self)
 
         res = self._try_sub_ground(other)
         if res is not NotImplemented:
@@ -923,7 +935,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
         if isinstance(other, PolyElement):
             domain = other.ring.domain
             if isinstance(domain, PolynomialRing) and domain.ring.is_element(self):
-                return other.mul_ground(self)
+                return cast('PolyElement[PolyElement[Er]]', other).mul_ground(self)
 
         res = self._try_mul_ground(other)
         if res is not NotImplemented:
