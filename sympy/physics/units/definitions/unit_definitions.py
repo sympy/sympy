@@ -120,7 +120,7 @@ becquerel = Bq = Quantity("becquerel", abbrev="Bq")
 mg = milligram = milligrams = Quantity("milligram", abbrev="mg")
 mg.set_global_relative_scale_factor(milli, gram)
 
-ug = microgram = micrograms = Quantity("microgram", abbrev="ug", latex_repr=r"\mu\text{g}")
+ug = microgram = micrograms = Quantity("microgram", abbrev="ug", latex_repr=r"\mu\text{g}", typst_repr=r'mu upright("g")')
 ug.set_global_relative_scale_factor(micro, gram)
 
 # Atomic mass constant
