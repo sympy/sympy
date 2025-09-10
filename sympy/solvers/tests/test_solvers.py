@@ -2720,3 +2720,15 @@ def test_solve_Piecewise():
         (46*x - 3*(x - 6)**2/2 - 276, (x >= 6) & (x < 10)),
         (0, x < 10),  # this will simplify away
         (S.NaN,True)))
+
+def test_issue_27233():
+
+    x, y = symbols('x y', real=True)
+
+    eq1 = (x**2 - 6*x + y**2 + 9) * log(Abs(x) - Abs(y) - 2)
+    eq2 = x**2 - y
+
+    solutions = solve([eq1, eq2], [x, y])
+    assert solutions == [
+        {x: 3, y: 0}, {x: -3, y: 0}
+    ]
