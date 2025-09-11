@@ -2,7 +2,7 @@
 
 from sympy.assumptions.ask import Q
 from sympy.core.symbol import symbols
-from sympy.core.relational import Unequality, Equality
+from sympy.core.relational import Ne, Eq, Unequality
 from sympy.logic.boolalg import And, Or, Implies, Equivalent, true, false
 from sympy.logic.inference import literal_symbol, \
      pl_true, satisfiable, valid, entails, PropKB
@@ -353,20 +353,18 @@ def test_z3():
     f,h = symbols('f h', cls=Function)
     x,y,c2 = symbols('x y c2')
 
-    assert z3_satisfiable(Equality(h(x, y), h(y, x))) == {Q.eq(h(x, y), h(y, x)): True}
-    # assert z3_satisfiable(Equality(f(h(x, y)), h(f(x), f(y)))) is True
-    # assert z3_satisfiable(Unequality(f(c2), x)) is True
+    assert z3_satisfiable(Eq(h(x, y), h(y, x))) == {Q.eq(h(x, y), h(y, x)): True}
 
     expr = And(
-        Unequality(x, y),
-        Equality(f(x), f(y)),
-        Unequality(h(f(x)), h(f(y)))
+        Ne(x, y),
+        Eq(f(x), f(y)),
+        Ne(h(f(x)), h(f(y)))
     )
     assert z3_satisfiable(expr) is False
 
     expr = And(
-        Equality(x, y),
-        Unequality(f(x), f(y))
+        Eq(x, y),
+        Ne(f(x), f(y))
     )
     assert z3_satisfiable(expr) is False
 
