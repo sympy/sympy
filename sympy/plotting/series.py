@@ -84,7 +84,7 @@ def _uniform_eval(f1, f2, *args, modules=None,
 
     try:
         return wrapper_func(f1, *args)
-    except Exception as err:
+    except Exception as err: # noqa: BLE001
         return _eval_with_sympy(err)
 
 
@@ -1365,7 +1365,7 @@ class LineOver1DRangeSeries(Line2DBaseSeries):
             else:
                 f = lambdify([self.var], self.expr, self.modules)
             x, y = self._adaptive_sampling_helper(f)
-        except Exception as err:
+        except Exception as err: # noqa: BLE001
             warnings.warn(
                 "The evaluation with %s failed.\n" % (
                     "NumPy/SciPy" if not self.modules else self.modules) +
@@ -1638,7 +1638,7 @@ class Parametric2DLineSeries(ParametricLineBaseSeries):
                 f_x = lambdify([self.var], self.expr_x)
                 f_y = lambdify([self.var], self.expr_y)
             x, y, p = self._adaptive_sampling_helper(f_x, f_y)
-        except Exception as err:
+        except Exception as err: # noqa: BLE001
             warnings.warn(
                 "The evaluation with %s failed.\n" % (
                     "NumPy/SciPy" if not self.modules else self.modules) +

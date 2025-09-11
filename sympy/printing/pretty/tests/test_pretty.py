@@ -58,7 +58,8 @@ from sympy.matrices import (Adjoint, Inverse, MatrixSymbol, Transpose,
 from sympy.matrices.expressions import hadamard_power
 
 from sympy.physics import mechanics
-from sympy.physics.control.lti import (TransferFunction, Feedback, TransferFunctionMatrix,
+from sympy.physics.control.lti import (
+    TransferFunction, DiscreteTransferFunction,Feedback, TransferFunctionMatrix,
     Series, Parallel, MIMOSeries, MIMOParallel, MIMOFeedback, StateSpace)
 from sympy.physics.units import joule, degree
 from sympy.printing.pretty import pprint, pretty as xpretty
@@ -2457,6 +2458,30 @@ def test_pretty_TransferFunction():
     assert upretty(tf2) == "2⋅s + 1\n───────\n 3 - p "
     tf3 = TransferFunction(p, p + 1, p)
     assert upretty(tf3) == "  p  \n─────\np + 1"
+
+
+def test_pretty_DiscreteTransferFunction():
+    tf1 = DiscreteTransferFunction(s - 1, s + 1, s)
+    assert upretty(tf1) == \
+"""\
+s - 1                  \n\
+─────, sampling time: 1\n\
+s + 1                  \
+"""
+    tf2 = DiscreteTransferFunction(2*s + 1, 3 - p, s, Symbol('T'))
+    assert upretty(tf2) == \
+"""\
+2⋅s + 1                  \n\
+───────, sampling time: T\n\
+ 3 - p                   \
+"""
+    tf3 = DiscreteTransferFunction(p, p + 1, p, 0.1)
+    assert upretty(tf3) == \
+"""\
+  p                                    \n\
+─────, sampling time: 0.100000000000000\n\
+p + 1                                  \
+"""
 
 
 def test_pretty_Series():

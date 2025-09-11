@@ -49,7 +49,10 @@ from sympy.matrices.expressions.matexpr import MatrixSymbol
 from sympy.matrices.expressions.permutation import PermutationMatrix
 from sympy.matrices.expressions.slice import MatrixSlice
 from sympy.matrices.expressions.dotproduct import DotProduct
-from sympy.physics.control.lti import TransferFunction, Series, Parallel, Feedback, TransferFunctionMatrix, MIMOSeries, MIMOParallel, MIMOFeedback
+from sympy.physics.control.lti import (
+    TransferFunction, DiscreteTransferFunction, Series, Parallel, Feedback,
+    TransferFunctionMatrix, MIMOSeries, MIMOParallel, MIMOFeedback,
+)
 from sympy.physics.quantum import Commutator, Operator
 from sympy.physics.quantum.trace import Tr
 from sympy.physics.units import meter, gibibyte, gram, microgram, second, milli, micro
@@ -1409,6 +1412,10 @@ def test_latex_log():
     assert latex(pow(log(x), x)) == r"\log{\left(x \right)}^{x}"
     assert latex(pow(log(x), x), ln_notation=True) == \
         r"\ln{\left(x \right)}^{x}"
+    assert latex(log(x, y, evaluate=False)) == r"\log_y{\left(x \right)}"
+    assert latex(log(x, 10, evaluate=False)) == r"\log_{10}{\left(x \right)}"
+    assert latex(log(x, y, evaluate=False), ln_notation=True) == r"\log_y{\left(x \right)}"
+    assert latex(log(x, 10, evaluate=False), ln_notation=True) == r"\log_{10}{\left(x \right)}"
 
 
 def test_issue_3568():
@@ -2619,6 +2626,16 @@ def test_TransferFunction_printing():
     assert latex(tf2) == r"\frac{x + 1}{2 - y}"
     tf3 = TransferFunction(y, y**2 + 2*y + 3, y)
     assert latex(tf3) == r"\frac{y}{y^{2} + 2 y + 3}"
+
+
+def test_DiscreteTransferFunction_printing():
+    tf1 = DiscreteTransferFunction(x - 1, x + 1, x)
+    assert latex(tf1) == r"\frac{x - 1}{x + 1} \text{, sampling time: } {1}"
+    tf2 = DiscreteTransferFunction(x + 1, 2 - y, x, Symbol('T'))
+    assert latex(tf2) == r"\frac{x + 1}{2 - y} \text{, sampling time: } {T}"
+    tf3 = DiscreteTransferFunction(y, y**2 + 2*y + 3, y, 0.1)
+    assert latex(tf3) == \
+        r"\frac{y}{y^{2} + 2 y + 3} \text{, sampling time: } {0.1}"
 
 
 def test_Parallel_printing():

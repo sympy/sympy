@@ -8,7 +8,7 @@ from .gosper import gosper_sum
 from sympy.core.expr import Expr
 from sympy.core.add import Add
 from sympy.core.containers import Tuple
-from sympy.core.function import Derivative, expand
+from sympy.core.function import Derivative, expand, expand_mul
 from sympy.core.mul import Mul
 from sympy.core.numbers import Float, _illegal
 from sympy.core.relational import Eq
@@ -20,7 +20,7 @@ from sympy.functions.combinatorial.numbers import bernoulli, harmonic
 from sympy.functions.elementary.complexes import re
 from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.piecewise import Piecewise
-from sympy.functions.elementary.trigonometric import cot, csc
+from sympy.functions.elementary.trigonometric import tan, sin, cot, csc
 from sympy.functions.special.hyper import hyper
 from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.functions.special.zeta_functions import zeta
@@ -32,7 +32,6 @@ from sympy.polys.polytools import parallel_poly_from_expr, Poly, factor
 from sympy.polys.rationaltools import together
 from sympy.series.limitseq import limit_seq
 from sympy.series.order import O
-from sympy.series.residues import residue
 from sympy.sets.contains import Contains
 from sympy.sets.sets import FiniteSet, Interval
 from sympy.utilities.iterables import sift
@@ -1456,9 +1455,24 @@ def eval_sum_residue(f, i_a_b):
     """
     i, a, b = i_a_b
 
-    # If lower limit > upper limit: Karr Summation Convention
-    if a.is_comparable and b.is_comparable and a > b:
-        return eval_sum_residue(f, (i, b + S.One, a - S.One))
+    # We don't know how to deal with symbolic constants in summand
+    if f.free_symbols - {i}:
+        return None
+
+    if not (a.is_Integer or a in (S.Infinity, S.NegativeInfinity)):
+        return None
+    if not (b.is_Integer or b in (S.Infinity, S.NegativeInfinity)):
+        return None
+
+    # Quick exit heuristic for the sums without infinite bound;
+    # right now the order is arbitrary
+    if not any(x in (S.NegativeInfinity, S.Infinity) for x in (a, b)):
+        return None
+
+    # If lower limit > upper limit: Karr Summation Convention;
+    # now order is canonical
+    if a > b:
+        return -eval_sum_residue(f, (i, b + S.One, a - S.One))
 
     def is_even_function(numer, denom):
         """Test if the rational function is an even function"""
@@ -1491,29 +1505,8 @@ def eval_sum_residue(f, i_a_b):
         shift = - b / a / n
         return shift
 
-    #Need a dummy symbol with no assumptions set for get_residue_factor
-    z = Dummy('z')
-
-    def get_residue_factor(numer, denom, alternating):
-        residue_factor = (numer.as_expr() / denom.as_expr()).subs(i, z)
-        if not alternating:
-            residue_factor *= cot(S.Pi * z)
-        else:
-            residue_factor *= csc(S.Pi * z)
-        return residue_factor
-
-    # We don't know how to deal with symbolic constants in summand
-    if f.free_symbols - {i}:
-        return None
-
-    if not (a.is_Integer or a in (S.Infinity, S.NegativeInfinity)):
-        return None
-    if not (b.is_Integer or b in (S.Infinity, S.NegativeInfinity)):
-        return None
-
-    # Quick exit heuristic for the sums which doesn't have infinite range
-    if a != S.NegativeInfinity and b != S.Infinity:
-        return None
+    def residues(numer, denom, alternating, poles):
+        return [_get_residue(numer, denom, a, alternating) for a in poles]
 
     match = match_rational(f, i)
     if match:
@@ -1530,44 +1523,51 @@ def eval_sum_residue(f, i_a_b):
     if denom.degree(i) - numer.degree(i) < 2:
         return None
 
-    if (a, b) == (S.NegativeInfinity, S.Infinity):
+    # handle non-even function with limits (-oo, oo), (-oo, k) or (k, oo)
+
+    both_inf = (a,b) == (S.NegativeInfinity, S.Infinity)
+
+    if not is_even_function(numer, denom):
+        # Try shifting summation and check if the summand can be made
+        # even wrt the origin.
+        # Sum(f(n), (n, a, b)) => Sum(f(n + s), (n, a - s, b - s))
+        shift = get_shift(denom)
+
+        if not shift:
+            return None
+
+        if shift.is_Integer:
+            numer = numer.shift(shift)
+            denom = denom.shift(shift)
+            if not is_even_function(numer, denom):
+                return None
+
+            if alternating:
+                f = S.NegativeOne**i * (S.NegativeOne**shift * numer.as_expr() / denom.as_expr())
+            else:
+                f = numer.as_expr() / denom.as_expr()
+            return eval_sum_residue(f, (i, a-shift, b-shift))
+        elif not both_inf:
+            return None  # can't make a shift that keeps limits integer
+
+    if both_inf:  # even or not
         poles = get_poles(denom)
         if poles is None:
             return None
         int_roots, nonint_roots = poles
-
         if int_roots:
             return None
 
-        residue_factor = get_residue_factor(numer, denom, alternating)
-        residues = [residue(residue_factor, z, root) for root in nonint_roots]
-        return -S.Pi * sum(residues)
+        return -S.Pi * sum(residues(numer, denom, alternating, nonint_roots))
 
-    if not (a.is_finite and b is S.Infinity):
-        return None
+    # handle even function with semi-infinite limits
 
-    if not is_even_function(numer, denom):
-        # Try shifting summation and check if the summand can be made
-        # and even function from the origin.
-        # Sum(f(n), (n, a, b)) => Sum(f(n + s), (n, a - s, b - s))
-        shift = get_shift(denom)
+    if a is S.NegativeInfinity:
+        # this is ok for an even function and will be necessary
+        # so the extraneous roots can be handled properly below
+        a, b = -b, -a
 
-        if not shift.is_Integer:
-            return None
-        if shift == 0:
-            return None
-
-        numer = numer.shift(shift)
-        denom = denom.shift(shift)
-
-        if not is_even_function(numer, denom):
-            return None
-
-        if alternating:
-            f = S.NegativeOne**i * (S.NegativeOne**shift * numer.as_expr() / denom.as_expr())
-        else:
-            f = numer.as_expr() / denom.as_expr()
-        return eval_sum_residue(f, (i, a-shift, b-shift))
+    assert a.is_Integer and b is S.Infinity  # even function with limits (k, oo)
 
     poles = get_poles(denom)
     if poles is None:
@@ -1575,11 +1575,10 @@ def eval_sum_residue(f, i_a_b):
     int_roots, nonint_roots = poles
 
     if int_roots:
-        int_roots = [int(root) for root in int_roots]
         int_roots_max = max(int_roots)
         int_roots_min = min(int_roots)
         # Integer valued poles must be next to each other
-        # and also symmetric from origin (Because the function is even)
+        # and also symmetric from origin (because the function is even)
         if not len(int_roots) == int_roots_max - int_roots_min + 1:
             return None
 
@@ -1587,9 +1586,7 @@ def eval_sum_residue(f, i_a_b):
         if a <= max(int_roots):
             return None
 
-    residue_factor = get_residue_factor(numer, denom, alternating)
-    residues = [residue(residue_factor, z, root) for root in int_roots + nonint_roots]
-    full_sum = -S.Pi * sum(residues)
+    full_sum = -S.Pi * sum(residues(numer, denom, alternating, int_roots + nonint_roots))
 
     if not int_roots:
         # Compute Sum(f, (i, 0, oo)) by adding a extraneous evaluation
@@ -1611,6 +1608,57 @@ def eval_sum_residue(f, i_a_b):
     result = half_sum - sum(extraneous)
 
     return result
+
+
+def _get_residue(numer: Poly, denom: Poly, a: Expr, alternating: bool) -> Expr:
+    """``Res((cot/csc)(pi*z)*numer(z)/denom(z))`` at ``a``."""
+    #
+    # Helper for eval_sum_residue. Since we know that a is a root of denom, we
+    # can factor out ``(x - a)^p`` from denom exactly using polynomials over
+    # the extension field containing ``a``. This is more efficient and more
+    # robust than the current implementation of ``residue`` which uses a series
+    # expansion.
+    #
+    x = denom.gen
+    z = Dummy("z")
+
+    if (2 * a).is_Integer:
+        # In this case we have to deal with zeros and poles of cot(pi*z) or
+        # csc(pi*z) which complicate the residue calculation. The series
+        # residue function handles rational roots well enough though.
+        from sympy.series.residues import residue
+        if not alternating:
+            return residue(cot(S.Pi*z)*(numer(z)/denom(z)), z, a)
+        else:
+            return residue(csc(S.Pi*z)*(numer(z)/denom(z)), z, a)
+
+    numer = numer.xreplace({x: z})
+    denom = denom.xreplace({x: z})
+    za = Poly(z - a, z, extension=True)
+    za, denom = za.unify(denom)
+
+    # Divide out (z - a)^p from denom
+    # Should this first cancel factors of (z - a) between numer and denom?
+    p = 0
+    q, r = denom.div(za)
+    while r == 0 and denom != 0:
+        denom = q
+        p += 1
+        q, r = denom.div(za)
+
+    assert p > 0, "a is not a pole"
+
+    if not alternating:
+        expr = (1/tan(S.Pi*z))*(numer/denom)
+    else:
+        expr = (1/sin(S.Pi*z))*(numer/denom)
+
+    if p > 1:
+        expr = expr.diff((z, p-1)) / factorial(p - 1)
+
+    expr = expr.xreplace({S.Pi*z: expand_mul(S.Pi*a), z: a})
+
+    return expr
 
 
 def _eval_matrix_sum(expression):

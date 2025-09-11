@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING, Optional, overload, Literal, Any, cast, Callable
+
 from functools import wraps, reduce
 from operator import mul
-from typing import Optional, overload, Literal, Any
 from collections import Counter, defaultdict
 from collections.abc import Iterator
 
@@ -19,7 +20,7 @@ from sympy.core.evalf import (
 from sympy.core.function import Derivative
 from sympy.core.mul import Mul, _keep_coeff
 from sympy.core.intfunc import ilcm
-from sympy.core.numbers import I, Integer, equal_valued
+from sympy.core.numbers import I, Integer, equal_valued, NegativeInfinity
 from sympy.core.relational import Relational, Equality
 from sympy.core.sorting import ordered
 from sympy.core.symbol import Dummy, Symbol
@@ -29,6 +30,7 @@ from sympy.logic.boolalg import BooleanAtom
 from sympy.polys import polyoptions as options
 from sympy.polys.constructor import construct_domain
 from sympy.polys.domains import FF, QQ, ZZ
+from sympy.polys.domains.domain import Domain
 from sympy.polys.domains.domainelement import DomainElement
 from sympy.polys.fglmtools import matrix_fglm
 from sympy.polys.groebnertools import groebner as _groebner
@@ -65,6 +67,9 @@ import sympy.polys
 import mpmath
 from mpmath.libmp.libhyper import NoConvergence
 
+
+if TYPE_CHECKING:
+    from typing import Self
 
 
 def _polifyit(func):
@@ -168,7 +173,7 @@ class Poly(Basic):
     rep: DMP
     gens: tuple[Expr, ...]
 
-    def __new__(cls, rep, *gens, **args) -> Poly:
+    def __new__(cls, rep, *gens, **args) -> Self:
         """Create a new polynomial instance out of something useful. """
         opt = options.build_options(gens, args)
 
@@ -226,7 +231,7 @@ class Poly(Basic):
         return (self.rep,) + self.gens
 
     @classmethod
-    def from_dict(cls, rep, *gens, **args):
+    def from_dict(cls, rep: dict[tuple[int, ...], Any] | dict[int, Any], *gens, **args):
         """Construct a polynomial from a ``dict``. """
         opt = options.build_options(gens, args)
         return cls._from_dict(rep, opt)
@@ -250,7 +255,7 @@ class Poly(Basic):
         return cls._from_expr(rep, opt)
 
     @classmethod
-    def _from_dict(cls, rep, opt):
+    def _from_dict(cls, rep: dict[tuple[int, ...], Any] | dict[int, Any], opt):
         """Construct a polynomial from a ``dict``. """
         gens = opt.gens
 
@@ -262,12 +267,22 @@ class Poly(Basic):
         domain = opt.domain
 
         if domain is None:
-            domain, rep = construct_domain(rep, opt=opt)
+            domain, rep_d = construct_domain(rep, opt=opt)
         else:
-            for monom, coeff in rep.items():
-                rep[monom] = domain.convert(coeff)
+            convert = domain.convert
+            rep_d = {monom: convert(coeff) for monom, coeff in rep.items()}
 
-        return cls.new(DMP.from_dict(rep, level, domain), *gens)
+        # rep_d could be dict[tuple[int, ...], Er] or dict[int, Er]
+        n = None
+        for n in rep_d: # type: ignore
+            break
+
+        if isinstance(n, int):
+            raw_dict = cast(dict[int, Any], rep_d)
+            return cls.new(DMP.from_raw_dict(raw_dict, domain), *gens)
+        else:
+            multi_dict = cast(dict[tuple[int, ...], Any], rep_d)
+            return cls.new(DMP.from_dict(multi_dict, level, domain), *gens)
 
     @classmethod
     def _from_list(cls, rep, opt):
@@ -444,7 +459,7 @@ class Poly(Basic):
         """Return one polynomial with ``self``'s properties. """
         return self.new(self.rep.one(self.rep.lev, self.rep.dom), *self.gens)
 
-    def unify(f, g):
+    def unify(f, g: Poly | Expr | complex) -> tuple[Poly, Poly]:
         """
         Make ``f`` and ``g`` belong to the same domain.
 
@@ -472,21 +487,21 @@ class Poly(Basic):
         _, per, F, G = f._unify(g)
         return per(F), per(G)
 
-    def _unify(f, g):
-        g = sympify(g)
+    def _unify(f, g: Poly | Expr | complex) -> tuple[Domain, Callable[[DMP], Poly], DMP, DMP]:
+        gs = cast('Poly | Expr', sympify(g))
 
-        if not g.is_Poly:
+        if not isinstance(gs, Poly):
             try:
-                g_coeff = f.rep.dom.from_sympy(g)
+                g_coeff = f.rep.dom.from_sympy(gs)
             except CoercionFailed:
-                raise UnificationFailed("Cannot unify %s with %s" % (f, g))
+                raise UnificationFailed("Cannot unify %s with %s" % (f, gs))
             else:
                 return f.rep.dom, f.per, f.rep, f.rep.ground_new(g_coeff)
 
-        if isinstance(f.rep, DMP) and isinstance(g.rep, DMP):
-            gens = _unify_gens(f.gens, g.gens)
+        if isinstance(f.rep, DMP) and isinstance(gs.rep, DMP):
+            gens = _unify_gens(f.gens, gs.gens)
 
-            dom, lev = f.rep.dom.unify(g.rep.dom, gens), len(gens) - 1
+            dom, lev = f.rep.dom.unify(gs.rep.dom, gens), len(gens) - 1
 
             if f.gens != gens:
                 f_monoms, f_coeffs = _dict_reorder(
@@ -499,18 +514,18 @@ class Poly(Basic):
             else:
                 F = f.rep.convert(dom)
 
-            if g.gens != gens:
+            if gs.gens != gens:
                 g_monoms, g_coeffs = _dict_reorder(
-                    g.rep.to_dict(), g.gens, gens)
+                    gs.rep.to_dict(), gs.gens, gens)
 
-                if g.rep.dom != dom:
-                    g_coeffs = [dom.convert(c, g.rep.dom) for c in g_coeffs]
+                if gs.rep.dom != dom:
+                    g_coeffs = [dom.convert(c, gs.rep.dom) for c in g_coeffs]
 
                 G = DMP.from_dict(dict(list(zip(g_monoms, g_coeffs))), lev, dom)
             else:
-                G = g.rep.convert(dom)
+                G = gs.rep.convert(dom)
         else:
-            raise UnificationFailed("Cannot unify %s with %s" % (f, g))
+            raise UnificationFailed("Cannot unify %s with %s" % (f, gs))
 
         cls = f.__class__
 
@@ -525,7 +540,18 @@ class Poly(Basic):
 
         return dom, per, F, G
 
-    def per(f, rep, gens=None, remove=None):
+    @overload
+    def per(
+        f, rep: DMP, gens: tuple[Expr, ...] | None = None, *, remove: int
+    ) -> Poly | Expr: ...
+    @overload
+    def per(
+        f, rep: DMP, gens: tuple[Expr, ...] | None = None, remove: None = None
+    ) -> Poly: ...
+
+    def per(
+        f, rep: DMP, gens: tuple[Expr, ...] | None = None, remove: int | None = None
+    ) -> Poly | Expr:
         """
         Create a Poly out of the given representation.
 
@@ -1867,7 +1893,7 @@ class Poly(Basic):
                 raise PolynomialError(
                     "a valid generator expected, got %s" % gen)
 
-    def degree(f, gen=0):
+    def degree(f, gen: int = 0) -> int | NegativeInfinity:
         """
         Returns degree of ``f`` in ``x_j``.
 
@@ -1892,12 +1918,12 @@ class Poly(Basic):
         if hasattr(f.rep, 'degree'):
             d = f.rep.degree(j)
             if d < 0:
-                d = S.NegativeInfinity
+                return S.NegativeInfinity
             return d
         else:  # pragma: no cover
             raise OperationNotSupported(f, 'degree')
 
-    def degree_list(f):
+    def degree_list(f) -> tuple[int | NegativeInfinity, ...]:
         """
         Returns a list of degrees of ``f``.
 
@@ -1912,11 +1938,12 @@ class Poly(Basic):
 
         """
         if hasattr(f.rep, 'degree_list'):
-            return f.rep.degree_list()
+            degrees = f.rep.degree_list()
+            return tuple(d if d >= 0 else S.NegativeInfinity for d in degrees)
         else:  # pragma: no cover
             raise OperationNotSupported(f, 'degree_list')
 
-    def total_degree(f):
+    def total_degree(f) -> int | NegativeInfinity:
         """
         Returns the total degree of ``f``.
 
@@ -1933,7 +1960,8 @@ class Poly(Basic):
 
         """
         if hasattr(f.rep, 'total_degree'):
-            return f.rep.total_degree()
+            d = f.rep.total_degree()
+            return d if d >= 0 else S.NegativeInfinity
         else:  # pragma: no cover
             raise OperationNotSupported(f, 'total_degree')
 
@@ -3949,7 +3977,6 @@ class Poly(Basic):
         prec = 10
         # using Counter bc its like an ordered set
         root_counts = Counter(candidates)
-
         while len(root_counts) > num_roots:
             for r in list(root_counts.keys()):
                 # If f(r) != 0 then f(r).evalf() gives a float/complex with precision.
@@ -4146,6 +4173,49 @@ class Poly(Basic):
             name, alt = gg[n](g, max_tries=max_tries, randomize=randomize)
         G = name if by_name else name.get_perm_group()
         return G, alt
+
+    def hurwitz_conditions(f):
+        """
+        Compute the conditions that ensure ``f`` is a Hurwitz polynomial of
+        full degree.
+
+        Explanation
+        ===========
+
+        Returns expressions ``[e1, e2, ...]`` such that the leading coefficient
+        is nonzero and all roots of the polynomial have strictly negative real
+        part if and only if ``ei > 0`` for all ``i``.
+
+        Note
+        ====
+
+        If you need a fast computation of the conditions, consider using the
+        domain ``EXRAW``. Conditions may be less simplified, but the computation
+        will be a lot faster.
+
+        Examples
+        ========
+
+        >>> from sympy import symbols, Poly, reduce_inequalities
+        >>> x, k = symbols("x k")
+        >>> p3 = Poly(x**3 + x**2 + 2*k*x + 1 - k, x)
+        >>> conditions = p3.hurwitz_conditions()
+        >>> conditions
+        [1, 3*k - 1, 1 - k]
+        >>> reduce_inequalities([c > 0 for c in conditions])
+        (1/3 < k) & (k < 1)
+
+        References
+        ==========
+
+        .. [1] G. Meinsma: Elementary proof of the Routh-Hurwitz test.
+               Systems & Control Letters, Volume 25, Issue 4, 1995, Pages 237-242,
+               https://courses.washington.edu/mengr471/resources/Routh_Hurwitz_Proof.pdf
+
+
+        """
+        conds = f.rep.hurwitz_conditions()
+        return [f.domain.to_sympy(cond) for cond in conds]
 
     @property
     def is_zero(f):
@@ -7764,6 +7834,21 @@ def is_zero_dimensional(F, *gens, **args):
     """
     return GroebnerBasis(F, *gens, **args).is_zero_dimensional
 
+
+@public
+def hurwitz_conditions(f, *gens, **args):
+    """
+    See :func:`~.Poly.hurwitz_conditions`.
+
+    """
+    options.allowed_flags(args, ['polys'])
+
+    try:
+        F, opt = poly_from_expr(f, *gens, **args)
+    except PolificationFailed as exc:
+        raise ComputationFailed('hurwitz_conditions', 1, exc)
+
+    return F.hurwitz_conditions()
 
 @public
 class GroebnerBasis(Basic):

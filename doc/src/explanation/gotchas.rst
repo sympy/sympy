@@ -581,9 +581,10 @@ Inverse Trig Functions
 
 SymPy uses different names for some functions than most computer algebra
 systems.  In particular, the inverse trig functions use the python names
-of :obj:`~.asin`, :obj:`~.acos` and so on instead of the usual ``arcsin``
-and ``arccos``.  Use the methods described in :ref:`Symbols <symbols>`
-above to see the names of all SymPy functions.
+of :obj:`~sympy.functions.elementary.trigonometric.asin`,
+:obj:`~sympy.functions.elementary.trigonometric.acos` and so on instead
+of the usual ``arcsin`` and ``arccos``.  Use the methods described in
+:ref:`Symbols <symbols>` above to see the names of all SymPy functions.
 
 Sqrt is not a Function
 ----------------------

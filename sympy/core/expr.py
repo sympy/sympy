@@ -17,7 +17,7 @@ from .sorting import default_sort_key
 from .kind import NumberKind
 from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.misc import as_int, func_name, filldedent
-from sympy.utilities.iterables import has_variety, sift, _sift_true_false
+from sympy.utilities.iterables import has_variety, _sift_true_false
 from mpmath.libmp import mpf_log, prec_to_dps
 from mpmath.libmp.libintmath import giant_steps
 
@@ -94,8 +94,8 @@ class Expr(Basic, EvalfMixin):
         def simplify(self, **kwargs) -> Expr:
             ...
 
-        def evalf(self, n: int = 15, subs: dict[Basic, Basic | float] | None = None,
-                  maxn: int = 100, chop: bool = False, strict: bool  = False,
+        def evalf(self, n: int | None = 15, subs: dict[Basic, Basic | float] | None = None,
+                  maxn: int = 100, chop: bool | int = False, strict: bool  = False,
                   quad: str | None = None, verbose: bool = False) -> Expr:
             ...
 
@@ -248,32 +248,32 @@ class Expr(Basic, EvalfMixin):
 
     @sympify_return([('other', 'Expr')], NotImplemented)
     @call_highest_priority('__radd__')
-    def __add__(self, other) -> Expr:
+    def __add__(self, other: complex) -> Expr:
         return Add(self, other)
 
     @sympify_return([('other', 'Expr')], NotImplemented)
     @call_highest_priority('__add__')
-    def __radd__(self, other) -> Expr:
+    def __radd__(self, other: Expr | complex) -> Expr:
         return Add(other, self)
 
     @sympify_return([('other', 'Expr')], NotImplemented)
     @call_highest_priority('__rsub__')
-    def __sub__(self, other) -> Expr:
+    def __sub__(self, other: complex) -> Expr:
         return Add(self, -other)
 
     @sympify_return([('other', 'Expr')], NotImplemented)
     @call_highest_priority('__sub__')
-    def __rsub__(self, other) -> Expr:
+    def __rsub__(self, other: Expr | complex) -> Expr:
         return Add(other, -self)
 
     @sympify_return([('other', 'Expr')], NotImplemented)
     @call_highest_priority('__rmul__')
-    def __mul__(self, other) -> Expr:
+    def __mul__(self, other: complex) -> Expr:
         return Mul(self, other)
 
     @sympify_return([('other', 'Expr')], NotImplemented)
     @call_highest_priority('__mul__')
-    def __rmul__(self, other) -> Expr:
+    def __rmul__(self, other: Expr | complex) -> Expr:
         return Mul(other, self)
 
     @sympify_return([('other', 'Expr')], NotImplemented)
@@ -282,18 +282,12 @@ class Expr(Basic, EvalfMixin):
         return Pow(self, other)
 
     def __pow__(self, other, mod=None) -> Expr:
+        power = self._pow(other)
         if mod is None:
-            return self._pow(other)
-        try:
-            _self, other, mod = as_int(self), as_int(other), as_int(mod)
-            if other >= 0:
-                return _sympify(pow(_self, other, mod))
-            else:
-                return _sympify(mod_inverse(pow(_self, -other, mod), mod))
-        except ValueError:
-            power = self._pow(other)
+            return power
+        else:
             try:
-                return power%mod
+                return power % mod
             except TypeError:
                 return NotImplemented
 
@@ -358,6 +352,8 @@ class Expr(Basic, EvalfMixin):
     def __int__(self) -> int:
         if not self.is_number:
             raise TypeError("Cannot convert symbols to int")
+        if not self.is_comparable:
+            raise TypeError("Cannot convert non-comparable expression to int")
         r = self.round(2)
         if not r.is_Number:
             raise TypeError("Cannot convert complex to int")
@@ -366,6 +362,9 @@ class Expr(Basic, EvalfMixin):
         i = int(r)
         if not i:
             return i
+        if int_valued(r):
+            r = self.round(15)
+            i = int(r)
         if int_valued(r):
             # non-integer self should pass one of these tests
             if (self > i) is S.true:
@@ -1157,7 +1156,11 @@ class Expr(Basic, EvalfMixin):
         None
 
         """
-        from sympy.polys.polyerrors import PolynomialError, GeneratorsNeeded
+        from sympy.polys.polyerrors import (
+            PolynomialError,
+            GeneratorsNeeded,
+            CoercionFailed,
+        )
         from sympy.polys.polytools import Poly
 
         try:
@@ -1167,9 +1170,10 @@ class Expr(Basic, EvalfMixin):
                 return None
             else:
                 return poly
-        except (PolynomialError, GeneratorsNeeded):
+        except (PolynomialError, GeneratorsNeeded, CoercionFailed):
             # PolynomialError is caught for e.g. exp(x).as_poly(x)
             # GeneratorsNeeded is caught for e.g. S(2).as_poly()
+            # CoercionFailed is caught for e.g. pi.as_poly(x, domain='QQ')
             return None
 
     def as_ordered_terms(self, order=None, data: Literal[False] = False) -> list[Expr]:
@@ -1768,36 +1772,45 @@ class Expr(Basic, EvalfMixin):
         else:
             return None
 
-    def as_independent(self, *deps, **hint) -> tuple[Expr, Expr]:
+    def as_independent(
+        self,
+        *deps: Basic | type[Basic],
+        as_Add: bool | None = None,
+        strict: bool = True,
+    ) -> tuple[Expr, Expr]:
         """
         A mostly naive separation of a Mul or Add into arguments that are not
         are dependent on deps. To obtain as complete a separation of variables
         as possible, use a separation method first, e.g.:
 
-        * separatevars() to change Mul, Add and Pow (including exp) into Mul
-        * .expand(mul=True) to change Add or Mul into Add
-        * .expand(log=True) to change log expr into an Add
+        * ``separatevars()`` to change Mul, Add and Pow (including exp) into Mul
+        * ``.expand(mul=True)`` to change Add or Mul into Add
+        * ``.expand(log=True)`` to change log expr into an Add
 
         The only non-naive thing that is done here is to respect noncommutative
-        ordering of variables and to always return (0, 0) for `self` of zero
-        regardless of hints.
+        ordering of variables and to always return ``(0, 0)`` for ``self`` of
+        zero regardless of hints.
 
-        For nonzero `self`, the returned tuple (i, d) has the
-        following interpretation:
+        For nonzero ``self``, the returned tuple ``(i, d)`` has the following
+        interpretation:
 
-        * i will has no variable that appears in deps
-        * d will either have terms that contain variables that are in deps, or
-          be equal to 0 (when self is an Add) or 1 (when self is a Mul)
-        * if self is an Add then self = i + d
-        * if self is a Mul then self = i*d
-        * otherwise (self, S.One) or (S.One, self) is returned.
+        * ``i`` has no variable that appears in deps
+        * ``d`` will either have terms that contain variables that are in deps,
+          or be equal to ``0`` (when ``self`` is an ``Add``) or ``1`` (when
+          ``self`` is a ``Mul``)
+        * if ``self`` is an Add then ``self = i + d``
+        * if ``self`` is a Mul then ``self = i*d``
+        * otherwise ``(self, S.One)`` or ``(S.One, self)`` is returned.
 
-        To force the expression to be treated as an Add, use the hint as_Add=True
+        To force the expression to be treated as an Add, use the argument
+        ``as_Add=True``.
+
+        The ``strict`` argument is deprecated and has no effect.
 
         Examples
         ========
 
-        -- self is an Add
+        -- ``self`` is an Add
 
         >>> from sympy import sin, cos, exp
         >>> from sympy.abc import x, y, z
@@ -1811,12 +1824,13 @@ class Expr(Basic, EvalfMixin):
         >>> (2*x*sin(x) + y + x + z).as_independent(x, y)
         (z, 2*x*sin(x) + x + y)
 
-        -- self is a Mul
+        -- ``self`` is a Mul
 
         >>> (x*sin(x)*cos(y)).as_independent(x)
         (cos(y), x*sin(x))
 
-        non-commutative terms cannot always be separated out when self is a Mul
+        Non-commutative terms cannot always be separated out when ``self`` is a
+        Mul
 
         >>> from sympy import symbols
         >>> n1, n2, n3 = symbols('n1 n2 n3', commutative=False)
@@ -1831,7 +1845,7 @@ class Expr(Basic, EvalfMixin):
         >>> ((x-n1)*(x-y)).as_independent(x)
         (1, (x - y)*(x - n1))
 
-        -- self is anything else:
+        -- ``self`` is anything else:
 
         >>> (sin(x)).as_independent(x)
         (1, sin(x))
@@ -1840,12 +1854,12 @@ class Expr(Basic, EvalfMixin):
         >>> exp(x+y).as_independent(x)
         (1, exp(x + y))
 
-        -- force self to be treated as an Add:
+        -- force ``self`` to be treated as an Add:
 
         >>> (3*x).as_independent(x, as_Add=True)
         (0, 3*x)
 
-        -- force self to be treated as a Mul:
+        -- force ``self`` to be treated as a Mul:
 
         >>> (3+x).as_independent(x, as_Add=False)
         (1, x + 3)
@@ -1858,9 +1872,9 @@ class Expr(Basic, EvalfMixin):
         >>> (y*(-3+x)).as_independent(x)
         (y, x - 3)
 
-        -- use .as_independent() for true independence testing instead
-           of .has(). The former considers only symbols in the free
-           symbols while the latter considers all symbols
+        -- use ``.as_independent()`` for true independence testing instead of
+           ``.has()``. The former considers only symbols in the free symbols
+           while the latter considers all symbols
 
         >>> from sympy import Integral
         >>> I = Integral(x, (x, 1, 2))
@@ -1873,10 +1887,10 @@ class Expr(Basic, EvalfMixin):
         >>> (I + x).as_independent(x) == (I, x)
         True
 
-        Note: when trying to get independent terms, a separation method
-        might need to be used first. In this case, it is important to keep
-        track of what you send to this routine so you know how to interpret
-        the returned values
+        Note: when trying to get independent terms, a separation method might
+        need to be used first. In this case, it is important to keep track of
+        what you send to this routine so you know how to interpret the returned
+        values
 
         >>> from sympy import separatevars, log
         >>> separatevars(exp(x+y)).as_independent(x)
@@ -1909,55 +1923,47 @@ class Expr(Basic, EvalfMixin):
         if self is S.Zero:
             return (self, self)
 
-        func = self.func
-        want: type[Add] | type[Mul]
-        if hint.get('as_Add', isinstance(self, Add) ):
-            want = Add
+        if as_Add is None:
+            as_Add = self.is_Add
+
+        syms, other = _sift_true_false(deps, lambda d: isinstance(d, Symbol))
+        syms_set = set(syms)
+
+        if other:
+            def has(e):
+                return e.has_xfree(syms_set) or e.has(*other)
         else:
-            want = Mul
+            def has(e):
+                return e.has_xfree(syms_set)
 
-        # sift out deps into symbolic and other and ignore
-        # all symbols but those that are in the free symbols
-        sym = set()
-        other = []
-        for d in deps:
-            if isinstance(d, Symbol):  # Symbol.is_Symbol is True
-                sym.add(d)
-            else:
-                other.append(d)
+        if as_Add:
+            if not self.is_Add:
+                if has(self):
+                    return (S.Zero, self)
+                else:
+                    return (self, S.Zero)
 
-        def has(e):
-            """return the standard has() if there are no literal symbols, else
-            check to see that symbol-deps are in the free symbols."""
-            has_other = e.has(*other)
-            if not sym:
-                return has_other
-            return has_other or e.has(*(e.free_symbols & sym))
+            depend, indep = _sift_true_false(self.args, has)
+            return (self.func(*indep), _unevaluated_Add(*depend))
 
-        if (want is not func or
-                func is not Add and func is not Mul):
-            if has(self):
-                return (want.identity, self)
-            else:
-                return (self, want.identity)
         else:
-            if func is Add:
-                args = list(self.args)
-            else:
-                args, nc = self.args_cnc()
+            if not self.is_Mul:
+                if has(self):
+                    return (S.One, self)
+                else:
+                    return (self, S.One)
 
-        d = sift(args, has)
-        depend = d[True]
-        indep = d[False]
-        if func is Add:  # all terms were treated as commutative
-            return (Add(*indep), _unevaluated_Add(*depend))
-        else:  # handle noncommutative by stopping at first dependent term
+            args, nc = self.args_cnc()
+            depend, indep = _sift_true_false(args, has)
+
+            # handle noncommutative by stopping at first dependent term
             for i, n in enumerate(nc):
                 if has(n):
                     depend.extend(nc[i:])
                     break
                 indep.append(n)
-            return Mul(*indep), _unevaluated_Mul(*depend)
+
+            return self.func(*indep), _unevaluated_Mul(*depend)
 
     def as_real_imag(self, deep=True, **hints) -> tuple[Expr, Expr]:
         """Performs complex expansion on 'self' and returns a tuple
@@ -3578,6 +3584,12 @@ class Expr(Basic, EvalfMixin):
         c = c.subs(d, log(x))
         return c, e
 
+    @overload
+    def as_coeff_Mul(self, rational: Literal[True]) -> tuple['Rational', Expr]: ...
+
+    @overload
+    def as_coeff_Mul(self, rational: bool = False) -> tuple['Number', Expr]: ...
+
     def as_coeff_Mul(self, rational: bool = False) -> tuple['Number', Expr]:
         """Efficiently extract the coefficient of a product."""
         return S.One, self
@@ -3612,7 +3624,7 @@ class Expr(Basic, EvalfMixin):
     ##################### DERIVATIVE, INTEGRAL, FUNCTIONAL METHODS ####################
     ###################################################################################
 
-    def diff(self, *symbols, **assumptions):
+    def diff(self, *symbols, **assumptions) -> Expr:
         assumptions.setdefault("evaluate", True)
         return _derivative_dispatch(self, *symbols, **assumptions)
 
@@ -3839,7 +3851,7 @@ class Expr(Basic, EvalfMixin):
     def round(self, n=None):
         """Return x rounded to the given decimal place.
 
-        If a complex number would results, apply round to the real
+        If a complex number would result, apply round to the real
         and imaginary components of the number.
 
         Examples
