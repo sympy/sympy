@@ -269,10 +269,10 @@ class SATSolver:
                         if res1[0] is True:
                             yield {self.symbols[abs(lit) - 1]:
                                     lit > 0 for lit in self.var_settings}
-                        # else:
-                            # self._simple_add_learned_clause(res1[1])
-                            # while not any(-lit in res1[1] for lit in self._current_level.var_settings):
-                            #     self._undo()
+                        else:
+                            self._simple_add_learned_clause(list(res1[1]))
+                            while not any(-lit in res1[1] for lit in self._current_level.var_settings):
+                                self._undo()
 
 
                     while self._current_level.flipped:

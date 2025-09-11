@@ -54,241 +54,253 @@ class EUFEqualityContradictionException(Exception):
 
 
 class ProofProducingCongruenceClosure(EUFCongruenceClosure):
-    """
-    Extended congruence closure with proof forest for explanations.
-
-    This class implements a proof-producing variant of congruence closure for
-    Equality with Uninterpreted Functions (EUF) theory. It extends the basic
-    congruence closure algorithm to track reasons (proof certificates) for
-    why terms become equal, enabling the generation of minimal explanations
-    for equalities and conflicts in DPLL(T) solvers.
-
-    **Theoretical Background:**
-    Congruence closure maintains equivalence classes of terms under the
-    congruence relation: if f(a1, ..., an) and f(b1, ..., bn) are terms
-    and ai = bi for all i, then f(a1, ..., an) = f(b1, ..., bn). This class
-    extends the algorithm to track WHY terms are equal by maintaining a proof
-    forest that records the sequence of equality assertions that led to each merge.
-
-    **Key Features:**
-    - Proof forest: Maps representative pairs to the equality literal that caused their merge
-    - Direct explanations: Maps term pairs to literals that directly asserted their equality
-    - Merge tracking: Records chronological sequence of all merges with reasons
-    - Explanation generation: Uses DFS to find minimal sets of equalities explaining why a=b
-
-    **Use Cases:**
-    - Conflict explanation in SAT/SMT solvers
-    - Proof generation for theorem provers
-    - Debugging equality reasoning in automated verification
-    - Theory propagation in DPLL(T) frameworks
-    """
-
+    """Extended congruence closure with proper function application and negation tracking."""
 
     def __init__(self, equations):
-        """
-        Initialize proof-producing congruence closure.
-
-        Parameters:
-        -----------
-        equations : list
-            Initial set of equality constraints to process
-
-        Attributes:
-        -----------
-        proof_forest : dict
-            Maps (rep_a, rep_b) -> reason
-            Stores the equality literal that caused representatives rep_a and rep_b
-            to be merged. Key invariant: for any merged pair, there exists exactly
-            one reason in the forest explaining their equality.
-
-        direct_explanations : dict
-            Maps (term_a, term_b) -> literal
-            Records equality literals that were directly asserted between flattened
-            terms, before any congruence propagation. Used for base cases in explanation.
-
-        merge_sequence : list
-            Chronological log of all merges: [(rep_a, rep_b, reason, orig_a, orig_b), ...]
-            Useful for backtracking and debugging merge order dependencies.
-
-        equalities_for_term : defaultdict(set)
-            Maps flattened_term -> {equality_literals involving this term}
-            Enables efficient lookup of all equality literals mentioning a given term
-            for explanation graph construction.
-        """
+        """Initialize proof-producing congruence closure with enhanced function tracking."""
         super().__init__(equations)
 
-        # Proof forest maps (representative_a, representative_b) -> equality_literal
-        # that caused these representatives to be unified
+        # Existing proof structures
         self.proof_forest = {}
-
-        # Direct explanations map (flattened_term_a, flattened_term_b) -> equality_literal
-        # that directly asserted a=b (before congruence closure propagation)
         self.direct_explanations = {}
-
-        # Chronological sequence of all merges with full context
         self.merge_sequence = []
-
-        # Adjacency list: flattened_term -> {equality_literals involving this term}
-        # Forms the explanation graph for DFS traversal
         self.equalities_for_term = defaultdict(set)
 
+        # Enhanced function tracking
+        self.function_applications = defaultdict(list)  # Maps function_name -> [(args, func_app, reason, is_positive), ...]
+        self.constant_equalities = {}  # Maps func_app -> constant
+        self.function_negations = defaultdict(list)  # Maps function_name -> [(args, func_app, reason), ...] for negated apps
 
     def add_equality_with_reason(self, lhs, rhs, reason):
-        """
-        Add equality constraint and record the reason for proof production.
-
-        This method extends the base congruence closure to track WHY the equality
-        holds. It performs the standard union-find merge while maintaining proof
-        certificates that can later be used to explain why any two terms are equal.
-
-        Parameters:
-        -----------
-        lhs, rhs : sympy expressions
-            The left and right-hand sides of the equality constraint
-        reason : sympy.Eq
-            The equality literal (Eq object) that justifies this constraint.
-            This serves as the proof certificate for why lhs = rhs.
-
-        Algorithm:
-        ----------
-        1. Flatten terms to canonical internal representations
-        2. Find current representatives of equivalence classes
-        3. Skip if terms already in same equivalence class
-        4. Record direct explanation for the original term pair
-        5. Record reason in proof forest between current representatives
-        6. Update explanation graph (equalities_for_term adjacency lists)
-        7. Delegate to base class for actual union-find merge
-
-        Complexity: O(alpha(n)) where alpha is inverse Ackermann function
-
-        """
+        """Add equality constraint and record the reason for proof production."""
         lhs_id = self._flatten(lhs)
         rhs_id = self._flatten(rhs)
 
         rep_lhs = self._find(lhs_id)
         rep_rhs = self._find(rhs_id)
 
-        # Early termination: terms already equal
         if rep_lhs == rep_rhs:
             return
 
-        # Record direct explanation between original flattened terms
-        # This captures the immediate justification before any congruence propagation
+        # Track function applications (both positive and negative)
+        self._track_function_applications(lhs, rhs, reason)
+
+        # Existing logic
         key = _ordered_pair(lhs_id, rhs_id)
         self.direct_explanations[key] = reason
 
-        # Record in proof forest between current equivalence class representatives
-        # This enables explanation of why representatives became equal
         proof_key = _ordered_pair(rep_lhs, rep_rhs)
         self.proof_forest[proof_key] = reason
 
-        # Log merge in chronological sequence for backtracking/debugging
         self.merge_sequence.append((rep_lhs, rep_rhs, reason, lhs_id, rhs_id))
 
-        # Update explanation graph: add this equality as an edge between both terms
-        # This creates bidirectional edges in the explanation graph
         self.equalities_for_term[lhs_id].add(reason)
         self.equalities_for_term[rhs_id].add(reason)
 
-        # Perform actual union-find merge using base class implementation
-        # This handles congruence propagation and updates internal data structures
         super().add_equality(lhs, rhs)
 
+    def add_disequality_with_reason(self, lhs, rhs, reason):
+        """Add disequality and track negated function applications."""
+        # Check if this is a negated function application
+        if self._is_function_application(lhs) and self._is_constant(rhs):
+            func_name = lhs.func.__name__
+            args = lhs.args
+            self.function_negations[func_name].append((args, lhs, reason))
+        elif self._is_function_application(rhs) and self._is_constant(lhs):
+            func_name = rhs.func.__name__
+            args = rhs.args
+            self.function_negations[func_name].append((args, rhs, reason))
+
+    def _track_function_applications(self, lhs, rhs, reason):
+        """Track function applications for congruence explanations."""
+        func_app, constant = None, None
+
+        if self._is_function_application(lhs) and not self._is_function_application(rhs):
+            func_app, constant = lhs, rhs
+        elif self._is_function_application(rhs) and not self._is_function_application(lhs):
+            func_app, constant = rhs, lhs
+
+        if func_app and constant:
+            if hasattr(func_app, 'func') and hasattr(func_app.func, '__name__'):
+                func_name = func_app.func.__name__
+                args = func_app.args
+
+                # Store positive function application
+                self.function_applications[func_name].append((args, func_app, reason, True))
+                self.constant_equalities[func_app] = constant
+
+    def _is_function_application(self, expr):
+        """Check if expression is a function application."""
+        return (hasattr(expr, 'func') and
+                hasattr(expr.func, '__name__') and
+                hasattr(expr, 'args') and
+                len(expr.args) > 0)
+
+    def _is_constant(self, expr):
+        """Check if expression is a constant (like _c0, _c1, etc.)."""
+        return (hasattr(expr, 'name') and
+                isinstance(expr.name, str) and
+                (expr.name.startswith('_c') | expr.name.startswith('c')))
 
     def explain_equality(self, a, b):
-        """
-        Generate minimal explanation for why terms a and b are equal.
-
-        This method produces a set of equality literals that together constitute
-        a proof/explanation for why a = b holds in the current congruence closure.
-        The explanation consists of a path of equalities connecting a to b through
-        the equivalence graph.
-
-        Parameters:
-        -----------
-        a, b : sympy expressions
-            The terms whose equality needs to be explained
-
-        Returns:
-        --------
-        set of sympy.Eq
-            A set of equality literals {Eq(x1,y1), Eq(x2,y2), ...} such that
-            asserting all these equalities is sufficient to derive a = b.
-            Returns empty set if a and b are not equal.
-
-        Algorithm:
-        ----------
-        Uses depth-first search (DFS) on the explanation graph where:
-        - Nodes are flattened term identifiers
-        - Edges are equality literals connecting terms
-        - Goal: find path from a to b, collecting edge labels (equality literals)
-
-        The explanation graph is constructed from equalities_for_term, where each
-        equality literal creates bidirectional edges between the terms it connects.
-
-        Complexity: O(V + E) where V = number of terms, E = number of equalities
-
-        Properties:
-        -----------
-        - Soundness: If explanation E is returned, then E |= (a = b)
-        - Completeness: If a = b in congruence closure, some explanation exists
-        - Minimality: Attempts to find concise explanations (though not globally minimal)
-        """
+        """Generate explanation for why terms a and b are equal with proper function congruence."""
         a_id = self._flatten(a)
         b_id = self._flatten(b)
 
-        # Base case: terms are syntactically identical
+        if a_id == b_id:
+            return set()
+
+        # Check for function congruence explanation first
+        func_explanation = self._explain_function_congruence(a, b)
+        if func_explanation:
+            return func_explanation
+
+        # Fall back to DFS
+        return self._explain_via_dfs(a, b)
+
+    def _explain_function_congruence(self, a, b):
+        """Explain equality via function congruence with proper argument tracking."""
+        # Case: function application equals constant
+        if self._is_function_application(a) and self._is_constant(b):
+            return self._explain_func_app_equals_constant(a, b)
+        elif self._is_function_application(b) and self._is_constant(a):
+            return self._explain_func_app_equals_constant(b, a)
+
+        # Case: both are function applications of same function
+        if (self._is_function_application(a) and self._is_function_application(b) and
+            hasattr(a, 'func') and hasattr(b, 'func') and a.func == b.func):
+            return self._explain_same_function_applications(a, b)
+
+        return None
+
+    def _explain_func_app_equals_constant(self, func_app, constant):
+        """Explain why func_app = constant using congruence with another function application."""
+        if not hasattr(func_app, 'func') or not hasattr(func_app.func, '__name__'):
+            return None
+
+        func_name = func_app.func.__name__
+        target_args = func_app.args
+
+        # Look for another function application with same function name and same constant
+        for stored_args, stored_func_app, stored_reason, is_positive in self.function_applications[func_name]:
+            if stored_func_app == func_app:
+                continue  # Skip self
+
+            # Check if it equals the same constant
+            stored_constant = self.constant_equalities.get(stored_func_app)
+            if stored_constant != constant:
+                continue
+
+            # Check arguments have same arity
+            if len(stored_args) != len(target_args):
+                continue
+
+            # Collect argument equality explanations
+            args_explanation = set()
+            all_args_equal = True
+
+            for stored_arg, target_arg in zip(stored_args, target_args):
+                if self._find(self._flatten(stored_arg)) == self._find(self._flatten(target_arg)):
+                    # Get explanation for why these arguments are equal
+                    if stored_arg != target_arg:  # Not trivially equal
+                        arg_explanation = self._explain_via_dfs(stored_arg, target_arg)
+                        args_explanation.update(arg_explanation)
+                else:
+                    all_args_equal = False
+                    break
+
+            if all_args_equal:
+                # Found valid congruence explanation
+                explanation = {stored_reason}  # Original function assertion
+                explanation.update(args_explanation)  # All argument equalities
+                return explanation
+
+        # Also check against negated function applications (for conflicts)
+        for neg_args, neg_func_app, neg_reason in self.function_negations[func_name]:
+            if len(neg_args) != len(target_args):
+                continue
+
+            # Check if arguments are equal
+            args_explanation = set()
+            all_args_equal = True
+
+            for neg_arg, target_arg in zip(neg_args, target_args):
+                if self._find(self._flatten(neg_arg)) == self._find(self._flatten(target_arg)):
+                    if neg_arg != target_arg:
+                        arg_explanation = self._explain_via_dfs(neg_arg, target_arg)
+                        args_explanation.update(arg_explanation)
+                else:
+                    all_args_equal = False
+                    break
+
+            if all_args_equal:
+                # This would be a conflict case, but for explanation purposes
+                # we return the negation reason and argument equalities
+                explanation = {neg_reason}  # Negated function assertion
+                explanation.update(args_explanation)  # All argument equalities
+                return explanation
+
+        return None
+
+    def _explain_same_function_applications(self, func_app1, func_app2):
+        """Explain why f(a1, ..., an) = f(b1, ..., bn) using argument equalities."""
+        args1 = func_app1.args
+        args2 = func_app2.args
+
+        if len(args1) != len(args2):
+            return None
+
+        explanation = set()
+        for arg1, arg2 in zip(args1, args2):
+            if self._find(self._flatten(arg1)) == self._find(self._flatten(arg2)):
+                if arg1 != arg2:  # Not trivially equal
+                    arg_explanation = self._explain_via_dfs(arg1, arg2)
+                    explanation.update(arg_explanation)
+            else:
+                # Arguments not equal, cannot explain via congruence
+                return None
+
+        return explanation
+
+    def _explain_via_dfs(self, a, b):
+        """DFS-based explanation for equality."""
+        a_id = self._flatten(a)
+        b_id = self._flatten(b)
+
         if a_id == b_id:
             return set()
 
         visited = set()
-        path = []  # Current path of equality literals being explored
+        path = []
 
         def dfs(current):
-            """
-            Depth-first search to find path of equalities from current to b_id.
-
-            Returns True if path found, False otherwise.
-            Modifies 'path' to contain the sequence of equality literals on success.
-            """
             if current == b_id:
                 return True
 
             visited.add(current)
 
-            # Explore all equality literals involving current term
             for eq in self.equalities_for_term[current]:
-                # Determine the "other" term in this equality literal
                 if hasattr(eq, 'lhs') and hasattr(eq, 'rhs'):
                     if self._flatten(eq.lhs) == current:
                         other = eq.rhs
                     elif self._flatten(eq.rhs) == current:
                         other = eq.lhs
                     else:
-                        continue  # This equality doesn't involve current term
+                        continue
 
                     other_id = self._flatten(other)
 
-                    # Recurse on unvisited neighbors
                     if other_id not in visited:
                         path.append(eq)
                         if dfs(other_id):
                             return True
-                        path.pop()  # Backtrack
+                        path.pop()
 
             return False
 
-        # Perform DFS from a_id to find path to b_id
         found = dfs(a_id)
+        return set(path) if found else set()
 
-        if found:
-            # Convert path list to set for consistency with API
-            explanation = set(path)
-        else:
-            # No path found - terms are not equal in current closure
-            explanation = set()
-
-        return explanation
 
 
 class EUFTheorySolver:
@@ -612,6 +624,9 @@ class EUFTheorySolver:
             self.disequalities_set[rep_lhs].add(rep_rhs)
             self.disequalities_set[rep_rhs].add(rep_lhs)
             self.disequality_causes[diseq_key] = ceq
+
+            # Track negated function applications
+            self.cc.add_disequality_with_reason(lhs, rhs, ceq)
 
         # Update interpretation stack
         self.interpretation_stack.append((literal, self.timestamp_counter))
