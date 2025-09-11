@@ -5,7 +5,7 @@ from sympy.assumptions.ask import Q
 
 from sympy.core import Add, Mul
 from sympy.core.relational import Equality, LessThan, GreaterThan, StrictLessThan, StrictGreaterThan
-from sympy.core.function import Function, UndefinedFunction, AppliedUndef
+from sympy.core.function import AppliedUndef
 from sympy.functions.elementary.complexes import Abs
 from sympy.functions.elementary.exponential import Pow
 from sympy.functions.elementary.miscellaneous import Min, Max
@@ -22,39 +22,10 @@ supported_predicates = {
     Q.extended_nonnegative, Q.extended_nonpositive
 }
 
-def is_supported_predicate(pred):
-    if not isinstance(pred, AppliedPredicate):
-        return False
-
-    return pred.function in supported_predicates
-
 
 def z3_satisfiable(expr, all_models=False):
     """
-    Returns the result from plugging the expression into the Z3 solver.
-
-    Only returns the model if the expression is satisfiable and can be expressed
-    as a pure Boolean formula, without predicate logic. If the expression involves
-    arithmetic or other theory predicates, the return value is True
-    instead of a model.
-
-    Examples
-    ========
-
-    >>> from sympy.logic.algorithms.smtlib import z3_satisfiable
-    >>> from sympy import symbols
-
-    >>> A, B, C = symbols('A B C')
-
-    >>> z3_satisfiable(A & ~B)
-    {A: True, B: False}
-
-    >>> z3_satisfiable((A | B) & (~A | C))
-    {A: True, B: False, C: True}
-
-    >>> z3_satisfiable(A & ~A)
-    False
-
+    Check satisfiability of a Boolean expression using the Z3 theorem prover.
     """
     if not isinstance(expr, EncodedCNF):
         exprs = EncodedCNF()
@@ -95,104 +66,43 @@ def clause_to_assertion(clause):
     return "(assert (or " + " ".join(clause_strings) + "))"
 
 
-def find_uninterpreted_functions(expr):
-    uf_arity = {}
-    for head in expr.atoms(UndefinedFunction):
-        uf_arity.setdefault(str(head), None)
-    if AppliedUndef is not None:
-        calls = expr.atoms(AppliedUndef)
-    else:
-        calls = [c for c in expr.atoms(Function) if isinstance(c.func, UndefinedFunction)]
-
-    for call in calls:
-        name = str(call.func)
-        arity = len(call.args)
-        prev = uf_arity.get(name)
-        uf_arity[name] = arity if prev is None else max(prev or 0, arity)
-
-    return uf_arity
-
-
-def collect_all_uninterpreted_functions(enc_cnf):
-    """Returns a dictionary, mapping uninterpreted function names to their maximum arity."""
-    uf_table = {}
-    for pred, enc in enc_cnf.encoding.items():
-        if not isinstance(pred, AppliedPredicate) or pred.function not in supported_predicates:
-            continue
-        # Update the table of uninterpreted functions.
-        pred_ufs = find_uninterpreted_functions(pred)
-        # If a function appears multiple times, store the largest number of arguments it takes.
-        for name, arity in pred_ufs.items():
-            if name in uf_table:
-                if uf_table[name] is None or arity is None:
-                    uf_table[name] = max(uf_table[name] or 0, arity or 0)
-                else:
-                    uf_table[name] = max(uf_table[name], arity)
-            else:
-                uf_table[name] = arity
-    return uf_table
-
-
-def collect_all_free_symbols(enc_cnf):
-    """Collect all free symbols from all predicates in the CNF."""
-    free_symbols = set()
-    for pred, enc in enc_cnf.encoding.items():
-        if not is_supported_predicate(pred):
-            continue
-        free_symbols |= pred.free_symbols
-    return free_symbols
-
-
 def encoded_cnf_to_z3_solver(enc_cnf, z3):
     s = z3.Solver()
 
-    uf_table = collect_all_uninterpreted_functions(enc_cnf)
-    free_symbols = collect_all_free_symbols(enc_cnf)
+    declarations = [f"(declare-const d{var} Bool)" for var in enc_cnf.variables]
+    assertions = [clause_to_assertion(clause) for clause in enc_cnf.data]
 
-    declarations = []
-    assertions = []
+    uninterpreted_functions_to_arity = {}
+    for pred, enc in enc_cnf.encoding.items():
+        uninterpreted_functions_to_arity.update({uf.func : len(uf.args) for uf in pred.atoms(AppliedUndef)})
 
-    declarations.extend(f"(declare-const d{var} Bool)" for var in enc_cnf.variables)
-    assertions.extend(clause_to_assertion(clause) for clause in enc_cnf.data)
+    # symbol_table must be provided for smtlib_code, even though
+    # it's unused when auto_declare is set to False
+    symbol_table = dict.fromkeys(uninterpreted_functions_to_arity,Callable[..., float] )
 
-    # Create declarations for all uninterpreted functions
-    for name, arity in sorted(uf_table.items()):
-        if arity is None:
+    symbols = set()
+    for pred, enc in enc_cnf.encoding.items():
+        if not isinstance(pred, AppliedPredicate):
             continue
-        elif arity == 0:
-            declarations.append(f"(declare-const {name} Real)")
-        else:
-            arg_types = " ".join(["Real"] * arity)
-            declarations.append(f"(declare-fun {name} ({arg_types}) Real)")
+        if pred.function not in supported_predicates:
+            continue
 
-    # Declare all free symbols that appear in the CNF
-    for sym in sorted(free_symbols, key=str):
+        pred_str = smtlib_code(pred, auto_declare=False, auto_assert=False, known_functions=known_functions,
+                               symbol_table=symbol_table)
+
+        symbols |= pred.free_symbols
+        pred = pred_str
+        assertion = f"(assert  (implies d{enc} {pred}))"
+        assertions.append(assertion)
+
+    for sym in symbols:
         declarations.append(f"(declare-const {sym} Real)")
 
-    for pred, enc in enc_cnf.encoding.items():
-        if not is_supported_predicate(pred):
-            continue
-
-        symbol_table = {}
-        for sym in pred.free_symbols:
-            symbol_table[sym] = float
-
-        # Add uninterpreted functions from predicate, specify their argument/return types as real numbers
-        pred_ufs = find_uninterpreted_functions(pred)
-        for name, arity in pred_ufs.items():
-            if arity is None or arity == 0:
-                symbol_table[Function(name)] = float
-            elif arity == 1:
-                symbol_table[Function(name)] = Callable[[float], float]
-            elif arity == 2:
-                symbol_table[Function(name)] = Callable[[float, float], float]
-            else:
-                symbol_table[Function(name)] = Callable[..., float]
-
-        pred_str = smtlib_code(pred, auto_declare=False, auto_assert=False, known_functions=known_functions, symbol_table=symbol_table)
-
-        clause = f"(implies d{enc} {pred_str})"
-        assertions.append(f"(assert (implies d{enc} {pred_str}))")
+    for f, arity in uninterpreted_functions_to_arity.items():
+        # Rather than defining new types for the domain and range
+        # we assume they are real to avoid unnecesary complexity.
+        arg_types = " ".join(["Real"] * arity)
+        declarations.append(f"(declare-fun {f} ({arg_types}) Real)")
 
     declarations = "\n".join(declarations)
     assertions = "\n".join(assertions)
