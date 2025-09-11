@@ -42,7 +42,7 @@ def test_find_pure_symbol():
     assert find_pure_symbol(
         [A, B, C], [~A | B, ~B | ~C, C | A]) == (None, None)
 
-# D:\SymPy\sympy\sympy\logic\tests\test_inference.py
+
 def test_find_pure_symbol_int_repr():
     assert find_pure_symbol_int_repr([1], [{1}]) == (1, True)
     assert find_pure_symbol_int_repr([1, 2],
@@ -150,6 +150,7 @@ def test_minisat22_satisfiable():
         {B: True, A: True})
     assert minisat22_satisfiable( Equivalent(A, B) & A ) == {A: True, B: True}
     assert minisat22_satisfiable( Equivalent(A, B) & ~A ) == {A: False, B: False}
+
 
 def test_minisat22_minimal_satisfiable():
     A, B, C = symbols('A,B,C')
@@ -269,6 +270,7 @@ def test_propKB_tolerant():
     A, B, C = symbols('A,B,C')
     assert kb.ask(B) is False
 
+
 def test_satisfiable_non_symbols():
     x, y = symbols('x y')
     assumptions = Q.zero(x*y)
@@ -284,6 +286,7 @@ def test_satisfiable_non_symbols():
     assert satisfiable(And(assumptions, facts, ~query), algorithm='dpll') in refutations
     assert not satisfiable(And(assumptions, facts, query), algorithm='dpll2')
     assert satisfiable(And(assumptions, facts, ~query), algorithm='dpll2') in refutations
+
 
 def test_satisfiable_bool():
     from sympy.core.singleton import S
