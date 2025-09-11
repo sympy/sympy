@@ -1148,12 +1148,12 @@ def test_large_random_constraint_set():
 
 
 def test_assert_lit_transitivity_conflict():
-    """Test transitivity conflict: x = y, y = z, x ≠ z."""
+    """Test transitivity conflict: x = y, y = z, x != z."""
     enc_cnf = EncodedCNF()
     enc_cnf.encoding = {
         Eq(x, y): 1,      # x = y
         Eq(y, z): 2,      # y = z
-        Ne(x, z): 3       # x ≠ z (conflicts by transitivity)
+        Ne(x, z): 3       # x != z (conflicts by transitivity)
     }
     enc_cnf.data = [{1}, {2}, {3}]
 
@@ -1163,23 +1163,23 @@ def test_assert_lit_transitivity_conflict():
     assert solver.assert_lit(1) == (True, set())
     assert solver.assert_lit(2) == (True, set())
 
-    # Assert x ≠ z (should conflict due to transitivity x = y = z)
+    # Assert x != z (should conflict due to transitivity x = y = z)
     assert solver.assert_lit(3) == (False, {-1, -2, -3})
 
 
 def test_assert_lit_function_congruence_conflict():
-    """Test function congruence conflict: ¬Q.prime(x), Q.eq(x,y), Q.prime(y)."""
+    """Test function congruence conflict: ~Q.prime(x), Q.eq(x,y), Q.prime(y)."""
     enc_cnf = EncodedCNF()
     enc_cnf.encoding = {
         Q.prime(x): 1,    # Q.prime(x)
         Q.eq(x, y): 2,    # x = y
         Q.prime(y): 3     # Q.prime(y)
     }
-    enc_cnf.data = [{-1}, {2}, {3}]  # ¬Q.prime(x), x = y, Q.prime(y)
+    enc_cnf.data = [{-1}, {2}, {3}]  # ~Q.prime(x), x = y, Q.prime(y)
 
     solver, conflicts = EUFTheorySolver.from_encoded_cnf(enc_cnf)
 
-    # Assert ¬Q.prime(x) and x = y (should succeed)
+    # Assert ~Q.prime(x) and x = y (should succeed)
     assert solver.assert_lit(-1) == (True, set())
     assert solver.assert_lit(2) == (True, set())
 
@@ -1196,16 +1196,16 @@ def test_assert_lit_multi_predicate_conflict():
         Q.eq(x, y): 3,    # x = y
         Q.even(y): 4      # Q.even(y)
     }
-    enc_cnf.data = [{1}, {-2}, {3}, {4}]  # Q.prime(x), ¬Q.even(x), x = y, Q.even(y)
+    enc_cnf.data = [{1}, {-2}, {3}, {4}]  # Q.prime(x), ~Q.even(x), x = y, Q.even(y)
 
     solver, conflicts = EUFTheorySolver.from_encoded_cnf(enc_cnf)
 
-    # Assert Q.prime(x), ¬Q.even(x), x = y (should succeed)
+    # Assert Q.prime(x), ~Q.even(x), x = y (should succeed)
     assert solver.assert_lit(1) == (True, set())
     assert solver.assert_lit(-2) == (True, set())
     assert solver.assert_lit(3) == (True, set())
 
-    # Assert Q.even(y) (should conflict with ¬Q.even(x) and x = y)
+    # Assert Q.even(y) (should conflict with ~Q.even(x) and x = y)
     assert solver.assert_lit(4) == (False, {2, -3, -4})
 
 
@@ -1217,7 +1217,7 @@ def test_assert_lit_complex_equality_chain_conflict():
         Eq(b, c): 2,      # b = c
         Eq(c, d): 3,      # c = d
         Eq(d, e): 4,      # d = e
-        Ne(a, e): 5       # a ≠ e (conflicts with transitivity)
+        Ne(a, e): 5       # a != e (conflicts with transitivity)
     }
     enc_cnf.data = [{1}, {2}, {3}, {4}, {5}]
 
@@ -1229,7 +1229,7 @@ def test_assert_lit_complex_equality_chain_conflict():
     assert solver.assert_lit(3) == (True, set())
     assert solver.assert_lit(4) == (True, set())
 
-    # Assert a ≠ e (should conflict with full chain)
+    # Assert a != e (should conflict with full chain)
     assert solver.assert_lit(5) == (False, {-1, -2, -3, -4, -5})
 
 
@@ -1243,7 +1243,7 @@ def test_assert_lit_multiple_function_applications():
         Q.prime(y): 4,     # Q.prime(y) (derivable)
         Q.composite(y): 5  # Q.composite(y) (derivable)
     }
-    enc_cnf.data = [{1}, {-2}, {3}, {4}, {5}]  # Q.prime(x), ¬Q.composite(x), x = y, Q.prime(y), Q.composite(y)
+    enc_cnf.data = [{1}, {-2}, {3}, {4}, {5}]  # Q.prime(x), ~Q.composite(x), x = y, Q.prime(y), Q.composite(y)
 
     solver, conflicts = EUFTheorySolver.from_encoded_cnf(enc_cnf)
 
@@ -1431,17 +1431,17 @@ def test_assert_lit_unary_predicate_conflicts():
         Q.positive(y): 4,    # Q.positive(y)
         Q.negative(y): 5     # Q.negative(y)
     }
-    enc_cnf.data = [{1}, {-2}, {3}, {4}, {5}]  # Q.positive(x), ¬Q.negative(x), x = y, Q.positive(y), Q.negative(y)
+    enc_cnf.data = [{1}, {-2}, {3}, {4}, {5}]  # Q.positive(x), ~Q.negative(x), x = y, Q.positive(y), Q.negative(y)
 
     solver, conflicts = EUFTheorySolver.from_encoded_cnf(enc_cnf)
 
     # Establish positive and equality
     assert solver.assert_lit(1) == (True, set())   # Q.positive(x)
-    assert solver.assert_lit(-2) == (True, set())  # ¬Q.negative(x)
+    assert solver.assert_lit(-2) == (True, set())  # ~Q.negative(x)
     assert solver.assert_lit(3) == (True, set())   # x = y
     assert solver.assert_lit(4) == (True, set())   # Q.positive(y) - derivable
 
-    # Q.negative(y) should conflict with ¬Q.negative(x) and x = y
+    # Q.negative(y) should conflict with ~Q.negative(x) and x = y
     assert solver.assert_lit(5) == (False, {2, -3, -5})
 
 
@@ -1521,4 +1521,3 @@ def test_assert_lit_function_symmetry():
     # Should not conflict (f is not assumed symmetric)
     assert solver.assert_lit(1) == (True, set())
     assert solver.assert_lit(2) == (True, set())
-
