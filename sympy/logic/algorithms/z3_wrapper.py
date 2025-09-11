@@ -191,7 +191,6 @@ def encoded_cnf_to_z3_solver(enc_cnf, z3):
 
         pred_str = smtlib_code(pred, auto_declare=False, auto_assert=False, known_functions=known_functions, symbol_table=symbol_table)
 
-        clause = f"(implies d{enc} {pred_str})"
         assertions.append(f"(assert (implies d{enc} {pred_str}))")
 
     declarations = "\n".join(declarations)
