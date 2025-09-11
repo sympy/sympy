@@ -406,10 +406,17 @@ def test_z3_vs_lra_dpll2():
         except z3.z3types.Z3Exception:
             continue
 
-        lra_dpll2_sat = lra_dpll2_satisfiable(cnf) is not False
-        print(f"\nlra model is {lra_dpll2_sat}")
-        print(f"z3 model is {z3_sat}\n")
-        assert z3_sat == lra_dpll2_sat
+        lra_dpll2_sat = lra_dpll2_satisfiable(cnf)
+
+        # z3 and dpll2 may find differend models so we shouldn't
+        # test the models directly for equality
+        assert lra_dpll2_sat is not None
+        assert z3_sat is not None
+        lra_dpll2_is_sat = lra_dpll2_sat is not False
+        z3_is_sat = z3_sat is not False
+
+        assert z3_is_sat == lra_dpll2_is_sat
+
 
 def test_issue_27733():
     x, y = symbols('x,y')
