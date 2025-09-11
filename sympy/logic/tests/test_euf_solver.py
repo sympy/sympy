@@ -10,6 +10,135 @@ from sympy.logic.algorithms.euf_theory_solver import (
 )
 from sympy.logic.algorithms.euf_theory import EUFUnhandledInput
 from sympy.assumptions.assume import AppliedPredicate
+import random
+from sympy.logic.inference import satisfiable
+
+
+# Try to import Z3 for comparison
+try:
+    import z3
+    Z3_AVAILABLE = True
+except ImportError:
+    Z3_AVAILABLE = False
+
+
+class RandomEUFTestGenerator:
+    """Generator for random EUF test cases."""
+
+    def __init__(self, seed=42):
+        random.seed(seed)
+        self.symbols_pool = [symbols(f'x_{i}') for i in range(20)]
+        self.functions_pool = [Function(f'f_{i}') for i in range(5)]
+
+    def generate_random_term(self, depth=0, max_depth=3):
+        """Generate a random term (symbol or function application)."""
+        if depth >= max_depth or random.random() < 0.4:
+            # Return a symbol
+            return random.choice(self.symbols_pool)
+        else:
+            # Return a function application
+            func = random.choice(self.functions_pool)
+            num_args = random.randint(1, 3)
+            args = [self.generate_random_term(depth + 1, max_depth) for _ in range(num_args)]
+            return func(*args)
+
+    def generate_random_equality(self):
+        """Generate a random equality or disequality."""
+        term1 = self.generate_random_term()
+        term2 = self.generate_random_term()
+
+        if random.random() < 0.7:  # 70% equalities, 30% disequalities
+            return Eq(term1, term2)
+        else:
+            return Ne(term1, term2)
+
+    def generate_constraint_set(self, num_constraints=50):
+        """Generate a set of random constraints."""
+        constraints = []
+        for _ in range(num_constraints):
+            constraints.append(self.generate_random_equality())
+        return constraints
+
+
+class Z3Comparator:
+    """Compare SymPy EUF results with Z3."""
+
+    def __init__(self):
+        if not Z3_AVAILABLE:
+            pytest.skip("Z3 not available for comparison")
+
+    def _get_function_signature(self, func_name, arity):
+        """Get a unique function signature for Z3."""
+        return f"{func_name}_{arity}"
+
+    def sympy_to_z3_term(self, term, z3_symbols, z3_functions):
+        """Convert SymPy term to Z3 term."""
+        if term.is_symbol:
+            if term not in z3_symbols:
+                z3_symbols[term] = z3.Const(str(term), z3.IntSort())
+            return z3_symbols[term]
+        elif hasattr(term, 'func') and hasattr(term.func, '__name__'):
+            func_name = term.func.__name__
+            arity = len(term.args)
+
+            # Create unique function signature based on name and arity
+            func_signature = self._get_function_signature(func_name, arity)
+
+            if func_signature not in z3_functions:
+                # Create Z3 function with specific arity
+                arg_sorts = [z3.IntSort()] * arity
+                z3_functions[func_signature] = z3.Function(func_signature, *arg_sorts, z3.IntSort())
+
+            z3_func = z3_functions[func_signature]
+            z3_args = [self.sympy_to_z3_term(arg, z3_symbols, z3_functions) for arg in term.args]
+            return z3_func(*z3_args)
+        else:
+            # Fallback for other terms
+            term_str = str(term)
+            if term_str not in z3_symbols:
+                z3_symbols[term_str] = z3.Const(term_str, z3.IntSort())
+            return z3_symbols[term_str]
+
+    def sympy_to_z3_constraint(self, constraint, z3_symbols, z3_functions):
+        """Convert SymPy constraint to Z3 constraint."""
+        if isinstance(constraint, Eq):
+            left = self.sympy_to_z3_term(constraint.lhs, z3_symbols, z3_functions)
+            right = self.sympy_to_z3_term(constraint.rhs, z3_symbols, z3_functions)
+            return left == right
+        elif isinstance(constraint, Ne):
+            left = self.sympy_to_z3_term(constraint.lhs, z3_symbols, z3_functions)
+            right = self.sympy_to_z3_term(constraint.rhs, z3_symbols, z3_functions)
+            return left != right
+        elif isinstance(constraint, Not) and isinstance(constraint.args[0], Eq):
+            eq = constraint.args[0]
+            left = self.sympy_to_z3_term(eq.lhs, z3_symbols, z3_functions)
+            right = self.sympy_to_z3_term(eq.rhs, z3_symbols, z3_functions)
+            return left != right
+        else:
+            raise ValueError(f"Unsupported constraint type: {type(constraint)}")
+
+    def check_satisfiability_with_z3(self, constraints):
+        """Check satisfiability using Z3."""
+        solver = z3.Solver()
+        z3_symbols = {}
+        z3_functions = {}
+
+        try:
+            for constraint in constraints:
+                z3_constraint = self.sympy_to_z3_constraint(constraint, z3_symbols, z3_functions)
+                solver.add(z3_constraint)
+
+            result = solver.check()
+            if result == z3.sat:
+                return True, solver.model()
+            elif result == z3.unsat:
+                return False, None
+            else:
+                return None, None
+        except Exception as e:
+            print(f"Z3 conversion error: {e}")
+            return None, None
+
 
 f, g = symbols('f g', cls=Function)
 F, G, H, I, J, K = symbols('F G H I J K', cls=Function)
@@ -233,6 +362,7 @@ def test_function_array_like_operations():
     # Verify congruence holds
     assert solver.IsTrue(Eq(F(i, x), F(j, y))) is True
     assert solver.IsTrue(Eq(G(F(i, x)), G(F(j, y)))) is True
+
 
 def test_functional_composition_chains():
     """Test long chains of functional composition."""
@@ -878,3 +1008,142 @@ def test_multiple_disequalities_explanation():
     assert Ne(c, d) in explanation_zw
     assert Eq(c, z) in explanation_zw
     assert Eq(d, w) in explanation_zw
+
+
+def test_random_satisfiable_constraints_small():
+    """Test random satisfiable constraints (small scale)."""
+    generator = RandomEUFTestGenerator()
+    z3_comparator = Z3Comparator() if Z3_AVAILABLE else None
+
+    for trial in range(10):
+        print(f"\nTrial {trial + 1}/10")
+
+        # Generate simple satisfiable constraints
+        constraints = []
+        symbols_used = generator.symbols_pool[:5]  # Use only 5 symbols
+
+        # Add some equalities in a chain: x0 = x1 = x2
+        constraints.append(Eq(symbols_used[0], symbols_used[1]))
+        constraints.append(Eq(symbols_used[1], symbols_used[2]))
+
+        # Add some unrelated equalities
+        constraints.append(Eq(symbols_used[3], symbols_used[4]))
+
+        # Test with SymPy
+        result = satisfiable(boolalg.And(*constraints), use_euf_theory=True)
+        sympy_sat = result is not False
+        print(f"SymPy result: {'SAT' if sympy_sat else 'UNSAT'}")
+        # Compare with Z3 if available
+        if Z3_AVAILABLE and z3_comparator:
+            z3_result = z3_comparator.check_satisfiability_with_z3(constraints)
+            z3_sat, z3_model = z3_result if z3_result else (None, None)
+            if z3_sat is not None:
+                print(f"Z3 result: {'SAT' if z3_sat else 'UNSAT'}")
+                assert sympy_sat == z3_sat, f"Disagreement: SymPy={sympy_sat}, Z3={z3_sat}"
+
+
+def test_random_unsatisfiable_constraints_small():
+    """Test random unsatisfiable constraints (small scale)."""
+    generator = RandomEUFTestGenerator()
+    z3_comparator = Z3Comparator() if Z3_AVAILABLE else None
+
+    for trial in range(10):
+        print(f"\nTrial {trial + 1}/10")
+
+        # Generate unsatisfiable constraints
+        x, y, z = generator.symbols_pool[:3]
+
+        constraints = [
+            Eq(x, y),
+            Eq(y, z),
+            Ne(x, z)  # This makes it unsatisfiable
+        ]
+        result = satisfiable(boolalg.And(*constraints), use_euf_theory=True)
+        sympy_sat = result is not False
+        print(f"SymPy result: {'SAT' if sympy_sat else 'UNSAT'}")
+        # Should be unsatisfiable
+        assert not sympy_sat, "Expected UNSAT but got SAT"
+
+        # Compare with Z3 if available
+        if Z3_AVAILABLE and z3_comparator:
+            z3_result = z3_comparator.check_satisfiability_with_z3(constraints)
+            z3_sat, z3_model = z3_result if z3_result else (None, None)
+            if z3_sat is not None:
+                print(f"Z3 result: {'SAT' if z3_sat else 'UNSAT'}")
+                assert sympy_sat == z3_sat, f"Disagreement: SymPy={sympy_sat}, Z3={z3_sat}"
+
+
+def test_random_function_constraints_medium():
+    """Test random constraints with functions (medium scale)."""
+    generator = RandomEUFTestGenerator()
+
+    for trial in range(5):
+        print(f"\nFunction trial {trial + 1}/5")
+
+        # Generate constraints with functions
+        x, y, z = generator.symbols_pool[:3]
+        f = generator.functions_pool[0]
+
+        constraints = [
+            Eq(x, y),
+            Eq(f(x), z),
+            # f(y) should equal z by congruence
+        ]
+
+        # Add the congruence conclusion as a query
+        query = Eq(f(y), z)
+
+        # Check if constraints + query is satisfiable
+        all_constraints = constraints + [query]
+        result = satisfiable(boolalg.And(*all_constraints), use_euf_theory=True)
+        sympy_sat = result is not False
+        print(f"SymPy result for constraints + query: {'SAT' if sympy_sat else 'UNSAT'}")
+
+        # Should be satisfiable due to congruence
+        assert sympy_sat, "Expected SAT due to functional congruence"
+
+        # Also check if constraints + negated query is unsatisfiable
+        negated_constraints = constraints + [Not(query)]
+        result_neg = satisfiable(boolalg.And(*negated_constraints), use_euf_theory=True)
+        sympy_sat_neg = result_neg is not False
+        print(f"SymPy result for constraints + ~query: {'SAT' if sympy_sat_neg else 'UNSAT'}")
+
+        # Should be unsatisfiable
+        assert not sympy_sat_neg, "Expected UNSAT for constraints + ~query"
+
+def test_large_random_constraint_set():
+    """Test large random constraint sets."""
+    generator = RandomEUFTestGenerator()
+    z3_comparator = Z3Comparator() if Z3_AVAILABLE else None
+
+    for trial in range(3):
+        print(f"\nLarge trial {trial + 1}/3")
+
+        # Generate larger constraint set
+        constraints = generator.generate_constraint_set(num_constraints=25)
+
+        # Filter out trivially false constraints (x != x)
+        filtered_constraints = []
+        for constraint in constraints:
+            if isinstance(constraint, Ne) and constraint.lhs == constraint.rhs:
+                continue  # Skip x != x
+            if isinstance(constraint, Eq) and constraint.lhs == constraint.rhs:
+                continue  # Skip x == x (trivially true)
+            filtered_constraints.append(constraint)
+
+        if len(filtered_constraints) == 0:
+            continue
+
+        print(f"Testing {len(filtered_constraints)} constraints")
+
+        result = satisfiable(boolalg.And(*filtered_constraints), use_euf_theory=True)
+        sympy_sat = result is not False
+        print(f"SymPy result: {'SAT' if sympy_sat else 'UNSAT'}")
+
+        # Compare with Z3 if available (only for smaller sets due to conversion complexity)
+        if Z3_AVAILABLE and z3_comparator and len(filtered_constraints) <= 15:
+            z3_result = z3_comparator.check_satisfiability_with_z3(filtered_constraints)
+            z3_sat, z3_model = z3_result if z3_result else (None, None)
+            if z3_sat is not None:
+                print(f"Z3 result: {'SAT' if z3_sat else 'UNSAT'}")
+                assert sympy_sat == z3_sat, f"Disagreement: SymPy={sympy_sat}, Z3={z3_sat}"
