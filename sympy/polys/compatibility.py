@@ -264,19 +264,31 @@ class IPolys(Generic[Er]):
     @overload
     def clone(self, symbols: Expr | list[Expr] | tuple[Expr, ...] | None = None,
                     *,
-                    domain: PolyRing[Es] | Domain[Es],
+                    domain: Domain[Es],
                     order: None = None) -> PolyRing[Es]: ...
+    @overload
+    def clone(self, symbols: Expr | list[Expr] | tuple[Expr, ...] | None = None,
+                    *,
+                    domain: PolyRing[Es],
+                    order: None = None) -> PolyRing[PolyElement[Es]]: ...
 
     # Ring operations and cloning
     @abstractmethod
     def clone(self,
              symbols: Expr | list[Expr] | tuple[Expr, ...] | None = None,
              domain: PolyRing[Es] | Domain[Es] | None = None,
-             order: str | MonomialOrder | None = None) -> PolyRing[Er] | PolyRing[Es]:
+             order: str | MonomialOrder | None = None) -> PolyRing[Er] | PolyRing[Es] | PolyRing[PolyElement[Es]]:
+        ...
+
+    @overload
+    def __getitem__(self, key: int) -> PolyRing[Er]:
+        ...
+    @overload
+    def __getitem__(self, key: slice) -> PolyRing[Er] | Domain[Er]:
         ...
 
     @abstractmethod
-    def __getitem__(self, key: slice | int) -> IPolys[Er] | Domain[Er]:
+    def __getitem__(self, key: slice | int) -> PolyRing[Er] | Domain[Er]:
         ...
 
     @abstractmethod

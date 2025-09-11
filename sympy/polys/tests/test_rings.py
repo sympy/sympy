@@ -2278,7 +2278,7 @@ def test_PolyElement_imul_num():
     assert p.imul_num(3) == 3 * x and p.imul_num(3) is not p
 
     p = x + y
-    assert p.imul_num(0) is None and p == R.zero
+    assert p.imul_num(0) is p and p == R.zero
 
     p = x + y ** 2
     p_id = id(p)

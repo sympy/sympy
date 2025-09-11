@@ -1542,7 +1542,7 @@ class Domain(Generic[Er]):
     def imag(self, a) -> Er:
         return self.zero
 
-    def almosteq(self, a: Er, b: Er, tolerance: int | None = None):
+    def almosteq(self, a: Er, b: Er, tolerance: float | None = None):
         """Check if ``a`` and ``b`` are almost equal. """
         return a == b
 
