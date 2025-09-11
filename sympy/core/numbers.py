@@ -934,7 +934,7 @@ class Float(Number):
 
     def __getnewargs_ex__(self):
         sign, man, exp, bc = self._mpf_
-        arg = (sign, hex(man)[2:], exp, bc)
+        arg = (sign, f'{man:x}', exp, bc)
         kwargs = {'precision': self._prec}
         return ((arg,), kwargs)
 

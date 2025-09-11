@@ -96,7 +96,7 @@ class Subset():
         """
         bin_list = Subset.bitlist_from_subset(self.subset, self.superset)
         n = (int(''.join(bin_list), 2) + k) % 2**self.superset_size
-        bits = bin(n)[2:].rjust(self.superset_size, '0')
+        bits = f'{n:b}'.rjust(self.superset_size, '0')
         return Subset.subset_from_bitlist(self.superset, bits)
 
     def next_binary(self):
@@ -538,7 +538,7 @@ class Subset():
 
         iterate_binary, rank_binary
         """
-        bits = bin(rank)[2:].rjust(len(superset), '0')
+        bits = f'{rank:b}'.rjust(len(superset), '0')
         return Subset.subset_from_bitlist(superset, bits)
 
     @classmethod
