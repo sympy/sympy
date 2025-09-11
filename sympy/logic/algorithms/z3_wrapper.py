@@ -22,12 +22,6 @@ supported_predicates = {
     Q.extended_nonnegative, Q.extended_nonpositive
 }
 
-def is_supported_predicate(pred):
-    if not isinstance(pred, AppliedPredicate):
-        return False
-
-    return pred.function in supported_predicates
-
 
 def z3_satisfiable(expr, all_models=False):
     """
@@ -110,7 +104,7 @@ def encoded_cnf_to_z3_solver(enc_cnf, z3):
     for pred, enc in enc_cnf.encoding.items():
         if not isinstance(pred, AppliedPredicate):
             continue
-        if pred.function not in (Q.gt, Q.lt, Q.ge, Q.le, Q.ne, Q.eq, Q.positive, Q.negative, Q.extended_negative, Q.extended_positive, Q.zero, Q.nonzero, Q.nonnegative, Q.nonpositive, Q.extended_nonzero, Q.extended_nonnegative, Q.extended_nonpositive):
+        if pred.function not in supported_predicates:
             continue
 
         pred_str = smtlib_code(pred, auto_declare=False, auto_assert=False, known_functions=known_functions,
