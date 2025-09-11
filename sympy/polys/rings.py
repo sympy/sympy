@@ -584,14 +584,14 @@ class PolyRing(DefaultPrinting, IPolys[Er], Generic[Er]):
                 f"got {gen}"
             )
 
-    def _gen_index(self, gen: int | str):
+    def _gen_index(self, gen: int | str) -> int:
         # Get generator index from int or string.
         if isinstance(gen, int):
             if 0 <= gen < self.ngens:
                 return gen
             else:
                 raise ValueError(f"invalid generator index: {gen}")
-        else:  # gen is a string
+        else:
             try:
                 return self.symbols.index(gen)
             except ValueError:
@@ -770,6 +770,7 @@ class PolyRing(DefaultPrinting, IPolys[Er], Generic[Er]):
 
         return poly
 
+
 class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, ...], Er], Generic[Er]):
     """Element of multivariate distributed polynomial ring. """
 
@@ -813,7 +814,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
     def __ge__(self, other) -> bool:
         return self._cmp(other, ge)
 
-    def as_expr(self, *symbols):
+    def as_expr(self, *symbols: Expr) -> Expr:
         if not symbols:
             symbols = self.ring.symbols
         elif len(symbols) != self.ring.ngens:
@@ -847,7 +848,6 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
         """
         if self.ring.is_element(other):
             return self._add(other)
-
 
         if isinstance(other, PolyElement):
             domain = other.ring.domain
@@ -1076,7 +1076,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
                 isinstance(other.ring.domain, PolynomialRing)
                 and other.ring.domain.ring == ring
             ):
-                return other.__rdivmod__(self)
+                return other.__rdivmod__(self) # type: ignore
             else:
                 return NotImplemented
         try:
@@ -1110,7 +1110,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
                 isinstance(other.ring.domain, PolynomialRing)
                 and other.ring.domain.ring == ring
             ):
-                return other.__rmod__(self)
+                return other.__rmod__(self) # type: ignore
             else:
                 return NotImplemented
         try:
@@ -1143,7 +1143,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
                 isinstance(other.ring.domain, PolynomialRing)
                 and other.ring.domain.ring == ring
             ):
-                return other.__rtruediv__(self)
+                return other.__rtruediv__(self) # type: ignore
             else:
                 return NotImplemented
 
@@ -1177,7 +1177,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
                 isinstance(other.ring.domain, PolynomialRing)
                 and other.ring.domain.ring == ring
             ):
-                return other.__rtruediv__(self)
+                return other.__rtruediv__(self) # type: ignore
             else:
                 return NotImplemented
 
@@ -1745,7 +1745,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
             )
 
     @overload
-    def evaluate(self, values: list[tuple[Expr, Er | int]]) -> PolyElement[Er] | Er:
+    def evaluate(self, values: list[tuple[PolyElement[Er], Er | int]]) -> PolyElement[Er] | Er:
         ...
 
     @overload
@@ -2357,7 +2357,9 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
     def rem(self, G: list[PolyElement[Er]]) -> list[PolyElement[Er]]:
         ...
 
-    def rem(self, G: PolyElement[Er] | list[PolyElement[Er]]) -> PolyElement[Er] | list[PolyElement[Er]]:
+    def rem(
+        self, G: PolyElement[Er] | list[PolyElement[Er]]
+    ) -> PolyElement[Er] | list[PolyElement[Er]]:
         f = self
         if isinstance(G, PolyElement):
             return f._rem(G)
@@ -2385,7 +2387,9 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
     def exquo(self, G: PolyElement[Er]) -> PolyElement[Er]:
         ...
 
-    def exquo(self, G: PolyElement[Er] | list[PolyElement[Er]]) -> PolyElement[Er] | list[PolyElement[Er]]:
+    def exquo(
+        self, G: PolyElement[Er] | list[PolyElement[Er]]
+    ) -> PolyElement[Er] | list[PolyElement[Er]]:
         q, r = self.div(G)
 
         if not r:
