@@ -1,79 +1,19 @@
 [project]
-
 name = "sympy"
-description = "Computer algebra system (CAS) in Python"
-dynamic = ["version"]
-dependencies = ["mpmath >= 1.1.0"]
 requires-python = ">=3.9"
-scripts = ["isympy = isympy:main"]
-authors = [
-    { name = "Meurer A" },
-    { name = "Smith CP" },
-    { name = "Paprocki M" },
-    { name = "Čertík O" },
-    { name = "Kirpichev SB" },
-    { name = "Rocklin M" },
-    { name = "Kumar A" },
-    { name = "Ivanov S" },
-    { name = "Moore JK" },
-    { name = "Singh S" },
-    { name = "Rathnayake T" },
-    { name = "Vig S" },
-    { name = "Granger BE" },
-    { name = "Muller RP" },
-    { name = "Bonazzi F" },
-    { name = "Gupta H" },
-    { name = "Vats S" },
-    { name = "Johansson F" },
-    { name = "Pedregosa F" },
-    { name = "Curry MJ" },
-    { name = "Terrel AR" },
-    { name = "Roučka Š" },
-    { name = "Saboo A" },
-    { name = "Fernando I" },
-    { name = "Kulal S" },
-    { name = "Cimrman R" },
-    { name = "Scopatz A" },
+dynamic = [
+    "version",
+    "keywords",
+    "description",
+    "classifiers",
+    "urls",
+    "optional-dependencies",
+    "dependencies",
+    "scripts",
+    "authors",
+    "license",
+    "readme",
 ]
-maintainers = [
-    { name = "SymPy development team", email = "sympy@googlegroups.com" },
-]
-keywords = ["Math CAS"]
-classifiers = [
-    'License :: OSI Approved :: BSD License',
-    'Operating System :: OS Independent',
-    'Programming Language :: Python',
-    'Topic :: Scientific/Engineering',
-    'Topic :: Scientific/Engineering :: Mathematics',
-    'Topic :: Scientific/Engineering :: Physics',
-    'Programming Language :: Python :: 3',
-    'Programming Language :: Python :: 3.9',
-    'Programming Language :: Python :: 3.10',
-    'Programming Language :: Python :: 3.11',
-    'Programming Language :: Python :: 3.12',
-    'Programming Language :: Python :: 3.13',
-    'Programming Language :: Python :: 3 :: Only',
-    'Programming Language :: Python :: Implementation :: CPython',
-    'Programming Language :: Python :: Implementation :: PyPy',
-]
-license = "BSD-3-Clause"
-readme = "README.md"
-license-files = ["LICENSE"]
-
-[project.urls]
-Homepage = "https://sympy.org",
-Documentation = "https://docs.sympy.org/",
-Source = "https://github.com/sympy/sympy",
-"Release Notes" = "https://github.com/sympy/sympy/wiki/Release-Notes",
-Issues = "https://github.com/sympy/sympy/issues"
-Donate = "https://www.sympy.org/en/donate.html"
-
-[project.scripts]
-isympy = "isympy:main"
-
-[tool.setuptools.dynamic]
-version = { attr = "sympy.release.__version__" }
-
 
 [build-system]
 requires = ["setuptools>=40.8.0"]
@@ -219,7 +159,6 @@ module = [
     "pysat.*",
     "bpython.*",
 ]
-
 ignore_missing_imports = true
 
 # pyright type checker settings:
@@ -249,40 +188,44 @@ exclude-modules = '''
 )
 '''
 
-[project.optional-dependencies]
-reccomended = ["gmpy2"]
-interactive = ["ipython"]
-parsing = ["antlr4-python3-runtime==4.11.*","lark","clang","LFortran"]
-fastlogic = ["pycosat","python-sat"]
-plotting = ["matplotlib","pyglet"]
-lambdify = ["numpy","scipy"] # lambidfy will automatically use these to improve performance
-lamdify-extras = ["cupy","jax","tensorflow","numexpr"] # optional compatability with these libraries is provided by lambdify
-autowrap = ["Cython","numpy","llvmlite"]
-code-printers = ["llvmlite","tensorflow"]
-statistics = ["scipy","numpy","pymc"]
-symengine = ["symengine"] # this optional backend will not be used unless the USE_SYMENGINE=1 is set
-
 [dependency-groups]
 dev = [
-{include-group = "test"}
-{include-group = "lint"}
-{include-group = "benchmark"}
-{include-group = "doc"}
-]
-
-test = [
-    "wurlitzer",
-    "cloudpickle",
-    "hypothesis"
+    "flake8",
+    "flake8-comprehensions",
     "pytest",
+    "hypothesis",
     "pytest-doctestplus",
     "pytest-split",
     "pytest-timeout",
     "pytest-xdist",
 ]
 
-lint = ["ruff", "sphinx-lint", "mypy","flake8","flake8-comprehensions"]
-benchmark = ["asv"]
+lint = ["ruff", "sphinx-lint", "mypy"]
+
+all-optional = [
+    "numpy",
+    "scipy",
+    "numexpr",
+    "matplotlib",
+    "bpython",
+    "ipython",
+    "cython",
+    "wurlitzer",
+    "autowrap",
+    "lxml",
+    "lark",
+    "z3-solver",
+    "pycosat",
+    "jax",
+    "jaxlib",
+    "libclang",
+    "antlr4-python3-runtime==4.11.*",
+    "symengine",
+    "numba",
+    "llvmlite",
+    "pymc",
+    "gmpy2",
+]
 
 doc = [
     "furo",
@@ -305,3 +248,6 @@ doc = [
     "sphinxcontrib-qthelp",
     "sphinxcontrib-serializinghtml",
 ]
+
+[tool.uv]
+default-groups = ["dev", "lint"]
