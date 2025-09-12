@@ -755,6 +755,14 @@ def test_PolyElement___add__():
     raises(TypeError, lambda: t + QQ(1, 2))
     raises(TypeError, lambda: QQ(1, 2) + t)
 
+    R, x = ring("x", ZZ)
+    R1, a = ring("a", R)
+
+    assert x + a == R1.domain.convert(x) + a
+    assert (x + a).ring == R1
+    assert a + x == a + R1.domain.convert(x)
+    assert (a + x).ring == R1
+
 
 def test_PolyElement___sub__():
     Rt, t = ring("t", ZZ)
@@ -796,6 +804,14 @@ def test_PolyElement___sub__():
 
     raises(TypeError, lambda: t - QQ(1, 2))
     raises(TypeError, lambda: QQ(1, 2) - t)
+
+    R, x = ring("x", ZZ)
+    R1, a = ring("a", R)
+
+    assert x - a == R1.domain.convert(x) - a
+    assert (x - a).ring == R1
+    assert a - x == a - R1.domain.convert(x)
+    assert (a - x).ring == R1
 
 
 def test_PolyElement___mul__():
@@ -846,6 +862,14 @@ def test_PolyElement___mul__():
     _, x, y = ring("x,y", ZZ)
     p = x + y
     raises(TypeError, lambda: (1/2)*p)
+
+    R, x = ring("x", ZZ)
+    R1, a = ring("a", R)
+
+    assert x*a == R1.domain.convert(x) * a
+    assert (x*a).ring == R1
+    assert a*x == a * R1.domain.convert(x)
+    assert (a*x).ring == R1
 
 
 def test_PolyElement___truediv__():
@@ -2254,7 +2278,7 @@ def test_PolyElement_imul_num():
     assert p.imul_num(3) == 3 * x and p.imul_num(3) is not p
 
     p = x + y
-    assert p.imul_num(0) is None and p == R.zero
+    assert p.imul_num(0) is p and p == R.zero
 
     p = x + y ** 2
     p_id = id(p)
