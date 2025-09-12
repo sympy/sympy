@@ -556,7 +556,7 @@ class IntegerPowerable:
             except NotImplementedError:
                 return NotImplemented
         else:
-            bits = [int(d) for d in reversed(bin(e)[2:])]
+            bits = [int(d) for d in reversed(f'{e:b}')]
             n = len(bits)
             p = self
             first = True

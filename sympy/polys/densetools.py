@@ -19,7 +19,7 @@ from sympy.polys.densearith import (
     dup_exquo_ground, dmp_exquo_ground,
 )
 from sympy.polys.densebasic import (
-    dup, dmp, _dup, _dmp, _ground_dmp,
+    dup, dmp, _dup, _dmp, _dmp2, _ground_dmp,
     dup_strip, dmp_strip, dup_truncate,
     dup_convert, dmp_convert,
     dup_degree, dmp_degree,
@@ -34,7 +34,6 @@ from sympy.polys.densebasic import (
     dmp_zeros,
     dmp_include,
     dup_nth,
-    dup_normal,
 )
 from sympy.polys.polyerrors import (
     MultivariatePolynomialError,
@@ -46,7 +45,9 @@ from math import ceil as _ceil, log2 as _log2, sqrt
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from sympy.external.gmpy import MPQ
     from sympy.polys.domains.ringextension import RingExtension
+    from sympy.polys.domains.algebraicfield import AlgebraicField, Alg
 
 
 def dup_integrate(f: dup[Ef], m: int, K: Field[Ef]) -> dup[Ef]:
@@ -123,7 +124,7 @@ def _rec_integrate_in(g: dmp[Ef], m: int, v: int, i: int, j: int, K: Field[Ef]) 
 
     w, i = v - 1, i + 1
 
-    return dmp_strip([ _rec_integrate_in(c, m, w, i, j, K) for c in g ], v)
+    return dmp_strip([ _rec_integrate_in(c, m, w, i, j, K) for c in g ], v, K)
 
 
 def dmp_integrate_in(f: dmp[Ef], m: int, j: int, u: int, K: Field[Ef]) -> dmp[Ef]:
@@ -172,7 +173,7 @@ def dup_diff(f: dup[Er], m: int, K: Domain[Er]) -> dup[Er]:
     if n < m:
         return []
 
-    deriv = []
+    deriv: list[Er] = []
 
     if m == 1:
         for coeff in f[:-m]:
@@ -188,7 +189,7 @@ def dup_diff(f: dup[Er], m: int, K: Domain[Er]) -> dup[Er]:
             deriv.append(K(k)*coeff)
             n -= 1
 
-    return dup_strip(deriv)
+    return dup_strip(deriv, K)
 
 
 def dmp_diff(f: dmp[Er], m: int, u: int, K: Domain[Er]) -> dmp[Er]:
@@ -217,9 +218,10 @@ def dmp_diff(f: dmp[Er], m: int, u: int, K: Domain[Er]) -> dmp[Er]:
     n = dmp_degree(f, u)
 
     if n < m:
-        return dmp_zero(u)
+        return dmp_zero(u, K)
 
-    deriv, v = [], u - 1
+    deriv: list[dmp[Er]] = []
+    v = u - 1
 
     if m == 1:
         for coeff in f[:-m]:
@@ -235,7 +237,7 @@ def dmp_diff(f: dmp[Er], m: int, u: int, K: Domain[Er]) -> dmp[Er]:
             deriv.append(dmp_mul_ground(coeff, K(k), v, K))
             n -= 1
 
-    return dmp_strip(deriv, u)
+    return dmp_strip(deriv, u, K)
 
 
 def _rec_diff_in(g: dmp[Er], m: int, v: int, i: int, j: int, K: Domain[Er]) -> dmp[Er]:
@@ -245,7 +247,7 @@ def _rec_diff_in(g: dmp[Er], m: int, v: int, i: int, j: int, K: Domain[Er]) -> d
 
     w, i = v - 1, i + 1
 
-    return dmp_strip([ _rec_diff_in(c, m, w, i, j, K) for c in g ], v)
+    return dmp_strip([ _rec_diff_in(c, m, w, i, j, K) for c in g ], v, K)
 
 
 def dmp_diff_in(f: dmp[Er], m: int, j: int, u: int, K: Domain[Er]) -> dmp[Er]:
@@ -334,7 +336,7 @@ def _rec_eval_in(g: dmp[Er], a: Er, v: int, i: int, j: int, K: Domain[Er]) -> dm
 
     v, i = v - 1, i + 1
 
-    return dmp_strip([ _rec_eval_in(c, a, v, i, j, K) for c in g ], v)
+    return dmp_strip([ _rec_eval_in(c, a, v, i, j, K) for c in g ], v, K)
 
 
 def dmp_eval_in(f: dmp[Er], a: Er, j: int, u: int, K: Domain[Er]) -> dmp[Er]:
@@ -396,14 +398,14 @@ def dmp_eval_tail(f: dmp[Er], A: list[Er], u: int, K: Domain[Er]) -> dmp[Er]:
         return f
 
     if dmp_zero_p(f, u):
-        return dmp_zero(u - len(A))
+        return dmp_zero(u - len(A), K)
 
     e = _rec_eval_tail(f, 0, A, u, K)
 
     if u == len(A) - 1:
         return e
     else:
-        return dmp_strip(e, u - len(A))
+        return dmp_strip(e, u - len(A), K)
 
 
 def _rec_diff_eval(g: dmp[Er], m: int, a: Er, v: int, i: int, j: int, K: Domain[Er]) -> dmp[Er]:
@@ -413,7 +415,7 @@ def _rec_diff_eval(g: dmp[Er], m: int, a: Er, v: int, i: int, j: int, K: Domain[
 
     v, i = v - 1, i + 1
 
-    return dmp_strip([ _rec_diff_eval(c, m, a, v, i, j, K) for c in g ], v)
+    return dmp_strip([ _rec_diff_eval(c, m, a, v, i, j, K) for c in g ], v, K)
 
 
 def dmp_diff_eval_in(f: dmp[Er], m: int, a: Er, j: int, u: int, K: Domain[Er]) -> dmp[Er]:
@@ -457,7 +459,7 @@ def dup_trunc(f: dup[Eeuclid], p: Eeuclid, K: Domain[Eeuclid]) -> dup[Eeuclid]:
 
     """
     if K.is_ZZ:
-        g = []
+        g: list[Eeuclid] = []
 
         for c in f:
             c = c % p
@@ -473,7 +475,7 @@ def dup_trunc(f: dup[Eeuclid], p: Eeuclid, K: Domain[Eeuclid]) -> dup[Eeuclid]:
     else:
         g = [ c % p for c in f ]
 
-    return dup_strip(g)
+    return dup_strip(g, K)
 
 
 def dmp_trunc(f: dmp[Er], p: dmp[Er], u: int, K: Domain[Er]) -> dmp[Er]:
@@ -493,7 +495,7 @@ def dmp_trunc(f: dmp[Er], p: dmp[Er], u: int, K: Domain[Er]) -> dmp[Er]:
     11*x**2 + 11*x + 5
 
     """
-    return dmp_strip([ dmp_rem(c, p, u - 1, K) for c in f ], u)
+    return dmp_strip([ dmp_rem(c, p, u - 1, K) for c in f ], u, K)
 
 
 def dmp_ground_trunc(f: dmp[Eeuclid], p: Eeuclid, u: int, K: Domain[Eeuclid]) -> dmp[Eeuclid]:
@@ -517,7 +519,7 @@ def dmp_ground_trunc(f: dmp[Eeuclid], p: Eeuclid, u: int, K: Domain[Eeuclid]) ->
 
     v = u - 1
 
-    return dmp_strip([ dmp_ground_trunc(c, p, v, K) for c in f ], u)
+    return dmp_strip([ dmp_ground_trunc(c, p, v, K) for c in f ], u, K)
 
 
 def dup_monic(f: dup[Ef], K: Field[Ef]) -> dup[Ef]:
@@ -818,18 +820,18 @@ def dup_real_imag(f: dup[Er], K: Domain[Er]) -> tuple[dmp[Er], dmp[Er]]:
     if not K.is_ZZ and not K.is_QQ:
         raise DomainError("computing real and imaginary parts is not supported over %s" % K)
 
-    f1 = dmp_zero(1)
-    f2 = dmp_zero(1)
+    f1 = dmp_zero(1, K)
+    f2 = dmp_zero(1, K)
 
     if not f:
         return f1, f2
 
-    g = [[[K.one, K.zero]], [[K.one], []]]
-    h = dmp_ground(f[0], 2)
+    g = _dmp2([[[K.one, K.zero]], [[K.one], []]])
+    h = dmp_ground(f[0], 2, K)
 
     for c in f[1:]:
         h = dmp_mul(h, g, 2, K)
-        h = dmp_add_term(h, dmp_ground(c, 1), 0, 2, K)
+        h = dmp_add_term(h, dmp_ground(c, 1, K), 0, 2, K)
 
     H = dmp_to_raw_dict(h, 2, K)
 
@@ -955,7 +957,7 @@ def dmp_shift(f: dmp[Er], a: list[Er], u: int, K: Domain[Er]) -> dmp[Er]:
                 afj = dmp_mul_ground(f[j], a0, u-1, K)
                 f[j + 1] = dmp_add(f[j + 1], afj, u-1, K)
 
-    return dmp_strip(f, u)
+    return dmp_strip(f, u, K)
 
 
 def dup_transform(f: dup[Er], p: dup[Er], q: dup[Er], K: Domain[Er]) -> dup[Er]:
@@ -1004,7 +1006,7 @@ def dup_compose(f: dup[Er], g: dup[Er], K: Domain[Er]) -> dup[Er]:
 
     """
     if len(g) <= 1:
-        return dup_strip([dup_eval(f, dup_LC(g, K), K)])
+        return dup_strip([dup_eval(f, dup_LC(g, K), K)], K)
 
     if not f:
         return []
@@ -1088,7 +1090,7 @@ def dup_series_compose(f: dup[Er], g: dup[Er], n: int, K: Domain[Er]) -> dup[Er]
     g = dup_truncate(g, n, K)
 
     if len(g) <= 1:
-        return dup_strip([dup_eval(f, dup_LC(g, K), K)])
+        return dup_strip([dup_eval(f, dup_LC(g, K), K)], K)
 
     if not f:
         return []
@@ -1101,7 +1103,7 @@ def _dup_right_decompose(f: dup[Er], s: int, K: Domain[Er]) -> dup[Er]:
     n = len(f) - 1
     lc = dup_LC(f, K)
 
-    fd: dict[int, Er] = dup_to_raw_dict(f)
+    fd: dict[int, Er] = dup_to_raw_dict(f, K)
     g = { s: K.one }
 
     r = n // s
@@ -1126,7 +1128,8 @@ def _dup_right_decompose(f: dup[Er], s: int, K: Domain[Er]) -> dup[Er]:
 
 def _dup_left_decompose(f: dup[Er], h: dup[Er], K: Domain[Er]) -> dup[Er] | None:
     """Helper function for :func:`_dup_decompose`."""
-    g, i = {}, 0
+    g: dict[int, Er] = {}
+    i = 0
 
     while f:
         q, r = dup_div(f, h, K)
@@ -1149,12 +1152,10 @@ def _dup_decompose(f: dup[Er], K: Domain[Er]) -> tuple[dup[Er], dup[Er]] | None:
             continue
 
         h = _dup_right_decompose(f, s, K)
+        g = _dup_left_decompose(f, h, K)
 
-        if h is not None:
-            g = _dup_left_decompose(f, h, K)
-
-            if g is not None:
-                return g, h
+        if g is not None:
+            return g, h
 
     return None
 
@@ -1238,7 +1239,7 @@ def dmp_alg_inject(
     if not (K.is_Algebraic or K.is_GaussianRing or K.is_GaussianField):
         raise DomainError('computation can be done only in an algebraic domain')
 
-    fd: dict[tuple[int, ...], Er] = dmp_to_dict(f, u)
+    fd: dict[tuple[int, ...], Er] = dmp_to_dict(f, u, K)
     h: dict[tuple[int, ...], Eg] = {}
 
     for f_monom, g in fd.items():
@@ -1250,7 +1251,7 @@ def dmp_alg_inject(
     return F, u + 1, K.dom
 
 
-def dmp_lift(f, u, K):
+def dmp_lift(f: dmp[Alg], u: int, K: AlgebraicField) -> dmp[MPQ]:
     """
     Convert algebraic coefficients to integers in ``K[X]``.
 
@@ -1277,7 +1278,7 @@ def dmp_lift(f, u, K):
     p_a = K.mod.to_list()
     P_A = dmp_include(p_a, list(range(1, v + 1)), 0, K2)
 
-    return dmp_resultant(F, P_A, v, K2)
+    return dmp_resultant(F, P_A, v, K2) # type: ignore
 
 
 def dup_sign_variations(f, K):
@@ -1509,7 +1510,7 @@ def _dup_series_reversion_small(f: dup[Er], n: int, K: Domain[Er]) -> dup[Er]:
     if n >= 4:
         g[-4] = (2 * b ** 2 - a * c) * cinv ** 5
 
-    return dup_normal(g, K)
+    return dup_strip(g, K)
 
 
 def dup_series_reversion(f: dup[Er], n: int, K: Domain[Er]) -> dup[Er]:
@@ -1590,4 +1591,4 @@ def dup_series_reversion(f: dup[Er], n: int, K: Domain[Er]) -> dup[Er]:
         # t = t * h^m mod x**(n-1)
         t = dup_series_mul(t, H[m - 1], n, K)
 
-    return dup_strip(g)
+    return dup_strip(g, K)

@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, ClassVar
+from typing import TYPE_CHECKING, ClassVar, overload, Literal
 
 from collections import defaultdict
 from functools import reduce
@@ -18,6 +18,10 @@ from .parameters import global_parameters
 from .kind import KindDispatcher
 from .traversal import bottom_up
 from sympy.utilities.iterables import sift
+
+
+if TYPE_CHECKING:
+    from .numbers import Number
 
 
 # internal marker to indicate:
@@ -841,7 +845,13 @@ class Mul(Expr, AssocOp):
                 return S.NegativeOne, (-args[0],) + args[1:]
         return S.One, args
 
-    def as_coeff_Mul(self, rational=False):
+    @overload
+    def as_coeff_Mul(self, rational: Literal[True]) -> tuple['Rational', Expr]: ...
+
+    @overload
+    def as_coeff_Mul(self, rational: bool = False) -> tuple['Number', Expr]: ...
+
+    def as_coeff_Mul(self, rational=False) -> tuple['Number', Expr]:
         """
         Efficiently extract the coefficient of a product.
         """
@@ -850,9 +860,9 @@ class Mul(Expr, AssocOp):
         if coeff.is_Number:
             if not rational or coeff.is_Rational:
                 if len(args) == 1:
-                    return coeff, args[0]
+                    return coeff, args[0] # type: ignore
                 else:
-                    return coeff, self._new_rawargs(*args)
+                    return coeff, self._new_rawargs(*args) # type: ignore
             elif coeff.is_extended_negative:
                 return S.NegativeOne, self._new_rawargs(*((-coeff,) + args))
         return S.One, self

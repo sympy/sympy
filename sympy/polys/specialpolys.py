@@ -201,16 +201,16 @@ def dmp_fateman_poly_F_1(n, K):
     v = [K(1), K(0), K(0)]
 
     for i in range(0, n):
-        v = [dmp_one(i, K), dmp_zero(i), v]
+        v = [dmp_one(i, K), dmp_zero(i, K), v]
 
     m = n - 1
 
-    U = dmp_add_term(u, dmp_ground(K(1), m), 0, n, K)
-    V = dmp_add_term(u, dmp_ground(K(2), m), 0, n, K)
+    U = dmp_add_term(u, dmp_ground(K(1), m, K), 0, n, K)
+    V = dmp_add_term(u, dmp_ground(K(2), m, K), 0, n, K)
 
     f = [[-K(3), K(0)], [], [K(1), K(0), -K(1)]]
 
-    W = dmp_add_term(v, dmp_ground(K(1), m), 0, n, K)
+    W = dmp_add_term(v, dmp_ground(K(1), m, K), 0, n, K)
     Y = dmp_raise(f, m, 1, K)
 
     F = dmp_mul(U, V, n, K)
@@ -246,7 +246,7 @@ def dmp_fateman_poly_F_2(n, K):
 
     m = n - 1
 
-    v = dmp_add_term(u, dmp_ground(K(2), m - 1), 0, n, K)
+    v = dmp_add_term(u, dmp_ground(K(2), m - 1, K), 0, n, K)
 
     f = dmp_sqr([dmp_one(m, K), dmp_neg(v, m, K)], n, K)
     g = dmp_sqr([dmp_one(m, K), v], n, K)
@@ -281,7 +281,7 @@ def dmp_fateman_poly_F_3(n, K):
     for i in range(0, n - 1):
         u = dmp_add_term([u], dmp_one(i, K), n + 1, i + 1, K)
 
-    v = dmp_add_term(u, dmp_ground(K(2), n - 2), 0, n, K)
+    v = dmp_add_term(u, dmp_ground(K(2), n - 2, K), 0, n, K)
 
     f = dmp_sqr(
         dmp_add_term([dmp_neg(v, n - 1, K)], dmp_one(n - 1, K), n + 1, n, K), n, K)

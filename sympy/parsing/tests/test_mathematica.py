@@ -318,3 +318,20 @@ def test_parser_mathematica_exp_alt():
     assert convert_chain3(full_form1) == sin(x*y)
     assert convert_chain3(full_form2) == x*y + z
     assert convert_chain3(full_form3) == sin(x*(y + z)*w**n)
+
+
+def test_Mathematica_literal_regex():
+    import sys
+    import re
+    from sympy.parsing.mathematica import MathematicaParser
+    literal_regex = re.compile(MathematicaParser._literal)
+
+    for c in map(chr, range(sys.maxunicode+1)):
+        if c == "_" or (not c.isidentifier() and not f"x{c}".isidentifier()):
+            assert not literal_regex.match(c)
+            assert not literal_regex.fullmatch(f"x{c}")
+        else:
+            if c.isidentifier():
+                assert literal_regex.fullmatch(c)
+            if f"x{c}".isidentifier():
+                assert literal_regex.fullmatch(f"x{c}")

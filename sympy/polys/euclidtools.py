@@ -489,12 +489,12 @@ def dmp_inner_subresultants(f, g, u, K):
 
     v = u - 1
     if dmp_zero_p(g, u):
-        return [f], [dmp_ground(K.one, v)]
+        return [f], [dmp_ground(K.one, v, K)]
 
     R = [f, g]
     d = n - m
 
-    b = dmp_pow(dmp_ground(-K.one, v), d + 1, v, K)
+    b = dmp_pow(dmp_ground(-K.one, v, K), d + 1, v, K)
 
     h = dmp_prem(f, g, u, K)
     h = dmp_mul_term(h, b, 0, u, K)
@@ -502,7 +502,7 @@ def dmp_inner_subresultants(f, g, u, K):
     lc = dmp_LC(g, K)
     c = dmp_pow(lc, d, v, K)
 
-    S = [dmp_ground(K.one, v), c]
+    S = [dmp_ground(K.one, v, K), c]
     c = dmp_neg(c, v, K)
 
     while not dmp_zero_p(h, u):
@@ -584,12 +584,12 @@ def dmp_prs_resultant(f, g, u, K):
         return dup_prs_resultant(f, g, K)
 
     if dmp_zero_p(f, u) or dmp_zero_p(g, u):
-        return (dmp_zero(u - 1), [])
+        return (dmp_zero(u - 1, K), [])
 
     R, S = dmp_inner_subresultants(f, g, u, K)
 
     if dmp_degree(R[-1], u) > 0:
-        return (dmp_zero(u - 1), R)
+        return (dmp_zero(u - 1, K), R)
 
     return S[-1], R
 
@@ -625,7 +625,7 @@ def dmp_zz_modular_resultant(f, g, p, u, K):
     B = n*M + m*N
 
     D, a = [K.one], -K.one
-    r = dmp_zero(v)
+    r = dmp_zero(v, K)
 
     while dup_degree(D) <= B:
         while True:
@@ -646,8 +646,8 @@ def dmp_zz_modular_resultant(f, g, p, u, K):
         e = dmp_eval(r, a, v, K)
 
         if not v:
-            R = dup_strip([R])
-            e = dup_strip([e])
+            R = dup_strip([R], K)
+            e = dup_strip([e], K)
         else:
             R = [R]
             e = [e]
@@ -694,7 +694,7 @@ def dmp_zz_collins_resultant(f, g, u, K):
     m = dmp_degree(g, u)
 
     if n < 0 or m < 0:
-        return dmp_zero(u - 1)
+        return dmp_zero(u - 1, K)
 
     A = dmp_max_norm(f, u, K)
     B = dmp_max_norm(g, u, K)
@@ -705,7 +705,7 @@ def dmp_zz_collins_resultant(f, g, u, K):
     v = u - 1
 
     B = K(2)*K.factorial(K(n + m))*A**m*B**n
-    r, p, P = dmp_zero(v), K.one, K.one
+    r, p, P = dmp_zero(v, K), K.one, K.one
 
     from sympy.ntheory import nextprime
 
@@ -754,7 +754,7 @@ def dmp_qq_collins_resultant(f, g, u, K0):
     m = dmp_degree(g, u)
 
     if n < 0 or m < 0:
-        return dmp_zero(u - 1)
+        return dmp_zero(u - 1, K0)
 
     K1 = K0.get_ring()
 
@@ -870,7 +870,7 @@ def dmp_discriminant(f, u, K):
     d, v = dmp_degree(f, u), u - 1
 
     if d <= 0:
-        return dmp_zero(v)
+        return dmp_zero(v, K)
     else:
         s = (-1)**((d*(d - 1)) // 2)
         c = dmp_LC(f, K)
@@ -921,14 +921,14 @@ def _dmp_rr_trivial_gcd(f, g, u, K):
         return tuple(dmp_zeros(3, u, K))
     elif zero_f:
         if K.is_nonnegative(dmp_ground_LC(g, u, K)):
-            return g, dmp_zero(u), dmp_one(u, K)
+            return g, dmp_zero(u, K), dmp_one(u, K)
         else:
-            return dmp_neg(g, u, K), dmp_zero(u), dmp_ground(-K.one, u)
+            return dmp_neg(g, u, K), dmp_zero(u, K), dmp_ground(-K.one, u, K)
     elif zero_g:
         if K.is_nonnegative(dmp_ground_LC(f, u, K)):
-            return f, dmp_one(u, K), dmp_zero(u)
+            return f, dmp_one(u, K), dmp_zero(u, K)
         else:
-            return dmp_neg(f, u, K), dmp_ground(-K.one, u), dmp_zero(u)
+            return dmp_neg(f, u, K), dmp_ground(-K.one, u, K), dmp_zero(u, K)
     elif if_contain_one:
         return dmp_one(u, K), f, g
     elif query('USE_SIMPLIFY_GCD'):
@@ -946,12 +946,12 @@ def _dmp_ff_trivial_gcd(f, g, u, K):
         return tuple(dmp_zeros(3, u, K))
     elif zero_f:
         return (dmp_ground_monic(g, u, K),
-                dmp_zero(u),
-                dmp_ground(dmp_ground_LC(g, u, K), u))
+                dmp_zero(u, K),
+                dmp_ground(dmp_ground_LC(g, u, K), u, K))
     elif zero_g:
         return (dmp_ground_monic(f, u, K),
-                dmp_ground(dmp_ground_LC(f, u, K), u),
-                dmp_zero(u))
+                dmp_ground(dmp_ground_LC(f, u, K), u, K),
+                dmp_zero(u, K))
     elif query('USE_SIMPLIFY_GCD'):
         return _dmp_simplify_gcd(f, g, u, K)
     else:
@@ -1677,7 +1677,7 @@ def dup_rr_lcm(f, g, K):
 
     """
     if not f or not g:
-        return dmp_zero(0)
+        return dmp_zero(0, K)
 
     fc, f = dup_primitive(f, K)
     gc, g = dup_primitive(g, K)

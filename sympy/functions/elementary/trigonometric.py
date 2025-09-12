@@ -2747,8 +2747,7 @@ class atan(InverseTrigonometricFunction):
                 return -pi/4
 
         if arg is S.ComplexInfinity:
-            from sympy.calculus.accumulationbounds import AccumBounds
-            return AccumBounds(-pi/2, pi/2)
+            return
 
         if arg.could_extract_minus_sign():
             return -cls(-arg)
