@@ -410,6 +410,7 @@ class PolyRing(DefaultPrinting, IPolys[Er], Generic[Er]):
         """True if this is a multivariate ring."""
         return self.ngens > 1
 
+    # Ring operations and cloning
     @overload
     def clone(
         self,
@@ -417,6 +418,7 @@ class PolyRing(DefaultPrinting, IPolys[Er], Generic[Er]):
         domain: None = None,
         order: None = None,
     ) -> PolyRing[Er]: ...
+
     @overload
     def clone(
         self,
@@ -425,6 +427,7 @@ class PolyRing(DefaultPrinting, IPolys[Er], Generic[Er]):
         domain: Domain[Es],
         order: None = None,
     ) -> PolyRing[Es]: ...
+
     @overload
     def clone(
         self,
@@ -434,7 +437,6 @@ class PolyRing(DefaultPrinting, IPolys[Er], Generic[Er]):
         order: None = None,
     ) -> PolyRing[PolyElement[Es]]: ...
 
-    # Ring operations and cloning
     def clone(
         self,
         symbols: Expr | list[Expr] | tuple[Expr, ...] | None = None,
