@@ -1,3 +1,81 @@
+[project]
+
+name = "sympy"
+description = "Computer algebra system (CAS) in Python"
+dynamic = ["version"]
+scripts = {isympy = "isympy:main"}
+dependencies = ["mpmath >= 1.1.0"]
+requires-python = ">=3.9"
+authors = [
+    { name = "Meurer A" },
+    { name = "Smith CP" },
+    { name = "Paprocki M" },
+    { name = "Čertík O" },
+    { name = "Kirpichev SB" },
+    { name = "Rocklin M" },
+    { name = "Kumar A" },
+    { name = "Ivanov S" },
+    { name = "Moore JK" },
+    { name = "Singh S" },
+    { name = "Rathnayake T" },
+    { name = "Vig S" },
+    { name = "Granger BE" },
+    { name = "Muller RP" },
+    { name = "Bonazzi F" },
+    { name = "Gupta H" },
+    { name = "Vats S" },
+    { name = "Johansson F" },
+    { name = "Pedregosa F" },
+    { name = "Curry MJ" },
+    { name = "Terrel AR" },
+    { name = "Roučka Š" },
+    { name = "Saboo A" },
+    { name = "Fernando I" },
+    { name = "Kulal S" },
+    { name = "Cimrman R" },
+    { name = "Scopatz A" },
+]
+maintainers = [
+    { name = "SymPy development team", email = "sympy@googlegroups.com" },
+]
+keywords = ["Math CAS"]
+classifiers = [
+    'License :: OSI Approved :: BSD License',
+    'Operating System :: OS Independent',
+    'Programming Language :: Python',
+    'Topic :: Scientific/Engineering',
+    'Topic :: Scientific/Engineering :: Mathematics',
+    'Topic :: Scientific/Engineering :: Physics',
+    'Programming Language :: Python :: 3',
+    'Programming Language :: Python :: 3.9',
+    'Programming Language :: Python :: 3.10',
+    'Programming Language :: Python :: 3.11',
+    'Programming Language :: Python :: 3.12',
+    'Programming Language :: Python :: 3.13',
+    'Programming Language :: Python :: 3 :: Only',
+    'Programming Language :: Python :: Implementation :: CPython',
+    'Programming Language :: Python :: Implementation :: PyPy',
+]
+license = "BSD-3-Clause"
+readme = "README.md"
+license-files = ["LICENSE"]
+
+[project.urls]
+Homepage = "https://sympy.org"
+Documentation = "https://docs.sympy.org/"
+Source = "https://github.com/sympy/sympy"
+"Release Notes" = "https://github.com/sympy/sympy/wiki/Release-Notes"
+Issues = "https://github.com/sympy/sympy/issues"
+Donate = "https://www.sympy.org/en/donate.html"
+
+[tool.setuptools.dynamic]
+version = { attr = "sympy.release.__version__" }
+
+
+[build-system]
+requires = ["setuptools>=40.8.0"]
+build-backend = "setuptools.build_meta:__legacy__"
+
 [tool.pytest.ini_options]
 # Don't run the tests marked as slow by default.
 addopts = "-m 'not slow and not tooslow'"
@@ -8,10 +86,7 @@ filterwarnings = [
 
 # Only run tests under the sympy/ directory. Otherwise pytest will attempt to
 # collect tests from e.g. the bin/ directory as well.
-testpaths = [
-    "sympy",
-    "doc/src",
-]
+testpaths = ["sympy", "doc/src"]
 
 # Normalise output of doctests.
 doctest_optionflags = [
@@ -21,27 +96,18 @@ doctest_optionflags = [
     "FLOAT_CMP",
 ]
 
-norecursedirs = [
-    "sympy/parsing/autolev/test-examples",
-]
+norecursedirs = ["sympy/parsing/autolev/test-examples"]
 
-markers = [
-    "nocache_fail",
-    "tooslow",
-]
+markers = ["nocache_fail", "tooslow"]
 
 [tool.coverage.report]
 
-exclude_lines = [
-    "pragma: no cover",
-    "if TYPE_CHECKING:",
-    "assert False",
-]
+exclude_lines = ["pragma: no cover", "if TYPE_CHECKING:", "assert False"]
 
 [tool.ruff]
 # Enable Pyflakes `E` and `F` codes by default.
 lint.select = [
-    "B015",  # Useless comparison: a == b rather than a = b.
+    "B015",    # Useless comparison: a == b rather than a = b.
     "C4",
     "E",
     "F",
@@ -54,29 +120,32 @@ lint.select = [
     "SIM101",
     "SLOT",
     "TRY002",
-    "BLE001", # except Exception or except BaseException
+    "BLE001",  # except Exception or except BaseException
 ]
 
 # Ignore rules that currently fail on the SymPy codebase
 lint.ignore = [
-    "E401",  # Multiple imports on one line
-    "E402",  # Module level import not at top of file
-    "E501",  # Line too long (<LENGTH> > 88 characters)
-    "E701",  # Multiple statements on one line (colon)
-    "E702",  # Multiple statements on one line (semicolon)
-    "E711",  # Comparison to `None` should be `cond is not None`
-    "E712",  # Comparison to `<BOOL>` should be `cond is <BOOL>`
-    "E713",  # Test for membership should be `not in`
-    "E714",  # Test for object identity should be `is not`
-    "E721",  # Do not compare types, use `isinstance()`
-    "E731",  # Do not assign a `lambda` expression, use a `def`
-    "E741",  # Ambiguous variable name: `<VARIABLE>`
-    "E743",  # Ambiguous function name: `<FUNCTION>`
+    "E401", # Multiple imports on one line
+    "E402", # Module level import not at top of file
+    "E501", # Line too long (<LENGTH> > 88 characters)
+    "E701", # Multiple statements on one line (colon)
+    "E702", # Multiple statements on one line (semicolon)
+    "E711", # Comparison to `None` should be `cond is not None`
+    "E712", # Comparison to `<BOOL>` should be `cond is <BOOL>`
+    "E713", # Test for membership should be `not in`
+    "E714", # Test for object identity should be `is not`
+    "E721", # Do not compare types, use `isinstance()`
+    "E731", # Do not assign a `lambda` expression, use a `def`
+    "E741", # Ambiguous variable name: `<VARIABLE>`
+    "E743", # Ambiguous function name: `<FUNCTION>`
     # Rules from the stable "FURB" set that are ignored. See #27897
     # Just to be safe, we'll ignore FURB161 until we drop support for Python 3.9
-    "FURB161",  # Use of `bin({existing}).count('1')`
-    "FURB187",  # Use of assignment of `reversed` on list `{name}`
+    "FURB161", # Use of `bin({existing}).count('1')`
+    "FURB187", # Use of assignment of `reversed` on list `{name}`
 ]
+
+# Allow unused variables when underscore-prefixed.
+lint.dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 
 # Exclude paths currently excluded in the flake8 configuration
 exclude = [
@@ -95,9 +164,6 @@ exclude = [
 # Black default, although irrelevant with E501 ignored
 line-length = 88
 
-# Allow unused variables when underscore-prefixed.
-lint.dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
-
 # Per-file ignores currently specified in the flake8 configuration
 [tool.ruff.lint.per-file-ignores]
 "sympy/interactive/session.py" = ["F821"]
@@ -105,9 +171,7 @@ lint.dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 # Global mypy settings:
 [tool.mypy]
 warn_unused_configs = true
-exclude = [
-    "sympy/parsing/autolev/test-examples",
-]
+exclude = ["sympy/parsing/autolev/test-examples"]
 
 # Per module settings:
 [[tool.mypy.overrides]]
@@ -150,8 +214,9 @@ module = [
     "theano.*",
     "multiset.*",
     "pysat.*",
-    "bpython.*"
+    "bpython.*",
 ]
+
 ignore_missing_imports = true
 
 # pyright type checker settings:
@@ -180,3 +245,70 @@ exclude-modules = '''
     |sympy.plotting.pygletplot
 )
 '''
+
+[project.optional-dependencies]
+reccomended = ["gmpy2"]
+interactive = ["ipython"]
+parsing = ["antlr4-python3-runtime==4.11.*", "lark", "clang", "LFortran"]
+fastlogic = ["pycosat", "python-sat"]
+plotting = ["matplotlib", "pyglet"]
+lambdify = [
+    "numpy",
+    "scipy",
+] # lambidfy will automatically use these to improve performance
+lamdify-extras = [
+    "cupy",
+    "jax",
+    "tensorflow",
+    "numexpr",
+] # optional compatability with these libraries is provided by lambdify
+autowrap = ["Cython", "numpy", "llvmlite"]
+code-printers = ["llvmlite", "tensorflow"]
+statistics = ["scipy", "numpy", "pymc"]
+symengine = [
+    "symengine",
+] # this optional backend will not be used unless the USE_SYMENGINE=1 is set
+
+[dependency-groups]
+dev = [
+    { include-group = "test" },
+    { include-group = "lint" },
+    { include-group = "benchmark" },
+    { include-group = "doc" },
+]
+
+test = [
+    "wurlitzer",
+    "cloudpickle",
+    "hypothesis",
+    "pytest",
+    "pytest-doctestplus",
+    "pytest-split",
+    "pytest-timeout",
+    "pytest-xdist",
+]
+
+lint = ["ruff", "sphinx-lint", "mypy", "flake8", "flake8-comprehensions"]
+benchmark = ["asv"]
+
+doc = [
+    "furo",
+    "intersphinx-registry",
+    "linkify-it-py",
+    "matplotlib",
+    "matplotlib-inline",
+    "myst-parser",
+    "scipy",
+    "sphinx",
+    "sphinx-autobuild",
+    "sphinx-copybutton",
+    "sphinx-math-dollar",
+    "sphinx-reredirects",
+    "sphinxcontrib-applehelp",
+    "sphinxcontrib-devhelp",
+    "sphinxcontrib-htmlhelp",
+    "sphinxcontrib-jquery",
+    "sphinxcontrib-jsmath",
+    "sphinxcontrib-qthelp",
+    "sphinxcontrib-serializinghtml",
+]
