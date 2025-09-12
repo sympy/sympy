@@ -4,7 +4,8 @@ from __future__ import annotations
 
 from abc import abstractmethod
 from typing import TYPE_CHECKING, Generic, Mapping, Any, cast, overload
-from sympy.polys.domains.domain import Domain, Er, Es
+from sympy.polys.domains.domain import Domain, Er, Es, Ef, Eeuclid, Eordered, Eabs
+from sympy.polys.domains.field import Field
 from sympy.polys.densebasic import dup, dmp
 
 if TYPE_CHECKING:
@@ -444,93 +445,109 @@ class IPolys(Generic[Er]):
         q, r = dup_pdiv(self.to_dup(f), self.to_dup(g), self.domain)
         return (self.from_dup(q), self.from_dup(r))
 
-    def dup_prem(self, f, g):
+    def dup_prem(self, f: cPoly[Er], g: cPoly[Er]) -> PolyElement[Er]:
         return self.from_dup(dup_prem(self.to_dup(f), self.to_dup(g), self.domain))
 
-    def dup_pquo(self, f, g):
+    def dup_pquo(self, f: cPoly[Er], g: cPoly[Er]) -> PolyElement[Er]:
         return self.from_dup(dup_pquo(self.to_dup(f), self.to_dup(g), self.domain))
 
-    def dup_pexquo(self, f, g):
+    def dup_pexquo(self, f: cPoly[Er], g: cPoly[Er]) -> PolyElement[Er]:
         return self.from_dup(dup_pexquo(self.to_dup(f), self.to_dup(g), self.domain))
 
-    def dmp_pdiv(self, f, g):
+    def dmp_pdiv(self, f: cPoly[Er], g: cPoly[Er]) -> tuple[PolyElement[Er], PolyElement[Er]]:
         q, r = dmp_pdiv(self.to_dense(f), self.to_dense(g), self.ngens-1, self.domain)
         return (self.from_dense(q), self.from_dense(r))
 
-    def dmp_prem(self, f, g):
+    def dmp_prem(self, f: cPoly[Er], g: cPoly[Er]) -> PolyElement[Er]:
         return self.from_dense(dmp_prem(self.to_dense(f), self.to_dense(g), self.ngens-1, self.domain))
 
-    def dmp_pquo(self, f, g):
+    def dmp_pquo(self, f: cPoly[Er], g: cPoly[Er]) -> PolyElement[Er]:
         return self.from_dense(dmp_pquo(self.to_dense(f), self.to_dense(g), self.ngens-1, self.domain))
 
-    def dmp_pexquo(self, f, g):
+    def dmp_pexquo(self, f: cPoly[Er], g: cPoly[Er]) -> PolyElement[Er]:
         return self.from_dense(dmp_pexquo(self.to_dense(f), self.to_dense(g), self.ngens-1, self.domain))
 
-    def dup_rr_div(self, f, g):
+    def dup_rr_div(self: IPolys[Eeuclid], f: cPoly[Eeuclid], g: cPoly[Eeuclid]) -> tuple[PolyElement[Eeuclid], PolyElement[Eeuclid]]:
         q, r = dup_rr_div(self.to_dup(f), self.to_dup(g), self.domain)
         return (self.from_dup(q), self.from_dup(r))
-    def dmp_rr_div(self, f, g):
+
+    def dmp_rr_div(self: IPolys[Eeuclid], f: cPoly[Eeuclid], g: cPoly[Eeuclid]) -> tuple[PolyElement[Eeuclid], PolyElement[Eeuclid]]:
         q, r = dmp_rr_div(self.to_dense(f), self.to_dense(g), self.ngens-1, self.domain)
         return (self.from_dense(q), self.from_dense(r))
-    def dup_ff_div(self, f, g):
+
+    def dup_ff_div(self: IPolys[Ef], f: cPoly[Ef], g: cPoly[Ef]) -> tuple[PolyElement[Ef], PolyElement[Ef]]:
         q, r = dup_ff_div(self.to_dup(f), self.to_dup(g), self.domain)
         return (self.from_dup(q), self.from_dup(r))
-    def dmp_ff_div(self, f, g):
+
+    def dmp_ff_div(self: IPolys[Ef], f: cPoly[Ef], g: cPoly[Ef]) -> tuple[PolyElement[Ef], PolyElement[Ef]]:
         q, r = dmp_ff_div(self.to_dense(f), self.to_dense(g), self.ngens-1, self.domain)
         return (self.from_dense(q), self.from_dense(r))
 
-    def dup_div(self, f, g):
+    def dup_div(self, f: cPoly[Er], g: cPoly[Er]) -> tuple[PolyElement[Er], PolyElement[Er]]:
         q, r = dup_div(self.to_dup(f), self.to_dup(g), self.domain)
         return (self.from_dup(q), self.from_dup(r))
-    def dup_rem(self, f, g):
+
+    def dup_rem(self, f: cPoly[Er], g: cPoly[Er]) -> PolyElement[Er]:
         return self.from_dup(dup_rem(self.to_dup(f), self.to_dup(g), self.domain))
-    def dup_quo(self, f, g):
+
+    def dup_quo(self, f: cPoly[Er], g: cPoly[Er]) -> PolyElement[Er]:
         return self.from_dup(dup_quo(self.to_dup(f), self.to_dup(g), self.domain))
-    def dup_exquo(self, f, g):
+
+    def dup_exquo(self, f: cPoly[Er], g: cPoly[Er]) -> PolyElement[Er]:
         return self.from_dup(dup_exquo(self.to_dup(f), self.to_dup(g), self.domain))
 
-    def dmp_div(self, f, g):
+    def dmp_div(self, f: cPoly[Er], g: cPoly[Er]) -> tuple[PolyElement[Er], PolyElement[Er]]:
         q, r = dmp_div(self.to_dense(f), self.to_dense(g), self.ngens-1, self.domain)
         return (self.from_dense(q), self.from_dense(r))
-    def dmp_rem(self, f, g):
+
+    def dmp_rem(self, f: cPoly[Er], g: cPoly[Er]) -> PolyElement[Er]:
         return self.from_dense(dmp_rem(self.to_dense(f), self.to_dense(g), self.ngens-1, self.domain))
-    def dmp_quo(self, f, g):
+
+    def dmp_quo(self, f: cPoly[Er], g: cPoly[Er]) -> PolyElement[Er]:
         return self.from_dense(dmp_quo(self.to_dense(f), self.to_dense(g), self.ngens-1, self.domain))
-    def dmp_exquo(self, f, g):
+
+    def dmp_exquo(self, f: cPoly[Er], g: cPoly[Er]) -> PolyElement[Er]:
         return self.from_dense(dmp_exquo(self.to_dense(f), self.to_dense(g), self.ngens-1, self.domain))
 
-    def dup_max_norm(self, f):
-        return dup_max_norm(self.to_dense(f), self.domain)
-    def dmp_max_norm(self, f):
+    def dup_max_norm(self: IPolys[Eordered], f: cPoly[Eordered]) -> Eordered:
+        return dup_max_norm(self.to_dup(f), self.domain)
+
+    def dmp_max_norm(self: IPolys[Eordered], f: cPoly[Eordered]) -> Eordered:
         return dmp_max_norm(self.to_dense(f), self.ngens-1, self.domain)
 
-    def dup_l1_norm(self, f):
+    def dup_l1_norm(self: IPolys[Eabs], f: cPoly[Eabs]) -> Eabs:
         return dup_l1_norm(self.to_dup(f), self.domain)
-    def dmp_l1_norm(self, f):
+
+    def dmp_l1_norm(self: IPolys[Eabs], f: cPoly[Eabs]) -> Eabs:
         return dmp_l1_norm(self.to_dense(f), self.ngens-1, self.domain)
 
-    def dup_l2_norm_squared(self, f):
+    def dup_l2_norm_squared(self, f: cPoly[Er]) -> Er:
         return dup_l2_norm_squared(self.to_dup(f), self.domain)
-    def dmp_l2_norm_squared(self, f):
+
+    def dmp_l2_norm_squared(self, f: cPoly[Er]) -> Er:
         return dmp_l2_norm_squared(self.to_dense(f), self.ngens-1, self.domain)
 
-    def dup_expand(self, polys):
-        return self.from_dense(dup_expand(list(map(self.to_dense, polys)), self.domain))
-    def dmp_expand(self, polys):
+    def dup_expand(self, polys: list[cPoly[Er]]) -> PolyElement[Er]:
+        return self.from_dup(dup_expand(list(map(self.to_dup, polys)), self.domain))
+
+    def dmp_expand(self, polys: list[cPoly[Er]]) -> PolyElement[Er]:
         return self.from_dense(dmp_expand(list(map(self.to_dense, polys)), self.ngens-1, self.domain))
 
-    def dup_LC(self, f):
+    def dup_LC(self, f: cPoly[Er]) -> Er:
         return dup_LC(self.to_dup(f), self.domain)
-    def dmp_LC(self, f):
+
+    def dmp_LC(self, f: cPoly[Er]) -> PolyElement[Er] | Er:
         LC = dmp_LC(self.to_dense(f), self.domain)
         if isinstance(LC, list):
             ring = cast('IPolys[Er]', self[1:])
             return ring.from_dense(LC)
         else:
             return LC
-    def dup_TC(self, f):
+
+    def dup_TC(self, f: cPoly[Er]) -> Er:
         return dup_TC(self.to_dup(f), self.domain)
-    def dmp_TC(self, f):
+
+    def dmp_TC(self, f: cPoly[Er]) -> PolyElement[Er] | Er:
         TC = dmp_TC(self.to_dense(f), self.domain)
         if isinstance(TC, list):
             ring = cast('IPolys[Er]', self[1:])
@@ -538,100 +555,127 @@ class IPolys(Generic[Er]):
         else:
             return TC
 
-    def dmp_ground_LC(self, f):
+    def dmp_ground_LC(self, f: cPoly[Er]) -> Er:
         return dmp_ground_LC(self.to_dense(f), self.ngens-1, self.domain)
-    def dmp_ground_TC(self, f):
+
+    def dmp_ground_TC(self, f: cPoly[Er]) -> Er:
         return dmp_ground_TC(self.to_dense(f), self.ngens-1, self.domain)
 
-    def dup_degree(self, f):
+    def dup_degree(self, f: cPoly[Er]) -> int:
         return dup_degree(self.to_dup(f))
-    def dmp_degree(self, f):
-        return dmp_degree(self.to_dense(f), self.ngens-1)
-    def dmp_degree_in(self, f, j):
-        return dmp_degree_in(self.to_dense(f), j, self.ngens-1)
-    def dup_integrate(self, f, m):
-        return self.from_dense(dup_integrate(self.to_dense(f), m, self.domain))
-    def dmp_integrate(self, f, m):
-        return self.from_dense(dmp_integrate(self.to_dense(f), m, self.ngens-1, self.domain))
 
-    def dup_diff(self, f, m):
-        return self.from_dense(dup_diff(self.to_dense(f), m, self.domain))
-    def dmp_diff(self, f, m):
+    def dmp_degree(self, f: cPoly[Er]) -> int:
+        return dmp_degree(self.to_dense(f), self.ngens-1)
+
+    def dmp_degree_in(self, f: cPoly[Er], j: int) -> int:
+        return dmp_degree_in(self.to_dense(f), j, self.ngens-1)
+
+    def dup_integrate(self: IPolys[Ef], f: cPoly[Ef], m: int) -> PolyElement[Ef]:
+        return self.from_dup(dup_integrate(self.to_dup(f), m, cast('Field[Ef]', self.domain)))
+
+    def dmp_integrate(self: IPolys[Ef], f: cPoly[Ef], m: int) -> PolyElement[Ef]:
+        return self.from_dense(dmp_integrate(self.to_dense(f), m, self.ngens-1, cast('Field[Ef]', self.domain)))
+
+    def dup_diff(self, f: cPoly[Er], m: int) -> PolyElement[Er]:
+        return self.from_dup(dup_diff(self.to_dup(f), m, self.domain))
+
+    def dmp_diff(self, f: cPoly[Er], m: int) -> PolyElement[Er]:
         return self.from_dense(dmp_diff(self.to_dense(f), m, self.ngens-1, self.domain))
 
-    def dmp_diff_in(self, f, m, j):
+    def dmp_diff_in(self, f: cPoly[Er], m: int, j: int) -> PolyElement[Er]:
         return self.from_dense(dmp_diff_in(self.to_dense(f), m, j, self.ngens-1, self.domain))
-    def dmp_integrate_in(self, f, m, j):
-        return self.from_dense(dmp_integrate_in(self.to_dense(f), m, j, self.ngens-1, self.domain))
 
-    def dup_eval(self, f, a):
-        return dup_eval(self.to_dense(f), a, self.domain)
-    def dmp_eval(self, f, a):
+    def dmp_integrate_in(self: IPolys[Ef], f: cPoly[Ef], m: int, j: int) -> PolyElement[Ef]:
+        return self.from_dense(dmp_integrate_in(self.to_dense(f), m, j, self.ngens-1, cast('Field[Ef]', self.domain)))
+
+    def dup_eval(self, f: cPoly[Er], a: Er) -> Er:
+        return dup_eval(self.to_dup(f), a, self.domain)
+
+    def dmp_eval(self, f: cPoly[Er], a: Er) -> PolyElement[Er]:
         result = dmp_eval(self.to_dense(f), a, self.ngens-1, self.domain)
-        return self[1:].from_dense(result)
-
-    def dmp_eval_in(self, f, a, j):
-        result = dmp_eval_in(self.to_dense(f), a, j, self.ngens-1, self.domain)
-        return self.drop(j).from_dense(result)
-    def dmp_diff_eval_in(self, f, m, a, j):
-        result = dmp_diff_eval_in(self.to_dense(f), m, a, j, self.ngens-1, self.domain)
-        return self.drop(j).from_dense(result)
-
-    def dmp_eval_tail(self, f, A):
-        result = dmp_eval_tail(self.to_dense(f), A, self.ngens-1, self.domain)
         if isinstance(result, list):
-            return self[:-len(A)].from_dense(result)
+            return cast('IPolys[Er]', self[1:]).from_dense(result)
         else:
             return result
 
-    def dup_trunc(self, f, p):
-        return self.from_dense(dup_trunc(self.to_dense(f), p, self.domain))
-    def dmp_trunc(self, f, g):
-        return self.from_dense(dmp_trunc(self.to_dense(f), self[1:].to_dense(g), self.ngens-1, self.domain))
-    def dmp_ground_trunc(self, f, p):
+    def dmp_eval_in(self, f: cPoly[Er], a: Er, j: int) -> PolyElement[Er]:
+        result = dmp_eval_in(self.to_dense(f), a, j, self.ngens-1, self.domain)
+        if isinstance(result, list):
+            return cast('IPolys[Er]', self.drop(j)).from_dense(result)
+        else:
+            return result
+
+    def dmp_diff_eval_in(self, f: cPoly[Er], m: int, a: Er, j: int) -> PolyElement[Er]:
+        result = dmp_diff_eval_in(self.to_dense(f), m, a, j, self.ngens-1, self.domain)
+        if isinstance(result, list):
+            return cast('IPolys[Er]', self.drop(j)).from_dense(result)
+        else:
+            return result
+
+    def dmp_eval_tail(self, f: cPoly[Er], A: list[Er]) -> PolyElement[Er] | Er:
+        result = dmp_eval_tail(self.to_dense(f), A, self.ngens-1, self.domain)
+        if isinstance(result, list):
+            return cast('IPolys[Er]', self[:-len(A)]).from_dense(result)
+        else:
+            return result
+
+    def dup_trunc(self: IPolys[Eeuclid], f: cPoly[Eeuclid], p: Eeuclid) -> PolyElement[Eeuclid]:
+        return self.from_dup(dup_trunc(self.to_dup(f), p, self.domain))
+
+    def dmp_trunc(self: IPolys[Eeuclid], f: cPoly[Eeuclid], g: cPoly[Eeuclid]) -> PolyElement[Eeuclid]:
+        return self.from_dense(dmp_trunc(self.to_dense(f), self[1:].to_dense(g), self.ngens-1, self.domain)) # type: ignore
+
+    def dmp_ground_trunc(self: IPolys[Eeuclid], f: cPoly[Eeuclid], p: Eeuclid) -> PolyElement[Eeuclid]:
         return self.from_dense(dmp_ground_trunc(self.to_dense(f), p, self.ngens-1, self.domain))
 
-    def dup_monic(self, f):
-        return self.from_dense(dup_monic(self.to_dense(f), self.domain))
-    def dmp_ground_monic(self, f):
-        return self.from_dense(dmp_ground_monic(self.to_dense(f), self.ngens-1, self.domain))
+    def dup_monic(self: IPolys[Ef], f: cPoly[Ef]) -> PolyElement[Ef]:
+        return self.from_dup(dup_monic(self.to_dup(f), cast('Field[Ef]', self.domain)))
 
-    def dup_extract(self, f, g):
-        c, F, G = dup_extract(self.to_dense(f), self.to_dense(g), self.domain)
-        return (c, self.from_dense(F), self.from_dense(G))
-    def dmp_ground_extract(self, f, g):
+    def dmp_ground_monic(self: IPolys[Ef], f: cPoly[Ef]) -> PolyElement[Ef]:
+        return self.from_dense(dmp_ground_monic(self.to_dense(f), self.ngens-1, cast('Field[Ef]', self.domain)))
+
+    def dup_extract(self, f: cPoly[Er], g: cPoly[Er]) -> tuple[Er, PolyElement[Er], PolyElement[Er]]:
+        c, F, G = dup_extract(self.to_dup(f), self.to_dup(g), self.domain)
+        return (c, self.from_dup(F), self.from_dup(G))
+
+    def dmp_ground_extract(self, f: cPoly[Er], g: cPoly[Er]) -> tuple[Er, PolyElement[Er], PolyElement[Er]]:
         c, F, G = dmp_ground_extract(self.to_dense(f), self.to_dense(g), self.ngens-1, self.domain)
         return (c, self.from_dense(F), self.from_dense(G))
 
-    def dup_real_imag(self, f):
-        p, q = dup_real_imag(self.wrap(f).drop(1).to_dense(), self.domain)
+    def dup_real_imag(self, f: cPoly[Er]) -> tuple[PolyElement[Er], PolyElement[Er]]:
+        p, q = dup_real_imag(self.wrap(f).drop(1).to_dense(), self.domain) # type: ignore
         return (self.from_dense(p), self.from_dense(q))
 
-    def dup_mirror(self, f):
-        return self.from_dense(dup_mirror(self.to_dense(f), self.domain))
-    def dup_scale(self, f, a):
-        return self.from_dense(dup_scale(self.to_dense(f), a, self.domain))
-    def dup_shift(self, f, a):
-        return self.from_dense(dup_shift(self.to_dense(f), a, self.domain))
-    def dmp_shift(self, f, a):
-        return self.from_dense(dmp_shift(self.to_dense(f), a, self.ngens-1, self.domain))
-    def dup_transform(self, f, p, q):
-        return self.from_dense(dup_transform(self.to_dense(f), self.to_dense(p), self.to_dense(q), self.domain))
+    def dup_mirror(self, f: cPoly[Er]) -> PolyElement[Er]:
+        return self.from_dup(dup_mirror(self.to_dup(f), self.domain))
 
-    def dup_compose(self, f, g):
-        return self.from_dense(dup_compose(self.to_dense(f), self.to_dense(g), self.domain))
-    def dmp_compose(self, f, g):
+    def dup_scale(self, f: cPoly[Er], a: Er) -> PolyElement[Er]:
+        return self.from_dup(dup_scale(self.to_dup(f), a, self.domain))
+
+    def dup_shift(self, f: cPoly[Er], a: Er) -> PolyElement[Er]:
+        return self.from_dup(dup_shift(self.to_dup(f), a, self.domain))
+
+    def dmp_shift(self, f: cPoly[Er], a: list[Er]) -> PolyElement[Er]:
+        return self.from_dense(dmp_shift(self.to_dense(f), a, self.ngens-1, self.domain))
+
+    def dup_transform(self, f: cPoly[Er], p: cPoly[Er], q: cPoly[Er]) -> PolyElement[Er]:
+        return self.from_dup(dup_transform(self.to_dup(f), self.to_dup(p), self.to_dup(q), self.domain))
+
+    def dup_compose(self, f: cPoly[Er], g: cPoly[Er]) -> PolyElement[Er]:
+        return self.from_dup(dup_compose(self.to_dup(f), self.to_dup(g), self.domain))
+
+    def dmp_compose(self, f: cPoly[Er], g: cPoly[Er]) -> PolyElement[Er]:
         return self.from_dense(dmp_compose(self.to_dense(f), self.to_dense(g), self.ngens-1, self.domain))
 
-    def dup_decompose(self, f):
-        components = dup_decompose(self.to_dense(f), self.domain)
-        return list(map(self.from_dense, components))
+    def dup_decompose(self, f: cPoly[Er]) -> list[PolyElement[Er]]:
+        components = dup_decompose(self.to_dup(f), self.domain)
+        return list(map(self.from_dup, components))
 
-    def dmp_lift(self, f):
+    def dmp_lift(self, f: cPoly[Er]) -> PolyElement[Er]:
         result = dmp_lift(self.to_dense(f), self.ngens-1, self.domain)
         return self.to_ground().from_dense(result)
 
-    def dup_sign_variations(self, f):
+    def dup_sign_variations(self, f: cPoly[Er]) -> int:
         return dup_sign_variations(self.to_dense(f), self.domain)
 
     def dup_clear_denoms(self, f, convert=False):
