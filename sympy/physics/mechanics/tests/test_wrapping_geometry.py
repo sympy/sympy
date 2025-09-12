@@ -397,6 +397,9 @@ class TestWrappingCone:
             (N.z, pi/6, (N.x + N.y)/(sqrt(2)*sqrt(3)) + N.z, (3*N.x - 3*N.y)/(sqrt(2)*sqrt(3)) + 3*N.z, sqrt(Rational(40, 3) - 4*sqrt(2))),
             (N.z, pi/4, (cos(pi/6)*N.x + sin(pi/6)*N.y + N.z)/sqrt(2), (3*cos(2*pi/3)*N.x + 3*sin(2*pi/3)*N.y + 3*N.z)/sqrt(2), sqrt(10 - 6*cos(pi/(2*sqrt(2))))),
             (N.z, pi/4, (N.x + N.z)/sqrt(2), (2*N.y + 2*N.z)/sqrt(2), sqrt(5 - 4*cos(pi/(2*sqrt(2))))),
+            (N.z, pi/6, S.Zero, N.x/sqrt(3) + N.z, sqrt(Rational(4, 3))),
+            (N.z, pi/4, (N.x + N.z)/sqrt(2), S.Zero, S.One),
+            (N.z, pi/3, S.Zero, S.Zero, S.Zero),
         ]
     )
     def test_geodesic_length(axis, alpha, position_1, position_2, expected):
