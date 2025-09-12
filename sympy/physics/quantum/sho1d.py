@@ -455,7 +455,7 @@ class Hamiltonian(SHOOp):
         >>> H = Hamiltonian('H')
         >>> k = SHOKet('k')
         >>> qapply(H*k)
-        hbar*k*omega*|k> + hbar*omega*|k>/2
+        hbar*omega*(k + 1/2)*|k>
 
     Matrix Representation
 
