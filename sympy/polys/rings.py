@@ -61,13 +61,14 @@ if TYPE_CHECKING:
     from typing import TypeIs
     from sympy.polys.fields import FracField
     from types import NotImplementedType
+
     _str = str
 
 
 Mon = tuple[int, ...]
 
 
-ninf = float('-inf')
+ninf = float("-inf")
 
 
 @public
@@ -220,16 +221,18 @@ def sring(exprs, *symbols, **options):
         return (_ring, polys)
 
 
-def _parse_symbols(symbols: str | Expr | Sequence[str] | Sequence[Expr]) -> Sequence[Expr]:
+def _parse_symbols(
+    symbols: str | Expr | Sequence[str] | Sequence[Expr],
+) -> Sequence[Expr]:
     if isinstance(symbols, str):
         return _symbols(symbols, seq=True) if symbols else ()
     elif isinstance(symbols, Expr):
         return (symbols,)
     elif is_sequence(symbols):
         if all(isinstance(s, str) for s in symbols):
-            return _symbols(symbols) # type: ignore
+            return _symbols(symbols)  # type: ignore
         elif all(isinstance(s, Expr) for s in symbols):
-            return cast('Sequence[Expr]', symbols)
+            return cast("Sequence[Expr]", symbols)
 
     raise GeneratorsError(
         "expected a string, Symbol or expression or a non-empty sequence of strings, Symbols or expressions"
@@ -277,13 +280,12 @@ class PolyRing(DefaultPrinting, IPolys[Er], Generic[Er]):
         order: str | MonomialOrder | None = lex,
     ) -> PolyRing[PolyElement[Es]]: ...
 
-    def __new__( # type: ignore
+    def __new__(  # type: ignore
         cls,
         symbols: str | Expr | Sequence[str] | Sequence[Expr],
         domain: Domain[Er] | PolyRing[Es],
         order: str | MonomialOrder | None = lex,
     ) -> PolyRing[Er] | PolyRing[PolyElement[Es]]:
-
         # Create a new ring instance.
         symbols = tuple(_parse_symbols(symbols))
         ngens = len(symbols)
@@ -292,7 +294,9 @@ class PolyRing(DefaultPrinting, IPolys[Er], Generic[Er]):
 
         # Validate that symbols do not overlap with domain symbols
         if isinstance(domain, CompositeDomain) and set(symbols) & set(domain.symbols):
-            raise GeneratorsError("polynomial ring and it's ground domain share generators")
+            raise GeneratorsError(
+                "polynomial ring and it's ground domain share generators"
+            )
 
         # Create and initialize instance
         obj = object.__new__(cls)
@@ -360,7 +364,7 @@ class PolyRing(DefaultPrinting, IPolys[Er], Generic[Er]):
                     setattr(self, name, generator)
 
     # Pickle support
-    def __getnewargs__(self)-> tuple[tuple[Expr, ...], Domain[Er], MonomialOrder]:
+    def __getnewargs__(self) -> tuple[tuple[Expr, ...], Domain[Er], MonomialOrder]:
         return self.symbols, self.domain, self.order
 
     # Hash and equality
@@ -374,11 +378,9 @@ class PolyRing(DefaultPrinting, IPolys[Er], Generic[Er]):
         return not self == other
 
     @overload
-    def __getitem__(self, key: int) -> PolyRing[Er]:
-        ...
+    def __getitem__(self, key: int) -> PolyRing[Er]: ...
     @overload
-    def __getitem__(self, key: slice) -> PolyRing[Er] | Domain[Er]:
-        ...
+    def __getitem__(self, key: slice) -> PolyRing[Er] | Domain[Er]: ...
 
     def __getitem__(self, key: slice | int) -> PolyRing[Er] | Domain[Er]:
         # Get a subring with subset of symbols.
@@ -481,7 +483,7 @@ class PolyRing(DefaultPrinting, IPolys[Er], Generic[Er]):
 
     def to_ground(self: PolyRing[PolyElement[Es]]) -> PolyRing[Es]:
         """Convert to ground domain."""
-        if isinstance(self.domain, CompositeDomain) or hasattr(self.domain, 'domain'):
+        if isinstance(self.domain, CompositeDomain) or hasattr(self.domain, "domain"):
             return self.clone(domain=self.domain.domain)
         else:
             raise ValueError(f"{self.domain} is not a composite domain")
@@ -508,7 +510,11 @@ class PolyRing(DefaultPrinting, IPolys[Er], Generic[Er]):
         return poly
 
     # Polynomial creation from various formats
-    def from_dict(self, element: Mapping[Mon, int | Er | Expr] | PolyElement[Er], orig_domain: Domain[Er] | None =None) -> PolyElement[Er]:
+    def from_dict(
+        self,
+        element: Mapping[Mon, int | Er | Expr] | PolyElement[Er],
+        orig_domain: Domain[Er] | None = None,
+    ) -> PolyElement[Er]:
         """Create polynomial from dictionary of monomials to coefficients."""
         if not isinstance(element, dict):
             raise TypeError(
@@ -516,7 +522,9 @@ class PolyRing(DefaultPrinting, IPolys[Er], Generic[Er]):
             )
         return self._from_dict_ground(element, orig_domain)
 
-    def from_terms(self, element: Iterable[tuple[Mon, Er]], orig_domain: Domain[Er] | None =None) -> PolyElement[Er]:
+    def from_terms(
+        self, element: Iterable[tuple[Mon, Er]], orig_domain: Domain[Er] | None = None
+    ) -> PolyElement[Er]:
         """Create polynomial from sequence of (monomial, coefficient) pairs."""
         return self.from_dict(dict(element), orig_domain)
 
@@ -760,7 +768,9 @@ class PolyRing(DefaultPrinting, IPolys[Er], Generic[Er]):
             other.order,
         )
 
-    def _from_dict_ground(self, element: Mapping[Mon, int| Er | Expr], orig_domain=None) -> PolyElement[Er]:
+    def _from_dict_ground(
+        self, element: Mapping[Mon, int | Er | Expr], orig_domain=None
+    ) -> PolyElement[Er]:
         # Create polynomial from dictionary with ground domain conversion.
         poly = self.zero
         domain_new = self.domain_new
@@ -773,10 +783,14 @@ class PolyRing(DefaultPrinting, IPolys[Er], Generic[Er]):
         return poly
 
 
-class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, ...], Er], Generic[Er]):
-    """Element of multivariate distributed polynomial ring. """
+class PolyElement(
+    DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, ...], Er], Generic[Er]
+):
+    """Element of multivariate distributed polynomial ring."""
 
-    def __init__(self, ring: PolyRing[Er], init: dict[Mon, Er] | Iterable[tuple[Mon, Er]]):
+    def __init__(
+        self, ring: PolyRing[Er], init: dict[Mon, Er] | Iterable[tuple[Mon, Er]]
+    ):
         super().__init__(init)
         self.ring = ring
         # This check would be too slow to run every time:
@@ -787,7 +801,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
 
     _hash = None
 
-    def __hash__(self) -> int: # type: ignore
+    def __hash__(self) -> int:  # type: ignore
         # XXX: This computes a hash of a dictionary, but currently we don't
         # protect dictionary from being changed so any use site modifications
         # will make hashing go wrong. Use this feature with caution until we
@@ -821,8 +835,8 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
             symbols = self.ring.symbols
         elif len(symbols) != self.ring.ngens:
             raise ValueError(
-                "Wrong number of symbols, expected %s got %s" %
-                (self.ring.ngens, len(symbols))
+                "Wrong number of symbols, expected %s got %s"
+                % (self.ring.ngens, len(symbols))
             )
         return expr_from_dict(self.as_expr_dict(), *symbols)
 
@@ -830,7 +844,9 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
     def __add__(self, other: PolyElement[Er] | Er | int, /) -> PolyElement[Er]: ...
 
     @overload
-    def __add__(self, other: PolyElement[PolyElement[Er]], /) -> PolyElement[PolyElement[Er]]: ...
+    def __add__(
+        self, other: PolyElement[PolyElement[Er]], /
+    ) -> PolyElement[PolyElement[Er]]: ...
 
     def __add__(
         self, other: PolyElement[Er] | Er | int | PolyElement[PolyElement[Er]], /
@@ -854,7 +870,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
         if isinstance(other, PolyElement):
             domain = other.ring.domain
             if isinstance(domain, PolynomialRing) and domain.ring.is_element(self):
-                return cast('PolyElement[PolyElement[Er]]', other)._add_ground(self)
+                return cast("PolyElement[PolyElement[Er]]", other)._add_ground(self)
 
         res = self._try_add_ground(other)
         if res is not NotImplemented:
@@ -883,12 +899,12 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
             return self._add_ground(cp2)
 
     @overload
-    def __sub__(self, other: PolyElement[Er] | Er | int, /) -> PolyElement[Er]:
-        ...
+    def __sub__(self, other: PolyElement[Er] | Er | int, /) -> PolyElement[Er]: ...
 
     @overload
-    def __sub__(self, other: PolyElement[PolyElement[Er]], /) -> PolyElement[PolyElement[Er]]:
-        ...
+    def __sub__(
+        self, other: PolyElement[PolyElement[Er]], /
+    ) -> PolyElement[PolyElement[Er]]: ...
 
     def __sub__(
         self, other: PolyElement[Er] | Er | int | PolyElement[PolyElement[Er]], /
@@ -914,7 +930,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
         if isinstance(other, PolyElement):
             domain = other.ring.domain
             if isinstance(domain, PolynomialRing) and domain.ring.is_element(self):
-                return cast('PolyElement[PolyElement[Er]]', other)._sub_ground(self)
+                return cast("PolyElement[PolyElement[Er]]", other)._sub_ground(self)
 
         res = self._try_sub_ground(other)
         if res is not NotImplemented:
@@ -957,14 +973,12 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
             return self._rsub_ground(cp2)
 
     @overload
-    def __mul__(self, other: PolyElement[Er] | Er | int, /) -> PolyElement[Er]:
-        ...
+    def __mul__(self, other: PolyElement[Er] | Er | int, /) -> PolyElement[Er]: ...
 
     @overload
     def __mul__(
         self, other: PolyElement[PolyElement[Er]], /
-    ) -> PolyElement[PolyElement[Er]]:
-        ...
+    ) -> PolyElement[PolyElement[Er]]: ...
 
     def __mul__(
         self, other: PolyElement[Er] | Er | int | PolyElement[PolyElement[Er]], /
@@ -993,7 +1007,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
         if isinstance(other, PolyElement):
             domain = other.ring.domain
             if isinstance(domain, PolynomialRing) and domain.ring.is_element(self):
-                return cast('PolyElement[PolyElement[Er]]', other).mul_ground(self)
+                return cast("PolyElement[PolyElement[Er]]", other).mul_ground(self)
 
         res = self._try_mul_ground(other)
         if res is not NotImplemented:
@@ -1063,7 +1077,9 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
 
         return self._pow_int(n)
 
-    def __divmod__(self, other: PolyElement[Er] | Er | int) -> tuple[PolyElement[Er], PolyElement[Er]]:
+    def __divmod__(
+        self, other: PolyElement[Er] | Er | int
+    ) -> tuple[PolyElement[Er], PolyElement[Er]]:
         ring = self.ring
         if not other:
             raise ZeroDivisionError("polynomial division")
@@ -1071,14 +1087,15 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
             if other.ring == ring:
                 return self._divmod(other)
             elif (
-                isinstance(ring.domain, PolynomialRing) and ring.domain.ring == other.ring
+                isinstance(ring.domain, PolynomialRing)
+                and ring.domain.ring == other.ring
             ):
                 pass
             elif (
                 isinstance(other.ring.domain, PolynomialRing)
                 and other.ring.domain.ring == ring
             ):
-                return other.__rdivmod__(self) # type: ignore
+                return other.__rdivmod__(self)  # type: ignore
             else:
                 return NotImplemented
         try:
@@ -1105,14 +1122,15 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
             if other.ring == ring:
                 return self._mod(other)
             elif (
-                isinstance(ring.domain, PolynomialRing) and ring.domain.ring == other.ring
+                isinstance(ring.domain, PolynomialRing)
+                and ring.domain.ring == other.ring
             ):
                 pass
             elif (
                 isinstance(other.ring.domain, PolynomialRing)
                 and other.ring.domain.ring == ring
             ):
-                return other.__rmod__(self) # type: ignore
+                return other.__rmod__(self)  # type: ignore
             else:
                 return NotImplemented
         try:
@@ -1139,13 +1157,16 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
         elif ring.is_element(other):
             return self._floordiv(other)
         elif isinstance(other, PolyElement):
-            if isinstance(ring.domain, PolynomialRing) and ring.domain.ring == other.ring:
+            if (
+                isinstance(ring.domain, PolynomialRing)
+                and ring.domain.ring == other.ring
+            ):
                 pass
             elif (
                 isinstance(other.ring.domain, PolynomialRing)
                 and other.ring.domain.ring == ring
             ):
-                return other.__rtruediv__(self) # type: ignore
+                return other.__rtruediv__(self)  # type: ignore
             else:
                 return NotImplemented
 
@@ -1171,15 +1192,18 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
         if not other:
             raise ZeroDivisionError("polynomial division")
         elif ring.is_element(other):
-            return self._truediv(cast('Er', other))
+            return self._truediv(cast("Er", other))
         elif isinstance(other, PolyElement):
-            if isinstance(ring.domain, PolynomialRing) and ring.domain.ring == other.ring:
+            if (
+                isinstance(ring.domain, PolynomialRing)
+                and ring.domain.ring == other.ring
+            ):
                 pass
             elif (
                 isinstance(other.ring.domain, PolynomialRing)
                 and other.ring.domain.ring == ring
             ):
-                return other.__rtruediv__(self) # type: ignore
+                return other.__rtruediv__(self)  # type: ignore
             else:
                 return NotImplemented
 
@@ -1293,7 +1317,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
     def set_ring(self, new_ring: PolyRing[Es]) -> PolyElement[Es]:
         """Change the ring of this polynomial."""
         if self.ring == new_ring:
-            return cast('PolyElement[Es]', self)
+            return cast("PolyElement[Es]", self)
         return self._change_ring(new_ring)
 
     def strip_zero(self) -> None:
@@ -1331,7 +1355,9 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
         """Return a key for sorting polynomials."""
         return len(self), self.terms()
 
-    def _drop(self, gen: PolyElement[Er] | int | str) -> tuple[int, PolyRing[Er] | Domain[Er]]:
+    def _drop(
+        self, gen: PolyElement[Er] | int | str
+    ) -> tuple[int, PolyRing[Er] | Domain[Er]]:
         ring = self.ring
         i = ring.index(gen)
 
@@ -1343,7 +1369,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
 
     def _drop_multi(self, i: int) -> PolyElement[Er]:
         assert self.ring.ngens > 1
-        return cast('PolyElement[Er]', self.drop(i))
+        return cast("PolyElement[Er]", self.drop(i))
 
     def drop(self, gen: PolyElement[Er] | int | str) -> PolyElement[Er] | Er:
         i, ring = self._drop(gen)
@@ -1372,7 +1398,6 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
     def drop_to_ground(
         self, gen: PolyElement[Er] | int | str | None
     ) -> PolyElement[PolyElement[Er]]:
-
         ring = self.ring
         if ring.ngens == 1:
             raise ValueError("Cannot drop only generator to ground")
@@ -1415,7 +1440,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
         """
         return self._square()
 
-    def degree(self, x: PolyElement[Er] | int | str | None =None) -> float:
+    def degree(self, x: PolyElement[Er] | int | str | None = None) -> float:
         """
         The leading degree in ``x`` or the main variable.
 
@@ -1479,12 +1504,12 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
             return self.quo_ground(self.LC)
 
     @overload
-    def div(self, fv: PolyElement[Er]) -> tuple[PolyElement[Er], PolyElement[Er]]:
-        ...
+    def div(self, fv: PolyElement[Er]) -> tuple[PolyElement[Er], PolyElement[Er]]: ...
 
     @overload
-    def div(self, fv: Iterable[PolyElement[Er]]) -> tuple[list[PolyElement[Er]], PolyElement[Er]]:
-        ...
+    def div(
+        self, fv: Iterable[PolyElement[Er]]
+    ) -> tuple[list[PolyElement[Er]], PolyElement[Er]]: ...
 
     def div(
         self, fv: PolyElement[Er] | Iterable[PolyElement[Er]]
@@ -1548,7 +1573,9 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
             return self
         return self._quo_ground(x)
 
-    def extract_ground(self, g: PolyElement[Er]) -> tuple[Er, PolyElement[Er], PolyElement[Er]]:
+    def extract_ground(
+        self, g: PolyElement[Er]
+    ) -> tuple[Er, PolyElement[Er], PolyElement[Er]]:
         f = self
         fc = f.content()
         gc = g.content()
@@ -1584,7 +1611,9 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
     def l1_norm(self):
         return self._norm(sum)
 
-    def deflate(self, *G: PolyElement[Er]) -> tuple[tuple[int, ...], list[PolyElement[Er]]]:
+    def deflate(
+        self, *G: PolyElement[Er]
+    ) -> tuple[tuple[int, ...], list[PolyElement[Er]]]:
         ring = self.ring
         polys = [self] + list(G)
 
@@ -1634,14 +1663,14 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
             terms = []
 
             for monom, coeff in self.iterterms():
-                coeff = coeff % p # type: ignore
+                coeff = coeff % p  # type: ignore
 
-                if coeff > p // 2: # type: ignore
+                if coeff > p // 2:  # type: ignore
                     coeff = coeff - p
 
                 terms.append((monom, coeff))
         else:
-            terms = [(monom, coeff % p) for monom, coeff in self.iterterms()] # type: ignore
+            terms = [(monom, coeff % p) for monom, coeff in self.iterterms()]  # type: ignore
 
         poly = self.new(terms)
         poly.strip_zero()
@@ -1713,7 +1742,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
             return p.ring.zero
 
         monoms, coeffs = zip(*terms)
-        monoms_list = [m[:i] + (0,) + m[i + 1:] for m in monoms]
+        monoms_list = [m[:i] + (0,) + m[i + 1 :] for m in monoms]
         return p.ring.from_dict(dict(zip(monoms_list, coeffs)))
 
     def compose(self, x, a=None):
@@ -1747,12 +1776,14 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
             )
 
     @overload
-    def evaluate(self, values: list[tuple[PolyElement[Er], Er | int]]) -> PolyElement[Er] | Er:
-        ...
+    def evaluate(
+        self, values: list[tuple[PolyElement[Er], Er | int]]
+    ) -> PolyElement[Er] | Er: ...
 
     @overload
-    def evaluate(self, x: PolyElement[Er] | int | str, a: Er | int) -> PolyElement[Er] | Er:
-        ...
+    def evaluate(
+        self, x: PolyElement[Er] | int | str, a: Er | int
+    ) -> PolyElement[Er] | Er: ...
 
     def evaluate(self, *args, **kwargs) -> PolyElement[Er] | Er:
         eval_dict = {}
@@ -1777,15 +1808,13 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
         else:
             temp_result = self._subs(eval_dict)
             new_ring = ring.drop(*[ring.gens[i] for i in eval_dict.keys()])
-            return temp_result.set_ring(new_ring) # type: ignore
+            return temp_result.set_ring(new_ring)  # type: ignore
 
     @overload
-    def subs(self, values: list[tuple[Expr, Er | int]]) -> PolyElement[Er]:
-        ...
+    def subs(self, values: list[tuple[Expr, Er | int]]) -> PolyElement[Er]: ...
 
     @overload
-    def subs(self, x: PolyElement[Er] | int | str, a: Er | int) -> PolyElement[Er]:
-        ...
+    def subs(self, x: PolyElement[Er] | int | str, a: Er | int) -> PolyElement[Er]: ...
 
     def subs(self, *args, **kwargs) -> PolyElement[Er]:
         subs_dict = {}
@@ -1811,7 +1840,9 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
         else:
             return self._subs(subs_dict)
 
-    def prem(self, g: PolyElement[Er], x: PolyElement[Er] | int | None = None) -> PolyElement[Er]:
+    def prem(
+        self, g: PolyElement[Er], x: PolyElement[Er] | int | None = None
+    ) -> PolyElement[Er]:
         """
         Pseudo-remainder of the polynomial ``self`` with respect to ``g``.
 
@@ -1868,7 +1899,9 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
         x_index = self.ring.index(x)
         return self._prem(g, x_index)
 
-    def pdiv(self, g: PolyElement[Er], x: PolyElement[Er] | int | None = None) -> tuple[PolyElement[Er], PolyElement[Er]]:
+    def pdiv(
+        self, g: PolyElement[Er], x: PolyElement[Er] | int | None = None
+    ) -> tuple[PolyElement[Er], PolyElement[Er]]:
         """
         Computes the pseudo-division of the polynomial ``self`` with respect to ``g``.
 
@@ -2050,7 +2083,11 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
         x_index = self.ring.index(x)
         return self._subresultants(g, x_index)
 
-    def symmetrize(self) -> tuple[PolyElement[Er], PolyElement[Er], list[tuple[PolyElement[Er], PolyElement[Er]]]]:
+    def symmetrize(
+        self,
+    ) -> tuple[
+        PolyElement[Er], PolyElement[Er], list[tuple[PolyElement[Er], PolyElement[Er]]]
+    ]:
         r"""
         Rewrite *self* in terms of elementary symmetric polynomials.
 
@@ -2253,7 +2290,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
             for exp, (monom, coeff) in zip(multinomial, terms):
                 if exp:
                     product_monom = monomial_mulpow(product_monom, monom, exp)
-                    product_coeff *= coeff ** exp
+                    product_coeff *= coeff**exp
 
             monom = tuple(product_monom)
             coeff = product_coeff
@@ -2289,7 +2326,9 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
         # p._check()
         return p
 
-    def _divmod(self, other: PolyElement[Er]) -> tuple[PolyElement[Er], PolyElement[Er]]:
+    def _divmod(
+        self, other: PolyElement[Er]
+    ) -> tuple[PolyElement[Er], PolyElement[Er]]:
         return self.div(other)
 
     def _divmod_ground(self, x: Er) -> tuple[PolyElement[Er], PolyElement[Er]]:
@@ -2302,16 +2341,13 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
         return self.quo_ground(p2)
 
     @overload
-    def _truediv(self, p2: PolyElement[Er]) -> PolyElement[Er]:
-        ...
+    def _truediv(self, p2: PolyElement[Er]) -> PolyElement[Er]: ...
 
     @overload
-    def _truediv(self, p2: list[PolyElement[Er]]) -> list[PolyElement[Er]]:
-        ...
+    def _truediv(self, p2: list[PolyElement[Er]]) -> list[PolyElement[Er]]: ...
 
     @overload
-    def _truediv(self, p2: Er) -> PolyElement[Er]:
-        ...
+    def _truediv(self, p2: Er) -> PolyElement[Er]: ...
 
     def _truediv(self, p2):
         return self.exquo(p2)
@@ -2352,12 +2388,10 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
         return term_div
 
     @overload
-    def rem(self, G: PolyElement[Er]) -> PolyElement[Er]:
-        ...
+    def rem(self, G: PolyElement[Er]) -> PolyElement[Er]: ...
 
     @overload
-    def rem(self, G: list[PolyElement[Er]]) -> list[PolyElement[Er]]:
-        ...
+    def rem(self, G: list[PolyElement[Er]]) -> list[PolyElement[Er]]: ...
 
     def rem(
         self, G: PolyElement[Er] | list[PolyElement[Er]]
@@ -2371,23 +2405,19 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
             return f._rem_list(G)
 
     @overload
-    def quo(self, G: PolyElement[Er]) -> PolyElement[Er]:
-        ...
+    def quo(self, G: PolyElement[Er]) -> PolyElement[Er]: ...
 
     @overload
-    def quo(self, G: list[PolyElement[Er]]) -> list[PolyElement[Er]]:
-        ...
+    def quo(self, G: list[PolyElement[Er]]) -> list[PolyElement[Er]]: ...
 
     def quo(self, G):
         return self.div(G)[0]
 
     @overload
-    def exquo(self, G: list[PolyElement[Er]]) -> list[PolyElement[Er]]:
-        ...
+    def exquo(self, G: list[PolyElement[Er]]) -> list[PolyElement[Er]]: ...
 
     @overload
-    def exquo(self, G: PolyElement[Er]) -> PolyElement[Er]:
-        ...
+    def exquo(self, G: PolyElement[Er]) -> PolyElement[Er]: ...
 
     def exquo(
         self, G: PolyElement[Er] | list[PolyElement[Er]]
@@ -2676,7 +2706,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
 
     def to_dup(self) -> dup[Er]:
         assert self.ring.ngens == 1
-        return dup_from_dict(self, self.ring.domain) # type: ignore
+        return dup_from_dict(self, self.ring.domain)  # type: ignore
 
     def to_dict(self) -> dict[Mon, Er]:
         # Return a self.flint_poly.to_dict() in case of python-flint
@@ -2811,7 +2841,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
         if element == 1:
             return self._get_coeff(self.ring.zero_monom)
         elif self.ring.is_element(element):
-            terms = list(cast('PolyElement[Er]', element).iterterms())
+            terms = list(cast("PolyElement[Er]", element).iterterms())
             if len(terms) == 1:
                 monom, coeff = terms[0]
                 if coeff == self.ring.domain.one:
@@ -2938,7 +2968,9 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
         """
         return self._sorted(list(self.items()), order)
 
-    def _sorted(self, seq: list[tuple[Mon, Er]], order: _str | None) -> list[tuple[Mon, Er]]:
+    def _sorted(
+        self, seq: list[tuple[Mon, Er]], order: _str | None
+    ) -> list[tuple[Mon, Er]]:
         if order is None:
             ordering = self.ring.order
         else:
@@ -3024,9 +3056,9 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
         else:
             # XXX: This is not valid for all domains (e.g. GF(p))
             terms = [
-                (monom, coeff // x) # type: ignore
+                (monom, coeff // x)  # type: ignore
                 for monom, coeff in self.iterterms()
-                if not (coeff % x) # type: ignore
+                if not (coeff % x)  # type: ignore
             ]
         return self.new(terms)
 
@@ -3035,7 +3067,9 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
         terms = [term_div(t, term) for t in self.iterterms()]
         return self.new([t for t in terms if t is not None])
 
-    def _deflate(self, J: tuple[int, ...], polys: list[PolyElement[Er]]) -> list[PolyElement[Er]]:
+    def _deflate(
+        self, J: tuple[int, ...], polys: list[PolyElement[Er]]
+    ) -> list[PolyElement[Er]]:
         ring = self.ring
         H = []
         for p in polys:
@@ -3069,7 +3103,9 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
                 g[e] = ring.domain_new(coeff * expv[i])
         return g
 
-    def cofactors(self: PolyElement[Er], other: PolyElement[Er]) -> tuple[PolyElement[Er], PolyElement[Er], PolyElement[Er]]:
+    def cofactors(
+        self: PolyElement[Er], other: PolyElement[Er]
+    ) -> tuple[PolyElement[Er], PolyElement[Er], PolyElement[Er]]:
         if not self and not other:
             zero = self.ring.zero
             return zero, zero, zero
@@ -3091,14 +3127,18 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
 
         return (h.inflate(J), cff.inflate(J), cfg.inflate(J))
 
-    def _gcd_zero(self, other: PolyElement[Er]) -> tuple[PolyElement[Er], PolyElement[Er], PolyElement[Er]]:
+    def _gcd_zero(
+        self, other: PolyElement[Er]
+    ) -> tuple[PolyElement[Er], PolyElement[Er], PolyElement[Er]]:
         one, zero = self.ring.one, self.ring.zero
         if other.is_nonnegative:
             return other, zero, one
         else:
             return -other, zero, -one
 
-    def _gcd_monom(self, other: PolyElement[Er]) -> tuple[PolyElement[Er], PolyElement[Er], PolyElement[Er]]:
+    def _gcd_monom(
+        self, other: PolyElement[Er]
+    ) -> tuple[PolyElement[Er], PolyElement[Er], PolyElement[Er]]:
         ring = self.ring
         ground_gcd = ring.domain.gcd
         ground_quo = ring.domain.quo
@@ -3119,7 +3159,9 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
         )
         return h, cff, cfg
 
-    def _gcd(self, other: PolyElement[Er]) -> tuple[PolyElement[Er], PolyElement[Er], PolyElement[Er]]:
+    def _gcd(
+        self, other: PolyElement[Er]
+    ) -> tuple[PolyElement[Er], PolyElement[Er], PolyElement[Er]]:
         ring = self.ring
 
         if ring.domain.is_QQ:
@@ -3129,10 +3171,14 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
         else:  # TODO: don't use dense representation (port PRS algorithms)
             return ring.dmp_inner_gcd(self, other)
 
-    def _gcd_ZZ(self, other: PolyElement[Er]) -> tuple[PolyElement[Er], PolyElement[Er], PolyElement[Er]]:
+    def _gcd_ZZ(
+        self, other: PolyElement[Er]
+    ) -> tuple[PolyElement[Er], PolyElement[Er], PolyElement[Er]]:
         return heugcd(self, other)
 
-    def _gcd_QQ(self, g: PolyElement[Er]) -> tuple[PolyElement[Er], PolyElement[Er], PolyElement[Er]]:
+    def _gcd_QQ(
+        self, g: PolyElement[Er]
+    ) -> tuple[PolyElement[Er], PolyElement[Er], PolyElement[Er]]:
         f = self
         ring = f.ring
         new_ring = ring.clone(domain=ring.domain.get_ring())
@@ -3233,7 +3279,9 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
         [q], r = self._div_list([fv])
         return q, r
 
-    def _div_list(self, fv: list[PolyElement[Er]]) -> tuple[list[PolyElement[Er]], PolyElement[Er]]:
+    def _div_list(
+        self, fv: list[PolyElement[Er]]
+    ) -> tuple[list[PolyElement[Er]], PolyElement[Er]]:
         ring = self.ring
         s = len(fv)
         qv = [ring.zero for i in range(s)]
@@ -3305,7 +3353,9 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
 
         return r * c
 
-    def _pdiv(self, g: PolyElement[Er], x: int) -> tuple[PolyElement[Er], PolyElement[Er]]:
+    def _pdiv(
+        self, g: PolyElement[Er], x: int
+    ) -> tuple[PolyElement[Er], PolyElement[Er]]:
         f = self
 
         df = f._degree_int(x)
@@ -3330,11 +3380,11 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
 
             Q = q * lc_g
 
-            q = Q + (lc_r) * xp ** j
+            q = Q + (lc_r) * xp**j
 
             R = r * lc_g
 
-            G = g * lc_r * xp ** j
+            G = g * lc_r * xp**j
 
             r = R - G
 
@@ -3343,7 +3393,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
             if dr < dg:
                 break
 
-        c = lc_g ** N
+        c = lc_g**N
 
         q = q * c
         r = r * c
@@ -3458,7 +3508,11 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
 
         return result
 
-    def _symmetrize(self) -> tuple[PolyElement[Er], PolyElement[Er], list[tuple[PolyElement[Er], PolyElement[Er]]]]:
+    def _symmetrize(
+        self,
+    ) -> tuple[
+        PolyElement[Er], PolyElement[Er], list[tuple[PolyElement[Er], PolyElement[Er]]]
+    ]:
         # For the python-flint override this can just be converted back to
         # the pure python version until python-flint provides some
         # equivalent functionality.
@@ -3494,7 +3548,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
                         _height, _monom, _coeff = height, monom, coeff
 
             if _height != -1:
-                monom, coeff = cast('Mon', _monom), cast('Er', _coeff)
+                monom, coeff = cast("Mon", _monom), cast("Er", _coeff)
             else:
                 break
 
@@ -3516,10 +3570,14 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict[tuple[int, .
     # TODO: following methods should point to polynomial
     # representation independent algorithm implementations.
 
-    def half_gcdex(self, other: PolyElement[Er]) -> tuple[PolyElement[Er], PolyElement[Er]]:
+    def half_gcdex(
+        self, other: PolyElement[Er]
+    ) -> tuple[PolyElement[Er], PolyElement[Er]]:
         return self.ring.dmp_half_gcdex(self, other)
 
-    def gcdex(self, other: PolyElement[Er]) -> tuple[PolyElement[Er], PolyElement[Er], PolyElement[Er]]:
+    def gcdex(
+        self, other: PolyElement[Er]
+    ) -> tuple[PolyElement[Er], PolyElement[Er], PolyElement[Er]]:
         return self.ring.dmp_gcdex(self, other)
 
     def resultant(self, other: PolyElement[Er]) -> PolyElement[Er] | Er:
