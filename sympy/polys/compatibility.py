@@ -4,8 +4,10 @@ from __future__ import annotations
 
 from abc import abstractmethod
 from typing import TYPE_CHECKING, Generic, Mapping, Any, cast, overload
+from sympy.external.gmpy import MPZ
 from sympy.polys.domains.domain import Domain, Er, Es, Ef, Eeuclid, Eordered, Eabs
 from sympy.polys.domains.field import Field
+from sympy.polys.domains.algebraicfield import Alg, AlgebraicField
 from sympy.polys.densebasic import dup, dmp
 
 if TYPE_CHECKING:
@@ -671,8 +673,8 @@ class IPolys(Generic[Er]):
         components = dup_decompose(self.to_dup(f), self.domain)
         return list(map(self.from_dup, components))
 
-    def dmp_lift(self, f: cPoly[Er]) -> PolyElement[Er]:
-        result = dmp_lift(self.to_dense(f), self.ngens-1, self.domain)
+    def dmp_lift(self: IPolys[Alg], f: cPoly[Alg]) -> PolyElement[MPZ]:
+        result = dmp_lift(self.to_dense(f), self.ngens-1, cast('AlgebraicField', self.domain))
         return self.to_ground().from_dense(result)
 
     def dup_sign_variations(self, f: cPoly[Er]) -> int:
