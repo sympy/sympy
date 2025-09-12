@@ -20,10 +20,11 @@ from sympy.core.containers import Tuple
 from sympy.matrices import ImmutableMatrix, Matrix, ShapeError
 from sympy.functions.elementary.trigonometric import sin, cos
 from sympy.physics.control.lti import (
-    create_transfer_function,TransferFunctionBase, TransferFunction,
+    create_transfer_function, TransferFunctionBase, TransferFunction,
     DiscreteTransferFunction, PIDController,Series, Parallel, Feedback,
     TransferFunctionMatrix, MIMOSeries, MIMOParallel, MIMOFeedback, StateSpace,
-    gbt, bilinear, forward_diff, backward_diff, phase_margin, gain_margin)
+    DiscreteStateSpace, create_state_space, gbt, bilinear, forward_diff,
+    backward_diff, phase_margin, gain_margin)
 from sympy.testing.pytest import raises
 from sympy.logic.boolalg import false, true
 
@@ -37,6 +38,7 @@ a0, a1, a2, a3, b0, b1, b2, b3, b4, c0, c1, c2, c3, d0, d1, d2, d3 = \
 TF1 = TransferFunction(1, s**2 + 2*zeta*wn*s + wn**2, s)
 TF2 = TransferFunction(k, 1, s)
 TF3 = TransferFunction(a2*p - s, a2*s + p, s)
+
 
 def test_create_transfer_function():
     cont_tf1 = create_transfer_function(s+1, s**2 + 2, s)
@@ -748,7 +750,7 @@ def test_DiscreteTransferFunction_functions():
     assert G4.expand() == DiscreteTransferFunction(a0*s**s - b0*p**p, g, p, 2.4)
     assert G4.expand() != DiscreteTransferFunction(a0*s**s - b0*p**p, g, p)
 
-    # purely symbolic polynomials.
+    # testing that subs works.
     p1 = a1*s + a0
     p2 = b2*s**2 + b1*s + b0
     SP1 = DiscreteTransferFunction(p1, p2, s)
@@ -2989,14 +2991,19 @@ def test_TransferFunction_gbt():
     dtf_test_bilinear1 = DiscreteTransferFunction.from_coeff_lists(numZ,
                                                              denZ,
                                                              z, T).expand()
-    dtf_test_bilinear2 = \
-        DiscreteTransferFunction.from_gbt(tf, T, 0.5, z).expand()
+    dtf_test_bilinear2 = DiscreteTransferFunction.from_gbt(tf, T,
+                                                           0.5, z).expand()
     # corresponding tf with manually calculated coefs
     num_manual = [T/(2*(a + b*T/2)), T/(2*(a + b*T/2))]
     den_manual = [1, (-a + b*T/2)/(a + b*T/2)]
     dtf_manual = DiscreteTransferFunction.\
         from_coeff_lists(num_manual, den_manual, z, T).expand()
+    num_manual = [T/(2*(a + b*T/2)), T/(2*(a + b*T/2))]
+    den_manual = [1, (-a + b*T/2)/(a + b*T/2)]
+    dtf_manual = DiscreteTransferFunction.\
+        from_coeff_lists(num_manual, den_manual, z, T).expand()
 
+    assert dtf_test_bilinear1 == dtf_test_bilinear2 == dtf_manual
     assert dtf_test_bilinear1 == dtf_test_bilinear2 == dtf_manual
 
     tf = TransferFunction(1, a*s+b, s)
@@ -3129,6 +3136,23 @@ def test_TransferFunction_gain_margin():
     raises(ValueError, lambda: gain_margin(tf3))
     raises(ValueError, lambda: gain_margin(MIMOSeries(tf_m)))
 
+def test_create_state_space():
+    A = Matrix([[0, 1], [1, 0]])
+    B = Matrix([1, 0])
+    C = Matrix([[0, 1]])
+    D = Matrix([0])
+
+    cont_ss1 = create_state_space(A, B, C, D)
+    assert isinstance(cont_ss1, StateSpace)
+
+    cont_ss2 = create_state_space(A, B, C, D, sampling_time = 0)
+    assert isinstance(cont_ss2, StateSpace)
+
+    disc_ss1 = create_state_space(A, B, C, D, 0.1)
+    assert isinstance(disc_ss1, DiscreteStateSpace)
+
+    disc_ss2 = create_state_space(A, B, C, D, T)
+    assert isinstance(disc_ss2, DiscreteStateSpace)
 
 def test_StateSpace_construction():
     # using different numbers for a SISO system.
@@ -3142,6 +3166,7 @@ def test_StateSpace_construction():
     assert ss1.input_matrix == Matrix([1, 0])
     assert ss1.output_matrix == Matrix([[0, 1]])
     assert ss1.feedforward_matrix == Matrix([0])
+    assert ss1.sampling_time == 0
     assert ss1.args == (Matrix([[0, 1], [1, 0]]), Matrix([[1], [0]]), Matrix([[0, 1]]), Matrix([[0]]))
 
     # using different symbols for a SISO system.
@@ -3238,7 +3263,8 @@ def test_StateSpace_construction():
     raises(TypeError, lambda: StateSpace(s**2, s+1, 2*s, 1))
     raises(TypeError, lambda: StateSpace(Matrix([2, 0.5]), Matrix([-1]),
                                          Matrix([1]), 0))
-def test_StateSpace_add():
+
+def test_StateSpace_add_mul():
     A1 = Matrix([[4, 1],[2, -3]])
     B1 = Matrix([[5, 2],[-3, -3]])
     C1 = Matrix([[2, -4],[0, 1]])
@@ -3342,8 +3368,19 @@ def test_SymPy_substitution_functions():
     ss1 = StateSpace(Matrix([s]), Matrix([(s + 1)**2]), Matrix([s**2 - 1]), Matrix([2*s]))
     ss2 = StateSpace(Matrix([s + p]), Matrix([(s + 1)*(p - 1)]), Matrix([p**3 - s**3]), Matrix([s - p]))
 
+    dss1 = DiscreteStateSpace(Matrix([s]), Matrix([(s + 1)**2]),
+                              Matrix([s**2 - 1]), Matrix([2*s]), 0.1)
+    dss2 = DiscreteStateSpace(Matrix([s + p]), Matrix([(s + 1)*(p - 1)]),
+                              Matrix([p**3 - s**3]), Matrix([s - p]), 0.1)
+
     assert ss1.subs({s:5}) == StateSpace(Matrix([[5]]), Matrix([[36]]), Matrix([[24]]), Matrix([[10]]))
     assert ss2.subs({p:1}) == StateSpace(Matrix([[s + 1]]), Matrix([[0]]), Matrix([[1 - s**3]]), Matrix([[s - 1]]))
+
+    assert dss1.subs({s:5}) == DiscreteStateSpace(Matrix([[5]]), Matrix([[36]]),
+                                          Matrix([[24]]), Matrix([[10]]), 0.1)
+    assert dss2.subs({p:1}) == DiscreteStateSpace(
+        Matrix([[s + 1]]), Matrix([[0]]),
+        Matrix([[1 - s**3]]), Matrix([[s - 1]]), 0.1)
 
     # xreplace
     assert ss1.xreplace({s:p}) == \
@@ -3351,19 +3388,40 @@ def test_SymPy_substitution_functions():
     assert ss2.xreplace({s:a, p:b}) == \
         StateSpace(Matrix([[a + b]]), Matrix([[(a + 1)*(b - 1)]]), Matrix([[-a**3 + b**3]]), Matrix([[a - b]]))
 
+    assert dss1.xreplace({s:p}) == \
+        DiscreteStateSpace(Matrix([[p]]), Matrix([[(p + 1)**2]]),
+                           Matrix([[p**2 - 1]]), Matrix([[2*p]]), 0.1)
+    assert dss2.xreplace({s:a, p:b}) == \
+        DiscreteStateSpace(Matrix([[a + b]]), Matrix([[(a + 1)*(b - 1)]]),
+                           Matrix([[-a**3 + b**3]]), Matrix([[a - b]]), 0.1)
+
     # evalf
     p1 = a1*s + a0
     p2 = b2*s**2 + b1*s + b0
     G = StateSpace(Matrix([p1]), Matrix([p2]))
+
+    dG = DiscreteStateSpace(Matrix([p1]), Matrix([p2]), sampling_time = 0.3)
+
     expect = StateSpace(Matrix([[2*s + 1]]), Matrix([[5*s**2 + 4*s + 3]]), Matrix([[0]]), Matrix([[0]]))
     expect_ = StateSpace(Matrix([[2.0*s + 1.0]]), Matrix([[5.0*s**2 + 4.0*s + 3.0]]), Matrix([[0]]), Matrix([[0]]))
+
+    dexpect = DiscreteStateSpace(Matrix([[2*s + 1]]),
+                                 Matrix([[5*s**2 + 4*s + 3]]), Matrix([[0]]),
+                                 Matrix([[0]]), 0.3)
+    dexpect_ = DiscreteStateSpace(Matrix([[2.0*s + 1.0]]),
+                                  Matrix([[5.0*s**2 + 4.0*s + 3.0]]),
+                                  Matrix([[0]]), Matrix([[0]]), 0.3)
+
     assert G.subs({a0: 1, a1: 2, b0: 3, b1: 4, b2: 5}) == expect
     assert G.subs({a0: 1, a1: 2, b0: 3, b1: 4, b2: 5}).evalf() == expect_
     assert expect.evalf() == expect_
 
+    assert dG.subs({a0: 1, a1: 2, b0: 3, b1: 4, b2: 5}) == dexpect
+    assert dG.subs({a0: 1, a1: 2, b0: 3, b1: 4, b2: 5}).evalf() == dexpect_
+    assert dexpect.evalf() == dexpect_
+
 def test_conversion():
     # StateSpace to TransferFunction for SISO
-    #TODO: DiscreteTransferFunction
     A1 = Matrix([[-5, -1], [3, -1]])
     B1 = Matrix([2, 5])
     C1 = Matrix([[1, 2]])
@@ -3371,6 +3429,7 @@ def test_conversion():
     H1 = StateSpace(A1, B1, C1, D1)
     H3 = StateSpace(Matrix([[a0, a1], [a2, a3]]), B = Matrix([[b1], [b2]]), C = Matrix([[c1, c2]]))
     tm1 = H1.rewrite(TransferFunction)
+    raises(TypeError, lambda: H1.rewrite(DiscreteTransferFunction)) # H1 is not a discrete system
     tm2 = (-H1).rewrite(TransferFunction)
 
     tf1 = tm1[0][0]
@@ -3406,28 +3465,56 @@ def test_conversion():
     assert SS.rewrite(TransferFunction)[0][0] == TF1
 
     # TransferFunction cannot be converted to DiscreteStateSpace
-    # TODO: raises(TypeError, lambda: TF1.rewrite(DiscreteStateSpace))
+    raises(TypeError, lambda: TF1.rewrite(DiscreteStateSpace))
 
     # Transfer function has to be proper
     raises(ValueError, lambda: TransferFunction(b*s**2 + p**2 - a*p + s, b - p**2, s).rewrite(StateSpace))
 
+    # DiscreteStateSpace to DiscreteTransferFunction for SISO
+    DH1 = DiscreteStateSpace(A1, B1, C1, D1, 0.1)
+    DH3 = DiscreteStateSpace(Matrix([[a0, a1], [a2, a3]]),
+                             B = Matrix([[b1], [b2]]), C = Matrix([[c1, c2]]),
+                             sampling_time = T)
+    dtm1 = DH1.rewrite(DiscreteTransferFunction)
+    raises(TypeError, lambda: DH1.rewrite(TransferFunction)) # H3 is not a continuous system
+    dtm2 = (-DH1).rewrite(DiscreteTransferFunction)
+
+    dtf1 = dtm1[0][0]
+    dtf2 = dtm2[0][0]
+
+    assert dtf1 == DiscreteTransferFunction(12*z + 59, z**2 + 6*z + 8, z, 0.1)
+    assert dtf2.num == -dtf1.num
+    assert dtf2.den == dtf1.den
+    assert dtf1.sampling_time == 0.1
+    assert dtf2.sampling_time == 0.1
+
+    # DiscreteStateSpace to DiscreteTransferFunction for MIMO
+    DH2 = DiscreteStateSpace(A2, B2, C2, D2, T)
+    dtm3 = DH2.rewrite(DiscreteTransferFunction)
+
+    # outputs for input i obtained at Index i-1. Consider input 1
+    assert dtm3[0][0] == DiscreteTransferFunction(2.0*z**3 + 1.0*z**2 - 10.5*z + 4.5, 1.0*z**3 + 0.5*z**2 - 6.5*z - 2.5, z, T)
+    assert dtm3[0][1] == DiscreteTransferFunction(2.0*z**3 + 2.0*z**2 - 10.5*z - 3.5, 1.0*z**3 + 0.5*z**2 - 6.5*z - 2.5, z, T)
+    assert dtm3[0][2] == DiscreteTransferFunction(2.0*z**2 + 5.0*z - 0.5, 1.0*z**3 + 0.5*z**2 - 6.5*z - 2.5, z, T)
+    assert DH3.rewrite(DiscreteTransferFunction) == [[DiscreteTransferFunction(-c1*(a1*b2 - a3*b1 + b1*z) - c2*(-a0*b2 + a2*b1 + b2*z),
+                                                              -a0*a3 + a0*z + a1*a2 + a3*z - z**2, z, T)]]
     # DiscreteTransferFunction to DiscreteStateSpace
     dtf1 = DiscreteTransferFunction(z+5, z**3+2*z**2+4*z+3, z, 0.1)
-    # TODO:
-    # DSS = dtf1.rewrite(DiscreteStateSpace)
-    # A = Matrix([[0, 1, 0], [0, 0, 1], [-3, -4, -2]])
-    # B = Matrix([0, 0, 1])
-    # C = Matrix([[5, 1, 0]])
-    # D = Matrix([[0]])
-    # assert DSS == DiscreteStateSpace(A, B, C, D, 0.1)
+    DSS = dtf1.rewrite(DiscreteStateSpace)
+    A = Matrix([[0, 1, 0], [0, 0, 1], [-3, -4, -2]])
+    B = Matrix([0, 0, 1])
+    C = Matrix([[5, 1, 0]])
+    D = Matrix([[0]])
 
-    # TODO: assert DSS.rewrite(DiscreteTransferFunction)[0][0] == dtf1
+    assert DSS == DiscreteStateSpace(A, B, C, D, 0.1)
 
-    # DiscreteTransferFunction cannot be converted to StateSpace
+    assert DSS.rewrite(DiscreteTransferFunction)[0][0] == dtf1
+
+    # DiscreteTransferFunction cannot be converted to DiscreteStateSpace
     raises(TypeError, lambda: dtf1.rewrite(StateSpace))
 
     # discrete-time Transfer function has to be proper
-    # TODO: raises(ValueError, lambda: DiscreteTransferFunction(b2*z**2 + b1*z + b0, z + a0, z).rewrite(DiscreteStateSpace))
+    raises(ValueError, lambda: DiscreteTransferFunction(b2*z**2 + b1*z + b0, z + a0, z).rewrite(DiscreteStateSpace))
 
 def test_StateSpace_dsolve():
     # https://web.mit.edu/2.14/www/Handouts/StateSpaceResponse.pdf
@@ -3490,7 +3577,6 @@ def test_StateSpace_dsolve():
     expr6 = expr6.subs([(a11, 0), (a12, 1), (a21, -2), (a22, -3), (b1, 0), (b2, 1), (c1, 1), (c2, -1), (i1, 1), (i2, 2)])
     assert expr6 == 8*exp(-t) - 9*exp(-2*t)
 
-
 def test_StateSpace_functions():
     # https://in.mathworks.com/help/control/ref/statespacemodel.obsv.html
 
@@ -3520,7 +3606,8 @@ def test_StateSpace_functions():
     Qo = SS4.observability_matrix().subs([(a0, 0), (a1, -6), (a2, 1), (a3, -5), (c1, 0), (c2, 1)])
     assert Qo == Matrix([[0, 1], [1, -5]])
 
-    ss_obs = StateSpace(Matrix([[1, 0, 1], [0,0,0],[0,0,-2]]), Matrix([1,1,0]), Matrix([1,1,Rational(1,3)]).T).to_observable_form()
+    ss_obs = StateSpace(Matrix([[1, 0, 1], [0,0,0],[0,0,-2]]), Matrix([1,1,0]),
+                        Matrix([1,1, Rational(1,3)]).T).to_observable_form()
     A_obs = ss_obs.A[:2, :2]
     A_nobs = ss_obs.A[2:, 2:]
     assert A_obs.eigenvals() == {0: 1, 1: 1}
@@ -3574,7 +3661,6 @@ def test_StateSpace_functions():
     assert ss4.output_matrix == Matrix([[c1, c2, 0, 0], [0, 0, 0, 1]])
     assert ss4.feedforward_matrix == Matrix([[0, 0], [0, 0]])
 
-
 def test_StateSpace_series():
     # For SISO Systems
     a1 = Matrix([[0, 1], [1, 0]])
@@ -3616,6 +3702,8 @@ def test_StateSpace_series():
     assert ser1.num_inputs == 1
     assert ser1.num_outputs == 1
     assert ser1.rewrite(TransferFunction) == TransferFunction(s**2, s**3 - s**2 - s + 1, s)
+    raises(TypeError, lambda: ser1.rewrite(DiscreteTransferFunction))  # cannot convert to discrete transfer function
+
     ser2 = Series(ss1)
     ser3 = Series(ser2, ss2)
     assert ser3.doit() == ser1.doit()
@@ -3733,7 +3821,6 @@ def test_StateSpace_series():
                         (TransferFunction(s, s + 1, s), TransferFunction(1, s, s)),
                         (TransferFunction(1, s + 1, s), TransferFunction(s, s + 2, s)))))
 
-
 def test_StateSpace_parallel():
     # For SISO system
     a1 = Matrix([[0, 1], [1, 0]])
@@ -3762,6 +3849,7 @@ def test_StateSpace_parallel():
                         Matrix([[0, 1, 1, 0]]),
                         Matrix([[1]]))
     assert p1.rewrite(TransferFunction) == TransferFunction(s*(s + 2), s**2 - 1, s)
+    raises(TypeError, lambda: p1.rewrite(DiscreteTransferFunction))  # cannot convert to discrete transfer function
 
     # Connecting StateSpace with TransferFunction
     tf1 = TransferFunction(s, s+1, s)
@@ -3853,7 +3941,6 @@ def test_StateSpace_parallel():
                         [3, 2],
                         [1, -1]])))
 
-
 def test_StateSpace_feedback():
     # For SISO
     a1 = Matrix([[0, 1], [1, 0]])
@@ -3883,6 +3970,7 @@ def test_StateSpace_feedback():
                             [[0, 1, 0, 0]]), Matrix(
                             [[0]]))
     assert fd1.rewrite(TransferFunction) == TransferFunction(s*(s - 1), s**3 - s + 1, s)
+    raises(TypeError, lambda: fd1.rewrite(DiscreteTransferFunction))  # cannot convert to discrete transfer function
 
     # Positive Feedback
     fd2 = Feedback(ss1, ss2, 1)
@@ -4008,3 +4096,782 @@ def test_StateSpace_stability():
     ss2 = StateSpace(A2, B, C, D)
     ineq = ss2.get_asymptotic_stability_conditions()
     assert ineq == [False]
+
+def test_DiscreteStateSpace_construction():
+    # using different numbers for a SISO system.
+    A1 = Matrix([[0, 1], [1, 0]])
+    B1 = Matrix([1, 0])
+    C1 = Matrix([[0, 1]])
+    D1 = Matrix([0])
+    ss1 = DiscreteStateSpace(A1, B1, C1, D1)
+
+    assert ss1.state_matrix == Matrix([[0, 1], [1, 0]])
+    assert ss1.input_matrix == Matrix([1, 0])
+    assert ss1.output_matrix == Matrix([[0, 1]])
+    assert ss1.feedforward_matrix == Matrix([0])
+    assert ss1.sampling_time == 1
+    assert ss1.args == (Matrix([[0, 1], [1, 0]]), Matrix([[1], [0]]),
+                        Matrix([[0, 1]]), Matrix([[0]]), 1)
+
+    # using different symbols for a SISO system.
+    ss2 = DiscreteStateSpace(Matrix([a0]), Matrix([a1]),
+                    Matrix([a2]), Matrix([a3]), 0.1)
+
+    assert ss2.state_matrix == Matrix([[a0]])
+    assert ss2.input_matrix == Matrix([[a1]])
+    assert ss2.output_matrix == Matrix([[a2]])
+    assert ss2.feedforward_matrix == Matrix([[a3]])
+    assert ss2.sampling_time == 0.1
+    assert isinstance(ss2.sampling_time, Number) is True # ensure it is a sympy object, not just a python float
+    assert ss2.args == (Matrix([[a0]]), Matrix([[a1]]), Matrix([[a2]]),
+                        Matrix([[a3]]), 0.1)
+
+    # using different numbers for a MIMO system.
+    ss3 = DiscreteStateSpace(Matrix([[-1.5, -2], [1, 0]]),
+                    Matrix([[0.5, 0], [0, 1]]),
+                    Matrix([[0, 1], [0, 2]]),
+                    Matrix([[2, 2], [1, 1]]), T)
+
+    assert ss3.state_matrix == Matrix([[-1.5, -2], [1,  0]])
+    assert ss3.input_matrix == Matrix([[0.5, 0], [0, 1]])
+    assert ss3.output_matrix == Matrix([[0, 1], [0, 2]])
+    assert ss3.feedforward_matrix == Matrix([[2, 2], [1, 1]])
+    assert ss3.sampling_time == T
+    assert ss3.args == (Matrix([[-1.5, -2],
+                                [1,  0]]),
+                        Matrix([[0.5, 0],
+                                [0, 1]]),
+                        Matrix([[0, 1],
+                                [0, 2]]),
+                        Matrix([[2, 2],
+                                [1, 1]]), T)
+
+    # using different symbols for a MIMO system.
+    A4 = Matrix([[a0, a1], [a2, a3]])
+    B4 = Matrix([[b0, b1], [b2, b3]])
+    C4 = Matrix([[c0, c1], [c2, c3]])
+    D4 = Matrix([[d0, d1], [d2, d3]])
+    ss4 = DiscreteStateSpace(A4, B4, C4, D4, 12)
+
+    assert ss4.state_matrix == Matrix([[a0, a1], [a2, a3]])
+    assert ss4.input_matrix == Matrix([[b0, b1], [b2, b3]])
+    assert ss4.output_matrix == Matrix([[c0, c1], [c2, c3]])
+    assert ss4.feedforward_matrix == Matrix([[d0, d1], [d2, d3]])
+    assert ss4.sampling_time == 12
+    assert ss4.args == (Matrix([[a0, a1],
+                                [a2, a3]]),
+                        Matrix([[b0, b1],
+                                [b2, b3]]),
+                        Matrix([[c0, c1],
+                                [c2, c3]]),
+                        Matrix([[d0, d1],
+                                [d2, d3]]), 12)
+
+    # using less matrices. Rest will be filled with a minimum of zeros.
+    ss5 = DiscreteStateSpace()
+    assert ss5.args == (Matrix([[0]]), Matrix([[0]]), Matrix([[0]]),
+                        Matrix([[0]]), 1)
+
+    A6 = Matrix([[0, 1], [1, 0]])
+    B6 = Matrix([1, 1])
+    ss6 = DiscreteStateSpace(A6, B6, sampling_time = 2)
+
+    assert ss6.state_matrix == Matrix([[0, 1], [1, 0]])
+    assert ss6.input_matrix ==  Matrix([1, 1])
+    assert ss6.output_matrix == Matrix([[0, 0]])
+    assert ss6.feedforward_matrix == Matrix([[0]])
+    assert ss6.sampling_time == 2
+    assert ss6.args == (Matrix([[0, 1],
+                                [1, 0]]),
+                        Matrix([[1],
+                                [1]]),
+                        Matrix([[0, 0]]),
+                        Matrix([[0]]), 2)
+
+    # Check if the system is SISO or MIMO.
+    # If system is not SISO, then it is definitely MIMO.
+
+    assert ss1.is_SISO == True
+    assert ss2.is_SISO == True
+    assert ss3.is_SISO == False
+    assert ss4.is_SISO == False
+    assert ss5.is_SISO == True
+    assert ss6.is_SISO == True
+
+    # ShapeError if matrices do not fit.
+    raises(ShapeError, lambda: StateSpace(Matrix([s, (s+1)**2]), Matrix([s+1]),
+                                          Matrix([s**2 - 1]), Matrix([2*s])))
+    raises(ShapeError, lambda: StateSpace(Matrix([s]), Matrix([s+1, s**3 + 1]),
+                                          Matrix([s**2 - 1]), Matrix([2*s])))
+    raises(ShapeError, lambda: StateSpace(Matrix([s]), Matrix([s+1]),
+                                          Matrix([[s**2 - 1], [s**2 + 2*s + 1]]), Matrix([2*s])))
+    raises(ShapeError, lambda: StateSpace(Matrix([[-s, -s], [s, 0]]),
+                                                Matrix([[s/2, 0], [0, s]]),
+                                                Matrix([[0, s]]),
+                                                Matrix([[2*s, 2*s], [s, s]])))
+
+    # TypeError if arguments are not sympy matrices.
+    raises(TypeError, lambda: StateSpace(s**2, s+1, 2*s, 1))
+    raises(TypeError, lambda: StateSpace(Matrix([2, 0.5]), Matrix([-1]),
+                                         Matrix([1]), 0))
+
+    raises(ValueError, lambda: DiscreteStateSpace(A1, B1, C1, D1, 0)) # sampling time cannot be zero
+
+def test_DiscreteStateSpace_add_mul():
+    A1 = Matrix([[4, 1],[2, -3]])
+    B1 = Matrix([[5, 2],[-3, -3]])
+    C1 = Matrix([[2, -4],[0, 1]])
+    D1 = Matrix([[3, 2],[1, -1]])
+    ss1 = DiscreteStateSpace(A1, B1, C1, D1, T)
+
+    A2 = Matrix([[-3, 4, 2],[-1, -3, 0],[2, 5, 3]])
+    B2 = Matrix([[1, 4],[-3, -3],[-2, 1]])
+    C2 = Matrix([[4, 2, -3],[1, 4, 3]])
+    D2 = Matrix([[-2, 4],[0, 1]])
+    ss2 = DiscreteStateSpace(A2, B2, C2, D2, T)
+    ss3 = DiscreteStateSpace(sampling_time = T)
+    ss4 = DiscreteStateSpace(Matrix([1]), Matrix([2]),
+                             Matrix([3]), Matrix([4]), T)
+
+    expected_add = \
+        DiscreteStateSpace(
+        Matrix([
+        [4,  1,  0,  0, 0],
+        [2, -3,  0,  0, 0],
+        [0,  0, -3,  4, 2],
+        [0,  0, -1, -3, 0],
+        [0,  0,  2,  5, 3]]),
+        Matrix([
+        [ 5,  2],
+        [-3, -3],
+        [ 1,  4],
+        [-3, -3],
+        [-2,  1]]),
+        Matrix([
+        [2, -4, 4, 2, -3],
+        [0,  1, 1, 4,  3]]),
+        Matrix([
+        [1, 6],
+        [1, 0]]), T)
+
+    expected_mul = \
+        DiscreteStateSpace(
+        Matrix([
+        [ -3,   4,  2, 0,  0],
+        [ -1,  -3,  0, 0,  0],
+        [  2,   5,  3, 0,  0],
+        [ 22,  18, -9, 4,  1],
+        [-15, -18,  0, 2, -3]]),
+        Matrix([
+        [  1,   4],
+        [ -3,  -3],
+        [ -2,   1],
+        [-10,  22],
+        [  6, -15]]),
+        Matrix([
+        [14, 14, -3, 2, -4],
+        [ 3, -2, -6, 0,  1]]),
+        Matrix([
+        [-6, 14],
+        [-2,  3]]), T)
+
+    assert ss1 + ss2 == expected_add
+    assert ss1*ss2 == expected_mul
+    assert ss3 + 1/2 == DiscreteStateSpace(Matrix([[0]]), Matrix([[0]]),
+                                           Matrix([[0]]), Matrix([[0.5]]), T)
+    assert ss4*1.5 == DiscreteStateSpace(Matrix([[1]]), Matrix([[2]]),
+                                         Matrix([[4.5]]), Matrix([[6.0]]), T)
+    assert 1.5*ss4 == DiscreteStateSpace(Matrix([[1]]), Matrix([[3.0]]),
+                                         Matrix([[3]]), Matrix([[6.0]]), T)
+
+    raises(ShapeError, lambda: ss1 + ss3)
+    raises(ShapeError, lambda: ss2*ss4)
+
+    # compatibility tests
+    ss5 = DiscreteStateSpace(A1, B1, C1, D1, 0.1)
+    cont_ss = StateSpace(A2, B2, C2, D2)
+
+    raises(TypeError, lambda: ss5 + ss2) # sum of state spaces with different sampling time
+    raises(TypeError, lambda: ss5 * ss2) # multiplication of state spaces with different sampling time
+    raises(TypeError, lambda: ss1 + cont_ss) # sum of state space and continuous state space
+    raises(TypeError, lambda: ss1 * cont_ss) # multiplication of state space and continuous state space
+
+def test_DiscreteStateSpace_negation():
+    A = Matrix([[a0, a1], [a2, a3]])
+    B = Matrix([[b0, b1], [b2, b3]])
+    C = Matrix([[c0, c1], [c1, c2], [c2, c3]])
+    D = Matrix([[d0, d1], [d1, d2], [d2, d3]])
+    SS = DiscreteStateSpace(A, B, C, D, T)
+    SS_neg = -SS
+
+    state_mat = Matrix([[-1, 1], [1, -1]])
+    input_mat = Matrix([1, -1])
+    output_mat = Matrix([[-1, 1]])
+    feedforward_mat = Matrix([1])
+    system = DiscreteStateSpace(state_mat, input_mat, output_mat,
+                                feedforward_mat, T)
+
+    assert SS_neg == \
+        DiscreteStateSpace(Matrix([[a0, a1],
+                           [a2, a3]]),
+                   Matrix([[b0, b1],
+                           [b2, b3]]),
+                   Matrix([[-c0, -c1],
+                           [-c1, -c2],
+                           [-c2, -c3]]),
+                   Matrix([[-d0, -d1],
+                           [-d1, -d2],
+                           [-d2, -d3]]), T)
+    assert -system == \
+        DiscreteStateSpace(Matrix([[-1,  1],
+                           [ 1, -1]]),
+                   Matrix([[ 1],[-1]]),
+                   Matrix([[1, -1]]),
+                   Matrix([[-1]]), T)
+    assert -SS_neg == SS
+    assert -(-(-(-system))) == system
+
+def test_DiscreteStateSpace_functions():
+    # https://in.mathworks.com/help/control/ref/statespacemodel.obsv.html
+    A_mat = Matrix([[-1.5, -2], [1, 0]])
+    B_mat = Matrix([0.5, 0])
+    C_mat = Matrix([[0, 1]])
+    D_mat = Matrix([1])
+    SS1 = DiscreteStateSpace(A_mat, B_mat, C_mat, D_mat)
+    SS2 = DiscreteStateSpace(Matrix([[1, 1], [4, -2]]),
+                             Matrix([[0, 1], [0, 2]]),
+                             Matrix([[-1, 1], [1, -1]]))
+    SS3 = DiscreteStateSpace(Matrix([[1, 1], [4, -2]]),
+                             Matrix([[1, -1], [1, -1]]))
+    SS4 = DiscreteStateSpace(Matrix([[a0, a1], [a2, a3]]),
+                             Matrix([[b1], [b2]]), Matrix([[c1, c2]]))
+
+    # Observability
+    assert SS1.is_observable() == True
+    assert SS2.is_observable() == False
+    assert SS1.observability_matrix() == Matrix([[0, 1], [1, 0]])
+    assert SS2.observability_matrix() == Matrix([[-1,  1], [ 1, -1], [ 3, -3], [-3,  3]])
+    assert SS1.observable_subspace() == [Matrix([[1], [0]]), Matrix([[0], [1]])]
+    assert SS2.observable_subspace() == [Matrix([[-1], [ 1]])]
+    raises(NotImplementedError, lambda: SS4.observable_subspace())
+    assert SS1.unobservable_subspace() == []
+    assert SS2.unobservable_subspace() == [Matrix([[1],[1]])]
+    raises(NotImplementedError, lambda: SS4.unobservable_subspace())
+
+    Qo = SS4.observability_matrix().subs([(a0, 0), (a1, -6), (a2, 1), (a3, -5), (c1, 0), (c2, 1)])
+    assert Qo == Matrix([[0, 1], [1, -5]])
+
+    ss_obs = StateSpace(Matrix([[1, 0, 1], [0,0,0],[0,0,-2]]), Matrix([1,1,0]),
+                        Matrix([1,1, Rational(1,3)]).T).to_observable_form()
+    A_obs = ss_obs.A[:2, :2]
+    A_nobs = ss_obs.A[2:, 2:]
+    assert A_obs.eigenvals() == {0: 1, 1: 1}
+    assert A_nobs.eigenvals() == {-2: 1}
+
+    # Controllability
+    assert SS1.is_controllable() == True
+    assert SS3.is_controllable() == False
+    assert SS1.controllability_matrix() ==  Matrix([[0.5, -0.75], [  0,   0.5]])
+    assert SS3.controllability_matrix() == Matrix([[1, -1, 2, -2], [1, -1, 2, -2]])
+    assert SS4.controllability_matrix() == \
+        Matrix([[b1, a0*b1 + a1*b2], [b2, a2*b1 + a3*b2]])
+    assert SS1.controllable_subspace() == [Matrix([[0.5], [  0]]), Matrix([[-0.75], [  0.5]])]
+    assert SS3.controllable_subspace() == [Matrix([[1], [1]])]
+    assert SS1.uncontrollable_subspace() == []
+    assert SS3.uncontrollable_subspace() == [Matrix([[-1], [1]])]
+    raises(NotImplementedError, lambda: SS4.uncontrollable_subspace()) # uncontrollable subspace fo symbols not implemented
+
+    Qc = SS4.controllability_matrix().subs([(a0, 0), (a1, 1), (a2, -6), (a3, -5), (b1, 0), (b2, 1)])
+    assert Qc == Matrix([[0, 1], [1, -5]])
+    ss_contr = StateSpace(Matrix([[1, 0, 1], [0,0,0],[0,0,-2]]), Matrix([1,1,0]), Matrix([1,1,0]).T).to_controllable_form()
+    A_contr = ss_contr.A[:2, :2]
+    A_ncontr = ss_contr.A[2:, 2:]
+    assert A_contr.eigenvals() == {0: 1, 1: 1}
+    assert A_ncontr.eigenvals() == {-2: 1}
+
+    # Append
+    A1 = Matrix([[0, 1], [1, 0]])
+    B1 = Matrix([[0], [1]])
+    C1 = Matrix([[0, 1]])
+    D1 = Matrix([[0]])
+    ss1 = DiscreteStateSpace(A1, B1, C1, D1)
+    ss2 = DiscreteStateSpace(Matrix([[1, 0], [0, 1]]), Matrix([[1], [0]]),
+                     Matrix([[1, 0]]), Matrix([[1]]))
+    ss3 = ss1.append(ss2)
+    ss4 = SS4.append(ss1)
+
+    assert ss3.num_states == ss1.num_states + ss2.num_states
+    assert ss3.num_inputs == ss1.num_inputs + ss2.num_inputs
+    assert ss3.num_outputs == ss1.num_outputs + ss2.num_outputs
+    assert ss3.state_matrix == Matrix([[0, 1, 0, 0], [1, 0, 0, 0],
+                                       [0, 0, 1, 0], [0, 0, 0, 1]])
+    assert ss3.input_matrix == Matrix([[0, 0], [1, 0], [0, 1], [0, 0]])
+    assert ss3.output_matrix == Matrix([[0, 1, 0, 0], [0, 0, 1, 0]])
+    assert ss3.feedforward_matrix == Matrix([[0, 0], [0, 1]])
+
+    cont_ss1 = StateSpace(A1, B1, C1, D1)
+    ss1_ = DiscreteStateSpace(A1, B1, C1, D1, sampling_time=2)
+    raises(TypeError, lambda: ss1.append(cont_ss1))  # TypeError if appending a continuous system to a discrete system
+    raises(TypeError, lambda: ss1.append(ss1_))  # TypeError if appending a discrete system with different sampling time
+
+    # Using symbolic matrices
+    assert ss4.num_states == SS4.num_states + ss1.num_states
+    assert ss4.num_inputs == SS4.num_inputs + ss1.num_inputs
+    assert ss4.num_outputs == SS4.num_outputs + ss1.num_outputs
+    assert ss4.state_matrix == Matrix([[a0, a1, 0, 0], [a2, a3, 0, 0],
+                                       [0, 0, 0, 1], [0, 0, 1, 0]])
+    assert ss4.input_matrix == Matrix([[b1, 0], [b2, 0], [0, 0], [0, 1]])
+    assert ss4.output_matrix == Matrix([[c1, c2, 0, 0], [0, 0, 0, 1]])
+    assert ss4.feedforward_matrix == Matrix([[0, 0], [0, 0]])
+
+def test_DiscreteStateSpace_series():
+    # For SISO Systems
+    a1 = Matrix([[0, 1], [1, 0]])
+    b1 = Matrix([[0], [1]])
+    c1 = Matrix([[0, 1]])
+    d1 = Matrix([[0]])
+    a2 = Matrix([[1, 0], [0, 1]])
+    b2 = Matrix([[1], [0]])
+    c2 = Matrix([[1, 0]])
+    d2 = Matrix([[1]])
+
+    ss1 = DiscreteStateSpace(a1, b1, c1, d1, T)
+    ss2 = DiscreteStateSpace(a2, b2, c2, d2, T)
+    tf1 = DiscreteTransferFunction(s, s+1, s, T)
+    ser1 = Series(ss1, ss2)
+    assert ser1 == Series(
+        DiscreteStateSpace(
+            Matrix([[0, 1], [1, 0]]), Matrix([[0], [1]]), Matrix([[0, 1]]),
+            Matrix([[0]]), T),
+        DiscreteStateSpace(
+            Matrix([[1, 0], [0, 1]]), Matrix([[1], [0]]), Matrix([[1, 0]]),
+            Matrix([[1]]), T),)
+    assert ser1.doit() == DiscreteStateSpace(
+        Matrix([[0, 1, 0, 0], [1, 0, 0, 0], [0, 1, 1, 0], [0, 0, 0, 1]]),
+        Matrix([[0], [1], [0], [0]]), Matrix([[0, 1, 1, 0]]), Matrix([[0]]), T)
+
+    assert ser1.num_inputs == 1
+    assert ser1.num_outputs == 1
+    assert ser1.rewrite(DiscreteTransferFunction) == \
+        DiscreteTransferFunction(z**2, z**3 - z**2 - z + 1, z, T)
+    raises(TypeError, lambda: ser1.rewrite(TransferFunction))  # Cannot rewrite to TransferFunction
+    ser2 = Series(ss1)
+    ser3 = Series(ser2, ss2)
+    assert ser3.doit() == ser1.doit()
+
+    # DiscreteTransferFunction interconnection with DiscreteStateSpace
+    ser_tf = Series(tf1, ss1)
+    assert ser_tf == Series(DiscreteTransferFunction(s, s + 1, s, T),
+                            DiscreteStateSpace(Matrix([
+                            [0, 1],[1, 0]]), Matrix([[0], [1]]),
+                            Matrix([[0, 1]]), Matrix([[0]]), T))
+    assert ser_tf.doit() == DiscreteStateSpace(
+                            Matrix([[-1, 0,  0], [0, 0,  1], [-1, 1, 0]]),
+                            Matrix([[1], [0], [1]]), Matrix([[0, 0, 1]]),
+                            Matrix([[0]]), T)
+    assert ser_tf.rewrite(DiscreteTransferFunction) == \
+        DiscreteTransferFunction(z**2, z**3 + z**2 - z - 1, z, T)
+
+    # For MIMO Systems
+    a3 = Matrix([[4, 1], [2, -3]])
+    b3 = Matrix([[5, 2], [-3, -3]])
+    c3 = Matrix([[2, -4], [0, 1]])
+    d3 = Matrix([[3, 2], [1, -1]])
+    a4 = Matrix([[-3, 4, 2], [-1, -3, 0], [2, 5, 3]])
+    b4 = Matrix([[1, 4], [-3, -3], [-2, 1]])
+    c4 = Matrix([[4, 2, -3], [1, 4, 3]])
+    d4 = Matrix([[-2, 4], [0, 1]])
+    ss3 = DiscreteStateSpace(a3, b3, c3, d3, T)
+    ss4 = DiscreteStateSpace(a4, b4, c4, d4, T)
+    ser4 = MIMOSeries(ss3, ss4)
+    assert ser4 == MIMOSeries(DiscreteStateSpace(Matrix([
+                    [4,  1],
+                    [2, -3]]), Matrix([
+                    [ 5,  2],
+                    [-3, -3]]), Matrix([
+                    [2, -4],
+                    [0,  1]]), Matrix([
+                    [3,  2],
+                    [1, -1]]), T), DiscreteStateSpace(Matrix([
+                    [-3,  4, 2],
+                    [-1, -3, 0],
+                    [ 2,  5, 3]]), Matrix([
+                    [ 1,  4],
+                    [-3, -3],
+                    [-2,  1]]), Matrix([
+                    [4, 2, -3],
+                    [1, 4,  3]]), Matrix([
+                    [-2, 4],
+                    [ 0, 1]]), T))
+    assert ser4.doit() == DiscreteStateSpace(
+                        Matrix([
+                        [4,   1,  0, 0,  0],
+                        [2,  -3,  0, 0,  0],
+                        [2,   0,  -3, 4,  2],
+                        [-6,  9, -1, -3,  0],
+                        [-4, 9,  2, 5, 3]]),
+                        Matrix([
+                        [5,   2],
+                        [-3,  -3],
+                        [7,   -2],
+                        [-12,  -3],
+                        [-5, -5]]),
+                        Matrix([
+                        [-4, 12, 4, 2, -3],
+                        [0, 1, 1, 4, 3]]),
+                        Matrix([
+                        [-2, -8],
+                        [1, -1]]), T)
+    assert ser4.num_inputs == ss3.num_inputs
+    assert ser4.num_outputs == ss4.num_outputs
+    ser5 = MIMOSeries(ss3)
+    ser6 = MIMOSeries(ser5, ss4)
+    assert ser6.doit() == ser4.doit()
+    assert ser6.rewrite(TransferFunctionMatrix) == \
+        ser4.rewrite(TransferFunctionMatrix)
+    tf2 = DiscreteTransferFunction(1, s, s, T)
+    tf3 = DiscreteTransferFunction(1, s+1, s, T)
+    tf4 = DiscreteTransferFunction(s, s+2, s, T)
+    tfm = TransferFunctionMatrix([[tf1, tf2], [tf3, tf4]])
+    ser6 = MIMOSeries(ss3, tfm)
+    assert ser6 == MIMOSeries(DiscreteStateSpace(Matrix([
+                        [4,  1],
+                        [2, -3]]), Matrix([
+                        [ 5,  2],
+                        [-3, -3]]), Matrix([
+                        [2, -4],
+                        [0,  1]]), Matrix([
+                        [3,  2],
+                        [1, -1]]), T), TransferFunctionMatrix((
+                        (DiscreteTransferFunction(s, s + 1, s, T),
+                         DiscreteTransferFunction(1, s, s, T)),
+                        (DiscreteTransferFunction(1, s + 1, s, T),
+                         DiscreteTransferFunction(s, s + 2, s, T)))))
+
+    # compatibility tests
+    ss5 = DiscreteStateSpace(a1, b1, c1, d1, 0.2)
+    cont_ss1 = StateSpace(a2, b2, c2, d2)
+
+    # SISO
+    raises(TypeError, lambda: Series(ss5, ss2))  # series with different sampling time
+    raises(TypeError, lambda: Series(ss1, cont_ss1))  # series with continuous state space
+
+    # MIMO
+    ss6 = DiscreteStateSpace(a3, b3, c3, d3)
+    cont_ss2 = StateSpace(a4, b4, c4, d4)
+    raises(TypeError, lambda: MIMOSeries(ss6, ss4))  # series with different sampling time
+    raises(TypeError, lambda: MIMOSeries(ss3, cont_ss2))  # series with continuous state space
+
+def test_DiscreteStateSpace_parallel():
+    # For SISO system
+    a1 = Matrix([[0, 1], [1, 0]])
+    b1 = Matrix([[0], [1]])
+    c1 = Matrix([[0, 1]])
+    d1 = Matrix([[0]])
+    a2 = Matrix([[1, 0], [0, 1]])
+    b2 = Matrix([[1], [0]])
+    c2 = Matrix([[1, 0]])
+    d2 = Matrix([[1]])
+    ss1 = DiscreteStateSpace(a1, b1, c1, d1, 0.12)
+    ss2 = DiscreteStateSpace(a2, b2, c2, d2, 0.12)
+    p1 = Parallel(ss1, ss2)
+    assert p1 == Parallel(DiscreteStateSpace(
+        Matrix([[0, 1], [1, 0]]), Matrix([[0], [1]]),
+        Matrix([[0, 1]]), Matrix([[0]]), 0.12),
+                          DiscreteStateSpace(
+        Matrix([[1, 0],[0, 1]]), Matrix([[1],[0]]),
+        Matrix([[1, 0]]), Matrix([[1]]), 0.12))
+    assert p1.doit() == DiscreteStateSpace(Matrix([
+                        [0, 1, 0, 0],
+                        [1, 0, 0, 0],
+                        [0, 0, 1, 0],
+                        [0, 0, 0, 1]]),
+                        Matrix([
+                        [0],
+                        [1],
+                        [1],
+                        [0]]),
+                        Matrix([[0, 1, 1, 0]]),
+                        Matrix([[1]]), 0.12)
+    assert p1.rewrite(DiscreteTransferFunction) == \
+        DiscreteTransferFunction(z*(z + 2), z**2 - 1, z, 0.12)
+    raises(TypeError, lambda: p1.rewrite(TransferFunction))  # cannot rewrite to TransferFunction
+
+    # Connecting DiscreteStateSpace with DiscreteTransferFunction
+    tf1 = DiscreteTransferFunction(s, s+1, s, 0.12)
+    p2 = Parallel(ss1, tf1)
+    assert p2 == Parallel(DiscreteStateSpace(Matrix([
+                        [0, 1],
+                        [1, 0]]), Matrix([
+                        [0],
+                        [1]]), Matrix([[0, 1]]), Matrix([[0]]), 0.12),
+                        DiscreteTransferFunction(s, s + 1, s, 0.12))
+    assert p2.doit() == DiscreteStateSpace(
+                        Matrix([
+                        [0, 1,  0],
+                        [1, 0,  0],
+                        [0, 0, -1]]),
+                        Matrix([
+                        [0],
+                        [1],
+                        [1]]),
+                        Matrix([[0, 1, -1]]),
+                        Matrix([[1]]), 0.12)
+    assert p2.rewrite(DiscreteTransferFunction) == \
+        DiscreteTransferFunction(z**2, z**2 - 1, z, 0.12)
+
+    # For MIMO
+    a3 = Matrix([[4, 1], [2, -3]])
+    b3 = Matrix([[5, 2], [-3, -3]])
+    c3 = Matrix([[2, -4], [0, 1]])
+    d3 = Matrix([[3, 2], [1, -1]])
+    a4 = Matrix([[-3, 4, 2], [-1, -3, 0], [2, 5, 3]])
+    b4 = Matrix([[1, 4], [-3, -3], [-2, 1]])
+    c4 = Matrix([[4, 2, -3], [1, 4, 3]])
+    d4 = Matrix([[-2, 4], [0, 1]])
+    ss3 = DiscreteStateSpace(a3, b3, c3, d3, 0.12)
+    ss4 = DiscreteStateSpace(a4, b4, c4, d4, 0.12)
+    p3 = MIMOParallel(ss3, ss4)
+    assert p3 == MIMOParallel(DiscreteStateSpace(Matrix([
+                        [4,  1],
+                        [2, -3]]), Matrix([
+                        [ 5,  2],
+                        [-3, -3]]), Matrix([
+                        [2, -4],
+                        [0,  1]]), Matrix([
+                        [3,  2],
+                        [1, -1]]), 0.12), DiscreteStateSpace(Matrix([
+                        [-3,  4, 2],
+                        [-1, -3, 0],
+                        [ 2,  5, 3]]), Matrix([
+                        [ 1,  4],
+                        [-3, -3],
+                        [-2,  1]]), Matrix([
+                        [4, 2, -3],
+                        [1, 4,  3]]), Matrix([
+                        [-2, 4],
+                        [ 0, 1]]), 0.12))
+    assert p3.doit() == DiscreteStateSpace(Matrix([
+                        [4, 1, 0, 0, 0],
+                        [2, -3, 0, 0, 0],
+                        [0, 0, -3, 4, 2],
+                        [0, 0, -1, -3, 0],
+                        [0, 0, 2, 5, 3]]),
+                        Matrix([
+                        [5, 2],
+                        [-3, -3],
+                        [1, 4],
+                        [-3, -3],
+                        [-2, 1]]),
+                        Matrix([
+                        [2, -4, 4, 2, -3],
+                        [0, 1, 1, 4, 3]]),
+                        Matrix([
+                        [1, 6],
+                        [1, 0]]), 0.12)
+
+    # Using StateSpace with MIMOParallel.
+    tf2 = DiscreteTransferFunction(1, s, s, 0.12)
+    tf3 = DiscreteTransferFunction(1, s + 1, s, 0.12)
+    tf4 = DiscreteTransferFunction(s, s + 2, s, 0.12)
+    tfm = TransferFunctionMatrix([[tf1, tf2], [tf3, tf4]])
+    p4 = MIMOParallel(tfm, ss3)
+    assert p4 == MIMOParallel(TransferFunctionMatrix((
+                        (DiscreteTransferFunction(s, s + 1, s, 00.12),
+                         DiscreteTransferFunction(1, s, s, 0.12)),
+                        (DiscreteTransferFunction(1, s + 1, s, 0.12),
+                         DiscreteTransferFunction(s, s + 2, s, 0.12)))),
+                        DiscreteStateSpace(Matrix([
+                        [4, 1],
+                        [2, -3]]), Matrix([
+                        [5, 2],
+                        [-3, -3]]), Matrix([
+                        [2, -4],
+                        [0, 1]]), Matrix([
+                        [3, 2],
+                        [1, -1]]), 0.12))
+
+    # compatibility tests
+    ss5 = DiscreteStateSpace(a1, b1, c1, d1, 0.33)
+    cont_ss1 = DiscreteStateSpace(a2, b2, c2, d2)
+
+    # SISO
+    raises(TypeError, lambda: Parallel(ss5, ss2))  # parallel with different sampling time
+    raises(TypeError, lambda: Parallel(ss1, cont_ss1))  # parallel with continuous state space
+
+    # MIMO
+    ss6 = DiscreteStateSpace(a3, b3, c3, d3, 0.33)
+    cont_ss2 = DiscreteStateSpace(a4, b4, c4, d4)
+    raises(TypeError, lambda: MIMOParallel(ss6, ss4))  # parallel with different sampling time
+    raises(TypeError, lambda: MIMOParallel(ss3, cont_ss2))  # parallel with continuous state space
+
+def test_DiscreteStateSpace_feedback():
+    # For SISO
+    a1 = Matrix([[0, 1], [1, 0]])
+    b1 = Matrix([[0], [1]])
+    c1 = Matrix([[0, 1]])
+    d1 = Matrix([[0]])
+    a2 = Matrix([[1, 0], [0, 1]])
+    b2 = Matrix([[1], [0]])
+    c2 = Matrix([[1, 0]])
+    d2 = Matrix([[1]])
+    ss1 = DiscreteStateSpace(a1, b1, c1, d1, T)
+    ss2 = DiscreteStateSpace(a2, b2, c2, d2, T)
+    fd1 = Feedback(ss1, ss2)
+
+    # Negative feedback
+    assert fd1 == Feedback(
+        DiscreteStateSpace(
+            Matrix([[0, 1], [1, 0]]), Matrix([[0], [1]]),
+            Matrix([[0, 1]]), Matrix([[0]]), T),
+        DiscreteStateSpace(
+            Matrix([[1, 0],[0, 1]]), Matrix([[1],[0]]),
+            Matrix([[1, 0]]), Matrix([[1]]), T), -1)
+    assert fd1.doit() == DiscreteStateSpace(Matrix([
+                            [0,  1,  0, 0],
+                            [1, -1, -1, 0],
+                            [0,  1,  1, 0],
+                            [0,  0,  0, 1]]), Matrix([
+                            [0],
+                            [1],
+                            [0],
+                            [0]]), Matrix(
+                            [[0, 1, 0, 0]]), Matrix(
+                            [[0]]), T)
+    assert fd1.rewrite(DiscreteTransferFunction) == \
+        DiscreteTransferFunction(z*(z - 1), z**3 - z + 1, z, T)
+    raises(TypeError, lambda: fd1.rewrite(TransferFunction))  # Cannot rewrite to TransferFunction
+
+    # Positive Feedback
+    fd2 = Feedback(ss1, ss2, 1)
+    assert fd2.doit() == DiscreteStateSpace(Matrix([
+                            [0, 1, 0, 0],
+                            [1, 1, 1, 0],
+                            [0, 1, 1, 0],
+                            [0, 0, 0, 1]]), Matrix([
+                            [0],
+                            [1],
+                            [0],
+                            [0]]), Matrix(
+                            [[0, 1, 0, 0]]), Matrix(
+                            [[0]]), T)
+    assert fd2.rewrite(DiscreteTransferFunction) == \
+        DiscreteTransferFunction(z*(z - 1), z**3 - 2*z**2 - z + 1, z, T)
+
+    # Connection with DiscreteTransferFunction
+    tf1 = DiscreteTransferFunction(s, s+1, s, T)
+    fd3 = Feedback(ss1, tf1)
+    assert fd3 == Feedback(DiscreteStateSpace(Matrix([
+                            [0, 1],
+                            [1, 0]]), Matrix([
+                            [0],
+                            [1]]), Matrix([[0, 1]]), Matrix([[0]]), T),
+                            DiscreteTransferFunction(s, s + 1, s, T), -1)
+    assert fd3.doit() == DiscreteStateSpace(Matrix([
+                            [0,  1,  0],
+                            [1, -1,  1],
+                            [0,  1, -1]]), Matrix([
+                            [0],
+                            [1],
+                            [0]]), Matrix(
+                            [[0, 1, 0]]), Matrix(
+                            [[0]]), T)
+
+    # For MIMO
+    a3 = Matrix([[4, 1], [2, -3]])
+    b3 = Matrix([[5, 2], [-3, -3]])
+    c3 = Matrix([[2, -4], [0, 1]])
+    d3 = Matrix([[3, 2], [1, -1]])
+    a4 = Matrix([[-3, 4, 2], [-1, -3, 0], [2, 5, 3]])
+    b4 = Matrix([[1, 4], [-3, -3], [-2, 1]])
+    c4 = Matrix([[4, 2, -3], [1, 4, 3]])
+    d4 = Matrix([[-2, 4], [0, 1]])
+    ss3 = DiscreteStateSpace(a3, b3, c3, d3, T)
+    ss4 = DiscreteStateSpace(a4, b4, c4, d4, T)
+
+    # Negative Feedback
+    fd4 = MIMOFeedback(ss3, ss4)
+    assert fd4 == MIMOFeedback(DiscreteStateSpace(Matrix([
+                            [4,  1],
+                            [2, -3]]), Matrix([
+                            [ 5,  2],
+                            [-3, -3]]), Matrix([
+                            [2, -4],
+                            [0,  1]]), Matrix([
+                            [3,  2],
+                            [1, -1]]), T), DiscreteStateSpace(Matrix([
+                            [-3,  4, 2],
+                            [-1, -3, 0],
+                            [ 2,  5, 3]]), Matrix([
+                            [ 1,  4],
+                            [-3, -3],
+                            [-2,  1]]), Matrix([
+                            [4, 2, -3],
+                            [1, 4,  3]]), Matrix([
+                            [-2, 4],
+                            [ 0, 1]]), T), -1)
+    assert fd4.doit() == DiscreteStateSpace(Matrix([
+                            [Rational(3), Rational(-3, 4), Rational(-15, 4),
+                            Rational(-37, 2), Rational(-15)],
+                            [Rational(7, 2), Rational(-39, 8), Rational(9, 8),
+                             Rational(39, 4), Rational(9)],
+                            [Rational(3), Rational(-41, 4), Rational(-45, 4),
+                            Rational(-51, 2), Rational(-19)],
+                            [Rational(-9, 2), Rational(129, 8), Rational(73, 8),
+                            Rational(171, 4), Rational(36)],
+                            [Rational(-3, 2), Rational(47, 8), Rational(31, 8),
+                             Rational(85, 4), Rational(18)]]), Matrix([
+                            [Rational(-1, 4), Rational(19, 4)],
+                            [Rational(3, 8), Rational(-21, 8)],
+                            [Rational(1, 4), Rational(29, 4)],
+                            [Rational(3, 8), Rational(-93, 8)],
+                            [Rational(5, 8), Rational(-35, 8)]]), Matrix([
+                            [Rational(1), Rational(-15, 4), Rational(-7, 4),
+                             Rational(-21, 2), Rational(-9)],
+                            [Rational(1, 2), Rational(-13, 8), Rational(-13, 8),
+                             Rational(-19, 4), Rational(-3)]]), Matrix([
+                            [Rational(-1, 4), Rational(11, 4)],
+                            [Rational(1, 8), Rational(9, 8)]]), T)
+
+    # Positive Feedback
+    fd5 = MIMOFeedback(ss3, ss4, 1)
+    assert fd5.doit() == DiscreteStateSpace(Matrix([
+                            [Rational(4, 7), Rational(62, 7), Rational(1),
+                             Rational(-8), Rational(-69, 7)],
+                            [Rational(32, 7), Rational(-135, 14),
+                             Rational(-3, 2), Rational(3), Rational(36, 7)],
+                            [Rational(-10, 7), Rational(41, 7), Rational(-4),
+                             Rational(-12), Rational(-97, 7)],
+                            [Rational(12, 7), Rational(-111, 14),
+                             Rational(-5, 2), Rational(18), Rational(171, 7)],
+                            [Rational(2, 7), Rational(-29, 14), Rational(-1, 2),
+                             Rational(10), Rational(81, 7)]]), Matrix([
+                            [Rational(6, 7), Rational(-17, 7)],
+                            [Rational(-9, 14), Rational(15, 14)],
+                            [Rational(6, 7), Rational(-31, 7)],
+                            [Rational(-27, 14), Rational(87, 14)],
+                            [Rational(-15, 14), Rational(25, 14)]]), Matrix([
+                            [Rational(-2, 7), Rational(11, 7), Rational(1),
+                             Rational(-4), Rational(-39, 7)],
+                            [Rational(-2, 7), Rational(15, 14), Rational(-1, 2),
+                             Rational(-3), Rational(-18, 7)]]), Matrix([
+                            [Rational(4, 7), Rational(-9, 7)],
+                            [Rational(1, 14), Rational(-11, 14)]]), T)
+
+    # compatibility tests
+    ss5 = DiscreteStateSpace(a1, b1, c1, d1, 0.12)
+    cont_ss1 = DiscreteStateSpace(a2, b2, c2, d2)
+
+    # SISO
+    raises(TypeError, lambda: Feedback(ss5, ss2))  # feedback with different sampling time
+    raises(TypeError, lambda: Feedback(ss1, cont_ss1))  # feedback with continuous state space
+
+    # MIMO
+    ss6 = DiscreteStateSpace(a3, b3, c3, d3, 0.12)
+    cont_ss2 = DiscreteStateSpace(a4, b4, c4, d4)
+    raises(TypeError, lambda: MIMOFeedback(ss6, ss4))  # feedback with different sampling time
+    raises(TypeError, lambda: MIMOFeedback(ss3, cont_ss2))  # feedback with continuous state space
+
+def test_DiscreteStateSpace_stability():
+    # TODO after implementing stability methods for DiscreteStateSpace
+    pass

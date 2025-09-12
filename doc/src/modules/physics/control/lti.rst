@@ -42,7 +42,15 @@ lti
 .. autoclass:: MIMOFeedback
    :members:
 
+.. autofunction:: create_state_space
+
+.. autoclass:: StateSpaceBase
+   :members:
+
 .. autoclass:: StateSpace
+   :members:
+
+.. autoclass:: DiscreteStateSpace
    :members:
 
 .. autofunction:: gbt
