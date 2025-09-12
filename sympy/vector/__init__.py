@@ -9,7 +9,8 @@ from sympy.vector.functions import (express, matrix_to_vector,
                                     laplacian, is_conservative,
                                     is_solenoidal, scalar_potential,
                                     directional_derivative,
-                                    scalar_potential_difference)
+                                    scalar_potential_difference,
+                                    surface_param_eq)
 from sympy.vector.point import Point
 from sympy.vector.orienters import (AxisOrienter, BodyOrienter,
                                     SpaceOrienter, QuaternionOrienter)
