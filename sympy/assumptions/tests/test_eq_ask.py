@@ -1,7 +1,7 @@
 # sympy/assumptions/tests/test_euf_propagation.py
 
 from sympy.assumptions.euf_ask import euf_ask
-from sympy.assumptions.ask import Q
+from sympy.assumptions.ask import ask, Q
 from sympy import symbols
 from sympy.testing.pytest import raises
 
@@ -181,3 +181,10 @@ def test_edge_cases():
 
     # x = x should always be true (reflexivity)
     assert euf_ask(Q.prime(x), Q.prime(x) & Q.eq(x, x)) is True
+
+
+def test_euf_integer_rational_irrational_real():
+    # Rational, irrational, real
+    assert ask(Q.real(x), Q.rational(y) & Q.eq(x, y)) is True
+    assert ask(Q.real(x), Q.integer(y) & Q.eq(x, y)) is True
+    assert ask(Q.rational(x), Q.integer(y) & Q.eq(x, y)) is True

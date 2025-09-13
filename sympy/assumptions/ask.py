@@ -515,7 +515,7 @@ def ask(proposition, assumptions=True, context=global_assumptions):
             return res
     except UnhandledInput:
         try:
-            res = euf_ask(proposition, assumptions=assumptions, context=context)
+            res = satask(proposition, assumptions=assumptions, use_euf_theory=True)
             if res is not None:
                 return res
         except EUFUnhandledInput:
