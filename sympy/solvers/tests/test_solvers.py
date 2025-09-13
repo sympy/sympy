@@ -2720,3 +2720,9 @@ def test_solve_Piecewise():
         (46*x - 3*(x - 6)**2/2 - 276, (x >= 6) & (x < 10)),
         (0, x < 10),  # this will simplify away
         (S.NaN,True)))
+
+def test_issue_8397():
+    try:
+        nsolve(Eq(-x - 1, -x + 1), 10)  # Attempt to solve a contradiction
+    except ValueError as e:
+        assert str(e) == "the equation has no solution"
