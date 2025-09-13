@@ -11,11 +11,12 @@ from sympy.logic.algorithms.euf_theory import EUFUnhandledInput
 from sympy.assumptions.assume import AppliedPredicate
 import sympy.core.random as random
 from sympy.logic.inference import satisfiable
+from sympy.external import import_module
 
 
 # Try to import Z3 for comparison
 try:
-    import z3
+    z3 = import_module("z3")
     Z3_AVAILABLE = True
 except ImportError:
     Z3_AVAILABLE = False
