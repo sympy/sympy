@@ -37,7 +37,6 @@ Doctest:
 
 from sympy.assumptions.assume import global_assumptions, AppliedPredicate
 from sympy.assumptions.cnf import CNF, EncodedCNF
-from sympy.assumptions.ask import Q
 from sympy.logic.inference import satisfiable
 from sympy.logic.algorithms.euf_theory import EUFUnhandledInput
 from sympy.matrices.kind import MatrixKind
