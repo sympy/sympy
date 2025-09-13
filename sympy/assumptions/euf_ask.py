@@ -44,8 +44,6 @@ from sympy.matrices.kind import MatrixKind
 from sympy.core.kind import NumberKind
 from sympy.core.singleton import S
 
-# Allowed binary preds
-ALLOWED_BIN_PRED = {Q.eq, Q.ne}
 
 def euf_ask(proposition, assumptions=True, context=global_assumptions):
     """

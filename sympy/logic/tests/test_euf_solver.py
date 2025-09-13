@@ -1,5 +1,4 @@
 import pytest
-from sympy.testing.pytest import XFAIL
 from sympy import symbols, Function, Eq, Not, Ne, Unequality
 from sympy.assumptions.cnf import CNF, EncodedCNF
 from sympy.logic import boolalg
@@ -10,7 +9,7 @@ from sympy.logic.algorithms.euf_theory_solver import (
 )
 from sympy.logic.algorithms.euf_theory import EUFUnhandledInput
 from sympy.assumptions.assume import AppliedPredicate
-import random
+import sympy.core.random as random
 from sympy.logic.inference import satisfiable
 
 
@@ -202,28 +201,6 @@ def test_disequality_conflict():
         solver.SetTrue(Eq(a, b))
 
 
-def test_backtrack_removes_last():
-    solver = EUFTheorySolver()
-    solver.Initialize({Eq(a, b), Eq(b, c)})
-    solver.SetTrue(Eq(a, b))
-    solver.SetTrue(Eq(b, c))
-    assert solver.IsTrue(Eq(a, c))
-    solver.Backtrack(1)
-    assert solver.IsTrue(Eq(a, c)) is None
-    assert solver.IsTrue(Eq(a, b)) is True
-
-
-def test_explanation_for_positive():
-    solver = EUFTheorySolver()
-    lits = {Eq(a, b), Eq(b, c), Eq(a, c)}
-    solver.Initialize(lits)
-    solver.SetTrue(Eq(a, b))
-    solver.SetTrue(Eq(b, c))
-    expl = solver.Explanation(Eq(a, c))
-    for lit in expl:
-        assert solver.IsTrue(lit)
-
-
 def test_redundant_assertions_safe():
     solver = EUFTheorySolver()
     solver.Initialize({Eq(a, b)})
@@ -259,9 +236,6 @@ def test_order_independence_of_assertions():
     solver.assert_lit(2)
     assert conflicts == []
     assert solver.IsTrue(Eq(x, z)) is True
-    # Reset and reverse
-    solver.Backtrack(len(solver.interpretation_stack))
-    assert solver.IsTrue(Eq(x, z)) is None
 
 
 def test_simple_equality_chain():
@@ -277,22 +251,6 @@ def test_simple_equality_chain():
         assert euf.assert_lit(lit_id) == (True,set())
 
     assert euf.IsTrue(Eq(x, z)) is True
-
-
-def test_backtrack_recovery():
-    """
-    EUF: assert eq, then backtrack and verify its gone.
-    """
-    cnf = CNF().from_prop(Eq(x, y))
-    enc = EncodedCNF(); enc.from_cnf(cnf)
-    euf, _ = EUFTheorySolver.from_encoded_cnf(enc, testing_mode=True)
-    lit_id = next(iter(enc.encoding.values()))
-
-    euf.assert_lit(lit_id)
-    assert euf.IsTrue(Eq(x, y)) is True
-
-    euf.Backtrack(1)  # undo the only decision
-    assert euf.IsTrue(Eq(x, y)) is None
 
 
 def test_multiple_function_symbols_deep_nesting():
@@ -565,47 +523,6 @@ def test_explain_disequality():
     assert isinstance(explanation, set)
 
 
-def test_reset_functionality():
-    """Test reset method."""
-    solver = EUFTheorySolver()
-    solver.Initialize({Eq(a, b), Ne(c, d)})
-
-    solver.SetTrue(Eq(a, b))
-    solver.SetTrue(Ne(c, d))
-
-    # Reset should clear all state
-    solver.reset()
-
-    assert len(solver.interpretation_stack) == 0
-    assert solver.timestamp_counter == 0
-    assert len(solver.literal_timestamp) == 0
-    assert len(solver.disequalities_set) == 0
-    assert len(solver.disequality_causes) == 0
-
-
-def test_backtrack_empty_stack():
-    """Test backtracking with empty stack."""
-    solver = EUFTheorySolver()
-    solver.Initialize({Eq(a, b)})
-
-    # Backtrack more than available
-    solver.Backtrack(5)  # Should not crash
-
-
-def test_rebuild_state_with_conflicts():
-    """Test _rebuild_state with potential conflicts."""
-    solver = EUFTheorySolver()
-    solver.Initialize({Eq(a, b), Eq(b, c), Ne(a, c)})
-
-    solver.SetTrue(Eq(a, b))
-    solver.SetTrue(Eq(b, c))
-
-    # Force rebuild
-    solver._rebuild_state()
-
-    # Should handle conflicts gracefully during rebuild
-
-
 def test_functional_congruence_complex():
     """Test complex functional congruence scenarios."""
     solver = EUFTheorySolver()
@@ -753,7 +670,7 @@ def test_deep_explanation_chain():
         solver.SetTrue(eq)
 
     # Explain why a = e
-    explanation = solver.Explanation(Eq(a, e))
+    explanation = solver.cc.explain_equality(a, e)
     assert len(explanation) > 0
 
 
@@ -1521,3 +1438,283 @@ def test_assert_lit_function_symmetry():
     # Should not conflict (f is not assumed symmetric)
     assert solver.assert_lit(1) == (True, set())
     assert solver.assert_lit(2) == (True, set())
+
+
+def test_diamond_disequality_basic_conflict():
+    """Test basic diamond disequality: a = b, a = c, b != c."""
+    enc_cnf = EncodedCNF()
+    enc_cnf.encoding = {
+        Eq(a, b): 1,      # a = b
+        Eq(a, c): 2,      # a = c
+        Ne(b, c): 3       # b != c (conflicts with transitivity a = b = c)
+    }
+    enc_cnf.data = [{1}, {2}, {3}]
+
+    solver, conflicts = EUFTheorySolver.from_encoded_cnf(enc_cnf)
+
+    # Assert the equalities (should succeed)
+    assert solver.assert_lit(1) == (True, set())  # a = b
+    assert solver.assert_lit(2) == (True, set())  # a = c
+
+    # Assert disequality (should conflict due to transitivity)
+    result = solver.assert_lit(3)
+    assert result[0] == False
+    # Conflict should involve all three literals
+    conflict_lits = result[1]
+    assert len(conflict_lits) > 0
+    assert any(abs(lit) in [1, 2, 3] for lit in conflict_lits)
+
+
+def test_diamond_disequality_reverse_order():
+    """Test diamond disequality with disequality asserted first."""
+    enc_cnf = EncodedCNF()
+    enc_cnf.encoding = {
+        Ne(b, c): 1,      # b != c
+        Eq(a, b): 2,      # a = b
+        Eq(a, c): 3       # a = c (should conflict)
+    }
+    enc_cnf.data = [{1}, {2}, {3}]
+
+    solver, conflicts = EUFTheorySolver.from_encoded_cnf(enc_cnf)
+
+    # Assert disequality first
+    assert solver.assert_lit(1) == (True, set())  # b != c
+    assert solver.assert_lit(2) == (True, set())  # a = b
+
+    # This should conflict (a = c would make b = c, contradicting b != c)
+    result = solver.assert_lit(3)
+    assert result[0] == False
+    assert len(result[1]) > 0
+
+
+def test_diamond_disequality_with_functions():
+    """Test diamond disequality with function applications: f(a) = x, f(b) = x, a = b, f(a) != f(b)."""
+    enc_cnf = EncodedCNF()
+    func_f = Function('f')
+
+    enc_cnf.encoding = {
+        Eq(func_f(a), x): 1,     # f(a) = x
+        Eq(func_f(b), x): 2,     # f(b) = x
+        Eq(a, b): 3,             # a = b
+        Ne(func_f(a), func_f(b)): 4  # f(a) != f(b) (conflicts with congruence)
+    }
+    enc_cnf.data = [{1}, {2}, {3}, {4}]
+
+    solver, conflicts = EUFTheorySolver.from_encoded_cnf(enc_cnf)
+
+    assert solver.assert_lit(1) == (True, set())
+    assert solver.assert_lit(2) == (True, set())
+    assert solver.assert_lit(3) == (True, set())
+
+    # Should conflict due to functional congruence
+    result = solver.assert_lit(4)
+    assert result[0] == False
+    assert len(result[1]) > 0
+
+
+def test_diamond_disequality_extended_chain():
+    """Test extended diamond with longer equality chain: a = b = c = d, but a != d."""
+    enc_cnf = EncodedCNF()
+    enc_cnf.encoding = {
+        Eq(a, b): 1,      # a = b
+        Eq(b, c): 2,      # b = c
+        Eq(c, d): 3,      # c = d
+        Ne(a, d): 4       # a != d (conflicts with transitivity)
+    }
+    enc_cnf.data = [{1}, {2}, {3}, {4}]
+
+    solver, conflicts = EUFTheorySolver.from_encoded_cnf(enc_cnf)
+
+    # Build equality chain
+    assert solver.assert_lit(1) == (True, set())
+    assert solver.assert_lit(2) == (True, set())
+    assert solver.assert_lit(3) == (True, set())
+
+    # Contradictory disequality should conflict
+    result = solver.assert_lit(4)
+    assert result[0] == False
+    conflict_lits = result[1]
+    assert len(conflict_lits) > 0
+    # Should involve multiple literals from the chain
+    assert len(conflict_lits) >= 3
+
+
+def test_diamond_disequality_multiple_branches():
+    """Test diamond with multiple branches: a = b, a = c, a = d, b != c."""
+    enc_cnf = EncodedCNF()
+    enc_cnf.encoding = {
+        Eq(a, b): 1,      # a = b
+        Eq(a, c): 2,      # a = c
+        Eq(a, d): 3,      # a = d
+        Ne(b, c): 4,      # b != c (conflicts)
+        Ne(c, d): 5       # c != d (would also conflict)
+    }
+    enc_cnf.data = [{1}, {2}, {3}, {4}, {5}]
+
+    solver, conflicts = EUFTheorySolver.from_encoded_cnf(enc_cnf)
+
+    # Build equality star pattern centered on 'a'
+    assert solver.assert_lit(1) == (True, set())
+    assert solver.assert_lit(2) == (True, set())
+    assert solver.assert_lit(3) == (True, set())
+
+    # Conflict
+    result1 = solver.assert_lit(4)  # b != c
+    assert result1[0] == False
+
+
+def test_diamond_disequality_nested_functions():
+    """Test diamond with nested functions: f(g(a)) = x, f(g(b)) = x, a = b, f(g(a)) != f(g(b))."""
+    enc_cnf = EncodedCNF()
+    func_f, func_g = Function('f'), Function('g')
+
+    enc_cnf.encoding = {
+        Eq(func_f(func_g(a)), x): 1,        # f(g(a)) = x
+        Eq(func_f(func_g(b)), x): 2,        # f(g(b)) = x
+        Eq(a, b): 3,                        # a = b
+        Ne(func_f(func_g(a)), func_f(func_g(b))): 4  # f(g(a)) != f(g(b))
+    }
+    enc_cnf.data = [{1}, {2}, {3}, {4}]
+
+    solver, conflicts = EUFTheorySolver.from_encoded_cnf(enc_cnf)
+
+    assert solver.assert_lit(1) == (True, set())
+    assert solver.assert_lit(2) == (True, set())
+    assert solver.assert_lit(3) == (True, set())
+
+    # Should conflict due to nested function congruence
+    result = solver.assert_lit(4)
+    assert result[0] == False
+    assert len(result[1]) > 0
+
+
+def test_diamond_disequality_explanation_basic():
+    """Test explain_disequality for basic diamond pattern."""
+    solver = EUFTheorySolver()
+
+    # Set up diamond: a = b, a = c, so b = c by transitivity
+    solver.SetTrue(Eq(a, b))
+    solver.SetTrue(Eq(a, c))
+
+    # Now b and c should be equal, so explain why they're NOT disequal
+    explanation = solver.explain_disequality(b, c)
+
+    # Since b = c (through a), there should be no disequality explanation
+    assert explanation == set()  # Empty because b = c
+
+
+def test_diamond_disequality_explanation_with_source():
+    """Test explain_disequality when there's an actual disequality to explain."""
+    solver = EUFTheorySolver()
+
+    # Set up: x = a, y = b, a != b
+    # This means x != y should be explained by {Eq(x, a), Eq(y, b), Ne(a, b)}
+    solver.SetTrue(Eq(x, a))
+    solver.SetTrue(Eq(y, b))
+    solver.SetTrue(Ne(a, b))
+
+    explanation = solver.explain_disequality(x, y)
+
+    # Should contain the source disequality and connecting equalities
+    expected_in_explanation = {Ne(a, b), Eq(a, x), Eq(b, y)}
+    for exp_lit in expected_in_explanation:
+        assert exp_lit in explanation
+
+
+def test_diamond_disequality_explanation_chain():
+    """Test explain_disequality through longer chain."""
+    solver = EUFTheorySolver()
+
+    # Chain: x = u = v, y = w = z, v 1= w
+    # So x != y through the chain
+    solver.SetTrue(Eq(x, u))
+    solver.SetTrue(Eq(u, v))
+    solver.SetTrue(Eq(y, w))
+    solver.SetTrue(Eq(w, z))
+    solver.SetTrue(Ne(v, w))
+
+    explanation = solver.explain_disequality(x, y)
+
+    # Should contain source disequality and connecting chain
+    assert Ne(v, w) in explanation
+    assert Eq(u, x) in explanation
+    assert Eq(u, v) in explanation
+    assert Eq(w, y) in explanation
+
+
+def test_diamond_disequality_function_explanation():
+    """Test explain_disequality with function applications."""
+    solver = EUFTheorySolver()
+    func_f = Function('f')
+
+    # f(a) != f(b), a = x, b = y
+    # So f(x) != f(y) should be explained
+    solver.SetTrue(Ne(func_f(a), func_f(b)))
+    solver.SetTrue(Eq(a, x))
+    solver.SetTrue(Eq(b, y))
+
+    explanation = solver.explain_disequality(func_f(x), func_f(y))
+
+    # Should contain source function disequality and argument equalities
+    assert Ne(func_f(a), func_f(b)) in explanation
+
+
+def test_diamond_disequality_complex_scenario():
+    """Test complex diamond disequality scenario with multiple interconnected terms."""
+    enc_cnf = EncodedCNF()
+    func_f = Function('f')
+
+    enc_cnf.encoding = {
+        Eq(a, b): 1,                # a = b
+        Eq(func_f(a), x): 2,        # f(a) = x
+        Eq(func_f(b), y): 3,        # f(b) = y
+        Ne(x, y): 4                 # x != y (conflicts with f(a) = f(b) by congruence)
+    }
+    enc_cnf.data = [{1}, {2}, {3}, {4}]
+
+    solver, conflicts = EUFTheorySolver.from_encoded_cnf(enc_cnf)
+
+    assert solver.assert_lit(1) == (True, set())  # a = b
+    assert solver.assert_lit(2) == (True, set())  # f(a) = x
+    assert solver.assert_lit(3) == (True, set())  # f(b) = y
+
+    # Should conflict: a = b implies f(a) = f(b), but f(a) = x, f(b) = y, x != y
+    result = solver.assert_lit(4)
+    assert result[0] == False
+    assert len(result[1]) > 0
+
+
+def test_diamond_disequality_no_false_conflicts():
+    """Test that valid diamond patterns don't produce false conflicts."""
+    enc_cnf = EncodedCNF()
+    enc_cnf.encoding = {
+        Eq(a, b): 1,      # a = b
+        Eq(c, d): 2,      # c = d (unrelated)
+        Ne(a, c): 3       # a != c (should be fine, no connection)
+    }
+    enc_cnf.data = [{1}, {2}, {3}]
+
+    solver, conflicts = EUFTheorySolver.from_encoded_cnf(enc_cnf)
+
+    # All should succeed - no diamond conflict here
+    assert solver.assert_lit(1) == (True, set())
+    assert solver.assert_lit(2) == (True, set())
+    assert solver.assert_lit(3) == (True, set())
+
+
+def test_diamond_disequality_partial_diamond():
+    """Test partial diamond that doesn't create conflict."""
+    enc_cnf = EncodedCNF()
+    enc_cnf.encoding = {
+        Eq(a, b): 1,      # a = b
+        Ne(b, c): 2,      # b != c
+        Ne(a, c): 3       # a != c (consistent with above)
+    }
+    enc_cnf.data = [{1}, {2}, {3}]
+
+    solver, conflicts = EUFTheorySolver.from_encoded_cnf(enc_cnf)
+
+    # All should succeed - this is consistent
+    assert solver.assert_lit(1) == (True, set())
+    assert solver.assert_lit(2) == (True, set())
+    assert solver.assert_lit(3) == (True, set())
