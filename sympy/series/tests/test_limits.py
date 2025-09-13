@@ -17,7 +17,7 @@ from sympy.functions.elementary.miscellaneous import (cbrt, real_root, sqrt)
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import (acos, acot, acsc, asec, asin,
                                                       atan, cos, cot, csc, sec, sin, tan)
-from sympy.functions.special.bessel import (besseli, bessely, besselj, besselk)
+from sympy.functions.special.bessel import (besseli, bessely, besselj, besselk, airyai, airybi)
 from sympy.functions.special.error_functions import (Ei, erf, erfc, erfi, fresnelc, fresnels)
 from sympy.functions.special.gamma_functions import (digamma, gamma, uppergamma)
 from sympy.functions.special.hyper import meijerg
@@ -798,6 +798,17 @@ def test_limit_with_Float():
 
 def test_issue_10610():
     assert limit(3**x*3**(-x - 1)*(x + 1)**2/x**2, x, oo) == Rational(1, 3)
+
+
+def test_issue_10804():
+    assert limit(airybi(x)*x**(S(1)/4)*exp(-2*x**Rational(3, 2)/3), x, oo)**2 == 1/pi
+    assert limit(2*airyai(x)*x**(S(1)/4)*exp(2*x**Rational(3, 2)/3), x, oo)**2 == 1/pi
+    assert limit(airyai(x), x, oo) == S.Zero
+    assert limit(airyai(x), x, -oo) == S.Zero
+    assert limit(airybi(x), x, oo) ==  S.Infinity
+    assert limit(airybi(x), x, -oo) == S.Zero
+    assert limit(airyai(x), x, 0) == 3**(S(5)/6)*gamma(S(1)/3)/(6*pi)
+    assert limit(airybi(x), x, 0) == 3**(S(1)/3)*gamma(S(1)/3)/(2*pi)
 
 
 def test_issue_10868():
