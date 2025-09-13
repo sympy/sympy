@@ -230,14 +230,7 @@ class ProofProducingCongruenceClosure(EUFCongruenceClosure):
             expr (sympy.Expr): Expression to check
 
         Returns:
-            bool: True if expr is a function application (e.g., f(x), g(a,b)), False otherwise
-
-        Example:
-            >>> f = Function('f')
-            >>> cc._is_function_application(f(x))
-            True
-            >>> cc._is_function_application(x)
-            False
+            bool: True if expr is a function application (e.g., f(x), g(a,b)), False otherwise.
         """
         return (hasattr(expr, 'func') and
                 hasattr(expr.func, '__name__') and
