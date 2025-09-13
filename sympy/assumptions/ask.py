@@ -457,6 +457,7 @@ def ask(proposition, assumptions=True, context=global_assumptions):
     from sympy.assumptions.satask import satask
     from sympy.assumptions.lra_satask import lra_satask
     from sympy.logic.algorithms.lra_theory import UnhandledInput
+    from sympy.logic.algorithms.euf_theory import EUFUnhandledInput
 
     proposition = sympify(proposition)
     assumptions = sympify(assumptions)
@@ -509,10 +510,16 @@ def ask(proposition, assumptions=True, context=global_assumptions):
 
     try:
         res = lra_satask(proposition, assumptions=assumptions, context=context)
+        if res is not None:
+            return res
     except UnhandledInput:
+        try:
+            res = satask(proposition, assumptions=assumptions, use_euf_theory=True)
+            if res is not None:
+                return res
+        except EUFUnhandledInput:
+            return None
         return None
-
-    return res
 
 
 def _ask_single_fact(key, local_facts):
