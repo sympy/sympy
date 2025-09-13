@@ -145,6 +145,7 @@ F, G, H, I, J, K = symbols('F G H I J K', cls=Function)
 variables = symbols('a b c d e f g h i j k l m n o p q r s t u v w x y z')
 a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z = variables
 
+
 def test_initialize_and_istrue():
     solver = EUFTheorySolver()
     eqs = {Eq(a, b), Eq(b, c), Eq(F(a), F(b))}
