@@ -2465,23 +2465,23 @@ def test_pretty_DiscreteTransferFunction():
     tf1 = DiscreteTransferFunction(s - 1, s + 1, s)
     assert upretty(tf1) == \
 """\
-s - 1         \n\
-───── -> st: 1\n\
-s + 1         \
+s - 1        \n\
+───── [st: 1]\n\
+s + 1        \
 """
     tf2 = DiscreteTransferFunction(2*s + 1, 3 - p, s, Symbol('T'))
     assert upretty(tf2) == \
 """\
-2⋅s + 1         \n\
-─────── -> st: T\n\
- 3 - p          \
+2⋅s + 1        \n\
+─────── [st: T]\n\
+ 3 - p         \
 """
     tf3 = DiscreteTransferFunction(p, p + 1, p, 0.1)
     assert upretty(tf3) == \
 """\
-  p                           \n\
-───── -> st: 0.100000000000000\n\
-p + 1                         \
+  p                          \n\
+───── [st: 0.100000000000000]\n\
+p + 1                        \
 """
 
 
@@ -2878,6 +2878,24 @@ def test_pretty_TransferFunctionMatrix():
         expected5
 
 
+    dtf1 = DiscreteTransferFunction(x + y, x - 2*y, y, 0.1)
+    dtf2 = DiscreteTransferFunction(x - y, x + y, y, 0.1)
+
+    expected6 = \
+"""\
+     ⎡ x + y ⎤         \n\
+     ⎢───────⎥         \n\
+     ⎢x - 2⋅y⎥         \n\
+     ⎢       ⎥         \n\
+     ⎢ x - y ⎥         \n\
+     ⎢ ───── ⎥         \n\
+     ⎣ x + y ⎦{k}      \n\
+[st: 0.100000000000000]\
+"""
+
+    assert upretty(TransferFunctionMatrix([[dtf1], [dtf2]])) == expected6
+
+
 def test_pretty_StateSpace():
     ss1 = StateSpace(Matrix([a]), Matrix([b]), Matrix([c]), Matrix([d]))
     A = Matrix([[0, 1], [1, 0]])
@@ -2934,27 +2952,33 @@ def test_pretty_DiscreteStateSpace():
 
     expected1 = \
 """\
-⎡[a]  [b]⎤         \n\
-⎢        ⎥ -> st: 1\n\
-⎣[c]  [d]⎦         \
+⎡[a]  [b]⎤\n\
+⎢        ⎥\n\
+⎣[c]  [d]⎦\n\
+          \n\
+ [st: 1]  \
 """
     expected2 = \
 """\
-⎡⎡0  1⎤  ⎡1⎤⎤         \n\
-⎢⎢    ⎥  ⎢ ⎥⎥         \n\
-⎢⎣1  0⎦  ⎣0⎦⎥ -> st: T\n\
-⎢           ⎥         \n\
-⎣[0  1]  [0]⎦         \
+⎡⎡0  1⎤  ⎡1⎤⎤\n\
+⎢⎢    ⎥  ⎢ ⎥⎥\n\
+⎢⎣1  0⎦  ⎣0⎦⎥\n\
+⎢           ⎥\n\
+⎣[0  1]  [0]⎦\n\
+             \n\
+   [st: T]   \
 """
     expected3 = \
 """\
-⎡⎡-1.5  -2⎤  ⎡0.5  0⎤⎤                         \n\
-⎢⎢        ⎥  ⎢      ⎥⎥                         \n\
-⎢⎣ 1    0 ⎦  ⎣ 0   1⎦⎥                         \n\
-⎢                    ⎥ -> st: 0.100000000000000\n\
-⎢  ⎡0  1⎤     ⎡2  2⎤ ⎥                         \n\
-⎢  ⎢    ⎥     ⎢    ⎥ ⎥                         \n\
-⎣  ⎣0  2⎦     ⎣1  1⎦ ⎦                         \
+⎡⎡-1.5  -2⎤  ⎡0.5  0⎤⎤ \n\
+⎢⎢        ⎥  ⎢      ⎥⎥ \n\
+⎢⎣ 1    0 ⎦  ⎣ 0   1⎦⎥ \n\
+⎢                    ⎥ \n\
+⎢  ⎡0  1⎤     ⎡2  2⎤ ⎥ \n\
+⎢  ⎢    ⎥     ⎢    ⎥ ⎥ \n\
+⎣  ⎣0  2⎦     ⎣1  1⎦ ⎦ \n\
+                       \n\
+[st: 0.100000000000000]\
 """
 
     assert upretty(ss1) == expected1

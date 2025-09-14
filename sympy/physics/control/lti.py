@@ -5017,15 +5017,17 @@ class TransferFunctionMatrix(MIMOLinearTimeInvariant):
         >>> M_2 = Matrix([[z/(z-1), z/(z-8)], [z**2/(z**2-2+1), z]])
         >>> M2_tf = TransferFunctionMatrix.from_Matrix(M_2, z, 0.1)
         >>> pprint(M2_tf, use_unicode=False)
-        [  z       z  ]
-        [-----   -----]
-        [z - 1   z - 8]
-        [             ]
-        [   2         ]
-        [  z       z  ]
-        [------    -  ]
-        [ 2        1  ]
-        [z  - 1       ]{k}, st: 0.1
+          [  z       z  ]
+          [-----   -----]
+          [z - 1   z - 8]
+          [             ]
+          [   2         ]
+          [  z       z  ]
+          [------    -  ]
+          [ 2        1  ]
+          [z  - 1       ]{k}
+        [st: 0.100000000000000]
+
 
 
         """

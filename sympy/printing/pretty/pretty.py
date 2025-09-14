@@ -1002,7 +1002,7 @@ class PrettyPrinter(Printer):
             result =  self._print(1)/self._print(expr.den)
 
         result = prettyForm(\
-            *result.right(f" -> st: {expr.sampling_time}"))
+            *result.right(f" [st: {expr.sampling_time}]"))
         return result
 
 
@@ -1123,7 +1123,7 @@ class PrettyPrinter(Printer):
         if expr.sampling_time == 0:
             return mat
 
-        return prettyForm(*mat.right(f", st: {expr.sampling_time}"))
+        return prettyForm(*mat.below(f"[st: {expr.sampling_time}]"))
 
     def _print_StateSpace(self, expr):
         from sympy.matrices.expressions.blockmatrix import BlockMatrix
@@ -1141,8 +1141,8 @@ class PrettyPrinter(Printer):
         C = expr._C
         D = expr._D
         mat = BlockMatrix([[A, B], [C, D]])
-        mat = self._print(mat)
-        return prettyForm(*mat.right(f" -> st: {expr.sampling_time}"))
+        mat: stringPict = self._print(mat)
+        return prettyForm(*mat.below(f"\n[st: {expr.sampling_time}]"))
 
     def _print_BasisDependent(self, expr):
         from sympy.vector import Vector
