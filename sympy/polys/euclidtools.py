@@ -4,7 +4,8 @@ from __future__ import annotations
 
 from typing import overload, Literal
 
-from sympy.polys.domains.domain import Domain, Er
+from sympy.polys.domains.domain import Domain, Er, Ef
+from sympy.polys.domains.field import Field
 from sympy.polys.densearith import (
     dup_sub_mul,
     dup_neg, dmp_neg,
@@ -18,7 +19,9 @@ from sympy.polys.densearith import (
     dup_prem, dmp_prem,
     dup_mul_ground, dmp_mul_ground,
     dmp_mul_term,
-    dup_quo_ground, dmp_quo_ground,
+    dup_exquo_ground,
+    dmp_quo_ground,
+    dmp_exquo_ground,
     dup_max_norm, dmp_max_norm)
 from sympy.polys.densebasic import (
     dup, dmp, _dup, _dmp,
@@ -50,9 +53,7 @@ from sympy.polys.polyerrors import (
     DomainError)
 
 
-
-
-def dup_half_gcdex(f, g, K):
+def dup_half_gcdex(f: dup[Ef], g: dup[Ef], K: Field[Ef]) -> tuple[dup[Ef], dup[Ef]]:
     """
     Half extended Euclidean algorithm in `F[x]`.
 
@@ -81,7 +82,7 @@ def dup_half_gcdex(f, g, K):
         f, g = g, r
         a, b = b, dup_sub_mul(a, q, b, K)
 
-    a = dup_quo_ground(a, dup_LC(f, K), K)
+    a = dup_exquo_ground(a, dup_LC(f, K), K)
     f = dup_monic(f, K)
 
     return a, f
@@ -310,7 +311,7 @@ def dmp_primitive_prs(f, g, u, K):
         raise MultivariatePolynomialError(f, g)
 
 
-def dup_inner_subresultants(f, g, K):
+def dup_inner_subresultants(f: dup[Er], g: dup[Er], K: Domain[Er]):
     """
     Subresultant PRS algorithm in `K[x]`.
 
@@ -375,7 +376,7 @@ def dup_inner_subresultants(f, g, K):
         b = -lc * c**d
 
         h = dup_prem(f, g, K)
-        h = dup_quo_ground(h, b, K)
+        h = dup_exquo_ground(h, b, K)
 
         lc = dup_LC(g, K)
 
@@ -769,7 +770,7 @@ def dmp_qq_collins_resultant(f, g, u, K0):
 
     c = K0.convert(cf**m * cg**n, K1)
 
-    return dmp_quo_ground(r, c, u - 1, K0)
+    return dmp_exquo_ground(r, c, u - 1, K0)
 
 
 @overload
