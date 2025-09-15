@@ -2035,14 +2035,11 @@ def test_lambert_bivariate():
         exp(-z + LambertW(2*z**4*exp(2*z))/2)/z]
     # cases when p != S.One
     # issue 4271
-    ans = solve((a/x + exp(x/2)).diff(x, 2), x)
-    x0 = (-a)**Rational(1, 3)
-    x1 = sqrt(3)*I
-    x2 = x0/6
-    assert ans == [
-        6*LambertW(x0/3),
-        6*LambertW(x2*(-x1 - 1)),
-        6*LambertW(x2*(x1 - 1))]
+    assert solve((a/x + exp(x/2)).diff(x, 2), x) == [
+        6*LambertW(-a**(S(1)/3)/3),
+        6*LambertW(a**(S(1)/3)*(1 - sqrt(3)*I)/6),
+        6*LambertW(a**(S(1)/3)*(1 + sqrt(3)*I)/6),
+    ]
     assert solve((1/x + exp(x/2)).diff(x, 2), x) == \
                 [6*LambertW(Rational(-1, 3)), 6*LambertW(Rational(1, 6) - sqrt(3)*I/6), \
                 6*LambertW(Rational(1, 6) + sqrt(3)*I/6), 6*LambertW(Rational(-1, 3), -1)]

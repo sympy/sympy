@@ -18,7 +18,7 @@ from sympy.functions.combinatorial.factorials import (rf, binomial, factorial)
 from sympy.functions.combinatorial.numbers import harmonic
 from sympy.functions.elementary.complexes import Abs, re
 from sympy.functions.elementary.exponential import (exp, log)
-from sympy.functions.elementary.hyperbolic import (sinh, tanh)
+from sympy.functions.elementary.hyperbolic import (sinh, tanh, coth)
 from sympy.functions.elementary.integers import floor
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
@@ -26,6 +26,7 @@ from sympy.functions.elementary.trigonometric import (cos, sin, atan)
 from sympy.functions.special.gamma_functions import (gamma, lowergamma)
 from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.functions.special.zeta_functions import zeta
+from sympy.functions.elementary.trigonometric import tan
 from sympy.integrals.integrals import Integral
 from sympy.logic.boolalg import And, Or
 from sympy.matrices.expressions.matexpr import MatrixSymbol
@@ -1567,7 +1568,7 @@ def test_summation_by_residues():
     assert eval_sum_residue(1 / (4*x**2 - 1), (x, -oo, oo)) == 0
     assert eval_sum_residue(x**2 / (x**2 - S(1)/4)**2, (x, -oo, oo)) == pi**2/2
     assert eval_sum_residue(1 / (4*x**2 - 1)**2, (x, -oo, oo)) == pi**2/8
-    assert eval_sum_residue(1 / ((x - S(1)/2)**2 + 1), (x, -oo, oo)) == pi*tanh(pi)
+    assert eval_sum_residue(1 / ((x - S(1)/2)**2 + 1), (x, -oo, oo)) == pi/coth(pi)
     assert eval_sum_residue(1 / x**2, (x, S(1), oo)) == pi**2/6
     assert eval_sum_residue(1 / x**4, (x, S(1), oo)) == pi**4/90
     assert eval_sum_residue(1 / x**2 / (x**2 + 4), (x, S(1), oo)) == \
@@ -1602,6 +1603,24 @@ def test_summation_by_residues():
     assert eval_sum_residue(1 / x**2, (x, S(3), oo)) == -S(5)/4 + pi**2/6
     assert eval_sum_residue((-1)**x / x**2, (x, S(1), oo)) == -pi**2/12
     assert eval_sum_residue((-1)**x / x**2, (x, S(2), oo)) == 1 - pi**2/12
+
+    # https://github.com/sympy/sympy/issues/27824
+    # even function which works for -oo to k
+    ans = Rational(1, 2) + pi/(2*tanh(pi))
+    assert eval_sum_residue((1/(k**2+1)), (k, -oo, S(0))) == ans
+    assert eval_sum_residue((1/(k**2+1)), (k, oo, -S(1))) == -ans  # Karr convention
+
+    # function which is neither even nor odd which works for -oo to k
+    assert eval_sum_residue(1 / (k**2 + 2*k +2), (k, -oo, S(0))) == 1 + pi/(2*tanh(pi))
+    assert eval_sum_residue(1 / (k**2 + 2*k +2), (k, -oo, -S(1))) == S.Half+pi/tanh(pi)/2
+
+    # odd function that cannot be made even returns None
+    assert eval_sum_residue(1/(k**3 + 1), (k, S(0), oo)) is None
+
+    # SO issue cited on #27827
+    assert summation(1 / ((k+1) ** 4 + 1), (k, -oo, oo)).simplify() == (
+        sqrt(2)*pi*(1 - I)*(I/tan(sqrt(2)*pi*(1 + I)/2) +
+        1/tan(sqrt(2)*pi*(1 - I)/2))/4)
 
 
 @slow

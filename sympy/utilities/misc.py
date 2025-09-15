@@ -8,6 +8,9 @@ import os
 import re as _re
 import struct
 from textwrap import fill, dedent
+from typing import TypeVar, Callable, Literal, SupportsIndex, SupportsInt, overload
+
+_CallableT = TypeVar("_CallableT", bound=Callable)
 
 
 class Undecidable(ValueError):
@@ -178,7 +181,7 @@ HASH_RANDOMIZATION = getattr(sys.flags, 'hash_randomization', False)
 _debug_tmp: list[str] = []
 _debug_iter = 0
 
-def debug_decorator(func):
+def debug_decorator(func: _CallableT) -> _CallableT:
     """If SYMPY_DEBUG is True, it will print a nice execution tree with
     arguments and results of all decorated functions, else do nothing.
     """
@@ -236,7 +239,7 @@ def debug_decorator(func):
     def decorated(*args, **kwargs):
         return maketree(func, *args, **kwargs)
 
-    return decorated
+    return decorated  # type: ignore
 
 
 def debug(*args):
@@ -497,7 +500,14 @@ def ordinal(num):
     return str(n) + suffix
 
 
-def as_int(n, strict=True):
+@overload
+def as_int(n: SupportsIndex, strict: Literal[True] = True) -> int:
+    ...
+@overload
+def as_int(n: SupportsInt, strict: Literal[False]) -> int:
+    ...
+
+def as_int(n: SupportsIndex | SupportsInt, strict: bool = True) -> int:
     """
     Convert the argument to a builtin integer.
 
@@ -551,7 +561,7 @@ def as_int(n, strict=True):
         try:
             if isinstance(n, bool):
                 raise TypeError
-            return operator.index(n)
+            return operator.index(n) # type: ignore
         except TypeError:
             raise ValueError('%s is not an integer' % (n,))
     else:
@@ -559,6 +569,6 @@ def as_int(n, strict=True):
             result = int(n)
         except TypeError:
             raise ValueError('%s is not an integer' % (n,))
-        if n - result:
+        if n - result: # type: ignore
             raise ValueError('%s is not an integer' % (n,))
         return result

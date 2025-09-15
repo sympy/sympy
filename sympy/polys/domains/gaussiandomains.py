@@ -1,113 +1,131 @@
 """Domains of Gaussian type."""
 
 from __future__ import annotations
+from typing import Generic, TypeVar, Any, TYPE_CHECKING
+
+from sympy.external.gmpy import MPZ, MPQ
 from sympy.core.numbers import I
+from sympy.core.expr import Expr
 from sympy.polys.polyclasses import DMP
 from sympy.polys.polyerrors import CoercionFailed
-from sympy.polys.domains.integerring import ZZ
-from sympy.polys.domains.rationalfield import QQ
+from sympy.polys.domains.integerring import ZZ, IntegerRing
+from sympy.polys.domains.rationalfield import QQ, RationalField
+from sympy.polys.domains.polynomialring import PolynomialRing
 from sympy.polys.domains.algebraicfield import AlgebraicField
 from sympy.polys.domains.domain import Domain
 from sympy.polys.domains.domainelement import DomainElement
 from sympy.polys.domains.field import Field
 from sympy.polys.domains.ring import Ring
+from sympy.polys.domains.ringextension import RingExtension
 
 
-class GaussianElement(DomainElement):
+Tdom = TypeVar('Tdom', MPZ, MPQ)
+Telem = TypeVar('Telem', bound="GaussianElement")
+
+
+if TYPE_CHECKING:
+    from typing import Self
+
+
+class GaussianElement(DomainElement, Generic[Tdom]):
     """Base class for elements of Gaussian type domains."""
-    base: Domain
-    _parent: Domain
+    base: Domain[Tdom]
+    _parent: GaussianDomain[Self, Tdom]
+    x: Tdom
+    y: Tdom
 
     __slots__ = ('x', 'y')
 
-    def __new__(cls, x, y=0):
+    def __new__(cls, x: Tdom | int, y: Tdom | int = 0):
         conv = cls.base.convert
         return cls.new(conv(x), conv(y))
 
     @classmethod
-    def new(cls, x, y):
+    def new(cls, x: Tdom, y: Tdom) -> Self:
         """Create a new GaussianElement of the same domain."""
         obj = super().__new__(cls)
         obj.x = x
         obj.y = y
         return obj
 
-    def parent(self):
+    def parent(self) -> Domain[Self]:
         """The domain that this is an element of (ZZ_I or QQ_I)"""
         return self._parent
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash((self.x, self.y))
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
         if isinstance(other, self.__class__):
             return self.x == other.x and self.y == other.y
         else:
             return NotImplemented
 
-    def __lt__(self, other):
+    def __lt__(self, other) -> bool:
         if not isinstance(other, GaussianElement):
             return NotImplemented
         return [self.y, self.x] < [other.y, other.x]
 
-    def __pos__(self):
+    def __pos__(self) -> Self:
         return self
 
-    def __neg__(self):
+    def __neg__(self) -> Self:
         return self.new(-self.x, -self.y)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "%s(%s, %s)" % (self._parent.rep, self.x, self.y)
 
-    def __str__(self):
-        return str(self._parent.to_sympy(self))
+    def __str__(self) -> str:
+        return str(self._parent.to_sympy(self)) # type: ignore
 
     @classmethod
-    def _get_xy(cls, other):
-        if not isinstance(other, cls):
-            try:
-                other = cls._parent.convert(other)
-            except CoercionFailed:
-                return None, None
-        return other.x, other.y
-
-    def __add__(self, other):
-        x, y = self._get_xy(other)
-        if x is not None:
-            return self.new(self.x + x, self.y + y)
+    def _get_xy(cls, other: GaussianElement[Tdom] | int) -> tuple[Tdom, Tdom] | None:
+        if isinstance(other, cls):
+            return other.x, other.y
         else:
+            try:
+                other_convert = cls._parent.convert(other)
+            except CoercionFailed:
+                return None
+            return other_convert.x, other_convert.y
+
+    def __add__(self, other: Self | int) -> Self:
+        other_conv = self._get_xy(other)
+        if other_conv is None:
             return NotImplemented
+        x, y = other_conv
+        return self.new(self.x + x, self.y + y)
 
     __radd__ = __add__
 
-    def __sub__(self, other):
-        x, y = self._get_xy(other)
-        if x is not None:
-            return self.new(self.x - x, self.y - y)
-        else:
+    def __sub__(self, other: Self | int) -> Self:
+        other_conv = self._get_xy(other)
+        if other_conv is None:
             return NotImplemented
+        x, y = other_conv
+        return self.new(self.x - x, self.y - y)
 
-    def __rsub__(self, other):
-        x, y = self._get_xy(other)
-        if x is not None:
-            return self.new(x - self.x, y - self.y)
-        else:
+    def __rsub__(self, other: Self | int) -> Self:
+        other_conv = self._get_xy(other)
+        if other_conv is None:
             return NotImplemented
+        x, y = other_conv
+        return self.new(x - self.x, y - self.y)
 
-    def __mul__(self, other):
-        x, y = self._get_xy(other)
-        if x is not None:
-            return self.new(self.x*x - self.y*y, self.x*y + self.y*x)
-        else:
+    def __mul__(self, other: Self | int) -> Self:
+        other_conv = self._get_xy(other)
+        if other_conv is None:
             return NotImplemented
+        x, y = other_conv
+        return self.new(self.x*x - self.y*y, self.x*y + self.y*x)
 
     __rmul__ = __mul__
 
-    def __pow__(self, exp):
+    def __pow__(self, exp: int) -> Self:
         if exp == 0:
-            return self.new(1, 0)
+            return self.new(self.base(1), self.base(0))
         if exp < 0:
-            self, exp = 1/self, -exp
+            self, exp = 1/self, -exp # type: ignore
         if exp == 1:
             return self
         pow2 = self
@@ -120,10 +138,10 @@ class GaussianElement(DomainElement):
             exp //= 2
         return prod
 
-    def __bool__(self):
+    def __bool__(self) -> bool:
         return bool(self.x) or bool(self.y)
 
-    def quadrant(self):
+    def quadrant(self) -> int:
         """Return quadrant index 0-3.
 
         0 is included in quadrant 0.
@@ -135,15 +153,18 @@ class GaussianElement(DomainElement):
         else:
             return 0 if self.x >= 0 else 2
 
-    def __rdivmod__(self, other):
+    def __divmod__(self, other: Self | int) -> tuple[Self, Self]:
+        raise NotImplementedError
+
+    def __rdivmod__(self, other: Self | int) -> tuple[Self, Self]:
         try:
-            other = self._parent.convert(other)
+            other_convert = self._parent.convert(other)
         except CoercionFailed:
             return NotImplemented
         else:
-            return other.__divmod__(self)
+            return other_convert.__divmod__(self)
 
-    def __rtruediv__(self, other):
+    def __rtruediv__(self, other: GaussianElement | int) -> GaussianRational:
         try:
             other = QQ_I.convert(other)
         except CoercionFailed:
@@ -151,24 +172,32 @@ class GaussianElement(DomainElement):
         else:
             return other.__truediv__(self)
 
-    def __floordiv__(self, other):
+    def __floordiv__(self, other: Self | int) -> Self:
         qr = self.__divmod__(other)
-        return qr if qr is NotImplemented else qr[0]
+        if qr is NotImplemented:
+            return NotImplemented
+        return qr[0]
 
-    def __rfloordiv__(self, other):
+    def __rfloordiv__(self, other: Self | int) -> Self:
         qr = self.__rdivmod__(other)
-        return qr if qr is NotImplemented else qr[0]
+        if qr is NotImplemented:
+            return NotImplemented
+        return qr[0]
 
-    def __mod__(self, other):
+    def __mod__(self, other: Self | int) -> Self:
         qr = self.__divmod__(other)
-        return qr if qr is NotImplemented else qr[1]
+        if qr is NotImplemented:
+            return NotImplemented
+        return qr[1]
 
-    def __rmod__(self, other):
+    def __rmod__(self, other: Self | int) -> Self:
         qr = self.__rdivmod__(other)
-        return qr if qr is NotImplemented else qr[1]
+        if qr is NotImplemented:
+            return NotImplemented
+        return qr[1]
 
 
-class GaussianInteger(GaussianElement):
+class GaussianInteger(GaussianElement[MPZ]):
     """Gaussian integer: domain element for :ref:`ZZ_I`
 
         >>> from sympy import ZZ_I
@@ -180,16 +209,17 @@ class GaussianInteger(GaussianElement):
     """
     base = ZZ
 
-    def __truediv__(self, other):
+    def __truediv__(self, other: GaussianElement | int) -> GaussianRational:
         """Return a Gaussian rational."""
         return QQ_I.convert(self)/other
 
-    def __divmod__(self, other):
+    def __divmod__(self, other: GaussianInteger | int) -> tuple[GaussianInteger, GaussianInteger]:
         if not other:
             raise ZeroDivisionError('divmod({}, 0)'.format(self))
-        x, y = self._get_xy(other)
-        if x is None:
+        other_conv = self._get_xy(other)
+        if other_conv is None:
             return NotImplemented
+        x, y = other_conv
 
         # multiply self and other by x - I*y
         # self/other == (a + I*b)/c
@@ -208,7 +238,7 @@ class GaussianInteger(GaussianElement):
         return q, self - q*other  # |r| < |other|
 
 
-class GaussianRational(GaussianElement):
+class GaussianRational(GaussianElement[MPQ]):
     """Gaussian rational: domain element for :ref:`QQ_I`
 
         >>> from sympy import QQ_I, QQ
@@ -220,19 +250,21 @@ class GaussianRational(GaussianElement):
     """
     base = QQ
 
-    def __truediv__(self, other):
+    def __truediv__(self, other: GaussianElement | int) -> Self:
         """Return a Gaussian rational."""
         if not other:
             raise ZeroDivisionError('{} / 0'.format(self))
-        x, y = self._get_xy(other)
-        if x is None:
+
+        other_conv = self._get_xy(other)
+        if other_conv is None:
             return NotImplemented
+        x, y = other_conv
+
         c = x*x + y*y
 
-        return GaussianRational((self.x*x + self.y*y)/c,
-                                (-self.x*y + self.y*x)/c)
+        return self.new((self.x*x + self.y*y)/c, (-self.x*y + self.y*x)/c)
 
-    def __divmod__(self, other):
+    def __divmod__(self, other: Self | int) -> tuple[Self, Self]:
         try:
             other = self._parent.convert(other)
         except CoercionFailed:
@@ -240,12 +272,13 @@ class GaussianRational(GaussianElement):
         if not other:
             raise ZeroDivisionError('{} % 0'.format(self))
         else:
-            return self/other, QQ_I.zero
+            return self/other, self._parent.zero
 
 
-class GaussianDomain():
+class GaussianDomain(RingExtension[Telem, Tdom]):
     """Base class for Gaussian domains."""
     dom: Domain
+    units: tuple[Telem, Telem, Telem, Telem]
 
     is_Numerical = True
     is_Exact = True
@@ -253,12 +286,15 @@ class GaussianDomain():
     has_assoc_Ring = True
     has_assoc_Field = True
 
-    def to_sympy(self, a):
+    def to_dict(self, element: Telem) -> dict[tuple[int, ...], Tdom]:
+        return {(0,): element.x, (1,): element.y}
+
+    def to_sympy(self, a: Telem) -> Expr:
         """Convert ``a`` to a SymPy object. """
         conv = self.dom.to_sympy
         return conv(a.x) + I*conv(a.y)
 
-    def from_sympy(self, a):
+    def from_sympy(self, a: Expr) -> Telem:
         """Convert a SymPy object to ``self.dtype``."""
         r, b = a.as_coeff_Add()
         x = self.dom.from_sympy(r)  # may raise CoercionFailed
@@ -271,61 +307,62 @@ class GaussianDomain():
         else:
             raise CoercionFailed("{} is not Gaussian".format(a))
 
-    def inject(self, *gens):
+    def inject(self, *gens: Any) -> PolynomialRing[Telem]:
         """Inject generators into this domain. """
         return self.poly_ring(*gens)
 
-    def canonical_unit(self, d):
-        unit = self.units[-d.quadrant()]  # - for inverse power
+    def canonical_unit(self, a: Telem) -> Telem:
+        unit = self.units[-a.quadrant()]  # - for inverse power
         return unit
 
-    def is_negative(self, element):
+    def is_negative(self, a: Telem) -> bool:
         """Returns ``False`` for any ``GaussianElement``. """
         return False
 
-    def is_positive(self, element):
+    def is_positive(self, a: Telem) -> bool:
         """Returns ``False`` for any ``GaussianElement``. """
         return False
 
-    def is_nonnegative(self, element):
+    def is_nonnegative(self, a: Telem) -> bool:
         """Returns ``False`` for any ``GaussianElement``. """
         return False
 
-    def is_nonpositive(self, element):
+    def is_nonpositive(self, a: Telem) -> bool:
         """Returns ``False`` for any ``GaussianElement``. """
         return False
 
-    def from_ZZ_gmpy(K1, a, K0):
+    def from_ZZ_gmpy(K1, a, K0) -> Telem:
         """Convert a GMPY mpz to ``self.dtype``."""
         return K1(a)
 
-    def from_ZZ(K1, a, K0):
+    def from_ZZ(K1, a, K0) -> Telem:
         """Convert a ZZ_python element to ``self.dtype``."""
         return K1(a)
 
-    def from_ZZ_python(K1, a, K0):
+    def from_ZZ_python(K1, a, K0) -> Telem:
         """Convert a ZZ_python element to ``self.dtype``."""
         return K1(a)
 
-    def from_QQ(K1, a, K0):
+    def from_QQ(K1, a, K0) -> Telem:
         """Convert a GMPY mpq to ``self.dtype``."""
         return K1(a)
 
-    def from_QQ_gmpy(K1, a, K0):
+    def from_QQ_gmpy(K1, a, K0) -> Telem:
         """Convert a GMPY mpq to ``self.dtype``."""
         return K1(a)
 
-    def from_QQ_python(K1, a, K0):
+    def from_QQ_python(K1, a, K0) -> Telem:
         """Convert a QQ_python element to ``self.dtype``."""
         return K1(a)
 
-    def from_AlgebraicField(K1, a, K0):
+    def from_AlgebraicField(K1, a, K0) -> Telem | None:
         """Convert an element from ZZ<I> or QQ<I> to ``self.dtype``."""
         if K0.ext.args[0] == I:
             return K1.from_sympy(K0.to_sympy(a))
+        return None
 
 
-class GaussianIntegerRing(GaussianDomain, Ring):
+class GaussianIntegerRing(GaussianDomain[GaussianInteger, MPZ], Ring[MPZ]):
     r"""Ring of Gaussian integers ``ZZ_I``
 
     The :ref:`ZZ_I` domain represents the `Gaussian integers`_ `\mathbb{Z}[i]`
@@ -425,7 +462,7 @@ class GaussianIntegerRing(GaussianDomain, Ring):
     .. _gcd: https://en.wikipedia.org/wiki/Greatest_common_divisor
 
     """
-    dom = ZZ
+    dom: IntegerRing = ZZ
     mod = DMP([ZZ.one, ZZ.zero, ZZ.one], ZZ)
     dtype = GaussianInteger
     zero = dtype(ZZ(0), ZZ(0))
@@ -449,26 +486,26 @@ class GaussianIntegerRing(GaussianDomain, Ring):
         else:
             return NotImplemented
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         """Compute hash code of ``self``. """
         return hash('ZZ_I')
 
     @property
-    def has_CharacteristicZero(self):
+    def has_CharacteristicZero(self): # type: ignore
         return True
 
-    def characteristic(self):
+    def characteristic(self) -> int:
         return 0
 
-    def get_ring(self):
+    def get_ring(self) -> Self:
         """Returns a ring associated with ``self``. """
         return self
 
-    def get_field(self):
+    def get_field(self) -> GaussianRationalField:
         """Returns a field associated with ``self``. """
         return QQ_I
 
-    def normalize(self, d, *args):
+    def normalize(self, d: GaussianInteger, *args: GaussianInteger):
         """Return first quadrant element associated with ``d``.
 
         Also multiply the other arguments by the same power of i.
@@ -478,13 +515,16 @@ class GaussianIntegerRing(GaussianDomain, Ring):
         args = tuple(a*unit for a in args)
         return (d,) + args if args else d
 
-    def gcd(self, a, b):
+    def gcd(self, a: GaussianInteger, b: GaussianInteger) -> GaussianInteger:
         """Greatest common divisor of a and b over ZZ_I."""
         while b:
             a, b = b, a % b
-        return self.normalize(a)
+        unit = self.canonical_unit(a)
+        return a*unit
 
-    def gcdex(self, a, b):
+    def gcdex(
+        self, a: GaussianInteger, b: GaussianInteger
+    ) -> tuple[GaussianInteger, GaussianInteger, GaussianInteger]:
         """Return x, y, g such that x * a + y * b = g = gcd(a, b)"""
         x_a = self.one
         x_b = self.zero
@@ -496,25 +536,27 @@ class GaussianIntegerRing(GaussianDomain, Ring):
             x_a, x_b = x_b, x_a - q * x_b
             y_a, y_b = y_b, y_a - q * y_b
 
-        a, x_a, y_a = self.normalize(a, x_a, y_a)
+        unit = self.canonical_unit(a)
+        a, x_a, y_a = a*unit, x_a*unit, y_a*unit
         return x_a, y_a, a
 
-    def lcm(self, a, b):
+    def lcm(self, a: GaussianInteger, b: GaussianInteger) -> GaussianInteger:
         """Least common multiple of a and b over ZZ_I."""
         return (a * b) // self.gcd(a, b)
 
-    def from_GaussianIntegerRing(K1, a, K0):
+    def from_GaussianIntegerRing(K1, a, K0) -> GaussianInteger:
         """Convert a ZZ_I element to ZZ_I."""
         return a
 
-    def from_GaussianRationalField(K1, a, K0):
+    def from_GaussianRationalField(K1, a, K0) -> GaussianInteger:
         """Convert a QQ_I element to ZZ_I."""
         return K1.new(ZZ.convert(a.x), ZZ.convert(a.y))
 
-ZZ_I = GaussianInteger._parent = GaussianIntegerRing()
+
+ZZ_I = GaussianInteger._parent = GaussianIntegerRing() # type: ignore
 
 
-class GaussianRationalField(GaussianDomain, Field):
+class GaussianRationalField(GaussianDomain[GaussianRational, MPQ], Field[GaussianRational]):
     r"""Field of Gaussian rationals ``QQ_I``
 
     The :ref:`QQ_I` domain represents the `Gaussian rationals`_ `\mathbb{Q}(i)`
@@ -631,7 +673,7 @@ class GaussianRationalField(GaussianDomain, Field):
 
     .. _Gaussian rationals: https://en.wikipedia.org/wiki/Gaussian_rational
     """
-    dom = QQ
+    dom: RationalField = QQ
     mod = DMP([QQ.one, QQ.zero, QQ.one], QQ)
     dtype = GaussianRational
     zero = dtype(QQ(0), QQ(0))
@@ -647,42 +689,42 @@ class GaussianRationalField(GaussianDomain, Field):
     def __init__(self):  # override Domain.__init__
         """For constructing QQ_I."""
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
         """Returns ``True`` if two domains are equivalent. """
         if isinstance(other, GaussianRationalField):
             return True
         else:
             return NotImplemented
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         """Compute hash code of ``self``. """
         return hash('QQ_I')
 
     @property
-    def has_CharacteristicZero(self):
+    def has_CharacteristicZero(self) -> bool: # type: ignore
         return True
 
-    def characteristic(self):
+    def characteristic(self) -> int:
         return 0
 
-    def get_ring(self):
+    def get_ring(self) -> GaussianIntegerRing:
         """Returns a ring associated with ``self``. """
         return ZZ_I
 
-    def get_field(self):
+    def get_field(self) -> Self:
         """Returns a field associated with ``self``. """
         return self
 
-    def as_AlgebraicField(self):
+    def as_AlgebraicField(self) -> AlgebraicField:
         """Get equivalent domain as an ``AlgebraicField``. """
         return AlgebraicField(self.dom, I)
 
-    def numer(self, a):
+    def numer(self, a: GaussianRational) -> GaussianInteger:
         """Get the numerator of ``a``."""
         ZZ_I = self.get_ring()
-        return ZZ_I.convert(a * self.denom(a))
+        return ZZ_I.convert(a * self.denom(a)) # type: ignore
 
-    def denom(self, a):
+    def denom(self, a: GaussianRational) -> GaussianInteger:
         """Get the denominator of ``a``."""
         ZZ = self.dom.get_ring()
         QQ = self.dom
@@ -690,17 +732,17 @@ class GaussianRationalField(GaussianDomain, Field):
         denom_ZZ = ZZ.lcm(QQ.denom(a.x), QQ.denom(a.y))
         return ZZ_I(denom_ZZ, ZZ.zero)
 
-    def from_GaussianIntegerRing(K1, a, K0):
+    def from_GaussianIntegerRing(K1, a, K0) -> GaussianRational:
         """Convert a ZZ_I element to QQ_I."""
         return K1.new(a.x, a.y)
 
-    def from_GaussianRationalField(K1, a, K0):
+    def from_GaussianRationalField(K1, a, K0) -> GaussianRational:
         """Convert a QQ_I element to QQ_I."""
         return a
 
-    def from_ComplexField(K1, a, K0):
+    def from_ComplexField(K1, a, K0) -> GaussianRational:
         """Convert a ComplexField element to QQ_I."""
         return K1.new(QQ.convert(a.real), QQ.convert(a.imag))
 
 
-QQ_I = GaussianRational._parent = GaussianRationalField()
+QQ_I = GaussianRational._parent = GaussianRationalField() # type: ignore

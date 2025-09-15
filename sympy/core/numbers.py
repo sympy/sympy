@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import overload
+from typing import overload, Literal
 
 import numbers
 import decimal
@@ -32,7 +32,7 @@ from mpmath.libmp.libmpf import (
     finf as _mpf_inf, fninf as _mpf_ninf,
     fnan as _mpf_nan, fzero, _normalize as mpf_normalize,
     prec_to_dps, dps_to_prec)
-from sympy.utilities.misc import debug
+from sympy.utilities.misc import debug, as_int
 from sympy.utilities.exceptions import sympy_deprecation_warning
 from .parameters import global_parameters
 
@@ -934,7 +934,7 @@ class Float(Number):
 
     def __getnewargs_ex__(self):
         sign, man, exp, bc = self._mpf_
-        arg = (sign, hex(man)[2:], exp, bc)
+        arg = (sign, f'{man:x}', exp, bc)
         kwargs = {'precision': self._prec}
         return ((arg,), kwargs)
 
@@ -1691,6 +1691,9 @@ class Rational(Number):
     def __hash__(self):
         return super().__hash__()
 
+    def __format__(self, format_spec):
+        return format(fractions.Fraction(self.p, self.q), format_spec)
+
     def factors(self, limit=None, use_trial=True, use_rho=False,
                 use_pm1=False, verbose=False, visual=False):
         """A wrapper to factorint which return factors of self that are
@@ -1751,6 +1754,12 @@ class Rational(Number):
                 return self, S.One
             return -self, S.NegativeOne
         return S.One, self
+
+    @overload
+    def as_coeff_Mul(self, rational: Literal[True]) -> tuple[Rational, Expr]: ...
+
+    @overload
+    def as_coeff_Mul(self, rational: bool = False) -> tuple["Number", Expr]: ...
 
     def as_coeff_Mul(self, rational=False):
         """Efficiently extract the coefficient of a product."""
@@ -1955,6 +1964,18 @@ class Integer(Rational):
                 return Integer(other.p % self.p)
             return Rational.__rmod__(self, other)
         return Rational.__rmod__(self, other)
+
+    def __pow__(self, other, mod=None):
+        if mod is not None:
+            try:
+                other_int = as_int(other)
+                mod_int = as_int(mod)
+            except ValueError:
+                pass
+            else:
+                return Integer(pow(self.p, other_int, mod_int))
+
+        return super().__pow__(other, mod)
 
     def __eq__(self, other):
         if isinstance(other, int):

@@ -2,7 +2,7 @@
 
 from sympy.assumptions.ask import Q
 from sympy.core.symbol import symbols
-from sympy.core.relational import Unequality
+from sympy.core.relational import Ne, Eq, Unequality
 from sympy.logic.boolalg import And, Or, Implies, Equivalent, true, false
 from sympy.logic.inference import literal_symbol, \
      pl_true, satisfiable, valid, entails, PropKB
@@ -19,6 +19,9 @@ from sympy.core.random import randint
 
 from sympy.testing.pytest import raises, skip
 from sympy.external import import_module
+
+from sympy.core.function import Function
+
 
 
 def test_literal():
@@ -148,6 +151,7 @@ def test_minisat22_satisfiable():
     assert minisat22_satisfiable( Equivalent(A, B) & A ) == {A: True, B: True}
     assert minisat22_satisfiable( Equivalent(A, B) & ~A ) == {A: False, B: False}
 
+
 def test_minisat22_minimal_satisfiable():
     A, B, C = symbols('A,B,C')
     minisat22_satisfiable = lambda expr, minimal=True: satisfiable(expr, algorithm="minisat22", minimal=True)
@@ -266,6 +270,7 @@ def test_propKB_tolerant():
     A, B, C = symbols('A,B,C')
     assert kb.ask(B) is False
 
+
 def test_satisfiable_non_symbols():
     x, y = symbols('x y')
     assumptions = Q.zero(x*y)
@@ -281,6 +286,7 @@ def test_satisfiable_non_symbols():
     assert satisfiable(And(assumptions, facts, ~query), algorithm='dpll') in refutations
     assert not satisfiable(And(assumptions, facts, query), algorithm='dpll2')
     assert satisfiable(And(assumptions, facts, ~query), algorithm='dpll2') in refutations
+
 
 def test_satisfiable_bool():
     from sympy.core.singleton import S
@@ -340,6 +346,28 @@ def test_z3():
     # test nonlinear function
     assert z3_satisfiable((x ** 2 >= 2) & (x < 1) & (x > -1)) is False
 
+    f = symbols('f1', cls=Function)
+    model = z3_satisfiable(f(A))
+    assert bool(model) is True
+
+    f,h = symbols('f h', cls=Function)
+    x,y,c2 = symbols('x y c2')
+
+    assert z3_satisfiable(Eq(h(x, y), h(y, x))) == {Q.eq(h(x, y), h(y, x)): True}
+
+    expr = And(
+        Ne(x, y),
+        Eq(f(x), f(y)),
+        Ne(h(f(x)), h(f(y)))
+    )
+    assert z3_satisfiable(expr) is False
+
+    expr = And(
+        Eq(x, y),
+        Ne(f(x), f(y))
+    )
+    assert z3_satisfiable(expr) is False
+
 
 def test_z3_vs_lra_dpll2():
     z3 = import_module("z3")
@@ -376,9 +404,17 @@ def test_z3_vs_lra_dpll2():
         except z3.z3types.Z3Exception:
             continue
 
-        lra_dpll2_sat = lra_dpll2_satisfiable(cnf) is not False
+        lra_dpll2_sat = lra_dpll2_satisfiable(cnf)
 
-        assert z3_sat == lra_dpll2_sat
+        # z3 and dpll2 may find differend models so we shouldn't
+        # test the models directly for equality
+        assert lra_dpll2_sat is not None
+        assert z3_sat is not None
+        lra_dpll2_is_sat = lra_dpll2_sat is not False
+        z3_is_sat = z3_sat is not False
+
+        assert z3_is_sat == lra_dpll2_is_sat
+
 
 def test_issue_27733():
     x, y = symbols('x,y')
