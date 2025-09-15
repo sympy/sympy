@@ -4,8 +4,9 @@ from sympy.core.numbers import Integer
 from sympy.matrices.dense import (Matrix, eye)
 from sympy.tensor.indexed import Indexed
 from sympy.combinatorics import Permutation
-from sympy.core import S, Rational, Symbol, Basic, Add, Wild, Function
+from sympy.core import S, Rational, Symbol, Basic, Add, Mul, Wild, Function, Expr
 from sympy.core.containers import Tuple
+from sympy.core.decorators import call_highest_priority
 from sympy.core.symbol import symbols
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.integrals import integrate
@@ -1254,6 +1255,69 @@ def test_hash():
     assert tsymmetry.func(*tsymmetry.args) == tsymmetry
     assert hash(tsymmetry.func(*tsymmetry.args)) == hash(tsymmetry)
     assert check_all(tsymmetry)
+
+def test_op_priority():
+    class NewExpr(Expr):
+        _op_priority = 100
+        is_commutative = False
+
+        def __neg__(self):
+            return self*S.NegativeOne
+
+        @call_highest_priority('__radd__')
+        def __add__(self, other):
+            return NewAdd(self, other)
+
+        @call_highest_priority('__add__')
+        def __radd__(self, other):
+            return NewAdd(other, self)
+
+        @call_highest_priority('__rsub__')
+        def __sub__(self, other):
+            return NewAdd(self, -other)
+
+        @call_highest_priority('__sub__')
+        def __rsub__(self, other):
+            return NewAdd(other, -self)
+
+        @call_highest_priority('__rmul__')
+        def __mul__(self, other):
+            return NewMul(self, other)
+
+        @call_highest_priority('__mul__')
+        def __rmul__(self, other):
+            return NewMul(other, self)
+
+        @call_highest_priority('__rtruediv__')
+        def __truediv__(self, other):
+            return NewMul(self, other)
+
+        @call_highest_priority('__truediv__')
+        def __rtruediv__(self, other):
+            return NewMul(other, self)
+
+    class NewAdd(NewExpr, Add):
+        pass
+
+    class NewMul(NewExpr, Mul):
+        pass
+
+    class NewSymbol(NewExpr, Symbol):
+        def __init__(self, name):
+            self.name = name
+
+    Lorentz = TensorIndexType('Lorentz', dim=4, dummy_name='L')
+    a = tensor_indices('a', Lorentz)
+    p = tensor_heads('p', [Lorentz])
+    n = NewSymbol('n')
+
+    assert isinstance(n + p(a), NewAdd)
+    assert isinstance(p(a) + n, NewAdd)
+    assert isinstance(n - p(a), NewAdd)
+    assert isinstance(p(a) - n, NewAdd)
+    assert isinstance(n * p(a), NewMul)
+    assert isinstance(p(a) * n, NewMul)
+    assert isinstance(p(a) / n, NewMul)
 
 
 ### TEST VALUED TENSORS ###
