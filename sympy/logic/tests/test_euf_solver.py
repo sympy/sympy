@@ -12,7 +12,8 @@ from sympy.assumptions.assume import AppliedPredicate
 import sympy.core.random as random
 from sympy.logic.inference import satisfiable
 from sympy.external import import_module
-
+from sympy.testing.pytest import raises, skip
+from sympy.logic.algorithms.z3_wrapper import z3_satisfiable
 
 # Try to import Z3 for comparison
 try:
@@ -27,8 +28,12 @@ class RandomEUFTestGenerator:
 
     def __init__(self, seed=42):
         random.seed(seed)
+        self.MAX_ARGS = 3
+
         self.symbols_pool = [symbols(f'x_{i}') for i in range(20)]
         self.functions_pool = [Function(f'f_{i}') for i in range(5)]
+        self.function_arity ={ f: random.randint(1, self.MAX_ARGS) for f in self.functions_pool }
+
 
     def generate_random_term(self, depth=0, max_depth=3):
         """Generate a random term (symbol or function application)."""
@@ -38,7 +43,7 @@ class RandomEUFTestGenerator:
         else:
             # Return a function application
             func = random.choice(self.functions_pool)
-            num_args = random.randint(1, 3)
+            num_args = self.function_arity[func]
             args = [self.generate_random_term(depth + 1, max_depth) for _ in range(num_args)]
             return func(*args)
 
@@ -52,11 +57,22 @@ class RandomEUFTestGenerator:
         else:
             return Ne(term1, term2)
 
-    def generate_constraint_set(self, num_constraints=50):
+    def generate_constraint_set(self, num_constraints=25):
         """Generate a set of random constraints."""
-        constraints = []
-        for _ in range(num_constraints):
-            constraints.append(self.generate_random_equality())
+        constraints = set()
+        while len(constraints) < num_constraints:
+            candidate_term_pair = sorted((self.generate_random_term(), self.generate_random_term()),key=str)
+            candidate_term_pair = tuple(candidate_term_pair)
+            if candidate_term_pair[0] == candidate_term_pair[1]:
+                continue # Skip x != x or x == x
+            if candidate_term_pair in constraints:
+                continue # Skip duplicates
+
+            constraints.add(candidate_term_pair)
+
+        # 70% equalities, 30% disequalities
+        constraints = [Eq(term1, term2) if random.random() < 0.7 else Ne(term1,term2) for term1, term2 in constraints]
+
         return constraints
 
 
@@ -1028,42 +1044,93 @@ def test_random_function_constraints_medium():
         # Should be unsatisfiable
         assert not sympy_sat_neg, "Expected UNSAT for constraints + ~query"
 
+
 def test_large_random_constraint_set():
     """Test large random constraint sets."""
     generator = RandomEUFTestGenerator()
-    z3_comparator = Z3Comparator() if Z3_AVAILABLE else None
+    z3 = import_module("z3")
+    if z3 is None:
+        skip("z3 not installed.")
+    # z3_comparator = Z3Comparator() if Z3_AVAILABLE else None
 
-    for trial in range(3):
-        print(f"\nLarge trial {trial + 1}/3")
+    sat_count = 0
+    TRIAL_COUNT = 50
 
-        # Generate larger constraint set
-        constraints = generator.generate_constraint_set(num_constraints=25)
+    problems = []
+    # generate likely sat problems
+    problems += [generator.generate_constraint_set(num_constraints=25) for _ in range(TRIAL_COUNT // 2)]
+    # generate likely unsat problems
+    problems += [generator.generate_constraint_set(num_constraints=100) for _ in range(1 + TRIAL_COUNT // 2)]
 
-        # Filter out trivially false constraints (x != x)
-        filtered_constraints = []
-        for constraint in constraints:
-            if isinstance(constraint, Ne) and constraint.lhs == constraint.rhs:
-                continue  # Skip x != x
-            if isinstance(constraint, Eq) and constraint.lhs == constraint.rhs:
-                continue  # Skip x == x (trivially true)
-            filtered_constraints.append(constraint)
+    for trial in range(TRIAL_COUNT):
+        # print(f"\nLarge trial {trial + 1}/3")
 
-        if len(filtered_constraints) == 0:
-            continue
+        constraints = problems[trial]
 
-        print(f"Testing {len(filtered_constraints)} constraints")
 
-        result = satisfiable(boolalg.And(*filtered_constraints), use_euf_theory=True)
+
+        # print(f"Testing {len(constraints)} constraints")
+
+        problem =boolalg.And(*constraints)
+        assert problem not in (False, True)
+
+        result = satisfiable(problem, use_euf_theory=True)
         sympy_sat = result is not False
-        print(f"SymPy result: {'SAT' if sympy_sat else 'UNSAT'}")
+        # print(f"SymPy result: {'SAT' if sympy_sat else 'UNSAT'}")
+        z3_sat = z3_satisfiable(problem) is not False
+
+        assert sympy_sat == z3_sat
+        if sympy_sat:
+            sat_count += 1
+
+    assert sat_count > 0
+    assert sat_count != TRIAL_COUNT
+    print(f"{sat_count} / {TRIAL_COUNT} problems were satifiable")
+
+def test_random_sat_problems():
+    """Test large random sat problem involving euf constraints."""
+    generator = RandomEUFTestGenerator()
+    z3 = import_module("z3")
+    if z3 is None:
+        skip("z3 not installed.")
+    # z3_comparator = Z3Comparator() if Z3_AVAILABLE else None
+
+    sat_count = 0
+    TRIAL_COUNT = 2
+
+
+
+    for trial in range(TRIAL_COUNT):
+        constraint_sets = []
+        constraint_sets += [generator.generate_constraint_set(num_constraints=100) for _ in range(TRIAL_COUNT)]
+
+        simple_disjunction = boolalg.Or(
+            *[boolalg.And(*[constraint for constraint in constraint_set]) for constraint_set in constraint_sets])
+
+
+        assert simple_disjunction not in (False, True)
+
+        result = satisfiable(simple_disjunction, use_euf_theory=True)
+        sympy_sat = result is not False
+        # print(f"SymPy result: {'SAT' if sympy_sat else 'UNSAT'}")
+        z3_sat = z3_satisfiable(simple_disjunction) is not False
+
+        assert sympy_sat == z3_sat
+        if sympy_sat:
+            sat_count += 1
+
+    # assert sat_count > 0
+    # assert sat_count != TRIAL_COUNT
+    print(f"{sat_count} / {TRIAL_COUNT} problems were satifiable")
+
 
         # Compare with Z3 if available (only for smaller sets due to conversion complexity)
-        if Z3_AVAILABLE and z3_comparator and len(filtered_constraints) <= 15:
-            z3_result = z3_comparator.check_satisfiability_with_z3(filtered_constraints)
-            z3_sat, z3_model = z3_result if z3_result else (None, None)
-            if z3_sat is not None:
-                print(f"Z3 result: {'SAT' if z3_sat else 'UNSAT'}")
-                assert sympy_sat == z3_sat, f"Disagreement: SymPy={sympy_sat}, Z3={z3_sat}"
+        # if Z3_AVAILABLE and z3_comparator and len(filtered_constraints) <= 15:
+        #     z3_result = z3_comparator.check_satisfiability_with_z3(filtered_constraints)
+        #     z3_sat, z3_model = z3_result if z3_result else (None, None)
+        #     if z3_sat is not None:
+        #         print(f"Z3 result: {'SAT' if z3_sat else 'UNSAT'}")
+        #         assert sympy_sat == z3_sat, f"Disagreement: SymPy={sympy_sat}, Z3={z3_sat}"
 
 
 def test_assert_lit_transitivity_conflict():
