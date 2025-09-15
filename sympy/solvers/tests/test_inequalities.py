@@ -390,12 +390,16 @@ def test_issue_10198():
     assert reduce_inequalities(
         -1 + 1/abs(1/x - 1) < 0) == (x > -oo) & (x < S(1)/2) & Ne(x, 0)
 
-    assert reduce_inequalities(abs(1/sqrt(x)) - 1, x) == Eq(x, 1)
     assert reduce_abs_inequality(-3 + 1/abs(1 - 1/x), '<', x) == \
         Or(And(-oo < x, x < 0),
         And(S.Zero < x, x < Rational(3, 4)), And(Rational(3, 2) < x, x < oo))
-    raises(ValueError,lambda: reduce_abs_inequality(-3 + 1/abs(
+    raises(NotImplementedError,lambda: reduce_abs_inequality(-3 + 1/abs(
         1 - 1/sqrt(x)), '<', x))
+
+
+@XFAIL
+def test_issue_10198_xfail():
+    assert reduce_inequalities(abs(1/sqrt(x)) - 1, x) == Eq(x, 1)
 
 
 def test_issue_10047():
@@ -403,12 +407,17 @@ def test_issue_10047():
     # is not real the inequality is invalid
     # assert solve(sin(x) < 2) == (x <= oo)
 
-    # with PR 16956, (x <= oo) autoevaluates when x is extended_real
-    # which is assumed in the current implementation of inequality solvers
-    assert solve(sin(x) < 2) == True
+    # This no longer works when _solve_inequality no longer calls
+    # solve_univariate_inequality. It could be fixed in future if
+    # solve_univariate_inequality is fixed to handle periodic functions
+    # correctly:
+    with raises(NotImplementedError):
+        assert solve(sin(x) < 2)
+
     assert solveset(sin(x) < 2, domain=S.Reals) == S.Reals
 
 
+@XFAIL
 def test_issue_10268():
     assert solve(log(x) < 1000) == And(S.Zero < x, x < exp(1000))
 
@@ -487,6 +496,7 @@ def test__pt():
     raises(ValueError, lambda: _pt(Dummy('i', infinite=True), S.One))
 
 
+@XFAIL
 def test_issue_25697():
     assert _solve_inequality(log(x, 3) <= 2, x) == (x <= 9) & (S.Zero < x)
 

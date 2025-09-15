@@ -327,7 +327,7 @@ def reduce_abs_inequality(expr, rel, gen):
         elif expr.is_Pow:
             n = expr.exp
             if not n.is_Integer:
-                raise ValueError("Only Integer Powers are allowed on Abs.")
+                raise NotImplementedError("Only Integer Powers are allowed on Abs.")
 
             exprs.extend((expr**n, conds) for expr, conds in _bottom_up_scan(expr.base))
         elif isinstance(expr, Abs):
@@ -817,9 +817,14 @@ def _solve_inequality(ie, s, linear=False):
     except (PolynomialError, NotImplementedError):
         if not linear:
             try:
-                rv = reduce_rational_inequalities([[ie]], s)
+                rv = reduce_abs_inequality(ie.lhs - ie.rhs, ie.rel_op, s)
             except PolynomialError:
-                rv = solve_univariate_inequality(ie, s)
+                # XXX: Previously this would call solve_univariate_inequality
+                # but that leads to buggy results for integration of
+                # periodic piecewise functions. This should not call
+                # solve_univariate_inequality as long as it cannot handle
+                # periodic functions correctly.
+                raise NotImplementedError
             # remove restrictions wrt +/-oo that may have been
             # applied when using sets to simplify the relationship
             okoo = classify(ie, s, oo)
