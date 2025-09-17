@@ -5,7 +5,6 @@ from sympy.assumptions.assume import AppliedPredicate
 from sympy.logic.algorithms.euf_theory import EUFCongruenceClosure, EUFUnhandledInput
 from sympy.core.symbol import Dummy
 from sympy.utilities.iterables import numbered_symbols
-from sympy.assumptions.ask_generated import get_known_facts_dict
 
 
 def _order_key(expr):

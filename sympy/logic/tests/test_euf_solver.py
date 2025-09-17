@@ -12,7 +12,7 @@ from sympy.assumptions.assume import AppliedPredicate
 import sympy.core.random as random
 from sympy.logic.inference import satisfiable
 from sympy.external import import_module
-from sympy.testing.pytest import raises, skip
+from sympy.testing.pytest import skip
 from sympy.logic.algorithms.z3_wrapper import z3_satisfiable
 
 # Try to import Z3 for comparison
@@ -1105,8 +1105,7 @@ def test_random_sat_problems():
         constraint_sets += [generator.generate_constraint_set(num_constraints=100) for _ in range(TRIAL_COUNT)]
 
         simple_disjunction = boolalg.Or(
-            *[boolalg.And(*[constraint for constraint in constraint_set]) for constraint_set in constraint_sets])
-
+                *[boolalg.And(*list(constraint_set)) for constraint_set in constraint_sets])
 
         assert simple_disjunction not in (False, True)
 
