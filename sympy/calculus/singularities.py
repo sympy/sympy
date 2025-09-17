@@ -45,7 +45,8 @@ def singularities(expression, symbol, domain=None):
     Set
         A set of values for ``symbol`` for which ``expression`` has a
         singularity. An ``EmptySet`` is returned if ``expression`` has no
-        singularities for any given value of ``Symbol``.
+        singularities for any given value of ``Symbol``. An ``Interval`` is returned
+        if ``expression`` has uncountably many singularities.
 
     Raises
     ======
@@ -84,9 +85,12 @@ def singularities(expression, symbol, domain=None):
     {-1, 1/2 - sqrt(3)*I/2, 1/2 + sqrt(3)*I/2}
     >>> singularities(log(x), x)
     {0}
+    >>> singularities(0**x, x)
+    Interval.open(-oo, 0)
 
     """
     from sympy.solvers.solveset import solveset
+    from sympy.sets.sets import Interval
 
     if domain is None:
         domain = S.Reals if symbol.is_real else S.Complexes
@@ -95,6 +99,13 @@ def singularities(expression, symbol, domain=None):
         e = expression.rewrite([sec, csc, cot, tan], cos)
         e = e.rewrite([sech, csch, coth, tanh], cosh)
         for i in e.atoms(Pow):
+            if i.base == S.Zero:
+                sing_interval = solveset(i.exp <= 0, symbol, domain)
+                # Since in Sympy we assume that 0**0 = 1,
+                # we can't have a singularity at i.exp == 0 and therefore
+                # we must return an open interval.
+                sing_interval = Interval.open(sing_interval.inf, sing_interval.sup)
+                sings += sing_interval
             if i.exp.is_infinite:
                 raise NotImplementedError
             if i.exp.is_negative:
