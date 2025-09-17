@@ -945,6 +945,9 @@ def test_multiple_disequalities_explanation():
 
 def test_random_satisfiable_constraints_small():
     """Test random satisfiable constraints (small scale)."""
+    z3 = import_module("z3")
+    if z3 is None:
+        skip("z3 not installed.")
     generator = RandomEUFTestGenerator()
     z3_comparator = Z3Comparator() if Z3_AVAILABLE else None
 
@@ -977,6 +980,9 @@ def test_random_satisfiable_constraints_small():
 
 def test_random_unsatisfiable_constraints_small():
     """Test random unsatisfiable constraints (small scale)."""
+    z3 = import_module("z3")
+    if z3 is None:
+        skip("z3 not installed.")
     generator = RandomEUFTestGenerator()
     z3_comparator = Z3Comparator() if Z3_AVAILABLE else None
 
@@ -1008,6 +1014,9 @@ def test_random_unsatisfiable_constraints_small():
 
 def test_random_function_constraints_medium():
     """Test random constraints with functions (medium scale)."""
+    z3 = import_module("z3")
+    if z3 is None:
+        skip("z3 not installed.")
     generator = RandomEUFTestGenerator()
 
     for trial in range(5):
@@ -1066,7 +1075,6 @@ def test_large_random_constraint_set():
         # print(f"\nLarge trial {trial + 1}/3")
 
         constraints = problems[trial]
-
 
 
         # print(f"Testing {len(constraints)} constraints")
