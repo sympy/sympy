@@ -456,6 +456,7 @@ def ask(proposition, assumptions=True, context=global_assumptions):
     """
     from sympy.assumptions.satask import satask
     from sympy.assumptions.lra_satask import lra_satask
+    from sympy.assumptions.euf_ask import euf_ask
     from sympy.logic.algorithms.lra_theory import UnhandledInput
     from sympy.logic.algorithms.euf_theory import EUFUnhandledInput
 
@@ -514,7 +515,7 @@ def ask(proposition, assumptions=True, context=global_assumptions):
             return res
     except UnhandledInput:
         try:
-            res = satask(proposition, assumptions=assumptions, use_euf_theory=True)
+            res = euf_ask(proposition, assumptions=assumptions)
             if res is not None:
                 return res
         except EUFUnhandledInput:

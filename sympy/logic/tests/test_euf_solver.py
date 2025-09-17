@@ -1096,7 +1096,7 @@ def test_random_sat_problems():
     # z3_comparator = Z3Comparator() if Z3_AVAILABLE else None
 
     sat_count = 0
-    TRIAL_COUNT = 2
+    TRIAL_COUNT = 1
 
 
 

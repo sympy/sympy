@@ -5,6 +5,7 @@ from sympy.assumptions.assume import AppliedPredicate
 from sympy.logic.algorithms.euf_theory import EUFCongruenceClosure, EUFUnhandledInput
 from sympy.core.symbol import Dummy
 from sympy.utilities.iterables import numbered_symbols
+from sympy.assumptions.ask_generated import get_known_facts_dict
 
 
 def _order_key(expr):
@@ -577,24 +578,30 @@ class EUFTheorySolver:
         self.current_conflict_eq = None
         self.current_conflict_eq_explanation = None
 
+        # For generating consistent constants for predicates
+        self._dummies = numbered_symbols('_c', Dummy)
+        self.predicate_constants = {}  # persistent mapping for predicate -> constant
+
+
+    def get_predicate_constant(self, pred_func):
+        """Get consistent constant for a predicate function."""
+        if pred_func not in self.predicate_constants:
+            self.predicate_constants[pred_func] = next(self._dummies)
+        return self.predicate_constants[pred_func]
+
 
     @classmethod
     def from_encoded_cnf(cls, encoded_cnf, testing_mode=False):
         solver = cls()
         literal_eqs = {}
         conflicts = []
-        dummies = numbered_symbols('_c', lambda name=None: Dummy(name, finite=True))
-
-        # CRITICAL: Use consistent constants for same predicate types
-        predicate_constants = {}  # Maps predicate function to its constant
 
         ALLOWED_BIN_PRED = {Q.eq, Q.ne}
 
         def get_predicate_constant(pred_func):
             """Get consistent constant for a predicate function."""
-            if pred_func not in predicate_constants:
-                predicate_constants[pred_func] = next(dummies)
-            return predicate_constants[pred_func]
+            # Delegate to solver's instance method or variable
+            return solver.get_predicate_constant(pred_func)
 
 
         def process_pred(pred):
