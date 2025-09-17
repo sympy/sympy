@@ -9,7 +9,7 @@ This tutorial shows how to use **SymPy** to:
 1. Derive the **finite square well** equations **analytically**:
    - Bound-state conditions for even/odd parity.
    - **Exact normalization constants** for the wavefunctions (symbolic integrals).
-2. Solve **numerically** for bound-state energies using :func:`sympy.nsolve`.
+2. Solve **numerically** for bound-state energies using :func:`sympy.solvers.solvers.nsolve`.
 3. Plot the **zero-crossing functions**, the **square-well potential**, and the
    **analytically normalized** wavefunctions.
 
