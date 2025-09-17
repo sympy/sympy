@@ -1,39 +1,57 @@
+.. -*- coding: utf-8 -*-
 .. _creation_annihilation_tutorial:
 
 ======================================
 Creation and Annihilation Operators
 ======================================
 
-This tutorial demonstrates the algebra of creation and annihilation operators using
-the :mod:`sympy.physics.quantum` tools.
+We use :mod:`sympy` symbols and quantum operators; the visualization uses a SymPy
+expression for the energy ladder and evaluates it via :func:`sympy.lambdify`.
+
+Symbolic setup
+==============
 
 .. code-block:: python
 
    from sympy.physics.quantum import Dagger, Operator, Commutator
+   from sympy import symbols
 
    a = Operator('a')
    adag = Dagger(a)
+   print("Commutator [a, a^†] =", Commutator(a, adag))
 
-.. code-block:: python
+   n = symbols('n', integer=True, nonnegative=True)
+   hw = symbols('hbar_omega', positive=True)  # parameter
+   E_n = hw*(n + 1/2)
+   print("E_n =", E_n)
 
-   from sympy.physics.quantum import Ket
-   n = Ket('n')
-   print(a * n)
-   print(adag * n)
+Energy ladder plot (SymPy variables → NumPy)
+============================================
 
-.. code-block:: python
+.. plot::
+   :include-source: True
 
-   from sympy.physics.quantum.boson import BosonOp
-   from sympy.physics.quantum import Dagger, Commutator
+   import numpy as np
+   import matplotlib.pyplot as plt
+   from sympy import symbols, lambdify
 
-   a = BosonOp('a')
-   adag = Dagger(a)
-   print(Commutator(a, adag).doit())
+   # SymPy variables & expression
+   n = symbols('n', integer=True, nonnegative=True)
+   hw = symbols('hbar_omega', positive=True)
+   E_n = hw*(n + 1/2)
 
-Visualization
-=============
+   # Turn into a numeric callable E(n, hw)
+   E = lambdify((n, hw), E_n, modules="numpy")
 
-.. image:: ../../../_static/creation_annihilation_ladder.png
-   :alt: Energy ladder stem plot
-   :align: center
+   ns = np.arange(0, 7)
+   hw_val = 1.0
+   En = E(ns, hw_val)
 
+   plt.figure(figsize=(6,3.5))
+   markerline, stemlines, baseline = plt.stem(ns, En)
+   plt.setp(markerline, markersize=6)
+   plt.xlabel("n")
+   plt.ylabel("E_n")
+   plt.title("Harmonic-oscillator energy ladder (driven by SymPy variable hbar_omega)")
+   plt.tight_layout()
+   plt.show()

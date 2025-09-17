@@ -1,13 +1,12 @@
 .. _quantum_mechanics_tutorial:
 
 =================================
-Quantum Mechanics Tutorials 
+Quantum Mechanics Tutorials
 =================================
 
-These tutorials are prepared by Dr. Al Rey Villagracia to demonstrate on  how to use the :mod:`sympy.physics.quantum` module and related
-symbolic tools for quantum mechanics. We cover examples such as defining operators,
-computing commutators, and representing state vectors. Each example includes
-step-by-step code and explanations that are helpful for both education and research.
+These tutorials by Dr. Al Rey Villagracia demonstrate how to use the sympy.physics.quantum module and related
+symbolic tools for quantum mechanics. Each tutorial embeds static figures so plots appear
+in the built HTML without executing code..
 
 .. toctree::
    :maxdepth: 2

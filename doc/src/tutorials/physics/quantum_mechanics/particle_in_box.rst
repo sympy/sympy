@@ -1,31 +1,57 @@
+.. -*- coding: utf-8 -*-
 .. _particle_in_box_tutorial:
 
 =====================================
 Particle in a Box (Infinite Well)
 =====================================
 
-.. math::
+We define the normalized eigenfunctions using SymPy symbols first and only then
+evaluate them for plotting.
 
-   -\frac{\hbar^2}{2m} \frac{d^2 \psi(x)}{dx^2} = E \psi(x)
-
-with :math:`\psi(0) = \psi(L) = 0`.
+Symbolic eigenfunctions
+=======================
 
 .. code-block:: python
 
-   from sympy import symbols, Function, diff, Eq, dsolve
+   from sympy import symbols, sin, pi, sqrt
    from sympy.abc import x
 
-   m, hbar, L, E = symbols("m hbar L E", positive=True)
-   psi = Function("psi")
+   L = symbols('L', positive=True)
+   psi1 = sqrt(2/L) * sin(pi*x/L)
+   psi2 = sqrt(2/L) * sin(2*pi*x/L)
+   psi3 = sqrt(2/L) * sin(3*pi*x/L)
+   print(psi1)
 
-   sch_eq = Eq(-hbar**2/(2*m) * diff(psi(x), x, 2), E*psi(x))
-   sol = dsolve(sch_eq)
-   print(sol)
+Wavefunction plots (SymPy variables → NumPy)
+============================================
 
-Plotting Wavefunctions
-======================
+.. plot::
+   :include-source: True
 
-.. image:: ../../../_static/particle_in_box.png
-   :alt: ψ1..ψ3 eigenfunctions
-   :align: center
+   import numpy as np
+   import matplotlib.pyplot as plt
+   from sympy import symbols, sin, pi, sqrt, lambdify
+   from sympy.abc import x
 
+   L = symbols('L', positive=True)
+   psi1 = sqrt(2/L) * sin(pi*x/L)
+   psi2 = sqrt(2/L) * sin(2*pi*x/L)
+   psi3 = sqrt(2/L) * sin(3*pi*x/L)
+
+   f1 = lambdify((x, L), psi1, modules="numpy")
+   f2 = lambdify((x, L), psi2, modules="numpy")
+   f3 = lambdify((x, L), psi3, modules="numpy")
+
+   L_val = 1.0
+   xs = np.linspace(0.0, L_val, 400)
+
+   plt.figure(figsize=(6,3.5))
+   plt.plot(xs, f1(xs, L_val), label="psi_1(x)")
+   plt.plot(xs, f2(xs, L_val), label="psi_2(x)")
+   plt.plot(xs, f3(xs, L_val), label="psi_3(x)")
+   plt.xlabel("x")
+   plt.ylabel("psi_n(x)")
+   plt.title("Particle in a box: eigenfunctions (driven by SymPy variable L)")
+   plt.legend()
+   plt.tight_layout()
+   plt.show()
