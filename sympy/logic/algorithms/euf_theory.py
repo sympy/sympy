@@ -229,6 +229,35 @@ class EUFCongruenceClosure:
         self.pending_unions.append((self._flatten(lhs), self._flatten(rhs)))
         self._process_pending_unions()
 
+
+    def _replace_with_representative(self, expr):
+        """
+        Recursively replace all symbols and subexpressions in expr with their
+        current class representatives using union-find _find.
+        """
+        from sympy import Symbol, Lambda
+
+        if isinstance(expr, (Symbol, Dummy)):
+            # Return the representative of the symbol (already registered)
+            rep = self._find(expr)
+            return rep
+
+        # Terminal cases: Number or atom without proper class
+        if getattr(expr, "is_Atom", False):
+            return expr
+
+        # Recursive case: rebuild expression with replaced args
+        new_args = tuple(self._replace_with_representative(arg) for arg in expr.args)
+
+        # For Lambda and other special classes, preserve structure
+        if isinstance(expr, Lambda):
+            # Rebuild the Lambda with replaced body
+            return Lambda(expr.variables[0], new_args[0])
+
+        # Rebuild with same function and replaced args
+        return expr.func(*new_args)
+
+
     def are_equal(self, lhs, rhs):
         """
         Query whether two terms are in the same class under the closure.
@@ -245,6 +274,8 @@ class EUFCongruenceClosure:
         >>> cc.are_equal(f(x), f(y))
         True
         """
-        lhs_id, rhs_id = self._flatten(lhs), self._flatten(rhs)
+        lhs_repl = self._replace_with_representative(lhs)
+        rhs_repl = self._replace_with_representative(rhs)
+        lhs_id, rhs_id = self._flatten(lhs_repl), self._flatten(rhs_repl)
         if self._find(lhs_id) == self._find(rhs_id):
             return True

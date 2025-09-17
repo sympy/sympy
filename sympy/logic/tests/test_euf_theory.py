@@ -3,6 +3,7 @@ from sympy.core.relational import Eq
 from sympy.core.numbers import Integer
 from sympy.core.function import Function, Lambda
 from sympy.logic.algorithms.euf_theory import EUFCongruenceClosure
+from sympy.testing.pytest import XFAIL
 
 f, g, h = symbols('f g h', cls=Function)
 x, y, z, w, a, b, c, d = symbols('x y z w a b c d')
@@ -260,3 +261,34 @@ def test_flatten_simple_atoms_and_numbers():
     flat_btrue2 = cc._flatten(btrue)
     assert flat_btrue1 == flat_btrue2
     assert flat_btrue1 != d  # Different from other dummies
+
+
+def test_compound_expression_propagation():
+    x, y, z = symbols('x y z')
+    # x = y => x*y + z = y*y + z
+    cc = EUFCongruenceClosure([Eq(x, y)])
+    assert cc.are_equal(x*y + z, y*y + z)
+
+
+def test_compound_double_layer():
+    x, y, z, w = symbols('x y z w')
+    cc = EUFCongruenceClosure([Eq(x, y), Eq(z, w)])
+    expr1 = x*y + z
+    expr2 = y*y + w
+    assert cc.are_equal(expr1, expr2)
+
+
+def test_mixed_equality_disequality():
+    x, y, z = symbols('x y z')
+    cc = EUFCongruenceClosure([Eq(x, y)])
+    # x = y, so x*y + y = x*y + y = y*y + y
+    assert cc.are_equal(x*y + y, y**2 + y)
+
+
+def test_compound_in_function_application():
+    from sympy import Function
+    x, y, z = symbols('x y z')
+    f = Function('f')
+    cc = EUFCongruenceClosure([Eq(x, y)])
+    # Congruence: x*y + z = y*y + z => f(x*y + z) = f(y*y + z)
+    assert cc.are_equal(f(x*y + z), f(y*y + z))
