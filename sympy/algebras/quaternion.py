@@ -17,6 +17,10 @@ from sympy.core.expr import Expr
 from sympy.core.sympify import sympify, _sympify
 from sympy.core.logic import fuzzy_not, fuzzy_or
 from sympy.utilities.misc import as_int
+from sympy.core.numbers import pi
+from sympy.functions.elementary.miscellaneous import Min, Max
+from typing import Optional, List, Tuple
+import warnings
 
 from mpmath.libmp.libmpf import prec_to_dps
 
@@ -1713,3 +1717,440 @@ class Quaternion(Expr):
         """
 
         return ln(self.norm())
+  class EnhancedQuaternion(Quaternion):
+    """Enhanced Quaternion class with additional features"""
+    
+    # ============= New Feature 1: Quaternion Interpolation =============
+    
+    def slerp(self, other: 'Quaternion', t: Expr) -> 'Quaternion':
+        """
+        Spherical Linear Interpolation between two quaternions.
+        
+        Parameters
+        ==========
+        other : Quaternion
+            The target quaternion to interpolate to
+        t : Expr
+            Interpolation parameter (0 <= t <= 1)
+            
+        Returns
+        =======
+        Quaternion
+            Interpolated quaternion at parameter t
+            
+        Examples
+        ========
+        >>> from sympy import Quaternion, Rational
+        >>> q1 = Quaternion(1, 0, 0, 0)
+        >>> q2 = Quaternion(0, 1, 0, 0)
+        >>> q1.slerp(q2, Rational(1, 2))
+        """
+        q1 = self.normalize()
+        q2 = other.normalize()
+        
+        # Calculate dot product
+        dot = q1.a * q2.a + q1.b * q2.b + q1.c * q2.c + q1.d * q2.d
+        
+        # If quaternions are too similar, use linear interpolation
+        if abs(dot) > 0.9995:
+            return self.lerp(other, t)
+        
+        # Ensure we take the shortest path
+        if dot < 0:
+            q2 = -q2
+            dot = -dot
+        
+        # Calculate interpolation coefficients
+        theta = acos(dot)
+        sin_theta = sin(theta)
+        
+        w1 = sin((1 - t) * theta) / sin_theta
+        w2 = sin(t * theta) / sin_theta
+        
+        return Quaternion(
+            w1 * q1.a + w2 * q2.a,
+            w1 * q1.b + w2 * q2.b,
+            w1 * q1.c + w2 * q2.c,
+            w1 * q1.d + w2 * q2.d
+        )
+    
+    def lerp(self, other: 'Quaternion', t: Expr) -> 'Quaternion':
+        """
+        Linear interpolation between two quaternions.
+        
+        Parameters
+        ==========
+        other : Quaternion
+            The target quaternion
+        t : Expr
+            Interpolation parameter (0 <= t <= 1)
+        """
+        return Quaternion(
+            (1 - t) * self.a + t * other.a,
+            (1 - t) * self.b + t * other.b,
+            (1 - t) * self.c + t * other.c,
+            (1 - t) * self.d + t * other.d
+        ).normalize()
+    
+    # ============= New Feature 2: Squad Interpolation =============
+    
+    @classmethod
+    def squad(cls, q0: 'Quaternion', q1: 'Quaternion', 
+              q2: 'Quaternion', q3: 'Quaternion', t: Expr) -> 'Quaternion':
+        """
+        Squad (Spherical Quadrangle) interpolation for smooth quaternion curves.
+        
+        Parameters
+        ==========
+        q0, q1, q2, q3 : Quaternion
+            Control quaternions for the cubic spline
+        t : Expr
+            Interpolation parameter (0 <= t <= 1)
+            
+        Returns
+        =======
+        Quaternion
+            Smoothly interpolated quaternion
+        """
+        # Calculate intermediate control points
+        s1 = cls._squad_tangent(q0, q1, q2)
+        s2 = cls._squad_tangent(q1, q2, q3)
+        
+        # Two-level slerp for smooth interpolation
+        slerp1 = q1.slerp(q2, t)
+        slerp2 = s1.slerp(s2, t)
+        
+        return slerp1.slerp(slerp2, 2 * t * (1 - t))
+    
+    @staticmethod
+    def _squad_tangent(q_prev: 'Quaternion', q_curr: 'Quaternion', 
+                       q_next: 'Quaternion') -> 'Quaternion':
+        """Calculate squad tangent for smooth interpolation"""
+        q_inv = q_curr.inverse()
+        log1 = (q_inv * q_prev).log()
+        log2 = (q_inv * q_next).log()
+        tangent = (log1 + log2) * Rational(-1, 4)
+        return q_curr * tangent.exp()
+    
+    # ============= New Feature 3: Distance Metrics =============
+    
+    def geodesic_distance(self, other: 'Quaternion') -> Expr:
+        """
+        Calculate geodesic distance between two quaternions on the unit sphere.
+        
+        Returns
+        =======
+        Expr
+            The geodesic distance
+        """
+        q1 = self.normalize()
+        q2 = other.normalize()
+        dot = abs(q1.a * q2.a + q1.b * q2.b + q1.c * q2.c + q1.d * q2.d)
+        return acos(Min(dot, 1))
+    
+    def chordal_distance(self, other: 'Quaternion') -> Expr:
+        """
+        Calculate chordal distance between two quaternions.
+        """
+        diff = self - other
+        return diff.norm()
+    
+    # ============= New Feature 4: Advanced Decompositions =============
+    
+    def swing_twist_decomposition(self, axis: Tuple[Expr, Expr, Expr]) -> Tuple['Quaternion', 'Quaternion']:
+        """
+        Decompose quaternion into swing and twist components around an axis.
+        
+        Parameters
+        ==========
+        axis : tuple
+            The twist axis (x, y, z)
+            
+        Returns
+        =======
+        tuple
+            (swing_quaternion, twist_quaternion)
+        """
+        # Normalize the axis
+        axis_norm = sqrt(axis[0]**2 + axis[1]**2 + axis[2]**2)
+        axis = (axis[0]/axis_norm, axis[1]/axis_norm, axis[2]/axis_norm)
+        
+        # Project quaternion onto twist axis
+        projection = self.b * axis[0] + self.c * axis[1] + self.d * axis[2]
+        
+        # Twist quaternion
+        twist = Quaternion(self.a, 
+                          projection * axis[0],
+                          projection * axis[1], 
+                          projection * axis[2]).normalize()
+        
+        # Swing quaternion
+        swing = self * twist.inverse()
+        
+        return (swing, twist)
+    
+    def polar_decomposition(self) -> Tuple['Quaternion', Expr]:
+        """
+        Decompose quaternion into unit quaternion and positive scalar.
+        
+        Returns
+        =======
+        tuple
+            (unit_quaternion, magnitude)
+        """
+        magnitude = self.norm()
+        unit_quat = self.normalize()
+        return (unit_quat, magnitude)
+    
+    # ============= New Feature 5: Quaternion Derivatives =============
+    
+    def angular_velocity(self, dt: Expr) -> 'Quaternion':
+        """
+        Calculate angular velocity quaternion for rotation rate.
+        
+        Parameters
+        ==========
+        dt : Expr
+            Time differential
+            
+        Returns
+        =======
+        Quaternion
+            Angular velocity as a pure quaternion
+        """
+        q_dot = self.diff(dt)
+        omega_quat = 2 * q_dot * self.conjugate()
+        return omega_quat.vector_part()
+    
+    def time_derivative(self, omega: 'Quaternion') -> 'Quaternion':
+        """
+        Calculate time derivative given angular velocity.
+        
+        Parameters
+        ==========
+        omega : Quaternion
+            Angular velocity (pure quaternion)
+            
+        Returns
+        =======
+        Quaternion
+            dq/dt
+        """
+        if not omega.is_pure():
+            raise ValueError("Angular velocity must be a pure quaternion")
+        return self * omega * Rational(1, 2)
+    
+    # ============= New Feature 6: Statistical Operations =============
+    
+    @classmethod
+    def mean(cls, quaternions: List['Quaternion'], weights: Optional[List[Expr]] = None) -> 'Quaternion':
+        """
+        Calculate weighted mean of quaternions using iterative averaging.
+        
+        Parameters
+        ==========
+        quaternions : list
+            List of quaternions to average
+        weights : list, optional
+            Weights for each quaternion
+            
+        Returns
+        =======
+        Quaternion
+            Weighted mean quaternion
+        """
+        if not quaternions:
+            raise ValueError("Cannot compute mean of empty list")
+        
+        if weights is None:
+            weights = [S.One] * len(quaternions)
+        
+        # Normalize weights
+        total_weight = sum(weights)
+        weights = [w / total_weight for w in weights]
+        
+        # Start with weighted sum for initial guess
+        mean_q = sum(w * q for w, q in zip(weights, quaternions))
+        mean_q = mean_q.normalize()
+        
+        # Iterative refinement (simplified for symbolic computation)
+        for _ in range(3):  # Limited iterations for symbolic expressions
+            tangent_sum = Quaternion(0, 0, 0, 0)
+            for w, q in zip(weights, quaternions):
+                # Log map to tangent space
+                relative_q = mean_q.inverse() * q
+                log_q = relative_q.log()
+                tangent_sum = tangent_sum + w * log_q
+            
+            # Update mean
+            mean_q = mean_q * tangent_sum.exp()
+            mean_q = mean_q.normalize()
+        
+        return mean_q
+    
+    # ============= New Feature 7: Conversion Methods =============
+    
+    def to_rodrigues(self) -> Tuple[Expr, Expr, Expr]:
+        """
+        Convert quaternion to Rodrigues rotation vector.
+        
+        Returns
+        =======
+        tuple
+            Rodrigues vector (rx, ry, rz)
+        """
+        if abs(self.a) < 1e-10:
+            # Handle 180 degree rotation case
+            factor = S.Infinity
+        else:
+            factor = 1 / self.a
+        
+        return (self.b * factor, self.c * factor, self.d * factor)
+    
+    @classmethod
+    def from_rodrigues(cls, vec: Tuple[Expr, Expr, Expr]) -> 'Quaternion':
+        """
+        Create quaternion from Rodrigues rotation vector.
+        
+        Parameters
+        ==========
+        vec : tuple
+            Rodrigues vector (rx, ry, rz)
+        """
+        rx, ry, rz = vec
+        theta = sqrt(rx**2 + ry**2 + rz**2)
+        
+        if theta.is_zero:
+            return cls(1, 0, 0, 0)
+        
+        half_theta = atan(theta)
+        factor = sin(half_theta) / theta
+        
+        return cls(
+            cos(half_theta),
+            factor * rx,
+            factor * ry,
+            factor * rz
+        )
+    
+    # ============= New Feature 8: Quaternion Filtering =============
+    
+    def low_pass_filter(self, target: 'Quaternion', alpha: Expr) -> 'Quaternion':
+        """
+        Apply low-pass filter for smooth quaternion transitions.
+        
+        Parameters
+        ==========
+        target : Quaternion
+            Target quaternion
+        alpha : Expr
+            Filter coefficient (0 < alpha < 1)
+            
+        Returns
+        =======
+        Quaternion
+            Filtered quaternion
+        """
+        return self.slerp(target, alpha)
+    
+    # ============= New Feature 9: Error Metrics =============
+    
+    def rotation_error(self, target: 'Quaternion') -> Expr:
+        """
+        Calculate rotation error angle between two quaternions.
+        
+        Returns
+        =======
+        Expr
+            Error angle in radians
+        """
+        error_q = target * self.inverse()
+        return error_q.angle()
+    
+    # ============= New Feature 10: Quaternion Constraints =============
+    
+    def project_to_constraint(self, axis: Tuple[Expr, Expr, Expr], 
+                            allowed_angle: Optional[Expr] = None) -> 'Quaternion':
+        """
+        Project quaternion to satisfy rotation constraints.
+        
+        Parameters
+        ==========
+        axis : tuple
+            Constraint axis
+        allowed_angle : Expr, optional
+            Maximum allowed rotation angle
+            
+        Returns
+        =======
+        Quaternion
+            Constrained quaternion
+        """
+        swing, twist = self.swing_twist_decomposition(axis)
+        
+        if allowed_angle is not None:
+            # Limit twist angle
+            twist_angle = twist.angle()
+            if abs(twist_angle) > allowed_angle:
+                limited_angle = allowed_angle * sign(twist_angle)
+                twist = Quaternion.from_axis_angle(axis, limited_angle)
+        
+        return swing * twist
+    
+    # ============= New Feature 11: Dual Quaternions Support =============
+    
+    def to_dual_quaternion(self, translation: Tuple[Expr, Expr, Expr] = (0, 0, 0)) -> Tuple['Quaternion', 'Quaternion']:
+        """
+        Convert to dual quaternion for combined rotation and translation.
+        
+        Parameters
+        ==========
+        translation : tuple
+            Translation vector (x, y, z)
+            
+        Returns
+        =======
+        tuple
+            (real_part, dual_part) of dual quaternion
+        """
+        t = Quaternion(0, translation[0], translation[1], translation[2])
+        dual_part = t * self * Rational(1, 2)
+        return (self, dual_part)
+    
+    # ============= New Feature 12: Optimization Methods =============
+    
+    def optimize_path(self, target: 'Quaternion', obstacles: List['Quaternion'] = None) -> List['Quaternion']:
+        """
+        Generate optimized rotation path avoiding obstacles.
+        
+        Parameters
+        ==========
+        target : Quaternion
+            Target orientation
+        obstacles : list, optional
+            List of quaternion obstacles to avoid
+            
+        Returns
+        =======
+        list
+            List of intermediate quaternions forming the path
+        """
+        steps = 10
+        path = []
+        
+        for i in range(steps + 1):
+            t = Rational(i, steps)
+            q = self.slerp(target, t)
+            
+            # Simple obstacle avoidance
+            if obstacles:
+                for obs in obstacles:
+                    dist = q.geodesic_distance(obs)
+                    if dist < pi/6:  # Threshold distance
+                        # Perturb away from obstacle
+                        avoidance = q - obs * Rational(1, 10)
+                        q = avoidance.normalize()
+            
+            path.append(q)
+        
+        return path      
