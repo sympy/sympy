@@ -1306,6 +1306,14 @@ def test_op_priority():
         def __init__(self, name):
             self.name = name
 
+        # The following definitions are required to satisfy mypy.
+
+        def subs():
+            pass
+
+        def simplify():
+            pass
+
     Lorentz = TensorIndexType('Lorentz', dim=4, dummy_name='L')
     a = tensor_indices('a', Lorentz)
     p = tensor_heads('p', [Lorentz])
