@@ -5,8 +5,8 @@
 Creation and Annihilation Operators
 ======================================
 
-We use :mod:'sympy' symbols and quantum operators; the visualization uses a SymPy
-expression for the energy ladder and evaluates it via :func:'sympy.lambdify'.
+We use :mod:`sympy` symbols and quantum operators; the visualization uses a SymPy
+expression for the energy ladder and evaluates it via :func:`sympy.lambdify`.
 
 Symbolic setup
 ==============
