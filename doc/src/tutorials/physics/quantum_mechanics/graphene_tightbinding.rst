@@ -1,8 +1,8 @@
 .. _graphene_tightbinding:
 
-========================================
+==========================================
 Graphene Band Structure with Tight Binding
-========================================
+==========================================
 
 This tutorial demonstrates how to use Python (NumPy + Matplotlib + SymPy) to 
 calculate and plot the **band structure** and **density of states (DOS)** of 
