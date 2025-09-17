@@ -663,13 +663,16 @@ def test_diagonal():
     s = SparseMatrix(3, 3, {(1, 1): 1})
     assert type(s.diagonal()) == type(s)
     assert type(m) != type(s)
-    raises(ValueError, lambda: m.diagonal(3))
-    raises(ValueError, lambda: m.diagonal(-3))
+    assert m.diagonal(3)  == Matrix(1, 0, [])
+    assert m.diagonal(-3) == Matrix(1, 0, [])
     raises(ValueError, lambda: m.diagonal(pi))
     M = ones(2, 3)
     assert banded({i: list(M.diagonal(i))
         for i in range(1-M.rows, M.cols)}) == M
 
+    #https://github.com/sympy/sympy/issues/28067
+    x = Matrix([])
+    assert x.diagonal() == Matrix(1, 0, [])
 
 def test_jordan_block():
     assert Matrix.jordan_block(3, 2) == Matrix.jordan_block(3, eigenvalue=2) \
