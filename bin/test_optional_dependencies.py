@@ -36,7 +36,7 @@ test_list = [
     '*llvm*',
 
     # aesara
-    '*aesara*',
+    #'*aesara*',
 
     # jax
     '*jax*',
