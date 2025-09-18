@@ -26,3 +26,4 @@ write to our `mailing list
    continuum_mechanics/index.rst
    control/index.rst
    quantum/index.rst
+
