@@ -767,6 +767,7 @@ def test_assert_literals_and_conflict():
     for eq in expected_eqs:
         assert eq in explanation
 
+
 def test_explain_disequality_basic():
     """Test basic disequality explanation with direct disequality."""
     solver = EUFTheorySolver()
@@ -1095,6 +1096,7 @@ def test_large_random_constraint_set():
     assert sat_count != TRIAL_COUNT
     print(f"{sat_count} / {TRIAL_COUNT} problems were satifiable")
 
+
 def test_random_sat_problems():
     """Test large random sat problem involving euf constraints."""
     z3 = import_module("z3")
@@ -1125,6 +1127,45 @@ def test_random_sat_problems():
 
         # Still verify against Z3 on the full disjunction.
         simple_disjunction = boolalg.Or(*(boolalg.And(*cs) for cs in constraint_sets))
+        assert simple_disjunction not in (False, True)
+        z3_sat = z3_satisfiable(simple_disjunction) is not False
+
+        assert sympy_sat == z3_sat
+        if sympy_sat:
+            sat_count += 1
+
+    print(f"{sat_count} / {TRIAL_COUNT} problems were satifiable")
+
+
+def test_random_sat_problems_2():
+    """Test large random sat problem involving euf constraints."""
+    z3 = import_module("z3")
+    if z3 is None:
+        skip("z3 not installed.")
+    # z3_comparator = Z3Comparator() if Z3_AVAILABLE else None
+
+    sat_count = 0
+    TRIAL_COUNT = 2
+
+
+    for trial in range(TRIAL_COUNT):
+        # Re-seed per trial to avoid cross-trial RNG state and keep runs reproducible
+        generator = RandomEUFTestGenerator(seed=42 + trial)
+        constraint_sets = [generator.generate_constraint_set(num_constraints=100) for _ in range(TRIAL_COUNT)]
+
+        # Avoid asserting a big disjunction in a single SAT+DPLL(T) run because EUF
+        # lacks proper backtracking across branches in this integration.
+        # Check each branch (conjunction) independently, then OR the results.
+        branch_results = []
+        for cs in constraint_sets:
+            conjunct = boolalg.Or(*cs)
+            assert conjunct not in (False, True)
+            branch_results.append(satisfiable(conjunct, use_euf_theory=True) is not False)
+
+        sympy_sat = all(branch_results)
+
+        # Still verify against Z3 on the full disjunction.
+        simple_disjunction = boolalg.And(*(boolalg.Or(*cs) for cs in constraint_sets))
         assert simple_disjunction not in (False, True)
         z3_sat = z3_satisfiable(simple_disjunction) is not False
 
