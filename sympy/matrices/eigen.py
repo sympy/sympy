@@ -1431,7 +1431,7 @@ def _jordan_form_rational_matrix(M, calc_transform):
             mat_char = eig_mat(fac, field)
 
         mat_pow = mat_char
-        nullity = len(nullspace_to_list(mat_char.nullspace(divide_last=True).transpose()))
+        nullity = mat_pow.nullspace(divide_last=True).shape[0]
         i       = 2
 
         while nullity != ret[-1]:
@@ -1440,7 +1440,7 @@ def _jordan_form_rational_matrix(M, calc_transform):
             if nullity == algebraic_multiplicity:
                 break
             mat_pow *= mat_char
-            nullity = len(nullspace_to_list(mat_pow.nullspace(divide_last=True).transpose()))
+            nullity = nullity = mat_pow.nullspace(divide_last=True).shape[0]
             i       += 1
         return ret
 
@@ -1467,53 +1467,22 @@ def _jordan_form_rational_matrix(M, calc_transform):
     _, factors = dup_factor_list(charpoly, domain)
     rows, cols = dM.shape
 
-    _is_diagonalizable = all(exp == 1 for _, exp in factors)
     eigenvals_by_factor = factors_to_eigenvals()
 
-    if _is_diagonalizable:
-        eigen_values = [eig for eigs_list in eigenvals_by_factor.values() for eig in eigs_list]
-
-        jordan_mat = M.diag(*eigen_values)
-
-        if not calc_transform:
-            return jordan_mat
-
-        jordan_basis = []
-        for base, multiplicity in eigenvals_by_factor:
-            key = (base, multiplicity)
-
-            if len(base) == 2:
-                field = domain
-                basis = eig_mat(base, field).nullspace(divide_last=True)
-            else:
-                minpoly = Poly.from_list(base, l, domain=domain)
-                field = FiniteExtension(minpoly)
-                l = minpoly.gens[0]
-                basis = eig_mat(base, field).nullspace(divide_last=True)
-
-            eigenvects = basis.rep.to_ddm()
-            eigenvects = [[field.to_sympy(x) for x in vect] for vect in eigenvects]
-
-            if len(base) != 2:
-                for val in eigenvals_by_factor[key]:
-                    vects = [Matrix([x.subs(l, val) for x in vect]) for vect in eigenvects]
-                    jordan_basis.extend(vects)
-            else:
-                jordan_basis.extend([Matrix(vect) for vect in eigenvects])
-
-        basis_mat = M.hstack(*jordan_basis)
-        return basis_mat, jordan_mat
-
     block_structure = {}
-    for fac, m in eigenvals_by_factor:
-        nullity = nullity_chain(fac, m)
-        block_sizes = _blocks_from_nullity_chain(nullity)
+    for fac, multiplicity in eigenvals_by_factor:
+        if multiplicity == 1:
+            block_sizes = [1]
+        else:
+            nullity = nullity_chain(fac, multiplicity)
+            block_sizes = _blocks_from_nullity_chain(nullity)
+
         size_nums = [(i+1, num) for i, num in enumerate(block_sizes)]
 
         # we expect larger Jordan blocks to come earlier
         size_nums.reverse()
 
-        eigen_vals = eigenvals_by_factor[(fac, m)]
+        eigen_vals = eigenvals_by_factor[(fac, multiplicity)]
         for r in eigen_vals:
             for size, num in size_nums:
                 block_structure.setdefault(r, []).extend([size] * num)
