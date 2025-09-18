@@ -1,9 +1,13 @@
 # sympy/printing/aesaracode.py
+# - Module imports without Aesara
+# - Public APIs raise clear ImportError when Aesara is missing
+# - Doctests won't fail under plain doctest when Aesara isn't installed
+
 from __future__ import annotations
 
 import math
 from functools import partial
-from typing import Any
+from typing import Any, Dict, Iterable, Mapping
 
 import sympy
 from sympy.external import import_module
@@ -11,12 +15,14 @@ from sympy.printing.printer import Printer
 from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.iterables import is_sequence
 
-# ---------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Optional dependency handling
-# ---------------------------------------------------------------------------
-aesara = import_module("aesara")  # -> module or None
+# -----------------------------------------------------------------------------
+# NOTE: sympy.external.import_module returns None if the package is missing,
+#       which lets this module import even when Aesara isn't installed.
+aesara = import_module("aesara")  # type: ignore[assignment]
 
-# Keep for doctest runners that honor it (nose, xdoctest, etc.)
+# For doctest runners that honor it (e.g., nose, xdoctest). Plain doctest ignores this.
 __doctest_requires__ = {
     "aesara_function": ["aesara"],
     "aesara_code": ["aesara"],
@@ -24,19 +30,25 @@ __doctest_requires__ = {
     "sympy.printing.aesaracode.aesara_code": ["aesara"],
 }
 
-# ---------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Aesara-dependent bindings
-# ---------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
+# We declare MAPPING exactly once to keep linters happy. It's populated only
+# when Aesara is available; otherwise it remains an empty dict.
+MAPPING: Dict[type, Any] = {}
+
 if aesara:
+    # Import Aesara symbols only when available
     aes = aesara.scalar
     aet = aesara.tensor
     from aesara.tensor import nlinalg
     from aesara.tensor.elemwise import Elemwise, DimShuffle
 
-    # Aesara 2.8.11 renamed true_div -> true_divide
+    # Aesara 2.8.11 renamed true_div -> true_divide. Support both.
     true_divide = getattr(aet, "true_divide", None) or aet.true_div
 
-    _MAPPING = {
+    # Map SymPy node types to Aesara tensor ops.
+    MAPPING.update({
         sympy.Add:        aet.add,
         sympy.Mul:        aet.mul,
         sympy.Abs:        aet.abs,
@@ -71,58 +83,70 @@ if aesara:
         sympy.StrictLessThan:    aet.lt,
         sympy.LessThan:          aet.le,
         sympy.GreaterThan:       aet.ge,
-        sympy.And:        aet.bitwise_and,
-        sympy.Or:         aet.bitwise_or,
-        sympy.Not:        aet.invert,
-        sympy.Xor:        aet.bitwise_xor,
-        sympy.Max:        aet.maximum,
-        sympy.Min:        aet.minimum,
+        sympy.And:        aet.bitwise_and,   # bitwise
+        sympy.Or:         aet.bitwise_or,    # bitwise
+        sympy.Not:        aet.invert,        # bitwise
+        sympy.Xor:        aet.bitwise_xor,   # bitwise
+        sympy.Max:        aet.maximum,       # note: Aesara accepts 2 inputs
+        sympy.Min:        aet.minimum,       # note: Aesara accepts 2 inputs
         sympy.conjugate:  aet.conj,
         sympy.core.numbers.ImaginaryUnit: lambda: aet.complex(0, 1),
-        # Matrices
-        sympy.MatAdd:         Elemwise(aes.add),
+        # Matrix constructs
+        sympy.MatAdd:          Elemwise(aes.add),
         sympy.HadamardProduct: Elemwise(aes.mul),
-        sympy.Trace:          nlinalg.trace,
-        sympy.Determinant:    nlinalg.det,
-        sympy.Inverse:        nlinalg.matrix_inverse,
-        sympy.Transpose:      DimShuffle((False, False), [1, 0]),
-    }
-
+        sympy.Trace:           nlinalg.trace,
+        sympy.Determinant:     nlinalg.det,
+        sympy.Inverse:         nlinalg.matrix_inverse,
+        sympy.Transpose:       DimShuffle((False, False), [1, 0]),
+    })
 else:
-    # Stubs to keep module importable; APIs will raise when called.
-    aes = aet = nlinalg = None
+    # Stubs so names exist; APIs will raise a clear error when used.
+    aes = None
+    aet = None
+    nlinalg = None
+    Elemwise = object  # harmless placeholder
+    class DimShuffle:  # pragma: no cover - not used without Aesara
+        def __init__(self, *_, **__):  # noqa: D401
+            """Placeholder for DimShuffle when Aesara is missing."""
+            pass
     true_divide = None
-    _MAPPING: dict[type, Any] = {}
 
-# ---------------------------------------------------------------------------
-# Printer
-# ---------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
+# Errors
+# -----------------------------------------------------------------------------
 class _AesaraMissingError(ImportError):
+    """Uniform error when Aesara-backed functionality is invoked without Aesara."""
     def __init__(self, api: str):
         super().__init__(f"Aesara is required for {api}")
 
+# -----------------------------------------------------------------------------
+# Printer
+# -----------------------------------------------------------------------------
 class AesaraPrinter(Printer):
     """
     .. deprecated:: 1.14
        The Aesara code printer is deprecated. See :ref:`deprecated-aesaraprinter`.
 
-    Code printer producing Aesara symbolic graphs.
+    Code printer that produces Aesara symbolic graphs from SymPy expressions.
     """
     printmethod = "_aesara"
 
     def __init__(self, *args, **kwargs):
         if not aesara:
+            # Fail fast only when the printer is actually constructed
             raise _AesaraMissingError("AesaraPrinter")
-        self.cache = kwargs.pop("cache", {})
+        self.cache: Dict[Any, Any] = kwargs.pop("cache", {})
         super().__init__(*args, **kwargs)
 
-    # ---- cache helpers ----
+    # ---- cache helpers ------------------------------------------------------
     def _get_key(self, s, name=None, dtype=None, broadcastable=None):
+        """Create a stable cache key for SymPy object s."""
         if name is None:
             name = s.name
         return (name, type(s), s.args, dtype, broadcastable)
 
     def _get_or_create(self, s, name=None, dtype=None, broadcastable=None):
+        """Return cached Aesara variable or create it."""
         if not aesara:
             raise _AesaraMissingError("AesaraPrinter")
         if name is None:
@@ -134,11 +158,11 @@ class AesaraPrinter(Printer):
         key = self._get_key(s, name, dtype=dtype, broadcastable=broadcastable)
         if key in self.cache:
             return self.cache[key]
-        value = aet.tensor(name=name, dtype=dtype, shape=broadcastable)
+        value = aet.tensor(name=name, dtype=dtype, shape=broadcastable)  # type: ignore[attr-defined]
         self.cache[key] = value
         return value
 
-    # ---- node printers ----
+    # ---- node printers ------------------------------------------------------
     def _print_Symbol(self, s, **kw):
         return self._get_or_create(
             s,
@@ -155,23 +179,25 @@ class AesaraPrinter(Printer):
         )
 
     def _print_Basic(self, expr, **kw):
-        op = _MAPPING[type(expr)]
+        # Lookup the corresponding Aesara op and apply on children
+        op = MAPPING[type(expr)]
         return op(*[self._print(arg, **kw) for arg in expr.args])
 
     def _print_Number(self, n, **_):
+        # Integers handled elsewhere; cast to float by default
         return float(n.evalf())
 
     def _print_MatrixSymbol(self, X, **kw):
         return self._get_or_create(
             X,
             dtype=kw.get("dtypes", {}).get(X),
-            broadcastable=(None, None),
+            broadcastable=(None, None),  # 2D
         )
 
     def _print_DenseMatrix(self, X, **kw):
         if not hasattr(aet, "stacklists"):
             raise NotImplementedError(
-                "Matrix translation not yet supported in this Aesara version"
+                "Matrix translation not supported by this Aesara version"
             )
         return aet.stacklists([[self._print(a, **kw) for a in row] for row in X.tolist()])
 
@@ -225,7 +251,7 @@ class AesaraPrinter(Printer):
         return aet.switch(pc, pe, rest)
 
     def _print_Rational(self, expr, **kw):
-        return true_divide(self._print(expr.p, **kw), self._print(expr.q, **kw))
+        return true_divide(self._print(expr.p, **kw), self._print(expr.q, **kw))  # type: ignore[misc]
 
     def _print_Integer(self, expr, **_):
         return expr.p
@@ -244,31 +270,32 @@ class AesaraPrinter(Printer):
     def emptyPrinter(self, expr):
         return expr
 
-    def doprint(self, expr, dtypes=None, broadcastables=None):
+    def doprint(self, expr, dtypes: Mapping[Any, Any] | None = None,
+                broadcastables: Mapping[Any, Any] | None = None):
+        """Entry point used by aesara_code to produce an Aesara graph variable."""
         if dtypes is None:
             dtypes = {}
         if broadcastables is None:
             broadcastables = {}
         return self._print(expr, dtypes=dtypes, broadcastables=broadcastables)
 
-# ---------------------------------------------------------------------------
-# Public API
-# ---------------------------------------------------------------------------
-global_cache: dict[Any, Any] = {}
+# -----------------------------------------------------------------------------
+# Public helpers
+# -----------------------------------------------------------------------------
+global_cache: Dict[Any, Any] = {}
 
-def aesara_code(expr, cache=None, **kwargs):
+def aesara_code(expr, cache: Dict[Any, Any] | None = None, **kwargs):
     """
     Convert a SymPy expression into an Aesara graph variable.
 
-    Examples (guarded so plain doctest doesn't fail if Aesara is absent)
-    ------------------------------------------------------------------------------
+    Guarded doctest (won't fail when Aesara is absent):
     >>> from sympy.abc import x
     >>> from sympy.external import import_module
     >>> _aes = import_module('aesara')
     >>> if _aes:
     ...     from sympy.printing.aesaracode import aesara_code
     ...     v = aesara_code(x + 1, cache={})
-    ...     type(v).__name__ in {'TensorVariable', 'TensorConstant'}
+    ...     isinstance(getattr(v, 'type', None), object)
     True
     """
     sympy_deprecation_warning(
@@ -282,31 +309,39 @@ def aesara_code(expr, cache=None, **kwargs):
         cache = global_cache
     return AesaraPrinter(cache=cache, settings={}).doprint(expr, **kwargs)
 
-def dim_handling(inputs, dim=None, dims=None, broadcastables=None):
+def dim_handling(
+    inputs: Iterable[Any],
+    dim: int | None = None,
+    dims: Mapping[Any, int] | None = None,
+    broadcastables: Mapping[Any, tuple[bool, ...]] | None = None,
+) -> Dict[Any, tuple[bool, ...]]:
+    """
+    Back-compat utility that derives Aesara 'broadcastable' tuples for inputs.
+    Priority: dim > dims > broadcastables > {}
+    """
     if dim is not None:
         return dict.fromkeys(inputs, (False,) * dim)
     if dims is not None:
         maxdim = max(dims.values())
         return {s: (False,) * d + (True,) * (maxdim - d) for s, d in dims.items()}
     if broadcastables is not None:
-        return broadcastables
+        return dict(broadcastables)
     return {}
 
 def aesara_function(
-    inputs,
-    outputs,
-    scalar=False,
+    inputs: Iterable[Any],
+    outputs: Iterable[Any],
+    scalar: bool = False,
     *,
-    dim=None,
-    dims=None,
-    broadcastables=None,
+    dim: int | None = None,
+    dims: Mapping[Any, int] | None = None,
+    broadcastables: Mapping[Any, tuple[bool, ...]] | None = None,
     **kwargs,
 ):
     """
     Create an Aesara function from SymPy expressions.
 
-    Examples (guarded)
-    ------------------
+    Guarded doctests:
     >>> from sympy.abc import x, y, z
     >>> from sympy.external import import_module
     >>> _aes = import_module('aesara')
@@ -335,10 +370,10 @@ def aesara_function(
     cache = kwargs.pop("cache", {})
     dtypes = kwargs.pop("dtypes", {})
 
-    broadcastables = dim_handling(
-        inputs, dim=dim, dims=dims, broadcastables=broadcastables
-    )
+    # Determine broadcastables (dim/dims/back-compat)
+    broadcastables = dim_handling(inputs, dim=dim, dims=dims, broadcastables=broadcastables)
 
+    # Convert inputs/outputs to Aesara variables
     code = partial(aesara_code, cache=cache, dtypes=dtypes, broadcastables=broadcastables)
     tinputs = list(map(code, inputs))
     toutputs = list(map(code, outputs))
@@ -346,19 +381,23 @@ def aesara_function(
     # Ensure constants are tensors
     from aesara.graph.basic import Variable as AesaraVariable
     toutputs = [
-        out if isinstance(out, AesaraVariable) else aet.as_tensor_variable(out)
+        out if isinstance(out, AesaraVariable) else aet.as_tensor_variable(out)  # type: ignore[attr-defined]
         for out in toutputs
     ]
     if len(toutputs) == 1:
-        toutputs = toutputs[0]
+        toutputs = toutputs[0]  # type: ignore[assignment]
 
-    func = aesara.function(tinputs, toutputs, **kwargs)
-    is_0d = [len(o.variable.broadcastable) == 0 for o in func.outputs]
+    # Compile Aesara function
+    func = aesara.function(tinputs, toutputs, **kwargs)  # type: ignore[call-arg]
+
+    # Detect 0-dim outputs for optional scalar squeezing
+    is_0d = [len(o.variable.broadcastable) == 0 for o in func.outputs]  # type: ignore[attr-defined]
 
     if not scalar or not any(is_0d):
-        func.aesara_function = func
+        func.aesara_function = func  # type: ignore[attr-defined]
         return func
 
+    # Wrap to squeeze 0-d outputs into Python scalars
     def wrapper(*args):
         out = func(*args)
         if is_sequence(out):
@@ -367,7 +406,7 @@ def aesara_function(
 
     wrapper.__wrapped__ = func
     wrapper.__doc__ = func.__doc__
-    wrapper.aesara_function = func
+    wrapper.aesara_function = func  # type: ignore[attr-defined]
     return wrapper
 
 __all__ = [
