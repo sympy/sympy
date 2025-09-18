@@ -1194,8 +1194,6 @@ class PythonPowerSeriesRingZZ:
                 return coeffs, None
             else:
                 prec = self._prec
-        else:
-            prec = min(prec, self._prec)
 
         if len(coeffs) > prec:
             coeffs = dup_truncate(coeffs, prec, self._domain)
@@ -1462,8 +1460,6 @@ class PythonPowerSeriesRingQQ:
                 return coeffs, None
             else:
                 prec = self._prec
-        else:
-            prec = min(prec, self._prec)
 
         if len(coeffs) > prec:
             coeffs = dup_truncate(coeffs, prec, self._domain)

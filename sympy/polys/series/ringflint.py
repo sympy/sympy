@@ -205,8 +205,6 @@ class FlintPowerSeriesRingZZ:
             if len(coeffs) <= self._prec:
                 return fmpz_poly(coeffs)
             prec = self._prec
-        else:
-            prec = min(prec, self._prec)
 
         return fmpz_series(coeffs, prec=prec)
 
@@ -652,8 +650,6 @@ class FlintPowerSeriesRingQQ:
             if len(coeffs) <= self._prec:
                 return fmpq_poly(coeffs)
             prec = self._prec
-        else:
-            prec = min(prec, self._prec)
 
         return fmpq_series(coeffs, prec=prec)
 
