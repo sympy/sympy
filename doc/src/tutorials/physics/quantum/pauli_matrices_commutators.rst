@@ -13,14 +13,14 @@ Explore the algebra of the **Pauli matrices**, compute their commutators symboli
 Input variables
 ---------------
 
-- :math:`\sigma_x, \sigma_y, \sigma_z` — the standard 2×2 Pauli matrices.  
-- :math:`s` — a real-valued scaling parameter applied to the matrices in the visualization.  
-- :math:`o` — an offset parameter applied to :math:`\sigma_x` as a scalar multiple of the identity.  
+- :math:`\sigma_x, \sigma_y, \sigma_z` — the standard 2×2 Pauli matrices.
+- :math:`s` — a real-valued scaling parameter applied to the matrices in the visualization.
+- :math:`o` — an offset parameter applied to :math:`\sigma_x` as a scalar multiple of the identity.
 
 Example problem
 ---------------
 
-**Question.** Verify that the Pauli matrices satisfy the SU(2) commutation relations  
+**Question.** Verify that the Pauli matrices satisfy the SU(2) commutation relations
 
 .. math::
 
@@ -28,9 +28,9 @@ Example problem
 
 where :math:`\epsilon_{ijk}` is the Levi-Civita symbol. Then, visualize the effect of applying a scaling parameter :math:`s` and an offset :math:`o` to these matrices.
 
-**Approach.**  
-1. Define the Pauli matrices symbolically in SymPy.  
-2. Compute their commutators and check if they match the SU(2) algebra.  
+**Approach.**
+1. Define the Pauli matrices symbolically in SymPy.
+2. Compute their commutators and check if they match the SU(2) algebra.
 3. Introduce symbolic variables :math:`s,o`, lambdify the modified matrices, and plot the results as numeric arrays.
 
 Symbolic setup
@@ -79,9 +79,9 @@ Visualization (SymPy → NumPy via ``lambdify``)
 
 For visualization, we introduce symbolic variables:
 
-- ``s`` is a real-valued scaling factor applied to each matrix.  
-- ``offset`` is a real-valued parameter that shifts :math:`\sigma_x` by adding ``offset`` times the identity matrix.  
-- ``Mx``, ``My``, ``Mz`` are symbolic matrix expressions that depend on ``s`` and ``offset``.  
+- ``s`` is a real-valued scaling factor applied to each matrix.
+- ``offset`` is a real-valued parameter that shifts :math:`\sigma_x` by adding ``offset`` times the identity matrix.
+- ``Mx``, ``My``, ``Mz`` are symbolic matrix expressions that depend on ``s`` and ``offset``.
 - Each is lambdified into a NumPy function for fast numeric evaluation.
 
 After choosing numeric values (``sval=1.0``, ``oval=0.0``), we evaluate these matrices and display them. Each subplot corresponds to one Pauli matrix (or its real part, in the case of :math:`\sigma_y`).
@@ -125,7 +125,7 @@ After choosing numeric values (``sval=1.0``, ``oval=0.0``), we evaluate these ma
        ax.set_xticks([]); ax.set_yticks([])
 
 
-   cax = fig.add_axes([0.88, 0.15, 0.02, 0.7])  
+   cax = fig.add_axes([0.88, 0.15, 0.02, 0.7])
    cbar = fig.colorbar(im, cax=cax, orientation="vertical", label="value")
    cbar.ax.tick_params(labelsize=8)
 
@@ -139,7 +139,7 @@ After choosing numeric values (``sval=1.0``, ``oval=0.0``), we evaluate these ma
 Summary
 --------------
 
-- **Algebra.** The commutators confirm the SU(2) structure: :math:`[\sigma_x,\sigma_y]=2i\sigma_z`, and cyclic permutations.  
-- **Parameters.** The scaling parameter ``s`` magnifies the matrices, while ``offset`` shifts :math:`\sigma_x` by the identity, demonstrating symbolic control.  
-- **Visualization.** Displaying the matrices as color maps emphasizes their entries’ structure and how symbolic parameters affect them.  
+- **Algebra.** The commutators confirm the SU(2) structure: :math:`[\sigma_x,\sigma_y]=2i\sigma_z`, and cyclic permutations.
+- **Parameters.** The scaling parameter ``s`` magnifies the matrices, while ``offset`` shifts :math:`\sigma_x` by the identity, demonstrating symbolic control.
+- **Visualization.** Displaying the matrices as color maps emphasizes their entries’ structure and how symbolic parameters affect them.
 - **Symbolic-to-numeric pipeline.** Using :func:`sympy.utilities.lambdify` to convert symbolic matrices into NumPy arrays cleanly separates the algebraic derivation from the plotting stage.
