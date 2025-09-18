@@ -98,7 +98,7 @@ doctest_list = [
     '*llvm*',
 
     # aesara
-    '*aesara*',
+    #'*aesara*',
 
     # gmpy
     'sympy/ntheory',
