@@ -30,7 +30,7 @@ try:
             except Exception:
                 return default
         _np.obj2sctype = _obj2sctype  # type: ignore[attr-defined]
-except Exception:
+except: 
     # If NumPy isn't available at doc import time, ignore; Sphinx will fail earlier for other reasons.
     pass
 
