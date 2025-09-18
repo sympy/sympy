@@ -33,7 +33,7 @@ Solution approach
 Analytic derivation (all SymPy)
 -------------------------------
 
-**Step 1 — Parameterization of bound states.**  
+**Step 1 — Parameterization of bound states.**
 Bound states satisfy :math:`E<0`.
 Introduce the *binding energy*
 :math:`\varepsilon>0` via :math:`E=-\varepsilon` with :math:`0<\varepsilon<V_0`.
@@ -41,7 +41,7 @@ Define inside/outside wave numbers
 :math:`k=\sqrt{2m(V_0-\varepsilon)}/\hbar` and
 :math:`\alpha=\sqrt{2m\varepsilon}/\hbar`.
 
-**Step 2 — Parity decomposition and boundary conditions.**  
+**Step 2 — Parity decomposition and boundary conditions.**
 For a symmetric well, eigenfunctions have definite parity.
 Imposing continuity at :math:`x=\pm a` and exponential decay outside yields the
 bounded transcendental conditions
@@ -52,7 +52,7 @@ bounded transcendental conditions
    k\cos(ka)+\alpha\sin(ka) &= 0 \quad (\text{odd}).
    \end{aligned}
 
-**Step 3 — Piecewise eigenfunctions.**  
+**Step 3 — Piecewise eigenfunctions.**
 Using the parity-appropriate trigonometric form in :math:`|x|\le a` and
 exponential tails in :math:`|x|>a`, construct
 
@@ -69,7 +69,7 @@ exponential tails in :math:`|x|>a`, construct
    A\,\operatorname{sgn}(x)\sin(ka)\,e^{-\alpha(|x|-a)}, & |x|>a.
    \end{cases}
 
-**Step 4 — Analytic normalization.**  
+**Step 4 — Analytic normalization.**
 By symmetry, integrate over :math:`x\ge 0` and double:
 
 .. math::
@@ -86,7 +86,7 @@ Set :math:`A_{\text{even}}=1/\|\psi_{\text{even}}\|` and
 :math:`A_{\text{odd}}=1/\|\psi_{\text{odd}}\|` to obtain closed-form
 normalization constants.
 
-**Step 5 — Symbolic-to-numeric interface.**  
+**Step 5 — Symbolic-to-numeric interface.**
 Keep the derivation symbolic in SymPy; later substitute numerical parameters,
 solve the transcendental equations, and evaluate normalized wavefunctions via
 :func:`sympy.utilities.lambdify.lambdify`.
@@ -296,5 +296,5 @@ The finite square well supports a **finite** number of bound states determined
 by parity-resolved transcendental equations. Compared to the infinite well,
 eigenfunctions have **exponential tails** outside the well, and the number of
 levels increases with both depth :math:`V_0` and width :math:`a`. Analytic
-normalization ensures correctly scaled wavefunctions, while the symbolic-to-
-numeric workflow cleanly separates derivation from evaluation and visualization.
+normalization ensures correctly scaled wavefunctions, while the symbolic-to-numeric
+workflow cleanly separates derivation from evaluation and visualization.
