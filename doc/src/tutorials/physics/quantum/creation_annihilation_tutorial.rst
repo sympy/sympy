@@ -5,15 +5,38 @@
 Creation and Annihilation Operators
 ======================================
 
-We use :mod:`~sympy` symbols and quantum operators; the visualization uses a SymPy
-expression for the energy ladder.
+Creation (``a†``) and annihilation (``a``) operators are fundamental tools in
+quantum mechanics, especially in the study of the harmonic oscillator and
+quantum field theory. They provide a convenient algebraic way to move between
+quantum states:
 
-Afterwards we evaluate it via :func:`sympy.utilities.lambdify.lambdify`.
+- The annihilation operator ``a`` lowers the state (removes one quantum of
+  energy).
+- The creation operator ``a†`` raises the state (adds one quantum of energy).
+
+These operators obey the commutation relation :math:`[a, a^\dagger] = 1`, which
+encodes the quantization of the system. With them we can systematically build
+the ladder of energy eigenstates and compute physical quantities such as the
+spectrum of the harmonic oscillator.
+
+We will demonstrate this algebra in SymPy, symbolically construct the energy
+levels :math:`E_n`, and then plot the discrete spectrum.
 
 Symbolic setup
 ==============
 
-.. code-block:: python
+We introduce the following variables and operators:
+
+- ``a`` – the annihilation operator.
+- ``a†`` – the creation operator, defined as the Hermitian conjugate of ``a``.
+- ``n`` – the quantum number, a nonnegative integer representing the energy level.
+- ``hbar_omega`` – shorthand for :math:`\hbar \omega`, the characteristic energy scale.
+- ``E_n`` – the symbolic expression for the nth energy level,
+  :math:`E_n = \hbar \omega \left(n + \tfrac{1}{2}\right)`.
+
+.. plot::
+   :include-source: True
+   :context: reset
 
    from sympy.physics.quantum import Dagger, Operator, Commutator
    from sympy import symbols
@@ -30,17 +53,17 @@ Symbolic setup
 Energy ladder plot (SymPy variables → NumPy)
 ============================================
 
+We now convert the symbolic expression for :math:`E_n` into a numerical function
+using ``lambdify`` and evaluate it for several values of ``n`` to plot the
+discrete energy ladder of the harmonic oscillator.
+
 .. plot::
    :include-source: True
+   :context:
 
    import numpy as np
    import matplotlib.pyplot as plt
-   from sympy import symbols, lambdify
-
-   # SymPy variables & expression
-   n = symbols('n', integer=True, nonnegative=True)
-   hw = symbols('hbar_omega', positive=True)
-   E_n = hw*(n + 1/2)
+   from sympy import lambdify
 
    # Turn into a numeric callable E(n, hw)
    E = lambdify((n, hw), E_n, modules="numpy")

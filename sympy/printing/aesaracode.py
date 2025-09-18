@@ -9,9 +9,6 @@ from sympy.utilities.iterables import is_sequence
 import sympy
 from functools import partial
 
-__doctest_requires__ = {
-    'aesara_function': ['aesara'],
-}
 
 aesara = import_module('aesara')
 
@@ -484,28 +481,23 @@ def aesara_function(inputs, outputs, scalar=False, *,
 
     >>> from sympy.abc import x, y, z
     >>> from sympy.printing.aesaracode import aesara_function
-    >>> from sympy.external import import_module
-    >>> _aes = import_module('aesara')  # returns None if not installed
 
     A simple function with one input and one output:
 
-    >>> if _aes:
-    ...     f1 = aesara_function([x], [x**2 - 1], scalar=True)
-    ...     f1(3)
+    >>> f1 = aesara_function([x], [x**2 - 1], scalar=True)
+    >>> f1(3)
     8.0
 
     A function with multiple inputs and one output:
 
-    >>> if _aes:
-    ...     f2 = aesara_function([x, y, z], [(x**z + y**z)**(1/z)], scalar=True)
-    ...     f2(3, 4, 2)
+    >>> f2 = aesara_function([x, y, z], [(x**z + y**z)**(1/z)], scalar=True)
+    >>> f2(3, 4, 2)
     5.0
 
     A function with multiple inputs and multiple outputs:
 
-    >>> if _aes:
-    ...     f3 = aesara_function([x, y], [x**2 + y**2, x**2 - y**2], scalar=True)
-    ...     f3(2, 3)
+    >>> f3 = aesara_function([x, y], [x**2 + y**2, x**2 - y**2], scalar=True)
+    >>> f3(2, 3)
     [13.0, -5.0]
 
     See also
