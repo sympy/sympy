@@ -9,6 +9,9 @@ from sympy.utilities.iterables import is_sequence
 import sympy
 from functools import partial
 
+__doctest_requires__ = {
+    'aesara_function': ['aesara'],
+}
 
 aesara = import_module('aesara')
 
