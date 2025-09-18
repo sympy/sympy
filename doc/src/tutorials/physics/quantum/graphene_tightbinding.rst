@@ -168,3 +168,4 @@ Interpretation of variables and results
 
 - Numerical stability.
   The use of :func:`sympy.utilities.lambdify.lambdify` to create the callable ``fabs_np`` ensures a clean separation between **symbolic definitions** and **numeric evaluation**, preserving exactness in the derivation while enabling efficient computation and plotting.
+  

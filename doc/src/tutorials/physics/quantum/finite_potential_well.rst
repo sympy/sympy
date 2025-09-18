@@ -25,8 +25,8 @@ Solution approach
 -----------------
 
 1. Derive even/odd transcendental equations and analytic normalization constants
-   symbolically in SymPy.  
-2. Use :func:`sympy.solvers.solvers.nsolve` to find bound-state energies.  
+   symbolically in SymPy.
+2. Use :func:`sympy.solvers.solvers.nsolve` to find bound-state energies.
 3. Plot zero-crossing functions, potential, and analytically
    normalized wavefunctions.
 
@@ -34,7 +34,7 @@ Analytic derivation (all SymPy)
 -------------------------------
 
 **Step 1 — Parameterization of bound states.**  
-Bound states satisfy :math:`E<0`. 
+Bound states satisfy :math:`E<0`.
 Introduce the *binding energy*
 :math:`\varepsilon>0` via :math:`E=-\varepsilon` with :math:`0<\varepsilon<V_0`.
 Define inside/outside wave numbers
@@ -233,7 +233,7 @@ Next, we define :math:`V(x)` and reconstruct normalized
        k_val = float(sp.sqrt(2*m_val*(V0_val - eps_val))/hbar_val)
        apha  = float(sp.sqrt(2*m_val*eps_val)/hbar_val)
        Aeven = float(sp.N(A_even_exact.subs({m:m_val, hbar:hbar_val, a:a_val, V0:V0_val, eps:eps_val})))
-       Aodd  = float(sp.N(A_odd_exact .subs({m:m_val, hbar:hbar_val, a:a_val, V0:V0_val, eps:eps_val})))
+       Aodd  = float(sp.N(A_odd_exact.subs({m:m_val, hbar:hbar_val, a:a_val, V0:V0_val, eps:eps_val})))
        psi_even_num = sp.lambdify(
            x,
            sp.Piecewise(
@@ -297,4 +297,4 @@ by parity-resolved transcendental equations. Compared to the infinite well,
 eigenfunctions have **exponential tails** outside the well, and the number of
 levels increases with both depth :math:`V_0` and width :math:`a`. Analytic
 normalization ensures correctly scaled wavefunctions, while the symbolic-to-
-numeric workflow  cleanly separates derivation from evaluation and visualization.
+numeric workflow cleanly separates derivation from evaluation and visualization.
