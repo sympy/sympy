@@ -9,6 +9,23 @@ from sympy.external.gmpy import GROUND_TYPES
 from sympy.utilities.misc import ARCH
 import re
 
+# --- NumPy 2.0 compatibility shim -------------------------------------------
+# Some optional deps (e.g., aesara) still import np.obj2sctype which was removed in NumPy 2.0.
+# Provide a compatible alias using the recommended replacement np.dtype(obj).type.
+try:
+    import numpy as _np
+    if not hasattr(_np, "obj2sctype"):
+        def _obj2sctype(obj, default=None):
+            try:
+                return _np.dtype(obj).type
+            except Exception:
+                return default
+        _np.obj2sctype = _obj2sctype  # type: ignore[attr-defined]
+except Exception:
+    # If NumPy isn't available at doc import time, ignore; Sphinx will fail earlier for other reasons.
+    pass
+
+
 try:
     import hypothesis
 

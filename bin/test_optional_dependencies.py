@@ -36,7 +36,7 @@ test_list = [
     '*llvm*',
 
     # aesara
-    #'*aesara*',
+    '*aesara*',
 
     # jax
     '*jax*',
@@ -98,7 +98,7 @@ doctest_list = [
     '*llvm*',
 
     # aesara
-    #'*aesara*',
+    '*aesara*',
 
     # gmpy
     'sympy/ntheory',
