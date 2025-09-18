@@ -54,7 +54,7 @@ def _useries(
 
     prec = min(series_prec, ring_prec)
     if deg < prec:
-        return coeffs, series_prec
+        return coeffs, prec
 
     coeffs = dup_truncate(coeffs, prec, dom)
     return coeffs, prec
