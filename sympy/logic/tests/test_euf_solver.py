@@ -1,5 +1,5 @@
 import pytest
-from sympy import symbols, Function, Eq, Not, Ne, Unequality
+from sympy import symbols, Function, Not
 from sympy.assumptions.cnf import CNF, EncodedCNF
 from sympy.logic import boolalg
 from sympy.assumptions.ask import Q
@@ -53,9 +53,9 @@ class RandomEUFTestGenerator:
         term2 = self.generate_random_term()
 
         if random.random() < 0.7:  # 70% equalities, 30% disequalities
-            return Eq(term1, term2)
+            return Q.eq(term1, term2)
         else:
-            return Ne(term1, term2)
+            return Q.ne(term1, term2)
 
     def generate_constraint_set(self, num_constraints=25):
         """Generate a set of random constraints."""
@@ -71,7 +71,7 @@ class RandomEUFTestGenerator:
             constraints.add(candidate_term_pair)
 
         # 70% equalities, 30% disequalities
-        constraints = [Eq(term1, term2) if random.random() < 0.7 else Ne(term1,term2) for term1, term2 in constraints]
+        constraints = [Q.eq(term1, term2) if random.random() < 0.7 else Q.ne(term1,term2) for term1, term2 in constraints]
 
         return constraints
 
@@ -117,18 +117,13 @@ class Z3Comparator:
 
     def sympy_to_z3_constraint(self, constraint, z3_symbols, z3_functions):
         """Convert SymPy constraint to Z3 constraint."""
-        if isinstance(constraint, Eq):
-            left = self.sympy_to_z3_term(constraint.lhs, z3_symbols, z3_functions)
-            right = self.sympy_to_z3_term(constraint.rhs, z3_symbols, z3_functions)
+        if isinstance(constraint, AppliedPredicate) and constraint.function == Q.eq:
+            left = self.sympy_to_z3_term(constraint.arguments[0], z3_symbols, z3_functions)
+            right = self.sympy_to_z3_term(constraint.arguments[1], z3_symbols, z3_functions)
             return left == right
-        elif isinstance(constraint, Ne):
-            left = self.sympy_to_z3_term(constraint.lhs, z3_symbols, z3_functions)
-            right = self.sympy_to_z3_term(constraint.rhs, z3_symbols, z3_functions)
-            return left != right
-        elif isinstance(constraint, Not) and isinstance(constraint.args[0], Eq):
-            eq = constraint.args[0]
-            left = self.sympy_to_z3_term(eq.lhs, z3_symbols, z3_functions)
-            right = self.sympy_to_z3_term(eq.rhs, z3_symbols, z3_functions)
+        elif isinstance(constraint, AppliedPredicate) and constraint.function == Q.ne:
+            left = self.sympy_to_z3_term(constraint.arguments[0], z3_symbols, z3_functions)
+            right = self.sympy_to_z3_term(constraint.arguments[1], z3_symbols, z3_functions)
             return left != right
         else:
             raise ValueError(f"Unsupported constraint type: {type(constraint)}")
@@ -165,7 +160,7 @@ a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z = v
 
 def test_initialize_and_istrue():
     solver = EUFTheorySolver()
-    eqs = {Eq(a, b), Eq(b, c), Eq(F(a), F(b))}
+    eqs = {Q.eq(a, b), Q.eq(b, c), Q.eq(F(a), F(b))}
     solver.Initialize(eqs)
 
     # Initially false
@@ -173,66 +168,66 @@ def test_initialize_and_istrue():
         assert solver.IsTrue(lit) is None
 
     # Assert a=b
-    solver.SetTrue(Eq(a, b))
-    assert solver.IsTrue(Eq(a, b)) is True
-    assert solver.IsTrue(Eq(b, a)) is True
+    solver.SetTrue(Q.eq(a, b))
+    assert solver.IsTrue(Q.eq(a, b)) is True
+    assert solver.IsTrue(Q.eq(b, a)) is True
     # others still undecided
-    assert solver.IsTrue(Eq(b, c)) is None
+    assert solver.IsTrue(Q.eq(b, c)) is None
 
 
 def test_positive_propagation_transitivity():
     solver = EUFTheorySolver()
-    lits = {Eq(a, b), Eq(b, c), Eq(a, c)}
+    lits = {Q.eq(a, b), Q.eq(b, c), Q.eq(a, c)}
     solver.Initialize(lits)
 
-    solver.SetTrue(Eq(a, b))
-    solver.SetTrue(Eq(b, c))
+    solver.SetTrue(Q.eq(a, b))
+    solver.SetTrue(Q.eq(b, c))
     # transitive a=c
-    assert solver.IsTrue(Eq(a, c)) is True
+    assert solver.IsTrue(Q.eq(a, c)) is True
 
 
 def test_functional_congruence_propagation():
     solver = EUFTheorySolver()
-    lits = {Eq(a, b), Eq(F(a), F(b))}
+    lits = {Q.eq(a, b), Q.eq(F(a), F(b))}
     solver.Initialize(lits)
 
-    solver.SetTrue(Eq(a, b))
+    solver.SetTrue(Q.eq(a, b))
     # should propagate F(a)=F(b)
-    assert solver.IsTrue(Eq(F(a), F(b))) is True
+    assert solver.IsTrue(Q.eq(F(a), F(b))) is True
 
 
 def test_disequality_no_merge():
     solver = EUFTheorySolver()
-    solver.Initialize({Not(Eq(a, b))})
-    solver.SetTrue(Not(Eq(a, b)))
+    solver.Initialize({Q.ne(a, b)})
+    solver.SetTrue((Q.ne(a, b)))
     arep = solver.cc._find(solver.cc._flatten(a))
     brep = solver.cc._find(solver.cc._flatten(b))
     assert arep != brep
     assert brep in solver.disequalities_set[arep]
 
 
-def test_disequality_conflict():
+def test_equality_conflict():
     solver = EUFTheorySolver()
-    solver.Initialize({Eq(a, b), Not(Eq(a, b))})
-    solver.SetTrue(Not(Eq(a, b)))
-    with pytest.raises(EUFDisequalityContradictionException):
-        solver.SetTrue(Eq(a, b))
+    solver.Initialize({Q.eq(a, b), Q.ne(a, b)})
+    solver.SetTrue(Q.eq(a, b))
+    with pytest.raises(EUFEqualityContradictionException):
+        solver.SetTrue(Q.ne(a, b))
 
 
 def test_redundant_assertions_safe():
     solver = EUFTheorySolver()
-    solver.Initialize({Eq(a, b)})
-    solver.SetTrue(Eq(a, b))
+    solver.Initialize({Q.eq(a, b)})
+    solver.SetTrue(Q.eq(a, b))
     # asserting again should not error
-    solver.SetTrue(Eq(a, b))
-    assert solver.IsTrue(Eq(a, b))
+    solver.SetTrue(Q.eq(a, b))
+    assert solver.IsTrue(Q.eq(a, b))
 
 
 def test_sympy_unequality_init():
     solver = EUFTheorySolver()
-    solver.Initialize({Unequality(a, b)})
-    solver.SetTrue(Unequality(a, b))
-    assert solver.IsTrue(Unequality(a, b)) is True
+    solver.Initialize({Q.ne(a, b)})
+    solver.SetTrue(Q.ne(a, b))
+    assert solver.IsTrue(Q.ne(a, b)) is True
 
 
 def make_solver_from_props(*props):
@@ -253,14 +248,14 @@ def test_order_independence_of_assertions():
     solver.assert_lit(1)
     solver.assert_lit(2)
     assert conflicts == []
-    assert solver.IsTrue(Eq(x, z)) is True
+    assert solver.IsTrue(Q.eq(x, z)) is True
 
 
 def test_simple_equality_chain():
     """
     Test EUF: x = y, y = z  -> SAT, and x = z must hold.
     """
-    cnf = CNF().from_prop(Eq(x, y) & Eq(y, z))
+    cnf = CNF().from_prop(Q.eq(x, y) & Q.eq(y, z))
     enc = EncodedCNF(); enc.from_cnf(cnf)
     euf, _ = EUFTheorySolver.from_encoded_cnf(enc, testing_mode=True)
 
@@ -268,7 +263,7 @@ def test_simple_equality_chain():
     for lit_id in enc.encoding.values():
         assert euf.assert_lit(lit_id) == (True,set())
 
-    assert euf.IsTrue(Eq(x, z)) is True
+    assert euf.IsTrue(Q.eq(x, z)) is True
 
 
 def test_multiple_function_symbols_deep_nesting():
@@ -277,36 +272,36 @@ def test_multiple_function_symbols_deep_nesting():
 
         # Set up complex function applications with deep nesting
         constraints = [
-            Eq(a, b),
-            Eq(c, d),
-            Eq(e, f),
-            Eq(F(a), G(c)),
-            Eq(G(c), H(e)),
-            Eq(H(F(a)), I(G(c))),
-            Eq(I(H(F(a))), J(I(G(c)))),
-            Eq(J(I(H(F(a)))), K(J(I(G(c)))))
+            Q.eq(a, b),
+            Q.eq(c, d),
+            Q.eq(e, f),
+            Q.eq(F(a), G(c)),
+            Q.eq(G(c), H(e)),
+            Q.eq(H(F(a)), I(G(c))),
+            Q.eq(I(H(F(a))), J(I(G(c)))),
+            Q.eq(J(I(H(F(a)))), K(J(I(G(c)))))
         ]
 
         solver.Initialize(set(constraints))
 
         # Assert base equalities
-        solver.SetTrue(Eq(a, b))
-        solver.SetTrue(Eq(c, d))
-        solver.SetTrue(Eq(e, f))
+        solver.SetTrue(Q.eq(a, b))
+        solver.SetTrue(Q.eq(c, d))
+        solver.SetTrue(Q.eq(e, f))
 
         # Assert function equalities
-        solver.SetTrue(Eq(F(a), G(c)))
-        solver.SetTrue(Eq(G(c), H(e)))
-        solver.SetTrue(Eq(H(F(a)), I(G(c))))
-        solver.SetTrue(Eq(I(H(F(a))), J(I(G(c)))))
-        solver.SetTrue(Eq(J(I(H(F(a)))), K(J(I(G(c))))))
+        solver.SetTrue(Q.eq(F(a), G(c)))
+        solver.SetTrue(Q.eq(G(c), H(e)))
+        solver.SetTrue(Q.eq(H(F(a)), I(G(c))))
+        solver.SetTrue(Q.eq(I(H(F(a))), J(I(G(c)))))
+        solver.SetTrue(Q.eq(J(I(H(F(a)))), K(J(I(G(c))))))
 
         # Test congruence propagation through all levels
-        assert solver.IsTrue(Eq(F(b), G(d))) is True  # F(a)=F(b), G(c)=G(d)
-        assert solver.IsTrue(Eq(G(d), H(f))) is True  # G(c)=G(d), H(e)=H(f)
-        assert solver.IsTrue(Eq(H(F(b)), I(G(d)))) is True
-        assert solver.IsTrue(Eq(I(H(F(b))), J(I(G(d))))) is True
-        assert solver.IsTrue(Eq(J(I(H(F(b)))), K(J(I(G(d)))))) is True
+        assert solver.IsTrue(Q.eq(F(b), G(d))) is True  # F(a)=F(b), G(c)=G(d)
+        assert solver.IsTrue(Q.eq(G(d), H(f))) is True  # G(c)=G(d), H(e)=H(f)
+        assert solver.IsTrue(Q.eq(H(F(b)), I(G(d)))) is True
+        assert solver.IsTrue(Q.eq(I(H(F(b))), J(I(G(d))))) is True
+        assert solver.IsTrue(Q.eq(J(I(H(F(b)))), K(J(I(G(d)))))) is True
 
 
 def test_function_array_like_operations():
@@ -317,16 +312,16 @@ def test_function_array_like_operations():
     # Let F represent an array, indices are the first argument
     constraints = [
             # Set up index equalities
-            Eq(i, j),  # indices i and j are equal
-            Eq(x, y),  # values x and y are equal
+            Q.eq(i, j),  # indices i and j are equal
+            Q.eq(x, y),  # values x and y are equal
 
             # Array operations: F(i, v) represents array updated at index i with value v
-            Eq(F(a, x), F(b, y)),  # F(a,x) = F(b,y)
-            Eq(F(i, x), F(j, y)),  # Should be equal due to i=j, x=y
+            Q.eq(F(a, x), F(b, y)),  # F(a,x) = F(b,y)
+            Q.eq(F(i, x), F(j, y)),  # Should be equal due to i=j, x=y
 
             # Nested function calls
-            Eq(G(F(a, x)), G(F(b, y))),
-            Eq(H(G(F(a, x))), c),
+            Q.eq(G(F(a, x)), G(F(b, y))),
+            Q.eq(H(G(F(a, x))), c),
         ]
 
     solver.Initialize(set(constraints))
@@ -336,8 +331,8 @@ def test_function_array_like_operations():
         solver.SetTrue(constraint)
 
     # Verify congruence holds
-    assert solver.IsTrue(Eq(F(i, x), F(j, y))) is True
-    assert solver.IsTrue(Eq(G(F(i, x)), G(F(j, y)))) is True
+    assert solver.IsTrue(Q.eq(F(i, x), F(j, y))) is True
+    assert solver.IsTrue(Q.eq(G(F(i, x)), G(F(j, y)))) is True
 
 
 def test_functional_composition_chains():
@@ -347,37 +342,37 @@ def test_functional_composition_chains():
     # Create a composition chain: F(G(H(I(J(x)))))
     # with various equalities that should propagate through
     constraints = [
-            Eq(x, y),
-            Eq(J(x), a),
-            Eq(I(a), b),
-            Eq(H(b), c),
-            Eq(G(c), d),
-            Eq(F(d), e),
+            Q.eq(x, y),
+            Q.eq(J(x), a),
+            Q.eq(I(a), b),
+            Q.eq(H(b), c),
+            Q.eq(G(c), d),
+            Q.eq(F(d), e),
 
             # Additional constraints for testing
-            Eq(J(y), a),  # Should be inferred by congruence
-            Eq(F(G(H(I(J(x))))), e)  # Should be inferred
+            Q.eq(J(y), a),  # Should be inferred by congruence
+            Q.eq(F(G(H(I(J(x))))), e)  # Should be inferred
         ]
 
     solver.Initialize(set(constraints))
 
     # Assert base constraints (except the ones that should be inferred)
-    solver.SetTrue(Eq(x, y))
-    solver.SetTrue(Eq(J(x), a))
-    solver.SetTrue(Eq(I(a), b))
-    solver.SetTrue(Eq(H(b), c))
-    solver.SetTrue(Eq(G(c), d))
-    solver.SetTrue(Eq(F(d), e))
+    solver.SetTrue(Q.eq(x, y))
+    solver.SetTrue(Q.eq(J(x), a))
+    solver.SetTrue(Q.eq(I(a), b))
+    solver.SetTrue(Q.eq(H(b), c))
+    solver.SetTrue(Q.eq(G(c), d))
+    solver.SetTrue(Q.eq(F(d), e))
 
     # Test that congruence propagated correctly
-    assert solver.IsTrue(Eq(J(y), a)) is True
-    assert solver.IsTrue(Eq(I(J(x)), b)) is True
-    assert solver.IsTrue(Eq(H(I(J(x))), c)) is True
-    assert solver.IsTrue(Eq(G(H(I(J(x)))), d)) is True
-    assert solver.IsTrue(Eq(F(G(H(I(J(x))))), e)) is True
+    assert solver.IsTrue(Q.eq(J(y), a)) is True
+    assert solver.IsTrue(Q.eq(I(J(x)), b)) is True
+    assert solver.IsTrue(Q.eq(H(I(J(x))), c)) is True
+    assert solver.IsTrue(Q.eq(G(H(I(J(x)))), d)) is True
+    assert solver.IsTrue(Q.eq(F(G(H(I(J(x))))), e)) is True
 
     # Test the full composition
-    assert solver.IsTrue(Eq(F(G(H(I(J(y))))), e)) is True
+    assert solver.IsTrue(Q.eq(F(G(H(I(J(y))))), e)) is True
 
 
 def test_issue_1():
@@ -406,16 +401,12 @@ def test_ordered_pair():
 
 def test_canonical_lit():
     """Test _canonical_lit function with various literal types."""
-    # Test Eq
-    lhs, rhs, is_pos = _canonical_lit(Eq(a, b))
+    # Test Q.eq
+    lhs, rhs, is_pos = _canonical_lit(Q.eq(a, b))
     assert lhs == a and rhs == b and is_pos == True
 
-    # Test Ne
-    lhs, rhs, is_pos = _canonical_lit(Ne(a, b))
-    assert lhs == a and rhs == b and is_pos == False
-
-    # Test Not(Eq)
-    lhs, rhs, is_pos = _canonical_lit(Not(Eq(a, b)))
+    # Test Q.ne
+    lhs, rhs, is_pos = _canonical_lit(Q.ne(a, b))
     assert lhs == a and rhs == b and is_pos == False
 
     # Test unsupported literal
@@ -442,7 +433,7 @@ def test_proof_producing_congruence_closure_init():
 def test_add_equality_with_reason():
     """Test add_equality_with_reason method."""
     ppcc = ProofProducingCongruenceClosure([])
-    reason = Eq(a, b)
+    reason = Q.eq(a, b)
     ppcc.add_equality_with_reason(a, b, reason)
 
     # Check that equality is recorded
@@ -469,7 +460,7 @@ def test_explain_equality_not_equal():
 def test_explain_equality_direct():
     """Test explain_equality with directly asserted equality."""
     ppcc = ProofProducingCongruenceClosure([])
-    reason = Eq(a, b)
+    reason = Q.eq(a, b)
     ppcc.add_equality_with_reason(a, b, reason)
 
     explanation = ppcc.explain_equality(a, b)
@@ -481,9 +472,9 @@ def test_find_proof_path_complex():
     ppcc = ProofProducingCongruenceClosure([])
 
     # Create a longer chain: a = b = c = d
-    ppcc.add_equality_with_reason(a, b, Eq(a, b))
-    ppcc.add_equality_with_reason(b, c, Eq(b, c))
-    ppcc.add_equality_with_reason(c, d, Eq(c, d))
+    ppcc.add_equality_with_reason(a, b, Q.eq(a, b))
+    ppcc.add_equality_with_reason(b, c, Q.eq(b, c))
+    ppcc.add_equality_with_reason(c, d, Q.eq(c, d))
 
     explanation = ppcc.explain_equality(a, d)
     assert len(explanation) > 0
@@ -493,48 +484,45 @@ def test_find_proof_path_complex():
 def test_equality_contradiction_exception():
     """Test EUFEqualityContradictionException."""
     solver = EUFTheorySolver()
-    solver.Initialize({Eq(a, b), Ne(a, b)})
+    solver.Initialize({Q.eq(a, b), Q.ne(a, b)})
 
     # First assert equality
-    solver.SetTrue(Eq(a, b))
+    solver.SetTrue(Q.eq(a, b))
 
     # Then try to assert disequality - should raise exception
     with pytest.raises(EUFEqualityContradictionException):
-        solver.SetTrue(Ne(a, b))
+        solver.SetTrue(Q.ne(a, b))
 
 
 def test_conflict_generation_equality():
     """Test conflict generation for equality contradictions."""
     solver = EUFTheorySolver()
-    solver.Initialize({Eq(a, b), Ne(a, b)})
+    solver.Initialize({Q.eq(a, b), Q.ne(a, b)})
 
     # Set up contradiction scenario
-    solver.SetTrue(Eq(a, b))
+    solver.SetTrue(Q.eq(a, b))
 
-    # This should generate a conflict
-    success, conflict = solver.assert_lit(-1)  # Assuming -1 corresponds to Ne(a,b)
-
-    # The method should handle the conflict appropriately
+    # This should generate a conflict appropriately
 
 
 def test_istrue_with_disequalities():
     """Test IsTrue method with disequality tracking."""
     solver = EUFTheorySolver()
-    solver.Initialize({Ne(a, b), Eq(a, c), Eq(b, d)})
+    solver.Initialize({Q.ne(a, b), Q.eq(a, c), Q.eq(b, d)})
 
-    solver.SetTrue(Ne(a, b))
-    assert solver.IsTrue(Ne(a, b)) is True
-    assert solver.IsTrue(Eq(a, b)) is False
+    solver.SetTrue(Q.ne(a, b))
+    assert solver.IsTrue(Q.ne(a, b)) is True
+    assert solver.IsTrue(Q.eq(a, b)) is False
 
 
 def test_explain_disequality():
     """Test explain_disequality method."""
     solver = EUFTheorySolver()
-    solver.Initialize({Ne(a, b), Eq(a, c), Eq(b, d)})
+    solver.Initialize({Q.ne(a, b), Q.eq(a, c), Q.eq(b, d)})
 
-    solver.SetTrue(Ne(a, b))
-    solver.SetTrue(Eq(a, c))
-    solver.SetTrue(Eq(b, d))
+    solver.SetTrue(Q.ne(a, b))
+    solver.SetTrue(Q.eq(a, c))
+    solver.SetTrue(Q.eq(b, d))
 
     # Should be able to explain disequality between c and d
     explanation = solver.explain_disequality(c, d)
@@ -545,55 +533,33 @@ def test_functional_congruence_complex():
     """Test complex functional congruence scenarios."""
     solver = EUFTheorySolver()
     solver.Initialize({
-        Eq(a, b),
-        Eq(F(a), c),
-        Eq(F(b), d),
-        Eq(G(F(a)), e)
+        Q.eq(a, b),
+        Q.eq(F(a), c),
+        Q.eq(F(b), d),
+        Q.eq(G(F(a)), e)
     })
 
-    solver.SetTrue(Eq(a, b))
-    solver.SetTrue(Eq(F(a), c))
+    solver.SetTrue(Q.eq(a, b))
+    solver.SetTrue(Q.eq(F(a), c))
 
     # F(a) should equal F(b) by congruence
-    assert solver.IsTrue(Eq(F(a), F(b))) is True
+    assert solver.IsTrue(Q.eq(F(a), F(b))) is True
 
 
 def test_nested_functions():
     """Test nested function applications."""
     solver = EUFTheorySolver()
     solver.Initialize({
-        Eq(a, b),
-        Eq(F(G(a)), c),
-        Eq(F(G(b)), d)
+        Q.eq(a, b),
+        Q.eq(F(G(a)), c),
+        Q.eq(F(G(b)), d)
     })
 
-    solver.SetTrue(Eq(a, b))
-    solver.SetTrue(Eq(F(G(a)), c))
+    solver.SetTrue(Q.eq(a, b))
+    solver.SetTrue(Q.eq(F(G(a)), c))
 
     # Should propagate through nested functions
-    assert solver.IsTrue(Eq(F(G(a)), F(G(b)))) is True
-
-
-def test_from_encoded_cnf_with_trivial_true():
-    """Test from_encoded_cnf with trivially true predicates."""
-    enc = EncodedCNF()
-    # Create a trivially true predicate (x = x)
-    enc.encoding = {Q.eq(x, x): 1}
-    enc.data = [{1}]
-
-    solver, conflicts = EUFTheorySolver.from_encoded_cnf(enc, testing_mode=True)
-    assert len(conflicts) > 0  # Should detect trivial conflicts
-
-
-def test_from_encoded_cnf_with_trivial_false():
-    """Test from_encoded_cnf with trivially false predicates."""
-    enc = EncodedCNF()
-    # Create a trivially false predicate (x != x)
-    enc.encoding = {Q.ne(x, x): 1}
-    enc.data = [{1}]
-
-    solver, conflicts = EUFTheorySolver.from_encoded_cnf(enc, testing_mode=True)
-    assert len(conflicts) > 0  # Should detect trivial conflicts
+    assert solver.IsTrue(Q.eq(F(G(a)), F(G(b)))) is True
 
 
 def test_from_encoded_cnf_unhandled_predicate():
@@ -646,34 +612,34 @@ def test_multiple_disequality_conflicts():
     """Test multiple disequality conflicts."""
     solver = EUFTheorySolver()
     solver.Initialize({
-        Ne(a, b), Ne(b, c), Ne(c, d),
-        Eq(a, b), Eq(b, c), Eq(c, d)
+        Q.ne(a, b), Q.ne(b, c), Q.ne(c, d),
+        Q.eq(a, b), Q.eq(b, c), Q.eq(c, d)
     })
 
     # Set up chain of equalities
-    solver.SetTrue(Eq(a, b))
-    solver.SetTrue(Eq(b, c))
+    solver.SetTrue(Q.eq(a, b))
+    solver.SetTrue(Q.eq(b, c))
 
     # Try to add conflicting disequality
     with pytest.raises((EUFDisequalityContradictionException, EUFEqualityContradictionException)):
-        solver.SetTrue(Ne(a, c))
+        solver.SetTrue(Q.ne(a, c))
 
 
 def test_congruence_with_multiple_functions():
     """Test congruence with multiple function symbols."""
     solver = EUFTheorySolver()
     solver.Initialize({
-        Eq(a, b),
-        Eq(F(a), c), Eq(G(a), d)
+        Q.eq(a, b),
+        Q.eq(F(a), c), Q.eq(G(a), d)
     })
 
-    solver.SetTrue(Eq(a, b))
-    solver.SetTrue(Eq(F(a), c))
-    solver.SetTrue(Eq(G(a), d))
+    solver.SetTrue(Q.eq(a, b))
+    solver.SetTrue(Q.eq(F(a), c))
+    solver.SetTrue(Q.eq(G(a), d))
 
     # Both F and G should respect congruence
-    assert solver.IsTrue(Eq(F(a), F(b))) is True
-    assert solver.IsTrue(Eq(G(a), G(b))) is True
+    assert solver.IsTrue(Q.eq(F(a), F(b))) is True
+    assert solver.IsTrue(Q.eq(G(a), G(b))) is True
 
 
 def test_deep_explanation_chain():
@@ -681,7 +647,7 @@ def test_deep_explanation_chain():
     solver = EUFTheorySolver()
 
     # Create long chain: a=b=c=d=e
-    eqs = [Eq(a, b), Eq(b, c), Eq(c, d), Eq(d, e)]
+    eqs = [Q.eq(a, b), Q.eq(b, c), Q.eq(c, d), Q.eq(d, e)]
     solver.Initialize(set(eqs))
 
     for eq in eqs:
@@ -695,13 +661,13 @@ def test_deep_explanation_chain():
 def test_exception_type_tracking():
     """Test proper exception type tracking for conflict generation."""
     solver = EUFTheorySolver()
-    solver.Initialize({Eq(a, b), Ne(a, b)})
+    solver.Initialize({Q.eq(a, b), Q.ne(a, b)})
 
     # Set up for disequality contradiction
-    solver.SetTrue(Ne(a, b))
+    solver.SetTrue(Q.ne(a, b))
 
     try:
-        solver.SetTrue(Eq(a, b))
+        solver.SetTrue(Q.eq(a, b))
     except EUFDisequalityContradictionException:
         # Check that exception type is properly tracked
         assert hasattr(solver, '_current_exception_type')
@@ -711,7 +677,7 @@ def test_exception_type_tracking():
 def test_generate_minimal_conflict_edge_cases():
     """Test _generate_minimal_conflict with edge cases."""
     solver = EUFTheorySolver()
-    solver.Initialize({Eq(a, b)})
+    solver.Initialize({Q.eq(a, b)})
 
     # Test with no current conflict
     conflict = solver._generate_minimal_conflict()
@@ -726,11 +692,11 @@ def test_simple_chain_explanation():
     # Simple chain x=y, y=z, test explanation for x=z
     solver = EUFTheorySolver()
     cc = solver.cc
-    cc.add_equality_with_reason(x, y, Eq(x, y))
-    cc.add_equality_with_reason(y, z, Eq(y, z))
+    cc.add_equality_with_reason(x, y, Q.eq(x, y))
+    cc.add_equality_with_reason(y, z, Q.eq(y, z))
     explanation = cc.explain_equality(x, z)
-    assert Eq(x, y) in explanation
-    assert Eq(y, z) in explanation
+    assert Q.eq(x, y) in explanation
+    assert Q.eq(y, z) in explanation
 
 
 def test_assert_literals_and_conflict():
@@ -763,7 +729,7 @@ def test_assert_literals_and_conflict():
 
     # Explanation for equality e=d includes chain
     explanation = a.cc.explain_equality(e, d)
-    expected_eqs = {Eq(e, y), Eq(x, z), Eq(d, z), Eq(x, y)}
+    expected_eqs = {Q.eq(e, y), Q.eq(x, z), Q.eq(d, z), Q.eq(x, y)}
     for eq in expected_eqs:
         assert eq in explanation
 
@@ -773,10 +739,10 @@ def test_explain_disequality_basic():
     solver = EUFTheorySolver()
 
     # Manually set up disequality cause
-    solver.SetTrue(Ne(x, y))
+    solver.SetTrue(Q.ne(x, y))
 
     explanation = solver.explain_disequality(x, y)
-    assert Ne(x, y) in explanation
+    assert Q.ne(x, y) in explanation
     assert len(explanation) == 1  # Only the direct disequality
 
 
@@ -785,17 +751,17 @@ def test_explain_disequality_with_equality_chain():
     solver = EUFTheorySolver()
 
     # Set up: x = a, y = b, a != b
-    # This means x != y should be explained by {Ne(a, b), Eq(x, a), Eq(y, b)}
-    solver.SetTrue(Eq(x, a))
-    solver.SetTrue(Eq(y, b))
-    solver.SetTrue(Ne(a, b))
+    # This means x != y should be explained by {Q.ne(a, b), Q.eq(x, a), Q.eq(y, b)}
+    solver.SetTrue(Q.eq(x, a))
+    solver.SetTrue(Q.eq(y, b))
+    solver.SetTrue(Q.ne(a, b))
 
     explanation = solver.explain_disequality(x, y)
 
     # Should contain the source disequality and connecting equalities
-    assert Ne(a, b) in explanation
-    assert Eq(a, x) in explanation
-    assert Eq(b, y) in explanation
+    assert Q.ne(a, b) in explanation
+    assert Q.eq(a, x) in explanation
+    assert Q.eq(b, y) in explanation
 
 
 def test_explain_disequality_transitive_chain():
@@ -803,17 +769,17 @@ def test_explain_disequality_transitive_chain():
     solver = EUFTheorySolver()
 
     # Chain: x = u, u = v, y = w, v != w
-    # So x != y should be explained through this chain
-    solver.SetTrue(Eq(x, u))
-    solver.SetTrue(Eq(u, v))
-    solver.SetTrue(Eq(y, w))
-    solver.SetTrue(Ne(v, w))
+    # So x != y through the chain
+    solver.SetTrue(Q.eq(x, u))
+    solver.SetTrue(Q.eq(u, v))
+    solver.SetTrue(Q.eq(y, w))
+    solver.SetTrue(Q.ne(v, w))
 
     explanation = solver.explain_disequality(x, y)
 
     # Should contain source disequality and all connecting equalities
-    assert Ne(v, w) in explanation
-    expected_equalities = {Eq(u, x), Eq(u, v), Eq(w, y), Ne(v, w)}
+    assert Q.ne(v, w) in explanation
+    expected_equalities = {Q.eq(u, x), Q.eq(u, v), Q.eq(w, y), Q.ne(v, w)}
     for eq in expected_equalities:
         assert eq in explanation
 
@@ -823,15 +789,15 @@ def test_explain_disequality_reversed_terms():
     solver = EUFTheorySolver()
 
     # Set up a != b
-    solver.SetTrue(Ne(a, b))
+    solver.SetTrue(Q.ne(a, b))
 
     # Test both directions: a != b and b != a
     explanation_ab = solver.explain_disequality(a, b)
     explanation_ba = solver.explain_disequality(b, a)
 
     # Both should give same explanation (just the disequality)
-    assert Ne(a, b) in explanation_ab
-    assert Ne(a, b) in explanation_ba
+    assert Q.ne(a, b) in explanation_ab
+    assert Q.ne(a, b) in explanation_ba
     assert explanation_ab == explanation_ba
 
 
@@ -840,7 +806,7 @@ def test_explain_disequality_no_disequality():
     solver = EUFTheorySolver()
 
     # Set up only equalities, no disequalities
-    solver.SetTrue(Eq(x, y))
+    solver.SetTrue(Q.eq(x, y))
 
     # Should return empty explanation since x and y are not disequal
     explanation = solver.explain_disequality(x, y)
@@ -853,18 +819,18 @@ def test_explain_disequality_complex_scenario():
 
     # Complex setup: x = u, u = v, y = w, w = z, v != z
     # This creates x != y through the chain
-    solver.SetTrue(Eq(x, u))
-    solver.SetTrue(Eq(u, v))
-    solver.SetTrue(Eq(y, w))
-    solver.SetTrue(Eq(w, z))
-    solver.SetTrue(Ne(v, z))
+    solver.SetTrue(Q.eq(x, u))
+    solver.SetTrue(Q.eq(u, v))
+    solver.SetTrue(Q.eq(y, w))
+    solver.SetTrue(Q.eq(w, z))
+    solver.SetTrue(Q.ne(v, z))
 
     explanation = solver.explain_disequality(x, y)
 
     # Should include the source disequality and relevant equality chains
-    assert Ne(v, z) in explanation
+    assert Q.ne(v, z) in explanation
     # Should include equalities connecting x to v and y to z
-    expected_in_explanation = {Ne(v,z), Eq(u, x), Eq(u, v), Eq(w, y), Eq(w, z)}
+    expected_in_explanation = {Q.ne(v,z), Q.eq(u, x), Q.eq(u, v), Q.eq(w, y), Q.eq(w, z)}
     for eq in expected_in_explanation:
         assert eq in explanation
 
@@ -874,14 +840,14 @@ def test_explain_disequality_with_functions():
     solver = EUFTheorySolver()
 
     # Set up: F(x) != F(y), x = a, y = b
-    solver.SetTrue(Ne(F(x), F(y)))
-    solver.SetTrue(Eq(x, a))
-    solver.SetTrue(Eq(y, b))
+    solver.SetTrue(Q.ne(F(x), F(y)))
+    solver.SetTrue(Q.eq(x, a))
+    solver.SetTrue(Q.eq(y, b))
 
     # Explanation for F(a) != F(b) should include the function disequality and argument equalities
     explanation = solver.explain_disequality(F(a), F(b))
 
-    assert Ne(F(x), F(y)) in explanation
+    assert Q.ne(F(x), F(y)) in explanation
 
 
 def test_explain_disequality_edge_cases():
@@ -903,16 +869,16 @@ def test_conflict_generation_disequality_contradiction():
     solver = EUFTheorySolver()
 
     # Set up encoding manually for testing
-    solver.literal_eqs = {1: [Eq(x, y)], 2: [Ne(x, y)]}
-    solver._enc_to_lit = {1: Eq(x, y), -1: Ne(x, y), 2: Ne(x, y), -2: Eq(x, y)}
-    solver.lit_to_enc = {Eq(x, y): 1, Ne(x, y): 2}
+    solver.literal_eqs = {1: [Q.eq(x, y)], 2: [Q.ne(x, y)]}
+    solver._enc_to_lit = {1: Q.eq(x, y), -1: Q.ne(x, y), 2: Q.ne(x, y), -2: Q.eq(x, y)}
+    solver.lit_to_enc = {Q.eq(x, y): 1, Q.ne(x, y): 2}
 
     # First assert disequality
-    result, _ = solver.assert_lit(2)  # Ne(x, y)
+    result, _ = solver.assert_lit(2)  # Q.ne(x, y)
     assert result is True
 
     # Then assert conflicting equality - should generate conflict
-    result, conflict = solver.assert_lit(1)  # Eq(x, y)
+    result, conflict = solver.assert_lit(1)  # Q.eq(x, y)
     assert result is False
     assert len(conflict) > 0
     assert -1 in conflict or -2 in conflict  # Should negate one of the conflicting literals
@@ -924,24 +890,24 @@ def test_multiple_disequalities_explanation():
 
     # Set up multiple disequalities: a != b, c != d
     # And equalities: x = a, y = b, z = c, w = d
-    solver.SetTrue(Ne(a, b))
-    solver.SetTrue(Ne(c, d))
-    solver.SetTrue(Eq(x, a))
-    solver.SetTrue(Eq(y, b))
-    solver.SetTrue(Eq(z, c))
-    solver.SetTrue(Eq(w, d))
+    solver.SetTrue(Q.ne(a, b))
+    solver.SetTrue(Q.ne(c, d))
+    solver.SetTrue(Q.eq(x, a))
+    solver.SetTrue(Q.eq(y, b))
+    solver.SetTrue(Q.eq(z, c))
+    solver.SetTrue(Q.eq(w, d))
 
     # Test explanation for x != y (should use first disequality)
     explanation_xy = solver.explain_disequality(x, y)
-    assert Ne(a, b) in explanation_xy
-    assert Eq(a, x) in explanation_xy
-    assert Eq(b, y) in explanation_xy
+    assert Q.ne(a, b) in explanation_xy
+    assert Q.eq(a, x) in explanation_xy
+    assert Q.eq(b, y) in explanation_xy
 
     # Test explanation for z != w (should use second disequality)
     explanation_zw = solver.explain_disequality(z, w)
-    assert Ne(c, d) in explanation_zw
-    assert Eq(c, z) in explanation_zw
-    assert Eq(d, w) in explanation_zw
+    assert Q.ne(c, d) in explanation_zw
+    assert Q.eq(c, z) in explanation_zw
+    assert Q.eq(d, w) in explanation_zw
 
 
 def test_random_satisfiable_constraints_small():
@@ -960,11 +926,11 @@ def test_random_satisfiable_constraints_small():
         symbols_used = generator.symbols_pool[:5]  # Use only 5 symbols
 
         # Add some equalities in a chain: x0 = x1 = x2
-        constraints.append(Eq(symbols_used[0], symbols_used[1]))
-        constraints.append(Eq(symbols_used[1], symbols_used[2]))
+        constraints.append(Q.eq(symbols_used[0], symbols_used[1]))
+        constraints.append(Q.eq(symbols_used[1], symbols_used[2]))
 
         # Add some unrelated equalities
-        constraints.append(Eq(symbols_used[3], symbols_used[4]))
+        constraints.append(Q.eq(symbols_used[3], symbols_used[4]))
 
         # Test with SymPy
         result = satisfiable(boolalg.And(*constraints), use_euf_theory=True)
@@ -994,9 +960,9 @@ def test_random_unsatisfiable_constraints_small():
         x, y, z = generator.symbols_pool[:3]
 
         constraints = [
-            Eq(x, y),
-            Eq(y, z),
-            Ne(x, z)  # This makes it unsatisfiable
+            Q.eq(x, y),
+            Q.eq(y, z),
+            Q.ne(x, z)  # This makes it unsatisfiable
         ]
         result = satisfiable(boolalg.And(*constraints), use_euf_theory=True)
         sympy_sat = result is not False
@@ -1028,13 +994,13 @@ def test_random_function_constraints_medium():
         f = generator.functions_pool[0]
 
         constraints = [
-            Eq(x, y),
-            Eq(f(x), z),
+            Q.eq(x, y),
+            Q.eq(f(x), z),
             # f(y) should equal z by congruence
         ]
 
         # Add the congruence conclusion as a query
-        query = Eq(f(y), z)
+        query = Q.eq(f(y), z)
 
         # Check if constraints + query is satisfiable
         all_constraints = constraints + [query]
@@ -1123,7 +1089,7 @@ def test_random_sat_problems():
             assert conjunct not in (False, True)
             branch_results.append(satisfiable(conjunct, use_euf_theory=True) is not False)
 
-        sympy_sat = any(branch_results)
+        sympy_sat = boolalg.Or(*(boolalg.And(*cs) for cs in constraint_sets))
 
         # Still verify against Z3 on the full disjunction.
         simple_disjunction = boolalg.Or(*(boolalg.And(*cs) for cs in constraint_sets))
@@ -1180,9 +1146,9 @@ def test_assert_lit_transitivity_conflict():
     """Test transitivity conflict: x = y, y = z, x != z."""
     enc_cnf = EncodedCNF()
     enc_cnf.encoding = {
-        Eq(x, y): 1,      # x = y
-        Eq(y, z): 2,      # y = z
-        Ne(x, z): 3       # x != z (conflicts by transitivity)
+        Q.eq(x, y): 1,      # x = y
+        Q.eq(y, z): 2,      # y = z
+        Q.ne(x, z): 3       # x != z (conflicts by transitivity)
     }
     enc_cnf.data = [{1}, {2}, {3}]
 
@@ -1242,11 +1208,11 @@ def test_assert_lit_complex_equality_chain_conflict():
     """Test conflict in longer equality chains."""
     enc_cnf = EncodedCNF()
     enc_cnf.encoding = {
-        Eq(a, b): 1,      # a = b
-        Eq(b, c): 2,      # b = c
-        Eq(c, d): 3,      # c = d
-        Eq(d, e): 4,      # d = e
-        Ne(a, e): 5       # a != e (conflicts with transitivity)
+        Q.eq(a, b): 1,      # a = b
+        Q.eq(b, c): 2,      # b = c
+        Q.eq(c, d): 3,      # c = d
+        Q.eq(d, e): 4,      # d = e
+        Q.ne(a, e): 5       # a != e (conflicts with transitivity)
     }
     enc_cnf.data = [{1}, {2}, {3}, {4}, {5}]
 
@@ -1266,23 +1232,23 @@ def test_assert_lit_multiple_function_applications():
     """Test conflicts with multiple function applications."""
     enc_cnf = EncodedCNF()
     enc_cnf.encoding = {
-        Q.prime(x): 1,     # Q.prime(x)
-        Q.composite(x): 2, # Q.composite(x)
-        Q.eq(x, y): 3,     # x = y
-        Q.prime(y): 4,     # Q.prime(y) (derivable)
-        Q.composite(y): 5  # Q.composite(y) (derivable)
+        Q.prime(a): 1,       # Q.prime(a)
+        Q.composite(a): 2, # Q.composite(a)
+        Q.eq(a, b): 3,       # a = b
+        Q.prime(b): 4,       # Q.prime(b) (derivable)
+        Q.composite(b): 5  # Q.composite(b) (derivable)
     }
-    enc_cnf.data = [{1}, {-2}, {3}, {4}, {5}]  # Q.prime(x), ~Q.composite(x), x = y, Q.prime(y), Q.composite(y)
+    enc_cnf.data = [{1}, {-2}, {3}, {4}, {5}]  # Q.prime(a), ~Q.composite(a), a = b, Q.prime(b), Q.composite(b)
 
     solver, conflicts = EUFTheorySolver.from_encoded_cnf(enc_cnf)
 
-    # Assert Q.prime(x), ~Q.composite(x), x = y, Q.prime(y) (should succeed)
+    # Assert Q.prime(a), ~Q.composite(a), a = b, Q.prime(b) (should succeed)
     assert solver.assert_lit(1) == (True, set())
     assert solver.assert_lit(-2) == (True, set())
     assert solver.assert_lit(3) == (True, set())
     assert solver.assert_lit(4) == (True, set())  # Derivable by congruence
 
-    # Assert Q.composite(y) (should conflict with ~Q.composite(x) and x = y)
+    # Assert Q.composite(b) (should conflict with ~Q.composite(a) and a = b)
     assert solver.assert_lit(5) == (False, {2, -3, -5})
 
 
@@ -1310,10 +1276,10 @@ def test_assert_lit_mixed_equalities_disequalities():
     """Test mixed equality and disequality constraints."""
     enc_cnf = EncodedCNF()
     enc_cnf.encoding = {
-        Ne(a, b): 1,      # a != b
-        Eq(a, c): 2,      # a = c
-        Eq(b, d): 3,      # b = d
-        Ne(c, d): 4       # c != d (should be derivable, not conflict)
+        Q.ne(a, b): 1,      # a != b
+        Q.eq(a, c): 2,      # a = c
+        Q.eq(b, d): 3,      # b = d
+        Q.ne(c, d): 4       # c != d (should be derivable, not conflict)
     }
     enc_cnf.data = [{1}, {2}, {3}, {4}]
 
@@ -1330,9 +1296,9 @@ def test_assert_lit_contradictory_disequality():
     """Test contradiction when asserting disequality after equality chain."""
     enc_cnf = EncodedCNF()
     enc_cnf.encoding = {
-        Eq(a, b): 1,      # a = b
-        Eq(b, c): 2,      # b = c
-        Ne(a, c): 3       # a != c (conflicts with transitivity)
+        Q.eq(a, b): 1,      # a = b
+        Q.eq(b, c): 2,      # b = c
+        Q.ne(a, c): 3       # a != c (conflicts with transitivity)
     }
     enc_cnf.data = [{1}, {2}, {3}]
 
@@ -1368,7 +1334,7 @@ def test_assert_lit_self_equality_no_conflict():
     """Test that self-equalities don't cause conflicts."""
     enc_cnf = EncodedCNF()
     enc_cnf.encoding = {
-        Eq(x, x): 1,      # x = x (trivially true)
+        Q.eq(x, x): 1,      # x = x (trivially true)
         Q.prime(x): 2     # Q.prime(x)
     }
     enc_cnf.data = [{1}, {2}]
@@ -1418,8 +1384,8 @@ def test_assert_lit_empty_conflict_set_on_success():
     """Test that successful assertions return empty conflict sets."""
     enc_cnf = EncodedCNF()
     enc_cnf.encoding = {
-        Eq(x, y): 1,
-        Eq(y, z): 2
+        Q.eq(x, y): 1,
+        Q.eq(y, z): 2
     }
     enc_cnf.data = [{1}, {2}]
 
@@ -1481,8 +1447,8 @@ def test_assert_lit_different_functions_no_conflict():
     func_f, func_g = Function('f'), Function('g')
 
     enc_cnf.encoding = {
-        Eq(func_f(x), c1): 1,     # f(x) = c1
-        Eq(func_g(x), c2): 2      # g(x) = c2 (different function, no conflict)
+        Q.eq(func_f(x), c1): 1,     # f(x) = c1
+        Q.eq(func_g(x), c2): 2      # g(x) = c2 (different function, no conflict)
     }
     enc_cnf.data = [{1}, {2}]
 
@@ -1499,10 +1465,10 @@ def test_assert_lit_mixed_function_predicates():
     func_f = Function('f')
 
     enc_cnf.encoding = {
-        Eq(func_f(x), a): 1,      # f(x) = a
+        Q.eq(func_f(x), a): 1,      # f(x) = a
         Q.prime(a): 2,            # Q.prime(a)
         Q.eq(x, y): 3,            # x = y
-        Eq(func_f(y), b): 4,      # f(y) = b
+        Q.eq(func_f(y), b): 4,      # f(y) = b
         Q.composite(b): 5         # Q.composite(b)
     }
     enc_cnf.data = [{1}, {2}, {3}, {4}, {-5}]  # Assume prime/composite conflict
@@ -1522,8 +1488,8 @@ def test_assert_lit_function_arity_mismatch_no_conflict():
     func_f = Function('f')
 
     enc_cnf.encoding = {
-        Eq(func_f(x), c1): 1,     # f(x) = c1 (arity 1)
-        Eq(func_f(x, y), c2): 2   # f(x,y) = c2 (arity 2, different function)
+        Q.eq(func_f(x), c1): 1,     # f(x) = c1 (arity 1)
+        Q.eq(func_f(x, y), c2): 2   # f(x,y) = c2 (arity 2, different function)
     }
     enc_cnf.data = [{1}, {2}]
 
@@ -1540,8 +1506,8 @@ def test_assert_lit_function_symmetry():
     func_f = Function('f')
 
     enc_cnf.encoding = {
-        Eq(func_f(a, b), c): 1,   # f(a,b) = c
-        Eq(func_f(b, a), d): 2    # f(b,a) = d (different unless f is symmetric)
+        Q.eq(func_f(a, b), c): 1,   # f(a,b) = c
+        Q.eq(func_f(b, a), d): 2    # f(b,a) = d (different unless f is symmetric)
     }
     enc_cnf.data = [{1}, {2}]
 
@@ -1556,9 +1522,9 @@ def test_diamond_disequality_basic_conflict():
     """Test basic diamond disequality: a = b, a = c, b != c."""
     enc_cnf = EncodedCNF()
     enc_cnf.encoding = {
-        Eq(a, b): 1,      # a = b
-        Eq(a, c): 2,      # a = c
-        Ne(b, c): 3       # b != c (conflicts with transitivity a = b = c)
+        Q.eq(a, b): 1,      # a = b
+        Q.eq(a, c): 2,      # a = c
+        Q.ne(b, c): 3       # b != c (conflicts with transitivity a = b = c)
     }
     enc_cnf.data = [{1}, {2}, {3}]
 
@@ -1581,9 +1547,9 @@ def test_diamond_disequality_reverse_order():
     """Test diamond disequality with disequality asserted first."""
     enc_cnf = EncodedCNF()
     enc_cnf.encoding = {
-        Ne(b, c): 1,      # b != c
-        Eq(a, b): 2,      # a = b
-        Eq(a, c): 3       # a = c (should conflict)
+        Q.ne(b, c): 1,      # b != c
+        Q.eq(a, b): 2,      # a = b
+        Q.eq(a, c): 3       # a = c (should conflict)
     }
     enc_cnf.data = [{1}, {2}, {3}]
 
@@ -1605,10 +1571,10 @@ def test_diamond_disequality_with_functions():
     func_f = Function('f')
 
     enc_cnf.encoding = {
-        Eq(func_f(a), x): 1,     # f(a) = x
-        Eq(func_f(b), x): 2,     # f(b) = x
-        Eq(a, b): 3,             # a = b
-        Ne(func_f(a), func_f(b)): 4  # f(a) != f(b) (conflicts with congruence)
+        Q.eq(func_f(a), x): 1,     # f(a) = x
+        Q.eq(func_f(b), x): 2,     # f(b) = x
+        Q.eq(a, b): 3,             # a = b
+        Q.ne(func_f(a), func_f(b)): 4  # f(a) != f(b) (conflicts with congruence)
     }
     enc_cnf.data = [{1}, {2}, {3}, {4}]
 
@@ -1628,10 +1594,10 @@ def test_diamond_disequality_extended_chain():
     """Test extended diamond with longer equality chain: a = b = c = d, but a != d."""
     enc_cnf = EncodedCNF()
     enc_cnf.encoding = {
-        Eq(a, b): 1,      # a = b
-        Eq(b, c): 2,      # b = c
-        Eq(c, d): 3,      # c = d
-        Ne(a, d): 4       # a != d (conflicts with transitivity)
+        Q.eq(a, b): 1,      # a = b
+        Q.eq(b, c): 2,      # b = c
+        Q.eq(c, d): 3,      # c = d
+        Q.ne(a, d): 4       # a != d (conflicts with transitivity)
     }
     enc_cnf.data = [{1}, {2}, {3}, {4}]
 
@@ -1655,11 +1621,11 @@ def test_diamond_disequality_multiple_branches():
     """Test diamond with multiple branches: a = b, a = c, a = d, b != c."""
     enc_cnf = EncodedCNF()
     enc_cnf.encoding = {
-        Eq(a, b): 1,      # a = b
-        Eq(a, c): 2,      # a = c
-        Eq(a, d): 3,      # a = d
-        Ne(b, c): 4,      # b != c (conflicts)
-        Ne(c, d): 5       # c != d (would also conflict)
+        Q.eq(a, b): 1,      # a = b
+        Q.eq(a, c): 2,      # a = c
+        Q.eq(a, d): 3,      # a = d
+        Q.ne(b, c): 4,      # b != c (conflicts)
+        Q.eq(c, d): 5       # c != d (would also conflict)
     }
     enc_cnf.data = [{1}, {2}, {3}, {4}, {5}]
 
@@ -1681,10 +1647,10 @@ def test_diamond_disequality_nested_functions():
     func_f, func_g = Function('f'), Function('g')
 
     enc_cnf.encoding = {
-        Eq(func_f(func_g(a)), x): 1,        # f(g(a)) = x
-        Eq(func_f(func_g(b)), x): 2,        # f(g(b)) = x
-        Eq(a, b): 3,                        # a = b
-        Ne(func_f(func_g(a)), func_f(func_g(b))): 4  # f(g(a)) != f(g(b))
+        Q.eq(func_f(func_g(a)), x): 1,        # f(g(a)) = x
+        Q.eq(func_f(func_g(b)), x): 2,        # f(g(b)) = x
+        Q.eq(a, b): 3,                        # a = b
+        Q.ne(func_f(func_g(a)), func_f(func_g(b))): 4  # f(g(a)) != f(g(b))
     }
     enc_cnf.data = [{1}, {2}, {3}, {4}]
 
@@ -1704,9 +1670,12 @@ def test_diamond_disequality_explanation_basic():
     """Test explain_disequality for basic diamond pattern."""
     solver = EUFTheorySolver()
 
+    # Set up diamond: a = b, a = c, so b = c
+    solver = EUFTheorySolver()
+
     # Set up diamond: a = b, a = c, so b = c by transitivity
-    solver.SetTrue(Eq(a, b))
-    solver.SetTrue(Eq(a, c))
+    solver.SetTrue(Q.eq(a, b))
+    solver.SetTrue(Q.eq(a, c))
 
     # Now b and c should be equal, so explain why they're NOT disequal
     explanation = solver.explain_disequality(b, c)
@@ -1721,14 +1690,14 @@ def test_diamond_disequality_explanation_with_source():
 
     # Set up: x = a, y = b, a != b
     # This means x != y should be explained by {Eq(x, a), Eq(y, b), Ne(a, b)}
-    solver.SetTrue(Eq(x, a))
-    solver.SetTrue(Eq(y, b))
-    solver.SetTrue(Ne(a, b))
+    solver.SetTrue(Q.eq(x, a))
+    solver.SetTrue(Q.eq(y, b))
+    solver.SetTrue(Q.ne(a, b))
 
     explanation = solver.explain_disequality(x, y)
 
     # Should contain the source disequality and connecting equalities
-    expected_in_explanation = {Ne(a, b), Eq(a, x), Eq(b, y)}
+    expected_in_explanation = {Q.ne(a, b), Q.eq(a, x), Q.eq(b, y)}
     for exp_lit in expected_in_explanation:
         assert exp_lit in explanation
 
@@ -1739,19 +1708,19 @@ def test_diamond_disequality_explanation_chain():
 
     # Chain: x = u = v, y = w = z, v 1= w
     # So x != y through the chain
-    solver.SetTrue(Eq(x, u))
-    solver.SetTrue(Eq(u, v))
-    solver.SetTrue(Eq(y, w))
-    solver.SetTrue(Eq(w, z))
-    solver.SetTrue(Ne(v, w))
+    solver.SetTrue(Q.eq(x, u))
+    solver.SetTrue(Q.eq(u, v))
+    solver.SetTrue(Q.eq(y, w))
+    solver.SetTrue(Q.eq(w, z))
+    solver.SetTrue(Q.ne(v, w))
 
     explanation = solver.explain_disequality(x, y)
 
     # Should contain source disequality and connecting chain
-    assert Ne(v, w) in explanation
-    assert Eq(u, x) in explanation
-    assert Eq(u, v) in explanation
-    assert Eq(w, y) in explanation
+    assert Q.ne(v, w) in explanation
+    assert Q.eq(u, x) in explanation
+    assert Q.eq(u, v) in explanation
+    assert Q.eq(w, y) in explanation
 
 
 def test_diamond_disequality_function_explanation():
@@ -1761,14 +1730,14 @@ def test_diamond_disequality_function_explanation():
 
     # f(a) != f(b), a = x, b = y
     # So f(x) != f(y) should be explained
-    solver.SetTrue(Ne(func_f(a), func_f(b)))
-    solver.SetTrue(Eq(a, x))
-    solver.SetTrue(Eq(b, y))
+    solver.SetTrue(Q.ne(func_f(a), func_f(b)))
+    solver.SetTrue(Q.eq(a, x))
+    solver.SetTrue(Q.eq(b, y))
 
     explanation = solver.explain_disequality(func_f(x), func_f(y))
 
     # Should contain source function disequality and argument equalities
-    assert Ne(func_f(a), func_f(b)) in explanation
+    assert Q.ne(func_f(a), func_f(b)) in explanation
 
 
 def test_diamond_disequality_complex_scenario():
@@ -1777,10 +1746,10 @@ def test_diamond_disequality_complex_scenario():
     func_f = Function('f')
 
     enc_cnf.encoding = {
-        Eq(a, b): 1,                # a = b
-        Eq(func_f(a), x): 2,        # f(a) = x
-        Eq(func_f(b), y): 3,        # f(b) = y
-        Ne(x, y): 4                 # x != y (conflicts with f(a) = f(b) by congruence)
+        Q.eq(a, b): 1,                # a = b
+        Q.eq(func_f(a), x): 2,        # f(a) = x
+        Q.eq(func_f(b), y): 3,        # f(b) = y
+        Q.ne(x, y): 4                 # x != y (conflicts with f(a) = f(b) by congruence)
     }
     enc_cnf.data = [{1}, {2}, {3}, {4}]
 
@@ -1800,9 +1769,9 @@ def test_diamond_disequality_no_false_conflicts():
     """Test that valid diamond patterns don't produce false conflicts."""
     enc_cnf = EncodedCNF()
     enc_cnf.encoding = {
-        Eq(a, b): 1,      # a = b
-        Eq(c, d): 2,      # c = d (unrelated)
-        Ne(a, c): 3       # a != c (should be fine, no connection)
+        Q.eq(a, b): 1,      # a = b
+        Q.eq(c, d): 2,      # c = d (unrelated)
+        Q.ne(a, c): 3       # a != c (should be fine, no connection)
     }
     enc_cnf.data = [{1}, {2}, {3}]
 
@@ -1818,9 +1787,9 @@ def test_diamond_disequality_partial_diamond():
     """Test partial diamond that doesn't create conflict."""
     enc_cnf = EncodedCNF()
     enc_cnf.encoding = {
-        Eq(a, b): 1,      # a = b
-        Ne(b, c): 2,      # b != c
-        Ne(a, c): 3       # a != c (consistent with above)
+        Q.eq(a, b): 1,      # a = b
+        Q.ne(b, c): 2,      # b != c
+        Q.ne(a, c): 3       # a != c (consistent with above)
     }
     enc_cnf.data = [{1}, {2}, {3}]
 

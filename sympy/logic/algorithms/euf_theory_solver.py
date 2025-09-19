@@ -1,5 +1,5 @@
 from collections import defaultdict
-from sympy import Eq, Ne, Not
+from sympy import Eq, Ne
 from sympy.assumptions.ask import Q
 from sympy.assumptions.assume import AppliedPredicate
 from sympy.logic.algorithms.euf_theory import EUFCongruenceClosure, EUFUnhandledInput
@@ -21,24 +21,36 @@ def _ordered_pair(a, b):
 
 
 def _canonical_lit(literal):
-    """Extract canonical form (lhs, rhs, is_positive) from a literal."""
-    if isinstance(literal, Eq):
-        return literal.lhs, literal.rhs, True
-    elif isinstance(literal, Ne):
-        return literal.lhs, literal.rhs, False
-    elif isinstance(literal, Not) and isinstance(literal.args[0], Eq):
-        eq = literal.args[0]
-        return eq.lhs, eq.rhs, False
-    else:
-        raise EUFUnhandledInput(f"Unsupported literal type: {type(literal)}")
+    """Extract canonical form (lhs, rhs, is_positive) from a literal.
+
+    Accepts:
+      - AppliedPredicate(Q.eq/Q.ne, (lhs, rhs))
+    """
+
+    # AppliedPredicate (Q.eq / Q.ne)
+    if isinstance(literal, AppliedPredicate):
+        if literal.function == Q.eq:
+            return literal.arguments[0], literal.arguments[1], True
+        elif literal.function == Q.ne:
+            return literal.arguments[0], literal.arguments[1], False
+        else:
+            raise EUFUnhandledInput(f"Unsupported AppliedPredicate: {literal.function}")
+
+
+    # Anything else: unsupported
+    raise EUFUnhandledInput(f"Unsupported literal type: {type(literal)}")
+
+
 
 
 def _canon_eq(lhs, rhs):
-    """Return a canonical equality (ordered) from lhs and rhs."""
-    if _order_key(lhs) <= _order_key(rhs):
-        return Eq(lhs, rhs)
-    else:
-        return Eq(rhs, lhs)
+    """Return a canonical equality (ordered) from lhs and rhs.
+
+    Always returns Q.eq with ordered arguments so _canon_eq(a,b) == _canon_eq(b,a).
+    """
+    a, b = _ordered_pair(lhs, rhs)
+    return Q.eq(a, b)
+
 
 
 class EUFDisequalityContradictionException(Exception):
@@ -112,7 +124,7 @@ class ProofProducingCongruenceClosure(EUFCongruenceClosure):
         Parameters:
             lhs (sympy.Expr): Left-hand side of the equality
             rhs (sympy.Expr): Right-hand side of the equality
-            reason (sympy.Eq): The equality literal that justifies this constraint
+            reason : The equality literal that justifies this constraint
 
         Returns:
             None
@@ -168,7 +180,7 @@ class ProofProducingCongruenceClosure(EUFCongruenceClosure):
         Parameters:
             lhs (sympy.Expr): Left-hand side of the disequality
             rhs (sympy.Expr): Right-hand side of the disequality
-            reason (sympy.Ne): The disequality literal that justifies this constraint
+            reason : The disequality literal that justifies this constraint
 
         Returns:
             None
@@ -196,7 +208,7 @@ class ProofProducingCongruenceClosure(EUFCongruenceClosure):
         Parameters:
             lhs (sympy.Expr): Left-hand side of equality
             rhs (sympy.Expr): Right-hand side of equality
-            reason (sympy.Eq): Reason for this equality
+            reason : Reason for this equality
 
         Returns:
             None
@@ -268,7 +280,7 @@ class ProofProducingCongruenceClosure(EUFCongruenceClosure):
             b (sympy.Expr): Second term to explain equality for
 
         Returns:
-            set: Set of sympy.Eq literals that explain why a = b.
+            set: Set of sympy literals that explain why a = b.
                  Empty set if a and b are identical or not equal.
 
         Algorithm:
@@ -349,7 +361,7 @@ class ProofProducingCongruenceClosure(EUFCongruenceClosure):
         Example:
             Given: f(a) = c, a = b
             Query: Why f(b) = c?
-            Returns: {Eq(f(a), c), Eq(a, b)}
+            Returns: {Q.eq(f(a), c), Q.eq(a, b)}
         """
         if not hasattr(func_app, 'func') or not hasattr(func_app.func, '__name__'):
             return None
@@ -437,7 +449,7 @@ class ProofProducingCongruenceClosure(EUFCongruenceClosure):
         Example:
             Given: a = b, c = d
             Query: Why f(a, c) = f(b, d)?
-            Returns: {Eq(a, b), Eq(c, d)}
+            Returns: {Q.eq(a, b), Q.eq(c, d)}
         """
         args1 = func_app1.args
         args2 = func_app2.args
@@ -612,7 +624,7 @@ class EUFTheorySolver:
             # Unary predicates: Q.prime(x) -> Eq(Q.prime(x), _c_prime)
             if isinstance(pred, AppliedPredicate) and len(pred.arguments) == 1:
                 pred_constant = get_predicate_constant(pred.function)
-                eq = Eq(pred, pred_constant)
+                eq = Q.eq(pred, pred_constant)
                 return [eq], []
 
             # Binary predicates Q.eq/Q.ne
@@ -624,18 +636,12 @@ class EUFTheorySolver:
                     left, right = pred.lhs, pred.rhs
                     is_eq = pred.func == Eq
 
-                # Trivial cases
-                if left == right:
-                    if is_eq:
-                        return [], [True]
-                    else:
-                        return [], [False]
 
                 # Create constraint directly
                 if is_eq:
-                    new_constraint = Eq(left, right)
+                    new_constraint = Q.eq(left, right)
                 else:
-                    new_constraint = Ne(left, right)
+                    new_constraint = Q.ne(left, right)
 
                 return [new_constraint], []
 
@@ -654,14 +660,6 @@ class EUFTheorySolver:
                     literal_eqs[enc] = eqs
                     solver._enc_to_lit[enc] = eqs[0]
                     solver.lit_to_enc[eqs[0]] = enc
-                    if isinstance(eqs[0], Eq):
-                        opp_equation = Ne(eqs[0].lhs, eqs[0].rhs)
-                        solver._enc_to_lit[-enc] = opp_equation
-                        solver.lit_to_enc[opp_equation] = -enc
-                    if isinstance(eqs[0], Ne):
-                        opp_equation = Eq(eqs[0].lhs, eqs[0].rhs)
-                        solver._enc_to_lit[-enc] = opp_equation
-                        solver.lit_to_enc[opp_equation] = -enc
 
                 # Handle trivial conflicts
                 if True in triv:
@@ -754,6 +752,11 @@ class EUFTheorySolver:
                     eq_encoding = self.lit_to_enc.get(self.current_conflict_eq)
                     if eq_encoding is not None:
                         conflict_clause.add(-eq_encoding)
+                    else:
+                        opp_term = Q.ne(self.current_conflict_eq.lhs, self.current_conflict_eq.rhs)
+                        opp_eq_encoding = self.lit_to_enc.get(opp_term)
+                        if opp_eq_encoding is not None:
+                            conflict_clause.add(opp_eq_encoding)
 
                 # Get explanation for the disequality that's being violated
                 if self.current_conflict_eq is not None:
@@ -766,6 +769,17 @@ class EUFTheorySolver:
                         exp_encoding = self.lit_to_enc.get(exp_lit)
                         if exp_encoding is not None:
                             conflict_clause.add(-exp_encoding)
+                        else:
+                            if exp_lit.function == Q.eq:
+                                opp_term = Q.ne(exp_lit.lhs, exp_lit.rhs)
+                                opp_eq_encoding = self.lit_to_enc.get(opp_term)
+                                if opp_eq_encoding is not None:
+                                    conflict_clause.add(opp_eq_encoding)
+                            elif exp_lit.function == Q.ne:
+                                opp_term = Q.eq(exp_lit.lhs, exp_lit.rhs)
+                                opp_eq_encoding = self.lit_to_enc.get(opp_term)
+                                if opp_eq_encoding is not None:
+                                    conflict_clause.add(opp_eq_encoding)
 
             elif self._current_exception_type == 'equality_contradiction':
                 # EUFEqualityContradictionException case
@@ -777,10 +791,10 @@ class EUFTheorySolver:
                     if diseq_encoding is not None:
                         conflict_clause.add(-diseq_encoding)
                     else :
-                        new_diseq = Ne(self.current_conflict_diseq.rhs, self.current_conflict_diseq.lhs)
-                        diseq_encoding = self.lit_to_enc.get(new_diseq)
-                        if diseq_encoding is not None:
-                            conflict_clause.add(-diseq_encoding)
+                        new_eq = Q.eq(self.current_conflict_diseq.lhs, self.current_conflict_diseq.rhs)
+                        new_eq_encoding = self.lit_to_enc.get(new_eq)
+                        if new_eq_encoding is not None:
+                            conflict_clause.add(new_eq_encoding)
 
                 # Get explanation for why the terms are already equal
                 if self.current_conflict_diseq is not None:
@@ -794,10 +808,18 @@ class EUFTheorySolver:
                         if exp_encoding is not None:
                             conflict_clause.add(-exp_encoding)
                         else:
-                            new_eq = Eq(exp_lit.rhs, exp_lit.lhs)
-                            exp_encoding = self.lit_to_enc.get(new_eq)
-                            if exp_encoding is not None:
-                                conflict_clause.add(-exp_encoding)
+                            if exp_lit.function == Q.eq:
+                                opp_term = Q.ne(exp_lit.lhs, exp_lit.rhs)
+                                opp_eq_encoding = self.lit_to_enc.get(opp_term)
+                                if opp_eq_encoding is not None:
+                                    conflict_clause.add(opp_eq_encoding)
+                            elif exp_lit.function == Q.ne:
+                                opp_term = Q.eq(exp_lit.lhs, exp_lit.rhs)
+                                opp_eq_encoding = self.lit_to_enc.get(opp_term)
+                                if opp_eq_encoding is not None:
+                                    conflict_clause.add(opp_eq_encoding)
+
+
 
         return conflict_clause
 
@@ -846,7 +868,7 @@ class EUFTheorySolver:
                     raise EUFDisequalityContradictionException("EUF conflict: Congruence Closure violated Disequality")
 
         else:
-            ceq = Ne(ceq.lhs, ceq.rhs)
+            ceq = Q.ne(ceq.lhs, ceq.rhs)
 
             # Adding disequality a != b
             rep_lhs = self.cc._find(lhs_c)
@@ -897,11 +919,11 @@ class EUFTheorySolver:
             if is_positive:
                 consequences = self.SetTrue(constraint)
             else:
-                if isinstance(constraint, Eq):
-                    new_eq = Ne(constraint.lhs, constraint.rhs)
+                if constraint.function == Q.eq:
+                    new_eq = Q.ne(constraint.lhs, constraint.rhs)
                     consequences = self.SetTrue(new_eq)
                 else:  # Ne
-                    new_eq = Eq(constraint.lhs, constraint.rhs)
+                    new_eq = Q.eq(constraint.lhs, constraint.rhs)
                     consequences = self.SetTrue(new_eq)
 
             if consequences is None:

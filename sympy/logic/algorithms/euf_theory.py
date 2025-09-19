@@ -16,9 +16,10 @@ Example usage (doctest):
 
 >>> from sympy import symbols, Function, Eq
 >>> from sympy.logic.algorithms.euf_theory import EUFCongruenceClosure
+>>> from sympy.assumptions.ask import Q
 >>> f, g = symbols('f g', cls=Function)
 >>> a, b, x, c = symbols('a b x c')
->>> cc = EUFCongruenceClosure([Eq(a, b), Eq(f(a), x)])
+>>> cc = EUFCongruenceClosure([Q.eq(a, b), Q.eq(f(a), x)])
 >>> cc.are_equal(f(b), x)
 True
 >>> cc.add_equality(a, c)
@@ -69,7 +70,7 @@ class EUFCongruenceClosure:
         """
         Parameters
         ----------
-        equations : list of Eq or SymPy expressions
+        equations : list of Q.eq or SymPy expressions
             The ground equalities to be saturated.
         """
         # ----- Section 4, Paper -----
@@ -88,15 +89,11 @@ class EUFCongruenceClosure:
 
         # Curryfication and flattening (Sec 3/4): every unique subterm assigned constant
         for eq in equations:
-            if isinstance(eq, Eq):
-                left_id = self._flatten(eq.lhs)
-                right_id = self._flatten(eq.rhs)
-                self._register(left_id)
-                self._register(right_id)
-                self.pending_unions.append((left_id, right_id))
-            else:
-                tid = self._flatten(eq)
-                self._register(tid)
+            left_id = self._flatten(eq.lhs)
+            right_id = self._flatten(eq.rhs)
+            self._register(left_id)
+            self._register(right_id)
+            self.pending_unions.append((left_id, right_id))
         self._process_pending_unions()
 
     def _register(self, const):
@@ -264,11 +261,12 @@ class EUFCongruenceClosure:
 
         Examples
         --------
-        >>> from sympy import symbols, Function, Eq
+        >>> from sympy import symbols, Function
         >>> from sympy.logic.algorithms.euf_theory import EUFCongruenceClosure
+        >>> from sympy.assumptions.ask import Q
         >>> f = Function('f')
         >>> x, y = symbols('x y')
-        >>> cc = EUFCongruenceClosure([Eq(x, y), Eq(f(x), f(y))])
+        >>> cc = EUFCongruenceClosure([Q.eq(x, y), Q.eq(f(x), f(y))])
         >>> cc.are_equal(x, y)
         True
         >>> cc.are_equal(f(x), f(y))
