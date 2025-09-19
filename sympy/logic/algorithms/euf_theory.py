@@ -33,7 +33,6 @@ Classes
 
 from collections import defaultdict, deque
 from sympy.core.symbol import Symbol
-from sympy.core.relational import Eq
 from sympy.core.function import Lambda
 from sympy.core.symbol import Dummy
 from sympy.core.numbers import Number
