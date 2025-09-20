@@ -110,7 +110,7 @@ class BinaryRelation(Predicate):
             return False
         return None
 
-    def eval(self, args, assumptions=True):
+    def eval(self, args, assumptions=True, rec=float("inf")):
         # quick exit for structurally same arguments
         ret = self._compare_reflexive(*args)
         if ret is not None:
@@ -119,7 +119,7 @@ class BinaryRelation(Predicate):
         # don't perform simplify on args here. (done by AppliedBinaryRelation._eval_ask)
         # evaluate by multipledispatch
         lhs, rhs = args
-        ret = self.handler(lhs, rhs, assumptions=assumptions)
+        ret = self.handler(lhs, rhs, assumptions=assumptions, rec=rec)
         if ret is not None:
             return ret
 
@@ -127,7 +127,7 @@ class BinaryRelation(Predicate):
         if self.is_reflexive:
             types = (type(lhs), type(rhs))
             if self.handler.dispatch(*types) is not self.handler.dispatch(*reversed(types)):
-                ret = self.handler(rhs, lhs, assumptions=assumptions)
+                ret = self.handler(rhs, lhs, assumptions=assumptions, rec=rec)
 
         return ret
 
@@ -178,7 +178,7 @@ class AppliedBinaryRelation(AppliedPredicate):
             return Not(self, evaluate=False)
         return neg_rel(*self.arguments)
 
-    def _eval_ask(self, assumptions):
+    def _eval_ask(self, assumptions, rec=float("inf")):
         conj_assumps = set()
         binrelpreds = {Eq: Q.eq, Ne: Q.ne, Gt: Q.gt, Lt: Q.lt, Ge: Q.ge, Le: Q.le}
         for a in conjuncts(assumptions):
@@ -203,7 +203,7 @@ class AppliedBinaryRelation(AppliedPredicate):
 
         # simplify the args and try again
         args = tuple(a.simplify() for a in self.arguments)
-        return self.function.eval(args, assumptions)
+        return self.function.eval(args, assumptions, rec=rec)
 
     def __bool__(self):
         ret = ask(self)

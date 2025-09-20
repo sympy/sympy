@@ -3,12 +3,15 @@
 from contextlib import contextmanager
 import inspect
 from sympy.core.symbol import Str
-from sympy.core.sympify import _sympify
+from sympy.core.sympify import _sympify, sympify
 from sympy.logic.boolalg import Boolean, false, true
 from sympy.multipledispatch.dispatcher import Dispatcher, str_signature
 from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.iterables import is_sequence
 from sympy.utilities.source import get_class
+
+
+
 
 
 class AssumptionsContext(set):
@@ -152,8 +155,12 @@ class AppliedPredicate(Boolean):
         # Will be changed to self.args[1:] after args overriding is removed
         return self._args[1:]
 
-    def _eval_ask(self, assumptions):
-        return self.function.eval(self.arguments, assumptions)
+    def _eval_ask(self, assumptions, rec):
+        import inspect
+        sig = inspect.signature(self.function.eval)
+        # if len(sig.parameters) == 2:
+        #     return self.function.eval(self.arguments, assumptions)
+        return self.function.eval(self.arguments, assumptions, rec)
 
     @property
     def binary_symbols(self):
@@ -337,15 +344,26 @@ class Predicate(Boolean, metaclass=PredicateMeta):
     def __call__(self, *args):
         return AppliedPredicate(self, *args)
 
-    def eval(self, args, assumptions=True):
+    def eval(self, args, assumptions=True, rec=None):
         """
         Evaluate ``self(*args)`` under the given assumptions.
 
         This uses only direct resolution methods, not logical inference.
         """
+        import inspect
+
+
+
         result = None
         try:
-            result = self.handler(*args, assumptions=assumptions)
+            # sig = inspect.signature(self.handler)
+            # if len(sig.parameters) == 2:
+            #     result = self.handler(*args, assumptions=assumptions)
+            # else:
+            # try:
+            result = self.handler(*args, assumptions=assumptions, rec=rec)
+            # except TypeError:
+            #     result = self.handler(*args, assumptions=assumptions)
         except NotImplementedError:
             pass
         return result
@@ -483,3 +501,62 @@ def assuming(*assumptions):
     finally:
         global_assumptions.clear()
         global_assumptions.update(old_global_assumptions)
+
+
+def recursive_ask(proposition, assumptions, rec=float('inf')):
+    if rec > 0:
+        from sympy.assumptions.ask import ask
+        return ask(proposition, assumptions, rec=rec-1)
+
+
+    from sympy.assumptions.ask import _ask_single_fact, Q, _extract_all_facts
+    from sympy.core.relational import Eq, Ne, Gt, Lt, Ge, Le
+    from sympy.assumptions.cnf import CNF, EncodedCNF, Literal
+    from sympy.core.kind import BooleanKind
+
+
+
+    proposition = sympify(proposition)
+    assumptions = sympify(assumptions)
+
+    if isinstance(proposition, Predicate) or proposition.kind is not BooleanKind:
+        raise TypeError("proposition must be a valid logical expression")
+
+    if isinstance(assumptions, Predicate) or assumptions.kind is not BooleanKind:
+        raise TypeError("assumptions must be a valid logical expression")
+
+    binrelpreds = {Eq: Q.eq, Ne: Q.ne, Gt: Q.gt, Lt: Q.lt, Ge: Q.ge, Le: Q.le}
+    if isinstance(proposition, AppliedPredicate):
+        key, args = proposition.function, proposition.arguments
+    elif proposition.func in binrelpreds:
+        key, args = binrelpreds[type(proposition)], proposition.args
+    else:
+        key, args = Q.is_true, (proposition,)
+
+    # convert local and global assumptions to CNF
+    assump_cnf = CNF.from_prop(assumptions)
+    # assump_cnf.extend(context)
+
+    # extract the relevant facts from assumptions with respect to args
+    local_facts = _extract_all_facts(assump_cnf, args)
+
+    # convert default facts and assumed facts to encoded CNF
+    # known_facts_cnf = get_all_known_facts()
+    # enc_cnf = EncodedCNF()
+    # enc_cnf.from_cnf(CNF(known_facts_cnf))
+    # enc_cnf.add_from_cnf(local_facts)
+
+    # check the satisfiability of given assumptions
+    # if local_facts.clauses and satisfiable(enc_cnf) is False:
+    #     raise ValueError(f"inconsistent assumptions {assumptions}")
+
+    # quick computation for single fact
+    res = _ask_single_fact(key, local_facts)
+    if res is not None:
+        return res
+
+    # direct resolution method, no logic
+    res = key(*args)._eval_ask(assumptions, rec)
+    if res is not None:
+        return bool(res)
+
