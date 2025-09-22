@@ -295,18 +295,18 @@ class ProofProducingCongruenceClosure(EUFCongruenceClosure):
         b_id = self._flatten(b)
 
         # Base case: terms are syntactically identical
-        if a_id == b_id:
+        if a == b:
             return set()
 
         # Try function congruence explanation first (more specific)
-        func_explanation = self._explain_function_congruence(a, b)
+        func_explanation = self.explain_function_congruence(a, b)
         if func_explanation:
             return func_explanation
 
         # Fall back to general DFS explanation
         return self._explain_via_dfs(a, b)
 
-    def _explain_function_congruence(self, a, b):
+    def _explain_function_congruence_with_predicate(self, a, b):
         """
         Explain equality via function congruence with proper argument tracking.
 
@@ -335,6 +335,54 @@ class ProofProducingCongruenceClosure(EUFCongruenceClosure):
             return self._explain_same_function_applications(a, b)
 
         return None
+
+    def explain_function_congruence(self, a, b):
+        """
+        Generate an explanation for the equality of two terms `a` and `b` based on functional congruence.
+
+        This method covers multiple cases:
+        1. When both `a` and `b` are function applications with the same function symbol,
+        recursively explain equality of their corresponding arguments to justify `a = b`.
+        2. When both are function applications but have different function symbols,
+        fall back to a DFS-based explanation to find a chain of equalities in the congruence closure.
+        3. When one is a function application and the other is a constant (or non-function),
+        fall back to DFS explanation to discover equality through intermediate terms.
+        4. When neither is a function application, no functional congruence explanation applies (returns None).
+
+        Parameters:
+            a (sympy.Expr): The first term to explain.
+            b (sympy.Expr): The second term to explain.
+
+        Returns:
+            set or None: A set of equality literals that explain why `a` equals `b` according to function congruence rules,
+                        or None if no such congruence explanation applies.
+
+        Notes:
+            - Ensures that function applications have matching arities before recursively explaining argument equalities.
+            - Uses DFS explanation for terms with different function heads or mixed function-constant cases.
+            - This strategy enables minimal and structurally meaningful explanations for equalities in an EUF solver context.
+        """
+        # If both are function applications
+        if self._is_function_application(a) and self._is_function_application(b):
+            if a.func == b.func:
+                # Functional congruence: iterate over arguments
+                explanation = set()
+                for ai, bi in zip(a.args, b.args):
+                    explanation.update(self.explain_equality(ai, bi))
+                return explanation
+            else:
+                # Different function heads: use DFS to explain why they're equal
+                return self._explain_via_dfs(a, b)
+        # If only one is a function application and the other is a constant
+        elif (self._is_function_application(a) and self._is_constant(b)) or \
+            (self._is_constant(a) and self._is_function_application(b)):
+            return self._explain_function_congruence_with_predicate(a, b)
+        elif (self._is_function_application(a) and not self._is_function_application(b)) or \
+            (not self._is_function_application(a) and self._is_function_application(b)):
+            return self._explain_via_dfs(a, b)
+        # Neither is a function application
+        return None
+
 
     def _explain_func_app_equals_constant(self, func_app, constant):
         """
@@ -499,7 +547,7 @@ class ProofProducingCongruenceClosure(EUFCongruenceClosure):
         a_id = self._flatten(a)
         b_id = self._flatten(b)
 
-        if a_id == b_id:
+        if a==b:
             return set()
 
         visited = set()
@@ -753,10 +801,20 @@ class EUFTheorySolver:
                     if eq_encoding is not None:
                         conflict_clause.add(-eq_encoding)
                     else:
-                        opp_term = Q.ne(self.current_conflict_eq.lhs, self.current_conflict_eq.rhs)
-                        opp_eq_encoding = self.lit_to_enc.get(opp_term)
-                        if opp_eq_encoding is not None:
-                            conflict_clause.add(opp_eq_encoding)
+                        new_eq_encoding = self.lit_to_enc.get(Q.eq(self.current_conflict_eq.rhs, self.current_conflict_eq.lhs))
+                        if new_eq_encoding is not None:
+                            conflict_clause.add(-new_eq_encoding)
+                        else:
+                            opp_term = Q.ne(self.current_conflict_eq.lhs, self.current_conflict_eq.rhs)
+                            opp_eq_encoding = self.lit_to_enc.get(opp_term)
+                            if opp_eq_encoding is not None:
+                                conflict_clause.add(opp_eq_encoding)
+                            else:
+                                opp_term = Q.ne(self.current_conflict_eq.rhs, self.current_conflict_eq.lhs)
+                                opp_eq_encoding = self.lit_to_enc.get(opp_term)
+                                if opp_eq_encoding is not None:
+                                    conflict_clause.add(opp_eq_encoding)
+
 
                 # Get explanation for the disequality that's being violated
                 if self.current_conflict_eq is not None:
@@ -770,16 +828,32 @@ class EUFTheorySolver:
                         if exp_encoding is not None:
                             conflict_clause.add(-exp_encoding)
                         else:
-                            if exp_lit.function == Q.eq:
-                                opp_term = Q.ne(exp_lit.lhs, exp_lit.rhs)
-                                opp_eq_encoding = self.lit_to_enc.get(opp_term)
-                                if opp_eq_encoding is not None:
-                                    conflict_clause.add(opp_eq_encoding)
-                            elif exp_lit.function == Q.ne:
-                                opp_term = Q.eq(exp_lit.lhs, exp_lit.rhs)
-                                opp_eq_encoding = self.lit_to_enc.get(opp_term)
-                                if opp_eq_encoding is not None:
-                                    conflict_clause.add(opp_eq_encoding)
+                            new_exp_lit = Q.eq(exp_lit.rhs, exp_lit.lhs) if exp_lit.function == Q.eq else Q.ne(exp_lit.rhs, exp_lit.lhs)
+                            new_exp_encoding = self.lit_to_enc.get(new_exp_lit)
+                            if new_exp_encoding is not None:
+                                conflict_clause.add(-new_exp_encoding)
+                            else:
+                                if exp_lit.function == Q.eq:
+                                    opp_term = Q.ne(exp_lit.lhs, exp_lit.rhs)
+                                    opp_eq_encoding = self.lit_to_enc.get(opp_term)
+                                    if opp_eq_encoding is not None:
+                                        conflict_clause.add(opp_eq_encoding)
+                                    else:
+                                        # If we can't find the opposite term, we may need to create a new one
+                                        new_opp_term = Q.ne(exp_lit.rhs, exp_lit.lhs)
+                                        new_opp_eq_encoding = self.lit_to_enc.get(new_opp_term)
+                                        if new_opp_eq_encoding is not None:
+                                            conflict_clause.add(new_opp_eq_encoding)
+                                elif exp_lit.function == Q.ne:
+                                    opp_term = Q.eq(exp_lit.lhs, exp_lit.rhs)
+                                    opp_eq_encoding = self.lit_to_enc.get(opp_term)
+                                    if opp_eq_encoding is not None:
+                                        conflict_clause.add(opp_eq_encoding)
+                                    else:
+                                        new_opp_term = Q.eq(exp_lit.rhs, exp_lit.lhs)
+                                        new_opp_eq_encoding = self.lit_to_enc.get(new_opp_term)
+                                        if new_opp_eq_encoding is not None:
+                                            conflict_clause.add(new_opp_eq_encoding)
 
             elif self._current_exception_type == 'equality_contradiction':
                 # EUFEqualityContradictionException case
@@ -791,10 +865,19 @@ class EUFTheorySolver:
                     if diseq_encoding is not None:
                         conflict_clause.add(-diseq_encoding)
                     else :
-                        new_eq = Q.eq(self.current_conflict_diseq.lhs, self.current_conflict_diseq.rhs)
-                        new_eq_encoding = self.lit_to_enc.get(new_eq)
-                        if new_eq_encoding is not None:
-                            conflict_clause.add(new_eq_encoding)
+                        new_diseq_encoding = self.lit_to_enc.get(Q.ne(self.current_conflict_diseq.rhs, self.current_conflict_diseq.lhs))
+                        if new_diseq_encoding is not None:
+                            conflict_clause.add(-new_diseq_encoding)
+                        else:
+                            new_eq = Q.eq(self.current_conflict_diseq.lhs, self.current_conflict_diseq.rhs)
+                            new_eq_encoding = self.lit_to_enc.get(new_eq)
+                            if new_eq_encoding is not None:
+                                conflict_clause.add(new_eq_encoding)
+                            else:
+                                new_eq = Q.eq(self.current_conflict_diseq.rhs, self.current_conflict_diseq.lhs)
+                                new_eq_encoding = self.lit_to_enc.get(new_eq)
+                                if new_eq_encoding is not None:
+                                    conflict_clause.add(new_eq_encoding)
 
                 # Get explanation for why the terms are already equal
                 if self.current_conflict_diseq is not None:
@@ -808,16 +891,30 @@ class EUFTheorySolver:
                         if exp_encoding is not None:
                             conflict_clause.add(-exp_encoding)
                         else:
-                            if exp_lit.function == Q.eq:
-                                opp_term = Q.ne(exp_lit.lhs, exp_lit.rhs)
-                                opp_eq_encoding = self.lit_to_enc.get(opp_term)
-                                if opp_eq_encoding is not None:
-                                    conflict_clause.add(opp_eq_encoding)
-                            elif exp_lit.function == Q.ne:
-                                opp_term = Q.eq(exp_lit.lhs, exp_lit.rhs)
-                                opp_eq_encoding = self.lit_to_enc.get(opp_term)
-                                if opp_eq_encoding is not None:
-                                    conflict_clause.add(opp_eq_encoding)
+                            new_exp_encoding = self.lit_to_enc.get(Q.eq(exp_lit.rhs, exp_lit.lhs) if exp_lit.function == Q.eq else Q.ne(exp_lit.rhs, exp_lit.lhs))
+                            if new_exp_encoding is not None:
+                                conflict_clause.add(-new_exp_encoding)
+                            else:
+                                if exp_lit.function == Q.eq:
+                                    opp_term = Q.ne(exp_lit.lhs, exp_lit.rhs)
+                                    opp_eq_encoding = self.lit_to_enc.get(opp_term)
+                                    if opp_eq_encoding is not None:
+                                        conflict_clause.add(opp_eq_encoding)
+                                    else:
+                                        new_opp_term = Q.ne(exp_lit.rhs, exp_lit.lhs)
+                                        new_opp_eq_encoding = self.lit_to_enc.get(new_opp_term)
+                                        if new_opp_eq_encoding is not None:
+                                            conflict_clause.add(new_opp_eq_encoding)
+                                elif exp_lit.function == Q.ne:
+                                    opp_term = Q.eq(exp_lit.lhs, exp_lit.rhs)
+                                    opp_eq_encoding = self.lit_to_enc.get(opp_term)
+                                    if opp_eq_encoding is not None:
+                                        conflict_clause.add(opp_eq_encoding)
+                                    else:
+                                        new_opp_term = Q.eq(exp_lit.rhs, exp_lit.lhs)
+                                        new_opp_eq_encoding = self.lit_to_enc.get(new_opp_term)
+                                        if new_opp_eq_encoding is not None:
+                                            conflict_clause.add(new_opp_eq_encoding)
 
 
 

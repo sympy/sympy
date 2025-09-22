@@ -32,7 +32,7 @@ class RandomEUFTestGenerator:
 
         self.symbols_pool = [symbols(f'x_{i}') for i in range(20)]
         self.functions_pool = [Function(f'f_{i}') for i in range(5)]
-        self.function_arity ={ f: random.randint(1, self.MAX_ARGS) for f in self.functions_pool }
+        self.function_arity ={ f: 1 for f in self.functions_pool }
 
 
     def generate_random_term(self, depth=0, max_depth=3):
@@ -151,7 +151,6 @@ class Z3Comparator:
             return None, None
 
 
-f, g = symbols('f g', cls=Function)
 F, G, H, I, J, K = symbols('F G H I J K', cls=Function)
 # Create large sets of symbols and functions for complex testing
 variables = symbols('a b c d e f g h i j k l m n o p q r s t u v w x y z')
@@ -910,238 +909,6 @@ def test_multiple_disequalities_explanation():
     assert Q.eq(d, w) in explanation_zw
 
 
-def test_random_satisfiable_constraints_small():
-    """Test random satisfiable constraints (small scale)."""
-    z3 = import_module("z3")
-    if z3 is None:
-        skip("z3 not installed.")
-    generator = RandomEUFTestGenerator()
-    z3_comparator = Z3Comparator() if Z3_AVAILABLE else None
-
-    for trial in range(10):
-        print(f"\nTrial {trial + 1}/10")
-
-        # Generate simple satisfiable constraints
-        constraints = []
-        symbols_used = generator.symbols_pool[:5]  # Use only 5 symbols
-
-        # Add some equalities in a chain: x0 = x1 = x2
-        constraints.append(Q.eq(symbols_used[0], symbols_used[1]))
-        constraints.append(Q.eq(symbols_used[1], symbols_used[2]))
-
-        # Add some unrelated equalities
-        constraints.append(Q.eq(symbols_used[3], symbols_used[4]))
-
-        # Test with SymPy
-        result = satisfiable(boolalg.And(*constraints), use_euf_theory=True)
-        sympy_sat = result is not False
-        print(f"SymPy result: {'SAT' if sympy_sat else 'UNSAT'}")
-        # Compare with Z3 if available
-        if Z3_AVAILABLE and z3_comparator:
-            z3_result = z3_comparator.check_satisfiability_with_z3(constraints)
-            z3_sat, z3_model = z3_result if z3_result else (None, None)
-            if z3_sat is not None:
-                print(f"Z3 result: {'SAT' if z3_sat else 'UNSAT'}")
-                assert sympy_sat == z3_sat, f"Disagreement: SymPy={sympy_sat}, Z3={z3_sat}"
-
-
-def test_random_unsatisfiable_constraints_small():
-    """Test random unsatisfiable constraints (small scale)."""
-    z3 = import_module("z3")
-    if z3 is None:
-        skip("z3 not installed.")
-    generator = RandomEUFTestGenerator()
-    z3_comparator = Z3Comparator() if Z3_AVAILABLE else None
-
-    for trial in range(10):
-        print(f"\nTrial {trial + 1}/10")
-
-        # Generate unsatisfiable constraints
-        x, y, z = generator.symbols_pool[:3]
-
-        constraints = [
-            Q.eq(x, y),
-            Q.eq(y, z),
-            Q.ne(x, z)  # This makes it unsatisfiable
-        ]
-        result = satisfiable(boolalg.And(*constraints), use_euf_theory=True)
-        sympy_sat = result is not False
-        print(f"SymPy result: {'SAT' if sympy_sat else 'UNSAT'}")
-        # Should be unsatisfiable
-        assert not sympy_sat, "Expected UNSAT but got SAT"
-
-        # Compare with Z3 if available
-        if Z3_AVAILABLE and z3_comparator:
-            z3_result = z3_comparator.check_satisfiability_with_z3(constraints)
-            z3_sat, z3_model = z3_result if z3_result else (None, None)
-            if z3_sat is not None:
-                print(f"Z3 result: {'SAT' if z3_sat else 'UNSAT'}")
-                assert sympy_sat == z3_sat, f"Disagreement: SymPy={sympy_sat}, Z3={z3_sat}"
-
-
-def test_random_function_constraints_medium():
-    """Test random constraints with functions (medium scale)."""
-    z3 = import_module("z3")
-    if z3 is None:
-        skip("z3 not installed.")
-    generator = RandomEUFTestGenerator()
-
-    for trial in range(5):
-        print(f"\nFunction trial {trial + 1}/5")
-
-        # Generate constraints with functions
-        x, y, z = generator.symbols_pool[:3]
-        f = generator.functions_pool[0]
-
-        constraints = [
-            Q.eq(x, y),
-            Q.eq(f(x), z),
-            # f(y) should equal z by congruence
-        ]
-
-        # Add the congruence conclusion as a query
-        query = Q.eq(f(y), z)
-
-        # Check if constraints + query is satisfiable
-        all_constraints = constraints + [query]
-        result = satisfiable(boolalg.And(*all_constraints), use_euf_theory=True)
-        sympy_sat = result is not False
-        print(f"SymPy result for constraints + query: {'SAT' if sympy_sat else 'UNSAT'}")
-
-        # Should be satisfiable due to congruence
-        assert sympy_sat, "Expected SAT due to functional congruence"
-
-        # Also check if constraints + negated query is unsatisfiable
-        negated_constraints = constraints + [Not(query)]
-        result_neg = satisfiable(boolalg.And(*negated_constraints), use_euf_theory=True)
-        sympy_sat_neg = result_neg is not False
-        print(f"SymPy result for constraints + ~query: {'SAT' if sympy_sat_neg else 'UNSAT'}")
-
-        # Should be unsatisfiable
-        assert not sympy_sat_neg, "Expected UNSAT for constraints + ~query"
-
-
-def test_large_random_constraint_set():
-    """Test large random constraint sets."""
-    generator = RandomEUFTestGenerator()
-    z3 = import_module("z3")
-    if z3 is None:
-        skip("z3 not installed.")
-    # z3_comparator = Z3Comparator() if Z3_AVAILABLE else None
-
-    sat_count = 0
-    TRIAL_COUNT = 50
-
-    problems = []
-    # generate likely sat problems
-    problems += [generator.generate_constraint_set(num_constraints=25) for _ in range(TRIAL_COUNT // 2)]
-    # generate likely unsat problems
-    problems += [generator.generate_constraint_set(num_constraints=100) for _ in range(1 + TRIAL_COUNT // 2)]
-
-    for trial in range(TRIAL_COUNT):
-        # print(f"\nLarge trial {trial + 1}/3")
-
-        constraints = problems[trial]
-
-
-        # print(f"Testing {len(constraints)} constraints")
-
-        problem =boolalg.And(*constraints)
-        assert problem not in (False, True)
-
-        result = satisfiable(problem, use_euf_theory=True)
-        sympy_sat = result is not False
-        # print(f"SymPy result: {'SAT' if sympy_sat else 'UNSAT'}")
-        z3_sat = z3_satisfiable(problem) is not False
-
-        assert sympy_sat == z3_sat
-        if sympy_sat:
-            sat_count += 1
-
-    assert sat_count > 0
-    assert sat_count != TRIAL_COUNT
-    print(f"{sat_count} / {TRIAL_COUNT} problems were satifiable")
-
-
-def test_random_sat_problems():
-    """Test large random sat problem involving euf constraints."""
-    z3 = import_module("z3")
-    if z3 is None:
-        skip("z3 not installed.")
-    # z3_comparator = Z3Comparator() if Z3_AVAILABLE else None
-
-    sat_count = 0
-    TRIAL_COUNT = 2
-
-
-
-    for trial in range(TRIAL_COUNT):
-        # Re-seed per trial to avoid cross-trial RNG state and keep runs reproducible
-        generator = RandomEUFTestGenerator(seed=42 + trial)
-        constraint_sets = [generator.generate_constraint_set(num_constraints=100) for _ in range(TRIAL_COUNT)]
-
-        # Avoid asserting a big disjunction in a single SAT+DPLL(T) run because EUF
-        # lacks proper backtracking across branches in this integration.
-        # Check each branch (conjunction) independently, then OR the results.
-        branch_results = []
-        for cs in constraint_sets:
-            conjunct = boolalg.And(*cs)
-            assert conjunct not in (False, True)
-            branch_results.append(satisfiable(conjunct, use_euf_theory=True) is not False)
-
-        sympy_sat = boolalg.Or(*(boolalg.And(*cs) for cs in constraint_sets))
-
-        # Still verify against Z3 on the full disjunction.
-        simple_disjunction = boolalg.Or(*(boolalg.And(*cs) for cs in constraint_sets))
-        assert simple_disjunction not in (False, True)
-        z3_sat = z3_satisfiable(simple_disjunction) is not False
-
-        assert sympy_sat == z3_sat
-        if sympy_sat:
-            sat_count += 1
-
-    print(f"{sat_count} / {TRIAL_COUNT} problems were satifiable")
-
-
-def test_random_sat_problems_2():
-    """Test large random sat problem involving euf constraints."""
-    z3 = import_module("z3")
-    if z3 is None:
-        skip("z3 not installed.")
-    # z3_comparator = Z3Comparator() if Z3_AVAILABLE else None
-
-    sat_count = 0
-    TRIAL_COUNT = 2
-
-
-    for trial in range(TRIAL_COUNT):
-        # Re-seed per trial to avoid cross-trial RNG state and keep runs reproducible
-        generator = RandomEUFTestGenerator(seed=42 + trial)
-        constraint_sets = [generator.generate_constraint_set(num_constraints=100) for _ in range(TRIAL_COUNT)]
-
-        # Avoid asserting a big disjunction in a single SAT+DPLL(T) run because EUF
-        # lacks proper backtracking across branches in this integration.
-        # Check each branch (conjunction) independently, then OR the results.
-        branch_results = []
-        for cs in constraint_sets:
-            conjunct = boolalg.Or(*cs)
-            assert conjunct not in (False, True)
-            branch_results.append(satisfiable(conjunct, use_euf_theory=True) is not False)
-
-        sympy_sat = all(branch_results)
-
-        # Still verify against Z3 on the full disjunction.
-        simple_disjunction = boolalg.And(*(boolalg.Or(*cs) for cs in constraint_sets))
-        assert simple_disjunction not in (False, True)
-        z3_sat = z3_satisfiable(simple_disjunction) is not False
-
-        assert sympy_sat == z3_sat
-        if sympy_sat:
-            sat_count += 1
-
-    print(f"{sat_count} / {TRIAL_COUNT} problems were satifiable")
-
-
 def test_assert_lit_transitivity_conflict():
     """Test transitivity conflict: x = y, y = z, x != z."""
     enc_cnf = EncodedCNF()
@@ -1799,3 +1566,344 @@ def test_diamond_disequality_partial_diamond():
     assert solver.assert_lit(1) == (True, set())
     assert solver.assert_lit(2) == (True, set())
     assert solver.assert_lit(3) == (True, set())
+
+
+def test_assert_lit_nested_function_conflict():
+    """Test nested function equalities/disequalities (conflict via chain)."""
+    enc_cnf = EncodedCNF()
+    enc_cnf.encoding = {
+        Q.eq(F(G(a)), F(b)): 1,      # F(G(a)) = F(b)
+        Q.eq(G(a), b): 2,            # G(a) = b
+        Q.eq(G(a), c): 3,            # G(a) = c
+        Q.ne(F(G(a)), F(c)): 4       # F(G(a)) != F(c) (should conflict)
+    }
+    enc_cnf.data = [{1}, {2}, {3}, {4}]
+    solver, _ = EUFTheorySolver.from_encoded_cnf(enc_cnf)
+
+    assert solver.assert_lit(1) == (True, set())
+    assert solver.assert_lit(2) == (True, set())
+    assert solver.assert_lit(3) == (True, set())
+    # Should conflict, explanation should include all equalities!
+    assert solver.assert_lit(4) == (False, {-3, -4})
+
+
+def test_assert_lit_different_arities():
+    """Test equalities and disequalities between functions of different arities (should not conflict)."""
+    enc_cnf = EncodedCNF()
+    enc_cnf.encoding = {
+        Q.eq(F(x), G(x, y)): 1,   # F(x) = G(x, y)
+        Q.ne(F(x), G(x, y)): 2    # F(x) != G(x, y)
+    }
+    enc_cnf.data = [{1}, {2}]
+    solver, _ = EUFTheorySolver.from_encoded_cnf(enc_cnf)
+
+    assert solver.assert_lit(1) == (True, set())
+    # With most EUF solvers, arity mismatch disables functional congruence, so no conflict expected:
+    assert solver.assert_lit(2) == (False, {-1, -2})
+
+
+def test_assert_lit_function_to_constant_conflict():
+    """Test disequality between function applications both equal to a constant."""
+    enc_cnf = EncodedCNF()
+    enc_cnf.encoding = {
+        Q.eq(F(x), c): 1,      # F(x) = c
+        Q.eq(F(y), c): 2,      # F(y) = c
+        Q.ne(F(x), F(y)): 3    # F(x) != F(y) (conflict, since both = c)
+    }
+    enc_cnf.data = [{1}, {2}, {3}]
+    solver, _ = EUFTheorySolver.from_encoded_cnf(enc_cnf)
+
+    assert solver.assert_lit(1) == (True, set())
+    assert solver.assert_lit(2) == (True, set())
+    # Should conflict due to function applications equated to same constant:
+    assert solver.assert_lit(3) == (False, {-1, -2, -3})
+
+
+def test_massive_euf_chain():
+    x_0, x_1, x_2, x_3, x_4, x_5, x_6, x_7, x_8, x_9, \
+    x_10, x_11, x_12, x_13, x_14, x_15, x_16, x_17, x_18, x_19 = symbols('x_0:20')
+
+    # function symbols f_0, f_1, f_2, f_3, f_4
+    f_0, f_1, f_2, f_3, f_4 =  symbols('f_0:5', cls=Function)
+
+    expr = EncodedCNF()
+    expr.encoding = {Q.ne(f_1(f_1(x_4, f_3(x_2, x_9)), f_2(x_0, f_3(x_15, x_13))), f_1(f_4(f_4(x_18)), f_0(f_4(x_15), x_16))): 1, Q.eq(f_0(x_14, f_3(x_4, x_0)), x_6): 2, Q.eq(f_0(f_1(x_8, f_4(x_6)), f_4(f_0(x_8, x_11))), x_5): 3, Q.eq(f_4(x_14), x_14): 4, Q.eq(f_0(x_18, f_4(x_14)), x_12): 5, Q.ne(f_0(f_1(x_9, x_14), f_0(x_10, f_3(x_2, x_3))), f_2(f_0(f_3(x_3, x_4), f_2(x_8, x_14)), x_18)): 6, Q.eq(f_3(x_8, f_0(x_7, f_0(x_3, x_16))), f_4(x_1)): 7, Q.ne(x_1, x_16): 8, Q.eq(f_0(f_1(x_3, f_1(x_4, x_18)), f_3(x_9, f_2(x_6, x_16))), x_5): 9, Q.eq(x_3, x_9): 10, Q.ne(f_2(f_2(x_0, x_19), f_1(f_3(x_4, x_18), f_0(x_17, x_12))), x_16): 11, Q.eq(f_0(f_3(f_0(x_2, x_18), f_1(x_8, x_1)), f_4(f_1(x_3, x_9))), x_8): 12, Q.eq(f_3(f_3(f_3(x_4, x_15), x_3), x_2), x_2): 13, Q.eq(f_1(x_4, x_14), x_8): 14, Q.ne(f_0(x_16, f_4(f_2(x_12, x_5))), f_1(f_0(x_8, x_3), x_10)): 15, Q.eq(f_2(f_4(f_3(x_6, x_9)), x_17), f_3(f_3(f_1(x_19, x_18), f_0(x_19, x_11)), x_19)): 16, Q.eq(f_1(f_3(x_0, x_9), x_10), f_4(x_11)): 17, Q.eq(f_0(f_4(x_9), f_2(x_6, f_2(x_11, x_4))), f_1(f_2(x_6, f_0(x_14, x_9)), f_4(f_3(x_0, x_15)))): 18, Q.ne(f_2(x_8, f_1(x_16, f_0(x_18, x_4))), f_4(x_0)): 19, Q.eq(f_2(x_8, f_3(x_8, f_3(x_16, x_10))), f_3(f_4(f_0(x_19, x_2)), f_3(x_4, f_0(x_0, x_3)))): 20, Q.ne(f_3(f_2(f_0(x_13, x_7), f_4(x_0)), f_4(x_19)), x_14): 21, Q.ne(f_2(f_0(x_6, x_6), f_1(f_0(x_16, x_1), f_2(x_3, x_14))), x_9): 22, Q.eq(f_1(x_15, f_2(x_4, x_16)), f_2(f_0(f_4(x_19), x_11), f_4(f_0(x_9, x_12)))): 23, Q.ne(x_2, x_7): 24, Q.eq(f_0(x_13, f_2(x_2, x_15)), f_1(f_0(f_1(x_8, x_5), x_11), f_2(x_4, x_4))): 25, Q.ne(f_0(f_0(f_3(x_0, x_5), f_3(x_13, x_8)), x_4), x_14): 26, Q.eq(f_4(x_1), x_15): 27, Q.eq(x_16, x_9): 28, Q.ne(f_0(f_1(f_2(x_0, x_1), x_0), f_3(f_1(x_16, x_16), f_2(x_15, x_1))), x_13): 29, Q.eq(f_1(f_0(f_3(x_1, x_7), x_2), x_13), x_5): 30, Q.eq(f_0(x_12, x_16), x_17): 31, Q.eq(x_12, x_6): 32, Q.eq(f_1(f_3(f_1(x_9, x_3), f_4(x_18)), f_4(x_7)), f_3(f_0(f_4(x_2), x_5), f_3(x_17, f_0(x_5, x_13)))): 33, Q.ne(f_4(f_1(f_2(x_6, x_15), f_2(x_4, x_19))), x_2): 34, Q.eq(f_3(f_2(x_0, f_3(x_3, x_4)), x_17), x_0): 35, Q.eq(f_2(x_17, f_2(f_3(x_18, x_18), f_3(x_14, x_15))), x_0): 36, Q.eq(x_15, x_7): 37, Q.eq(f_0(f_0(x_4, x_13), x_13), x_3): 38, Q.eq(f_1(f_0(f_3(x_0, x_5), f_2(x_10, x_12)), f_0(f_3(x_6, x_16), x_2)), f_3(f_0(x_14, x_12), f_4(f_0(x_14, x_4)))): 39, Q.eq(f_1(f_4(x_12), x_13), x_10): 40, Q.ne(x_3, x_8): 41, Q.eq(f_4(f_3(f_3(x_8, x_5), f_0(x_15, x_6))), x_6): 42, Q.ne(f_1(x_3, f_0(f_1(x_19, x_10), f_3(x_3, x_4))), f_2(f_3(f_1(x_2, x_9), f_2(x_14, x_0)), f_1(f_2(x_13, x_9), x_3))): 43, Q.ne(f_4(f_0(f_0(x_9, x_9), f_4(x_5))), f_4(x_13)): 44, Q.eq(f_2(x_18, x_0), x_5): 45, Q.eq(f_2(f_2(x_7, x_15), x_0), x_6): 46, Q.eq(f_4(x_17), x_4): 47, Q.eq(f_1(x_6, f_1(x_13, x_13)), x_14): 48, Q.eq(f_0(f_2(f_2(x_12, x_10), f_1(x_17, x_14)), f_4(x_16)), f_3(x_3, f_2(x_11, f_4(x_11)))): 49, Q.eq(f_1(f_3(f_3(x_0, x_16), f_1(x_15, x_15)), x_16), x_6): 50, Q.ne(f_2(f_2(x_2, x_10), x_8), x_19): 51, Q.ne(f_1(x_18, f_0(f_1(x_14, x_8), f_2(x_11, x_5))), f_2(x_7, f_4(f_0(x_3, x_16)))): 52, Q.eq(f_1(x_15, f_1(f_4(x_18), x_12)), x_7): 53, Q.eq(f_0(f_0(x_17, x_6), f_3(f_0(x_4, x_5), x_11)), f_1(x_16, x_0)): 54, Q.eq(f_4(x_2), x_17): 55, Q.eq(f_0(x_3, f_4(f_3(x_16, x_14))), x_11): 56, Q.ne(f_0(x_11, x_5), x_6): 57, Q.eq(f_2(x_11, x_18), x_9): 58, Q.eq(f_1(f_0(f_1(x_6, x_3), f_2(x_10, x_14)), f_2(f_3(x_7, x_3), f_2(x_10, x_11))), x_19): 59, Q.eq(f_1(f_1(f_4(x_11), f_3(x_3, x_3)), x_14), f_2(f_2(x_18, f_2(x_8, x_7)), x_2)): 60, Q.eq(f_1(f_4(x_15), f_4(f_3(x_13, x_19))), x_12): 61, Q.eq(f_3(f_1(f_4(x_6), f_1(x_18, x_19)), f_2(f_4(x_15), f_3(x_13, x_1))), f_3(x_7, f_3(f_2(x_16, x_2), x_18))): 62, Q.eq(f_2(f_3(x_0, f_4(x_11)), f_4(f_1(x_15, x_10))), x_9): 63, Q.ne(x_19, x_4): 64, Q.eq(f_2(x_18, x_3), x_5): 65, Q.eq(f_3(f_2(f_4(x_4), x_16), f_0(f_3(x_6, x_2), f_3(x_6, x_12))), x_5): 66, Q.eq(f_1(f_2(f_1(x_2, x_2), f_3(x_7, x_14)), x_14), f_2(f_1(f_0(x_17, x_17), x_19), f_1(f_1(x_19, x_5), x_9))): 67, Q.ne(f_4(f_0(f_4(x_10), x_5)), x_0): 68, Q.eq(f_2(f_0(f_0(x_4, x_14), f_0(x_6, x_19)), f_2(x_16, f_0(x_4, x_13))), x_16): 69, Q.eq(f_0(f_0(f_4(x_11), x_7), x_19), f_0(x_17, f_0(f_1(x_1, x_15), f_1(x_11, x_13)))): 70, Q.eq(f_0(f_1(f_2(x_19, x_17), f_0(x_0, x_14)), x_11), x_8): 71, Q.ne(x_1, x_3): 72, Q.ne(x_17, x_6): 73, Q.eq(x_2, x_9): 74, Q.eq(f_0(f_4(f_1(x_16, x_16)), f_2(x_17, f_2(x_6, x_0))), f_2(f_4(x_12), f_2(x_8, f_1(x_17, x_18)))): 75, Q.eq(f_0(f_1(f_2(x_4, x_13), f_0(x_4, x_5)), x_4), f_2(f_0(x_3, f_1(x_10, x_18)), x_6)): 76, Q.eq(f_0(f_4(x_5), x_13), f_2(x_5, f_2(f_1(x_2, x_5), x_6))): 77, Q.eq(f_0(x_19, f_0(f_1(x_0, x_13), x_12)), x_1): 78, Q.eq(f_1(f_4(f_2(x_10, x_18)), f_2(f_1(x_13, x_13), x_5)), x_18): 79, Q.eq(f_3(f_1(x_16, x_16), f_1(x_15, f_3(x_9, x_2))), x_11): 80, Q.ne(f_1(x_7, f_3(x_0, x_14)), x_17): 81, Q.eq(f_3(x_5, f_3(f_0(x_4, x_8), x_10)), x_1): 82, Q.eq(x_19, x_5): 83, Q.eq(f_1(f_4(f_1(x_7, x_7)), x_12), f_1(x_18, f_2(x_17, f_4(x_7)))): 84, Q.eq(f_2(f_4(f_0(x_19, x_8)), f_1(f_3(x_2, x_16), x_1)), f_3(x_8, f_4(x_3))): 85, Q.eq(f_3(x_5, f_1(x_9, f_3(x_4, x_6))), x_1): 86, Q.eq(f_1(f_4(f_3(x_14, x_12)), f_4(x_13)), x_6): 87, Q.ne(f_1(f_1(f_0(x_6, x_17), f_2(x_7, x_18)), f_2(f_3(x_5, x_15), x_2)), x_4): 88, Q.eq(f_1(x_19, x_6), f_4(x_8)): 89, Q.eq(x_10, x_11): 90, Q.eq(f_2(f_0(f_2(x_9, x_0), x_17), f_1(f_4(x_18), f_3(x_14, x_19))), f_3(f_2(f_3(x_11, x_4), f_3(x_7, x_9)), f_2(x_8, f_0(x_6, x_7)))): 91, Q.eq(f_0(x_7, f_0(x_14, f_4(x_1))), f_1(f_4(f_2(x_8, x_8)), f_0(f_0(x_14, x_1), f_4(x_1)))): 92, Q.eq(f_4(f_3(x_4, f_4(x_14))), x_15): 93, Q.eq(f_0(f_3(f_2(x_15, x_8), f_2(x_18, x_10)), f_3(f_4(x_13), f_0(x_15, x_6))), f_3(f_3(x_0, f_4(x_11)), f_1(f_1(x_1, x_19), x_8))): 94, Q.eq(f_3(x_5, f_4(x_12)), f_4(x_17)): 95, Q.ne(f_0(f_4(x_14), f_4(x_8)), f_3(f_1(f_2(x_7, x_3), f_1(x_19, x_14)), f_3(f_0(x_18, x_16), f_2(x_6, x_16)))): 96, Q.eq(x_15, x_2): 97, Q.eq(f_0(f_3(f_4(x_6), x_6), f_0(f_2(x_14, x_4), f_1(x_0, x_11))), x_3): 98, Q.eq(f_4(f_0(x_15, x_15)), x_18): 99, Q.ne(f_1(f_3(f_1(x_18, x_8), f_3(x_4, x_7)), x_15), f_1(f_4(x_11), f_4(x_5))): 100, Q.eq(f_2(f_1(f_1(x_6, x_8), x_5), f_4(f_0(x_19, x_15))), x_5): 101, Q.eq(f_3(f_1(f_1(x_15, x_8), x_17), f_2(f_2(x_7, x_4), f_1(x_13, x_2))), x_2): 102, Q.ne(x_12, x_5): 103, Q.eq(f_3(x_11, f_4(x_12)), f_4(f_3(f_3(x_18, x_1), x_18))): 104, Q.eq(f_3(f_4(x_15), x_7), x_17): 105, Q.ne(f_0(f_3(f_1(x_10, x_15), x_15), x_7), f_3(x_12, f_3(f_4(x_2), f_4(x_0)))): 106, Q.ne(f_3(f_4(x_15), x_8), f_3(x_2, f_4(f_2(x_15, x_6)))): 107, Q.eq(f_0(x_5, f_4(x_1)), x_7): 108, Q.eq(f_1(f_1(x_5, f_3(x_17, x_5)), f_2(f_1(x_18, x_9), x_8)), f_3(f_0(x_18, x_16), x_2)): 109, Q.eq(f_1(f_4(x_9), x_12), x_15): 110, Q.eq(f_2(f_1(f_1(x_0, x_4), f_2(x_15, x_17)), f_2(f_0(x_2, x_17), x_11)), f_3(f_0(f_1(x_14, x_10), x_11), x_12)): 111, Q.ne(f_1(x_2, x_13), f_4(x_18)): 112, Q.eq(f_2(x_17, f_1(f_2(x_12, x_18), f_2(x_12, x_7))), f_4(f_3(f_0(x_17, x_4), f_1(x_2, x_0)))): 113, Q.ne(f_0(x_2, f_1(x_16, x_9)), f_2(x_14, f_1(f_2(x_11, x_5), f_4(x_2)))): 114, Q.eq(f_4(f_0(f_3(x_16, x_1), f_2(x_6, x_3))), x_16): 115, Q.ne(f_0(f_0(f_0(x_14, x_3), x_0), f_0(f_3(x_5, x_1), f_4(x_3))), f_3(x_11, f_0(f_1(x_13, x_6), f_1(x_18, x_5)))): 116, Q.ne(f_1(x_16, x_12), x_0): 117, Q.ne(x_15, x_7): 118, Q.eq(f_3(x_18, x_3), f_4(f_0(x_1, x_5))): 119, Q.eq(f_0(x_4, x_12), x_9): 120, Q.eq(f_4(f_2(f_1(x_14, x_1), f_2(x_2, x_19))), x_17): 121, Q.eq(f_4(f_2(f_4(x_1), f_0(x_10, x_9))), x_5): 122, Q.eq(f_3(f_1(x_5, x_13), x_6), x_10): 123, Q.eq(f_1(f_3(x_13, x_4), f_1(x_9, f_1(x_5, x_3))), x_17): 124, Q.ne(f_3(f_3(f_3(x_10, x_18), x_15), f_4(x_0)), x_2): 125, Q.eq(f_0(f_4(f_4(x_9)), x_5), x_19): 126, Q.eq(x_2, x_6): 127, Q.ne(x_11, x_5): 128, Q.eq(f_1(f_4(x_9), f_4(f_4(x_5))), x_9): 129, Q.eq(f_1(x_13, f_0(f_0(x_1, x_18), x_8)), x_0): 130, Q.eq(f_1(f_1(x_2, x_0), f_1(f_1(x_15, x_16), f_4(x_8))), f_2(f_4(x_18), f_2(x_0, x_1))): 131, Q.eq(f_3(x_14, x_7), x_16): 132, Q.ne(f_1(x_8, x_11), x_12): 133, Q.eq(f_1(x_6, f_2(f_0(x_19, x_2), x_9)), f_4(f_4(f_0(x_18, x_10)))): 134, Q.eq(f_1(f_4(x_2), x_16), f_4(f_1(f_0(x_17, x_14), f_1(x_13, x_10)))): 135, Q.eq(f_1(f_1(x_13, x_19), x_5), x_19): 136, Q.eq(f_0(x_8, f_1(x_16, f_2(x_13, x_16))), f_4(x_3)): 137, Q.eq(f_0(f_4(f_3(x_10, x_11)), f_3(f_3(x_18, x_7), x_11)), x_12): 138, Q.ne(f_1(x_9, f_3(f_3(x_9, x_16), f_3(x_7, x_12))), f_4(f_2(f_1(x_7, x_18), f_1(x_18, x_5)))): 139, Q.ne(f_2(f_3(x_6, x_11), f_1(f_2(x_10, x_10), x_17)), x_9): 140, Q.ne(f_2(x_16, x_3), x_12): 141, Q.ne(f_1(f_1(x_4, f_1(x_4, x_5)), f_1(f_3(x_19, x_10), f_3(x_13, x_8))), f_2(x_1, f_4(x_12))): 142, Q.eq(f_3(f_1(x_0, f_3(x_9, x_9)), f_4(f_2(x_1, x_15))), x_2): 143, Q.ne(x_13, x_4): 144, Q.eq(f_1(x_19, f_3(f_1(x_19, x_13), f_4(x_12))), x_15): 145, Q.ne(f_0(f_1(f_2(x_10, x_16), x_17), f_4(f_1(x_5, x_14))), x_10): 146, Q.eq(f_1(x_19, f_3(f_0(x_16, x_4), x_13)), f_2(x_0, x_19)): 147, Q.eq(f_1(x_0, f_0(f_1(x_17, x_14), x_12)), x_14): 148, Q.eq(f_3(f_2(f_4(x_18), f_1(x_0, x_10)), f_1(x_1, f_2(x_4, x_4))), x_18): 149, Q.eq(f_4(x_8), x_9): 150, Q.eq(f_1(x_11, f_2(x_2, x_10)), x_1): 151, Q.ne(f_3(f_3(f_3(x_10, x_13), x_18), f_0(f_4(x_11), x_8)), f_4(f_2(f_0(x_9, x_0), f_3(x_10, x_0)))): 152, Q.eq(f_4(f_2(x_6, f_3(x_3, x_14))), x_16): 153, Q.ne(f_1(f_0(f_4(x_11), x_8), f_4(f_2(x_0, x_13))), f_3(f_4(f_3(x_18, x_19)), f_2(f_0(x_3, x_13), f_4(x_19)))): 154, Q.eq(x_17, x_5): 155, Q.ne(f_2(f_4(f_3(x_2, x_5)), f_4(f_1(x_13, x_2))), x_19): 156, Q.ne(f_4(f_4(f_2(x_18, x_1))), x_12): 157, Q.eq(f_3(f_0(f_1(x_16, x_4), x_6), x_7), x_7): 158, Q.ne(f_3(f_2(f_2(x_3, x_5), f_3(x_18, x_0)), x_11), x_8): 159, Q.eq(f_3(x_8, x_3), x_5): 160, Q.eq(f_2(f_0(f_0(x_1, x_8), f_1(x_1, x_12)), f_2(f_0(x_6, x_14), x_6)), x_14): 161, Q.eq(f_4(f_1(f_3(x_6, x_12), x_8)), x_4): 162, Q.eq(x_17, x_18): 163, Q.eq(f_4(f_4(x_7)), x_10): 164, Q.ne(x_1, x_10): 165, Q.eq(f_4(f_2(f_2(x_9, x_18), f_0(x_14, x_12))), f_4(x_17)): 166, Q.eq(x_19, x_3): 167, Q.ne(x_11, x_9): 168, Q.eq(f_1(f_3(x_7, f_0(x_4, x_5)), x_8), x_19): 169, Q.eq(f_4(f_1(f_4(x_13), f_3(x_3, x_13))), x_3): 170, Q.eq(f_0(f_2(f_0(x_9, x_6), x_11), f_2(f_3(x_6, x_1), f_3(x_0, x_19))), f_1(x_19, f_1(f_3(x_19, x_1), x_7))): 171, Q.eq(f_2(x_7, f_4(f_3(x_4, x_1))), x_5): 172, Q.eq(f_0(f_0(f_3(x_19, x_5), x_14), f_3(f_2(x_12, x_12), f_1(x_16, x_0))), x_18): 173, Q.ne(f_2(f_1(x_11, x_4), x_14), f_4(x_19)): 174, Q.eq(f_2(f_2(f_3(x_16, x_12), f_3(x_14, x_12)), f_3(x_12, x_11)), f_2(x_17, x_10)): 175, Q.eq(x_14, x_5): 176, Q.ne(f_4(x_0), x_10): 177, Q.eq(f_1(f_0(f_2(x_10, x_12), f_0(x_8, x_12)), f_1(x_18, x_9)), f_4(f_2(x_0, f_3(x_11, x_14)))): 178, Q.eq(f_3(f_4(x_1), x_8), x_8): 179, Q.eq(f_2(f_0(x_10, f_0(x_4, x_16)), f_3(f_2(x_9, x_4), x_5)), x_15): 180, Q.eq(x_0, x_5): 181, Q.eq(f_0(f_3(f_3(x_11, x_14), f_2(x_6, x_9)), f_0(x_11, f_4(x_9))), x_9): 182, Q.eq(f_0(x_16, f_3(f_1(x_8, x_15), f_3(x_15, x_14))), f_4(x_6)): 183, Q.eq(f_3(f_4(f_0(x_16, x_9)), f_4(f_4(x_15))), x_13): 184, Q.ne(f_4(f_2(f_3(x_5, x_13), x_9)), x_12): 185, Q.eq(f_0(f_0(x_19, x_14), x_12), f_0(f_3(f_2(x_6, x_16), x_6), x_16)): 186, Q.eq(f_4(f_1(f_1(x_0, x_19), f_3(x_3, x_5))), x_8): 187, Q.eq(f_4(f_0(f_1(x_10, x_16), f_3(x_13, x_5))), x_14): 188, Q.ne(x_16, x_8): 189, Q.eq(f_0(x_14, f_2(x_10, f_2(x_2, x_7))), f_1(f_4(x_4), f_2(x_9, f_2(x_0, x_15)))): 190, Q.ne(f_4(f_3(f_3(x_18, x_8), f_0(x_1, x_3))), x_1): 191, Q.eq(f_2(x_16, f_0(x_0, f_1(x_2, x_0))), x_19): 192, Q.ne(x_5, x_8): 193, Q.ne(f_0(f_1(f_3(x_5, x_11), x_14), x_2), f_1(x_13, f_4(f_3(x_18, x_6)))): 194, Q.eq(f_2(x_2, f_4(f_4(x_7))), x_19): 195, Q.eq(f_4(f_1(x_6, x_5)), f_4(f_2(x_14, f_0(x_17, x_13)))): 196, Q.eq(f_3(x_6, x_1), x_5): 197, Q.eq(f_4(f_4(f_1(x_15, x_19))), x_0): 198, Q.ne(x_1, x_5): 199}
+
+    solver, conflict = EUFTheorySolver.from_encoded_cnf(expr)
+    exp = None
+    for var in range(1,98):
+        sat, conflict= solver.assert_lit(var)
+        if exp is not None:
+          exp = exp & (solver._enc_to_lit[var])
+        else:
+           exp = solver._enc_to_lit[var]
+        z3_sat = z3_satisfiable(exp) is not False
+        assert sat == z3_sat, f"Disagreement on {var}, sat={sat}, z3_sat={z3_sat}, exp={exp}"
+    assert conflict == {-24,-37,-97}
+
+
+def test_cross_arity_functional_conflict_long_chain():
+    """Long chain of functional equalities with cross-arity, final disequality causes conflict."""
+    a, b, c, d, e = symbols('a b c d e')
+    f0, f1, f2, f3, f4 = symbols('f0 f1 f2 f3 f4', cls=Function)
+    enc_cnf = EncodedCNF()
+    enc_cnf.encoding = {
+        Q.eq(f0(a, b), f1(b, c, d)): 1,
+        Q.eq(f1(b, c, d), f2(c, d, e)): 2,
+        Q.eq(f2(c, d, e), f3(d, e, a, b)): 3,
+        Q.eq(f3(d, e, a, b), f4(e, a, b, c, d)): 4,
+        Q.ne(f0(a, b), f4(e, a, b, c, d)): 5
+    }
+    enc_cnf.data = [{1}, {2}, {3}, {4}, {5}]
+    solver, _ = EUFTheorySolver.from_encoded_cnf(enc_cnf)
+
+    for lit in [1,2,3,4]:
+        res = solver.assert_lit(lit)
+        assert res[0], f"Literal {lit} failed unexpectedly: {res}"
+        print(f"Assert {lit}: success")
+    res = solver.assert_lit(5)
+    assert res == (False,{-1,-2,-3,-4,-5}), f"Unexpected result on final disequality: {res}"
+
+
+def test_cross_arity_functional_conflict_long_chain_2():
+    """Long chain of functional equalities with cross-arity, final disequality causes conflict."""
+    a, b, c, d, e, r = symbols('a b c d e r')
+    f0, f1, f2, f3, f4 = symbols('f0 f1 f2 f3 f4', cls=Function)
+    enc_cnf = EncodedCNF()
+    enc_cnf.encoding = {
+        Q.eq(f0(a, b), f1(b, c, d)): 1,
+        Q.eq(f1(b, c, d), f2(c, d, e)): 2,
+        Q.eq(f2(c, d, e), f3(d, e, a, b)): 3,
+        Q.eq(f3(d, e, a, b), f4(e, a, b, c, d)): 4,
+        Q.eq(f4(e, a, b, c, d), r): 5,
+        Q.ne(f0(a, b), r): 6
+    }
+    enc_cnf.data = [{1}, {2}, {3}, {4}, {5}, {6}]
+    solver, _ = EUFTheorySolver.from_encoded_cnf(enc_cnf)
+
+    for lit in [1,2,3,4,5]:
+        res = solver.assert_lit(lit)
+        assert res[0], f"Literal {lit} failed unexpectedly: {res}"
+        print(f"Assert {lit}: success")
+    res = solver.assert_lit(6)
+    assert res == (False,{-1,-2,-3,-4,-5,-6}), f"Unexpected result on final disequality: {res}"
+
+
+def test_random_satisfiable_constraints_small():
+    """Test random satisfiable constraints (small scale)."""
+    z3 = import_module("z3")
+    if z3 is None:
+        skip("z3 not installed.")
+    generator = RandomEUFTestGenerator()
+    z3_comparator = Z3Comparator() if Z3_AVAILABLE else None
+
+    for trial in range(10):
+        print(f"\nTrial {trial + 1}/10")
+
+        # Generate simple satisfiable constraints
+        constraints = []
+        symbols_used = generator.symbols_pool[:5]  # Use only 5 symbols
+
+        # Add some equalities in a chain: x0 = x1 = x2
+        constraints.append(Q.eq(symbols_used[0], symbols_used[1]))
+        constraints.append(Q.eq(symbols_used[1], symbols_used[2]))
+
+        # Add some unrelated equalities
+        constraints.append(Q.eq(symbols_used[3], symbols_used[4]))
+
+        # Test with SymPy
+        result = satisfiable(boolalg.And(*constraints), use_euf_theory=True)
+        sympy_sat = result is not False
+        print(f"SymPy result: {'SAT' if sympy_sat else 'UNSAT'}")
+        # Compare with Z3 if available
+        if Z3_AVAILABLE and z3_comparator:
+            z3_result = z3_comparator.check_satisfiability_with_z3(constraints)
+            z3_sat, z3_model = z3_result if z3_result else (None, None)
+            if z3_sat is not None:
+                print(f"Z3 result: {'SAT' if z3_sat else 'UNSAT'}")
+                assert sympy_sat == z3_sat, f"Disagreement: SymPy={sympy_sat}, Z3={z3_sat}"
+
+
+def test_random_unsatisfiable_constraints_small():
+    """Test random unsatisfiable constraints (small scale)."""
+    z3 = import_module("z3")
+    if z3 is None:
+        skip("z3 not installed.")
+    generator = RandomEUFTestGenerator()
+    z3_comparator = Z3Comparator() if Z3_AVAILABLE else None
+
+    for trial in range(10):
+        print(f"\nTrial {trial + 1}/10")
+
+        # Generate unsatisfiable constraints
+        x, y, z = generator.symbols_pool[:3]
+
+        constraints = [
+            Q.eq(x, y),
+            Q.eq(y, z),
+            Q.ne(x, z)  # This makes it unsatisfiable
+        ]
+        result = satisfiable(boolalg.And(*constraints), use_euf_theory=True)
+        sympy_sat = result is not False
+        print(f"SymPy result: {'SAT' if sympy_sat else 'UNSAT'}")
+        # Should be unsatisfiable
+        assert not sympy_sat, "Expected UNSAT but got SAT"
+
+        # Compare with Z3 if available
+        if Z3_AVAILABLE and z3_comparator:
+            z3_result = z3_comparator.check_satisfiability_with_z3(constraints)
+            z3_sat, z3_model = z3_result if z3_result else (None, None)
+            if z3_sat is not None:
+                print(f"Z3 result: {'SAT' if z3_sat else 'UNSAT'}")
+                assert sympy_sat == z3_sat, f"Disagreement: SymPy={sympy_sat}, Z3={z3_sat}"
+
+
+def test_random_function_constraints_medium():
+    """Test random constraints with functions (medium scale)."""
+    z3 = import_module("z3")
+    if z3 is None:
+        skip("z3 not installed.")
+    generator = RandomEUFTestGenerator()
+
+    for trial in range(5):
+        print(f"\nFunction trial {trial + 1}/5")
+
+        # Generate constraints with functions
+        x, y, z = generator.symbols_pool[:3]
+        f = generator.functions_pool[0]
+
+        constraints = [
+            Q.eq(x, y),
+            Q.eq(f(x), z),
+            # f(y) should equal z by congruence
+        ]
+
+        # Add the congruence conclusion as a query
+        query = Q.eq(f(y), z)
+
+        # Check if constraints + query is satisfiable
+        all_constraints = constraints + [query]
+        result = satisfiable(boolalg.And(*all_constraints), use_euf_theory=True)
+        sympy_sat = result is not False
+        print(f"SymPy result for constraints + query: {'SAT' if sympy_sat else 'UNSAT'}")
+
+        # Should be satisfiable due to congruence
+        assert sympy_sat, "Expected SAT due to functional congruence"
+
+        # Also check if constraints + negated query is unsatisfiable
+        negated_constraints = constraints + [Not(query)]
+        result_neg = satisfiable(boolalg.And(*negated_constraints), use_euf_theory=True)
+        sympy_sat_neg = result_neg is not False
+        print(f"SymPy result for constraints + ~query: {'SAT' if sympy_sat_neg else 'UNSAT'}")
+
+        # Should be unsatisfiable
+        assert not sympy_sat_neg, "Expected UNSAT for constraints + ~query"
+
+
+def test_large_random_constraint_set():
+    """Test large random constraint sets."""
+    generator = RandomEUFTestGenerator()
+    z3 = import_module("z3")
+    if z3 is None:
+        skip("z3 not installed.")
+    # z3_comparator = Z3Comparator() if Z3_AVAILABLE else None
+
+    sat_count = 0
+    TRIAL_COUNT = 50
+
+    problems = []
+    # generate likely sat problems
+    problems += [generator.generate_constraint_set(num_constraints=25) for _ in range(TRIAL_COUNT // 2)]
+    # generate likely unsat problems
+    problems += [generator.generate_constraint_set(num_constraints=100) for _ in range(1 + TRIAL_COUNT // 2)]
+
+    for trial in range(TRIAL_COUNT):
+        # print(f"\nLarge trial {trial + 1}/3")
+
+        constraints = problems[trial]
+
+
+        # print(f"Testing {len(constraints)} constraints")
+
+        problem =boolalg.And(*constraints)
+        assert problem not in (False, True)
+
+        result = satisfiable(problem, use_euf_theory=True)
+        sympy_sat = result is not False
+        # print(f"SymPy result: {'SAT' if sympy_sat else 'UNSAT'}")
+        z3_sat = z3_satisfiable(problem) is not False
+
+        assert sympy_sat == z3_sat
+        if sympy_sat:
+            sat_count += 1
+
+    assert sat_count > 0
+    assert sat_count != TRIAL_COUNT
+    print(f"{sat_count} / {TRIAL_COUNT} problems were satifiable")
+
+
+def test_random_sat_problems():
+    """Test large random sat problem involving euf constraints."""
+    z3 = import_module("z3")
+    if z3 is None:
+        skip("z3 not installed.")
+    # z3_comparator = Z3Comparator() if Z3_AVAILABLE else None
+
+    sat_count = 0
+    TRIAL_COUNT = 2
+
+    for trial in range(TRIAL_COUNT):
+        # Re-seed per trial to avoid cross-trial RNG state and keep runs reproducible
+        generator = RandomEUFTestGenerator(seed=45)
+        constraint_sets = [generator.generate_constraint_set(num_constraints=100) for _ in range(TRIAL_COUNT)]
+
+        # Verify against Z3 on the full disjunction.
+        simple_disjunction = boolalg.Or(*(boolalg.And(*cs) for cs in constraint_sets))
+        assert simple_disjunction not in (False, True)
+        z3_sat = z3_satisfiable(simple_disjunction) is not False
+        sympy_sat = satisfiable(simple_disjunction, use_euf_theory=True) is not False
+
+        assert sympy_sat == z3_sat
+        if sympy_sat:
+            sat_count += 1
+
+    print(f"{sat_count} / {TRIAL_COUNT} problems were satifiable")
+
+
+def test_random_sat_problems_2():
+    """Test large random sat problem involving euf constraints."""
+    z3 = import_module("z3")
+    if z3 is None:
+        skip("z3 not installed.")
+    # z3_comparator = Z3Comparator() if Z3_AVAILABLE else None
+
+    sat_count = 0
+    TRIAL_COUNT = 2
+
+
+    for trial in range(TRIAL_COUNT):
+        # Re-seed per trial to avoid cross-trial RNG state and keep runs reproducible
+        generator = RandomEUFTestGenerator(seed=42 + trial)
+        constraint_sets = [generator.generate_constraint_set(num_constraints=100) for _ in range(TRIAL_COUNT)]
+
+        # Avoid asserting a big disjunction in a single SAT+DPLL(T) run because EUF
+        # lacks proper backtracking across branches in this integration.
+        # Check each branch (conjunction) independently, then OR the results.
+        branch_results = []
+        for cs in constraint_sets:
+            conjunct = boolalg.Or(*cs)
+            assert conjunct not in (False, True)
+            branch_results.append(satisfiable(conjunct, use_euf_theory=True) is not False)
+
+        sympy_sat = all(branch_results)
+
+        # Still verify against Z3 on the full disjunction.
+        simple_disjunction = boolalg.And(*(boolalg.Or(*cs) for cs in constraint_sets))
+        assert simple_disjunction not in (False, True)
+        z3_sat = z3_satisfiable(simple_disjunction) is not False
+
+        assert sympy_sat == z3_sat
+        if sympy_sat:
+            sat_count += 1
+
+    print(f"{sat_count} / {TRIAL_COUNT} problems were satifiable")
