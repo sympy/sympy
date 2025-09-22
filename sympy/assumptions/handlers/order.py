@@ -185,6 +185,19 @@ def _(expr, assumptions, rec):
 def _(expr, assumptions, rec):
     return fuzzy_or((recursive_ask(Q.zero(arg), assumptions=assumptions, rec=rec) for arg in expr.args))
 
+@ZeroPredicate.register(Pow)
+def _(expr, assumptions, rec):
+    base, exp = expr.base, expr.exp
+
+    zb = recursive_ask(Q.zero(base), assumptions=assumptions, rec=rec)
+    if zb is False:
+        return False
+    if zb is True:
+        if recursive_ask(Q.positive(exp), assumptions=assumptions, rec=rec) is True:
+            return True
+        if recursive_ask(Q.negative(exp), assumptions=assumptions, rec=rec) is True:
+            return False
+
 @NonPositivePredicate.register(Expr)
 def _(expr, assumptions, rec):
     ret = expr.is_nonpositive
