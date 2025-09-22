@@ -285,9 +285,25 @@ class PowerSeriesRingRing(Generic[Er]):
         """Convert arg to the element of ground domain of ring."""
         return self.domain.convert(arg, self.domain)
 
-    def ring_new(self, arg: Expr | Er | int) -> PowerSeriesElement[Er]:
+    def ring_new(
+        self, arg: PowerSeriesElement[Er] | Expr | Er | int
+    ) -> PowerSeriesElement[Er]:
         """Create a power series element from various types."""
-        if isinstance(arg, Expr):
+        if isinstance(arg, PowerSeriesElement):
+            R = self.ring
+            if R == arg.ring:
+                return arg
+
+            sprec = arg.prec
+            if sprec is None:
+                prec = self.prec
+            else:
+                prec = min(self.prec, sprec)
+
+            s = R(R.to_list(arg.series), prec)
+            return self.from_element(s)
+
+        elif isinstance(arg, Expr):
             return self.from_expr(arg)
         elif isinstance(arg, int):
             return self.from_int(arg)
@@ -1040,6 +1056,11 @@ class PowerSeriesElement(DomainElement, CantSympify, Generic[Er]):
         coeffs = R.to_list(self.series)
         series = R.from_list(coeffs)
         return self._new(series)
+
+    @property
+    def prec(self) -> int | None:
+        """Return the precision of the series."""
+        return self.ring.series_prec(self.series)
 
     @property
     def is_ground(self) -> bool | None:
