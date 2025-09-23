@@ -241,6 +241,21 @@ class PowerSeriesRingRing(Generic[Er]):
         """Convert a lower power series element to a PowerSeriesElement."""
         return PowerSeriesElement(self, element)
 
+    def from_powerserieselement(
+        self, element: PowerSeriesElement[Er]
+    ) -> PowerSeriesElement[Er]:
+        """Convert a power series element to a power series element."""
+        R = self.ring
+        sprec = element.prec
+
+        if sprec is None:
+            s = R(R.to_list(element.series))
+        else:
+            prec = min(self.prec, sprec)
+            s = R(R.to_list(element.series), prec)
+
+        return self.from_element(s)
+
     def from_int(self, arg: int) -> PowerSeriesElement[Er]:
         """Convert an integer to a power series element."""
         g = self.domain_new(arg)
@@ -290,19 +305,7 @@ class PowerSeriesRingRing(Generic[Er]):
     ) -> PowerSeriesElement[Er]:
         """Create a power series element from various types."""
         if isinstance(arg, PowerSeriesElement):
-            R = self.ring
-            if R == arg.ring:
-                return arg
-
-            sprec = arg.prec
-            if sprec is None:
-                prec = self.prec
-            else:
-                prec = min(self.prec, sprec)
-
-            s = R(R.to_list(arg.series), prec)
-            return self.from_element(s)
-
+            return self.from_powerserieselement(arg)
         elif isinstance(arg, Expr):
             return self.from_expr(arg)
         elif isinstance(arg, int):
