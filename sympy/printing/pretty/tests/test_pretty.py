@@ -7354,6 +7354,7 @@ def test_pretty_print_tensor_expr():
     i, j, k = tensor_indices("i j k", L)
     i0 = tensor_indices("i_0", L)
     A, B, C, D = tensor_heads("A B C D", [L])
+    A0 = tensor_heads("A_0", [L])
     H = TensorHead("H", [L, L])
 
     expr = -i
@@ -7396,6 +7397,22 @@ A   \n\
  i₀\n\
 A  \n\
    \
+"""
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = A0(i0)
+    ascii_str = \
+"""\
+   i_0\n\
+A_0   \n\
+      \
+"""
+    ucode_str = \
+"""\
+  i₀\n\
+A₀  \n\
+    \
 """
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
