@@ -297,8 +297,6 @@ class ProofProducingCongruenceClosure(EUFCongruenceClosure):
         Complexity:
             O(V + E) where V = number of terms, E = number of equalities
         """
-        a_id = self._flatten(a)
-        b_id = self._flatten(b)
 
         # Base case: terms are syntactically identical
         if a == b:
@@ -317,8 +315,6 @@ class ProofProducingCongruenceClosure(EUFCongruenceClosure):
         return self._explain_via_alternate_dfs(a,b)
 
     def _explain_via_alternate_dfs(self, a, b):
-        a_id = self._flatten(a)
-        b_id = self._flatten(b)
         if a==b:
             return set()
         visited = set()
