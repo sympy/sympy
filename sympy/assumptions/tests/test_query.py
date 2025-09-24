@@ -1952,6 +1952,7 @@ def test_positive():
 
     #exponential
     assert ask(Q.positive(exp(x)), Q.real(x)) is True
+    assert ask(Q.positive(x**y), Q.nonzero(x) & Q.even(y)) is True
     assert ask(~Q.negative(exp(x)), Q.real(x)) is True
     assert ask(Q.positive(x + exp(x)), Q.real(x)) is None
     assert ask(Q.positive(exp(x)), Q.imaginary(x)) is None
@@ -1959,7 +1960,13 @@ def test_positive():
     assert ask(Q.negative(exp(pi*I, evaluate=False)), Q.imaginary(x)) is True
     assert ask(Q.positive(exp(x*pi*I)), Q.even(x)) is True
     assert ask(Q.positive(exp(x*pi*I)), Q.odd(x)) is False
+    assert ask(Q.positive(x**y), Q.zero(x) & Q.positive(y)) is False
     assert ask(Q.positive(exp(x*pi*I)), Q.real(x)) is None
+    assert ask(Q.positive(x**2), Q.real(x)) is None
+    assert ask(Q.positive(x**y), Q.even(y) & Q.real(x)) is None
+    assert ask(Q.positive(x**y),Q.zero(x)) is None
+    assert ask(Q.positive(x**y), Q.zero(x) & Q.negative(y)) is None
+    assert ask(Q.positive(x**y), Q.zero(x) & Q.even(y)) is None
 
     # logarithm
     assert ask(Q.positive(log(x)), Q.imaginary(x)) is False
@@ -2570,6 +2577,9 @@ def test_issue_27440():
     nan = S.NaN
     assert ask(Q.negative(nan)) is None
 
-def test_issue_28150():
-    from sympy import Pow, Q, ask
-    assert ask(Q.real(Pow(0, -1, evaluate=False))) is False
+def test_issue_28127():
+    assert ask(Q.le(x,y), Q.gt(x,y)) is False
+    assert ask(Q.ge(x,y), Q.lt(x,y)) is False
+    assert ask(Q.gt(y,x), Q.lt(x,y)) is True
+    assert ask(Q.lt(y,x), Q.gt(x,y)) is True
+    assert ask(Q.le(y,x), Q.ge(x,y)) is True
