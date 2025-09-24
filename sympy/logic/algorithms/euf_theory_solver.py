@@ -114,6 +114,9 @@ class ProofProducingCongruenceClosure(EUFCongruenceClosure):
         self.constant_equalities = {}  # func_app -> constant
         self.function_negations = defaultdict(list)  # func_name -> [(args, func_app, reason)]
 
+
+        self.equations_for_term = defaultdict(set)
+
     def add_equality_with_reason(self, lhs, rhs, reason):
         """
         Add equality constraint and record the reason for proof production.
@@ -165,6 +168,9 @@ class ProofProducingCongruenceClosure(EUFCongruenceClosure):
         # Update explanation graph edges
         self.equalities_for_term[lhs_id].add(reason)
         self.equalities_for_term[rhs_id].add(reason)
+
+        self.equations_for_term[lhs].add(reason)
+        self.equations_for_term[rhs].add(reason)
 
         # Perform actual union-find merge
         super().add_equality(lhs, rhs)
@@ -304,7 +310,83 @@ class ProofProducingCongruenceClosure(EUFCongruenceClosure):
             return func_explanation
 
         # Fall back to general DFS explanation
-        return self._explain_via_dfs(a, b)
+        dfs_explanation = self._explain_via_dfs(a, b)
+        if dfs_explanation:
+            return dfs_explanation
+
+        return self._explain_via_alternate_dfs(a,b)
+
+    def _explain_via_alternate_dfs(self, a, b):
+        a_id = self._flatten(a)
+        b_id = self._flatten(b)
+        if a==b:
+            return set()
+        visited = set()
+        path = []  # Current path of equality literals
+
+        def dfs(current):
+            if current == b:
+                return True
+            if self._is_function_application(current) and self._is_function_application(b):
+                if current.func==b.func and len(current.args)==len(b.args):
+                    args_eqs = set()
+                    flag=0
+                    for currenti, bi in zip(current.args, b.args):
+                        if self._find(self._flatten(currenti)) == self._find(self._flatten(bi)):
+                            args_eqs.update(self._explain_via_alternate_dfs(currenti, bi)) # convert from _explain to explain
+                        else:
+                            flag=1
+                            break
+                    if flag==0:
+                        path.extend(args_eqs)
+                        return True
+            visited.add(current)
+            current_id = self._flatten(current)
+            u = self.classlist[self._find(current_id)]
+            eqs = [eq for term in u for eq in self.equalities_for_term[term]]
+            eqs = set(eqs)
+            for eq in eqs:
+                lhs = eq.lhs
+                rhs = eq.rhs
+                if lhs == current:
+                    other = rhs
+                    if other not in visited:
+                        path.append(eq)
+                        if dfs(other):
+                            return True
+                        path.pop()  # Backtrack
+                elif rhs == current:
+                    other = lhs
+                    if other not in visited:
+                        path.append(eq)
+                        if dfs(other):
+                            return True
+                        path.pop()  # Backtrack
+                elif current.func==lhs.func and len(current.args)==len(lhs.args):
+                    args_eqs = set()
+                    for currenti, li in zip(current.args, lhs.args):
+                        if self._find(self._flatten(currenti)) == self._find(self._flatten(li)):
+                            args_eqs.update(self._explain_via_alternate_dfs(currenti, li)) # convert from _explain to explain
+                        else:
+                            continue
+                    args_eqs.add(eq)
+                    if lhs not in visited and dfs(lhs):
+                        path.extend(args_eqs)
+                        return True
+                elif current.func==rhs.func and len(current.args)==len(rhs.args):
+                    args_eqs = set()
+                    for currenti, ri in zip(current.args, rhs.args):
+                        if self._find(self._flatten(currenti)) == self._find(self._flatten(ri)):
+                            args_eqs.update(self._explain_via_alternate_dfs(currenti, ri)) # convert from _explain to explain
+                        else:
+                            continue
+                    args_eqs.add(eq)
+                    if rhs not in visited and dfs(rhs):
+                        path.extend(args_eqs)
+                        return True
+        found = dfs(a)
+        return set(path) if found else set()
+
 
     def _explain_function_congruence_with_predicate(self, a, b):
         """
@@ -364,7 +446,7 @@ class ProofProducingCongruenceClosure(EUFCongruenceClosure):
         """
         # If both are function applications
         if self._is_function_application(a) and self._is_function_application(b):
-            if a.func == b.func:
+            if a.func == b.func and len(a.args) == len(b.args):
                 # Functional congruence: iterate over arguments
                 explanation = set()
                 for ai, bi in zip(a.args, b.args):

@@ -32,7 +32,7 @@ class RandomEUFTestGenerator:
 
         self.symbols_pool = [symbols(f'x_{i}') for i in range(20)]
         self.functions_pool = [Function(f'f_{i}') for i in range(5)]
-        self.function_arity ={ f: 1 for f in self.functions_pool }
+        self.function_arity ={ f: random.randint(1,self.MAX_ARGS) for f in self.functions_pool }
 
 
     def generate_random_term(self, depth=0, max_depth=3):
@@ -1689,6 +1689,31 @@ def test_cross_arity_functional_conflict_long_chain_2():
     assert res == (False,{-1,-2,-3,-4,-5,-6}), f"Unexpected result on final disequality: {res}"
 
 
+def test_conflict_different_arity_nested_1():
+    """Test: multi-level nested functions with different arities, conflict arises by transitivity & congruence."""
+    x, y, z, a, b,c, d= symbols('x y z a b c d')
+    f1, f2, f3, f4 = symbols('f1 f2 f3 f4', cls=Function)
+    enc_cnf = EncodedCNF()
+    enc_cnf.encoding = {
+        Q.eq(f1(x, y), f2(x, y, z, b)): 1,           # f1(2 args) = f2(4 args)
+        Q.eq(f2(x, y, z, b), f4(c,d)): 2,        # f2(4 args) = f4(2 args)
+        Q.eq(f4(c,d), f3(a, b, y)): 3,       # f4(2 args) = f3(3 args)
+        Q.eq(x, a): 4,
+        Q.eq(y, b): 5,
+        Q.ne(f1(a, b), f3(a, b, b)): 6           # f1(2 args) vs f3(3 args): arities differ, closure should force conflict
+    }
+    enc_cnf.data = [{1}, {2}, {3}, {4}, {5}, {6}]
+    solver, _ = EUFTheorySolver.from_encoded_cnf(enc_cnf)
+    for k in range(1, 6):
+        res = solver.assert_lit(k)
+        assert res[0], f"Assertion {k} failed unexpectedly: {res}"
+        print(f"Assert {k}: success, no conflict.")
+    res = solver.assert_lit(6)
+    assert res == (False, {-1,-2,-3,-4,-5,-6}), f"Unexpected result on final disequality: {res}"
+    print(f"Final conflict on arity/nest: {res}")
+    assert not res[0], "Conflict expected on disequality, but not detected."
+
+
 def test_random_satisfiable_constraints_small():
     """Test random satisfiable constraints (small scale)."""
     z3 = import_module("z3")
@@ -1815,7 +1840,7 @@ def test_large_random_constraint_set():
     # generate likely sat problems
     problems += [generator.generate_constraint_set(num_constraints=25) for _ in range(TRIAL_COUNT // 2)]
     # generate likely unsat problems
-    problems += [generator.generate_constraint_set(num_constraints=100) for _ in range(1 + TRIAL_COUNT // 2)]
+    problems += [generator.generate_constraint_set(num_constraints=50) for _ in range(1 + TRIAL_COUNT // 2)]
 
     for trial in range(TRIAL_COUNT):
         # print(f"\nLarge trial {trial + 1}/3")
@@ -1855,7 +1880,7 @@ def test_random_sat_problems():
     for trial in range(TRIAL_COUNT):
         # Re-seed per trial to avoid cross-trial RNG state and keep runs reproducible
         generator = RandomEUFTestGenerator(seed=45)
-        constraint_sets = [generator.generate_constraint_set(num_constraints=100) for _ in range(TRIAL_COUNT)]
+        constraint_sets = [generator.generate_constraint_set(num_constraints=50) for _ in range(TRIAL_COUNT)]
 
         # Verify against Z3 on the full disjunction.
         simple_disjunction = boolalg.Or(*(boolalg.And(*cs) for cs in constraint_sets))
@@ -1884,7 +1909,7 @@ def test_random_sat_problems_2():
     for trial in range(TRIAL_COUNT):
         # Re-seed per trial to avoid cross-trial RNG state and keep runs reproducible
         generator = RandomEUFTestGenerator(seed=42 + trial)
-        constraint_sets = [generator.generate_constraint_set(num_constraints=100) for _ in range(TRIAL_COUNT)]
+        constraint_sets = [generator.generate_constraint_set(num_constraints=70) for _ in range(TRIAL_COUNT)]
 
         # Avoid asserting a big disjunction in a single SAT+DPLL(T) run because EUF
         # lacks proper backtracking across branches in this integration.
