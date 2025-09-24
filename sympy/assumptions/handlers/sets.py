@@ -230,6 +230,13 @@ def _(expr, assumptions):
 # RealPredicate
 
 def _RealPredicate_number(expr, assumptions):
+    # Special case: 0**negative -> undefined (not real)
+    from sympy import Pow
+    if isinstance(expr, Pow):
+        b, e = expr.args
+        if b.is_zero and e.is_negative:
+            return False
+
     # let as_real_imag() work first since the expression may
     # be simpler to evaluate
     i = expr.as_real_imag()[1].evalf(2)
@@ -237,6 +244,7 @@ def _RealPredicate_number(expr, assumptions):
         return not i
     # allow None to be returned if we couldn't show for sure
     # that i was 0
+
 
 @RealPredicate.register_many(Abs, Exp1, Float, GoldenRatio, im, Pi, Rational,
     re, TribonacciConstant)
