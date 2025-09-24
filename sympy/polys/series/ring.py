@@ -244,16 +244,9 @@ class PowerSeriesRingRing(Generic[Er]):
     def from_powerserieselement(
         self, element: PowerSeriesElement[Er]
     ) -> PowerSeriesElement[Er]:
-        """Convert a power series element to a power series element."""
+        """Convert a power series element into the corresponding element of this ring."""
         R = self.ring
-        sprec = element.prec
-
-        if sprec is None:
-            s = R(R.to_list(element.series))
-        else:
-            prec = min(self.prec, sprec)
-            s = R(R.to_list(element.series), prec)
-
+        s = R.from_element(element.series)
         return self.from_element(s)
 
     def from_int(self, arg: int) -> PowerSeriesElement[Er]:

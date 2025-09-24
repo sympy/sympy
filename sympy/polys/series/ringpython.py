@@ -1200,6 +1200,11 @@ class PythonPowerSeriesRingZZ:
 
         return coeffs, prec
 
+    def from_element(self, s: USeries[MPZ]) -> USeries[MPZ]:
+        """Convert a power series element into the corresponding element of this ring."""
+        coeffs, prec = s
+        return _useries(coeffs, prec, self._domain, self._prec)
+
     def to_list(self, s: USeries[MPZ]) -> list[MPZ]:
         """Returns the list of series coefficients."""
         coeffs, _ = s
@@ -1465,6 +1470,11 @@ class PythonPowerSeriesRingQQ:
             coeffs = dup_truncate(coeffs, prec, self._domain)
 
         return coeffs, prec
+
+    def from_element(self, s: USeries[MPQ]) -> USeries[MPQ]:
+        """Convert a power series element into the corresponding element of this ring."""
+        coeffs, prec = s
+        return _useries(coeffs, prec, self._domain, self._prec)
 
     def to_list(self, s: USeries[MPQ]) -> list[MPQ]:
         """Return the list of series coefficients."""
