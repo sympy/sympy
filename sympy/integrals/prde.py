@@ -917,7 +917,7 @@ def parametric_log_deriv_heu(fa, fd, wa, wd, DE, c1=None):
     ln, ls = splitfactor(l, DE)
     z = ls*ln.gcd(ln.diff(DE.t))
 
-    if not z.has(DE.t):
+    if z.degree(DE.t) < 1:
         # TODO: We treat this as 'no solution', until the structure
         # theorem version of parametric_log_deriv is implemented.
         return None
