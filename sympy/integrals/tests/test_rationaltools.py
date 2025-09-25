@@ -1,4 +1,4 @@
-from sympy.core.numbers import (I, Rational)
+from sympy.core.numbers import (all_close, I, Rational)
 from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, symbols)
 from sympy.functions.elementary.exponential import log
@@ -201,3 +201,12 @@ def test_issue_28186():
     )
     assert integrate(f, x) == F
     assert (F.diff(x) - f).ratsimp() == 0
+
+
+def test_issue_27675():
+    f = lambda n: integrate((n - x)**-2, (x, 0, 1))
+    a = f(1.7)
+    b = f(Rational('1.7'))
+    assert a.is_Float
+    assert not b.is_Float
+    assert all_close(a, b)

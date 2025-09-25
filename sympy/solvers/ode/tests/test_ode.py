@@ -1007,6 +1007,16 @@ def test_issue_15056():
     C3 = Symbol('C3')
     assert get_numbered_constants(Symbol('C1') * Function('C2')(t)) == C3
 
+def test_issue_11542():
+    m = 96
+    g = 9.8
+    k = .2
+    f1 = g * m
+    t = Symbol('t')
+    v = Function('v')
+    v_equation = dsolve(f1 - k * (v(t) ** 2) - m * Derivative(v(t)), 0)
+    assert str(v_equation) == \
+        'Eq(t + 3.49899826364866*log(1.0*v(t) - 68.5803659675138) - 3.49926844542097*log(1.0*v(t) + 68.5856615302509), C1)'
 
 def test_issue_15913():
     eq = -C1/x - 2*x*f(x) - f(x) + Derivative(f(x), x)
