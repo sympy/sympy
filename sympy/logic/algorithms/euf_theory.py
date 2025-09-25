@@ -20,9 +20,6 @@ True
 >>> cc.add_equality(a, c)
 >>> cc.are_equal(a, c)
 True
-Classes
--------
-    EUFCongruenceClosure: Implements the congruence closure algorithm for EUF.
 """
 
 from collections import defaultdict, deque
