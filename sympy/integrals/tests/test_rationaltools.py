@@ -11,7 +11,6 @@ from sympy.simplify.simplify import simplify
 from sympy.integrals.rationaltools import ratint, ratint_logpart, log_to_atan
 
 from sympy.abc import a, b, x, t
-from sympy.testing.pytest import XFAIL
 
 half = S.Half
 
@@ -142,7 +141,6 @@ def test_issue_5981():
     u = symbols('u')
     assert integrate(1/(u**2 + 1)) == atan(u)
 
-@XFAIL
 def test_issue_10488():
     a,b,c,x = symbols('a b c x', positive=True)
     assert integrate(x/(a*x+b),x) == x/a - b*log(a*x + b)/a**2
