@@ -1826,7 +1826,7 @@ def test_issue_21024():
     assert F == integrate(f, x)
 
     f = x/(2*x + tanh(1))
-    F = x/2 - log(2*x + tanh(1))*tanh(1)/4
+    F = x/2 - log(4*x + 2*tanh(1))*tanh(1)/4
     assert F == integrate(f, x)
 
     f = x - sinh(4)/x
@@ -1846,7 +1846,7 @@ def test_issue_21024():
     assert F == integrate(f, x)
 
     f = x**2/(2*x + sinh(2))
-    F = x**2/4 - x*sinh(2)/4 + log(2*x + sinh(2))*sinh(2)**2/8
+    F = x**2/4 - x*sinh(2)/4 + log(8*x + 4*sinh(2))*sinh(2)**2/8
     assert F == integrate(f, x)
 
     f = -x**2/(x + E)
@@ -1878,7 +1878,7 @@ def test_issue_21024():
     assert F == integrate(f, x)
 
     f = x + x/(5*x + sinh(3))
-    F = x**2/2 + x/5 - log(5*x + sinh(3))*sinh(3)/25
+    F = x**2/2 + x/5 - log(25*x + 5*sinh(3))*sinh(3)/25
     assert F == integrate(f, x)
 
     f = (x + exp(3))/(2*x**2 + 2*x)

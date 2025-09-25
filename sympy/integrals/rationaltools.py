@@ -53,6 +53,7 @@ def ratint(f, x, **flags):
 
     p, q = Poly(p, x, composite=False, field=True), Poly(q, x, composite=False, field=True)
     pdom, qdom = p.get_domain(), q.get_domain()
+    dom = pdom.unify(qdom)
     p, q = p.set_domain(pdom.get_exact()), q.set_domain(qdom.get_exact())
 
     coeff, p, q = p.cancel(q)
@@ -67,8 +68,8 @@ def ratint(f, x, **flags):
 
     P, Q = h.as_numer_denom()
 
-    P = Poly(P, x, domain=pdom)
-    Q = Poly(Q, x, domain=qdom)
+    P = Poly(P, x, domain=dom)
+    Q = Poly(Q, x, domain=dom)
 
     q, r = P.div(Q)
 
