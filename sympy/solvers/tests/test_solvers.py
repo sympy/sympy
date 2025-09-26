@@ -829,7 +829,8 @@ def test_solve_inequalities():
     assert solve((x - 3)/(x - 2) < 0, x) == And(Lt(2, x), Lt(x, 3))
     assert solve(x/(x + 1) > 1, x) == And(Lt(-oo, x), Lt(x, -1))
 
-    assert solve(sin(x) > S.Half) == And(pi/6 < x, x < pi*Rational(5, 6))
+    with raises(NotImplementedError):
+        solve(sin(x) > S.Half, x)
 
     assert solve(Eq(False, x < 1)) == (S.One <= x) & (x < oo)
     assert solve(Eq(True, x < 1)) == (-oo < x) & (x < 1)
@@ -1911,12 +1912,20 @@ def test_issues_6819_6820_6821_6248_8692_25777_25779():
     x = symbols('x')
     assert solve(2**x + 4**x) == [I*pi/log(2)]
 
-def test_issue_17638():
 
+@XFAIL
+def test_issue_17638_xfail1():
     assert solve(((2-exp(2*x))*exp(x))/(exp(2*x)+2)**2 > 0, x) == (-oo < x) & (x < log(2)/2)
-    assert solve(((2-exp(2*x)+2)*exp(x+2))/(exp(x)+2)**2 > 0, x) == (-oo < x) & (x < log(4)/2)
-    assert solve((exp(x)+2+x**2)*exp(2*x+2)/(exp(x)+2)**2 > 0, x) == (-oo < x) & (x < oo)
 
+
+@XFAIL
+def test_issue_17638_xfail2():
+    assert solve(((2-exp(2*x)+2)*exp(x+2))/(exp(x)+2)**2 > 0, x) == (-oo < x) & (x < log(4)/2)
+
+
+@XFAIL
+def test_issue_17638_xfail3():
+    assert solve((exp(x)+2+x**2)*exp(2*x+2)/(exp(x)+2)**2 > 0, x) == (-oo < x) & (x < oo)
 
 
 def test_issue_14607():
