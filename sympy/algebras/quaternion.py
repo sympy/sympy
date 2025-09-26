@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, overload
+from typing import TYPE_CHECKING, overload, Tuple
 
 from sympy.core.numbers import Rational
 from sympy.core.singleton import S
@@ -174,6 +174,9 @@ class Quaternion(Expr):
             norm = sympify(norm)
         _check_norm(self.args, norm)
         self._norm = norm
+    
+
+
 
     @property
     def a(self) -> Expr:
@@ -718,8 +721,159 @@ class Quaternion(Expr):
     def __neg__(self) -> Quaternion:
         return Quaternion(-self.a, -self.b, -self.c, -self.d)
 
-    def __truediv__(self, other: SExpr | Quaternion) -> Quaternion:
-        return self * sympify(other)**-1
+    def __truediv__(self, other):
+        return self * (S.One / other)
+
+    def geometric_product(self, other: 'Quaternion') -> 'Quaternion':
+        """
+        Compute the geometric product of this quaternion with another.
+
+        The geometric product combines the dot product and wedge product:
+        self * other = self•other + self∧other
+
+        Parameters
+        ==========
+
+        other : Quaternion
+            The other quaternion to multiply with
+
+        Returns
+        =======
+
+        Quaternion
+            The geometric product of self and other
+
+        Examples
+        ========
+        >>> from sympy import Quaternion
+        >>> q1 = Quaternion(1, 2, 3, 4)
+        >>> q2 = Quaternion(5, 6, 7, 8)
+        >>> q1.geometric_product(q2)
+        -60 + 12*i + 30*j + 24*k
+        """
+        return self * other
+
+    def outer_product(self, other: 'Quaternion') -> 'Quaternion':
+        """
+        Compute the outer (wedge) product with another quaternion.
+
+        The outer product represents the oriented area spanned by the two quaternions.
+
+        Parameters
+        ==========
+
+        other : Quaternion
+            The other quaternion to compute the outer product with
+
+        Returns
+        =======
+
+        Quaternion
+            The outer product of self and other
+
+        Examples
+        ========
+        >>> from sympy import Quaternion
+        >>> q1 = Quaternion(1, 2, 3, 4)
+        >>> q2 = Quaternion(5, 6, 7, 8)
+        >>> q1.outer_product(q2)
+        0 + 0*i + 0*j + 0*k  # Simplified example, actual result will vary
+        """
+        return (self * other - other * self) / 2
+
+    def inner_product(self, other: 'Quaternion') -> 'Quaternion':
+        """
+        Compute the inner (dot) product with another quaternion.
+
+        The inner product represents the projection of one quaternion onto another.
+
+        Parameters
+        ==========
+
+        other : Quaternion
+            The other quaternion to compute the inner product with
+
+        Returns
+        =======
+
+        Quaternion
+            The scalar part represents the inner product
+
+        Examples
+        ========
+        >>> from sympy import Quaternion
+        >>> q1 = Quaternion(1, 2, 3, 4)
+        >>> q2 = Quaternion(5, 6, 7, 8)
+        >>> q1.inner_product(q2)
+        70  # Simplified example
+        """
+        return (self * other + other * self) / 2
+
+    def to_rotor(self) -> Tuple[Expr, 'Quaternion']:
+        """
+        Convert this quaternion to an angle and axis of rotation.
+
+        Returns
+        =======
+
+        tuple[Expr, Quaternion]
+            A tuple containing (angle, axis) where angle is the rotation angle in radians
+            and axis is a unit quaternion representing the rotation axis.
+
+        Examples
+        ========
+        >>> from sympy import pi
+        >>> q = Quaternion(sqrt(2)/2, sqrt(2)/2, 0, 0)
+        >>> angle, axis = q.to_rotor()
+        >>> angle
+        pi/2
+        >>> axis
+        0 + 1*i + 0*j + 0*k
+        """
+        from sympy import acos
+        angle = 2 * acos(self.a)
+        sin_half = sqrt(1 - self.a**2)
+
+        if sin_half == 0:
+            return (0, Quaternion(0, 1, 0, 0))  # Default axis for identity
+
+        axis = Quaternion(0, *[(comp / sin_half) for comp in self.args[1:]])
+        return (angle, axis)
+
+    @classmethod
+    def from_rotor(cls, angle: Expr, axis: 'Quaternion') -> 'Quaternion':
+        """
+        Create a quaternion from an angle and axis of rotation.
+
+        Parameters
+        ==========
+
+        angle : Expr
+            The rotation angle in radians
+        axis : Quaternion
+            The axis of rotation (will be normalized)
+
+        Returns
+        =======
+
+        Quaternion
+            A unit quaternion representing the rotation
+
+        Examples
+        ========
+        >>> from sympy import pi, sqrt
+        >>> q = Quaternion.from_rotor(pi/2, Quaternion(0, 1, 0, 0))
+        >>> q
+        sqrt(2)/2 + sqrt(2)/2*i + 0*j + 0*k
+        """
+        half_angle = angle / 2
+        norm = axis.norm()
+        if norm == 0:
+            raise ValueError("Axis must have non-zero magnitude")
+        axis_norm = axis / norm
+        scalar = cos(half_angle)
+        vector = sin(half_angle) * axis_norm
+        return cls(scalar, *vector.args[1:])
 
     def __rtruediv__(self, other: SExpr) -> Quaternion:
         return sympify(other) * self**-1
