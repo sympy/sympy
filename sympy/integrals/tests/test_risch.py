@@ -703,6 +703,9 @@ def test_risch_integrate():
     assert risch_integrate(log(x**y), x) == x*log(x**y) - x*y
     assert risch_integrate(log(sqrt(x)), x) == x*log(sqrt(x)) - x/2
 
+    # Example 6.2.1
+    expr = (exp(x) - x**2 + 2*x)/((exp(x) + x)**2*x**2)*exp((x**2 - 1)/x + 1/(exp(x) + x))
+    assert risch_integrate(expr, x) == exp(-x)*exp(1/(x + exp(x)) + (x**2 - 1)/x)
 
 def test_risch_integrate_float():
     assert risch_integrate((-60*exp(x) - 19.2*exp(4*x))*exp(4*x), x) == -2.4*exp(8*x) - 12.0*exp(5*x)
