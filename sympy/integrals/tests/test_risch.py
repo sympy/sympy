@@ -703,6 +703,26 @@ def test_risch_integrate():
     assert risch_integrate(log(x**y), x) == x*log(x**y) - x*y
     assert risch_integrate(log(sqrt(x)), x) == x*log(sqrt(x)) - x/2
 
+    # Example 6.2.1
+    expr = (exp(x) - x**2 + 2*x)/((exp(x) + x)**2*x**2)*exp((x**2 - 1)/x + 1/(exp(x) + x))
+    assert risch_integrate(expr, x) == exp(-x)*exp(1/(x + exp(x)) + (x**2 - 1)/x)
+
+    # issue 28407
+    # TODO: exp(exp(x)) - exp(-exp(x)) would be a simpler return form
+    expr = exp(x + exp(x)) + exp(x - exp(x))
+    assert risch_integrate(expr, x) == \
+        (exp(2*x)*exp(-x + exp(x)) - exp(x - exp(x)))*exp(-x)
+
+    # Ensure the results from integrate_hyperexponential() are in a simple
+    # form, i.e., this doesn't return something like (1 + exp(-2*x))*exp(x)/2
+
+    # sinh(x).rewrite(exp)
+    expr = exp(x)/2 - exp(-x)/2
+    assert risch_integrate(expr, x) == exp(x)/2 + exp(-x)/2
+
+    # sin(x).rewrite(exp)
+    expr = -I*(exp(I*x) - exp(-I*x))/2
+    assert risch_integrate(expr, x) == -exp(I*x)/2 - exp(-I*x)/2
 
 def test_risch_integrate_float():
     assert risch_integrate((-60*exp(x) - 19.2*exp(4*x))*exp(4*x), x) == -2.4*exp(8*x) - 12.0*exp(5*x)
