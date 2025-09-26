@@ -207,3 +207,11 @@ def test_rischDE():
     assert rischDE(Poly(-2*x, x), Poly(1, x), Poly(1 - 2*x - 2*x**2, x),
     Poly(1, x), DE) == \
         (Poly(x + 1, x), Poly(1, x))
+
+    # See issue 28407
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(t, t)]})
+    fa = Poly(-t + 1, t)
+    fd = Poly(1, t)
+    ga = Poly(1, t)
+    gd = Poly(1, t)
+    assert rischDE(fa, fd, ga, gd, DE) == (Poly(-1, t), Poly(t, t))
