@@ -230,7 +230,7 @@ def _(expr, assumptions):
 # RealPredicate
 
 def _RealPredicate_number(expr, assumptions):
-    evaluated = expr.doit()  # force evaluation like 0**-1 → zoo
+    evaluated = expr.doit()  # force evaluation like 0**-1 -> zoo
 
     # let as_real_imag() work first since the expression may
     # be simpler to evaluate
