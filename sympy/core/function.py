@@ -2089,6 +2089,45 @@ class Lambda(Expr):
 
         return symargmap
 
+    def curry(self):
+        """
+        Return a curried Lambda: any multi-variable Lambda becomes a
+        nest of single-argument Lambdas.
+
+        Examples
+        ========
+
+        >>> from sympy import Lambda, symbols
+        >>> x, y = symbols('x y')
+        >>> Lambda((x, y), x + y).curry()
+        Lambda(x, Lambda(y, x + y))
+        >>> Lambda(x, x ** 2).curry()
+        Lambda(x, x**2)
+        >>> from sympy import Tuple
+        >>> Lambda((x, Tuple(y,)), x*y).curry()
+        Lambda(x, Lambda(y, x*y))
+        >>> Lambda((x, (y,)), x*y).curry()
+        Lambda(x, Lambda(y, x*y))
+
+        Currying means every Lambda in the expression binds exactly one variable.
+        If already curried, returns self.
+        """
+        def _flatten_vars(sig):
+            if isinstance(sig, Tuple):
+                return sum([_flatten_vars(a) for a in sig], [])
+            else:
+                return [sig]
+        vars = _flatten_vars(self.signature)
+        e = self.expr
+        # If already curried (one variable per nested lambda), return as is
+        if len(vars) == 1 and isinstance(self.expr, Lambda):
+        # Already Lambda(x, Lambda(y, ...)), so nothing to do
+            return self
+        # Nest from the innermost outward
+        for v in reversed(vars):
+            e = Lambda(v, e)
+        return e
+
     @property
     def is_identity(self):
         """Return ``True`` if this ``Lambda`` is an identity function. """
