@@ -1566,9 +1566,23 @@ def integrate_hyperexponential(a, d, DE, z=None, conds='piecewise'):
 
         # XXX: Does qd = 0 always necessarily correspond to the exponential
         # equaling 1?
+        # Mathematically correct: substitute denominator's zero condition and integrate
+        zero_cond = {s for s in qds.free_symbols}
+        # Substitute all denominator variables to values that make qds zero
+        # For log(x), set x=1; for n, set n=0, etc.
+        # Try to solve qds == 0 for its free symbols
+        from sympy import solve
+        subs_dict = {}
+        for sym in qds.free_symbols:
+            sol = solve(qds, sym)
+            if sol:
+                subs_dict[sym] = sol[0]
+        # Substitute into the integrand and integrate
+        integrand = (p - i).subs(DE.t, 1).subs(s).subs(subs_dict)
+        correct_integral = integrate(integrand, DE.x)
         ret += Piecewise(
                 (qas/qds, Ne(qds, 0)),
-                (integrate((p - i).subs(DE.t, 1).subs(s), DE.x), True)
+                (correct_integral, True)
             )
     else:
         ret += qas/qds
