@@ -516,6 +516,15 @@ class Integral(AddWithLimits):
                 did = did.xreplace(undo)
             return did
 
+        # Try pattern matching
+        attempt = pattern_integrate(self, strict=hints.get('strictpatterns', True))
+        if attempt != self:
+            if isinstance(attempt, Integral):
+                # We solved some inner integrals, but not all, so try again
+                return attempt.doit(hints)
+            else:
+                return attempt
+
         # continue with existing assumptions
         undone_limits = []
         # ulj = free symbols of any undone limits' upper and lower limits
@@ -1410,7 +1419,7 @@ class Integral(AddWithLimits):
 
 
 def integrate(function, *symbols: SymbolLimits, meijerg=None, conds='piecewise',
-                        risch=None, heurisch=None, manual=None, **kwargs):
+                        risch=None, heurisch=None, manual=None, strictpatterns=True, **kwargs):
     """integrate(f, var, ...)
 
     .. deprecated:: 1.6
@@ -1573,7 +1582,8 @@ def integrate(function, *symbols: SymbolLimits, meijerg=None, conds='piecewise',
         'conds': conds,
         'risch': risch,
         'heurisch': heurisch,
-        'manual': manual
+        'manual': manual,
+        'strictpatterns': strictpatterns
         }
 
     integral = Integral(function, *symbols, **kwargs)
@@ -1644,4 +1654,5 @@ def _(expr):
 # Delayed imports
 from .deltafunctions import deltaintegrate
 from .meijerint import meijerint_definite, meijerint_indefinite, _debug
+from .patterns import pattern_integrate
 from .trigonometry import trigintegrate
