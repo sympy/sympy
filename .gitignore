@@ -91,3 +91,5 @@ sample.tex
 # Ignore hypothesis files
 .hypothesis
 
+# Ignore uv lock files
+uv.lock
