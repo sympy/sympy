@@ -208,7 +208,7 @@ class Plot:
         xlim=None, ylim=None, axis_center='auto', axis=True,
         xscale='linear', yscale='linear', legend=False, autoscale=True,
         margin=0, annotations=None, markers=None, rectangles=None,
-        fill=None, backend='default', size=None, **kwargs):
+        fill=None, backend='default', size=None, legend_loc=None, **kwargs):
 
         # Options for the graph as a whole.
         # The possible values for each option are described in the docstring of
@@ -223,6 +223,7 @@ class Plot:
         self.xscale = xscale
         self.yscale = yscale
         self.legend = legend
+        self.legend_loc = legend_loc
         self.autoscale = autoscale
         self.margin = margin
         self._annotations = annotations
