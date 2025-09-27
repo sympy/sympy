@@ -71,8 +71,14 @@ def _(expr, assumptions):
     if ask_all(~Q.zero(expr.base), Q.finite(expr.base), Q.zero(expr.exp), assumptions=assumptions):
         return True
     if ask_all(Q.integer(expr.base), Q.integer(expr.exp), assumptions=assumptions):
-        if ask_any(Q.positive(expr.exp), Q.nonnegative(expr.exp) & ~Q.zero(expr.base), Q.zero(expr.base-1), Q.zero(expr.base+1), assumptions=assumptions):
+        neg_exp = ask(Q.negative(expr.exp), assumptions)
+        if  neg_exp is False:
             return True
+        base_pm_1 = ask_any( Q.zero(expr.base - 1), Q.zero(expr.base + 1), assumptions=assumptions)
+        if base_pm_1:
+            return True
+        if neg_exp and base_pm_1 is False:
+            return False
 
 @IntegerPredicate.register(Mul)
 def _(expr, assumptions):
