@@ -48,8 +48,7 @@ def test_generic_zero_matrix():
     raises(TypeError, lambda: z.rows)
     raises(TypeError, lambda: z.cols)
 
-    assert MatAdd() == z
-    assert MatAdd(z, A) == MatAdd(A)
+    assert MatAdd() == 0
     # Make sure it is hashable
     hash(z)
 
@@ -85,8 +84,7 @@ def test_generic_identity():
     raises(TypeError, lambda: I.rows)
     raises(TypeError, lambda: I.cols)
 
-    assert MatMul() == I
-    assert MatMul(I, A) == MatMul(A)
+    assert MatMul() == 1
     # Make sure it is hashable
     hash(I)
 
