@@ -4217,6 +4217,11 @@ class Poly(Basic):
         conds = f.rep.hurwitz_conditions()
         return [f.domain.to_sympy(cond) for cond in conds]
 
+    def schur_conditions(f):
+        """ ... """
+        conds = f.rep.schur_conditions()
+        return [f.domain.to_sympy(cond) for cond in conds]
+
     @property
     def is_zero(f):
         """
@@ -7849,6 +7854,22 @@ def hurwitz_conditions(f, *gens, **args):
         raise ComputationFailed('hurwitz_conditions', 1, exc)
 
     return F.hurwitz_conditions()
+
+
+@public
+def schur_conditions(f, *gens, **args):
+    """
+    See :func:`~.Poly.schur_conditions`.
+
+    """
+    options.allowed_flags(args, ['polys'])
+
+    try:
+        F, opt = poly_from_expr(f, *gens, **args)
+    except PolificationFailed as exc:
+        raise ComputationFailed('schur_conditions', 1, exc)
+
+    return F.schur_conditions()
 
 @public
 class GroebnerBasis(Basic):

@@ -1164,6 +1164,10 @@ class DMP(CantSympify, Generic[Er]):
         """Computes the Routh Hurwitz criteria of ``f``. """
         raise NotImplementedError
 
+    def schur_conditions(f) -> list[Er]:
+        """Computes the Schur conditions of ``f``. """
+        raise NotImplementedError
+
     @property
     def is_zero(f) -> bool:
         """Returns ``True`` if ``f`` is a zero polynomial. """
@@ -1836,6 +1840,13 @@ class DMP_Python(DMP[Er]):
         if f.lev:
             raise ValueError("Routh-Hurwitz stability is only defined for univariate polynomials.")
         return dup_routh_hurwitz(f._rep, f.dom)
+
+    def schur_conditions(f) -> list[Er]:
+        """Computes the Schur conditions of ``f``. """
+        from sympy.polys.rootconditions import dup_schur_conditions
+        if f.lev:
+            raise ValueError("Schur stability is only defined for univariate polynomials.")
+        return dup_schur_conditions(f._rep, f.dom)
 
     @property
     def is_zero(f) -> bool:
@@ -2544,6 +2555,10 @@ class DUP_Flint(DMP[Er]):
     def hurwitz_conditions(f) -> list[Er]:
         """Computes the Routh Hurwitz criteria of ``f``. """
         return f.to_DMP_Python().hurwitz_conditions()
+
+    def schur_conditions(f) -> list[Er]:
+        """Computes the Schur conditions of ``f``. """
+        return f.to_DMP_Python().schur_conditions()
 
     @property
     def is_zero(f) -> bool:

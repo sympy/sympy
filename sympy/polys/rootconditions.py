@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import math
+
 from sympy.polys.densebasic import dup
 from sympy.polys.domains.domain import Er, Domain
 from sympy.core.numbers import I
@@ -7,7 +9,7 @@ from sympy.core.numbers import I
 from sympy.polys.densearith import dup_exquo_ground
 from sympy.polys.domains import EXRAW, EX, QQ, ZZ
 from sympy.polys.densebasic import dup_convert
-from sympy.polys.densetools import dup_clear_denoms
+from sympy.polys.densetools import dup_clear_denoms, dup_transform, dup_eval
 from sympy.core.exprtools import factor_terms
 from sympy.core.expr import Expr
 from sympy.simplify.simplify import signsimp
@@ -244,7 +246,25 @@ def _build_simplified_factors(
     return (sign, factors), nonzeros
 
 
-# TODO Implement conditions for discrete time systems
-# Possible ways are:
-# - Map z = (1+s)/(1-s) and use routh-hurwitz
-# - Use Jury's test
+def dup_schur_conditions(f: dup[Er], K: Domain[Er]) -> list[Er]:
+    # Check if -1 is a root, since the transformation is not defined in this case
+    evaluation = K.to_sympy(dup_eval(f, -K.one, K))
+    if evaluation.is_number and math.isclose(evaluation, 0.0):
+        return [-K.one]
+
+    excluded_domains = [EX, EXRAW]
+    if not K in excluded_domains and I in K:
+        raise NotImplementedError(
+            "Schur conditions is not implemented for complex domains"
+        )
+    if K.is_RR: #XXX: Precision problems with things like RR[x] still remain
+        pq = dup_convert(f, K, QQ)
+        _, pz = dup_clear_denoms(pq, QQ, convert=True)
+        p_transformed: list = dup_transform(pz, [ZZ.one, ZZ.one],
+                                            [-ZZ.one, ZZ.one], ZZ)
+        conds: list = _dup_routh_hurwitz_fraction_free(p_transformed, ZZ)
+
+        return [K.convert_from(c, ZZ) for c in conds]
+
+    p_transformed = dup_transform(f, [K.one, K.one], [-K.one, K.one], K)
+    return dup_routh_hurwitz(p_transformed, K)
