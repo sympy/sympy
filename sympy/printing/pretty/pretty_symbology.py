@@ -20,7 +20,7 @@ def U(name):
         unicode_warnings += 'No \'%s\' in unicodedata\n' % name
         return None
 
-from sympy.printing.conventions import split_super_sub
+from sympy.printing.conventions import split_super_sub, split_leading_trailing_underscore
 from sympy.core.alphabets import greeks
 from sympy.utilities.exceptions import sympy_deprecation_warning
 
@@ -556,7 +556,8 @@ def pretty_symbol(symb_name, bold_name=False):
     if not _use_unicode:
         return symb_name
 
-    name, sups, subs = split_super_sub(symb_name)
+    leading, name, trailing = split_leading_trailing_underscore(symb_name)
+    name, sups, subs = split_super_sub(name)
 
     def translate(s, bold_name) :
         if bold_name:
@@ -605,7 +606,7 @@ def pretty_symbol(symb_name, bold_name=False):
         sups_result = ' '.join(pretty_sups)
         subs_result = ' '.join(pretty_subs)
 
-    return ''.join([name, sups_result, subs_result])
+    return leading*'_' + ''.join([name, sups_result, subs_result]) + trailing*'_'
 
 
 def annotated(letter):
