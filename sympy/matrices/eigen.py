@@ -261,7 +261,7 @@ def _eigenvals_list(
         for factor, multiplicity in factors:
             eigs = roots(factor, multiple=True, **flags)
 
-            degree = factor.degree()
+            degree = int(factor.degree())
             if len(eigs) != degree:
                 f = factor.as_expr()
                 x = factor.gen
@@ -309,10 +309,11 @@ def _eigenvals_dict(
             charpoly = block.charpoly()
 
         factors = charpoly.factor_list()[1]
+
         for factor, multiplicity in factors:
             eigs = roots(factor, multiple=False, **flags)
 
-            degree = factor.degree()
+            degree = int(factor.degree())
             if sum(eigs.values()) != degree:
                 degree = int(factor.degree())
                 f = factor.as_expr()
