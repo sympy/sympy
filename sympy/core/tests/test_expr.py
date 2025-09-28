@@ -9,7 +9,8 @@ from sympy.core.expr import (ExprBuilder, unchanged, Expr,
     UnevaluatedExpr)
 from sympy.core.function import (Function, DefinedFunction, expand, WildFunction,
     AppliedUndef, Derivative, diff, Subs)
-from sympy.core.mul import Mul, _unevaluated_Mul
+from sympy.core.mul import Mul
+from sympy.core.expr import _unevaluated_Mul
 from sympy.core.numbers import (NumberSymbol, E, zoo, oo, Float, I,
     Rational, nan, Integer, Number, pi, _illegal)
 from sympy.core.power import Pow

@@ -1,5 +1,6 @@
 mpmath
 pytest
+setuptools
 pytest-xdist
 pytest-timeout
 pytest-split
