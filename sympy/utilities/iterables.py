@@ -377,14 +377,14 @@ def ibin(n, bits=None, str=False):
 
     if not str:
         if bits >= 0:
-            return [1 if i == "1" else 0 for i in bin(n)[2:].rjust(bits, "0")]
+            return [1 if i == "1" else 0 for i in f'{n:b}'.rjust(bits, "0")]
         else:
             return variations(range(2), n, repetition=True)
     else:
         if bits >= 0:
-            return bin(n)[2:].rjust(bits, "0")
+            return f'{n:b}'.rjust(bits, "0")
         else:
-            return (bin(i)[2:].rjust(n, "0") for i in range(2**n))
+            return (f'{i:b}'.rjust(n, "0") for i in range(2**n))
 
 
 def variations(seq, n, repetition=False):
