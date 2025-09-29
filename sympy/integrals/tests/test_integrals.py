@@ -2185,3 +2185,12 @@ def test_issue_27374():
     Ec = diff(u, z, z).subs([(x, sqrt(b*b-z*z))])
     expected_result = -2*sqrt(2)*b*a**3*exp(-b**2*a**2/2)/(3*sqrt(pi))
     assert simplify(integrate(Ec, (z, -b, b))) == expected_result
+
+
+def test_issue_27675():
+    f = lambda n: integrate((n - x)**-2, (x, 0, 1))
+    a = f(1.7)
+    b = f(Rational('1.7'))
+    assert a.is_Float
+    assert not b.is_Float
+    assert abs(a - b) < 1e-16

@@ -29,7 +29,7 @@ from functools import reduce
 from sympy.core.function import Lambda
 from sympy.core.mul import Mul
 from sympy.core.intfunc import ilcm
-from sympy.core.numbers import I
+from sympy.core.numbers import I, Rational, Float
 from sympy.core.power import Pow
 from sympy.core.relational import Ne
 from sympy.core.singleton import S
@@ -1702,6 +1702,20 @@ class NonElementaryIntegral(Integral):
     pass
 
 
+def _replace_coeff(e, q, r):
+    if e.is_Pow:
+        return Pow(_replace_coeff(e.base, q, r), e.exp)
+    if isinstance(e, exp):
+        return e
+    if q(e):
+        return r(e)
+    args = getattr(e, 'args', ())
+    fargs = tuple(_replace_coeff(a, q, r) for a in args)
+    if args != fargs:
+        return e.func(*fargs)
+    return e
+
+
 def risch_integrate(f, x, extension=None, handle_first='log',
                     separate_integral=False, rewrite_complex=None,
                     conds='piecewise'):
@@ -1810,7 +1824,8 @@ def risch_integrate(f, x, extension=None, handle_first='log',
     log(log(x))
 
     """
-    f = S(f)
+    f0 = S(f)
+    f = _replace_coeff(f0, lambda e: e.is_Float, Rational)
 
     DE = extension or DifferentialExtension(f, x, handle_first=handle_first,
             dummy=True, rewrite_complex=rewrite_complex)
@@ -1837,6 +1852,9 @@ def risch_integrate(f, x, extension=None, handle_first='log',
         else:
             raise NotImplementedError("Only exponential and logarithmic "
             "extensions are currently supported.")
+
+        if f != f0:
+            ans = _replace_coeff(ans, lambda e: e.is_Rational or e.is_Integer, Float)
 
         result += ans
         if b:
