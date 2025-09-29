@@ -994,6 +994,7 @@ def solve(f, *symbols, **flags):
 
     for i, fi in enumerate(f):
         # Abs / Max / Min
+        # Rewrites as piecewise functions prior to solving
         while True:
             was = fi
             fi = fi.replace(Abs, lambda arg:
