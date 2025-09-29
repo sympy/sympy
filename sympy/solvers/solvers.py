@@ -31,7 +31,7 @@ from sympy.core.traversal import preorder_traversal
 from sympy.logic.boolalg import And, BooleanAtom
 
 from sympy.functions import (log, exp, LambertW, cos, sin, tan, acos, asin, atan,
-                             Abs, re, im, arg, sqrt, atan2)
+                             Abs, re, im, arg, sqrt, atan2, Max, Min)
 from sympy.functions.combinatorial.factorials import binomial
 from sympy.functions.elementary.hyperbolic import HyperbolicFunction
 from sympy.functions.elementary.piecewise import piecewise_fold, Piecewise
@@ -993,16 +993,30 @@ def solve(f, *symbols, **flags):
         return []
 
     for i, fi in enumerate(f):
-        # Abs
+        # Abs / Max / Min
         while True:
             was = fi
             fi = fi.replace(Abs, lambda arg:
                 separatevars(Abs(arg)).rewrite(Piecewise) if arg.has(*symbols)
                 else Abs(arg))
+            fi = fi.replace(Max, lambda *args:
+                separatevars(Max(*args)).rewrite(Piecewise) if any(arg.has(*symbols) for arg in args)
+                else Max(*args))
+            fi = fi.replace(Min, lambda *args:
+                separatevars(Min(*args)).rewrite(Piecewise) if any(arg.has(*symbols) for arg in args)
+                else Min(*args))
             if was == fi:
                 break
 
         for e in fi.find(Abs):
+            if e.has(*symbols):
+                raise NotImplementedError('solving %s when the argument '
+                    'is not real or imaginary.' % e)
+        for e in fi.find(Max):
+            if e.has(*symbols):
+                raise NotImplementedError('solving %s when the argument '
+                    'is not real or imaginary.' % e)
+        for e in fi.find(Min):
             if e.has(*symbols):
                 raise NotImplementedError('solving %s when the argument '
                     'is not real or imaginary.' % e)
