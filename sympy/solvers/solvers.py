@@ -2438,6 +2438,7 @@ def solve_undetermined_coeffs(equ, coeffs, *syms, **flags):
         # -(exp(x) + y), A*exp(x) + B
         # then see what symbols are common to both
         # {x} = {x, A, B} - {x, y}
+        # Separate terms dependent and independent of coefficients
         ind, dep = xeq.as_independent(*coeffs, as_Add=True)
         dfree = dep.free_symbols
         syms = dfree & ind.free_symbols
@@ -2460,9 +2461,7 @@ def solve_undetermined_coeffs(equ, coeffs, *syms, **flags):
     gens = set(xeq.as_coefficients_dict(*syms).keys()) - {1}
     cset = set(coeffs)
     if any(g.has_xfree(cset) for g in gens):
-        return  # a generator contained a coefficient symbol
-
-    # make sure we are working with symbols for generators
+        return None  # A generator contained a coefficient symbol
 
     e, gens, _ = recast_to_symbols([xeq], list(gens))
     xeq = e[0]
@@ -2475,12 +2474,18 @@ def solve_undetermined_coeffs(equ, coeffs, *syms, **flags):
 
     soln = solve(system, coeffs, **flags)
 
-    # unpack unless told otherwise if length is 1
-
-    settings = flags.get('dict', None) or flags.get('set', None)
-    if type(soln) is dict or settings or len(soln) != 1:
+    # Handle output format
+    if flags.get('dict', False):
+        if isinstance(soln, dict):
+            return [soln]
+        elif isinstance(soln, list):
+            return soln if all(isinstance(s, dict) for s in soln) else [dict(zip(coeffs, s)) for s in soln]
+        else:
+            return [{}]
+    elif isinstance(soln, list) and len(soln) == 1:
+        return soln[0]
+    else:
         return soln
-    return soln[0]
 
 
 def solve_linear_system_LU(matrix, syms):
