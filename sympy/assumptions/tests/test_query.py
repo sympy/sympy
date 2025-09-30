@@ -25,6 +25,9 @@ from sympy.testing.pytest import (XFAIL, slow, raises, warns_deprecated_sympy,
     _both_exp_pow)
 import math
 
+def test_issue_28150():
+    expr = ask(Q.real(Pow(0, -1, evaluate=False)))
+    assert expr is False
 
 def test_int_1():
     z = 1
