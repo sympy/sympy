@@ -256,18 +256,24 @@ def _eigenvals_list(
         else:
             charpoly = block.charpoly()
 
-        eigs = roots(charpoly, multiple=True, **flags)
+        factors = charpoly.factor_list()[1]
 
-        if len(eigs) != block.rows:
-            try:
-                eigs = charpoly.all_roots(multiple=True)
-            except NotImplementedError:
-                if error_when_incomplete:
-                    raise MatrixError(eigenvals_error_message)
-                else:
-                    eigs = []
+        for factor, multiplicity in factors:
+            eigs = roots(factor, multiple=True, **flags)
 
-        all_eigs += eigs
+            degree = int(factor.degree())
+            if len(eigs) != degree:
+                f = factor.as_expr()
+                x = factor.gen
+                try:
+                    eigs = [CRootOf(f, x, idx) for idx in range(degree)]
+                except NotImplementedError:
+                    if error_when_incomplete:
+                        raise MatrixError(eigenvals_error_message)
+                    else:
+                        eigs = []
+
+            all_eigs += eigs * multiplicity
 
     if not simplify:
         return all_eigs
@@ -302,22 +308,30 @@ def _eigenvals_dict(
         else:
             charpoly = block.charpoly()
 
-        eigs = roots(charpoly, multiple=False, **flags)
+        factors = charpoly.factor_list()[1]
 
-        if sum(eigs.values()) != block.rows:
-            try:
-                eigs = dict(charpoly.all_roots(multiple=False))
-            except NotImplementedError:
-                if error_when_incomplete:
-                    raise MatrixError(eigenvals_error_message)
+        for factor, multiplicity in factors:
+            eigs = roots(factor, multiple=False, **flags)
+
+            degree = int(factor.degree())
+            if sum(eigs.values()) != degree:
+                degree = int(factor.degree())
+                f = factor.as_expr()
+                x = factor.gen
+                try:
+                    eigs = {CRootOf(f, x, idx): 1 for idx in range(degree)}
+                except NotImplementedError:
+                    if error_when_incomplete:
+                        raise MatrixError(eigenvals_error_message)
+                    else:
+                        eigs = {}
+
+            for k, v in eigs.items():
+                v_total = v * multiplicity
+                if k in all_eigs:
+                    all_eigs[k] += v_total
                 else:
-                    eigs = {}
-
-        for k, v in eigs.items():
-            if k in all_eigs:
-                all_eigs[k] += v
-            else:
-                all_eigs[k] = v
+                    all_eigs[k] = v_total
 
     if not simplify:
         return all_eigs
