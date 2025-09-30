@@ -51,6 +51,9 @@ def test_singularities():
         pi/2, 3*pi/2, 5*pi/2)
     assert singularities(csc(x), x, Interval(0, 3*pi)) == FiniteSet(
         0, pi, 2*pi, 3*pi)
+    assert singularities(0**x, x) == Interval.open(-oo, 0)
+    assert singularities(0**(x-1), x) == Interval.open(-oo, 1)
+    assert singularities(0**(x+1)/(x-2), x) == Union({2}, Interval.open(-oo, -1))
 
 
 def test_is_increasing():

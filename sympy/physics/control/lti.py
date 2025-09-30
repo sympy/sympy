@@ -31,11 +31,12 @@ from abc import ABC, abstractmethod
 
 from mpmath.libmp.libmpf import prec_to_dps
 
-__all__ = ['TransferFunction', 'DiscreteTransferFunction', 'PIDController', 'Series',
+__all__ = ['TransferFunction', 'DiscreteTransferFunction',
+           'create_transfer_function','PIDController', 'Series',
            'MIMOSeries', 'Parallel', 'MIMOParallel', 'Feedback', 'MIMOFeedback',
-           'TransferFunctionMatrix', 'StateSpace', 'gbt',
-           'bilinear', 'forward_diff', 'backward_diff', 'phase_margin',
-           'gain_margin']
+           'TransferFunctionMatrix', 'StateSpace', 'DiscreteStateSpace',
+           'create_state_space', 'gbt', 'bilinear', 'forward_diff',
+           'backward_diff', 'phase_margin', 'gain_margin']
 
 def _roots(poly, var):
     """ like roots, but works on higher-order polynomials. """
@@ -414,6 +415,13 @@ class LinearTimeInvariant(Basic, EvalfMixin, ABC):
 
     @classmethod
     def _check_args(cls, args):
+        """
+        Check if the arguments passed to the class are valid.
+        Every argument must be of the same type as the class (_clstype).
+        All arguments must have the same complex variable of the Laplace
+        transform.
+
+        """
         if not args:
             raise ValueError("At least 1 argument must be passed.")
         if not all(isinstance(arg, cls._clstype) for arg in args):
@@ -422,7 +430,7 @@ class LinearTimeInvariant(Basic, EvalfMixin, ABC):
         if len(var_set) != 1:
             raise ValueError(filldedent(f"""
                 All transfer functions should use the same complex variable
-                of the Laplace transform. {len(var_set)} different
+                of the Laplace transform or z-transform. {len(var_set)} different
                 values found."""))
 
     @property
@@ -488,8 +496,13 @@ def _check_other_MIMO(func):
     return wrapper
 
 
-def _check_compatibility(systems):
-    """Checks compatibility between different systems"""
+def _check_time_compatibility(systems):
+    """
+    Checks compatibility between different systems
+    Every system must be either continuous-time or discrete-time and
+    must have the same sampling time if discrete-time.
+
+    """
     if not all(isinstance(system, LinearTimeInvariant) \
                for system in systems):
         return
@@ -514,10 +527,9 @@ def _compatibility_decorator(func):
     Decorator to check compatibility of systems before performing operations.
     """
     def wrapper(self, *args, **kwargs):
-        _check_compatibility([self] + list(args))
+        _check_time_compatibility([self] + list(args))
         return func(self, *args, **kwargs)
     return wrapper
-
 
 def create_transfer_function(num, den, var, sampling_time=0):
     """
@@ -703,14 +715,15 @@ class TransferFunctionBase(SISOLinearTimeInvariant, ABC):
         den_accepted = ((isinstance(den, accepted_istances) and den.has(Symbol))
                     or den.is_number)
 
-        if num_accepted and den_accepted:
-            cls.is_StateSpace_object = False
-            return super(TransferFunctionBase, cls).__new__(cls, num, den, var,
-                                                            *args, **kwargs)
-
-        else:
+        if not num_accepted or not den_accepted:
             raise TypeError("""Unsupported type for numerator or denominator of
                             TransferFunction.""")
+
+        obj = super(TransferFunctionBase, cls).__new__(cls, num, den, var,
+                                                        *args, **kwargs)
+        obj.is_StateSpace_object = False
+        return obj
+
 
     @classmethod
     def from_rational_expression(cls, expr, var=None, *args, **kwargs):
@@ -2192,6 +2205,35 @@ class DiscreteTransferFunction(TransferFunctionBase):
             function model are not implemented yet.
             """)
 
+    def _eval_rewrite_as_DiscreteStateSpace(self, *args):
+        """
+        Returns the equivalent space model of the transfer function model.
+        The state space model will be returned in the controllable canonical
+        form.
+
+        Unlike the space state to transfer function model conversion, the
+        transfer function to state space model conversion is not unique.
+        There can be multiple state space representations of a given transfer function model.
+
+        Examples
+        ========
+
+        >>> from sympy.abc import z
+        >>> from sympy.physics.control import DiscreteTransferFunction, DiscreteStateSpace
+        >>> dtf = DiscreteTransferFunction(z**2 + 1, z**3 + z*2 + 10, z, 0.1)
+        >>> dtf.rewrite(DiscreteStateSpace)
+        DiscreteStateSpace(Matrix([
+        [  0,  1, 0],
+        [  0,  0, 1],
+        [-10, -2, 0]]), Matrix([
+        [0],
+        [0],
+        [1]]), Matrix([[1, 0, 1]]), Matrix([[0]]), 0.1)
+
+        """
+        A, B, C, D = self._StateSpace_matrices_equivalent()
+        return DiscreteStateSpace(A, B, C, D, self.sampling_time)
+
     def _eval_rewrite_as_StateSpace(self, *args):
         raise TypeError("""
             The discrete transfer function model cannot be rewritten as a
@@ -2343,6 +2385,31 @@ def _dummify_args(_arg, var):
 
     return dummy_arg_list, dummy_dict
 
+def _any_state_space_systems(arg_list: tuple) -> bool:
+    """
+    Check if there are any state space objects in the argument list.
+    If there are, return True, else return False.
+
+    Systems are considered to be state space systems if they are instances of
+    StateSpaceBase or have an attribute `is_StateSpace_object` that is True.
+
+    """
+    return any(isinstance(arg, StateSpaceBase) or
+               (hasattr(arg, 'is_StateSpace_object') and
+                arg.is_StateSpace_object) for arg in arg_list)
+
+def _are_input_output_compatible(args):
+    """
+    Check if the input and output of the systems are compatible for series
+    connection. The input of the second system should match the output of the
+    first system.
+
+    """
+    for i in range(1, len(args)):
+        if args[i].num_inputs != args[i-1].num_outputs:
+            return False
+    return True
+
 class Series(SISOLinearTimeInvariant):
     r"""
     A class for representing a series configuration of SISO systems.
@@ -2439,28 +2506,29 @@ class Series(SISOLinearTimeInvariant):
 
     """
     def __new__(cls, *args, evaluate=False):
-
         args = _flatten_args(args, Series)
-        # For StateSpace series connection
-        if args and any(isinstance(arg, StateSpace) or (hasattr(arg, 'is_StateSpace_object')
-                                            and arg.is_StateSpace_object)for arg in args):
-            # Check for SISO
-            if (args[0].num_inputs == 1) and (args[-1].num_outputs == 1):
-                # Check the interconnection
-                for i in range(1, len(args)):
-                    if args[i].num_inputs != args[i-1].num_outputs:
-                        raise ValueError(filldedent("""Systems with incompatible inputs and outputs
-                            cannot be connected in Series."""))
-                cls._is_series_StateSpace = True
-            else:
-                raise ValueError("To use Series connection for MIMO systems use MIMOSeries instead.")
-        else:
-            cls._is_series_StateSpace = False
-            cls._check_args(args)
-
-        _check_compatibility(args)
-
+        _check_time_compatibility(args)
         obj = super().__new__(cls, *args)
+
+        # For StateSpace series connection
+        if args and _any_state_space_systems(args):
+            # Check for SISO
+            if any(not arg.is_SISO for arg in args):
+                raise ValueError(
+                    filldedent("""To use Series connection for MIMO systems use
+                               MIMOSeries instead."""))
+            # Check the interconnection
+            if not _are_input_output_compatible(args):
+                raise ValueError(
+                    filldedent("""
+                        Systems with incompatible inputs and outputs
+                        cannot be connected in Series.
+                        """))
+            obj._is_series_StateSpace = True
+        else:
+            obj._is_series_StateSpace = False
+            obj._check_args(args)
+
         obj._is_continuous = args[0].is_continuous
 
         return obj.doit() if evaluate else obj
@@ -2494,8 +2562,8 @@ class Series(SISOLinearTimeInvariant):
 
     def doit(self, **hints):
         """
-        Returns the resultant transfer function or StateSpace obtained after evaluating
-        the series interconnection.
+        Returns the resultant transfer function or state space obtained after
+        evaluating the series interconnection.
 
         Examples
         ========
@@ -2512,23 +2580,23 @@ class Series(SISOLinearTimeInvariant):
         Notes
         =====
 
-        If a series connection contains only TransferFunction components, the equivalent system returned
-        will be a TransferFunction. However, if a StateSpace object is used in any of the arguments,
-        the output will be a StateSpace object.
+        If a series connection contains only TransferFunctionBase components,
+        the equivalent system returned will be a transfer function. However, if
+        a StateSpaceBase object is used in any of the arguments,
+        the output will be a state space object.
 
         """
         # Check if the system is a StateSpace
         if self._is_series_StateSpace:
             # Return the equivalent StateSpace model
+            ss_class = StateSpace if self.is_continuous else DiscreteStateSpace
+
             res = self.args[0]
-            if not isinstance(res, StateSpace):
-                res = res.doit().rewrite(StateSpace)
+            if not isinstance(res, ss_class):
+                res = res.doit().rewrite(ss_class)
             for arg in self.args[1:]:
-                if not isinstance(arg, StateSpace):
-                    arg = arg.doit().rewrite(StateSpace)
-                else:
-                    arg = arg.doit()
-                arg = arg.doit()
+                if not isinstance(arg, ss_class):
+                    arg = arg.doit().rewrite(ss_class)
                 res = arg * res
             return res
 
@@ -2708,11 +2776,6 @@ class Series(SISOLinearTimeInvariant):
     def sampling_time(self):
         return self.args[0].sampling_time
 
-def _mat_mul_compatible(*args):
-    """To check whether shapes are compatible for matrix mul."""
-    return all(args[i].num_outputs == args[i+1].num_inputs for i in range(len(args)-1))
-
-
 class MIMOSeries(MIMOLinearTimeInvariant):
     r"""
     A class for representing a series configuration of MIMO systems.
@@ -2842,30 +2905,26 @@ class MIMOSeries(MIMOLinearTimeInvariant):
 
     """
     def __new__(cls, *args, evaluate=False):
-        is_StateSpace = lambda arg: isinstance(arg, StateSpace) or \
-            (hasattr(arg, 'is_StateSpace_object') and arg.is_StateSpace_object)
-        if args and any(is_StateSpace(arg) for arg in args):
+        args = _flatten_args(args, MIMOSeries)
+        obj = super().__new__(cls, *args)
+        if args and _any_state_space_systems(args):
             # Check compatibility
-            for i in range(1, len(args)):
-                if args[i].num_inputs != args[i - 1].num_outputs:
-                    raise ValueError(filldedent("""
-                        Systems with incompatible inputs and outputs
-                        cannot be connected in MIMOSeries."""))
-            obj = super().__new__(cls, *args)
-            cls._is_series_StateSpace = True
+            if not _are_input_output_compatible(args):
+                raise ValueError(filldedent("""
+                    Systems with incompatible inputs and outputs
+                    cannot be connected in MIMOSeries."""))
+            obj._is_series_StateSpace = True
+
         else:
             cls._check_args(args)
-            cls._is_series_StateSpace = False
+            obj._is_series_StateSpace = False
 
-            if _mat_mul_compatible(*args):
-                obj = super().__new__(cls, *args)
-
-            else:
+            if not _are_input_output_compatible(args):
                 raise ValueError(filldedent("""
                     Number of input signals do not match the number
                     of output signals of adjacent systems for some args."""))
 
-        _check_compatibility(args)
+        _check_time_compatibility(args)
         obj._is_continuous = args[0].is_continuous
 
         return obj.doit() if evaluate else obj
@@ -2913,8 +2972,9 @@ class MIMOSeries(MIMOLinearTimeInvariant):
     def doit(self, cancel=False, **kwargs):
         """
         Returns the resultant obtained after evaluating the MIMO systems arranged
-        in a series configuration. For TransferFunction systems it returns a TransferFunctionMatrix
-        and for StateSpace systems it returns the resultant StateSpace system.
+        in a series configuration.
+        For transfer function systems it returns a TransferFunctionMatrix
+        and for state space systems it returns the resultant state space system.
 
         Examples
         ========
@@ -2931,14 +2991,13 @@ class MIMOSeries(MIMOLinearTimeInvariant):
         """
         if self._is_series_StateSpace:
             # Return the equivalent StateSpace model
+            ss_class = StateSpace if self.is_continuous else DiscreteStateSpace
             res = self.args[0]
-            if not isinstance(res, StateSpace):
-                res = res.doit().rewrite(StateSpace)
+            if not isinstance(res, ss_class):
+                res = res.doit().rewrite(ss_class)
             for arg in self.args[1:]:
-                if not isinstance(arg, StateSpace):
-                    arg = arg.doit().rewrite(StateSpace)
-                else:
-                    arg = arg.doit()
+                if not isinstance(arg, ss_class):
+                    arg = arg.doit().rewrite(ss_class)
                 res = arg * res
             return res
 
@@ -2955,8 +3014,10 @@ class MIMOSeries(MIMOLinearTimeInvariant):
         return temp_tfm.subs(_dummy_dict)
 
     def _eval_rewrite_as_TransferFunctionMatrix(self, *args, **kwargs):
+        tf_class = TransferFunction if self.is_continuous \
+            else DiscreteTransferFunction
         if self._is_series_StateSpace:
-            return self.doit().rewrite(TransferFunction)
+            return self.doit().rewrite(tf_class)
         return self.doit()
 
     @_check_other_MIMO
@@ -3097,22 +3158,21 @@ class Parallel(SISOLinearTimeInvariant):
     """
 
     def __new__(cls, *args, evaluate=False):
-
         args = _flatten_args(args, Parallel)
-        # For StateSpace parallel connection
-        if args and any(isinstance(arg, StateSpace) or (hasattr(arg, 'is_StateSpace_object')
-                                                        and arg.is_StateSpace_object) for arg in args):
-            # Check for SISO
-            if all(arg.is_SISO for arg in args):
-                cls._is_parallel_StateSpace = True
-            else:
-                raise ValueError("To use Parallel connection for MIMO systems use MIMOParallel instead.")
-        else:
-            cls._is_parallel_StateSpace = False
-            cls._check_args(args)
         obj = super().__new__(cls, *args)
+        # For StateSpace parallel connection
+        if args and _any_state_space_systems(args):
+            # Check for SISO
+            if any(not arg.is_SISO for arg in args):
+                raise ValueError(filldedent("""
+                    To use Parallel connection for MIMO systems use
+                    MIMOParallel instead."""))
+            obj._is_parallel_StateSpace = True
+        else:
+            obj._is_parallel_StateSpace = False
+            obj._check_args(args)
 
-        _check_compatibility(args)
+        _check_time_compatibility(args)
         obj._is_continuous = args[0].is_continuous
 
         return obj.doit() if evaluate else obj
@@ -3164,12 +3224,14 @@ class Parallel(SISOLinearTimeInvariant):
         """
         if self._is_parallel_StateSpace:
             # Return the equivalent StateSpace model
+            ss_class = StateSpace if self.is_continuous else DiscreteStateSpace
+
             res = self.args[0].doit()
-            if not isinstance(res, StateSpace):
-                res = res.rewrite(StateSpace)
+            if not isinstance(res, ss_class):
+                res = res.rewrite(ss_class)
             for arg in self.args[1:]:
-                if not isinstance(arg, StateSpace):
-                    arg = arg.doit().rewrite(StateSpace)
+                if not isinstance(arg, ss_class):
+                    arg = arg.doit().rewrite(ss_class)
                 res += arg
             return res
 
@@ -3451,30 +3513,21 @@ class MIMOParallel(MIMOLinearTimeInvariant):
     """
 
     def __new__(cls, *args, evaluate=False):
-
         args = _flatten_args(args, MIMOParallel)
-
+        obj = super().__new__(cls, *args)
         # For StateSpace Parallel connection
-        is_StateSpace = lambda arg: isinstance(arg, StateSpace) or \
-            (hasattr(arg, 'is_StateSpace_object') and arg.is_StateSpace_object)
-
-        if args and any(is_StateSpace(arg) for arg in args):
-            compatible_input = lambda arg: arg.num_inputs != args[0].num_inputs
-            compatible_output = lambda arg: arg.num_outputs != \
-                                                            args[0].num_outputs
-            if any(compatible_input(arg) or compatible_output(arg)
-                   for arg in args[1:]):
+        if args and _any_state_space_systems(args):
+            if not _are_input_output_compatible(args):
                 raise ShapeError("Systems with incompatible inputs and outputs"
                                  "cannot be connected in MIMOParallel.")
-            cls._is_parallel_StateSpace = True
+            obj._is_parallel_StateSpace = True
         else:
-            cls._check_args(args)
+            obj._check_args(args)
             if any(arg.shape != args[0].shape for arg in args):
                 raise TypeError("Shape of all the args is not equal.")
-            cls._is_parallel_StateSpace = False
-        obj = super().__new__(cls, *args)
+            obj._is_parallel_StateSpace = False
 
-        _check_compatibility(args)
+        _check_time_compatibility(args)
         obj._is_continuous = args[0].is_continuous
 
         return obj.doit() if evaluate else obj
@@ -3603,14 +3656,14 @@ class Feedback(SISOLinearTimeInvariant):
     system or in simple words, the dynamical model representing the process
     to be controlled. The second argument, ``sys2``, is the feedback system
     and controls the fed back signal to ``sys1``. Both ``sys1`` and ``sys2``
-    can either be ``Series``, ``StateSpace`` or ``TransferFunction`` objects.
+    can either be ``Series``, state space or transfer function objects.
 
     Parameters
     ==========
 
-    sys1 : Series, StateSpace, TransferFunction
+    sys1 : Series, StateSpaceBase, TransferFunctionBase
         The feedforward path system.
-    sys2 : Series, StateSpace, TransferFunction, optional
+    sys2 : Series, StateSpaceBase, TransferFunctionBase, optional
         The feedback path system (often a feedback controller).
         It is the model sitting on the feedback path.
 
@@ -3626,14 +3679,14 @@ class Feedback(SISOLinearTimeInvariant):
 
     ValueError
         When ``sys1`` and ``sys2`` are not using the
-        same complex variable of the Laplace transform.
+        same complex variable of the Laplace transform or z-transform.
 
         When a combination of ``sys1`` and ``sys2`` yields
         zero denominator.
 
     TypeError
-        When either ``sys1`` or ``sys2`` is not a ``Series``, ``StateSpace`` or
-        ``TransferFunction`` object.
+        When either ``sys1`` or ``sys2`` is not a ``Series``, ``StateSpaceBase``
+        or ``TransferFunctionBase`` object.
 
     Examples
     ========
@@ -3716,16 +3769,18 @@ class Feedback(SISOLinearTimeInvariant):
         if not sys2:
             sys2 = create_transfer_function(1, 1, sys1.var, sys1.sampling_time)
 
-        if not isinstance(sys1, (TransferFunctionBase, Series, StateSpace, Feedback)):
+        if not isinstance(sys1, (TransferFunctionBase, Series, StateSpaceBase,
+                                 Feedback)):
             raise TypeError("Unsupported type for `sys1` in Feedback.")
 
-        if not isinstance(sys2, (TransferFunctionBase, Series, StateSpace, Feedback)):
+        if not isinstance(sys2, (TransferFunctionBase, Series, StateSpaceBase,
+                                 Feedback)):
             raise TypeError("Unsupported type for `sys2` in Feedback.")
 
         if not (sys1.num_inputs == sys1.num_outputs == sys2.num_inputs ==
                 sys2.num_outputs == 1):
-            raise ValueError("""To use Feedback connection for MIMO systems
-                            use MIMOFeedback instead.""")
+            raise ValueError(filldedent("""To use Feedback connection for MIMO systems
+                            use MIMOFeedback instead."""))
 
         if sign not in [-1, 1]:
             raise ValueError(filldedent("""
@@ -3733,20 +3788,23 @@ class Feedback(SISOLinearTimeInvariant):
                 either be 1 (positive feedback loop) or -1
                 (negative feedback loop)."""))
 
+        obj = super(SISOLinearTimeInvariant, cls).__new__(cls, sys1, sys2,
+                                                          _sympify(sign))
+
         if sys1.is_StateSpace_object or sys2.is_StateSpace_object:
-            cls.is_StateSpace_object = True
+            obj.is_StateSpace_object = True
         else:
             if Mul(sys1.to_expr(), sys2.to_expr()).simplify() == sign:
-                raise ValueError("The equivalent system will have zero denominator.")
+                raise ValueError(filldedent("""The equivalent system will have zero
+                                 denominator."""))
             if sys1.var != sys2.var:
-                raise ValueError(filldedent("""Both `sys1` and `sys2` should be using the
-                same complex variable."""))
-            cls.is_StateSpace_object = False
+                raise ValueError(filldedent("""Both `sys1` and `sys2` should be
+                    using the same complex variable."""))
+            obj.is_StateSpace_object = False
 
-        _check_compatibility([sys1, sys2])
-
-        obj = super(SISOLinearTimeInvariant, cls).__new__(cls, sys1, sys2, _sympify(sign))
+        _check_time_compatibility([sys1, sys2])
         obj._is_continuous = sys1.is_continuous
+
         return obj
 
     def __repr__(self):
@@ -3939,8 +3997,10 @@ class Feedback(SISOLinearTimeInvariant):
 
         """
         if self.is_StateSpace_object:
-            sys1_ss = self.sys1.doit().rewrite(StateSpace)
-            sys2_ss = self.sys2.doit().rewrite(StateSpace)
+            ss_class = StateSpace if self.is_continuous else DiscreteStateSpace
+
+            sys1_ss = self.sys1.doit().rewrite(ss_class)
+            sys2_ss = self.sys2.doit().rewrite(ss_class)
             A1, B1, C1, D1 = sys1_ss.A, sys1_ss.B, sys1_ss.C, sys1_ss.D
             A2, B2, C2, D2 = sys2_ss.A, sys2_ss.B, sys2_ss.C, sys2_ss.D
 
@@ -3964,7 +4024,7 @@ class Feedback(SISOLinearTimeInvariant):
             B = Matrix.vstack(B1 * T2, B2 * D1 * T2)
             C = Matrix.hstack(T1 * C1, self.sign * D1 * E_C2)
             D = D1 * T2
-            return StateSpace(A, B, C, D)
+            return create_state_space(A, B, C, D, self.sampling_time)
 
         arg_list = list(self.sys1.args) if isinstance(self.sys1, Series) else [self.sys1]
         # F_n and F_d are resultant TFs of num and den of Feedback.
@@ -4053,9 +4113,9 @@ class MIMOFeedback(MIMOLinearTimeInvariant):
     Parameters
     ==========
 
-    sys1 : MIMOSeries, TransferFunctionMatrix, StateSpace
+    sys1 : MIMOSeries, TransferFunctionMatrix, StateSpaceBase
         The MIMO system placed on the feedforward path.
-    sys2 : MIMOSeries, TransferFunctionMatrix, StateSpace
+    sys2 : MIMOSeries, TransferFunctionMatrix, StateSpaceBase
         The system placed on the feedback path
         (often a feedback controller).
     sign : int, optional
@@ -4068,7 +4128,7 @@ class MIMOFeedback(MIMOLinearTimeInvariant):
 
     ValueError
         When ``sys1`` and ``sys2`` are not using the
-        same complex variable of the Laplace transform.
+        same complex variable of the Laplace transform or z-transform.
 
         Forward path model should have an equal number of inputs/outputs
         to the feedback path outputs/inputs.
@@ -4079,7 +4139,7 @@ class MIMOFeedback(MIMOLinearTimeInvariant):
 
     TypeError
         When either ``sys1`` or ``sys2`` is not a ``MIMOSeries``,
-        ``TransferFunctionMatrix`` or a ``StateSpace`` object.
+        ``TransferFunctionMatrix`` or a ``StateSpaceBase`` object.
 
     Examples
     ========
@@ -4185,11 +4245,11 @@ class MIMOFeedback(MIMOLinearTimeInvariant):
     """
     def __new__(cls, sys1, sys2, sign=-1):
         if not isinstance(sys1,
-                          (TransferFunctionMatrix, MIMOSeries, StateSpace)):
+                          (TransferFunctionMatrix, MIMOSeries, StateSpaceBase)):
             raise TypeError("Unsupported type for `sys1` in MIMO Feedback.")
 
         if not isinstance(sys2,
-                          (TransferFunctionMatrix, MIMOSeries, StateSpace)):
+                          (TransferFunctionMatrix, MIMOSeries, StateSpaceBase)):
             raise TypeError("Unsupported type for `sys2` in MIMO Feedback.")
 
         if sys1.num_inputs != sys2.num_outputs or \
@@ -4204,20 +4264,21 @@ class MIMOFeedback(MIMOLinearTimeInvariant):
                 either be 1 (positive feedback loop) or -1
                 (negative feedback loop)."""))
 
+        obj = super().__new__(cls, sys1, sys2, _sympify(sign))
+
         if sys1.is_StateSpace_object or sys2.is_StateSpace_object:
-            cls.is_StateSpace_object = True
+            obj.is_StateSpace_object = True
         else:
             if not _is_invertible(sys1, sys2, sign):
                 raise ValueError("Non-Invertible system inputted.")
-            cls.is_StateSpace_object = False
+            obj.is_StateSpace_object = False
 
-        if not cls.is_StateSpace_object and sys1.var != sys2.var:
+        if not obj.is_StateSpace_object and sys1.var != sys2.var:
             raise ValueError(filldedent("""
                 Both `sys1` and `sys2` should be using the
                 same complex variable."""))
 
-        _check_compatibility([sys1, sys2])
-        obj = super().__new__(cls, sys1, sys2, _sympify(sign))
+        _check_time_compatibility([sys1, sys2])
         obj._is_continuous = sys1.is_continuous
 
         return obj
@@ -4454,8 +4515,9 @@ class MIMOFeedback(MIMOLinearTimeInvariant):
 
         """
         if self.is_StateSpace_object:
-            sys1_ss = self.sys1.doit().rewrite(StateSpace)
-            sys2_ss = self.sys2.doit().rewrite(StateSpace)
+            ss_class = StateSpace if self.is_continuous else DiscreteStateSpace
+            sys1_ss = self.sys1.doit().rewrite(ss_class)
+            sys2_ss = self.sys2.doit().rewrite(ss_class)
             A1, B1, C1, D1 = sys1_ss.A, sys1_ss.B, sys1_ss.C, sys1_ss.D
             A2, B2, C2, D2 = sys2_ss.A, sys2_ss.B, sys2_ss.C, sys2_ss.D
 
@@ -4479,7 +4541,7 @@ class MIMOFeedback(MIMOLinearTimeInvariant):
             B = Matrix.vstack(B1 * T2, B2 * D1 * T2)
             C = Matrix.hstack(T1 * C1, self.sign * D1 * E_C2)
             D = D1 * T2
-            return StateSpace(A, B, C, D)
+            return create_state_space(A, B, C, D, self.sampling_time)
 
         _mat = self.sensitivity * self.sys1.doit()._expr_mat
 
@@ -4900,7 +4962,7 @@ class TransferFunctionMatrix(MIMOLinearTimeInvariant):
                 temp.append(element.to_expr())
             expr_mat_arg.append(temp)
 
-        _check_compatibility([sys for row in arg for sys in row])
+        _check_time_compatibility([sys for row in arg for sys in row])
 
         if isinstance(arg, (tuple, list, Tuple)):
             # Making nested Tuple (sympy.core.containers.Tuple) from nested list or nested Python tuple
@@ -4955,15 +5017,17 @@ class TransferFunctionMatrix(MIMOLinearTimeInvariant):
         >>> M_2 = Matrix([[z/(z-1), z/(z-8)], [z**2/(z**2-2+1), z]])
         >>> M2_tf = TransferFunctionMatrix.from_Matrix(M_2, z, 0.1)
         >>> pprint(M2_tf, use_unicode=False)
-        [  z       z  ]
-        [-----   -----]
-        [z - 1   z - 8]
-        [             ]
-        [   2         ]
-        [  z       z  ]
-        [------    -  ]
-        [ 2        1  ]
-        [z  - 1       ]{k}, sampling time: 0.1
+          [  z       z  ]
+          [-----   -----]
+          [z - 1   z - 8]
+          [             ]
+          [   2         ]
+          [  z       z  ]
+          [------    -  ]
+          [ 2        1  ]
+          [z  - 1       ]{k}
+        [st: 0.100000000000000]
+
 
 
         """
@@ -5243,62 +5307,100 @@ class TransferFunctionMatrix(MIMOLinearTimeInvariant):
     def sampling_time(self):
         return self.args[0][0][0].sampling_time
 
-class StateSpaceBase(LinearTimeInvariant):
-    r"""
-    State space model (ssm) of a linear, time invariant control system.
-
-    Represents the standard state-space model with A, B, C, D as state-space matrices.
-    This makes the linear control system:
-
-        (1) x'(t) = A * x(t) + B * u(t);    x in R^n , u in R^k
-        (2) y(t)  = C * x(t) + D * u(t);    y in R^m
-
-    where u(t) is any input signal, y(t) the corresponding output, and x(t) the system's state.
+def create_state_space(A, B, C, D, sampling_time=0):
+    """
+    Creates a new state space object.
+    sampling_time == 0 means continuous time state space.
+    sampling_time > 0 means discrete time state space.
 
     Parameters
     ==========
 
-    A : Matrix
-        The State matrix of the state space model.
-    B : Matrix
-        The Input-to-State matrix of the state space model.
-    C : Matrix
-        The State-to-Output matrix of the state space model.
-    D : Matrix
-        The Feedthrough matrix of the state space model.
+
+    sampling_time : Symbol, Number, optional
+        Default is 0.
+        Time interval between two consecutive sampling instants.
+        If sampling_time == 0, it is a continuous time state space,
+        else it is a discrete time state space.
 
     Examples
     ========
 
     >>> from sympy import Matrix
-    >>> from sympy.physics.control import StateSpace
-
-    The easiest way to create a StateSpaceModel is via four matrices:
-
-    >>> A = Matrix([[1, 2], [1, 0]])
-    >>> B = Matrix([1, 1])
-    >>> C = Matrix([[0, 1]])
+    >>> from sympy.abc import t
+    >>> from sympy.physics.control.lti import create_state_space
+    >>> A = Matrix([[1,0],[0,1]])
+    >>> B = Matrix([1,0])
+    >>> C = Matrix([1,0]).T
     >>> D = Matrix([0])
-    >>> StateSpace(A, B, C, D)
+    >>> create_state_space(A, B, C, D)
     StateSpace(Matrix([
-    [1, 2],
-    [1, 0]]), Matrix([
+    [1, 0],
+    [0, 1]]), Matrix([
     [1],
-    [1]]), Matrix([[0, 1]]), Matrix([[0]]))
-
-    One can use less matrices. The rest will be filled with a minimum of zeros:
-
-    >>> StateSpace(A, B)
-    StateSpace(Matrix([
-    [1, 2],
-    [1, 0]]), Matrix([
+    [0]]), Matrix([[1, 0]]), Matrix([[0]]))
+    >>> create_state_space(A, B, C, D, t)
+    DiscreteStateSpace(Matrix([
+    [1, 0],
+    [0, 1]]), Matrix([
     [1],
-    [1]]), Matrix([[0, 0]]), Matrix([[0]]))
+    [0]]), Matrix([[1, 0]]), Matrix([[0]]), t)
 
     See Also
     ========
 
-    TransferFunction, TransferFunctionMatrix
+    StateSpace, DiscreteStateSpace
+
+    """
+    if sampling_time == 0:
+        return StateSpace(A, B, C, D)
+
+    return DiscreteStateSpace(A, B, C, D, sampling_time)
+
+class StateSpaceBase(LinearTimeInvariant, ABC):
+    r"""
+    Base class for state space objects.
+    This class is not meant to be used directly.
+
+    Explanation
+    ===========
+
+    State space model (ssm) of a linear, time invariant control system.
+
+    Represents the standard state-space model with A, B, C, D as state-space
+    matrices. This makes the linear control system:
+
+    For continuous-time systems:
+        (1) x'(t) = A * x(t) + B * u(t);    x in R^n , u in R^k
+        (2) y(t)  = C * x(t) + D * u(t);    y in R^m
+
+    For discrete-time systems:
+        (1) x[k+1] = A * x[k] + B * u[k];    x in R^n , u in R^k
+        (2) y[k]   = C * x[k] + D * u[k];    y in R^m
+
+    where u(t) or u[k] is any input signal, y(t) or y[k] the corresponding
+    output, and x(t) or x[k] the system's state.
+
+    Parameters
+    ==========
+
+    A : Matrix, optional
+        The State matrix of the state space model.
+    B : Matrix, optional
+        The Input-to-State matrix of the state space model.
+    C : Matrix, optional
+        The State-to-Output matrix of the state space model.
+    D : Matrix, optional
+        The Feedthrough matrix of the state space model.
+    *args, **kwargs:
+        Additional arguments and keyword arguments that are passed to the
+        parent class such as sampling time for discrete-time systems.
+
+    See Also
+    ========
+
+    StateSpace, DiscreteStateSpace, TransferFunction, DiscreteTransferFunction,
+    TransferFunctionMatrix
 
     References
     ==========
@@ -5308,6 +5410,11 @@ class StateSpaceBase(LinearTimeInvariant):
 
     """
     def __new__(cls, A=None, B=None, C=None, D=None, *args, **kwargs):
+        if cls is StateSpaceBase:
+            raise NotImplementedError(
+                """
+                The StateSpaceBase class is not meant to be used directly.
+                """)
         if A is None:
             A = zeros(1)
         if B is None:
@@ -5478,7 +5585,7 @@ class StateSpaceBase(LinearTimeInvariant):
         2
 
         """
-        return self._A.rows
+        return self.A.rows
 
     @property
     def num_inputs(self):
@@ -5499,7 +5606,7 @@ class StateSpaceBase(LinearTimeInvariant):
         1
 
         """
-        return self._D.cols
+        return self.D.cols
 
     @property
     def num_outputs(self):
@@ -5520,7 +5627,7 @@ class StateSpaceBase(LinearTimeInvariant):
         1
 
         """
-        return self._D.rows
+        return self.D.rows
 
 
     @property
@@ -5528,113 +5635,17 @@ class StateSpaceBase(LinearTimeInvariant):
         """Returns the shape of the equivalent StateSpace system."""
         return self.num_outputs, self.num_inputs
 
-    def dsolve(self, initial_conditions=None, input_vector=None, var=Symbol('t')):
-        r"""
-        Returns `y(t)` or output of StateSpace given by the solution of equations:
-            x'(t) = A * x(t) + B * u(t)
-            y(t)  = C * x(t) + D * u(t)
-
-        Parameters
-        ============
-
-        initial_conditions : Matrix
-            The initial conditions of `x` state vector. If not provided, it defaults to a zero vector.
-        input_vector : Matrix
-            The input vector for state space. If not provided, it defaults to a zero vector.
-        var : Symbol
-            The symbol representing time. If not provided, it defaults to `t`.
-
-        Examples
-        ==========
-
-        >>> from sympy import Matrix
-        >>> from sympy.physics.control import StateSpace
-        >>> A = Matrix([[-2, 0], [1, -1]])
-        >>> B = Matrix([[1], [0]])
-        >>> C = Matrix([[2, 1]])
-        >>> ip = Matrix([5])
-        >>> i = Matrix([0, 0])
-        >>> ss = StateSpace(A, B, C)
-        >>> ss.dsolve(input_vector=ip, initial_conditions=i).simplify()
-        Matrix([[15/2 - 5*exp(-t) - 5*exp(-2*t)/2]])
-
-        If no input is provided it defaults to solving the system with zero initial conditions and zero input.
-
-        >>> ss.dsolve()
-        Matrix([[0]])
-
-        References
-        ==========
-        .. [1] https://web.mit.edu/2.14/www/Handouts/StateSpaceResponse.pdf
-        .. [2] https://docs.sympy.org/latest/modules/solvers/ode.html#sympy.solvers.ode.systems.linodesolve
-
-        """
-
-        if not isinstance(var, Symbol):
-            raise ValueError("Variable for representing time must be a Symbol.")
-        if not initial_conditions:
-            initial_conditions = zeros(self._A.shape[0], 1)
-        elif initial_conditions.shape != (self._A.shape[0], 1):
-            raise ShapeError("Initial condition vector should have the same number of "
-                             "rows as the state matrix.")
-        if not input_vector:
-            input_vector = zeros(self._B.shape[1], 1)
-        elif input_vector.shape != (self._B.shape[1], 1):
-            raise ShapeError("Input vector should have the same number of "
-                             "columns as the input matrix.")
-        sol = linodesolve(A=self._A, t=var, b=self._B*input_vector, type='type2', doit=True)
-        mat1 = Matrix(sol)
-        mat2 = mat1.replace(var, 0)
-        free1 = self._A.free_symbols | self._B.free_symbols | input_vector.free_symbols
-        free2 = mat2.free_symbols
-        # Get all the free symbols form the matrix
-        dummy_symbols = list(free2-free1)
-        # Convert the matrix to a Coefficient matrix
-        r1, r2 = linear_eq_to_matrix(mat2, dummy_symbols)
-        s = linsolve((r1, initial_conditions+r2))
-        res_tuple = next(iter(s))
-        for ind, v in enumerate(res_tuple):
-            mat1 = mat1.replace(dummy_symbols[ind], v)
-        res = self._C*mat1 + self._D*input_vector
-        return res
-
     def _eval_evalf(self, prec):
         """
         Returns state space model where numerical expressions are evaluated into floating point numbers.
         """
         dps = prec_to_dps(prec)
-        return StateSpace(
+        return create_state_space(
             self._A.evalf(n = dps),
             self._B.evalf(n = dps),
             self._C.evalf(n = dps),
-            self._D.evalf(n = dps))
-
-    def _eval_rewrite_as_TransferFunction(self, *args):
-        """
-        Returns the equivalent Transfer Function of the state space model.
-
-        Examples
-        ========
-
-        >>> from sympy import Matrix
-        >>> from sympy.physics.control import TransferFunction, StateSpace
-        >>> A = Matrix([[-5, -1], [3, -1]])
-        >>> B = Matrix([2, 5])
-        >>> C = Matrix([[1, 2]])
-        >>> D = Matrix([0])
-        >>> ss = StateSpace(A, B, C, D)
-        >>> ss.rewrite(TransferFunction)
-        [[TransferFunction(12*s + 59, s**2 + 6*s + 8, s)]]
-
-        """
-        s = Symbol('s')
-        n = self._A.shape[0]
-        I = eye(n)
-        G = self._C*(s*I - self._A).solve(self._B) + self._D
-        G = G.simplify()
-        to_tf = lambda expr: TransferFunction.from_rational_expression(expr, s)
-        tf_mat = [[to_tf(expr) for expr in sublist] for sublist in G.tolist()]
-        return tf_mat
+            self._D.evalf(n = dps),
+            self.sampling_time)
 
     def __add__(self, other):
         """
@@ -5665,28 +5676,30 @@ class StateSpaceBase(LinearTimeInvariant):
         """
         # Check for scalars
         if isinstance(other, (int, float, complex, Symbol)):
-            A = self._A
-            B = self._B
-            C = self._C
-            D = self._D.applyfunc(lambda element: element + other)
+            A = self.A
+            B = self.B
+            C = self.C
+            D = self.D.applyfunc(lambda element: element + other)
+            return create_state_space(A, B, C, D, self.sampling_time)
 
-        else:
-            # Check nature of system
-            if not isinstance(other, StateSpace):
-                raise ValueError("Addition is only supported for 2 State Space models.")
-            # Check dimensions of system
-            elif ((self.num_inputs != other.num_inputs) or (self.num_outputs != other.num_outputs)):
-                raise ShapeError("Systems with incompatible inputs and outputs cannot be added.")
+        # Check nature of system
+        if not isinstance(other, StateSpaceBase):
+            raise ValueError("Addition is only supported for 2 State Space models.")
+        # Check dimensions of system
+        elif ((self.num_inputs != other.num_inputs) or (self.num_outputs != other.num_outputs)):
+            raise ShapeError("Systems with incompatible inputs and outputs cannot be added.")
 
-            m1 = (self._A).row_join(zeros(self._A.shape[0], other._A.shape[-1]))
-            m2 = zeros(other._A.shape[0], self._A.shape[-1]).row_join(other._A)
+        _check_time_compatibility([self, other])
 
-            A = m1.col_join(m2)
-            B = self._B.col_join(other._B)
-            C = self._C.row_join(other._C)
-            D = self._D + other._D
+        m1 = (self.A).row_join(zeros(self.A.shape[0], other.A.shape[-1]))
+        m2 = zeros(other.A.shape[0], self.A.shape[-1]).row_join(other.A)
 
-        return StateSpace(A, B, C, D)
+        A = m1.col_join(m2)
+        B = self.B.col_join(other.B)
+        C = self.C.row_join(other.C)
+        D = self.D + other.D
+
+        return create_state_space(A, B, C, D, self.sampling_time)
 
     def __radd__(self, other):
         """
@@ -5769,7 +5782,8 @@ class StateSpaceBase(LinearTimeInvariant):
         [5]]), Matrix([[-1, -2]]), Matrix([[0]]))
 
         """
-        return StateSpace(self._A, self._B, -self._C, -self._D)
+        return create_state_space(self.A, self.B, -self.C, -self.D,
+                               self.sampling_time)
 
     def __mul__(self, other):
         """
@@ -5795,28 +5809,30 @@ class StateSpaceBase(LinearTimeInvariant):
         """
         # Check for scalars
         if isinstance(other, (int, float, complex, Symbol)):
-            A = self._A
-            B = self._B
-            C = self._C.applyfunc(lambda element: element*other)
-            D = self._D.applyfunc(lambda element: element*other)
+            A = self.A
+            B = self.B
+            C = self.C.applyfunc(lambda element: element*other)
+            D = self.D.applyfunc(lambda element: element*other)
+            return create_state_space(A, B, C, D, self.sampling_time)
 
-        else:
-            # Check nature of system
-            if not isinstance(other, StateSpace):
-                raise ValueError("Multiplication is only supported for 2 State Space models.")
-            # Check dimensions of system
-            elif self.num_inputs != other.num_outputs:
-                raise ShapeError("Systems with incompatible inputs and outputs cannot be multiplied.")
+        # Check nature of system
+        if not isinstance(other, StateSpaceBase):
+            raise ValueError("Multiplication is only supported for 2 State Space models.")
+        # Check dimensions of system
+        elif self.num_inputs != other.num_outputs:
+            raise ShapeError("Systems with incompatible inputs and outputs cannot be multiplied.")
 
-            m1 = (other._A).row_join(zeros(other._A.shape[0], self._A.shape[1]))
-            m2 = (self._B * other._C).row_join(self._A)
+        _check_time_compatibility([self, other])
 
-            A = m1.col_join(m2)
-            B = (other._B).col_join(self._B * other._D)
-            C = (self._D * other._C).row_join(self._C)
-            D = self._D * other._D
+        m1 = (other.A).row_join(zeros(other.A.shape[0], self.A.shape[1]))
+        m2 = (self.B * other.C).row_join(self.A)
 
-        return StateSpace(A, B, C, D)
+        A = m1.col_join(m2)
+        B = (other.B).col_join(self.B * other.D)
+        C = (self.D * other.C).row_join(self.C)
+        D = self.D * other.D
+
+        return create_state_space(A, B, C, D, self.sampling_time)
 
     def __rmul__(self, other):
         """
@@ -5841,23 +5857,23 @@ class StateSpaceBase(LinearTimeInvariant):
 
         """
         if isinstance(other, (int, float, complex, Symbol)):
-            A = self._A
-            C = self._C
-            B = self._B.applyfunc(lambda element: element*other)
-            D = self._D.applyfunc(lambda element: element*other)
-            return StateSpace(A, B, C, D)
+            A = self.A
+            C = self.C
+            B = self.B.applyfunc(lambda element: element*other)
+            D = self.D.applyfunc(lambda element: element*other)
+            return create_state_space(A, B, C, D, self.sampling_time)
         else:
             return self*other
 
     def __repr__(self):
-        A_str = self._A.__repr__()
-        B_str = self._B.__repr__()
-        C_str = self._C.__repr__()
-        D_str = self._D.__repr__()
+        A_str = self.A.__repr__()
+        B_str = self.B.__repr__()
+        C_str = self.C.__repr__()
+        D_str = self.D.__repr__()
 
-        return f"StateSpace(\n{A_str},\n\n{B_str},\n\n{C_str},\n\n{D_str})"
+        return f"StateSpaceBase(\n{A_str},\n\n{B_str},\n\n{C_str},\n\n{D_str})"
 
-
+    @_compatibility_decorator
     def append(self, other):
         """
         Returns the first model appended with the second model. The order is preserved.
@@ -5898,15 +5914,15 @@ class StateSpaceBase(LinearTimeInvariant):
         C = zeros(p, n)
         D = zeros(p, m)
 
-        A[:self.num_states, :self.num_states] = self._A
-        A[self.num_states:, self.num_states:] = other._A
-        B[:self.num_states, :self.num_inputs] = self._B
-        B[self.num_states:, self.num_inputs:] = other._B
-        C[:self.num_outputs, :self.num_states] = self._C
-        C[self.num_outputs:, self.num_states:] = other._C
-        D[:self.num_outputs, :self.num_inputs] = self._D
-        D[self.num_outputs:, self.num_inputs:] = other._D
-        return StateSpace(A, B, C, D)
+        A[:self.num_states, :self.num_states] = self.A
+        A[self.num_states:, self.num_states:] = other.A
+        B[:self.num_states, :self.num_inputs] = self.B
+        B[self.num_states:, self.num_inputs:] = other.B
+        C[:self.num_outputs, :self.num_states] = self.C
+        C[self.num_outputs:, self.num_states:] = other.C
+        D[:self.num_outputs, :self.num_inputs] = self.D
+        D[self.num_outputs:, self.num_inputs:] = other.D
+        return create_state_space(A, B, C, D, self.sampling_time)
 
     def _calc_orthogonal_complement(self, M, dim):
         """
@@ -6097,7 +6113,8 @@ class StateSpaceBase(LinearTimeInvariant):
     def observability_matrix(self):
         """
         Returns the observability matrix of the state space model:
-            [C, C * A^1, C * A^2, .. , C * A^(n-1)]; A in R^(n x n), C in R^(m x k)
+            [C, C * A^1, C * A^2, .. , C * A^(n-1)]; A in R^(n x n),
+            C in R^(m x k)
 
         Examples
         ========
@@ -6121,9 +6138,9 @@ class StateSpaceBase(LinearTimeInvariant):
 
         """
         n = self.num_states
-        ob = self._C
+        ob = self.C
         for i in range(1,n):
-            ob = ob.col_join(self._C * self._A**i)
+            ob = ob.col_join(self.C * self.A**i)
 
         return Matrix(ob)
 
@@ -6253,10 +6270,10 @@ class StateSpaceBase(LinearTimeInvariant):
         .. [1] https://in.mathworks.com/help/control/ref/statespacemodel.ctrb.html
 
         """
-        co = self._B
-        n = self._A.shape[0]
+        co = self.B
+        n = self.A.shape[0]
         for i in range(1, n):
-            co = co.row_join(((self._A)**i) * self._B)
+            co = co.row_join(((self.A)**i) * self.B)
 
         return Matrix(co)
 
@@ -6352,7 +6369,184 @@ class StateSpaceBase(LinearTimeInvariant):
         """
         return self.controllability_matrix().rank() == self.num_states
 
-    def get_asymptotic_stability_conditions(self, fast=False):
+    @abstractmethod
+    def get_asymptotic_stability_conditions(self, fast=False) -> list[bool]:
+        pass
+
+class StateSpace(StateSpaceBase):
+    """
+    State space model of a linear, continuous-time, time invariant control
+    system.
+
+    See py:class:`~.StateSpaceBase` for more details.
+
+    Parameters
+    ==========
+
+    A : Matrix, optional
+        The State matrix of the state space model.
+    B : Matrix, optional
+        The Input-to-State matrix of the state space model.
+    C : Matrix, optional
+        The State-to-Output matrix of the state space model.
+    D : Matrix, optional
+        The Feedthrough matrix of the state space model.
+
+    Examples
+    ========
+
+    >>> from sympy import Matrix
+    >>> from sympy.physics.control import StateSpace
+
+    The easiest way to create a StateSpaceModel is via four matrices:
+
+    >>> A = Matrix([[1, 2], [1, 0]])
+    >>> B = Matrix([1, 1])
+    >>> C = Matrix([[0, 1]])
+    >>> D = Matrix([0])
+    >>> StateSpace(A, B, C, D)
+    StateSpace(Matrix([
+    [1, 2],
+    [1, 0]]), Matrix([
+    [1],
+    [1]]), Matrix([[0, 1]]), Matrix([[0]]))
+
+    One can use less matrices. The rest will be filled with a minimum of zeros:
+
+    >>> StateSpace(A, B)
+    StateSpace(Matrix([
+    [1, 2],
+    [1, 0]]), Matrix([
+    [1],
+    [1]]), Matrix([[0, 0]]), Matrix([[0]]))
+
+    See Also
+    ========
+
+    StateSpaceBase, DiscreteStateSpace, TransferFunction,
+    DiscreteTransferFunction
+
+    """
+    def __new__(cls, A=None, B=None, C=None, D=None):
+        return super(StateSpace, cls).__new__(cls, A, B, C, D)
+
+    def __repr__(self):
+        A_str = self.A.__repr__()
+        B_str = self.B.__repr__()
+        C_str = self.C.__repr__()
+        D_str = self.D.__repr__()
+
+        return f"StateSpace(\n{A_str},\n\n{B_str},\n\n{C_str},\n\n{D_str})"
+
+    def dsolve(self, initial_conditions=None, input_vector=None, var=Symbol('t')):
+        r"""
+        Returns `y(t)` or output of StateSpace given by the solution of equations:
+
+        .. math::
+            \begin{aligned}
+            \dot{x}(t) &= Ax(t) + Bu(t) \\
+            y(t) &= Cx(t) + Du(t)
+            \end{aligned}
+
+        Parameters
+        ============
+
+        initial_conditions : Matrix
+            The initial conditions of `x` state vector. If not provided, it defaults to a zero vector.
+        input_vector : Matrix
+            The input vector for state space. If not provided, it defaults to a zero vector.
+        var : Symbol
+            The symbol representing time. If not provided, it defaults to `t`.
+
+        Examples
+        ==========
+
+        >>> from sympy import Matrix
+        >>> from sympy.physics.control import StateSpace
+        >>> A = Matrix([[-2, 0], [1, -1]])
+        >>> B = Matrix([[1], [0]])
+        >>> C = Matrix([[2, 1]])
+        >>> ip = Matrix([5])
+        >>> i = Matrix([0, 0])
+        >>> ss = StateSpace(A, B, C)
+        >>> ss.dsolve(input_vector=ip, initial_conditions=i).simplify()
+        Matrix([[15/2 - 5*exp(-t) - 5*exp(-2*t)/2]])
+
+        If no input is provided it defaults to solving the system with zero initial conditions and zero input.
+
+        >>> ss.dsolve()
+        Matrix([[0]])
+
+        References
+        ==========
+        .. [1] https://web.mit.edu/2.14/www/Handouts/StateSpaceResponse.pdf
+        .. [2] https://docs.sympy.org/latest/modules/solvers/ode.html#sympy.solvers.ode.systems.linodesolve
+
+        """
+
+        if not isinstance(var, Symbol):
+            raise ValueError("Variable for representing time must be a Symbol.")
+        if not initial_conditions:
+            initial_conditions = zeros(self._A.shape[0], 1)
+        elif initial_conditions.shape != (self._A.shape[0], 1):
+            raise ShapeError("Initial condition vector should have the same number of "
+                             "rows as the state matrix.")
+        if not input_vector:
+            input_vector = zeros(self._B.shape[1], 1)
+        elif input_vector.shape != (self._B.shape[1], 1):
+            raise ShapeError("Input vector should have the same number of "
+                             "columns as the input matrix.")
+        sol = linodesolve(A=self._A, t=var, b=self._B*input_vector, type='type2', doit=True)
+        mat1 = Matrix(sol)
+        mat2 = mat1.replace(var, 0)
+        free1 = self._A.free_symbols | self._B.free_symbols | input_vector.free_symbols
+        free2 = mat2.free_symbols
+        # Get all the free symbols form the matrix
+        dummy_symbols = list(free2-free1)
+        # Convert the matrix to a Coefficient matrix
+        r1, r2 = linear_eq_to_matrix(mat2, dummy_symbols)
+        s = linsolve((r1, initial_conditions+r2))
+        res_tuple = next(iter(s))
+        for ind, v in enumerate(res_tuple):
+            mat1 = mat1.replace(dummy_symbols[ind], v)
+        res = self._C*mat1 + self._D*input_vector
+        return res
+
+    def _eval_rewrite_as_TransferFunction(self, *args):
+        """
+        Returns the equivalent :class:`~.TransferFunction` of the state space
+        model.
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix
+        >>> from sympy.physics.control import TransferFunction, StateSpace
+        >>> A = Matrix([[-5, -1], [3, -1]])
+        >>> B = Matrix([2, 5])
+        >>> C = Matrix([[1, 2]])
+        >>> D = Matrix([0])
+        >>> ss = StateSpace(A, B, C, D)
+        >>> ss.rewrite(TransferFunction)
+        [[TransferFunction(12*s + 59, s**2 + 6*s + 8, s)]]
+
+        """
+        s = Symbol('s')
+        n = self.A.shape[0]
+        I = eye(n)
+        G = self.C*(s*I - self.A).solve(self.B) + self.D
+        G = G.simplify()
+        to_tf = lambda expr: TransferFunction.from_rational_expression(expr, s)
+        tf_mat = [[to_tf(expr) for expr in sublist] for sublist in G.tolist()]
+        return tf_mat
+
+    def _eval_rewrite_as_DiscreteTransferFunction(self, *args):
+        raise TypeError("""
+            The continuous state space model cannot be rewritten as a
+            discrete-time transfer function model.
+            """)
+
+    def get_asymptotic_stability_conditions(self, fast=False) -> list[bool]:
         """
         Returns the asymptotic stability conditions for the state space.
 
@@ -6398,19 +6592,145 @@ class StateSpaceBase(LinearTimeInvariant):
 
         domain = EXRAW if fast else None
         # if domain is None, to_DM will find the domain automatically
-        _A = self.A.to_DM(domain = domain)
+        _A = self.A.to_DM(domain = domain) # type: ignore
         charpoly = _A.charpoly()
         charpoly = Poly(charpoly, s, domain = _A.domain)
 
         conditions = charpoly.hurwitz_conditions()
         return [c > 0 for c in conditions]
 
-class StateSpace(StateSpaceBase):
-    def __new__(cls, A=None, B=None, C=None, D=None):
-        return super(StateSpace, cls).__new__(cls, A, B, C, D)
+    @property
+    def sampling_time(self):
+        return S.Zero
+
+    _is_continuous = True
+
+class DiscreteStateSpace(StateSpaceBase):
+    """
+    State space model of a linear, discrete-time, time invariant control
+    system.
+
+    See py:class:`~.StateSpaceBase` for more details.
+
+    Parameters
+    ==========
+
+    A : Matrix, optional
+        The State matrix of the state space model.
+    B : Matrix, optional
+        The Input-to-State matrix of the state space model.
+    C : Matrix, optional
+        The State-to-Output matrix of the state space model.
+    D : Matrix, optional
+        The Feedthrough matrix of the state space model.
+    sampling_time : Symbol, Number, optional
+        Time interval between two consecutive sampling instants
+        Defaults to 1.
+
+    Examples
+    ========
+
+    >>> from sympy import Matrix
+    >>> from sympy.physics.control import DiscreteStateSpace
+
+    The easiest way to create a StateSpaceModel is via four matrices:
+
+    >>> A = Matrix([[1, 2], [1, 0]])
+    >>> B = Matrix([1, 1])
+    >>> C = Matrix([[0, 1]])
+    >>> D = Matrix([0])
+    >>> DiscreteStateSpace(A, B, C, D)
+    DiscreteStateSpace(Matrix([
+    [1, 2],
+    [1, 0]]), Matrix([
+    [1],
+    [1]]), Matrix([[0, 1]]), Matrix([[0]]), 1)
+
+    One can use less matrices. The rest will be filled with a minimum of zeros:
+
+    >>> DiscreteStateSpace(A, B, sampling_time=0.2)
+    DiscreteStateSpace(Matrix([
+    [1, 2],
+    [1, 0]]), Matrix([
+    [1],
+    [1]]), Matrix([[0, 0]]), Matrix([[0]]), 0.2)
+
+    See Also
+    ========
+
+    StateSpaceBase, StateSpace, TransferFunction,
+    DiscreteTransferFunction
+
+    """
+    def __new__(cls, A=None, B=None, C=None, D=None, sampling_time=1):
+        if sampling_time == 0:
+            raise ValueError(filldedent("""
+                The sampling time cannot be zero.
+                If you want to create a continuous state space,
+                use the StateSpace class instead."""))
+
+        sampling_time = sympify(sampling_time)
+        obj = super(DiscreteStateSpace, cls).__new__(cls, A, B, C, D, sampling_time)
+        obj._sampling_time = sampling_time
+
+        return obj
+
+    def __repr__(self):
+        A_str = self.A.__repr__()
+        B_str = self.B.__repr__()
+        C_str = self.C.__repr__()
+        D_str = self.D.__repr__()
+
+        return f"""DiscreteStateSpace(\n{A_str},
+        \n{B_str},
+        \n{C_str},
+        \n{D_str},
+        \nst: {self.sampling_time})"""
+
+    def _eval_rewrite_as_DiscreteTransferFunction(self, *args):
+        """
+        Returns the equivalent :class:`~.DiscreteTransferFunction` of the state
+        space model.
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix
+        >>> from sympy.physics.control import DiscreteTransferFunction, DiscreteStateSpace
+        >>> A = Matrix([[-5, -1], [3, -1]])
+        >>> B = Matrix([2, 5])
+        >>> C = Matrix([[1, 2]])
+        >>> D = Matrix([0])
+        >>> ss = DiscreteStateSpace(A, B, C, D)
+        >>> ss.rewrite(DiscreteTransferFunction)
+        [[DiscreteTransferFunction(12*z + 59, z**2 + 6*z + 8, z, 1)]]
+
+        """
+        z = Symbol('z')
+        n = self.A.shape[0]
+        I = eye(n)
+        G = self.C*(z*I - self.A).solve(self.B) + self.D
+        G = G.simplify()
+        to_tf = lambda expr: DiscreteTransferFunction.\
+            from_rational_expression(expr, z, self.sampling_time)
+        tf_mat = [[to_tf(expr) for expr in sublist] for sublist in G.tolist()]
+        return tf_mat
+
+    def _eval_rewrite_as_TransferFunction(self, *args):
+        raise TypeError("""
+            The discrete state space model cannot be rewritten as a
+            continuous-time transfer function model.
+            """)
+
+    def get_asymptotic_stability_conditions(self, fast=False) -> list[bool]:
+        # TODO
+        raise NotImplementedError("""
+            Asymptotic stability conditions are not implemented for discrete
+            state space models yet.
+            """)
 
     @property
     def sampling_time(self):
-        return 0
+        return self._sampling_time
 
-    _is_continuous = True
+    _is_continuous = False

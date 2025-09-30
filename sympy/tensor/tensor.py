@@ -46,6 +46,7 @@ from sympy.combinatorics.tensor_can import get_symmetric_group_sgs, \
 from sympy.core import Basic, Expr, sympify, Add, Mul, S
 from sympy.core.cache import clear_cache
 from sympy.core.containers import Tuple, Dict
+from sympy.core.decorators import call_highest_priority
 from sympy.core.function import WildFunction
 from sympy.core.sorting import default_sort_key
 from sympy.core.symbol import Symbol, symbols, Wild
@@ -2014,18 +2015,23 @@ class TensExpr(Expr, ABC):
     def __abs__(self):
         raise NotImplementedError
 
+    @call_highest_priority('__radd__')
     def __add__(self, other):
         return TensAdd(self, other).doit(deep=False)
 
+    @call_highest_priority('__add__')
     def __radd__(self, other):
         return TensAdd(other, self).doit(deep=False)
 
+    @call_highest_priority('__rsub__')
     def __sub__(self, other):
         return TensAdd(self, -other).doit(deep=False)
 
+    @call_highest_priority('__sub__')
     def __rsub__(self, other):
         return TensAdd(other, -self).doit(deep=False)
 
+    @call_highest_priority('__rmul__')
     def __mul__(self, other):
         """
         Multiply two tensors using Einstein summation convention.
@@ -2051,9 +2057,11 @@ class TensExpr(Expr, ABC):
         """
         return TensMul(self, other).doit(deep=False)
 
+    @call_highest_priority('__mul__')
     def __rmul__(self, other):
         return TensMul(other, self).doit(deep=False)
 
+    @call_highest_priority('__rtruediv__')
     def __truediv__(self, other):
         other = _sympify(other)
         if isinstance(other, TensExpr):

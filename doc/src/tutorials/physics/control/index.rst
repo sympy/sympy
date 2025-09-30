@@ -18,7 +18,7 @@ representation is particularly useful for time-domain analysis and handling comp
 MIMO systems.
 
 This tutorial contains a brief guide on how to solve Control Problems using
-`TransferFunction`, `DiscreteTransferFunction` and `StateSpace`.
+``TransferFunction``, ``DiscreteTransferFunction`` and ``StateSpace``.
 
 .. toctree::
    :maxdepth: 1
