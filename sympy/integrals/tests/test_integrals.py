@@ -2193,4 +2193,4 @@ def test_issue_27675():
     b = f(Rational('1.7'))
     assert a.is_Float
     assert not b.is_Float
-    assert abs(a - b) < 1e-16
+    assert a == b.evalf()

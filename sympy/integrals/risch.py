@@ -1825,6 +1825,7 @@ def risch_integrate(f, x, extension=None, handle_first='log',
 
     """
     f0 = S(f)
+    precision = max([0] + [n._prec for n in f0.atoms(Float)])
     f = _replace_coeff(f0, lambda e: e.is_Float, Rational)
 
     DE = extension or DifferentialExtension(f, x, handle_first=handle_first,
@@ -1854,7 +1855,9 @@ def risch_integrate(f, x, extension=None, handle_first='log',
             "extensions are currently supported.")
 
         if f != f0:
-            ans = _replace_coeff(ans, lambda e: e.is_Rational or e.is_Integer, Float)
+            is_rational = lambda e: e.is_Rational or e.is_Integer
+            as_float = lambda n: Float(n, precision=precision)
+            ans = _replace_coeff(ans, is_rational, as_float)
 
         result += ans
         if b:
