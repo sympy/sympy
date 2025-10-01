@@ -992,32 +992,19 @@ def solve(f, *symbols, **flags):
             return [], set()
         return []
 
+    repl_funcs = (Abs, Min, Max)
     for i, fi in enumerate(f):
         # Abs / Max / Min
         # Rewrites as piecewise functions prior to solving
         while True:
             was = fi
-            fi = fi.replace(Abs, lambda arg:
-                separatevars(Abs(arg)).rewrite(Piecewise) if arg.has(*symbols)
-                else Abs(arg))
-            fi = fi.replace(Max, lambda *args:
-                separatevars(Max(*args)).rewrite(Piecewise) if any(arg.has(*symbols) for arg in args)
-                else Max(*args))
-            fi = fi.replace(Min, lambda *args:
-                separatevars(Min(*args)).rewrite(Piecewise) if any(arg.has(*symbols) for arg in args)
-                else Min(*args))
+            fi = fi.replace(lambda ex: type(ex) in repl_funcs,
+                       lambda ex: separatevars(ex).rewrite(Piecewise) if any(
+                           arg.has(*symbols) for arg in ex.args) else ex)
             if was == fi:
                 break
 
-        for e in fi.find(Abs):
-            if e.has(*symbols):
-                raise NotImplementedError('solving %s when the argument '
-                    'is not real or imaginary.' % e)
-        for e in fi.find(Max):
-            if e.has(*symbols):
-                raise NotImplementedError('solving %s when the argument '
-                    'is not real or imaginary.' % e)
-        for e in fi.find(Min):
+        for e in fi.find(lambda ex: type(ex) in repl_funcs):
             if e.has(*symbols):
                 raise NotImplementedError('solving %s when the argument '
                     'is not real or imaginary.' % e)
