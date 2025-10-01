@@ -1096,6 +1096,10 @@ def test_Pow_is_integer():
     o = Symbol('o', odd=True, prime=True)
     assert (k/o).is_integer is False
 
+    x = Symbol('x', integer=True)
+    assert ((2*x + 2*x**3)*x/10).is_integer is None
+    assert ((2*x + 2*x**3)*x/2).is_integer
+
 
 def test_Pow_is_real():
     x = Symbol('x', real=True)
