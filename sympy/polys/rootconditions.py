@@ -257,14 +257,14 @@ def dup_schur_conditions(f: dup[Er], K: Domain[Er]) -> list[Er]:
         raise NotImplementedError(
             "Schur conditions is not implemented for complex domains"
         )
-    if K.is_RR: #XXX: Precision problems with things like RR[x] still remain
-        pq = dup_convert(f, K, QQ)
-        _, pz = dup_clear_denoms(pq, QQ, convert=True)
-        p_transformed: list = dup_transform(pz, [ZZ.one, ZZ.one],
-                                            [-ZZ.one, ZZ.one], ZZ)
-        conds: list = _dup_routh_hurwitz_fraction_free(p_transformed, ZZ)
+    if not K.is_Exact:
+        K_exact = K.get_exact()
+        pe = dup_convert(f, K, K_exact)
+        p_transformed: list = dup_transform(pe, [K_exact.one, K_exact.one],
+                                    [-K_exact.one, K_exact.one], K_exact)
+        conds: list = dup_routh_hurwitz(p_transformed, K_exact)
 
-        return [K.convert_from(c, ZZ) for c in conds]
+        return [K.convert_from(c, K_exact) for c in conds]
 
     p_transformed = dup_transform(f, [K.one, K.one], [-K.one, K.one], K)
     return dup_routh_hurwitz(p_transformed, K)

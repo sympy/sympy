@@ -4218,7 +4218,24 @@ class Poly(Basic):
         return [f.domain.to_sympy(cond) for cond in conds]
 
     def schur_conditions(f):
-        """ ... """
+        """
+        Compute the conditions that ensure ``f`` a Schur stable polynomial.
+
+        Explanation
+        ===========
+
+        Returns expressions ``[e1, e2, ...]`` such that all roots of the
+        polynomial lie inside the unit circle if and only if ``ei > 0``
+        for all ``i``.
+
+        Note
+        ====
+
+        If you need a fast computation of the conditions, consider using the
+        domain ``EXRAW``. Conditions may be less simplified and there could be
+        some precision issues, but the computation will be a lot faster.
+
+        """
         conds = f.rep.schur_conditions()
         return [f.domain.to_sympy(cond) for cond in conds]
 
