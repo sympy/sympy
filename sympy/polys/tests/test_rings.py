@@ -875,23 +875,35 @@ def test_PolyElement___mul__():
 def test_PolyElement___truediv__():
     R, x,y,z = ring("x,y,z", ZZ)
 
+    # Exact division by ground element
     assert (2*x**2 - 4)/2 == x**2 - 2
-    assert (2*x**2 - 3)/2 == x**2
+    # Non-exact division by ground element should raise
+    raises(ExactQuotientFailed, lambda: (2*x**2 - 3)/2)
 
+    # Division by polynomial
     assert (x**2 - 1).quo(x) == x
     assert (x**2 - x).quo(x) == x - 1
-
+    # Non-exact division by polynomial should raise
     raises(ExactQuotientFailed, lambda: (x**2 - 1)/x)
     assert (x**2 - x)/x == x - 1
     raises(ExactQuotientFailed, lambda: (x**2 - 1)/(2*x))
 
+    # Division by polynomial with remainder
     assert (x**2 - 1).quo(2*x) == 0
     assert (x**2 - x)/(x - 1) == (x**2 - x).quo(x - 1) == x
 
+def test_PolyElement_exquo_ground():
+    R, x = ring("x", ZZ)
+    f = 2*x**2 - 4
+    # Exact division
+    assert f.exquo_ground(2) == x**2 - 2
+    # Non-exact division should raise
+    raises(ExactQuotientFailed, lambda: (2*x**2 - 3).exquo_ground(2))
+
     raises(TypeError, lambda: x / QQ(1, 2))
 
-    R, x,y,z = ring("x,y,z", ZZ)
-    assert len((x**2/3 + y**3/4 + z**4/5).terms()) == 0
+    R, x, y, z = ring("x,y,z", ZZ)
+    raises(ExactQuotientFailed, lambda: x**2/3 + y**3/4 + z**4/5)
 
     R, x,y,z = ring("x,y,z", QQ)
     assert len((x**2/3 + y**3/4 + z**4/5).terms()) == 3
@@ -1144,9 +1156,7 @@ def test_PolyElement___divmod__():
     assert r == R1.zero
 
     p5 = 5*x + 3
-    q, r = divmod(p5, 2)
-    assert q == 0
-    assert r == x + 1
+    raises(ExactQuotientFailed, lambda: divmod(p5, 2))
 
     raises(TypeError, lambda: divmod(p1, QQ(1, 2)))
 
@@ -1164,8 +1174,8 @@ def test_PolyElement___divmod__():
 
     Rt, t = ring("t", ZZ)
     R, x, y = ring("x,y", Rt)
+    raises(ExactQuotientFailed, lambda: divmod((x + 2 * t), t))
 
-    assert divmod((x + 2 * t), t) == (2, x)
 
     R, x, y = ring("x, y", ZZ)
     Rt, t, u = ring("t, u", R)
@@ -1219,8 +1229,8 @@ def test_PolyElement___floordiv__():
     Rt, t = ring("t", ZZ)
     R, x, y = ring("x,y", Rt)
 
-    assert (x + 2*t) // t == R(2)
-    assert x + 2*t // t == x + 2
+    raises(ExactQuotientFailed, lambda: (x + 2*t) // t)
+    raises(ExactQuotientFailed, lambda: (x + 2*t) // t)
     raises(TypeError, lambda: x // QQ(1, 2))
 
     R, x, y = ring("x, y", ZZ)
@@ -2172,8 +2182,7 @@ def test_PolyElement_quo_term():
     assert R(0).quo_term(((1, 0), 2)) == R.zero
 
     f = x**2 + 2*x + 1
-    r = f.quo_term((R.zero_monom, 2))
-    assert r == (x**2 + 2*x + 1).quo_ground(2)
+    raises(ExactQuotientFailed, lambda: f.quo_term((R.zero_monom, 2)))
 
     f = x**2*y + 2*x*y
     term = ((1, 1), 1)
@@ -2265,7 +2274,7 @@ def test_PolyElement_quo_ground():
     raises(ZeroDivisionError, lambda: x.quo_ground(0))
     assert R.zero.quo_ground(5) == R.zero
     assert (x**2 + 2*x + 3).quo_ground(1) == x**2 + 2*x + 3
-    assert (x**2 + 2*x + 4).quo_ground(2) == (x**2)/2 + x + 2
+    raises(ExactQuotientFailed, lambda: (x**2 + 2*x + 4).quo_ground(2))
 
     R, x = ring("x", QQ)
     assert (x**2 + 3*x + 6).quo_ground(3) == (x**2)/3 + x + 2

@@ -788,6 +788,38 @@ class PolyElement(
 ):
     """Element of multivariate distributed polynomial ring."""
 
+    def _exquo_ground(self, x: Er) -> "PolyElement[Er]":
+        domain = self.ring.domain
+        if domain.is_Field:
+            exquo = domain.exquo
+            terms = [(monom, exquo(coeff, x)) for monom, coeff in self.iterterms()]
+        else:
+            # For non-fields, ensure exact division
+            terms = []
+            for monom, coeff in self.iterterms():
+                if hasattr(coeff, '__mod__') and coeff % x:
+                    raise ExactQuotientFailed(self, x)
+                if hasattr(coeff, '__floordiv__'):
+                    q = coeff // x
+                else:
+                    q = domain.exquo(coeff, x)
+                terms.append((monom, q))
+        return self.new(terms)
+    """Element of multivariate distributed polynomial ring."""
+
+    def exquo_ground(self, x: Er) -> "PolyElement[Er]":
+        """Exact quotient of self by an element of the ground domain.
+
+        Raises ExactQuotientFailed if not exact.
+        """
+        domain = self.ring.domain
+        if not x:
+            raise ZeroDivisionError("polynomial division")
+        if not self or x == domain.one:
+            return self
+        return self._exquo_ground(x)
+    """Element of multivariate distributed polynomial ring."""
+
     def __init__(
         self, ring: PolyRing[Er], init: dict[Mon, Er] | Iterable[tuple[Mon, Er]]
     ):
@@ -1208,11 +1240,11 @@ class PolyElement(
                 return NotImplemented
 
         try:
-            other = ring.domain_new(other)
+            other_ground = ring.domain_new(other)
         except CoercionFailed:
             return NotImplemented
         else:
-            return self._floordiv_ground(other)
+            return self.exquo_ground(other_ground)
 
     def __rtruediv__(self, other: Er | int) -> PolyElement[Er]:
         ring = self.ring
@@ -1221,7 +1253,7 @@ class PolyElement(
         except CoercionFailed:
             return NotImplemented
         else:
-            return other_poly._truediv(self)
+            return other_poly.__truediv__(self)
 
     @property
     def is_generator(self) -> bool:
@@ -1564,13 +1596,18 @@ class PolyElement(
                 return ([], ring.zero)
             return self._div_list(fv_list)
 
-    def quo_ground(self, x: Er) -> PolyElement[Er]:
+    def quo_ground(self, x: Er) -> "PolyElement[Er]":
         domain = self.ring.domain
 
         if not x:
             raise ZeroDivisionError("polynomial division")
         if not self or x == domain.one:
             return self
+        # For integer-like domains, require exact division
+        if not domain.is_Field:
+            for _, coeff in self.iterterms():
+                if hasattr(coeff, "__mod__") and coeff % x:
+                    raise ExactQuotientFailed(self, x)
         return self._quo_ground(x)
 
     def extract_ground(
