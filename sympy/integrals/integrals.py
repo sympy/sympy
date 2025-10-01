@@ -11,13 +11,14 @@ from sympy.core.exprtools import factor_terms
 from sympy.core.function import diff
 from sympy.core.logic import fuzzy_bool
 from sympy.core.mul import Mul
-from sympy.core.numbers import oo, pi
+from sympy.core.numbers import Float, Rational, oo, pi
+from sympy.core.power import Pow
 from sympy.core.relational import Ne
 from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, Symbol, Wild)
 from sympy.core.sympify import sympify
 from sympy.functions import Piecewise, sqrt, piecewise_fold, tan, cot, atan
-from sympy.functions.elementary.exponential import log
+from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.integers import floor
 from sympy.functions.elementary.complexes import Abs, sign
 from sympy.functions.elementary.miscellaneous import Min, Max
@@ -439,6 +440,15 @@ class Integral(AddWithLimits):
         # check for the trivial zero
         if self.is_zero:
             return S.Zero
+
+        # cast float coefficients to rationals to prevent error accumulation
+        precision = max([0] + [n._prec for n in self.function.atoms(Float)])
+        f = _replace_coeff(self.function, lambda e: e.is_Float, Rational)
+        if f != self.function:
+            result = f.integrate(*self.limits, **eval_kwargs)
+            is_rational = lambda e: e.is_Rational or e.is_Integer
+            as_float = lambda n: Float(n, precision=precision)
+            return _replace_coeff(result, is_rational, as_float)
 
         # hacks to handle integrals of
         # nested summations
@@ -1407,6 +1417,19 @@ class Integral(AddWithLimits):
             I += limit(((F.subs(x, s - r)) - F.subs(x, s + r)), r, 0, '+')
         return I
 
+
+def _replace_coeff(e, q, r):
+    if e.is_Pow:
+        return Pow(_replace_coeff(e.base, q, r), e.exp)
+    if isinstance(e, exp):
+        return e
+    if q(e):
+        return r(e)
+    args = getattr(e, 'args', ())
+    fargs = tuple(_replace_coeff(a, q, r) for a in args)
+    if args != fargs:
+        return e.func(*fargs)
+    return e
 
 
 def integrate(function, *symbols: SymbolLimits, meijerg=None, conds='piecewise',

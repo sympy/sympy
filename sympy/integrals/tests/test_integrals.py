@@ -350,7 +350,7 @@ def test_issue_3623():
 def test_issue_3664():
     n = Symbol('n', integer=True, nonzero=True)
     assert integrate(-1./2 * x * sin(n * pi * x/2), [x, -2, 0]) == \
-        2.0*cos(pi*n)/(pi*n)
+        2.0*(-1.0)**n/(pi*n)
     assert integrate(x * sin(n * pi * x/2) * Rational(-1, 2), [x, -2, 0]) == \
         2*cos(pi*n)/(pi*n)
 
@@ -1420,8 +1420,8 @@ def test_issue_8368i():
 
 
 def test_issue_8901():
-    assert integrate(sinh(1.0*x)) == 1.0*cosh(1.0*x)
-    assert integrate(tanh(1.0*x)) == 1.0*x - 1.0*log(tanh(1.0*x) + 1)
+    assert integrate(sinh(1.0*x)) == cosh(x)
+    assert integrate(tanh(1.0*x)) == x - 1.0*log(tanh(x) + 1.0)
     assert integrate(tanh(x)) == x - log(tanh(x) + 1)
 
 
@@ -2078,9 +2078,9 @@ def test_issue_20782():
     L = (x, -float('Inf'), 1)
 
     assert integrate(fun1, L) == 1
-    assert integrate(fun2, L) == 0
+    assert integrate(fun2, L) == 0.0
     assert integrate(-fun1, L) == -1
-    assert integrate(-fun2, L) == 0
+    assert integrate(-fun2, L) == 0.0
     assert integrate(fun_sum, L) == 1.
     assert integrate(-fun_sum, L) == -1.
 
@@ -2090,7 +2090,7 @@ def test_issue_20781():
     f = lambda a: P(int(a)) + P(float(a))
     L = (x, -float('Inf'), x)
     f1 = integrate(f(1), L)
-    assert f1 == 2*x - Min(1.0, x) - Min(x, Max(1.0, 1, evaluate=False))
+    assert f1 == 2.0*x - 2.0*Min(1.0, x)
     # XXX is_zero is True for S(0) and Float(0) and this is baked into
     # the code more deeply than the issue of Float(0) != S(0)
     assert integrate(f(0), (x, -float('Inf'), x)
@@ -2190,7 +2190,12 @@ def test_issue_27374():
 def test_issue_27675():
     f = lambda n: integrate((n - x)**-2, (x, 0, 1))
     a = f(1.7)
-    b = f(Rational('1.7'))
+    b = f(Rational(1.7))
     assert a.is_Float
     assert not b.is_Float
     assert a == b.evalf()
+
+
+def test_issue_22435():
+    f = (y - 2.4)**2 * sqrt(y) * 0.1875
+    assert integrate(f, (y, 0, 4)) == 1.0971428571428572
