@@ -18,11 +18,11 @@ from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, Symbol, Wild)
 from sympy.core.sympify import sympify
 from sympy.functions import Piecewise, sqrt, piecewise_fold, tan, cot, atan
-from sympy.functions.elementary.exponential import exp, log
+from sympy.functions.elementary.exponential import log, ExpBase
 from sympy.functions.elementary.integers import floor
 from sympy.functions.elementary.complexes import Abs, sign
 from sympy.functions.elementary.miscellaneous import Min, Max
-from sympy.functions.special.singularity_functions import Heaviside
+from sympy.functions.special.singularity_functions import Heaviside, SingularityFunction
 from .rationaltools import ratint
 from sympy.matrices import MatrixBase
 from sympy.polys import Poly, PolynomialError
@@ -1421,7 +1421,7 @@ class Integral(AddWithLimits):
 def _replace_coeff(e, q, r):
     if e.is_Pow:
         return Pow(_replace_coeff(e.base, q, r), e.exp)
-    if isinstance(e, exp):
+    if isinstance(e, (ExpBase, SingularityFunction)):
         return e
     if q(e):
         return r(e)
