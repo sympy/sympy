@@ -15,7 +15,7 @@ from sympy.functions.elementary.complexes import (Abs, arg, conjugate, im, re)
 from sympy.functions.elementary.exponential import (LambertW, exp, log)
 from sympy.functions.elementary.hyperbolic import (atanh, cosh, sinh, tanh)
 from sympy.functions.elementary.integers import floor
-from sympy.functions.elementary.miscellaneous import (cbrt, root, sqrt)
+from sympy.functions.elementary.miscellaneous import (cbrt, root, sqrt, Max, Min)
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import (acos, asin, atan, atan2, cos, sec, sin, tan)
 from sympy.functions.special.error_functions import (erf, erfc, erfcinv, erfinv)
@@ -2720,3 +2720,24 @@ def test_solve_Piecewise():
         (46*x - 3*(x - 6)**2/2 - 276, (x >= 6) & (x < 10)),
         (0, x < 10),  # this will simplify away
         (S.NaN,True)))
+
+def test_issue_28331():
+    # Prior to pull#28435, solve does not automatically rewrite
+    # Min and Max functions to piecewise, as it does with Abs.
+    # A "NotImplementedError" may be raised even if the system is
+    # solvable after being rewritten as piecewise. Also, leaving
+    # Min/Max in the system can prevent some solutions from being found.
+    x, y = symbols('x y', real=True)
+    variables = (x, y)
+    # Prior to PR: [(1, 1)]
+    system = [Eq(y, Max(x, -x)), Eq(y, 1)]
+    assert solve(system, variables) == [(-1, 1), (1, 1)]
+    # Prior to PR: "NotImplementedError: could not solve y - Min(3/2 - y/2, y/2 - 3/2)"
+    system = [Eq(y, Min(x, -x)), Eq(y, 2*x+3)]
+    assert solve(system, variables) == [(-3, -3)]
+    # Prior to PR: "NotImplementedError: could not solve y - Max(y/10 - 17/10, (y/10 - 17/10)**2)"
+    system = [Eq(y, Max(x ** 2, x)), Eq(y, 10 * x + 17)]
+    assert solve(system, variables) == [(5 - sqrt(42), 67 - 10*sqrt(42)), (5 + sqrt(42), 10*sqrt(42) + 67)]
+    system = [Eq(y, Max(3*x, -(S(1)/3)*x)), Eq(y, -(x**2)+10)]
+    # Prior to PR: "NotImplementedError: could not solve y - Max(-sqrt(10 - y)/3, 3*sqrt(10 - y))"
+    assert solve(system, variables) == [(-3, 1), (2, 6)]
