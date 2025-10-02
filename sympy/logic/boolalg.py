@@ -1689,7 +1689,7 @@ def to_anf(expr, deep=True):
     return expr.to_anf(deep=deep)
 
 
-def to_nnf(expr, simplify=True, mode="default"):
+def to_nnf(expr, simplified=True, mode="default"):
     """
     Converts ``expr`` to Negation Normal Form (NNF).
 
@@ -1711,13 +1711,13 @@ def to_nnf(expr, simplify=True, mode="default"):
     >>> to_nnf(Equivalent(A >> B, B >> A))
     (A | ~B | (A & ~B)) & (B | ~A | (B & ~A))
     """
-    if is_nnf(expr, simplify=simplify):
+    if is_nnf(expr, simplified=simplified):
         return expr
 
     if isinstance(expr, Xor):
-        return expr.to_nnf(simplify=simplify, mode=mode)
+        return expr.to_nnf(simplify=simplified, mode=mode)
 
-    return expr.to_nnf(simplify=simplify)
+    return expr.to_nnf(simplify=simplified)
 
 
 
@@ -1992,7 +1992,7 @@ def eliminate_implications(expr, mode='default'):
     (A | ~C) & (B | ~A) & (C | ~B)
 
     """
-    return to_nnf(expr, simplify=False, mode=mode)
+    return to_nnf(expr, simplified=False, mode=mode)
 
 
 def is_literal(expr):
