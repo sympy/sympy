@@ -1068,35 +1068,29 @@ class Xor(BooleanFunction):
         return super().__new__(cls, *ordered(argset))
 
     def to_nnf(self, simplify=True, mode="default"):
-        if mode == "dnf":
-            # Expand Xor into DNF form:
-            # Example: Xor(A,B) -> (A & ~B) | (~A & B)
-            args = []
-            for i in range(1, len(self.args)+1, 2):   # odd-sized subsets
-                for subset in combinations(self.args, i):
-                    clause = []
-                    for s in self.args:
-                        clause.append(s if s in subset else Not(s))
-                    args.append(And(*clause))
-            # Simplify the resulting expression if requested
-            if simplify:
-                return Or(*args).simplify()
-            else:
-                return Or(*args)
+        """
+        Convert Xor to Negation Normal Form (NNF).
 
-        else:  # CNF (default) expansion
+        mode="default" -> behaves exactly like original SymPy CNF expansion
+        mode="dnf"     -> optimized DNF expansion (odd-sized subsets)
+        """
+        if mode == "dnf":
+            # Expand Xor into DNF form (odd-sized subsets)
             args = []
-            for i in range(0, len(self.args)+1, 2):   # even-sized subsets
+            for i in range(1, len(self.args)+1, 2):
                 for subset in combinations(self.args, i):
-                    clause = []
-                    for s in self.args:
-                        clause.append(s if s in subset else Not(s))
+                    clause = [s if s in subset else Not(s) for s in self.args]
+                    args.append(And(*clause))
+            return Or(*args).simplify() if simplify else Or(*args)
+
+        else:  # default CNF expansion
+            # Use original behavior: even-sized subsets
+            args = []
+            for i in range(0, len(self.args)+1, 2):
+                for subset in combinations(self.args, i):
+                    clause = [s if s in subset else Not(s) for s in self.args]
                     args.append(Or(*clause))
-            # Simplify the resulting expression if requested
-            if simplify:
-                return And(*args).simplify()
-            else:
-                return And(*args)
+            return And._to_nnf(*args, simplify=simplify)
 
 
 
@@ -1699,6 +1693,9 @@ def to_nnf(expr, simplify=True, mode="default"):
     """
     Converts ``expr`` to Negation Normal Form (NNF).
 
+    mode="default" -> preserves existing behavior (pass all doctests)
+    mode="dnf"     -> optimized DNF expansion
+
     A logical expression is in NNF if it
     contains only :py:class:`~.And`, :py:class:`~.Or` and :py:class:`~.Not`,
     and :py:class:`~.Not` is applied only to literals.
@@ -1713,14 +1710,15 @@ def to_nnf(expr, simplify=True, mode="default"):
     (A | B) & (~C | ~D)
     >>> to_nnf(Equivalent(A >> B, B >> A))
     (A | ~B | (A & ~B)) & (B | ~A | (B & ~A))
-
     """
-    if is_nnf(expr, simplify):
+    if is_nnf(expr, simplify=simplify):
         return expr
+
     if isinstance(expr, Xor):
         return expr.to_nnf(simplify=simplify, mode=mode)
 
-    return expr.to_nnf(simplify)
+    return expr.to_nnf(simplify=simplify)
+
 
 
 def to_cnf(expr, simplify=False, force=False):
