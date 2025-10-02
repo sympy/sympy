@@ -1069,22 +1069,19 @@ class Xor(BooleanFunction):
 
     def to_nnf(self, simplify=True, mode="default"):
         """
-        Convert Xor to Negation Normal Form (NNF).
+        Convert Xor to NNF.
 
-        mode="default" -> behaves exactly like original SymPy CNF expansion
-        mode="dnf"     -> optimized DNF expansion (odd-sized subsets)
+        mode="default" -> behaves like original SymPy
+        mode="dnf"     -> optimized DNF (odd-sized subsets)
         """
         if mode == "dnf":
-            # Expand Xor into DNF form (odd-sized subsets)
             args = []
             for i in range(1, len(self.args)+1, 2):
                 for subset in combinations(self.args, i):
                     clause = [s if s in subset else Not(s) for s in self.args]
                     args.append(And(*clause))
             return Or(*args).simplify() if simplify else Or(*args)
-
         else:  # default CNF expansion
-            # Use original behavior: even-sized subsets
             args = []
             for i in range(0, len(self.args)+1, 2):
                 for subset in combinations(self.args, i):
@@ -1093,38 +1090,37 @@ class Xor(BooleanFunction):
             return And._to_nnf(*args, simplify=simplify)
 
 
+        def _eval_rewrite_as_Or(self, *args, **kwargs):
+            a = self.args
+            return Or(*[_convert_to_varsSOP(x, self.args)
+                        for x in _get_odd_parity_terms(len(a))])
 
-    def _eval_rewrite_as_Or(self, *args, **kwargs):
-        a = self.args
-        return Or(*[_convert_to_varsSOP(x, self.args)
-                    for x in _get_odd_parity_terms(len(a))])
+        def _eval_rewrite_as_And(self, *args, **kwargs):
+            a = self.args
+            return And(*[_convert_to_varsPOS(x, self.args)
+                        for x in _get_even_parity_terms(len(a))])
 
-    def _eval_rewrite_as_And(self, *args, **kwargs):
-        a = self.args
-        return And(*[_convert_to_varsPOS(x, self.args)
-                     for x in _get_even_parity_terms(len(a))])
+        def _eval_simplify(self, **kwargs):
+            # as standard simplify uses simplify_logic which writes things as
+            # And and Or, we only simplify the partial expressions before using
+            # patterns
+            rv = self.func(*[a.simplify(**kwargs) for a in self.args])
+            rv = rv.to_anf()
+            if not isinstance(rv, Xor):  # This shouldn't really happen here
+                return rv
+            patterns = _simplify_patterns_xor()
+            return _apply_patternbased_simplification(rv, patterns,
+                                                    kwargs['measure'], None)
 
-    def _eval_simplify(self, **kwargs):
-        # as standard simplify uses simplify_logic which writes things as
-        # And and Or, we only simplify the partial expressions before using
-        # patterns
-        rv = self.func(*[a.simplify(**kwargs) for a in self.args])
-        rv = rv.to_anf()
-        if not isinstance(rv, Xor):  # This shouldn't really happen here
-            return rv
-        patterns = _simplify_patterns_xor()
-        return _apply_patternbased_simplification(rv, patterns,
-                                                  kwargs['measure'], None)
-
-    def _eval_subs(self, old, new):
-        # If old is Xor, replace the parts of the arguments with new if all
-        # are there
-        if isinstance(old, Xor):
-            old_set = set(old.args)
-            if old_set.issubset(self.args):
-                args = set(self.args) - old_set
-                args.add(new)
-                return self.func(*args)
+        def _eval_subs(self, old, new):
+            # If old is Xor, replace the parts of the arguments with new if all
+            # are there
+            if isinstance(old, Xor):
+                old_set = set(old.args)
+                if old_set.issubset(self.args):
+                    args = set(self.args) - old_set
+                    args.add(new)
+                    return self.func(*args)
 
 
 class Nand(BooleanFunction):
@@ -1689,7 +1685,7 @@ def to_anf(expr, deep=True):
     return expr.to_anf(deep=deep)
 
 
-def to_nnf(expr, simplified=True, mode="default"):
+def to_nnf(expr, simplify=True, mode="default"):
     """
     Converts ``expr`` to Negation Normal Form (NNF).
 
@@ -1710,16 +1706,15 @@ def to_nnf(expr, simplified=True, mode="default"):
     (A | B) & (~C | ~D)
     >>> to_nnf(Equivalent(A >> B, B >> A))
     (A | ~B | (A & ~B)) & (B | ~A | (B & ~A))
+    
     """
-    if is_nnf(expr, simplified=simplified):
+    if is_nnf(expr, simplified=simplify):
         return expr
 
     if isinstance(expr, Xor):
-        return expr.to_nnf(simplify=simplified, mode=mode)
+        return expr.to_nnf(simplify=simplify, mode=mode)
 
-    return expr.to_nnf(simplify=simplified)
-
-
+    return expr.to_nnf(simplify=simplify)
 
 def to_cnf(expr, simplify=False, force=False):
     """
@@ -1747,21 +1742,14 @@ def to_cnf(expr, simplify=False, force=False):
 
     if simplify:
         if not force and len(_find_predicates(expr)) > 8:
-            raise ValueError(filldedent('''
-            To simplify a logical expression with more
-            than 8 variables may take a long time and requires
-            the use of `force=True`.'''))
+            raise ValueError("Use force=True for >8 variables")
         return simplify_logic(expr, 'cnf', True, force=force)
 
-    # Don't convert unless we have to
     if is_cnf(expr):
         return expr
 
     expr = eliminate_implications(expr, mode='cnf')
-    res = distribute_and_over_or(expr)
-
-    return res
-
+    return distribute_and_over_or(expr)
 
 def to_dnf(expr, simplify=False, force=False):
     """
@@ -1789,18 +1777,15 @@ def to_dnf(expr, simplify=False, force=False):
 
     if simplify:
         if not force and len(_find_predicates(expr)) > 8:
-            raise ValueError(filldedent('''
-            To simplify a logical expression with more
-            than 8 variables may take a long time and requires
-            the use of `force=True`.'''))
+            raise ValueError("Use force=True for >8 variables")
         return simplify_logic(expr, 'dnf', True, force=force)
 
-    # Don't convert unless we have to
     if is_dnf(expr):
         return expr
 
     expr = eliminate_implications(expr, mode='dnf')
     return distribute_or_over_and(expr)
+
 
 
 def is_anf(expr):
@@ -1992,7 +1977,7 @@ def eliminate_implications(expr, mode='default'):
     (A | ~C) & (B | ~A) & (C | ~B)
 
     """
-    return to_nnf(expr, simplified=False, mode=mode)
+    return to_nnf(expr, simplify=False, mode=mode)
 
 
 def is_literal(expr):
