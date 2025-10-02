@@ -1633,8 +1633,19 @@ class LatexPrinter(Printer):
         name: str = self._settings['symbol_names'].get(expr)
         if name is not None:
             return name
+        
+        new_name = expr.name
+        temp = re.match(r"^_+", new_name)
+        if temp:
+            start = r"\_" * len(temp.group(0))
+            remainder = new_name[len(temp.group(0)):]
 
-        return self._deal_with_super_sub(expr.name, style=style)
+            if remainder:
+                return start + remainder
+            else:
+                return start
+
+        return self._deal_with_super_sub(new_name, style=style)
 
     _print_RandomSymbol = _print_Symbol
 
