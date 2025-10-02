@@ -1078,7 +1078,11 @@ class Xor(BooleanFunction):
                     for s in self.args:
                         clause.append(s if s in subset else Not(s))
                     args.append(And(*clause))
-            return Or(*args)
+            # Simplify the resulting expression if requested
+            if simplify:
+                return Or(*args).simplify()
+            else:
+                return Or(*args)
 
         else:  # CNF (default) expansion
             args = []
@@ -1088,7 +1092,12 @@ class Xor(BooleanFunction):
                     for s in self.args:
                         clause.append(s if s in subset else Not(s))
                     args.append(Or(*clause))
-            return And(*args)
+            # Simplify the resulting expression if requested
+            if simplify:
+                return And(*args).simplify()
+            else:
+                return And(*args)
+
 
 
     def _eval_rewrite_as_Or(self, *args, **kwargs):
@@ -1708,7 +1717,6 @@ def to_nnf(expr, simplify=True, mode="default"):
     """
     if is_nnf(expr, simplify):
         return expr
-    
     if isinstance(expr, Xor):
         return expr.to_nnf(simplify=simplify, mode=mode)
 
