@@ -2979,26 +2979,32 @@ def _finger(eq):
     So y and x have unique fingerprints, but a and b do not.
     """
     f = eq.free_symbols
-    d = dict(list(zip(f, [[0]*4 + [defaultdict(int)] for fi in f])))
+    # initialize counters: [symbol_count, neg_count, symbol_in_AND_OR, neg_in_AND_OR, defaultdict for patterns]
+    d = dict(zip(f, [[0, 0, 0, 0, defaultdict(int)] for _ in f]))
+
     for a in eq.args:
         if a.is_Symbol:
             d[a][0] += 1
         elif a.is_Not:
             d[a.args[0]][1] += 1
-        else:
-            o = len(a.args), sum(isinstance(ai, Not) for ai in a.args)
+        else:  # a is And/Or
+            o = len(a.args), sum(isinstance(ai, type(a).Not) or ai.is_Not for ai in a.args)
             for ai in a.args:
                 if ai.is_Symbol:
                     d[ai][2] += 1
                     d[ai][-1][o] += 1
                 elif ai.is_Not:
                     d[ai.args[0]][3] += 1
+                    d[ai.args[0]][-1][o] += 1  # ✅ include pattern for negated symbols
                 else:
-                    raise NotImplementedError('unexpected level of nesting')
+                    raise NotImplementedError("unexpected level of nesting")
+
+    # create reverse mapping: pattern -> list of symbols
     inv = defaultdict(list)
-    for k, v in ordered(iter(d.items())):
+    for k, v in ordered(d.items()):
         v[-1] = tuple(sorted([i + (j,) for i, j in v[-1].items()]))
         inv[tuple(v)].append(k)
+
     return inv
 
 
