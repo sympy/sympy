@@ -1067,13 +1067,29 @@ class Xor(BooleanFunction):
             return Not(Xor(*argset))
         return super().__new__(cls, *ordered(argset))
 
-    def to_nnf(self, simplify=True):
-        args = []
-        for i in range(0, len(self.args)+1, 2):
-            for neg in combinations(self.args, i):
-                clause = [Not(s) if s in neg else s for s in self.args]
-                args.append(Or(*clause))
-        return And._to_nnf(*args, simplify=simplify)
+    def to_nnf(self, simplify=True, mode="default"):
+        if mode == "dnf":
+            # Expand Xor into DNF form:
+            # Example: Xor(A,B) -> (A & ~B) | (~A & B)
+            args = []
+            for i in range(1, len(self.args)+1, 2):   # odd-sized subsets
+                for subset in combinations(self.args, i):
+                    clause = []
+                    for s in self.args:
+                        clause.append(s if s in subset else Not(s))
+                    args.append(And(*clause))
+            return Or(*args)
+
+        else:  # CNF (default) expansion
+            args = []
+            for i in range(0, len(self.args)+1, 2):   # even-sized subsets
+                for subset in combinations(self.args, i):
+                    clause = []
+                    for s in self.args:
+                        clause.append(s if s in subset else Not(s))
+                    args.append(Or(*clause))
+            return And(*args)
+
 
     def _eval_rewrite_as_Or(self, *args, **kwargs):
         a = self.args
@@ -1670,7 +1686,7 @@ def to_anf(expr, deep=True):
     return expr.to_anf(deep=deep)
 
 
-def to_nnf(expr, simplify=True):
+def to_nnf(expr, simplify=True, mode="default"):
     """
     Converts ``expr`` to Negation Normal Form (NNF).
 
@@ -1692,6 +1708,10 @@ def to_nnf(expr, simplify=True):
     """
     if is_nnf(expr, simplify):
         return expr
+    
+    if isinstance(expr, Xor):
+        return expr.to_nnf(simplify=simplify, mode=mode)
+
     return expr.to_nnf(simplify)
 
 
@@ -1731,7 +1751,7 @@ def to_cnf(expr, simplify=False, force=False):
     if is_cnf(expr):
         return expr
 
-    expr = eliminate_implications(expr)
+    expr = eliminate_implications(expr, mode='cnf')
     res = distribute_and_over_or(expr)
 
     return res
@@ -1773,7 +1793,7 @@ def to_dnf(expr, simplify=False, force=False):
     if is_dnf(expr):
         return expr
 
-    expr = eliminate_implications(expr)
+    expr = eliminate_implications(expr, mode='dnf')
     return distribute_or_over_and(expr)
 
 
@@ -1944,7 +1964,7 @@ def _is_form(expr, function1, function2):
     return True
 
 
-def eliminate_implications(expr):
+def eliminate_implications(expr, mode='default'):
     """
     Change :py:class:`~.Implies` and :py:class:`~.Equivalent` into
     :py:class:`~.And`, :py:class:`~.Or`, and :py:class:`~.Not`.
@@ -1966,7 +1986,7 @@ def eliminate_implications(expr):
     (A | ~C) & (B | ~A) & (C | ~B)
 
     """
-    return to_nnf(expr, simplify=False)
+    return to_nnf(expr, simplify=False, mode=mode)
 
 
 def is_literal(expr):
