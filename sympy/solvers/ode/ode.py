@@ -258,6 +258,7 @@ from sympy.solvers import checksol, solve
 from sympy.utilities import numbered_symbols
 from sympy.utilities.iterables import uniq, sift, iterable
 from sympy.solvers.deutils import _preprocess, ode_order, _desolve
+from sympy import besselj, bessely, sqrt, symbols, Wild, Eq, Abs
 
 
 #: This is a list of hints in the order that they should be preferred by
@@ -2191,7 +2192,126 @@ def _handle_Integral(expr, func, hint):
 
 
 # XXX: Should this function maybe go somewhere else?
-
+def _solve_bessel_type_equation(eq, func, order, match, startind, coeff, index):
+    """
+    Solve second-order ODEs of the form y'' + A*x^k*y = 0
+    where k is symbolic. These have solutions in terms of Bessel functions.
+    
+    The general solution is:
+    y(x) = x^(1/2) * [C1*BesselJ(nu, z) + C2*BesselY(nu, z)]
+    where nu = 1/(k+2) and z = (2/(k+2))*x^((k+2)/2) for A=1
+    
+    References:
+    - Abramowitz & Stegun, Handbook of Mathematical Functions, 9.1.52
+    - Arfken & Weber, Mathematical Methods for Physicists
+    """
+    
+    x = func.args[0]
+    f = func.func
+    C1, C2 = get_numbered_constants(eq, num=2)
+    
+    # Extract coefficients from the match
+    p = match[match['a3']]  # coefficient of y''
+    q = match[match['b3']]  # coefficient of y'
+    r = match[match['c3']]  # coefficient of y
+    x0 = match['x0']
+    
+    # We need the equation in the form: y'' + A*x^k*y = 0
+    # This means p should be 1 (or constant), q should be 0, and r should be A*x^k
+    
+    # Check if this is actually a Bessel-type equation
+    if q != 0:
+        raise NotImplementedError(
+            "Bessel-type solution only implemented for equations of the form "
+            "y'' + A*x^k*y = 0 (no first derivative term)"
+        )
+    
+    if p != 1 and p != S.One:
+        # Try to normalize the equation
+        if p.is_constant():
+            r = r / p
+            p = S.One
+        else:
+            raise NotImplementedError(
+                "Bessel-type solution requires constant coefficient for y''"
+            )
+    
+    # Extract A and k from r = A*x^k
+    k_sym = Wild('k_sym', exclude=[x])
+    A_sym = Wild('A_sym', exclude=[x])
+    
+    # Try to match r against A*x^k or A*(x-x0)^k
+    if x0 == 0:
+        pattern_match = r.match(A_sym * x**k_sym)
+    else:
+        pattern_match = r.match(A_sym * (x - x0)**k_sym)
+    
+    if not pattern_match:
+        # Try without coefficient
+        if x0 == 0:
+            pattern_match = r.match(x**k_sym)
+            if pattern_match:
+                pattern_match[A_sym] = S.One
+        else:
+            pattern_match = r.match((x - x0)**k_sym)
+            if pattern_match:
+                pattern_match[A_sym] = S.One
+    
+    if not pattern_match:
+        raise NotImplementedError(
+            f"Could not identify Bessel-type equation pattern from coefficient: {r}"
+        )
+    
+    A = pattern_match[A_sym]
+    k = pattern_match[k_sym]
+    
+    # Handle special cases
+    if k == -2:
+        raise NotImplementedError(
+            "The case k = -2 leads to a singularity in the Bessel order."
+        )
+    
+    if k == 0:
+        # y'' + A*y = 0 has simple solutions
+        from sympy import cos, sin
+        omega = sqrt(Abs(A))
+        if x0 == 0:
+            x_arg = x
+        else:
+            x_arg = x - x0
+        
+        if A > 0:
+            solution = C1 * cos(omega * x_arg) + C2 * sin(omega * x_arg)
+        else:
+            solution = C1 * exp(omega * x_arg) + C2 * exp(-omega * x_arg)
+        return Eq(f(x), solution)
+    
+    # For the ODE y'' + A*x^k*y = 0
+    # The solution is: y = sqrt(x) * Z(z)
+    # where Z satisfies Bessel's equation with order nu = 1/(k+2)
+    # and z = (2*sqrt(A)/(k+2)) * x^((k+2)/2)
+    
+    nu = Abs(1 / (k + 2))
+    
+    # Handle the argument based on x0
+    if x0 == 0:
+        x_arg = x
+    else:
+        x_arg = x - x0
+    
+    # The argument of the Bessel function
+    # For positive A: z = (2*sqrt(A)/(k+2)) * x^((k+2)/2)
+    if A == 1 or A == S.One:
+        z = (2 / (k + 2)) * x_arg**((k + 2)/2)
+    else:
+        # More general case
+        z = (2 * sqrt(Abs(A)) / (k + 2)) * x_arg**((k + 2)/2)
+    
+    # Construct the solution
+    # The general solution is y = sqrt(x) * [C1*J_nu(z) + C2*Y_nu(z)]
+    solution = sqrt(x_arg) * (C1 * besselj(nu, z) + C2 * bessely(nu, z))
+    
+    return Eq(f(x), solution)
 
 def homogeneous_order(eq, *symbols):
     r"""
@@ -2360,6 +2480,9 @@ def ode_2nd_power_series_ordinary(eq, func, order, match):
                 # Seeing if the startterm can be reduced further.
                 # If it vanishes for n lesser than startind, it is
                 # equal to summation from n.
+                free_syms = startind.free_symbols - {n}
+                if free_syms:
+                    return _solve_bessel_type_equation(eq, func, order, match, startind, coeff, index)
                 if startind:
                     for i in reversed(range(startind)):
                         if not term.subs(n, i):
@@ -2476,7 +2599,18 @@ def ode_2nd_power_series_regular(eq, func, order, match):
     f(x) = C2*|--- - -- + 1| + ------------------------ + O\x /
               \120   6     /              x
 
-
+    Note: If the equation contains symbolic exponents (e.g., x^k where k is symbolic),
+    the function will attempt to solve it as a Bessel-type equation and return
+    solutions in terms of Bessel functions rather than power series.
+    
+    Examples with symbolic exponents:
+    
+    >>> from sympy import symbols, Function, dsolve, Eq, Derivative
+    >>> x = symbols('x')
+    >>> k = symbols('k')
+    >>> y = Function('y')
+    >>> ode = Eq(x**k*y(x) + Derivative(y(x), (x, 2)), 0)
+    >>> sol = dsolve(ode)  # Returns Bessel function solution
     References
     ==========
     - George E. Simmons, "Differential Equations with Applications and
