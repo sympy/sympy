@@ -2724,7 +2724,6 @@ def test_solve_Piecewise():
 
 
 def test_solve_maxmin():
-    x, y = symbols('x y', real=True)
     variables = (x, y)
     system = [Eq(y, Max(x, -x)), Eq(y, 1)]
     assert solve(system, variables) == [(-1, 1), (1, 1)]
