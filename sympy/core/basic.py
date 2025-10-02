@@ -719,8 +719,10 @@ class Basic(Printable):
         >>> Derivative(x, y).has_free(y)
         True
         """
-        empty: set[Basic] = set()
-        return empty.union(*(a.free_symbols for a in self.args))
+        result: set[Basic] = set()
+        for a in self.args:
+            result.update(a.free_symbols)
+        return result
 
     @property
     def expr_free_symbols(self):
