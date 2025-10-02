@@ -2723,23 +2723,13 @@ def test_solve_Piecewise():
         (S.NaN,True)))
 
 
-def test_issue_28331():
-    # Prior to pull#28435, solve does not automatically rewrite
-    # Min and Max functions to piecewise, as it does with Abs.
-    # A "NotImplementedError" may be raised even if the system is
-    # solvable after being rewritten as piecewise. Also, leaving
-    # Min/Max in the system can prevent some solutions from being found.
-    x, y = symbols('x y', real=True)
+def test_solve_maxmin():
     variables = (x, y)
-    # Prior to PR: "[(1, 1)]" (Missing (-1, 1))
     system = [Eq(y, Max(x, -x)), Eq(y, 1)]
     assert solve(system, variables) == [(-1, 1), (1, 1)]
-    # Prior to PR: "NotImplementedError: could not solve y - Min(3/2 - y/2, y/2 - 3/2)"
     system = [Eq(y, Min(x, -x)), Eq(y, 2*x+3)]
     assert solve(system, variables) == [(-3, -3)]
-    # Prior to PR: "NotImplementedError: could not solve y - Max(y/10 - 17/10, (y/10 - 17/10)**2)"
     system = [Eq(y, Max(x ** 2, x)), Eq(y, 10 * x + 17)]
     assert solve(system, variables) == [(5 - sqrt(42), 67 - 10*sqrt(42)), (5 + sqrt(42), 10*sqrt(42) + 67)]
-    # Prior to PR: "NotImplementedError: could not solve y - Max(-sqrt(10 - y)/3, 3*sqrt(10 - y))"
     system = [Eq(y, Max(3*x, -(S(1)/3)*x)), Eq(y, -(x**2)+10)]
     assert solve(system, variables) == [(-3, 1), (2, 6)]
