@@ -1706,7 +1706,6 @@ def to_nnf(expr, simplify=True, mode="default"):
     (A | B) & (~C | ~D)
     >>> to_nnf(Equivalent(A >> B, B >> A))
     (A | ~B | (A & ~B)) & (B | ~A | (B & ~A))
-    
     """
     if is_nnf(expr, simplified=simplify):
         return expr
