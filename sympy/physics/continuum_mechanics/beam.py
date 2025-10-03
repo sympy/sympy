@@ -1063,9 +1063,7 @@ class Beam:
             )
 
         # safely unpack the single solution tuple (no brittle .args indexing)
-        sol_tuple = next(iter(solution_set))
-        solution = list(sol_tuple)
-        if not solution or solution == EmptySet:
+        if solution_set is S.EmptySet:
             raise ValueError("Insufficient boundary conditions to solve the beam.")
         sol_tuple = next(iter(solution_set))
         solution = list(sol_tuple)

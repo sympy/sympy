@@ -10,10 +10,8 @@ from sympy.functions import SingularityFunction, Piecewise, meijerg, Abs, log, s
 from sympy.testing.pytest import raises
 from sympy.physics.units import meter, newton, kilo, giga, milli
 from sympy.physics.continuum_mechanics.beam import Beam3D
-from sympy.physics.continuum_mechanics.beam import Beam
 from sympy.geometry import Circle, Polygon, Point2D, Triangle
 from sympy.core.sympify import sympify
-from sympy import Symbol
 
 x = Symbol('x')
 y = Symbol('y')
