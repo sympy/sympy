@@ -13,7 +13,6 @@ from sympy.core.sympify import sympify
 from sympy.solvers import linsolve, solveset
 from sympy.solvers.ode.ode import dsolve
 from sympy.solvers.solvers import solve
-from sympy.solvers.solveset import linsolve
 from sympy.printing import sstr
 from sympy.functions import SingularityFunction, Piecewise, factorial
 from sympy.integrals import integrate
@@ -25,7 +24,6 @@ from sympy.sets.sets import Interval, FiniteSet
 from sympy.utilities.lambdify import lambdify
 from sympy.utilities.decorator import doctest_depends_on
 from sympy.utilities.iterables import iterable
-from sympy import EmptySet
 import warnings
 
 
