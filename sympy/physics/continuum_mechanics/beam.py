@@ -924,6 +924,13 @@ class Beam:
         """
         This method solves for all the reaction loads, rotation jumps, deflection jumps.
 
+        Raises
+        ======
+        ValueError
+            If the system of equations for the reaction loads is inconsistent
+        (no solution). This can occur when supports, loads, or boundary
+        conditions conflict.
+
         Parameters
         ==========
         reactions : Symbol
@@ -1043,8 +1050,24 @@ class Beam:
             eqs = deflection_curve.subs(x, position) - value
             deflection_eqs.append(eqs)
         total_supports = tuple(set(applied_supports + reactions))
-        solution = list((linsolve([shear_curve, moment_curve] + shear_force_eqs + bending_moment_eqs + slope_eqs
-                            + deflection_eqs, (C3, C4) + total_supports + rotation_jumps + deflection_jumps).args)[0])
+
+        solution_set = linsolve(
+            [shear_curve, moment_curve] + shear_force_eqs + bending_moment_eqs + slope_eqs + deflection_eqs,
+            (C3, C4) + total_supports + rotation_jumps + deflection_jumps
+        )
+
+        # handle inconsistent systems (no solution) with a clear error
+        if solution_set is S.EmptySet:
+            raise ValueError(
+                "No solution for reaction loads; check supports/loads/boundary conditions for inconsistency."
+            )
+
+        # safely unpack the single solution tuple (no brittle .args indexing)
+        if solution_set is S.EmptySet:
+            raise ValueError("Insufficient boundary conditions to solve the beam.")
+        sol_tuple = next(iter(solution_set))
+        solution = list(sol_tuple)
+
         reaction_index = 2+len(total_supports)
         rotation_index = reaction_index + len(rotation_jumps)
         reaction_solution = solution[2:reaction_index]
