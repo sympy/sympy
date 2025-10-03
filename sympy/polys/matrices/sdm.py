@@ -834,6 +834,24 @@ class SDM(dict):
         {0: {1: 6}, 1: {0: 3}}
 
         """
+        from sympy import nan,zoo
+        if A.domain.is_EXRAW:
+            #THIS is for issue 28446, undefined behavior when multiplying by 0
+            Csdm = {}
+        for i, Ai in A.items():
+            Ci = {}
+            Csdm = {}
+            for j, aij in Ai.items():
+                prod = aij * b
+                if prod.is_nan:
+                    Ci[j] = nan
+                elif prod:
+                    Ci[j] = prod
+            if Ci:
+                Csdm[i] = Ci
+        return A.new(Csdm, A.shape, A.domain)
+            
+            
         Csdm = unop_dict(A, lambda aij: aij*b)
         return A.new(Csdm, A.shape, A.domain)
 
