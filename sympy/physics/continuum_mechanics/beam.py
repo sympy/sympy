@@ -1052,7 +1052,7 @@ class Beam:
             eqs = deflection_curve.subs(x, position) - value
             deflection_eqs.append(eqs)
         total_supports = tuple(set(applied_supports + reactions))
-        
+
         solution_set = linsolve(
             [shear_curve, moment_curve] + shear_force_eqs + bending_moment_eqs + slope_eqs + deflection_eqs,
             (C3, C4) + total_supports + rotation_jumps + deflection_jumps
