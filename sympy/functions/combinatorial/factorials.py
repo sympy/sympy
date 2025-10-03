@@ -137,44 +137,38 @@ class factorial(CombinatorialFunction):
 
     @classmethod
     def eval(cls, n):
-        n = sympify(n)
+    n = sympify(n)
 
-        if n.is_Number:
-            if n.is_zero:
-                return S.One
-            elif n is S.Infinity:
-                return S.Infinity
-            elif n.is_Integer:
-                if n.is_negative:
-                    return S.ComplexInfinity
+    if n.is_Number:
+        if n.is_zero:
+            return S.One
+        elif n is S.Infinity:
+            return S.Infinity
+        elif n.is_Integer:
+            if n.is_negative:
+                return S.ComplexInfinity
+            else:
+                n = n.p
+
+                # --- Small factorial fix ---
+                if n < 20:
+                    if not cls._small_factorials:
+                        result = 1
+                        for i in range(1, 20):
+                            result *= i
+                            cls._small_factorials.append(result)
+                    return Integer(cls._small_factorials[n-1])
+                # --------------------------
+
+                # GMPY factorial is faster, use it when available
+                elif _gmpy is not None:
+                    result = _gmpy.fac(n)
+
                 else:
-                    n = n.p
+                    bits = bin(n).count('1')
+                    result = cls._recursive(n) * 2**(n - bits)
 
-                    if n < 20:
-                        if not cls._small_factorials:
-                            result = 1
-                            for i in range(1, 20):
-                                result *= i
-                                cls._small_factorials.append(result)
-                        result = cls._small_factorials[n-1]
-
-                    # GMPY factorial is faster, use it when available
-                    #
-                    # XXX: There is a sympy.external.gmpy.factorial function
-                    # which provides gmpy.fac if available or the flint version
-                    # if flint is used. It could be used here to avoid the
-                    # conditional logic but it needs to be checked whether the
-                    # pure Python fallback used there is as fast as the
-                    # fallback used here (perhaps the fallback here should be
-                    # moved to sympy.external.ntheory).
-                    elif _gmpy is not None:
-                        result = _gmpy.fac(n)
-
-                    else:
-                        bits = bin(n).count('1')
-                        result = cls._recursive(n)*2**(n - bits)
-
-                    return Integer(result)
+                return Integer(result)
 
     def _facmod(self, n, q):
         res, N = 1, int(_sqrt(n))
