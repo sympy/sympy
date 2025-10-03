@@ -2768,7 +2768,129 @@ class SecondLinearBessel(SingleODESolver):
         return [Eq(f(x), ((x**(Rational(1-c4,2)))*(C1*besselj(n/d4,a4*x**d4/d4)
             + C2*bessely(n/d4,a4*x**d4/d4))).subs(x, x-b4))]
 
+class SecondLinearBesselSymbolic(SingleODESolver):
+    r"""
+    Solves second-order ODEs of the form y'' + A*x^k*y = 0 where k is symbolic.
 
+    These equations have solutions in terms of Bessel functions when k is a
+    symbolic parameter (not a specific number).
+
+    The general solution is:
+
+    .. math:: y(x) = \sqrt{x} \left[C_1 J_\nu(z) + C_2 Y_\nu(z)\right]
+
+    where :math:`\nu = \frac{1}{k+2}` and :math:`z = \frac{2}{k+2} x^{(k+2)/2}`
+
+    Examples
+    ========
+
+    >>> from sympy import symbols, Function, dsolve, Eq, Derivative
+    >>> x = symbols('x')
+    >>> k = symbols('k')
+    >>> y = Function('y')
+    >>> ode = Eq(x**k*y(x) + Derivative(y(x), (x, 2)), 0)
+    >>> dsolve(ode)
+    Eq(y(x), sqrt(x)*(C1*besselj(1/(k + 2), 2*x**(k/2 + 1)/(k + 2)) + 
+                      C2*bessely(1/(k + 2), 2*x**(k/2 + 1)/(k + 2))))
+
+    References
+    ==========
+    - Abramowitz & Stegun, Handbook of Mathematical Functions, 9.1.52
+    - https://eqworld.ipmnet.ru/en/solutions/ode/ode0201.pdf
+    """
+    hint = "2nd_linear_bessel_symbolic"
+    has_integral = False
+    order = [2]
+
+    def _matches(self):
+        eq = self.ode_problem.eq_high_order_free
+        f = self.ode_problem.func
+        x = self.ode_problem.sym
+        order = self.ode_problem.order
+        
+        if order != 2:
+            return False
+        
+        # Get linear coefficients
+        match = self.ode_problem.get_linear_coefficients(eq, f, order)
+        if not match:
+            return False
+        
+        # We need: a3*y'' + b3*y' + c3*y = 0
+        # For Bessel with symbolic exponent: y'' + 0*y' + (x^k)*y = 0
+        a3 = match[2]  # coefficient of y''
+        b3 = match[1]  # coefficient of y'
+        c3 = match[0]  # coefficient of y
+        
+        # Check if b3 = 0 (no first derivative term)
+        if b3 != 0:
+            return False
+        
+        # Normalize: divide by coefficient of y''
+        if a3 == 0:
+            return False
+        
+        if a3 != 1 and a3 != S.One:
+            if not a3.is_constant():
+                return False
+            c3 = c3 / a3
+        
+        # Check if c3 is of the form A*x^k where k has free symbols
+        # This indicates symbolic exponent
+        A_sym = Wild('A_sym', exclude=[x])
+        k_sym = Wild('k_sym', exclude=[x])
+        
+        pattern_match = c3.match(A_sym * x**k_sym)
+        if not pattern_match:
+            pattern_match = c3.match(x**k_sym)
+            if pattern_match:
+                pattern_match[A_sym] = S.One
+        
+        if not pattern_match:
+            return False
+        
+        # Check if k is symbolic (has free symbols)
+        k_val = pattern_match[k_sym]
+        if not k_val.free_symbols:
+            # k is numeric, not symbolic - let other solvers handle it
+            return False
+        
+        # Store the matched values
+        self.match_dict = {
+            'A': pattern_match[A_sym],
+            'k': k_val,
+            'x0': 0  # We're assuming expansion around x=0
+        }
+        
+        return True
+
+    def _get_general_solution(self, *, simplify_flag: bool = True):
+        f = self.ode_problem.func.func
+        x = self.ode_problem.sym
+        (C1, C2) = self.ode_problem.get_numbered_constants(num=2)
+        
+        A = self.match_dict['A']
+        k = self.match_dict['k']
+        
+        # Handle special cases
+        if k == -2:
+            raise NotImplementedError(
+                "The case k = -2 leads to a singularity in the Bessel order."
+            )
+        
+        # For y'' + A*x^k*y = 0
+        # The Bessel order and argument are:
+        nu = 1 / (k + 2)
+        
+        if A == 1 or A == S.One:
+            z = (2 / (k + 2)) * x**((k + 2)/2)
+        else:
+            z = (2 * sqrt(Abs(A)) / (k + 2)) * x**((k + 2)/2)
+        
+        # General solution
+        solution = sqrt(x) * (C1 * besselj(nu, z) + C2 * bessely(nu, z))
+        
+        return [Eq(f(x), solution)]
 class SecondLinearAiry(SingleODESolver):
     r"""
     Gives solution of the Airy differential equation
@@ -2951,6 +3073,7 @@ solver_map = {
     'Liouville': Liouville,
     '2nd_linear_airy': SecondLinearAiry,
     '2nd_linear_bessel': SecondLinearBessel,
+    '2nd_linear_bessel_symbolic': SecondLinearBesselSymbolic,
     '2nd_hypergeometric': SecondHypergeometric,
     'nth_order_reducible': NthOrderReducible,
     '2nd_nonlinear_autonomous_conserved': SecondNonlinearAutonomousConserved,

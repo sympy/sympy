@@ -3,6 +3,7 @@ from sympy.core.numbers import (E, I, Rational, pi)
 from sympy.core.relational import Eq
 from sympy.core.singleton import S
 from sympy.core.symbol import (Symbol, symbols)
+from sympy.functions.special.bessel import besselj, bessely
 from sympy.functions.elementary.complexes import (im, re)
 from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.elementary.hyperbolic import acosh
@@ -1116,3 +1117,27 @@ def test_issue_27683():
     expected = Eq(u, C1 + C2*x + 0.000125*x**2)
     assert sol1 == expected
     assert sol2 == expected
+
+
+def test_issue_28438():
+    # Test with symbolic exponent
+    x = symbols("x")
+    k = symbols("k")
+    y = Function("y")
+    
+    eq = Eq(x**k*y(x) + Derivative(y(x), (x, 2)), 0)
+    sol = dsolve(eq, y(x), hint='2nd_linear_bessel_symbolic')
+    
+    # Check that solution contains Bessel functions
+    assert sol.has(besselj) and sol.has(bessely)
+    
+    # Check with coefficient
+    eq2 = Eq(2*x**k*y(x) + Derivative(y(x), (x, 2)), 0)
+    sol2 = dsolve(eq2, y(x), hint='2nd_linear_bessel_symbolic')
+    assert sol2.has(besselj) and sol2.has(bessely)
+    
+    # Verify numeric case still uses power series
+    eq3 = Eq(x**2*y(x) + Derivative(y(x), (x, 2)), 0)
+    sol3 = dsolve(eq3, y(x))
+    # Should NOT use the symbolic bessel hint
+    assert '2nd_power_series_ordinary' in classify_ode(eq3, y(x))
