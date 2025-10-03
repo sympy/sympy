@@ -932,7 +932,7 @@ class Beam:
             If the system of equations for the reaction loads is inconsistent
         (no solution). This can occur when supports, loads, or boundary
         conditions conflict.
-        
+    
         Parameters
         ==========
         reactions : Symbol
