@@ -1,3 +1,4 @@
+import pytest
 from sympy.core.function import expand
 from sympy.core.numbers import (Rational, pi)
 from sympy.core.singleton import S
@@ -9,13 +10,32 @@ from sympy.functions import SingularityFunction, Piecewise, meijerg, Abs, log, s
 from sympy.testing.pytest import raises
 from sympy.physics.units import meter, newton, kilo, giga, milli
 from sympy.physics.continuum_mechanics.beam import Beam3D
+from sympy.physics.continuum_mechanics.beam import Beam
 from sympy.geometry import Circle, Polygon, Point2D, Triangle
 from sympy.core.sympify import sympify
+from sympy import Symbol
 
 x = Symbol('x')
 y = Symbol('y')
 R1, R2 = symbols('R1, R2')
 
+def test_reaction_inconsistent_symbolic_raises_valueerror():
+    E, I, P = Symbol('E'), Symbol('I'), Symbol('P')
+    b = Beam(10, E, I)
+    r1 = b.apply_support(0, 'pin')
+    r2 = b.apply_support(10, 'roller')
+    b.apply_rotation_hinge(4)
+    b.apply_load(-P, 4, -1)
+    with pytest.raises(ValueError):
+        b.solve_for_reaction_loads(r1, r2)
+
+def test_reaction_inconsistent_numeric_raises_valueerror():
+    E, I = Symbol('E'), Symbol('I')
+    b = Beam(10, E, I)
+    r1 = b.apply_support(0, 'pin')
+    b.apply_load(10, 10, -1)
+    with pytest.raises(ValueError):
+        b.solve_for_reaction_loads(r1)
 
 def test_Beam():
     E = Symbol('E')

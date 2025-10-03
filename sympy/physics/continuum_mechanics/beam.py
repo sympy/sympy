@@ -13,6 +13,7 @@ from sympy.core.sympify import sympify
 from sympy.solvers import linsolve, solveset
 from sympy.solvers.ode.ode import dsolve
 from sympy.solvers.solvers import solve
+from sympy.solvers.solveset import linsolve
 from sympy.printing import sstr
 from sympy.functions import SingularityFunction, Piecewise, factorial
 from sympy.integrals import integrate
@@ -24,6 +25,7 @@ from sympy.sets.sets import Interval, FiniteSet
 from sympy.utilities.lambdify import lambdify
 from sympy.utilities.decorator import doctest_depends_on
 from sympy.utilities.iterables import iterable
+from sympy import EmptySet
 import warnings
 
 
@@ -924,6 +926,13 @@ class Beam:
         """
         This method solves for all the reaction loads, rotation jumps, deflection jumps.
 
+        Raises
+        ======
+        ValueError
+            If the system of equations for the reaction loads is inconsistent
+        (no solution). This can occur when supports, loads, or boundary
+        conditions conflict.
+        
         Parameters
         ==========
         reactions : Symbol
@@ -1043,8 +1052,26 @@ class Beam:
             eqs = deflection_curve.subs(x, position) - value
             deflection_eqs.append(eqs)
         total_supports = tuple(set(applied_supports + reactions))
-        solution = list((linsolve([shear_curve, moment_curve] + shear_force_eqs + bending_moment_eqs + slope_eqs
-                            + deflection_eqs, (C3, C4) + total_supports + rotation_jumps + deflection_jumps).args)[0])
+        
+        solution_set = linsolve(
+            [shear_curve, moment_curve] + shear_force_eqs + bending_moment_eqs + slope_eqs + deflection_eqs,
+            (C3, C4) + total_supports + rotation_jumps + deflection_jumps
+        )
+
+        # handle inconsistent systems (no solution) with a clear error
+        if solution_set is S.EmptySet:
+            raise ValueError(
+                "No solution for reaction loads; check supports/loads/boundary conditions for inconsistency."
+            )
+
+        # safely unpack the single solution tuple (no brittle .args indexing)
+        sol_tuple = next(iter(solution_set))
+        solution = list(sol_tuple)
+        if not solution or solution == EmptySet:
+            raise ValueError("Insufficient boundary conditions to solve the beam.")
+        sol_tuple = next(iter(solution_set))
+        solution = list(sol_tuple)
+
         reaction_index = 2+len(total_supports)
         rotation_index = reaction_index + len(rotation_jumps)
         reaction_solution = solution[2:reaction_index]
