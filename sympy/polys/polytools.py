@@ -4243,8 +4243,7 @@ class Poly(Basic):
         >>> p3 = Poly(x**3 + x**2 + 2*k*x + 1 - k, x)
         >>> conditions = p3.schur_conditions()
         >>> conditions
-        ⎡      2                  2               2          ⎤
-        ⎣- 15⋅k  + 20⋅k - 5, - 8⋅k  - 8⋅k + 8, 3⋅k  + 8⋅k - 3⎦
+        [-15*k**2 + 20*k - 5, -8*k**2 - 8*k + 8, 3*k**2 + 8*k - 3]
         >>> reduce_inequalities([c > 0 for c in conditions])
         (1/3 < k) & (k < -1/2 + sqrt(5)/2)
 
