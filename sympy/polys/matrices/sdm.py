@@ -1594,21 +1594,22 @@ def sdm_scalar_mul(A, b, op):
     """
 
     K = A.domain
-    zero = K.zero
-    zero_prod = op(zero, b)
 
-    if K.is_EXRAW and (zero_prod != zero):
-        m, n = A.shape
-        Csdm = {i: dict.fromkeys(range(n), zero_prod) for i in range(m)}
-        for i, Ai in A.items():
-            Ci = Csdm[i]
-            for j, Aij in Ai.items():
-                Cij = op(Aij, b)
-                if Cij == zero:
-                    del Ci[j]
-                else:
-                    Ci[j] = Cij
-        return A.new(Csdm, A.shape, K)
+    if K.is_EXRAW:
+        zero = K.zero
+        zero_prod = op(zero, b)
+        if (zero_prod != zero):
+            m, n = A.shape
+            Csdm = {i: dict.fromkeys(range(n), zero_prod) for i in range(m)}
+            for i, Ai in A.items():
+                Ci = Csdm[i]
+                for j, Aij in Ai.items():
+                    Cij = op(Aij, b)
+                    if Cij == zero:
+                        del Ci[j]
+                    else:
+                        Ci[j] = Cij
+            return A.new(Csdm, A.shape, K)
 
     Csdm = unop_dict(A, lambda aij: op(aij, b))
     return A.new(Csdm, A.shape, K)
