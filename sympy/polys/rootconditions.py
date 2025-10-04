@@ -35,6 +35,9 @@ def dup_routh_hurwitz(f: dup[Er], K: Domain[Er]) -> list[Er]:
            https://courses.washington.edu/mengr471/resources/Routh_Hurwitz_Proof.pdf
 
     """
+    if not f:
+        raise ValueError("zero polynomial")
+
     excluded_domains = [EX, EXRAW]
     if not K in excluded_domains and I in K:
         raise NotImplementedError(
@@ -70,9 +73,7 @@ def dup_routh_hurwitz(f: dup[Er], K: Domain[Er]) -> list[Er]:
 
 
 def _dup_routh_hurwitz_fraction_free(p: dup[Er], K: Domain[Er]) -> list[Er]:
-    if not p:
-        raise ValueError("zero polynomial")
-    elif len(p) == 1:
+    if len(p) == 1:
         return []
     elif len(p) == 2:
         return [p[0] * p[1]]
@@ -247,16 +248,39 @@ def _build_simplified_factors(
 
 
 def dup_schur_conditions(f: dup[Er], K: Domain[Er]) -> list[Er]:
-    # Check if -1 is a root, since the transformation is not defined in this case
-    evaluation = K.to_sympy(dup_eval(f, -K.one, K))
-    if evaluation.is_number and math.isclose(evaluation, 0.0):
-        return [-K.one]
+    """
+    Computes the schur stability conditions of ``f``.
+
+    Explanation
+    ===========
+
+    Returns expressions ``[e1, e2, ...]`` such that all roots of the
+    polynomial lie inside the unit circle if and only if ``ei > 0``
+    for all ``i``.
+
+    References
+    ==========
+
+    .. [1] https://faculty.washington.edu/chx/teaching/me547/2_1_stability.pdf#:~:text=2.6%20Routh,plane%20Real
+
+    """
+    if not f:
+        raise ValueError("zero polynomial")
 
     excluded_domains = [EX, EXRAW]
     if not K in excluded_domains and I in K:
         raise NotImplementedError(
             "Schur conditions is not implemented for complex domains"
         )
+
+    # Check if -1 is a root, since the transformation is not defined in this case
+    evaluation = K.to_sympy(dup_eval(f, -K.one, K))
+    if evaluation.is_Number:
+        if K.is_Exact and K.is_zero(evaluation):
+            return [-K.one]
+        elif not K.is_Exact and math.isclose(evaluation, 0.0):
+            return [-K.one]
+
     if not K.is_Exact:
         K_exact = K.get_exact()
         pe = dup_convert(f, K, K_exact)

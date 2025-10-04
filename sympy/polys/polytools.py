@@ -4235,6 +4235,24 @@ class Poly(Basic):
         domain ``EXRAW``. Conditions may be less simplified and there could be
         some precision issues, but the computation will be a lot faster.
 
+        Examples
+        ========
+
+        >>> from sympy import symbols, Poly, reduce_inequalities
+        >>> x, k = symbols("x k")
+        >>> p3 = Poly(x**3 + x**2 + 2*k*x + 1 - k, x)
+        >>> conditions = p3.schur_conditions()
+        >>> conditions
+        ⎡      2                  2               2          ⎤
+        ⎣- 15⋅k  + 20⋅k - 5, - 8⋅k  - 8⋅k + 8, 3⋅k  + 8⋅k - 3⎦
+        >>> reduce_inequalities([c > 0 for c in conditions])
+        (1/3 < k) & (k < -1/2 + sqrt(5)/2)
+
+        References
+        ==========
+
+        .. [1] https://faculty.washington.edu/chx/teaching/me547/2_1_stability.pdf#:~:text=2.6%20Routh,plane%20Real
+
         """
         conds = f.rep.schur_conditions()
         return [f.domain.to_sympy(cond) for cond in conds]
