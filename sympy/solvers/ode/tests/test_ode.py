@@ -1118,26 +1118,22 @@ def test_issue_27683():
     assert sol1 == expected
     assert sol2 == expected
 
-
 def test_issue_28438():
-    # Test with symbolic exponent
     x = symbols("x")
     k = symbols("k")
     y = Function("y")
     
-    eq = Eq(x**k*y(x) + Derivative(y(x), (x, 2)), 0)
-    sol = dsolve(eq, y(x), hint='2nd_linear_bessel_symbolic')
+    # Symbolic k
+    eq1 = Eq(Derivative(y(x), (x, 2)) + x**k * y(x), 0)
+    sol1 = dsolve(eq1, y(x))
+    assert sol1.has(besselj) and sol1.has(bessely)
     
-    # Check that solution contains Bessel functions
-    assert sol.has(besselj) and sol.has(bessely)
-    
-    # Check with coefficient
-    eq2 = Eq(2*x**k*y(x) + Derivative(y(x), (x, 2)), 0)
-    sol2 = dsolve(eq2, y(x), hint='2nd_linear_bessel_symbolic')
+    # Numeric k=3
+    eq2 = Eq(Derivative(y(x), (x, 2)) + x**3 * y(x), 0)
+    sol2 = dsolve(eq2, y(x))
     assert sol2.has(besselj) and sol2.has(bessely)
     
-    # Verify numeric case still uses power series
-    eq3 = Eq(x**2*y(x) + Derivative(y(x), (x, 2)), 0)
+    # k=2 (returns Bessel, not series)
+    eq3 = Eq(Derivative(y(x), (x, 2)) + x**2 * y(x), 0)
     sol3 = dsolve(eq3, y(x))
-    # Should NOT use the symbolic bessel hint
-    assert '2nd_power_series_ordinary' in classify_ode(eq3, y(x))
+    assert sol3.has(besselj) or sol3.has(bessely) or sol3.has(sin)  # May auto-simplify

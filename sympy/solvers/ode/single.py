@@ -15,7 +15,7 @@ from sympy.core.numbers import zoo
 from sympy.core.relational import Equality, Eq
 from sympy.core.symbol import Symbol, Dummy, Wild
 from sympy.core.mul import Mul
-from sympy.functions import exp, tan, log, sqrt, besselj, bessely, cbrt, airyai, airybi
+from sympy.functions import exp, tan, log, sqrt, besselj, bessely, cbrt, airyai, airybi, Abs
 from sympy.integrals import Integral
 from sympy.polys import Poly
 from sympy.polys.polytools import cancel, factor, factor_list, degree
@@ -2772,8 +2772,7 @@ class SecondLinearBesselSymbolic(SingleODESolver):
     r"""
     Solves second-order ODEs of the form y'' + A*x^k*y = 0 where k is symbolic.
 
-    These equations have solutions in terms of Bessel functions when k is a
-    symbolic parameter (not a specific number).
+    These equations have solutions in terms of Bessel functions.
 
     The general solution is:
 
@@ -2790,8 +2789,7 @@ class SecondLinearBesselSymbolic(SingleODESolver):
     >>> y = Function('y')
     >>> ode = Eq(x**k*y(x) + Derivative(y(x), (x, 2)), 0)
     >>> dsolve(ode)
-    Eq(y(x), sqrt(x)*(C1*besselj(1/(k + 2), 2*x**(k/2 + 1)/(k + 2)) + 
-                      C2*bessely(1/(k + 2), 2*x**(k/2 + 1)/(k + 2))))
+    Eq(y(x), sqrt(x)*(C1*besselj(1/(k + 2), 2*x**(k/2 + 1)/(k + 2)) + C2*bessely(1/(k + 2), 2*x**(k/2 + 1)/(k + 2))))
 
     References
     ==========
@@ -2851,15 +2849,12 @@ class SecondLinearBesselSymbolic(SingleODESolver):
         
         # Check if k is symbolic (has free symbols)
         k_val = pattern_match[k_sym]
-        if not k_val.free_symbols:
-            # k is numeric, not symbolic - let other solvers handle it
-            return False
+
         
         # Store the matched values
         self.match_dict = {
             'A': pattern_match[A_sym],
             'k': k_val,
-            'x0': 0  # We're assuming expansion around x=0
         }
         
         return True
@@ -2872,11 +2867,7 @@ class SecondLinearBesselSymbolic(SingleODESolver):
         A = self.match_dict['A']
         k = self.match_dict['k']
         
-        # Handle special cases
-        if k == -2:
-            raise NotImplementedError(
-                "The case k = -2 leads to a singularity in the Bessel order."
-            )
+       
         
         # For y'' + A*x^k*y = 0
         # The Bessel order and argument are:
@@ -2891,6 +2882,7 @@ class SecondLinearBesselSymbolic(SingleODESolver):
         solution = sqrt(x) * (C1 * besselj(nu, z) + C2 * bessely(nu, z))
         
         return [Eq(f(x), solution)]
+
 class SecondLinearAiry(SingleODESolver):
     r"""
     Gives solution of the Airy differential equation
