@@ -8,6 +8,7 @@ from sympy.core.singleton import S
 from sympy.external.gmpy import GROUND_TYPES
 from sympy.testing.pytest import raises
 
+from sympy import oo, zoo ,nan
 from sympy.polys.domains import QQ, ZZ, EXRAW
 from sympy.polys.matrices.sdm import SDM
 from sympy.polys.matrices.ddm import DDM
@@ -220,6 +221,23 @@ def test_SDM_mul_elementwise():
 
     raises(DMDomainError, lambda: Aq.mul_elementwise(B))
     raises(DMShapeError, lambda: A1.mul_elementwise(B))
+
+
+def test_SDM_scalar_mul_exraw():
+    A1 = SDM({}, (1, 1), EXRAW)
+    expected1 = SDM({0: {0: nan}}, (1, 1), EXRAW)
+    assert A1.mul(oo) == expected1
+    assert A1.rmul(oo) == expected1
+
+    A2 = SDM({0: {1: EXRAW(5)}}, (1, 2), EXRAW)
+    expected2 = SDM({0: {0: nan, 1: zoo}}, (1, 2), EXRAW)
+    assert A2.mul(zoo) == expected2
+
+    A3 = SDM({0: {0: ZZ(1), 1: ZZ(2)}}, (1, 2), ZZ)
+    expected3 = SDM({0: {0: ZZ(3), 1: ZZ(6)}}, (1, 2), ZZ)
+    scalar = ZZ(3)
+    assert A3.mul(scalar) == expected3
+    assert A3.rmul(scalar) == expected3
 
 
 def test_SDM_matmul():
