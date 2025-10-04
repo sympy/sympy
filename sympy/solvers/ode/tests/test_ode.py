@@ -3,6 +3,7 @@ from sympy.core.numbers import (E, I, Rational, pi)
 from sympy.core.relational import Eq
 from sympy.core.singleton import S
 from sympy.core.symbol import (Symbol, symbols)
+from sympy.functions.special.bessel import besselj, bessely
 from sympy.functions.elementary.complexes import (im, re)
 from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.elementary.hyperbolic import acosh
@@ -1116,3 +1117,23 @@ def test_issue_27683():
     expected = Eq(u, C1 + C2*x + 0.000125*x**2)
     assert sol1 == expected
     assert sol2 == expected
+
+def test_issue_28438():
+    x = symbols("x")
+    k = symbols("k")
+    y = Function("y")
+
+    # Symbolic k
+    eq1 = Eq(Derivative(y(x), (x, 2)) + x**k * y(x), 0)
+    sol1 = dsolve(eq1, y(x))
+    assert sol1.has(besselj) and sol1.has(bessely)
+
+    # Numeric k=3
+    eq2 = Eq(Derivative(y(x), (x, 2)) + x**3 * y(x), 0)
+    sol2 = dsolve(eq2, y(x))
+    assert sol2.has(besselj) and sol2.has(bessely)
+
+    # k=2 (returns Bessel, not series)
+    eq3 = Eq(Derivative(y(x), (x, 2)) + x**2 * y(x), 0)
+    sol3 = dsolve(eq3, y(x))
+    assert sol3.has(besselj) or sol3.has(bessely) or sol3.has(sin)  # May auto-simplify
