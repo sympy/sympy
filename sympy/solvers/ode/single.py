@@ -2851,6 +2851,11 @@ class SecondLinearBesselSymbolic(SingleODESolver):
         # Check if k is symbolic (has free symbols)
         k_val = pattern_match[k_sym]
 
+        # Exclude k=0 and k=1 cases (handled by other solvers)
+        # k=0: constant coefficient ODEs
+        # k=1: Airy equation (handled by 2nd_linear_airy)
+        if k_val.is_number and k_val in [0, 1]:
+            return False
 
         # Store the matched values
         self.match_dict = {
