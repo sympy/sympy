@@ -1122,17 +1122,17 @@ def test_issue_28438():
     x = symbols("x")
     k = symbols("k")
     y = Function("y")
-    
+
     # Symbolic k
     eq1 = Eq(Derivative(y(x), (x, 2)) + x**k * y(x), 0)
     sol1 = dsolve(eq1, y(x))
     assert sol1.has(besselj) and sol1.has(bessely)
-    
+
     # Numeric k=3
     eq2 = Eq(Derivative(y(x), (x, 2)) + x**3 * y(x), 0)
     sol2 = dsolve(eq2, y(x))
     assert sol2.has(besselj) and sol2.has(bessely)
-    
+
     # k=2 (returns Bessel, not series)
     eq3 = Eq(Derivative(y(x), (x, 2)) + x**2 * y(x), 0)
     sol3 = dsolve(eq3, y(x))

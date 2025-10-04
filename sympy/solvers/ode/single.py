@@ -2805,82 +2805,83 @@ class SecondLinearBesselSymbolic(SingleODESolver):
         f = self.ode_problem.func
         x = self.ode_problem.sym
         order = self.ode_problem.order
-        
+
         if order != 2:
             return False
-        
+
         # Get linear coefficients
         match = self.ode_problem.get_linear_coefficients(eq, f, order)
         if not match:
             return False
-        
+
         # We need: a3*y'' + b3*y' + c3*y = 0
         # For Bessel with symbolic exponent: y'' + 0*y' + (x^k)*y = 0
         a3 = match[2]  # coefficient of y''
         b3 = match[1]  # coefficient of y'
         c3 = match[0]  # coefficient of y
-        
+
         # Check if b3 = 0 (no first derivative term)
         if b3 != 0:
             return False
-        
+
         # Normalize: divide by coefficient of y''
         if a3 == 0:
             return False
-        
+
         if a3 != 1 and a3 != S.One:
             if not a3.is_constant():
                 return False
             c3 = c3 / a3
-        
+
         # Check if c3 is of the form A*x^k where k has free symbols
         # This indicates symbolic exponent
         A_sym = Wild('A_sym', exclude=[x])
         k_sym = Wild('k_sym', exclude=[x])
-        
+
         pattern_match = c3.match(A_sym * x**k_sym)
         if not pattern_match:
             pattern_match = c3.match(x**k_sym)
             if pattern_match:
                 pattern_match[A_sym] = S.One
-        
-        if not pattern_match:
+
+        # Store the matched values
+        if not pattern_match or k_sym not in pattern_match:
             return False
-        
+
         # Check if k is symbolic (has free symbols)
         k_val = pattern_match[k_sym]
 
-        
+
         # Store the matched values
         self.match_dict = {
             'A': pattern_match[A_sym],
             'k': k_val,
         }
-        
+
         return True
 
     def _get_general_solution(self, *, simplify_flag: bool = True):
         f = self.ode_problem.func.func
         x = self.ode_problem.sym
         (C1, C2) = self.ode_problem.get_numbered_constants(num=2)
-        
+
         A = self.match_dict['A']
         k = self.match_dict['k']
-        
-       
-        
+
+
+
         # For y'' + A*x^k*y = 0
         # The Bessel order and argument are:
         nu = 1 / (k + 2)
-        
+
         if A == 1 or A == S.One:
             z = (2 / (k + 2)) * x**((k + 2)/2)
         else:
             z = (2 * sqrt(Abs(A)) / (k + 2)) * x**((k + 2)/2)
-        
+
         # General solution
         solution = sqrt(x) * (C1 * besselj(nu, z) + C2 * bessely(nu, z))
-        
+
         return [Eq(f(x), solution)]
 
 class SecondLinearAiry(SingleODESolver):
