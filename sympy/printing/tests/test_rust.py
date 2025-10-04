@@ -1,7 +1,8 @@
 from sympy.core import (S, pi, oo, symbols, Rational, Integer,
                         GoldenRatio, EulerGamma, Catalan, Lambda, Dummy,
                         Eq, Ne, Le, Lt, Gt, Ge, Mod)
-from sympy.functions import (Piecewise, sin, cos, Abs, exp, ceiling, sqrt,
+from sympy.functions import (Piecewise, Heaviside,
+                             sin, cos, Abs, exp, ceiling, sqrt,
                              sign, floor)
 from sympy.logic import ITE
 from sympy.testing.pytest import raises
@@ -185,6 +186,30 @@ def test_sign():
     expr = sign(cos(x))
     assert rust_code(expr) == "(if (x.cos() == 0.0) { 0.0 } else { (x.cos()).signum() })"
 
+def test_Heaviside():
+    expr = Heaviside(x + y, pow(z, x * 2))
+    code: str = rust_code(expr)
+
+    prefix = "__cond_"
+    index = code.find(prefix)
+    if index != -1:
+        start = index + len(prefix)
+        # find the next space
+        next_space = code.find(" ", start)
+        if next_space == -1:
+            # If no space is found, take the rest of the string
+            next_space = len(code)
+
+        end = next_space
+        condname = f"__cond_{code[start:end]}"
+        expected = f"""{{
+    let {condname} = x + y;
+    if {condname} > 0.0 {{ 1.0 }} else if {condname} == 0.0 || {condname} == -0.0 {{ z.powf(2.0*x) }} else {{ 0.0 }}
+}}"""
+        assert code == expected
+    else:
+        assert False, ValueError("Condition not found!")
+
 
 def test_reserved_words():
 
@@ -229,11 +254,25 @@ def test_dummy_loops():
     y = IndexedBase('y')
     i = Idx(i, m)
 
-    assert rust_code(x[i], assign_to=y[i]) == (
-        "for i in 0..m {\n"
-        "    y[i] = x[i];\n"
-        "}")
+    code = rust_code(x[i], assign_to=y[i])
+    prefix = "m_"
+    index = code.find(prefix)
+    if index != -1:
+        start = index + len(prefix)
+        # find the next space
+        next_space = code.find(" ", start)
+        if next_space == -1:
+            # If no space is found, take the rest of the string
+            next_space = len(code)
 
+        end = next_space
+        m_name = f"m_{code[start:end]}"
+    else:
+        raise ValueError("Dummy variable m is not found!")
+    expected = f"""for i in 0..{m_name} {{
+    y[i] = x[i];
+}}"""
+    assert code == expected
 
 def test_loops():
     m, n = symbols('m n', integer=True)
@@ -352,9 +391,15 @@ def test_user_functions():
 
 
 def test_matrix():
-    assert rust_code(Matrix([1, 2, 3])) == '[1, 2, 3]'
-    with raises(ValueError):
-        rust_code(Matrix([[1, 2, 3]]))
+    assert rust_code(Matrix([1, 2, 3])) == '[[1], [2], [3]]'
+    assert rust_code(Matrix([[1, 2, 3]])) == '[[1, 2, 3]]'
+    expr = Matrix([[x, y], [y, x], [z, x]])
+    code = rust_code(expr)
+    assert code == "[[x, y], [y, x], [z, x]]"
+
+    expr = Matrix([x, y, z] * 6).reshape(3, 6)
+    code = rust_code(expr)
+    assert code == "[[x, y, z, x, y, z], [x, y, z, x, y, z], [x, y, z, x, y, z]]"
 
 
 def test_sparse_matrix():

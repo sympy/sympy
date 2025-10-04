@@ -40,7 +40,7 @@ from sympy.codegen.ast import (
     float32, float64, int32,
     real, integer,  bool_
 )
-from sympy.core import S, Rational, Float, Lambda
+from sympy.core import S, Rational, Float, Lambda, Dummy
 from sympy.core.expr import Expr
 from sympy.core.numbers import equal_valued
 from sympy.functions.elementary.integers import ceiling, floor
@@ -467,9 +467,6 @@ class RustCodePrinter(CodePrinter):
     def _print_Idx(self, expr):
         return expr.label.name
 
-    def _print_Dummy(self, expr):
-        return expr.name
-
     def _print_Exp1(self, expr, _type=False):
         return "E"
 
@@ -493,6 +490,31 @@ class RustCodePrinter(CodePrinter):
 
     def _print_NaN(self, expr, _type=False):
         return "NAN"
+
+    def _print_Max(self, expr):
+        arg0_printed = self._print(expr.args[0])
+        arg1_printed = self._print(expr.args[1])
+        return f"({arg0_printed}).max({arg1_printed})"
+
+    def _print_Min(self, expr):
+        arg0_printed = self._print(expr.args[0])
+        arg1_printed = self._print(expr.args[1])
+        return f"({arg0_printed}).min({arg1_printed})"
+
+    def _print_Heaviside(self, expr):
+        arg0 = expr.args[0]
+        arg0_printed = self._print(arg0)
+        default = expr.args[1] if len(expr.args) > 1 else 0.5
+        default_printed = self._print(default)
+
+        dummy_cond = Dummy('__cond')
+        condname = f"__cond_{dummy_cond.dummy_index}"
+        return f"""{{
+let {condname} = {arg0_printed};
+if {condname} > 0.0 {{ 1.0 }} else if {condname} == 0.0 || {condname} == -0.0 {{ {default_printed} }} else {{ 0.0 }}
+}}"""
+        # return f"if ({arg0_printed}) > 0.0 {{ 1.0 }} else if ({arg0_printed}) == 0.0 || ({arg0_printed}) == -0.0 {{ {default_printed} }} else {{ 0.0 }}"
+
 
     def _print_Piecewise(self, expr):
         if expr.args[-1].cond != True:
@@ -526,10 +548,17 @@ class RustCodePrinter(CodePrinter):
         return self._print(expr.rewrite(Piecewise, deep=False))
 
     def _print_MatrixBase(self, A):
-        if A.cols == 1:
-            return "[%s]" % ", ".join(self._print(a) for a in A)
-        else:
-            raise ValueError("Full Matrix Support in Rust need Crates (https://crates.io/keywords/matrix).")
+        # Print all matrices with type [[scalar_type; ncols]; nrows]
+        # even if nrows==1 or ncols==1
+
+        nrows, ncols = A.shape
+        rows = []
+        for irow in range(nrows):
+            row = [self._print(A[irow, icol]) for icol in range(ncols)]
+            row_code = f"[{', '.join(row)}]"
+            rows.append(row_code)
+
+        return f"[{', '.join(rows)}]"
 
     def _print_SparseRepMatrix(self, mat):
         # do not allow sparse matrices to be made dense
