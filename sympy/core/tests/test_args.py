@@ -2346,6 +2346,14 @@ def test_sympy__functions__elementary__miscellaneous__Rem():
     from sympy.functions.elementary.miscellaneous import Rem
     assert _test_args(Rem(x, 2))
 
+def test_sympy__functions__elementary__miscellaneous__Hyperoperation():
+    from sympy.functions.elementary.miscellaneous import Hyperoperation
+    assert _test_args(Hyperoperation(x, 2, 4))
+
+def test_sympy__functions__elementary__miscellaneous__Loop():
+    from sympy.functions.elementary.miscellaneous import Loop
+    assert _test_args(Loop(x + 2, y))
+
 
 def test_sympy__functions__elementary__piecewise__ExprCondPair():
     from sympy.functions.elementary.piecewise import ExprCondPair
