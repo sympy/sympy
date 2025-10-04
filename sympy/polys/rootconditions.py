@@ -276,10 +276,12 @@ def dup_schur_conditions(f: dup[Er], K: Domain[Er]) -> list[Er]:
     # Check if -1 is a root, since the transformation is not defined in this case
     evaluation = K.to_sympy(dup_eval(f, -K.one, K))
     if evaluation.is_Number:
-        if K.is_Exact and K.is_zero(evaluation):
-            return [-K.one]
-        elif not K.is_Exact and math.isclose(evaluation, 0.0):
-            return [-K.one]
+        if K not in excluded_domains and K.is_Exact:
+            if K.is_zero(K.from_sympy(evaluation)):
+                return [-K.one]
+        else:
+            if math.isclose(evaluation, 0.0):
+                return [-K.one]
 
     if not K.is_Exact:
         K_exact = K.get_exact()
