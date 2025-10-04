@@ -834,12 +834,10 @@ class SDM(dict):
         {0: {1: 6}, 1: {0: 3}}
 
         """
-        Csdm = unop_dict(A, lambda aij: aij*b)
-        return A.new(Csdm, A.shape, A.domain)
+        return sdm_scalar_mul(A, b, lambda x, y: x * y)
 
     def rmul(A, b):
-        Csdm = unop_dict(A, lambda aij: b*aij)
-        return A.new(Csdm, A.shape, A.domain)
+        return sdm_scalar_mul(A, b, lambda x, y: y * x)
 
     def mul_elementwise(A, B):
         if A.domain != B.domain:
@@ -1587,6 +1585,33 @@ def sdm_matmul_exraw(A, B, K, m, o):
                                 C.pop(i, None)
 
     return C
+
+
+def sdm_scalar_mul(A, b, op):
+    """
+    Handles special cases like 0 * oo -> nan by creating a dense result
+    when necessary. For all other cases, it uses the fast sparse approach.
+    """
+
+    K = A.domain
+    zero = K.zero
+    zero_prod = op(zero, b)
+
+    if K.is_EXRAW and (zero_prod != zero):
+        m, n = A.shape
+        Csdm = {i: {j: zero_prod for j in range(n)} for i in range(m)}
+        for i, Ai in A.items():
+            Ci = Csdm[i]
+            for j, Aij in Ai.items():
+                Cij = op(Aij, b)
+                if Cij == zero:
+                    del Ci[j]
+                else:
+                    Ci[j] = Cij
+        return A.new(Csdm, A.shape, K)
+
+    Csdm = unop_dict(A, lambda aij: op(aij, b))
+    return A.new(Csdm, A.shape, K)
 
 
 def sdm_irref(A):
