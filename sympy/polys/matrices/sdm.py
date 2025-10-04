@@ -1599,7 +1599,7 @@ def sdm_scalar_mul(A, b, op):
 
     if K.is_EXRAW and (zero_prod != zero):
         m, n = A.shape
-        Csdm = {i: {j: zero_prod for j in range(n)} for i in range(m)}
+        Csdm = {i: dict.fromkeys(range(n), zero_prod) for i in range(m)}
         for i, Ai in A.items():
             Ci = Csdm[i]
             for j, Aij in Ai.items():
