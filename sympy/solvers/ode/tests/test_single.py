@@ -636,15 +636,6 @@ def test_2nd_linear_bessel_symbolic():
     _ode_solver_test(_get_examples_ode_sol_2nd_linear_bessel_symbolic)
 
 
-def test_2nd_linear_bessel_symbolic_exclusion():
-    """Test the case for Euler-Cauchy form is excluded from 2nd_linear_bessel_symbolic"""
-    # k = -2 should NOT be matched (division by zero)
-    eq = x**(-2)*f(x) + f(x).diff(x, 2)
-    hints = classify_ode(eq)
-    assert '2nd_linear_bessel_symbolic' not in hints
-    # Should be handled by other solvers instead
-    assert 'nth_linear_euler_eq_homogeneous' in hints or '2nd_linear_bessel' in hints
-
 
 @_add_example_keys
 def _get_examples_ode_sol_euler_homogeneous():

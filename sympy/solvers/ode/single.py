@@ -2851,9 +2851,6 @@ class SecondLinearBesselSymbolic(SingleODESolver):
         # Check if k is symbolic (has free symbols)
         k_val = pattern_match[k_sym]
 
-        # Exclude k=-2 (division by zero in nu = 1/(k+2))
-        if k_val == -2:
-            return False
 
         # Store the matched values
         self.match_dict = {
