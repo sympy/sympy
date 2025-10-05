@@ -2854,7 +2854,7 @@ class SecondLinearBesselSymbolic(SingleODESolver):
         # Exclude k=-2 (division by zero in nu = 1/(k+2))
         if k_val == -2:
             return False
-        
+
         # Store the matched values
         self.match_dict = {
             'A': pattern_match[A_sym],
@@ -2879,7 +2879,7 @@ class SecondLinearBesselSymbolic(SingleODESolver):
         # Solution is y = sqrt(x)*(C1*sin(sqrt(3)*log(x)/2) + C2*cos(sqrt(3)*log(x)/2))
         # But we shouldn't handle this case here. Instead, raise an error if hint is provided explicitly.
             raise NotImplementedError("k=-2 case should be handled by nth_linear_euler_eq_homogeneous")
-        
+
         # For y'' + A*x^k*y = 0
         # The Bessel order and argument are:
         nu = 1 / (k + 2)

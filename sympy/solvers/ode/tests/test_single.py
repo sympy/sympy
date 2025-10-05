@@ -637,7 +637,7 @@ def test_2nd_linear_bessel_symbolic():
 
 
 def test_2nd_linear_bessel_symbolic_exclusion():
-    """Test that case for Euler-Cauchy form is excluded from 2nd_linear_bessel_symbolic"""
+    """Test the case for Euler-Cauchy form is excluded from 2nd_linear_bessel_symbolic"""
     # k = -2 should NOT be matched (division by zero)
     eq = x**(-2)*f(x) + f(x).diff(x, 2)
     hints = classify_ode(eq)
