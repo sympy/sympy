@@ -2099,15 +2099,15 @@ def _get_examples_ode_sol_2nd_linear_bessel_symbolic():
             # Basic case with symbolic k
             '2nd_bessel_symbolic_01': {
                 'eq': x**k*f(x) + f(x).diff(x, 2),
-                'sol': [Eq(f(x), sqrt(x)*(C1*besselj(1/(k + 2), 2*x**(k/2 + 1)/(k + 2)) + 
+                'sol': [Eq(f(x), sqrt(x)*(C1*besselj(1/(k + 2), 2*x**(k/2 + 1)/(k + 2)) +
                                         C2*bessely(1/(k + 2), 2*x**(k/2 + 1)/(k + 2))))],
                 'checkodesol_XFAIL': True,  # checkodesol cannot handle symbolic k
             },
-            
+
             # Case with symbolic coefficient A
             '2nd_bessel_symbolic_02': {
                 'eq': A*x**k*f(x) + f(x).diff(x, 2),
-                'sol': [Eq(f(x), sqrt(x)*(C1*besselj(1/(k + 2), 2*sqrt(Abs(A))*x**(k/2 + 1)/(k + 2)) + 
+                'sol': [Eq(f(x), sqrt(x)*(C1*besselj(1/(k + 2), 2*sqrt(Abs(A))*x**(k/2 + 1)/(k + 2)) +
                                         C2*bessely(1/(k + 2), 2*sqrt(Abs(A))*x**(k/2 + 1)/(k + 2))))],
                 'checkodesol_XFAIL': True,  # checkodesol cannot handle symbolic A and k
             },
