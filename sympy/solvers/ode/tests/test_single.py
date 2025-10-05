@@ -635,6 +635,17 @@ def test_2nd_linear_bessel_symbolic():
     """Test cases for the second order linear Bessel equation solver with symbolic parameters"""
     _ode_solver_test(_get_examples_ode_sol_2nd_linear_bessel_symbolic)
 
+
+def test_2nd_linear_bessel_symbolic_exclusion():
+    """Test that case for Euler-Cauchy form is excluded from 2nd_linear_bessel_symbolic"""
+    # k = -2 should NOT be matched (division by zero)
+    eq = x**(-2)*f(x) + f(x).diff(x, 2)
+    hints = classify_ode(eq)
+    assert '2nd_linear_bessel_symbolic' not in hints
+    # Should be handled by other solvers instead
+    assert 'nth_linear_euler_eq_homogeneous' in hints or '2nd_linear_bessel' in hints
+
+
 @_add_example_keys
 def _get_examples_ode_sol_euler_homogeneous():
     r1, r2, r3, r4, r5 = [rootof(x**5 - 14*x**4 + 71*x**3 - 154*x**2 + 120*x - 1, n) for n in range(5)]

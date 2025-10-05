@@ -2851,7 +2851,10 @@ class SecondLinearBesselSymbolic(SingleODESolver):
         # Check if k is symbolic (has free symbols)
         k_val = pattern_match[k_sym]
 
-
+        # Exclude k=-2 (division by zero in nu = 1/(k+2))
+        if k_val == -2:
+            return False
+        
         # Store the matched values
         self.match_dict = {
             'A': pattern_match[A_sym],
@@ -2868,8 +2871,15 @@ class SecondLinearBesselSymbolic(SingleODESolver):
         A = self.match_dict['A']
         k = self.match_dict['k']
 
-
-
+        # Special case: k = -2 causes division by zero
+        # The equation x^(-2)*y + y'' = 0 is an Euler equation
+        # and should be handled differently
+        if k == -2:
+        # This is x^2*y'' + y = 0 after multiplying by x^2
+        # Solution is y = sqrt(x)*(C1*sin(sqrt(3)*log(x)/2) + C2*cos(sqrt(3)*log(x)/2))
+        # But we shouldn't handle this case here. Instead, raise an error if hint is provided explicitly.
+            raise NotImplementedError("k=-2 case should be handled by nth_linear_euler_eq_homogeneous")
+        
         # For y'' + A*x^k*y = 0
         # The Bessel order and argument are:
         nu = 1 / (k + 2)
