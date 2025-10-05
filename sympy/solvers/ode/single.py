@@ -15,7 +15,7 @@ from sympy.core.numbers import zoo
 from sympy.core.relational import Equality, Eq
 from sympy.core.symbol import Symbol, Dummy, Wild
 from sympy.core.mul import Mul
-from sympy.functions import exp, tan, log, sqrt, besselj, bessely, cbrt, airyai, airybi, Abs
+from sympy.functions import exp, tan, log, sqrt, besselj, bessely, cbrt, airyai, airybi, Abs, sin, cos
 from sympy.integrals import Integral
 from sympy.polys import Poly
 from sympy.polys.polytools import cancel, factor, factor_list, degree
@@ -2872,10 +2872,14 @@ class SecondLinearBesselSymbolic(SingleODESolver):
         # The equation x^(-2)*y + y'' = 0 is an Euler equation
         # and should be handled differently
         if k == -2:
-        # This is x^2*y'' + y = 0 after multiplying by x^2
-        # Solution is y = sqrt(x)*(C1*sin(sqrt(3)*log(x)/2) + C2*cos(sqrt(3)*log(x)/2))
-        # But we shouldn't handle this case here. Instead, raise an error if hint is provided explicitly.
-            raise NotImplementedError("k=-2 case should be handled by nth_linear_euler_eq_homogeneous")
+            # For x^(-2)*y + y'' = 0, the solution is an Euler equation form
+            # Multiplying by x^2: y'' + y = 0 which gives y = sqrt(x)*(C1*sin(sqrt(3)*log(x)/2) + C2*cos(sqrt(3)*log(x)/2))
+            if A == 1 or A == S.One:
+                return [Eq(f(x), sqrt(x)*(C1*sin(sqrt(3)*log(x)/2) + C2*cos(sqrt(3)*log(x)/2)))]
+            else:
+                # General A case for k=-2
+                sqrt_term = sqrt(Abs(A)*3)
+                return [Eq(f(x), sqrt(x)*(C1*sin(sqrt_term*log(x)/2) + C2*cos(sqrt_term*log(x)/2)))]
 
         # For y'' + A*x^k*y = 0
         # The Bessel order and argument are:
