@@ -148,6 +148,7 @@ class DifferentialExtension:
     - d: The top level extension derivation, as defined by the current
       derivation (see level below).
     - case: The string representation of the case of self.d.
+    - transcendental: Whether all the extensions in the tower are transcendental
     (Note that self.T and self.D will always contain the complete extension,
     regardless of the level.  Therefore, you should ALWAYS use DE.t and DE.d
     instead of DE.T[-1] and DE.D[-1].  If you want to have a list of the
@@ -168,8 +169,8 @@ class DifferentialExtension:
     # only create one DifferentialExtension per integration).  Also, it's nice
     # to have a safeguard when debugging.
     __slots__ = ('f', 'origf', 'x', 'T', 'D', 'fa', 'fd', 'Tfuncs',
-        'backsubs', 'exts', 'extargs', 'cases', 'case', 't', 'd', 'newf',
-        'level', 'ts', 'dummy')
+        'backsubs', 'exts', 'extargs', 'cases', 'case', 'transcendental',
+        't', 'd', 'newf', 'level', 'ts', 'dummy')
 
     def __init__(self, f=None, x=None, handle_first='log', dummy=False, extension=None, rewrite_complex=None):
         """
@@ -208,7 +209,7 @@ class DifferentialExtension:
         if extension:
             if 'D' not in extension:
                 raise ValueError("At least the key D must be included with "
-                    "the extension flag to DifferentialExtension.")
+                                 "the extension flag to DifferentialExtension.")
             for attr in extension:
                 setattr(self, attr, extension[attr])
 
@@ -217,11 +218,11 @@ class DifferentialExtension:
             return
         elif f is None or x is None:
             raise ValueError("Either both f and x or a manual extension must "
-            "be given.")
+                             "be given.")
 
         if handle_first not in ('log', 'exp'):
             raise ValueError("handle_first must be 'log' or 'exp', not %s." %
-                str(handle_first))
+                             str(handle_first))
 
         # f will be the original function, self.f might change if we reset
         # (e.g., we pull out a constant from an exponential); origf always
@@ -246,7 +247,7 @@ class DifferentialExtension:
             # rewrite the trigonometric components
             for candidates, rule in rewritables.items():
                 self.newf = self.newf.rewrite(candidates, rule)
-            self.newf = cancel(self.newf)
+                self.newf = cancel(self.newf)
         else:
             if any(i.has(x) for i in self.f.atoms(sin, cos, cot, tan, sinh,
                     cosh, coth, tanh, asin, acos, acot, atan)):
@@ -269,11 +270,11 @@ class DifferentialExtension:
                 # We couldn't find a new extension on the last pass, so I guess
                 # we can't do it.
                 raise NotImplementedError("Couldn't find an elementary "
-                    "transcendental extension for %s.  Try using a " % str(f) +
-                    "manual extension with the extension flag.")
+                                          "transcendental extension for %s.  Try using a " % str(f) +
+                                          "manual extension with the extension flag.")
 
             exps, pows, numpows, sympows, log_new_extension = \
-                    self._rewrite_exps_pows(exps, pows, numpows, sympows, log_new_extension)
+                self._rewrite_exps_pows(exps, pows, numpows, sympows, log_new_extension)
 
             logs, symlogs = self._rewrite_logs(logs, symlogs)
 
@@ -308,7 +309,7 @@ class DifferentialExtension:
         return None
 
     def _rewrite_exps_pows(self, exps, pows, numpows,
-            sympows, log_new_extension):
+                           sympows, log_new_extension):
         """
         Rewrite exps/pows for better processing.
         """
@@ -373,16 +374,16 @@ class DifferentialExtension:
         # TODO: This probably doesn't need to be completely recomputed at
         # each pass.
         exps = update_sets(exps, self.newf.atoms(exp),
-            lambda i: i.exp.is_rational_function(*self.T) and
-            i.exp.has(*self.T))
+                           lambda i: i.exp.is_rational_function(*self.T) and
+                           i.exp.has(*self.T))
         pows = update_sets(pows, self.newf.atoms(Pow),
-            lambda i: i.exp.is_rational_function(*self.T) and
-            i.exp.has(*self.T))
+                           lambda i: i.exp.is_rational_function(*self.T) and
+                           i.exp.has(*self.T))
         numpows = update_sets(numpows, set(pows),
-            lambda i: not i.base.has(*self.T))
+                              lambda i: not i.base.has(*self.T))
         sympows = update_sets(sympows, set(pows) - set(numpows),
-            lambda i: i.base.is_rational_function(*self.T) and
-            not i.exp.is_Integer)
+                              lambda i: i.base.is_rational_function(*self.T) and
+                              not i.exp.is_Integer)
 
         # The easiest way to deal with non-base E powers is to convert them
         # into base E, integrate, and then convert back.
@@ -394,8 +395,9 @@ class DifferentialExtension:
             # exp to do that :)
             if i in sympows:
                 if i.exp.is_Rational:
-                    raise NotImplementedError("Algebraic extensions are "
-                        "not supported (%s)." % str(i))
+                    self.transcendental = False
+                    # raise NotImplementedError("Algebraic extensions are "
+                    #                           "not supported (%s)." % str(i))
                 # We can add a**b only if log(a) in the extension, because
                 # a**b == exp(b*log(a)).
                 basea, based = frac_in(i.base, self.t)
@@ -412,7 +414,7 @@ class DifferentialExtension:
                     self.backsubs += [(new, old)]
                     log_new_extension = self._log_part([log(i.base)])
                     exps = update_sets(exps, self.newf.atoms(exp), lambda i:
-                        i.exp.is_rational_function(*self.T) and i.exp.has(*self.T))
+                                       i.exp.is_rational_function(*self.T) and i.exp.has(*self.T))
                     continue
                 ans, u, const = A
                 newterm = exp(i.exp*(log(const) + u))
@@ -432,7 +434,7 @@ class DifferentialExtension:
             else:
                 # i in numpows
                 newterm = new
-            # TODO: Just put it in self.Tfuncs
+                # TODO: Just put it in self.Tfuncs
             self.backsubs.append((new, old))
             self.newf = self.newf.xreplace({old: newterm})
             exps.append(newterm)
@@ -445,12 +447,12 @@ class DifferentialExtension:
         """
         atoms = self.newf.atoms(log)
         logs = update_sets(logs, atoms,
-            lambda i: i.args[0].is_rational_function(*self.T) and
-            i.args[0].has(*self.T))
+                           lambda i: i.args[0].is_rational_function(*self.T) and
+                           i.args[0].has(*self.T))
         symlogs = update_sets(symlogs, atoms,
-            lambda i: i.has(*self.T) and i.args[0].is_Pow and
-            i.args[0].base.is_rational_function(*self.T) and
-            not i.args[0].exp.is_Integer)
+                              lambda i: i.has(*self.T) and i.args[0].is_Pow and
+                              i.args[0].base.is_rational_function(*self.T) and
+                              not i.args[0].exp.is_Integer)
 
         # We can handle things like log(x**y) by converting it to y*log(x)
         # This will fix not only symbolic exponents of the argument, but any
@@ -482,11 +484,12 @@ class DifferentialExtension:
             self.T = [i.gen for i in self.D]
         if not self.x:
             self.x = self.T[0]
-        self.cases = [get_case(d, t) for d, t in zip(self.D, self.T)]
-        self.level = -1
-        self.t = self.T[self.level]
-        self.d = self.D[self.level]
-        self.case = self.cases[self.level]
+            self.cases = [get_case(d, t) for d, t in zip(self.D, self.T)]
+            self.level = -1
+            self.t = self.T[self.level]
+            self.d = self.D[self.level]
+            self.case = self.cases[self.level]
+            self.transcendental = False
 
     def _exp_part(self, exps):
         """
@@ -532,7 +535,7 @@ class DifferentialExtension:
                     self.newf = self.newf.xreplace({exp(arg): exp(const)*Mul(*[
                         u**power for u, power in ans])})
                     self.newf = self.newf.xreplace({exp(p*exparg):
-                        exp(const*p) * Mul(*[u**power for u, power in ans])
+                                                    exp(const*p) * Mul(*[u**power for u, power in ans])
                         for exparg, p in others})
                     # TODO: Add something to backsubs to put exp(const*p)
                     # back together.
@@ -561,36 +564,36 @@ class DifferentialExtension:
                     if const or len(ans) > 1:
                         rad = Mul(*[term**(power/n) for term, power in ans])
                         self.newf = self.newf.xreplace({exp(p*exparg):
-                            exp(const*p)*rad for exparg, p in others})
+                                                        exp(const*p)*rad for exparg, p in others})
                         self.newf = self.newf.xreplace(dict(list(zip(reversed(self.T),
-                            reversed([f(self.x) for f in self.Tfuncs])))))
+                                                                     reversed([f(self.x) for f in self.Tfuncs])))))
                         restart = True
                         break
                     else:
                         # TODO: give algebraic dependence in error string
-                        raise NotImplementedError("Cannot integrate over "
-                            "algebraic extensions.")
+                        # raise NotImplementedError("Cannot integrate over "
+                        #     "algebraic extensions.")
+                        self.algebraic = False
 
+            arga, argd = frac_in(arg, self.t)
+            darga = (argd*derivation(Poly(arga, self.t), self) -
+                     arga*derivation(Poly(argd, self.t), self))
+            dargd = argd**2
+            darga, dargd = darga.cancel(dargd, include=True)
+            darg = darga.as_expr()/dargd.as_expr()
+            self.t = next(self.ts)
+            self.T.append(self.t)
+            self.extargs.append(arg)
+            self.exts.append('exp')
+            self.D.append(darg.as_poly(self.t, expand=False)*Poly(self.t,
+                                                                  self.t, expand=False))
+            if self.dummy:
+                i = Dummy("i")
             else:
-                arga, argd = frac_in(arg, self.t)
-                darga = (argd*derivation(Poly(arga, self.t), self) -
-                    arga*derivation(Poly(argd, self.t), self))
-                dargd = argd**2
-                darga, dargd = darga.cancel(dargd, include=True)
-                darg = darga.as_expr()/dargd.as_expr()
-                self.t = next(self.ts)
-                self.T.append(self.t)
-                self.extargs.append(arg)
-                self.exts.append('exp')
-                self.D.append(darg.as_poly(self.t, expand=False)*Poly(self.t,
-                    self.t, expand=False))
-                if self.dummy:
-                    i = Dummy("i")
-                else:
-                    i = Symbol('i')
+                i = Symbol('i')
                 self.Tfuncs += [Lambda(i, exp(arg.subs(self.x, i)))]
                 self.newf = self.newf.xreplace(
-                        {exp(exparg): self.t**p for exparg, p in others})
+                    {exp(exparg): self.t**p for exparg, p in others})
                 new_extension = True
 
         if restart:
@@ -658,7 +661,7 @@ class DifferentialExtension:
             else:
                 arga, argd = frac_in(arg, self.t)
                 darga = (argd*derivation(Poly(arga, self.t), self) -
-                    arga*derivation(Poly(argd, self.t), self))
+                         arga*derivation(Poly(argd, self.t), self))
                 dargd = argd**2
                 darg = darga.as_expr()/dargd.as_expr()
                 self.t = next(self.ts)
@@ -666,14 +669,14 @@ class DifferentialExtension:
                 self.extargs.append(arg)
                 self.exts.append('log')
                 self.D.append(cancel(darg.as_expr()/arg).as_poly(self.t,
-                    expand=False))
+                                                                 expand=False))
                 if self.dummy:
                     i = Dummy("i")
                 else:
                     i = Symbol('i')
-                self.Tfuncs += [Lambda(i, log(arg.subs(self.x, i)))]
-                self.newf = self.newf.xreplace({log(arg): self.t})
-                new_extension = True
+                    self.Tfuncs += [Lambda(i, log(arg.subs(self.x, i)))]
+                    self.newf = self.newf.xreplace({log(arg): self.t})
+                    new_extension = True
 
         return new_extension
 
@@ -691,7 +694,7 @@ class DifferentialExtension:
         exts, extargs).
         """
         return (self.fa, self.fd, self.D, self.T, self.Tfuncs,
-            self.backsubs, self.exts, self.extargs)
+                self.backsubs, self.exts, self.extargs)
 
     # NOTE: this printing doesn't follow the Python's standard
     # eval(repr(DE)) == DE, where DE is the DifferentialExtension object,
@@ -726,6 +729,7 @@ class DifferentialExtension:
         self.t = self.x
         self.T = [self.x]
         self.D = [Poly(1, self.x)]
+        self.transcendental = True
         self.level = -1
         self.exts = []
         self.extargs = []
@@ -734,8 +738,8 @@ class DifferentialExtension:
         else:
             # For testing
             self.ts = numbered_symbols('t')
-        # For various things that we change to make things work that we need to
-        # change back when we are done.
+            # For various things that we change to make things work that we need to
+            # change back when we are done.
         self.backsubs = []
         self.Tfuncs = []
         self.newf = self.f
@@ -783,7 +787,7 @@ class DifferentialExtension:
         """
         if self.level >= -1:
             raise ValueError("The level of the differential extension cannot "
-                "be incremented any further.")
+                             "be incremented any further.")
 
         self.level += 1
         self.t = self.T[self.level]
@@ -804,7 +808,7 @@ class DifferentialExtension:
         """
         if self.level <= -len(self.T):
             raise ValueError("The level of the differential extension cannot "
-                "be decremented any further.")
+                             "be decremented any further.")
 
         self.level -= 1
         self.t = self.T[self.level]
