@@ -2872,14 +2872,10 @@ class SecondLinearBesselSymbolic(SingleODESolver):
         # The equation x^(-2)*y + y'' = 0 is an Euler equation
         # and should be handled differently
         if k == -2:
-            # For x^(-2)*y + y'' = 0, the solution is an Euler equation form
-            # Multiplying by x^2: y'' + y = 0 which gives y = sqrt(x)*(C1*sin(sqrt(3)*log(x)/2) + C2*cos(sqrt(3)*log(x)/2))
-            if A == 1 or A == S.One:
-                return [Eq(f(x), sqrt(x)*(C1*sin(sqrt(3)*log(x)/2) + C2*cos(sqrt(3)*log(x)/2)))]
-            else:
-                # General A case for k=-2
-                sqrt_term = sqrt(Abs(A)*3)
-                return [Eq(f(x), sqrt(x)*(C1*sin(sqrt_term*log(x)/2) + C2*cos(sqrt_term*log(x)/2)))]
+            # For x^(-2)*y + y'' = 0, characteristic equation is r^2 - r + A = 0
+            discriminant = 1 - 4*A
+            omega = sqrt(Abs(discriminant)) / 2
+            return [Eq(f(x), sqrt(x)*(C1*sin(omega*log(x)) + C2*cos(omega*log(x))))]
 
         # For y'' + A*x^k*y = 0
         # The Bessel order and argument are:

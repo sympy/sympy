@@ -2113,6 +2113,24 @@ def _get_examples_ode_sol_2nd_linear_bessel_symbolic():
                                         C2*bessely(1/(k + 2), 2*sqrt(Abs(A))*x**(k/2 + 1)/(k + 2))))],
                 'checkodesol_XFAIL': True,  # checkodesol cannot handle symbolic A and k
             },
+            # Special case k = -2
+            '2nd_bessel_symbolic_03': {
+                'eq': x**(-2)*f(x) + f(x).diff(x, 2),
+                'sol': [Eq(f(x), sqrt(x)*(C1*sin(sqrt(3)*log(x)/2) + C2*cos(sqrt(3)*log(x)/2)))],
+                'checkodesol_XFAIL': True,
+            },
+            # Case k = -4
+            '2nd_bessel_symbolic_04': {
+                'eq': x**(-4)*f(x) + f(x).diff(x, 2),
+                'sol': [Eq(f(x), sqrt(x)*(C1*besselj(-S(1)/2, -1/x) + C2*bessely(-S(1)/2, -1/x)))],
+                'checkodesol_XFAIL': True,
+            },
+            # Case with coefficient for k = -2
+            '2nd_bessel_symbolic_05': {
+                'eq': 2*x**(-2)*f(x) + f(x).diff(x, 2),
+                'sol': [Eq(f(x), sqrt(x)*(C1*sin(sqrt(7)*log(x)/2) + C2*cos(sqrt(7)*log(x)/2)))],
+                'checkodesol_XFAIL': True,
+            },
         }
     }
 
