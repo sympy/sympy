@@ -16,6 +16,7 @@ llvmlite = import_module('llvmlite')
 if llvmlite:
     ll = import_module('llvmlite.ir').ir
     llvm = import_module('llvmlite.binding').binding
+    llvm.initialize()
     llvm.initialize_native_target()
     llvm.initialize_native_asmprinter()
 
