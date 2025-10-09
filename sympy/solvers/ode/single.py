@@ -2784,14 +2784,12 @@ class SecondLinearBesselSymbolic(SingleODESolver):
     Examples
     ========
 
-    >>> from sympy import symbols, Function, dsolve, Eq, Derivative
-    >>> x = symbols('x')
-    >>> k = symbols('k')
+    >>> from sympy import symbols, Function, dsolve, Derivative
+    >>> x, k = symbols('x k')
     >>> y = Function('y')
-    >>> ode = Eq(x**k*y(x) + Derivative(y(x), (x, 2)), 0)
-    >>> dsolve(ode)
-    Eq(y(x), sqrt(x)*(C1*besselj(1/(k + 2), 2*x**(k/2 + 1)/(k + 2))
-                + C2*bessely(1/(k + 2), 2*x**(k/2 + 1)/(k + 2))))
+    >>> dsolve(Derivative(y(x), (x, 2)) + x**k*y(x))
+    Eq(y(x), sqrt(x)*(C1*besselj(1/(k + 2), 2*x**(k/2 + 1)/(k + 2)) +
+                  C2*bessely(1/(k + 2), 2*x**(k/2 + 1)/(k + 2))))
 
     References
     ==========
@@ -2830,10 +2828,7 @@ class SecondLinearBesselSymbolic(SingleODESolver):
         if a3 == 0:
             return False
 
-        if a3 != 1 and a3 != S.One:
-            if not a3.is_constant():
-                return False
-            c3 = c3 / a3
+        c3 = c3 / a3
 
         # Check if c3 is of the form A*x^k where k has free symbols
         # This indicates symbolic exponent
@@ -2852,7 +2847,6 @@ class SecondLinearBesselSymbolic(SingleODESolver):
 
         # Check if k is symbolic (has free symbols)
         k_val = pattern_match[k_sym]
-
 
         # Store the matched values
         self.match_dict = {
