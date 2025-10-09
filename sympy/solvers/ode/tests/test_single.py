@@ -636,7 +636,6 @@ def test_2nd_linear_bessel_symbolic():
     _ode_solver_test(_get_examples_ode_sol_2nd_linear_bessel_symbolic)
 
 
-
 @_add_example_keys
 def _get_examples_ode_sol_euler_homogeneous():
     r1, r2, r3, r4, r5 = [rootof(x**5 - 14*x**4 + 71*x**3 - 154*x**2 + 120*x - 1, n) for n in range(5)]
@@ -2089,6 +2088,7 @@ def _get_examples_ode_sol_2nd_linear_bessel():
     },
     }
     }
+
 
 @_add_example_keys
 def _get_examples_ode_sol_2nd_linear_bessel_symbolic():

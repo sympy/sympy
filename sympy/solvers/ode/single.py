@@ -2768,6 +2768,7 @@ class SecondLinearBessel(SingleODESolver):
         return [Eq(f(x), ((x**(Rational(1-c4,2)))*(C1*besselj(n/d4,a4*x**d4/d4)
             + C2*bessely(n/d4,a4*x**d4/d4))).subs(x, x-b4))]
 
+
 class SecondLinearBesselSymbolic(SingleODESolver):
     r"""
     Solves second-order ODEs of the form y'' + A*x^k*y = 0 where k is symbolic.
@@ -2789,7 +2790,8 @@ class SecondLinearBesselSymbolic(SingleODESolver):
     >>> y = Function('y')
     >>> ode = Eq(x**k*y(x) + Derivative(y(x), (x, 2)), 0)
     >>> dsolve(ode)
-    Eq(y(x), sqrt(x)*(C1*besselj(1/(k + 2), 2*x**(k/2 + 1)/(k + 2)) + C2*bessely(1/(k + 2), 2*x**(k/2 + 1)/(k + 2))))
+    Eq(y(x), sqrt(x)*(C1*besselj(1/(k + 2), 2*x**(k/2 + 1)/(k + 2))
+                + C2*bessely(1/(k + 2), 2*x**(k/2 + 1)/(k + 2))))
 
     References
     ==========
@@ -2881,15 +2883,13 @@ class SecondLinearBesselSymbolic(SingleODESolver):
         # The Bessel order and argument are:
         nu = 1 / (k + 2)
 
-        if A == 1 or A == S.One:
-            z = (2 / (k + 2)) * x**((k + 2)/2)
-        else:
-            z = (2 * sqrt(Abs(A)) / (k + 2)) * x**((k + 2)/2)
+        z = (2 * sqrt(Abs(A)) / (k + 2)) * x**((k + 2)/2)
 
         # General solution
         solution = sqrt(x) * (C1 * besselj(nu, z) + C2 * bessely(nu, z))
 
         return [Eq(f(x), solution)]
+
 
 class SecondLinearAiry(SingleODESolver):
     r"""
