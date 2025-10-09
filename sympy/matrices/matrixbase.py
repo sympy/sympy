@@ -717,11 +717,8 @@ class MatrixBase(Printable):
         diag
         """
         k = as_int(k)
-        if -self.rows < k < self.cols:
-            rv = [self[r, r+k] for r in range(max(0, -k), min(self.rows, self.cols - k))]
-            return self._new(1, len(rv), rv)
-        else:
-            raise ValueError("Diagonal does not exist")
+        rv = [self[r, r+k] for r in range(max(0, -k), min(self.rows, self.cols - k))]
+        return self._new(1, len(rv), rv)
 
     def row(self, i: int, /) -> Self:
         """Elementary row selector.

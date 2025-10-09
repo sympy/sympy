@@ -95,6 +95,13 @@ def test_special_denom():
     raises(ValueError, lambda: special_denom(Poly(1, t), Poly(t**2, t), Poly(1, t), Poly(t**2 - 1, t),
     Poly(t, t), DE, case='unrecognized_case'))
 
+    # Example 6.2.1
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(t, t)]})
+    a = Poly(t**2 + 2*x*t + x**2, t)
+    b = Poly((1 + 1/x**2)*t**2 + (2*x - 1 + 2/x)*t + x**2, t)
+    c = Poly(t/x**2 - 1 + 2/x, t)
+    assert special_denom(a, b, Poly(1, t), c, Poly(1, t), DE) == \
+        (a, Poly(t**2/x**2 + (2/x - 1)*t, t), Poly(t**2/x**2 + (2/x - 1)*t, t), Poly(t, t))
 
 def test_bound_degree_fail():
     # Primitive
@@ -200,3 +207,11 @@ def test_rischDE():
     assert rischDE(Poly(-2*x, x), Poly(1, x), Poly(1 - 2*x - 2*x**2, x),
     Poly(1, x), DE) == \
         (Poly(x + 1, x), Poly(1, x))
+
+    # See issue 28407
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(t, t)]})
+    fa = Poly(-t + 1, t)
+    fd = Poly(1, t)
+    ga = Poly(1, t)
+    gd = Poly(1, t)
+    assert rischDE(fa, fd, ga, gd, DE) == (Poly(-1, t), Poly(t, t))

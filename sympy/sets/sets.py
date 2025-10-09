@@ -1316,6 +1316,15 @@ class Union(Set, LatticeOp):
     """
     Represents a union of sets as a :class:`Set`.
 
+    Parameters
+    ==========
+    args : iterable[Set]
+        The input sets to be united.
+
+    evaluate : bool, optional
+        If True (default from sympy.core.parameters.global_parameters.evaluate),
+        the constructor simplifies the union.
+
     Examples
     ========
 
@@ -1496,6 +1505,15 @@ class Union(Set, LatticeOp):
 class Intersection(Set, LatticeOp):
     """
     Represents an intersection of sets as a :class:`Set`.
+
+    Parameters
+    ==========
+    args : iterable[Set]
+        The input sets to be intersected.
+
+    evaluate : bool, optional
+        If True (default from sympy.core.parameters.global_parameters.evaluate),
+        the constructor simplifies the intersection.
 
     Examples
     ========
