@@ -18,6 +18,7 @@ from sympy import nsimplify
 from .entity import GeometryEntity
 from .exceptions import GeometryError
 from .point import Point, Point2D, Point3D
+from sympy.core import pi
 from sympy.core.containers import OrderedSet
 from sympy.core.exprtools import factor_terms
 from sympy.core.function import Function, expand_mul
@@ -729,3 +730,11 @@ def intersection(*entities, pairwise=False, **kwargs):
         p = prec_to_dps(prec)
         res = [i.n(p) for i in res]
     return res
+
+def rad(d):
+    """Return the radian value for the given degrees (pi = 180 degrees)."""
+    return d*pi/180
+
+def deg(r):
+    """Return the degree value for the given radians (pi = 180 degrees)."""
+    return r/pi*180

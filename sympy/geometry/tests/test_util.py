@@ -1,4 +1,5 @@
 import pytest
+from sympy.core import pi
 from sympy.core.numbers import Float
 from sympy.core.function import (Derivative, Function)
 from sympy.core.singleton import S
@@ -7,7 +8,7 @@ from sympy.functions import exp, cos, sin, tan, cosh, sinh
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.geometry import Point, Point2D, Line, Polygon, Segment, convex_hull,\
     intersection, centroid, Point3D, Line3D, Ray, Ellipse
-from sympy.geometry.util import idiff, closest_points, farthest_points, _ordered_points, are_coplanar
+from sympy.geometry.util import idiff, closest_points, farthest_points, _ordered_points, are_coplanar, rad, deg
 from sympy.solvers.solvers import solve
 from sympy.testing.pytest import raises
 
@@ -168,3 +169,15 @@ def test_are_coplanar():
 
     assert are_coplanar(a, b, c) == False
     assert are_coplanar(a, d) == False
+
+def test_rad():
+    assert rad(180) == pi
+    assert rad(30) == pi/6
+    assert rad(60) == pi/3
+    assert rad(900) == 5*pi
+
+def test_deg():
+    assert deg(pi/3) == 60
+    assert deg(pi/2) == 90
+    assert deg(pi) == 180
+    assert deg(3*pi) == 540
