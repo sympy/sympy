@@ -216,6 +216,14 @@ def test_SDM_mul_elementwise():
     assert A.mul_elementwise(B) == C
     assert B.mul_elementwise(A) == C
 
+    D = SDM({}, (1, 1), EXRAW)
+    E = SDM({0: {0: oo}}, (1, 1), EXRAW)
+    F = SDM({0: {1: 1}}, (2, 2), EXRAW)
+    G = SDM({0: {1: 1}, 1: {0: oo}}, (2, 2), EXRAW)
+
+    assert D.mul_elementwise(E) == SDM({0: {0: nan}}, (1, 1), EXRAW)
+    assert F.mul_elementwise(G) == SDM({0: {1: 1}, 1: {0: nan}}, (2, 2), EXRAW)
+
     Aq = A.convert_to(QQ)
     A1 = SDM({0:{0:ZZ(1)}}, (1, 1), ZZ)
 
