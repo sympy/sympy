@@ -844,9 +844,17 @@ class SDM(dict):
             raise DMDomainError
         if A.shape != B.shape:
             raise DMShapeError
-        zero = A.domain.zero
-        fzero = lambda e: zero
-        Csdm = binop_dict(A, B, mul, fzero, fzero)
+
+        K = A.domain
+        zero = K.zero
+        if K.is_EXRAW:
+            fmul_zero_a = lambda e: e * zero 
+            fmul_zero_b = lambda e: zero * e
+            Csdm = binop_dict(A, B, mul, fmul_zero_a, fmul_zero_b)
+        else:
+            fzero = lambda e: zero
+            Csdm = binop_dict(A, B, mul, fzero, fzero)
+
         return A.new(Csdm, A.shape, A.domain)
 
     def add(A, B):
