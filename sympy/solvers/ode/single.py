@@ -2820,14 +2820,11 @@ class SecondLinearBesselSymbolic(SingleODESolver):
         b3 = match[1]  # coefficient of y'
         c3 = match[0]  # coefficient of y
 
-        # Check if b3 = 0 (no first derivative term)
-        if b3 != 0:
+        # Check if b3 = 0 (no first derivative term) or a3 = 0  (no second derivative term)
+        if b3 != 0 or a3 == 0:
             return False
 
         # Normalize: divide by coefficient of y''
-        if a3 == 0:
-            return False
-
         c3 = c3 / a3
 
         # Check if c3 is of the form A*x^k where k has free symbols
@@ -2836,22 +2833,17 @@ class SecondLinearBesselSymbolic(SingleODESolver):
         k_sym = Wild('k_sym', exclude=[x])
 
         pattern_match = c3.match(A_sym * x**k_sym)
-        if not pattern_match:
-            pattern_match = c3.match(x**k_sym)
-            if pattern_match:
-                pattern_match[A_sym] = S.One
+        if not pattern_match or k_sym not in pattern_match:
+            return False
 
         # Store the matched values
         if not pattern_match or k_sym not in pattern_match:
             return False
 
-        # Check if k is symbolic (has free symbols)
-        k_val = pattern_match[k_sym]
-
         # Store the matched values
         self.match_dict = {
             'A': pattern_match[A_sym],
-            'k': k_val,
+            'k': pattern_match[k_sym],
         }
 
         return True
@@ -2880,9 +2872,7 @@ class SecondLinearBesselSymbolic(SingleODESolver):
         z = (2 * sqrt(Abs(A)) / (k + 2)) * x**((k + 2)/2)
 
         # General solution
-        solution = sqrt(x) * (C1 * besselj(nu, z) + C2 * bessely(nu, z))
-
-        return [Eq(f(x), solution)]
+        return [Eq(f(x), sqrt(x) * (C1*besselj(nu, z) + C2*bessely(nu, z)))]
 
 
 class SecondLinearAiry(SingleODESolver):
