@@ -2816,12 +2816,11 @@ class SecondLinearBesselSymbolic(SingleODESolver):
 
         # We need: a3*y'' + b3*y' + c3*y = 0
         # For Bessel with symbolic exponent: y'' + 0*y' + (x^k)*y = 0
-        a3 = match[2]  # coefficient of y''
-        b3 = match[1]  # coefficient of y'
-        c3 = match[0]  # coefficient of y
+        c3,b3,a3,rhs=match.values()
 
         # Check if b3 = 0 (no first derivative term) or a3 = 0  (no second derivative term)
-        if b3 != 0 or a3 == 0:
+        # or rhs != 0 (non-homogeneous)
+        if b3 != 0 or a3 == 0 or rhs!=0:
             return False
 
         # Normalize: divide by coefficient of y''
