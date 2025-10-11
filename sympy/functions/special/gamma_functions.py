@@ -1336,7 +1336,7 @@ class multigamma(DefinedFunction):
     def _eval_is_real(self):
         x, p = self.args
         y = 2*x
-        if y.is_integer and (y <= (p - 1)) is True:
+        if y.is_integer and (y <= (p - 1)) == True:
             return False
         if intlike(y) and (y <= (p - 1)):
             return False
