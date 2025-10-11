@@ -1602,25 +1602,27 @@ def sdm_scalar_mul(A, b, op):
     """
 
     K = A.domain
-
-    if K.is_EXRAW:
-        zero = K.zero
-        zero_prod = op(zero, b)
-        if (zero_prod != zero):
-            m, n = A.shape
-            Csdm = {i: dict.fromkeys(range(n), zero_prod) for i in range(m)}
-            for i, Ai in A.items():
-                Ci = Csdm[i]
-                for j, Aij in Ai.items():
-                    Cij = op(Aij, b)
-                    if Cij == zero:
-                        del Ci[j]
-                    else:
-                        Ci[j] = Cij
-            return A.new(Csdm, A.shape, K)
-
-    Csdm = unop_dict(A, lambda aij: op(aij, b))
+    zero = K.zero
+    if K.is_EXRAW and op(zero, b) != zero:
+        Csdm = sdm_scalar_mul_exraw(A, b, op)
+    else:
+        Csdm = unop_dict(A, lambda aij: op(aij, b))
     return A.new(Csdm, A.shape, K)
+
+def sdm_scalar_mul_exraw(A, b, op):
+    zero = A.domain.zero
+    zero_prod = op(zero, b)
+    m, n = A.shape
+    Csdm = {i: dict.fromkeys(range(n), zero_prod) for i in range(m)}
+    for i, Ai in A.items():
+        Ci = Csdm[i]
+        for j, Aij in Ai.items():
+            Cij = op(Aij, b)
+            if Cij == zero:
+                del Ci[j]
+            else:
+                Ci[j] = Cij
+    return Csdm
 
 
 def sdm_irref(A):
