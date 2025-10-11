@@ -138,7 +138,19 @@ def test_continuous_domain():
     assert continuous_domain(0**(x+1)/(x-2), x, S.Reals) == Union(
         Interval.Ropen(-1, 2), Interval.open(2, oo))
 
-
+def test_accumbounds_union():
+    a = AccumBounds(1, 5)
+    b = AccumBounds(3, 8)
+    assert a.union(b) == AccumBounds(1, 8)
+    
+    a = AccumBounds(1, 3)
+    b = AccumBounds(5, 8)
+    assert a.union(b) == AccumBounds(1, 8)
+    
+    a = AccumBounds(1, 5)
+    b = AccumBounds(5, 8)
+    assert a.union(b) == AccumBounds(1, 8)
+    
 @XFAIL
 def test_continuous_domain_acot():
     acot_cont = Piecewise((pi+acot(x), x<0), (acot(x), True))
