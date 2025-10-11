@@ -378,7 +378,7 @@ class DifferentialExtension:
                            i.exp.has(*self.T))
         pows = update_sets(pows, self.newf.atoms(Pow),
                            lambda i: i.exp.is_rational_function(*self.T) and
-                           i.exp.has(*self.T))
+                           (i.exp.has(*self.T) or (i.exp.is_Rational and not i.exp.is_Integer)))
         numpows = update_sets(numpows, set(pows),
                               lambda i: not i.base.has(*self.T))
         sympows = update_sets(sympows, set(pows) - set(numpows),
@@ -484,12 +484,11 @@ class DifferentialExtension:
             self.T = [i.gen for i in self.D]
         if not self.x:
             self.x = self.T[0]
-            self.cases = [get_case(d, t) for d, t in zip(self.D, self.T)]
-            self.level = -1
-            self.t = self.T[self.level]
-            self.d = self.D[self.level]
-            self.case = self.cases[self.level]
-            self.transcendental = False
+        self.cases = [get_case(d, t) for d, t in zip(self.D, self.T)]
+        self.level = -1
+        self.t = self.T[self.level]
+        self.d = self.D[self.level]
+        self.case = self.cases[self.level]
 
     def _exp_part(self, exps):
         """
@@ -562,18 +561,22 @@ class DifferentialExtension:
                     # handle exp(log(x)/2) because it equals sqrt(x).
 
                     if const or len(ans) > 1:
-                        rad = Mul(*[term**(power/n) for term, power in ans])
-                        self.newf = self.newf.xreplace({exp(p*exparg):
-                                                        exp(const*p)*rad for exparg, p in others})
-                        self.newf = self.newf.xreplace(dict(list(zip(reversed(self.T),
-                                                                     reversed([f(self.x) for f in self.Tfuncs])))))
-                        restart = True
-                        break
+                        # If we're building a non-transcendental extension,
+                        # don't restart - just continue to avoid infinite loops
+                        if self.transcendental:
+                            rad = Mul(*[term**(power/n) for term, power in ans])
+                            self.newf = self.newf.xreplace({exp(p*exparg):
+                                                            exp(const*p)*rad for exparg, p in others})
+                            self.newf = self.newf.xreplace(dict(list(zip(reversed(self.T),
+                                                                         reversed([f(self.x) for f in self.Tfuncs])))))
+                            restart = True
+                            break
+                        # else: fall through to add extension normally
                     else:
                         # TODO: give algebraic dependence in error string
                         # raise NotImplementedError("Cannot integrate over "
                         #     "algebraic extensions.")
-                        self.algebraic = False
+                        pass
 
             arga, argd = frac_in(arg, self.t)
             darga = (argd*derivation(Poly(arga, self.t), self) -
@@ -591,10 +594,10 @@ class DifferentialExtension:
                 i = Dummy("i")
             else:
                 i = Symbol('i')
-                self.Tfuncs += [Lambda(i, exp(arg.subs(self.x, i)))]
-                self.newf = self.newf.xreplace(
-                    {exp(exparg): self.t**p for exparg, p in others})
-                new_extension = True
+            self.Tfuncs += [Lambda(i, exp(arg.subs(self.x, i)))]
+            self.newf = self.newf.xreplace(
+                {exp(exparg): self.t**p for exparg, p in others})
+            new_extension = True
 
         if restart:
             return None
@@ -674,9 +677,9 @@ class DifferentialExtension:
                     i = Dummy("i")
                 else:
                     i = Symbol('i')
-                    self.Tfuncs += [Lambda(i, log(arg.subs(self.x, i)))]
-                    self.newf = self.newf.xreplace({log(arg): self.t})
-                    new_extension = True
+                self.Tfuncs += [Lambda(i, log(arg.subs(self.x, i)))]
+                self.newf = self.newf.xreplace({log(arg): self.t})
+                new_extension = True
 
         return new_extension
 
@@ -1611,7 +1614,10 @@ def integrate_primitive(a, d, DE, z=None):
         i = cancel(a.as_expr()/d.as_expr() - (g1[1]*derivation(g1[0], DE) -
             g1[0]*derivation(g1[1], DE)).as_expr()/(g1[1]**2).as_expr() -
             residue_reduce_derivation(g2, DE, z))
-        i = NonElementaryIntegral(cancel(i).subs(s), DE.x)
+        if DE.transcendental:
+            i = NonElementaryIntegral(cancel(i).subs(s), DE.x)
+        else:
+            i = Integral(cancel(i).subs(s), DE.x)
         return ((g1[0].as_expr()/g1[1].as_expr()).subs(s) +
             residue_reduce_to_basic(g2, DE, z), i, b)
 
@@ -1628,7 +1634,11 @@ def integrate_primitive(a, d, DE, z=None):
         # i == p - Dq from integrate_primitive_polynomial(), which has been
         # proven to have no elementary integral over k(t), and ret contains
         # the partial q, so f == D(ret) + i holds for the returned values.
-        i = NonElementaryIntegral(cancel(i.as_expr()).subs(s), DE.x)
+        # The nonelementary proof is only valid for transcendental towers.
+        if DE.transcendental:
+            i = NonElementaryIntegral(cancel(i.as_expr()).subs(s), DE.x)
+        else:
+            i = Integral(cancel(i.as_expr()).subs(s), DE.x)
     else:
         i = cancel(i.as_expr())
 
@@ -1726,7 +1736,10 @@ def integrate_hyperexponential(a, d, DE, z=None, conds='piecewise'):
         i = cancel(a.as_expr()/d.as_expr() - (g1[1]*derivation(g1[0], DE) -
             g1[0]*derivation(g1[1], DE)).as_expr()/(g1[1]**2).as_expr() -
             residue_reduce_derivation(g2, DE, z))
-        i = NonElementaryIntegral(cancel(i.subs(s)), DE.x)
+        if DE.transcendental:
+            i = NonElementaryIntegral(cancel(i.subs(s)), DE.x)
+        else:
+            i = Integral(cancel(i.subs(s)), DE.x)
         return ((g1[0].as_expr()/g1[1].as_expr()).subs(s) +
             residue_reduce_to_basic(g2, DE, z), i, b)
 
@@ -1760,7 +1773,10 @@ def integrate_hyperexponential(a, d, DE, z=None, conds='piecewise'):
     if not b:
         i = p - (qd*derivation(qa, DE) - qa*derivation(qd, DE)).as_expr()/\
             (qd**2).as_expr()
-        i = NonElementaryIntegral(cancel(i).subs(s), DE.x)
+        if DE.transcendental:
+            i = NonElementaryIntegral(cancel(i).subs(s), DE.x)
+        else:
+            i = Integral(cancel(i).subs(s), DE.x)
     return (ret, i, b)
 
 
@@ -2032,13 +2048,12 @@ def risch_integrate(f, x, extension=None, handle_first='log',
         else:
             result = result.subs(DE.backsubs)
             if isinstance(i, Integral):
-                i = NonElementaryIntegral(i.function.subs(DE.backsubs), i.limits)
+                if DE.transcendental:
+                    i = NonElementaryIntegral(i.function.subs(DE.backsubs), i.limits)
+                else:
+                    i = Integral(i.function.subs(DE.backsubs), *i.limits)
             if not separate_integral:
                 result += i
                 return result
             else:
-
-                if isinstance(i, NonElementaryIntegral):
-                    return (result, i)
-                else:
-                    return (result, 0)
+                return (result, i)
