@@ -398,7 +398,7 @@ def bound_degree(a, b, cQ, DE, case='auto', parametric=False):
                 if A is not None:
                     aa, z = A
                     if aa == 1:
-                        beta = -(a*derivation(z, DE).as_poly(t1) +
+                        beta = -(a*derivation(z, DE, basic=True).as_poly(t1) +
                             b*z.as_poly(t1)).LC()/(z.as_expr()*a.LC())
                         betaa, betad = frac_in(beta, DE.t)
                         from .prde import limited_integrate
