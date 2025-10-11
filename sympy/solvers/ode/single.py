@@ -2832,8 +2832,6 @@ class SecondLinearBesselSymbolic(SingleODESolver):
         k_sym = Wild('k_sym', exclude=[x])
 
         pattern_match = c3.match(A_sym * x**k_sym)
-        if not pattern_match or k_sym not in pattern_match:
-            return False
 
         if not pattern_match or k_sym not in pattern_match:
             return False
