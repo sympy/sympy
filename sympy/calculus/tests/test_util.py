@@ -24,6 +24,7 @@ from sympy.sets.fancysets import ImageSet
 from sympy.sets.conditionset import ConditionSet
 from sympy.testing.pytest import XFAIL, raises, _both_exp_pow, slow
 from sympy.abc import x, y
+from sympy.calculus.util import AccumBounds
 
 a = Symbol('a', real=True)
 
