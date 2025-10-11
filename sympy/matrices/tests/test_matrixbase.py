@@ -9,7 +9,7 @@ from sympy import (
     MatrixSymbol, Max, Min, MutableDenseMatrix, MutableSparseMatrix, Poly, Pow,
     PurePoly, Q, Quaternion, Rational, RootOf, S, SparseMatrix, Symbol, Tuple,
     Wild, banded, casoratian, cos, diag, diff, exp, expand, eye, floor, hessian,
-    integrate, log, matrix_multiply_elementwise, nan, ones, oo, pi, randMatrix,
+    integrate, log, matrix_multiply_elementwise, nan, ones, oo, zoo, pi, randMatrix,
     rot_axis1, rot_axis2, rot_axis3, rot_ccw_axis1, rot_ccw_axis2,
     rot_ccw_axis3, signsimp, simplify, sin, sqrt, sstr, symbols, sympify, tan,
     trigsimp, wronskian, zeros, cancel)
@@ -1007,6 +1007,19 @@ def test_multiplication():
 
     M = Matrix([[oo, oo], [0, 0]])
     assert M ** 2 == Matrix([[nan, nan], [nan, nan]])
+
+    M = Matrix([[0]])
+    assert M * oo == Matrix([[nan]])
+    assert oo * M == Matrix([[nan]])
+
+    M = Matrix([[5, 0], [0, oo]])
+    assert M * zoo == Matrix([[zoo, nan], [nan, zoo]])
+
+    M = Matrix([0, 1, 2])
+    assert M * 3 == Matrix([0, 3, 6])
+
+    M = Matrix([0, 1, zoo])
+    assert M/0 == Matrix([nan, zoo, zoo])
 
     # https://github.com/sympy/sympy/issues/22353
     A = Matrix(ones(3, 1))
