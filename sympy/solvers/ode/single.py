@@ -2835,7 +2835,6 @@ class SecondLinearBesselSymbolic(SingleODESolver):
         if not pattern_match or k_sym not in pattern_match:
             return False
 
-        # Store the matched values
         if not pattern_match or k_sym not in pattern_match:
             return False
 

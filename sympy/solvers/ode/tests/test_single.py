@@ -643,7 +643,6 @@ def test_2nd_linear_bessel_symbolic_rejects_nonhomogeneous():
     eq = f(x).diff(x, 2) - x**3*f(x) - 10
     hints = classify_ode(eq, f(x))
 
-    # Should be possible to handle this with variation of parameters.
     assert '2nd_linear_bessel_symbolic' not in hints
 
 
