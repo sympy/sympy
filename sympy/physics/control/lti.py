@@ -11,7 +11,6 @@ from sympy.core.numbers import I, pi, oo
 from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.core.symbol import Dummy, Symbol
-from sympy.core.logic import fuzzy_and
 from sympy.functions import Abs
 from sympy.core.sympify import sympify, _sympify
 from sympy.matrices import Matrix, ImmutableMatrix, ImmutableDenseMatrix, eye, ShapeError, zeros
