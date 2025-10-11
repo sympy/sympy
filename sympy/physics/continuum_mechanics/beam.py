@@ -41,7 +41,6 @@ __doctest_requires__ = {
 numpy = import_module('numpy', import_kwargs={'fromlist':['arange']})
 
 
-
 class Beam:
     """
     A Beam is a structural element that is capable of withstanding load
@@ -700,6 +699,7 @@ class Beam:
         self.apply_load(E * I * deflection_jump, loc, -4)
         self.bc_shear_force.append((loc, 0))
         return deflection_jump
+
     def apply_load(self, value, start, order, end=None):
         """
         This method adds up the loads given to a particular beam object.
@@ -847,7 +847,6 @@ class Beam:
                 term = coeff * SingularityFunction(x, end, i) / factorial(i)
                 self._load += term
                 self._original_load += term
-
 
     @property
     def load(self):
