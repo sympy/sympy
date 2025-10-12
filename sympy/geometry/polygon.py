@@ -1146,6 +1146,13 @@ class Polygon(GeometrySet):
         if center_dist <= e1_max_radius + e2_max_radius:
             warnings.warn("Polygons may intersect producing erroneous output",
                           stacklevel=3)
+            # If polygons actually intersect (vertex inside other polygon), return 0
+            for vertex in e1.vertices:
+                if e2.encloses_point(vertex):
+                    return S.Zero
+            for vertex in e2.vertices:
+                if e1.encloses_point(vertex):
+                    return S.Zero
 
         '''
         Find the upper rightmost vertex of e1 and the lowest leftmost vertex of e2
