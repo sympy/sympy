@@ -1613,7 +1613,7 @@ class DomainMatrix:
         return A.from_rep(A.rep.matmul(B.rep))
 
     def _scalarmul(A, lamda, reverse):
-        if lamda == A.domain.zero:
+        if lamda == A.domain.zero and (not (A.domain.is_EXRAW)):
             return DomainMatrix.zeros(A.shape, A.domain)
         elif lamda == A.domain.one:
             return A.copy()
