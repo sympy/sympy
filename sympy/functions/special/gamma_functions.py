@@ -1340,5 +1340,5 @@ class multigamma(DefinedFunction):
             return False
         if intlike(y) and (y <= (p - 1)):
             return False
-        if y > (p - 1) or y.is_noninteger:
+        if (y > (p - 1)) == True or y.is_noninteger:
             return True
