@@ -1,8 +1,8 @@
-from sympy.core import (S, pi, oo, symbols, Rational, Integer,
+from sympy.core import (S, pi, oo, symbols, Rational, Integer, Symbol,
                         GoldenRatio, EulerGamma, Catalan, Lambda, Dummy,
                         Eq, Ne, Le, Lt, Gt, Ge, Mod)
 from sympy.functions import (Piecewise, sin, cos, Abs, exp, ceiling, sqrt,
-                             sign, floor)
+                             sign, floor, log)
 from sympy.logic import ITE
 from sympy.testing.pytest import raises
 from sympy.utilities.lambdify import implemented_function
@@ -361,3 +361,20 @@ def test_sparse_matrix():
     # gh-15791
     with raises(NotImplementedError):
         rust_code(SparseMatrix([[1, 2, 3]]))
+
+def test_parenthesize_typecast():
+    modulus = Symbol("modulus")
+    lwe_dimension = Symbol("lwe_dimension")
+
+    exp = (
+        2
+        ** (
+            2
+            * ceiling(
+                -0.025167785 * lwe_dimension + log(modulus) / log(2) + 4.10067100000001
+            )
+        )
+        + 0.5
+    ) / (3 * modulus**2)
+
+    assert(rust_code(exp) == '(1_f64/3.0)*(0.5 + (2*(-0.025167785*lwe_dimension + modulus.ln()/2_i32.ln() + 4.10067100000001).ceil()).exp2())*modulus.powi(-2)')
