@@ -344,7 +344,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
 
         *modules* can be one of the following types:
 
-        - The strings ``"math"``, ``"cmath"``, ``"mpmath"``, ``"umpmath"``,
+        - The strings ``"math"``, ``"cmath"``, ``"mpmath"``, ``"umath"``,
           ``"numpy"``, ``"unumpy"``, ``"numexpr"``, ``"scipy"``, ``"sympy"``,
           ``"tensorflow"``, ``"torch"`` or ``"jax"``. This uses the corresponding printer
           and namespace mapping for that module.
