@@ -309,24 +309,6 @@ for func in _numpy_known_functions:
 for const in _numpy_known_constants:
     setattr(NumPyPrinter, f'_print_{const}', _print_known_const)
 
-_unumpy_known_functions = {k: 'uncertainties.unumpy.' + v for k, v in _known_functions_numpy.items()}
-
-class UnumPyPrinter(NumPyPrinter):
-    """
-    uncertainties.unumpy printer which handles vectorized piecewise functions,
-    logical operators, etc.
-    """
-
-    def doprint(self, expr, assign_to=None):
-        # performing an arbitrary identity operation on the result, prompts unumpy to convert 0d arrays to scalar values.
-        return f"({super().doprint(expr, assign_to=assign_to)}) * 1"
-
-for func in _unumpy_known_functions:
-    setattr(UnumPyPrinter, f'_print_{func}', _print_known_func)
-
-for const in _numpy_known_constants:
-    setattr(UnumPyPrinter, f'_print_{const}', _print_known_const)
-
 
 _known_functions_scipy_special = {
     'Ei': 'expi',
