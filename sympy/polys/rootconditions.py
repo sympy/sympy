@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import math
-
 from sympy.polys.densebasic import dup
 from sympy.polys.domains.domain import Er, Domain
 from sympy.core.numbers import I
@@ -258,6 +256,13 @@ def dup_schur_conditions(f: dup[Er], K: Domain[Er]) -> list[Er]:
     polynomial lie inside the unit circle if and only if ``ei > 0``
     for all ``i``.
 
+    Warning
+    =======
+
+    Due to precision issues, roots at -1 may be missed and the conditions
+    could be incorrect. Consider checking if the polynomial has roots at -1
+    before using this method.
+
     References
     ==========
 
@@ -274,23 +279,30 @@ def dup_schur_conditions(f: dup[Er], K: Domain[Er]) -> list[Er]:
         )
 
     # Check if -1 is a root, since the transformation is not defined in this case
-    evaluation = K.to_sympy(dup_eval(f, -K.one, K))
-    if evaluation.is_Number:
-        if K not in excluded_domains and K.is_Exact:
-            if K.is_zero(K.from_sympy(evaluation)):
-                return [-K.one]
-        else:
-            if math.isclose(evaluation, 0.0):
+    if K.is_zero(dup_eval(f, -K.one, K)):
                 return [-K.one]
 
     if not K.is_Exact:
         K_exact = K.get_exact()
         pe = dup_convert(f, K, K_exact)
-        p_transformed: list = dup_transform(pe, [K_exact.one, K_exact.one],
-                                    [-K_exact.one, K_exact.one], K_exact)
-        conds: list = dup_routh_hurwitz(p_transformed, K_exact)
+        conds: list = dup_routh_hurwitz(_schur_to_hurwitz(pe, K_exact), K_exact)
 
         return [K.convert_from(c, K_exact) for c in conds]
 
-    p_transformed = dup_transform(f, [K.one, K.one], [-K.one, K.one], K)
-    return dup_routh_hurwitz(p_transformed, K)
+    return dup_routh_hurwitz(_schur_to_hurwitz(f, K), K)
+
+
+def _schur_to_hurwitz(f: dup[Er], K: Domain[Er]) -> dup[Er]:
+    """
+    Apply the bilinear transformation ``z = (1 + s)/(1 - s)`` to the
+    polynomial ``f`` in order to map the unit circle to the left half plane,
+    transforming the problem of Schur stability to the problem of Routh-Hurwitz
+    stability.
+
+    Note
+    ====
+    The transformation is not defined if -1 is a root of the polynomial.
+
+    """
+
+    return dup_transform(f, [K.one, K.one], [-K.one, K.one], K)

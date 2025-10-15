@@ -4204,6 +4204,7 @@ def test_hurwitz_conditions():
     assert 0 in p14.hurwitz_conditions()
     assert 0 in p14.set_domain(EXRAW).hurwitz_conditions()
 
+
 def test_schur_conditions():
     raises(ValueError, lambda: Poly(0, x).schur_conditions())
     raises(NotImplementedError, lambda: Poly(x**2 + (1+I)).schur_conditions())
@@ -4234,21 +4235,14 @@ def test_schur_conditions():
         (b0**2 + 2*b0*b2 + 2*b0*b4 - b1**2 - 2*b1*b3 + b2**2 + 2*b2*b4 -
          b3**2 + b4**2)]
     assert p1_.schur_conditions() == [
-        Mul(-2, Add(b3, Mul(-1, b1), Mul(-2, b4), Mul(2, b0)),
-            Add(b0, b2, b4, Mul(-1, b1), Mul(-1, b3)), evaluate=False),
-        Add(Mul(-4, Add(Mul(-1, b2), Mul(3, b0), Mul(3, b4)),
-            Add(b3, Mul(-1, b1), Mul(-2, b4), Mul(2, b0))),
-            Mul(2, Add(b1, Mul(-1, b3), Mul(-2, b4), Mul(2, b0)),
-            Add(b0, b2, b4, Mul(-1, b1), Mul(-1, b3)))),
-        Mul(-8, Add(Mul(
-            Add(Mul(-1, Add(b1, Mul(-1, b3), Mul(-2, b4), Mul(2, b0)),
-            Add(b0, b2, b4, Mul(-1, b1), Mul(-1, b3))), Mul(2, Add(Mul(-1, b2),
-            Mul(3, b0), Mul(3, b4)), Add(b3, Mul(-1, b1), Mul(-2, b4),
-            Mul(2, b0)))), Add(b1, Mul(-1, b3), Mul(-2, b4), Mul(2, b0))),
-            Mul(-1,Pow(Add(b3, Mul(-1, b1), Mul(-2, b4),Mul(2, b0)), 2),
-            Add(b0, b1, b2, b3, b4))), Add(b3, Mul(-1, b1), Mul(-2, b4),
-            Mul(2, b0))),
-        Mul(-2, Add(b3, Mul(-1, b1), Mul(-2, b4), Mul(2, b0)), Add(b0, b1, b2, b3, b4))]
+        -2*((2*b0 - b1 + b3 - 2*b4)*(b0 - b1 + b2 - b3 + b4)),
+        (-4*((3*b0 - b2 + 3*b4)*(2*b0 - b1 + b3 - 2*b4)) +
+         2*((2*b0 + b1 - b3 - 2*b4)*(b0 - b1 + b2 - b3 + b4))),
+        (-8*(((2*((3*b0 - b2 + 3*b4)*(2*b0 - b1 + b3 - 2*b4)) -
+         (2*b0 + b1 - b3 - 2*b4)*(b0 - b1 + b2 - b3 + b4))*
+         (2*b0 + b1 - b3 - 2*b4) - (2*b0 - b1 + b3 - 2*b4)**2*
+         (b0 + b1 + b2 + b3 + b4))*(2*b0 - b1 + b3 - 2*b4))),
+        -2*((2*b0 - b1 + b3 - 2*b4)*(b0 + b1 + b2 + b3 + b4))]
 
     p2 = Poly((x+0.4531)*(x-0.98321)*(x+0.2328)*(x+0.4), x)
     assert all(c > 0 for c in p2.schur_conditions())

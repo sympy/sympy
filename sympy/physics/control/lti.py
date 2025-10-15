@@ -1,5 +1,6 @@
-from typing import Type
+from typing import Type, Union
 from sympy import Interval, numer, Rational, solveset
+import math
 from sympy.core.add import Add
 from sympy.core.basic import Basic
 from sympy.core.containers import Tuple
@@ -11,9 +12,11 @@ from sympy.core.numbers import I, pi, oo
 from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.core.symbol import Dummy, Symbol
+from sympy.core.relational import StrictGreaterThan
 from sympy.functions import Abs
 from sympy.core.sympify import sympify, _sympify
-from sympy.matrices import Matrix, ImmutableMatrix, ImmutableDenseMatrix, eye, ShapeError, zeros
+from sympy.matrices import (Matrix, ImmutableMatrix, ImmutableDenseMatrix, eye,
+                            ShapeError, zeros)
 from sympy.functions.elementary.exponential import (exp, log)
 from sympy.matrices.expressions import MatMul, MatAdd
 from sympy.polys import Poly, rootof
@@ -24,7 +27,7 @@ from sympy.series import limit
 from sympy.utilities.misc import filldedent
 from sympy.solvers.ode.systems import linodesolve
 from sympy.solvers.solveset import linsolve, linear_eq_to_matrix
-from sympy.logic.boolalg import false, true
+from sympy.logic.boolalg import false, true, Boolean
 from sympy.solvers.inequalities import reduce_inequalities
 from abc import ABC, abstractmethod
 
@@ -1227,8 +1230,9 @@ class TransferFunctionBase(SISOLinearTimeInvariant, ABC):
                       self.var, self.sampling_time)
 
     @abstractmethod
-    def get_asymptotic_stability_conditions(self, cancel_poles_zeros=False,
-                                            fast=False) -> list:
+    def get_asymptotic_stability_conditions(
+        self, cancel_poles_zeros=False, fast=False
+    ) -> list[Union[Boolean, StrictGreaterThan]]:
         """
         Returns the asymptotic stability conditions for the transfer function.
 
@@ -1731,8 +1735,9 @@ class TransferFunction(TransferFunctionBase):
         m = Mul(self.num, Pow(self.den, -1, evaluate=False), evaluate=False)
         return limit(m, self.var, 0)
 
-    def get_asymptotic_stability_conditions(self, cancel_poles_zeros=False,
-                                            fast=False):
+    def get_asymptotic_stability_conditions(
+        self, cancel_poles_zeros=False, fast=False
+    ) -> list[Union[Boolean, StrictGreaterThan]]:
         r"""
         See :func:`TransferFunctionBase.get_asymptotic_stability_conditions`.
         """
@@ -2186,16 +2191,30 @@ class DiscreteTransferFunction(TransferFunctionBase):
         m = Mul(self.num, Pow(self.den, -1, evaluate=False), evaluate=False)
         return limit(m, self.var, 1)
 
-    def get_asymptotic_stability_conditions(self, cancel_poles_zeros=False,
-                                            fast=False):
+    def get_asymptotic_stability_conditions(
+        self, cancel_poles_zeros=False,  fast=False
+    ) -> list[Union[Boolean, StrictGreaterThan]]:
         r"""
         See :func:`TransferFunctionBase.get_asymptotic_stability_conditions`.
+
+        Warning
+        =======
+
+        Due to precision issues, poles at -1 may be missed and the conditions
+        could be incorrect. Consider checking if the transfer function has roots
+        at -1 before using this method.
+
         """
         standard_form = self.to_standard_form(cancel_poles_zeros)
 
         domain = EXRAW if fast else None
 
         p = Poly(standard_form.den, self.var, domain = domain)
+
+        # Check if there are roots at -1 since schur_conditions could miss them
+        evaluation = p.eval(-1)
+        if evaluation.is_Number and math.isclose(evaluation, 0):
+            return [false]
 
         return [c > 0 for c in p.schur_conditions()]
 
@@ -6364,7 +6383,9 @@ class StateSpaceBase(LinearTimeInvariant, ABC):
         return self.controllability_matrix().rank() == self.num_states
 
     @abstractmethod
-    def get_asymptotic_stability_conditions(self, fast=False) -> list[bool]:
+    def get_asymptotic_stability_conditions(
+        self, fast=False
+    ) -> list[Union[Boolean, StrictGreaterThan]]:
         """
         Returns the asymptotic stability conditions for the state space.
 
@@ -6591,7 +6612,9 @@ class StateSpace(StateSpaceBase):
             discrete-time transfer function model.
             """)
 
-    def get_asymptotic_stability_conditions(self, fast=False) -> list[bool]:
+    def get_asymptotic_stability_conditions(
+        self, fast=False
+    ) -> list[Union[Boolean, StrictGreaterThan]]:
         r"""
         See :func:`StateSpaceBase.get_asymptotic_stability_conditions`.
         """
@@ -6728,9 +6751,19 @@ class DiscreteStateSpace(StateSpaceBase):
             continuous-time transfer function model.
             """)
 
-    def get_asymptotic_stability_conditions(self, fast=False) -> list[bool]:
+    def get_asymptotic_stability_conditions(
+        self, fast=False
+    ) -> list[Union[Boolean, StrictGreaterThan]]:
         r"""
         See :func:`StateSpaceBase.get_asymptotic_stability_conditions`.
+
+        Warning
+        =======
+
+        Due to precision issues, eigenvalues at -1 may be missed and the
+        conditions could be incorrect. Consider checking if the state space has
+        roots at -1 before using this method.
+
         """
         s = Symbol('s')
 
@@ -6739,6 +6772,11 @@ class DiscreteStateSpace(StateSpaceBase):
         _A = self.A.to_DM(domain = domain) # type: ignore
         charpoly = _A.charpoly()
         charpoly = Poly(charpoly, s, domain = _A.domain)
+
+        # Check if there are roots at -1 since schur_conditions could miss them
+        evaluation = charpoly.eval(-1)
+        if evaluation.is_Number and math.isclose(evaluation, 0):
+            return [false]
 
         return [c > 0 for c in charpoly.schur_conditions()]
 
