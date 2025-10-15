@@ -209,7 +209,7 @@ def _import(module, reload=False):
 _lambdify_generated_counter = 1
 
 
-@doctest_depends_on(modules=('numpy', 'scipy', 'tensorflow',), python_version=(3,))
+@doctest_depends_on(modules=('numpy', 'scipy', 'tensorflow', 'uncertainties'), python_version=(3,))
 def lambdify(args, expr, modules=None, printer=None, use_imps=True,
              dummify=False, cse=False, docstring_limit=1000):
     """Convert a SymPy expression into a function that allows for fast
@@ -505,6 +505,37 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     >>> result.numpy()
     [[1. 2.]
      [3. 4.]]
+
+    Usage with the Uncertainties package:
+
+    >>> from uncertainties import ufloat
+    >>> from sympy.abc import x
+
+    Use with scalar values by passing ``modules='umath'``.
+
+    >>> uncert_square = lambdify(x, x**2, 'umath')
+    >>> uncert_square(ufloat(2, 0.1))
+    4.00+/-0.40
+    >>> uncert_square(2) # Also works with non ``ufloat`` inputs
+    4
+
+    Use with vectors and matrices by passing ``modules='unumpy'``.
+
+    >>> uncert_mat_square = lambdify([x, y], Matrix([x, y]).dot(Matrix([2, 3])), 'unumpy')
+    >>> uncert_mat_square(ufloat(1, 0.1), ufloat(2, 0.2))
+     8.00+/-0.6
+
+    Due to the internal workings of ``uncertainties.unumpy``, when a
+    matrix is returned, some elements may unexpectedly be wrapped in a
+    1x1 array. This can be fixed by applying an identity
+    operation to the result, such as multiplying by 1 or adding 0.
+
+    >>> from sympy import sqrt
+    >>> uncert_sqrt = lambdify(x, Matrix([sqrt(x)]), 'unumpy')
+    >>> uncert_sqrt(ufloat(4, 0.4)) # Matrix contains element wrapped in 1x1 array.
+    [[array(2.0+/-0.1, dtype=object)]]
+    >>> uncert_sqrt(ufloat(4, 0.4)) * 1 # Fix by applying identity operation on result
+    [[2.0+/-0.1]]
 
     Notes
     =====
