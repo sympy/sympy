@@ -3,6 +3,7 @@ from sympy.core.numbers import (E, I, Rational, pi)
 from sympy.core.relational import Eq
 from sympy.core.singleton import S
 from sympy.core.symbol import (Symbol, symbols)
+from sympy.functions.special.bessel import besselj, bessely
 from sympy.functions.elementary.complexes import (im, re)
 from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.elementary.hyperbolic import acosh
@@ -917,7 +918,7 @@ def test_2nd_power_series_ordinary():
     C1, C2 = symbols("C1 C2")
 
     eq = f(x).diff(x, 2) - x*f(x)
-    assert classify_ode(eq) == ('2nd_linear_airy', '2nd_power_series_ordinary')
+    assert classify_ode(eq) == ('2nd_linear_airy', '2nd_linear_bessel_transform', '2nd_power_series_ordinary')
     sol = Eq(f(x), C2*(x**3/6 + 1) + C1*x*(x**3/12 + 1) + O(x**6))
     assert dsolve(eq, hint='2nd_power_series_ordinary') == sol
     assert checkodesol(eq, sol) == (True, 0)
@@ -957,7 +958,7 @@ def test_2nd_power_series_ordinary():
     # assert checkodesol(eq, sol) == (True, 0)
 
     eq = f(x).diff(x, 2) + x*f(x)
-    assert classify_ode(eq) == ('2nd_linear_airy', '2nd_power_series_ordinary')
+    assert classify_ode(eq) == ('2nd_linear_airy', '2nd_linear_bessel_transform', '2nd_power_series_ordinary')
     sol = Eq(f(x), C2*(x**6/180 - x**3/6 + 1) + C1*x*(-x**3/12 + 1) + O(x**7))
     assert dsolve(eq, hint='2nd_power_series_ordinary', n=7) == sol
     assert checkodesol(eq, sol) == (True, 0)
@@ -1116,3 +1117,30 @@ def test_issue_27683():
     expected = Eq(u, C1 + C2*x + 0.000125*x**2)
     assert sol1 == expected
     assert sol2 == expected
+
+
+def test_issue_28438():
+    x = symbols("x")
+    k = symbols("k")
+    y = Function("y")
+
+    # Symbolic k
+    eq1 = Eq(Derivative(y(x), (x, 2)) + x**k * y(x), 0)
+    sol1 = dsolve(eq1, y(x))
+    expected1 = Eq(y(x), sqrt(x)*(C1*besselj(1/(k + 2), 2*x**(k/2 + 1)/(k + 2)) +
+                                   C2*bessely(1/(k + 2), 2*x**(k/2 + 1)/(k + 2))))
+    assert sol1 == expected1
+
+    # Numeric k=3
+    eq2 = Eq(Derivative(y(x), (x, 2)) + x**3 * y(x), 0)
+    sol2 = dsolve(eq2, y(x))
+    expected2 = Eq(y(x), sqrt(x)*(C1*besselj(S(1)/5, 2*x**(S(5)/2)/5) +
+                                   C2*bessely(S(1)/5, 2*x**(S(5)/2)/5)))
+    assert sol2 == expected2
+
+    # k=2 - this should be handled by 2nd_linear_bessel (numeric case)
+    eq3 = Eq(Derivative(y(x), (x, 2)) + x**2 * y(x), 0)
+    sol3 = dsolve(eq3, y(x))
+    expected3 = Eq(y(x), sqrt(x)*(C1*besselj(S(1)/4, x**2/2) +
+                                   C2*bessely(S(1)/4, x**2/2)))
+    assert sol3 == expected3

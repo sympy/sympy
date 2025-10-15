@@ -15,7 +15,7 @@ from sympy.core.numbers import zoo
 from sympy.core.relational import Equality, Eq
 from sympy.core.symbol import Symbol, Dummy, Wild
 from sympy.core.mul import Mul
-from sympy.functions import exp, tan, log, sqrt, besselj, bessely, cbrt, airyai, airybi
+from sympy.functions import exp, tan, log, sqrt, besselj, bessely, cbrt, airyai, airybi, Abs
 from sympy.integrals import Integral
 from sympy.polys import Poly
 from sympy.polys.polytools import cancel, factor, factor_list, degree
@@ -2769,6 +2769,108 @@ class SecondLinearBessel(SingleODESolver):
             + C2*bessely(n/d4,a4*x**d4/d4))).subs(x, x-b4))]
 
 
+class SecondLinearBesselTransform(SingleODESolver):
+    r"""
+    Solves second-order ODEs of the form y'' + A*x^k*y = 0.
+
+    These equations have solutions in terms of Bessel functions.
+
+    The general solution is:
+
+    .. math:: y(x) = \sqrt{x} \left[C_1 J_\nu(z) + C_2 Y_\nu(z)\right]
+
+    where :math:`\nu = \frac{1}{k+2}` and :math:`z = \frac{2}{k+2} x^{(k+2)/2}`
+
+    Examples
+    ========
+
+    >>> from sympy import symbols, Function, dsolve, Derivative
+    >>> x, k = symbols('x k')
+    >>> y = Function('y')
+    >>> dsolve(Derivative(y(x), (x, 2)) + x**k*y(x))
+    Eq(y(x), sqrt(x)*(C1*besselj(1/(k + 2), 2*x**(k/2 + 1)/(k + 2)) +
+                  C2*bessely(1/(k + 2), 2*x**(k/2 + 1)/(k + 2))))
+
+    References
+    ==========
+    - Abramowitz & Stegun, Handbook of Mathematical Functions, 9.1.52
+    - https://eqworld.ipmnet.ru/en/solutions/ode/ode0201.pdf
+    """
+    hint = "2nd_linear_bessel_transform"
+    has_integral = False
+    order = [2]
+
+    def _matches(self):
+        eq = self.ode_problem.eq_high_order_free
+        f = self.ode_problem.func
+        x = self.ode_problem.sym
+        order = self.ode_problem.order
+
+        if order != 2:
+            return False
+
+        # Get linear coefficients
+        match = self.ode_problem.get_linear_coefficients(eq, f, order)
+        if not match:
+            return False
+
+        # We need: a3*y'' + b3*y' + c3*y = 0
+        # For Bessel with symbolic exponent: y'' + 0*y' + (x^k)*y = 0
+        a3 = match[2]  # coefficient of y''
+        b3 = match[1]  # coefficient of y'
+        c3 = match[0]  # coefficient of y
+        rhs = match[-1]  # right-hand side
+
+        # Check if b3 = 0 (no first derivative term) or a3 = 0  (no second derivative term)
+        # or rhs != 0 (non-homogeneous)
+        if b3 != 0 or a3 == 0 or rhs != 0:
+            return False
+
+        # Normalize: divide by coefficient of y''
+        c3 = c3 / a3
+
+        # Check if c3 is of the form A*x^k where k has free symbols
+        A_sym = Wild('A_sym', exclude=[x])
+        k_sym = Wild('k_sym', exclude=[x])
+
+        pattern_match = c3.match(A_sym * x**k_sym)
+
+        if not pattern_match or k_sym not in pattern_match:
+            return False
+
+        k_val = pattern_match[k_sym]
+        A_val = pattern_match[A_sym]
+
+        if k_val == -2:
+            # Special case: k = -2 is an Euler equation, better handled by other solvers.
+            return False
+
+        # Store the matched values
+        self.match_dict = {
+            'A': A_val,
+            'k': k_val,
+        }
+
+        return True
+
+    def _get_general_solution(self, *, simplify_flag: bool = True):
+        f = self.ode_problem.func.func
+        x = self.ode_problem.sym
+        (C1, C2) = self.ode_problem.get_numbered_constants(num=2)
+
+        A = self.match_dict['A']
+        k = self.match_dict['k']
+
+        # For y'' + A*x^k*y = 0
+        # The Bessel order and argument are:
+        nu = 1 / (k + 2)
+
+        z = (2 * sqrt(Abs(A)) / (k + 2)) * x**((k + 2)/2)
+
+        # General solution
+        return [Eq(f(x), sqrt(x) * (C1*besselj(nu, z) + C2*bessely(nu, z)))]
+
+
 class SecondLinearAiry(SingleODESolver):
     r"""
     Gives solution of the Airy differential equation
@@ -2951,6 +3053,7 @@ solver_map = {
     'Liouville': Liouville,
     '2nd_linear_airy': SecondLinearAiry,
     '2nd_linear_bessel': SecondLinearBessel,
+    '2nd_linear_bessel_transform': SecondLinearBesselTransform,
     '2nd_hypergeometric': SecondHypergeometric,
     'nth_order_reducible': NthOrderReducible,
     '2nd_nonlinear_autonomous_conserved': SecondNonlinearAutonomousConserved,

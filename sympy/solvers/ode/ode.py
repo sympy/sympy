@@ -300,6 +300,7 @@ allhints = (
     "Liouville",
     "2nd_linear_airy",
     "2nd_linear_bessel",
+    "2nd_linear_bessel_transform",
     "2nd_hypergeometric",
     "2nd_hypergeometric_Integral",
     "nth_order_reducible",
