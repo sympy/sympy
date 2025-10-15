@@ -364,17 +364,7 @@ def test_sparse_matrix():
 
 def test_parenthesize_typecast():
     modulus = Symbol("modulus")
-    lwe_dimension = Symbol("lwe_dimension")
 
-    exp = (
-        2
-        ** (
-            2
-            * ceiling(
-                -0.025167785 * lwe_dimension + log(modulus) / log(2) + 4.10067100000001
-            )
-        )
-        + 0.5
-    ) / (3 * modulus**2)
-
-    assert(rust_code(exp) == '(1_f64/3.0)*(0.5 + (2*(-0.025167785*lwe_dimension + modulus.ln()/2_i32.ln() + 4.10067100000001).ceil()).exp2())*modulus.powi(-2)')
+    exp = (2 ** (2.0 * ceiling(-y + log(x) / log(2.0) + 4)) + 0.5) / (3 * modulus**2)
+    
+    assert(rust_code(exp) == '(1_f64/3.0)*(0.5 + (2.0*(-y + 1.44269504088896*x.ln()).ceil() + 8.0).exp2())*modulus.powi(-2)')
