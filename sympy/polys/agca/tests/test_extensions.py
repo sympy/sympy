@@ -194,3 +194,12 @@ def test_FiniteExtension_sincos_jacobian():
         J = DomainMatrix(elements_K, (3, 3), K)
         det = J.charpoly()[-1] * (-K.one)**3
         assert det == K.convert(r**2*sin(p))
+
+def test_nullspace_finiteextension():
+    mat = DomainMatrix({0: {0: 10, 1: 12, 2: 44}, 1: {0: 47, 1: 56, 2: 67},
+                        2: {0: 22, 1: 37, 2: 35}}, (3, 3), QQ)
+    field = FiniteExtension(Poly(x**3 - 101*x**2 - 1141*x - 15066, x, domain=QQ))
+    expected_result = DomainMatrix({0: {i: field.convert(e)
+            for i, e in enumerate([44*x - 1660, 67*x + 1398, x**2 - 66*x - 4])}}, (1, 3), field)
+    result = (mat.convert_to(field)- field(x) * mat.eye(mat.shape, field)).nullspace()
+    assert result == expected_result

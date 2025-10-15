@@ -3,7 +3,7 @@
 from sympy.polys.domains.domain import Domain
 from sympy.polys.domains.domainelement import DomainElement
 from sympy.polys.polyerrors import (CoercionFailed, NotInvertible,
-        GeneratorsError)
+        GeneratorsError, ExactQuotientFailed)
 from sympy.polys.polytools import Poly
 from sympy.printing.defaults import DefaultPrinting
 
@@ -341,7 +341,14 @@ class MonogenicFiniteExtension(Domain):
         return self.exquo(f, g)
 
     def exquo(self, f, g):
-        rep = self.ring.exquo(f.rep, g.rep)
+        ring = self.ring
+        try:
+            rep = ring.exquo(f.rep, g.rep)
+        except ExactQuotientFailed:
+            if not ring.domain.is_Field:
+                raise
+            ginv = ring.invert(g.rep, self.mod)
+            rep = ring.mul(f.rep, ginv)
         return ExtElem(rep % self.mod, self)
 
     def is_negative(self, a):
