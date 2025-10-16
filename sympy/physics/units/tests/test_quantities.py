@@ -278,8 +278,8 @@ def test_find_unit():
     assert find_unit(inch) == [
         'm', 'au', 'cm', 'dm', 'ft', 'km', 'ly', 'mi', 'mm', 'nm', 'pm', 'um', 'yd',
         'nmi', 'feet', 'foot', 'inch', 'mile', 'yard', 'meter', 'miles', 'yards',
-        'inches', 'meters', 'micron', 'microns', 'angstrom', 'angstroms', 'decimeter',
-        'kilometer', 'lightyear', 'nanometer', 'picometer', 'centimeter', 'decimeters',
+        'inches', 'meters', 'micron', 'microns', 'angstrom', 'datamile', 'angstroms', 'datamiles',
+        'decimeter', 'kilometer', 'lightyear', 'nanometer', 'picometer', 'centimeter', 'decimeters',
         'kilometers', 'lightyears', 'micrometer', 'millimeter', 'nanometers', 'picometers',
         'centimeters', 'micrometers', 'millimeters', 'nautical_mile', 'planck_length',
         'nautical_miles', 'astronomical_unit', 'astronomical_units']
