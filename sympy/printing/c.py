@@ -14,7 +14,7 @@ source code files that are compilable without further modifications.
 from __future__ import annotations
 from typing import Any
 
-from functools import wraps
+from functools import wraps, cache
 from itertools import chain
 
 from sympy.core import S
@@ -88,6 +88,7 @@ reserved_words = [
 
 reserved_words_c99 = ['inline', 'restrict']
 
+@cache  # called repeatedly, takes ~10ms (see gh-28451)
 def get_math_macros():
     """ Returns a dictionary with math-related macros from math.h/cmath
 
