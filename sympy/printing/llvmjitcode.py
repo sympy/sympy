@@ -386,9 +386,9 @@ def llvm_callable(args, expr, callback_type=None):
     callback_type : string
         Create function with signature appropriate to use as a callback.
         Currently supported:
-           'scipy.integrate'
-           'scipy.integrate.test'
-           'cubature'
+        'scipy.integrate'
+        'scipy.integrate.test'
+        'cubature'
 
     Returns
     =======
