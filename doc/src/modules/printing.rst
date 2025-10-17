@@ -683,6 +683,79 @@ The following constants/functions are for rendering atoms and symbols.
 .. autoclass:: prettyForm
    :members:
 
+LLVM JIT Compilation
+--------------------
+
+.. module:: sympy.printing.llvmjitcode
+
+SymPy can compile symbolic expressions to native machine code using LLVM through
+the `llvmlite` library. This provides significant performance improvements for
+numerical evaluation of expressions, especially when used as callbacks for
+integration routines.
+
+The main function for LLVM JIT compilation is `llvm_callable()`, which converts
+a SymPy expression into a compiled function that can be called with numerical
+arguments.
+
+Usage::
+
+    >>> from sympy.printing.llvmjitcode import llvm_callable
+    >>> from sympy.abc import x, y
+    >>> expr = x**2 + 2*x + 1
+    >>> f = llvm_callable([x], expr)
+    >>> f(3.0)  # Evaluate the expression at x=3
+    16.0
+
+The function supports various callback types for integration with external
+libraries:
+
+- ``'scipy.integrate'``: For use with SciPy's integration functions
+- ``'scipy.integrate.test'``: For direct testing with ctypes
+- ``'cubature'``: For use with the cubature integration library
+
+Example with SciPy integration::
+
+    >>> from sympy.printing.llvmjitcode import llvm_callable
+    >>> from sympy.abc import x
+    >>> from scipy.integrate import quad
+    >>> expr = x**2
+    >>> f = llvm_callable([x], expr, callback_type='scipy.integrate')
+    >>> quad(f, 0, 2)[0]  # Integrate x^2 from 0 to 2
+    2.6666666666666665
+
+The module also supports Common Subexpression Elimination (CSE) for improved
+performance::
+
+    >>> from sympy import cse
+    >>> from sympy.printing.llvmjitcode import llvm_callable
+    >>> from sympy.abc import x, y
+    >>> expr1 = x**2 + y**2
+    >>> expr2 = 4*(x**2 + y**2) + 8
+    >>> cse_result = cse([expr1, expr2])
+    >>> f = llvm_callable([x, y], cse_result)
+    >>> f(1.0, 2.0)  # Returns tuple: (expr1_value, expr2_value)
+    (5.0, 28.0)
+
+**Note**: This functionality requires the `llvmlite` library to be installed.
+See the :ref:`dependencies` page for installation instructions.
+
+.. autofunction:: llvm_callable
+
+.. autoclass:: LLVMJitPrinter
+   :members:
+
+.. autoclass:: LLVMJitCallbackPrinter
+   :members:
+
+.. autoclass:: LLVMJitCode
+   :members:
+
+.. autoclass:: LLVMJitCodeCallback
+   :members:
+
+.. autoclass:: CodeSignature
+   :members:
+
 dotprint
 --------
 
