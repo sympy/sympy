@@ -676,6 +676,7 @@ def pde_1st_linear_variable_coeff(eq, func, order, match, solvefun):
     >>> from sympy import Function, pprint
     >>> from sympy.abc import x,y
     >>> f = Function('f')
+    >>> u = f(x,y)
     >>> eq =  x*(u.diff(x)) - y*(u.diff(y)) + y**2*u - y**2
     >>> pdsolve(eq)
     Eq(f(x, y), F(x*y)*exp(y**2/2) + 1)
