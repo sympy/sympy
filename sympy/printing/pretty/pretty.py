@@ -2796,6 +2796,52 @@ class PrettyPrinter(Printer):
     def _print_QuotientModule(self, M):
         return self._print(M.base) / self._print(M.killed_module)
 
+    def _print_Quaternion(self, expr):
+        a, b, c, d = expr.args
+
+        if self._use_unicode:
+            i_symbol = '\U0001D456'  # 𝑖
+            j_symbol = '\U0001D457'  # 𝑗
+            k_symbol = '\U0001D458'  # 𝑘
+        else:
+            i_symbol = 'i'
+            j_symbol = 'j'
+            k_symbol = 'k'
+
+        terms = []
+
+        if a != 0:
+            terms.append(self._print(a))
+
+        for coeff, symbol in [(b, i_symbol), (c, j_symbol), (d, k_symbol)]:
+            if coeff != 0:
+                if coeff == 1:
+                    terms.append(prettyForm(symbol))
+                elif coeff == -1:
+                    terms.append(prettyForm('-' + symbol))
+                else:
+                    coeff_str = self._print(coeff)
+                    if symbol:
+                        terms.append(prettyForm(*coeff_str.right(symbol)))
+                    else:
+                        terms.append(coeff_str)
+
+        if not terms:
+            return prettyForm('0')
+
+        if len(terms) == 1:
+            return terms[0]
+
+        result = terms[0]
+        for term in terms[1:]:
+            term_str = str(term)
+            if term_str.startswith('-'):
+                result = prettyForm(*result.right(' - ', term_str[1:]))
+            else:
+                result = prettyForm(*result.right(' + ', term))
+
+        return result
+
     def _print_MatrixHomomorphism(self, h):
         matrix = self._print(h._sympy_matrix())
         matrix.baseline = matrix.height() // 2
