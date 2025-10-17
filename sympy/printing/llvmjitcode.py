@@ -1,6 +1,13 @@
 '''
 Use llvmlite to create executable functions from SymPy expressions
 
+The primary goal is to significantly accelerate the numerical evaluation of
+expressions, which is especially useful for functions that need to be called
+repeatedly with different arguments (e.g., in numerical integration,
+optimization, or plotting).
+
+The main entry point for users is the llvm_callable function.
+
 This module requires llvmlite (https://github.com/numba/llvmlite).
 '''
 
@@ -386,9 +393,9 @@ def llvm_callable(args, expr, callback_type=None):
     callback_type : string
         Create function with signature appropriate to use as a callback.
         Currently supported:
-           'scipy.integrate'
-           'scipy.integrate.test'
-           'cubature'
+        'scipy.integrate'
+        'scipy.integrate.test'
+        'cubature'
 
     Returns
     =======
