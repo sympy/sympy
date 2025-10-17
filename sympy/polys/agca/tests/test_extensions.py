@@ -112,6 +112,10 @@ def test_FiniteExtension_exquo():
     xf = K(x)
     assert K.exquo(xf**2 - 1, xf - 1) == xf + 1
 
+    K1 = FiniteExtension(Poly(x**3 - 101*x**2 - 1141*x - 15066, x, domain=QQ))
+    x1 = K1(x)
+    assert K1.exquo(-25*x1**2 - 1797*x1 - 15106, 10 - x1) == x1**2 - 66*x1 - 4
+
 
 def test_FiniteExtension_convert():
     # Test from_MonogenicFiniteExtension
