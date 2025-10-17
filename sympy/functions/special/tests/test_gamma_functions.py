@@ -734,6 +734,10 @@ def test_multigamma():
     assert multigamma(0.7, 3, evaluate=False).is_real == True
     assert multigamma(3, 3, evaluate=False).is_real == True
 
+    assert multigamma(n, 1, evaluate=False).is_real is None
+    n_neg = Symbol('n', integer=True, negative=True)
+    assert multigamma(n_neg, 1, evaluate=False).is_real == False
+
 def test_gamma_as_leading_term():
     assert gamma(x).as_leading_term(x) == 1/x
     assert gamma(2 + x).as_leading_term(x) == S(1)
