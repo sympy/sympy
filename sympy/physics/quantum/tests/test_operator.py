@@ -219,7 +219,7 @@ def test_differential_operator():
         DifferentialOperator(Derivative(d.expr, x), f(x, y))
     assert diff(d, y) == \
         DifferentialOperator(Derivative(d.expr, y), f(x, y))
-    assert qapply(d*w) == Wavefunction(2*x**3 + 6*x*y**2 + 6*x**2*y + 2*y**3,
+    assert qapply(d*w).expand() == Wavefunction(2*x**3 + 6*x*y**2 + 6*x**2*y + 2*y**3,
                                        x, y)
 
     # 2D polar Laplacian (th = theta)
