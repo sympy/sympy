@@ -3624,7 +3624,7 @@ def test_StateSpace_functions():
     assert SS3.controllable_subspace() == [Matrix([[1], [1]])]
     assert SS1.uncontrollable_subspace() == []
     assert SS3.uncontrollable_subspace() == [Matrix([[-1], [1]])]
-    raises(NotImplementedError, lambda: SS4.uncontrollable_subspace()) # uncontrollable subspace fo symbols not implemented
+    raises(NotImplementedError, lambda: SS4.uncontrollable_subspace()) # uncontrollable subspace for symbols not implemented
 
     Qc = SS4.controllability_matrix().subs([(a0, 0), (a1, 1), (a2, -6), (a3, -5), (b1, 0), (b2, 1)])
     assert Qc == Matrix([[0, 1], [1, -5]])
@@ -4379,7 +4379,7 @@ def test_DiscreteStateSpace_functions():
     assert SS3.controllable_subspace() == [Matrix([[1], [1]])]
     assert SS1.uncontrollable_subspace() == []
     assert SS3.uncontrollable_subspace() == [Matrix([[-1], [1]])]
-    raises(NotImplementedError, lambda: SS4.uncontrollable_subspace()) # uncontrollable subspace fo symbols not implemented
+    raises(NotImplementedError, lambda: SS4.uncontrollable_subspace()) # uncontrollable subspace for symbols not implemented
 
     Qc = SS4.controllability_matrix().subs([(a0, 0), (a1, 1), (a2, -6), (a3, -5), (b1, 0), (b2, 1)])
     assert Qc == Matrix([[0, 1], [1, -5]])
