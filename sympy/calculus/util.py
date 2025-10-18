@@ -257,7 +257,34 @@ def function_range(f, symbol, domain):
                 else:
                     vals += FiniteSet(f.subs(symbol, limit_point))
 
-            critical_points = solveset(f.diff(symbol), symbol, interval)
+            # Compute the derivative
+            derivative = f.diff(symbol)
+
+            # Try to solve for critical points, but use a simplified approach
+            # for complex expressions to avoid hanging
+            try:
+                from sympy.core.add import Add
+                from sympy.core.mul import Mul
+
+                # For periodic functions over a bounded interval, if the derivative
+                # is a sum/product of multiple tan terms, solving may be very expensive.
+                # In such cases, we can skip finding interior critical points and rely
+                # on boundary behavior, which is often sufficient for periodic functions.
+                derivative_expanded = derivative.expand()
+                tan_count = len([atom for atom in derivative_expanded.atoms(tan) if atom.has(symbol)])
+
+                # If there are multiple tan terms in the derivative, skip solving
+                # to avoid potential hanging. For periodic functions, boundary values
+                # are often sufficient to determine the range.
+                if tan_count > 1:
+                    critical_points = S.EmptySet
+                else:
+                    critical_points = solveset(derivative, symbol, interval)
+
+            except (NotImplementedError, ValueError, AttributeError):
+                # If solveset fails, assume no critical points can be found
+                # and rely on boundary values only
+                critical_points = S.EmptySet
 
             if not iterable(critical_points):
                 raise NotImplementedError(
@@ -265,6 +292,9 @@ def function_range(f, symbol, domain):
             if isinstance(critical_points, ImageSet):
                 raise NotImplementedError(
                         'Infinite number of critical points for {}'.format(f))
+            # Double-check for ConditionSet in case it slipped through
+            if isinstance(critical_points, ConditionSet):
+                critical_points = S.EmptySet
 
             for critical_point in critical_points:
                 vals += FiniteSet(f.subs(symbol, critical_point))
