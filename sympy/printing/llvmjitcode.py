@@ -1,6 +1,13 @@
 '''
 Use llvmlite to create executable functions from SymPy expressions
 
+The primary goal is to significantly accelerate the numerical evaluation of
+expressions, which is especially useful for functions that need to be called
+repeatedly with different arguments (e.g., in numerical integration,
+optimization, or plotting).
+
+The main entry point for users is the llvm_callable function.
+
 This module requires llvmlite (https://github.com/numba/llvmlite).
 '''
 
@@ -27,7 +34,22 @@ __doctest_requires__ = {('llvm_callable'): ['llvmlite']}
 
 
 class LLVMJitPrinter(Printer):
-    '''Convert expressions to LLVM IR'''
+    '''Convert SymPy expressions to LLVM IR.
+    Parameters
+    ==========
+    module : llvmlite.ir.Module
+        LLVM module to which generated IR is added.
+    builder : llvmlite.ir.IRBuilder
+        IR builder used to construct instructions.
+    fn : llvmlite.ir.Function
+        LLVM function being constructed.
+    func_arg_map : dict, optional
+        Mapping from Symbols to LLVM function arguments/values.
+    Notes
+    =====
+    This printer is used internally by :func:`llvm_callable` to lower SymPy
+    expressions to LLVM IR for JIT compilation via llvmlite.
+    '''
     def __init__(self, module, builder, fn, *args, **kwargs):
         self.func_arg_map = kwargs.pop("func_arg_map", {})
         if not llvmlite:
@@ -386,9 +408,9 @@ def llvm_callable(args, expr, callback_type=None):
     callback_type : string
         Create function with signature appropriate to use as a callback.
         Currently supported:
-           'scipy.integrate'
-           'scipy.integrate.test'
-           'cubature'
+        'scipy.integrate'
+        'scipy.integrate.test'
+        'cubature'
 
     Returns
     =======
