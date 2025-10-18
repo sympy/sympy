@@ -246,11 +246,6 @@ class Logic:
         else:
             return a.args != b.args
 
-    def __lt__(self, other):
-        if type(self) is not type(other):
-            return str(type(self)) < str(type(other))
-        return self.args < other.args
-
     def __str__(self):
         return '%s(%s)' % (self.__class__.__name__,
                            ', '.join(str(a) for a in self.args))
