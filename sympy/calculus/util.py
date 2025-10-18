@@ -263,9 +263,6 @@ def function_range(f, symbol, domain):
             # Try to solve for critical points, but use a simplified approach
             # for complex expressions to avoid hanging
             try:
-                from sympy.core.add import Add
-                from sympy.core.mul import Mul
-
                 # For periodic functions over a bounded interval, if the derivative
                 # is a sum/product of multiple tan terms, solving may be very expensive.
                 # In such cases, we can skip finding interior critical points and rely
