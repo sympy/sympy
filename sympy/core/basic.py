@@ -389,7 +389,7 @@ class Basic(Printable):
         1
 
         """
-        # all redefinitions of __cmp__ method should start with the
+        # all redefinitions of compare method should start with the
         # following lines:
         if self is other:
             return 0

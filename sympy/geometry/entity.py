@@ -39,7 +39,7 @@ from sympy.utilities.misc import func_name
 from sympy.utilities.iterables import is_sequence
 
 
-# How entities are ordered; used by __cmp__ in GeometryEntity
+# How entities are ordered; used for comparison in GeometryEntity
 ordering_of_classes = [
     "Point2D",
     "Point3D",
@@ -78,35 +78,16 @@ class GeometryEntity(Basic, EvalfMixin):
 
     __slots__: tuple[str, ...] = ()
 
-    def __cmp__(self, other):
-        """Comparison of two GeometryEntities."""
+    def __lt__(self, other):
         n1 = self.__class__.__name__
         n2 = other.__class__.__name__
-        c = (n1 > n2) - (n1 < n2)
-        if not c:
-            return 0
-
-        i1 = -1
-        for cls in self.__class__.__mro__:
-            try:
-                i1 = ordering_of_classes.index(cls.__name__)
-                break
-            except ValueError:
-                i1 = -1
-        if i1 == -1:
-            return c
-
-        i2 = -1
-        for cls in other.__class__.__mro__:
-            try:
-                i2 = ordering_of_classes.index(cls.__name__)
-                break
-            except ValueError:
-                i2 = -1
-        if i2 == -1:
-            return c
-
-        return (i1 > i2) - (i1 < i2)
+        if n1 != n2:
+            return n1 < n2
+        i1 = next((ordering_of_classes.index(cls.__name__) for cls in self.__class__.__mro__ if cls.__name__ in ordering_of_classes), -1)
+        i2 = next((ordering_of_classes.index(cls.__name__) for cls in other.__class__.__mro__ if cls.__name__ in ordering_of_classes), -1)
+        if i1 == -1 or i2 == -1:
+            return n1 < n2
+        return i1 < i2
 
     def __contains__(self, other):
         """Subclasses should implement this method for anything more complex than equality."""
