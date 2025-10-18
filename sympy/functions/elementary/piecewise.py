@@ -540,12 +540,6 @@ class Piecewise(Function):
                     rv = piecewise_fold(rv)
                 return rv
 
-        # Ensure there's a default case to avoid undefined regions
-        # If the last condition is not True, add (0, True) as default
-        # This fixes issue #28469 where nested integrations return nan
-        if not self.args or self.args[-1].cond != true:
-            self = self.func(*self.args, (0, true))
-
         # handle a Piecewise with lo <= hi and no x-independent relationals
         # -----------------------------------------------------------------
         ok, abei = self._intervals(x)
