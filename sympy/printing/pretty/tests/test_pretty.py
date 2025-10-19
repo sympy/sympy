@@ -8116,9 +8116,9 @@ def test_pretty_quaternion():
     assert upretty(q7) == '𝑖 - 𝑗 + 2𝑘'
 
     q8 = Quaternion(Rational(1,2), Rational(3,4), -Rational(2,3), 1)
-    assert pretty(q8) == '1/2 + 3/4i - 2/3j + k'
-    assert upretty(q8) == '1/2 + 3/4𝑖 - 2/3𝑗 + 𝑘'
+    assert pretty(q8) == ' 1   3i   2j       \n - + --- - --- + k \n2    4     3       '
+    assert upretty(q8) == ' 1   3𝑖   2𝑗       \n ─ + ─── - ─── + 𝑘 \n2    4     3       '
 
     q9 = Quaternion(x, y, z, t)
-    assert pretty(q9) == 'x + yi + zj + tk'
+    assert pretty(q9) == 'x + iy + jz + kt'
     assert upretty(q9) == 'x + y𝑖 + z𝑗 + t𝑘'

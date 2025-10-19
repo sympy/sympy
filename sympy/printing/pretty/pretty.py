@@ -1,4 +1,5 @@
 import itertools
+import re
 
 from sympy.core import S
 from sympy.core.add import Add
@@ -2800,47 +2801,40 @@ class PrettyPrinter(Printer):
         a, b, c, d = expr.args
 
         if self._use_unicode:
-            i_symbol = '\U0001D456'  # 𝑖
-            j_symbol = '\U0001D457'  # 𝑗
-            k_symbol = '\U0001D458'  # 𝑘
+            i_symbol = Symbol('\U0001D456')  # 𝑖
+            j_symbol = Symbol('\U0001D457')  # 𝑗
+            k_symbol = Symbol('\U0001D458')  # 𝑘
         else:
-            i_symbol = 'i'
-            j_symbol = 'j'
-            k_symbol = 'k'
+            i_symbol = Symbol('i')
+            j_symbol = Symbol('j')
+            k_symbol = Symbol('k')
 
         terms = []
-
         if a != 0:
-            terms.append(self._print(a))
-
-        for coeff, symbol in [(b, i_symbol), (c, j_symbol), (d, k_symbol)]:
-            if coeff != 0:
-                if coeff == 1:
-                    terms.append(prettyForm(symbol))
-                elif coeff == -1:
-                    terms.append(prettyForm('-' + symbol))
-                else:
-                    coeff_str = self._print(coeff)
-                    if symbol:
-                        terms.append(prettyForm(*coeff_str.right(symbol)))
-                    else:
-                        terms.append(coeff_str)
+            terms.append(a)
+        for coeff, sym in [(b, i_symbol), (c, j_symbol), (d, k_symbol)]:
+            if coeff == 0:
+                continue
+            terms.append(Mul(coeff, sym, evaluate=False))
 
         if not terms:
-            return prettyForm('0')
+            return self._print(S.Zero)
+        elif len(terms) == 1:
+            term = terms[0]
+            if hasattr(term, 'args') and len(term.args) == 2:
+                coeff, sym = term.args
+                if coeff == 1:
+                    return self._print(sym)
+                elif coeff == -1:
+                    return prettyForm('-' + str(self._print(sym)))
+            result_str = str(self._print(term))
+            return prettyForm(result_str.replace('*', '').replace('⋅', ''))
 
-        if len(terms) == 1:
-            return terms[0]
+        result = self._print_Add(Add(*terms, evaluate=False), order="none")
+        result_str = str(result).replace('*', '').replace('⋅', '')
+        result_str = re.sub(r'(?<![\w])1([ijk𝑖𝑗𝑘])', r'\1', result_str)
 
-        result = terms[0]
-        for term in terms[1:]:
-            term_str = str(term)
-            if term_str.startswith('-'):
-                result = prettyForm(*result.right(' - ', term_str[1:]))
-            else:
-                result = prettyForm(*result.right(' + ', term))
-
-        return result
+        return prettyForm(result_str)
 
     def _print_MatrixHomomorphism(self, h):
         matrix = self._print(h._sympy_matrix())
