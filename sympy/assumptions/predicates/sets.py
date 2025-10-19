@@ -229,13 +229,27 @@ class HermitianPredicate(Predicate):
     ``ask(Q.hermitian(x))`` is true iff ``x`` belongs to the set of
     Hermitian operators.
 
+    Examples
+    ========
+
+    >>> from sympy import Q, ask, Matrix, I, Symbol
+    >>> ask(Q.hermitian(2))
+    True
+    >>> ask(Q.hermitian(I))
+    False
+    >>> A = Matrix([[1, I], [-I, 1]])
+    >>> ask(Q.hermitian(A))
+    True
+    >>> x = Symbol('x', real=True)
+    >>> ask(Q.hermitian(x))
+    True
+
     References
     ==========
 
     .. [1] https://mathworld.wolfram.com/HermitianOperator.html
 
     """
-    # TODO: Add examples
     name = 'hermitian'
     handler = Dispatcher(
         "HermitianHandler",
