@@ -328,13 +328,26 @@ class AntihermitianPredicate(Predicate):
     antihermitian operators, i.e., operators in the form ``x*I``, where
     ``x`` is Hermitian.
 
+    Examples
+    ========
+
+    >>> from sympy import Q, ask, Matrix, I
+    >>> ask(Q.antihermitian(I))
+    True
+    >>> ask(Q.antihermitian(2))
+    False
+    >>> A = Matrix([[0, -2 - I, 0], [2 - I, 0, -I], [0, -I, 0]])
+    >>> ask(Q.antihermitian(A))
+    True
+    >>> ask(Q.antihermitian(0))
+    True
+
     References
     ==========
 
     .. [1] https://mathworld.wolfram.com/HermitianOperator.html
 
     """
-    # TODO: Add examples
     name = 'antihermitian'
     handler = Dispatcher(
         "AntiHermitianHandler",
