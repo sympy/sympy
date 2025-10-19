@@ -1685,8 +1685,8 @@ def test_piecewise_nested_integration():
     assert result3_def is not None
 
 
-def test_piecewise_as_leading_term():
-    """Test as_leading_term method for Piecewise functions."""
+def test_piecewise_as_leading_term_with_default():
+    """Test as_leading_term method for Piecewise functions with default conditions."""
     a1, a2, a3 = symbols('a1 a2 a3')
     t = symbols('t')
 
