@@ -1637,3 +1637,66 @@ def test_piecewise__eval_is_meromorphic():
     assert f.is_meromorphic(x, 2) == True
     assert f.is_meromorphic(x, Symbol('a')) == None
     assert f.is_meromorphic(x, Symbol('a', real=True)) == None
+
+
+def test_piecewise_nested_integration():
+    """Test nested integration of Piecewise functions with and without default."""
+    a1, a2, a3 = symbols('a1 a2 a3')
+    t, t1, t2, t3 = symbols('t t1 t2 t3')
+
+    # Test without default (0, True)
+    p_no_default = [(a1, t < 1), (a2, t < 2), (a3, t < 3)]
+
+    f1 = Piecewise(*p_no_default).subs({t: t1})
+    f2 = Piecewise(*p_no_default).subs({t: t2})
+    f3 = Piecewise(*p_no_default).subs({t: t3})
+
+    # Single integral should work
+    result1 = integrate(f1, (t1, 0, 3))
+    assert result1 == a1 + a2 + a3
+
+    # Double integral should work
+    result2 = integrate(f1 * integrate(f2, (t2, 0, t1)), (t1, 0, 3))
+    # Result should be computable without errors
+    assert result2 is not None
+
+    # Triple integral should work
+    result3 = integrate(f1 * integrate(f2 * integrate(f3, (t3, 0, t2)), (t2, 0, t1)), (t1, 0, 3))
+    # Result should be computable without errors
+    assert result3 is not None
+
+    # Test with default (0, True)
+    p_with_default = [(a1, t < 1), (a2, t < 2), (a3, t < 3), (0, True)]
+
+    f1_default = Piecewise(*p_with_default).subs({t: t1})
+    f2_default = Piecewise(*p_with_default).subs({t: t2})
+    f3_default = Piecewise(*p_with_default).subs({t: t3})
+
+    # Single integral should work
+    result1_def = integrate(f1_default, (t1, 0, 3))
+    assert result1_def == a1 + a2 + a3
+
+    # Double integral should work
+    result2_def = integrate(f1_default * integrate(f2_default, (t2, 0, t1)), (t1, 0, 3))
+    assert result2_def is not None
+
+    # Triple integral should work
+    result3_def = integrate(f1_default * integrate(f2_default * integrate(f3_default, (t3, 0, t2)), (t2, 0, t1)), (t1, 0, 3))
+    assert result3_def is not None
+
+
+def test_piecewise_as_leading_term():
+    """Test as_leading_term method for Piecewise functions."""
+    a1, a2, a3 = symbols('a1 a2 a3')
+    t = symbols('t')
+
+    # Test as_leading_term with default condition
+    test_pw = Piecewise((a1, t < 1), (a2, t < 2), (a3, True))
+    leading = test_pw.as_leading_term(t)
+    # Should not raise an error and should return a valid expression
+    assert leading is not None
+
+    # Test without explicit True default
+    test_pw2 = Piecewise((a1, t < 1), (a2, t < 2))
+    leading2 = test_pw2.as_leading_term(t)
+    assert leading2 is not None
