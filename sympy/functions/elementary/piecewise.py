@@ -1,4 +1,4 @@
-from sympy.core import S, Function, diff, Tuple, Dummy, Mul
+from sympy.core import S, diff, Tuple, Dummy, Mul
 from sympy.core.function import DefinedFunction
 from sympy.core.basic import Basic, as_Basic
 from sympy.core.numbers import Rational, NumberSymbol, _illegal
