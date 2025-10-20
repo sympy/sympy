@@ -855,8 +855,8 @@ def test_conflict_generation_disequality_contradiction():
     # Then assert conflicting equality - should generate conflict
     result, conflict = solver.assert_lit(1)  # Q.eq(x, y)
     assert result is False
-    assert len(conflict) > 0
-    assert -1 in conflict or -2 in conflict  # Should negate one of the conflicting literals
+    assert len(conflict) == 2
+    assert -1 in conflict or -2 in conflict # Should negate one of the conflicting literals
 
 
 def test_multiple_disequalities_explanation():
