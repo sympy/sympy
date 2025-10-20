@@ -147,7 +147,6 @@ class Z3Comparator:
             else:
                 return None, None
         except (ValueError, TypeError, AttributeError, z3.Z3Exception) as e:
-            print(f"Z3 conversion error: {e}")
             return None, None
 
 
@@ -493,17 +492,6 @@ def test_equality_contradiction_exception():
         solver.SetTrue(Q.ne(a, b))
 
 
-def test_conflict_generation_equality():
-    """Test conflict generation for equality contradictions."""
-    solver = EUFTheorySolver()
-    solver.Initialize({Q.eq(a, b), Q.ne(a, b)})
-
-    # Set up contradiction scenario
-    solver.SetTrue(Q.eq(a, b))
-
-    # This should generate a conflict appropriately
-
-
 def test_istrue_with_disequalities():
     """Test IsTrue method with disequality tracking."""
     solver = EUFTheorySolver()
@@ -581,18 +569,6 @@ def test_unary_predicate_handling():
     enc.data = [[1]]
 
     solver, conflicts = EUFTheorySolver.from_encoded_cnf(enc, testing_mode=True)
-
-
-def test_binary_predicate_q_eq():
-    """Test Q.eq binary predicate handling."""
-    enc = EncodedCNF()
-    # Create Q.eq(x, y) predicate
-    eq_xy = AppliedPredicate(Q.eq, (x, y))
-    enc.encoding = {eq_xy: 1}
-    enc.data = [[1]]
-
-    solver, conflicts = EUFTheorySolver.from_encoded_cnf(enc, testing_mode=True)
-    # Should convert properly
 
 
 def test_binary_predicate_q_ne():
@@ -1664,7 +1640,6 @@ def test_cross_arity_functional_conflict_long_chain():
     for lit in [1,2,3,4]:
         res = solver.assert_lit(lit)
         assert res[0], f"Literal {lit} failed unexpectedly: {res}"
-        print(f"Assert {lit}: success")
     res = solver.assert_lit(5)
     assert res == (False,{-1,-2,-3,-4,-5}), f"Unexpected result on final disequality: {res}"
 
@@ -1688,7 +1663,6 @@ def test_cross_arity_functional_conflict_long_chain_2():
     for lit in [1,2,3,4,5]:
         res = solver.assert_lit(lit)
         assert res[0], f"Literal {lit} failed unexpectedly: {res}"
-        print(f"Assert {lit}: success")
     res = solver.assert_lit(6)
     assert res == (False,{-1,-2,-3,-4,-5,-6}), f"Unexpected result on final disequality: {res}"
 
@@ -1711,10 +1685,8 @@ def test_conflict_different_arity_nested_1():
     for k in range(1, 6):
         res = solver.assert_lit(k)
         assert res[0], f"Assertion {k} failed unexpectedly: {res}"
-        print(f"Assert {k}: success, no conflict.")
     res = solver.assert_lit(6)
     assert res == (False, {-1,-2,-3,-4,-5,-6}), f"Unexpected result on final disequality: {res}"
-    print(f"Final conflict on arity/nest: {res}")
     assert not res[0], "Conflict expected on disequality, but not detected."
 
 
@@ -1727,8 +1699,6 @@ def test_random_satisfiable_constraints_small():
     z3_comparator = Z3Comparator() if Z3_AVAILABLE else None
 
     for trial in range(10):
-        print(f"\nTrial {trial + 1}/10")
-
         # Generate simple satisfiable constraints
         constraints = []
         symbols_used = generator.symbols_pool[:5]  # Use only 5 symbols
@@ -1743,13 +1713,11 @@ def test_random_satisfiable_constraints_small():
         # Test with SymPy
         result = satisfiable(boolalg.And(*constraints), use_euf_theory=True)
         sympy_sat = result is not False
-        print(f"SymPy result: {'SAT' if sympy_sat else 'UNSAT'}")
         # Compare with Z3 if available
         if Z3_AVAILABLE and z3_comparator:
             z3_result = z3_comparator.check_satisfiability_with_z3(constraints)
             z3_sat, z3_model = z3_result if z3_result else (None, None)
             if z3_sat is not None:
-                print(f"Z3 result: {'SAT' if z3_sat else 'UNSAT'}")
                 assert sympy_sat == z3_sat, f"Disagreement: SymPy={sympy_sat}, Z3={z3_sat}"
 
 
@@ -1762,7 +1730,6 @@ def test_random_unsatisfiable_constraints_small():
     z3_comparator = Z3Comparator() if Z3_AVAILABLE else None
 
     for trial in range(10):
-        print(f"\nTrial {trial + 1}/10")
 
         # Generate unsatisfiable constraints
         x, y, z = generator.symbols_pool[:3]
@@ -1774,7 +1741,6 @@ def test_random_unsatisfiable_constraints_small():
         ]
         result = satisfiable(boolalg.And(*constraints), use_euf_theory=True)
         sympy_sat = result is not False
-        print(f"SymPy result: {'SAT' if sympy_sat else 'UNSAT'}")
         # Should be unsatisfiable
         assert not sympy_sat, "Expected UNSAT but got SAT"
 
@@ -1783,7 +1749,6 @@ def test_random_unsatisfiable_constraints_small():
             z3_result = z3_comparator.check_satisfiability_with_z3(constraints)
             z3_sat, z3_model = z3_result if z3_result else (None, None)
             if z3_sat is not None:
-                print(f"Z3 result: {'SAT' if z3_sat else 'UNSAT'}")
                 assert sympy_sat == z3_sat, f"Disagreement: SymPy={sympy_sat}, Z3={z3_sat}"
 
 
@@ -1795,8 +1760,6 @@ def test_random_function_constraints_medium():
     generator = RandomEUFTestGenerator()
 
     for trial in range(5):
-        print(f"\nFunction trial {trial + 1}/5")
-
         # Generate constraints with functions
         x, y, z = generator.symbols_pool[:3]
         f = generator.functions_pool[0]
@@ -1814,7 +1777,6 @@ def test_random_function_constraints_medium():
         all_constraints = constraints + [query]
         result = satisfiable(boolalg.And(*all_constraints), use_euf_theory=True)
         sympy_sat = result is not False
-        print(f"SymPy result for constraints + query: {'SAT' if sympy_sat else 'UNSAT'}")
 
         # Should be satisfiable due to congruence
         assert sympy_sat, "Expected SAT due to functional congruence"
@@ -1823,7 +1785,6 @@ def test_random_function_constraints_medium():
         negated_constraints = constraints + [Not(query)]
         result_neg = satisfiable(boolalg.And(*negated_constraints), use_euf_theory=True)
         sympy_sat_neg = result_neg is not False
-        print(f"SymPy result for constraints + ~query: {'SAT' if sympy_sat_neg else 'UNSAT'}")
 
         # Should be unsatisfiable
         assert not sympy_sat_neg, "Expected UNSAT for constraints + ~query"
@@ -1847,19 +1808,12 @@ def test_large_random_constraint_set():
     problems += [generator.generate_constraint_set(num_constraints=50) for _ in range(1 + TRIAL_COUNT // 2)]
 
     for trial in range(TRIAL_COUNT):
-        # print(f"\nLarge trial {trial + 1}/3")
-
         constraints = problems[trial]
-
-
-        # print(f"Testing {len(constraints)} constraints")
-
         problem =boolalg.And(*constraints)
         assert problem not in (False, True)
 
         result = satisfiable(problem, use_euf_theory=True)
         sympy_sat = result is not False
-        # print(f"SymPy result: {'SAT' if sympy_sat else 'UNSAT'}")
         z3_sat = z3_satisfiable(problem) is not False
 
         assert sympy_sat == z3_sat
@@ -1868,7 +1822,6 @@ def test_large_random_constraint_set():
 
     assert sat_count > 0
     assert sat_count != TRIAL_COUNT
-    print(f"{sat_count} / {TRIAL_COUNT} problems were satifiable")
 
 
 def test_random_sat_problems():
@@ -1895,8 +1848,6 @@ def test_random_sat_problems():
         assert sympy_sat == z3_sat
         if sympy_sat:
             sat_count += 1
-
-    print(f"{sat_count} / {TRIAL_COUNT} problems were satifiable")
 
 
 def test_random_sat_problems_2():
@@ -1934,5 +1885,3 @@ def test_random_sat_problems_2():
         assert sympy_sat == z3_sat
         if sympy_sat:
             sat_count += 1
-
-    print(f"{sat_count} / {TRIAL_COUNT} problems were satifiable")

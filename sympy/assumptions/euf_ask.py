@@ -6,35 +6,7 @@ This module implements the interface for querying assumptions using the EUF
 (theory of Equality with Uninterpreted Functions) solver. It follows a scheme
 similar to the LRA SAT-ask interface [see lra_satask.py] and is integrated with a
 DPLL(T) framework.
-
-Key functions:
-    - euf_ask: Main entry point for answering queries using EUF theory.
-    - _is_direct_euf_propagation: Checks for simple propagation cases.
-    - _handle_direct_propagation: Handles direct propagation when a predicate's
-      assumption can be inferred immediately.
-    - check_satisfiability: Determines satisfiability under the EUF theory.
-
-References:
-    [1] DPLL(T): Fast Decision Procedures.
-    [2] Proof-Producing Congruence Closure.
-
-Examples:
-    >>> from sympy.assumptions.euf_ask import euf_ask
-    >>> from sympy.assumptions.ask import Q
-    >>> from sympy import symbols
-    >>> x, y = symbols('x y')
-    >>> euf_ask(Q.prime(x), Q.prime(y) & Q.eq(x, y))
-    True
-
-Doctest:
-    >>> from sympy.assumptions.euf_ask import euf_ask
-    >>> from sympy.assumptions.ask import Q
-    >>> from sympy import symbols
-    >>> x, y = symbols('x y')
-    >>> euf_ask(Q.prime(x), Q.prime(y) & Q.eq(x, y))
-    True
 """
-
 from sympy.assumptions.assume import global_assumptions, AppliedPredicate
 from sympy.assumptions.cnf import CNF, EncodedCNF
 from sympy.logic.inference import satisfiable
