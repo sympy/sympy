@@ -146,7 +146,7 @@ class Z3Comparator:
                 return False, None
             else:
                 return None, None
-        except (ValueError, TypeError, AttributeError, z3.Z3Exception) as e:
+        except (ValueError, TypeError, AttributeError, z3.Z3Exception):
             return None, None
 
 
