@@ -1812,7 +1812,7 @@ def _get_examples_ode_sol_separable():
     # https://github.com/sympy/sympy/issues/10379
     'separable_24': {
         'eq': f(t).diff(t)-(1-51.05*y*f(t)),
-        'sol': [Eq(f(t), (0.019588638589618023*exp(y*(C1 - 51.049999999999997*t)) + 0.019588638589618023)/y)],
+        'sol': [Eq(f(t), (2.783712970656612e-16*exp(y*(C1 - 51.05*t)) + 0.019588638589618023)/y)],
         'func': f(t),
     },
 
