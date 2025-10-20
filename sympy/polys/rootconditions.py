@@ -278,16 +278,21 @@ def dup_schur_conditions(f: dup[Er], K: Domain[Er]) -> list[Er]:
             "Schur conditions is not implemented for complex domains"
         )
 
-    # Check if -1 is a root, since the transformation is not defined in this case
-    if K.is_zero(dup_eval(f, -K.one, K)):
-                return [-K.one]
-
     if not K.is_Exact:
         K_exact = K.get_exact()
         pe = dup_convert(f, K, K_exact)
+
+        # Check if -1 is a root, since the transformation is not defined in this case
+        if K_exact.is_zero(dup_eval(pe, -K_exact.one, K_exact)):
+                    return [-K.one]
+
         conds: list = dup_routh_hurwitz(_schur_to_hurwitz(pe, K_exact), K_exact)
 
         return [K.convert_from(c, K_exact) for c in conds]
+
+    # Check if -1 is a root, since the transformation is not defined in this case
+    if K.is_zero(dup_eval(f, -K.one, K)):
+                return [-K.one]
 
     return dup_routh_hurwitz(_schur_to_hurwitz(f, K), K)
 
