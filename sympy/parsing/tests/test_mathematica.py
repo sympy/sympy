@@ -354,4 +354,3 @@ def test_mathematica_not_operator():
 
     # Factorial distinction
     assert parse_mathematica("x!") == factorial(x)
-
