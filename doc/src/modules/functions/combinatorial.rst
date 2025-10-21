@@ -1,9 +1,17 @@
-.. _combinatorial-functions:
-
 Combinatorial
 =============
 
 This module implements various combinatorial functions.
+
+It includes functions related to factorials, special number sequences (like Fibonacci and Catalan), and combinatorial quantities such as binomial coefficients and Stirling numbers.
+
+**Note:**  
+Most combinatorial functions in SymPy can handle both **symbolic** and **numeric** arguments.  
+For example, `factorial(n)` remains unevaluated when `n` is a symbol, but returns a number when `n` is an integer.
+
+-----------------------------
+Combinatorial Numbers
+-----------------------------
 
 .. autoclass:: sympy.functions.combinatorial.numbers.bell
    :members:
@@ -17,10 +25,8 @@ This module implements various combinatorial functions.
 .. autoclass:: sympy.functions.combinatorial.numbers.catalan
    :members:
 
-
 .. autoclass:: sympy.functions.combinatorial.numbers.euler
    :members:
-
 
 .. autoclass:: sympy.functions.combinatorial.factorials.factorial
    :members:
@@ -31,7 +37,6 @@ This module implements various combinatorial functions.
 .. autoclass:: sympy.functions.combinatorial.factorials.factorial2
    :members:
 
-
 .. autoclass:: sympy.functions.combinatorial.factorials.FallingFactorial
    :members:
 
@@ -40,7 +45,6 @@ This module implements various combinatorial functions.
 
 .. autoclass:: sympy.functions.combinatorial.numbers.tribonacci
    :members:
-
 
 .. autoclass:: sympy.functions.combinatorial.numbers.harmonic
    :members:
@@ -93,25 +97,28 @@ This module implements various combinatorial functions.
 .. autoclass:: sympy.functions.combinatorial.factorials.MultiFactorial
    :members:
 
-
 .. autoclass:: sympy.functions.combinatorial.factorials.RisingFactorial
    :members:
 
 .. autofunction:: sympy.functions.combinatorial.numbers.stirling
 
-Enumeration
-===========
 
-Three functions are available. Each of them attempts to efficiently compute
-a given combinatorial quantity for a given set or multiset which can be
-entered as an integer, sequence or multiset (dictionary with
-elements as keys and multiplicities as values). The ``k`` parameter indicates
-the number of elements to pick (or the number of partitions to make). When
-``k`` is None, the sum of the enumeration for all ``k`` (from 0 through the
-number of items represented by ``n``) is returned. A ``replacement`` parameter
-is recognized for combinations and permutations; this indicates that any item
-may appear with multiplicity as high as the number of items in the original
-set.
+**Examples**
+
+>>> from sympy import fibonacci, catalan, stirling
+>>> fibonacci(6)
+8
+>>> catalan(4)
+14
+>>> stirling(5, 2)
+15
+
+
+-----------------------------
+Enumeration
+-----------------------------
+
+Three functions are available. Each of them attempts to efficiently compute a given combinatorial quantity for a given set or multiset which can be entered as an integer, sequence or multiset (dictionary with elements as keys and multiplicities as values). The `k` parameter indicates the number of elements to pick (or the number of partitions to make). When `k` is None, the sum of the enumeration for all `k` (from 0 through the number of items represented by `n`) is returned. A `replacement` parameter is recognized for combinations and permutations; this indicates that any item may appear with multiplicity as high as the number of items in the original set.
 
 >>> from sympy.functions.combinatorial.numbers import nC, nP, nT
 >>> items = 'baby'
