@@ -2799,41 +2799,24 @@ class PrettyPrinter(Printer):
 
     def _print_Quaternion(self, expr):
         a, b, c, d = expr.args
-
         if self._use_unicode:
-            i_symbol = Symbol('\U0001D456')  # 𝑖
-            j_symbol = Symbol('\U0001D457')  # 𝑗
-            k_symbol = Symbol('\U0001D458')  # 𝑘
+            i_symbol = Symbol('\U0001D456')
+            j_symbol = Symbol('\U0001D457')
+            k_symbol = Symbol('\U0001D458')
         else:
             i_symbol = Symbol('i')
             j_symbol = Symbol('j')
             k_symbol = Symbol('k')
-
-        terms = []
-        if a != 0:
-            terms.append(a)
-        for coeff, sym in [(b, i_symbol), (c, j_symbol), (d, k_symbol)]:
-            if coeff == 0:
-                continue
-            terms.append(Mul(coeff, sym, evaluate=False))
-
+        terms = [t for t in [a, b*i_symbol, c*j_symbol, d*k_symbol] if t != 0]
         if not terms:
             return self._print(S.Zero)
-        elif len(terms) == 1:
-            term = terms[0]
-            if hasattr(term, 'args') and len(term.args) == 2:
-                coeff, sym = term.args
-                if coeff == 1:
-                    return self._print(sym)
-                elif coeff == -1:
-                    return prettyForm('-' + str(self._print(sym)))
-            result_str = str(self._print(term))
-            return prettyForm(result_str.replace('*', '').replace('⋅', ''))
-
-        result = self._print_Add(Add(*terms, evaluate=False), order="none")
+        add_expr = Add(*terms, evaluate=False)
+        if isinstance(add_expr, Add):
+            result = self._print_Add(add_expr, order="none")
+        else:
+            result = self._print(add_expr)
         result_str = str(result).replace('*', '').replace('⋅', '')
         result_str = re.sub(r'(?<![\w])1([ijk𝑖𝑗𝑘])', r'\1', result_str)
-
         return prettyForm(result_str)
 
     def _print_MatrixHomomorphism(self, h):
