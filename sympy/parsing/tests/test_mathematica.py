@@ -1,8 +1,9 @@
-from sympy import sin, Function, symbols, Dummy, Lambda, cos
+from sympy import sin, Function, symbols, Dummy, Lambda, cos, Symbol, factorial, S
 from sympy.parsing.mathematica import parse_mathematica, MathematicaParser
 from sympy.core.sympify import sympify
 from sympy.abc import n, w, x, y, z
 from sympy.testing.pytest import raises
+from sympy.logic.boolalg import And, Or, Not
 
 
 def test_mathematica():
@@ -335,3 +336,21 @@ def test_Mathematica_literal_regex():
                 assert literal_regex.fullmatch(c)
             if f"x{c}".isidentifier():
                 assert literal_regex.fullmatch(f"x{c}")
+
+
+def test_mathematica_not_operator():
+    # Basic tests
+    x = Symbol('x')
+    assert parse_mathematica("!x") == Not(x)
+
+    # And / Or combinations
+    x1, x2 = Symbol('x1'), Symbol('x2')
+    assert parse_mathematica("x1 && !x2") == And(x1, Not(x2))
+    assert parse_mathematica("!x1 || !x2") == Or(Not(x1), Not(x2))
+
+    # Constants
+    assert parse_mathematica("!True") == S.false
+    assert parse_mathematica("!False") == S.true
+
+    # Factorial distinction
+    assert parse_mathematica("x!") == factorial(x)
