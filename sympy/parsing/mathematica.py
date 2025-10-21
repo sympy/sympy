@@ -1143,7 +1143,6 @@ class MathematicaParser:
         "Not": Not,
         "Function": _parse_Function,
         "Factorial": factorial,
-        "Factorial2": lambda x: factorial(x) * factorial(x - 1),
     }
 
     _atom_conversions = {
