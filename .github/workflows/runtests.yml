@@ -316,7 +316,7 @@ jobs:
           python-version: '3.13'
       - run: python -m pip install --upgrade pip
       - run: pip install -r requirements-dev.txt
-      - run: pytest -m slow --timeout 595 -n auto -v
+      - run: pytest -m slow --timeout 595 -n auto -v --durations=0
 
   # -------------------- Test older (and newer) Python --------------- #
 
