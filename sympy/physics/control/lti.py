@@ -1,6 +1,5 @@
 from typing import Type, Union
 from sympy import Interval, numer, Rational, solveset
-import math
 from sympy.core.add import Add
 from sympy.core.basic import Basic
 from sympy.core.containers import Tuple
@@ -2210,11 +2209,6 @@ class DiscreteTransferFunction(TransferFunctionBase):
         domain = EXRAW if fast else None
 
         p = Poly(standard_form.den, self.var, domain = domain)
-
-        # Check if there are roots at -1 since schur_conditions could miss them
-        evaluation = p.eval(-1)
-        if evaluation.is_Number and math.isclose(evaluation, 0):
-            return [false]
 
         return [c > 0 for c in p.schur_conditions()]
 
@@ -6772,11 +6766,6 @@ class DiscreteStateSpace(StateSpaceBase):
         _A = self.A.to_DM(domain = domain) # type: ignore
         charpoly = _A.charpoly()
         charpoly = Poly(charpoly, s, domain = _A.domain)
-
-        # Check if there are roots at -1 since schur_conditions could miss them
-        evaluation = charpoly.eval(-1)
-        if evaluation.is_Number and math.isclose(evaluation, 0):
-            return [false]
 
         return [c > 0 for c in charpoly.schur_conditions()]
 
