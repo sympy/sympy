@@ -24,6 +24,7 @@ from sympy.sets.fancysets import ImageSet
 from sympy.sets.conditionset import ConditionSet
 from sympy.testing.pytest import XFAIL, raises, _both_exp_pow, slow
 from sympy.abc import x, y
+from sympy.calculus.util import AccumBounds
 
 a = Symbol('a', real=True)
 
@@ -138,6 +139,16 @@ def test_continuous_domain():
     assert continuous_domain(0**(x+1)/(x-2), x, S.Reals) == Union(
         Interval.Ropen(-1, 2), Interval.open(2, oo))
 
+def test_accumbounds_union():
+    a = AccumBounds(1, 5)
+    b = AccumBounds(3, 8)
+    assert a.union(b) == AccumBounds(1, 8)
+    a = AccumBounds(1, 3)
+    b = AccumBounds(5, 8)
+    assert a.union(b) == AccumBounds(1, 8)
+    a = AccumBounds(1, 5)
+    b = AccumBounds(5, 8)
+    assert a.union(b) == AccumBounds(1, 8)
 
 @XFAIL
 def test_continuous_domain_acot():

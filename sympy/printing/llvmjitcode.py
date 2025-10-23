@@ -14,9 +14,11 @@ from sympy.utilities.decorator import doctest_depends_on
 
 llvmlite = import_module('llvmlite')
 if llvmlite:
+    LLVMLITE_VERSION = [int(p) for p in llvmlite.__version__.split('.')[:2]]
     ll = import_module('llvmlite.ir').ir
     llvm = import_module('llvmlite.binding').binding
-    llvm.initialize()
+    if LLVMLITE_VERSION < [0, 45]:
+        llvm.initialize()
     llvm.initialize_native_target()
     llvm.initialize_native_asmprinter()
 
@@ -265,15 +267,23 @@ class LLVMJitCode:
     def _compile_function(self, strmod):
         llmod = llvm.parse_assembly(strmod)
 
-        pmb = llvm.create_pass_manager_builder()
-        pmb.opt_level = 2
-        pass_manager = llvm.create_module_pass_manager()
-        pmb.populate(pass_manager)
+        target_machine = (llvm.Target.from_default_triple().
+                          create_target_machine())
 
-        pass_manager.run(llmod)
+        if LLVMLITE_VERSION < [0, 45]:
+            pmb = llvm.create_pass_manager_builder()
+            pmb.opt_level = 2
+            pass_manager = llvm.create_module_pass_manager()
+            pmb.populate(pass_manager)
+            pass_manager.run(llmod)
+        else:
+            pto = llvm.create_pipeline_tuning_options(speed_level=2,
+                                                      size_level=0)
+            pto.loop_vectorization = True
+            pass_builder = llvm.create_pass_builder(target_machine, pto)
+            pass_manager = pass_builder.getModulePassManager()
+            pass_manager.run(llmod, pass_builder)
 
-        target_machine = \
-            llvm.Target.from_default_triple().create_target_machine()
         exe_eng = llvm.create_mcjit_compiler(llmod, target_machine)
         exe_eng.finalize_object()
         exe_engines.append(exe_eng)

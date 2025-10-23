@@ -50,7 +50,7 @@ from sympy.integrals.integrals import (Integral, integrate)
 from sympy.polys.rootoftools import rootof
 
 from sympy.core import Function, Symbol
-from sympy.functions import airyai, airybi, besselj, bessely, lowergamma
+from sympy.functions import airyai, airybi, besselj, bessely, lowergamma, Abs
 from sympy.integrals.risch import NonElementaryIntegral
 from sympy.solvers.ode import classify_ode, dsolve
 from sympy.solvers.ode.ode import allhints, _remove_redundant_solutions
@@ -629,6 +629,30 @@ def test_nth_order_linear_euler_eq_nonhomogeneous_variation_of_parameters():
     assert our_hint in classify_ode(eq, f(x))
 
     _ode_solver_test(_get_examples_ode_sol_euler_var_para)
+
+
+def test_2nd_linear_bessel_transform():
+    """Test cases for the second order linear Bessel equation solver with symbolic parameters"""
+    _ode_solver_test(_get_examples_ode_sol_2nd_linear_bessel_transform)
+
+
+def test_2nd_linear_bessel_transform_rejects_nonhomogeneous():
+    """Verify that non-homogeneous equations are rejected."""
+    # Non-homogeneous equation: y'' - x^3*y = 10
+    # Should NOT be matched. (homogeneous only)
+    eq = f(x).diff(x, 2) - x**3*f(x) - 10
+    hints = classify_ode(eq, f(x))
+
+    assert '2nd_linear_bessel_transform' not in hints
+
+
+def test_2nd_linear_bessel_transform_rejects_euler_case():
+    """Verify that k=-2 case is rejected."""
+    # k=-2 should NOT be matched - it's an Euler equation
+    eq = x**(-2)*f(x) + f(x).diff(x, 2)
+    hints = classify_ode(eq, f(x))
+
+    assert '2nd_linear_bessel_transform' not in hints
 
 
 @_add_example_keys
@@ -2086,6 +2110,39 @@ def _get_examples_ode_sol_2nd_linear_bessel():
 
 
 @_add_example_keys
+def _get_examples_ode_sol_2nd_linear_bessel_transform():
+    k = Symbol('k')
+    A = Symbol('A', positive=True)
+    return {
+        'hint': "2nd_linear_bessel_transform",
+        'func': f(x),
+        'examples': {
+            # Basic case with symbolic k
+            '2nd_bessel_transform_01': {
+                'eq': x**k*f(x) + f(x).diff(x, 2),
+                'sol': [Eq(f(x), sqrt(x)*(C1*besselj(1/(k + 2), 2*x**(k/2 + 1)/(k + 2)) +
+                                        C2*bessely(1/(k + 2), 2*x**(k/2 + 1)/(k + 2))))],
+                'checkodesol_XFAIL': True,  # checkodesol cannot handle symbolic k
+            },
+
+            # Case with symbolic coefficient A
+            '2nd_bessel_transform_02': {
+                'eq': A*x**k*f(x) + f(x).diff(x, 2),
+                'sol': [Eq(f(x), sqrt(x)*(C1*besselj(1/(k + 2), 2*sqrt(Abs(A))*x**(k/2 + 1)/(k + 2)) +
+                                        C2*bessely(1/(k + 2), 2*sqrt(Abs(A))*x**(k/2 + 1)/(k + 2))))],
+                'checkodesol_XFAIL': True,  # checkodesol cannot handle symbolic A and k
+            },
+
+            # Case k = -4
+            '2nd_bessel_transform_03': {
+                'eq': x**(-4)*f(x) + f(x).diff(x, 2),
+                'sol': [Eq(f(x), sqrt(x)*(C1*besselj(-S(1)/2, -1/x) + C2*bessely(-S(1)/2, -1/x)))],
+            },
+        }
+    }
+
+
+@_add_example_keys
 def _get_examples_ode_sol_2nd_2F1_hypergeometric():
     return {
             'hint': "2nd_hypergeometric",
@@ -2893,6 +2950,7 @@ def _get_all_examples():
     _get_examples_ode_sol_1st_rational_riccati + \
     _get_examples_ode_sol_nth_linear_var_of_parameters + \
     _get_examples_ode_sol_2nd_linear_bessel + \
+    _get_examples_ode_sol_2nd_linear_bessel_transform + \
     _get_examples_ode_sol_2nd_2F1_hypergeometric + \
     _get_examples_ode_sol_2nd_nonlinear_autonomous_conserved + \
     _get_examples_ode_sol_separable_reduced + \

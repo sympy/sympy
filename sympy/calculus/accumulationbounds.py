@@ -692,11 +692,7 @@ class AccumulationBounds(Expr):
             raise TypeError(
                 "Input must be AccumulationBounds or FiniteSet object")
 
-        if self.min <= other.min and self.max >= other.min:
-            return AccumBounds(self.min, Max(self.max, other.max))
-
-        if other.min <= self.min and other.max >= self.min:
-            return AccumBounds(other.min, Max(self.max, other.max))
+        return AccumBounds(Min(self.min, other.min), Max(self.max, other.max))
 
 
 @dispatch(AccumulationBounds, AccumulationBounds) # type: ignore # noqa:F811

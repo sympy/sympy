@@ -30,7 +30,9 @@ __doctest_requires__ = {('lambdify',): ['numpy', 'tensorflow']}
 MATH_DEFAULT: dict[str, Any] = {}
 CMATH_DEFAULT: dict[str,Any] = {}
 MPMATH_DEFAULT: dict[str, Any] = {}
+UMATH_DEFAULT: dict[str, Any] = {}
 NUMPY_DEFAULT: dict[str, Any] = {"I": 1j}
+UNUMPY_DEFAULT: dict[str, Any] = {"I": 1j}
 SCIPY_DEFAULT: dict[str, Any] = {"I": 1j}
 CUPY_DEFAULT: dict[str, Any] = {"I": 1j}
 JAX_DEFAULT: dict[str, Any] = {"I": 1j}
@@ -46,7 +48,9 @@ NUMEXPR_DEFAULT: dict[str, Any] = {}
 MATH = MATH_DEFAULT.copy()
 CMATH = CMATH_DEFAULT.copy()
 MPMATH = MPMATH_DEFAULT.copy()
+UMATH = UMATH_DEFAULT.copy()
 NUMPY = NUMPY_DEFAULT.copy()
+UNUMPY = UNUMPY_DEFAULT.copy()
 SCIPY = SCIPY_DEFAULT.copy()
 CUPY = CUPY_DEFAULT.copy()
 JAX = JAX_DEFAULT.copy()
@@ -98,9 +102,18 @@ MPMATH_TRANSLATIONS = {
     "betainc_regularized": "betainc",
 }
 
+UMATH_TRANSLATIONS: dict[str, str] = {
+    "ceiling": "ceil",
+    "E": "e",
+    "ln": "log",
+}
+
 NUMPY_TRANSLATIONS: dict[str, str] = {
     "Heaviside": "heaviside",
 }
+
+UNUMPY_TRANSLATIONS: dict[str, str] = {}
+
 SCIPY_TRANSLATIONS: dict[str, str] = {
     "jn" : "spherical_jn",
     "yn" : "spherical_yn"
@@ -118,7 +131,9 @@ MODULES = {
     "math": (MATH, MATH_DEFAULT, MATH_TRANSLATIONS, ("from math import *",)),
     "cmath": (CMATH, CMATH_DEFAULT, CMATH_TRANSLATIONS, ("import cmath; from cmath import *",)),
     "mpmath": (MPMATH, MPMATH_DEFAULT, MPMATH_TRANSLATIONS, ("from mpmath import *",)),
+    "umath": (UMATH, UMATH_DEFAULT, UMATH_TRANSLATIONS, ("from math import pi, e, tau, inf, nan; from uncertainties.umath import *",)),
     "numpy": (NUMPY, NUMPY_DEFAULT, NUMPY_TRANSLATIONS, ("import numpy; from numpy import *; from numpy.linalg import *",)),
+    "unumpy": (UNUMPY, UNUMPY_DEFAULT, UNUMPY_TRANSLATIONS, ("import uncertainties.unumpy; from uncertainties.unumpy import *; from uncertainties.unumpy.ulinalg import *",)),
     "scipy": (SCIPY, SCIPY_DEFAULT, SCIPY_TRANSLATIONS, ("import scipy; import numpy; from scipy.special import *",)),
     "cupy": (CUPY, CUPY_DEFAULT, CUPY_TRANSLATIONS, ("import cupy",)),
     "jax": (JAX, JAX_DEFAULT, JAX_TRANSLATIONS, ("import jax",)),
@@ -138,7 +153,7 @@ def _import(module, reload=False):
     Creates a global translation dictionary for module.
 
     The argument module has to be one of the following strings: "math","cmath"
-    "mpmath", "numpy", "sympy", "tensorflow", "jax".
+    "mpmath", "umath", "numpy", "unumpy", "sympy", "tensorflow", "jax".
     These dictionaries map names of Python functions to their equivalent in
     other modules.
     """
@@ -194,7 +209,7 @@ def _import(module, reload=False):
 _lambdify_generated_counter = 1
 
 
-@doctest_depends_on(modules=('numpy', 'scipy', 'tensorflow',), python_version=(3,))
+@doctest_depends_on(modules=('numpy', 'scipy', 'tensorflow', 'uncertainties'), python_version=(3,))
 def lambdify(args, expr, modules=None, printer=None, use_imps=True,
              dummify=False, cse=False, docstring_limit=1000):
     """Convert a SymPy expression into a function that allows for fast
@@ -329,9 +344,9 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
 
         *modules* can be one of the following types:
 
-        - The strings ``"math"``, ``"cmath"``, ``"mpmath"``, ``"numpy"``,
-          ``"numexpr"``, ``"scipy"``, ``"sympy"``, ``"tensorflow"``,
-          ``"torch"`` or ``"jax"``. This uses the corresponding printer
+        - The strings ``"math"``, ``"cmath"``, ``"mpmath"``, ``"umath"``,
+          ``"numpy"``, ``"unumpy"``, ``"numexpr"``, ``"scipy"``, ``"sympy"``,
+          ``"tensorflow"``, ``"torch"`` or ``"jax"``. This uses the corresponding printer
           and namespace mapping for that module.
         - A module (e.g., ``math``). This uses the global namespace of the
           module. If the module is one of the above known modules, it will
@@ -490,6 +505,37 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
     >>> result.numpy()
     [[1. 2.]
      [3. 4.]]
+
+    Usage with the Uncertainties package:
+
+    >>> from uncertainties import ufloat
+    >>> from sympy.abc import x
+
+    Use with scalar values by passing ``modules='umath'``.
+
+    >>> uncert_square = lambdify(x, x**2, 'umath')
+    >>> uncert_square(ufloat(2, 0.1))
+    4.00+/-0.40
+    >>> uncert_square(2) # Also works with non ``ufloat`` inputs
+    4
+
+    Use with vectors and matrices by passing ``modules='unumpy'``.
+
+    >>> uncert_mat_square = lambdify([x, y], Matrix([x, y]).dot(Matrix([2, 3])), 'unumpy')
+    >>> uncert_mat_square(ufloat(1, 0.1), ufloat(2, 0.2))
+     8.00+/-0.6
+
+    Due to the internal workings of ``uncertainties.unumpy``, when a
+    matrix is returned, some elements may unexpectedly be wrapped in a
+    1x1 array. This can be fixed by applying an identity
+    operation to the result, such as multiplying by 1 or adding 0.
+
+    >>> from sympy import sqrt
+    >>> uncert_sqrt = lambdify(x, Matrix([sqrt(x)]), 'unumpy')
+    >>> uncert_sqrt(ufloat(4, 0.4)) # Matrix contains element wrapped in 1x1 array.
+    [[array(2.0+/-0.1, dtype=object)]]
+    >>> uncert_sqrt(ufloat(4, 0.4)) * 1 # Fix by applying identity operation on result
+    [[2.0+/-0.1]]
 
     Notes
     =====
@@ -822,6 +868,8 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
         elif _module_present('scipy', namespaces):
             from sympy.printing.numpy import SciPyPrinter as Printer # type: ignore
         elif _module_present('numpy', namespaces):
+            from sympy.printing.numpy import NumPyPrinter as Printer # type: ignore
+        elif _module_present('unumpy', namespaces):
             from sympy.printing.numpy import NumPyPrinter as Printer # type: ignore
         elif _module_present('cupy', namespaces):
             from sympy.printing.numpy import CuPyPrinter as Printer # type: ignore

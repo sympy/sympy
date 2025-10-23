@@ -760,7 +760,7 @@ class ComplexRootOf(RootOf):
             return cls._new(poly, index)
 
     @classmethod
-    def _get_roots(cls, method, poly, radicals):
+    def _get_roots(cls, method: str, poly: Poly, radicals: bool) -> list[Expr]:
         """Return postprocessed roots of specified kind. """
         if not poly.is_univariate:
             raise PolynomialError("only univariate polynomials are allowed")
@@ -769,7 +769,7 @@ class ComplexRootOf(RootOf):
 
         # get rid of gen and it's free symbol
         d = Dummy()
-        poly = poly.subs(poly.gen, d)
+        poly = poly.per(poly.rep, gens=(d,))
         x = symbols('x')
         # see what others are left and select x or a numbered x
         # that doesn't clash
@@ -781,13 +781,24 @@ class ComplexRootOf(RootOf):
 
         if dom.is_QQ or dom.is_ZZ:
             return cls._get_roots_qq(method, poly, radicals)
-        elif dom.is_AlgebraicField or dom.is_ZZ_I or dom.is_QQ_I:
+        elif dom.is_ZZ_I or dom.is_QQ_I:
+            coeffs = poly.rep.to_list()
+
+            if all(c.y == 0 for c in coeffs):
+                poly = poly.set_domain(dom.dom)
+                return cls._get_roots_qq(method, poly, radicals)
+            elif all(c.x == 0 for c in coeffs):
+                poly = (I*poly).set_domain(dom.dom)
+                return cls._get_roots_qq(method, poly, radicals)
+            else:
+                return cls._get_roots_alg(method, poly, radicals)
+
+        elif dom.is_AlgebraicField:
             return cls._get_roots_alg(method, poly, radicals)
         else:
             # XXX: not sure how to handle ZZ[x] which appears in some tests?
             # this makes the tests pass alright but has to be a better way?
             return cls._get_roots_qq(method, poly, radicals)
-
 
     @classmethod
     def _get_roots_qq(cls, method, poly, radicals):
@@ -820,6 +831,8 @@ class ComplexRootOf(RootOf):
                 roots_filt = f.which_real_roots(roots)
             elif method == "_all_roots":
                 roots_filt = f.which_all_roots(roots)
+            else:
+                raise TypeError("Unknown method")
             for r in roots_filt:
                 subroots[r] = m
 

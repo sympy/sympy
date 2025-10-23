@@ -9,7 +9,7 @@ from sympy import Mul, Add, Pow, Rational, log, exp, sqrt, cos, sin, tan, asin, 
     acosh, atanh, acoth, asech, acsch, expand, im, flatten, polylog, cancel, expand_trig, sign, simplify, \
     UnevaluatedExpr, S, atan, atan2, Mod, Max, Min, rf, Ei, Si, Ci, airyai, airyaiprime, airybi, primepi, prime, \
     isprime, cot, sec, csc, csch, sech, coth, Function, E, I, pi, Tuple, GreaterThan, StrictGreaterThan, StrictLessThan, \
-    LessThan, Equality, Or, And, Lambda, Integer, Dummy, symbols
+    LessThan, Equality, Or, And, Lambda, Integer, Dummy, symbols, Not, factorial
 from sympy.core.sympify import sympify, _sympify
 from sympy.functions.special.bessel import airybiprime
 from sympy.functions.special.error_functions import li
@@ -912,6 +912,11 @@ class MathematicaParser:
                         if pointer == 0 or pointer == size - 1 or self._is_op(tokens[pointer - 1]) or self._is_op(tokens[pointer + 1]):
                             pointer += 1
                             continue
+                    # Special case: "!" without preceding operand is PREFIX Not, not POSTFIX Factorial
+                    if token == "!" and op_type == self.POSTFIX:
+                        if pointer == 0 or self._is_op(tokens[pointer - 1]):
+                            pointer += 1
+                            continue
                     changed = True
                     tokens[pointer] = node
                     if op_type == self.INFIX:
@@ -1135,8 +1140,9 @@ class MathematicaParser:
         "Equal": Equality,
         "Or": Or,
         "And": And,
-
+        "Not": Not,
         "Function": _parse_Function,
+        "Factorial": factorial,
     }
 
     _atom_conversions = {
