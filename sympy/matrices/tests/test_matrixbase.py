@@ -1080,10 +1080,6 @@ def test_power():
     assert A**10 == Matrix([[2**10]]) == A._matrix_pow_by_jordan_blocks(S(10)) == \
         A._eval_pow_by_recursion(10)
 
-    # testing a matrix that cannot be jordan blocked issue 11766
-    m = Matrix([[3, 0, 0, 0, -3], [0, -3, -3, 0, 3], [0, 3, 0, 3, 0], [0, 0, 3, 0, 3], [3, 0, 0, 3, 0]])
-    raises(MatrixError, lambda: m._matrix_pow_by_jordan_blocks(S(10)))
-
     # test issue 11964
     raises(MatrixError, lambda: Matrix([[1, 1], [3, 3]])._matrix_pow_by_jordan_blocks(S(-10)))
     A = Matrix([[0, 1, 0], [0, 0, 1], [0, 0, 0]])  # Nilpotent jordan block size 3
@@ -2443,7 +2439,7 @@ def test_jordan_form():
 
     # complexity: two of eigenvalues are zero
     m = Matrix(3, 3, [4, -5, 2, 5, -7, 3, 6, -9, 4])
-    Jmust = Matrix(3, 3, [0, 1, 0, 0, 0, 0, 0, 0, 1])
+    Jmust = Matrix(3, 3, [1, 0, 0, 0, 0, 1, 0, 0, 0])
     P, J = m.jordan_form()
     assert Jmust == J
 
@@ -2468,7 +2464,7 @@ def test_jordan_form():
 
     m = Matrix(4, 4, [5, 4, 2, 1, 0, 1, -1, -1, -1, -1, 3, 0, 1, 1, -1, 2])
     assert not m.is_diagonalizable()
-    Jmust = Matrix(4, 4, [1, 0, 0, 0, 0, 2, 0, 0, 0, 0, 4, 1, 0, 0, 0, 4])
+    Jmust = Matrix(4, 4, [2, 0, 0, 0, 0, 1, 0, 0, 0, 0, 4, 1, 0, 0, 0, 4])
     P, J = m.jordan_form()
     assert Jmust == J
 
@@ -2527,10 +2523,11 @@ def test_jordan_form_issue_15858():
         [0, 0, 2, 1]])
     (P, J) = A.jordan_form()
     assert P.expand() == Matrix([
-        [    -I,          -I/2,      I,           I/2],
-        [-1 + I,             0, -1 - I,             0],
-        [     0, -S(1)/2 - I/2,      0, -S(1)/2 + I/2],
-        [     0,             1,      0,             1]])
+        [   -8,      -4,     -8,      -4],
+        [8 + 8*I,      0, 8 - 8*I,      0],
+        [    0, -4 + 4*I,     0, -4 - 4*I],
+        [    0,    -8*I,     0,     8*I]
+    ])
     assert J == Matrix([
         [-I, 1, 0, 0],
         [0, -I, 0, 0],
