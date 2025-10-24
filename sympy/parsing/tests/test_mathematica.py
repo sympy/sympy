@@ -243,6 +243,10 @@ def test_parser_mathematica_tokenizer():
     assert chain("x || !y") == ["Or", "x", ["Not", "y"]]
     assert chain("!x || !y") == ["Or", ["Not", "x"], ["Not", "y"]]
 
+    # Enablement of implicit multiplication with factorial
+    assert chain("x!y") == ["Times", ["Factorial", "x"], "y"]
+    assert chain("x!y!") == ["Times", ["Factorial", "x"], ["Factorial", "y"]]
+
     # Compound expressions
     assert chain("a;b") == ["CompoundExpression", "a", "b"]
     assert chain("a;") == ["CompoundExpression", "a", "Null"]
@@ -369,3 +373,7 @@ def test_mathematica_not_operator():
 
     # Factorial distinction
     assert parse_mathematica("x!") == factorial(x)
+
+    # Factorial with implicit multiplication
+    assert parse_mathematica("x!y") == y*factorial(x)
+    assert parse_mathematica("x!y!") == factorial(x)*factorial(y)
