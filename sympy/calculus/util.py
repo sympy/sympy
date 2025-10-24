@@ -218,7 +218,7 @@ def function_range(f, symbol, domain):
         return FiniteSet(f.expand())
 
     from sympy.series.limits import limit
-    from sympy.solvers.solveset import solveset, solveset_real
+    from sympy.solvers.solveset import solveset
 
     if period is not None:
         if isinstance(domain, Interval):
