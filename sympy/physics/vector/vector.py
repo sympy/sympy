@@ -100,7 +100,10 @@ class Vector(Printable, EvalfMixin):
 
         """
 
+        from sympy import trigsimp, S
         from sympy.physics.vector.dyadic import Dyadic, _check_dyadic
+        from sympy.physics.vector.vector import _check_vector
+
         if isinstance(other, Dyadic):
             other = _check_dyadic(other)
             ol = Vector(0)
@@ -113,6 +116,7 @@ class Vector(Printable, EvalfMixin):
             for v2 in other.args:
                 out += ((v2[0].T) * (v2[1].dcm(v1[1])) * (v1[0]))[0]
         if Vector.simp:
+            from sympy import trigsimp
             return trigsimp(out, recursive=True)
         else:
             return out
