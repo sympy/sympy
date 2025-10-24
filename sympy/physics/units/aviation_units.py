@@ -1,5 +1,5 @@
 import re
-from sympy.physics.units import Quantity, foot, meter
+from sympy.physics.units import Quantity, foot
 
 # Flight Level unit: 1 FL = 100 ft
 FL = Quantity('flight_level', factor=100 * foot)
