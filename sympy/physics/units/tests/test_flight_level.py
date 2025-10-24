@@ -3,7 +3,7 @@ import sys, os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 
-from aviation_units import parse_flight_level, convert_quantity_to_numeric
+from sympy.physics.units.aviation_units import parse_flight_level, convert_quantity_to_numeric
 from sympy.physics.units import meter, foot
 
 def test_flight_level():
