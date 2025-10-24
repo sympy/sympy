@@ -1067,13 +1067,36 @@ class Xor(BooleanFunction):
             return Not(Xor(*argset))
         return super().__new__(cls, *ordered(argset))
 
-    def to_nnf(self, simplify=True):
-        args = []
+    def to_nnf(self, simplify=True, form=None):
+        """
+        Convert XOR to Negation Normal Form (NNF).
+
+        Parameters
+        ----------
+        simplify : bool
+            If True, simplifies the result.
+        form : str or None
+            Can be 'cnf' or 'dnf'. Default (None) keeps backward-compatible CNF-style output.
+            - 'cnf' → builds CNF (POS, conjunction of even-parity-false clauses)
+            - 'dnf' → builds DNF (SOP, disjunction of odd-parity-true clauses)
+        """
+
+        if form == 'dnf':
+            terms = []
+            for mask in range(1 << len(self.args)):
+                # select only odd-parity combinations (XOR True)
+                if (mask.bit_count() % 2) == 1:
+                    conj = [a if (mask >> i) & 1 else Not(a) for i, a in enumerate(self.args)]
+                    terms.append(And(*conj))
+            return Or._to_nnf(*terms, simplify=simplify) if terms else false
+
+        clauses = []
         for i in range(0, len(self.args)+1, 2):
             for neg in combinations(self.args, i):
                 clause = [Not(s) if s in neg else s for s in self.args]
-                args.append(Or(*clause))
-        return And._to_nnf(*args, simplify=simplify)
+                clauses.append(Or(*clause))
+        return And._to_nnf(*clauses, simplify=simplify)
+
 
     def _eval_rewrite_as_Or(self, *args, **kwargs):
         a = self.args
@@ -1694,7 +1717,6 @@ def to_nnf(expr, simplify=True):
         return expr
     return expr.to_nnf(simplify)
 
-
 def to_cnf(expr, simplify=False, force=False):
     """
     Convert a propositional logical sentence ``expr`` to conjunctive normal
@@ -1722,19 +1744,25 @@ def to_cnf(expr, simplify=False, force=False):
     if simplify:
         if not force and len(_find_predicates(expr)) > 8:
             raise ValueError(filldedent('''
-            To simplify a logical expression with more
-            than 8 variables may take a long time and requires
-            the use of `force=True`.'''))
+                To simplify a logical expression with more
+                than 8 variables may take a long time and requires
+                the use of `force=True`.'''))
         return simplify_logic(expr, 'cnf', True, force=force)
 
-    # Don't convert unless we have to
+
     if is_cnf(expr):
         return expr
 
     expr = eliminate_implications(expr)
-    res = distribute_and_over_or(expr)
 
-    return res
+
+    if hasattr(expr, 'to_nnf'):
+        try:
+            expr = expr.to_nnf(form='cnf')
+        except TypeError:
+            expr = expr.to_nnf()
+
+    return distribute_and_over_or(expr)
 
 
 def to_dnf(expr, simplify=False, force=False):
@@ -1764,17 +1792,26 @@ def to_dnf(expr, simplify=False, force=False):
     if simplify:
         if not force and len(_find_predicates(expr)) > 8:
             raise ValueError(filldedent('''
-            To simplify a logical expression with more
-            than 8 variables may take a long time and requires
-            the use of `force=True`.'''))
+                To simplify a logical expression with more
+                than 8 variables may take a long time and requires
+                the use of `force=True`.'''))
         return simplify_logic(expr, 'dnf', True, force=force)
+
 
     # Don't convert unless we have to
     if is_dnf(expr):
         return expr
 
     expr = eliminate_implications(expr)
+
+    if hasattr(expr, 'to_nnf'):
+        try:
+            expr = expr.to_nnf(form='dnf')
+        except TypeError:
+            expr = expr.to_nnf()
     return distribute_or_over_and(expr)
+
+
 
 
 def is_anf(expr):

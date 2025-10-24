@@ -1457,3 +1457,36 @@ def test_evaluate_false():
     expr = Equivalent(x, x, x, evaluate=False)
     assert isinstance(expr, Equivalent)
     assert expr.args == (x, x, x)
+
+
+
+import time
+
+
+def test_xor_dnf_cnf_symmetry():
+    x = symbols('x1:6')
+
+    expr = Xor(*x[:3])
+    assert simplify_logic(to_cnf(expr) ^ expr) == False
+    assert simplify_logic(to_dnf(expr) ^ expr) == False
+
+    # Performance test
+    t1 = time.time()
+    to_cnf(Xor(*x[:6]))
+    t_cnf = time.time() - t1
+
+    t2 = time.time()
+    to_dnf(Xor(*x[:6]))
+    t_dnf = time.time() - t2
+
+    assert t_dnf < t_cnf * 10, "DNF is unreasonably slower than CNF"
+
+def test_dnf_hint_behavior():
+    x = symbols('x1:4')
+    expr = Xor(*x)
+    dnf_expr = to_dnf(expr)
+    
+    # DNF should be an OR of AND terms
+    assert dnf_expr.is_Or, "DNF form should be an OR of AND terms"
+    for term in dnf_expr.args:
+        assert term.is_And or term.is_Atom, "Each term in DNF should be AND or literal"
