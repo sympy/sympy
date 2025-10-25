@@ -1077,8 +1077,8 @@ class Xor(BooleanFunction):
             If True, simplifies the result.
         form : str or None
             Can be 'cnf' or 'dnf'. Default (None) keeps backward-compatible CNF-style output.
-            - 'cnf' → builds CNF (POS, conjunction of even-parity-false clauses)
-            - 'dnf' → builds DNF (SOP, disjunction of odd-parity-true clauses)
+            - 'cnf' -> builds CNF (POS, conjunction of even-parity-false clauses)
+            - 'dnf' -> builds DNF (SOP, disjunction of odd-parity-true clauses)
         """
 
         if form == 'dnf':
