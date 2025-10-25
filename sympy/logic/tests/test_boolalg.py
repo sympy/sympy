@@ -1485,7 +1485,7 @@ def test_dnf_hint_behavior():
     x = symbols('x1:4')
     expr = Xor(*x)
     dnf_expr = to_dnf(expr)
-    
+
     # DNF should be an OR of AND terms
     assert dnf_expr.is_Or, "DNF form should be an OR of AND terms"
     for term in dnf_expr.args:

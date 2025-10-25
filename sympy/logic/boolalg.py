@@ -1483,9 +1483,8 @@ class ITE(BooleanFunction):
             return c
         if b == c:
             return b
+
         else:
-            # or maybe the results allow the answer to be expressed
-            # in terms of the condition
             if b is true and c is false:
                 return a
             if b is false and c is true:
