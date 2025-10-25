@@ -1387,12 +1387,9 @@ def _jordan_form(M: Tmat,
 def _jordan_form_rational_matrix(M, calc_transform):
     dM = DomainMatrix.from_Matrix(M, field=True)
 
-    def eig_mat(base, field):
-        if len(base) == 2:
-            mat_char = dM - (dM.eye(dM.shape, field) * field.to_sympy(-base[1] / base[0]))
-        else:
-            mat_char = dM.convert_to(field) - (dM.eye(M.shape, field) * field.unit)
-
+    def eig_mat(algebraic_num):
+        field = domain.algebraic_field(algebraic_num)
+        mat_char = dM.convert_to(field) - (dM.eye(M.shape, field) * field.unit)
         return mat_char
 
     def factors_to_eigenvals() :
@@ -1420,14 +1417,10 @@ def _jordan_form_rational_matrix(M, calc_transform):
         until it is constant where ``E = M - val*I``"""
 
         ret     = [0]
-        if len(fac) == 2:
-            field = domain
-        else:
-            minpoly = Poly.from_list(fac, l, domain=domain)
-            algebraic_num = AlgebraicNumber((minpoly, eigenvals_by_factor[(fac, algebraic_multiplicity)][0]),
-                                            alias='a')
-            field = domain.algebraic_field(algebraic_num)
-        mat_char = eig_mat(fac, field)
+        minpoly = Poly.from_list(fac, l, domain=domain)
+        algebraic_num = AlgebraicNumber((minpoly, eigenvals_by_factor[(fac, algebraic_multiplicity)][0]),
+                                        alias='a')
+        mat_char = eig_mat(algebraic_num)
 
         mat_pow = mat_char
         vecs = mat_pow.nullspace()
@@ -1504,14 +1497,10 @@ def _jordan_form_rational_matrix(M, calc_transform):
 
 
     for (factor, multiplicity), eigen_vals in eigenvals_by_factor.items():
-        if len(factor) == 2:
-            field = domain
-        else:
-            minpoly = Poly.from_list(factor, l, domain=domain)
-            algebraic_num = AlgebraicNumber((minpoly, eigenvals_by_factor[(factor, multiplicity)][0]),
-                                            alias='a')
-            field = domain.algebraic_field(algebraic_num)
-        char_mat = eig_mat(factor, field)
+        minpoly = Poly.from_list(factor, l, domain=domain)
+        algebraic_num = AlgebraicNumber((minpoly, eigenvals_by_factor[(factor, multiplicity)][0]),
+                                alias='a')
+        char_mat = eig_mat(algebraic_num)
 
         vects = nullspace_cache[factor] if factor in nullspace_cache else char_mat.nullspace()
         geometric_multiplicity = vects.shape[0]
