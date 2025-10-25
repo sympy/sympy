@@ -1834,6 +1834,31 @@ def meijerint_definite(f, x, a, b):
     elif a is S.NegativeInfinity:
         # Integrating -oo to oo. We need to find a place to split the integral.
         _debug('  Integrating -oo to +oo.')
+        
+        # Special case for exp(a*(x^2 + 2*b*x + c)) where a < 0
+        # This is a Gaussian integral that can be solved analytically
+        from sympy.core.symbol import Wild
+        
+        # Pattern: exp(a*(x^2 + 2*b*x + c)) where a < 0
+        a_coeff = Wild('a_coeff', exclude=[x])
+        b_coeff = Wild('b_coeff', exclude=[x])
+        c_coeff = Wild('c_coeff', exclude=[x])
+        pattern = exp(a_coeff * (x**2 + 2*b_coeff*x + c_coeff))
+        
+        match = f.match(pattern)
+        if match and match[a_coeff].is_negative:
+            a_val = match[a_coeff]
+            b_val = match[b_coeff]
+            c_val = match[c_coeff]
+            
+            # Complete the square: a*(x^2 + 2*b*x + c) = a*((x+b)^2 + (c-b^2))
+            # The integral is: exp(a*(c-b^2)) * integral(exp(a*(x+b)^2)) from -oo to oo
+            # = exp(a*(c-b^2)) * sqrt(pi/(-a))
+            # = sqrt(pi) * exp(a*(c-b^2)) / sqrt(-a)
+            
+            result = sqrt(pi) * exp(a_val * (c_val - b_val**2)) / sqrt(-a_val)
+            return result, True
+        
         innermost = _find_splitting_points(f, x)
         _debug('  Sensible splitting points:', innermost)
         for c in sorted(innermost, key=default_sort_key, reverse=True) + [S.Zero]:

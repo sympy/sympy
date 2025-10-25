@@ -233,6 +233,18 @@ def test_meijerint():
     assert simplify(integrate(x**s*exp(-a*x**2), (x, -oo, oo))) == \
         a**(-s/2 - S.Half)*((-1)**s + 1)*gamma(s/2 + S.Half)/2
 
+    # Test fix for issue #28485: exp(a*(x^2 + 2*x)) with negative a
+    a_neg = symbols('a', negative=True)
+    assert integrate(exp(a_neg*(x**2 + 2*x)), (x, -oo, oo)) == \
+        sqrt(pi)*exp(-a_neg)/sqrt(-a_neg)
+    
+    # Test that it matches the positive case
+    a_pos = symbols('a', positive=True)
+    result_pos = integrate(exp(-a_pos*(x**2 + 2*x)), (x, -oo, oo))
+    result_neg = integrate(exp(a_neg*(x**2 + 2*x)), (x, -oo, oo))
+    # They should be equal when a_neg = -a_pos
+    assert result_neg.subs(a_neg, -a_pos) == result_pos
+
 
 def test_bessel():
     from sympy.functions.special.bessel import (besseli, besselj)
