@@ -256,13 +256,6 @@ def dup_schur_conditions(f: dup[Er], K: Domain[Er]) -> list[Er]:
     polynomial lie inside the unit circle if and only if ``ei > 0``
     for all ``i``.
 
-    Warning
-    =======
-
-    Due to precision issues, roots at -1 may be missed and the conditions
-    could be incorrect. Consider checking if the polynomial has roots at -1
-    before using this method.
-
     References
     ==========
 
@@ -278,36 +271,28 @@ def dup_schur_conditions(f: dup[Er], K: Domain[Er]) -> list[Er]:
             "Schur conditions is not implemented for complex domains"
         )
 
-    if not K.is_Exact:
+    if K.is_Exact:
+        return _dup_schur_conditions(f, K)
+    else:
         K_exact = K.get_exact()
         pe = dup_convert(f, K, K_exact)
 
-        # Check if -1 is a root, since the transformation is not defined in this case
-        if K_exact.is_zero(dup_eval(pe, -K_exact.one, K_exact)):
-                    return [-K.one]
-
-        conds: list = dup_routh_hurwitz(_schur_to_hurwitz(pe, K_exact), K_exact)
-
+        conds = _dup_schur_conditions(pe, K_exact)
         return [K.convert_from(c, K_exact) for c in conds]
 
+
+def _dup_schur_conditions(f: dup[Er], K: Domain[Er]) -> list[Er]:
+    """
+    Computes the Schur stability conditions, mapping the unit circle to the left
+    half plane, transforming the problem into a Routh-Hurwitz stability problem.
+
+    The transformation is done via ``z = (1 + s)/(1 - s)`` to the polynomial
+    ``f``.
+
+    """
     # Check if -1 is a root, since the transformation is not defined in this case
     if K.is_zero(dup_eval(f, -K.one, K)):
-                return [-K.one]
+        return [-K.one]
 
-    return dup_routh_hurwitz(_schur_to_hurwitz(f, K), K)
-
-
-def _schur_to_hurwitz(f: dup[Er], K: Domain[Er]) -> dup[Er]:
-    """
-    Apply the bilinear transformation ``z = (1 + s)/(1 - s)`` to the
-    polynomial ``f`` in order to map the unit circle to the left half plane,
-    transforming the problem of Schur stability to the problem of Routh-Hurwitz
-    stability.
-
-    Note
-    ====
-    The transformation is not defined if -1 is a root of the polynomial.
-
-    """
-
-    return dup_transform(f, [K.one, K.one], [-K.one, K.one], K)
+    f_t = dup_transform(f, [K.one, K.one], [-K.one, K.one], K)
+    return dup_routh_hurwitz(f_t, K)

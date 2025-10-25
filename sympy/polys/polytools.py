@@ -4228,13 +4228,6 @@ class Poly(Basic):
         polynomial lie inside the unit circle if and only if ``ei > 0``
         for all ``i``.
 
-        Warning
-        =======
-
-        Due to precision issues, roots at -1 may be missed and the conditions
-        could be incorrect. Consider checking if the polynomial has roots at -1
-        before using this method.
-
         Note
         ====
 
