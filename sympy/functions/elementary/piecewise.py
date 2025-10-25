@@ -1,6 +1,6 @@
 from sympy.core import S, diff, Tuple, Dummy, Mul
-from sympy.core.basic import Basic, as_Basic
 from sympy.core.function import DefinedFunction
+from sympy.core.basic import Basic, as_Basic
 from sympy.core.numbers import Rational, NumberSymbol, _illegal
 from sympy.core.parameters import global_parameters
 from sympy.core.relational import (Lt, Gt, Eq, Ne, Relational,
@@ -222,7 +222,7 @@ class Piecewise(DefinedFunction):
     def _eval_simplify(self, **kwargs):
         return piecewise_simplify(self, **kwargs)
 
-    def _eval_as_leading_term(self, x, logx, cdir):
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):
         for e, c in self.args:
             if c == True or c.subs(x, 0) == True:
                 return e.as_leading_term(x)
@@ -810,10 +810,13 @@ class Piecewise(DefinedFunction):
     _eval_is_positive = lambda self: self._eval_template_is_attr('is_positive')
     _eval_is_extended_real = lambda self: self._eval_template_is_attr(
             'is_extended_real')
-    _eval_is_extended_positive = lambda self: self._eval_template_is_attr( # type: ignore
-            'is_extended_positive')
-    _eval_is_extended_negative = lambda self: self._eval_template_is_attr( # type: ignore
-            'is_extended_negative')
+
+    def _eval_is_extended_positive(self):
+        return self._eval_template_is_attr('is_extended_positive')
+
+    def _eval_is_extended_negative(self):
+        return self._eval_template_is_attr('is_extended_negative')
+
     _eval_is_extended_nonzero = lambda self: self._eval_template_is_attr(
             'is_extended_nonzero')
     _eval_is_extended_nonpositive = lambda self: self._eval_template_is_attr(
