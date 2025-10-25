@@ -1186,42 +1186,57 @@ class PolyElement(
         else:
             return other_poly._floordiv(self)
 
-    def __truediv__(self, other: PolyElement[Er] | Er | int) -> PolyElement[Er]:
+    def __truediv__(self, other):
+        
         ring = self.ring
 
         if not other:
-            raise ZeroDivisionError("polynomial division")
-        elif ring.is_element(other):
-            return self._truediv(cast("Er", other))
-        elif isinstance(other, PolyElement):
-            if (
-                isinstance(ring.domain, PolynomialRing)
-                and ring.domain.ring == other.ring
-            ):
-                pass
-            elif (
-                isinstance(other.ring.domain, PolynomialRing)
-                and other.ring.domain.ring == ring
-            ):
-                return other.__rtruediv__(self)  # type: ignore
-            else:
-                return NotImplemented
+            raise ZeroDivisionError("polynomial division by zero")
+
+        if isinstance(other, PolyElement) and self.ring == other.ring:
+            return self.exquo(other)
+
+        if ring.is_element(other):
+            return self.exquo_ground(other)
+
+        if isinstance(other, PolyElement):
+            return other.__rtruediv__(self)
 
         try:
-            other = ring.domain_new(other)
+            other_ground = ring.domain_new(other)
         except CoercionFailed:
             return NotImplemented
         else:
-            return self._floordiv_ground(other)
+            return self.exquo_ground(other_ground)
 
-    def __rtruediv__(self, other: Er | int) -> PolyElement[Er]:
+    def __rtruediv__(self, other):
+
         ring = self.ring
+
         try:
             other_poly = ring.ground_new(other)
         except CoercionFailed:
             return NotImplemented
-        else:
-            return other_poly._truediv(self)
+
+        if isinstance(self, PolyElement) and not self.is_zero:
+            try:
+                return other_poly.exquo(self)
+            except ExactQuotientFailed:
+                raise ExactQuotientFailed(other_poly, self)
+
+        if self.is_zero:
+            raise ZeroDivisionError("division by zero")
+
+    def exquo_ground(self, other):
+        try:
+            other_ground = self.ring.ground_new(other)
+        except CoercionFailed:
+            raise TypeError(f"Cannot coerce {other} to ground of {self.ring}")
+
+        q, r = divmod(self, other_ground)
+        if not r.is_zero:
+            raise ExactQuotientFailed(self, other_ground)
+        return q
 
     @property
     def is_generator(self) -> bool:
