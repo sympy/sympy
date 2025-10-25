@@ -329,6 +329,12 @@ def plot(*args, show=True, **kwargs):
         the overall figure. The default value is set to ``None``, meaning
         the size will be set by the default backend.
 
+    legend_loc : str, optional
+      The location of the legend. It will be used when called with
+      ``legend``. The value should be equivalent to the arguments
+      of the :external:mod:`matplotlib`'s
+      :external:class:`~matplotlib.legend.Legend` class.
+
     Examples
     ========
 
