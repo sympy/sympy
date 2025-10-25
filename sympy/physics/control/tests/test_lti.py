@@ -849,6 +849,27 @@ def test_DiscreteTransferFunction_functions():
     assert DiscreteTransferFunction(
         z, (z+Rational(1,8))*(z+k), z).is_stable() == None
 
+    generic_den = b4 * s**4 + b3 * s**3 + b2 * s**2 + b1 * s + b0
+
+    stab_cond = DiscreteTransferFunction(1, generic_den, s).\
+                get_asymptotic_stability_conditions()
+    assert stab_cond == [
+        (-4*b0**2 + 6*b0*b1 - 4*b0*b2 + 2*b0*b3 - 2*b1**2 + 2*b1*b2 - 2*b1*b4 -
+         2*b2*b3 + 4*b2*b4 + 2*b3**2 - 6*b3*b4 + 4*b4**2) > 0,
+        (-20*b0**2 + 10*b0*b1 + 12*b0*b2 - 18*b0*b3 - 2*b1**2 - 2*b1*b2 +
+         18*b1*b4 + 2*b2*b3 - 12*b2*b4 + 2*b3**2 - 10*b3*b4 + 20*b4**2) > 0,
+        (64*b0**4 - 64*b0**3*b1 - 64*b0**3*b3 + 64*b0**2*b1*b2 +
+         64*b0**2*b1*b3 + 64*b0**2*b1*b4 - 64*b0**2*b2**2 + 64*b0**2*b2*b3 -
+         64*b0**2*b3**2 + 64*b0**2*b3*b4 - 128*b0**2*b4**2 - 64*b0*b1**2*b3 -
+         64*b0*b1**2*b4 + 64*b0*b1*b2*b3 - 128*b0*b1*b2*b4 + 128*b0*b1*b3*b4 +
+         64*b0*b1*b4**2 + 128*b0*b2**2*b4 - 64*b0*b2*b3**2 - 128*b0*b2*b3*b4 +
+         64*b0*b3**3 - 64*b0*b3**2*b4 + 64*b0*b3*b4**2 + 64*b1**3*b4 -
+         64*b1**2*b2*b4 - 64*b1**2*b4**2 + 64*b1*b2*b3*b4 + 64*b1*b2*b4**2 -
+         64*b1*b3**2*b4 + 64*b1*b3*b4**2 - 64*b1*b4**3 - 64*b2**2*b4**2 +
+         64*b2*b3*b4**2 - 64*b3*b4**3 + 64*b4**4) > 0,
+        (b0**2 + 2*b0*b2 + 2*b0*b4 - b1**2 - 2*b1*b3 + b2**2 + 2*b2*b4 -
+         b3**2 + b4**2) > 0]
+
     # Zeros of a transfer function.
     assert G1.zeros() == [1, 1]
     assert G2.zeros() == []
@@ -4873,5 +4894,18 @@ def test_DiscreteStateSpace_feedback():
     raises(TypeError, lambda: MIMOFeedback(ss3, cont_ss2))  # feedback with continuous state space
 
 def test_DiscreteStateSpace_stability():
-    # TODO after implementing stability methods for DiscreteStateSpace
-    pass
+    k = symbols('k')
+    B = Matrix([1, 0, 0])
+    C = Matrix([[0, 1, 0]])
+    D = Matrix([0])
+
+    A1 = Matrix([[0,1,0],[0,0,1], [k-1, -2*k, -1]])
+    ss1 = DiscreteStateSpace(A1, B, C, D)
+    ineq = ss1.get_asymptotic_stability_conditions()
+    assert ineq == [-15*k**2 + 20*k - 5 > 0, -8*k**2 - 8*k + 8 > 0,
+                    3*k**2 + 8*k - 3 > 0]
+
+    A2 = Matrix([[1,0,0], [0,-1,k], [0,0,-1]])
+    ss2 = DiscreteStateSpace(A2, B, C, D)
+    ineq = ss2.get_asymptotic_stability_conditions()
+    assert ineq == [False]

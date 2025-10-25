@@ -7,7 +7,7 @@ from sympy.core.numbers import I
 from sympy.polys.densearith import dup_exquo_ground
 from sympy.polys.domains import EXRAW, EX, QQ, ZZ
 from sympy.polys.densebasic import dup_convert
-from sympy.polys.densetools import dup_clear_denoms
+from sympy.polys.densetools import dup_clear_denoms, dup_transform, dup_eval
 from sympy.core.exprtools import factor_terms
 from sympy.core.expr import Expr
 from sympy.simplify.simplify import signsimp
@@ -33,6 +33,9 @@ def dup_routh_hurwitz(f: dup[Er], K: Domain[Er]) -> list[Er]:
            https://courses.washington.edu/mengr471/resources/Routh_Hurwitz_Proof.pdf
 
     """
+    if not f:
+        raise ValueError("zero polynomial")
+
     excluded_domains = [EX, EXRAW]
     if not K in excluded_domains and I in K:
         raise NotImplementedError(
@@ -68,9 +71,7 @@ def dup_routh_hurwitz(f: dup[Er], K: Domain[Er]) -> list[Er]:
 
 
 def _dup_routh_hurwitz_fraction_free(p: dup[Er], K: Domain[Er]) -> list[Er]:
-    if not p:
-        raise ValueError("zero polynomial")
-    elif len(p) == 1:
+    if len(p) == 1:
         return []
     elif len(p) == 2:
         return [p[0] * p[1]]
@@ -244,7 +245,54 @@ def _build_simplified_factors(
     return (sign, factors), nonzeros
 
 
-# TODO Implement conditions for discrete time systems
-# Possible ways are:
-# - Map z = (1+s)/(1-s) and use routh-hurwitz
-# - Use Jury's test
+def dup_schur_conditions(f: dup[Er], K: Domain[Er]) -> list[Er]:
+    """
+    Computes the schur stability conditions of ``f``.
+
+    Explanation
+    ===========
+
+    Returns expressions ``[e1, e2, ...]`` such that all roots of the
+    polynomial lie inside the unit circle if and only if ``ei > 0``
+    for all ``i``.
+
+    References
+    ==========
+
+    .. [1] https://faculty.washington.edu/chx/teaching/me547/2_1_stability.pdf#:~:text=2.6%20Routh,plane%20Real
+
+    """
+    if not f:
+        raise ValueError("zero polynomial")
+
+    excluded_domains = [EX, EXRAW]
+    if not K in excluded_domains and I in K:
+        raise NotImplementedError(
+            "Schur conditions is not implemented for complex domains"
+        )
+
+    if K.is_Exact:
+        return _dup_schur_conditions(f, K)
+    else:
+        K_exact = K.get_exact()
+        pe = dup_convert(f, K, K_exact)
+
+        conds = _dup_schur_conditions(pe, K_exact)
+        return [K.convert_from(c, K_exact) for c in conds]
+
+
+def _dup_schur_conditions(f: dup[Er], K: Domain[Er]) -> list[Er]:
+    """
+    Computes the Schur stability conditions, mapping the unit circle to the left
+    half plane, transforming the problem into a Routh-Hurwitz stability problem.
+
+    The transformation is done via ``z = (1 + s)/(1 - s)`` to the polynomial
+    ``f``.
+
+    """
+    # Check if -1 is a root, since the transformation is not defined in this case
+    if K.is_zero(dup_eval(f, -K.one, K)):
+        return [-K.one]
+
+    f_t = dup_transform(f, [K.one, K.one], [-K.one, K.one], K)
+    return dup_routh_hurwitz(f_t, K)
