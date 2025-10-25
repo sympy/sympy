@@ -1187,7 +1187,7 @@ class PolyElement(
             return other_poly._floordiv(self)
 
     def __truediv__(self, other):
-        
+
         ring = self.ring
 
         if not other:
