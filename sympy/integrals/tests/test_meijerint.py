@@ -237,7 +237,7 @@ def test_meijerint():
     a_neg = symbols('a', negative=True)
     assert integrate(exp(a_neg*(x**2 + 2*x)), (x, -oo, oo)) == \
         sqrt(pi)*exp(-a_neg)/sqrt(-a_neg)
-    
+
     # Test that it matches the positive case
     a_pos = symbols('a', positive=True)
     result_pos = integrate(exp(-a_pos*(x**2 + 2*x)), (x, -oo, oo))
