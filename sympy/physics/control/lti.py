@@ -695,6 +695,37 @@ class TransferFunctionBase(SISOLinearTimeInvariant, ABC):
     .. [3] https://en.wikipedia.org/wiki/Z-transform
 
     """
+
+    def minimal_realization(self):
+        """
+        Return a transfer function with all cancellable pole-zero pairs removed.
+
+        This is also called a minimal realization. It simplifies the transfer
+        function while preserving its input-output behavior.
+
+        Examples
+        ========
+
+        >>> from sympy.abc import s
+        >>> from sympy.physics.control.lti import TransferFunction
+        >>> tf = TransferFunction((s + 1)*(s - 2), (s - 2)*(s + 3), s)
+        >>> tf.minimal_realization()
+        TransferFunction(s + 1, s + 3, s)
+
+        >>> tf2 = TransferFunction(s**2 + 2*s + 1, s**2 + 3*s + 2, s)
+        >>> tf2.minimal_realization()
+        TransferFunction(s + 1, s + 2, s)
+        """
+        simplified = cancel(self.num / self.den)
+
+
+        num, den = simplified.as_numer_denom()
+
+    
+        return create_transfer_function(num, den, self.var, self.sampling_time)
+
+
+    
     def __new__(cls, num, den, var, *args, **kwargs):
         if cls is TransferFunctionBase:
             raise NotImplementedError(
@@ -4038,6 +4069,9 @@ class Feedback(SISOLinearTimeInvariant):
 
         _resultant_tf = create_transfer_function(F_n.num * F_d.den, F_n.den * F_d.num,
                                F_n.var, self.sys1.sampling_time)
+        
+        _resultant_tf = _resultant_tf.minimal_realization()
+
 
         if cancel:
             _resultant_tf = _resultant_tf.simplify()
