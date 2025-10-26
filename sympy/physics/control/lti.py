@@ -1709,6 +1709,7 @@ class TransferFunction(TransferFunctionBase):
     def from_rational_expression(cls, expr, var=None):
         r"""
         See :func:`TransferFunctionBase.from_rational_expression`.
+
         """
         return super().from_rational_expression(expr, var)
 
@@ -1716,6 +1717,7 @@ class TransferFunction(TransferFunctionBase):
     def from_coeff_lists(cls, num_list, den_list, var):
         r"""
         See :func:`TransferFunctionBase.from_coeff_lists`.
+
         """
         return super().from_coeff_lists(num_list, den_list, var)
 
@@ -1723,12 +1725,14 @@ class TransferFunction(TransferFunctionBase):
     def from_zpk(cls, zeros, poles, gain, var):
         r"""
         See :func:`TransferFunctionBase.from_zpk`.
+
         """
         return super().from_zpk(zeros, poles, gain, var)
 
     def dc_gain(self):
         r"""
         See :func:`TransferFunctionBase.dc_gain`.
+
         """
         m = Mul(self.num, Pow(self.den, -1, evaluate=False), evaluate=False)
         return limit(m, self.var, 0)
@@ -1738,6 +1742,7 @@ class TransferFunction(TransferFunctionBase):
     ) -> list[Boolean]:
         r"""
         See :func:`TransferFunctionBase.get_asymptotic_stability_conditions`.
+
         """
         standard_form = self.to_standard_form(cancel_poles_zeros)
 
@@ -1952,6 +1957,7 @@ class DiscreteTransferFunction(TransferFunctionBase):
     def from_rational_expression(cls, expr, var=None, sampling_time=1):
         r"""
         See :func:`TransferFunctionBase.from_rational_expression`.
+
         """
         return super().from_rational_expression(expr, var,
                                                 sampling_time=sampling_time)
@@ -1960,6 +1966,7 @@ class DiscreteTransferFunction(TransferFunctionBase):
     def from_coeff_lists(cls, num_list, den_list, var, sampling_time=1):
         r"""
         See :func:`TransferFunctionBase.from_coeff_lists`.
+
         """
         return super().from_coeff_lists(num_list, den_list, var,
                                         sampling_time=sampling_time)
@@ -2185,6 +2192,7 @@ class DiscreteTransferFunction(TransferFunctionBase):
     def dc_gain(self):
         r"""
         See :func:`TransferFunctionBase.dc_gain`.
+
         """
         m = Mul(self.num, Pow(self.den, -1, evaluate=False), evaluate=False)
         return limit(m, self.var, 1)
@@ -6599,6 +6607,7 @@ class StateSpace(StateSpaceBase):
     def get_asymptotic_stability_conditions(self, fast=False) -> list[Boolean]:
         r"""
         See :func:`StateSpaceBase.get_asymptotic_stability_conditions`.
+
         """
         s = Symbol('s')
 
