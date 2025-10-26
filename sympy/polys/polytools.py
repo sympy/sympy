@@ -4217,6 +4217,45 @@ class Poly(Basic):
         conds = f.rep.hurwitz_conditions()
         return [f.domain.to_sympy(cond) for cond in conds]
 
+    def schur_conditions(f):
+        """
+        Compute the conditions that ensure ``f`` a Schur stable polynomial.
+
+        Explanation
+        ===========
+
+        Returns expressions ``[e1, e2, ...]`` such that all roots of the
+        polynomial lie inside the unit circle if and only if ``ei > 0``
+        for all ``i``.
+
+        Note
+        ====
+
+        If you need a fast computation of the conditions, consider using the
+        domain ``EXRAW``. Conditions may be less simplified and there could be
+        some precision issues, but the computation will be a lot faster.
+
+        Examples
+        ========
+
+        >>> from sympy import symbols, Poly, reduce_inequalities
+        >>> x, k = symbols("x k")
+        >>> p3 = Poly(x**3 + x**2 + 2*k*x + 1 - k, x)
+        >>> conditions = p3.schur_conditions()
+        >>> conditions
+        [-15*k**2 + 20*k - 5, -8*k**2 - 8*k + 8, 3*k**2 + 8*k - 3]
+        >>> reduce_inequalities([c > 0 for c in conditions])
+        (1/3 < k) & (k < -1/2 + sqrt(5)/2)
+
+        References
+        ==========
+
+        .. [1] https://faculty.washington.edu/chx/teaching/me547/2_1_stability.pdf#:~:text=2.6%20Routh,plane%20Real
+
+        """
+        conds = f.rep.schur_conditions()
+        return [f.domain.to_sympy(cond) for cond in conds]
+
     @property
     def is_zero(f):
         """
@@ -7849,6 +7888,23 @@ def hurwitz_conditions(f, *gens, **args):
         raise ComputationFailed('hurwitz_conditions', 1, exc)
 
     return F.hurwitz_conditions()
+
+
+@public
+def schur_conditions(f, *gens, **args):
+    """
+    See :func:`~.Poly.schur_conditions`.
+
+    """
+    options.allowed_flags(args, ['polys'])
+
+    try:
+        F, opt = poly_from_expr(f, *gens, **args)
+    except PolificationFailed as exc:
+        raise ComputationFailed('schur_conditions', 1, exc)
+
+    return F.schur_conditions()
+
 
 @public
 class GroebnerBasis(Basic):
