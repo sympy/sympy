@@ -34,7 +34,38 @@ __doctest_requires__ = {('llvm_callable'): ['llvmlite']}
 
 
 class LLVMJitPrinter(Printer):
-    '''Convert expressions to LLVM IR'''
+    """
+    Convert SymPy expressions into LLVM Intermediate Representation (IR).
+
+    This printer translates mathematical expressions into LLVM IR code
+    that can be compiled and executed efficiently. It provides methods
+    for handling basic operations (addition, multiplication, powers, and
+    common math functions) and supports double precision arithmetic.
+
+    Parameters
+    ==========
+    module : llvmlite.ir.Module
+        The LLVM IR module into which generated functions and variables
+        are inserted.
+    builder : llvmlite.ir.IRBuilder
+        Used to construct LLVM instructions for arithmetic and function calls.
+    fn : llvmlite.ir.Function
+        The LLVM function being generated.
+    func_arg_map : dict, optional
+        A mapping between SymPy symbols and LLVM function arguments.
+
+    Examples
+    ========
+    >>> from sympy.printing.llvmjitcode import LLVMJitPrinter
+    >>> from sympy.abc import x
+    >>> from llvmlite import ir
+    >>> module = ir.Module('m')
+    >>> fn_type = ir.FunctionType(ir.DoubleType(), [ir.DoubleType()])
+    >>> fn = ir.Function(module, fn_type, name='f')
+    >>> builder = ir.IRBuilder(fn.append_basic_block('entry'))
+    >>> printer = LLVMJitPrinter(module, builder, fn, func_arg_map={x: fn.args[0]})
+    """
+
     def __init__(self, module, builder, fn, *args, **kwargs):
         self.func_arg_map = kwargs.pop("func_arg_map", {})
         if not llvmlite:
@@ -121,6 +152,41 @@ class LLVMJitPrinter(Printer):
 # Used when parameters are passed by array.  Often used in callbacks to
 # handle a variable number of parameters.
 class LLVMJitCallbackPrinter(LLVMJitPrinter):
+    """
+    Specialized LLVM printer for callback functions using array-based parameters.
+
+    This subclass of LLVMJitPrinter handles expressions where function
+    parameters are passed by array (such as when using SciPy or cubature
+    callbacks). It provides support for printing Indexed and Symbol
+    expressions that map to array elements.
+
+    Parameters
+    ==========
+    module : llvmlite.ir.Module
+        The LLVM IR module into which code is generated.
+    builder : llvmlite.ir.IRBuilder
+        LLVM instruction builder for constructing operations.
+    fn : llvmlite.ir.Function
+        LLVM function object representing the compiled callback.
+    func_arg_map : dict
+        Maps SymPy symbols or IndexedBase objects to (array, index)
+        tuples in the generated function.
+
+    Examples
+    ========
+    >>> from sympy.printing.llvmjitcode import LLVMJitCallbackPrinter
+    >>> from sympy.tensor.indexed import IndexedBase
+    >>> from sympy.abc import x
+    >>> from llvmlite import ir
+    >>> arr = IndexedBase('arr')
+    >>> module = ir.Module('m')
+    >>> fn_type = ir.FunctionType(ir.DoubleType(), [ir.PointerType(ir.DoubleType())])
+    >>> fn = ir.Function(module, fn_type, name='f')
+    >>> builder = ir.IRBuilder(fn.append_basic_block('entry'))
+    >>> printer = LLVMJitCallbackPrinter(module, builder, fn,
+    ...     func_arg_map={arr: (fn.args[0], 0), x: (fn.args[0], 0)})
+    """
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -157,6 +223,29 @@ current_link_suffix = 0
 
 
 class LLVMJitCode:
+    """
+    Generate and compile LLVM IR for SymPy expressions.
+
+    This class builds LLVM IR modules and functions from SymPy expressions,
+    compiles them using `llvmlite`, and returns function pointers that can
+    be called from Python through `ctypes`. It handles numeric and tuple
+    returns, wrapping them as needed for Python interoperability.
+
+    Parameters
+    ==========
+    signature : CodeSignature
+        Defines the return and argument types of the generated function.
+
+    Examples
+    ========
+    >>> from sympy.printing.llvmjitcode import LLVMJitCode, CodeSignature
+    >>> import ctypes
+    >>> from sympy.abc import x
+    >>> sig = CodeSignature(ctypes.c_double)
+    >>> jit = LLVMJitCode(sig)
+    >>> # Build the function using LLVM IR (internally called by llvm_callable)
+    """
+
     def __init__(self, signature):
         self.signature = signature
         self.fp_type = ll.DoubleType()
@@ -305,6 +394,28 @@ class LLVMJitCode:
 
 
 class LLVMJitCodeCallback(LLVMJitCode):
+    """
+    Generate LLVM code for callback-style functions with array inputs and outputs.
+
+    This subclass of LLVMJitCode builds functions whose inputs and outputs
+    are accessed through pointers, commonly used in integration routines or
+    numerical libraries such as SciPy or cubature. It manages the correct
+    storage and retrieval of values through LLVM IR instructions.
+
+    Parameters
+    ==========
+    signature : CodeSignature
+        Defines the return and argument ctypes for the callback function.
+
+    Examples
+    ========
+    >>> from sympy.printing.llvmjitcode import LLVMJitCodeCallback, CodeSignature
+    >>> import ctypes
+    >>> sig = CodeSignature(ctypes.c_int)
+    >>> jit_cb = LLVMJitCodeCallback(sig)
+    >>> # Used internally when creating callback functions via llvm_callable
+    """
+
     def __init__(self, signature):
         super().__init__(signature)
 
