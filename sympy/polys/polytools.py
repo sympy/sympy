@@ -4219,7 +4219,7 @@ class Poly(Basic):
 
     def schur_conditions(f):
         """
-        Compute the conditions that ensure ``f`` a Schur stable polynomial.
+        Compute the conditions that ensure ``f`` is a Schur stable polynomial.
 
         Explanation
         ===========
