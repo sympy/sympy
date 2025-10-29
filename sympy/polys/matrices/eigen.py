@@ -76,10 +76,12 @@ def dom_eigenvects_to_sympy(
         eigenvects = [[field.to_sympy(x) for x in vect] for vect in eigenvects]
 
         degree = minpoly.degree()
-        minpoly = minpoly.as_expr()
-        eigenvals = roots(minpoly, l, **kwargs)
+        # Try to get symbolic roots first
+        eigenvals = roots(minpoly.as_expr(), l, **kwargs)
         if len(eigenvals) != degree:
-            eigenvals = [CRootOf(minpoly, l, idx) for idx in range(degree)]
+            # Use CRootOf.all_roots which handles algebraic fields properly
+            # by passing the Poly object directly instead of converting to expression
+            eigenvals = CRootOf.all_roots(minpoly, radicals=kwargs.get('radicals', True))
 
         for eigenvalue in eigenvals:
             new_eigenvects = [
