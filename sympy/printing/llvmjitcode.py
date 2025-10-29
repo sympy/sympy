@@ -240,7 +240,6 @@ class LLVMJitCode:
     ========
     >>> from sympy.printing.llvmjitcode import LLVMJitCode, CodeSignature
     >>> import ctypes
-    >>> from sympy.abc import x
     >>> sig = CodeSignature(ctypes.c_double)
     >>> jit = LLVMJitCode(sig)
     >>> # Build the function using LLVM IR (internally called by llvm_callable)
