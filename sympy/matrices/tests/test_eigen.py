@@ -716,7 +716,6 @@ def test_eigenvects_algebraic_field():
     # Test that eigenvects works with matrices having algebraic coefficients
     # where symbolic root solving fails and CRootOf is needed.
     # Regression test for issue #28507: NotImplementedError: CRootOf is not supported over EX
-    
     # Matrix from the original issue with multiple algebraic coefficients
     # The characteristic polynomial has domain over QQ<sqrt(3) + sqrt(5) + sqrt(7)>
     M = Matrix([
@@ -726,13 +725,13 @@ def test_eigenvects_algebraic_field():
         [Rational(9, 2), 2, 4, 12, sqrt(7)/5],
         [Rational(25, 13), sqrt(7)/4, 2, 1, 1]
     ])
-    
+
     # Before the fix, this would raise:
     # NotImplementedError: CRootOf is not supported over EX
     # because the minimal polynomial has algebraic coefficients and
     # converting to expression lost the AlgebraicField domain
     vecs = M.eigenvects()
-    
+
     # Just verify it completes without error and returns results
     assert len(vecs) > 0
     assert all(mult > 0 for _, mult, _ in vecs)
