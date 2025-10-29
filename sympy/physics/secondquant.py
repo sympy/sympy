@@ -1655,7 +1655,7 @@ class Commutator(Function):
     """
     The Commutator:  [A, B] = A*B - B*A
 
-    The arguments are ordered according to .__cmp__()
+    The arguments are ordered according to comparison operators
 
     Examples
     ========

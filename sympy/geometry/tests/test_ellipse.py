@@ -116,8 +116,6 @@ def test_ellipse_geom():
     assert hash(c1) == hash(Circle(Point(1, 0), Point(0, 1), Point(0, -1)))
     assert c1 in e1
     assert (Line(p1, p2) in e1) is False
-    assert e1.__cmp__(e1) == 0
-    assert e1.__cmp__(Point(0, 0)) > 0
 
     # Encloses
     assert e1.encloses(Segment(Point(-0.5, -0.5), Point(0.5, 0.5))) is True
