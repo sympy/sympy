@@ -712,9 +712,9 @@ def test_issue_25282():
     assert sum(Matrix(mat).eigenvals().values()) == 24
 
 
-def test_issue_28507():
+def test_eigenvects_algebraic_field():
     # Test that eigenvects works with matrices containing algebraic coefficients
-    # Previously raised: NotImplementedError: CRootOf is not supported over EX
+    # Regression test for issue #28507
     M = Matrix([
         [1, sqrt(2)],
         [sqrt(2), 3]
