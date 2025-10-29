@@ -710,3 +710,32 @@ def test_issue_25282():
         mat.append(rotate(ds, i) + rotate(dd, i))
 
     assert sum(Matrix(mat).eigenvals().values()) == 24
+
+
+def test_issue_28507():
+    # Test that eigenvects works with matrices containing algebraic coefficients
+    # Previously raised: NotImplementedError: CRootOf is not supported over EX
+    M = Matrix([
+        [1, sqrt(2)],
+        [sqrt(2), 3]
+    ])
+
+    vecs = M.eigenvects()
+    assert len(vecs) == 2
+    # Verify eigenvector equation: M*v = lambda*v
+    for val, mult, vec_list in vecs:
+        assert len(vec_list) == mult
+        for v in vec_list:
+            assert simplify(M*v - val*v) == Matrix([0, 0])
+
+    # Test with multiple algebraic coefficients (sqrt(2) and sqrt(3))
+    M2 = Matrix([
+        [sqrt(2), 1],
+        [1, sqrt(3)]
+    ])
+
+    vecs2 = M2.eigenvects()
+    assert len(vecs2) == 2
+    for val, mult, vec_list in vecs2:
+        for v in vec_list:
+            assert simplify(M2*v - val*v) == Matrix([0, 0])
