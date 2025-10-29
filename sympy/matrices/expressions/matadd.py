@@ -2,9 +2,9 @@ from functools import reduce
 import operator
 
 from sympy.core import Basic, sympify
-from sympy.singleton import S
 from sympy.core.add import add, Add, _could_extract_minus_sign
 from sympy.core.sorting import default_sort_key
+from sympy.core.singleton import S
 from sympy.functions import adjoint
 from sympy.matrices.matrixbase import MatrixBase
 from sympy.matrices.expressions.transpose import transpose
