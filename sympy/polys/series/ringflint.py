@@ -11,6 +11,7 @@ from sympy.external.gmpy import GROUND_TYPES, MPZ, MPQ
 from sympy.utilities.decorator import doctest_depends_on
 from sympy.polys.polyerrors import NotReversible
 
+_require_flint_version = False
 
 if TYPE_CHECKING:
     from flint import fmpq_poly, fmpq_series, fmpz_poly, fmpz_series, ctx  # type: ignore
@@ -18,6 +19,15 @@ if TYPE_CHECKING:
 elif GROUND_TYPES == "flint":
     from flint import fmpq_poly, fmpq_series, fmpz_poly, fmpz_series, ctx
     from flint.utils.flint_exceptions import DomainError
+
+    # Required in specific cases where the 0.8 implementation provides faster
+    # performance for working with Flint series methods.
+    # This can be removed when python-flint 0.8 becomes the minimum supported version.
+    import flint
+
+    _major, _minor, *_ = flint.__version__.split(".")
+    if (int(_major), int(_minor)) >= (0, 8):
+        _require_flint_version = True
 else:
     fmpq_poly = fmpq_series = fmpz_poly = fmpz_series = ctx = None
 
@@ -205,10 +215,22 @@ class FlintPowerSeriesRingZZ:
             if len(coeffs) <= self._prec:
                 return fmpz_poly(coeffs)
             prec = self._prec
-        else:
-            prec = min(prec, self._prec)
 
         return fmpz_series(coeffs, prec=prec)
+
+    def from_element(self, s: ZZSeries) -> ZZSeries:
+        """Convert a power series element into the corresponding element of this ring."""
+        ring_prec = self._prec
+        if isinstance(s, fmpz_poly):
+            if s.degree() >= ring_prec:
+                return fmpz_series(s, prec=ring_prec)
+            return s
+
+        prec = min(_get_series_precision(s), ring_prec)
+        if _require_flint_version:
+            return fmpz_series(s, prec=prec)
+        else:
+            return fmpz_series(s.coeffs(), prec=prec)
 
     def to_list(self, s: ZZSeries) -> list[MPZ]:
         """Returns the list of series coefficients."""
@@ -652,10 +674,22 @@ class FlintPowerSeriesRingQQ:
             if len(coeffs) <= self._prec:
                 return fmpq_poly(coeffs)
             prec = self._prec
-        else:
-            prec = min(prec, self._prec)
 
         return fmpq_series(coeffs, prec=prec)
+
+    def from_element(self, s: QQSeries) -> QQSeries:
+        """Convert a power series element into the corresponding element of this ring."""
+        ring_prec = self._prec
+        if isinstance(s, fmpq_poly):
+            if s.degree() >= ring_prec:
+                return fmpq_series(s, prec=ring_prec)
+            return s
+
+        prec = min(_get_series_precision(s), ring_prec)
+        if _require_flint_version:
+            return fmpq_series(s, prec=prec)
+        else:
+            return fmpq_series(s.coeffs(), prec=prec)
 
     def to_list(self, s: QQSeries) -> list[MPQ]:
         """Returns the list of series coefficients."""
