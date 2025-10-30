@@ -252,6 +252,7 @@ class DiscretePSpace(PSpace):
 
     def eval_prob(self, _domain):
         sym = list(self.symbols)[0]
+
         if isinstance(_domain, Range):
             n = symbols('n', integer=True)
             inf, sup, step = (r for r in _domain.args)
@@ -260,10 +261,13 @@ class DiscretePSpace(PSpace):
             rv = summation(summand,
                 (n, inf/step, (sup)/step - 1)).doit()
             return rv
+
         elif isinstance(_domain, FiniteSet):
-            pdf = Lambda(sym, self.pdf)
-            rv = sum(pdf(x) for x in _domain)
+            rv = sum(self.pdf.subs(sym, x) for x in _domain).simplify()
+            if isinstance(rv, Sum) and rv.function.is_Piecewise and (v := rv.limits[0])[1].is_number and v[2] == S.Infinity:
+                rv = sum(rv.function.subs(v[0], i) for i in range(int(v[1]), int(v[1]) + 100))
             return rv
+
         elif isinstance(_domain, Union):
             rv = sum(self.eval_prob(x) for x in _domain.args)
             return rv
