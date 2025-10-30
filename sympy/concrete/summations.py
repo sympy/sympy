@@ -1010,7 +1010,66 @@ def telescopic(L, R, limits):
         return telescopic_direct(R, L, abs(s), (i, a, b))
     elif s > 0:
         return telescopic_direct(L, R, s, (i, a, b))
+    
+def _maybe_recombine_apart_terms(expr, i):
+    """
+    After apart(expr, i) produced an Add, check whether the
+    degree-1 denominators (simple poles) produced by apart can be
+    safely summed individually. If the sum of their coefficients is
+    zero (so they cancel), recombine them with together() and return
+    the recombined expression. Otherwise return the original expr.  
+    This aims to avoid splitting a convergent rational summand into
+    individually divergent pieces.
+    """
+    # Nothing to do if not an Add
+    if not expr.is_Add:
+       return expr 
+    terms = list(Add.make_args(expr))
+    group_high_deg = []
+    group_possible_simple = []  
+    for t in terms:
+        num, den = t.as_numer_denom()
+       # Try to get polynomial in i for the denominator
+        try:
+            p = den.as_poly(i)
+        except Exception:
+            p = None
+        if p is not None and p.degree() > 1:
+            # denominator degree > 1 — these are "safe" grouped terms
+            group_high_deg.append(t)
+        else:
+            # degree 1 or non-polynomial denom -> potentially problematic if apart split them
+            group_possible_simple.append(t) 
+    # If there are no potentially-simple terms then nothing to do
+    if not group_possible_simple:
+       return expr 
+    # Sum their rational values (as expressions). If they cancel to zero,
+    # recombine them (making them part of one rational factor).
+    try:
+        sum_of_group = Add(*group_possible_simple)
+        # Cancel common factors and simplify numerator/denominator combination
+        sum_simpl = together(sum_of_group)
+    except Exception:
+        # If anything goes wrong, be conservative: don't change expr
+        return expr
 
+    # If recombination yields zero or cancels simple poles, return recombined form
+    if sum_simpl == 0:
+        return Add(*(group_high_deg + [sum_simpl]))
+
+    # If together() produced a simplification with denominator degree > 1
+    # it means we recombined simple poles into a safe high-degree denom; use it.
+    try:
+        _, new_den = sum_simpl.as_numer_denom()
+        new_p = new_den.as_poly(i)
+        if new_p is not None and new_p.degree() > 1:
+            return Add(*(group_high_deg + [sum_simpl]))
+    except Exception:
+        # fallback: do not change expr
+        pass
+
+    # otherwise leave expression unchanged (cannot safely split)
+    return expr
 
 def eval_sum(f, limits):
     (i, a, b) = limits
@@ -1099,6 +1158,7 @@ def eval_sum_direct(expr, limits):
     # -1/(5*(5*i + 7)) + 1/(5*(5*i + 2))
     try:
         expr = apart(expr, i)  # see if it becomes an Add
+        expr = _maybe_recombine_apart_terms(expr, i)
     except PolynomialError:
         pass
 
@@ -1161,6 +1221,7 @@ def eval_sum_symbolic(f, limits):
     # -1/(5*(5*i + 7)) + 1/(5*(5*i + 2))
     try:
         f = apart(f, i)
+        f = _maybe_recombine_apart_terms(f, i)
     except PolynomialError:
         pass
 

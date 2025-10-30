@@ -1693,3 +1693,24 @@ def test_issue_23952():
     expr = Sum(abs(k1 - k2)*p**k1 *(1 - q)**(n - k2),
         (k1, 0, n), (k2, 0, n))
     assert expr.subs(p,0).subs(q,1).subs(n, 3).doit() == 3
+
+
+def test_apart_multivariate_recombine():
+    x, y = symbols('x y')
+    f = (x**2 + y)/(x**2*(x + 2)*(x + 4))
+    # Prior to the fix this could hang or return an unevaluated Sum
+    res = summation(f, (x, 1, oo))
+    # Should return a concrete expression (not an unevaluated Sum)
+    assert not isinstance(res, Sum)
+    # For y substituted as 1 it should be numeric/real
+    val = res.subs(y, 1).evalf()
+    assert val.is_real
+
+def test_apart_simple_case_unchanged():
+    # Make sure ordinary single-variable apart/summation still works
+    x = symbols('x')
+    f = 1/(x*(x+1))
+    res = summation(f, (x, 1, oo))
+    # sum_{x=1..oo} 1/(x(x+1)) = 1
+    assert res == S.One
+
