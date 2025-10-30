@@ -225,6 +225,18 @@ def test_eigenvects():
         assert M*vec_list[0] == val*vec_list[0]
 
 
+def test_eigenvects_algebraic_field():
+    M = Matrix([
+        [45, 15, 20, 18, sqrt(5)/2],
+        [15, 85, 35, 22, Rational(11, 37)],
+        [20, 35, 15, 40, 3*sqrt(3)/7],
+        [Rational(9, 2), 2, 4, 12, sqrt(7)/5],
+        [Rational(25, 13), sqrt(7)/4, 2, 1, 1]
+    ])
+    vecs = M.eigenvects()
+    assert len(vecs) > 0
+
+
 def test_left_eigenvects():
     M = Matrix([[0, 1, 1],
                 [1, 0, 0],
@@ -710,28 +722,3 @@ def test_issue_25282():
         mat.append(rotate(ds, i) + rotate(dd, i))
 
     assert sum(Matrix(mat).eigenvals().values()) == 24
-
-
-def test_eigenvects_algebraic_field():
-    # Test that eigenvects works with matrices having algebraic coefficients
-    # where symbolic root solving fails and CRootOf is needed.
-    # Regression test for issue #28507: NotImplementedError: CRootOf is not supported over EX
-    # Matrix from the original issue with multiple algebraic coefficients
-    # The characteristic polynomial has domain over QQ<sqrt(3) + sqrt(5) + sqrt(7)>
-    M = Matrix([
-        [45, 15, 20, 18, sqrt(5)/2],
-        [15, 85, 35, 22, Rational(11, 37)],
-        [20, 35, 15, 40, 3*sqrt(3)/7],
-        [Rational(9, 2), 2, 4, 12, sqrt(7)/5],
-        [Rational(25, 13), sqrt(7)/4, 2, 1, 1]
-    ])
-
-    # Before the fix, this would raise:
-    # NotImplementedError: CRootOf is not supported over EX
-    # because the minimal polynomial has algebraic coefficients and
-    # converting to expression lost the AlgebraicField domain
-    vecs = M.eigenvects()
-
-    # Just verify it completes without error and returns results
-    assert len(vecs) > 0
-    assert all(mult > 0 for _, mult, _ in vecs)

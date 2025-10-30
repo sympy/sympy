@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Optional, overload, Literal, Any, cast, Callab
 
 from functools import wraps, reduce
 from operator import mul
-from collections import defaultdict
+from collections import defaultdict, Counter
 from collections.abc import Iterator
 
 from sympy.core import (
@@ -3975,33 +3975,26 @@ class Poly(Basic):
 
     def _which_roots(f, candidates, num_roots):
         prec = 10
-        # Remove duplicates while preserving order
-        seen = set()
-        roots = []
-        for r in candidates:
-            if r not in seen:
-                seen.add(r)
-                roots.append(r)
-
+        root_counts = Counter(candidates)
         fe = f.as_expr()
         x = f.gens[0]
 
-        while len(roots) > num_roots:
+        while len(root_counts) > num_roots:
             remove = set()
-            for n, r in enumerate(roots):
+            for r in list(root_counts.keys()):
                 # If f(r) != 0 then f(r).evalf() gives a float/complex with precision.
                 f_r = fe.subs(x, r).evalf(prec, maxn=2*prec)
                 if abs(f_r)._prec >= 2:
-                    remove.add(n)
+                    remove.add(r)
 
             if not remove:
-                # No roots eliminated, increase precision won't help
                 break
 
-            roots = [r for n, r in enumerate(roots) if n not in remove]
+            for r in remove:
+                root_counts.pop(r)
             prec *= 2
 
-        return roots
+        return list(root_counts.keys())
 
     def same_root(f, a, b):
         """
