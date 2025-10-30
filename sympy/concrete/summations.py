@@ -1032,7 +1032,7 @@ def _maybe_recombine_apart_terms(expr, i):
        # Try to get polynomial in i for the denominator
         try:
             p = den.as_poly(i)
-        except Exception:
+        except (PolynomialError, AttributeError, TypeError):
             p = None
         if p is not None and p.degree() > 1:
             # denominator degree > 1, these are "safe" grouped terms
@@ -1049,7 +1049,7 @@ def _maybe_recombine_apart_terms(expr, i):
         sum_of_group = Add(*group_possible_simple)
         # Cancel common factors and simplify numerator/denominator combination
         sum_simpl = together(sum_of_group)
-    except Exception:
+    except (PolynomialError, ValueError, TypeError):
         # If anything goes wrong, be conservative: don't change expr
         return expr
 
@@ -1064,7 +1064,7 @@ def _maybe_recombine_apart_terms(expr, i):
         new_p = new_den.as_poly(i)
         if new_p is not None and new_p.degree() > 1:
             return Add(*(group_high_deg + [sum_simpl]))
-    except Exception:
+    except (PolynomialError, AttributeError, TypeError):
         # fallback: do not change expr
         pass
 
