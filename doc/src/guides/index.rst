@@ -20,3 +20,4 @@ For a deeper and elaborate exploration of other SymPy topics, see the
    solving/index.md
    logo.rst
    ../citing.md
+   benchmarking.rst
