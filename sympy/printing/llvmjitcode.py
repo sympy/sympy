@@ -227,8 +227,8 @@ class LLVMJitCode:
     Generate and compile LLVM IR for SymPy expressions.
 
     This class builds LLVM IR modules and functions from SymPy expressions,
-    compiles them using `llvmlite`, and returns function pointers that can
-    be called from Python through `ctypes`. It handles numeric and tuple
+    compiles them using ``llvmlite``, and returns function pointers that can
+    be called from Python through ``ctypes``. It handles numeric and tuple
     returns, wrapping them as needed for Python interoperability.
 
     Parameters
@@ -240,10 +240,9 @@ class LLVMJitCode:
     ========
     >>> from sympy.printing.llvmjitcode import LLVMJitCode, CodeSignature
     >>> import ctypes
-    >>> from sympy.abc import x
     >>> sig = CodeSignature(ctypes.c_double)
     >>> jit = LLVMJitCode(sig)
-    >>> # Build the function using LLVM IR (internally called by llvm_callable)
+    >>> # Build the function using LLVM IR (internally called by ``llvm_callable``)
     """
 
     def __init__(self, signature):
