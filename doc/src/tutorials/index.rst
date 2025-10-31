@@ -16,6 +16,8 @@ If you are new to SymPy, start here.
    :hidden:
 
    intro-tutorial/index.rst
+   integrals.rst
+
 
 :ref:`Physics Tutorial <physics_tutorials>`
 ===========================================
