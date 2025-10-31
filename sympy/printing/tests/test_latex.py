@@ -944,6 +944,18 @@ def test_latex_derivatives():
     assert latex(diff(f(x), (x, Max(n1, n2)))) == \
         r'\frac{d^{\max\left(n_{1}, n_{2}\right)}}{d x^{\max\left(n_{1}, n_{2}\right)}} f{\left(x \right)}'
 
+    # parenthesizing of the argument
+    g = Function("g")
+    # addition always parenthesized
+    for mul_symbol in (None, 'dot'):
+        assert latex(Derivative(f(x) + g(x), x), mul_symbol=mul_symbol) == \
+            r"\frac{d}{d x} \left(f{\left(x \right)} + g{\left(x \right)}\right)"
+    # multiplication parenthesized only if mul_symbol isn't None
+    assert latex(Derivative(f(x) * g(x), x)) == \
+        r"\frac{d}{d x} f{\left(x \right)} g{\left(x \right)}"
+    assert latex(Derivative(f(x) * g(x), x), mul_symbol='dot') == \
+        r"\frac{d}{d x} \left(f{\left(x \right)} \cdot g{\left(x \right)}\right)"
+
     # set diff operator
     assert latex(diff(f(x), x), diff_operator="rd") == r'\frac{\mathrm{d}}{\mathrm{d} x} f{\left(x \right)}'
 
