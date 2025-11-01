@@ -1029,11 +1029,11 @@ def _maybe_recombine_apart_terms(expr, i):
     group_possible_simple = []
     for t in terms:
         num, den = t.as_numer_denom()
-       # Try to get polynomial in i for the denominator
-        try:
+        if den.is_polynomial(i):
             p = den.as_poly(i)
-        except (PolynomialError, AttributeError, TypeError):
+        else:
             p = None
+
         if p is not None and p.degree() > 1:
             # denominator degree > 1, these are "safe" grouped terms
             group_high_deg.append(t)
@@ -1045,13 +1045,10 @@ def _maybe_recombine_apart_terms(expr, i):
        return expr
     # Sum their rational values (as expressions). If they cancel to zero,
     # recombine them (making them part of one rational factor).
-    try:
-        sum_of_group = Add(*group_possible_simple)
-        # Cancel common factors and simplify numerator/denominator combination
-        sum_simpl = together(sum_of_group)
-    except (PolynomialError, ValueError, TypeError):
-        # If anything goes wrong, be conservative: don't change expr
-        return expr
+
+    sum_of_group = Add(*group_possible_simple)
+    # Cancel common factors and simplify numerator/denominator combination
+    sum_simpl = together(sum_of_group, deep=True)
 
     # If recombination yields zero or cancels simple poles, return recombined form
     if sum_simpl == 0:
@@ -1059,16 +1056,12 @@ def _maybe_recombine_apart_terms(expr, i):
 
     # If together() produced a simplification with denominator degree > 1
     # it means we recombined simple poles into a safe high-degree denom; use it.
-    try:
-        _, new_den = sum_simpl.as_numer_denom()
+    _, new_den = sum_simpl.as_numer_denom()
+    if new_den.is_polynomial(i):
         new_p = new_den.as_poly(i)
-        if new_p is not None and new_p.degree() > 1:
+        if new_p.degree() > 1:
             return Add(*(group_high_deg + [sum_simpl]))
-    except (PolynomialError, AttributeError, TypeError):
-        # fallback: do not change expr
-        pass
 
-    # otherwise leave expression unchanged (cannot safely split)
     return expr
 
 def eval_sum(f, limits):

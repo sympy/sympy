@@ -1,6 +1,5 @@
 from math import prod
-
-from sympy import N
+from sympy import N, Pow, Mul, Add
 from sympy.concrete.expr_with_intlimits import ReorderError
 from sympy.concrete.products import (Product, product)
 from sympy.concrete.summations import (Sum, summation, telescopic,
@@ -558,7 +557,7 @@ def test_wallis_product():
 
 def test_telescopic_sums():
     #checks also input 2 of comment 1 issue 4127
-    assert Sum(1/k - 1/(k + 1), (k, 1, n)).doit().equals(1 - 1/(1 + n))
+    assert Sum(1/k - 1/(k + 1), (k, 1, n)).doit() == n/(1 + n)
     assert Sum(
         f(k) - f(k + 2), (k, m, n)).doit() == -f(1 + n) - f(2 + n) + f(m) + f(1 + m)
     assert Sum(cos(k) - cos(k + 3), (k, 1, n)).doit() == -cos(1 + n) - \
@@ -568,9 +567,9 @@ def test_telescopic_sums():
     assert telescopic(1/m, -m/(1 + m), (m, n - 1, n)) == \
         telescopic(1/k, -k/(1 + k), (k, n - 1, n))
 
-    assert Sum(1/x/(x - 1), (x, a, b)).doit().equals(1/(a - 1) - 1/b)
+    assert Sum(1/x/(x - 1), (x, a, b)).doit() == Mul(-1, Add(a, -b, -1), Pow(Mul(b, Add(a, -1)), -1))
     eq = 1/((5*n + 2)*(5*(n + 1) + 2))
-    assert Sum(eq, (n, 0, oo)).doit().equals(S(1)/10)
+    assert Sum(eq, (n, 0, oo)).doit() == gamma(S(12)/5) / (14 * gamma(S(7)/5))
     nz = symbols('nz', nonzero=True)
     v = Sum(eq.subs(5, nz).subs(nz, 5), (n, 0, oo)).doit()
     val = N(v, 50)
@@ -1698,15 +1697,12 @@ def test_issue_23952():
 
 
 def test_apart_multivariate_recombine():
+    # See issue #28290
     x, y = symbols('x y')
     f = (x**2 + y)/(x**2*(x + 2)*(x + 4))
-    # Prior to the fix this could hang or return an unevaluated Sum
     res = summation(f, (x, 1, oo))
-    # Should return a concrete expression (not an unevaluated Sum)
     assert not isinstance(res, Sum)
-    # For y substituted as 1 it should be numeric/real
-    val = res.subs(y, 1).evalf()
-    assert val.is_real
+    assert res.subs(y, 1).evalf().is_real
 
 
 def test_apart_simple_case_unchanged():
