@@ -7,10 +7,44 @@ from sympy.core.symbol import Dummy
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.elementary.complexes import (Abs, sign, arg, re)
 from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.elementary.trigonometric import sin, cos, tan, cot
+from sympy import pi
 from sympy.functions.special.gamma_functions import gamma
 from sympy.polys import PolynomialError, factor
 from sympy.series.order import Order
+from sympy import series, oo
 from .gruntz import gruntz
+
+def _reduce_periodic_arg(expr, var):
+    """
+    For periodic functions in expr, extract the asymptotically small part
+    of their arguments with respect to var approaching infinity.
+    Only applies to sin, cos, tan, cot.
+    """
+    def _periodic_arg(f, period):
+        arg = f.args[0]
+        if not arg.has(var):
+            return f
+        try:
+            s = arg.series(var, oo, 5).removeO()
+            terms = s.as_ordered_terms()
+            small = 0
+            for t in terms:
+               if t.limit(var, oo) == 0:
+                  small += t
+            # If all terms vanish, use 0
+            if small == 0:
+                return f.func(0)
+            # Only replace if small vanishes at infinity
+            if small.limit(var, oo) == 0:
+                return f.func(small)
+        except Exception:
+            pass
+        return f
+    return expr.replace(
+        lambda x: x.func in (sin, cos, tan, cot) and x.args[0].has(var),
+        lambda x: _periodic_arg(x, 2*pi)
+    )
 
 def limit(e, z, z0, dir="+"):
     """Computes the limit of ``e(z)`` at the point ``z0``.
@@ -377,6 +411,9 @@ class Limit(Expr):
         l = None
 
         try:
+            # Reduce periodic function arguments modulo their period before gruntz
+            if z0 in (S.Infinity, S.NegativeInfinity):
+                e = _reduce_periodic_arg(e, z)
             r = gruntz(e, z, z0, dir)
             if r is S.NaN or l is S.NaN:
                 raise PoleError()
