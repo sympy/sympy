@@ -4,7 +4,7 @@ to 2D Cables.
 """
 
 from sympy.core.sympify import sympify
-from sympy.core.symbol import Symbol,symbols
+from sympy.core.symbol import Symbol, symbols
 from sympy import sin, cos, pi, atan, diff, Piecewise, solve, rad
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.solvers.solveset import linsolve

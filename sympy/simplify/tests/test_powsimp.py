@@ -122,6 +122,8 @@ def test_powsimp():
     assert powsimp(x**2*y**3*(x*y**2)**Rational(3, 2)
         ) == x*y*(x*y**2)**Rational(5, 2)
 
+    #issue 27380
+    assert powsimp(1.0**(x+1)/1.0**x) == 1.0
 
 def test_powsimp_negated_base():
     assert powsimp((-x + y)/sqrt(x - y)) == -sqrt(x - y)

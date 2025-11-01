@@ -1079,7 +1079,7 @@ class Derivative(Expr):
         2*f(x)
 
     Such derivatives will show up when the chain rule is used to
-    evalulate a derivative:
+    evaluate a derivative:
 
         >>> f(g(x)).diff(x)
         Derivative(f(g(x)), g(x))*Derivative(g(x), x)
@@ -1259,6 +1259,8 @@ class Derivative(Expr):
 
     def __new__(cls, expr, *variables, **kwargs):
         expr = sympify(expr)
+        if not isinstance(expr, Basic):
+            raise TypeError(f"Cannot represent derivative of {type(expr)}")
         symbols_or_none = getattr(expr, "free_symbols", None)
         has_symbol_set = isinstance(symbols_or_none, set)
 

@@ -84,22 +84,25 @@ redirects = {
     "tutorial/matrices": "../tutorials/intro-tutorial/matrices.html",
     "tutorial/manipulation": "../tutorials/intro-tutorial/manipulation.html",
 
-    "modules/physics/vector/vectors": "../explanation/modules/physics/vector/vectors/vectors.html",
-    "modules/physics/vector/kinematics": "../explanation/modules/physics/vector/kinematics/kinematics.html",
-    "modules/physics/vector/advanced": "../explanation/modules/physics/vector/advanced.html",
-    "modules/physics/vector/fields": "../explanation/modules/physics/vector/fields.html",
-    "modules/physics/mechanics/advanced": "../explanation/modules/physics/mechanics/advanced.html",
-    "modules/physics/mechanics/autolev_parser": "../explanation/modules/physics/mechanics/autolev_parser.html",
-    "modules/physics/mechanics/examples": "../tutorials/physics/mechanics/index.html",
-    "modules/physics/mechanics/joints": "../explanation/modules/physics/mechanics/joints.html",
-    "modules/physics/mechanics/kane": "../explanation/modules/physics/mechanics/kane.html",
-    "modules/physics/mechanics/lagrange": "../explanation/modules/physics/mechanics/lagrange.html",
-    "modules/physics/mechanics/masses": "../explanation/modules/physics/mechanics/masses.html",
-    "modules/physics/mechanics/reference": "../explanation/modules/physics/mechanics/reference.html",
-    "modules/physics/mechanics/symsystem": "../explanation/modules/physics/mechanics/symsystem.html",
-    "modules/physics/mechanics/linearize": "../explanation/modules/physics/mechanics/linearize.html",
-    "modules/physics/mechanics/sympy_mechanics_for_autolev_uses": "../explanation/modules/physics/mechanics/sympy_mechanics_for_autolev_uses.html",
-    "tutorials/physics/biomechanics/biomechanics": "../explanation/modules/physics/biomechanics/biomechanics.html",
+    "modules/physics/continuum_mechanics/beam_problems": "../../../tutorials/physics/continuum_mechanics/beam_problems.html",
+    "modules/physics/vector/index": "../../../explanation/modules/physics/vector/index.html",
+    "modules/physics/vector/vectors": "../../../explanation/modules/physics/vector/vectors/vectors.html",
+    "modules/physics/vector/kinematics": "../../../explanation/modules/physics/vector/kinematics/kinematics.html",
+    "modules/physics/vector/advanced": "../../../explanation/modules/physics/vector/advanced.html",
+    "modules/physics/vector/fields": "../../../explanation/modules/physics/vector/fields.html",
+    "modules/physics/mechanics/index": "../../../explanation/modules/physics/mechanics/index.html",
+    "modules/physics/mechanics/advanced": "../../../explanation/modules/physics/mechanics/advanced.html",
+    "modules/physics/mechanics/autolev_parser": "../../../explanation/modules/physics/mechanics/autolev_parser.html",
+    "modules/physics/mechanics/examples": "../../../tutorials/physics/mechanics/index.html",
+    "modules/physics/mechanics/joints": "../../../explanation/modules/physics/mechanics/joints.html",
+    "modules/physics/mechanics/kane": "../../../explanation/modules/physics/mechanics/kane.html",
+    "modules/physics/mechanics/lagrange": "../../../explanation/modules/physics/mechanics/lagrange.html",
+    "modules/physics/mechanics/masses": "../../../explanation/modules/physics/mechanics/masses.html",
+    "modules/physics/mechanics/reference": "../../../explanation/modules/physics/mechanics/reference.html",
+    "modules/physics/mechanics/symsystem": "../../../explanation/modules/physics/mechanics/symsystem.html",
+    "modules/physics/mechanics/linearize": "../../../explanation/modules/physics/mechanics/linearize.html",
+    "modules/physics/mechanics/sympy_mechanics_for_autolev_uses": "../../../explanation/modules/physics/mechanics/sympy_mechanics_for_autolev_users.html",
+    "tutorials/physics/biomechanics/biomechanics": "../../../explanation/modules/physics/biomechanics/biomechanics.html",
 
 }
 
@@ -138,7 +141,7 @@ myst_enable_checkboxes = True
 # myst_update_mathjax = False
 
 # Don't linkify links unless they start with "https://". This is needed
-# because the linkify library treates .py as a TLD.
+# because the linkify library treats .py as a TLD.
 myst_linkify_fuzzy_links = False
 
 # Add any paths that contain templates here, relative to this directory.
@@ -338,7 +341,7 @@ html_css_files = ['custom.css']
 html_domain_indices = ['py-modindex']
 
 # If true, the reST sources are included in the HTML build as _sources/<name>.
-# html_copy_source = True
+html_copy_source = False
 
 # Output file base name for HTML help builder.
 htmlhelp_basename = 'SymPydoc'
@@ -489,8 +492,9 @@ if not commit_hash:
 
 fork = 'sympy'
 blobpath = \
-    "https://github.com/{}/sympy/blob/{}/sympy/".format(fork, commit_hash)
+    "https://github.com/{}/sympy/blob/{}/".format(fork, commit_hash)
 
+html_theme_options["source_view_link"] = blobpath + "doc/src/{filename}?plain=1"
 
 def linkcode_resolve(domain, info):
     """Determine the URL corresponding to Python object."""
@@ -529,7 +533,7 @@ def linkcode_resolve(domain, info):
         linespec = ""
 
     fn = os.path.relpath(fn, start=os.path.dirname(sympy.__file__))
-    return blobpath + fn + linespec
+    return blobpath + "sympy/" + fn + linespec
 
 
 def resolve_type_aliases(app, env, node, contnode):

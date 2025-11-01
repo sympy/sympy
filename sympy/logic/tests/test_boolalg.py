@@ -1365,3 +1365,95 @@ def test_issue_26985():
 
     assert result_anf == d
     assert result == d
+
+
+def test_evaluate_false():
+    x, y = symbols('x y')
+
+    expr = And(evaluate=False)
+    assert isinstance(expr, And)
+    assert expr.args == ()
+
+    expr = And(x, evaluate=False)
+    assert isinstance(expr, And)
+    assert expr.args == (x,)
+
+    expr = And(x, x, evaluate=False)
+    assert isinstance(expr, And)
+    assert expr.args == (x, x)
+
+    expr = And(x, y, evaluate=False)
+    assert isinstance(expr, And)
+    assert expr.args == (x, y)
+
+    expr = And(y, x, evaluate=False)
+    assert isinstance(expr, And)
+    assert expr.args == (y, x)
+
+    expr = Or(evaluate=False)
+    assert isinstance(expr, Or)
+    assert expr.args == ()
+
+    expr = Or(x, evaluate=False)
+    assert isinstance(expr, Or)
+    assert expr.args == (x,)
+
+    expr = Or(x, x, evaluate=False)
+    assert isinstance(expr, Or)
+    assert expr.args == (x, x)
+
+    expr = Or(x, y, evaluate=False)
+    assert isinstance(expr, Or)
+    assert expr.args == (x, y)
+
+    expr = Or(y, x, evaluate=False)
+    assert isinstance(expr, Or)
+    assert expr.args == (y, x)
+
+    expr = Xor(evaluate=False)
+    assert isinstance(expr, Xor)
+    assert expr.args == ()
+
+    expr = Xor(x, evaluate=False)
+    assert isinstance(expr, Xor)
+    assert expr.args == (x,)
+
+    expr = Xor(x, x, evaluate=False)
+    assert isinstance(expr, Xor)
+    assert expr.args == (x, x)
+
+    expr = Xor(x, y, evaluate=False)
+    assert isinstance(expr, Xor)
+    assert expr.args == (x, y)
+
+    expr = Xor(y, x, evaluate=False)
+    assert isinstance(expr, Xor)
+    assert expr.args == (y, x)
+
+    expr = Xor(x, x, x, evaluate=False)
+    assert isinstance(expr, Xor)
+    assert expr.args == (x, x, x)
+
+    expr = Equivalent(evaluate=False)
+    assert isinstance(expr, Equivalent)
+    assert expr.args == ()
+
+    expr = Equivalent(x, evaluate=False)
+    assert isinstance(expr, Equivalent)
+    assert expr.args == (x,)
+
+    expr = Equivalent(x, x, evaluate=False)
+    assert isinstance(expr, Equivalent)
+    assert expr.args == (x, x)
+
+    expr = Equivalent(x, y, evaluate=False)
+    assert isinstance(expr, Equivalent)
+    assert expr.args == (x, y)
+
+    expr = Equivalent(y, x, evaluate=False)
+    assert isinstance(expr, Equivalent)
+    assert expr.args == (y, x)
+
+    expr = Equivalent(x, x, x, evaluate=False)
+    assert isinstance(expr, Equivalent)
+    assert expr.args == (x, x, x)

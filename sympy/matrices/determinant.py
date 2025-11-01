@@ -1,5 +1,10 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from types import FunctionType
 
+from sympy.core.add import Add
 from sympy.core.cache import cacheit
 from sympy.core.numbers import Float, Integer
 from sympy.core.singleton import S
@@ -16,7 +21,17 @@ from .utilities import (
     _iszero, _is_zero_after_expand_mul, _dotprodsimp, _simplify)
 
 
-def _find_reasonable_pivot(col, iszerofunc=_iszero, simpfunc=_simplify):
+if TYPE_CHECKING:
+    from typing import Callable, Iterable
+    from sympy.core.expr import Expr
+    from sympy.matrices.matrixbase import MatrixBase
+
+
+def _find_reasonable_pivot(
+        col: Iterable[Expr],
+        iszerofunc: Callable[[Expr], bool | None] = _iszero,
+        simpfunc: Callable[[Expr], Expr] = _simplify,
+    ) -> tuple[int | None, Expr | None, bool, list[tuple[int, Expr]]]:
     """ Find the lowest index of an item in ``col`` that is
     suitable for a pivot.  If ``col`` consists only of
     Floats, the pivot with the largest norm is returned.
@@ -34,7 +49,7 @@ def _find_reasonable_pivot(col, iszerofunc=_iszero, simpfunc=_simplify):
     elements that were simplified during the process of pivot
     finding."""
 
-    newly_determined = []
+    newly_determined: list[tuple[int, Expr]] = []
     col = list(col)
     # a column that contains a mix of floats and integers
     # but at least one float is considered a numerical
@@ -48,7 +63,7 @@ def _find_reasonable_pivot(col, iszerofunc=_iszero, simpfunc=_simplify):
             # mean the value is numerically zero.  Make sure
             # to replace all entries with numerical zeros
             if max_value != 0:
-                newly_determined = [(i, 0) for i, x in enumerate(col) if x != 0]
+                newly_determined = [(i, S.Zero) for i, x in enumerate(col) if x != 0]
             return (None, None, False, newly_determined)
         index = col_abs.index(max_value)
         return (index, col[index], False, newly_determined)
@@ -120,7 +135,11 @@ def _find_reasonable_pivot(col, iszerofunc=_iszero, simpfunc=_simplify):
     return (i, col[i], True, newly_determined)
 
 
-def _find_reasonable_pivot_naive(col, iszerofunc=_iszero, simpfunc=None):
+def _find_reasonable_pivot_naive(
+        col: Iterable[Expr],
+        iszerofunc: Callable[[Expr], bool | None] = _iszero,
+        simpfunc: Callable[[Expr], Expr] | None = _simplify,
+    ) -> tuple[int | None, Expr | None, bool, list[tuple[int, Expr]]]:
     """
     Helper that computes the pivot value and location from a
     sequence of contiguous matrix column elements. As a side effect
@@ -329,7 +348,8 @@ def _adjugate(M, method="berkowitz"):
 
 
 # This functions is a candidate for caching if it gets implemented for matrices.
-def _charpoly(M, x='lambda', simplify=_simplify):
+def _charpoly(M, x: str | Expr = 'lambda',
+              simplify: Callable[[Expr], Expr] = _simplify) -> PurePoly:
     """Computes characteristic polynomial det(x*I - M) where I is
     the identity matrix.
 
@@ -708,12 +728,17 @@ def _det(M, method="bareiss", iszerofunc=None):
             det = M[b, b]._eval_det_bird()
         elif method == "laplace":
             det = M[b, b]._eval_det_laplace()
+        else:
+            assert False
         dets.append(det)
     return Mul(*dets)
 
 
 # This functions is a candidate for caching if it gets implemented for matrices.
-def _det_bareiss(M, iszerofunc=_is_zero_after_expand_mul):
+def _det_bareiss(
+        M: MatrixBase,
+        iszerofunc: Callable[[Expr], bool | None] = _is_zero_after_expand_mul,
+    ) -> Expr:
     """Compute matrix determinant using Bareiss' fraction-free
     algorithm which is an extension of the well known Gaussian
     elimination method. This approach is best suited for dense
@@ -734,7 +759,7 @@ def _det_bareiss(M, iszerofunc=_is_zero_after_expand_mul):
 
     # Recursively implemented Bareiss' algorithm as per Deanna Richelle Leggett's
     # thesis http://www.math.usm.edu/perry/Research/Thesis_DRL.pdf
-    def bareiss(mat, cumm=1):
+    def bareiss(mat: MatrixBase, cumm: Expr = S.One):
         if mat.rows == 0:
             return mat.one
         elif mat.rows == 1:
@@ -744,8 +769,8 @@ def _det_bareiss(M, iszerofunc=_is_zero_after_expand_mul):
         # With the default iszerofunc, _find_reasonable_pivot slows down
         # the computation by the factor of 2.5 in one test.
         # Relevant issues: #10279 and #13877.
-        pivot_pos, pivot_val, _, _ = _find_reasonable_pivot(mat[:, 0], iszerofunc=iszerofunc)
-        if pivot_pos is None:
+        pivot_pos, pivot_val, _, _ = _find_reasonable_pivot(mat[:, 0].flat(), iszerofunc=iszerofunc)
+        if pivot_pos is None or pivot_val is None:
             return mat.zero
 
         # if we have a valid pivot, we'll do a "row swap", so keep the
@@ -875,8 +900,8 @@ def __det_laplace(M):
     elif n == 2:
         return M[0, 0] * M[1, 1] - M[0, 1] * M[1, 0]
     else:
-        return sum((-1) ** i * M[0, i] *
-                   __det_laplace(M.minor_submatrix(0, i)) for i in range(n))
+        minor = lambda i: __det_laplace(M.minor_submatrix(0, i))
+        return Add(*((-1)**i * M[0, i] * minor(i) for i in range(n)))
 
 
 def _det_laplace(M):

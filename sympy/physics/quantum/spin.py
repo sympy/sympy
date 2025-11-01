@@ -1,4 +1,4 @@
-"""Quantum mechanical angular momemtum."""
+"""Quantum mechanical angular momentum."""
 
 from sympy.concrete.summations import Sum
 from sympy.core.add import Add
@@ -1247,15 +1247,15 @@ class JzKet(SpinState, Ket):
         >>> from sympy.physics.quantum.tensorproduct import TensorProduct
         >>> j1,m1,j2,m2 = symbols('j1 m1 j2 m2')
         >>> TensorProduct(JzKet(1,0), JzKet(1,1))
-        |1,0>x|1,1>
+        |1,0>|1,1>
         >>> TensorProduct(JzKet(j1,m1), JzKet(j2,m2))
-        |j1,m1>x|j2,m2>
+        |j1,m1>|j2,m2>
 
     A TensorProduct can be rewritten, in which case the eigenstates that make
     up the tensor product is rewritten to the new basis:
 
         >>> TensorProduct(JzKet(1,1),JxKet(1,1)).rewrite('Jz')
-        |1,1>x|1,-1>/2 + sqrt(2)*|1,1>x|1,0>/2 + |1,1>x|1,1>/2
+        |1,1>|1,-1>/2 + sqrt(2)*|1,1>|1,0>/2 + |1,1>|1,1>/2
 
     The represent method for TensorProduct's gives the vector representation of
     the state. Note that the state in the product basis is the equivalent of the
@@ -1725,7 +1725,7 @@ class JzKetCoupled(CoupledSpinState, Ket):
     state. This is done by passing coupled=False to the rewrite function:
 
         >>> JzKetCoupled(1, 0, (1, 1)).rewrite('Jz', coupled=False)
-        -sqrt(2)*|1,-1>x|1,1>/2 + sqrt(2)*|1,1>x|1,-1>/2
+        -sqrt(2)*|1,-1>|1,1>/2 + sqrt(2)*|1,1>|1,-1>/2
 
     Get the vector representation of a state in terms of the basis elements
     of the Jx operator:
@@ -2015,35 +2015,35 @@ def uncouple(expr, jn=None, jcoupling_list=None):
         >>> from sympy.physics.quantum.spin import JzKetCoupled, uncouple
         >>> from sympy import S
         >>> uncouple(JzKetCoupled(1, 0, (S(1)/2, S(1)/2)))
-        sqrt(2)*|1/2,-1/2>x|1/2,1/2>/2 + sqrt(2)*|1/2,1/2>x|1/2,-1/2>/2
+        sqrt(2)*|1/2,-1/2>|1/2,1/2>/2 + sqrt(2)*|1/2,1/2>|1/2,-1/2>/2
 
     Perform the same calculation using a SpinState state:
 
         >>> from sympy.physics.quantum.spin import JzKet
         >>> uncouple(JzKet(1, 0), (S(1)/2, S(1)/2))
-        sqrt(2)*|1/2,-1/2>x|1/2,1/2>/2 + sqrt(2)*|1/2,1/2>x|1/2,-1/2>/2
+        sqrt(2)*|1/2,-1/2>|1/2,1/2>/2 + sqrt(2)*|1/2,1/2>|1/2,-1/2>/2
 
     Uncouple a numerical state of three coupled spaces using a CoupledSpinState state:
 
         >>> uncouple(JzKetCoupled(1, 1, (1, 1, 1), ((1,3,1),(1,2,1)) ))
-        |1,-1>x|1,1>x|1,1>/2 - |1,0>x|1,0>x|1,1>/2 + |1,1>x|1,0>x|1,0>/2 - |1,1>x|1,1>x|1,-1>/2
+        |1,-1>|1,1>|1,1>/2 - |1,0>|1,0>|1,1>/2 + |1,1>|1,0>|1,0>/2 - |1,1>|1,1>|1,-1>/2
 
     Perform the same calculation using a SpinState state:
 
         >>> uncouple(JzKet(1, 1), (1, 1, 1), ((1,3,1),(1,2,1)) )
-        |1,-1>x|1,1>x|1,1>/2 - |1,0>x|1,0>x|1,1>/2 + |1,1>x|1,0>x|1,0>/2 - |1,1>x|1,1>x|1,-1>/2
+        |1,-1>|1,1>|1,1>/2 - |1,0>|1,0>|1,1>/2 + |1,1>|1,0>|1,0>/2 - |1,1>|1,1>|1,-1>/2
 
     Uncouple a symbolic state using a CoupledSpinState state:
 
         >>> from sympy import symbols
         >>> j,m,j1,j2 = symbols('j m j1 j2')
         >>> uncouple(JzKetCoupled(j, m, (j1, j2)))
-        Sum(CG(j1, m1, j2, m2, j, m)*|j1,m1>x|j2,m2>, (m1, -j1, j1), (m2, -j2, j2))
+        Sum(CG(j1, m1, j2, m2, j, m)*|j1,m1>|j2,m2>, (m1, -j1, j1), (m2, -j2, j2))
 
     Perform the same calculation using a SpinState state
 
         >>> uncouple(JzKet(j, m), (j1, j2))
-        Sum(CG(j1, m1, j2, m2, j, m)*|j1,m1>x|j2,m2>, (m1, -j1, j1), (m2, -j2, j2))
+        Sum(CG(j1, m1, j2, m2, j, m)*|j1,m1>|j2,m2>, (m1, -j1, j1), (m2, -j2, j2))
 
     """
     a = expr.atoms(SpinState)

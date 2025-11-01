@@ -1468,9 +1468,7 @@ class airyai(AiryBase):
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
-            elif arg is S.Infinity:
-                return S.Zero
-            elif arg is S.NegativeInfinity:
+            elif arg is S.Infinity or arg is S.NegativeInfinity:
                 return S.Zero
             elif arg.is_zero:
                 return S.One / (3**Rational(2, 3) * gamma(Rational(2, 3)))

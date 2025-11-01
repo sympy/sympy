@@ -386,7 +386,8 @@ EVALUATED_FACTORIAL_EXPRESSION_PAIRS = [
     (r"(x + 1)!", factorial(x + 1)),
     (r"(x!)!", factorial(factorial(x))),
     (r"x!!!", factorial(factorial(factorial(x)))),
-    (r"5!7!", factorial(5) * factorial(7))
+    (r"5!7!", factorial(5) * factorial(7)),
+    (r"24! \times 24!", factorial(24) * factorial(24))
 ]
 
 UNEVALUATED_SUM_EXPRESSION_PAIRS = [
@@ -869,3 +870,10 @@ def test_matrix_expressions():
 
     for latex_str, sympy_expr in EVALUATED_MATRIX_EXPRESSION_PAIRS:
         assert parse_latex_lark(latex_str) == sympy_expr, latex_str
+
+def test_latex_cases_environment_error():
+    from sympy.parsing.latex import parse_latex, LaTeXParsingError
+    from sympy.testing.pytest import raises
+    latex_string = r"\begin{cases} x=1 \\ y=2 \end{cases}"
+    with raises(LaTeXParsingError, match="The 'cases' environment is not currently supported"):
+        parse_latex(latex_string)

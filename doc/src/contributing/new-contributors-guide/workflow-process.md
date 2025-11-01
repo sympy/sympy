@@ -21,7 +21,7 @@ pull request, or even before committing a change.
   checks](workflow-process-code-quality) pass.**
 
   ```bash
-  ./bin/test quality
+  python bin/test quality
   flake8 sympy/
   ```
 
@@ -37,7 +37,7 @@ pull request, or even before committing a change.
 
 - [ ] **Make sure all tests pass.** [You may want to run a relevant subset of
   the test suite locally](workflow-process-run-tests) before committing (e.g.,
-  `./bin/test solvers`). When you open a pull request, all tests will be run
+  `python bin/test solvers`). When you open a pull request, all tests will be run
   on CI. The CI must be all green before a PR can be merged.
 
 - [ ] **[Write good commit messages](workflow-process-commit-messages).**
@@ -165,7 +165,7 @@ are some code quality checks that will run automatically on the CI once you
 create a pull request, but you can also run them locally with
 
 ```
-./bin/test quality
+python bin/test quality
 flake8 sympy/
 ```
 
@@ -304,13 +304,13 @@ directly as well if you prefer.
 Run all tests by using the command:
 
 ```bash
-$ ./bin/test
+$ python bin/test
 ```
 
 To run tests for a specific file, use:
 
 ```bash
-$ ./bin/test test_basic
+$ python bin/test test_basic
 ```
 
 Where `test_basic` is from file `sympy/core/basic.py`.
@@ -318,15 +318,15 @@ Where `test_basic` is from file `sympy/core/basic.py`.
 To run tests for modules, use:
 
 ```bash
-$ ./bin/test /core /utilities
+$ python bin/test /core /utilities
 ```
 
 This will run tests for the `core` and `utilities` modules.
 
-Similary, run quality tests with:
+Similarly, run quality tests with:
 
 ```bash
-$ ./bin/test code_quality
+$ python bin/test code_quality
 ```
 
 ## Commit the changes

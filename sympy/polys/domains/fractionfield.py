@@ -1,13 +1,24 @@
 """Implementation of :class:`FractionField` class. """
 
+from __future__ import annotations
 
+from typing import Generic, TYPE_CHECKING
+
+from sympy.polys.domains.domain import Er
 from sympy.polys.domains.compositedomain import CompositeDomain
 from sympy.polys.domains.field import Field
 from sympy.polys.polyerrors import CoercionFailed, GeneratorsError
 from sympy.utilities import public
 
+
+if TYPE_CHECKING:
+    from typing import TypeIs
+    from sympy.polys.domains.domain import Domain
+    from sympy.polys.fields import FracField, FracElement
+
+
 @public
-class FractionField(Field, CompositeDomain):
+class FractionField(Field, CompositeDomain, Generic[Er]):
     """A class for representing multivariate rational function fields. """
 
     is_FractionField = is_Frac = True
@@ -15,15 +26,15 @@ class FractionField(Field, CompositeDomain):
     has_assoc_Ring = True
     has_assoc_Field = True
 
-    def __init__(self, domain_or_field, symbols=None, order=None):
+    def __init__(self, domain_or_field: FracField[Er] | Domain[Er], symbols=None, order=None):
         from sympy.polys.fields import FracField
 
         if isinstance(domain_or_field, FracField) and symbols is None and order is None:
             field = domain_or_field
         else:
-            field = FracField(symbols, domain_or_field, order)
+            field = FracField(symbols, domain_or_field, order) # type: ignore
 
-        self.field = field
+        self.field: FracField[Er] = field
         self.dtype = field.dtype
 
         self.gens = field.gens
@@ -36,6 +47,10 @@ class FractionField(Field, CompositeDomain):
 
     def new(self, element):
         return self.field.field_new(element)
+
+    def of_type(self, element) -> TypeIs[FracElement[Er]]:
+        """Check if ``a`` is of type ``dtype``. """
+        return self.field.is_element(element)
 
     @property
     def zero(self):
@@ -53,13 +68,13 @@ class FractionField(Field, CompositeDomain):
         return str(self.domain) + '(' + ','.join(map(str, self.symbols)) + ')'
 
     def __hash__(self):
-        return hash((self.__class__.__name__, self.dtype.field, self.domain, self.symbols))
+        return hash((self.__class__.__name__, self.field, self.domain, self.symbols))
 
     def __eq__(self, other):
         """Returns ``True`` if two domains are equivalent. """
-        return isinstance(other, FractionField) and \
-            (self.dtype.field, self.domain, self.symbols) ==\
-            (other.dtype.field, other.domain, other.symbols)
+        if not isinstance(other, FractionField):
+            return NotImplemented
+        return self.field == other.field
 
     def to_sympy(self, a):
         """Convert ``a`` to a SymPy object. """

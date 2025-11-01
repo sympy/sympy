@@ -142,6 +142,17 @@ def check_matrix_delimiters(latex_str):
                    f"{eellipsis}")
             raise LaTeXParsingError(err)
 
+def check_cases_env(latex_str):
+    """
+    Raises LaTeXParsingError if the cases environment is used.
+    """
+    if r"\begin{cases}" in latex_str:
+        raise LaTeXParsingError(
+            "The 'cases' environment is not currently supported by parse_latex. \n"
+            "If you're trying to parse a piecewise function or a block of expressions, \n"
+            "consider breaking them into separate parse_latex calls."
+        )
+
 __doctest_requires__ = {('parse_latex',): ['antlr4', 'lark']}
 
 
@@ -188,6 +199,8 @@ def parse_latex(s, strict=False, backend="antlr"):
     0.693147180559945
     """
 
+    check_cases_env(s)
+
     check_matrix_delimiters(s)
 
     if backend == "antlr":
@@ -201,4 +214,5 @@ def parse_latex(s, strict=False, backend="antlr"):
         return parse_latex_lark(s)
     else:
         raise NotImplementedError(f"Using the '{backend}' backend in the LaTeX" \
-                                   " parser is not supported.")
+                                   " parser is not supported, backend must be one of" \
+                                   " ('antlr', 'lark')")

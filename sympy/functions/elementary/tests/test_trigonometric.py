@@ -1080,7 +1080,7 @@ def test_atan():
     assert atan.nargs == FiniteSet(1)
     assert atan(oo) == pi/2
     assert atan(-oo) == -pi/2
-    assert atan(zoo) == AccumBounds(-pi/2, pi/2)
+    assert unchanged(atan, zoo)
 
     assert atan(0) == 0
     assert atan(1) == pi/4
@@ -1545,14 +1545,6 @@ def test_real_imag():
         assert cos(a).as_real_imag(deep=deep) == (cos(a), 0)
         assert tan(a).as_real_imag(deep=deep) == (tan(a), 0)
         assert cot(a).as_real_imag(deep=deep) == (cot(a), 0)
-
-
-@XFAIL
-def test_sin_cos_with_infinity():
-    # Test for issue 5196
-    # https://github.com/sympy/sympy/issues/5196
-    assert sin(oo) is S.NaN
-    assert cos(oo) is S.NaN
 
 
 @slow

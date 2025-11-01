@@ -451,19 +451,19 @@ class NegativeBinomialDistribution(SingleDiscreteDistribution):
         r = self.r
         p = self.p
 
-        return binomial(k + r - 1, k) * (1 - p)**r * p**k
+        return binomial(k + r - 1, k) * (1 - p)**k * p**r
 
     def _characteristic_function(self, t):
         r = self.r
         p = self.p
 
-        return ((1 - p) / (1 - p * exp(I*t)))**r
+        return (p / (1 - (1 - p) * exp(I*t)))**r
 
     def _moment_generating_function(self, t):
         r = self.r
         p = self.p
 
-        return ((1 - p) / (1 - p * exp(t)))**r
+        return (p / (1 - (1 - p) * exp(t)))**r
 
 def NegativeBinomial(name, r, p):
     r"""
@@ -475,13 +475,15 @@ def NegativeBinomial(name, r, p):
     The density of the Negative Binomial distribution is given by
 
     .. math::
-        f(k) := \binom{k + r - 1}{k} (1 - p)^r p^k
+        f(k) := \binom{k + r - 1}{k} (1 - p)^k p^r
 
     Parameters
     ==========
 
     r : A positive value
+        Number of successes until the experiment is stopped.
     p : A value between 0 and 1
+        Probability of success.
 
     Returns
     =======
@@ -495,19 +497,19 @@ def NegativeBinomial(name, r, p):
     >>> from sympy import Symbol, S
 
     >>> r = 5
-    >>> p = S.One / 5
+    >>> p = S.One / 3
     >>> z = Symbol("z")
 
     >>> X = NegativeBinomial("x", r, p)
 
     >>> density(X)(z)
-    1024*binomial(z + 4, z)/(3125*5**z)
+    (2/3)**z*binomial(z + 4, z)/243
 
     >>> E(X)
-    5/4
+    10
 
     >>> variance(X)
-    25/16
+    30
 
     References
     ==========

@@ -511,7 +511,7 @@ class AugmentedAssignment(AssignmentBase):
        Symbol for binary operation being applied in the assignment, such as "+",
        "*", etc.
     """
-    binop = None  # type: str
+    binop: str | None
 
     @property
     def op(self):
@@ -1890,6 +1890,41 @@ class FunctionCall(Token, Expr):
 
     _construct_name = String
     _construct_function_args = staticmethod(lambda args: Tuple(*args))
+
+
+class KeywordFunctionCall(FunctionCall):
+    """ Represents a call to a function with keyword arguments in the code.
+
+    Parameters
+    ==========
+
+    name : str
+    function_args : Tuple
+    keyword_args : dict
+        Dictionary mapping parameter names to their values
+
+    Examples
+    ========
+
+    >>> from sympy.codegen.ast import KeywordFunctionCall, String
+    >>> from sympy.core.containers import Tuple
+    >>> from sympy import fcode
+    >>> fcall = KeywordFunctionCall(String('reshape'), Tuple(String('array'), String('shape')), {'order': String('order_array')})
+    >>> print(fcode(fcall, source_format='free'))
+    reshape(array, shape, order=order_array)
+
+    """
+    __slots__ = ('keyword_args',)
+    _fields = ('name', 'function_args', 'keyword_args')  # type: ignore
+
+    defaults = {'keyword_args': {}}
+
+    @staticmethod
+    def _construct_keyword_args(kwargs):
+        from sympy.core.containers import Dict
+        if kwargs is None:
+            return Dict({})
+        return Dict(kwargs)
 
 
 class Raise(Token):

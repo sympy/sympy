@@ -66,7 +66,7 @@ class AssumptionKeys:
 
     @memoize_property
     def transcendental(self):
-        from .predicates.sets import TranscendentalPredicate
+        from .handlers.sets import TranscendentalPredicate
         return TranscendentalPredicate()
 
     @memoize_property
@@ -363,6 +363,46 @@ def _extract_all_facts(assump, exprs):
                 facts.add(frozenset(args))
     return CNF(facts)
 
+def _normalize_applied_predicates(expr):
+    # Replace Q.gt(a,b) with Q.lt(b,a)
+    expr = expr.replace(
+        lambda e: hasattr(e, 'function') and e.function == Q.gt,
+        lambda e: Q.lt(e.arguments[1], e.arguments[0])
+    )
+    # Replace Q.ge(a,b) with Q.le(b,a)
+    expr = expr.replace(
+        lambda e: hasattr(e, 'function') and e.function == Q.ge,
+        lambda e: Q.le(e.arguments[1], e.arguments[0])
+    )
+    return expr
+
+def _normalize_relations(expr):
+    def _filter(e):
+        return isinstance(e, (Gt, Ge, Lt, Le, Eq, Ne))
+
+    def _replace(e):
+        a, b = e.args
+        if isinstance(e, Gt):
+            return Q.lt(b, a)
+        elif isinstance(e, Ge):
+            return Q.le(b, a)
+        elif isinstance(e, Lt):
+            return Q.lt(a, b)
+        elif isinstance(e, Le):
+            return Q.le(a, b)
+        elif isinstance(e, Eq):
+            return Q.eq(a, b)
+        elif isinstance(e, Ne):
+            return Q.ne(a, b)
+        return e
+
+    return expr.replace(_filter, _replace)
+
+
+def _normalize_expr(expr):
+    expr = _normalize_relations(expr)
+    expr = _normalize_applied_predicates(expr)
+    return expr
 
 def ask(proposition, assumptions=True, context=global_assumptions):
     """
@@ -467,11 +507,12 @@ def ask(proposition, assumptions=True, context=global_assumptions):
     if isinstance(assumptions, Predicate) or assumptions.kind is not BooleanKind:
         raise TypeError("assumptions must be a valid logical expression")
 
-    binrelpreds = {Eq: Q.eq, Ne: Q.ne, Gt: Q.gt, Lt: Q.lt, Ge: Q.ge, Le: Q.le}
+    # Normalize both proposition and assumptions
+    proposition = _normalize_expr(proposition)
+    assumptions = _normalize_expr(assumptions)
+
     if isinstance(proposition, AppliedPredicate):
         key, args = proposition.function, proposition.arguments
-    elif proposition.func in binrelpreds:
-        key, args = binrelpreds[type(proposition)], proposition.args
     else:
         key, args = Q.is_true, (proposition,)
 
@@ -490,7 +531,7 @@ def ask(proposition, assumptions=True, context=global_assumptions):
 
     # check the satisfiability of given assumptions
     if local_facts.clauses and satisfiable(enc_cnf) is False:
-        raise ValueError("inconsistent assumptions %s" % assumptions)
+        raise ValueError(f"inconsistent assumptions {assumptions}")
 
     # quick computation for single fact
     res = _ask_single_fact(key, local_facts)

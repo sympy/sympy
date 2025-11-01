@@ -598,9 +598,7 @@ class RisingFactorial(CombinatorialFunction):
                                           range(int(k)), 1)
 
                 else:
-                    if x is S.Infinity:
-                        return S.Infinity
-                    elif x is S.NegativeInfinity:
+                    if x is S.Infinity or x is S.NegativeInfinity:
                         return S.Infinity
                     else:
                         if isinstance(x, Poly):
@@ -759,9 +757,7 @@ class FallingFactorial(CombinatorialFunction):
                             return reduce(lambda r, i: r*(x - i),
                                           range(int(k)), 1)
                 else:
-                    if x is S.Infinity:
-                        return S.Infinity
-                    elif x is S.NegativeInfinity:
+                    if x is S.Infinity or x is S.NegativeInfinity:
                         return S.Infinity
                     else:
                         if isinstance(x, Poly):

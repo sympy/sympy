@@ -2265,11 +2265,7 @@ def expr_to_holonomic(func, x=None, x0=0, y0=None, lenics=None, domain=None, ini
 
     # create the lookup table
     global _lookup_table, domain_for_table
-    if not _lookup_table:
-        domain_for_table = domain
-        _lookup_table = {}
-        _create_table(_lookup_table, domain=domain)
-    elif domain != domain_for_table:
+    if not _lookup_table or domain != domain_for_table:
         domain_for_table = domain
         _lookup_table = {}
         _create_table(_lookup_table, domain=domain)

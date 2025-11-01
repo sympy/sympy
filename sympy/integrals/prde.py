@@ -17,7 +17,7 @@ each function for more information.
 import itertools
 from functools import reduce
 
-from sympy.core.intfunc import ilcm
+from sympy.core.intfunc import ilcm, igcd
 from sympy.core import Dummy, Add, Mul, Pow, S
 from sympy.integrals.rde import (order_at, order_at_oo, weak_normalizer,
     bound_degree)
@@ -533,7 +533,7 @@ def param_poly_rischDE(a, b, q, n, DE):
     if a.is_ground:
         # Normalization: a = 1.
         a = a.LC()
-        b, q = b.quo_ground(a), [qi.quo_ground(a) for qi in q]
+        b, q = b.to_field().exquo_ground(a), [qi.to_field().exquo_ground(a) for qi in q]
 
         if not b.is_zero and (DE.case == 'base' or
                 b.degree() > max(0, DE.d.degree() - 1)):
@@ -875,6 +875,31 @@ def parametric_log_deriv_heu(fa, fd, wa, wd, DE, c1=None):
 
     The argument w == Dtheta/theta
     """
+    # Note: ideally the code here should let n = 1 whenever possible, as the
+    # check in special_denom() only succeeds in that case.
+
+    # Special case when f and w are rational numbers (not in the book, but
+    # this fails this heuristic and comes up often enough to add here). In
+    # this case, we can set z = 0.
+    f = fa.as_expr()/fd.as_expr()
+    w = wa.as_expr()/wd.as_expr()
+    if f.is_Rational and w.is_Rational:
+        # solve n*x = m*y in integers, i.e., n=y, m=x (after dividing through
+        # by gcd(x, y))
+        x = f.p*w.q
+        y = w.p*f.q
+        g = igcd(x, y)
+        x //=g
+        y //=g
+        n = y
+        m = x
+        if n == 0:
+            return None
+        if n < 0:
+            n = -n
+            m = -m
+        return (n, m, Poly(1, DE.t))
+
     # TODO: finish writing this and write tests
     c1 = c1 or Dummy('c1')
 
@@ -917,7 +942,7 @@ def parametric_log_deriv_heu(fa, fd, wa, wd, DE, c1=None):
     ln, ls = splitfactor(l, DE)
     z = ls*ln.gcd(ln.diff(DE.t))
 
-    if not z.has(DE.t):
+    if z.degree(DE.t) < 1:
         # TODO: We treat this as 'no solution', until the structure
         # theorem version of parametric_log_deriv is implemented.
         return None

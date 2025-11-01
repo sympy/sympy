@@ -249,7 +249,7 @@ def mr(n, bases):
     from sympy.polys.domains import ZZ
 
     n = as_int(n)
-    if n < 2:
+    if n < 2 or (n > 2 and n % 2 == 0):
         return False
     # remove powers of 2 from n-1 (= t * 2**s)
     s = bit_scan1(n - 1)
@@ -591,9 +591,9 @@ def is_mersenne_prime(n):
         return False
     result = _lucas_lehmer_primality_test(p)
     if result:
-        raise ValueError(filldedent('''
-            This Mersenne Prime, 2^%s - 1, should
-            be added to SymPy's known values.''' % p))
+        raise ValueError(filldedent(f'''
+            This Mersenne Prime, 2^{p} - 1, should
+            be added to SymPy's known values.'''))
     return result
 
 

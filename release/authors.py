@@ -30,8 +30,7 @@ Thanks to everyone who contributed to this release!
     authors_text += '\n'.join(authors_lines)
 
     # Output to file and to screen
-    with open(outdir / 'authors.txt', 'w') as authorsfile:
-        authorsfile.write(authors_text)
+    Path(outdir / 'authors.txt').write_text(authors_text)
 
     print()
     print(blue("Here are the authors to put at the bottom of the release notes."))

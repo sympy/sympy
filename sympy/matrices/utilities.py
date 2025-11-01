@@ -1,3 +1,11 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, overload
+
+if TYPE_CHECKING:
+    from typing import Literal
+    from sympy.core.expr import Expr
+
 from contextlib import contextmanager
 from threading import local
 
@@ -20,8 +28,12 @@ def dotprodsimp(x):
     finally:
         _dotprodsimp_state.state = old
 
+@overload
+def _dotprodsimp(expr: Expr, withsimp: Literal[False] = False) -> Expr: ...
+@overload
+def _dotprodsimp(expr: Expr, withsimp: Literal[True]) -> tuple[Expr, bool]: ...
 
-def _dotprodsimp(expr, withsimp=False):
+def _dotprodsimp(expr: Expr, withsimp: bool = False) -> Expr | tuple[Expr, bool]:
     """Wrapper for simplify.dotprodsimp to avoid circular imports."""
     from sympy.simplify.simplify import dotprodsimp as dps
     return dps(expr, withsimp=withsimp)
@@ -55,7 +67,7 @@ def _get_intermediate_simp_bool(default=False, dotprodsimp=None):
     return _get_intermediate_simp(default, False, True, dotprodsimp)
 
 
-def _iszero(x):
+def _iszero(x: Expr) -> bool | None:
     """Returns True if x is zero."""
     return getattr(x, 'is_zero', None)
 

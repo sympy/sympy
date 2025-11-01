@@ -8,8 +8,8 @@ from sympy import (
     ImmutableSparseMatrix, Integer, KroneckerDelta, MatPow, Matrix,
     MatrixSymbol, Max, Min, MutableDenseMatrix, MutableSparseMatrix, Poly, Pow,
     PurePoly, Q, Quaternion, Rational, RootOf, S, SparseMatrix, Symbol, Tuple,
-    Wild, banded, casoratian, cos, diag, diff, exp, expand, eye, hessian,
-    integrate, log, matrix_multiply_elementwise, nan, ones, oo, pi, randMatrix,
+    Wild, banded, casoratian, cos, diag, diff, exp, expand, eye, floor, hessian,
+    integrate, log, matrix_multiply_elementwise, nan, ones, oo, zoo, pi, randMatrix,
     rot_axis1, rot_axis2, rot_axis3, rot_ccw_axis1, rot_ccw_axis2,
     rot_ccw_axis3, signsimp, simplify, sin, sqrt, sstr, symbols, sympify, tan,
     trigsimp, wronskian, zeros, cancel)
@@ -663,13 +663,16 @@ def test_diagonal():
     s = SparseMatrix(3, 3, {(1, 1): 1})
     assert type(s.diagonal()) == type(s)
     assert type(m) != type(s)
-    raises(ValueError, lambda: m.diagonal(3))
-    raises(ValueError, lambda: m.diagonal(-3))
+    assert m.diagonal(3)  == Matrix(1, 0, [])
+    assert m.diagonal(-3) == Matrix(1, 0, [])
     raises(ValueError, lambda: m.diagonal(pi))
     M = ones(2, 3)
     assert banded({i: list(M.diagonal(i))
         for i in range(1-M.rows, M.cols)}) == M
 
+    #https://github.com/sympy/sympy/issues/28067
+    x = Matrix([])
+    assert x.diagonal() == Matrix(1, 0, [])
 
 def test_jordan_block():
     assert Matrix.jordan_block(3, 2) == Matrix.jordan_block(3, eigenvalue=2) \
@@ -999,11 +1002,32 @@ def test_multiplication():
     assert c[1, 0] == 3*5
     assert c[1, 1] == 0
 
+    c = Matrix([oo])
+    assert c * 0 == Matrix([nan])
+    assert 0 * c == Matrix([nan])
+
+    c = Matrix([[oo, 0], [5, oo]])
+    assert c * 0 == Matrix([[nan, 0], [0, nan]])
+    assert 0 * c == Matrix([[nan, 0], [0, nan]])
+
     M = Matrix([[oo, 0], [0, oo]])
     assert M ** 2 == M
 
     M = Matrix([[oo, oo], [0, 0]])
     assert M ** 2 == Matrix([[nan, nan], [nan, nan]])
+
+    M = Matrix([[0]])
+    assert M * oo == Matrix([[nan]])
+    assert oo * M == Matrix([[nan]])
+
+    M = Matrix([[5, 0], [0, oo]])
+    assert M * zoo == Matrix([[zoo, nan], [nan, zoo]])
+
+    M = Matrix([0, 1, 2])
+    assert M * 3 == Matrix([0, 3, 6])
+
+    M = Matrix([0, 1, zoo])
+    assert M/0 == Matrix([nan, zoo, zoo])
 
     # https://github.com/sympy/sympy/issues/22353
     A = Matrix(ones(3, 1))
@@ -3788,3 +3812,8 @@ def test_issue_23276():
     assert integrate(M, (x, 0, 1), (y, 0, 1)) == Matrix([
         [S.Half],
         [S.Half]])
+
+
+def test_issue_27225():
+    # https://github.com/sympy/sympy/issues/27225
+    raises(TypeError, lambda : floor(Matrix([1, 1, 0])))

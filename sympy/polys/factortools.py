@@ -508,8 +508,8 @@ def dup_cyclotomic_p(f, K, irreducible=False):
     for i in range(n - 1, -1, -2):
         h.insert(0, f[i])
 
-    g = dup_sqr(dup_strip(g), K)
-    h = dup_sqr(dup_strip(h), K)
+    g = dup_sqr(dup_strip(g, K), K)
+    h = dup_sqr(dup_strip(h, K), K)
 
     F = dup_sub(g, dup_lshift(h, 1, K), K)
 
@@ -1090,9 +1090,9 @@ def dmp_zz_wang(f, u, K, mod=None, seed=None):
         else:
             mod += eez_mod_step
 
-    s_norm, s_arg, i = None, 0, 0
+    s_norm, s_arg = None, 0
 
-    for s, _, _, _, _ in configs:
+    for i, (s, _, _, _, _) in enumerate(configs):
         _s_norm = dup_max_norm(s, K)
 
         if s_norm is not None:
@@ -1101,8 +1101,6 @@ def dmp_zz_wang(f, u, K, mod=None, seed=None):
                 s_arg = i
         else:
             s_norm = _s_norm
-
-        i += 1
 
     _, cs, E, H, A = configs[s_arg]
     orig_f = f
@@ -1527,7 +1525,7 @@ def dup_factor_list_include(f, K):
     coeff, factors = dup_factor_list(f, K)
 
     if not factors:
-        return [(dup_strip([coeff]), 1)]
+        return [(dup_strip([coeff], K), 1)]
     else:
         g = dup_mul_ground(factors[0][0], coeff, K)
         return [(g, factors[0][1])] + factors[1:]
@@ -1618,7 +1616,7 @@ def dmp_factor_list_include(f, u, K):
     coeff, factors = dmp_factor_list(f, u, K)
 
     if not factors:
-        return [(dmp_ground(coeff, u), 1)]
+        return [(dmp_ground(coeff, u, K), 1)]
     else:
         g = dmp_mul_ground(factors[0][0], coeff, u, K)
         return [(g, factors[0][1])] + factors[1:]

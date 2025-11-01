@@ -20,11 +20,11 @@ def parse_autolev(autolev_code, include_numeric):
         raise ImportError("Autolev parsing requires the antlr4 Python package,"
                           " provided by pip (antlr4-python3-runtime)"
                           " conda (antlr-python-runtime), version 4.11")
-    try:
-        l = autolev_code.readlines()
-        input_stream = antlr4.InputStream("".join(l))
-    except Exception:
-        input_stream = antlr4.InputStream(autolev_code)
+
+    if not isinstance(autolev_code, str):
+        autolev_code = "".join(autolev_code.readlines())
+
+    input_stream = antlr4.InputStream(autolev_code)
 
     if AutolevListener:
         from ._listener_autolev_antlr import MyListener

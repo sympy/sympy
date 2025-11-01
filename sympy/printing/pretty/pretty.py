@@ -993,6 +993,19 @@ class PrettyPrinter(Printer):
         else:
             return self._print(1)/self._print(expr.den)
 
+    def _print_DiscreteTransferFunction(self, expr):
+        if not expr.num == 1:
+            res = Mul(expr.num, Pow(expr.den, -1, evaluate=False),
+                      evaluate=False)
+            result = self._print_Mul(res)
+        else:
+            result =  self._print(1)/self._print(expr.den)
+
+        result = prettyForm(\
+            *result.right(f" [st: {expr.sampling_time}]"))
+        return result
+
+
     def _print_Series(self, expr):
         args = list(expr.args)
         for i, a in enumerate(expr.args):
@@ -1101,9 +1114,16 @@ class PrettyPrinter(Printer):
     def _print_TransferFunctionMatrix(self, expr):
         mat = self._print(expr._expr_mat)
         mat.baseline = mat.height() - 1
-        subscript = greek_unicode['tau'] if self._use_unicode else r'{t}'
+        if expr.sampling_time == 0:
+            subscript = greek_unicode['tau'] if self._use_unicode else r'{t}'
+        else:
+            subscript = r'{k}'
         mat = prettyForm(*mat.right(subscript))
-        return mat
+
+        if expr.sampling_time == 0:
+            return mat
+
+        return prettyForm(*mat.below(f"[st: {expr.sampling_time}]"))
 
     def _print_StateSpace(self, expr):
         from sympy.matrices.expressions.blockmatrix import BlockMatrix
@@ -1113,6 +1133,16 @@ class PrettyPrinter(Printer):
         D = expr._D
         mat = BlockMatrix([[A, B], [C, D]])
         return self._print(mat.blocks)
+
+    def _print_DiscreteStateSpace(self, expr):
+        from sympy.matrices.expressions.blockmatrix import BlockMatrix
+        A = expr._A
+        B = expr._B
+        C = expr._C
+        D = expr._D
+        mat = BlockMatrix([[A, B], [C, D]])
+        mat: stringPict = self._print(mat)
+        return prettyForm(*mat.below(f"\n[st: {expr.sampling_time}]"))
 
     def _print_BasisDependent(self, expr):
         from sympy.vector import Vector
@@ -1250,7 +1280,7 @@ class PrettyPrinter(Printer):
         return self._print(out_expr)
 
     def _printer_tensor_indices(self, name, indices, index_map={}):
-        center = stringPict(name)
+        center = stringPict(pretty_symbol(name))
         top = stringPict(" "*center.width())
         bot = stringPict(" "*center.width())
 

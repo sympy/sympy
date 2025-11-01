@@ -796,7 +796,7 @@ def gcdex_diophantine(a, b, c):
     """
     # Extended Euclidean Algorithm (Diophantine Version) pg. 13
     # TODO: This should go in densetools.py.
-    # XXX: Bettter name?
+    # XXX: Better name?
 
     s, g = a.half_gcdex(b)
     s *= c.exquo(g)  # Inexact division means c is not in (a, b)
@@ -1509,7 +1509,13 @@ def integrate_hyperexponential_polynomial(p, DE, z):
             except NonElementaryIntegralException:
                 b = False
             else:
-                qa = qa*vd + va*Poly(t1**i)*qd
+                # q += v*t**i
+                if i > 0:
+                    ti = Poly(t1**i, t1)
+                else:
+                    ti = Poly(z**-i, z)
+
+                qa = qa*vd + va*ti*qd
                 qd *= vd
 
     return (qa, qd, b)
@@ -1534,7 +1540,7 @@ def integrate_hyperexponential(a, d, DE, z=None, conds='piecewise'):
     """
     # XXX: a and d must be canceled, or this might return incorrect results
     z = z or Dummy("z")
-    s = list(zip(reversed(DE.T), reversed([f(DE.x) for f in DE.Tfuncs])))
+    s = [(z, DE.t**-1)] + list(zip(reversed(DE.T), reversed([f(DE.x) for f in DE.Tfuncs])))
 
     g1, h, r = hermite_reduce(a, d, DE)
     g2, b = residue_reduce(h[0], h[1], DE, z=z)

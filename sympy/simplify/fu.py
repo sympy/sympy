@@ -1,6 +1,7 @@
 from collections import defaultdict
 
 from sympy.core.add import Add
+from sympy.core.cache import cacheit
 from sympy.core.expr import Expr
 from sympy.core.exprtools import Factors, gcd_terms, factor_terms
 from sympy.core.function import expand_mul
@@ -653,10 +654,6 @@ def TR10i(rv):
     2*sqrt(2)*x*sin(x + pi/6)
 
     """
-    global _ROOT2, _ROOT3, _invROOT3
-    if _ROOT2 is None:
-        _roots()
-
     def f(rv):
         if not rv.is_Add:
             return rv
@@ -740,7 +737,7 @@ def TR10i(rv):
             # that have the right ratio
             args = []
             for a in byrad:
-                for b in [_ROOT3*a, _invROOT3]:
+                for b in [_ROOT3()*a, _invROOT3()]:
                     if b in byrad:
                         for i in range(len(byrad[a])):
                             if byrad[a][i] is None:
@@ -1718,11 +1715,19 @@ fufuncs = '''
 FU = dict(list(zip(fufuncs, list(map(locals().get, fufuncs)))))
 
 
-def _roots():
-    global _ROOT2, _ROOT3, _invROOT3
-    _ROOT2, _ROOT3 = sqrt(2), sqrt(3)
-    _invROOT3 = 1/_ROOT3
-_ROOT2 = None
+@cacheit
+def _ROOT2():
+    return sqrt(2)
+
+
+@cacheit
+def _ROOT3():
+    return sqrt(3)
+
+
+@cacheit
+def _invROOT3():
+    return 1/sqrt(3)
 
 
 def trig_split(a, b, two=False):
@@ -1775,10 +1780,6 @@ def trig_split(a, b, two=False):
     >>> trig_split(cos(x)*cos(y), sin(x)*sin(y))
     >>> trig_split(-sqrt(6)*cos(x), sqrt(2)*sin(x)*sin(y), two=True)
     """
-    global _ROOT2, _ROOT3, _invROOT3
-    if _ROOT2 is None:
-        _roots()
-
     a, b = [Factors(i) for i in (a, b)]
     ua, ub = a.normal(b)
     gcd = a.gcd(b).as_expr()
@@ -1897,12 +1898,12 @@ def trig_split(a, b, two=False):
         if not cob:
             cob = S.One
         if coa is cob:
-            gcd *= _ROOT2
+            gcd *= _ROOT2()
             return gcd, n1, n2, c.args[0], pi/4, False
-        elif coa/cob == _ROOT3:
+        elif coa/cob == _ROOT3():
             gcd *= 2*cob
             return gcd, n1, n2, c.args[0], pi/3, False
-        elif coa/cob == _invROOT3:
+        elif coa/cob == _invROOT3():
             gcd *= 2*coa
             return gcd, n1, n2, c.args[0], pi/6, False
 

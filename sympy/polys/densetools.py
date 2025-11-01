@@ -1,21 +1,26 @@
 """Advanced tools for dense recursive polynomials in ``K[x]`` or ``K[X]``. """
 
+from __future__ import annotations
 
+from sympy.polys.domains.domain import Domain, Er, Eg, Ef, Eeuclid
+from sympy.polys.domains.field import Field
 from sympy.polys.densearith import (
     dup_add_term, dmp_add_term,
-    dup_lshift,
+    dup_lshift, dup_rshift,
     dup_add, dmp_add,
     dup_sub, dmp_sub,
-    dup_mul, dmp_mul,
+    dup_mul, dmp_mul, dup_series_mul,
     dup_sqr,
     dup_div,
+    dup_series_pow,
     dup_rem, dmp_rem,
     dup_mul_ground, dmp_mul_ground,
     dup_quo_ground, dmp_quo_ground,
     dup_exquo_ground, dmp_exquo_ground,
 )
 from sympy.polys.densebasic import (
-    dup_strip, dmp_strip,
+    dup, dmp, _dup, _dmp, _dmp2, _ground_dmp,
+    dup_strip, dmp_strip, dup_truncate,
     dup_convert, dmp_convert,
     dup_degree, dmp_degree,
     dmp_to_dict,
@@ -25,18 +30,27 @@ from sympy.polys.densebasic import (
     dmp_zero, dmp_ground,
     dmp_zero_p,
     dup_to_raw_dict, dup_from_raw_dict,
+    dmp_to_raw_dict,
     dmp_zeros,
     dmp_include,
+    dup_nth,
 )
 from sympy.polys.polyerrors import (
     MultivariatePolynomialError,
     DomainError
 )
 
-from math import ceil as _ceil, log2 as _log2
+from math import ceil as _ceil, log2 as _log2, sqrt
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from sympy.external.gmpy import MPQ
+    from sympy.polys.domains.ringextension import RingExtension
+    from sympy.polys.domains.algebraicfield import AlgebraicField, Alg
 
 
-def dup_integrate(f, m, K):
+def dup_integrate(f: dup[Ef], m: int, K: Field[Ef]) -> dup[Ef]:
     """
     Computes the indefinite integral of ``f`` in ``K[x]``.
 
@@ -68,7 +82,7 @@ def dup_integrate(f, m, K):
     return g
 
 
-def dmp_integrate(f, m, u, K):
+def dmp_integrate(f: dmp[Ef], m: int, u: int, K: Field[Ef]) -> dmp[Ef]:
     """
     Computes the indefinite integral of ``f`` in ``x_0`` in ``K[X]``.
 
@@ -85,7 +99,7 @@ def dmp_integrate(f, m, u, K):
 
     """
     if not u:
-        return dup_integrate(f, m, K)
+        return _dmp(dup_integrate(_dup(f), m, K))
 
     if m <= 0 or dmp_zero_p(f, u):
         return f
@@ -103,17 +117,17 @@ def dmp_integrate(f, m, u, K):
     return g
 
 
-def _rec_integrate_in(g, m, v, i, j, K):
+def _rec_integrate_in(g: dmp[Ef], m: int, v: int, i: int, j: int, K: Field[Ef]) -> dmp[Ef]:
     """Recursive helper for :func:`dmp_integrate_in`."""
     if i == j:
         return dmp_integrate(g, m, v, K)
 
     w, i = v - 1, i + 1
 
-    return dmp_strip([ _rec_integrate_in(c, m, w, i, j, K) for c in g ], v)
+    return dmp_strip([ _rec_integrate_in(c, m, w, i, j, K) for c in g ], v, K)
 
 
-def dmp_integrate_in(f, m, j, u, K):
+def dmp_integrate_in(f: dmp[Ef], m: int, j: int, u: int, K: Field[Ef]) -> dmp[Ef]:
     """
     Computes the indefinite integral of ``f`` in ``x_j`` in ``K[X]``.
 
@@ -135,7 +149,7 @@ def dmp_integrate_in(f, m, j, u, K):
     return _rec_integrate_in(f, m, u, 0, j, K)
 
 
-def dup_diff(f, m, K):
+def dup_diff(f: dup[Er], m: int, K: Domain[Er]) -> dup[Er]:
     """
     ``m``-th order derivative of a polynomial in ``K[x]``.
 
@@ -159,7 +173,7 @@ def dup_diff(f, m, K):
     if n < m:
         return []
 
-    deriv = []
+    deriv: list[Er] = []
 
     if m == 1:
         for coeff in f[:-m]:
@@ -175,10 +189,10 @@ def dup_diff(f, m, K):
             deriv.append(K(k)*coeff)
             n -= 1
 
-    return dup_strip(deriv)
+    return dup_strip(deriv, K)
 
 
-def dmp_diff(f, m, u, K):
+def dmp_diff(f: dmp[Er], m: int, u: int, K: Domain[Er]) -> dmp[Er]:
     """
     ``m``-th order derivative in ``x_0`` of a polynomial in ``K[X]``.
 
@@ -197,16 +211,17 @@ def dmp_diff(f, m, u, K):
 
     """
     if not u:
-        return dup_diff(f, m, K)
+        return _dmp(dup_diff(_dup(f), m, K))
     if m <= 0:
         return f
 
     n = dmp_degree(f, u)
 
     if n < m:
-        return dmp_zero(u)
+        return dmp_zero(u, K)
 
-    deriv, v = [], u - 1
+    deriv: list[dmp[Er]] = []
+    v = u - 1
 
     if m == 1:
         for coeff in f[:-m]:
@@ -222,20 +237,20 @@ def dmp_diff(f, m, u, K):
             deriv.append(dmp_mul_ground(coeff, K(k), v, K))
             n -= 1
 
-    return dmp_strip(deriv, u)
+    return dmp_strip(deriv, u, K)
 
 
-def _rec_diff_in(g, m, v, i, j, K):
+def _rec_diff_in(g: dmp[Er], m: int, v: int, i: int, j: int, K: Domain[Er]) -> dmp[Er]:
     """Recursive helper for :func:`dmp_diff_in`."""
     if i == j:
         return dmp_diff(g, m, v, K)
 
     w, i = v - 1, i + 1
 
-    return dmp_strip([ _rec_diff_in(c, m, w, i, j, K) for c in g ], v)
+    return dmp_strip([ _rec_diff_in(c, m, w, i, j, K) for c in g ], v, K)
 
 
-def dmp_diff_in(f, m, j, u, K):
+def dmp_diff_in(f: dmp[Er], m: int, j: int, u: int, K: Domain[Er]) -> dmp[Er]:
     """
     ``m``-th order derivative in ``x_j`` of a polynomial in ``K[X]``.
 
@@ -259,7 +274,7 @@ def dmp_diff_in(f, m, j, u, K):
     return _rec_diff_in(f, m, u, 0, j, K)
 
 
-def dup_eval(f, a, K):
+def dup_eval(f: dup[Er], a: Er, K: Domain[Er]) -> Er:
     """
     Evaluate a polynomial at ``x = a`` in ``K[x]`` using Horner scheme.
 
@@ -285,7 +300,7 @@ def dup_eval(f, a, K):
     return result
 
 
-def dmp_eval(f, a, u, K):
+def dmp_eval(f: dmp[Er], a: Er, u: int, K: Domain[Er]) -> dmp[Er]:
     """
     Evaluate a polynomial at ``x_0 = a`` in ``K[X]`` using the Horner scheme.
 
@@ -300,7 +315,7 @@ def dmp_eval(f, a, u, K):
 
     """
     if not u:
-        return dup_eval(f, a, K)
+        return _ground_dmp(dup_eval(_dup(f), a, K))
 
     if not a:
         return dmp_TC(f, K)
@@ -314,17 +329,17 @@ def dmp_eval(f, a, u, K):
     return result
 
 
-def _rec_eval_in(g, a, v, i, j, K):
+def _rec_eval_in(g: dmp[Er], a: Er, v: int, i: int, j: int, K: Domain[Er]) -> dmp[Er]:
     """Recursive helper for :func:`dmp_eval_in`."""
     if i == j:
         return dmp_eval(g, a, v, K)
 
     v, i = v - 1, i + 1
 
-    return dmp_strip([ _rec_eval_in(c, a, v, i, j, K) for c in g ], v)
+    return dmp_strip([ _rec_eval_in(c, a, v, i, j, K) for c in g ], v, K)
 
 
-def dmp_eval_in(f, a, j, u, K):
+def dmp_eval_in(f: dmp[Er], a: Er, j: int, u: int, K: Domain[Er]) -> dmp[Er]:
     """
     Evaluate a polynomial at ``x_j = a`` in ``K[X]`` using the Horner scheme.
 
@@ -348,20 +363,20 @@ def dmp_eval_in(f, a, j, u, K):
     return _rec_eval_in(f, a, u, 0, j, K)
 
 
-def _rec_eval_tail(g, i, A, u, K):
+def _rec_eval_tail(g: dmp[Er], i: int, A: list[Er], u: int, K: Domain[Er]) -> dmp[Er]:
     """Recursive helper for :func:`dmp_eval_tail`."""
     if i == u:
-        return dup_eval(g, A[-1], K)
+        return _ground_dmp(dup_eval(_dup(g), A[-1], K))
     else:
         h = [ _rec_eval_tail(c, i + 1, A, u, K) for c in g ]
 
         if i < u - len(A) + 1:
             return h
         else:
-            return dup_eval(h, A[-u + i - 1], K)
+            return _ground_dmp(dup_eval(_dup(h), A[-u + i - 1], K))
 
 
-def dmp_eval_tail(f, A, u, K):
+def dmp_eval_tail(f: dmp[Er], A: list[Er], u: int, K: Domain[Er]) -> dmp[Er]:
     """
     Evaluate a polynomial at ``x_j = a_j, ...`` in ``K[X]``.
 
@@ -383,27 +398,27 @@ def dmp_eval_tail(f, A, u, K):
         return f
 
     if dmp_zero_p(f, u):
-        return dmp_zero(u - len(A))
+        return dmp_zero(u - len(A), K)
 
     e = _rec_eval_tail(f, 0, A, u, K)
 
     if u == len(A) - 1:
         return e
     else:
-        return dmp_strip(e, u - len(A))
+        return dmp_strip(e, u - len(A), K)
 
 
-def _rec_diff_eval(g, m, a, v, i, j, K):
+def _rec_diff_eval(g: dmp[Er], m: int, a: Er, v: int, i: int, j: int, K: Domain[Er]) -> dmp[Er]:
     """Recursive helper for :func:`dmp_diff_eval`."""
     if i == j:
         return dmp_eval(dmp_diff(g, m, v, K), a, v, K)
 
     v, i = v - 1, i + 1
 
-    return dmp_strip([ _rec_diff_eval(c, m, a, v, i, j, K) for c in g ], v)
+    return dmp_strip([ _rec_diff_eval(c, m, a, v, i, j, K) for c in g ], v, K)
 
 
-def dmp_diff_eval_in(f, m, a, j, u, K):
+def dmp_diff_eval_in(f: dmp[Er], m: int, a: Er, j: int, u: int, K: Domain[Er]) -> dmp[Er]:
     """
     Differentiate and evaluate a polynomial in ``x_j`` at ``a`` in ``K[X]``.
 
@@ -429,7 +444,7 @@ def dmp_diff_eval_in(f, m, a, j, u, K):
     return _rec_diff_eval(f, m, a, u, 0, j, K)
 
 
-def dup_trunc(f, p, K):
+def dup_trunc(f: dup[Eeuclid], p: Eeuclid, K: Domain[Eeuclid]) -> dup[Eeuclid]:
     """
     Reduce a ``K[x]`` polynomial modulo a constant ``p`` in ``K``.
 
@@ -444,26 +459,26 @@ def dup_trunc(f, p, K):
 
     """
     if K.is_ZZ:
-        g = []
+        g: list[Eeuclid] = []
 
         for c in f:
             c = c % p
 
-            if c > p // 2:
+            if c > p // 2: # type: ignore
                 g.append(c - p)
             else:
                 g.append(c)
     elif K.is_FiniteField:
         # XXX: python-flint's nmod does not support %
-        pi = int(p)
-        g = [ K(int(c) % pi) for c in f ]
+        pi = int(p) # type: ignore
+        g = [ K(int(c) % pi) for c in f ] # type: ignore
     else:
         g = [ c % p for c in f ]
 
-    return dup_strip(g)
+    return dup_strip(g, K)
 
 
-def dmp_trunc(f, p, u, K):
+def dmp_trunc(f: dmp[Er], p: dmp[Er], u: int, K: Domain[Er]) -> dmp[Er]:
     """
     Reduce a ``K[X]`` polynomial modulo a polynomial ``p`` in ``K[Y]``.
 
@@ -480,10 +495,10 @@ def dmp_trunc(f, p, u, K):
     11*x**2 + 11*x + 5
 
     """
-    return dmp_strip([ dmp_rem(c, p, u - 1, K) for c in f ], u)
+    return dmp_strip([ dmp_rem(c, p, u - 1, K) for c in f ], u, K)
 
 
-def dmp_ground_trunc(f, p, u, K):
+def dmp_ground_trunc(f: dmp[Eeuclid], p: Eeuclid, u: int, K: Domain[Eeuclid]) -> dmp[Eeuclid]:
     """
     Reduce a ``K[X]`` polynomial modulo a constant ``p`` in ``K``.
 
@@ -500,14 +515,14 @@ def dmp_ground_trunc(f, p, u, K):
 
     """
     if not u:
-        return dup_trunc(f, p, K)
+        return _dmp(dup_trunc(_dup(f), p, K))
 
     v = u - 1
 
-    return dmp_strip([ dmp_ground_trunc(c, p, v, K) for c in f ], u)
+    return dmp_strip([ dmp_ground_trunc(c, p, v, K) for c in f ], u, K)
 
 
-def dup_monic(f, K):
+def dup_monic(f: dup[Ef], K: Field[Ef]) -> dup[Ef]:
     """
     Divide all coefficients by ``LC(f)`` in ``K[x]``.
 
@@ -536,7 +551,7 @@ def dup_monic(f, K):
         return dup_exquo_ground(f, lc, K)
 
 
-def dmp_ground_monic(f, u, K):
+def dmp_ground_monic(f: dmp[Ef], u: int, K: Field[Ef]) -> dmp[Ef]:
     """
     Divide all coefficients by ``LC(f)`` in ``K[X]``.
 
@@ -559,7 +574,7 @@ def dmp_ground_monic(f, u, K):
 
     """
     if not u:
-        return dup_monic(f, K)
+        return _dmp(dup_monic(_dup(f), K))
 
     if dmp_zero_p(f, u):
         return f
@@ -572,7 +587,7 @@ def dmp_ground_monic(f, u, K):
         return dmp_exquo_ground(f, lc, u, K)
 
 
-def dup_content(f, K):
+def dup_content(f: dup[Er], K: Domain[Er]) -> Er:
     """
     Compute the GCD of coefficients of ``f`` in ``K[x]``.
 
@@ -614,7 +629,7 @@ def dup_content(f, K):
     return cont
 
 
-def dmp_ground_content(f, u, K):
+def dmp_ground_content(f: dmp[Er], u: int, K: Domain[Er]) -> Er:
     """
     Compute the GCD of coefficients of ``f`` in ``K[X]``.
 
@@ -639,7 +654,7 @@ def dmp_ground_content(f, u, K):
     from sympy.polys.domains import QQ
 
     if not u:
-        return dup_content(f, K)
+        return dup_content(_dup(f), K)
 
     if dmp_zero_p(f, u):
         return K.zero
@@ -659,7 +674,7 @@ def dmp_ground_content(f, u, K):
     return cont
 
 
-def dup_primitive(f, K):
+def dup_primitive(f: dup[Er], K: Domain[Er]) -> tuple[Er, dup[Er]]:
     """
     Compute content and the primitive form of ``f`` in ``K[x]``.
 
@@ -692,7 +707,7 @@ def dup_primitive(f, K):
         return cont, dup_quo_ground(f, cont, K)
 
 
-def dmp_ground_primitive(f, u, K):
+def dmp_ground_primitive(f: dmp[Er], u: int, K: Domain[Er]) -> tuple[Er, dmp[Er]]:
     """
     Compute content and the primitive form of ``f`` in ``K[X]``.
 
@@ -715,7 +730,8 @@ def dmp_ground_primitive(f, u, K):
 
     """
     if not u:
-        return dup_primitive(f, K)
+        cont, fu = dup_primitive(_dup(f), K)
+        return cont, _dmp(fu)
 
     if dmp_zero_p(f, u):
         return K.zero, f
@@ -728,7 +744,7 @@ def dmp_ground_primitive(f, u, K):
         return cont, dmp_quo_ground(f, cont, u, K)
 
 
-def dup_extract(f, g, K):
+def dup_extract(f: dup[Er], g: dup[Er], K: Domain[Er]) -> tuple[Er, dup[Er], dup[Er]]:
     """
     Extract common content from a pair of polynomials in ``K[x]``.
 
@@ -754,7 +770,9 @@ def dup_extract(f, g, K):
     return gcd, f, g
 
 
-def dmp_ground_extract(f, g, u, K):
+def dmp_ground_extract(
+    f: dmp[Er], g: dmp[Er], u: int, K: Domain[Er]
+) -> tuple[Er, dmp[Er], dmp[Er]]:
     """
     Extract common content from a pair of polynomials in ``K[X]``.
 
@@ -780,7 +798,7 @@ def dmp_ground_extract(f, g, u, K):
     return gcd, f, g
 
 
-def dup_real_imag(f, K):
+def dup_real_imag(f: dup[Er], K: Domain[Er]) -> tuple[dmp[Er], dmp[Er]]:
     """
     Find ``f1`` and ``f2``, such that ``f(x+I*y) = f1(x,y) + f2(x,y)*I``.
 
@@ -802,20 +820,20 @@ def dup_real_imag(f, K):
     if not K.is_ZZ and not K.is_QQ:
         raise DomainError("computing real and imaginary parts is not supported over %s" % K)
 
-    f1 = dmp_zero(1)
-    f2 = dmp_zero(1)
+    f1 = dmp_zero(1, K)
+    f2 = dmp_zero(1, K)
 
     if not f:
         return f1, f2
 
-    g = [[[K.one, K.zero]], [[K.one], []]]
-    h = dmp_ground(f[0], 2)
+    g = _dmp2([[[K.one, K.zero]], [[K.one], []]])
+    h = dmp_ground(f[0], 2, K)
 
     for c in f[1:]:
         h = dmp_mul(h, g, 2, K)
-        h = dmp_add_term(h, dmp_ground(c, 1), 0, 2, K)
+        h = dmp_add_term(h, dmp_ground(c, 1, K), 0, 2, K)
 
-    H = dup_to_raw_dict(h)
+    H = dmp_to_raw_dict(h, 2, K)
 
     for k, h in H.items():
         m = k % 4
@@ -832,7 +850,7 @@ def dup_real_imag(f, K):
     return f1, f2
 
 
-def dup_mirror(f, K):
+def dup_mirror(f: dup[Er], K: Domain[Er]) -> dup[Er]:
     """
     Evaluate efficiently the composition ``f(-x)`` in ``K[x]``.
 
@@ -854,7 +872,7 @@ def dup_mirror(f, K):
     return f
 
 
-def dup_scale(f, a, K):
+def dup_scale(f: dup[Er], a: Er, K: Domain[Er]) -> dup[Er]:
     """
     Evaluate efficiently composition ``f(a*x)`` in ``K[x]``.
 
@@ -876,7 +894,7 @@ def dup_scale(f, a, K):
     return f
 
 
-def dup_shift(f, a, K):
+def dup_shift(f: dup[Er], a: Er, K: Domain[Er]) -> dup[Er]:
     """
     Evaluate efficiently Taylor shift ``f(x + a)`` in ``K[x]``.
 
@@ -899,7 +917,7 @@ def dup_shift(f, a, K):
     return f
 
 
-def dmp_shift(f, a, u, K):
+def dmp_shift(f: dmp[Er], a: list[Er], u: int, K: Domain[Er]) -> dmp[Er]:
     """
     Evaluate efficiently Taylor shift ``f(X + A)`` in ``K[X]``.
 
@@ -919,25 +937,30 @@ def dmp_shift(f, a, u, K):
     x**2*y + 2*x**2 + 4*x*y + 11*x + 7*y + 22
     """
     if not u:
-        return dup_shift(f, a[0], K)
+        return _dmp(dup_shift(_dup(f), a[0], K))
 
     if dmp_zero_p(f, u):
         return f
 
     a0, a1 = a[0], a[1:]
 
-    f = [ dmp_shift(c, a1, u-1, K) for c in f ]
-    n = len(f) - 1
+    if any(a1):
+        f = [ dmp_shift(c, a1, u-1, K) for c in f ]
+    else:
+        f = list(f)
 
-    for i in range(n, 0, -1):
-        for j in range(0, i):
-            afj = dmp_mul_ground(f[j], a0, u-1, K)
-            f[j + 1] = dmp_add(f[j + 1], afj, u-1, K)
+    if a0:
+        n = len(f) - 1
 
-    return f
+        for i in range(n, 0, -1):
+            for j in range(0, i):
+                afj = dmp_mul_ground(f[j], a0, u-1, K)
+                f[j + 1] = dmp_add(f[j + 1], afj, u-1, K)
+
+    return dmp_strip(f, u, K)
 
 
-def dup_transform(f, p, q, K):
+def dup_transform(f: dup[Er], p: dup[Er], q: dup[Er], K: Domain[Er]) -> dup[Er]:
     """
     Evaluate functional transformation ``q**n * f(p/q)`` in ``K[x]``.
 
@@ -968,7 +991,7 @@ def dup_transform(f, p, q, K):
     return h
 
 
-def dup_compose(f, g, K):
+def dup_compose(f: dup[Er], g: dup[Er], K: Domain[Er]) -> dup[Er]:
     """
     Evaluate functional composition ``f(g)`` in ``K[x]``.
 
@@ -983,7 +1006,7 @@ def dup_compose(f, g, K):
 
     """
     if len(g) <= 1:
-        return dup_strip([dup_eval(f, dup_LC(g, K), K)])
+        return dup_strip([dup_eval(f, dup_LC(g, K), K)], K)
 
     if not f:
         return []
@@ -997,7 +1020,7 @@ def dup_compose(f, g, K):
     return h
 
 
-def dmp_compose(f, g, u, K):
+def dmp_compose(f: dmp[Er], g: dmp[Er], u: int, K: Domain[Er]) -> dmp[Er]:
     """
     Evaluate functional composition ``f(g)`` in ``K[X]``.
 
@@ -1012,7 +1035,7 @@ def dmp_compose(f, g, u, K):
 
     """
     if not u:
-        return dup_compose(f, g, K)
+        return _dmp(dup_compose(_dup(f), _dup(g), K))
 
     if dmp_zero_p(f, u):
         return f
@@ -1026,12 +1049,61 @@ def dmp_compose(f, g, u, K):
     return h
 
 
-def _dup_right_decompose(f, s, K):
+def _dup_series_compose(f: dup[Er], g: dup[Er], n: int, K: Domain[Er]) -> dup[Er]:
+    """
+    Helper function for dup_series_compose using divide and conquer.
+    """
+    if len(f) == 1:
+        return [f[0]]
+
+    m = len(f) // 2
+    f_high = f[:-m]
+    f_low = f[-m:]
+
+    comp0 = _dup_series_compose(f_low, g, n, K)
+    comp1 = _dup_series_compose(f_high, g, n, K)
+
+    g_power = dup_series_pow(g, m, n, K)
+    high_term = dup_series_mul(comp1, g_power, n, K)
+
+    result = dup_add(high_term, comp0, K)
+    return dup_truncate(result, n, K)
+
+
+def dup_series_compose(f: dup[Er], g: dup[Er], n: int, K: Domain[Er]) -> dup[Er]:
+    """
+    Compute ``f(g(x))`` mod ``x**n`` using divide and conquer composition.
+
+    Examples
+    ========
+    >>> from sympy import ZZ
+    >>> from sympy.polys.densetools import dup_series_compose
+    >>> from sympy.polys.densebasic import dup_from_list, dup_print
+    >>> f = dup_from_list([1, 1, 1], ZZ)
+    >>> g = dup_from_list([1, 1], ZZ)
+    >>> comp = dup_series_compose(f, g, 3, ZZ)
+    >>> dup_print(comp, 'x')
+    x**2 + 3*x + 3
+
+    """
+    f = dup_truncate(f, n, K)
+    g = dup_truncate(g, n, K)
+
+    if len(g) <= 1:
+        return dup_strip([dup_eval(f, dup_LC(g, K), K)], K)
+
+    if not f:
+        return []
+
+    return _dup_series_compose(f, g, n, K)
+
+
+def _dup_right_decompose(f: dup[Er], s: int, K: Domain[Er]) -> dup[Er]:
     """Helper function for :func:`_dup_decompose`."""
     n = len(f) - 1
     lc = dup_LC(f, K)
 
-    f = dup_to_raw_dict(f)
+    fd: dict[int, Er] = dup_to_raw_dict(f, K)
     g = { s: K.one }
 
     r = n // s
@@ -1040,13 +1112,13 @@ def _dup_right_decompose(f, s, K):
         coeff = K.zero
 
         for j in range(0, i):
-            if not n + j - i in f:
+            if not n + j - i in fd:
                 continue
 
             if not s - j in g:
                 continue
 
-            fc, gc = f[n + j - i], g[s - j]
+            fc, gc = fd[n + j - i], g[s - j]
             coeff += (i - r*j)*fc*gc
 
         g[s - i] = K.quo(coeff, i*r*lc)
@@ -1054,9 +1126,10 @@ def _dup_right_decompose(f, s, K):
     return dup_from_raw_dict(g, K)
 
 
-def _dup_left_decompose(f, h, K):
+def _dup_left_decompose(f: dup[Er], h: dup[Er], K: Domain[Er]) -> dup[Er] | None:
     """Helper function for :func:`_dup_decompose`."""
-    g, i = {}, 0
+    g: dict[int, Er] = {}
+    i = 0
 
     while f:
         q, r = dup_div(f, h, K)
@@ -1070,7 +1143,7 @@ def _dup_left_decompose(f, h, K):
     return dup_from_raw_dict(g, K)
 
 
-def _dup_decompose(f, K):
+def _dup_decompose(f: dup[Er], K: Domain[Er]) -> tuple[dup[Er], dup[Er]] | None:
     """Helper function for :func:`dup_decompose`."""
     df = len(f) - 1
 
@@ -1079,17 +1152,15 @@ def _dup_decompose(f, K):
             continue
 
         h = _dup_right_decompose(f, s, K)
+        g = _dup_left_decompose(f, h, K)
 
-        if h is not None:
-            g = _dup_left_decompose(f, h, K)
-
-            if g is not None:
-                return g, h
+        if g is not None:
+            return g, h
 
     return None
 
 
-def dup_decompose(f, K):
+def dup_decompose(f: dup[Er], K: Domain[Er]) -> list[dup[Er]]:
     """
     Computes functional decomposition of ``f`` in ``K[x]``.
 
@@ -1125,7 +1196,7 @@ def dup_decompose(f, K):
     .. [1] [Kozen89]_
 
     """
-    F = []
+    F: list[dup[Er]] = []
 
     while True:
         result = _dup_decompose(f, K)
@@ -1139,7 +1210,11 @@ def dup_decompose(f, K):
     return [f] + F
 
 
-def dmp_alg_inject(f, u, K):
+def dmp_alg_inject(
+    f: dmp[Er],
+    u: int,
+    K: RingExtension[Er, Eg],
+) -> tuple[dmp[Eg], int, Domain[Eg]]:
     """
     Convert polynomial from ``K(a)[X]`` to ``K[a,X]``.
 
@@ -1161,36 +1236,14 @@ def dmp_alg_inject(f, u, K):
     QQ
 
     """
-    if K.is_GaussianRing or K.is_GaussianField:
-        return _dmp_alg_inject_gaussian(f, u, K)
-    elif K.is_Algebraic:
-        return _dmp_alg_inject_alg(f, u, K)
-    else:
+    if not (K.is_Algebraic or K.is_GaussianRing or K.is_GaussianField):
         raise DomainError('computation can be done only in an algebraic domain')
 
+    fd: dict[tuple[int, ...], Er] = dmp_to_dict(f, u, K)
+    h: dict[tuple[int, ...], Eg] = {}
 
-def _dmp_alg_inject_gaussian(f, u, K):
-    """Helper function for :func:`dmp_alg_inject`."""
-    f, h = dmp_to_dict(f, u), {}
-
-    for f_monom, g in f.items():
-        x, y = g.x, g.y
-        if x:
-            h[(0,) + f_monom] = x
-        if y:
-            h[(1,) + f_monom] = y
-
-    F = dmp_from_dict(h, u + 1, K.dom)
-
-    return F, u + 1, K.dom
-
-
-def _dmp_alg_inject_alg(f, u, K):
-    """Helper function for :func:`dmp_alg_inject`."""
-    f, h = dmp_to_dict(f, u), {}
-
-    for f_monom, g in f.items():
-        for g_monom, c in g.to_dict().items():
+    for f_monom, g in fd.items():
+        for g_monom, c in K.to_dict(g).items():
             h[g_monom + f_monom] = c
 
     F = dmp_from_dict(h, u + 1, K.dom)
@@ -1198,7 +1251,7 @@ def _dmp_alg_inject_alg(f, u, K):
     return F, u + 1, K.dom
 
 
-def dmp_lift(f, u, K):
+def dmp_lift(f: dmp[Alg], u: int, K: AlgebraicField) -> dmp[MPQ]:
     """
     Convert algebraic coefficients to integers in ``K[X]``.
 
@@ -1225,7 +1278,7 @@ def dmp_lift(f, u, K):
     p_a = K.mod.to_list()
     P_A = dmp_include(p_a, list(range(1, v + 1)), 0, K2)
 
-    return dmp_resultant(F, P_A, v, K2)
+    return dmp_resultant(F, P_A, v, K2) # type: ignore
 
 
 def dup_sign_variations(f, K):
@@ -1382,7 +1435,7 @@ def dmp_clear_denoms(f, u, K0, K1=None, convert=False):
         return common, dmp_convert(f, u, K0, K1)
 
 
-def dup_revert(f, n, K):
+def dup_revert(f: dup[Er], n: int, K: Domain[Er]) -> dup[Er]:
     """
     Compute ``f**(-1)`` mod ``x**n`` using Newton iteration.
 
@@ -1416,7 +1469,7 @@ def dup_revert(f, n, K):
     return g
 
 
-def dmp_revert(f, g, u, K):
+def dmp_revert(f: dmp[Er], n: int, u: int, K: Domain[Er]) -> dmp[Er]:
     """
     Compute ``f**(-1)`` mod ``x**n`` using Newton iteration.
 
@@ -1428,6 +1481,114 @@ def dmp_revert(f, g, u, K):
 
     """
     if not u:
-        return dup_revert(f, g, K)
+        return _dmp(dup_revert(_dup(f), n, K))
     else:
-        raise MultivariatePolynomialError(f, g)
+        raise MultivariatePolynomialError(f, n)
+
+
+def _dup_series_reversion_small(f: dup[Er], n: int, K: Domain[Er]) -> dup[Er]:
+    """
+    Helper function for :func:`dup_series_reversion`.
+    ``n`` should be less than or equal to 4.
+    """
+    if n < 1 or n > 4:
+        raise ValueError("Only n <= 4 supported")
+
+    f = dup_truncate(f, n, K)
+    f = [K.zero] * (4 - len(f)) + f
+    a, b, c, d = f
+
+    cinv = K.revert(c)
+    g = [K.zero] * n
+
+    if n >= 2:
+        g[-2] = cinv
+
+    if n >= 3:
+        g[-3] = -b * cinv ** 3
+
+    if n >= 4:
+        g[-4] = (2 * b ** 2 - a * c) * cinv ** 5
+
+    return dup_strip(g, K)
+
+
+def dup_series_reversion(f: dup[Er], n: int, K: Domain[Er]) -> dup[Er]:
+    r"""
+    Computes the compositional inverse of f using fast lagrange inversion.
+    The result is computed modulo x**n.
+
+    Examples
+    ========
+    >>> from sympy.polys import QQ
+    >>> from sympy.polys.densetools import dup_series_reversion
+    >>> from sympy.polys.densebasic import dup_from_list, dup_print
+    >>> f = dup_from_list([QQ(1, 3), QQ(1, 4), QQ(1, 5), QQ(1, 6), QQ(1, 7), 0], QQ)
+    >>> rev = dup_series_reversion(f, 7, QQ)
+    >>> dup_print(rev, 'x')
+    5528444159/32400*x**6 + 467419477/16200*x**5 - 789929/216*x**4 + 40817/90*x**3 - 343/6*x**2 + 7*x
+
+    References
+    ==========
+
+    .. [1] Johansson, F. A fast algorithm for reversion of power series.
+        https://arxiv.org/abs/1403.4676
+
+    """
+    if not f:
+        return []
+
+    if f[-1] != K.zero:
+        raise ValueError("f must have zero constant term")
+    if n<=4:
+        return _dup_series_reversion_small(f, n, K)
+
+    # Step 0: h = x / f mod x**(n-1)
+    f1 = dup_rshift(f, 1, K)
+    f1_inv = dup_revert(f1, n, K)
+    h = dup_truncate(f1_inv, n, K)
+
+    m = _ceil(sqrt(n - 1))
+
+    # Precompute powers of h: h, h^2, ..., h^m mod x**(n-1)
+    H = [h]
+    for _ in range(1, m):
+        h_prev = H[-1]
+        h_next = dup_series_mul(h_prev, h, n, K)
+        H.append(h_next)
+
+    # Initialize g with n zeros
+    g = [K.zero] * n
+
+    # First block: compute g[i] for i = 1 to m - 1
+    for i in range(1, m):
+        coeff = dup_nth(H[i-1], i - 1, K)  # coeff = [x**(i-1)](h^i)
+        # (1/i) * [x**(i-1)](h^i)
+        g[-(i + 1)] = K.quo(coeff, K(i))
+
+    # t = h^m
+    t = H[m - 1]
+
+    # Loop over blocks of size m
+    for i in range(m, n, m):
+        # g[i] = (1 / i) * [x**(i-1)](t)
+        coeff = dup_nth(t, i - 1, K)
+        g[-(i + 1)] = K.quo(coeff, K(i))
+
+        # Now fill g[i + j] for 1 <= j < m
+        for j in range(1, m):
+            if i + j >= n:
+                break
+
+            s = K.zero
+            for k in range(0, i + j):
+                c1 = dup_nth(t, k, K)
+                c2 = dup_nth(H[j-1], i + j - k - 1, K)
+                s += c1 * c2
+
+            g[-(i + j + 1)] = K.quo(s, K(i + j))
+
+        # t = t * h^m mod x**(n-1)
+        t = dup_series_mul(t, H[m - 1], n, K)
+
+    return dup_strip(g, K)

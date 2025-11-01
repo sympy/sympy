@@ -160,17 +160,13 @@ def test_simplex():
     assert lpmin(x, [y >= 1, x >= y + z, x >= 0, z >= 0]
         ) == (1, {x: 1, y: 1, z: 0})
 
-    # detect oscillation
-    # o1
     v = x1, x2, x3, x4 = symbols('x1 x2 x3 x4')
     raises(InfeasibleLPError, lambda: lpmin(
         9*x2 - 8*x3 + 3*x4 + 6,
         [5*x2 - 2*x3 <= 0,
         -x1 - 8*x2 + 9*x3 <= -3,
         10*x1 - x2+ 9*x4 <= -4] + [i >= 0 for i in v]))
-    # o2 - equations fed to lpmin are changed into a matrix
-    # system that doesn't oscillate and has the same solution
-    # as below
+
     M = linear_eq_to_matrix
     f = 5*x2 + x3 + 4*x4 - x1
     L = 5*x2 + 2*x3 + 5*x4 - (x1 + 5)
@@ -252,3 +248,17 @@ def test_linprog():
         ) == (-2, [0, 2])
     assert linprog([1, -1], [[1, 1]], [5], bounds={1:(3, None)}
         ) == (-5, [0, 5])
+
+
+def test_28089():
+    s, t = symbols('s t')
+    objective = 5
+    constraints = [t >= 0, Eq(s + t, 1), s + 2 * t <= 0]
+    raises(InfeasibleLPError, lambda: lpmin(objective, constraints))
+
+
+def test_28104():
+    x, y = symbols('x y')
+    val, var = lpmax(0, [x >= 0, y >= 0])
+    assert var[y] is S.Zero
+    assert var[x] is S.Zero

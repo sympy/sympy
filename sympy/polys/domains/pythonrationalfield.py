@@ -14,9 +14,9 @@ class PythonRationalField(RationalField):
     installed. Elements are instances of :ref:`MPQ`.
     """
 
-    dtype = PythonRational
-    zero = dtype(0)
-    one = dtype(1)
+    dtype = PythonRational # type: ignore
+    zero = dtype(0) # type: ignore
+    one = dtype(1) # type: ignore
     alias = 'QQ_python'
 
     def __init__(self):

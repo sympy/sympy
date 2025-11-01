@@ -168,6 +168,7 @@ class LatexPrinter(Printer):
         "max": None,
         "diff_operator": "d",
         "adjoint_style": "dagger",
+        "disable_split_super_sub": False,
     }
 
     def __init__(self, settings=None):
@@ -823,14 +824,18 @@ class LatexPrinter(Printer):
         else:
             tex = r"\frac{%s^{%s}}{%s}" % (diff_symbol, self._print(dim), tex)
 
+        precedence = PRECEDENCE["Mul"]
+        if self._settings['mul_symbol']:
+            # Nudge up the precedence so d/dx (f(x) * g(x)) also gets parenthesized
+            precedence += 1
         if any(i.could_extract_minus_sign() for i in expr.args):
             return r"%s %s" % (tex, self.parenthesize(expr.expr,
-                                                  PRECEDENCE["Mul"],
+                                                  precedence,
                                                   is_neg=True,
                                                   strict=True))
 
         return r"%s %s" % (tex, self.parenthesize(expr.expr,
-                                                  PRECEDENCE["Mul"],
+                                                  precedence,
                                                   is_neg=False,
                                                   strict=True))
 
@@ -1075,7 +1080,14 @@ class LatexPrinter(Printer):
             return tex
 
     def _print_log(self, expr, exp=None):
-        if not self._settings["ln_notation"]:
+        if len(expr.args) == 2:
+            argument = self._print(expr.args[0])
+            base = self._print(expr.args[1])
+            if len(base) == 1:
+                tex = r"\log_%s{\left(%s \right)}" % (base, argument)
+            else:
+                tex = r"\log_{%s}{\left(%s \right)}" % (base, argument)
+        elif not self._settings["ln_notation"]:
             tex = r"\log{\left(%s \right)}" % self._print(expr.args[0])
         else:
             tex = r"\ln{\left(%s \right)}" % self._print(expr.args[0])
@@ -1630,15 +1642,20 @@ class LatexPrinter(Printer):
 
     _print_RandomSymbol = _print_Symbol
 
-    def _deal_with_super_sub(self, string: str, style='plain') -> str:
-        if '{' in string:
-            name, supers, subs = string, [], []
+    def _split_super_sub(self, name: str) -> tuple[str, list[str], list[str]]:
+        if name is None or '{' in name:
+            return (name, [], [])
+        elif self._settings["disable_split_super_sub"]:
+            name, supers, subs = (name.replace('_', '\\_').replace('^', '\\^'), [], [])
         else:
-            name, supers, subs = split_super_sub(string)
+            name, supers, subs = split_super_sub(name)
+        name = translate(name)
+        supers = [translate(sup) for sup in supers]
+        subs = [translate(sub) for sub in subs]
+        return (name, supers, subs)
 
-            name = translate(name)
-            supers = [translate(sup) for sup in supers]
-            subs = [translate(sub) for sub in subs]
+    def _deal_with_super_sub(self, string: str, style='plain') -> str:
+        name, supers, subs = self._split_super_sub(string)
 
         # apply the style only to the name
         if style == 'bold':
@@ -2619,6 +2636,12 @@ class LatexPrinter(Printer):
         num, den = self._print(expr.num), self._print(expr.den)
         return r"\frac{%s}{%s}" % (num, den)
 
+    def _print_DiscreteTransferFunction(self, expr):
+        num, den = self._print(expr.num), self._print(expr.den)
+        sampling_time = self._print(expr.sampling_time)
+        return r"\frac{%s}{%s} \text{ [st: } {%s} \text{]}" % \
+            (num, den, sampling_time)
+
     def _print_Series(self, expr):
         args = list(expr.args)
         parens = lambda x: self.parenthesize(x, precedence_traditional(expr),
@@ -2679,11 +2702,17 @@ class LatexPrinter(Printer):
         inv_mat = self._print(MIMOSeries(expr.sys2, expr.sys1))
         sys1 = self._print(expr.sys1)
         _sign = "+" if expr.sign == -1 else "-"
-        return r"\left(I_{\tau} %s %s\right)^{-1} \cdot %s" % (_sign, inv_mat, sys1)
+        return r"\left(I_{\tau} %s %s\right)^{-1} \cdot %s" % (_sign, inv_mat,
+                                                               sys1)
 
     def _print_TransferFunctionMatrix(self, expr):
         mat = self._print(expr._expr_mat)
-        return r"%s_\tau" % mat
+        if expr.sampling_time == 0:
+            print_mat = r"%s_\tau" % mat
+        else:
+            print_mat = r"\underset{[st:\ {%s}]}{%s_k}" %\
+                        (expr.sampling_time, mat)
+        return print_mat
 
     def _print_DFT(self, expr):
         return r"\text{{{}}}_{{{}}}".format(expr.__class__.__name__, expr.n)
@@ -2802,15 +2831,7 @@ class LatexPrinter(Printer):
             self._print(h.domain), self._print(h.codomain))
 
     def _print_Manifold(self, manifold):
-        string = manifold.name.name
-        if '{' in string:
-            name, supers, subs = string, [], []
-        else:
-            name, supers, subs = split_super_sub(string)
-
-            name = translate(name)
-            supers = [translate(sup) for sup in supers]
-            subs = [translate(sub) for sub in subs]
+        name, supers, subs = self._split_super_sub(manifold.name.name)
 
         name = r'\text{%s}' % name
         if supers:

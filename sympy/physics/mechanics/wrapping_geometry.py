@@ -2,18 +2,20 @@
 
 from abc import ABC, abstractmethod
 
-from sympy import Integer, acos, pi, sqrt, sympify, tan
+from sympy import Integer, acos, pi, sqrt, sympify, tan, cos, sin, Piecewise
 from sympy.core.relational import Eq
 from sympy.functions.elementary.trigonometric import atan2
 from sympy.polys.polytools import cancel
 from sympy.physics.vector import Vector, dot
 from sympy.simplify.simplify import trigsimp
+from sympy.physics.mechanics import Point
 
 
 __all__ = [
     'WrappingGeometryBase',
     'WrappingCylinder',
     'WrappingSphere',
+    'WrappingCone'
 ]
 
 
@@ -32,19 +34,6 @@ class WrappingGeometryBase(ABC):
     @abstractmethod
     def point(cls):
         """The point with which the geometry is associated."""
-        pass
-
-    @abstractmethod
-    def point_on_surface(self, point):
-        """Returns ``True`` if a point is on the geometry's surface.
-
-        Parameters
-        ==========
-        point : Point
-            The point for which it's to be ascertained if it's on the
-            geometry's surface or not.
-
-        """
         pass
 
     @abstractmethod
@@ -160,16 +149,14 @@ class WrappingSphere(WrappingGeometryBase):
         self._point = point
 
     def point_on_surface(self, point):
-        """Returns ``True`` if a point is on the sphere's surface.
+        """Returns a symbolic equality for whether a point is on the sphere's
+        surface.
 
         Parameters
         ==========
 
         point : Point
-            The point for which it's to be ascertained if it's on the sphere's
-            surface or not. This point's position relative to the sphere's
-            center must be a simple expression involving the radius of the
-            sphere, otherwise this check will likely not work.
+            The point for which the expression is to be generated.
 
         """
         point_vector = point.pos_from(self.point)
@@ -177,7 +164,7 @@ class WrappingSphere(WrappingGeometryBase):
             point_radius_squared = dot(point_vector, point_vector)
         else:
             point_radius_squared = point_vector**2
-        return Eq(point_radius_squared, self.radius**2) == True
+        return Eq(point_radius_squared, self.radius**2, evaluate=False)
 
     def geodesic_length(self, point_1, point_2):
         r"""Returns the shortest distance between two points on the sphere's
@@ -234,9 +221,10 @@ class WrappingSphere(WrappingGeometryBase):
         >>> sphere.geodesic_length(p1, p2)
         pi*r/2
 
-        If the ``geodesic_length`` method is passed an argument, the ``Point``
-        that doesn't lie on the sphere's surface then a ``ValueError`` is
-        raised because it's not possible to calculate a value in this case.
+        If the ``geodesic_length`` method is passed an argument that doesn't
+        lie on the sphere's surface then unexpected results may be obtained.
+        It is the user's responsibility to ensure that the points lie on the
+        sphere's surface.
 
         Parameters
         ==========
@@ -247,15 +235,6 @@ class WrappingSphere(WrappingGeometryBase):
             Point to which the geodesic length should be calculated.
 
         """
-        for point in (point_1, point_2):
-            if not self.point_on_surface(point):
-                msg = (
-                    f'Geodesic length cannot be calculated as point {point} '
-                    f'with radius {point.pos_from(self.point).magnitude()} '
-                    f'from the sphere\'s center {self.point} does not lie on '
-                    f'the surface of {self} with radius {self.radius}.'
-                )
-                raise ValueError(msg)
         point_1_vector = point_1.pos_from(self.point).normalize()
         point_2_vector = point_2.pos_from(self.point).normalize()
         central_angle = acos(point_2_vector.dot(point_1_vector))
@@ -400,16 +379,14 @@ class WrappingCylinder(WrappingGeometryBase):
         self._axis = axis.normalize()
 
     def point_on_surface(self, point):
-        """Returns ``True`` if a point is on the cylinder's surface.
+        """Returns a symbolic equality for whether a point is on the cylinder's
+        surface.
 
         Parameters
         ==========
 
         point : Point
-            The point for which it's to be ascertained if it's on the
-            cylinder's surface or not. This point's position relative to the
-            cylinder's axis must be a simple expression involving the radius of
-            the sphere, otherwise this check will likely not work.
+            The point for which the expression is to be generated.
 
         """
         relative_position = point.pos_from(self.point)
@@ -419,7 +396,7 @@ class WrappingCylinder(WrappingGeometryBase):
             point_radius_squared = dot(point_vector, point_vector)
         else:
             point_radius_squared = point_vector**2
-        return Eq(trigsimp(point_radius_squared), self.radius**2) == True
+        return Eq(trigsimp(point_radius_squared), self.radius**2, evaluate=False)
 
     def geodesic_length(self, point_1, point_2):
         """The shortest distance between two points on a geometry's surface.
@@ -476,8 +453,9 @@ class WrappingCylinder(WrappingGeometryBase):
         sqrt(r**2*q(t)**2 + 1)
 
         If the ``geodesic_length`` method is passed an argument ``Point`` that
-        doesn't lie on the sphere's surface then a ``ValueError`` is raised
-        because it's not possible to calculate a value in this case.
+        doesn't lie on the cylinder's surface then unexpected results may occur.
+        It is the user's responsibility to ensure that the points lie on the
+        cylinder's surface.
 
         Parameters
         ==========
@@ -488,17 +466,6 @@ class WrappingCylinder(WrappingGeometryBase):
             Point to which the geodesic length should be calculated.
 
         """
-        for point in (point_1, point_2):
-            if not self.point_on_surface(point):
-                msg = (
-                    f'Geodesic length cannot be calculated as point {point} '
-                    f'with radius {point.pos_from(self.point).magnitude()} '
-                    f'from the cylinder\'s center {self.point} does not lie on '
-                    f'the surface of {self} with radius {self.radius} and axis '
-                    f'{self.axis}.'
-                )
-                raise ValueError(msg)
-
         relative_position = point_2.pos_from(point_1)
         parallel_length = relative_position.dot(self.axis)
 
@@ -580,6 +547,299 @@ class WrappingCylinder(WrappingGeometryBase):
         return (
             f'{self.__class__.__name__}(radius={self.radius}, '
             f'point={self.point}, axis={self.axis})'
+        )
+
+
+class WrappingCone(WrappingGeometryBase):
+    """A solid (infinite) conical object.
+
+    Explanation
+    ===========
+
+    A wrapping geometry that allows for circular arcs to be defined between
+    pairs of points on the surface of a cone. These paths are always geodetic
+    (the shortest possible) in the sense that they become straight lines on
+    the unwrapped conical surface.
+
+    Examples
+    ========
+
+    To create a ``WrappingCone`` instance, a ``Symbol`` denoting its semi-vertical
+    angle, a ``Point`` defining its apex, and a ``Vector`` specifying its axis
+    are needed:
+
+    >>> from sympy import symbols
+    >>> from sympy.physics.mechanics import Point, ReferenceFrame, WrappingCone
+    >>> N = ReferenceFrame('N')
+    >>> alpha = symbols('alpha')
+    >>> pO = Point('pO')
+    >>> ax = N.z
+
+    A cone with semi-vertical angle ``alpha``, apex at ``pO``, and axis aligned
+    with ``N.z`` can be instantiated with:
+
+    >>> WrappingCone(alpha, pO, ax)
+    WrappingCone(alpha=alpha, apex=pO, axis=N.z)
+
+    Parameters
+    ==========
+
+    alpha : Symbol
+        The semi-vertical angle of the cone.
+    apex : Point
+        The tip of the cone where the curved surface meets.
+    axis : Vector
+        The axis along which the cone is aligned.
+
+    See Also
+    ========
+
+    WrappingCylinder
+        Cylindrical geometry where wrapping arcs are geodetic on the cylinder.
+    WrappingSphere
+        Spherical geometry where the wrapping direction is always geodetic.
+
+    """
+    def __init__(self, alpha, apex, axis):
+        """
+        Initializer for ``WrappingCone``.
+
+        Parameters
+        ==========
+
+        alpha: Symbol
+            The semi vertical angle of the cone.
+
+        apex: Point
+            The tip of the cone where the curved surface meets.
+
+        axis: Vector
+            The axis along which the cone is aligned.
+
+        """
+        if alpha.is_number:
+            if alpha == 0:
+                raise ValueError(
+                    "Cone angle alpha must be positive."
+                )
+            if alpha == pi / 2:
+                raise ValueError(
+                    "Cone angle alpha must be less than pi/2."
+                )
+        elif alpha.is_real is False or alpha.is_positive is False:
+            raise ValueError(
+                    "Cone angle alpha must be real and positive."
+                )
+        self._alpha = alpha
+
+        if not isinstance(apex, Point):
+            raise TypeError("The 'apex' must be a Point object.")
+        self._apex = apex
+
+        if not isinstance(axis, Vector):
+            raise TypeError("The 'axis' must be a Vector object.")
+        self._axis = axis.normalize()
+
+    @property
+    def point(self):
+        """This method is implemented as required by WrappingGeometryBase, use WrappingCone.apex instead."""
+        return self._apex
+
+    @property
+    def alpha(self):
+        """The semi vertical angle of the cone."""
+        return self._alpha
+
+    @alpha.setter
+    def alpha(self, alpha):
+        self._alpha = alpha
+
+    @property
+    def apex(self):
+        """The tip of the cone where the curved surface meets."""
+        return self._apex
+
+    @apex.setter
+    def apex(self, apex):
+        self._apex = apex
+
+    @property
+    def axis(self):
+        """The axis along which the cone is aligned."""
+        return self._axis
+
+    @axis.setter
+    def axis(self, axis):
+        self._axis = axis.normalize()
+
+    def point_on_surface(self, point):
+        """
+        Returns a symbolic equality for whether a point is on the cone's
+        surface.
+
+        Parameters
+        ==========
+
+        point : Point
+            The point for which the expression is to be generated.
+        """
+        position = point.pos_from(self.apex)
+        axis_component = position.dot(self.axis) * self.axis
+        radial_component = position - axis_component
+        lhs = radial_component.dot(radial_component)
+        rhs = axis_component.dot(axis_component) * tan(self.alpha) ** 2
+        return Eq(lhs, rhs, evaluate=False)
+
+    def geodesic_length(self, point_1, point_2):
+        """
+        The shortest distance between two points on a conical surface.
+
+        Explanation
+        ===========
+        Computes the geodesic by "unwrapping" the cone into a planar sector
+        and measuring the straight line distance between the corresponding
+        points in that sector.
+
+        Examples
+        ========
+        >>> from sympy import pi, sqrt
+        >>> from sympy.physics.mechanics import Point, ReferenceFrame, WrappingCone
+        >>> N = ReferenceFrame('N')
+        >>> alpha = pi/6
+        >>> apex = Point('O')
+        >>> cone = WrappingCone(alpha, apex, N.z)
+        >>> p1 = Point('A')
+        >>> p1.set_pos(apex, N.x / sqrt(3) + N.z)
+        >>> p2 = Point('B')
+        >>> p2.set_pos(apex, N.y / sqrt(3) + N.z)
+        >>> cone.geodesic_length(p1, p2)
+        sqrt(8/3 - 4*sqrt(2)/3)
+
+        Parameters
+        ==========
+        point_1 : Point
+            Starting point on the cone's surface.
+        point_2 : Point
+            Ending point on the cone's surface.
+        """
+        pos1 = point_1.pos_from(self.apex)
+        pos2 = point_2.pos_from(self.apex)
+        z1 = pos1.dot(self.axis)
+        z2 = pos2.dot(self.axis)
+        s1 = z1 / cos(self.alpha)
+        s2 = z2 / cos(self.alpha)
+        n1 = (pos1 - z1 * self.axis).normalize()
+        n2 = (pos2 - z2 * self.axis).normalize()
+        central = _directional_atan(
+            cancel((n1.cross(n2)).dot(self.axis)),
+            cancel(n1.dot(n2))
+        )
+
+        central = Piecewise((central, central <= pi), (2 * pi - central, True))
+
+        delta_u = central * sin(self.alpha)
+        return sqrt(s1**2 + s2**2 - 2*s1*s2*cos(delta_u))
+
+
+    def geodesic_end_vectors(self, point_1, point_2):
+        """
+        Computes the unit tangent vectors for the geodesic path at its
+        endpoints.
+
+        The tangent vector of the geodesic is found by considering the
+        straight-line path in the unrolled planar sector representation of the
+        cone. This vector is then mapped back to the 3D space at each
+        endpoint.
+        """
+        # Get the position vectors of the points relative to the cone's apex.
+        # All subsequent calculations are performed in the cone's reference frame.
+        pos1 = point_1.pos_from(self.apex)
+        pos2 = point_2.pos_from(self.apex)
+
+        # A unique geodesic cannot be defined between two identical points.
+        if pos1 == pos2:
+            raise ValueError(
+                f'No unique geodesic exists for coincident points {point_1} and {point_2}.'
+            )
+
+        # If one point is the apex, the geodesic is the straight line along the
+        # cone's surface to the other point. The tangent at the apex points
+        # towards the other point, and the tangent at the other point points
+        # away from the apex.
+        if pos1.magnitude() == 0:
+            v = pos2.normalize()
+            return (v, -v)
+        if pos2.magnitude() == 0:
+            v = pos1.normalize()
+            return (-v, v)
+
+        # Project the position vectors onto the cone's axis to get the z-height.
+        z1 = pos1.dot(self.axis)
+        z2 = pos2.dot(self.axis)
+        # Calculate the slant height (distance from apex to point along the
+        # cone's surface). This is R in polar coordinates for the unrolled cone.
+        s1 = z1 / cos(self.alpha)
+        s2 = z2 / cos(self.alpha)
+
+        # Calculate the geodesic length (shortest distance on the surface).
+        # This will be the denominator when normalizing the tangent vectors.
+        L = self.geodesic_length(point_1, point_2)
+
+        # If the points are the same, the tangent vectors are zero vectors.
+        if L == 0:
+            return (Vector(0), Vector(0))
+
+        # Unrolling the cone
+        # Find the unit vectors perpendicular to the cone's axis that point
+        # towards each point's projection on the xy-plane.
+        n1 = (pos1 - z1 * self.axis).normalize()
+        n2 = (pos2 - z2 * self.axis).normalize()
+
+        # Calculate the central angle (theta) between the two points in the
+        # plane perpendicular to the cone's axis.
+        central = _directional_atan(
+            cancel((n1.cross(n2)).dot(self.axis)),
+            cancel(n1.dot(n2))
+        )
+
+        # The shortest path is chosen by ensuring the angle is not reflex.
+        central = Piecewise((central, central <= pi), (2 * pi - central, True))
+
+        # Convert the 3D central angle to the corresponding angle (phi) in the
+        # unrolled 2D planar sector.
+        delta_u = central * sin(self.alpha)
+
+        # At each point, define an orthogonal basis on the tangent plane.
+        # All vectors are expressed in the cone's main reference frame.
+        # g: The generator vector, pointing radially away from the apex.
+        # c: The circumferential vector, tangential to the circular base.
+        g1 = pos1.normalize()
+        c1 = self.axis.cross(n1)
+        g2 = pos2.normalize()
+        c2 = self.axis.cross(n2)
+
+        # In the unrolled 2D plane, the tangent vector is constant. We find its
+        # components in the local polar basis at each point.
+        # v_radial: Component along the generator vector 'g'.
+        # v_circ: Component along the circumferential vector 'c'.
+
+        # Components for v1 (tangent vector at point_1)
+        v1_radial_comp = (s2 * cos(delta_u) - s1) / L
+        v1_circ_comp = (s2 * sin(delta_u)) / L
+        v1 = v1_radial_comp * g1 + v1_circ_comp * c1
+
+        # Components for v2 (tangent vector at point_2)
+        v2_radial_comp = (s1 * cos(delta_u) - s2) / L
+        v2_circ_comp = (-s1 * sin(delta_u)) / L
+        v2 = v2_radial_comp * g2 + v2_circ_comp * c2
+
+        return (v1, v2)
+
+    def __repr__(self):
+        """Representation of a ``WrappingCone``."""
+        return (
+            f'{self.__class__.__name__}(alpha={self.alpha}, '
+            f'apex={self.apex}, axis={self.axis})'
         )
 
 

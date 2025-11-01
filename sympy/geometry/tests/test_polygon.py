@@ -269,7 +269,7 @@ def test_polygon():
     assert t1.exradii[t1.sides[2]] == 5*sqrt(2)/2
 
     # Excenters
-    assert t1.excenters[t1.sides[2]] == Point2D(25*sqrt(2), -5*sqrt(2)/2)
+    assert t1.excenters[t1.sides[2]] == Point2D(5*sqrt(2)/2, -5*sqrt(2)/2)
 
     # Circumcircle
     assert t1.circumcircle.center == Point(2.5, 2.5)
@@ -444,6 +444,12 @@ def test_bisectors():
 def test_incenter():
     assert Triangle(Point(0, 0), Point(1, 0), Point(0, 1)).incenter \
         == Point(1 - sqrt(2)/2, 1 - sqrt(2)/2)
+
+def test_excenters():
+    t = Triangle(Point(0, 0), Point(6, 0), Point(0, 2))
+    assert t.excenters[t.sides[0]] == Point(sqrt(10) + 4, sqrt(10) + 4)
+    assert t.excenters[t.sides[1]] == Point(2 - sqrt(10), -2 + sqrt(10))
+    assert t.excenters[t.sides[2]] == Point(2 + sqrt(10), -sqrt(10) - 2)
 
 def test_inradius():
     assert Triangle(Point(0, 0), Point(4, 0), Point(0, 3)).inradius == 1
@@ -651,7 +657,7 @@ def test_type_of_triangle():
     assert p2.is_scalene() == True
     assert p2.is_equilateral() == False
 
-    # Equilateral triagle
+    # Equilateral triangle
     p3 = Polygon(Point(0, 0), Point(6, 0), Point(3, sqrt(27)))
     assert p3.is_isosceles() == True
     assert p3.is_scalene() == False

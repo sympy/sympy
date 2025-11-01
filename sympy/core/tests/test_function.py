@@ -1452,3 +1452,8 @@ def test_eval_classmethod_check():
         class F(Function):
             def eval(self, x):
                 pass
+
+
+def test_issue_27163():
+    # https://github.com/sympy/sympy/issues/27163
+    raises(TypeError, lambda: Derivative(f, t))

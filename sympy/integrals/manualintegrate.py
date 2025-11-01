@@ -37,9 +37,11 @@ from sympy.core.logic import fuzzy_not
 from sympy.core.mul import Mul
 from sympy.core.numbers import Integer, Number, E
 from sympy.core.power import Pow
-from sympy.core.relational import Eq, Ne, Boolean
+from sympy.core.relational import Eq, Ne
 from sympy.core.singleton import S
 from sympy.core.symbol import Dummy, Symbol, Wild
+from sympy.core.exprtools import factor_terms
+from sympy.core.function import WildFunction
 from sympy.functions.elementary.complexes import Abs
 from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.hyperbolic import (HyperbolicFunction, csch,
@@ -49,7 +51,7 @@ from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import (TrigonometricFunction,
     cos, sin, tan, cot, csc, sec, acos, asin, atan, acot, acsc, asec)
 from sympy.functions.special.delta_functions import Heaviside, DiracDelta
-from sympy.functions.special.error_functions import (erf, erfi, fresnelc,
+from sympy.functions.special.error_functions import (erf, erfc, erfi, fresnelc,
     fresnels, Ci, Chi, Si, Shi, Ei, li)
 from sympy.functions.special.gamma_functions import uppergamma
 from sympy.functions.special.elliptic_integrals import elliptic_e, elliptic_f
@@ -58,11 +60,12 @@ from sympy.functions.special.polynomials import (chebyshevt, chebyshevu,
     OrthogonalPolynomial)
 from sympy.functions.special.zeta_functions import polylog
 from .integrals import Integral
-from sympy.logic.boolalg import And
+from sympy.logic.boolalg import And, Boolean
 from sympy.ntheory.factor_ import primefactors
 from sympy.polys.polytools import degree, lcm_list, gcd_list, Poly
 from sympy.simplify.radsimp import fraction
 from sympy.simplify.simplify import simplify
+from sympy.simplify.powsimp import powsimp
 from sympy.solvers.solvers import solve
 from sympy.strategies.core import switch, do_one, null_safe, condition
 from sympy.utilities.iterables import iterable
@@ -971,6 +974,29 @@ def exp_rule(integral):
         return ExpRule(integrand, symbol, E, integrand.args[0])
 
 
+def powsimp_rule(integral):
+    """
+    Strategy that simplifies the exponent of a power.
+    exp(a*x**2) * exp(b*x) -> exp((a*x**2 + b*x))
+    For example, this is useful for the ErfRule.
+    """
+    integrand, symbol = integral
+    a = Wild('a', exclude=[symbol])
+    b = Wild('b', exclude=[symbol])
+    k = Wild('k', exclude=[symbol])
+
+    match = integrand.match(k**(a*symbol**2) * k**(b*symbol))
+
+    if not match:
+        return
+
+    simplified = powsimp(integrand, combine='exp')
+
+    if simplified != integrand:
+        steps = integral_steps(simplified, symbol)
+        return RewriteRule(integrand, symbol, simplified, steps)
+
+
 def orthogonal_poly_rule(integral):
     orthogonal_poly_classes = {
         jacobi: JacobiRule,
@@ -1066,7 +1092,7 @@ def nested_pow_rule(integral: IntegralInfo):
     a_ = Wild('a', exclude=[x])
     b_ = Wild('b', exclude=[x, 0])
     pattern = a_+b_*x
-    generic_cond = S.true
+    generic_cond: Boolean = S.true
 
     class NoMatch(Exception):
         pass
@@ -1167,7 +1193,7 @@ def inverse_trig_rule(integral: IntegralInfo, degenerate=True):
         step = _add_degenerate_step(non_square_cond, generic_step, square_step)
         if k.is_real and c.is_real:
             # list of ((rule, base_exp, a, sign_a, b, sign_b), condition)
-            rules = []
+            rules: list[tuple[Rule, Boolean]] = []
             for args, cond in (  # don't apply ArccoshRule to x**2-1
                 ((ArcsinRule, k, 1, -c, -1, h), And(k > 0, c < 0)),  # 1-x**2
                 ((ArcsinhRule, k, 1, c, 1, h), And(k > 0, c > 0)),  # 1+x**2
@@ -1206,6 +1232,9 @@ def mul_rule(integral: IntegralInfo):
             return ConstantTimesRule(integrand, symbol, coeff, f, next_step)
 
 
+special_error_functions = (erf, erfc, erfi, fresnelc, fresnels, Ci, Chi, Si, Shi, Ei, li)
+
+
 def _parts_rule(integrand, symbol) -> tuple[Expr, Expr, Expr, Expr, Rule] | None:
     # LIATE rule:
     # log, inverse trig, algebraic, trigonometric, exponential
@@ -1232,8 +1261,9 @@ def _parts_rule(integrand, symbol) -> tuple[Expr, Expr, Expr, Expr, Rule] | None
 
         return pull_out_u_rl
 
-    liate_rules = [pull_out_u(log), pull_out_u(*inverse_trig_functions),
-                   pull_out_algebraic, pull_out_u(sin, cos),
+    liate_rules = [pull_out_u(*special_error_functions), pull_out_u(log),
+                   pull_out_u(*inverse_trig_functions), pull_out_algebraic,
+                   pull_out_u(sin, cos), pull_out_u(sinh, cosh),
                    pull_out_u(exp)]
 
 
@@ -1267,7 +1297,7 @@ def _parts_rule(integrand, symbol) -> tuple[Expr, Expr, Expr, Expr, Rule] | None
 
             # Can integrate a polynomial times OrthogonalPolynomial
             if rule == pull_out_algebraic:
-                if dv.is_Derivative or dv.has(TrigonometricFunction) or \
+                if dv.is_Derivative or dv.has(TrigonometricFunction, HyperbolicFunction) or \
                         isinstance(dv, OrthogonalPolynomial):
                     v_step = integral_steps(dv, symbol)
                     if v_step.contains_dont_know():
@@ -1398,6 +1428,44 @@ def trig_product_rule(integral: IntegralInfo):
         return SecTanRule(integrand, symbol)
     if integrand == csc(symbol) * cot(symbol):
         return CscCotRule(integrand, symbol)
+
+
+def trig_cmplx_exp_rule(integral: IntegralInfo):
+    """
+    Strategy that rewrites sin, cos, sinh, and cosh in terms of complex exponentials.
+    Useful for integration techniques that handle exponentials better.
+    Applies only when the integrand belongs to a class that benefits from exponential rewriting,
+    such as combinations involving Gaussian exponentials.
+
+    sin(x)  -> (exp(i*x) - exp(-i*x)) / (2*i)
+    cos(x)  -> (exp(i*x) + exp(-i*x)) / 2
+    sinh(x) -> (exp(x) - exp(-x)) / 2
+    cosh(x) -> (exp(x) + exp(-x)) / 2
+    """
+    integrand, symbol = integral
+
+    if not integrand.has(exp) and not integrand.has(sin, cos, sinh, cosh):
+        return
+
+    a = Wild('a', exclude=[symbol, 0])
+    b = Wild('b', exclude=[symbol])
+    c = Wild('c', exclude=[symbol])
+    # n = Wild('n', exclude=[symbol], properties=[lambda n: n > 0])
+    f = WildFunction('f')
+    guassian_pattern = exp(a * symbol**2 + b * symbol + c)
+    trigexp_over_x_pattern = f*exp(a * symbol)/symbol
+    trigexp_over_x_match = integrand.match(trigexp_over_x_pattern)
+    if not (any(term.match(guassian_pattern) for term in integrand.atoms(exp))
+            or (trigexp_over_x_match and
+                trigexp_over_x_match[f].has(sin, cos, sinh, cosh))):
+        return
+
+    # Replace trig and hyperbolic functions with their exponential forms
+    rewritten = integrand.rewrite([sin, cos, sinh, cosh], exp)
+
+    if rewritten != integrand:
+        steps = integral_steps(rewritten, symbol)
+        return RewriteRule(integrand, symbol, rewritten, steps)
 
 
 def quadratic_denom_rule(integral):
@@ -1979,6 +2047,7 @@ def rewrites_rule(integral):
 def fallback_rule(integral):
     return DontKnowRule(*integral)
 
+
 # Cache is used to break cyclic integrals.
 # Need to use the same dummy variable in cached expressions for them to match.
 # Also record "u" of integration by parts, to avoid infinite repetition.
@@ -2074,7 +2143,9 @@ def integral_steps(integrand, symbol, **options):
             Mul: do_one(null_safe(mul_rule), null_safe(trig_product_rule),
                         null_safe(heaviside_rule), null_safe(quadratic_denom_rule),
                         null_safe(sqrt_linear_rule),
-                        null_safe(sqrt_quadratic_rule)),
+                        null_safe(sqrt_quadratic_rule),
+                        null_safe(powsimp_rule),
+                        null_safe(trig_cmplx_exp_rule)),
             Derivative: derivative_rule,
             TrigonometricFunction: trig_rule,
             Heaviside: heaviside_rule,
@@ -2171,4 +2242,12 @@ def manualintegrate(f, var):
             result = result.func(
                 (result.args[1][0], Ne(*cond.args)),
                 (result.args[0][0], True))
+    # Factor terms like erf(x)*sin(x) that may have been expanded
+    def _has_erf_trig_mul(expr):
+        for sub in expr.find(Mul):
+            if sub.has(erf, erfc, erfi) and sub.has(sin, cos, sinh, cosh):
+                return True
+        return False
+    if _has_erf_trig_mul(f) and _has_erf_trig_mul(result):
+        result = factor_terms(result)
     return result

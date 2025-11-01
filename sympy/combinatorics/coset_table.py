@@ -814,7 +814,13 @@ class CosetTable(DefaultPrinting):
                 for x in A:
                     beta = table[alpha][A_dict[x]]
                     table[gamma][A_dict[x]] = beta
-                    table[beta][A_dict_inv[x]] == gamma
+                    # XXX: The line below uses == rather than = which means
+                    # that it has no effect. It is not clear though if it is
+                    # correct simply to delete the line or to change it to
+                    # use =. Changing it causes some tests to fail.
+                    #
+                    # https://github.com/sympy/sympy/issues/27633
+                    table[beta][A_dict_inv[x]] == gamma # noqa: B015
         # all the cosets in the table are live cosets
         self.p = list(range(gamma + 1))
         # delete the useless columns

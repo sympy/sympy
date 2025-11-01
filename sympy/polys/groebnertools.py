@@ -225,9 +225,6 @@ def _buchberger(f, ring):
         F.remove(ih)
         G, CP = update(G, CP, ih)
 
-    # count the number of critical pairs which reduce to zero
-    reductions_to_zero = 0
-
     while CP:
         ig1, ig2 = select(CP)
         CP.remove((ig1, ig2))
@@ -239,8 +236,6 @@ def _buchberger(f, ring):
 
         if ht:
             G, CP = update(G, CP, ht[1])
-        else:
-            reductions_to_zero += 1
 
     ######################################
     # now G is a Groebner basis; reduce it
@@ -630,8 +625,6 @@ def _f5b(F, ring):
 
     k = len(B)
 
-    reductions_to_zero = 0
-
     while len(CP):
         cp = CP.pop()
 
@@ -686,8 +679,6 @@ def _f5b(F, ring):
             k += 1
 
             #print(len(B), len(CP), "%d critical pairs removed" % len(indices))
-        else:
-            reductions_to_zero += 1
 
     # reduce Groebner basis:
     H = [Polyn(g).monic() for g in B]

@@ -258,7 +258,7 @@ class BasisDependentMul(BasisDependent, Mul):
             if isinstance(arg, cls._zero_func):
                 count += 1
                 zeroflag = True
-            elif arg == S.Zero:
+            elif arg == S.Zero or arg == 0.0:
                 zeroflag = True
             elif isinstance(arg, (cls._base_func, cls._mul_func)):
                 count += 1
