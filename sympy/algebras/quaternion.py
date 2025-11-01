@@ -175,6 +175,28 @@ class Quaternion(Expr):
         _check_norm(self.args, norm)
         self._norm = norm
 
+        def cosine_angle(self, other: Quaternion) -> Expr:
+        """Returns the cosine of the angle between self and another quaternion.
+
+        Given two quaternions, q₁ (self) and q₂ (other), the cosine of the angle between them is defined as:
+
+            cos(θ) = (q₁ · q₂) / (||q₁|| * ||q₂||)
+
+        where the dot product is computed as:
+
+            q₁ · q₂ = a₁*a₂ + b₁*b₂ + c₁*c₂ + d₁*d₂
+
+        Examples
+        ========
+        >>> from sympy import Quaternion
+        >>> q1 = Quaternion(1, 2, 3, 4)
+        >>> q2 = Quaternion(2, 3, 4, 5)
+        >>> q1.cosine_angle(q2)
+        (1*2 + 2*3 + 3*4 + 4*5) / (q1.norm() * q2.norm())
+        """
+        dot = self.a * other.a + self.b * other.b + self.c * other.c + self.d * other.d
+        return dot / (self.norm() * other.norm())
+
     @property
     def a(self) -> Expr:
         return self.args[0]
