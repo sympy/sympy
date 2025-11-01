@@ -333,7 +333,8 @@ class MatrixUnit(MatrixExpr):
         return Eq(self.rows, self.cols)
 
     def _eval_transpose(self):
-        return MatrixUnit(self._j, self._i, self.shape)
+        transposed_shape = (self.shape[1], self.shape[0])
+        return MatrixUnit(self._j, self._i, transposed_shape)
 
     def _eval_trace(self):
         if (self.rows == self.cols) == True:
@@ -350,10 +351,10 @@ class MatrixUnit(MatrixExpr):
         return self, ZeroMatrix(*self.shape)
 
     def _eval_conjugate(self):
-        return MatrixUnit(self._j, self._i, self.shape)
+        return self
 
     def _eval_adjoint(self):
-        return self._eval_conjugate()
+        return self._eval_conjugate()._eval_transpose()
 
     def _entry(self, i, j, **kwargs):
         return KroneckerDelta(i, self._i, (0, self.rows-1)) * KroneckerDelta(j, self._j, (0, self.cols-1))

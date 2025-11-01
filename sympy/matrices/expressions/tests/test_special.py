@@ -188,6 +188,14 @@ def test_MatrixUnit():
     assert mu.rows == 3
     assert mu.cols == 3
 
+    ma = MatrixUnit(1, 2, (3, 4))
+    assert ma.transpose() == ma.T == MatrixUnit(2, 1, (4, 3))
+    assert ma.adjoint() == MatrixUnit(2, 1, (4, 3))
+    assert ma.conjugate() == ma
+    assert ma.shape == (3, 4)
+    assert ma.rows == 3
+    assert ma.cols == 4
+
 
 def test_Identity():
     n, m = symbols('n m', integer=True)
