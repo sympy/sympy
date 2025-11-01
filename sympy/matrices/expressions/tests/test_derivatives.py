@@ -3,7 +3,7 @@ Some examples have been taken from:
 
 http://www.math.uwaterloo.ca/~hwolkowi//matrixcookbook.pdf
 """
-from sympy import KroneckerProduct, Matrix, diff, eye, Array
+from sympy import KroneckerProduct, Matrix, diff, eye, Array, MatPow
 from sympy.combinatorics import Permutation
 from sympy.concrete.summations import Sum
 from sympy.core.numbers import Rational
@@ -612,3 +612,11 @@ def test_issue_15667():
     expr = Trace(A) * A
     I = Identity(k)
     assert expr.diff(A) == ArrayAdd(ArrayTensorProduct(I, A), PermuteDims(ArrayTensorProduct(Trace(A)*I, I), Permutation(3)(1, 2)))
+
+
+def test_matpow_derivative():
+    M = MatPow(Matrix([[m, 0], [0, m]]), 2)
+    assert M.diff(m) == Matrix([[2*m, 0], [0, 2*m]])
+
+    M = MatPow(Matrix([[0, m], [n, 0]]), 3)
+    assert M.diff(m) == Matrix([[0, 2*m*n], [n**2, 0]])
