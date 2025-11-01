@@ -227,7 +227,7 @@ class MatrixExpr(Expr):
 
     def _eval_derivative(self, x):
         # `x` is a scalar:
-        if self.has(x):
+        if self.has(x) or (isinstance(x, MatrixElement) and self.has(x.parent)):
             # See if there are other methods using it:
             return super()._eval_derivative(x)
         else:
@@ -890,5 +890,5 @@ from .matadd import MatAdd
 from .matpow import MatPow
 from .transpose import Transpose
 from .inverse import Inverse
-from .special import ZeroMatrix, Identity
+from .special import ZeroMatrix, Identity, GenericZeroMatrix, GenericIdentity
 from .determinant import Determinant

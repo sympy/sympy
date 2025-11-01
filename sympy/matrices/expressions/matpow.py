@@ -103,11 +103,15 @@ class MatPow(MatrixExpr):
         # dbase = self.base.diff(x)
         dexp = self.exp.diff(x)
         if dexp != 0:
-            raise NotImplementedError("cannot derive matrix power if exponent depends on the derivation variable")
+            return None
         if self.exp.is_Integer:
-            from sympy import MatMul
-            return MatMul.fromiter(self.base for i in range(self.exp))._eval_derivative(x)
-        raise NotImplementedError("cannot evaluate derivatives of matrix power is not a known integer")
+            if self.exp > 0:
+                from sympy import MatMul
+                return MatMul.fromiter(self.base for _ in range(self.exp))._eval_derivative(x)
+            elif self.exp == 0:
+                from .special import ZeroMatrix
+                return ZeroMatrix(*self.base.shape)
+        return None
 
     def _eval_derivative_matrix_lines(self, x):
         from sympy.tensor.array.expressions.array_expressions import ArrayContraction

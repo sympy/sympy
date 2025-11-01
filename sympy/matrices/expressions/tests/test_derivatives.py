@@ -618,5 +618,21 @@ def test_matpow_derivative():
     M = MatPow(Matrix([[m, 0], [0, m]]), 2)
     assert M.diff(m) == Matrix([[2*m, 0], [0, 2*m]])
 
-    M = MatPow(Matrix([[0, m], [n, 0]]), 3)
+    base = Matrix([[0, m], [n, 0]])
+    M = MatPow(base, 3)
     assert M.diff(m) == Matrix([[0, 2*m*n], [n**2, 0]])
+
+    M = MatPow(base, 0)
+    assert M.diff(m) == ZeroMatrix(2, 2)
+
+    M = MatPow(base, -1)
+    assert M.diff(m) == ArrayDerivative(M, m)
+
+    M = MatPow(base, i)
+    assert M.diff(m) == ArrayDerivative(M, m)
+
+    X = MatrixSymbol('X', 2, 2)
+    Y = MatrixSymbol('Y', 2, 2)
+    expr = X + Y
+    # TODO: ZeroMatrix is being returned, need to call .doit() to simplify:
+    assert expr.diff(Y[0, 0]).doit() == MatrixUnit(0, 0, (2, 2))
