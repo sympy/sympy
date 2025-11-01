@@ -538,7 +538,7 @@ def test_issue_23364():
 
     x = symbols('x')
     F = MatrixSymbol('F', 3, 3)
-    assert ((x * F) ** 2).diff(x) == (2/x)*(x*F)**2
+    assert ((x * F) ** 2).diff(x) == (2*x) * F**2
 
 
 def test_issue_21597():
