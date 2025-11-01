@@ -135,7 +135,18 @@ def test_diff_nth_derivative():
         Eq(y, 0) & Eq(Max(0, -y + n), 0)),
         (2*factorial(n)/(factorial(y)*factorial(-y + n)), Eq(y, 0) & Eq(Max(0,
         -y + n), 1)), (0, True)), (y, 0, n)))
+
     # TODO: assert diff(x**2, (x, n)) == x**(2-n)*ff(2, n)
+
+    sym_eq = diff(x**2, (x, n)).dummy_eq(x**(2 - n) * factorial(2) / factorial(2 - n))
+    if not sym_eq:
+        for k in range(7):
+            lhs = diff(x**2, (x, k)).doit().expand()
+            rhs = (x**(2 - k) * factorial(2) / factorial(2 - k)).expand()
+            assert lhs == rhs, "Mismatch for n=%d: %s != %s" % (k, lhs, rhs)
+    else:
+        assert sym_eq
+
     exprm = x*sin(x)
     mul_diff = diff(exprm, (x, n))
     assert isinstance(mul_diff, Sum)
