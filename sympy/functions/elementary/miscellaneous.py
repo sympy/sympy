@@ -399,7 +399,9 @@ class MinMaxBase(Expr, LatticeOp):
         if not args:
             return cls.identity
 
-        if len(args) == 1:
+        from sympy.sets.sets import Set
+
+        if len(args) == 1 and not isinstance(list(args).pop(), Set):
             return list(args).pop()
 
         # base creation
@@ -551,9 +553,10 @@ class MinMaxBase(Expr, LatticeOp):
         Also reshape ``Max(a, Max(b, c))`` to ``Max(a, b, c)``,
         and check arguments for comparability
         """
+        from sympy.sets.sets import Set
         for arg in arg_sequence:
             # pre-filter, checking comparability of arguments
-            if not isinstance(arg, Expr) or arg.is_extended_real is False or (
+            if not isinstance(arg, (Expr, Set)) or arg.is_extended_real is False or (
                     arg.is_number and
                     not arg.is_comparable):
                 raise ValueError("The argument '%s' is not comparable." % arg)
@@ -564,6 +567,11 @@ class MinMaxBase(Expr, LatticeOp):
                 continue
             elif arg.func == cls:
                 yield from arg.args
+            elif isinstance(arg, Set):
+                try:
+                    yield cls.setfunc(arg)
+                except NotImplementedError:
+                    yield arg
             else:
                 yield arg
 
@@ -767,6 +775,7 @@ class Max(MinMaxBase, Application):
     """
     zero = S.Infinity
     identity = S.NegativeInfinity
+    setfunc = lambda x : x.sup
 
     def fdiff( self, argindex ):
         from sympy.functions.special.delta_functions import Heaviside
@@ -830,6 +839,7 @@ class Min(MinMaxBase, Application):
     """
     zero = S.NegativeInfinity
     identity = S.Infinity
+    setfunc = lambda x : x.inf
 
     def fdiff( self, argindex ):
         from sympy.functions.special.delta_functions import Heaviside
