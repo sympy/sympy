@@ -890,5 +890,5 @@ from .matadd import MatAdd
 from .matpow import MatPow
 from .transpose import Transpose
 from .inverse import Inverse
-from .special import ZeroMatrix, Identity, GenericZeroMatrix, GenericIdentity
+from .special import ZeroMatrix, Identity
 from .determinant import Determinant
