@@ -530,6 +530,8 @@ def test_issue_23492():
     assert trace(A).as_explicit().diff(A) == MatrixUnit(0, 0, (3, 3)) + MatrixUnit(1, 1, (3, 3)) + MatrixUnit(2, 2, (3, 3))
     assert trace(A).diff(A.as_explicit()) == eye(3)
 
+    assert (trace(A) + trace(A**2)).diff(A) == Identity(3) + 2 * A.T
+
 
 def test_issue_23364():
     # https://github.com/sympy/sympy/issues/23364
