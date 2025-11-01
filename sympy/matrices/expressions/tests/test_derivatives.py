@@ -520,6 +520,8 @@ def test_issue_24725():
     b = symbols("b")
     assert diff(Trace(x.T @ w) + b, w) == x
 
+    assert w[0, 0].diff(w) == MatrixUnit(0, 0, w.shape)
+
 
 def test_issue_23492():
     # https://github.com/sympy/sympy/issues/23492
