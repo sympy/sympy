@@ -456,8 +456,8 @@ class Beam:
         80*SingularityFunction(x, 0, -2) - 20*SingularityFunction(x, 0, -1) + 20*SingularityFunction(x, 4, -1)
         >>> b.slope()
         (-((-80*SingularityFunction(x, 0, 1) + 10*SingularityFunction(x, 0, 2) - 10*SingularityFunction(x, 4, 2))/I + 120/I)/E + 80.0/(E*I))*SingularityFunction(x, 2, 0)
-        - 0.666666666666667*(-80*SingularityFunction(x, 0, 1) + 10*SingularityFunction(x, 0, 2) - 10*SingularityFunction(x, 4, 2))*SingularityFunction(x, 0, 0)/(E*I)
-        + 0.666666666666667*(-80*SingularityFunction(x, 0, 1) + 10*SingularityFunction(x, 0, 2) - 10*SingularityFunction(x, 4, 2))*SingularityFunction(x, 2, 0)/(E*I)
+        - 0.666666666666667*(-80.0*SingularityFunction(x, 0, 1) + 10.0*SingularityFunction(x, 0, 2) - 10.0*SingularityFunction(x, 4, 2))*SingularityFunction(x, 0, 0)/(E*I)
+        + 0.666666666666667*(-80.0*SingularityFunction(x, 0, 1) + 10.0*SingularityFunction(x, 0, 2) - 10.0*SingularityFunction(x, 4, 2))*SingularityFunction(x, 2, 0)/(E*I)
         """
         x = self.variable
         E = self.elastic_modulus
