@@ -3443,7 +3443,7 @@ class DomainMatrix:
 
         .. [1]  Nakos, G. C., Turner, P. R., & Williams, R. M. (1997). Fraction-free
                 algorithms for linear and polynomial equations. ACM SIGSAM Bulletin,
-                31(3), 11-19. https://doi.org/10.1145/271130.271133
+                31(3), 11-19. https://dl.acm.org/doi/10.1145/271130.271133
         .. [2]  Middeke, J.; Jeffrey, D.J.; Koutschan, C. (2020), "Common Factors
                 in Fraction-Free Matrix Decompositions", Mathematics in Computer Science,
                 15 (4): 589–608, arXiv:2005.12380, doi:10.1007/s11786-020-00495-9

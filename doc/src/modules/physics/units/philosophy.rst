@@ -275,7 +275,7 @@ Literature
 ==========
 
 .. [Page52] C. H. Page, `Classes of units in the SI
-    <https://doi.org/10.1119/1.1927482>`_,
+    <https://pubs.aip.org/aapt/ajp/article-abstract/20/1/1/1034555/Units-and-Dimensions-in-Physics?redirectedFrom=fulltext>`_,
     Am. J. of Phys. 20, 1 (1952): 1.
 
 .. [Page78] C. H. Page, `Units and Dimensions in Physics
@@ -283,7 +283,7 @@ Literature
     Am. J. of Phys. 46, 1 (1978): 78.
 
 .. [deBoer79] J. de Boer, `Group properties of quantities and units
-    <https://aapt.scitation.org/doi/10.1119/1.11703>`_,
+    <https://pubs.aip.org/aapt/ajp/article-abstract/47/9/818/1051258/Group-properties-of-quantities-and-units?redirectedFrom=fulltext>`_,
     Am. J. of Phys. 47, 9 (1979): 818.
 
 .. [LevyLeblond77] J.-M. Lévy-Leblond, `On the Conceptual Nature of the
