@@ -322,7 +322,8 @@ class EllipticCurvePoint:
             slope = (y1 - y2) / (x1 - x2)
             yint = (y1 * x2 - y2 * x1) / (x2 - x1)
         else:
-            if (y1 + y2) == 0:
+            y_inverse = -y1 - a1*x1 - a3
+            if y2 == y_inverse:
                 return self.point_at_infinity(self._curve)
             slope = (3 * x1**2 + 2*a2*x1 + a4 - a1*y1) / (a1 * x1 + a3 + 2 * y1)
             yint = (-x1**3 + a4*x1 + 2*a6 - a3*y1) / (a1*x1 + a3 + 2*y1)
@@ -395,3 +396,56 @@ class EllipticCurvePoint:
             if p.z == 0:
                 return i
         return oo
+    def __eq__(self, other):
+        """
+        Check if two elliptic curve points are equal.
+
+        Two points are equal if they represent the same point in projective space.
+        Points at infinity (z=0) are always equal regardless of x and y coordinates.
+        For finite points, we compare using projective coordinate equivalence.
+
+        Parameters
+        ==========
+        other : EllipticCurvePoint
+            The point to compare with.
+
+        Returns
+        =======
+        bool
+            True if the points are equal, False otherwise.
+
+        Examples
+        ========
+        >>> from sympy.ntheory.elliptic_curve import EllipticCurve
+        >>> curve = EllipticCurve(0, 0, 1, 0, 1, 0)
+        >>> P = curve(0, 0, 1)
+        >>> Q = P + (-P)  # Point at infinity
+        >>> from sympy.ntheory.elliptic_curve import EllipticCurvePoint
+        >>> inf = EllipticCurvePoint.point_at_infinity(curve)
+        >>> Q == inf
+        True
+        """
+        if not isinstance(other, EllipticCurvePoint):
+            return False
+
+        # Points must be on the same curve
+        if self._curve != other._curve:
+            return False
+
+        # Both points at infinity are equal
+        # In projective coordinates, any point with z=0 represents infinity
+        if self.z == 0 and other.z == 0:
+            return True
+
+        # One at infinity, the other not
+        if self.z == 0 or other.z == 0:
+            return False
+
+        # Both are finite points - compare in projective coordinates
+        # (x1:y1:z1) == (x2:y2:z2) iff x1*z2 == x2*z1 and y1*z2 == y2*z1
+        return (self.x * other.z == other.x * self.z and
+                self.y * other.z == other.y * self.z)
+
+    def __ne__(self, other):
+        """Check if two points are not equal."""
+        return not self.__eq__(other)

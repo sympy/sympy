@@ -1,4 +1,4 @@
-from sympy.ntheory.elliptic_curve import EllipticCurve
+from sympy.ntheory.elliptic_curve import EllipticCurve, EllipticCurvePoint
 
 
 def test_elliptic_curve():
@@ -18,3 +18,12 @@ def test_elliptic_curve():
     assert EllipticCurve(-2731, -55146, 1, 0, 1).discriminant == 25088
     # Torsion points
     assert len(EllipticCurve(0, 1).torsion_points()) == 6
+
+def test_point_addition_inverse():
+    """Test that P + (-P) returns the point at infinity."""
+    # Test case from issue #28529
+    curve = EllipticCurve(0, 0, 1, 0, 1, 0)
+    P = curve(0, 0, 1)
+    result = P + (-P)
+    expected = EllipticCurvePoint.point_at_infinity(curve)
+    assert result == expected
