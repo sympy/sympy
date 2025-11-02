@@ -433,7 +433,6 @@ class EllipticCurvePoint:
             return False
 
         # Both points at infinity are equal
-        # In projective coordinates, any point with z=0 represents infinity
         if self.z == 0 and other.z == 0:
             return True
 
@@ -441,8 +440,7 @@ class EllipticCurvePoint:
         if self.z == 0 or other.z == 0:
             return False
 
-        # Both are finite points - compare in projective coordinates
-        # (x1:y1:z1) == (x2:y2:z2) iff x1*z2 == x2*z1 and y1*z2 == y2*z1
+        # If both are finite points  compare in projective coordinates
         return (self.x * other.z == other.x * self.z and
                 self.y * other.z == other.y * self.z)
 
