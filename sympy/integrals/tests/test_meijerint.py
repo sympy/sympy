@@ -2,6 +2,7 @@ from sympy.core.function import expand_func
 from sympy.core.numbers import (I, Rational, oo, pi)
 from sympy.core.singleton import S
 from sympy.core.sorting import default_sort_key
+from sympy.core.symbol import symbols
 from sympy.functions.elementary.complexes import Abs, arg, re, unpolarify
 from sympy.functions.elementary.exponential import (exp, exp_polar, log)
 from sympy.functions.elementary.hyperbolic import cosh, acosh, sinh
@@ -772,3 +773,18 @@ def test_issue_25949():
     from sympy.core.symbol import symbols
     y = symbols("y", nonzero=True)
     assert integrate(cosh(y*(x + 1)), (x, -1, -0.25), meijerg=True) == sinh(0.75*y)/y
+
+
+def test_issue_28485():
+    """Test cases for Gaussian integrals with linear terms.
+    """
+    x = symbols('x')
+    a_neg = symbols('a', negative=True)
+    result_neg = integrate(exp(a_neg*(x**2 + 2*x)), (x, -oo, oo))
+    expected_neg = sqrt(pi)*exp(-a_neg)/sqrt(-a_neg)
+    assert result_neg.equals(expected_neg)
+
+    a_pos = symbols('a', positive=True)
+    result_pos = integrate(exp(-a_pos*(x**2 + 2*x)), (x, -oo, oo))
+    expected_pos = sqrt(pi)*exp(a_pos)/sqrt(a_pos)
+    assert result_pos.equals(expected_pos)
