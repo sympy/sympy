@@ -719,7 +719,7 @@ class MatrixSymbol(MatrixExpr):
             if isinstance(x, MatrixElement):
                 from .special import MatrixUnit
                 return MatrixUnit(x.i, x.j, self.shape)
-            raise NotImplementedError("could not determine this derivative")
+            return None
         else:
             return ZeroMatrix(self.shape[0], self.shape[1])
 

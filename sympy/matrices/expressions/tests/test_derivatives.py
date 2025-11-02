@@ -631,8 +631,16 @@ def test_matpow_derivative():
     M = MatPow(base, i)
     assert M.diff(m) == ArrayDerivative(M, m)
 
+
+def test_matexpr_derivative_by_matrix_element():
     X = MatrixSymbol('X', 2, 2)
     Y = MatrixSymbol('Y', 2, 2)
-    expr = X + Y
-    # TODO: ZeroMatrix is being returned, need to call .doit() to simplify:
-    assert expr.diff(Y[0, 0]).doit() == MatrixUnit(0, 0, (2, 2))
+    Z = MatrixSymbol("Z", 2, 2)
+
+    a = symbols("a")
+
+    assert (X + Y).diff(Y[0, 0]).doit() == MatrixUnit(0, 0, (2, 2))
+    assert (X + a*Y).diff(X[a, 0]) == MatrixUnit(a, 0, (2, 2))
+    assert (X + a*Y).diff(Y[a, 0]) == a*MatrixUnit(a, 0, (2, 2))
+    assert (X + a*Y).diff(Z[a, 0]) ==  ZeroMatrix(2, 2)
+    assert (X + a*Y).diff(a) == Y + ZeroMatrix(2, 2)
