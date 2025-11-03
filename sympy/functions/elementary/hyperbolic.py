@@ -1652,19 +1652,20 @@ class atanh(InverseHyperbolicFunction):
         if arg.is_zero:
             return S.Zero
 
-        if isinstance(arg, tanh) and arg.args[0].is_number:
+        if isinstance(arg, tanh):
             z = arg.args[0]
             if z.is_real:
                 return z
-            r, i = match_real_imag(z)
-            if r is not None and i is not None:
-                f = floor(2*i/pi)
-                even = f.is_even
-                m = z - I*f*pi/2
-                if even is True:
-                    return m
-                elif even is False:
-                    return m - I*pi/2
+            if z.is_number:
+                r, i = match_real_imag(z)
+                if r is not None and i is not None:
+                    f = floor(2*i/pi)
+                    even = f.is_even
+                    m = z - I*f*pi/2
+                    if even is True:
+                        return m
+                    elif even is False:
+                        return m - I*pi/2
 
     @staticmethod
     @cacheit

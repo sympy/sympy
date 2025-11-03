@@ -824,14 +824,18 @@ class LatexPrinter(Printer):
         else:
             tex = r"\frac{%s^{%s}}{%s}" % (diff_symbol, self._print(dim), tex)
 
+        precedence = PRECEDENCE["Mul"]
+        if self._settings['mul_symbol']:
+            # Nudge up the precedence so d/dx (f(x) * g(x)) also gets parenthesized
+            precedence += 1
         if any(i.could_extract_minus_sign() for i in expr.args):
             return r"%s %s" % (tex, self.parenthesize(expr.expr,
-                                                  PRECEDENCE["Mul"],
+                                                  precedence,
                                                   is_neg=True,
                                                   strict=True))
 
         return r"%s %s" % (tex, self.parenthesize(expr.expr,
-                                                  PRECEDENCE["Mul"],
+                                                  precedence,
                                                   is_neg=False,
                                                   strict=True))
 
@@ -2635,7 +2639,7 @@ class LatexPrinter(Printer):
     def _print_DiscreteTransferFunction(self, expr):
         num, den = self._print(expr.num), self._print(expr.den)
         sampling_time = self._print(expr.sampling_time)
-        return r"\frac{%s}{%s} \text{, sampling time: } {%s}" % \
+        return r"\frac{%s}{%s} \text{ [st: } {%s} \text{]}" % \
             (num, den, sampling_time)
 
     def _print_Series(self, expr):
@@ -2706,8 +2710,8 @@ class LatexPrinter(Printer):
         if expr.sampling_time == 0:
             print_mat = r"%s_\tau" % mat
         else:
-            print_mat = r"%s_k \text{, sampling time: } {%s}" % (mat,
-                                                           expr.sampling_time)
+            print_mat = r"\underset{[st:\ {%s}]}{%s_k}" %\
+                        (expr.sampling_time, mat)
         return print_mat
 
     def _print_DFT(self, expr):

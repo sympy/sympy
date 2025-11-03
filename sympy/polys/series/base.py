@@ -89,6 +89,10 @@ class PowerSeriesRingProto(Protocol[TSeries, Er]):
         """Create a power series from a list of coefficients."""
         ...
 
+    def from_element(self, s: TSeries, /) -> TSeries:
+        """Convert a power series element into the corresponding element of this ring."""
+        ...
+
     def to_list(self, s: TSeries, /) -> list[Er]:
         """Return the coefficients of a power series as a list."""
         ...

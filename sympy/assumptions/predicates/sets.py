@@ -229,13 +229,27 @@ class HermitianPredicate(Predicate):
     ``ask(Q.hermitian(x))`` is true iff ``x`` belongs to the set of
     Hermitian operators.
 
+    Examples
+    ========
+
+    >>> from sympy import Q, ask, Matrix, I, Symbol
+    >>> ask(Q.hermitian(2))
+    True
+    >>> ask(Q.hermitian(I))
+    False
+    >>> A = Matrix([[1, I], [-I, 1]])
+    >>> ask(Q.hermitian(A))
+    True
+    >>> x = Symbol('x', real=True)
+    >>> ask(Q.hermitian(x))
+    True
+
     References
     ==========
 
     .. [1] https://mathworld.wolfram.com/HermitianOperator.html
 
     """
-    # TODO: Add examples
     name = 'hermitian'
     handler = Dispatcher(
         "HermitianHandler",
@@ -328,13 +342,26 @@ class AntihermitianPredicate(Predicate):
     antihermitian operators, i.e., operators in the form ``x*I``, where
     ``x`` is Hermitian.
 
+    Examples
+    ========
+
+    >>> from sympy import Q, ask, Matrix, I
+    >>> ask(Q.antihermitian(I))
+    True
+    >>> ask(Q.antihermitian(2))
+    False
+    >>> A = Matrix([[0, -2 - I, 0], [2 - I, 0, -I], [0, -I, 0]])
+    >>> ask(Q.antihermitian(A))
+    True
+    >>> ask(Q.antihermitian(0))
+    True
+
     References
     ==========
 
     .. [1] https://mathworld.wolfram.com/HermitianOperator.html
 
     """
-    # TODO: Add examples
     name = 'antihermitian'
     handler = Dispatcher(
         "AntiHermitianHandler",

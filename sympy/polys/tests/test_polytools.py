@@ -4203,3 +4203,64 @@ def test_hurwitz_conditions():
     p14 = Poly(x**2 + 1/y, x)
     assert 0 in p14.hurwitz_conditions()
     assert 0 in p14.set_domain(EXRAW).hurwitz_conditions()
+
+
+def test_schur_conditions():
+    raises(ValueError, lambda: Poly(0, x).schur_conditions())
+    raises(NotImplementedError, lambda: Poly(x**2 + (1+I)).schur_conditions())
+    assert Poly(1,x).schur_conditions() == []
+
+    b0, b1, b2, b3, b4 = symbols('b_0 b_1 b_2 b_3 b_4')
+
+    assert Poly(b1 * x + b0, x).schur_conditions() == [-b0**2 + b1**2]
+
+    p1 = Poly(b4 * s**4 + b3 * s**3 + b2 * s**2 + b1 * s + b0, s)
+    p1_ = Poly(b4 * s**4 + b3 * s**3 + b2 * s**2 + b1 * s + b0, s,
+               domain = EXRAW)
+
+    assert p1.schur_conditions() == [
+        (-4*b0**2 + 6*b0*b1 - 4*b0*b2 + 2*b0*b3 - 2*b1**2 + 2*b1*b2 - 2*b1*b4 -
+         2*b2*b3 + 4*b2*b4 + 2*b3**2 - 6*b3*b4 + 4*b4**2),
+        (-20*b0**2 + 10*b0*b1 + 12*b0*b2 - 18*b0*b3 - 2*b1**2 - 2*b1*b2 +
+         18*b1*b4 + 2*b2*b3 - 12*b2*b4 + 2*b3**2 - 10*b3*b4 + 20*b4**2),
+        (64*b0**4 - 64*b0**3*b1 - 64*b0**3*b3 + 64*b0**2*b1*b2 +
+         64*b0**2*b1*b3 + 64*b0**2*b1*b4 - 64*b0**2*b2**2 + 64*b0**2*b2*b3 -
+         64*b0**2*b3**2 + 64*b0**2*b3*b4 - 128*b0**2*b4**2 - 64*b0*b1**2*b3 -
+         64*b0*b1**2*b4 + 64*b0*b1*b2*b3 - 128*b0*b1*b2*b4 + 128*b0*b1*b3*b4 +
+         64*b0*b1*b4**2 + 128*b0*b2**2*b4 - 64*b0*b2*b3**2 - 128*b0*b2*b3*b4 +
+         64*b0*b3**3 - 64*b0*b3**2*b4 + 64*b0*b3*b4**2 + 64*b1**3*b4 -
+         64*b1**2*b2*b4 - 64*b1**2*b4**2 + 64*b1*b2*b3*b4 + 64*b1*b2*b4**2 -
+         64*b1*b3**2*b4 + 64*b1*b3*b4**2 - 64*b1*b4**3 - 64*b2**2*b4**2 +
+         64*b2*b3*b4**2 - 64*b3*b4**3 + 64*b4**4),
+        (b0**2 + 2*b0*b2 + 2*b0*b4 - b1**2 - 2*b1*b3 + b2**2 + 2*b2*b4 -
+         b3**2 + b4**2)]
+    assert p1_.schur_conditions() == [
+        -2*((2*b0 - b1 + b3 - 2*b4)*(b0 - b1 + b2 - b3 + b4)),
+        (-4*((3*b0 - b2 + 3*b4)*(2*b0 - b1 + b3 - 2*b4)) +
+         2*((2*b0 + b1 - b3 - 2*b4)*(b0 - b1 + b2 - b3 + b4))),
+        (-8*(((2*((3*b0 - b2 + 3*b4)*(2*b0 - b1 + b3 - 2*b4)) -
+         (2*b0 + b1 - b3 - 2*b4)*(b0 - b1 + b2 - b3 + b4))*
+         (2*b0 + b1 - b3 - 2*b4) - (2*b0 - b1 + b3 - 2*b4)**2*
+         (b0 + b1 + b2 + b3 + b4))*(2*b0 - b1 + b3 - 2*b4))),
+        -2*((2*b0 - b1 + b3 - 2*b4)*(b0 + b1 + b2 + b3 + b4))]
+
+    p2 = Poly((x+0.4531)*(x-0.98321)*(x+0.2328)*(x+0.4), x)
+    assert all(c > 0 for c in p2.schur_conditions())
+
+    p3 = Poly((x+0.4531)*(x-0.64536)*(x+0.2328)*(x+1.0021), x)
+    assert any(c <= 0 for c in p3.schur_conditions())
+
+    p4 = Poly((x+0.4531)*(x-0.64536)*(x+0.2328)*(x+1), x)
+    assert any(c <= 0 for c in p4.schur_conditions())
+
+    p5 = Poly((x+0.4)*(x+0.012)*(x**2-1.52*x+0.9872), x)
+    assert all(c > 0 for c in p5.schur_conditions())
+
+    assert all(c > 0 for c in p5.set_domain(QQ).schur_conditions())
+    assert all(c > 0 for c in p5.set_domain(EXRAW).schur_conditions())
+
+    p6 = Poly((x+0.3)*(x+0.24)*(x-0.1942)*(x**2-1.6*x+1), x)
+    assert any(c <= 0 for c in p6.schur_conditions())
+
+    assert any(c <= 0 for c in p6.set_domain(QQ).schur_conditions())
+    assert any(c <= 0 for c in p6.set_domain(EXRAW).schur_conditions())
