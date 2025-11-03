@@ -265,10 +265,8 @@ def _eigenvals_list(
 
             degree = int(factor.degree())
             if len(eigs) != degree:
-                f = factor.as_expr()
-                x = factor.gen
                 try:
-                    eigs = [CRootOf(f, x, idx) for idx in range(degree)]
+                    eigs = factor.all_roots(multiple=True)
                 except NotImplementedError:
                     if error_when_incomplete:
                         raise MatrixError(eigenvals_error_message)
@@ -318,10 +316,8 @@ def _eigenvals_dict(
             degree = int(factor.degree())
             if sum(eigs.values()) != degree:
                 degree = int(factor.degree())
-                f = factor.as_expr()
-                x = factor.gen
                 try:
-                    eigs = {CRootOf(f, x, idx): 1 for idx in range(degree)}
+                    eigs = dict(charpoly.all_roots(multiple=False))
                 except NotImplementedError:
                     if error_when_incomplete:
                         raise MatrixError(eigenvals_error_message)
@@ -1404,7 +1400,7 @@ def _jordan_form_rational_matrix(M, calc_transform):
                 roots_found = list(roots(minpoly.as_expr(), l, quartics=False, cubics=False))
                 degree = minpoly.degree()
                 if len(roots_found) != degree:
-                    roots_found = [CRootOf(minpoly, l, idx) for idx in range(degree)]
+                    roots_found = minpoly.all_roots(multiple=True)
                 eigenvals.extend(roots_found)
 
             eigenvals_by_factor[(tuple(base), exp)] = eigenvals
