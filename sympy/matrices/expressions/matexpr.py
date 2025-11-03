@@ -716,7 +716,7 @@ class MatrixSymbol(MatrixExpr):
     def _eval_derivative(self, x):
         # x is a scalar:
         if self.free_symbols & x.free_symbols:
-            if isinstance(x, MatrixElement):
+            if isinstance(x, MatrixElement) and self == x.parent:
                 from .special import MatrixUnit
                 return MatrixUnit(x.i, x.j, self.shape)
             return None

@@ -644,3 +644,6 @@ def test_matexpr_derivative_by_matrix_element():
     assert (X + a*Y).diff(Y[a, 0]) == a*MatrixUnit(a, 0, (2, 2))
     assert (X + a*Y).diff(Z[a, 0]) ==  ZeroMatrix(2, 2)
     assert (X + a*Y).diff(a) == Y + ZeroMatrix(2, 2)
+
+    A = MatrixSymbol(a, a, a)
+    assert A.diff(Y[a,a]) == ZeroMatrix(a, a)
