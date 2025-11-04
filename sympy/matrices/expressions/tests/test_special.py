@@ -179,18 +179,18 @@ def test_OneMatrix_mul():
 
 
 def test_MatrixUnit():
-    mu = MatrixUnit(1, 2, (3, 3))
+    mu = MatrixUnit(3, 3, 1, 2)
 
     assert mu.as_explicit() == ImmutableDenseMatrix([[0, 0, 0], [0, 0, 1], [0, 0, 0]])
-    assert mu.T == MatrixUnit(2, 1, (3, 3))
+    assert mu.T == MatrixUnit(3, 3, 2, 1)
     assert mu.free_symbols == set()
     assert mu.shape == (3, 3)
     assert mu.rows == 3
     assert mu.cols == 3
 
-    ma = MatrixUnit(1, 2, (3, 4))
-    assert ma.transpose() == ma.T == MatrixUnit(2, 1, (4, 3))
-    assert ma.adjoint() == MatrixUnit(2, 1, (4, 3))
+    ma = MatrixUnit(3, 4, 1, 2)
+    assert ma.transpose() == ma.T == MatrixUnit(4, 3, 2, 1)
+    assert ma.adjoint() == MatrixUnit(4, 3, 2, 1)
     assert ma.conjugate() == ma
     assert ma.shape == (3, 4)
     assert ma.rows == 3

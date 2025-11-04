@@ -309,32 +309,30 @@ class MatrixUnit(MatrixExpr):
 
     https://en.wikipedia.org/wiki/Matrix_unit
     """
-    def __new__(cls, i, j, shape):
-        obj = MatrixExpr.__new__(cls, i, j, shape)
+    def __new__(cls, rows, cols, i, j):
+        obj = MatrixExpr.__new__(cls, rows, cols, i, j)
         obj._i = i
         obj._j = j
-        obj._shape = shape
         return obj
 
     @property
     def shape(self):
-        return self._shape
+        return self._args[0], self._args[1]
 
     @property
     def rows(self):
-        return self._shape[0]
+        return self._args[0]
 
     @property
     def cols(self):
-        return self._shape[1]
+        return self._args[1]
 
     @property
     def is_square(self):
         return Eq(self.rows, self.cols)
 
     def _eval_transpose(self):
-        transposed_shape = (self.shape[1], self.shape[0])
-        return MatrixUnit(self._j, self._i, transposed_shape)
+        return MatrixUnit(self.cols, self.rows, self._j, self._i)
 
     def _eval_trace(self):
         if (self.rows == self.cols) == True:

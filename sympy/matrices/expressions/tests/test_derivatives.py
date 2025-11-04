@@ -520,14 +520,14 @@ def test_issue_24725():
     b = symbols("b")
     assert diff(Trace(x.T @ w) + b, w) == x
 
-    assert w[0, 0].diff(w) == MatrixUnit(0, 0, w.shape)
+    assert w[0, 0].diff(w) == MatrixUnit(w.shape[0], w.shape[1], 0, 0)
 
 
 def test_issue_23492():
     # https://github.com/sympy/sympy/issues/23492
     A = MatrixSymbol('A', 3, 3)
     assert trace(A).diff(A) == Identity(3)
-    assert trace(A).as_explicit().diff(A) == MatrixUnit(0, 0, (3, 3)) + MatrixUnit(1, 1, (3, 3)) + MatrixUnit(2, 2, (3, 3))
+    assert trace(A).as_explicit().diff(A) == MatrixUnit(3, 3, 0, 0) + MatrixUnit(3, 3, 1, 1) + MatrixUnit(3, 3, 2, 2)
     assert trace(A).diff(A.as_explicit()) == eye(3)
 
     assert (trace(A) + trace(A**2)).diff(A) == Identity(3) + 2 * A.T
@@ -572,14 +572,14 @@ def test_issue_17229():
     M = MatrixSymbol('M', 3, 3)
 
     # MatrixSymbol and MatrixElement:
-    assert M[1, 2].diff(M) == MatrixUnit(1, 2, (3, 3))
+    assert M[1, 2].diff(M) == MatrixUnit(3, 3, 1, 2)
     assert M[1, 2].diff(M.as_explicit()) == Matrix([[0, 0, 0], [0, 0, 1], [0, 0, 0]])
-    assert M.diff(M[1, 1]) == MatrixUnit(1, 1, (3, 3))
+    assert M.diff(M[1, 1]) == MatrixUnit(3, 3,1, 1)
     assert M.as_explicit().diff(M[1, 2]) == Matrix([[0, 0, 0], [0, 0, 1], [0, 0, 0]])
 
     # MatrixSymbol and component-explicit matrix:
-    assert M.diff(M.as_explicit()) == Array([[MatrixUnit(i, j, (3, 3)) for j in range(3)] for i in range(3)])
-    assert M.as_explicit().diff(M) == Matrix([[MatrixUnit(i, j, (3, 3)) for j in range(3)] for i in range(3)])
+    assert M.diff(M.as_explicit()) == Array([[MatrixUnit(3, 3, i, j) for j in range(3)] for i in range(3)])
+    assert M.as_explicit().diff(M) == Matrix([[MatrixUnit(3, 3, i, j) for j in range(3)] for i in range(3)])
 
 
 def test_issue_15651():
@@ -639,9 +639,9 @@ def test_matexpr_derivative_by_matrix_element():
 
     a = symbols("a")
 
-    assert (X + Y).diff(Y[0, 0]).doit() == MatrixUnit(0, 0, (2, 2))
-    assert (X + a*Y).diff(X[a, 0]) == MatrixUnit(a, 0, (2, 2))
-    assert (X + a*Y).diff(Y[a, 0]) == a*MatrixUnit(a, 0, (2, 2))
+    assert (X + Y).diff(Y[0, 0]).doit() == MatrixUnit(2, 2, 0, 0)
+    assert (X + a*Y).diff(X[a, 0]) == MatrixUnit(2, 2, a, 0)
+    assert (X + a*Y).diff(Y[a, 0]) == a*MatrixUnit(2, 2, a, 0)
     assert (X + a*Y).diff(Z[a, 0]) ==  ZeroMatrix(2, 2)
     assert (X + a*Y).diff(a) == Y + ZeroMatrix(2, 2)
 

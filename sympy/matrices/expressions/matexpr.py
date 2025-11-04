@@ -718,7 +718,7 @@ class MatrixSymbol(MatrixExpr):
         if self.free_symbols & x.free_symbols:
             if isinstance(x, MatrixElement) and self == x.parent:
                 from .special import MatrixUnit
-                return MatrixUnit(x.i, x.j, self.shape)
+                return MatrixUnit(self.shape[0], self.shape[1], x.i, x.j)
             return None
         else:
             return ZeroMatrix(self.shape[0], self.shape[1])

@@ -3263,7 +3263,7 @@ def test_sympy__matrices__expressions__special__ZeroMatrix():
 
 def test_sympy__matrices__expressions__special__MatrixUnit():
     from sympy.matrices.expressions.special import MatrixUnit
-    assert _test_args(MatrixUnit(3, 5, (8, 9)))
+    assert _test_args(MatrixUnit(8, 9, 3, 5))
 
 
 def test_sympy__matrices__expressions__special__GenericZeroMatrix():

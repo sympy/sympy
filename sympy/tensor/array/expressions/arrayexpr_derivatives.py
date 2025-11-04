@@ -32,7 +32,7 @@ def array_derive(expr, x):
 def _(expr: Expr, x: _ArrayExpr):
     if expr.free_symbols & x.free_symbols:
         if isinstance(expr, MatrixElement) and isinstance(x, MatrixSymbol):
-            return MatrixUnit(expr.i, expr.j, x.shape)
+            return MatrixUnit(x.shape[0], x.shape[1], expr.i, expr.j)
         raise NotImplementedError("algorithm not implemented for this case")
     return ZeroArray(*x.shape)
 
