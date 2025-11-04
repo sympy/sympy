@@ -322,8 +322,8 @@ class EllipticCurvePoint:
             slope = (y1 - y2) / (x1 - x2)
             yint = (y1 * x2 - y2 * x1) / (x2 - x1)
         else:
-            y_inverse = -y1 - a1*x1 - a3
-            if y2 == y_inverse:
+            # For the general Weierstrass form the inverse of a point (x,y) is (x, -y - a1*x - a3)
+            if y2 == -y1 - a1*x1 - a3:
                 return self.point_at_infinity(self._curve)
             slope = (3 * x1**2 + 2*a2*x1 + a4 - a1*y1) / (a1 * x1 + a3 + 2 * y1)
             yint = (-x1**3 + a4*x1 + 2*a6 - a3*y1) / (a1*x1 + a3 + 2*y1)
@@ -396,6 +396,7 @@ class EllipticCurvePoint:
             if p.z == 0:
                 return i
         return oo
+
     def __eq__(self, other):
         """
         Check if two elliptic curve points are equal.
@@ -411,8 +412,11 @@ class EllipticCurvePoint:
 
         Returns
         =======
-        bool
-            True if the points are equal, False otherwise.
+        bool or NotImplemented
+            True if the points are equal, False if they are different points on
+            the same curve, NotImplemented if other is not an EllipticCurvePoint
+            or is on a different curve.
+
 
         Examples
         ========
@@ -426,11 +430,11 @@ class EllipticCurvePoint:
         True
         """
         if not isinstance(other, EllipticCurvePoint):
-            return False
+            return NotImplemented
 
         # Points must be on the same curve
-        if self._curve != other._curve:
-            return False
+        if self._curve is not other._curve:
+            return NotImplemented
 
         # Both points at infinity are equal
         if self.z == 0 and other.z == 0:
@@ -440,10 +444,13 @@ class EllipticCurvePoint:
         if self.z == 0 or other.z == 0:
             return False
 
-        # If both are finite points  compare in projective coordinates
+        # If both are finite points compare in projective coordinates
         return (self.x * other.z == other.x * self.z and
                 self.y * other.z == other.y * self.z)
 
     def __ne__(self, other):
         """Check if two points are not equal."""
-        return not self.__eq__(other)
+        result = self.__eq__(other)
+        if result is NotImplemented:
+            return NotImplemented
+        return not result
