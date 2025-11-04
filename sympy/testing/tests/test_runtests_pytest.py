@@ -1,6 +1,6 @@
 import pathlib
 from typing import List
-
+from pathlib import Path
 import pytest
 
 from sympy.testing.runtests_pytest import (
@@ -101,7 +101,7 @@ class TestUpdateArgsWithPaths:
         args = update_args_with_paths(paths=paths, keywords=None, args=[])
         assert len(args) == len(expected_paths)
         for arg, expected in zip(sorted(args), expected_paths):
-            assert expected in arg
+            assert Path(expected).as_posix() in Path(arg).as_posix()
 
     @staticmethod
     @pytest.mark.parametrize(
@@ -122,7 +122,7 @@ class TestUpdateArgsWithPaths:
         expected_args = ['sympy/physics/mechanics/tests/test_kane3.py::test_bicycle']
         assert len(args) == len(expected_args)
         for arg, expected in zip(sorted(args), expected_args):
-            assert expected in arg
+            assert Path(expected).as_posix() in Path(arg).as_posix()
 
     @staticmethod
     @pytest.mark.parametrize(
@@ -142,7 +142,7 @@ class TestUpdateArgsWithPaths:
         expected_args = ['sympy/core/tests/test_sympify.py::test_issue_3538']
         assert len(args) == len(expected_args)
         for arg, expected in zip(sorted(args), expected_args):
-            assert expected in arg
+            assert Path(expected).as_posix() in Path(arg).as_posix()
 
     @staticmethod
     def test_multiple_keywords():
@@ -155,7 +155,7 @@ class TestUpdateArgsWithPaths:
         ]
         assert len(args) == len(expected_args)
         for arg, expected in zip(sorted(args), expected_args):
-            assert expected in arg
+            assert Path(expected).as_posix() in Path(arg).as_posix()
 
     @staticmethod
     def test_keyword_match_in_multiple_files():
@@ -168,4 +168,4 @@ class TestUpdateArgsWithPaths:
         ]
         assert len(args) == len(expected_args)
         for arg, expected in zip(sorted(args), expected_args):
-            assert expected in arg
+            assert Path(expected).as_posix() in Path(arg).as_posix()
