@@ -691,7 +691,9 @@ class ComplexRootOf(RootOf):
         """
         Reset all intervals
         """
-        self._all_roots(self.poly, use_cache=False)
+        factors = _pure_factors(self.poly)
+        self._get_reals(factors, use_cache=False)
+        self._get_complexes(factors, use_cache=False)
 
     @classmethod
     def _all_roots(cls, poly, use_cache=True):
