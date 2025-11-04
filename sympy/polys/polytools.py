@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Optional, overload, Literal, Any, cast, Callab
 
 from functools import wraps, reduce
 from operator import mul
-from collections import Counter, defaultdict
+from collections import defaultdict, Counter
 from collections.abc import Iterator
 
 from sympy.core import (
@@ -3975,15 +3975,23 @@ class Poly(Basic):
 
     def _which_roots(f, candidates, num_roots):
         prec = 10
-        # using Counter bc its like an ordered set
         root_counts = Counter(candidates)
+        fe = f.as_expr()
+        x = f.gens[0]
+
         while len(root_counts) > num_roots:
+            remove = set()
             for r in list(root_counts.keys()):
                 # If f(r) != 0 then f(r).evalf() gives a float/complex with precision.
-                f_r = f(r).evalf(prec, maxn=2*prec)
+                f_r = fe.subs(x, r).evalf(prec, maxn=2*prec)
                 if abs(f_r)._prec >= 2:
-                    root_counts.pop(r)
+                    remove.add(r)
 
+            if not remove:
+                break
+
+            for r in remove:
+                root_counts.pop(r)
             prec *= 2
 
         return list(root_counts.keys())

@@ -225,6 +225,24 @@ def test_eigenvects():
         assert M*vec_list[0] == val*vec_list[0]
 
 
+@slow
+def test_eigenvects_algebraic_field():
+    M = Matrix([
+        [45, 15, 20, 18, sqrt(5)/2],
+        [15, 85, 35, 22, Rational(11, 37)],
+        [20, 35, 15, 40, 3*sqrt(3)/7],
+        [Rational(9, 2), 2, 4, 12, sqrt(7)/5],
+        [Rational(25, 13), sqrt(7)/4, 2, 1, 1]
+    ])
+    vecs = M.eigenvects()
+    assert len(vecs) == 5
+    for val, mult, vec_list in vecs:
+        assert len(vec_list) == 1
+        v = vec_list[0]
+        diff = M*v - val*v
+        assert all(abs(x) < 1e-10 for x in diff.evalf().values())
+
+
 def test_left_eigenvects():
     M = Matrix([[0, 1, 1],
                 [1, 0, 0],
