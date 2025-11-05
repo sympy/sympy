@@ -2576,6 +2576,10 @@ def test_issue_25221():
 def test_issue_27440():
     nan = S.NaN
     assert ask(Q.negative(nan)) is None
+    
+def test_pow_zero_neg():
+    from sympy import ask, Q, Pow
+    assert ask(Q.real(Pow(0, -1, evaluate=False))) is False
 
 def test_issue_28127():
     assert ask(Q.le(x,y), Q.gt(x,y)) is False
