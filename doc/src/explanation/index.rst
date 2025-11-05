@@ -15,6 +15,7 @@ technical implementation details, and opinionated recommendations.
    :maxdepth: 2
 
    best-practices.md
+   tips.rst
    gotchas.rst
    solve_output.rst
    modules/physics/index.rst
