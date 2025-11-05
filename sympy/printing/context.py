@@ -33,7 +33,8 @@ class ContextPrinter(LatexPrinter):
     '\\\\startformula x^{2} + \\\\sqrt{2} \\\\stopformula'
     """
 
-    printmethod = "_context"
+    # printmethod inherited from LatexPrinter ("_latex")
+    # We use all the LaTeX printer's methods for printing expressions
 
     _default_settings: dict[str, Any] = {
         **LatexPrinter._default_settings,

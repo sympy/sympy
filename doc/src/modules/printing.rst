@@ -485,8 +485,6 @@ See ``sympy.printing.context``.
 .. autoclass:: ContextPrinter
    :members:
 
-   .. autoattribute:: ContextPrinter.printmethod
-
 .. autofunction:: context
 
 .. autofunction:: print_context
