@@ -1,8 +1,8 @@
 .. _topics:
 
-======
-Topics
-======
+===================
+Specialized Modules
+===================
 
 **Contents**
 

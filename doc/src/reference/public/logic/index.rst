@@ -1,8 +1,8 @@
 .. _logic:
 
-======
-Logic
-======
+==============
+Logic and Sets
+==============
 
 **Contents**
 

@@ -1,8 +1,8 @@
 .. _matrices_modules:
 
-========
-Matrices
-========
+==============================
+Matrices, Tensors, and Vectors
+==============================
 
 **Contents**
 

@@ -4,18 +4,23 @@
 API Reference
 =============
 
-This section contains a summary of SymPy modules, functions, classes, and
-methods. All functions and objects implemented in the ``sympy`` core
-subpackage are documented below.
+This section contains the complete API reference for SymPy. It documents all
+public modules, functions, classes, and methods with their technical details.
+
+**For tutorials and how-to guides**, see the :ref:`Tutorials <tutorials>` and
+:ref:`How-to Guides <guides>` sections. **For conceptual explanations**, see
+the :ref:`Explanations <explanations>` section.
+
+The API reference is organized into the following categories:
 
 ..  rst-class:: column
 
 :ref:`Basics <basic_modules>`
 -------------------------------------------------------
 
-   Contains a description of operations for the basic modules. Subcategories include: *absolute basics*,
-   *manipulation*, *assumptions*, *functions*, *simplification*, *calculus*, *solvers*, and some
-   other subcategories.
+   API reference for core SymPy functionality. Includes: *absolute basics*,
+   *manipulation*, *assumptions*, *functions*, *simplification*, *calculus*, *solvers*,
+   and other fundamental operations.
 
 
 ..  rst-class:: column
@@ -23,54 +28,54 @@ subpackage are documented below.
 :ref:`Code Generation <codegen_module>`
 -------------------------------------------------------
 
-   Contains a description of methods for the generation of compilable and executable code.
+   API reference for code generation modules.
 
 
 ..  rst-class:: column
 
-:ref:`Logic <logic>`
+:ref:`Logic and Sets <logic>`
 -------------------------------------------------------
 
-   Contains method details for the *logic* and *sets* modules.
+   API reference for the *logic* and *sets* modules.
 
 ..  rst-class:: column
 
-:ref:`Matrices <matrices_modules>`
+:ref:`Matrices, Tensors, and Vectors <matrices_modules>`
 -------------------------------------------------------
 
-   Discusses methods for the matrices, tensor and vector modules.
+   API reference for the *matrices*, *tensor*, and *vector* modules.
 
 ..  rst-class:: column
 
 :ref:`Number Theory <numtheory_module>`
 -------------------------------------------------------
 
-   Documents methods for the Number theory module.
+   API reference for the *number theory* module.
 
 ..  rst-class:: column
 
 :ref:`Physics <physics-docs>`
 -------------------------------------------------------
 
-   Contains documentation for Physics methods.
+   API reference for physics modules.
 
 ..  rst-class:: column
 
 :ref:`Utilities <utilities>`
 -------------------------------------------------------
 
-   Contains docstrings for methods of several utility modules. Subcategories
-   include: *Interactive*, *Parsing*, *Printing*, *Testing*, *Utilities*.
+   API reference for utility modules. Includes: *Interactive*, *Parsing*, *Printing*,
+   *Testing*, and other utilities.
 
 
 ..  rst-class:: column
 
-:ref:`Topics <topics>`
+:ref:`Specialized Modules <topics>`
 -------------------------------------------------------
 
-   Contains method docstrings for several modules. Subcategories include : *Plotting*,
-   *Polynomials*, *Geometry*, *Category Theory*, *Cryptography*, *Differential*, *Holonomic*,
-   *Lie Algebra*, and *Stats*.
+   API reference for specialized mathematical domains. Includes: *Plotting*,
+   *Polynomials*, *Geometry*, *Category Theory*, *Cryptography*, *Differential Geometry*,
+   *Holonomic Functions*, *Lie Algebras*, and *Statistics*.
 
 
 .. toctree::
