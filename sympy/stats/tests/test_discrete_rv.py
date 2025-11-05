@@ -91,6 +91,21 @@ def test_GeometricDistribution():
     Y = Geometric('Y', Rational(3, 10))
     assert coskewness(X, X + Y, X + 2*Y).simplify() == sqrt(230)*Rational(81, 1150)
 
+    # Test for issue #20031: density should be 0 for non-positive integers
+    g = Geometric("G", p=S(1)/4)
+    # Test negative integers
+    assert density(g)(-1) == 0
+    assert density(g)(-2) == 0
+    # Test zero
+    assert density(g)(0) == 0
+    # Test non-integer values
+    assert density(g)(S(1)/2) == 0
+    assert density(g)(S(3)/2) == 0
+    assert density(g)(0.5) == 0
+    # Verify that valid positive integers still work
+    assert density(g)(1) == S(1)/4
+    assert density(g)(2) == S(3)/16
+
 
 def test_Hermite():
     a1 = Symbol("a1", positive=True)
