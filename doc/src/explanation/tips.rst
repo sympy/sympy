@@ -1,6 +1,6 @@
 .. _tips:
 
-====
+
 Tips
 ====
 
@@ -15,7 +15,7 @@ Quick Start Tips
 ================
 
 Use isympy for Interactive Sessions
-------------------------------------
+-----------------------------------
 
 The :command:`isympy` command launches an enhanced IPython session with
 SymPy already imported and common symbols predefined:
@@ -58,7 +58,7 @@ Working with Symbols
 ====================
 
 Define Multiple Symbols at Once
---------------------------------
+-------------------------------
 
 Use the :func:`~.symbols` function to define multiple symbols efficiently:
 
@@ -66,7 +66,7 @@ Use the :func:`~.symbols` function to define multiple symbols efficiently:
     >>> x1, x2, x3, x4, x5 = symbols('x1:6')  # Creates x1 through x5
 
 Import Common Symbols from sympy.abc
--------------------------------------
+------------------------------------
 
 For quick scripts, import symbols from :mod:`sympy.abc`:
 
@@ -75,7 +75,7 @@ For quick scripts, import symbols from :mod:`sympy.abc`:
 This is especially useful for Greek letters and common variable names.
 
 Add Assumptions When Defining Symbols
---------------------------------------
+-------------------------------------
 
 Adding assumptions helps SymPy simplify expressions more effectively:
 
@@ -93,7 +93,7 @@ Working with Numbers
 ====================
 
 Use Rational() for Exact Fractions
------------------------------------
+----------------------------------
 
 Avoid using Python floats when you want exact arithmetic:
 
@@ -113,7 +113,7 @@ Or use the ``S`` shorthand:
     x + 1/3
 
 Use S() to Create SymPy Objects
---------------------------------
+-------------------------------
 
 The ``S`` function converts Python objects to SymPy objects:
 
@@ -144,10 +144,10 @@ Other useful constants: :obj:`~.E` (Euler's number), :obj:`~.I`
 (imaginary unit), :obj:`~.oo` (infinity), :obj:`~.zoo` (complex infinity).
 
 Simplification and Manipulation
-================================
+===============================
 
 Choose the Right Simplification Function
------------------------------------------
+----------------------------------------
 
 Don't always reach for :func:`~.simplify`. Use targeted functions:
 
@@ -161,7 +161,7 @@ Don't always reach for :func:`~.simplify`. Use targeted functions:
 - :func:`~.simplify` - General purpose (tries everything)
 
 Use expand() Strategically
----------------------------
+--------------------------
 
 The :func:`~.expand` function has many options for selective expansion:
 
@@ -173,7 +173,7 @@ The :func:`~.expand` function has many options for selective expansion:
     x**n*y**n
 
 Use .rewrite() to Change Function Forms
-----------------------------------------
+---------------------------------------
 
 The :meth:`~sympy.core.basic.Basic.rewrite` method converts between equivalent forms:
 
@@ -185,7 +185,7 @@ The :meth:`~sympy.core.basic.Basic.rewrite` method converts between equivalent f
     cos(x) + I*sin(x)
 
 Use together() for Combining Fractions
----------------------------------------
+--------------------------------------
 
 The :func:`~.together` function combines multiple fractions:
 
@@ -195,10 +195,10 @@ The :func:`~.together` function combines multiple fractions:
     (2*x + 3)/((x + 1)*(x + 2))
 
 Substitution and Evaluation
-============================
+===========================
 
 Use .subs() for Substitution
------------------------------
+----------------------------
 
 Substitute values or expressions with :meth:`~sympy.core.basic.Basic.subs`:
 
@@ -217,7 +217,7 @@ You can substitute multiple values at once:
     z + 3
 
 Use .evalf() for Numerical Evaluation
---------------------------------------
+-------------------------------------
 
 Convert symbolic expressions to numerical values:
 
@@ -233,7 +233,7 @@ You can evaluate with substitution:
     0.841470984807897
 
 Use N() as Shorthand for evalf()
----------------------------------
+--------------------------------
 
 :func:`~.N` is equivalent to :meth:`~sympy.core.evalf.EvalfMixin.evalf`:
 
@@ -246,7 +246,7 @@ Solving Equations
 =================
 
 Use solve() for Equations
---------------------------
+-------------------------
 
 The :func:`~.solve` function solves equations symbolically:
 
@@ -261,7 +261,7 @@ For systems of equations, pass multiple equations:
     {x: 1, y: 1}
 
 Use solveset() for Better Control
-----------------------------------
+---------------------------------
 
 :func:`~.solveset` is more powerful and returns a :class:`~.FiniteSet`:
 
@@ -284,7 +284,7 @@ Calculus
 ========
 
 Use diff() for Derivatives
----------------------------
+--------------------------
 
 Compute derivatives with :func:`~.diff`:
 
@@ -296,7 +296,7 @@ Compute derivatives with :func:`~.diff`:
     6*x*y**2
 
 Use integrate() for Integration
---------------------------------
+-------------------------------
 
 Compute integrals with :func:`~.integrate`:
 
@@ -320,7 +320,7 @@ Compute limits with :func:`~.limit`:
     oo
 
 Use series() for Taylor Series
--------------------------------
+------------------------------
 
 Expand expressions as series with :func:`~.series`:
 
@@ -330,7 +330,7 @@ Expand expressions as series with :func:`~.series`:
     1 + x + x**2 + x**3 + x**4 + O(x**5)
 
 Remove O() Terms with .removeO()
----------------------------------
+--------------------------------
 
 Remove order terms from series:
 
@@ -366,7 +366,7 @@ Access elements and properties:
     [3/2, -1/2]])
 
 Use Eye for Identity Matrices
-------------------------------
+-----------------------------
 
 Create identity matrices with :func:`~.eye`:
 
@@ -409,7 +409,7 @@ Performance Tips
 ================
 
 Use evaluate=False to Skip Simplification
-------------------------------------------
+-----------------------------------------
 
 When building large expressions, disable automatic evaluation:
 
@@ -421,7 +421,7 @@ Then simplify once at the end:
     >>> expr.doit()
 
 Use lambdify() for Fast Numerical Evaluation
----------------------------------------------
+--------------------------------------------
 
 Convert SymPy expressions to fast numerical functions:
 
@@ -434,7 +434,7 @@ Convert SymPy expressions to fast numerical functions:
     array([ 4,  9, 16])
 
 Use cse() for Common Subexpression Elimination
------------------------------------------------
+----------------------------------------------
 
 Optimize expressions by eliminating repeated subexpressions:
 
@@ -451,7 +451,7 @@ Display and Printing
 ====================
 
 Use pprint() for Pretty Printing
----------------------------------
+--------------------------------
 
 The :func:`~.pprint` function displays expressions nicely:
 
@@ -464,7 +464,7 @@ The :func:`~.pprint` function displays expressions nicely:
      -∞
 
 Use init_printing() for Automatic Pretty Printing
---------------------------------------------------
+-------------------------------------------------
 
 Enable automatic pretty printing in IPython/Jupyter:
 
@@ -473,7 +473,7 @@ Enable automatic pretty printing in IPython/Jupyter:
     # Displays in nice mathematical notation
 
 Use latex() to Generate LaTeX Code
------------------------------------
+----------------------------------
 
 Convert expressions to LaTeX for papers and presentations:
 
@@ -482,7 +482,7 @@ Convert expressions to LaTeX for papers and presentations:
     '\\int\\limits_{-\\infty}^{\\infty} e^{- x^{2}}\\, dx'
 
 Use mathematica_code() and other code generation
--------------------------------------------------
+------------------------------------------------
 
 Convert to other systems:
 
@@ -494,7 +494,7 @@ Testing and Debugging
 =====================
 
 Use .equals() to Test Mathematical Equality
---------------------------------------------
+-------------------------------------------
 
 The ``==`` operator tests structural equality, not mathematical equality.
 Use :meth:`~sympy.core.expr.Expr.equals` for mathematical equality:
@@ -505,7 +505,7 @@ Use :meth:`~sympy.core.expr.Expr.equals` for mathematical equality:
     True
 
 Check if Expression is Zero
-----------------------------
+---------------------------
 
 To check if an expression is mathematically zero:
 
@@ -528,10 +528,10 @@ Check properties of expressions:
     True
 
 Common Pitfalls and Solutions
-==============================
+=============================
 
 Remember: ** not ^ for Exponentiation
---------------------------------------
+-------------------------------------
 
 Python uses ``**`` for powers, not ``^``:
 
@@ -540,7 +540,7 @@ Python uses ``**`` for powers, not ``^``:
     >>> # x^2 gives x XOR 2, not x squared
 
 Always Use * for Multiplication
---------------------------------
+-------------------------------
 
 Implicit multiplication doesn't work:
 
@@ -549,7 +549,7 @@ Implicit multiplication doesn't work:
     >>> # 2x gives SyntaxError
 
 Variables Must Be Defined Before Use
--------------------------------------
+------------------------------------
 
 Unlike Mathematica or Maple, symbols must be created first:
 
@@ -557,7 +557,7 @@ Unlike Mathematica or Maple, symbols must be created first:
     >>> y**2  # Error if y not defined
 
 Changing a Variable Doesn't Change Expressions
------------------------------------------------
+----------------------------------------------
 
 Once an expression is created, changing variables doesn't affect it:
 
