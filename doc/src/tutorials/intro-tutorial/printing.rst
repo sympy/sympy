@@ -18,6 +18,7 @@ There are several printers available in SymPy.  The most common ones are
 - ASCII pretty printer
 - Unicode pretty printer
 - LaTeX
+- ConTeXt
 - MathML
 - Dot
 
@@ -188,6 +189,27 @@ To get the `\mathrm{\LaTeX}` form of an expression, use ``latex()``.
 The ``latex()`` function has many options to change the formatting of
 different things.  See :py:meth:`its documentation
 <sympy.printing.latex.latex>` for more details.
+
+ConTeXt
+-------
+
+ConTeXt is a document preparation system based on TeX, similar to LaTeX.
+To get the ConTeXt form of an expression, use ``context()``.
+
+    >>> from sympy import context
+    >>> print(context(Integral(sqrt(1/x), x)))
+    \int \sqrt{\frac{1}{x}}\, dx
+
+Most mathematical expressions produce identical output to ``latex()`` since
+the mathematical syntax is largely the same. The main difference is in how
+equations are delimited. ConTeXt uses ``\startformula...\stopformula`` instead
+of ``\begin{equation}...\end{equation}``.
+
+    >>> print(context(Integral(sqrt(1/x), x), mode='equation'))
+    \startformula \int \sqrt{\frac{1}{x}}\, dx \stopformula
+
+The ``context()`` function accepts the same options as ``latex()``.
+See :py:meth:`its documentation <sympy.printing.context.context>` for more details.
 
 MathML
 ------

@@ -242,7 +242,7 @@ from .algebras import Quaternion
 
 from .printing import (pager_print, pretty, pretty_print, pprint,
         pprint_use_unicode, pprint_try_use_unicode, latex, print_latex,
-        multiline_latex, mathml, print_mathml, python, print_python, pycode,
+        multiline_latex, context, print_context, mathml, print_mathml, python, print_python, pycode,
         ccode, print_ccode, smtlib_code, glsl_code, print_glsl, cxxcode, fcode,
         print_fcode, rcode, print_rcode, jscode, print_jscode, julia_code,
         mathematica_code, octave_code, rust_code, print_gtk, preview, srepr,
@@ -492,7 +492,7 @@ __all__ = [
     # sympy.printing
     'pager_print', 'pretty', 'pretty_print', 'pprint', 'pprint_use_unicode',
     'pprint_try_use_unicode', 'latex', 'print_latex', 'multiline_latex',
-    'mathml', 'print_mathml', 'python', 'print_python', 'pycode', 'ccode',
+    'context', 'print_context', 'mathml', 'print_mathml', 'python', 'print_python', 'pycode', 'ccode',
     'print_ccode', 'smtlib_code', 'glsl_code', 'print_glsl', 'cxxcode', 'fcode',
     'print_fcode', 'rcode', 'print_rcode', 'jscode', 'print_jscode',
     'julia_code', 'mathematica_code', 'octave_code', 'rust_code', 'print_gtk',

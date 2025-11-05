@@ -4,6 +4,8 @@ from .pretty import pager_print, pretty, pretty_print, pprint, pprint_use_unicod
 
 from .latex import latex, print_latex, multiline_latex
 
+from .context import context, print_context
+
 from .mathml import mathml, print_mathml
 
 from .python import python, print_python
@@ -51,6 +53,9 @@ __all__ = [
 
     # sympy.printing.latex
     'latex', 'print_latex', 'multiline_latex',
+
+    # sympy.printing.context
+    'context', 'print_context',
 
     # sympy.printing.mathml
     'mathml', 'print_mathml',

@@ -469,6 +469,28 @@ This class implements LaTeX printing. See ``sympy.printing.latex``.
 
 .. autofunction:: print_latex
 
+ContextPrinter
+--------------
+
+.. module:: sympy.printing.context
+
+This class implements ConTeXt printing. ConTeXt is a document preparation
+system based on TeX, similar to LaTeX. Most mathematical expressions have
+identical syntax in LaTeX and ConTeXt, but ConTeXt uses different environment
+delimiters such as ``\startformula...\stopformula`` instead of
+``\begin{equation}...\end{equation}``.
+
+See ``sympy.printing.context``.
+
+.. autoclass:: ContextPrinter
+   :members:
+
+   .. autoattribute:: ContextPrinter.printmethod
+
+.. autofunction:: context
+
+.. autofunction:: print_context
+
 MathMLPrinter
 -------------
 
