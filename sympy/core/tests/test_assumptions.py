@@ -1303,7 +1303,7 @@ def test_common_assumptions():
         'rational': True, 'imaginary': False, 'complex': True,
         'commutative': True,'noninteger': False, 'composite': False,
         'infinite': False, 'nonnegative': True, 'finite': True,
-        'transcendental': False,'negative': False}
+        'transcendental': False,'negative': False, 'hermitian': True}
     assert common_assumptions([0, 1, 2], 'positive integer'.split()
         ) == {'integer': True}
     assert common_assumptions([0, 1, 2], []) == {}

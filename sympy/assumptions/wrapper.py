@@ -143,6 +143,28 @@ class AssumptionsWrapper(Basic):
     _eval_is_transcendental = make_eval_method("transcendental")
     _eval_is_zero = make_eval_method("zero")
 
+    # Additional predicates added in issue #10243 fix
+    _eval_is_positive_infinite = make_eval_method("positive_infinite")
+    _eval_is_negative_infinite = make_eval_method("negative_infinite")
+    _eval_is_complex_elements = make_eval_method("complex_elements")
+    _eval_is_diagonal = make_eval_method("diagonal")
+    _eval_is_fullrank = make_eval_method("fullrank")
+    _eval_is_integer_elements = make_eval_method("integer_elements")
+    _eval_is_invertible = make_eval_method("invertible")
+    _eval_is_is_true = make_eval_method("is_true")
+    _eval_is_lower_triangular = make_eval_method("lower_triangular")
+    _eval_is_normal = make_eval_method("normal")
+    _eval_is_orthogonal = make_eval_method("orthogonal")
+    _eval_is_positive_definite = make_eval_method("positive_definite")
+    _eval_is_real_elements = make_eval_method("real_elements")
+    _eval_is_singular = make_eval_method("singular")
+    _eval_is_square = make_eval_method("square")
+    _eval_is_symmetric = make_eval_method("symmetric")
+    _eval_is_triangular = make_eval_method("triangular")
+    _eval_is_unit_triangular = make_eval_method("unit_triangular")
+    _eval_is_unitary = make_eval_method("unitary")
+    _eval_is_upper_triangular = make_eval_method("upper_triangular")
+
 
 # one shot functions which are faster than AssumptionsWrapper
 

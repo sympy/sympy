@@ -289,9 +289,78 @@ def _generate_assumption_rules():
 
 
 _assume_rules = _load_pre_generated_assumption_rules()
-_assume_defined = _assume_rules.defined_facts.copy()
-_assume_defined.add('polar')
-_assume_defined = frozenset(_assume_defined)
+
+def _assume_type_keys():
+    """
+    Return all valid assumption type keys.
+
+    This function returns a frozenset of all assumption keys that can be used
+    with SymPy objects. This includes:
+    - All facts from the assumption rules (_assume_rules.defined_facts)
+    - Additional unary predicates that exist in Q but aren't in the core fact rules
+    - The special 'polar' assumption for backward compatibility
+
+    The keys returned by this function are used to:
+    - Validate assumption kwargs when creating Symbols and other objects
+    - Iterate over all possible assumptions in functions like assumptions() and common_assumptions()
+    - Ensure consistency across the assumptions system
+
+    Returns
+    =======
+    frozenset
+        A frozenset of all valid assumption key strings.
+
+    Examples
+    ========
+
+    >>> from sympy.core.assumptions import _assume_type_keys
+    >>> keys = _assume_type_keys()
+    >>> 'real' in keys
+    True
+    >>> 'positive' in keys
+    True
+    >>> 'hermitian' in keys
+    True
+    >>> 'polar' in keys  # Special backward compatibility key
+    True
+
+    Notes
+    =====
+
+    This function was added to fix issue #10243, which identified that
+    _assume_defined was missing many valid assumption keys that existed
+    in Q (AssumptionKeys), causing assumptions like hermitian=True to be
+    incorrectly rejected when creating Symbol objects.
+
+    """
+    # Start with keys from the core fact rules
+    keys = _assume_rules.defined_facts.copy()
+
+    # Add 'polar' for backward compatibility (it's not in the fact rules but is used in legacy code)
+    keys.add('polar')
+
+    # Add additional unary predicates that exist in Q but aren't in the core fact rules.
+    # These include hermitian/antihermitian properties, infinite variants, matrix predicates,
+    # and the is_true predicate. These were identified as missing in issue #10243.
+    additional_keys = {
+        # Hermitian predicates
+        'hermitian', 'antihermitian',
+        # Infinite variants
+        'positive_infinite', 'negative_infinite',
+        # Matrix predicates
+        'symmetric', 'invertible', 'orthogonal', 'unitary', 'positive_definite',
+        'upper_triangular', 'lower_triangular', 'diagonal', 'fullrank', 'square',
+        'integer_elements', 'real_elements', 'complex_elements',
+        'singular', 'normal', 'triangular', 'unit_triangular',
+        # Boolean predicate
+        'is_true',
+    }
+
+    keys.update(additional_keys)
+
+    return frozenset(keys)
+
+_assume_defined = _assume_type_keys()
 
 
 def assumptions(expr, _check=None):
