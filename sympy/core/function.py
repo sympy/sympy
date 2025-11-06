@@ -1385,7 +1385,7 @@ class Derivative(Expr):
             # derivatives.
             zero = False
             free = expr.free_symbols
-            from sympy.matrices.expressions.matexpr import MatrixExpr
+            from sympy.matrices.expressions.matexpr import MatrixExpr, MatrixElement
 
             for v, c in variable_count:
                 vfree = v.free_symbols
@@ -1399,6 +1399,9 @@ class Derivative(Expr):
                             zero = True
                             break
                     elif isinstance(v, MatrixExpr):
+                        zero = False
+                        break
+                    elif isinstance(v, MatrixElement):
                         zero = False
                         break
                     elif isinstance(v, Symbol) and v not in free:
