@@ -266,7 +266,7 @@ def Geometric(name, p):
     >>> X = Geometric("x", p)
 
     >>> density(X)(z)
-    (4/5)**(z - 1)/5
+    Piecewise(((4/5)**(z - 1)/5, (z >= 1) & (z < oo) & Eq(z, floor(z))), (0, True))
 
     >>> E(X)
     5
