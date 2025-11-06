@@ -209,6 +209,20 @@ class GeometricDistribution(SingleDiscreteDistribution):
     def pdf(self, k):
         return (1 - self.p)**(k - 1) * self.p
 
+    def __call__(self, *args):
+        from sympy.stats.rv import RandomSymbol, random_symbols
+        k = args[0] if args else None
+        if k is None:
+            return self.pdf
+        # Only apply support check when k doesn't contain random symbols
+        # When k contains random symbols, return pdf directly for symbolic computations
+        if isinstance(k, RandomSymbol) or random_symbols(k):
+            return self.pdf(k)
+        return Piecewise((self.pdf(k), self.set.as_relational(k)), (0, True))
+
+    def _cdf(self, x):
+        return Piecewise((1 - (1 - self.p)**floor(x), x >= 1), (0, True))
+
     def _characteristic_function(self, t):
         p = self.p
         return p * exp(I*t) / (1 - (1 - p)*exp(I*t))
