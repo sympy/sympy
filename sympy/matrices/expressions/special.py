@@ -308,6 +308,33 @@ class MatrixUnit(MatrixExpr):
     Matrix with only one nonzero entry with value 1.
 
     https://en.wikipedia.org/wiki/Matrix_unit
+
+    Example
+    =======
+
+    Create a matrix unit of shape `(3, 4)` with unit entry at the second row
+    and third column, i.e. at `(1, 2)`:
+
+    >>> from sympy.matrices.expressions.special import MatrixUnit
+    >>> E = MatrixUnit(3, 4, 1, 2)
+    >>> E.shape
+    (3, 4)
+    >>> E.as_explicit()
+    Matrix([
+    [0, 0, 0, 0],
+    [0, 0, 1, 0],
+    [0, 0, 0, 0]])
+
+    The transposition of a matrix unit is a different matrix unit:
+
+    >>> E.T
+    MatrixUnit(4, 3, 2, 1)
+    >>> E.T.as_explicit()
+    Matrix([
+    [0, 0, 0],
+    [0, 0, 0],
+    [0, 1, 0],
+    [0, 0, 0]])
     """
     def __new__(cls, rows, cols, i, j):
         obj = MatrixExpr.__new__(cls, rows, cols, i, j)

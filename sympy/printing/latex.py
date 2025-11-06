@@ -1878,6 +1878,10 @@ class LatexPrinter(Printer):
         return self._print_Symbol(expr, style=self._settings[
             'mat_symbol_style'])
 
+    def _print_MatrixUnit(self, E):
+        return "E_{%s,%s}" % (self._print(E._i), self._print(E._j)) \
+            if self._settings['mat_symbol_style'] == 'plain' else r"\mathcal{E}_{%s,%s}" % (self._print(E._i), self._print(E._j))
+
     def _print_ZeroMatrix(self, Z):
         return "0" if self._settings[
             'mat_symbol_style'] == 'plain' else r"\mathbf{0}"
