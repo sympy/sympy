@@ -2,7 +2,7 @@
 Performance Benchmarking (ASV)
 =============================
 
-SymPy uses `Airspeed Velocity (ASV)`_ to measure and track performance
+SymPy uses Airspeed Velocity (ASV) to measure and track performance
 across commits. ASV allows contributors to identify regressions, compare
 performance between branches, and validate the impact of their changes.
 
@@ -11,11 +11,10 @@ results, and compare performance between commits.
 
 .. contents::
    :local:
-   :depth: 2
 
------------------------
-1. Installing and Setup
------------------------
+----------------------
+Installing and Setup
+----------------------
 
 ASV is not installed automatically with SymPy. To install it:
 
@@ -33,11 +32,11 @@ Before running ASV, ensure that SymPy is built in-place:
 
 This step is required so that ASV uses the local development version of SymPy.
 
---------------------------------
-2. Running Benchmarks (Basic Use)
---------------------------------
+------------------------------
+Running Benchmarks (Basic Use)
+------------------------------
 
-To run *all* benchmarks on the current commit:
+To run all benchmarks on the current commit:
 
 .. code-block:: bash
 
@@ -75,9 +74,9 @@ Example:
 
     asv run --bench integrate
 
-------------------------------------
-3. Comparing Results Across Commits
-------------------------------------
+----------------------------------
+Comparing Results Across Commits
+----------------------------------
 
 ASV allows direct comparison between two revisions:
 
@@ -85,7 +84,7 @@ ASV allows direct comparison between two revisions:
 
     asv compare master HEAD
 
-The typical output looks like:
+Example output:
 
 ::
 
@@ -95,60 +94,53 @@ The typical output looks like:
 
 Interpretation:
 
-* **ratio > 1.0** → the new commit is *slower* (possible regression)
-* **ratio < 1.0** → the new commit is *faster*
-* **std** shows timing variability (lower is more stable)
+* **ratio > 1.0** – slower (possible regression)
+* **ratio < 1.0** – faster
+* **std** – timing variability (lower is better)
 
-You can also compare arbitrary commits:
+To compare arbitrary commits:
 
 .. code-block:: bash
 
     asv compare <old> <new>
 
------------------------------------
-4. Interpreting ASV Benchmark Output
------------------------------------
+----------------------------------
+Interpreting ASV Benchmark Output
+----------------------------------
 
 Each benchmark typically reports:
 
 * **time** – execution time in seconds
 * **ratio** – comparison factor between two commits
 * **std** – standard deviation across runs
-* **samples** – number of timing samples collected
+* **samples** – count of timing samples
 
-General tips:
+General guidelines:
 
 * Treat **ratio ≥ 1.2** as a likely regression.
-* Large **std** often means system noise; rerun with ``asv run`` (without ``--quick``).
-* For unstable benchmarks, running more samples may help.
+* Large **std** indicates noise; rerun with ``asv run``.
+* For unstable benchmarks, consider running more samples.
 
------------------------------------
-5. Viewing Results with ASV Preview
------------------------------------
+------------------------------
+Viewing Results with ASV Preview
+------------------------------
 
-To see interactive visualizations:
+To launch an interactive viewer:
 
 .. code-block:: bash
 
     asv preview
 
-This opens a local web interface that includes:
+This opens a local web interface showing timing graphs, regressions,
+benchmark descriptions, and environment details.
 
-* commit-by-commit performance graphs
-* historical timing trends
-* regression highlights
-* benchmark descriptions
-* environment configuration
+-----------------------------------------------
+Detecting and Reporting Regressions in Pull Requests
+-----------------------------------------------
 
-This is recommended before submitting a pull request.
+Before submitting a PR, contributors should check for regressions.
 
-------------------------------------------------------
-6. Detecting and Reporting Regressions in Pull Requests
-------------------------------------------------------
-
-Before creating a PR, contributors should check that their changes do not introduce performance regressions.
-
-Recommended workflow:
+Recommended process:
 
 1. Build SymPy in-place:
 
@@ -162,7 +154,7 @@ Recommended workflow:
 
        asv run benchmarks/<module>
 
-3. Compare results with ``master``:
+3. Compare with ``master``:
 
    .. code-block:: bash
 
@@ -170,18 +162,14 @@ Recommended workflow:
 
 If a regression is found:
 
-* Investigate whether the slowdown is expected or necessary.
-* If unexpected, try profiling or isolating the cause.
-* Mention ASV results in the PR description, including benchmark names and ratios.
-
-Maintainers may request additional ASV comparisons before merging.
+* Determine whether it is expected.
+* If unexpected, profile or isolate the change.
+* Mention ASV results in the PR description.
 
 ----------------------
-7. Useful References
+Useful References
 ----------------------
 
 * ASV documentation: https://asv.readthedocs.io/en/stable/
 * SymPy benchmark suite: ``benchmarks/`` directory
 * Contributor Guide: :ref:`contributing`
-
-.. _Airspeed Velocity (ASV): https://asv.readthedocs.io/en/stable/
