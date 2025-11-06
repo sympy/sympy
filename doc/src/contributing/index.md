@@ -19,4 +19,4 @@ debug.rst
 docstring.rst
 documentation-style-guide.rst
 deprecations.md
-```
+benchmarking.rst
