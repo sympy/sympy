@@ -158,10 +158,13 @@ def _(dist: SingleFiniteDistribution, size, seed):
     # scipy can handle with custom distributions
 
     from scipy.stats import rv_discrete
+    import numpy
     density_ = dist.dict
     x, y = [], []
-    for k, v in density_.items():
-        x.append(int(k))
+    sample_space = numpy.empty(shape=(len(density_),), dtype=object)
+    for i, (k, v) in enumerate(density_.items()):
+        x.append(i)
         y.append(float(v))
+        sample_space[i] = k
     scipy_rv = rv_discrete(name='scipy_rv', values=(x, y))
-    return scipy_rv.rvs(size=size, random_state=seed)
+    return sample_space[scipy_rv.rvs(size=size, random_state=seed)]
