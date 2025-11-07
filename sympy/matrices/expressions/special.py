@@ -20,6 +20,11 @@ class ZeroMatrix(MatrixExpr):
     A
     >>> Z*A.T
     0
+    >>> Z.as_explicit()
+    Matrix([
+    [0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0]])
     """
     is_ZeroMatrix = True
 
@@ -112,6 +117,11 @@ class Identity(MatrixExpr):
     >>> I = Identity(3)
     >>> I*A
     A
+    >>> I.as_explicit()
+    Matrix([
+    [1, 0, 0],
+    [0, 1, 0],
+    [0, 0, 1]])
     """
 
     is_Identity = True
@@ -217,6 +227,19 @@ class OneMatrix(MatrixExpr):
     Also called "matrix of ones" or "all-ones matrix".
 
     https://en.wikipedia.org/wiki/Matrix_of_ones
+
+    Examples
+    ========
+
+    >>> from sympy.matrices.expressions import OneMatrix
+    >>> O = OneMatrix(3, 4)
+    >>> O.shape
+    (3, 4)
+    >>> O.as_explicit()
+    Matrix([
+    [1, 1, 1, 1],
+    [1, 1, 1, 1],
+    [1, 1, 1, 1]])
     """
     def __new__(cls, m, n, evaluate=False):
         m, n = _sympify(m), _sympify(n)
@@ -309,11 +332,11 @@ class MatrixUnit(MatrixExpr):
 
     https://en.wikipedia.org/wiki/Matrix_unit
 
-    Example
-    =======
+    Examples
+    ========
 
     Create a matrix unit of shape `(3, 4)` with unit entry at the second row
-    and third column, i.e. at `(1, 2)`:
+    and third column, i.e. at `(1, 2)`
 
     >>> from sympy.matrices.expressions.special import MatrixUnit
     >>> E = MatrixUnit(3, 4, 1, 2)
@@ -324,6 +347,10 @@ class MatrixUnit(MatrixExpr):
     [0, 0, 0, 0],
     [0, 0, 1, 0],
     [0, 0, 0, 0]])
+    >>> E[1, 2]
+    1
+    >>> E[1, 1]
+    0
 
     The transposition of a matrix unit is a different matrix unit:
 
@@ -335,6 +362,17 @@ class MatrixUnit(MatrixExpr):
     [0, 0, 0],
     [0, 1, 0],
     [0, 0, 0]])
+
+    Both shape and position of unit entry may be symbolic
+
+    >>> from sympy import symbols
+    >>> a, b, i, j, x, y = symbols("a b i j x y")
+    >>> M = MatrixUnit(a, b, i, j)
+    >>> M.shape
+    (a, b)
+    >>> M[x, y]
+    KroneckerDelta(i, x, (0, a - 1))*KroneckerDelta(j, y, (0, b - 1))
+
     """
     def __new__(cls, rows, cols, i, j):
         obj = MatrixExpr.__new__(cls, rows, cols, i, j)
