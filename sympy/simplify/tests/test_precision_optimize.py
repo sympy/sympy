@@ -3,7 +3,6 @@ from sympy.simplify.precision_optimize import algebraic_rewrite
 
 a, b, x = symbols('a b x')
 
-
 def test_difference_of_squares_symbolic():
     expr = a**2 - b**2
     rewritten = algebraic_rewrite(expr)
@@ -24,7 +23,7 @@ def test_exponential_cancellation():
     normal = expr.subs({x: 1e-10}).evalf()
     optimized = expr.evalf(optimize_for_precision=True, subs={x: 1e-10})
     # Optimized result should be closer to true value
-    true_value = 1e-10 * exp(0)  # ≈ 1e-10
+    true_value = 1e-10 * exp(0)  # 1e-10
     assert abs(optimized - true_value) < abs(normal - true_value)
 
 
